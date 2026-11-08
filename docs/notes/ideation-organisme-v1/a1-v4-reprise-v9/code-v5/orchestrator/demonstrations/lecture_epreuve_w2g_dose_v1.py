@@ -16,15 +16,25 @@ Gardes (texte § 6 ; toute garde qui refuse : arrêt sans λ\\*, aucun chiffre �
 1. sortie absente ou illisible : `epreuve-w2g-dose-v1.json`, `manifeste.json`, `epreuve-w2g-dose-v1-table.txt` ou la console
    absents, compagnon non conforme (`verifier_scelle` faux), JSON illisible ou de forme inattendue, table différente de celle du
    JSON, console sans exactement une ligne « code N », code de sortie ≠ 0 (autre que 3 et 124, qui relèvent de la garde 2) ;
-2. durée dépassée : code 3 ou 124 à la console, `arret` non nul, une dose incomplète ou manquante ;
-3. graine non dérivée et réglages : texte non scellé ; `mode` ≠ « décisif (graine = empreinte du texte scellé) » ;
-   `entropie_racine` ≠ l'entier de l'empreinte du texte ; `texte.sha256` du manifeste ≠ cette empreinte ; entropie < 2⁶⁴ ;
-   grille ≠ `GRILLE_DOSES_W2G` (dose 0 comprise) ; répétitions ≠ attendues ; processus ≠ attendus ; durée maximale, versions,
-   empreintes des modules, lignes, règle ou nom d'épreuve différents de la section 4 du texte ;
-4. vérité servie : une clé « verite » (accents ignorés) ou « N », à toute profondeur, dans la sortie ou le manifeste ;
+2. durée dépassée et totalité : code 3 ou 124 à la console, `arret` non nul ; les 11 doses de `GRILLE_DOSES_W2G` (0 comprise)
+   présentes dans `resultats`, dans l'ordre, égales au champ `doses` ; chacune `complete`, `repetitions` = attendues sur la dose
+   et sur les quatre lignes (une dose jamais commencée est **absente** de la sortie d'`assembler`, non « incomplète » : M-3) ;
+3. graine non dérivée et réglages (chemins exacts, M-4 ; le manifeste range tout sous `reglages`, le fichier de résultats n'a
+   pas de champ `texte`) : texte non scellé ; `mode` et `reglages.mode` ≠ « décisif (graine = empreinte du texte scellé) » ;
+   `entropie_racine` et `reglages.entropie_racine` ≠ l'entier de l'empreinte du texte ; `reglages.texte.sha256` ≠ cette
+   empreinte ; `reglages.texte.chemin` ≠ le texte lu ; entropie < 2⁶⁴ ; `doses` et `reglages.doses` ≠ la grille ;
+   `repetitions` et `reglages.repetitions` ≠ attendues ; `reglages.processus` ≠ attendus ; `reglages.duree_max_s` ≠
+   `--duree-max-attendue` (fixée par le texte scellé) ; `reglages.python`, `reglages.numpy`, `reglages.modules_sha256`,
+   `reglages.lignes`, `epreuve` différents de la section 4 ; `regle_de_choix` et `reglages.regle_de_choix` ≠ (0,8 ; 0) ;
+   incohérence entre les deux fichiers sur `mode`, `entropie_racine`, `repetitions`, `doses`, `regle_de_choix` ;
+4. vérité servie : une clé dont le **nom** est « verite » (accents et casse ignorés) ou « N » (exact), à toute profondeur, dans
+   l'un des deux fichiers (égalité de nom, jamais sous-chaîne, jamais dans les valeurs) ;
 5. défaut du certificat : à la dose 0, (a) > 0 ou (b) > 0 ; à toute dose, (b) > 0 ;
 6. instrument : une loi du monde refusée par la grammaire servie à une dose ; λ\\* recalculé ≠ λ\\* imprimé par le script ;
-   cœurs lus par ce lecteur (`attaque_goodhart_v2.py`, `attaque_goodhart_v5.py`) d'empreinte différente de la section 4.
+   dose 0 proposée par le script (`choisir_dose` ne l'exclut pas ; le recalcul l'exclut) ; cœurs lus par ce lecteur
+   (`attaque_goodhart_v2.py`, `attaque_goodhart_v5.py`) d'empreinte différente de la section 4.
+Ordre : garde 1 seule (sans elle rien n'est lisible) ; puis les gardes 2, 3 et 4 ensemble (forme et provenance, aucun compte lu :
+tous leurs motifs sont rapportés, la lecture d'arrêt nomme la plus petite) ; puis 5 ; puis 6.
 Des évaluations impossibles ne sont pas un arrêt : comptées, rapportées, « audit écrit requis avant report de λ\\* » (λ\\* inchangé).
 
 Codes de sortie :
@@ -36,7 +46,7 @@ Codes de sortie :
 `--help` rend 0 sans rien lire ni écrire ; le code 1 n'est jamais rendu volontairement (exception non prévue de Python).
 
 Usage : python3 -I -B demonstrations/lecture_epreuve_w2g_dose_v1.py DOSSIER_DE_SORTIE --texte TEXTE_SCELLE --console CONSOLE_SCELLEE
-        --lecture LECTURE_NEUVE.json [--repetitions-attendues 1000] [--processus-attendus 4]
+        --lecture LECTURE_NEUVE.json --duree-max-attendue S [--repetitions-attendues 1000] [--processus-attendus 4]
 """
 
 import argparse
@@ -61,7 +71,6 @@ CODE_USAGE = 4
 
 # --- ce que la section 4 du texte fixe (comparé tel quel) ----------------------------------------------------------------------
 MODE_DECISIF = "décisif (graine = empreinte du texte scellé)"
-DUREE_MAX_S = 6300.0
 PYTHON = "3.13.18"
 NUMPY = "2.5.3"
 LIGNES = ("monde|v9", "recombinaison|v9", "recombinaison|ancien", "monde|v8_information")
@@ -91,11 +100,18 @@ MENTION_EXPLORATOIRE = ("chiffres exploratoires (graine 20261108, texte § 3) : 
 
 
 class GardeRefusee(Exception):
-    """Une garde du texte (§ 6) refuse : arrêt sans λ*. `motifs` : liste de (motif, détail)."""
+    """Une ou plusieurs gardes du texte (§ 6) refusent : arrêt sans λ*. `motifs` : liste de (garde, motif, détail) ;
+    `garde` : la plus petite garde qui refuse."""
 
-    def __init__(self, garde, motifs):
-        self.garde, self.motifs = garde, list(motifs)
-        super().__init__(f"garde {garde} : " + " ; ".join(f"{m} ({d})" for m, d in self.motifs))
+    def __init__(self, motifs):
+        self.motifs = list(motifs)
+        self.garde = min(g for g, _, _ in self.motifs)
+        super().__init__(" ; ".join(f"garde {g} : {m} ({d})" for g, m, d in self.motifs))
+
+
+def _refus(garde, motifs):
+    """(motif, détail)… d'une seule garde → GardeRefusee."""
+    return GardeRefusee([(garde, m, d) for m, d in motifs])
 
 
 class UsageRefuse(Exception):
@@ -183,24 +199,24 @@ def garde_1(dossier, console):
                "table": os.path.join(dossier, FICHIER_TABLE), "console": console}
     absents = [f"{nom} : {p}" for nom, p in chemins.items() if not os.path.isfile(p)]
     if absents:
-        raise GardeRefusee(1, [("sortie_absente", x) for x in absents])
+        raise _refus(1, [("sortie_absente", x) for x in absents])
     non_scelles = [f"{nom} : {p}" for nom, p in chemins.items() if not verifier_scelle(p)]
     if non_scelles:
-        raise GardeRefusee(1, [("compagnon", x) for x in non_scelles])
+        raise _refus(1, [("compagnon", x) for x in non_scelles])
     try:
         rapport, manif = lire_json(chemins["sortie"]), lire_json(chemins["manifeste"])
         code = lire_code_console(console)
         with open(chemins["table"], encoding="utf-8") as f:
             texte_table = f.read()
     except (ValueError, UnicodeDecodeError) as e:
-        raise GardeRefusee(1, [("illisible", str(e))]) from None
+        raise _refus(1, [("illisible", str(e))]) from None
     motifs = verifier_forme(rapport, manif)
     if motifs:
-        raise GardeRefusee(1, motifs)
+        raise _refus(1, motifs)
     if texte_table != rapport["table"] + "\n":
-        raise GardeRefusee(1, [("table", "la table scellée diffère de la table du JSON")])
+        raise _refus(1, [("table", "la table scellée diffère de la table du JSON")])
     if code not in (0, 3, 124):
-        raise GardeRefusee(1, [("code_de_sortie", f"code {code} à la console (attendu 0)")])
+        raise _refus(1, [("code_de_sortie", f"code {code} à la console (attendu 0)")])
     return rapport, manif, code
 
 
@@ -250,7 +266,10 @@ def verifier_forme(rapport, manif):
     return motifs
 
 
-def garde_2(rapport, code):
+def garde_2(rapport, code, repetitions):
+    """Durée et totalité (texte § 6, garde 2, et majeur M-3 de la contre-lecture) : les 11 doses de la grille présentes dans
+    `resultats`, dans l'ordre, chacune `complete` et à `repetitions` attendues sur la dose et sur les quatre lignes (a) à (d).
+    Rend la liste des (motif, détail)."""
     motifs = []
     if code == 3:
         motifs.append(("code_3", "arrêt du script à la durée maximale (code 3 à la console)"))
@@ -258,67 +277,93 @@ def garde_2(rapport, code):
         motifs.append(("delai_externe", "délai externe atteint (code 124 à la console)"))
     if rapport["arret"] is not None:
         motifs.append(("arret", f"« arret » non nul : {rapport['arret']!r}"))
-    if [r["dose"] for r in rapport["resultats"]] != rapport["doses"]:
-        motifs.append(("dose_manquante", "les doses des résultats ne sont pas celles de la sortie, dans l'ordre"))
+    grille = list(a5.GRILLE_DOSES_W2G)
+    presentes = [r["dose"] for r in rapport["resultats"]]
+    if presentes != grille:
+        absentes = [d for d in grille if d not in presentes]
+        en_trop = [d for d in presentes if d not in grille]
+        motifs.append(("dose_absente", f"resultats : {len(presentes)} doses sur {len(grille)} ; absentes {absentes}, "
+                                       f"hors grille {en_trop}, ordre {'conforme' if sorted(presentes) == presentes else 'non trié'}"))
+    if presentes != rapport["doses"]:
+        motifs.append(("dose_manquante", "les doses de « resultats » ne sont pas celles du champ « doses », dans l'ordre"))
     for r in rapport["resultats"]:
-        if r["complete"] is not True or r["repetitions"] != rapport["repetitions"]:
-            motifs.append(("dose_incomplete", f"dose {r['dose']} : complète = {r['complete']}, "
-                                              f"répétitions {r['repetitions']} sur {rapport['repetitions']}"))
-    if motifs:
-        raise GardeRefusee(2, motifs)
+        lignes_n = sorted({x["repetitions"] for x in r["lignes"].values()})
+        if r["complete"] is not True or r["repetitions"] != repetitions or lignes_n != [repetitions]:
+            motifs.append(("dose_incomplete", f"dose {r['dose']} : complete = {r['complete']}, répétitions {r['repetitions']} "
+                                              f"(lignes {lignes_n}) ; attendues {repetitions}"))
+    return motifs
 
 
-def garde_3(rapport, manif, texte, repetitions, processus):
-    """Rend l'empreinte du texte scellé."""
+def _champ(objet, chemin):
+    """Valeur au chemin pointé (« reglages.texte.sha256 ») ou None."""
+    for morceau in chemin.split("."):
+        if not isinstance(objet, dict) or morceau not in objet:
+            return None
+        objet = objet[morceau]
+    return objet
+
+
+def garde_3(rapport, manif, texte, repetitions, processus, duree_max):
+    """Graine dérivée et réglages (texte § 6, garde 3, et majeur M-4) : chemins exacts — manifeste `reglages.*`, fichier de
+    résultats à la racine (il n'a pas de champ `texte`). Rend (liste des (motif, détail), empreinte du texte ou None)."""
     if not os.path.isfile(texte) or not verifier_scelle(texte):
-        raise GardeRefusee(3, [("texte_non_scelle", f"texte scellé exigé (compagnon .sha256 conforme) : {texte}")])
+        return [("texte_non_scelle", f"texte scellé exigé (compagnon .sha256 conforme) : {texte}")], None
     empreinte = sha256_fichier(texte)
     entier = int(empreinte, 16)
-    g = manif["reglages"]
+    m = lambda chemin: _champ(manif, chemin)  # noqa: E731
     motifs = []
-    if rapport["mode"] != MODE_DECISIF or g.get("mode") != MODE_DECISIF:
-        motifs.append(("mode", f"mode {rapport['mode']!r} (manifeste {g.get('mode')!r}), attendu {MODE_DECISIF!r}"))
-    if rapport["entropie_racine"] != str(entier) or g.get("entropie_racine") != str(entier):
-        motifs.append(("entropie", "entropie racine ≠ l'entier gros-boutiste de l'empreinte du texte scellé"))
-    t = g.get("texte")
-    if not isinstance(t, dict) or t.get("sha256") != empreinte:
-        motifs.append(("texte_sha256", f"texte.sha256 du manifeste ≠ empreinte du texte {empreinte[:12]}…"))
+    for champ in ("mode", "entropie_racine", "repetitions", "doses", "regle_de_choix"):
+        if rapport[champ] != m(f"reglages.{champ}"):
+            motifs.append(("incoherence_fichiers", f"« {champ} » du fichier de résultats {rapport[champ]!r} ≠ "
+                                                   f"« reglages.{champ} » du manifeste {m('reglages.' + champ)!r}"))
+    if rapport["mode"] != MODE_DECISIF or m("reglages.mode") != MODE_DECISIF:
+        motifs.append(("mode", f"mode {rapport['mode']!r} (reglages.mode {m('reglages.mode')!r}), attendu {MODE_DECISIF!r}"))
+    if rapport["entropie_racine"] != str(entier) or m("reglages.entropie_racine") != str(entier):
+        motifs.append(("entropie", "entropie_racine (fichier de résultats ou reglages.entropie_racine) ≠ l'entier gros-boutiste "
+                                   "de l'empreinte du texte scellé"))
+    if m("reglages.texte.sha256") != empreinte:
+        motifs.append(("texte_sha256", f"reglages.texte.sha256 {m('reglages.texte.sha256')!r} ≠ empreinte du texte {empreinte[:12]}…"))
+    chemin = m("reglages.texte.chemin")
+    if not isinstance(chemin, str) or os.path.realpath(chemin) != os.path.realpath(texte):
+        motifs.append(("texte_chemin", f"reglages.texte.chemin {chemin!r} ≠ texte lu {os.path.abspath(texte)!r}"))
     try:
         ag.verifier_entropie(int(rapport["entropie_racine"]), decisif=True)
     except (ValueError, TypeError) as e:
         motifs.append(("entropie_sous_2_64", str(e)))
     grille = list(a5.GRILLE_DOSES_W2G)
-    if rapport["doses"] != grille or g.get("doses") != grille:
-        motifs.append(("grille", f"grille {rapport['doses']} (manifeste {g.get('doses')}), attendue {grille}"))
-    if not (rapport["repetitions"] == repetitions == g.get("repetitions")) or not _entier(rapport["repetitions"]):
-        motifs.append(("repetitions", f"répétitions {rapport['repetitions']} (manifeste {g.get('repetitions')}), attendues {repetitions}"))
-    if g.get("processus") != processus or not _entier(g.get("processus")):
-        motifs.append(("processus", f"processus {g.get('processus')}, attendus {processus}"))
-    if not _nombre(g.get("duree_max_s")) or g.get("duree_max_s") != DUREE_MAX_S:
-        motifs.append(("duree_max", f"durée maximale {g.get('duree_max_s')}, attendue {DUREE_MAX_S}"))
-    if g.get("python") != PYTHON or g.get("numpy") != NUMPY:
-        motifs.append(("versions", f"python {g.get('python')}, numpy {g.get('numpy')} ; attendus {PYTHON}, {NUMPY}"))
-    if g.get("modules_sha256") != MODULES_SHA256:
-        m = g.get("modules_sha256") if isinstance(g.get("modules_sha256"), dict) else {}
-        ecarts = sorted(set(MODULES_SHA256) ^ set(m)) + sorted(k for k in set(MODULES_SHA256) & set(m) if m[k] != MODULES_SHA256[k])
-        motifs.append(("modules", f"empreintes des modules différentes de la section 4 : {ecarts}"))
-    if rapport["epreuve"] != EPREUVE or g.get("epreuve") != EPREUVE:
-        motifs.append(("epreuve", f"épreuve {rapport['epreuve']!r} (manifeste {g.get('epreuve')!r}), attendue {EPREUVE!r}"))
-    if g.get("lignes") != list(LIGNES):
-        motifs.append(("lignes", f"lignes du manifeste {g.get('lignes')}, attendues {list(LIGNES)}"))
-    r = rapport["regle_de_choix"]
-    if not isinstance(r, dict) or r != g.get("regle_de_choix") or any(r.get(k) != v for k, v in REGLE_DE_CHOIX.items()):
-        motifs.append(("regle", f"règle de choix {r!r}, attendue {REGLE_DE_CHOIX} (égale au manifeste)"))
-    if motifs:
-        raise GardeRefusee(3, motifs)
-    return empreinte
+    if rapport["doses"] != grille or m("reglages.doses") != grille:
+        motifs.append(("grille", f"doses {rapport['doses']} (reglages.doses {m('reglages.doses')}), attendues {grille}"))
+    if not _entier(rapport["repetitions"]) or not (rapport["repetitions"] == repetitions == m("reglages.repetitions")):
+        motifs.append(("repetitions", f"repetitions {rapport['repetitions']} (reglages.repetitions {m('reglages.repetitions')}), "
+                                      f"attendues {repetitions}"))
+    if not _entier(m("reglages.processus")) or m("reglages.processus") != processus:
+        motifs.append(("processus", f"reglages.processus {m('reglages.processus')}, attendus {processus}"))
+    if not _nombre(m("reglages.duree_max_s")) or m("reglages.duree_max_s") != duree_max:
+        motifs.append(("duree_max", f"reglages.duree_max_s {m('reglages.duree_max_s')}, attendue {duree_max}"))
+    if m("reglages.python") != PYTHON or m("reglages.numpy") != NUMPY:
+        motifs.append(("versions", f"reglages.python {m('reglages.python')}, reglages.numpy {m('reglages.numpy')} ; "
+                                   f"attendus {PYTHON}, {NUMPY}"))
+    modules = m("reglages.modules_sha256")
+    if modules != MODULES_SHA256:
+        mm = modules if isinstance(modules, dict) else {}
+        ecarts = sorted(set(MODULES_SHA256) ^ set(mm)) + sorted(k for k in set(MODULES_SHA256) & set(mm) if mm[k] != MODULES_SHA256[k])
+        motifs.append(("modules", f"reglages.modules_sha256 différent de la section 4 : {ecarts}"))
+    if rapport["epreuve"] != EPREUVE or m("reglages.epreuve") != EPREUVE:
+        motifs.append(("epreuve", f"epreuve {rapport['epreuve']!r} (reglages.epreuve {m('reglages.epreuve')!r}), attendue {EPREUVE!r}"))
+    if m("reglages.lignes") != list(LIGNES):
+        motifs.append(("lignes", f"reglages.lignes {m('reglages.lignes')}, attendues {list(LIGNES)}"))
+    for quoi, r in (("regle_de_choix (fichier de résultats)", rapport["regle_de_choix"]),
+                    ("reglages.regle_de_choix (manifeste)", m("reglages.regle_de_choix"))):
+        if not isinstance(r, dict) or any(k not in r or not _nombre(r[k]) or r[k] != v for k, v in REGLE_DE_CHOIX.items()):
+            motifs.append(("regle", f"{quoi} {r!r}, attendue {REGLE_DE_CHOIX}"))
+    return motifs, empreinte
 
 
 def garde_4(rapport, manif):
-    motifs = [("cle_verite" if k != "N" else "cle_N", f"{quoi} : {chemin}")
-              for quoi, objet in (("sortie", rapport), ("manifeste", manif)) for k, chemin in cles_interdites(objet)]
-    if motifs:
-        raise GardeRefusee(4, motifs)
+    """Égalité du **nom de clé** (« verite », accents et casse ignorés ; « N » exacte), à toute profondeur des deux fichiers ;
+    jamais une recherche de sous-chaîne, jamais dans les valeurs (contre-lecture m-8)."""
+    return [("cle_verite" if k != "N" else "cle_N", f"{quoi} : {chemin}")
+            for quoi, objet in (("epreuve-w2g-dose-v1.json", rapport), ("manifeste.json", manif)) for k, chemin in cles_interdites(objet)]
 
 
 def garde_5(rapport):
@@ -330,7 +375,7 @@ def garde_5(rapport):
         if b > 0:
             motifs.append(("recombinaison_promue", f"dose {r['dose']} : (b) {b} promue(s) (membre du nul v9 promu)"))
     if motifs:
-        raise GardeRefusee(5, motifs)
+        raise _refus(5, motifs)
 
 
 def garde_6(rapport):
@@ -345,10 +390,12 @@ def garde_6(rapport):
                                                 "par la grammaire servie"))
     lam = lambda_recalcule(rapport["resultats"])
     imprime = rapport["dose_proposee_par_la_regle"]
+    if _nombre(imprime) and imprime == 0:
+        motifs.append(("lambda_dose_nulle", "le script propose la dose 0 (`choisir_dose` ne l'exclut pas) : jamais choisissable"))
     if not ((lam is None and imprime is None) or (lam is not None and _nombre(imprime) and imprime == lam)):
         motifs.append(("desaccord_lambda", f"λ* imprimé par le script {imprime!r}, recalculé {lam!r}"))
     if motifs:
-        raise GardeRefusee(6, motifs)
+        raise _refus(6, motifs)
     return lam
 
 
@@ -391,12 +438,14 @@ def table(doses, lam):
     return "\n".join(lignes)
 
 
-def lire(dossier, texte, console, repetitions, processus):
+def lire(dossier, texte, console, repetitions, processus, duree_max):
     """Applique les gardes 1 à 6 dans l'ordre et rend le contenu de la lecture (λ* ou aucune dose). Lève `GardeRefusee`."""
     rapport, manif, code = garde_1(dossier, console)
-    garde_2(rapport, code)
-    empreinte = garde_3(rapport, manif, texte, repetitions, processus)
-    garde_4(rapport, manif)
+    m3, empreinte = garde_3(rapport, manif, texte, repetitions, processus, duree_max)
+    motifs = ([(2, m, d) for m, d in garde_2(rapport, code, repetitions)] + [(3, m, d) for m, d in m3]
+              + [(4, m, d) for m, d in garde_4(rapport, manif)])
+    if motifs:  # gardes 2 à 4 (forme et provenance, aucun compte lu) : tous leurs motifs rapportés ensemble
+        raise GardeRefusee(motifs)
     garde_5(rapport)
     lam = garde_6(rapport)
     doses = par_dose(rapport)
@@ -443,10 +492,14 @@ def principal(argv=None):
     a.add_argument("--lecture", required=True, help="chemin neuf de la lecture JSON (refus s'il existe)")
     a.add_argument("--repetitions-attendues", type=int, default=1000)
     a.add_argument("--processus-attendus", type=int, default=4)
+    a.add_argument("--duree-max-attendue", type=float, required=True,
+                   help="durée maximale (s) fixée par le texte scellé (§ 4), comparée à reglages.duree_max_s ; aucune valeur par défaut")
     try:
         args = a.parse_args(argv)
         if args.repetitions_attendues < 1 or args.processus_attendus < 1:
             raise UsageRefuse("--repetitions-attendues et --processus-attendus : entiers ≥ 1")
+        if not args.duree_max_attendue > 0 or args.duree_max_attendue == float("inf"):
+            raise UsageRefuse("--duree-max-attendue : nombre fini > 0")
         lecture_abs = os.path.abspath(args.lecture)
         if os.path.lexists(lecture_abs) or os.path.lexists(lecture_abs + ".sha256"):
             raise UsageRefuse(f"lecture déjà écrite : {args.lecture} (on n'écrase jamais)")
@@ -459,14 +512,16 @@ def principal(argv=None):
         return CODE_USAGE
     entete = {"lecture": VERSION, "lecteur": {"chemin": os.path.abspath(__file__), "sha256": sha256_fichier(os.path.abspath(__file__))},
               "parametres": {"repetitions_attendues": args.repetitions_attendues, "processus_attendus": args.processus_attendus},
-              "attendu_section_4": {"mode": MODE_DECISIF, "grille": list(a5.GRILLE_DOSES_W2G), "duree_max_s": DUREE_MAX_S,
+              "attendu_section_4": {"mode": MODE_DECISIF, "grille": list(a5.GRILLE_DOSES_W2G), "duree_max_s": args.duree_max_attendue,
                                     "python": PYTHON, "numpy": NUMPY, "modules_sha256": MODULES_SHA256,
                                     "regle_de_choix": dict(REGLE_DE_CHOIX)}}
     try:
-        contenu, code = lire(args.dossier, args.texte, args.console, args.repetitions_attendues, args.processus_attendus)
+        contenu, code = lire(args.dossier, args.texte, args.console, args.repetitions_attendues, args.processus_attendus,
+                             args.duree_max_attendue)
     except GardeRefusee as e:
         refus = dict(entete, statut="arrêt de garde : pas de λ*, aucun chiffre lu pour choisir une dose ; sortie rapportée telle quelle",
-                     code=CODE_GARDE, garde=e.garde, motifs=[{"motif": m, "detail": d} for m, d in e.motifs],
+                     code=CODE_GARDE, garde=e.garde, gardes_refusees=sorted({g for g, _, _ in e.motifs}),
+                     motifs=[{"garde": g, "motif": m, "detail": d} for g, m, d in e.motifs],
                      pieces=pieces(args.dossier, args.texte, args.console))
         print(f"arrêt : {e}", file=sys.stderr)
         try:
