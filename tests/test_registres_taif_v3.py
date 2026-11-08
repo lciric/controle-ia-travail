@@ -592,3 +592,138 @@ def test_total_depenses_cle_sources_et_journal(depot_taif):
     non_sommees = [s for s in sources["signalements"] if s["quoi"].startswith("dépense non sommée")]
     assert [s["ligne"] for s in non_sommees] == [10]
     assert sources["cellules"]["total-depenses-v3"]["global"]["non_sommees"]["lignes"] == [10]
+
+
+# --------------------------------------------------------------------------- v3 : mise en page du texte extrait du PDF envoyé
+def _promis(racine: Path, jour: str = "2026-11-05") -> tuple[dict, str, dict]:
+    sortie = racine / "sortie"
+    resume = rt.construire(racine, sortie, jour)
+    tables, sources = _lire(sortie)
+    return resume, tables["promis-livre-v3.md"], sources
+
+
+def _ids(table: str, prefixe: str) -> list[str]:
+    return [l.split("|")[1].strip() for l in table.splitlines() if l.startswith(f"| {prefixe}")]
+
+
+def test_fichier_texte_numeros_de_ligne_malgre_les_sauts_de_page(depot_taif):
+    # Sain : la ligne « 6. Progress to date » est la 10e du fichier, après un saut de page (« \x0c2. Problem », l. 7) ;
+    # `FichierTexte` cite 10. Artefact : `Fichier` (coupe `splitlines`) la citerait 11, un numéro qui n'existe pas dans le fichier.
+    texte = rt.FichierTexte(depot_taif, CANDIDATURE, scelle=True)
+    assert texte.lignes[9] == "6. Progress to date (phase 0, since 5 October 2026)"
+    assert len(texte.lignes) == len(texte.chemin.read_text(encoding="utf-8").split("\n")) - 1
+    assert rt.Fichier(depot_taif, CANDIDATURE).lignes[10] == "6. Progress to date (phase 0, since 5 October 2026)"
+    titre, lignes = rt.section_texte(texte, 6)
+    assert titre == (10, "6. Progress to date (phase 0, since 5 October 2026)") and lignes[0][0] == 11 and lignes[-1][0] == 17
+    assert rt.section_texte(texte, 2)[0] == (7, "\x0c2. Problem")             # saut de page devant un titre : titre quand même
+    assert rt.section_texte(texte, 4) == (None, [])
+    _, table, sources = _promis(depot_taif)
+    src = sources["cellules"]["promis-livre-v3"]
+    assert src["C6-1"]["promesse"]["lignes"] == [11, 12, 13] and src["C6-1"]["promesse"]["chemin"] == CANDIDATURE
+    assert src["C6-2"]["promesse"]["lignes"] == [14] and src["C6-G0"]["promesse"]["lignes"] == [15, 16]
+    assert src["C7-1"]["promesse"]["lignes"] == [20, 21, 22] and src["C7-2"]["promesse"]["lignes"] == [23, 24]
+    assert src["C8-1"]["promesse"]["lignes"] == [30, 31] and src["C8-2"]["promesse"]["lignes"] == [32]
+    assert src["C8-3"]["promesse"]["lignes"] == [34] and src["C8-4"]["promesse"]["lignes"] == [35, 36]
+    assert src["C8-1"]["date_promise"]["lignes"] == [18, 30, 31]              # titre de la section 7 cité pour la date
+
+
+def test_section6_puces_recollees(depot_taif):
+    # Sain : une puce sur trois lignes (« on a rented » / « H200 … The validation covered » / « bit-identical replay. ») est
+    # une seule promesse ; la ligne « H200 … » commence par une majuscule mais la puce courante ne finit pas par un point :
+    # elle continue la puce. « Compute spent » ouvre une puce (majuscule après « replay. »).
+    _, table, _ = _promis(depot_taif)
+    assert _ids(table, "C6-") == ["C6-1", "C6-2", "C6-G0"]
+    c6_1 = _ligne(table, "| C6-1 ")[2]
+    assert "on a rented H200 (criterion 1 of gate G0), after an inconclusive first version. The validation covered bit-identical replay." in c6_1
+    # Unitaire : la même règle sur des lignes données.
+    items = rt.items_indentes([(1, "     Alpha one"), (2, "     Beta two."), (3, "     gamma three."), (4, "     Delta four"),
+                               (5, "Colonne zéro"), (6, "     Epsilon five."), (7, ""), (8, " 1. Un critère sur"), (9, "    deux lignes."),
+                               (10, " 2. Deux.")])
+    # Règle : « Beta two. » continue « Alpha one » (majuscule, mais la puce ne finit pas par un point) ; « gamma three. »
+    # continue (minuscule) ; « Delta four » ouvre une puce (majuscule après un point) ; la ligne à la colonne 0 clôt la puce ;
+    # « Epsilon » ouvre une puce ; les numérotées ouvrent chacune une puce et la ligne indentée suivante les continue.
+    assert [(i["lignes"], i["texte"]) for i in items] == [
+        ([1, 2, 3], "Alpha one Beta two. gamma three."), ([4], "Delta four"), ([6], "Epsilon five."),
+        ([8, 9], "Un critère sur deux lignes."), ([10], "Deux.")]
+    # Artefact : aucune ligne indentée → aucune puce, pas d'exception.
+    assert rt.items_indentes([(1, "Colonne zéro."), (2, "")]) == []
+
+
+def test_section6_sans_paragraphe_gate_g0_signale(depot_taif):
+    _ecrire(depot_taif, CANDIDATURE, _candidature_texte(gate_g0=False), scelle=True)
+    resume, table, _ = _promis(depot_taif)
+    assert _ids(table, "C6-") == ["C6-1", "C6-2"] and "| C6-G0 " not in table
+    assert [s["quoi"] for s in resume["signalements"] if s["chemin"] == CANDIDATURE] == \
+        ["paragraphe « Gate G0 » absent de la section 6 : aucune ligne C6-G0"]
+
+
+def test_section7_ligne_du_calendrier_coupee_recollee(depot_taif):
+    # Sain : la ligne « 1 » court sur trois lignes physiques (cellule « Work » coupée deux fois), la ligne « 2 » sur deux
+    # (cellule « Gates » coupée) ; chacune donne une seule ligne C7, cellules recollées par un espace, période telle que le texte.
+    _, table, sources = _promis(depot_taif)
+    assert _ids(table, "C7-") == ["C7-1", "C7-2"]
+    c7_1 = _ligne(table, "| C7-1 ")
+    assert c7_1[2] == ("Close G0. Paper C: deference of judges under the five attack families (HC1). Paper A: organisms and "
+                       "dose–response → G0")
+    assert c7_1[3] == "mois 1 (Nov 2026)"
+    c7_2 = _ligne(table, "| C7-2 ")
+    assert c7_2[2] == "Paper C: impersonation (HC3) → Paper C on arXiv and at a workshop; GC" and c7_2[3] == "mois 2 (Jan 2027)"
+    assert sources["cellules"]["promis-livre-v3"]["C7-2"]["etat"]["lignes"] == [23, 24]
+    # Unitaire : une cellule décalée de deux colonnes au plus va à la bonne colonne (tolérance) ; une ligne vide finit la table.
+    rangs, erreur = rt.table_alignee([(1, _rang("Months", "Period", "Work", "Gates and outputs")),
+                                      (2, _rang("5–6", "Apr–May 2027", "Paper A: adaptive attacks", "Paper A on arXiv;")),
+                                      (3, "  " + _rang("", "", "learning against the probe", "submission")[2:]),
+                                      (4, ""), (5, _rang("7", "Jun 2027", "Après la table : ignoré", "Final report"))])
+    assert erreur == "" and len(rangs) == 1
+    assert rangs[0] == {"lignes": [2, 3], "cellules": ["5–6", "Apr–May 2027", "Paper A: adaptive attacks learning against the probe",
+                                                       "Paper A on arXiv; submission"]}
+
+
+def test_section7_sans_entete_signalee_sans_exception(depot_taif):
+    # Artefact : la ligne « Months … Period … Work … » manque → aucune ligne C7, un signalement, le reste de la table est rendu.
+    _ecrire(depot_taif, CANDIDATURE, _candidature_texte(entete7=False), scelle=True)
+    resume, table, _ = _promis(depot_taif)
+    assert _ids(table, "C7-") == [] and _ids(table, "C8-") == ["C8-1", "C8-2", "C8-3", "C8-4"]
+    assert resume["comptes"]["promis-livre-v3"] == 12
+    signales = [s for s in resume["signalements"] if s["chemin"] == CANDIDATURE]
+    assert [s["quoi"] for s in signales] == ["table de la section 7 illisible (en-tête « Months … Period … Work … » absent) : aucune ligne C7"]
+    assert signales[0]["ligne"] == 18 and signales[0]["texte"].startswith("7. Timeline")
+    # Unitaire : sans en-tête, ([], raison) ; en-tête sans ligne de calendrier : ([], raison), jamais une exception.
+    assert rt.table_alignee([(1, " 1          Dec 2026           Close G0      G0")]) == ([], "en-tête « Months … Period … Work … » absent")
+    assert rt.table_alignee([(1, _rang("Months", "Period", "Work", "Gates and outputs")), (2, "")]) == ([], "aucune ligne de calendrier sous l'en-tête")
+
+
+@pytest.mark.parametrize("absente, restantes, quoi", [
+    (6, ["C7-1", "C7-2", "C8-1", "C8-2", "C8-3", "C8-4"], "section 6 « Progress to date » absente de la candidature : aucune ligne C6"),
+    (7, ["C6-1", "C6-2", "C6-G0", "C8-1", "C8-2", "C8-3", "C8-4"], "section 7 « Timeline » absente de la candidature : aucune ligne C7"),
+    (8, ["C6-1", "C6-2", "C6-G0", "C7-1", "C7-2"], "section 8 « Deliverables and success criteria » absente de la candidature : aucune ligne C8"),
+])
+def test_section_absente_aucune_ligne_et_signalement(depot_taif, absente, restantes, quoi):
+    # Artefact : une section manque → aucune ligne pour elle, un signalement (`signalements` de `sources-v3.json`), pas d'exception ;
+    # les autres sections et les critères de G0 sont rendus. Sans section 7, la date promise des lignes C8 reste vide (sans source).
+    _ecrire(depot_taif, CANDIDATURE, _candidature_texte(sections=tuple(s for s in (6, 7, 8) if s != absente)), scelle=True)
+    resume, table, sources = _promis(depot_taif)
+    assert _ids(table, "C") == restantes and _ids(table, "G0-") == ["G0-1", "G0-2", "G0-3", "G0-4", "G0-5"]
+    signales = [s for s in sources["signalements"] if s["chemin"] == CANDIDATURE]
+    assert [s["quoi"] for s in signales] == [quoi] and signales[0]["ligne"] == 0 and signales[0]["sha256"] == rt.empreinte(depot_taif / CANDIDATURE)
+    if absente == 7:
+        assert _ligne(table, "| C8-1 ")[3] == "" and "date_promise" not in sources["cellules"]["promis-livre-v3"]["C8-1"]
+
+
+def test_section8_livrables_puis_criteres_numerotes(depot_taif):
+    # Sain : deux livrables (puces sans glyphe, la première sur deux lignes, la seconde derrière un saut de page) puis deux
+    # critères numérotés « 1. », « 2. » (le second coupé sur deux lignes) ; les étiquettes « Deliverables. » et « Success. » ne
+    # sont pas des puces ; identifiants C8-1 à C8-4 dans l'ordre du texte.
+    _, table, _ = _promis(depot_taif)
+    assert _ids(table, "C8-") == ["C8-1", "C8-2", "C8-3", "C8-4"]
+    assert _ligne(table, "| C8-1 ")[2] == ("Two papers: C (arXiv and a workshop by month 4) and A (arXiv and a conference submission "
+                                            "by month 7). Paper B in the ambitious scenario.")
+    assert _ligne(table, "| C8-2 ")[2] == "Model organisms and probes."
+    assert _ligne(table, "| C8-3 ")[2] == "The deference law and the displacement tax are measured (Paper C)."
+    assert _ligne(table, "| C8-4 ")[2] == ("The lemma and the negative theorem are proven and tested on real activations within the 2 × 2 "
+                                            "design (Paper A).")
+    assert "Deliverables." not in [l.split("|")[3].strip() for l in table.splitlines() if l.startswith("| C8-")]
+    # Artefact : un critère numéroté suivi d'une ligne indentée en majuscule après un point ouvre une puce nouvelle (règle écrite) :
+    # un lecteur qui coupe une phrase après un point et reprend par une majuscule verrait deux puces ; la règle le dit.
+    items = rt.items_indentes([(1, " 1. Un critère fini."), (2, "    Suite en majuscule après un point.")])
+    assert [i["texte"] for i in items] == ["Un critère fini.", "Suite en majuscule après un point."]
