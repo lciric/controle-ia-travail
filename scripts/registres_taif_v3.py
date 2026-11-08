@@ -753,7 +753,7 @@ def etat_periode(periode: str, jour: str) -> str:
 
 # Mise en page du texte extrait du PDF envoyé (`pdftotext -layout`) : titres « N. Titre » à la colonne 0, puces sans glyphe,
 # table du calendrier à colonnes alignées par espaces (v3).
-_TITRE_SECTION_TEXTE = re.compile(r"^(\d{1,2})\. \S")
+_TITRE_SECTION_TEXTE = re.compile(r"^\x0c?(\d{1,2})\. \S")        # un saut de page (« \x0c ») peut précéder un titre
 _ITEM_NUMEROTE = re.compile(r"^\s+(\d+)\.\s+(\S.*)$")
 _FIN_DE_PHRASE = re.compile(r"[.!?]\s*$")
 _LIGNE_INDENTEE = re.compile(r"^\s+(\S.*)$")
@@ -821,6 +821,7 @@ def paragraphe_colonne_0(lignes: list[tuple[int, str]], debut: str) -> tuple[lis
     """Paragraphe à la colonne 0 qui commence par `debut` : ses lignes consécutives non vides, recollées par un espace."""
     nos, textes = [], []
     for no, l in lignes:
+        l = l.lstrip("\x0c")                                  # un saut de page devant la ligne ne l'indente pas
         if not nos:
             if l.startswith(debut):
                 nos.append(no)
@@ -857,6 +858,7 @@ def table_alignee(lignes: list[tuple[int, str]]) -> tuple[list[dict], str]:
     for no, l in lignes:
         if no <= entete[0]:
             continue
+        l = l.replace("\x0c", " ")                            # un saut de page garde la position des colonnes
         c = cellules(l)
         if c[0] and c[0][0].isdigit():
             courante = {"lignes": [no], "cellules": c}
