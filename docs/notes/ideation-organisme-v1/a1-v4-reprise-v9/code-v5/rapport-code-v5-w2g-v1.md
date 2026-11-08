@@ -56,20 +56,32 @@ Décision de nommage (routine) : le monde W2g vit **dans le cœur v5** (`pole/at
 
 ## 5. Épreuve hors ligne « W2 gradué » : résultat exploratoire et λ\* imprimé
 
-Script `demonstrations/epreuve_w2g_dose_v1.py` ; course jouée ici : `--graine 20261108 --repetitions 1000 --processus 2` (grille gelée des 11 doses), **mode exploratoire** (graine < 2⁶⁴) ; `<<DUREE_EPREUVE>>` sur 2 processus, en parallèle d'autres travaux (le devis de 29 à 58 min de la note W2 tenait pour 7 lignes ; ici 11 doses × 4 évaluations). Par répétition r (carte neuve, la même à toutes les doses : plan apparié en λ), quatre évaluations à tirages frais par le juge de la course : (a) la **loi du monde** sous v9 (borne haute d'un attaquant qui la connaît ; la loi est dans la grammaire servie, vérifié à chaque répétition) ; (b) la **recombinaison pure** sous v9 (membre : 0 attendu, certificat) ; (c) la recombinaison pure sous v8 (dents, P10) ; (d) la loi du monde sous v8 (information).
+Script `demonstrations/epreuve_w2g_dose_v1.py`, **mode exploratoire** (graine `20261108` < 2⁶⁴), 2 processus, `nice -n 10`. **Incident** : une première course sur la grille gelée entière (11 doses × 1 000, lancée à 17:19 UTC) a été **coupée par `timeout 3600` à 18:17 UTC (code 124), sans aucune sortie** : la durée maximale par défaut du script (7 200 s) dépassait le délai externe — erreur de ce développeur ; rien n'en a été lu (aucune ligne écrite). Correction : `DUREE_MAX_S = 3300` (arrêt propre avant le délai, doses complètes gardées), essais et mutations rejoués après. Vitesse mesurée par un pilote (doses 0,10 et 0,50, 50 répétitions, graine 5 : 63,6 s, soit 0,64 s par répétition sur 2 processus ; **sa table a été vue avant de choisir la grille réduite** : (a) 5/50 à 0,10, 43/50 à 0,50) : la grille entière demande ≈ 2 h. **Grille réduite** (dite, R4) : doses **0,30 ; 0,40 ; 0,50 ; 0,75** à 1 000 répétitions (18:19 à 19:13 UTC, 3 219 s), puis la dose **0** à 200 répétitions (193 s) ; doses 0,05 à 0,25 et 1,00 non jouées. Le choix des quatre doses a été fait **après** le pilote, autour de la région où le pilote plaçait le seuil : c'est un choix informé, à lire comme tel (la course décisive, si elle est rejouée, prend la grille gelée entière ou une grille fixée par son texte avant tout regard). Par répétition r (carte neuve, la même à toutes les doses : plan apparié en λ), quatre évaluations à tirages frais par le juge de la course : (a) la **loi du monde** sous v9 (borne haute d'un attaquant qui la connaît ; la loi est dans la grammaire servie, vérifié à chaque répétition) ; (b) la **recombinaison pure** sous v9 (membre : 0 attendu, certificat) ; (c) la recombinaison pure sous v8 (dents, P10) ; (d) la loi du monde sous v8 (information).
 
 ```
-<<TABLE_EPREUVE>>
+dose λ | écart KL moyen | (a) monde sous v9 : promues/n, taux, CP95 | (b) recombinaison sous v9 : promues/n | (c) recombinaison sous v8 : taux | (d) monde sous v8 : taux | log W méd. (a) | éval. impossibles | complète
+0.30 | 0.112479 | 641/1000, 0.641, [0.615 ; 0.666] | 0/1000 | 0.762 | 0.992 | 4.6541 | 0 | oui
+0.40 | 0.169507 | 809/1000, 0.809, [0.787 ; 0.829] | 0/1000 | 0.621 | 0.990 | 8.1143 | 0 | oui
+0.50 | 0.233694 | 890/1000, 0.890, [0.872 ; 0.906] | 0/1000 | 0.499 | 0.992 | 11.5757 | 0 | oui
+0.75 | 0.425176 | 965/1000, 0.965, [0.954 ; 0.974] | 0/1000 | 0.311 | 0.997 | 24.0481 | 0 | oui
+règle du texte (§ 4) appliquée — plus petite dose avec (a) ≥ 0.8 et (b) = 0 : λ* = 0.4 — PROPOSITION IMPRIMÉE, PAS DÉCIDÉE : la mère et le contre-lecteur décident (marqueur <<DOSE_LAMBDA>>)
+(course séparée, 200 répétitions)
+0.00 | 0.0 | 0/200, 0.000, [0.000 ; 0.015] | 0/200 | 1.000 | 1.000 | -0.0 | 0 | oui
 ```
 
-**Lecture (descriptive, non décisive).** `<<LECTURE_EPREUVE>>`
+Sorties : `epreuve-w2g-dose-v1-exploratoire-doses-030-075.json` (`c85e59b3594050e6c7ce162721e42c19b55d890acd752ef39b268617b279b2b9`), `epreuve-w2g-dose-v1-exploratoire-dose-000.json` (`a4821262e5b9507d4275c81050af2034b3f9bdb0364b97513d30bdf2cb56748e`), sceaux vérifiés dans leurs dossiers d'origine ; les manifestes y consignent les empreintes du code exécuté (`epreuve_w2g_dose_v1.py` `c691a43d…`, `attaque_goodhart_v5.py` `8692746a…`, égales aux fichiers livrés). Aucune évaluation impossible ; la loi du monde est dans la grammaire servie à toutes les répétitions (0 refus).
 
-**Règle de choix du brouillon 3 (§ 4) appliquée par le script et imprimée** : plus petite dose de la grille où (a) ≥ 0,80 et (b) = 0 → **λ\* = `<<LAMBDA>>`**. **Ce chiffre n'est pas décidé** : il remplit le marqueur `<<DOSE_LAMBDA>>` seulement si la mère et le contre-lecteur le retiennent (annexe B, point 5), ou Lazar en décide.
+**Lecture (descriptive, non décisive).** (i) À dose nulle, W2 reste fermé sous v9 : 0/200 pour la loi du monde comme pour la recombinaison (Clopper-Pearson haut 0,015), et promu 200/200 sous v8 (le trou du v8). (ii) La recombinaison pure n'est **jamais** promue sous v9 : 0 sur 4 200 (certificat ; log W médian de −1,6 à −6,2). (iii) La puissance du v9 sur la loi du monde croît avec la dose : 0,641 (λ = 0,30) ; 0,809 (0,40) ; 0,890 (0,50) ; 0,965 (0,75) ; sous v8, la même loi est promue à 0,990–0,997 à toutes ces doses : **prix apparié de la fermeture à la frontière** d'environ 0,35 à 0,30, 0,18 à 0,40, 0,10 à 0,50, 0,03 à 0,75 (différences de taux, information, pas une mesure appariée par répétition). (iv) Sous v8, la recombinaison pure reste promue à 0,762 (0,30) … 0,311 (0,75) : la prédiction P10 du texte (taux(v8, témoin, 1) ≥ 0,50) est **à la limite à λ = 0,50** (0,499 ici, pour la recombinaison soumise une fois) et fausse au-delà ; à λ = 0,40, 0,621.
+
+**Règle de choix du brouillon 3 (§ 4) appliquée par le script et imprimée** : plus petite dose de la grille où (a) ≥ 0,80 et (b) = 0 → **λ\* = 0,40** (sur la grille réduite : 0,30 manque le seuil, 0,40 le passe à 0,809 ; borne basse de Clopper-Pearson 0,787 **sous** 0,80 : à ce nombre de répétitions, 0,40 et une dose juste au-dessus ne se distinguent pas ; 0,05 à 0,25 n'ont pas été jouées mais le pilote et la monotonie en λ les placent sous 0,641). **Ce chiffre n'est pas décidé** : il remplit le marqueur `<<DOSE_LAMBDA>>` seulement si la mère et le contre-lecteur le retiennent (annexe B, point 5), ou Lazar en décide.
 
 ## 6. Réserves
 
 1. **R1 (ordre du brouillon 3, § 13 point 2)** : le texte prévoit un **texte court scellé** pour l'épreuve avant de la jouer ; la mission a demandé la mesure maintenant. La course ci-dessus est donc **exploratoire** (graine exploratoire, aucun texte scellé) : elle éprouve le script et donne un λ\* **indicatif**. Si la mère tient l'ordre du brouillon, la course décisive se rejoue sous le texte scellé par `--entropie-texte CHEMIN_SCELLE` (graine = empreinte ; mode décisif du script, gardé par `verifier_scelle`) ; son λ\* seul remplit `<<DOSE_LAMBDA>>`. Les prédictions P7 à P11 du brouillon 3 étant signées **avant** cette course, elles ne sont pas contaminées ; ce rédacteur n'a écrit aucun seuil de lecture après l'avoir vue (les critères 2′ à 5′ et P7 à P11 viennent du brouillon 3, codés tels quels avant le lancement de l'épreuve, à 17:19 UTC).
-2. **(b) est nul par certificat** à toute dose (la recombinaison pure est un membre du v9 : log W ≤ 0 par construction) : la condition « (b) = 0 » de la règle est une vérification du code, pas une mesure ; 0 sur 11 000 observé.
+2. **(b) est nul par certificat** à toute dose (la recombinaison pure est un membre du v9 : log W ≤ 0 par construction) : la condition « (b) = 0 » de la règle est une vérification du code, pas une mesure ; 0 sur 4 200 observé.
+2 bis. **λ\* = 0,40 est à la limite de la règle** (0,809 contre 0,80, intervalle à 95 % [0,787 ; 0,829]) : une course décisive sous une autre graine peut rendre 0,50. **Recommandation à la mère et au contre-lecteur** (confiance moyenne, 0,6) : si l'on veut que P7 (≥ 12/24 sous attaque) se lise avec une marge sur ce que voit l'oracle, préférer une règle sur la **borne basse** (≥ 0,80) — elle donnerait 0,50 ici (0,872) — ou écrire la règle telle quelle et accepter 0,40 ; dans les deux cas, noter que P10 tombe sous 0,50 dès λ = 0,50 (sous v8, la recombinaison soumise une fois perd sa promotion quand la loi neuve pèse plus) : P10 et une règle « borne basse » sont en tension, à trancher au texte, pas ici.
+2 ter. **Grille réduite et choix informé** (section 5) : la règle a été appliquée sur 4 doses (plus 0), choisies après un pilote vu ; la dose 0,35 n'existe pas dans la grille gelée, la grille gelée ne contient pas de dose entre 0,30 et 0,40.
+2 quater. **Incident de délai** (section 5) : la première course est perdue sans lecture ; 58 minutes de processeur, 0 dollar.
 3. L'écart rapporté **majore** la distance à la classe du v9 (section 2) ; la distance exacte à la classe demanderait une optimisation sur les membres par morceaux, non faite.
 4. Le lanceur gelé v5 **ne vérifie pas `go_machine` contre le registre** (format et distinction de `go` seulement) : conforme au texte § 4 (vérification par le lanceur durable v5) ; si la mère veut la double vérification au lanceur gelé, c'est un changement de code (v6, R12) et de texte.
 5. **Sorties scellées** : les scripts écrivent leurs compagnons `.sha256` dans leur dossier de sortie (convention du dépôt) ; aucun n'a été recopié ici (interdit de la mission) ; les empreintes des sorties sont relevées par `sha256sum` à la section 8.
@@ -86,12 +98,36 @@ Script `demonstrations/epreuve_w2g_dose_v1.py` ; course jouée ici : `--graine 2
 7. **§ 7, vérification de W2g hors du nul** : l'épreuve donne (a) par dose ; l'auditeur refait sur les 24 cartes de la course la ligne (a) à λ\* (200 tirages frais ; « ≥ 80 % » est à lire sur les répétitions de l'épreuve, pas sur une seule carte : à préciser).
 8. **§ 8, gardes neuves du code v5** (à lister au brouillon 4) : `verifier_dose` (bornes, type), `carte_w2g` (entropie absente, carte négative, dose absente), `carte` (W2 avec dose, W2g sans dose, monde inconnu), `monde_w2g` (N manquante), `verifier_verite_non_servie` (forme de la description, fragments de N, clé « verite »), `nul_du_juge` (W1 refusé), `verifier_plan` (dose absente, nulle, hors grille, sans W2g), `_dose_de` / `_rejouer_loi` (suite de W2g sans dose), `lire_monde_w2g` (monde ≠ W2g, doses mêlées), lanceur : `go_machine` (format, ≠ go), `dose_w2g` exigée et numérique, nom v5, fermeture v4 + 2, `--dose-w2g` refusée en réel ; 31 mutations.
 9. **§ 11** : `FICHIERS_GELES` v5 = 79 fichiers (77 + 2) ; empreintes des fichiers v5 (section 1) ; `<<EMPREINTES_AU_COMMIT>>` à calculer sur `<<COMMIT_CODE_V5>>` par la commande de B2v4 l. 405 avec le module `demonstrations/attaque_goodhart_v5.py`.
-10. **§ 12 et § 13 point 2** : l'épreuve compte 11 doses × 1 000 répétitions × 4 évaluations (44 000 au lieu de « 7 lignes × 1 000 ») ; durée mesurée `<<DUREE_EPREUVE>>` sur 2 processus ; grille et règle écrites dans le texte court de l'épreuve ; graine décisive = empreinte du texte court scellé (`--entropie-texte`).
+10. **§ 12 et § 13 point 2** : l'épreuve compte 4 évaluations par répétition (≈ 0,64 s par répétition sur 2 processus, mesuré) ; la grille gelée entière (11 doses × 1 000) demande ≈ 2 h sur 2 cœurs, pas 30 à 60 min ; 4 doses × 1 000 tiennent en 54 min ; le texte court doit fixer la grille avant tout regard et une durée maximale sous le délai externe (`--duree-max-s`) ; grille et règle écrites dans le texte court de l'épreuve ; graine décisive = empreinte du texte court scellé (`--entropie-texte`).
 11. **§ 0.6** : « W2g à λ\* > 0 n'est plus membre du v9 ni du v8 » : vrai par la forme (non couverte) ; la **loi du monde** est promue sous v8 à toute dose (ligne (d)) ; sous v9 selon la table.
-12. **Marqueurs** : `<<COMMIT_CODE_V5>>` = le commit privé qui porte `code-v5/` **et**, pour le dépôt public, le commit où le patch sera appliqué (deux commits distincts : écrire les deux, le public reste un nœud de Lazar) ; `<<DOSE_LAMBDA>>` = la dose retenue par la mère et le contre-lecteur (proposition imprimée : `<<LAMBDA>>`) ; `<<EMPREINTES_AU_COMMIT>>` et `<<CASE_CONFIGURATION>>` : inchangés, à la mère.
+12. **Marqueurs** : `<<COMMIT_CODE_V5>>` = le commit privé qui porte `code-v5/` **et**, pour le dépôt public, le commit où le patch sera appliqué (deux commits distincts : écrire les deux, le public reste un nœud de Lazar) ; `<<DOSE_LAMBDA>>` = la dose retenue par la mère et le contre-lecteur (proposition imprimée, exploratoire : 0,40 ; voir réserve 2 bis) ; `<<EMPREINTES_AU_COMMIT>>` et `<<CASE_CONFIGURATION>>` : inchangés, à la mère.
 
 ## 8. Empreintes et comptes relevés (`sha256sum`, `date -u`)
 
 ```
-<<SHA256SUMS>>
+relevé le 2026-11-08 19:19 UTC, dossier code-v5/ :
+30b5736fba7d3e13f65ff7562474ede92caf47ef6bf5e7b7822bf0e9193569af  epreuve-w2g-dose-v1-exploratoire-dose-000-table.txt
+a4821262e5b9507d4275c81050af2034b3f9bdb0364b97513d30bdf2cb56748e  epreuve-w2g-dose-v1-exploratoire-dose-000.json
+91b06e77b36bdadaaf84d9b302bda859e486710073a9f675323f2808e017fe96  epreuve-w2g-dose-v1-exploratoire-doses-030-075-table.txt
+c85e59b3594050e6c7ce162721e42c19b55d890acd752ef39b268617b279b2b9  epreuve-w2g-dose-v1-exploratoire-doses-030-075.json
+30c09d3392e5b6e8ab509f790574cc11c77a3162d494ea1659e51f11f7efb2a2  epreuve-w2g-dose-v1-pilote-vitesse-table.txt
+85506f1cb51ab373e1e92fa3e8fe84b0fdaa8019c1a0da4d7698c99dbcca15c7  epreuve-w2g-dose-v1-sortie-console.txt
+a071c7ecd8ba52db8d029a8a704dc935f007360f67daf0b95d675b3b162efac4  essais-et-mutations-v4-rejoues.txt
+e78f1358ee28ce8735f7272674291e4458242782948994ec733a4fe105487a00  essais-v5-sortie.txt
+116df6c01b80fbfa4f9d593272c6ad237dd0f83725ff5170c6e1814ca5c1637b  mutations-v5-sortie.txt
+e2caeca1e19209a3a10fd418ec4632c70096ef6e8f42ed2caa6782a412fa93d0  orchestrator/demonstrations/attaque_goodhart_v5.py
+c691a43d9905e91a0ba91ddfef785e53a091768fa7dcd3007f03066aeef10dda  orchestrator/demonstrations/epreuve_w2g_dose_v1.py
+cac2c63119452ef78a329f699ddd3da5607d0032ae929c1f881ce456668963d0  orchestrator/essais/mutations_attaque_goodhart_v5.py
+4c3303c580d3743a6f0553e47cd09d51f9536e7cccb7b9b091b84fa4997e207c  orchestrator/essais/test_attaque_goodhart_v5.py
+8692746a1b02b15465062423d1f05e2084ce1d1861c979316ce1a5ef4384ba15  orchestrator/pole/attaque_goodhart_v5.py
+12c39347e47fec599da21ef00f8d0534b661d2dd982b7f8c7ca9ac2169a660d2  patch-public-code-v5.diff
+dépôt public /home/user/ideation-organism (commit 8947bc80a5c2fee0cfee4f3cafbdaaca8ed77f3e, arbre propre, non modifié), fichiers v4 et juge :
+0077a6470781b8cd9e0599232ddd52e3601c8c4c8735a5cfcf817800bda3bb5c  pole/attaque_goodhart_v4.py
+6357c0f55a55fdf73969d7f1f6a15fad99fb4566b6c7b541b8cc1cbee329f5ec  demonstrations/attaque_goodhart_v4.py
+350423da81e1f49eb251a72c8a0ca69c350cab8298b8f59b5c10c75bf3739cd6  essais/test_attaque_goodhart_v4.py
+2dd378f6e83c1e5f0a4079e615b132763a13cd3d1fed028249747d806b87c6db  essais/mutations_attaque_goodhart_v4.py
+7ae450df2482246122bf9fbcf0fa5ef30b4a7e4c6f0d09531e83af048e46ee95  pole/nul_v9.py
+7e4bff5995df2a7d62a4f5a2f5f9176da614e657a55b05183325fa2fc6e24e44  demonstrations/banc_tricheurs_v9.py
+359928110d757cd54cc0d2773910c7360895b68cac5d17e0e4b4e9933ef306bc  pole/selection_pari.py
+comptes : essais v5 30/30 ; mutations v5 31/31 tuées ; essais v4 27/27 ; mutations v4 33/33 tuées ; patch : git apply --check propre sur 8947bc8 ; FICHIERS_GELES v5 = 79
 ```
