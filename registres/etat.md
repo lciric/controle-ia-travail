@@ -379,3 +379,8 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 
 ## 8 novembre, 07:15 UTC — arrêt de la session mère (R-1764)
 - Passation finale : `registres/passations/2026-11-08-0715.md` (complète celle de 06:14 et le brief). Prochaine action inchangée : lecture principale de l'étiqueteur. Ensuite : contre-lecture de la chaîne de la course (consigne prête, `dcb21799…`), E3 bis, organisme v65 (travail inachevé `c2c39794`).
+
+## 8 novembre, 07:23 UTC — reprise par la nouvelle session mère, autre compte (R-1765)
+- **Étiqueteur** : tout est prêt sauf les clés ; 1.5 puis 4.2 attendent les variables du brief sur ce compte et le feu vert écrit de Lazar pour la dépense.
+- **En vol** : contre-lecture de la chaîne de la course de T0.6 (sous-agent neuf) ; code v65 de l'organisme (développeur neuf, repris de `c2c39794`) ; E3 bis (fille 6, ancien compte ; suite ciblée 1 878 passés ; run depuis 06:58:22Z ; garde de dépense vers 08:28Z).
+- **Instances** : 59671807 (E3 bis, fille 6) ; 58936096, 58936099, 58936100 jamais touchées ; inventaire impossible d'ici sans clé Vast.
