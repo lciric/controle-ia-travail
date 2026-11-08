@@ -44,7 +44,7 @@ Compte : **0 bloquant, 3 majeurs, 9 mineurs.**
 
 - **La règle écrite est sans effet de bord**, dans toutes les branches que le texte nomme : lignes exigées absentes, en
   double, mal formées, postérieures, sceau faux (l. 910-922, 1110-1116, 1317-1327) ; `lecture-cout-t06.json` absent ou sans
-  table A (l. 914, 1327-1329, 1376-1377) ; fichier d'audit illisible ou `consigne` différente de la ligne (l. 1027-1028,
+  table A (l. 914, 1325-1327, 1376-1377) ; fichier d'audit illisible ou `consigne` différente de la ligne (l. 1027-1028,
   1343) ; clé du registre refusée par la règle M-2 (l. 1119-1121). Dans chacune, « rien d'écrit » ne laisse que la ligne du
   journal `<registre>.ouvertures.md` (l. 1543-1546), qui n'est pas un résultat rattaché au manifeste. Le module confirme la
   faisabilité : à l'étape B, aucun manifeste neuf n'est créé (`etape_b` l. 636-637 lit celui de l'étape A), et toute
@@ -54,7 +54,7 @@ Compte : **0 bloquant, 3 majeurs, 9 mineurs.**
   (`lire_fuites`) ; le texte le déclare (« défait le marqueur 1 du module ») mais pas pour la table A ni le fichier d'audit
   (constat m-04).
 - **Une branche manque dans la garde écrite (M-A)** : « `diag/<run-t07>/lecture-t07.json` déjà présent ». Le texte dit « une
-  tentative après lui → refus » (l. 1551) et le script modélise ce refus dans la garde (`garde_etape_b`, `lecture_deja_ecrite`),
+  tentative après lui → refus » (l. 1551, l. 1498) et le script modélise ce refus dans la garde (`garde_etape_b`, `lecture_deja_ecrite`),
   mais aucune des trois listes de la garde (l. 910-922, 1110-1116, 1317-1327) ne le porte. Sans cette ligne, le module tel
   qu'il est ouvrirait les scores (journal « OUVERTURE »), lirait, puis échouerait à `ecrire_resultat` (`manifeste.py` l. 134-135)
   → `GardeArret` → `arret-etape-b.json` **écrit et scellé**, code 3 : un fichier d'arrêt rattaché au manifeste d'un run qui porte
@@ -152,13 +152,13 @@ même faute donne « ligne manquante → refus » ; pour une clé permise sans e
 `CODE-T07` quand DS-3 bis n'est pas accordée), elle est sans effet. La seule famille concernée est donc `SCELLEMENT-JEUX-T07-JD`,
 `-JC`, `-JA` (`sondes_lues`, repli des jeux, l. 1266, 1312). La règle actuelle, elle, refuserait `SCELLEMENT-T06`, `SCORES-T08`,
 `SCELLEMENT-T08` : j'ai vérifié que le candidat 12 r2 de T0.6 n'écrit **aucune** clé de registre (il ne cite que
-`SCELLEMENT-T07` et `SCELLEMENT-P3BIS`, lues par son script), donc rien ne casse aujourd'hui ; mais T0.8 n'est pas écrit, et la
+`SCELLEMENT-T07` et `SCELLEMENT-P3BIS`, lues par son script, l. 334), donc rien ne casse aujourd'hui ; mais T0.8 n'est pas écrit, et la
 règle large mettrait T0.7 à la merci d'un nom choisi ailleurs. Restreindre est le bon sens.
 
 **Comment l'écrire** (liste explicite, jamais « et analogues » dans le texte scellé) :
-- l. 1299-1301 (règle (3)) : « **sauf si son nom, marque retirée, égale `SCELLEMENT-JEUX-JD`, `SCELLEMENT-JEUX-JC` ou
+- l. 1298-1301 (règle (3)) : « **sauf si son nom, marque retirée, égale `SCELLEMENT-JEUX-JD`, `SCELLEMENT-JEUX-JC` ou
   `SCELLEMENT-JEUX-JA`** (forme sans marque des seules clés de T0.7 dont la présence fixe une lecture : `sondes_lues` et repli
-  des jeux) → refus » ; retirer la « conséquence déclarée » (l. 1302-1305 : `SCELLEMENT-T08`, `SCORES-T08`, `SCELLEMENT-T06`…
+  des jeux) → refus » ; retirer la « conséquence déclarée » (l. 1303-1306 : `SCELLEMENT-T08`, `SCORES-T08`, `SCELLEMENT-T06`…
   ne font plus refuser) et la remplacer par « une clé d'une autre tâche bâtie sur le patron `SCELLEMENT-JEUX-<marque>-*` fait
   refuser ; la Concordance demande à T0.8 de ne pas l'employer » ;
 - l. 1119-1121 (Liste d'arrêt) : même restriction ;
@@ -167,7 +167,7 @@ règle large mettrait T0.7 à la merci d'un nom choisi ailleurs. Restreindre est
 - l. 1658-1661 (Concordance (2)) : « aucune de leurs clés n'a la forme `SCELLEMENT-JEUX-<marque>-JD|JC|JA` » à la place de
   « marque retirée, n'égale une clé de T0.7 » ;
 - l. 1310 et l. 2072 (marqueur) : « ni ne tombe sous la règle (3) restreinte » ; l. 28 (table « du 12 au 13 », ligne 3) et
-  l. 2037 (table des constats, M-2) : une phrase « règle (3) restreinte au brouillon 14 (R-1924 (1)) ».
+  l. 2033 (table des constats, M-2) : une phrase « règle (3) restreinte au brouillon 14 (R-1924 (1)) ».
 
 ### (2) L1 par fichier « mots et coût » illisible, L7b, L7c = issues finales sous ce texte ; correction par version neuve
 
@@ -180,7 +180,7 @@ déclaré (l. 1554-1559) se ferme ainsi sans inventer de clé ni de fichier « -
   `temoin`, `mention`, `T100` sont faites et scellées) ; elle lit (ii) seule, sur les mêmes scores scellés, sous une clé
   d'issue et un fichier de résultat neufs qu'elle nomme (sinon une double lecture de (i) devient possible) ;
 - sa ligne de registre **ne peut pas** s'appeler `SCELLEMENT-T07` : le script de T0.6 exige **exactement une** ligne de cette
-  clé (`lire_registre`, l. 66-68 du script `ba2ba5cf…`) ; une seconde ferait refuser la lecture de T0.6. La version neuve
+  clé (`lire_registre`, l. 70-72 du script `ba2ba5cf…`) ; une seconde ferait refuser la lecture de T0.6. La version neuve
   prendra une clé à part (`SCELLEMENT-T07-V2` par exemple), que son propre module exigera ; le dire ici évite de le découvrir
   au nœud (constat m-09).
 
@@ -192,13 +192,13 @@ du fichier de T0.6 demande une **version neuve de ce préenregistrement** (R12),
 mêmes scores » à la place de « sous ce même texte » ; l. 934-936 (plan 4 bis) et l. 2016 (CLT7D-03, mention « au brouillon 14 :
 version neuve ») de même ; l. 1554-1559 (Relance) : remplacer le « reste déclaré, non tranché » par « **tranché (R-1924 (2))** :
 L1 par fichier illisible, L7b et L7c sont des issues finales sous ce texte ; correction par version neuve, clé de registre à
-part, lecture de (ii) seule » ; l. 36 (table, ligne 6) et l. 2031 (« trois déclarés non tranchés ») : « tranchés au
-brouillon 14 ».
+part, lecture de (ii) seule » ; l. 31 (table « du 12 au 13 », ligne 6) et l. 2031 (« trois déclarés non tranchés ») :
+« tranchés au brouillon 14 ».
 
 ### (3) Garde d'ordre : étape A refusée si `VERDICT-P3BIS` est déjà inscrit
 
 **Juste, et nécessaire.** CLT7B-03 exige `SCORES-T07` et `SONDES-T07` **strictement antérieures** à `VERDICT-P3BIS` (l. 907-908,
-919-920, 1138-1139, 1325-1326) ; une étape A ouverte après `VERDICT-P3BIS` écrirait deux lignes postérieures et **toute étape B
+919-920, 1138-1139, 1324-1325) ; une étape A ouverte après `VERDICT-P3BIS` écrirait deux lignes postérieures et **toute étape B
 sur ce run serait refusée à jamais** : la minute de carte et l'extraction (jusqu'à 10 USD) seraient dépensées pour un run mort.
 Le brouillon 13 a aggravé le risque en écrivant que `VERDICT-P3BIS` « peut précéder l'étape A » (l. 1316), alors que l'ordre
 forcé par le texte est A < `VERDICT-P3BIS` < B. `SCELLEMENT-P3BIS` et `ISSUE-MOTS-ET-COUT-T06` peuvent, elles, précéder A sans
@@ -219,17 +219,17 @@ pas si `VERDICT-P3BIS` est déjà inscrite (garde d'ordre) » ; l. 1138-1139 (Li
 **Juste, et je peux déjà fournir ce que le marqueur demande.** Le script est sur `origin/prep/t06-candidat8-v1`, commit
 `1ae198b4` (« Candidat 8 : bloc de règle « mots et coût » v2 »), empreinte `ba2ba5cf…` **égale** à celle citée par le texte
 (l. 1269) et par le candidat 12 r2 de T0.6 (l. 334). Deux faits à vérifier au candidat, que j'ai lus : (a) `lire_registre`
-(l. 61-66 du script) **ignore toute ligne dont la première cellule n'est pas `SCELLEMENT-T07` ou `SCELLEMENT-P3BIS`** : il ne
-refuse jamais une clé inconnue, il exige exactement une ligne de chacune de ses deux clés ; (b) il journalise `OUVERTURE-SONDES-T06`
+(l. 61-72 du script) **ignore toute ligne dont la première cellule n'est pas `SCELLEMENT-T07` ou `SCELLEMENT-P3BIS`** (l. 66-67) :
+il ne refuse jamais une clé inconnue, il exige exactement une ligne de chacune de ses deux clés (l. 71-72) ; (b) il journalise `OUVERTURE-SONDES-T06`
 dans le même `<registre>.ouvertures.md` (l. 101). Le fait (a) corrige le texte (constat M-C) et règle par construction la
 demande (4) de la Concordance pour T0.6 (reste T0.8).
 
 **Comment l'écrire** : plutôt qu'un quinzième marqueur, étendre la ligne `<<COMMIT_CODE_T06>>`, `<<EMPREINTES_CODE_T06>>`
 (l. 2069) : « y compris `scripts/controle_lecture_t06_v1.py` (`ba2ba5cf…`), cité **au commit** du texte scellé de T0.6, absent de
 `main` au 8 novembre (branche `prep/t06-candidat8-v1`, commit `1ae198b4`) ; à vérifier au candidat : empreinte égale,
-`lire_registre` ignore toute clé autre que ses deux (l. 61-66), journal `OUVERTURE-SONDES-T06` ». Si la mère préfère un marqueur
-à part (`<<SCRIPT_CONTROLE_T06>>`), mettre à jour l. 2045-2053 (quinze marqueurs) et la table « du 12 au 13 », ligne 7. Dans
-les deux cas, corriger l. 1269-1270 (« qui prend le registre en argument, l. 20-23 » : exact) et l. 1282-1284 (voir M-C).
+`lire_registre` ignore toute clé autre que ses deux (l. 66-67), journal `OUVERTURE-SONDES-T06` (l. 101) ». Mettre à jour la
+table « du 12 au 13 », ligne 7 (l. 32) si le compte des marqueurs change. Si la mère préfère un marqueur
+à part (`<<SCRIPT_CONTROLE_T06>>`), mettre à jour l. 2045-2053 (quinze marqueurs). Dans les deux cas, corriger l. 1269-1270 (« qui prend le registre en argument, l. 20-23 » : exact) et l. 1282-1284 (voir M-C).
 
 ## Constats
 
@@ -243,7 +243,7 @@ Aucun.
 ### Majeurs
 
 **M-A — « `lecture-t07.json` déjà écrit » n'est pas dans la garde d'ouverture de l'étape B** (l. 910-922, 1110-1116, 1317-1327 ;
-promesse l. 1551 et l. 1500-1501 ; script `garde_etape_b`). Voir question (a). Sans cette ligne, la « tentative après lui » du
+promesse l. 1551 et l. 1498 ; script `garde_etape_b`). Voir question (a). Sans cette ligne, la « tentative après lui » du
 texte n'est pas un refus mais une lecture complète suivie d'un `arret-etape-b.json` écrit et scellé (code 3), avec les scores
 ouverts et journalisés : effet de bord contraire à « rien d'écrit » et à R12. Correction, dans les trois listes de la garde et
 l. 1543-1551 : « **`diag/<run-t07>/lecture-t07.json` ou `arret-etape-b.json` déjà présent → refus de la garde, code 2, journalisé,
@@ -261,15 +261,15 @@ depuis les textes et mesures à 10⁻⁹ près → contre-lecture en échec (pas
 
 **M-C — Le texte attribue au script de T0.6 un refus qu'il n'a pas** (l. 1282-1284 : « mêmes refus : […] clé ni exigée ni
 permise » ; l. 1285-1287 et 1580 : « refusée là si le script de T0.6 refuse toute clé ni exigée ni permise, à contrôler » ;
-l. 1664-1667 : « si `controle_lecture_t06_v1.py` refuse toute clé ni exigée ni permise, les lignes que T0.7 ajoute […] feraient
-refuser la lecture de T0.6 »). Fait vérifié sur le script `ba2ba5cf…` (l. 61-66) : il **ignore** toute ligne dont la clé n'est
+l. 1662-1666 : « si `controle_lecture_t06_v1.py` refuse toute clé ni exigée ni permise, les lignes que T0.7 ajoute […] feraient
+refuser la lecture de T0.6 »). Fait vérifié sur le script `ba2ba5cf…` (l. 66-67) : il **ignore** toute ligne dont la clé n'est
 pas l'une de ses deux ; le refus « clé ni exigée ni permise » est **propre à T0.7** (`registre_v1.py` l. 128-129). La citation
 est fausse au pied de la lettre (R6 : un fichier cité par empreinte doit être décrit exactement), et deux règles s'appuient sur
 une hypothèse déjà tranchée. Correction : l. 1282-1284 : « mêmes motifs `DATE` et `SHA`, même `sceau_conforme`, mêmes refus de
 forme (ligne manquante, en double, mal formée, non strictement antérieure, sceau faux) ; **le refus « clé ni exigée ni permise »
-est propre à T0.7 : le script de T0.6 ignore toute clé autre que ses deux** (`lire_registre`, l. 61-66) » ; l. 1285-1287 et
+est propre à T0.7 : le script de T0.6 ignore toute clé autre que ses deux** (`lire_registre`, l. 66-67) » ; l. 1285-1287 et
 1580 : « égalité des refus sur les deux clés communes ; une clé inconnue est ignorée par le script de T0.6 et traitée ici par la
-règle du registre partagé » ; l. 1664-1667 : « le script de T0.6 (`ba2ba5cf…`) ignore les clés de T0.7 par construction ; la
+règle du registre partagé » ; l. 1662-1666 : « le script de T0.6 (`ba2ba5cf…`) ignore les clés de T0.7 par construction ; la
 demande ne vise que T0.8 ».
 
 ### Mineurs
@@ -314,7 +314,7 @@ présent (ce dernier **est** modélisé par `lecture_deja_ecrite` : le texte ne 
 
 **m-09** (l. 1558-1559, et décision (2)) : le texte propose `ISSUE-MOTS-ET-COUT-T06-R1` et `lecture-t07-ii.json` comme exemples
 pour la suite ; avec la décision (2), remplacer par la phrase « version neuve de ce préenregistrement, sous une clé de registre
-**autre que `SCELLEMENT-T07`** (le script de T0.6 exige exactement une ligne de cette clé, l. 66-68), qui lit (ii) seule ».
+**autre que `SCELLEMENT-T07`** (le script de T0.6 exige exactement une ligne de cette clé, l. 71-72), qui lit (ii) seule ».
 
 ## Ce que je n'ai pas relu
 
