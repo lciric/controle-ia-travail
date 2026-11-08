@@ -931,22 +931,61 @@ def test_fichier_issue_p3bis_illisible_L0a(jouet):
     assert lec["issue_critere_3"] == "L0a" and "clé absente" in lec["p3bis"]["motif"]
 
 
-def test_L7_sans_objet_aucune_dose_qualifiee(depot):
-    """N-063 : M1 (la base réussit à toutes les doses) → L7 ; aucune aire décisive calculée sur (ii) (artefact : une aire décisive
-    de (ii) présente → essai en échec) ; toutes les aires rapportées « hors jugement »."""
+def _conditions_vues(monkeypatch) -> list:
+    """Espionne `lecture_jeux` : conditions présentes dans les scores qu'elle reçoit (artefact de CLT7D-03 : une clé de (ii) lue)."""
+    vues = []
+    original = lv.lecture_jeux
+
+    def espion(t, *args, **kw):
+        vues.append(set(np.unique(t["condition"]).tolist()))
+        return original(t, *args, **kw)
+    monkeypatch.setattr(lv, "lecture_jeux", espion)
+    return vues
+
+
+def test_L7_sans_objet_aucune_dose_jugee(depot, monkeypatch):
+    """N-063 : la base réussit aux quatre doses → Q = vide, L7 ; aucune aire décisive calculée sur (ii) (artefact : une aire décisive
+    de (ii) → essai en échec) ; (i-a) lu au niveau décisif, rapporté sans issue ; les quatre doses en descriptif, marquées."""
+    vues = _conditions_vues(monkeypatch)
     j = construire_run(depot, par_dose={d: "réussit" for d in DOSES})
     ra, lec = _ab(j)
-    assert lec["issue_critere_3"] == "L7" and lec["doses"]["qualifiees"] == [] and lec["entrees"]["Q"] == "M1"
-    assert "sans objet à cette course" in lec["phrase"] and lec["entrees"]["II"] is None and lec["entrees"]["I"] is None
-    assert lec["jeux"] == {} and all(set(v) == {cr.JEU_I, *DOSES} for v in lec["jeux_hors_jugement"].values())
-    assert all(x["marque"] == cr.HORS_JUGEMENT for v in lec["jeux_hors_jugement"].values() for x in v.values())
-    assert lec["predictions"]["T7-P2"].startswith("sans objet") and "hors jugement" in lec["predictions"]["T7-P1"]
+    assert lec["issue_critere_3"] == "L7" and lec["sous_phrase_L7"] == "aucune qualifiee" and lec["entrees"]["Q"] == "vide"
+    assert lec["doses"]["qualifiees"] == [] and "sans objet à cette course" in lec["phrase"] and lec["entrees"]["II"] is None
+    assert all(set(v) == {cr.JEU_I} for v in lec["jeux"].values())                     # aucune aire décisive de (ii)
+    assert all(v[cr.JEU_I]["niveau"] == 0.9875 for v in lec["jeux"].values())
+    assert all(set(v) == set(DOSES) for v in lec["jeux_hors_jugement"].values())
+    assert all(x["marque"].startswith("hors jugement") and x["niveau"] == 0.95 for v in lec["jeux_hors_jugement"].values() for x in v.values())
+    assert lec["predictions"]["T7-P2"].startswith("sans objet") and "rapportée sans issue du critère 3 (L7)" in lec["predictions"]["T7-P1"]
+    assert lec["scores_ii_ouverts"] and any(set(DOSES) <= v for v in vues)            # ouverts sous L7, en descriptif seulement
 
 
-def test_L7b_base_non_calculable(depot):
-    j = construire_run(depot, par_dose={"S25": "non calculable", "S50": "réussit", "S75": "échoue", "S100": "échoue"})
+def test_L7_doses_qualifiees_sans_effet(depot):
+    j = construire_run(depot, issue_mc=issue_mots_et_cout(PAR_DOSE_SAIN, effets={"S75": EFFET_NON_ETABLI, "S100": None}))
     _, lec = _ab(j)
-    assert lec["issue_critere_3"] == "L7b" and lec["entrees"]["Q"] == "M4" and lec["jeux"] == {} and lec["doses"]["qualifiees"] == []
+    assert lec["issue_critere_3"] == "L7" and lec["sous_phrase_L7"] == "qualifiees sans effet"
+    assert lec["doses"]["marques"]["S75"] == cr.MENTIONS["sans effet"] and lec["doses"]["marques"]["S100"] == cr.MENTIONS["effet non calculable"]
+    assert lec["jeux_hors_jugement"][NOMS[0]]["S100"]["marque"] == cr.MENTIONS["effet non calculable"]
+
+
+@pytest.mark.parametrize("issue_mc, ligne", [
+    (issue_mots_et_cout({"S25": "non calculable", "S50": "réussit", "S75": "échoue", "S100": "échoue"}), "L7b"),
+    (issue_mots_et_cout(PAR_DOSE_SAIN, champs={"S0.etat": "réussit"}), "L7c"),
+    (issue_mots_et_cout({d: "réussit" for d in DOSES}, issue="M2"), "L7c"),
+])
+def test_L7b_L7c_aucun_score_de_ii_ouvert(depot, monkeypatch, issue_mc, ligne):
+    """CLT7D-03 : sous L7b et L7c, aucun score de (ii) (S25 à S100) n'est ouvert ; T7-P1 lu et rapporté ; artefact : une condition
+    de (ii) vue par la lecture → essai en échec ; jamais un arrêt sans ligne."""
+    vues = _conditions_vues(monkeypatch)
+    j = construire_run(depot, issue_mc=issue_mc)
+    _, lec = _ab(j)
+    assert lec["issue_critere_3"] == ligne and lec["scores_ouverts"] and not lec["scores_ii_ouverts"]
+    assert lec["conditions_retirees"] == list(DOSES) and lec["jeux_hors_jugement"] == {}
+    assert all(set(v) == {cr.JEU_I} for v in lec["jeux"].values()) and vues and all(not (v & set(DOSES)) for v in vues)
+    assert lec["predictions"]["T7-P2"].startswith("non lue : nœud") and lec["predictions"]["T7-P1"].startswith("confirmée")
+    ouvertures = (j.registre.parent / (j.registre.name + ".ouvertures.md")).read_text()
+    assert "conditions retirées : S25, S50, S75, S100" in ouvertures
+    if ligne == "L7c":
+        assert lec["doses"]["derivation"]["champs_en_ecart"] and "incohérente" in lec["phrase"]
 
 
 def test_Q_absente_L1(depot):
@@ -955,40 +994,40 @@ def test_Q_absente_L1(depot):
     assert lec["issue_critere_3"] == "L1" and lec["entrees"]["Q"] == "absente" and not lec["scores_ouverts"] and "ISSUE-MOTS" in lec["phrase"]
 
 
-def test_trois_doses_qualifiees_M2_et_toutes_M3(depot):
+def test_trois_doses_jugees(depot):
     j = construire_run(depot, par_dose={"S25": "réussit", "S50": "échoue", "S75": "échoue", "S100": "échoue"})
     _, lec = _ab(j)
-    assert lec["doses"]["qualifiees"] == ["S50", "S75", "S100"] and lec["issue_critere_3"] == "L2"
+    assert lec["doses"]["jugees"] == ["S50", "S75", "S100"] and lec["issue_critere_3"] == "L2"
 
 
-def test_champ_par_dose_absent_arrete(depot):
-    j = construire_run(depot, issue_mc=issue_mots_et_cout(PAR_DOSE_SAIN, sans="S75.etat"))
-    ra = _a(j)
-    ajouter_p3bis(j)
-    with pytest.raises(lv.ArretApresManifeste, match=r"doses\.S75\.etat"):
-        _b(j, ra["run_t07"])
-    verifier(j.racine / "diag" / ra["run_t07"] / "arret-etape-b.json")
+def test_S100_hors_jugement(depot):
+    j = construire_run(depot, par_dose={"S25": "échoue", "S50": "échoue", "S75": "réussit", "S100": "réussit"})
+    _, lec = _ab(j)                                     # M2 avec S100 hors jugement : absente des décisives, présente en T7-P17
+    assert "S100" not in lec["jeux"][NOMS[0]] and "S100" in lec["jeux_hors_jugement"][NOMS[0]]
+    assert lec["doses"]["qualification_S100"].startswith("hors jugement")
 
 
-def test_dose_manquante_arrete(depot):
-    j = construire_run(depot, issue_mc=issue_mots_et_cout({"S25": "réussit", "S50": "échoue", "S100": "échoue"}))   # S75 manque
-    ra = _a(j)
-    ajouter_p3bis(j)
-    with pytest.raises(lv.ArretApresManifeste, match=r"doses\.S75"):
-        _b(j, ra["run_t07"])
-
-
-@pytest.mark.parametrize("issue, qualifiees, motif", [
-    ("M2", ["S100"], "écrites"),                     # liste du fichier ≠ liste recalculée depuis `doses`
-    ("M3", None, "incohérente"),                     # M3 avec deux doses seulement
-    ("M1", None, "incohérente"),                     # M1 avec des doses qualifiées
+@pytest.mark.parametrize("issue_mc, motif", [
+    (issue_mots_et_cout(PAR_DOSE_SAIN, sans="S75.etat"), r"doses\.S75\.etat"),
+    (issue_mots_et_cout({"S25": "réussit", "S50": "échoue", "S100": "échoue"}), r"S75 manquante"),
+    (issue_mots_et_cout(PAR_DOSE_SAIN, champs={"S75.bas": None}), r"S75\.bas"),
 ])
-def test_doses_qualifiees_incoherentes_arretent(issue, qualifiees, motif):
-    doc = issue_mots_et_cout(PAR_DOSE_SAIN, issue=issue, qualifiees=qualifiees)
-    lu = {"issue_mots_et_cout": doc["issue_mots_et_cout"], "doses": doc["doses"], "doses_qualifiees_ecrites": doc["doses_qualifiees"]}
-    with pytest.raises(GardeArret, match=motif):
-        lv.filtrer_doses_qualifiees(lu)
-    assert lv.filtrer_doses_qualifiees({**lu, "issue_mots_et_cout": "M2", "doses_qualifiees_ecrites": ["S75", "S100"]}) == ["S75", "S100"]
+def test_fichier_mots_et_cout_illisible_L1_jamais_un_arret(depot, issue_mc, motif):
+    """Brouillon 11, l. 1209-1214 : clé absente, dose manquante, `null` sur une dose « échoue » → fichier illisible, Q = absente,
+    L1, motif écrit dans `lecture-t07.json` ; aucun score ouvert ; jamais un arrêt sans ligne."""
+    j = construire_run(depot, issue_mc=issue_mc)
+    ra, lec = _ab(j)
+    assert lec["issue_critere_3"] == "L1" and lec["entrees"]["Q"] == "absente" and not lec["scores_ouverts"]
+    assert re.search(motif, lec["doses"]["motif_Q_absente"]) and "illisible" in lec["phrase"]
+    assert not (j.racine / "diag" / ra["run_t07"] / "arret-etape-b.json").exists()
+
+
+@pytest.mark.parametrize("issue, qualifiees", [("M2", ["S100"]), ("M3", None), ("M1", None)])
+def test_doses_qualifiees_ou_etiquette_incoherentes_L7c(issue, qualifiees):
+    """Étiquette du fichier ≠ recalculée ou `doses_qualifiees` ≠ doses « échoue » → incohérent (étape 3), jamais un arrêt."""
+    r = deriv(PAR_DOSE_SAIN, issue=issue, qualifiees=qualifiees)
+    assert r["Q"] == "incoherent" and r["etape"] == 3 and r["champs_en_ecart"]
+    assert deriv(PAR_DOSE_SAIN, issue="M2", qualifiees=["S75", "S100"])["Q"] == "partiel"
 
 
 def test_scores_posterieurs_au_verdict_refuses(jouet):
