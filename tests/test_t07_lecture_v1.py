@@ -421,7 +421,7 @@ def test_issues_avec_scores():
     assert cr.issue_critere_3("ok", "vu", "A4", [N, Z], [U, U])["issue"] == "L5"
     r = cr.issue_critere_3("ok", "vu", "A4", [U, N], [N, E])
     assert r["issue"] == "L5" and "pour (ii)" in r["phrase"]
-    r = cr.issue_critere_3("ok", "vu", "A4", [U, Z], [N, U], None, "M2 : base échoue")
+    r = cr.issue_critere_3("ok", "vu", "A4", [U, Z], [N, U], "aucune", "M2 : base échoue")
     assert r["issue"] == "L2" and "M2 : base échoue" in r["phrase"] and r["qualification_mots_et_cout"]["(i)"] == cr.SANS_OBJET
     r = cr.issue_critere_3("ok", "vu", "A5", [U, Z], [Z, E])
     assert r["issue"] == "L3" and cr.EN_ATTENTE_T06 in r["phrase"] and r["entrees"] == {"G": "ok", "D": "non vide", "P": "vu", "A": "A5",
