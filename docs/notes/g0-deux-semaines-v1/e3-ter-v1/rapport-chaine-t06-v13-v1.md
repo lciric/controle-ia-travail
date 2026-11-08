@@ -66,7 +66,7 @@ Commande, dans l'arbre de travail, avec `. .venv/bin/activate` et `PYTHONPATH=sr
 
 ```
 PYTHONPATH=src timeout 900 nice -n 10 python -m pytest -q -p no:cacheprovider tests/test_t06_chaine_v13.py
-→ 95 passed in 26.50s
+→ 101 passed in 37.11s   (95 avant l'ajout du § 4 bis : 95 passed in 26.50s ; 6 essais du jeton ajoutés ensuite)
 ```
 
 Contenu (cas sain et artefacts pour chaque étage) :
@@ -75,6 +75,7 @@ Contenu (cas sain et artefacts pour chaque étage) :
 - Lanceur v13 (shell, faux `vastai` 1.8.3, faux `df`, dépôt local avec branche `prep/essai-t06`, 31 essais) : `--verifier-go-seulement` cas sain (rien créé) et 12 artefacts (`GO_ID` vide, absent, illisible ; identifiant absent du registre ; décision ; échue ; plafond insuffisant avec et sans dépense antérieure ; ligne trop petite ; GO de la course ; registre absent ; plafond illisible) ; `controles-epreuve` cas sain (ligne lue au registre de `main` et dans le commit, `lancement.txt` complet) et 11 artefacts (dont `GO_ID` ≠ `go_id` de la configuration et ligne absente du registre **du commit** → « commit postérieur au GO exigé ») ; `creation` cas sain (commande `GO_ID=GO-… vastai create instance …`, `-e EPREUVE_GO_ID=…`, garde de calcul rejouée sur le registre du dépôt d'essai, `T06_TESTS_ARGS` toujours refusé en mode réel) et 5 artefacts (`GO_ID` vide, absent, autre ; ligne retirée du registre entre les contrôles et la création ; ligne échue au jour de la création) : aucun `create instance` dans le journal du faux outil.
 - Amorce v11 (essai local, aucun appel à Vast, 10 essais) : cas sain en mode jouet et réel (« GO : GO-… conforme (plafond 16 USD », « lanceur v6 », suite ciblée jouée, branche `essai/` poussée) ; artefacts : identifiant absent du registre du commit, décision, échue, GO de la course, identifiant illisible, ligne retirée du commit → `refus`, destruction demandée, aucun run ; une ligne à 23 USD passe aussi (rien en dur).
 - Diffs (3 essais) : voir § 3.
+- Jeton GitHub sous l'un ou l'autre nom (6 essais) : voir § 4 bis.
 
 Suite existante : voir § 6.
 
