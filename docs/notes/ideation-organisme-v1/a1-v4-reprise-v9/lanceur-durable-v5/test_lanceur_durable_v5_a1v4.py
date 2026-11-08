@@ -200,7 +200,7 @@ def test_go_de_la_machine_lu_sur_la_ligne_sain_et_registre_reel(tmp_path):
 
 
 @pytest.mark.parametrize("lignes, go, jour, motif", [
-    ([LIGNE_22], GO_M, JOUR, "absent du registre"),
+    ([LIGNE_22], GO_M, JOUR, "GO-2026-11-08-12 absent"),
     ([LIGNE_22, LIGNE_12.replace("| calcul |", "| décision |")], GO_M, JOUR, "pas « calcul »"),
     ([LIGNE_22, LIGNE_12], GO_M, dt.date(2026, 11, 17), "hors de sa période"),
     ([LIGNE_22, LIGNE_12], GO_M, dt.date(2026, 11, 7), "hors de sa période"),
@@ -851,9 +851,12 @@ def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
     assert gestes(r) == [["detruire", 90000001]]
 
 
-def test_machine_etiquette_autre_aucun_geste_et_reprise(monde):
+def test_machine_etiquette_autre_aucun_geste(monde):
     r, env, nu, d = monde(etiquette="a1-v3-troisieme-v1")
     assert v5.MachineV5(r, env).principal() == 4 and gestes(r) == []
+
+
+def test_machine_reprise_du_conteneur_ne_relance_rien(monde):
     r, env, nu, d = monde()
     r.travail.mkdir(parents=True)
     (r.travail / "ETAT").write_text("course\n")

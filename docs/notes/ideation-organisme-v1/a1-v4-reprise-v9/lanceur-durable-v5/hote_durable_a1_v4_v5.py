@@ -78,21 +78,24 @@ MOTIF_GO = re.compile(r"^GO-\d{4}-\d{2}-\d{2}-\d{2}$")
 ETIQUETTE = "a1-v4-v9"
 NOM_CLE_ARGON_PILOTE = "GEMINI_API_KEY_2"  # la seule source de la clé, par son nom, chez le pilote (R-1540)
 NOMS_JETON_GITHUB = ("GH_TOKEN", "CONTROLE_IA_GITHUB_TOKEN_2")  # le premier présent l'emporte (chaîne T0.6 v13)
-BRANCHE_DONNEES = "donnees/attaque-goodhart-v4-a1v4-v9-v1"
-BRANCHE_INTERROMPUE = "donnees/attaque-goodhart-v4-a1v4-v9-interrompue-v1"
-BRANCHE_REFUS = "donnees/attaque-goodhart-v4-a1v4-v9-refus-v1"
-BRANCHE_VIE = "donnees/attaque-goodhart-v4-a1v4-v9-signe-de-vie-v1"
+BRANCHE_DONNEES = "donnees/attaque-goodhart-v4-a1v4-v1"  # noms du brouillon 3 du texte A1-v4, section 8
+BRANCHE_INTERROMPUE = "donnees/attaque-goodhart-v4-a1v4-interrompue-v1"
+BRANCHE_REFUS = "donnees/attaque-goodhart-v4-a1v4-refus-v1"
+BRANCHE_VIE = "donnees/attaque-goodhart-v4-a1v4-signe-de-vie-v1"
 AMORCE = "scripts/amorce_hote_durable_a1_v4_v5.sh"
 MODULE = "src/controle_ia/hote_durable_a1_v4_v5.py"
 MODULES = v4.MODULES + ("hote_durable_a1_v4_v5.py",)
-TRAVAIL = "a1-v4-v9"  # dossier de travail sur la machine : /root/a1-v4-v9
+TRAVAIL = "a1-v4-reprise-v9-v1"  # dossier de travail sur la machine : /root/a1-v4-reprise-v9-v1 (brouillon 3, section 4)
+LISTE_EMPREINTES = "EMPREINTES-sortie-a1-v4-v1.txt"
+JOURNAL_HOTE = "journal-hote-a1-v4-v1.log"
 DOSSIER_TEXTE = "orchestrator/prereg"
-MOTIF_NOM_TEXTE = re.compile(r"^preenregistrement-attaque-goodhart-v4-v([1-9][0-9]*)\.md$")
-MARQUEUR = re.compile(r"<<[A-Z_]+>>")
+PREFIXE_TEXTE_DEFAUT = "preenregistrement-attaque-goodhart-v4-v"  # le lanceur gelé v4 exige `…-v4-v<N>.md` ; un code v5 pourrait exiger `-v5-v`
+MOTIF_PREFIXE_TEXTE = re.compile(r"^preenregistrement-attaque-goodhart-v[1-9][0-9]*-v$")
+MARQUEUR = re.compile(r"<<[A-Z0-9_]+>>")
 DEBUT_PLAN, FIN_PLAN = "<!-- plan-gele : début -->", "<!-- plan-gele : fin -->"
 DEBUT_EMPREINTES, FIN_EMPREINTES = "<!-- empreintes-du-code : début -->", "<!-- empreintes-du-code : fin -->"
-VARIANTES_MONDES = {"i": ["W1", "W2"], "ii": ["W2", "W2 gradué"]}  # la configuration doit s'accorder à sa variante
-CLES_CONFIGURATION = {"version", "variante", "mondes", "mondes_texte", "etiquette", "go_course", "plafond_course_usd",
+VARIANTES_MONDES = {"i": ["W1", "W2"], "ii": ["W2", "W2g"]}  # (ii) : W2g = « W2 gradué » (note W2, brouillon 3) ; accord exigé
+CLES_CONFIGURATION = {"version", "variante", "mondes", "mondes_texte", "etiquette", "go_course", "plafond_course_usd", "prefixe_texte",
                       "lanceur_gele", "dossier_sortie", "etape_depense", "commit_code_gele", "fichiers_geles_publics"}
 CLES_CONFIGURATION_FACULTATIVES = {"pieces_privees", "note"}
 SECRETS_PILOTE = (NOM_CLE_ARGON_PILOTE, "CLE_ARGON", "CONTROLE_IA_GITHUB_TOKEN_2") + s10.SECRETS_PILOTE
@@ -218,6 +221,8 @@ def lire_configuration_mondes(chemin) -> dict:
                       f"{MONTANT_GO_COURSE_USD:g}")
     if not isinstance(c["commit_code_gele"], str) or not re.fullmatch(r"[0-9a-f]{40}", c["commit_code_gele"]):
         raise h.Refus("configuration : commit_code_gele = hash complet de 40 caractères")
+    if not isinstance(c["prefixe_texte"], str) or not MOTIF_PREFIXE_TEXTE.match(c["prefixe_texte"]):
+        raise h.Refus(f"configuration : prefixe_texte {c['prefixe_texte']!r} hors de {MOTIF_PREFIXE_TEXTE.pattern}")
     for k in ("lanceur_gele", "dossier_sortie", "etape_depense"):
         if not isinstance(c[k], str) or not c[k].strip() or any(ch.isspace() for ch in c[k]):
             raise h.Refus(f"configuration : {k} illisible")
@@ -255,27 +260,30 @@ def _bloc(texte: str, debut: str, fin: str, nom: str) -> str:
     return texte[i + len(debut):j]
 
 
-def version_du_texte(chemin) -> int:
-    """N de `prereg/preenregistrement-attaque-goodhart-v4-v<N>.md` ; refus de tout autre nom (v3, brouillon, autre dossier)."""
+def version_du_texte(chemin, prefixe: str = PREFIXE_TEXTE_DEFAUT) -> int:
+    """N de `orchestrator/prereg/<prefixe><N>.md` (préfixe de la configuration, `preenregistrement-attaque-goodhart-v4-v` par
+    défaut) ; refus de tout autre nom (v3, brouillon, autre dossier)."""
     chemin = Path(chemin)
-    m = MOTIF_NOM_TEXTE.match(chemin.name)
+    if not MOTIF_PREFIXE_TEXTE.match(prefixe or ""):
+        raise h.Refus(f"préfixe du nom du texte illisible ({prefixe!r})")
+    m = re.match(rf"^{re.escape(prefixe)}([1-9][0-9]*)\.md$", chemin.name)
     if not m or chemin.parent.name != "prereg" or chemin.parent.parent.name != "orchestrator":
-        raise h.Refus(f"nom du texte : {DOSSIER_TEXTE}/preenregistrement-attaque-goodhart-v4-v<N>.md exigé, reçu "
-                      f"{'/'.join(chemin.parts[-3:])}")
+        raise h.Refus(f"nom du texte : {DOSSIER_TEXTE}/{prefixe}<N>.md exigé, reçu {'/'.join(chemin.parts[-3:])}")
     return int(m.group(1))
 
 
-def nom_texte(version: int) -> str:
-    return f"{DOSSIER_TEXTE}/preenregistrement-attaque-goodhart-v4-v{int(version)}.md"
+def nom_texte(version: int, prefixe: str = PREFIXE_TEXTE_DEFAUT) -> str:
+    return f"{DOSSIER_TEXTE}/{prefixe}{int(version)}.md"
 
 
-def verifier_texte(chemin, sha_attendu: str, conf: dict) -> dict:
-    """Le texte scellé, tel que le lanceur v5 l'attend : nom v4-v<N> sous `orchestrator/prereg` ; compagnon égal ; empreinte égale à
-    `sha_attendu` (lue au scellement) ; aucun marqueur `<<…>>` ; bloc `plan-gele` (mode, mondes = `mondes_texte`, fournisseurs,
-    plafond_usd = 200, go = GO des appels) ; bloc `empreintes-du-code` contenant chaque fichier gelé public de la configuration à
-    la même empreinte. Rend version, empreinte, mondes, nombre de lignes du bloc."""
+def verifier_texte(chemin, sha_attendu: str, conf: dict, go_machine: str | None = None) -> dict:
+    """Le texte scellé, tel que le lanceur v5 l'attend : nom `<prefixe_texte><N>.md` sous `orchestrator/prereg` ; compagnon égal ;
+    empreinte égale à `sha_attendu` (lue au scellement) ; aucun marqueur `<<…>>` ; bloc `plan-gele` (mode = course, mondes =
+    `mondes_texte`, fournisseurs = argon, plafond_usd = 200, go = GO des appels ; `go_machine`, si la ligne existe, égal à la ligne
+    vérifiée) ; bloc `empreintes-du-code` contenant chaque fichier gelé public de la configuration à la même empreinte. Rend version,
+    empreinte, mondes, nombre de lignes du bloc."""
     chemin = Path(chemin)
-    version = version_du_texte(chemin)
+    version = version_du_texte(chemin, conf["prefixe_texte"])
     if not chemin.is_file():
         raise h.Refus(f"texte introuvable : {chemin}")
     if not isinstance(sha_attendu, str) or not re.fullmatch(r"[0-9a-f]{64}", sha_attendu):
@@ -305,6 +313,11 @@ def verifier_texte(chemin, sha_attendu: str, conf: dict) -> dict:
         plafond = None
     if plafond is None or abs(plafond - MONTANT_GO_COURSE_USD) > 1e-9:
         raise h.Refus(f"plan-gele : plafond_usd = {lignes.get('plafond_usd')!r}, exactement {MONTANT_GO_COURSE_USD:g} exigé")
+    if "go_machine" in lignes:
+        if lignes["go_machine"] == GO_COURSE or not MOTIF_GO.match(lignes["go_machine"]):
+            raise h.Refus(f"plan-gele : go_machine = {lignes['go_machine']!r} illisible ou égal à la ligne des appels")
+        if go_machine is not None and lignes["go_machine"] != go_machine:
+            raise h.Refus(f"plan-gele : go_machine = {lignes['go_machine']!r}, la ligne vérifiée ({NOM_GO_MACHINE_ENV}) est {go_machine!r}")
     gelees = dict((r, e) for e, r in re.findall(r"^([0-9a-f]{64})  (\S+)$", _bloc(texte, DEBUT_EMPREINTES, FIN_EMPREINTES,
                                                                                     "empreintes-du-code"), re.M))
     if not gelees:
@@ -315,7 +328,7 @@ def verifier_texte(chemin, sha_attendu: str, conf: dict) -> dict:
         raise h.Refus("fichiers gelés publics de la configuration absents du bloc du texte ou à une autre empreinte : "
                       + " ; ".join(ecarts))
     return {"version": version, "sha256": vu, "mondes": lignes["mondes"], "lignes_gelees": len(gelees), "plafond_usd": plafond,
-            "go": lignes["go"], "nom": nom_texte(version)}
+            "go": lignes["go"], "go_machine": lignes.get("go_machine"), "nom": nom_texte(version, conf["prefixe_texte"])}
 
 
 # --- script de démarrage : la minuterie d'abord, sans Python (celle de la v4, étiquette et noms de la v5) ----------------------
@@ -388,7 +401,7 @@ def corps(commit_prive: str, commit_public: str, sha_texte: str, nom_texte_relat
             raise h.Refus(f"{nom} : forme exacte exigée ({motif})")
     if go_machine == GO_COURSE:
         raise h.Refus("go_machine égal au GO des appels : refus")
-    version_du_texte(Path(nom_texte_relatif))
+    version_du_texte(Path(nom_texte_relatif), conf.get("prefixe_texte", PREFIXE_TEXTE_DEFAUT))
     manquants = [k for k in ("CLE_ARGON", "GH_TOKEN") if not secrets.get(k)]
     if manquants:
         raise h.Refus(f"secrets absents : {', '.join(manquants)}")
@@ -472,7 +485,7 @@ def louer(a, client=None, aujourd_hui=None, environ=None, maintenant=None) -> in
         conf["chemin_depot"] = chemin_dans_le_depot(Path(a.configuration_mondes), Path(a.racine_privee) if getattr(a, "racine_privee", None) else None)
         j.ecrire(f"configuration des mondes : variante ({conf['variante']}) {conf['mondes']} ; {conf['chemin_depot']} "
                  f"{conf['sha256']} ; {len(conf['fichiers_geles_publics'])} fichiers gelés publics ; code gelé {conf['commit_code_gele']}")
-        t = verifier_texte(a.texte, a.sha_texte, conf)
+        t = verifier_texte(a.texte, a.sha_texte, conf, go_machine)
         racine_publique = Path(a.texte).resolve().parents[2]
         n = verifier_fichiers_geles(racine_publique, conf)
         j.ecrire(f"texte {t['nom']} : empreinte {t['sha256']} = compagnon = scellement ; mondes « {t['mondes']} » ; aucun marqueur ; "
@@ -669,7 +682,7 @@ class MachineV5(v4.MachineV4):
             self.debut = time.monotonic() - max(0.0, time.time() - t0)
 
     def principal(self) -> int:
-        journal = self.t / "journal-hote-a1-v4-v9-v1.log"
+        journal = self.t / JOURNAL_HOTE
         if self.etat_fichier.exists():  # reprise du conteneur : jamais de relance (R12)
             self.j = h.Journal(journal, self.secrets)
             avant = self.etat_fichier.read_text().strip()
@@ -739,7 +752,6 @@ class MachineV5(v4.MachineV4):
             raise h.Refus(f"GO_ID={e['GO_ID']} : la ligne des appels est {GO_COURSE} (aucune autre)")
         if not MOTIF_GO.match(e["GO_MACHINE"]) or e["GO_MACHINE"] == GO_COURSE:
             raise h.Refus(f"GO_MACHINE={e['GO_MACHINE']!r} illisible ou égal à la ligne des appels")
-        version_du_texte(Path(e["NOM_TEXTE"]))
         if not (0 < self.prix_h <= h.PRIX_MAX_H_USD):
             raise h.Refus(f"prix horaire {self.prix_h} hors de ]0 ; {h.PRIX_MAX_H_USD}]")
         self.verifier_interpreteurs()  # C1, correction 7
@@ -790,6 +802,7 @@ class MachineV5(v4.MachineV4):
         if conf.get("pieces_privees"):
             r.empreintes = dict(conf["pieces_privees"])
         r.commit_code_gele = conf["commit_code_gele"]
+        version_du_texte(Path(e["NOM_TEXTE"]), conf["prefixe_texte"])
         self.j.ecrire(f"configuration des mondes : variante ({conf['variante']}) {conf['mondes']} ; {conf['chemin_depot']} {conf['sha256']} ; "
                       f"{len(conf['fichiers_geles_publics'])} fichiers gelés publics ; code gelé {conf['commit_code_gele']} ; lanceur "
                       f"{conf['lanceur_gele']} ; étape de dépense {conf['etape_depense']}")
@@ -802,7 +815,7 @@ class MachineV5(v4.MachineV4):
         if h.lancer(["git", "merge-base", "--is-ancestor", r.commit_code_gele, e["COMMIT_PUBLIC"]],
                     cwd=r.clone_public).returncode != 0:
             raise h.Refus(f"le commit {e['COMMIT_PUBLIC']} ne descend pas du code gelé {r.commit_code_gele}")
-        t = verifier_texte(r.clone_public / e["NOM_TEXTE"], e["SHA_TEXTE"], conf)
+        t = verifier_texte(r.clone_public / e["NOM_TEXTE"], e["SHA_TEXTE"], conf, e["GO_MACHINE"])
         n = verifier_fichiers_geles(r.clone_public, conf)
         statut = h.git("status", "--porcelain", cwd=r.clone_public)
         if statut.strip():
@@ -852,9 +865,73 @@ class MachineV5(v4.MachineV4):
                 d.mkdir(exist_ok=True)
                 shutil.copy2(p, d / nom)
 
+    def lancer_relais(self) -> None:
+        """Comme la v1 (relais Argon neuf, seul à tenir la clé, réglages relevés), journal au nom de la v5."""
+        r = self.r
+        commande = r.racine_sources / h.NUIT / "commande_argon_v56_nuit_v2.py"
+        self.journal_relais = self.t / "relais-argon-journal-a1-v4.jsonl"
+        self.cmd_relais = [r.python_relais, "-I", "-B", str(commande), "servir", "--port", str(r.port), "--plafond-usd",
+                           str(h.PLAFOND_RELAIS_USD), "--max-appels", str(h.MAX_APPELS_RELAIS), "--journal", str(self.journal_relais)]
+        self._demarrer_relais()
+        fin = time.monotonic() + r.attente_relais_s
+        etat = None
+        while time.monotonic() < fin:
+            etat = h.etat_relais(r.port)
+            if etat is not None:
+                break
+            if self.relais.poll() is not None:
+                raise h.Refus(f"relais sorti en code {self.relais.returncode} au démarrage")
+            time.sleep(0.5)
+        if etat is None:
+            raise h.Refus("relais muet au démarrage")
+        attendu = {"plafond_usd": h.PLAFOND_RELAIS_USD, "max_appels": h.MAX_APPELS_RELAIS, "appels": 0, "cle_presente": True}
+        ecarts = {k: etat.get(k) for k, v in attendu.items() if etat.get(k) != v}
+        if ecarts:
+            raise h.Refus(f"relais : réglages inattendus {ecarts}")
+        self.j.ecrire(f"relais {r.port} PID {self.relais.pid} : plafond {etat['plafond_usd']} USD, {etat['max_appels']} appels, clé "
+                      f"présente (booléen), dépense {etat.get('depense_usd')}")
+
+    def lancer_course(self) -> None:
+        sortie = open(self.t / "course-stdout-a1-v4.log", "ab")
+        self.course = subprocess.Popen(self.cmd_course(False), cwd=self.r.clone_public / "orchestrator", env=self.env_course(),
+                                       stdout=sortie, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)
+        self.j.ecrire(f"course lancée : PID {self.course.pid} (processus lancé par l'hôte lui-même, sans coquille)")
+
+    def garder(self) -> None:
+        """Comme la v1 : relevé daté chaque minute (`garde-a1-v4.jsonl`), relais mort relancé seulement, plafonds de la machine."""
+        r = self.r
+        releves = self.t / "garde-a1-v4.jsonl"
+        while True:
+            code = self.course.poll()
+            relais_vivant = self.relais.poll() is None
+            etat = h.etat_relais(r.port) if relais_vivant else None
+            ecoule = time.monotonic() - self.debut
+            ligne = {"utc": h.maintenant(), "course_vivante": code is None, "relais_vivant": relais_vivant,
+                     "appels": (etat or {}).get("appels"), "depense_argon_usd": (etat or {}).get("depense_usd"),
+                     "ecoule_h": round(ecoule / 3600, 4), "cout_machine_usd": round(self.cout_machine(), 4)}
+            with open(releves, "a", encoding="utf-8") as f:
+                f.write(json.dumps(ligne, ensure_ascii=False) + "\n")
+            if code is not None:
+                self.code_course = code
+                (self.t / "code-sortie-lanceur.txt").write_text(f"{code}\n")
+                self.j.ecrire(f"fin du lanceur : code {code}")
+                self.nature_fin = "fin_du_lanceur"
+                return
+            if not relais_vivant:  # règle des guetteurs : relancer seulement, jamais arrêter
+                self.j.ecrire(f"relais mort (code {self.relais.returncode}) : relancé avec les mêmes réglages")
+                self._demarrer_relais()
+            if ecoule >= r.duree_max_s or self.cout_machine() >= r.plafond_machine_usd:
+                self.nature_fin = "plafond_de_la_machine"
+                self.j.ecrire(f"PLAFOND DE LA MACHINE atteint ({ecoule / 3600:.3f} h, {self.cout_machine():.2f} USD) : la course est "
+                              "arrêtée par son identifiant (écart déclaré, section 8 du texte)")
+                self.code_course = h.arreter_par_pid(self.course, self.j, "course")
+                (self.t / "code-sortie-lanceur.txt").write_text(f"{self.code_course} (arrêt au plafond de la machine)\n")
+                return
+            time.sleep(r.periode_s)
+
     def sceller(self) -> Path:
         self.copier_journaux_du_demarrage()
-        liste = self.t / "EMPREINTES-sortie-a1-v4-v9-v1.txt"
+        liste = self.t / LISTE_EMPREINTES
         lignes = [f"{h.sha256_fichier(p)}  {p.relative_to(self.t)}" for p in self.fichiers_a_verser() if p != liste]
         liste.write_text("\n".join(lignes) + "\n")
         return liste
