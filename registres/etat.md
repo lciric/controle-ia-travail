@@ -423,3 +423,7 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - **Ordre scellé** `docs/procedures/ordre-sonde-refus-lecteur-c-etiqueteur-v2-v1.md` (`37b39e9a…`), envoyé à la fille clés 2 ; 30 items neufs sans jumeau, Opus 5.5 contre Fable 5.1, comptes seulement, plafond 15 dollars sur les crédits Claude.
 - **Ensuite** : lecture exploratoire v2 de l'étiqueteur avec le lecteur retenu (nœuds : plafond, jumeaux).
 - **11:24 UTC — sonde finie (R-2003)** : Opus 0 échec sur 30, Fable 2 refus « bio » sur 30 ; **Opus retenu comme lecteur candidat** de la lecture exploratoire v2 ; 5,07 dollars. Prochain nœud pour Lazar : plafond de la lecture v2 (Opus ≈ 29 dollars pour 700 appels) et jumeaux.
+
+## 9 novembre, 12:58 UTC — autonomie de 8 heures (GO-2026-11-09-04, jusqu'à ≈ 20:57 UTC, R-2009)
+- Lecture exploratoire v2 de l'étiqueteur (GO-2026-11-09-03) : code commité (`c7d61c74c`), ordre d'exécution en rédaction, relecture par Fable, puis essai de format.
+- Collisionneur permis pour les questions de conception difficiles et cruciales.
