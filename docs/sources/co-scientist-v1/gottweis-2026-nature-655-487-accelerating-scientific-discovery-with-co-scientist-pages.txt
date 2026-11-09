@@ -1,0 +1,1613 @@
+======== PAGE 1 ========
+Article
+
+Accelerating scientific discovery with
+Co-Scientist
+
+https://doi.org/10.1038/s41586-026-10644-y                     Juraj Gottweis1,8 ✉, Wei-Hung Weng2,8 ✉, Alexander Daryin1,8, Tao Tu2,8, Petar Sirkovic1,8,
+                                                               Artiom Myaskovsky1,8, Grzegorz Glowaty1,8, Felix Weissenberger1,8, Alessio Orlandi1,8,
+Received: 20 March 2025
+                                                               Dan Popovici3, Anil Palepu3, Keran Rong2, Ryutaro Tanno2, Khaled Saab2, Fan Zhang3,
+Accepted: 11 May 2026                                          Jacob Blum4, Andrew Carroll3, Kavita Kulkarni3, Nenad Tomašev2, Dina Zverinski1,
+                                                               Ivor Rendulic1, Elahe Vedadi2, Florian Hasler1, Luka Rimanic1, Marina Boia1, Ivan Budiselic1,
+Published online: 19 May 2026
+                                                               Ben Feinstein3, Mathias Bellaiche3, Tom Sheffer3, Jan Freyberg2, Jeremy Ratcliff2,
+Open access                                                    Ottavia Bertolli2, Katherine Chou3, Avinatan Hassidim3, Burak Gokturk1, Amin Vahdat1,
+                                                               Yuan Guan4, Vikram Dhillon5, Eeshit Dhaval Vaishnav6, Byron Lee6, Tiago R. D. Costa7,
+    Check for updates
+                                                               José R. Penadés7, Gary Peltz4, Yossi Matias3, James Manyika3, Demis Hassabis2, Yunhan Xu2,
+                                                               Pushmeet Kohli2 ✉, Annalisa Pawlosky3 ✉, Alan Karthikesalingam2 ✉ & Vivek Natarajan2 ✉
+
+
+
+                                                               Scientific discovery is driven by scientists generating hypotheses for complex problems
+                                                               that undergo rigorous experimental validation. To augment this process, we introduce
+                                                               Co-Scientist, a multi-agent artificial intelligence (AI) system built on Gemini for
+                                                               structured scientific thinking and hypothesis generation. Co-Scientist aims to help
+                                                               scientists discover new original knowledge. Conditioned on their research objectives
+                                                               and previous scientific evidence, it formulates demonstrably novel research
+                                                               hypotheses for experimental verification. The system’s design involves agents
+                                                               continuously generating, critiquing and refining hypotheses accelerated by scaling
+                                                               test-time compute. Key contributions include (1) a multi-agent architecture with
+                                                               an asynchronous task execution framework for flexible compute scaling, and (2) a
+                                                               tournament evolution process for self-improving hypotheses generation. Automated
+                                                               evaluations show continued benefits of test-time compute scaling, improving
+                                                               hypothesis quality over time. Although this is a general-purpose system, we focus the
+                                                               validation in three biomedical applications: drug repurposing; novel-target discovery1;
+                                                               and explaining mechanisms of antimicrobial resistance2. Specifically, Co-Scientist
+                                                               helped to identify new drug-repurposing candidates and synergistic combination
+                                                               therapies for acute myeloid leukaemia that were validated through in vitro experiments.
+                                                               These real-world validations demonstrate the potential of Co-Scientist to accelerate
+                                                               scientific discovery and usher in an era of AI-empowered scientists.
+
+
+Researchers are faced with a breadth and depth conundrum. The com-                             becoming more accessible. Motivated by the aforementioned unmet
+plexity of scientific topics requires increasingly deep and specific sub-                      needs in the modern discovery process in science and medicine and
+ject matter expertise, while leaps in insight may still arise from broad                       building on the advancements in frontier AI12, we develop and intro-
+knowledge bridging across disciplines3–5. With the rapid rise in scientific                    duce Co-Scientist.
+publications and the development of numerous specialized technolo-                                Co-Scientist is a structured scientific thinking engine designed to
+gies, mastery of both discipline-specific depth and trans-disciplinary                         act as a collaborator to scientists and help accelerate the scientific
+insights can be challenging.                                                                   discovery process. The system is a compound, multi-agent AI system13
+  At the same time, there has been rapid technological progress in AI                          building on Google’s large language model (LLM) Gemini14, mirroring
+towards generally intelligent and collaborative systems, which might                           the reasoning process underpinning the scientific method15. Given a
+empower scientists in creatively traversing and expertly reasoning                             research goal specified in natural language, the system can search,
+across disciplinary domains. Such systems are capable of advanced                              learn and reason over relevant literature to synthesize previous work
+reasoning6–8, multimodal understanding8 and agentic actions9, such as                          and propose novel, original research hypotheses and experimental pro-
+the ability to use tools to solve complex tasks over long time horizons.                       tocols (Fig. 1a). Co-Scientist provides grounding for its recommenda-
+Furthermore, the trends with distillation10 and inference time compute                         tions by citing relevant literature, applying sound scientific reasoning
+costs8,11 indicate that such intelligent and general AI systems are rapidly                    and verifying its conclusions through external tools when applicable.
+1
+ Google Cloud AI Research, Zurich, Switzerland. 2Google DeepMind, Mountain View, CA, USA. 3Google Research, Mountain View, CA, USA. 4Stanford University School of Medicine, Palo Alto,
+CA, USA. 5Houston Methodist Hospital, Houston, TX, USA. 6Sequome, San Francisco, CA, USA. 7Fleming Initiative and Imperial College London, London, UK. 8These authors contributed equally:
+Juraj Gottweis, Wei-Hung Weng, Alexander Daryin, Tao Tu, Petar Sirkovic, Artiom Myaskovsky, Grzegorz Glowaty, Felix Weissenberger, Alessio Orlandi. ✉e-mail: juro@google.com; ckbjimmy@
+google.com; pushmeet@google.com; apawlosky@google.com; alankarthi@google.com; natviv@google.com
+
+
+
+                                                                                                                                         Nature | Vol 655 | 9 July 2026 | 487
+
+======== PAGE 2 ========
+Article
+              a                                                            Scientist inputs                                            Co-Scientist multi-agent system
+
+                                                                                                                        Research plan
+                                                                                                                                                                                          Generation agent
+                                                                            Research goal                               configuration
+                                                                                                                                                                                                                                              AI
+                                                                                                                                                                          Literature exploration
+                                                                       Scientist describes a                                                                      Simulated scientific debate
+                                                                     research goal along with
+                                 Scientist                           preferences, experiment                                                                                                                                            Co-Scientist
+                                                                       constraints and other                            Ranking agent                                                     Reflection agent
+                                                                             attributes                                  tournaments
+                                                                                                                                                                                                                                        Co-Scientist
+                        The scientist interacts                                                                                                                  Full review with web search                                      continuously generates,
+                          with the system by                                                                                                                                                                                       reviews, debates and
+                                                                                                                     Research hypothesis                                              Simulation review
+                        specifying a research                                 Add idea                                                                                                                                               improves research
+                         goal in natural language                                                                 comparison and ranking                                        Tournament review                                     hypotheses and
+                                                                             Review idea                           with scientific debate in                                                                                       proposals toward the
+                    The scientist can suggest                                                                     tournaments. Limitations                                                Deep verification                       research goal provided
+                       their own ideas and                                 Discuss research                      and top win–loss patterns                                                                                             by the scientist
+                        proposals, provide                                                                            are summarized and
+                                                                                                                  provided as feedback to                                                 Evolution agent
+                     feedback and reviews,
+                   and interact through a chat                                                                   other agents. This enables
+                                                                                                                   iterative improvement in                      Inspiration from other ideas                                             Tool use
+                        interface to guide                           Research proposals and
+                           Co-Scientist                                     overview                                   quality of research                                                 Simplification
+                                                                                                                     hypothesis generation                                                                                                 Search
+                                                                                                                            creating a                                        Research extension
+                                                                       Top-ranked research                                                                                                                                             Additional tools
+                                                                                                                      self-improving loop.
+                              Discuss through                       hypotheses and proposals
+                               chat interface                                                                                                                          Proximity check agent
+                                                                      are summarized into a
+                                                                      research overview and
+                                                                     shared with the scientist                                                                                    Meta-review agent
+                                                                                                                                                                                                                                           Memory
+                                                                                                                                                               Research overview formulation
+
+
+                                                                                                              Co-Scientist system design
+
+              b
+
+                                                                                                                                                                                                                    Research overview
+                                                                    Research goal                   Configuration                            Supervisor agent                                                               with
+                                         Scientist                                                                                                                                                                  detailed hypotheses
+                                                                                                                                         Assign agents to workers
+
+                                                     Additional                                                                                                                                                       Worker
+                                                     feedback
+                                                                                         Generation agent                                    Proximity agent                                                          Worker
+                                                                                                                                                                                                                      Worker
+
+                                                                                         Reflection agent                                  Meta-review agent                                                          Worker
+
+                                                     AI
+                                                                                                                                                                                                                     Context
+                                                                                           Ranking agent                                     Evolution agent                                                         Memory
+                                             Co-Scientist
+                                                                                                           Co-Scientist specialized agents
+
+
+                                                                                                       Co-Scientist multi-agent architecture
+
+              c
+                                                                                                                                                                                                                               Suggested drug
+                                                                                                                                                                      AML cell activity
+
+
+
+
+                                         Suggest an existing drug that could be                                                                                                                                                Suggested novel drug
+                                                   repurposed for AML                                          With preclinical evidence:
+             Application
+
+
+
+
+                                          treatment and provide experimentally                                  binimetinib, pacritinib
+                                        testable concentrations for an IC50 assay.                                                                                                           IC50
+                                                                                                             Completely novel repurposing:
+                                        The drug should inhibit the proliferation of
+                                                                                                                  KIRA6, leflunomide
+                                          AML cell lines, particularly MOLM13.
+                                                                                                                                                                                                        Drug concentration
+                                   Scientist provides research goal to identify possible               Co-Scientist generates predictions for                In vitro experiments show that Co-Scientist-proposed drug
+                                          drug repurposing candidates for AML                                  AML drug repurposing.                       -repurposing candidates inhibit tumour activity in AML cell lines
+                                                                                                       Scientists review and select candidates
+                                                                                                               for in vitro experiments
+
+                                                                                                                       Drug repurposing for AML
+
+                                                                                                                                                                                                                                             Disease
+                                                                                                                                                               fold change
+
+
+
+
+                                                                                                                                                                                                                                             progression
+                                                                                                                                                                Fibroblast
+
+
+
+
+                                                                                                                                                                                                                                          Untreated
+                                         Propose a novel hypothesis about specific
+                                                                                                                   Co-Scientist identified
+                                            epigenetic alterations contributing to
+                                                                                                                  three epigenetic targets
+                                           myofibroblast formation in liver fibrosis                                                                                                                                                           FDA-approved
+                                                                                                                                                                                            Fibrosis    Fibrosis    Suggested Suggested
+                                                                                                                 Co-Scientist proposes                                                      inducer     inhibitor     drug 1    drug 2
+                                    Scientist specifies research goal to                                                                                 In vitro experiments show that the drugs based on the proposed
+                                         identify novel epigenetic                                              several epigenetic target
+                                                                                                            candidates for in vitro experiments       epigenetic targets reduce the fibrogenesis in human hepatic organoids.
+                                          targets for liver fibrosis
+
+                                                                                                            Identifying treatment targets for liver fibrosis
+
+
+
+                                                                                               Hypothesis       Experimental works and results                                                         Insights submitted to a top journal
+
+                                                                                                 2015–2024: scientists create novel
+                                        Why are cf-PICIs found in                              hypothesis, and validate experimentally       Independently propose the same hypothesis                                           Recapitulate result
+                                        many bacterial species?                               over around 10 years of iterative research
+             Basic research
+
+
+
+
+                                  Scientists start exploring the cf-PICI                                                                                        Co-Scientist hypotheses
+                                          mechanisms in 2015                                                                                            Conserved regions on capsids and tails
+                                                                                           2024: Co-Scientist generated research                      Capsid interaction with bacterial membranes
+                                                                                         hypothesis matching the empirical findings                                        …
+                                                                                                        in 2 days
+
+                                                                                       Parallel in silico discovery of bacterial gene transfer mechanism relevant to AMR
+
+
+Fig. 1 | See next page for caption.
+
+
+
+
+488 | Nature | Vol 655 | 9 July 2026
+
+======== PAGE 3 ========
+Fig. 1 | Summary of Co-Scientist design, its multi-agent architecture and        b, The underlying multi-agent architecture: a Supervisor agent parses the
+experimental validation. a, Overview of the different components of              user’s natural language research goal and dynamically allocates resources
+Co-Scientist’s structured scientific thinking engine—the multi-agent system,     to specialized worker agents within an asynchronous task queue. The red
+and its interaction paradigm with scientists. Given a research goal in natural   boxes in the ‘Co-Scientist specialized agents’ part denote individual agents
+language, Co-Scientist generates novel research hypotheses. The system uses      each with their own unique logic and role. The blue boxes indicate the
+specialized Gemini-based agents, including Generation, Reflection, Ranking,      scientist-in-the-loop inputs and feedback. The dark grey arrows represent
+Evolution, Proximity (which evaluates relatedness) and Meta-review (which        the information flow through the Co-Scientist, and the red arrows represent
+provides high level analysis) agents, to continuously generate, debate and       the information feedback loop between the specialized agents. c, End-to-end
+evolve research hypotheses within a tournament framework. Feedback from          validation of Co-Scientist across three biomedical problems of varying
+the tournament enables iterative improvement, creating a self-improving loop     complexity: Co-Scientist proposed drug-repurposing candidates for AML
+towards novel and high-quality hypotheses for solving complex scientific         (top), identified novel epigenetic targets for liver fibrosis (middle) and
+problems. Co-Scientist uses tools, including web search and specialized AI       independently recapitulated a, then unpublished, co-timed discovery of
+models, to improve the grounding and quality of generated research               a novel bacterial gene transfer mechanism relevant to AMR (bottom).
+hypotheses. Scientists can converse with Co-Scientist in natural language to     All hypotheses generated by Co-Scientist were subsequently verified
+specify research goals, incorporate constraints, provide feedback, steer and     through independent in vitro laboratory experiments.
+suggest new directions for explorations through the designated user interface.
+
+
+
+   Co-Scientist is purpose-built for a ‘scientist-in-the-loop’ collabora-
+tive paradigm. Scientists can specify their research goals in simple             Key contributions
+natural language and inform the system of desirable attributes and               Introducing Co-Scientist
+constraints for the proposed solutions. They can also actively interact          We develop and introduce Co-Scientist, a structured scientific thinking
+with and steer the system, including directly suggesting initial ideas and       engine, that goes beyond literature summarization and deep research
+hypotheses for the exploration, refining generated ideas or providing            tools to assist scientists in generating knowledge, novel hypothesis
+feedback through natural language chat.                                          generation, identifying unexpected connections and experimental
+   Co-Scientist works through a substantial scaling of the test-time             planning.
+compute paradigm16–18, implementing structured scientific thinking in
+a multi-agent setup to iteratively reason, evolve and improve the out-           Substantial scaling of the test-time compute paradigm for
+puts as it gathers more knowledge (Fig. 1b). Underpinning the system             scientific reasoning
+are thinking and reasoning steps—notably a self-play-based scientific            Co-Scientist is built on a Gemini-based multi-agent architecture, using
+debate step for generating novel research hypotheses; tournaments                an asynchronous task-execution framework. This framework enables
+that compare and rank hypotheses through the process of finding                  the system to flexibly allocate computational resources to scientific
+win and loss patterns; and an evolution process to improve their qual-           reasoning, mirroring key aspects of the scientific method. Specifically,
+ity. Finally, the agentic nature of the system enables it to recursively         the system uses self-play strategies, including a scientific debate and a
+self-critique its output and use tools such as web search and specialized        tournament-based evolution process, to iteratively refine hypotheses
+AI models to provide itself with feedback to refine its hypotheses and           and research proposals creating a self-improving loop. Using automated
+research proposals.                                                              evaluations across 15 complex expert curated open scientific goals, we
+   Although Co-Scientist is general purpose and applicable across                demonstrate the benefits of scaling the test-time compute paradigm with
+scientific disciplines, here we validate it in three impactful areas of          Co-Scientist outperforming other state-of-the-art agentic and reasoning
+biomedicine with varied complexity: drug repurposing for cancer;                 models in generating high-quality hypotheses for complex problems.
+novel treatment target discovery for liver fibrosis; and identification of
+mechanistic explanations for antimicrobial resistance (AMR) (Fig. 1c).           Expert-in-the-loop scientific workflow
+   Drug development remains an expensive and protracted process,                 Our system is designed for collaboration with scientists. The system
+with most new approvals requiring de novo discovery for each indi-               can flexibly incorporate conversational feedback in natural language
+cation19. Systematic identification of new therapeutic indications               from scientists and co-develop, evolve and refine outputs.
+for approved agents through drug repurposing offers a pragmatic
+strategy to accelerate development timelines and reduce attrition20.             End-to-end validation of Co-Scientist in important topics in
+Using Co-Scientist, we generated large-scale repurposing predictions             biomedicine
+validated through expert curation and in vitro assays. The system pro-           We present end-to-end validation of AI-generated hypotheses through
+posed several single-agent and combination therapies for AML that                new empirical findings in three distinct and increasingly complex areas
+demonstrate selective cytotoxicity at clinically relevant concentrations.        of biomedicine: drug repurposing, novel-target discovery and AMR
+Beyond repurposing, Co-Scientist enables hypothesis generation for               (Table 1 and Supplementary Note 1).
+de novo target discovery, a process that is traditionally limited by the
+scale and uncertainty of biological inference. We applied Co-Scientist
+to liver fibrosis, for which it proposed and ranked novel epigenetic             Co-Scientist overview
+targets demonstrating significant anti-fibrotic activity and hepatocyte          Given a research goal, Co-Scientist generates hypotheses constrained
+regeneration in human hepatic organoids1. Finally, we examined bac-              by default criteria that include plausibility, novelty, testability and
+terial gene transfer mechanisms related to AMR, a system-level chal-             safety. At a high level, it uses an asynchronous multi-agent architecture
+lenge involving molecular mechanisms and evolutionary pressures2.                whereby a team of agents co-operate to solve scientific problems and
+Researchers instructed the system to explore a topic their group had             develop new hypotheses (Fig. 1b). It comprises a natural language inter-
+independently discovered, but not yet published. Co-Scientist was                face for expert supervision, a task-execution framework for resource
+asked to hypothesize how capsid-forming phage-inducible chromo-                  allocation, a suite of specialized agents (Generation, Reflection, Rank-
+somal islands (cf-PICIs) exist across bacterial species. It independently        ing, Evolution, Proximity and Meta-review) mirroring the scientific
+proposed that cf-PICIs interact with diverse phage tails to expand host          method and a persistent context memory for long-horizon reason-
+range, mirroring the researchers’ unpublished experimental findings              ing. Detailed system configurations and agent mechanisms are fully
+detailed in co-timed reports2,21.                                                described in the Methods.
+
+
+                                                                                                                     Nature | Vol 655 | 9 July 2026 | 489
+
+======== PAGE 4 ========
+Article
+Table 1 | Real-world applications in biomedicine for end-to-end validation of Co-Scientist
+
+Application                             Drug repurposing                         Novel treatment target discovery                      Explain mechanism of gene transfer evolution
+Challenge                               Complex search                           Identifying novel targets                             Understanding complex systems
+Complexity                              Medium                                   High                                                  Very high
+Scale                                   Moderate, data limited                   Moderate, experiment limited                          Large, data and computation limited
+Unknown elements                        Constrained                              Large                                                 Vast and dynamic
+Summary of three scientific tasks selected to evaluate the hypothesis generation abilities of Co-Scientist. The chosen applications span varying biological disciplines and are categorized
+by four axes, inherent challenge (the primary scientific objective), complexity (the depth of reasoning required), scale (data availability and experimental feasibility) and unknown elements
+(the boundaries of the hypothesis search space). These progressively demanding tasks illustrate Co-Scientist’s generalizability and its ability to navigate both constrained problem spaces and
+open-ended explorations.
+
+
+
+
+                                                                                                  enhancement compared with the initial ones. Notably, although the
+System analysis and evaluation                                                                    Elo rating is not the direct optimization target, its progressive increase
+We first conducted the initial system evaluations to benchmark                                    emerges from the system’s information feedback loops that enable
+and verify the choice of the architecture and metrics underpinning                                recursive self-improvement.
+Co-Scientist (Supplementary Note 2 and Supplementary Fig. 1). We                                     To further contextualize this observation, we focused our analysis
+performed an ablation study to investigate the contribution of each                               on a subset of 15 research goals, curated as challenging problems by
+agentic component in Co-Scientist. We then analysed the impact                                    seven biomedical experts in their respective fields of expertise (Fig. 2b).
+of scaling test-time compute, and undertook a small-scale evalu-                                  These experts held doctoral degrees in biological or life science disci-
+ation with domain experts to assess the quality of the system out-                                plines and were actively working as postdoctoral researchers or faculty
+puts. Finally, to assess the practical use of the system’s predictions,                           members at academic research institutions. These research goals were
+we performed end-to-end wet-laboratory validations (laboratory                                    consistently structured and formatted, encompassing a research title,
+experiments) of Co-Scientist-generated hypotheses and research                                    a clear set of goals, preferences specifying biological or disease areas of
+proposals in three key biomedical applications: drug repurposing,                                 interest, desirable solution attributes and constraints on experimental
+identifying new treatment targets and elucidating the mechanisms                                  techniques.
+underlying AMR (Table 1 and Supplementary Note 1). The varying com-                                  In addition to the research goals, the experts provided their ‘best
+plexity and nature of these applications enable a more comprehensive                              guess’ hypotheses or solutions. We then included outputs from other
+assessment of the system. Notably, all three validations included the                             state-of-the-art LLMs and reasoning models at the time of this study
+expert-in-the-loop concept.                                                                       (Gemini 2.0 Pro Experimental, Gemini 2.0 Flash Thinking Experi-
+                                                                                                  mental 12-19, OpenAI o1, OpenAI o3-mini-high, and DeepSeek R1) in
+Agent ablation analysis                                                                           a tournament along with the expert’s best guess and Co-Scientist for
+Our ablation analyses (described in the Methods, Supplementary                                    each curated goal. Performance was assessed using the Co-Scientist
+Note 3 and Supplementary Figs. 2–6) confirmed the importance of                                   Elo rating metric.
+our multi-agent architecture and specialized prompting strategies for                                The trends previously observed with test-time compute scaling
+robust scientific reasoning. For example, granting the Reflection agent                           in Fig. 2a were consistent within this subset. Furthermore, as shown
+access to external search tools effectively prevented the hallucination                           in Fig. 2b, Co-Scientist eventually substantially surpassed the other
+of seemingly novel but implausible hypotheses, while using a scientific                           frontier LLMs and reasoning models in Elo rating with iterative
+debate prompt in the Ranking agent substantially improved the ranking                             improvement. Notably, newer reasoning models, such as OpenAI
+of hypotheses and reduced positional bias. Furthermore, iterative refine-                         o3-mini-high and DeepSeek R1, demonstrated competitive perfor-
+ment by the Evolution agent substantially boosted hypotheses quality.                             mance while requiring much less compute and reasoning time. Finally,
+                                                                                                  we observed no evidence of performance saturation as measured by
+Scaling test-time compute improves scientific reasoning                                           Elo, suggesting that further scaling of test-time compute in this par-
+To evaluate the effects of test-time compute scaling and Co-Scientist’s                           adigm could yield continued improvements in the result quality of
+progress during iterative scientific reasoning and hypothesis genera-                             Co-Scientist, provided that the research goal is tractable and benefits
+tion, we measured the Elo ratings of Co-Scientist-generated hypotheses                            from the search-and-explore paradigm. It is worth noting again that
+and proposals over the course of its thinking and computation (that                               the Co-Scientist architecture is model agnostic and is likely to benefit
+is, the tournament of hypotheses). This analysis was done across 203                              from further advancements in frontier and reasoning LLMs, such as
+distinct research goals curated across broad scientific topics (pre-                              the most recent Gemini 3 models.
+dominantly in biomedicine, but also included other topics, such                                      Building on Co-Scientist’s ability to refine and improve research
+as mathematics and physics) and entered into Co-Scientist until                                   hypotheses and proposals iteratively, we investigated its potential to
+3 February 2025.                                                                                  improve on expert best-guess solutions. Consistent with our previ-
+   Co-Scientist’s research hypotheses and proposals were partitioned                              ous observations, Co-Scientist demonstrated the ability to enhance
+into ten temporal buckets of equal size. Each bucket corresponded                                 expert best-guess solutions over time, as evidenced by the Elo metric
+to a sequential 10% of the total generation time, with the first bucket                           in Extended Data Fig. 1. Notably, the improvement trends initially mir-
+containing the earliest 10% of generated Co-Scientist results, while                              rored those of Co-Scientist’s self-generated solutions but subsequently
+the tenth bucket comprised the most recent 10%. For each bucket,                                  surpassed them as measured by Elo. While this is a preliminary finding
+we determined the average Elo rating of the top-ten hypotheses and                                requiring further validation, it suggests a new paradigm of human–AI
+the maximum individual Elo rating (the best Elo). These average and                               collaboration in scientific discovery with systems such as Co-Scientist
+best Elo ratings were averaged across 203 research goals and their                                augmenting and accelerating the work of expert scientists.
+corresponding tournaments. The resulting performance trends as
+seen in Fig. 2a, across both metrics, serve as a measure of Co-Scientist’s                        Co-Scientist yields potentially impactful results for experts
+quality improvement as it spends more time in thinking and computa-                               To obtain expert feedback and assess preferences, we conducted
+tion—the most recent hypotheses demonstrate a considerable quality                                a small-scale expert evaluation on 11 of the 15 previously curated
+
+
+490 | Nature | Vol 655 | 9 July 2026
+
+======== PAGE 5 ========
+            a                                                                       Best hypothesis Elo                                                                                                                         Top-10 average hypothesis Elo
+
+                                                                Co-Scientist best                                                                                                                                    Co-Scientist top-10 average
+
+
+             Elo rating (self-evaluation)
+
+
+
+
+                                                                                                                                          Elo rating (self-evaluation)
+                                                                                                                                                                                                      1,600
+                                               1,600
+
+                                                                                                                                                                                                      1,500
+                                               1,500
+                                                                                                                                                                                                      1,400
+
+                                               1,400
+                                                                                                                                                                                                      1,300
+
+
+                                               1,300                                                                                                                                                  1,200
+                                                                 2            4                  6               8             10                                                                                    2             4               6          8         10
+                                                                                         Time bucket                                                                                                                                     Time bucket
+
+            b                                                                       Best hypothesis Elo                                                                                                                          Top-10 average hypothesis Elo
+
+                                                                Co-Scientist best                                                                                                                                    Co-Scientist top-10 average
+                                               1,700            Gemini 2.0 Pro Experimental                                                                                                           1,700          Gemini 2.0 Pro Experimental
+                Elo rating (self-evaluation)
+
+
+
+
+                                                                                                                                          Elo rating (self-evaluation)
+                                                                Gemini 2.0 Flash Thinking Experimental 12-19                                                                                                         Gemini 2.0 Flash Thinking Experimental 12-19
+                                                                OpenAI o1                                                                                                                             1,600          OpenAI o1
+                                               1,600
+                                                                OpenAI o3                                                                                                                                            OpenAI o3
+                                                                DeepSeek R1                                                                                                                                          DeepSeek R1
+                                               1,500                                                                                                                                                  1,500
+                                                                Human expert                                                                                                                                         Human expert
+
+                                               1,400                                                                                                                                                  1,400
+
+                                               1,300                                                                                                                                                  1,300
+
+                                               1,200                                                                                                                                                  1,200
+                                                                 2             4                  6              8              10                                                                                   2             4               6            8        10
+                                                                                          Time bucket                                                                                                                                     Time bucket
+
+                                                               Novelty versus impact ratings of models                                                                                                                          Averaged ranking of models
+            c                                                                                                                                                                                          2.0
+                                                                                                                                                    Averaged ranking (rank of 1 indicates the best)
+
+
+
+                                                     4.00                                                            Co-Scientist
+                                                                                                                     Gemini 2.0
+                                                                                                                     Flash Thinking                                                                    2.2
+                                                     3.75
+                                                                                                                     Experimental 12-19
+                                                                                                                     Gemini 2.0                                                                        2.4
+                                                     3.50
+                                                                             (3.09, 3.09)       (3.64, 3.09)         Pro Experimental
+                                                                                                                     OpenAI o1                                                                         2.6
+                                                     3.25                               (3.27, 3.00)                                                                                                          2.36
+                                            Impact
+
+
+
+
+                                                                                                                                                                                                                                                       2.45           2.45
+                                                     3.00                                                                                                                                              2.8
+
+                                                                                                       (3.55, 2.82)                                                                                    3.0
+                                                     2.75                                                                                                                                                                         2.73
+
+                                                     2.50                                                                                                                                              3.2
+
+                                                     2.25                                                                                                                                              3.4
+
+                                                     2.00                                                                                                                                               Co-Scientist           Gemini 2.0        Gemini 2.0         OpenAI o1
+                                                         2.0         2.5          3.0          3.5         4.0                                                                                                               Flash Thinking   Pro Experimental
+                                                                                                                                                                                                                           Experimental 12-19
+                                                                              Novelty
+
+Fig. 2 | Scaling test-time compute enhances Co-Scientist’s scientific                                                                     novel hypotheses compared with human domain experts and state-of-the-art
+thinking and hypotheses quality. a, Impact of test-time compute scaling on                                                                large language and reasoning models (for example, OpenAI o1, o3-mini-high,
+Co-Scientist hypotheses quality measured by Elo auto-evaluation. Generated                                                                DeepSeek-R1). c, Blinded human expert evaluation: independent domain
+hypotheses across 203 diverse scientific research goals were partitioned into                                                             experts rigorously assessed AI system hypotheses across 11 curated open
+ten sequential temporal buckets. The continuous upward trend in both the                                                                  biomedical problems. Left, the average expert ratings for hypothesis novelty
+maximum individual Elo rating (left) and the top-ten average Elo rating (right)                                                           and impact, evaluated independently on a five-point Likert scale and presented
+suggests that the system has the capacity for self-improvement towards                                                                    as grouped bar charts. Right, the overall expert preference ranking. Co-Scientist
+high-quality scientific hypotheses for complex problems. b, Auto-evaluation                                                               consistently achieved the highest expert ratings in novelty and impact and was
+benchmarking against standard language models and human experts. Evaluated                                                                selected as the preferred AI system by experts. For a and b, data are mean ± 95%
+on a subset of 15 highly complex, expert-curated biomedical goals, Co-Scientist                                                           confidence intervals. For c, data are mean ± probable errors. The exact sample
+leverages test-time compute scaling to surpass and generate higher-quality and                                                            sizes (n) are 203 research goals (a), 15 goals (b) and 11 goals (c).
+
+
+
+
+research goals. We asked the experts who curated the research goals                                                                       should receive the lowest ranking. Impact: higher-ranked outputs
+to assess outputs from Co-Scientist, Gemini 2.0 Flash Thinking Experi-                                                                    should address important open questions in the field and have the
+mental 12-19, Gemini 2.0 Pro Experimental, and OpenAI o1 models. Spe-                                                                     potential to substantially advance scientific understanding or lead
+cifically, they provided a preference ranking (1 being most preferred                                                                     to practical applications.
+and 4 being least preferred) and rated the novelty and impact of the                                                                        Across 11 expert-evaluated research goals, the outputs generated
+proposed solutions on a five-point scale, ranging from 1 (worst) to                                                                       by Co-Scientist were most preferred and rated higher in novelty and
+5 (best) following this rubric. Novelty: higher-ranked outputs should                                                                     impact axes compared with the other baseline models. Specifically,
+propose hypotheses that, to the best of the expert’s knowledge, have                                                                      Co-Scientist received an average preference rank of 2.36, and nov-
+not been previously published in any form. Hypotheses similar to                                                                          elty and impact ratings of 3.64 and 3.09 (out of 5) as shown in Fig. 2c.
+existing proposals, even with minor modifications, should rank lower                                                                      These evaluations reflect subjective expert assessments, not objective
+and exact replicas of previously proposed and performed experiments                                                                       ground truth. Notably, the human expert preferences also appear
+
+
+                                                                                                                                                                                                                                               Nature | Vol 655 | 9 July 2026 | 491
+
+======== PAGE 6 ========
+Article
+to be concordant with relative Elo ratings as can be inferred from
+Fig. 2b,c.                                                                    Wet-laboratory validation of Co-Scientist AML
+   We also conducted the preference ranking evaluation for the 15             drug-repurposing candidates
+goals between Co-Scientist and other LLM and reasoning model bas­             The candidate selection for wet-laboratory experiments was performed
+elines using OpenAI o3-mini-2025-01-31, o1-preview-2024-09-12, Gemini         with meticulous expert oversight. Thirty top-ranked drug candidate
+2.0 Pro Experimental and Gemini 2.0 Flash Thinking Experimental 01-21         hypotheses were shared with expert oncologists (an example detailed
+as judges (LLM-as-a-judge evaluation). Co-Scientist outputs were the          Co-Scientist output is provided in Supplementary Note 6). The experts
+most preferred by all four evaluation judge LLMs as shown in Extended         evaluated the hypotheses, selecting drug candidates on the basis
+Data Fig. 2. Owing to the small scale of these evaluations, further studies   of their potential to modulate key molecular signalling pathways
+are necessary for any reliable conclusions. We present a more compre-         associated with disease progression and resistance.
+hensive clinical expert evaluation focused on Co-Scientist proposals for          The primary selection criteria prioritized compounds with multip­
+drug repurposing in Supplementary Note 4 and Supplementary Fig. 7.            athway activity, specifically those targeting dysregulated inflammatory
+                                                                              signalling, metabolic reprogramming and aberrant cell proliferation.
+                                                                              Emerging evidence indicates that these interconnected biological
+Real-world validations                                                        processes have critical roles in AML relapse and treatment resistance23.
+Drug repurposing with Co-Scientist                                            Candidates were further prioritized on the basis of preclinical mecha-
+Rigorous assessment of a system’s ability to generate novel hypotheses        nistic insights demonstrating relevance to AML biology, including
+for complex scientific problems necessitates end-to-end experimen-            their predicted effects on leukaemic cell survival, interactions within
+tal validation. However, due to the challenging, time-consuming and           the bone marrow microenvironment and mechanisms underlying
+resource-intensive nature of such endeavours, large-scale experimental        therapeutic resistance.
+validation is infeasible. Instead, we selected areas of unmet clinical need       On the basis of potential mechanisms of action, five initial drug-
+to serve as a strong benchmark for the end-to-end system evaluation of        repurposing candidates—binimetinib, pacritinib, cerivastatin, pravas-
+the system’s hypotheses-generation ability. Importantly, all experimen-       tatin and dimethyl fumarate—were selected for further wet-laboratory
+tal validations were conducted in collaboration with expert scientists,       validation in AML. A list of drug details is provided in Supplementary
+who provided guidance to Co-Scientist and prioritized wet-laboratory          Note 5.3.
+experiments.                                                                      Of the five drugs tested (the experimental setup is described in Sup-
+   Our first end-to-end validation of Co-Scientist is in drug repurpos-       plementary Note 5.4), binimetinib, pacritinib and cerivastatin dem-
+ing, for which the goal was to identify novel therapeutic indications         onstrated inhibition of cell viability (Fig. 3a–c). Notably, binimetinib,
+for existing, approved drugs beyond their original use. This approach         which is already approved for the treatment of metastatic melanoma,
+can accelerate the identification of treatments for complex and rare          exhibited an half-maximal inhibitory concentration (IC50) as low as
+diseases, as repurposed drugs have established safety profiles and            2 nM in all AML cell lines (except for NOMO-1), but this was much higher
+are readily available. From a technical standpoint, this is a complex         in the TK6 non-AML cell line (Fig. 3a and Extended Data Fig. 3). While
+search-and-explore problem involving a large but finite set of drug–          binimetinib demonstrated limited efficacy as monotherapy in heavily
+disease pairs as noted in Table 1.                                            pretreated, RAS-mutant relapsed/refractory AML in a previous phase
+   Given Co-Scientist’s ability to synthesize and integrate information       II study, Co-Scientist proposed an alternative repurposing strategy for
+across a vast body of scientific and clinical literature, we hypothesized     frontline treatment without molecular profiling, on the basis of modula-
+that drug repurposing would be an ideal test of the system’s abilities.       tion of baseline RAS–MEK–ERK pathway activity that may influence sen-
+The validation of Co-Scientist’s predictions was performed using a            sitivity to conventional chemotherapy in treatment-naive disease24. This
+multifaceted approach, incorporating computational biology analyses,          result shows the promise of Co-Scientist to aid with drug repurposing.
+oncologist expert feedback and in vitro wet-laboratory experiments
+using cancer cell lines.                                                      Single-agent AML repurposing candidates
+   We constrained Co-Scientist to explore potential repurposing               We next investigated Co-Scientist’s ability to autonomously propose
+hypotheses from a curated list of 2,300 approved drugs across 34              single-agent drug-repurposing candidates without oversight. Towards
+cancer types and conducted an oncologist expert review of the pre-            this, the system was directed to generate a ranked list of repurposing
+dictions (Supplementary Note 5.1 and Supplementary Fig. 8). Building          candidates for AML that were not previously repurposed for the target
+on the positive feedback from clinical experts, we conducted in vitro         indication and without any previous preclinical evidence. Furthermore,
+wet-laboratory validation experiments for drug-repurposing hypoth-            Co-Scientist did not receive any additional external inputs, such as
+eses generated by Co-Scientist for acute myeloid leukaemia (AML), an          the DepMap scores or human expert feedback. We then determined
+aggressive haematological malignancy marked by uncontrolled prolif-           whether these candidates suggested by Co-Scientist could be validated
+eration of myeloblasts, resulting in impaired haematopoiesis. There is        in the laboratory.
+a critical unmet need for effective therapeutic options in the context of        For in vitro laboratory validation, the domain experts reviewed and
+disease recurrence22. The cell-line-based experiments conducted here          selected the top three repurposing candidates to treat AML: nanvuran-
+serve as an initial biological validation step for Co-Scientist hypotheses,   lat, KIRA6 and leflunomide.
+with intentionally straightforward methodology following established             The detailed Co-Scientist output, including the hypothesis, rationale
+protocols. We selected four AML cell lines for covering different AML         and self-generated novelty review, is provided for KIRA6 in Supplemen-
+subtypes (MOLM-13, KG-1a, HL-60 and NOMO-1) and a non-AML cell                tary Note 6. As can be seen, the system identifies that targeting IRE1α
+line (TK6), on the basis of the rationale provided by Co-Scientist and        in the context of AML has been explored25 previously but not with the
+the clinical expert in the loop (Supplementary Note 5.2). It is impor-        specific drug KIRA6, suggesting that the system is reasonably well
+tant to emphasize that these wet-laboratory experiments function as           calibrated in its assessment of novelty. The system suggests an overall
+a viability check of the drug-repurposing pipeline, yet they are not a        moderate level of novelty for the hypothesis.
+replacement for the rigorous preclinical and clinical assessment that is         Of the three drugs tested, treatment with the IRE1α inhibitor KIRA6
+typically required for therapeutic validation. They provide an efficient      showed inhibition of cell viability in several AML cell lines representing
+biological reality check enabling us to rapidly evaluate AI-generated         different molecular subtypes, KG-1a, MOLM-13, HL-60 and NOMO-1,
+hypotheses before committing to more resource-intensive validation            and the non-AML cell line TK6 as a control (Fig. 3d–h, Supplementary
+studies necessary for clinical translation.                                   Note 5.2 and Supplementary Table 4). The IC50 values of KIRA6 were all
+
+
+492 | Nature | Vol 655 | 9 July 2026
+
+======== PAGE 7 ========
+ a                                    MOLM-13 cells                    b                                      MOLM-13 cells                          c                                     MOLM-13 cells                           d                                       MOLM-13 cells
+                              IC50 = 0.01 μM (0.003–0.025 μM)                                          IC50 = 0.73 μM (0.38–1.35 μM)                                                IC50 = 6.73 μM (1.8–32 μM)                                                      IC50 = 1.75 μM (0.7–4.3 μM)
+
+                                                                                        100                                                                         100                                                                             100
+                 100
+
+
+
+
+                                                                                                                                                   Inhibition (%)
+
+
+
+
+                                                                                                                                                                                                                                   Inhibition (%)
+                                                                       Inhibition (%)
+Inhibition (%)
+
+
+
+
+                  50                                                                    50                                                                           50                                                                              50
+
+
+
+
+                   0                                                                     0                                                                            0                                                                               0
+                       10–4   10–3   10–2   10–1     100   101   102                          10–4   10–3   10–2      10–1   100       101   102                          10–4   10–3    10–2     10–1         100     101   102                          10–4   10–3    10–2     10–1         100    101   102
+                                      Binimetinib (μM)                                                        Pacritinib (μM)                                                             Cerivastatin (μM)                                                                 KIRA6 (μM)
+
+
+ e                                      KG-1a cells                     f                                          HL-60 cells                       g                                    NOMO-1 cells                             h                                            TK6 cells
+
+                              IC50 = 0.01 μM (0.012–0.081 μM)                                           IC50 = 0.87 μM (0.32–2.4 μM)                                              IC50 = 0.14 μM (0.08–0.24 μM)                                                   IC50 = 0.18 μM (0.12–0.27 μM)
+
+                                                                                        100                                                                         100                                                                             100
+                 100
+                                                                       Inhibition (%)
+
+
+
+
+                                                                                                                                                                                                                                   Inhibition (%)
+                                                                                                                                                   Inhibition (%)
+Inhibition (%)
+
+
+
+
+                 50                                                                      50                                                                         50                                                                              50
+
+
+
+
+                  0                                                                       0                                                                           0                                                                              0
+                       10
+                         –4
+                              10–3   10–2   10–1     100   101   102                          10–4   10–3   10–2      10–1       100   101   102                          10–3    10–2     10–1          100         101     102                          10–3    10–2     10–1          100         101    102
+                                        KIRA6 (μM)                                                                 KIRA6 (μM)                                                               KIRA6 (μM)                                                                      KIRA6 (μM)
+
+
+Fig. 3 | In vitro biological validation of Co-Scientist generated single-                                                                                 cell line TK6 (h). KIRA6 exhibits highly selective cytotoxicity against the KG-1a
+agent repurposing candidates for AML. Co-Scientist identified promising                                                                                   AML cell line compared with the non-malignant TK6 control. The 18-fold
+biologically active compounds, ranging from candidates with existing                                                                                      separation establishes a promising in vitro therapeutic window and suggests
+preclinical rationales to completely novel therapeutic targets for AML.                                                                                   Co-Scientist’s promising capability to search, reason and identify biologically
+a–c, Dose–response curve of MOLM-13 AML cells treated with binimetinib (a),                                                                               active compounds. The x axis represents drug concentration (µM) on a
+pacritinib (b) or cerivastatin (c). Co-Scientist nominated candidates with                                                                                logarithmic scale, and the y axis represents the percentage of growth inhibition.
+existing evidence, demonstrating potent anti-leukaemic activity. d–h, Dose–                                                                               Data are mean ± s.d. of n = 3 biologically independent experiments. Exact IC50
+response curves of the completely novel Co-Scientist-predicted candidate                                                                                  values were determined using nonlinear regression curve fitting; numbers in
+KIRA6 (an IRE1α inhibitor) evaluated in different AML cell lines (MOLM-13 (d),                                                                            parentheses above plots indicate 95% confidence interval.
+KG-1a (e), HL-60 (f) and NOMO-1 (g)) and in the normal lymphoblastoid control
+
+
+
+in the nanomolar or low micromolar range, but it was much more effec-                                                                                     Table 2 and Supplementary Note 5.5. These patterns probably reflect
+tive in KG-1a cells (IC50 of 10 nM) than in the non-AML control cell line                                                                                 the underlying molecular profiles of the two cell lines (Supplementary
+TK6 (IC50 of 180 nM). KIRA6 was also slightly more effective in NOMO-1                                                                                    Notes 5.3 and 5.5). Further mechanistic studies will be required to define
+cells, with an IC50 of 144 nM but, notably, MOLM-13 and HL-60 cells were                                                                                  the molecular determinants of response to combination therapy across
+markedly less sensitive to KIRA6 (IC50 values of 1,750 nM and 870 nM,                                                                                     AML subtypes, and to identify predictive biomarkers that could enable
+respectively). The 18-fold separation between the highly primitive KG-1a                                                                                  rational regimen selection.
+cells and the normal lymphoblastoid TK6 line highlights a potential                                                                                         These results not only demonstrate Co-Scientist’s ability to identify
+selective therapeutic window. The differential sensitivities observed                                                                                     potent single agents but also highlight its use in proposing new syner-
+across distinct AML subtypes indicate that IRE1α blockade may be                                                                                          gistic drug combinations that have potential in addressing therapeutic
+most effective in targeting primitive, stem-like AML populations over                                                                                     resistance and treatment-refractory disease. Importantly, it shows the
+more differentiated lineages. Comprehensive cytogenetic rationales                                                                                        potential of Co-Scientist to identify new drug combinations without the
+and molecular mechanisms correlating these varying cell line sensitivi-                                                                                   requirement of large-scale wet-laboratory screening, which becomes
+ties to the IRE1α–XBP1 axis are described in Supplementary Note 5.2.                                                                                      exponentially more costly and difficult as larger combinations are
+Nanvuranlat and leflunomide instead show limited effect on MOLM-13                                                                                        considered. Thus, Co-Scientist may enable research that was previously
+cells (Extended Data Fig. 4).                                                                                                                             restricted by wet-laboratory design and feasibility.
+
+Synergistic AML drug combinations                                                                                                                         Guiding clinical translation design
+A common strategy for more effective treatment is the combination                                                                                         While the results are promising, translating these predictions from
+of drugs that synergistically target different disease pathways, but                                                                                      Co-Scientist into clinical practice will be highly challenging, as the
+searching and screening for these combinations becomes exponentially                                                                                      complexity of a disease model, patient heterogeneity and disease vari-
+more complex as the number of drugs increases. This is a complex                                                                                          ability cannot be fully captured in such limited in vitro experiments.
+task even for experts; at the same time, it may be well suited for AI. To                                                                                 Even if a hypothesis generated by Co-Scientist is well reviewed by
+investigate this, we used Co-Scientist to identify promising synergistic                                                                                  oncologists and supported by preclinical rationale and strong in vitro
+multi-drug regimens for AML. We then evaluated seven drug combina-                                                                                        experiments, this does not guarantee in vivo efficacy or clinical suc-
+tions proposed by Co-Scientist in the MOLM-13 and KG-1a cell lines. In                                                                                    cess. Factors such as drug bioavailability, pharmacokinetics, off-target
+MOLM-13 cells, responses were predominantly synergistic across both                                                                                       effects and patient selection criteria can all impact onward clinical
+dual (for example, JNJ-64619178 + selinexor) and triple combinations                                                                                      trial outcomes. Moreover, in case of haematological malignancies, the
+(such as JQ1 + olaparib + MSA2). By contrast, KG-1a cells exhibited highly                                                                                tumour microenvironment and systemic interactions may introduce
+context-dependent responses with a mixture of synergy and antago-                                                                                         unforeseen resistance mechanisms, further complicating translation
+nism, probably reflecting their distinct chemoresistant molecular                                                                                         from hypothesis to clinical benefit.
+profile (TP53 mutant). A comprehensive summary of all interaction                                                                                            To more faithfully approximate the parameters that govern
+patterns is provided in Fig. 4, Extended Data Figs. 5 and 6, Extended Data                                                                                real-world therapeutic decision-making, we tasked Co-Scientist with a
+
+
+                                                                                                                                                                                                                             Nature | Vol 655 | 9 July 2026 | 493
+
+======== PAGE 8 ========
+Article
+                      a                                              JNJ-64619178 + selinexor (MOLM-13)                                       b                                                    JNJ-64619178 + selinexor (KG-1a)
+                                         1.0                                                                                                                        1.0
+                                                         Synergy (CI < 1)                                                                                                                   Synergy (CI < 1)
+                                                        Antagonism (CI > 1)                                                                                                                Antagonism (CI > 1)
+                                         0.8                                                                                                                        0.8
+
+
+
+                     Combination index
+
+
+
+
+                                                                                                                                              Combination index
+                                         0.6                                                                                                                        0.6
+
+
+                                         0.4                                                                                                                        0.4
+
+
+                                         0.2                                                                                                                        0.2
+
+
+                                          0                                                                                                                                  0
+
+                                                                 0.6           0.7              0.8           0.9       1.0                                                         0.80           0.85              0.90           0.95                          1.00
+                                                                                   Fraction affected                                                                                                          Fraction affected
+                      c                                                                                        JQ1 + olaparib + MSA2 (MOLM-13)
+                                                                       HSA max-over-MSA2 (locked scale)                                                                                      Bliss max-over-MSA2 (locked scale)
+
+                                                               0.5                                                      0.8                                                         0.5                                                    0.8
+                                                                                                                        0.6                                                                                                                0.6
+                                                               1.5                                                                                                                  1.5
+
+
+
+
+                                                                                                                               Excess fractional effect
+
+
+
+
+                                                                                                                                                                                                                                                  Excess fractional effect
+                                                                                                                        0.4                                                                                                                0.4
+                                                               2.5                                                                                                                  2.5
+                                               Olaparib (nM)
+
+
+
+
+                                                                                                                                                                    Olaparib (nM)
+                                                                                                                        0.2                                                                                                                0.2
+                                                               3.5                                                      0                                                           3.5                                                    0
+                                                                                                                        –0.2                                                                                                               –0.2
+                                                               4.5                                                                                                                  4.5
+                                                                                                                        –0.4                                                                                                               –0.4
+                                                               5.5                                                                                                                  5.5
+                                                                                                                        –0.6                                                                                                               –0.6
+                                                               6.5                                                      –0.8                                                        6.5                                                    –0.8
+
+                                                                       0.5   1.5    2.5   3.5     4.5   5.5     6.5                                                                         0.5   1.5   2.5    3.5   4.5    5.5   6.5
+                                                                                       JQ1 (nM)                                                                                                           JQ1 (nM)
+
+                      d                                                                                         JQ1 + olaparib + MSA2 (KG-1a)
+                                                                       HSA max-over-MSA2 (locked scale)                                                                                      Bliss max-over-MSA2 (locked scale)
+
+                                                               0.5                                                      0.8                                                         0.5                                                    0.8
+                                                                                                                        0.6                                                                                                                0.6
+                                                               1.5                                                                                                                  1.5
+                                                                                                                                  Excess fractional effect
+
+
+
+
+                                                                                                                                                                                                                                                  Excess fractional effect
+                                                                                                                        0.4                                                                                                                0.4
+                                                               2.5                                                                                                                  2.5
+                                               Olaparib (nM)
+
+
+
+
+                                                                                                                                                                  Olaparib (nM)
+
+
+
+
+                                                                                                                        0.2                                                                                                                0.2
+                                                               3.5                                                      0                                                           3.5                                                    0
+                                                                                                                        –0.2                                                                                                               –0.2
+                                                               4.5                                                                                                                  4.5
+                                                                                                                        –0.4                                                                                                               –0.4
+                                                               5.5                                                                                                                  5.5
+                                                                                                                        –0.6                                                                                                               –0.6
+                                                               6.5                                                      –0.8                                                        6.5                                                    –0.8
+
+                                                                       0.5   1.5    2.5   3.5     4.5   5.5     6.5                                                                         0.5   1.5   2.5    3.5   4.5    5.5   6.5
+                                                                                       JQ1 (nM)                                                                                                            JQ1 (nM)
+
+Fig. 4 | Validation of Co-Scientist predicted synergistic multi-drug                                                                                         combination. c,d, Excess fractional effect heat map for the triple-drug
+combinations for AML. Co-Scientist successfully navigated high-dimensional                                                                                   combination JQ1, olaparib and MSA2. Synergy is quantified across a matrix
+combinatorial spaces to propose effective multi-drug therapy regimens,                                                                                       of drug concentrations (nM) using the highest single agent (HSA) and Bliss
+validated here in the AML cell lines MOLM-13 (a and c) and KG-1a (b and d).                                                                                  independence models. The colour scale illustrates the deviation from predicted
+a,b, Quantitative synergy analysis of the dual combination JNJ-64619178                                                                                      additive effects: the red regions indicate a positive excess effect (synergy), and
+and selinexor. The plot illustrates the relationship between the combination                                                                                 the blue regions represent a negative excess effect (antagonism). These results
+index (CI) and the fraction affected (Fa) using the Chou–Talalay method.                                                                                     suggest Co-Scientist’s ability to identify highly active, complex combinatorial
+The horizontal red dashed line represents strictly additive effects (CI = 1.0).                                                                              treatments without exhaustive empirical screening. Complete interaction
+Datapoints falling below this threshold denote the synergy zone (CI < 1),                                                                                    profiles are available in Extended Data Figs. 5 and 6 and Extended Data Tables 1
+while points above denote the antagonism zone (CI > 1), confirming strong                                                                                    and 2. For all synergy analyses, experiments were performed in n = 3 biologically
+synergistic interactions for this Co-Scientist-proposed double-drug                                                                                          independent replicates.
+
+
+
+structured translational analysis using a detailed clinical variable frame-                                                                                  (Supplementary Note 5.6). Extended results and methodological details
+work encompassing patient demographics, ELN2022 risk stratification,                                                                                         are provided in Supplementary Note 5.2 and 5.6. Taken together, these
+molecular features, preclinical activity and established safety and                                                                                          analyses illustrate how Co-Scientist can help clinician scientists move
+pharmacokinetic/pharmacodynamic data (Supplementary Note 5.6).                                                                                               beyond initial hypothesis generation to synthesize diverse clinical
+   Here, for example, Co-Scientist’s structured translational analysis                                                                                       and biological variables into testable, clinically grounded therapeutic
+successfully identified a specific clinical niche for binimetinib: frail,                                                                                    strategies.
+heavily pretreated patients with AML. The system accurately deduced
+that binimetinib’s unique metabolic pathway (UGT1A1) circumvents                                                                                             Identifying therapeutic targets for liver fibrosis
+severe CYP3A4-dependent drug–drug interactions common with                                                                                                   Co-Scientist used a method employing human hepatic organoids
+azole antifungals—a major limitation for current targeted therapies                                                                                          coupled with live-cell imaging to identify novel therapeutic targets
+
+
+494 | Nature | Vol 655 | 9 July 2026
+
+======== PAGE 9 ========
+for severe liver fibrosis1,26,27. Co-Scientist was tasked with generating    we expect further substantial improvements in the quality of hypoth-
+hypotheses on target epigenetic alterations (three top-ranked hypoth-        eses generated and the complexity of scientific tasks that the system
+eses were selected by experts) and identifying drugs targeting these         can autonomously accomplish.
+predicted epigenetic modifiers. It successfully identified three epige-         Despite these promising early results, several limitations must be
+netic modifiers and drugs targeting them, and two of them exhibited          addressed. Co-Scientist’s knowledge is constrained by its reliance on
+significant anti-fibrotic activity in the hepatic organoids without caus-    open-access scientific literature, which may lead to the omission of
+ing cellular toxicity. Critically, one of the effective drugs (vorinostat)   critical previous work behind paywalls and a systemic lack of access
+is already approved by the US Food and Drug Administration (FDA) for         to negative experimental results. Furthermore, the quality of gener-
+another cancer indication, creating an opportunity for drug repurpos-        ated hypotheses relies on the mixed and contradictory quality of the
+ing for liver fibrosis treatment1. This example also highlights the poten-   source literature; there is therefore a risk of propagating erroneous
+tial of AI systems such as Co-Scientist to make unexpected connections       or irreproducible findings. A key future direction is the development
+across disparate disciplines and diseases (cancer and liver fibrosis) and    of agents with enhanced provenance capabilities to trace claims to
+synthesize helpful and impactful hypotheses and discoveries.                 specific figures or data within a source, mitigating the impact of unreli-
+                                                                             able literature.
+Recapitulating a breakthrough in AMR                                            Co-Scientist also inherits the intrinsic limitations of its underlying
+Co-Scientist was also challenged to independently identify the mecha-        models, including imperfect factuality and the potential for hallucina-
+nism behind the broad host range and rapid spread of cf-PICIs, mobile        tions. Improving reasoning capabilities is a critical area for future work.
+elements that carry virulence and antibiotic-resistance genes across         Moreover, the validation of Co-Scientist’s hypotheses, while successful,
+diverse bacterial species (including Escherichia coli and Klebsiella pneu-   remains preliminary.
+moniae). With only minimal background information, Co-Scientist                 Finally, the broader integration of such AI systems into the scientific
+independently and accurately proposed the top-ranked hypothesis that         workflow requires careful consideration of potential bias, which could
+cf-PICIs interact with diverse phage tails to expand their host range2.      risk diminishing critical thinking or homogenizing research direc-
+This finding, generated by the AI in just 2 days, precisely matched the      tions. While AI has the potential to democratize access to scientific
+primary discovery of an independent, co-timed genomic and experi-            information, particularly in resource-limited settings, it is essential to
+mental study before completing peer review21. This convergence and           develop robust verification methods and maintain rigorous peer review
+recapitulation is another demonstration of Co-Scientist’s potential          to ensure that AI can augment, rather than replace, human scientific
+to accelerate scientific discovery by synthesizing complex scientific        reasoning and creativity. Improper use of such AI systems without
+information and generating rigorous scientific hypotheses on-par             rigorous peer review and guardrails could also lead to worsening of
+with experts.                                                                the scientific reproducibility crisis through production of low-quality
+                                                                             scientific artifacts. Further details regarding safety and ethical implica-
+                                                                             tions are provided in Supplementary Note 7.
+Discussion                                                                      The continued development of Co-Scientist will focus on three key
+Here we report the development and initial validation of a multi-agent       areas. Immediate improvements will target the system’s robustness by
+Gemini-based AI system, Co-Scientist, designed as a structured sci-          enhancing learning and knowledge base, literature search capabilities
+entific thinking engine to accelerate novel scientific discovery.            to broaden access, implementing more rigorous fact-checking against
+Co-Scientist moves beyond conventional computational approaches              external databases and tools, and improving citation recall. Future
+through the in silico implementation of a multi-agent architecture that      advancements will focus on expanding the system’s core capabilities.
+mirrors the core aspects of the scientific method. Instead of brute-force    This includes integrating agents that can directly reason over public
+generation, the system iteratively refines hypotheses through a ‘gen-        databases and multimodal data, enabling bioinformatics and data sci-
+erate, debate, evolve’ paradigm. This method, which incorporates             ence tasks. The implementation of reinforcement learning from human
+self-debate, tournament-based selection and iterative evolution              and experimental feedback could further optimize the hypothesis
+and refinement, enables a progressive convergence on high-quality,           generation and refinement process.
+well-supported hypotheses, thereby scaling research ideation with               Expanded evaluations are also necessary to assess Co-Scientist’s gen-
+test-time compute rather than exhaustive generation. The system’s            eralizability across a wider range of scientific disciplines. This requires
+context memory, combined with the iterative self-improvement cycle,          developing more objective and automated evaluation metrics that
+functions as an emergent internal model of the scientific research pro-      move beyond current ranking systems and engaging a larger cohort
+cess. While not an explicit symbolic model, it represents a progressively    of domain experts to stress test the system with diverse and complex
+more coherent and interconnected state of knowledge, facilitating the        research queries.
+synthesis of information and the identification of knowledge gaps.              In the fullness of time, integrating Co-Scientist with laboratory auto-
+   The practical use of this approach was demonstrated through the           mation platforms could create a closed-loop, autonomous system for
+generation of novel and experimentally tractable hypotheses across           hypothesis generation, experimental validation and iterative learning,
+three challenging and varied biomedical problems. In oncology,               substantially accelerating the pace of scientific discovery.
+Co-Scientist identified drug-repurposing candidates for AML that
+showed in vitro efficacy at clinically relevant concentrations. For liver
+fibrosis, it proposed new epigenetic targets, leading to the experi-         Conclusion
+mental validation of several anti-fibrotic compounds, including one          Co-Scientist represents a promising step towards AI-assisted augmen-
+FDA-approved drug. Furthermore, in microbiology, the system inde-            tation of scientists and acceleration of scientific discovery. Its ability
+pendently recapitulated an at-the-time unpublished mechanism of              to think scientifically, generate testable hypotheses across diverse
+mobile genetic element transfer between bacteria. These findings             scientific and biomedical domains, some supported by experimen-
+provide preliminary evidence that Co-Scientist can contribute mean-          tal findings, along with the capacity for recursive self-improvement
+ingfully to scientific discovery by amplifying scientists.                   with increasing compute, demonstrates the promise of meaningfully
+   This system’s architecture is model agnostic, enabling it to take         accelerating scientists’ endeavours to resolve grand challenges in
+advantage of the advancing capabilities of frontier LLMs without             human health, medicine and science. This innovation opens numer-
+requiring retraining of the whole agentic framework, such as Gemini 3,       ous questions and opportunities. Applying the empiric and responsi-
+GPT 5.4 and Opus 4.6. With the latest advances in frontier models,           ble approach of science to Co-Scientist itself can thereby enable safe
+
+
+                                                                                                               Nature | Vol 655 | 9 July 2026 | 495
+
+======== PAGE 10 ========
+Article
+exploration of its undoubted potential, including how collaborative and                              15.   Gower, B. Scientific Method: a Historical and Philosophical Introduction (Routledge,
+                                                                                                           2012).
+human-centred AI systems might be able to augment human ingenuity                                    16.   Snell, C., Lee, J., Xu, K. & Kumar, A. Scaling LLM test-time compute optimally can be more
+and accelerate scientific discovery.                                                                       effective than scaling parameters for reasoning. In International Conference on Learning
+                                                                                                           Representations (ICLR) (2025).
+                                                                                                     17.   Brown, N. & Sandholm, T. Superhuman AI for multiplayer poker. Science 365, 885–890
+                                                                                                           (2019).
+Online content                                                                                       18.   Silver, D. et al. Mastering the game of Go with deep neural networks and tree search.
+Any methods, additional references, Nature Portfolio reporting summa-                                      Nature 529, 484–489 (2016).
+                                                                                                     19.   Ringel, M. S., Scannell, J. W., Baedeker, M. & Schulze, U. Breaking Eroom’s law. Nat. Rev.
+ries, source data, extended data, supplementary information, acknowl-                                      Drug Discov. 19, 833–834 (2020).
+edgements, peer review information; details of author contributions                                  20.   Pushpakom, S. et al. Drug repurposing: progress, challenges and recommendations.
+and competing interests; and statements of data and code availability                                      Nat. Rev. Drug Discov. 18, 41–58 (2019).
+                                                                                                     21.   He, L. et al. Chimeric infective particles expand species boundaries in phage-inducible
+are available at https://doi.org/10.1038/s41586-026-10644-y.                                               chromosomal island mobilization. Cell 188, 6636–6653 (2025).
+                                                                                                     22.   Döhner, H., Weisdorf, D. J. & Bloomfield, C. D. Acute myeloid leukemia. N. Engl. J. Med.
+1.    Guan, Y. et al. AI-assisted drug re-purposing for human liver fibrosis. Adv. Sci. 12, e08751         373, 1136–1152 (2015).
+      (2025).                                                                                        23.   Guo, Q. et al. NF-κB in biology and targeted therapy: new insights and translational
+2.    Penadés, J. R. et al. AI mirrors experimental science to uncover a novel mechanism of                implications. Signal Transduc. Target. Ther. 9, 53 (2024).
+      gene transfer crucial to bacterial evolution. Cell 188, 6654–6665 (2025).                      24.   Maiti, A. et al. Phase II trial of MEK inhibitor binimetinib (MEK162) in RAS-mutant acute
+3.    Jinek, M. et al. A programmable dual-RNA-guided DNA endonuclease in adaptive                         myeloid leukemia. Clin. Lymphoma Myeloma Leuk. 19, 142–148 (2019).
+      bacterial immunity. Science 337, 816–821 (2012).                                               25.   Philippe, C. et al. Pivotal role of the endoplasmic reticulum stress-related XBP1s/miR-22/
+4.    Hopfield, J. J. Neural networks and physical systems with emergent collective                        SIRT1 axis in acute myeloid leukemia apoptosis and response to chemotherapy. Leukemia
+      computational abilities. Proc. Natl Acad. Sci. USA 79, 2554–2558 (1982).                             38, 1764–1776 (2024).
+5.    Hinton, G. E. & Sejnowski, T. J. in Parallel Distributed Processing: Explorations in the       26.   Guan, Y. et al. A human multi-lineage hepatic organoid model for liver fibrosis.
+      Microstructure of Cognition Vol. 1 (eds Feldman, J. A. et al.) 282–317 (MIT Press, 1986).            Nat. Commun. 12, 6138 (2021).
+6.    Guo, D. et al. DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement                27.   Guan, Y. et al. Live-cell imaging of human liver fibrosis using hepatic micro-organoids.
+      learning. Nature 645, 633–638 (2025).                                                                JCI Insight 10, e187099 (2024).
+7.    Jaech, A. et al. OpenAI O1 system card. Preprint at https://arxiv.org/abs/2412.16720 (2024).
+8.    Gemini Team, Google. Gemini 1.5: unlocking multimodal understanding across millions            Publisher’s note Springer Nature remains neutral with regard to jurisdictional claims in
+      of tokens of context. Preprint at https://arxiv.org/abs/2403.05530 (2024).                     published maps and institutional affiliations.
+9.    Wiesinger, J., Marlow, P. & Vuskovic, V. Agents. kaggle https://www.kaggle.com/
+      whitepaper-agents (2024).                                                                                         Open Access This article is licensed under a Creative Commons Attribution
+10.   Hinton, G. E., Vinyals, O. & Dean, J. Distilling the knowledge in a neural network. Preprint                      4.0 International License, which permits use, sharing, adaptation, distribution
+      at https://arxiv.org/abs/1503.02531 (2015).                                                                       and reproduction in any medium or format, as long as you give appropriate
+11.   Gemma Team, Google. Gemma: open models based on gemini research and technology.                credit to the original author(s) and the source, provide a link to the Creative Commons licence,
+      Preprint at https://arxiv.org/abs/2403.08295 (2024).                                           and indicate if changes were made. The images or other third party material in this article are
+12.   Leslie, D. et al. ‘Frontier AI,’ power, and the public interest: who benefits, who decides?    included in the article’s Creative Commons licence, unless indicated otherwise in a credit line
+      Harvard Data Sci. Rev. https://doi.org/10.1162/99608f92.4a42495c (2024).                       to the material. If material is not included in the article’s Creative Commons licence and your
+13.   Chen, L. et al. Are more LLM calls all you need? Towards the scaling properties of             intended use is not permitted by statutory regulation or exceeds the permitted use, you will
+      compound AI systems. Adv. Neural Inform. Process. Syst. 37, 45767–45790 (2024).                need to obtain permission directly from the copyright holder. To view a copy of this licence,
+14.   Comanici, G. et al. Gemini 2.5: pushing the frontier with advanced reasoning, multimodality,   visit http://creativecommons.org/licenses/by/4.0/.
+      long context, and next generation agentic capabilities. Preprint at https://arxiv.org/abs/
+      2507.06261 (2025).                                                                             © The Author(s) 2026
+
+
+
+
+496 | Nature | Vol 655 | 9 July 2026
+
+======== PAGE 11 ========
+Methods
+                                                                             From research goal to research plan configuration
+Overview of Co-Scientist architecture                                        The research goal, specified by the scientist, serves as the entry point to
+Co-Scientist uses a multi-agent architecture built on Google’s Gemini.       Co-Scientist. Leveraging the multimodal and long context capabilities
+In this study, we used Gemini 2.0 models as the base foundational            of Gemini models, Co-Scientist efficiently processes research goals of
+LLM for all agents14, integrated within an asynchronous task execu-          varying complexity, from simple statements to extensive documents
+tion framework. This framework allows flexible scaling of test-time          spanning tens of thousands of natural language tokens or other relevant
+compute resources, facilitating advanced scientific thinking and             data (for example, including hundreds of previous publication PDF
+reasoning. Given a research goal specified by an expert scientist in         files). The research goal may also incorporate specific constraints,
+natural language, Co-Scientist generates hypotheses that adhere              attributes and preferences related to the scientist’s particular labora-
+to the following default criteria. (1) Alignment with the provided           tory setting or field of work.
+research goal. The generated outputs must precisely align with the              Co-Scientist then parses the goal to derive a research plan configura-
+research goals, preferences and constraints defined by the scientist.        tion for generating research proposals. This configuration captures the
+(2) Plausibility. The system outputs should be free of readily appar-        desired proposal preferences, attributes and constraints. For example,
+ent flaws. Any potential contradictions with previous literature             it specifies whether Co-Scientist should exclusively propose novel
+or established knowledge must be explicitly stated and justified.            hypotheses. It also specifies the criteria for evaluating hypothesis qual-
+(3) Novelty. A key objective of Co-Scientist is to generate novel hypoth-    ity, such as novelty and experimental feasibility. These criteria are then
+eses, conjectures and research plans grounded in previous literature,        used by the system during its auto-evaluation, tournament debates and
+rather than simply synthesizing existing information (a capability           self-improvement phases. The attributes, preferences and evaluation
+already addressed by existing ‘deep research’ tools28). (4) Testabil-        criteria can all be customized to a given research goal. To illustrate this
+ity. The system outputs should be amenable to empirical validation           process, we present an example research goal and its corresponding
+within the constraints specified by the scientist. (5) Safety. The system    parsed research plan configuration in Supplementary Note 10.1, in
+outputs will be controlled to prevent enabling unsafe, unethical or          which the goal is to develop a novel hypothesis related to phosphoryla-
+harmful research. Aside from these default criteria, Co-Scientist can        tion of the nuclear pore complex as a causative mechanism for ALS29.
+be configured with additional criteria, preferences and constraints             On the basis of the research plan configuration, the Supervisor agent
+as needed. For example, it can be configured to generate outputs in          initiates the creation of a task queue and begins orchestrating the spe-
+formats preferred by the researcher to improve interpretability and          cialized agents. The system operates continuously and asynchronously.
+readability.                                                                 Periodically, the Supervisor agent calculates a comprehensive set of
+   At a high level, Co-Scientist comprises four key components. (1) A        summary statistics, reflecting the system’s state and progress toward
+natural-language input–output interface. Scientists interact with and        the specified research goal. These statistics inform decisions regarding
+supervise the system primarily through natural language. This allows         resource allocation and the determination of whether a terminal state
+them to not only define the initial research goal but also refine it at      for the overall computation has been reached. The state is periodically
+any time, provide feedback on generated hypotheses (including their          written to the associated context memory of the system and leveraged
+own solutions) and generally steer and guide the system’s progress.          as feedback in subsequent rounds of computation. It also enables easy
+(2) Asynchronous task framework. Co-Scientist uses a multi-agent sys-        restarts in case of any failure in the system components.
+tem in which specialized agents operate as worker processes within an
+asynchronous, continuous and configurable task execution framework.          The specialized agents underpinning Co-Scientist
+A dedicated Supervisor agent manages the worker task queue, assigns          At the heart of Co-Scientist is a coalition of specialized agents, each
+specialized agents to these processes and allocates resources. This          orchestrated by the Supervisor agent. These agents are designed to
+design enables the system to flexibly and effectively use computational      emulate the scientific reasoning process, enabling them to generate
+resources and iteratively improve its scientific reasoning and quality       novel hypotheses and research plans. Each agent is provided a library
+of hypotheses. (3) Specialized agents. After accounting for inductive        of strategies (that is, a collection of prompts) to better explain and help
+biases and scientific priors derived from the scientific method, the         it perform its assigned task. They are also equipped to interact with
+process of scientific reasoning and hypothesis generation is broken          and utilize external tools, such as web search engines and specialized
+down into subtasks. Individual, specialized agents, each equipped            AI models, through application programming interfaces (APIs). These
+with customized instruction prompts, are designed to execute these           specialized agents are enumerated below: (1) Generation agent. The
+subtasks. These agents operate as workers coordinated by the Super-          agent initiates the research process by generating the initial focus areas,
+visor agent. (4) Context memory. To enable iterative computation             iteratively extending them and generating a set of initial hypotheses
+and scientific reasoning over long time horizons, Co-Scientist uses a        and proposals that address the research goal. This involves exploring
+persistent context memory to store and retrieve states of the agents         relevant literature using web search, synthesizing existing findings
+and the system during the course of the computation. The specific            into new directions and engaging in simulated scientific debates for
+Co-Scientist design was arrived at with iterative developments and           iterative improvement. (2) Reflection agent. This agent simulates the
+feedback from expert scientists and is reflective of the current capabili-   role of a scientific peer reviewer, critically examining the correctness,
+ties of the underlying LLMs. The Co-Scientist multi-agent architecture       quality and novelty of the generated hypotheses and research pro-
+is depicted and summarized in Fig. 1b.                                       posals. Furthermore, it evaluates the potential of each hypothesis to
+   Throughout the next section, we use a recurring example: gener-           provide an improved explanation for existing research observations
+ating hypotheses for exploring the biological mechanisms of amyo-            (identified through literature search and review), particularly those
+trophic lateral sclerosis (ALS) to illustrate the various components of      that may be under-explained. (3) Ranking agent. An important abstr­
+Co-Scientist. Although this example has been reviewed by domain              action in Co-Scientist is the notion of a tournament in which different
+experts, it remains illustrative and may contain errors. Importantly, this   research proposals are evaluated, debated and ranked enabling iterative
+example does not aim to suggest potential therapeutic avenues for ALS        improvements. The Ranking agent orchestrates an Elo-based tourna-
+and should be interpreted with utmost caution. We have also provided         ment30 to assess and prioritize the generated hypotheses at any given
+the pseudocode demonstrating agent logic in Supplementary Note 8.            time. This involves pairwise comparisons, facilitated by simulated
+All of the prompts used in the agents are listed in Supplementary Note 9,    scientific debates, which allow nuanced evaluation of the relative merits
+and all the examples are listed in the Supplementary Note 10.                of each hypothesis. (4) Proximity agent. This agent asynchronously
+
+======== PAGE 12 ========
+Article
+computes a proximity graph for generated hypotheses, enabling                   techniques. These debates typically involve multiple turns of con-
+clustering of similar ideas, de-duplication and efficient exploration           versations leading to a refined hypothesis generated at the end. An
+of the hypothesis landscape. (5) Evolution agent. Co-Scientist’s iterative      example prompt is given in Supplementary Note 9.1.
+improvement capability relies heavily on this agent, which continuously       • Iterative assumptions identification. The agent iteratively identifies
+refines the top-ranked hypotheses emerging from the tournament. Its             testable intermediate assumptions, which, if proven true, can lead to
+refinement strategies include synthesizing existing ideas, using analo-         scientific discovery. These plausible assumptions and their subas-
+gies, leveraging literature for supporting details, exploring unconven-         sumptions are identified through conditional reasoning hops and
+tional reasoning and simplifying concepts for clarity. (6) Meta-review          subsequently aggregated into complete hypotheses.
+agent. This agent also enables Co-Scientist’s continuous improvement          • Research expansion. To identify previously unexplored areas of the
+by synthesizing insights from all reviews, identifying recurring patterns       hypothesis space, the Generation agent reviews existing hypotheses
+in tournament debates, and using these findings to optimize other               and the research overview and feedback provided by the Meta-review
+agents’ performance in subsequent iterations. This also enhances the            agent in the previous iteration. This is used to inform additional explo-
+quality and relevance of generated hypotheses and reviews in subse-             ration directions in the research hypothesis space.
+quent iterations. At the end of the Co-Scientist computation process,
+this agent also synthesizes top-ranked hypotheses and reviews into a            An example hypothesis and research proposal output from the
+comprehensive research overview for review by the scientist.                  Generation agent is presented in Supplementary Note 10.2 for the
+   The Supervisor agent’s seamless orchestration of these specialized         aforementioned research goal regarding explaining a basic mechanism
+agents enables the development of valid, novel and testable hypoth-           related to ALS. The Generation agent also summarizes and categorizes
+eses and research plans tailored to the input research goal provided          each generated hypothesis, enabling scientists to quickly grasp the
+by the scientist.                                                             core ideas.
+   In summary, the Generation agent curates an initial list of research
+hypotheses satisfying a research goal. These are then reviewed by the         Reflection agent
+Reflection agent and evaluated in a tournament by the Ranking agent           Reviews are integral to Co-Scientist’s effectiveness in generating new
+orchestrating debate matches involving the hypothesis. The Evolution,         proposals. The Reflection agent searches relevant previous work and
+Proximity, and Meta-review agents operate on the tournament state             data (through web search or a dedicated scientist-provided reposi-
+to help to improve the quality of the system outputs.                         tory), assesses existing experimental evidence for or against a given
+   The Supervisor agent periodically computes and writes to the context       hypothesis and rigorously verifies the novelty, correctness and quality
+memory a comprehensive suite of statistics, including the number of           of generated outputs with tools. Effective reviews filter inaccurate and,
+hypotheses generated and requiring review, and the progress of the            when stipulated, non-novel hypotheses. Moreover, they also provide
+tournament. These statistics also include analyses of the effective-          feedback to all of the other agents, driving continuous improvement.
+ness of different hypothesis generation methodologies (for example,           The Reflection agent uses the following types of review strategies:
+generating new ideas through the Generation agent versus improv-              • Initial review. Building on Co-Scientist’s default evaluation criteria, the
+ing existing ideas through the Evolution agent). On the basis of these          Reflection agent performs an initial review assessing the correctness,
+statistics, the Supervisor agent then orchestrates subsequent system            quality, novelty and a preliminary assessment of safety (ethics) of the
+operations, that is, generating new hypotheses, reviews, tournaments            generated hypotheses. A more in-depth discussion on safety con-
+and improvements to existing hypotheses, by strategically weighting             siderations is provided in Supplementary Note 7. This initial review,
+and sampling the specialized agents for execution through the worker            which does not use external tools such as web search, aims to quickly
+processes.                                                                      discard flawed, non-novel or otherwise unsuitable hypotheses.
+   Importantly, the Meta-review agent enables feedback propagation            • Full review. If a hypothesis passes the initial review, the Reflection
+and learning without back-propagation techniques (for example,                  agent performs a full review, using external tools and web searches
+fine-tuning or reinforcement learning)31. The Meta-review agent gen-            to identify relevant articles for improved reasoning and ground-
+erates feedback applicable to all agents, which is simply appended              ing. This review evaluates the hypothesis’s correctness, quality and
+to their prompts in the next iteration—a capability facilitated by the          novelty similar to the initial review but with full literature search.
+long-context search and reasoning capabilities of the underlying                For correctness and quality, the agent scrutinizes the underlying
+Gemini models. Through this feedback loop, Co-Scientist continu-                assumptions and reasoning. For novelty, it summarizes known aspects
+ously learns and improves in subsequent iterations with more compute            of the hypothesis and then judges their novelty on the basis of exist-
+scaling.                                                                        ing literature. An example full novelty review, review critiques and a
+   Finally, while our work leverages Gemini 2.0, Co-Scientist framework         complete full review example are shown in Supplementary Note 10.3,
+is model agnostic and portable to other similar models or combinations          10.4 and 10.5, respectively.
+thereof. Future LLM improvements, such as our Gemini 3 models, will           • Deep verification review. The Reflection agent also conducts a deep
+further enhance Co-Scientist’s ability to generate scientific hypotheses        verification review, decomposing the hypothesis into constituent
+and perform complex tasks over the longer term.                                 assumptions. Each assumption is further broken down into fundamen-
+                                                                                tal subassumptions, decontextualized and independently evaluated
+Generation agent                                                                for correctness to identify invalidating elements for subsequent filter-
+The Generation agent uses a diverse array of strategies (encoded as             ing. Concurrently, the reasons for potential hypothesis invalidation
+prompts), techniques and tools to generate hypotheses, such as the              due to incorrect assumptions are summarized. This deep verification
+following:                                                                      helps Co-Scientist to detect subtle errors within complex hypotheses,
+• Literature exploration through web search. The agent iteratively              such as flaws in reasoning or inaccurate experimental protocols. An
+  searches the web, retrieves and reads relevant research articles, learns      identified error does not necessarily invalidate the core hypothesis;
+  about topics and grounds its reasoning by summarizing previous work           the Reflection agent assesses whether the incorrect assumption is
+  and building a knowledge base of scientific facts. It then builds on this     fundamental to the hypothesis and incorporates this reasoning into
+  summary to generate hypotheses and research plans. An example                 the review. Non-fundamental errors can be addressed during sub-
+  prompt is given in Supplementary Note 9.1.                                    sequent refinement stages. An example deep verification review is
+• Simulated scientific debates. Here, the Generation agent simulates            provided in Supplementary Note 10.6 for the previously introduced
+  scientific debates among experts by using self-critique and self-play         ALS hypothesis. We also show another example of a deep verification
+
+======== PAGE 13 ========
+  review through probing questions in the context of drug repurposing       favourable rankings and this informs the tournament state for subse-
+  for AML in Supplementary Note 10.7.                                       quent iterations.
+• Observation review. Moreover, the Reflection agent also explores
+  whether a given hypothesis can account for long-tail observations         Proximity agent
+  from previous experimental results. This review aims to determine         The Proximity agent calculates the similarity between research hypoth-
+  whether the hypothesis can provide insights on existing experimental      eses and proposals, and builds a proximity graph, taking into account
+  findings and observed phenomena within relevant articles. For each        the specific research goal. Although it does not directly participate in
+  observation, the agent assesses whether the hypothesis is a superior      hypothesis generation, the Proximity agent assists the Ranking agent
+  explanation over existing ones, assuming its validity. Positive obser-    in organizing tournament matches and showcasing a diverse range
+  vations are summarized and appended to the hypothesis. Note that          of ideas related to the research goal. This enables scientists to quickly
+  this review often completes without any important findings (as in the     explore areas of interest and easily identify related concepts.
+  case for the ALS hypothesis example). An example prompt to gener-
+  ate observations is provided in Supplementary Note 9.2. An illustra-      Evolution agent
+  tive example of an observation review is provided in Supplementary        The Evolution agent continuously refines and improves existing hypo­
+  Note 10.8 in the context of an alternative hypothesis for explaining      theses and proposals using several strategies, including the following:
+  a mechanism of AMR.                                                       • Enhancement through grounding. Here the agent attempts to
+• Simulation review. The Reflection agent also reviews hypotheses by          improve hypotheses by identifying weaknesses, generating search
+  simulating them in a step-wise manner (for example, simulating the          queries, retrieving and reading articles, suggesting improvements
+  mechanism of action or the proposed experiment in the proposal).            and elaborating on details to fill reasoning gaps.
+  This simulation enables the agent to identify and summarize poten-        • Coherence, practicality and feasibility improvements. The agent aims
+  tial failure scenarios. This review method is built on the assumption       to address issues and creates more coherent hypotheses, potentially
+  that frontier LLMs may have developed an internal world model of            rectifying underlying problems with invalid initial assumptions. The
+  science that enables them to simulate and accurately predict various        agent also refines the hypotheses to make them more practical and
+  scientific phenomena.                                                       feasible. Supplementary Note 9.4 provides an example of the feasibil-
+• Recurrent/tournament review. The Reflection agent adapts its full           ity improvement prompt.
+  reviews on the basis of Co-Scientist’s growing knowledge. By analys-      • Inspiration from existing hypotheses. The agent additionally creates
+  ing reviewed hypotheses and results of the tournament conducted             new hypotheses inspired by single or multiple top-ranked hypotheses.
+  by the Ranking agent, the Reflection agent identifies recurring issues    • Combination. The agent also attempts to directly combine the best
+  and improvement opportunities, refining its reviews accordingly.            aspects of several top-ranking hypotheses to create new hypotheses.
+                                                                            • Simplification. The agent simplifies hypotheses for easier verifica-
+   Moreover, Co-Scientist can incorporate reviews from expert sci-            tion and testing.
+entists to guide ranking and improvements (further discussed in the         • Out-of-box thinking. The agent also explores out-of-the-box ideas by
+‘Expert-in-the-loop interactions with Co-Scientist’ section). A key aim       moving away from a subset of hypotheses and generating divergent
+is to have the Reflection agent generate a comprehensive set of reviews       ones. Supplementary Note 9.4 provides an example prompt for this.
+from multiple angles covering the common methods that scientists
+use when critiquing and refining research hypotheses and proposals.            The Evolution agent generates new hypotheses; it does not modify or
+                                                                            replace existing ones. This strategy protects the quality of top-ranked
+Ranking agent                                                               hypotheses from flawed improvements, as each new hypothesis must
+Co-Scientist explores numerous hypotheses and research proposals            also compete in the tournament. The evolution of research hypotheses
+towards a research goal, necessitating a ranking mechanism to prior-        and proposals also allows Co-Scientist to iteratively combine differ-
+itize scientists’ time and computational resources toward the most          ent improvement techniques and gradually improve the quality of
+promising candidates. This task is performed by the Ranking agent.          the results.
+The agent orchestrates an Elo-based tournament30 to automatically
+evaluate and rank all hypotheses, providing supporting rationale. This      Meta-review agent
+ranking serves to communicate to scientists an ordered list of research     The Meta-review agent serves a crucial role in Co-Scientist’s feedback
+hypotheses and proposals aligned with the research goal. Despite its        loop, enabling self-improvement in scientific thinking and reasoning.
+assumptions and limitations32, Elo remains a good proxy for relative        This agent operates on the tournament state and summarizes common
+ranking, and it has previously been applied to rank extracted patterns      patterns identified in reviews and scientific debates in the tournament
+and ideas in games33. In the future, extensions may be considered34.        matches into a meta-review critique.
+We set the initial Elo rating of 1,200 for the newly added hypothesis.         By synthesizing insights from all reviews, the Meta-review provides
+   As the tournament is computationally intensive, the Ranking agent        valuable feedback to the Reflection agent, leading to more thorough
+uses several optimization strategies. Top-ranked hypotheses are com-        and reliable future reviews. This helps to prevent oversight of critical
+pared pairwise in tournament matches through multi-turn scientific          details. Consider the illustrative example of a identifying a repurposing
+debates35. This mitigates ordering bias and focuses on novelty, correct-    drug candidate for ALS as a research goal: while only 90% of individual
+ness and testability. Lower-ranked hypotheses undergo single-turn           reviews might correctly identify a blood–brain barrier permeability
+comparisons in a pairwise manner in their tournament match. The agent       issue in a proposed candidate, the meta-review ensures that all future
+concludes each comparison with a decision regarding which hypothesis        reviews by the Reflection agent definitively address this crucial factor.
+is better. Supplementary Note 9.3 shows example prompts. Supple-            Hypothesis and research proposal generation is also enhanced by the
+mentary Note 10.9 shows an example of the Ranking agent conducting          meta-review’s identification of recurring issues. While the Generation
+a scientific debate match in a tournament to compare two hypotheses.        agent uses this feedback selectively to avoid over-fitting to these review
+   The Ranking agent prioritizes tournament matches as follows:             critiques, it helps to prevent the recurrence of common issues.
+(1) hypotheses are more likely to be compared with similar ones (on            Supplementary Note 9.5 provides an example prompt for the
+the basis of the Proximity agent’s graph, described in the next section);   meta-review. In Supplementary Note 10.10, we showcase an example
+(2) newer and top-ranking hypotheses are prioritized for participa-         of the summarized meta-review critique generated for the reviews of
+tion in tournament matches. Successful hypotheses quickly achieve           the previously introduced ALS mechanism hypotheses.
+
+======== PAGE 14 ========
+Article
+                                                                            target discovery and AMR mechanism generation tasks each required
+Research overview generation                                                comparable, similar time investments from experts for setup and final
+At the end of the Co-Scientist computation, the Meta-review agent           review. The scientists and experts featured in our validations have noted
+synthesizes top-ranked hypotheses into a research overview, provid-         that Co-Scientist accomplishes work that would otherwise require days
+ing a roadmap for future research. This overview outlines potential         and even weeks of the scientists’ time.
+research areas and directions relevant to the research goal, justifying
+their importance and suggesting specific experiments within each.           Tool use in Co-Scientist
+Each area includes illustrative example topics. The research overview       Co-Scientist leverages various tools during the generation, review and
+also serves as an additional input to the Generation agent in subsequent    improvement of hypotheses. Web search and retrieval are primary
+iterations. The research overview serves to effectively map the bound-      tools, important for grounded, up-to-date hypotheses. For research
+ary of current knowledge relevant to the research goal in Co-Scientist      goals that explore a constrained space of possibilities (for example,
+and helps highlight future areas of exploration. In Supplementary           all known cell receptors of a specific type or all FDA-approved drugs),
+Note 10.11, we show an example of a research overview for the ALS           Co-Scientist agents use domain-specific tools, such as open databases,
+mechanism research goal. The Meta-review agent can further format           to constrain searches and generate hypotheses. Co-Scientist can also
+these overviews using constrained decoding techniques36 to adhere           index and search a private repository of publications and experimental
+to common research publication and grant formats (for example,              data specified by the scientist. Finally, the system can use and incor-
+US National Institutes of Health Specific Aims Page format). We dem-        porate feedback from specialized AI models, such as AlphaFold. We
+onstrate the effectiveness of this in subsequent sections.                  demonstrate this qualitatively with a protein design example in the
+                                                                            Supplementary Note 11 and Supplementary Fig. 9.
+Research contacts identification
+The Meta-review agent also uses previous literature reviews to suggest      Ablation analysis
+qualified domain experts for research hypothesis and proposal review,       To validate the contributions of Co-Scientist’s core components and
+including the reasoning behind each suggestion. These potential con-        agents, we performed a series of quantitative ablation studies (Supple-
+tacts are summarized in the research overview, providing researchers        mentary Note 3 and Supplementary Figs. 2–6). These analyses revealed
+with additional perspectives and potential avenues for collaborations.      that our architectural choices provide tangible benefits to performance
+An example research contact (with the researcher name redacted) is          and robustness of the overall system.
+shown in Supplementary Note 10.12.                                             Specifically, we quantified the value of our multi-faceted Generation
+                                                                            agent, showing that a diverse set of generation strategies contributes
+Expert-in-the-loop interactions with Co-Scientist                           to the creation of correct hypotheses across different benchmarks.
+Co-Scientist empowers scientists to actively steer and guide the system        Critically, the Reflection agent’s ability to assess novelty was shown
+through an expert-in-the-loop design (Fig. 1a,b). Scientists can inter-     to be dependent on its integration with an external search tool. On a
+act with the system in several ways. The typical interaction between        dataset of published ideas that should be rated as non-novel, the agent
+Co-Scientist and a human follows a structured process:                      without search incorrectly assigned a high auto-evaluation novelty
+• Research goal definition: the process begins with a scientist defining    score of 6.14 (out of 10), while the agent with search correctly assigned
+  the high-level research objective. This involves writing a detailed       a low novelty score of 2.38 (out of 10). The search tool also enhanced
+  prompt that can include the specific research question, known con-        review accuracy, raising the average auto-evaluation correctness score
+  straints of the hypotheses solution space, desired attributes of the      from 7.4 to 8.46 (out of 10) for these known-correct ideas and increasing
+  output and relevant background literature and data. With proper goal      the area under the curve (AUC) on the GPQA benchmark from 0.643 to
+  definition, scientists can direct Co-Scientist to follow up on specific   0.651 in our run using Gemini 2.0 Flash as the base foundational LLM
+  research directions (for example, restricted to a smaller collection of   for the agents in the system.
+  prior publications). When this research is referenced in the research        Furthermore, we demonstrated that using the scientific debate
+  goal, Co-Scientist can prioritize generation methods that can access      prompt rather than simple comparison prompt for the Ranking agent
+  and synthesize it.                                                        can significantly enhance ranking accuracy for high-quality hypotheses
+• Goal refinement: the scientist can refine the initial research goal in    and, critically, reduces the positional bias.
+  light of the generated hypotheses and research overview.                     Our analysis of the Evolution agent confirms that its iterative refine-
+• Providing review: the scientist can also provide manual reviews of gen-   ment process is crucial, boosting precision on GPQA from 70.9% to
+  erated hypotheses, which Co-Scientist uses to evaluate and improve        75.4%, and increasing the average research hypothesis quality score
+  the hypotheses and proposals.                                             (auto-evaluation) on the constructed dataset from 4.7 to 5.6.
+• Providing ideas and hypotheses: in the user interface, scientists are        The effectiveness of our Proximity agent was also validated, as its
+  allowed to contribute their own hypotheses and proposals for inclu-       semantic similarity scores showed a strong correlation with the actual
+  sion in the tournament, where they are ranked alongside and can be        quality score differences between hypotheses, ensuring a comprehen-
+  combined with system-generated hypotheses and proposals.                  sive exploration of the problem space.
+• Final review and selection: after the Co-Scientist run is complete, the      Finally, we found that Meta-review agent measurably improves the
+  scientist is presented with a ranked list of hypotheses and a synthe-     quality of correctness reviews, increasing AUC for predicting a correct
+  sized research overview from the Meta-review agent. The expert then       solution from 0.521 to 0.597 in our constructed dataset, and 0.629 to
+  invests time in reviewing the top-ranked proposals to select the most     0.634 in the GPQA diamond dataset.
+  promising candidates for further experimental validation.                    These results provide important quantitative evidence and support
+                                                                            that our multi-agent architecture and specialized prompting strategies
+  This workflow empowers scientists to guide Co-Scientist at critical       are critical design choices that lead to more accurate, robust and reli-
+junctures. As illustrative examples, we quantified the human time invest-   able scientific hypothesis generation and evaluation.
+ment for our main validation studies. For the AML drug-repurposing
+study, the initial prompt, defining the goal to find novel combination      Statistics and reproducibility
+therapies, required less than 1 h of an expert clinician’s time. After      No statistical methods were used to predetermine sample sizes. For com-
+the system’s complex run, the final review and selection of promising       putational evaluations, sample sizes (n = 203, n = 15 and n = 11 research
+candidates for in vitro testing took roughly 3 h. Similarly, the fibrosis   goals) were chosen to ensure robust statistical averaging and broad
+
+======== PAGE 15 ========
+representation across diverse scientific domains. For in vitro valida-         28. Jones, N. OpenAI’s ‘deep research’ tool: is it useful for scientists? Nature https://doi.org/
+                                                                                   10.1038/d41586-025-00377-9 (2025).
+tions, five distinct AML cell lines were tested in independent biological      29. Megat, S. et al. Integrative genetic analysis illuminates ALS heritability and identifies risk
+triplicates (n = 3). This sample size was not predetermined by statistical         genes. Nat. Commun. 14, 342 (2023).
+methods but was chosen on the basis of widely accepted standard prac-          30. Elo, A. E. The Rating of Chess Players, Past and Present (Ishi Press, 2008).
+                                                                               31. LeCun, Y. A theoretical framework for back-propagation. In Proc. 1988 Connectionist
+tices for preliminary in vitro dose-response viability screening. Given the        Models Summer School Vol. 1 (eds Touretzky, D. et al.) 21–28 (Morgan Kaufmann,
+large effect sizes typical of such preliminary pharmacological assays,             1988).
+three independent biological replicates provide the necessary degrees          32. Hamilton, A. H., Kalenkova, A. & Roughan, M. The impact of intransitivity on the Elo rating
+                                                                                   system. PLoS One 20, e0338261 (2025).
+of freedom to calculate s.d., assess assay consistency and robustly fit        33. Coulom, R. Computing ‘Elo ratings’ of move patterns in the game of go. ICGA J. 30,
+nonlinear regression curves for IC50 estimation. All attempts at repli-            198–208 (2007).
+cation in both computational and in vitro were successful. The human           34. Kovalchik, S. Extension of the Elo rating system to margin of victory. Int. J. Forecast. 36,
+                                                                                   1329–1341 (2020).
+expert evaluation of the LLM-generated outputs was explicitly blinded,         35. Khan, A. et al. Debating with more persuasive LLMs leads to more truthful answers.
+ensuring that independent domain experts were completely unaware of                In Proc. 41st International Conference on Machine Learning Vol. 235 (eds Salakhutdinov, R.
+which model generated the hypotheses they were scoring. Blinding was               et al.) 23662–23733 (PMLR, 2024).
+                                                                               36. Post, M. & Vilar, D. Fast lexically constrained decoding with dynamic beam allocation
+not applicable to the in vitro cell viability screening assays because these       for neural machine translation. In Proc. 2018 Conference of the North American Chapter
+experiments involve standardized, automated multimode microplate                   of the Association for Computational Linguistics: Human Language Technologies Vol. 1
+reader readouts. All cell lines were authenticated by their respective             (Long Papers) 1314–1324 (Association for Computational Linguistics, 2018).
+                                                                               37. Gemini Team, Google. Gemini: a family of highly capable multimodal models. Preprint
+providers and were confirmed negative for mycoplasma contamination.                at https://arxiv.org/abs/2312.11805 (2023).
+
+Reporting summary
+                                                                               Acknowledgements We thank our teammates S. Venugopalan, J. Platt, E. Brand and Y. Liu for
+Further information on research design is available in the Nature Port-        detailed technical feedback on the manuscript; J. T. Rostoel, C. Chmielowska, J. B. Patkowski,
+folio Reporting Summary linked to this article.                                J. Inchai, W. Liu and W. Ren for providing expert feedback on the AI system introduced in
+                                                                               this work; the laboratory of R. Majeti from Stanford University for providing the AML cell lines
+                                                                               used in this work; R. Raman, R. Flynn, C. Hempstead, A. Darzi, O. Abudayyeh, J. Gootenberg,
+                                                                               N. Fishman, J. Lequyer, D. Leesman, R. Solanki, D. Gong and A. Sadagopan for feedback on
+Data availability                                                              different aspects of the AI system and the work; M. Abdelrahim, E. Burns, P. Prasad and H. Mai
+                                                                               for clinical expertise and expert evaluation; H. Gowda, C. Balagtas and the Signios Biosciences
+Except for the three real-world validation tasks (drug repurposing for         team for support with the wet-laboratory experiments; our teammates A.-C. Rivers, S. Basu,
+AML, novel-target discovery for liver fibrosis, mechanism explanation          S. Nowozin, T. Wagner, N. Latysheva, N. Kerem, Y. Carmel, H. H. Harrirou, L. Tamulevičius,
+of gene transfer evolution), the remaining datasets used for develop-          I. Grublyte, T. Applebaum, M. Shah, N. Stroppa, M. Ciorobea, J. Oesignhaus, D. Ballesteros,
+                                                                               L. Važić, A. Trostanetski, B. Byrne, B. James, J. Barrios, I. Lee, T. Rakket and B. Panichprecha for
+ment, benchmarking and evaluation of the systems are open source               technical support; C. Taylor, J. Walker, J. Mason, H. Gladman, S. Singh, I. Bowers, A. Cupani,
+or otherwise accessible publicly with permissions. Specifically, the           F. Pietra, U. Okereke, A. Senoner, A. Fernandez Lara, J. Bawagan, D. Breen, S. Lee, D.-P. Barley,
+GPQA diamond dataset is publicly available at Hugging Face (https://           K. Tong, Q. Green, E. Rolland, T. Goddu, R. Parikh, S. Kou, R. Sico, A. Ferber, C. Kozlowski,
+                                                                               A. Lentz, K. K. Walker, R. Ruparel, J. Sturgeon, L. Verburgh, K. Seager, L. Karlsson, D. Vijaykumar,
+huggingface.co/datasets/Idavidrein/gpqa). The Cancer Dependency                L. Winer, E.-A. Graham, T. Milner, M. K. Blake, E. Radhansson, I. Ghosh, J. Nayar, B. Cappy,
+Map (DepMap) Q2 2024 data used for computational sanity checks are             C. Grade, A. Jones, L. Vardoulakis, L. Dorfman, A. Chakraborthy, D. Williams-Falokun, M. Shiels,
+publicly available at the DepMap portal (https://depmap.org/portal/).          K. Pamarthy, S. Brown, A. Song, C. Wright, E. Zadina, G. Hong, M. Klein, S. Leung, J. Gaiser,
+                                                                               R. Green, V. Johnston, M. de Andres-Clavera, A. Singh, A. Dondzik, T. Beyer, D. Russell,
+The curated drug targets dataset from the Open Targets Platform is             V. Vuskovic, G. Jennings, K. Schaefer, M. Felix, R. Teo, S. Giardino, K. Paterson, A. Laydon,
+available online (https://platform.opentargets.org/downloads).                 V. Langston, M. Voges, A. Otter, S. Pickering, P. Kunkle, M. H. Taege, A. Marsh, A. Mould,
+                                                                               J. Fenster, F. Garcia, Z. Wang, P. Beak, J. Stevenson, A. Brik and S. S. Mahdavi for support and
+                                                                               guidance during the course of this project; and M. Brenner, Z. Ghahramani, D. Webster,
+                                                                               J. Barral, M. Howell, S. Thomas, K. DeSalvo, J. Freidenfelds, R. Levavi Morad, A. Eslami,
+Code availability                                                              A. Koivuniemi, G. Corrado, R. Hansen, A. Berndt, S. Narayanan, C. Mayer, P. Ranganathan,
+                                                                               A. Jain, S. Huffman, J. Woodward, J. Jumper, N. Shazeer, O. Vinyals, K. Kavukcuoglu, T. Kurian,
+The full source code for the Co-Scientist system is not publicly available.
+                                                                               J. Dean and S. Pichai for support of this work.
+Owing to the deep integration of the Co-Scientist multi-agent framework
+with proprietary internal infrastructure, the immense computational            Author contributions J.G., V.N., T.T. and A.K. initiated the project. J.G., W.-H.W., A.D., T.T., Y.G.,
+resources required for massive test-time scaling and the safety impli-         V.D., E.D.V., B.L., T.R.D.C., J.R.P., G.P., A. Pawlosky, A.K. and V.N. contributed to the conception of
+                                                                               the study and study design. J.G., W.-H.W., A.D., P.S., A.M., G.G., F.W., A.O., D.P., J.B., D.Z., I.R., E.V.,
+cations of unmonitored autonomous agentic use of such capable AI               F.H., L.R., M. Boia, I.B., B.F., M. Bellaiche, T.S., J.F., J.R., B.G., A.V., D.H., Y.X., P.K., A. Pawlosky,
+systems, we are unable to publicly release the full source code or provide     A.K. and V.N. contributed to system design. J.G., W.-H.W., A.D., T.T., O.B., Y.G., V.D., E.D.V., B.L.,
+                                                                               T.R.D.C., J.R.P., G.P., P.K., A. Pawlosky, A.K. and V.N. contributed to acquisition of the data. J.G.,
+broad access immediately. Instead, to enable and accelerate research on
+                                                                               W.-H.W., A.D., T.T., P.S., A.M., F.W., G.G., A. Palepu, D.P., F.Z., Y.G., V.D., E.D.V., B.L., T.R.D.C., J.R.P.,
+important scientific problems, we are initiating an experimental access        G.P., A. Pawlosky, A.K. and V.N. contributed to analysis and interpretation of the data. J.G., K.R.,
+program. We request scientists interested in solving important scientific      J.B., A.C., K.K., K.C., A.H., B.G., A.V., Y.M., J.M., D.H., Y.X., P.K., A. Pawlosky, A.K. and V.N. provided
+                                                                               strategic guidance. Y.X. led product discovery and development. J.G., W.-H.W., A.D., T.T., K.K.,
+problems to reach out and we will provision access subject to computa-
+                                                                               O.B., Y.X., A. Pawlosky, A.K. and V.N. contributed to paper organization and team logistics. J.G.,
+tional resources. In due course, we expect to provide broader access to        J.R., N.T., O.B. and V.N. contributed to safety evaluation. J.G., W.-H.W., T.T., P.S., A. Palepu, R.T.,
+thousands of scientists across the scientific community through Google         K.S., N.T., J.R., V.D., E.D.V., B.L., J.M., P.K., A. Pawlosky, A.K. and V.N. contributed to drafting and
+                                                                               revising the manuscript. W.-H.W. led manuscript preparation.
+APIs and bespoke interfaces over time. To further aid transparency and
+reproducibility, we have provided comprehensive pseudocode detailing           Funding This work was supported by US National Institutes of Health awards (1R01DC021133
+the multi-agent orchestration and tournament logic (Supplementary              and 1R24OD035408) to G.P.
+Note 8), alongside the exact system prompts used (Supplementary
+                                                                               Competing interests This study was funded by Alphabet and/or a subsidiary thereof. Some
+Note 9). The foundational LLM model, Gemini, used in Co-Scientist is           authors (J.G., W.-H.W., AD, T.T., P.S., A.M., G.G., F.W., A.O., D.P., A. Palepu, K.R., R.T., K.S., F.Z., A.C.,
+publicly available through APIs, Google AI studio, the Gemini App and          K.K., N.T., D.Z., I.R., E.V., F.H., L.R., M. Boia, I.B., B.F., M. Bellaiche, T.S., J.F., J.R., O.B., K.C., A.H.,
+other surfaces. Furthermore, important technical details on Gemini have        B.G., A.V., Y.M., J.M., D.H., P.K., Y.X., A. Pawlosky, A.K. and V.N.) are employees of Alphabet and
+                                                                               may own stock as part of the standard compensation package. E.D.V. and B.L. are employees of
+been described extensively in corresponding technical reports8,14,37. The      Sequome. B.L. is the founder of Dendra Therapeutics.
+system, algorithms and analysis scripts were developed using Python
+(v.3.11.7). Data handling and visualization were performed using pandas        Additional information
+                                                                               Supplementary information The online version contains supplementary material available at
+(v.2.1.4), numpy (v.1.26.4), seaborn (v.0.12.2) and matplotlib (v.3.8.0).      https://doi.org/10.1038/s41586-026-10644-y.
+For in vitro validations, dose–response curve fitting and IC50 estimation      Correspondence and requests for materials should be addressed to Juraj Gottweis,
+were performed using GraphPad Prism (v.10.6.0, GraphPad Software).             Wei-Hung Weng, Pushmeet Kohli, Annalisa Pawlosky, Alan Karthikesalingam or Vivek Natarajan.
+                                                                               Peer review information Nature thanks Olivier Elemento, Linfeng Zhang and the other,
+Dose–effect data from single-agent and combination treatments were             anonymous, reviewer(s) for their contribution to the peer review of this work.
+analysed using Julius AI statistical software (accessed November 2025).        Reprints and permissions information is available at http://www.nature.com/reprints.
+
+======== PAGE 16 ========
+Article
+
+
+
+
+Extended Data Fig. 1 | AI-augmented expertise with Co-Scientist through
+Elo-based auto-evaluation. Through its self-improvement process,
+Co-Scientist refines and enhances expert ‘best guess’ solutions over time,
+as measured by the Elo rating on a subset of 15 curated research goals. It is
+important to note that the Elo metric is auto-evaluated and not based on
+independent ground truth. The error bar indicates the corresponding standard
+error of the mean (s.e.m.). Data are presented as mean ± s.e.m. for 15 independent
+expert-curated research goals.
+
+======== PAGE 17 ========
+Extended Data Fig. 2 | LLM preference ranking auto-evaluation of                 Lower numbers indicate better rankings. In each box plot, the central line
+Co-Scientist and other baselines. Averaged preference ranking of results         represents the median ranking, the top and bottom edges of the box indicate
+across 15 expert curated research goals generated by Co-Scientist, Gemini 2.0    the 25th and 75th percentiles respectively, the whiskers extend to the most
+Flash Thinking Experimental 12-19, Gemini 2.0 Pro Experimental, and OpenAI o1,   extreme data points within 1.5 times the interquartile range, and the grey
+using four different LLM evaluators: OpenAI o3-mini-2025-01-31 (upper left),     diamond marks the mean. Each box plot represents averaged evaluation scores
+OpenAI o1-preview-2024-09-12 (upper right), Gemini 2.0 Pro Experimental          for the 15 independent expert-curated research goals.
+(lower left), and Gemini 2.0 Flash Thinking Experimental 01-21 (lower right).
+
+======== PAGE 18 ========
+Article
+
+
+
+
+Extended Data Fig. 3 | Dose response curves of drug repurposing candidate           generally expected to be overactive or essential in the TK6 cell line compared
+Binimetinib in other cell lines. Binimetinib demonstrates activity inhibiting       to AML cells. Thus, the significantly higher IC50 in TK6 compared to three AML
+cell viability in KG-1a (a), HL-60 (b) and TK6 (c) cell lines. x axis is the drug   cell lines (MOLM-13, KG-1a, HL-60), is consistent with its intended mechanism
+concentration (μM), and y axis is the percentage of growth inhibition.              of action. Data are presented as mean ± s.d. of n = 3 biologically independent
+Binimetinib’s target is related to the RAS–RAF–MEK–ERK pathway which is not         experiments.
+
+======== PAGE 19 ========
+Extended Data Fig. 4 | Dose response curves of the drug repurposing             Nanvuranlat (d) showed little to no effect on the MOLM-13 cell line across the
+candidates with little to no effect on MOLM-13. Of the expert-selected drug     concentrations tested. x axis is the drug concentration (μM), and y axis is the
+repurposing candidates, Pravastatin (a) and dimethyl fumarate (DMF) (c)         percentage of growth inhibition. Data are presented as mean ± s.d. of n = 3
+showed little to no effect on the MOLM-13 cell line across the concentrations   biologically independent experiments.
+tested. Of the novel drug repurposing candidates, Leflunomide (b) and
+
+======== PAGE 20 ========
+Article
+
+
+
+
+Extended Data Fig. 5 | See next page for caption.
+
+======== PAGE 21 ========
+Extended Data Fig. 5 | Comprehensive synergy analysis of Co-Scientist            The horizontal red dashed line indicates a strictly additive effect (CI = 1.0).
+nominated dual drug combinations in AML cell lines. Building upon the            Data points below the line (CI < 1.0) indicate synergistic interactions, while
+representative example in Fig. 4a,b, this figure details the pharmacological     points above the line (CI > 1.0) indicate antagonism. The results highlight
+interactions of additional AI-predicted doublets evaluated in MOLM-13            that while certain combinations (e.g., Palbociclib + Selinexor (b)) exhibit
+(left panels) and KG-1a (right panels) cell lines. Synergy was quantified        consistent synergy across different genetic backgrounds, others display
+using the Chou-Talalay method based on fixed-ratio dose-response data.           context-dependent interaction profiles strongly influenced by the specific
+Each panel presents a Fraction affected versus Combination Index (Fa-CI) plot.   cell line’s mutational status.
+
+======== PAGE 22 ========
+Article
+
+
+
+
+Extended Data Fig. 6 | Excess fractional effect heatmaps for Co-Scientist       the difference between the observed combined empirical effect and the
+predicted triple drug combinations. Complementing Fig. 4c,d, this figure        predicted additive effect. Positive excess effects are visualized in red (synergy),
+provides the interaction matrices for the other evaluated triplet regimen       zero excess in white (additivity), and negative excess in blue (antagonism).
+(JNJ-64619178 + SNDX-5613 + Selinexor) across AML cell lines MOLM-13 (a) and    To compress the three-dimensional dose space into a two-dimensional matrix,
+KG-1a (b). Synergy and antagonism are quantified across a comprehensive grid    the plots display the maximum positive interaction across the third drug’s dose
+of drug concentrations (nM) utilizing both the Highest Single Agent (HSA) and   range.
+Bliss independence models. The heatmaps display the fractional excess effect:
+
+======== PAGE 23 ========
+Extended Data Table 1 | IC50 of the drugs used in the drug
+combination experiments in AML cell lines, MOLM-13 and
+KG-1a
+
+
+
+
+The table presents the half-maximal inhibitory concentrations (IC50, in μM) for 11 individual
+drugs evaluated in two acute myeloid leukaemia (AML) cell lines, MOLM-13 and KG-1a. These
+single-agent efficacies were determined to establish the baseline dose-response behaviours
+required for the subsequent drug combination synergy analyses. Cell viability was assessed
+following 72 to 96 h of drug exposure. IC50 values were estimated using non-linear regression
+curve fitting. ‘No response’ indicates that the drug failed to achieve 50% growth inhibition
+within the tested concentration range. All experiments were performed in biologically
+independent triplicates (n = 3).
+
+======== PAGE 24 ========
+Article
+Extended Data Table 2 | Summary of the drug combination
+synergy experiments
+
+
+
+
+The table categorizes the overall in vitro interaction profiles of seven Co-Scientist nominated
+drug combinations, including doublet and triplet combinations, evaluated in two acute
+myeloid leukaemia (AML) cell lines, MOLM-13 and KG-1a. Pharmacological interactions were
+quantitatively assessed using the Chou-Talalay combination index (CI) method for doublets,
+and Highest Single Agent (HSA) and Bliss independence models for triplets. The interaction
+outcomes are classified into three categories, ‘Synergistic’ (exhibiting CI < 1 or positive excess
+fractional effect), ‘Not synergistic’ (additive or antagonistic effects), and ‘Mixed response’
+(exhibiting context-dependent effects, transitioning between synergy and antagonism
+depending on the dose or effect level). All experiments were performed in biologically
+independent triplicates (n = 3).
+
+======== PAGE 25 ========
+                                                                                                                                                                                         nature portfolio | reporting summary
+                                                                                                                                         Juraj Gottweis, Wei-Hung Weng, Pushmeet
+                                                                                                                                         Kohli, Annalisa Pawlosky, Alan
+                                                                                                     Corresponding author(s):            Karthikesalingam, Vivek Natarajan
+
+                                                                                                     Last updated by author(s): May 8, 2026
+
+
+
+
+Reporting Summary
+Nature Portfolio wishes to improve the reproducibility of the work that we publish. This form provides structure for consistency and transparency
+in reporting. For further information on Nature Portfolio policies, see our Editorial Policies and the Editorial Policy Checklist.
+
+
+
+
+Statistics
+For all statistical analyses, confirm that the following items are present in the figure legend, table legend, main text, or Methods section.
+n/a Confirmed
+           The exact sample size (n) for each experimental group/condition, given as a discrete number and unit of measurement
+           A statement on whether measurements were taken from distinct samples or whether the same sample was measured repeatedly
+           The statistical test(s) used AND whether they are one- or two-sided
+           Only common tests should be described solely by name; describe more complex techniques in the Methods section.
+
+           A description of all covariates tested
+           A description of any assumptions or corrections, such as tests of normality and adjustment for multiple comparisons
+           A full description of the statistical parameters including central tendency (e.g. means) or other basic estimates (e.g. regression coefficient)
+           AND variation (e.g. standard deviation) or associated estimates of uncertainty (e.g. confidence intervals)
+
+           For null hypothesis testing, the test statistic (e.g. F, t, r) with confidence intervals, effect sizes, degrees of freedom and P value noted
+           Give P values as exact values whenever suitable.
+
+           For Bayesian analysis, information on the choice of priors and Markov chain Monte Carlo settings
+           For hierarchical and complex designs, identification of the appropriate level for tests and full reporting of outcomes
+           Estimates of effect sizes (e.g. Cohen's d, Pearson's r), indicating how they were calculated
+                                                Our web collection on statistics for biologists contains articles on many of the points above.
+
+
+
+Software and code
+Policy information about availability of computer code
+  Data collection        The system, algorithms and scripts were implemented using Python 3.11.7. Scientific literature and data were collected via web search APIs
+                         and internal data pipelines compatible with the Gemini 2.0 model infrastructure. Data collection for in vitro cell viability was performed using
+                         a multimode microplate reader.
+
+  Data analysis          The full source code for the Co-Scientist system is not publicly available. The foundational LLM model, Gemini, used in Co-Scientist is publicly
+                         available via APIs, Google AI studio, the Gemini App and other surfaces. The analysis codes were developed using Python (version 3.11.7).
+                         Data handling and visualization were performed using pandas (version 2.1.4), numpy (version 1.26.4), seaborn (version 0.12.2), and matplotlib
+                         (version 3.8.0). For in vitro validations, dose-response curve fitting and IC50 estimation were performed using GraphPad Prism (version 10.6.0,
+                         GraphPad Software). Synergy analysis and Combination Index calculations were performed using Julius AI statistical software (accessed
+                         November 2025).
+For manuscripts utilizing custom algorithms or software that are central to the research but not yet described in published literature, software must be made available to editors and
+reviewers. We strongly encourage code deposition in a community repository (e.g. GitHub). See the Nature Portfolio guidelines for submitting code & software for further information.
+                                                                                                                                                                                              April 2023
+
+
+
+
+                                                                                                                                                                                               1
+
+======== PAGE 26 ========
+                                                                                                                                                                            nature portfolio | reporting summary
+Data
+Policy information about availability of data
+ All manuscripts must include a data availability statement. This statement should provide the following information, where applicable:
+    - Accession codes, unique identifiers, or web links for publicly available datasets
+    - A description of any restrictions on data availability
+    - For clinical datasets or third party data, please ensure that the statement adheres to our policy
+
+
+Except for the three real-world validation tasks (drug repurposing for AML, novel target discovery for liver fibrosis, mechanism explanation of gene transfer
+evolution), the remaining datasets used for development, benchmarking and evaluation of the AI systems are open source or otherwise accessible publicly with
+permissions. Specifically, the GPQA diamond dataset is publicly available at Hugging Face (https://huggingface.co/datasets/Idavidrein/gpqa). The Cancer
+Dependency Map (DepMap) Q2 2024 data used for computational sanity checks is publicly available at the DepMap portal (https://depmap.org/portal/). The
+curated drug targets dataset from the Open Targets Platform is available at https://platform.opentargets.org/downloads.
+
+
+
+Research involving human participants, their data, or biological material
+Policy information about studies with human participants or human data. See also policy information about sex, gender (identity/presentation),
+and sexual orientation and race, ethnicity and racism.
+  Reporting on sex and gender              N/A
+
+  Reporting on race, ethnicity, or N/A
+  other socially relevant
+  groupings
+
+  Population characteristics               N/A
+
+  Recruitment                              N/A
+
+  Ethics oversight                         N/A
+
+Note that full information on the approval of the study protocol must also be provided in the manuscript.
+
+
+
+Field-specific reporting
+Please select the one below that is the best fit for your research. If you are not sure, read the appropriate sections before making your selection.
+
+    Life sciences                       Behavioural & social sciences                 Ecological, evolutionary & environmental sciences
+For a reference copy of the document with all sections, see nature.com/documents/nr-reporting-summary-flat.pdf
+
+
+
+Life sciences study design
+All studies must disclose on these points even when the disclosure is negative.
+  Sample size            No statistical methods were used to predetermine sample sizes. For the computational evaluations, the sample size of 203 diverse research
+                         goals, 15 expert-curated goals, and 11 goals for LLM-as-a-judge preference were chosen to ensure a broad representation of scientific
+                         domains, robust statistical averaging across varying complexity, and to mitigate evaluator bias. For the in vitro validations, five distinct AML
+                         cell lines (MOLM-13, KG-1a, HL-60, NOMO-1, and TK6) were tested to model the molecular and genetic heterogeneity of the disease.
+                         Experiments were performed in biological triplicates (n=3). This sample size was not predetermined by statistical methods but was chosen
+                         based on widely accepted standard practices for preliminary in vitro dose-response viability screening. Given the large effect sizes typical of
+                         such preliminary pharmacological assays, three independent biological replicates provide the necessary degrees of freedom to calculate
+                         standard deviation, assess assay consistency, and robustly fit non-linear regression curves for IC50 estimation.
+
+  Data exclusions        No data were excluded from the computational or in vitro laboratory analyses.
+
+  Replication            All in vitro dose-response (single-agent screening) and cell viability assays (fixed-ratio combination treatments) were performed in
+                         independent biological triplicates (n=3). For computational hypothesis generation and LLM-as-a-judge evaluations, the system generated
+                         responses or evaluations independently across multiple discrete runs. All attempts at replication (both in vitro and computational) were
+                         successful. The resulting in vitro data were presented as the mean ± standard deviation of these triplicates.
+
+  Randomization          Randomization was not relevant for the in vitro experiments, as these involved standardized dose-response testing where specified drug
+                         concentrations were deterministically applied to cell cultures. For the human evaluation of the Co-Scientist and other LLMs, outputs were
+                                                                                                                                                                                 April 2023
+
+
+
+
+                         assessed by experts, the model outputs were presented randomly.
+
+  Blinding               The human expert evaluation of the LLM-generated outputs was explicitly blinded, ensuring that independent domain experts were
+                         completely unaware of which model generated the hypotheses they were scoring. Blinding was not applicable to the in vitro cell viability
+                         screening assays because these experiments involve standardized, automated readouts (absorbance at 490 nm using a multimode microplate
+
+
+                                                                                                                                                                                  2
+
+======== PAGE 27 ========
+                          reader) that are objective and not subject to investigator interpretation bias. Furthermore, knowledge of the drug identity is required by the
+                          experimenter to prepare the appropriate molar concentration ranges and dilution series for accurate IC50 determination.
+
+
+
+
+                                                                                                                                                                            nature portfolio | reporting summary
+Reporting for specific materials, systems and methods
+We require information from authors about some types of materials, experimental systems and methods used in many studies. Here, indicate whether each material,
+system or method listed is relevant to your study. If you are not sure if a list item applies to your research, read the appropriate section before selecting a response.
+
+
+Materials & experimental systems                                Methods
+n/a Involved in the study                                       n/a Involved in the study
+          Antibodies                                                      ChIP-seq
+          Eukaryotic cell lines                                           Flow cytometry
+          Palaeontology and archaeology                                   MRI-based neuroimaging
+          Animals and other organisms
+          Clinical data
+          Dual use research of concern
+          Plants
+
+
+
+
+Dual use research of concern
+Policy information about dual use research of concern
+
+Hazards
+  Could the accidental, deliberate or reckless misuse of agents or technologies generated in the work, or the application of information presented
+  in the manuscript, pose a threat to:
+  No Yes
+            Public health
+
+            National security
+            Crops and/or livestock
+            Ecosystems
+            Any other significant area
+
+
+Experiments of concern
+  Does the work involve any of these experiments of concern:
+  No Yes
+            Demonstrate how to render a vaccine ineffective
+            Confer resistance to therapeutically useful antibiotics or antiviral agents
+            Enhance the virulence of a pathogen or render a nonpathogen virulent
+            Increase transmissibility of a pathogen
+            Alter the host range of a pathogen
+            Enable evasion of diagnostic/detection modalities
+            Enable the weaponization of a biological agent or toxin
+            Any other potentially harmful combination of experiments and agents
+                                                                                                                                                                                 April 2023
+
+
+
+
+                                                                                                                                                                                  3
+
+======== PAGE 28 ========
+                                                                                                                                                                     nature portfolio | reporting summary
+Plants
+ Seed stocks             Report on the source of all seed stocks or other plant material used. If applicable, state the seed stock centre and catalogue number. If
+                         plant specimens were collected from the field, describe the collection location, date and sampling procedures.
+
+ Novel plant genotypes   Describe the methods by which all novel plant genotypes were produced. This includes those generated by transgenic approaches,
+                         gene editing, chemical/radiation-based mutagenesis and hybridization. For transgenic lines, describe the transformation method, the
+                         number of independent lines analyzed and the generation upon which experiments were performed. For gene-edited lines, describe
+                         the editor used, the endogenous sequence targeted for editing, the targeting guide RNA sequence (if applicable) and how the editor
+                         was applied.
+ Authentication          Describe any authentication procedures for each seed stock used or novel genotype generated. Describe any experiments used to
+                         assess the effect of a mutation and, where applicable, how potential secondary effects (e.g. second site T-DNA insertions, mosiacism,
+                         off-target gene editing) were examined.
+
+
+
+
+                                                                                                                                                                          April 2023
+
+
+
+
+                                                                                                                                                                           4
+
