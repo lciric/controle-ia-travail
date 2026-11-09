@@ -422,3 +422,4 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 ## 9 novembre, 11:07 UTC — sonde de refus des lecteurs candidats Claude de l'étiqueteur v2 (R-2001, GO-2026-11-09-02)
 - **Ordre scellé** `docs/procedures/ordre-sonde-refus-lecteur-c-etiqueteur-v2-v1.md` (`37b39e9a…`), envoyé à la fille clés 2 ; 30 items neufs sans jumeau, Opus 5.5 contre Fable 5.1, comptes seulement, plafond 15 dollars sur les crédits Claude.
 - **Ensuite** : lecture exploratoire v2 de l'étiqueteur avec le lecteur retenu (nœuds : plafond, jumeaux).
+- **11:24 UTC — sonde finie (R-2003)** : Opus 0 échec sur 30, Fable 2 refus « bio » sur 30 ; **Opus retenu comme lecteur candidat** de la lecture exploratoire v2 ; 5,07 dollars. Prochain nœud pour Lazar : plafond de la lecture v2 (Opus ≈ 29 dollars pour 700 appels) et jumeaux.
