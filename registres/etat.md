@@ -418,3 +418,7 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - **Course de dose-réponse exploratoire en marche** : instance 59847776 (fille clés 2), commit `1609a4bf…`, distillation des données en cours.
 - **Organisme v2** : règle de permission accordée par Lazar pour une seule commande (R-1978), voie (a) des plafonds (R-1981) ; lanceur v3 et garde d'empreinte en écriture, non commités.
 - **T0.7** : brouillon 14 et module prêts, marqueurs restants.
+
+## 9 novembre, 11:07 UTC — sonde de refus des lecteurs candidats Claude de l'étiqueteur v2 (R-2001, GO-2026-11-09-02)
+- **Ordre scellé** `docs/procedures/ordre-sonde-refus-lecteur-c-etiqueteur-v2-v1.md` (`37b39e9a…`), envoyé à la fille clés 2 ; 30 items neufs sans jumeau, Opus 5.5 contre Fable 5.1, comptes seulement, plafond 15 dollars sur les crédits Claude.
+- **Ensuite** : lecture exploratoire v2 de l'étiqueteur avec le lecteur retenu (nœuds : plafond, jumeaux).
