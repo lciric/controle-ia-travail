@@ -412,3 +412,9 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - **Nul v9** : vérification courte rendue (description seulement ; B1, I5, I6 levés) ; **verdict scellé : « puissance perdue » au premier étage** (R-1779) ; nœud de Lazar : accepter le prix ou chercher un nul moins coûteux.
 - **Instances** : 59288960 détruite à 10:08:19Z (R-1777) ; restent 58936096, 58936099, 58936100 (R8, arrêtées, jamais touchées).
 - **En attente** : contre-lecture de la chaîne de la course (ancienne session ; relance par la mère si absente à 13:00Z) ; suite complète des essais (en cours).
+
+## 9 novembre, 08:19 UTC — fin de l'autonomie de 12 heures (passation `registres/passations/2026-11-09-0819.md`, R-1988)
+- **A1-v4 en marche** : préenregistrement scellé `d306a8fa…`, λ\* = 0,40, publication `f39a7f4a…` sur le dépôt public, instance 59845811 (exécutante `session_016QhUrsygb1xWr7cXnvCo5R`), contrôle au plus tard le 12 novembre à 15:39 UTC.
+- **Course de dose-réponse exploratoire en marche** : instance 59847776 (fille clés 2), commit `1609a4bf…`, distillation des données en cours.
+- **Organisme v2** : règle de permission accordée par Lazar pour une seule commande (R-1978), voie (a) des plafonds (R-1981) ; lanceur v3 et garde d'empreinte en écriture, non commités.
+- **T0.7** : brouillon 14 et module prêts, marqueurs restants.
