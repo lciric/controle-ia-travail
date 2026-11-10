@@ -93,8 +93,8 @@ sont dans ce texte, sous réserve de la contre-lecture du brouillon 2 du plan et
    `docs/notes/procedures-publiees-echelon-3-v1/catalogue-procedures-echelon-3-v1-brouillon1.md`, `a0c6e3a6…`, non
    scellé) : scellée avant toute requête ([R] l. 396-399) ; ce qui en est remis à l'équipe.
 6. Protocole remis : une version sans chemin ni renvoi interne, relue.
-7. Conceptions gelées remises : lesquelles (les deux familles, pour la probabilité jointe de A3), relues par qui ; le
-   moniteur témoin n'est pas désigné ([R] l. 243-244).
+7. Conceptions gelées remises : lesquelles (les deux familles, pour la probabilité conditionnelle de A3), relues par
+   qui ; le moniteur témoin n'est pas désigné ([R] l. 243-244).
 8. Ce qu'il faut pour faire tourner notre agent sur les tâches du périmètre : à définir, relu ; rien du coffre.
 9. Lecture de leurs épisodes : option (i), notre juge ; ou option (ii), leur juge, épisode par épisode ; dans les deux
    cas, un préenregistrement propre, car [R] définit la course par « la chaîne du bras » (l. 65-66).
