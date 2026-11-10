@@ -94,6 +94,7 @@ PORTEE_REGLE_4 = "restreinte"
 SHA_FICHIER_LEGER = "701f73bd3a8ef30f46b304a6d5caa21444f0e1daf0829d04046e4024aa4e6e60"
 SHA_FICHIER_COMPLET = "91b61c45cdafd0ab979e261171b9661920715fa42c6cbc9751cd2697bfd3177a"
 NOM_FICHIER_COMPLET = "sondes-figees.npz"
+ETAT_PHRASES_LUES, ETAT_PHRASES_NON_LUES, MOTIF_PHRASES_NON_LUES = lt.ETAT_PHRASES_LUES, lt.ETAT_PHRASES_NON_LUES, lt.MOTIF_P9_SANS_PHRASES
 PRINCIPALES_P3 = {"tromperie": "tromperie-difference_moyennes-c15", "enjeux": "enjeux-lineaire-c15"}
 CONCEPTS_NEUFS = ("dissimulation", "domaine")
 N_COUPLES_FIGES_REEL = 24
@@ -272,21 +273,44 @@ def etape_complete(config: dict) -> bool:
     return all(spc[c] is None for c in CONCEPTS_NEUFS)
 
 
+def reserve_couches_repli(couches, garde_equivalence: dict) -> str | None:
+    """Réserve « couches … non vérifiées » sous le repli (brouillon 21, plan, point 8, CLT7B-12) : la garde d'équivalence ne voit
+    que la couche du sous-ensemble poussé ; les autres couches lues sont écrites non vérifiées. Couche illisible → `GardeArret`."""
+    try:
+        c_eq = int(garde_equivalence["couche"])
+    except (KeyError, TypeError, ValueError):
+        raise GardeArret("repli : couche de la garde d'équivalence illisible : réserve des couches non écrivable") from None
+    hors = [int(c) for c in couches if int(c) != c_eq]
+    return (f"couches {hors} non vérifiées (garde d'équivalence du repli à la couche {c_eq} seule, celle du sous-ensemble poussé)"
+            if hors else None)
+
+
 def lire_jeux_et_phrases(racine: Path, lignes_v: dict, fermeture: int, racine_t06: Path, run_t06: str, min_concepts: int = 1) -> dict:
     """Étape A complète, dans la garde : jeux scellés présents avant la fermeture (contenu contrôlé, `sondes_neuves_v1.lire_jeu`),
     phrases des concepts (`SCELLEMENT-CONCEPTS-T07`), contrôle de disjonction contre les tâches de la course 7b (fiches de
-    `episodes-t06.json`)."""
+    `episodes-t06.json`). Brouillon 21, option (c) (R-2158 ; « Accord au code », point 20 (ii)) : les jeux sont lus sans condition
+    sur la ligne des concepts ; les phrases seulement si leur ligne précède strictement l'instant de fermeture (comme les jeux),
+    au moins `min_concepts` concepts (quatre en mode réel ; moins → refus) ; sinon `phrases` est nul et `phrases_etat` dit
+    pourquoi (T7-P9 non lue, réserve R15)."""
     jeux, chemins = {}, {}
     for cle, nom, jeu in ((rg.SCELLEMENT_JEUX_JD, "JD", sn.JEU_JD), (rg.SCELLEMENT_JEUX_JC, "JC", sn.JEU_JC),
                           (rg.SCELLEMENT_JEUX_JA, "JA", sn.JEU_JA)):
         if cle in lignes_v and lignes_v[cle]["instant"] < int(fermeture):
             chemins[nom] = Path(racine) / lignes_v[cle]["chemin"]
             jeux[nom] = sn.lire_jeu(chemins[nom], jeu)
-    phrases = sn.lire_phrases_concepts(Path(racine) / lignes_v[rg.SCELLEMENT_CONCEPTS_T07]["chemin"], min_concepts)
+    lc = lignes_v.get(rg.SCELLEMENT_CONCEPTS_T07)
+    if lc is not None and lc["instant"] < int(fermeture):
+        phrases = sn.lire_phrases_concepts(Path(racine) / lc["chemin"], min_concepts)
+        phrases_etat = {"etat": ETAT_PHRASES_LUES, "chemin": lc["chemin"], "date": lc["date"]}
+    else:
+        phrases = None
+        phrases_etat = {"etat": ETAT_PHRASES_NON_LUES, "motif": MOTIF_PHRASES_NON_LUES,
+                        "ligne": ("absente" if lc is None else f"inscrite le {lc['date']}, pas strictement avant la fermeture "
+                                                                  f"{rg.date_utc(int(fermeture))} : exclue pour de bon sur ce lancement")}
     corps = verifier_resultat(racine_t06, Path(racine_t06) / "diag" / run_t06 / "episodes-t06.json")
     taches_eval = sorted({str(f["tache"]) for f in lv1._exiger(corps, ("resultat", "fiches"), "episodes-t06")})
     disjonction = sn.controler_disjonction(jeux, taches_eval) if jeux else {"etat": "aucun jeu dans le périmètre"}
-    return {"jeux": jeux, "phrases": phrases, "disjonction": disjonction, "chemins": chemins}
+    return {"jeux": jeux, "phrases": phrases, "phrases_etat": phrases_etat, "disjonction": disjonction, "chemins": chemins}
 
 
 def charger_sondes(racine: Path, config: dict, concepts: list) -> tuple[list, dict]:
@@ -473,7 +497,7 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
             charge = tenter(charger_sondes, racine, config, sortie["concepts"])
             if charge:
                 sortie["sondes"], sortie["rapport_sondes"] = charge
-            if etape_complete(config) and rg.SCELLEMENT_CONCEPTS_T07 in lignes_v:
+            if etape_complete(config):                          # option (c), R-2158 : jeux lus sans la ligne des concepts
                 jx = tenter(lire_jeux_et_phrases, racine, lignes_v, fermeture, racine, run_t06, 4 if config["mode"] == "reel" else 1)
                 if jx:
                     sortie["jeux_generiques"] = jx
@@ -652,6 +676,7 @@ def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dic
             echecs_p6 = {role: x["echec_notation"] for role, x in extras["p6"].items() if "echec_notation" in x}
             index["p6"] = {**{role: x["sonde"].nom for role, x in extras["p6"].items()},
                            "etat": "échec" if echecs_p6 else "notée", **({"echec": echecs_p6} if echecs_p6 else {})}
+        index["phrases_concepts"] = extras.get("phrases_concepts")          # option (c), R-2158 : T7-P9 et R15 à l'étape B
         index["directions"] = [{"rang": j, "nom": d["sonde"].nom, "couche": int(d["sonde"].couche), "n_plancher": len(d["plancher"]),
                                 "etat": "échec" if "echec_notation" in d else "notée", **({"echec": d["echec_notation"]} if "echec_notation" in d else {})}
                                for j, d in enumerate(extras.get("directions", []))]
@@ -822,7 +847,7 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
                 for c in couches_c:
                     for n in (f"intention-sans-cout-{f}-c{c}", f"intention-temoin-{f}-c{c}"):
                         taches += [f"entrainement/{n}", f"mahalanobis-egalite/{n}", f"plancher/{n}"]
-        if generiques:
+        if generiques and generiques["phrases"]:          # option (c) : aucune phrase → aucune tâche de plancher de concept
             taches += [f"plancher-concept/{k}/c{c}" for k in sorted(generiques["phrases"]["concepts"]) for c in couches_c]
         taches = list(dict.fromkeys(taches))
     garde_manifeste = {"garde_adaptee": config["garde_adaptee"], "portee_regle_4": config["portee_regle_4"],
@@ -845,6 +870,8 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
         identite = (lv1.garde_identite(racine, run_t06, ep["resultat"], config["couches"]) if repli is None else
                     {"remplacee_par": "garde d'équivalence du repli (activations recalculées)", **repli["garde_equivalence"],
                      "identite_dose_0": repli["identite_dose_0"], "rejeu": repli["rejeu"]})
+        if repli is not None:          # brouillon 21 (plan, point 8, CLT7B-12) : réserve des couches que la garde ne voit pas, sous le repli aussi
+            identite["reserve"] = reserve_couches_repli(config["couches"], repli["garde_equivalence"])
         mesures = lv1.charger_mesures(ep["mesures"], list(config["predicteurs_triviaux"]) + (["cout"] if complete else []))
         lv1.ecrire_resultat(racine_sortie, chemin_m, "ouverture-t07", {**ouverture, "garde_identite": identite,
                                                                         "reserves_t06": ep["reserves"], "etats_t06": ep["etats"],
@@ -890,6 +917,7 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
                     for s in appris["sondes"][concept]["couples"]:
                         neufs.append({"sonde": s, "etat": appris["rapport"]["concepts"][concept]["couples"][s.nom]["etat"]})
             extras = {"neufs": neufs, "directions": appris["directions"]["directions"] if appris["directions"] else [],
+                      "phrases_concepts": generiques["phrases_etat"],
                       "lexicaux": appris["lexicaux"], "concepts": {c: s.nom for c, s in zip(ouverture["concepts"], principales)},
                       "p6": ({"sonde": {"sonde": appris["p6"]["_sondes"][appris["p6"]["sonde"]]["sonde"],
                                         "plancher": appris["planchers"][appris["p6"]["sonde"]]},
@@ -907,6 +935,7 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
                    "couples_figes": rapport_couples, "cles_ignorees": ignorees, "garde_adaptee": garde_manifeste}
         if complete:
             contenu.update(sondes_neuves=appris["rapport"], disjonction=generiques["disjonction"], controles_jeux=controles_jeux,
+                           phrases_concepts=generiques["phrases_etat"],
                            fichiers_sondes_neuves=ecrire_sondes_neuves(racine_sortie, run_t07, appris),
                            note="sondes neuves apprises à l'étape A (30 couples, sonde principale par concept, T7-P6, directions des "
                                 "concepts, témoins lexicaux), consignées ici avant toute notation d'une action d'organisme ; les noms "

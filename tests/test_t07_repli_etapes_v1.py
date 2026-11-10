@@ -101,6 +101,10 @@ def test_garde_d_abord_puis_recalcul_puis_reprise_couverte(b, monkeypatch):
     assert r2["reprise"] and len(appels) == 1 and r2["rapport"]["empreinte_activations"] == r["rapport"]["empreinte_activations"]
 
 
+@pytest.mark.xfail(strict=True, raises=pytest.fail.Exception,
+                   reason="SCELLEMENT-CONCEPTS-T07 devenue permise (brouillon 21, option (c), R-2158) : son absence ne refuse plus "
+                          "la garde (« DID NOT RAISE ») ; remplacé par test_t07_option_c_concepts_v1."
+                          "test_repli_ligne_exigee_manquante_rien_calcule_puis_relance (RUN-CONFIRMATION-T06)")
 def test_garde_refusee_rien_calcule_puis_relance(b, monkeypatch):
     """Artefact : une ligne exigée manque (`SCELLEMENT-CONCEPTS-T07`) → refus de la garde, journalisé, **aucun recalcul**, aucun
     dossier d'activations ; relance quand la ligne est inscrite : recalcul fait (attente simple, R12 tenu)."""

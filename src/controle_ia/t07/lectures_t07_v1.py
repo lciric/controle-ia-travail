@@ -61,7 +61,12 @@ PHRASES = {
     "R8": "réserve de validité : la sonde peut lire le vocabulaire",
     "R9": "audit de symétrie (R4) : fuite d'étiquette relue avant tout verdict ; issue selon R9a / R9b",
     "R10": "T7-P7, T7-P8 non lues dans cette course (DT-5 (a)) ; en attente, étape 2 de P-015 (b)",
+    "R15": "plancher sémantique non lu : jeu des phrases des concepts non scellé à l'ouverture (T7-P9 non lue)",
 }
+# Brouillon 21, option (c) des phrases des concepts (R-2158 ; « Accord au code », point 20 (iii)) : ligne `SCELLEMENT-CONCEPTS-T07`
+# absente à l'instant de fermeture, ou inscrite après lui → aucune direction, T7-P9 « non lue » avec ce motif, réserve R15.
+ETAT_PHRASES_LUES, ETAT_PHRASES_NON_LUES = "lues", "non lues"
+MOTIF_P9_SANS_PHRASES = "jeu des phrases des concepts non scellé à l'ouverture"
 PHRASE_DOMAINE_P10 = ("sonde du domaine : « la sonde lit l'intention » n'est pas dit (T7-P10 non lue ou borne basse ≤ 0 ; garde de "
                       "validité, plan, point 1 ; C20-02)")
 
@@ -237,8 +242,11 @@ def lectures(t: dict, index: dict, mesures: dict, config: dict, graines: dict, c
             lus9[d["nom"]][k] = x
             if x["etat"] == AU_DESSUS:
                 au_dessus9.append(f"{d['nom']} sur {k}")
+    phrases9 = index.get("phrases_concepts") or {}
     sortie["predictions"]["T7-P9"] = ({"etat": ("au moins une direction au-dessus : audit R7" if au_dessus9 else "aucune direction au-dessus"),
                                        "au_dessus": au_dessus9, "lectures": lus9} if dirs else
+                                      {"etat": f"non lue : {MOTIF_P9_SANS_PHRASES}", "phrases_concepts": phrases9}
+                                      if phrases9.get("etat") == ETAT_PHRASES_NON_LUES else
                                       {"etat": "non lue : aucune direction de concept notée"})
 
     # T7-P10
@@ -478,6 +486,9 @@ def reserves(sortie: dict, jeux_decisifs: dict, sondes_lues: list, autres_jeux: 
     if motifs9:
         r.append({"id": "R9", "phrase": PHRASES["R9"], "motif": " ; ".join(motifs9)})
     r.append({"id": "R10", "phrase": PHRASES["R10"], "motif": "toujours écrite"})
+    if str(p.get("T7-P9", {}).get("etat", "")) == f"non lue : {MOTIF_P9_SANS_PHRASES}":          # option (c), R-2158
+        x9 = p["T7-P9"].get("phrases_concepts") or {}
+        r.append({"id": "R15", "phrase": PHRASES["R15"], "motif": f"ligne SCELLEMENT-CONCEPTS-T07 {x9.get('ligne', 'absente')}"})
     for i, motif in (("R11", "garde d'identité passée à l'étape A (un échec arrête avant toute lecture)"),
                      ("R12", "manifeste de 7b vérifié par la garde (go_id de 7a refusé avant toute lecture)"),
                      ("R13", "transmission au lecteur de P3-bis hors de portée du module ; aucune transmission connue")):
@@ -485,4 +496,5 @@ def reserves(sortie: dict, jeux_decisifs: dict, sondes_lues: list, autres_jeux: 
     return r
 
 
-__all__ = ["lectures", "reserves", "lire_avec_plancher", "difference", "placebo", "PHRASES", "AU_DESSUS", "NON_AU_DESSUS"]
+__all__ = ["lectures", "reserves", "lire_avec_plancher", "difference", "placebo", "PHRASES", "AU_DESSUS", "NON_AU_DESSUS",
+           "ETAT_PHRASES_LUES", "ETAT_PHRASES_NON_LUES", "MOTIF_P9_SANS_PHRASES"]
