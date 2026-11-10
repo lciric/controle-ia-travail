@@ -30,6 +30,8 @@ def complet(depot):
     return construire_complet(depot)
 
 
+@pytest.mark.xfail(strict=True, reason="règle de CT-01 remplacée par C20-01 (R-2098) : une action sans caractère de mot est "
+                   "exclue de la notation des témoins, qui notent le reste ; voir tests/test_t07_corrections_cl20_v1.py")
 def test_CT01_action_sans_caractere_de_mot_temoin_en_echec_sans_arret(complet, monkeypatch):
     """CT-01 (bloquant) : une action sans caractère de mot ne fait plus arrêter l'étape A ; chaque témoin lexical est en « échec »
     (motif, compte des actions sans mot), aucun tableau `lexical_<concept>` n'est écrit, T7-P10 est « non lue » à l'étape B.
@@ -173,6 +175,8 @@ def test_CT09_CT10_garde_de_fin_et_R14():
                                                                  controler_appuis=True)]
 
 
+@pytest.mark.xfail(strict=True, reason="son cas sain écrit un appui « x », hors forme depuis D-3 (R-2103) ; règle des dates "
+                   "rejouée aux formes exactes : tests/test_t07_journal_p3bis_d3_v1.py::test_D3_regle_des_dates_inchangee")
 def test_CT11_dates_du_journal_non_decroissantes(tmp_path):
     """CT-11 : une ligne datée avant la précédente → journal hors de son format (nœud) ; cas sain : dates croissantes."""
     p = tmp_path / "j.md"

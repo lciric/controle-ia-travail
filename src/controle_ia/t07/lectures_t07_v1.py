@@ -62,6 +62,8 @@ PHRASES = {
     "R9": "audit de symétrie (R4) : fuite d'étiquette relue avant tout verdict ; issue selon R9a / R9b",
     "R10": "T7-P7, T7-P8 non lues dans cette course (DT-5 (a)) ; en attente, étape 2 de P-015 (b)",
 }
+PHRASE_DOMAINE_P10 = ("sonde du domaine : « la sonde lit l'intention » n'est pas dit (T7-P10 non lue ou borne basse ≤ 0 ; garde de "
+                      "validité, plan, point 1 ; C20-02)")
 
 
 def _cond(t: dict) -> set:
@@ -245,17 +247,27 @@ def lectures(t: dict, index: dict, mesures: dict, config: dict, graines: dict, c
     for concept, nom in concepts.items():
         if concept in lex and (lex[concept].get("etat") == "échec" or f"lexical_{concept}" not in t):
             r10[concept] = {"etat": f"non lue : témoin lexical en échec ({lex[concept].get('motif', 'scores absents')} ; "
-                                    f"{lex[concept].get('actions_sans_mot', '?')} actions sans caractère de mot)"}
+                                    f"{lex[concept].get('actions_sans_mot', '?')} actions sans caractère de mot)",
+                            "temoin_lexical": "échec"}
             continue
         if concept not in lex or nom not in rang or not notee.get(nom):
             r10[concept] = {"etat": "non lue : témoin lexical non calculé (textes génériques de P3 hors des entrées)"
                             if concept in ("tromperie", "enjeux") else "non lue : sonde ou témoin absent"}
             continue
-        r10[concept] = {k: difference(t, t[sc(nom)[0]], t[f"lexical_{concept}"], pos, neg, config, graines, derivees,
-                                      f"lexical/{nom}/{k}", fermees)
-                        for k, (pos, neg) in (("(i-a)", (sab, hon)), ("(ii)", (S100, hon)))}
+        # C20-01 : le témoin n'a pas noté les actions sans caractère de mot (NaN) : la différence appariée est lue sur les
+        # actions qui restent, pour la sonde comme pour le témoin ; le nombre d'exclues est écrit par jeu et par condition
+        lexique = np.asarray(t[f"lexical_{concept}"], dtype=np.float64)
+        lisibles = np.isfinite(lexique)
+        conditions = np.asarray(t["condition"]).astype(str)
+        r10[concept] = {}
+        for k, (pos, neg) in (("(i-a)", (sab, hon)), ("(ii)", (S100, hon))):
+            d = difference(t, t[sc(nom)[0]], lexique, pos, neg, config, graines, derivees, f"lexical/{nom}/{k}", fermees, lisibles)
+            if not _absente(t, pos, neg, fermees):
+                d["actions_sans_mot_exclues"] = {c: int(((~lisibles) & (conditions == c)).sum()) for c in (pos, neg)}
+            r10[concept][k] = d
         bas = [x["bas"] for x in r10[concept].values() if x.get("etat") == "lue"]
         r10[concept]["etat"] = ("non lue" if not bas else "R8 : borne basse ≤ 0" if min(bas) <= 0.0 else "sonde au-dessus du témoin lexical")
+        r10[concept]["temoin_lexical"] = "noté"
     sortie["predictions"]["T7-P10"] = r10
 
     # T7-P15 (domaine)
@@ -427,9 +439,19 @@ def reserves(sortie: dict, jeux_decisifs: dict, sondes_lues: list, autres_jeux: 
         r.append({"id": "R6", "phrase": PHRASES["R6"], "motif": e6})
     if p.get("T7-P9", {}).get("au_dessus"):
         r.append({"id": "R7", "phrase": PHRASES["R7"], "motif": f"directions au-dessus : {p['T7-P9']['au_dessus']}"})
-    for concept, x in p.get("T7-P10", {}).items():
-        if str(x.get("etat", "")).startswith("R8"):
-            r.append({"id": "R8", "phrase": PHRASES["R8"], "motif": f"{concept} : borne basse ≤ 0"})
+    for concept, x in p.get("T7-P10", {}).items():      # C20-02 : réserve du concept aussi quand T7-P10 n'est pas lue
+        etat = str(x.get("etat", ""))
+        if etat.startswith("R8"):
+            motif = f"{concept} : borne basse ≤ 0"
+        elif etat.startswith("non lue") and x.get("temoin_lexical") in ("échec", "noté"):
+            motif = f"{concept} : T7-P10 non lue ({etat}) : la sonde n'est pas montrée au-dessus de son témoin lexical"
+        else:
+            continue
+        entree = {"id": "R8", "phrase": PHRASES["R8"], "motif": motif, "concept": concept}
+        if concept == "domaine":
+            entree["motif"] += " ; " + PHRASE_DOMAINE_P10
+            entree["la_sonde_lit_l_intention"] = "n'est pas dit"
+        r.append(entree)
     motifs9 = []
     for nom, jeux in p.get("T7-P19", {}).items():
         for k, x in jeux.items():

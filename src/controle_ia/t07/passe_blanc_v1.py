@@ -6,7 +6,7 @@ d'autre :
 
 1. **l'extraction des jeux génériques en mode réel** (modèle de la course lue, `lecture_v2.extracteur_de_la_course`, cache local
    seulement) sur un **échantillon petit, fixe et écrit** : pour chaque jeu scellé présent au registre, les enregistrements des
-   `PAIRES_PAR_JEU` premières paires dans l'ordre du fichier, plus l'enregistrement le plus long (jetons de la conversation ;
+   `PAIRES_PAR_JEU` premières paires dans l'ordre canonique de `lire_jeu` (tâche, paire, membre), plus l'enregistrement le plus long (jetons de la conversation ;
    le premier en cas d'égalité), à l'empan de l'étape A (`sondes_neuves_v1.EMPAN_DE_JEU`), et pour J-C aussi l'action entière ;
    pour les phrases des concepts, les `PAIRES_PAR_CONCEPT` premières paires (par indice) de chaque concept, plus la phrase la
    plus longue ; les enregistrements pris sont écrits dans la sortie ;
@@ -17,6 +17,9 @@ d'autre :
    frontière maximale : le jeton suivant atteint le champ ; (F4) le champ `COST:` est à la position écrite, réponse sans ses
    blancs de tête ; plus, sur tous les enregistrements de tous les jeux, la garde du gabarit de l'étape A
    (`jetons_reponse_forcee` : identifiants = rendu complet du gabarit) ;
+2 bis. **la garde d'identité des jeux** (E-8, décision D-2 (a), R-2101 ; `controle_jeux_v1.remesurer_jetons`) : les moyennes de
+   longueur du journal du script des jeux (mots, caractères, jetons) recalculées au tokeniseur du modèle ; écart → arrêt motivé
+   (l'étape A refait la même garde ; la passe l'éprouve avant que l'ouverture fixe le périmètre) ;
 3. **la durée et la mémoire** : chargement du modèle, durée de chaque passe de l'échantillon, estimation de la durée de
    l'extraction de l'étape A (moyenne des passes hors la première × nombre de passes de l'étape A) ; mémoire de la carte (pic
    réservé, `torch.cuda.max_memory_reserved`, contre `PART_CARTE_MAX` de la carte) et de l'hôte (activations que l'étape A garde
@@ -53,6 +56,7 @@ from ..gardes import GardeArret, etat_git
 from ..harnais.formats import _ids
 from ..premier_test_ia.empans import jetons_message_utilisateur, jetons_reponse_forcee
 from ..scellement import sceller
+from . import controle_jeux_v1 as cj
 from . import registre_v1 as rg
 from . import sondes_neuves_v1 as sn
 
@@ -72,8 +76,8 @@ FAUTES_ECRITES = 20
 CHAMP = "COST:"
 CODE_OK, CODE_REFUS, CODE_ARRET = 0, 2, 3
 JEUX = ((rg.SCELLEMENT_JEUX_JD, "JD", sn.JEU_JD), (rg.SCELLEMENT_JEUX_JC, "JC", sn.JEU_JC), (rg.SCELLEMENT_JEUX_JA, "JA", sn.JEU_JA))
-REGLE_ECHANTILLON = (f"par jeu scellé présent : les enregistrements des {PAIRES_PAR_JEU} premières paires (tâche, paire) dans l'ordre du "
-                     "fichier, plus l'enregistrement le plus long (jetons de la conversation ; le premier en cas d'égalité), à l'empan de "
+REGLE_ECHANTILLON = (f"par jeu scellé présent : les enregistrements des {PAIRES_PAR_JEU} premières paires (tâche, paire) dans l'ordre "
+                     "canonique de lire_jeu (tâche, paire, membre), plus l'enregistrement le plus long (jetons de la conversation ; le premier en cas d'égalité), à l'empan de "
                      f"l'étape A, et pour J-C aussi l'action entière ; phrases : les {PAIRES_PAR_CONCEPT} premières paires (par indice) "
                      "de chaque concept (phrase du concept et phrase neutre), plus la phrase la plus longue (jetons ; la première en cas "
                      "d'égalité)")
@@ -321,6 +325,14 @@ def passe_a_blanc(racine: Path, registre: Path, config: dict, run_t06: str, raci
                     except GardeArret as e:
                         motifs.append(f"phrase {c}/{r['indice']}/{cote} : {e}")
                         jetons_phr.append((c, r["indice"], cote, 0))
+    # (2 bis) garde d'identité des jeux (E-8, D-2 (a) ; consigne v3 des jeux, § 2) : remesure des jetons contre le journal du script
+    remesure = {}
+    for n, recs in entrees["jeux"].items():
+        try:
+            remesure[n] = cj.remesurer_jetons(n, recs, racine / entrees["fichiers"][n]["chemin"], lambda x: len(_ids(ext.fmt.tok, x)), mode)
+        except GardeArret as e:
+            remesure[n] = {"etat": f"écart : {e}"}
+            motifs.append(str(e))
     duree_tokeniseur = round(time.perf_counter() - t0, 3)
     for n, c in controles.items():
         if c["fautes"]:
@@ -395,6 +407,7 @@ def passe_a_blanc(racine: Path, registre: Path, config: dict, run_t06: str, raci
         "gabarit": {"par_jeu": {n: {"enregistrements": c["n"], "fautes": len([f for f in c["fautes"] if f["faute"].startswith("gabarit")])}
                                 for n, c in controles.items()},
                     "tient": not any(f["faute"].startswith("gabarit") for c in controles.values() for f in c["fautes"])},
+        "remesure_jetons": remesure,
         "frontiere": {"regle": "F1 à F4 (docstring de passe_blanc_v1), tous les enregistrements des jeux lus avant le champ",
                       "par_jeu": frontiere, "tient": not any(f["faute"].startswith("F") for c in controles.values() for f in c["fautes"]),
                       "fautes": [{"jeu": n, **f} for n, c in controles.items() for f in c["fautes"]][:FAUTES_ECRITES]},

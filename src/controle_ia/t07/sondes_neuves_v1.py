@@ -101,7 +101,11 @@ def graine(graines: dict, cle: str, derivees: dict | None = None) -> int:
 
 # ------------------------------------------------------------------------------------------------------------------ jeux
 def lire_jeu(chemin: Path, jeu: str) -> list[dict]:
-    """Enregistrements d'un jeu (consigne v3, section 3) ; toute faute → `GardeArret` (arrêt de l'étape A, R5)."""
+    """Enregistrements d'un jeu (consigne v3, section 3) ; toute faute → `GardeArret` (arrêt de l'étape A, R5). L'étiquette est
+    lue dans son champ, jamais au rang de ligne ; les enregistrements sont rendus dans un **ordre canonique** (tâche, paire,
+    membre), indépendant de l'ordre du fichier (R-2109 : `assembler` écrit toujours le membre d'étiquette 0 en premier ; la lettre
+    du membre, tirée par graine, ne porte pas l'étiquette) : extraction, plis, apprentissage, validation, témoins et T7-P6 sont
+    les mêmes au bit près quel que soit l'ordre des lignes."""
     chemin = Path(chemin)
     if jeu not in MODES_JEU:
         raise GardeArret(f"jeu {jeu!r} inconnu")
@@ -133,7 +137,7 @@ def lire_jeu(chemin: Path, jeu: str) -> list[dict]:
             raise GardeArret(f"jeu {jeu}, tâche {t}, paire {p} : deux membres A et B, étiquettes 0 et 1 attendus")
         if len({m["mode"] for m in membres}) != 1:
             raise GardeArret(f"jeu {jeu}, tâche {t}, paire {p} : membres de modes différents")
-    return lignes
+    return sorted(lignes, key=lambda r: (r["tache"], r["paire"], r["membre"]))
 
 
 def controler_disjonction(jeux: dict, taches_evaluation) -> dict:

@@ -10,8 +10,14 @@ point 8), v1. **Rien n'est jamais écrit** dans ces fichiers par T0.7.
    `pleine`, `reduite` ou `pleine-anticipee` ; après `reduite`, seule `pleine` ou `pleine-anticipee` ; après `pleine` ou
    `pleine-anticipee`, aucune) ; forme fautive → `JournalFautif` (refus, code 2, nœud). `paquets` et `motif` ne sont pas lus
    (« Ce que T0.7 en lit » : clé, date, mode, et l'appui des lignes `reduite` et `pleine`, comparé aux lignes citées par
-   `garde_adaptee_v1`). **Interprétation déclarée** : une ligne vide (après retrait des espaces) ne porte aucune tentative et est
-   ignorée ; toute autre ligne après l'en-tête doit avoir la forme.
+   `garde_adaptee_v1`). **D-3 (R-2103 ; essai de concordance `c867a1b2…`)** : le lecteur applique **en entier** le prédicat de
+   format de l'écrivain (`premier_test_ia/ouverture_p3bis_v2.py`, `330915f6…`, `lire_ligne_journal` et `exiger_format_journal`,
+   l. 691-750) : chaque ligne finie par un saut de ligne (fichier sans saut final → faute), aucune ligne vide, aucune espace en
+   tête ni en fin (la ligne commence et finit par `|`), cellules `appui` (jetons `CLÉ=sha256` séparés par une espace, clés
+   `SCORES-T07`, `SONDES-T07`, `GARDE-ADAPTEE-T07-P3BIS`, `RENDEZ-VOUS-P3BIS-N` ; forme du mode pour une ouverture), `paquets`
+   (deux empreintes séparées par une espace ; `-` permis pour un refus) et `motif` (`-` pour une ouverture ; `code : texte`, code
+   de la liste fermée, pour un refus) à leur forme ; le fichier vide reste refusé. L'interprétation tolérante du brouillon 19
+   (« ligne vide ignorée ») est retirée. La règle « dates non décroissantes » (CT-11) reste telle quelle.
 2. **Registre des préalables de P3-bis** `registres/prealables-p3bis-v1.md` (`lire_prealables`) : même format que
    `registres/scellements-v1.md` (quatre cellules, date au motif `DATE`, chemin relatif sans « .. », empreinte du fichier entier
    égale à son compagnon) ; T0.7 lit `GARDE-ADAPTEE-T07-P3BIS` (au plus une ligne) et `RENDEZ-VOUS-P3BIS-N` (numéros consécutifs
@@ -39,7 +45,16 @@ MODES_P3BIS = (PLEINE, REDUITE, PLEINE_ANTICIPEE)
 SUIVANTS_PERMIS = {None: (PLEINE, REDUITE, PLEINE_ANTICIPEE), REDUITE: (PLEINE, PLEINE_ANTICIPEE), PLEINE: (), PLEINE_ANTICIPEE: ()}
 GARDE_ADAPTEE_T07_P3BIS = "GARDE-ADAPTEE-T07-P3BIS"
 CLES_ECRITS_P3BIS = ("ECRIT-PERIMETRE-JEUX-P3BIS", "ECRIT-LANCEMENT-RELANCE-P3BIS", "ECRIT-ENGAGEMENT-ETAPE-A-P3BIS")
-RENDEZ_VOUS = re.compile(r"RENDEZ-VOUS-P3BIS-([1-9][0-9]*)")
+RENDEZ_VOUS = re.compile(r"RENDEZ-VOUS-P3BIS-([1-9][0-9]*)")      # même motif que l'écrivain (R-2103)
+# --- prédicat de format de l'écrivain (`ouverture_p3bis_v2.py`, `330915f6…`, l. 168-175), recopié (D-3, R-2103)
+MOTIFS_REFUS = ("registre-absent", "ligne-absente", "ligne-double", "ligne-mal-formee", "sceau-faux", "compagnon-absent",
+                "date-posterieure", "cle-inconnue", "rendez-vous-non-consecutif", "rendez-vous-non-croissant",
+                "ligne-apres-decision-finale", "ni-scores-ni-ouvrir", "decision-maintenir", "garde-adaptee-absente",
+                "garde-adaptee-posterieure", "deja-ouverte", "paquet-faux")
+JETON_APPUI = re.compile(r"([A-Z0-9]+(?:-[A-Z0-9]+)+)=([0-9a-f]{64})")
+CLE_RDV_APPUI = re.compile(r"RENDEZ-VOUS-P3BIS-[1-9][0-9]*")
+PAQUETS_CELLULE = re.compile(r"[0-9a-f]{64} [0-9a-f]{64}")
+MOTIF_CELLULE = re.compile(r"([a-z]+(?:-[a-z]+)*) : (\S.*)")
 FICHIER_DECISION = "docs/decisions/rendez-vous-P3-bis-v{n}.md"
 PREREG_T07 = "prereg/T0.7-sondes-v0-v1.md"
 MAINTENIR, OUVRIR, OUVRIR_PLEINEMENT = "maintenir", "ouvrir", "ouvrir pleinement"
@@ -60,6 +75,41 @@ def _cellules(ligne: str) -> list[str] | None:
     return [c.strip() for c in s[1:-1].split("|")]
 
 
+def _forme_appui(mode: str, cles: list[str]) -> bool:
+    if mode == PLEINE:
+        return cles == [rg.SCORES_T07, rg.SONDES_T07]
+    if mode == REDUITE:
+        return len(cles) == 2 and bool(CLE_RDV_APPUI.fullmatch(cles[0])) and cles[1] == GARDE_ADAPTEE_T07_P3BIS
+    return len(cles) == 1 and bool(CLE_RDV_APPUI.fullmatch(cles[0]))
+
+
+def faute_de_cellules(cle: str, mode: str, appui: str, paquets: str, motif: str) -> str | None:
+    """D-3 : cellules `appui`, `paquets`, `motif` au prédicat de l'écrivain (`lire_ligne_journal`, l. 691-719) ; rend la faute ou None."""
+    cles = []
+    if appui != "-":
+        for jeton in appui.split(" "):
+            m = JETON_APPUI.fullmatch(jeton)
+            if m is None:
+                return f"appui : jeton {jeton!r} (CLÉ=sha256 attendu)"
+            if not (m.group(1) in (rg.SCORES_T07, rg.SONDES_T07, GARDE_ADAPTEE_T07_P3BIS) or CLE_RDV_APPUI.fullmatch(m.group(1))):
+                return f"appui : clé {m.group(1)!r} inconnue"
+            cles.append(m.group(1))
+    if cle == OUVERTURE_P3BIS:
+        if not _forme_appui(mode, cles):
+            return f"appui {appui!r} hors de la forme du mode {mode}"
+        if not PAQUETS_CELLULE.fullmatch(paquets):
+            return f"paquets {paquets!r} (deux empreintes séparées par une espace attendues)"
+        if motif != "-":
+            return f"motif {motif!r} d'une ouverture (« - » attendu)"
+        return None
+    if paquets != "-" and not PAQUETS_CELLULE.fullmatch(paquets):
+        return f"paquets {paquets!r} d'un refus (« - » ou deux empreintes attendus)"
+    m = MOTIF_CELLULE.fullmatch(motif)
+    if m is None or m.group(1) not in MOTIFS_REFUS:
+        return f"motif {motif!r} (code de la liste fermée, « : », texte attendus)"
+    return None
+
+
 def lire_journal_p3bis(chemin: Path) -> list[dict]:
     """Lignes du journal, dans l'ordre du fichier : {numero (ligne du fichier, depuis 1), cle, date, instant, mode, appui, paquets,
     motif}. Absent → []. Forme fautive → `JournalFautif` (toutes les fautes relevées, jointes par « ; »)."""
@@ -72,13 +122,18 @@ def lire_journal_p3bis(chemin: Path) -> list[dict]:
     fautes, sortie = [], []
     if len(lignes) < 2 or lignes[0] != ENTETE_JOURNAL[0] or lignes[1] != ENTETE_JOURNAL[1]:
         raise JournalFautif(f"journal de P3-bis {chemin} : en-tête absent ou différent des deux lignes {list(ENTETE_JOURNAL)} : nœud")
+    if lignes[-1] != "":                                                                   # D-3 : saut de ligne final
+        fautes.append("dernière ligne sans saut de ligne")
+    else:
+        lignes = lignes[:-1]
     precedent, instant_precedent = None, None
     for i, brute in enumerate(lignes[2:], start=3):
-        if not brute.strip():
+        if "\r" in brute or not (len(brute) >= 2 and brute.startswith("|") and brute.endswith("|")):     # D-3 : ligne vide, espaces
+            fautes.append(f"ligne {i} : ligne vide, ou qui ne commence ou ne finit pas par « | »")
             continue
-        c = _cellules(brute)
-        if c is None or len(c) != 6:
-            fautes.append(f"ligne {i} : {0 if c is None else len(c)} cellules, six attendues")
+        c = [x.strip() for x in brute[1:-1].split("|")]
+        if len(c) != 6:
+            fautes.append(f"ligne {i} : {len(c)} cellules, six attendues")
             continue
         cle, date, mode, appui, paquets, motif = c
         if cle not in CLES_JOURNAL:
@@ -92,6 +147,9 @@ def lire_journal_p3bis(chemin: Path) -> list[dict]:
         if mode not in MODES_P3BIS:
             fautes.append(f"ligne {i} : mode {mode!r} inconnu ({list(MODES_P3BIS)})")
             continue
+        forme = faute_de_cellules(cle, mode, appui, paquets, motif)                        # D-3 : appui, paquets, motif
+        if forme:                                         # faute écrite ; date et ordre de la ligne jugés aussi (toutes les fautes)
+            fautes.append(f"ligne {i} : {forme}")
         if instant_precedent is not None and instant < instant_precedent:                 # CT-11
             fautes.append(f"ligne {i} : date {date} antérieure à la ligne précédente (journal en ajout seul : dates non décroissantes)")
             continue

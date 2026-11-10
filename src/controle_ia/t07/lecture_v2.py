@@ -66,11 +66,14 @@ from pathlib import Path
 import numpy as np
 
 from ..gardes import GardeArret, motif_d_arret
+from ..harnais.formats import _ids
 from ..manifeste import config_canonique, creer_manifeste, lire_manifeste, verifier_resultat
 from ..premier_test_ia.figees import lire_sondes
 from ..scellement import verifier
 from ..sondes.evaluation import aire_sous_courbe
 from ..sondes.familles import SondeMahalanobis
+from . import code_t07_v1 as ct
+from . import controle_jeux_v1 as cj
 from . import criteres_v1 as cr
 from . import donnees_p3_t07_v1 as d3
 from . import garde_adaptee_v1 as ga
@@ -95,6 +98,8 @@ CONCEPTS_NEUFS = ("dissimulation", "domaine")
 N_COUPLES_FIGES_REEL = 24
 FAMILLES_COUPLES = ("difference_moyennes", "lineaire", "perceptron", "attention")
 COUCHES_COUPLES = (7, 15, 23)
+REGLE_SANS_MOT = ("C20-01 (décision de la mère, R-2098) : actions sans aucun caractère de mot exclues de la notation des témoins "
+                  "lexicaux, et d'elle seule ; comptées par condition ; T7-P10 lue sur les actions qui restent")
 PHRASE_SUITE_FINALE = ("issue finale pour 7b sur ce lancement (G4, R14 ; N-066, règle 4 restreinte) : voies « version neuve » et "
                        "« texte nouveau » fermées")
 
@@ -193,6 +198,7 @@ def exiger_configuration(config: dict) -> None:
                          "de configuration")
     if config.get("donnees_p3") is not None:            # clé facultative (T7-P10 de la tromperie et des enjeux, plan, point 10)
         d3.exiger_config(config["donnees_p3"], config["mode"])
+    cj.exiger_enonces_config(config)                    # clé facultative `enonces_reserve` (E-8 : rejeu du contrôle 9)
     if config["mode"] == "reel":
         if int(config["n_plancher"]) != lv1.N_PLANCHER_REEL:
             raise GardeArret(f"mode réel : n_plancher {config['n_plancher']} ≠ {lv1.N_PLANCHER_REEL}")
@@ -269,16 +275,17 @@ def lire_jeux_et_phrases(racine: Path, lignes_v: dict, fermeture: int, racine_t0
     """Étape A complète, dans la garde : jeux scellés présents avant la fermeture (contenu contrôlé, `sondes_neuves_v1.lire_jeu`),
     phrases des concepts (`SCELLEMENT-CONCEPTS-T07`), contrôle de disjonction contre les tâches de la course 7b (fiches de
     `episodes-t06.json`)."""
-    jeux = {}
+    jeux, chemins = {}, {}
     for cle, nom, jeu in ((rg.SCELLEMENT_JEUX_JD, "JD", sn.JEU_JD), (rg.SCELLEMENT_JEUX_JC, "JC", sn.JEU_JC),
                           (rg.SCELLEMENT_JEUX_JA, "JA", sn.JEU_JA)):
         if cle in lignes_v and lignes_v[cle]["instant"] < int(fermeture):
-            jeux[nom] = sn.lire_jeu(Path(racine) / lignes_v[cle]["chemin"], jeu)
+            chemins[nom] = Path(racine) / lignes_v[cle]["chemin"]
+            jeux[nom] = sn.lire_jeu(chemins[nom], jeu)
     phrases = sn.lire_phrases_concepts(Path(racine) / lignes_v[rg.SCELLEMENT_CONCEPTS_T07]["chemin"], min_concepts)
     corps = verifier_resultat(racine_t06, Path(racine_t06) / "diag" / run_t06 / "episodes-t06.json")
     taches_eval = sorted({str(f["tache"]) for f in lv1._exiger(corps, ("resultat", "fiches"), "episodes-t06")})
     disjonction = sn.controler_disjonction(jeux, taches_eval) if jeux else {"etat": "aucun jeu dans le périmètre"}
-    return {"jeux": jeux, "phrases": phrases, "disjonction": disjonction}
+    return {"jeux": jeux, "phrases": phrases, "disjonction": disjonction, "chemins": chemins}
 
 
 def charger_sondes(racine: Path, config: dict, concepts: list) -> tuple[list, dict]:
@@ -450,6 +457,10 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
             motifs.extend(_motifs(ga.garde_etape_a(instant, lignes_v, journal, prealables, decisions, deja=False)))
         premiere = tenter(premiere_ouverture_a, registre, run_t06)
         fermeture, source = ga.instant_fermeture(instant, premiere if isinstance(premiere, int) else None, journal)
+        if rg.CODE_T07 in lignes_v:          # DS-3 bis (R-2104) : commit et empreintes du code égaux à l'arbre exécuté, ligne avant la 1re ouverture
+            code = tenter(ct.controler_code, racine, lignes_v[rg.CODE_T07], premiere if isinstance(premiere, int) else None)
+            if code:
+                sortie["code_t07"] = code
         resume_journal["ouverture_reduite_avant_ouverture_A"] = ga.reduite_avant(journal, instant)
         resume_journal["fermeture_perimetre"] = {"instant": rg.date_utc(fermeture), "source": source,
                                                  "premiere_ouverture_A": rg.date_utc(premiere) if isinstance(premiere, int) else None}
@@ -651,13 +662,25 @@ def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dic
                     raise CleAbsente(f"texte absent de textes-actions-t06.jsonl pour l'action {c}")
                 tx.append(textes[c])
             from ..sondes.temoins import MOTIF_MOT
-            sans_mot = sum(1 for x in tx if not MOTIF_MOT.search(x))
+            # C20-01 (R-2098) : les actions sans aucun caractère de mot sont exclues de la notation des témoins lexicaux, et
+            # d'elle seule (NaN dans `lexical_<concept>`) ; leur nombre est écrit par condition ; T7-P10 est lue sur le reste
+            avec_mot = np.array([bool(MOTIF_MOT.search(x)) for x in tx], dtype=bool)
+            sans_mot = int((~avec_mot).sum())
+            cond_n = np.asarray(tableaux["condition"]).astype(str)
+            index["lexicaux_actions_sans_mot"] = {
+                "regle": REGLE_SANS_MOT, "actions": len(tx), "exclues": sans_mot,
+                "par_condition": {c: int(((~avec_mot) & (cond_n == c)).sum()) for c in sorted(set(cond_n.tolist()))}}
+            gardees = [x for x, m in zip(tx, avec_mot) if m]
             index["lexicaux"] = {}
             for concept, x in extras["lexicaux"].items():     # CT-01 : un témoin en échec n'arrête jamais l'étape A
                 entree = {"nom": x["temoin"].nom, "empreinte": x["empreinte"], "penalite": x["penalite"]}
                 try:
-                    tableaux[f"lexical_{concept}"] = x["temoin"].scores(tx)
-                    entree["etat"] = "notée"
+                    if not gardees:
+                        raise GardeArret("aucune action notée ne porte un caractère de mot")
+                    lexique = np.full(len(tx), np.nan, dtype=np.float64)
+                    lexique[avec_mot] = x["temoin"].scores(gardees)
+                    tableaux[f"lexical_{concept}"] = lexique
+                    entree.update(etat="notée", actions_notees=len(gardees), actions_sans_mot_exclues=sans_mot)
                 except GardeArret as e:
                     entree.update(etat="échec", motif=str(e), actions_sans_mot=sans_mot, actions=len(tx))
                 index["lexicaux"][concept] = entree
@@ -763,6 +786,10 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
     horloge = horloge or time.time
     exiger_configuration(config)
     complete = etape_complete(config)
+    enonces = None
+    if complete:                                          # E-8 : énoncés du rejeu du contrôle 9, avant toute ouverture (refus, code 2)
+        cj.exiger_enonces_pour_l_etape(config)
+        enonces = cj.lire_enonces(racine, config)
     instant = int(time.time()) if instant is None else int(instant)
     ouverture = ouvrir(racine, registre, config, "A", run_t06, instant)
     noms = ouverture["sondes_lues"]
@@ -822,7 +849,20 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
         if complete:
             t0 = time.perf_counter()
             ext = extracteur if extracteur is not None else extracteur_de_la_course(racine, run_t06, config)
-            appris = sn.apprendre(generiques["jeux"], generiques["phrases"], ext, config, graines, ouverture["concepts"])
+            # E-8 (D-2 (a), R-2101) : remesure des jetons (garde d'identité, écart = arrêt), puis rejeu du contrôle 9 contre les
+            # textes de la course (paires en défaut exclues et consignées), avant toute extraction
+            compter = (lambda x: len(_ids(ext.fmt.tok, x))) if hasattr(ext, "fmt") else None
+            controles_jeux = {"remesure_jetons": {}}
+            for cle_jeu, recs in generiques["jeux"].items():
+                if compter is None:
+                    controles_jeux["remesure_jetons"][cle_jeu] = {"etat": "non vérifiée : extracteur sans tokeniseur (essais)"}
+                    continue
+                controles_jeux["remesure_jetons"][cle_jeu] = cj.remesurer_jetons(cle_jeu, recs, generiques["chemins"][cle_jeu], compter,
+                                                                                 config["mode"])
+            textes_course = lire_textes(lv1._chemin_sous_racine(racine, run_t06, str(ep["resultat"]["textes"])))
+            rejeu = cj.rejouer_controle_9(generiques["jeux"], textes_course.values(), enonces)
+            controles_jeux["controle_9"] = rejeu["rapport"]
+            appris = sn.apprendre(rejeu["jeux"], generiques["phrases"], ext, config, graines, ouverture["concepts"])
             if config.get("donnees_p3") is not None:                   # T7-P10 de la tromperie et des enjeux (plan, point 10)
                 lex_p3 = d3.temoins_p3(racine, config["donnees_p3"])
                 appris["lexicaux"].update(lex_p3)
@@ -859,7 +899,7 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
                    "principales": principales_rapport, "principales_consignees": {s.nom: s.empreinte() for s in principales},
                    "couples_figes": rapport_couples, "cles_ignorees": ignorees, "garde_adaptee": garde_manifeste}
         if complete:
-            contenu.update(sondes_neuves=appris["rapport"], disjonction=generiques["disjonction"],
+            contenu.update(sondes_neuves=appris["rapport"], disjonction=generiques["disjonction"], controles_jeux=controles_jeux,
                            fichiers_sondes_neuves=ecrire_sondes_neuves(racine_sortie, run_t07, appris),
                            note="sondes neuves apprises à l'étape A (30 couples, sonde principale par concept, T7-P6, directions des "
                                 "concepts, témoins lexicaux), consignées ici avant toute notation d'une action d'organisme ; les noms "
