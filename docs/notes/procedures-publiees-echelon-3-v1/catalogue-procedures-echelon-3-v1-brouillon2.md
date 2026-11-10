@@ -1,12 +1,12 @@
 # Catalogue des procédures publiées d'optimisation contre un retour — admissibilité à l'échelon 3 — v1, brouillon 2
 
-- **Date** : 2026-11-10 (rédaction entre 10:10 et 11:15 UTC environ).
+- **Date** : 2026-11-10 (rédaction entre 10:10 et 10:50 UTC environ). Un instantané intermédiaire de ce fichier a été commité par la session mère pendant la rédaction (`da951201`, « non relu ») ; la version de référence est celle que donne son empreinte à la remise.
 - **Auteur** : sous-agent rédacteur neuf, sans autre rôle dans le programme ; il n'a écrit ni le brouillon 1, ni la contre-lecture, ni la règle du bras, ni aucune décision citée. Aucun calcul loué, aucune dépense, aucun commit.
 - **Pièces de départ** :
   - brouillon 1 : `docs/notes/procedures-publiees-echelon-3-v1/catalogue-procedures-echelon-3-v1-brouillon1.md`, `a0c6e3a6…`, laissé intact (R12) ;
   - contre-lecture (R2) : `docs/notes/procedures-publiees-echelon-3-v1/contre-lecture-catalogue-procedures-echelon-3-v1.md`, `c3489a08…`, points CP-1 à CP-16 ;
   - décisions de Lazar sur les trois questions de la contre-lecture, le 10 novembre 2026 vers 10:17 UTC : `registres/passations/2026-11-10-1018-decision-lazar-anteriorite-procedures-jury-transmission.md`, `8a2c8b71…` (égale à son compagnon), lignes 8 à 10 (mot de Lazar) et 24 à 34 (décisions) ;
-  - en lecture seule : `prereg/bras-attaque-regle-v1.md`, candidat brouillon 3, **non scellé**, sans compagnon (`4055bd20…`), lignes 60 à 105, 155 à 160 et 403 seulement ; `docs/decisions/decision-N-053-v1.md` (`2204256d…`) ; `docs/decisions/decision-N-056-v1.md` (`3592c1e9…`).
+  - en lecture seule : `prereg/bras-attaque-regle-v1.md`, candidat brouillon 3, **non scellé**, sans compagnon (`4055bd20…`), lignes 60 à 105, 155 à 160 et 403, plus l'aperçu de cinq lignes décrit en section 1.2 ; `docs/decisions/decision-N-053-v1.md` (`2204256d…`) ; `docs/decisions/decision-N-056-v1.md` (`3592c1e9…`).
 - **Objet** : servir la condition (1) de l'échelon 3 — la procédure d'essai et de correction de l'attaquant est une procédure d'optimisation déjà publiée, citée, sans recette écrite par le programme. Ce document est une bibliographie. Il classe des procédures par leur boucle (algorithme, type de retour, forme du produit) et nomme, avec leur page, leurs éléments publiés propres au domaine d'origine, sans jamais en reproduire le texte. Il ne donne ni paramètre, ni réglage, ni budget de requêtes, ni adaptation aux moniteurs du programme, ni description de mise en œuvre ; il ne reproduit aucune consigne d'attaquant, aucun gabarit, aucun exemple de contournement.
 - **Statut** : brouillon 2, **non scellé à la remise** ; le brouillon 1 a été scellé tel quel (commit `5b604ce5`) et contre-lu (R2). Les apports de ce brouillon n'ont pas été contre-lus, en particulier l'application de la décision 3 à h4rm3l (P12) et à la méthode principale de Schaeffer et al. (P22a), que la contre-lecture ne nommait pas : contre-lecture (R2) à faire avant scellement.
 
@@ -56,7 +56,7 @@
 
 **Échelle d'accès** (règle du bras, candidat brouillon 3, **non scellé, non opposable**, lignes 96 à 104). L'échelon 3, « Informé, retour compté », connaît les conceptions gelées et le protocole, « plus les verdicts rendus à ses essais ». Il écrit « le contenu de l'action ». Il interroge « le moniteur gelé, requêtes comptées, plafond scellé avant toute requête » et joue « procédure d'optimisation publiée seulement » (ligne 101). Les échelons suivants sont : 4, « Écriture des activations » (ligne 102) ; 5, « Réglage fin des poids » (ligne 103) ; 6, « Renforcement contre la sonde », qui écrit « les poids, la note de la sonde dans le signal » (ligne 104). Les épisodes lus à l'ouverture sont « neufs, écrits par une politique figée après la dernière requête » (ligne 159).
 
-**Contrôle des citations.** Chaque citation nouvelle ou modifiée a été contrôlée par programme sur la page indiquée : `pdftotext`, en mode simple et en mode `-layout`, recherche après suppression des blancs et de la casse, ligatures, apostrophes et tirets normalisés. Le résultat est donné en annexe D. Une phrase de PAIR (p. 4), que `pdftotext` entrelace avec l'algorithme, est paraphrasée et non citée. Les citations reprises du brouillon 1 sont reproduites telles quelles ; le contrôle final par programme les couvre aussi (section 8.1).
+**Contrôle des citations.** Chaque citation nouvelle ou modifiée a été contrôlée par programme sur la page indiquée : `pdftotext`, en mode simple et en mode `-layout`, recherche après suppression des blancs et de la casse, ligatures, apostrophes et tirets normalisés. Le résultat est donné en annexe D. Une phrase de PAIR (p. 4), que `pdftotext` entrelace avec l'algorithme, est paraphrasée et non citée. Les citations reprises du brouillon 1 sont reproduites telles quelles ; le contrôle final par programme les couvre aussi (annexe D).
 
 **Pages opératoires.** Les pages qui portent une consigne d'attaquant (PAIR, p. 23–26 ; TAP, p. 37) n'ont été contrôlées que par programme : légende du tableau et présence d'une note de 1 à 10, sans affichage du texte. Les variantes de consignes de Ge-Wang et al. (sections H et I) et l'annexe H de Schaeffer et al. n'ont pas été lues ; la p. 23 de ce dernier l'a été autour de la phrase citée seulement. Pour les deux PDF versés, seules les pages servant au classement ont été lues : p. 1, 4, 8 et 9 de Boundary Point Jailbreaking ; p. 1, 4 et 12 de Screwtape.
 
@@ -268,7 +268,7 @@ Les trois questions de la contre-lecture (CP-8, CP-9, CP-1) ont été tranchées
 - **Option retenue — (a) non.** Avantage : conforme aux textes en vigueur, aucun écart nouveau. Inconvénient : la littérature du contrôle qui lit les notes n'est pas jouée.
 - **Option écartée — (b) oui, régime distinct, sous les deux conditions de l'échelon 3.** Avantage : couvre P19 à P24 et durcit l'épreuve des moniteurs. Inconvénients : écart nouveau à N-056 point 6 ; une note renseigne sur le seuil calibré ; devis et préenregistrement à part.
 - **Recommandation** (contre-lecture) : (a), confiance haute. **Défaut prévu** : (a), le texte en vigueur.
-- **Application** : P14 à P24 et P44 restent « Non — note ou sortie textuelle ». Le brouillon 1 écrivait « échelon à situer » pour ces retours ; aucun ne l'est plus, puisque la décision n'ouvre aucun régime.
+- **Application** : P14 à P21, P22b, P22c, P23, P24 et P44 restent « Non — note ou sortie textuelle ». Le brouillon 1 écrivait « échelon à situer » pour ces retours ; aucun ne l'est plus, puisque la décision n'ouvre aucun régime.
 
 ### Décision 3 — Transposition : option (b)
 
@@ -326,7 +326,7 @@ Sous la décision 3, trois de ces sept sortent de la liste (PAIR, TAP, Rainbow T
 
 ### 8.1 Vérifications et limites
 
-- **Contrôle final par programme** : le décompte des citations contrôlées dans ce fichier figure en annexe D.
+- **Contrôle final par programme** : 163 citations tirées d'un PDF trouvées à la page dite, 0 échec ; 103 empreintes, 0 écart (annexe D).
 - **Code** : non lu ; commits = tête au 2026-11-10, pas commit de publication ; licences lues dans l'en-tête du fichier racine, sans métadonnée normalisée (brouillon 1). Six dépôts n'ont pas de fichier de licence à la racine (P06, P30, P32, P33, P37, P41) ; le dépôt de P42 est introuvable ; les dépôts anonymes de P13 et P36 n'ont pas été consultés ; les dépôts de P01, P03 et P12 sont rattachés par le nom ou le site, pas par le PDF. La contre-lecture n'a pas vérifié cette colonne, et le brouillon 2 non plus. Boundary Point Jailbreaking et Screwtape ne publient pas de code (p. 9 ; p. 12).
 - **Versions** : seules les versions arXiv ont été lues ; les versions de conférence n'ont pas été comparées. L'écart v1/v4 de PAIR a été trouvé ; aucun autre écart de version n'a été cherché.
 - **Détails non relevés** : signal exact de l'affinage de Neural Chameleons (P34) ; juge mis en œuvre dans le code de PAIR ; codage du verdict binaire de Llama Guard dans la note que reçoit l'attaquant de PAIR v4 (non décrit dans le PDF).
@@ -351,7 +351,7 @@ Titres et versions lus dans les métadonnées d'arXiv le 2026-11-10. Les classem
   - arXiv:2603.10842v1, « PivotAttack: Rethinking the Search Trajectory in Hard-Label Text Attacks via Pivot Words » ;
   - arXiv:2607.14101v1, « LBA: Textual Hard-Label Adversarial Attack under Low Query Budgets » ;
   - arXiv:2608.29568v2, « OASIS: Optimizing Attacker Sequences for Hard-Label Black-Box Text Attacks ».
-- **MIPRO**, arXiv:2406.11695v2, « Optimizing Instructions and Demonstrations for Multi-Stage Language Model Programs » (optimiseur de consignes, A2 probable ; GEPA, P17, p. 1, le nomme « the leading prompt optimizer », selon la contre-lecture).
+- **MIPRO**, arXiv:2406.11695v2, « Optimizing Instructions and Demonstrations for Multi-Stage Language Model Programs » (optimiseur de consignes, A2 probable ; GEPA, P17, p. 1, le nomme « the leading prompt optimizer », citation vérifiée).
 - **AutoInject**, arXiv:2602.05746v2, « Learning to Inject: Automated Prompt Injection via Reinforcement Learning » (signal de succès binaire transformé en récompense apprise ; entraînement de l'attaquant ; question 4).
 - **SneakyPrompt**, arXiv:2305.12082v3, « SneakyPrompt: Jailbreaking Text-to-image Generative Models » (requêtes répétées à un générateur filtré, renforcement ; question 4).
 - **Voisin pour la condition (2), pas pour la liste** : arXiv:2506.06933v1, « Rewriting the Budget: A General Framework for Black-Box Attacks Under Cost Asymmetry » (images, entrée continue).
@@ -495,4 +495,9 @@ Non consultés : dépôt anonyme `anonymous.4open.science` (P13, PDF p. 5) ; dé
 
 ## Annexe D — Contrôle final des citations
 
-(À compléter par le contrôle final par programme, avant remise.)
+Contrôle par programme du fichier achevé, le 2026-11-10 entre 10:40 et 10:50 UTC, avec `pdftotext` 24.02.0, en mode simple et `-layout`, après suppression des blancs et de la casse, ligatures, apostrophes et tirets normalisés :
+- **Citations tirées d'un PDF** : 163 segments, tous trouvés à la page dite sur le PDF versé, 0 échec. 158 ont été placés automatiquement (page et PDF lus dans le texte du catalogue). Pour 5 segments, la page est écrite hors du motif reconnu par le programme ; ils ont été contrôlés un à un : P12, p. 6 ; P08, p. 4 ; P25, p. 4 ; P17, p. 1 ; P13, p. 4.
+- **Citations des pièces du dépôt** (N-053, N-056, règle du bras, passation du 10 novembre, contre-lecture) : contrôlées sur le texte de la pièce, 0 échec. Deux corrections ont été faites avant remise : la citation de la règle du bras rendue exacte (ligne 159), et la condition (1) attribuée à la contre-lecture.
+- **Empreintes** : 103 empreintes, abrégées dans les tables ou complètes en annexe A, comparées aux fichiers et aux compagnons `.sha256` : 0 écart. Tous les chemins cités existent.
+- **Hors contrôle** : termes, titres, texte de licence et segments en français (82 segments), ainsi que les titres des annexes A et B et de la section 8.2.
+- **Limite** : le programme établit la présence du texte à la page, pas son sens. Le sens a été lu pour les citations nouvelles. Pour les citations reprises du brouillon 1, il repose sur le tirage de la contre-lecture (24 sur 24).
