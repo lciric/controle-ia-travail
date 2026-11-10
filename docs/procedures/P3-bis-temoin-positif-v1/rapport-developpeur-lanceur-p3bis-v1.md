@@ -4,7 +4,7 @@
   `session_01QPDgKgACWyCkCN8HjqwNXy` ; je n'ai écrit ni le code de P3-bis, ni ses brouillons, ni ses contre-lectures, ni
   T0.6, ni T0.7.
 - **Heures** (toutes relevées par `date -u`) : début 2026-11-10 05:20:40 UTC ; arbre créé à 05:21 ; message de la mère
-  (GO-2026-11-10-02, 23 novembre) reçu vers 06:10 et appliqué au jalon 6 (06:18:21) ; @@HEURES@@
+  (GO-2026-11-10-02, 23 novembre) reçu vers 06:10 et appliqué au jalon 6 (06:18:21) ; bancs finaux de 06:26:06 à 06:28:58 UTC ; répétition jouet de 06:25:43 à 06:35:00 UTC (premier passage de 06:18:32 à 06:24:47, trois écarts de la répétition elle-même, corrigés) ; essai de fumée du scellement vers 06:21 UTC ; rapport rempli et scellé ensuite (heure du commit du jalon final).
 - **Consigne** : `docs/notes/g0-deux-semaines-v1/consignes-mere-2026-11-10-0500-v1/consigne-lanceur-p3bis-v1.md`
   (`b0c7d5088d826d730d380410330edf2e4759d7e0526d49a4d986069da1d6b135`, vérifiée) ; noms communs
   `noms-communs-p3bis-v2.md` (`766992f4ea5eea8b5e319fd315e2ea0cb646c8f0e0400bf32a2bf5fdcb83d06a`, vérifiée) ; interdits
@@ -25,7 +25,7 @@
   verbe ne les vise) ; garde de calcul et `registres/go.md` non modifiés (registres temporaires fabriqués dans les essais) ;
   aucune lecture d'environnement ni de valeur de clé ; commits locaux sur `prep/p3bis-lanceur-v1` seulement, ni fetch ni
   push ; aucune écriture hors de mon arbre et de mon bloc-notes ; garde des secrets à 0 avant chaque commit ; place disque
-  regardée avant chaque passage d'essais (jamais sous 4,5 Go libres) ; **aucun refus de permissions ni de classifieur**.
+  regardée avant chaque passage d'essais (jamais sous 4,0 Go libres) ; **aucun refus de permissions ni de classifieur**.
 - **Non vérifié, déclaré** : le module d'ouverture v2 et les scripts de l'instance v2 n'existent pas encore (autre
   chantier) : la chaîne est écrite contre leurs noms et leur interface (section « Dépendances ») ; les bancs jouent un
   bouchon d'`ouverture_p3bis_v2` qui appelle la logique réelle d'`ouverture_p3bis_v1`. Une anomalie préexistante de
@@ -35,13 +35,38 @@
 ## Verdict
 
 Chaîne écrite, éprouvée et répétée sur jouet : tous les contrôles du point 6 de la contre-lecture du code ont un cas sain
-et un artefact ; @@COMPTES@@. Elle n'est **pas lançable** avant le candidat : épingles `A_EPINGLER` des contrôles et de la
+et un artefact ; **361 cas de bancs, 0 non conforme** (module commun 140, lanceur 56, surveillance et contrôle à cinq minutes 82, récupération et destruction 43, contrôles avant dépense 40), joués sur les versions finales des scripts ; **répétition jouet conforme** (21 étapes et vérifications : fin normale jusqu'à la destruction, code 5 avec instance gardée et destruction refusée, relance refusée tant que l'instance gardée est sur le compte, contrôle à cinq minutes en échec avec arrêt par l'identifiant). Elle n'est **pas lançable** avant le candidat : épingles `A_EPINGLER` des contrôles et de la
 récupération (refus de tout lancement tant qu'il en reste une, éprouvé), code corrigé v2, brouillon 10 (écarts ci-dessous),
 journaux canoniques des bancs et des deux répétitions rejoués après épinglage, contre-lecture R2 de la chaîne.
 
 ## Fichiers et empreintes
 
-@@EMPREINTES@@
+| fichier (sous `docs/procedures/P3-bis-temoin-positif-v1/`) | rôle | sha256 |
+|---|---|---|
+| `lancer_p3bis_v1.sh` | lanceur (création de l'instance) | `0ca137b54b1de06fba5b34830ed6872d42b8776bdf8b136c755d246efbd8eec8` |
+| `verifications_p3bis_v1.py` | module commun (bibliothèque standard) | `71153720bce0d2792747a4480c3ffb7da7c71c3389bf06b369cd062d5cef58fb` |
+| `controles_avant_depense_p3bis_v1.sh` | contrôles avant dépense (épingles A_EPINGLER) | `8571d2f33a075aaaef6da8780c77075947d7c66b9636774989eb5fccd392c601` |
+| `surveiller_p3bis_v1.sh` | surveillance (arrêts par identifiant) | `dbaa6a62986f149741fce12e7165e0de6df5ca456e6d07badf78b91ddf2a122e` |
+| `controle_cinq_minutes_p3bis_v1.sh` | contrôle à cinq minutes | `51411159616708fa45056cf95c536ab602496fe726706442ad1016a88a08153d` |
+| `recuperation_p3bis_v1.sh` | récupération, lectures fermées, commit du paquet (épingle PY) | `9f87af2f29bf5ab680d929ae7d3cfdd0212e3785c3c781dee20abe80bd1105f0` |
+| `detruire_p3bis_v1.sh` | destruction par identifiant (voisin neuf) | `d44c97ea480127088a5976d62db4fa18fd3ffd978c86fe16f2ea6c60d11fc4d0` |
+| `sceller_p3bis_v1.sh` | scellement (S) | `82ebd30e36e81a54e1449dc08609229a0b972bf2156b6a9ec9d1c6bf5f9f0cdf` |
+| `repetition_jouet_p3bis_v1.sh` | répétition jouet de la chaîne de session | `b0a7c655e4176533506784204133a8dd69d3091b670121069fb51136035bf29e` |
+| `repetition_finale_p3bis_v1.sh` | répétition finale en mode décisif (au candidat) | `354dc699ec34cfdae95a2296ede8476d5e2a0b890c878a37857888ab8f46f9dd` |
+| `essais_verifications_p3bis_v1.py` | banc du module commun (pytest) | `8130b8231ee7cbd2ddc610d4cf2f7ffba5f04eb8b1919dc0b72f93ab6c17ffa5` |
+| `essais_lanceur_p3bis_v1.sh` | banc du lanceur | `e8be03b7c62020026ea88a4a7ec8c4c65602295fcc588321dd44ff8ae835f676` |
+| `essais_surveillance_p3bis_v1.sh` | banc de la surveillance et du contrôle à cinq minutes | `154d1285772daaf66d9871177740eef3b44abbe9ec8f1447fdd97120dd0e6dd5` |
+| `essais_controles_p3bis_v1.sh` | banc des contrôles avant dépense | `a38381114825f687ad743805f1112a6032f7764d5bcafcbbd07d0082006b77ed` |
+| `essais_recuperation_p3bis_v1.sh` | banc de la récupération et de la destruction | `81f9789a228ce5f448ef34584d9b95bc2549764bf3b49727f46d71100db089e1` |
+| `journaux-developpeur-v1/banc-controles-p3bis-v1-dev.log` | journal de mon passage (provisoire, non canonique) | `9b800527f33b84bb188f068807fd7ab0033a90de45a92ba86d90a6f087a019ee` |
+| `journaux-developpeur-v1/banc-lanceur-p3bis-v1-dev.log` | journal de mon passage (provisoire, non canonique) | `5e6a83936e52d552615f35f6845ed583f18e7f5bebb07fa6dc660b650957428b` |
+| `journaux-developpeur-v1/banc-recuperation-p3bis-v1-dev.log` | journal de mon passage (provisoire, non canonique) | `8c45049ca10ce94d669bec5433bb3c3c31149b3cbbacbc9dfb5081426009aea2` |
+| `journaux-developpeur-v1/banc-surveillance-p3bis-v1-dev.log` | journal de mon passage (provisoire, non canonique) | `f2361cb8e776c9677a47c6a7deb4b9716873b1be423a29c7fd65d7bd33167a8c` |
+| `journaux-developpeur-v1/banc-verifications-p3bis-v1-dev.log` | journal de mon passage (provisoire, non canonique) | `f2ca3fb9c63966b07a97186ef8d88a65d6aa4676f83a79eaba09d64682940e68` |
+| `journaux-developpeur-v1/repetition-jouet-p3bis-v1-dev-passage-1-ecarts.log` | journal de mon passage (provisoire, non canonique) | `7e08011acff7edfd507dbadd5686c663a89d9b687edb674518274df05c2f5df6` |
+| `journaux-developpeur-v1/repetition-jouet-p3bis-v1-dev.log` | journal de mon passage (provisoire, non canonique) | `9b3f474f5b1e6d4515f05c817a0815279e4603ba9ef239bddc73116c99cf2749` |
+
+Chaque fichier a son compagnon `.sha256` (R6). Ce rapport est scellé à part (son compagnon fait foi).
 
 ## Contrôles : texte → code → essai
 
@@ -74,7 +99,43 @@ journaux canoniques des bancs et des deux répétitions rejoués après épingla
 
 ## Essais
 
-@@ESSAIS@@
+Passages finaux (versions finales des scripts ; journaux versés sous `journaux-developpeur-v1/`, noms `…-dev.log`). Interpréteur `/home/user/controle-ia-travail/.venv/bin/python` (Python 3.13.18) pour pytest et les lectures jouées ; `python3` du système (3.13.18) pour le module commun (`-I`). Place disque regardée avant chaque passage : 4,0 à 8,2 Go libres selon l'heure (jamais sous 3 Go).
+
+| passage | heures (UTC, `date -u`) | durée | cas | non conformes | journal |
+|---|---|---|---|---|---|
+| banc du module commun (pytest, `essais_verifications_p3bis_v1.py`) | 06:26:06 – 06:26:12 | 6 s | 140 | 0 | `banc-verifications-p3bis-v1-dev.log` |
+| banc du lanceur | 06:26:12 – 06:26:33 | 21 s | 56 | 0 | `banc-lanceur-p3bis-v1-dev.log` |
+| banc de la surveillance et du contrôle à cinq minutes | 06:26:33 – 06:26:47 | 14 s | 82 | 0 | `banc-surveillance-p3bis-v1-dev.log` |
+| banc de la récupération et de la destruction | 06:26:47 – 06:27:03 | 16 s | 43 | 0 | `banc-recuperation-p3bis-v1-dev.log` |
+| banc des contrôles avant dépense | 06:27:03 – 06:28:58 | 115 s | 40 | 0 | `banc-controles-p3bis-v1-dev.log` |
+| répétition jouet (passage 2, conforme) | 06:25:43 – 06:35:00 | 557 s (dont trois attentes de 181 s pour le contrôle à cinq minutes) | 21 étapes et vérifications | 0 | `repetition-jouet-p3bis-v1-dev.log` |
+| répétition jouet (passage 1) | 06:18:32 – 06:24:47 | 376 s | 19 étapes et vérifications | 3 | `repetition-jouet-p3bis-v1-dev-passage-1-ecarts.log` |
+| essai de fumée du scellement (dépôt synthétique du banc des contrôles) | vers 06:21 | quelques secondes | 3 | 0 | non versé (bloc-notes effacé) |
+
+- **Passage 1 de la répétition, gardé (R4, symétrie)** : la tentative 3 était lancée alors que l'instance gardée de la
+  tentative 2 restait sur le compte ; le lanceur l'a refusée (« instances non tolérées : 77777772 (exited, stopped) ») —
+  comportement voulu par la liste d'arrêt (une instance arrêtée hors `ARRETEES_TOLEREES` bloque toute création : nœud), mais
+  non attendu par la répétition. Corrigé dans la répétition (tentative 3a : ce refus est attendu et vérifié ; tentative 3 :
+  compte factice neuf, instance gardée mise de côté, déclaré). **Conséquence à porter au texte ou au candidat** : après un
+  code 5, ou après l'arrêt d'une instance sur le contrôle à cinq minutes, aucune relance n'est possible sans décision
+  (instance détruite par l'identifiant, ou ajoutée à `ARRETEES_TOLEREES` par une version neuve du lanceur).
+- **Essai de fumée du scellement** : copie du scellement (lignes H, DEPOT, DISTANT changées) sur le dépôt synthétique du banc
+  des contrôles, à la branche `scellement/p3bis-v1` : passage 1 conforme (S n'ajoute que les six fichiers, poussé et relu,
+  ligne `SCELLEMENT-P3BIS` imprimée) ; passage 2 refusé (sorties présentes, R12, code 2) ; puis les contrôles avant dépense
+  (copie épinglée du banc, deux bouchons) sur ce S : 42 lignes OK, aucun KO, « TOUS CONFORMES ».
+- **Passages de mise au point** (avant les passages finaux, non versés) : banc du lanceur trois fois (erreurs du banc :
+  dossier `prereg/` des variantes, base des variantes, motif de L29 ; une fois L03 après l'ajout de la branche aux
+  contrôles), banc des contrôles quatre fois (module absent à côté de la copie, compagnons de `docs/` exigés par
+  `verifier-arbre`, cas K33 déplacé sous `docs/`), banc de la récupération trois fois (dossier `prereg/`, nom du dossier
+  existant, `git add` des traces seules), banc de la surveillance une fois, pytest trois fois ; tous verts ensuite, puis
+  rejoués après le changement de GO (message de la mère).
+- **Bouchons déclarés** (lignes changées comptées dans chaque journal) : faux outil de location partout ; contrôles avant
+  dépense dans les bancs du lanceur et la répétition ; dans le banc des contrôles, le bloc du vrai tokeniseur (mesure du
+  banc) et le bloc des gardes du lanceur run_v2 (joués par la répétition finale au candidat) ; module d'ouverture v2 dans
+  les bancs de la récupération et la répétition (interface v2, logique réelle de v1, lectures factices) ; journaux de preuve
+  factices à S dans le banc du lanceur et la répétition.
+- **Aucun essai existant modifié** ; aucun fichier sous `tests/` (arbre gelé) ; la suite complète n'est pas jouée (interdit
+  commun 5).
 
 ## Écarts au texte (brouillon 9) et à la consigne, déclarés
 
@@ -128,6 +189,11 @@ journaux canoniques des bancs et des deux répétitions rejoués après épingla
     candidat, après épinglage (les empreintes des contrôles et de la récupération changent avec leurs épingles ; R12).
 18. **PY** (contrôles, récupération) : épingle `A_EPINGLER` ; un environnement aux dépendances épinglées de S (le bloc 8
     le vérifie) ; N doit être compté dans le même environnement que la liste jouée par les contrôles.
+19. **Relance après une instance gardée ou arrêtée** (vu à la répétition, passage 1) : la liste fermée des instances refuse
+    toute création tant qu'une instance arrêtée de P3-bis (code 5, contrôle à cinq minutes en échec, autre motif) reste
+    sur le compte hors `ARRETEES_TOLEREES` ; une relance demande donc une décision (destruction par l'identifiant, ou
+    version neuve du lanceur qui l'ajoute aux instances tolérées). Lecture littérale du texte, gardée ; à dire au
+    brouillon 10.
 
 ## Dépendances envers le code corrigé (autre chantier)
 
@@ -165,7 +231,7 @@ journaux canoniques des bancs et des deux répétitions rejoués après épingla
 
 ## Ce que la mère mettra au marqueur `<<CHAINE_P3BIS>>`
 
-@@CHAINE@@
+Au candidat, après épinglage et passages canoniques : chemins et empreintes des quinze fichiers de la table « Fichiers et empreintes » (versions épinglées des contrôles et de la récupération), des cinq journaux canoniques des bancs (`banc-verifications-p3bis-v1.log`, `banc-lanceur-p3bis-v1.log`, `banc-surveillance-p3bis-v1.log`, `banc-controles-p3bis-v1.log`, `banc-recuperation-p3bis-v1.log`) et des deux répétitions (`repetition-jouet-p3bis-v1.log`, `repetition-finale-p3bis-v1.log`), chacun avec son compagnon, versés sous `docs/procedures/P3-bis-temoin-positif-v1/` sur la branche de scellement avant S. Forme proposée, une entrée par fichier : `` `docs/procedures/P3-bis-temoin-positif-v1/<fichier>` (`<sha256>`) ``. Aujourd'hui (non épinglé), les empreintes sont celles de la table ci-dessus, au commit de ce rapport.
 
 ## Ce qui reste
 
@@ -177,5 +243,6 @@ journaux canoniques des bancs et des deux répétitions rejoués après épingla
    le brouillon 10, la contre-lecture du code).
 3. Brouillon 10 : écarts 1, 12, 13 et 16 ; noms v2.
 4. Jouer la chaîne contre le code corrigé dès qu'il existe (dépendances 1 à 8).
-5. Scellement : aucun banc dédié ; essai de fumée (cas sain, refus R12, puis contrôles conformes sur le S produit) ; joué
+5. Décider la règle de relance après une instance gardée (écart 19).
+6. Scellement : aucun banc dédié ; essai de fumée (cas sain, refus R12, puis contrôles conformes sur le S produit) ; joué
    en entier par la répétition finale.

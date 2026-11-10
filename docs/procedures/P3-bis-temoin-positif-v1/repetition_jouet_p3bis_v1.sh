@@ -15,8 +15,9 @@
 #   2. calcul/p3bis-reel-v2 (relance), second paquet en échec : journal « SECOND PAQUET EN ÉCHEC », fin, code 5 ;
 #      surveillance → GARDER (arrêt par l'identifiant, instance gardée) ; récupération des traces seules (code 4) ;
 #      destruction REFUSÉE ;
-#   3. calcul/p3bis-reel-v3 (relance), contrôle à cinq minutes en échec (commit autre au journal) : arrêt par
-#      l'identifiant, aucune destruction.
+#   3. calcul/p3bis-reel-v3 (relance) : d'abord REFUSÉE (l'instance gardée de la tentative 2 est sur le compte, ni
+#      tolérée ni en marche : liste fermée, nœud) ; puis, sur un compte factice neuf (instance gardée mise de côté, déclaré),
+#      contrôle à cinq minutes en échec (commit autre au journal) : arrêt par l'identifiant, aucune destruction.
 # Copies jouées, lignes changées comptées et déclarées : lanceur (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S) ; récupération
 # (DEPOT_URL, PY) ; contrôles avant dépense : BOUCHON (le bloc réel est joué par son banc et par la répétition finale) ;
 # module d'ouverture v2 : BOUCHON au src/ du dépôt synthétique (interface v2, logique réelle de v1, lectures factices ;
@@ -209,11 +210,16 @@ tail -1 "$R/console-T2-surveillance.txt" | cut -c1-170 | sed 's/^/    | /'
 etape T2-recuperation 4 "RÉCUPÉRATION DES TRACES SEULES (AUCUN RUN), SANS LECTURE : TOUS CONFORMES" bash "$R/H/recuperation_p3bis_v1.sh" "$S" calcul/p3bis-reel-v2 "$R/recup-2"
 etape T2-destruction-refusee 2 "REFUS : instance gardée" bash "$R/H/detruire_p3bis_v1.sh" 77777772 "$R/traces-2" "$R/surv-2" "$R/recup-2.rapport.txt"
 verifier "instance du code 5 : arrêtée, jamais détruite" "[ -e '$R/etat/instance-77777772/arretee' ] && [ ! -e '$R/etat/instance-77777772/detruite' ]"
-# --- tentative 3 : relance, contrôle à cinq minutes en échec ----------------------------------------------------------
+# --- tentative 3 refusée : l'instance gardée de la tentative 2 est sur le compte, ni tolérée ni en marche ----------------
+etape T3a-lanceur-refuse 2 "instances : non tolérée(s)" bash "$R/H/lancer_p3bis_v1.sh" "$S" "$R/traces-3a" - 3
+verifier "instance gardée : toute création neuve refusée (liste fermée : nœud), branche v3 non créée" \
+    "grep -q 'instances non tolérées : 77777772 (exited, stopped)' '$R/traces-3a/lancement.txt' && ! git --git-dir='$R/distant.git' rev-parse -q --verify refs/heads/calcul/p3bis-reel-v3"
+# --- tentative 3 sur un compte factice neuf (instance gardée mise de côté), contrôle à cinq minutes en échec ------------
+mkdir -p "$R/etat-mis-de-cote" && mv "$R/etat/instance-77777772" "$R/etat-mis-de-cote/"
 etape T3-lanceur 0 "succès : True ; identifiant 77777773" bash "$R/H/lancer_p3bis_v1.sh" "$S" "$R/traces-3" - 3
 attendre_cinq "$R/traces-3"
 etape T3-cinq-minutes-ko 1 "instance 77777773 arrêtée par son identifiant (R10) ; nœud de Lazar" bash "$R/H/controle_cinq_minutes_p3bis_v1.sh" 77777773 "$R/traces-3" "$R/cinq-3"
-verifier "contrôle à cinq minutes en échec : instance arrêtée, non détruite" "[ -e '$R/etat/instance-77777773/arretee' ] && [ ! -e '$R/etat/instance-77777773/detruite' ]"
+verifier "contrôle à cinq minutes en échec : instance arrêtée, non détruite ; instance gardée de la tentative 2 jamais détruite" "[ -e '$R/etat/instance-77777773/arretee' ] && [ ! -e '$R/etat/instance-77777773/detruite' ] && [ ! -e '$R/etat-mis-de-cote/instance-77777772/detruite' ]"
 # --- bilan --------------------------------------------------------------------------------------------------------
 verifier "aucun verbe sur les instances tolérées ; destructions : la seule instance de la fin normale" \
     "! grep -E ' (stop|destroy) instance 589361' '$R/etat/appels.txt' && [ \"\$(grep -c ' destroy instance ' '$R/etat/appels.txt')\" = 1 ] && grep -q ' destroy instance 77777771\$' '$R/etat/appels.txt'"
