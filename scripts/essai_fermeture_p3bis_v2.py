@@ -374,6 +374,7 @@ def essai_second_paquet(dossier: Path) -> dict:
         sortie[k] = {"empreinte": index["sha256"], "morceaux": [m["taille"] for m in index["morceaux"]],
                      "relecture": relu == {c: (d / c).read_bytes() for c in chemins}, "fichiers": sorted(relu)}
         shutil.rmtree(d)
+    shutil.rmtree(Path(dossier))                # dossier de l'épreuve, à lui seul, effacé par son chemin exact
     a, b = sortie[1], sortie[2]
     sortie["conforme"] = bool(a["empreinte"] != b["empreinte"] and a["relecture"] and b["relecture"]
                               and a["fichiers"] == b["fichiers"] and len(a["morceaux"]) >= 2
