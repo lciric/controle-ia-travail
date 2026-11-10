@@ -68,6 +68,7 @@ from ..scellement import verifier
 from ..sondes.evaluation import aire_sous_courbe
 from ..sondes.familles import SondeMahalanobis
 from . import criteres_v1 as cr
+from . import donnees_p3_t07_v1 as d3
 from . import garde_adaptee_v1 as ga
 from . import journal_p3bis_v1 as jp
 from . import lecture_v1 as lv1
@@ -180,6 +181,8 @@ def exiger_configuration(config: dict) -> None:
     n = config["niveau_base_t06"]
     if not (cr._nombre(n) and 0.0 < float(n) < 1.0):
         raise GardeArret(f"niveau_base_t06 = {n!r} : nombre dans ]0, 1[ attendu")
+    if config.get("donnees_p3") is not None:            # clé facultative (T7-P10 de la tromperie et des enjeux, plan, point 10)
+        d3.exiger_config(config["donnees_p3"], config["mode"])
     if config["mode"] == "reel":
         if int(config["n_plancher"]) != lv1.N_PLANCHER_REEL:
             raise GardeArret(f"mode réel : n_plancher {config['n_plancher']} ≠ {lv1.N_PLANCHER_REEL}")
@@ -449,6 +452,10 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
                 jx = tenter(lire_jeux_et_phrases, racine, lignes_v, fermeture, racine, run_t06)
                 if jx:
                     sortie["jeux_generiques"] = jx
+            if etape_complete(config) and config.get("donnees_p3") is not None:
+                dp3 = tenter(d3.controler, racine, config["donnees_p3"])
+                if dp3:
+                    sortie["donnees_p3"] = dp3
             couples = tenter(charger_couples_figes, racine, config)
             if couples:
                 sortie["couples_figes"], sortie["rapport_couples"] = couples
@@ -705,11 +712,13 @@ def exiger_principales_consignees(racine_sortie: Path, chemin_sondes: Path, prin
 
 
 def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: int | None = None,
-            racine_sortie: Path | None = None, horloge=None, extracteur=None) -> dict:
+            racine_sortie: Path | None = None, horloge=None, extracteur=None, repli: dict | None = None) -> dict:
     """Étape A, v2 (celle de `lecture_v1.etape_a`, plus (x), (xi), G2, G5 et la garde de fin d'étape) ; à l'étape complète
     (`etape_complete`), les sondes neuves sont apprises après le manifeste (`sondes_neuves_v1.apprendre`, modèle de la course :
     `extracteur_de_la_course`, ou `extracteur` donné pour les essais), consignées dans `sondes-t07.json` avant toute notation,
-    puis notées avec les témoins et la base « coût seul ». `horloge` (défaut `time.time`) date la fin."""
+    puis notées avec les témoins et la base « coût seul ». `horloge` (défaut `time.time`) date la fin. `repli` : rapport de
+    `repli_recalcul_v1.recalculer` (activations recalculées) ; la garde d'identité au bit près est alors remplacée par la garde
+    d'équivalence du repli (R11 : « garde d'identité (étape A (1)) ou garde d'équivalence du repli »)."""
     debut = time.perf_counter()
     racine, registre = Path(racine), Path(registre)
     racine_sortie = Path(racine_sortie) if racine_sortie else racine
@@ -751,6 +760,15 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
             t0 = time.perf_counter()
             ext = extracteur if extracteur is not None else extracteur_de_la_course(racine, run_t06, config)
             appris = sn.apprendre(generiques["jeux"], generiques["phrases"], ext, config, graines, ouverture["concepts"])
+            if config.get("donnees_p3") is not None:                   # T7-P10 de la tromperie et des enjeux (plan, point 10)
+                lex_p3 = d3.temoins_p3(racine, config["donnees_p3"])
+                appris["lexicaux"].update(lex_p3)
+                appris["rapport"]["temoins_lexicaux"].update({c: {x: y for x, y in v.items() if x != "temoin"} for c, v in lex_p3.items()})
+                appris["rapport"]["temoins_lexicaux_p3"] = {"source": "données et découpage de P3 (clé donnees_p3)",
+                                                            "fichiers": ouverture.get("donnees_p3")}
+            else:
+                appris["rapport"]["temoins_lexicaux_p3"] = ("non calculés : clé donnees_p3 absente de la configuration (données et "
+                                                            "découpage de P3 non cités)")
             durees["sondes_neuves_s"] = round(time.perf_counter() - t0, 2)
             par_nom_p3 = {s.nom: s for s in sondes}
             principales = [par_nom_p3[config["sondes_par_concept"][c]] if c in lv1.CONCEPTS_P3 else appris["sondes"][c]["principale"]
@@ -788,7 +806,9 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
                                "les directions des concepts et les témoins lexicaux ne sont ni appris ni notés")
         chemin_sondes = lv1.ecrire_resultat(racine_sortie, chemin_m, "sondes-t07", contenu)
         ep = lv1.lire_episodes_t06(racine, run_t06)
-        identite = lv1.garde_identite(racine, run_t06, ep["resultat"], config["couches"])
+        identite = (lv1.garde_identite(racine, run_t06, ep["resultat"], config["couches"]) if repli is None else
+                    {"remplacee_par": "garde d'équivalence du repli (activations recalculées)", **repli["garde_equivalence"],
+                     "identite_dose_0": repli["identite_dose_0"], "rejeu": repli["rejeu"]})
         mesures = lv1.charger_mesures(ep["mesures"], list(config["predicteurs_triviaux"]) + (["cout"] if complete else []))
         lv1.ecrire_resultat(racine_sortie, chemin_m, "ouverture-t07", {**ouverture, "garde_identite": identite,
                                                                         "reserves_t06": ep["reserves"], "etats_t06": ep["etats"],
@@ -1007,9 +1027,30 @@ def main(argv: list[str]) -> int:
             print(f"      {n:4d}  {issue}")
         return lv1.main(["grille"])
     if a.action == "repli-recalcul":
-        print("REFUS : repli-recalcul : garde d'équivalence écrite (t07.repli_v1), rejeu des épisodes non écrit (modèle, adaptateurs, "
-              "conversations de l'environnement par la chaîne de T0.6) ; rien écrit ; nœud", file=sys.stderr)
-        return CODE_REFUS
+        from . import repli_recalcul_v1 as rr
+        try:
+            config = charger_configuration(Path(a.config_t07))
+        except GardeArret as err:
+            print(f"REFUS : {err}", file=sys.stderr)
+            return CODE_REFUS
+        try:
+            rapport = rr.recalculer(Path(a.racine), a.run_t06)
+        except GardeArret as err:
+            print(f"ARRÊT (R11, repli) : {err} ; relance une fois sur la même carte que la course, puis nœud", file=sys.stderr)
+            return CODE_ARRET
+        try:
+            registre = Path(a.registre) if a.registre else Path(a.racine) / config["registre"]
+            r = etape_a(Path(a.racine), registre, config, a.run_t06, a.instant,
+                        Path(a.racine_sortie) if a.racine_sortie else None, repli=rapport)
+            print(f"repli : {rapport['rejeu']['actions_notees_recalculees']} actions recalculées, garde d'équivalence passée ; "
+                  f"notation scellée, fermée : {r['scores']['chemin']}")
+            return CODE_OK
+        except ArretApresManifeste as err:
+            print(f"ARRÊT : {err}", file=sys.stderr)
+            return CODE_ARRET
+        except GardeArret as err:
+            print(f"REFUS : {err}", file=sys.stderr)
+            return CODE_REFUS
     try:
         config = charger_configuration(Path(a.config_t07))
         registre = Path(a.registre) if a.registre else Path(a.racine) / config["registre"]
