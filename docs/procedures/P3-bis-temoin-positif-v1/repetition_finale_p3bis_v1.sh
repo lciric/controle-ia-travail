@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Brouillon 3 (2026-11-10, 09:05 UTC) : seuil de place disque fixé (CD-04) : PLACE_MIN_KO = mesure + marge, détail ci-dessous.
 # Brouillon 2 (2026-11-10, contre-lecture différentielle) : clone de la branche de scellement en extraction partielle
 # (CD-05 ; aucun chemin interdit extrait, absence vérifiée) ; copie des contrôles clonée du dépôt nu local avec --shared ;
 # seuil de place disque fixé à la mesure plus une marge écrite (CD-04, PLACE_MIN_KO).
@@ -17,7 +18,17 @@
 # Ce qu'elle ne joue pas, déclaré : la création (le lanceur exige ce journal parmi les preuves de S) ; la chaîne fermée
 # sur des sorties réelles d'un run décisif (aucune n'existe avant la course : l'essai différentiel de fermeture du code
 # corrigé en tient lieu, rejoué au bloc 6 des contrôles ; s'il joue le mode décisif sous un texte scellé, ce bloc le
-# couvre). Place disque : un clone partagé du dépôt entier (plusieurs Go) ; refus sous 12 Go libres.
+# couvre). Place disque (CD-04) : refus sous PLACE_MIN_KO ko libres dans le dossier parent de RACINE_NEUVE (même disque
+# que /tmp, où vont l'extraction du scellement et la liste ciblée). Mesure du 2026-11-10 au commit du code a1de3915, en
+# rejouant les mêmes commandes (clones, extraction partielle, git archive) et en relevant la liste et l'essai :
+#   dépôt (clone partagé d'un dépôt superficiel : objets copiés, extraction partielle) 4 168 320 ko ; dépôt nu
+#   distant.git 1 558 424 ko ; pendant le scellement, extraction git archive pour verifier-arbre 2 404 304 ko (effacée
+#   avant les contrôles) ; pendant les contrôles, clone des contrôles depuis le dépôt nu 4 087 844 ko, dossier temporaire
+#   de la liste ciblée v2 (531 essais) 1 811 908 ko, dossier de l'essai de fermeture 17 540 ko (pic relevé toutes les 10 s).
+#   Pic : contrôles = 4 168 320 + 1 558 424 + 4 087 844 + 1 811 908 + 17 540 = 11 644 036 ko (scellement : 8 131 048 ko).
+#   Marge écrite : 1 048 576 ko (1 Gio) pour le cache du tokeniseur (non mesuré, quelques dizaines de Mo attendus), les
+#   pics de l'essai entre deux relevés, la croissance de S sur a1de3915 (texte, journaux : quelques Mo) et l'écart du/df.
+#   Seuil : 11 644 036 + 1 048 576 = 12 692 612 ko. Les écritures d'autres sessions pendant la répétition ne sont pas couvertes.
 # Journal : « script éprouvé : <script> <sha256> » (copies versées : scellement, contrôles, module commun, ce script),
 # lignes changées, sorties des étapes, dernière ligne « RÉPÉTITION FINALE DE P3-BIS : CONFORME ».
 # Usage : repetition_finale_p3bis_v1.sh BRANCHE_DE_SCELLEMENT RACINE_NEUVE
@@ -28,7 +39,7 @@ DEPOT=/home/user/controle-ia-travail
 H=$(dirname "$(realpath "$0")")
 EXTRACTION=('/*' '!/docs/notes/bras-attaque/' '!/diag/20261109-070232-t06-reel/' '!/runs/20261109-070232-t06-reel/' '!/donnees/bras-attaque*' '!/donnees/mode-tenu-a-l-ecart*' '!/diag/*/lecture-sondes-t06.json*' '!/scripts/extraire_mesures_epreuve_t06_v1.py*')
 ABSENTS=(docs/notes/bras-attaque diag/20261109-070232-t06-reel runs/20261109-070232-t06-reel scripts/extraire_mesures_epreuve_t06_v1.py)
-PLACE_MIN_KO=A_MESURER                           # CD-04 : mesure plus marge écrite (voir plus bas)
+PLACE_MIN_KO=12692612                            # CD-04 : mesure 11 644 036 ko + marge 1 048 576 ko (voir l'en-tête)
 PREUVES_SANS_FINALE="banc-verifications-p3bis-v1.log banc-lanceur-p3bis-v1.log banc-surveillance-p3bis-v1.log banc-controles-p3bis-v1.log banc-recuperation-p3bis-v1.log repetition-jouet-p3bis-v1.log"
 [ -e "$R" ] && { echo "$R existe déjà (R12)"; exit 2; }
 grep -qE '^[A-Z_]+="?A_EPINGLER' "$H/controles_avant_depense_p3bis_v1.sh" && { echo "épingles des contrôles non remplies : la répétition finale se joue au candidat"; exit 2; }

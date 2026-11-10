@@ -1,0 +1,46 @@
+début de la répétition : 2026-11-10T08:37:54Z
+script éprouvé : lancer_p3bis_v1.sh 54a6020a667e6a092a9978d69d43b8fcab944cfe9374f591ae20c6459f0d433b
+script éprouvé : controle_cinq_minutes_p3bis_v1.sh 51411159616708fa45056cf95c536ab602496fe726706442ad1016a88a08153d
+script éprouvé : surveiller_p3bis_v1.sh dbaa6a62986f149741fce12e7165e0de6df5ca456e6d07badf78b91ddf2a122e
+script éprouvé : recuperation_p3bis_v1.sh 0c967fe8e1749aa1936c24b78787147d8ceec1290f5125bee8d174c007c1cde5
+script éprouvé : detruire_p3bis_v1.sh d44c97ea480127088a5976d62db4fa18fd3ffd978c86fe16f2ea6c60d11fc4d0
+script éprouvé : verifications_p3bis_v1.py 08661404b74c5b0440297c94b67222793a7ee377b3256b87df0eab68da9390b0
+script éprouvé : repetition_jouet_p3bis_v1.sh 85096b6877e5560ee01e240aa9c0946010888aaefaf3cad0adc62ce720b792a7
+lignes changées : lanceur 3 (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S) ; récupération 2 (DEPOT_URL, PY)
+commit de scellement de la répétition : 57482dc1a822596e3b6ed823e48acfa8cc13f522
+T1-lanceur : code 0 ; 4 s ; CONFORME
+    | succès : True ; identifiant 77777771 ; message : 
+    lancement : instance 77777771 écrite, offre 111, branche v1 poussée par l'« instance » : CONFORME
+T1-cinq-minutes : code 0 ; 0 s ; CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+T1-surveillance : code 0 ; CONFORME
+    | FIN : AMORCE 2026-11-12T12:30:00Z : fin, code 0 ; instance 77777771 arrêtée par son identifiant (R10) ; état relu : actual_status=exited cur_state=stopped intended_sta
+    surveillance : PROGRES relevé, dépense relevée sous 80 USD, arrêt par l'identifiant (instance arrêtée) : CONFORME
+T1-recuperation : code 0 ; 16 s ; CONFORME
+    | RÉCUPÉRATION : TOUS CONFORMES ; paquet des lectures 03b9942a23eccf5aef87ec6b8e6992b00d10371ec31e86ad8dc0cd98c01f66f8 poussé sur calcul/p3bis-reel-v1
+    récupération : branche distante = commit du seul paquet (16 783 360 octets) et de son compagnon : CONFORME
+T1-destruction : code 0 ; 0 s ; CONFORME
+    | DESTRUCTION : instance 77777771 détruite par son identifiant (R10), absente de la liste relue
+T2-lanceur : code 0 ; 3 s ; CONFORME
+    | succès : True ; identifiant 77777772 ; message : 
+T2-cinq-minutes : code 0 ; 0 s ; CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+T2-surveillance : code 0 ; CONFORME
+    | GARDER : fin, code 5 ; second paquet en échec : instance arrêtée par son identifiant, gardée, jamais détruite jusqu'au paquet refait (le run n'est pas rejoué) ; ins
+T2-recuperation : code 4 ; 0 s ; CONFORME
+    | RÉCUPÉRATION DES TRACES SEULES (AUCUN RUN), SANS LECTURE : TOUS CONFORMES
+T2-destruction-refusee : code 2 ; 0 s ; CONFORME
+    | REFUS : instance gardée (second paquet en échec) : jamais détruite avant le paquet refait
+    instance du code 5 : arrêtée, jamais détruite : CONFORME
+T3a-lanceur-refuse : code 2 ; 1 s ; CONFORME
+    | instances : non tolérée(s), ou liste illisible (voir les lignes ci-dessus et lancement.txt) : pas de création
+    instance gardée : toute création neuve refusée (liste fermée : nœud), branche v3 non créée : CONFORME
+T3-lanceur : code 0 ; 1 s ; CONFORME
+    | succès : True ; identifiant 77777773 ; message : 
+T3-cinq-minutes-ko : code 1 ; 1 s ; CONFORME
+    | CONTRÔLE À CINQ MINUTES : 2 KO ; instance 77777773 arrêtée par son identifiant (R10) ; nœud de Lazar
+    contrôle à cinq minutes en échec : instance arrêtée, non détruite ; instance gardée de la tentative 2 jamais détruite : CONFORME
+    aucun verbe sur les instances tolérées ; destructions : la seule instance de la fin normale : CONFORME
+    aucun jeton dans les traces, sorties et états : CONFORME
+durée de la répétition : 579 s ; fin : 2026-11-10T08:47:33Z
+RÉPÉTITION JOUET DE LA CHAÎNE DE P3-BIS : CONFORME
