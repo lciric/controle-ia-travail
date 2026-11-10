@@ -64,9 +64,11 @@ SANS_MARQUE_REFUSEES = ("SCELLEMENT-JEUX-JD", "SCELLEMENT-JEUX-JC", "SCELLEMENT-
 
 # Clés par étape (brouillon 14, « Clés par étape »). Étape A : `GO-ETAPE-A-T07` (étape annexe) ou `GO-LECTURE-T07` (variante B) —
 # l'une des deux est exigée, vérifié par `lecture_v1.ouvrir` ; `CODE-T07` exigée seulement si DS-3 bis est accordée (configuration).
-EXIGEES_ETAPE_A = (RUN_CONFIRMATION_T06, SCELLEMENT_CONCEPTS_T07)
-PERMISES_ETAPE_A = (SCELLEMENT_JEUX_JD, SCELLEMENT_JEUX_JC, SCELLEMENT_JEUX_JA, GO_ETAPE_A_T07, GO_LECTURE_T07, CODE_T07,
-                    SCELLEMENT_T07, AUDIT_FUITES_T07, CONSIGNE_AUDIT_FUITES_T07, SCELLEMENT_P3BIS, ISSUE_MOTS_ET_COUT_T06)
+# Brouillon 21, option (c) des phrases des concepts (R-2158 ; « Accord au code », point 20 (i)) : `SCELLEMENT-CONCEPTS-T07` passe
+# des exigées aux permises ; lue seulement si elle précède strictement l'instant de fermeture (`lecture_v2.lire_jeux_et_phrases`).
+EXIGEES_ETAPE_A = (RUN_CONFIRMATION_T06,)
+PERMISES_ETAPE_A = (SCELLEMENT_JEUX_JD, SCELLEMENT_JEUX_JC, SCELLEMENT_JEUX_JA, SCELLEMENT_CONCEPTS_T07, GO_ETAPE_A_T07, GO_LECTURE_T07,
+                    CODE_T07, SCELLEMENT_T07, AUDIT_FUITES_T07, CONSIGNE_AUDIT_FUITES_T07, SCELLEMENT_P3BIS, ISSUE_MOTS_ET_COUT_T06)
 # Présence refusée à l'ouverture de l'étape A (brouillon 14, R-1924 (3) : `VERDICT_P3BIS` retirée des permises ; « Clés par
 # étape » : `SCORES-T07` ou `SONDES-T07` présente → étape déjà jouée).
 REFUSEES_ETAPE_A = {
