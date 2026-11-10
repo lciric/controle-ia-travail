@@ -1,6 +1,6 @@
 # Addendum 1 au préenregistrement du témoin de Bailey (`prereg/temoin-attaque-publiee-bailey-v1.md`, `fb6c2f34…`) — condition de lancement 6 : code, lectures, risques
 
-10 novembre 2026, brouillon 2, 17:49 UTC (`date -u` à l'écriture de ce brouillon). Session « attaquant informé » successeur (`session_013QMaykGXY4fZmZNX5fm1K4`), branche
+10 novembre 2026, scellé vers 17:53 UTC (brouillon 1 relu à 17:37 ; brouillon 2, corrections, 17:49). Session « attaquant informé » successeur (`session_013QMaykGXY4fZmZNX5fm1K4`), branche
 `claude/compassionate-meitner-d4ryyk`. Le préenregistrement scellé reste tel quel (R12) ; en cas de conflit, il prime et
 l'écart est un nœud. Cet addendum remplit la condition de lancement 6 (« le code du journaliseur, du lanceur, de
 l'analyse et des gardes écrit, éprouvé (R5), contre-lu, committé ; addendum scellé qui en donne le commit »). Il ne
@@ -49,9 +49,18 @@ est éprouvé à la mise en place et au pilote.
 (corrections D-1 à D-11 de `8895a5a7…`) a été relu par `4f079ece…` pour D-1, D-2 et les fonctions `validite`,
 `verdict`, `garde_fin_de_run` seulement ; « les points D-3 à D-11 n'ont pas été relus point par point » (`4f079ece…`,
 en-tête) ; les relectures suivantes n'ont lu d'`analyse_v3` que `validite`, `garde_fin_de_run`, `nombre_de_tours` et
-`garde_nombre_de_tours`. Un contrôle court de D-3 à D-11 par un sous-agent neuf est en cours :
-`docs/notes/reproduction-attaque-publiee-v1/controle-analyse-v3-d3-d11-bailey-v1.md` ; son verdict est cité ici à la
-version scellée.
+`garde_nombre_de_tours`. Un contrôle court de D-3 à D-11 par un sous-agent neuf :
+`docs/notes/reproduction-attaque-publiee-v1/controle-analyse-v3-d3-d11-bailey-v1.md`
+(`cc1eca97eb4abe24955b7fdc3f30efba5b6bfb4c4066a755aca484e3d71a8087`). Verdict : aucun point bloquant ; D-3, D-4, D-5,
+D-8, D-10, D-11 faits ; D-6 et D-7 en partie ; aucune correction ne change une issue des « Critères de lecture gelés »
+avec les entrées que fournissent les appelants (comptes entiers, flottants Python). **Limites connues, déclarées et
+reportées à la prochaine version du code** (elles imposeraient une nouvelle version de toute la chaîne qui importe
+`analyse_v3`) : `mentions_audit` n'exige pas des comptes entiers (E-1, reste de D-6) ; deux essais de D-7 manquent
+(audit sans mention ; symétrie de l'intervalle) ; `_exact` ne rend pas exactement une `Fraction` (E-2 ; aucun appelant
+n'en passe) ; `verdict` ne contrôle pas le type des valeurs de l'audit (E-3 ; l'audit est construit par `lecture_v8`) ;
+docstring renvoyant à `lecture_v1` (E-4) ; valeurs par défaut `evaluations_attendues` et `Evaluation.rang`, contrôle
+de `tirages` (E-5 à E-7). Libellé écrit ici (D-9) : quand P2 change d'issue selon le traitement des égalités, le
+verdict est « Non interprétable (P2 dépend des égalités) » (texte, ligne « non interprétable » ; P-1).
 
 ## 2. Lectures de lignes scellées, actées par Lazar
 
