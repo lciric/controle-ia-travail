@@ -443,3 +443,8 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 ## 9 novembre, 12:58 UTC — autonomie de 8 heures (GO-2026-11-09-04, jusqu'à ≈ 20:57 UTC, R-2009)
 - Lecture exploratoire v2 de l'étiqueteur (GO-2026-11-09-03) : code commité (`c7d61c74c`), ordre d'exécution en rédaction, relecture par Fable, puis essai de format.
 - Collisionneur permis pour les questions de conception difficiles et cruciales.
+
+## 10 novembre, 12:31 UTC — session « attaquant informé » successeur (`session_013QMaykGXY4fZmZNX5fm1K4`), passation d'étape
+Voir `registres/passations/2026-11-10-1231-attaquant-informe-successeur-etape.md`. Pièce 1 du bras scellée en version finale
+(`f440b090…`) ; pièces 3 et 4 en brouillon 3 ; témoin de Bailey : code de la condition 6 en v3 (en écriture), nœud 5 à
+Lazar (recommandation `0b2268b4…`), licence écrite attendue ; ligne de GO : `GO-2026-11-10-10` (main). Aucune instance, aucune dépense.
