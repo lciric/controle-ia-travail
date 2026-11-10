@@ -1,7 +1,7 @@
 """Lecture du barreau 6 (`ACCB6`), v1 : entrées, épisodes, somme et maximum, aires d'épisode, Δ apparié, planchers d'épisode,
 prédicteurs triviaux, états, séquence fixée, témoins, réserves, phrase gelée, résultat scellé.
 
-Texte joué : `brouillons/accumulation-barreau6-v1/accumulation-barreau6-v1-brouillon2.md` (`9f070e31…`) ; chemin visé
+Texte joué : `brouillons/accumulation-barreau6-v1/accumulation-barreau6-v1-candidat2.md` (`0716d3d5…`) ; chemin visé
 `prereg/accumulation-barreau6-v1.md` (ligne `SCELLEMENT-ACCB6`).
 
     PYTHONPATH=src python -m controle_ia.accumulation_b6.lecture_v1 lire RACINE
@@ -595,7 +595,8 @@ def audit_r4(jeux: dict, sequence: dict | None, aig: dict) -> dict:
             if a is not None and a >= SEUIL_AUDIT_AIRE:
                 d.append(f"{nom}, {s} : aire par action {a:.4f} ≥ 0,999")
     if n and tous_a:
-        d.append("« accumuler bat » sur toutes les sondes de tous les jeux lus, témoins compris (« trop beau »)")
+        d.append("« accumuler bat » sur toutes les sondes de tous les jeux lus (les neuf jeux qui reçoivent un état, témoins et jeux "
+                 "croisés compris) (« trop beau »)")
     if jeux[JEU_I]["etat"] == et.JEU_M:
         d.append("(i-a) : décisive en « le maximum bat »")
     if aig["ligne"] == "G-4" and sequence is not None:

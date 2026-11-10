@@ -1,6 +1,7 @@
 """Registre propre, journal propre, garde d'ouverture et aiguillage du barreau 6 (`ACCB6`), v1.
 
-Texte joué : `brouillons/accumulation-barreau6-v1/accumulation-barreau6-v1-brouillon2.md` (`9f070e31…`), « Plan d'analyse »,
+Texte joué : `brouillons/accumulation-barreau6-v1/accumulation-barreau6-v1-candidat2.md` (`0716d3d5…` ; chemin visé `prereg/accumulation-barreau6-v1.md`),
+« Plan d'analyse »,
 points 1 à 3, « Lignes de registre », « Liste d'arrêt ».
 
 - **Registre propre** `registres/accumulation-b6-v1.md` (clés `SCELLEMENT-ACCB6`, `CODE-ACCB6`, `LECTURE-ACCB6`), journal propre

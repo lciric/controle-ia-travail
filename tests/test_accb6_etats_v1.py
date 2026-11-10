@@ -1,6 +1,6 @@
 """Essais des états, de la séquence fixée et des phrases gelées du barreau 6 (`etats_v1.py`, `phrases_v1.py`) : fonctions pures,
 aucune donnée. Texte joué : `brouillons/accumulation-barreau6-v1/accumulation-barreau6-v1-brouillon2.md` (`9f070e31…`), « Seuil » et
-« Critères de lecture gelés ». L'énumération versée (`scripts/enumeration_etats_accb6_v1.py`) est rejouée et comparée à sa sortie."""
+« Critères de lecture gelés ». L'énumération versée (`scripts/enumeration_etats_accb6_v2.py`, R-2278) est rejouée et comparée à sa sortie."""
 from __future__ import annotations
 
 import hashlib
@@ -17,8 +17,8 @@ from controle_ia.accumulation_b6 import etats_v1 as et
 from controle_ia.accumulation_b6 import phrases_v1 as ph
 
 RACINE_DEPOT = Path(__file__).resolve().parents[1]
-SCRIPT = RACINE_DEPOT / "scripts" / "enumeration_etats_accb6_v1.py"
-SORTIE = RACINE_DEPOT / "scripts" / "enumeration-etats-accb6-v1.txt"
+SCRIPT = RACINE_DEPOT / "scripts" / "enumeration_etats_accb6_v2.py"     # v2 : candidat 2 (R-2278)
+SORTIE = RACINE_DEPOT / "scripts" / "enumeration-etats-accb6-v2.txt"
 
 NEUTRE = et.EntreesCouple(echec=False, fuite=et.FUITE_AUCUNE, dessus_somme=True, dessus_max=True, sature_somme=False,
                           sature_max=False, bas_delta_positif=False, haut_delta_negatif=False, trivial_somme=False, trivial_max=False)

@@ -1,6 +1,7 @@
 """États du barreau 6 (`ACCB6`), v1 : fonctions pures, sans lecture de fichier.
 
-Texte joué : `brouillons/accumulation-barreau6-v1/accumulation-barreau6-v1-brouillon2.md` (`9f070e31…`), section « Seuil » :
+Texte joué : `brouillons/accumulation-barreau6-v1/accumulation-barreau6-v1-candidat2.md` (`0716d3d5…` ; chemin visé `prereg/accumulation-barreau6-v1.md`),
+section « Seuil » :
 
 - **état d'un couple (jeu, sonde)**, la première règle qui s'applique : 1. E (échec) ; 2. F (fuite nommée sur ce jeu) ; 3. P (ni
   S_Σ ni S_max au-dessus de son plancher) ; 4. S (aires d'épisode de S_Σ et de S_max toutes deux ≥ 0,99) ; 5. A (borne basse de Δ
