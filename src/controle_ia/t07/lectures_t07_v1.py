@@ -243,6 +243,9 @@ def lectures(t: dict, index: dict, mesures: dict, config: dict, graines: dict, c
             if x["etat"] == AU_DESSUS:
                 au_dessus9.append(f"{d['nom']} sur {k}")
     phrases9 = index.get("phrases_concepts") or {}
+    if dirs and phrases9.get("etat") == ETAT_PHRASES_NON_LUES:          # option (c) : aucun repli silencieux (R5)
+        raise GardeArret(f"T7-P9 : {len(dirs)} direction(s) de concept dans l'index alors que les phrases des concepts sont « non lues » "
+                         f"({phrases9.get('ligne', 'ligne ?')}) : index incohérent, arrêt")
     sortie["predictions"]["T7-P9"] = ({"etat": ("au moins une direction au-dessus : audit R7" if au_dessus9 else "aucune direction au-dessus"),
                                        "au_dessus": au_dessus9, "lectures": lus9} if dirs else
                                       {"etat": f"non lue : {MOTIF_P9_SANS_PHRASES}", "phrases_concepts": phrases9}

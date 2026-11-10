@@ -857,7 +857,9 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
     chemin_m, _ = creer_manifeste(racine_sortie, run_t07, {**config, "etape": "A", "sondes_lues": noms, "niveau_applique": ouverture["niveau"],
                                                            "cles_ignorees_etape_a": ignorees, "garde_adaptee_etape_a": garde_manifeste,
                                                            "etape_complete": complete, "concepts_lus": ouverture["concepts"],
-                                                           "jeux_scelles": ouverture["jeux_scelles"]},
+                                                           "jeux_scelles": ouverture["jeux_scelles"],
+                                                           # option (c), R-2166 : état des phrases des concepts, fixé à l'ouverture
+                                                           "phrases_concepts_etape_a": (generiques or {}).get("phrases_etat")},
                                   taches, entropie=int(config["entropie"]), decisif=(config["mode"] == "reel"),
                                   prereg=config["preenregistrement"], autoriser_depot_sale=True, commande=f"{COMMANDE} etape-a")
     graines = lire_manifeste(chemin_m)[0]["graines"]
@@ -897,6 +899,9 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
                     raise GardeArret(f"jeu {cle_v} vidé par le rejeu du contrôle 9 (toutes ses tâches sorties, consigne v3, § 10 étape 4) : "
                                      f"la sonde de « {concept_v} », lue depuis l'ouverture, ne peut être apprise : arrêt, nœud")
             appris = sn.apprendre(rejeu["jeux"], generiques["phrases"], ext, config, graines, ouverture["concepts"])
+            if generiques["phrases"] is None and appris["directions"] and appris["directions"].get("directions"):
+                raise GardeArret("option (c) : directions de concept apprises sans phrases lues (ligne SCELLEMENT-CONCEPTS-T07 "  # R5
+                                 f"{generiques['phrases_etat'].get('ligne')}) : arrêt, aucune notation")
             if config.get("donnees_p3") is not None:                   # T7-P10 de la tromperie et des enjeux (plan, point 10)
                 lex_p3 = d3.temoins_p3(racine, config["donnees_p3"])
                 appris["lexicaux"].update(lex_p3)

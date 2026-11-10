@@ -198,3 +198,98 @@ def test_reserve_des_couches_ecrite_sous_le_repli_de_bout_en_bout(b, capsys):
     assert g["remplacee_par"].startswith("garde d'équivalence")
     hors = [int(c) for c in cfg["couches"] if int(c) != int(g["couche"])]
     assert hors and g["reserve"] == lv.reserve_couches_repli(cfg["couches"], g)
+
+
+# ------------------------------------------------- reprise (agent neuf, consigne fdb24706…) : gardes ajoutées, manifeste, variante B
+def test_manifeste_porte_l_etat_des_phrases_lues_et_non_lues(complet):
+    """R-2166, « plancher de concept gardé au manifeste » : l'état des phrases, fixé à l'ouverture, est écrit dans la configuration
+    du manifeste (avant toute graine dérivée) ; les tâches `plancher-concept/…` y sont quand les phrases sont lues (cas sain),
+    absentes sinon (repli)."""
+    ra = _a(complet)
+    m = _manifeste(complet, ra["run_t07"])
+    assert m["config"]["phrases_concepts_etape_a"]["etat"] == lt.ETAT_PHRASES_LUES
+    assert sum(t.startswith("plancher-concept/") for t in m["graines"]) == \
+        len(sn.lire_phrases_concepts(complet.racine / _resultat(complet, ra["run_t07"], "sondes-t07.json")["phrases_concepts"]["chemin"])
+            ["concepts"]) * len(complet.config["couches"])
+
+
+def test_manifeste_sans_ligne_etat_non_lues(complet):
+    _sans_ligne(complet, rg.SCELLEMENT_CONCEPTS_T07)
+    ra = _a(complet)
+    m = _manifeste(complet, ra["run_t07"])
+    assert m["config"]["phrases_concepts_etape_a"] == {"etat": lt.ETAT_PHRASES_NON_LUES, "motif": lt.MOTIF_P9_SANS_PHRASES,
+                                                       "ligne": "absente"}
+    assert not any(t.startswith("plancher-concept/") for t in m["graines"])
+
+
+def test_artefact_directions_apprises_sans_phrases_arret(complet, monkeypatch):
+    """Artefact (R5, garde neuve de `lecture_v2.etape_a`) : sans phrases lues, un apprentissage qui rendrait quand même des
+    directions de concept → arrêt après le manifeste, rien de noté. Cas sain : `test_ligne_absente_etape_A_au_bout_T7P9_non_lue_R15`."""
+    _sans_ligne(complet, rg.SCELLEMENT_CONCEPTS_T07)
+    vrai = lv.sn.apprendre
+
+    def fautif(*a, **k):
+        r = vrai(*a, **k)
+        r["directions"] = {"directions": [{"faux": True}], "rapports": [], "format_lecture": "phrase"}
+        return r
+    monkeypatch.setattr(lv.sn, "apprendre", fautif)
+    with pytest.raises(lv.ArretApresManifeste, match="directions de concept apprises sans phrases lues"):
+        _a(complet)
+    assert not list((complet.racine / "donnees").glob("*-t07-lecture-*/scores*"))
+
+
+def test_artefact_index_incoherent_T7P9_arret_a_l_etape_B(complet, monkeypatch):
+    """Artefact (R5, garde neuve de `lectures_t07_v1.lectures`) : directions présentes dans l'index des scores alors que l'état des
+    phrases dit « non lues » → arrêt de l'étape B (jamais T7-P9 lue ni R15 écrite en silence). Cas sain :
+    `test_ligne_avant_la_fermeture_T7P9_lue_sans_R15`."""
+    ra = _a(complet)
+    run7 = ra["run_t07"]
+    lignes_audit(complet, run7)
+    lignes_p3bis(complet, APRES_A)
+    vrai = lv.lv1.ouvrir_scores
+
+    def falsifie(*a, **k):
+        t, index = vrai(*a, **k)
+        assert index["directions"]
+        index["phrases_concepts"] = {"etat": lt.ETAT_PHRASES_NON_LUES, "motif": lt.MOTIF_P9_SANS_PHRASES, "ligne": "absente"}
+        return t, index
+    monkeypatch.setattr(lv.lv1, "ouvrir_scores", falsifie)
+    with pytest.raises(lv.ArretApresManifeste, match="index incohérent"):
+        _b(complet, run7)
+
+
+def _ajouter_concepts_au_banc(racine: Path, ligne: str, date: str) -> None:
+    cellules = [c.strip() for c in ligne.strip("|").split("|")]
+    with open(racine / "registres" / "scellements-v1.md", "a", encoding="utf-8") as f:
+        f.write(rg.ecrire_ligne(rg.SCELLEMENT_CONCEPTS_T07, date, cellules[2], cellules[3]) + "\n")
+
+
+def test_variante_B_ligne_inscrite_apres_la_garde_du_repli_exclue(b):
+    """Variante B (voie nominale), artefact : la garde du repli (instant T0) ferme le périmètre ; la ligne des concepts inscrite
+    après elle (T0 + 60), avant l'étape A (T0 + 120), n'est jamais lue : phrases « non lues », aucune direction, aucune tâche de
+    plancher de concept, état écrit au manifeste. La lire serait l'échec de cet essai."""
+    racine, run, cfg = b
+    reg = racine / "registres" / "scellements-v1.md"
+    texte = reg.read_text(encoding="utf-8")
+    ligne = next(l for l in texte.splitlines() if l.startswith(f"| {rg.SCELLEMENT_CONCEPTS_T07} |"))
+    reg.write_text(texte.replace(ligne + "\n", ""), encoding="utf-8")
+    assert not _repli(b)["reprise"]
+    _ajouter_concepts_au_banc(racine, ligne, rg.date_utc(T0 + 60))
+    r = lv.etape_a(racine, reg, cfg, run, instant=T0 + 120, repli=rt.lire_rapport(racine, run))
+    run7 = r["run_t07"]
+    s = json.loads((racine / "diag" / run7 / "sondes-t07.json").read_text(encoding="utf-8"))["resultat"]
+    assert s["phrases_concepts"]["etat"] == lt.ETAT_PHRASES_NON_LUES and "exclue pour de bon" in s["phrases_concepts"]["ligne"]
+    assert s["sondes_neuves"]["directions"] == []
+    m = json.loads((racine / "runs" / run7 / "manifeste.json").read_text(encoding="utf-8"))
+    assert m["config"]["phrases_concepts_etape_a"]["etat"] == lt.ETAT_PHRASES_NON_LUES
+    assert not any(t.startswith("plancher-concept/") for t in m["graines"])
+
+
+def test_variante_B_ligne_avant_la_garde_du_repli_lue(b):
+    """Variante B, cas sain : la ligne des concepts du banc précède la garde du repli → phrases lues, directions apprises."""
+    racine, run, cfg = b
+    reg = racine / "registres" / "scellements-v1.md"
+    assert not _repli(b)["reprise"]
+    r = lv.etape_a(racine, reg, cfg, run, instant=T0 + 120, repli=rt.lire_rapport(racine, run))
+    s = json.loads((racine / "diag" / r["run_t07"] / "sondes-t07.json").read_text(encoding="utf-8"))["resultat"]
+    assert s["phrases_concepts"]["etat"] == lt.ETAT_PHRASES_LUES and len(s["sondes_neuves"]["directions"]) > 0
