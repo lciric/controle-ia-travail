@@ -678,7 +678,7 @@ REFUS = {
                         "rendez-vous-non-consecutif"),
     "numéro 01": (lambda d: (_monter(d, normal=False, rdv=[("ouvrir", "2026-11-20T12:10:00Z")]),
                              _remplacer(d, ob.REGISTRE_PREALABLES, "RENDEZ-VOUS-P3BIS-1", "RENDEZ-VOUS-P3BIS-01")),
-                  "rendez-vous-non-consecutif"),
+                  "cle-inconnue"),                  # clé lue au motif [1-9][0-9]* du lecteur de T0.7 (R-2103)
     "décision avant le rendez-vous": (lambda d: _monter(d, normal=False, rdv=[("ouvrir", "2026-11-19T12:10:00Z")]),
                                       "ligne-mal-formee"),
     "décision datée après sa ligne": (lambda d: _monter(d, normal=False, rdv=[("ouvrir pleinement", "2026-11-21T12:10:00Z",
@@ -754,7 +754,8 @@ def test_format_du_journal_cas_sain_et_chaque_ligne_hors_format():
     lignes = ob.exiger_format_journal(_texte_journal(REFUS_SAIN, OUV_REDUITE, OUV_PLEINE))
     assert [(x["cle"], x["mode"]) for x in lignes] == [("REFUS-OUVERTURE-P3BIS", "pleine-anticipee"),
                                                        ("OUVERTURE-P3BIS", "reduite"), ("OUVERTURE-P3BIS", "pleine")]
-    assert ob.exiger_format_journal("") == []
+    with pytest.raises(GardeArret, match="fichier vide"):                            # D-3 (R-2103) : fichier vide hors
+        ob.exiger_format_journal("")                                                 # format (accepté avant R-2103)
     hors = {
         "cellule en trop": _lj("REFUS-OUVERTURE-P3BIS", "2026-11-24T12:00:00Z", "pleine", "-", "-", "deja-ouverte : x", "y"),
         "cellule en moins": _lj("REFUS-OUVERTURE-P3BIS", "2026-11-24T12:00:00Z", "pleine", "-", "deja-ouverte : x"),

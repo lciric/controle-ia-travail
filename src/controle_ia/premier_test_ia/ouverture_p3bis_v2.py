@@ -94,6 +94,21 @@ du dossier de sortie en échec **après** la ligne `OUVERTURE-P3BIS` : arrêt (c
 l'ouverture (sens prudent pour T0.7) et l'écart se consigne. Date de la mise en paquet (réserve « écrit après la lecture
 fermée ») : `--date-paquet`, sinon `git log` du paquet. La date du rendez-vous est une constante de ce module
 (`DATE_RENDEZ_VOUS`) : si elle change, le module change.
+
+**Corrections de l'écrivain du journal** (essai de concordance du journal avec le lecteur de T0.7,
+`docs/notes/g0-deux-semaines-v1/concordance-journal-p3bis-t07-v1/rapport-concordance-journal-v1.md`, `c867a1b2…` ;
+décisions de la mère R-2103) : **D-1** dates du journal non décroissantes (journal qui recule : hors format,
+`ligne-mal-formee`) ; une horloge antérieure à la date de la dernière ligne du journal donne un refus **sans ligne** (code 2,
+rien d'ouvert, `HorlogeEnArriere`), avant toute lecture des registres, puisqu'une ligne datée de cette horloge ferait
+elle-même reculer le journal ; une dernière ligne hors format est tenue pour antérieure (le refus `ligne-mal-formee` suit,
+avec sa ligne). **D-2** `pleine-anticipee` refusée dès que `SCORES-T07` et `SONDES-T07` sont inscrites et conformes au
+registre des scellements : le mode suit le registre, jamais l'opérateur ; code `ni-scores-ni-ouvrir` (choix déclaré : aucun
+code de la liste fermée ne nomme ce refus, un code neuf changerait la liste du texte), texte écrit au motif. **D-3** fichier
+du journal vide (0 octet) hors format (`ligne-mal-formee`) ; l'en-tête n'est écrit que dans un journal absent, jamais dans un
+fichier vide, qui reste donc hors format (la garde `deja-ouverte` n'est jamais remise à zéro par un journal vidé) ; formes
+refusées : celles du tableau D-3 du rapport (CRLF seul admis). **D-4** `SCELLEMENT-T07` et `GARDE-ADAPTEE-T07-P3BIS` doivent
+citer `prereg/T0.7-sondes-v0-v1.md` (`PREREG_T07`), sinon `garde-adaptee-absente`. Clé `RENDEZ-VOUS-P3BIS-N` lue avec le
+motif `[1-9][0-9]*` du lecteur (`RENDEZ-VOUS-P3BIS-01` : `cle-inconnue`).
 """
 from __future__ import annotations
 
@@ -144,8 +159,9 @@ REGISTRE_SCELLEMENTS = "registres/scellements-v1.md"
 JOURNAL_OUVERTURES = "registres/ouvertures-p3bis-v1.md"
 CLES_ECRITS = ("ECRIT-PERIMETRE-JEUX-P3BIS", "ECRIT-LANCEMENT-RELANCE-P3BIS", "ECRIT-ENGAGEMENT-ETAPE-A-P3BIS")
 CLE_GARDE_ADAPTEE = "GARDE-ADAPTEE-T07-P3BIS"
-RENDEZ_VOUS = re.compile(r"RENDEZ-VOUS-P3BIS-([0-9]+)")
+RENDEZ_VOUS = re.compile(r"RENDEZ-VOUS-P3BIS-([1-9][0-9]*)")   # même motif que le lecteur de T0.7 (R-2103)
 SCORES_T07, SONDES_T07, SCELLEMENT_T07 = "SCORES-T07", "SONDES-T07", "SCELLEMENT-T07"
+PREREG_T07 = "prereg/T0.7-sondes-v0-v1.md"   # texte que citent SCELLEMENT-T07 et la garde adaptée (D-4, R-2103)
 CLES_T07_LUES = (SCORES_T07, SONDES_T07, SCELLEMENT_T07)
 DATE_RENDEZ_VOUS = "2026-11-20T12:00:00Z"  # date du texte (proposée, défaut sous 48 heures, R-2021)
 FICHIER_DECISION = "docs/decisions/rendez-vous-P3-bis-v{n}.md"
@@ -192,6 +208,11 @@ class RefusOuverture(GardeArret):
 
 class JournalImpossible(GardeArret):
     """Le journal des ouvertures ne peut pas être écrit : refus, rien n'est ouvert (code 2), aucune ligne (CP-06)."""
+
+
+class HorlogeEnArriere(JournalImpossible):
+    """D-1 (R-2103) : l'horloge précède la date de la dernière ligne du journal ; une ligne datée de cette horloge ferait
+    reculer les dates du journal (que T0.7 refuserait en entier) : refus sans ligne, rien n'est ouvert (code 2)."""
 
 
 def _refuser(fautes: list, appui: str = "-", paquets: str = "-"):
@@ -738,9 +759,11 @@ def lire_ligne_journal(brute: str) -> dict:
 
 def exiger_format_journal(texte: str) -> list[dict]:
     """Journal entier au format exact : les deux lignes d'en-tête, puis une ligne de six cellules par tentative, chaque ligne
-    finie par un saut de ligne ; ordre permis des ouvertures. Rend les lignes ; sinon garde (tous les défauts écrits)."""
+    finie par un saut de ligne ; dates non décroissantes (D-1) ; ordre permis des ouvertures. Fichier vide (0 octet) : hors
+    format (D-3). Rend les lignes ; sinon garde (tous les défauts écrits)."""
     if texte == "":
-        return []
+        raise GardeArret("journal des ouvertures hors format : fichier vide (0 octet) ; un journal absent vaut « aucune "
+                         "tentative », un fichier vide jamais (D-3, R-2103)")
     fautes = []
     lignes = texte.split("\n")
     if lignes[-1] != "":
@@ -749,12 +772,17 @@ def exiger_format_journal(texte: str) -> list[dict]:
         lignes = lignes[:-1]
     if tuple(lignes[:2]) != ENTETE_JOURNAL:
         fautes.append("en-tête autre que les deux lignes fixées")
-    sortie = []
+    sortie, numeros = [], []
     for n, brute in enumerate(lignes[2:], start=3):
         try:
             sortie.append(lire_ligne_journal(brute))
+            numeros.append(n)
         except GardeArret as e:
             fautes.append(f"ligne {n} : {e}")
+    for k in range(1, len(sortie)):
+        if sortie[k]["instant"] < sortie[k - 1]["instant"]:
+            fautes.append(f"ligne {numeros[k]} : date {sortie[k]['date']} antérieure à celle de la ligne {numeros[k - 1]} "
+                          f"({sortie[k - 1]['date']}) : dates non décroissantes exigées (D-1)")
     etat = None
     for x in sortie:
         if x["cle"] != CLE_OUVERTURE:
@@ -778,6 +806,34 @@ def lire_journal(chemin: Path) -> list[dict]:
         raise RefusOuverture("ligne-mal-formee", str(e)) from None
 
 
+def instant_de_la_derniere_ligne(chemin: Path) -> int | None:
+    """D-1 : instant de la dernière ligne du journal ; journal absent ou illisible, en-tête seul, ou dernière ligne hors
+    format : `None` (une ligne hors format est tenue pour antérieure ; le refus `ligne-mal-formee` la relèvera)."""
+    try:
+        texte = Path(chemin).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+    lignes = texte.split("\n")
+    if lignes and lignes[-1] == "":
+        lignes = lignes[:-1]
+    if not lignes or (len(lignes) <= 2 and lignes[-1] == ENTETE_JOURNAL[len(lignes) - 1]):
+        return None
+    try:
+        return lire_ligne_journal(lignes[-1])["instant"]
+    except GardeArret:
+        return None
+
+
+def exiger_horloge(racine: Path, instant: int) -> None:
+    """D-1 (R-2103) : l'horloge ne précède pas la date de la dernière ligne du journal ; sinon `HorlogeEnArriere` (refus
+    sans ligne, code 2). Une date égale est permise (dates non décroissantes)."""
+    derniere = instant_de_la_derniere_ligne(Path(racine) / JOURNAL_OUVERTURES)
+    if derniere is not None and int(instant) < derniere:
+        raise HorlogeEnArriere(f"horloge {date_utc(instant)} antérieure à la date de la dernière ligne du journal "
+                               f"({date_utc(derniere)}) : une ligne datée de cette horloge ferait reculer les dates du "
+                               f"journal ; refus sans ligne, rien n'est ouvert (D-1, R-2103)")
+
+
 def ligne_journal(cle: str, instant: int, mode: str, appui: str, paquets: str, motif: str) -> str:
     """Ligne de tentative, vérifiée au format exact avant d'être écrite (le module vérifie le format qu'il écrit)."""
     brute = "| " + " | ".join([cle, date_utc(instant), mode, appui, paquets, motif]) + " |"
@@ -786,18 +842,21 @@ def ligne_journal(cle: str, instant: int, mode: str, appui: str, paquets: str, m
 
 
 def inscrire(racine: Path, brute: str) -> None:
-    """Ajoute une ligne au journal (créé avec ses deux lignes d'en-tête) ; impossible : `JournalImpossible`."""
-    lire_ligne_journal(brute)
+    """Ajoute une ligne au journal (créé avec ses deux lignes d'en-tête s'il est absent ; un fichier vide ne reçoit pas
+    d'en-tête et reste hors format, D-3) ; ligne datée avant la dernière ligne : `HorlogeEnArriere` (D-1) ; impossible :
+    `JournalImpossible`."""
+    instant = lire_ligne_journal(brute)["instant"]
     j = Path(racine) / JOURNAL_OUVERTURES
     if not j.parent.is_dir():
         raise JournalImpossible(f"dossier {j.parent} absent")
+    exiger_horloge(racine, instant)
     try:
-        neuf = not j.exists() or j.stat().st_size == 0
+        neuf = not j.exists()
         avant = b"" if neuf else j.read_bytes()
         with open(j, "a", encoding="utf-8") as f:
             if neuf:
                 f.write("\n".join(ENTETE_JOURNAL) + "\n")
-            elif not avant.endswith(b"\n"):
+            elif avant and not avant.endswith(b"\n"):
                 f.write("\n")
             f.write(brute + "\n")
         if not j.read_text(encoding="utf-8").endswith(brute + "\n"):
@@ -1010,9 +1069,13 @@ def chemin_normal(racine: Path, t07: dict, instant: int) -> list:
 
 def garde_adaptee_en_vigueur(racine: Path, pre: dict, t07: dict, decision: dict, instant: int) -> list:
     """Branche 1 : T0.7 scellé (`SCELLEMENT-T07` conforme) avec la garde adaptée (`GARDE-ADAPTEE-T07-P3BIS` qui cite le même
-    texte), toutes deux strictement antérieures à la ligne de la décision « ouvrir » (contre-lecture 3, D2 ; CP-17)."""
+    texte), toutes deux strictement antérieures à la ligne de la décision « ouvrir » (contre-lecture 3, D2 ; CP-17), toutes
+    deux citant `PREREG_T07` (D-4, R-2103)."""
     fautes = []
     s, g = t07.get(SCELLEMENT_T07), pre["garde"]
+    for x in (s, g):
+        if x is not None and x["chemin"] != PREREG_T07:
+            fautes.append(("garde-adaptee-absente", f"{x['cle']} cite {x['chemin']!r}, {PREREG_T07!r} attendu (D-4, R-2103)"))
     if s is None:
         fautes.append(("garde-adaptee-absente", "T0.7 non scellé (aucune ligne SCELLEMENT-T07)"))
     else:
@@ -1113,6 +1176,11 @@ def garde_ouverture(racine, mode: str, instant: int) -> dict:
             _refuser(maintenir + normal, appui_presente(racine, mode))
         _refuser([(normal[0][0], f"le mode pleine exige SCORES-T07 et SONDES-T07 conformes : {normal[0][1]}")] + normal[1:],
                  appui_presente(racine, mode))
+    if mode == PLEINE_ANTICIPEE and not normal:
+        _refuser([("ni-scores-ni-ouvrir", "lignes SCORES-T07 et SONDES-T07 inscrites et conformes au registre des "
+                                          "scellements : « pleine-anticipee » refusée, seule « pleine » est permise ; le "
+                                          "mode suit le registre, jamais l'opérateur (D-2, R-2103)")],
+                 appui_presente(racine, mode))
     if dernier_mot is None:
         _refuser(sans, appui_presente(racine, mode))
     if maintenir:
@@ -1200,8 +1268,9 @@ def extraire(fichiers: dict[str, bytes], sortie: Path) -> None:
 
 def ouvrir(racine, mode: str, run: str, sortie, racine_paquets=None, date_paquet: str | None = None,
            instant: int | None = None, imprimer=print) -> dict:
-    """Garde, relecture des paquets, ligne au journal, puis extraction ; un refus est journalisé (code de la liste fermée)
-    avant d'être levé. `instant` : pour les essais seulement (la ligne de commande prend l'horloge, CP-08)."""
+    """Horloge (D-1 : antérieure à la dernière ligne du journal, refus sans ligne), garde, relecture des paquets, ligne au
+    journal, puis extraction ; un refus est journalisé (code de la liste fermée) avant d'être levé. `instant` : pour les
+    essais seulement (la ligne de commande prend l'horloge, CP-08)."""
     racine = Path(racine)
     racine_paquets = Path(racine_paquets) if racine_paquets is not None else racine
     sortie = Path(sortie)
@@ -1212,6 +1281,7 @@ def ouvrir(racine, mode: str, run: str, sortie, racine_paquets=None, date_paquet
     if not sortie.parent.is_dir():
         raise GardeArret(f"dossier parent de la sortie {sortie.parent} absent")
     instant = int(time.time()) if instant is None else int(instant)
+    exiger_horloge(racine, instant)                     # D-1 : avant toute lecture des registres et toute ligne
     try:
         g = garde_ouverture(racine, mode, instant)
         try:
