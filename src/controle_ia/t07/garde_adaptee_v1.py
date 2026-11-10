@@ -192,8 +192,11 @@ def garde_etape_a(oA: int, lignes: dict, journal: list, prealables: dict | None 
     return codes
 
 
-def garde_fin_etape_a(fin: int, lignes: dict, journal: list) -> list[tuple[str, str]]:
-    """Juste avant `SCORES-T07` et `SONDES-T07` (datées `fin`) : lignes et journal relus à cet instant."""
+def garde_fin_etape_a(fin: int, lignes: dict, journal: list, prealables: dict | None = None, decisions: dict | None = None,
+                      controler_appuis: bool = False) -> list[tuple[str, str]]:
+    """Juste avant `SCORES-T07` et `SONDES-T07` (datées `fin`) : lignes et journal relus à cet instant. `controler_appuis` (CT-10) :
+    `VERDICT-P3BIS` inscrite avec une ouverture réduite → G1 et l'appui des réduites contrôlés aussi à la fin (registre des
+    préalables relu), pour qu'aucune de ces deux lignes ne soit écrite sur un run que l'étape B refuserait."""
     codes = []
     for o in _o(journal, jp.PLEINE_ANTICIPEE):
         codes.append((ANTICIPEE, f"ligne {o['numero']} du journal de P3-bis : ouverture pleine-anticipee ({o['date']}) : "
@@ -206,6 +209,14 @@ def garde_fin_etape_a(fin: int, lignes: dict, journal: list) -> list[tuple[str, 
     if rg.VERDICT_P3BIS in lignes and not reduites:
         codes.append((VERDICT_PENDANT_A, "nœud : VERDICT-P3BIS inscrite pendant l'étape A sans ouverture réduite au journal de P3-bis "
                                          "(étape A non aboutie avant VERDICT-P3BIS, chemin sans ouverture anticipée)"))
+    if controler_appuis and rg.VERDICT_P3BIS in lignes and reduites:
+        g1 = _g1(lignes)
+        if g1:
+            codes.append((SCELLEMENT_APRES_VERDICT, g1))
+        for o in reduites:
+            m = controler_reduite(o, lignes, prealables, decisions)
+            if m:
+                codes.append((APPUI_FAUX, m))
     return codes
 
 
@@ -284,7 +295,7 @@ def instant_fermeture(oA: int, premiere_ouverture_a: int | None, journal: list) 
 
 def reduite_avant(journal: list, instant: int | None) -> dict | None:
     """Première ouverture réduite du journal strictement avant `instant` (toute date si `instant` est nul)."""
-    r = [o for o in _o(journal, jp.REDUITE) if instant is None or o["instant"] < instant]
+    r = [o for o in _o(journal, jp.REDUITE) if instant is None or o["instant"] < instant]   # appelée avec fA + 1 par R14 (CT-09)
     return {"date": r[0]["date"], "numero": r[0]["numero"], "instant": r[0]["instant"]} if r else None
 
 
@@ -292,7 +303,7 @@ def reserve_r14(journal: list, fin_a: int | None) -> dict | None:
     """R14 : une ouverture réduite strictement antérieure à la fin de l'étape A (fA) ; absente sur tout autre run."""
     if fin_a is None:
         return None
-    r = reduite_avant(journal, fin_a)
+    r = reduite_avant(journal, fin_a + 1)        # CT-09 : « au plus tard à la fin », comme la garde de fin (`<=`)
     if r is None:
         return None
     return {"id": "R14", "phrase": PHRASE_R14.format(date=r["date"], numero=r["numero"]), "ouverture_reduite": r}

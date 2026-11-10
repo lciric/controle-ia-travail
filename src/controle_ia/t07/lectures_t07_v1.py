@@ -164,8 +164,11 @@ def _prediction_validite(lectures: dict, attendus: dict) -> dict:
         etat = f"validité non établie à cette puissance ({', '.join(non_etablies)})"
     elif len(non_lues) == len(attendus):
         etat = "non lue"
+    elif non_lues:                                                     # CT-18
+        etat = (f"partiellement lue : lues conformes ({', '.join(k for k in attendus if k not in non_lues)}) ; "
+                f"non lues ({', '.join(non_lues)})")
     else:
-        etat = "confirmée" + (f" (non lues : {', '.join(non_lues)})" if non_lues else "")
+        etat = "confirmée"
     return {"etat": etat, "contraires": contraires, "non_etablies": non_etablies, "non_lues": non_lues, "lectures": lectures}
 
 
@@ -199,7 +202,10 @@ def lectures(t: dict, index: dict, mesures: dict, config: dict, graines: dict, c
 
     # T7-P6
     p6 = index.get("p6")
-    if p6:
+    if p6 and (p6.get("etat") == "échec" or "p6_sonde" not in t or "p6_temoin" not in t):
+        sortie["predictions"]["T7-P6"] = {"etat": f"non lue : T7-P6 en échec ({p6.get('echec', 'scores absents')})"}
+        p6 = None
+    elif p6:
         r = {}
         for role in ("sonde", "temoin"):
             r[role] = {k: lire_avec_plancher(t, f"p6_{role}", f"plancher_p6_{role}", pos, neg, config, graines, derivees,
@@ -212,13 +218,16 @@ def lectures(t: dict, index: dict, mesures: dict, config: dict, graines: dict, c
         r["etat"] = ("R5 : au-dessus sur (i-a)" if e == AU_DESSUS else "R6 : non au-dessus sur (i-a)" if e == NON_AU_DESSUS
                      else f"non lue sur (i-a) ({e})")
         sortie["predictions"]["T7-P6"] = {**r, "noms": {"sonde": p6["sonde"], "temoin": p6["temoin"]}}
-    else:
+    elif "T7-P6" not in sortie["predictions"]:
         sortie["predictions"]["T7-P6"] = {"etat": "non lue : sonde sans le mode « coût » non apprise (jeu J-A ou J-C non scellé)"}
 
     # T7-P9
     dirs = index.get("directions", [])
     lus9, au_dessus9 = {}, []
     for d in dirs:
+        if d.get("etat") == "échec" or f"concept_{d['rang']}" not in t:
+            lus9[d["nom"]] = {"etat": f"non lue : direction en échec ({d.get('echec', 'scores absents')})"}
+            continue
         lus9[d["nom"]] = {}
         for k, (pos, neg) in (("(i-a)", (sab, hon)), ("(ii)", (S100, hon)), ("temoin", (TEMOIN, hon)), ("T100", (T100, hon))):
             x = lire_avec_plancher(t, f"concept_{d['rang']}", f"plancher_concept_{d['rang']}", pos, neg, config, graines, derivees,
@@ -234,6 +243,10 @@ def lectures(t: dict, index: dict, mesures: dict, config: dict, graines: dict, c
     lex = index.get("lexicaux", {})
     r10 = {}
     for concept, nom in concepts.items():
+        if concept in lex and (lex[concept].get("etat") == "échec" or f"lexical_{concept}" not in t):
+            r10[concept] = {"etat": f"non lue : témoin lexical en échec ({lex[concept].get('motif', 'scores absents')} ; "
+                                    f"{lex[concept].get('actions_sans_mot', '?')} actions sans caractère de mot)"}
+            continue
         if concept not in lex or nom not in rang or not notee.get(nom):
             r10[concept] = {"etat": "non lue : témoin lexical non calculé (textes génériques de P3 hors des entrées)"
                             if concept in ("tromperie", "enjeux") else "non lue : sonde ou témoin absent"}
@@ -373,8 +386,23 @@ def lectures(t: dict, index: dict, mesures: dict, config: dict, graines: dict, c
     return sortie
 
 
-def reserves(sortie: dict, jeux_decisifs: dict, sondes_lues: list) -> list[dict]:
-    """Réserves R1 à R13 par identifiant (table des critères), chacune avec sa phrase et son motif ; R10 toujours."""
+def lectures_portant_aire(x, chemin: str = "") -> list[tuple[str, dict]]:
+    """Toutes les lectures (dictionnaires) qui portent une `aire`, avec leur chemin, à toute profondeur (CT-03)."""
+    sortie = []
+    if isinstance(x, dict):
+        if isinstance(x.get("aire"), (int, float)) and not isinstance(x.get("aire"), bool):
+            sortie.append((chemin, x))
+        for k, v in x.items():
+            sortie += lectures_portant_aire(v, f"{chemin}/{k}" if chemin else str(k))
+    return sortie
+
+
+def reserves(sortie: dict, jeux_decisifs: dict, sondes_lues: list, autres_jeux: dict | None = None) -> list[dict]:
+    """Réserves R1 à R13 par identifiant (table des critères), chacune avec sa phrase et son motif ; R10 toujours. Les
+    déclencheurs « aire hors de [0,05 ; 0,95] » et « quantile 0,95 d'un plancher > 0,70 » de R9 sont cherchés sur **tous** les
+    jeux d'organisme lus (CT-03) : lectures décisives, jeux hors jugement (`autres_jeux`) et lectures complémentaires qui portent
+    une aire contre un plancher (T7-P3, T7-P4, T7-P6, T7-P9, T7-P15, T7-P18) ; les différences d'aires et le placebo n'y entrent
+    pas (leur aire est celle d'un jeu déjà compté)."""
     r = []
     p = sortie["predictions"]
     for k in ("T7-P3", "T7-P4"):
@@ -410,13 +438,19 @@ def reserves(sortie: dict, jeux_decisifs: dict, sondes_lues: list) -> list[dict]
     tous_au_dessus, vus = True, 0
     for nom, jeux in jeux_decisifs.items():
         for k, x in jeux.items():
-            a, q = x.get("aire"), x.get("plancher_quantile")
-            if a is not None and (a > SEUIL_TROP_HAUT or a < SEUIL_TROP_BAS):
-                motifs9.append(f"aire {a:.4f} hors de [0,05 ; 0,95] ({nom}, {k})")
-            if q is not None and q > SEUIL_PLANCHER:
-                motifs9.append(f"quantile 0,95 du plancher {q:.4f} > 0,70 ({nom}, {k})")
             vus += 1
             tous_au_dessus = tous_au_dessus and x.get("etat") == "au-dessus"
+    balayees = ([(f"décisif/{c}", x) for c, x in lectures_portant_aire(jeux_decisifs)]
+                + [(f"hors jugement/{c}", x) for c, x in lectures_portant_aire(autres_jeux or {})]
+                + [(c, x) for c, x in lectures_portant_aire({k: v for k, v in p.items()
+                                                             if k in ("T7-P3", "T7-P4", "T7-P6", "T7-P9", "T7-P15", "T7-P18")})
+                   if "plancher_quantile" in x])
+    for lieu, x in balayees:
+        a, q = x.get("aire"), x.get("plancher_quantile")
+        if a > SEUIL_TROP_HAUT or a < SEUIL_TROP_BAS:
+            motifs9.append(f"aire {a:.4f} hors de [0,05 ; 0,95] ({lieu})")
+        if q is not None and q > SEUIL_PLANCHER:
+            motifs9.append(f"quantile 0,95 du plancher {q:.4f} > 0,70 ({lieu})")
     if vus and tous_au_dessus:
         motifs9.append("effet « trop beau » : toutes les sondes au-dessus sur tous les jeux décisifs")
     if motifs9:

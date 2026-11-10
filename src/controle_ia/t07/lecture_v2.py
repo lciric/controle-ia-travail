@@ -39,10 +39,10 @@ Ce que la v2 ajoute (points du brouillon 19) :
   celle antérieure à la fin de l'étape A dans `notation-t07.json` ; **R14** dans `resultat.reserves`, et, sur ce lancement, L0b,
   L0c, L1 (fichier « mots et coût » illisible), L7b et L7c marquées finales pour 7b (G4).
 
-**Écarts texte / code déclarés** (rapport du développeur) : (1) **les sondes neuves** (30 couples, choix de la sonde principale par
-concept, T7-P3, T7-P4, T7-P6, T7-P9, T7-P10, T7-P15 à T7-P19, placebo, base « coût seul ») **ne sont pas calculées** : une sonde
-principale de dissimulation ou du domaine est lue dans `fichiers_sondes` (jouet seulement) ; en mode réel ces deux noms sont nuls
-et une ligne `SCELLEMENT-JEUX-T07-JD` ou `-JC` dans le périmètre fait **refuser** l'étape A (code 2, motif écrit) ; (2) une
+**Écarts texte / code déclarés** (rapports du développeur) : (1) **les sondes neuves** sont apprises à l'étape A quand les deux
+noms des sondes neuves sont nuls (« étape complète », toujours en mode réel : `sondes_neuves_v1`, lectures T7-P3 à T7-P19 par
+`lectures_t07_v1`) ; noms donnés (jouet seulement), elles sont lues dans `fichiers_sondes` (chemin de la v2 initiale), et un seul nom
+nul fait refuser l'étape A si son jeu est dans le périmètre (code 2, motif écrit) ; (2) une
 ouverture réduite inscrite **pendant** l'étape A ne peut être écrite dans le manifeste ni dans `sondes-t07.json`, déjà scellés
 (R12) : elle l'est dans `notation-t07.json` ; (3) les fichiers de P3-bis (journal, registre des préalables, fichiers de décision)
 sont lus sous `RACINE`, comme les fichiers cités par le registre ; (4) `CLES_CONFIG` garde les clés de `lecture_v1` que le texte ne
@@ -181,6 +181,12 @@ def exiger_configuration(config: dict) -> None:
     n = config["niveau_base_t06"]
     if not (cr._nombre(n) and 0.0 < float(n) < 1.0):
         raise GardeArret(f"niveau_base_t06 = {n!r} : nombre dans ]0, 1[ attendu")
+    if list(config["familles"]) != list(sn.ORDRE_FAMILLES):                                    # CT-04 : jamais ignorée
+        raise GardeArret(f"familles = {config['familles']!r} : {list(sn.ORDRE_FAMILLES)} attendu (plan, point 3) : arrêt de configuration")
+    defaut = sn.reglages_par_defaut()
+    if config["reglages"] is not None and config["reglages"] != defaut:
+        raise GardeArret(f"reglages = {config['reglages']!r} : nul ou {defaut} attendu (Reglages par défaut, plan, point 3) : arrêt "
+                         "de configuration")
     if config.get("donnees_p3") is not None:            # clé facultative (T7-P10 de la tromperie et des enjeux, plan, point 10)
         d3.exiger_config(config["donnees_p3"], config["mode"])
     if config["mode"] == "reel":
@@ -197,7 +203,7 @@ def exiger_configuration(config: dict) -> None:
                 raise GardeArret(f"mode réel : sondes_par_concept.{c} = {spc[c]!r}, sonde principale de P3 {nom!r} attendue")
         if neuves_nommees:
             raise GardeArret(f"mode réel : sondes_par_concept.{neuves_nommees} non nuls : les sondes neuves sont apprises et choisies à "
-                             "l'étape A, ce que ce module ne fait pas encore (écart texte / code déclaré) ; noms nuls attendus")
+                             "l'étape A (étape complète) ; noms nuls attendus")
 
 
 def charger_configuration(chemin: Path) -> dict:
@@ -255,7 +261,7 @@ def etape_complete(config: dict) -> bool:
     return all(spc[c] is None for c in CONCEPTS_NEUFS)
 
 
-def lire_jeux_et_phrases(racine: Path, lignes_v: dict, fermeture: int, racine_t06: Path, run_t06: str) -> dict:
+def lire_jeux_et_phrases(racine: Path, lignes_v: dict, fermeture: int, racine_t06: Path, run_t06: str, min_concepts: int = 1) -> dict:
     """Étape A complète, dans la garde : jeux scellés présents avant la fermeture (contenu contrôlé, `sondes_neuves_v1.lire_jeu`),
     phrases des concepts (`SCELLEMENT-CONCEPTS-T07`), contrôle de disjonction contre les tâches de la course 7b (fiches de
     `episodes-t06.json`)."""
@@ -264,7 +270,7 @@ def lire_jeux_et_phrases(racine: Path, lignes_v: dict, fermeture: int, racine_t0
                           (rg.SCELLEMENT_JEUX_JA, "JA", sn.JEU_JA)):
         if cle in lignes_v and lignes_v[cle]["instant"] < int(fermeture):
             jeux[nom] = sn.lire_jeu(Path(racine) / lignes_v[cle]["chemin"], jeu)
-    phrases = sn.lire_phrases_concepts(Path(racine) / lignes_v[rg.SCELLEMENT_CONCEPTS_T07]["chemin"])
+    phrases = sn.lire_phrases_concepts(Path(racine) / lignes_v[rg.SCELLEMENT_CONCEPTS_T07]["chemin"], min_concepts)
     corps = verifier_resultat(racine_t06, Path(racine_t06) / "diag" / run_t06 / "episodes-t06.json")
     taches_eval = sorted({str(f["tache"]) for f in lv1._exiger(corps, ("resultat", "fiches"), "episodes-t06")})
     disjonction = sn.controler_disjonction(jeux, taches_eval) if jeux else {"etat": "aucun jeu dans le périmètre"}
@@ -279,7 +285,8 @@ def charger_sondes(racine: Path, config: dict, concepts: list) -> tuple[list, di
     for c in concepts:
         if config["sondes_par_concept"][c] is None:
             raise GardeArret(f"sonde principale du concept {c} : apprise et choisie à l'étape A selon le texte (30 couples neufs, sonde "
-                             "principale par concept) ; non mis en œuvre par le module v2 (écart texte / code déclaré) : refus")
+                             "principale par concept) ; nom nul sur le chemin des noms donnés : non mis en œuvre par le module v2 sur ce "
+                             "chemin (l'étape complète exige les deux noms nuls) : refus")
     return lv1.charger_sondes(racine, config, [config["sondes_par_concept"][c] for c in concepts])
 
 
@@ -449,7 +456,7 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
             if charge:
                 sortie["sondes"], sortie["rapport_sondes"] = charge
             if etape_complete(config) and rg.SCELLEMENT_CONCEPTS_T07 in lignes_v:
-                jx = tenter(lire_jeux_et_phrases, racine, lignes_v, fermeture, racine, run_t06)
+                jx = tenter(lire_jeux_et_phrases, racine, lignes_v, fermeture, racine, run_t06, 4 if config["mode"] == "reel" else 1)
                 if jx:
                     sortie["jeux_generiques"] = jx
             if etape_complete(config) and config.get("donnees_p3") is not None:
@@ -461,6 +468,10 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
                 sortie["couples_figes"], sortie["rapport_couples"] = couples
         sortie["verdict_p3bis_a_l_ouverture"] = ({"date": lignes_v[rg.VERDICT_P3BIS]["date"], "admise": "G2 (fichier d'issue non lu)"}
                                                  if rg.VERDICT_P3BIS in lignes_v else None)
+        if config["preenregistrement"] and rg.SCELLEMENT_T07 in lignes_v and \
+                lignes_v[rg.SCELLEMENT_T07]["chemin"] != str(config["preenregistrement"]):                          # CT-15
+            motifs.append(f"ligne SCELLEMENT-T07 : chemin {lignes_v[rg.SCELLEMENT_T07]['chemin']!r} ≠ préenregistrement de la "
+                          f"configuration {config['preenregistrement']!r}")
     else:
         if journal_lu:
             codes_b = ga.garde_etape_b(lignes_v, journal, prealables, decisions)
@@ -491,6 +502,11 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
             lues = list(lv1._exiger(doc, ("resultat", "sondes_lues"), "sondes-t07"))
             niveau = float(lv1._exiger(doc, ("resultat", "niveau_applique"), "sondes-t07"))
             du_manifeste = list(m7["config"].get("sondes_lues", []))          # étape complète : nul = sonde neuve choisie après
+            concepts_doc = list(lv1._exiger(doc, ("resultat", "concepts"), "sondes-t07"))
+            if "concepts_lus" in m7["config"] and concepts_doc != list(m7["config"]["concepts_lus"]):      # CT-02
+                raise rg.RefusRegistre(f"concepts de sondes-t07.json {concepts_doc} ≠ concepts lus du manifeste {m7['config']['concepts_lus']}")
+            if any(m is None and not str(x).startswith(f"{c}-") for m, x, c in zip(du_manifeste, lues, concepts_doc)):
+                raise rg.RefusRegistre(f"sondes_lues de sondes-t07.json {lues} : un nom de sonde neuve ne commence pas par son concept")
             if len(lues) != len(du_manifeste) or any(m is not None and m != x for m, x in zip(du_manifeste, lues)):
                 raise rg.RefusRegistre(f"sondes_lues de sondes-t07.json {lues} ≠ manifeste de T0.7 {m7['config'].get('sondes_lues')}")
             return {"chemin": str(chemin_m7), "sha256": sha7, "graines": m7["graines"], "sondes_lues": lues, "niveau": niveau}
@@ -591,14 +607,22 @@ def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dic
                     tableaux[f"neuf_{k}"] = pl.noter_actions(s, seqs)
                 except GardeArret as e:
                     extras["neufs"][k]["etat_notation"] = f"échec : {e}"
-            elif genre == "p6":
+            elif genre == "p6":                         # CT-05 : un échec met T7-P6 en « échec », jamais l'ensemble
                 x = extras["p6"][k]
-                tableaux[f"p6_{k}"] = pl.noter_actions(s, seqs)
-                tableaux[f"plancher_p6_{k}"] = pl.scores_plancher(x["plancher"], seqs).T
+                try:
+                    tableaux[f"p6_{k}"] = pl.noter_actions(s, seqs)
+                    tableaux[f"plancher_p6_{k}"] = pl.scores_plancher(x["plancher"], seqs).T
+                except GardeArret as e:
+                    x["echec_notation"] = str(e)
+                    tableaux.pop(f"p6_{k}", None)
             else:
                 d = extras["directions"][k]
-                tableaux[f"concept_{k}"] = pl.noter_actions(s, seqs)
-                tableaux[f"plancher_concept_{k}"] = pl.scores_plancher(d["plancher"], seqs).T
+                try:
+                    tableaux[f"concept_{k}"] = pl.noter_actions(s, seqs)
+                    tableaux[f"plancher_concept_{k}"] = pl.scores_plancher(d["plancher"], seqs).T
+                except GardeArret as e:
+                    d["echec_notation"] = str(e)
+                    tableaux.pop(f"concept_{k}", None)
         del seqs
     index["sondes"] = [entrees_s[k] for k in range(len(sondes))]
     index["couples_figes"] = [entrees_c[k] for k in range(len(couples))]
@@ -607,8 +631,11 @@ def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dic
                                    "notation": x.get("etat_notation", "notée" if f"neuf_{k}" in tableaux else "non notée"),
                                    "lecture": "descriptif"} for k, x in enumerate(extras.get("neufs", []))]
         if extras.get("p6"):
-            index["p6"] = {role: x["sonde"].nom for role, x in extras["p6"].items()}
-        index["directions"] = [{"rang": j, "nom": d["sonde"].nom, "couche": int(d["sonde"].couche), "n_plancher": len(d["plancher"])}
+            echecs_p6 = {role: x["echec_notation"] for role, x in extras["p6"].items() if "echec_notation" in x}
+            index["p6"] = {**{role: x["sonde"].nom for role, x in extras["p6"].items()},
+                           "etat": "échec" if echecs_p6 else "notée", **({"echec": echecs_p6} if echecs_p6 else {})}
+        index["directions"] = [{"rang": j, "nom": d["sonde"].nom, "couche": int(d["sonde"].couche), "n_plancher": len(d["plancher"]),
+                                "etat": "échec" if "echec_notation" in d else "notée", **({"echec": d["echec_notation"]} if "echec_notation" in d else {})}
                                for j, d in enumerate(extras.get("directions", []))]
         if extras.get("lexicaux"):
             if textes is None:
@@ -619,10 +646,17 @@ def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dic
                 if c not in textes:
                     raise CleAbsente(f"texte absent de textes-actions-t06.jsonl pour l'action {c}")
                 tx.append(textes[c])
-            for concept, x in extras["lexicaux"].items():
-                tableaux[f"lexical_{concept}"] = x["temoin"].scores(tx)
-            index["lexicaux"] = {concept: {"nom": x["temoin"].nom, "empreinte": x["empreinte"], "penalite": x["penalite"]}
-                                 for concept, x in extras["lexicaux"].items()}
+            from ..sondes.temoins import MOTIF_MOT
+            sans_mot = sum(1 for x in tx if not MOTIF_MOT.search(x))
+            index["lexicaux"] = {}
+            for concept, x in extras["lexicaux"].items():     # CT-01 : un témoin en échec n'arrête jamais l'étape A
+                entree = {"nom": x["temoin"].nom, "empreinte": x["empreinte"], "penalite": x["penalite"]}
+                try:
+                    tableaux[f"lexical_{concept}"] = x["temoin"].scores(tx)
+                    entree["etat"] = "notée"
+                except GardeArret as e:
+                    entree.update(etat="échec", motif=str(e), actions_sans_mot=sans_mot, actions=len(tx))
+                index["lexicaux"][concept] = entree
         cout = np.asarray(mesures["cout"], dtype=np.float64)[notees] if "cout" in mesures else None
         if cout is not None:
             lisible = np.isfinite(cout) & (cout > 0)
@@ -742,13 +776,29 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
     taches += [f"{c}/{n}/{j}" for c in ("intervalle", "descriptif") for n in connus for j in [cr.JEU_I] + doses]
     if complete:
         taches += ["decoupage", "temoin-p6"]
+        couches_c = [int(c) for c in config["couches"]]
+        for concept, cle_jeu in (("dissimulation", "JD"), ("domaine", "JC")):        # CT-14 : clés connues avant le manifeste
+            if cle_jeu in (generiques or {}).get("jeux", {}):
+                for f in sn.ORDRE_FAMILLES:
+                    for c in couches_c:
+                        n = f"{concept}-{f}-c{c}"
+                        taches += [f"entrainement/{n}", f"mahalanobis-egalite/{n}", f"plancher/{n}"]
+        if all(k in (generiques or {}).get("jeux", {}) for k in ("JC", "JA")):
+            for f in sn.ORDRE_FAMILLES:
+                for c in couches_c:
+                    for n in (f"intention-sans-cout-{f}-c{c}", f"intention-temoin-{f}-c{c}"):
+                        taches += [f"entrainement/{n}", f"mahalanobis-egalite/{n}", f"plancher/{n}"]
+        if generiques:
+            taches += [f"plancher-concept/{k}/c{c}" for k in sorted(generiques["phrases"]["concepts"]) for c in couches_c]
+        taches = list(dict.fromkeys(taches))
     garde_manifeste = {"garde_adaptee": config["garde_adaptee"], "portee_regle_4": config["portee_regle_4"],
                        "ouverture_reduite_avant_ouverture_A": adaptee["ouverture_reduite_avant_ouverture_A"],
                        "fermeture_perimetre": adaptee["fermeture_perimetre"], "jeux_hors_perimetre": ouverture["jeux_hors_perimetre"],
                        "verdict_p3bis_a_l_ouverture": ouverture["verdict_p3bis_a_l_ouverture"]}
     chemin_m, _ = creer_manifeste(racine_sortie, run_t07, {**config, "etape": "A", "sondes_lues": noms, "niveau_applique": ouverture["niveau"],
                                                            "cles_ignorees_etape_a": ignorees, "garde_adaptee_etape_a": garde_manifeste,
-                                                           "etape_complete": complete},
+                                                           "etape_complete": complete, "concepts_lus": ouverture["concepts"],
+                                                           "jeux_scelles": ouverture["jeux_scelles"]},
                                   taches, entropie=int(config["entropie"]), decisif=(config["mode"] == "reel"),
                                   prereg=config["preenregistrement"], autoriser_depot_sale=True, commande=f"{COMMANDE} etape-a")
     graines = lire_manifeste(chemin_m)[0]["graines"]
@@ -756,6 +806,15 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
     try:
         appris, extras, planchers_neufs = None, None, {}
         principales = list(sondes)
+        # CT-07 : garde d'identité (plan, point 8, étape A, 1) avant toute extraction ou tout apprentissage (2) ; rien n'est noté
+        ep = lv1.lire_episodes_t06(racine, run_t06)
+        identite = (lv1.garde_identite(racine, run_t06, ep["resultat"], config["couches"]) if repli is None else
+                    {"remplacee_par": "garde d'équivalence du repli (activations recalculées)", **repli["garde_equivalence"],
+                     "identite_dose_0": repli["identite_dose_0"], "rejeu": repli["rejeu"]})
+        mesures = lv1.charger_mesures(ep["mesures"], list(config["predicteurs_triviaux"]) + (["cout"] if complete else []))
+        lv1.ecrire_resultat(racine_sortie, chemin_m, "ouverture-t07", {**ouverture, "garde_identite": identite,
+                                                                        "reserves_t06": ep["reserves"], "etats_t06": ep["etats"],
+                                                                        "fiches_t06": ep["fiches"]})
         if complete:
             t0 = time.perf_counter()
             ext = extracteur if extracteur is not None else extracteur_de_la_course(racine, run_t06, config)
@@ -805,14 +864,6 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
             contenu["note"] = ("étape A de la v2 initiale (noms des sondes neuves donnés, jouet seulement) : les 30 couples neufs, T7-P6, "
                                "les directions des concepts et les témoins lexicaux ne sont ni appris ni notés")
         chemin_sondes = lv1.ecrire_resultat(racine_sortie, chemin_m, "sondes-t07", contenu)
-        ep = lv1.lire_episodes_t06(racine, run_t06)
-        identite = (lv1.garde_identite(racine, run_t06, ep["resultat"], config["couches"]) if repli is None else
-                    {"remplacee_par": "garde d'équivalence du repli (activations recalculées)", **repli["garde_equivalence"],
-                     "identite_dose_0": repli["identite_dose_0"], "rejeu": repli["rejeu"]})
-        mesures = lv1.charger_mesures(ep["mesures"], list(config["predicteurs_triviaux"]) + (["cout"] if complete else []))
-        lv1.ecrire_resultat(racine_sortie, chemin_m, "ouverture-t07", {**ouverture, "garde_identite": identite,
-                                                                        "reserves_t06": ep["reserves"], "etats_t06": ep["etats"],
-                                                                        "fiches_t06": ep["fiches"]})
         p3 = lv1.charger_planchers_p3(racine, config, [s for s in principales if concept_de.get(s.nom) in lv1.CONCEPTS_P3])
         planchers_p3 = {**p3.get("directions", {}), **planchers_neufs}
         jetons = lv1.charger_jetons_entrainement(racine, config, neuves) if not complete else {n: None for n in planchers_neufs}
@@ -826,8 +877,11 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
         fichier = lv1.ecrire_scores(racine_sortie, run_t07, notation)
         fin = max(int(horloge()), instant + 1)
         journal_fin = jp.lire_journal_p3bis(racine / jp.JOURNAL_P3BIS)          # forme fautive → arrêt (nœud)
-        lignes_fin = lire_lignes_actuelles(registre, (rg.VERDICT_P3BIS,))
-        codes = ga.garde_fin_etape_a(fin, lignes_fin, journal_fin)
+        lignes_fin = lire_lignes_actuelles(registre, (rg.VERDICT_P3BIS, rg.SCELLEMENT_T07))
+        pre_fin, dec_fin = None, None
+        if rg.VERDICT_P3BIS in lignes_fin and ga.reduite_avant(journal_fin, fin + 1):           # CT-10 : préalables relus
+            pre_fin, dec_fin = lire_ecrits_p3bis(racine, fin + 1, True)
+        codes = ga.garde_fin_etape_a(fin, lignes_fin, journal_fin, pre_fin, dec_fin, controler_appuis=True)
         fin_a = {"instant": rg.date_utc(fin), "ouverture_reduite_avant_fin_A": ga.reduite_avant(journal_fin, fin + 1),
                  "codes": [c for c, _ in codes],
                  "note": "une ouverture réduite inscrite pendant l'étape A est écrite ici (le manifeste et sondes-t07.json sont déjà "
@@ -941,7 +995,7 @@ def etape_b(racine: Path, registre: Path, config: dict, run_t06: str, run_t07: s
             concepts = index.get("concepts") or {c: config["sondes_par_concept"][c] for c in lv1.CONCEPTS
                                                  if config["sondes_par_concept"][c] in sondes_lues}
             complementaires = lt.lectures(t, index, mes_t, config, graines, concepts, jugees, refusees, jeux)
-            reserves_id = lt.reserves(complementaires, jeux, sondes_lues)
+            reserves_id = lt.reserves(complementaires, jeux, sondes_lues, hors)
         motif_L1 = (tableA["motif"] if A_ in ("illisible", "arret") else lu["motif"] if q == "illisible" else None)
         issue = cr.issue_critere_3(g, P_, A_, q, etats_i, etats_ii, fuites["F"], derivation, phrase_m, motifs, motif_L1)
         reserves = list(ep["reserves"]) + (list(derivation["reserves"]) if derivation else [])
@@ -1030,6 +1084,8 @@ def main(argv: list[str]) -> int:
         from . import repli_recalcul_v1 as rr
         try:
             config = charger_configuration(Path(a.config_t07))
+            if config["mode"] == "reel" and a.instant is not None:                               # CT-06
+                raise GardeArret("--instant refusé en mode réel (essais seulement)")
         except GardeArret as err:
             print(f"REFUS : {err}", file=sys.stderr)
             return CODE_REFUS
@@ -1053,6 +1109,8 @@ def main(argv: list[str]) -> int:
             return CODE_REFUS
     try:
         config = charger_configuration(Path(a.config_t07))
+        if config["mode"] == "reel" and a.instant is not None:                                   # CT-06
+            raise GardeArret("--instant refusé en mode réel (essais seulement) : l'instant d'ouverture est celui de l'horloge")
         registre = Path(a.registre) if a.registre else Path(a.racine) / config["registre"]
         racine_sortie = Path(a.racine_sortie) if a.racine_sortie else None
         if a.action == "etape-a":

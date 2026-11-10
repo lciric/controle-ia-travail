@@ -69,6 +69,12 @@ FORMATS_LECTURE = ("message_utilisateur", "phrase_seule")
 MAX_JETONS_PHRASE = 128
 
 
+def reglages_par_defaut() -> dict:
+    """`sondes.familles.Reglages` par défaut (plan, point 3), sans le journal : la seule valeur permise de la clé `reglages`."""
+    r = Reglages()
+    return {"l2": r.l2, "epoques": r.epoques, "pas": r.pas, "cachees": r.cachees, "retrecissement": r.retrecissement}
+
+
 def agregation_de(famille: str) -> str:
     return "attention" if famille == "attention" else "max"
 
@@ -321,8 +327,9 @@ def sondes_p6(jc: dict, ja: dict, idx_tr: dict, principale: dict, graines: dict,
                                                         ja["y"][v]) for n in sortie}, "_sondes": sortie}
 
 
-def lire_phrases_concepts(chemin: Path) -> dict:
-    """Jeu de phrases des concepts sans lien (ligne `SCELLEMENT-CONCEPTS-T07`) : format de lecture, puis paires par concept."""
+def lire_phrases_concepts(chemin: Path, min_concepts: int = 1) -> dict:
+    """Jeu de phrases des concepts sans lien (ligne `SCELLEMENT-CONCEPTS-T07`) : format de lecture, puis paires par concept ;
+    au moins `min_concepts` concepts (plan, point 10 : quatre en mode réel ; CT-13), au moins deux paires par concept."""
     try:
         lignes = [json.loads(l) for l in Path(chemin).read_text(encoding="utf-8").splitlines() if l.strip()]
     except (OSError, ValueError) as e:
@@ -337,8 +344,11 @@ def lire_phrases_concepts(chemin: Path) -> dict:
             raise GardeArret(f"phrases des concepts, ligne {k} : {{concept, indice, phrase_concept, phrase_neutre}} attendu")
         exiger_concept_sans_affect(r["concept"])
         concepts.setdefault(r["concept"], []).append(r)
-    if not concepts:
-        raise GardeArret("phrases des concepts : aucune paire")
+    if len(concepts) < max(1, int(min_concepts)):
+        raise GardeArret(f"phrases des concepts : {len(concepts)} concept(s), au moins {max(1, int(min_concepts))} attendus (plan, point 10)")
+    courts = sorted(c for c, v in concepts.items() if len(v) < 2)
+    if courts:
+        raise GardeArret(f"phrases des concepts : moins de deux paires pour {courts}")
     return {"format_lecture": lignes[0]["format_lecture"], "concepts": concepts}
 
 
@@ -350,9 +360,13 @@ def directions_concepts(extracteur, phrases: dict, couches, n_plancher: int, gra
         pos = [extracteur.phrase(r["phrase_concept"], phrases["format_lecture"]) for r in paires]
         neg = [extracteur.phrase(r["phrase_neutre"], phrases["format_lecture"]) for r in paires]
         for c in couches:
-            d, rap = direction_concept(concept, int(c), [p[c] for p in pos], [p[c] for p in neg])
-            pl = plancher_concept(concept, int(c), [p[c] for p in pos], [p[c] for p in neg], int(n_plancher),
-                                  graine(graines, f"plancher-concept/{concept}/c{int(c)}", derivees))
+            try:                                              # CT-05 : une direction en échec n'arrête pas l'ensemble
+                d, rap = direction_concept(concept, int(c), [p[c] for p in pos], [p[c] for p in neg])
+                pl = plancher_concept(concept, int(c), [p[c] for p in pos], [p[c] for p in neg], int(n_plancher),
+                                      graine(graines, f"plancher-concept/{concept}/c{int(c)}", derivees))
+            except GardeArret as e:
+                rapports.append({"concept": concept, "couche": int(c), "etat": f"échec : {e}"})
+                continue
             sortie.append({"sonde": d, "plancher": pl})
             rapports.append(rap)
     return {"directions": sortie, "rapports": rapports, "format_lecture": phrases["format_lecture"]}
@@ -432,13 +446,18 @@ def apprendre(jeux: dict, phrases: dict | None, extracteur, config: dict, graine
         entrainement[p.nom] = tr
         if concept in concepts_lus:
             planchers[p.nom] = plancher_de(p, tr, n, graine(graines, f"plancher/{p.nom}", derivees))
-    p6 = None
+    p6, echec_p6 = None, None
     if "JA" in jeux and "JC" in jeux:
-        p6 = sondes_p6(ext["JC"], ext["JA"], idx, rapport["concepts"]["domaine"]["couples"][rapport["concepts"]["domaine"]["principale"]],
-                       graines, calcul, derivees)
-        for nom, x in p6["_sondes"].items():
-            planchers[nom] = plancher_de(x["sonde"], x["entrainement"], n, graine(graines, f"plancher/{nom}", derivees))
+        try:                                                  # CT-05 : un échec met T7-P6 en « échec », jamais l'ensemble
+            p6 = sondes_p6(ext["JC"], ext["JA"], idx, rapport["concepts"]["domaine"]["couples"][rapport["concepts"]["domaine"]["principale"]],
+                           graines, calcul, derivees)
+            pl6 = {nom: plancher_de(x["sonde"], x["entrainement"], n, graine(graines, f"plancher/{nom}", derivees))
+                   for nom, x in p6["_sondes"].items()}
+            planchers.update(pl6)
+        except GardeArret as e:
+            p6, echec_p6 = None, str(e)
     rapport["p6"] = ({k: v for k, v in p6.items() if k != "_sondes"} if p6 else
+                     {"etat": f"échec : {echec_p6}"} if echec_p6 else
                      {"etat": "non lue : " + ("jeu J-A non scellé" if "JA" not in jeux else "jeu J-C non scellé (famille et couche du domaine)")})
     directions = directions_concepts(extracteur, phrases, couches, n, graines, derivees) if phrases else None
     rapport["directions"] = directions["rapports"] if directions else []

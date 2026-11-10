@@ -72,7 +72,7 @@ def lire_journal_p3bis(chemin: Path) -> list[dict]:
     fautes, sortie = [], []
     if len(lignes) < 2 or lignes[0] != ENTETE_JOURNAL[0] or lignes[1] != ENTETE_JOURNAL[1]:
         raise JournalFautif(f"journal de P3-bis {chemin} : en-tête absent ou différent des deux lignes {list(ENTETE_JOURNAL)} : nœud")
-    precedent = None
+    precedent, instant_precedent = None, None
     for i, brute in enumerate(lignes[2:], start=3):
         if not brute.strip():
             continue
@@ -92,6 +92,10 @@ def lire_journal_p3bis(chemin: Path) -> list[dict]:
         if mode not in MODES_P3BIS:
             fautes.append(f"ligne {i} : mode {mode!r} inconnu ({list(MODES_P3BIS)})")
             continue
+        if instant_precedent is not None and instant < instant_precedent:                 # CT-11
+            fautes.append(f"ligne {i} : date {date} antérieure à la ligne précédente (journal en ajout seul : dates non décroissantes)")
+            continue
+        instant_precedent = instant
         if cle == OUVERTURE_P3BIS:
             if mode not in SUIVANTS_PERMIS[precedent]:
                 fautes.append(f"ligne {i} : ouverture {mode!r} après {precedent!r} : ordre interdit par P3-bis (b8, plan, point 8)")
