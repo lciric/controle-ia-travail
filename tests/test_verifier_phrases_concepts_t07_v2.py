@@ -1152,3 +1152,506 @@ def test_decompter_artefact_reponses_non_scellees(echantillonne, reel, capsys):
     Path(str(echantillonne / vp.REPONSES) + ".sha256").unlink()
     assert lancer(reel.args("decompter", echantillonne, "--essai")) == 2
     assert "compagnon" in capsys.readouterr().err
+
+
+# ######################################################################################################################
+# v2 — voie « réécriture d'un concept entier » (second tour), gardes neuves, corrections D-1, D-2, D-4, D-6 à D-8
+# ######################################################################################################################
+
+SCRIPT_V1 = RACINE / "scripts" / "verifier_phrases_concepts_t07_v1.py"
+EMPREINTE_SCRIPT_V1 = "6bc2665aaf26c4559a7d18f4db4da7886f042f19c70f9c56411303ad295ec844"
+REECRITS = ("chats", "geographie")
+
+# Gabarits du second tour (écrits par les essais ; jamais des paires du jeu) : autres phrases que celles du premier tour.
+GABARITS_2 = {
+    "chats": ("A {a} {b} often climbs onto the {d} beside the garden gate at dusk.", GABARITS["chats"][1],
+              "A {a} {b} often leans against the {d} beside the garden gate at dusk.", GABARITS["chats"][3]),
+    "geographie": ("The {a} {b} stretches north of the {d} beyond a long row of low hills.", GABARITS["geographie"][1],
+                   "The {a} {b} stands left of the {d} beyond a long row of low shelves.", GABARITS["geographie"][3]),
+}
+
+
+def phrases_2(c: str, k: int) -> tuple[str, str]:
+    tc, bc, tn, bn = GABARITS_2[c]
+    a, b = (k - 1) // 9, (k - 1) % 9
+    d = (a + b) % 9
+    return tc.format(a=ADJ[a], b=bc[b], d=LIEU[d]), tn.format(a=ADJ[a], b=bn[b], d=LIEU[d])
+
+
+def enregistrement_2(c: str, k: int, **change) -> dict:
+    pc, pn = phrases_2(c, k)
+    r = {"concept": c, "indice": k, "domaine_neutre": f"N{(k - 1) % 8 + 1}", "phrase_concept": pc, "phrase_neutre": pn}
+    r.update(change)
+    return r
+
+
+def remise_2(changes: dict | None = None, ote=(), en_plus=()) -> list[dict]:
+    changes = changes or {}
+    return [enregistrement_2(c, k, **changes.get((c, k), {})) for c in REECRITS for k in range(1, 73)
+            if (c, k) not in ote] + list(en_plus)
+
+
+def args2(reel, mode, d, *extra):
+    return reel.args(mode, d, "--tour", 2, "--essai", *extra)
+
+
+def fautive_2(c, k):
+    return {"phrase_concept": phrases_2(c, k)[0][:-1] + " in fear."}
+
+
+def items_nc(cle, c, n):
+    return [it["item"] for it in items_de(cle, c)[:n]]
+
+
+@pytest.fixture(scope="session")
+def premier_tour_reecriture(sain, reel, tmp_path_factory):
+    """Premier tour : chats et geographie à réécrire (deux paires non conformes chacun), meteo acceptée avec une paire
+    non conforme retirée (CC-15), sports acceptée ; décompte en code 1, `selection-v2.json` non écrit."""
+    d = tmp_path_factory.mktemp("tour1") / "jeu"
+    shutil.copytree(sain, d)
+    with isolement():
+        assert lancer(reel.args("echantillon", d, "--entropie", ENTROPIE_ESSAI)) == 0
+        cle = json.loads((d / vp.CLE_ECHANTILLON).read_text())
+        defauts = {i: {"Q5_A": "non"} for c in REECRITS for i in items_nc(cle, c, 2)}
+        defauts[items_de(cle, "meteo")[0]["item"]] = {"Q2": "non"}
+        reponses(d, defauts)
+        assert lancer(reel.args("decompter", d, "--essai")) == 1
+    dc = json.loads((d / vp.DECOMPTE).read_text())
+    assert dc["acceptes"] == ["meteo", "sports"] and not (d / vp.SELECTION_V2).exists()
+    return d
+
+
+def passes_2(reel, d, initiale, renvois=None, code1=1, code2=0):
+    ri = ecrire_jsonl(d / "remise-ecrivain-v2.jsonl", initiale)
+    assert lancer(args2(reel, "verifier", d, "--passe", 1, "--remise", ri)) == code1
+    autres = [ecrire_jsonl(d / "remise-ecrivain-renvois-v2.jsonl", renvois)] if renvois is not None else []
+    if code2 is not None:
+        assert lancer(args2(reel, "verifier", d, "--passe", 2, "--remise", ri, *autres)) == code2
+    return json.loads((d / vp.SELECTION_REECRITURE).read_text()) if (d / vp.SELECTION_REECRITURE).exists() else None
+
+
+@pytest.fixture(scope="session")
+def tour2_echantillonne(premier_tour_reecriture, reel, tmp_path_factory):
+    d = tmp_path_factory.mktemp("tour2") / "jeu"
+    shutil.copytree(premier_tour_reecriture, d)
+    with isolement():
+        s = passes_2(reel, d, remise_2(), code1=0)
+        assert s["code_passe2"] == 0
+        assert lancer(args2(reel, "echantillon", d, "--entropie", ENTROPIE_ESSAI + 1)) == 0
+    return d
+
+
+@pytest.fixture(scope="session")
+def tour2_accepte(tour2_echantillonne, reel, tmp_path_factory):
+    d = tmp_path_factory.mktemp("tour2acc") / "jeu"
+    shutil.copytree(tour2_echantillonne, d)
+    with isolement():
+        reponses(d, tour=2)
+        assert lancer(args2(reel, "decompter", d)) == 0
+    return d
+
+
+def empreintes_du_dossier(d: Path) -> dict:
+    return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(d.iterdir()) if p.is_file()}
+
+
+# ---------------------------------------------------------------------------------------------------- v1 intact
+
+def test_v1_intact():
+    assert hashlib.sha256(SCRIPT_V1.read_bytes()).hexdigest() == EMPREINTE_SCRIPT_V1
+    assert vp.VERSION == "verifier_phrases_concepts_t07_v2"
+
+
+# ---------------------------------------------------------------------------------------------------- second tour
+
+def test_tour2_cas_sain_de_bout_en_bout(tour2_accepte, premier_tour_reecriture, reel, tmp_path):
+    d = copie(tour2_accepte, tmp_path)
+    avant = empreintes_du_dossier(premier_tour_reecriture)
+    apres = empreintes_du_dossier(d)
+    assert all(apres[n] == h for n, h in avant.items())                 # rien du premier tour n'est réécrit (R12)
+    for n in ("journal-verification-passe1-v2.txt", vp.RENVOIS_V2, "journal-verification-passe2-v2.txt",
+              vp.SELECTION_REECRITURE, vp.ECHANTILLON_V2, vp.CLE_ECHANTILLON_V2, vp.JOURNAL_ECHANTILLON_V2,
+              vp.DECOMPTE_V2, vp.JOURNAL_DECOMPTE_V2, vp.SELECTION_V2):
+        assert n in apres and f"{n}.sha256" in apres, n
+    j1 = (d / "journal-verification-passe1-v2.txt").read_text(encoding="utf-8")
+    assert "second tour (réécriture" in j1 and "contre 143 paires gardées des autres concepts" in j1
+    assert "concepts réécrits ['chats', 'geographie']" in j1 and "[DÉFAUT]" not in j1
+    r = json.loads((d / vp.RENVOIS_V2).read_text())
+    assert r["tour"] == 2 and r["renvois"] == [] and r["amont"]["paires_gardees"] == {"meteo": 71, "sports": 72}
+    sr = json.loads((d / vp.SELECTION_REECRITURE).read_text())
+    assert set(sr["concepts"]) == set(REECRITS) and sr["code_passe2"] == 0
+    assert all(x["remise"] == "remise-2" for c in REECRITS for x in sr["concepts"][c]["pris"])
+    cle2 = json.loads((d / vp.CLE_ECHANTILLON_V2).read_text())
+    cle1 = json.loads((d / vp.CLE_ECHANTILLON).read_text())
+    assert len(cle2["items"]) == 14 and cle2["concepts"] == list(REECRITS) and cle2["entropie"] != cle1["entropie"]
+    dc2 = json.loads((d / vp.DECOMPTE_V2).read_text())
+    assert dc2["acceptes"] == list(REECRITS) and dc2["tour"] == 2 and dc2["arrets"] == []
+    s2 = json.loads((d / vp.SELECTION_V2).read_text())
+    retiree_meteo = json.loads((d / vp.DECOMPTE).read_text())["retraits_en_attente"]["meteo"][0]
+    assert s2["provenance"]["chats"]["remise"] == "remise-2" and s2["provenance"]["meteo"]["remise"] == "remise-1"
+    assert s2["retraits_contre_verification"] == {"meteo": [retiree_meteo]}
+    assert [x["chemin"] for x in s2["decomptes"]] == [vp.DECOMPTE, vp.DECOMPTE_V2] and s2["code_passe2"] == 0
+    me = s2["concepts"]["meteo"]
+    assert retiree_meteo not in [x["indice_remise"] for x in me["pris"]] and me["pris"][-1]["indice_remise"] == 65
+    assert s2["concepts"]["chats"]["pris"][0]["phrase_concept"] == phrases_2("chats", 1)[0]
+    assert all(x["remise"] == "remise-1" for x in s2["concepts"]["sports"]["pris"])
+    assert assembler(reel, d, vp.SELECTION_V2) == 0
+    lignes = (d / vp.FICHIER_ASSEMBLE).read_text().split("\n")[:-1]
+    assert len(lignes) == 257 and json.loads(lignes[1])["phrase_concept"] == phrases_2("chats", 1)[0]
+    assert "[OK] D-1 — garde de l'assemblage" in (d / vp.JOURNAL_ASSEMBLAGE).read_text(encoding="utf-8")
+
+
+def test_tour2_c8_contre_les_paires_gardees(premier_tour_reecriture, reel, tmp_path):
+    """C8 entre les paires neuves et contre les paires gardées (prises et réserve) ; une paire retirée par la
+    contre-vérification et les paires de l'ancienne remise d'un concept réécrit n'entrent pas dans la comparaison."""
+    d = copie(premier_tour_reecriture, tmp_path)
+    retiree = json.loads((d / vp.DECOMPTE).read_text())["retraits_en_attente"]["meteo"][0]
+    changes = {("chats", 1): {"phrase_neutre": phrases_factices("meteo", 2)[1]},          # gardée, prise
+               ("chats", 2): {"phrase_neutre": phrases_factices("meteo", 70)[1]},         # gardée, réserve
+               ("chats", 3): {"phrase_neutre": phrases_factices("meteo", retiree)[1]},    # retirée : hors comparaison
+               ("chats", 4): {"phrase_neutre": phrases_factices("chats", 4)[1]},          # ancienne remise : hors jeu
+               ("geographie", 9): {"phrase_neutre": phrases_2("chats", 9)[1]}}            # deux neuves : rang
+    passes_2(reel, d, remise_2(changes), code2=None)
+    r = {(x["concept"], x["indice"]): x["motifs"] for x in json.loads((d / vp.RENVOIS_V2).read_text())["renvois"]}
+    c8 = {k: [m for m in v if m["controle"] == "C8"] for k, v in r.items()}
+    assert c8[("chats", 1)][0]["valeurs"]["paire_en_conflit"] == "meteo/2 (gardée, remise-1)"
+    assert c8[("chats", 2)][0]["valeurs"]["paire_en_conflit"] == "meteo/70 (gardée, remise-1)"
+    assert not c8.get(("chats", 3)) and not c8.get(("chats", 4))
+    assert c8[("geographie", 9)][0]["valeurs"]["paire_en_conflit"] == "chats/9"
+    assert not [k for k in r if k[0] not in REECRITS]
+
+
+def test_tour2_ligne_d_un_concept_non_reecrit_et_71_paires(premier_tour_reecriture, reel, tmp_path):
+    d = copie(premier_tour_reecriture, tmp_path)
+    passes_2(reel, d, remise_2(ote={("geographie", 72)}, en_plus=[enregistrement("meteo", 3)]), code2=None)
+    r = json.loads((d / vp.RENVOIS_V2).read_text())
+    assert [(x["concept"], x["indice"]) for x in r["renvois"]] == [("geographie", 72)]
+    assert len(r["lignes_rejetees"]) == 1 and "non réécrit" in r["lignes_rejetees"][0]["motif"]
+
+
+def test_tour2_renvois_retrait_contre_une_paire_gardee(premier_tour_reecriture, reel, tmp_path):
+    d = copie(premier_tour_reecriture, tmp_path)
+    initiale = remise_2({("chats", 5): fautive_2("chats", 5), ("chats", 6): fautive_2("chats", 6)})
+    renvois = [enregistrement_2("chats", 5, phrase_neutre=phrases_factices("sports", 7)[1]),   # C8 contre une gardée
+               enregistrement_2("chats", 6)]                                                    # rendue juste
+    s = passes_2(reel, d, initiale, renvois)
+    ret = {x["indice_remise"]: x["motifs"] for x in s["retraits"]}
+    assert set(ret) == {5} and ret[5][0]["valeurs"]["paire_en_conflit"] == "sports/7 (gardée, remise-1)"
+    ch = s["concepts"]["chats"]
+    assert ch["n"] == 64 and ch["pris"][-1]["indice_remise"] == 65 and s["code_passe2"] == 0
+    assert [x for x in ch["pris"] if x["indice_remise"] == 6][0]["reecrite"] is True
+
+
+@pytest.mark.parametrize("cas,motif", [
+    ("sans-decompte", "decompte-contre-verification-v1.json"),
+    ("tous-acceptes", "aucun concept à réécrire"),
+    ("remise-du-premier-tour", "c'est une remise du premier tour"),
+    ("entropie-imposee-sans-essai", "entropie imposée"),
+])
+def test_tour2_artefacts_amont(cas, motif, sain, accepte, premier_tour_reecriture, reel, tmp_path, capsys):
+    d = copie({"sans-decompte": sain, "tous-acceptes": accepte}.get(cas, premier_tour_reecriture), tmp_path)
+    r = ecrire_jsonl(d / "remise-ecrivain-v2.jsonl", remise_2())
+    if cas == "remise-du-premier-tour":
+        r = d / "remise-ecrivain-v1.jsonl"
+    a = args2(reel, "verifier", d, "--passe", 1, "--remise", r)
+    if cas == "entropie-imposee-sans-essai":
+        a.remove("--essai")
+    assert lancer(a) == 2
+    assert motif in capsys.readouterr().err
+    assert not (d / vp.RENVOIS_V2).exists() and not (d / "journal-verification-passe1-v2.txt").exists()
+
+
+def test_tour2_artefact_premier_decompte_en_attente_du_second_lecteur(sain, reel, tmp_path, capsys):
+    d = copie(sain, tmp_path)
+    assert lancer(reel.args("echantillon", d, "--entropie", ENTROPIE_ESSAI)) == 0
+    cle = json.loads((d / vp.CLE_ECHANTILLON).read_text())
+    ech = {x["item"]: x for x in json.loads((d / vp.ECHANTILLON).read_text())["items"]}
+    a = items_de(cle, "sports")[0]["item"]
+    defauts = {i: {"Q5_A": "non"} for i in items_nc(cle, "chats", 2)}
+    defauts[a] = {"Q4_A": "oui", "citation_Q4_A": ech[a]["phrase_A"].split()[1]}
+    reponses(d, defauts)
+    assert lancer(reel.args("decompter", d, "--essai")) == 1
+    r = ecrire_jsonl(d / "remise-ecrivain-v2.jsonl", remise_2())
+    assert lancer(args2(reel, "verifier", d, "--passe", 1, "--remise", r)) == 2
+    assert "second lecteur de Q4, voie non écrite" in capsys.readouterr().err
+
+
+def test_tour2_second_echec_arret_code_3_et_rien_d_assemble(tour2_echantillonne, reel, tmp_path):
+    d = copie(tour2_echantillonne, tmp_path)
+    cle = json.loads((d / vp.CLE_ECHANTILLON_V2).read_text())
+    reponses(d, {i: {"Q5_B": "non"} for i in items_nc(cle, "geographie", 2)}, tour=2)
+    assert lancer(args2(reel, "decompter", d)) == vp.CODE_ARRET == 3
+    dc = json.loads((d / vp.DECOMPTE_V2).read_text())
+    assert dc["arrets"] == ["geographie"] and dc["concepts"]["geographie"]["decision"].startswith("second échec")
+    assert dc["acceptes"] == ["chats"] and not (d / vp.SELECTION_V2).exists()
+    assert "[ARRÊT] second échec de ['geographie']" in (d / vp.JOURNAL_DECOMPTE_V2).read_text(encoding="utf-8")
+    assert assembler(reel, d, vp.SELECTION) == 2 and not (d / vp.FICHIER_ASSEMBLE).exists()
+
+
+def test_tour2_une_non_conforme_retiree_et_remplacee_par_la_reserve_de_la_remise_2(tour2_echantillonne, reel, tmp_path):
+    d = copie(tour2_echantillonne, tmp_path)
+    cle = json.loads((d / vp.CLE_ECHANTILLON_V2).read_text())
+    it = items_de(cle, "chats")[0]
+    reponses(d, {it["item"]: {"Q2": "non"}}, tour=2)
+    assert lancer(args2(reel, "decompter", d)) == 0
+    s2 = json.loads((d / vp.SELECTION_V2).read_text())
+    ch = s2["concepts"]["chats"]
+    assert it["indice_remise"] not in [x["indice_remise"] for x in ch["pris"]] and ch["pris"][-1]["indice_remise"] == 65
+    assert ch["pris"][-1]["remise"] == "remise-2" and s2["retraits_contre_verification"]["chats"] == [it["indice_remise"]]
+    assert assembler(reel, d, vp.SELECTION_V2) == 0
+
+
+def test_tour2_un_oui_a_q4_code_1_sans_selection(tour2_echantillonne, reel, tmp_path):
+    d = copie(tour2_echantillonne, tmp_path)
+    cle = json.loads((d / vp.CLE_ECHANTILLON_V2).read_text())
+    ech = {x["item"]: x for x in json.loads((d / vp.ECHANTILLON_V2).read_text())["items"]}
+    a = items_de(cle, "chats")[0]["item"]
+    reponses(d, {a: {"Q4_B": "oui", "citation_Q4_B": ech[a]["phrase_B"].split()[1]}}, tour=2)
+    assert lancer(args2(reel, "decompter", d)) == 1
+    assert not (d / vp.SELECTION_V2).exists()
+    assert json.loads((d / vp.DECOMPTE_V2).read_text())["concepts"]["chats"]["decision"].startswith("second lecteur")
+
+
+def test_tour2_echantillon_artefact_selection_nommee_autre(tour2_echantillonne, reel, tmp_path, capsys):
+    d = copie(tour2_echantillonne, tmp_path)
+    for n in (vp.ECHANTILLON_V2, vp.CLE_ECHANTILLON_V2, vp.JOURNAL_ECHANTILLON_V2):
+        for x in (d / n, Path(str(d / n) + ".sha256")):
+            x.unlink()
+    assert lancer(args2(reel, "echantillon", d, "--selection", vp.SELECTION)) == 2
+    assert "l'échantillon se tire sur selection-reecriture-v2.json" in capsys.readouterr().err
+
+
+def test_tour2_option_refusee_hors_des_trois_modes(reel, tmp_path):
+    with pytest.raises(SystemExit) as e:
+        vp.analyser(reel.args("assembler", tmp_path, "--tour", 2))
+    assert e.value.code == 2
+
+
+# ---------------------------------------------------------------------------------------------------- D-1 : assembler
+
+def test_d1_artefact_selection_non_nommee(accepte, reel, tmp_path, capsys):
+    d = copie(accepte, tmp_path)
+    assert lancer(reel.args("assembler", d, "--essai")) == 2
+    assert "exige une sélection nommée" in capsys.readouterr().err and not (d / vp.FICHIER_ASSEMBLE).exists()
+
+
+def test_d1_artefact_selection_qui_n_est_pas_la_derniere(echantillonne, reel):
+    """Sonde (a) de la contre-lecture : après un retrait CC-15, `selection-v1.json` n'est plus la dernière."""
+    cle = json.loads((echantillonne / vp.CLE_ECHANTILLON).read_text())
+    reponses(echantillonne, {items_de(cle, "sports")[0]["item"]: {"Q2": "non"}})
+    assert lancer(reel.args("decompter", echantillonne, "--essai")) == 0
+    assert assembler(reel, echantillonne, vp.SELECTION) == 2
+    assert not (echantillonne / vp.FICHIER_ASSEMBLE).exists()
+    assert assembler(reel, echantillonne, vp.SELECTION_V2) == 0                # cas sain
+
+
+def test_d1_artefact_sans_decompte(sain, reel, tmp_path, capsys):
+    """Sonde (c) : assembler sans échantillon ni décompte."""
+    d = copie(sain, tmp_path)
+    assert assembler(reel, d) == 2
+    assert "aucun décompte" in capsys.readouterr().err and not (d / vp.FICHIER_ASSEMBLE).exists()
+
+
+def test_d1_artefact_decompte_en_code_1(premier_tour_reecriture, reel, tmp_path, capsys):
+    """Sonde (b) : un décompte qui exige une réécriture ; `selection-v1.json` est la dernière, refusée quand même."""
+    d = copie(premier_tour_reecriture, tmp_path)
+    assert assembler(reel, d) == 2
+    err = capsys.readouterr().err
+    assert "dernier décompte non « accepté »" in err and "'chats'" in err and not (d / vp.FICHIER_ASSEMBLE).exists()
+
+
+def resceller_selection(d: Path, s: dict, nom=None) -> None:
+    f = d / (nom or vp.SELECTION_V2)
+    Path(str(f) + ".sha256").unlink()
+    f.unlink()
+    f.write_bytes(vp.json_canonique(s))
+    _sceller(f)
+
+
+@pytest.mark.parametrize("cas,motif", [("paire-retiree", "paire retirée"),
+                                       ("non-liee", "n'est pas liée aux décomptes")])
+def test_d1_artefacts_selection_v2_falsifiee(echantillonne, reel, cas, motif, capsys):
+    cle = json.loads((echantillonne / vp.CLE_ECHANTILLON).read_text())
+    it = items_de(cle, "sports")[0]
+    reponses(echantillonne, {it["item"]: {"Q2": "non"}})
+    assert lancer(reel.args("decompter", echantillonne, "--essai")) == 0
+    s = json.loads((echantillonne / vp.SELECTION_V2).read_text())
+    if cas == "paire-retiree":
+        s1 = selection_de(echantillonne)
+        ancienne = [x for x in s1["concepts"]["sports"]["pris"] if x["indice_remise"] == it["indice_remise"]][0]
+        s["concepts"]["sports"]["pris"][-1] = ancienne | {"indice": 64}
+    else:
+        s["decomptes"] = []
+    resceller_selection(echantillonne, s)
+    assert assembler(reel, echantillonne, vp.SELECTION_V2) == 2
+    assert motif in capsys.readouterr().err and not (echantillonne / vp.FICHIER_ASSEMBLE).exists()
+
+
+@pytest.mark.parametrize("avec_champ", [True, False], ids=["remise-1-ecrite", "remise-absente"])
+def test_d1_artefact_ancienne_remise_d_un_concept_reecrit(tour2_accepte, reel, tmp_path, capsys, avec_champ):
+    d = copie(tour2_accepte, tmp_path)
+    s = json.loads((d / vp.SELECTION_V2).read_text())
+    vieille = dict(selection_de(d)["concepts"]["chats"]["pris"][0])
+    if avec_champ:
+        vieille["remise"] = "remise-1"
+    s["concepts"]["chats"]["pris"][0] = vieille
+    resceller_selection(d, s)
+    assert assembler(reel, d, vp.SELECTION_V2) == 2
+    assert "ancienne remise d'un concept réécrit" in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------------------------------------------- D-2
+
+@pytest.mark.parametrize("cas", ["ligne-vide-en-fin", "paire-non-renvoyee"])
+def test_d2_refus_propre_puis_second_passage_rejoue(extrait, reel, tmp_path, capsys, cas):
+    d = copie(extrait, tmp_path)
+    ri = ecrire_jsonl(d / "remise-ecrivain-v1.jsonl", remise_factice({("chats", 3): fautive("chats", 3)}))
+    assert lancer(reel.args("verifier", d, "--passe", 1, "--remise", ri)) == 1
+    rw = d / "remise-ecrivain-renvois-v1.jsonl"
+    if cas == "ligne-vide-en-fin":
+        rw.write_text(json.dumps(enregistrement("chats", 3)) + "\n\n", encoding="utf-8")
+    else:
+        ecrire_jsonl(rw, [enregistrement("chats", 3), enregistrement("chats", 4)])
+    assert lancer(reel.args("verifier", d, "--passe", 2, "--remise", ri, rw)) == 2
+    err = capsys.readouterr().err
+    assert "D-2 — remise des renvois hors de forme" in err and ("ligne vide" in err or "non renvoyée" in err)
+    assert not (d / vp.SELECTION).exists() and not (d / "journal-verification-passe2-v1.txt").exists()
+    assert [p.name for p in d.iterdir() if p.name.startswith("journal-refus-verifier-")]
+    corrigee = ecrire_jsonl(d / "remise-ecrivain-renvois-corrigee-v2.jsonl", [enregistrement("chats", 3)])
+    assert lancer(reel.args("verifier", d, "--passe", 2, "--remise", ri, corrigee)) == 0       # cas sain : rejoué
+    assert selection_de(d)["code_passe2"] == 0
+
+
+# ---------------------------------------------------------------------------------------------------- D-4
+
+def test_d4_paire_deja_retiree_n_entre_plus_dans_la_comparaison(extrait, reel, tmp_path):
+    """Sonde de la contre-lecture : chats/3 réécrite à un mot de chats/20 (non réécrite) est retirée ; chats/7 réécrite
+    n'est en conflit qu'avec chats/3 : elle est gardée (au v1, retirée aussi)."""
+    d = copie(extrait, tmp_path)
+    p20 = phrases_factices("chats", 20)[0]
+    p3 = p20.replace("back porch", "back garden")
+    p7 = p3.replace("afternoon", "evening")
+    assert vp.distance_edition(vp.normaliser(p7), vp.normaliser(p20)) == 2
+    s = passes(reel, d, remise_factice({("chats", 3): fautive("chats", 3), ("chats", 7): fautive("chats", 7)}),
+               [enregistrement("chats", 3, phrase_concept=p3), enregistrement("chats", 7, phrase_concept=p7)])
+    ret = {x["indice_remise"]: x["motifs"] for x in s["retraits"]}
+    assert set(ret) == {3} and ret[3][0]["valeurs"]["paire_en_conflit"] == "chats/20"
+    assert 7 in s["concepts"]["chats"]["valides"]
+
+
+def test_d4_unites_c8_second_passage():
+    a = paire("chats", 3)
+    a.reecrite = True
+    b = paire("chats", 7, phrase_concept=a.phrase_concept)
+    b.reecrite = True
+    c = paire("chats", 9, phrase_concept=a.phrase_concept)          # non réécrite
+    assert [x["paire"] for x in vp.c8_second_passage(vp.trier([a, b]))] == ["chats/7"]   # rang le plus élevé
+    assert {x["paire"] for x in vp.c8_second_passage(vp.trier([a, b, c]))} == {"chats/3", "chats/7"}
+    f1 = paire("meteo", 4)
+    f1.fixe = True
+    f2 = paire("meteo", 5, phrase_concept=f1.phrase_concept)
+    f2.fixe = True
+    n = paire("chats", 3, phrase_neutre=f1.phrase_neutre)
+    n.reecrite = True
+    assert [x["paire"] for x in vp.c8_second_passage([n], [f1])] == ["chats/3"]
+    with pytest.raises(vp.Refus, match="deux paires gardées en conflit"):
+        vp.c8_second_passage([], [f1, f2])
+
+
+# ---------------------------------------------------------------------------------------------------- D-6, D-7, D-8
+
+def test_d6_modules_charges_nommes_au_journal(extrait):
+    j = (extrait / vp.JOURNAL_EXTRACTION).read_text(encoding="utf-8")
+    assert "module chargé controle_ia.gardes : controle_ia/gardes.py sha256 " in j
+    assert j.count("[INFO] module chargé controle_ia") >= len(vp.MODULES_EMPLOYES)
+
+
+def test_d7_autre_commit_avec_empreintes(reel, tmp_path):
+    f = tmp_path / "empreintes.json"
+    f.write_text(json.dumps(vp.EMPREINTES_MODULE_8DC1CB09), encoding="utf-8")
+    d = tmp_path / "jeu"
+    assert lancer(reel.args("extraire", d, "--commit-module", "0123abcd", "--empreintes-module", f)) == 0
+    j = (d / vp.JOURNAL_EXTRACTION).read_text(encoding="utf-8")
+    assert "[ÉCART DÉCLARÉ] commit du module 0123abcd : empreintes lues dans" in j and "module (commit 0123abcd)" in j
+    f.write_text(json.dumps(vp.EMPREINTES_MODULE_8DC1CB09 | {"harnais/formats.py": "0" * 64}), encoding="utf-8")
+    assert lancer(reel.args("extraire", tmp_path / "jeu2", "--commit-module", "0123abcd", "--empreintes-module", f)) == 2
+
+
+def test_d7_c2_double_espace(ctx):
+    d = vp.controle_c2([paire("chats", 1, phrase_neutre="The small basket usually rests on the shed near  the back pantry.")])
+    assert [x for x in d if x["role"] == "phrase_neutre" and "double espace" in x["motif"]], d
+
+
+def test_d7_c2_espace_avant_le_point_admis_par_la_lettre_de_la_regle(ctx):
+    """Constat (rapporté, règle inchangée) : `^[A-Z][A-Za-z ,'-]*\\.$` admet un espace avant le point final."""
+    assert vp.controle_c2([paire("chats", 1, phrase_neutre="The small basket usually rests on the shed near the back "
+                                                           "pantry .")]) == []
+
+
+def test_d7_c2_espace_en_fin_de_phrase(ctx):
+    d = vp.motifs_c2("The small basket usually rests on the shed near the back pantry. ", "chats", "phrase_neutre")
+    assert "espace en fin" in d
+
+
+def test_d7_c12_refus_du_module_au_niveau_d_assembler(accepte, reel, tmp_path, monkeypatch, capsys):
+    """C12 refusé par la garde du module elle-même (`GardeArret` du paquet chargé), au niveau du mode : refus, code 2,
+    nom final absent. Simulé : aucun fichier qui passe C2 à C11 n'échoue à C12 au code `8dc1cb09` (déclaré)."""
+    d = copie(accepte, tmp_path)
+    vrai = vp.charger_paquet
+
+    def charger(*x, **k):
+        mod = vrai(*x, **k)
+
+        def refuse(chemin, min_concepts):
+            raise mod["GardeArret"]("refus simulé de lire_phrases_concepts")
+        mod["lire_phrases_concepts"] = refuse
+        return mod
+    monkeypatch.setattr(vp, "charger_paquet", charger)
+    assert assembler(reel, d) == 2
+    assert "assemblage refusé" in capsys.readouterr().err and not (d / vp.FICHIER_ASSEMBLE).exists()
+    assert "le module refuse : refus simulé" in [p for p in d.iterdir()
+                                                 if p.name.startswith("journal-refus-assembler")][0].read_text()
+
+
+def test_d8_entropie_imposee_refusee_sans_essai(echantillonne, reel, capsys):
+    reponses(echantillonne)
+    assert lancer(reel.args("decompter", echantillonne)) == 2
+    assert "D-8" in capsys.readouterr().err and not (echantillonne / vp.DECOMPTE).exists()
+
+
+def test_d8_assembler_refuse_une_cle_imposee_sans_essai(accepte, reel, tmp_path, capsys):
+    d = copie(accepte, tmp_path)
+    assert lancer(reel.args("assembler", d, "--selection", vp.SELECTION)) == 2
+    assert "D-8" in capsys.readouterr().err and not (d / vp.FICHIER_ASSEMBLE).exists()
+
+
+def test_d8_cas_sain_entropie_neuve_sans_essai(sain, reel, tmp_path):
+    d = copie(sain, tmp_path)
+    assert lancer(reel.args("echantillon", d)) == 0
+    reponses(d)
+    assert lancer(reel.args("decompter", d)) == 0
+    assert "essai" not in json.loads((d / vp.DECOMPTE).read_text())
+    assert lancer(reel.args("assembler", d, "--selection", vp.SELECTION)) == 0
+
+
+def test_d8_ecrire_final_lien_impossible_et_relecture_fausse(tmp_path, monkeypatch):
+    f = tmp_path / "final.jsonl"
+    vp.ecrire_final(f, b"abc\n")                                            # cas sain
+    assert f.read_bytes() == b"abc\n" and [p.name for p in tmp_path.iterdir()] == ["final.jsonl"]
+    g = tmp_path / "autre.jsonl"
+
+    def lien(a, b):
+        raise OSError("lien refusé (essai)")
+    monkeypatch.setattr(vp.os, "link", lien)
+    with pytest.raises(vp.Refus, match="lien impossible"):
+        vp.ecrire_final(g, b"abc\n")
+    assert not g.exists() and [p.name for p in tmp_path.iterdir()] == ["final.jsonl"]
+    monkeypatch.undo()
+    vrai = vp.ecrire_neuf
+    monkeypatch.setattr(vp, "ecrire_neuf", lambda chemin, octets: vrai(chemin, octets + b"x"))
+    with pytest.raises(vp.Refus, match="relu ≠ octets contrôlés"):
+        vp.ecrire_final(g, b"abc\n")
+    assert not g.exists() and [p.name for p in tmp_path.iterdir()] == ["final.jsonl"]
+    with pytest.raises(vp.Refus, match="R12"):
+        monkeypatch.undo()
+        vp.ecrire_final(f, b"abc\n")
