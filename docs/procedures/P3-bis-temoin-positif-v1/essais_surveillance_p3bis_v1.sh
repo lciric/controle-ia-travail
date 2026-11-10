@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Brouillon 2 (2026-11-10, après la fusion du code corrigé) : cas X ajoutés, concordance des lignes du journal lues par la
+# chaîne avec les vrais scripts de l'instance v2 et de l'amorce v2 (fragments littéraux), et un artefact.
 # Banc de la surveillance et du contrôle à cinq minutes de P3-bis (R5), v1 : surveiller_p3bis_v1.sh et
 # controle_cinq_minutes_p3bis_v1.sh joués contre un faux outil de location (aucun service appelé ; il journalise chaque
 # verbe, refuse toute destruction et tout verbe inattendu). Décliné du banc de la surveillance de P3 sous un nom neuf
@@ -230,6 +232,37 @@ v5 V01-jetons-absents non 99999999 "$E/traces-V" "$E/sortie-V01"
 mkdir -p "$E/sortie-V02"; v5 V02-dossier-existant oui 99999999 "$E/traces-V" "$E/sortie-V02"
 mkdir -p "$E/traces-V3"; cp "$E/traces-V/lancement.txt" "$E/traces-V3/"; v5 V03-traces-incompletes oui 99999999 "$E/traces-V3" "$E/sortie-V03"
 v5 V04-usage oui 99999999 "$E/traces-V"
+# --- concordance avec les vrais scripts de l'instance v2 (code corrigé, arbre fusionné) : chaque ligne du journal que lisent
+# la surveillance, le contrôle à cinq minutes et le module commun est écrite par le script de l'instance ou par l'amorce,
+# sous cette forme exacte (fragment littéral du source) ; artefact : une copie dont le fragment est altéré est vue
+SRCD=$(realpath "$ICI/../../..")
+INST=$SRCD/scripts/p3bis_instance_v2.sh; AMOR=$SRCD/scripts/amorce_instance_p3bis_v2.sh
+FRAGMENTS=("$INST|journal \"début : ETUDE=\$ETUDE MODE=\$MODE COMMIT=\$COMMIT BRANCHE=\$BRANCHE\""
+           "$INST|ETUDE=p3bis"
+           "$INST|journal \"préenregistrement lu : \$ATTENDUS tests attendus ;"
+           "$INST|journal \"branche \$BRANCHE poussée avant l'installation"
+           "$INST|nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv"
+           "$INST|journal \"run : processus \$PID_RUN lancé\""
+           "$INST|journal \"run : processus \$PID_RUN fini, code \$code\""
+           "$INST|résumé écrit sans arrêt consigné : run complet"
+           "$INST|journal \"SECOND PAQUET EN ÉCHEC ("
+           "$INST|if [ -n \"\$SECOND_PAQUET_EN_ECHEC\" ]; then exit 5; fi"
+           "$INST|MOTIF_PROGRES='^PROGRES [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z( [a-z_]+=[^ ]+)+\$'"
+           "$INST|journal() { printf '%s %s\\n' \"\$(date -u +%FT%TZ)\" \"\$*\" | tee -a \"\$JOURNAL\"; }"
+           "$AMOR|echo \"AMORCE \$(date -u +%FT%TZ) : commit \$COMMIT\""
+           "$AMOR|echo \"AMORCE \$(date -u +%FT%TZ) : fin, code \$code\""
+           "$AMOR|echo \"AMORCE : clonage impossible"
+           "$AMOR|exit \$code")
+for x in "${FRAGMENTS[@]}"; do
+    f=${x%%|*}; frag=${x#*|}; NCAS=$((NCAS + 1))
+    if [ -f "$f" ] && grep -qF -- "$frag" "$f"; then echo "X-$(basename "$f") « ${frag:0:70} » : présent ; CONFORME"
+    else echo "X-$(basename "$f") « ${frag:0:70} » : absent ; NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1)); fi
+done
+sed 's/SECOND PAQUET EN ÉCHEC (/SECOND PAQUET RATÉ (/' "$INST" > "$E/instance-alteree.sh"
+NCAS=$((NCAS + 1))
+if grep -qF -- 'journal "SECOND PAQUET EN ÉCHEC (' "$E/instance-alteree.sh"; then echo "X-artefact (fragment altéré non vu) : NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1))
+else echo "X-artefact (copie du script dont la ligne « SECOND PAQUET EN ÉCHEC » est altérée) : altération vue ; CONFORME"; fi
+echo "script de l'instance lu : $(sha256sum "$INST" | cut -d' ' -f1) ; amorce lue : $(sha256sum "$AMOR" | cut -d' ' -f1)"
 echo "cas joués : $NCAS"
 echo "FIN DU BANC DE LA SURVEILLANCE DE P3-BIS ; cas non conformes : $NON_CONFORMES"
 [ "$NON_CONFORMES" = 0 ]

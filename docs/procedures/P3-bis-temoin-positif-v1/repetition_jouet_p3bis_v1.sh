@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Brouillon 2 (2026-11-10, après la fusion du code corrigé, branche prep/p3bis-code-v2) : VRAI module ouverture_p3bis_v2
+# (bouchon retiré), VRAIE amorce v2, run source décisif fabriqué par l'essai de fermeture v2, lectures décisives réelles.
 # Répétition jouet de la chaîne de session de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1 : la chaîne entière,
 # dans l'ordre de la session — lanceur, contrôle à cinq minutes, surveillance, récupération (lectures fermées, commit et
 # poussée du seul paquet), destruction — jouée de bout en bout contre un FAUX outil de location qui simule l'instance
@@ -8,7 +10,7 @@
 # c'est la chaîne de session qui est neuve : la chaîne de l'instance appartient au code corrigé, autre chantier).
 # Trois tentatives, chacune sur sa branche :
 #   1. calcul/p3bis-reel-v1, fin normale : le faux outil pousse une branche de calcul comme l'instance (run factice,
-#      second paquet RÉEL fait par `ouverture_p3bis_v1.fermer_run`, traces), puis son journal avance (amorce, PROGRES,
+#      second paquet RÉEL fait par `ouverture_p3bis_v2.fermer_run`, traces), puis son journal avance (amorce, PROGRES,
 #      fin, code 0) ; contrôle à cinq minutes conforme (joué à la création + 181 s : la répétition attend) ; surveillance
 #      → FIN, arrêt par l'identifiant ; récupération conforme (paquet des lectures de 16 783 360 octets poussé) ;
 #      destruction par l'identifiant ;
@@ -20,8 +22,9 @@
 #      contrôle à cinq minutes en échec (commit autre au journal) : arrêt par l'identifiant, aucune destruction.
 # Copies jouées, lignes changées comptées et déclarées : lanceur (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S) ; récupération
 # (DEPOT_URL, PY) ; contrôles avant dépense : BOUCHON (le bloc réel est joué par son banc et par la répétition finale) ;
-# module d'ouverture v2 : BOUCHON au src/ du dépôt synthétique (interface v2, logique réelle de v1, lectures factices ;
-# même bouchon que le banc de la récupération) ; journaux de preuve à S : factices, à la forme du module commun
+# module d'ouverture v2, amorce v2 : les VRAIS (src/ et scripts/ de l'arbre fusionné) ; run source décisif fabriqué par
+# `fabriquer_run` de l'essai de fermeture v2 sous le texte factice, qui cite le commit du code, la configuration du run et
+# l'entropie de P3 ; lectures de P3 et complémentaire réelles, décisives ; journaux de preuve à S : factices, à la forme du module commun
 # (ceux de la répétition ne peuvent exister avant elle). Surveillance à INTERVALLE=1.
 # Le journal écrit « script éprouvé : <script> <sha256> » pour les scripts réels dont les copies sont jouées, chaque
 # étape avec son code et sa dernière ligne, les durées, et finit sur « RÉPÉTITION JOUET DE LA CHAÎNE DE P3-BIS : CONFORME ».
@@ -64,10 +67,9 @@ git config user.email essai@invalid; git config user.name essai; git config comm
 git remote add origin "$R/distant.git"
 cp -r "$SRC/src" . && find src -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null
 cp "$SRC/pyproject.toml" .; printf '__pycache__/\n*.pyc\ndonnees/\n' > .gitignore
-sed -n '/^"""Bouchon du banc de la récupération/,/^    sys.exit(_main(sys.argv\[1:\]))$/p' "$ICI/essais_recuperation_p3bis_v1.sh" > src/controle_ia/premier_test_ia/ouverture_p3bis_v2.py
-grep -q '^def _main' src/controle_ia/premier_test_ia/ouverture_p3bis_v2.py || { echo "bouchon du module d'ouverture v2 illisible"; exit 2; }
+[ -f src/controle_ia/premier_test_ia/ouverture_p3bis_v2.py ] || { echo "module ouverture_p3bis_v2 absent de l'arbre fusionné"; exit 2; }
 mkdir -p prereg scripts registres .claude/hooks "$V"
-printf '#!/usr/bin/env bash\n# amorce factice de la répétition jouet\nenv COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/p3bis_instance_v2.sh\n' > "$A"
+cp "$SRC/$A" "$A"                                  # vraie amorce v2 (code corrigé)
 git -C "$SRC" show HEAD:.claude/hooks/garde_calcul.py > .claude/hooks/garde_calcul.py
 { git -C "$SRC" show main:registres/go.md | sed -n '1,10p'; git -C "$SRC" show main:registres/go.md | grep '^| GO-2026-11-10-02 |'; } > registres/go.md
 for s in lancer_p3bis_v1.sh $CHAINE; do cp "$R/H/$s" "$V/$s"; done
@@ -82,10 +84,30 @@ for nom, (verdict, scripts) in v.JOURNAUX.items():
 EOF
 (cd "$V" && for f in *; do case "$f" in *.sha256) ;; *) sha256sum "$f" > "$f.sha256" ;; esac; done)
 git add -A && git commit -qm "base de la répétition jouet" && git push -q origin main || exit 2
-E_AMORCE=$(sha256sum "$A" | cut -d' ' -f1)
-printf '# Préenregistrement factice de la répétition jouet de P3-bis\n\n- GO : **GO-2026-11-10-02** (`registres/go.md` l. 217)\n- Lancement : `GO_ID=GO-2026-11-10-02`, `PREREG=%s`, `BRANCHE=calcul/p3bis-reel-v1` (une relance prend `…-v2`, puis `…-v3`), `DEPOT_URL=file://%s`\n- Empreintes : `%s` (`%s`, sha256)\n- Entropie : `%s`\n- Tests attendus : `2`\n' \
-    "$P" "$R/distant.git" "$A" "$E_AMORCE" "$ENT" > "$P"
-(cd prereg && sha256sum "$(basename "$P")" > "$(basename "$P").sha256")
+E_AMORCE=$(sha256sum "$A" | cut -d' ' -f1); CODE=$(git rev-parse HEAD)
+CONFIG='{"mode": "reel", "max_nouveaux": 64}'
+PYTHONPATH=src "$PYB" -B - "$P" "$CODE" "$ENT" "$CONFIG" "$R/distant.git" "$A" "$E_AMORCE" <<'EOF' || exit 2
+"""Texte factice scellé : lignes lues par le lanceur, le contrôle à cinq minutes et la récupération, et forme de R1 et R2
+(sections, contre-lecture) lue par les lectures décisives ; cite le commit du code, la configuration du run et l'entropie."""
+import hashlib, json, sys
+from pathlib import Path
+from controle_ia.manifeste import config_canonique
+from controle_ia.prereg import SECTIONS
+from controle_ia.scellement import sceller
+chemin, commit, ent, config, distant, amorce, e_amorce = sys.argv[1:8]
+corps = ["# Préenregistrement factice de la répétition jouet de P3-bis", "",
+         "- GO : **GO-2026-11-10-02** (`registres/go.md`)",
+         f"- Lancement : `GO_ID=GO-2026-11-10-02`, `PREREG={chemin}`, `BRANCHE=calcul/p3bis-reel-v1` (une relance prend `…-v2`, "
+         f"puis `…-v3`), `DEPOT_URL=file://{distant}`",
+         f"- Empreintes : `{amorce}` (`{e_amorce}`, sha256)", f"- Commit du code d'analyse : `{commit}`",
+         f"- Configuration de P3 (empreinte canonique) : `{hashlib.sha256(config_canonique(json.loads(config))).hexdigest()}`",
+         f"- Entropie : `{ent}`", "- Tests attendus : `531`", ""]
+for s in SECTIONS[:-1]:
+    corps += [f"## {s}", "", f"contenu factice : {s}", ""]
+corps += ["## Contre-lecture", "", f"brouillon relu `{'a' * 64}`, rapport `{'b' * 64}`", ""]
+Path(chemin).write_text("\n".join(corps), encoding="utf-8")
+sceller(chemin)
+EOF
 git add -A && git commit -qm "S (répétition jouet)" && git push -q origin main || exit 2
 S=$(git rev-parse HEAD); echo "commit de scellement de la répétition : $S"
 cd "$R" || exit 2
@@ -100,13 +122,16 @@ git config user.name "instance de calcul (P3-bis)"; git config user.email instan
 RUN=20261112-080000-p3bis-reel
 mkdir -p "traces/p3bis-\$scen"; echo "journal factice (scénario \$scen)" > "traces/p3bis-\$scen/journal.txt"; (cd "traces/p3bis-\$scen" && sha256sum -- * > empreintes.sha256)
 if [ "\$scen" = 1 ]; then
-    mkdir -p "runs/\$RUN" "diag/\$RUN" "donnees/\$RUN"
-    echo '{"run_id": "factice"}' > "runs/\$RUN/manifeste.json"
-    echo '{"resultat": {"comptes": 240}}' > "diag/\$RUN/resume.json"; echo '{"resultat": {"sondes": []}}' > "diag/\$RUN/sondes-figees.json"
-    for n in sondes-figees.npz sondes-figees-legeres.npz scores-p3.npz jetons-principales-p3.npz textes-actions-p3.jsonl; do head -c 4096 /dev/urandom > "donnees/\$RUN/\$n"; done
-    echo '{"resultat": {"episodes": "factices"}}' > "diag/\$RUN/episodes-p3.json"
-    PYTHONPATH=src "$PYB" -B -m controle_ia.scellement sceller "runs/\$RUN/manifeste.json" "diag/\$RUN/resume.json" "diag/\$RUN/sondes-figees.json" "diag/\$RUN/episodes-p3.json" donnees/"\$RUN"/* > /dev/null
-    PYTHONPATH=src "$PYB" -B -c "import sys; from controle_ia.premier_test_ia.ouverture_p3bis_v1 import fermer_run; fermer_run('.', sys.argv[1])" "\$RUN"
+    PYTHONPATH="\$d/c/src" "$PYB" -B - "\$d/c" "\$RUN" prereg/P3-bis-temoin-positif-v1.md "$ENT" '{"mode": "reel", "max_nouveaux": 64}' "$SRC/scripts/essai_fermeture_p3bis_v2.py" <<'PYF'
+import importlib.util, json, sys
+from pathlib import Path
+clone, run, prereg, entropie, config, essai = sys.argv[1:7]
+spec = importlib.util.spec_from_file_location("essai_fermeture_p3bis_v2", essai)
+ev2 = importlib.util.module_from_spec(spec); spec.loader.exec_module(ev2)
+from controle_ia.premier_test_ia import ouverture_p3bis_v2 as ob
+ev2.fabriquer_run(Path(clone), run, "vu", ev2.graine("vu"), config=json.loads(config), decisif=True, prereg=prereg, entropie=int(entropie))
+ob.fermer_run(Path(clone), run)
+PYF
 fi
 for x in runs diag traces; do [ -e "\$x" ] && git add "\$x"; done
 git commit -qm "P3-bis (reel) : scénario \$scen de la répétition jouet" && git push -q origin "\$br"
@@ -147,7 +172,7 @@ case "\$1 \$2" in
     [ "\$scen" = 3 ] && c=fedcba9876543210fedcba9876543210fedcba98
     echo "AMORCE 2026-11-12T08:00:00Z : commit \$c"
     echo "2026-11-12T08:00:10Z début : ETUDE=p3bis MODE=reel COMMIT=\$c BRANCHE=\$br"
-    echo "2026-11-12T08:00:20Z préenregistrement lu : 2 tests attendus ; configuration prereg/P3-bis-temoin-positif-config-v1.json"
+    echo "2026-11-12T08:00:20Z préenregistrement lu : 531 tests attendus ; configuration prereg/P3-bis-temoin-positif-config-v1.json"
     echo "NVIDIA A100-SXM4-80GB, 580.159.03, 81920 MiB"
     echo "2026-11-12T08:00:40Z branche \$br poussée avant l'installation (droit d'écriture éprouvé)"
     [ "\$n" -ge 2 ] && echo "PROGRES 2026-11-12T09:00:00Z etape=sondes-figees empreinte=0123456789abcdef sondes=430"

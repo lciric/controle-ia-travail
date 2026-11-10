@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Brouillon 2 (2026-11-10, après la fusion du code corrigé) : vrais scripts de l'instance v2 (amorce, script, empreinte
+# de la liste), vraie liste ciblée v2 (531 essais ; fichiers copiés, la suite remplacée par un troisième bouchon qui écrit
+# « 531 passed », ou FAUX_SUITE), vraie sortie versée de l'essai de fermeture v2 ; l'essai rejoué au commit S reste
+# factice ici (sept minutes par passage : joué par la répétition finale).
 # Banc des contrôles avant dépense de P3-bis (R5), v1, décliné du banc des contrôles de P3 (docs/procedures/
 # P3-premier-test-v2/essais_controles_p3_v1.sh) sous un nom neuf (R12) : un cas sain et un artefact par bloc, chacun joué
 # contre le script entier, sur un dépôt synthétique et un dépôt nu local (aucun appel externe ; le vrai registres/go.md
@@ -45,32 +49,13 @@ git -C "$SRC" show HEAD:.claude/hooks/garde_calcul.py > .claude/hooks/garde_calc
 { git -C "$SRC" show main:registres/go.md | sed -n '1,10p'; git -C "$SRC" show main:registres/go.md | grep '^| GO-2026-11-10-02 |'; } > registres/go.md
 VNP=$("$PYB" -c "import numpy, pytest; print(f'numpy=={numpy.__version__}\npytest=={pytest.__version__}')")
 printf '%s\n' "$VNP" > requirements-cpu.txt; echo "-r requirements-cpu.txt" > requirements-gpu.txt; echo "# aucune (banc)" > requirements-donnees.txt
-cat > tests/test_banc_trivial_p3bis.py <<'EOF'
-import os
-
-
-def test_un():
-    assert os.environ.get("FAUX_TEST_ECHEC") is None
-
-
-def test_deux():
-    assert 1 + 1 == 2
-EOF
-echo "tests/test_banc_trivial_p3bis.py" > scripts/essais-cibles-p3bis-v2.txt
-LSHA=$(sha256sum scripts/essais-cibles-p3bis-v2.txt | cut -d' ' -f1)
-cat > scripts/p3bis_instance_v2.sh <<EOF
-#!/usr/bin/env bash
-# script de l'instance factice du banc des contrôles (aucun \`timeout\`)
-DEPOT_URL="\${DEPOT_URL:-https://github.com/lciric/controle-ia-travail.git}"
-LISTE_TESTS="scripts/essais-cibles-p3bis-v2.txt"
-LISTE_SHA256="$LSHA"
-LANCEUR=(controle_ia.premier_test_ia.run_v2 --config "\$CONFIG" --taches "\$TACHES")
-EOF
-cat > scripts/amorce_instance_p3bis_v2.sh <<'EOF'
-#!/usr/bin/env bash
-# amorce factice du banc des contrôles
-env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/p3bis_instance_v2.sh
-EOF
+# vrais scripts de l'instance v2, vraie liste ciblée v2 (et ses 30 fichiers d'essais, copiés pour la garde des chemins ;
+# la liste n'est pas jouée ici : bouchon de la suite, la vraie liste est jouée par la répétition finale)
+for f in scripts/essais-cibles-p3bis-v2.txt scripts/p3bis_instance_v2.sh scripts/amorce_instance_p3bis_v2.sh; do
+    cp "$SRC/$f" "$SRC/$f.sha256" "$(dirname "$f")/" || { echo "$f absent de l'arbre fusionné"; exit 2; }
+done
+while IFS= read -r f; do [ -n "$f" ] && cp "$SRC/$f" "$f"; done < scripts/essais-cibles-p3bis-v2.txt
+ESSAI_V=brouillons/P3-bis-temoin-positif-v1/essai-fermeture-p3bis-v2-sortie-v1.txt   # vraie sortie versée de l'essai v2
 cat > scripts/essai_fermeture_p3bis_v2.py <<'EOF'
 """Essai différentiel de fermeture factice du banc des contrôles de P3-bis."""
 import os, sys
@@ -91,7 +76,7 @@ for s in lancer_p3bis_v1.sh surveiller_p3bis_v1.sh controle_cinq_minutes_p3bis_v
     if [ -f "$ICI/$s" ]; then cp "$ICI/$s" "$V/$s"; else printf 'DEPOT_URL=https://github.com/lciric/controle-ia-travail.git\n' > "$V/$s"; fi
 done
 (cd "$V" && for s in *.sh *.py; do sha256sum "$s" > "$s.sha256"; done)    # docs/ est scellé (verifier-arbre)
-printf '%s\n' "CONFORME — taille fixe" "CONFORME — longueur comprimée" "ESSAI DIFFÉRENTIEL DE FERMETURE : CONFORME" > "$V/essai-fermeture-p3bis-banc-v1.txt"
+cp "$SRC/$ESSAI_V" "$SRC/$ESSAI_V.sha256" brouillons/P3-bis-temoin-positif-v1/
 "$PYB" -I -B - "$ICI/verifications_p3bis_v1.py" "$E/mesure-saine.json" "$E/mesure-a-differe.json" "$E/mesure-autre.json" "$V/longueurs-attendues-p3bis-banc-v1.json" <<'EOF' || exit 2
 import importlib.util, json, sys, copy
 spec = importlib.util.spec_from_file_location("v", sys.argv[1]); v = importlib.util.module_from_spec(spec); spec.loader.exec_module(v)
@@ -112,19 +97,19 @@ import json, sys
 c = json.load(open(sys.argv[1], encoding="utf-8")); c["consignes_sha256"] = sys.argv[2]
 open(sys.argv[3], "w", encoding="utf-8").write(json.dumps(c, ensure_ascii=False, indent=1, sort_keys=True) + "\n")
 EOF
-E_ESSAI=$(sha256sum "$V/essai-fermeture-p3bis-banc-v1.txt" | cut -d' ' -f1)
+E_ESSAI=$(sha256sum "$ESSAI_V" | cut -d' ' -f1)
 E_LONG=$(sha256sum "$V/longueurs-attendues-p3bis-banc-v1.json" | cut -d' ' -f1)
 E_RAPPORT=$(sha256sum "$RAPPORT" | cut -d' ' -f1)
 E_AMORCE=$(sha256sum scripts/amorce_instance_p3bis_v2.sh | cut -d' ' -f1); E_INST=$(sha256sum scripts/p3bis_instance_v2.sh | cut -d' ' -f1)
 # texte candidat : brouillon 9, onze marqueurs remplis
 "$PYB" -I - "$SRC/$B9" brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-candidat-banc.md "$C1" "$E_AMORCE" "$E_INST" \
-    "$V/essai-fermeture-p3bis-banc-v1.txt" "$E_ESSAI" "$V/longueurs-attendues-p3bis-banc-v1.json" "$E_LONG" "$CONS_SHA" "$RAPPORT" "$E_RAPPORT" <<'EOF' || exit 2
+    "$ESSAI_V" "$E_ESSAI" "$V/longueurs-attendues-p3bis-banc-v1.json" "$E_LONG" "$CONS_SHA" "$RAPPORT" "$E_RAPPORT" <<'EOF' || exit 2
 import sys
 t = open(sys.argv[1], encoding="utf-8").read()
 c1, ea, ei, essai, ee, lg, el, cs, rap, er = sys.argv[3:13]
 r = {"<<COMMIT_CODE_P3BIS>>": c1,
      "<<EMPREINTES_CODE_P3BIS>>": f"`scripts/amorce_instance_p3bis_v2.sh` (`{ea}`, sha256) ; `scripts/p3bis_instance_v2.sh` (`{ei}`, sha256)",
-     "<<IDENTITE_CODE_P3BIS>>": "sortie versée (banc)", "<<TESTS_ATTENDUS_P3BIS>>": "2",
+     "<<IDENTITE_CODE_P3BIS>>": "sortie versée (banc)", "<<TESTS_ATTENDUS_P3BIS>>": "531",
      "<<ESSAI_FERMETURE_P3BIS>>": f"`{essai}` (`{ee}`)", "<<LONGUEURS_P3BIS>>": f"`{lg}` (`{el}`)",
      "<<EMPREINTE_CONFIG_P3BIS>>": "0" * 64, "<<EMPREINTE_CONSIGNES_P3BIS>>": cs,
      "<<PIECES_SUR_MAIN_P3BIS>>": "commit du banc", "<<CHAINE_P3BIS>>": "chaîne du banc",
@@ -140,7 +125,7 @@ t, k = re.subn(r"création au plus tard le(\s+)16 novembre 2026", r"création au
 assert k == 1, k
 open(sys.argv[2], "w", encoding="utf-8").write(t)
 EOF
-for f in "$V/essai-fermeture-p3bis-banc-v1.txt" "$V/longueurs-attendues-p3bis-banc-v1.json" "$RAPPORT" brouillons/P3-bis-temoin-positif-v1/*-banc.*; do
+for f in "$ESSAI_V" "$V/longueurs-attendues-p3bis-banc-v1.json" "$RAPPORT" brouillons/P3-bis-temoin-positif-v1/*-banc.*; do
     (cd "$(dirname "$f")" && sha256sum "$(basename "$f")" > "$(basename "$f").sha256")
 done
 git add -A && git commit -qm "C2 : pièces hors de l'arbre gelé" && C2=$(git rev-parse HEAD)
@@ -154,7 +139,7 @@ git clone -q --bare . "$E/distant.git" || exit 2
 cd "$E" || exit 2
 # --- copie jouée --------------------------------------------------------------------------------------------------
 "$PYB" -I - "$ICI/controles_avant_depense_p3bis_v1.sh" "$E/controles-banc.sh" "$E/distant.git" "$REL_P" "$(sha256sum "source/$REL_P" | cut -d' ' -f1)" \
-    "$REL_C" "$(sha256sum "source/$REL_C" | cut -d' ' -f1)" "$REL_K" "$CONS_SHA" "$C1" "$V/essai-fermeture-p3bis-banc-v1.txt" "$E_ESSAI" \
+    "$REL_C" "$(sha256sum "source/$REL_C" | cut -d' ' -f1)" "$REL_K" "$CONS_SHA" "$C1" "$ESSAI_V" "$E_ESSAI" \
     "$V/longueurs-attendues-p3bis-banc-v1.json" "$E_LONG" "$RAPPORT=$E_RAPPORT" "$PYB" "$C0" <<'EOF' || exit 2
 import re, sys
 src, dst, distant = sys.argv[1:4]
@@ -177,9 +162,11 @@ rep('''HF_HOME="$W/cache-hf" PYTHONPATH=src "$PY" - "$P" "$CFG" "$TACHES" > "$W/
     '''cat "${FAUSSE_MESURE:?}" > "$W/longueurs-mesurees.json"; cat > "$W/bloc-tokeniseur.txt" <<'EOF_TOK'   # bouchon du banc''')
 rep('''PYTHONPATH=src "$PY" - "$P" "$CFG" "$TACHES" > "$W/bloc-gardes.txt" 2>&1 <<'EOF_GARDES\'''',
     '''cat > "$W/bloc-gardes.txt" <<'EOF_GARDES'   # bouchon du banc''')
+rep('''PYTHONPATH=src "$PY" -m pytest -q -p no:cacheprovider --color=no $FICHIERS > "$W/liste.txt" 2>&1; cs=$?''',
+    '''printf '%s\\n' "${FAUX_SUITE:-531 passed in 1.00s}" > "$W/liste.txt"; cs=${FAUX_CODE_SUITE:-0}   # bouchon du banc''')
 assert "A_EPINGLER" not in "\n".join(l for l in t.splitlines() if re.match(r"^[A-Z_]+=", l))
 open(dst, "w", encoding="utf-8").write(t)
-print(f"lignes changées dans la copie des contrôles : {n} (13 épingles, CODE_P3, clonage, deux bouchons)")
+print(f"lignes changées dans la copie des contrôles : {n} (13 épingles, CODE_P3, clonage, trois bouchons)")
 EOF
 cp "$ICI/verifications_p3bis_v1.py" "$E/"          # module commun à côté de la copie jouée (H = dossier de la copie)
 # --- cas -----------------------------------------------------------------------------------------------------------
@@ -227,14 +214,14 @@ jouer K10-taches-non-citees 1 "4 tâches non citées par leur empreinte" "$(vari
 jouer K11-go-autre 1 "5 GO : GO-2026-11-08-13 : seul GO-2026-11-10-02" "$(variante k11 : "sed -i 's/^- GO : \*\*GO-2026-11-10-02\*\*/- GO : **GO-2026-11-08-13**/' $P")"
 jouer K12-go-revoque 1 "5 GO : GO-2026-11-10-02 (ou GO-2026-11-02-29, qu'il prolonge) révoqué" "$(variante k12 "echo '| GO-2026-11-10-99 | 2026-11-10 | révocation | GO-2026-11-10-02 | — | 2026-11-10 | Lazar | essai |' >> registres/go.md" :)"
 jouer K13-garde-de-calcul 1 "5 garde de calcul sur le registre de S" "$(variante k13 "echo '| GO-2026-11-09-98 | 2026-13-45 | calcul | dates illisibles | 1 USD | 2026-11-30 | Lazar | essai |' >> registres/go.md" :)"
-jouer K14-essai-verse-non-conforme 1 "6 essai de fermeture : sortie" "$(variante k14 "echo 'NON CONFORME — variante' >> $V/essai-fermeture-p3bis-banc-v1.txt; echo 'ESSAI DIFFÉRENTIEL DE FERMETURE : CONFORME' >> $V/essai-fermeture-p3bis-banc-v1.txt; (cd $V && sha256sum essai-fermeture-p3bis-banc-v1.txt > essai-fermeture-p3bis-banc-v1.txt.sha256)" :)"
-jouer K15-essai-non-cite 1 "6 essai de fermeture : sortie" "$(variante k15 : "sed -i 's|\`$V/essai-fermeture-p3bis-banc-v1.txt\` (\`$E_ESSAI\`)|sortie non citée|g' $P")"
+jouer K14-essai-verse-non-conforme 1 "6 essai de fermeture : sortie" "$(variante k14 "echo 'NON CONFORME — variante' >> $ESSAI_V; echo 'ESSAI DIFFÉRENTIEL DE FERMETURE : CONFORME' >> $ESSAI_V; (cd brouillons/P3-bis-temoin-positif-v1 && sha256sum essai-fermeture-p3bis-v2-sortie-v1.txt > essai-fermeture-p3bis-v2-sortie-v1.txt.sha256)" :)"
+jouer K15-essai-non-cite 1 "6 essai de fermeture : sortie" "$(variante k15 : "sed -i 's|\`$ESSAI_V\` (\`$E_ESSAI\`)|sortie non citée|g' $P")"
 jouer K16-essai-rejoue-non-conforme 1 "6 essai de fermeture rejoué au commit S" "$S0" FAUX_ESSAI_NON_CONFORME=1
 jouer K17-longueurs-a-differe-de-t 1 "7 longueurs : t7 : indication_gabarit A 91 ≠ T 92" "$S0" FAUSSE_MESURE="$E/mesure-a-differe.json"
 jouer K18-longueurs-resume-autre 1 "7 longueurs : résumé des longueurs" "$S0" FAUSSE_MESURE="$E/mesure-autre.json"
 jouer K19-longueurs-non-citees 1 "7 longueurs attendues non citées" "$(variante k19 : "sed -i 's|\`$V/longueurs-attendues-p3bis-banc-v1.json\` (\`$E_LONG\`)|non citées|g' $P")"
-jouer K20-n-cite-autre 1 "8 liste ciblée : « 2 passed" "$(variante k20 : "sed -i 's/^- Tests attendus : \`2\`/- Tests attendus : \`3\`/' $P")"
-jouer K21-essai-en-echec 1 "8 liste ciblée : «" "$S0" FAUX_TEST_ECHEC=1
+jouer K20-n-cite-autre 1 "8 liste ciblée : « 531 passed" "$(variante k20 : "sed -i 's/^- Tests attendus : \`531\`/- Tests attendus : \`530\`/' $P")"
+jouer K21-essai-en-echec 1 "8 liste ciblée : « 1 failed, 530 passed" "$S0" FAUX_SUITE="1 failed, 530 passed in 1.00s" FAUX_CODE_SUITE=1
 jouer K22-liste-autre-empreinte 1 "8 liste ciblée absente ou d'empreinte autre" "$(variante k22 "echo '' >> scripts/essais-cibles-p3bis-v2.txt" :)"
 jouer K23-versions-autres 1 "8 environnement PY" "$(variante k23 "sed -i 's/^numpy==.*/numpy==0.0.1/' requirements-cpu.txt" :)"
 jouer K24-config-hors-ecarts 1 "9 configuration : écarts à celle de P3 hors des écarts du texte : \['lot'\]" "$(variante k24 "sed -i 's/\"lot\": 8/\"lot\": 4/' $REL_C; (cd brouillons/P3-bis-temoin-positif-v1 && sha256sum $(basename "$REL_C") > $(basename "$REL_C").sha256)" :)"

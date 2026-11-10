@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Brouillon 2 (2026-11-10, après la fusion du code corrigé) : l'amorce versée au dépôt synthétique est la vraie
+# `scripts/amorce_instance_p3bis_v2.sh` (son empreinte citée par le texte factice, encodée et passée à la création).
 # Banc du lanceur de P3-bis (R5), v1, décliné du banc du lanceur de P3 (docs/procedures/P3-premier-test-v2/
 # essais_lanceur_p3_v1.sh) sous un nom neuf (R12). Chaque garde du lanceur : un cas sain et au moins un artefact.
 # Aucun appel réel n'est possible : faux outil de location sur le PATH (n'appelle aucun service ; journalise le verbe,
@@ -94,7 +96,7 @@ git init -q -b main "$E/depot" && cd "$E/depot" || exit 2
 git config user.email essai@invalid; git config user.name essai; git config commit.gpgsign false; git config push.negotiate false
 git remote add origin "$E/distant.git"
 mkdir -p prereg scripts registres .claude/hooks "$VERSEES"
-printf '#!/usr/bin/env bash\necho "amorce factice du banc"\n' > "$A"
+cp "$ICI/../../../$A" "$A" || { echo "amorce v2 absente de l'arbre fusionné"; exit 2; }    # vraie amorce v2 (code corrigé)
 E_AMORCE=$(sha256sum "$A" | cut -d' ' -f1)
 git -C "$D" show HEAD:.claude/hooks/garde_calcul.py > .claude/hooks/garde_calcul.py
 { git -C "$D" show main:registres/go.md | sed -n '1,10p'
