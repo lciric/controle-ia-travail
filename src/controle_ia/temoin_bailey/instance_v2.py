@@ -60,7 +60,10 @@ def etat(objet: dict) -> None:
 # --- mise en place ----------------------------------------------------------------------------------------------------
 
 def _git(clone: Path, *args: str) -> str:
-    return subprocess.run(["git", "-C", str(clone), *args], check=True, capture_output=True, text=True).stdout.strip()
+    try:
+        return subprocess.run(["git", "-C", str(clone), *args], check=True, capture_output=True, text=True).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        raise GardeArret("garde « dépôt public » tombée : dépôt illisible") from None
 
 
 def garde_depot_public(clone: Path) -> str:
@@ -161,6 +164,7 @@ def pas_attendus(clone: Path, cfg=None) -> int:
 
 
 def mise_en_place(manifeste: dict, clone: Path, sortie: Path) -> dict:
+    sortie.mkdir(parents=True, exist_ok=True)
     etats = {}
     gardes = (("dépôt public", lambda: garde_depot_public(clone)),
               ("empreintes", lambda: garde_empreintes_publiques(clone)),
@@ -196,6 +200,7 @@ def controle_juge(manifeste: dict, clone: Path, sortie: Path, cache_juge=None, j
     Garde du juge après son premier appel. Écrit les comptes et les empreintes des réponses ; jamais les textes.
     `cache_juge`, `juge`, `generer` : substituts pour l'épreuve sur processeur."""
     from .journaliseur_v2 import etat_juge_charge, garde_juge, reponses_attendues
+    sortie.mkdir(parents=True, exist_ok=True)
     if "TESTING" in os.environ:
         raise GardeArret("garde « juge » tombée : variable TESTING présente au lancement du processus")
     racine = clone / cv.SOUS_DOSSIER
