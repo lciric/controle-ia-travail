@@ -3,7 +3,7 @@
 - Auteur : développeur neuf (sous-agent de la session mère `session_01QPDgKgACWyCkCN8HjqwNXy`, Claude Opus 5.5) ; n'a écrit ni la chaîne de T0.6, ni T0.6, ni T0.7, ni P3-bis, ni leurs contre-lectures.
 - Consigne : `docs/notes/g0-deux-semaines-v1/consignes-mere-2026-11-10-0500-v1/consigne-preparation-chaine-t06-v14-v1.md` (`16d9a990c3e51de0732f41090678c6f01d3c02e0c19a6f7a9df50087c07b4154`, vérifiée avant lecture) ; interdits communs `851028fc2f425cee8e64613db20f6a2e2a7c289d07dd5441a9993d24630682a6` (vérifiés).
 - Lieu : arbre lié `/home/user/wt-t06-v14`, branche `prep/t06-chaine-v14-v1`, partie de S `935262b17ca95894a882b02f1526ee39d1738652`, extraction partielle exacte de la consigne (`docs/sources/` et `docs/notes/bras-attaque/` jamais extraits ; « embargo-absent » vérifié). Aucun `fetch`, aucun `push`, rien sur `main` ni dans les autres arbres ; registre de `main` lu par `git show main:registres/go.md` seulement (main `31327cd8`).
-- Heures (`date -u`, 10 novembre 2026) : début 06:40:07 ; arbre 06:40 ; jalon code 06:55:45 ; jalon essais 07:03:29 ; liste ciblée v4 de __DEBUT_LISTE__ à __FIN_LISTE__ ; S″ 07:09:24 ; contrôles hors ligne 07:10:25 à 07:10:49 ; rapport __HEURE_RAPPORT__.
+- Heures (`date -u`, 10 novembre 2026) : début 06:40:07 ; arbre 06:40 ; jalon code 06:55:45 ; jalon essais 07:03:29 ; liste ciblée v4 de 07:03:38 à 07:27:51 (rejeu des échecs 07:31:07 à 07:31:48) ; S″ 07:09:24 ; contrôles hors ligne 07:10:25 à 07:10:49 ; rapport scellé vers 07:33:58.
 - **Option (c) de Lazar (R-2079)** : T0.6 reste scellé sur la chaîne v13 ; cette v14 est une assurance, préparée et éprouvée, **non adoptée**. Rien n'est écrit sous `prereg/`.
 
 **Verdict : chaîne v14 prête à contre-lire, avec trois écarts au mandat nécessaires (§ 2) et une condition de bascule neuve (§ 5) ; essais neufs verts ; liste ciblée v4 jouée sur l'arbre partiel, échecs tous expliqués par l'extraction partielle prescrite (§ 4) ; essai à blanc conforme les 16 et 22, refus le 23, à la condition que le commit de scellement porte la ligne GO-2026-11-10-01 dans son registre (§ 5).**
@@ -37,7 +37,7 @@
 
 Configuration de 7b v2 : copie de `prereg/T0.6-organismes-config-7b-v1.json` (même écriture JSON, `indent=1`, clés triées, octets vérifiés), où changent **seulement** `go_id` (GO-2026-11-02-28 → GO-2026-11-10-01), `calendrier.dernier_jour_creation` (2026-11-15 → 2026-11-22) et `calendrier.fin_go_utc` (2026-11-17T00:00:00Z → 2026-11-24T00:00:00Z) ; différence vérifiée clé par clé (essai `test_configuration_7b_v2_ne_differe_de_la_v1_que_par_trois_valeurs_et_est_scellee`) ; l'empreinte canonique de la v1 recalculée (`ca8003f9…`) est celle que cite le texte scellé.
 
-Commits locaux (branche `prep/t06-chaine-v14-v1`) : `e0075b54` (code, listes, cibles v3, configuration v2) ; `7fc83762` (essais v14) ; `56cf6aa3` (couples) ; `e1361803` (**S″**, texte factice scellé) ; `b6af8662` (artefacts de l'essai à blanc) ; __COMMIT_RAPPORT__ (ce rapport).
+Commits locaux (branche `prep/t06-chaine-v14-v1`) : `e0075b54` (code, listes, cibles v3, configuration v2) ; `7fc83762` (essais v14) ; `56cf6aa3` (couples) ; `e1361803` (**S″**, texte factice scellé) ; `b6af8662` (artefacts de l'essai à blanc) ; le commit qui ajoute le sceau de ce rapport (dernier de la branche) (ce rapport).
 
 ## 2. Écarts au mandat (nécessaires ; à trancher par la mère)
 
@@ -78,7 +78,31 @@ v4 = v3 − {`test_t06_v13_liste.py`, `test_cibles_invisibles_v2.py`, `test_t06_
 
 ## 4. Essais
 
-__SECTION_ESSAIS__
+### 4.1 Essais neufs, joués seuls (interpréteur `/home/user/controle-ia-travail/.venv/bin/python`, `PYTHONPATH=src`, `--basetemp` neuf sous l'arbre, effacé ensuite)
+
+| Fichier | Résultat | Durée | Heure (`date -u`) |
+|---|---|---|---|
+| `tests/test_t06_v14_gardes.py` | **56 passés** | 2,47 s | 06:57:39 |
+| `tests/test_t06_v14_scripts.py` | **39 passés** | 30,21 s | 07:02:04 |
+| `tests/test_t06_v14_liste.py` | **14 passés** (contrôle de syntaxe Python 3.11 joué : `python3.11` présent) | 16,88 s | 07:03:06 |
+
+Cas sain et artefact pour chaque garde neuve (R5), avec le motif exact attendu : GO de la configuration ≠ `GO_ID` (lanceur : contrôles et création ; amorce : `COURSE_GO_ID` ≠ `go_id`), `GO_ID` / `COURSE_GO_ID` absent, vide ou illisible, `COURSE_GO_ID` et `EPREUVE_GO_ID` tous deux posés, ancienne valeur GO-2026-11-02-28 (refusée en course), ligne absente du registre (de `main` ; du commit S ; du commit cloné), ligne échue, révoquée, de type « décision », plafond de la configuration > plafond de la ligne (200 > 150 ; 200,01 > 200), plafond illisible, calendrier au-delà de l'échéance de la ligne (fin du GO un jour trop tard ; dernier jour de création après la fin du GO ; jour après le dernier jour de création), fin du GO reçue ≠ celle de la configuration, épreuve sous la ligne de la course (lue dans le texte, refusée au lanceur et à l'amorce), GO de la course illisible, ancienne valeur absente du code v14 (constantes Python hors docstrings et lignes de code des scripts ; artefact : la même recherche la trouve dans la v13, la v11, `configuration.py` et `session.py`), lanceur v6 qui refuse la course v14 (pourquoi le v7), différentiels v13 → v14 et v11 → v12 bornés à des marqueurs. La ligne réelle GO-2026-11-10-01 est recopiée telle quelle du registre de `main` dans l'essai et éprouvée à jours explicites (16, 22 et 23 conformes pour la ligne ; 9 et 24 refusés ; calendrier de la configuration 7b v2 : 16 et 22 conformes, 23 « dépassé », 24 « validité »). Les autres essais sont à dates relatives au jour de l'essai (aucune bombe à retardement).
+
+### 4.2 Liste ciblée v4 sur mon arbre
+
+Commande : `PYTHONPATH=src python -m pytest -q -p no:cacheprovider --color=no -rf --basetemp=/home/user/wt-t06-v14/.tmp-essais/liste-v4 <85 fichiers>` (la liste v4 moins `tests/test_t06_v4_extraire.py`, § 0.2) ; `df -h /home/user` avant : 11 Go libres. **De 07:03:38 à 07:27:51 UTC** (`date -u`) : **1 874 passés, 207 échoués, 36 erreurs en 1 450,52 s (0:24:10)**, 2 117 essais. Résumé : `essais-liste-v4-resume-v1.txt` (scellé).
+
+Rejeu des 243 nœuds en échec ou en erreur, une ligne de cause chacun (07:31:07 à 07:31:48 UTC, 38,44 s, mêmes 207 + 36) :
+
+| Cause | Nombre | Fichiers |
+|---|---|---|
+| `docs/sources/` absent de l'arbre (extraction partielle de la consigne) : garde « fichier absent sur disque » (`invites-2606.08892-v1/index.json`, `invites-2606.07054-v1/derivees/index-v1.json`) ou `FileNotFoundError` sur `docs/sources/invites-2606.08892-v1` | 119 échecs directs + 19 échecs dont le message attendu est remplacé par celui de cette garde + **36 erreurs** de mise en place (bras B v1, v4, régénération des sondes de P3, gardes de P3 : toutes les sections imprimées portent `docs/sources`) | extraction t05, pilote A, environnement A, P3, trace lite, cibles invisibles v3 (12 : agents et juges, comme la v2), **T0.6 : 27** (`test_t06_cibles_invisibles_v3` 14 = sept lanceurs × deux runs jouets, `test_t06_v11_lanceur_jouet` 5, `test_t06_v11_configuration_v5` 3, `test_t06_v3_lanceur_jouet` 2, `test_t06_v2_lanceur_jouet`, `test_t06_lanceur_jouet`, `test_t06_chaine_v13` 1 chacun ; rejoués seuls : 27 sur 27 portent `docs/sources`) |
+| même cause, masquée : le gabarit des essais de notation attend une `GardeArret` du lanceur du pilote A, qui lève celle de `docs/sources` avant d'écrire quoi que ce soit (`lancer_pilote_a` charge `controle_ia.environnements.invites`, dont la racine est `docs/sources/invites-2606.08892-v1`), puis le commit du gabarit, vide, échoue | 63 | `test_noter_pilote_a`, `test_noter_rejeu_juges_v1`, `test_noter_rejeu_juges_v2` |
+| `pypandoc` absent du `.venv` processeur (attendu par la consigne) | 3 | `test_corpus_arxiv` |
+| dossier temporaire sous l'arbre de travail (prescrit) : `_etat_courant` d'un dossier qui devait n'être pas un dépôt git trouve le dépôt parent | 1 | `test_lire_pilote::test_gardes_du_preenregistrement_et_du_commit` (passe avec un dossier temporaire hors de tout dépôt, vérifié) |
+| probablement `docs/sources` (même lanceur, mêmes fichiers dont tous les autres échecs portent cette cause), non démontré | 2 | `test_pilote_a::test_lanceur_echec_du_prechargement_avant_les_episodes[panne1]` (`arret.json` non écrit), `test_revalider_pilote_a::test_term_avale_apres_le_dernier_controle_empeche_le_resume` (message TERM au lieu de « relevé avant le résumé ») |
+
+**Aucun échec ne touche la chaîne v14** : les 109 essais v14 passent dans la liste, ainsi que les inventaires des cibles invisibles v3 et tous les essais des chaînes v12 et v13 qui ne jouent pas de run jouet. Ce que l'arbre partiel ne peut pas montrer : les runs jouets (dont le lanceur v7 joué à marqueur) ; à rejouer sur un arbre qui porte les petits dossiers de `docs/sources/` que l'amorce clone (§ 8). Compte attendu sur l'instance : 2 117 + les essais de `tests/test_t06_v4_extraire.py` ; par différence, 2022 − 54 + 151 = **2119** (comptes de collecte des trois fichiers retirés : 14, 21, 19 ; des cinq ajoutés : 21, 21, 56, 39, 14), ce qui suppose 2 essais dans le fichier non joué.
 
 ## 5. Essai à blanc de la bascule (hors ligne, rien poussé)
 
@@ -122,3 +146,5 @@ Après le mot de Lazar (13 novembre, 12:00 UTC au plus tôt), en chemin critique
 - Jouer, sur un arbre qui porte `docs/sources/` (arbre de la mère ou instance), les essais que l'extraction partielle empêche (§ 4), dont `tests/test_t06_cibles_invisibles_v3.py` (cas v7) et `tests/test_t06_v4_extraire.py` (non joué ici par interdit).
 - Relever « Tests attendus » de la liste v4 sur l'arbre de S‴ (estimation 2119).
 - Incident du § 0.1 à consigner par la mère.
+- Hors de mes dossiers et non touchés : des dossiers `/tmp/pilote-jouet-*` laissés par les essais du pilote (créés par `tempfile`, effacés à la sortie normale de leur processus) ; mes dossiers temporaires (`/home/user/wt-t06-v14/.tmp-essais`, dossiers de diagnostic du bloc-notes) sont effacés par leur chemin exact.
+- Mise à jour de la branche : `prep/t06-chaine-v14-v1` est locale (aucune poussée).
