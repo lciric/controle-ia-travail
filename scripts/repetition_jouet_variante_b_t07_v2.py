@@ -115,6 +115,7 @@ def construire_origine(base: Path, nom: str, t06: Path, run6: str, avec_concepts
     f = ct.ecrire_fichier_code(maison, c7, maison / "registres" / "code-t07" / "CODE-T07-v1.json")
     with open(reg, "a", encoding="utf-8") as h:
         h.write(rg.ecrire_ligne(rg.CODE_T07, avant, "registres/code-t07/CODE-T07-v1.json", sceller(f)) + "\n")
+    concepts_a_main = sum(1 for l in reg.read_text(encoding="utf-8").splitlines() if l.startswith(f"| {rg.SCELLEMENT_CONCEPTS_T07} |"))
     r1.committer(maison)
     h_main = git(maison, "rev-parse", "HEAD")
     git(maison, "checkout", "-q", "-b", BR7B, c7)
@@ -128,7 +129,6 @@ def construire_origine(base: Path, nom: str, t06: Path, run6: str, avec_concepts
             poussees.append(p.name)
     r1.committer(maison)
     git(maison, "push", "-q", str(origine), "main", BR7B)
-    concepts_a_main = sum(1 for l in reg.read_text(encoding="utf-8").splitlines() if l.startswith(f"| {rg.SCELLEMENT_CONCEPTS_T07} |"))
     return {"origine": origine, "C7": c7, "S7": s7, "H": h_main, "config": config7.name, "branche_7b": git(maison, "rev-parse", BR7B),
             "donnees_7b": poussees, "ligne_concepts_a_main": concepts_a_main}
 
