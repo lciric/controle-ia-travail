@@ -97,7 +97,9 @@ fi
 AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'
 git -c credential.helper="$AIDE" clone -q --filter=blob:none --no-checkout --single-branch --branch main "$URL" "$D" || arret "clonage" 2
 git -C "$D" config credential.helper "$AIDE"; git -C "$D" config user.name "instance de calcul (T0.7)"; git -C "$D" config user.email "instance-calcul@invalid"
-REGISTRES="registres/scellements-v1.md registres/scellements-v1.md.ouvertures.md registres/ouvertures-p3bis-v1.md registres/prealables-p3bis-v1.md"
+# registres/go.md : lu par la garde (extrait d'une ligne GO-*, registre_v1.verifier_lignes) ; nommé ici (reprise, R-2166 : la v1
+# le recopiait avec tous les registres/*.md, la première forme de la v2 l'avait perdu)
+REGISTRES="registres/scellements-v1.md registres/scellements-v1.md.ouvertures.md registres/ouvertures-p3bis-v1.md registres/prealables-p3bis-v1.md registres/go.md"
 MOTIFS='/*
 !/*/
 /.claude/
