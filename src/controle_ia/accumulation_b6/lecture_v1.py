@@ -10,7 +10,9 @@ Codes de sortie : 0 lecture écrite et scellée (G-1 compris) ; 2 refus avant le
 avant E1 : rien d'écrit hors du journal propre ; relance plus tard ou nœud, selon le motif) ; 3 arrêt après le manifeste
 (`diag/<run>/arret-accb6.json` écrit et scellé ; nœud).
 
-Ordre (« Plan d'analyse ») : garde d'ouverture (`garde_v1.garde`) ; aiguillage sur `lecture-t07.json` (E4) avant toute ouverture de
+Ordre (« Plan d'analyse ») : garde d'ouverture (`garde_v1.garde`) ; contrôle du code exécuté contre le fichier de `CODE-ACCB6`
+(`code_accb6_v1.controler_code`, R-2272 : paquet importé et commit cité égaux à la liste, commit ancêtre de la tête ; sinon refus,
+code 2, avant tout calcul et avant le manifeste) ; aiguillage sur `lecture-t07.json` (E4) avant toute ouverture de
 E1 (`garde_v1.aiguiller`) ; sous G-1, rien d'autre n'est lu ; sinon `sondes-t07.json` (E2) et `notation-t07.json` (E2b), puis le
 manifeste (graines `accb6/<jeu>/<sonde>`, entropie de `CODE-ACCB6`, R9), puis E1 (`scores-actions-t07.npz` : `cle`, `condition`,
 `tache`, `pas`, `index`, `scores_<k>`, `plancher_<k>` des sondes lues, rien d'autre) et E3 (`mesures-t06.npz` : `cle`, `condition`,
@@ -47,6 +49,7 @@ from ..sondes.temoins import difference_aires_appariee
 from ..t07 import criteres_v1 as cr
 from ..t07 import plancher_v1 as pl
 from ..t07 import registre_v1 as rg
+from . import code_accb6_v1 as ca
 from . import etats_v1 as et
 from . import garde_v1 as gv
 from . import phrases_v1 as ph
@@ -654,14 +657,16 @@ def reserves_t07_recopiees(e4: dict, sondes: list | None) -> list:
 
 
 # -------------------------------------------------------------------------------------------------------------------- lecture
-def lire(racine: Path, instant: int | None = None, horloge=None) -> dict:
-    """Lecture complète (docstring du module). `instant` et `horloge` : essais seulement (la commande prend l'horloge)."""
+def lire(racine: Path, instant: int | None = None, horloge=None, dossier_code: Path | None = None) -> dict:
+    """Lecture complète (docstring du module). `instant`, `horloge` et `dossier_code` (dossier du paquet contrôlé contre
+    `CODE-ACCB6` ; défaut : le paquet importé) : essais seulement (la commande prend l'horloge et le paquet importé)."""
     racine = Path(racine)
     horloge = horloge or time.time
     instant = int(time.time()) if instant is None else int(instant)
     g = gv.garde(racine, instant)
     run_t07 = g["run_t07"]
     try:
+        code = ca.controler_code(racine, g["lignes_propres"][gv.CODE_ACCB6], dossier_code)
         e4 = gv.lire_e4(racine, run_t07)
         aig = gv.aiguiller(e4)
         so = None
@@ -706,7 +711,8 @@ def lire(racine: Path, instant: int | None = None, horloge=None) -> dict:
         else:
             lus["E1"]["ouvert"] = False
         resultat = {"texte": gv.PREREG, "texte_sha256": g["lignes_propres"][gv.SCELLEMENT_ACCB6]["sha256"],
-                    "fichiers": lus, "run_t07": run_t07, "run_7b": g["run_7b"], "garde": _propre(g), "aiguillage": aig,
+                    "fichiers": lus, "run_t07": run_t07, "run_7b": g["run_7b"], "garde": _propre(g), "controle_code": code,
+                    "aiguillage": aig,
                     "sondes": so, "n_tirages": N_TIRAGES, "niveau_decisif": so["niveau_decisif"] if so else None,
                     "niveau_descriptif": NIVEAU_DESCRIPTIF, "quantile_plancher": et.QUANTILE_PLANCHER,
                     "lecture": calc, "reserves": reserves, "reserves_t07": rt07, "phrase": phrase,

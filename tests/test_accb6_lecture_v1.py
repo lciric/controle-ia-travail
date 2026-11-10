@@ -23,6 +23,7 @@ from controle_ia.sondes.evaluation import aire_sous_courbe, intervalle_blocs
 from controle_ia.sondes.temoins import difference_aires_appariee
 from controle_ia.t07 import plancher_v1 as pl
 from controle_ia.t07 import registre_v1 as rg
+from controle_ia.accumulation_b6 import code_accb6_v1 as ca
 from controle_ia.accumulation_b6 import etats_v1 as et
 from controle_ia.accumulation_b6 import garde_v1 as gv
 from controle_ia.accumulation_b6 import lecture_v1 as lv
@@ -172,13 +173,35 @@ def construire(racine: Path, n_taches: int = 40, k: int = 2, effets: dict | None
         encoding="utf-8")
     # registre propre
     rel_p, sha_p = _depot(racine, gv.PREREG, PREREG_TEXTE)
-    code = {"commit": "c" * 40, "fichiers": {"src/controle_ia/accumulation_b6/lecture_v1.py": "d" * 64},
-            "entropie": 251208749203984110238413207513450199877}
-    rel_c, sha_c = _depot(racine, "registres/code-accb6/code-accb6-v1.json", json.dumps(code) + "\n")
+    rel_c, sha_c = code_jouet(racine)
     j.registre_propre.write_text("# Registre propre du barreau 6 (ACCB6)\n\n" + _ligne(gv.SCELLEMENT_ACCB6, t_scellement, rel_p, sha_p)
                                  + _ligne(gv.CODE_ACCB6, t_code, rel_c, sha_c), encoding="utf-8")
     j.lignes = {"scores": (rel_s, sha_s), "mesures": (rel_m, sha_m), "code": (rel_c, sha_c), "prereg": (rel_p, sha_p)}
     return j
+
+
+ENTROPIE_JOUET = 251208749203984110238413207513450199877
+DOSSIER_PAQUET_JOUET = "src/controle_ia/accumulation_b6"
+
+
+def code_jouet(racine: Path) -> tuple[str, str]:
+    """Fichier de `CODE-ACCB6` du jouet (R-2272) : si `racine` est la racine d'un dépôt git, le paquet importé y est recopié et
+    committé, et le fichier est écrit par `code_accb6_v1.ecrire_fichier_code` pour ce commit (la lecture contrôle alors cette copie,
+    `dossier_code`) ; sinon (jouets en sous-dossier, qui ne lisent pas), un fichier de la seule forme exigée."""
+    import shutil
+    import subprocess
+    rel = "registres/code-accb6/code-accb6-v1.json"
+    if (racine / ".git").exists():
+        cible = racine / DOSSIER_PAQUET_JOUET
+        cible.mkdir(parents=True, exist_ok=True)
+        for f in Path(ca.__file__).resolve().parent.glob("*.py"):
+            shutil.copy(f, cible / f.name)
+        subprocess.run(["git", "-C", str(racine), "add", DOSSIER_PAQUET_JOUET], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(racine), "commit", "-q", "-m", "paquet du jouet"], check=True, capture_output=True)
+        ca.ecrire_fichier_code(racine, "HEAD", racine / rel, entropie=ENTROPIE_JOUET)
+        return rel, sceller(racine / rel)
+    code = {"commit": "c" * 40, "fichiers": {"src/controle_ia/accumulation_b6/lecture_v1.py": "d" * 64}, "entropie": ENTROPIE_JOUET}
+    return _depot(racine, rel, json.dumps(code) + "\n")
 
 
 def aire_t07(j: Jouet, nom_sonde: str, pos: str, neg: str = "honnete") -> float:
@@ -228,6 +251,7 @@ def tirages(monkeypatch):
 
 def _lire(j: Jouet, **kw):
     kw.setdefault("instant", T0 + 5000)
+    kw.setdefault("dossier_code", j.racine / DOSSIER_PAQUET_JOUET)
     return lv.lire(j.racine, **kw)
 
 
@@ -357,6 +381,7 @@ def test_g1_rien_n_est_lu(depot, monkeypatch):
     charge = np.load
     vus = []
     monkeypatch.setattr(mod.np, "load", lambda *a, **k: vus.append(a[0]) or charge(*a, **k))
+    monkeypatch.setattr(ca, "dossier_du_paquet", lambda: (j.racine / DOSSIER_PAQUET_JOUET).resolve())
     assert lv.main(["lire", str(j.racine)]) == lv.CODE_OK
     assert appels == [] and vus == []
     lus = sorted((j.racine / "diag").glob("*-accb6-lecture/lecture-accb6.json"))

@@ -239,7 +239,7 @@ def test_lecture_complete_n_ecrit_rien_dans_le_registre_partage(depot, tirages):
     """Lecture de bout en bout : empreintes de `registres/scellements-v1.md` et de son journal égales avant et après."""
     j = construire(depot)
     avant = _empreintes_partagees(j)
-    lv.lire(j.racine, instant=OUVERTURE)
+    lv.lire(j.racine, instant=OUVERTURE, dossier_code=j.racine / "src/controle_ia/accumulation_b6")
     assert _empreintes_partagees(j) == avant
 
 
@@ -326,7 +326,7 @@ def test_aiguillage_refus_de_bout_en_bout_journalise(depot):
     e4["issue_critere_3"] = "L1"
     ecrire_resultat(j.racine, j.racine / "runs" / RUN_T07 / "manifeste.json", "lecture-t07", e4)
     with pytest.raises(gv.RefusAccb6, match="recoupement"):
-        lv.lire(j.racine, instant=OUVERTURE)
+        lv.lire(j.racine, instant=OUVERTURE, dossier_code=j.racine / "src/controle_ia/accumulation_b6")
     journal = (j.racine / gv.JOURNAL_PROPRE).read_text(encoding="utf-8").splitlines()
     assert journal[0].startswith("| OUVERTURE-ACCB6 |") and journal[-1].startswith("| REFUS-ACCB6 |")
     assert not list((j.racine / "runs").glob("*accb6*"))
