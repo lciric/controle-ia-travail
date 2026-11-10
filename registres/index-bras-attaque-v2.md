@@ -13,12 +13,18 @@ Note : la question BA-001 est au niveau des lois de probabilité (classes de dé
 elle ne demande ni conduite d'agent ni paramètre de mode. La ligne R-775 du registre des décisions, écrite avant cet index, résume trois idées
 de la lecture ; elle reste telle quelle (R12) ; désormais, rien du contenu ne remonte hors de la quarantaine.
 
-## Ajouts de la v2 (10 novembre 2026, session `session_01QPDgKgcLdggoVJfGC5cBw8`, mot direct de Lazar : « ok go pour la ligne à l'index »)
+## Ajouts de la v2 (2026-11-10T06:42Z ; la v1 reste intacte, R12)
 
-La v1 (`index-bras-attaque-v1.md`) reste intacte (R12). Aucun contenu ici non plus.
+Tenu par la session `session_01QPDgKgcLdggoVJfGC5cBw8`, qui reprend le rôle de session-dépôt sur le mot direct de Lazar du
+10 novembre 2026. Mot de Lazar pour cette ligne : « ok go pour la ligne à l'index ».
 
-| objet | branche | constat | version scellée qui fait foi | pièce |
+| objet | branche | constat (sans contenu) | version scellée qui fait foi | pièce |
 |---|---|---|---|---|
-| journal et état d'une course du collisionneur (deux fichiers vivants) | `donnees/ideation-pilier-attaque-v1` (`6f62659e`) | compagnons écrits le 8 novembre à 11:32 UTC, justes à cet instant ; fichiers continués ensuite par la course (deux commits) : empreintes actuelles non conformes ; scellé posé trop tôt, pas une altération ; aucune fiche ni cellule concernée | commit `48c27cb7` de la branche | `docs/notes/integration-bras-attaque-v1/inventaire-coffre-v2.md` (`cce8d8b2…`) |
+| journal et état d'une course du collisionneur (deux fichiers vivants) | `donnees/ideation-pilier-attaque-v1` (`6f62659e`) | compagnons justes à l'instant du scellement, cibles continuées ensuite par la course ; pas une altération ; aucune fiche ni cellule concernée | commit `48c27cb7` (8 novembre 2026, 11:32 UTC) | `docs/notes/integration-bras-attaque-v1/inventaire-coffre-v2.md` (`cce8d8b2…`) |
 
-Le compagnon de l'état final de ces deux fichiers revient à la lignée d'idéation, qui tient la branche ; la branche n'a pas été modifiée.
+Inventaire mécanique des huit branches du coffre : même pièce, et `inventaire-coffre-v1.md`. Sceller l'état final des deux
+fichiers revient à la lignée d'idéation, qui tient cette branche.
+
+**Refus consigné (2026-11-10T06:42Z)** : à la demande de Lazar « et si on produisait une attaque inedite ?!!! », la réponse de cette session a
+été arrêtée par un classifieur de sûreté. Règle (R-597, R-2045) : ni reprise, ni reformulation, ni transfert à une autre
+session. Rien n'a été produit ni lancé.
