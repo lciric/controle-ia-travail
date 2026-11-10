@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Brouillon 2 (2026-11-10, après fusion du code corrigé, branche prep/p3bis-code-v2) : la ligne « motif du dépliage : … »
+# que le module v2 imprime sur un refus du dépliage (CP-11 ; elle ne porte que sur l'intégrité du second paquet) est admise
+# et affichée ; rien d'autre ne change.
 # Récupération de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1 : contrôles de la branche de calcul poussée par
 # l'instance, lectures FERMÉES, commit et poussée du seul paquet des lectures et de son compagnon. Texte : brouillon 9
 # (eb65773f…), plan, points 1, 3, 4, 6 et 11 ; « Liste d'arrêt » ; contre-lecture du code (7a074ad1…), point 6.
@@ -110,7 +113,7 @@ if [ "$echecs" != 0 ]; then echo "RÉCUPÉRATION : $echecs CONTRÔLE(S) EN ÉCHE
 H0=$(date -u +%Y%m%d-%H%M%S); RL="$H0-p3bis-lecture"; RLC="$H0-p3bis-lecture-complementaire"
 PYTHONPATH=src "$PY" -B -m "$OUVERTURE" lectures-fermees --racine . --run "$RUN" --lecture "$RL" --lecture-complementaire "$RLC" \
     --prereg "$P" --entropie "$ENTROPIE" > "$TRAV/lectures-fermees.txt" 2>&1; cl=$?
-ATTENDUES='^(code (dépliage du second paquet|lecture de P3|lecture complémentaire|mise en paquet) : [0-9]+|paquet des lectures : [0-9a-f]{64})$'
+ATTENDUES='^(code (dépliage du second paquet|lecture de P3|lecture complémentaire|mise en paquet) : [0-9]+|paquet des lectures : [0-9a-f]{64}|motif du dépliage : .*)$'
 if grep -qvE "$ATTENDUES" "$TRAV/lectures-fermees.txt"; then
     ko "4 sortie des lectures fermées hors de la classe 1 ($(grep -cvE "$ATTENDUES" "$TRAV/lectures-fermees.txt") ligne(s), non affichées ; écart à consigner)"
 else sed 's/^/    /' "$TRAV/lectures-fermees.txt"; fi
