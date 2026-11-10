@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Organisme d'idéation, version 3</title>
+<style>
+:root { --encre:#1b1f24; --doux:#59616b; --filet:#c9cfd6; --fond-tete:#eef1f4; }
+@page { size: A4; }
+* { box-sizing: border-box; }
+body { font-family: "DejaVu Serif", "Liberation Serif", serif; font-size: 9.4pt; line-height: 1.38; color: var(--encre); margin: 0; background: #fff; }
+h1, h2, h3, .tag, th, .cartouche h2, figcaption, .legende { font-family: "DejaVu Sans", "Liberation Sans", sans-serif; }
+h1 { font-size: 17pt; margin: 0 0 1.5mm; line-height: 1.15; }
+h2 { font-size: 12.2pt; margin: 6mm 0 2mm; padding-bottom: 1mm; border-bottom: 1.3pt solid var(--encre); break-after: avoid; }
+h3 { font-size: 10.3pt; margin: 3.8mm 0 1.4mm; break-after: avoid; }
+p { margin: 0 0 1.9mm; }
+ul, ol { margin: 0 0 2mm; padding-left: 5mm; }
+li { margin: 0 0 0.8mm; }
+.sous-titre { color: var(--doux); font-size: 9pt; margin-bottom: 3.5mm; }
+.cartouche { border: 1.1pt solid var(--encre); padding: 3mm 4mm 2mm; margin: 0 0 3mm; }
+.cartouche h2 { border: none; margin: 0 0 1.5mm; padding: 0; font-size: 11pt; }
+table { width: 100%; border-collapse: collapse; margin: 1.5mm 0 3mm; font-size: 8.1pt; line-height: 1.3; }
+th { background: var(--fond-tete); text-align: left; font-weight: bold; }
+th, td { border: 0.6pt solid var(--filet); padding: 1.1mm 1.5mm; vertical-align: top; }
+tr { break-inside: avoid; }
+.tag { display: inline-block; font-size: 6.6pt; font-weight: bold; padding: 0.2mm 1.2mm; border-radius: 1mm; color: #fff; white-space: nowrap; }
+.demontre { background: #1e6b3a; } .simule { background: #2b7a78; } .prereg { background: #1f4e8c; } .question { background: #8a5a00; } .choix { background: #59616b; } .fait { background: #1e6b3a; } .cours { background: #8a5a00; } .afaire { background: #1f4e8c; } .raye { background: #7a1f2b; } .occupe { background: #7a1f2b; }
+.ref { font-family: "DejaVu Sans Mono", monospace; font-size: 6.9pt; color: var(--doux); word-break: break-all; }
+.note { color: var(--doux); font-size: 8.2pt; }
+.saut { break-before: page; }
+.bloc { break-inside: avoid; }
+.encadre { border-left: 2.2pt solid var(--encre); padding: 0.5mm 0 0.5mm 3mm; margin: 2mm 0 3mm; }
+.reserve { border: 1.4pt dashed #7a1f2b; padding: 3mm 4mm; margin: 2mm 0 3mm; background: #fdf6f7; }
+figure { margin: 2mm 0 3mm; break-inside: avoid; }
+figcaption { font-size: 7.8pt; color: var(--doux); margin-top: 1mm; }
+svg text { font-family: "DejaVu Sans", "Liberation Sans", sans-serif; }
+.legende { font-size: 7.8pt; }
+</style>
+</head>
+<body>
+
+<h1>L'organisme d'idéation, expliqué depuis zéro<br>et sa place dans le programme de contrôle</h1>
+<p class="sous-titre">Pour un lecteur qui ne sait rien du projet. Version 3, 10 novembre 2026. Rédigé par la session
+« attaquant informé » pour Lazar. Aucun résultat d'attaque contre le juge de l'organisme n'est rapporté ici : la
+section 9 est réservée à la session mère. Chaque affirmation renvoie à sa source (annexe). La version 1 a passé
+l'épreuve du lecteur neuf (dix réponses justes sur dix) ; la version 2 corrige une étiquette fausse et ajoute les
+définitions que ce lecteur a demandées ; la version 3 intègre le lien entre l'organisme et son objectif ultime validé par
+Lazar, corrige l'état du code v65 et porte les décisions du 10 novembre. Ni la version 2 ni la version 3 n'ont été
+re-testées.</p>
+
+<div class="cartouche">
+<h2>Comment lire ce document</h2>
+<p class="legende">Statuts : <span class="tag prereg">préenregistré</span> écrit et scellé avant les données ;
+<span class="tag question">à trancher</span> décision ouverte ; <span class="tag choix">choix</span> décision de
+conception ; <span class="tag occupe">occupé</span> déjà publié par d'autres ; <span class="tag fait">fait</span>
+<span class="tag cours">en cours</span> <span class="tag afaire">à faire</span> état d'un travail.</p>
+<p class="legende"><b>Qui est qui.</b> Lazar dirige le programme ; c'est une personne. Les « sessions » sont des
+instances de Claude, chacune dans un rôle séparé : la <i>session mère</i> pilote le programme et lit ses résultats ; la
+<i>session de dépôt</i> tient le dépôt, les machines et les relais vers les fournisseurs de modèles ; la session
+<i>« attaquant informé »</i>, qui écrit ce document, conçoit le bras d'attaque (section 7) et ne lit aucun résultat
+d'attaque contre le juge de l'organisme, pour que ses propres épreuves de ce juge restent à connaissance déclarée. Un
+lecteur, un développeur ou un correcteur « neuf » est une instance sans mémoire du travail qu'il juge ; « d'une autre
+lignée » veut dire d'un autre modèle.</p>
+</div>
+
+<div class="cartouche">
+<h2>L'essentiel en une page</h2>
+<ul>
+<li><b>Ce que c'est.</b> Un petit système de recherche automatisée : des agents d'intelligence artificielle proposent des
+lois candidates (des « fiches »), et un <b>juge statistique</b>, calculé hors de tout agent, décide ce qui mérite d'être
+promu [N-064 ; RD].</li>
+<li><b>L'idée centrale.</b> Le rôle qui produit ne tient jamais la clé qui évalue. Le juge travaille sur un engagement
+scellé avant que les données existent, contre un nul fait des lois déjà connues, avec un contrôle des comparaisons
+multiples. Il ne promeut que ce qui apporte au-delà de ce qu'on savait.</li>
+<li><b>Comment on sait s'il marche.</b> Sur des mondes jouets dont on a planté les lois : un oracle compte les lois vraies
+retenues et les lois fausses promues. La composition des proposeurs se juge sur cet oracle et sur le coût, jamais sur le
+verdict du juge [N-058].</li>
+<li><b>Sa place dans le programme de contrôle.</b> Le programme pose une seule question : <i>que mesure un moniteur, et sa
+mesure survit-elle à l'adversaire ?</i> Le juge de l'organisme est un moniteur, de prétentions de recherche ; l'attaquer
+relève de la même méthode que le bras d'attaque. Rôle adopté : second terrain du papier C [N-065].</li>
+<li><b>La courbe dose-réponse.</b> Une seule existe, pour le juge seul et sans agent. Ce document propose celle de la
+chaîne complète, avec de vrais agents (section 6), à décider.</li>
+<li><b>Où il en est.</b> Une première course de l'organisme sur le pilier « attaque » faite ; deux attaques contre le juge courues et lues ; la plus petite course
+réelle de la boucle entière attend son code et une machine adaptée. <b>Il est absent du texte envoyé au fonds</b> : à
+l'entretien, il se dit hors du plan financé.</li>
+</ul>
+</div>
+
+<h2>1. Le problème que l'organisme attaque</h2>
+<p>La recherche automatisée confie à des agents la production d'idées et d'hypothèses. Le danger est connu : si un modèle
+juge les idées d'autres modèles, il peut être flatté, convaincu ou trompé, et des idées fausses passent pour neuves. C'est
+un cas de la loi de Goodhart : une mesure que l'on optimise cesse de mesurer.</p>
+<p>L'organisme répond par une architecture. Les agents proposent ; aucun agent ne juge. Le jugement est une statistique,
+calculée par un programme (l'orchestrateur), sur des données tirées après que la proposition a été scellée, contre ce
+que l'on savait déjà. Cette idée n'est pas neuve en entier, et le projet le dit : POPPER calcule déjà des e-valeurs hors
+des agents ; Dwork et collègues (2015, réutilisation d'un échantillon de validation sous analyse adaptative) et Blum et
+Hardt (« The Ladder », 2015, un tableau de classement qui résiste à qui lit ses scores) ont posé le principe : un juge dont
+on lit les verdicts peut être sur-ajusté, et l'on peut s'en garder ; Co-Scientist est voisin de la boucle « générer,
+classer, faire évoluer ». Ces quatre citations sont obligatoires dans tout texte qui présente l'organisme [N-064 point 4].</p>
+
+<div class="bloc">
+<h2>2. Un organisme, son objectif ultime, et une conception concurrente</h2>
+<p>Lecture validée par Lazar le 10 novembre 2026 [DEC : R-2152], reprise telle quelle :</p>
+<p class="encadre">« L'organisme d'idéation est l'organisme de l'objectif ultime (N-044, N-045), branché depuis le 28 octobre
+2026 sur une tâche précise, proposer des hypothèses de recherche jugées par un juge statistique ; son code a continué sans
+rupture jusqu'aux versions 64 et 65. Il n'a pas encore les propriétés de l'objectif ultime : il ne se conçoit pas seul,
+rien n'est figé après une phase de conception, son universalité n'est mesurée sur aucune famille de questions jamais vue.
+La boucle fermée du code v65, où une génération hérite de la précédente, en est le premier pas. L'organisme de Gemini est
+une conception concurrente, rapportée à part. »</p>
+<table>
+<tr><th style="width:26%">Ce que vise l'objectif ultime</th><th>Ce qu'il veut dire [N-044 ; N-045]</th></tr>
+<tr><td>Se concevoir soi-même</td><td>Un système de plusieurs agents qui se réécrit sur un vivier de tâches à vérité connue, puis, son architecture figée, répond à des questions neuves sans réentraînement. Sa composition est apprise, modèle par rôle compris ; le coût entre dans le signal ; l'héritage entre générations est récompensé.</td></tr>
+<tr><td>L'universalité</td><td>Mesurée sur des familles de questions jamais vues à la conception.</td></tr>
+<tr><td>Où en est l'organisme d'idéation</td><td>Branché sur une seule tâche (proposer des hypothèses de recherche) ; la boucle fermée du code v65, où une génération hérite de la précédente, est le premier pas.</td></tr>
+</table>
+</div>
+<p class="note">L'organisme de Gemini, conception concurrente, a été couru en pilotes du 24 au 26 octobre [GO] ; il est
+rapporté à part et n'est pas l'objet de ce document.</p>
+
+<h2>3. Comment il marche</h2>
+<figure>
+<svg viewBox="0 0 760 170" width="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chaîne de l'organisme d'idéation">
+  <defs><marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1b1f24"/></marker></defs>
+  <g font-size="9.5">
+    <rect x="5" y="20" width="110" height="46" fill="#eef1f4" stroke="#59616b"/><text x="60" y="39" text-anchor="middle" font-weight="bold">Question</text><text x="60" y="54" text-anchor="middle">et monde planté</text>
+    <rect x="135" y="20" width="110" height="46" fill="#eef3fb" stroke="#1f4e8c"/><text x="190" y="39" text-anchor="middle" font-weight="bold">Proposeurs</text><text x="190" y="54" text-anchor="middle">écrivent des fiches</text>
+    <rect x="265" y="20" width="110" height="46" fill="#eef3fb" stroke="#1f4e8c"/><text x="320" y="39" text-anchor="middle" font-weight="bold">Gardien</text><text x="320" y="54" text-anchor="middle">trie par la forme</text>
+    <rect x="395" y="20" width="110" height="46" fill="#eef7f1" stroke="#1e6b3a"/><text x="450" y="39" text-anchor="middle" font-weight="bold">Juge statistique</text><text x="450" y="54" text-anchor="middle">hors de tout agent</text>
+    <rect x="525" y="20" width="110" height="46" fill="#eef3fb" stroke="#1f4e8c"/><text x="580" y="39" text-anchor="middle" font-weight="bold">Tests de mort</text><text x="580" y="54" text-anchor="middle">en bac à sable</text>
+    <rect x="655" y="20" width="100" height="46" fill="#eef1f4" stroke="#59616b"/><text x="705" y="39" text-anchor="middle" font-weight="bold">Sélection</text><text x="705" y="54" text-anchor="middle">scellée, héritée</text>
+  </g>
+  <g stroke="#1b1f24" stroke-width="1.2"><line x1="115" y1="43" x2="133" y2="43" marker-end="url(#f)"/><line x1="245" y1="43" x2="263" y2="43" marker-end="url(#f)"/><line x1="375" y1="43" x2="393" y2="43" marker-end="url(#f)"/><line x1="505" y1="43" x2="523" y2="43" marker-end="url(#f)"/><line x1="635" y1="43" x2="653" y2="43" marker-end="url(#f)"/></g>
+  <path d="M705,66 L705,96 L190,96 L190,68" fill="none" stroke="#59616b" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#f)"/>
+  <text x="300" y="91" font-size="8.5" fill="#59616b">génération suivante : elle lit les lois retenues, jamais un verdict</text>
+  <rect x="395" y="112" width="240" height="40" fill="#fff" stroke="#1e6b3a"/>
+  <text x="515" y="128" font-size="9" text-anchor="middle" font-weight="bold">Oracle du monde planté</text>
+  <text x="515" y="143" font-size="8.5" text-anchor="middle">compte : vraies retenues, fausses promues</text>
+  <rect x="5" y="112" width="300" height="40" fill="#fbeff1" stroke="#7a1f2b"/>
+  <text x="155" y="128" font-size="9" text-anchor="middle" font-weight="bold">Attaque de Goodhart (épreuve)</text>
+  <text x="155" y="143" font-size="8.5" text-anchor="middle">un proposeur qui lit le juge et ses verdicts</text>
+  <line x1="305" y1="125" x2="393" y2="60" stroke="#7a1f2b" stroke-width="1.1" marker-end="url(#f)"/>
+</svg>
+<figcaption>La chaîne d'une génération, de la question à la sélection. L'oracle lit le monde planté, jamais le verdict du
+juge ; l'attaque de Goodhart est une épreuve du juge, pas une pièce de la chaîne. D'après le brouillon du préenregistrement
+de la boucle réelle [BR] et les décisions N-058, N-064.</figcaption>
+</figure>
+<table>
+<tr><th style="width:24%">Pièce</th><th>Ce qu'elle fait, et pourquoi</th></tr>
+<tr><td>Proposeurs</td><td>Agents de fournisseurs différents (aujourd'hui Kimi et Argon). Ils écrivent des fiches : une fiche est une loi candidate, assez formelle pour être jugée. Ils ne voient jamais un verdict, et leur mémoire ne contient ni verdict ni témoin.</td></tr>
+<tr><td>Gardien mécanique</td><td>Une « douane de forme » qui trie les fiches par leur seule forme ; les fiches trop concrètes vont à un coffre scellé. Aucun juge à modèle ne décide.</td></tr>
+<tr><td>Juge statistique</td><td>Statistique calculée par l'orchestrateur, hors de tout agent, sur un engagement scellé avant que les données existent, contre un nul formé des lois connues (l'archive), avec un contrôle des comparaisons multiples [N-064].</td></tr>
+<tr><td>Monde planté et oracle</td><td>Un monde jouet dont on connaît les lois : on y plante des lois vraies (à promouvoir) et des lois fausses (à refuser). Des témoins plantés sont mêlés anonymement à chaque génération ; des générations entières d'étalonnage ont un calendrier secret [N-059].</td></tr>
+<tr><td>Tests de mort</td><td>Épreuves préenregistrées, exécutées en bac à sable par un expérimentateur et vérifiées par un agent d'une autre famille ; l'orchestrateur recalcule le verdict sur le fichier brut.</td></tr>
+<tr><td>Sélection et héritage</td><td>La génération suivante lit le bilan scellé de la précédente, et refuse de partir sinon. Le signal porte sur plusieurs générations ; l'héritage est récompensé [N-045].</td></tr>
+<tr><td>Composition et coût</td><td>Combien de parties, quels rôles, quel modèle par rôle : appris. Le coût entre dans le signal. Les voies bon marché passent avant les chères. La composition se juge sur l'oracle et le coût, jamais sur le verdict du juge [N-045 ; N-058].</td></tr>
+<tr><td>Tâches fraîches, test final</td><td>Une part de tâches neuves tirée d'un vivier à chaque génération ; le test final n'est lu qu'une fois, en fin de boucle [N-049 ; N-050].</td></tr>
+</table>
+
+<h2 class="saut">4. Un exemple suivi : une génération</h2>
+<ol>
+<li><b>Le cadre.</b> Une question et un monde planté jouet (trois issues, deux traits). Une archive de départ déclarée et
+scellée : une loi connue. On plante quatre lois vraies et quatre lois fausses ; les fausses sont des recombinaisons de la
+loi connue, donc membres du nul [BR].</li>
+<li><b>Les propositions.</b> Deux proposeurs de fournisseurs différents écrivent douze fiches, six chacun, sans voir les
+lois plantées ni aucun verdict.</li>
+<li><b>Le jugement.</b> Le gardien trie par la forme. Le juge reçoit l'engagement scellé de chaque fiche, tire les données
+après le gel, calcule la statistique contre le nul des lois connues, corrige la multiplicité, et promeut ou non.</li>
+<li><b>Les tests de mort.</b> Les lois promues sont éprouvées en bac à sable ; l'orchestrateur recalcule le verdict sur le
+fichier brut ; la sélection est scellée.</li>
+<li><b>La génération 2</b> lit la sélection scellée (les lois retenues, jamais un verdict) et repart.</li>
+<li><b>L'oracle</b> compte les lois vraies retenues et les fausses promues. La prédiction de cette plus petite course,
+écrite au brouillon de son préenregistrement, <b>non encore scellé</b>, a le signe + : au moins une loi vraie promue puis
+survivante en génération 1, et aucune fausse promue en génération 1 ni 2 [BR].</li>
+</ol>
+
+<h2>5. Ses revendications, et ce qui est déjà publié</h2>
+<p class="note">Statuts après la vérification d'antériorité et la décision N-064. « Non occupée » veut dire absente des
+pièces lues, pas « vierge » : une zone vierge est une question.</p>
+<table>
+<tr><th style="width:7%"></th><th>Revendication</th><th style="width:26%">Statut</th></tr>
+<tr><td>O1</td><td>le rôle qui produit ne tient jamais la clé qui évalue</td><td>voisine</td></tr>
+<tr><td>O2</td><td>juge statistique : calculé par l'orchestrateur, engagement scellé, nul des lois connues, multiplicité</td><td><span class="tag occupe">occupée en partie</span> (POPPER) ; énoncé resserré</td></tr>
+<tr><td>O3</td><td>prédictions scellées avant les données ; tirages semés par l'empreinte</td><td>voisine</td></tr>
+<tr><td>O4</td><td>battre un nul des lois connues : « rien au-delà de l'archive »</td><td>non occupée</td></tr>
+<tr><td>O6</td><td>douane de forme, coffre scellé</td><td>voisine</td></tr>
+<tr><td>O8</td><td>proposeurs de plusieurs fournisseurs</td><td>non occupée</td></tr>
+<tr><td>O10</td><td>témoins plantés vrais et faux à chaque génération</td><td>voisine</td></tr>
+<tr><td>O11</td><td>banc de tricheurs scriptés</td><td><span class="tag occupe">occupée dans son principe</span> (Dwork et collègues ; Blum et Hardt) ; la forme seule est revendiquée</td></tr>
+<tr><td>O12</td><td>attaque de Goodhart : un proposeur qui lit la description du juge et, dans un bras, ses verdicts, sur des mondes où toute promotion est fausse</td><td><span class="tag occupe">occupée dans son principe</span> ; la forme non trouvée</td></tr>
+<tr><td>O13, O14</td><td>tests de mort en bac à sable ; sélection entre générations par ces tests</td><td>voisines</td></tr>
+<tr><td>O17</td><td>scellement avant lecture ; aucun repli silencieux</td><td>non occupée</td></tr>
+<tr><td>O19</td><td>puissance du juge mesurée : « rien promu » n'est pas « aucun effet »</td><td>voisine</td></tr>
+<tr><td>O20</td><td>juge éprouvé sur une vérité plantée</td><td>occupée dans son principe (pratique courante)</td></tr>
+</table>
+<p class="note">Liste abrégée (O1 à O20 en entier dans la note d'antériorité [ACS]). Les revendications O sont des choix de
+conception, sans signe ; les signes vivent dans les préenregistrements : l'attaque de Goodhart A1-v4 (hypothèses H1 à H5,
+prédictions P1 à P11, « ouvertes dans les deux sens ») et la boucle réelle (prédiction P1, signe +) [A1P ; BR]. La page
+publique du projet ne cite pas encore les quatre références obligatoires ; la corriger est une publication, donc un geste
+de Lazar.</p>
+
+<h2 class="saut">6. La courbe dose-réponse</h2>
+<p><b>Pourquoi elle compte.</b> Dans le programme de contrôle, la courbe dose-réponse des organismes de sabotage valide
+l'instrument : si le réglage de la dose n'agit pas, rien de ce que lisent les moniteurs ne se conclut. L'équivalent, pour
+l'organisme, est la courbe qui montre que la chaîne réagit au signal : plus une loi vraie est forte dans le monde, plus elle
+doit être retrouvée et promue ; et les fausses ne doivent jamais l'être, à aucune dose. Sans elle, un « rien promu » ou un
+« tout promu » ne se lit pas.</p>
+<h3>Ce qui existe : l'épreuve « W2 graduée » <span class="tag fait">scellée</span></h3>
+<p>La dose λ est le poids d'une loi nouvelle ajoutée à un monde qui, à λ = 0, n'apporte rien au-delà de l'archive. Grille
+gelée de onze doses (0 ; 0,05 ; 0,10 ; 0,15 ; 0,20 ; 0,25 ; 0,30 ; 0,40 ; 0,50 ; 0,75 ; 1), la dose 0 jouée comme
+contrôle ; mille répétitions par dose. Deux réponses : la fréquence de promotion de la loi du monde, et celle de la
+recombinaison pure, qui doit rester nulle. Règle écrite avant l'épreuve : la dose retenue est la plus petite où la loi du
+monde est promue au moins 800 fois sur 1 000, et la recombinaison jamais [W2G]. <b>Limite</b> : c'est une courbe du juge
+seul, hors ligne, sans agent ; elle n'a servi qu'à fixer la dose d'une épreuve.</p>
+<h3>Ce qui manque, et ce que je propose</h3>
+<div class="encadre">
+<p><b>Décision</b> : ajouter à l'organisme la courbe dose-réponse de la chaîne complète, avec de vrais agents.
+<b>Enjeu</b> : valider l'instrument entier, comme le critère 2 de la porte de fin de phase le fait pour le programme ; tu as
+demandé cette courbe le 10 novembre.</p>
+<ul>
+<li><b>(a) Courbe de sensibilité.</b> Dose : la force de la loi vraie d'un monde d'étalonnage au-delà de l'archive (par
+exemple le poids λ d'une loi nouvelle, comme dans l'épreuve W2 graduée) ; la famille de mondes exacte se fixe au
+préenregistrement. Réponses lues sur l'oracle : la probabilité qu'une loi vraie soit promue puis survive
+aux tests de mort, et le taux de fausses promotions. Grille gelée, répétitions dimensionnées par simulation, contrôle à
+λ = 0, critère de croissance et seuil, le tout préenregistré. Avantage : valide la chaîne entière et prolonge une épreuve
+déjà scellée. Inconvénient : coûteuse (agents × doses × répétitions), donc devis.</li>
+<li><b>(b) Courbe de corruption.</b> Dose : la pression adverse (nombre de verdicts que l'attaquant peut lire, ou part de
+proposeurs tricheurs). Réponse : le taux de fausses promotions. Avantage : c'est la courbe du bras d'attaque appliquée au
+juge, au cœur du papier C. Inconvénient : elle touche au pilier « attaque » de l'organisme et suit les règles du bras.</li>
+<li><b>(c) Les deux, à la suite.</b></li>
+</ul>
+<p><b>Recommandation</b> : (a) d'abord, sur cinq doses (0 ; 0,10 ; 0,25 ; 0,50 ; 1), dès que la plus petite course réelle
+de la boucle tourne ; (b) ensuite, dans le cadre du bras. Confiance 0,6. C'est une dépense : préenregistrement, devis,
+autorisation, puis ton mot.</p>
+</div>
+<h3>Quand peut-elle partir ?</h3>
+<p>Pas avant la plus petite course réelle de la boucle : la chaîne complète n'a encore jamais tourné avec de vrais agents.
+Cette course attend trois pièces [BR, section 12]. D'abord le code v65 : son premier développeur a été arrêté par Lazar le
+8 novembre et son travail tenu pour annulé [DEC : R-1767] ; le développement reprend dans une session neuve (mot de Lazar
+du 10 novembre, relayé par la session mère). Ensuite une machine jetable dotée du bac à sable bubblewrap, à louer quand le
+code v65 sera contre-lu. Enfin les commandes des relais des deux fournisseurs, versées le 10 novembre par la session de
+dépôt avec la configuration v5 [RL]. Une course coûte environ 2 à 8 dollars attendus, 35 au pire [BR, section 13] ; une
+courbe de cinq doses sur huit mondes en demande quarante, soit de l'ordre de 80 à 320 dollars attendus, à fixer au devis.
+Son préenregistrement peut s'écrire dès maintenant, sur le dessin de cette course.</p>
+
+<h2>7. Sa place dans le programme de contrôle</h2>
+<div class="encadre">
+<p><b>Le programme de contrôle, en bref.</b> Un <i>moniteur</i> surveille un agent d'intelligence artificielle et alerte
+s'il soupçonne un sabotage ; une <i>sonde</i> est un moniteur qui lit les activations internes du modèle, au lieu de ses
+seuls textes. Le programme a trois papiers : <b>A</b>, le sabotage étalé dans le temps sur de nombreuses actions (sa porte
+de décision s'appelle G1) ; <b>B</b>, le sabotage réparti entre plusieurs agents ; <b>C</b>, l'adversaire qui agit sur le
+moniteur lui-même (flatterie, persuasion, usurpation), mesuré sur des juges et des sondes. Le <b>bras d'attaque</b>
+éprouve les moniteurs gelés contre un attaquant dont la connaissance est déclarée, échelon par échelon : 0, pression
+déclarée ; 1, aveugle ; 2, informé de la conception, par le seul contenu de ses actions ; 3, informé, avec un nombre
+compté de verdicts du moniteur ; 4, écriture des activations ; 5, réglage fin des poids ; 6, renforcement contre la
+sonde. Une <b>famille tenue à l'écart</b> est une famille de sabotages écrite sans voir aucun moniteur et réservée pour
+mesurer si un moniteur tient sur ce qu'il n'a jamais vu.</p>
+</div>
+<p><b>Une seule question.</b> Le programme de contrôle demande : <i>que mesure un moniteur, et sa mesure survit-elle à
+l'adversaire ?</i> Le juge de l'organisme est un moniteur, de prétentions de recherche au lieu d'actions d'agent. La
+même question s'y pose, avec les mêmes outils : moniteur gelé, adversaire de connaissance déclarée, lecture scellée.</p>
+<table class="bloc">
+<tr><th style="width:24%">Rôle (décision N-065)</th><th style="width:13%">État</th><th>Ce qu'il apporte au programme</th></tr>
+<tr><td>1. Second terrain du papier C</td><td><span class="tag fait">adopté</span></td><td>La corruptibilité de deux sortes de juges : le juge statistique (attaque de Goodhart) et un juge génératif en tournoi, façon Co-Scientist (conçu, non lancé).</td></tr>
+<tr><td>2. Atelier d'idées</td><td><span class="tag fait">adopté</span></td><td>Des idées pour le programme ; une fiche est un matériau, jamais une preuve ; tout usage décisif passe par un préenregistrement.</td></tr>
+<tr><td>3. Famille de menaces diffuses</td><td><span class="tag question">à trancher</span></td><td>Un proposeur à poids ouverts qui trompe le juge sur de nombreuses propositions d'apparence honnête est une menace diffuse au sens du programme ; s'il devient famille tenue à l'écart, il doit être écrit sans voir aucun moniteur.</td></tr>
+</table>
+<ul>
+<li><b>Invariants.</b> Aucun score d'un moniteur du programme n'entre dans l'entraînement ni la sélection de l'organisme
+[N-053 point 5, rappelé par N-065] ; la sélection des proposeurs ne lit jamais le verdict du juge [N-058].</li>
+<li><b>Lien avec le bras d'attaque.</b> L'attaque de Goodhart est un attaquant qui lit les verdicts d'un juge gelé, à budget
+compté : la structure de l'échelon 3 du bras, appliquée au juge de l'organisme. La courbe (b) de la section 6 est sa
+courbe d'évasion.</li>
+<li><b>Un monde tiré du programme.</b> L'orchestrateur prévoit un « monde sur banque » dont les instances viennent des
+épisodes du programme, issues cachées [C7].</li>
+<li><b>À l'entretien</b> : une diapositive, hors du plan financé ; aucun chiffre de l'attaque hors de ce que fixe son
+verdict scellé (section 9) ; jamais « universel » ; les quatre citations obligatoires [RD].</li>
+</ul>
+
+<h2>8. Ce qui a été fait, au 10 novembre 2026</h2>
+<table>
+<tr><th style="width:32%">Chantier</th><th style="width:14%">État</th><th>Pièce, date</th></tr>
+<tr><td>Pilotes de l'organisme de Gemini (conception concurrente, rapportée à part)</td><td><span class="tag fait">faits</span></td><td>24-26 octobre ; plusieurs courses [GO]</td></tr>
+<tr><td>Organisme du pilier « attaque », version 1</td><td><span class="tag fait">couru</span></td><td>30 fiches validées ; autorisation close à 8,42 dollars sur un plafond de 20 (GO-2026-11-08-08) ; fiches au coffre [DEC : R-1853, R-1885]</td></tr>
+<tr><td>Attaques de Goodhart A1-v3 et A1-v4</td><td><span class="tag fait">courues, lues</span></td><td>préenregistrement scellé [A1P] ; verdicts officiels scellés, celui d'A1-v4 par un lecteur neuf d'une autre lignée que l'auditeur [DEC : R-2111] (section 9)</td></tr>
+<tr><td>Épreuve « W2 graduée »</td><td><span class="tag fait">scellée</span></td><td>courbe du juge seul (section 6) [W2G]</td></tr>
+<tr><td>Essai à blanc de la boucle complète</td><td><span class="tag fait">fait</span></td><td>deux générations, fournisseurs simulés [BR]</td></tr>
+<tr><td>Plus petite course réelle de la boucle</td><td><span class="tag afaire">en attente</span></td><td>préenregistrement en brouillon [BR] ; autorisation de 45 dollars jusqu'au 30 novembre (GO-2026-11-08-02) ; manquent le code v65 (développement repris en session neuve) et une machine qui isole les épreuves ; les commandes des relais sont versées [RL]</td></tr>
+<tr><td>Juge en tournoi, façon Co-Scientist</td><td><span class="tag cours">conçu</span></td><td>non lancé ; devis de 80 à 145 dollars [RD]</td></tr>
+<tr><td>Présence dans le texte envoyé au fonds</td><td><span class="tag raye">absent</span></td><td>à dire hors du plan financé</td></tr>
+</table>
+
+<div class="reserve">
+<h2 style="border:none;margin:0 0 1.5mm;padding:0">9. Résultats — section réservée à la session mère</h2>
+<p>L'auteur de ce document ne lit aucun résultat d'attaque contre le juge de l'organisme ni aucun résultat de moniteur du
+programme. Cette section est à compléter par la session mère, depuis les pièces scellées : les verdicts des attaques
+A1-v3 et A1-v4, dans leur lecture bornée ; l'issue de l'épreuve W2 graduée ; ce que l'essai à blanc a montré ; et ce
+qui sera lu avant l'entretien.</p>
+</div>
+
+<div class="bloc">
+<h2>10. Les décisions qui t'attendent sur l'organisme</h2>
+<table>
+<tr><th style="width:38%">Décision</th><th>Où elle en est</th></tr>
+<tr><td>Courbe dose-réponse de la chaîne complète (section 6)</td><td>go de Lazar le 10 novembre : (a) d'abord ; préenregistrement en brouillon [CB] ; lancement après la plus petite course, sur devis et autorisation ; plafond à décider au devis</td></tr>
+<tr><td>Accès au code de l'organisme pour la simulation sans agents qui dimensionne la courbe</td><td>décidé le 10 novembre : copie empreintée du seul code nécessaire, au commit 94bfd92, sans résultat ni code d'attaque, versée par la session de dépôt [D1050]</td></tr>
+<tr><td>Chemin critique de la courbe : code v65, machine avec bubblewrap, commandes des relais</td><td>le code v65 reprend en session neuve, dates à venir ; les relais sont versés [RL] ; la machine sera louée quand le code sera contre-lu, fournisseur à fixer</td></tr>
+<tr><td>Rôle 3 : famille de menaces diffuses, tenue à l'écart ou non</td><td>à trancher avant toute conception de sonde qui pourrait la toucher (session mère, confiance 0,5) [RD]</td></tr>
+<tr><td>Juge du tournoi : Kimi, ou un modèle Claude sur crédits</td><td>ouvert [RD]</td></tr>
+<tr><td>Règle de permission de la course v2</td><td>accordée pour une seule commande</td></tr>
+<tr><td>Prix du nul v9 ; question de sens de W2</td><td>ouverts depuis le 8 novembre</td></tr>
+<tr><td>Régimes de budget et code figé (étape 1 de N-044)</td><td>en attente de ton mot</td></tr>
+<tr><td>Correction de la page publique (quatre citations)</td><td>une publication, donc ton geste</td></tr>
+<tr><td>Lien entre l'organisme et l'organisme de l'objectif ultime</td><td>tranché le 10 novembre : lecture validée par Lazar (section 2) [DEC : R-2152]</td></tr>
+</table>
+</div>
+
+<h2>Clé des noms</h2>
+<table>
+<tr><th style="width:26%">Nom</th><th>Ce qu'il désigne</th></tr>
+<tr><td>A1, A1-v3, A1-v4</td><td>L'attaque de Goodhart contre le juge statistique, dans sa troisième et sa quatrième version.</td></tr>
+<tr><td>W1, W2, « W2 graduée »</td><td>Des mondes de l'attaque A1 ; « W2 graduée » est l'épreuve à dose de la section 6. La « question de sens de W2 » est une question ouverte de Lazar sur ce que ce monde mesure.</td></tr>
+<tr><td>Nul v8, nul v9</td><td>Deux versions du nul des lois connues ; v8 est en production ; v9 couvre une classe de recombinaisons de plus et a été éprouvé à part ; son « prix » est une décision ouverte sur son coût.</td></tr>
+<tr><td>Code v65</td><td>La version de l'orchestrateur qui manque à la plus petite course réelle de la boucle ; elle ferme la boucle, une génération héritant de la précédente.</td></tr>
+<tr><td>Pilier « attaque », course v2</td><td>L'organisme appliqué à une question scellée sur les attaques contre les moniteurs ; ses fiches vont au coffre, en quarantaine. La « course v2 » est sa course sur la version 2 de cette question.</td></tr>
+<tr><td>Numéros dans les chemins</td><td>« reprise-v9 », « goodhart-v5 », « orchestrateur-v52b » : des versions de travail des dossiers et des textes ; seule l'empreinte identifie une pièce.</td></tr>
+</table>
+
+<h2 class="saut">Annexe — Sources</h2>
+<table>
+<tr><th style="width:9%">Sigle</th><th>Pièce</th><th style="width:16%">Empreinte</th></tr>
+<tr><td>N-044</td><td><span class="ref">docs/decisions/decision-N-044-v1.md</span></td><td class="ref">2b70bdac…</td></tr>
+<tr><td>N-045</td><td><span class="ref">docs/decisions/decision-N-045-v2.md</span></td><td class="ref">c7b05e39…</td></tr>
+<tr><td>N-049</td><td><span class="ref">docs/decisions/decision-N-049-v1.md</span></td><td class="ref">8a5bf5e5…</td></tr>
+<tr><td>N-050</td><td><span class="ref">docs/decisions/decision-N-050-v1.md</span></td><td class="ref">a54b128d…</td></tr>
+<tr><td>N-053</td><td><span class="ref">docs/decisions/decision-N-053-v1.md</span></td><td class="ref">2204256d…</td></tr>
+<tr><td>N-058</td><td><span class="ref">docs/decisions/decision-N-058-v1.md</span></td><td class="ref">854f2724…</td></tr>
+<tr><td>N-059</td><td><span class="ref">docs/decisions/decision-N-059-v1.md</span></td><td class="ref">41aff854…</td></tr>
+<tr><td>N-064</td><td><span class="ref">docs/decisions/decision-N-064-v1.md</span></td><td class="ref">387c9d4e…</td></tr>
+<tr><td>N-065</td><td><span class="ref">docs/decisions/decision-N-065-v1.md</span></td><td class="ref">f820e90d…</td></tr>
+<tr><td>[RD]</td><td>rapport de la session mère du 9 novembre, section 6, <span class="ref">docs/notes/rapports-directeur/rapport-principes-etat-goulots-entretien-organisme-2026-11-09-v1.md</span></td><td class="ref">22263fce…</td></tr>
+<tr><td>[ACS]</td><td>note d'antériorité, <span class="ref">docs/notes/ideation-organisme-v1/anteriorite-co-scientist-v1/note-anteriorite-co-scientist-v1.md</span></td><td class="ref">08a3738a…</td></tr>
+<tr><td>[APE]</td><td>note sur POPPER, <span class="ref">docs/notes/ideation-organisme-v1/anteriorite-co-scientist-v1/note-anteriorite-popper-evaluator-v1.md</span></td><td class="ref">d1ab7049…</td></tr>
+<tr><td>[BR]</td><td>boucle réelle, brouillon non scellé, <span class="ref">docs/notes/organisme-boucle-reelle-v1/preenregistrement-boucle-reelle-organisme-v1-brouillon1.md</span></td><td class="ref">736e3fd6…</td></tr>
+<tr><td>[W2G]</td><td>épreuve W2 graduée, <span class="ref">docs/notes/ideation-organisme-v1/a1-v4-reprise-v9/epreuve-w2g-dose-v2-v1.md</span></td><td class="ref">e025f108…</td></tr>
+<tr><td>[A1P]</td><td>préenregistrement de l'attaque A1-v4, <span class="ref">docs/notes/ideation-organisme-v1/a1-v4-reprise-v9/preenregistrement-attaque-goodhart-v5-v1.md</span></td><td class="ref">d306a8fa…</td></tr>
+<tr><td>[C7]</td><td>conception de l'orchestrateur, <span class="ref">docs/notes/ideation-organisme-v1/orchestrateur-v52b/conception-v7-v1.md</span></td><td class="ref">31fc8c4b…</td></tr>
+<tr><td>[GO]</td><td>registre des autorisations, sur main au 10 novembre (lignes GO-2026-11-08-02 et -08 ; pilotes, lignes 47 à 73), <span class="ref">registres/go.md</span></td><td class="ref">e682abb0…</td></tr>
+<tr><td>[DEC]</td><td>registre des décisions, sur main au commit 05995a4a, 10 novembre (R-1767, R-1853, R-1885, R-2111, R-2152), <span class="ref">registres/decisions.md</span></td><td class="ref">b12604ac…</td></tr>
+<tr><td>[RL]</td><td>commandes des relais et configuration v5, versées par la session de dépôt (branche claude/upbeat-cray-dmauvv, commit 9dce5742) : <span class="ref">registres/passations/2026-11-10-1045-organisme-m6-commandes-et-configuration-v5.md</span> ; configuration <span class="ref">docs/notes/ideation-organisme-v1/tour-ferme-etage1-v1/configuration-tour-ferme-v5.json</span> (995eb918…)</td><td class="ref">abf72390…</td></tr>
+<tr><td>[CB]</td><td>préenregistrement de la courbe de la chaîne complète, brouillon 1, <span class="ref">docs/notes/organisme-courbe-dose-reponse-v1/preenregistrement-courbe-chaine-complete-v1-brouillon1.md</span></td><td class="ref">a0fe0114…</td></tr>
+<tr><td>[D1050]</td><td>décision de Lazar « go recos » du 10 novembre, <span class="ref">registres/passations/2026-11-10-1050-decision-lazar-go-recos-acces-hc2-licence.md</span></td><td class="ref">def13a65…</td></tr>
+<tr><td>—</td><td>questionnaire de compréhension, scellé avant ce document, <span class="ref">docs/notes/entretien-recapitulatif-v1/questionnaire-comprehension-organisme-v1.md</span></td><td class="ref">66deeea0…</td></tr>
+</table>
+
+</body>
+</html>

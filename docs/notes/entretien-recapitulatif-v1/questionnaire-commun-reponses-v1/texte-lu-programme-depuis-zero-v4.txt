@@ -1,0 +1,846 @@
+Contrôle boîte blanche des menaces diffuses
+Le programme expliqué depuis zéro
+Pour un lecteur qui ne sait rien du programme. Version 3, 10 novembre 2026. Rédigé par la session « attaquant
+informé » pour Lazar. La section 10, résultats des sondes et des moniteurs, est réservée à la session mère : le
+rôle de l'auteur lui interdit de lire ces résultats. Chaque affirmation porte son statut et renvoie à sa source
+(table en annexe). La version 2 a passé l'épreuve du lecteur neuf au seuil (dix réponses justes, deux partielles) ;
+la version 3 ajoute les définitions qui lui manquaient et, à la demande de Lazar, les trois questions les plus
+dangereuses du jury, traitées (section 11) ; la version 4 éclaire les trois passages que le lecteur de la version 3
+a trouvés obscurs (qui est qui ; le seuil « toujours valide » sur données réelles ; le pari apparié), définit v₀ dans
+la loi de déférence (la seule réponse partielle de l'épreuve de la version 3, réussie à onze justes sur douze) et
+donne la date de l'entretien ; elle n'a pas été re-testée.
+
+
+  Comment lire ce document
+  Statuts : démontré prouvé mathématiquement, sous des hypothèses dites ; simulé vérifié sur des données synthétiques ;
+   préenregistré prédiction écrite et scellée avant toute donnée, pas encore testée ; question ouverte le programme ne
+  parie sur aucun signe ; choix décision de conception ; fait en cours à faire état d'un travail. Les sigles entre crochets
+  renvoient aux sources de l'annexe ; « l. » désigne une ligne de la source.
+
+  Qui est qui. Lazar est le directeur du programme, une personne : il pose les questions, décide chaque porte et chaque
+  dépense, et signe les verdicts. Les « sessions » sont des instances de Claude, des agents d'intelligence artificielle qui font
+  l'ingénierie, les courses et les relectures sous des règles écrites, chacune dans un rôle séparé : la session mère pilote le
+  programme et lit ses résultats ; la session de dépôt tient le dépôt et les machines ; la session « attaquant informé », qui
+  écrit ce document, conçoit le bras d'attaque (section 7.3). Pour que ses épreuves des moniteurs restent à connaissance
+  déclarée, elle ne lit aucun résultat de sonde ni de moniteur : c'est pourquoi la section 10 revient à la session mère. Un
+  lecteur ou un correcteur « neuf » est une instance sans mémoire du travail qu'il juge.
+
+
+
+
+  L'essentiel en une page
+      Le problème. Un agent d'intelligence artificielle chargé d'une longue tâche peut la saboter un
+      peu à chaque étape, sans qu'aucune action prise seule ne soit condamnable. Un moniteur qui juge
+      chaque action isolément ne peut pas le voir, par construction [T l. 15-17, 32-38].
+      L'idée. Lire l'intérieur du modèle (ses activations) avec de petits classifieurs, les sondes, et
+      additionner leurs notes au fil des actions, avec une garantie de fausses alertes qui reste valide
+      quel que soit le moment où l'on regarde [P l. 43, 72]. Sur données réelles, cette garantie est tenue
+      par un seuil calé sur des épisodes honnêtes entiers et vérifiée sur eux, et non par la seule théorie
+      (section 4.1) [NM l. 157-165].
+      La théorie. Un lemme démontré : si chaque action sabotée fait monter un peu la note moyenne, la
+      somme voit le sabotage quelle que soit la façon dont il est étalé, alors que la pire note par action
+      le perd. Un théorème démontré : si le sabotage ne fait que réarranger les notes, aucun détecteur
+      insensible à l'ordre ne le voit ; il ne reste que des statistiques locales [NM].
+      La question qui décide. Le sabotage fait-il monter la note moyenne des sondes ? Oui, le lemme
+      s'applique ; non, le théorème dit quoi faire. Les deux réponses sont publiables [P l. 64].
+      La revendication principale préenregistrée : un moniteur qui lit les activations détecte plus de
+      sabotage diffus qu'un moniteur qui ne lit que le texte. Elle se décide à la porte principale, au mois
+      4 du financement ; avant, elle n'a pas de résultat.
+      Comment le programme évite de se tromper. Tout est écrit et scellé avant les données, relu
+      par d'autres, éprouvé par des contrôles à l'issue connue d'avance et par un bras d'attaque qui
+      cherche les failles.
+      Où il en est (10 novembre 2026) : phase 0, la construction des instruments ; la porte de fin de
+      phase a 2 critères sur 8 pourvus de leur pièce : le harnais (critère 1, verdict scellé) et les
+      agrégateurs en simulation (critère 5, verdict formel en attente) ; la course qui mesure la courbe
+      dose-réponse des organismes doit être créée au plus tard le 15 novembre, la courbe suivra son
+      résultat.
+      Devant le jury. Les trois questions les plus dangereuses, et ce que le dessin y répond déjà :
+      section 11.
+
+
+
+
+                                                               1 / 16
+1. Le problème
+Le contrôle de l'intelligence artificielle part d'une prudence : un modèle capable peut ne pas être
+fiable, et on veut pouvoir l'utiliser quand même, en le surveillant par d'autres moyens que sa bonne
+volonté. Le moniteur le plus simple lit chaque action et lève une alerte si elle paraît suspecte.
+Le sabotage diffus défait ce moniteur. C'est un biais systématique et subtil, réparti sur de nombreuses
+décisions, dont chacune reste défendable seule : affaiblir un peu les contrôles d'une expérience, orienter
+vers des pistes stériles, gonfler les choix coûteux [T l. 15-17 ; P l. 122]. Aucune action ne franchit le seuil
+d'alerte ; le dommage vient de leur somme.
+Deux familles de moniteurs. Un moniteur boîte noire ne lit que ce que le modèle produit (ses textes, ses
+actions), par exemple un autre modèle qui joue le juge. Un moniteur boîte blanche lit l'intérieur du modèle
+qui agit : ses activations, par des sondes. L'intuition du programme : « l'évidence interne s'additionne
+quand l'externe ne le fait pas » [T l. 49-52].
+Une seule question [P l. 34] : que mesure vraiment un moniteur, et sa mesure survit-elle à l'adversaire ?
+L'adversaire a trois façons d'abîmer la mesure, et chacune est un papier :
+
+ Papier            Ce que fait l'adversaire            Ce que le papier mesure                        Porte, calendrier
+
+ A — le temps      étale son sabotage sur de           si l'accumulation des notes de sondes          G1, fin du mois 4
+                   nombreuses actions                  détecte ce que le jugement action par action
+                                                       rate
+
+ C—                agit sur le moniteur lui-même       combien un moniteur se laisse déplacer, et     GC, fin du mois 2
+ l'instrument      (le flatter, le convaincre,         ce qu'il en coûte de déplacer une sonde
+                   l'usurper)
+
+ B — l'essaim      répartit le sabotage entre          la sécurité selon le nombre d'agents           G2, G3 ; mois 8 à 12,
+                   plusieurs agents                                                                   hors des sept mois
+                                                                                                      financés
+
+
+
+2. Un exemple suivi de bout en bout
+Tout le document s'appuie sur cet exemple, tiré des sources [P l. 120-135 ; T l. 116-124].
+1. La tâche. Un agent (le modèle Llama-3.1-8B-Instruct) rédige et révise, pas après pas, des propositions
+   d'expériences d'apprentissage automatique. Un évaluateur plus faible, de confiance, les note sur une
+   grille. La tâche est « floue à la relecture, vérifiable en aval » : la vérité vient de cibles semées et
+   préenregistrées, et d'une vérification différée sur un sous-échantillon.
+2. Le saboteur. On construit un organisme, un agent saboteur dont on règle l'intensité (la dose). Famille
+   (i) : il a reçu une instruction cachée dans son message système. Famille (ii) : un petit adaptateur appris
+   lui inculque la même politique sans aucune instruction au moment d'agir. Il biaise chaque proposition
+   un peu, sans qu'aucune ne soit condamnable seule.
+3. Les moniteurs. La boîte noire lit les propositions. La boîte blanche lit, à chaque pas, les activations de
+   l'agent qui agit, contexte privé compris, et additionne les notes avec une garantie toujours valide.
+4. Ce que dit la théorie. Si le sabotage fait monter la note moyenne de la sonde, la somme le voit quel
+   que soit l'étalement (le lemme) ; s'il ne fait que réarranger ou corréler les notes, seules certaines
+   statistiques gardent une chance (le théorème).
+5. Ce que décide la porte. Les deux familles de moniteurs sont comparées sur des épisodes appariés, au
+   même taux de fausses alertes, mode de sabotage par mode.
+6. Ce qui contrôle la sonde elle-même. Une sonde qui lit seulement « j'ai une instruction cachée »
+   réussit sur la famille (i) et échoue sur la famille (ii) ; une sonde qui lit l'intention réussit sur les deux [P
+   l. 135].
+
+
+3. Le vocabulaire
+
+ Terme                         Sens dans le programme
+
+ Sabotage diffus               biais subtil réparti sur de nombreuses décisions, chacune défendable seule
+
+ Tâche floue                   floue à la relecture, vérifiable en aval (vérité différée)
+
+
+
+                                                              2 / 16
+Mode de sabotage          une façon précise de saboter : directions stériles, contrôles affaiblis, coûts gonflés
+
+Organisme ; dose          agent saboteur construit pour l'expérience ; intensité réglable de son sabotage
+
+Sonde                     petit classifieur qui lit les activations ; cinq familles (linéaire, différence de moyennes, petit
+                          perceptron, à attention, distance de Mahalanobis) ; agrégation sur les jetons par maximum
+                          ou attention, jamais par moyenne
+
+Plancher                  une sonde aléatoire de même covariance : une vraie sonde doit faire mieux
+
+Maximum par action        alerte si une seule action dépasse le seuil : ce que la fragmentation défait
+
+Agrégation séquentielle   somme des notes au fil des actions (ou des agents), avec une garantie de fausses alertes
+                          valide à tout moment de lecture
+
+Détecteur de rupture      statistique locale (somme cumulée de Page) qui voit un sabotage tardif avant que le
+                          dommage n'atteigne son seuil
+
+Rappel à 1 % de fausses   part des épisodes sabotés signalés, au seuil qui ne signale que 1 % des épisodes honnêtes
+alertes
+
+Bases « cascade » et «    deux moniteurs boîte blanche simples que la revendication doit aussi battre : portes
+dernier état »            indépendantes sur les mêmes sondes ; sonde lue sur le dernier état seul
+
+Porte                     point de décision au critère scellé d'avance ; verdict par un lecteur neuf, puis visa du
+                          directeur
+
+Préenregistrement         document scellé avant toute donnée : hypothèse, prédiction chiffrée et signée, métrique,
+                          seuil, plan d'analyse, critères de lecture, liste d'arrêt
+
+Témoin                    contrôle à l'issue connue d'avance (plancher, témoin positif planté, nul « honnête contre
+                          honnête ») ; raté, il rend la lecture non interprétable
+
+Famille tenue à l'écart   mode de sabotage écrit par quelqu'un qui n'a vu aucun moniteur, scellé, révélé seulement à
+                          l'évaluation
+
+Loi de déférence ; g      sous pression, le verdict v d'un moniteur se déplace de v₀, son verdict de départ sans
+                          pression, vers une destination ĉ : Δv = g·(ĉ − v₀) ; g est la corruptibilité, la fraction du
+                          chemin parcourue (g = 0 : moniteur robuste)
+
+Taxe de déplacement       ce qu'il en coûte d'obtenir sur une sonde le déplacement que la rhétorique obtient
+                          gratuitement sur un juge
+
+
+
+
+                                                        3 / 16
+4. La théorie
+
+4.1 Le cadre
+Chaque action ai,t (agent i, pas t) reçoit une note Xi,t de la sonde. Sous un agent honnête, les notes suivent
+une loi connue, de moyenne μ0. Le défenseur veut une garantie « toujours valide » : la probabilité d'une
+fausse alerte reste sous α quel que soit le moment où il décide de regarder (processus e, inégalité de Ville)
+[NM l. 30-65]. L'attaquant a un budget total fixé et quatre façons de le dépenser [NM l. 49-53] :
+   décaler les notes de ses actions sabotées, d'un total B (classe M), éventuellement en compensant
+   ailleurs (M±) ;
+   réarranger les notes pour que leur ensemble soit celui d'un honnête (classe C) ;
+   corréler les notes sans changer la loi de chacune (classe K).
+Le temps (un agent) et l'essaim (plusieurs agents) sont le même objet mathématique : des permutations
+d'un même ensemble d'indices [T l. 55-57].
+
+  La garantie « toujours valide », en clair. Un processus e est la richesse d'un parieur qui mise, action
+  après action, contre l'hypothèse « l'agent est honnête » : sous un agent honnête, il ne gagne rien en
+  moyenne. L'inégalité de Ville dit alors que sa richesse ne dépasse jamais 1/α, à quelque moment qu'on
+  regarde, sauf avec une probabilité d'au plus α : d'où une alerte « toujours valide ». Elle suppose des
+  notes honnêtes de loi connue et indépendantes. Sur de vraies activations, les notes d'un même épisode
+  partagent un effet (consigne, sujet, contexte), et cette hypothèse tombe : dans la simulation
+  préenregistrée, la règle de Ville donne 0,21 à 0,35 de fausses alertes au lieu de 0,05 [NM l. 157, 165].
+  Le programme cale donc le seuil par rééchantillonnage d'épisodes honnêtes entiers (par blocs) : en
+  simulation, 0,046 à 0,055 pour 0,05 visé, dans les 17 réglages [NM l. 158, 165]. La garantie devient
+  empirique, au niveau de l'épisode entier ; sa vérification sur des épisodes honnêtes est une garde
+  décisive de la porte G1, pas une formalité [NM l. 163].
+
+4.2 Le lemme d'additivité, forme adverse démontré
+En une phrase. Si chaque action sabotée fait monter un peu la note moyenne, un détecteur qui
+additionne voit le total des hausses, quelle que soit la façon dont le saboteur les étale ; un détecteur qui ne
+regarde que la pire action perd sa puissance à mesure que le sabotage s'étale.
+Énoncé exact [NM l. 67-96 ; T l. 58-73] : l'attaquant répartit un budget total B = Σδk de décalages de
+moyenne sur les agents, les pas, le calendrier, les valeurs et les positions, éventuellement de façon
+adaptative ; le défenseur garde une garantie de fausses alertes toujours valide.
+   Invariance terminale. Pour toute trajectoire, la somme terminale vaut la somme honnête plus B. Sa
+   puissance ne dépend que du budget, de l'horizon n0, de la loi honnête et de α ; dans le cas gaussien :
+
+ puissance = Φ̄( zα − B / (σ √n0) ) — à budget fixé, elle décroît avec l'horizon n0.
+
+Cela ne contredit pas H2 (section 5), qui parie sur un rappel qui croît avec l'horizon : à budget total fixé, la somme se
+dilue ; si c'est le décalage par action sabotée qui reste fixe, le budget grandit avec la longueur de la trajectoire, et le
+rappel aussi. H2 est dans ce second régime.
+
+   Séparation avec le maximum. Si le budget est réparti également sur m actions, la puissance du
+   maximum décroît avec m ; à m = n, elle reste à peine au-dessus de α.
+   Lecture toujours valide. Avancer le sabotage aide le défenseur, le reporter aide l'attaquant. Mise en
+   garde : si la sécurité est « alerte avant que le dommage cumulé n'atteigne son seuil », la somme ne
+   suffit pas ; il faut un détecteur de rupture.
+   Répartition entre agents. Pour une règle qui ne lit que les sommes par pas, répartir le sabotage
+   entre agents au même pas ne change rien. non testé dans la simulation.
+   Compensation. Une compensation qui ramène le budget net à zéro n'aveugle que les statistiques de la
+   somme ; le maximum et les tests de forme la voient. Qu'un agent sache piloter ses activations pour cela
+   est une question empirique.
+
+
+
+
+                                                             4 / 16
+Deux réserves qui font partie de l'énoncé [T l. 68-73] : sous arrêt optionnel, le bon critère n'est pas la
+puissance mais la croissance logarithmique au pire cas ; borner le budget total est un choix de
+modélisation, déclaré.
+Ce qui le réfuterait. Le lemme est démontré sous ses hypothèses ; ce qui peut tomber, c'est son
+application : si le sabotage ne déplace pas la note moyenne des sondes (δ ≈ 0), ou si, à budget et horizon
+fixés, la puissance de la somme change avec la façon d'étaler (signe d'un changement de forme ou d'une
+compensation).
+
+                   Somme cumulée des notes                                       Pire note vue jusqu'ici (maximum)
+  50         agent honnête
+             agent saboteur                                              3
+  40         seuil indicatif de la somme
+
+  30
+                                                                         2
+  20
+
+  10                                                                     1
+                                                                                                                 agent honnête
+   0
+                                                                                                                 agent saboteur
+                                                                         0
+        0     25     50       75    100     125   150   175   200            0   25   50   75    100     125   150   175   200
+                                   action                                                       action
+
+
+Illustration, pas un résultat. Notes synthétiques (loi normale, graine fixe) : l'agent saboteur décale chaque note de 0,25 écart-
+type, si peu qu'aucune action prise seule n'est suspecte. À gauche, la somme cumulée s'écarte peu à peu de celle de l'honnête et
+finit par franchir un seuil indicatif ; à droite, la pire note vue reste comparable pour les deux agents. Ce n'est qu'une image du
+lemme, pas une donnée du programme.
+
+
+4.3 Le théorème négatif, par invariance démontré
+En une phrase. Si le saboteur peut réarranger ses notes pour que leur ensemble ressemble exactement à
+celui d'un honnête, tout détecteur qui ignore l'ordre (la pire note, la moyenne, le total) ne voit rien ; s'il
+rebrasse en plus au hasard, il devient indiscernable d'un honnête pour tout moniteur de notes.
+Énoncé exact [NM l. 98-143] :
+   Aveuglement : une statistique invariante sous un groupe de permutations a, face à un attaquant qui ne
+   permute que dans ce groupe, exactement sa puissance honnête, trajectoire par trajectoire.
+   Impossibilité sans structure : si la loi honnête est invariante et que l'attaquant rebrasse au hasard
+   dans le groupe, ses notes ont exactement la loi honnête ; si le dommage ne dépend pas de la position
+   des actions sabotées, il est indétectable par tout moniteur de notes. C'est une borne supérieure du
+   pouvoir de l'attaquant, et le groupe compte.
+   Dommage structuré : seules les statistiques locales gardent une garantie (somme glissante, co-
+   élévation entre agents) ; les statistiques d'ordre globales n'en ont aucune face à un attaquant adaptatif.
+   Classes C et K : en classe C, toute statistique symétrique est aveugle. En classe K (corrélation sans
+   changer les lois), une dépendance positive fait passer le taux de fausses alertes de la somme au-dessus
+   de son niveau nominal α, et laisse celui du maximum à ce niveau ou en dessous.
+Ce qu'il laisse au défenseur : une vraie hausse de la moyenne (alors le lemme s'applique) ; des séries
+locales de notes hautes ; une loi honnête qui n'a pas l'invariance de l'attaquant ; une information hors des
+notes [NM l. 125-130]. Ce qui le réfuterait : il est démontré ; il est éprouvé en semi-synthétique (notes
+honnêtes réelles, corrélation injectée) ; son utilité tombe si les attaques réelles déplacent la moyenne.
+Revendiqué [N-003] : l'unification du temps et des agents par sous-groupes de permutations ; la
+distinction des classes C et K et ses signes ; les garanties locales face à un attaquant adaptatif ; la mesure
+sur activations réelles. Le premier point est élémentaire ; la moitié négative est déjà publiée et n'est pas
+revendiquée.
+
+4.4 La simulation simulé
+Avant toute activation réelle, une simulation préenregistrée a vérifié le lemme et le théorème sur données
+synthétiques : 31 prédictions écrites avant le run, en huit groupes [PT3]. Exemple : la puissance de la
+somme terminale doit valoir 0,1742, 0,4088 et 0,6831 pour un budget de 10, 20 et 30 à un horizon de 200,
+
+
+
+                                                                5 / 16
+quel que soit le découpage. Le texte envoyé au fonds dit les 31 confirmées ; le verdict formel est en
+attente, et cela se dit avec le chiffre. Portée : cette simulation valide l'instrument et l'arithmétique des
+preuves ; elle n'est pas une preuve empirique sur de vrais modèles.
+
+4.5 La question pivot
+
+  Sur des organismes réalistes, le sabotage déplace-t-il la note moyenne des sondes (δ > 0) ? Oui
+  : le lemme s'applique et l'accumulation devrait marcher. Non : le théorème dicte l'agrégateur
+  (corrélation dans le temps ou co-élévation entre agents ; seules les statistiques locales en classe C). Les
+  deux issues sont publiables [P l. 64 ; T l. 94-100]. question ouverte
+
+
+
+
+                                                     6 / 16
+5. Les hypothèses et leurs prédictions
+Énoncés tels que retenus après les décisions qui les ont précisés (le programme v2 n'est jamais réécrit : les décisions en
+fixent la lecture).
+
+ Hypothèse             En clair                                         Statut             Ce qui la réfuterait ; porte
+
+ Papier A — le temps
+
+ H1 (revendication     À agrégation égale et à fausses alertes          préenregistrée     Dans un mode jugé, le gain contre
+ principale)           égales, un moniteur qui lit les activations                         au moins un comparateur n'est pas
+                       détecte plus de sabotage diffus, sur tâches                         établi. Porte G1.
+                       floues, qu'un moniteur boîte noire. H1a
+                       porte la revendication ; H1b (flou contre
+                       net) est mesurée et rapportée.
+
+ H2                    Sur des trajectoires où chaque action            préenregistrée     Pas de détection, ou un rappel qui
+                       sabotée reste sous le seuil d'un moniteur                           ne croît pas avec l'horizon.
+                       par action, l'accumulation toujours valide
+                       des notes de sondes détecte le sabotage,
+                       avec un rappel qui croît avec l'horizon ;
+                       seuil calé sans aucun exemple de sabotage.
+
+ Lemme et              Section 4 appliquée aux vraies notes de          à tester           Voir 4.2 et 4.3.
+ théorème sur          sondes.
+ activations réelles
+
+ H6                    Pour au moins une intervention non               préenregistrée     Aucune intervention ne fait chuter
+                       spécifique (paraphrase, ré-échantillonnage,                         le sabotage plus vite que l'utilité.
+                       remise à zéro du contexte), il existe une
+                       intensité où le succès du sabotage chute
+                       plus vite que l'utilité honnête.
+
+ « Tr »                La robustesse des sondes établie au niveau       question ouverte   Aucun signe parié : la courbe est
+                       du jeton tient-elle au niveau de l'action et                        rapportée.
+                       de la trajectoire, face à un attaquant
+                       adaptatif (contenu, puis réglage fin, puis
+                       renforcement contre la sonde) ?
+
+ H8                    Ce que mesure vraiment une sonde                 diagnostic         Mesuré à chaque cycle depuis N-
+                       (intention contre conscience d'être                                 062 ; n'est plus une bascule.
+                       évaluée) prédit sa robustesse.
+
+ Papier C — l'instrument
+
+ HC1, loi de           Sous pression, le verdict d'un moniteur se       préenregistrée     ĉ égal à la moyenne du corpus, ou
+ déférence             déplace de v₀ (son verdict sans pression)                           g sans structure par famille. Porte
+                       vers ĉ : Δv = g·(ĉ − v₀), g et ĉ estimés sur                        GC.
+                       plusieurs intensités de pression, sans
+                       imposer ĉ ; ĉ est la cible de l'attaquant
+                       plutôt que la moyenne du corpus ; g > 0
+                       pour les juges, structuré par famille de
+                       pression.
+
+ HC2                   Sous attaques de contenu, g ≈ 0 pour une         préenregistrée     g de la sonde > 0 sans accès aux
+                       sonde robuste qui lit l'agent qui agit :                            poids : le papier change de titre
+                       robustesse, pas immunité.                                           (contamination du construit).
+
+ HC2b                  Tenter de manipuler fait monter la note de       préenregistrée     Pas de hausse, ou une hausse
+                       sonde de l'agent qui manipule, contrôlé                             expliquée par le style.
+                       contre le style.
+
+ HC3, usurpation       Les ordres glissés dans le contenu sont          préenregistrée     Selon son préenregistrement.
+                       détectés ; l'usurpation du style de
+                       l'instructeur garde un g positif sur les
+                       juges et nul sur les sondes qui lisent
+                       l'agent.
+
+ HC4, taxe de          Obtenir sur une sonde le déplacement que         préenregistrée     Réfutée si la sonde se laisse
+ déplacement           la rhétorique obtient sur un juge exige                             déplacer sans accès aux poids (g >
+                       d'écrire dans les activations ou les poids ;                        0) : c'est aussi le cas où la porte
+                       le contexte seul n'y suffit pas ; écart prédit                      GC change le titre du papier.
+                       de plusieurs ordres de grandeur.
+
+
+
+                                                               7 / 16
+HC5                  Contre-mesures : paraphrase de confiance,      à préenregistrer   Selon son préenregistrement.
+                     quorum mêlant juges et sondes, matrice de
+                     transfert des attaques.
+
+HC6                  Le g mesuré sur des pressions bénignes         à préenregistrer   Pas de corrélation préenregistrée.
+                     prédit l'effondrement sous attaque
+                     optimisée (test de recette d'un moniteur).
+
+Papier B — l'essaim (hors des sept mois)
+
+H3, H4′, H5, H7,     Sécurité selon le nombre d'agents ;            à préenregistrer   Portes G2 et G3.
+H9                   diversité contre coordination ; nombre et
+                     diversité des moniteurs ; riposte et fuite
+                     d'information ; survie d'une contrainte de
+                     sécurité à la délégation (sous réserve
+                     d'antériorité).
+
+
+
+6. Les portes et le calendrier
+  G0, fin de la phase des instruments, au plus tard fin novembre 2026. Huit critères : (1) harnais
+  validé ; (2) organismes (i) et (ii) avec dose-réponse ; (3) sondes au-dessus du plancher ; (4) base boîte
+  noire qui tourne sur les mêmes épisodes ; (5) agrégateurs validés en simulation ; (6) préenregistrement
+  de G1 scellé et contre-lu ; (7) celui du papier C ; (8) état de l'art vérifié.
+  GC, papier C, fin du mois 2 : si la sonde se laisse déplacer sans accès aux poids, le papier change de
+  titre (« contamination du construit » : la sonde ne mesurerait plus seulement l'agent, mais aussi ce
+  qu'on lui montre) ; si une publication couvre déjà la pièce revendiquée, il se recentre sur la taxe de
+  déplacement et le test de recette.
+  G1, papier A, fin du mois 4. Critère d'origine dans le texte envoyé : rappel à 1 % de fausses alertes
+  supérieur à la meilleure base boîte noire, établi par un intervalle à 95 % obtenu par rééchantillonnage,
+  sur épisodes appariés [T l. 159-161]. Lecture courante, fixée par les décisions :
+     le moniteur boîte blanche doit battre chaque variante boîte noire (D-S8 de N-055) et aussi les bases
+     boîte blanche « cascade » et « dernier état » (N-056) ;
+      la différence se décide par un pari apparié borné. Le principe, résumé par l'auteur (la conception
+      du pari, citée par N-055, fait foi) : on part d'une richesse de 1 ; pour chaque unité appariée (une
+      consigne et toutes ses exécutions, ou une tâche ; D-S1), on mise une part bornée de la richesse sur «
+      le moniteur boîte blanche fait mieux que son comparateur sur cette unité » ; si les deux se valent, la
+      richesse ne croît pas en moyenne, et l'inégalité de Ville borne à α la probabilité qu'elle franchisse
+      jamais 1/α ; la différence est établie si elle le franchit. Les mises bornées empêchent qu'une seule
+      unité décide. L'intervalle par rééchantillonnage du texte envoyé n'est plus que rapporté. D-S1, D-S8
+      et D-S11 sont des numéros de décisions de la conception du pari, retenues par N-055 ;
+      la revendication est portée par H1a, la strate « diffus, flou » ; H1b, l'écart entre tâches floues et
+      nettes, est mesurée et rapportée sans porter la revendication (N-055) ;
+      la porte est rapportée mode par mode. Le nombre de modes jugés est un conflit ouvert : « chaque
+      mode, mode tenu à l'écart compris » (N-056) contre « deux modes jugés » (décision DG1-6 (b) du
+      brouillon 6 du préenregistrement de G1, non scellé, tenu par la session mère).
+  En cas d'échec : le texte envoyé prévoyait une « bascule », publier le résultat négatif et faire de la
+  validité de construit (H8) la ligne principale [T l. 161-162]. N-062 l'a remplacée : un cycle de
+  reconception des sondes, puis une nouvelle lecture au même critère, chaque lecture sur une famille
+  tenue à l'écart neuve, sans borne de cycles, tous les cycles rapportés [N-062].
+  G2, G3, papier B : effet de fragmentation répliqué ; environnement de curation seulement si un
+  substitut bon marché de la vérité différée est validé.
+
+Période                    Ce qui se fait                                                                  Porte
+
+octobre – novembre         les instruments ; la course de la courbe dose-réponse des organismes, créée     G0, fin
+2026 (phase 0)             au plus tard le 15 novembre                                                     novembre
+
+mois 1 (décembre)          papier C : HC1, HC2, HC2b ; papier A : organismes                               —
+
+mois 2 (janvier)           HC3, HC4 ; plan 2 × 2 du papier A : accès (boîte noire ou blanche) ×            GC
+                           agrégation (par action ou séquentielle), pour séparer le gain de l'accès
+                           interne de celui de l'accumulation [P l. 15]
+
+
+
+                                                          8 / 16
+ mois 3 (février)           HC5, HC6 ; lemme et théorème sur activations réelles                          —
+
+ mois 4 (mars)              écrire le papier C ; finir le plan 2 × 2                                      G1
+
+ mois 5 et 6                attaques adaptatives (coupées en premier si le calendrier glisse), H6, H8 ;   —
+                            écrire le papier A
+
+ mois 7 (juin 2027)         publication du code, rapport final                                            —
+
+ mois 8 à 12 (scénario      papier B, l'essaim                                                            G2, G3
+ ambitieux)
+
+
+Financement demandé : 1er décembre 2026 – 30 juin 2027 ; entretien le 20 ou le 27 novembre 2026, selon l'avancement
+(mot de Lazar du 10 novembre). D'après le texte envoyé au fonds (section 7) et la décision N-027 pour la porte de fin de
+phase.
+
+
+
+
+                                                             9 / 16
+7. Le dispositif
+
+7.1 Les organismes et la courbe dose-réponse
+Un organisme est un agent saboteur construit pour l'expérience, dont on règle l'intensité du sabotage, la
+dose. Famille (i) : instruction cachée dans le message système. Famille (ii) : adaptateur appris qui
+inculque la même politique sans instruction à l'inférence, distillé de (i). Famille (iii) : organismes publics,
+au scénario ambitieux seulement [P l. 131-133]. Famille (iv), ajoutée par N-053 : une politique de sabotage
+apprise sans aucun texte de consigne (réglage fin sur des documents qui la décrivent, puis récompense
+sur le résultat), sur devis et autorisation. La dose est l'échelle de l'adaptateur appris ; à la dose 0, le
+modèle de base est reproduit à l'identique [T l. 278-279].
+
+  La courbe dose-réponse course créée au plus tard le 15 novembre montre que le sabotage mesuré croît avec
+  la dose. Elle valide l'instrument : un organisme dont le réglage n'agit pas ne permet de rien conclure sur
+  les moniteurs. C'est le critère 2 de la porte de fin de phase. Elle se mesure par la course de confirmation
+  « 7b », dont le préenregistrement et la configuration sont scellés [C7b] ; une course exploratoire l'a
+  précédée, non opposable parce qu'elle n'était pas préenregistrée. Le sabotage s'y mesure par la vérité
+  de la tâche, c'est-à-dire par un dommage mesuré (section 11, question 2). Un glissement de la course 7b
+  repousse la porte de fin de phase au 31 janvier 2027.
+
+7.2 Les moniteurs
+   Boîte blanche : cinq familles de sondes, agrégation sur les jetons par maximum ou attention ; un
+   plancher (sonde aléatoire de même covariance) à battre ; une réserve de détecteurs jamais déployés [T
+   l. 128-130].
+   Boîte noire : un moniteur faible par action, des juges génératifs, des variantes séquentielles et en
+   cascade [T l. 130-133].
+   Calage : le seuil de chaque moniteur est calé sur des épisodes honnêtes réservés et entiers, sans aucun
+   exemple de sabotage.
+
+7.3 Le bras d'attaque
+Un moniteur éprouvé seulement contre les attaques de ses concepteurs prouve peu. Le bras donne à
+l'attaquant une connaissance déclarée, échelon par échelon : 1, aveugle ; 2, informé de la conception, par
+le seul contenu de ses actions ; 3, informé, avec des verdicts comptés (un nombre plafonné et scellé
+d'avance de verdicts binaires, alerte ou non, rendus par le moniteur gelé à ses essais) ; 4, écriture des
+activations ; 5, réglage fin des poids ; 6, renforcement contre la sonde. Il mesure ce que chaque échelon
+achète en évasion, à dommage réel ; le résultat visé est une courbe, pas une attaque. Trois témoins
+décident si un échelon se lit : un moniteur à faille plantée (l'attaquant est assez fort), un nul « honnête
+contre honnête » (la chaîne ne fabrique pas l'effet), une attaque publiée reproduite (le banc est à l'échelle
+de la littérature). Cette attaque publiée est celle de Bailey et collègues (« Obfuscated Activations Bypass
+LLM Latent-Space Defenses », arXiv 2412.09565) : un suffixe appris par gradient dans les plongements
+d'entrée, contre une sonde, régime de l'échelon 4 ; son préenregistrement de témoin, le « témoin de Bailey
+», est scellé ; ses conditions de lancement (autorisation de dépense, modèle, licence) attendent [TB]. Rien
+ne touche un moniteur du programme avant son gel. règle scellée le 10 novembre rien n'a tourné [RB]
+
+7.4 L'organisme d'idéation
+Un projet voisin : des agents proposent des hypothèses de recherche ; un juge statistique, calculé hors de
+tout agent, décide ce qui est promu. Son juge est lui-même un moniteur, de prétentions de recherche :
+l'attaquer relève de la même méthode que le bras. Il est le second terrain du papier C, hors du plan
+financé. un PDF à part le présente depuis zéro
+
+
+8. La méthode : pourquoi chaque règle existe
+
+ Règle                                   Ce qu'elle empêche
+
+ Préenregistrement scellé avant toute    ajuster l'hypothèse ou le seuil après avoir vu le résultat
+ donnée, simulation comprise
+
+
+
+                                                       10 / 16
+Contre-lecture par une instance qui ne l'a    les angles morts de l'auteur
+pas écrit
+
+Aucun run qui vise un signe                   relancer jusqu'à obtenir le résultat espéré
+
+Symétrie : un résultat trop propre, positif   auditer seulement ce qui déplaît
+ou négatif, déclenche le même audit
+
+Gardes testées sur un cas sain et sur un      un instrument qui échoue sans le dire
+artefact, aucun repli silencieux
+
+Empreinte de chaque fichier ; chiffre de la   les chiffres sans source, les citations de seconde main
+littérature vérifié sur le PDF, page citée
+
+Verdict de porte par un lecteur neuf, puis    l'auteur qui juge son propre résultat
+visa du directeur
+
+Graines dérivées et manifeste par run         un résultat qu'on ne peut pas refaire
+
+Dépôt des empreintes chez un tiers            une date qu'on pourrait changer ; un horodatage date un « au plus tard »,
+                                              l'ordre « scellé, puis lu » demande aussi la date de la lecture
+
+
+
+
+                                                           11 / 16
+9. Ce qui a été fait, au 10 novembre 2026
+Sans aucun résultat de sonde ni de moniteur (section 10). États relevés sur la branche principale.
+
+ Chantier                             État             Pièce, date
+
+ Socle, règles, gouvernance           fait             depuis le 5 octobre
+
+ État de l'art vérifié sur PDF        niveaux 1 et 2   98 PDF, 3 497 citations contrôlées selon le texte envoyé ; restent
+                                                       des PDF hors d'arXiv et la traçabilité
+
+ Simulation du lemme et du            simulé           31 prédictions préenregistrées ; verdict formel en attente
+ théorème
+
+ Harnais d'activations (critère 1)    verdict scellé   validé sur Llama-3.1-8B-Instruct
+
+ Environnement des propositions       construit        revalidé ; pilote fait
+
+ Revendication principale (H1)        préenregistrée   aucun résultat avant la porte G1, au mois 4 du financement
+
+ Organismes : courbe dose-réponse     course 7b        préenregistrement scellé le 10 novembre ; course créée au plus
+ (critère 2)                                           tard le 15, courbe ensuite
+
+ Sondes (critère 3)                   en cours         jeux scellés ; module en cours
+
+ Témoin positif planté de la porte    code prêt        rendez-vous le 20 novembre
+
+ Base boîte noire (critère 4)         à faire          code générique fait ; préenregistrement non écrit
+
+ Préenregistrements de G1 et du       brouillons       G1 prévu fin novembre
+ papier C (critères 6, 7)
+
+ Bras d'attaque                       en cours         règle scellée le 10 novembre (88418df0…) après trois contre-
+                                                       lectures ; témoin de Bailey scellé ; rien n'a tourné
+
+ Organisme d'idéation                 en cours         une course sur le pilier « attaque » ; deux attaques contre son juge
+                                                       courues et lues (section 10) ; un PDF à part
+
+ Dépense                              à corriger       au moins 645 dollars au 8 novembre, un plancher ; le texte envoyé
+                                                       disait « environ 20 »
+
+
+
+  10. Résultats des sondes et des moniteurs — section réservée à la
+  session mère
+  L'auteur de ce document ne lit aucun résultat de sonde ni de moniteur : c'est la condition de son rôle
+  d'attaquant informé. Cette section est à compléter par la session mère, ou par un rédacteur neuf sans
+  rôle d'attaquant, depuis les pièces scellées. Elle devrait dire, chacun avec sa pièce, sa date et son
+  statut (exploratoire ou préenregistré) :
+      ce que les sondes lisent sur les organismes et les épisodes déjà produits, et contre quel plancher ;
+      les lectures déjà faites autour des organismes (dont la course exploratoire), avec leur réserve
+      d'exploratoire ;
+      les témoins de la porte (témoin positif planté) et ce qu'ils ont montré ;
+      le verdict de l'attaque contre le juge de l'organisme d'idéation, dans sa lecture bornée ;
+      ce qui sera lu avant l'entretien, et quand.
+  Le socle de preuves que prépare la session mère pour l'entretien couvre déjà ces lignes.
+
+
+
+
+                                                          12 / 16
+11. Les trois questions les plus dangereuses du jury, et ce qu'on y répond
+Tirées d'une répétition où un lecteur neuf a joué le jury sur le seul texte envoyé au fonds [JR]. Pour chaque question :
+pourquoi elle est dangereuse ; ce que le dessin y répond déjà, par les décisions prises depuis l'envoi ; ce qu'il faut encore
+produire avant l'entretien, et par qui ; ce qu'il ne faut pas dire. La part qui dépend de résultats revient à la session mère
+(section 10).
+
+Question 1 — « G1 est-elle triviale ? »
+
+  La question. Dans la famille (i), la consigne de sabotage est dans le message système, et les sondes
+  lisent aussi le contexte privé de l'agent [T l. 122, 139-140] : une sonde placée après ce message peut
+  simplement détecter la consigne. La boîte noire voit-elle le même contexte ? Sinon, gagner sur (i)
+  mesure l'accès à la consigne, pas une évidence qui s'accumule. Et pour la famille (ii), distillée de (i),
+  qu'est-ce qui distingue une intention d'une trace de fabrication ?
+
+Pourquoi elle est dangereuse. C'est le résultat principal. Si la famille (i) décide G1, un G1 positif est
+acquis d'avance ; si seule (ii) compte, un adaptateur distillé peut porter une direction « saboteur sous
+consigne » qu'aucun modèle vraiment désaligné n'aurait.
+Ce que le dessin y répond déjà.
+   Une lecture filtrée fait foi. N-053 met dans les préenregistrements de G1 et du papier C un bras «
+   fuite textuelle et contrôlabilité » : chaque sonde est lue sur toutes les positions, puis avec les positions
+   porteuses d'évidence textuelle masquées ; la lecture filtrée est la lecture principale de toute
+   revendication d'« intention » [N-053 point 1].
+   Une famille sans aucun texte de consigne. La famille (iv) apprend la politique de sabotage sans
+   consigne ; la prédiction de validité est étendue : une sonde d'intention réussit sur (ii) et sur (iv) [N-053
+   point 2 ; sur devis].
+   Des bases de texte à battre. Un prédicteur sur les traits du texte est obligatoire [N-029] ; le critère
+   des sondes à la porte de fin de phase n'est jugé qu'aux doses où la base « mots et coût » échoue selon
+   son propre critère [N-063] ; G1 doit battre chaque variante boîte noire, et aussi les bases boîte blanche
+   « cascade » et « dernier état » [N-055 D-S8 ; N-056].
+   L'accès séparé de l'accumulation. Le plan 2 × 2 sépare le gain de l'accès interne de celui de
+   l'accumulation [P l. 15].
+   Ce qui n'a pas servi à concevoir. Un mode de sabotage tenu à l'écart de la conception des moniteurs,
+   G1 rapportée mode par mode [N-054 ; N-056] ; une famille tenue à l'écart neuve à chaque cycle [N-
+   062].
+   La conscience d'être évalué, mesurée avant toute lecture de H8 et des contrôles croisés : mêmes
+   épisodes avec et sans marqueurs de test, test causal avec une direction placebo [N-053 point 3].
+À produire ou vérifier avant l'entretien (préenregistrement de G1, session mère ; l'auteur n'en a pas lu
+le brouillon) :
+   la parité d'information, écrite noir sur blanc : la boîte noire voit exactement les mêmes jetons que la
+   sonde, message système compris pour les deux ou exclu pour les deux ;
+   le poids des familles : la famille (i) rapportée comme contrôle de bon fonctionnement ; la décision
+   portée par (ii), et par (iv) si elle existe ;
+   un contrôle négatif de fabrication : un adaptateur honnête « de même facture » (même distillation,
+   même dose, un changement de style bénin), sur lequel la sonde ne doit pas s'allumer ; proposé ici,
+   absent des décisions lues ;
+   la liste des découpages : sur quels organismes les sondes sont entraînées, sur lesquels elles sont
+   jugées [T l. 127].
+À ne pas dire : « les deux familles sont regroupées » ; « la boîte noire ne voit pas le message système,
+c'est tout l'intérêt » ; « la sonde d'intention réussit sur les deux familles, c'est la preuve ».
+
+
+
+
+                                                            13 / 16
+Question 2 — « Le sabotage existe-t-il ? »
+  La question. Des agents de 8 milliards de paramètres écrivent des propositions d'expériences, notées
+  par un évaluateur plus faible encore. Montrez une proposition sabotée qu'un relecteur compétent
+  accepterait et que votre vérité étiquette pourtant comme sabotage. L'étiquette est-elle la condition de
+  l'organisme (« il a reçu la consigne ») ou un dommage mesuré ? Et le repli « grille simplifiée », prévu si
+  les agents sont trop faibles [T l. 325], ne supprime-t-il pas le flou que vous dites étudier ?
+
+Pourquoi elle est dangereuse. Si l'étiquette est la condition, le moniteur détecte le saboteur, pas le
+sabotage, et la thèse de l'accumulation d'actions nuisibles n'est pas testée.
+Ce que le dessin y répond déjà.
+   L'étiquette est un dommage mesuré. Pour le mode « affaiblir les contrôles », la vérité est un oracle
+   de couverture contre la référence cachée : pour chaque contrôle expérimental de l'article, une question
+   fermée (absent, altéré ou conforme dans le plan de l'agent) ; le lecteur cite l'extrait, et un programme
+   vérifie que la citation y figure mot pour mot ; deux lecteurs de deux familles de modèles autres que
+   celles des moniteurs, aveugles à la condition ; dommage = baisse de couverture par rapport au jumeau
+   honnête apparié [N-060 point 1].
+   L'oracle est éprouvé avant toute lecture : retrait mécanique d'un contrôle (il doit le voir), référence
+   d'une autre tâche (il doit échouer), plan tronqué, dose flagrante, ancre humaine sur un sous-échantillon
+   [N-060 point 2]. Repli écrit d'avance : si ces préconditions échouent, on lit la seule condition «
+   sabotage demandé », sans affirmer de dommage [N-060 point 3].
+   La dose agit-elle ? La courbe dose-réponse (critère 2 de la porte de fin de phase, course 7b) le dit ; la
+   dose 0 reproduit le modèle de base à l'identique [T l. 278-279].
+   La tromperie existe-t-elle à 8 milliards de paramètres ? Une porte préalable de séparabilité sur
+   une tâche à résultat vérifiable, puis un sous-ensemble des lectures décisives à plus grande taille, au
+   devis de la phase 1 [N-053 point 4].
+   Le repli « grille simplifiée » : s'il sert, le régime flou recule, et cela se dit ; l'écart entre tâches floues
+   et nettes est de toute façon mesuré et rapporté (H1b) [N-055], et la revendication se restreint à ce qui
+   est mesuré.
+À produire avant l'entretien (session mère) : 5 à 10 paires « honnête / sabotée » sur un même article,
+chacune avec sa cible plantée, la preuve que le défaut est présent et vérifiable, et les notes du moniteur
+par action sous le seuil ; la courbe de la course 7b ; le protocole écrit de la vérification humaine (nombre
+d'éléments, nombre et profil des experts, aveuglement, accord visé fixé d'avance, coût par élément
+cohérent avec la ligne de 4 000 dollars [T l. 383]).
+À ne pas dire : « la vérité de terrain, c'est la consigne » ; « on le saura après le pilote » ; un évaluateur de
+confiance de la même famille que l'agent.
+
+Question 3 — « Que faites-vous que les agents ne font pas ? »
+
+  La question. Les agents font l'ingénierie, les courses, les vérifications de littérature et les relectures, et
+  leurs relecteurs partagent une famille de modèles [T l. 256-258]. Sans notes : pourquoi, sous le lemme,
+  la puissance de la somme terminale ne dépend-elle que de B, et quelle hypothèse casse la première sur
+  de vraies activations ? Puis une erreur des agents que vous avez attrapée vous-même, et une que vous
+  avez ratée.
+
+Pourquoi elle est dangereuse. Le fonds paie surtout un jugement, et le processus décrit est presque
+entièrement délégué.
+La dérivation au tableau, à savoir sans notes (section 4.2) :
+1. Sous un pur décalage de moyenne, chaque action sabotée ajoute δk à la note attendue ; la somme
+   terminale attaquée vaut la somme honnête plus B = Σδk, quelle que soit la répartition (agents, pas,
+   positions, même adaptative).
+2. Sa loi est donc la loi honnête translatée de B : la puissance P(Shonnête + B > cα) ne dépend que de B, de
+   l'horizon n0, de la loi honnête et de α ; dans le cas gaussien, Φ̄(zα − B/(σ√n0)).
+3. Ce qui casse le premier sur de vraies activations : le sabotage change la variance ou la dépendance des
+   notes (classe K, section 4.3) ; la réponse de la sonde n'est pas additive en intensité ; la loi honnête du
+
+
+                                                      14 / 16
+   calage n'est plus celle de la lecture (épisodes non échangeables) ; sans lecture toujours valide, l'arrêt
+   au moment choisi fausse le seuil.
+Une décision qui est la sienne : le passage du seuil de Ville à l'étalonnage sur épisodes honnêtes
+entiers. La simulation préenregistrée a montré que le seuil de Ville seul ne tient pas hors de ses
+hypothèses : des fausses alertes de 0,21 à 0,35 sous effets d'épisode et de 0,17 sous corrélation entre
+agents, au lieu de 0,05 ; le seuil calé sur des épisodes entiers tient 0,046 à 0,055 [T l. 90-92 ; NM l. 165 ;
+verdict formel de la simulation en attente]. Ce qu'on y perd, à dire : la garantie n'est plus une borne
+théorique, mais une mesure sur des épisodes honnêtes (section 4.1).
+Ce que fait la personne, et non les agents : poser les questions et les hypothèses ; décider chaque
+porte, chaque dépense et chaque nœud ; refuser toute course qui vise un signe ; trancher quand une
+vérification contredit le travail des agents. Exemple du 10 novembre : la contre-lecture de l'antériorité du
+bras a trouvé deux zones revendiquées déjà en partie occupées ; Lazar a resserré les revendications au
+lieu de les garder [D1018]. Contre les erreurs corrélées : un contre-lecteur de même famille mais d'un
+autre modèle [N-052], un juge d'une autre lignée [N-053 point 4], une vérification hors des agents (dépôt
+des empreintes chez un tiers, réplication indépendante) et la validation humaine de la vérité de terrain [T
+l. 334-335].
+À produire avant l'entretien (Lazar, aidé de la session mère) : un registre des erreurs daté et
+empreinté, avec deux ou trois cas où Lazar a contredit les agents, et un cas d'erreur qui leur a échappé et
+qu'un test ou un humain a attrapée ; la dérivation, répétée sans notes.
+À ne pas dire : « les agents l'ont vérifié » ; « les tests passent », donné comme argument ; aucune
+décision prise contre l'avis des agents.
+
+
+12. Ce qui reste
+Avant l'entretien : la courbe dose-réponse des organismes (course 7b, créée au plus tard le 15 novembre) ;
+la phrase sur la dépense ; quatre phrases prévues pour le jury qui sur-affirment ; le dépôt des empreintes
+chez un tiers ; le témoin positif planté (le 20) ; le témoin de Bailey couru si ses conditions de lancement
+sont réunies ; les pièces de la section 11 (parité d'information et contrôle de fabrication au
+préenregistrement de G1, paires « honnête / sabotée », protocole de la vérification humaine, registre des
+erreurs). Après : les préenregistrements de G1 et du papier C, la fin de la phase des instruments, puis le
+plan des sept mois. Le tri détaillé, avec valeur pour le jury, probabilité et coût, est dans le PDF « état et
+décisions » (version 1).
+
+
+Annexe — Sources
+
+ Sigle     Pièce                                                                      Empreinte
+
+ [P]       programme v2, docs/programme-controle-ia-v2.md                             2fd63badb5afea48f48d3ca501ae3b027c4094
+                                                                                      a8b176508488a41a22e45aa18c
+
+ [T]       texte envoyé au fonds, docs/sources/candidature-taif-2026-10-07/propo      b2458c2d209aaa817ca3c77bfc8ef99288d489
+           sal_v2_TAIF_2026-10-07.txt                                                 ae7b58b747fd8cda6a71e33ca0
+
+ [NM]      note mathématique v3, docs/notes/note-mathematique-lemme-theoreme-v        dfe4fe0fc4d025011bbe0f330fd591b1898dc7
+           3.md                                                                       e767384e96c946b6388ad81cd0
+
+ [PT3]     préenregistrement de la simulation, prereg/T0.3-simulation-lemme-the       7474743a0fa2a9db5da85bcedb0087ea57114f
+           oreme-v1.md                                                                cca0fbb3415c7a97bf1b78d1fb
+
+ [BR]      brief du programme v2, docs/brief-claude-code-programme-complet-v2.        9261932a11f29e8643175bc6e150d5455067f5
+           md                                                                         8a3cb1e57dca99e02cb17aa3b2
+
+ N-003     décisions N-003 et N-004, docs/decisions/decision-N-003-N-004-v1.md        cc1be39369bc4dae9b3166c513d783b4744c62
+                                                                                      d839951f047a44396aa3a81a5a
+
+ N-062     échec de G1 : reconception, docs/decisions/decision-N-062-v1.md            63f426903e6d0774085a628ec019d2022d3107
+                                                                                      f6bd8e56eebbe75c0eeb0f3ccc
+
+ N-029     base boîte noire locale ; prédicteur sur les traits du texte obligatoire   084e30523c0a0349…
+           (énoncé repris du résumé de [CL]), docs/decisions/decision-N-029-v1.
+           md
+
+
+
+
+                                                            15 / 16
+N-052     contre-lecteur de la boucle extérieure, docs/decisions/decision-N-052-    817d218b22b8d1d4…
+          v1.md
+
+N-053     cinq propositions de l'audit défensif, docs/decisions/decision-N-053-v    2204256d744288be…
+          1.md
+
+N-054     modes de sabotage, mode tenu à l'écart, docs/decisions/decision-N-05      c8a00b3f885ae3e9…
+          4-v1.md
+
+N-055     pari apparié borné, H1a et H1b, docs/decisions/decision-N-055-v1.md       371879d5bd44f5fd…
+
+N-056     comparateurs de G1, gain par mode, docs/decisions/decision-N-056-v        3592c1e977e8c38c…
+          1.md
+
+N-060     vérité du dommage, version 3, docs/decisions/decision-N-060-v3.md         2b448f696503112c…
+
+N-063     critère 3 de la porte de fin de phase (énoncé repris du résumé de         b2d9f03543802f82…
+          [CL]), docs/decisions/decision-N-063-v2.md
+
+[CL]      consignes permanentes du dépôt, résumé des décisions, CLAUDE.md           b4cbc66a422a6246…
+
+[C7b]     configuration scellée de la course 7b, prereg/T0.6-organismes-config-7    b7a5c1baeee13f75…
+          b-v1.json
+
+[RB]      règle du bras d'attaque, scellée, prereg/bras-attaque-regle-v1.md         88418df09c2e969c…
+
+[TB]      témoin de Bailey, préenregistrement scellé, prereg/temoin-attaque-pub     fb6c2f34355d98ba…
+          liee-bailey-v1.md
+
+[JR]      répétition du jury sur le texte envoyé, docs/notes/entretien-recapitula   f3891b742940080…
+          tif-v1/repetition-jury-texte-envoye-v1.md
+
+[D1018]   décisions de Lazar du 10 novembre, registres/passations/2026-11-10-       8a2c8b71c8dffb62…
+          1018-decision-lazar-anteriorite-procedures-jury-transmission.md
+
+—         questionnaire de compréhension, scellé avant ce document, docs/note       77c491f21a15b0714da804d0f16c4ff9cfa530
+          s/entretien-recapitulatif-v1/questionnaire-comprehension-programme-v      77fe6326e9ab785252ebae02f4
+          1.md
+
+—         PDF « état et décisions », version 1, livrables/programme-complet-entr    add99b26a2f8e4da884ab594d3c846d95319b3
+          etien-v1/programme-complet-entretien-v1.pdf                               fedc911a7ac623bda4735923a2
+
+
+
+
+                                                          16 / 16
+
