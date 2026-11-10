@@ -451,6 +451,54 @@ def test_constantes_reelles_de_la_chaine():
     assert r.returncode == 0, r.stderr
 
 
+# ================================================================================================= configuration
+CFG_P3 = ICI.parents[2] / "prereg/P3-premier-test-config-v1.json"
+CFG_B1 = ICI.parents[2] / "brouillons/P3-bis-temoin-positif-v1/P3-bis-temoin-positif-config-v1-brouillon1.json"
+
+
+def cfg_saine(tmp_path, **changes):
+    import hashlib
+    cons = tmp_path / "consignes.md"
+    cons.write_text("consignes factices\n", encoding="utf-8")
+    c = json.loads(CFG_B1.read_text(encoding="utf-8"))
+    c["consignes_sha256"] = hashlib.sha256(cons.read_bytes()).hexdigest()
+    for k, v in changes.items():
+        if v == "SUPPRIMER":
+            del c[k]
+        else:
+            c[k] = v
+    return ecrire(tmp_path, "cfg.json", json.dumps(c, indent=1)), str(cons)
+
+
+def test_config_saine_brouillon1_rempli(tmp_path):
+    cfg, cons = cfg_saine(tmp_path)
+    r = cli("config", cfg, str(CFG_P3), cons)
+    assert r.returncode == 0, r.stderr
+    assert "budget_entrainement_s, chemin_consignes, consignes_sha256, duree_max_s, fils_entrainement" in r.stdout
+
+
+@pytest.mark.parametrize("changes, motif", [
+    ({"lot": 4}, "hors des écarts du texte : ['lot']"),
+    ({"duree_max_s": 16200}, "duree_max_s = 16200"),
+    ({"budget_entrainement_s": "SUPPRIMER"}, "budget_entrainement_s = 'absent'"),
+    ({"fils_entrainement": 32}, "fils_entrainement = 32"),
+    ({"chemin_consignes": "prereg/P3-consignes-v1.md"}, "chemin_consignes"),
+    ({"consignes_sha256": "0" * 64}, "consignes_sha256"),
+    ({"temperature": 0.7}, "temperature"),
+    ({"nouvelle_cle": 1}, "nouvelle_cle"),
+])
+def test_config_artefact(tmp_path, changes, motif):
+    cfg, cons = cfg_saine(tmp_path, **changes)
+    r = cli("config", cfg, str(CFG_P3), cons)
+    assert r.returncode == 1 and motif in r.stderr, r.stderr
+
+
+def test_config_artefact_brouillon1_non_rempli(tmp_path):
+    cons = ecrire(tmp_path, "c.md", "x\n")
+    r = cli("config", str(CFG_B1), str(CFG_P3), cons)
+    assert r.returncode == 1 and "consignes_sha256" in r.stderr
+
+
 # ================================================================================================= longueurs
 def mesure(n=60, a=88, t=88, b=90):
     return {"par_tache": [{"tache": f"t{i}", **{m: {"saboteur": a + (i % 2), "temoin": t + (i % 2), "mention": b}

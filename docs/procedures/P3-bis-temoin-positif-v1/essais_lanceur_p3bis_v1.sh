@@ -77,8 +77,8 @@ cp "$ICI/verifications_p3bis_v1.py" "$E/H/"
 cat > "$E/H/controles_avant_depense_p3bis_v1.sh" <<'EOF'
 #!/usr/bin/env bash
 mkdir -p "$2" "$2.travail" && echo donnees > "$2/x"
-echo "arguments : S=${1:0:12} ; $# arguments"
-[ $# = 2 ] || { echo "KO  essai : nombre d'arguments"; echo "CONTRÔLES AVANT DÉPENSE : ÉCHEC"; exit 1; }
+echo "arguments : S=${1:0:12} ; $# arguments ; branche $3"
+[ $# = 3 ] && [ "$3" = "${FAUX_BRANCHE_ATTENDUE:-calcul/p3bis-reel-v1}" ] || { echo "KO  essai : arguments ($*)"; echo "CONTRÔLES AVANT DÉPENSE : ÉCHEC"; exit 1; }
 if [ -n "${FAUX_KO:-}" ]; then echo "OK  essai"; echo "KO  essai : faute simulée"; echo "CONTRÔLES AVANT DÉPENSE : ÉCHEC"; exit 1; fi
 if [ -n "${FAUX_DERNIERE:-}" ]; then echo "OK  essai"; echo "dernière ligne inattendue (essai)"; exit 0; fi
 echo "OK  essai"; echo "CONTRÔLES AVANT DÉPENSE : TOUS CONFORMES"
@@ -108,7 +108,7 @@ texte() {   # $1 GO de la ligne « GO », $2 GO de la ligne Lancement, $3 branch
 URL=file://$E/distant.git
 for s in lancer_p3bis_v1.sh $CHAINE; do cp "$E/H/$s" "$VERSEES/$s"; done
 # journaux de preuve conformes au module commun (scripts éprouvés : empreintes des copies jouées)
-python3 -I - "$E/H/verifications_p3bis_v1.py" "$E/H" "$VERSEES" <<'EOF' || exit 2
+python3 -I -B - "$E/H/verifications_p3bis_v1.py" "$E/H" "$VERSEES" <<'EOF' || exit 2
 import hashlib, importlib.util, sys
 from pathlib import Path
 spec = importlib.util.spec_from_file_location("v", sys.argv[1]); v = importlib.util.module_from_spec(spec); spec.loader.exec_module(v)
@@ -175,7 +175,7 @@ apres L00 "traces : instance écrite (cible unique des arrêts), offre choisie, 
     "grep -qx 'instance 99999999' '$E/traces-L00-sain/lancement.txt' && grep -q '^offre choisie : 111 (1.1 USD/h)' '$E/traces-L00-sain/lancement.txt' && [ \$(grep -c '^essai d.offre' '$E/traces-L00-sain/lancement.txt') = 1 ] && [ ! -e '$E/traces-L00-sain/repli-processeur.txt' ] && [ ! -e '$E/traces-L00-sain/clone-controles' ]"
 # L01 / L02 / L03 : branche de calcul et relance
 git -C "$E/depot" push -q origin "$S:refs/heads/calcul/p3bis-reel-v1"
-cas L01-relance-2-sain 0 "succès : True" oui "$S" 2 - "$J_OK"
+cas L01-relance-2-sain 0 "succès : True" oui "$S" 2 - "$J_OK" FAUX_BRANCHE_ATTENDUE=calcul/p3bis-reel-v2
 apres L01 "relance : branche calcul/p3bis-reel-v2, étiquette p3bis-v2" "grep -qx 'env BRANCHE=calcul/p3bis-reel-v2' '$E/vastai-L01-relance-2-sain.txt' && grep -qx 'etiquette p3bis-v2' '$E/vastai-L01-relance-2-sain.txt'"
 cas L02-branche-presente 2 "branche calcul/p3bis-reel-v1 : git ls-remote, code 0" non "$S" 1 - "$J_OK"
 git -C "$E/depot" push -q origin --delete calcul/p3bis-reel-v1

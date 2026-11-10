@@ -121,7 +121,7 @@ J_HF=${HF_TOKEN:-}; J_GH=${CONTROLE_IA_GITHUB_TOKEN:-}
 [ "${#J_HF}" -ge 8 ] && [ "${#J_GH}" -ge 8 ] || { echo "jeton absent (HF_TOKEN ou CONTROLE_IA_GITHUB_TOKEN) : pas de création"; exit 2; }
 unset J_HF J_GH
 # 4. contrôles avant dépense sur S (aucun délai : « aucun budget de temps »)
-if ! bash "$H/controles_avant_depense_p3bis_v1.sh" "$S" "$T/clone-controles" > "$T/controles.txt" 2>&1; then
+if ! bash "$H/controles_avant_depense_p3bis_v1.sh" "$S" "$T/clone-controles" "$BRANCHE" > "$T/controles.txt" 2>&1; then
     grep '^KO' "$T/controles.txt" || tail -5 "$T/controles.txt"; echo "contrôles avant dépense en échec : pas de création"; exit 2
 fi
 tail -1 "$T/controles.txt" | grep -qx "CONTRÔLES AVANT DÉPENSE : TOUS CONFORMES" || { echo "contrôles : dernière ligne inattendue"; exit 2; }

@@ -47,6 +47,9 @@ refus « d'attente » : aucune offre conforme, crédit insuffisant, dépense au 
       gras).
   constantes DOSSIER
       constantes des scripts de la chaîne (dans DOSSIER) égales à celles de ce module, une ligne chacune.
+  config CFG CFG_P3 CONSIGNES
+      configuration de P3-bis : seuls écarts à celle de P3 ceux du texte (chemin et empreinte des consignes, deux durées à
+      null, 30 fils d'entraînement), empreinte des consignes égale à celle du fichier, mode « reel ».
   longueurs MESURE ATTENDUES
       longueurs en jetons mesurées (JSON écrit par le bloc du tokeniseur des contrôles) : A et T égaux tâche par tâche
       sur les quatre mesures ; résumé égal aux longueurs attendues (JSON épinglé au candidat).
@@ -476,8 +479,42 @@ def constantes(dossier: str) -> str:
     return f"{len(CONSTANTES)} constantes de la chaîne égales à celles du module commun"
 
 
+# ================================================================================================= configuration
+# texte, en-tête : « Écarts à la configuration de P3 (…), seuls écarts : chemin_consignes ; consignes_sha256 ; duree_max_s
+# et budget_entrainement_s à null ; fils_entrainement à 30 »
+ECARTS_CONFIG = {"chemin_consignes": "prereg/P3-bis-consignes-v1.md", "duree_max_s": None, "budget_entrainement_s": None,
+                 "fils_entrainement": 30}
+
+
+def config(cfg: str, cfg_p3: str, consignes: str) -> str:
+    import hashlib
+    try:
+        c, p = json.loads(lire(cfg)), json.loads(lire(cfg_p3))
+        assert isinstance(c, dict) and isinstance(p, dict)
+    except (ValueError, AssertionError):
+        raise SystemExit("configuration : JSON illisible ou pas un objet") from None
+    absent = object()
+    ecarts = sorted(k for k in set(c) | set(p) if c.get(k, absent) != p.get(k, absent))
+    permis = set(ECARTS_CONFIG) | {"consignes_sha256"}
+    hors = [k for k in ecarts if k not in permis]
+    if hors:
+        raise SystemExit(f"configuration : écarts à celle de P3 hors des écarts du texte : {hors}")
+    for k, v in ECARTS_CONFIG.items():
+        if k not in c or c[k] != v or (v is None and c[k] is not None) or (isinstance(v, int) and isinstance(c[k], bool)):
+            raise SystemExit(f"configuration : {k} = {c.get(k, 'absent')!r} ; {v!r} attendu")
+    try:
+        sha = hashlib.sha256(open(consignes, "rb").read()).hexdigest()
+    except OSError:
+        raise SystemExit(f"consignes {consignes} absentes ou illisibles") from None
+    if c.get("consignes_sha256") != sha:
+        raise SystemExit(f"configuration : consignes_sha256 {str(c.get('consignes_sha256'))[:16]}… ≠ empreinte des consignes {sha[:16]}…")
+    if c.get("mode") != "reel":
+        raise SystemExit(f"configuration : mode {c.get('mode')!r} ; « reel » attendu")
+    return f"configuration : seuls écarts à P3 ceux du texte ({', '.join(ecarts)}) ; consignes citées par leur empreinte"
+
+
 # ================================================================================================= longueurs
-MESURES = ("consigne_seule", "indication_seule", "consigne_gabarit", "indication_gabarit")
+MESURES =("consigne_seule", "indication_seule", "consigne_gabarit", "indication_gabarit")
 
 
 def resume_longueurs(par_tache: list[dict]) -> dict:
@@ -613,6 +650,8 @@ def main(argv: list[str]) -> int:
         print(constantes(argv[2]))
     elif c == "longueurs" and n == 4:
         print(longueurs(*argv[2:4]))
+    elif c == "config" and n == 5:
+        print(config(*argv[2:5]))
     elif c == "preuves" and n >= 3:
         print("\n".join(preuves(argv[2], argv[3:])))
     else:
