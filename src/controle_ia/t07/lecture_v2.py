@@ -14,7 +14,8 @@ notation.
     PYTHONPATH=src python -m controle_ia.t07.lecture_v2 passe-blanc RACINE RUN_T06 CONFIG_T07 [--registre CHEMIN] [--racine-sortie R]
 
 `passe-blanc` : passe à blanc de l'extracteur avant l'étape A (fichier neuf `passe_blanc_v1.py` ; aucune donnée décisive ; codes
-0 tenue, 2 refus, 3 arrêt motivé).
+0 tenue, 2 refus, 3 arrêt motivé). `repli-seul RACINE RUN_T06 CONFIG_T07` et `etape-a-apres-repli RACINE RUN_T06 CONFIG_T07 RAPPORT` :
+repli en deux temps de la variante B (fichier neuf `repli_etapes_v1.py`).
 
 Codes de sortie : ceux de `lecture_v1` (0, 2, 3). **Écart de nom déclaré** : le texte nomme `python -m controle_ia.t07.lecture_v1` ;
 la v2 est un fichier neuf (R12), la commande change de nom.
@@ -1097,6 +1098,9 @@ def main(argv: list[str]) -> int:
     if argv and argv[0] == "passe-blanc":                         # passe à blanc de l'extracteur (fichier neuf)
         from . import passe_blanc_v1 as pb
         return pb.main(argv[1:])
+    if argv and argv[0] in ("repli-seul", "etape-a-apres-repli"):     # repli en deux temps, variante B (fichier neuf)
+        from . import repli_etapes_v1 as rt
+        return rt.main(argv)
     p = argparse.ArgumentParser(prog=COMMANDE, description=__doc__.splitlines()[0])
     sp = p.add_subparsers(dest="action", required=True)
     sp.add_parser("passe-blanc", help="passe à blanc de l'extracteur (passe_blanc_v1 : RACINE RUN_T06 CONFIG_T07 [--registre] [--racine-sortie])")
