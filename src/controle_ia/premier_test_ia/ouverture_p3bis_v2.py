@@ -366,13 +366,30 @@ def _ecrire_neuf(chemin: Path, octets: bytes) -> None:
 
 
 def exclure_localement(racine: Path, motifs) -> None:
-    """Ajoute des motifs à `.git/info/exclude` du clone (local, jamais commité) ; hors d'un clone git : garde."""
+    """Ajoute des motifs à `.git/info/exclude` du clone (local, jamais commité) ; hors d'un clone git : garde.
+    Contre-lecture différentielle, CD-01 (incident R-2085) : refus, motif écrit et rien d'écrit, si la racine git trouvée
+    n'est pas la racine donnée (sous-dossier d'un dépôt englobant : son fichier d'exclusion serait touché) ou si c'est un
+    arbre lié (`.git` est un fichier : le fichier d'exclusion est commun à tous les arbres du dépôt) ; le fichier écrit doit
+    être sous `<racine>/.git/`."""
+    racine = Path(racine)
+    r = subprocess.run(["git", "-C", str(racine), "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise GardeArret(f"{racine} n'est pas un clone git ({r.stderr.strip()})")
+    haut = Path(r.stdout.strip())
+    if haut.resolve() != racine.resolve():
+        raise GardeArret(f"{racine} n'est pas la racine de son dépôt git ({haut}) : le fichier d'exclusion serait celui d'un "
+                         f"dépôt englobant ; refusé, rien d'écrit (CD-01)")
+    if not (racine / ".git").is_dir():
+        raise GardeArret(f"{racine} est un arbre lié (.git n'est pas un dossier) : son fichier d'exclusion est commun à tous "
+                         f"les arbres du dépôt ; refusé, rien d'écrit (CD-01)")
     r = subprocess.run(["git", "-C", str(racine), "rev-parse", "--git-path", "info/exclude"], capture_output=True, text=True)
     if r.returncode != 0:
         raise GardeArret(f"{racine} n'est pas un clone git ({r.stderr.strip()})")
     chemin = Path(r.stdout.strip())
     if not chemin.is_absolute():
-        chemin = Path(racine) / chemin
+        chemin = racine / chemin
+    if (racine / ".git").resolve() not in chemin.resolve().parents:
+        raise GardeArret(f"fichier d'exclusion {chemin} hors de {racine}/.git ; refusé, rien d'écrit (CD-01)")
     chemin.parent.mkdir(parents=True, exist_ok=True)
     deja = set(chemin.read_text(encoding="utf-8").splitlines()) if chemin.exists() else set()
     with open(chemin, "a", encoding="utf-8") as f:
