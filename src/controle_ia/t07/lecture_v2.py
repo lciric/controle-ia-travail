@@ -11,6 +11,10 @@ notation.
     PYTHONPATH=src python -m controle_ia.t07.lecture_v2 repli-recalcul RACINE RUN_T06 CONFIG_T07 [--registre CHEMIN]
     PYTHONPATH=src python -m controle_ia.t07.lecture_v2 grille
     PYTHONPATH=src python -m controle_ia.t07.lecture_v2 empreinte-config CONFIG_T07
+    PYTHONPATH=src python -m controle_ia.t07.lecture_v2 passe-blanc RACINE RUN_T06 CONFIG_T07 [--registre CHEMIN] [--racine-sortie R]
+
+`passe-blanc` : passe à blanc de l'extracteur avant l'étape A (fichier neuf `passe_blanc_v1.py` ; aucune donnée décisive ; codes
+0 tenue, 2 refus, 3 arrêt motivé).
 
 Codes de sortie : ceux de `lecture_v1` (0, 2, 3). **Écart de nom déclaré** : le texte nomme `python -m controle_ia.t07.lecture_v1` ;
 la v2 est un fichier neuf (R12), la commande change de nom.
@@ -1050,8 +1054,12 @@ def etape_b(racine: Path, registre: Path, config: dict, run_t06: str, run_t07: s
 
 # ---------------------------------------------------------------------------------------------------------------- commande
 def main(argv: list[str]) -> int:
+    if argv and argv[0] == "passe-blanc":                         # passe à blanc de l'extracteur (fichier neuf)
+        from . import passe_blanc_v1 as pb
+        return pb.main(argv[1:])
     p = argparse.ArgumentParser(prog=COMMANDE, description=__doc__.splitlines()[0])
     sp = p.add_subparsers(dest="action", required=True)
+    sp.add_parser("passe-blanc", help="passe à blanc de l'extracteur (passe_blanc_v1 : RACINE RUN_T06 CONFIG_T07 [--registre] [--racine-sortie])")
     for nom, aide in (("etape-a", "notation scellée, fermée"), ("etape-b", "lecture mécanique"), ("repli-recalcul", "recalcul des activations (repli)")):
         q = sp.add_parser(nom, help=aide)
         q.add_argument("racine")
