@@ -308,17 +308,20 @@ def test_configuration_compagnon_absent_faux_ou_json_illisible(tmp_path):
 
 
 def test_configurations_livrees_lisibles_et_egales_au_depot_public(tmp_path):
-    """Les deux fichiers livrés, lus avec un compagnon calculé ici (le dossier n'en porte pas : la mère scelle) ; variante (ii)
-    livrée ; empreintes égales aux fichiers du clone public local s'il est présent."""
+    """Les deux fichiers livrés, lus avec leur compagnon (écrit par la mère, R-1966, commit 7eeecce2) ; artefact : une copie
+    sans compagnon est refusée, puis lue une fois scellée ici ; variante (ii) livrée ; empreintes égales aux fichiers du
+    clone public local s'il est présent."""
     pub = Path("/home/user/ideation-organism")
     for variante in ("i", "ii"):
         src = ICI / f"configuration-mondes-variante-{variante}-v1.json"
-        with pytest.raises(h.Refus, match="compagnon .sha256 absent"):
-            v5.lire_configuration_mondes(src)
+        c_livree = v5.lire_configuration_mondes(src)  # cas sain : compagnon livré
         copie = tmp_path / src.name
         copie.write_bytes(src.read_bytes())
+        with pytest.raises(h.Refus, match="compagnon .sha256 absent"):  # artefact : copie sans compagnon
+            v5.lire_configuration_mondes(copie)
         sceller(copie)
         c = v5.lire_configuration_mondes(copie)
+        assert {k: v for k, v in c.items() if k != "chemin"} == {k: v for k, v in c_livree.items() if k != "chemin"}
         assert c["variante"] == variante and c["lanceur_gele"] == LANCEUR_GELE and len(c["fichiers_geles_publics"]) == 11
         assert {"pole/attaque_goodhart_v4.py", "pole/nul_v9.py", "demonstrations/banc_tricheurs_v9.py", LANCEUR_GELE} <= set(c["fichiers_geles_publics"])
         if (pub / "orchestrator" / "pole" / "nul_v9.py").is_file():
