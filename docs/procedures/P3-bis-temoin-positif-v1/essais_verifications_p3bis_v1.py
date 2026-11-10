@@ -22,6 +22,7 @@ _spec = importlib.util.spec_from_file_location("verifications_p3bis_v1", MODULE)
 V = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(V)
 BROUILLON9 = ICI.parents[2] / "brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-brouillon9.md"
+BROUILLON10 = ICI.parents[2] / "brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-brouillon10.md"   # 9038a015…, recopié de main
 
 ENTETE = ("| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |\n"
           "|---|---|---|---|---|---|---|---|\n")
@@ -71,7 +72,8 @@ def test_go_sain(go_ok):
 
 
 def test_go_sain_dernier_jour(go_ok):
-    assert cli("go", *go_ok, "2026-11-23").returncode == 0
+    # dernier jour de création : la borne du texte (18 novembre, brouillon 10, R-2097), pas l'échéance du GO (23)
+    assert cli("go", *go_ok, "2026-11-18").returncode == 0
 
 
 def test_go_sain_sans_la_ligne_d_origine(tmp_path):
@@ -80,6 +82,8 @@ def test_go_sain_sans_la_ligne_d_origine(tmp_path):
 
 
 @pytest.mark.parametrize("jour, motif", [("2026-11-24", "hors de la validité"), ("2026-11-09", "hors de la validité"),
+                                         ("2026-11-19", "borne de création du 2026-11-18"),
+                                         ("2026-11-23", "borne de création du 2026-11-18"),
                                          ("2026-11-1", "mal formé"), ("2026-13-40", "impossible")])
 def test_go_artefact_jour(go_ok, jour, motif):
     r = cli("go", *go_ok, jour)
@@ -89,8 +93,17 @@ def test_go_artefact_jour(go_ok, jour, motif):
 def test_go_artefact_date_limite_constante(go_ok, tmp_path, monkeypatch):
     # échéance du registre et date limite sont deux gardes distinctes : la constante seule refuse le 23 si elle valait le 22
     monkeypatch.setattr(V, "DATE_LIMITE_CREATION", "2026-11-22")
+    monkeypatch.setattr(V, "BORNE_CREATION", "2026-11-30")
     with pytest.raises(SystemExit, match="après le 2026-11-22"):
         V.go(*go_ok, "2026-11-23")
+
+
+def test_go_artefact_borne_constante(go_ok, monkeypatch):
+    # borne de création et échéance du GO sont deux gardes distinctes : la borne seule refuse le 18 si elle valait le 17
+    monkeypatch.setattr(V, "BORNE_CREATION", "2026-11-17")
+    with pytest.raises(SystemExit, match="borne de création du 2026-11-17"):
+        V.go(*go_ok, "2026-11-18")
+    assert V.BORNE_CREATION == "2026-11-17"
 
 
 @pytest.mark.parametrize("texte, motif", [
@@ -451,19 +464,19 @@ def test_depense_artefact_arguments(args):
 
 
 # ================================================================================================= valeurs, constantes
-def test_valeurs_sain_brouillon9_reecrit(tmp_path):
-    r = cli("valeurs", ecrire(tmp_path, "p.md", brouillon9_reecrit()))
+def test_valeurs_sain_brouillon10():
+    r = cli("valeurs", str(BROUILLON10))
     assert r.returncode == 0, r.stderr
 
 
 def test_valeurs_ecart_declare_brouillon9_tel_quel():
-    # le brouillon 9 dit encore GO-2026-11-02-29 et le 16 novembre : écart texte-code déclaré (porté au brouillon 10)
+    # le brouillon 9 dit encore GO-2026-11-02-29 et le 16 novembre, sans borne de création : refusé (corrigé au brouillon 10)
     r = cli("valeurs", str(BROUILLON9))
-    assert r.returncode == 1 and "23 novembre" in r.stderr and "GO-2026-11-10-02" in r.stderr
+    assert r.returncode == 1 and "23 novembre" in r.stderr and "GO-2026-11-10-02" in r.stderr and "18 novembre" in r.stderr
 
 
 def test_valeurs_artefact(tmp_path):
-    t = brouillon9_reecrit().replace("2,10 USD de l'heure", "2,50 USD de l'heure")
+    t = BROUILLON10.read_text(encoding="utf-8").replace("2,10 USD de l'heure", "2,50 USD de l'heure")
     r = cli("valeurs", ecrire(tmp_path, "p.md", t))
     assert r.returncode == 1 and "2,10" in r.stderr
 
@@ -613,3 +626,9 @@ def test_preuves_artefact_journal_absent_ou_inconnu(tmp_path):
 def test_usage():
     assert cli("inconnue").returncode == 2
     assert cli("go", "un").returncode == 2
+
+
+def test_valeurs_artefact_borne_de_creation_retiree(tmp_path):
+    t = BROUILLON10.read_text(encoding="utf-8").replace("après le 18 novembre 2026", "après le 21 novembre 2026")
+    r = cli("valeurs", ecrire(tmp_path, "p.md", t))
+    assert r.returncode == 1 and "18 novembre" in r.stderr

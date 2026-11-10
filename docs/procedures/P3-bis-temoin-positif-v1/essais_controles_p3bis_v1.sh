@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Brouillon 3 (2026-11-10, contre-lecture différentielle) : texte candidat = brouillon 10 (marqueurs remplis) ; clone de
+# la copie en extraction partielle (CD-05), témoin fabriqué docs/notes/bras-attaque/ absent du clone (K00), refusé s'il
+# est extrait (K36) ; borne de création du 18 novembre lue par le module commun.
 # Brouillon 2 (2026-11-10, après la fusion du code corrigé) : vrais scripts de l'instance v2 (amorce, script, empreinte
 # de la liste), vraie liste ciblée v2 (531 essais ; fichiers copiés, la suite remplacée par un troisième bouchon qui écrit
 # « 531 passed », ou FAUX_SUITE), vraie sortie versée de l'essai de fermeture v2 ; l'essai rejoué au commit S reste
@@ -31,7 +34,7 @@ SRC=$(realpath "$ICI/../../..")
 PYB=/home/user/controle-ia-travail/.venv/bin/python
 V=docs/procedures/P3-bis-temoin-positif-v1
 P=prereg/P3-bis-temoin-positif-v1.md; CFG=prereg/P3-bis-temoin-positif-config-v1.json; CONSIGNES=prereg/P3-bis-consignes-v1.md
-B9=brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-brouillon9.md
+B10=brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-brouillon10.md   # 9038a015…, recopié de main
 [ -e "$E" ] && { echo "$E existe déjà (R12)"; exit 2; }
 for s in controles_avant_depense_p3bis_v1.sh verifications_p3bis_v1.py; do echo "script éprouvé : $s $(sha256sum "$ICI/$s" | cut -d' ' -f1)"; done
 echo "script éprouvé : $(basename "$0") $(sha256sum "$(realpath "$0")" | cut -d' ' -f1)"
@@ -101,8 +104,8 @@ E_ESSAI=$(sha256sum "$ESSAI_V" | cut -d' ' -f1)
 E_LONG=$(sha256sum "$V/longueurs-attendues-p3bis-banc-v1.json" | cut -d' ' -f1)
 E_RAPPORT=$(sha256sum "$RAPPORT" | cut -d' ' -f1)
 E_AMORCE=$(sha256sum scripts/amorce_instance_p3bis_v2.sh | cut -d' ' -f1); E_INST=$(sha256sum scripts/p3bis_instance_v2.sh | cut -d' ' -f1)
-# texte candidat : brouillon 9, onze marqueurs remplis
-"$PYB" -I - "$SRC/$B9" brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-candidat-banc.md "$C1" "$E_AMORCE" "$E_INST" \
+# texte candidat : brouillon 10, ses dix marqueurs remplis (l'essai de fermeture y est déjà cité : sortie v1, 06e84ff7…)
+"$PYB" -I - "$SRC/$B10" brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-candidat-banc.md "$C1" "$E_AMORCE" "$E_INST" \
     "$ESSAI_V" "$E_ESSAI" "$V/longueurs-attendues-p3bis-banc-v1.json" "$E_LONG" "$CONS_SHA" "$RAPPORT" "$E_RAPPORT" <<'EOF' || exit 2
 import sys
 t = open(sys.argv[1], encoding="utf-8").read()
@@ -116,16 +119,14 @@ r = {"<<COMMIT_CODE_P3BIS>>": c1,
      "<<CONTRE_LECTURE_4_P3BIS>>": f"rapport `{rap}` (`{er}`), texte relu `{'1' * 64}`"}
 for k, x in r.items():
     t = t.replace(k, x)
-# écarts au brouillon 9 déclarés (message de la mère, R-2077) : ligne de GO et date limite du brouillon 10
 import re
-for a_, b_ in (("- GO : **GO-2026-11-02-29**", "- GO : **GO-2026-11-10-02**"), ("`GO_ID=GO-2026-11-02-29`", "`GO_ID=GO-2026-11-10-02`")):
-    assert t.count(a_) == 1, a_
-    t = t.replace(a_, b_)
-t, k = re.subn(r"création au plus tard le(\s+)16 novembre 2026", r"création au plus tard le\g<1>23 novembre 2026", t)
-assert k == 1, k
+assert not re.search(r"<<[A-Z0-9_]+>>", t), re.findall(r"<<[A-Z0-9_]+>>", t)
+assert f"`{essai}`" in t and ee in t, "essai de fermeture non cité par le brouillon 10 sous ce chemin"
 open(sys.argv[2], "w", encoding="utf-8").write(t)
 EOF
-for f in "$ESSAI_V" "$V/longueurs-attendues-p3bis-banc-v1.json" "$RAPPORT" brouillons/P3-bis-temoin-positif-v1/*-banc.*; do
+mkdir -p docs/notes/bras-attaque
+echo "témoin fabriqué par le banc (aucun contenu réel) : jamais extrait dans un clone de la chaîne (CD-05)" > docs/notes/bras-attaque/temoin-banc.txt
+for f in "$ESSAI_V" "$V/longueurs-attendues-p3bis-banc-v1.json" "$RAPPORT" docs/notes/bras-attaque/temoin-banc.txt brouillons/P3-bis-temoin-positif-v1/*-banc.*; do
     (cd "$(dirname "$f")" && sha256sum "$(basename "$f")" > "$(basename "$f").sha256")
 done
 git add -A && git commit -qm "C2 : pièces hors de l'arbre gelé" && C2=$(git rev-parse HEAD)
@@ -157,7 +158,7 @@ for k, x in v.items():
     assert len(lignes) == 1, k
     rep(lignes[0], f'{k}="{x}"')
 rep(re.findall(r"^CODE_P3=.*$", t, re.M)[0], f"CODE_P3={sys.argv[17]}")
-rep('git clone -q "$DEPOT_URL" "$D"', f'git clone -q "file://{distant}" "$D"')
+rep('git clone -q --no-checkout "$DEPOT_URL" "$D"', f'git clone -q --no-checkout "file://{distant}" "$D"')
 rep('''HF_HOME="$W/cache-hf" PYTHONPATH=src "$PY" - "$P" "$CFG" "$TACHES" > "$W/longueurs-mesurees.json" 2> "$W/bloc-tokeniseur.txt" <<'EOF_TOK\'''',
     '''cat "${FAUSSE_MESURE:?}" > "$W/longueurs-mesurees.json"; cat > "$W/bloc-tokeniseur.txt" <<'EOF_TOK'   # bouchon du banc''')
 rep('''PYTHONPATH=src "$PY" - "$P" "$CFG" "$TACHES" > "$W/bloc-gardes.txt" 2>&1 <<'EOF_GARDES\'''',
@@ -198,6 +199,8 @@ apres_k00() { local n; n=$(grep -c '^OK' "$E/console-K00-sain.txt"); NCAS=$((NCA
     if [ "$n" -ge 30 ] && tail -1 "$E/console-K00-sain.txt" | grep -qx "CONTRÔLES AVANT DÉPENSE : TOUS CONFORMES"; then echo "    cas sain : $n lignes OK, dernière ligne conforme : CONFORME"
     else echo "    cas sain : $n lignes OK : NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1)); fi; }
 apres_k00
+NCAS=$((NCAS + 1)); if grep -q '^OK  0 clone en extraction partielle' "$E/console-K00-sain.txt"; then echo "    cas sain : clone en extraction partielle, témoin docs/notes/bras-attaque/ absent du disque : CONFORME"
+else echo "    cas sain : extraction partielle non vue : NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1)); fi
 jouer K01-s-ajoute-un-fichier 1 "1 contenu de S inattendu" "$(variante k01 : "echo x > autre.txt")"
 jouer K02-commit-cite-deux-fois 1 "2 commit du code cité illisible, cité 2 fois" "$(variante k02 : "sed -i 's/^- Commit du code d.analyse : \(.*\)$/&\n- Commit du code d'\''analyse : \1/' $P")"
 jouer K03-commit-cite-autre 1 "2 commit du code $C0 ≠ code relu épinglé" "$(variante k03 : "sed -i 's/$C1/$C0/' $P")"
@@ -215,7 +218,7 @@ jouer K11-go-autre 1 "5 GO : GO-2026-11-08-13 : seul GO-2026-11-10-02" "$(varian
 jouer K12-go-revoque 1 "5 GO : GO-2026-11-10-02 (ou GO-2026-11-02-29, qu'il prolonge) révoqué" "$(variante k12 "echo '| GO-2026-11-10-99 | 2026-11-10 | révocation | GO-2026-11-10-02 | — | 2026-11-10 | Lazar | essai |' >> registres/go.md" :)"
 jouer K13-garde-de-calcul 1 "5 garde de calcul sur le registre de S" "$(variante k13 "echo '| GO-2026-11-09-98 | 2026-13-45 | calcul | dates illisibles | 1 USD | 2026-11-30 | Lazar | essai |' >> registres/go.md" :)"
 jouer K14-essai-verse-non-conforme 1 "6 essai de fermeture : sortie" "$(variante k14 "echo 'NON CONFORME — variante' >> $ESSAI_V; echo 'ESSAI DIFFÉRENTIEL DE FERMETURE : CONFORME' >> $ESSAI_V; (cd brouillons/P3-bis-temoin-positif-v1 && sha256sum essai-fermeture-p3bis-v2-sortie-v1.txt > essai-fermeture-p3bis-v2-sortie-v1.txt.sha256)" :)"
-jouer K15-essai-non-cite 1 "6 essai de fermeture : sortie" "$(variante k15 : "sed -i 's|\`$ESSAI_V\` (\`$E_ESSAI\`)|sortie non citée|g' $P")"
+jouer K15-essai-non-cite 1 "6 essai de fermeture : sortie" "$(variante k15 : "sed -i 's/$E_ESSAI/$(printf 'e%.0s' {1..64})/g' $P")"
 jouer K16-essai-rejoue-non-conforme 1 "6 essai de fermeture rejoué au commit S" "$S0" FAUX_ESSAI_NON_CONFORME=1
 jouer K17-longueurs-a-differe-de-t 1 "7 longueurs : t7 : indication_gabarit A 91 ≠ T 92" "$S0" FAUSSE_MESURE="$E/mesure-a-differe.json"
 jouer K18-longueurs-resume-autre 1 "7 longueurs : résumé des longueurs" "$S0" FAUSSE_MESURE="$E/mesure-autre.json"
@@ -237,6 +240,16 @@ git -C "$E/source" push -q "$E/distant.git" --delete calcul/p3bis-reel-v1
 jouer K32-rapport-absent 1 "14 rapport $RAPPORT absent" "$(variante k32 "git rm -q $RAPPORT $RAPPORT.sha256" :)"
 jouer K33-sceau-faux-sous-docs 1 "14 verifier-arbre" "$(variante k33 "echo '0000000000000000000000000000000000000000000000000000000000000000  surveiller_p3bis_v1.sh' > $V/surveiller_p3bis_v1.sh.sha256" :)"
 jouer K33b-sceau-faux-des-taches 1 "4 sceaux" "$(variante k33b "echo '0000000000000000000000000000000000000000000000000000000000000000  taches-pilote-60-v1.json' > donnees/t05-pilote-v1/taches-pilote-60-v1.json.sha256" :)"
+# K36 : clone sans l'extraction partielle (ligne de la copie changée en « true ») : le témoin docs/notes/bras-attaque/ est
+# extrait sur disque, refus avant tout contrôle (code 2)
+sed 's|^git -C "$D" sparse-checkout set --no-cone .*$|true   # artefact du banc : extraction partielle retirée|' "$E/controles-banc.sh" > "$E/controles-banc-k36.sh"
+[ "$(diff "$E/controles-banc.sh" "$E/controles-banc-k36.sh" | grep -c '^>')" = 1 ] || { echo "copie K36 non sûre"; exit 2; }
+cp "$E/controles-banc.sh" "$E/controles-banc-sain.sh"; cp "$E/controles-banc-k36.sh" "$E/controles-banc.sh"
+NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" LANG=C.UTF-8 FAUSSE_MESURE="$E/mesure-saine.json" bash "$E/controles-banc.sh" "$S0" "$E/clone-k36" calcul/p3bis-reel-v1 > "$E/console-K36.txt" 2>&1; c=$?
+if [ "$c" = 2 ] && grep -q "REFUS : docs/notes/bras-attaque extrait sur disque" "$E/console-K36.txt" && ! grep -q '^OK  ' "$E/console-K36.txt"; then echo "K36-extraction-entiere-refusee : code 2 ; CONFORME"
+else echo "K36-extraction-entiere-refusee : code $c ; NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1)); fi
+tail -1 "$E/console-K36.txt" | cut -c1-170 | sed 's/^/    | /'
+cp "$E/controles-banc-sain.sh" "$E/controles-banc.sh"
 # refus de départ (code 2)
 k2() { local nom=$1; shift; NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" LANG=C.UTF-8 "$@" > "$E/console-$nom.txt" 2>&1
     local c=$?; if [ "$c" = 2 ]; then echo "$nom : code 2 ; CONFORME"; else echo "$nom : code $c ; NON CONFORME (2 attendu)"; NON_CONFORMES=$((NON_CONFORMES + 1)); fi

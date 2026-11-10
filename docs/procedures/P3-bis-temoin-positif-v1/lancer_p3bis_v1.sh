@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Brouillon 2 (2026-11-10, contre-lecture différentielle) : borne de création du 18 novembre 2026 (BORNE_CREATION ;
+# brouillon 10, R-2097), appliquée en plus de l'échéance du GO (le 23).
 # Création de l'instance de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1. Texte qui fait foi :
 # brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-brouillon9.md (eb65773f…), en-tête (GO, Lancement),
 # « Liste d'arrêt », plan, point 11, « Devis », « Ce que le code et la chaîne doivent changer », point 6 ; contre-lecture
@@ -41,7 +43,8 @@ trap 'echo "arrêt avant la création (ligne $LINENO)"; exit 2' ERR
 [ $# -eq 4 ] && [ -n "$2" ] || { echo "usage : lancer_p3bis_v1.sh S DOSSIER_TRACES EN_MARCHE N"; exit 2; }
 S=$1; T=$(realpath -m "$2"); EN_MARCHE=$3; N=$4; OFFRE=""
 GO_CALCUL=GO-2026-11-10-02                       # seul GO accepté (texte, en-tête et liste d'arrêt)
-DATE_LIMITE_CREATION=2026-11-23                  # « création au plus tard le 23 novembre 2026 »
+DATE_LIMITE_CREATION=2026-11-23                  # « création au plus tard le 23 novembre 2026 » (échéance du GO)
+BORNE_CREATION=2026-11-18                        # « aucune création, relance comprise, après le 18 novembre 2026 » (brouillon 10, R-2097)
 ESSAIS_AVANT_REPLI=12                            # douze essais d'offre, processeur exigé…
 INTERVALLE_OFFRE_S=900                           # … à 15 minutes d'intervalle, puis repli écrit (plan, point 11)
 DEPOT_URL=https://github.com/lciric/controle-ia-travail.git
@@ -66,10 +69,12 @@ BRANCHE=calcul/p3bis-reel-v$N; ETIQUETTE=p3bis-v$N
 [ -f "$VERIF" ] || { echo "module commun $VERIF absent"; exit 2; }
 command -v "$V" > /dev/null || { echo "outil de location introuvable sur le PATH"; exit 2; }
 [ -e "$T" ] && { echo "$T existe déjà (R12)"; exit 2; }
-date_permise() {   # date du jour (UTC) au plus tard DATE_LIMITE_CREATION
+date_permise() {   # date du jour (UTC) au plus tard DATE_LIMITE_CREATION (GO) et au plus tard BORNE_CREATION (texte)
     local j; j=$(date -u +%F)
     [[ "$j" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [[ ! "$j" > "$DATE_LIMITE_CREATION" ]] \
         || { echo "date du jour $j après le $DATE_LIMITE_CREATION : aucune création (ligne de GO neuve, nœud)"; return 1; }
+    [[ ! "$j" > "$BORNE_CREATION" ]] \
+        || { echo "date du jour $j après la borne de création du $BORNE_CREATION (brouillon 10, R-2097) : aucune création, relance comprise"; return 1; }
 }
 # 0. date limite et place disque
 date_permise || exit 3

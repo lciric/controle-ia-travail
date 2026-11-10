@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Brouillon 2 (2026-11-10, contre-lecture différentielle, CD-05) : verifier-arbre n'est plus joué sur DEPOT (où des
+# chemins interdits peuvent être extraits) : les trois fichiers neufs sont vérifiés par leur sceau, puis S est extrait par
+# `git archive` des seuls dossiers scellés, chemins interdits exclus par pathspec (jamais lus), dans un dossier
+# temporaire où verifier-arbre est joué, avant toute poussée.
 # Scellement du préenregistrement de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29
 # jusqu'au 2026-11-23 : R-2077), v1. Texte : brouillon 9 (eb65773f…), en-tête (« S est fait sur une branche tirée du
 # commit du code, puis poussé » ; « Le commit de scellement S, que l'amorce extrait, ne change aucun chemin de l'arbre
@@ -13,7 +17,7 @@
 # empreinte) ; sortie de l'essai de fermeture, longueurs attendues et rapports épinglés versés et scellés ; scripts de la
 # chaîne égaux à leurs copies versées ; preuves des essais (PREUVES_EXIGEES, module commun) et scripts éprouvés égaux
 # aux copies versées ; GO (module commun, registre de HEAD, jour du scellement) ; branche de calcul v1 absente du dépôt
-# distant. Puis : copies, problemes() vide et aucun marqueur, sceaux, verifier-arbre ; un seul commit S qui n'ajoute que
+# distant. Puis : copies, problemes() vide et aucun marqueur, sceaux ; un seul commit S qui n'ajoute que
 # les six fichiers ; poussé sur BRANCHE ; relu sur le dépôt distant. La ligne SCELLEMENT-P3BIS du registre
 # registres/scellements-v1.md n'est PAS écrite ici (S n'ajoute que six fichiers) : ce script l'imprime, la session mère
 # l'inscrit par un commit suivant. Un échec avant le commit retire les fichiers créés ici, et seulement eux. Code 2 sur
@@ -97,7 +101,7 @@ grep -q '<<[A-Z0-9_]\+>>' "$P" && { nettoyer; echo "marqueurs restants dans le t
 PYTHONPATH=src "$PY" -B -c "import sys; from controle_ia.prereg import problemes; p = problemes(sys.argv[1]); print(p); sys.exit(1 if p else 0)" "$P" > /dev/null
 CREES+=("$P.sha256" "$CFG.sha256" "$CONSIGNES.sha256")
 PYTHONPATH=src "$PY" -B -m controle_ia.scellement sceller "$P" "$CFG" "$CONSIGNES" > /dev/null
-PYTHONPATH=src "$PY" -B -m controle_ia.scellement verifier-arbre . > /dev/null
+PYTHONPATH=src "$PY" -B -m controle_ia.scellement verifier "$P" "$CFG" "$CONSIGNES" > /dev/null
 # 8. un seul commit S, six fichiers ajoutés ; poussé ; relu
 git add -- "$P" "$P.sha256" "$CFG" "$CFG.sha256" "$CONSIGNES" "$CONSIGNES.sha256"
 [ "$(git diff --cached --name-only | sort | tr '\n' ' ')" = "$(printf '%s\n' "$CFG" "$CFG.sha256" "$CONSIGNES" "$CONSIGNES.sha256" "$P" "$P.sha256" | sort | tr '\n' ' ')" ] \
@@ -106,6 +110,19 @@ trap 'echo "arrêt du scellement après le commit (ligne $LINENO) : vérifier S 
 git commit -qm "P3-bis : scellement du préenregistrement (S) ; texte, configuration et consignes relus, octet pour octet"
 S=$(git rev-parse HEAD)
 [ "$(git diff --name-only --diff-filter=A "$S^" "$S" | wc -l)" = 6 ] && [ "$(git diff --name-only "$S^" "$S" | wc -l)" = 6 ]
+# verifier-arbre sur S, hors de DEPOT : dossiers scellés extraits par git archive, chemins interdits exclus (CD-05)
+VA=$(mktemp -d)
+DOSSIERS=(); for d in docs prereg runs diag livrables registres/passations; do git cat-file -e "$S:$d" 2>/dev/null && DOSSIERS+=("$d"); done
+git archive "$S" -- "${DOSSIERS[@]}" ':(exclude)docs/notes/bras-attaque' ':(exclude)diag/20261109-070232-t06-reel' \
+    ':(exclude)runs/20261109-070232-t06-reel' ':(exclude,glob)diag/*/lecture-sondes-t06.json*' | tar -x -C "$VA"
+for x in docs/notes/bras-attaque diag/20261109-070232-t06-reel runs/20261109-070232-t06-reel; do
+    [ -e "$VA/$x" ] && { rm -rf "$VA"; echo "REFUS : $x extrait pour verifier-arbre : S commité localement, NON poussé"; exit 2; }
+done
+PYTHONPATH=src "$PY" -B -m controle_ia.scellement verifier-arbre "$VA" > "$VA.txt" 2>&1 || true
+if ! tail -1 "$VA.txt" | grep -qx "arbre intact"; then
+    echo "verifier-arbre sur S : $(grep '^ÉCHEC' "$VA.txt" | head -3 | tr '\n' ' ') : S commité localement, NON poussé"; rm -rf "$VA" "$VA.txt"; exit 2
+fi
+rm -rf "$VA" "$VA.txt"
 git push -q origin "HEAD:refs/heads/$BRANCHE"
 [ "$(git ls-remote "$DISTANT" "refs/heads/$BRANCHE" | cut -f1)" = "$S" ] || { echo "S non relu sur le dépôt distant"; exit 2; }
 echo "ligne à inscrire par la session mère (registres/scellements-v1.md, commit suivant) : | SCELLEMENT-P3BIS | $(TZ=UTC0 git log -1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ "$S") | $P | $(sha256sum "$P" | cut -d' ' -f1) |"

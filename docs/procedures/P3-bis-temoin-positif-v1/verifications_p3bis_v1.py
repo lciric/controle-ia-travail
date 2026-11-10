@@ -16,7 +16,7 @@ refus « d'attente » : aucune offre conforme, crédit insuffisant, dépense au 
       GO cité par le texte (ligne « - GO : **GO-…** » et `GO_ID=…` de la ligne « Lancement ») égal à GO_CALCUL ; une seule
       ligne de ce GO au registre, à huit colonnes, type « calcul », accordée par Lazar, octroi, plafond et échéance
       exacts (2026-11-10, 80 USD non cumulés avec GO_ORIGINE, 2026-11-23) ; JOUR (AAAA-MM-JJ, UTC) entre l'octroi et
-      DATE_LIMITE_CREATION ; aucune ligne de type « révocation » qui nomme GO_CALCUL ou GO_ORIGINE dans son périmètre ou sa
+      DATE_LIMITE_CREATION, et au plus tard BORNE_CREATION (le 18 novembre : brouillon 10, R-2097) ; aucune ligne de type « révocation » qui nomme GO_CALCUL ou GO_ORIGINE dans son périmètre ou sa
       référence (forme exacte du texte) ; toute ligne « | GO-… » à un autre
       nombre de colonnes que huit refuse le registre (comme la garde de calcul). La ligne d'accord du jour de P3 n'existe
       plus : DB-5 (a), le GO en tient lieu.
@@ -77,7 +77,11 @@ GO_ORIGINE = "GO-2026-11-02-29"          # GO prolongé : sa révocation refuse 
 OCTROI_GO = "2026-11-10"
 PLAFOND_GO = "80 USD (plafond de GO-2026-11-02-29, non cumulé)"   # colonne « plafond » du registre, mot pour mot
 ECHEANCE_GO = "2026-11-23"               # colonne « échéance » du registre
-DATE_LIMITE_CREATION = "2026-11-23"      # « création au plus tard le 23 novembre 2026 » (constante)
+DATE_LIMITE_CREATION = "2026-11-23"      # « création au plus tard le 23 novembre 2026 » (constante) : échéance du GO
+# Borne de création du texte (brouillon 10, `9038a015…` ; R-2097 ; message de la mère, 2026-11-10) : « aucune création,
+# relance comprise, après le 18 novembre 2026 » (jour UTC entier), la course devant finir avant le rendez-vous ; appliquée
+# en plus de l'échéance du GO.
+BORNE_CREATION = "2026-11-18"
 PRIX_MAX = 2.10                          # USD de l'heure
 FIABILITE_MIN = 0.98
 STOCKAGE_MAX = 0.08                      # USD de l'heure
@@ -189,10 +193,14 @@ def go(prereg: str, go_md: str, jour: str) -> str:
         raise SystemExit(f"jour {jour} hors de la validité de {g} ({accorde} → {echeance})")
     if j > jour_iso(DATE_LIMITE_CREATION):
         raise SystemExit(f"jour {jour} après le {DATE_LIMITE_CREATION} : aucune création (ligne de GO neuve, nœud)")
+    if j > jour_iso(BORNE_CREATION):
+        raise SystemExit(f"jour {jour} après la borne de création du {BORNE_CREATION} (brouillon 10, R-2097 : la course doit "
+                         f"finir avant le rendez-vous) : aucune création, relance comprise")
     r = revocations(registre, g) + revocations(registre, GO_ORIGINE)
     if r:
         raise SystemExit(f"{g} (ou {GO_ORIGINE}, qu'il prolonge) révoqué au registre des GO ({', '.join(sorted(set(r)))})")
-    return f"{g} conforme (jour {jour}, au plus tard le {DATE_LIMITE_CREATION} ; aucune révocation)"
+    return (f"{g} conforme (jour {jour}, au plus tard le {BORNE_CREATION} par la borne de création, le "
+            f"{DATE_LIMITE_CREATION} par le GO ; aucune révocation)")
 
 
 # ================================================================================================= instances
@@ -438,6 +446,7 @@ VALEURS_TEXTE = (
     "téléchargement au plus 0,05 USD par Go", "au moins 30 cœurs effectifs", "128 000 Mo de mémoire vive",
     "disque ≥ 80 Go", "processeur AMD EPYC 7513 exigé d'abord", "douze essais à 15 minutes d'intervalle",
     "plafond exactement 80 USD", "création au plus tard le 23 novembre 2026",
+    "aucune création, relance comprise, après le 18 novembre 2026",
     "≥ 20 USD plus 10 heures du prix des instances nommées en marche",
     "l'absence de ligne `PROGRES` pendant deux heures donne une alerte",
     "`duree_max_s` et `budget_entrainement_s` à `null`", "aucun `timeout`", "16 783 360 octets",
@@ -448,6 +457,7 @@ VALEURS_TEXTE = (
 CONSTANTES = {
     ("lancer_p3bis_v1.sh", "GO_CALCUL"): GO_CALCUL,
     ("lancer_p3bis_v1.sh", "DATE_LIMITE_CREATION"): DATE_LIMITE_CREATION,
+    ("lancer_p3bis_v1.sh", "BORNE_CREATION"): BORNE_CREATION,
     ("lancer_p3bis_v1.sh", "ESSAIS_AVANT_REPLI"): str(ESSAIS_AVANT_REPLI),
     ("lancer_p3bis_v1.sh", "INTERVALLE_OFFRE_S"): str(INTERVALLE_OFFRE_S),
     ("lancer_p3bis_v1.sh", "DEPOT_URL"): DEPOT_URL,

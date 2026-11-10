@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Brouillon 3 (2026-11-10, contre-lecture différentielle, CD-05) : témoin fabriqué docs/notes/bras-attaque/ au dépôt
+# synthétique ; absent du clone de la récupération (R00), refus s'il est extrait (R16).
 # Banc de la récupération et de la destruction de P3-bis (R5), v1, brouillon 2 (2026-11-10, après la fusion du code
 # corrigé, branche prep/p3bis-code-v2) : recuperation_p3bis_v1.sh et detruire_p3bis_v1.sh, un cas sain et des artefacts,
 # joués contre le VRAI module `ouverture_p3bis_v2` (aucun bouchon) et les VRAIES lectures de P3 et complémentaire en mode
@@ -75,6 +77,9 @@ CONFIG='{"mode": "reel", "max_nouveaux": 64}'
 mkdir -p "$V" prereg
 cp "$E/recuperation_p3bis_v1.sh" "$E/detruire_p3bis_v1.sh" "$E/verifications_p3bis_v1.py" "$V/"
 (cd "$V" && for s in *.sh *.py; do sha256sum "$s" > "$s.sha256"; done)
+mkdir -p docs/notes/bras-attaque
+echo "témoin fabriqué par le banc (aucun contenu réel) : jamais extrait dans le clone de la récupération (CD-05)" > docs/notes/bras-attaque/temoin-banc.txt
+(cd docs/notes/bras-attaque && sha256sum temoin-banc.txt > temoin-banc.txt.sha256)
 git add -A && git commit -qm "base du banc de la récupération" || exit 2
 CODE=$(git rev-parse HEAD)                       # commit du code cité par le texte (arbre gelé : src/, pyproject, .gitignore)
 texte() { PYTHONPATH=src "$PYB" -B "$E/texte.py" "$P" "$CODE" "$1" "$2"; }
@@ -137,6 +142,8 @@ assert any(k.endswith(ob.DUREES) for k in f)
 ' '$E/paquet-R00.tar' '$ENT' '$P'"
 apres "branche distante : un seul commit de plus, qui n'ajoute que le paquet et son compagnon ; paquet de 16 783 360 octets à l'empreinte imprimée" \
     "[ \"\$(git --git-dir='$E/distant.git' rev-parse refs/heads/calcul/p3bis-reel-v1^)\" = '$T00' ] && [ \"\$(git --git-dir='$E/distant.git' diff --name-only '$T00' refs/heads/calcul/p3bis-reel-v1 | tr '\n' ' ')\" = '$PAQ $PAQ.sha256 ' ] && [ \"\$(git --git-dir='$E/distant.git' cat-file -s refs/heads/calcul/p3bis-reel-v1:$PAQ)\" = 16783360 ] && grep -q \"\$(git --git-dir='$E/distant.git' show refs/heads/calcul/p3bis-reel-v1:$PAQ | sha256sum | cut -c1-64)\" '$E/console-R00-sain.txt'"
+apres "clone en extraction partielle : témoin docs/notes/bras-attaque/ absent du disque (CD-05)" \
+    "grep -q '^OK  0 clone en extraction partielle' '$E/console-R00-sain.txt' && [ ! -e '$E/recup-R00-sain/docs/notes/bras-attaque' ] && [ -d '$E/recup-R00-sain/src' ]"
 apres "rapport écrit (récupération.rapport.txt) ; aucune ligne de la classe 2 affichée (seules les lignes de code et l'empreinte)" \
     "[ -s '$E/recup-R00-sain.rapport.txt' ] && [ \$(grep -c '^    code .* : 0\$' '$E/console-R00-sain.txt') = 4 ] && [ \$(grep -c '^    ' '$E/console-R00-sain.txt') = 5 ]"
 apres "clone : aucun fichier du run en clair, aucune sortie de lecture restée (non suivis et ignorés compris)" \
@@ -175,6 +182,15 @@ apres "lecture refusée par sa propre garde (configuration citée autre que cell
 instance r15 $B2 "$S0" : && { cp "$E/recuperation_p3bis_v1.sh" "$E/recuperation-autre.sh"; echo "# ligne ajoutée" >> "$E/recuperation-autre.sh"
     NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" bash "$E/recuperation-autre.sh" "$S0" $B2 "$E/recup-R15" > "$E/console-R15.txt" 2>&1
     [ $? = 1 ] && grep -q '^KO  0 récupération exécutée ≠ copie versée à S' "$E/console-R15.txt" && echo "R15-copie-non-versee : code 1 ; CONFORME" || { echo "R15-copie-non-versee : NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1)); }; }
+# R16 : clone sans l'extraction partielle (copie dont la ligne est changée en « true ») : témoin extrait, refus (code 2)
+instance r16 $B2 "$S0" : && {
+    sed 's|^git -C "$D" sparse-checkout set --no-cone .*$|true   # artefact du banc : extraction partielle retirée|' "$E/recuperation_p3bis_v1.sh" > "$E/recuperation-r16.sh"
+    [ "$(diff "$E/recuperation_p3bis_v1.sh" "$E/recuperation-r16.sh" | grep -c '^>')" = 1 ] || { echo "copie R16 non sûre"; exit 2; }
+    NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" LANG=C.UTF-8 bash "$E/recuperation-r16.sh" "$S0" $B2 "$E/recup-R16" > "$E/console-R16.txt" 2>&1; c=$?
+    if [ "$c" = 2 ] && grep -q "REFUS : docs/notes/bras-attaque extrait sur disque" "$E/console-R16.txt" && [ "$(tete $B2)" = "$(git -C "$E/instance-r16" rev-parse HEAD)" ]; then
+        echo "R16-extraction-entiere-refusee : code 2 ; CONFORME"
+    else echo "R16-extraction-entiere-refusee : code $c ; NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1)); fi
+    grep -v '^$' "$E/console-R16.txt" | tail -1 | cut -c1-170 | sed 's/^/    | /'; }
 # --- destruction -----------------------------------------------------------------------------------------------------
 cat > "$E/bin/vastai" <<'EOF'
 #!/usr/bin/env bash

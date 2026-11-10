@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Brouillon 3 (2026-11-10, contre-lecture différentielle, CD-05) : clone de la branche de calcul en extraction partielle
+# (aucun chemin interdit extrait), absence vérifiée, refus sinon (code 2).
 # Brouillon 2 (2026-11-10, après fusion du code corrigé, branche prep/p3bis-code-v2) : la ligne « motif du dépliage : … »
 # que le module v2 imprime sur un refus du dépliage (CP-11 ; elle ne porte que sur l'intégrité du second paquet) est admise
 # et affichée ; rien d'autre ne change.
@@ -27,6 +29,10 @@
 # Le rapport (sortie entière) est écrit aussi dans DOSSIER_NEUF.rapport.txt.
 # Usage : recuperation_p3bis_v1.sh S BRANCHE DOSSIER_NEUF
 set -uo pipefail
+# extraction partielle de tout clone de la chaîne (interdits communs v2, règle 9 ; contre-lecture différentielle, CD-05) :
+# aucun chemin interdit n'est jamais extrait, donc jamais haché par verifier-arbre ; absence vérifiée sur disque
+EXTRACTION=('/*' '!/docs/notes/bras-attaque/' '!/diag/20261109-070232-t06-reel/' '!/runs/20261109-070232-t06-reel/' '!/donnees/bras-attaque*' '!/donnees/mode-tenu-a-l-ecart*' '!/diag/*/lecture-sondes-t06.json*' '!/scripts/extraire_mesures_epreuve_t06_v1.py*')
+ABSENTS=(docs/notes/bras-attaque diag/20261109-070232-t06-reel runs/20261109-070232-t06-reel scripts/extraire_mesures_epreuve_t06_v1.py)
 SOI=$(realpath "$0")
 [ $# -eq 3 ] || { echo "usage : recuperation_p3bis_v1.sh S BRANCHE DOSSIER_NEUF"; exit 2; }
 S=$1; BRANCHE=$2; D=$(realpath -m "$3")
@@ -53,8 +59,12 @@ ok() { echo "OK  $*"; }
 ko() { echo "KO  $*"; echecs=$((echecs + 1)); }
 finir() { exit "$1"; }
 corps() {
-git clone -q --branch "$BRANCHE" --single-branch "$DEPOT_URL" "$D" || { echo "clonage de la branche $BRANCHE impossible"; finir 2; }
+git clone -q --no-checkout --branch "$BRANCHE" --single-branch "$DEPOT_URL" "$D" || { echo "clonage de la branche $BRANCHE impossible"; finir 2; }
+git -C "$D" sparse-checkout set --no-cone "${EXTRACTION[@]}" || { echo "extraction partielle impossible"; finir 2; }
+git -C "$D" checkout -q "$BRANCHE" || { echo "extraction de la branche $BRANCHE impossible"; finir 2; }
 cd "$D" || finir 2
+for x in "${ABSENTS[@]}"; do [ -e "$x" ] && { echo "REFUS : $x extrait sur disque (interdits communs v2, règle 9 ; CD-05) : aucune récupération"; finir 2; }; done
+ok "0 clone en extraction partielle : ${ABSENTS[*]} absents du disque"
 [ "$(git rev-parse --abbrev-ref HEAD)" = "$BRANCHE" ] && ok "0 clone de la branche de calcul $BRANCHE (jamais main)" || ko "0 branche courante $(git rev-parse --abbrev-ref HEAD) ≠ $BRANCHE"
 TETE=$(git rev-parse HEAD); echo "tête de la branche : $TETE"
 if [ "$COPIE_EXIGEE" = oui ]; then

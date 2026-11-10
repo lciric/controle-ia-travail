@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Brouillon 2 (2026-11-10, contre-lecture différentielle, CD-05) : clone en extraction partielle (aucun chemin interdit
+# extrait : docs/notes/bras-attaque/ et ceux de la règle 1 des interdits communs v2), absence vérifiée, refus sinon.
 # Contrôles avant dépense de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1. Texte qui fait foi : brouillon 9
 # (eb65773f…), en-tête, « Liste d'arrêt », plan, points 2, 6 et 11, « Ce que le code et la chaîne doivent changer »,
 # points 1 à 6 ; contre-lecture du code (7a074ad1…), point 6. Déclinés de docs/procedures/P3-premier-test-v2/
@@ -53,6 +55,10 @@ LONGUEURS_ATTENDUES_CHEMIN=A_EPINGLER
 RAPPORTS_ATTENDUS=A_EPINGLER                     # paires chemin=empreinte des rapports de contre-lecture cités par le texte
 PY=A_EPINGLER                                    # interpréteur d'un environnement aux dépendances épinglées de S
 # --- constantes de P3-bis --------------------------------------------------------------------------------------------
+# extraction partielle de tout clone de la chaîne (interdits communs v2, règle 9 ; contre-lecture différentielle, CD-05) :
+# aucun chemin interdit n'est jamais extrait, donc jamais haché par verifier-arbre ; absence vérifiée sur disque
+EXTRACTION=('/*' '!/docs/notes/bras-attaque/' '!/diag/20261109-070232-t06-reel/' '!/runs/20261109-070232-t06-reel/' '!/donnees/bras-attaque*' '!/donnees/mode-tenu-a-l-ecart*' '!/diag/*/lecture-sondes-t06.json*' '!/scripts/extraire_mesures_epreuve_t06_v1.py*')
+ABSENTS=(docs/notes/bras-attaque diag/20261109-070232-t06-reel runs/20261109-070232-t06-reel scripts/extraire_mesures_epreuve_t06_v1.py)
 H=$(dirname "$(realpath "$0")")
 VERIF=$H/verifications_p3bis_v1.py
 VERSEES=docs/procedures/P3-bis-temoin-positif-v1
@@ -84,8 +90,11 @@ W="$D.travail"
 [ -e "$W" ] && { echo "$W existe déjà"; exit 2; }
 mkdir -p "$W" || exit 2
 trap 'rm -rf "$W"' EXIT
-git clone -q "$DEPOT_URL" "$D" || { echo "clonage impossible"; exit 2; }
+git clone -q --no-checkout "$DEPOT_URL" "$D" || { echo "clonage impossible"; exit 2; }
+git -C "$D" sparse-checkout set --no-cone "${EXTRACTION[@]}" || { echo "extraction partielle impossible"; exit 2; }
 cd "$D" && git checkout -q "$S" || { echo "commit $S introuvable"; exit 2; }
+for x in "${ABSENTS[@]}"; do [ -e "$x" ] && { echo "REFUS : $x extrait sur disque (interdits communs v2, règle 9 ; CD-05) : aucun contrôle"; exit 2; }; done
+ok "0 clone en extraction partielle : ${ABSENTS[*]} absents du disque"
 # 1. contenu de S
 [ "$(git log --diff-filter=A -1 --format=%H -- "$P.sha256")" = "$S" ] && ok "1 S ajoute le sceau du texte" || ko "1 S n'est pas le commit qui ajoute $P.sha256"
 attendus_s=$(printf '%s\n' "$CFG" "$CFG.sha256" "$CONSIGNES" "$CONSIGNES.sha256" "$P" "$P.sha256" | sort | tr '\n' ' ')

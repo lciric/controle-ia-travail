@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Brouillon 3 (2026-11-10, contre-lecture différentielle) : borne de création du 18 novembre (L06b sain ; L06c, L06d, L07
+# artefacts), en plus de l'échéance du GO (L06).
 # Brouillon 2 (2026-11-10, après la fusion du code corrigé) : l'amorce versée au dépôt synthétique est la vraie
 # `scripts/amorce_instance_p3bis_v2.sh` (son empreinte citée par le texte factice, encodée et passée à la création).
 # Banc du lanceur de P3-bis (R5), v1, décliné du banc du lanceur de P3 (docs/procedures/P3-premier-test-v2/
@@ -194,8 +196,10 @@ cp "$E/go-sain.md" "$E/depot/registres/go.md"
 S_GO=$(variante go "texte GO-2026-11-08-13 GO-2026-11-08-13 calcul/p3bis-reel-v1 '$URL' '$E_AMORCE' > '$P'; sceller_texte")
 cas L05-go-autre 2 "seul GO-2026-11-10-02 est accepté" non "$S_GO" 1 - "$J_OK"
 cas L06-date-apres-limite 3 "après le 2026-11-23" non "$S" 1 - FAUX_JOUR=2026-11-24
-cas L06b-date-limite-saine 0 "succès : True" oui "$S" 1 - FAUX_JOUR=2026-11-23
-cas L07-date-passe-pendant-les-offres 3 "après le 2026-11-23" non "$S" 1 - FAUX_JOUR=2026-11-23 FAUX_APRES=6 FAUX_JOUR2=2026-11-24 FAUX_OFFRES="$OFFRES_AUCUNE"
+cas L06b-borne-de-creation-saine 0 "succès : True" oui "$S" 1 - FAUX_JOUR=2026-11-18
+cas L06c-apres-la-borne-de-creation 3 "après la borne de création du 2026-11-18" non "$S" 1 - FAUX_JOUR=2026-11-19
+cas L06d-apres-la-borne-avant-l-echeance 3 "après la borne de création du 2026-11-18" non "$S" 1 - FAUX_JOUR=2026-11-23
+cas L07-date-passe-pendant-les-offres 3 "après la borne de création du 2026-11-18" non "$S" 1 - FAUX_JOUR=2026-11-18 FAUX_APRES=6 FAUX_JOUR2=2026-11-19 FAUX_OFFRES="$OFFRES_AUCUNE"
 # L08 à L10 : contrôles et jetons
 cas L08-controles-ko 2 "contrôles avant dépense en échec" non "$S" 1 - "$J_OK" FAUX_KO=1
 cas L09-controles-derniere-ligne 2 "contrôles : dernière ligne inattendue" non "$S" 1 - "$J_OK" FAUX_DERNIERE=1
