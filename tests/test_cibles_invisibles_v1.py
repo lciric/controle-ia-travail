@@ -354,6 +354,8 @@ REGISTRE = {
     "controle_ia/environnements/lancer_pilote_a.py::exiger_invites": (EXEMPT, "chargement d'invites, sans tâche"),
     "controle_ia/premier_test_ia/run.py::controler_format_agent": (EXEMPT, "conversation de contrôle fixe"),
     "controle_ia/premier_test_ia/run.py::executer": (EXEMPT, "chargement d'invite, sans tâche"),
+    "controle_ia/premier_test_ia/run_v2.py::executer": (
+        EXEMPT, "chargement d'invite, sans tâche ; copie de run.py::executer comparée ligne à ligne (P3-bis, CP-10)"),
     "controle_ia/premier_test_ia/empans.py::jetons_reponse_forcee": (EXEMPT, "rendu générique de textes fournis"),
     "controle_ia/harnais/formats.py::FormatChat._debut": (EXEMPT, "rendu générique du gabarit de conversation"),
     "controle_ia/harnais/formats.py::FormatChat._pieces": (EXEMPT, "rendu générique du gabarit de conversation"),
