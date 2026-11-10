@@ -660,6 +660,39 @@ def lire_textes(chemin: Path) -> dict:
     return sortie
 
 
+def ecrire_sondes_neuves(racine_sortie: Path, run_t07: str, appris: dict) -> dict:
+    """`donnees/<run-t07>/sondes-neuves-t07.npz` (`figees.ecrire_sondes`, scellé) : les 30 couples neufs, la sonde de T7-P6 et son
+    témoin, les directions des concepts, et les directions de plancher des sondes neuves lues et de T7-P6 ; une sonde de
+    Mahalanobis y est écrite au format du paquet gelé (mêmes μ et P ; la réécriture en produit matriciel se refait, avec son
+    essai d'égalité, à chaque usage). Les témoins lexicaux, que ce format ne porte pas, vont dans
+    `donnees/<run-t07>/temoins-lexicaux-t07.json` (scellé)."""
+    from ..premier_test_ia.figees import ecrire_sondes
+    from ..scellement import sceller
+
+    def gelee(s):
+        return SondeMahalanobis(s.nom, s.couche, s.mu, s.P, s.agregation, s.famille) if isinstance(s, SondeMahalanobis) else s
+    sondes = [gelee(x) for c in appris["sondes"].values() for x in c["couples"]]
+    if appris["p6"]:
+        sondes += [gelee(x["sonde"]) for x in appris["p6"]["_sondes"].values()]
+    if appris["directions"]:
+        sondes += [d["sonde"] for d in appris["directions"]["directions"]]
+    planchers = [p for liste in appris["planchers"].values() for p in liste]
+    dossier = Path(racine_sortie) / "donnees" / run_t07
+    rel = f"donnees/{run_t07}/sondes-neuves-t07.npz"
+    sha = ecrire_sondes(Path(racine_sortie) / rel, sondes + planchers,
+                        {"planchers": {n: [p.nom for p in liste] for n, liste in appris["planchers"].items()},
+                         "principales": {c: x["principale"].nom for c, x in appris["sondes"].items()}})
+    lex = {c: {"nom": x["temoin"].nom, "vocabulaire": list(x["temoin"].vocabulaire), "idf": x["temoin"].idf.tolist(),
+               "w": x["temoin"].w.tolist(), "b": x["temoin"].b, "penalite": x["penalite"], "empreinte": x["empreinte"]}
+           for c, x in appris["lexicaux"].items()}
+    chemin_lex = dossier / "temoins-lexicaux-t07.json"
+    if chemin_lex.exists():
+        raise GardeArret(f"{chemin_lex} existe déjà (R12)")
+    chemin_lex.write_text(json.dumps(lex, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"sondes": {"chemin": rel, "sha256": sha, "nombre": len(sondes), "planchers": len(planchers)},
+            "temoins_lexicaux": {"chemin": f"donnees/{run_t07}/temoins-lexicaux-t07.json", "sha256": sceller(chemin_lex)}}
+
+
 def exiger_principales_consignees(racine_sortie: Path, chemin_sondes: Path, principales: list) -> None:
     """Garde (plan, point 4 ; CLT7B-12) : chaque sonde principale est consignée, avec son empreinte, dans `sondes-t07.json`
     scellé, **avant** toute notation d'une action d'organisme ; sinon la notation est refusée (arrêt)."""
@@ -746,6 +779,7 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
                    "couples_figes": rapport_couples, "cles_ignorees": ignorees, "garde_adaptee": garde_manifeste}
         if complete:
             contenu.update(sondes_neuves=appris["rapport"], disjonction=generiques["disjonction"],
+                           fichiers_sondes_neuves=ecrire_sondes_neuves(racine_sortie, run_t07, appris),
                            note="sondes neuves apprises à l'étape A (30 couples, sonde principale par concept, T7-P6, directions des "
                                 "concepts, témoins lexicaux), consignées ici avant toute notation d'une action d'organisme ; les noms "
                                 "des sondes neuves ne sont pas dans le manifeste, écrit avant leur apprentissage (graines, R9)")
@@ -973,7 +1007,8 @@ def main(argv: list[str]) -> int:
             print(f"      {n:4d}  {issue}")
         return lv1.main(["grille"])
     if a.action == "repli-recalcul":
-        print("REFUS : repli-recalcul non mis en œuvre (modèle, adaptateurs et carte graphique requis) ; rien écrit ; nœud", file=sys.stderr)
+        print("REFUS : repli-recalcul : garde d'équivalence écrite (t07.repli_v1), rejeu des épisodes non écrit (modèle, adaptateurs, "
+              "conversations de l'environnement par la chaîne de T0.6) ; rien écrit ; nœud", file=sys.stderr)
         return CODE_REFUS
     try:
         config = charger_configuration(Path(a.config_t07))

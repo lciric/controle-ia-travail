@@ -353,3 +353,20 @@ def test_extracteur_du_module_sur_le_modele_jouet_du_harnais():
     assert ext.phrase("le chat dort", "message_utilisateur")[2].shape[0] == len("le chat dort")
     with pytest.raises(GardeArret, match="empan"):
         ext.reponse(r["contexte_systeme"], r["observation"], r["reponse"], "champ")
+
+
+def test_sondes_neuves_ecrites_et_relues_a_leur_empreinte(complet):
+    """Sortie de l'étape A : `sondes-neuves-t07.npz` (`figees.ecrire_sondes`, scellé) relu par `figees.lire_sondes` à l'empreinte
+    écrite dans `sondes-t07.json` : 30 couples, sonde de T7-P6 et témoin, directions des concepts, planchers des sondes neuves
+    lues et de T7-P6 ; témoins lexicaux dans leur fichier scellé ; artefact : empreinte fausse → arrêt (R11)."""
+    from controle_ia.premier_test_ia.figees import lire_sondes
+    from controle_ia.scellement import verifier
+    ra = _a(complet)
+    f = _resultat(complet, ra["run_t07"], "sondes-t07.json")["fichiers_sondes_neuves"]
+    sondes, meta, sha = lire_sondes(complet.racine / f["sondes"]["chemin"], f["sondes"]["sha256"])
+    assert sha == f["sondes"]["sha256"] and f["sondes"]["nombre"] == 30 + 2 + 6
+    assert len(sondes) == f["sondes"]["nombre"] + f["sondes"]["planchers"] and set(meta["principales"]) == {"dissimulation", "domaine"}
+    assert len(meta["planchers"]) == 4 and all(len(v) == complet.config["n_plancher"] for v in meta["planchers"].values())
+    assert verifier(complet.racine / f["temoins_lexicaux"]["chemin"]) == f["temoins_lexicaux"]["sha256"]
+    with pytest.raises(GardeArret):
+        lire_sondes(complet.racine / f["sondes"]["chemin"], "0" * 64)

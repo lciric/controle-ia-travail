@@ -408,8 +408,11 @@ def apprendre(jeux: dict, phrases: dict | None, extracteur, config: dict, graine
         ext[cle]["paires"] = [r["paire"] for r in recs]
         idx[cle] = index_par_taches(ext[cle], t_e, t_v)
     entier = extraire_jeu(extracteur, jeux["JC"], "action_entiere", echeance) if "JC" in jeux else None
+    r0 = Reglages()
     rapport = {"decoupage": {"entrainement": t_e, "validation": t_v, "part": PART_ENTRAINEMENT}, "concepts": {},
-               "frontieres_ajustees": None}
+               "frontieres_ajustees": None,
+               "reglages": {"l2": r0.l2, "epoques": r0.epoques, "pas": r0.pas, "cachees": r0.cachees,
+                            "retrecissement": r0.retrecissement, "source": "sondes.familles.Reglages par défaut (plan, point 3)"}}
     sondes, planchers, entrainement = {}, {}, {}
     for cle, concept in (("JD", "dissimulation"), ("JC", "domaine")):
         if cle not in jeux:
