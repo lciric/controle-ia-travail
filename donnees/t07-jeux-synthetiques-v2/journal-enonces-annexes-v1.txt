@@ -1,0 +1,246 @@
+Journal du lot 1, points 1 et 2 : énoncés de la réserve et annexes A, B, C — v1
+date : 2026-11-10 07:57:26 UTC (horloge de la machine, UTC)
+outil : extraire_enonces_annexes_v1.py sha256 b8a7d04b67a99cd2f3f82554c2121780d5eca7e0ea2bb7e649cc5d813b758772 (texte intégral en fin de journal)
+entrées (chemin relatif à la racine du clone, sha256 lu / attendu) :
+    reserve : donnees/20261007-082440-t05-extraction/taches-entrainement.json 8d20a698d76baa8a42cd1494227fc411ef043d24a67a413e5cf812541166a4fd (conforme)
+    evaluation : donnees/20261007-082440-t05-extraction/taches-evaluation.json 76cdeace861d2fff45ca732c55c2d97611dcd47edc7c27d62bdad4c37755e67e (conforme)
+    projection : brouillons/t07-jeux-synthetiques-v2-brouillon1/enonces-reserve-projection-ecrivain.jsonl a9e8839f886f9df1ce8270a347151bd11bee0e0742b425edf5914cd5c23d50f8 (conforme)
+    consigne : docs/procedures/consigne-jeux-synthetiques-T0.7-v3.md d9de50a6f4f7a8add3465ad53a5b894703f70b8777b7f8e428417ebfcd73b485 (conforme)
+    annexe A : brouillons/t07-jeux-synthetiques-v2-brouillon1/annexes/banque-instructions-v2.json 230099ef0eece0c11c1ac1a2dfd563e5747292723ddd614eebe7bdbb37d1cc01 (conforme)
+    annexe B : brouillons/t07-jeux-synthetiques-v2-brouillon1/annexes/banque-incitations-v2.json eb6a424d20505819491608e2b8c277735157801bb1230304b5f616922ff91b56 (conforme)
+    annexe C : brouillons/t07-jeux-synthetiques-v2-brouillon1/annexes/mots-interdits-v2.json 5d42ab633dd4dda055989a2609fc77e49accdb428f2acdbad0bdbaf9630cba76 (conforme)
+
+1. Énoncés de la réserve
+    tâches de réserve dans le fichier scellé : 32 ; tâches d'évaluation : 64 (identifiants uniques : 64)
+    intersection réserve ∩ évaluation : 0
+    écrit : enonces-reserve-v2.jsonl (32 lignes, clés identifiant, questions, classification ; champs cibles, couts_rapportes, empreintes jamais extraits) sha256 a9e8839f886f9df1ce8270a347151bd11bee0e0742b425edf5914cd5c23d50f8
+    égalité à l'octet avec la projection remise à l'écrivain (a9e8839f…) : OUI
+    égalité du contenu, ligne par ligne (identifiant, questions, classification) : OUI ; même ordre que le fichier scellé : OUI
+
+2. Annexes A, B, C : copie à l'octet et comparaison à la consigne v3
+    copie banque-instructions-v2.json sha256 230099ef0eece0c11c1ac1a2dfd563e5747292723ddd614eebe7bdbb37d1cc01 (égale à la source)
+    copie banque-incitations-v2.json sha256 eb6a424d20505819491608e2b8c277735157801bb1230304b5f616922ff91b56 (égale à la source)
+    copie mots-interdits-v2.json sha256 5d42ab633dd4dda055989a2609fc77e49accdb428f2acdbad0bdbaf9630cba76 (égale à la source)
+    A, cadrages lus dans la consigne : ['F1', 'F2', 'F3', 'F4'] ; égalité au JSON : OUI
+    A, entrées lues dans la consigne : 20 (cadrage en rotation F1..F4) ; égalité au JSON : OUI ; réserve : 4 (cadrage nul) ; égalité : OUI
+    A, autres clés du JSON : [] ; source déclarée : 'docs/procedures/consigne-jeux-synthetiques-T0.7-v3.md'
+    B, entrées lues dans la consigne : 8 ; égalité au JSON : OUI ; autres clés : [] ; source déclarée : 'docs/procedures/consigne-jeux-synthetiques-T0.7-v3.md'
+    C, mots lus dans la consigne : 66 ; égalité au JSON (même ordre) : OUI ; autres clés : [] ; source déclarée : 'docs/procedures/consigne-jeux-synthetiques-T0.7-v3.md'
+
+Bilan : 0 écart(s) ; code 0
+
+--- texte intégral de l'outil (extraire_enonces_annexes_v1.py, sha256 b8a7d04b67a99cd2f3f82554c2121780d5eca7e0ea2bb7e649cc5d813b758772) ---
+#!/usr/bin/env python3
+"""Lot 1 des jeux de T0.7, points 1 et 2 (inventaire `c9910a54…`, section 5) — v1.
+
+1. Extrait `enonces-reserve-v2.jsonl` du fichier scellé des tâches de réserve (`identifiant`, `questions`,
+   `classification`, ordre du fichier ; jamais `cibles`, `couts_rapportes`, `empreintes`), le compare à la projection
+   remise à l'écrivain (`a9e8839f…`) à l'octet et ligne par ligne, et contrôle qu'aucune tâche n'est d'évaluation.
+2. Copie à l'octet les annexes A, B, C du brouillon 1 dans le dossier de sortie et compare leur contenu, par programme,
+   aux annexes A, B, C de la consigne v3 (`d9de50a6…`).
+
+Aucun champ caché n'est affiché ; aucune écriture hors du dossier de sortie (ouverture en mode « x » : rien n'est écrasé).
+Usage : python -I extraire_enonces_annexes_v1.py <racine du dépôt> <dossier de sortie> <journal>
+"""
+from __future__ import annotations
+
+import datetime as dt
+import hashlib
+import json
+import re
+import shutil
+import sys
+from pathlib import Path
+
+ATTENDU = {
+    "reserve": ("donnees/20261007-082440-t05-extraction/taches-entrainement.json",
+                "8d20a698d76baa8a42cd1494227fc411ef043d24a67a413e5cf812541166a4fd"),
+    "evaluation": ("donnees/20261007-082440-t05-extraction/taches-evaluation.json",
+                   "76cdeace861d2fff45ca732c55c2d97611dcd47edc7c27d62bdad4c37755e67e"),
+    "projection": ("brouillons/t07-jeux-synthetiques-v2-brouillon1/enonces-reserve-projection-ecrivain.jsonl",
+                   "a9e8839f886f9df1ce8270a347151bd11bee0e0742b425edf5914cd5c23d50f8"),
+    "consigne": ("docs/procedures/consigne-jeux-synthetiques-T0.7-v3.md",
+                 "d9de50a6f4f7a8add3465ad53a5b894703f70b8777b7f8e428417ebfcd73b485"),
+    "annexe A": ("brouillons/t07-jeux-synthetiques-v2-brouillon1/annexes/banque-instructions-v2.json",
+                 "230099ef0eece0c11c1ac1a2dfd563e5747292723ddd614eebe7bdbb37d1cc01"),
+    "annexe B": ("brouillons/t07-jeux-synthetiques-v2-brouillon1/annexes/banque-incitations-v2.json",
+                 "eb6a424d20505819491608e2b8c277735157801bb1230304b5f616922ff91b56"),
+    "annexe C": ("brouillons/t07-jeux-synthetiques-v2-brouillon1/annexes/mots-interdits-v2.json",
+                 "5d42ab633dd4dda055989a2609fc77e49accdb428f2acdbad0bdbaf9630cba76"),
+}
+CHAMPS_CACHES = ("cibles", "couts_rapportes", "empreintes")
+
+
+def sha(p: Path) -> str:
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def main(racine: Path, sortie: Path, journal: Path) -> int:
+    lignes: list[str] = []
+    ecarts: list[str] = []
+
+    def j(t: str = "") -> None:
+        lignes.append(t)
+        print(t)
+
+    def ecart(t: str) -> None:
+        ecarts.append(t)
+        j(f"[ÉCART] {t}")
+
+    j("Journal du lot 1, points 1 et 2 : énoncés de la réserve et annexes A, B, C — v1")
+    j(f"date : {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} (horloge de la machine, UTC)")
+    moi = Path(__file__).resolve()
+    j(f"outil : {moi.name} sha256 {sha(moi)} (texte intégral en fin de journal)")
+    j("entrées (chemin relatif à la racine du clone, sha256 lu / attendu) :")
+    for nom, (chemin, attendu) in ATTENDU.items():
+        e = sha(racine / chemin)
+        etat = "conforme" if e == attendu else "NON CONFORME"
+        j(f"    {nom} : {chemin} {e} ({etat})")
+        if e != attendu:
+            ecart(f"{nom} : empreinte {e} ≠ attendue {attendu}")
+    if ecarts:
+        j("[ARRÊT] entrée non conforme : rien n'est écrit")
+        journal.write_text("\n".join(lignes) + "\n", encoding="utf-8")
+        return 2
+
+    # ------------------------------------------------------------------ 1. énoncés
+    j("")
+    j("1. Énoncés de la réserve")
+    d = json.loads((racine / ATTENDU["reserve"][0]).read_text(encoding="utf-8"))
+    taches = d["resultat"]["taches"]
+    ev = json.loads((racine / ATTENDU["evaluation"][0]).read_text(encoding="utf-8"))["resultat"]["taches"]
+    ids_eval = [t["identifiant"] for t in ev]
+    j(f"    tâches de réserve dans le fichier scellé : {len(taches)} ; tâches d'évaluation : {len(ids_eval)} "
+      f"(identifiants uniques : {len(set(ids_eval))})")
+    sortie_lignes = []
+    for t in taches:
+        if "classification" not in t:
+            ecart(f"tâche {t['identifiant']} sans champ classification")
+        enr = {"identifiant": t["identifiant"], "questions": t["questions"], "classification": t.get("classification")}
+        assert not any(c in enr for c in CHAMPS_CACHES)
+        sortie_lignes.append(json.dumps(enr, ensure_ascii=False) + "\n")
+    ids = [t["identifiant"] for t in taches]
+    if len(ids) != 32 or len(set(ids)) != 32:
+        ecart(f"{len(ids)} identifiants ({len(set(ids))} uniques) ≠ 32")
+    communs = sorted(set(ids) & set(ids_eval))
+    j(f"    intersection réserve ∩ évaluation : {len(communs)} {communs if communs else ''}".rstrip())
+    if communs:
+        ecart(f"tâches de réserve aussi d'évaluation : {communs}")
+    cible = sortie / "enonces-reserve-v2.jsonl"
+    with open(cible, "x", encoding="utf-8", newline="\n") as f:
+        f.writelines(sortie_lignes)
+    j(f"    écrit : {cible.name} ({len(sortie_lignes)} lignes, clés identifiant, questions, classification ; "
+      f"champs {', '.join(CHAMPS_CACHES)} jamais extraits) sha256 {sha(cible)}")
+    proj = racine / ATTENDU["projection"][0]
+    egal_octet = cible.read_bytes() == proj.read_bytes()
+    j(f"    égalité à l'octet avec la projection remise à l'écrivain ({ATTENDU['projection'][1][:8]}…) : "
+      f"{'OUI' if egal_octet else 'NON'}")
+    p_lignes = [json.loads(l) for l in proj.read_text(encoding="utf-8").splitlines() if l.strip()]
+    s_lignes = [json.loads(l) for l in sortie_lignes]
+    egal_contenu = p_lignes == s_lignes
+    meme_ordre = [p["identifiant"] for p in p_lignes] == ids
+    j(f"    égalité du contenu, ligne par ligne (identifiant, questions, classification) : "
+      f"{'OUI' if egal_contenu else 'NON'} ; même ordre que le fichier scellé : {'OUI' if meme_ordre else 'NON'}")
+    if not egal_octet:
+        ecart("énoncés : fichier extrait ≠ projection à l'octet")
+    if not egal_contenu or not meme_ordre:
+        ecart("énoncés : contenu ou ordre ≠ projection")
+
+    # ------------------------------------------------------------------ 2. annexes
+    j("")
+    j("2. Annexes A, B, C : copie à l'octet et comparaison à la consigne v3")
+    noms = {"annexe A": "banque-instructions-v2.json", "annexe B": "banque-incitations-v2.json",
+            "annexe C": "mots-interdits-v2.json"}
+    copies = {}
+    for nom, fichier in noms.items():
+        src = racine / ATTENDU[nom][0]
+        dst = sortie / fichier
+        with open(src, "rb") as fs, open(dst, "xb") as fd:
+            shutil.copyfileobj(fs, fd)
+        e = sha(dst)
+        copies[nom] = json.loads(dst.read_text(encoding="utf-8"))
+        j(f"    copie {dst.name} sha256 {e} ({'égale' if e == ATTENDU[nom][1] else 'DIFFÉRENTE'} à la source)")
+        if e != ATTENDU[nom][1]:
+            ecart(f"{nom} : copie ≠ source")
+    texte = (racine / ATTENDU["consigne"][0]).read_text(encoding="utf-8")
+
+    def section(titre_debut: str, titre_suivant: str | None) -> str:
+        i = texte.index(titre_debut)
+        k = texte.index(titre_suivant, i) if titre_suivant else len(texte)
+        return texte[i:k]
+
+    sa = section("## Annexe A", "## Annexe B")
+    sb = section("## Annexe B", "## Annexe C")
+    sc = section("## Annexe C", None)
+
+    # Annexe A : cadrages
+    cadrages_md = {}
+    for m in re.finditer(r"^- (F\d) : «\s*(.*?)\s*»\s*$", sa, re.M):
+        ouverture, fermeture = [x.strip() for x in m.group(2).split("…")]
+        cadrages_md[m.group(1)] = [ouverture, fermeture]
+    a = copies["annexe A"]
+    j(f"    A, cadrages lus dans la consigne : {sorted(cadrages_md)} ; égalité au JSON : "
+      f"{'OUI' if cadrages_md == a['cadrages'] else 'NON'}")
+    if cadrages_md != a["cadrages"]:
+        ecart(f"annexe A : cadrages ≠ consigne ({cadrages_md} / {a['cadrages']})")
+    # Annexe A : entrées et réserve
+    entrees_md, reserve_md = [], []
+    for m in re.finditer(r"^\| (D\d\d|R\d) (\(réserve\) )?\| (.*?) \| (.*?) \|\s*$", sa, re.M):
+        ident, est_reserve, contrainte, rappel = m.group(1), bool(m.group(2)), m.group(3), m.group(4)
+        if est_reserve:
+            reserve_md.append({"id": ident, "cadrage": None, "contrainte": contrainte, "rappel": rappel})
+        else:
+            k = len(entrees_md) + 1
+            entrees_md.append({"id": ident, "cadrage": f"F{(k - 1) % 4 + 1}", "contrainte": contrainte,
+                               "rappel": rappel})
+    eg_e = entrees_md == a["entrees"]
+    eg_r = reserve_md == a["reserve"]
+    j(f"    A, entrées lues dans la consigne : {len(entrees_md)} (cadrage en rotation F1..F4) ; égalité au JSON : "
+      f"{'OUI' if eg_e else 'NON'} ; réserve : {len(reserve_md)} (cadrage nul) ; égalité : {'OUI' if eg_r else 'NON'}")
+    if not eg_e or not eg_r:
+        for x, y in zip(entrees_md + reserve_md, a["entrees"] + a["reserve"]):
+            if x != y:
+                ecart(f"annexe A : {x} ≠ {y}")
+        if len(entrees_md) != len(a["entrees"]) or len(reserve_md) != len(a["reserve"]):
+            ecart("annexe A : nombres d'entrées différents")
+    autres_a = sorted(set(a) - {"source", "cadrages", "entrees", "reserve"})
+    j(f"    A, autres clés du JSON : {autres_a} ; source déclarée : {a.get('source')!r}")
+    # Annexe B
+    b_md = [{"id": m.group(1), "texte": m.group(2)}
+            for m in re.finditer(r"^\| (I\d\d) \| (.*?) \|\s*$", sb, re.M)]
+    b = copies["annexe B"]
+    eg_b = b_md == b["entrees"]
+    j(f"    B, entrées lues dans la consigne : {len(b_md)} ; égalité au JSON : {'OUI' if eg_b else 'NON'} ; "
+      f"autres clés : {sorted(set(b) - {'source', 'entrees'})} ; source déclarée : {b.get('source')!r}")
+    if not eg_b:
+        for x, y in zip(b_md, b["entrees"]):
+            if x != y:
+                ecart(f"annexe B : {x} ≠ {y}")
+        if len(b_md) != len(b["entrees"]):
+            ecart("annexe B : nombres d'entrées différents")
+    # Annexe C
+    corps_c = sc.split("La liste est fixée")[0]
+    c_md = re.findall(r"`([^`]+)`", corps_c)
+    c = copies["annexe C"]
+    mots = c["mots"] if isinstance(c, dict) else c
+    eg_c = c_md == mots
+    j(f"    C, mots lus dans la consigne : {len(c_md)} ; égalité au JSON (même ordre) : {'OUI' if eg_c else 'NON'} ; "
+      f"autres clés : {sorted(set(c) - {'source', 'mots'}) if isinstance(c, dict) else []} ; "
+      f"source déclarée : {c.get('source') if isinstance(c, dict) else None!r}")
+    if not eg_c:
+        ecart(f"annexe C : consigne {c_md} ≠ JSON {mots}")
+
+    j("")
+    j(f"Bilan : {len(ecarts)} écart(s) ; code {1 if ecarts else 0}")
+    j("")
+    j(f"--- texte intégral de l'outil ({moi.name}, sha256 {sha(moi)}) ---")
+    lignes.append(moi.read_text(encoding="utf-8").rstrip("\n"))
+    lignes.append("--- fin du texte de l'outil ---")
+    with open(journal, "x", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lignes) + "\n")
+    return 1 if ecarts else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])))
+--- fin du texte de l'outil ---
