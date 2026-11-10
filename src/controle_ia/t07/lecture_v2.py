@@ -390,8 +390,9 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
         exigees = rg.EXIGEES_ETAPE_A + ((rg.CODE_T07,) if config["code_t07_exige"] else ())
         permises = tuple(k for k in rg.PERMISES_ETAPE_A + (rg.VERDICT_P3BIS,) if k not in exigees)
         refusees = {k: v for k, v in rg.REFUSEES_ETAPE_A.items() if k != rg.VERDICT_P3BIS}
-    elif etape == "B":
-        exigees, permises, refusees = rg.EXIGEES_ETAPE_B, rg.PERMISES_ETAPE_B, {}
+    elif etape == "B":                                   # DF-02 : CODE-T07 exigée aussi à l'étape B quand DS-3 bis est accordée
+        exigees = rg.EXIGEES_ETAPE_B + ((rg.CODE_T07,) if config["code_t07_exige"] else ())
+        permises, refusees = tuple(k for k in rg.PERMISES_ETAPE_B if k not in exigees), {}
     else:
         raise GardeArret(f"étape {etape!r} inconnue")
     marques = tuple(config["marques_autres_taches"])
@@ -400,6 +401,11 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
     v = tenter(rg.verifier_lignes, lignes, racine, instant) if lignes else {}
     lignes_v = (v[1] if isinstance(v, tuple) and v and v[0] == "partiel" else v) or {}
     sortie = {"etape": etape, "instant": rg.date_utc(instant), "run": run_t06}
+    if rg.CODE_T07 in lignes_v:        # DS-3 bis (R-2104), DF-02 : étapes A et B ; commit et arbre exécuté, ligne avant la 1re ouverture de A
+        premiere_c = tenter(premiere_ouverture_a, registre, run_t06)
+        code = tenter(ct.controler_code, racine, lignes_v[rg.CODE_T07], premiere_c if isinstance(premiere_c, int) else None)
+        if code:
+            sortie["code_t07"] = code
 
     # journal de P3-bis et écrits du rendez-vous (garde adaptée, N-066)
     chemin_journal = racine / jp.JOURNAL_P3BIS
@@ -458,10 +464,6 @@ def ouvrir(racine: Path, registre: Path, config: dict, etape: str, run_t06: str,
             motifs.extend(_motifs(ga.garde_etape_a(instant, lignes_v, journal, prealables, decisions, deja=False)))
         premiere = tenter(premiere_ouverture_a, registre, run_t06)
         fermeture, source = ga.instant_fermeture(instant, premiere if isinstance(premiere, int) else None, journal)
-        if rg.CODE_T07 in lignes_v:          # DS-3 bis (R-2104) : commit et empreintes du code égaux à l'arbre exécuté, ligne avant la 1re ouverture
-            code = tenter(ct.controler_code, racine, lignes_v[rg.CODE_T07], premiere if isinstance(premiere, int) else None)
-            if code:
-                sortie["code_t07"] = code
         resume_journal["ouverture_reduite_avant_ouverture_A"] = ga.reduite_avant(journal, instant)
         resume_journal["fermeture_perimetre"] = {"instant": rg.date_utc(fermeture), "source": source,
                                                  "premiere_ouverture_A": rg.date_utc(premiere) if isinstance(premiere, int) else None}
@@ -863,6 +865,10 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
             textes_course = lire_textes(lv1._chemin_sous_racine(racine, run_t06, str(ep["resultat"]["textes"])))
             rejeu = cj.rejouer_controle_9(generiques["jeux"], textes_course.values(), enonces)
             controles_jeux["controle_9"] = rejeu["rapport"]
+            for concept_v, cle_v in (("dissimulation", "JD"), ("domaine", "JC")):           # DF-03 : jeu vidé → garde nommée
+                if concept_v in ouverture["concepts"] and cle_v in generiques["jeux"] and cle_v not in rejeu["jeux"]:
+                    raise GardeArret(f"jeu {cle_v} vidé par le rejeu du contrôle 9 (toutes ses tâches sorties, consigne v3, § 10 étape 4) : "
+                                     f"la sonde de « {concept_v} », lue depuis l'ouverture, ne peut être apprise : arrêt, nœud")
             appris = sn.apprendre(rejeu["jeux"], generiques["phrases"], ext, config, graines, ouverture["concepts"])
             if config.get("donnees_p3") is not None:                   # T7-P10 de la tromperie et des enjeux (plan, point 10)
                 lex_p3 = d3.temoins_p3(racine, config["donnees_p3"])
@@ -1133,7 +1139,6 @@ def main(argv: list[str]) -> int:
             print(f"      {n:4d}  {issue}")
         return lv1.main(["grille"])
     if a.action == "repli-recalcul":
-        from . import repli_recalcul_v1 as rr
         try:
             config = charger_configuration(Path(a.config_t07))
             if config["mode"] == "reel" and a.instant is not None:                               # CT-06
@@ -1141,13 +1146,17 @@ def main(argv: list[str]) -> int:
         except GardeArret as err:
             print(f"REFUS : {err}", file=sys.stderr)
             return CODE_REFUS
-        try:
-            rapport = rr.recalculer(Path(a.racine), a.run_t06)
-        except GardeArret as err:
-            print(f"ARRÊT (R11, repli) : {err} ; relance une fois sur la même carte que la course, puis nœud", file=sys.stderr)
+        from . import repli_etapes_v1 as rt
+        registre = Path(a.registre) if a.registre else Path(a.racine) / config["registre"]
+        try:                                                  # DF-01 : garde d'ouverture avant tout recalcul ; reprise couverte
+            rapport = rt.repli(Path(a.racine), registre, config, a.run_t06, a.instant)["rapport"]
+        except rt.ArretRepli as err:
+            print(f"ARRÊT (R11, repli) : {err}", file=sys.stderr)
             return CODE_ARRET
+        except GardeArret as err:
+            print(f"REFUS : {err}", file=sys.stderr)
+            return CODE_REFUS
         try:
-            registre = Path(a.registre) if a.registre else Path(a.racine) / config["registre"]
             r = etape_a(Path(a.racine), registre, config, a.run_t06, a.instant,
                         Path(a.racine_sortie) if a.racine_sortie else None, repli=rapport)
             print(f"repli : {rapport['rejeu']['actions_notees_recalculees']} actions recalculées, garde d'équivalence passée ; "

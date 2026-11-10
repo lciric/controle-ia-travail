@@ -173,3 +173,58 @@ def test_code_t07_commande_verifier(jc, capsys):
     (jc.pieces["code"] / "src" / "controle_ia" / "t07" / "b.py").write_text("B = 3\n")
     assert ct.main(["verifier", str(jc.racine), str(jc.registre)]) == 2
     assert not jc.journal.exists()
+
+
+# ------------------------------------------------------------------------------------- DF-02 (contre-lecture différentielle)
+def test_DF02_paquets_importes_et_arbre_de_travail(jc):
+    """DF-02 : tout `src/controle_ia/` de l'arbre exécuté égal au commit cité. Cas sain : arbre propre (essai du cas sain plus
+    haut). Artefacts : un paquet importé hors de `t07/` changé dans un commit postérieur au commit cité → refus ; un fichier non
+    suivi sous `src/controle_ia/` → refus (arbre de travail modifié)."""
+    d, c7 = jc.pieces["code"], jc.pieces["c7"]
+    poser_code(jc, d, c7)
+    autre = d / "src" / "controle_ia" / "autre"
+    autre.mkdir(parents=True)
+    (autre / "y.py").write_text("Y = 1\n")
+    with pytest.raises(rg.RefusRegistre, match="arbre de travail modifié"):
+        _a(jc)
+    _git(d, "add", "-A")
+    _git(d, "commit", "-q", "-m", "paquet importé changé après C7")
+    with pytest.raises(rg.RefusRegistre, match="paquets importés compris"):
+        _a(jc, instant=INSTANT + 1)
+
+
+def test_DF02_code_t07_exigee_et_controlee_a_l_etape_B(jc):
+    """DF-02 : avec `code_t07_exige` vrai, l'étape B exige et contrôle `CODE-T07`. Cas sain : étape B lue ; artefact : module retouché
+    entre les deux étapes → l'étape B refuse (code 2), rien d'écrit."""
+    from test_t07_lecture_v1 import APRES_A, INSTANT_B
+    from test_t07_lecture_v2 import lignes_audit, lignes_p3bis
+    poser_code(jc, jc.pieces["code"], jc.pieces["c7"])
+    ra = _a(jc)
+    lignes_audit(jc, ra["run_t07"])
+    lignes_p3bis(jc, APRES_A)
+    m = jc.pieces["code"] / "src" / "controle_ia" / "t07" / "a.py"
+    m.write_text("A = 2\n")
+    with pytest.raises(rg.RefusRegistre, match="CODE-T07"):
+        lv.etape_b(jc.racine, jc.registre, jc.config, RUN_T06, ra["run_t07"], instant=INSTANT_B)
+    assert not (jc.racine / "diag" / ra["run_t07"] / "lecture-t07.json").exists()
+    m.write_text("A = 1\n")
+    lec = lv.etape_b(jc.racine, jc.registre, jc.config, RUN_T06, ra["run_t07"], instant=INSTANT_B + 1)
+    assert lec["issue_critere_3"]
+
+
+def test_DF02_passe_a_blanc_exige_code_t07(jc):
+    """DF-02 : la passe à blanc contrôle `CODE-T07` avant tout (`code_t07_exige` vrai) : absente → refus ; conforme → tenue ;
+    module retouché → refus ; rien d'écrit sur un refus."""
+    from controle_ia.t07 import passe_blanc_v1 as pb
+    from test_t07_passe_blanc_v1 import COUCHES_JOUET, extracteur_jouet, memoire
+    jc.config["couches"] = list(COUCHES_JOUET)
+    kw = dict(extracteur=extracteur_jouet(), mesure=memoire())
+    with pytest.raises(pb.RefusPasse, match="CODE-T07 exigée"):
+        pb.passe_a_blanc(jc.racine, jc.registre, jc.config, RUN_T06, instant=INSTANT, **kw)
+    poser_code(jc, jc.pieces["code"], jc.pieces["c7"])
+    r = pb.passe_a_blanc(jc.racine, jc.registre, jc.config, RUN_T06, instant=INSTANT + 1, **kw)
+    assert r["issue"] == "tenue" and r["sortie"]["code_t07"]["commit"] == jc.pieces["c7"]
+    (jc.pieces["code"] / "src" / "controle_ia" / "t07" / "b.py").write_text("B = 9\n")
+    with pytest.raises(pb.RefusPasse, match="CODE-T07"):
+        pb.passe_a_blanc(jc.racine, jc.registre, jc.config, RUN_T06, instant=INSTANT + 2, **kw)
+    assert len(list((jc.racine / pb.DOSSIER).iterdir())) == 1

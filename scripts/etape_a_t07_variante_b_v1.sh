@@ -6,7 +6,8 @@
 #   S7 : commit de scellement de T0.7 (descendant de C7, arbre gelé égal) ; C7 : commit du code ; RUN6 : run de 7b ;
 #   CONFIG : configuration de T0.7 dans S7 ; BRANCHE : branche de sortie, neuve ; BRANCHE_7B : branche poussée par la course 7b ;
 #   ATTENDU : dernière ligne attendue des essais de T0.7 (durée retirée) ; ECHEANCE_UTC_S : heure de destruction par la minuterie.
-# Ordre des gestes (mère, R-2112) : essais, CODE-T07 contrôlée, repli (recalcul et garde d'équivalence), passe à blanc, étape A.
+# Ordre des gestes (mère, R-2112 ; DF-01) : essais, CODE-T07 contrôlée, repli (garde d'ouverture, puis recalcul et garde
+# d'équivalence), passe à blanc (CODE-T07 et mémoire de la notation comprises), étape A.
 # Variables : GH_TOKEN (toujours), HF_TOKEN (réel), posées par la commande de création, par leur nom ; CONTAINER_ID et
 # CONTAINER_API_KEY, posées par Vast. Aucune n'est jamais affichée.
 # Essai local seulement (ESSAI_LOCAL=1) : RACINE_INSTANCE, DEPOT_URL (dépôt local), VENV_EXISTANT, ESSAIS_LISTE (liste réduite) ;
@@ -25,7 +26,7 @@ S6=935262b17ca95894a882b02f1526ee39d1738652
 API=https://console.vast.ai/api/v0
 T="$R/t07-etape-a-b-v1"; D="$T/depot"; X="$T/traces"; L="$X/journal-t07.txt"; XT=traces/t07-etape-a-b-v1
 mkdir -p "$X" || { echo "T07 REFUS : $X impossible"; exit 2; }
-export TZ=UTC
+export TZ=UTC PYTHONDONTWRITEBYTECODE=1                    # aucun __pycache__ sous src/ : CODE-T07 refuse un arbre de travail modifié
 j() { printf '%s T07 %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
 BRANCHE_PRETE=0
 fin_instance() {  # fin : réel, état voulu « stopped » demandé (la session détruit par l'identifiant, R10) ; essai : fichier, sortie
@@ -186,23 +187,26 @@ pousser() {
     local n; for n in 1 2 3; do git push -q origin "HEAD:refs/heads/$BR" && { j "poussé : $(git rev-parse HEAD) « $m »"; return 0; }; sleep $((20 * n)); done
     BRANCHE_PRETE=0; arret "poussée « $m » impossible"; }
 BRANCHE_PRETE=1
-# 9. repli : recalcul des activations et garde d'équivalence (R11 : une relance sur la même carte, puis nœud)
+# 9. repli : garde d'ouverture de l'étape A (journalisée) PUIS recalcul sous un nom daté et garde d'équivalence (DF-01) ;
+#    R11 : une relance sur la même carte, sous un nom daté neuf (le premier recalcul reste) ; refus de la garde : arrêt (attente)
+RAPPORT="donnees/$RUN6/activations/rapport-repli-t07.json"
 for essai in 1 2; do
     PYTHONPATH=src "$PY" -m controle_ia.t07.lecture_v2 repli-seul . "$RUN6" "$CONFIG" > "$X/repli-$essai.txt" 2> "$X/repli-$essai.err"; c=$?
     j "repli, essai $essai : code $c ; $(head -n 1 "$X/repli-$essai.txt")"
     [ "$c" = 0 ] && break
-    [ "$c" = 3 ] && [ "$essai" = 1 ] && [ -d "donnees/$RUN6/activations" ] && mv "donnees/$RUN6/activations" "donnees/$RUN6/activations-echec-1" && { j "garde du repli en échec (R11) : une relance, même carte, même commit"; continue; }
-    traces; arret "repli : code $c (essai $essai) : nœud (motif : repli-$essai.err)" 3
+    [ "$c" = 3 ] && [ "$essai" = 1 ] && { j "garde d'équivalence ou identité en échec (R11) : une relance, même carte, même commit, nom neuf"; continue; }
+    traces; pousser "T0.7 (variante B) : repli en arrêt, code $c (essai $essai)" registres/scellements-v1.md.ouvertures.md "$XT"
+    arret "repli : code $c (essai $essai) : $( [ "$c" = 2 ] && echo 'refus de la garde (ligne manquante : attente, relance sur une instance neuve)' || echo 'nœud') (motif : repli-$essai.err)" 3
 done
-RAPPORT=$(ls -1d replis-t07/*/rapport-repli-t07.json 2>/dev/null | sort | tail -n 1); [ -n "$RAPPORT" ] || arret "rapport du repli introuvable" 3
-traces; pousser "T0.7 (variante B) : repli du recalcul, garde d'équivalence passée (aucune ouverture)" replis-t07 "$XT"
+[ -f "$RAPPORT" ] || arret "rapport du repli introuvable ($RAPPORT)" 3
+traces; pousser "T0.7 (variante B) : garde d'ouverture, repli du recalcul, garde d'équivalence passée" "$RAPPORT" "$RAPPORT.sha256" registres/scellements-v1.md.ouvertures.md "$XT"
 # 10. passe à blanc (aucune donnée décisive)
 PYTHONPATH=src "$PY" -m controle_ia.t07.lecture_v2 passe-blanc . "$RUN6" "$CONFIG" > "$X/passe-blanc.txt" 2> "$X/passe-blanc.err"; c=$?
 j "passe à blanc : code $c ; $(head -n 1 "$X/passe-blanc.txt")"
 traces; pousser "T0.7 (variante B) : passe à blanc de l'extracteur (aucune donnée décisive), code $c" passes-blanches-t07 "$XT"
 [ "$c" = 0 ] || arret "passe à blanc : code $c : l'étape A ne part pas (motif : passe-blanc.err)" 3
 # 11. étape A après le repli (garde d'identité remplacée par la garde d'équivalence)
-PYTHONPATH=src "$PY" -m controle_ia.t07.lecture_v2 etape-a-apres-repli . "$RUN6" "$CONFIG" "$RAPPORT" > "$X/etape-a.txt" 2> "$X/etape-a.err"; c=$?
+PYTHONPATH=src "$PY" -m controle_ia.t07.lecture_v2 etape-a-apres-repli . "$RUN6" "$CONFIG" > "$X/etape-a.txt" 2> "$X/etape-a.err"; c=$?
 RUN7=$(ls -1 runs 2>/dev/null | grep -- '-t07-lecture-' | sort | tail -n 1); j "étape A : code $c${RUN7:+, run $RUN7}"
 CH=(registres/scellements-v1.md registres/scellements-v1.md.ouvertures.md "$XT")
 [ -n "$RUN7" ] && CH+=("runs/$RUN7" "diag/$RUN7" "donnees/$RUN7")

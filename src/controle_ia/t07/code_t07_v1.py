@@ -12,7 +12,12 @@ vérifie le sceau et l'antériorité stricte à l'ouverture (`registre_v1.verifi
 3. **égalité à l'arbre exécuté** : dans le dépôt git qui porte le module **effectivement importé** (`dossier_du_module`), le commit
    cité existe et est la tête ou un de ses ancêtres (commit de scellement descendant du commit du code, comme la voie B de T0.6) ;
    les fichiers `*.py` de `src/controle_ia/t07/` au commit cité sont exactement ceux de la liste, chacun à l'empreinte écrite ; les
-   fichiers du dossier importé sont les mêmes, aux mêmes empreintes (aucun fichier en plus, en moins ou changé). Sinon refus.
+   fichiers du dossier importé sont les mêmes, aux mêmes empreintes (aucun fichier en plus, en moins ou changé) ; **DF-02** : tout
+   `src/controle_ia/` de l'arbre exécuté (paquets importés compris) est égal au commit cité (`git diff` vide) et l'arbre de travail
+   n'y porte aucun fichier modifié ni ajouté (`git status`). Sinon refus.
+
+Contrôle joué par la garde de l'étape A **et de l'étape B** (`code_t07_exige` vrai : ligne exigée aux deux), par la passe à blanc
+et avant le repli (DF-02).
 
 Le contrôle ne lit que le dépôt du code et le fichier cité ; il n'ouvre rien de la course.
 """
@@ -41,6 +46,12 @@ def _git(depot: Path, *args: str) -> tuple[int, str]:
 
 def _sha(octets: bytes) -> str:
     return hashlib.sha256(octets).hexdigest()
+
+
+def _refus_arbre(statut: str) -> rg.RefusRegistre:
+    lignes = statut.strip().splitlines()
+    return rg.RefusRegistre(f"CODE-T07 : arbre de travail modifié sous src/controle_ia/ ({len(lignes)} entrée(s), première : "
+                            f"{lignes[0].strip()[:120]!r})")
 
 
 def lire_fichier_code(chemin: Path) -> dict:
@@ -87,6 +98,13 @@ def controler_code(racine: Path, entree: dict, premiere_ouverture: int | None, d
     if importes != ecrits:
         raise rg.RefusRegistre(f"CODE-T07 : fichiers du module importé ≠ liste écrite (en plus : {sorted(importes - ecrits)[:5]} ; "
                                f"absents : {sorted(ecrits - importes)[:5]})")
+    # DF-02 : les paquets importés aussi (`sondes`, `harnais`, `premier_test_ia`, `manifeste`, `t06`, `organismes`…) : tout
+    # `src/controle_ia/` de l'arbre exécuté égal au commit cité, aucun fichier modifié ni ajouté
+    if _git(depot, "diff", "--quiet", commit, "--", "src/controle_ia")[0] != 0:
+        raise rg.RefusRegistre(f"CODE-T07 : src/controle_ia/ de l'arbre exécuté ≠ commit cité {commit[:12]}… (paquets importés compris)")
+    _, statut = _git(depot, "status", "--porcelain", "--untracked-files=all", "--", "src/controle_ia")
+    if statut.strip():
+        raise _refus_arbre(statut)
     ecarts = []
     for p, s in sorted(d["fichiers"].items()):
         blob = subprocess.run(["git", "-C", str(depot), "show", f"{commit}:{p}"], capture_output=True).stdout

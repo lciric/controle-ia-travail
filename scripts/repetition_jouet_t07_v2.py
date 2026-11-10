@@ -68,9 +68,9 @@ def main(argv: list[str]) -> int:
         Path(a.sortie).write_text(json.dumps(resume, ensure_ascii=False, indent=1), encoding="utf-8")
         return 1
     textes = [json.loads(l) for l in (dossier / "donnees" / r1.RUN_T06 / "textes-actions-t06.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
+    graines6 = json.loads((dossier / "runs" / r1.RUN_T06 / "manifeste.json").read_text())["graines"]     # DF-08 : entropie des graines
     resume["actions_t06"] = {"actions": len(textes), "sans_caractere_de_mot": sum(1 for x in textes if not MOT.search(x["texte"])),
-                             "entropie_manifeste": json.loads((dossier / "runs" / r1.RUN_T06 / "manifeste.json").read_text())["entropie"]
-                             if "entropie" in json.loads((dossier / "runs" / r1.RUN_T06 / "manifeste.json").read_text()) else None}
+                             "entropie_manifeste": sorted({int(g["entropie"]) for g in graines6.values()})}
     origine = None
     if a.repli:
         origine = dossier.parent / (dossier.name + "-activations-d-origine")

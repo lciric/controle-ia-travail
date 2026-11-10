@@ -5,6 +5,7 @@ aucun téléchargement) et les jeux factices de `test_t07_sondes_neuves_v1.py` ;
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -219,6 +220,9 @@ def test_sous_commande_de_lecture_v2(jb, capsys):
     graine « modele-jouet ») : code 0 et sortie scellée ; artefacts : run de T0.6 sans manifeste lisible → code 2, rien d'écrit ;
     mesure de la mémoire réelle de l'hôte."""
     creer_manifeste(jb.racine, RUN_MODELE, {"mode": "jouet", "agent": {}}, ["modele-jouet"], entropie=7, autoriser_depot_sale=True)
+    (jb.racine / "donnees" / RUN_MODELE).mkdir(parents=True)                # DF-04 : la passe lit les jetons notés de la course
+    for nom in ("mesures-t06.npz", "mesures-t06.npz.sha256"):
+        shutil.copy(jb.racine / "donnees" / RUN_T06 / nom, jb.racine / "donnees" / RUN_MODELE / nom)
     cfg = jb.racine / "config-t07-passe.json"
     cfg.write_text(json.dumps(jb.config, ensure_ascii=False), encoding="utf-8")
     code = lv.main(["passe-blanc", str(jb.racine), "20261108-140000-t06-jouet", str(cfg), "--registre", str(jb.registre)])
@@ -231,3 +235,21 @@ def test_sous_commande_de_lecture_v2(jb, capsys):
     assert verifier(chemin) == out.split("sortie ", 1)[1].split()[1]
     s = json.loads(chemin.read_text(encoding="utf-8"))
     assert s["run_t06"] == RUN_MODELE and s["memoire"]["jugement"]["hote"]["disponible"] > 0 and s["nature"] == pb.NATURE
+
+
+# ------------------------------------------------------------------------------------- DF-04 (contre-lecture différentielle)
+def test_DF04_memoire_de_la_notation(jb, monkeypatch):
+    """DF-04 : la passe juge aussi la mémoire de la notation (une couche, toutes les actions notées, float32, jetons notés lus dans
+    `mesures-t06.npz`). Cas sain : besoin écrit, tenue ; artefacts : notation de 40 Gio pour 64 Gio disponibles (jeux tenus) →
+    arrêt « mémoire de la notation » ; mesures absentes → arrêt « non estimable » (aucun repli silencieux)."""
+    r = _pb(jb)
+    j = r["sortie"]["memoire"]["jugement"]
+    n = j["notation"]
+    assert r["issue"] == "tenue" and n["octets"] == 4 * 32 * n["jetons_notes"] and j["besoin_notation_octets"] == 2 * n["octets"]
+    monkeypatch.setattr(pb, "octets_notation", lambda *a: {"actions_notees": 1, "jetons_notes": 1, "octets": 40 * GIO})
+    r = _pb(jb, instant=INSTANT_PB + 1)
+    assert r["issue"] == "arrêt" and any(m.startswith("mémoire de la notation") for m in r["motifs"]) and r["sortie"]["frontiere"]["tient"]
+    monkeypatch.undo()
+    (jb.racine / "donnees" / RUN_T06 / "mesures-t06.npz").rename(jb.racine / "donnees" / RUN_T06 / "mesures-t06.npz.ailleurs")
+    r = _pb(jb, instant=INSTANT_PB + 2)
+    assert r["issue"] == "arrêt" and any("non estimable" in m for m in r["motifs"]) and not r["sortie"]["memoire"]["tient"]

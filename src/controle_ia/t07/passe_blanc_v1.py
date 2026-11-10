@@ -25,6 +25,9 @@ d'autre :
    réservé, `torch.cuda.max_memory_reserved`, contre `PART_CARTE_MAX` de la carte) et de l'hôte (activations que l'étape A garde
    en mémoire pour tous les jeux et toutes les phrases, en float32, aux couches lues, × `FACTEUR_COPIES`, contre `PART_HOTE_MAX`
    de la mémoire disponible relevée après le chargement et l'échantillon).
+   **DF-04** : aussi la mémoire de la **notation** (une couche, toutes les actions notées, float32 : jetons notés lus dans `mesures-t06.npz`),
+   au même facteur et à la même part ; mesures illisibles : arrêt. **DF-02** : avec `code_t07_exige` vrai, `CODE-T07` est
+   contrôlée avant tout (`code_t07_v1.controler_code`) ; absente ou non conforme : refus, code 2.
 
 **Elle n'écrit rien de décisif** : ni manifeste de run, ni score, ni notation d'une action d'organisme, ni sonde, ni ligne de
 registre, ni ligne `OUVERTURE-T07` ou `REFUS-T07` au journal (l'instant de fermeture du périmètre des jeux reste celui de la
@@ -255,16 +258,21 @@ def lire_entrees(racine: Path, registre: Path) -> dict:
 
 
 # ---------------------------------------------------------------------------------------------------------------------- passe
-def _juger_memoire(mesure: dict, octets_etape_a: int, mode: str) -> tuple[dict, str | None]:
+def _juger_memoire(mesure: dict, octets_etape_a: int, mode: str, octets_notation: int | None = None) -> tuple[dict, str | None]:
     hote, carte = mesure["hote"], mesure["carte"]
     besoin = int(FACTEUR_COPIES * octets_etape_a)
     jugement = {"activations_etape_a_octets": int(octets_etape_a), "facteur_copies": FACTEUR_COPIES, "besoin_hote_octets": besoin,
                 "part_hote_max": PART_HOTE_MAX, "part_carte_max": PART_CARTE_MAX, **mesure}
+    if octets_notation is not None:                     # DF-04 : notation, une couche à la fois, toutes les actions notées
+        jugement.update(notation_octets=int(octets_notation), besoin_notation_octets=int(FACTEUR_COPIES * octets_notation))
     if hote.get("disponible") is None:
         return jugement, "mémoire de l'hôte illisible (/proc/meminfo) : la garde de mémoire ne peut être jugée"
     if besoin > PART_HOTE_MAX * hote["disponible"]:
         return jugement, (f"mémoire de l'hôte : l'étape A garderait ≈ {besoin / 2**30:.2f} Gio d'activations (copies comprises) pour "
                           f"{hote['disponible'] / 2**30:.2f} Gio disponibles (part maximale {PART_HOTE_MAX})")
+    if octets_notation is not None and FACTEUR_COPIES * octets_notation > PART_HOTE_MAX * hote["disponible"]:
+        return jugement, (f"mémoire de la notation : une couche de toutes les actions notées ≈ {FACTEUR_COPIES * octets_notation / 2**30:.2f} "
+                          f"Gio (copies comprises) pour {hote['disponible'] / 2**30:.2f} Gio disponibles (part maximale {PART_HOTE_MAX})")
     if carte is None:
         if mode == "reel":
             return jugement, "mode réel sans carte visible (torch.cuda.is_available() faux) : la mémoire de la carte ne peut être jugée"
@@ -276,6 +284,23 @@ def _juger_memoire(mesure: dict, octets_etape_a: int, mode: str) -> tuple[dict, 
         return jugement, (f"mémoire de la carte : pic réservé {carte['pic_reserve'] / 2**30:.2f} Gio pour {carte['totale'] / 2**30:.2f} "
                           f"Gio (part maximale {PART_CARTE_MAX})")
     return jugement, None
+
+
+def octets_notation(racine: Path, run_t06: str, largeur: int) -> dict:
+    """DF-04 : mémoire de la notation de l'étape A (`lecture_v2.noter` charge, pour une couche, les activations de toutes les actions
+    notées, en float32) : 4 × largeur × somme des jetons notés, lue dans `donnees/<run>/mesures-t06.npz` (sceau vérifié ; seule la
+    colonne `jetons_notes` est lue). Illisible → `GardeArret` (aucun repli silencieux)."""
+    chemin = Path(racine) / "donnees" / run_t06 / "mesures-t06.npz"
+    try:
+        rg.sceau_conforme(chemin)
+        with np.load(chemin) as z:
+            j = np.asarray(z["jetons_notes"], dtype=np.int64)
+    except GardeArret:
+        raise
+    except (OSError, ValueError, KeyError) as e:
+        raise GardeArret(f"mesures de la course illisibles ({type(e).__name__}) : mémoire de la notation non estimable") from None
+    notes = j[j > 0]
+    return {"actions_notees": int(notes.size), "jetons_notes": int(notes.sum()), "octets": int(OCTETS_FLOAT32 * int(largeur) * int(notes.sum()))}
 
 
 def passe_a_blanc(racine: Path, registre: Path, config: dict, run_t06: str, racine_sortie: Path | None = None,
@@ -295,6 +320,18 @@ def passe_a_blanc(racine: Path, registre: Path, config: dict, run_t06: str, raci
     except GardeArret as e:
         raise RefusPasse(f"dépôt de la racine : {e}") from None
     mode = config["mode"]
+    code_t07 = None
+    if config["code_t07_exige"]:                        # DF-02 : CODE-T07 contrôlée avant la passe (refus, code 2)
+        from . import code_t07_v1 as ct
+        from .lecture_v2 import lire_lignes_actuelles, premiere_ouverture_a
+        ligne = lire_lignes_actuelles(registre, (rg.CODE_T07,)).get(rg.CODE_T07)
+        if ligne is None:
+            raise RefusPasse("CODE-T07 exigée (code_t07_exige vrai) et absente du registre")
+        try:
+            rg.sceau_conforme(racine / ligne["chemin"], ligne["sha256"])
+            code_t07 = ct.controler_code(racine, ligne, premiere_ouverture_a(registre, run_t06))
+        except GardeArret as e:
+            raise RefusPasse(f"CODE-T07 : {e}") from None
     nom = time.strftime("%Y%m%d-%H%M%S", time.gmtime(instant)) + f"-passe-blanc-t07-{mode}"
     dossier = racine_sortie / DOSSIER / nom
     if dossier.exists():
@@ -391,7 +428,14 @@ def passe_a_blanc(racine: Path, registre: Path, config: dict, run_t06: str, raci
     base = durees[1:] if len(durees) > 1 else durees
     estimation = round(sum(base) / len(base) * n_passes_a, 1) if base else None   # durée par passe (jamais des jetons)
     octets_a = OCTETS_FLOAT32 * len(couches) * int(largeur or 0) * int(jetons_a)
-    memoire, motif_memoire = _juger_memoire(mesure(), octets_a, mode)
+    notation = None
+    try:
+        notation = octets_notation(racine, run_t06, int(largeur or 0))
+    except GardeArret as e:
+        motifs.append(f"mémoire de la notation non estimable : {e}")
+    memoire, motif_memoire = _juger_memoire(mesure(), octets_a, mode, notation["octets"] if notation else None)
+    if notation:
+        memoire["notation"] = notation
     if largeur is None:
         motifs.append("aucune passe de l'échantillon menée : largeur des activations inconnue, mémoire de l'étape A non estimable")
     if motif_memoire:
@@ -416,7 +460,9 @@ def passe_a_blanc(racine: Path, registre: Path, config: dict, run_t06: str, raci
                    "extraction_etape_a_estimee_s": estimation,
                    "note": "estimation : moyenne des passes de l'échantillon hors la première × passes de l'extraction de l'étape A ; "
                            "rapportée, jamais une garde (aucun couperet de temps)"},
-        "memoire": {"apres_chargement": memoire_chargement, "jugement": memoire, "tient": motif_memoire is None and largeur is not None},
+        "memoire": {"apres_chargement": memoire_chargement, "jugement": memoire,
+                    "tient": motif_memoire is None and largeur is not None and notation is not None},
+        "code_t07": code_t07,
         "issue": "tenue" if not motifs else "arrêt", "motifs": motifs,
     }
     dossier.mkdir(parents=True)

@@ -623,7 +623,7 @@ def test_journal_mal_forme_refus_noeud(depot, contenu, motif):
     assert jp.lire_journal_p3bis(p) == []
 
 
-@pytest.mark.xfail(strict=True, reason="interprétation tolérante (ligne vide ignorée, appui libre) retirée par D-3 (R-2103) ; "
+@pytest.mark.xfail(strict=True, raises=jp.JournalFautif, reason="interprétation tolérante (ligne vide ignorée, appui libre) retirée par D-3 (R-2103) ; "
                    "cas sain refait aux formes exactes : tests/test_t07_journal_p3bis_d3_v1.py")
 def test_journal_cas_sain_lignes_et_refus_lus():
     """(xv) : lecture du journal au format de P3-bis b8 ; une ligne `REFUS-OUVERTURE-P3BIS` est lue mais n'est jamais une ouverture ;

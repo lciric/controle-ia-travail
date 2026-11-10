@@ -273,3 +273,24 @@ def test_passe_a_blanc_remesure_cas_sain_et_artefact(depot):
     _poser_journal(dossier, faux, "journal-verification-v3.txt")
     r = pb.passe_a_blanc(j.racine, j.registre, j.config, RUN_T06, instant=1_800_000_001, extracteur=ext, mesure=memoire())
     assert r["issue"] == "arrêt" and any(m.startswith("remesure des jetons de JD") for m in r["motifs"])
+
+
+# ------------------------------------------------------------------------------------- DF-03 (contre-lecture différentielle)
+def test_DF03_jeu_vide_par_le_rejeu_garde_nommee(depot, monkeypatch):
+    """DF-03 : une suite de 8 mots commune à toutes les réponses de J-D (et de J-C) dans les textes de la course vide ces jeux :
+    l'étape A s'arrête par une garde nommée (« vidé par le rejeu »), `arret.json` écrit, jamais une `KeyError` ; cas sain : les
+    essais de l'étape A plus haut (rien d'exclu)."""
+    from controle_ia.t07.lecture_v1 import ArretApresManifeste
+    j = construire_complet(depot)
+    commune = "soignée sobre CONTROLS: témoins COST: 120 PREDICTION: gain modeste"
+    original = lv.lire_textes
+
+    def lire(chemin):
+        t = original(chemin)
+        t[sorted(t)[0]] = "copie : " + commune
+        return t
+    monkeypatch.setattr(lv, "lire_textes", lire)
+    with pytest.raises(ArretApresManifeste, match="vidé par le rejeu"):
+        _a(j)
+    arrets = list(j.racine.glob("diag/*-t07-*/arret.json"))
+    assert len(arrets) == 1 and "vidé par le rejeu" in json.loads(arrets[0].read_text(encoding="utf-8"))["resultat"]["motif"]
