@@ -103,9 +103,12 @@ git -C "$D" cat-file -e "$S6^{commit}" 2>/dev/null && { git -C "$D" diff --quiet
 j "code conforme : S7 $S7, C7 $C7, main $H"
 # 3. registres de main, fichiers qu'ils citent (dont les quatre lignes de jeux et de concepts) et journaux du script des jeux
 interdit() { case "$1" in *lecture-sondes-t06*|donnees/bras-attaque*|donnees/mode-tenu-a-l-ecart*|docs/notes/bras-attaque/*|donnees/lecture-b-7a-quarantaine-v1*|scripts/extraire_mesures_epreuve_t06_v1.py) return 0;; esac; return 1; }
-apporter() {  # $1 = révision, $2 = chemin : fichier et compagnon recopiés s'ils existent à cette révision
+apporter() {  # $1 = révision, $2 = chemin : fichier et compagnon recopiés s'ils existent à cette révision ; un fichier suivi à S7 hors
+    # de l'extraction partielle y est d'abord ajouté (sinon git le retirerait de l'arbre au changement de branche ; vu à la répétition)
     local q; interdit "$2" && arret "chemin interdit cité : $2" 2
     for q in "$2" "$2.sha256"; do git -C "$D" cat-file -e "$1:$q" 2>/dev/null || continue
+        if git -C "$D" cat-file -e "HEAD:$q" 2>/dev/null && [ ! -e "$D/$q" ]; then
+            git -C "$D" sparse-checkout add "/$q" 2>/dev/null || arret "extraction partielle de $q" 2; fi
         mkdir -p "$D/$(dirname "$q")" && git -C "$D" show "$1:$q" > "$D/$q" || arret "copie de $q" 2; done; }
 for f in $(git -C "$D" ls-tree -r --name-only "$H" -- registres/ | grep -E '^registres/([^/]+\.md(\.sha256)?|go-extraits/[^/]+)$'); do
     mkdir -p "$D/$(dirname "$f")" && git -C "$D" show "$H:$f" > "$D/$f" || arret "registre $f" 2; done
