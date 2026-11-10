@@ -1,0 +1,149 @@
+Journal du lot 2, étape 1 : contrôle de forme de J-D, J-C (v3) et J-A par le module de T0.7 — v1
+date : 2026-11-10 09:42:25 UTC (horloge de la machine, UTC)
+outil : controle_forme_module_t07_v3_v1.py sha256 83dd462e2aca8619bce7159c4b00bb8d172783deb482f06db8e94bb05704f614 (texte intégral en fin de journal)
+module importé : /home/user/lot2-jc-tmp/module/src/controle_ia/t07/sondes_neuves_v1.py sha256 b1c59783ed231c88c5671bc124b0a3f448e5b948b48677db2f361fe6d05c085d (attendu au commit 8dc1cb09 : b1c59783ed231c88c5671bc124b0a3f448e5b948b48677db2f361fe6d05c085d)
+gardes importées de : /home/user/lot2-jc-tmp/module/src/controle_ia/gardes.py
+évaluation : donnees/20261007-082440-t05-extraction/taches-evaluation.json sha256 76cdeace861d2fff45ca732c55c2d97611dcd47edc7c27d62bdad4c37755e67e
+
+[OK] lire_jeu(donnees/t07-jeux-synthetiques-v3/dissimulation-v2.jsonl, 'dissimulation') : sha256 32f412888270a3c4b4bc347cf57055bd11b517000feceeaeed122476238ec228 ; 640 enregistrements, 320 paires, 32 tâches, modes ['aucun']
+[OK] lire_jeu(donnees/t07-jeux-synthetiques-v3/domaine-cout-v3.jsonl, 'domaine-cout') : sha256 99b4f1b25daa84f16b6c8c8dec06fede52ec7538f085d95b09e7e20bec627447 ; 640 enregistrements, 320 paires, 32 tâches, modes ['cout']
+[OK] lire_jeu(donnees/t07-jeux-synthetiques-v3/intention-autres-modes-v2.jsonl, 'intention-autres-modes') : sha256 5b0409209e66e6c29b69e675c5836cefbef966d9cc0a34412837cae837e2aacf ; 640 enregistrements, 320 paires, 32 tâches, modes ['controles', 'direction']
+[OK] controler_disjonction(J-D, J-C, J-A ; 64 tâches d'évaluation scellées) : {'taches_evaluation': 64, 'taches_reserve': {'dissimulation': 32, 'domaine-cout': 32, 'intention-autres-modes': 32}, 'communes': 0}
+
+R5 — artefacts (rien n'est écrit dans le dossier des jeux ; le fichier altéré vit dans un sous-dossier temporaire effacé à la sortie de l'outil) :
+    [OK] lire_jeu refuse l'artefact (premier enregistrement de J-C, position_cost + 1) : jeu domaine-cout, ligne 1 : position_cost 990 ne pointe pas la ligne COST: de la réponse
+    [OK] lire_jeu refuse J-C lu sous la clé de J-A : jeu intention-autres-modes, ligne 1 : jeu 'domaine-cout' ou mode 'cout' hors de intention-autres-modes ('controles', 'direction')
+    [OK] controler_disjonction refuse une liste d'évaluation augmentée d'une tâche de J-C (2510.02692v3) : contrôle de disjonction : tâches de réserve aussi tâches d'évaluation : {'dissimulation': ['2510.02692v3'], 'domaine-cout': ['2510.02692v3'], 'intention-autres-modes': ['2510.02692v3']} : arrêt
+
+Bilan : 0 faute(s) ; code 0
+
+--- texte intégral de l'outil (controle_forme_module_t07_v3_v1.py, sha256 83dd462e2aca8619bce7159c4b00bb8d172783deb482f06db8e94bb05704f614) ---
+#!/usr/bin/env python3
+"""Lot 2 des jeux de T0.7, étape 1 : contrôle de forme de J-D, J-C (version 3) et J-A par le module de T0.7 (commit
+8dc1cb09 de `prep/t07-module-v2`, extrait par `git archive` dans un dossier temporaire, jamais activé) — v1.
+
+Reprise de l'outil du lot 1 (`controle_forme_module_t07_v1.py`, 646a0499…), étendue aux trois jeux du dossier
+`donnees/t07-jeux-synthetiques-v3/` : `sondes_neuves_v1.lire_jeu` sur les trois fichiers ; `controler_disjonction`
+contre les 64 tâches d'évaluation scellées (`taches-evaluation.json`, `76cdeace…`). Aucune activation, aucun modèle,
+aucune sonde apprise : seules ces deux fonctions de lecture sont appelées. R5 : artefacts (un enregistrement altéré de
+J-C, écrit dans un sous-dossier temporaire effacé à la sortie ; J-C lu sous la clé de J-A ; une tâche de J-C ajoutée à la
+liste d'évaluation) qui doivent être refusés par les mêmes fonctions.
+Usage : python -I -B controle_forme_module_t07_v3_v1.py <src du module> <racine du dépôt> <dossier temporaire> <journal à créer>
+"""
+from __future__ import annotations
+
+import datetime as dt
+import hashlib
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+SRC_MODULE, RACINE, TMP, JOURNAL = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4])
+sys.path.insert(0, str(SRC_MODULE))
+
+from controle_ia.gardes import GardeArret  # noqa: E402
+from controle_ia.t07 import sondes_neuves_v1 as sn  # noqa: E402
+
+D = RACINE / "donnees/t07-jeux-synthetiques-v3"
+EVAL = RACINE / "donnees/20261007-082440-t05-extraction/taches-evaluation.json"
+FICHIERS = {"dissimulation": D / "dissimulation-v2.jsonl", "domaine-cout": D / "domaine-cout-v3.jsonl",
+            "intention-autres-modes": D / "intention-autres-modes-v2.jsonl"}
+ATTENDUS = {"dissimulation": "32f412888270a3c4b4bc347cf57055bd11b517000feceeaeed122476238ec228",
+            "domaine-cout": "99b4f1b25daa84f16b6c8c8dec06fede52ec7538f085d95b09e7e20bec627447",
+            "intention-autres-modes": "5b0409209e66e6c29b69e675c5836cefbef966d9cc0a34412837cae837e2aacf"}
+
+
+def sha(p: Path) -> str:
+    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+
+lignes: list[str] = []
+fautes: list[str] = []
+
+
+def j(t: str = "") -> None:
+    lignes.append(t)
+    print(t)
+
+
+j("Journal du lot 2, étape 1 : contrôle de forme de J-D, J-C (v3) et J-A par le module de T0.7 — v1")
+j(f"date : {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} (horloge de la machine, UTC)")
+moi = Path(__file__).resolve()
+j(f"outil : {moi.name} sha256 {sha(moi)} (texte intégral en fin de journal)")
+j(f"module importé : {Path(sn.__file__).resolve()} sha256 {sha(sn.__file__)} (attendu au commit 8dc1cb09 : "
+  "b1c59783ed231c88c5671bc124b0a3f448e5b948b48677db2f361fe6d05c085d)")
+if sha(sn.__file__) != "b1c59783ed231c88c5671bc124b0a3f448e5b948b48677db2f361fe6d05c085d":
+    fautes.append("module : empreinte ≠ 8dc1cb09")
+if not str(Path(sn.__file__).resolve()).startswith(str(SRC_MODULE.resolve())):
+    fautes.append("module : importé hors du dossier extrait")
+j(f"gardes importées de : {Path(sys.modules['controle_ia.gardes'].__file__).resolve()}")
+j(f"évaluation : {EVAL.relative_to(RACINE)} sha256 {sha(EVAL)}")
+j("")
+
+jeux = {}
+for jeu, p in FICHIERS.items():
+    if sha(p) != ATTENDUS[jeu]:
+        fautes.append(f"{jeu} : empreinte {sha(p)} ≠ {ATTENDUS[jeu]}")
+    try:
+        recs = sn.lire_jeu(p, jeu)
+    except GardeArret as e:
+        fautes.append(f"lire_jeu {jeu} : {e}")
+        j(f"[REFUS] lire_jeu({p.relative_to(RACINE)}, {jeu!r}) : {e}")
+        continue
+    jeux[jeu] = recs
+    paires = {(r["tache"], r["paire"]) for r in recs}
+    modes = sorted({r["mode"] for r in recs})
+    j(f"[OK] lire_jeu({p.relative_to(RACINE)}, {jeu!r}) : sha256 {sha(p)} ; {len(recs)} enregistrements, "
+      f"{len(paires)} paires, {len({r['tache'] for r in recs})} tâches, modes {modes}")
+
+ids_eval = [t["identifiant"] for t in json.loads(EVAL.read_text(encoding="utf-8"))["resultat"]["taches"]]
+if len(jeux) == 3:
+    try:
+        bilan = sn.controler_disjonction(jeux, ids_eval)
+        j(f"[OK] controler_disjonction(J-D, J-C, J-A ; {len(set(ids_eval))} tâches d'évaluation scellées) : {bilan}")
+    except GardeArret as e:
+        fautes.append(f"controler_disjonction : {e}")
+        j(f"[REFUS] controler_disjonction : {e}")
+
+j("")
+j("R5 — artefacts (rien n'est écrit dans le dossier des jeux ; le fichier altéré vit dans un sous-dossier temporaire "
+  "effacé à la sortie de l'outil) :")
+with tempfile.TemporaryDirectory(dir=str(TMP)) as tmp:
+    texte = FICHIERS["domaine-cout"].read_text(encoding="utf-8").splitlines()
+    r0 = json.loads(texte[0])
+    r0["position_cost"] = r0["position_cost"] + 1  # ne pointe plus « COST: »
+    art = Path(tmp) / "artefact-domaine-cout.jsonl"
+    art.write_text("\n".join([json.dumps(r0, ensure_ascii=False)] + texte[1:]) + "\n", encoding="utf-8")
+    try:
+        sn.lire_jeu(art, "domaine-cout")
+        fautes.append("R5 : lire_jeu n'a pas refusé l'artefact (position_cost décalé)")
+        j("    [FAUTE] lire_jeu a accepté un enregistrement à position_cost décalé")
+    except GardeArret as e:
+        j(f"    [OK] lire_jeu refuse l'artefact (premier enregistrement de J-C, position_cost + 1) : {e}")
+try:
+    sn.lire_jeu(FICHIERS["domaine-cout"], "intention-autres-modes")
+    fautes.append("R5 : lire_jeu n'a pas refusé J-C lu comme J-A")
+    j("    [FAUTE] lire_jeu a accepté J-C lu comme J-A")
+except GardeArret as e:
+    j(f"    [OK] lire_jeu refuse J-C lu sous la clé de J-A : {str(e)[:160]}")
+if "domaine-cout" in jeux:
+    intrus = jeux["domaine-cout"][0]["tache"]
+    try:
+        sn.controler_disjonction(jeux, ids_eval + [intrus])
+        fautes.append("R5 : controler_disjonction n'a pas refusé une tâche commune")
+        j("    [FAUTE] controler_disjonction a accepté une tâche commune")
+    except GardeArret as e:
+        j(f"    [OK] controler_disjonction refuse une liste d'évaluation augmentée d'une tâche de J-C ({intrus}) : "
+          f"{str(e)[:240]}")
+
+j("")
+j(f"Bilan : {len(fautes)} faute(s) ; code {1 if fautes else 0}" + (f" — {fautes}" if fautes else ""))
+j("")
+j(f"--- texte intégral de l'outil ({moi.name}, sha256 {sha(moi)}) ---")
+lignes.append(moi.read_text(encoding="utf-8").rstrip("\n"))
+lignes.append("--- fin du texte de l'outil ---")
+with open(JOURNAL, "x", encoding="utf-8", newline="\n") as f:
+    f.write("\n".join(lignes) + "\n")
+sys.exit(1 if fautes else 0)
+--- fin du texte de l'outil ---
