@@ -374,11 +374,12 @@ def exclure_localement(racine: Path, motifs) -> None:
     if not chemin.is_absolute():
         chemin = Path(racine) / chemin
     chemin.parent.mkdir(parents=True, exist_ok=True)
-    deja = chemin.read_text(encoding="utf-8").splitlines() if chemin.exists() else []
+    deja = set(chemin.read_text(encoding="utf-8").splitlines()) if chemin.exists() else set()
     with open(chemin, "a", encoding="utf-8") as f:
         for m in motifs:
-            if m not in deja:
+            if m not in deja:                   # un motif répété dans le même appel n'est écrit qu'une fois
                 f.write(m + "\n")
+                deja.add(m)
 
 
 def _suivis(racine: Path, chemins) -> list[str]:
