@@ -31,8 +31,9 @@ def test_essai_differentiel_de_fermeture_complet(tmp_path):
     for v in ef.VARIANTES:
         ligne = next(x for x in texte.splitlines() if f"contrôle positif « {v} »" in x)
         assert ligne.startswith("CONFORME — ") and f"'{ef.CRITERE_ATTENDU[v]}'" in ligne, ligne
-    reste = next(x for x in texte.splitlines() if "« fichier-reste »" in x)
-    assert "reste.json" in reste and "`git status --porcelain` (relevé de la v1) sous « vu » : []" in reste   # CP-07
+    vu = next(p for p in r["variantes"]["fichier-reste"] if p["issue_visee"] == "vu")             # CP-07 : l'inventaire de
+    assert any(x[0].endswith("/reste.json") for x in vu["publics"])                              # l'arbre voit le fichier
+    assert not any(x.endswith("/reste.json") for x in vu["porcelaine"])                          # que `git status` tait
     zeros = next(p for p in r["variantes"]["zeros-bourre"] if p["issue_visee"] == "vu")
     sain = next(p for p in r["variantes"]["zeros-bourre"] if p["issue_visee"] == "non vu")
     assert sain["zlib"] - zeros["zlib"] > 4000                                           # les zéros se compriment
