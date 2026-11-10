@@ -374,6 +374,22 @@ REGISTRE = {
     "controle_ia/environnements/extraire_t05.py::preparer_contre_verification": (EXEMPT, "extraction T0.5"),
     "controle_ia/environnements/extraire_t05.py::lire_contre_verification": (EXEMPT, "extraction T0.5"),
     "controle_ia/environnements/extraire_t05.py::_main": (EXEMPT, "extraction T0.5"),
+    # T0.6 (R-1679) : lanceur de T0.6, versions 1 à 4, et transcription des démonstrations honnêtes. Chaque tâche, d'évaluation comme de distillation,
+    # n'entre dans une invite que par `pilote_a.tache_de` (énoncé et classification : les cibles n'y sont pas) ; l'essai à marqueur de
+    # tests/test_t06_cibles_invisibles_v1.py joue la répétition jouet des quatre versions avec un marqueur dans les cibles de TOUTES les tâches et
+    # le cherche dans chaque invite (ouverture, guide, conversation de contrôle) et dans chaque fichier écrit.
+    "controle_ia/t06/distillation_transcription.py::transcription_honnete": (COUVERT, "t06_cibles_invisibles (v1 à v4)"),
+    "controle_ia/t06/lanceur.py::exemples_honnetes": (COUVERT, "t06_cibles_invisibles (v1 à v4)"),
+    "controle_ia/t06/lanceur.py::jouer_distillation": (COUVERT, "t06_cibles_invisibles (v1 à v4)"),
+    "controle_ia/t06/lanceur.py::jouer_evaluation": (COUVERT, "t06_cibles_invisibles (v1 à v4)"),
+    "controle_ia/t06/lanceur.py::executer": (COUVERT, "t06_cibles_invisibles (v1)"),
+    "controle_ia/t06/lanceur.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v1)"),
+    "controle_ia/t06/lanceur_v2.py::executer": (COUVERT, "t06_cibles_invisibles (v2)"),
+    "controle_ia/t06/lanceur_v2.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v2)"),
+    "controle_ia/t06/lanceur_v3.py::executer": (COUVERT, "t06_cibles_invisibles (v3)"),
+    "controle_ia/t06/lanceur_v3.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v3)"),
+    "controle_ia/t06/lanceur_v4.py::executer": (COUVERT, "t06_cibles_invisibles (v4)"),
+    "controle_ia/t06/lanceur_v4.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v4)"),
 }
 # Fonctions qui lisent la clé « cibles » (ou les coûts rapportés) d'une tâche : mesures du pilote A et extraction.
 LECTEURS_DE_CIBLES_ADMIS = {
@@ -382,6 +398,14 @@ LECTEURS_DE_CIBLES_ADMIS = {
                                                    "assembler", "assembler.tache", "_main"},
     "controle_ia/environnements/lancer_pilote_a.py": {"exiger_cibles", "paires_d_appariement", "paires_enonce_seul"},
     "controle_ia/environnements/lire_pilote.py": {"couvertures", "base_enonce_seul", "mesures_cout", "analyser"},
+    # T0.6 (R-1679) : FAUX LECTEURS. La clé `cibles` lue ici est celle de la configuration d'un adaptateur LoRA (`config["adaptateur"]["cibles"]`,
+    # noms des modules de projection visés : « q_proj », …), lue dans un fichier de configuration scellé ; ce n'est pas la référence cachée d'une
+    # tâche (les tâches ne passent que par `tache_de`). Preuve : tests/test_t06_cibles_invisibles_v1.py::test_cles_cibles_de_la_configuration_sont_des_modules_de_lora.
+    "controle_ia/t06/configuration.py": {"exiger_config_t06"},
+    "controle_ia/t06/lanceur.py": {"_executer_apres_manifeste"},
+    "controle_ia/t06/lanceur_v2.py": {"_executer_apres_manifeste"},
+    "controle_ia/t06/lanceur_v3.py": {"_executer_apres_manifeste"},
+    "controle_ia/t06/lanceur_v4.py": {"_executer_apres_manifeste"},
 }
 CLES_CACHEES = {"cibles", "couts_rapportes"}
 # Dossiers dont les modules ne sont pas balayés : le vérificateur de N-060 v3 lit la référence par construction.
