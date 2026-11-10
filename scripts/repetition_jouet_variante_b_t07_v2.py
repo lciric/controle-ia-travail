@@ -8,7 +8,8 @@ sans réseau, sans carte, sans modèle descendu, sans Vast.
 Ce qui change par rapport à la v1 :
 - **arbre de T0.6 matérialisé par `git show`** depuis le commit `1609a4bf` (fichiers nommés : `src/`, `prereg/P3-consignes-v1.md`
   et son compagnon, `registres/go.md`, `docs/notes/g0-deux-semaines-v1/config-t06-jouet-v5.json`), au lieu d'un arbre extrait à ce
-  commit (aucun `checkout`, aucun `worktree` : interdits communs, règle 4) ; la liste et les empreintes des fichiers matérialisés
+  commit (aucun `checkout`, aucun `worktree` : interdits communs, règle 4), plus `docs/sources/invites-2606.08892-v1/` que lit
+  `environnements/invites.py` ; la liste et les empreintes des fichiers matérialisés
   sont écrites dans le résumé ;
 - **neuf arguments** (argument `PERIMETRE`, C-1) ;
 - **quatre passages** du script et un passage de mesure :
@@ -53,7 +54,8 @@ BR, BR7B = "donnees/t07-etape-a-v1", "calcul/t06-confirmation-7b-v1"
 CODE = ("src", "tests", "scripts", "requirements-cpu.txt", "requirements-gpu.txt", "pyproject.toml", "docs/sources/invites-2606.08892-v1",
         "prereg/P3-consignes-v1.md", "prereg/P3-consignes-v1.md.sha256")
 ARBRE_T06 = ("src", "prereg/P3-consignes-v1.md", "prereg/P3-consignes-v1.md.sha256", "registres/go.md",
-             "docs/notes/g0-deux-semaines-v1/config-t06-jouet-v5.json")
+             "docs/notes/g0-deux-semaines-v1/config-t06-jouet-v5.json",
+             "docs/sources/invites-2606.08892-v1")                # lu par environnements/invites.py (parents[3] du module)
 ESSAIS = "tests/test_t07_journal_p3bis_d3_v1.py"
 ATTENDU = "20 passed"
 MOTIFS_7B = ("adaptateur-", "mesures-t06.npz", "textes-actions-t06.jsonl", "activations-sous-ensemble-t06-")
