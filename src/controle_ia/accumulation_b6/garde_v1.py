@@ -10,7 +10,9 @@ points 1 à 3, « Lignes de registre », « Liste d'arrêt ».
 - **Garde d'ouverture** (`garde`) : clés exigées, chacune exactement une fois, de forme conforme (format de `registre_v1`, appelé tel
   quel pour le registre propre), sceau vérifié (`registre_v1.verifier_lignes`), strictement antérieure à l'ouverture ; fichier
   `lecture-t07.json` présent et scellé (`manifeste.verifier_resultat`) ; `arret-etape-b.json` présent → refus, nœud ;
-  `lecture-accb6.json` déjà présent sous `diag/` → refus (lecture unique, R12) ; `SCELLEMENT-ACCB6` strictement avant
+  `lecture-accb6.json` déjà présent sous `diag/` → refus (lecture unique, R12) ; `arret-accb6.json` d'un run quelconque déjà présent
+  sous `diag/` → refus, code 2, nœud (garde de non-relance : aucune relance après un arrêt, code 3 ; candidat 1 du texte, C1-12,
+  C1-13 ; R-2275) ; `SCELLEMENT-ACCB6` strictement avant
   `SCORES-T07` (sinon refus, nœud) ; clé de ce texte (marque `ACCB6`) présente dans `registres/scellements-v1.md` → refus (liste
   d'arrêt : la mère retire la ligne). Tous les motifs sont relevés, puis rendus ensemble (une ligne `REFUS-ACCB6` au journal propre,
   `RefusAccb6`, code 2) ; sinon une ligne `OUVERTURE-ACCB6`. Réserve R-B6-TARD (scellement non strictement antérieur à
@@ -241,6 +243,10 @@ def garde(racine: Path, instant: int) -> dict:
     deja = sorted(str(p.relative_to(racine)) for p in (racine / "diag").glob(f"*/{FICHIER_LECTURE}")) if (racine / "diag").is_dir() else []
     if deja:
         motifs.append(f"{deja[0]} déjà présent : la lecture est unique (R12) : refus")
+    arrets = sorted(str(p.relative_to(racine)) for p in (racine / "diag").glob(f"*/{FICHIER_ARRET}")) if (racine / "diag").is_dir() else []
+    if arrets:                                    # garde de non-relance (C1-12, C1-13 ; R-2275)
+        motifs.append(f"{arrets[0]} déjà présent : aucune relance après un arrêt (code 3) sous ce texte : refus, nœud ; une lecture "
+                      "après un arrêt demande une version neuve du texte")
     if motifs:
         journaliser(racine, REFUS_ACCB6, instant, f"lecture/{run_t07 or '?'}", "clés ou fichiers manquants ou fautifs : " + " ; ".join(motifs))
         raise RefusAccb6(" ; ".join(motifs))
