@@ -1,0 +1,407 @@
+L'organisme d'idéation, expliqué depuis zéro
+et sa place dans le programme de contrôle
+Pour un lecteur qui ne sait rien du projet. Version 1, 10 novembre 2026. Rédigé par la session « attaquant
+informé » pour Lazar. Aucun résultat d'attaque contre le juge de l'organisme n'est rapporté ici : la section 9 est
+réservée à la session mère. Chaque affirmation renvoie à sa source (annexe).
+
+
+  Comment lire ce document
+  Statuts : préenregistré écrit et scellé avant les données ; à trancher décision ouverte ; choix décision de conception ;
+   occupé déjà publié par d'autres ; fait en cours à faire état d'un travail.
+
+
+
+
+  L'essentiel en une page
+     Ce que c'est. Un petit système de recherche automatisée : des agents d'intelligence artificielle
+     proposent des lois candidates (des « fiches »), et un juge statistique, calculé hors de tout agent,
+     décide ce qui mérite d'être promu [N-064 ; RD].
+     L'idée centrale. Le rôle qui produit ne tient jamais la clé qui évalue. Le juge travaille sur un
+     engagement scellé avant que les données existent, contre un nul fait des lois déjà connues, avec
+     un contrôle des comparaisons multiples. Il ne promeut que ce qui apporte au-delà de ce qu'on
+     savait.
+     Comment on sait s'il marche. Sur des mondes jouets dont on a planté les lois : un oracle
+     compte les lois vraies retenues et les lois fausses promues. La composition des proposeurs se juge
+     sur cet oracle et sur le coût, jamais sur le verdict du juge [N-058].
+     Sa place dans le programme de contrôle. Le programme pose une seule question : que mesure
+     un moniteur, et sa mesure survit-elle à l'adversaire ? Le juge de l'organisme est un moniteur, de
+     prétentions de recherche ; l'attaquer relève de la même méthode que le bras d'attaque. Rôle
+     adopté : second terrain du papier C [N-065].
+     La courbe dose-réponse. Une seule existe, pour le juge seul et sans agent. Ce document propose
+     celle de la chaîne complète, avec de vrais agents (section 6), à décider.
+     Où il en est. Une première course faite ; deux attaques contre le juge courues et lues ; la plus
+     petite course réelle de la boucle entière attend son code et une machine adaptée. Il est absent
+     du texte envoyé au fonds : à l'entretien, il se dit hors du plan financé.
+
+
+
+1. Le problème que l'organisme attaque
+La recherche automatisée confie à des agents la production d'idées et d'hypothèses. Le danger est connu :
+si un modèle juge les idées d'autres modèles, il peut être flatté, convaincu ou trompé, et des idées fausses
+passent pour neuves. C'est un cas de la loi de Goodhart : une mesure que l'on optimise cesse de mesurer.
+L'organisme répond par une architecture. Les agents proposent ; aucun agent ne juge. Le jugement est
+une statistique, calculée par un programme (l'orchestrateur), sur des données tirées après que la
+proposition a été scellée, contre ce que l'on savait déjà. Cette idée n'est pas neuve en entier, et le projet le
+dit : POPPER calcule déjà des e-valeurs hors des agents ; Dwork et collègues (2015, réutilisation d'un
+échantillon de validation sous analyse adaptative) et Blum et Hardt (« The Ladder », 2015, un tableau de
+classement qui résiste à qui lit ses scores) ont posé le principe : un juge dont on lit les verdicts peut être
+sur-ajusté, et l'on peut s'en garder ; Co-Scientist est voisin de la boucle « générer, classer, faire évoluer ».
+Ces quatre citations sont obligatoires dans tout texte qui présente l'organisme [N-064 point 4].
+
+
+
+
+                                                             1/7
+2. Deux lignées portent le nom « organisme »
+
+ Lignée                                      Ce qu'elle est
+
+ L'organisme qui se conçoit                  Un système de plusieurs agents qui se réécrit sur un vivier de tâches à vérité connue,
+ lui-même                                    puis, son architecture figée, répond à des questions neuves sans réentraînement.
+                                             Objectif ultime : l'universalité, mesurée sur des familles de questions jamais vues à la
+                                             conception [N-044]. Ses premières versions, des essaims d'agents, ont été écrites par
+                                             Gemini et courues en pilotes en octobre. Sa composition est apprise, modèle par rôle
+                                             compris ; le coût entre dans le signal ; l'héritage entre générations est récompensé [N-
+                                             045].
+
+ L'organisme d'idéation                      Le « pôle scientifique automatique » : des proposeurs écrivent des fiches, un juge
+ (objet de ce document)                      statistique décide. C'est lui que visent les décisions N-058, N-059, N-064 et N-065 ; les
+                                             principes de N-044 et N-045 en fixent l'objectif ultime.
+
+Le lien exact entre les deux lignées est à confirmer par la session mère. Les pilotes de la première sont au registre des
+autorisations [GO].
+
+
+3. Comment il marche
+
+
+      Question                    Proposeurs                  Gardien                   Juge statistique                  Tests de mort      Sélection
+   et monde planté            écrivent des fiches         trie par la forme             hors de tout agent                en bac à sable   scellée, héritée
+
+
+                                                              génération suivante : elle lit les lois retenues, jamais un verdict
+
+
+
+             Attaque de Goodhart (épreuve)                                                          Oracle du monde planté
+           un proposeur qui lit le juge et ses verdicts                                     compte : vraies retenues, fausses promues
+
+
+
+
+La chaîne d'une génération, de la question à la sélection. L'oracle lit le monde planté, jamais le verdict du juge ; l'attaque de
+Goodhart est une épreuve du juge, pas une pièce de la chaîne. D'après le brouillon du préenregistrement de la boucle réelle [BR]
+et les décisions N-058, N-064.
+
+ Pièce                                   Ce qu'elle fait, et pourquoi
+
+ Proposeurs                              Agents de fournisseurs différents (aujourd'hui Kimi et Argon). Ils écrivent des fiches : une
+                                         fiche est une loi candidate, assez formelle pour être jugée. Ils ne voient jamais un verdict,
+                                         et leur mémoire ne contient ni verdict ni témoin.
+
+ Gardien mécanique                       Une « douane de forme » qui trie les fiches par leur seule forme ; les fiches trop concrètes
+                                         vont à un coffre scellé. Aucun juge à modèle ne décide.
+
+ Juge statistique                        Statistique calculée par l'orchestrateur, hors de tout agent, sur un engagement scellé avant
+                                         que les données existent, contre un nul formé des lois connues (l'archive), avec un contrôle
+                                         des comparaisons multiples [N-064].
+
+ Monde planté et oracle                  Un monde jouet dont on connaît les lois : on y plante des lois vraies (à promouvoir) et des
+                                         lois fausses (à refuser). Des témoins plantés sont mêlés anonymement à chaque génération
+                                         ; des générations entières d'étalonnage ont un calendrier secret [N-059].
+
+ Tests de mort                           Épreuves préenregistrées, exécutées en bac à sable par un expérimentateur et vérifiées
+                                         par un agent d'une autre famille ; l'orchestrateur recalcule le verdict sur le fichier brut.
+
+ Sélection et héritage                   La génération suivante lit le bilan scellé de la précédente, et refuse de partir sinon. Le
+                                         signal porte sur plusieurs générations ; l'héritage est récompensé [N-045].
+
+ Composition et coût                     Combien de parties, quels rôles, quel modèle par rôle : appris. Le coût entre dans le signal.
+                                         Les voies bon marché passent avant les chères. La composition se juge sur l'oracle et le
+                                         coût, jamais sur le verdict du juge [N-045 ; N-058].
+
+ Tâches fraîches, test final             Une part de tâches neuves tirée d'un vivier à chaque génération ; le test final n'est lu
+                                         qu'une fois, en fin de boucle [N-049 ; N-050].
+
+
+
+
+                                                                              2/7
+4. Un exemple suivi : une génération
+1. Le cadre. Une question et un monde planté jouet (trois issues, deux traits). Une archive de départ
+   déclarée et scellée : une loi connue. On plante quatre lois vraies et quatre lois fausses ; les fausses sont
+   des recombinaisons de la loi connue, donc membres du nul [BR].
+2. Les propositions. Deux proposeurs de fournisseurs différents écrivent douze fiches, six chacun, sans
+   voir les lois plantées ni aucun verdict.
+3. Le jugement. Le gardien trie par la forme. Le juge reçoit l'engagement scellé de chaque fiche, tire les
+   données après le gel, calcule la statistique contre le nul des lois connues, corrige la multiplicité, et
+   promeut ou non.
+4. Les tests de mort. Les lois promues sont éprouvées en bac à sable ; l'orchestrateur recalcule le
+   verdict sur le fichier brut ; la sélection est scellée.
+5. La génération 2 lit la sélection scellée (les lois retenues, jamais un verdict) et repart.
+6. L'oracle compte les lois vraies retenues et les fausses promues. La prédiction préenregistrée de cette
+   plus petite course signe + : au moins une loi vraie promue puis survivante en génération 1, et aucune
+   fausse promue en génération 1 ni 2 [BR, brouillon non scellé].
+
+
+5. Ses revendications, et ce qui est déjà publié
+Statuts après la vérification d'antériorité et la décision N-064. « Non occupée » veut dire absente des pièces lues, pas «
+vierge » : une zone vierge est une question.
+
+         Revendication                                                                       Statut
+
+ O1      le rôle qui produit ne tient jamais la clé qui évalue                               voisine
+
+ O2      juge statistique : calculé par l'orchestrateur, engagement scellé, nul des lois      occupée en partie   (POPPER) ;
+         connues, multiplicité                                                               énoncé resserré
+
+ O3      prédictions scellées avant les données ; tirages semés par l'empreinte              voisine
+
+ O4      battre un nul des lois connues : « rien au-delà de l'archive »                      non occupée
+
+ O6      douane de forme, coffre scellé                                                      voisine
+
+ O8      proposeurs de plusieurs fournisseurs                                                non occupée
+
+ O10     témoins plantés vrais et faux à chaque génération                                   voisine
+
+ O11     banc de tricheurs scriptés                                                           occupée dans son principe
+                                                                                             (Dwork et collègues ; Blum et
+                                                                                             Hardt) ; la forme seule est
+                                                                                             revendiquée
+
+ O12     attaque de Goodhart : un proposeur qui lit la description du juge et, dans un        occupée dans son principe   ; la
+         bras, ses verdicts, sur des mondes où toute promotion est fausse                    forme non trouvée
+
+ O13,    tests de mort en bac à sable ; sélection entre générations par ces tests            voisines
+ O14
+
+ O17     scellement avant lecture ; aucun repli silencieux                                   non occupée
+
+ O19     puissance du juge mesurée : « rien promu » n'est pas « aucun effet »                voisine
+
+ O20     juge éprouvé sur une vérité plantée                                                 occupée dans son principe
+                                                                                             (pratique courante)
+
+Liste abrégée (O1 à O20 en entier dans la note d'antériorité [ACS]). Les revendications O sont des choix de conception,
+sans signe ; les signes vivent dans les préenregistrements : l'attaque de Goodhart A1-v4 (hypothèses H1 à H5, prédictions
+P1 à P11, « ouvertes dans les deux sens ») et la boucle réelle (prédiction P1, signe +) [A1P ; BR]. La page publique du
+projet ne cite pas encore les quatre références obligatoires ; la corriger est une publication, donc un geste de Lazar.
+
+
+
+
+                                                             3/7
+6. La courbe dose-réponse
+Pourquoi elle compte. Dans le programme de contrôle, la courbe dose-réponse des organismes de
+sabotage valide l'instrument : si le réglage de la dose n'agit pas, rien de ce que lisent les moniteurs ne se
+conclut. L'équivalent, pour l'organisme, est la courbe qui montre que la chaîne réagit au signal : plus une
+loi vraie est forte dans le monde, plus elle doit être retrouvée et promue ; et les fausses ne doivent jamais
+l'être, à aucune dose. Sans elle, un « rien promu » ou un « tout promu » ne se lit pas.
+
+Ce qui existe : l'épreuve « W2 graduée » scellée
+La dose λ est le poids d'une loi nouvelle ajoutée à un monde qui, à λ = 0, n'apporte rien au-delà de
+l'archive. Grille gelée de onze doses (0 ; 0,05 ; 0,10 ; 0,15 ; 0,20 ; 0,25 ; 0,30 ; 0,40 ; 0,50 ; 0,75 ; 1), la
+dose 0 jouée comme contrôle ; mille répétitions par dose. Deux réponses : la fréquence de promotion de la
+loi du monde, et celle de la recombinaison pure, qui doit rester nulle. Règle écrite avant l'épreuve : la dose
+retenue est la plus petite où la loi du monde est promue au moins 800 fois sur 1 000, et la recombinaison
+jamais [W2G]. Limite : c'est une courbe du juge seul, hors ligne, sans agent ; elle n'a servi qu'à fixer la
+dose d'une épreuve.
+
+Ce qui manque, et ce que je propose
+  Décision : ajouter à l'organisme la courbe dose-réponse de la chaîne complète, avec de vrais agents.
+  Enjeu : valider l'instrument entier, comme le critère 2 de la porte de fin de phase le fait pour le
+  programme ; tu as demandé cette courbe le 10 novembre.
+     (a) Courbe de sensibilité. Dose : la force λ des lois vraies plantées dans des mondes d'étalonnage,
+     sur l'échelle de l'épreuve W2 graduée. Réponses lues sur l'oracle : la probabilité qu'une loi vraie soit
+     promue puis survive aux tests de mort, et le taux de fausses promotions. Grille gelée, répétitions
+     dimensionnées par simulation, contrôle à λ = 0, critère de croissance et seuil, le tout préenregistré.
+     Avantage : valide la chaîne entière et prolonge une épreuve déjà scellée. Inconvénient : coûteuse
+     (agents × doses × répétitions), donc devis.
+     (b) Courbe de corruption. Dose : la pression adverse (nombre de verdicts que l'attaquant peut lire,
+     ou part de proposeurs tricheurs). Réponse : le taux de fausses promotions. Avantage : c'est la courbe
+     du bras d'attaque appliquée au juge, au cœur du papier C. Inconvénient : elle touche au pilier «
+     attaque » de l'organisme et suit les règles du bras.
+     (c) Les deux, à la suite.
+  Recommandation : (a) d'abord, sur cinq doses (0 ; 0,10 ; 0,25 ; 0,50 ; 1), dès que la plus petite course
+  réelle de la boucle tourne ; (b) ensuite, dans le cadre du bras. Confiance 0,6. C'est une dépense :
+  préenregistrement, devis, autorisation, puis ton mot.
+
+
+Quand peut-elle partir ?
+Pas avant la plus petite course réelle de la boucle : la chaîne complète n'a encore jamais tourné avec de
+vrais agents. Cette course attend le code v65, une machine jetable dotée du bac à sable bubblewrap et les
+commandes des relais des deux fournisseurs [BR, section 12]. Une course coûte environ 2 à 8 dollars
+attendus, 35 au pire [BR, section 13] ; une courbe de cinq doses sur huit mondes en demande quarante,
+soit de l'ordre de 80 à 320 dollars attendus, à fixer au devis. Son préenregistrement peut s'écrire dès
+maintenant, sur le dessin de cette course.
+
+
+7. Sa place dans le programme de contrôle
+Une seule question. Le programme de contrôle demande : que mesure un moniteur, et sa mesure survit-
+elle à l'adversaire ? Le juge de l'organisme est un moniteur, de prétentions de recherche au lieu d'actions
+d'agent. La même question s'y pose, avec les mêmes outils : moniteur gelé, adversaire de connaissance
+déclarée, lecture scellée.
+
+
+
+
+                                                      4/7
+Rôle (décision N-065)         État                  Ce qu'il apporte au programme
+
+1. Second terrain du           adopté               La corruptibilité de deux sortes de juges : le juge statistique (attaque de
+papier C                                            Goodhart) et un juge génératif en tournoi, façon Co-Scientist (conçu, non
+                                                    lancé).
+
+2. Atelier d'idées             adopté               Des idées pour le programme ; une fiche est un matériau, jamais une
+                                                    preuve ; tout usage décisif passe par un préenregistrement.
+
+3. Famille de menaces          à trancher           Un proposeur à poids ouverts qui trompe le juge sur de nombreuses
+diffuses                                            propositions d'apparence honnête est une menace diffuse au sens du
+                                                    programme ; s'il devient famille tenue à l'écart, il doit être écrit sans voir
+                                                    aucun moniteur.
+
+
+  Invariants. Aucun score d'un moniteur du programme n'entre dans l'entraînement ni la sélection de
+  l'organisme [N-053 point 5, rappelé par N-065] ; la sélection des proposeurs ne lit jamais le verdict du
+  juge [N-058].
+  Lien avec le bras d'attaque. L'attaque de Goodhart est un attaquant qui lit les verdicts d'un juge
+  gelé, à budget compté : la structure de l'échelon 3 du bras, appliquée au juge de l'organisme. La courbe
+  (b) de la section 6 est sa courbe d'évasion.
+  Un monde tiré du programme. L'orchestrateur prévoit un « monde sur banque » dont les instances
+  viennent des épisodes du programme, issues cachées [C7].
+  À l'entretien : une diapositive, hors du plan financé ; aucun chiffre de l'attaque hors de ce que fixe son
+  verdict scellé (section 9) ; jamais « universel » ; les quatre citations obligatoires [RD].
+
+
+8. Ce qui a été fait, au 10 novembre 2026
+
+Chantier                                 État                  Pièce, date
+
+Pilotes de l'organisme qui se conçoit       faits              24-26 octobre ; plusieurs courses [GO]
+lui-même
+
+Organisme du pilier « attaque »,            couru              30 fiches validées ; autorisation close à 8,42 dollars sur un
+version 1                                                      plafond de 20 (GO-2026-11-08-08) ; fiches au coffre [DEC : R-
+                                                               1853, R-1885]
+
+Attaques de Goodhart A1-v3 et A1-v4         courues, lues      préenregistrement scellé [A1P] ; verdicts officiels scellés, celui
+                                                               d'A1-v4 par un lecteur neuf d'une autre lignée que l'auditeur
+                                                               [DEC : R-2111] (section 9)
+
+Épreuve « W2 graduée »                      scellée            courbe du juge seul (section 6) [W2G]
+
+Essai à blanc de la boucle complète         fait               deux générations, fournisseurs simulés [BR]
+
+Plus petite course réelle de la boucle      en attente         préenregistrement en brouillon [BR] ; autorisation de 45 dollars
+                                                               jusqu'au 30 novembre (GO-2026-11-08-02) ; manquent le code
+                                                               v65, les commandes des relais et une machine qui isole les
+                                                               épreuves
+
+Juge en tournoi, façon Co-Scientist         conçu              non lancé ; devis de 80 à 145 dollars [RD]
+
+Présence dans le texte envoyé au            absent             à dire hors du plan financé
+fonds
+
+
+
+ 9. Résultats — section réservée à la session mère
+ L'auteur de ce document ne lit aucun résultat d'attaque contre le juge de l'organisme ni aucun
+ résultat de moniteur du programme. Cette section est à compléter par la session mère, depuis les
+ pièces scellées : les verdicts des attaques A1-v3 et A1-v4, dans leur lecture bornée ; l'issue de
+ l'épreuve W2 graduée ; ce que l'essai à blanc a montré ; et ce qui sera lu avant l'entretien.
+
+
+
+
+                                                                 5/7
+10. Les décisions qui t'attendent sur l'organisme
+
+Décision                                         Où elle en est
+
+Courbe dose-réponse de la chaîne complète        proposée ici : (a) d'abord, puis (b) ; confiance 0,6 ; dépense ; son
+(section 6)                                      préenregistrement s'écrit dès maintenant
+
+Chemin critique de la courbe : code v65,         le code chez un développeur neuf depuis le 8 novembre ; machine et
+machine avec bubblewrap, commandes des           relais à la session de dépôt [BR, section 12]
+relais
+
+Rôle 3 : famille de menaces diffuses, tenue à    à trancher avant toute conception de sonde qui pourrait la toucher
+l'écart ou non                                   (session mère, confiance 0,5) [RD]
+
+Juge du tournoi : Kimi, ou un modèle Claude      ouvert [RD]
+sur crédits
+
+Règle de permission de la course v2              accordée pour une seule commande
+
+Prix du nul v9 ; question de sens de W2          ouverts depuis le 8 novembre
+
+Régimes de budget et code figé (étape 1 de       en attente de ton mot
+N-044)
+
+Correction de la page publique (quatre           une publication, donc ton geste
+citations)
+
+Lien entre les deux lignées « organisme »        à confirmer par la session mère
+
+
+
+Annexe — Sources
+
+Sigle      Pièce                                                                                             Empreinte
+
+N-044      docs/decisions/decision-N-044-v1.md                                                               2b70bdac…
+
+N-045      docs/decisions/decision-N-045-v2.md                                                               c7b05e39…
+
+N-049      docs/decisions/decision-N-049-v1.md                                                               8a5bf5e5…
+
+N-050      docs/decisions/decision-N-050-v1.md                                                               a54b128d…
+
+N-058      docs/decisions/decision-N-058-v1.md                                                               854f2724…
+
+N-059      docs/decisions/decision-N-059-v1.md                                                               41aff854…
+
+N-064      docs/decisions/decision-N-064-v1.md                                                               387c9d4e…
+
+N-065      docs/decisions/decision-N-065-v1.md                                                               f820e90d…
+
+[RD]       rapport de la session mère du 9 novembre, section 6, docs/notes/rapports-directeur/rappor         22263fce…
+           t-principes-etat-goulots-entretien-organisme-2026-11-09-v1.md
+
+[ACS]      note d'antériorité, docs/notes/ideation-organisme-v1/anteriorite-co-scientist-v1/note-anter       08a3738a…
+           iorite-co-scientist-v1.md
+
+[APE]      note sur POPPER, docs/notes/ideation-organisme-v1/anteriorite-co-scientist-v1/note-anter          d1ab7049…
+           iorite-popper-evaluator-v1.md
+
+[BR]       boucle réelle, brouillon non scellé, docs/notes/organisme-boucle-reelle-v1/preenregistrement      736e3fd6…
+           -boucle-reelle-organisme-v1-brouillon1.md
+
+[W2G]      épreuve W2 graduée, docs/notes/ideation-organisme-v1/a1-v4-reprise-v9/epreuve-w2g-dose-v          e025f108…
+           2-v1.md
+
+[A1P]      préenregistrement de l'attaque A1-v4, docs/notes/ideation-organisme-v1/a1-v4-reprise-v9/p         d306a8fa…
+           reenregistrement-attaque-goodhart-v5-v1.md
+
+[C7]       conception de l'orchestrateur, docs/notes/ideation-organisme-v1/orchestrateur-v52b/concept        31fc8c4b…
+           ion-v7-v1.md
+
+[GO]       registre des autorisations, sur main au 10 novembre (lignes GO-2026-11-08-02 et -08 ;             e682abb0…
+           pilotes, lignes 47 à 73), registres/go.md
+
+[DEC]      registre des décisions, sur main au 10 novembre (R-1853, R-1885, R-2111), registres/deci          b3d96dfe…
+           sions.md
+
+
+
+
+                                                               6/7
+—   questionnaire de compréhension, scellé avant ce document, docs/notes/entretien-recapitul   66deeea0…
+    atif-v1/questionnaire-comprehension-organisme-v1.md
+
+
+
+
+                                                   7/7
+
