@@ -97,11 +97,11 @@ H1H=$((MAINTENANT - 3600))
 sc M00; printf '%s\n%s\n' "$A1" "$P1" > "$E/scenario-M00/logs-1.txt"; printf '%s\n' "$A1" "$P1" "$P2" "$RUNOK" "$FIN0" > "$E/scenario-M00/logs-2.txt"
 surv M00 0 "FIN : $FIN0 ; instance 99999999 arrêtée par son identifiant (R10)" "$H1H"
 apres "arrêt par l'identifiant, une seule fois ; aucune destruction ; ligne à consigner ; relevé cumulatif de 4 lignes" \
-    "[ \$(grep -c '^stop instance 99999999\$' '$E/scenario-M00/actions') = 1 ] && ! grep -q destroy '$E/scenario-M00/actions' && [ \$(wc -l < '$E/sortie-M00/arrets-a-consigner.txt') = 1 ] && [ \$(wc -l < '$E/sortie-M00/progres.txt') = 4 ] && [ ! -e '$E/sortie-M00/instance-gardee' ]"
+    "[ \$(grep -c '^stop instance 99999999\$' '$E/scenario-M00/actions') = 1 ] && ! grep -q destroy '$E/scenario-M00/actions' && [ \$(wc -l < '$E/sortie-M00/arrets-a-consigner.txt') = 1 ] && [ \$(wc -l < '$E/sortie-M00/progres.txt') = 4 ] && [ ! -e '$E/sortie-M00/instance-gardee' ] && [ \"\$(cat '$E/sortie-M00/motif.txt')\" = FIN ]"
 sc M01; printf '%s\n' "$A1" "$P1" "$RUNOK" "AMORCE 2026-11-12T12:30:00Z : fin, code 5" > "$E/scenario-M01/logs-defaut.txt"
 surv M01 0 "GARDÉE, jamais détruite" "$H1H"
 apres "code 5 : instance arrêtée par son identifiant et marquée gardée (instance-gardee)" \
-    "grep -q '^stop instance 99999999\$' '$E/scenario-M01/actions' && grep -q 'second paquet en échec' '$E/sortie-M01/instance-gardee'"
+    "grep -q '^stop instance 99999999\$' '$E/scenario-M01/actions' && grep -q 'second paquet en échec' '$E/sortie-M01/instance-gardee' && grep -qx GARDER '$E/sortie-M01/motif.txt'"
 sc M02; printf '%s\n' "$A1" "2026-11-12T12:01:00Z SECOND PAQUET EN ÉCHEC (sel absent) : aucun fichier du run poussé en clair" "AMORCE 2026-11-12T12:30:00Z : fin, code 1" > "$E/scenario-M02/logs-defaut.txt"
 surv M02 0 "GARDÉE, jamais détruite" "$H1H"
 sc M03; L3=("$A1" "$P1" "2026-11-12T12:01:00Z SECOND PAQUET EN ÉCHEC (relecture fausse)")

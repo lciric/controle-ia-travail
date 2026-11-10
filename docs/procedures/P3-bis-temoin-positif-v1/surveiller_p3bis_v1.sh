@@ -78,6 +78,7 @@ sys.stdout.write(t)'
 arreter() {   # $1 motif, $2 détail ; arrêt par l'identifiant (R10), jamais par motif ; aucune destruction
     local m=$1 detail=$2 r e c=0 k
     python3 -I "$VERIF" identifiant "$ID" "$L" > /dev/null 2>&1 || { echo "$m : $detail ; ARRÊT REFUSÉ PAR LA GARDE (identifiant)"; exit 1; }
+    printf '%s\n' "$m" > "$D/motif.txt"                 # lu par detruire_p3bis_v1.sh : seule la fin normale (FIN) permet la destruction
     [ "$m" = GARDER ] && printf '%s\n' "$detail" > "$D/instance-gardee"
     r=$(vastai stop instance "$ID" 2>&1 | masquer) || c=$?
     printf '%s arrêt de %s demandé par son identifiant (motif %s) : code %s ; %s\n' "$(date -u +%FT%TZ)" "$ID" "$m" "$c" "$(printf '%s' "$r" | tr '\n' ' ' | cut -c1-200)" >> "$D/arret.txt"
