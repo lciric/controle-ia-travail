@@ -1,0 +1,103 @@
+--- essai_concordance_journal_v1.py	2026-11-10 08:10:39.310029988 +0000
++++ essai_concordance_journal_v1_rejeu_a1de3915.py	2026-11-10 08:27:29.210904119 +0000
+@@ -1,5 +1,18 @@
+ #!/usr/bin/env python3
+-"""Essai de concordance du journal des ouvertures de P3-bis (écrivain) avec le lecteur de T0.7, v1.
++"""Essai de concordance du journal des ouvertures de P3-bis (écrivain) avec le lecteur de T0.7, v1 — rejeu sur l'écrivain corrigé.
++
++REJEU (développeur de la chaîne de P3-bis, 2026-11-10, heure relevée par `date -u` : 08:28 UTC). Copie de
++`docs/notes/g0-deux-semaines-v1/concordance-journal-p3bis-t07-v1/essai_concordance_journal_v1.py` (`b30c9db7…`), changée
++seulement en ceci (consigne de la mère, R-2103) :
++  (1) l'écrivain est lu au commit du code proposé `a1de3915` (CD-01 et D-1 à D-4, clé de rendez-vous) au lieu de `02217f1c`,
++      avec son empreinte ; le lecteur reste au commit `8dc1cb09`, lu par `git show`, empreintes inchangées ;
++  (2) issues visées changées par les décisions de R-2103 : D01, seconde tentative : refus sans ligne (D-1, `HorlogeEnArriere`,
++      sous-classe de `JournalImpossible`) ; S06a : refus `ni-scores-ni-ouvrir` (D-2) ; D04 : refus `garde-adaptee-absente`
++      (D-4) ; N05 : refus `ligne-mal-formee` d'une ligne sans en-tête (D-3), lecteur attendu en refus ;
++  (3) N05 : la lecture du fichier vide par l'écrivain, avant la tentative, est prise dans un `try` (l'écrivain la refuse
++      désormais ; sans cela l'essai s'arrête) ;
++  (4) un scénario ajouté, R08b : `RENDEZ-VOUS-P3BIS-01` au registre des préalables (clé au motif `[1-9][0-9]*`, `cle-inconnue`).
++Rien d'autre n'est changé ; le rapport du rejeu donne le différentiel.
+ 
+ Consigne : `docs/notes/g0-deux-semaines-v1/consignes-mere-2026-11-10-0500-v1/consigne-concordance-journal-p3bis-t07-v1.md`
+ (`042ba58a…`), mandat, points 1 à 3. Écrit le 2026-11-10 (heure relevée par `date -u` : 07:56 UTC) par un agent neuf, qui n'a
+@@ -38,7 +51,7 @@
+ import tarfile
+ from pathlib import Path
+ 
+-COMMIT_ECRIVAIN = "02217f1cf5255ef87c42285fc579d38c5a6ff003"
++COMMIT_ECRIVAIN = "a1de39151ebae29138a389829751397074239615"   # rejeu (1)
+ COMMIT_LECTEUR = "8dc1cb09f5e764f37aa87cf1410bc6586249b3d1"
+ COPIES = (
+     (COMMIT_ECRIVAIN, "src/controle_ia/__init__.py", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+@@ -47,7 +60,7 @@
+     (COMMIT_ECRIVAIN, "src/controle_ia/premier_test_ia/__init__.py",
+      "c72da1602f1998e4c7b30b670e89143d6a9c6337b903164f4bc6eed5ab9a5f92"),
+     (COMMIT_ECRIVAIN, "src/controle_ia/premier_test_ia/ouverture_p3bis_v2.py",
+-     "330915f67402e097c2581fee0de2ed6950954f2c071356df19b27980bb5f5bb3"),
++     "1361382e669f26d5568c81044e160c7fc122f4264832ffb70ec8d9b4714d2a13"),   # rejeu (1)
+     (COMMIT_LECTEUR, "src/controle_ia/t07/__init__.py", "553bd9d29b56f0923859da2d3a63fadf9891c4274b9bb23fc367496e77e5a61e"),
+     (COMMIT_LECTEUR, "src/controle_ia/t07/registre_v1.py", "914b8f374ce8f8bc6550d03c34c5f6c2a97ac93b8ce44da24fd88229185ffca0"),
+     (COMMIT_LECTEUR, "src/controle_ia/t07/journal_p3bis_v1.py",
+@@ -404,10 +417,10 @@
+         self.tenter(s, b, "pleine", T_ANTICIPEE, (O, "pleine"))
+         self.juger(s, b)
+ 
+-        s, b = self.scenario("S06a", "E-8 : pleine-anticipee sous « ouvrir pleinement » avec SCORES-T07 et SONDES-T07 inscrites",
+-                             vue_t07=True)
++        s, b = self.scenario("S06a", "E-8 : pleine-anticipee sous « ouvrir pleinement » avec SCORES-T07 et SONDES-T07 inscrites "
++                                     "(rejeu (2) : refusée, D-2)", vue_t07=True)
+         monter(b, rdv=[("ouvrir pleinement", D_DEC1, D_RDV1)], scores=D_SCORES_TOT)
+-        self.tenter(s, b, "pleine-anticipee", T_ANTICIPEE, (O, "pleine-anticipee"))
++        self.tenter(s, b, "pleine-anticipee", T_ANTICIPEE, (R, "ni-scores-ni-ouvrir"))
+         self.juger(s, b)
+ 
+         s, b = self.scenario("S06b", "même banc que S06a, mode pleine demandé (chemin normal, rendez-vous sans objet)", vue_t07=True)
+@@ -444,6 +457,8 @@
+             ("R08", "cle-inconnue", "pleine", dict(scores=D_SCORES),
+              lambda b_, p: p + [L("AUTRE-CLE-P3BIS", D_ECRIT, ECRITS[0][1], hashlib.sha256((b_.r / ECRITS[0][1]).read_bytes())
+                                   .hexdigest())]),
++            ("R08b", "cle-inconnue", "pleine-anticipee", dict(rdv=[("ouvrir pleinement", D_DEC1, D_RDV1)]),   # rejeu (4)
++             lambda b_, p: [x.replace("| RENDEZ-VOUS-P3BIS-1 |", "| RENDEZ-VOUS-P3BIS-01 |") for x in p]),
+             ("R09", "rendez-vous-non-consecutif", "reduite", dict(),
+              lambda b_, p: p + [l_rdv(b_, 2, "ouvrir", D_DEC1, D_RDV1)]),
+             ("R10", "rendez-vous-non-croissant", "reduite", dict(rdv=[("maintenir", D_DEC1, D_RDV1), ("ouvrir", D_DEC1, D_RDV1)]),
+@@ -494,20 +509,24 @@
+         self.tenter(s, b, "pleine", T_PLEINE, ("arret",), panne_extraction=True, n_lignes=1)
+         self.juger(s, b)
+ 
+-        s, b = self.scenario("N05", "journal présent et vide (0 octet) avant la première tentative", vue_t07=True)
++        s, b = self.scenario("N05", "journal présent et vide (0 octet) avant la première tentative (rejeu (2) : refus, D-3)",
++                             attendu_lecteur="refus", vue_t07=True)
+         monter(b, scores=D_SCORES)
+         (b.r / ob.JOURNAL_OUVERTURES).write_bytes(b"")
+-        s["avant"] = {"lecteur": self.lire(b.r / ob.JOURNAL_OUVERTURES)[1] or "lu",
+-                      "ecrivain": f"{len(ob.lire_journal(b.r / ob.JOURNAL_OUVERTURES))} ligne(s), aucun refus"}
+-        self.tenter(s, b, "pleine", T_PLEINE, (O, "pleine"))
++        try:                                                                         # rejeu (3)
++            ecr = f"{len(ob.lire_journal(b.r / ob.JOURNAL_OUVERTURES))} ligne(s), aucun refus"
++        except ob.RefusOuverture as e:
++            ecr = f"refus {e.code}"
++        s["avant"] = {"lecteur": self.lire(b.r / ob.JOURNAL_OUVERTURES)[1] or "lu", "ecrivain": ecr}
++        self.tenter(s, b, "pleine", T_PLEINE, (R, "ligne-mal-formee"))
+         self.juger(s, b)
+ 
+         # ---- sondes de discordance ----
+-        s, b = self.scenario("D01", "horloge en arrière : refus à 12:00, puis ouverture pleine à 11:00 (dates décroissantes)",
++        s, b = self.scenario("D01", "horloge en arrière : refus à 12:00, puis pleine à 11:00 (rejeu (2) : refus sans ligne, D-1)",
+                              vue_t07=True)
+         monter(b, scores=D_SCORES)
+         self.tenter(s, b, "reduite", T_PLEINE, (R, "ni-scores-ni-ouvrir"))
+-        self.tenter(s, b, "pleine", T_AVANT, (O, "pleine"))
++        self.tenter(s, b, "pleine", T_AVANT, ("journal-impossible",))
+         self.juger(s, b)
+ 
+         s, b = self.scenario("D02", "deux tentatives à la même seconde (dates égales)", vue_t07=True)
+@@ -519,7 +538,7 @@
+         s, b = self.scenario("D04", "reduite : SCELLEMENT-T07 et garde adaptée citant un texte autre que "
+                                     "prereg/T0.7-sondes-v0-v1.md", vue_t07=True)
+         monter(b, scel_rel="prereg/T0.7-autre-v1.md", rdv=[("ouvrir", D_DEC1, D_RDV1)])
+-        self.tenter(s, b, "reduite", T_REDUITE, (O, "reduite"))
++        self.tenter(s, b, "reduite", T_REDUITE, (R, "garde-adaptee-absente"))         # rejeu (2) : D-4
+         self.juger(s, b)
+ 
+     # ---------------------------------------------------------------------------------------------- tolérance
