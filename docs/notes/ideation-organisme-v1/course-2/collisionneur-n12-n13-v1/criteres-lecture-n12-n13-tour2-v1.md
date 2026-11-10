@@ -105,7 +105,7 @@ mode tenu à l'écart (cloison R-2152, R-2170 ; N-054), ni aucun chemin des inte
    du tour 1 (pièces 1 à 6 ; codes Q2 et N4 de la pré-collision), à Avalon, à Damani, ou à N-045, N-053, N-058 est recoupée sur la
    synthèse v2 (ligne). Si la synthèse v2 ne la porte pas : « hors des faits servis » (compté par espèce), même exacte ailleurs ; le
    lecteur peut la recouper sur une pièce non servie et ajoute alors « exacte, non servie » ou « inexacte, non servie ». « Question
-   v2 » (question, l. 7 et l. 26) désigne la question du tour 1, non servie : un chiffre qu'une espèce lui attribue est recoupé sur
+   v2 » (question, l. 7 et l. 26) désigne la question du tour 1, ainsi nommée par la synthèse v2 (l. 12), non servie : un chiffre qu'une espèce lui attribue est recoupé sur
    la synthèse v2 (qui en porte les chiffres, l. 58), puis au besoin sur cette question. Un chiffre qui diffère de la synthèse v2
    au-delà de l'arrondi est « inexact sur les pièces » (compté par espèce). **Inexactitudes déjà corrigées** (synthèse v2,
    l. 217–236, notamment : « chute monotone » d'Avalon ; ECE « 0,37–0,53 » attribuée au modèle de base ; « N-045, § 9 » ; « N-045
@@ -273,7 +273,8 @@ mode tenu à l'écart (cloison R-2152, R-2170 ; N-054), ni aucun chemin des inte
     la question et de la synthèse v2 (« non trouvée dans la synthèse v2 » après recherche), et porte son statut (critère 7), sa
     classe de dépense, son pire cas nommé et son sort en T2 et T3 : non contestée ; contestée, maintenue (contesté n'est pas
     réfuté) ; réfutée (par qui, raison) ; abandonnée par son auteur. Une piste tenue par deux espèces est « partagée à deux », listée
-    à part. Les pistes de la couche 4 sont décrites en E et seulement renvoyées ici.
+    à part. Les pistes de la couche 4 sont décrites en E et seulement renvoyées ici. Une piste qui toucherait à une attaque contre
+    un moniteur, un juge ou un bac à sable se décrit par sa classe et son but, jamais par son mode d'emploi (critère 3).
 28. **Rien n'est perdu.** Toutes les pistes sont listées, les réfutées et les abandonnées comprises, marquées « idée non retenue »
     avec leur raison (consigne de la mère, mots de Lazar : « pour que rien de notre brinstorm ne soit perdu »). Chacune porte son
     statut au programme (critère 26). Ni classement, ni « meilleure piste », ni recommandation.
@@ -343,11 +344,11 @@ mode tenu à l'écart (cloison R-2152, R-2170 ; N-054), ni aucun chemin des inte
 | `docs/notes/ideation-organisme-v1/course-2/collisionneur-n12-n13-v1/erratum-synthese-n12-n13-v1.md` | recoupement (changements v1 → v2) ; § 1 à 7 lus, annexe des remplacements parcourue par ses titres | `7f80b3752529b76c0061d21a1b8b060a518535b7e9eb97053ab07fc97b649349` (égale au compagnon) |
 | `docs/notes/ideation-organisme-v1/course-2/collisionneur-noeuds-v1/criteres-lecture-noeuds-v12-tour1-v1.md` | modèle : critères du tour 1 des nœuds ; lus en entier | `22edbf4751c205f6760a136963bfaebcede773bfdc3300e923ad8e5df4e3a529` (égale au compagnon) |
 | `docs/notes/ideation-organisme-v1/course-2/collisionneur-noeuds-v1/criteres-lecture-noeuds-v12-tour2-v1.md` | modèle : critères du tour 2 des nœuds ; lus en entier | `23daca0d665009bf1dc332d55089fb266c94cbac484c7ba94bff5c86207b5e22` (égale au compagnon) |
-| `docs/notes/ideation-organisme-v1/course-2/collisionneur-v8/collisionneur_v8.py` | espèces (l. 69–82) et consignes servies (l. 133–219) ; ces lignes lues | `22e5ed8a64075f2f985755d9bff2c2336d8edc5f73cbc3b0511405fd8f43d264` (égale au compagnon) |
+| `docs/notes/ideation-organisme-v1/course-2/collisionneur-v8/collisionneur_v8.py` | espèces et consignes servies ; lus : l. 60–87, 133–147, 149–180, 201–219 ; le reste non lu | `22e5ed8a64075f2f985755d9bff2c2336d8edc5f73cbc3b0511405fd8f43d264` (égale au compagnon) |
 | `docs/notes/ideation-organisme-v1/course-2/collisionneur-v8/LISEZMOI-collisionneur-v8.md` | mode d'emploi du v8 : refus, modèle servi, dépense d'E ; lu en entier | `d3336c6d418972187a3eb8912bcbef4e04ab7d17c542fdc1ec2b0252a16b0aa7` (égale au compagnon) |
 | `docs/decisions/decision-N-045-v2.md` | recoupement pour le lecteur ; non lue par l'auteur | `c7b05e39de381cee1d5ec2276745a0310bd3cc0857a6be0e0fb14eeb5042261d` (égale au compagnon) |
 | `docs/decisions/decision-N-053-v1.md` | recoupement ; point 5 (l. 38–44) lu | `2204256d744288be2708578c0fdc8c44c62a29b70b2727ed7e31ec142d1cdeae` (égale au compagnon) |
-| `docs/decisions/decision-N-058-v1.md` | recoupement ; lue (l. 1–39) | `854f2724864f1e45394e001f4aca7b0248753e5d2b0a66991e2ee8a7be87de9d` (égale au compagnon) |
+| `docs/decisions/decision-N-058-v1.md` | recoupement ; lue en entier (39 lignes) | `854f2724864f1e45394e001f4aca7b0248753e5d2b0a66991e2ee8a7be87de9d` (égale au compagnon) |
 | `registres/passations/2026-11-10-1159.md` | chemin du run et lecteur prévu ; point 8 lu | `e113d747251b1f004b55d7f7c549f08f83d226a9cd19b8f80e493b180d762121` (égale au compagnon) |
 | `registres/go.md` | registre vivant ; ligne GO-2026-11-01-05 lue ; empreinte relevée à l'assemblage | `2c396b016d4ab86bd3f09cc7e21173f19d0c9765cc1a85b8efc08e59c2bc39f0` |
 | `registres/depenses.md` | registre vivant ; lignes des 1er, 2 et 3 novembre citées lues ; empreinte relevée à l'assemblage | `5268f0f09943ab37d103534206121a30a28b76807b8eae6bac98c3e0d77b02a9` |
