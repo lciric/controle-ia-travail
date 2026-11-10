@@ -1,0 +1,3176 @@
+From cef5ea60ea22a9bb46a2b0be761972672a4c2ede Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 10 Nov 2026 10:57:32 +0000
+Subject: [PATCH] =?UTF-8?q?Organism=20v65:=20smallest=20real=20run=20of=20?=
+ =?UTF-8?q?the=20full=20loop=20(real=20arm=20alone,=20two=20generations)?=
+ =?UTF-8?q?=20=E2=80=94=20code,=20tests,=20mutation=20bench;=20not=20count?=
+ =?UTF-8?q?er-read,=20not=20sealed,=20nothing=20run=20against=20a=20model?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+New files only (R12; v64, v59 and every existing file unchanged), base 94bfd92:
+- pole/boucle_reelle_v65.py: M1 sealed starting inheritance (generation 0, K1 "known, declared", accepted only at the hash
+  carried by the sealed text); M2 planted set read byte for byte from the sealed text (V1-V4, F1-F4, T-ELIM, T-MAL; every
+  false law checked to be in the class the v8 null covers); M3 planted laws judged with their generation's archive (guard 18);
+  M4 real arm alone (guard 20), generation 2 reads generation 1's sealed selection and replants F1-F4 plus copies of the first
+  four retained cards by log e (guard 21); spending guards (part before each proposer call, GO required in real mode).
+- pole/lecture_boucle_reelle_v65.py: M5 frozen reading, criteria C5, C4, C2, C3, C6, C1 in the draft's order, audits A1-A4.
+- demonstrations/boucle_reelle_v65.py, lire_boucle_reelle_v65.py, preparer_boucle_reelle_v65.py; exemples/
+  configuration-boucle-reelle-v5.json (v6 commands named with their hashes, caps 40 + 5 USD), jeu-plante-boucle-reelle-v65.md.
+- essais: test_boucle_reelle_v65.py, test_lecture_boucle_reelle_v65.py, mutations_boucle_reelle_v65.py (38 of 38 killed).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01QPDgKhUpjGAMFhKSKNcVEA
+---
+ .../demonstrations/boucle_reelle_v65.py       | 428 ++++++++++++
+ .../demonstrations/lire_boucle_reelle_v65.py  |  76 +++
+ .../preparer_boucle_reelle_v65.py             |  63 ++
+ .../essais/mutations_boucle_reelle_v65.py     | 155 +++++
+ orchestrator/essais/test_boucle_reelle_v65.py | 623 ++++++++++++++++++
+ .../essais/test_lecture_boucle_reelle_v65.py  | 224 +++++++
+ .../configuration-boucle-reelle-v5.json       | 338 ++++++++++
+ .../exemples/jeu-plante-boucle-reelle-v65.md  | 329 +++++++++
+ orchestrator/pole/boucle_reelle_v65.py        | 570 ++++++++++++++++
+ .../pole/lecture_boucle_reelle_v65.py         | 260 ++++++++
+ 10 files changed, 3066 insertions(+)
+ create mode 100644 orchestrator/demonstrations/boucle_reelle_v65.py
+ create mode 100644 orchestrator/demonstrations/lire_boucle_reelle_v65.py
+ create mode 100644 orchestrator/demonstrations/preparer_boucle_reelle_v65.py
+ create mode 100644 orchestrator/essais/mutations_boucle_reelle_v65.py
+ create mode 100644 orchestrator/essais/test_boucle_reelle_v65.py
+ create mode 100644 orchestrator/essais/test_lecture_boucle_reelle_v65.py
+ create mode 100644 orchestrator/exemples/configuration-boucle-reelle-v5.json
+ create mode 100644 orchestrator/exemples/jeu-plante-boucle-reelle-v65.md
+ create mode 100644 orchestrator/pole/boucle_reelle_v65.py
+ create mode 100644 orchestrator/pole/lecture_boucle_reelle_v65.py
+
+diff --git a/orchestrator/demonstrations/boucle_reelle_v65.py b/orchestrator/demonstrations/boucle_reelle_v65.py
+new file mode 100644
+index 0000000..6bc62f1
+--- /dev/null
++++ b/orchestrator/demonstrations/boucle_reelle_v65.py
+@@ -0,0 +1,428 @@
++"""Lanceur de la plus petite course réelle de la boucle complète de l'organisme, version 65 (fichier neuf, R12). Cœur :
++`pole/boucle_reelle_v65.py` ; lecture gelée (programme à part) : `demonstrations/lire_boucle_reelle_v65.py`,
++`pole/lecture_boucle_reelle_v65.py`. Réutilise sans le modifier le lanceur du tour fermé v64 (`demonstrations/tour_ferme_v64.py` :
++adaptateurs réels et commandes externes v64, doublures, bac à sable, machine jetable).
++
++Deux modes, exclusifs, qui passent par **le même chemin** (proposeurs `ProposeurAdaptateur`, étage `AdaptateurEtageV64`) :
++- **à blanc** (`--a-blanc --graine G`, G < 2⁶⁴) : doublures scriptées ; jeu planté lu dans `exemples/jeu-plante-boucle-reelle-v65.md`
++  (même bloc que celui du texte à sceller), héritage de départ écrit dans `SORTIE/depart/` puis **relu par la garde 17** ;
++- **réel** (`--preenregistrement P --heritage-depart H --configuration CONF --moteur reel --confirmer-moteur-reel --registre-go R
++  --go ID --utilisateur-bac U`) : le plan, le jeu planté, l'empreinte de l'héritage de départ, l'empreinte de la configuration
++  et le GO sont lus dans le **texte scellé** `prereg/preenregistrement-boucle-reelle-organisme-v1-v<N>.md`, jamais en ligne de
++  commande ; E = int(sha256 du texte scellé) ≥ 2⁶⁴.
++
++Gardes avant tout appel (code 2) : dossier de sortie non vide ; bac sans défaut (« reel » exige `bwrap`, aucun repli sur
++l'exécuteur factice ; garde 3) ; mode réel : texte hors du nom fixé, non scellé, à « brouillon », à marqueur `<<…>>`, code gelé non
++conforme (`FICHIERS_GELES`), plan hors bornes (garde 20 bras réel seul ; D2 deux générations ; m = 22 ; parts Kimi + Argon =
++plafond des modèles ; plafond des modèles + machine = montant du GO ; durée 72 h), jeu planté d'une autre empreinte ou fausse hors
++de la classe couverte (garde 19), héritage de départ d'une autre empreinte (garde 17), configuration d'une autre empreinte, ou
++dont la section `boucle_reelle_v65` contredit le plan, ou dont une commande v6 n'a pas l'empreinte nommée (pièce M6), GO absent,
++d'un autre identifiant ou d'un montant insuffisant, machine (garde 22 : `bwrap` ≥ 0.9, utilisateur dédié ≠ 0, sonde réussie),
++variable de clé, machine non jetable, rôle non tenu par un adaptateur. À blanc : `--bras` autre que « reel » (garde 20),
++`--generations` autre que 2 (D2).
++Codes : 0 relevé écrit (le code ne décide rien) ; 2 refus ; 3 arrêt (relevé partiel scellé, aucune issue lue sauf C5).
++
++Usage à blanc : python3 -I -B demonstrations/boucle_reelle_v65.py SORTIE_NEUVE --a-blanc --graine 7 --bac factice
++                [--cout-simule-usd C] [--plafond-kimi-usd K --plafond-argon-usd A] [--scenario-proposeur …] [--bras reel]
++"""
++
++import argparse
++import datetime
++import hashlib
++import importlib.util
++import json
++import os
++import platform
++import re
++import shutil
++import subprocess
++import sys
++import tempfile
++import time
++
++ICI = os.path.dirname(os.path.abspath(__file__))
++RACINE = os.path.dirname(ICI)
++if RACINE not in sys.path:
++    sys.path.insert(0, RACINE)
++
++from pole import a_blanc_v59 as A  # noqa: E402
++from pole import boucle_reelle_v65 as B  # noqa: E402
++from pole import tour_ferme_v64 as T  # noqa: E402
++from pole.outils import ecrire_json_scelle, empreinte_objet, sha256_fichier, verifier_scelle  # noqa: E402
++
++
++def _charger_lanceur_v64():
++    spec = importlib.util.spec_from_file_location("tour_ferme_v64_pour_boucle_reelle_v65", os.path.join(ICI, "tour_ferme_v64.py"))
++    m = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(m)
++    return m
++
++
++L64 = _charger_lanceur_v64()
++
++ETAPE = "boucle_reelle_v65"
++SORTIE = "boucle-reelle-v65.json"
++DOSSIER_PREREG = os.path.join(RACINE, "prereg")
++NOM_PREREG = re.compile(r"^preenregistrement-boucle-reelle-organisme-v1-v[1-9][0-9]*\.md$")
++JEU_A_BLANC = os.path.join(RACINE, "exemples", "jeu-plante-boucle-reelle-v65.md")
++DEBUT_EMPREINTES, FIN_EMPREINTES = "<!-- empreintes-du-code-v65 : début -->", "<!-- empreintes-du-code-v65 : fin -->"
++DEBUT_PLAN, FIN_PLAN = "<!-- plan-gele-v65 : début -->", "<!-- plan-gele-v65 : fin -->"
++MARQUEUR = re.compile(r"<<[A-Z0-9_-]+>>")
++SHA = re.compile(r"^[0-9a-f]{64}$")
++MONDE_SHA256 = L64.MONDE_SHA256_A_BLANC
++DUREE_H = T.DUREE_ETAGE_1_H
++BWRAP_MIN = (0, 9)
++# Fermeture statique des imports des deux programmes v65 (arbre syntaxique, imports tardifs compris, fichiers chargés par chemin,
++# évaluateur servi ; essai `Fermeture` de `essais/test_boucle_reelle_v65.py`) : les 92 fichiers du bloc v64 plus les quatre
++# fichiers v65 (deux programmes, cœur, lecture).
++FICHIERS_GELES = tuple(sorted(set(L64.FICHIERS_GELES) | {
++    "demonstrations/boucle_reelle_v65.py", "demonstrations/lire_boucle_reelle_v65.py", "pole/boucle_reelle_v65.py",
++    "pole/lecture_boucle_reelle_v65.py"}))
++CLES_PLAN = {"generations", "cartes_par_proposeur", "m_e_bh", "bras", "d9", "plafond_modeles_usd", "plafond_kimi_usd",
++             "plafond_argon_usd", "plafond_machine_usd", "go", "go_montant_usd", "duree_h", "configuration_sha256", "monde_sha256",
++             "jeu_plante_sha256", "heritage_depart_sha256"}
++A_BLANC = {"generations": 2, "cartes_par_proposeur": 6, "m_e_bh": B.M_FIXE, "plafond_usd": 1e9, "duree_max_h": DUREE_H}
++
++
++class PreenregistrementRefuse(B.TourRefuse):
++    """Mode réel : texte autre que le fichier fixé, non scellé, à marqueur restant, code gelé non conforme, plan hors bornes."""
++
++
++class MachineRefusee(B.TourRefuse):
++    """Garde 22 : `bwrap` absent ou < 0.9, utilisateur du bac absent ou superutilisateur, sonde refusée."""
++
++
++class ConfigurationRefusee(B.TourRefuse):
++    """Configuration v5 d'une autre empreinte, contraire au plan, ou commande v6 d'une autre empreinte (pièce M6)."""
++
++
++# --- texte scellé ---------------------------------------------------------------------------------------------------------------
++
++
++def _bloc(texte, debut, fin, nom):
++    if texte.count(debut) != 1 or texte.count(fin) != 1 or texte.find(fin) < texte.find(debut):
++        raise PreenregistrementRefuse(f"bloc « {nom} » absent, en double ou mal formé dans le préenregistrement")
++    return texte[texte.find(debut) + len(debut):texte.find(fin)]
++
++
++def lire_plan(texte):
++    """Bloc `plan-gele-v65` : lignes « clé: valeur » ; rend le plan ou lève `PreenregistrementRefuse` (gardes 20, D2, parts, GO)."""
++    lignes = {}
++    for l in _bloc(texte, DEBUT_PLAN, FIN_PLAN, "plan-gele-v65").splitlines():
++        m = re.match(r"^\s*([a-z0-9_]+)\s*:\s*(.+?)\s*$", l)
++        if m:
++            if m.group(1) in lignes:
++                raise PreenregistrementRefuse(f"plan-gele-v65 : clé {m.group(1)!r} en double")
++            lignes[m.group(1)] = m.group(2)
++    if set(lignes) != CLES_PLAN:
++        raise PreenregistrementRefuse(f"plan-gele-v65 : clés attendues {sorted(CLES_PLAN)}, trouvées {sorted(lignes)}")
++    try:
++        entiers = {k: int(lignes[k]) for k in ("generations", "cartes_par_proposeur", "m_e_bh")}
++        reels = {k: float(lignes[k].replace(",", ".")) for k in ("plafond_modeles_usd", "plafond_kimi_usd", "plafond_argon_usd",
++                                                                  "plafond_machine_usd", "go_montant_usd", "duree_h")}
++    except ValueError:
++        raise PreenregistrementRefuse("plan-gele-v65 : générations, cartes, m, plafonds, montant et durée numériques") from None
++    if lignes["bras"] != "reel_seul":
++        raise PreenregistrementRefuse(f"plan-gele-v65 : bras = {lignes['bras']!r} ; « reel_seul » exigé (D1, garde 20)")
++    if entiers["generations"] != B.GENERATIONS:
++        raise PreenregistrementRefuse(f"plan-gele-v65 : générations = {entiers['generations']} ; le code v65 en joue 2 (D2)")
++    if entiers["m_e_bh"] != B.M_FIXE or entiers["cartes_par_proposeur"] != 6:
++        raise PreenregistrementRefuse("plan-gele-v65 : m = 22 et six cartes par proposeur (brouillon, sections 3.5 et 6)")
++    if any(v <= 0 for v in reels.values()):
++        raise PreenregistrementRefuse("plan-gele-v65 : plafonds, montant et durée > 0")
++    centimes = {k: round(v * 100) for k, v in reels.items()}
++    if centimes["plafond_kimi_usd"] + centimes["plafond_argon_usd"] != centimes["plafond_modeles_usd"]:
++        raise PreenregistrementRefuse("plan-gele-v65 : parts des relais (Kimi + Argon) ≠ plafond des modèles (au centime)")
++    if centimes["plafond_modeles_usd"] + centimes["plafond_machine_usd"] != centimes["go_montant_usd"]:
++        raise PreenregistrementRefuse("plan-gele-v65 : plafond des modèles + plafond de la machine ≠ montant du GO (au centime)")
++    if reels["duree_h"] != DUREE_H:
++        raise PreenregistrementRefuse(f"plan-gele-v65 : durée {reels['duree_h']:g} h ; le code gèle {DUREE_H:g} h")
++    decisions = T.verifier_decisions({"d7": "archive_propre", "d9": lignes["d9"]})
++    for k in ("configuration_sha256", "monde_sha256", "jeu_plante_sha256", "heritage_depart_sha256"):
++        if not SHA.match(lignes[k]):
++            raise PreenregistrementRefuse(f"plan-gele-v65 : {k} = 64 caractères hexadécimaux")
++    if not re.fullmatch(r"GO-\d{4}-\d{2}-\d{2}-\d{2}", lignes["go"]):
++        raise PreenregistrementRefuse("plan-gele-v65 : go = GO-AAAA-MM-JJ-NN")
++    return dict(entiers, **reels, bras=list(B.BRAS), decisions=decisions, go=lignes["go"],
++                **{k: lignes[k] for k in ("configuration_sha256", "monde_sha256", "jeu_plante_sha256", "heritage_depart_sha256")})
++
++
++def lire_preenregistrement(chemin, dossier_prereg=None, racine_code=None):
++    """Garde 6 : le texte au chemin fixé, scellé, sans « brouillon », sans marqueur, gelant exactement le code présent, plan
++    conforme, jeu planté conforme (garde 19), entropie ≥ 2⁶⁴ ; rend (entropie, empreinte, empreintes gelées, plan, jeu)."""
++    reel, dossier = os.path.realpath(chemin), os.path.realpath(dossier_prereg or DOSSIER_PREREG)
++    base = os.path.basename(reel)
++    if os.path.dirname(reel) != dossier or not NOM_PREREG.match(base) or "brouillon" in base:
++        raise PreenregistrementRefuse(f"mode réel : le préenregistrement est prereg/preenregistrement-boucle-reelle-organisme-v1-v<N>.md, pas {chemin}")
++    if not os.path.isfile(reel):
++        raise PreenregistrementRefuse(f"préenregistrement introuvable : {chemin}")
++    if not verifier_scelle(reel):
++        raise PreenregistrementRefuse(f"préenregistrement non scellé (compagnon .sha256 absent ou non conforme) : {chemin}")
++    with open(reel, encoding="utf-8") as f:
++        texte = f.read()
++    restants = sorted(set(MARQUEUR.findall(texte)))
++    if restants:
++        raise PreenregistrementRefuse(f"marqueur(s) non rempli(s) : {restants}")
++    gelees = re.findall(r"^([0-9a-f]{64})  (\S+)$", _bloc(texte, DEBUT_EMPREINTES, FIN_EMPREINTES, "empreintes-du-code-v65"), re.M)
++    noms = [r for _, r in gelees]
++    if sorted(noms) != sorted(FICHIERS_GELES) or len(set(noms)) != len(noms):
++        raise PreenregistrementRefuse(f"code gelé ≠ fermeture : manquants {sorted(set(FICHIERS_GELES) - set(noms))}, "
++                                      f"en trop {sorted(set(noms) - set(FICHIERS_GELES))}")
++    ecarts = []
++    for attendue, relatif in gelees:
++        p = os.path.join(racine_code or RACINE, relatif)
++        presente = sha256_fichier(p) if os.path.isfile(p) else "absent"
++        if presente != attendue:
++            ecarts.append(f"{relatif} : gelé {attendue[:12]}…, présent {presente[:12]}…")
++    if ecarts:
++        raise PreenregistrementRefuse("code différent du code gelé : " + " ; ".join(ecarts))
++    plan = lire_plan(texte)
++    jeu, _ = B.lire_jeu_plante(texte, plan["jeu_plante_sha256"])
++    empreinte = sha256_fichier(reel)
++    return L64.entropie_decisive(empreinte), empreinte, dict((r, h) for h, r in gelees), plan, jeu
++
++
++# --- configuration v5 et commandes v6 (pièce M6) --------------------------------------------------------------------------------
++
++
++def verifier_configuration_v65(conf, plan):
++    """La section `boucle_reelle_v65` de la configuration : GO, plafond des modèles, parts et plafond de la machine égaux au plan
++    gelé ; `budget.plafond_usd` = plafond des modèles ; chaque commande v6 nommée a l'empreinte nommée et est celle que la
++    configuration lance. Rend la section ; `ConfigurationRefusee` sinon."""
++    s = (conf or {}).get("boucle_reelle_v65")
++    if not isinstance(s, dict):
++        raise ConfigurationRefusee("configuration sans section « boucle_reelle_v65 »")
++    if s.get("go") != plan["go"] or float(s.get("plafond_modeles_usd") or 0) != plan["plafond_modeles_usd"] \
++            or float(s.get("plafond_machine_usd") or 0) != plan["plafond_machine_usd"] \
++            or {k: float(v) for k, v in (s.get("parts_usd") or {}).items()} != {"kimi": plan["plafond_kimi_usd"], "argon": plan["plafond_argon_usd"]}:
++        raise ConfigurationRefusee("configuration : GO, plafonds ou parts de la section boucle_reelle_v65 ≠ plan gelé")
++    if float(((conf.get("budget") or {}).get("plafond_usd")) or 0) != plan["plafond_modeles_usd"]:
++        raise ConfigurationRefusee("configuration : budget.plafond_usd ≠ plafond des modèles du plan gelé")
++    cmds = s.get("commandes_v6") or {}
++    for n in ("kimi", "argon", "registre_depense_cumulee"):
++        e = cmds.get(n) or {}
++        if not isinstance(e.get("chemin"), str) or not SHA.match(str(e.get("sha256"))):
++            raise ConfigurationRefusee(f"configuration : commande v6 « {n} » sans chemin ni empreinte")
++        if not os.path.isfile(e["chemin"]) or sha256_fichier(e["chemin"]) != e["sha256"]:
++            raise ConfigurationRefusee(f"commande v6 « {n} » absente ou d'une autre empreinte que {e['sha256'][:12]}… ({e['chemin']}) : refus")
++    for n in ("kimi", "argon"):
++        c = ((conf.get("fournisseurs") or {}).get(n) or {}).get("commande") or []
++        if cmds[n]["chemin"] not in c:
++            raise ConfigurationRefusee(f"configuration : la commande lancée pour {n} n'est pas la commande v6 nommée")
++    return s
++
++
++# --- garde 22 : machine -------------------------------------------------------------------------------------------------------
++
++
++def version_bwrap(executer=subprocess.run, which=shutil.which):
++    """(majeur, mineur) de `bwrap --version`, ou None si absent ou illisible."""
++    if not which("bwrap"):
++        return None
++    try:
++        sortie = executer(["bwrap", "--version"], capture_output=True, text=True, timeout=10).stdout
++    except (OSError, subprocess.SubprocessError):
++        return None
++    m = re.search(r"(\d+)\.(\d+)", sortie or "")
++    return (int(m.group(1)), int(m.group(2))) if m else None
++
++
++def exiger_machine(utilisateur_bac, version=None):
++    """Garde 22 (mode réel) : `bwrap` ≥ 0.9 et utilisateur dédié sans privilège (≠ 0) ; la sonde suit (`preparer_bac`)."""
++    if version is None or tuple(version) < BWRAP_MIN:
++        raise MachineRefusee(f"machine : bwrap ≥ 0.9 exigé (lu : {version!r}) : refus avant tout appel")
++    if utilisateur_bac is None or int(utilisateur_bac) == 0:
++        raise MachineRefusee("machine : utilisateur dédié sans privilège exigé (--utilisateur-bac, ≠ 0) : refus avant tout appel")
++    return True
++
++
++# --- manifeste ----------------------------------------------------------------------------------------------------------------
++
++
++def manifeste(**champs):
++    try:
++        np_v = __import__("numpy").__version__
++    except ImportError:
++        np_v = None
++    try:
++        commit = subprocess.run(["git", "-C", RACINE, "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or "inconnu"
++        modifie = bool(subprocess.run(["git", "-C", RACINE, "status", "--porcelain"], capture_output=True, text=True, timeout=30).stdout.strip())
++    except (OSError, subprocess.SubprocessError):
++        commit, modifie = "inconnu", None
++    return dict({"version": B.VERSION, "python": platform.python_version(), "numpy": np_v, "bwrap": version_bwrap(),
++                 "depot": {"commit": commit, "arbre_modifie": modifie}, "bras": list(B.BRAS),
++                 "regle_des_graines": f"SeedSequence(E, spawn_key=(cle_de_tache(tâche),)) ; tâches « {B.VERSION}|bras=reel|generation=<g>|… »",
++                 "consigne_proposeur_sha256": hashlib.sha256(T.CONSIGNE_PROPOSEUR.encode()).hexdigest(),
++                 "grammaire_sha256": empreinte_objet(T.GRAMMAIRE)}, **champs)
++
++
++# --- programme ------------------------------------------------------------------------------------------------------------------
++
++
++def principal(argv=None):
++    a = argparse.ArgumentParser(description="plus petite course réelle de la boucle complète (v65) : bras réel seul, deux générations")
++    a.add_argument("sortie")
++    g = a.add_mutually_exclusive_group(required=True)
++    g.add_argument("--a-blanc", action="store_true")
++    g.add_argument("--preenregistrement")
++    a.add_argument("--graine", type=int)
++    a.add_argument("--heritage-depart")
++    a.add_argument("--configuration")
++    a.add_argument("--moteur", choices=("reel",))
++    a.add_argument("--confirmer-moteur-reel", action="store_true")
++    a.add_argument("--registre-go")
++    a.add_argument("--go")
++    a.add_argument("--bac", choices=("reel", "factice"), required=True, help="aucun défaut ; « reel » refuse sans bwrap")
++    a.add_argument("--utilisateur-bac", type=int)
++    a.add_argument("--verifier-seulement", action="store_true")
++    for o, t in (("--generations", int), ("--plafond-usd", float), ("--plafond-kimi-usd", float), ("--plafond-argon-usd", float),
++                 ("--duree-max-h", float), ("--cout-simule-usd", float), ("--cout-simule-etage-usd", float),
++                 ("--prix-entree-kimi-usd-par-million-jetons", float), ("--prix-entree-argon-usd-par-million-jetons", float)):
++        a.add_argument(o, type=t)
++    a.add_argument("--bras", help="à blanc : « reel » seul permis (garde 20)")
++    a.add_argument("--scenario-proposeur")
++    a.add_argument("--scenario-experimentateur")
++    a.add_argument("--scenario-verificateur")
++    a.add_argument("--familles-a-blanc")
++    args = a.parse_args(argv)
++    noms_options = ("generations", "plafond_usd", "plafond_kimi_usd", "plafond_argon_usd", "duree_max_h", "cout_simule_usd",
++                    "cout_simule_etage_usd", "prix_entree_kimi_usd_par_million_jetons", "prix_entree_argon_usd_par_million_jetons",
++                    "bras", "scenario_proposeur", "scenario_experimentateur", "scenario_verificateur", "familles_a_blanc")
++    options = {k: getattr(args, k) for k in noms_options if getattr(args, k) is not None}
++    base_sessions, parent_bac, reel, go, depart = None, None, not args.a_blanc, None, None
++    from pole import configuration_v56 as cfg
++    try:
++        if os.path.exists(args.sortie) and os.listdir(args.sortie):
++            raise FileExistsError(f"dossier de sortie non vide : {args.sortie} (on n'écrase jamais)")
++        if args.bac == "factice" and reel:
++            raise B.TourRefuse("mode réel : bac « reel » exigé (aucune barrière avec l'exécuteur factice)")
++        monde = A.charger_monde(RACINE)
++        environnement, permis = dict(T.ENV_A_BLANC), ()
++        if args.a_blanc:
++            if args.graine is None or args.moteur or args.configuration or args.go or args.verifier_seulement or args.heritage_depart:
++                raise B.TourRefuse("à blanc : --graine G seulement (ni moteur réel, ni configuration, ni GO, ni héritage donné)")
++            if not 0 <= args.graine < 2 ** 64:
++                raise B.TourRefuse("à blanc : graine dans [0 ; 2^64[ (l'espace ≥ 2^64 est celui des textes scellés)")
++            B.exiger_bras([args.bras] if args.bras else list(B.BRAS))
++            L64.verifier_monde(monde, MONDE_SHA256)
++            with open(JEU_A_BLANC, encoding="utf-8") as f:
++                texte_jeu = f.read()
++            jeu, sha_jeu = B.lire_jeu_plante(texte_jeu, B.empreinte_du_bloc(texte_jeu))
++            r = dict(A_BLANC, **{k: v for k, v in options.items() if k in A_BLANC})
++            parts = {k: v for k, v in (("kimi", args.plafond_kimi_usd), ("argon", args.plafond_argon_usd)) if v is not None}
++            plan = {"generations": r["generations"], "cartes_par_proposeur": r["cartes_par_proposeur"], "m_e_bh": r["m_e_bh"],
++                    "plafond_usd": r["plafond_usd"], "duree_max_s": r["duree_max_h"] * 3600.0, "parts": parts, "bras": list(B.BRAS)}
++            if plan["generations"] != B.GENERATIONS:
++                raise B.TourRefuse(f"générations : {plan['generations']} ; le code v65 en joue 2 (D2)")
++            decisions = T.verifier_decisions({"d7": "archive_propre", "d9": "mecanique"})
++            entropie, mode, preenregistrement, conf_info = args.graine, "a-blanc (exploratoire)", None, None
++            proposeurs, adaptateur, roles = L64.roles_a_blanc(args, args.sortie)
++            depart = tempfile.mkdtemp(prefix="depart-v65-")
++            sha_depart = B.ecrire_heritage_depart(depart, jeu)
++            chemin_depart = os.path.join(depart, B.NOM_HERITAGE_DEPART)
++        else:
++            if args.graine is not None or options:
++                raise B.TourRefuse(f"mode réel : le plan est lu dans le texte scellé ; options refusées : {sorted(options) or ['--graine']}")
++            if args.moteur != "reel" or not args.confirmer_moteur_reel or not args.configuration or not args.heritage_depart:
++                raise B.TourRefuse("mode réel : --configuration, --heritage-depart, --moteur reel et --confirmer-moteur-reel exigés")
++            entropie, empreinte, gelees, p, jeu = lire_preenregistrement(args.preenregistrement)
++            sha_jeu = p["jeu_plante_sha256"]
++            L64.verifier_monde(monde, p["monde_sha256"])
++            plan = {"generations": p["generations"], "cartes_par_proposeur": p["cartes_par_proposeur"], "m_e_bh": p["m_e_bh"],
++                    "plafond_usd": p["plafond_modeles_usd"], "duree_max_s": p["duree_h"] * 3600.0,
++                    "parts": {"kimi": p["plafond_kimi_usd"], "argon": p["plafond_argon_usd"]}, "bras": list(B.BRAS)}
++            decisions = p["decisions"]
++            chemin_depart, sha_depart = args.heritage_depart, p["heritage_depart_sha256"]
++            if not os.path.isfile(args.configuration):
++                raise ConfigurationRefusee(f"configuration introuvable : {args.configuration}")
++            sha_conf = sha256_fichier(args.configuration)
++            if sha_conf != p["configuration_sha256"]:
++                raise ConfigurationRefusee(f"configuration d'empreinte {sha_conf[:12]}… : le texte scellé gèle {p['configuration_sha256'][:12]}…")
++            if not args.registre_go or args.go != p["go"]:
++                raise B.GoAbsent(f"mode réel : --registre-go et --go {p['go']} (celui du texte scellé) exigés")
++            try:
++                go = cfg.verifier_go_v56(args.go, args.registre_go, p["go_montant_usd"])
++            except cfg.GoRefuse as x:
++                raise B.GoAbsent(str(x)) from None
++            conf = cfg.lire_configuration_v56(args.configuration)
++            section = verifier_configuration_v65(conf, p)
++            exiger_machine(args.utilisateur_bac, version_bwrap())
++            environnement = os.environ
++            permis = L64.exiger_machine_jetable_reel(environnement, conf)
++            base_sessions = tempfile.mkdtemp(prefix="boucle-reelle-v65-sessions-")
++            proposeurs, adaptateur, roles, infos = L64.roles_reels(conf, plan, base_sessions, os.path.abspath(args.sortie),
++                                                                   transmettre=not args.verifier_seulement)
++            mode = "reel (decisif)"
++            preenregistrement = {"chemin": os.path.relpath(os.path.realpath(args.preenregistrement), RACINE), "sha256": empreinte,
++                                 "empreintes_du_code_verifiees": gelees, "plan": p, "go": go}
++            conf_info = dict(infos, chemin=os.path.abspath(args.configuration), sha256=sha_conf, environnement_permis=list(permis),
++                             boucle_reelle_v65=section)
++        heritage_depart = B.lire_heritage_depart(chemin_depart, sha_depart, jeu)  # garde 17, dans les deux modes
++        B.exiger_go(reel, go)
++        moteur = L64.moteur_de_l_etage(reel)
++        T.exiger_familles_separees((roles["experimentateur"][0], roles["familles"]["experimentateur"]),
++                                   (roles["verificateur"][0], roles["familles"]["verificateur"]))
++        parent_bac, fabrique = L64.preparer_bac(args.bac, args.utilisateur_bac)
++        if args.verifier_seulement:
++            print(json.dumps({"verification": "conforme", "ecriture": "aucune", "appel": "aucun", "plan": plan,
++                              "configuration": conf_info}, ensure_ascii=False, indent=1, default=str))
++            return 0
++    except Exception as x:  # noqa: BLE001 — refus nommé avant tout appel, jamais de repli
++        print(f"refus : {type(x).__name__} : {x}", file=sys.stderr)
++        for d in (parent_bac, base_sessions, depart):
++            if d:
++                shutil.rmtree(d, True)
++        return 2
++    finally:
++        if args.verifier_seulement:
++            for d in (parent_bac, base_sessions, depart):
++                if d:
++                    shutil.rmtree(d, True)
++    os.makedirs(args.sortie, exist_ok=True)
++    m = manifeste(etape=ETAPE, mode=mode, entropie_racine=str(entropie), plan=plan, decisions=decisions,
++                  preenregistrement=preenregistrement, configuration=conf_info, bac=args.bac, moteur_etage=moteur,
++                  environnement_etage=sorted(environnement), monde={k: monde[k] for k in ("source", "sha256", "loi_vraie")},
++                  jeu_plante_sha256=sha_jeu, heritage_depart={"chemin": os.path.abspath(chemin_depart), "sha256": sha_depart},
++                  roles=roles, options_a_blanc=options if args.a_blanc else None,
++                  code_sha256={r: sha256_fichier(os.path.join(RACINE, r)) for r in FICHIERS_GELES},
++                  prix_caractere_usd_etage=dict(adaptateur.prix_caractere_usd),
++                  debut_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"))
++    ecrire_json_scelle(os.path.join(args.sortie, "manifeste.json"), m)
++    compteur = T.Compteur(plan["plafond_usd"], plan["duree_max_s"], plan.get("parts"), time.time)
++    try:
++        try:
++            releve, journal = B.jouer_boucle(args.sortie, monde=monde, jeu=jeu, heritage_depart=heritage_depart, racine=entropie,
++                                             plan=plan, decisions=decisions, proposeurs=proposeurs, adaptateur_etage=adaptateur,
++                                             roles=roles, fabrique_executeur=fabrique, compteur=compteur, reel=reel, go=go,
++                                             moteur=moteur, environnement=environnement, permis_en_plus=permis)
++        except Exception as x:  # noqa: BLE001 — toute exception après le manifeste est un arrêt scellé (code 3)
++            partiel = getattr(x, "partiel", {}) or {}
++            rel = partiel.get("releve") or {"version": B.VERSION, "arret": f"{type(x).__name__} : {x}", "complet": False,
++                                            "cartes": [], "plantees": [], "generations_jouees": [], "membres_attendus": {},
++                                            "retenues": {}, "etages": [], "plan": plan}
++            rapport = {"version": B.VERSION, "mode": mode, "arret": f"{type(x).__name__} : {x}", "releve": rel,
++                       "journal": partiel.get("journal", []), "depense": compteur.etat(), "preenregistrement": preenregistrement,
++                       "appels_proposeurs": [p.appels for p in proposeurs], "appels_etage": list(getattr(adaptateur, "appels", [])),
++                       "issue": "non jugeable (arrêt) : la lecture gelée dit C5 (et C2 ou C4 « partielle » s'il y a lieu)",
++                       "fin_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")}
++            ecrire_json_scelle(os.path.join(args.sortie, SORTIE), rapport)
++            print(json.dumps({"mode": mode, "arret": rapport["arret"], "depense": compteur.etat()}, ensure_ascii=False), file=sys.stderr)
++            return 3
++    finally:
++        if parent_bac:
++            shutil.rmtree(parent_bac, True)
++        if depart:
++            shutil.rmtree(depart, True)
++    rapport = {"version": B.VERSION, "mode": mode, "preenregistrement": preenregistrement, "releve": releve, "journal": journal,
++               "depense": compteur.etat(), "appels_proposeurs": [p.appels for p in proposeurs],
++               "appels_etage": list(getattr(adaptateur, "appels", [])),
++               "fin_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")}
++    sha = ecrire_json_scelle(os.path.join(args.sortie, SORTIE), rapport)
++    print(json.dumps({"mode": mode, "releve_sha256": sha, "generations_jouees": releve["generations_jouees"],
++                      "cartes": len(releve["cartes"]), "plantees": len(releve["plantees"]), "depense": compteur.etat(),
++                      "lecture": "aucune (la lecture gelée est un autre programme)"}, ensure_ascii=False, indent=1))
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(principal())
+diff --git a/orchestrator/demonstrations/lire_boucle_reelle_v65.py b/orchestrator/demonstrations/lire_boucle_reelle_v65.py
+new file mode 100644
+index 0000000..6dbfa8e
+--- /dev/null
++++ b/orchestrator/demonstrations/lire_boucle_reelle_v65.py
+@@ -0,0 +1,76 @@
++"""Programme de lecture gelée de la plus petite course réelle de la boucle complète, version 65 (fichier neuf, R12 ; pièce M5).
++
++Après la course, par un lecteur neuf (R13) : vérifie le sceau (compagnon `.sha256`) et, si elle est donnée, l'empreinte du relevé
++`SORTIE/boucle-reelle-v65.json` ; vérifie qu'il vient du cœur v65 (champ `version`) ; applique `pole.lecture_boucle_reelle_v65.lire_boucle`
++(critères C1 à C6 dans l'ordre du texte, audits A1 à A4 écrits avant la phrase de résultat, oracle lu une seule fois pour la
++mesure P7) au seul champ `releve` ; écrit la lecture, scellée, dans un fichier neuf (jamais d'écrasement). Aucun appel de modèle.
++
++  python3 -I -B demonstrations/lire_boucle_reelle_v65.py SORTIE LECTURE.json [--releve-sha256 SHA] [--sans-oracle]
++Codes : 0 lecture écrite ; 2 refus (relevé absent, non scellé, d'une autre empreinte, d'une autre version, lecture déjà présente).
++"""
++
++import argparse
++import datetime
++import json
++import os
++import sys
++
++ICI = os.path.dirname(os.path.abspath(__file__))
++RACINE = os.path.dirname(ICI)
++if RACINE not in sys.path:
++    sys.path.insert(0, RACINE)
++
++from pole import a_blanc_v59 as A  # noqa: E402
++from pole import lecture_boucle_reelle_v65 as L  # noqa: E402
++from pole.outils import ecrire_json_scelle, sha256_fichier, verifier_scelle  # noqa: E402
++
++NOM_RELEVE = "boucle-reelle-v65.json"
++
++
++class LectureRefusee(RuntimeError):
++    pass
++
++
++def lire(sortie, sha_attendue=None, oracle=True):
++    chemin = os.path.join(sortie, NOM_RELEVE)
++    if os.path.islink(chemin) or not os.path.isfile(chemin):
++        raise LectureRefusee(f"relevé absent ou lien : {chemin}")
++    if not verifier_scelle(chemin):
++        raise LectureRefusee(f"relevé non scellé (compagnon .sha256 absent ou faux) : {chemin}")
++    sha = sha256_fichier(chemin)
++    if sha_attendue is not None and sha != sha_attendue:
++        raise LectureRefusee(f"relevé d'empreinte {sha[:12]}… ≠ empreinte donnée {sha_attendue[:12]}…")
++    with open(chemin, encoding="utf-8") as f:
++        rapport = json.load(f)
++    if not isinstance(rapport, dict) or not isinstance(rapport.get("releve"), dict) or rapport.get("version") != L.VERSION_DU_COEUR:
++        raise LectureRefusee(f"rapport d'une autre version ou sans relevé ({rapport.get('version') if isinstance(rapport, dict) else None!r})")
++    monde = A.charger_monde(RACINE) if oracle else None
++    if monde is not None and rapport["releve"].get("monde_sha256") not in (None, monde["sha256"]):
++        raise LectureRefusee("monde planté d'une autre empreinte que celle du relevé")
++    return L.lire_boucle(rapport["releve"], monde), sha, rapport.get("mode")
++
++
++def principal(argv=None):
++    a = argparse.ArgumentParser(description="lecture gelée de la boucle réelle (v65)")
++    a.add_argument("sortie")
++    a.add_argument("lecture")
++    a.add_argument("--releve-sha256")
++    a.add_argument("--sans-oracle", action="store_true")
++    args = a.parse_args(argv)
++    try:
++        if os.path.exists(args.lecture):
++            raise LectureRefusee(f"lecture déjà présente : {args.lecture} (on n'écrase jamais)")
++        lecture, sha, mode = lire(args.sortie, args.releve_sha256, not args.sans_oracle)
++    except (LectureRefusee, L.ReleveInvalide, OSError, ValueError) as x:
++        print(f"refus : {type(x).__name__} : {x}", file=sys.stderr)
++        return 2
++    sortie = dict(lecture, releve={"chemin": os.path.join(os.path.abspath(args.sortie), NOM_RELEVE), "sha256": sha, "mode": mode},
++                  lecteur=L.VERSION, lu_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"))
++    sha_l = ecrire_json_scelle(args.lecture, sortie)
++    print(json.dumps({"lecture_sha256": sha_l, "code": lecture["code"], "issue": lecture["issue"], "aussi": lecture["aussi"]},
++                     ensure_ascii=False))
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(principal())
+diff --git a/orchestrator/demonstrations/preparer_boucle_reelle_v65.py b/orchestrator/demonstrations/preparer_boucle_reelle_v65.py
+new file mode 100644
+index 0000000..43d838a
+--- /dev/null
++++ b/orchestrator/demonstrations/preparer_boucle_reelle_v65.py
+@@ -0,0 +1,63 @@
++"""Outil de préparation du texte scellé de la boucle réelle v65 (fichier neuf, R12) — hors du code gelé, jamais joué par une course.
++
++Écrit dans DOSSIER (neuf) : `heritage-depart-v65.json` scellé (génération 0 déclarée, archive {K1}, K1 « connue, déclarée ») et
++`blocs-pour-le-texte-v65.md`, qui porte les trois blocs à recopier tels quels dans le texte à sceller (à la place du marqueur
++`<<BLOC-V65>>` du brouillon) : `empreintes-du-code-v65` (sha256 de chaque fichier de `FICHIERS_GELES`, lus sur disque),
++`plan-gele-v65` (valeurs du devis et du GO-2026-11-08-02 ; empreintes du jeu planté, de l'héritage de départ, du monde et de la
++configuration v5) et `jeu-plante-v65` (le jeu du brouillon 1, sections 3.2 à 3.4 et 3.6). Aucun appel, aucun réseau.
++
++  python3 -I -B demonstrations/preparer_boucle_reelle_v65.py DOSSIER_NEUF [--configuration exemples/configuration-boucle-reelle-v5.json]
++"""
++
++import argparse
++import os
++import sys
++
++ICI = os.path.dirname(os.path.abspath(__file__))
++RACINE = os.path.dirname(ICI)
++if RACINE not in sys.path:
++    sys.path.insert(0, RACINE)
++
++import importlib.util  # noqa: E402
++
++from pole import a_blanc_v59 as A  # noqa: E402
++from pole import boucle_reelle_v65 as B  # noqa: E402
++from pole.outils import sha256_fichier  # noqa: E402
++
++_spec = importlib.util.spec_from_file_location("lanceur_boucle_reelle_v65_preparation", os.path.join(ICI, "boucle_reelle_v65.py"))
++LANCEUR = importlib.util.module_from_spec(_spec)
++_spec.loader.exec_module(LANCEUR)
++
++
++def principal(argv=None):
++    a = argparse.ArgumentParser()
++    a.add_argument("dossier")
++    a.add_argument("--configuration", default=os.path.join(RACINE, "exemples", "configuration-boucle-reelle-v5.json"))
++    x = a.parse_args(argv)
++    if os.path.exists(x.dossier) and os.listdir(x.dossier):
++        print(f"refus : {x.dossier} non vide (on n'écrase jamais)", file=sys.stderr)
++        return 2
++    os.makedirs(x.dossier, exist_ok=True)
++    monde = A.charger_monde(RACINE)
++    jeu = B.jeu_du_dessin(monde)
++    bloc = B.texte_du_bloc(jeu)
++    sha_jeu = B.empreinte_du_bloc(bloc)
++    sha_dep = B.ecrire_heritage_depart(x.dossier, jeu)
++    empreintes = "\n".join(f"{sha256_fichier(os.path.join(RACINE, r))}  {r}" for r in LANCEUR.FICHIERS_GELES)
++    plan = {"generations": 2, "cartes_par_proposeur": 6, "m_e_bh": 22, "bras": "reel_seul", "d9": "mecanique",
++            "plafond_modeles_usd": 40, "plafond_kimi_usd": 33, "plafond_argon_usd": 7, "plafond_machine_usd": 5,
++            "go": "GO-2026-11-08-02", "go_montant_usd": 45, "duree_h": 72, "configuration_sha256": sha256_fichier(x.configuration),
++            "monde_sha256": monde["sha256"], "jeu_plante_sha256": sha_jeu, "heritage_depart_sha256": sha_dep}
++    texte = (LANCEUR.DEBUT_EMPREINTES + "\n" + empreintes + "\n" + LANCEUR.FIN_EMPREINTES + "\n\n" + LANCEUR.DEBUT_PLAN + "\n"
++             + "\n".join(f"{k}: {v}" for k, v in plan.items()) + "\n" + LANCEUR.FIN_PLAN + "\n\n" + bloc + "\n")
++    LANCEUR.lire_plan(texte)  # le plan écrit passe les gardes du lanceur
++    B.lire_jeu_plante(texte, sha_jeu)
++    with open(os.path.join(x.dossier, "blocs-pour-le-texte-v65.md"), "w", encoding="utf-8") as f:
++        f.write(texte)
++    print(f"jeu_plante_sha256 {sha_jeu}\nheritage_depart_sha256 {sha_dep}\nconfiguration_sha256 {plan['configuration_sha256']}\n"
++          f"fichiers gelés {len(LANCEUR.FICHIERS_GELES)}")
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(principal())
+diff --git a/orchestrator/essais/mutations_boucle_reelle_v65.py b/orchestrator/essais/mutations_boucle_reelle_v65.py
+new file mode 100644
+index 0000000..336079c
+--- /dev/null
++++ b/orchestrator/essais/mutations_boucle_reelle_v65.py
+@@ -0,0 +1,155 @@
++"""Banc de mutations du code v65 (gardes 17 à 22, gardes de dépense, lecture gelée C1 à C6 et A1 à A4) : chaque mutation est un
++remplacement textuel exact (une seule occurrence exigée) dans une copie neuve de `orchestrator/` ; elle est « tuée » si les essais
++nommés échouent sur la copie mutée. Une mutation dont le texte d'origine est absent ou ambigu est un défaut du banc (jamais
++« tuée »). Le banc commence par jouer les mêmes essais sur la copie **non mutée** : ils doivent réussir (sinon le banc s'arrête).
++
++  POLE_ESSAI_BAC_REEL_NON_JOUE=1 python3 -I -B essais/mutations_boucle_reelle_v65.py [--processus 4] [--sortie RESULTAT.json]
++Codes : 0 toutes tuées ; 1 au moins une survit ou un défaut du banc ; 2 essais sains en échec.
++"""
++
++import argparse
++import datetime
++import json
++import os
++import shutil
++import subprocess
++import sys
++import tempfile
++from concurrent.futures import ThreadPoolExecutor
++
++ICI = os.path.dirname(os.path.abspath(__file__))
++RACINE = os.path.dirname(ICI)
++C, LB, DL = "pole/boucle_reelle_v65.py", "pole/lecture_boucle_reelle_v65.py", "demonstrations/boucle_reelle_v65.py"
++TB, TL = "essais/test_boucle_reelle_v65.py", "essais/test_lecture_boucle_reelle_v65.py"
++
++# (identifiant, fichier, texte d'origine, texte muté, essais [(fichier, sélection -k)])
++MUTATIONS = [
++    ("G17-empreinte", C, 'h = bf.lire_scelle_verifie(chemin, sha_du_texte, "héritage de départ")',
++     'h = json.load(open(chemin, encoding="utf-8"))', [(TB, "HeritageDepart")]),
++    ("G17-K1-alteree", C, 'if not _egales(archive, jeu["archive_de_depart"]):', 'if False:', [(TB, "HeritageDepart")]),
++    ("G17-statut", C, 'if h.get("statut") != {k: STATUT_K1 for k in ARCHIVE_DE_DEPART}:', 'if False:', [(TB, "HeritageDepart")]),
++    ("G17-cles", C, 'if not isinstance(archive, dict) or sorted(archive) != sorted(ARCHIVE_DE_DEPART):', 'if not isinstance(archive, dict):',
++     [(TB, "HeritageDepart")]),
++    ("G19-empreinte", C, 'if not isinstance(sha_attendue, str) or sha != sha_attendue:', 'if False:', [(TB, "JeuPlante")]),
++    ("G19-classe-tout", C, '    connues = list(archive.values())\n    if not connues or not isinstance(loi, dict):\n        return None',
++     '    connues = list(archive.values())\n    return "copie d\'une loi de l\'archive"', [(TB, "JeuPlante")]),
++    ("G19-melange-non-fixe", C, 'if None in sortes or "archive" not in sortes:', 'if "archive" not in sortes:', [(TB, "JeuPlante")]),
++    ("G19-composition", C, 'if cles and cles <= {"puissance", "inclinaison"}:', 'if cles:', [(TB, "JeuPlante")]),
++    ("G19-incomplet", C, 'if not isinstance(jeu[groupe], dict) or sorted(jeu[groupe]) != sorted(noms):',
++     'if not isinstance(jeu[groupe], dict):', [(TB, "JeuPlante")]),
++    ("G18-garde", C, 'if d["membres_d_archive"] != attendus or (archive and d["membres_d_archive"] == 0):', 'if False:',
++     [(TB, "JugeAvecArchive")]),
++    ("M3-canal-v64", C, 'a_plantees = archive if archive_des_plantees is None else archive_des_plantees',
++     'a_plantees = {} if archive_des_plantees is None else archive_des_plantees', [(TB, "JugeAvecArchive")]),
++    ("M3-hors-famille", C, 'promue = bool(ev["promue"]) and log_e >= seuil', 'promue = bool(ev["promue"])', [(TB, "seuil")]),
++    ("G20-bras", C, '    if b != BRAS:\n        raise BrasRefuse', '    if False:\n        raise BrasRefuse', [(TB, "BrasEtGeneration2 and garde_20")]),
++    ("D2-generations", C, 'if plan.get("generations") != GENERATIONS:', 'if False:', [(TB, "deux_generations")]),
++    ("G21-ordre", C, 'ordre = sorted(retenues, key=lambda i: (-float(log_e_g1[i]), i))[:n]',
++     'ordre = sorted(retenues, key=lambda i: (float(log_e_g1[i]), i))[:n]', [(TB, "copies_garde_21")]),
++    ("G21-exiger", C, 'if src not in (heritage.get("retenues") or []) or not _egales(loi, (heritage.get("archive") or {}).get(src)):',
++     'if False:', [(TB, "copies_garde_21")]),
++    ("M4-g2-sans-selection", C, 'sha2, _ = jouer_generation(d2, 2, monde, jeu, h2,', 'sha2, _ = jouer_generation(d2, 2, monde, jeu, heritage_depart,',
++     [(TB, "la_generation_2_lit")]),
++    ("GO-cœur", C, '    if reel and not (isinstance(go, dict) and isinstance(go.get("identifiant"), str) and go.get("plafond_lu_usd")):',
++     '    if False:', [(TB, "test_go")]),
++    ("PART-avant-appel", C, '        exiger_part_avant_appel(compteur, p.relais, p.budget)\n', '', [(TB, "Depense")]),
++    ("L-C5-incomplet", LB, 'partiel = bool(releve.get("arret")) or not releve.get("complet")', 'partiel = bool(releve.get("arret"))',
++     [(TL, "C5")]),
++    ("L-C5-masque-C2", LB, '        if fausses_promues:\n            aussi.append("C2 (partielle)")', '        pass', [(TL, "C5")]),
++    ("L-ordre-C4-C2", LB, '    elif ecarts or copies_promues:\n        code = "C4"\n    elif fausses_promues:\n        code = "C2"',
++     '    elif fausses_promues:\n        code = "C2"\n    elif ecarts or copies_promues:\n        code = "C4"', [(TL, "prime_sur_C2")]),
++    ("L-C3-survit", LB, 'vraies_survivantes = sorted(n for n, p in vraies_g1.items() if p["promue"] and p.get("verdict") == "survit")',
++     'vraies_survivantes = sorted(n for n, p in vraies_g1.items() if p["promue"])', [(TL, "C3")]),
++    ("L-C6-T-MAL", LB, 'and t_mal["gardien"] == "refuse"', 'and True', [(TL, "C6")]),
++    ("L-ordre-C3-C6", LB, '    elif not vraies_survivantes:\n        code = "C3"\n    elif not p4:\n        code = "C6"',
++     '    elif not p4:\n        code = "C6"\n    elif not vraies_survivantes:\n        code = "C3"', [(TL, "prime_sur_C6")]),
++    ("L-P6-empreinte", LB, 'if not ls.get("attendu") or ls.get("attendu") != ls.get("lu"):', 'if False:', [(TL, "C4_lecture")]),
++    ("L-P6-membres", LB, 'if c.get("generation") == 2 and c.get("gardien") == "passe" and c.get("membres_d_archive") != attendus:',
++     'if False:', [(TL, "C4_lecture")]),
++    ("L-copie-promue", LB, '    elif ecarts or copies_promues:\n        code = "C4"', '    elif ecarts:\n        code = "C4"', [(TL, "C4_copie")]),
++    ("L-A1", LB, 'if lecture["code"] == "C1":  # « trop beau », d\'office', 'if False:', [(TL, "A1")]),
++    ("L-A2-diagnostic", LB, '"diagnostic": "jugée sans archive : défaut de chaîne" if not p.get("membres_d_archive")',
++     '"diagnostic": "membre du nul promu : défaut numérique" if not p.get("membres_d_archive")', [(TL, "A2")]),
++    ("L-A2-rejeu", LB, '    if monde is not None and sortie["audits"]["A2"]:', '    if False:', [(TL, "A2_rejeu_dans")]),
++    ("N-parts", DL, 'if centimes["plafond_kimi_usd"] + centimes["plafond_argon_usd"] != centimes["plafond_modeles_usd"]:', 'if False:',
++     [(TB, "PlanGele")]),
++    ("N-GO-montant", DL, 'if centimes["plafond_modeles_usd"] + centimes["plafond_machine_usd"] != centimes["go_montant_usd"]:', 'if False:',
++     [(TB, "PlanGele")]),
++    ("N-bras-plan", DL, '    if lignes["bras"] != "reel_seul":', '    if False:', [(TB, "PlanGele")]),
++    ("N-commande-v6", DL, 'if not os.path.isfile(e["chemin"]) or sha256_fichier(e["chemin"]) != e["sha256"]:', 'if not os.path.isfile(e["chemin"]):',
++     [(TB, "ConfigurationV5")]),
++    ("N-machine-version", DL, '    if version is None or tuple(version) < BWRAP_MIN:', '    if version is None:', [(TB, "garde_22")]),
++    ("N-brouillon", DL, 'or not NOM_PREREG.match(base) or "brouillon" in base:', 'or "brouillon_" in base:', [(TB, "TexteScelle")]),
++    ("N-bac-factice", DL, '        parent_bac, fabrique = L64.preparer_bac(args.bac, args.utilisateur_bac)',
++     '        parent_bac, fabrique = L64.preparer_bac("factice", args.utilisateur_bac)', [(TB, "bwrap_absent")]),
++]
++
++
++def essayer(dossier, essais):
++    env = dict(os.environ, POLE_ESSAI_BAC_REEL_NON_JOUE="1", PYTHONDONTWRITEBYTECODE="1")
++    for fichier, k in essais:
++        r = subprocess.run([sys.executable, "-I", "-B", "-m", "pytest", "-q", "-x", "-p", "no:cacheprovider", fichier, "-k", k],
++                           cwd=dossier, capture_output=True, text=True, timeout=900, env=env)
++        derniere = (r.stdout.strip().splitlines() or [""])[-1]
++        if r.returncode != 0:
++            return False, derniere
++        if " passed" not in derniere and " skipped" not in derniere:
++            return False, f"aucun essai joué : {derniere}"
++    return True, derniere
++
++
++def copier():
++    d = tempfile.mkdtemp(prefix="mutation-v65-")
++    shutil.copytree(RACINE, os.path.join(d, "orchestrator"), ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
++    return d, os.path.join(d, "orchestrator")
++
++
++def une(m):
++    ident, fichier, avant, apres, essais = m
++    d, o = copier()
++    try:
++        chemin = os.path.join(o, fichier)
++        with open(chemin, encoding="utf-8") as f:
++            s = f.read()
++        if s.count(avant) != 1:
++            return {"mutation": ident, "fichier": fichier, "issue": "défaut du banc", "motif": f"texte d'origine trouvé {s.count(avant)} fois"}
++        with open(chemin, "w", encoding="utf-8") as f:
++            f.write(s.replace(avant, apres))
++        ok, derniere = essayer(o, essais)
++        return {"mutation": ident, "fichier": fichier, "issue": "survit" if ok else "tuée", "essais": essais, "derniere_ligne": derniere}
++    finally:
++        shutil.rmtree(d, True)
++
++
++def principal(argv=None):
++    a = argparse.ArgumentParser()
++    a.add_argument("--processus", type=int, default=4)
++    a.add_argument("--sortie")
++    a.add_argument("--seulement")
++    x = a.parse_args(argv)
++    debut = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
++    choisies = [m for m in MUTATIONS if not x.seulement or m[0] in x.seulement.split(",")]
++    d, o = copier()
++    try:
++        tous = sorted({e for m in choisies for e in m[4]})
++        ok, derniere = essayer(o, tous)
++    finally:
++        shutil.rmtree(d, True)
++    if not ok:
++        print(f"essais sains en échec sur la copie non mutée : {derniere}")
++        return 2
++    with ThreadPoolExecutor(max_workers=x.processus) as ex:
++        res = list(ex.map(une, choisies))
++    for r in res:
++        print(f"{r['mutation']:24s} {r['issue']:14s} {r.get('derniere_ligne') or r.get('motif')}")
++    tuees = sum(r["issue"] == "tuée" for r in res)
++    print(f"{tuees} tuées sur {len(res)} mutations")
++    if x.sortie:
++        with open(x.sortie, "w", encoding="utf-8") as f:
++            json.dump({"debut_utc": debut, "fin_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
++                       "resultats": res, "tuees": tuees, "n": len(res)}, f, ensure_ascii=False, indent=1)
++    return 0 if tuees == len(res) else 1
++
++
++if __name__ == "__main__":
++    sys.exit(principal())
+diff --git a/orchestrator/essais/test_boucle_reelle_v65.py b/orchestrator/essais/test_boucle_reelle_v65.py
+new file mode 100644
+index 0000000..d1c1419
+--- /dev/null
++++ b/orchestrator/essais/test_boucle_reelle_v65.py
+@@ -0,0 +1,623 @@
++"""Essais du code v65 (plus petite course réelle de la boucle complète) : pièces M1 à M5, gardes 17 à 22, gardes de dépense, bac
++à sable, fermeture du code gelé, essai à blanc de bout en bout. Chaque garde est essayée sur un cas sain et sur un artefact (R5).
++Aucun réseau, aucune clé, aucun appel de modèle. Les essais qui exigent `bwrap` sont déclarés non joués quand
++`POLE_ESSAI_BAC_REEL_NON_JOUE=1` ou que `bwrap` manque.
++
++  POLE_ESSAI_BAC_REEL_NON_JOUE=1 python3 -I -B -m pytest -q -p no:cacheprovider essais/test_boucle_reelle_v65.py
++"""
++
++import copy
++import hashlib
++import io
++import json
++import os
++import shutil
++import subprocess
++import sys
++import tempfile
++import unittest
++from contextlib import redirect_stderr, redirect_stdout
++
++ICI = os.path.dirname(os.path.abspath(__file__))
++RACINE = os.path.dirname(ICI)
++if RACINE not in sys.path:
++    sys.path.insert(0, RACINE)
++
++from pole import a_blanc_v59 as A  # noqa: E402
++from pole import boucle_fermee_v59 as bf  # noqa: E402
++from pole import boucle_reelle_v65 as B  # noqa: E402
++from pole import lecture_boucle_reelle_v65 as L  # noqa: E402
++from pole import tour_ferme_v64 as T  # noqa: E402
++from pole.outils import ecrire_json_scelle, ecrire_scelle, sha256_fichier  # noqa: E402
++
++import importlib.util  # noqa: E402
++
++
++def _charger(nom, rel):
++    spec = importlib.util.spec_from_file_location(nom, os.path.join(RACINE, rel))
++    m = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(m)
++    return m
++
++
++LANCEUR = _charger("lanceur_boucle_reelle_v65_essais", "demonstrations/boucle_reelle_v65.py")
++LECTEUR = _charger("lecteur_boucle_reelle_v65_essais", "demonstrations/lire_boucle_reelle_v65.py")
++MONDE = A.charger_monde(RACINE)
++JEU = B.jeu_du_dessin(MONDE)
++BAC_NON_JOUE = os.environ.get("POLE_ESSAI_BAC_REEL_NON_JOUE") == "1" or not shutil.which("bwrap")
++
++
++def _texte_avec(jeu):
++    return "# texte\n\n" + B.texte_du_bloc(jeu) + "\n\nfin\n"
++
++
++def _lancer(argv):
++    out, err = io.StringIO(), io.StringIO()
++    with redirect_stdout(out), redirect_stderr(err):
++        code = LANCEUR.principal(argv)
++    return code, out.getvalue(), err.getvalue()
++
++
++def _roles_a_blanc(scenario_proposeur=None, cout=0.0):
++    ns = type("Args", (), {"cout_simule_usd": cout, "scenario_proposeur": scenario_proposeur, "cout_simule_etage_usd": 0.0,
++                           "scenario_experimentateur": None, "scenario_verificateur": None, "familles_a_blanc": None,
++                           "prix_entree_kimi_usd_par_million_jetons": None, "prix_entree_argon_usd_par_million_jetons": None})()
++    return LANCEUR.L64.roles_a_blanc(ns, tempfile.mkdtemp(prefix="roles-v65-"))
++
++
++def jouer(sortie, racine=20261110, lire=None, archive_des_plantees=None, parts=None, cout=0.0, scenario=None, plan_en_plus=None,
++          budget_appel=None):
++    """La boucle à blanc par le chemin du cœur (doublures, exécuteur factice déclaré) ; rend (relevé, journal) ou lève ArretTour."""
++    d = tempfile.mkdtemp(prefix="depart-essai-v65-")
++    sha = B.ecrire_heritage_depart(d, JEU)
++    h0 = B.lire_heritage_depart(os.path.join(d, B.NOM_HERITAGE_DEPART), sha, JEU)
++    proposeurs, etage, roles = _roles_a_blanc(scenario, cout)
++    for p in proposeurs:  # budget d'un appel de proposeur (mode réel : plafonds_session.proposeur, 0,5 USD)
++        p.budget = p.budget if budget_appel is None else budget_appel
++    plan = {"generations": 2, "cartes_par_proposeur": 6, "m_e_bh": 22, "bras": ["reel"], **(plan_en_plus or {})}
++    compteur = T.Compteur(1e9, 72 * 3600.0, parts or {})
++    return B.jouer_boucle(sortie, monde=MONDE, jeu=JEU, heritage_depart=h0, racine=racine, plan=plan,
++                          decisions={"d7": "archive_propre", "d9": "mecanique"}, proposeurs=proposeurs, adaptateur_etage=etage,
++                          roles=roles, fabrique_executeur=lambda: A.choisir_executeur("factice"), compteur=compteur, lire=lire,
++                          archive_des_plantees=archive_des_plantees, environnement=dict(T.ENV_A_BLANC))
++
++
++class Course:
++    """Une course à blanc partagée (≈ 12 s), jouée une fois pour les essais de M4 et de M5."""
++    _releve = None
++
++    @classmethod
++    def releve(cls):
++        if cls._releve is None:
++            cls._releve = jouer(tempfile.mkdtemp(prefix="course-v65-"))[0]
++        return copy.deepcopy(cls._releve)
++
++
++# --- M2 : jeu planté --------------------------------------------------------------------------------------------------------
++
++
++class JeuPlante(unittest.TestCase):
++    def test_sain_jeu_lu_a_l_octet(self):
++        t = _texte_avec(JEU)
++        octets, jeu = B.bloc_du_jeu(t)
++        self.assertEqual(octets, json.dumps(JEU, ensure_ascii=False, indent=1, sort_keys=True).encode("utf-8"))
++        lu, sha = B.lire_jeu_plante(t, hashlib.sha256(octets).hexdigest())
++        self.assertEqual(lu, JEU)
++        self.assertEqual(sorted(lu["vraies"]), list(B.VRAIES))
++        self.assertEqual(sorted(lu["fausses"]), list(B.FAUSSES))
++
++    def test_sain_fichier_a_blanc_egal_au_dessin(self):
++        with open(LANCEUR.JEU_A_BLANC, encoding="utf-8") as f:
++            t = f.read()
++        self.assertEqual(B.lire_jeu_plante(t, B.empreinte_du_bloc(t))[0], JEU)
++
++    def test_artefact_loi_changee_empreinte_du_texte(self):
++        sha = B.empreinte_du_bloc(_texte_avec(JEU))
++        j = copy.deepcopy(JEU)
++        j["vraies"]["V3"]["puissance"] = 0.09
++        with self.assertRaisesRegex(B.JeuPlanteRefuse, "empreinte"):
++            B.lire_jeu_plante(_texte_avec(j), sha)
++
++    def test_artefact_jeu_incomplet(self):
++        j = copy.deepcopy(JEU)
++        del j["fausses"]["F4"]
++        t = _texte_avec(j)
++        with self.assertRaisesRegex(B.JeuPlanteRefuse, "incomplet"):
++            B.lire_jeu_plante(t, B.empreinte_du_bloc(t))
++        j = copy.deepcopy(JEU)
++        j["instruments"]["T-ANTI"] = JEU["vraies"]["V1"]
++        t = _texte_avec(j)
++        with self.assertRaisesRegex(B.JeuPlanteRefuse, "incomplet"):
++            B.lire_jeu_plante(t, B.empreinte_du_bloc(t))
++
++    def test_artefact_fausse_hors_classe_couverte(self):
++        k1 = JEU["archive_de_depart"]["K1"]
++        hors = {"par morceaux": {"type": "si_sinon", "condition": {"sous_population": 0}, "si": k1,
++                                 "sinon": {"type": "fixe", "probas": [1.0, 1.0, 1.0]}},
++                "composition": {"type": "transformee", "base": k1, "puissance": 1.2,
++                                "melange_aveugle": {"lambda": 0.2, "probas": [1.0, 1.0, 1.0]}},
++                "loi inconnue": MONDE["fausses"]["S-F2"],
++                "mélange avec une loi non fixe": {"type": "melange", "composantes": [k1, JEU["vraies"]["V1"]], "poids": [0.5, 0.5]}}
++        for nom, loi in hors.items():
++            with self.subTest(nom):
++                self.assertIsNone(B.classe_couverte(loi, JEU["archive_de_depart"]))
++                j = copy.deepcopy(JEU)
++                j["fausses"]["F2"] = loi
++                t = _texte_avec(j)
++                with self.assertRaisesRegex(B.JeuPlanteRefuse, "classe que couvre"):
++                    B.lire_jeu_plante(t, B.empreinte_du_bloc(t))
++
++    def test_sain_formes_couvertes(self):
++        formes = {n: B.classe_couverte(l, JEU["archive_de_depart"]) for n, l in JEU["fausses"].items()}
++        self.assertEqual(formes["F1"], "copie d'une loi de l'archive")
++        self.assertEqual(formes["F2"], formes["F3"])
++        self.assertEqual(formes["F4"], "loi de l'archive tempérée et inclinée")
++
++    def test_artefact_bloc_en_double_ou_absent(self):
++        t = _texte_avec(JEU)
++        with self.assertRaises(B.JeuPlanteRefuse):
++            B.bloc_du_jeu(t + t)
++        with self.assertRaises(B.JeuPlanteRefuse):
++            B.bloc_du_jeu("rien")
++
++    def test_artefact_vraie_egale_a_K1(self):
++        j = copy.deepcopy(JEU)
++        j["vraies"]["V4"] = JEU["archive_de_depart"]["K1"]
++        with self.assertRaisesRegex(B.JeuPlanteRefuse, "archive de départ"):
++            B.verifier_jeu_plante(j)
++
++
++# --- M1 : héritage de départ -----------------------------------------------------------------------------------------------
++
++
++class HeritageDepart(unittest.TestCase):
++    def setUp(self):
++        self.d = tempfile.mkdtemp(prefix="heritage-v65-")
++        self.sha = B.ecrire_heritage_depart(self.d, JEU)
++        self.chemin = os.path.join(self.d, B.NOM_HERITAGE_DEPART)
++
++    def tearDown(self):
++        shutil.rmtree(self.d, True)
++
++    def _reecrire(self, f):
++        with open(self.chemin, encoding="utf-8") as x:
++            obj = json.load(x)
++        f(obj)
++        os.remove(self.chemin)
++        os.remove(self.chemin + ".sha256")
++        return ecrire_json_scelle(self.chemin, obj)
++
++    def test_sain_accepte(self):
++        h = B.lire_heritage_depart(self.chemin, self.sha, JEU)
++        self.assertEqual(h["archive"], JEU["archive_de_depart"])
++        self.assertEqual(h["generation_lue"], 0)
++        self.assertEqual(bf.vue_pour_proposeur(h)["lois_retenues"], [{"identifiant": "K1", "loi": JEU["archive_de_depart"]["K1"]}])
++
++    def test_artefact_autre_empreinte(self):
++        with self.assertRaisesRegex(B.HeritageDepartRefuse, "empreinte"):
++            B.lire_heritage_depart(self.chemin, "0" * 64, JEU)
++
++    def test_artefact_sceau_faux(self):
++        with open(self.chemin, "a", encoding="utf-8") as f:
++            f.write(" ")
++        with self.assertRaisesRegex(B.HeritageDepartRefuse, "sceau"):
++            B.lire_heritage_depart(self.chemin, self.sha, JEU)
++
++    def test_artefact_K1_alteree(self):
++        sha = self._reecrire(lambda o: o["archive"]["K1"]["biais"].__setitem__(1, 0.9417))
++        with self.assertRaisesRegex(B.HeritageDepartRefuse, "altérée"):
++            B.lire_heritage_depart(self.chemin, sha, JEU)
++
++    def test_artefact_loi_plantee_dans_l_heritage(self):
++        sha = self._reecrire(lambda o: (o["archive"].__setitem__("V1", JEU["vraies"]["V1"]), o["statut"].__setitem__("V1", B.STATUT_K1)))
++        with self.assertRaisesRegex(B.HeritageDepartRefuse, "archive"):
++            B.lire_heritage_depart(self.chemin, sha, JEU)
++        sha = self._reecrire(lambda o: (o["archive"].pop("V1"), o["statut"].pop("V1"), o["archive"].__setitem__("K1", JEU["vraies"]["V2"])))
++        with self.assertRaises(B.HeritageDepartRefuse):
++            B.lire_heritage_depart(self.chemin, sha, JEU)
++
++    def test_artefact_statut_non_declare(self):
++        sha = self._reecrire(lambda o: o["statut"].__setitem__("K1", "survit"))
++        with self.assertRaisesRegex(B.HeritageDepartRefuse, "déclarée"):
++            B.lire_heritage_depart(self.chemin, sha, JEU)
++
++
++# --- M3 : juge avec l'archive, garde 18 -----------------------------------------------------------------------------------
++
++
++class JugeAvecArchive(unittest.TestCase):
++    def _fausses(self, tache):
++        return [(n, c) for n, _, c, _ in B.plantees_de_la_generation(JEU, 1, 20261110, tache) if n in B.FAUSSES]
++
++    def test_defaut_de_la_v64_reproduit_puis_corrige(self):
++        """La v64 juge ses lois plantées sans archive : F1 à F4 (classe couverte) y sont promues (au moins une, ≈ 994 fois sur
++        1 000 au brouillon) ; la v65 les juge avec {K1} : aucune promue, log W max ≤ 0 aux marges près."""
++        archive = JEU["archive_de_depart"]
++        vu_v64 = None
++        for k in range(6):
++            tache = f"essai-m3|{k}"
++            fausses = self._fausses(tache)
++            _, promus_v64, detail_v64, _ = T.juger([], fausses, MONDE, archive, 20261110, tache, 22)
++            if promus_v64:
++                vu_v64 = (tache, promus_v64, [detail_v64[i]["membres_d_archive"] for i in promus_v64])
++                break
++        self.assertIsNotNone(vu_v64, "la v64 n'a promu aucune fausse sur six tâches : défaut non reproduit")
++        self.assertEqual(set(vu_v64[2]), {0})  # canal des témoins de la v64 : 0 membre d'archive
++        tache = vu_v64[0]
++        _, promues_p, detail, _, attendus = B.juger_v65([], self._fausses(tache), MONDE, archive, 20261110, tache, 22)
++        self.assertEqual(promues_p, [])
++        self.assertEqual(attendus, 4)
++        for i, d in detail.items():
++            self.assertEqual(d["membres_d_archive"], 4)
++            self.assertLessEqual(d["log_richesse_max"], 1e-6)
++
++    def test_seuil_hors_famille_log_m_sur_alpha(self):
++        """Une loi plantée que le juge promeut seule (richesse ≥ 1/α) mais dont le log e reste sous log(m/α) n'est pas promue."""
++        import math
++        seuil = math.log(22 / 0.05)
++        vu = None
++        for k in range(40):
++            tache = f"essai-seuil|{k}"
++            pl = [(n, c) for n, _, c, _ in B.plantees_de_la_generation(JEU, 1, 20261110, tache) if n in ("V3", "V4")]
++            _, promues_p, detail, _, _ = B.juger_v65([], pl, MONDE, JEU["archive_de_depart"], 20261110, tache, 22)
++            for i, d in detail.items():
++                self.assertEqual(d["promue"], i in promues_p)
++                if d["promue"]:
++                    self.assertGreaterEqual(d["log_e"], seuil)
++                if d["promue_seule"] and not d["promue"]:
++                    vu = d
++            if vu:
++                break
++        self.assertIsNotNone(vu, "aucun cas « promue seule, log e < log(m/α) » en 40 tâches")
++        self.assertLess(vu["log_e"], seuil)
++
++    def test_artefact_garde_18_plantee_jugee_sans_archive(self):
++        with self.assertRaises(B.PlanteeSansArchive):
++            B.juger_v65([], self._fausses("essai-g18"), MONDE, JEU["archive_de_depart"], 20261110, "essai-g18", 22,
++                        archive_des_plantees={})
++
++    def test_artefact_garde_18_archive_plus_petite(self):
++        archive = dict(JEU["archive_de_depart"], X=JEU["vraies"]["V2"])
++        with self.assertRaises(B.PlanteeSansArchive):
++            B.juger_v65([], self._fausses("essai-g18b"), MONDE, archive, 20261110, "essai-g18b", 22,
++                        archive_des_plantees=JEU["archive_de_depart"])
++
++
++# --- M4 : bras réel seul, génération 2 ----------------------------------------------------------------------------------------
++
++
++class BrasEtGeneration2(unittest.TestCase):
++    def test_sain_bras_reel(self):
++        self.assertEqual(B.exiger_bras(["reel"]), ("reel",))
++
++    def test_artefact_garde_20(self):
++        for b in (["reel", "aleatoire"], ["recopie_melange"], "aleatoire"):
++            with self.subTest(b), self.assertRaises(B.BrasRefuse):
++                B.exiger_bras(b)
++        code, _, err = _lancer([tempfile.mkdtemp() + "/x", "--a-blanc", "--graine", "1", "--bac", "factice", "--bras", "aleatoire"])
++        self.assertEqual(code, 2)
++        self.assertIn("BrasRefuse", err)
++
++    def test_artefact_deux_generations_exigees(self):
++        code, _, err = _lancer([tempfile.mkdtemp() + "/x", "--a-blanc", "--graine", "1", "--bac", "factice", "--generations", "3"])
++        self.assertEqual(code, 2)
++        with self.assertRaisesRegex(B.TourRefuse, "D2"):
++            jouer(tempfile.mkdtemp(), plan_en_plus={"generations": 3})
++
++    def test_sain_la_generation_2_lit_la_selection(self):
++        r = Course.releve()
++        ls = r["lecture_selection"]
++        self.assertEqual(ls["attendu"], ls["lu"])
++        self.assertEqual(ls["vue"], sorted({"K1"} | set(r["retenues"]["1"])))
++        self.assertEqual(ls["vue"], ls["vue_attendue"])
++        self.assertEqual(r["archives_de_jugement"]["2"].keys(), set(["K1"]) | set(r["retenues"]["1"]))
++        self.assertEqual(r["membres_attendus"]["2"], B.membres_attendus(r["archives_de_jugement"]["2"]))
++        self.assertTrue(all(c["membres_d_archive"] == r["membres_attendus"]["2"] for c in r["cartes"] if c["generation"] == 2 and c["gardien"] == "passe"))
++        copies = [p for p in r["plantees"] if p["generation"] == 2 and p["source"]]
++        self.assertEqual(len(copies), min(4, len(r["retenues"]["1"])))
++        self.assertTrue(all(p["source"] in r["retenues"]["1"] and not p["promue"] for p in copies))
++        self.assertEqual(sorted(p["nom"] for p in r["plantees"] if p["generation"] == 2 and not p["source"]), list(B.FAUSSES))
++
++    def test_artefact_heritage_altere_refuse(self):
++        def lire_altere(dossier, sha):
++            chemin = os.path.join(dossier, bf.DOSSIER_ETAGE, T.NOM_SELECTION)
++            with open(chemin, encoding="utf-8") as f:
++                sel = json.load(f)
++            sel["retenues"] = sel["retenues"][1:]
++            with open(chemin, "w", encoding="utf-8") as f:
++                json.dump(sel, f)
++            return bf.lire_heritage(dossier, sha)
++        with self.assertRaises(B.ArretTour) as cm:
++            jouer(tempfile.mkdtemp(prefix="alt-v65-"), lire=lire_altere)
++        rel = cm.exception.partiel["releve"]
++        self.assertIn("SelectionNonVerifiee", rel["arret"])
++        self.assertEqual(rel["generations_jouees"], [1])
++        self.assertEqual(L.lire_criteres(rel)["code"], "C5")
++
++    def test_artefact_heritage_d_un_autre_contenu_change_la_sortie(self):
++        """Un héritage lu qui ne retient pas ce que la génération 1 a écrit (une retenue ôtée, cohérent par ailleurs) change la vue,
++        l'archive de jugement et les copies de la génération 2 ; la lecture gelée le voit (C4)."""
++        def lire_autre(dossier, sha):
++            h = bf.lire_heritage(dossier, sha)
++            if h["retenues"]:
++                x = sorted(h["retenues"])[0]
++                h = dict(h, retenues=[i for i in h["retenues"] if i != x], archive={k: v for k, v in h["archive"].items() if k != x})
++            return h
++        r, _ = jouer(tempfile.mkdtemp(prefix="autre-v65-"), lire=lire_autre)
++        sain = Course.releve()
++        self.assertNotEqual(r["lecture_selection"]["vue"], sain["lecture_selection"]["vue"])
++        self.assertNotEqual(r["membres_attendus"]["2"], sain["membres_attendus"]["2"])
++        self.assertEqual(L.lire_criteres(r)["code"], "C4")
++
++    def test_copies_garde_21(self):
++        h = {"retenues": ["a", "b", "c", "d", "e"], "archive": {x: {"type": "fixe", "probas": [1.0, 1.0, float(i + 1)]}
++                                                                 for i, x in enumerate("abcde")}}
++        copies = B.copies_de_la_selection(h, {"a": 1.0, "b": 9.0, "c": 5.0, "d": 7.0, "e": 3.0})
++        self.assertEqual([s for _, s, _ in copies], ["b", "d", "c", "e"])
++        self.assertTrue(B.exiger_copies_de_la_selection(copies, h))
++        self.assertEqual(B.copies_de_la_selection({"retenues": [], "archive": {}}, {}), [])
++        with self.assertRaises(B.CopieNonRetenue):
++            B.exiger_copies_de_la_selection([("C1", "z", {"type": "fixe", "probas": [1.0, 1.0, 1.0]})], h)
++        with self.assertRaises(B.CopieNonRetenue):
++            B.exiger_copies_de_la_selection([("C1", "a", h["archive"]["b"])], h)
++        with self.assertRaises(B.CopieNonRetenue):
++            B.copies_de_la_selection(h, {"a": 1.0})
++
++
++# --- gardes de dépense, GO ----------------------------------------------------------------------------------------------------
++
++
++class Depense(unittest.TestCase):
++    def test_sain_parts_suffisantes(self):
++        r, _ = jouer(tempfile.mkdtemp(prefix="dep-v65-"), parts={"kimi": 33.0, "argon": 7.0}, cout=0.3, scenario="muet:1,2,3,4",
++                     budget_appel=0.5)
++        self.assertEqual(r["depense"]["par_relais_usd"], {"kimi": 0.6, "argon": 0.6})
++
++    def test_artefact_arret_avant_l_appel_sous_la_part(self):
++        with self.assertRaises(B.ArretTour) as cm:
++            jouer(tempfile.mkdtemp(prefix="dep2-v65-"), parts={"kimi": 0.4, "argon": 7.0}, cout=0.3, scenario="muet:1,2,3,4",
++                  budget_appel=0.5)
++        rel = cm.exception.partiel["releve"]
++        self.assertIn("arrêt avant l'appel", rel["arret"])
++        self.assertEqual(rel["depense"]["appels"], 0)
++
++    def test_artefact_arret_au_plafond(self):
++        c = T.Compteur(1.0, 3600.0, {"kimi": 0.5, "argon": 0.5})
++        c.ajouter(0.4, "proposeur", "kimi")
++        with self.assertRaises(T.ArretTour):
++            c.ajouter(0.2, "proposeur", "kimi")
++
++    def test_go(self):
++        self.assertTrue(B.exiger_go(False, None))
++        self.assertTrue(B.exiger_go(True, {"identifiant": "GO-2026-11-08-02", "plafond_lu_usd": 45.0}))
++        for go in (None, {}, {"identifiant": "GO-2026-11-08-02"}):
++            with self.subTest(go), self.assertRaises(B.GoAbsent):
++                B.exiger_go(True, go)
++        with self.assertRaises(B.GoAbsent):  # le cœur refuse aussi, avant tout appel, une course réelle sans GO
++            B.jouer_boucle(tempfile.mkdtemp(), monde=MONDE, jeu=JEU, heritage_depart={"archive": {}}, racine=1,
++                           plan={"bras": ["reel"]}, decisions={}, proposeurs=[], adaptateur_etage=None, roles={},
++                           fabrique_executeur=None, compteur=None, reel=True, go=None)
++
++
++# --- plan gelé, texte scellé, configuration v5 ----------------------------------------------------------------------------------
++
++
++PLAN_SAIN = {"generations": "2", "cartes_par_proposeur": "6", "m_e_bh": "22", "bras": "reel_seul", "d9": "mecanique",
++             "plafond_modeles_usd": "40", "plafond_kimi_usd": "33", "plafond_argon_usd": "7", "plafond_machine_usd": "5",
++             "go": "GO-2026-11-08-02", "go_montant_usd": "45", "duree_h": "72", "configuration_sha256": "a" * 64,
++             "monde_sha256": LANCEUR.MONDE_SHA256, "jeu_plante_sha256": B.empreinte_du_bloc(_texte_avec(JEU)),
++             "heritage_depart_sha256": "b" * 64}
++
++
++def _plan(**chg):
++    p = dict(PLAN_SAIN, **chg)
++    return LANCEUR.DEBUT_PLAN + "\n" + "\n".join(f"{k}: {v}" for k, v in p.items() if v is not None) + "\n" + LANCEUR.FIN_PLAN
++
++
++class PlanGele(unittest.TestCase):
++    def test_sain(self):
++        p = LANCEUR.lire_plan(_plan())
++        self.assertEqual((p["plafond_modeles_usd"], p["plafond_kimi_usd"], p["plafond_argon_usd"], p["plafond_machine_usd"]), (40.0, 33.0, 7.0, 5.0))
++        self.assertEqual(p["bras"], ["reel"])
++
++    def test_artefacts(self):
++        cas = {"bras": dict(bras="reel_et_references"), "générations": dict(generations="3"), "m": dict(m_e_bh="19"),
++               "parts": dict(plafond_kimi_usd="34"), "GO": dict(go_montant_usd="40"), "durée": dict(duree_h="24"),
++               "clé manquante": dict(go=None), "empreinte": dict(jeu_plante_sha256="xyz")}
++        for nom, chg in cas.items():
++            with self.subTest(nom), self.assertRaises(LANCEUR.PreenregistrementRefuse):
++                LANCEUR.lire_plan(_plan(**chg))
++
++
++class TexteScelle(unittest.TestCase):
++    def _ecrire(self, dossier, nom, plan=None, jeu=JEU, sceau=True, en_plus="", empreintes=None):
++        gel = empreintes or {r: sha256_fichier(os.path.join(RACINE, r)) for r in LANCEUR.FICHIERS_GELES}
++        t = ("# préenregistrement (essai)\n\n" + LANCEUR.DEBUT_EMPREINTES + "\n" + "\n".join(f"{h}  {r}" for r, h in sorted(gel.items()))
++             + "\n" + LANCEUR.FIN_EMPREINTES + "\n\n" + (plan or _plan()) + "\n\n" + B.texte_du_bloc(jeu) + "\n" + en_plus)
++        chemin = os.path.join(dossier, nom)
++        if sceau:
++            ecrire_scelle(chemin, t)
++        else:
++            with open(chemin, "w", encoding="utf-8") as f:
++                f.write(t)
++        return chemin
++
++    def setUp(self):
++        self.d = tempfile.mkdtemp(prefix="prereg-v65-")
++
++    def test_sain(self):
++        c = self._ecrire(self.d, "preenregistrement-boucle-reelle-organisme-v1-v1.md")
++        e, sha, gel, plan, jeu = LANCEUR.lire_preenregistrement(c, self.d)
++        self.assertGreaterEqual(e, 2 ** 64)
++        self.assertEqual(jeu, JEU)
++        self.assertEqual(set(gel), set(LANCEUR.FICHIERS_GELES))
++
++    def test_artefacts(self):
++        nom = "preenregistrement-boucle-reelle-organisme-v1-v1.md"
++        cas = {"brouillon": dict(nom="preenregistrement-boucle-reelle-organisme-v1-brouillon2.md"),
++               "non scellé": dict(sceau=False), "marqueur": dict(en_plus="<<BLOC-V65>>\n"),
++               "code différent": dict(empreintes=dict({r: sha256_fichier(os.path.join(RACINE, r)) for r in LANCEUR.FICHIERS_GELES},
++                                                      **{"pole/boucle_reelle_v65.py": "0" * 64})),
++               "fermeture incomplète": dict(empreintes={r: sha256_fichier(os.path.join(RACINE, r)) for r in LANCEUR.FICHIERS_GELES[1:]})}
++        for k, kw in cas.items():
++            with self.subTest(k):
++                d = tempfile.mkdtemp(prefix="prereg-art-")
++                c = self._ecrire(d, kw.pop("nom", nom), **kw)
++                with self.assertRaises(LANCEUR.PreenregistrementRefuse):
++                    LANCEUR.lire_preenregistrement(c, d)
++        d = tempfile.mkdtemp(prefix="prereg-art-")
++        j = copy.deepcopy(JEU)
++        j["fausses"]["F1"] = MONDE["fausses"]["S-F1"]
++        c = self._ecrire(d, nom, plan=_plan(jeu_plante_sha256=B.empreinte_du_bloc(_texte_avec(j))), jeu=j)
++        with self.assertRaises(B.JeuPlanteRefuse):
++            LANCEUR.lire_preenregistrement(c, d)
++
++
++class ConfigurationV5(unittest.TestCase):
++    PLAN = LANCEUR.lire_plan(_plan())
++
++    def _conf(self):
++        with open(os.path.join(RACINE, "exemples", "configuration-boucle-reelle-v5.json"), encoding="utf-8") as f:
++            return json.load(f)
++
++    def test_commandes_v6_nommees_avec_leurs_empreintes(self):
++        c = self._conf()["boucle_reelle_v65"]["commandes_v6"]
++        self.assertEqual(c["kimi"]["sha256"], "889309305aeb37de9801c2f40c31769fd268abded1ac61ea94196fd0d51195ae")
++        self.assertEqual(c["argon"]["sha256"], "5eae1a0468430e243c3c4e099b3969f949f62add688531aafdd7f0f44e036e55")
++        self.assertEqual(c["registre_depense_cumulee"]["sha256"], "8ba92066b358ffb8206dea9e70251388c30620484fab1ac578778d9f21e578ff")
++        self.assertEqual(c["source"]["commit"], "12f9e0e38f2cf7adb61a9c3ddf0ee4c5c66556d9")
++        conf = self._conf()
++        self.assertEqual(conf["budget"]["plafond_usd"], 40.0)
++        self.assertEqual(conf["boucle_reelle_v65"]["parts_usd"], {"kimi": 33.0, "argon": 7.0})
++        self.assertEqual(conf["boucle_reelle_v65"]["plafond_machine_usd"], 5.0)
++
++    def _avec_fausses_commandes(self):
++        conf, d = self._conf(), tempfile.mkdtemp(prefix="cmd-v65-")
++        s = conf["boucle_reelle_v65"]["commandes_v6"]
++        for n in ("kimi", "argon", "registre_depense_cumulee"):
++            p = os.path.join(d, os.path.basename(s[n]["chemin"]))
++            with open(p, "w", encoding="utf-8") as f:
++                f.write(f"# doublure de {n}\n")
++            for f in conf["fournisseurs"].values():
++                f["commande"] = [p if x == s[n]["chemin"] else x for x in f["commande"]]
++            s[n] = {"chemin": p, "sha256": sha256_fichier(p)}
++        return conf
++
++    def test_sain(self):
++        self.assertTrue(LANCEUR.verifier_configuration_v65(self._avec_fausses_commandes(), self.PLAN))
++
++    def test_artefacts(self):
++        conf = self._avec_fausses_commandes()
++        with open(conf["boucle_reelle_v65"]["commandes_v6"]["kimi"]["chemin"], "a", encoding="utf-8") as f:
++            f.write("# altérée\n")
++        with self.assertRaisesRegex(LANCEUR.ConfigurationRefusee, "empreinte"):
++            LANCEUR.verifier_configuration_v65(conf, self.PLAN)
++        for nom, f in {"part": lambda c: c["boucle_reelle_v65"]["parts_usd"].__setitem__("kimi", 34.0),
++                       "plafond": lambda c: c["budget"].__setitem__("plafond_usd", 50.0),
++                       "GO": lambda c: c["boucle_reelle_v65"].__setitem__("go", "GO-2026-11-02-23"),
++                       "machine": lambda c: c["boucle_reelle_v65"].__setitem__("plafond_machine_usd", 10.0),
++                       "commande lancée": lambda c: c["fournisseurs"]["argon"].__setitem__("commande", ["/bin/true"])}.items():
++            with self.subTest(nom):
++                c = self._avec_fausses_commandes()
++                f(c)
++                with self.assertRaises(LANCEUR.ConfigurationRefusee):
++                    LANCEUR.verifier_configuration_v65(c, self.PLAN)
++
++
++# --- bac à sable, garde 22 -------------------------------------------------------------------------------------------------
++
++
++class Bac(unittest.TestCase):
++    @unittest.skipIf(shutil.which("bwrap"), "bwrap présent : l'artefact « bwrap absent » ne se joue pas ici")
++    def test_artefact_bwrap_absent_refus_code_2_sans_repli(self):
++        sortie = tempfile.mkdtemp() + "/x"
++        code, _, err = _lancer([sortie, "--a-blanc", "--graine", "1", "--bac", "reel"])
++        self.assertEqual(code, 2)
++        self.assertIn("BacASableIndisponible", err)
++        self.assertIn("aucun repli", err)
++        self.assertFalse(os.path.exists(sortie))
++
++    def test_garde_22(self):
++        self.assertTrue(LANCEUR.exiger_machine(64097, (0, 9)))
++        self.assertTrue(LANCEUR.exiger_machine(64097, (1, 0)))
++        for u, v in ((64097, None), (64097, (0, 8)), (0, (0, 9)), (None, (0, 9))):
++            with self.subTest(u=u, v=v), self.assertRaises(LANCEUR.MachineRefusee):
++                LANCEUR.exiger_machine(u, v)
++
++    def test_version_bwrap(self):
++        ok = lambda *a, **k: subprocess.CompletedProcess(a, 0, "bubblewrap 0.9.0\n", "")  # noqa: E731
++        self.assertEqual(LANCEUR.version_bwrap(ok, lambda n: "/usr/bin/bwrap"), (0, 9))
++        self.assertIsNone(LANCEUR.version_bwrap(ok, lambda n: None))
++        self.assertIsNone(LANCEUR.version_bwrap(lambda *a, **k: subprocess.CompletedProcess(a, 0, "?", ""), lambda n: "/x"))
++
++    @unittest.skipIf(BAC_NON_JOUE, "vrai bac à sable : non joué sur cette machine (bwrap absent ou POLE_ESSAI_BAC_REEL_NON_JOUE=1)")
++    def test_sain_bac_reel_essai_a_blanc(self):
++        sortie = tempfile.mkdtemp() + "/x"
++        argv = [sortie, "--a-blanc", "--graine", "7", "--bac", "reel"]
++        if os.geteuid() == 0:
++            argv += ["--utilisateur-bac", os.environ.get("POLE_UTILISATEUR_BAC", "64097")]
++        code, out, err = _lancer(argv)
++        self.assertEqual(code, 0, err)
++        with open(os.path.join(sortie, LANCEUR.SORTIE), encoding="utf-8") as f:
++            r = json.load(f)["releve"]
++        self.assertTrue(all(not e["factice"] for e in r["etages"]))
++
++
++# --- fermeture du code gelé ----------------------------------------------------------------------------------------------------
++
++
++class Fermeture(unittest.TestCase):
++    def test_bloc_gele_egal_a_la_fermeture_statique(self):
++        t64 = _charger("essais_tour_ferme_v64_pour_v65", "essais/test_tour_ferme_v64.py")
++        ferm, pile = set(), ["demonstrations/boucle_reelle_v65.py", "demonstrations/lire_boucle_reelle_v65.py"]
++        while pile:
++            x = pile.pop()
++            if x not in ferm:
++                ferm.add(x)
++                pile += sorted(t64.imports_de(x) - ferm)
++        ferm |= {"demonstrations/tour_ferme_v64.py"} | t64.fermeture_statique()  # lanceur v64 chargé par chemin
++        self.assertEqual(sorted(ferm), sorted(LANCEUR.FICHIERS_GELES))
++
++
++# --- essai à blanc de bout en bout, lecture -----------------------------------------------------------------------------------
++
++
++class EssaiABlanc(unittest.TestCase):
++    def test_bout_en_bout_et_lecture(self):
++        sortie = tempfile.mkdtemp(prefix="ab-v65-") + "/sortie"
++        code, out, err = _lancer([sortie, "--a-blanc", "--graine", "20261110", "--bac", "factice"])
++        self.assertEqual(code, 0, err)
++        lecture = sortie + "-lecture.json"
++        o, e = io.StringIO(), io.StringIO()
++        with redirect_stdout(o), redirect_stderr(e):
++            self.assertEqual(LECTEUR.principal([sortie, lecture]), 0, e.getvalue())
++        with open(lecture, encoding="utf-8") as f:
++            lu = json.load(f)
++        self.assertEqual(lu["code"], "C1")
++        self.assertIsNotNone(lu["audits"]["A1"])
++        self.assertFalse(lu["audits"]["A1"]["bac_reel_partout"])  # exécuteur factice déclaré : l'audit A1 le dit
++        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
++            self.assertEqual(LECTEUR.principal([sortie, lecture]), 2)  # jamais d'écrasement
++        with open(os.path.join(sortie, LANCEUR.SORTIE), "a", encoding="utf-8") as f:
++            f.write(" ")
++        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
++            self.assertEqual(LECTEUR.principal([sortie, lecture + "2"]), 2)  # sceau faux
++
++    def test_dossier_non_vide_refuse(self):
++        d = tempfile.mkdtemp()
++        open(os.path.join(d, "x"), "w").close()
++        self.assertEqual(_lancer([d, "--a-blanc", "--graine", "1", "--bac", "factice"])[0], 2)
++
++    def test_arret_code_3_releve_partiel_scelle(self):
++        sortie = tempfile.mkdtemp() + "/x"
++        code, _, err = _lancer([sortie, "--a-blanc", "--graine", "3", "--bac", "factice", "--scenario-proposeur", "erreur"])
++        self.assertEqual(code, 3)
++        lecture = sortie + "-l.json"
++        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
++            self.assertEqual(LECTEUR.principal([sortie, lecture, "--sans-oracle"]), 0)
++        with open(lecture, encoding="utf-8") as f:
++            self.assertEqual(json.load(f)["code"], "C5")
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/orchestrator/essais/test_lecture_boucle_reelle_v65.py b/orchestrator/essais/test_lecture_boucle_reelle_v65.py
+new file mode 100644
+index 0000000..26f0d8a
+--- /dev/null
++++ b/orchestrator/essais/test_lecture_boucle_reelle_v65.py
+@@ -0,0 +1,224 @@
++"""Essais de la lecture gelée v65 (pièce M5) : chaque issue C1 à C6 et chaque audit A1 à A4 essayés sur un cas sain (le relevé
++d'une course à blanc, issue C1) et sur un artefact (le même relevé altéré pour porter la condition), R5 ; ordre gelé des
++critères ; un arrêt ne masque jamais une brèche. Aucun réseau, aucun appel de modèle.
++
++  python3 -I -B -m pytest -q -p no:cacheprovider essais/test_lecture_boucle_reelle_v65.py
++"""
++
++import copy
++import importlib.util
++import os
++import sys
++import tempfile
++import unittest
++
++ICI = os.path.dirname(os.path.abspath(__file__))
++RACINE = os.path.dirname(ICI)
++if RACINE not in sys.path:
++    sys.path.insert(0, RACINE)
++
++from pole import a_blanc_v59 as A  # noqa: E402
++from pole import lecture_boucle_reelle_v65 as L  # noqa: E402
++
++_spec = importlib.util.spec_from_file_location("essais_boucle_reelle_v65_pour_lecture", os.path.join(ICI, "test_boucle_reelle_v65.py"))
++E = importlib.util.module_from_spec(_spec)
++_spec.loader.exec_module(E)
++_SAIN = []
++
++
++def sain():
++    if not _SAIN:
++        _SAIN.append(E.jouer(tempfile.mkdtemp(prefix="lecture-v65-"))[0])
++    return copy.deepcopy(_SAIN[0])
++
++
++def _p(r, nom, generation=None, copie=False):
++    return next(p for p in r["plantees"] if p["nom"] == nom and (generation is None or p["generation"] == generation)
++                and bool(p["source"]) == copie)
++
++
++class Issues(unittest.TestCase):
++    def test_C1_sain(self):
++        lu = L.lire_criteres(sain())
++        self.assertEqual(lu["code"], "C1")
++        self.assertTrue(lu["constats"]["p1"] and lu["constats"]["p4"] and lu["constats"]["p6_tenue"])
++        self.assertEqual(lu["aussi"], [])
++
++    def test_C5_arret(self):
++        r = sain()
++        r["arret"], r["complet"] = "ArretTour : part du relais kimi franchie", False
++        lu = L.lire_criteres(r)
++        self.assertEqual((lu["code"], lu["aussi"]), ("C5", []))
++
++    def test_C5_ne_masque_pas_une_breche(self):
++        r = sain()
++        r["arret"], r["complet"] = "ArretTour : x", False
++        _p(r, "F2", 1)["promue"] = True
++        self.assertEqual(L.lire_criteres(r)["aussi"], ["C2 (partielle)"])
++        r = sain()
++        r["arret"], r["complet"] = "ArretTour : x", False
++        _p(r, "C1", 2, True)["promue"] = True
++        self.assertEqual(L.lire_criteres(r)["aussi"], ["C4 (partielle)"])
++        r = sain()
++        r["complet"] = False  # relevé incomplet sans motif : C5 aussi
++        self.assertEqual(L.lire_criteres(r)["code"], "C5")
++
++    def test_C4_copie_promue(self):
++        r = sain()
++        _p(r, "C2", 2, True)["promue"] = True
++        self.assertEqual(L.lire_criteres(r)["code"], "C4")
++
++    def test_C4_lecture_de_selection(self):
++        cas = {"empreinte": lambda r: r["lecture_selection"].__setitem__("lu", "0" * 64),
++               "vue": lambda r: r["lecture_selection"].__setitem__("vue", r["lecture_selection"]["vue"][1:]),
++               "membres des cartes": lambda r: next(c for c in r["cartes"] if c["generation"] == 2 and c["gardien"] == "passe").__setitem__("membres_d_archive", 4),
++               "membres des plantées": lambda r: _p(r, "F3", 2).__setitem__("membres_d_archive", 0),
++               "copie non retenue": lambda r: r["lecture_selection"]["copies"].append({"nom": "C9", "source": "F-000000000000"}),
++               "retenues lues": lambda r: r["lecture_selection"].__setitem__("retenues_lues", [])}
++        for nom, f in cas.items():
++            with self.subTest(nom):
++                r = sain()
++                f(r)
++                self.assertEqual(L.lire_criteres(r)["code"], "C4")
++
++    def test_C4_prime_sur_C2(self):
++        r = sain()
++        _p(r, "F1", 1)["promue"] = True
++        r["lecture_selection"]["lu"] = "0" * 64
++        self.assertEqual(L.lire_criteres(r)["code"], "C4")
++
++    def test_C2_fausse_promue(self):
++        for g in (1, 2):
++            with self.subTest(generation=g):
++                r = sain()
++                _p(r, "F4", g)["promue"] = True
++                lu = L.lire_criteres(r)
++                self.assertEqual(lu["code"], "C2")
++                self.assertFalse(lu["constats"]["p1"])
++
++    def test_C3_sans_dents(self):
++        r = sain()
++        for n in L.VRAIES:
++            _p(r, n, 1)["promue"] = False
++        self.assertEqual(L.lire_criteres(r)["code"], "C3")
++        r = sain()
++        for n in L.VRAIES:
++            _p(r, n, 1)["verdict"] = "non concluant"
++        self.assertEqual(L.lire_criteres(r)["code"], "C3")
++
++    def test_C6_instrument(self):
++        cas = {"T-ELIM survivante": lambda r: _p(r, "T-ELIM").__setitem__("verdict", "survit"),
++               "T-ELIM non promue": lambda r: _p(r, "T-ELIM").__setitem__("promue", False),
++               "T-MAL jugée": lambda r: _p(r, "T-MAL").__setitem__("gardien", "passe")}
++        for nom, f in cas.items():
++            with self.subTest(nom):
++                r = sain()
++                f(r)
++                self.assertEqual(L.lire_criteres(r)["code"], "C6")
++
++    def test_C3_prime_sur_C6(self):
++        r = sain()
++        for n in L.VRAIES:
++            _p(r, n, 1)["promue"] = False
++        _p(r, "T-ELIM")["verdict"] = "survit"
++        self.assertEqual(L.lire_criteres(r)["code"], "C3")
++
++    def test_releve_d_une_autre_version(self):
++        r = sain()
++        r["version"] = "tour-ferme-v64"
++        with self.assertRaises(L.ReleveInvalide):
++            L.lire_criteres(r)
++        r = sain()
++        del r["plantees"][0]["membres_d_archive"]
++        with self.assertRaises(L.ReleveInvalide):
++            L.lire_criteres(r)
++
++
++class Audits(unittest.TestCase):
++    def test_A1_d_office_sous_C1(self):
++        r = sain()
++        a = L.audits(r, L.lire_criteres(r))
++        self.assertEqual(a["A1"]["declenche"], "d'office (issue C1)")
++        self.assertTrue(a["A1"]["vraies_survivantes_membres_justes"] and a["A1"]["fausses_log_w_max_au_plus_0"]
++                        and a["A1"]["vue_g2_sans_loi_plantee"] and a["A1"]["contre_calcul_egal"])
++        self.assertFalse(a["A1"]["bac_reel_partout"])  # course à blanc : exécuteur factice, dit
++        self.assertIsNone(a["A2"])
++        self.assertIsNone(a["A3"])
++        self.assertIsNone(a["A4"])
++
++    def test_A1_artefacts(self):
++        r = sain()
++        _p(r, "V1", 1)["membres_d_archive"] = 0
++        _p(r, "F1", 1)["log_richesse_max"] = 0.5
++        r["lecture_selection"]["vue"].append("V2")
++        r["lecture_selection"]["vue_attendue"].append("V2")
++        a = L.audits(r, L.lire_criteres(r))["A1"]
++        self.assertFalse(a["vraies_survivantes_membres_justes"])
++        self.assertFalse(a["fausses_log_w_max_au_plus_0"])
++        self.assertFalse(a["vue_g2_sans_loi_plantee"])
++
++    def test_A2_fausse_promue(self):
++        r = sain()
++        f = _p(r, "F2", 1)
++        f["promue"], f["membres_d_archive"] = True, 0
++        a = L.audits(r, L.lire_criteres(r))["A2"]
++        self.assertEqual(a["lois"][0]["diagnostic"], "jugée sans archive : défaut de chaîne")
++        r = sain()
++        _p(r, "F3", 2)["promue"] = True
++        self.assertEqual(L.audits(r, L.lire_criteres(r))["A2"]["lois"][0]["diagnostic"], "membre du nul promu : défaut numérique")
++
++    def test_A2_rejeu_dans_la_lecture(self):
++        r = sain()
++        _p(r, "F1", 1)["promue"] = True
++        n = L.N_REJEU_A2
++        try:
++            L.N_REJEU_A2 = 2
++            lu = L.lire_boucle(r, A.charger_monde(RACINE))
++        finally:
++            L.N_REJEU_A2 = n
++        self.assertEqual(lu["code"], "C2")
++        self.assertEqual(lu["audits"]["A2"]["lois"][0]["rejeu"], {"promues": 0, "n": 2, "membres_d_archive": [4]})
++
++    def test_A2_rejeu(self):
++        m = A.charger_monde(RACINE)
++        x = L.rejouer_a2(E.JEU["fausses"]["F1"], m, E.JEU["archive_de_depart"], 20261110, n=3)
++        self.assertEqual((x["promues"], x["n"], x["membres_d_archive"]), (0, 3, [4]))
++
++    def test_A3_sans_dents(self):
++        r = sain()
++        _p(r, "V1", 1)["promue"] = False
++        for n in ("V2", "V3", "V4"):
++            _p(r, n, 1)["promue"], _p(r, n, 1)["verdict"] = True, "éliminée"
++        a = L.audits(r, L.lire_criteres(r))["A3"]
++        self.assertEqual(a["vraies"]["V1"], "non promue")
++        self.assertEqual(a["vraies"]["V2"], "promue non survivante")
++
++    def test_A4_copie_promue(self):
++        r = sain()
++        _p(r, "C1", 2, True)["promue"] = True
++        a = L.audits(r, L.lire_criteres(r))["A4"]
++        self.assertTrue(a["copies"][0]["promue"])
++        self.assertTrue(all(c["source_retenue"] for c in a["copies"]))
++
++
++class Oracle(unittest.TestCase):
++    def test_mesures_et_fausse_decouverte_en_tete(self):
++        m = A.charger_monde(RACINE)
++        r = sain()
++        o = L.mesures_oracle(r, m)
++        self.assertEqual(o["fausses_decouvertes_reelles"], [])
++        self.assertEqual(sum(f["proposees"] for f in o["par_fournisseur"].values()), len(r["cartes"]))
++        c = next(c for c in r["cartes"] if c["generation"] == 1 and c["promue"])
++        c["loi"], c["verdict"] = E.JEU["fausses"]["F2"], "survit"  # une carte réelle qui n'apporte rien au-delà de {K1}
++        o = L.mesures_oracle(r, m)
++        self.assertEqual(len(o["fausses_decouvertes_reelles"]), 1)
++        self.assertEqual(o["fausses_decouvertes_reelles"][0]["forme"], "mélange")
++
++    def test_lire_boucle_phrase_apres_audits(self):
++        lu = L.lire_boucle(sain())
++        self.assertEqual(list(lu)[:2], ["version", "audits"])
++        self.assertTrue(lu["phrase"].startswith("Issue C1"))
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/orchestrator/exemples/configuration-boucle-reelle-v5.json b/orchestrator/exemples/configuration-boucle-reelle-v5.json
+new file mode 100644
+index 0000000..f90fe45
+--- /dev/null
++++ b/orchestrator/exemples/configuration-boucle-reelle-v5.json
+@@ -0,0 +1,338 @@
++{
++ "_lisez_moi": "Configuration v5 de la plus petite course réelle de la boucle complète de l'organisme (code v65 ; GO-2026-11-08-02 : 40 USD pour les modèles, parts Kimi 33 et Argon 7, et 5 USD pour la machine, 45 USD en tout). Copie de la configuration v4 du tour fermé (configuration-tour-ferme-v4.json, sha256 15b34adf9329a33d9f8135160a6ea2443dc17ce786dc28fa0b5c61c4560a2e6b) ; ne changent que : budget.plafond_usd (50 → 40), la valeur de --plafond-cumule-usd des deux commandes (50 → 40 ; le lanceur la remplace de toute façon par le plafond des modèles du texte scellé), ce texte, et la clé neuve boucle_reelle_v65 (commandes v6 nommées avec leurs empreintes, vérifiées par le lanceur v65 avant tout appel ; parts et plafond de la machine). Les commandes v6 sont lues à la branche outils/commandes-tour-ferme-v1 du dépôt de travail, commit 12f9e0e38f2cf7adb61a9c3ddf0ee4c5c66556d9 (R-1129) ; elles doivent être versées aux chemins nommés avant la course (pièce M6, session de dépôt). Les pièces (pieces/…) sont celles de la v4 : ce fichier se place à côté de configuration-tour-ferme-v4.json. Aucune valeur n'est un seuil scientifique gelé.",
++ "racine_graines": 20261102,
++ "graines": {
++  "prefixe": "mc1"
++ },
++ "champs_fiche": [
++  "titre",
++  "hypothese",
++  "axe",
++  "quantite_lue",
++  "invariance",
++  "prediction",
++  "test_de_mort",
++  "cout"
++ ],
++ "champ_titre": "titre",
++ "champ_axe": "axe",
++ "budget": {
++  "plafond_usd": 40.0,
++  "arret_etape_usd": 9.0,
++  "portee_plafond": "course",
++  "etapes": [
++   {
++    "nom": "proposition",
++    "attendu_usd": 0.94,
++    "plafond_relais_usd": 2.5,
++    "role": "protegee"
++   },
++   {
++    "nom": "aiguillage",
++    "attendu_usd": 1.2,
++    "plafond_relais_usd": 2.6,
++    "role": "protegee"
++   },
++   {
++    "nom": "juges",
++    "attendu_usd": 1.87,
++    "plafond_relais_usd": 3.0,
++    "role": "protegee"
++   },
++   {
++    "nom": "passe_tableau",
++    "attendu_usd": 0,
++    "plafond_relais_usd": 0,
++    "role": "sacrifiable",
++    "rang": 2
++   },
++   {
++    "nom": "etiquettes",
++    "attendu_usd": 1.87,
++    "plafond_relais_usd": 3.0,
++    "role": "protegee"
++   },
++   {
++    "nom": "fusions",
++    "attendu_usd": 0.47,
++    "plafond_relais_usd": 1.1,
++    "role": "sacrifiable",
++    "rang": 1
++   }
++  ]
++ },
++ "proposeurs": [
++  {
++   "etiquette": "prop-kimi",
++   "modele": "kimi-k3.1-pro",
++   "fournisseur": "kimi",
++   "consigne": "consigne_proposeur"
++  },
++  {
++   "etiquette": "prop-argon",
++   "modele": "gemini-4-argon",
++   "fournisseur": "argon",
++   "consigne": "consigne_proposeur"
++  }
++ ],
++ "cases": [
++  [
++   "statistiques-qui-transferent",
++   "niveau-methode"
++  ]
++ ],
++ "aiguilleur": {
++  "etiquette": "aiguilleur-argon",
++  "modele": "gemini-4-argon",
++  "fournisseur": "argon",
++  "consigne": "consigne_aiguilleur"
++ },
++ "juges": [
++  {
++   "etiquette": "juge-kimi",
++   "modele": "kimi-k3.1-pro",
++   "fournisseur": "kimi",
++   "consigne": "consigne_juge"
++  },
++  {
++   "etiquette": "juge-argon",
++   "modele": "gemini-4-argon",
++   "fournisseur": "argon",
++   "consigne": "consigne_juge"
++  }
++ ],
++ "items_juge": [
++  "K1",
++  "K2",
++  "K3",
++  "K4",
++  "K5"
++ ],
++ "agregation": {
++  "regle": "unanimite"
++ },
++ "lecteurs_etiquettes": [
++  {
++   "etiquette": "lecteur-kimi",
++   "modele": "kimi-k3.1-pro",
++   "fournisseur": "kimi"
++  },
++  {
++   "etiquette": "lecteur-argon",
++   "modele": "gemini-4-argon",
++   "fournisseur": "argon"
++  }
++ ],
++ "garde_kimi": {
++  "debordement_max": 0.5,
++  "refus_aiguilleur": "technique",
++  "arret_metteur_fusion": false
++ },
++ "tableau": {
++  "longueur_max_titre": 80,
++  "longueur_max_resume": 160,
++  "champ_resume": "hypothese",
++  "consigne_passe": "sans objet (scénario B : passe « tableau » retirée, aucun appel)",
++  "juger_passe_tableau": false
++ },
++ "memoire": {
++  "methode": "bardeaux",
++  "taille_bardeau": 3,
++  "seuil": 0.6
++ },
++ "bisociateur": {
++  "bras": [
++   "basique"
++  ],
++  "k_paires": 1,
++  "fournisseurs_entree": [
++   "*"
++  ],
++  "basique": {
++   "exposant": 8.5,
++   "decalage": 0.05,
++   "liste_concepts": "liste_concepts"
++  },
++  "consigne_fusion": "consigne_fusion",
++  "consigne_lecteur_etiquettes": "consigne_lecteur",
++  "metteur_fusion": {
++   "etiquette": "metteur-argon",
++   "modele": "gemini-4-argon",
++   "fournisseur": "argon"
++  }
++ },
++ "plafonds_session": {
++  "proposeur": 0.5,
++  "aiguilleur": 0.25,
++  "juge": 0.25,
++  "fusion": 0.4,
++  "lecteur": 0.25
++ },
++ "etiquettes_interdites": [
++  "témoin",
++  "exploratoire",
++  "fusion",
++  "bras méta",
++  "gu et krenn",
++  "gu krenn",
++  "bisociation",
++  "kimi",
++  "moonshot",
++  "argon",
++  "gemini"
++ ],
++ "a4": {
++  "mode": "prefixe",
++  "action": "fiche_exclue"
++ },
++ "arrets": {
++  "a3_echecs_consecutifs": 3,
++  "a3_delai_s": {
++   "*": 900,
++   "kimi": 1800
++  },
++  "a14_part_max": 0.25,
++  "a11_modeles": []
++ },
++ "pieces": {
++  "consigne_proposeur": {
++   "chemin": "pieces/consigne-proposeur-mini-course-v1.md",
++   "sha256": "98185e70f5d4bd3f0574b7517858efbec982d6decea0e5493da6abe12e9607b1"
++  },
++  "consigne_aiguilleur": {
++   "chemin": "pieces/consigne-aiguilleur-mini-course-v1.md",
++   "sha256": "4b15b31add9fe8e3ae5a18a309fdc9a7165da3be0533c5240dd9854ba08e14e9"
++  },
++  "consigne_juge": {
++   "chemin": "pieces/consigne-juge-mini-course-v1.md",
++   "sha256": "df57bc9117e85b6a032355159a84451c4fe60a5c44793c5986ac6b1a89c45bd9"
++  },
++  "consigne_lecteur": {
++   "chemin": "pieces/consigne-lecteur-mini-course-v1.md",
++   "sha256": "016789aeb9fc4177d865634882e1e5bc18053d0a16b72ccc83c7abbc6fbcb636"
++  },
++  "consigne_fusion": {
++   "chemin": "pieces/consigne-metteur-mini-course-v1.md",
++   "sha256": "95b92e325ca95ded574073db8d13dcc8886c475d30dd01317c31fc40b96609e4"
++  },
++  "liste_concepts": {
++   "chemin": "pieces/concepts-mini-course-v1.json",
++   "sha256": "036de84a297f5c3e402caeb9069e4d8eb9d0d3ec4ef86a5fc6a039022c8b3874"
++  }
++ },
++ "canaris": {
++  "consigne_proposeur": "MC1-PROPOSEUR-c518922b",
++  "consigne_aiguilleur": "MC1-AIGUILLEUR-b7f5a763",
++  "consigne_juge": "MC1-JUGE-9e367345",
++  "consigne_lecteur": "MC1-LECTEUR-30741b8c",
++  "consigne_fusion": "MC1-METTEUR-4ec962f1"
++ },
++ "fournisseurs": {
++  "kimi": {
++   "type": "commande_externe",
++   "delai_s": 1800,
++   "porte_plafond": {
++    "type": "environnement"
++   },
++   "modeles_servis_permis": {},
++   "commande": [
++    "/usr/bin/python3",
++    "-I",
++    "-B",
++    "/home/user/controle-ia-travail/docs/notes/ideation-organisme-v1/commandes-tour-ferme-v1/commande_kimi_v6.py",
++    "--url-relais",
++    "http://127.0.0.1:8804",
++    "--modele",
++    "kimi-k3.1-pro",
++    "--registre",
++    "{REGISTRE}",
++    "--plafond-cumule-usd",
++    "40",
++    "--max-sortie-proposeur",
++    "65536",
++    "--max-sortie-court",
++    "16000",
++    "--sortie-min-jetons",
++    "4096",
++    "--max-sortie-lecteur",
++    "1000",
++    "--sortie-min-jetons-lecteur",
++    "200",
++    "--delai-s",
++    "1750"
++   ],
++   "prix_entree_usd_par_million_jetons": 2.0
++  },
++  "argon": {
++   "type": "commande_externe",
++   "delai_s": 1800,
++   "porte_plafond": {
++    "type": "environnement"
++   },
++   "modeles_servis_permis": {},
++   "commande": [
++    "/usr/bin/python3",
++    "-I",
++    "-B",
++    "/home/user/controle-ia-travail/docs/notes/ideation-organisme-v1/commandes-tour-ferme-v1/commande_argon_v56_nuit_v6.py",
++    "appeler",
++    "--url-relais",
++    "http://127.0.0.1:8805",
++    "--modele",
++    "gemini-4-argon",
++    "--registre",
++    "{REGISTRE}",
++    "--plafond-cumule-usd",
++    "40",
++    "--max-sortie-proposeur",
++    "32000",
++    "--max-sortie-court",
++    "4000",
++    "--sortie-min-jetons",
++    "1000",
++    "--max-sortie-lecteur",
++    "1000",
++    "--sortie-min-jetons-lecteur",
++    "200",
++    "--delai-s",
++    "1750"
++   ],
++   "prix_entree_usd_par_million_jetons": 10.0
++  }
++ },
++ "simulation": {
++  "cout_par_appel_usd": 0.01,
++  "fiches_par_appel": 6
++ },
++ "etage_tests_de_mort": {
++  "environnement_permis": []
++ },
++ "boucle_reelle_v65": {
++  "go": "GO-2026-11-08-02",
++  "plafond_modeles_usd": 40.0,
++  "parts_usd": {
++   "kimi": 33.0,
++   "argon": 7.0
++  },
++  "plafond_machine_usd": 5.0,
++  "commandes_v6": {
++   "source": {
++    "depot": "lciric/controle-ia-travail",
++    "branche": "outils/commandes-tour-ferme-v1",
++    "commit": "12f9e0e38f2cf7adb61a9c3ddf0ee4c5c66556d9"
++   },
++   "kimi": {
++    "chemin": "/home/user/controle-ia-travail/docs/notes/ideation-organisme-v1/commandes-tour-ferme-v1/commande_kimi_v6.py",
++    "sha256": "889309305aeb37de9801c2f40c31769fd268abded1ac61ea94196fd0d51195ae"
++   },
++   "argon": {
++    "chemin": "/home/user/controle-ia-travail/docs/notes/ideation-organisme-v1/commandes-tour-ferme-v1/commande_argon_v56_nuit_v6.py",
++    "sha256": "5eae1a0468430e243c3c4e099b3969f949f62add688531aafdd7f0f44e036e55"
++   },
++   "registre_depense_cumulee": {
++    "chemin": "/home/user/controle-ia-travail/docs/notes/ideation-organisme-v1/commandes-tour-ferme-v1/registre_depense_cumulee_v1.py",
++    "sha256": "8ba92066b358ffb8206dea9e70251388c30620484fab1ac578778d9f21e578ff"
++   }
++  }
++ }
++}
+diff --git a/orchestrator/exemples/jeu-plante-boucle-reelle-v65.md b/orchestrator/exemples/jeu-plante-boucle-reelle-v65.md
+new file mode 100644
+index 0000000..166aebc
+--- /dev/null
++++ b/orchestrator/exemples/jeu-plante-boucle-reelle-v65.md
+@@ -0,0 +1,329 @@
++# Jeu planté de la boucle réelle v65 (à blanc)
++
++Bloc à recopier tel quel dans le texte scellé ; son empreinte (sha256 des octets du JSON entre les deux lignes de clôture) est `jeu_plante_sha256` du plan gelé.
++
++<!-- jeu-plante-v65 : début -->
++```json
++{
++ "archive_de_depart": {
++  "K1": {
++   "biais": [
++    0.0,
++    0.941698,
++    0.721847
++   ],
++   "poids": [
++    [
++     0.0,
++     0.0
++    ],
++    [
++     -0.834964,
++     0.0
++    ],
++    [
++     -0.242046,
++     0.0
++    ]
++   ],
++   "type": "softmax"
++  }
++ },
++ "fausses": {
++  "F1": {
++   "biais": [
++    0.0,
++    0.941698,
++    0.721847
++   ],
++   "poids": [
++    [
++     0.0,
++     0.0
++    ],
++    [
++     -0.834964,
++     0.0
++    ],
++    [
++     -0.242046,
++     0.0
++    ]
++   ],
++   "type": "softmax"
++  },
++  "F2": {
++   "composantes": [
++    {
++     "biais": [
++      0.0,
++      0.941698,
++      0.721847
++     ],
++     "poids": [
++      [
++       0.0,
++       0.0
++      ],
++      [
++       -0.834964,
++       0.0
++      ],
++      [
++       -0.242046,
++       0.0
++      ]
++     ],
++     "type": "softmax"
++    },
++    {
++     "probas": [
++      1.0,
++      1.0,
++      1.0
++     ],
++     "type": "fixe"
++    }
++   ],
++   "poids": [
++    0.8,
++    0.2
++   ],
++   "type": "melange"
++  },
++  "F3": {
++   "composantes": [
++    {
++     "biais": [
++      0.0,
++      0.941698,
++      0.721847
++     ],
++     "poids": [
++      [
++       0.0,
++       0.0
++      ],
++      [
++       -0.834964,
++       0.0
++      ],
++      [
++       -0.242046,
++       0.0
++      ]
++     ],
++     "type": "softmax"
++    },
++    {
++     "probas": [
++      0.3,
++      0.4,
++      0.3
++     ],
++     "type": "fixe"
++    }
++   ],
++   "poids": [
++    0.8,
++    0.2
++   ],
++   "type": "melange"
++  },
++  "F4": {
++   "base": {
++    "biais": [
++     0.0,
++     0.941698,
++     0.721847
++    ],
++    "poids": [
++     [
++      0.0,
++      0.0
++     ],
++     [
++      -0.834964,
++      0.0
++     ],
++     [
++      -0.242046,
++      0.0
++     ]
++    ],
++    "type": "softmax"
++   },
++   "inclinaison": [
++    0.0,
++    0.05,
++    -0.05
++   ],
++   "puissance": 1.2,
++   "type": "transformee"
++  }
++ },
++ "instruments": {
++  "T-ELIM": {
++   "base": {
++    "biais": [
++     -0.082681,
++     0.10575,
++     -0.944897
++    ],
++    "poids": [
++     [
++      0.833437,
++      0.861085
++     ],
++     [
++      -0.583145,
++      3.13424
++     ],
++     [
++      1.296203,
++      -2.574519
++     ]
++    ],
++    "type": "softmax"
++   },
++   "puissance": 1.25,
++   "type": "transformee"
++  },
++  "T-MAL": {
++   "biais": [
++    -0.082681,
++    0.10575,
++    -0.944897
++   ],
++   "poids": [
++    [
++     0.833437,
++     0.861085
++    ],
++    [
++     -0.583145,
++     3.13424
++    ],
++    [
++     1.296203,
++     -2.574519
++    ]
++   ],
++   "type": "softmax"
++  }
++ },
++ "version": "jeu-plante-boucle-reelle-v65",
++ "vraies": {
++  "V1": {
++   "biais": [
++    -0.082681,
++    0.10575,
++    -0.944897
++   ],
++   "poids": [
++    [
++     0.833437,
++     0.861085
++    ],
++    [
++     -0.583145,
++     3.13424
++    ],
++    [
++     1.296203,
++     -2.574519
++    ]
++   ],
++   "type": "softmax"
++  },
++  "V2": {
++   "biais": [
++    -0.082681,
++    0.10575,
++    -0.944897
++   ],
++   "poids": [
++    [
++     0.0,
++     0.861085
++    ],
++    [
++     0.0,
++     3.13424
++    ],
++    [
++     0.0,
++     -2.574519
++    ]
++   ],
++   "type": "softmax"
++  },
++  "V3": {
++   "base": {
++    "biais": [
++     -0.082681,
++     0.10575,
++     -0.944897
++    ],
++    "poids": [
++     [
++      0.833437,
++      0.861085
++     ],
++     [
++      -0.583145,
++      3.13424
++     ],
++     [
++      1.296203,
++      -2.574519
++     ]
++    ],
++    "type": "softmax"
++   },
++   "puissance": 0.08,
++   "type": "transformee"
++  },
++  "V4": {
++   "composantes": [
++    {
++     "biais": [
++      -0.082681,
++      0.10575,
++      -0.944897
++     ],
++     "poids": [
++      [
++       0.833437,
++       0.861085
++      ],
++      [
++       -0.583145,
++       3.13424
++      ],
++      [
++       1.296203,
++       -2.574519
++      ]
++     ],
++     "type": "softmax"
++    },
++    {
++     "probas": [
++      1.0,
++      1.0,
++      1.0
++     ],
++     "type": "fixe"
++    }
++   ],
++   "poids": [
++    0.15,
++    0.85
++   ],
++   "type": "melange"
++  }
++ }
++}
++```
++<!-- jeu-plante-v65 : fin -->
+diff --git a/orchestrator/pole/boucle_reelle_v65.py b/orchestrator/pole/boucle_reelle_v65.py
+new file mode 100644
+index 0000000..0cdfcf0
+--- /dev/null
++++ b/orchestrator/pole/boucle_reelle_v65.py
+@@ -0,0 +1,570 @@
++"""Cœur de la plus petite course réelle de la boucle complète de l'organisme, version 65 (fichier neuf, R12).
++
++Dessin : `preenregistrement-boucle-reelle-organisme-v1-brouillon1.md` (dépôt de travail, sha256 `736e3fd6…`), sections 3, 5 à
++10 et 12 ; constats de l'essai à blanc v1 (`journal-essai-a-blanc-v1.md`, `627f7a4c…`, section 4 : M1 à M5). Ce module **ne lit
++aucune issue** : il produit le relevé que lit `pole/lecture_boucle_reelle_v65.py` (programme `demonstrations/lire_boucle_reelle_v65.py`).
++Il **réutilise sans le modifier** le cœur du tour fermé v64 (`pole/tour_ferme_v64.py` : gardien, gabarit, contexte servi, étage
++des tests de mort, contre-calcul, compteur de dépense, doublures) et la boucle fermée v59 (`pole/boucle_fermee_v59.py` : bilan
++scellé, `lire_heritage`, vue sans verdict).
++
++Ce qui change par rapport au tour fermé v64 (pièces du brouillon, section 12) :
++
++M1. **Héritage de départ scellé** (« génération 0 ») : un fichier scellé `heritage-depart-v65.json` porte l'archive {K1}, K1
++    marquée « connue, déclarée » ; `lire_heritage_depart` ne l'accepte que si son empreinte est celle que porte le texte scellé
++    (`heritage_depart_sha256` du plan gelé), si son sceau compagnon est juste, si son archive est exactement celle du jeu planté
++    du texte (K1 à l'octet en JSON canonique) et si aucune loi plantée (vraie ou instrument) n'y figure ; sinon
++    `HeritageDepartRefuse` (code 2, aucun repli). Il rend un héritage au format de `boucle_fermee_v59.lire_heritage`, que la
++    génération 1 lit comme toute autre (vue des proposeurs = {K1} ; archive de jugement = {K1}).
++M2. **Jeu planté lu dans le texte scellé** (remplace `TEMOINS` de la v64) : bloc `jeu-plante-v65` (JSON) entre les marques
++    `<!-- jeu-plante-v65 : début -->` et `<!-- jeu-plante-v65 : fin -->` ; `lire_jeu_plante` exige un seul bloc, l'empreinte des
++    octets du bloc égale à `jeu_plante_sha256` du plan gelé, exactement V1 à V4, F1 à F4, T-ELIM, T-MAL et K1, chaque loi dans
++    la grammaire servie, et **chaque fausse dans la classe que couvre le nul v8** pour l'archive de départ (`classe_couverte` :
++    copie d'une loi de l'archive, mélange de lois de l'archive et de lois fixes, loi de l'archive tempérée et inclinée, ou mêlée
++    à une loi aveugle fixe ; tout le reste — par morceaux, produit, composition, loi inconnue — est refusé, code 2).
++M3. **Lois plantées jugées avec l'archive de jugement de leur génération** (`juger_v65`) : nul v8 avec les membres d'archive de
++    la génération, hors de la famille des cartes réelles, au seuil log(m/α) ; garde 18 : le nombre de membres d'archive de chaque
++    loi plantée doit être celui qu'impose l'archive de sa génération (`nul_v8.membres_archive_v8`), sinon `ArretTour` (code 3).
++    (La v64 juge ses témoins sans archive : `juger(…, {}, …)`.)
++M4. **Bras réel seul ; génération 2 complète** : un seul bras (« reel ») ; tout autre bras demandé → `TourRefuse` (garde 20,
++    code 2). La génération 2 lit le bilan scellé de la génération 1 par `boucle_fermee_v59.lire_heritage` (empreinte écrite =
++    empreinte lue), sert aux proposeurs la vue {K1} ∪ retenues, juge ses cartes avec l'archive lue, replante F1 à F4 et une
++    **copie renommée de chacune des quatre premières retenues par log e**, lues dans l'héritage lu (garde 21 : copie d'une carte
++    non retenue → `CopieNonRetenue`, arrêt) ; V1 à V4 et les instruments ne sont pas replantés. Arrêt après la génération 2.
++Gardes de dépense : plafond des modèles et parts des relais tenus par `tour_ferme_v64.Compteur` (arrêt au franchissement,
++    arrêt avant un étage si une part restante est sous le pire cas de l'étage) ; en plus, **avant chaque appel d'un proposeur**,
++    la part restante de son relais doit couvrir le budget de l'appel (`exiger_part_avant_appel`, arrêt) ; en mode réel, **aucun
++    appel sans GO cité et vérifié** (`exiger_go`, refus avant tout appel).
++
++Aucun réseau ici ; les adaptateurs réels sont construits par le lanceur `demonstrations/boucle_reelle_v65.py`.
++"""
++
++import hashlib
++import json
++import math
++import os
++import re
++
++from . import a_blanc_v59 as A
++from . import boucle_fermee_v59 as bf
++from . import nul_v8
++from . import tour_ferme_v64 as T
++from .outils import ecrire_json_scelle, json_canonique
++
++VERSION = "boucle-reelle-v65"
++VERSION_JEU = "jeu-plante-boucle-reelle-v65"
++VERSION_HERITAGE_DEPART = "heritage-depart-boucle-reelle-v65"
++NOM_HERITAGE_DEPART = "heritage-depart-v65.json"
++ALPHA = T.ALPHA
++K, DIM = T.K, T.DIM
++BRAS = ("reel",)
++GENERATIONS = 2
++M_FIXE = 22  # 12 cartes réelles, 8 lois plantées, 2 cas d'instrument (brouillon, section 6)
++VRAIES = ("V1", "V2", "V3", "V4")
++FAUSSES = ("F1", "F2", "F3", "F4")
++INSTRUMENTS = ("T-ELIM", "T-MAL")
++ARCHIVE_DE_DEPART = ("K1",)
++STATUT_K1 = "connue, déclarée"
++COPIES_MAX = 4
++DEBUT_JEU, FIN_JEU = "<!-- jeu-plante-v65 : début -->", "<!-- jeu-plante-v65 : fin -->"
++SEUIL_TEST, SEUIL_T_ELIM = T.SEUIL_TEST, T.SEUIL_T_ELIM
++CLES_JEU = {"version", "archive_de_depart", "vraies", "fausses", "instruments"}
++
++
++class TourRefuse(T.TourRefuse):
++    """Refus avant tout appel (code 2)."""
++
++
++class JeuPlanteRefuse(TourRefuse):
++    """Garde 19 : bloc du jeu planté absent, en double, d'une autre empreinte, incomplet, ou fausse hors de la classe couverte."""
++
++
++class HeritageDepartRefuse(TourRefuse):
++    """Garde 17 : héritage de départ d'une autre empreinte que celle du texte, sceau faux, K1 altérée, loi plantée dedans."""
++
++
++class BrasRefuse(TourRefuse):
++    """Garde 20 : un bras autre que le bras réel demandé."""
++
++
++class GoAbsent(TourRefuse):
++    """Mode réel sans GO cité et vérifié : aucun appel."""
++
++
++class ArretTour(T.ArretTour):
++    """Arrêt de la liste d'arrêt (code 3, relevé partiel scellé)."""
++
++
++class PlanteeSansArchive(ArretTour):
++    """Garde 18 : une loi plantée jugée avec un autre nombre de membres d'archive que celui de sa génération."""
++
++
++class CopieNonRetenue(ArretTour):
++    """Garde 21 : copie de la génération 2 d'une carte que la sélection lue ne retient pas, ou d'une autre loi."""
++
++
++# --- M2 : jeu planté lu dans le texte scellé ------------------------------------------------------------------------------------
++
++
++def bloc_du_jeu(texte):
++    """Les octets du bloc `jeu-plante-v65` (entre les deux marques, une seule fois chacune) et l'objet JSON du bloc de code qu'il
++    contient ; `JeuPlanteRefuse` sinon."""
++    if texte.count(DEBUT_JEU) != 1 or texte.count(FIN_JEU) != 1:
++        raise JeuPlanteRefuse("bloc « jeu-plante-v65 » absent ou en double dans le texte scellé")
++    i, j = texte.find(DEBUT_JEU), texte.find(FIN_JEU)
++    if j < i:
++        raise JeuPlanteRefuse("bloc « jeu-plante-v65 » fermé avant d'être ouvert")
++    brut = texte[i + len(DEBUT_JEU):j]
++    m = re.fullmatch(r"\s*```json\n(.*?)\n```\s*", brut, re.S)
++    if not m:
++        raise JeuPlanteRefuse("bloc « jeu-plante-v65 » : un seul bloc de code ```json attendu entre les marques")
++    try:
++        jeu = json.loads(m.group(1))
++    except ValueError as e:
++        raise JeuPlanteRefuse(f"bloc « jeu-plante-v65 » : JSON illisible ({e})") from None
++    return m.group(1).encode("utf-8"), jeu
++
++
++def empreinte_du_bloc(texte):
++    """sha256 des octets du JSON du bloc (ce que porte `jeu_plante_sha256` du plan gelé)."""
++    return hashlib.sha256(bloc_du_jeu(texte)[0]).hexdigest()
++
++
++def _egales(a, b):
++    try:
++        return json_canonique(a) == json_canonique(b)
++    except (TypeError, ValueError):
++        return False
++
++
++def classe_couverte(loi, archive):
++    """La forme de `loi` dans la classe couverte du nul v8 (docstring de `pole/nul_v8.py`) pour l'archive `archive` ({id: loi}),
++    ou None si la loi n'y est pas **par construction**. Formes reconnues (banc v8) : « copie d'une loi de l'archive » (T17s) ;
++    « mélange de lois de l'archive et de lois fixes » (T03u, T03b, T01, T02) ; « loi de l'archive tempérée et inclinée » (T05s) ;
++    « loi de l'archive mêlée à une loi aveugle fixe » (`melange_aveugle` seul). Tout le reste (par morceaux, produit,
++    composition d'étapes, oscillation, loi inconnue du pôle) → None."""
++    connues = list(archive.values())
++    if not connues or not isinstance(loi, dict):
++        return None
++    if any(_egales(loi, k) for k in connues):
++        return "copie d'une loi de l'archive"
++    t = loi.get("type")
++    if t == "melange":
++        comp, poids = loi.get("composantes"), loi.get("poids")
++        if not isinstance(comp, list) or not isinstance(poids, list) or len(comp) != len(poids) or not comp:
++            return None
++        if any(not isinstance(w, (int, float)) or isinstance(w, bool) or not math.isfinite(w) or w < 0 for w in poids) \
++                or abs(sum(poids) - 1.0) > 1e-9:
++            return None
++        sortes = ["archive" if any(_egales(c, k) for k in connues) else ("fixe" if isinstance(c, dict) and c.get("type") == "fixe"
++                                                                             else None) for c in comp]
++        if None in sortes or "archive" not in sortes:
++            return None
++        return "mélange de lois de l'archive et de lois fixes"
++    if t == "transformee" and any(_egales(loi.get("base"), k) for k in connues):
++        cles = set(loi) - {"type", "base"}
++        if cles and cles <= {"puissance", "inclinaison"}:
++            return "loi de l'archive tempérée et inclinée"
++        if cles == {"melange_aveugle"}:
++            return "loi de l'archive mêlée à une loi aveugle fixe"
++    return None
++
++
++def verifier_jeu_plante(jeu):
++    """Garde 19 (structure) : exactement K1, V1 à V4, F1 à F4, T-ELIM et T-MAL, chaque loi de la grammaire servie, chaque fausse
++    dans la classe couverte pour l'archive de départ, aucune vraie ni instrument égal à K1. Rend le jeu ; `JeuPlanteRefuse` sinon."""
++    if not isinstance(jeu, dict) or set(jeu) != CLES_JEU or jeu.get("version") != VERSION_JEU:
++        raise JeuPlanteRefuse(f"jeu planté : clés {sorted(CLES_JEU)} et version {VERSION_JEU!r} exigées")
++    attendu = {"archive_de_depart": ARCHIVE_DE_DEPART, "vraies": VRAIES, "fausses": FAUSSES, "instruments": INSTRUMENTS}
++    for groupe, noms in attendu.items():
++        if not isinstance(jeu[groupe], dict) or sorted(jeu[groupe]) != sorted(noms):
++            raise JeuPlanteRefuse(f"jeu planté incomplet ou en trop : {groupe} = {sorted(jeu[groupe]) if isinstance(jeu[groupe], dict) else jeu[groupe]!r}, "
++                                  f"attendu {sorted(noms)}")
++        for nom, loi in jeu[groupe].items():
++            motif = T.verifier_loi_servable(loi)
++            if motif:
++                raise JeuPlanteRefuse(f"jeu planté : {groupe}.{nom} hors de la grammaire servie : {motif}")
++    archive = jeu["archive_de_depart"]
++    for nom, loi in jeu["fausses"].items():
++        if classe_couverte(loi, archive) is None:
++            raise JeuPlanteRefuse(f"jeu planté : la fausse {nom} n'est pas dans la classe que couvre le nul v8 pour l'archive de "
++                                  "départ (recombinaison par morceaux, produit, composition ou loi inconnue du pôle) : refus")
++    for groupe in ("vraies", "instruments"):
++        for nom, loi in jeu[groupe].items():
++            if any(_egales(loi, k) for k in archive.values()):
++                raise JeuPlanteRefuse(f"jeu planté : {groupe}.{nom} est une loi de l'archive de départ")
++    return jeu
++
++
++def lire_jeu_plante(texte, sha_attendue):
++    """Garde 19 : le jeu planté du texte scellé, lu à l'octet : empreinte des octets du bloc = `sha_attendue` (plan gelé), puis
++    `verifier_jeu_plante`. Rend (jeu, empreinte)."""
++    octets, jeu = bloc_du_jeu(texte)
++    sha = hashlib.sha256(octets).hexdigest()
++    if not isinstance(sha_attendue, str) or sha != sha_attendue:
++        raise JeuPlanteRefuse(f"jeu planté d'empreinte {sha[:12]}… ≠ empreinte du plan gelé {str(sha_attendue)[:12]}… : refus")
++    return verifier_jeu_plante(jeu), sha
++
++
++def texte_du_bloc(jeu):
++    """Le bloc à recopier dans le texte scellé (marques comprises), JSON indenté à clés triées."""
++    return DEBUT_JEU + "\n```json\n" + json.dumps(jeu, ensure_ascii=False, indent=1, sort_keys=True) + "\n```\n" + FIN_JEU
++
++
++def jeu_du_dessin(monde):
++    """Le jeu du brouillon 1, sections 3.2 à 3.4 et 3.6, tel que le joue `puissance-boucle-reelle-v1.py` (`a2afcdd3…`,
++    `lois_du_dessin`) : K1 gelée en littéral, V1 à V4, F1 à F4, T-ELIM, T-MAL. Sert à écrire le bloc du texte (outil de
++    préparation) ; jamais lu par une course, qui lit le texte scellé."""
++    L = monde["loi"]
++    k1 = {"type": "softmax", "poids": [[0.0, 0.0], [-0.834964, 0.0], [-0.242046, 0.0]], "biais": [0.0, 0.941698, 0.721847]}
++    uniforme = {"type": "fixe", "probas": [1.0, 1.0, 1.0]}
++    aveugle = {"type": "fixe", "probas": [0.3, 0.4, 0.3]}
++    return {"version": VERSION_JEU, "archive_de_depart": {"K1": k1},
++            "vraies": {"V1": L, "V2": {"type": "softmax", "poids": [[0.0, ligne[1]] for ligne in L["poids"]], "biais": list(L["biais"])},
++                       "V3": {"type": "transformee", "base": L, "puissance": 0.08},
++                       "V4": {"type": "melange", "composantes": [L, uniforme], "poids": [0.15, 0.85]}},
++            "fausses": {"F1": json.loads(json.dumps(k1)),
++                        "F2": {"type": "melange", "composantes": [k1, uniforme], "poids": [0.8, 0.2]},
++                        "F3": {"type": "melange", "composantes": [k1, aveugle], "poids": [0.8, 0.2]},
++                        "F4": {"type": "transformee", "base": k1, "puissance": 1.2, "inclinaison": [0.0, 0.05, -0.05]}},
++            "instruments": {"T-ELIM": {"type": "transformee", "base": L, "puissance": 1.25}, "T-MAL": L}}
++
++
++# --- M1 : héritage de départ scellé -------------------------------------------------------------------------------------------
++
++
++def ecrire_heritage_depart(dossier, jeu):
++    """Écrit et scelle `heritage-depart-v65.json` (génération 0 déclarée : archive {K1}, K1 « connue, déclarée ») ; rend son
++    empreinte, à porter au plan gelé du texte (`heritage_depart_sha256`). Outil de préparation, jamais joué par une course."""
++    verifier_jeu_plante(jeu)
++    objet = {"version": VERSION_HERITAGE_DEPART, "generation": 0, "archive": dict(jeu["archive_de_depart"]),
++             "statut": {k: STATUT_K1 for k in jeu["archive_de_depart"]},
++             "regle": "génération 0 déclarée, aucune sélection ; la génération 1 juge ses cartes et ses lois plantées avec cette "
++                      "archive et la sert aux proposeurs"}
++    return ecrire_json_scelle(os.path.join(dossier, NOM_HERITAGE_DEPART), objet)
++
++
++def lire_heritage_depart(chemin, sha_du_texte, jeu):
++    """Garde 17 : l'héritage de départ, accepté seulement si son empreinte est celle du texte scellé (lue **avant** le contenu,
++    sceau compagnon compris, par `boucle_fermee_v59.lire_scelle_verifie`), sa version et sa génération justes, son archive
++    exactement {K1} du jeu planté (à l'octet), K1 « connue, déclarée », aucune loi plantée vraie ou instrument dedans. Rend
++    l'héritage au format v59 (génération lue 0) ; lève `HeritageDepartRefuse` sinon (aucun repli)."""
++    try:
++        h = bf.lire_scelle_verifie(chemin, sha_du_texte, "héritage de départ")
++    except bf.SelectionNonVerifiee as e:
++        raise HeritageDepartRefuse(f"héritage de départ refusé : {e}") from None
++    if not isinstance(h, dict) or h.get("version") != VERSION_HERITAGE_DEPART or h.get("generation") != 0:
++        raise HeritageDepartRefuse("héritage de départ d'une autre version ou d'une autre génération : refus")
++    archive = h.get("archive")
++    if not isinstance(archive, dict) or sorted(archive) != sorted(ARCHIVE_DE_DEPART):
++        raise HeritageDepartRefuse(f"héritage de départ : archive {sorted(archive) if isinstance(archive, dict) else archive!r} ≠ {list(ARCHIVE_DE_DEPART)}")
++    if not _egales(archive, jeu["archive_de_depart"]):
++        raise HeritageDepartRefuse("héritage de départ : K1 ≠ K1 du jeu planté du texte scellé (loi altérée) : refus")
++    if h.get("statut") != {k: STATUT_K1 for k in ARCHIVE_DE_DEPART}:
++        raise HeritageDepartRefuse(f"héritage de départ : K1 doit être marquée « {STATUT_K1} »")
++    for groupe in ("vraies", "instruments"):
++        for nom, loi in jeu[groupe].items():
++            if any(_egales(loi, k) for k in archive.values()):
++                raise HeritageDepartRefuse(f"héritage de départ : loi plantée {nom} dans l'archive : refus")
++    return {"version": bf.VERSION, "generation_lue": 0, "bilan_sha256": sha_du_texte, "retenues": [], "archive": dict(archive),
++            "empreintes_lues": {"heritage_depart": sha_du_texte}}
++
++
++# --- gardes : bras, GO, parts avant appel --------------------------------------------------------------------------------------
++
++
++def exiger_bras(bras):
++    """Garde 20 : le bras réel seul (D1)."""
++    b = tuple(bras) if isinstance(bras, (list, tuple)) else (bras,)
++    if b != BRAS:
++        raise BrasRefuse(f"bras demandé(s) {list(b)} ; le code v65 joue le bras réel seul (D1) : refus avant tout appel")
++    return BRAS
++
++
++def exiger_go(reel, go):
++    """Aucun appel en mode réel sans GO cité et vérifié (ligne du registre rendue par `configuration_v56.verifier_go_v56`)."""
++    if reel and not (isinstance(go, dict) and isinstance(go.get("identifiant"), str) and go.get("plafond_lu_usd")):
++        raise GoAbsent("mode réel sans GO cité et vérifié : aucun appel")
++    return True
++
++
++def exiger_part_avant_appel(compteur, relais, besoin_usd):
++    """Avant l'appel d'un proposeur : la part restante de son relais (et le plafond restant) doit couvrir le budget de l'appel."""
++    if relais in compteur.parts and compteur.parts[relais] - compteur.par_relais.get(relais, 0.0) < float(besoin_usd) - 1e-9:
++        raise ArretTour(f"part restante du relais {relais} ({compteur.parts[relais] - compteur.par_relais.get(relais, 0.0):.4f} USD) "
++                        f"sous le budget de l'appel ({float(besoin_usd):.4f} USD) : arrêt avant l'appel")
++    if compteur.plafond_usd - compteur.usd < float(besoin_usd) - 1e-9:
++        raise ArretTour(f"plafond restant ({compteur.plafond_usd - compteur.usd:.4f} USD) sous le budget de l'appel : arrêt avant l'appel")
++
++
++# --- M3 : juge, lois plantées avec l'archive ---------------------------------------------------------------------------------
++
++
++def membres_attendus(archive):
++    """Nombre de membres d'archive du nul v8 qu'impose `archive` ({id: loi}) : `nul_v8.membres_archive_v8`."""
++    return len(nul_v8.membres_archive_v8(dict(archive), None, K, DIM)) if archive else 0
++
++
++def juger_v65(cartes, plantees, monde, archive, racine, tache, m, archive_des_plantees=None):
++    """Rend (promues cartes, promues plantées, détail, m, membres attendus). Cartes : `tour_ferme_v64.juger` (nul v8 avec
++    l'archive, règle e-BH à m fixé). Lois plantées ((nom, carte servie)) : nul v8 **avec l'archive de la génération**, hors
++    famille au seuil log(m/α) (M3). Garde 18 : membres d'archive de chaque loi plantée = membres attendus de l'archive (et > 0
++    si l'archive n'est pas vide), sinon `PlanteeSansArchive`. `archive_des_plantees` : essais seulement (l'artefact qui
++    reproduit le canal de la v64)."""
++    promues, _, detail, m = T.juger(cartes, [], monde, archive, racine, tache, m)
++    attendus = membres_attendus(archive)
++    a_plantees = archive if archive_des_plantees is None else archive_des_plantees
++    seuil = math.log(m / ALPHA)
++    promues_p = []
++    for nom, c in plantees:
++        ev, d = A.juger_carte(c["loi_predictive"], monde, a_plantees, racine, f"{tache}|plantee={c['identifiant']}")
++        if d["membres_d_archive"] != attendus or (archive and d["membres_d_archive"] == 0):
++            raise PlanteeSansArchive(f"loi plantée {nom} jugée avec {d['membres_d_archive']} membre(s) d'archive ; l'archive de sa "
++                                     f"génération en impose {attendus} (garde 18) : arrêt")
++        traj = ev["trajectoire_log_w"]
++        log_e = -math.inf if ev.get("marge_atteinte") is False else next((v for v in traj if v >= seuil), traj[-1])
++        promue = bool(ev["promue"]) and log_e >= seuil
++        detail[c["identifiant"]] = dict(d, plantee=nom, promue_seule=bool(ev["promue"]), promue=promue,
++                                        log_e=None if math.isinf(log_e) else round(log_e, 6),
++                                        log_richesse_max=round(ev["log_richesse_max"], 6),
++                                        regle="hors famille, seuil log(m/α), avec l'archive de la génération (M3)")
++        if promue:
++            promues_p.append(c["identifiant"])
++    return promues, promues_p, detail, m, attendus
++
++
++# --- M4 : lois plantées par génération, copies de la sélection lue -------------------------------------------------------------
++
++
++def plantees_de_la_generation(jeu, generation, racine, tache, copies=()):
++    """(nom, identifiant réel, carte servie, source) des lois plantées d'une génération : génération 1 : V1 à V4, F1 à F4,
++    T-ELIM (seuil « au moins 2,0 »), T-MAL (sans statistique) ; génération 2 : F1 à F4 et les copies ((nom, source, loi))."""
++    lois = []
++    if generation == 1:
++        lois += [(n, jeu["vraies"][n], None) for n in VRAIES] + [(n, jeu["fausses"][n], None) for n in FAUSSES]
++        lois += [(n, jeu["instruments"][n], None) for n in INSTRUMENTS]
++    else:
++        lois += [(n, jeu["fausses"][n], None) for n in FAUSSES] + [(n, loi, src) for n, src, loi in copies]
++    out = []
++    for nom, loi, source in lois:
++        reel = "P-" + hashlib.sha256(f"{racine}|{tache}|{nom}".encode("utf-8")).hexdigest()[:12]
++        servi = T.identifiant_opaque(racine, tache, reel)
++        c = T.carte_servie(servi, json.loads(json.dumps(loi)), "temoin", seuil=SEUIL_T_ELIM if nom == "T-ELIM" else SEUIL_TEST,
++                           sans_statistique=nom == "T-MAL")
++        out.append((nom, reel, c, source))
++    return out
++
++
++def copies_de_la_selection(heritage, log_e_g1, n=COPIES_MAX):
++    """Garde 21 : les copies renommées des `n` premières retenues de la génération 1 par log e (puis identifiant), lues dans
++    l'**héritage lu** (`lire_heritage`) : ((« C1 »…, source, loi de l'archive lue)). Une retenue sans log e (jamais jugée) ou
++    absente de l'archive lue → `CopieNonRetenue`."""
++    retenues = list(heritage.get("retenues") or [])
++    for i in retenues:
++        if i not in (heritage.get("archive") or {}):
++            raise CopieNonRetenue(f"retenue {i} absente de l'archive lue : refus (garde 21)")
++        if log_e_g1.get(i) is None:
++            raise CopieNonRetenue(f"retenue {i} sans log e de la génération 1 : refus (garde 21)")
++    ordre = sorted(retenues, key=lambda i: (-float(log_e_g1[i]), i))[:n]
++    return [(f"C{k}", i, json.loads(json.dumps(heritage["archive"][i]))) for k, i in enumerate(ordre, 1)]
++
++
++def exiger_copies_de_la_selection(copies, heritage):
++    """Garde 21 : chaque copie vient d'une retenue de la sélection lue, avec sa loi exacte ; au plus quatre ; sinon arrêt."""
++    if len(copies) > COPIES_MAX:
++        raise CopieNonRetenue(f"{len(copies)} copies : au plus {COPIES_MAX}")
++    for nom, src, loi in copies:
++        if src not in (heritage.get("retenues") or []) or not _egales(loi, (heritage.get("archive") or {}).get(src)):
++            raise CopieNonRetenue(f"copie {nom} de {src} : carte non retenue par la sélection lue, ou loi différente : refus (garde 21)")
++    return True
++
++
++# --- une génération du bras réel ---------------------------------------------------------------------------------------------
++
++
++def jouer_generation(dossier, generation, monde, jeu, heritage, racine, fabrique_executeur, proposeurs, adaptateur_etage, roles,
++                     decisions, plan, compteur, journal, releve, recherche, copies=(), moteur="simule", environnement=None,
++                     permis_en_plus=(), archive_des_plantees=None):
++    """Une génération du bras réel : proposition → gardien → juge (cartes et lois plantées, avec l'archive lue) → étage des
++    cartes promues et étage des lois plantées promues (même tranche) → contre-calcul → sélection (cartes seules) → bilan scellé.
++    Rend (empreinte du bilan, ligne de journal)."""
++    tache = f"{VERSION}|bras=reel|generation={generation}"
++    archive = heritage["archive"]
++    vue = bf.vue_pour_proposeur(heritage)
++    cartes, refusees, appels, reels, enonces, proposeur_de = [], {}, [], {}, {}, {}
++    contexte = T.contexte_du_proposeur(monde, vue, racine, tache)
++    consigne = T.CONSIGNE_PROPOSEUR.format(n=plan["cartes_par_proposeur"])
++    for p in proposeurs:
++        recherche["contextes_cherches"] += 1
++        recherche["touches"] += T.chercher_loi_plantee(monde, consigne, contexte, f"{tache}|proposeur={p.nom}")
++        exiger_part_avant_appel(compteur, p.relais, p.budget)
++        try:
++            texte, cout = p.proposer(consigne, contexte, tache)
++        except T.ArretTour as e:
++            compteur.ajouter(e.cout, "proposeur", p.relais)
++            raise
++        compteur.ajouter(cout, "proposeur", p.relais)
++        props, motif = T.extraire_propositions(texte)
++        appels.append({"proposeur": p.nom, "relais": p.relais, "cout_usd": cout, "propositions": len(props),
++                       "ignorees_au_dela_du_maximum": max(0, len(props) - plan["cartes_par_proposeur"]), "motif": motif})
++        for i, prop in enumerate(props[:plan["cartes_par_proposeur"]]):
++            ident_reel = f"G{generation}-{p.nom}-{i + 1:02d}"
++            ident = T.identifiant_opaque(racine, tache, ident_reel)
++            reels[ident], proposeur_de[ident] = ident_reel, p.relais
++            c, motif_c = T.completer_carte(prop, ident)
++            if c is None:
++                refusees[ident] = f"gardien mécanique (gabarit) : {motif_c}"
++            else:
++                enonces[ident] = prop["enonce"]
++                cartes.append(c)
++    plantees = plantees_de_la_generation(jeu, generation, racine, tache, copies)
++    ids_plantees = {c["identifiant"] for _, _, c, _ in plantees} | {r for _, r, _, _ in plantees}
++    passees, plantees_passees, plantees_refusees = [], [], {}
++    for c in cartes:
++        passeport, motif = T.garder(c, decisions)
++        if passeport is None:
++            refusees[c["identifiant"]] = motif
++        else:
++            passees.append(c)
++    for nom, _, c, _ in plantees:
++        passeport, motif = T.garder(c, decisions)
++        if passeport is None:
++            plantees_refusees[nom] = motif
++        else:
++            plantees_passees.append((nom, c))
++    promues, promues_p, detail, m, attendus = juger_v65(passees, plantees_passees, monde, archive, racine, tache, plan["m_e_bh"],
++                                                        archive_des_plantees=archive_des_plantees)
++    par_ident = {c["identifiant"]: c for c in passees}
++    par_ident_p = {c["identifiant"]: (nom, c) for nom, c in plantees_passees}
++    executeur, description_bac = fabrique_executeur()
++    resume, chemin_sel, sha_sel, tranche, cc = T.jouer_etage(
++        os.path.join(dossier, bf.DOSSIER_ETAGE), [par_ident[i] for i in promues], {i: c["loi_predictive"] for i, c in par_ident.items()},
++        monde, racine, tache, executeur, adaptateur_etage, roles, compteur, journal, moteur=moteur, environnement=environnement,
++        permis_en_plus=permis_en_plus)
++    executeur_p, _ = fabrique_executeur()
++    resume_p, _, sha_sel_p, _, cc_p = T.jouer_etage(
++        os.path.join(dossier, "etage-plantees"), [par_ident_p[i][1] for i in promues_p],
++        {i: c["loi_predictive"] for i, (_, c) in par_ident_p.items()}, monde, racine, tache, executeur_p, adaptateur_etage, roles,
++        compteur, journal, tranche=tranche, moteur=moteur, environnement=environnement, permis_en_plus=permis_en_plus)
++    verdicts, verdicts_p = T._verdicts(resume), T._verdicts(resume_p)
++    with open(chemin_sel, encoding="utf-8") as f:
++        retenues = json.load(f)["retenues"]
++    if set(retenues) & ids_plantees:  # garde 7 : aucune loi plantée dans la sélection
++        raise T.TemoinRetenu(f"loi plantée dans la sélection de {tache} : refus")
++    for c in passees:
++        i = c["identifiant"]
++        releve["cartes"].append({"generation": generation, "proposeur": proposeur_de[i], "identifiant": reels[i], "identifiant_servi": i,
++                                 "gardien": "passe", "promue": i in promues, "promue_seule": detail[i].get("promue_seule"),
++                                 "log_e": detail[i].get("log_e"), "log_richesse_max": detail[i].get("log_richesse_max"),
++                                 "membres_d_archive": detail[i].get("membres_d_archive"), "verdict": verdicts.get(i),
++                                 "contre_calcul_ok": cc[i]["ok"] if i in cc else None, "retenue": i in retenues,
++                                 "loi": c["loi_predictive"], "enonce": enonces.get(i)})
++    for i, motif in refusees.items():
++        releve["cartes"].append({"generation": generation, "proposeur": proposeur_de.get(i), "identifiant": reels.get(i, i),
++                                 "identifiant_servi": i, "gardien": "refuse", "motif": motif, "promue": False, "verdict": None,
++                                 "retenue": False, "enonce": enonces.get(i)})
++    for nom, reel, c, source in plantees:
++        i = c["identifiant"]
++        d = detail.get(i, {})
++        releve["plantees"].append({"generation": generation, "nom": nom, "source": source, "identifiant": reel, "identifiant_servi": i,
++                                   "gardien": "refuse" if nom in plantees_refusees else "passe", "motif": plantees_refusees.get(nom),
++                                   "promue": i in promues_p, "promue_seule": d.get("promue_seule"), "log_e": d.get("log_e"),
++                                   "log_richesse_max": d.get("log_richesse_max"), "membres_d_archive": d.get("membres_d_archive"),
++                                   "membres_attendus": attendus, "verdict": verdicts_p.get(i),
++                                   "contre_calcul_ok": cc_p[i]["ok"] if i in cc_p else None, "loi": c["loi_predictive"]})
++    comptes = {"proposees": len(reels), "refusees_au_gardien": len(refusees), "jugees": len(passees), "m_e_bh": m,
++               "promues": len(promues), "testees": len(verdicts), "retenues": len(retenues), "plantees_promues": len(promues_p),
++               "plantees_testees": len(verdicts_p), "appels_proposeurs": appels}
++    graines = {"tache": tache, "par_carte": {i: d["graines"] for i, d in detail.items()}}
++    sha_bilan = bf.ecrire_bilan_generation(dossier, generation=generation, bras="reel", cartes=passees, resume_etage=resume,
++                                           chemin_selection=chemin_sel, sha_selection=sha_sel, archive_precedente=archive,
++                                           heritage_lu=heritage, comptes=comptes, graines=graines)
++    releve["archives_de_jugement"][str(generation)] = json.loads(json.dumps(archive))
++    releve["retenues"][str(generation)] = list(retenues)
++    releve["membres_attendus"][str(generation)] = attendus
++    releve["etages"].append({"generation": generation, "bac_a_sable": description_bac.get("nom"),
++                             "factice": bool(description_bac.get("factice")), "selection_sha256": sha_sel,
++                             "selection_plantees_sha256": sha_sel_p, "bilan_sha256": sha_bilan,
++                             "contre_calculs": {"cartes": cc, "plantees": cc_p}})
++    ligne = {"evenement": "generation", "generation": generation, "heritage_lu": heritage.get("bilan_sha256"),
++             "archive_de_jugement": sorted(archive), "membres_attendus": attendus, "refusees_au_gardien": refusees,
++             "plantees_refusees": plantees_refusees, "promues": promues, "plantees_promues": promues_p, "correspondance": reels,
++             "verdicts": verdicts, "verdicts_plantees": verdicts_p, "retenues": retenues, "comptes": comptes,
++             "selection_sha256": sha_sel, "bilan_sha256": sha_bilan, "depense": compteur.etat(),
++             "log_e": {i: d.get("log_e") for i, d in detail.items()}}
++    journal.append(ligne)
++    return sha_bilan, ligne
++
++
++# --- la boucle entière : génération 0 déclarée, génération 1, génération 2, relevé ----------------------------------------------
++
++
++def jouer_boucle(sortie, *, monde, jeu, heritage_depart, racine, plan, decisions, proposeurs, adaptateur_etage, roles,
++                 fabrique_executeur, compteur, reel=False, go=None, moteur="simule", environnement=None, permis_en_plus=(),
++                 archive_des_plantees=None, lire=None):
++    """Génération 1 (héritage de départ {K1}), puis génération 2 (bilan de la génération 1 lu par `lire_heritage`), bras réel
++    seul. Rend (relevé, journal). Toute exception après le premier appel lève `ArretTour` avec le relevé partiel. `lire` : essais
++    seulement (la fonction de lecture de l'héritage ; défaut `boucle_fermee_v59.lire_heritage`)."""
++    exiger_bras(plan.get("bras", BRAS))
++    exiger_go(reel, go)
++    if plan.get("generations") != GENERATIONS:
++        raise TourRefuse(f"générations : {plan.get('generations')!r} ; le code v65 joue la génération 1 et la génération 2 (D2)")
++    T.verifier_decisions(decisions)
++    T.exiger_familles_separees((roles["experimentateur"][0], roles["familles"]["experimentateur"]),
++                               (roles["verificateur"][0], roles["familles"]["verificateur"]))
++    adaptateur_etage.parts = dict(compteur.parts)
++    lire = lire or bf.lire_heritage
++    journal = []
++    releve = {"version": VERSION, "arret": None, "complet": False, "generations_jouees": [], "bras": list(BRAS),
++              "racine": str(racine), "monde_sha256": monde.get("sha256"), "plan": dict(plan), "decisions": dict(decisions),
++              "heritage_depart": {"sha256": heritage_depart.get("bilan_sha256"), "archive": sorted(heritage_depart["archive"])},
++              "cartes": [], "plantees": [], "archives_de_jugement": {}, "retenues": {}, "membres_attendus": {}, "etages": [],
++              "lecture_selection": None, "moteur_etage": moteur}
++    recherche = {"contextes_cherches": 0, "touches": []}
++    try:
++        d1 = os.path.join(sortie, "generation-1")
++        os.makedirs(d1)
++        sha1, ligne1 = jouer_generation(d1, 1, monde, jeu, heritage_depart, racine, fabrique_executeur, proposeurs, adaptateur_etage,
++                                        roles, decisions, plan, compteur, journal, releve, recherche, (), moteur, environnement,
++                                        permis_en_plus, archive_des_plantees)
++        releve["generations_jouees"].append(1)
++        with open(os.path.join(d1, bf.DOSSIER_ETAGE, T.NOM_SELECTION), encoding="utf-8") as f:  # telle qu'écrite par la génération 1
++            retenues_ecrites = json.load(f)["retenues"]
++        try:
++            h2 = lire(d1, sha1)
++        except (bf.HeritageRefuse, bf.SelectionNonVerifiee) as e:
++            raise ArretTour(f"héritage de la génération 1 refusé ({type(e).__name__}) : {e}") from e
++        vue = bf.vue_pour_proposeur(h2)
++        copies = copies_de_la_selection(h2, {i: ligne1["log_e"].get(i) for i in h2["retenues"]})
++        exiger_copies_de_la_selection(copies, h2)
++        releve["lecture_selection"] = {"attendu": sha1, "lu": h2["bilan_sha256"], "empreintes_lues": h2["empreintes_lues"],
++                                       "vue": sorted(x["identifiant"] for x in vue["lois_retenues"]),
++                                       "vue_attendue": sorted(set(heritage_depart["archive"]) | set(retenues_ecrites)),
++                                       "retenues_ecrites_g1": sorted(retenues_ecrites), "retenues_lues": sorted(h2["retenues"]),
++                                       "copies": [{"nom": n, "source": s} for n, s, _ in copies]}
++        journal.append({"evenement": "heritage-lu", "generation": 2, "bilan_sha256": h2["bilan_sha256"], "archive": sorted(h2["archive"])})
++        d2 = os.path.join(sortie, "generation-2")
++        os.makedirs(d2)
++        sha2, _ = jouer_generation(d2, 2, monde, jeu, h2, racine, fabrique_executeur, proposeurs, adaptateur_etage, roles,
++                                   decisions, plan, compteur, journal, releve, recherche, copies, moteur, environnement,
++                                   permis_en_plus, archive_des_plantees)
++        releve["generations_jouees"].append(2)
++        fin = lire(d2, sha2)  # la sélection de la génération 2 est scellée et relue ; aucune génération 3
++        releve["selection_finale"] = {"bilan_sha256": sha2, "retenues": sorted(fin["retenues"])}
++        releve["complet"] = True
++    except Exception as e:  # noqa: BLE001 — toute exception après le premier appel est un arrêt scellé, motif et type dits
++        releve["arret"] = f"{type(e).__name__} : {str(e)[:500]}"
++        journal.append({"evenement": "arret", "motif": releve["arret"], "depense": compteur.etat()})
++    releve["recherche_loi_plantee"] = {"contextes_cherches": recherche["contextes_cherches"], "touches": recherche["touches"],
++                                       "formes": ["exacte", "deux décimales"]}
++    releve["depense"] = compteur.etat()
++    if releve["arret"]:
++        raise ArretTour(releve["arret"], {"releve": releve, "journal": journal})
++    return releve, journal
++
++
++__all__ = ("VERSION", "VERSION_JEU", "NOM_HERITAGE_DEPART", "BRAS", "GENERATIONS", "M_FIXE", "VRAIES", "FAUSSES", "INSTRUMENTS",
++           "DEBUT_JEU", "FIN_JEU", "TourRefuse", "JeuPlanteRefuse", "HeritageDepartRefuse", "BrasRefuse", "GoAbsent", "ArretTour",
++           "PlanteeSansArchive", "CopieNonRetenue", "bloc_du_jeu", "empreinte_du_bloc", "classe_couverte", "verifier_jeu_plante",
++           "lire_jeu_plante", "texte_du_bloc", "jeu_du_dessin", "ecrire_heritage_depart", "lire_heritage_depart", "exiger_bras",
++           "exiger_go", "exiger_part_avant_appel", "membres_attendus", "juger_v65", "plantees_de_la_generation",
++           "copies_de_la_selection", "exiger_copies_de_la_selection", "jouer_generation", "jouer_boucle")
+diff --git a/orchestrator/pole/lecture_boucle_reelle_v65.py b/orchestrator/pole/lecture_boucle_reelle_v65.py
+new file mode 100644
+index 0000000..74a1f56
+--- /dev/null
++++ b/orchestrator/pole/lecture_boucle_reelle_v65.py
+@@ -0,0 +1,260 @@
++"""Lecture gelée de la plus petite course réelle de la boucle complète, version 65 (fichier neuf, R12 ; pièce M5).
++
++Applique au relevé scellé de `pole/boucle_reelle_v65.py` les critères gelés C1 à C6 et les audits A1 à A4 du brouillon 1
++(`preenregistrement-boucle-reelle-organisme-v1-brouillon1.md`, sections 8 et 9), **dans l'ordre du texte** : C5, C4, C2, C3,
++C6, C1 ; la première ligne qui s'applique donne l'issue. Un arrêt ne masque jamais une brèche : sous C5, une fausse ou une copie
++promue, ou une lecture de sélection en écart, s'écrit aussi (C2 ou C4 « partielle »). Les audits s'écrivent avant toute phrase
++de résultat. Aucune moyenne ni médiane sur des jetons (aucun jeton n'est lu ici). Le code de sortie d'une course ne décide rien ;
++ceci décide.
++
++L'oracle du monde planté n'est lu qu'ici, après la course (dans l'esprit de N-050) : `mesures_oracle` classe les cartes réelles
++(vraie découverte, fausse découverte, fausse promotion du juge, `oracle_tour_ferme_v60.classer`, seuil g₀ = 0,02 nat, gain
++au-delà de l'archive de jugement de la carte) — mesure P7, sans issue ; une fausse découverte d'une carte réelle s'écrit en tête
++et déclenche l'audit A2 sur sa forme. `rejouer_a2` rejoue une loi promue sur des tirages neufs (audit A2).
++"""
++
++VERSION = "lecture-boucle-reelle-v65"
++VERSION_DU_COEUR = "boucle-reelle-v65"
++VRAIES = ("V1", "V2", "V3", "V4")
++FAUSSES = ("F1", "F2", "F3", "F4")
++N_REJEU_A2 = 200  # « rejouer la loi promue 200 fois sur des tirages neufs » (brouillon, section 9)
++MARGE_LOG_W = 1e-6  # « log W maximaux ≤ 0 aux marges près » (audit A1)
++ISSUES = {"C5": "non jugeable (arrêt)", "C4": "boucle non fermée", "C2": "brèche dans la classe couverte", "C3": "sans dents",
++          "C6": "instrument en défaut", "C1": "la chaîne garde (classe couverte, ce monde, cette taille)"}
++
++
++class ReleveInvalide(ValueError):
++    """Relevé d'une autre version ou mal formé : aucune issue lue."""
++
++
++def _plantees(releve, generation=None, noms=None, copies=None):
++    out = []
++    for p in releve.get("plantees") or []:
++        if generation is not None and p.get("generation") != generation:
++            continue
++        if noms is not None and p.get("nom") not in noms:
++            continue
++        if copies is not None and (p.get("source") is not None) != copies:
++            continue
++        out.append(p)
++    return out
++
++
++def exiger_forme(releve):
++    if not isinstance(releve, dict) or releve.get("version") != VERSION_DU_COEUR:
++        raise ReleveInvalide(f"relevé d'une autre version ({(releve or {}).get('version') if isinstance(releve, dict) else releve!r}) : "
++                             f"la lecture v65 ne lit que les relevés du cœur {VERSION_DU_COEUR}")
++    for k in ("cartes", "plantees", "generations_jouees", "membres_attendus", "retenues", "etages"):
++        if k not in releve:
++            raise ReleveInvalide(f"relevé sans champ « {k} »")
++    for p in releve["plantees"]:
++        for k in ("generation", "nom", "promue", "gardien", "membres_d_archive", "membres_attendus", "verdict"):
++            if k not in p:
++                raise ReleveInvalide(f"loi plantée sans champ « {k} »")
++    return releve
++
++
++def p6_ecarts(releve):
++    """P6 et A4 : écarts de la lecture de la sélection (empreinte lue ≠ écrite ; vue ≠ {K1} ∪ retenues ; membres d'archive des
++    cartes et des lois plantées de la génération 2 ≠ ceux qu'impose l'archive lue ; copie d'une carte non retenue). Rend la
++    liste des écarts (vide si P6 tient) ; None si la génération 2 n'a pas commencé (rien à lire)."""
++    ls = releve.get("lecture_selection")
++    if ls is None:
++        return None
++    ecarts = []
++    if not ls.get("attendu") or ls.get("attendu") != ls.get("lu"):
++        ecarts.append(f"empreinte lue {str(ls.get('lu'))[:12]}… ≠ écrite {str(ls.get('attendu'))[:12]}…")
++    if sorted(ls.get("vue") or []) != sorted(ls.get("vue_attendue") or []) or not ls.get("vue_attendue"):
++        ecarts.append(f"vue {sorted(ls.get('vue') or [])} ≠ {{K1}} ∪ retenues {sorted(ls.get('vue_attendue') or [])}")
++    if sorted(ls.get("retenues_lues") or []) != sorted(ls.get("retenues_ecrites_g1") or []):
++        ecarts.append("retenues lues ≠ retenues écrites par la génération 1")
++    for c in ls.get("copies") or []:
++        if c.get("source") not in (ls.get("retenues_ecrites_g1") or []):
++            ecarts.append(f"copie {c.get('nom')} d'une carte non retenue ({c.get('source')})")
++    attendus = (releve.get("membres_attendus") or {}).get("2")
++    if 2 in (releve.get("generations_jouees") or []) or attendus is not None:
++        for c in releve.get("cartes") or []:
++            if c.get("generation") == 2 and c.get("gardien") == "passe" and c.get("membres_d_archive") != attendus:
++                ecarts.append(f"carte {c.get('identifiant')} de la génération 2 jugée avec {c.get('membres_d_archive')} membres "
++                              f"d'archive (attendus {attendus})")
++        for p in _plantees(releve, 2):
++            if p.get("gardien") == "passe" and p.get("membres_d_archive") != attendus:
++                ecarts.append(f"loi plantée {p['nom']} de la génération 2 jugée avec {p.get('membres_d_archive')} membres (attendus {attendus})")
++    return ecarts
++
++
++def lire_criteres(releve):
++    """Issue (C1 à C6) et constats, dans l'ordre gelé du texte. Rend un dictionnaire ; lève `ReleveInvalide` si le relevé n'est
++    pas du cœur v65."""
++    exiger_forme(releve)
++    partiel = bool(releve.get("arret")) or not releve.get("complet")
++    fausses_promues = [f"{p['nom']} (génération {p['generation']})" for p in _plantees(releve, noms=FAUSSES, copies=False) if p["promue"]]
++    copies_promues = [f"{p['nom']} ← {p.get('source')}" for p in _plantees(releve, 2, copies=True) if p["promue"]]
++    ecarts = p6_ecarts(releve)
++    p6_tenue = ecarts == [] if ecarts is not None else False
++    vraies_g1 = {p["nom"]: p for p in _plantees(releve, 1, noms=VRAIES)}
++    vraies_survivantes = sorted(n for n, p in vraies_g1.items() if p["promue"] and p.get("verdict") == "survit")
++    t_elim = next(iter(_plantees(releve, 1, noms=("T-ELIM",))), None)
++    t_mal = next(iter(_plantees(releve, 1, noms=("T-MAL",))), None)
++    p4 = bool(t_elim and t_elim["promue"] and t_elim.get("verdict") == "éliminée" and t_mal and t_mal["gardien"] == "refuse"
++              and not t_mal["promue"])
++    p1 = bool(vraies_survivantes) and not fausses_promues and not copies_promues
++    constats = {"partiel": partiel, "arret": releve.get("arret"), "fausses_promues": fausses_promues,
++                "copies_promues": copies_promues, "ecarts_p6": ecarts, "p6_tenue": p6_tenue,
++                "vraies_promues_survivantes_g1": vraies_survivantes, "p1": p1, "p4": p4,
++                "t_elim": None if t_elim is None else {"promue": t_elim["promue"], "verdict": t_elim.get("verdict")},
++                "t_mal": None if t_mal is None else {"gardien": t_mal["gardien"], "promue": t_mal["promue"]},
++                "p2_v1_v2": all(n in vraies_survivantes for n in ("V1", "V2")),
++                "p3_mesure": {n: {"promue": p["promue"], "verdict": p.get("verdict")} for n, p in sorted(vraies_g1.items()) if n in ("V3", "V4")},
++                "p5_copies_refusees": None if not _plantees(releve, 2, copies=True) else not copies_promues}
++    aussi = []
++    if partiel:
++        code = "C5"
++        if ecarts or copies_promues:
++            aussi.append("C4 (partielle)")
++        if fausses_promues:
++            aussi.append("C2 (partielle)")
++    elif ecarts or copies_promues:
++        code = "C4"
++    elif fausses_promues:
++        code = "C2"
++    elif not vraies_survivantes:
++        code = "C3"
++    elif not p4:
++        code = "C6"
++    elif p1 and p4 and p6_tenue:
++        code = "C1"
++    else:  # aucun chemin du texte n'y mène : défaut de la lecture, jamais une issue
++        raise ReleveInvalide(f"aucune ligne des critères ne s'applique (p1={p1}, p4={p4}, p6={p6_tenue}) : relevé incohérent")
++    return {"code": code, "issue": ISSUES[code], "aussi": aussi, "constats": constats}
++
++
++def audits(releve, lecture):
++    """Audits A1 à A4 (section 9), écrits avant toute phrase de résultat ; chacun déclenché selon l'issue ou le constat, le même
++    quelle que soit l'issue. Rend {A1: …, A2: …, A3: …, A4: …} (None si non déclenché)."""
++    c = lecture["constats"]
++    out = {"A1": None, "A2": None, "A3": None, "A4": None}
++    if lecture["code"] == "C1":  # « trop beau », d'office
++        attendus = releve.get("membres_attendus") or {}
++        vs = [p for p in _plantees(releve, 1, noms=VRAIES) if p["promue"] and p.get("verdict") == "survit"]
++        etages = releve.get("etages") or []
++        vue_sans_plantee = True
++        ls = releve.get("lecture_selection") or {}
++        noms_plantes = set(VRAIES) | set(FAUSSES) | {"T-ELIM", "T-MAL"}
++        noms_plantes |= {p.get("identifiant") for p in releve.get("plantees") or []} | {p.get("identifiant_servi") for p in releve.get("plantees") or []}
++        if set(ls.get("vue") or []) & noms_plantes:
++            vue_sans_plantee = False
++        fausses = _plantees(releve, noms=FAUSSES)
++        out["A1"] = {"declenche": "d'office (issue C1)",
++                     "vraies_survivantes_membres_justes": all(p.get("membres_d_archive") == attendus.get(str(p["generation"])) for p in vs),
++                     "bac_reel_partout": bool(etages) and all(not e.get("factice") for e in etages),
++                     "contre_calcul_egal": all(p.get("contre_calcul_ok") is not False for p in releve.get("plantees") or [])
++                     and all(x.get("contre_calcul_ok") is not False for x in releve.get("cartes") or []),
++                     "fausses_log_w_max_au_plus_0": all((p.get("log_richesse_max") is None) or p["log_richesse_max"] <= MARGE_LOG_W
++                                                        for p in fausses),
++                     "plus_grand_log_w_max_des_fausses": max((p["log_richesse_max"] for p in fausses if p.get("log_richesse_max") is not None),
++                                                             default=None),
++                     "vue_g2_sans_loi_plantee": vue_sans_plantee,
++                     "a_verifier_sur_fichiers_bruts": ["fichier témoin et journal de bwrap de chaque gains.csv",
++                                                       "registre du relais apparié appel par appel (expérimentateur appelé)"]}
++    fp = [p for p in _plantees(releve, noms=FAUSSES, copies=False) if p["promue"]]
++    if fp:
++        out["A2"] = {"declenche": "fausse promue", "lois": [
++            {"nom": p["nom"], "generation": p["generation"], "membres_d_archive": p.get("membres_d_archive"),
++             "membres_attendus": p.get("membres_attendus"),
++             "diagnostic": "jugée sans archive : défaut de chaîne" if not p.get("membres_d_archive")
++             else ("membres d'archive en écart : défaut de chaîne" if p.get("membres_d_archive") != p.get("membres_attendus")
++                   else "membre du nul promu : défaut numérique"),
++             "a_rejouer": "200 fois sur des tirages neufs (rejouer_a2)"} for p in fp]}
++    if lecture["code"] == "C3":
++        out["A3"] = {"declenche": "sans dents", "vraies": {
++            p["nom"]: ("non promue" if not p["promue"] else ("non concluante" if p.get("verdict") == "non concluant"
++                       else ("promue non survivante" if p.get("verdict") != "survit" else "survivante")))
++            for p in _plantees(releve, 1, noms=VRAIES)},
++            "a_relire": "traces de l'expérimentateur (tours, fin des tours, « rien envoyé ») ; jugement rejoué hors ligne à la même graine"}
++    if c["copies_promues"] or c["ecarts_p6"]:
++        ls = releve.get("lecture_selection") or {}
++        attendus = (releve.get("membres_attendus") or {}).get("2")
++        out["A4"] = {"declenche": "copie promue ou lecture de sélection en écart", "copies": [
++            {"nom": p["nom"], "source": p.get("source"), "promue": p["promue"], "membres_d_archive": p.get("membres_d_archive"),
++             "membres_imposes_par_la_selection_lue": attendus, "source_retenue": p.get("source") in (ls.get("retenues_ecrites_g1") or [])}
++            for p in _plantees(releve, 2, copies=True)], "ecarts_p6": c["ecarts_p6"]}
++    return out
++
++
++def mesures_oracle(releve, monde, oracle=None):
++    """P7 (mesure sans issue) : par carte réelle promue, classe de l'oracle v60 contre l'archive de jugement de sa génération ;
++    par fournisseur, proposées, refusées au gardien, promues, testées, survivantes, retenues, vraies et fausses découvertes. Une
++    fausse découverte d'une carte réelle est rendue en tête (`fausses_decouvertes_reelles`)."""
++    from .oracle_tour_ferme_v60 import Oracle, classer
++    o = oracle or Oracle(monde["loi"], int(releve["racine"]), 2)
++    par_f, fd = {}, []
++    for c in releve.get("cartes") or []:
++        f = par_f.setdefault(c.get("proposeur") or "?", {"proposees": 0, "refusees_au_gardien": 0, "promues": 0, "testees": 0,
++                                                         "survivantes": 0, "retenues": 0, "vraies_decouvertes": 0,
++                                                         "fausses_decouvertes": 0, "fausses_promotions_du_juge": 0})
++        f["proposees"] += 1
++        if c.get("gardien") != "passe":
++            f["refusees_au_gardien"] += 1
++            continue
++        f["promues"] += bool(c.get("promue"))
++        f["testees"] += c.get("verdict") is not None
++        f["survivantes"] += c.get("verdict") == "survit"
++        f["retenues"] += bool(c.get("retenue"))
++        if not c.get("promue"):
++            continue
++        archive = (releve.get("archives_de_jugement") or {}).get(str(c["generation"])) or {}
++        g = o.gain(c["loi"])
++        k = classer(promue=True, survit=c.get("verdict") == "survit", gain_nat=g, delta_gain_nat=g - o.gain_archive(archive),
++                    divergence_nat=o.divergence(c["loi"]), bras="reel")
++        f["vraies_decouvertes"] += k["vraie_decouverte"]
++        f["fausses_decouvertes"] += k["fausse_decouverte"]
++        f["fausses_promotions_du_juge"] += k["fausse_promotion_du_juge"]
++        if k["fausse_decouverte"]:
++            fd.append({"identifiant": c.get("identifiant"), "generation": c["generation"], "proposeur": c.get("proposeur"),
++                       "forme": forme_de_la_loi(c["loi"]), "audit": "A2 sur sa forme"})
++    return {"par_fournisseur": par_f, "fausses_decouvertes_reelles": fd}
++
++
++def forme_de_la_loi(loi):
++    """Forme d'une loi pour l'audit A2 : « par morceaux », « produit ou composition », « mélange », « softmax », « autre »."""
++    t = (loi or {}).get("type")
++    if t in ("si_sinon", "par_sous_population"):
++        return "par morceaux"
++    if t == "transformee":
++        return "composition d'étapes" if len(set(loi) - {"type", "base"}) > 1 or "oscillation" in loi else "déformation d'une loi"
++    if t in ("melange", "softmax", "fixe"):
++        return {"melange": "mélange", "softmax": "softmax", "fixe": "fixe"}[t]
++    return "autre"
++
++
++def rejouer_a2(loi, monde, archive, racine, n=200):
++    """Audit A2 : rejoue `loi` `n` fois sous le nul v8 avec `archive`, sur des tâches neuves ; rend {promues, n, membres}."""
++    from . import a_blanc_v59 as A
++    promues, membres = 0, set()
++    for r in range(n):
++        ev, d = A.juger_carte(loi, monde, archive, racine, f"{VERSION}|audit-a2|rejeu={r}")
++        promues += bool(ev["promue"])
++        membres.add(d["membres_d_archive"])
++    return {"promues": promues, "n": n, "membres_d_archive": sorted(membres)}
++
++
++def lire_boucle(releve, monde=None):
++    """La lecture entière : critères, puis audits (écrits avant la phrase de résultat), puis mesures de l'oracle si `monde`."""
++    lecture = lire_criteres(releve)
++    sortie = {"version": VERSION, "audits": audits(releve, lecture), "issue": lecture["issue"], "code": lecture["code"],
++              "aussi": lecture["aussi"], "constats": lecture["constats"]}
++    if monde is not None and releve.get("cartes"):
++        sortie["oracle"] = mesures_oracle(releve, monde)
++    if monde is not None and sortie["audits"]["A2"]:  # A2 : chaque fausse promue rejouée 200 fois avec l'archive de sa génération
++        for x in sortie["audits"]["A2"]["lois"]:
++            p = next(q for q in releve["plantees"] if q["nom"] == x["nom"] and q["generation"] == x["generation"] and q["promue"])
++            archive = (releve.get("archives_de_jugement") or {}).get(str(x["generation"])) or {}
++            x["rejeu"] = rejouer_a2(p["loi"], monde, archive, int(releve["racine"]), n=N_REJEU_A2)
++    sortie["phrase"] = (f"Issue {lecture['code']} : « {lecture['issue']} »" + (f" ; aussi : {', '.join(lecture['aussi'])}" if lecture["aussi"] else "")
++                        + " (classe couverte du nul v8, monde jouet S-V1, une génération et demie ; rien sur la classe non couverte).")
++    return sortie
++
++
++__all__ = ("VERSION", "ISSUES", "ReleveInvalide", "lire_criteres", "audits", "mesures_oracle", "rejouer_a2", "lire_boucle",
++           "p6_ecarts", "forme_de_la_loi")
+-- 
+2.43.0
+
