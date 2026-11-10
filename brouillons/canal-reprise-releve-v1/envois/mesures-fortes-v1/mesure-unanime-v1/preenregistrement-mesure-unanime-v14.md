@@ -1,6 +1,22 @@
-# Préenregistrement — mesure unanime du tour « mesures fortes » : fausses alertes par épisode honnête entier de l'agrégateur séquentiel, sans puis avec corrélation injectée (v13, après douze contre-lectures)
+# Préenregistrement — mesure unanime du tour « mesures fortes » : fausses alertes par épisode honnête entier de l'agrégateur séquentiel, sans puis avec corrélation injectée (v14, après treize contre-lectures)
 
-- Auteur : lignée conv-audit, instance du 28 octobre 2026 (servie par **Opus 4.6** pour cette v13 ; **Opus 4.8** pour la v12 et la v11 ; v10 par Opus 5.5, v2 à v9
+- **Version 14** — auteur : session-dépôt `session_01QPDgKgcLdggoVJfGC5cBw8` (servie par **Opus 5.5**), après le relevé
+  `date -u` de 09:08:51 UTC le 10 novembre 2026. **Remplace la v13** (`f52de3456e95872cb100cc6b866f7ad1912cdc52d664a48b4da2eccd3070c578`,
+  jamais scellée, gardée telle quelle, R12). Raison : l'exécutante de la lignée conv-audit s'est arrêtée à la relève du
+  28 octobre (changement de compte) sans achever la v14 ; le dossier est versé tel quel depuis `canal/conv-audit-n04`
+  (`4d1fa5c0`) sur `claude/upbeat-cray-dmauvv` (commit `a46d0077`, 270 compagnons vérifiés conformes) ; décision de Lazar du
+  10 novembre (« a ») : la session-dépôt achève et lance la mesure (`registres/passations/2026-11-10-0846-decision-lazar-mesure-unanime-ici.md`,
+  `609e48f6…`). **La v14 ne touche que la plomberie et le texte qui la décrit** : correction de CV13-1 à CV13-4 (traitement
+  en fin de document) ; noms et empreintes de la séquence, de la garde témoin et des deux tests v14, versés tels quels avec
+  leurs compagnons depuis le commit `4d1fa5c0` de la lignée conv-audit ; noms des six fichiers de sortie v14 dans les
+  commandes du Plan d'analyse. Les sections Hypothèse, Prédiction chiffrée et signe attendu, Métrique, Seuil, Critères de
+  lecture gelés et Liste d'arrêt sont **identiques au bit près** à la v13 ; le Plan d'analyse ne change que par ces noms de
+  fichiers (v13 → v14). **Environnement d'exécution reconstruit** le 10 novembre, sans modifier la plomberie scellée :
+  `/opt/venv-essaim-sim-v1` recréé (Python 3.13.18, numpy 2.5.4 — la version des répétitions d'octobre —, bash 5.2.21,
+  Linux x86_64) ; lien symbolique `/home/claude/canal-conv-audit-n04` → `/home/user/controle-ia-travail`, pour que les
+  chemins absolus codés en dur (interpréteur, `PYTHONPATH`, données) se résolvent ; `controle_ia.prereg` et
+  `controle_ia.scellement` sont ceux du `src/` de la branche `claude/upbeat-cray-dmauvv`.
+- Auteur de la v13 (pour mémoire) : lignée conv-audit, instance du 28 octobre 2026 (servie par **Opus 4.6** pour cette v13 ; **Opus 4.8** pour la v12 et la v11 ; v10 par Opus 5.5, v2 à v9
   par Fable 5.1), après le relevé `date -u` de 08:06:40 UTC le 28 octobre. **Remplace la v12** (`89d278e8e7ca02d1a8b4942b25c466287e70bce2a5c4aa190524355a82f56186`, gardée, R12). Pour mémoire, la v12 remplaçait la v11 (`b1c1dd69413c824551500cb46310c15c4a809f5b05559b45e407a34d2157791c`, gardée, R12), la v11 la v10 (`785a33fae9d835ee7529a44d76629dec7ce7bfd0544a5f7dc4b2a46646d1c3c2`, gardée, R12), et la v10 la v9 (`9206956b25ecd64c4bfb0eecd484eaa5605a4680940a34070caf9aaf49bd35e7`, gardée, R12 ; v8 `92c208af…`, v7 `54bb2892…`, v6 `24b5785b…`,
   v5 `29f91ff3…`, v4 `57187171…`, v3 `3a52f304…`, v2 `e6369f43…`, v1 `7158affc…` aussi) selon les contre-lectures précédentes, toutes
   acceptées (traitement en fin de document) : la v9 par un **huitième** sous-agent neuf Opus 5.5
@@ -28,9 +44,10 @@
   `e5ca74bb11faece8ca72f932d6b78f3bac8f36fd6f11a515e8e3afb53bd4f7dc`, (a) à (e)) ; la v3 entière par un **autre**
   sous-agent neuf Opus 5.5 (`contre-lecture-v3/rapport-contre-lecture-mesure-unanime-v3.md`,
   `0fb0734a59514af24162b86ec3413ca87c657120f5658c584ea4b27cb8a5214c`, CV3-1 à CV3-9, « à corriger en v4 »).
-- Date (UTC) : 2026-10-28, 08:07.
-- Code d'analyse : `analyse_fausses_alertes_v8.py`, **inchangé depuis la v8** (commit `32de42f2`) ; les v9 à v13 ne touchent
-  que la lecture, la rédaction et la séquence, **dans le commit qui porte ce texte** (branche `canal/conv-audit-n04`). Empreinte
+- Date de la v13 (UTC) : 2026-10-28, 08:07. Date de la v14 (UTC) : 2026-11-10, 09:08.
+- Code d'analyse : `analyse_fausses_alertes_v8.py`, **inchangé depuis la v8** (commit `32de42f2`) ; les v9 à v14 ne touchent
+  que la lecture, la rédaction et la séquence, **dans le commit qui porte ce texte** (branche `canal/conv-audit-n04` jusqu'à
+  la v13 ; `claude/upbeat-cray-dmauvv` pour la v14). Empreinte
   `52b1760a09970526a926f2119dceeef7f20e2f280bdb6a6c2d890962556c5400` ; testé sur données synthétiques seulement
   (`sortie-synthetique-essai-v8.json`, `f83456bee333d2806dc2ed953fb94e96b936f8a69ed5a1f2955b1adb7041fe62`, **5 tirages, 300 rééchantillonnages
   et sans commit**, le nombre de rééchantillonnages au manifeste : un essai du code, pas une sortie) et par `--test-gardes`
@@ -44,23 +61,24 @@
   feuilles, six audits qui suspendent (M2 bis réfutée compris, CV8-3), la réserve des bras à zéro et celle de (2a) avec D′ > 0
   (CV8-4), les bornes exactes, six refus du manifeste dont les trois propres au mode réel, CV8-6) ; elle vérifie le manifeste de la sortie (script v8, empreinte des données, **empreinte du script**, E égal à
   celui de la table, tirages 20, rééchantillonnages 2 000, commit présent — CV7-5), arrondit à 10⁻⁹ avant toute comparaison
-  à une borne (CV6-4), et **tout audit suspend la lecture** (CV6-1, CV7-2). **Séquence** : `commandes-lecture-reelle-v13.sh`
-  (`edc08b3fc1b8b7d786c2197e5b518a214f69956615143746ba07b11b09c7dbd8`, avec les gardes isolées `garde-trace-reelle-v12.sh` (`3b6fc4d83606ab0443555ab0655880ad43af9d952f34ad7b302ca26ef847b85d`) et `garde-lecture-seule-v12.sh` (`f58374077f0146f2136bdfb75ddbbaf64c515fb7fdf1800899728bad9abf734b`) et leurs tests déposés `test-garde-trace-v12.sh` (`8d730ddef86ce764cf842270e33ccf081d37e86908938548e2c998695ab46b45`) et `test-lecture-seule-v13.sh` (`ac080806c9c824142014910507bc9cb8b14ff77619f788ed85d43a4dd3f1c9ce`)) : commandes (1) à (4), la rédaction `rediger_note_lecture_v7.py` (`a9af81c40864b77ecbcef8f3930ddb0061fbd2ae102c836ddeee084fc4b49ab8`, **`--instance` et `--date` obligatoires**,
+  à une borne (CV6-4), et **tout audit suspend la lecture** (CV6-1, CV7-2). **Séquence** : `commandes-lecture-reelle-v14.sh`
+  (`d7c035c70160b9f4a3b7ed345d799d826f7c93fedf57c6643abc05a2dc57ff74`, avec les gardes isolées `garde-trace-reelle-v14.sh` (`a0cf2c534d481d125c3930505ab79f51d5079fa890e8c2cc50ccfdd59739063e` ; **paramétrée** : la séquence lui passe en arguments les trois noms des traces, elle n'en contient aucun, CV13-1) et `garde-lecture-seule-v12.sh` (`f58374077f0146f2136bdfb75ddbbaf64c515fb7fdf1800899728bad9abf734b`) et leurs tests déposés `test-garde-trace-v14.sh` (`45f34ada6e227823101c51b4bbea848f5d009cf15149a958651c0e633cfab4df`) et `test-lecture-seule-v14.sh` (`93835c54c17d97f06a1f03b53d867f4b68794a9769a312a24f84f6ee9d31a541`)) : commandes (1) à (4), la rédaction `rediger_note_lecture_v7.py` (`a9af81c40864b77ecbcef8f3930ddb0061fbd2ae102c836ddeee084fc4b49ab8`, **`--instance` et `--date` obligatoires**,
   mois complets, CV10-3, CV11-3) comprise, sa note **scellée** ; **lancement (CV9-1)** : par l'outil d'exécution de l'agent **en
   arrière-plan** avec un délai de **deux heures** (7 200 000 ms), jamais par `nohup … &`, jamais au premier plan borné à dix
   minutes ; la variable `MESURE_INSTANCE` (lignée et modèle qui lancent) est **obligatoire** en mode réel. **Durée dite**
   (CV8-1) : l'étape (2) prend environ 40 minutes de processeur avec 430 sondes, plus environ 10 minutes pour la table si
-  E ≠ 60. **Une seule exécution réelle (CV10-1)** : l'étape 0 pose un **témoin** `execution-reelle-v13.commencee` (`noclobber`,
-  jamais effacé) et refuse toute sortie réelle **nommée explicitement** (`sortie-reelle-v13.json` et son `.partiel`) — plus
-  jamais un préfixe que la répétition partage ; la répétition écrit dans le **sous-dossier** `repetition-v13/`, hors de portée
+  E ≠ 60. **Une seule exécution réelle (CV10-1)** : l'étape 0 pose un **témoin** `execution-reelle-v14.commencee` (`noclobber`,
+  jamais effacé) et refuse toute sortie réelle **nommée explicitement** (`sortie-reelle-v14.json` et son `.partiel`, noms passés
+  en arguments à la garde, CV13-1) — plus
+  jamais un préfixe que la répétition partage ; la répétition écrit dans le **sous-dossier** `repetition-v14/`, hors de portée
   de la garde, mais **passe par la même étape 0** (fonction `etape_0`), pour que les gardes soient exercées par leurs tests déposés (R5, CV11-3) ; la sortie réelle
   est écrite dans un fichier temporaire renommé à la fin ; un `.partiel` ne s'ouvre jamais. **Interrompue** avant la sortie
   finale scellée → **version nouvelle du préenregistrement** (R12) ; interrompue **après** l'étape (2) → reprise par
   `LECTURE_SEULE COMMIT`, qui rejoue les seules étapes (3) et (4), déterministes, sans lire aucune donnée, **ne réécrit aucun fichier scellé** (`sceller`
   refuse d'écraser), **vérifie la lecture déjà scellée avant d'en tirer la note** (CV11-1), **refuse par la garde isolée `garde-lecture-seule-v12.sh`** (sortie 7, jamais de mort silencieuse sous `set -e` : c'était le défaut CV11-1 de la v11) si la note est déjà scellée (CV10-2), vérifie le compagnon de la table en vigueur et compare le
-  commit au manifeste (sortie 8). Un **test déposé** `test-lecture-seule-v13.sh` exerce ce mode sur une copie isolée et une sortie artefact scellée — garde isolée (0 et 7), mode complet (commit faux → 8, cas sain → 0 note refaite, second appel → 7, note supprimée lecture scellée → 0, lecture corrompue → ≠ 0, sortie absente → 6) — et **la répétition le lance** (R5). **Répétition générale faite** (CV7-1) sur `synthetique-format-reel-repetition.npz` (`447dc136…`, 3 sondes
-  réelles, 2 placebo, E = 60 ; **le fichier déposé lui-même**, de même empreinte et hors de `donnees/`, est le chemin lu, CV11-2(f)), sous `repetition-v13/`, déposée et scellée **dans le commit qui porte ce texte** — la séquence va
-  jusqu'à la note (qui dit « RÉPÉTITION GÉNÉRALE … aucune donnée réelle ») ; les gardes « témoin » et « reprise » sont exercées par leurs tests déposés sur un **état planté qui reproduit l'état déposé** (R5, CV11-2(g)). Table gelée de M2 bis et M4 : `table_m2bis_m4_v8.py` (`7e512516b233d58be00703f8c8eada1ce53551188d79bd0d5b117c9c7e75e0d3`) → `table-m2bis-m4-v8.json`
+  commit au manifeste (sortie 8). Un **test déposé** `test-lecture-seule-v14.sh` exerce ce mode sur une copie isolée et une sortie artefact scellée — garde isolée (0 et 7), mode complet (commit faux → 8, cas sain → 0 note refaite, second appel → 7, note supprimée lecture scellée → 0, lecture corrompue → ≠ 0, sortie absente → 6) — et **la répétition le lance** (R5). **Répétition générale faite** (CV7-1) sur `synthetique-format-reel-repetition.npz` (`447dc136…`, 3 sondes
+  réelles, 2 placebo, E = 60 ; **le fichier déposé lui-même**, de même empreinte et hors de `donnees/`, est le chemin lu, CV11-2(f)), sous `repetition-v14/` (la répétition de la v13, sous `repetition-v13/`, reste déposée telle quelle), déposée et scellée **dans le commit qui porte ce texte** ; en mode `REPETITION`, la séquence refuse un chemin de données sous `donnees/` **et** toute empreinte annoncée égale à celle des données réelles, quel que soit le chemin (CV13-3) — la séquence va
+  jusqu'à la note (qui dit « RÉPÉTITION GÉNÉRALE … aucune donnée réelle ») ; les gardes « témoin » et « reprise » sont exercées par leurs tests déposés sur un **état planté qui reproduit l'état déposé** (R5, CV11-2(g) ; le test de la garde témoin plante les noms v14 et vérifie qu'ils figurent dans la séquence, CV13-1). Table gelée de M2 bis et M4 : `table_m2bis_m4_v8.py` (`7e512516b233d58be00703f8c8eada1ce53551188d79bd0d5b117c9c7e75e0d3`) → `table-m2bis-m4-v8.json`
   (`f63faada54a7b2432315c6766be988ea3bcd0049cff35199ca8234da5c98b120` ; compagnons `.sha256` à côté, CV4-5 ; **même quantité de M4 et même excès apparié que le
   script** : par sonde, moyenne des taux des cinq statistiques de somme, médiane sur les sondes ; excès = **médiane sur les
   sondes de la différence par sonde** entre cette quantité et la même à τ = 0, CV5-2), code v8 lui-même, mondes synthétiques à r₀ connu, E = 60, longueurs valides uniformes de 5 à 10 ; **si le
@@ -71,7 +89,10 @@
 - Documents qui font foi (chemin + empreinte) : synthèse du tour « mesures fortes »
   `docs/notes/collisionneur-mesures-fortes-v1/synthese-mesures-fortes-v1.md` (`bed9107b67c969e0e9a97336000a569faf2c519dd556731ace14f29de404885e`,
   sur `main`) ; données : `donnees/20261019-230011-p3-reel/scores-p3.npz`
-  (`968414fc7ce7db935c2c4a390a13e2eceebe2fd722628cccb52caf27128004cf`, compagnon conforme ; **comparée par le script**) ;
+  (`968414fc7ce7db935c2c4a390a13e2eceebe2fd722628cccb52caf27128004cf`, compagnon conforme ; **comparée par le script** ; fichier suivi dans l'arbre de `main` — objet git
+  `86ec9eaf2aac32ad9b5b3e68eb8f12d4a1a8bc56`, entré avec le commit de consolidation `9b7721c7` du 9 novembre —, identique à
+  l'objet de `calcul/p3-reel-v1` (`eb572dac`) ; empreinte vérifiée le 10 novembre par `sha256sum` sur l'objet de cette branche ;
+  **jamais ouvert** par l'auteur de la v14 avant le scellement) ;
   code de référence `src/controle_ia/bases/sequentiel.py` (`35a0983404d7a10d0bb736fa37307a108501785a207c27346be1cd02bab11ba8` ;
   T0.8 ; sa docstring, lignes 7 et 8, est la **seule source** ici du
   chiffre « la règle de Ville atteint 0,21 à 0,35 de faux positifs sous effet épisode (T0.3, P8) » : cité comme tel, non
@@ -248,17 +269,17 @@ ligne de lecture est « audit R4 avant toute lecture » (CV6-1). Aucun test form
   interpréteur `/opt/venv-essaim-sim-v1/bin/python -I -B`, données par chemin absolu
   `/home/claude/canal-conv-audit-n04/donnees/20261019-230011-p3-reel/scores-p3.npz` : (1) `analyse_fausses_alertes_v8.py
   --reel <chemin absolu> --empreinte-attendue 968414fc7ce7db935c2c4a390a13e2eceebe2fd722628cccb52caf27128004cf
-  --effectifs-seulement > effectifs-reel-v13.json` (E, K par pli, L, longueurs valides : **aucun taux** ; l'empreinte est
-  obligatoire, le script refuse sinon) ; si E ≠ 60, `table_m2bis_m4_v8.py --E <E> --longueurs-json effectifs-reel-v13.json >
+  --effectifs-seulement > effectifs-reel-v14.json` (E, K par pli, L, longueurs valides : **aucun taux** ; l'empreinte est
+  obligatoire, le script refuse sinon) ; si E ≠ 60, `table_m2bis_m4_v8.py --E <E> --longueurs-json effectifs-reel-v14.json >
   table-m2bis-m4-v8-E<E>.json`, scellée ; (2) **une fois** : `analyse_fausses_alertes_v8.py --reel <chemin absolu>
   --empreinte-attendue 968414fc7ce7db935c2c4a390a13e2eceebe2fd722628cccb52caf27128004cf --sondes-reelles 30 --sondes-placebo
-  400 --commit <commit du scellement> > sortie-reelle-v13.json` (`--tirages` 20 et `--bootstrap` 2 000 : **fixes** en mode réel,
-  le script refuse toute autre valeur) ; sortie scellée ; (3) `lecture_mecanique_v8.py sortie-reelle-v13.json <table en
+  400 --commit <commit du scellement> > sortie-reelle-v14.json` (`--tirages` 20 et `--bootstrap` 2 000 : **fixes** en mode réel,
+  le script refuse toute autre valeur) ; sortie scellée ; (3) `lecture_mecanique_v8.py sortie-reelle-v14.json <table en
   vigueur> --empreinte-donnees 968414fc7ce7db935c2c4a390a13e2eceebe2fd722628cccb52caf27128004cf --empreinte-script <empreinte
-  du script v8> > lecture-mecanique-reelle-v13.json`, scellée ; (4) `rediger_note_lecture_v7.py` → `note-lecture-mecanique-v13.md`,
+  du script v8> > lecture-mecanique-reelle-v14.json`, scellée ; (4) `rediger_note_lecture_v7.py` → `note-lecture-mecanique-v14.md`,
   scellée, que la note de lecture `lecture-mesure-unanime-v1.md` reprend telle quelle (l'auteur n'y ajoute que des réserves,
-  sous le titre prévu) ; **le tout par `MESURE_INSTANCE='…' bash commandes-lecture-reelle-v13.sh <commit du scellement>`, lancé par l'outil
-  d'exécution en arrière-plan avec un délai de deux heures** (≈ 40 à 50 minutes ; journal `journal-lecture-reelle-v13.log`),
+  sous le titre prévu) ; **le tout par `MESURE_INSTANCE='…' bash commandes-lecture-reelle-v14.sh <commit du scellement>`, lancé par l'outil
+  d'exécution en arrière-plan avec un délai de deux heures** (≈ 40 à 50 minutes ; journal `journal-lecture-reelle-v14.log`),
   répété avec succès sur le fichier synthétique au format réel ;
   manifeste : empreinte du script, commit, empreinte des données, niveau L, K par pli, graines, rééchantillonnages.
 
@@ -435,3 +456,25 @@ B3-ter — note supprimée, lecture corrompue → refus, aucune note — ajouté
 (docstring : phrase coupée dans `rediger_note_lecture_v7.py` recollée, usage complet). La v13 est écrite sous **Opus 4.6** et
 contre-lue par un sous-agent neuf d'un **modèle différent** (R13) avant scellement ; si « à sceller tel quel », scellée sans
 autre modification ; sinon v14.
+**Contre-lecture de la v13** (sous-agent neuf **Fable 5.1** ; `contre-lecture-v13/rapport-contre-lecture-mesure-unanime-v13.md`,
+`71ce7eeaa7c7b71512c5cc4d797f685717a98f7c679cbb58ac29b96ce924117a`, « à corriger en v14 », un défaut de plomberie bloquant et
+trois constats non bloquants ; aucun faux « confirmé », aucun faux blocage ; sections de science identiques au bit près à la
+v12) : **CV13-1** accepté, **bloquant** (la garde témoin gardée sous son nom v12 testait des noms v12 et ne voyait aucune
+trace v13 : elle était morte dans la séquence v13 ; v14 : garde `garde-trace-reelle-v14.sh` **paramétrée**, les trois noms
+lui sont passés en arguments par la séquence, comme à la garde de reprise ; son test `test-garde-trace-v14.sh` plante les noms
+v14, dont l'état sain `repetition-v14/sortie-reelle-v14.json`, et vérifie que ces noms figurent dans la séquence ; séquence,
+test de reprise et texte réécrits ; répétition refaite) ; **CV13-2** accepté **en partie seulement** : les fichiers manquants
+des dossiers `contre-lecture-v11/` et `contre-lecture-v12/` étaient dans les bacs à sable de leurs contre-lecteurs, disparus
+avec leurs conteneurs ; ce n'est **plus réparable** ; les rapports cités gardent leurs empreintes, et les fichiers versés
+restent identiques à leurs sources (`sortie-versement-cv12-2-v1.txt`) ; **CV13-3** accepté (en mode `REPETITION`, refus de
+toute empreinte annoncée égale à celle des données réelles, en plus du refus par chemin : le trou du test de préfixe est
+fermé quel que soit le chemin) ; **CV13-4** accepté (renvoi de ligne périmé ôté du test de reprise v14 : « dans la branche
+`LECTURE_SEULE` »). La plomberie v14 (séquence, garde témoin, deux tests) a été écrite et scellée sur `canal/conv-audit-n04`
+(`4d1fa5c0`) avant l'arrêt de la lignée conv-audit ; elle est versée telle quelle, compagnons conformes ; seul ce texte est
+achevé par la session-dépôt. **Constat de l'auteur de la v14 sur la plomberie scellée, non corrigé (R12)** : dans
+`test-garde-trace-v14.sh`, la ligne 30 affiche « OK noms du test = noms de la séquence v14 » même quand l'une des deux
+vérifications de nom échoue (le code de sortie final, lui, reste juste), et la vérification du nom de la sortie se contente
+d'une occurrence n'importe où dans la séquence, commentaires compris ; sans effet sur la protection (le témoin `noclobber` et
+la garde paramétrée suffisent) ; à juger par la contre-lecture. La v14 est écrite sous **Opus 5.5** et contre-lue par un
+sous-agent neuf d'un **modèle différent** (R13) avant scellement ; si « à sceller tel quel », scellée sans autre
+modification ; sinon v15.
