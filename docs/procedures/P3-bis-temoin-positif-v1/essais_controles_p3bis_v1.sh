@@ -4,12 +4,13 @@
 # contre le script entier, sur un dépôt synthétique et un dépôt nu local (aucun appel externe ; le vrai registres/go.md
 # n'est jamais modifié ; aucun clone du dépôt de travail entier : place disque). Dépôt synthétique : src/ de HEAD (copie),
 # configuration de P3, tâches de P3 et leur sceau, garde de calcul de HEAD, registre des GO fabriqué (ligne
-# GO-2026-11-02-29 recopiée de HEAD), dépendances épinglées aux versions de l'interpréteur PY du banc, liste ciblée v2
+# GO-2026-11-10-02 recopiée de main), dépendances épinglées aux versions de l'interpréteur PY du banc, liste ciblée v2
 # d'un fichier d'essais trivial (deux essais), scripts de l'instance v2 factices (empreinte de la liste écrite, lanceur
 # run_v2, dépôt de travail par défaut), essai de fermeture v2 factice (CONFORME, ou NON CONFORME sous
 # FAUX_ESSAI_NON_CONFORME), chaîne versée (copies réelles), sortie versée de l'essai, longueurs attendues, rapport de la
 # contre-lecture 4 factice ; texte candidat = le brouillon 9 dont les onze marqueurs sont remplis de valeurs du banc ;
-# configuration = brouillon 1 dont l'empreinte des consignes est remplie ; consignes = brouillon 2. Commits : C0 (base,
+# écarts au brouillon 9 déclarés appliqués (ligne « GO » et `GO_ID` : GO-2026-11-10-02 ; « création au plus tard le
+# 23 novembre 2026 » : R-2077, message de la mère) ; configuration = brouillon 1 dont l'empreinte des consignes est remplie ; consignes = brouillon 2. Commits : C0 (base,
 # tient lieu du commit du code de P3), C1 (commit du code : un module neuf seulement), C2 (pièces hors de l'arbre gelé),
 # S (texte, configuration, consignes et sceaux).
 # Copie jouée : celle de ce dossier, dont changent (lignes comptées et déclarées) : les épingles A_EPINGLER (valeurs du
@@ -41,7 +42,7 @@ mkdir -p prereg donnees/t05-pilote-v1 registres .claude/hooks scripts tests "$V"
 cp "$SRC/prereg/P3-premier-test-config-v1.json" "$SRC/prereg/P3-premier-test-config-v1.json.sha256" prereg/
 cp "$SRC/donnees/t05-pilote-v1/taches-pilote-60-v1.json" "$SRC/donnees/t05-pilote-v1/taches-pilote-60-v1.json.sha256" donnees/t05-pilote-v1/
 git -C "$SRC" show HEAD:.claude/hooks/garde_calcul.py > .claude/hooks/garde_calcul.py
-{ git -C "$SRC" show HEAD:registres/go.md | sed -n '1,10p'; git -C "$SRC" show HEAD:registres/go.md | grep '^| GO-2026-11-02-29 |'; } > registres/go.md
+{ git -C "$SRC" show main:registres/go.md | sed -n '1,10p'; git -C "$SRC" show main:registres/go.md | grep '^| GO-2026-11-10-02 |'; } > registres/go.md
 VNP=$("$PYB" -c "import numpy, pytest; print(f'numpy=={numpy.__version__}\npytest=={pytest.__version__}')")
 printf '%s\n' "$VNP" > requirements-cpu.txt; echo "-r requirements-cpu.txt" > requirements-gpu.txt; echo "# aucune (banc)" > requirements-donnees.txt
 cat > tests/test_banc_trivial_p3bis.py <<'EOF'
@@ -130,6 +131,13 @@ r = {"<<COMMIT_CODE_P3BIS>>": c1,
      "<<CONTRE_LECTURE_4_P3BIS>>": f"rapport `{rap}` (`{er}`), texte relu `{'1' * 64}`"}
 for k, x in r.items():
     t = t.replace(k, x)
+# écarts au brouillon 9 déclarés (message de la mère, R-2077) : ligne de GO et date limite du brouillon 10
+import re
+for a_, b_ in (("- GO : **GO-2026-11-02-29**", "- GO : **GO-2026-11-10-02**"), ("`GO_ID=GO-2026-11-02-29`", "`GO_ID=GO-2026-11-10-02`")):
+    assert t.count(a_) == 1, a_
+    t = t.replace(a_, b_)
+t, k = re.subn(r"création au plus tard le(\s+)16 novembre 2026", r"création au plus tard le\g<1>23 novembre 2026", t)
+assert k == 1, k
 open(sys.argv[2], "w", encoding="utf-8").write(t)
 EOF
 for f in "$V/essai-fermeture-p3bis-banc-v1.txt" "$V/longueurs-attendues-p3bis-banc-v1.json" "$RAPPORT" brouillons/P3-bis-temoin-positif-v1/*-banc.*; do
@@ -216,8 +224,8 @@ jouer K07-problemes-non-vide 1 "4 problemes() non vide" "$(variante k07 : "sed -
 jouer K08-texte-autre-que-le-relu 1 "4 $P de S ≠ candidat relu" "$(variante k08 : "sed -i 's/^## Seuil\$/## Seuil /' $P")"
 jouer K09-config-autre-que-la-relue 1 "4 $CFG de S ≠ configuration relue" "$(variante k09 : "sed -i 's/\"lot\": 8/\"lot\": 8 /' $CFG")"
 jouer K10-taches-non-citees 1 "4 tâches non citées par leur empreinte" "$(variante k10 : "sed -i 's/287e83485cba550098b80db809589398d8f2826c02dfa9cc2719a1063795d5aa/287e83485cba550098b80db809589398d8f2826c02dfa9cc2719a1063795d5ab/' $P")"
-jouer K11-go-autre 1 "5 GO : GO-2026-11-08-13 : seul GO-2026-11-02-29" "$(variante k11 : "sed -i 's/^- GO : \*\*GO-2026-11-02-29\*\*/- GO : **GO-2026-11-08-13**/' $P")"
-jouer K12-go-revoque 1 "5 GO : GO-2026-11-02-29 révoqué" "$(variante k12 "echo '| GO-2026-11-10-99 | 2026-11-10 | révocation | GO-2026-11-02-29 | — | 2026-11-10 | Lazar | essai |' >> registres/go.md" :)"
+jouer K11-go-autre 1 "5 GO : GO-2026-11-08-13 : seul GO-2026-11-10-02" "$(variante k11 : "sed -i 's/^- GO : \*\*GO-2026-11-10-02\*\*/- GO : **GO-2026-11-08-13**/' $P")"
+jouer K12-go-revoque 1 "5 GO : GO-2026-11-10-02 (ou GO-2026-11-02-29, qu'il prolonge) révoqué" "$(variante k12 "echo '| GO-2026-11-10-99 | 2026-11-10 | révocation | GO-2026-11-10-02 | — | 2026-11-10 | Lazar | essai |' >> registres/go.md" :)"
 jouer K13-garde-de-calcul 1 "5 garde de calcul sur le registre de S" "$(variante k13 "echo '| GO-2026-11-09-98 | 2026-13-45 | calcul | dates illisibles | 1 USD | 2026-11-30 | Lazar | essai |' >> registres/go.md" :)"
 jouer K14-essai-verse-non-conforme 1 "6 essai de fermeture : sortie" "$(variante k14 "echo 'NON CONFORME — variante' >> $V/essai-fermeture-p3bis-banc-v1.txt; echo 'ESSAI DIFFÉRENTIEL DE FERMETURE : CONFORME' >> $V/essai-fermeture-p3bis-banc-v1.txt; (cd $V && sha256sum essai-fermeture-p3bis-banc-v1.txt > essai-fermeture-p3bis-banc-v1.txt.sha256)" :)"
 jouer K15-essai-non-cite 1 "6 essai de fermeture : sortie" "$(variante k15 : "sed -i 's|\`$V/essai-fermeture-p3bis-banc-v1.txt\` (\`$E_ESSAI\`)|sortie non citée|g' $P")"
@@ -231,7 +239,7 @@ jouer K22-liste-autre-empreinte 1 "8 liste ciblée absente ou d'empreinte autre"
 jouer K23-versions-autres 1 "8 environnement PY" "$(variante k23 "sed -i 's/^numpy==.*/numpy==0.0.1/' requirements-cpu.txt" :)"
 jouer K24-config-hors-ecarts 1 "9 configuration : écarts à celle de P3 hors des écarts du texte : \['lot'\]" "$(variante k24 "sed -i 's/\"lot\": 8/\"lot\": 4/' $REL_C; (cd brouillons/P3-bis-temoin-positif-v1 && sha256sum $(basename "$REL_C") > $(basename "$REL_C").sha256)" :)"
 jouer K25-valeur-non-citee 1 "10 valeur(s) non citée(s) par le texte" "$(variante k25 : "sed -i 's/au plus \*\*2,10 USD de l.heure\*\*/au plus **2,50 USD de l'\''heure**/' $P")"
-jouer K26-constante-autre 1 "10 constantes de la chaîne différentes" "$(variante k26 "sed -i 's/^GO_CALCUL=GO-2026-11-02-29/GO_CALCUL=GO-2026-11-08-13/' $V/lancer_p3bis_v1.sh" :)"
+jouer K26-constante-autre 1 "10 constantes de la chaîne différentes" "$(variante k26 "sed -i 's/^GO_CALCUL=GO-2026-11-10-02/GO_CALCUL=GO-2026-11-08-13/' $V/lancer_p3bis_v1.sh" :)"
 jouer K27-instance-avec-timeout 1 "11 scripts/p3bis_instance_v2.sh : commande « timeout »" "$(variante k27 "echo 'timeout 300m bash run.sh' >> scripts/p3bis_instance_v2.sh" :)"
 jouer K28-instance-non-citee 1 "11 empreinte de scripts/p3bis_instance_v2.sh" "$(variante k28 : "sed -i 's/$E_INST/$(printf 'f%.0s' {1..64})/' $P")"
 jouer K29-citation-en-double 1 "12 lecture précoce" "$(variante k29 : "sed -i 's/^- Chemin des consignes de P3 : \(.*\)$/&\n- Chemin des consignes de P3 : \1/' $P")"

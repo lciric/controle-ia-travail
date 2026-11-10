@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Contrôle à cinq minutes de l'instance de P3-bis (témoin positif planté ; GO-2026-11-02-29), v1. Texte : brouillon 9
+# Contrôle à cinq minutes de l'instance de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1. Texte : brouillon 9
 # (eb65773f…), « Liste d'arrêt » (« Contrôle à cinq minutes en échec : arrêt de l'instance par son identifiant (R10),
 # consigné »). Décliné de docs/procedures/P3-premier-test-v2/controle_cinq_minutes_p3_v1.sh (P3) sous un nom neuf (R12).
 # Ce qui change contre P3 : prix plafond 2,10 USD/h ; étude « p3bis », branche calcul/p3bis-reel-vN et étiquette
@@ -132,7 +132,7 @@ python3 -I "$VERIF" identifiant "$ID" "$L" > /dev/null 2>&1 || ca=refus
 if [ "$ca" = 0 ]; then
     r=$(vastai stop instance "$ID" 2>&1 | masquer) || ca=$?
 fi
-printf '| %s | P3-bis, GO-2026-11-02-29 | instance %s : contrôle à cinq minutes, %s KO ; arrêt par son identifiant (R10), code %s |\n' \
+printf '| %s | P3-bis, GO-2026-11-10-02 | instance %s : contrôle à cinq minutes, %s KO ; arrêt par son identifiant (R10), code %s |\n' \
     "$(date -u +%FT%TZ)" "$ID" "$echec" "$ca" >> "$D/arrets-a-consigner.txt"
 if [ "$ca" = 0 ]; then
     echo "CONTRÔLE À CINQ MINUTES : $echec KO ; instance $ID arrêtée par son identifiant (R10) ; nœud de Lazar" | tee -a "$R"

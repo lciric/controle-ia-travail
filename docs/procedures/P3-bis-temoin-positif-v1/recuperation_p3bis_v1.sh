@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Récupération de P3-bis (témoin positif planté ; GO-2026-11-02-29), v1 : contrôles de la branche de calcul poussée par
+# Récupération de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1 : contrôles de la branche de calcul poussée par
 # l'instance, lectures FERMÉES, commit et poussée du seul paquet des lectures et de son compagnon. Texte : brouillon 9
 # (eb65773f…), plan, points 1, 3, 4, 6 et 11 ; « Liste d'arrêt » ; contre-lecture du code (7a074ad1…), point 6.
 # Déclinée de docs/procedures/P3-premier-test-v2/recuperation_p3_v1.sh (P3) sous un nom neuf (R12). Ce qui change :

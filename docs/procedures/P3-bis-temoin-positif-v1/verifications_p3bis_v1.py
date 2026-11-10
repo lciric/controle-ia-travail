@@ -1,4 +1,5 @@
-"""Vérifications communes de la chaîne de session de P3-bis (témoin positif planté ; GO-2026-11-02-29), v1.
+"""Vérifications communes de la chaîne de session de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de
+GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1.
 
 Texte qui fait foi : `brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-brouillon9.md` (`eb65773f…`),
 « Liste d'arrêt », « Devis », « Plan d'analyse » points 1, 3, 4, 6, 11, « Ce que le code et la chaîne doivent changer »
@@ -13,9 +14,10 @@ refus « d'attente » : aucune offre conforme, crédit insuffisant, dépense au 
 
   go PREREG GO_MD JOUR
       GO cité par le texte (ligne « - GO : **GO-…** » et `GO_ID=…` de la ligne « Lancement ») égal à GO_CALCUL ; une seule
-      ligne de ce GO au registre, à huit colonnes, type « calcul », accordée par Lazar, plafond « 80 USD », échéance
-      2026-11-16 ; JOUR (AAAA-MM-JJ, UTC) entre l'octroi et DATE_LIMITE_CREATION ; aucune ligne de type « révocation »
-      qui nomme GO_CALCUL dans son périmètre ou sa référence (forme exacte du texte) ; toute ligne « | GO-… » à un autre
+      ligne de ce GO au registre, à huit colonnes, type « calcul », accordée par Lazar, octroi, plafond et échéance
+      exacts (2026-11-10, 80 USD non cumulés avec GO_ORIGINE, 2026-11-23) ; JOUR (AAAA-MM-JJ, UTC) entre l'octroi et
+      DATE_LIMITE_CREATION ; aucune ligne de type « révocation » qui nomme GO_CALCUL ou GO_ORIGINE dans son périmètre ou sa
+      référence (forme exacte du texte) ; toute ligne « | GO-… » à un autre
       nombre de colonnes que huit refuse le registre (comme la garde de calcul). La ligne d'accord du jour de P3 n'existe
       plus : DB-5 (a), le GO en tient lieu.
   instances TOLEREES EN_MARCHE GO_MD JOURNAL         (entrée : réponse de « show instances --raw »)
@@ -66,11 +68,16 @@ import sys
 from datetime import date
 
 # --- GO, dates et bornes du texte (brouillon 9 : en-tête « GO », « Liste d'arrêt », plan, point 11, « Devis ») ------
-GO_CALCUL = "GO-2026-11-02-29"           # seul GO accepté (texte, en-tête ; liste d'arrêt)
-OCTROI_GO = "2026-11-02"
-PLAFOND_GO = "80 USD"                    # colonne « plafond » du registre
-ECHEANCE_GO = "2026-11-16"               # colonne « échéance » du registre
-DATE_LIMITE_CREATION = "2026-11-16"      # « création au plus tard le 16 novembre 2026 » (constante)
+# Message de la mère (2026-11-10, vers 06:15 UTC) : mot de Lazar reçu vers 06:04 UTC, R-2077 (commit 39a3a506 de main) :
+# GO-2026-11-02-29 prolongé jusqu'au 2026-11-23 par une ligne neuve, GO-2026-11-10-02 (règle R-389 de la garde : une
+# seconde ligne au même identifiant ne peut pas dépasser l'échéance d'origine). Écart au brouillon 9 (qui dit GO-29 et
+# l'échéance d'origine), déclaré ; la mère le porte au brouillon 10.
+GO_CALCUL = "GO-2026-11-10-02"           # seul GO accepté (texte, en-tête ; liste d'arrêt ; brouillon 10)
+GO_ORIGINE = "GO-2026-11-02-29"          # GO prolongé : sa révocation refuse aussi ; dépense totale des deux ≤ 80 USD
+OCTROI_GO = "2026-11-10"
+PLAFOND_GO = "80 USD (plafond de GO-2026-11-02-29, non cumulé)"   # colonne « plafond » du registre, mot pour mot
+ECHEANCE_GO = "2026-11-23"               # colonne « échéance » du registre
+DATE_LIMITE_CREATION = "2026-11-23"      # « création au plus tard le 23 novembre 2026 » (constante)
 PRIX_MAX = 2.10                          # USD de l'heure
 FIABILITE_MIN = 0.98
 STOCKAGE_MAX = 0.08                      # USD de l'heure
@@ -182,9 +189,9 @@ def go(prereg: str, go_md: str, jour: str) -> str:
         raise SystemExit(f"jour {jour} hors de la validité de {g} ({accorde} → {echeance})")
     if j > jour_iso(DATE_LIMITE_CREATION):
         raise SystemExit(f"jour {jour} après le {DATE_LIMITE_CREATION} : aucune création (ligne de GO neuve, nœud)")
-    r = revocations(registre, g)
+    r = revocations(registre, g) + revocations(registre, GO_ORIGINE)
     if r:
-        raise SystemExit(f"{g} révoqué au registre des GO ({', '.join(r)})")
+        raise SystemExit(f"{g} (ou {GO_ORIGINE}, qu'il prolonge) révoqué au registre des GO ({', '.join(sorted(set(r)))})")
     return f"{g} conforme (jour {jour}, au plus tard le {DATE_LIMITE_CREATION} ; aucune révocation)"
 
 
@@ -430,7 +437,7 @@ VALEURS_TEXTE = (
     "au plus 2,10 USD de l'heure", "fiabilité ≥ 0,98", "stockage au plus 0,08 USD de l'heure",
     "téléchargement au plus 0,05 USD par Go", "au moins 30 cœurs effectifs", "128 000 Mo de mémoire vive",
     "disque ≥ 80 Go", "processeur AMD EPYC 7513 exigé d'abord", "douze essais à 15 minutes d'intervalle",
-    "plafond exactement 80 USD", "création au plus tard le 16 novembre 2026",
+    "plafond exactement 80 USD", "création au plus tard le 23 novembre 2026",
     "≥ 20 USD plus 10 heures du prix des instances nommées en marche",
     "l'absence de ligne `PROGRES` pendant deux heures donne une alerte",
     "`duree_max_s` et `budget_entrainement_s` à `null`", "aucun `timeout`", "16 783 360 octets",

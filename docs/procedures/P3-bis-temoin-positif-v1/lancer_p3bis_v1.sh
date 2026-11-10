@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Création de l'instance de P3-bis (témoin positif planté ; GO-2026-11-02-29), v1. Texte qui fait foi :
+# Création de l'instance de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1. Texte qui fait foi :
 # brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-brouillon9.md (eb65773f…), en-tête (GO, Lancement),
 # « Liste d'arrêt », plan, point 11, « Devis », « Ce que le code et la chaîne doivent changer », point 6 ; contre-lecture
 # du code (7a074ad1…), point 6. Décliné de docs/procedures/P3-premier-test-v2/lancer_p3_v1.sh (P3) sous un nom neuf (R12).
 # Ce qui change contre P3 :
-#   - GO GO-2026-11-02-29 seulement, relu par le module commun verifications_p3bis_v1.py (ligne « - GO : » et GO_ID de la
-#     ligne « Lancement » du texte, une seule ligne au registre, plafond 80 USD, échéance 2026-11-16, aucune révocation au
+#   - GO GO-2026-11-10-02 seulement, relu par le module commun verifications_p3bis_v1.py (ligne « - GO : » et GO_ID de la
+#     ligne « Lancement » du texte, une seule ligne au registre, plafond 80 USD, échéance 2026-11-23, aucune révocation au
 #     sens exact du texte) ; date du jour au plus tard DATE_LIMITE_CREATION, relue avant et après les contrôles, avant
 #     chaque essai d'offre et juste avant la création ; la ligne d'accord du jour de P3 n'existe plus (DB-5 (a) : le GO en
 #     tient lieu) ;
@@ -40,8 +40,8 @@ set -euo pipefail
 trap 'echo "arrêt avant la création (ligne $LINENO)"; exit 2' ERR
 [ $# -eq 4 ] && [ -n "$2" ] || { echo "usage : lancer_p3bis_v1.sh S DOSSIER_TRACES EN_MARCHE N"; exit 2; }
 S=$1; T=$(realpath -m "$2"); EN_MARCHE=$3; N=$4; OFFRE=""
-GO_CALCUL=GO-2026-11-02-29                       # seul GO accepté (texte, en-tête et liste d'arrêt)
-DATE_LIMITE_CREATION=2026-11-16                  # « création au plus tard le 16 novembre 2026 »
+GO_CALCUL=GO-2026-11-10-02                       # seul GO accepté (texte, en-tête et liste d'arrêt)
+DATE_LIMITE_CREATION=2026-11-23                  # « création au plus tard le 23 novembre 2026 »
 ESSAIS_AVANT_REPLI=12                            # douze essais d'offre, processeur exigé…
 INTERVALLE_OFFRE_S=900                           # … à 15 minutes d'intervalle, puis repli écrit (plan, point 11)
 DEPOT_URL=https://github.com/lciric/controle-ia-travail.git

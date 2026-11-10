@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Contrôles avant dépense de P3-bis (témoin positif planté ; GO-2026-11-02-29), v1. Texte qui fait foi : brouillon 9
+# Contrôles avant dépense de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1. Texte qui fait foi : brouillon 9
 # (eb65773f…), en-tête, « Liste d'arrêt », plan, points 2, 6 et 11, « Ce que le code et la chaîne doivent changer »,
 # points 1 à 6 ; contre-lecture du code (7a074ad1…), point 6. Déclinés de docs/procedures/P3-premier-test-v2/
 # controles_avant_depense_p3_v1.sh (P3) sous un nom neuf (R12). Sur un clone neuf du dépôt de travail au commit de
@@ -12,8 +12,8 @@
 #   3  identité avec P3 : `git diff --name-status 7a54d431… <code>` sur les chemins de l'en-tête ne montre que des ajouts ;
 #   4  texte scellé SANS MARQUEUR (aucun « <<…>> », problemes() vide) ; sceaux du texte, de la configuration, des
 #      consignes et des tâches ; texte, configuration et consignes égaux aux candidats relus, octet pour octet ;
-#   5  GO : module commun (GO-2026-11-02-29 seul, une ligne au registre de S, plafond 80 USD, échéance 2026-11-16,
-#      aucune révocation au sens exact du texte, jour au plus tard le 16 novembre 2026) ; garde de calcul sur le
+#   5  GO : module commun (GO-2026-11-10-02 seul, une ligne au registre de S, plafond 80 USD, échéance 2026-11-23,
+#      aucune révocation au sens exact du texte, jour au plus tard le 23 novembre 2026) ; garde de calcul sur le
 #      registre de S ;
 #   6  ESSAI DIFFÉRENTIEL DE FERMETURE : sortie versée à S, à l'empreinte épinglée, scellée, citée par le texte, dernière
 #      ligne « ESSAI DIFFÉRENTIEL DE FERMETURE : CONFORME », aucune ligne « NON CONFORME » ; puis REJOUÉ au commit S (dont
@@ -25,7 +25,7 @@
 #      PY égales aux dépendances épinglées de S ;
 #   9  configuration : seuls écarts à P3 ceux du texte (module commun) ; gardes du lanceur run_v2 rejouées dans l'ordre
 #      d'executer(), jusqu'au manifeste (rien n'est écrit) ;
-#   10 valeurs de P3-bis citées par le texte (bloc des valeurs : 2,10 USD, 0,98, 30 cœurs, 80 USD, 16 novembre, durées
+#   10 valeurs de P3-bis citées par le texte (bloc des valeurs : 2,10 USD, 0,98, 30 cœurs, 80 USD, 23 novembre, durées
 #      nulles, aucun `timeout`, …) et constantes de la chaîne versée égales à celles du module commun ;
 #   11 scripts de l'instance (noms v2) : présents à S, cités par leur empreinte, aucune commande `timeout`, lanceur
 #      run_v2, liste ciblée v2, dépôt de travail par défaut (jamais la copie publique) ;
@@ -131,8 +131,8 @@ ST=$(sha256sum "$TACHES" 2>/dev/null | cut -d' ' -f1)
 # 5. GO ; garde de calcul sur le registre de S
 python3 -I "$VERIF" go "$P" registres/go.md "$(date -u +%F)" > "$W/bloc-go.txt" 2>&1 \
     && ok "5 GO : $(tail -1 "$W/bloc-go.txt")" || ko "5 GO : $(tail -1 "$W/bloc-go.txt")"
-echo '{"tool_input":{"command":"GO_ID=GO-2026-11-02-29 vastai create instance 1 --raw"}}' | python3 .claude/hooks/garde_calcul.py > "$W/garde.txt" 2>&1 \
-    && ok "5 garde de calcul : registre de S lisible, GO-2026-11-02-29 accepté" || ko "5 garde de calcul sur le registre de S : $(tail -1 "$W/garde.txt" | cut -c1-200)"
+echo '{"tool_input":{"command":"GO_ID=GO-2026-11-10-02 vastai create instance 1 --raw"}}' | python3 .claude/hooks/garde_calcul.py > "$W/garde.txt" 2>&1 \
+    && ok "5 garde de calcul : registre de S lisible, GO-2026-11-10-02 accepté" || ko "5 garde de calcul sur le registre de S : $(tail -1 "$W/garde.txt" | cut -c1-200)"
 # 6. essai différentiel de fermeture : sortie versée, citée ; puis rejoué au commit S
 if [ "$(git show "$S:$ESSAI_FERMETURE_CHEMIN" 2>/dev/null | sha256sum | cut -d' ' -f1)" = "$ESSAI_FERMETURE" ] \
    && [ "$(git show "$S:$ESSAI_FERMETURE_CHEMIN.sha256" 2>/dev/null)" = "$ESSAI_FERMETURE  $(basename "$ESSAI_FERMETURE_CHEMIN")" ] \

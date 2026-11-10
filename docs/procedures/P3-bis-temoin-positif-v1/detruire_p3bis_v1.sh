@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Destruction de l'instance de P3-bis (témoin positif planté ; GO-2026-11-02-29), v1, par son identifiant (R10), « dès que
+# Destruction de l'instance de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1, par son identifiant (R10), « dès que
 # les résultats poussés sont vérifiés par empreinte dans un clone de la session » (texte, brouillon 9, plan, point 11 ;
 # « Liste d'arrêt » : « en fin normale, après la récupération des résultats poussés et leur vérification par empreinte,
 # puis destruction de l'instance par son identifiant »). Voisin neuf de la chaîne (P3 gardait l'instance 72 heures ; rien
@@ -40,7 +40,7 @@ try:
 except Exception:
     print("illisible"); sys.exit(0)
 print("présente" if any(isinstance(i, dict) and str(i.get("id")) == sys.argv[1] for i in l) else "absente")' "$ID")
-printf '| %s | P3-bis, GO-2026-11-02-29 | instance %s détruite par son identifiant (R10) après la récupération vérifiée (%s) : code %s, liste relue : %s |\n' \
+printf '| %s | P3-bis, GO-2026-11-10-02 | instance %s détruite par son identifiant (R10) après la récupération vérifiée (%s) : code %s, liste relue : %s |\n' \
     "$(date -u +%FT%TZ)" "$ID" "$BR" "$c" "$L" >> "$SV/arrets-a-consigner.txt"
 if [ "$c" = 0 ] && [ "$L" = absente ]; then echo "DESTRUCTION : instance $ID détruite par son identifiant (R10), absente de la liste relue"; exit 0; fi
 echo "DESTRUCTION EN ÉCHEC : code $c, liste relue « $L » : agir par l'identifiant $ID, à la main (R10), consigner"

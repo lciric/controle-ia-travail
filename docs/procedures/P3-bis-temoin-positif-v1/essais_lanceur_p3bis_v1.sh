@@ -4,7 +4,7 @@
 # Aucun appel réel n'est possible : faux outil de location sur le PATH (n'appelle aucun service ; journalise le verbe,
 # l'étiquette, les variables non secrètes de --env et le GO, jamais un jeton), env -i, HOME redirigé, jetons factices,
 # faux contrôles avant dépense, fausse horloge pour la seule date du jour. Dépôt synthétique : texte minimal (GO, ligne
-# « Lancement », empreinte de l'amorce), registre des GO fabriqué (ligne GO-2026-11-02-29 recopiée du registre de HEAD,
+# « Lancement », empreinte de l'amorce), registre des GO fabriqué (ligne GO-2026-11-10-02 recopiée du registre de main,
 # un GO de calcul d'une autre course), garde de calcul du dépôt (copie de HEAD), copies versées des scripts de la chaîne
 # (celle du lanceur : celle du banc) et des journaux de preuve conformes ; dépôt nu local en guise de dépôt distant.
 # Le vrai registres/go.md n'est jamais modifié. Lignes changées dans la copie jouée du lanceur, comptées et déclarées :
@@ -97,10 +97,10 @@ mkdir -p prereg scripts registres .claude/hooks "$VERSEES"
 printf '#!/usr/bin/env bash\necho "amorce factice du banc"\n' > "$A"
 E_AMORCE=$(sha256sum "$A" | cut -d' ' -f1)
 git -C "$D" show HEAD:.claude/hooks/garde_calcul.py > .claude/hooks/garde_calcul.py
-{ git -C "$D" show HEAD:registres/go.md | sed -n '1,10p'
-  git -C "$D" show HEAD:registres/go.md | grep '^| GO-2026-11-02-29 |'
+{ git -C "$D" show main:registres/go.md | sed -n '1,10p'
+  git -C "$D" show main:registres/go.md | grep '^| GO-2026-11-10-02 |'
   echo "| GO-2026-11-08-13 | 2026-11-08 | calcul | autre course du programme (essai) | 50 USD | 2026-11-30 | Lazar | essai |"; } > registres/go.md
-[ "$(grep -c '^| GO-2026-11-02-29 |' registres/go.md)" = 1 ] || { echo "ligne GO-2026-11-02-29 introuvable au registre de HEAD"; exit 2; }
+[ "$(grep -c '^| GO-2026-11-10-02 |' registres/go.md)" = 1 ] || { echo "ligne GO-2026-11-10-02 introuvable au registre de main"; exit 2; }
 texte() {   # $1 GO de la ligne « GO », $2 GO de la ligne Lancement, $3 branche citée, $4 DEPOT_URL cité, $5 empreinte citée de l'amorce
     printf '# Préenregistrement factice du banc du lanceur de P3-bis\n\n- GO : **%s** (`registres/go.md` l. 217)\n- Lancement : `GO_ID=%s`, `PREREG=%s`, `BRANCHE=%s` (une relance prend `…-v2`, puis `…-v3`), `DEPOT_URL=%s`, amorce `%s`\n- Empreintes : `%s` (`%s`, sha256)\n' \
         "$1" "$2" "$P" "$3" "$4" "$A" "$A" "$5"
@@ -119,7 +119,7 @@ for nom, (verdict, scripts) in v.JOURNAUX.items():
 EOF
 for j in $(sed -n 's/^PREUVES="\(.*\)"$/\1/p' "$L"); do (cd "$VERSEES" && sha256sum "$j" > "$j.sha256"); done
 git add -A && git commit -qm "base du banc" && git push -q origin main
-texte GO-2026-11-02-29 GO-2026-11-02-29 calcul/p3bis-reel-v1 "$URL" "$E_AMORCE" > "$P"
+texte GO-2026-11-10-02 GO-2026-11-10-02 calcul/p3bis-reel-v1 "$URL" "$E_AMORCE" > "$P"
 (cd prereg && sha256sum "$(basename "$P")" > "$(basename "$P").sha256")
 git add -A && git commit -qm "scellement factice (S)" && git push -q origin main
 S=$(git rev-parse HEAD)
@@ -130,7 +130,7 @@ variante() {   # $1 nom de branche ; puis commandes à jouer dans le dépôt ava
     # sain écrit et scellé si les commandes n'en écrivent pas : S ajoute toujours le sceau du texte)
     local b=$1; shift
     git -C "$E/depot" checkout -q -b "variante/$b" "$BASE"
-    (cd "$E/depot" && mkdir -p prereg && eval "$*" && { [ -f "$P" ] || { texte GO-2026-11-02-29 GO-2026-11-02-29 calcul/p3bis-reel-v1 "$URL" "$E_AMORCE" > "$P"; sceller_texte; }; })
+    (cd "$E/depot" && mkdir -p prereg && eval "$*" && { [ -f "$P" ] || { texte GO-2026-11-10-02 GO-2026-11-10-02 calcul/p3bis-reel-v1 "$URL" "$E_AMORCE" > "$P"; sceller_texte; }; })
     git -C "$E/depot" add -A && git -C "$E/depot" commit -qm "variante $b" && git -C "$E/depot" push -q origin "variante/$b"
     git -C "$E/depot" rev-parse HEAD
     git -C "$E/depot" checkout -q main
@@ -170,7 +170,7 @@ TOL3='{"id": 58936096, "actual_status": "exited", "cur_state": "stopped"}, {"id"
 # L00 : cas sain
 cas L00-sain 0 "succès : True ; identifiant 99999999" oui "$S" 1 - "$J_OK"
 apres L00 "création : GO, étiquette, branche, texte, dépôt de travail et commit passés à l'instance, jetons présents sans valeur" \
-    "grep -qx 'go GO-2026-11-02-29' '$E/vastai-L00-sain.txt' && grep -qx 'etiquette p3bis-v1' '$E/vastai-L00-sain.txt' && grep -qx 'env BRANCHE=calcul/p3bis-reel-v1' '$E/vastai-L00-sain.txt' && grep -qx 'env PREREG=$P' '$E/vastai-L00-sain.txt' && grep -qx 'env DEPOT_URL=$URL' '$E/vastai-L00-sain.txt' && grep -qx 'env COMMIT=$S' '$E/vastai-L00-sain.txt' && grep -qx 'env HF_TOKEN présent' '$E/vastai-L00-sain.txt' && grep -qx 'env GH_TOKEN présent' '$E/vastai-L00-sain.txt' && grep -qx 'offre créée 111' '$E/vastai-L00-sain.txt'"
+    "grep -qx 'go GO-2026-11-10-02' '$E/vastai-L00-sain.txt' && grep -qx 'etiquette p3bis-v1' '$E/vastai-L00-sain.txt' && grep -qx 'env BRANCHE=calcul/p3bis-reel-v1' '$E/vastai-L00-sain.txt' && grep -qx 'env PREREG=$P' '$E/vastai-L00-sain.txt' && grep -qx 'env DEPOT_URL=$URL' '$E/vastai-L00-sain.txt' && grep -qx 'env COMMIT=$S' '$E/vastai-L00-sain.txt' && grep -qx 'env HF_TOKEN présent' '$E/vastai-L00-sain.txt' && grep -qx 'env GH_TOKEN présent' '$E/vastai-L00-sain.txt' && grep -qx 'offre créée 111' '$E/vastai-L00-sain.txt'"
 apres L00 "traces : instance écrite (cible unique des arrêts), offre choisie, un seul essai d'offre, aucun repli" \
     "grep -qx 'instance 99999999' '$E/traces-L00-sain/lancement.txt' && grep -q '^offre choisie : 111 (1.1 USD/h)' '$E/traces-L00-sain/lancement.txt' && [ \$(grep -c '^essai d.offre' '$E/traces-L00-sain/lancement.txt') = 1 ] && [ ! -e '$E/traces-L00-sain/repli-processeur.txt' ] && [ ! -e '$E/traces-L00-sain/clone-controles' ]"
 # L01 / L02 / L03 : branche de calcul et relance
@@ -179,18 +179,21 @@ cas L01-relance-2-sain 0 "succès : True" oui "$S" 2 - "$J_OK" FAUX_BRANCHE_ATTE
 apres L01 "relance : branche calcul/p3bis-reel-v2, étiquette p3bis-v2" "grep -qx 'env BRANCHE=calcul/p3bis-reel-v2' '$E/vastai-L01-relance-2-sain.txt' && grep -qx 'etiquette p3bis-v2' '$E/vastai-L01-relance-2-sain.txt'"
 cas L02-branche-presente 2 "branche calcul/p3bis-reel-v1 : git ls-remote, code 0" non "$S" 1 - "$J_OK"
 git -C "$E/depot" push -q origin --delete calcul/p3bis-reel-v1
-cas L03-relance-sans-tentative 2 "branche calcul/p3bis-reel-v1 absente du dépôt distant" non "$S" 2 - "$J_OK"
+cas L03-relance-sans-tentative 2 "branche calcul/p3bis-reel-v1 absente du dépôt distant" non "$S" 2 - "$J_OK" FAUX_BRANCHE_ATTENDUE=calcul/p3bis-reel-v2
 # L04 à L07 : GO et date
 # (le registre lu est celui du dépôt courant, jamais celui de S : révocation ajoutée au registre courant, puis retirée)
 cp "$E/depot/registres/go.md" "$E/go-sain.md"
-echo '| GO-2026-11-10-99 | 2026-11-10 | révocation | P3-bis suspendu | — | 2026-11-10 | Lazar | révoque GO-2026-11-02-29 |' >> "$E/depot/registres/go.md"
+echo '| GO-2026-11-10-99 | 2026-11-10 | révocation | P3-bis suspendu | — | 2026-11-10 | Lazar | révoque GO-2026-11-10-02 |' >> "$E/depot/registres/go.md"
 cas L04-go-revoque 2 "révoqué au registre des GO (GO-2026-11-10-99)" non "$S" 1 - "$J_OK"
 cp "$E/go-sain.md" "$E/depot/registres/go.md"
+echo '| GO-2026-11-10-98 | 2026-11-10 | révocation | GO-2026-11-02-29 révoqué (essai) | — | 2026-11-10 | Lazar | essai |' >> "$E/depot/registres/go.md"
+cas L04b-go-d-origine-revoque 2 "(ou GO-2026-11-02-29, qu'il prolonge) révoqué au registre des GO (GO-2026-11-10-98)" non "$S" 1 - "$J_OK"
+cp "$E/go-sain.md" "$E/depot/registres/go.md"
 S_GO=$(variante go "texte GO-2026-11-08-13 GO-2026-11-08-13 calcul/p3bis-reel-v1 '$URL' '$E_AMORCE' > '$P'; sceller_texte")
-cas L05-go-autre 2 "seul GO-2026-11-02-29 est accepté" non "$S_GO" 1 - "$J_OK"
-cas L06-date-apres-limite 3 "après le 2026-11-16" non "$S" 1 - FAUX_JOUR=2026-11-17
-cas L06b-date-limite-saine 0 "succès : True" oui "$S" 1 - FAUX_JOUR=2026-11-16
-cas L07-date-passe-pendant-les-offres 3 "après le 2026-11-16" non "$S" 1 - FAUX_JOUR=2026-11-16 FAUX_APRES=6 FAUX_JOUR2=2026-11-17 FAUX_OFFRES="$OFFRES_AUCUNE"
+cas L05-go-autre 2 "seul GO-2026-11-10-02 est accepté" non "$S_GO" 1 - "$J_OK"
+cas L06-date-apres-limite 3 "après le 2026-11-23" non "$S" 1 - FAUX_JOUR=2026-11-24
+cas L06b-date-limite-saine 0 "succès : True" oui "$S" 1 - FAUX_JOUR=2026-11-23
+cas L07-date-passe-pendant-les-offres 3 "après le 2026-11-23" non "$S" 1 - FAUX_JOUR=2026-11-23 FAUX_APRES=6 FAUX_JOUR2=2026-11-24 FAUX_OFFRES="$OFFRES_AUCUNE"
 # L08 à L10 : contrôles et jetons
 cas L08-controles-ko 2 "contrôles avant dépense en échec" non "$S" 1 - "$J_OK" FAUX_KO=1
 cas L09-controles-derniere-ligne 2 "contrôles : dernière ligne inattendue" non "$S" 1 - "$J_OK" FAUX_DERNIERE=1
@@ -209,11 +212,11 @@ cas L12b-preuve-sceau-faux 2 "sceau de banc-lanceur-p3bis-v1.log absent ou non c
 S_NC=$(variante nc "sed -i '1i cas 3 : NON CONFORME' '$VERSEES/banc-controles-p3bis-v1.log'; (cd '$VERSEES' && sha256sum banc-controles-p3bis-v1.log > banc-controles-p3bis-v1.log.sha256)")
 cas L13-preuve-non-conforme 2 "ligne d'échec avant le verdict" non "$S_NC" 1 - "$J_OK"
 # L14 à L18 : texte de S et commit de scellement
-S_AM=$(variante amorce "texte GO-2026-11-02-29 GO-2026-11-02-29 calcul/p3bis-reel-v1 '$URL' $(printf '0%.0s' {1..64}) > '$P'; sceller_texte")
+S_AM=$(variante amorce "texte GO-2026-11-10-02 GO-2026-11-10-02 calcul/p3bis-reel-v1 '$URL' $(printf '0%.0s' {1..64}) > '$P'; sceller_texte")
 cas L14-amorce-non-citee 2 "empreinte de l'amorce" non "$S_AM" 1 - "$J_OK"
-S_BR=$(variante br "texte GO-2026-11-02-29 GO-2026-11-02-29 calcul/p3bis-reel-v9 '$URL' '$E_AMORCE' > '$P'; sceller_texte")
+S_BR=$(variante br "texte GO-2026-11-10-02 GO-2026-11-10-02 calcul/p3bis-reel-v9 '$URL' '$E_AMORCE' > '$P'; sceller_texte")
 cas L15-branche-citee-autre 2 "la ligne « Lancement » de S cite autre chose" non "$S_BR" 1 - "$J_OK"
-S_URL=$(variante url "texte GO-2026-11-02-29 GO-2026-11-02-29 calcul/p3bis-reel-v1 https://github.com/lciric/controle-ia.git '$E_AMORCE' > '$P'; sceller_texte")
+S_URL=$(variante url "texte GO-2026-11-10-02 GO-2026-11-10-02 calcul/p3bis-reel-v1 https://github.com/lciric/controle-ia.git '$E_AMORCE' > '$P'; sceller_texte")
 cas L16-depot-url-autre 2 "DEPOT_URL : la ligne « Lancement » de S cite autre chose" non "$S_URL" 1 - "$J_OK"
 cas L17-pas-le-commit-de-scellement 2 "n'ajoute pas $P.sha256" non "$BASE" 1 - "$J_OK"
 git -C "$E/depot" checkout -q -b locale "$S" && echo x > "$E/depot/locale.txt" && git -C "$E/depot" add locale.txt && git -C "$E/depot" rm -q --cached "$P.sha256" \

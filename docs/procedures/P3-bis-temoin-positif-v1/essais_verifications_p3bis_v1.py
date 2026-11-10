@@ -25,12 +25,27 @@ BROUILLON9 = ICI.parents[2] / "brouillons/P3-bis-temoin-positif-v1/P3-bis-preenr
 
 ENTETE = ("| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |\n"
           "|---|---|---|---|---|---|---|---|\n")
-LIGNE_GO = ("| GO-2026-11-02-29 | 2026-11-02 | calcul | **Contrôle, P3-bis : témoin positif planté** … | 80 USD | "
-            "2026-11-16 | Lazar | mots de Lazar |\n")
+# ligne de GO en vigueur (message de la mère, R-2077) : GO-2026-11-10-02, prolongation de GO-2026-11-02-29 au 2026-11-23
+ORIGINE = ("| GO-2026-11-02-29 | 2026-11-02 | calcul | **Contrôle, P3-bis : témoin positif planté** … | 80 USD | "
+           "2026-11-16 | Lazar | mots de Lazar |\n")
+LIGNE_GO = ("| GO-2026-11-10-02 | 2026-11-10 | calcul | **Prolongation de GO-2026-11-02-29 (P3-bis, témoin positif planté) "
+            "jusqu'au 2026-11-23** … | 80 USD (plafond de GO-2026-11-02-29, non cumulé) | 2026-11-23 | Lazar | R-2077 |\n")
 AUTRE_GO = "| GO-2026-11-08-13 | 2026-11-08 | calcul | autre course | 50 USD | 2026-11-20 | Lazar | mots |\n"
-TEXTE = ("# Préenregistrement factice\n\n- GO : **GO-2026-11-02-29** (`registres/go.md` l. 217)\n"
-         "- Lancement : `GO_ID=GO-2026-11-02-29`, `PREREG=prereg/P3-bis-temoin-positif-v1.md`, "
+TEXTE = ("# Préenregistrement factice\n\n- GO : **GO-2026-11-10-02** (`registres/go.md`)\n"
+         "- Lancement : `GO_ID=GO-2026-11-10-02`, `PREREG=prereg/P3-bis-temoin-positif-v1.md`, "
          "`BRANCHE=calcul/p3bis-reel-v1`, `DEPOT_URL=https://github.com/lciric/controle-ia-travail.git`\n")
+
+
+def brouillon9_reecrit() -> str:
+    """Brouillon 9 avec les écarts déclarés (ligne de GO et date limite du brouillon 10 : R-2077)."""
+    import re
+    t = BROUILLON9.read_text(encoding="utf-8")
+    for a, b in (("- GO : **GO-2026-11-02-29**", "- GO : **GO-2026-11-10-02**"), ("`GO_ID=GO-2026-11-02-29`", "`GO_ID=GO-2026-11-10-02`")):
+        assert t.count(a) == 1
+        t = t.replace(a, b)
+    t, k = re.subn(r"création au plus tard le(\s+)16 novembre 2026", r"création au plus tard le\g<1>23 novembre 2026", t)
+    assert k == 1
+    return t
 
 
 def cli(*args, entree: str = "") -> subprocess.CompletedProcess:
@@ -46,20 +61,25 @@ def ecrire(d: Path, nom: str, texte: str) -> str:
 # ================================================================================================= go
 @pytest.fixture
 def go_ok(tmp_path):
-    return ecrire(tmp_path, "p.md", TEXTE), ecrire(tmp_path, "go.md", ENTETE + LIGNE_GO + AUTRE_GO)
+    return ecrire(tmp_path, "p.md", TEXTE), ecrire(tmp_path, "go.md", ENTETE + ORIGINE + LIGNE_GO + AUTRE_GO)
 
 
 def test_go_sain(go_ok):
     r = cli("go", *go_ok, "2026-11-10")
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "GO-2026-11-02-29 conforme" in r.stdout
+    assert "GO-2026-11-10-02 conforme" in r.stdout
 
 
 def test_go_sain_dernier_jour(go_ok):
-    assert cli("go", *go_ok, "2026-11-16").returncode == 0
+    assert cli("go", *go_ok, "2026-11-23").returncode == 0
 
 
-@pytest.mark.parametrize("jour, motif", [("2026-11-17", "hors de la validité"), ("2026-11-01", "hors de la validité"),
+def test_go_sain_sans_la_ligne_d_origine(tmp_path):
+    r = cli("go", ecrire(tmp_path, "p.md", TEXTE), ecrire(tmp_path, "go.md", ENTETE + LIGNE_GO), "2026-11-17")
+    assert r.returncode == 0, r.stderr
+
+
+@pytest.mark.parametrize("jour, motif", [("2026-11-24", "hors de la validité"), ("2026-11-09", "hors de la validité"),
                                          ("2026-11-1", "mal formé"), ("2026-13-40", "impossible")])
 def test_go_artefact_jour(go_ok, jour, motif):
     r = cli("go", *go_ok, jour)
@@ -67,17 +87,18 @@ def test_go_artefact_jour(go_ok, jour, motif):
 
 
 def test_go_artefact_date_limite_constante(go_ok, tmp_path, monkeypatch):
-    # échéance du registre et date limite sont deux gardes distinctes : la constante seule refuse le 16 si elle valait le 15
-    monkeypatch.setattr(V, "DATE_LIMITE_CREATION", "2026-11-15")
-    with pytest.raises(SystemExit, match="après le 2026-11-15"):
-        V.go(*go_ok, "2026-11-16")
+    # échéance du registre et date limite sont deux gardes distinctes : la constante seule refuse le 23 si elle valait le 22
+    monkeypatch.setattr(V, "DATE_LIMITE_CREATION", "2026-11-22")
+    with pytest.raises(SystemExit, match="après le 2026-11-22"):
+        V.go(*go_ok, "2026-11-23")
 
 
 @pytest.mark.parametrize("texte, motif", [
-    (TEXTE.replace("**GO-2026-11-02-29**", "**GO-2026-11-08-13**"), "seul GO-2026-11-02-29"),
-    (TEXTE.replace("`GO_ID=GO-2026-11-02-29`", "`GO_ID=GO-2026-11-08-13`"), "ligne « Lancement »"),
-    (TEXTE + "- GO : **GO-2026-11-02-29**\n", "en double"),
-    (TEXTE.replace("- GO : **GO-2026-11-02-29**", "- GO : GO-2026-11-02-29"), "absente, en double ou mal formée"),
+    (TEXTE.replace("**GO-2026-11-10-02**", "**GO-2026-11-08-13**"), "seul GO-2026-11-10-02"),
+    (TEXTE.replace("**GO-2026-11-10-02**", "**GO-2026-11-02-29**"), "seul GO-2026-11-10-02"),          # brouillon 9 tel quel
+    (TEXTE.replace("`GO_ID=GO-2026-11-10-02`", "`GO_ID=GO-2026-11-02-29`"), "ligne « Lancement »"),
+    (TEXTE + "- GO : **GO-2026-11-10-02**\n", "en double"),
+    (TEXTE.replace("- GO : **GO-2026-11-10-02**", "- GO : GO-2026-11-10-02"), "absente, en double ou mal formée"),
     (TEXTE.replace("- Lancement : ", "- Lancer : "), "« - Lancement : » absente"),
 ])
 def test_go_artefact_texte(tmp_path, texte, motif):
@@ -86,18 +107,21 @@ def test_go_artefact_texte(tmp_path, texte, motif):
 
 
 @pytest.mark.parametrize("registre, motif", [
-    (ENTETE + AUTRE_GO, "absent ou en double"),
+    (ENTETE + ORIGINE + AUTRE_GO, "absent ou en double"),
     (ENTETE + LIGNE_GO + LIGNE_GO, "absent ou en double"),
     (ENTETE + LIGNE_GO.replace("| calcul |", "| porte |"), "GO de type « calcul »"),
     (ENTETE + LIGNE_GO.replace("| Lazar |", "| Claude |"), "accordé par Lazar"),
-    (ENTETE + LIGNE_GO.replace("| 80 USD |", "| 90 USD |"), "ligne réécrite"),
-    (ENTETE + LIGNE_GO.replace("| 2026-11-16 |", "| 2026-11-30 |"), "ligne réécrite"),
-    (ENTETE + LIGNE_GO + "| GO-2026-11-10-01 | 2026-11-10 | calcul | trop | de | colonnes | Lazar | x | y |\n",
+    (ENTETE + LIGNE_GO.replace("| 80 USD (plafond de GO-2026-11-02-29, non cumulé) |", "| 80 USD |"), "ligne réécrite"),
+    (ENTETE + LIGNE_GO.replace("| 2026-11-23 |", "| 2026-11-30 |"), "ligne réécrite"),
+    (ENTETE + LIGNE_GO.replace("| 2026-11-10 | calcul", "| 2026-11-09 | calcul"), "ligne réécrite"),
+    (ENTETE + LIGNE_GO + "| GO-2026-11-11-01 | 2026-11-11 | calcul | trop | de | colonnes | Lazar | x | y |\n",
      "8 colonnes attendues"),
-    (ENTETE + LIGNE_GO + "| GO-2026-11-10-02 | 2026-11-10 | révocation | GO-2026-11-02-29 retiré | — | 2026-11-10 | "
-     "Lazar | mot |\n", "révoqué au registre des GO (GO-2026-11-10-02)"),
-    (ENTETE + LIGNE_GO + "| GO-2026-11-10-03 | 2026-11-10 | révocation | P3-bis arrêté | — | 2026-11-10 | Lazar | "
-     "révoque GO-2026-11-02-29 |\n", "révoqué au registre des GO (GO-2026-11-10-03)"),
+    (ENTETE + LIGNE_GO + "| GO-2026-11-11-02 | 2026-11-11 | révocation | GO-2026-11-10-02 retiré | — | 2026-11-11 | "
+     "Lazar | mot |\n", "révoqué au registre des GO (GO-2026-11-11-02)"),
+    (ENTETE + LIGNE_GO + "| GO-2026-11-11-03 | 2026-11-11 | révocation | P3-bis arrêté | — | 2026-11-11 | Lazar | "
+     "révoque GO-2026-11-10-02 |\n", "révoqué au registre des GO (GO-2026-11-11-03)"),
+    (ENTETE + ORIGINE + LIGNE_GO + "| GO-2026-11-11-04 | 2026-11-11 | révocation | GO-2026-11-02-29 retiré | — | 2026-11-11 | "
+     "Lazar | mot |\n", "(ou GO-2026-11-02-29, qu'il prolonge) révoqué au registre des GO (GO-2026-11-11-04)"),
 ])
 def test_go_artefact_registre(tmp_path, registre, motif):
     r = cli("go", ecrire(tmp_path, "p.md", TEXTE), ecrire(tmp_path, "go.md", registre), "2026-11-10")
@@ -106,12 +130,21 @@ def test_go_artefact_registre(tmp_path, registre, motif):
 
 @pytest.mark.parametrize("ligne", [
     # révocation d'un autre GO : sans effet ; identifiant voisin (préfixe) : sans effet ; type autre que « révocation »
-    "| GO-2026-11-10-04 | 2026-11-10 | révocation | GO-2026-11-08-13 retiré | — | 2026-11-10 | Lazar | mot |\n",
-    "| GO-2026-11-10-05 | 2026-11-10 | révocation | GO-2026-11-02-290 (identifiant voisin) | — | 2026-11-10 | Lazar | m |\n",
-    "| GO-2026-11-10-06 | 2026-11-10 | décision | rappel de GO-2026-11-02-29, aucune révocation | — | 2026-11-10 | Lazar | m |\n",
+    "| GO-2026-11-11-04 | 2026-11-11 | révocation | GO-2026-11-08-13 retiré | — | 2026-11-11 | Lazar | mot |\n",
+    "| GO-2026-11-11-05 | 2026-11-11 | révocation | GO-2026-11-10-020 (identifiant voisin) | — | 2026-11-11 | Lazar | m |\n",
+    "| GO-2026-11-11-06 | 2026-11-11 | décision | rappel de GO-2026-11-10-02, aucune révocation | — | 2026-11-11 | Lazar | m |\n",
 ])
 def test_go_sain_revocation_d_autre_chose(tmp_path, ligne):
     r = cli("go", ecrire(tmp_path, "p.md", TEXTE), ecrire(tmp_path, "go.md", ENTETE + LIGNE_GO + ligne), "2026-11-10")
+    assert r.returncode == 0, r.stderr
+
+
+def test_go_sain_registre_reel_de_main(tmp_path):
+    # la ligne réelle de main (lecture seule ; aucun fetch) passe ; ignoré si main ne la porte pas encore
+    r0 = subprocess.run(["git", "-C", str(ICI), "show", "main:registres/go.md"], capture_output=True, text=True)
+    if r0.returncode != 0 or "| GO-2026-11-10-02 |" not in r0.stdout:
+        pytest.skip("ligne GO-2026-11-10-02 absente de main")
+    r = cli("go", ecrire(tmp_path, "p.md", TEXTE), ecrire(tmp_path, "go.md", r0.stdout), "2026-11-10")
     assert r.returncode == 0, r.stderr
 
 
@@ -418,13 +451,19 @@ def test_depense_artefact_arguments(args):
 
 
 # ================================================================================================= valeurs, constantes
-def test_valeurs_sain_brouillon9():
-    r = cli("valeurs", str(BROUILLON9))
+def test_valeurs_sain_brouillon9_reecrit(tmp_path):
+    r = cli("valeurs", ecrire(tmp_path, "p.md", brouillon9_reecrit()))
     assert r.returncode == 0, r.stderr
 
 
+def test_valeurs_ecart_declare_brouillon9_tel_quel():
+    # le brouillon 9 dit encore GO-2026-11-02-29 et le 16 novembre : écart texte-code déclaré (porté au brouillon 10)
+    r = cli("valeurs", str(BROUILLON9))
+    assert r.returncode == 1 and "23 novembre" in r.stderr and "GO-2026-11-10-02" in r.stderr
+
+
 def test_valeurs_artefact(tmp_path):
-    t = BROUILLON9.read_text(encoding="utf-8").replace("2,10 USD de l'heure", "2,50 USD de l'heure")
+    t = brouillon9_reecrit().replace("2,10 USD de l'heure", "2,50 USD de l'heure")
     r = cli("valeurs", ecrire(tmp_path, "p.md", t))
     assert r.returncode == 1 and "2,10" in r.stderr
 
@@ -435,10 +474,10 @@ def test_constantes_sain_et_artefact(tmp_path):
             f"{n}={v}                 # commentaire\n" for (g, n), v in V.CONSTANTES.items() if g == f), encoding="utf-8")
     assert cli("constantes", str(tmp_path)).returncode == 0
     p = tmp_path / "lancer_p3bis_v1.sh"
-    p.write_text(p.read_text().replace("GO_CALCUL=GO-2026-11-02-29", "GO_CALCUL=GO-2026-11-08-13"))
+    p.write_text(p.read_text().replace("GO_CALCUL=GO-2026-11-10-02", "GO_CALCUL=GO-2026-11-08-13"))
     r = cli("constantes", str(tmp_path))
     assert r.returncode == 1 and "GO_CALCUL" in r.stderr
-    p.write_text(p.read_text().replace("GO_CALCUL=GO-2026-11-08-13", "GO_CALCUL=GO-2026-11-02-29\nGO_CALCUL=GO-2026-11-02-29"))
+    p.write_text(p.read_text().replace("GO_CALCUL=GO-2026-11-08-13", "GO_CALCUL=GO-2026-11-10-02\nGO_CALCUL=GO-2026-11-10-02"))
     assert cli("constantes", str(tmp_path)).returncode == 1
 
 

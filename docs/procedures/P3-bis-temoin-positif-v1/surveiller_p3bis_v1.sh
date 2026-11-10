@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Surveillance de l'instance de P3-bis (témoin positif planté ; GO-2026-11-02-29), v1, depuis la session de pilotage, sans
+# Surveillance de l'instance de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1, depuis la session de pilotage, sans
 # jamais afficher de jeton. Texte : brouillon 9 (eb65773f…), « Liste d'arrêt » et « Ce que le code et la chaîne doivent
 # changer », point 6 (i) ; contre-lecture du code (7a074ad1…), point 6. Déclinée de docs/procedures/P3-premier-test-v2/
 # surveiller_p3_v1.sh (P3) sous un nom neuf (R12). Ce qui change contre P3 :
@@ -89,7 +89,7 @@ arreter() {   # $1 motif, $2 détail ; arrêt par l'identifiant (R10), jamais pa
         sleep "$INTERVALLE"
     done
     printf '| %s | P3-bis, %s | instance %s arrêtée par son identifiant (R10), motif %s : %s ; état relu : %s |\n' \
-        "$(date -u +%FT%TZ)" "GO-2026-11-02-29" "$ID" "$m" "$detail" "$e" >> "$D/arrets-a-consigner.txt"
+        "$(date -u +%FT%TZ)" "GO-2026-11-10-02" "$ID" "$m" "$detail" "$e" >> "$D/arrets-a-consigner.txt"
     if [ "$c" != 0 ]; then
         echo "$m : $detail ; ARRÊT DE L'INSTANCE $ID EN ÉCHEC (code $c) : l'arrêter à la main par son identifiant (R10), consigner"; exit 1
     fi
