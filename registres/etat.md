@@ -448,3 +448,9 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 Voir `registres/passations/2026-11-10-1231-attaquant-informe-successeur-etape.md`. Pièce 1 du bras scellée en version finale
 (`f440b090…`) ; pièces 3 et 4 en brouillon 3 ; témoin de Bailey : code de la condition 6 en v3 (en écriture), nœud 5 à
 Lazar (recommandation `0b2268b4…`), licence écrite attendue ; ligne de GO : `GO-2026-11-10-10` (main). Aucune instance, aucune dépense.
+
+## 11 novembre, 16:24 UTC — session « attaquant informé » successeur : passation vers un autre compte
+Voir `registres/passations/2026-11-11-1624-attaquant-informe-passation-autre-compte.md` et le brief
+`docs/procedures/brief-reprise-attaquant-informe-2026-11-11-v1.md`. Témoin de Bailey : toutes les conditions de lancement
+remplies (addendum 2 `f79459c7…`, code `4988f3f4`) ; lancement par la nouvelle session, sous `GO-2026-11-10-10`
+(amendé `GO-2026-11-11-01`, modèle `GO-2026-11-11-02`), plafond 75 USD. Aucune instance, aucune dépense par cette session.
