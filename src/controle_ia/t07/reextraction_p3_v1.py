@@ -459,9 +459,11 @@ FICHIERS_MODELE = ("config.json", "tokenizer.json", "tokenizer_config.json")
 
 def revision_au_cache(modele: str, revision: str, cache_dir: str | None = None) -> dict:
     """La révision `revision` de `modele` est-elle entière dans le cache local ? Lecture hors ligne seulement
-    (`snapshot_download(local_files_only=True)`, aucun accès au réseau) : dossier de la révision, fichiers essentiels, poids
-    (et, avec un index, chacun de ses morceaux). Faute → `GardeArret`."""
+    (`snapshot_download(local_files_only=True)`, aucun accès au réseau) : dossier de la révision, fichiers essentiels non vides,
+    poids non vides ; avec des morceaux `model-<i>-of-<n>.safetensors`, index exigé, lisible, `weight_map` non vide, autant de
+    morceaux que le nom en annonce, chacun présent (CLC-P3-03, R-2311). Toute faute → `GardeArret`."""
     import json as _json
+    import re
 
     from huggingface_hub import snapshot_download
     try:
@@ -474,11 +476,24 @@ def revision_au_cache(modele: str, revision: str, cache_dir: str | None = None) 
     manquants = [n for n in FICHIERS_MODELE if not (dossier / n).is_file()]
     index = dossier / "model.safetensors.index.json"
     poids = sorted(x.name for x in dossier.glob("*.safetensors"))
+    nommes = [x for x in poids if re.fullmatch(r"model-\d+-of-\d+\.safetensors", x)]
+    if nommes and not index.is_file():
+        manquants.append("model.safetensors.index.json (morceaux sans index)")
     if index.is_file():
-        attendus = sorted(set(_json.loads(index.read_text(encoding="utf-8"))["weight_map"].values()))
+        try:
+            carte = _json.loads(index.read_text(encoding="utf-8"))["weight_map"]
+            if not isinstance(carte, dict) or not carte:
+                raise ValueError("weight_map vide ou mal formée")
+            attendus = sorted(set(str(v) for v in carte.values()))
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            raise GardeArret(f"modèle de P3 {modele}@{revision[:12]} : index des poids illisible ({type(e).__name__} : {e})") from None
+        annonces = {int(m.group(1)) for x in attendus if (m := re.fullmatch(r"model-\d+-of-(\d+)\.safetensors", x))}
+        if len(annonces) > 1 or (annonces and len(attendus) != annonces.pop()):
+            manquants.append(f"index : {len(attendus)} morceaux, nombre annoncé par leurs noms différent")
         manquants += [x for x in attendus if not (dossier / x).is_file()]
     elif not poids:
         manquants.append("*.safetensors")
+    manquants += [f"{x} (taille nulle)" for x in list(FICHIERS_MODELE) + poids if (dossier / x).is_file() and (dossier / x).stat().st_size == 0]
     if manquants:
         raise GardeArret(f"modèle de P3 {modele}@{revision[:12]} incomplet au cache local : {manquants}")
     return {"modele": modele, "revision": revision, "dossier": str(dossier), "poids": len(poids)}

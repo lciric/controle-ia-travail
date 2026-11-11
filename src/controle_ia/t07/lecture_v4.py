@@ -7,6 +7,7 @@ Sources : note v3 de l'analyste (`docs/notes/g0-deux-semaines-v1/t07-module-v2/e
     PYTHONPATH=src python -m controle_ia.t07.lecture_v4 etape-a RACINE RUN_T06 CONFIG_T07 [--registre CHEMIN] [--racine-sortie R] [--instant S]
     PYTHONPATH=src python -m controle_ia.t07.lecture_v4 etape-b RACINE RUN_T06 RUN_T07 CONFIG_T07 [--registre CHEMIN] [--racine-sortie R] [--instant S]
     PYTHONPATH=src python -m controle_ia.t07.lecture_v4 empreinte-config CONFIG_T07
+    PYTHONPATH=src python -m controle_ia.t07.lecture_v4 controle-avant-ouverture RACINE CONFIG_T07 [--cache-dir D]
     PYTHONPATH=src python -m controle_ia.t07.lecture_v4 grille
     PYTHONPATH=src python -m controle_ia.t07.lecture_v4 passe-blanc RACINE RUN_T06 CONFIG_T07 [--registre CHEMIN] [--racine-sortie R]
     PYTHONPATH=src python -m controle_ia.t07.lecture_v4 repli-seul RACINE RUN_T06 CONFIG_T07 [--registre CHEMIN]
@@ -39,6 +40,11 @@ Corrections de la contre-lecture (R-2305) : configuration **v8** (seuils du pali
 refusée) ; contrôle avant l'ouverture à la passe à blanc (`reextraction_p3_v1.controler_avant_ouverture`, CLP3-03) ; à l'étape
 B, chaque plancher décisif doit compter `n_plancher` directions (`exiger_nombre_de_directions`, note 05) ; état des figées
 affiché par `etape-a-apres-repli` (note 10).
+
+Correction de la contre-lecture courte (R-2311, CLC-P3-02) : sous-commande **`controle-avant-ouverture`**, lecture seule, rien
+d'écrit : configuration de la v4, puis `reextraction_p3_v1.controler_avant_ouverture` en entier (sceaux des entrées de P3,
+principales, témoin et directions de P3 au fichier léger, révision du modèle de P3 au cache local en mode réel) ; jouée par le
+script v4 à l'étape 8, avant le repli et sa garde d'ouverture. Codes : 0 (résumé JSON sur la sortie), 2 (refus, motif écrit).
 """
 from __future__ import annotations
 
@@ -688,10 +694,37 @@ def etape_b(racine: Path, registre: Path, config: dict, run_t06: str, run_t07: s
 
 
 # ---------------------------------------------------------------------------------------------------------------- commande
-COMMANDES_V4 = ("etape-a", "etape-b", "empreinte-config")
+COMMANDES_V4 = ("etape-a", "etape-b", "empreinte-config", "controle-avant-ouverture")
+
+
+def controle_avant_ouverture(argv: list[str]) -> int:
+    """CLC-P3-02 (R-2311) : `reextraction_p3_v1.controler_avant_ouverture` joué en entier, après les contrôles de configuration
+    de la v4, en lecture seule (rien n'est écrit), avant le repli et sa garde d'ouverture (étape 8 du script v4). Toute faute
+    (`GardeArret`, ou l'une des fautes de `reextraction_p3_v1.FAUTES_DU_BRAS`) → refus, code 2, motif sur l'erreur ; passé →
+    code 0, résumé JSON sur la sortie."""
+    import json
+    p = argparse.ArgumentParser(prog=f"{COMMANDE} controle-avant-ouverture",
+                                description="contrôle entier de la réextraction de P3 avant l'ouverture (lecture seule)")
+    p.add_argument("racine")
+    p.add_argument("config_t07")
+    p.add_argument("--cache-dir", default=None, help="cache de Hugging Face (essais) ; défaut : celui de l'environnement")
+    a = p.parse_args(argv)
+    try:
+        config = charger_configuration(Path(a.config_t07))
+        r = rx.controler_avant_ouverture(Path(a.racine), config, a.cache_dir)
+    except GardeArret as err:
+        print(f"REFUS : contrôle avant l'ouverture : {err}", file=sys.stderr)
+        return CODE_REFUS
+    except rx.FAUTES_DU_BRAS as err:
+        print(f"REFUS : contrôle avant l'ouverture : faute {type(err).__name__} : {err}", file=sys.stderr)
+        return CODE_REFUS
+    print(json.dumps(r, ensure_ascii=False, sort_keys=True))
+    return CODE_OK
 
 
 def main(argv: list[str]) -> int:
+    if argv and argv[0] == "controle-avant-ouverture":             # CLC-P3-02 (R-2311) : contrôle entier, avant le repli
+        return controle_avant_ouverture(argv[1:])
     if argv and argv[0] == "passe-blanc":                         # passe à blanc (copie v2 : configuration de la v4)
         from . import passe_blanc_v2 as pb2
         return pb2.main(argv[1:])
@@ -750,7 +783,7 @@ def main(argv: list[str]) -> int:
 
 
 __all__ = ["exiger_configuration", "charger_configuration", "empreinte_configuration", "methode_plancher", "charger_planchers_p3",
-           "lecture_planchers_p3", "paliers_de", "reserves_plancher_figees", "exiger_nombre_de_directions", "noter", "etape_a", "etape_b", "main", "CLES_CONFIG",
+           "lecture_planchers_p3", "paliers_de", "reserves_plancher_figees", "exiger_nombre_de_directions", "controle_avant_ouverture", "noter", "etape_a", "etape_b", "main", "CLES_CONFIG",
            "CLE_P3_DESCRIPTIF", "SOURCE_P3",
            "SOURCE_FIGEES", "LECTURE_P3"]
 
