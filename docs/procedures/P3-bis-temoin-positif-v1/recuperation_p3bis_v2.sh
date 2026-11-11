@@ -39,7 +39,7 @@ SOI=$(realpath "$0")
 [ $# -eq 3 ] || { echo "usage : recuperation_p3bis_v2.sh S BRANCHE DOSSIER_NEUF"; exit 2; }
 S=$1; BRANCHE=$2; D=$(realpath -m "$3")
 DEPOT_URL=https://github.com/lciric/controle-ia-travail.git
-PY=A_EPINGLER                                    # interpréteur d'un environnement aux dépendances épinglées de S (celui des contrôles)
+PY=/home/user/venv-p3bis-py311-v1/bin/python                                    # interpréteur d'un environnement aux dépendances épinglées de S (celui des contrôles)
 P=prereg/P3-bis-temoin-positif-v1.md
 VERSEES=docs/procedures/P3-bis-temoin-positif-v1
 ENTROPIE=173398867739501636779144561928402532101 # celle de P3, reprise (texte, en-tête)
