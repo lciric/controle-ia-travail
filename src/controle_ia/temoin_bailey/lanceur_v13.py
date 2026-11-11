@@ -893,7 +893,8 @@ def lancer_veilleur_arret_processus(ident: str, etiquette: str, echeance: float,
     if fournisseur is None:
         raise GardeArret("veilleur d'arrêt : fournisseur inconnu")
     cmd = [sys.executable, "-m", VEILLEUR_MODULE, "veilleur-arret", "--instance", str(ident), "--etiquette",
-           etiquette, "--echeance", repr(float(echeance)), "--journal", str(journal), "--fournisseur", fournisseur,
+           etiquette, "--echeance", repr(float(echeance)), "--journal", os.path.abspath(str(journal)),  # v13 (P-2)
+           "--fournisseur", fournisseur,
            "--periode", repr(float(periode_s))]
     with open(str(journal) + ".err", "ab") as err:
         p = subprocess.Popen(cmd, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
@@ -979,7 +980,7 @@ def identite_veilleur_arret(pid: int, journal) -> bool | None:
     if "veilleur-arret" not in args or "--journal" not in args:
         return False  # fini (zombie : ligne vide) ou PID réemployé
     i = args.index("--journal")
-    return i + 1 < len(args) and args[i + 1] == str(journal)
+    return i + 1 < len(args) and os.path.abspath(args[i + 1]) == os.path.abspath(str(journal))
 
 
 def arreter_veilleur(pid: int) -> None:

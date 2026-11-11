@@ -3096,8 +3096,14 @@ def test_v13_P1_finir_arret_en_cours_relu_sans_nouvel_arret(tmp_path, monkeypatc
     c, f, _ = _conduite_sortie(tmp_path, monkeypatch, initial=la.STATUT_ARRET_EN_COURS)
     lus = []
     vrai = f.statut
-    f.statut = lambda ident: (lus.append(1), "stopped" if len(lus) > 1 and vrai(ident) != "running"
-                              else vrai(ident))[1]
+
+    def statut(ident):  # première lecture après le transfert : « arrêt en cours » ; relecture : « stopped »
+        x = vrai(ident)
+        if x == "running":
+            return x
+        lus.append(x)
+        return x if len(lus) == 1 else "stopped"
+    f.statut = statut
     bilan = c.conduire()
     assert bilan["detruite"] is False and f.arrets == [] and bilan["statut_avant_destruction"] == "stopped"
     assert bilan["arret_avant_destruction"]["arret_demande"] is False
