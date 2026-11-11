@@ -318,6 +318,11 @@ def passe_a_blanc(racine: Path, registre: Path, config: dict, run_t06: str, raci
         exiger_configuration(config)
     except GardeArret as e:
         raise RefusPasse(f"configuration : {e}") from None
+    from .reextraction_p3_v1 import controler_avant_ouverture          # CLP3-03 (R-2305) : avant l'ouverture de l'étape A
+    try:
+        reextraction_p3 = controler_avant_ouverture(racine, config)
+    except GardeArret as e:
+        raise RefusPasse(f"réextraction des jetons de P3 non jouable (CLP3-03) : {e}") from None
     try:
         depot = {k: v for k, v in etat_git(racine).items() if k != "statut"}
     except GardeArret as e:
@@ -449,6 +454,7 @@ def passe_a_blanc(racine: Path, registre: Path, config: dict, run_t06: str, raci
         "nature": NATURE, "version": VERSION, "commande": COMMANDE, "instant": rg.date_utc(instant), "mode": mode, "run_t06": run_t06,
         "depot": depot,
         "configuration": {"empreinte_canonique": empreinte_canonique(config), "couches": couches, "registre": str(registre)},
+        "reextraction_p3": reextraction_p3,
         "versions": versions(), "fichiers": entrees["fichiers"],
         "echantillon": {"regle": REGLE_ECHANTILLON, "pris": pris},
         "gabarit": {"par_jeu": {n: {"enregistrements": c["n"], "fautes": len([f for f in c["fautes"] if f["faute"].startswith("gabarit")])}

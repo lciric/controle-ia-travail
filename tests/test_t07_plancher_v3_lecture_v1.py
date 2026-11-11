@@ -46,12 +46,13 @@ from test_t07_lecture_v2 import construire, lignes_audit, lignes_p3bis
 
 RACINE_DEPOT = Path(__file__).resolve().parents[1]
 METHODE = "difference_appariee_percentile"
-CONFIG_V7_FICHIER = RACINE_DEPOT / "docs/notes/g0-deux-semaines-v1/t07-module-v2/plancher-v3-pieces-v1/configuration-t07-v7.json"
+CONFIG_V8_FICHIER = RACINE_DEPOT / "docs/notes/g0-deux-semaines-v1/t07-module-v2/plancher-v3-pieces-v1/configuration-t07-v8.json"
 CANONIQUE_V6 = "7c61fcfbc8ed39d7f83832f11a79b1290d35f47f23e351e104f6dd632737b505"
 CANONIQUE_V7 = "4ff92c8ef07943e093793c218967be36621410714be9634ccccc3c27811d2b38"
+CANONIQUE_V8 = "0f32c6de1a6bf1f20ee2bf74c3839c2a2054b77c34a44a557dc821a83db60e12"   # CLP3-01 (R-2305)
 LEGER = {"chemin": "donnees/20261019-230011-p3-reel/sondes-figees-legeres.npz",
          "sha256": "701f73bd3a8ef30f46b304a6d5caa21444f0e1daf0829d04046e4024aa4e6e60"}
-CONFIG_V7 = {
+CONFIG_V8 = {
     "mode": "reel", "entropie": 141327499974890102043551261780374423878, "niveau_decisif": 0.9875, "quantile_plancher": 0.95,
     "n_plancher": 800, "tirages_aire": 2000, "permutations_placebo": 200, "mahalanobis_calcul": "produit_matriciel_v2",
     "ecart_ex_aequo": 0.005, "familles": ["difference_moyennes", "lineaire", "perceptron", "attention", "mahalanobis"],
@@ -77,25 +78,36 @@ CONFIG_V7 = {
                         "sha256": "8d20a698d76baa8a42cd1494227fc411ef043d24a67a413e5cf812541166a4fd"},
     "methode_plancher": METHODE,
     "plancher_figees": {"methode": "reextraction_p3_v1", "n_p3": 200,
-                        "tolerances": {"processeur": 1e-06, "carte_sonde": 0.01, "carte_directions": 0.1},
+                        "tolerances": {"processeur": 1e-06, "carte_sonde": 0.001, "carte_directions": 0.01},
                         "garde_principale": "rapportee"}}
 
 
+def v8() -> dict:
+    return copy.deepcopy(CONFIG_V8)
+
+
 def v7() -> dict:
-    return copy.deepcopy(CONFIG_V7)
+    c = v8()
+    c["plancher_figees"]["tolerances"] = {"processeur": 1e-06, "carte_sonde": 0.01, "carte_directions": 0.1}
+    return c
 
 
 def v6() -> dict:
-    c = v7()
+    c = v8()
     c["n_plancher"] = 200
     del c["plancher_figees"]
     return c
 
 
 # ----------------------------------------------------------------------------------------------------------------- configuration
-def test_configuration_v7_admise_par_la_v4_refusee_par_la_v3_et_la_v2():
-    lv4.exiger_configuration(v7())
-    assert lv2.empreinte_canonique(v7()) == CANONIQUE_V7
+def test_configuration_v8_admise_par_la_v4_v7_et_v6_refusees():
+    lv4.exiger_configuration(v8())
+    assert lv2.empreinte_canonique(v8()) == CANONIQUE_V8
+    assert lv2.empreinte_canonique(v7()) == CANONIQUE_V7                    # la v7 est la v8 aux seuils « carte » d'avant
+    with pytest.raises(GardeArret, match="fixées d'avance"):
+        lv4.exiger_configuration(v7())
+    with pytest.raises(GardeArret, match="n_plancher 800 ≠ 200"):
+        lv3.exiger_configuration(v8())
     assert lv2.empreinte_canonique(v6()) == CANONIQUE_V6                    # la v6 est bien la v7 moins ses deux changements
     with pytest.raises(GardeArret, match="n_plancher 800 ≠ 200"):
         lv3.exiger_configuration(v7())
@@ -105,47 +117,47 @@ def test_configuration_v7_admise_par_la_v4_refusee_par_la_v3_et_la_v2():
         lv4.exiger_configuration(v6())
 
 
-def test_fichier_v7_egal_au_texte_des_essais():
-    if not CONFIG_V7_FICHIER.is_file():
-        pytest.skip(f"{CONFIG_V7_FICHIER} absent de l'extraction")
-    assert json.loads(CONFIG_V7_FICHIER.read_text(encoding="utf-8")) == CONFIG_V7
-    assert lv4.empreinte_configuration(CONFIG_V7_FICHIER) == CANONIQUE_V7
+def test_fichier_v8_egal_au_texte_des_essais():
+    if not CONFIG_V8_FICHIER.is_file():
+        pytest.skip(f"{CONFIG_V8_FICHIER} absent de l'extraction")
+    assert json.loads(CONFIG_V8_FICHIER.read_text(encoding="utf-8")) == CONFIG_V8
+    assert lv4.empreinte_configuration(CONFIG_V8_FICHIER) == CANONIQUE_V8
 
 
 @pytest.mark.parametrize("valeur", [200, 799, 801, 1600, True, 800.0, "800"])
 def test_mode_reel_n_plancher_800_seulement(valeur):
-    c = v7()
+    c = v8()
     c["n_plancher"] = valeur
     with pytest.raises(GardeArret, match="n_plancher"):
         lv4.exiger_configuration(c)
 
 
 def test_mode_reel_autres_refus_et_controles_de_la_v3_joues():
-    c = v7()
+    c = v8()
     c["donnees_p3"] = None
     with pytest.raises(GardeArret, match="donnees_p3 exigée"):
         lv4.exiger_configuration(c)
-    c = v7()
+    c = v8()
     c["plancher_figees"]["tolerances"]["carte_sonde"] = 0.02
     with pytest.raises(GardeArret, match="fixées d'avance"):
         lv4.exiger_configuration(c)
-    c = v7()
+    c = v8()
     c["plancher_figees"]["n_p3"] = 800
     with pytest.raises(GardeArret, match="n_p3"):
         lv4.exiger_configuration(c)
-    c = v7()
+    c = v8()
     del c["methode_plancher"]
     with pytest.raises(lv4.CleAbsente, match="methode_plancher"):
         lv4.exiger_configuration(c)
-    c = v7()
+    c = v8()
     c["quantile_plancher"] = 0.9
     with pytest.raises(GardeArret, match="quantile_plancher"):
         lv4.exiger_configuration(c)
-    c = v7()
+    c = v8()
     c["fichiers_sondes"] = [{"chemin": "donnees/x/sondes-figees-legeres.npz", "sha256": "0" * 64}]
     with pytest.raises(GardeArret, match="fichier léger"):
         lv4.exiger_configuration(c)
-    c = v7()
+    c = v8()
     del c["n_plancher"]
     with pytest.raises(lv4.CleAbsente, match="n_plancher"):
         lv4.exiger_configuration(c)
@@ -153,10 +165,10 @@ def test_mode_reel_autres_refus_et_controles_de_la_v3_joues():
 
 def test_commande_empreinte_config(tmp_path, capsys):
     f7, f6 = tmp_path / "v7.json", tmp_path / "v6.json"
-    f7.write_text(json.dumps(v7()), encoding="utf-8")
+    f7.write_text(json.dumps(v8()), encoding="utf-8")
     f6.write_text(json.dumps(v6()), encoding="utf-8")
     assert lv4.main(["empreinte-config", str(f7)]) == 0
-    assert capsys.readouterr().out.strip() == CANONIQUE_V7
+    assert capsys.readouterr().out.strip() == CANONIQUE_V8
     assert lv4.main(["empreinte-config", str(f6)]) == 2
     assert lv3.main(["empreinte-config", str(f7)]) == 2
 
@@ -190,14 +202,14 @@ def test_miroir_passe_blanc_et_repli():
 def test_passe_blanc_v2_et_repli_v2_controlent_la_configuration_v4(tmp_path):
     with pytest.raises(pb2.RefusPasse, match="plancher_figees"):
         pb2.passe_a_blanc(tmp_path, tmp_path / "registre.md", v6(), "run")
-    c = v7()
+    c = v8()
     c["n_plancher"] = 200
     with pytest.raises(pb2.RefusPasse, match="n_plancher 200 ≠ 800"):
         pb2.passe_a_blanc(tmp_path, tmp_path / "registre.md", c, "run")
     with pytest.raises(rt2.RefusRepli, match="n_plancher 200 ≠ 800"):
         rt2.repli(tmp_path, tmp_path / "registre.md", c, "run")
     with pytest.raises(pb1.RefusPasse, match="n_plancher 800 ≠ 200"):                     # la v1 refuse la v7 : d'où la v2
-        pb1.passe_a_blanc(tmp_path, tmp_path / "registre.md", v7(), "run")
+        pb1.passe_a_blanc(tmp_path, tmp_path / "registre.md", v8(), "run")
 
 
 # -------------------------------------------------------------------------------------------------------------- bout en bout
@@ -274,6 +286,7 @@ def test_bout_en_bout_bras_etabli(depot, capsys, monkeypatch):
             carte = c == "tromperie"                       # un bras au palier « carte » : sa réserve doit passer à l'étape B
             sortie[s.nom] = {"concept": c, "etat": "établi", "motif": None, "directions": d, "graine": f"plancher/{s.nom}",
                              "palier": "carte" if carte else "identique", "reserve": rx.RESERVE_CARTE if carte else None,
+                             "reserve_principale": None if carte else "principale refaite hors du palier processeur (double)",
                              "n": len(d)}
         return {"par_sonde": sortie, "rapport": {"methode": rx.METHODE, "etat": "établi"}}
     monkeypatch.setattr(rx, "reextraire", double)
@@ -302,8 +315,11 @@ def test_bout_en_bout_bras_etabli(depot, capsys, monkeypatch):
     assert lec["issue_critere_3"] == "L2"
     tromperie = j.config["sondes_par_concept"]["tromperie"]
     assert nota["planchers_figees"]["paliers"][tromperie]["palier"] == "carte"
+    enjeux = j.config["sondes_par_concept"]["enjeux"]
     assert [r for r in lec["reserves"] if "plancher neuf de" in r] == [
-        f"plancher neuf de {tromperie} (réextraction de P3, palier carte) : {rx.RESERVE_CARTE}"]
+        f"plancher neuf de {tromperie} (réextraction de P3, palier carte) : {rx.RESERVE_CARTE}",
+        f"plancher neuf de {enjeux} (réextraction de P3, palier identique) : principale refaite hors du palier processeur (double)"]
+
     assert next(e for e in index["sondes"] if e["nom"] == tromperie)["plancher"]["reextraction"]["palier"] == "carte"
     for n in figees:
         for jeu, x in lec["jeux"][n].items():
@@ -319,3 +335,53 @@ def test_etape_a_arretee_si_le_nombre_de_directions_de_p3_differe(depot):
     j.config["plancher_figees"]["n_p3"] = 25
     with pytest.raises(lv4.ArretApresManifeste, match="24 directions .* 25 attendues"):
         lv4.etape_a(j.racine, j.registre, j.config, RUN_T06, instant=INSTANT)
+
+
+def test_lecture_descriptive_de_p3_ne_touche_pas_aux_scores_decisifs(monkeypatch):
+    """n34 (R-2305) : `lecture_planchers_p3` lit les 200 directions de P3 dans une copie des tableaux ; le plancher décisif
+    `plancher_<k>`, lu ensuite par les lectures complémentaires, reste le plancher neuf."""
+    neuf, p3 = np.zeros((30, 5)), np.ones((24, 5))
+    t = {"scores_0": np.zeros(5), "plancher_0": neuf, "plancher_p3_0": p3}
+    index = {"sondes": [{"rang": 0, "nom": "x", "etat": "échec", "plancher_p3": {"n": 24}}]}
+    vus = {}
+
+    def faux(t2, idx2, mesures, config, graines, niveau, jeux, cle):
+        vus.update(t2=t2, idx2=idx2, niveau=niveau, cle=cle)
+        return {"x": {"i": {}}}
+    monkeypatch.setattr(lv4, "lecture_jeux_v3", faux)
+    r = lv4.lecture_planchers_p3(t, index, {}, {}, {}, ["i"])
+    assert t["plancher_0"] is neuf and vus["t2"]["plancher_0"] is p3 and vus["t2"] is not t
+    assert vus["niveau"] == 0.95 and vus["cle"] == lv4.CLE_P3_DESCRIPTIF and vus["idx2"]["sondes"][0]["etat"] == "notée"
+    assert r["jeux"]["x"]["i"]["lecture"] == lv4.LECTURE_P3 and index["sondes"][0]["etat"] == "échec"
+
+
+def test_nombre_de_directions_exige_a_l_etape_b():
+    """Note 05 (R-2305) : chaque plancher décisif d'une sonde notée compte `n_plancher` directions (cas sain ; artefacts : tableau,
+    index, nombre écrit) ; une sonde en échec n'est pas lue."""
+    t = {"plancher_0": np.zeros((30, 4)), "plancher_1": np.zeros((30, 4))}
+    index = {"n_plancher": 30, "sondes": [{"rang": 0, "nom": "a", "etat": "notée", "plancher": {"n": 30}},
+                                          {"rang": 1, "nom": "b", "etat": "notée", "plancher": {"n": 30}},
+                                          {"rang": 2, "nom": "c", "etat": "échec"}]}
+    lv4.exiger_nombre_de_directions(t, index, {"n_plancher": 30})
+    for faute in ("tableau", "index", "nombre", "absent"):
+        t2, i2 = {k: v for k, v in t.items()}, copy.deepcopy(index)
+        if faute == "tableau":
+            t2["plancher_1"] = np.zeros((24, 4))
+        elif faute == "index":
+            i2["n_plancher"] = 200
+        elif faute == "nombre":
+            i2["sondes"][0]["plancher"]["n"] = 24
+        else:
+            del t2["plancher_0"]
+        with pytest.raises(GardeArret, match="arrêt"):
+            lv4.exiger_nombre_de_directions(t2, i2, {"n_plancher": 30})
+
+
+def test_passe_blanc_v2_refusee_si_la_reextraction_n_est_pas_jouable(tmp_path):
+    """CLP3-03 (R-2305) : la passe à blanc joue `controler_avant_ouverture` après la configuration ; une faute la refuse
+    (code 2, rien d'écrit) : ici, données de P3 non citées (jouet)."""
+    c = v8()
+    c.update(mode="jouet", donnees_p3=None, preenregistrement=None)
+    with pytest.raises(pb2.RefusPasse, match="CLP3-03"):
+        pb2.passe_a_blanc(tmp_path, tmp_path / "registre.md", c, "run")
+    assert not any(tmp_path.iterdir())

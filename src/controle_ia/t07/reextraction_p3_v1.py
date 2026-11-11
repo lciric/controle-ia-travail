@@ -42,11 +42,14 @@ inchangé depuis le commit de P3 `97dd8290`) :
    - « identique » : égalité au bit près ;
    - « processeur » : écart relatif ≤ 10⁻⁶ (ordre des sommes selon les fils et les noyaux d'algèbre linéaire : mesuré 0 pour
      la différence de moyennes et la sonde linéaire, ≤ 6 × 10⁻¹¹ pour les directions, fils 1 contre 4, calibrage) ;
-   - « carte » : au-delà, jusqu'à `carte_sonde` = 10⁻² (témoin) et `carte_directions` = 10⁻¹ (directions) : accepté **avec une
-     réserve écrite** (non-déterminisme de la carte présumé ; sous les réglages et sur la carte de P3, la régénération R-679 a
-     redonné le fichier complet au bit près : un écart de cet ordre n'est pas attendu). Au calibrage, un bruit de 10⁻² par
-     jeton donne 4,4 × 10⁻³ (témoin, tromperie) et 7,0 × 10⁻² (directions, tromperie) ; les fautes donnent au moins
-     2,4 × 10⁻² (témoin : empan décalé d'un jeton, enjeux), 0,06 à 0,11 (autre découpage), 1,4 à 1,7 (autre couche) ;
+   - « carte » : au-delà, jusqu'à `carte_sonde` = 10⁻³ (témoin) et `carte_directions` = 10⁻² (directions) (configuration v8,
+     CLP3-01, R-2305 ; v7 : 10⁻² et 10⁻¹, trop larges : « un exemple retiré » y passait) : accepté **avec une réserve écrite**,
+     « cause non établie » (carte, ou faute d'étendue partielle des jetons réextraits ; sous les réglages et sur la carte de
+     P3, la régénération R-679 a redonné le fichier complet au bit près : un écart de cet ordre n'est pas attendu). Au
+     calibrage (v3, rejoué), un bruit de 10⁻³ par jeton donne 4,4 × 10⁻⁴ et 2,2 × 10⁻⁴ (témoin), 8,3 × 10⁻³ et 2,2 × 10⁻³
+     (directions) : il passe ; **toutes les fautes calibrées sont arrêtées par le témoin** (la plus petite, « un exemple
+     retiré » des enjeux, 4,3 × 10⁻³, à 4,3 fois le plafond) ; une faute plus petite que le plafond (une part d'exemples assez
+     faible) peut encore passer au palier « carte », avec sa réserve : la garde n'arrête pas **toute** faute ;
    - au-delà : **échec** du bras (motif écrit).
    Écart relatif : ‖x′ − x‖ / ‖x‖ pour `w` et `q` ; |b′ − b| / (|b| + ‖w‖ · max ‖h‖) pour `b` (max ‖h‖ : plus grande norme
    d'un jeton d'entraînement réextrait ; aucune moyenne sur les jetons), maximum sur les directions pour la seconde garde.
@@ -54,7 +57,13 @@ inchangé depuis le commit de P3 `97dd8290`) :
    de T0.7 dérivée sous la clé « plancher/<sonde> » (`SeedSequence` du manifeste de T0.7, R9), noms
    `<sonde>-t07-plancher-<k>` (ceux de P3 sont `<sonde>-plancher-plancher-<k>`). Les 200 directions de P3 restent lues dans le fichier léger, en lecture descriptive.
 
-**Repli** (R5) : toute faute (entrée, modèle, données, garde) **arrête ce seul bras** : la sonde figée concernée n'a pas de
+**Contrôle avant l'ouverture** (CLP3-03, R-2305 ; `controler_avant_ouverture`, joué par la passe à blanc v2) : sceaux des
+quatre entrées de P3, principales de P3 égales à celles de la configuration, témoin et directions de P3 au fichier léger,
+**révision du modèle de P3 dans le cache local** (mode réel ; `revision_au_cache`, lecture hors ligne) ; une faute refuse la
+passe à blanc (code 2) : l'étape A ne part pas.
+
+**Repli** (R5) : toute faute détectée (entrée, modèle, données, garde en échec ; exceptions de `FAUTES_DU_BRAS`) **arrête ce
+seul bras** : la sonde figée concernée n'a pas de
 plancher décisif (« échec », motif écrit dans `reextraction-p3-t07.json`, `notation-t07.json` et l'index des scores) ; aucune
 bascule vers les 200 directions de P3.
 """
@@ -79,7 +88,7 @@ from .plancher_v3 import N_PLANCHER_P3
 
 METHODE = "reextraction_p3_v1"
 CLE_CONFIG = "plancher_figees"
-TOLERANCES = {"processeur": 1e-6, "carte_sonde": 1e-2, "carte_directions": 1e-1}
+TOLERANCES = {"processeur": 1e-6, "carte_sonde": 1e-3, "carte_directions": 1e-2}     # v8 (CLP3-01, R-2305)
 PALIERS = ("identique", "processeur", "carte")
 GARDES_PRINCIPALE = ("rapportee", "decisive")
 FAMILLE_TEMOIN = "difference_moyennes"
@@ -87,9 +96,10 @@ SUFFIXE_PLANCHER = "-t07"            # noms des directions neuves : <sonde>-t07-
 CONCEPTS_P3 = ("tromperie", "enjeux")
 FICHIER_PLANCHERS = "planchers-figees-t07.npz"
 # fautes qui arrêtent le seul bras (motif écrit, type compris) : garde, fichier, modèle absent du cache, carte, clé absente
-FAUTES_DU_BRAS = (GardeArret, OSError, RuntimeError, ValueError, KeyError)
-RESERVE_CARTE = ("écart au-delà de l'arithmétique du processeur : non-déterminisme de la carte présumé (sous les réglages et sur "
-                 "la carte de P3, la régénération R-679 a redonné le fichier complet au bit près)")
+FAUTES_DU_BRAS = (GardeArret, OSError, RuntimeError, ValueError, KeyError, MemoryError, TypeError, AttributeError, IndexError)  # CLP3-07
+RESERVE_CARTE = ("écart au palier « carte », cause non établie : au-delà de l'arithmétique du processeur, sous les plafonds "
+                 "de la configuration v8 ; carte (non-déterminisme sous des réglages pourtant déterministes, que la régénération R-679 "
+                 "n'a pas vu) ou faute d'étendue partielle des jetons réextraits ; écarts dans reextraction-p3-t07.json")
 
 
 # ----------------------------------------------------------------------------------------------------------------- configuration
@@ -444,6 +454,79 @@ def _vider_carte() -> None:
         torch.cuda.empty_cache()
 
 
+FICHIERS_MODELE = ("config.json", "tokenizer.json", "tokenizer_config.json")
+
+
+def revision_au_cache(modele: str, revision: str, cache_dir: str | None = None) -> dict:
+    """La révision `revision` de `modele` est-elle entière dans le cache local ? Lecture hors ligne seulement
+    (`snapshot_download(local_files_only=True)`, aucun accès au réseau) : dossier de la révision, fichiers essentiels, poids
+    (et, avec un index, chacun de ses morceaux). Faute → `GardeArret`."""
+    import json as _json
+
+    from huggingface_hub import snapshot_download
+    try:
+        dossier = Path(snapshot_download(repo_id=modele, revision=revision, local_files_only=True, cache_dir=cache_dir))
+    except Exception as e:                                      # absente du cache : l'API rend une erreur de lecture locale
+        raise GardeArret(f"modèle de P3 {modele}@{revision[:12]} absent du cache local ({type(e).__name__}) : la réextraction ne "
+                         "télécharge jamais") from None
+    if dossier.name != revision:
+        raise GardeArret(f"modèle de P3 : dossier du cache {dossier.name[:12]} ≠ révision {revision[:12]}")
+    manquants = [n for n in FICHIERS_MODELE if not (dossier / n).is_file()]
+    index = dossier / "model.safetensors.index.json"
+    poids = sorted(x.name for x in dossier.glob("*.safetensors"))
+    if index.is_file():
+        attendus = sorted(set(_json.loads(index.read_text(encoding="utf-8"))["weight_map"].values()))
+        manquants += [x for x in attendus if not (dossier / x).is_file()]
+    elif not poids:
+        manquants.append("*.safetensors")
+    if manquants:
+        raise GardeArret(f"modèle de P3 {modele}@{revision[:12]} incomplet au cache local : {manquants}")
+    return {"modele": modele, "revision": revision, "dossier": str(dossier), "poids": len(poids)}
+
+
+def controler_avant_ouverture(racine: Path, config: dict, cache_dir: str | None = None) -> dict:
+    """CLP3-03 : ce dont la réextraction a besoin, contrôlé avant l'ouverture de l'étape A (passe à blanc) : clé
+    `plancher_figees`, sceaux des quatre entrées de P3, principales de P3 égales à celles de la configuration, témoin et
+    directions de P3 de chaque sonde figée au fichier léger, révision du modèle de P3 dans le cache local (mode réel ;
+    jouet : sans objet). Faute → `GardeArret` (refus de la passe à blanc)."""
+    from ..premier_test_ia.figees import lire_sondes
+    if CLE_CONFIG not in config:
+        raise GardeArret(f"configuration : clé {CLE_CONFIG} absente")
+    mode = config["mode"]
+    exiger_config(config[CLE_CONFIG], mode)
+    d = config.get("donnees_p3")
+    if d is None:
+        raise GardeArret("donnees_p3 absente de la configuration : entrées de P3 non citées")
+    d3.exiger_config(d, mode)
+    p3 = lire_p3(racine, d)
+    f = config["planchers_p3"]
+    sondes, _, sha = lire_sondes(Path(racine) / f["chemin"], f["sha256"])
+    par = {x.nom: x for x in sondes}
+    figees = {}
+    for c in CONCEPTS_P3:
+        nom = config["sondes_par_concept"].get(c)
+        if nom is None:
+            continue
+        if p3["resultat"]["principales"].get(c) != nom:
+            raise GardeArret(f"sonde figée {nom} ({c}) : principale de P3 {p3['resultat']['principales'].get(c)!r}")
+        if nom not in par:
+            raise GardeArret(f"sonde figée {nom} absente du fichier léger")
+        s = par[nom]
+        temoin = _temoin(racine, config, c, s)
+        n = len(_directions_p3(racine, config, s, int(config[CLE_CONFIG]["n_p3"])))
+        figees[nom] = {"concept": c, "couche": int(s.couche), "temoin": temoin.nom, "directions_p3": n,
+                       "graine_seconde_garde": f"plancher/{c}" in p3["graines"]}
+    if not figees:
+        raise GardeArret("aucune sonde figée de P3 nommée par la configuration")
+    agent = p3["config"].get("agent") or {}
+    if mode == "reel":
+        cache = revision_au_cache(str(agent.get("modele")), str(agent.get("revision")), cache_dir)
+    else:
+        cache = {"etat": "sans objet (mode jouet : modèle jouet, aucun cache)"}
+    return {"regle": "CLP3-03 (R-2305) : entrées de la réextraction contrôlées avant l'ouverture de l'étape A", "p3": p3["fichiers"],
+            "fichier_leger": {"chemin": f["chemin"], "sha256": sha}, "figees": figees, "modele_p3": cache}
+
+
 def rapport_serialisable(r: dict) -> dict:
     """Le rapport et l'état de chaque bras, sans les directions (objets)."""
     return {"rapport": r["rapport"], "par_sonde": {n: {k: v for k, v in x.items() if k != "directions"} for n, x in r["par_sonde"].items()}}
@@ -462,6 +545,6 @@ def ecrire_planchers(racine_sortie: Path, run_t07: str, r: dict) -> dict | None:
     return {"chemin": rel, "sha256": sha, "directions": {n: len(x["directions"]) for n, x in etablis.items()}}
 
 
-__all__ = ["METHODE", "CLE_CONFIG", "TOLERANCES", "PALIERS", "SUFFIXE_PLANCHER", "FICHIER_PLANCHERS", "RESERVE_CARTE", "exiger_config",
+__all__ = ["revision_au_cache", "controler_avant_ouverture", "FICHIERS_MODELE", "METHODE", "CLE_CONFIG", "TOLERANCES", "PALIERS", "SUFFIXE_PLANCHER", "FICHIER_PLANCHERS", "RESERVE_CARTE", "exiger_config",
            "reglages_de_p3", "lire_p3", "exemples_p3", "ecarts_sonde", "palier", "garde_sonde", "garde_directions",
            "charger_modele_p3", "reextraire", "rapport_serialisable", "ecrire_planchers"]

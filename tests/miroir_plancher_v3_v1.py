@@ -117,6 +117,9 @@ ETAPE_B = [
      '    directions de P3 des sondes figées (`lecture_planchers_p3`, règle (a) à 95 %, hors jugement). v3 : celle de `lecture_v2.etape_b`,'),
     ('for c in ("intervalle", "descriptif") for n in sondes_lues\n',
      'for c in ("intervalle", "descriptif", CLE_P3_DESCRIPTIF) for n in sondes_lues\n'),
+    ("            t, index = lv1.ouvrir_scores(chemin_scores, sondes_lues, refusees)\n",
+     "            t, index = lv1.ouvrir_scores(chemin_scores, sondes_lues, refusees)\n"
+     "            exiger_nombre_de_directions(t, index, config)        # note 05 (R-2305) : n_plancher directions par plancher décisif\n"),
     ("        jeux, hors, etats_i, etats_ii, motifs, ecarts_base, couples = None, None, [], {}, {}, {}, None\n",
      "        jeux, hors, etats_i, etats_ii, motifs, ecarts_base, couples = None, None, [], {}, {}, {}, None\n"
      "        planchers_p3_lus, index = None, None\n"),
@@ -141,6 +144,16 @@ PASSE_BLANC = [
      "    from .lecture_v2 import empreinte_canonique, extracteur_de_la_course\n"
      "    from .lecture_v4 import exiger_configuration\n"),
     ("    from .lecture_v2 import charger_configuration\n", "    from .lecture_v4 import charger_configuration\n"),
+    ('        raise RefusPasse(f"configuration : {e}") from None\n',
+     '        raise RefusPasse(f"configuration : {e}") from None\n'
+     '    from .reextraction_p3_v1 import controler_avant_ouverture          # CLP3-03 (R-2305) : avant l\'ouverture de l\'étape A\n'
+     '    try:\n'
+     '        reextraction_p3 = controler_avant_ouverture(racine, config)\n'
+     '    except GardeArret as e:\n'
+     '        raise RefusPasse(f"réextraction des jetons de P3 non jouable (CLP3-03) : {e}") from None\n'),
+    ('        "configuration": {"empreinte_canonique": empreinte_canonique(config), "couches": couches, "registre": str(registre)},\n',
+     '        "configuration": {"empreinte_canonique": empreinte_canonique(config), "couches": couches, "registre": str(registre)},\n'
+     '        "reextraction_p3": reextraction_p3,\n'),
 ]
 
 # ------------------------------------------------------------------------------- repli_etapes_v1.py → repli_etapes_v2.py (module)
@@ -157,4 +170,7 @@ REPLI = [
     ("    from .lecture_v2 import ArretApresManifeste, charger_configuration, etape_a\n",
      "    from .lecture_v4 import ArretApresManifeste, charger_configuration, etape_a\n"),
     ('prog="python -m controle_ia.t07.lecture_v2"', 'prog="python -m controle_ia.t07.lecture_v4"'),
+    ("    print(f\"notation scellée, fermée : {r['scores']['chemin']} ; sondes lues {r['index']['sondes_lues']}\")\n",
+     "    print(f\"notation scellée, fermée : {r['scores']['chemin']} ; sondes lues {r['index']['sondes_lues']} ; plancher des \"\n"
+     "          f\"figées : {r['planchers_figees']['etats']}\")                           # CLP3-10 (R-2305)\n"),
 ]

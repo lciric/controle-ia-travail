@@ -181,17 +181,18 @@ def test_ecrire_planchers_scelle_et_relu(p3, tmp_path):
 
 # ------------------------------------------------------------------------------------------------------------------ artefacts
 def test_bruit_de_carte_palier_carte_et_reserve(p3):
-    """Bruit de 10⁻³ par jeton (ordre d'un écart de noyau de carte) : témoin et directions au palier « carte » (réserve écrite) ;
-    la principale linéaire, recette chaotique, s'écarte au-delà du processeur : réserve si « rapportee », échec si « decisive »."""
-    r, _ = _lancer(p3, config=_config(p3, "rapportee"), extraire=_bruit(1e-3))
+    """Bruit de 10⁻⁴ par jeton (seuils v8, R-2305 : sur le jouet, 16 exemples, le témoin y vaut ≈ 3 × 10⁻⁴) : témoin et
+    directions au palier « carte » (réserve « cause non établie ») ; la principale linéaire, recette chaotique, s'écarte au-delà
+    du processeur : réserve si « rapportee », échec si « decisive »."""
+    r, _ = _lancer(p3, config=_config(p3, "rapportee"), extraire=_bruit(1e-4))
     for nom, v in r["par_sonde"].items():
         assert v["etat"] == "établi" and v["palier"] == "carte" and v["reserve"] == rx.RESERVE_CARTE, nom
         assert 1e-6 < v["garde_identite"]["ecart_max"] <= rx.TOLERANCES["carte_sonde"]
         assert v["garde_identite"]["palier"] == v["garde_directions_p3"]["palier"] == "carte"
     t = r["par_sonde"]["tromperie-lineaire-c2"]
-    assert t["garde_principale"]["palier"] == "échec" and t["garde_principale"]["ecart_max"] > 1e-2
+    assert t["garde_principale"]["palier"] == "échec" and t["garde_principale"]["ecart_max"] > 1e-3
     assert "rapportée, non décisive" in t["reserve_principale"]
-    r2, _ = _lancer(p3, config=_config(p3, "decisive"), extraire=_bruit(1e-3))
+    r2, _ = _lancer(p3, config=_config(p3, "decisive"), extraire=_bruit(1e-4))
     t2 = r2["par_sonde"]["tromperie-lineaire-c2"]
     assert t2["etat"] == "échec" and "R11" in t2["motif"] and t2["directions"] is None
     assert r2["par_sonde"]["enjeux-difference_moyennes-c0"]["etat"] == "établi" and r2["rapport"]["etat"] == "partiel"
@@ -370,3 +371,111 @@ def test_reglages_de_torch_retablis_apres_la_reextraction(p3, deterministe):
         assert torch.are_deterministic_algorithms_enabled() is deterministe
     finally:
         torch.use_deterministic_algorithms(avant)
+
+
+def test_bruit_de_1e3_arrete_sur_le_jouet_aux_seuils_v8(p3):
+    """Seuils v8 (R-2305) : sur le jouet (16 et 19 exemples), un bruit de 10⁻³ par jeton porte le témoin au-delà de 10⁻³ :
+    les deux bras s'arrêtent (aux effectifs réels, le calibrage v3 le fait passer : témoin ≤ 4,4 × 10⁻⁴)."""
+    r, _ = _lancer(p3, config=_config(p3, "rapportee"), extraire=_bruit(1e-3))
+    assert all(v["etat"] == "échec" and v["garde_identite"]["palier"] == "échec" for v in r["par_sonde"].values())
+
+
+def test_palier_global_le_pire_des_gardes(p3, monkeypatch):
+    """n25c (R-2305) : témoin « identique » et directions au palier « carte » → palier du bras « carte », réserve écrite."""
+    vraie = rx.garde_directions
+
+    def carte(redonnees, figees, h_max, tol):
+        g = vraie(redonnees, figees, h_max, tol)
+        assert g["palier"] == "identique"
+        return {**g, "palier": "carte", "ecart_max": 5e-3}
+    monkeypatch.setattr(rx, "garde_directions", carte)
+    r, _ = _lancer(p3)
+    for v in r["par_sonde"].values():
+        assert v["garde_identite"]["palier"] == "identique" and v["garde_directions_p3"]["palier"] == "carte"
+        assert v["etat"] == "établi" and v["palier"] == "carte" and v["reserve"] == rx.RESERVE_CARTE
+
+
+@pytest.mark.parametrize("exc", [MemoryError, TypeError, AttributeError, IndexError])
+def test_fautes_hors_garde_arretent_le_seul_bras(p3, monkeypatch, exc):
+    """Note 07 (R-2305) : `MemoryError`, `TypeError`, `AttributeError`, `IndexError` arrêtent le seul bras (motif écrit, type
+    compris), jamais l'étape A ; à l'extraction : les deux bras ; au tirage d'un bras : ce bras seul."""
+    def casse(*a, **k):
+        raise exc("artefact")
+    r = rx.reextraire(p3, _config(p3), _figees(p3), lambda cle: GRAINE_T07, N_NEUF, extraire=casse)
+    assert all(v["etat"] == "échec" and exc.__name__ in v["motif"] for v in r["par_sonde"].values())
+    vraie = rx.plancher_apparie
+    monkeypatch.setattr(rx, "plancher_apparie", lambda nom, *a, **k: (_ for _ in ()).throw(exc("tirage")) if nom.startswith("tromperie")
+                        else vraie(nom, *a, **k))
+    r, _ = _lancer(p3)
+    t, e = r["par_sonde"]["tromperie-lineaire-c2"], r["par_sonde"]["enjeux-difference_moyennes-c0"]
+    assert t["etat"] == "échec" and exc.__name__ in t["motif"] and e["etat"] == "établi"
+
+
+def test_controle_avant_ouverture_cas_sain_et_artefacts(p3, tmp_path):
+    """CLP3-03 (R-2305) : entrées de la réextraction contrôlées avant l'ouverture (jouet : cache sans objet)."""
+    c = _config(p3)
+    r = rx.controler_avant_ouverture(p3, c)
+    assert set(r["figees"]) == {"tromperie-lineaire-c2", "enjeux-difference_moyennes-c0"}
+    assert r["figees"]["tromperie-lineaire-c2"]["temoin"] == "tromperie-difference_moyennes-c2"
+    assert all(x["directions_p3"] == 4 and x["graine_seconde_garde"] for x in r["figees"].values())
+    assert r["modele_p3"]["etat"].startswith("sans objet")
+    fautes = []
+    x = _config(p3); x["donnees_p3"] = None; fautes.append((x, "donnees_p3"))
+    x = _config(p3); x["donnees_p3"]["sondes_figees_p3"]["sha256"] = "0" * 64; fautes.append((x, "empreinte"))
+    x = _config(p3); x["sondes_par_concept"]["tromperie"] = "tromperie-difference_moyennes-c2"; fautes.append((x, "principale de P3"))
+    x = _config(p3, n_p3=5); fautes.append((x, "directions"))
+    x = _config(p3); del x[rx.CLE_CONFIG]; fautes.append((x, "absente"))
+    for cfg, motif in fautes:
+        with pytest.raises(GardeArret, match=motif):
+            rx.controler_avant_ouverture(p3, cfg)
+
+
+def _cache(base, modele, revision, fichiers):
+    d = base / ("models--" + modele.replace("/", "--")) / "snapshots" / revision
+    d.mkdir(parents=True)
+    for nom, contenu in fichiers.items():
+        (d / nom).write_text(contenu, encoding="utf-8")
+    return base
+
+
+REV = "0e9e39f249a16976918f6564b8830bc894c89659"
+COMPLET = {"config.json": "{}", "tokenizer.json": "{}", "tokenizer_config.json": "{}",
+           "model.safetensors.index.json": json.dumps({"weight_map": {"a": "model-00001-of-00002.safetensors",
+                                                                       "b": "model-00002-of-00002.safetensors"}}),
+           "model-00001-of-00002.safetensors": "x", "model-00002-of-00002.safetensors": "x"}
+
+
+def test_revision_au_cache_cas_sain_et_artefacts(tmp_path, monkeypatch):
+    """CLP3-03 : révision du modèle de P3 au cache local, lue hors ligne (cache factice ; aucun accès au réseau)."""
+    monkeypatch.setenv("HF_HUB_OFFLINE", "1")
+    sain = _cache(tmp_path / "sain", "org/nom", REV, COMPLET)
+    r = rx.revision_au_cache("org/nom", REV, str(sain))
+    assert r["poids"] == 2 and r["dossier"].endswith(REV)
+    with pytest.raises(GardeArret, match="absent du cache local"):
+        rx.revision_au_cache("org/nom", "1" * 40, str(sain))
+    with pytest.raises(GardeArret, match="absent du cache local"):
+        rx.revision_au_cache("org/autre", REV, str(sain))
+    partiel = _cache(tmp_path / "partiel", "org/nom", REV, {k: v for k, v in COMPLET.items() if k != "model-00002-of-00002.safetensors"})
+    with pytest.raises(GardeArret, match="incomplet"):
+        rx.revision_au_cache("org/nom", REV, str(partiel))
+    sans_tok = _cache(tmp_path / "sans-tok", "org/nom", REV, {k: v for k, v in COMPLET.items() if k != "tokenizer.json"})
+    with pytest.raises(GardeArret, match="tokenizer.json"):
+        rx.revision_au_cache("org/nom", REV, str(sans_tok))
+    sans_poids = _cache(tmp_path / "sans-poids", "org/nom", REV, {k: v for k, v in COMPLET.items() if "safetensors" not in k})
+    with pytest.raises(GardeArret, match="safetensors"):
+        rx.revision_au_cache("org/nom", REV, str(sans_poids))
+
+
+def test_controle_avant_ouverture_en_mode_reel_lit_le_cache(p3, monkeypatch):
+    """CLP3-03 : en mode réel, la révision de l'agent de P3 est cherchée au cache (ici : appel intercepté, cas sain et artefact)."""
+    vus = []
+    monkeypatch.setattr(rx, "revision_au_cache", lambda m, r, c=None: vus.append((m, r)) or {"modele": m, "revision": r})
+    monkeypatch.setattr(rx, "exiger_config", lambda pf, mode: None)
+    monkeypatch.setattr(rx.d3, "exiger_config", lambda d, mode: None)
+    c = {**_config(p3), "mode": "reel"}
+    r = rx.controler_avant_ouverture(p3, c)
+    agent = json.loads((p3 / f"runs/{RUN_P3}/manifeste.json").read_text())["config"]["agent"]
+    assert vus == [(str(agent.get("modele")), str(agent.get("revision")))] and r["modele_p3"]["modele"] == vus[0][0]
+    monkeypatch.setattr(rx, "revision_au_cache", lambda m, r, c=None: (_ for _ in ()).throw(GardeArret("absent du cache local")))
+    with pytest.raises(GardeArret, match="absent du cache local"):
+        rx.controler_avant_ouverture(p3, c)

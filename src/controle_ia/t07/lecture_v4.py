@@ -34,6 +34,11 @@ Ce que la v4 change, et rien d'autre (essais de miroir : `tests/test_t07_planche
 - **`etape_b`** (copie de `lecture_v3.etape_b`) : contrôle v4 ; lecture descriptive des 200 directions de P3
   (`lecture_planchers_p3` : règle (a), 95 %, hors jugement, graines « descriptif-p3/<sonde>/<jeu> ») ; `methode_plancher` du
   résultat porte `n_plancher` et la méthode des figées.
+
+Corrections de la contre-lecture (R-2305) : configuration **v8** (seuils du palier « carte » 10⁻³ et 10⁻², CLP3-01 ; la v7 est
+refusée) ; contrôle avant l'ouverture à la passe à blanc (`reextraction_p3_v1.controler_avant_ouverture`, CLP3-03) ; à l'étape
+B, chaque plancher décisif doit compter `n_plancher` directions (`exiger_nombre_de_directions`, note 05) ; état des figées
+affiché par `etape-a-apres-repli` (note 10).
 """
 from __future__ import annotations
 
@@ -150,6 +155,21 @@ def lecture_planchers_p3(t: dict, index: dict, mesures: dict, config: dict, grai
         for jeu in sortie[nom]:
             sortie[nom][jeu]["lecture"] = LECTURE_P3
     return {"lecture": LECTURE_P3, "jeux": sortie, "non_lues": absentes}
+
+
+def exiger_nombre_de_directions(t: dict, index: dict, config: dict) -> None:
+    """Note 05 (R-2305) : à l'ouverture des scores (étape B), chaque sonde notée a un plancher décisif de `n_plancher`
+    directions (tableau `plancher_<k>`, et nombre écrit dans l'index) ; sinon arrêt de l'étape B."""
+    n = int(config["n_plancher"])
+    if int(index.get("n_plancher", -1)) != n:
+        raise GardeArret(f"scores : n_plancher {index.get('n_plancher')!r} à l'étape A ≠ {n} (configuration) : arrêt")
+    for e in index["sondes"]:
+        if e.get("etat") != "notée":
+            continue
+        k = e["rang"]
+        m = t.get(f"plancher_{k}")
+        if m is None or int(m.shape[0]) != n or int((e.get("plancher") or {}).get("n", -1)) != n:
+            raise GardeArret(f"plancher décisif de {e['nom']} : {None if m is None else m.shape[0]} directions, {n} attendues : arrêt")
 
 
 def paliers_de(x: dict) -> dict:
@@ -585,6 +605,7 @@ def etape_b(racine: Path, registre: Path, config: dict, run_t06: str, run_t07: s
         if ouvre:
             chemin_scores = racine_sortie / lignes[rg.SCORES_T07]["chemin"]
             t, index = lv1.ouvrir_scores(chemin_scores, sondes_lues, refusees)
+            exiger_nombre_de_directions(t, index, config)        # note 05 (R-2305) : n_plancher directions par plancher décisif
             rg.journaliser_ouverture(registre, instant, f"scores-t07/{run_t07} (Q = {q} ; conditions retirées : "
                                      f"{', '.join(refusees) or 'aucune'})", lignes[rg.SCORES_T07]["sha256"])
             mesures = lv1.charger_mesures(ep["mesures"], list(config["predicteurs_triviaux"]) + ["cout"])
@@ -729,7 +750,7 @@ def main(argv: list[str]) -> int:
 
 
 __all__ = ["exiger_configuration", "charger_configuration", "empreinte_configuration", "methode_plancher", "charger_planchers_p3",
-           "lecture_planchers_p3", "paliers_de", "reserves_plancher_figees", "noter", "etape_a", "etape_b", "main", "CLES_CONFIG",
+           "lecture_planchers_p3", "paliers_de", "reserves_plancher_figees", "exiger_nombre_de_directions", "noter", "etape_a", "etape_b", "main", "CLES_CONFIG",
            "CLE_P3_DESCRIPTIF", "SOURCE_P3",
            "SOURCE_FIGEES", "LECTURE_P3"]
 

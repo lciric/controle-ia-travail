@@ -167,5 +167,6 @@ def main(argv: list[str]) -> int:
     except GardeArret as err:
         print(f"REFUS : {err}", file=sys.stderr)
         return CODE_REFUS
-    print(f"notation scellée, fermée : {r['scores']['chemin']} ; sondes lues {r['index']['sondes_lues']}")
+    print(f"notation scellée, fermée : {r['scores']['chemin']} ; sondes lues {r['index']['sondes_lues']} ; plancher des "
+          f"figées : {r['planchers_figees']['etats']}")                           # CLP3-10 (R-2305)
     return CODE_OK
