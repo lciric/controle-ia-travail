@@ -24,7 +24,7 @@ Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au
 1. `cd docs && sha256sum -c sha256sums-lancement-v2.txt` ; puis `python -m controle_ia.scellement verifier-arbre .` (avec `PYTHONPATH=src`).
 2. Lire `registres/etat.md` et la dernière passation dans `registres/passations/` (la plus récente par nom).
 3. Appliquer les défauts échus : toute décision « proposer avec recommandation » sans réponse depuis 48 heures prend son défaut ; le consigner dans `registres/decisions.md` et `registres/etat.md`.
-4. Inventorier les instances de calcul actives (Vast.ai : `vastai show instances`) ; toute instance sans tâche en cours s'arrête par son identifiant (R10) et se consigne dans `registres/arrets.md`.
+4. Inventorier les instances de calcul actives (Vast.ai : `vastai show instances` ; Hetzner : liste des serveurs du projet par l'interface de Hetzner, `GET https://api.hetzner.cloud/v1/servers` avec le jeton `HCLOUD_TOKEN` lu par son nom, identifiants et noms seulement — mot de Lazar, R-2322) ; toute instance ou tout serveur sans tâche en cours s'arrête par son identifiant (R10) et se consigne dans `registres/arrets.md`.
 5. Lancer les tests : `python -m pytest -q`. Puis reprendre à la « prochaine action » de la dernière passation.
 
 ## Passation — à la fin de CHAQUE session (R14)
