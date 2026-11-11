@@ -1,0 +1,12 @@
+# P-4 : place disque — relevé par la session fille (préalables de P3-bis, phase 1)
+Heure (date -u) : 2026-11-10T23:58:51Z ; dossier parent de la future racine de répétition : /tmp (même disque que /home/user)
+Commande : df -Pk /tmp /home/user /tmp/claude-0
+
+Filesystem     1024-blocks     Used Available Capacity Mounted on
+/dev/vda         264212084 13202636  27113316      33% /
+
+Seuil PLACE_MIN_KO : 12692612 ko ; libres : 27113316 ko ; conforme (marge 14420704 ko) au moment du relevé, avant l'installation de l'environnement PY et des clones.
+
+Second relevé, 2026-11-11T00:03:54Z (date -u), après l'installation de PY (/home/user/venv-p3bis-py311-v1), deux clones de 4,0 Go chacun (/home/user/clone-p3bis-a1de3915-v1, /home/user/mesure-longueurs-p3bis-v1) et le cache de pip :
+/dev/vda         264212084 31024456   9291496      77% /
+Libres : 9291496 ko < 12692612 ko : la répétition finale (P-6) exigera d'effacer d'abord, par leur chemin exact, le clone de mesure et le cache de pip de cette session (≈ 6,4 Go), puis un relevé neuf.
