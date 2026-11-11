@@ -11,7 +11,7 @@
   run jouet de P3 : code 0, résumé JSON ; artefacts → code 2, motif écrit, rien d'écrit sous la racine (sceau faux, témoin
   absent, sonde figée absente, garde de la principale inconnue, clé `plancher_figees` absente, fichier de configuration absent
   ou illisible, faute hors garde). Réel, sur les fichiers réels de P3 et la configuration v8 : cache factice complet → code 0 ;
-  cache absent, index illisible, configuration v7 → code 2.
+  cache absent, index illisible, configuration v7, `n_plancher` 200 → code 2.
 """
 from __future__ import annotations
 
@@ -232,6 +232,10 @@ def test_commande_controle_avant_ouverture_reel(tmp_path, capsys, hors_ligne):
     assert code == lv4.CODE_REFUS and "index des poids illisible" in err
     code, out, err = _commande(RACINE_DEPOT, v7(), tmp_path, capsys, "--cache-dir", str(sain))   # v7 : tolérances autres
     assert code == lv4.CODE_REFUS and "fixées d'avance" in err, err
+    c = v8()
+    c["n_plancher"] = 200                                       # contrôle de la v4 (non de la réextraction) : joué d'abord
+    code, out, err = _commande(RACINE_DEPOT, c, tmp_path, capsys, "--cache-dir", str(sain))
+    assert code == lv4.CODE_REFUS and "n_plancher 200 ≠ 800" in err, err
     c = v8()
     c["mode"] = "jouet"                                         # même fichiers, mode jouet : cache sans objet (pas de lecture)
     code, out, err = _commande(RACINE_DEPOT, c, tmp_path, capsys, "--cache-dir", str(tmp_path / "vide"))
