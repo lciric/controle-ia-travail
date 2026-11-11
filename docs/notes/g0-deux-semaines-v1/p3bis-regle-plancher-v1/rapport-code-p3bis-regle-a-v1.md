@@ -18,8 +18,8 @@ rien d'autre), l'ancienne règle à 200 est calculée et rapportée, un désacco
 bancs et **répétition jouet de bout en bout conformes** ; essai de fermeture v3 conforme ; temps d'instance ajouté
 **≈ 1 à 2 minutes** ; **37 couples** proposés, non appliqués. À contre-lire (P-7) avant le candidat.
 
-- Essais : 30 neufs (+ 3 au banc du module commun), suite des essais de P3-bis de l'arbre : `<<SUITE>>`.
-- Mutations : `<<MUTATIONS>>`.
+- Essais : 31 neufs (+ 3 au banc du module commun), suite des essais de P3-bis de l'arbre : `<<SUITE>>`.
+- Mutations : 27 tuées sur 27 (24 en première passe, 3 après renforcement des essais), import tracé sous la copie.
 - Aucun appel de modèle, aucune instance, aucune dépense ; aucun fichier existant modifié (R12).
 
 ## 1. Où naît le plancher dans la chaîne de P3-bis, et comment obtenir 800 directions dont les 200 premières sont celles de P3
@@ -209,8 +209,8 @@ tirage) ; sous le plafond de 80 USD de GO-2026-11-10-02. Aucune dépense ici.
 
 ## 4. Essais, mutations
 
-**Essais neufs** (30 dans `tests/`, plus 3 dans le banc du module commun v2), chaque garde neuve avec un cas sain et au
-moins un artefact (R5) :
+**Essais neufs** (31 dans `tests/` — lecture v2 21, notation 3, ouverture v3 5, essai de fermeture v3 2 —, plus 3 dans le
+banc du module commun v2), chaque garde neuve avec un cas sain et au moins un artefact (R5) :
 
 | garde ou propriété | cas sain | artefact(s) | essai |
 |---|---|---|---|
@@ -225,7 +225,8 @@ moins un artefact (R5) :
 | ancienne règle sur les seules 200 premières ; réserve R-R | runs jouets (pas de R-R) | directions 200 à 799 égales à la sonde : (a) « non vu », ancienne règle « vu », lecture de P3 (800) « non au-dessus » | `test_ancienne_regle_sur_les_seules_200_premieres_et_reserve_r_r` |
 | PB-13 aligné, R-M | sépare partout | ne sépare que sur les actions mentionnées ; classe vide (« non calculable ») | `test_pb13_aligne_sur_la_regle_a` |
 | jeux descriptifs et PB-7 sous (a) | aucun PB-7 | T séparé de H ; P3 « au-dessus » mais (a) non : pas de PB-7 ; place de PB-7 dans la liste égale à celle de la v1 | `test_jeux_descriptifs_et_pb7_sous_la_regle_a`, `test_reserve_pb7_suit_la_regle_a_et_non_la_lecture_de_p3`, `test_reserves_de_la_v1_gardees` |
-| identité PB-9 par nom | 430 sondes égales, 1 200 neuves | empreinte changée ; sonde de P3 absente ; neuve hors des directions 200 à 799 ; principales échangées | `test_identite_pb9_par_nom` |
+| identité PB-9 par nom | 430 sondes égales, 1 200 neuves | empreinte changée ; sonde de P3 absente ; neuve hors des directions 200 à 799 ; direction 200 présente dans P3 ; principales échangées (`identite` faux à chaque artefact) | `test_identite_pb9_par_nom` |
+| frontière « au moins autant » (≥, pas >) | égalité exacte : « non interprétable » (prédicteur trivial, `etat` ; mention étendue, `e_prime`) | juste en dessous ; non au-dessus ; échec ; séparation absente | `test_frontiere_au_moins_autant_predicteur_trivial_et_mention` |
 | aucune impression ; codes | quatre issues : code 0, sorties vides ; clé de PB-13 inchangée | garde : code 1, « ARRÊT : plancher de … » | `test_analyser_aucune_impression_code_0_et_garde_code_1` |
 | notation par lots à 800 directions | 1 603 sondes × 8 actions : écart ≤ 10⁻¹² ; 200 premières pareilles à 200 ou 800 | direction altérée : garde d'identité arrête | `tests/test_premier_test_ia_notation_plancher_800_v1.py` (3) |
 | ouverture v3 = v2 hors des lignes déclarées | comparaison des fichiers ; sources des fonctions et classes ; constantes ; commandes | une ligne de plus ailleurs | `tests/test_premier_test_ia_ouverture_p3bis_v3.py` (3) |
@@ -233,7 +234,23 @@ moins un artefact (R5) :
 | essai de fermeture v3 | comparaison au script v2 ; essai complet conforme | sept contrôles positifs détectés | `tests/test_essai_fermeture_p3bis_v3.py` (2) |
 | module commun v2 : `n_plancher` | configuration à 800 | 200 ; absente ; brouillon 1 (à 200) ; journal qui prouve un script `_v1` | `essais_verifications_p3bis_v2.py` (147) |
 
-(Suite des essais de P3-bis et mutations : à compléter.)
+**Mutations sur copies** (`mutations_p3bis_regle_a_v1.py`, versé ; journaux `mutations-p3bis-regle-a-v1.txt` et
+`mutations-survivantes-rejouees-v1.txt`) : pour chaque mutation, copie de `src/`, `tests/`, `scripts/` et `pyproject.toml`,
+une seule modification (texte trouvé une fois), essais visés joués **dans la copie** par `python -m pytest -o
+pythonpath="src tests" -p trace_import_mutation` ; le greffon (seul dossier de `PYTHONPATH`) écrit au début de la session
+le fichier réellement importé de chaque module muté (**import tracé** : toujours sous la copie, et le fichier muté
+lui-même) ; un **témoin** sans mutation passe (29, puis 30 essais). **Première passe : 24 tuées sur 27** ; survivantes :
+**m05** et **m06** (« au moins » devenu « plus que », pour le prédicteur trivial et la mention étendue : les essais ne
+visaient pas l'égalité exacte) et **m17** (l'essai de PB-9 ne vérifiait pas `identite` faux quand une sonde neuve tombe
+hors des directions 200 à 799). Essais renforcés (essai de frontière neuf ; `identite` faux exigé à chaque artefact de
+PB-9, et un artefact de plus), puis **les trois rejouées : 3 tuées sur 3**. **Total : 27 tuées sur 27.** Mutations :
+nombre de directions exigé, ancienne règle (199, 200 dernières), quantile, ordre du tirage, accords avec la lecture de P3
+(trois), intervalles des deux règles, graine, échec non rattrapé, issue tirée de l'ancienne règle, R-R inversée, PB-7 lu
+chez P3, PB-13 sur toutes les actions, niveau de A contre H, positifs inversés, `resume_pour_critere` retiré, sortie
+standard qui porte l'issue, PB-9 ; ouverture v3 (lecture v1, constante, fonction changées) ; essai v3 à 200 directions ;
+`t07/plancher_v2.py` altéré.
+
+(Suite des essais de P3-bis : à compléter.)
 
 ## 5. Couples proposés (écrits, non appliqués)
 
@@ -287,7 +304,7 @@ la configuration obtenue reste un JSON valide (journal `couples-proposes-p3bis-r
    `banc-*-p3bis-v2.log`, `repetition-*-p3bis-v2.log` ; épingles dans `controles_avant_depense_p3bis_v2.sh` (dont
    `ESSAI_FERMETURE` = la sortie de l'essai v3) et `recuperation_p3bis_v2.sh`. **La répétition finale v2 n'est pas jouée
    ici** (vrai tokeniseur par Hugging Face, épingles, ≈ 12,7 Go) : c'est P-6.
-5. **Liste ciblée v2 gardée** (précédent R-2113) : les 30 essais neufs ne sont pas dans la liste de l'instance ; ils se
+5. **Liste ciblée v2 gardée** (précédent R-2113) : les 31 essais neufs ne sont pas dans la liste de l'instance ; ils se
    jouent sur processeur, dans la session. N = 531 inchangé (à recompter par P-2 comme prévu).
 6. **Mesure du temps** : la notation sur la carte est **estimée** (aucune carte ici), pas mesurée ; tirage et garde
    d'identité mesurés sur ce processeur (4 cœurs, un fil), non sur l'EPYC 7513 de l'instance. Le total (≈ 1 à 2 min) est un
@@ -317,3 +334,27 @@ la configuration obtenue reste un JSON valide (journal `couples-proposes-p3bis-r
     `/prereg/P3-premier-test-config-v1.json*` et cinq pièces nommées de `brouillons/P3-bis-temoin-positif-v1/`
     (consignes brouillon 2, configuration brouillon 1, brouillons 9 et 10, sortie v1 de l'essai de fermeture v2) ; jamais
     `donnees/` ni `docs/notes/` entiers.
+
+## 7. Pièces
+
+**Branche** `prep/p3bis-regle-a-v1` (partie de `614fd5da4d63b3849f40d5dbf320ccb50d1a1330`, poussée ; jamais fusionnée) :
+
+| commit | contenu |
+|---|---|
+| `db39618f` | `t07/plancher_v2.py` repris de C7 à l'identique |
+| `08ae1244` | `lecture_p3bis_v2.py`, `ouverture_p3bis_v3.py`, `essai_fermeture_p3bis_v3.py` |
+| `3525a20c` | les quatre fichiers d'essais neufs |
+| `ab182e73` | chaîne de session v2 (quinze scripts) |
+| `da683900` | compagnons de la chaîne v2 ; journaux du développeur v4 (bancs, répétition jouet, générateur, écarts) |
+| `5e457525` | compagnons des fichiers neufs de l'arbre gelé, et l'essai de frontière et les artefacts de PB-9 renforcés : **commit du code proposé** (`5e4575259478af3611e2c7fb1313342912caf484`) — son message dit « 30 essais » : il y en a 31, l'essai de frontière ayant été ajouté juste avant (déclaré ; l'histoire poussée n'est pas réécrite) |
+
+**Fichiers neufs de l'arbre gelé au commit du code** (empreintes recalculées par `git show`, égales à leurs compagnons) :
+<<EMPREINTES_NEUVES>>
+
+**Pièces à côté de ce rapport** (`docs/notes/g0-deux-semaines-v1/p3bis-regle-plancher-v1/`, scellées, non committées) :
+
+| pièce | sha256 |
+|---|---|
+<<TABLE_PIECES>>
+
+Ce rapport est scellé en dernier (compagnon `rapport-code-p3bis-regle-a-v1.md.sha256`).
