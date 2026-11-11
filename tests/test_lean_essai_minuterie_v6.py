@@ -338,73 +338,19 @@ def test_delai_de_survie_par_defaut(tmp_path):   # m09
                                                            verifier=verifier)["garder"]
 
 
-def test_course_reproduite_et_sans_destruction(tmp_path):
-    """La course est reproduite (première lecture du PID négative, comme les 6 sur 138 du lecteur) ; elle ne fait plus conclure
-    « morte », ni par les lectures du PID, ni par `poll()`."""
-    vus, lectures = [], []
-
-    def verifier(f):
-        r = M.verifier_minuterie(f)
-        lectures.append(r["vivante"])
-        return r
-    try:
-        mi = M.lancer_minuterie_detachee(dossier=tmp_path / "a", popen=popen_reel(vus, retard=0.4), **k_lancement(tmp_path))
-        r = M.attendre_minuterie(mi, verifier=verifier, delai_s=30.0, pas_s=0.05, dormir=time.sleep)
-        assert lectures[0] is False and r["vivante"] and r["garder"] and r["lectures_negatives"] >= 1
-        mi = M.lancer_minuterie_detachee(dossier=tmp_path / "b", popen=popen_reel(vus, retard=0.4), **k_lancement(tmp_path))
-        r = M.attendre_minuterie(mi, processus=mi["_processus"], delai_s=30.0, pas_s=0.05, dormir=time.sleep)
-        assert r["vivante"] and r["garder"]
-    finally:
-        arreter(vus)
-
-
-def test_creation_avec_course_ne_detruit_pas(tmp_path):
-    """Vrai chemin de `creer_et_armer` (contrôle par défaut, `poll()`), vraie minuterie retardée : le serveur reste."""
+def test_controle_par_defaut_utilise_poll(tmp_path):   # poll() vivant, PID illisible : armée, rien n'est détruit
     api, chemins, ratt, emp = pret(tmp_path)
-    vus = []
-    try:
-        r = creer(api, chemins, ratt, emp, controler=None, dormir=time.sleep,
-                  lancer=lambda **kw: M.lancer_minuterie_detachee(popen=popen_reel(vus, retard=0.4), **kw))
-        assert 778 in api.serveurs and r["survie"]["garder"] and r["minuterie"]["pid"] == vus[0].pid
-        assert r["minuterie"]["journal"].startswith(str(M.DOSSIER_RELATIF))
-    finally:
-        arreter(vus)
+    j = tmp_path / "j.jsonl"
+    j.write_text(json.dumps({"detruire": False, "motif": "garder"}) + "\n")
+    pid = tmp_path / "pid.txt"
+    pid.write_text(f"{2 ** 22 + 7} 778 {JETON}\n")
 
-
-def test_lancements_reels_en_serie(tmp_path):
-    """25 vrais lancements sans retard, contrôle par les lectures du PID : aucun « morte » à tort."""
-    vus, negatifs = [], 0
-    try:
-        for n in range(25):
-            jeton = f"{n:02x}" * 16
-            mi = M.lancer_minuterie_detachee(dossier=tmp_path / f"s{n}", popen=popen_reel(vus),
-                                             **k_lancement(tmp_path, jeton))
-            r = M.attendre_minuterie(mi, delai_s=20.0, pas_s=0.02, dormir=time.sleep)
-            assert r["vivante"] and r["garder"], r
-            negatifs += r["lectures_negatives"]
-            arreter(vus[-1:])
-    finally:
-        arreter(vus)
-    print(f"lectures négatives du PID sur 25 lancements : {negatifs} (sans conclusion « morte »)")
-
-
-def test_minuterie_reelle_detachee(tmp_path):
-    vus = []
-    try:
-        mi = M.lancer_minuterie_detachee(dossier=tmp_path / "vivante", popen=popen_reel(vus), **k_lancement(tmp_path))
-        assert os.getsid(vus[0].pid) == vus[0].pid != os.getsid(0)   # session à elle
-        survie = M.attendre_minuterie(mi, delai_s=30.0, pas_s=0.2, dormir=time.sleep, processus=mi["_processus"])
-        assert survie["vivante"] and survie["garder"]
-        r = M.verifier_minuterie(Path(mi["fichier_pid"]), journal_minuterie=Path(mi["journal"]))
-        assert r["conforme"] and r["pid"] == vus[0].pid
-        morte = M.lancer_minuterie_detachee(dossier=tmp_path / "morte", popen=popen_reel(vus, code="import sys; sys.exit(2)"),
-                                            **k_lancement(tmp_path))
-        vus[1].wait(timeout=30)
-        assert not M.attendre_minuterie(morte, delai_s=2.0, pas_s=0.5, dormir=time.sleep)["vivante"]
-        assert M.attendre_minuterie(morte, processus=morte["_processus"], dormir=rien)["motif"] == "processus fini (code 2)"
-    finally:
-        arreter(vus)
-    assert not M.verifier_minuterie(Path(mi["fichier_pid"]))["vivante"]
+    class Vit:
+        def poll(self):
+            return None
+    r = creer(api, chemins, ratt, emp, controler=None,
+              lancer=lambda **kw: {"pid": 2 ** 22 + 7, "fichier_pid": str(pid), "journal": str(j), "_processus": Vit()})
+    assert r["survie"]["garder"] and 778 in api.serveurs and "_processus" not in r["minuterie"]
 
 
 # ---- CLC5-06 : m01, m10, m11, m15 (m09 plus haut) ------------------------------------------------------------------------------
@@ -415,19 +361,6 @@ def test_veiller_absence_sur_deux_lectures(tmp_path):   # m10 : un 404 seul n'ar
                           heure=suite_d_heures(UNE_HEURE, UNE_HEURE, UNE_HEURE, UNE_HEURE, ECHUE))
     assert code == 0 and 778 not in api.serveurs and not any(e.get("absence") for e in j)
     assert ("DELETE", "/servers/778") in api.appels
-
-
-def test_branche_macos_avec_vrai_ps(tmp_path):   # m11 : `kill -0` et `ps -ww` réels, sans /proc
-    p = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)", M.MODULE, "veiller", "--identifiant", "778"])
-    try:
-        f = tmp_path / "pid.txt"
-        f.write_text(f"{p.pid} 778 {JETON}\n")
-        r = M.verifier_minuterie(f, tmp_path / "pas-de-proc")
-        assert r["vivante"] and r["methode"] == "kill -0 et ps -p"
-    finally:
-        os.kill(p.pid, 15)
-        p.wait(timeout=30)
-    assert M.verifier_minuterie(f, tmp_path / "pas-de-proc")["motif"].startswith("processus absent")
 
 
 def test_lecture_refusee_401_bornee_a_trois(capsys):   # m01
@@ -569,6 +502,9 @@ def test_fichier_pousse_par_ls_remote(tmp_path):
     ok, motif = M.fichier_pousse(clone, f)
     assert not ok and "absent de la branche distante" in motif
     assert M.fichier_pousse(clone, tmp_path / "ailleurs.json")[1] == "fichier hors du dépôt"
+    git("--git-dir", str(distant), "update-ref", "-d", "refs/heads/poste", cwd=tmp_path)   # branche retirée du distant
+    git("reset", "-q", "--hard", "HEAD~1", cwd=clone)
+    assert M.fichier_pousse(clone, f) == (False, "branche poste absente du dépôt distant (lu par git ls-remote)")
 
 
 def test_pilote_bornes_ssh():
@@ -1076,3 +1012,87 @@ def test_acces_artefacts(tmp_path):
         with pytest.raises(GardeArret, match="IPv4"):
             M.creer_acces(client(api), prep, CLE_PUB, ip, chemins["verse"])
     assert not api.cles and not api.pare_feux
+
+
+# ---- vrais processus (CLC5-01, m11), en fin de fichier ----------------------------------------------------------------------
+
+def test_course_reproduite_et_sans_destruction(tmp_path):
+    """La course est reproduite (première lecture du PID négative, comme les 6 sur 138 du lecteur) ; elle ne fait plus conclure
+    « morte », ni par les lectures du PID, ni par `poll()`."""
+    vus, lectures = [], []
+
+    def verifier(f):
+        r = M.verifier_minuterie(f)
+        lectures.append(r["vivante"])
+        return r
+    try:
+        mi = M.lancer_minuterie_detachee(dossier=tmp_path / "a", popen=popen_reel(vus, retard=0.4), **k_lancement(tmp_path))
+        r = M.attendre_minuterie(mi, verifier=verifier, delai_s=30.0, pas_s=0.05, dormir=time.sleep)
+        assert lectures[0] is False and r["vivante"] and r["garder"] and r["lectures_negatives"] >= 1
+        mi = M.lancer_minuterie_detachee(dossier=tmp_path / "b", popen=popen_reel(vus, retard=0.4), **k_lancement(tmp_path))
+        r = M.attendre_minuterie(mi, processus=mi["_processus"], delai_s=30.0, pas_s=0.05, dormir=time.sleep)
+        assert r["vivante"] and r["garder"]
+    finally:
+        arreter(vus)
+
+
+def test_creation_avec_course_ne_detruit_pas(tmp_path):
+    """Vrai chemin de `creer_et_armer` (contrôle par défaut, `poll()`), vraie minuterie retardée : le serveur reste."""
+    api, chemins, ratt, emp = pret(tmp_path)
+    vus = []
+    try:
+        r = creer(api, chemins, ratt, emp, controler=None, dormir=time.sleep,
+                  lancer=lambda **kw: M.lancer_minuterie_detachee(popen=popen_reel(vus, retard=0.4), **kw))
+        assert 778 in api.serveurs and r["survie"]["garder"] and r["minuterie"]["pid"] == vus[0].pid
+        assert r["minuterie"]["journal"].startswith(str(M.DOSSIER_RELATIF))
+    finally:
+        arreter(vus)
+
+
+def test_lancements_reels_en_serie(tmp_path):
+    """25 vrais lancements sans retard, contrôle par les lectures du PID : aucun « morte » à tort."""
+    vus, negatifs = [], 0
+    try:
+        for n in range(25):
+            jeton = f"{n:02x}" * 16
+            mi = M.lancer_minuterie_detachee(dossier=tmp_path / f"s{n}", popen=popen_reel(vus),
+                                             **k_lancement(tmp_path, jeton))
+            r = M.attendre_minuterie(mi, delai_s=20.0, pas_s=0.02, dormir=time.sleep)
+            assert r["vivante"] and r["garder"], r
+            negatifs += r["lectures_negatives"]
+            arreter(vus[-1:])
+    finally:
+        arreter(vus)
+    print(f"lectures négatives du PID sur 25 lancements : {negatifs} (sans conclusion « morte »)")
+
+
+def test_minuterie_reelle_detachee(tmp_path):
+    vus = []
+    try:
+        mi = M.lancer_minuterie_detachee(dossier=tmp_path / "vivante", popen=popen_reel(vus), **k_lancement(tmp_path))
+        assert os.getsid(vus[0].pid) == vus[0].pid != os.getsid(0)   # session à elle
+        survie = M.attendre_minuterie(mi, delai_s=30.0, pas_s=0.2, dormir=time.sleep, processus=mi["_processus"])
+        assert survie["vivante"] and survie["garder"]
+        r = M.verifier_minuterie(Path(mi["fichier_pid"]), journal_minuterie=Path(mi["journal"]))
+        assert r["conforme"] and r["pid"] == vus[0].pid
+        morte = M.lancer_minuterie_detachee(dossier=tmp_path / "morte", popen=popen_reel(vus, code="import sys; sys.exit(2)"),
+                                            **k_lancement(tmp_path))
+        vus[1].wait(timeout=30)
+        assert not M.attendre_minuterie(morte, delai_s=2.0, pas_s=0.5, dormir=time.sleep)["vivante"]
+        assert M.attendre_minuterie(morte, processus=morte["_processus"], dormir=rien)["motif"] == "processus fini (code 2)"
+    finally:
+        arreter(vus)
+    assert not M.verifier_minuterie(Path(mi["fichier_pid"]))["vivante"]
+
+
+def test_branche_macos_avec_vrai_ps(tmp_path):   # m11 : `kill -0` et `ps -ww` réels, sans /proc
+    p = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)", M.MODULE, "veiller", "--identifiant", "778"])
+    try:
+        f = tmp_path / "pid.txt"
+        f.write_text(f"{p.pid} 778 {JETON}\n")
+        r = M.verifier_minuterie(f, tmp_path / "pas-de-proc")
+        assert r["vivante"] and r["methode"] == "kill -0 et ps -p"
+    finally:
+        os.kill(p.pid, 15)
+        p.wait(timeout=30)
+    assert M.verifier_minuterie(f, tmp_path / "pas-de-proc")["motif"].startswith("processus absent")
