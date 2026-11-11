@@ -388,6 +388,59 @@ def test_attendre_minuterie(tmp_path):
     assert mort == {"vivante": False, "garder": False, "motif": "absent"}
 
 
+ENFANT = r"""
+import sys
+from controle_ia.lean_essai import hetzner_v5 as H, minuterie_v5 as M
+s = {"id": 778, "name": H.NOM_MACHINE, "labels": {}, "created": sys.argv[1 + sys.argv.index("--depuis")],
+     "server_type": {"name": "ccx33"}, "location": {"name": "hel1"}}
+def transport(methode, chemin, corps=None):
+    if methode == "GET" and chemin == "/servers/778":
+        return 200, {"server": s}
+    if methode == "GET" and chemin.startswith("/servers?"):
+        return 200, {"servers": [{"id": 778, "name": s["name"]}], "meta": {"pagination": {}}}
+    if methode == "GET" and chemin.startswith("/server_types"):
+        return 200, {"server_types": [{"name": "ccx33", "prices": [{"location": "hel1", "price_hourly": {"gross": "0.2390"}}]}],
+                     "meta": {"pagination": {}}}
+    if methode == "GET" and chemin == "/pricing":
+        return 200, {"pricing": {"currency": "EUR", "primary_ips": [{"type": "ipv4", "prices": [
+            {"location": "hel1", "price_hourly": {"gross": "0.0010"}}]}]}}
+    return 500, {}
+sys.exit(M.main(sys.argv[2:], client=H.ClientHetzner5(transport=transport)))
+"""
+
+
+def test_minuterie_reelle_detachee(tmp_path):
+    """Processus réel, dans une session à lui, faux client dans l'enfant (aucun réseau) : PID versé, contrôle réel, première
+    ligne « garder » attendue en vrai ; puis arrêt par son PID (R10). Artefact : un enfant qui meurt aussitôt."""
+    vus = []
+
+    def popen(code):
+        def lancer(argv, **k):
+            i = argv.index("-m")
+            p = subprocess.Popen(argv[:i] + ["-c", code] + argv[i + 1:], **k)
+            vus.append(p)
+            return p
+        return lancer
+    k = dict(identifiant=778, pas="d1a", depuis=datetime.now(timezone.utc), echeance_h=2.0, taux=1.25, deja=0.0, jeton=JETON,
+             go_id=GO, lieu="hel1", prix_usd_h=0.3, racine=tmp_path)
+    try:
+        mi = M.lancer_minuterie_detachee(dossier=tmp_path / "vivante", popen=popen(ENFANT), **k)
+        assert os.getsid(vus[0].pid) == vus[0].pid != os.getsid(0)   # session à elle
+        survie = M.attendre_minuterie(mi, delai_s=30.0, pas_s=0.5)
+        assert survie == {"vivante": True, "garder": True, "motif": ""}
+        r = M.verifier_minuterie(Path(mi["fichier_pid"]), journal_minuterie=Path(mi["journal"]))
+        assert r["conforme"] and r["pid"] == vus[0].pid
+        morte = M.lancer_minuterie_detachee(dossier=tmp_path / "morte", popen=popen("import sys; sys.exit(2)"), **k)
+        vus[1].wait(timeout=30)
+        assert not M.attendre_minuterie(morte, delai_s=5.0, pas_s=0.5)["vivante"]
+    finally:
+        for p in vus:
+            if p.poll() is None:
+                os.kill(p.pid, 15)   # par son PID (R10)
+                p.wait(timeout=30)
+    assert not M.verifier_minuterie(Path(mi["fichier_pid"]))["vivante"]
+
+
 # ---- CLC4-03 : aucun chemin en dur ; contrôle portable -------------------------------------------------------------------------
 
 def test_racine_deduite_ou_donnee(tmp_path):
