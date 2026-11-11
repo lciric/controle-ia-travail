@@ -283,3 +283,9 @@ def test_coupure_applied_to(tmp_path):   # k04
     api = FauxAPI({777: {"name": H.NOM_MACHINE, "labels": {}}})
     with pytest.raises(GardeArret, match="non appliqué"):
         H3.verifier_coupure_nuage(client(api), 2, 777)
+
+
+def test_detruire_pas_ne_prend_que_le_pas_demande():
+    api = FauxAPI({9: {"name": "lean-outillage-d1b", "labels": {"essai": "lean", "pas": "d1b"}}})
+    assert M.detruire_pas(client(api), "d1a", dormir=lambda s: None)["message"] == "aucun serveur de l'essai"
+    assert 9 in api.serveurs
