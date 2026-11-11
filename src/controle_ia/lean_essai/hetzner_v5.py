@@ -16,6 +16,8 @@ from __future__ import annotations
 import time
 from datetime import datetime
 
+from controle_ia.gardes import GardeArret
+
 from .hetzner_v1 import ETIQUETTES, NOM_MACHINE, ErreurHetzner, regles_coupure, regles_installation  # noqa: F401
 from .hetzner_v3 import ETIQUETTE_CREATION, verifier_coupure_nuage  # noqa: F401
 from .hetzner_v4 import TYPES_PERMIS, ClientHetzner4, CreationRefusee, transport_urllib  # noqa: F401
@@ -99,6 +101,13 @@ class ClientHetzner5(ClientHetzner4):
     def creer_pare_feu_etiquete(self, nom: str, regles: list[dict], etiquettes: dict) -> dict:
         f = self._req("POST", "/firewalls", {"name": nom, "rules": regles, "labels": etiquettes}).get("firewall", {})
         return {"id": int(f["id"]), "nom": f.get("name")}
+
+    def ips_primaires_libres(self) -> list[tuple[int, str]]:
+        """Adresses IP primaires du projet attribuées à aucun serveur (facturées seules) : identifiants et noms."""
+        d = self._req("GET", "/primary_ips?per_page=50")
+        if d.get("meta", {}).get("pagination", {}).get("next_page"):
+            raise GardeArret("plus de 50 adresses IP primaires : lecture incomplète refusée")
+        return [(int(x["id"]), x.get("name")) for x in d.get("primary_ips", []) if x.get("assignee_id") is None]
 
     def lire_cle_ssh(self, ident: int) -> dict | None:
         statut, d = self.transport("GET", f"/ssh_keys/{int(ident)}", None)

@@ -128,6 +128,9 @@ class FauxAPI:
             if self.statut_post != 201:
                 return self.statut_post, {"error": {"code": "x"}}
             return 201, {"server": {"id": 778, "name": corps["name"], "created": "2026-11-11T01:00:30Z"}}
+        if methode == "GET" and chemin.startswith("/primary_ips"):
+            return 200, {"primary_ips": [{"id": 31, "name": "primary_ip-31", "assignee_id": None},
+                                         {"id": 32, "name": "primary_ip-32", "assignee_id": 778}], "meta": {"pagination": {}}}
         if methode == "GET" and chemin.startswith("/server_types"):
             return 200, {"server_types": TYPES, "meta": {"pagination": {}}}
         if methode == "GET" and chemin == "/pricing":
@@ -503,6 +506,17 @@ def test_bon_nom_detruit_autre_nom_nomme():
     with pytest.raises(GardeArret, match="NON touché"):
         M.rattraper_par_etiquette(client(api), "c" * 32, dormir=rien, fenetre_s=0.0)
     assert sorted(api.serveurs) == [6]
+
+
+def test_inventaire_lecture_seule(capsys):
+    api = FauxAPI({1: {"name": H.NOM_MACHINE, "labels": FIXES}, 3: {"name": H.NOM_MACHINE, "labels": {}},
+                   4: {"name": "organisme-v66-course", "labels": {}}})
+    assert M.main(["inventaire"], client=client(api), dormir=rien) == 0
+    r = json.loads(capsys.readouterr().out)
+    assert r["serveurs_de_l_essai"] == [[1, H.NOM_MACHINE], [3, H.NOM_MACHINE]] and r["ips_primaires_non_attribuees"] == [
+        [31, "primary_ip-31"]]
+    assert not any(a[0] in ("DELETE", "POST") for a in api.appels) and sorted(api.serveurs) == [1, 3, 4]
+    assert M.inventaire_essai(client(FauxAPI()), dormir=rien)["message"] == "aucun serveur de l'essai"
 
 
 def test_pas_ne_prend_que_son_pas():

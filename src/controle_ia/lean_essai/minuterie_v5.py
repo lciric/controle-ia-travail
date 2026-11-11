@@ -271,6 +271,18 @@ def detruire_pas(client, pas: str = "d1a", journal=None, dormir=time.sleep, essa
     return {"trouves": trouves, "detruits": detruits, "message": "aucun serveur de l'essai" if not trouves else ""}
 
 
+def inventaire_essai(client, pas: str = "d1a", journal=None, dormir=time.sleep, refus_max: int = REFUS_DURABLES_MAX) -> dict:
+    """Lecture seule : serveurs de l'essai (étiquettes fixes et nom) et adresses IP primaires attribuées à aucun serveur."""
+    par_etiquettes = _lire_avec_retentatives(lambda: client.chercher_par_etiquettes_fixes(pas), journal, dormir, None,
+                                             "recherche_etiquettes_fixes", refus_max)
+    par_nom = [(i, n) for i, n in _lire_avec_retentatives(client.inventaire, journal, dormir, None, "inventaire", refus_max)
+               if n == NOM_MACHINE]
+    serveurs = sorted(set(par_etiquettes) | set(par_nom))
+    ips = _lire_avec_retentatives(client.ips_primaires_libres, journal, dormir, None, "ips_primaires", refus_max)
+    return {"serveurs_de_l_essai": serveurs, "ips_primaires_non_attribuees": ips,
+            "message": "aucun serveur de l'essai" if not serveurs else f"{len(serveurs)} serveur(s) de l'essai"}
+
+
 # ---- veille (CLC4-01) --------------------------------------------------------------------------------------------------------
 
 def veiller(m: Machine, client, horloge=maintenant_utc, dormir=time.sleep, pas_s: float = 60.0, journal=None,
@@ -873,6 +885,8 @@ def construire_analyseur() -> argparse.ArgumentParser:
     k.add_argument("--serveur", type=int, required=True)
     k.add_argument("--pare-feu", type=int, required=True)
     k.add_argument("--journal", required=True)
+    i = sp("inventaire")
+    i.add_argument("--pas", choices=sorted(PAS_LONGS), default="d1a")
     w = sp("verifier-minuterie")
     w.add_argument("--fichier-pid", required=True)
     w.add_argument("--journal-minuterie")
@@ -919,6 +933,8 @@ def _executer(a, argv, client, dormir, horloge, popen, controler, verifier_pouss
                                       echeance_h=a.echeance_h, taux_declare=a.taux_usd_eur, deja=a.deja_depense_usd,
                                       lieu=a.lieu, prix_usd_h=a.prix_usd_h, journal=j, solder=solder, horloge=horloge,
                                       dormir=dormir)
+        elif a.action == "inventaire":
+            res = inventaire_essai(client, a.pas, j, dormir)
         elif a.action == "detruire":
             solder = fabrique_solder(chemins_depot(racine, exiger=False)["creations"], horloge)
             if a.identifiant is not None:
