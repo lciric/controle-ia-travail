@@ -1,6 +1,8 @@
 # État du programme
 
-Dernière mise à jour : 2026-11-10 23:45 UTC (heure relevée par `date -u`) — **autonomie jusqu'à la fin du programme**, pour la session mère et les autres sessions (mots de Lazar, R-2284, GO-2026-11-10-14 ; aucune dépense hors GO de calcul).
+Dernière mise à jour : 2026-11-11 07:13 UTC (heure relevée par `date -u`) — **T0.7 SCELLÉ** sur mot de Lazar (R-2321) : `prereg/T0.7-sondes-v0-v1.md` (`d7d180ec…`), configuration v8 sous `prereg/`, lignes `CODE-T07` et `SCELLEMENT-T07` dans `registres/scellements-v1.md`, `GARDE-ADAPTEE-T07-P3BIS` dans `registres/prealables-p3bis-v1.md` (créé) ; remède (a') : règle de la différence appariée et 800 directions (R-2285, R-2298 à R-2318) ; code fusionné dans `main` (C7 `b4cd9953`). Audit de P3 : nul tenu, deux réserves (R-2299). P3-bis : même règle, k = 800 (R-2296, R-2320). Outillage Lean : harnais v4, aucune machine faute de poste de passage (R-2293, R-2308). Registre jusqu'à R-2321, GO jusqu'à GO-2026-11-11-02. Autonomie jusqu'à la fin du programme (R-2284).
+
+Mise à jour précédente : 2026-11-10 23:45 UTC (heure relevée par `date -u`) — **autonomie jusqu'à la fin du programme**, pour la session mère et les autres sessions (mots de Lazar, R-2284, GO-2026-11-10-14 ; aucune dépense hors GO de calcul).
 
 Mise à jour précédente : 2026-11-10 22:06 UTC (heure relevée par `date -u`) — **lire d'abord la passation `registres/passations/2026-11-10-2206.md` (`8f625791…`)**, qui fait foi pour la reprise (registre jusqu'à R-2282, GO jusqu'à GO-2026-11-10-13). En bref : T0.7 candidat 1 « scellable » mais scellement suspendu au nœud de Lazar sur la règle « au-dessus du plancher » ((a), (a') ou (b), avant le 13 à 12:00 UTC) ; T0.8 gelé ; course de l'organisme : préenregistrement scellé ; barreau 6 candidat 3 et code « inscriptible » ; P3-bis brouillon 12 ; essai Lean brouillon 3 ; session porteuse des clés à désigner par Lazar ; aucun agent en cours.
 
