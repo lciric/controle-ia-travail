@@ -185,6 +185,8 @@ def test_bruit_de_carte_palier_carte_et_reserve(p3):
     directions au palier « carte » (réserve « cause non établie ») ; la principale linéaire, recette chaotique, s'écarte au-delà
     du processeur : réserve si « rapportee », échec si « decisive »."""
     r, _ = _lancer(p3, config=_config(p3, "rapportee"), extraire=_bruit(1e-4))
+    assert "cause non établie" in rx.RESERVE_CARTE and "présumé" not in rx.RESERVE_CARTE          # CLP3-01 (R-2305)
+    assert rx.TOLERANCES == {"processeur": 1e-6, "carte_sonde": 1e-3, "carte_directions": 1e-2}
     for nom, v in r["par_sonde"].items():
         assert v["etat"] == "établi" and v["palier"] == "carte" and v["reserve"] == rx.RESERVE_CARTE, nom
         assert 1e-6 < v["garde_identite"]["ecart_max"] <= rx.TOLERANCES["carte_sonde"]
@@ -428,6 +430,13 @@ def test_controle_avant_ouverture_cas_sain_et_artefacts(p3, tmp_path):
     for cfg, motif in fautes:
         with pytest.raises(GardeArret, match=motif):
             rx.controler_avant_ouverture(p3, cfg)
+    vrai = rx._temoin
+    try:                                                        # témoin absent du fichier léger
+        rx._temoin = lambda racine, cfg, c, s: vrai(racine, cfg, "absent" if c == "tromperie" else c, s)
+        with pytest.raises(GardeArret, match="témoin absent-difference_moyennes"):
+            rx.controler_avant_ouverture(p3, _config(p3))
+    finally:
+        rx._temoin = vrai
 
 
 def _cache(base, modele, revision, fichiers):
