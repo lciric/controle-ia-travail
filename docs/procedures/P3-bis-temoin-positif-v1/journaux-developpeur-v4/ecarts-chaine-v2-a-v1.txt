@@ -1,0 +1,442 @@
+== lancer_p3bis_v1.sh → lancer_p3bis_v2.sh : 23 nom(s) de script, 7 nom(s) de journal, 0 essai v2→v3, 1 changement(s) propre(s) ; 9 ligne(s) retirée(s), 11 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `lancer_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; étiquette du journal de lancement « lanceur p3bis v2 ».
+   -#   - GO GO-2026-11-10-02 seulement, relu par le module commun verifications_p3bis_v1.py (ligne « - GO : » et GO_ID de la
+   +#   - GO GO-2026-11-10-02 seulement, relu par le module commun verifications_p3bis_v2.py (ligne « - GO : » et GO_ID de la
+   -# Usage : lancer_p3bis_v1.sh S DOSSIER_TRACES EN_MARCHE N
+   +# Usage : lancer_p3bis_v2.sh S DOSSIER_TRACES EN_MARCHE N
+   -[ $# -eq 4 ] && [ -n "$2" ] || { echo "usage : lancer_p3bis_v1.sh S DOSSIER_TRACES EN_MARCHE N"; exit 2; }
+   +[ $# -eq 4 ] && [ -n "$2" ] || { echo "usage : lancer_p3bis_v2.sh S DOSSIER_TRACES EN_MARCHE N"; exit 2; }
+   -VERIF=$H/verifications_p3bis_v1.py
+   -CHAINE="verifications_p3bis_v1.py controles_avant_depense_p3bis_v1.sh surveiller_p3bis_v1.sh controle_cinq_minutes_p3bis_v1.sh recuperation_p3bis_v1.sh detruire_p3bis_v1.sh sceller_p3bis_v1.sh repetition_jouet_p3bis_v1.sh repetition_finale_p3bis_v1.sh essais_verifications_p3bis_v1.py essais_lanceur_p3bis_v1.sh essais_surveillance_p3bis_v1.sh essais_controles_p3bis_v1.sh essais_recuperation_p3bis_v1.sh"
+   -PREUVES="banc-verifications-p3bis-v1.log banc-lanceur-p3bis-v1.log banc-surveillance-p3bis-v1.log banc-controles-p3bis-v1.log banc-recuperation-p3bis-v1.log repetition-jouet-p3bis-v1.log repetition-finale-p3bis-v1.log"
+   +VERIF=$H/verifications_p3bis_v2.py
+   +CHAINE="verifications_p3bis_v2.py controles_avant_depense_p3bis_v2.sh surveiller_p3bis_v2.sh controle_cinq_minutes_p3bis_v2.sh recuperation_p3bis_v2.sh detruire_p3bis_v2.sh sceller_p3bis_v2.sh repetition_jouet_p3bis_v2.sh repetition_finale_p3bis_v2.sh essais_verifications_p3bis_v2.py essais_lanceur_p3bis_v2.sh essais_surveillance_p3bis_v2.sh essais_controles_p3bis_v2.sh essais_recuperation_p3bis_v2.sh"
+   +PREUVES="banc-verifications-p3bis-v2.log banc-lanceur-p3bis-v2.log banc-surveillance-p3bis-v2.log banc-controles-p3bis-v2.log banc-recuperation-p3bis-v2.log repetition-jouet-p3bis-v2.log repetition-finale-p3bis-v2.log"
+   -for paire in "lancer_p3bis_v1.sh=$0" $(for s in $CHAINE; do echo "$s=$H/$s"; done); do
+   +for paire in "lancer_p3bis_v2.sh=$0" $(for s in $CHAINE; do echo "$s=$H/$s"; done); do
+   -if ! bash "$H/controles_avant_depense_p3bis_v1.sh" "$S" "$T/clone-controles" "$BRANCHE" > "$T/controles.txt" 2>&1; then
+   +if ! bash "$H/controles_avant_depense_p3bis_v2.sh" "$S" "$T/clone-controles" "$BRANCHE" > "$T/controles.txt" 2>&1; then
+   -printf 'lanceur p3bis v1 %s ; instances en marche nommées %s\ncommit %s\noffre %s\nprereg %s\nbranche %s\netiquette %s\ngo %s\ncreation %s\nsurveillance : surveiller_p3bis_v1.sh <instance> %s <dépense antérieure en USD> <dossier neuf> (aucun plafond de durée ; alerte à deux heures sans PROGRES ; arrêt par identifiant sur fin, échec d amorce, redémarrage, état terminal, processus mort, 80 USD ; code 5 : instance gardée)\ncontrôle à cinq minutes entre %s et %s (création + 180 à 300 s ; controle_cinq_minutes_p3bis_v1.sh <instance> %s <dossier neuf>)\ndestruction : par son identifiant, dès les résultats poussés vérifiés (detruire_p3bis_v1.sh ; R10 ; texte, plan, point 11)\n' \
+   +printf 'lanceur p3bis v2 %s ; instances en marche nommées %s\ncommit %s\noffre %s\nprereg %s\nbranche %s\netiquette %s\ngo %s\ncreation %s\nsurveillance : surveiller_p3bis_v2.sh <instance> %s <dépense antérieure en USD> <dossier neuf> (aucun plafond de durée ; alerte à deux heures sans PROGRES ; arrêt par identifiant sur fin, échec d amorce, redémarrage, état terminal, processus mort, 80 USD ; code 5 : instance gardée)\ncontrôle à cinq minutes entre %s et %s (création + 180 à 300 s ; controle_cinq_minutes_p3bis_v2.sh <instance> %s <dossier neuf>)\ndestruction : par son identifiant, dès les résultats poussés vérifiés (detruire_p3bis_v2.sh ; R10 ; texte, plan, point 11)\n' \
+== surveiller_p3bis_v1.sh → surveiller_p3bis_v2.sh : 6 nom(s) de script, 0 nom(s) de journal, 0 essai v2→v3, 0 changement(s) propre(s) ; 6 ligne(s) retirée(s), 8 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `surveiller_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; aucun autre changement.
+   -#     (ligne pour registres/arrets.md, consignée par la session) ; aucune destruction ici (detruire_p3bis_v1.sh, après la
+   +#     (ligne pour registres/arrets.md, consignée par la session) ; aucune destruction ici (detruire_p3bis_v2.sh, après la
+   -#                         jusqu'à la récupération du paquet refait (fichier instance-gardee écrit ; detruire_p3bis_v1.sh
+   +#                         jusqu'à la récupération du paquet refait (fichier instance-gardee écrit ; detruire_p3bis_v2.sh
+   -#   surveiller_p3bis_v1.sh <identifiant> <dossier des traces du lancement> <dépense antérieure en USD> <dossier de sortie>
+   +#   surveiller_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dépense antérieure en USD> <dossier de sortie>
+   -VERIF=$H/verifications_p3bis_v1.py
+   +VERIF=$H/verifications_p3bis_v2.py
+   -    || { echo "usage : surveiller_p3bis_v1.sh <identifiant> <dossier des traces du lancement> <dépense antérieure en USD> <dossier neuf>"; exit 2; }
+   +    || { echo "usage : surveiller_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dépense antérieure en USD> <dossier neuf>"; exit 2; }
+   -    printf '%s\n' "$m" > "$D/motif.txt"                 # lu par detruire_p3bis_v1.sh : seule la fin normale (FIN) permet la destruction
+   +    printf '%s\n' "$m" > "$D/motif.txt"                 # lu par detruire_p3bis_v2.sh : seule la fin normale (FIN) permet la destruction
+== controle_cinq_minutes_p3bis_v1.sh → controle_cinq_minutes_p3bis_v2.sh : 3 nom(s) de script, 0 nom(s) de journal, 0 essai v2→v3, 0 changement(s) propre(s) ; 3 ligne(s) retirée(s), 5 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `controle_cinq_minutes_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; aucun autre changement.
+   -# Usage : controle_cinq_minutes_p3bis_v1.sh <identifiant> <dossier des traces du lancement> <dossier de sortie neuf>
+   +# Usage : controle_cinq_minutes_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dossier de sortie neuf>
+   -VERIF=$H/verifications_p3bis_v1.py
+   +VERIF=$H/verifications_p3bis_v2.py
+   -    || { echo "usage : controle_cinq_minutes_p3bis_v1.sh <identifiant> <dossier des traces du lancement> <dossier de sortie neuf>"; exit 2; }
+   +    || { echo "usage : controle_cinq_minutes_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dossier de sortie neuf>"; exit 2; }
+== controles_avant_depense_p3bis_v1.sh → controles_avant_depense_p3bis_v2.sh : 3 nom(s) de script, 0 nom(s) de journal, 1 essai v2→v3, 0 changement(s) propre(s) ; 4 ligne(s) retirée(s), 6 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `controles_avant_depense_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; essai de fermeture v3 rejoué (`scripts/essai_fermeture_p3bis_v3.py`).
+   -# Usage : controles_avant_depense_p3bis_v1.sh S DOSSIER_NEUF BRANCHE
+   +# Usage : controles_avant_depense_p3bis_v2.sh S DOSSIER_NEUF BRANCHE
+   -[ $# -eq 3 ] || { echo "usage : controles_avant_depense_p3bis_v1.sh S DOSSIER_NEUF BRANCHE (trois arguments)"; exit 2; }
+   +[ $# -eq 3 ] || { echo "usage : controles_avant_depense_p3bis_v2.sh S DOSSIER_NEUF BRANCHE (trois arguments)"; exit 2; }
+   -VERIF=$H/verifications_p3bis_v1.py
+   +VERIF=$H/verifications_p3bis_v2.py
+   -LISTE=scripts/essais-cibles-p3bis-v2.txt; ESSAI=scripts/essai_fermeture_p3bis_v2.py
+   +LISTE=scripts/essais-cibles-p3bis-v2.txt; ESSAI=scripts/essai_fermeture_p3bis_v3.py
+== recuperation_p3bis_v1.sh → recuperation_p3bis_v2.sh : 4 nom(s) de script, 0 nom(s) de journal, 0 essai v2→v3, 1 changement(s) propre(s) ; 5 ligne(s) retirée(s), 7 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `recuperation_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; lectures fermées par `ouverture_p3bis_v3` (lecture complémentaire `lecture_p3bis_v2`, règle (a') décisive).
+   -# (detruire_p3bis_v1.sh lit le rapport de ce script).
+   +# (detruire_p3bis_v2.sh lit le rapport de ce script).
+   -# Usage : recuperation_p3bis_v1.sh S BRANCHE DOSSIER_NEUF
+   +# Usage : recuperation_p3bis_v2.sh S BRANCHE DOSSIER_NEUF
+   -[ $# -eq 3 ] || { echo "usage : recuperation_p3bis_v1.sh S BRANCHE DOSSIER_NEUF"; exit 2; }
+   +[ $# -eq 3 ] || { echo "usage : recuperation_p3bis_v2.sh S BRANCHE DOSSIER_NEUF"; exit 2; }
+   -OUVERTURE=controle_ia.premier_test_ia.ouverture_p3bis_v2   # noms communs v2 (dépendance déclarée)
+   +OUVERTURE=controle_ia.premier_test_ia.ouverture_p3bis_v3   # lecture complémentaire lecture_p3bis_v2, règle (a') (R-2296)
+   -    [ "$(git show "$S:$VERSEES/recuperation_p3bis_v1.sh" 2>/dev/null | sha256sum | cut -d' ' -f1)" = "$(sha256sum "$SOI" | cut -d' ' -f1)" ] \
+   +    [ "$(git show "$S:$VERSEES/recuperation_p3bis_v2.sh" 2>/dev/null | sha256sum | cut -d' ' -f1)" = "$(sha256sum "$SOI" | cut -d' ' -f1)" ] \
+== detruire_p3bis_v1.sh → detruire_p3bis_v2.sh : 3 nom(s) de script, 0 nom(s) de journal, 0 essai v2→v3, 0 changement(s) propre(s) ; 3 ligne(s) retirée(s), 5 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `detruire_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; aucun autre changement.
+   -# Usage : detruire_p3bis_v1.sh <identifiant> <dossier des traces du lancement> <dossier de la surveillance> <rapport de la récupération>
+   +# Usage : detruire_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dossier de la surveillance> <rapport de la récupération>
+   -VERIF=$H/verifications_p3bis_v1.py
+   -[ $# -eq 4 ] && [[ "$ID" =~ ^[0-9]+$ ]] || { echo "usage : detruire_p3bis_v1.sh <identifiant> <traces du lancement> <dossier de la surveillance> <rapport de la récupération>"; exit 2; }
+   +VERIF=$H/verifications_p3bis_v2.py
+   +[ $# -eq 4 ] && [[ "$ID" =~ ^[0-9]+$ ]] || { echo "usage : detruire_p3bis_v2.sh <identifiant> <traces du lancement> <dossier de la surveillance> <rapport de la récupération>"; exit 2; }
+== sceller_p3bis_v1.sh → sceller_p3bis_v2.sh : 19 nom(s) de script, 7 nom(s) de journal, 0 essai v2→v3, 0 changement(s) propre(s) ; 6 ligne(s) retirée(s), 8 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `sceller_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; aucun autre changement.
+   -# Usage : sceller_p3bis_v1.sh BRANCHE
+   +# Usage : sceller_p3bis_v2.sh BRANCHE
+   -[ $# -eq 1 ] && [[ "$1" =~ ^scellement/p3bis-v[0-9]+$ ]] || { echo "usage : sceller_p3bis_v1.sh scellement/p3bis-vN"; exit 2; }
+   +[ $# -eq 1 ] && [[ "$1" =~ ^scellement/p3bis-v[0-9]+$ ]] || { echo "usage : sceller_p3bis_v2.sh scellement/p3bis-vN"; exit 2; }
+   -PREUVES_EXIGEES="banc-verifications-p3bis-v1.log banc-lanceur-p3bis-v1.log banc-surveillance-p3bis-v1.log banc-controles-p3bis-v1.log banc-recuperation-p3bis-v1.log repetition-jouet-p3bis-v1.log repetition-finale-p3bis-v1.log"
+   +PREUVES_EXIGEES="banc-verifications-p3bis-v2.log banc-lanceur-p3bis-v2.log banc-surveillance-p3bis-v2.log banc-controles-p3bis-v2.log banc-recuperation-p3bis-v2.log repetition-jouet-p3bis-v2.log repetition-finale-p3bis-v2.log"
+   -CTL=$H/controles_avant_depense_p3bis_v1.sh
+   -VERIF=$H/verifications_p3bis_v1.py
+   +CTL=$H/controles_avant_depense_p3bis_v2.sh
+   +VERIF=$H/verifications_p3bis_v2.py
+   -CHAINE="lancer_p3bis_v1.sh verifications_p3bis_v1.py controles_avant_depense_p3bis_v1.sh surveiller_p3bis_v1.sh controle_cinq_minutes_p3bis_v1.sh recuperation_p3bis_v1.sh detruire_p3bis_v1.sh sceller_p3bis_v1.sh repetition_jouet_p3bis_v1.sh repetition_finale_p3bis_v1.sh essais_verifications_p3bis_v1.py essais_lanceur_p3bis_v1.sh essais_surveillance_p3bis_v1.sh essais_controles_p3bis_v1.sh essais_recuperation_p3bis_v1.sh"
+   +CHAINE="lancer_p3bis_v2.sh verifications_p3bis_v2.py controles_avant_depense_p3bis_v2.sh surveiller_p3bis_v2.sh controle_cinq_minutes_p3bis_v2.sh recuperation_p3bis_v2.sh detruire_p3bis_v2.sh sceller_p3bis_v2.sh repetition_jouet_p3bis_v2.sh repetition_finale_p3bis_v2.sh essais_verifications_p3bis_v2.py essais_lanceur_p3bis_v2.sh essais_surveillance_p3bis_v2.sh essais_controles_p3bis_v2.sh essais_recuperation_p3bis_v2.sh"
+== repetition_jouet_p3bis_v1.sh → repetition_jouet_p3bis_v2.sh : 36 nom(s) de script, 0 nom(s) de journal, 2 essai v2→v3, 2 changement(s) propre(s) ; 26 ligne(s) retirée(s), 42 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `repetition_jouet_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; run fabriqué par l'essai de fermeture v3 (800 directions), récupération v2 (lectures fermées v3), paquet de la tentative 1 ouvert et lu, ligne `PROGRES` factice à 1 630 sondes.
+   -# Usage : repetition_jouet_p3bis_v1.sh RACINE_NEUVE
+   +# Usage : repetition_jouet_p3bis_v2.sh RACINE_NEUVE
+   -for s in lancer_p3bis_v1.sh controle_cinq_minutes_p3bis_v1.sh surveiller_p3bis_v1.sh recuperation_p3bis_v1.sh detruire_p3bis_v1.sh verifications_p3bis_v1.py; do
+   +for s in lancer_p3bis_v2.sh controle_cinq_minutes_p3bis_v2.sh surveiller_p3bis_v2.sh recuperation_p3bis_v2.sh detruire_p3bis_v2.sh verifications_p3bis_v2.py; do
+   -sed -e "s|^DEPOT=.*|DEPOT=$R/depot|" -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$R/distant.git|" -e "s|^INTERVALLE_OFFRE_S=.*|INTERVALLE_OFFRE_S=0|" "$ICI/lancer_p3bis_v1.sh" > "$R/H/lancer_p3bis_v1.sh"
+   -sed -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$R/distant.git|" -e "s|^PY=A_EPINGLER.*|PY=$PYB|" "$ICI/recuperation_p3bis_v1.sh" > "$R/H/recuperation_p3bis_v1.sh"
+   -echo "lignes changées : lanceur $(diff "$ICI/lancer_p3bis_v1.sh" "$R/H/lancer_p3bis_v1.sh" | grep -c '^>') (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S) ; récupération $(diff "$ICI/recuperation_p3bis_v1.sh" "$R/H/recuperation_p3bis_v1.sh" | grep -c '^>') (DEPOT_URL, PY)"
+   -for s in controle_cinq_minutes_p3bis_v1.sh surveiller_p3bis_v1.sh detruire_p3bis_v1.sh verifications_p3bis_v1.py; do cp "$ICI/$s" "$R/H/"; done
+   -cat > "$R/H/controles_avant_depense_p3bis_v1.sh" <<'EOF'
+   +sed -e "s|^DEPOT=.*|DEPOT=$R/depot|" -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$R/distant.git|" -e "s|^INTERVALLE_OFFRE_S=.*|INTERVALLE_OFFRE_S=0|" "$ICI/lancer_p3bis_v2.sh" > "$R/H/lancer_p3bis_v2.sh"
+   +sed -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$R/distant.git|" -e "s|^PY=A_EPINGLER.*|PY=$PYB|" "$ICI/recuperation_p3bis_v2.sh" > "$R/H/recuperation_p3bis_v2.sh"
+   +echo "lignes changées : lanceur $(diff "$ICI/lancer_p3bis_v2.sh" "$R/H/lancer_p3bis_v2.sh" | grep -c '^>') (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S) ; récupération $(diff "$ICI/recuperation_p3bis_v2.sh" "$R/H/recuperation_p3bis_v2.sh" | grep -c '^>') (DEPOT_URL, PY)"
+   +for s in controle_cinq_minutes_p3bis_v2.sh surveiller_p3bis_v2.sh detruire_p3bis_v2.sh verifications_p3bis_v2.py; do cp "$ICI/$s" "$R/H/"; done
+   +cat > "$R/H/controles_avant_depense_p3bis_v2.sh" <<'EOF'
+   -CHAINE=$(sed -n 's/^CHAINE="\(.*\)"$/\1/p' "$R/H/lancer_p3bis_v1.sh")
+   +CHAINE=$(sed -n 's/^CHAINE="\(.*\)"$/\1/p' "$R/H/lancer_p3bis_v2.sh")
+   -for s in lancer_p3bis_v1.sh $CHAINE; do cp "$R/H/$s" "$V/$s"; done
+   -"$PYB" -I -B - "$R/H/verifications_p3bis_v1.py" "$R/H" "$V" <<'EOF' || exit 2
+   +for s in lancer_p3bis_v2.sh $CHAINE; do cp "$R/H/$s" "$V/$s"; done
+   +"$PYB" -I -B - "$R/H/verifications_p3bis_v2.py" "$R/H" "$V" <<'EOF' || exit 2
+   -    PYTHONPATH="\$d/c/src" "$PYB" -B - "\$d/c" "\$RUN" prereg/P3-bis-temoin-positif-v1.md "$ENT" '{"mode": "reel", "max_nouveaux": 64}' "$SRC/scripts/essai_fermeture_p3bis_v2.py" <<'PYF'
+   +    PYTHONPATH="\$d/c/src" "$PYB" -B - "\$d/c" "\$RUN" prereg/P3-bis-temoin-positif-v1.md "$ENT" '{"mode": "reel", "max_nouveaux": 64}' "$SRC/scripts/essai_fermeture_p3bis_v3.py" <<'PYF'
+   -spec = importlib.util.spec_from_file_location("essai_fermeture_p3bis_v2", essai)
+   +spec = importlib.util.spec_from_file_location("essai_fermeture_p3bis_v3", essai)
+   -    [ "\$n" -ge 2 ] && echo "PROGRES 2026-11-12T09:00:00Z etape=sondes-figees empreinte=0123456789abcdef sondes=430"
+   +    [ "\$n" -ge 2 ] && echo "PROGRES 2026-11-12T09:00:00Z etape=sondes-figees empreinte=0123456789abcdef sondes=1630"
+   -etape T1-lanceur 0 "succès : True ; identifiant 77777771" bash "$R/H/lancer_p3bis_v1.sh" "$S" "$R/traces-1" - 1
+   +etape T1-lanceur 0 "succès : True ; identifiant 77777771" bash "$R/H/lancer_p3bis_v2.sh" "$S" "$R/traces-1" - 1
+   -etape T1-cinq-minutes 0 "CONTRÔLE À CINQ MINUTES : CONFORME" bash "$R/H/controle_cinq_minutes_p3bis_v1.sh" 77777771 "$R/traces-1" "$R/cinq-1"
+   -"${ENV[@]}" INTERVALLE=1 bash "$R/H/surveiller_p3bis_v1.sh" 77777771 "$R/traces-1" 0 "$R/surv-1" > "$R/console-T1-surveillance.txt" 2>&1; c=$?
+   +etape T1-cinq-minutes 0 "CONTRÔLE À CINQ MINUTES : CONFORME" bash "$R/H/controle_cinq_minutes_p3bis_v2.sh" 77777771 "$R/traces-1" "$R/cinq-1"
+   +"${ENV[@]}" INTERVALLE=1 bash "$R/H/surveiller_p3bis_v2.sh" 77777771 "$R/traces-1" 0 "$R/surv-1" > "$R/console-T1-surveillance.txt" 2>&1; c=$?
+   -etape T1-recuperation 0 "RÉCUPÉRATION : TOUS CONFORMES ; paquet des lectures" bash "$R/H/recuperation_p3bis_v1.sh" "$S" calcul/p3bis-reel-v1 "$R/recup-1"
+   +etape T1-recuperation 0 "RÉCUPÉRATION : TOUS CONFORMES ; paquet des lectures" bash "$R/H/recuperation_p3bis_v2.sh" "$S" calcul/p3bis-reel-v1 "$R/recup-1"
+   -etape T1-destruction 0 "DESTRUCTION : instance 77777771 détruite" bash "$R/H/detruire_p3bis_v1.sh" 77777771 "$R/traces-1" "$R/surv-1" "$R/recup-1.rapport.txt"
+   +cat > "$R/ouvrir-paquet.py" <<'EOF'
+   +"""Paquet des lectures de la tentative 1 ouvert (jouet) : lecture complémentaire v2, règle (a') sur 800 directions."""
+   +import json, sys
+   +from controle_ia.premier_test_ia import ouverture_p3bis_v3 as ob
+   +_, a = ob.relire_paquet_lectures(open(sys.argv[1], "rb").read(), int(sys.argv[2]))
+   +f = dict(ob.membres_de(a))
+   +m = [json.loads(v) for k, v in f.items() if k.startswith("runs/") and k.endswith("/manifeste.json")]
+   +l = [json.loads(v)["resultat"] for k, v in f.items() if k.endswith("/lecture-p3bis.json")]
+   +assert sorted(x["commande"] for x in m) == ["python -m controle_ia.premier_test_ia.lecture", "python -m controle_ia.premier_test_ia.lecture_p3bis_v2"], m
+   +assert len(l) == 1 and l[0]["issue_mecanique"] == {"issue": "vu", "ligne": 4}, l
+   +assert l[0]["etat_decisif"]["lecture"]["n_plancher"] == 800 and l[0]["regle_ancienne_200"]["lecture"]["n_plancher"] == 200
+   +EOF
+   +verifier "récupération : paquet ouvert (jouet) : lecture complémentaire lecture_p3bis_v2, règle (a') sur 800 directions, ancienne règle sur 200, issue « vu », ligne 4" \
+   +    "git --git-dir='$R/distant.git' show refs/heads/calcul/p3bis-reel-v1:diag/p3bis-ferme-20261112-080000-p3bis-reel/paquet-ferme-v1.tar > '$R/paquet-T1.tar' && PYTHONPATH='$SRC/src' '$PYB' -B '$R/ouvrir-paquet.py' '$R/paquet-T1.tar' '$ENT'"
+   +etape T1-destruction 0 "DESTRUCTION : instance 77777771 détruite" bash "$R/H/detruire_p3bis_v2.sh" 77777771 "$R/traces-1" "$R/surv-1" "$R/recup-1.rapport.txt"
+   -etape T2-lanceur 0 "succès : True ; identifiant 77777772" bash "$R/H/lancer_p3bis_v1.sh" "$S" "$R/traces-2" - 2
+   +etape T2-lanceur 0 "succès : True ; identifiant 77777772" bash "$R/H/lancer_p3bis_v2.sh" "$S" "$R/traces-2" - 2
+   -etape T2-cinq-minutes 0 "CONTRÔLE À CINQ MINUTES : CONFORME" bash "$R/H/controle_cinq_minutes_p3bis_v1.sh" 77777772 "$R/traces-2" "$R/cinq-2"
+   -"${ENV[@]}" INTERVALLE=1 bash "$R/H/surveiller_p3bis_v1.sh" 77777772 "$R/traces-2" 4.5 "$R/surv-2" > "$R/console-T2-surveillance.txt" 2>&1; c=$?
+   +etape T2-cinq-minutes 0 "CONTRÔLE À CINQ MINUTES : CONFORME" bash "$R/H/controle_cinq_minutes_p3bis_v2.sh" 77777772 "$R/traces-2" "$R/cinq-2"
+   +"${ENV[@]}" INTERVALLE=1 bash "$R/H/surveiller_p3bis_v2.sh" 77777772 "$R/traces-2" 4.5 "$R/surv-2" > "$R/console-T2-surveillance.txt" 2>&1; c=$?
+   -etape T2-recuperation 4 "RÉCUPÉRATION DES TRACES SEULES (AUCUN RUN), SANS LECTURE : TOUS CONFORMES" bash "$R/H/recuperation_p3bis_v1.sh" "$S" calcul/p3bis-reel-v2 "$R/recup-2"
+   -etape T2-destruction-refusee 2 "REFUS : instance gardée" bash "$R/H/detruire_p3bis_v1.sh" 77777772 "$R/traces-2" "$R/surv-2" "$R/recup-2.rapport.txt"
+   +etape T2-recuperation 4 "RÉCUPÉRATION DES TRACES SEULES (AUCUN RUN), SANS LECTURE : TOUS CONFORMES" bash "$R/H/recuperation_p3bis_v2.sh" "$S" calcul/p3bis-reel-v2 "$R/recup-2"
+   +etape T2-destruction-refusee 2 "REFUS : instance gardée" bash "$R/H/detruire_p3bis_v2.sh" 77777772 "$R/traces-2" "$R/surv-2" "$R/recup-2.rapport.txt"
+   -etape T3a-lanceur-refuse 2 "instances : non tolérée(s)" bash "$R/H/lancer_p3bis_v1.sh" "$S" "$R/traces-3a" - 3
+   +etape T3a-lanceur-refuse 2 "instances : non tolérée(s)" bash "$R/H/lancer_p3bis_v2.sh" "$S" "$R/traces-3a" - 3
+   -etape T3-lanceur 0 "succès : True ; identifiant 77777773" bash "$R/H/lancer_p3bis_v1.sh" "$S" "$R/traces-3" - 3
+   +etape T3-lanceur 0 "succès : True ; identifiant 77777773" bash "$R/H/lancer_p3bis_v2.sh" "$S" "$R/traces-3" - 3
+   -etape T3-cinq-minutes-ko 1 "instance 77777773 arrêtée par son identifiant (R10) ; nœud de Lazar" bash "$R/H/controle_cinq_minutes_p3bis_v1.sh" 77777773 "$R/traces-3" "$R/cinq-3"
+   +etape T3-cinq-minutes-ko 1 "instance 77777773 arrêtée par son identifiant (R10) ; nœud de Lazar" bash "$R/H/controle_cinq_minutes_p3bis_v2.sh" 77777773 "$R/traces-3" "$R/cinq-3"
+== repetition_finale_p3bis_v1.sh → repetition_finale_p3bis_v2.sh : 17 nom(s) de script, 6 nom(s) de journal, 0 essai v2→v3, 1 changement(s) propre(s) ; 12 ligne(s) retirée(s), 14 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `repetition_finale_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; copie de la chaîne par le motif `*_p3bis_v2`.
+   -# Usage : repetition_finale_p3bis_v1.sh BRANCHE_DE_SCELLEMENT RACINE_NEUVE
+   +# Usage : repetition_finale_p3bis_v2.sh BRANCHE_DE_SCELLEMENT RACINE_NEUVE
+   -[ $# -eq 2 ] && [[ "$1" =~ ^scellement/p3bis-v[0-9]+$ ]] || { echo "usage : repetition_finale_p3bis_v1.sh scellement/p3bis-vN RACINE_NEUVE"; exit 2; }
+   +[ $# -eq 2 ] && [[ "$1" =~ ^scellement/p3bis-v[0-9]+$ ]] || { echo "usage : repetition_finale_p3bis_v2.sh scellement/p3bis-vN RACINE_NEUVE"; exit 2; }
+   -PREUVES_SANS_FINALE="banc-verifications-p3bis-v1.log banc-lanceur-p3bis-v1.log banc-surveillance-p3bis-v1.log banc-controles-p3bis-v1.log banc-recuperation-p3bis-v1.log repetition-jouet-p3bis-v1.log"
+   +PREUVES_SANS_FINALE="banc-verifications-p3bis-v2.log banc-lanceur-p3bis-v2.log banc-surveillance-p3bis-v2.log banc-controles-p3bis-v2.log banc-recuperation-p3bis-v2.log repetition-jouet-p3bis-v2.log"
+   -grep -qE '^[A-Z_]+="?A_EPINGLER' "$H/controles_avant_depense_p3bis_v1.sh" && { echo "épingles des contrôles non remplies : la répétition finale se joue au candidat"; exit 2; }
+   +grep -qE '^[A-Z_]+="?A_EPINGLER' "$H/controles_avant_depense_p3bis_v2.sh" && { echo "épingles des contrôles non remplies : la répétition finale se joue au candidat"; exit 2; }
+   -for s in sceller_p3bis_v1.sh controles_avant_depense_p3bis_v1.sh verifications_p3bis_v1.py; do echo "script éprouvé : $s $(sha256sum "$H/$s" | cut -d' ' -f1)"; done
+   +for s in sceller_p3bis_v2.sh controles_avant_depense_p3bis_v2.sh verifications_p3bis_v2.py; do echo "script éprouvé : $s $(sha256sum "$H/$s" | cut -d' ' -f1)"; done
+   -cp "$H"/*_p3bis_v1.sh "$H"/*_p3bis_v1.py "$R/H/"
+   +cp "$H"/*_p3bis_v2.sh "$H"/*_p3bis_v2.py "$R/H/"
+   -    "$H/sceller_p3bis_v1.sh" > "$R/H/sceller_p3bis_v1.sh"
+   -sed -e "s|git clone -q --no-checkout \"\$DEPOT_URL\" \"\$D\"|git clone -q --no-checkout --shared \"$R/distant.git\" \"\$D\"|" "$H/controles_avant_depense_p3bis_v1.sh" > "$R/H/controles_avant_depense_p3bis_v1.sh"
+   -echo "lignes changées : scellement $(diff "$H/sceller_p3bis_v1.sh" "$R/H/sceller_p3bis_v1.sh" | grep -c '^>') (H : dossier des originaux, DEPOT, DISTANT, PREUVES_EXIGEES) ; contrôles $(diff "$H/controles_avant_depense_p3bis_v1.sh" "$R/H/controles_avant_depense_p3bis_v1.sh" | grep -c '^>') (clonage)"
+   +    "$H/sceller_p3bis_v2.sh" > "$R/H/sceller_p3bis_v2.sh"
+   +sed -e "s|git clone -q --no-checkout \"\$DEPOT_URL\" \"\$D\"|git clone -q --no-checkout --shared \"$R/distant.git\" \"\$D\"|" "$H/controles_avant_depense_p3bis_v2.sh" > "$R/H/controles_avant_depense_p3bis_v2.sh"
+   +echo "lignes changées : scellement $(diff "$H/sceller_p3bis_v2.sh" "$R/H/sceller_p3bis_v2.sh" | grep -c '^>') (H : dossier des originaux, DEPOT, DISTANT, PREUVES_EXIGEES) ; contrôles $(diff "$H/controles_avant_depense_p3bis_v2.sh" "$R/H/controles_avant_depense_p3bis_v2.sh" | grep -c '^>') (clonage)"
+   -( cd "$R/depot" && bash "$R/H/sceller_p3bis_v1.sh" "$BRANCHE" ) > "$R/scellement.txt" 2>&1; c1=$?
+   +( cd "$R/depot" && bash "$R/H/sceller_p3bis_v2.sh" "$BRANCHE" ) > "$R/scellement.txt" 2>&1; c1=$?
+   -    bash "$R/H/controles_avant_depense_p3bis_v1.sh" "$S" "$R/clone-controles" calcul/p3bis-reel-v1 > "$R/controles.txt" 2>&1; c2=$?
+   +    bash "$R/H/controles_avant_depense_p3bis_v2.sh" "$S" "$R/clone-controles" calcul/p3bis-reel-v1 > "$R/controles.txt" 2>&1; c2=$?
+   -    python3 -I "$H/verifications_p3bis_v1.py" preuves "$PR" $PREUVES_SANS_FINALE > "$R/preuves.txt" 2>&1 || ok=0
+   +    python3 -I "$H/verifications_p3bis_v2.py" preuves "$PR" $PREUVES_SANS_FINALE > "$R/preuves.txt" 2>&1 || ok=0
+== verifications_p3bis_v1.py → verifications_p3bis_v2.py : 39 nom(s) de script, 7 nom(s) de journal, 0 essai v2→v3, 3 changement(s) propre(s) ; 37 ligne(s) retirée(s), 41 ajoutée(s)
+   -"""Vérifications communes de la chaîne de session de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de
+   +"""Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `verifications_p3bis_v1.py`, gardé
+   +tel quel (R12), noms de la chaîne en v2 ; configuration : `n_plancher` à 800 parmi les écarts permis ; preuves : scripts `_v2`.
+   +
+   +Vérifications communes de la chaîne de session de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de
+   -      null, 30 fils d'entraînement), empreinte des consignes égale à celle du fichier, mode « reel ».
+   +      null, 30 fils d'entraînement, 800 directions de plancher : `n_plancher`, R-2320), empreinte des consignes égale à
+   +      celle du fichier, mode « reel ».
+   -    ("lancer_p3bis_v1.sh", "GO_CALCUL"): GO_CALCUL,
+   -    ("lancer_p3bis_v1.sh", "DATE_LIMITE_CREATION"): DATE_LIMITE_CREATION,
+   -    ("lancer_p3bis_v1.sh", "BORNE_CREATION"): BORNE_CREATION,
+   -    ("lancer_p3bis_v1.sh", "ESSAIS_AVANT_REPLI"): str(ESSAIS_AVANT_REPLI),
+   -    ("lancer_p3bis_v1.sh", "INTERVALLE_OFFRE_S"): str(INTERVALLE_OFFRE_S),
+   -    ("lancer_p3bis_v1.sh", "DEPOT_URL"): DEPOT_URL,
+   -    ("lancer_p3bis_v1.sh", "ARRETEES_TOLEREES"): '"' + " ".join(ARRETEES_TOLEREES) + '"',
+   -    ("lancer_p3bis_v1.sh", "FILTRE"): ('"gpu_name=A100_SXM4 gpu_ram>=79 num_gpus=1 cuda_vers>=13.0 verified=true '
+   +    ("lancer_p3bis_v2.sh", "GO_CALCUL"): GO_CALCUL,
+   +    ("lancer_p3bis_v2.sh", "DATE_LIMITE_CREATION"): DATE_LIMITE_CREATION,
+   +    ("lancer_p3bis_v2.sh", "BORNE_CREATION"): BORNE_CREATION,
+   +    ("lancer_p3bis_v2.sh", "ESSAIS_AVANT_REPLI"): str(ESSAIS_AVANT_REPLI),
+   +    ("lancer_p3bis_v2.sh", "INTERVALLE_OFFRE_S"): str(INTERVALLE_OFFRE_S),
+   +    ("lancer_p3bis_v2.sh", "DEPOT_URL"): DEPOT_URL,
+   +    ("lancer_p3bis_v2.sh", "ARRETEES_TOLEREES"): '"' + " ".join(ARRETEES_TOLEREES) + '"',
+   +    ("lancer_p3bis_v2.sh", "FILTRE"): ('"gpu_name=A100_SXM4 gpu_ram>=79 num_gpus=1 cuda_vers>=13.0 verified=true '
+   -    ("surveiller_p3bis_v1.sh", "ALERTE_SANS_PROGRES_S"): str(ALERTE_SANS_PROGRES_S),
+   -    ("controle_cinq_minutes_p3bis_v1.sh", "PRIX_MAX"): f"{PRIX_MAX:.2f}",
+   -    ("controles_avant_depense_p3bis_v1.sh", "DEPOT_URL"): DEPOT_URL,
+   -    ("recuperation_p3bis_v1.sh", "DEPOT_URL"): DEPOT_URL,
+   +    ("surveiller_p3bis_v2.sh", "ALERTE_SANS_PROGRES_S"): str(ALERTE_SANS_PROGRES_S),
+   +    ("controle_cinq_minutes_p3bis_v2.sh", "PRIX_MAX"): f"{PRIX_MAX:.2f}",
+   +    ("controles_avant_depense_p3bis_v2.sh", "DEPOT_URL"): DEPOT_URL,
+   +    ("recuperation_p3bis_v2.sh", "DEPOT_URL"): DEPOT_URL,
+   -# et budget_entrainement_s à null ; fils_entrainement à 30 »
+   +# et budget_entrainement_s à null ; fils_entrainement à 30 ; n_plancher à 800 » (v2 : règle (a'), R-2296, R-2320)
+   -                 "fils_entrainement": 30}
+   +                 "fils_entrainement": 30, "n_plancher": 800}
+   -    "banc-verifications-p3bis-v1.log": ("FIN DU BANC DU MODULE COMMUN DE P3-BIS ; cas non conformes : 0",
+   -                                        {"verifications_p3bis_v1.py", "essais_verifications_p3bis_v1.py"}),
+   -    "banc-lanceur-p3bis-v1.log": ("FIN DU BANC DU LANCEUR DE P3-BIS ; cas non conformes : 0",
+   -                                  {"lancer_p3bis_v1.sh", "verifications_p3bis_v1.py", "essais_lanceur_p3bis_v1.sh"}),
+   -    "banc-surveillance-p3bis-v1.log": ("FIN DU BANC DE LA SURVEILLANCE DE P3-BIS ; cas non conformes : 0",
+   -                                       {"surveiller_p3bis_v1.sh", "controle_cinq_minutes_p3bis_v1.sh",
+   -                                        "verifications_p3bis_v1.py", "essais_surveillance_p3bis_v1.sh"}),
+   -    "banc-controles-p3bis-v1.log": ("FIN DU BANC DES CONTRÔLES DE P3-BIS ; cas non conformes : 0",
+   -                                    {"controles_avant_depense_p3bis_v1.sh", "verifications_p3bis_v1.py",
+   -                                     "essais_controles_p3bis_v1.sh"}),
+   -    "banc-recuperation-p3bis-v1.log": ("FIN DU BANC DE LA RÉCUPÉRATION DE P3-BIS ; cas non conformes : 0",
+   -                                       {"recuperation_p3bis_v1.sh", "detruire_p3bis_v1.sh", "verifications_p3bis_v1.py",
+   -                                        "essais_recuperation_p3bis_v1.sh"}),
+   -    "repetition-jouet-p3bis-v1.log": ("RÉPÉTITION JOUET DE LA CHAÎNE DE P3-BIS : CONFORME",
+   -                                      {"lancer_p3bis_v1.sh", "controle_cinq_minutes_p3bis_v1.sh", "surveiller_p3bis_v1.sh",
+   -                                       "recuperation_p3bis_v1.sh", "detruire_p3bis_v1.sh", "verifications_p3bis_v1.py",
+   -                                       "repetition_jouet_p3bis_v1.sh"}),
+   -    "repetition-finale-p3bis-v1.log": ("RÉPÉTITION FINALE DE P3-BIS : CONFORME",
+   -                                       {"sceller_p3bis_v1.sh", "controles_avant_depense_p3bis_v1.sh",
+   -                                        "verifications_p3bis_v1.py", "repetition_finale_p3bis_v1.sh"}),
+   +    "banc-verifications-p3bis-v2.log": ("FIN DU BANC DU MODULE COMMUN DE P3-BIS ; cas non conformes : 0",
+   +                                        {"verifications_p3bis_v2.py", "essais_verifications_p3bis_v2.py"}),
+   +    "banc-lanceur-p3bis-v2.log": ("FIN DU BANC DU LANCEUR DE P3-BIS ; cas non conformes : 0",
+   +                                  {"lancer_p3bis_v2.sh", "verifications_p3bis_v2.py", "essais_lanceur_p3bis_v2.sh"}),
+   +    "banc-surveillance-p3bis-v2.log": ("FIN DU BANC DE LA SURVEILLANCE DE P3-BIS ; cas non conformes : 0",
+   +                                       {"surveiller_p3bis_v2.sh", "controle_cinq_minutes_p3bis_v2.sh",
+   +                                        "verifications_p3bis_v2.py", "essais_surveillance_p3bis_v2.sh"}),
+   +    "banc-controles-p3bis-v2.log": ("FIN DU BANC DES CONTRÔLES DE P3-BIS ; cas non conformes : 0",
+   +                                    {"controles_avant_depense_p3bis_v2.sh", "verifications_p3bis_v2.py",
+   +                                     "essais_controles_p3bis_v2.sh"}),
+   +    "banc-recuperation-p3bis-v2.log": ("FIN DU BANC DE LA RÉCUPÉRATION DE P3-BIS ; cas non conformes : 0",
+   +                                       {"recuperation_p3bis_v2.sh", "detruire_p3bis_v2.sh", "verifications_p3bis_v2.py",
+   +                                        "essais_recuperation_p3bis_v2.sh"}),
+   +    "repetition-jouet-p3bis-v2.log": ("RÉPÉTITION JOUET DE LA CHAÎNE DE P3-BIS : CONFORME",
+   +                                      {"lancer_p3bis_v2.sh", "controle_cinq_minutes_p3bis_v2.sh", "surveiller_p3bis_v2.sh",
+   +                                       "recuperation_p3bis_v2.sh", "detruire_p3bis_v2.sh", "verifications_p3bis_v2.py",
+   +                                       "repetition_jouet_p3bis_v2.sh"}),
+   +    "repetition-finale-p3bis-v2.log": ("RÉPÉTITION FINALE DE P3-BIS : CONFORME",
+   +                                       {"sceller_p3bis_v2.sh", "controles_avant_depense_p3bis_v2.sh",
+   +                                        "verifications_p3bis_v2.py", "repetition_finale_p3bis_v2.sh"}),
+   -                m = re.fullmatch(r"script éprouvé : ([a-z0-9_]+_v1\.(?:py|sh)) ([0-9a-f]{64})", x)
+   +                m = re.fullmatch(r"script éprouvé : ([a-z0-9_]+_v2\.(?:py|sh)) ([0-9a-f]{64})", x)
+== essais_verifications_p3bis_v1.py → essais_verifications_p3bis_v2.py : 9 nom(s) de script, 10 nom(s) de journal, 0 essai v2→v3, 4 changement(s) propre(s) ; 18 ligne(s) retirée(s), 35 ajoutée(s)
+   -"""Banc du module commun de la chaîne de P3-bis (R5), v1 : chaque garde de `verifications_p3bis_v1.py`, un cas sain et au
+   +"""Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `essais_verifications_p3bis_v1.py`, gardé
+   +tel quel (R12), noms de la chaîne en v2 ; configuration saine à 800 directions ; artefacts « 200 », « absent », script `_v1` prouvé.
+   +
+   +Banc du module commun de la chaîne de P3-bis (R5), v1 : chaque garde de `verifications_p3bis_v2.py`, un cas sain et au
+   -    PYTHONPATH=src python -m pytest -q -p no:cacheprovider docs/procedures/P3-bis-temoin-positif-v1/essais_verifications_p3bis_v1.py
+   +    PYTHONPATH=src python -m pytest -q -p no:cacheprovider docs/procedures/P3-bis-temoin-positif-v1/essais_verifications_p3bis_v2.py
+   -MODULE = ICI / "verifications_p3bis_v1.py"
+   -_spec = importlib.util.spec_from_file_location("verifications_p3bis_v1", MODULE)
+   +MODULE = ICI / "verifications_p3bis_v2.py"
+   +_spec = importlib.util.spec_from_file_location("verifications_p3bis_v2", MODULE)
+   -    p = tmp_path / "lancer_p3bis_v1.sh"
+   +    p = tmp_path / "lancer_p3bis_v2.sh"
+   +    c["n_plancher"] = 800                                    # chaîne v2 : règle (a'), R-2320
+   -    assert "budget_entrainement_s, chemin_consignes, consignes_sha256, duree_max_s, fils_entrainement" in r.stdout
+   +    assert "budget_entrainement_s, chemin_consignes, consignes_sha256, duree_max_s, fils_entrainement, n_plancher" in r.stdout
+   +    ({"n_plancher": 200}, "n_plancher = 200 ; 800 attendu"),                # v2 : l'ancien nombre refusé
+   +    ({"n_plancher": "SUPPRIMER"}, "n_plancher = 'absent'"),
+   +    assert r.returncode == 1 and "n_plancher = 200 ; 800 attendu" in r.stderr             # v2 : brouillon 1 à 200
+   +    c = json.loads(CFG_B1.read_text(encoding="utf-8"))
+   +    c["n_plancher"] = 800
+   +    r = cli("config", ecrire(tmp_path, "b1-800.json", json.dumps(c)), str(CFG_P3), cons)
+   +
+   +
+   +def test_preuves_artefact_script_de_la_chaine_v1(tmp_path):
+   +    """v2 : un journal qui prouve un script `_v1` (chaîne d'avant la règle (a')) est mal formé."""
+   +    journal_banc(tmp_path, "banc-verifications-p3bis-v2.log", extra="script éprouvé : verifications_p3bis_v1.py " + "0" * 64 + "\n")
+   +    r = cli("preuves", str(tmp_path), "banc-verifications-p3bis-v2.log")
+   +    assert r.returncode == 1 and "mal formée" in r.stderr
+   -    for nom in ["banc-verifications-p3bis-v1.log"]:
+   +    for nom in ["banc-verifications-p3bis-v2.log"]:
+   -    r = cli("preuves", str(tmp_path), "banc-verifications-p3bis-v1.log")
+   +    r = cli("preuves", str(tmp_path), "banc-verifications-p3bis-v2.log")
+   -    ({"scripts": {"verifications_p3bis_v1.py"}}, "manquants"),
+   -    ({"extra": "script éprouvé : lancer_p3bis_v1.sh zzz\n"}, "mal formée"),
+   +    ({"scripts": {"verifications_p3bis_v2.py"}}, "manquants"),
+   +    ({"extra": "script éprouvé : lancer_p3bis_v2.sh zzz\n"}, "mal formée"),
+   -    journal_banc(tmp_path, "banc-verifications-p3bis-v1.log", **kw)
+   -    r = cli("preuves", str(tmp_path), "banc-verifications-p3bis-v1.log")
+   +    journal_banc(tmp_path, "banc-verifications-p3bis-v2.log", **kw)
+   +    r = cli("preuves", str(tmp_path), "banc-verifications-p3bis-v2.log")
+   -    journal_banc(tmp_path, "banc-verifications-p3bis-v1.log")
+   -    journal_banc(tmp_path, "banc-lanceur-p3bis-v1.log")
+   -    p = tmp_path / "banc-lanceur-p3bis-v1.log"
+   -    p.write_text(p.read_text().replace("verifications_p3bis_v1.py " + "0" * 63, "verifications_p3bis_v1.py " + "1" * 63))
+   -    r = cli("preuves", str(tmp_path), "banc-verifications-p3bis-v1.log", "banc-lanceur-p3bis-v1.log")
+   +    journal_banc(tmp_path, "banc-verifications-p3bis-v2.log")
+   +    journal_banc(tmp_path, "banc-lanceur-p3bis-v2.log")
+   +    p = tmp_path / "banc-lanceur-p3bis-v2.log"
+   +    p.write_text(p.read_text().replace("verifications_p3bis_v2.py " + "0" * 63, "verifications_p3bis_v2.py " + "1" * 63))
+   +    r = cli("preuves", str(tmp_path), "banc-verifications-p3bis-v2.log", "banc-lanceur-p3bis-v2.log")
+   -    assert cli("preuves", str(tmp_path), "banc-lanceur-p3bis-v1.log").returncode == 1
+   +    assert cli("preuves", str(tmp_path), "banc-lanceur-p3bis-v2.log").returncode == 1
+== essais_lanceur_p3bis_v1.sh → essais_lanceur_p3bis_v2.sh : 13 nom(s) de script, 8 nom(s) de journal, 0 essai v2→v3, 0 changement(s) propre(s) ; 17 ligne(s) retirée(s), 19 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `essais_lanceur_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; aucun autre changement.
+   -# Usage : essais_lanceur_p3bis_v1.sh RACINE_NEUVE
+   +# Usage : essais_lanceur_p3bis_v2.sh RACINE_NEUVE
+   -for s in lancer_p3bis_v1.sh verifications_p3bis_v1.py; do
+   +for s in lancer_p3bis_v2.sh verifications_p3bis_v2.py; do
+   -L=$E/H/lancer_p3bis_v1.sh
+   +L=$E/H/lancer_p3bis_v2.sh
+   -    "$ICI/lancer_p3bis_v1.sh" > "$L"
+   -echo "lignes changées dans la copie du lanceur : $(diff "$ICI/lancer_p3bis_v1.sh" "$L" | grep -c '^>') (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S)"
+   -[ "$(diff "$ICI/lancer_p3bis_v1.sh" "$L" | grep -c '^>')" = 3 ] && ! grep -q "^DEPOT=$D" "$L" || { echo "copie du lanceur non sûre"; exit 2; }
+   -cp "$ICI/verifications_p3bis_v1.py" "$E/H/"
+   -cat > "$E/H/controles_avant_depense_p3bis_v1.sh" <<'EOF'
+   +    "$ICI/lancer_p3bis_v2.sh" > "$L"
+   +echo "lignes changées dans la copie du lanceur : $(diff "$ICI/lancer_p3bis_v2.sh" "$L" | grep -c '^>') (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S)"
+   +[ "$(diff "$ICI/lancer_p3bis_v2.sh" "$L" | grep -c '^>')" = 3 ] && ! grep -q "^DEPOT=$D" "$L" || { echo "copie du lanceur non sûre"; exit 2; }
+   +cp "$ICI/verifications_p3bis_v2.py" "$E/H/"
+   +cat > "$E/H/controles_avant_depense_p3bis_v2.sh" <<'EOF'
+   -for s in lancer_p3bis_v1.sh $CHAINE; do cp "$E/H/$s" "$VERSEES/$s"; done
+   +for s in lancer_p3bis_v2.sh $CHAINE; do cp "$E/H/$s" "$VERSEES/$s"; done
+   -python3 -I -B - "$E/H/verifications_p3bis_v1.py" "$E/H" "$VERSEES" <<'EOF' || exit 2
+   +python3 -I -B - "$E/H/verifications_p3bis_v2.py" "$E/H" "$VERSEES" <<'EOF' || exit 2
+   -S_COPIE=$(variante copie "echo '# ligne ajoutée' >> '$VERSEES/surveiller_p3bis_v1.sh'")
+   -cas L11-copie-versee-autre 2 "surveiller_p3bis_v1.sh exécuté ≠ copie versée au commit S" non "$S_COPIE" 1 - "$J_OK"
+   -S_PREUVE=$(variante preuve "git rm -q '$VERSEES/banc-recuperation-p3bis-v1.log'")
+   -cas L12-preuve-absente 2 "journal banc-recuperation-p3bis-v1.log absent de S" non "$S_PREUVE" 1 - "$J_OK"
+   -S_SCEAU=$(variante sceau "echo '0000000000000000000000000000000000000000000000000000000000000000  banc-lanceur-p3bis-v1.log' > '$VERSEES/banc-lanceur-p3bis-v1.log.sha256'")
+   -cas L12b-preuve-sceau-faux 2 "sceau de banc-lanceur-p3bis-v1.log absent ou non conforme" non "$S_SCEAU" 1 - "$J_OK"
+   -S_NC=$(variante nc "sed -i '1i cas 3 : NON CONFORME' '$VERSEES/banc-controles-p3bis-v1.log'; (cd '$VERSEES' && sha256sum banc-controles-p3bis-v1.log > banc-controles-p3bis-v1.log.sha256)")
+   +S_COPIE=$(variante copie "echo '# ligne ajoutée' >> '$VERSEES/surveiller_p3bis_v2.sh'")
+   +cas L11-copie-versee-autre 2 "surveiller_p3bis_v2.sh exécuté ≠ copie versée au commit S" non "$S_COPIE" 1 - "$J_OK"
+   +S_PREUVE=$(variante preuve "git rm -q '$VERSEES/banc-recuperation-p3bis-v2.log'")
+   +cas L12-preuve-absente 2 "journal banc-recuperation-p3bis-v2.log absent de S" non "$S_PREUVE" 1 - "$J_OK"
+   +S_SCEAU=$(variante sceau "echo '0000000000000000000000000000000000000000000000000000000000000000  banc-lanceur-p3bis-v2.log' > '$VERSEES/banc-lanceur-p3bis-v2.log.sha256'")
+   +cas L12b-preuve-sceau-faux 2 "sceau de banc-lanceur-p3bis-v2.log absent ou non conforme" non "$S_SCEAU" 1 - "$J_OK"
+   +S_NC=$(variante nc "sed -i '1i cas 3 : NON CONFORME' '$VERSEES/banc-controles-p3bis-v2.log'; (cd '$VERSEES' && sha256sum banc-controles-p3bis-v2.log > banc-controles-p3bis-v2.log.sha256)")
+== essais_surveillance_p3bis_v1.sh → essais_surveillance_p3bis_v2.sh : 8 nom(s) de script, 0 nom(s) de journal, 0 essai v2→v3, 0 changement(s) propre(s) ; 6 ligne(s) retirée(s), 8 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `essais_surveillance_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; aucun autre changement.
+   -# Banc de la surveillance et du contrôle à cinq minutes de P3-bis (R5), v1 : surveiller_p3bis_v1.sh et
+   -# controle_cinq_minutes_p3bis_v1.sh joués contre un faux outil de location (aucun service appelé ; il journalise chaque
+   +# Banc de la surveillance et du contrôle à cinq minutes de P3-bis (R5), v1 : surveiller_p3bis_v2.sh et
+   +# controle_cinq_minutes_p3bis_v2.sh joués contre un faux outil de location (aucun service appelé ; il journalise chaque
+   -# Usage : essais_surveillance_p3bis_v1.sh RACINE_NEUVE
+   +# Usage : essais_surveillance_p3bis_v2.sh RACINE_NEUVE
+   -SURV=$ICI/surveiller_p3bis_v1.sh
+   -CINQ=$ICI/controle_cinq_minutes_p3bis_v1.sh
+   +SURV=$ICI/surveiller_p3bis_v2.sh
+   +CINQ=$ICI/controle_cinq_minutes_p3bis_v2.sh
+   -for s in surveiller_p3bis_v1.sh controle_cinq_minutes_p3bis_v1.sh verifications_p3bis_v1.py; do
+   +for s in surveiller_p3bis_v2.sh controle_cinq_minutes_p3bis_v2.sh verifications_p3bis_v2.py; do
+== essais_controles_p3bis_v1.sh → essais_controles_p3bis_v2.sh : 16 nom(s) de script, 0 nom(s) de journal, 1 essai v2→v3, 1 changement(s) propre(s) ; 11 ligne(s) retirée(s), 13 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `essais_controles_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; configuration du banc à 800 directions ; essai de fermeture v3 (factice du banc).
+   -# Usage : essais_controles_p3bis_v1.sh RACINE_NEUVE
+   +# Usage : essais_controles_p3bis_v2.sh RACINE_NEUVE
+   -for s in controles_avant_depense_p3bis_v1.sh verifications_p3bis_v1.py; do echo "script éprouvé : $s $(sha256sum "$ICI/$s" | cut -d' ' -f1)"; done
+   +for s in controles_avant_depense_p3bis_v2.sh verifications_p3bis_v2.py; do echo "script éprouvé : $s $(sha256sum "$ICI/$s" | cut -d' ' -f1)"; done
+   -cat > scripts/essai_fermeture_p3bis_v2.py <<'EOF'
+   +cat > scripts/essai_fermeture_p3bis_v3.py <<'EOF'
+   -for s in lancer_p3bis_v1.sh surveiller_p3bis_v1.sh controle_cinq_minutes_p3bis_v1.sh controles_avant_depense_p3bis_v1.sh recuperation_p3bis_v1.sh verifications_p3bis_v1.py; do
+   +for s in lancer_p3bis_v2.sh surveiller_p3bis_v2.sh controle_cinq_minutes_p3bis_v2.sh controles_avant_depense_p3bis_v2.sh recuperation_p3bis_v2.sh verifications_p3bis_v2.py; do
+   -"$PYB" -I -B - "$ICI/verifications_p3bis_v1.py" "$E/mesure-saine.json" "$E/mesure-a-differe.json" "$E/mesure-autre.json" "$V/longueurs-attendues-p3bis-banc-v1.json" <<'EOF' || exit 2
+   +"$PYB" -I -B - "$ICI/verifications_p3bis_v2.py" "$E/mesure-saine.json" "$E/mesure-a-differe.json" "$E/mesure-autre.json" "$V/longueurs-attendues-p3bis-banc-v1.json" <<'EOF' || exit 2
+   -c = json.load(open(sys.argv[1], encoding="utf-8")); c["consignes_sha256"] = sys.argv[2]
+   +c = json.load(open(sys.argv[1], encoding="utf-8")); c["consignes_sha256"] = sys.argv[2]; c["n_plancher"] = 800   # v2 : R-2320
+   -"$PYB" -I - "$ICI/controles_avant_depense_p3bis_v1.sh" "$E/controles-banc.sh" "$E/distant.git" "$REL_P" "$(sha256sum "source/$REL_P" | cut -d' ' -f1)" \
+   +"$PYB" -I - "$ICI/controles_avant_depense_p3bis_v2.sh" "$E/controles-banc.sh" "$E/distant.git" "$REL_P" "$(sha256sum "source/$REL_P" | cut -d' ' -f1)" \
+   -cp "$ICI/verifications_p3bis_v1.py" "$E/"          # module commun à côté de la copie jouée (H = dossier de la copie)
+   +cp "$ICI/verifications_p3bis_v2.py" "$E/"          # module commun à côté de la copie jouée (H = dossier de la copie)
+   -jouer K26-constante-autre 1 "10 constantes de la chaîne différentes" "$(variante k26 "sed -i 's/^GO_CALCUL=GO-2026-11-10-02/GO_CALCUL=GO-2026-11-08-13/' $V/lancer_p3bis_v1.sh" :)"
+   +jouer K26-constante-autre 1 "10 constantes de la chaîne différentes" "$(variante k26 "sed -i 's/^GO_CALCUL=GO-2026-11-10-02/GO_CALCUL=GO-2026-11-08-13/' $V/lancer_p3bis_v2.sh" :)"
+   -jouer K33-sceau-faux-sous-docs 1 "14 verifier-arbre" "$(variante k33 "echo '0000000000000000000000000000000000000000000000000000000000000000  surveiller_p3bis_v1.sh' > $V/surveiller_p3bis_v1.sh.sha256" :)"
+   +jouer K33-sceau-faux-sous-docs 1 "14 verifier-arbre" "$(variante k33 "echo '0000000000000000000000000000000000000000000000000000000000000000  surveiller_p3bis_v2.sh' > $V/surveiller_p3bis_v2.sh.sha256" :)"
+   -k2 K34-epingles-non-remplies bash "$ICI/controles_avant_depense_p3bis_v1.sh" "$S0" "$E/clone-k34" calcul/p3bis-reel-v1
+   +k2 K34-epingles-non-remplies bash "$ICI/controles_avant_depense_p3bis_v2.sh" "$S0" "$E/clone-k34" calcul/p3bis-reel-v1
+== essais_recuperation_p3bis_v1.sh → essais_recuperation_p3bis_v2.sh : 26 nom(s) de script, 0 nom(s) de journal, 2 essai v2→v3, 2 changement(s) propre(s) ; 19 ligne(s) retirée(s), 23 ajoutée(s)
+   +# Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `essais_recuperation_p3bis_v1.sh`, gardé
+   +# tel quel (R12), noms de la chaîne en v2 ; runs fabriqués par l'essai de fermeture v3 (800 directions), lectures fermées v3 ; R00 : paquet relu, lecture complémentaire `lecture_p3bis_v2`, 800 et 200 directions.
+   -# corrigé, branche prep/p3bis-code-v2) : recuperation_p3bis_v1.sh et detruire_p3bis_v1.sh, un cas sain et des artefacts,
+   +# corrigé, branche prep/p3bis-code-v2) : recuperation_p3bis_v2.sh et detruire_p3bis_v2.sh, un cas sain et des artefacts,
+   -# Usage : essais_recuperation_p3bis_v1.sh RACINE_NEUVE
+   +# Usage : essais_recuperation_p3bis_v2.sh RACINE_NEUVE
+   -for s in recuperation_p3bis_v1.sh detruire_p3bis_v1.sh verifications_p3bis_v1.py; do echo "script éprouvé : $s $(sha256sum "$ICI/$s" | cut -d' ' -f1)"; done
+   +for s in recuperation_p3bis_v2.sh detruire_p3bis_v2.sh verifications_p3bis_v2.py; do echo "script éprouvé : $s $(sha256sum "$ICI/$s" | cut -d' ' -f1)"; done
+   -sed -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$E/distant.git|" -e "s|^PY=A_EPINGLER.*|PY=$PYB|" "$ICI/recuperation_p3bis_v1.sh" > "$E/recuperation_p3bis_v1.sh"
+   -echo "lignes changées dans la copie de la récupération : $(diff "$ICI/recuperation_p3bis_v1.sh" "$E/recuperation_p3bis_v1.sh" | grep -c '^>') (DEPOT_URL, PY)"
+   -[ "$(diff "$ICI/recuperation_p3bis_v1.sh" "$E/recuperation_p3bis_v1.sh" | grep -c '^>')" = 2 ] || { echo "copie de la récupération non sûre"; exit 2; }
+   -cp "$ICI/detruire_p3bis_v1.sh" "$ICI/verifications_p3bis_v1.py" "$E/"
+   +sed -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$E/distant.git|" -e "s|^PY=A_EPINGLER.*|PY=$PYB|" "$ICI/recuperation_p3bis_v2.sh" > "$E/recuperation_p3bis_v2.sh"
+   +echo "lignes changées dans la copie de la récupération : $(diff "$ICI/recuperation_p3bis_v2.sh" "$E/recuperation_p3bis_v2.sh" | grep -c '^>') (DEPOT_URL, PY)"
+   +[ "$(diff "$ICI/recuperation_p3bis_v2.sh" "$E/recuperation_p3bis_v2.sh" | grep -c '^>')" = 2 ] || { echo "copie de la récupération non sûre"; exit 2; }
+   +cp "$ICI/detruire_p3bis_v2.sh" "$ICI/verifications_p3bis_v2.py" "$E/"
+   -spec = importlib.util.spec_from_file_location("essai_fermeture_p3bis_v2", essai)
+   +spec = importlib.util.spec_from_file_location("essai_fermeture_p3bis_v3", essai)
+   -cp "$E/recuperation_p3bis_v1.sh" "$E/detruire_p3bis_v1.sh" "$E/verifications_p3bis_v1.py" "$V/"
+   +cp "$E/recuperation_p3bis_v2.sh" "$E/detruire_p3bis_v2.sh" "$E/verifications_p3bis_v2.py" "$V/"
+   -        PYTHONPATH="$d/src" "$PYB" -B "$E/fabriquer.py" "$d" "$RUN" "$P" "$ENT_I" "$CONFIG" "$SRC/scripts/essai_fermeture_p3bis_v2.py" > "$E/fabrication-$nom.txt" 2>&1 \
+   +        PYTHONPATH="$d/src" "$PYB" -B "$E/fabriquer.py" "$d" "$RUN" "$P" "$ENT_I" "$CONFIG" "$SRC/scripts/essai_fermeture_p3bis_v3.py" > "$E/fabrication-$nom.txt" 2>&1 \
+   -    env -i PATH=/usr/bin:/bin HOME="$E" LANG=C.UTF-8 "$@" bash "$E/recuperation_p3bis_v1.sh" "$s" "$br" "$E/recup-$nom" > "$E/console-$nom.txt" 2>&1; c=$?
+   +    env -i PATH=/usr/bin:/bin HOME="$E" LANG=C.UTF-8 "$@" bash "$E/recuperation_p3bis_v2.sh" "$s" "$br" "$E/recup-$nom" > "$E/console-$nom.txt" 2>&1; c=$?
+   -apres "paquet poussé relu par le banc (vrai module v2) : deux lectures décisives sous le texte, issue mécanique « vu », ligne 4, durées écrites" \
+   +apres "paquet poussé relu par le banc (vrai module v2) : deux lectures décisives sous le texte, lecture complémentaire lecture_p3bis_v2 (règle (a') sur 800 directions, ancienne règle sur 200), issue mécanique « vu », ligne 4, durées écrites" \
+   +assert sorted(x[\"commande\"] for x in m) == [\"python -m controle_ia.premier_test_ia.lecture\", \"python -m controle_ia.premier_test_ia.lecture_p3bis_v2\"], m
+   +assert l[0][\"etat_decisif\"][\"lecture\"][\"n_plancher\"] == 800 and l[0][\"regle_ancienne_200\"][\"lecture\"][\"n_plancher\"] == 200, l
+   -NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" bash "$ICI/recuperation_p3bis_v1.sh" "$S0" calcul/p3bis-reel-v1 "$E/recup-R01e" > "$E/console-R01e.txt" 2>&1
+   +NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" bash "$ICI/recuperation_p3bis_v2.sh" "$S0" calcul/p3bis-reel-v1 "$E/recup-R01e" > "$E/console-R01e.txt" 2>&1
+   -instance r05 $B2 "$S0" "echo '# modifié' >> $V/detruire_p3bis_v1.sh && git add $V/detruire_p3bis_v1.sh" && recup R05-modification 1 "1b 1 changement" "$S0" $B2
+   +instance r05 $B2 "$S0" "echo '# modifié' >> $V/detruire_p3bis_v2.sh && git add $V/detruire_p3bis_v2.sh" && recup R05-modification 1 "1b 1 changement" "$S0" $B2
+   -instance r15 $B2 "$S0" : && { cp "$E/recuperation_p3bis_v1.sh" "$E/recuperation-autre.sh"; echo "# ligne ajoutée" >> "$E/recuperation-autre.sh"
+   +instance r15 $B2 "$S0" : && { cp "$E/recuperation_p3bis_v2.sh" "$E/recuperation-autre.sh"; echo "# ligne ajoutée" >> "$E/recuperation-autre.sh"
+   -    sed 's|^git -C "$D" sparse-checkout set --no-cone .*$|true   # artefact du banc : extraction partielle retirée|' "$E/recuperation_p3bis_v1.sh" > "$E/recuperation-r16.sh"
+   -    [ "$(diff "$E/recuperation_p3bis_v1.sh" "$E/recuperation-r16.sh" | grep -c '^>')" = 1 ] || { echo "copie R16 non sûre"; exit 2; }
+   +    sed 's|^git -C "$D" sparse-checkout set --no-cone .*$|true   # artefact du banc : extraction partielle retirée|' "$E/recuperation_p3bis_v2.sh" > "$E/recuperation-r16.sh"
+   +    [ "$(diff "$E/recuperation_p3bis_v2.sh" "$E/recuperation-r16.sh" | grep -c '^>')" = 1 ] || { echo "copie R16 non sûre"; exit 2; }
+   -    env -i PATH="$E/bin:/usr/bin:/bin" HOME="$E" LANG=C.UTF-8 SCENARIO="$s" bash "$E/detruire_p3bis_v1.sh" "$id" "$E/traces-d" "$sv" "$rap" > "$E/console-$nom.txt" 2>&1; c=$?
+   +    env -i PATH="$E/bin:/usr/bin:/bin" HOME="$E" LANG=C.UTF-8 SCENARIO="$s" bash "$E/detruire_p3bis_v2.sh" "$id" "$E/traces-d" "$sv" "$rap" > "$E/console-$nom.txt" 2>&1; c=$?
+   -NCAS=$((NCAS + 1)); env -i PATH="$E/bin:/usr/bin:/bin" HOME="$E" SCENARIO="$E/scenario-D09" bash "$E/detruire_p3bis_v1.sh" 99999999 "$E/traces-d" > "$E/console-D09.txt" 2>&1
+   +NCAS=$((NCAS + 1)); env -i PATH="$E/bin:/usr/bin:/bin" HOME="$E" SCENARIO="$E/scenario-D09" bash "$E/detruire_p3bis_v2.sh" 99999999 "$E/traces-d" > "$E/console-D09.txt" 2>&1
