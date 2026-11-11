@@ -355,12 +355,12 @@ def test_controle_par_defaut_utilise_poll(tmp_path):   # poll() vivant, PID illi
 
 # ---- CLC5-06 : m01, m10, m11, m15 (m09 plus haut) ------------------------------------------------------------------------------
 
-def test_veiller_absence_sur_deux_lectures(tmp_path):   # m10 : un 404 seul n'arrête pas la garde
-    api = FauxAPI(SERVEUR, faux_404=4)
-    code, j = veiller_cli(api, tmp_path, "--prix-usd-h", "0.3",
-                          heure=suite_d_heures(UNE_HEURE, UNE_HEURE, UNE_HEURE, UNE_HEURE, ECHUE))
-    assert code == 0 and 778 not in api.serveurs and not any(e.get("absence") for e in j)
-    assert ("DELETE", "/servers/778") in api.appels
+def test_veiller_absence_sur_deux_lectures():   # m10 : dans la boucle, un 404 seul n'arrête pas la garde
+    api = FauxAPI(SERVEUR, faux_404=2)
+    m = M.Machine(778, H.NOM_MACHINE, T0, 0.3, 65.0, 48.0)
+    r = M.veiller(m, client(api), horloge=suite_d_heures(UNE_HEURE, UNE_HEURE, ECHUE), dormir=rien)
+    assert r["detruit"] and not r.get("absent") and 778 not in api.serveurs
+    assert ("DELETE", "/servers/778") in api.appels and api.faux_404 == 0
 
 
 def test_lecture_refusee_401_bornee_a_trois(capsys):   # m01
@@ -980,8 +980,8 @@ def test_detache(tmp_path, capsys):
     enfant = vus["argv"]
     assert enfant[3] == M.MODULE and "--detache" not in enfant and "--sortie" not in enfant and vus["start_new_session"]
     assert not M.construire_analyseur().parse_args(enfant[4:]).detache and sortie.exists()
-    assert M.main(argv, popen=popen) == 1
-    assert M.main(argv[:-2], popen=popen) == 1
+    assert M.main(argv, popen=popen) == 1 and "sortie-creation-v1.log existe déjà (R12)" in capsys.readouterr().err
+    assert M.main(argv[:-2], popen=popen) == 1 and "--detache exige --sortie" in capsys.readouterr().err
 
 
 def test_acces_creer_couper_supprimer(tmp_path):
@@ -998,7 +998,13 @@ def test_acces_creer_couper_supprimer(tmp_path):
     with pytest.raises(GardeArret, match="existe encore"):
         M.supprimer_acces(client(api), prep, chemins["verse"])
     api.serveurs.clear()
+    pf["name"] = "pare-feu-d-un-autre"
+    with pytest.raises(GardeArret, match="rien d'autre n'est touché"):
+        M.supprimer_acces(client(api), prep, chemins["verse"])
+    assert d["pare_feu"]["id"] in api.pare_feux and d["cle_ssh"]["id"] in api.cles
+    pf["name"] = d["nom"]
     assert M.supprimer_acces(client(api), prep, chemins["verse"]) == {"pare_feu": "supprimé", "cle_ssh": "supprimé"}
+    assert not api.cles and not api.pare_feux
 
 
 def test_acces_artefacts(tmp_path):
