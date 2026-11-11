@@ -1,0 +1,319 @@
+{
+ "version": "attendus-v1",
+ "note": "R5 (brouillon 3, § 3.1, § 4.5, A1) : chaque garde a un cas sain et au moins un artefact ; artefacts écrits à la main par le développeur, exécutés seulement après la coupure du réseau sortant.",
+ "lean": [
+  {
+   "nom": "sain (toutes les gardes)",
+   "fichier": "sain_v1.lean",
+   "etapes": 2,
+   "accepte": true,
+   "passent": [
+    "G-L1",
+    "G-L2",
+    "G-L3",
+    "G-L3+",
+    "G-L4",
+    "G-L5",
+    "G-L6",
+    "G-L7"
+   ]
+  },
+  {
+   "nom": "G-L1 erreur de compilation",
+   "fichier": "gl1_erreur_compilation_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L1"
+   ]
+  },
+  {
+   "nom": "G-L2 sorry",
+   "fichier": "gl2_sorry_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L2"
+   ],
+   "axiomes_contient": {
+    "etape_2": [
+     "sorryAx"
+    ]
+   }
+  },
+  {
+   "nom": "G-L2 et G-L7 : stop sans le mot, fausse sortie de l'agent",
+   "fichier": "gl2_stop_sans_mot_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L2"
+   ],
+   "passent": [
+    "G-L3",
+    "G-L4",
+    "G-L7"
+   ],
+   "axiomes_contient": {
+    "etape_2": [
+     "sorryAx"
+    ]
+   },
+   "sortie_agent_contient": [
+    "does not depend on any axioms"
+   ]
+  },
+  {
+   "nom": "G-L2 native_decide",
+   "fichier": "gl2_native_decide_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L2"
+   ]
+  },
+  {
+   "nom": "G-L3 axiome ajouté",
+   "fichier": "gl3_axiome_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L2",
+    "G-L3"
+   ],
+   "axiomes_contient": {
+    "enonce_item": [
+     "triche"
+    ]
+   }
+  },
+  {
+   "nom": "G-L3 unsafe, implemented_by, extern",
+   "fichier": "gl3_unsafe_extern_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L3"
+   ]
+  },
+  {
+   "nom": "G-L4 étape manquante",
+   "fichier": "gl4_etape_manquante_v1.lean",
+   "etapes": 3,
+   "accepte": false,
+   "echecs": [
+    "G-L4"
+   ]
+  },
+  {
+   "nom": "G-L4 théorème renommé",
+   "fichier": "gl4_renomme_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L4"
+   ]
+  },
+  {
+   "nom": "G-L4 noms hors du premier niveau",
+   "fichier": "gl4_espace_de_noms_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L4"
+   ]
+  },
+  {
+   "nom": "G-L5 étape prouvée à vide (CLP-12 d) : transmise au relecteur",
+   "fichier": "gl5_vacuite_v1.lean",
+   "etapes": 2,
+   "accepte": true,
+   "enonce_contient": {
+    "etape_1": [
+     "x < 0",
+     "0 < x"
+    ]
+   }
+  },
+  {
+   "nom": "G-L6 notation locale",
+   "fichier": "gl6_notation_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L6"
+   ]
+  },
+  {
+   "nom": "G-L6 instance anonyme",
+   "fichier": "gl6_instance_anonyme_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L6"
+   ]
+  },
+  {
+   "nom": "G-L6 définition imprimée (cas sain)",
+   "fichier": "gl6_definition_imprimee_v1.lean",
+   "etapes": 2,
+   "accepte": true,
+   "impression_contient": {
+    "carre": [
+     "x * x"
+    ]
+   }
+  },
+  {
+   "nom": "G-L7 initialiseur qui vise le fichier de contrôle",
+   "fichier": "gl7_initialiseur_v1.lean",
+   "etapes": 2,
+   "accepte": false,
+   "echecs": [
+    "G-L3+"
+   ],
+   "passent": [
+    "G-L1",
+    "G-L2",
+    "G-L4",
+    "G-L7"
+   ]
+  }
+ ],
+ "isolement_lean": [
+  {
+   "nom": "lectures hors du dossier",
+   "fichier": "iso_lecture_v1.lean",
+   "tentatives": {
+    "lecture-leurre": "ECHEC",
+    "lecture-leurre-proc": "ECHEC",
+    "lecture-shadow": "ECHEC",
+    "lecture-cle-ssh-root": "ECHEC",
+    "liste-srv": "ECHEC",
+    "liste-harnais": "ECHEC"
+   }
+  },
+  {
+   "nom": "écritures (contrôle, chaîne, Mathlib, harnais)",
+   "fichier": "iso_ecriture_v1.lean",
+   "tentatives": {
+    "ecriture-controle": "ECHEC",
+    "ecriture-srv-controle": "ECHEC",
+    "ecriture-mathlib": "ECHEC",
+    "ecriture-olean-mathlib": "ECHEC",
+    "ecriture-elan": "ECHEC",
+    "ecriture-usr": "ECHEC",
+    "ecriture-harnais": "ECHEC"
+   }
+  },
+  {
+   "nom": "persistance : écriture dans son propre espace (cas sain)",
+   "fichier": "iso_persistance_ecrire_v1.lean",
+   "tentatives": {
+    "ecriture-tmp": "REUSSI",
+    "ecriture-item": "REUSSI"
+   }
+  },
+  {
+   "nom": "persistance : rien pour l'item suivant",
+   "fichier": "iso_persistance_lire_v1.lean",
+   "tentatives": {
+    "lecture-tmp-precedent": "ECHEC",
+    "lecture-item-precedent": "ECHEC",
+    "liste-items": "ECHEC"
+   }
+  },
+  {
+   "nom": "réseau pendant la compilation",
+   "fichier": "iso_reseau_v1.lean",
+   "tentatives": {
+    "reseau-curl-ip": "ECHEC",
+    "reseau-python-tcp": "ECHEC",
+    "reseau-dns": "ECHEC"
+   }
+  }
+ ],
+ "python": [
+  {
+   "nom": "sain du bras S",
+   "fichier": "sain_v1.py",
+   "code": 0,
+   "stdout_contient": [
+    "SAIN x + 1"
+   ]
+  },
+  {
+   "nom": "isolement du bras S",
+   "fichier": "iso_v1.py",
+   "code": 0,
+   "tentatives": {
+    "lecture-leurre": "ECHEC",
+    "lecture-leurre-proc": "ECHEC",
+    "lecture-shadow": "ECHEC",
+    "lecture-cle-ssh-root": "ECHEC",
+    "liste-srv": "ECHEC",
+    "ecriture-mathlib": "ECHEC",
+    "ecriture-elan": "ECHEC",
+    "ecriture-pybac": "ECHEC",
+    "ecriture-harnais": "ECHEC",
+    "ecriture-usr": "ECHEC",
+    "reseau-tcp": "ECHEC",
+    "reseau-dns": "ECHEC"
+   }
+  },
+  {
+   "nom": "persistance Python : écriture dans son propre espace (cas sain)",
+   "fichier": "iso_persistance_ecrire_v1.py",
+   "code": 0,
+   "tentatives": {
+    "ecriture-tmp": "REUSSI",
+    "ecriture-item": "REUSSI"
+   }
+  },
+  {
+   "nom": "persistance Python : rien pour l'item suivant",
+   "fichier": "iso_persistance_lire_v1.py",
+   "code": 0,
+   "tentatives": {
+    "lecture-tmp-precedent": "ECHEC",
+    "lecture-item-precedent": "ECHEC",
+    "liste-items": "ECHEC"
+   }
+  }
+ ],
+ "limites_python": [
+  {
+   "nom": "mémoire (512M)",
+   "fichier": "limite_memoire_v1.py",
+   "code_non_nul": true,
+   "stdout_absent": [
+    "ALLOUE"
+   ]
+  },
+  {
+   "nom": "tâches (32)",
+   "fichier": "limite_taches_v1.py",
+   "stdout_contient": [
+    "REFUS"
+   ],
+   "stdout_absent": [
+    "LANCES"
+   ]
+  },
+  {
+   "nom": "temps de processus (5 s)",
+   "fichier": "limite_cpu_v1.py",
+   "code_non_nul": true,
+   "duree_max_s": 30
+  },
+  {
+   "nom": "durée murale (10 s)",
+   "fichier": "limite_duree_v1.py",
+   "code_non_nul": true,
+   "stdout_absent": [
+    "REVEILLE"
+   ],
+   "duree_max_s": 30
+  }
+ ]
+}
