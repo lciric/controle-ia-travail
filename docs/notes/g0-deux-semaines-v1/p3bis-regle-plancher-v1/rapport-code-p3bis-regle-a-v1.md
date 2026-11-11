@@ -1,7 +1,5 @@
 # Code de P3-bis sous la règle (a') — différence appariée et 800 directions — rapport du développeur, v1
 
-(BROUILLON EN COURS D'ÉCRITURE — rapport écrit au fil de l'eau ; la version scellée remplacera ce brouillon.)
-
 Écrit à partir du 2026-11-11 à 10:56 UTC (heures relevées par `date -u`) par un **développeur neuf** (Claude Opus 5.5,
 `claude-opus-5-5`), sous-agent de la session mère `session_01VJdZpSMxSdk2SJ1ScmdfNv`, sur la consigne
 `docs/notes/g0-deux-semaines-v1/consignes-mere-2026-11-10-1136-v1/consigne-code-p3bis-regle-a-v1.md`
@@ -12,13 +10,13 @@ aucune sortie de P3-bis, de T0.6, de 7a ni de 7b, rien sous `docs/notes/bras-att
 ## Verdict
 
 **Code de P3-bis sous la règle (a') écrit, éprouvé et poussé** sur `prep/p3bis-regle-a-v1` (commit du code proposé
-`<<COMMIT>>`) : la lecture décisive de PB-1 applique **exactement** la règle de C7 (`t07/plancher_v2.py` repris au bit
+`5e4575259478af3611e2c7fb1313342912caf484`) : la lecture décisive de PB-1 applique **exactement** la règle de C7 (`t07/plancher_v2.py` repris au bit
 près et importé) sur **800 directions dont les 200 premières sont celles de P3** (`n_plancher` = 800 dans la configuration,
 rien d'autre), l'ancienne règle à 200 est calculée et rapportée, un désaccord est la réserve R-R ; chaîne de session v2,
 bancs et **répétition jouet de bout en bout conformes** ; essai de fermeture v3 conforme ; temps d'instance ajouté
 **≈ 1 à 2 minutes** ; **37 couples** proposés, non appliqués. À contre-lire (P-7) avant le candidat.
 
-- Essais : 31 neufs (+ 3 au banc du module commun), suite des essais de P3-bis de l'arbre : `<<SUITE>>`.
+- Essais : 31 neufs (+ 3 au banc du module commun), suite des essais de P3-bis de l'arbre : **599 passés, aucun échec, aucun saut** (dont les 531 de la liste v2).
 - Mutations : 27 tuées sur 27 (24 en première passe, 3 après renforcement des essais), import tracé sous la copie.
 - Aucun appel de modèle, aucune instance, aucune dépense ; aucun fichier existant modifié (R12).
 
@@ -250,7 +248,20 @@ chez P3, PB-13 sur toutes les actions, niveau de A contre H, positifs inversés,
 standard qui porte l'issue, PB-9 ; ouverture v3 (lecture v1, constante, fonction changées) ; essai v3 à 200 directions ;
 `t07/plancher_v2.py` altéré.
 
-(Suite des essais de P3-bis : à compléter.)
+**Au commit du code proposé `5e457525`** (arbre propre) : les essais neufs rejoués — **30 passés** en 122 s (lecture v2 21,
+notation 3, ouverture v3 5, comparaison du script de l'essai v3 1 ; journal `essais-lecture-p3bis-v2-au-commit-du-code-v1.txt`)
+— et **l'essai différentiel de fermeture v3 rejoué** (11:44:54 – 11:53:27) : **CONFORME** — issues lues égales aux issues
+plantées, sorties de classe 1 identiques sur les seize passages, plage comprimée totale 8 octets pour une plus grande plage
+d'une issue de 8 (marge 16), plus grand écart de durée entre issues 2,74 s (seuil 30 s), sept contrôles positifs détectés,
+second paquet conforme ; sortie `essai-fermeture-p3bis-v3-sortie-v1.txt` et son lancement (commit, commande, Python 3.13.18)
+versés ; le premier passage (commit `3525a20c`, même arbre de code hors des compagnons) est versé aussi, sous un nom qui le dit.
+
+**Suite des essais de P3-bis de l'arbre** (journal `suite-essais-p3bis-regle-a-v1.txt` ; commit `da683900`, dont le code
+est celui du commit proposé hors de l'essai de frontière et des artefacts de PB-9 ajoutés ensuite ; Python 3.13.18, un fil
+d'OpenBLAS ; machine partagée) : la liste ciblée v2 (trente fichiers), les deux fichiers hors liste d'`a1de3915` et les
+quatre fichiers neufs — **599 passés en 1 962,65 s, aucun échec, aucun saut** : 531 de la liste v2 (le N du texte,
+inchangé), 38 hors liste d'`a1de3915`, 30 neufs (dont l'essai de fermeture v3 complet). Extraction déclarée au point 13 de
+la section 6.
 
 ## 5. Couples proposés (écrits, non appliqués)
 
@@ -349,12 +360,45 @@ la configuration obtenue reste un JSON valide (journal `couples-proposes-p3bis-r
 | `5e457525` | compagnons des fichiers neufs de l'arbre gelé, et l'essai de frontière et les artefacts de PB-9 renforcés : **commit du code proposé** (`5e4575259478af3611e2c7fb1313342912caf484`) — son message dit « 30 essais » : il y en a 31, l'essai de frontière ayant été ajouté juste avant (déclaré ; l'histoire poussée n'est pas réécrite) |
 
 **Fichiers neufs de l'arbre gelé au commit du code** (empreintes recalculées par `git show`, égales à leurs compagnons) :
-<<EMPREINTES_NEUVES>>
+- `scripts/essai_fermeture_p3bis_v3.py` (`785cb20b9a44742f322f06d4265d5a04561a15e999b4f32e1ed432d74c15defc`)
+- `src/controle_ia/premier_test_ia/lecture_p3bis_v2.py` (`c7a060c83b51c023d84448cb237e3479d39ce6860b64a5d292b65e63c41d1646`)
+- `src/controle_ia/premier_test_ia/ouverture_p3bis_v3.py` (`4a54a437e4a6031b1890f0f5f0261cf1141e72aee82d456d9fcd5483946693e9`)
+- `src/controle_ia/t07/plancher_v2.py` (`a0f80e6826b77279dfb807863af106655c2515f69d6d415657b7b121598ee796`)
+- `tests/test_essai_fermeture_p3bis_v3.py` (`df40117ad14aefd18fe414d597684e4a2ffc2279933bad890a41eb855474e3f7`)
+- `tests/test_premier_test_ia_lecture_p3bis_v2.py` (`a9b43ffa8ce88eac2e6c0b300ac6c81e86a35cd572dad7322a73c15897cd200c`)
+- `tests/test_premier_test_ia_notation_plancher_800_v1.py` (`ebb8b903ab0fbf34df25bc80db68a08ec73dc3cf73a233880e27b75db751fc5e`)
+- `tests/test_premier_test_ia_ouverture_p3bis_v3.py` (`205b2f41a83b999609c89ff6d47d7dc723dddbbf9823809364d0cffc309ea29c`)
+
+`git diff --name-status --no-renames a1de3915 5e457525 -- <CHEMINS_GELES>` : 15 lignes, toutes `A` ; règle d'identité de l'en-tête (`7a54d431` → `5e457525`) : 18 lignes, toutes `A`, sortie `identite-p3-commit-du-code-v1.txt` (`7719b1b5876aa7f08bddb8f84f6ff39066da895137a70bba0b3321c32345f35b`) ; à `a1de3915` : 14 lignes, `65a09fb5…`, comme le texte (`identite-p3-a1de3915-v1.txt`).
 
 **Pièces à côté de ce rapport** (`docs/notes/g0-deux-semaines-v1/p3bis-regle-plancher-v1/`, scellées, non committées) :
 
 | pièce | sha256 |
 |---|---|
-<<TABLE_PIECES>>
+| `banc-controles-p3bis-v2-dev.log` | `8773d4eb3482b1fe5d491f2886520402b0eb247646e3139443a1386b89a870a7` |
+| `banc-lanceur-p3bis-v2-dev.log` | `51c87ed5d253a9d3390a4c1dbfd7be9d9e03cbcfd90a707efbff7a30dc78898a` |
+| `banc-recuperation-p3bis-v2-dev.log` | `31098d00637095bacc6de56d1e9eebf238cb4989828b5e71bef9ba8e1239bea6` |
+| `banc-surveillance-p3bis-v2-dev.log` | `e842775cc0221e767ec9cc06bf7a217d6db6c86730c0de29ccc6a9bfd69ba96f` |
+| `banc-verifications-p3bis-v2-dev.log` | `4b15d0789bf18fa152e999bfc2ce016ed35a72655c7e44ed95e50c4eb4528510` |
+| `calculer_valeurs_couples_v1.py` | `f01d0418e214668a54f7b512916cc04836617d9949c9397bf0cb7cf49622920a` |
+| `construire_couples_p3bis_regle_a_v1.py` | `7e769cb016f62f90748466ceb6e6da172e15e5949c92a7954162018d6ee712a7` |
+| `couples-proposes-p3bis-regle-a-v1-journal.txt` | `4a79879a201d739c3e1122bd183f5167ae4c90e5f002377da72e5096d4871634` |
+| `couples-proposes-p3bis-regle-a-v1.json` | `41f8c885581d59d03e7111b65c3976e8db295e6ab7c9b740e0c50aa9631535e3` |
+| `essai-fermeture-p3bis-v3-lancement-premier-passage-3525a20c-v1.txt` | `22d3727d469164df1182322de3a820ad966b9c6b0653c78d0c1b73f90e3b8bf1` |
+| `essai-fermeture-p3bis-v3-lancement-v1.txt` | `2e9fc710a8f39102d4720477df0bed24ce80175459cd50281f7ba496c73d8990` |
+| `essai-fermeture-p3bis-v3-sortie-premier-passage-3525a20c-v1.txt` | `c2ed90e92d3da183d7edf9b596a8fd6ca3626dfa48d809e086b0c66a1ee4e2f6` |
+| `essai-fermeture-p3bis-v3-sortie-v1.txt` | `9375628699e95fc6563d2da4ce0172371cfeb2e3fcb56b0fbe8e2aa6774b1464` |
+| `essais-lecture-p3bis-v2-au-commit-du-code-v1.txt` | `f10cc322eddfa153dd248be7699653310163a153da8ba68703dd8bdcf64924ef` |
+| `identite-p3-a1de3915-v1.txt` | `65a09fb52ab479a69b109859899efa95c8b92966e0fa2c5d8e70002e8d0c7708` |
+| `identite-p3-commit-du-code-v1.txt` | `7719b1b5876aa7f08bddb8f84f6ff39066da895137a70bba0b3321c32345f35b` |
+| `mesure-temps-plancher-800-v1.json` | `e2c72a0de1bea7894d34d0e36790d765d3e4f3f5e9629c22ad8f4b682213fea0` |
+| `mesure_temps_plancher_800_v1.py` | `2c639ea68e842791e2541a05e8f6f28ee0642288d2edaee55827d0080b3f2676` |
+| `mutations-p3bis-regle-a-v1.txt` | `1b11118e12a492346782b09d2eb861636a8ad987898849e37ff17a0c65923ac6` |
+| `mutations-survivantes-rejouees-v1.txt` | `ae0e01f6c2ecbbcf795880603706a43b3cdc25a000860a4e49b293cf314c1b9f` |
+| `mutations_p3bis_regle_a_v1.py` | `a6f721441bfb30724d42b59de610367d92d52af2afc945d483faed60e3d77ba5` |
+| `preuves-journaux-chaine-v2-dev-v1.txt` | `e3c00ea6b1fd25847ac65a5deb2108e981653813880bfe698ed0be052b9e139f` |
+| `repetition-jouet-p3bis-v2-dev.log` | `5d7edeb2d1e3a72782838599d7aea64b6159e68b933eeeb900979e52d0c1bb65` |
+| `suite-essais-p3bis-regle-a-v1.txt` | `8ba30d4832cd5eb0652d8cbd9133b227a6a3f227ecc16813ee6c3788a0d31389` |
+| `valeurs-couples-p3bis-regle-a-v1.json` | `58692891e8e4feb0449677361359d630e6bbbf417a0fed54c178dc48eb810a4d` |
 
-Ce rapport est scellé en dernier (compagnon `rapport-code-p3bis-regle-a-v1.md.sha256`).
+Ce rapport est scellé en dernier (compagnon `rapport-code-p3bis-regle-a-v1.md.sha256`), le 2026-11-11 vers 12:06 UTC (`date -u` relevé juste avant le scellement).

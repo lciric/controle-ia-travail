@@ -50,9 +50,15 @@ def main(argv) -> int:
     m = re.search(r"commit ([0-9a-f]{40})", (dossier / "essai-fermeture-p3bis-v3-lancement-v1.txt").read_text(encoding="utf-8"))
     conformes = sum(1 for x in texte_essai.splitlines() if x.startswith("CONFORME — "))
     non = sum(1 for x in texte_essai.splitlines() if x.startswith("NON CONFORME"))
-    mut = (dossier / "mutations-p3bis-regle-a-v1.txt").read_text(encoding="utf-8").strip().splitlines()[-1]
+    m1 = re.search(r"MUTATIONS : (\d+) tuées sur (\d+)", (dossier / "mutations-p3bis-regle-a-v1.txt").read_text(encoding="utf-8"))
+    m2 = re.search(r"MUTATIONS : (\d+) tuées sur (\d+)", (dossier / "mutations-survivantes-rejouees-v1.txt").read_text(encoding="utf-8"))
+    tuees, total = int(m1.group(1)) + int(m2.group(1)), int(m1.group(2))
+    mut = (f"{tuees} tuées sur {total} ({m1.group(1)} en première passe ; les {m2.group(2)} survivantes, m05, m06 et m17, tuées "
+           "après les essais de frontière et de PB-9 renforcés), import tracé sous la copie, témoin conforme")
     suite = (dossier / "suite-essais-p3bis-regle-a-v1.txt").read_text(encoding="utf-8")
     passes = re.findall(r"^(\d+ passed[^\n]*)$", suite, re.M)
+    reprise = (dossier / "essais-lecture-p3bis-v2-au-commit-du-code-v1.txt").read_text(encoding="utf-8")
+    passes_reprise = re.findall(r"^(\d+ passed[^\n]*)$", reprise, re.M)
     v = {
         "commit": commit, "rapport": RAPPORT,
         "n_ajouts_geles": len(chemins), "ajouts_geles": ", ".join(f"`{c}`" for c in chemins),
@@ -65,12 +71,13 @@ def main(argv) -> int:
         "essai_resume": (f"dernière ligne « {texte_essai.strip().splitlines()[-1]} », {conformes} lignes conformes, {non} non "
                          "conforme : quatre passages par issue, issue lue égale à l'issue plantée sous la règle (a'), taille "
                          "fixe, règle des plages, durée, sept contrôles positifs détectés, second paquet"),
-        "essais_neufs": ("30 dans `tests/` — `test_premier_test_ia_lecture_p3bis_v2.py` 20, "
+        "essais_neufs": ("31 dans `tests/` — `test_premier_test_ia_lecture_p3bis_v2.py` 21, "
                          "`test_premier_test_ia_notation_plancher_800_v1.py` 3, `test_premier_test_ia_ouverture_p3bis_v3.py` 5, "
                          "`test_essai_fermeture_p3bis_v3.py` 2 —, plus 3 dans le banc du module commun v2 ; suite des essais de "
-                         f"P3-bis de l'arbre (liste v2, deux fichiers hors liste d'`a1de3915`, quatre neufs) : {passes[-1] if passes else 'voir le journal'}"),
-        "essais_neufs_court": "30 essais neufs, quatre fichiers, hors de la liste v2",
-        "mutations": mut.replace("MUTATIONS : ", ""),
+                         f"P3-bis de l'arbre (liste v2, deux fichiers hors liste d'`a1de3915`, quatre neufs) : {passes[-1] if passes else 'voir le journal'} "
+                         f"; fichier des essais de la lecture v2, renforcé, rejoué au commit du code : {passes_reprise[-1] if passes_reprise else 'voir le journal'}"),
+        "essais_neufs_court": "31 essais neufs, quatre fichiers, hors de la liste v2",
+        "mutations": mut,
         "generateur": ("`docs/procedures/P3-bis-temoin-positif-v1/journaux-developpeur-v4/generer_chaine_v2.py` et "
                        "`ecarts-chaine-v2-a-v1.txt`"),
         "bancs": ("module commun 147 essais passés ; lanceur 58 cas, surveillance 99, récupération 46, contrôles 42, 0 non "
