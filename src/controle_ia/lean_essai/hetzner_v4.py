@@ -15,7 +15,7 @@ import urllib.parse
 from controle_ia.gardes import GardeArret
 
 from . import garde_go_v1
-from .hetzner_v1 import ETIQUETTES, NOM_MACHINE, ErreurHetzner  # noqa: F401
+from .hetzner_v1 import ETIQUETTES, NOM_MACHINE, ErreurHetzner, regles_coupure, regles_installation  # noqa: F401
 from .hetzner_v3 import ETIQUETTE_CREATION, ClientHetzner3, transport_urllib, verifier_coupure_nuage  # noqa: F401
 
 TYPES_PERMIS = ("ccx23", "ccx33", "cx53")

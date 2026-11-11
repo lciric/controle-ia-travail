@@ -244,7 +244,8 @@ def veiller(m: Machine, client, horloge=lambda: datetime.now(timezone.utc), dorm
 def ligne_procedure_mere(echeance: datetime, pas: str = "d1a") -> str:
     tache = echeance - timedelta(hours=MARGE_TACHE_H)
     return (f"PROCÉDURE MÈRE (CLC3-07 c) : armer tout de suite une tâche programmée unique (send_later de la session mère) "
-            f"pour {tache.isoformat(timespec='minutes')} UTC (échéance {echeance.isoformat(timespec='minutes')} UTC moins "
+            f"pour {tache.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC (échéance "
+            f"{echeance.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC moins "
             f"{MARGE_TACHE_H:.0f} h), message : « Essai Lean D-1a, échéance de la machine {NOM_MACHINE} : lancer "
             f"`PYTHONPATH=src python -m controle_ia.lean_essai.minuterie_v4 detruire --pas {pas}`, vérifier l'absence, "
             f"inscrire l'arrêt et prévenir Lazar ». Puis committer le fichier de rattrapage.")
