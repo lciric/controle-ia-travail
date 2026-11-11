@@ -60,12 +60,12 @@ def suite_d_heures(*heures):
 class FauxAPI:
     def __init__(self, serveurs=None, *, forme="location", statut_post=201, perdre_post=False, apparition_apres=0,
                  statut_delete=200, pannes_get=0, page_suivante=False, apres_delete=None, statut_inventaire=200,
-                 pannes_delete=0):
+                 pannes_delete=0, statut_lecture=200):
         self.serveurs = {i: dict(s) for i, s in (serveurs or {}).items()}
         self.forme, self.statut_post, self.perdre_post = forme, statut_post, perdre_post
         self.apparition_apres, self.statut_delete, self.pannes_get = apparition_apres, statut_delete, pannes_get
         self.page_suivante, self.apres_delete = page_suivante, apres_delete
-        self.statut_inventaire, self.pannes_delete = statut_inventaire, pannes_delete
+        self.statut_inventaire, self.pannes_delete, self.statut_lecture = statut_inventaire, pannes_delete, statut_lecture
         self.cache, self.recherches, self.appels, self.corps = {}, 0, [], []
         self.cles, self.pare_feux, self.prochain = {}, {}, 500
 
@@ -85,6 +85,8 @@ class FauxAPI:
             if self.pannes_get > 0:
                 self.pannes_get -= 1
                 raise H.ErreurHetzner("injoignable (essai)")
+            if self.statut_lecture != 200:
+                return self.statut_lecture, {"error": {"code": "unauthorized"}}
             i = int(chemin.rsplit("/", 1)[1])
             return (200, {"server": self._serveur(i)}) if i in self.serveurs else (404, {"error": {"code": "not_found"}})
         if methode == "GET" and chemin.startswith("/servers?label_selector="):
@@ -279,6 +281,18 @@ def test_plafond_retranche_du_deja_depense(tmp_path):   # n20
     assert any(e.get("detruire") is False and e["motif"].startswith("garder") for e in j)
 
 
+def test_prix_le_plus_haut_retenu(tmp_path):   # prix passé plus bas que le prix lu : le lu compte
+    api = FauxAPI(SERVEUR)
+    code, j = veiller_cli(api, tmp_path, "--prix-usd-h", "0.1")
+    assert code == 0 and [e for e in j if e.get("demarrage") == "fait"][0]["prix_usd_h"] == pytest.approx(PRIX_HEL1)
+
+
+def test_minuterie_lecture_refusee_au_demarrage(tmp_path, capsys):   # 401 durable dès la première lecture
+    api = FauxAPI(SERVEUR, statut_lecture=401)
+    code, j = veiller_cli(api, tmp_path)
+    assert code == 3 and "à la main par l'identifiant 778" in capsys.readouterr().err and 778 in api.serveurs
+
+
 def test_refus_de_nom_au_demarrage(tmp_path, capsys):
     api = FauxAPI({778: {"name": "autre", "labels": {}}})
     code, _ = veiller_cli(api, tmp_path)
@@ -313,6 +327,10 @@ def test_creer_passe_deja_taux_et_echeance(tmp_path):   # n9, n15 côté créati
     assert vus["deja"] == 20.0 and vus["taux"] == 1.3 and vus["lieu"] == "hel1" and vus["jeton"] == JETON
     assert vus["echeance_h"] == pytest.approx(29.0) and r["echeance"] == (T0 + timedelta(hours=29)).isoformat()
     assert vus["prix_usd_h"] == pytest.approx((0.2390 + 0.0010) * 1.3)
+    chemins = depot(tmp_path / "b")
+    vus = {}
+    creer(FauxAPI(), chemins, preparer(chemins), taux_declare=0.5, vus=vus)
+    assert vus["taux"] == 1.25 and vus["prix_usd_h"] == pytest.approx(PRIX_HEL1)
 
 
 @pytest.mark.parametrize("survie", [{"vivante": False, "garder": False, "motif": "processus absent"},
@@ -323,6 +341,22 @@ def test_minuterie_morte_ou_muette_detruit(tmp_path, survie):
     with pytest.raises(GardeArret, match="minuterie non armée.*détruit"):
         creer(api, chemins, preparer(chemins), controler=lambda mi, d: survie)
     assert 778 not in api.serveurs and lignes(chemins["creations"])[-1]["destruction_confirmee"]
+
+
+def test_controle_par_defaut_de_la_survie(tmp_path):   # sans contrôleur injecté : PID réel absent ⇒ détruit
+    chemins = depot(tmp_path)
+    api = FauxAPI()
+    pid = tmp_path / "pid.txt"
+    pid.write_text(f"{2 ** 22 + 7} 778 {JETON}\n")
+
+    def lancer(**kw):
+        return {"pid": 2 ** 22 + 7, "fichier_pid": str(pid), "journal": str(tmp_path / "rien.jsonl")}
+    d = dict(go_id=GO, chemins=chemins, rattrapage=preparer(chemins), type_serveur="ccx33", image="ubuntu-24.04",
+             lieu="hel1", cles_ssh=[1], pare_feux=[2], horloge=lambda: T0, dormir=rien, lancer=lancer,
+             verifier_pousse=lambda racine, chemin: (True, "essai"), fenetre_s=60.0)
+    with pytest.raises(GardeArret, match="minuterie non armée.*processus absent"):
+        M.creer_et_armer(client(api), **d)
+    assert 778 not in api.serveurs
 
 
 def test_lancement_en_echec_detruit(tmp_path):   # n3
@@ -602,7 +636,7 @@ def test_preparer_sain(tmp_path):
                                                        (T0 + timedelta(hours=64)).isoformat()]
     m = r["taches_mere"][0]["message"]
     for attendu in ("DELETE https://api.hetzner.cloud/v1/servers/<identifiant>", "label_selector=essai%3Dlean%2Cpas%3Dd1a",
-                    "name=lean-outillage-d1a", "401 ou 403", "registres/arrets.md", "Ne jamais recréer",
+                    "name=lean-outillage-d1a", "401 ou 403", "registres/arrets.md", "Ne jamais recréer", "d'un autre nom",
                     "2026-11-12 16:00 UTC"):
         assert attendu in m
     assert "detruire --pas d1a" in r["commandes_poste"]["par_pas"]
@@ -734,8 +768,9 @@ def test_acces_artefacts(tmp_path):
     for cle in ("-----BEGIN OPENSSH PRIVATE KEY-----", CLE_PUB + "\n" + CLE_PUB, "AAAAC3Nza"):
         with pytest.raises(GardeArret, match="jamais une clé privée"):
             M.creer_acces(client(api), prep, cle, "203.0.113.5", chemins["verse"])
-    with pytest.raises(GardeArret, match="IPv4"):
-        M.creer_acces(client(api), prep, CLE_PUB, "203.0.113.0/24", chemins["verse"])
+    for ip in ("203.0.113.0/24", "203.0.113.999", "poste"):
+        with pytest.raises(GardeArret, match="IPv4"):
+            M.creer_acces(client(api), prep, CLE_PUB, ip, chemins["verse"])
     assert not api.cles and not api.pare_feux
     M.creer_acces(client(api), prep, CLE_PUB, "203.0.113.5", chemins["verse"])
     next(iter(api.pare_feux.values()))["name"] = "pare-feu-d-un-autre"

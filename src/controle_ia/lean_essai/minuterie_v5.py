@@ -219,8 +219,8 @@ def _detruire_trouves(client, trouves, journal, dormir, essais_max, solder=None,
     autres = [(i, n) for i, n in trouves if n != NOM_MACHINE]
     if autres:
         _signaler(journal, {"serveurs_d_un_autre_nom": autres, "touches": False})
-    detruits = [detruire_par_identifiant(client, i, n, journal, dormir, essais_max=essais_max, refus_max=refus_max,
-                                         solder=solder) for i, n in bons]
+    detruits = [detruire_par_identifiant(client, i, NOM_MACHINE, journal, dormir, essais_max=essais_max, refus_max=refus_max,
+                                         solder=solder) for i, _ in bons]   # nom fixe : le contrôle du nom ne dépend pas du tri
     return detruits, autres
 
 
