@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Correction sur place (2026-11-11, R-2367 ; consigne `consigne-correction-bancs-epingles-p3bis-v1.md`, `2748d944…`) : le
+# banc joue aussi bien contre une récupération épinglée que non épinglée : la ligne `^PY=.*` de la copie jouée est
+# remplacée quelle qu'en soit la valeur (une occurrence exigée) ; R01e fabrique son artefact en remettant PY=A_EPINGLER
+# dans une copie de la copie jouée (dépôt nu local) ; tout autre cas inchangé.
 # Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `essais_recuperation_p3bis_v1.sh`, gardé
 # tel quel (R12), noms de la chaîne en v2 ; runs fabriqués par l'essai de fermeture v3 (800 directions), lectures fermées v3 ; R00 : paquet relu, lecture complémentaire `lecture_p3bis_v2`, 800 et 200 directions.
 # Brouillon 3 (2026-11-10, contre-lecture différentielle, CD-05) : témoin fabriqué docs/notes/bras-attaque/ au dépôt
@@ -33,7 +37,8 @@ echo "script éprouvé : $(basename "$0") $(sha256sum "$(realpath "$0")" | cut -
 mkdir -p "$E/bin" && cd "$E" || exit 2
 NON_CONFORMES=0; NCAS=0
 # --- copie jouée ---------------------------------------------------------------------------------------------------
-sed -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$E/distant.git|" -e "s|^PY=A_EPINGLER.*|PY=$PYB|" "$ICI/recuperation_p3bis_v2.sh" > "$E/recuperation_p3bis_v2.sh"
+[ "$(grep -c '^PY=' "$ICI/recuperation_p3bis_v2.sh")" = 1 ] || { echo "copie de la récupération non sûre : une ligne PY= exigée"; exit 2; }
+sed -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$E/distant.git|" -e "s|^PY=.*|PY=$PYB|" "$ICI/recuperation_p3bis_v2.sh" > "$E/recuperation_p3bis_v2.sh"
 echo "lignes changées dans la copie de la récupération : $(diff "$ICI/recuperation_p3bis_v2.sh" "$E/recuperation_p3bis_v2.sh" | grep -c '^>') (DEPOT_URL, PY)"
 [ "$(diff "$ICI/recuperation_p3bis_v2.sh" "$E/recuperation_p3bis_v2.sh" | grep -c '^>')" = 2 ] || { echo "copie de la récupération non sûre"; exit 2; }
 cp "$ICI/detruire_p3bis_v2.sh" "$ICI/verifications_p3bis_v2.py" "$E/"
@@ -157,7 +162,10 @@ recup R01-branche-main 2 - "$S0" main
 recup R01b-branche-autre 2 - "$S0" calcul/p3-reel-v1
 mkdir -p "$E/recup-R01c-dossier-existant"; recup R01c-dossier-existant 2 - "$S0" calcul/p3bis-reel-v1
 recup R01d-s-invalide 2 - "abc" calcul/p3bis-reel-v1
-NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" bash "$ICI/recuperation_p3bis_v2.sh" "$S0" calcul/p3bis-reel-v1 "$E/recup-R01e" > "$E/console-R01e.txt" 2>&1
+# R01e : artefact « épingle non remplie » fabriqué sur la copie jouée, PY remis à A_EPINGLER (R-2367)
+sed 's|^PY=.*|PY=A_EPINGLER|' "$E/recuperation_p3bis_v2.sh" > "$E/recuperation-r01e.sh"
+[ "$(diff "$E/recuperation_p3bis_v2.sh" "$E/recuperation-r01e.sh" | grep -c '^>')" = 1 ] || { echo "copie R01e non sûre"; exit 2; }
+NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" bash "$E/recuperation-r01e.sh" "$S0" calcul/p3bis-reel-v1 "$E/recup-R01e" > "$E/console-R01e.txt" 2>&1
 [ $? = 2 ] && grep -q A_EPINGLER "$E/console-R01e.txt" && echo "R01e-epingle-non-remplie : code 2 ; CONFORME" || { echo "R01e-epingle-non-remplie : NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1)); }
 # artefacts (branche calcul/p3bis-reel-v2, réécrite à chaque cas)
 B2=calcul/p3bis-reel-v2

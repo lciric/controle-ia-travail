@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Correction sur place (2026-11-11, R-2367 ; consigne `consigne-correction-bancs-epingles-p3bis-v1.md`, `2748d944…`) : la
+# répétition joue aussi bien contre une récupération épinglée que non épinglée : la ligne `^PY=.*` de la copie jouée est
+# remplacée quelle qu'en soit la valeur (une occurrence exigée) ; rien d'autre ne change.
 # Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `repetition_jouet_p3bis_v1.sh`, gardé
 # tel quel (R12), noms de la chaîne en v2 ; run fabriqué par l'essai de fermeture v3 (800 directions), récupération v2 (lectures fermées v3), paquet de la tentative 1 ouvert et lu, ligne `PROGRES` factice à 1 630 sondes.
 # Brouillon 2 (2026-11-10, après la fusion du code corrigé, branche prep/p3bis-code-v2) : VRAI module ouverture_p3bis_v2
@@ -52,7 +55,8 @@ NON_CONFORMES=0
 JETONS=(HF_TOKEN=factice-hf-6666666 CONTROLE_IA_GITHUB_TOKEN=factice-gi-7777777)
 # --- copies jouées -----------------------------------------------------------------------------------------------------
 sed -e "s|^DEPOT=.*|DEPOT=$R/depot|" -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$R/distant.git|" -e "s|^INTERVALLE_OFFRE_S=.*|INTERVALLE_OFFRE_S=0|" "$ICI/lancer_p3bis_v2.sh" > "$R/H/lancer_p3bis_v2.sh"
-sed -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$R/distant.git|" -e "s|^PY=A_EPINGLER.*|PY=$PYB|" "$ICI/recuperation_p3bis_v2.sh" > "$R/H/recuperation_p3bis_v2.sh"
+[ "$(grep -c '^PY=' "$ICI/recuperation_p3bis_v2.sh")" = 1 ] || { echo "copie de la récupération non sûre : une ligne PY= exigée"; exit 2; }
+sed -e "s|^DEPOT_URL=.*|DEPOT_URL=file://$R/distant.git|" -e "s|^PY=.*|PY=$PYB|" "$ICI/recuperation_p3bis_v2.sh" > "$R/H/recuperation_p3bis_v2.sh"
 echo "lignes changées : lanceur $(diff "$ICI/lancer_p3bis_v2.sh" "$R/H/lancer_p3bis_v2.sh" | grep -c '^>') (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S) ; récupération $(diff "$ICI/recuperation_p3bis_v2.sh" "$R/H/recuperation_p3bis_v2.sh" | grep -c '^>') (DEPOT_URL, PY)"
 for s in controle_cinq_minutes_p3bis_v2.sh surveiller_p3bis_v2.sh detruire_p3bis_v2.sh verifications_p3bis_v2.py; do cp "$ICI/$s" "$R/H/"; done
 cat > "$R/H/controles_avant_depense_p3bis_v2.sh" <<'EOF'

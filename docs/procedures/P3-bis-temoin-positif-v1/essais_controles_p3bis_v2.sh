@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Correction sur place (2026-11-11, R-2367 ; consigne `consigne-correction-bancs-epingles-p3bis-v1.md`, `2748d944…`) : le
+# banc joue aussi bien contre des contrôles épinglés que non épinglés : chaque épingle `^K=.*$` de la copie jouée est
+# remplacée quelle qu'en soit la valeur (une occurrence exigée) ; K34 fabrique son artefact en remettant les treize
+# épingles à A_EPINGLER dans une copie de la copie jouée (dépôt nu local) ; tout autre cas inchangé.
 # Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `essais_controles_p3bis_v1.sh`, gardé
 # tel quel (R12), noms de la chaîne en v2 ; configuration du banc à 800 directions ; essai de fermeture v3 (factice du banc).
 # Brouillon 3 (2026-11-10, contre-lecture différentielle) : texte candidat = brouillon 10 (marqueurs remplis) ; clone de
@@ -156,7 +160,7 @@ def rep(a, b):
     assert t.count(a) == 1, a
     t = t.replace(a, b); n += 1
 for k, x in v.items():
-    lignes = re.findall(rf"^{k}=A_EPINGLER.*$", t, re.M)
+    lignes = re.findall(rf"^{k}=.*$", t, re.M)          # épinglée ou non (R-2367)
     assert len(lignes) == 1, k
     rep(lignes[0], f'{k}="{x}"')
 rep(re.findall(r"^CODE_P3=.*$", t, re.M)[0], f"CODE_P3={sys.argv[17]}")
@@ -256,7 +260,10 @@ cp "$E/controles-banc-sain.sh" "$E/controles-banc.sh"
 k2() { local nom=$1; shift; NCAS=$((NCAS + 1)); env -i PATH=/usr/bin:/bin HOME="$E" LANG=C.UTF-8 "$@" > "$E/console-$nom.txt" 2>&1
     local c=$?; if [ "$c" = 2 ]; then echo "$nom : code 2 ; CONFORME"; else echo "$nom : code $c ; NON CONFORME (2 attendu)"; NON_CONFORMES=$((NON_CONFORMES + 1)); fi
     grep -v '^$' "$E/console-$nom.txt" | tail -1 | cut -c1-170 | sed 's/^/    | /'; }
-k2 K34-epingles-non-remplies bash "$ICI/controles_avant_depense_p3bis_v2.sh" "$S0" "$E/clone-k34" calcul/p3bis-reel-v1
+# K34 : artefact « épingles non remplies » fabriqué sur la copie jouée, les treize épingles remises à A_EPINGLER (R-2367)
+sed -E 's/^(CANDIDAT_RELU|CANDIDAT_RELU_CHEMIN|CONFIG_RELUE|CONFIG_RELUE_CHEMIN|CONSIGNES_RELUES|CONSIGNES_RELUES_CHEMIN|CODE_RELU|ESSAI_FERMETURE|ESSAI_FERMETURE_CHEMIN|LONGUEURS_ATTENDUES|LONGUEURS_ATTENDUES_CHEMIN|RAPPORTS_ATTENDUS|PY)=.*$/\1=A_EPINGLER/' "$E/controles-banc.sh" > "$E/controles-banc-k34.sh"
+[ "$(diff "$E/controles-banc.sh" "$E/controles-banc-k34.sh" | grep -c '^>')" = 13 ] && [ "$(grep -cE '^[A-Z_]+=A_EPINGLER$' "$E/controles-banc-k34.sh")" = 13 ] || { echo "copie K34 non sûre"; exit 2; }
+k2 K34-epingles-non-remplies bash "$E/controles-banc-k34.sh" "$S0" "$E/clone-k34" calcul/p3bis-reel-v1
 grep -q "A_EPINGLER" "$E/console-K34-epingles-non-remplies.txt" || { echo "    motif « A_EPINGLER » absent : NON CONFORME"; NON_CONFORMES=$((NON_CONFORMES + 1)); }
 k2 K35-usage bash "$E/controles-banc.sh" "$S0" "$E/clone-k35"
 k2 K35b-branche-invalide bash "$E/controles-banc.sh" "$S0" "$E/clone-k35b" main
