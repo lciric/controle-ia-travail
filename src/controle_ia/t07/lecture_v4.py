@@ -152,10 +152,30 @@ def lecture_planchers_p3(t: dict, index: dict, mesures: dict, config: dict, grai
     return {"lecture": LECTURE_P3, "jeux": sortie, "non_lues": absentes}
 
 
+def paliers_de(x: dict) -> dict:
+    """Palier de la garde d'identité d'un bras de la réextraction et ses réserves (écrits dans l'index des scores et dans
+    `notation-t07.json`)."""
+    return {"etat": x.get("etat"), "palier": x.get("palier"), "reserve": x.get("reserve"),
+            "reserve_principale": x.get("reserve_principale"),
+            "garde_principale": (x.get("garde_principale") or {}).get("palier")}
+
+
+def reserves_plancher_figees(index) -> list:
+    """Réserves du plancher neuf des sondes figées (palier « carte », principale rapportée hors du processeur), lues dans l'index
+    des scores, recopiées dans `resultat.reserves` de l'étape B (aucune réserve perdue entre les deux étapes)."""
+    sortie = []
+    for e in (index or {}).get("sondes", []):
+        r = (e.get("plancher") or {}).get("reextraction")
+        for cle in ("reserve", "reserve_principale"):
+            if r and r.get(cle):
+                sortie.append(f"plancher neuf de {e['nom']} (réextraction de P3, palier {r.get('palier')}) : {r[cle]}")
+    return sortie
+
+
 # ------------------------------------------------------------------------------------------------------------- étape A (copies)
 def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dict, jetons: dict, config: dict, graines: dict,
           couples: list, extras: dict | None = None, textes: dict | None = None, descriptifs_p3: dict | None = None,
-          echecs_figees: dict | None = None, sources_planchers: dict | None = None) -> dict:
+          echecs_figees: dict | None = None, sources_planchers: dict | None = None, paliers_figees: dict | None = None) -> dict:
     """v4 : celle de `lecture_v2.noter`, directions de plancher notées par lots (`plancher_v3.scores_plancher_vectorises`, contrôle
     en ligne contre la boucle du harnais) ; sondes figées de P3 : plancher neuf de la réextraction (`planchers_p3`,
     `sources_planchers`), leurs 200 directions de P3 notées en descriptif (`descriptifs_p3` → `plancher_p3_<k>`), bras arrêté
@@ -175,6 +195,7 @@ def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dic
              "actions_non_notees": int(mesures["cle"].shape[0] - notees.size), "couples_figes": []}
     extras = extras or {}
     descriptifs_p3, echecs_figees, sources_planchers = descriptifs_p3 or {}, echecs_figees or {}, sources_planchers or {}
+    paliers_figees = paliers_figees or {}
     groupes: dict = {}
     membres_extras = [("neuf", k, x["sonde"]) for k, x in enumerate(extras.get("neufs", [])) if x["etat"] == "notée"]
     membres_extras += [("p6", role, x["sonde"]) for role, x in extras.get("p6", {}).items()]
@@ -213,6 +234,8 @@ def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dic
                     tableaux[f"plancher_{k}"] = pl3.scores_plancher_vectorises(plancher, seqs).T
                     entree["plancher"] = {"n": len(plancher), "source": source, "notation": pl3.METHODE_NOTATION,
                                           "empreintes_deux_premieres": [p.empreinte() for p in plancher[:2]]}
+                    if s.nom in paliers_figees:          # v4 : palier et réserves de la garde d'identité de la réextraction
+                        entree["plancher"]["reextraction"] = paliers_figees[s.nom]
                 except CleAbsente:
                     raise
                 except GardeArret as e:
@@ -476,7 +499,8 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
         t0 = time.perf_counter()
         notation = noter(racine, run_t06, mesures, principales, planchers_p3, jetons, config, graines, couples, extras, textes,
                          descriptifs_p3=descriptifs_p3, echecs_figees=echecs_figees,
-                         sources_planchers={n: SOURCE_FIGEES for n in planchers_figees})
+                         sources_planchers={n: SOURCE_FIGEES for n in planchers_figees},
+                         paliers_figees={n: paliers_de(x) for n, x in reextraction["par_sonde"].items() if x["etat"] == "établi"})
         durees["notation_s"] = round(time.perf_counter() - t0, 2)
         fichier = lv1.ecrire_scores(racine_sortie, run_t07, notation)
         fin = max(int(horloge()), instant + 1)
@@ -496,6 +520,7 @@ def etape_a(racine: Path, registre: Path, config: dict, run_t06: str, instant: i
                     "garde_identite": identite, "planchers_p3": p3.get("fichier"), "cles_ignorees": ignorees,
                     "planchers_figees": {"fichier": fichier_figees, "n_plancher": int(config["n_plancher"]),
                                          "etats": {n: x["etat"] for n, x in reextraction["par_sonde"].items()},
+                                         "paliers": {n: paliers_de(x) for n, x in reextraction["par_sonde"].items()},
                                          "reextraction": f"diag/{run_t07}/reextraction-p3-t07.json"},
                     "garde_adaptee_fin_A": fin_a, "etape_complete": complete, "durees_s": durees,
                     "graines_derivees_apres_manifeste": sorted(set(graines) - set(lire_manifeste(chemin_m)[0]["graines"])),
@@ -555,7 +580,7 @@ def etape_b(racine: Path, registre: Path, config: dict, run_t06: str, run_t07: s
         jugees = list(derivation["doses_jugees"]) if (derivation and lii) else []
         refusees = [] if oii else list(cr.DOSES)
         jeux, hors, etats_i, etats_ii, motifs, ecarts_base, couples = None, None, [], {}, {}, {}, None
-        planchers_p3_lus = None
+        planchers_p3_lus, index = None, None
         complementaires, reserves_id = None, []
         if ouvre:
             chemin_scores = racine_sortie / lignes[rg.SCORES_T07]["chemin"]
@@ -591,6 +616,7 @@ def etape_b(racine: Path, registre: Path, config: dict, run_t06: str, run_t07: s
         motif_L1 = (tableA["motif"] if A_ in ("illisible", "arret") else lu["motif"] if q == "illisible" else None)
         issue = cr.issue_critere_3(g, P_, A_, q, etats_i, etats_ii, fuites["F"], derivation, phrase_m, motifs, motif_L1)
         reserves = list(ep["reserves"]) + (list(derivation["reserves"]) if derivation else [])
+        reserves += reserves_plancher_figees(index)            # v4 : palier « carte », principale rapportée
         reserves += [f"{r['id']} : {r['phrase']} ({r['motif']})" for r in reserves_id if r["phrase"] != "non déclenchée"]
         if r14:
             reserves.append(f"R14 : {r14['phrase']}")
@@ -703,7 +729,8 @@ def main(argv: list[str]) -> int:
 
 
 __all__ = ["exiger_configuration", "charger_configuration", "empreinte_configuration", "methode_plancher", "charger_planchers_p3",
-           "lecture_planchers_p3", "noter", "etape_a", "etape_b", "main", "CLES_CONFIG", "CLE_P3_DESCRIPTIF", "SOURCE_P3",
+           "lecture_planchers_p3", "paliers_de", "reserves_plancher_figees", "noter", "etape_a", "etape_b", "main", "CLES_CONFIG",
+           "CLE_P3_DESCRIPTIF", "SOURCE_P3",
            "SOURCE_FIGEES", "LECTURE_P3"]
 
 

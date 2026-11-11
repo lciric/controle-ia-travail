@@ -25,7 +25,7 @@ NOTER = [
      "          couples: list, extras: dict | None = None, textes: dict | None = None) -> dict:\n",
      "def noter(racine: Path, run: str, mesures: dict, sondes: list, planchers_p3: dict, jetons: dict, config: dict, graines: dict,\n"
      "          couples: list, extras: dict | None = None, textes: dict | None = None, descriptifs_p3: dict | None = None,\n"
-     "          echecs_figees: dict | None = None, sources_planchers: dict | None = None) -> dict:\n"),
+     "          echecs_figees: dict | None = None, sources_planchers: dict | None = None, paliers_figees: dict | None = None) -> dict:\n"),
     ('    """`lecture_v1.noter` (sondes lues',
      '    """v4 : celle de `lecture_v2.noter`, directions de plancher notées par lots (`plancher_v3.scores_plancher_vectorises`, contrôle\n'
      '    en ligne contre la boucle du harnais) ; sondes figées de P3 : plancher neuf de la réextraction (`planchers_p3`,\n'
@@ -35,7 +35,12 @@ NOTER = [
      '"n_plancher": int(config["n_plancher"]),\n             "notation_planchers": pl3.METHODE_NOTATION,\n'),
     ("    extras = extras or {}\n",
      "    extras = extras or {}\n"
-     "    descriptifs_p3, echecs_figees, sources_planchers = descriptifs_p3 or {}, echecs_figees or {}, sources_planchers or {}\n"),
+     "    descriptifs_p3, echecs_figees, sources_planchers = descriptifs_p3 or {}, echecs_figees or {}, sources_planchers or {}\n"
+     "    paliers_figees = paliers_figees or {}\n"),
+    ('                                          "empreintes_deux_premieres": [p.empreinte() for p in plancher[:2]]}\n',
+     '                                          "empreintes_deux_premieres": [p.empreinte() for p in plancher[:2]]}\n'
+     '                    if s.nom in paliers_figees:          # v4 : palier et réserves de la garde d\'identité de la réextraction\n'
+     '                        entree["plancher"]["reextraction"] = paliers_figees[s.nom]\n'),
     ('                    entree["essai_egalite"] = essai\n'
      '                    if s.nom in planchers_p3:\n'
      '                        plancher = planchers_p3[s.nom]\n'
@@ -95,11 +100,13 @@ ETAPE_A = [
     ("        notation = noter(racine, run_t06, mesures, principales, planchers_p3, jetons, config, graines, couples, extras, textes)\n",
      "        notation = noter(racine, run_t06, mesures, principales, planchers_p3, jetons, config, graines, couples, extras, textes,\n"
      "                         descriptifs_p3=descriptifs_p3, echecs_figees=echecs_figees,\n"
-     "                         sources_planchers={n: SOURCE_FIGEES for n in planchers_figees})\n"),
+     "                         sources_planchers={n: SOURCE_FIGEES for n in planchers_figees},\n"
+     "                         paliers_figees={n: paliers_de(x) for n, x in reextraction[\"par_sonde\"].items() if x[\"etat\"] == \"établi\"})\n"),
     ('                    "garde_identite": identite, "planchers_p3": p3.get("fichier"), "cles_ignorees": ignorees,\n',
      '                    "garde_identite": identite, "planchers_p3": p3.get("fichier"), "cles_ignorees": ignorees,\n'
      '                    "planchers_figees": {"fichier": fichier_figees, "n_plancher": int(config["n_plancher"]),\n'
      '                                         "etats": {n: x["etat"] for n, x in reextraction["par_sonde"].items()},\n'
+     '                                         "paliers": {n: paliers_de(x) for n, x in reextraction["par_sonde"].items()},\n'
      '                                         "reextraction": f"diag/{run_t07}/reextraction-p3-t07.json"},\n'),
 ]
 
@@ -112,7 +119,10 @@ ETAPE_B = [
      'for c in ("intervalle", "descriptif", CLE_P3_DESCRIPTIF) for n in sondes_lues\n'),
     ("        jeux, hors, etats_i, etats_ii, motifs, ecarts_base, couples = None, None, [], {}, {}, {}, None\n",
      "        jeux, hors, etats_i, etats_ii, motifs, ecarts_base, couples = None, None, [], {}, {}, {}, None\n"
-     "        planchers_p3_lus = None\n"),
+     "        planchers_p3_lus, index = None, None\n"),
+    ("        reserves = list(ep[\"reserves\"]) + (list(derivation[\"reserves\"]) if derivation else [])\n",
+     "        reserves = list(ep[\"reserves\"]) + (list(derivation[\"reserves\"]) if derivation else [])\n"
+     "        reserves += reserves_plancher_figees(index)            # v4 : palier « carte », principale rapportée\n"),
     ("            couples = lecture_couples(t, index, config, [cr.JEU_I] + ([d for d in cr.DOSES] if oii else []))\n",
      "            couples = lecture_couples(t, index, config, [cr.JEU_I] + ([d for d in cr.DOSES] if oii else []))\n"
      "            planchers_p3_lus = lecture_planchers_p3(t, index, mesures, config, graines,\n"

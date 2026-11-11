@@ -250,6 +250,8 @@ def test_bout_en_bout_bras_arrete_aucune_bascule(depot, capsys):
         for jeu, x in p3d["jeux"][n].items():
             assert x["lecture"] == lv4.LECTURE_P3 and x["difference"]["methode"] == METHODE and x["niveau"] == 0.95
     assert lec["methode_plancher"]["n_plancher"] == j.config["n_plancher"]
+    assert not [r for r in lec["reserves"] if "plancher neuf de" in r]
+    assert all(x["etat"] == "échec" and x["palier"] is None for x in nota["planchers_figees"]["paliers"].values())
     taches = set(m["graines"])
     assert {f"plancher/{n}" for n in figees} <= taches and {f"{lv4.CLE_P3_DESCRIPTIF}/{n}/{cr.JEU_I}" for n in figees} <= taches
 
@@ -269,8 +271,10 @@ def test_bout_en_bout_bras_etabli(depot, capsys, monkeypatch):
             X = [rng.standard_normal((40, len(s.w))) for _ in range(3)]
             d = plancher_apparie(f"{s.nom}{rx.SUFFIXE_PLANCHER}", int(s.couche), X, s.agregation, n_plancher, graine_de(f"plancher/{s.nom}"))
             tirees[s.nom] = d
+            carte = c == "tromperie"                       # un bras au palier « carte » : sa réserve doit passer à l'étape B
             sortie[s.nom] = {"concept": c, "etat": "établi", "motif": None, "directions": d, "graine": f"plancher/{s.nom}",
-                             "palier": "identique", "reserve": None, "n": len(d)}
+                             "palier": "carte" if carte else "identique", "reserve": rx.RESERVE_CARTE if carte else None,
+                             "n": len(d)}
         return {"par_sonde": sortie, "rapport": {"methode": rx.METHODE, "etat": "établi"}}
     monkeypatch.setattr(rx, "reextraire", double)
     run_t07, lec, nota, m = _etapes(j, cfg, capsys)
@@ -296,6 +300,11 @@ def test_bout_en_bout_bras_etabli(depot, capsys, monkeypatch):
     boucle = pl.scores_plancher(tirees[figees[0]], seqs).T
     assert np.max(np.abs(t[f"plancher_{k}"] - boucle)) <= 1e-12 * max(1.0, float(np.max(np.abs(boucle))))
     assert lec["issue_critere_3"] == "L2"
+    tromperie = j.config["sondes_par_concept"]["tromperie"]
+    assert nota["planchers_figees"]["paliers"][tromperie]["palier"] == "carte"
+    assert [r for r in lec["reserves"] if "plancher neuf de" in r] == [
+        f"plancher neuf de {tromperie} (réextraction de P3, palier carte) : {rx.RESERVE_CARTE}"]
+    assert next(e for e in index["sondes"] if e["nom"] == tromperie)["plancher"]["reextraction"]["palier"] == "carte"
     for n in figees:
         for jeu, x in lec["jeux"][n].items():
             assert "echec" not in x and x["difference"]["methode"] == METHODE and x["plancher"]["n"] == j.config["n_plancher"]
