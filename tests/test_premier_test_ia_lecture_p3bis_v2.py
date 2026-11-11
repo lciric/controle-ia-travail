@@ -320,10 +320,16 @@ def test_identite_pb9_par_nom():
     assert r["identite"] is False and r["empreintes_differentes"] == [f"{P}-plancher-plancher-199"]
     p3 = _sf_pb9(200)
     p3["sondes"].append({"nom": "sonde-absente", "empreinte": "z"})                             # artefact : sonde de P3 absente
-    assert l2.identite_pb9(_sf_pb9(800), p3)["absentes_de_P3bis"] == ["sonde-absente"]
+    r = l2.identite_pb9(_sf_pb9(800), p3)
+    assert r["absentes_de_P3bis"] == ["sonde-absente"] and r["identite"] is False
     bis = _sf_pb9(800)
     bis["sondes"].append({"nom": "neuve-hors-plancher", "empreinte": "n"})                      # artefact : neuve hors 200-799
-    assert l2.identite_pb9(bis, _sf_pb9(200))["neuves_hors_des_directions_200_a_799"] == ["neuve-hors-plancher"]
+    r = l2.identite_pb9(bis, _sf_pb9(200))
+    assert r["neuves_hors_des_directions_200_a_799"] == ["neuve-hors-plancher"] and r["identite"] is False
+    p3_plus = _sf_pb9(200)
+    p3_plus["sondes"].append({"nom": f"{P}-plancher-plancher-200", "empreinte": f"{P}200"})   # artefact : direction 200 dans P3
+    r = l2.identite_pb9(_sf_pb9(800), p3_plus)
+    assert r["directions_200_a_799_presentes_dans_P3"] == [f"{P}-plancher-plancher-200"] and r["identite"] is False
     autre = _sf_pb9(800)
     autre["principales"] = {"tromperie": PE, "enjeux": P}                                       # artefact : principales
     assert l2.identite_pb9(autre, _sf_pb9(200))["identite"] is False
@@ -369,3 +375,20 @@ def test_regle_a_echec_sur_tirages_degeneres_et_classe_manquante():
     sain = l2.lire_regle_a(s, P_, y, np.tile(np.arange(10), 2).astype(str), 3, 0.95)         # cas sain : blocs mêlés
     assert "echec" not in sain and sain["n_plancher"] == 800
     assert "sans les deux classes" in l2.lire_regle_ancienne(s, P_[:200].T, y, blocs, 3, 0.95)["echec"]
+
+
+# ------------------------------------------------------------------------------------------------- frontières (« au moins »)
+def test_frontiere_au_moins_autant_predicteur_trivial_et_mention():
+    """« Non interprétable » dès que la séparation atteint celle de la sonde (≥, pas >) : à égalité exacte, et pas juste
+    en dessous ; pour un prédicteur trivial de P3 (`etat`) et pour la mention étendue (`e_prime`)."""
+    d = {"aire": 0.8, "au_dessus_du_plancher": True}
+    egal = {"jetons_notes": {"aire": 0.2, "separation": 0.8, "n": 10}}                      # max(0,2 ; 0,8) = 0,8
+    juste_dessous = {"jetons_notes": {"aire": 0.79, "separation": 0.79, "n": 10}}
+    assert l2.etat(d, egal) == (lp.NON_INTERPRETABLE, ["jetons_notes"])                     # égalité : non interprétable
+    assert l2.etat(d, juste_dessous) == (lp.AU_DESSUS, [])                                   # artefact : en dessous
+    assert l2.etat({**d, "au_dessus_du_plancher": False}, egal) == (lp.NON_AU_DESSUS, [])   # non au-dessus : jamais
+    assert l2.etat({"echec": "x"}, egal) == (lp.ECHEC, [])
+    assert l2.e_prime(lp.AU_DESSUS, 0.8, {"separation": 0.8}) == (lp.NON_INTERPRETABLE, True)
+    assert l2.e_prime(lp.AU_DESSUS, 0.8, {"separation": 0.79}) == (lp.AU_DESSUS, False)
+    assert l2.e_prime(lp.NON_AU_DESSUS, 0.8, {"separation": 1.0}) == (lp.NON_AU_DESSUS, False)
+    assert l2.e_prime(lp.AU_DESSUS, 0.8, {"separation": None}) == (lp.AU_DESSUS, False)
