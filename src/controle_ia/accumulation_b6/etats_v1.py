@@ -32,8 +32,8 @@ FUITE_NOMMEE, FUITE_AUCUNE, FUITE_SANS_OBJET = "nommée", "aucune", "sans objet"
 FUITES = (FUITE_NOMMEE, FUITE_AUCUNE, FUITE_SANS_OBJET)
 SATURATION = 0.99                       # « Seuil », règle 4 : aire d'épisode ≥ 0,99
 SEUIL_EXCLUSION = 0.10                  # « Plan d'analyse », point 4 : plus de 10 % des tâches du jeu exclues → E
-QUANTILE_PLANCHER = 0.95                # « Métrique » : quantile 0,95 des 200 aires des directions
-N_DIRECTIONS = 200                      # « Métrique » : 200 directions de `plancher_<k>`
+QUANTILE_PLANCHER = 0.95                # « Métrique » : quantile 0,95 des 800 aires des directions
+N_DIRECTIONS = 800                      # « Métrique » : 800 directions de `plancher_<k>` (T0.7 scellé, `n_plancher` ; R-2330, E-1)
 
 
 @dataclass(frozen=True)

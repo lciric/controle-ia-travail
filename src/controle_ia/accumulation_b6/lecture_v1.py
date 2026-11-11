@@ -21,7 +21,7 @@ manifeste (graines `accb6/<jeu>/<sonde>`, entropie de `CODE-ACCB6`, R9), puis E1
 Calculs (« Métrique ») : S_Σ = somme et S_max = maximum des dix scores d'action d'un épisode (liste fermée) ; aire d'épisode par
 `sondes.evaluation.aire_sous_courbe` ; Δ et son intervalle par `sondes.temoins.difference_aires_appariee` (blocs = tâches, 10 000
 tirages) ; intervalles des deux aires par `sondes.evaluation.intervalle_blocs`, même graine (mêmes tirages) ; plancher d'épisode =
-quantile 0,95 des aires d'épisode des 200 directions de `plancher_<k>` (lues, jamais retirées) ; prédicteurs triviaux d'épisode L
+quantile 0,95 des aires d'épisode des 800 directions de `plancher_<k>` (lues, jamais retirées) ; prédicteurs triviaux d'épisode L
 (somme des `jetons_notes`) et Mn (nombre d'actions à `mention_etendue` vrai), séparation max(a, 1 − a) (`criteres_v1.separation`) ;
 aire par action sur toutes les actions notées du jeu, égale à 10⁻⁹ près au champ `aire` de T0.7 quand il l'écrit (sinon arrêt).
 Niveaux : 1 − 0,05/(2k) pour B6-P1 et B6-P2 (k sondes lues, recoupé avec `niveau_applique` = 1 − 0,05/k) ; 95 % pour les
@@ -322,7 +322,7 @@ def statistiques_episode(x: np.ndarray) -> dict:
 # -------------------------------------------------------------------------------------------------------------------- couples
 def mesurer_couple(scores, plancher, jetons, mention, ep: dict) -> dict:
     """Calculs d'un couple qui ne dépendent pas du niveau : S_Σ, S_max, aires d'épisode, planchers d'épisode (quantile 0,95 des
-    200 directions), Δ des directions, prédicteurs triviaux d'épisode ; `GardeArret` → échec du couple."""
+    800 directions), Δ des directions, prédicteurs triviaux d'épisode ; `GardeArret` → échec du couple."""
     idx = ep["idx"]
     n = len(ep["taches_gardees"])
     y = np.tile(np.array([1, 0], dtype=np.int64), n)
@@ -645,15 +645,40 @@ def ecrire_phrase(aig: dict, calc: dict | None, reserves: list, reserves_t07: li
             "remplissage": remplir}
 
 
+PREFIXE_PLANCHER_NEUF = "plancher neuf de "     # chaînes de `t07.lecture_v4.reserves_plancher_figees` (C7), dans `resultat.reserves`
+ID_PLANCHER_NEUF = "plancher neuf"
+MOTIF_PLANCHER_NEUF = "écrite par T0.7 dans resultat.reserves de lecture-t07.json, hors de reserves_identifiees"
+
+
 def reserves_t07_recopiees(e4: dict, sondes: list | None) -> list:
     """`reserves_identifiees` de T0.7, recopiées telles quelles, chacune avec les sondes lues qu'elle vise (nom de la sonde dans le
-    motif, ou concept égal au champ `concept` de la réserve) ; une réserve qui n'en nomme aucune est recopiée sans sonde."""
+    motif, ou concept égal au champ `concept` de la réserve) ; une réserve qui n'en nomme aucune est recopiée sans sonde.
+
+    v2 (R-2330, E-3 ; C-04 de la revérification sur T0.7 scellé) : puis, dans leur ordre, les réserves du plancher neuf des sondes
+    figées de P3 que T0.7 écrit dans `resultat.reserves` et non dans `reserves_identifiees` (chaînes qui commencent par « plancher
+    neuf de », écrites par `lecture_v4.reserves_plancher_figees` : palier « carte » de la garde d'identité, et principale rapportée
+    sous la même forme) : chacune recopiée telle quelle (`phrase`), `id` « plancher neuf », `motif` (sa source), avec les sondes
+    lues dont le nom est dans la chaîne. Les autres chaînes de `resultat.reserves` ne sont pas recopiées (réserves de T0.6, de la
+    dérivation des doses, et celles de `reserves_identifiees`, déjà recopiées). `resultat.reserves` absent ou nul : rien (champ non
+    exigé de E4) ; présent mais pas une liste, ou entrée qui n'est pas une chaîne : `GardeArret` (arrêt : une réserve du plancher
+    neuf pourrait être perdue ; aucun repli silencieux)."""
     sortie = []
     for x in e4.get("reserves_identifiees") or []:
         if not isinstance(x, dict):
             raise GardeArret(f"reserves_identifiees : entrée {x!r} : objet attendu : arrêt")
         visees = [s["nom"] for s in (sondes or []) if s["nom"] in str(x.get("motif", "")) or x.get("concept") == s["concept"]]
         sortie.append({**x, "sondes_visees": visees})
+    chaines = e4.get("reserves")
+    if chaines is None:
+        return sortie
+    if not isinstance(chaines, list):
+        raise GardeArret(f"lecture-t07.json : reserves de type {type(chaines).__name__} : liste de chaînes attendue : arrêt, nœud")
+    for x in chaines:
+        if not isinstance(x, str):
+            raise GardeArret(f"lecture-t07.json : reserves : entrée {x!r} : chaîne attendue : arrêt, nœud")
+        if x.startswith(PREFIXE_PLANCHER_NEUF):
+            sortie.append({"id": ID_PLANCHER_NEUF, "phrase": x, "motif": MOTIF_PLANCHER_NEUF,
+                           "sondes_visees": [s["nom"] for s in (sondes or []) if s["nom"] in x]})
     return sortie
 
 

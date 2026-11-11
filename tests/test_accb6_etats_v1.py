@@ -18,7 +18,8 @@ from controle_ia.accumulation_b6 import phrases_v1 as ph
 
 RACINE_DEPOT = Path(__file__).resolve().parents[1]
 SCRIPT = RACINE_DEPOT / "scripts" / "enumeration_etats_accb6_v2.py"     # v2 : candidat 2 (R-2278)
-SORTIE = RACINE_DEPOT / "scripts" / "enumeration-etats-accb6-v2.txt"
+SORTIE = RACINE_DEPOT / "scripts" / "enumeration-etats-accb6-v2-code-v2.txt"   # code v2 : N_DIRECTIONS = 800 (R-2330)
+SORTIE_CODE_V1 = RACINE_DEPOT / "scripts" / "enumeration-etats-accb6-v2.txt"   # code 6c98ea20 (00088af5…), gardée intacte
 
 NEUTRE = et.EntreesCouple(echec=False, fuite=et.FUITE_AUCUNE, dessus_somme=True, dessus_max=True, sature_somme=False,
                           sature_max=False, bas_delta_positif=False, haut_delta_negatif=False, trivial_somme=False, trivial_max=False)
@@ -244,3 +245,20 @@ def test_enumeration_rejouee_egale_a_la_sortie_versee(tmp_path):
     assert hashlib.sha256(SORTIE.read_bytes()).hexdigest() == compagnon
     texte = sortie.read_text(encoding="utf-8")
     assert "cas sans état : 0" in texte and "cas sans phrase : 0" in texte
+
+
+def test_enumeration_du_code_v2_egale_a_celle_du_code_v1_hors_empreinte_de_etats_v1():
+    """R-2330 : `N_DIRECTIONS` = 800 ne change aucune règle d'état ni aucune phrase. La sortie du script v2 sur le code v2 et celle
+    versée pour le code `6c98ea20` ne diffèrent que par la ligne d'empreinte de `etats_v1.py` (l. 3) ; les 2 151 autres lignes sont
+    égales octet pour octet ; l'empreinte écrite est celle du `etats_v1.py` de cet arbre."""
+    if not (SORTIE.is_file() and SORTIE_CODE_V1.is_file()):
+        pytest.skip("sorties versées absentes de cet arbre")
+    neuve, ancienne = SORTIE.read_bytes().split(b"\n"), SORTIE_CODE_V1.read_bytes().split(b"\n")
+    assert len(neuve) == len(ancienne) == 2153                    # 2 152 lignes et la fin de fichier
+    ecarts = [i for i, (x, y) in enumerate(zip(neuve, ancienne)) if x != y]
+    assert ecarts == [2]
+    module = Path(et.__file__).resolve()
+    assert neuve[2].decode("utf-8") == f"module : src/controle_ia/accumulation_b6/etats_v1.py ({hashlib.sha256(module.read_bytes()).hexdigest()})"
+    assert ancienne[2].decode("utf-8") == ("module : src/controle_ia/accumulation_b6/etats_v1.py "
+                                           "(6b8aa2db63cb7931cf554d81c96433f8cab09fe42a3a5edbfcff7b5159aae827)")
+    assert hashlib.sha256(SORTIE_CODE_V1.read_bytes()).hexdigest() == "00088af568388a4fbe381b7d80b97883b242013d99c7c5893bde54b9e741873e"

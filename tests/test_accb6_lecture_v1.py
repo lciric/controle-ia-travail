@@ -125,7 +125,7 @@ def construire(racine: Path, n_taches: int = 40, k: int = 2, effets: dict | None
     # E1 : scores de T0.7 (actions notées seulement)
     n = jetons > 0
     t = {"cle": cle[n], "condition": cond[n], "tache": tache[n], "pas": pas[n]}
-    index = {"sondes": [], "sondes_lues": [s["nom"] for s in sondes], "n_plancher": 200, "actions_notees": int(n.sum())}
+    index = {"sondes": [], "sondes_lues": [s["nom"] for s in sondes], "n_plancher": 800, "actions_notees": int(n.sum())}
     for r, s in enumerate(sondes):
         entree = {"rang": r, "nom": s["nom"], "couche": s["couche"], "agregation": s["agregation"], "famille": s["famille"],
                   "empreinte": f"{r:064x}", "essai_egalite": None, "etat": "notée"}
@@ -133,7 +133,7 @@ def construire(racine: Path, n_taches: int = 40, k: int = 2, effets: dict | None
             entree.update(etat="échec", echec="égalité de Mahalanobis non tenue (jouet)")
         else:
             t[f"scores_{r}"] = scores_jouet(rng, t["cle"], t["condition"], t["tache"], t["pas"], effets)
-            t[f"plancher_{r}"] = rng.normal(size=(200, int(n.sum())))
+            t[f"plancher_{r}"] = rng.normal(size=(800, int(n.sum())))
         index["sondes"].append(entree)
     t["couple_0"] = rng.normal(size=int(n.sum())); t["neuf_0"] = rng.normal(size=int(n.sum()))       # jamais lus
     t["p6_sonde"] = rng.normal(size=int(n.sum())); t["concept_0"] = rng.normal(size=int(n.sum()))
@@ -365,7 +365,7 @@ def test_liste_fermee_et_aucune_moyenne_ni_mediane(tmp_path):
 
 
 def test_mediane_seulement_sur_les_directions_du_plancher():
-    """La seule médiane du paquet porte sur les aires des 200 directions (descriptif du plancher), jamais sur des jetons."""
+    """La seule médiane du paquet porte sur les aires des 800 directions (descriptif du plancher), jamais sur des jetons."""
     texte = (Path(lv.__file__)).read_text(encoding="utf-8")
     assert texte.count("np.median(") == 2 and "np.median(dir_s)" in texte and "np.median(dir_m)" in texte
 
@@ -479,12 +479,12 @@ def test_score_non_fini_tache_exclue():
          "tache": np.array(["t0"] * 20 + ["t1"] * 20), "pas": np.tile(np.arange(10), 4)}
     mes = {"condition": t["condition"], "tache": t["tache"]}
     st = lv.structure_episodes(t, mes, "a", "b")
-    sc, plc = np.zeros(40), np.zeros((200, 40))
+    sc, plc = np.zeros(40), np.zeros((800, 40))
     assert lv.episodes_pour_sonde(st, sc, plc)["n_exclues"] == 0
     sc[3] = np.nan
     ep = lv.episodes_pour_sonde(st, sc, plc)
     assert ep["taches_exclues"] == ["t0"] and ep["episodes_incomplets_par_condition"] == {"a": 1, "b": 0}
-    plc2 = np.zeros((200, 40)); plc2[7, 25] = np.inf
+    plc2 = np.zeros((800, 40)); plc2[7, 25] = np.inf
     assert lv.episodes_pour_sonde(st, np.zeros(40), plc2)["taches_exclues"] == ["t1"]
 
 
@@ -511,7 +511,7 @@ def test_tirages_degeneres_echec_du_couple(monkeypatch, tirages):
                        enumerate([("a", "t0"), ("b", "t0"), ("a", "t1"), ("b", "t1")])}}
     monkeypatch.setattr(lv, "mesurer_couple", lambda *a, **k: m | {"aire_somme": 0.5, "aire_max": 0.5})
     sonde = {"nom": "s", "rang": 0, "famille_n054": "générique", "etat_notation": "notée"}
-    t = {"scores_0": np.zeros(40), "plancher_0": np.zeros((200, 40))}
+    t = {"scores_0": np.zeros(40), "plancher_0": np.zeros((800, 40))}
     c = lv.lire_couple(t, {"jetons_notes": np.ones(40), "mention_etendue": np.zeros(40, bool)}, st, sonde, et.FUITE_AUCUNE, [0.95], 1)
     assert c["etat"] == et.E and "sans les deux classes" in c["motif_echec"]
 
@@ -660,12 +660,12 @@ def test_fuite_nommee_sur_saboteur(depot, tirages):
 
 # ------------------------------------------------------------------------------------------------------------- constantes
 def test_constantes_du_texte():
-    """10 000 tirages ; niveaux 1 − 0,05/(2k) ; quantile 0,95 ; 200 directions ; saturation 0,99 ; exclusion 10 % ; tolérance 10⁻⁹."""
+    """10 000 tirages ; niveaux 1 − 0,05/(2k) ; quantile 0,95 ; 800 directions ; saturation 0,99 ; exclusion 10 % ; tolérance 10⁻⁹."""
     assert lv.N_TIRAGES == 10_000 == lv.TIRAGES_GELES
     assert [round(lv.niveau_decisif(k), 6) for k in (4, 3, 2)] == [0.99375, 0.991667, 0.9875]
     with pytest.raises(GardeArret):
         lv.niveau_decisif(1)
-    assert et.QUANTILE_PLANCHER == 0.95 and et.N_DIRECTIONS == 200 and et.SATURATION == 0.99 and et.SEUIL_EXCLUSION == 0.10
+    assert et.QUANTILE_PLANCHER == 0.95 and et.N_DIRECTIONS == 800 and et.SATURATION == 0.99 and et.SEUIL_EXCLUSION == 0.10
     assert lv.TOLERANCE_AIRE_PAR_ACTION == 1e-9 and lv.NIVEAU_DESCRIPTIF == 0.95
 
 
@@ -705,19 +705,55 @@ def test_g2_defense_en_profondeur_sans_conditions_retirees(depot, tirages, monke
     assert vues[0].isdisjoint(et.ORDRE_DOSES) and set(calc["jeux"]) == set(lv.JEUX_SANS_II)
 
 
-def test_directions_de_plancher_200_exigees(depot, tirages):
-    """`plancher_<k>` à 199 directions → arrêt, nœud (200 attendues) ; cas sain : les autres essais (200)."""
+def _e1_a_n_directions(j: Jouet, n: int) -> None:
+    """Réécrit E1 du jouet avec `plancher_0` à `n` directions (tronqué, ou complété par ses premières lignes au-delà de 800), le
+    rescelle et porte la nouvelle empreinte à la ligne `SCORES-T07` du registre partagé."""
     import io
-    j = construire(depot)
-    t = dict(j.t); t["plancher_0"] = t["plancher_0"][:199]
+    t = dict(j.t)
+    p0 = t["plancher_0"]
+    t["plancher_0"] = p0[:n] if n <= p0.shape[0] else np.vstack([p0, p0[:n - p0.shape[0]]])
     index = json.loads((j.racine / "diag" / RUN_T07 / "notation-t07.json").read_text())["resultat"]["index"]
     t["index"] = np.frombuffer(json.dumps(index, ensure_ascii=False, sort_keys=True).encode("utf-8"), dtype=np.uint8)
     p = j.racine / "donnees" / RUN_T07 / gv.FICHIER_SCORES
     buf = io.BytesIO(); np.savez(buf, **t)
     p.write_bytes(buf.getvalue()); (p.parent / (p.name + ".sha256")).unlink(); sha = sceller(p)
     j.registre_partage.write_text(j.registre_partage.read_text(encoding="utf-8").replace(j.lignes["scores"][1], sha), encoding="utf-8")
-    with pytest.raises(lv.ArretAccb6, match="199 directions de plancher, 200 attendues"):
+    j.lignes["scores"] = (j.lignes["scores"][0], sha)
+
+
+@pytest.mark.parametrize("n", [200, 799, 801])
+def test_directions_de_plancher_800_exigees(depot, tirages, n):
+    """`plancher_<k>` à n ≠ 800 directions → arrêt après le manifeste, nœud (800 attendues : T0.7 scellé ; R-2330, E-1) : 200 (le
+    nombre d'avant T0.7 scellé), 799 et 801 (bords) ; motif écrit dans `arret-accb6.json` scellé ; aucune ligne `LECTURE-ACCB6`.
+    Cas sain : les autres essais (800)."""
+    j = construire(depot)
+    _e1_a_n_directions(j, n)
+    with pytest.raises(lv.ArretAccb6, match=f"{n} directions de plancher, 800 attendues"):
         _lire(j)
+    arrets = list((j.racine / "diag").glob("*-accb6-lecture/arret-accb6.json"))
+    assert len(arrets) == 1 and (arrets[0].parent / "arret-accb6.json.sha256").is_file()
+    motif = json.loads(arrets[0].read_text(encoding="utf-8"))["resultat"]["motif"]
+    assert f"{n} directions de plancher, 800 attendues : arrêt, nœud" in motif
+    assert gv.LECTURE_ACCB6 not in j.registre_propre.read_text(encoding="utf-8")
+
+
+def test_directions_de_plancher_200_par_la_commande_code_3_puis_relance_refusee(depot, monkeypatch, capsys):
+    """Artefact à 200 directions par la commande, constantes réelles (R-2330, E-1) : code 3 (arrêt après le manifeste), motif sur la
+    sortie d'erreur et dans `arret-accb6.json` scellé, aucune ligne `LECTURE-ACCB6` ; puis relance refusée (code 2, garde de
+    non-relance). Cas sain à 800 par la commande : `test_commande_aux_constantes_reelles` (essais du contre-lecteur)."""
+    j = construire(depot)
+    _e1_a_n_directions(j, 200)
+    monkeypatch.setattr(ca, "dossier_du_paquet", lambda: (j.racine / DOSSIER_PAQUET_JOUET).resolve())
+    assert lv.N_TIRAGES == lv.TIRAGES_GELES == 10_000
+    assert lv.main(["lire", str(j.racine)]) == lv.CODE_ARRET == 3
+    err = capsys.readouterr().err
+    assert err.startswith("ARRÊT : ") and "200 directions de plancher, 800 attendues : arrêt, nœud" in err
+    arrets = sorted((j.racine / "diag").glob("*-accb6-lecture/arret-accb6.json"))
+    assert len(arrets) == 1 and (arrets[0].parent / "arret-accb6.json.sha256").is_file()
+    assert "200 directions de plancher, 800 attendues" in json.loads(arrets[0].read_text(encoding="utf-8"))["resultat"]["motif"]
+    assert gv.LECTURE_ACCB6 not in j.registre_propre.read_text(encoding="utf-8")
+    assert lv.main(["lire", str(j.racine)]) == lv.CODE_REFUS == 2
+    assert "aucune relance après un arrêt" in capsys.readouterr().err
 
 
 def test_k_recoupe_avec_niveau_applique_meme_si_e2_et_e4_s_accordent(depot, tirages):
@@ -735,3 +771,82 @@ def test_k_recoupe_avec_niveau_applique_meme_si_e2_et_e4_s_accordent(depot, tira
     j.registre_partage.write_text("\n".join(lignes) + "\n", encoding="utf-8")
     with pytest.raises(gv.RefusAccb6, match="≠ 1 − 0,05/k"):
         _lire(j)
+
+
+# ------------------------------------------------------- v2 (R-2330, E-3) : réserves du plancher neuf des sondes figées de T0.7
+# Réserve du palier « carte » : texte de `t07.reextraction_p3_v1.RESERVE_CARTE`, forme de `t07.lecture_v4.reserves_plancher_figees`
+# (commit C7 `b4cd9953`, recopiés ici : ces modules ne sont pas dans l'arbre du barreau 6).
+RESERVE_CARTE_T07 = ("écart au palier « carte », cause non établie : au-delà de l'arithmétique du processeur, sous les plafonds de la "
+                     "configuration v8 ; carte (non-déterminisme sous des réglages pourtant déterministes, que la régénération R-679 "
+                     "n'a pas vu) ou faute d'étendue partielle des jetons réextraits ; écarts dans reextraction-p3-t07.json")
+
+
+def chaine_plancher_neuf(nom: str, palier: str = "carte", reserve: str = RESERVE_CARTE_T07) -> str:
+    """Chaîne écrite par `t07.lecture_v4.reserves_plancher_figees` dans `resultat.reserves` de `lecture-t07.json`."""
+    return f"plancher neuf de {nom} (réextraction de P3, palier {palier}) : {reserve}"
+
+
+def test_reserve_plancher_neuf_recopiee_unite():
+    """E-3 : les réserves du plancher neuf des sondes figées (`resultat.reserves`, chaînes, hors de `reserves_identifiees`) sont
+    recopiées après celles-ci, dans leur ordre, telles quelles, avec la sonde lue visée ; les autres chaînes ne le sont pas ; sans
+    elles, rien n'est ajouté (sortie de la v1) ; forme fautive → arrêt (cas sain et artefacts, R5)."""
+    sondes = [{"nom": "tromperie-difference_moyennes-c15", "concept": "tromperie"}, {"nom": "enjeux-lineaire-c15", "concept": "enjeux"},
+              {"nom": "domaine-lineaire-c7", "concept": "domaine"}]
+    ident = [{"id": "R3", "phrase": "p", "motif": "enjeux-lineaire-c15 au-dessus"}, {"id": "R10", "phrase": "q", "motif": "toujours"}]
+    autres = ["contrôle négatif de la garde d'équivalence « x » pour l'état y", "R3 : p (enjeux-lineaire-c15 au-dessus)",
+              "réserve gelée de T0.6 (M3) : z", "R14 : le plancher neuf de tromperie-difference_moyennes-c15 cité ailleurs"]
+    carte = chaine_plancher_neuf(sondes[0]["nom"])
+    principale = chaine_plancher_neuf(sondes[1]["nom"], "identique", "sonde principale enjeux-lineaire-c15 refaite par la recette de P3 "
+                                      "à un écart 1.000e-03 > 1e-06 (au-delà de l'arithmétique du processeur) ; rapportée, non décisive "
+                                      "(garde_principale = rapportee) : le témoin déterministe porte la garde d'identité")
+    v1 = lv.reserves_t07_recopiees({"reserves_identifiees": ident}, sondes)
+    assert [x["sondes_visees"] for x in v1] == [["enjeux-lineaire-c15"], []]
+    for reserves in (None, [], autres):                                    # sans réserve du plancher neuf : rien d'ajouté
+        assert lv.reserves_t07_recopiees({"reserves_identifiees": ident, "reserves": reserves}, sondes) == v1
+    r = lv.reserves_t07_recopiees({"reserves_identifiees": ident, "reserves": autres[:2] + [carte] + autres[2:] + [principale]}, sondes)
+    assert r[:2] == v1
+    assert r[2:] == [{"id": "plancher neuf", "phrase": carte, "motif": lv.MOTIF_PLANCHER_NEUF, "sondes_visees": [sondes[0]["nom"]]},
+                     {"id": "plancher neuf", "phrase": principale, "motif": lv.MOTIF_PLANCHER_NEUF, "sondes_visees": [sondes[1]["nom"]]}]
+    assert lv.reserves_t07_recopiees({"reserves": [carte]}, sondes[1:]) == [      # sonde figée non lue : recopiée sans sonde visée
+        {"id": "plancher neuf", "phrase": carte, "motif": lv.MOTIF_PLANCHER_NEUF, "sondes_visees": []}]
+    with pytest.raises(GardeArret, match="liste de chaînes attendue"):
+        lv.reserves_t07_recopiees({"reserves": carte}, sondes)
+    with pytest.raises(GardeArret, match="chaîne attendue"):
+        lv.reserves_t07_recopiees({"reserves": [carte, {"id": "R16", "phrase": carte}]}, sondes)
+
+
+@pytest.mark.parametrize("avec", [True, False], ids=["avec-carte", "sans"])
+def test_reserve_carte_du_plancher_neuf_recopiee_de_bout_en_bout(depot, tirages, avec):
+    """E-3, sortie jouet de T0.7 (`lecture-t07.json`) : avec la réserve du palier « carte » d'une sonde figée dans `resultat.reserves`
+    → recopiée dans `reserves_t07` du résultat scellé, à côté de la sonde visée, et en annotation de la phrase ; sans elle → rien
+    (aucune entrée « plancher neuf », phrase sans « plancher neuf »)."""
+    j = construire(depot, sans_e4=True)
+    e4 = e4_jouet(j, "G-4")
+    nom = j.sondes[0]["nom"]
+    e4["reserves"] = ["contrôle négatif de la garde d'équivalence « x » pour l'état y"] + ([chaine_plancher_neuf(nom)] if avec else [])
+    ecrire_resultat(j.racine, j.racine / "runs" / RUN_T07 / "manifeste.json", "lecture-t07", e4)
+    corps = _corps(j, _lire(j))
+    neuves = [x for x in corps["reserves_t07"] if x.get("id") == "plancher neuf"]
+    annotations = [a for a in corps["phrase"]["annotations"] if "plancher neuf" in a]
+    assert [x["id"] for x in corps["reserves_t07"] if x.get("id") != "plancher neuf"] == ["R3", "R10"]
+    if avec:
+        assert neuves == [{"id": "plancher neuf", "phrase": chaine_plancher_neuf(nom), "motif": lv.MOTIF_PLANCHER_NEUF,
+                           "sondes_visees": [nom]}]
+        assert annotations == [f"réserve de T0.7 plancher neuf (sondes visées : {nom}) : « {chaine_plancher_neuf(nom)} » "
+                               f"({lv.MOTIF_PLANCHER_NEUF})"]
+        assert annotations[0] in corps["phrase"]["phrase_complete"]
+    else:
+        assert neuves == [] and annotations == [] and "plancher neuf" not in corps["phrase"]["phrase_complete"]
+
+
+def test_reserves_de_t07_hors_de_forme_arret(depot, tirages):
+    """E-3, artefact : `resultat.reserves` de T0.7 présent mais pas une liste → arrêt après le manifeste (code 3), `arret-accb6.json`
+    scellé, aucune ligne `LECTURE-ACCB6` (cas sain : l'essai précédent)."""
+    j = construire(depot, sans_e4=True)
+    e4 = e4_jouet(j, "G-4")
+    e4["reserves"] = chaine_plancher_neuf(j.sondes[0]["nom"])
+    ecrire_resultat(j.racine, j.racine / "runs" / RUN_T07 / "manifeste.json", "lecture-t07", e4)
+    with pytest.raises(lv.ArretAccb6, match="liste de chaînes attendue"):
+        _lire(j)
+    assert len(list((j.racine / "diag").glob("*-accb6-lecture/arret-accb6.json"))) == 1
+    assert gv.LECTURE_ACCB6 not in j.registre_propre.read_text(encoding="utf-8")
