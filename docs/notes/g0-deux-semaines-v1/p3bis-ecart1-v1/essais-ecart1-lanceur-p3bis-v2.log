@@ -1,0 +1,53 @@
+début des essais : 2026-11-11T23:50:35Z
+script joué : lancer_p3bis_v2_ecart1_v2.sh 2e294e5a64086806591cdd0724561d7a8d7fdaab464705c22f9b92687d6607fb
+script joué : lancer_p3bis_v2.sh 029bdb5c114a6166a21fa93724d71a2bf6158dc9686993424f6fbe8462352b08
+script joué : verifications_p3bis_v2.py 1524df5f6432197fde4793a4fde56d4496407a107c88f5e294a6bc9716923054
+script joué : controle_cinq_minutes_p3bis_v2.sh 6f9213499687d655e290ab96c1ab8a1cdb9ecd373b1d6beecb7efda962f40864
+script joué : surveiller_p3bis_v2.sh d65421073068466a3aa6cc90ef00e6c76b15ea7b3e61e254c1dbafad020afe9b
+script joué : detruire_p3bis_v2.sh cae56ec9cbd00485a9506a1af1bb9dfd8e4b493e966003cb0ed365fe6973ae46
+script joué : essais_ecart1_lanceur_p3bis_v2.sh e9a8dc69f39aa41e69209136db97aa9c2a1ab00400ca947c804934eabdaf0762
+lignes changées dans la copie de lancer_p3bis_v2.sh : 3 (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S)
+lignes changées dans la copie de lancer_p3bis_v2_ecart1_v2.sh : 3 (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S)
+écart entre les deux copies jouées = écart entre les deux lanceurs : CONFORME
+commit de scellement factice : ad12fd3b7b6a0b9f8ae94872a9c8e77b4cc37045
+E1-credit-nul : code 3 ; 0 s ; CONFORME
+    | crédit nul ou négatif : pas de création
+    E1 : ligne officielle (minimum 31.00 USD) puis ligne d'écart dans lancement.txt ; aucune création : CONFORME
+E2-credit-negatif : code 3 ; 1 s ; CONFORME
+    | crédit nul ou négatif : pas de création
+E3-credit-illisible : code 2 ; 0 s ; CONFORME
+    | crédit illisible (show user, code 2) : pas de création
+    E3 : aucune ligne d'écart (arrêt avant), aucune création : CONFORME
+E4-reponse-non-json : code 2 ; 0 s ; CONFORME
+    | crédit illisible (show user, code 2) : pas de création
+E5-outil-en-echec : code 2 ; 1 s ; CONFORME
+    | crédit illisible (show user, outil en échec, code 1) : pas de création
+E14-outil-en-echec-reponse-lisible : code 2 ; 0 s ; CONFORME
+    | crédit illisible (show user, outil en échec, code 1) : pas de création
+    E14 (C1) : ligne officielle (crédit 6.00, minimum 31.00) écrite, aucune ligne d'écart, aucune création : CONFORME
+E15-credit-sous-le-centime : code 3 ; 1 s ; CONFORME
+    | crédit nul ou négatif : pas de création
+    E15 (C2) : ligne officielle « crédit 0.00 USD » puis ligne d'écart ; aucune création : CONFORME
+E6-origine-absente : code 2 ; 0 s ; CONFORME
+    | lancer_p3bis_v2.sh exécuté ≠ copie versée au commit S
+E7-origine-modifiee : code 2 ; 0 s ; CONFORME
+    | lancer_p3bis_v2.sh exécuté ≠ copie versée au commit S
+    lanceur d'origine rendu égal à sa copie versée à S : CONFORME
+E8-temoin-origine-credit-6 : code 3 ; 0 s ; CONFORME
+    | crédit insuffisant : pas de création ; recharge demandée à Lazar
+    E1 à E8, E14, E15 : aucune création demandée au faux outil : CONFORME
+E9-sain-credit-6 : code 0 ; 1 s ; CONFORME
+    | succès : True ; identifiant 77777771 ; message : 
+    E9 : ligne officielle (crédit 6.00, minimum 31.00), ligne d'écart, instance 77777771, empreinte du lanceur d'écart joué sur la ligne « lanceur p3bis v2 » : CONFORME
+E10-cinq-minutes : code 0 ; 0 s ; CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+E11-surveillance : code 0 ; CONFORME
+    | FIN : AMORCE 2026-11-12T12:30:00Z : fin, code 0 ; instance 77777771 arrêtée par son identifiant (R10) ; état relu : actual_status=exited cur_state=stopped intended_sta
+E12-destruction : code 0 ; 0 s ; CONFORME
+    | DESTRUCTION : instance 77777771 détruite par son identifiant (R10), absente de la liste relue
+E13-credit-50 : code 0 ; 0 s ; CONFORME
+    | succès : True ; identifiant 77777772 ; message : 
+    E13 : ligne officielle (crédit 50.00, minimum 31.00) et ligne d'écart : CONFORME
+    aucun appel de création hors E9 et E13 (deux en tout) ; vrai registre des GO jamais lu par les copies jouées (DEPOT synthétique) : CONFORME
+fin des essais : 2026-11-11T23:53:47Z
+ESSAIS DU LANCEUR D'ÉCART 1 DE P3-BIS : CONFORMES
