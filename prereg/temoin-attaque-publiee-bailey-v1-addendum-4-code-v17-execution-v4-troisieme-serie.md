@@ -95,7 +95,7 @@ décorateur) lancé par `python -m controle_ia.temoin_bailey.execution_v4` dans 
 sortie standard commençant exactement par `configuration_attendue`, journaliseur substitué vu par le script, dossier de
 Hydra hors du clone ; **artefact** : le même mini-clone par `execution_v3` échoue sans rien imprimer, comme les pilotes du
 12 novembre ; erreur du script propagée (code non nul, aucun repli) ; garde `TESTING` ; même épreuve avec le vrai dossier
-`configs/` du code public quand il est fourni. Assertions ajoutées après la contre-lecture du code (C-2 : dossier courant, tête de `sys.path`, module local `evaluate`, graine, `__name__`, `sys.argv[0]`). **Résultats** : fichier v17, 169 essais (161 v16 rejoués, 8 v17) : 168 passés, 1 sauté sans `TEMOIN_BAILEY_CONFIGS_PUBLIQUES`, passé quand il est fourni (rejoué par la contre-lecture de cet addendum : même compte) ; `test_temoin_bailey_analyse_v3.py` et `test_temoin_bailey_condition6_v16.py` : 197 passés. **Suite complète du dépôt** (6 687 essais, ≈ 3 h) : une première passe, arrêtée vers 24 %, a montré 23 échecs, tous dans six fichiers d'autres chantiers, rejoués seuls (23 échecs, 333 passés) : `test_cibles_invisibles_v1.py` (2) et `_v2.py` (1), `test_corpus_arxiv.py` (3, module absent du `.venv`), `test_hote_durable_a1_v3_v3.py` (15 : interpréteur Python 3.13 exigé, branches et GO d'un autre chantier), `test_lanceur_durable_v5_a1v4.py` (1), `test_noter_pilote_a.py` (1) ; aucun n'importe un module de `src/controle_ia/temoin_bailey/` ni un module de l'archive envoyée sur l'instance ; aucun n'a rien poussé (vérifié par `git ls-remote`). Une seconde passe complète tournait au scellement ; son compte est inscrit dans la passation.
+`configs/` du code public quand il est fourni. Assertions ajoutées après la contre-lecture du code (C-2 : dossier courant, tête de `sys.path`, module local `evaluate`, graine, `__name__`, `sys.argv[0]`). **Résultats** : fichier v17, 169 essais (161 v16 rejoués, 8 v17) : 168 passés, 1 sauté sans `TEMOIN_BAILEY_CONFIGS_PUBLIQUES`, passé quand il est fourni (rejoué par la contre-lecture de cet addendum : même compte) ; `test_temoin_bailey_analyse_v3.py` et `test_temoin_bailey_condition6_v16.py` : 197 passés. **Suite complète du dépôt** (6 687 essais, ≈ 3 h) : une première passe, arrêtée vers 24 % (1 692 essais joués), a montré 24 échecs, tous dans six fichiers d'autres chantiers : `test_cibles_invisibles_v1.py` (2) et `_v2.py` (1), `test_corpus_arxiv.py` (3, module `pypandoc` absent du `.venv`), `test_hote_durable_a1_v3_v3.py` (16 : interpréteur Python 3.13 exigé, branches et GO d'un autre chantier), `test_lanceur_durable_v5_a1v4.py` (1), `test_noter_pilote_a.py` (1, `test_rejeu_identique_et_r12`, non reproduit : passé seul, 37 sur 37, et à la seconde passe) ; rejoués seuls : 23 échecs, 333 passés. Aucun échec ne vient d'un module de `src/controle_ia/temoin_bailey/` ni d'un module de l'archive envoyée sur l'instance : `test_corpus_arxiv.py` et `test_noter_pilote_a.py` importent `controle_ia.gardes` et `controle_ia.scellement` (archive), mais les échecs du premier viennent de `pypandoc`, absent du `.venv` (`corpus_arxiv.py` l. 374), et celui du second n'est pas reproduit ; l'échec de `test_cibles_invisibles_v2.py::test_inventaire_tout_constructeur_d_invite_est_examine` nomme `temoin_bailey/lecture_v5.py` à `lecture_v8.py::_interruption` : inventaire statique d'un autre chantier, qui relève tout dictionnaire à clé `role` ; ces fonctions bâtissent le rôle d'exécution (pilote ou run principal) et ne construisent aucune invite ; présent depuis `lecture_v5`, non introduit par la v17. Aucun essai n'a rien poussé (vérifié par `git ls-remote`). Une seconde passe complète tournait au scellement (vers 30 % : les mêmes échecs, `test_noter_pilote_a.py` passé) ; son compte final est inscrit dans la passation, hors de ce texte.
 
 **Épreuve hors essais, version figée de l'instance** (Hydra 1.3.2, OmegaConf 2.3.0, Python 3.11.18) :
 `runs/temoin-bailey-v1-20261111/epreuve-hydra132-execution-v4-v2.py` (`0677c557…`), sortie `…-sortie-v2.txt` (`316910b9…`, en-tête écrit par le script : interpréteur, emplacements de Hydra et d'OmegaConf, commit du clone, empreinte de `configs/`, empreinte des essais) ; la v1 (`17c3544d…`, sortie `7c204bd5…`, en-tête écrit à la main) reste telle quelle (les empreintes de `configs/` des deux en-têtes diffèrent, `aeeab086…` et `100152d5…`, parce que la v2 hache chemins et contenus : même dossier) : mini-clone synthétique
@@ -157,9 +157,15 @@ daté que par son commit (précédents des addenda 2 et 3). 7 : le mot direct de
 série. Le « go (a), garde le poste » (22:10Z) approuve une option qui nommait « nouvelle série » ; le § 7.3 de l'addendum 3
 ne valait que pour la série de cet addendum (K-3 de la contre-lecture). S'y ajoute, verbatim, le message de Lazar reçu
 vers 22:14Z pendant l'exécution de l'option (a), dont la dernière étape est la nouvelle série : « avance en autonomie
-pendant 10h » (note `registres/passations/2026-11-12-2320-decision-lazar-bailey-autonomie-10h-mot-de-lancement.md`).
-Cette session tient les deux mots ensemble pour le mot direct de lancement ; c'est une lecture de la session, déclarée ici
-et rapportée à Lazar avec le lancement (la contre-lecture recommandait un mot exprès). 8 : pilotage par un poste Hetzner
+pendant 10h » (note `registres/passations/2026-11-12-2320-decision-lazar-bailey-autonomie-10h-mot-de-lancement.md`,
+`4f127118…` ; note commitée le 12 novembre à 22:50:48Z, commit `1356c77c` ; l'heure 23:20 de son nom et de son titre est
+fausse ; l'heure de réception, ≈ 22:14Z, est celle que rapporte la session). Cette session tient les deux mots ensemble
+pour le mot direct de lancement ; c'est une lecture de la session, formée après la contre-lecture (le brouillon 2,
+commité après ce message, ne l'invoquait pas), déclarée ici et rapportée à Lazar dès le scellement, avant la création de
+l'instance (la contre-lecture recommandait un mot exprès). Cette lecture ne vaut que pour une création d'instance avant
+le 13 novembre 2026, 08:14Z (fin des 10 heures) ; au-delà, la condition 7 est à obtenir de nouveau. Elle reste dans les
+bornes de la note (`4f127118…`) : aucune dépense hors de `GO-2026-11-10-10`, aucune autre série, aucune décision de
+nœud. 8 : pilotage par un poste Hetzner
 autonome neuf (v11, `poste-hetzner-v11.sh`, `059d0837…`) ; `DEPOT_URL` du dépôt de travail ; l'ordre de lancement relève,
 avant la création du poste, que la tête poussée de la branche porte cet addendum scellé, et que l'empreinte du script sans
 secrets imprimée par le constructeur v11 est `059d0837…`. Alerte : celle de l'addendum 3, § 7.2, gardée telle quelle
@@ -170,8 +176,12 @@ Lazar à toute issue de la liste d'arrêt. Aucune instance avant le scellement d
 Rapport (R2) : `docs/notes/reproduction-attaque-publiee-v1/contre-lecture-addendum-4-code-v17-bailey-v1.md`
 (`2db77cc7c7b5a6799e803ceede0ec889b33abe79e1d50b02fbd1cba71d065161`), contre-lecteur neuf, sur le brouillon 2 : « scellable
 après corrections », aucun bloquant. Traitement : K-1 (renvois v10 → v11 : § 2.2, 2.4, 6) ; K-2 (risque (b) réécrit, texte
-du rapport) ; K-3 (condition 7 : mot direct de Lazar, voir § 6 ; la session y tient pour mot de lancement les deux mots
-de Lazar, lecture déclarée) ; K-4 (en-tête et § 2.2 : contrôle du juge) ; K-5 (§ 3 : comptes et échecs nommés) ; K-6
+du rapport) ; K-3 : correction recommandée non suivie ; la session tient les deux mots de Lazar pour le mot de
+lancement, lecture déclarée au § 6 ; K-4 (en-tête et § 2.2 : contrôle du juge) ; K-5 (§ 3 : comptes et échecs nommés) ; K-6
 (risque (e)) ; K-7 (essai à blanc, § 2.2) ; K-8 (alerte, § 6) ; K-9 (§ 3 et § 5 (c)) ; K-10 (en-tête, cette section) ;
 K-11 (condition 8). **Modifications après la contre-lecture** : la condition 7 cite le message « avance en autonomie
 pendant 10h » (non vu par la contre-lecture) ; § 3 : résultats des essais inscrits.
+Contre-lecture différentielle (R2) : `docs/notes/reproduction-attaque-publiee-v1/contre-lecture-differentielle-addendum-4-bailey-v1.md`
+(`cb2eb8e5ce1f18ee92a3645407003f7c9e9192c1ded6f4eaa3dcb0dcd3ad1d3b`), contre-lecteur neuf, sur la version `abd68108…` : « scellable après corrections »,
+aucun bloquant ; condition 7 « déclarée et défendable » sous D-4. Traitement : D-1 et D-2 (§ 3, texte du rapport) ; D-3
+(§ 3) ; D-4, D-5, D-6 (§ 6, condition 7, texte du rapport) ; D-7 (cette section).
