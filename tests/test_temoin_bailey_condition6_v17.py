@@ -3664,10 +3664,13 @@ MINI_CONFIG = "defaults:\n  - _self_\n  - experiment: default\n"
 MINI_DEFAUT = ("seed: 0\nmodel_path: modele\nattack_defense_epochs: 1\nsave_probe_path: null\n"
                "save_tunable_params_path: null\nlambda_: 1.0\n")
 MINI_EXPERIENCE = "defaults:\n    - default\n\nlambda_: 0.1\nattack_defense_epochs: 100\n"
-MINI_SCRIPT = '''import sys
+MINI_SCRIPT = '''import os
+import sys
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
+import transformers
+from evaluate import MARQUE
 from obf_reps.utils import classe_journaliseur
 
 
@@ -3676,6 +3679,8 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
     c = classe_journaliseur()
     sys.stderr.write(f"JOURNALISEUR {c.__module__}.{c.__qualname__}\\n")
+    sys.stderr.write(f"DOSSIER {os.getcwd()}\\nCHEMIN0 {sys.path[0]}\\nLOCAL {MARQUE}\\n")
+    sys.stderr.write(f"GRAINES {transformers.GRAINES}\\nNOM {__name__}\\nARGV0 {sys.argv[0]}\\n")
     if cfg.experiment.lambda_ == 0.5:
         raise RuntimeError("erreur volontaire du script")
 
@@ -3700,6 +3705,7 @@ def _mini_clone(racine: Path, configs_publiques: Path | None = None) -> Path:
     (d / "obf_reps" / "utils.py").write_text("from obf_reps.logging import WAndBLogger\n\n\n"
                                              "def classe_journaliseur():\n    return WAndBLogger\n")
     (d / "transformers.py").write_text("GRAINES = []\n\n\ndef set_seed(g):\n    GRAINES.append(g)\n")
+    (d / "evaluate.py").write_text("MARQUE = 'module local du clone'\n")
     (d / "train_harmful.py").write_text(MINI_SCRIPT)
     return racine
 
@@ -3730,6 +3736,11 @@ def test_v17_epreuve_reelle_hydra_main_cas_sain(tmp_path):
     attendu = configuration_attendue(clone, over)
     assert r.stdout.startswith(attendu) and "attack_defense_epochs: 3" in attendu and "seed: 1394228342" in attendu
     assert "JOURNALISEUR controle_ia.temoin_bailey.journaliseur_v3.JournaliseurLocal" in r.stderr
+    d = (clone / cv.SOUS_DOSSIER).resolve()
+    # C-2 de la relecture v17 : dossier courant, tête de `sys.path`, module local, graine, nom et argv du script
+    assert f"DOSSIER {d}\n" in r.stderr and f"CHEMIN0 {d}\n" in r.stderr
+    assert "LOCAL module local du clone\n" in r.stderr and "GRAINES [7]\n" in r.stderr
+    assert "NOM __main__\n" in r.stderr and f"ARGV0 {d / 'train_harmful.py'}\n" in r.stderr
     assert (tmp_path / "hydra" / ".hydra" / "config.yaml").exists()
     assert not (clone / cv.SOUS_DOSSIER / "outputs").exists()
 
