@@ -91,3 +91,4 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 | 2026-11-12T01:08:35Z | P3-bis, GO-2026-11-10-02 | instance 60286945 : surveillance, ÉTAT TERMINAL (exited, stopped) ; arrêt par son identifiant (R10), état relu ; destruction en attente du mot de Lazar (R-2411) |
 | 2026-11-12T05:18:03Z | Course 7b, GO-2026-11-02-28 | instance 60218139 : fin normale, détruite par son identifiant (R10), absente de l'inventaire ; R-2413 |
 | 2026-11-12T07:47:20Z | Vast.ai 60286945 (P3-bis, tentative 1, arrêtée) | détruite par identifiant, mot de relance de Lazar | R-2416 |
+| 2026-11-12T00:24:07Z | Hetzner 175751342 (ccx33, hel1) | detruire --identifiant, code 0 ; inventaire vide 00:24:09Z et 00:26:47Z ; clé 132500120 et pare-feu 12031843 supprimés 00:26:45Z ; minuterie PID 1117 arrêtée | fin normale après « noyau » non conforme (lecture des .olean refusée à bac) ; R-2417 |

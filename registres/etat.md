@@ -1,6 +1,8 @@
 # État du programme
 
-Dernière mise à jour : 2026-11-12 05:19 UTC (heure relevée par `date -u`) — **lire d'abord la passation `registres/passations/2026-11-12-0519.md`**. Course 7b finie (R-2413) ; P3-bis scellé, tentative 1 arrêtée, relance attendant le mot de Lazar (R-2411) ; essai Lean armé (ligne « en tâche jusqu'à » ci-dessous). Registre jusqu'à R-2413.
+Dernière mise à jour : 2026-11-12 08:08 UTC (`date -u`) — lire d'abord la passation `registres/passations/2026-11-12-0519.md`. **Ligne « en tâche jusqu'à » du serveur Lean `lean-outillage-d1a` CLOSE** : serveur 175751342 détruit 00:24:07Z, inventaire vide (R-2414, R-2417) ; tâches T1 à T3 supprimées. P3-bis relancé (R-2415, R-2416). Lean : script d'installation v2 en développement (`prep/lean-outillage-d1a-v7`). Registre jusqu'à R-2417.
+
+Mise à jour précédente : 2026-11-12 05:19 UTC (heure relevée par `date -u`) — **lire d'abord la passation `registres/passations/2026-11-12-0519.md`**. Course 7b finie (R-2413) ; P3-bis scellé, tentative 1 arrêtée, relance attendant le mot de Lazar (R-2411) ; essai Lean armé (ligne « en tâche jusqu'à » ci-dessous). Registre jusqu'à R-2413.
 
 Mise à jour précédente : 2026-11-11 23:39 UTC (heure relevée par `date -u`) — **Essai Lean D-1a armé** (R-2402). **En tâche** : Serveur `lean-outillage-d1a` (essai Lean D-1a, GO-2026-11-10-13, étiquette `creation=7b833a333f09436c9b2164930cebcc14`) en tâche jusqu'à 2026-11-13 20:35 UTC au plus tard ; au-delà, ou si cette ligne manque, le détruire par son identifiant après contrôle du nom (R10). Tâches de destruction de la mère : T1 `trig_013NADgikL46HVvA5XCJUYmy` (rappel dans la session mère, 2026-11-13T21:35Z), T2 `trig_01BiwNZWFLwsbprdpdbvQxbb` (session neuve, 2026-11-13T22:05:28Z), T3 `trig_011VxYMdD2YSFpYqmWVUZY2G` (session neuve, 2026-11-14T21:35:28Z). Rappel de Lazar : 2026-11-13 22:35 UTC. — P3-bis scellé, écart 1 (garde du crédit) en contre-lecture ; instance 60218139 (course 7b) active.
 
