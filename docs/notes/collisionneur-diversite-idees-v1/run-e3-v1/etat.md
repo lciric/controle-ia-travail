@@ -1,0 +1,20 @@
+| Cellule | Statut | Essais | Modèle servi | Caractères | Marqueur | Coût USD |
+|---|---|---|---|---|---|---|
+| E3-T1-conception-A | OK | 1 | claude-fable-5-1 | 18977 | oui | 0.95 |
+| E3-T1-conception-B | OK | 1 | claude-opus-4-6 | 14432 | oui | 0.47 |
+| E3-T1-conception-C | OK | 1 | gemini-4-argon | 28256 | oui | 0.48 |
+| E3-T1-conception-D | OK | 1 | kimi-k3.1-pro | 15751 | oui | 0.16 |
+| E3-T1-conception-E | OK | 1 | gpt-6-astra | 17628 | oui | 0.31 |
+| E3-T2-critique-croisee-A | OK | 1 | claude-fable-5-1 | 22202 | oui | 1.46 |
+| E3-T2-critique-croisee-B | OK | 1 | claude-opus-4-6 | 24491 | oui | 1.08 |
+| E3-T2-critique-croisee-C | REFUS | 1 | gemini-4-argon | 0 | non | 0.23 |
+| E3-T2-critique-croisee-D | OK | 1 | kimi-k3.1-pro | 17527 | oui | 0.24 |
+| E3-T2-critique-croisee-E | OK | 1 | gpt-6-astra | 18021 | oui | 0.52 |
+| E3-T3-reponse-A | OK | 1 | claude-fable-5-1 | 20105 | oui | 1.23 |
+| E3-T3-reponse-B | OK | 1 | claude-opus-4-6 | 15116 | oui | 0.84 |
+| E3-T3-reponse-C | OK | 1 | gemini-4-argon | 32409 | oui | 0.84 |
+| E3-T3-reponse-D | OK | 1 | kimi-k3.1-pro | 16042 | oui | 0.22 |
+| E3-T3-reponse-E | OK | 1 | gpt-6-astra | 19353 | oui | 0.50 |
+
+Absences acceptées par l'arbitre : E3-T2-critique-croisee-C.
+Dépense totale : 9.54 USD. Mis à jour 2026-11-12T21:24:52Z.
