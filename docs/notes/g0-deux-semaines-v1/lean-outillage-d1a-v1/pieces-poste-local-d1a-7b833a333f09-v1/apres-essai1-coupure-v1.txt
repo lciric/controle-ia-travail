@@ -1,0 +1,22 @@
+2026-11-12T00:18:11Z nftables chargé
+table inet coupure_d1a {
+	chain sortie {
+		type filter hook output priority filter; policy drop;
+		oif "lo" accept
+		ct state established,related accept
+		udp sport 68 udp dport 67 accept
+		ip daddr 169.254.169.254 tcp dport 80 accept
+	}
+
+	chain entree {
+		type filter hook input priority filter; policy drop;
+		iif "lo" accept
+		ct state established,related accept
+		tcp dport 22 accept
+		udp sport 67 udp dport 68 accept
+	}
+
+	chain transit {
+		type filter hook forward priority filter; policy drop;
+	}
+}
