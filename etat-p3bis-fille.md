@@ -5,3 +5,6 @@ Relance lancée (R-2431) à 2026-11-12T13:56:14Z : enchaîneur v4 (19728737…) 
 
 ## 2026-11-12T13:58:45Z
 Essai du chemin R-2432 : send_message vers la mère refusé de nouveau (« non-retryable (elevated_session_untrusted_device) … Nothing was sent or changed »), SANS content_digest dans la réponse : confirm_repository_trust n'a donc pas été appelé (il exige un digest tiré d'un refus). Je reste sur cette note. État : relance en cours depuis 13:56:14Z (PID 345, lancement-7), contrôles avant dépense en cours, aucune création à 13:58Z.
+
+## 2026-11-12T14:30:53Z
+Contrôles avant dépense rejoués sur S : « TOUS CONFORMES » (0 KO). Dossier de la liste ciblée /tmp/pytest-of-root/pytest-0 effacé par chemin exact. Essai d'offre 1 sur 12 (processeur exigé) : code 3, aucune offre conforme. Aucune création.
