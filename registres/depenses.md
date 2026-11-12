@@ -425,3 +425,6 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 | 2026-11-12 | GO-2026-11-10-11 | Course réelle de l'organisme v66, poste local, reprise : machine Hetzner 175792062 (cpx32, hel1, debian-13), 07:53:06Z → 08:38:15Z (45 min 9 s) ; ≈ 0,059 EUR TTC (≈ 0,07 USD) | Hetzner |
 | 2026-11-12 | GO-2026-11-10-11 | Course réelle de l'organisme v66, poste local, reprise : relais Kimi, 1 appel (réponse du proposeur coupée à sa borne de sortie) ; 0,481706 USD | Kimi (Moonshot) |
 | 2026-11-12 | GO-2026-11-10-13 | Hetzner ccx33 hel1, serveur 175838427, essai Lean D-1a, second essai (outillage) | 2026-11-12T14:31:04Z → 14:39:50Z, 1 h facturée | 0,22692 EUR ≈ 0,28 USD (taux 1,25) ; cumul de la ligne 0,56 USD | poste local, branche donnees/lean-outillage-d1a-poste-local-v2 ; R-2438 |
+| 2026-11-12 | GO-2026-11-12-06 | Course réelle de l'organisme v67 (configuration v8), poste local : machine Hetzner 175834755 (cpx32, hel1, debian-13), 14:01:34Z → 17:19:43Z (3 h 18 min 9 s) ; ≈ 0,235 EUR TTC (≈ 0,27 USD) | Hetzner |
+| 2026-11-12 | GO-2026-11-12-06 | Course réelle de l'organisme v67, poste local : relais Kimi, 30 appels, 1,13813 USD | Kimi (Moonshot) |
+| 2026-11-12 | GO-2026-11-12-06 | Course réelle de l'organisme v67, poste local : relais Argon, 16 appels, 0,85618 USD | Argon (Gemini) |

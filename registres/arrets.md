@@ -99,3 +99,6 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 | 2026-11-12T08:36:48Z | relais Kimi pid 94531 | arrêté par le PID |
 | 2026-11-12T08:36:50Z | relais Argon pid 94543 | arrêté par le PID |
 | 2026-11-12T14:39:50Z | Hetzner 175838427 (ccx33, hel1) | detruire --identifiant, code 0 ; inventaire vide 14:39:52Z et 14:42:25Z ; clé 132525089 et pare-feu 12036919 supprimés 14:42:23Z ; minuterie PID 2441 terminée d'elle-même 14:40:09Z | fin normale après « noyau » non conforme (vérificateur incompatible avec Lean 4.35.0) ; R-2438 |
+| 2026-11-12T17:19:43Z | Hetzner 175834755 | Course v67 (GO-2026-11-12-06), poste local : serveur détruit par l'identifiant (action 667480874417041 « success », GET 404) ; clé SSH 132525071 supprimée |
+| 2026-11-12T17:18:32Z | relais Kimi pid 110065 | arrêté par le PID |
+| 2026-11-12T17:18:34Z | relais Argon pid 110077 | arrêté par le PID |
