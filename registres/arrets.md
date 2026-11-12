@@ -102,3 +102,5 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 | 2026-11-12T17:19:43Z | Hetzner 175834755 | Course v67 (GO-2026-11-12-06), poste local : serveur détruit par l'identifiant (action 667480874417041 « success », GET 404) ; clé SSH 132525071 supprimée |
 | 2026-11-12T17:18:32Z | relais Kimi pid 110065 | arrêté par le PID |
 | 2026-11-12T17:18:34Z | relais Argon pid 110077 | arrêté par le PID |
+| 2026-11-12T15:05:35Z | P3-bis, GO-2026-11-10-02 | instance 60370121 : contrôle à cinq minutes, 3 KO ; arrêt par son identifiant (R10), code 0 | (ligne proposée par la fille, note `0f3ea945`, inscrite par la mère, R-2446) |
+| 2026-11-12T15:05:41Z | P3-bis, GO-2026-11-10-02 | instance 60370121 arrêtée par son identifiant (R10), motif DÉPENSE (faux positif probable, unité de inet_*_billed) ; état relu | (ligne proposée par la fille, note `0f3ea945`, inscrite par la mère, R-2446) |
