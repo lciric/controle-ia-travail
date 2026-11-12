@@ -89,3 +89,4 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 | 2026-11-11T00:02:17Z | Hetzner 175573391 | Course réelle de l'organisme v66 (GO-2026-11-10-11) : serveur `organisme-v66-course` détruit par l'identifiant (`DELETE /v1/servers/175573391`, action 667128687002673 réussie) ; relecture 404 ; inventaire vide ; clé SSH jetable 132459145 supprimée à 00:02:35Z | opérateur sous-agent de la mère ; R-2293 |
 | 2026-11-12T01:06:28Z | P3-bis, GO-2026-11-10-02 | instance 60286945 : contrôle à cinq minutes, 4 KO ; arrêt par son identifiant (R10), code 0 ; R-2411 |
 | 2026-11-12T01:08:35Z | P3-bis, GO-2026-11-10-02 | instance 60286945 : surveillance, ÉTAT TERMINAL (exited, stopped) ; arrêt par son identifiant (R10), état relu ; destruction en attente du mot de Lazar (R-2411) |
+| 2026-11-12T05:18:03Z | Course 7b, GO-2026-11-02-28 | instance 60218139 : fin normale, détruite par son identifiant (R10), absente de l'inventaire ; R-2413 |
