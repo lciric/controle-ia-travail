@@ -8,3 +8,6 @@ Essai du chemin R-2432 : send_message vers la mère refusé de nouveau (« non-r
 
 ## 2026-11-12T14:30:53Z
 Contrôles avant dépense rejoués sur S : « TOUS CONFORMES » (0 KO). Dossier de la liste ciblée /tmp/pytest-of-root/pytest-0 effacé par chemin exact. Essai d'offre 1 sur 12 (processeur exigé) : code 3, aucune offre conforme. Aucune création.
+
+## 2026-11-12T15:00:50Z
+CRÉATION : instance 60370121, créée à 2026-11-12T15:00:41Z (creation 1794495641) ; essai d'offre 3 sur 12 (processeur exigé, aucun repli) ; offre 46608733, A100 SXM4, AMD EPYC 7513, 1,09 USD/h ; lanceur d'écart code 0, « succès : True ; identifiant 60370121 ». Ligne d'écart présente dans lancement.txt (« écart 1 (R-2399) : garde du crédit remplacée par la recharge automatique du compte (mot de Lazar) ; crédit présent > 0 exigé »), après la ligne officielle « crédit 5.79 USD ; minimum 20.00 USD ». Contrôle à cinq minutes à création + 290 s (≈ 15:05:31Z), puis surveillance.
