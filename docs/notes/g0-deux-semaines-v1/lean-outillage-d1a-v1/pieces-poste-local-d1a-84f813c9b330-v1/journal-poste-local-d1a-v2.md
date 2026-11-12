@@ -1,0 +1,24 @@
+# Journal du poste local — D-1a, second essai (GO-2026-11-10-13)
+
+- Consigne v2 af1d8ae3… vérifiée (et sha256sum -c du compagnon) ; procédure v9 7f69fece… (tête de prep v7 et b0b8667a) ; branche donnees/lean-outillage-d1a-poste-local-v2 à 32a40613, poussée -u, référence de suivi, amont résolu ; V sans pièces du premier essai.
+- Routine 1 : sha256sum -c conforme ; verifier-arbre non lancé (bras-attaque extrait, règle 9). Routine 2 : etat.md et registres/passations/2026-11-12-0519.md lus.
+- Section 0 : Python 3.14.4, OpenSSH 10.2p1 ; HCLOUD_TOKEN présent ; mandataires vides ; vérificateur 644 ; essai à blanc sleep PID 466 lancé 2026-11-12T12:38:47Z, kill -0 depuis une autre commande à faire.
+- adresses-sortie 12:43:59Z : 16 essais, 16 réponses, 2 adresses distinctes, ip_poste_vue, 0 hors du /24 → P = 24.
+- Terminal Ubuntu ouvert par Lazar (distro relancée 13:36:18Z). Essai à blanc n°2 : sleep PID 817 lancé 2026-11-12T13:56:10Z. (Incident : capture $(…) du PID bloquait la commande, le sleep héritant de la sortie.)
+- kill -0 817 depuis une autre commande : réussi (13:56:21Z).
+- Relance réelle de l'hôte : claude.exe 39200 terminé, nouvel hôte 41508 démarré 2026-11-12T14:00:31Z (après le sleep, 13:56:09Z). kill -0 817 réussi à 14:01:53Z, puis kill 817 (R10). Essai à blanc conforme.
+- L1 2026-11-12T14:02:19Z (date -u) ; T_LIM = 2026-11-12T20:02:19Z ; H = 2026-11-14T12:02:19Z.
+- L1 preparer code 0 : rattrapage-machine-d1a-84f813c9b330-v1.json.
+- L2 14:02:20Z acces-creer --prefixe-poste 24 code 0 : clé 132525089 88:45:54:74:12:c5:3b:4a:c5:e8:12:94:4b:84:0e:22 ; pare-feu 12036919.
+- L3 14:02:29Z : garde-poste conforme ; commit 9196a99874b13d270cb7ee88b150c1ab46878c3e poussé ; amont et fichier_pousse vérifiés.
+- Mot « armée » reçu (R-2434) 2026-11-12T14:31:00Z ; empreinte 1ac1f180fc0533b2b49626d6b52bdc6196b68ef2f2df2ec3d564d0e5b388e7e4 ; T1 trig_01KLbFn2NCK4Zdc1DxKF3HE5, T2 trig_01XQbHnFNbCPttrW4W8oLwGF, T3 trig_01Eaze6ympX8U7abyyZXnFLj ; serveur d'une autre session (175834755) à ne pas toucher.
+- L4 14:31:01Z : inventaire vide.
+- L5 14:31:01Z : serveur 175838427 créé 14:31:04Z, échéance 2026-11-14T11:02:19Z, minuterie PID 2441. L6 14:31:34Z conforme.
+- L7 14:31:37Z : pièces de création et de minuterie poussées.
+- Section 3 : adresse du serveur lue (jamais versée) ; known_hosts : 3 entrée(s) préalable(s), retirée(s) par ssh-keygen -R.
+- pilote avant lancé 2026-11-12T14:31:59Z (commit de Mathlib 56a005855ea17e0b0958f73ec801ae140b0a1679, épinglé au premier essai)
+- Pilote avant 14:31:59Z → 14:34:35Z : installation conforme, garde de lisibilité conforme (bac lit 16 chemins dont Mathlib.olean), sonde v2 ouverte sans écart, essai R5 « bac lit Mathlib.olean » conforme (sain, témoin 0644, artefact 0600 refusé).
+- Coupure 14:35:08Z (--prefixe-poste 24) et verifier-coupure code 0.
+- pilote apres lancé 2026-11-12T14:35:19Z
+- Pilote apres 14:35:19Z → 14:39:19Z, code 1 : sonde après coupure (v2, cache vidé) conforme, aucun écart ; vérificateur épinglé ; NOYAU NON CONFORME (0/18) : verificateur_noyau_v4.lean ne compile pas sous Lean 4.35.0 (« Unknown identifier CollectAxioms.collect », l. 48 ; « Invalid field notation », l. 49) → G-L7 échoue partout, G-L2/G-L4/G-L5 du cas sain par voie de conséquence ; cas simproc : « Function._hors_noyau » absent (G-L1). Lecture par bac : plus d'erreur de permission. Rien d'autre lancé. Section 5.
+- S5 : detruire 175838427 14:39:50Z code 0 ; inventaire vide 14:39:52Z ; acces-supprimer 14:42:23Z code 0 (pare-feu et clé supprimés) ; minuterie 2441 déjà terminée à 14:42:24Z (verifier-minuterie : processus absent) ; inventaire final vide 14:42:25Z.
