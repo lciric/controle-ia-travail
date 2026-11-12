@@ -1,0 +1,56 @@
+# Journal des essais hors machine — réparation du vérificateur du noyau (R-2439), branche prep/lean-outillage-d1a-v10, code d7e42c26d0085cda3fa895b3380136a21b576975
+# Heures relevées par date -u. Chaîne installée à part dans le bac à sable du développeur : elan 4.2.4 (elan-init.sh sha256 a620ff1641616222c8d37c54845492004bb84d6877cdbc944dd65c1aa685bf53, identique à la machine), Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release), Mathlib 56a005855ea17e0b0958f73ec801ae140b0a1679 et son cache (9 031 fichiers, cache.mathlib.org). Python 3.13.18, pytest 9.1.1. Chemins locaux remplacés par <depot>, <chaine>, <tmp>.
+
+## 1. Défaut reproduit : compilation de verificateur_noyau_v4.lean (sha256 1f744a4d…, égal au vérificateur épinglé de la machine au second essai), 2026-11-12T20:32:28Z, code 1
+<depot>/src/controle_ia/lean_essai/verificateur_noyau_v4.lean:48:18: error(lean.unknownIdentifier): Unknown identifier `CollectAxioms.collect`
+<depot>/src/controle_ia/lean_essai/verificateur_noyau_v4.lean:49:2: error(lean.invalidField): Invalid field notation: Type of
+  s
+is not known; cannot resolve field `axioms`
+<depot>/src/controle_ia/lean_essai/verificateur_noyau_v4.lean:55:7: error(lean.invalidField): Invalid field `setNat`: The environment does not contain `Lean.Options.setNat`, so it is not possible to project the field `setNat` from an expression
+  o
+of type `Options`
+<depot>/src/controle_ia/lean_essai/verificateur_noyau_v4.lean:104:18: warning: `Lean.Environment.replay` has been deprecated: Use `Lean.Kernel.Environment.replay` instead
+
+Note: The updated constant has a different type:
+  Std.HashMap Name ConstantInfo → Kernel.Environment → IO Kernel.Environment
+instead of
+  Std.HashMap Name ConstantInfo → Environment → IO Environment
+
+Note: The updated constant is in a different namespace. Dot notation may need to be changed (e.g., from `x.replay` to `Kernel.Environment.replay x`).
+<depot>/src/controle_ia/lean_essai/verificateur_noyau_v4.lean:87:4: error: (kernel) invalid declaration, it uses unsafe declaration 'Lean.enableInitializersExecution'
+<depot>/src/controle_ia/lean_essai/verificateur_noyau_v4.lean:140:4: error: Failed to find LCNF signature for VerificateurNoyauV4.principal
+
+## 2. Essai R5 de la machine (essai_compilation_verificateur_v1.sh) joué hors machine, utilisateur courant, 2026-11-12T22:51:27Z
+### v5 (v5 code 0)
+{"cas": "sain", "fichier": "src/controle_ia/lean_essai/verificateur_noyau_v5.lean", "sha256": "9ee1fed015c539f7a0526d6e05fce23cc9ffbba0c469fe3cb0171dba53d8d981", "attendu": "compile sans message", "code": 0, "messages": "", "conforme": true}
+{"cas": "artefact-copie-cassee", "fichier": "src/controle_ia/lean_essai/verificateur_noyau_v5.lean (copie cassée)", "sha256": "d2b6481be8b35294495c7f2350fdb4cf8a17bfbeff462d0049d1f3ed1994f785", "attendu": "refusée", "code": 1, "messages": "<tmp>/casse.lean:214:17: error(lean.unknownIdentifier): Unknown identifier `identifiantInconnuEssaiR5V1`", "conforme": true}
+{"cas": "bilan", "conforme": true, "version_lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)"}
+### v4 (v4 code 1)
+{"cas": "sain", "fichier": "src/controle_ia/lean_essai/verificateur_noyau_v4.lean", "sha256": "1f744a4d8addde8579b55c2970c456b829a244216f98e58a5144e627021efe28", "attendu": "compile sans message", "code": 1, "messages": "<tmp>/sain.lean:48:18: error(lean.unknownIdentifier): Unknown identifier `CollectAxioms.collect`\n<tmp>/sain.lean:49:2: error(lean.invalidField): Invalid field notation: Type of\n  s\nis not known; cannot resolve field `axioms`\n<tmp>/sain.lean:55:7: error(lean.invalidField): Invalid field `setNat`: The environment does not contain `Lean.Options.setNat`, so it is not possible to project the field `setNat` from an expression\n  o\nof type `Options`\n<tmp>/sain.lean:104:18: warning: `Lean.Environment.replay` has been deprecated: Use `Lean.Kernel.Environment.replay` instead\n\nNote: The updated constant has a different type:\n  Std.HashMap Name ConstantInfo → Kernel.Environment → IO Kernel.Environment\ninstead of\n  Std.HashMap Name ConstantInfo → Environment → IO Environment\n\nNote: The updated constant is in a different namespace. Dot notation may need to be changed (e.g., from `x.replay` to `Kernel.Environment.replay x`).\n<tmp>/sain.lean:87:4: error: (kernel) invalid declaration, it uses unsafe declaration 'Lean.enableInitializersExecution'\n<tmp>/sain.lean:140:4: error: Failed to find LCNF signature for VerificateurNoyauV4.principal", "conforme": false}
+{"cas": "artefact-copie-cassee", "fichier": "src/controle_ia/lean_essai/verificateur_noyau_v4.lean (copie cassée)", "sha256": "08a5919ec9e2602bbbae108c6f7a01ca3d46cfc88ddc26d750da91f8749e3408", "attendu": "refusée", "code": 1, "messages": "<tmp>/casse.lean:48:18: error(lean.unknownIdentifier): Unknown identifier `CollectAxioms.collect`\n<tmp>/casse.lean:49:2: error(lean.invalidField): Invalid field notation: Type of\n  s\nis not known; cannot resolve field `axioms`\n<tmp>/casse.lean:55:7: error(lean.invalidField): Invalid field `setNat`: The environment does not contain `Lean.Options.setNat`, so it is not possible to project the field `setNat` from an expression\n  o\nof type `Options`\n<tmp>/casse.lean:104:18: warning: `Lean.Environment.replay` has been deprecated: Use `Lean.Kernel.Environment.replay` instead\n\nNote: The updated constant has a different type:\n  Std.HashMap Name ConstantInfo → Kernel.Environment → IO Kernel.Environment\ninstead of\n  Std.HashMap Name ConstantInfo → Environment → IO Environment\n\nNote: The updated constant is in a different namespace. Dot notation may need to be changed (e.g., from `x.replay` to `Kernel.Environment.replay x`).\n<tmp>/casse.lean:87:4: error: (kernel) invalid declaration, it uses unsafe declaration 'Lean.enableInitializersExecution'\n<tmp>/casse.lean:140:4: error: Failed to find LCNF signature for VerificateurNoyauV4.principal\n<tmp>/casse.lean:148:17: error(lean.unknownIdentifier): Unknown identifier `identifiantInconnuEssaiR5V1`", "conforme": true}
+{"cas": "bilan", "conforme": false, "version_lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)", "motif": "le vérificateur ne compile pas sans message sur la machine, ou la copie cassée n est pas refusée : arrêt avant la coupure"}
+
+## 3. Jeu complet des artefacts R5 Lean et noyau (essai-verificateur-hors-machine-v1.json), 2026-11-12T22:41:04Z → 22:45:58Z, code 1 (36 cas jugés conformes sur 39 ; écarts connus : noyau_simproc_hors_noyau_v4.lean ×2, gl5_vacuite_v1.lean)
+
+## 4. Essais ciblés avec la chaîne (LEAN_ESSAI_D1A_CHAINE), tests/test_lean_essai_verificateur_v5.py et tests/test_lean_essai_pilote_v9.py, 2026-11-12T22:45:58Z → 22:51:25Z, code 0
+52 passed in 327.18s (0:05:27)
+
+## 5. Mêmes essais sans la chaîne, 2026-11-12T22:51:25Z → 22:51:27Z, code 0
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:170: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:177: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:184: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:193: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:205: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:229: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:239: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:259: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:273: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:304: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:326: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [1] tests/test_lean_essai_verificateur_v5.py:333: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+SKIPPED [2] tests/test_lean_essai_pilote_v9.py:387: chaîne épinglée absente : LEAN_ESSAI_D1A_CHAINE non posée (essai sauté, pas réussi)
+38 passed, 14 skipped in 1.65s
+
+## 6. Mutations v9 (journal-mutations-harnais-v9.json), 2026-11-12T21:38:06Z → 22:40:21Z, code 0 : 173 tuées sur 173, aucune par délai ; témoin : 141 passed, 1 deselected
+Essai désélectionné partout : tests/test_lean_essai_minuterie_v7.py::test_creation_avec_course_ne_detruit_pas (fichier scellé, inchangé) : échoue depuis 2026-11-12T16:00Z sur le code inchangé de b0b8667a (échéance fixe du rattrapage 2026-11-12T16:00Z, horloge réelle de la minuterie enfant : « échéance de 39.0 h atteinte », aucune ligne « garder » en 120 s) ; trois passages isolés, trois échecs.
