@@ -1,0 +1,289 @@
+{
+ "verification": "conforme",
+ "ecriture": "aucune",
+ "appel": "aucun",
+ "plan": {
+  "generations": 2,
+  "cartes_par_proposeur": 6,
+  "m_e_bh": 22,
+  "plafond_usd": 40.0,
+  "duree_max_s": 259200.0,
+  "parts": {
+   "kimi": 33.0,
+   "argon": 7.0
+  },
+  "bras": [
+   "reel"
+  ]
+ },
+ "configuration": {
+  "budget_appel_usd": 1.5,
+  "modeles_demandes": {
+   "kimi": "kimi-k3.1-pro",
+   "argon": "gemini-4-argon"
+  },
+  "substitutions_dans_les_commandes": [
+   {
+    "fournisseur": "argon",
+    "argument": 10,
+    "avant": "{REGISTRE}",
+    "apres": "/root/sorties/course-reelle/registre-depense-cumulee-v1.jsonl"
+   },
+   {
+    "fournisseur": "argon",
+    "argument": 12,
+    "avant": "40",
+    "apres": "40"
+   },
+   {
+    "fournisseur": "kimi",
+    "argument": 9,
+    "avant": "{REGISTRE}",
+    "apres": "/root/sorties/course-reelle/registre-depense-cumulee-v1.jsonl"
+   },
+   {
+    "fournisseur": "kimi",
+    "argument": 11,
+    "avant": "40",
+    "apres": "40"
+   }
+  ],
+  "accuses_plafond": "non relancées (vérification seule)",
+  "parts_des_relais_usd": {
+   "kimi": 33.0,
+   "argon": 7.0
+  },
+  "portes": {
+   "kimi": {
+    "type": "environnement",
+    "variables": [
+     "ETAPE_POLE",
+     "PLAFOND_ETAPE_USD"
+    ]
+   },
+   "argon": {
+    "type": "environnement",
+    "variables": [
+     "ETAPE_POLE",
+     "PLAFOND_ETAPE_USD"
+    ]
+   }
+  },
+  "bareme_des_commandes": {
+   "kimi": {
+    "prix_entree_usd_par_million_jetons": 2.0,
+    "caracteres_par_jeton": 3,
+    "prix_caractere_usd": 6.666666666666666e-07
+   },
+   "argon": {
+    "prix_entree_usd_par_million_jetons": 10.0,
+    "caracteres_par_jeton": 3,
+    "prix_caractere_usd": 3.3333333333333337e-06
+   }
+  },
+  "adaptateurs": {
+   "kimi": {
+    "commande": [
+     "/usr/bin/python3",
+     "-I",
+     "-B",
+     "/root/course/commandes-v6/commande_kimi_v6.py",
+     "--url-relais",
+     "http://127.0.0.1:8804",
+     "--modele",
+     "kimi-k3.1-pro",
+     "--registre",
+     "/root/sorties/course-reelle/registre-depense-cumulee-v1.jsonl",
+     "--plafond-cumule-usd",
+     "40",
+     "--max-sortie-proposeur",
+     "131072",
+     "--max-sortie-court",
+     "16000",
+     "--sortie-min-jetons",
+     "4096",
+     "--max-sortie-lecteur",
+     "1000",
+     "--sortie-min-jetons-lecteur",
+     "200",
+     "--delai-s",
+     "7150"
+    ],
+    "empreintes": {
+     "/usr/bin/python3": "17b78e0a93175e86f9ac03141924fd7a7f0c0c52e66b34bfa0de20ffef989df1",
+     "/root/course/commandes-v6/commande_kimi_v6.py": "889309305aeb37de9801c2f40c31769fd268abded1ac61ea94196fd0d51195ae"
+    },
+    "variables_transmises": [],
+    "delai_s": 7200.0,
+    "modeles_servis_permis": {},
+    "controle_modele_servi": "exigé (CL13-05) : la dernière ligne rend `modele_servi`, égal au modèle demandé (ou suivi d'un suffixe de date strict -AAAAMMJJ, ou dans la liste explicite des identifiants permis), sinon refus et arrêt, y compris quand la commande voit l'écart elle-même et sort avec un code non nul (CL14-09)",
+    "version": "adaptateurs-v56",
+    "modele_servi_recopie": "CL20-01 : modele_servi de la dernière ligne recopié dans le résultat « ok » (et « budget_depasse ») après le contrôle de la commande ; absent : A2 au noyau",
+    "plafond_etape": "variables ETAPE_POLE et PLAFOND_ETAPE_USD (porte « environnement »), fixées au lancement de l'étape",
+    "version_v64": "adaptateur-commande-v64",
+    "lecture_code_4": "v64 (TF-02, option a) : code 4 dont la dernière ligne porte « envoye » : false → « budget_depasse » pour cette session, coût compté 0, marqué rien_envoye ; tout autre code non nul : lecture de la v56 (erreur)"
+   },
+   "argon": {
+    "commande": [
+     "/usr/bin/python3",
+     "-I",
+     "-B",
+     "/root/course/commandes-v6/commande_argon_v56_nuit_v6.py",
+     "appeler",
+     "--url-relais",
+     "http://127.0.0.1:8805",
+     "--modele",
+     "gemini-4-argon",
+     "--registre",
+     "/root/sorties/course-reelle/registre-depense-cumulee-v1.jsonl",
+     "--plafond-cumule-usd",
+     "40",
+     "--max-sortie-proposeur",
+     "32000",
+     "--max-sortie-court",
+     "4000",
+     "--sortie-min-jetons",
+     "1000",
+     "--max-sortie-lecteur",
+     "1000",
+     "--sortie-min-jetons-lecteur",
+     "200",
+     "--delai-s",
+     "1750"
+    ],
+    "empreintes": {
+     "/usr/bin/python3": "17b78e0a93175e86f9ac03141924fd7a7f0c0c52e66b34bfa0de20ffef989df1",
+     "/root/course/commandes-v6/commande_argon_v56_nuit_v6.py": "5eae1a0468430e243c3c4e099b3969f949f62add688531aafdd7f0f44e036e55"
+    },
+    "variables_transmises": [],
+    "delai_s": 1800.0,
+    "modeles_servis_permis": {},
+    "controle_modele_servi": "exigé (CL13-05) : la dernière ligne rend `modele_servi`, égal au modèle demandé (ou suivi d'un suffixe de date strict -AAAAMMJJ, ou dans la liste explicite des identifiants permis), sinon refus et arrêt, y compris quand la commande voit l'écart elle-même et sort avec un code non nul (CL14-09)",
+    "version": "adaptateurs-v56",
+    "modele_servi_recopie": "CL20-01 : modele_servi de la dernière ligne recopié dans le résultat « ok » (et « budget_depasse ») après le contrôle de la commande ; absent : A2 au noyau",
+    "plafond_etape": "variables ETAPE_POLE et PLAFOND_ETAPE_USD (porte « environnement »), fixées au lancement de l'étape",
+    "version_v64": "adaptateur-commande-v64",
+    "lecture_code_4": "v64 (TF-02, option a) : code 4 dont la dernière ligne porte « envoye » : false → « budget_depasse » pour cette session, coût compté 0, marqué rien_envoye ; tout autre code non nul : lecture de la v56 (erreur)"
+   }
+  },
+  "commandes": "adaptateur-commande-v67",
+  "chemin": "/root/course/configuration-boucle-reelle-v8.json",
+  "sha256": "eb6262890927bfc351bf2a32c21d0dcf121445256a5ebe6c4eaee70b9265b31d",
+  "environnement_permis": [],
+  "boucle_reelle_v66": {
+   "plafond_modeles_usd": 40.0,
+   "parts_usd": {
+    "kimi": 33.0,
+    "argon": 7.0
+   },
+   "plafond_machine_usd": 5.0,
+   "commandes_v6": {
+    "source": {
+     "depot": "lciric/controle-ia-travail",
+     "branche": "outils/commandes-tour-ferme-v1",
+     "commit": "12f9e0e38f2cf7adb61a9c3ddf0ee4c5c66556d9"
+    },
+    "kimi": {
+     "chemin": "commandes-v6/commande_kimi_v6.py",
+     "sha256": "889309305aeb37de9801c2f40c31769fd268abded1ac61ea94196fd0d51195ae"
+    },
+    "argon": {
+     "chemin": "commandes-v6/commande_argon_v56_nuit_v6.py",
+     "sha256": "5eae1a0468430e243c3c4e099b3969f949f62add688531aafdd7f0f44e036e55"
+    },
+    "registre_depense_cumulee": {
+     "chemin": "commandes-v6/registre_depense_cumulee_v1.py",
+     "sha256": "8ba92066b358ffb8206dea9e70251388c30620484fab1ac578778d9f21e578ff"
+    }
+   }
+  },
+  "delais_v67": {
+   "kimi": {
+    "adaptateur_s": 7200.0,
+    "commande_s": 7150.0
+   },
+   "argon": {
+    "adaptateur_s": 1800.0,
+    "commande_s": 1750.0
+   }
+  },
+  "bac": {
+   "nom": "bwrap",
+   "factice": false,
+   "bwrap": "/usr/bin/bwrap",
+   "python": "/usr/bin/python3",
+   "delai_s": 60.0,
+   "memoire_mo": 768,
+   "processus_max": 1024,
+   "borne_de_processus_effective": true,
+   "descripteurs_max": 512,
+   "temps_processeur_s": 65,
+   "dossier_de_travail": {
+    "neuf_par_execution": true,
+    "entrees_max": 2000,
+    "octets_max": 268435456,
+    "octets_max_par_fichier": 52428800,
+    "hors_de_la_sortie": true,
+    "retire_apres_chaque_execution": true,
+    "racine": "/tmp/bac-boucle-reelle-v67-kaqsvtx4/bac"
+   },
+   "identite_du_script_sur_l_hote": {
+    "utilisateur_dedie": {
+     "uid": 64097,
+     "gid": 64097,
+     "nom": null
+    },
+    "lance_par": "setpriv --reuid --regid --clear-groups --no-new-privs"
+   },
+   "espaces_d_utilisateurs_imbriques": "interdits (--disable-userns)",
+   "dev_shm_octets_max": 33554432,
+   "version_du_module": 2,
+   "identite_lue_sur_l_hote": "témoin créé par la sonde, propriétaire lu par lstat sur l'hôte (CL15-01)",
+   "memoire_du_bac_entier": {
+    "octets_max": 805306368,
+    "par": "groupe de contrôle memory, un par exécution"
+   },
+   "dev": "lecture seule (--remount-ro /dev), sauf /dev/shm borné",
+   "filtre_d_appels_systeme": {
+    "refuses_eperm": [
+     "add_key",
+     "bpf",
+     "io_uring_enter",
+     "io_uring_register",
+     "io_uring_setup",
+     "kcmp",
+     "keyctl",
+     "memfd_create",
+     "memfd_secret",
+     "msgctl",
+     "msgget",
+     "msgrcv",
+     "msgsnd",
+     "perf_event_open",
+     "pidfd_getfd",
+     "process_vm_readv",
+     "process_vm_writev",
+     "ptrace",
+     "request_key",
+     "semctl",
+     "semget",
+     "semop",
+     "semtimedop",
+     "shmat",
+     "shmctl",
+     "shmdt",
+     "shmget",
+     "userfaultfd"
+    ],
+    "x32": "refusés",
+    "autre_architecture": "processus tué"
+   },
+   "identite_dediee_controlee": "aucun autre processus de l'identité (départ et chaque exécution), compte sans interpréteur de commandes, un seul bac à la fois (verrou)",
+   "isolation": "--unshare-all --unshare-net --unshare-user --uid 65534 --gid 65534 --cap-drop ALL --new-session --die-with-parent --clearenv ; /usr en lecture seule, racine remontée en lecture seule ; /proc/sys en lecture seule ; --disable-userns ; /dev/shm borné, /dev en lecture seule ; --seccomp (filtre d'appels système) ; mémoire du bac entier bornée (groupe de contrôle) ; dossier de travail neuf seul en écriture ; tranche en lecture seule ; lancé sous un utilisateur dédié sans privilège de l'hôte",
+   "memoire_bac_min_mo": 768,
+   "version_etage": "tests_de_mort_v3 (v52b, CL16-01)",
+   "sonde": "bwrap présent ; sonde OK ; connexion réseau refusée (réseau isolé) ; écriture hors du dossier de travail refusée; aucune capacité, pas de superutilisateur (ni sur l'hôte : témoin d'identité lu par le noyau), remontage en écriture refusé, /proc/sys en lecture seule, espaces d'utilisateurs imbriqués refusés, /dev/shm borné, /dev en lecture seule, filtre d'appels système actif, mémoire du bac entier bornée (groupe de contrôle), borne de processus tenue",
+   "demande": "reel"
+  }
+ }
+}

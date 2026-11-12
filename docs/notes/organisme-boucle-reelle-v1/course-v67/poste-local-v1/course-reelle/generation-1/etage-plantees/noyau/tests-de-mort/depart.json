@@ -1,0 +1,123 @@
+{
+  "reglages": {
+    "bac_a_sable": {
+      "borne_de_processus_effective": true,
+      "bwrap": "/usr/bin/bwrap",
+      "delai_s": 60.0,
+      "descripteurs_max": 512,
+      "dev": "lecture seule (--remount-ro /dev), sauf /dev/shm borné",
+      "dev_shm_octets_max": 33554432,
+      "dossier_de_travail": {
+        "entrees_max": 2000,
+        "hors_de_la_sortie": true,
+        "neuf_par_execution": true,
+        "octets_max": 268435456,
+        "octets_max_par_fichier": 52428800,
+        "racine": "/tmp/bac-boucle-reelle-v67-27h7z9sc/bac",
+        "retire_apres_chaque_execution": true
+      },
+      "espaces_d_utilisateurs_imbriques": "interdits (--disable-userns)",
+      "factice": false,
+      "filtre_d_appels_systeme": {
+        "autre_architecture": "processus tué",
+        "refuses_eperm": [
+          "add_key",
+          "bpf",
+          "io_uring_enter",
+          "io_uring_register",
+          "io_uring_setup",
+          "kcmp",
+          "keyctl",
+          "memfd_create",
+          "memfd_secret",
+          "msgctl",
+          "msgget",
+          "msgrcv",
+          "msgsnd",
+          "perf_event_open",
+          "pidfd_getfd",
+          "process_vm_readv",
+          "process_vm_writev",
+          "ptrace",
+          "request_key",
+          "semctl",
+          "semget",
+          "semop",
+          "semtimedop",
+          "shmat",
+          "shmctl",
+          "shmdt",
+          "shmget",
+          "userfaultfd"
+        ],
+        "x32": "refusés"
+      },
+      "identite_dediee_controlee": "aucun autre processus de l'identité (départ et chaque exécution), compte sans interpréteur de commandes, un seul bac à la fois (verrou)",
+      "identite_du_script_sur_l_hote": {
+        "lance_par": "setpriv --reuid --regid --clear-groups --no-new-privs",
+        "utilisateur_dedie": {
+          "gid": 64097,
+          "nom": null,
+          "uid": 64097
+        }
+      },
+      "identite_lue_sur_l_hote": "témoin créé par la sonde, propriétaire lu par lstat sur l'hôte (CL15-01)",
+      "isolation": "--unshare-all --unshare-net --unshare-user --uid 65534 --gid 65534 --cap-drop ALL --new-session --die-with-parent --clearenv ; /usr en lecture seule, racine remontée en lecture seule ; /proc/sys en lecture seule ; --disable-userns ; /dev/shm borné, /dev en lecture seule ; --seccomp (filtre d'appels système) ; mémoire du bac entier bornée (groupe de contrôle) ; dossier de travail neuf seul en écriture ; tranche en lecture seule ; lancé sous un utilisateur dédié sans privilège de l'hôte",
+      "memoire_bac_min_mo": 768,
+      "memoire_du_bac_entier": {
+        "octets_max": 805306368,
+        "par": "groupe de contrôle memory, un par exécution"
+      },
+      "memoire_mo": 768,
+      "nom": "bwrap",
+      "processus_max": 1024,
+      "python": "/usr/bin/python3",
+      "sonde": "bwrap présent ; sonde OK ; connexion réseau refusée (réseau isolé) ; écriture hors du dossier de travail refusée; aucune capacité, pas de superutilisateur (ni sur l'hôte : témoin d'identité lu par le noyau), remontage en écriture refusé, /proc/sys en lecture seule, espaces d'utilisateurs imbriqués refusés, /dev/shm borné, /dev en lecture seule, filtre d'appels système actif, mémoire du bac entier bornée (groupe de contrôle), borne de processus tenue",
+      "temps_processeur_s": 65,
+      "version_du_module": 2,
+      "version_etage": "tests_de_mort_v3 (v52b, CL16-01)"
+    },
+    "dossier_ferme": null,
+    "experimentateur": {
+      "etiquette": "experimentateur-kimi",
+      "externe": false,
+      "modele": "kimi-k3.1-pro"
+    },
+    "lecteur": {
+      "etiquette": "verificateur-argon",
+      "meme_modele_que_l_experimentateur": false,
+      "modele": "gemini-4-argon"
+    },
+    "nombre_demande": 3,
+    "quotas": {
+      "budget_lecteur_usd": 0.1,
+      "budget_test_usd": 0.8,
+      "delai_execution_s": 120.0,
+      "executions_par_fiche": 3,
+      "memoire_mo": 768,
+      "taille_max_servie_par_fiche": 200000,
+      "tours_max_par_fiche": 12
+    },
+    "tranche": {
+      "fichiers": [
+        {
+          "chemin": "episodes.csv",
+          "pages": 1,
+          "sha256": "14c2d8d1970e9ed68b1a41ed08354c119a758a91e41c98d40b5aa9fc1517de14",
+          "taille_caracteres": 10618
+        },
+        {
+          "chemin": "evaluateur_lois_v62.py",
+          "pages": 1,
+          "sha256": "26613fe72da7f049d5dd076aab51a3808221bf52686b9d0258a201c8b38b8632",
+          "taille_caracteres": 4644
+        }
+      ],
+      "index_sha256": "c50b1c756fbe42b16bd9880ce3614ed5143dd9342f94afbbba4cc210b8bf97e1",
+      "pages_total": 2,
+      "racine": "tranche"
+    }
+  },
+  "regle": "étage de tests de mort (R-776, option a ; v48) avec le verdict calculé par le noyau (R-1057, v57b) : résultat exploratoire ; préenregistrement court scellé avant toute session (R1), bloc statistique (fichier, colonne, statistique) exigé ; classement figé avant l'étage et vérifié après (N-053 : aucune sélection sur le verdict) ; verdict calculé par le noyau sur le fichier brut que nomme le préenregistrement, à la dernière exécution réussie, scellé avant la session du lecteur ; tout incident de la fiche → non concluant ; chiffre imprimé, lignes CALCUL: et lecteur neuf consignés comme témoins, jamais décisifs ; ordre des verdicts : non concluant < éliminée < survit ; jamais servi aux juges de la même course ; matériau (comptes et étiquettes) pour la génération suivante",
+  "version_etage": "tests_de_mort_v5 (v57b, R-1057 : verdict du noyau câblé dans l'étage)"
+}

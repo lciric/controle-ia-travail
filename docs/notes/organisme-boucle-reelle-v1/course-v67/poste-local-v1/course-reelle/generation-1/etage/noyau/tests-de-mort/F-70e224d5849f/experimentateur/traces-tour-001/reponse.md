@@ -1,0 +1,3 @@
+```json
+{"experience":[{"executer":{"script":"import json, runpy\nLOI = '{\"composantes\":[{\"biais\":[0.0,1.2,0.2],\"poids\":[[0.0,0.0],[-1.6,2.4],[0.4,-3.0]],\"type\":\"softmax\"},{\"probas\":[0.3,0.4,0.3],\"type\":\"fixe\"}],\"poids\":[0.92,0.08],\"type\":\"melange\"}'\nev = runpy.run_path('tranche/evaluateur_lois_v62.py')\nev['ecrire_gains'](json.loads(LOI), 'tranche/episodes.csv', 'gains.csv')\n"}}]}
+```

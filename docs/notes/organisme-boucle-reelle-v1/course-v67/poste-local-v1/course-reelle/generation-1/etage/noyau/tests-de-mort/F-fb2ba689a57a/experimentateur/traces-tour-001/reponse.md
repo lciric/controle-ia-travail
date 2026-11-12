@@ -1,0 +1,3 @@
+```json
+{"experience":[{"executer":{"script":"import csv\nimport json\nimport runpy\n\nLOI = '{\"biais\":[0.0,0.6,-0.35],\"poids\":[[0.0,0.0],[-0.835,1.1],[-0.242,-2.2]],\"type\":\"softmax\"}'\nev = runpy.run_path('tranche/evaluateur_lois_v62.py')\nev['ecrire_gains'](json.loads(LOI), 'tranche/episodes.csv', 'gains.csv')\n\nwith open('gains.csv', encoding='utf-8', newline='') as fichier:\n    gains = [float(ligne['gain']) for ligne in csv.DictReader(fichier) if ligne['gain'] != '']\nprint('RESULTAT: ' + repr(sum(gains) / len(gains)))"}}]}
+```
