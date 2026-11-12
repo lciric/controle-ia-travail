@@ -1,0 +1,19 @@
+........................................................................ [ 48%]
+...................................F.................................... [ 97%]
+...                                                                      [100%]
+=================================== FAILURES ===================================
+________________________ test_depense_sain_sous_plafond ________________________
+
+    def test_depense_sain_sous_plafond():
+        r = run_dep(json.dumps({"dph_total": 2.0, "inet_down_billed": 20, "inet_down_cost": 0.026}))
+>       assert r.returncode == 0 and "dépense 2.52 USD" in r.stdout, r.stdout
+E       AssertionError: dépense 4.00 USD (antérieure 0.00 ; calcul 2.00 à 2.0000 USD/h sur 3600 s ; téléchargement 2.00, descente 0.00 Go (relevés en Kio)) ; projetée au prochain relevé 4.07 USD ; plafond 80 USD ; téléchargement non relevé (montée) : majorant 2.00 USD pris
+E         
+E       assert (0 == 0 and 'dépense 2.52 USD' in 'dépense 4.00 USD (antérieure 0.00 ; calcul 2.00 à 2.0000 USD/h sur 3600 s ; téléchargement 2.00, descente 0.00 Go (re... projetée au prochain relevé 4.07 USD ; plafond 80 USD ; téléchargement non relevé (montée) : majorant 2.00 USD pris\n')
+E        +  where 0 = CompletedProcess(args=['/tmp/claude-0/-home-user-controle-ia-travail/d9ee6091-e75a-5f52-8473-9583438f59bd/scratchpad/a... prochain relevé 4.07 USD ; plafond 80 USD ; téléchargement non relevé (montée) : majorant 2.00 USD pris\n', stderr='').returncode
+E        +  and   'dépense 4.00 USD (antérieure 0.00 ; calcul 2.00 à 2.0000 USD/h sur 3600 s ; téléchargement 2.00, descente 0.00 Go (re... projetée au prochain relevé 4.07 USD ; plafond 80 USD ; téléchargement non relevé (montée) : majorant 2.00 USD pris\n' = CompletedProcess(args=['/tmp/claude-0/-home-user-controle-ia-travail/d9ee6091-e75a-5f52-8473-9583438f59bd/scratchpad/a... prochain relevé 4.07 USD ; plafond 80 USD ; téléchargement non relevé (montée) : majorant 2.00 USD pris\n', stderr='').stdout
+
+essais_module_ecart2.py:436: AssertionError
+=========================== short test summary info ============================
+FAILED essais_module_ecart2.py::test_depense_sain_sous_plafond - AssertionErr...
+1 failed, 146 passed in 5.12s

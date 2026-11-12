@@ -1,0 +1,49 @@
+# P3-bis, écart 2, D1 : sources de l'unité du téléchargement (lignes citées), v1
+# relevé le 2026-11-12T21:03:50Z (date -u) par le développeur de l'écart 2 ; copies dans son bac à sable (non versées : code et pages de tiers),
+# citées par leur empreinte ; aucune exécution du client, aucun appel à l'interface de Vast, aucune clé.
+
+## 1. Client vastai publié sur PyPI (roues téléchargées par « pip download vastai==<version> --no-deps », extraites sans installation)
+- vastai-1.8.3-py3-none-any.whl : 8c50b291dd92feecc4e0a7eb57b365afe6f9ab719c4d6b4f681d0af367757010
+  vastai/cli/commands/offers.py (73b9b6dfc2d7f0d678caa1d21ea20e63ad8d22339cca4d31c9c6241b90801c48) :
+    l. 107 :             inet_down:              float     internet download speed in Mb/s
+    l. 108 :             inet_down_cost:         float     internet download bandwidth cost in $/GB
+    l. 109 :             inet_up:                float     internet upload speed in Mb/s
+    l. 110 :             inet_up_cost:           float     internet upload bandwidth cost in $/GB
+  vastai/cli/display.py (9a9772f09672d2b9be7b3228898056d536c1ca83b3e7bdef28c365e5f99d99c9) :
+    l. 272 :     ("listed_inet_up_cost",   "netu_$/TB", "{:0.2f}", lambda x: x * 1024, True),
+    l. 273 :     ("listed_inet_down_cost", "netd_$/TB", "{:0.2f}", lambda x: x * 1024, True),
+  recherche de « inet_down_billed » et « inet_up_billed » dans tout le paquet extrait : 0 fichier ; le mot « billed » n'y paraît que dans billed_expected, billed_verified (display.py) et deux phrases de price_increase.py
+- vastai-1.11.0-py3-none-any.whl : 678adde97b0747f8019b00bb8e4956915ea7220bf582d53c86e6c0083ae33197
+  vastai/cli/commands/offers.py (f884f85405096aa78ca085a64c9c2c680a34edace0b51d8c9371eb7667c9d6fb) :
+    l. 107 :             inet_down:              float     internet download speed in Mb/s
+    l. 108 :             inet_down_cost:         float     internet download bandwidth cost in $/GB
+    l. 109 :             inet_up:                float     internet upload speed in Mb/s
+    l. 110 :             inet_up_cost:           float     internet upload bandwidth cost in $/GB
+  vastai/cli/display.py (f7fa3c41387683862c85c2d5e6ebb605b12e2de7bef45d936133bce65bf5d6c5) :
+    l. 274 :     ("listed_inet_up_cost",   "netu_$/TB", "{:0.2f}", lambda x: x * 1024, True),
+    l. 275 :     ("listed_inet_down_cost", "netd_$/TB", "{:0.2f}", lambda x: x * 1024, True),
+  recherche de « inet_down_billed » et « inet_up_billed » dans tout le paquet extrait : 0 fichier ; le mot « billed » n'y paraît que dans billed_expected, billed_verified (display.py) et deux phrases de price_increase.py
+
+## 2. Documentation publique de l'interface (docs.vast.ai, pages Markdown lues le 2026-11-12 vers 20:35 UTC)
+- https://docs.vast.ai/guides/reference/billing.md : 1adb2d1bfaaa666321409ae816dd74af8668e5049e5eedaeda5540545c6ae607 ; « inet_*_billed » cité : 0 fois
+- https://docs.vast.ai/guides/instances/pricing.md : 589cd84f9b986177f573970d52c4ad472d68ab9e9ad2b76a62a7795e25b175f7 ; « inet_*_billed » cité : 0 fois
+- https://docs.vast.ai/guides/pricing.md : c1534e0c66745ada2da239aed38d2f9b5277a01ac29a8ee527c798beb98c52a7 ; « inet_*_billed » cité : 0 fois
+- https://docs.vast.ai/guides/reference/faq/billing.md : 248664e5012af388de67740aa1f9e8ec6363fcf462514e1369ade0a3c055a81f ; « inet_*_billed » cité : 0 fois
+- https://docs.vast.ai/api-reference/instances/show-instance.md : 3e8ec4b7e2baa30a2aa6df6e0755a3710eaa031adb38728b44ac38135e111f03 ; « inet_*_billed » cité : 0 fois
+- https://docs.vast.ai/api-reference/instances/show-instances.md : 5fc3f8d0ab90d34456bc6b3771f687383d0172731ae135c3fe17e7d4c1fdab10 ; « inet_*_billed » cité : 0 fois
+- https://docs.vast.ai/cli/reference/show-instance.md : caf375bccc0cd407cf22d9ee13ce2e43f200a318637afd141881e35e2003e967 ; « inet_*_billed » cité : 0 fois
+  guides/reference/billing.md, l. 76 et 80 :
+    * Bandwidth costs (in \$/TB)
+    You are charged bandwidth prices for every byte sent or received to or from the instance, regardless of what state it is in. The prices for base rental, storage, and bandwidth vary considerably from m
+  guides/instances/pricing.md, l. 70 :
+    Data transfer costs vary by host and include both upload and download traffic. Charges apply per byte transferred. Review bandwidth rates during instance selection as these can significantly impact to
+  guides/pricing.md, l. 30 :
+    * **Bandwidth**, per byte for both ingress and egress. Rates are host-set; check before picking data-intensive offers.
+
+## 3. Valeurs relevées par la session fille (branche etat/p3bis-fille-v1, tête 0f3ea945, etat-p3bis-fille.md, entrée 2026-11-12T15:06:43Z)
+    inet_down_billed vaut 6 564 085,76 (et inet_up_billed 289 792)
+    avec inet_down_cost en USD par Go (0,026)
+    dépense 182259.82 USD (calcul 0.09 à 1.0889 USD/h sur 294 s ; téléchargement 182259.73)
+
+## 4. Taille du dépôt cloné deux fois par l'amorce (borne basse physique)
+    clone local du dépôt de travail, « git count-objects -vH » : size-pack: 1.59 GiB

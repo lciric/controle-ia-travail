@@ -1,0 +1,202 @@
+début des essais : 2026-11-12T21:03:05Z
+script joué : verifications_p3bis_v2_ecart2_v1.py ba6deb689b92cab04f580165b955e2c69c9558a5e229f0f7f1ef170aba89107e
+script joué : controle_cinq_minutes_p3bis_v2_ecart2_v1.sh 6aa165e50d11ac1161686b79b1b690ff23e2528abf833b693f7874701f3cd66f
+script joué : surveiller_p3bis_v2_ecart2_v1.sh 555ee5223ccb1742d890b8cc2e6da74dba0a1a98d743ed1b3234eb67998c19db
+script joué : enchaineur_p3bis_v5.sh 34131eaf528f65077576a83a64fceb58100ab34027b043c79763a31669e063a0
+script joué : lancer_p3bis_v2_ecart1_v2.sh 2e294e5a64086806591cdd0724561d7a8d7fdaab464705c22f9b92687d6607fb
+script joué : verifications_p3bis_v2.py 1524df5f6432197fde4793a4fde56d4496407a107c88f5e294a6bc9716923054
+script joué : controle_cinq_minutes_p3bis_v2.sh 6f9213499687d655e290ab96c1ab8a1cdb9ecd373b1d6beecb7efda962f40864
+script joué : surveiller_p3bis_v2.sh d65421073068466a3aa6cc90ef00e6c76b15ea7b3e61e254c1dbafad020afe9b
+script joué : essais_ecart2_p3bis_v1.sh e9629573af24dcfeb832373b0a398f48347bd2f4b13d45173807c1048ddaa6d3
+=== D1 : dépense de téléchargement (module commun d'écart) ===
+D1-01-temoin-origine : module d'origine sur les valeurs de la fille : faux positif reproduit (code 3 ; dépense 182258.00 USD (antérieure 0.00 ; calcul 0.09 à 1.…) : CONFORME
+D1-02-sain-valeurs-fille : module d'écart sur les valeurs de la fille : dépense plausible, pas d'arrêt (code 0 ; dépense 0.28 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 0.19, descente 6.72 Go, montée 0.30 Go (relevés en Kio)) ; projetée au prochain relevé 0.31 USD ; plafond 80 USD) : CONFORME
+D1-03-telechargement-excessif : 3,3 × 10^9 Kio (3 379 Go) à 0,026 USD/Go : arrêt, code 3 (dépense 87.96 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 87.87, descente 3379.20 Go, montée 0.30 Go (relevés en Kio)) ; projetée au prochain relevé 88.00 USD ; plafond 80 USD) : CONFORME
+D1-04-excessif-prix-max : 1,6 × 10^9 Kio (1 638 Go) au prix plafond du filtre, 0,05 USD/Go : arrêt, code 3 (dépense 84.01 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 83.92, descente 1638.40 Go (relevés en Kio)) ; projetée au prochain relevé 84.05 USD ; plafond 80 USD ; téléchargement non relevé (montée) : majorant 2.00 USD pris) : CONFORME
+D1-05-seuil-sous : antérieure 79,60 : projetée 79,91, pas d'arrêt (code 0) : CONFORME
+D1-06-seuil-dessus : antérieure 79,70 : les 0,19 USD de téléchargement font passer le plafond, arrêt (code 3) : CONFORME
+D1-07-champs-absents : champs absents : majorant 2,00 USD pris et écrit (dépense 2.09 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 2.00) ; projetée au prochain relevé 2.13 USD ; plafond 80 USD ; téléchargement non relevé (descente, montée) : majorant 2.00 USD pris) : CONFORME
+D1-08-releve-texte : relevé de descente en texte : majorant ajouté à la montée relevée (dépense 2.10 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 2.01, montée 0.30 Go (relevés en Kio)) ; projetée au prochain relevé 2.14 USD ; plafond 80 USD ; téléchargement non relevé (descente) : majorant 2.00 USD pris) : CONFORME
+D1-09-prix-negatif : prix au Go négatif : majorant (dépense 2.09 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 2.00) ; projetée au prochain relevé 2.13 USD ; plafond 80 USD ; téléchargement non relevé (descente, montée) : majorant 2.00 USD pris) : CONFORME
+D1-10-releve-booleen : relevé booléen : majorant (dépense 2.09 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 2.00) ; projetée au prochain relevé 2.13 USD ; plafond 80 USD ; téléchargement non relevé (descente, montée) : majorant 2.00 USD pris) : CONFORME
+D1-11-montee-illisible : montée illisible : descente relevée plus majorant, jamais zéro en silence (dépense 2.26 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 2.17, descente 6.72 Go (relevés en Kio)) ; projetée au prochain relevé 2.30 USD ; plafond 80 USD ; téléchargement non relevé (montée) : majorant 2.00 USD pris) : CONFORME
+D1-12-temoin-montee-origine : témoin : l'origine compte la montée illisible pour zéro, sans rien écrire (dépense 170666.32 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 170666.23) ; projetée au prochain relevé 170666.36 USD ; plafond 80 USD) : CONFORME
+D1-13-reponse-illisible : réponse non JSON : bornes de prix et de téléchargement prises, écrites (dépense 2.17 USD (antérieure 0.00 ; calcul 0.17 à 2.1000 USD/h sur 294 s ; téléchargement 2.00) ; projetée au prochain relevé 2.24 USD ; plafond 80 USD ; prix relu illisible : 2.10 USD/h pris (borne) ; téléchargement non relevé (descente, montée) : majorant 2.00 USD pris) : CONFORME
+D1-14-arguments-illisibles : arguments illisibles : code 1 (comme l'origine) : CONFORME
+D1-15-diff-du-module : arbre syntaxique égal à l'origine hors docstring, fonction « depense » et constantes OCTETS_PAR_* (blocs du diff : 1c1,18 48c65,66 105a124,127 429,436c451,462 441c467,468 ) : CONFORME
+=== D1 : surveillance d'écart ===
+S1-01-sain-valeurs-fille : code 0 (attendu 0), « FIN : AMORCE 2026-11-12T18:00:00Z : fin, code 0 ; instance 9 » : CONFORME
+    | FIN : AMORCE 2026-11-12T18:00:00Z : fin, code 0 ; instance 99999999 arrêtée par son identifiant (R10) ; état relu : actual_status=exited cur_state=stopped intended_sta
+S1-01b : valeurs de la fille à chaque relevé : aucun arrêt pour la dépense, fin normale seule ; un arrêt par l'identifiant ; dépense écrite à chaque tour : CONFORME
+S1-02-temoin-origine : code 0 (attendu 0), « DÉPENSE : dépense 182258.00 USD » : CONFORME
+    | DÉPENSE : dépense 182258.00 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 182257.91) ; projetée au prochain relevé 182258.04 USD ; 
+S1-02b : témoin : la surveillance d'origine arrête au premier relevé (faux positif de R-2446 reproduit) : CONFORME
+S1-03-excessif : code 0 (attendu 0), « DÉPENSE : dépense 87.96 USD » : CONFORME
+    | DÉPENSE : dépense 87.96 USD (antérieure 0.00 ; calcul 0.09 à 1.0900 USD/h sur 294 s ; téléchargement 87.87, descente 3379.20 Go, montée 0.30 Go (relevés en Kio)) 
+S1-03b : téléchargement réellement excessif : arrêt par l'identifiant, motif DÉPENSE (garde intacte) : CONFORME
+S1-04-champs-absents : code 0 (attendu 0), « FIN : AMORCE 2026-11-12T18:00:00Z : fin, code 0 » : CONFORME
+    | FIN : AMORCE 2026-11-12T18:00:00Z : fin, code 0 ; instance 99999999 arrêtée par son identifiant (R10) ; état relu : actual_status=exited cur_state=stopped intended_sta
+S1-04b : champs illisibles : majorant écrit à chaque relevé ; dépense antérieure passée comptée : CONFORME
+S1-05-module-ecart-absent : code 2 (attendu 2), « module commun d'écart » : CONFORME
+    | module commun d'écart /tmp/claude-0/-home-user-controle-ia-travail/d9ee6091-e75a-5f52-8473-9583438f59bd/scratchpad/agents/p3bis-ecart2/passages/final/h-sans-module/verif
+S1-05b : module d'écart absent : refus de départ, aucun appel à l'outil : CONFORME
+=== D2 : contrôle à cinq minutes d'écart (attente bornée) ===
+C2-01-sain-immediat : code 0 (attendu 0), « CONTRÔLE À CINQ MINUTES : CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-01b : un seul relevé (création + 181 s), aucun arrêt : CONFORME
+C2-02-lignes-a-200 : code 0 (attendu 0), « CONTRÔLE À CINQ MINUTES : CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-02-lignes-a-200b : lignes à + 200 s : conforme au relevé de la création + 211 s (2 relevés), aucun KO, aucun arrêt : CONFORME
+C2-03-lignes-a-400 : code 0 (attendu 0), « CONTRÔLE À CINQ MINUTES : CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-03-lignes-a-400b : lignes à + 400 s : conforme au relevé de la création + 421 s (9 relevés), aucun KO, aucun arrêt : CONFORME
+C2-04-lignes-a-890 : code 0 (attendu 0), « CONTRÔLE À CINQ MINUTES : CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-04-lignes-a-890b : lignes à + 890 s : conforme au relevé de la création + 900 s (25 relevés), aucun KO, aucun arrêt : CONFORME
+C2-05-lignes-a-910 : code 1 (attendu 1), « instance 99999999 arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 3 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-05b : lignes à + 910 s : KO à l'échéance exacte (création + 900 s), trois KO « à l'échéance », un arrêt par l'identifiant, ligne à consigner : CONFORME
+C2-06-jamais : code 1 (attendu 1), « 3 KO ; instance 99999999 arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 3 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-06b : lignes jamais écrites : KO seulement à l'échéance (+ 900 s), un arrêt : CONFORME
+C2-07-echec-a-100 : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-07b : ligne d'échec écrite à + 100 s : arrêt immédiat au premier relevé (+ 181 s) : CONFORME
+C2-08-echec-a-500 : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-08b : fin de l'amorce à + 505 s (après des attentes) : arrêt au relevé suivant (+ 511 s), pas à l'échéance : CONFORME
+C2-09-demarrage-lent : code 0 (attendu 0), « CONTRÔLE À CINQ MINUTES : CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-09b : état « loading » jusqu'à + 300 s : attente, puis conforme : CONFORME
+C2-10-etat-terminal : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-10b : état « exited » à + 400 s : signe d'échec, arrêt au relevé de + 421 s : CONFORME
+C2-11-journal-illisible-puis-lu : code 0 (attendu 0), « CONTRÔLE À CINQ MINUTES : CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-11b : journal illisible jusqu'à + 300 s : attente, conforme à + 301 s : CONFORME
+C2-12-journal-toujours-illisible : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-12b : journal toujours illisible : KO à l'échéance (l'origine : KO immédiat ; écart déclaré) : CONFORME
+C2-13-etat-toujours-illisible : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-13b : état toujours illisible : KO à l'échéance (l'origine : KO immédiat ; écart déclaré) : CONFORME
+C2-14-retard-sain : code 0 (attendu 0), « CONTRÔLE À CINQ MINUTES : CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-14b : commencé à + 1 000 s : un seul relevé, retard écrit, conforme : CONFORME
+C2-15-retard-ligne-absente : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 3 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-15b : commencé après l'échéance, lignes absentes : KO au seul relevé : CONFORME
+C2-16-trop-tot : code 2 (attendu 2), « trop tôt : création + 100 s » : CONFORME
+    | trop tôt : création + 100 s ; rejouer à la création + 180 s au moins
+C2-16b : avant + 180 s : refus, rien n'est écrit, aucun appel (inchangé) : CONFORME
+C2-17-commit-autre : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-17b : AMORCE d'un autre commit : arrêt immédiat : CONFORME
+C2-18-tests-autres : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-18b : « préenregistrement lu : 530 » à + 400 s : arrêt au relevé suivant : CONFORME
+C2-19-carte-autre : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-19b : carte A100 PCIE 40 Go : signe d'échec dès qu'elle est écrite : CONFORME
+C2-20-carte-sxm4-40go : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-21-prix-au-dessus-du-choisi : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-21-prix-au-dessus-du-choisib : signe d'échec de l'état : arrêt immédiat au premier relevé : CONFORME
+C2-22-prix-au-dessus-du-plafond : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 2 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-22-prix-au-dessus-du-plafondb : signe d'échec de l'état : arrêt immédiat au premier relevé : CONFORME
+C2-23-machine-autre : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-23-machine-autreb : signe d'échec de l'état : arrêt immédiat au premier relevé : CONFORME
+C2-24-etiquette-autre : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-24-etiquette-autreb : signe d'échec de l'état : arrêt immédiat au premier relevé : CONFORME
+C2-25-carte-relue-autre : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-25-carte-relue-autreb : signe d'échec de l'état : arrêt immédiat au premier relevé : CONFORME
+C2-26-label-absent : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-26b : étiquette absente : attente, KO à l'échéance : CONFORME
+C2-27-redemarrage : code 1 (attendu 1), « arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-27b : AMORCE répétée à + 300 s : redémarrage, arrêt au relevé suivant (+ 301 s) : CONFORME
+C2-28-arret-en-echec : code 1 (attendu 1), « ARRÊT DE L'INSTANCE 99999999 EN ÉCHEC » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 1 KO ; ARRÊT DE L'INSTANCE 99999999 EN ÉCHEC (code 1) : l'arrêter à la main par son identifiant (R10) ; nœud de Lazar
+C2-29-identifiant-autre : code 2 (attendu 2), « ce lanceur a créé 99999999 » : CONFORME
+    | identifiant : instance 99999997 : ce lanceur a créé 99999999 ; aucune autre n'est arrêtée ni détruite ici
+C2-29b : identifiant autre : aucun appel : CONFORME
+C2-30-jeton-masque : code 0 (attendu 0), « CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-30b : jeton masqué dans le journal gardé : CONFORME
+C2-V01-jetons-absents : refus de départ, code 2 (attendu 2) : CONFORME
+C2-V02-dossier-existant : refus de départ, code 2 (attendu 2) : CONFORME
+C2-V03-traces-incompletes : refus de départ, code 2 (attendu 2) : CONFORME
+C2-V04-usage : refus de départ, code 2 (attendu 2) : CONFORME
+C2-V05 : refus de départ : aucun appel à l'outil : CONFORME
+C2-X-p3bis_instance_v2.sh : « journal "début : ETUDE=$ETUDE MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRAN » présent dans le vrai script : CONFORME
+C2-X-p3bis_instance_v2.sh : « journal "préenregistrement lu : $ATTENDUS tests attendus ; » présent dans le vrai script : CONFORME
+C2-X-p3bis_instance_v2.sh : « journal "branche $BRANCHE poussée avant l'installation » présent dans le vrai script : CONFORME
+C2-X-p3bis_instance_v2.sh : « nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv » présent dans le vrai script : CONFORME
+C2-X-amorce_instance_p3bis_v2.sh : « echo "AMORCE $(date -u +%FT%TZ) : commit $COMMIT" » présent dans le vrai script : CONFORME
+C2-X-amorce_instance_p3bis_v2.sh : « echo "AMORCE $(date -u +%FT%TZ) : fin, code $code" » présent dans le vrai script : CONFORME
+C2-X-amorce_instance_p3bis_v2.sh : « echo "AMORCE : clonage impossible » présent dans le vrai script : CONFORME
+C2-X-amorce_instance_p3bis_v2.sh : « git -c credential.helper="$AIDE" clone -q "$DEPOT_URL" amorce-depot » présent dans le vrai script : CONFORME
+C2-X-p3bis_instance_v2.sh : « git -c credential.helper="$AIDE_GIT" clone -q "$DEPOT_URL" "$DEPOT" » présent dans le vrai script : CONFORME
+C2-X-ordre : ordre dans le script de l'instance : « début », second clonage, « branche poussée », carte (cause de D2) : CONFORME
+C2-T1-temoin-origine-290 : code 1 (attendu 1), « 3 KO ; instance 99999999 arrêtée par son identifiant (R10) » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : 3 KO ; instance 99999999 arrêtée par son identifiant (R10) ; nœud de Lazar
+C2-T2-meme-scenario-ecart : code 0 (attendu 0), « CONTRÔLE À CINQ MINUTES : CONFORME » : CONFORME
+    | CONTRÔLE À CINQ MINUTES : CONFORME
+C2-T2b : même scénario, contrôle d'écart : conforme à + 410 s, sans arrêt (défaut de R-2446 corrigé) : CONFORME
+C2-K1-constantes : constantes du contrôle d'écart : PRIX_MAX 2.10 et DELAI_MIN_S 180 (inchangés), ECHEANCE_S 900, PAS_S 30 : CONFORME
+C2-K2-preambule-et-arret : préambule (de « ETUDE=… » au dossier de sortie, hors message d'usage) et bloc d'arrêt égaux à l'origine, octet pour octet : CONFORME
+=== D3 : enchaîneur v5, de bout en bout sur appelants factices ===
+lignes changées dans la copie jouée de lancer_p3bis_v2.sh : 3 (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S)
+lignes changées dans la copie jouée de lancer_p3bis_v2_ecart1_v2.sh : 3 (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S)
+lignes changées dans la copie jouée de l'enchaîneur v5 : 1 (empreinte épinglée du lanceur : celle de sa copie jouée)
+commit de scellement factice : c98fe5d522ed54802751b32d016a9d83a6ae32e4
+E3-01-sain-horloge-simulee : enchaîneur v5 : code 0 (attendu 0) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-12T21:55:19Z ENCHAÎNEUR : fin ; lanceur 0 ; contrôle à cinq minutes 0 ; surveillance 0 ; suite par la session (récupération, destruction par l'identifiant se
+E3-01b : journal : jeton exporté depuis _2 (nom seul), codes du lanceur (0), du contrôle (0, conforme), de la surveillance (0, FIN), ligne de fin : CONFORME
+E3-01c : contrôle appelé à la création + 181 à 185 s ; conforme au premier relevé après les lignes de + 426 s : CONFORME
+E3-01d : surveillance d'écart : dépense antérieure passée (0,53), téléchargement de la fille compté 0,19 USD, aucun arrêt pour la dépense ; une création, un arrêt par l'identifiant (fin normale) : CONFORME
+E3-01e : appels à l'outil dans l'ordre du temps simulé (création, contrôle, surveillance) : CONFORME
+E3-02-echec-amorce : enchaîneur v5 : code 0 (attendu 0) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-12T21:08:26Z ENCHAÎNEUR : fin ; lanceur 0 ; contrôle à cinq minutes 1 ; surveillance 0 ; suite par la session (récupération, destruction par l'identifiant se
+E3-02b : échec d'amorce à + 250 s : contrôle en code 1 au relevé suivant, la surveillance suit quand même (R-2393) et arrête par l'identifiant : CONFORME
+E3-03-lanceur-code-3 : enchaîneur v5 : code 3 (attendu 3) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-12T21:03:53Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 3)
+E3-03b : lanceur en code 3 (crédit nul) : aucune création, ni contrôle ni surveillance, fin écrite : CONFORME
+E3-04-piece-modifiee : enchaîneur v5 : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | controle_cinq_minutes_p3bis_v2_ecart2_v1.sh : absent ou d'empreinte autre que l'épinglée (6aa165e50d11ac1161686b79b1b690ff23e2528abf833b693f7874701f3cd66f) : aucun appe
+E3-04b : contrôle d'écart modifié : refus avant tout appel (aucun dossier, aucun appel à l'outil) : CONFORME
+E3-05-depense-anterieure-illisible : dépense antérieure illisible : code 2, rien de créé : CONFORME
+E3-06-dossier-existant : dossier existant : code 2 (R12) : CONFORME
+E3-07 (horloge réelle, ≈ 3 min 30 s) : début 2026-11-12T21:03:54Z
+E3-07-sain-horloge-reelle : enchaîneur v5 : code 0 (attendu 0) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-12T21:07:20Z ENCHAÎNEUR : fin ; lanceur 0 ; contrôle à cinq minutes 0 ; surveillance 0 ; suite par la session (récupération, destruction par l'identifiant se
+E3-07b : horloge réelle : contrôle appelé à la création + 181 s, conforme ; surveillance jusqu'à FIN : CONFORME
+E3-07 : fin 2026-11-12T21:07:20Z
+=== R : bancs existants rejoués ===
+R-01-banc-module-origine : banc du module commun sur le module d'origine : 147 passed (canonique : 147 passed) : CONFORME
+lignes changées dans la copie re-pointée du banc du module : 2 (ICI, MODULE)
+R-02-banc-module-repointe : banc du module re-pointé sur le module d'écart : 1 failed, 146 passed ; seul échec attendu : test_depense_sain_sous_plafond (il encode l'ancienne unité : 20 × 0,026 = 0,52 USD) : CONFORME
+    | E       AssertionError: dépense 4.00 USD (antérieure 0.00 ; calcul 2.00 à 2.0000 USD/h sur 3600 s ; téléchargement 2.00, descente 0.00 Go (relevés en Kio)) ; projetée au prochain relevé 4.07 U
+    | E       assert (0 == 0 and 'dépense 2.52 USD' in 'dépense 4.00 USD (antérieure 0.00 ; calcul 2.00 à 2.0000 USD/h sur 3600 s ; téléchargement 2.00, descente 0.00 Go (re... projetée au prochain r
+R-03-banc-surveillance-origine : banc de la surveillance d'origine rejoué : lignes de verdict égales au journal canonique (seules diffèrent les lignes citées « | », secondes et chemins) : CONFORME
+lignes changées dans la copie re-pointée du banc de la surveillance : 2 (ICI, SURV)
+R-04-banc-surveillance-repointe : banc de la surveillance re-pointé sur la surveillance d'écart : 0 non conforme, lignes de verdict égales au canonique (hors lignes « script éprouvé », qui nomment la copie re-pointée) : CONFORME
+R-05-origine-egal-a-S-verifications_p3bis_v2.py : verifications_p3bis_v2.py du dossier égal à sa copie versée à S : CONFORME
+R-05-origine-egal-a-S-controle_cinq_minutes_p3bis_v2.sh : controle_cinq_minutes_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-05-origine-egal-a-S-surveiller_p3bis_v2.sh : surveiller_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-05-origine-egal-a-S-lancer_p3bis_v2.sh : lancer_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-05-origine-egal-a-S-essais_verifications_p3bis_v2.py : essais_verifications_p3bis_v2.py du dossier égal à sa copie versée à S : CONFORME
+R-05-origine-egal-a-S-essais_surveillance_p3bis_v2.sh : essais_surveillance_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-05-origine-egal-a-S-banc-surveillance-p3bis-v2.log : banc-surveillance-p3bis-v2.log du dossier égal à sa copie versée à S : CONFORME
+R-05-origine-egal-a-S-banc-verifications-p3bis-v2.log : banc-verifications-p3bis-v2.log du dossier égal à sa copie versée à S : CONFORME
+R-06-lanceur-ecart1 : lanceur d'écart 1 v2 inchangé (2e294e5a…), épinglé tel quel par l'enchaîneur v5 : CONFORME
+R-07-epingles-v5 : empreintes épinglées dans l'enchaîneur v5 égales aux pièces d'écart du dossier : CONFORME
+cas joués : 132
+fin des essais : 2026-11-12T21:07:57Z
+ESSAIS DE L'ÉCART 2 DE P3-BIS : CONFORMES

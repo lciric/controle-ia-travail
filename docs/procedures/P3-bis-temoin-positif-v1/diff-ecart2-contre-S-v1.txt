@@ -1,0 +1,406 @@
+# P3-bis, écart 2 : diff complet des trois pièces d'écart contre leurs originaux à S (8f8df8b2…), v1
+# produit le 2026-11-12T21:03:14Z (date -u) par « diff -u ORIGINE ÉCART », depuis le dossier de la chaîne de la branche prep/p3bis-ecart2-v1 ;
+# originaux égaux à leurs copies versées à S (essais R-05). L'enchaîneur v5 et le banc des essais sont neufs (sans origine au dépôt).
+
+######## verifications_p3bis_v2.py (1524df5f6432197fde4793a4fde56d4496407a107c88f5e294a6bc9716923054) -> verifications_p3bis_v2_ecart2_v1.py (ba6deb689b92cab04f580165b955e2c69c9558a5e229f0f7f1ef170aba89107e)
+--- verifications_p3bis_v2.py	2026-11-12 20:29:48.600764478 +0000
++++ verifications_p3bis_v2_ecart2_v1.py	2026-11-12 20:43:15.040812415 +0000
+@@ -1,4 +1,21 @@
+-"""Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `verifications_p3bis_v1.py`, gardé
++"""ÉCART 2 (R-2450 ; nœud R-2446 ; défaut D1 de la consigne `consigne-developpeur-p3bis-ecart2-v1.md`, `1fd50996…`) :
++module commun d'écart, v1, écrit le 2026-11-12 vers 20:43 UTC (heure relevée par `date -u`). Copie de
++`verifications_p3bis_v2.py` au commit S (`8f8df8b2…`, `1524df5f…`), qui reste dans ce dossier tel quel (R12) et que le
++lanceur d'écart compare toujours à S ; dont ne changent que cet en-tête, la description de « depense » ci-dessous, deux
++constantes neuves (OCTETS_PAR_UNITE_RELEVEE, OCTETS_PAR_GO_PRIX) et la fonction `depense` (téléchargement) :
++  - unité de `inet_down_billed` et `inet_up_billed` : non documentée (client `vastai` 1.8.3 et 1.11.0 publiés sur PyPI,
++    documentation publique de l'interface) ; interprétation la plus prudente parmi celles qui restent physiquement
++    plausibles : kilo-octets binaires (1 024 octets) ; prix `inet_down_cost` et `inet_up_cost` en USD par Go
++    (`vastai/cli/commands/offers.py` l. 108 et 110 des deux versions), Go pris décimal (10^9 octets), ce qui compte le
++    plus de Go ; d'où : USD = relevé × 1 024 / 10^9 × prix (rapport `rapport-developpeur-p3bis-ecart2-v1.md`, D1) ;
++    l'origine multipliait le relevé par le prix au Go sans conversion (faux positif de 182 259,73 USD, R-2446) ;
++  - aucune part du téléchargement n'est comptée zéro en silence : une paire (relevé, prix) illisible, à la descente ou à
++    la montée, ajoute le majorant de 2,00 USD, écrit (l'origine prenait le majorant à la place du tout si la descente
++    était illisible, et ignorait la montée illisible).
++Seule la sous-commande « depense » est jouée sous ce nom (surveillance d'écart `surveiller_p3bis_v2_ecart2_v1.sh`) ;
++les autres sous-commandes restent celles du module d'origine, appelé par son nom.
++
++Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `verifications_p3bis_v1.py`, gardé
+ tel quel (R12), noms de la chaîne en v2 ; configuration : `n_plancher` à 800 parmi les écarts permis ; preuves : scripts `_v2`.
+ 
+ Vérifications communes de la chaîne de session de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de
+@@ -45,7 +62,8 @@
+   depense CREATION MAINTENANT DPH_OFFRE ANTERIEURE INTERVALLE   (entrée : réponse de « show instance <id> --raw »)
+       dépense cumulée de la course : ANTERIEURE (tentatives et relances précédentes, USD) + prix × durée depuis la
+       création (le plus haut du prix relu et de celui de l'offre ; PRIX_MAX si le prix relu est illisible, écrit) +
+-      téléchargement relevé (MAJORANT_TELECHARGEMENT_USD si illisible, écrit). Code 3 si la dépense projetée au prochain
++      téléchargement relevé, descente et montée (relevé en Kio × 1 024 / 10^9 × prix au Go ; MAJORANT_TELECHARGEMENT_USD
++      ajouté, écrit, pour toute paire illisible ; écart 2, D1). Code 3 si la dépense projetée au prochain
+       relevé atteint PLAFOND_USD.
+   valeurs PREREG
+       valeurs de P3-bis citées par le texte (bloc des valeurs, point 6 (iv) du code ; texte aux espaces réduites, sans
+@@ -103,6 +121,10 @@
+ HEURES_CREDIT_AUTRES = 10
+ PLAFOND_USD = 80.0                       # dépense cumulée de la course, toutes tentatives et relances comprises
+ MAJORANT_TELECHARGEMENT_USD = 2.0        # devis : « ≤ 2,0 USD à 0,05 USD/Go » ; pris si le relevé est illisible
++# écart 2, D1 : unité de inet_*_billed non documentée ; kilo-octet binaire pris (interprétation prudente, physiquement
++# plausible) ; prix inet_*_cost en USD par Go (client vastai, offers.py l. 108 et 110), Go décimal pris (prudent)
++OCTETS_PAR_UNITE_RELEVEE = 1024
++OCTETS_PAR_GO_PRIX = 10 ** 9
+ ALERTE_SANS_PROGRES_S = 7200             # « l'absence de ligne PROGRES pendant deux heures donne une alerte »
+ ARRETEES_TOLEREES = ("58936096", "58936099", "58936100")   # constante du lanceur (consigne du lanceur, 2026-11-10)
+ DEPOT_URL = "https://github.com/lciric/controle-ia-travail.git"
+@@ -426,19 +448,24 @@
+     else:
+         prix = max(PRIX_MAX, po)
+         notes.append(f"prix relu illisible : {prix:.2f} USD/h pris (borne)")
+-    tel = None
+-    if all(nombre(d.get(k)) and d.get(k) >= 0 for k in ("inet_down_billed", "inet_down_cost")):
+-        tel = float(d["inet_down_billed"]) * float(d["inet_down_cost"])
+-        if all(nombre(d.get(k)) and d.get(k) >= 0 for k in ("inet_up_billed", "inet_up_cost")):
+-            tel += float(d["inet_up_billed"]) * float(d["inet_up_cost"])
+-    if tel is None:
+-        tel = MAJORANT_TELECHARGEMENT_USD
+-        notes.append(f"téléchargement non relevé : majorant {tel:.2f} USD pris")
++    # écart 2, D1 : relevé (Kio) × 1 024 / 10^9 = Go ; Go × prix (USD par Go) = USD ; chaque sens compté, ou majorant
++    tel, volumes, illisibles = 0.0, [], []
++    for sens, relev, cout in (("descente", "inet_down_billed", "inet_down_cost"), ("montée", "inet_up_billed", "inet_up_cost")):
++        if all(nombre(d.get(k)) and d.get(k) >= 0 for k in (relev, cout)):
++            go_ = float(d[relev]) * OCTETS_PAR_UNITE_RELEVEE / OCTETS_PAR_GO_PRIX
++            tel += go_ * float(d[cout])
++            volumes.append(f"{sens} {go_:.2f} Go")
++        else:
++            illisibles.append(sens)
++    if illisibles:
++        tel += MAJORANT_TELECHARGEMENT_USD
++        notes.append(f"téléchargement non relevé ({', '.join(illisibles)}) : majorant {MAJORANT_TELECHARGEMENT_USD:.2f} USD pris")
+     calcul = prix * (mt - cr) / 3600
+     total = an + calcul + tel
+     projete = total + prix * iv / 3600
+     ligne = (f"dépense {total:.2f} USD (antérieure {an:.2f} ; calcul {calcul:.2f} à {prix:.4f} USD/h sur {mt - cr} s ; "
+-             f"téléchargement {tel:.2f}) ; projetée au prochain relevé {projete:.2f} USD ; plafond {PLAFOND_USD:g} USD"
++             f"téléchargement {tel:.2f}" + (f", {', '.join(volumes)} (relevés en Kio)" if volumes else "")
++             + f") ; projetée au prochain relevé {projete:.2f} USD ; plafond {PLAFOND_USD:g} USD"
+              + ("" if not notes else " ; " + " ; ".join(notes)))
+     print(ligne)
+     sys.exit(3 if projete >= PLAFOND_USD else 0)
+
+######## surveiller_p3bis_v2.sh (d65421073068466a3aa6cc90ef00e6c76b15ea7b3e61e254c1dbafad020afe9b) -> surveiller_p3bis_v2_ecart2_v1.sh (555ee5223ccb1742d890b8cc2e6da74dba0a1a98d743ed1b3234eb67998c19db)
+--- surveiller_p3bis_v2.sh	2026-11-12 20:29:48.600764478 +0000
++++ surveiller_p3bis_v2_ecart2_v1.sh	2026-11-12 20:43:43.020814078 +0000
+@@ -1,4 +1,15 @@
+ #!/usr/bin/env bash
++# ÉCART 2 (R-2450 ; nœud R-2446 ; défaut D1 de la consigne `consigne-developpeur-p3bis-ecart2-v1.md`, `1fd50996…`) :
++# surveillance d'écart, v1, écrite le 2026-11-12 vers 20:45 UTC (heure relevée par `date -u`). Copie de
++# `surveiller_p3bis_v2.sh` au commit S (`8f8df8b2…`, `d6542107…`), qui reste dans ce dossier tel quel (R12) et que le
++# lanceur d'écart compare toujours à S ; dont ne changent que :
++#   (a) la dépense (motif DÉPENSE) est calculée par le module commun d'écart `verifications_p3bis_v2_ecart2_v1.py`
++#       (VERIF_DEPENSE, sous-commande « depense » seule : téléchargement relevé en Kio, converti en Go avant le prix au
++#       Go ; toute paire illisible ajoute le majorant de 2,00 USD, écrit) ; module absent : code 2 ;
++#   (b) toutes les autres sous-commandes (identifiant, etat, motif) restent celles du module d'origine
++#       `verifications_p3bis_v2.py`, égal à S ;
++#   (c) cet en-tête et l'usage sous le nom neuf.
++# Rien d'autre ne change (motifs, arrêts par identifiant, alerte, intervalle, codes).
+ # Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `surveiller_p3bis_v1.sh`, gardé
+ # tel quel (R12), noms de la chaîne en v2 ; aucun autre changement.
+ # Surveillance de l'instance de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1, depuis la session de pilotage, sans
+@@ -32,7 +43,7 @@
+ # Gardé de P3 : jetons exigés pour le masquage (R5) ; journal gardé comme dernier relevé seulement si l'appel a réussi ;
+ # relevé cumulatif AMORCE et PROGRES jamais tronqué (progres.txt) ; outil de location exigé sur le PATH.
+ #
+-#   surveiller_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dépense antérieure en USD> <dossier de sortie>
++#   surveiller_p3bis_v2_ecart2_v1.sh <identifiant> <dossier des traces du lancement> <dépense antérieure en USD> <dossier de sortie>
+ #
+ # Interroge l'état et le journal toutes les INTERVALLE secondes (120 par défaut, entier de 0 à 600). Sort en écrivant le
+ # motif sur sa dernière ligne : code 0 si l'instance est arrêtée par son identifiant (état relu écrit) ; code 1 si l'arrêt
+@@ -44,8 +55,9 @@
+ INTERVALLE=${INTERVALLE:-120}
+ H=$(dirname "$(realpath "$0")")
+ VERIF=$H/verifications_p3bis_v2.py
++VERIF_DEPENSE=$H/verifications_p3bis_v2_ecart2_v1.py   # écart 2, D1 : sous-commande « depense » seulement
+ [[ "$ID" =~ ^[0-9]+$ && -n "$T" && "$ANTERIEURE" =~ ^[0-9]+(\.[0-9]+)?$ && -n "$D" ]] \
+-    || { echo "usage : surveiller_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dépense antérieure en USD> <dossier neuf>"; exit 2; }
++    || { echo "usage : surveiller_p3bis_v2_ecart2_v1.sh <identifiant> <dossier des traces du lancement> <dépense antérieure en USD> <dossier neuf>"; exit 2; }
+ [[ "$INTERVALLE" =~ ^[0-9]+$ ]] && [ "$INTERVALLE" -le 600 ] || { echo "INTERVALLE : entier de 0 à 600 secondes"; exit 2; }
+ J_HF=${HF_TOKEN:-}; J_GH=${CONTROLE_IA_GITHUB_TOKEN:-}
+ [ "${#J_HF}" -ge 8 ] && [ "${#J_GH}" -ge 8 ] \
+@@ -54,6 +66,7 @@
+ [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
+ command -v vastai > /dev/null || { echo "outil de location introuvable sur le PATH : surveillance aveugle, arrêt"; exit 2; }
+ [ -f "$VERIF" ] || { echo "module commun $VERIF absent"; exit 2; }
++[ -f "$VERIF_DEPENSE" ] || { echo "module commun d'écart $VERIF_DEPENSE absent"; exit 2; }
+ L="$T/lancement.txt"
+ [ -f "$L" ] || { echo "traces du lancement illisibles ($L absent)"; exit 2; }
+ G=$(python3 -I "$VERIF" identifiant "$ID" "$L" 2>&1) || { echo "identifiant : $(printf '%s\n' "$G" | tail -1)"; exit 2; }
+@@ -130,7 +143,7 @@
+     esac
+     [ "$terminal" -ge 2 ] && arreter "ÉTAT TERMINAL" "$e"
+     c=0
+-    dep=$(python3 -I "$VERIF" depense "$CREATION" "$maintenant" "$CHOISIE" "$ANTERIEURE" "$INTERVALLE" < "$D/etat-tour.json") || c=$?
++    dep=$(python3 -I "$VERIF_DEPENSE" depense "$CREATION" "$maintenant" "$CHOISIE" "$ANTERIEURE" "$INTERVALLE" < "$D/etat-tour.json") || c=$?
+     echo "$(date -u +%FT%TZ) $dep" >> "$D/depenses.txt"
+     case "$c" in
+         0) ;;
+
+######## controle_cinq_minutes_p3bis_v2.sh (6f9213499687d655e290ab96c1ab8a1cdb9ecd373b1d6beecb7efda962f40864) -> controle_cinq_minutes_p3bis_v2_ecart2_v1.sh (6aa165e50d11ac1161686b79b1b690ff23e2528abf833b693f7874701f3cd66f)
+--- controle_cinq_minutes_p3bis_v2.sh	2026-11-12 20:29:48.593981054 +0000
++++ controle_cinq_minutes_p3bis_v2_ecart2_v1.sh	2026-11-12 20:45:43.660821250 +0000
+@@ -1,4 +1,33 @@
+ #!/usr/bin/env bash
++# ÉCART 2 (R-2450 ; nœud R-2446 ; défaut D2 de la consigne `consigne-developpeur-p3bis-ecart2-v1.md`, `1fd50996…`) :
++# contrôle à cinq minutes d'écart, v1, écrit le 2026-11-12 vers 20:50 UTC (heure relevée par `date -u`). Copie de
++# `controle_cinq_minutes_p3bis_v2.sh` au commit S (`8f8df8b2…`, `6f921349…`), qui reste dans ce dossier tel quel (R12)
++# et que le lanceur d'écart compare toujours à S. Constat (R-2411, R-2446) : l'amorce clone le dépôt deux fois (amorce,
++# puis script de l'instance) ; « début » vient vers la création + 224 s, les lignes suivantes plus tard ; joué à + 181 s
++# puis à + 290 s, le contrôle d'origine a trouvé des lignes absentes sans aucun signe d'échec, et a arrêté l'instance.
++# Seul change le relevé, qui devient une ATTENTE BORNÉE :
++#   (a) un relevé (état et journal) toutes les PAS_S = 30 s, de l'appel (au plus tôt la création + 180 s, inchangé) à
++#       l'ÉCHÉANCE, la création + ECHEANCE_S = 900 s ; chaque contrôle d'origine rend OK, ATTENTE ou KO ;
++#   (b) KO immédiat (arrêt de l'instance par son identifiant, comme l'origine) sur tout SIGNE D'ÉCHEC, liste fermée :
++#       état ni « running » ni de démarrage (« created », « loading », « scheduling », absent) ; prix relu au-dessus du
++#       plafond ou de l'offre choisie ; machine ou hôte autres que ceux de l'offre ; carte autre qu'« A100 SXM4 » ;
++#       étiquette autre ; ligne « AMORCE : … » (échec de l'amorce) ; ligne « AMORCE <date> : commit » d'un autre commit,
++#       ou celle de S répétée (redémarrage) ; ligne « AMORCE <date> : fin, code N » (l'amorce a fini dans la fenêtre :
++#       le script de l'instance s'est arrêté, sa poussée faite) ; ligne « début : ETUDE=… » autre que l'attendue ; ligne
++#       « préenregistrement lu : … » d'un autre nombre de tests ; ligne de carte (« …, N MiB ») qui n'est pas une
++#       A100 SXM4 d'au moins 75 Gio ;
++#   (c) ATTENTE, jamais un KO avant l'échéance : état illisible ; état de démarrage ; prix, machine, hôte, carte ou
++#       étiquette absents ; journal illisible ; une ligne attendue pas encore écrite (AMORCE de S, « début »,
++#       « préenregistrement lu », carte, « branche … poussée avant l'installation ») ; au relevé de l'échéance, toute
++#       ATTENTE devient un KO (instance arrêtée par son identifiant) ;
++#   (d) contrôle appelé après l'échéance : un seul relevé, retard écrit (comme le retard écrit de l'origine) ;
++#   (e) journal relu par « logs --tail 20000 » (comme la surveillance) au lieu de 200 lignes : la fenêtre plus longue
++#       ne doit faire sortir aucune ligne du relevé ;
++#   (f) cet en-tête, l'usage sous le nom neuf ; sorties : controle-5min.txt (en-tête, une ligne par relevé, dernier
++#       relevé en entier, verdict), releves.txt, etat.txt et journal-5min.txt du dernier relevé.
++# Inchangés : préambule (usage, jetons, dossier neuf, outil, traces, garde de l'identifiant, lecture des traces, nombre
++# de tests du texte de S, refus avant la création + 180 s), contrôles eux-mêmes et leurs valeurs, masquage, arrêt par
++# l'identifiant après la garde du module commun d'origine, ligne à consigner, codes de sortie.
+ # Chaîne v2 (2026-11-11 ; règle (a') de P3-bis : R-2296, R-2320 ; consigne `consigne-code-p3bis-regle-a-v1.md`, `39300056…`) : copie de `controle_cinq_minutes_p3bis_v1.sh`, gardé
+ # tel quel (R12), noms de la chaîne en v2 ; aucun autre changement.
+ # Contrôle à cinq minutes de l'instance de P3-bis (témoin positif planté ; GO-2026-11-10-02, prolongation de GO-2026-11-02-29 jusqu'au 2026-11-23 : R-2077), v1. Texte : brouillon 9
+@@ -8,27 +37,28 @@
+ # p3bis-vN lues dans les traces du lancement ; sur tout KO, l'instance est ARRÊTÉE PAR SON IDENTIFIANT ici (garde du
+ # module commun : instance créée par le lanceur, hors ARRETEES_TOLEREES ; « vastai stop instance <id> », jamais par
+ # motif), l'arrêt écrit dans arrets-a-consigner.txt ; aucune destruction.
+-# À jouer entre la création + 180 s et la création + 300 s ; plus tôt : refus (code 2, rien n'est écrit) ; plus tard : le
+-# contrôle se fait et le retard est écrit. Aucun jeton n'est affiché (jetons exigés pour le masquage, R5).
++# (Origine : à jouer entre la création + 180 s et la création + 300 s ; écart 2 : voir (a) à (d) ci-dessus.) Plus tôt
++# que la création + 180 s : refus (code 2, rien n'est écrit). Aucun jeton n'est affiché (jetons exigés pour le masquage, R5).
+ # Ce qui est contrôlé : l'état de l'instance (en marche ; prix au plus PRIX_MAX et au plus celui de l'offre choisie ;
+-# machine et hôte de l'offre choisie ; carte A100 SXM4 ; étiquette) ; le journal (200 dernières lignes, masqué, gardé) :
++# machine et hôte de l'offre choisie ; carte A100 SXM4 ; étiquette) ; le journal (masqué, gardé) :
+ # une seule ligne « AMORCE <date> : commit <S> », aucune ligne « AMORCE : », « début : ETUDE=p3bis MODE=reel COMMIT=<S>
+ # BRANCHE=<branche> », « préenregistrement lu : <N> tests attendus » (N cité une seule fois par le texte de S), une carte
+ # A100 SXM4 d'au moins 75 Gio, « branche <branche> poussée avant l'installation ».
+ # Codes : 0 conforme ; 1 au moins un KO (instance arrêtée par son identifiant, ou arrêt en échec écrit) ; 2 usage, jetons
+ # absents, dossier de sortie existant (R12), traces du lancement incomplètes ou illisibles, identifiant autre que celui
+ # du lancement, outil de location introuvable, ou contrôle trop tôt.
+-# Usage : controle_cinq_minutes_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dossier de sortie neuf>
++# Usage : controle_cinq_minutes_p3bis_v2_ecart2_v1.sh <identifiant> <dossier des traces du lancement> <dossier de sortie neuf>
+ set -uo pipefail
+ PRIX_MAX=2.10                                    # plan, point 11 (même valeur que le module commun ; contrôles, constantes)
+ DELAI_MIN_S=180
+-DELAI_PREVU_S=300
++ECHEANCE_S=900                                   # écart 2 : échéance des relevés, création + 900 s (KO des attentes)
++PAS_S=30                                         # écart 2 : un relevé toutes les 30 s jusqu'à l'échéance
+ ETUDE=p3bis; MODE=reel
+ ID=${1:-}; T=${2:-}; D=${3:-}
+ H=$(dirname "$(realpath "$0")")
+ VERIF=$H/verifications_p3bis_v2.py
+ [[ "$ID" =~ ^[0-9]+$ && -n "$T" && -n "$D" ]] \
+-    || { echo "usage : controle_cinq_minutes_p3bis_v2.sh <identifiant> <dossier des traces du lancement> <dossier de sortie neuf>"; exit 2; }
++    || { echo "usage : controle_cinq_minutes_p3bis_v2_ecart2_v1.sh <identifiant> <dossier des traces du lancement> <dossier de sortie neuf>"; exit 2; }
+ J_HF=${HF_TOKEN:-}; J_GH=${CONTROLE_IA_GITHUB_TOKEN:-}
+ [ "${#J_HF}" -ge 8 ] && [ "${#J_GH}" -ge 8 ] \
+     || { echo "jetons HF_TOKEN et CONTROLE_IA_GITHUB_TOKEN absents ou trop courts : masquage impossible, contrôle refusé"; exit 2; }
+@@ -70,63 +100,140 @@
+         t = t.replace(v, "***")
+ sys.stdout.write(t)'
+ }
+-echo "contrôle à cinq minutes de $ID : création + $ecart s ; commit $S ; branche $BR ; offre choisie $OFFRE ($PRIX_CHOISI USD/h)" | tee "$R"
+-[ "$ecart" -le "$DELAI_PREVU_S" ] || echo "--  contrôle fait après la création + $DELAI_PREVU_S s prévue (retard écrit)" | tee -a "$R"
+-vastai show instance "$ID" --raw 2>&1 | masquer | python3 -c '
+-import json, math, sys
+-offre, prix_choisi, prix_max, chemin_offre, etiquette = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), sys.argv[4], sys.argv[5]
+-k = 0
+-def ok(m): print("OK  " + m)
+-def ko(m):
+-    global k; k += 1; print("KO  " + m)
+-t = sys.stdin.read()
++echo "contrôle à cinq minutes de $ID : création + $ecart s ; commit $S ; branche $BR ; offre choisie $OFFRE ($PRIX_CHOISI USD/h) ; écart 2 : un relevé toutes les $PAS_S s jusqu'à la création + $ECHEANCE_S s (échéance), KO immédiat sur tout signe d'échec" | tee "$R"
++[ "$ecart" -lt "$ECHEANCE_S" ] || echo "--  contrôle commencé après l'échéance (création + $ECHEANCE_S s) : un seul relevé (retard écrit)" | tee -a "$R"
++A_DEBUT="début : ETUDE=$ETUDE MODE=$MODE COMMIT=$S BRANCHE=$BR"
++A_PREREG="préenregistrement lu : $NT tests attendus"
++A_BRANCHE="branche $BR poussée avant l'installation"
++k=0
++while :; do
++    k=$((k + 1)); t=$(date -u +%s); off=$((t - CREATION)); final=0
++    [ "$off" -ge "$ECHEANCE_S" ] && final=1
++    vastai show instance "$ID" --raw 2>&1 | masquer > "$D/etat-releve.json"
++    rm -f "$D/journal-5min.txt" "$D/journal-erreur.txt"
++    if vastai logs "$ID" --tail 20000 > "$D/journal-brut.txt" 2>&1; then
++        masquer < "$D/journal-brut.txt" > "$D/journal-5min.txt"; J="$D/journal-5min.txt"
++    else
++        masquer < "$D/journal-brut.txt" | head -c 300 > "$D/journal-erreur.txt"; J=-
++    fi
++    rm -f "$D/journal-brut.txt"
++    c=0
++    python3 -I - "$D/etat-releve.json" "$J" "$T/offre.json" "$S" "$ETIQUETTE" "$PRIX_CHOISI" "$PRIX_MAX" "$OFFRE" "$final" \
++        "$A_DEBUT" "$A_PREREG" "$A_BRANCHE" > "$D/etat.txt" 2>&1 <<'PY' || c=$?
++import json, math, re, sys
++(etat_f, journal_f, offre_f, S, etiquette, prix_choisi, prix_max, offre, final,
++ a_debut, a_prereg, a_branche) = sys.argv[1:13]
++prix_choisi, prix_max, final = float(prix_choisi), float(prix_max), final == "1"
++L = []
++def ok(m): L.append(("OK  ", m))
++def att(m): L.append(("ATT ", m))
++def ko(m): L.append(("KO  ", m))
++def nombre(v): return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+ try:
+-    d = json.loads(t)
+-    assert isinstance(d, dict)
++    o = json.load(open(offre_f, encoding="utf-8"))
++    assert isinstance(o, dict)
+ except Exception:
+-    ko("état de l instance illisible (show instance) : " + t[:120].replace("\n", " ")); sys.exit(1)
++    o = {}
++t = open(etat_f, encoding="utf-8", errors="replace").read()
+ try:
+-    o = json.load(open(chemin_offre, encoding="utf-8"))
++    d = json.loads(t)
++    assert isinstance(d, dict)
+ except Exception:
+-    o = {}
+-champs = ("actual_status", "cur_state", "dph_total", "machine_id", "host_id", "gpu_name", "inet_down_cost", "label")
+-print("instance : " + " ; ".join(f"{c} {d.get(c)}" for c in champs))
+-etat, p, carte, lab = d.get("actual_status"), d.get("dph_total"), d.get("gpu_name"), d.get("label")
+-machine, hote, machine_o, hote_o = d.get("machine_id"), d.get("host_id"), o.get("machine_id"), o.get("host_id")
+-nombre = isinstance(p, (int, float)) and not isinstance(p, bool) and math.isfinite(p)
+-(ok if etat == "running" else ko)(f"instance en marche ({etat})")
+-(ok if nombre and p <= prix_max else ko)(f"prix relu {p} USD/h au plus {prix_max}")
+-(ok if nombre and p <= prix_choisi + 0.0005 else ko)(f"prix relu {p} USD/h au plus celui de l offre choisie ({prix_choisi})")
+-(ok if machine_o is not None and machine == machine_o and hote == hote_o else ko)(
+-    f"machine {machine} et hôte {hote} de l offre choisie {offre} ({machine_o}, {hote_o})")
+-(ok if carte == "A100 SXM4" else ko)(f"carte {carte} (A100 SXM4 attendue)")
+-(ok if lab == etiquette else ko)(f"étiquette {lab} ({etiquette} attendue)")
+-sys.exit(1 if k else 0)' "$OFFRE" "$PRIX_CHOISI" "$PRIX_MAX" "$T/offre.json" "$ETIQUETTE" > "$D/etat.txt" 2>&1
+-c=$?
++    d = None
++    att("état de l'instance illisible (show instance) : " + t[:120].replace("\n", " "))
++if d is not None:
++    champs = ("actual_status", "cur_state", "dph_total", "machine_id", "host_id", "gpu_name", "inet_down_cost", "label")
++    print("instance : " + " ; ".join(f"{c} {d.get(c)}" for c in champs))
++    etat, p, carte, lab = d.get("actual_status"), d.get("dph_total"), d.get("gpu_name"), d.get("label")
++    if etat == "running":
++        ok(f"instance en marche ({etat})")
++    elif etat in (None, "created", "loading", "scheduling"):
++        att(f"instance pas encore en marche ({etat})")
++    else:
++        ko(f"instance ni en marche ni en démarrage ({etat}) : signe d'échec")
++    if not nombre(p):
++        att(f"prix relu illisible ({p})")
++    else:
++        (ok if p <= prix_max else ko)(f"prix relu {p} USD/h au plus {prix_max}")
++        (ok if p <= prix_choisi + 0.0005 else ko)(f"prix relu {p} USD/h au plus celui de l'offre choisie ({prix_choisi})")
++    machine, hote, machine_o, hote_o = d.get("machine_id"), d.get("host_id"), o.get("machine_id"), o.get("host_id")
++    m = f"machine {machine} et hôte {hote} de l'offre choisie {offre} ({machine_o}, {hote_o})"
++    if machine_o is None:
++        ko(m + " : offre choisie illisible")
++    elif machine is None or (hote is None and hote_o is not None):
++        att(m)
++    else:
++        (ok if machine == machine_o and hote == hote_o else ko)(m)
++    (att if carte is None else ok if carte == "A100 SXM4" else ko)(f"carte {carte} (A100 SXM4 attendue)")
++    (att if lab is None else ok if lab == etiquette else ko)(f"étiquette {lab} ({etiquette} attendue)")
++if journal_f == "-":
++    att("journal de l'instance illisible (logs en échec ; 300 premiers caractères masqués dans journal-erreur.txt)")
++else:
++    J = open(journal_f, encoding="utf-8", errors="replace").read().split("\n")
++    a_s = [x for x in J if re.fullmatch(r"AMORCE [0-9]{4}-[0-9]{2}-[0-9]{2}T[^ ]* : commit " + re.escape(S), x)]
++    autres = [x for x in J if re.match(r"AMORCE [0-9]{4}-[0-9]{2}-[0-9]{2}T[^ ]* : commit ", x) and x not in a_s]
++    if autres:
++        ko(f"journal : ligne « AMORCE <date> : commit » d'un autre commit que {S} ({autres[0][:120]}) : signe d'échec")
++    elif len(a_s) > 1:
++        ko(f"journal : ligne « AMORCE <date> : commit {S} » répétée (redémarrage) : signe d'échec")
++    elif a_s:
++        ok(f"journal : une seule ligne « AMORCE <date> : commit {S} »")
++    else:
++        att(f"journal : ligne « AMORCE <date> : commit {S} » absente")
++    e = [x for x in J if x.startswith("AMORCE : ")]
++    if e:
++        ko(f"journal : échec de l'amorce ({e[0][:120]})")
++    else:
++        ok("journal : aucune ligne d'échec de l'amorce")
++    f = [x for x in J if re.fullmatch(r"AMORCE \S+ : fin, code [0-9]+", x)]
++    if f:
++        ko(f"journal : fin de l'amorce pendant le contrôle ({f[0][:120]}) : signe d'échec")
++    else:
++        ok("journal : aucune fin de l'amorce")
++    if any(a_debut in x for x in J):
++        ok(f"journal : « {a_debut} »")
++    elif any("début : ETUDE=" in x for x in J):
++        ko(f"journal : ligne « début : ETUDE=… » autre que « {a_debut} » : signe d'échec")
++    else:
++        att(f"journal : « {a_debut} » absent")
++    if any(a_prereg in x for x in J):
++        ok(f"journal : « {a_prereg} »")
++    elif any("préenregistrement lu : " in x for x in J):
++        ko(f"journal : ligne « préenregistrement lu : … » autre que « {a_prereg} » : signe d'échec")
++    else:
++        att(f"journal : « {a_prereg} » absent")
++    a100 = [x for x in J if re.search(r"A100.*SXM4.*, *[0-9]+ MiB *$", x)]
++    mib = [x for x in J if re.search(r", *[0-9]+ MiB *$", x)]
++    if a100:
++        n = int(re.search(r", *([0-9]+) MiB *$", a100[0]).group(1))
++        (ok if n >= 76800 else ko)(f"journal : carte « {a100[0][:120]} »" + ("" if n >= 76800 else " : moins de 75 Gio"))
++    elif mib:
++        ko(f"journal : carte autre qu'une A100 SXM4 (« {mib[0][:120]} ») : signe d'échec")
++    else:
++        att("journal : carte A100 SXM4 d'au moins 75 Gio absente")
++    if any(a_branche in x for x in J):
++        ok(f"journal : « {a_branche} »")
++    else:
++        att(f"journal : « {a_branche} » absent")
++if final:
++    L = [("KO  ", m + " (à l'échéance)") if q == "ATT " else (q, m) for q, m in L]
++for q, m in L:
++    print(q + m)
++sys.exit(1 if any(q == "KO  " for q, _ in L) else 3 if any(q == "ATT " for q, _ in L) else 0)
++PY
++    n_ok=$(grep -c '^OK  ' "$D/etat.txt"); n_att=$(grep -c '^ATT ' "$D/etat.txt"); n_ko=$(grep -c '^KO  ' "$D/etat.txt")
++    printf 'relevé %s (%s, création + %s s%s) : %s OK, %s en attente, %s KO ; code %s\n' "$k" "$(date -u +%FT%TZ)" "$off" \
++        "$( [ "$final" = 1 ] && echo ', échéance' )" "$n_ok" "$n_att" "$n_ko" "$c" | tee -a "$D/releves.txt" "$R"
++    [ "$c" = 3 ] && [ "$final" = 0 ] || break
++    reste=$((CREATION + ECHEANCE_S - $(date -u +%s))); p=$PAS_S
++    [ "$reste" -lt "$p" ] && p=$reste
++    [ "$p" -ge 1 ] || p=1
++    sleep "$p"
++done
+ cat "$D/etat.txt" >> "$R"; cat "$D/etat.txt"
+ n_ko=$(grep -c '^KO  ' "$D/etat.txt")
+ echec=$((echec + n_ko))
+-[ "$c" = 0 ] || [ "$n_ko" -gt 0 ] || ko "relecture de l'état impossible (code $c)"
+-if vastai logs "$ID" --tail 200 > "$D/journal-brut.txt" 2>&1; then
+-    masquer < "$D/journal-brut.txt" > "$D/journal-5min.txt"
+-    rm -f "$D/journal-brut.txt"
+-    J="$D/journal-5min.txt"
+-    [ "$(grep -cE "^AMORCE [0-9]{4}-[0-9]{2}-[0-9]{2}T[^ ]* : commit $S\$" "$J")" = 1 ] && ok "journal : une seule ligne « AMORCE <date> : commit $S »" \
+-        || ko "journal : ligne « AMORCE <date> : commit $S » absente ou répétée (redémarrage ?)"
+-    grep -qE '^AMORCE : ' "$J" && ko "journal : échec de l'amorce ($(grep -E '^AMORCE : ' "$J" | head -1 | cut -c1-120))" || ok "journal : aucune ligne d'échec de l'amorce"
+-    grep -qF "début : ETUDE=$ETUDE MODE=$MODE COMMIT=$S BRANCHE=$BR" "$J" && ok "journal : « début : ETUDE=$ETUDE MODE=$MODE COMMIT=$S BRANCHE=$BR »" \
+-        || ko "journal : « début : ETUDE=$ETUDE MODE=$MODE COMMIT=<S> BRANCHE=$BR » absent"
+-    grep -qF "préenregistrement lu : $NT tests attendus" "$J" && ok "journal : « préenregistrement lu : $NT tests attendus »" \
+-        || ko "journal : « préenregistrement lu : $NT tests attendus » absent"
+-    CARTE=$(grep -E 'A100.*SXM4.*, *[0-9]+ MiB *$' "$J" | head -1)
+-    MIB=$(printf '%s\n' "$CARTE" | sed -n 's/.*, *\([0-9][0-9]*\) MiB *$/\1/p')
+-    [ -n "$MIB" ] && [ "$MIB" -ge 76800 ] && ok "journal : carte « $CARTE »" || ko "journal : carte A100 SXM4 d'au moins 75 Gio absente (« $CARTE »)"
+-    grep -qF "branche $BR poussée avant l'installation" "$J" && ok "journal : « branche $BR poussée avant l'installation »" \
+-        || ko "journal : « branche $BR poussée avant l'installation » absent"
+-else
+-    masquer < "$D/journal-brut.txt" | head -c 300 > "$D/journal-erreur.txt"; rm -f "$D/journal-brut.txt"
+-    ko "journal de l'instance illisible (logs en échec ; 300 premiers caractères masqués dans journal-erreur.txt)"
+-fi
++[ "$c" = 0 ] || [ "$n_ko" -gt 0 ] || ko "relecture de l'état et du journal impossible (code $c)"
+ if [ "$echec" = 0 ]; then echo "CONTRÔLE À CINQ MINUTES : CONFORME" | tee -a "$R"; exit 0; fi
+ # arrêt de l'instance par son identifiant (R10), après la garde du module commun ; aucune destruction
+ ca=0
