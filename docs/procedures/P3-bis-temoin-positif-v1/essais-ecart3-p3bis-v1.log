@@ -1,0 +1,126 @@
+début des essais : 2026-11-13T08:03:54Z
+script joué : enchaineur_p3bis_v6.sh 1b49b701253b89fd42cad589097f700697dd38de0a178b1fadda168dbd7f521f
+script joué : lancer_p3bis_v2.sh 029bdb5c114a6166a21fa93724d71a2bf6158dc9686993424f6fbe8462352b08
+script joué : enchaineur_p3bis_v5.sh 34131eaf528f65077576a83a64fceb58100ab34027b043c79763a31669e063a0
+script joué : lancer_p3bis_v2_ecart1_v2.sh 2e294e5a64086806591cdd0724561d7a8d7fdaab464705c22f9b92687d6607fb
+script joué : controle_cinq_minutes_p3bis_v2_ecart2_v1.sh 6aa165e50d11ac1161686b79b1b690ff23e2528abf833b693f7874701f3cd66f
+script joué : surveiller_p3bis_v2_ecart2_v1.sh 555ee5223ccb1742d890b8cc2e6da74dba0a1a98d743ed1b3234eb67998c19db
+script joué : verifications_p3bis_v2_ecart2_v1.py ba6deb689b92cab04f580165b955e2c69c9558a5e229f0f7f1ef170aba89107e
+script joué : verifications_p3bis_v2.py 1524df5f6432197fde4793a4fde56d4496407a107c88f5e294a6bc9716923054
+script joué : essais_ecart3_p3bis_v1.sh 56659e9d498ade34b9d00578433f2eb0f00bea1184de25fd9aebb1e878d6bf81
+=== V : forme de l'enchaîneur v6 ===
+V-01-trois-lignes : hors commentaires, v6 ne diffère de v5 que par trois lignes : épingle du lanceur (lanceur d'origine, 029bdb5c114a6166a21fa93724d71a2bf6158dc9686993424f6fbe8462352b08), usage, étiquette du journal : CONFORME
+    | 3c3
+    | < LANCEUR=lancer_p3bis_v2_ecart1_v2.sh;             E_LANCEUR=2e294e5a64086806591cdd0724561d7a8d7fdaab464705c22f9b92687d6607fb
+    | ---
+    | > LANCEUR=lancer_p3bis_v2.sh;                       E_LANCEUR=029bdb5c114a6166a21fa93724d71a2bf6158dc9686993424f6fbe8462352b08
+    | 8c8
+    | < [ $# -eq 5 ] && [ -n "$2" ] || { echo "usage : enchaineur_p3bis_v5.sh S DOSSIER_NEUF EN_MARCHE N DEPENSE_ANTERIEURE_USD"; exit 2; }
+    | ---
+    | > [ $# -eq 5 ] && [ -n "$2" ] || { echo "usage : enchaineur_p3bis_v6.sh S DOSSIER_NEUF EN_MARCHE N DEPENSE_ANTERIEURE_USD"; exit 2; }
+    | 27c27
+    | < note "enchaîneur p3bis v5 $(sha256sum "$0" | cut -d' ' -f1) ; PID $$ ; S $S ; EN_MARCHE $EN_MARCHE ; N $N ; dépense antérieure $ANT USD ; dossier $D"
+    | ---
+    | > note "enchaîneur p3bis v6 $(sha256sum "$0" | cut -d' ' -f1) ; PID $$ ; S $S ; EN_MARCHE $EN_MARCHE ; N $N ; dépense antérieure $ANT USD ; dossier $D"
+V-02-epingle-lanceur-origine : épingle du lanceur de v6 égale au lanceur d'origine du dossier et à sa copie versée à S : CONFORME
+V-03-epingles-ecart2 : épingles du contrôle, de la surveillance et du module d'écart 2 : lignes égales à v5, égales aux pièces du dossier : CONFORME
+=== E : enchaîneur v6, de bout en bout sur appelants factices ===
+lignes changées dans la copie jouée de lancer_p3bis_v2.sh : 3 (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S)
+lignes changées dans la copie jouée de lancer_p3bis_v2_ecart1_v2.sh : 3 (DEPOT, DEPOT_URL, INTERVALLE_OFFRE_S)
+lignes changées dans la copie jouée de l'enchaîneur v6 : 1 (empreinte épinglée du lanceur d'origine : celle de sa copie jouée)
+lignes changées dans la copie jouée de l'enchaîneur v5 (témoin) : 1 (empreinte épinglée du lanceur d'écart 1 : celle de sa copie jouée)
+commit de scellement factice : f565a4aad66c7e9bf8fce582b8dbfa47b9cb8a0d
+branche factice calcul/p3bis-reel-v1 poussée au distant, égale à S (comme au 13 novembre : R-2490)
+E6-01-sain-relance-2 : enchaineur_p3bis_v6.sh : code 0 (attendu 0) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:55:29Z ENCHAÎNEUR : fin ; lanceur 0 ; contrôle à cinq minutes 0 ; surveillance 0 ; suite par la session (récupération, destruction par l'identifiant se
+E6-01b : journal : v6, épingle du lanceur d'origine vérifiée, lanceur d'origine appelé (0), contrôle d'écart 2 (0, conforme), surveillance d'écart 2 (0, FIN) : CONFORME
+E6-01c : lancement.txt : garde d'origine (crédit 50,00 ≥ minimum 20,00), aucune ligne d'écart 1, lanceur exécuté = lanceur d'origine, branche calcul/p3bis-reel-v2, étiquette p3bis-v2 : CONFORME
+E6-01d : une création (BRANCHE=calcul/p3bis-reel-v2, étiquette p3bis-v2), un arrêt par l'identifiant à la fin normale ; dépense antérieure passée (0,53) ; téléchargement compté selon l'écart 2 : CONFORME
+E6-01e : contrôle d'écart 2 appelé à la création + 181 à 185 s, conforme au premier relevé après + 426 s ; appels dans l'ordre du temps : CONFORME
+E6-02-credit-19-99 : enchaineur_p3bis_v6.sh : code 3 (attendu 3) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:01Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 3)
+E6-02-credit-19-99b : aucune création, ni contrôle ni surveillance ; lanceur : « crédit insuffisant : pas de création ; recharge demandée à Lazar » : CONFORME
+E6-02c : ligne officielle du crédit écrite (19,99 sous 20,00) : CONFORME
+E6-03-credit-20-exact : enchaineur_p3bis_v6.sh : code 0 (attendu 0) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:55:37Z ENCHAÎNEUR : fin ; lanceur 0 ; contrôle à cinq minutes 0 ; surveillance 0 ; suite par la session (récupération, destruction par l'identifiant se
+E6-03b : crédit égal au minimum, au centime : création (cas sain du seuil) : CONFORME
+E6-04-credit-7-05-creation-60432755 : enchaineur_p3bis_v6.sh : code 3 (attendu 3) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:10Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 3)
+E6-04-credit-7-05-creation-60432755b : aucune création, ni contrôle ni surveillance ; lanceur : « crédit insuffisant : pas de création ; recharge demandée à Lazar » : CONFORME
+E6-04T-temoin-v5-ecart1-credit-7-05 : enchaineur_p3bis_v5.sh : code 0 (attendu 0) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:55:46Z ENCHAÎNEUR : fin ; lanceur 0 ; contrôle à cinq minutes 0 ; surveillance 0 ; suite par la session (récupération, destruction par l'identifiant se
+E6-04Tb : TÉMOIN (R4) : l'enchaîneur v5 et le lanceur d'écart 1 créent à 7,05 USD (crédit de la création de 60432755, R-2491), là où v6 refuse : CONFORME
+E6-05-credit-nul : enchaineur_p3bis_v6.sh : code 3 (attendu 3) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:18Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 3)
+E6-05-credit-nulb : aucune création, ni contrôle ni surveillance ; lanceur : « crédit insuffisant : pas de création ; recharge demandée à Lazar » : CONFORME
+E6-05c-credit-negatif : enchaineur_p3bis_v6.sh : code 3 (attendu 3) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:19Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 3)
+E6-05c-credit-negatifb : aucune création, ni contrôle ni surveillance ; lanceur : « crédit insuffisant : pas de création ; recharge demandée à Lazar » : CONFORME
+E6-06-nommee-credit-33-41 : enchaineur_p3bis_v6.sh : code 3 (attendu 3) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:19Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 3)
+E6-06-nommee-credit-33-41b : aucune création, ni contrôle ni surveillance ; lanceur : « crédit insuffisant : pas de création ; recharge demandée à Lazar » : CONFORME
+E6-06c : minimum avec une instance nommée en marche à 1,342 USD/h : 33,42 USD : CONFORME
+E6-07-nommee-credit-33-42 : enchaineur_p3bis_v6.sh : code 0 (attendu 0) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:55:55Z ENCHAÎNEUR : fin ; lanceur 0 ; contrôle à cinq minutes 0 ; surveillance 0 ; suite par la session (récupération, destruction par l'identifiant se
+E6-07b : crédit égal au minimum avec l'instance nommée : création, chaîne jusqu'à FIN : CONFORME
+E6-08-instance-d-autrui-arretee : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:28Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 2)
+E6-08-instance-d-autrui-arreteeb : aucune création, ni contrôle ni surveillance ; lanceur : « instances : non tolérée(s), ou liste illisible » : CONFORME
+E6-09-outil-en-echec-reponse-lisible : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:28Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 2)
+E6-09-outil-en-echec-reponse-lisibleb : aucune création, ni contrôle ni surveillance ; lanceur : « crédit illisible (show user, code 1) : pas de création » : CONFORME
+E6-10-credit-illisible : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:29Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 2)
+E6-10-credit-illisibleb : aucune création, ni contrôle ni surveillance ; lanceur : « crédit illisible (show user, code 2) : pas de création » : CONFORME
+E6-11-lanceur-modifie : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | lancer_p3bis_v2.sh : absent ou d'empreinte autre que l'épinglée (af68e87245937548a1e923c82a4c45be0cd3e9a1de8218088aeb3306c51fa27b) : aucun appel
+E6-11b : lanceur d'origine modifié : refus de v6 avant tout appel (aucun dossier, aucun appel à l'outil) : CONFORME
+E6-12-epingle-contournee-lanceur-modifie : enchaineur_p3bis_v6_epingle_contournee.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:30Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 2)
+E6-12-epingle-contournee-lanceur-modifieb : aucune création, ni contrôle ni surveillance ; lanceur : « lancer_p3bis_v2.sh exécuté ≠ copie versée au commit S » : CONFORME
+E6-13-lanceur-absent : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | lancer_p3bis_v2.sh : absent ou d'empreinte autre que l'épinglée (af68e87245937548a1e923c82a4c45be0cd3e9a1de8218088aeb3306c51fa27b) : aucun appel
+E6-13b : lanceur d'origine absent : refus de v6 avant tout appel : CONFORME
+E6-13c : copie jouée du lanceur rétablie (empreinte d'avant les cas E6-11 à E6-13) : CONFORME
+E6-14-relance-2-sans-branche-v1 : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:30Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 2)
+E6-14-relance-2-sans-branche-v1b : aucune création, ni contrôle ni surveillance ; lanceur : « relance 2 : branche calcul/p3bis-reel-v1 absente du dépôt distant (code 2) ; une relance » : CONFORME
+E6-15-branche-v2-deja-presente : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:30Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 2)
+E6-15-branche-v2-deja-presenteb : aucune création, ni contrôle ni surveillance ; lanceur : « branche calcul/p3bis-reel-v2 : git ls-remote, code 0 (2 attendu : absente du dépôt dista » : CONFORME
+E6-16-tentative-1-branche-v1-presente : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:04:31Z ENCHAÎNEUR : fin sans contrôle ni surveillance (lanceur, code 2)
+E6-16-tentative-1-branche-v1-presenteb : aucune création, ni contrôle ni surveillance ; lanceur : « branche calcul/p3bis-reel-v1 : git ls-remote, code 0 (2 attendu : absente du dépôt dista » : CONFORME
+E6-17-echec-amorce : enchaineur_p3bis_v6.sh : code 0 (attendu 0) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | 2026-11-13T08:09:06Z ENCHAÎNEUR : fin ; lanceur 0 ; contrôle à cinq minutes 1 ; surveillance 0 ; suite par la session (récupération, destruction par l'identifiant se
+E6-17b : échec d'amorce à + 250 s : contrôle en code 1, la surveillance suit (R-2393) et arrête par l'identifiant : CONFORME
+E6-18-piece-ecart2-modifiee : enchaineur_p3bis_v6.sh : code 2 (attendu 2) ; aucune destruction ; aucun jeton écrit : CONFORME
+    | surveiller_p3bis_v2_ecart2_v1.sh : absent ou d'empreinte autre que l'épinglée (555ee5223ccb1742d890b8cc2e6da74dba0a1a98d743ed1b3234eb67998c19db) : aucun appel
+E6-18b : surveillance d'écart 2 modifiée : refus avant tout appel : CONFORME
+E6-19-depense-anterieure-illisible : dépense antérieure illisible : code 2, rien de créé : CONFORME
+E6-20-dossier-existant : dossier existant : code 2 (R12) : CONFORME
+E6-21-usage : trois arguments : usage, code 2 : CONFORME
+E6-22-creations : créations factices de tout le banc : 5 (E6-01, E6-03, E6-04T, E6-07, E6-17), toutes sur calcul/p3bis-reel-v2, étiquette p3bis-v2 : CONFORME
+=== R : bancs existants rejoués ===
+R-01-banc-lanceur-origine : banc du lanceur d'origine rejoué : 0 non conforme, lignes de verdict égales au journal canonique versé à S (hors lignes citées « | ») : CONFORME
+    lignes citées « | » qui diffèrent du canonique (commits et empreintes factices) : 2
+R-02-banc-ecart2 : banc de l'écart 2 rejoué (enchaîneur v5, contrôle, surveillance et module d'écart 2) : 132 cas, 0 non conforme, mêmes cas et mêmes verdicts que le journal versé : CONFORME
+R-03-origine-egal-a-S-lancer_p3bis_v2.sh : lancer_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-verifications_p3bis_v2.py : verifications_p3bis_v2.py du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-controles_avant_depense_p3bis_v2.sh : controles_avant_depense_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-surveiller_p3bis_v2.sh : surveiller_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-controle_cinq_minutes_p3bis_v2.sh : controle_cinq_minutes_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-recuperation_p3bis_v2.sh : recuperation_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-detruire_p3bis_v2.sh : detruire_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-sceller_p3bis_v2.sh : sceller_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-repetition_jouet_p3bis_v2.sh : repetition_jouet_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-repetition_finale_p3bis_v2.sh : repetition_finale_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-essais_verifications_p3bis_v2.py : essais_verifications_p3bis_v2.py du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-essais_lanceur_p3bis_v2.sh : essais_lanceur_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-essais_surveillance_p3bis_v2.sh : essais_surveillance_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-essais_controles_p3bis_v2.sh : essais_controles_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-03-origine-egal-a-S-essais_recuperation_p3bis_v2.sh : essais_recuperation_p3bis_v2.sh du dossier égal à sa copie versée à S : CONFORME
+R-04-pieces-inchangees : enchaîneur v5 (34131eaf…), lanceur d'écart 1 v2 (2e294e5a…) et pièces d'écart 2 (6aa165e5…, 555ee522…, ba6deb68…) inchangés : CONFORME
+cas joués : 71
+fin des essais : 2026-11-13T08:09:55Z
+ESSAIS DE L'ÉCART 3 DE P3-BIS : CONFORMES
