@@ -1,0 +1,186 @@
+{
+ "auteur_tiers": "Préparateur (Claude Opus 5.5), sous-agent de la session mère, 13 novembre 2026, version 2 : témoins vrai et jumeau réécrits (M9 de la contre-lecture 3aaf9981…) ; témoins faux repris de la v1 (748f391e…). Réserve : le préparateur est du modèle d'un proposeur et du juge opus-juge ; « tiers » vaut pour l'instance, pas pour le modèle.",
+ "temoins": [
+  {
+   "classe": "vrai",
+   "attendu": "eligible",
+   "note_max": {},
+   "fiche": {
+    "nom": "Estimateur de Chao des bassins non vus, validé contre l'oracle du monde planté",
+    "type": "question",
+    "enonce": "Les groupes de doublons d'une génération (calculés par l'orchestrateur, jamais par un modèle) sont des « espèces » observées ; le nombre de groupes vus exactement une fois (f1) et exactement deux fois (f2) donne, par l'estimateur de Chao, une borne inférieure du nombre de bassins encore non vus : f1² / (2 f2). Sur un monde planté, cette borne se compare au nombre réel de composantes plantées non couvertes, que l'oracle connaît. Question : l'estimateur suit-il le nombre réel de bassins manquants, ou les propositions des modèles violent-elles l'hypothèse d'échantillonnage qui le fonde, au point qu'il annonce l'épuisement alors que des bassins étroits restent ?",
+    "loi_predictive": {
+     "espace_instances": "mondes plantés de six à douze composantes, quarante graines scellées, une génération de propositions par monde, regroupement des doublons de l'orchestrateur",
+     "prediction": "la borne de Chao sous-estime le nombre de composantes non couvertes d'au moins 30 % sur les mondes où une composante a une masse inférieure à 0,05 ; sur les mondes sans composante étroite, l'écart reste sous 15 %",
+     "signe": "-",
+     "metrique": "écart relatif (borne de Chao − composantes non couvertes) / composantes non couvertes, par monde, lu une fois par l'oracle après la course ; médiane et intervalle par rééchantillonnage des graines"
+    },
+    "perte_traduction": "Un groupe de doublons n'est pas exactement un bassin d'idées : deux bassins peuvent se fondre dans un groupe, un bassin se scinder en deux ; l'estimateur suppose des tirages indépendants et une probabilité de capture homogène dans chaque bassin.",
+    "questions_servies": [
+     "Q1",
+     "Q3",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le monde planté donne le nombre exact de composantes et leur couverture : on peut éprouver un estimateur d'espèces non vues contre la vérité, ce qu'aucune course sur des tâches ouvertes ne permet.",
+     "incopiable_parce_que": "Il faut un monde écrit par un programme à graine scellée, un regroupement des doublons fait par programme et un oracle lu une seule fois ; sans eux, le nombre de bassins manquants est inconnu, quel que soit le calcul disponible."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "L'estimateur de Chao vient de l'écologie (richesse spécifique) ; son emploi pour dire combien de bassins d'idées restent à trouver, et son épreuve contre l'oracle d'un monde planté, sont la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Un compte des groupes de doublons vus une et deux fois, au manifeste de fin, et une lecture de l'oracle sur les composantes non couvertes."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "le calcul tient sur processeur à partir des sorties d'une course déjà jouée ; une course à monde planté par graine si elle n'existe pas."
+    },
+    "piege": "Compter comme espèces des groupes formés avec un seuil de distance réglé après coup rendrait l'estimateur circulaire ; le seuil du regroupement doit être scellé avant la course.",
+    "cosmetique_si": "Si l'écart ne dépend pas de la présence d'une composante étroite, l'estimateur ne dit rien des bassins étroits.",
+    "anteriorite": [
+     {
+      "reference": "Chao, A., « Nonparametric estimation of the number of classes in a population », Scandinavian Journal of Statistics, 1984",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "classe": "jumeau",
+   "attendu": "eligible",
+   "note_max": {},
+   "jumeau_de": "Estimateur de Chao des bassins non vus, validé contre l'oracle du monde planté",
+   "fiche": {
+    "nom": "Combien de bassins reste-t-il ? Borne des espèces non vues sur les groupes de doublons, éprouvée par l'oracle",
+    "type": "question",
+    "enonce": "Traitons chaque groupe de doublons d'une génération comme une espèce. Avec f1 groupes vus une seule fois et f2 groupes vus deux fois, la borne de Chao, f1² / (2 f2), estime par le bas combien de bassins n'ont pas encore été touchés. Le monde planté permet de la confronter au nombre réel de composantes que personne n'a couvertes : la borne annonce-t-elle à tort l'épuisement quand il reste des bassins étroits ?",
+    "loi_predictive": {
+     "espace_instances": "quarante mondes plantés à graine scellée par configuration, de six à douze composantes, une génération de propositions chacun",
+     "prediction": "sous-estimation d'au moins 30 % du nombre de composantes non couvertes quand une composante pèse moins de 0,05 ; moins de 15 % d'écart sans composante étroite",
+     "signe": "-",
+     "metrique": "écart relatif entre la borne et le nombre de composantes non couvertes lu par l'oracle après la course, médiane par configuration avec intervalle par rééchantillonnage"
+    },
+    "perte_traduction": "Groupes de doublons et bassins ne coïncident pas toujours ; l'hypothèse de captures indépendantes et homogènes n'est qu'approchée.",
+    "questions_servies": [
+     "Q3",
+     "Q1",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Seul un monde planté fournit le vrai nombre de bassins manquants contre lequel éprouver la borne.",
+     "incopiable_parce_que": "Sans monde à graine scellée, regroupement par programme et oracle, il n'existe pas de vérité de terrain sur les bassins non vus."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Un estimateur classique de richesse spécifique, transposé aux bassins d'idées et éprouvé contre l'oracle."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Compter les groupes vus une et deux fois au manifeste de fin ; lire l'oracle sur la couverture."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "sur processeur, à partir de sorties de course existantes."
+    },
+    "piege": "Un seuil de regroupement choisi après coup rend la mesure circulaire.",
+    "cosmetique_si": "Si l'écart ne bouge pas avec la présence d'une composante étroite.",
+    "anteriorite": [
+     {
+      "reference": "Chao, A., 1984, Scandinavian Journal of Statistics, estimation du nombre de classes",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "classe": "faux_falsifiabilite",
+   "attendu": "ineligible",
+   "note_max": {
+    "falsifiabilite": 1
+   },
+   "fiche": {
+    "nom": "Indice d'élégance profonde noté par les proposeurs eux-mêmes",
+    "type": "approche",
+    "enonce": "Demander à chaque proposeur d'attribuer à ses propres idées un indice d'élégance profonde, de 0 à 10, qui capte intuitivement la profondeur d'un bassin, puis garder les idées les mieux notées : les idées élégantes sont en général profondes, et l'organisme s'y dirigera naturellement.",
+    "loi_predictive": {
+     "espace_instances": "les idées de l'organisme en général",
+     "prediction": "les idées seront plus profondes et plus originales",
+     "signe": "+",
+     "metrique": "l'impression générale de profondeur qui se dégage des idées retenues"
+    },
+    "perte_traduction": "Presque rien : l'élégance se reconnaît quand on la voit.",
+    "questions_servies": [
+     "Q2",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "aucune",
+     "texte": "Aucun avantage propre : l'idée tient avec n'importe quelle interface de programmation de modèle.",
+     "incopiable_parce_que": ""
+    },
+    "originalite": {
+     "niveau": "occupee",
+     "texte": "L'auto-évaluation des sorties par le modèle qui les a produites est une pratique répandue."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Ajouter l'indice à la consigne des proposeurs et trier l'archive selon lui."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "un appel de plus par proposeur."
+    },
+    "piege": "Aucun piège particulier.",
+    "cosmetique_si": "Difficile à dire.",
+    "anteriorite": []
+   }
+  },
+  {
+   "classe": "faux_anteriorite",
+   "attendu": "ineligible",
+   "note_max": {
+    "originalite": 1
+   },
+   "fiche": {
+    "nom": "Montée de la température d'échantillonnage des proposeurs vers les bassins rares",
+    "type": "approche",
+    "enonce": "Idée inédite : augmenter la température d'échantillonnage des proposeurs, génération après génération, pour aplatir la loi de leurs propositions et faire tomber plus souvent des propositions dans les bassins de faible probabilité, puis laisser le juge statistique trier comme aujourd'hui.",
+    "loi_predictive": {
+     "espace_instances": "les cartes d'une génération de l'organisme à monde planté, à température 0,7 contre 1,3",
+     "prediction": "à température 1,3, la part des cartes qui tombent hors des trois bassins les plus fréquents augmente d'au moins 0,10",
+     "signe": "+",
+     "metrique": "part des cartes hors des trois groupes prédictifs les plus peuplés, comptés par le regroupement des doublons de l'orchestrateur"
+    },
+    "perte_traduction": "La température change la forme des cartes autant que leur idée de fond.",
+    "questions_servies": [
+     "Q2",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Un réglage simple, sans changement de l'organisme.",
+     "incopiable_parce_que": "C'est la première fois que la température est employée pour explorer des bassins d'idées."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Personne n'a encore proposé de jouer sur la température d'échantillonnage pour diversifier les idées d'un modèle de langue."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Un paramètre de température par génération dans l'appel des proposeurs."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "le même nombre d'appels qu'une génération ordinaire."
+    },
+    "piege": "Des cartes mal formées plus nombreuses à haute température, refusées par le gardien.",
+    "cosmetique_si": "Si la part hors des bassins fréquents ne monte pas.",
+    "anteriorite": []
+   }
+  }
+ ]
+}
