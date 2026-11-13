@@ -1,0 +1,117 @@
+{
+ "lanceur": "/home/user/controle-ia-travail/scripts/lancer_course_ideation_bassins_etroits_v2.py",
+ "essais": "/home/user/controle-ia-travail/tests/test_lancer_course_ideation_bassins_etroits_v2.py",
+ "mutants": [
+  {
+   "mutant": "base",
+   "garde": "aucune (contrôle de l'outil)",
+   "avant": null,
+   "apres": null,
+   "code_pytest": 0,
+   "bilan": "122 passed in 50.27s",
+   "essais_en_echec": [],
+   "issue": "contrôle : tous passés"
+  },
+  {
+   "mutant": "V1-pid-reutilise-tenu-pour-vivant",
+   "garde": "superviseur vivant : l'heure de départ du processus n'est plus comparée",
+   "avant": "    return bool(sup) and debut_processus(sup[\"pid\"]) is not None and debut_processus(sup[\"pid\"]) == sup[\"debut_proc\"]",
+   "apres": "    return bool(sup) and debut_processus(sup[\"pid\"]) is not None",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 51.22s",
+   "essais_en_echec": [
+    "test_m7_superviseur_vivant_pid_reutilise"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "V2-zombie-tenu-pour-vivant",
+   "garde": "un processus fini non récolté (zombie) compte pour vivant",
+   "avant": "    if len(champs) < 20 or champs[0] == \"Z\":",
+   "apres": "    if len(champs) < 20:",
+   "code_pytest": 0,
+   "bilan": "122 passed in 50.26s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "V3-seuil-sans-depense-a-1-usd",
+   "garde": "relance permise après une dépense relevée jusqu'à 1 USD",
+   "avant": "SEUIL_SANS_DEPENSE_USD = 1e-5 ",
+   "apres": "SEUIL_SANS_DEPENSE_USD = 1.0 ",
+   "code_pytest": 0,
+   "bilan": "122 passed in 48.48s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "V5-en-marche-de-la-seule-generation-demandee",
+   "garde": "un processus en marche ne retient que sa propre génération",
+   "avant": "                 if fin is None and superviseur_vivant(sup)]\n    if en_marche:",
+   "apres": "                 if fin is None and superviseur_vivant(sup) and run[\"generation\"] == g]\n    if en_marche:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 46.08s",
+   "essais_en_echec": [
+    "test_m7_en_marche_rien_ne_part"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "V10-bras-mort-non-compte",
+   "garde": "dépense : un bras mort sans fin propre n'est plus compté à son plafond",
+   "avant": "    manquants = max(len(morts) + len(vivants), len(run[\"bras\"]) - expliques)",
+   "apres": "    manquants = max(len(vivants), len(run[\"bras\"]) - expliques - len(morts))",
+   "code_pytest": 0,
+   "bilan": "122 passed in 48.52s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "V14-sans-session-neuve",
+   "garde": "le superviseur n'est plus détaché dans une session de processus neuve",
+   "avant": "                             stdin=subprocess.DEVNULL, start_new_session=True)",
+   "apres": "                             stdin=subprocess.DEVNULL, start_new_session=False)",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 50.91s",
+   "essais_en_echec": [
+    "test_trois_generations_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "V15-signaux-non-relayes",
+   "garde": "le superviseur ne relaie plus les signaux à l'orchestrateur",
+   "avant": "        signal.signal(s, relayer)",
+   "apres": "        pass",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 52.65s",
+   "essais_en_echec": [
+    "test_m7_arret_par_pid_relaye"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "V16-bras-sans-fin-propre-relancable",
+   "garde": "bras : un bras précédent sans code scellé ne verrouille plus",
+   "avant": "    if any(lire_code(b[\"depart\"][\"superviseur\"]) is None for b in run[\"bras\"]):",
+   "apres": "    if False:",
+   "code_pytest": 0,
+   "bilan": "122 passed in 54.04s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  }
+ ],
+ "tues": [
+  "V1-pid-reutilise-tenu-pour-vivant",
+  "V5-en-marche-de-la-seule-generation-demandee",
+  "V14-sans-session-neuve",
+  "V15-signaux-non-relayes"
+ ],
+ "survivants": [
+  "V2-zombie-tenu-pour-vivant",
+  "V3-seuil-sans-depense-a-1-usd",
+  "V10-bras-mort-non-compte",
+  "V16-bras-sans-fin-propre-relancable"
+ ],
+ "note": "deux lots joués l un après l autre (base et V1, V2, V3, V5 ; puis V10, V14, V15, V16), réunis ici"
+}

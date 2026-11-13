@@ -1,0 +1,134 @@
+{
+ "P1_deux_lancements_concurrents": {
+  "codes_des_deux_invocations": [
+   0,
+   0
+  ],
+  "courses_lancees_par_l_orchestrateur": 2,
+  "depense_relevee_usd": 9.0,
+  "pids_distincts": 2,
+  "relance_1": [
+   0,
+   "{\"etat\": \"clôture\", \"processus\": [{\"run\": \"20261113-140001-course-ideation-bassins-etroits-v2-g1\", \"temps\": \"course\", \"code\": 0, \"issue\": \"fin propre\"}, {\"run\":"
+  ],
+  "relance_2": [
+   2,
+   "{\"refus\": \"génération 1 : 2 courses réussies (une au plus) : nœud pour la mère\"}"
+  ],
+  "runs_avec_manifeste_de_depart": 2
+ },
+ "P2_lanceur_mort_entre_detachement_et_manifeste": {
+  "course_jouee_par_l_orchestrateur": [
+   "mesure",
+   "course"
+  ],
+  "fichiers_du_dossier_de_run": [
+   "liste-blanche.json",
+   "liste-blanche.json.sha256",
+   "mesure-consignes.json",
+   "mesure-consignes.json.sha256"
+  ],
+  "relance_apres_la_fin": [
+   2,
+   "{\"refus\": \"run 20261113-140001-course-ideation-bassins-etroits-v2-g1 sans manifeste de départ ni de refus scellé : état "
+  ],
+  "relance_generation_2": [
+   2,
+   "{\"refus\": \"run 20261113-140001-course-ideation-bassins-etroits-v2-g1 sans manifeste de départ ni de refus scellé : état "
+  ],
+  "relance_pendant": [
+   2,
+   "{\"refus\": \"run 20261113-140001-course-ideation-bassins-etroits-v2-g1 sans manifeste de départ ni de refus scellé : état inconnu, aucun lancement\"}"
+  ],
+  "superviseur_vivant_sans_manifeste": true
+ },
+ "P3_superviseur_tue_orchestrateur_orphelin": {
+  "cloture": [
+   0,
+   "{\"etat\": \"clôture\", \"processus\": [{\"run\": \"20261113-140001-course-ideation-bassins-etroits-v2-g1\", \"temps\": \"course\", \"code\": null, \"issue\": \"mort sans fin propre : plafond compté, génération verrouillée\"}]}"
+  ],
+  "course_finie_par_l_orphelin_manifeste_de_fin_present": true,
+  "depense_run": {
+   "bras_usd": 0.0,
+   "course_usd": 20.0,
+   "lecture": "course : processus mort sans fin propre, ou en marche : plafond entier compté ; bras : aucun bras",
+   "run": "20261113-140001-course-ideation-bassins-etroits-v2-g1"
+  },
+  "orchestrateur_orphelin_vivant_apres_la_cloture": true,
+  "orphelin_fini_seul": true,
+  "pid_de_l_orphelin_dit_dans_la_cloture": false,
+  "relance_apres_la_fin_de_l_orphelin": [
+   2,
+   "{\"refus\": \"génération 1 verrouillée : tentative 20261113-140001-course-ideation-bassins-etroits-v2-g1 (dépense relevée 20.000000 USD ; cours"
+  ],
+  "relance_generation_2": [
+   2,
+   "{\"refus\": \"génération 2 refusée : la génération 1 n'a pas une course et un bras réussis, manifestes de fin scellés et classement lisible\"}"
+  ],
+  "relance_meme_generation": [
+   2,
+   "{\"refus\": \"génération 1 verrouillée : tentative 20261113-140001-course-ideation-bassins-etroits-v2-g1 (dépense relevée 20.000000 USD ; cours"
+  ]
+ },
+ "P4_bras_superviseur_tue": {
+  "cloture": [
+   0,
+   "{\"etat\": \"clôture\", \"processus\": [{\"run\": \"20261113-140001-course-ideation-bassins-etroits-v2-g1\", \"temps\": \"bras-1\", \"code\": null, \"issue\": \"mort sans fin propre : plafond compté, génération verrouil"
+  ],
+  "depense_run": {
+   "bras_usd": 3.1,
+   "course_usd": 4.5,
+   "lecture": "course : manifeste de fin de l'orchestrateur ; bras : 1 bras sans fin propre ou sans trace : plafond du bras compté pour chacun",
+   "run": "20261113-140001-course-ideation-bassins-etroits-v2-g1"
+  },
+  "generation_2": [
+   2,
+   "{\"refus\": \"génération 2 refusée : la génération 1 n'a pas une course et un bras réussis, manifestes de fin scellés et cl"
+  ],
+  "pendant_le_bras": [
+   3,
+   "{\"etat\": \"en marche : rien lancé\", \"processus\": [{\"run\": \"20261113-140001-course-ideation-bassins-etroits-v2-g1\", \"temps"
+  ],
+  "relance": [
+   2,
+   "{\"refus\": \"génération 1 verrouillée (20261113-140001-course-ideation-bassins-etroits-v2-g1) : un bras sans fin propre : état inconnu ; nœud pour la mère ou Lazar\"}"
+  ]
+ },
+ "P5_exception_au_detachement_du_bras": {
+  "manifestes_du_run": [],
+  "premiere_invocation": {
+   "code": null,
+   "exception_non_gardee": "OSError"
+  },
+  "relance": [
+   2,
+   "{\"refus\": \"préfixe du cache d'octets déjà présent : /tmp/claude-0/-home-user/d9ee6091-e75a-5f52-8473-9583438f59bd/scratchpad/contre-lecture-bassins-v1/v2/pt-o2/test_p5_exception_au_detacheme0/sorties/"
+  ]
+ },
+ "P6_seuil_sans_depense_0.01": {
+  "depense_relevee": 0.01,
+  "relance": [
+   2,
+   "{\"refus\": \"génération 1 verrouillée : tentative 20261113-140001-course-ideation-bassins-etroits-v2-g1 (dépense relevée 0"
+  ]
+ },
+ "P6_seuil_sans_depense_1.1e-05": {
+  "depense_relevee": 1.1e-05,
+  "relance": [
+   2,
+   "{\"refus\": \"génération 1 verrouillée : tentative 20261113-140001-course-ideation-bassins-etroits-v2-g1 (dépense relevée 0"
+  ]
+ },
+ "P6_seuil_sans_depense_5e-06": {
+  "depense_relevee": 5e-06,
+  "relance": [
+   0,
+   "{\"generation\": 1, \"temps\": \"course\", \"etat\": \"lancée, détachée\", \"pid_superviseur\": 25030, \"arret\": \"kill -TERM 25030 (r"
+  ]
+ },
+ "P7_zombie_et_pid_reutilise": {
+  "debut_processus_d_un_zombie": null,
+  "vivant_meme_pid_autre_depart": false,
+  "vivant_meme_pid_meme_depart": true
+ }
+}
