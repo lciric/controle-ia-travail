@@ -461,13 +461,25 @@ def revision_au_cache(modele: str, revision: str, cache_dir: str | None = None) 
     """La révision `revision` de `modele` est-elle entière dans le cache local ? Lecture hors ligne seulement
     (`snapshot_download(local_files_only=True)`, aucun accès au réseau) : dossier de la révision, fichiers essentiels non vides,
     poids non vides ; avec des morceaux `model-<i>-of-<n>.safetensors`, index exigé, lisible, `weight_map` non vide, autant de
-    morceaux que le nom en annonce, chacun présent (CLC-P3-03, R-2311). Toute faute → `GardeArret`."""
+    morceaux que le nom en annonce, chacun présent (CLC-P3-03, R-2311). Toute faute → `GardeArret`.
+
+    Motifs (correction de l'arrêt de l'étape A de T0.7, R-2588, R-2589, R-2593 ; diagnostic
+    `docs/notes/g0-deux-semaines-v1/etape-a-t07-preparation-v1/diagnostic-arret-cache-v1/`) : `snapshot_download` reçoit les
+    motifs du préchargement (`harnais.modeles.MOTIFS_PRECHARGEMENT`, ceux de `precharger_modele`). `huggingface_hub` 1.33.0 écrit
+    au cache, pendant un téléchargement en ligne, la liste complète de l'arbre du dépôt (`trees/<commit>.json`) ; hors ligne, il
+    exige ensuite de l'instantané tous les fichiers de cette liste que retiennent les motifs donnés. Sans motifs, il exigeait tout
+    l'arbre (dossier `original/` compris, jamais préchargé) et levait `IncompleteSnapshotError` sur un cache préchargé entier ;
+    avec les motifs, il n'exige que les fichiers préchargés. Sans liste de l'arbre au cache, la bibliothèque ne contrôle rien :
+    les contrôles ci-dessous restent tous, inchangés."""
     import json as _json
     import re
 
     from huggingface_hub import snapshot_download
+
+    from ..harnais.modeles import MOTIFS_PRECHARGEMENT
     try:
-        dossier = Path(snapshot_download(repo_id=modele, revision=revision, local_files_only=True, cache_dir=cache_dir))
+        dossier = Path(snapshot_download(repo_id=modele, revision=revision, local_files_only=True, cache_dir=cache_dir,
+                                         allow_patterns=list(MOTIFS_PRECHARGEMENT)))
     except Exception as e:                                      # absente du cache : l'API rend une erreur de lecture locale
         raise GardeArret(f"modèle de P3 {modele}@{revision[:12]} absent du cache local ({type(e).__name__}) : la réextraction ne "
                          "télécharge jamais") from None
