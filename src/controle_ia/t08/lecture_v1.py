@@ -153,6 +153,13 @@ class LectureT08:
         man = en.lire_manifeste_7b(lb, "manifeste_7b", taches_fichier)
         if course.get("manifeste_7b_sha256") != man["sha256"]:
             raise GardeArret("course-t08.json : manifeste de 7b différent de celui de la lecture")
+        if self.mode == "reel":
+            mq = self.config["marqueurs"]
+            if man["run_id"] != mq["RUN_7B"]["run_id"] or man["sha256"] != mq["RUN_7B"]["manifeste_sha256"]:
+                raise GardeArret("manifeste de 7b ≠ RUN_7B (identifiant ou empreinte)")
+            code = en.exiger_ligne(reg, "CODE-MOTS-ET-COUT-T06")
+            if code["sha256"] != mq["CODE_MOTS_ET_COUT_T06"]["sha256"]:
+                raise GardeArret("ligne CODE-MOTS-ET-COUT-T06 ≠ marqueur CODE_MOTS_ET_COUT_T06 (empreinte)")
         plis = partition_plis(list(mes["tache"]), graine_entiere(man["graines"]["partition-taches"]))
         mes_et = lb.lire_npz("mesures_etalonnage")
         tex_et = lb.lire_jsonl("textes_etalonnage")
@@ -326,6 +333,7 @@ class LectureT08:
             return None
         lus = [v for v in dec.values() if v["pas_lus"] > 0]
         r = st.clopper_pearson(sum(1 for v in lus if v[stat]["alerte"]), len(lus))
+        r["trajectoires_diffuses"] = None if r["taux"] is None else 1.0 - r["taux"]
         r["episodes"] = len(dec)
         r["sans_pas_lu"] = len(dec) - len(lus)
         return r
@@ -725,9 +733,12 @@ class LectureT08:
         self.r["temoin_distille_honnete"]["tables_D_F_sha256_avant"] = avant
         self._consigner("h bis", self.r["temoin_distille_honnete"].get("etat"))
 
-    def executer(self) -> dict:
-        self.etape_a()
-        self.etape_b()
+    def executer(self, depuis: str = "a") -> dict:
+        if depuis == "a":
+            self.etape_a()
+            self.etape_b()
+        elif depuis != "c" or not self.etapes or self.etapes[-1]["etape"] != "b":
+            raise GardeArret("lecture reprise ailleurs qu'après l'étape (b) : refusée")
         self.etape_c()
         self.etape_d()
         self.etape_e()
@@ -754,15 +765,29 @@ def executer_lecture(config: dict, racine, run_id: str, prereg: str | None = Non
         marqueurs = cf.exiger_marqueurs(config.get("marqueurs"))
         if prereg is None:
             raise GardeArret("lecture réelle sans préenregistrement scellé : R1 interdit")
+        from ..harnais.validation_reelle import exiger_code_importe_sous
+        from .course_v1 import exiger_code_au_commit
+
+        exiger_code_importe_sous(racine)
+        exiger_code_au_commit(racine, marqueurs["COMMIT_CODE_T08"])
         entropie = marqueurs["ENTROPIE_T08"]
     if piece is None:
         piece = mc.charger_piece(mode, (config.get("marqueurs") or {}).get("CODE_MOTS_ET_COUT_T06"), racine)
+    debut = time.perf_counter()
+    lecture = LectureT08(config, racine, None, piece)
+    # (a) et (b) ne tirent rien : ils passent avant le manifeste ; un arrêt par leurs gardes (entrées, empreintes,
+    # effectifs, contrôle d'identité de M2) n'écrit rien du tout.
+    lecture.etape_a()
+    lecture.etape_b()
     chemin_m, m = creer_manifeste(racine, run_id, config, cles_graines_lecture(), entropie=entropie,
                                   decisif=mode == "reel", prereg=prereg, autoriser_depot_sale=autoriser_depot_sale,
                                   commande=COMMANDE)
-    debut = time.perf_counter()
-    lecture = LectureT08(config, racine, m["graines"], piece)
-    resultat = lecture.executer()
+    lecture.g = m["graines"]
+    try:
+        resultat = lecture.executer(depuis="c")
+    except Exception as e:                     # après le manifeste : arrêt consigné, comme la chaîne de T0.6
+        ecrire_resultat(racine, chemin_m, "arret-lecture-t08", {"etapes": lecture.etapes, "motif": f"{type(e).__name__}: {e}"})
+        raise
     chemin = ecrire_resultat(racine, chemin_m, "lecture-t08", resultat)
     return {"manifeste": str(chemin_m), "lecture": str(chemin), "table_D": resultat["table_D"]["ligne"],
             "duree_s": round(time.perf_counter() - debut, 1),
