@@ -1,0 +1,1690 @@
+diff --git a/pole/sonde_pilote_v70.py b/pole/sonde_pilote_v71.py
+index 2059fad..a8b9310 100644
+--- a/pole/sonde_pilote_v70.py
++++ b/pole/sonde_pilote_v71.py
+@@ -1,42 +1,62 @@
+-"""Sonde payante du pilote MR-2 — code v70 (fichier neuf ; D-4 de la contre-lecture du différentiel v68 → v69, `935e44bc…` ;
+-décisions de la mère R-2548). Aucun réseau ici : la sous-commande `sonde` du lanceur lance les relais (clés par leur nom) et
+-appelle par la chaîne du pilote (adaptateur → commande → relais → amont) ; ce module relit les pièces de chaque appel, en tire
+-les faits et les conclusions, bâtit le relevé, et dit si un relevé permet le mode réel (`exiger_releve`).
++"""Sonde payante du pilote MR-2 — code v71 (fichier neuf, R12 ; remplace `sonde_pilote_v70.py`, gardé). Aucun réseau ici : la
++sous-commande `sonde` du lanceur v71 lance les relais (clés par leur nom) et appelle par la chaîne du pilote (adaptateur →
++commande → relais → amont) ; ce module relit les pièces de chaque appel, en tire les faits et les conclusions, bâtit le relevé,
++tient le registre des lancements de la sonde, et dit si un relevé permet le mode réel (`exiger_releve`).
++
++Changements depuis la v70 (contre-lecture du différentiel v69 → v70, `f6bc1b00…` ; mot de Lazar R-2604) :
++- **A-1** : le verdict sur la réflexion d'Astra (et d'Argon quand `totalTokenCount` ne tranche pas) ne confirme plus « comprise »
++  sur une zone où la réflexion pourrait être ajoutée. Par appel, avec c la sortie du fournisseur, t la réflexion et O les octets
++  du texte visible (relu du corps par la commande gelée) : t > c → « non_comprise » (si la réflexion était comprise, c ≥ t) ;
++  t > 0 et c − t ≤ O + 16 < c → « comprise » (si la réflexion était ajoutée, c ne compterait que le texte visible, au plus
++  O + 16 jetons : un jeton de texte porte au moins un octet, 16 jetons de forme au plus) ; sinon « indetermine ». Une réponse
++  d'un mot n'est plus supposée : sa longueur est lue. Un verdict « contradictoire » d'un appel rend l'ensemble contradictoire.
++- **A-2** : l'usage est lu par la fonction même de la commande gelée (`lire_dialecte`) : un champ absent vaut ce qu'il vaut pour
++  elle (Argon : `candidatesTokenCount` absent = 0). Les champs bruts sont gardés **tels quels** (absent ≠ nul), avec la liste des
++  champs absents.
++- **a-1** : registre des lancements de la sonde (hors dépôt) : un second lancement sous une ligne de GO déjà employée est refusé
++  avant tout dossier, sauf reprise écrite au registre des décisions (`R-NNNN` qui cite les deux identifiants et les mots
++  « reprise de la sonde »), employée une seule fois.
++- **a-2** : le relevé doit porter l'empreinte de la configuration et celles du code de l'arbre qui le lit ; ses faits sont
++  **relus des pièces** de chaque appel (réponse brute, corps du relais, témoin), chacune égale à son compagnon : un relevé sans
++  ses pièces, ou dont un fait diffère de ses pièces, est refusé (au bloc et au mode réel : le dossier de la sonde accompagne son
++  relevé). La borne de chaque appel est lue de la ligne de la commande et doit être la borne configurée.
++- **a-3** : les faits d'un appel sont tirés de ses pièces : un appel parti puis arrêté sans être porté par l'arrêt est porté au
++  relevé (partiel) avec sa dépense, dès que sa réponse brute existe.
+ 
+ La sonde **n'est jamais jouée par le développeur** : elle dépense, sous deux lignes de GO à part de π1 et π2 (configuration,
+-section `sonde` : s1 4,39 USD sur crédits de Claude, s2 3,68 USD hors crédits ; nœud de Lazar). Elle ne lit aucun monde ni aucun
+-résultat (hors R1) ; elle se fait **avant** le scellement du texte, dont le bloc gelé cite l'empreinte de son relevé. Par relais :
+-un appel à la borne gelée (consigne courte, réponse d'un mot) ; avec `--borne-courte`, un second appel à 256 jetons (texte long
+-demandé).
+-
+-Faits relevés par appel : statut de l'amont, état et cause rendus par la commande, identifiant servi (règle M-1 de la commande),
+-raison d'arrêt, champs d'usage bruts, sortie comptée par la règle de la configuration, coût calculé aux prix de la configuration
+-(à rapprocher de la console par Lazar : hors du code), et pour Claude le flux brut relu ici indépendamment et comparé au message
+-que le relais a reconstitué (`lire_flux_anthropic`).
++section `sonde` : s1 4,39 USD sur crédits de Claude, s2 3,68 USD hors crédits). Elle ne lit aucun monde ni aucun résultat ;
++elle se fait **avant** le scellement du texte, dont le bloc gelé cite l'empreinte de son relevé. Par relais : un appel à la borne
++gelée (consigne courte, réponse d'un mot demandée) ; avec `--borne-courte`, un second appel à 256 jetons (texte long demandé).
+ 
+ Conclusions par proposeur, toutes exigées vraies par le mode réel : `statut`, `modele_servi_conforme`, `borne_gelee_admise`,
+-`raison_arret_normale`, `usage_entier`, `verdict_egal_a_la_regle` (le verdict de la sonde sur la réflexion égale la règle de
+-comptage de la configuration), `borne_courte_tronquee` et `borne_tenue` (la sortie comptée reste sous la borne courte : le plafond
+-est dur) ; Claude en plus : `flux_relu_egal`, `effort_admis`. Le mode réel recalcule les conclusions depuis les faits du relevé.
++`raison_arret_normale`, `usage_entier`, `verdict_egal_a_la_regle`, `borne_courte_tronquee` et `borne_tenue` ; Claude en plus :
++`flux_relu_egal`, `effort_admis`. Le mode réel recalcule les conclusions depuis les faits, et les faits depuis les pièces.
+ """
+ 
++import copy
+ import importlib.util
+ import json
+ import os
++import re
+ 
+ from .outils import sha256_fichier
+-from .pilote_mr2_v70 import PROPOSEURS, Refus
++from .pilote_mr2_v70 import PROPOSEURS, Refus, exiger_hors_depot
+ 
+-VERSION = "sonde-pilote-v70"
+-VERSION_RELEVE = "releve-sonde-pilote-v70"
+-RELEVE = "releve-sonde-pilote-v70.json"
++VERSION = "sonde-pilote-v71"
++VERSION_RELEVE = "releve-sonde-pilote-v71"
++RELEVE = "releve-sonde-pilote-v71.json"
+ APPELS = ("borne_gelee", "borne_courte")
+-SEUIL_VISIBLE = 32  # jetons visibles d'une réponse d'un mot, au plus
++MARGE_FORMAT = 16  # jetons comptés hors du texte visible (forme du message), au plus — A-1
+ IDENTITE = ("modele", "dialecte", "url_amont", "reglages", "borne_sortie_jetons", "variable_cle", "variable_espace")
+ CONCLUSIONS_EXIGEES = ("statut", "modele_servi_conforme", "borne_gelee_admise", "raison_arret_normale", "usage_entier",
+                        "verdict_egal_a_la_regle", "borne_courte_tronquee", "borne_tenue")
+ CONCLUSIONS_CLAUDE = ("flux_relu_egal", "effort_admis")
+ REGLE_DU_VERDICT = {"comprise": True, "sans_champ": True, "non_comprise": False}
++CHAMPS_ATTENDUS = {"claude": ("input_tokens", "output_tokens"),
++                   "gemini": ("promptTokenCount", "candidatesTokenCount", "thoughtsTokenCount", "totalTokenCount"),
++                   "astra": ("prompt_tokens", "completion_tokens", "completion_tokens_details.reasoning_tokens", "total_tokens")}
++REPRISE = "reprise de la sonde"
++_COMMANDES = {}
+ 
+ 
+ def _entier(x):
+@@ -44,73 +64,128 @@ def _entier(x):
+ 
+ 
+ def _commande(conf):
+-    """Le module de la commande gelée (sa règle M-1 sur l'identifiant servi), chargé depuis son chemin ; non inscrit dans
+-    `sys.modules`."""
+-    s = importlib.util.spec_from_file_location("commande_pilote_sonde", conf["commande"]["chemin_absolu"])
+-    m = importlib.util.module_from_spec(s)
+-    s.loader.exec_module(m)
+-    return m
++    """Le module de la commande gelée (ses règles M-1 et d-6 sur l'identifiant servi, sa lecture de l'usage), chargé une fois
++    depuis son chemin ; non inscrit dans `sys.modules`."""
++    chemin = conf["commande"]["chemin_absolu"]
++    if chemin not in _COMMANDES:
++        s = importlib.util.spec_from_file_location("commande_pilote_sonde_v71", chemin)
++        m = importlib.util.module_from_spec(s)
++        s.loader.exec_module(m)
++        _COMMANDES[chemin] = m
++    return _COMMANDES[chemin]
++
+ 
++# --- usage : champs bruts tels quels, lecture par la commande gelée (A-2) ----------------------------------------------------
+ 
+ def usage_brut(dialecte, corps):
+-    """Les champs d'usage bruts du fournisseur (entiers ou None), sans aucune règle de comptage."""
++    """A-2 : l'objet d'usage du fournisseur **tel quel** (copie ; None s'il est absent) : un champ absent reste absent."""
+     corps = corps if isinstance(corps, dict) else {}
++    return copy.deepcopy(corps.get("usageMetadata" if dialecte == "gemini" else "usage"))
++
++
++def champs_absents(dialecte, u):
++    """Les champs d'usage attendus du dialecte qui manquent à l'objet brut (`a.b` : champ b de l'objet a)."""
++    u = u if isinstance(u, dict) else {}
++    out = []
++    for k in CHAMPS_ATTENDUS[dialecte]:
++        a, _, b = k.partition(".")
++        if a not in u or (b and not (isinstance(u[a], dict) and b in u[a])):
++            out.append(k)
++    return out
++
++
++def corps_reduit(dialecte, u):
++    """Un corps du fournisseur réduit à son usage brut, lisible par `lire_dialecte` (rien d'autre n'y est lu pour les jetons)."""
+     if dialecte == "claude":
+-        u = corps.get("usage") or {}
+-        return {k: u.get(k) for k in ("input_tokens", "output_tokens")}
++        return {"content": [], "stop_reason": None, "usage": u}
+     if dialecte == "gemini":
+-        u = corps.get("usageMetadata") or {}
+-        return {k: u.get(k) for k in ("promptTokenCount", "candidatesTokenCount", "thoughtsTokenCount", "totalTokenCount")}
+-    u = corps.get("usage") or {}
+-    return {"prompt_tokens": u.get("prompt_tokens"), "completion_tokens": u.get("completion_tokens"),
+-            "reasoning_tokens": (u.get("completion_tokens_details") or {}).get("reasoning_tokens"),
+-            "total_tokens": u.get("total_tokens")}
++        return {"candidates": [{}], "usageMetadata": u}
++    return {"choices": [{}], "usage": u}
++
++
++def lecture_de_la_commande(conf, dialecte, corps, comprise):
++    """(texte visible, jetons {entree, sortie, reflexion, regle}) par `lire_dialecte` de la commande gelée ; (None, None) si le
++    corps est illisible pour elle."""
++    try:
++        texte, _, _, jetons, _ = _commande(conf).lire_dialecte(dialecte, corps, comprise)
++    except (ValueError, KeyError, IndexError, TypeError, AttributeError):
++        return None, None
++    return texte, jetons
++
++
++def jetons_de_l_usage(conf, dialecte, u, comprise):
++    """A-2 : les jetons que la commande gelée lit de cet usage brut (même fonction que le pilote), ou None."""
++    return lecture_de_la_commande(conf, dialecte, corps_reduit(dialecte, u), comprise)[1]
++
++
++def usage_entier(conf, dialecte, u, comprise):
++    """A-2 : l'usage est entier au sens de la commande (entrée et sortie comptées entières ; sinon elle rend `usage_absent`)."""
++    j = jetons_de_l_usage(conf, dialecte, u, comprise)
++    return j is not None and _entier(j["entree"]) and _entier(j["sortie"])
++
++
++def sortie_comptee(conf, dialecte, u, comprise):
++    """A-2 : la sortie comptée par la commande gelée selon la règle de la configuration, ou None."""
++    j = jetons_de_l_usage(conf, dialecte, u, comprise)
++    return j["sortie"] if j is not None and _entier(j["sortie"]) else None
++
+ 
++# --- verdict sur la réflexion (A-1) ---------------------------------------------------------------------------------------------
+ 
+-def verdict_reflexion(dialecte, u):
+-    """D-2 : le champ de sortie du fournisseur compte-t-il déjà la réflexion ? « comprise », « non_comprise », « indetermine » ;
+-    Claude : « sans_champ » (aucun compte séparé : `output_tokens` compte tout). Argon : `totalTokenCount` tranche s'il est
+-    présent (prompt + candidats + pensées : non comprise ; prompt + candidats : comprise) ; sinon, comme Astra, sur une réponse
+-    d'un mot : sortie ≥ réflexion et sortie − réflexion ≤ 32 → comprise ; sortie ≤ 32 et réflexion > sortie → non comprise."""
++def champs(dialecte, u):
++    """(entrée, sortie du fournisseur c, réflexion t, total) avec les valeurs par défaut de la commande gelée (Argon : candidats
++    et pensées absents = 0 ; Astra : réflexion absente ou nulle = 0)."""
++    u = u if isinstance(u, dict) else {}
++    if dialecte == "gemini":
++        return (u.get("promptTokenCount"), u.get("candidatesTokenCount", 0), u.get("thoughtsTokenCount", 0),
++                u.get("totalTokenCount"))
++    det = u.get("completion_tokens_details")
++    det = det if isinstance(det, dict) else {}
++    return u.get("prompt_tokens"), u.get("completion_tokens"), det.get("reasoning_tokens") or 0, None
++
++
++def verdict_reflexion(dialecte, u, octets_visibles):
++    """A-1 : le champ de sortie du fournisseur compte-t-il déjà la réflexion ? Par appel : « comprise », « non_comprise »,
++    « contradictoire » ou « indetermine » ; Claude : « sans_champ » (aucun compte séparé). Votes, chacun sûr sous sa seule
++    hypothèse :
++    - Argon, `totalTokenCount` entier et réflexion t > 0 : total = entrée + c + t → non comprise ; total = entrée + c et t ≤ c →
++      comprise ;
++    - t > c → non comprise (comprise, c compterait t) ;
++    - t > 0 et c − t ≤ O + 16 < c (O : octets du texte visible) → comprise (ajoutée, c ne compterait que le texte visible : au plus
++      un jeton par octet, plus 16 jetons de forme).
++    Un seul vote : ce verdict ; deux votes différents : « contradictoire » ; aucun : « indetermine »."""
+     if dialecte == "claude":
+         return "sans_champ"
+-    if dialecte == "gemini":
+-        p, c, t, total = (u.get(k) for k in ("promptTokenCount", "candidatesTokenCount", "thoughtsTokenCount", "totalTokenCount"))
+-    else:
+-        p, c, t, total = u.get("prompt_tokens"), u.get("completion_tokens"), u.get("reasoning_tokens"), None
++    p, c, t, total = champs(dialecte, u)
+     if not (_entier(c) and _entier(t)) or t == 0:
+         return "indetermine"
++    votes = set()
+     if dialecte == "gemini" and _entier(total) and _entier(p):
+         if total == p + c + t:
+-            return "non_comprise"
+-        if total == p + c:
+-            return "comprise"
+-        return "indetermine"
+-    if c >= t and c - t <= SEUIL_VISIBLE:
+-        return "comprise"
+-    if c <= SEUIL_VISIBLE and t > c:
+-        return "non_comprise"
+-    return "indetermine"
++            votes.add("non_comprise")
++        elif total == p + c and t <= c:
++            votes.add("comprise")
++    if t > c:
++        votes.add("non_comprise")
++    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:
++        votes.add("comprise")
++    if len(votes) == 1:
++        return votes.pop()
++    return "contradictoire" if votes else "indetermine"
+ 
+ 
+-def usage_entier(dialecte, u):
+-    """Les champs d'usage d'entrée et de sortie du dialecte, présents et entiers."""
+-    cles = {"claude": ("input_tokens", "output_tokens"), "gemini": ("promptTokenCount", "candidatesTokenCount"),
+-            "astra": ("prompt_tokens", "completion_tokens")}[dialecte]
+-    return all(_entier(u.get(k)) for k in cles)
+-
++def verdict_d_ensemble(verdicts):
++    """Un verdict par appel → un verdict : « contradictoire » si un appel l'est ou si les verdicts tranchés divergent ; le seul
++    verdict tranché sinon ; « indetermine » si aucun ne tranche."""
++    if "contradictoire" in verdicts:
++        return "contradictoire"
++    tranches = {v for v in verdicts if v in REGLE_DU_VERDICT}
++    if len(tranches) == 1:
++        return tranches.pop()
++    return "contradictoire" if tranches else "indetermine"
+ 
+-def sortie_comptee(dialecte, u, comprise):
+-    """La sortie comptée par la règle de la configuration (celle de la commande et du relais), ou None."""
+-    if dialecte == "claude":
+-        s = u.get("output_tokens")
+-        return s if _entier(s) else None
+-    c, t = (u.get("candidatesTokenCount"), u.get("thoughtsTokenCount") or 0) if dialecte == "gemini" else \
+-        (u.get("completion_tokens"), u.get("reasoning_tokens") or 0)
+-    if not (_entier(c) and _entier(t)):
+-        return None
+-    return c if comprise else c + t
+ 
++# --- flux de Claude, relu indépendamment ---------------------------------------------------------------------------------------
+ 
+ def relire_flux(flux):
+     """Le flux SSE brut de l'interface Messages, relu ici sans `lire_flux_anthropic` : identifiant, raison d'arrêt (dernière non
+@@ -154,66 +229,105 @@ def comparer_flux(flux, corps):
+             "usage_dans_message_delta": r["usage_dans_message_delta"]}
+ 
+ 
+-def faits_d_un_appel(conf, nom, quoi, borne, dossier, r):
+-    """Les faits d'un appel de la sonde, depuis l'enregistrement rendu par `appeler` et le corps du relais scellé sur disque."""
+-    p = conf["proposeurs"][nom]
+-    rel = {}
+-    f = os.path.join(dossier, "corps-relais.json")
+-    if os.path.isfile(f):
+-        try:
+-            with open(f, encoding="utf-8") as h:
+-                rel = json.load(h)
+-        except ValueError:
+-            rel = {}
+-    corps = rel.get("corps") if isinstance(rel, dict) else None
+-    u = usage_brut(p["dialecte"], corps)
+-    sortie = sortie_comptee(p["dialecte"], u, p["reflexion_comprise"])
+-    faits = {"proposeur": nom, "appel": quoi, "borne": borne, "etat": r.get("etat"), "code": r.get("code"), "cause": r.get("cause"),
+-             "raison_arret": r.get("raison_arret"), "modele_servi": r.get("modele_servi"),
+-             "modele_servi_conforme": bool(_commande(conf).modele_conforme(p["modele"], r.get("modele_servi"))),
+-             "statut_amont": rel.get("statut_amont") if isinstance(rel, dict) else None,
+-             "type_erreur": rel.get("type_erreur") if isinstance(rel, dict) else None,
+-             "usage_brut": u, "usage_entier": usage_entier(p["dialecte"], u),
+-             "verdict_reflexion": verdict_reflexion(p["dialecte"], u), "sortie_comptee": sortie, "cout_usd": r.get("cout_usd"),
+-             "au_dessus_du_pire_cas": rel.get("au_dessus_du_pire_cas") if isinstance(rel, dict) else None,
+-             "pieces": {k: r.get(k) for k in ("reponse_brute_sha256", "temoin_sha256", "corps_relais_sha256")}}
+-    if p["dialecte"] == "claude":
+-        faits["flux"] = comparer_flux(rel.get("flux") if isinstance(rel, dict) else None, corps)
+-    return faits
++# --- faits d'un appel, tirés de ses pièces (a-2, a-3) ---------------------------------------------------------------------------
++
++def _compagnon_egal(chemin):
++    try:
++        with open(chemin + ".sha256", encoding="utf-8") as f:
++            return f.read().split()[0] == sha256_fichier(chemin)
++    except (OSError, IndexError):
++        return False
+ 
+ 
+-def verdict_d_ensemble(verdicts):
+-    """Un verdict par appel → un verdict : le seul verdict tranché s'il n'y en a qu'un, « contradictoire » s'ils divergent."""
+-    tranches = {v for v in verdicts if v in REGLE_DU_VERDICT}
+-    if len(tranches) == 1:
+-        return tranches.pop()
+-    return "contradictoire" if tranches else "indetermine"
++def _lire_piece(chemin):
++    """Une pièce scellée d'un appel : présente, égale à son compagnon, JSON ; rend (objet, empreinte)."""
++    nom = os.path.join(*chemin.split(os.sep)[-3:])
++    if not os.path.isfile(chemin):
++        raise Refus(f"pièce de la sonde absente : {nom}")
++    if not _compagnon_egal(chemin):
++        raise Refus(f"pièce de la sonde ≠ son compagnon : {nom}")
++    try:
++        with open(chemin, encoding="utf-8") as f:
++            return json.load(f), sha256_fichier(chemin)
++    except ValueError:
++        raise Refus(f"pièce de la sonde illisible : {nom}") from None
++
++
++def dossier_d_un_appel(racine, nom, quoi):
++    """Le dossier d'un appel : `racine/proposeur/appel` (disposition fixe : rien n'est lu ailleurs)."""
++    if nom not in PROPOSEURS or quoi not in APPELS:
++        raise Refus(f"appel de la sonde inconnu : {nom!r}, {quoi!r}")
++    return os.path.join(racine, nom, quoi)
++
++
++def faits_depuis_les_pieces(conf, nom, quoi, racine):
++    """Les faits d'un appel, tirés de ses seules pièces (réponse brute écrite par l'adaptateur, corps du relais écrit par la
++    commande, témoin d'isolement), chacune égale à son compagnon : code, état, cause, raison d'arrêt, identifiant servi, coût et
++    borne de la dernière ligne de la commande (comme l'adaptateur les lit) ; statut de l'amont, usage brut, drapeau du pire cas et
++    flux de Claude du corps du relais ; octets du texte visible et jetons par la commande gelée."""
++    p = conf["proposeurs"][nom]
++    d = p["dialecte"]
++    dossier = dossier_d_un_appel(racine, nom, quoi)
++    rep, sha_rep = _lire_piece(os.path.join(dossier, "reponse-brute.json"))
++    rep = rep if isinstance(rep, dict) else {}
++    der = rep.get("derniere_ligne") if isinstance(rep.get("derniere_ligne"), dict) else {}
++    code = rep.get("code")
++    rel, sha_corps = {}, None
++    if rep.get("corps_relais_sha256") is not None:
++        rel, sha_corps = _lire_piece(os.path.join(dossier, "corps-relais.json"))
++        if sha_corps != rep["corps_relais_sha256"]:
++            raise Refus(f"pièce de la sonde : corps du relais de {nom}, {quoi} ≠ empreinte de sa réponse brute")
++        rel = rel if isinstance(rel, dict) else {}
++    tem = os.path.join(dossier, "temoin-isolement.json")
++    sha_tem = _lire_piece(tem)[1] if os.path.exists(tem) else None
++    corps = rel.get("corps")
++    u = usage_brut(d, corps)
++    texte, _ = lecture_de_la_commande(conf, d, corps, p["reflexion_comprise"]) if isinstance(corps, dict) else (None, None)
++    octets = len(texte.encode("utf-8")) if isinstance(texte, str) else None
++    faits = {"proposeur": nom, "appel": quoi, "borne": der.get("borne_sortie"), "consigne_sha256": der.get("consigne_sha256"),
++             "code": code, "etat": der.get("etat") if code == 0 else "echec", "cause": der.get("cause"),
++             "raison_arret": der.get("raison_arret"), "modele_servi": der.get("modele_servi"),
++             "modele_servi_conforme": bool(_commande(conf).modele_conforme(p["modele"], der.get("modele_servi"))),
++             "cout_usd": float(der.get("cout_usd") or 0.0),
++             "statut_amont": rel.get("statut_amont"), "type_erreur": rel.get("type_erreur"),
++             "au_dessus_du_pire_cas": rel.get("au_dessus_du_pire_cas"),
++             "usage_brut": u, "champs_absents": champs_absents(d, u), "octets_visibles": octets,
++             # lus pour Lazar, jamais repris par les conclusions (recalculées des champs bruts) :
++             "usage_entier": usage_entier(conf, d, u, p["reflexion_comprise"]),
++             "sortie_comptee": sortie_comptee(conf, d, u, p["reflexion_comprise"]),
++             "verdict_reflexion": verdict_reflexion(d, u, octets),
++             "pieces": {"reponse_brute_sha256": sha_rep, "corps_relais_sha256": sha_corps, "temoin_sha256": sha_tem}}
++    if d == "claude":
++        faits["flux"] = comparer_flux(rel.get("flux"), corps)
++    return faits
+ 
+ 
+ def conclusions(conf, nom, faits):
+     """Les conclusions d'un proposeur, depuis ses faits (un ou deux appels) ; verdict, usage et sortie comptée **recalculés**
+-    depuis les champs d'usage bruts (jamais repris des valeurs dérivées écrites au relevé)."""
++    depuis les champs d'usage bruts et les octets visibles (jamais repris des valeurs dérivées écrites au relevé) ; bornes
++    comparées à la configuration."""
+     p = conf["proposeurs"][nom]
+     d = p["dialecte"]
+-    f1 = next((f for f in faits if f["appel"] == "borne_gelee"), None)
+-    f2 = next((f for f in faits if f["appel"] == "borne_courte"), None)
++    bc = conf["sonde"]["borne_courte_jetons"]
++    f1 = next((f for f in faits if f.get("appel") == "borne_gelee"), None)
++    f2 = next((f for f in faits if f.get("appel") == "borne_courte"), None)
+     tous = [f for f in (f1, f2) if f is not None]
+-    verdict = verdict_d_ensemble([verdict_reflexion(d, f["usage_brut"]) for f in tous])
+-    sortie2 = sortie_comptee(d, f2["usage_brut"], p["reflexion_comprise"]) if f2 is not None else None
+-    c = {"statut": bool(tous) and all(f["statut_amont"] == 200 and f["etat"] in ("complet", "tronque") for f in tous),
+-         "modele_servi_conforme": bool(tous) and all(f["modele_servi_conforme"] for f in tous),
+-         "borne_gelee_admise": f1 is not None and f1["statut_amont"] == 200 and f1["borne"] == p["borne_sortie_jetons"],
+-         "raison_arret_normale": f1 is not None and f1["etat"] == "complet",
+-         "usage_entier": bool(tous) and all(usage_entier(d, f["usage_brut"]) for f in tous),
++    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get("usage_brut"), f.get("octets_visibles")) for f in tous])
++    sortie2 = sortie_comptee(conf, d, f2.get("usage_brut"), p["reflexion_comprise"]) if f2 is not None else None
++    c = {"statut": bool(tous) and all(f.get("statut_amont") == 200 and f.get("etat") in ("complet", "tronque") for f in tous),
++         "modele_servi_conforme": bool(tous) and all(f.get("modele_servi_conforme") is True for f in tous),
++         "borne_gelee_admise": f1 is not None and f1.get("statut_amont") == 200 and f1.get("borne") == p["borne_sortie_jetons"],
++         "raison_arret_normale": f1 is not None and f1.get("etat") == "complet",
++         "usage_entier": bool(tous) and all(usage_entier(conf, d, f.get("usage_brut"), p["reflexion_comprise"]) for f in tous),
+          "verdict_reflexion": verdict, "regle_configuree": p["reflexion_comprise"],
+          "verdict_egal_a_la_regle": REGLE_DU_VERDICT.get(verdict) is p["reflexion_comprise"],
+-         "borne_courte_tronquee": f2 is not None and f2["etat"] == "tronque",
+-         "borne_tenue": f2 is not None and _entier(sortie2) and sortie2 <= f2["borne"],
++         "borne_courte_tronquee": f2 is not None and f2.get("etat") == "tronque",
++         "borne_tenue": f2 is not None and f2.get("borne") == bc and _entier(sortie2) and sortie2 <= bc,
+          "en_tete_d_espace": p["variable_espace"] is not None,
+          "au_dessus_du_pire_cas": any(f.get("au_dessus_du_pire_cas") for f in tous)}
+     if d == "claude":
+         c["flux_relu_egal"] = bool(tous) and all((f.get("flux") or {}).get("egal") is True for f in tous)
+-        c["effort_admis"] = f1 is not None and f1["statut_amont"] == 200 and "output_config" in p["reglages"]
++        c["effort_admis"] = f1 is not None and f1.get("statut_amont") == 200 and "output_config" in p["reglages"]
+     return c
+ 
+ 
+@@ -228,24 +342,17 @@ def releve(conf, faits, borne_courte, debut, fin, partiel, arret, extra):
+            "identite": {n: {k: conf["proposeurs"][n][k] for k in IDENTITE} for n in PROPOSEURS},
+            "pieces_sha256": {"commande": conf["commande"]["sha256"], "relais": conf["relais"]["sha256"]},
+            "appels": faits,
+-           "conclusions": {n: conclusions(conf, n, [f for f in faits if f["proposeur"] == n]) for n in PROPOSEURS}}
++           "conclusions": {n: conclusions(conf, n, [f for f in faits if f.get("proposeur") == n]) for n in PROPOSEURS}}
+     out.update(extra)
+     return out
+ 
+ 
+-def _compagnon_egal(chemin):
+-    try:
+-        with open(chemin + ".sha256", encoding="utf-8") as f:
+-            return f.read().split()[0] == sha256_fichier(chemin)
+-    except (OSError, IndexError):
+-        return False
+-
+-
+-def exiger_releve(conf, chemin):
+-    """D-4 : le mode réel (et le bloc gelé qui le cite) exige un relevé de la sonde : présent, égal à son compagnon, complet, fait
+-    avec l'appel à borne courte, par la commande et le relais de cette configuration, pour l'identité de chaque proposeur de la
+-    configuration ; conclusions recalculées depuis ses faits égales aux siennes et toutes vraies, verdict sur la réflexion égal à
+-    la règle de comptage gelée. Rend l'empreinte du relevé ; Refus sinon."""
++def exiger_releve(conf, chemin, attendu):
++    """D-4 : le mode réel (et le bloc gelé qui le cite) exige un relevé de la sonde : présent, égal à son compagnon, complet,
++    fait avec l'appel à borne courte, par la commande et le relais de cette configuration, **sous cette configuration et ce code**
++    (`attendu` : {configuration_sha256, code_sha256} de l'arbre qui lit ; a-2), pour l'identité de chaque proposeur ; deux appels
++    par proposeur ; conclusions recalculées depuis ses faits égales aux siennes et toutes vraies ; **chaque fait égal aux faits
++    relus de ses pièces** (dossier de la sonde à côté du relevé ; a-2). Rend l'empreinte du relevé ; Refus sinon."""
+     if not chemin or not os.path.isfile(chemin):
+         raise Refus("relevé de la sonde absent : le mode réel l'exige (D-4)")
+     if not _compagnon_egal(chemin):
+@@ -261,15 +368,20 @@ def exiger_releve(conf, chemin):
+         raise Refus("relevé de la sonde partiel ou sans l'appel à borne courte (le plafond n'y est pas éprouvé)")
+     if r.get("pieces_sha256") != {"commande": conf["commande"]["sha256"], "relais": conf["relais"]["sha256"]}:
+         raise Refus("relevé de la sonde fait par une autre commande ou un autre relais")
++    if r.get("configuration_sha256") != attendu["configuration_sha256"]:  # a-2
++        raise Refus("relevé de la sonde fait sous une autre configuration")
++    if r.get("code_sha256") != attendu["code_sha256"]:  # a-2
++        raise Refus("relevé de la sonde fait par un autre code")
+     faits = r.get("appels")
+-    if not isinstance(faits, list):
+-        raise Refus("relevé de la sonde : appels absents")
++    if not isinstance(faits, list) or not all(isinstance(f, dict) for f in faits) \
++            or len(faits) != len(PROPOSEURS) * len(APPELS):
++        raise Refus("relevé de la sonde : appels absents ou en nombre faux")
+     for nom in PROPOSEURS:
+         p = conf["proposeurs"][nom]
+         if (r.get("identite") or {}).get(nom) != {k: p[k] for k in IDENTITE}:
+             raise Refus(f"relevé de la sonde : identité de {nom} ≠ configuration")
+-        a_lui = [f for f in faits if isinstance(f, dict) and f.get("proposeur") == nom]
+-        if sorted(f.get("appel") for f in a_lui) != sorted(APPELS):
++        a_lui = [f for f in faits if f.get("proposeur") == nom]
++        if sorted(str(f.get("appel")) for f in a_lui) != sorted(APPELS):
+             raise Refus(f"relevé de la sonde : {nom} sans ses deux appels")
+         try:
+             recalculees = conclusions(conf, nom, a_lui)
+@@ -281,7 +393,63 @@ def exiger_releve(conf, chemin):
+         if manque:
+             raise Refus(f"relevé de la sonde : {nom} ne confirme pas {manque} (verdict sur la réflexion : "
+                         f"{recalculees['verdict_reflexion']}, règle gelée : {p['reflexion_comprise']})")
++    racine = os.path.dirname(os.path.abspath(chemin))
++    for f in faits:  # a-2 : les faits sont ceux des pièces
++        if f != faits_depuis_les_pieces(conf, f["proposeur"], f["appel"], racine):
++            raise Refus(f"relevé de la sonde : faits de {f['proposeur']}, {f['appel']} ≠ ceux de ses pièces")
+     return sha256_fichier(chemin)
+ 
+ 
++# --- registre des lancements de la sonde (a-1) ----------------------------------------------------------------------------------
++
++def lancements_de_la_sonde(registre):
++    """Les lancements consignés (une ligne JSON par lancement) ; [] si le registre n'existe pas encore."""
++    if not os.path.exists(registre):
++        return []
++    try:
++        with open(registre, encoding="utf-8") as f:
++            out = [json.loads(ligne) for ligne in f if ligne.strip()]
++    except (OSError, ValueError):
++        raise Refus("registre des lancements de la sonde illisible") from None
++    if not all(isinstance(x, dict) and isinstance(x.get("go"), list) for x in out):
++        raise Refus("registre des lancements de la sonde : ligne sans « go »")
++    return out
++
++
++def exiger_premier_lancement(registre, identifiants, reprise=None, registre_decisions=None):
++    """a-1 : avant tout dossier et tout relais. Registre hors dépôt (chemin absolu, hors de tout dépôt git). Si l'un des
++    identifiants de GO a déjà servi à un lancement consigné : refus, sauf reprise écrite — `reprise` (R-NNNN) est une seule
++    ligne du registre des décisions, qui cite les deux identifiants et les mots « reprise de la sonde », et n'a jamais servi.
++    Une reprise sans lancement antérieur sous ces lignes est refusée. Rend la reprise admise, ou None."""
++    exiger_hors_depot(registre, "registre des lancements de la sonde")
++    deja = lancements_de_la_sonde(registre)
++    vus = {i for x in deja for i in x["go"]}
++    if not set(identifiants) & vus:
++        if reprise is not None:
++            raise Refus("sonde : --reprise sans lancement antérieur sous ces lignes de GO")
++        return None
++    if reprise is None:
++        raise Refus(f"sonde : déjà lancée sous {sorted(set(identifiants) & vus)} (une seule exécution par ligne ; une reprise "
++                    f"exige --reprise R-NNNN écrite au registre des décisions)")
++    if not (isinstance(reprise, str) and re.fullmatch(r"R-\d+", reprise)):
++        raise Refus("sonde : --reprise R-NNNN exigé")
++    if any(x.get("reprise") == reprise for x in deja):
++        raise Refus(f"sonde : la reprise {reprise} a déjà servi")
++    if not registre_decisions or not os.path.isfile(registre_decisions):
++        raise Refus("sonde : --reprise exige --registre-decisions (le registre des décisions)")
++    with open(registre_decisions, encoding="utf-8") as f:
++        lignes = [ligne for ligne in f if ligne.startswith(f"| {reprise} |")]
++    if len(lignes) != 1 or REPRISE not in lignes[0] or not all(i in lignes[0] for i in identifiants):
++        raise Refus(f"sonde : {reprise} n'est pas une seule ligne du registre des décisions citant les deux lignes de GO et "
++                    f"« {REPRISE} »")
++    return reprise
++
++
++def consigner_lancement(registre, identifiants, sortie, debut, reprise):
++    """a-1 : le lancement consigné quand les relais sont prêts, avant le premier appel (comme le pilote, m-6)."""
++    with open(registre, "a", encoding="utf-8") as f:
++        f.write(json.dumps({"go": list(identifiants), "debut_utc": debut, "sortie": os.path.abspath(sortie), "reprise": reprise,
++                            "module": VERSION}, ensure_ascii=False) + "\n")
++
++
+ __all__ = [n for n in dir() if not n.startswith("_")]
+diff --git a/demonstrations/pilote_mr2_v70.py b/demonstrations/pilote_mr2_v71.py
+index ef620f2..4c1ce61 100644
+--- a/demonstrations/pilote_mr2_v70.py
++++ b/demonstrations/pilote_mr2_v71.py
+@@ -1,10 +1,18 @@
+-"""Lanceur du pilote d'une génération sur la famille MR-2 — code v70 (fichier neuf, R12 ; remplace `pilote_mr2_v69.py`, gardé ;
++"""Lanceur du pilote d'une génération sur la famille MR-2 — code v71 (fichier neuf, R12 ; remplace `pilote_mr2_v70.py`, gardé ;
+ C-11, C-13, C-14, C-18 ; sonde).
+ 
++Changements depuis la v70 (contre-lecture du différentiel v69 → v70, `f6bc1b00…` ; mot de Lazar R-2604 : code v71 du seul
++module de la sonde) : le module de la sonde v71 (`pole/sonde_pilote_v71.py` : A-1, A-2, a-1, a-2, a-3) ; la sous-commande
++`sonde` exige un registre des lancements hors dépôt (a-1 : un second lancement sous les mêmes lignes est refusé avant tout
++dossier, sauf `--reprise R-NNNN` écrite au registre des décisions) ; les faits de chaque appel sont tirés de ses pièces, et un
++appel parti puis arrêté sans être porté par l'arrêt est porté au relevé (a-3) ; le relevé est lu sous la configuration et le
++code de l'arbre, ses faits relus de ses pièces (a-2), au bloc et au mode réel. Le reste du lanceur est celui de la v70 ; les
++noms des pièces du pilote restent ceux de la v70 (ceux que l'audit v70, inchangé, rapatrie).
++
+ Texte : `preenregistrement-pilote-conditionnelles-v1-brouillon4.md` (`04ada9fa…`), Q-P2 (a) : une génération, proposeurs puis
+ gardien, sans juge, sans étage, sans test de mort ; 4 mondes, bras A seul (archive {K1}), 4 proposeurs, un appel chacun par monde.
+ 
+-Changements depuis la v69 (contre-lecture du différentiel v68 → v69, `935e44bc…` ; décisions de la mère R-2548) :
++Changements de la v70, gardés (contre-lecture du différentiel v68 → v69, `935e44bc…` ; décisions de la mère R-2548) :
+ - **D-1** : la règle des graines écrite au manifeste est bâtie depuis la constante du cœur (`REGLE_EPISODES`) ; elle est aussi
+   une ligne du bloc gelé, donc du texte scellé : code, manifeste et texte disent la même chaîne.
+ - **D-2** : un coût lu au-dessus du pire cas arrête le pilote (code 3) : l'appel est porté au relevé partiel, sa dépense comptée.
+@@ -23,7 +31,8 @@ Sous-commandes (sorties imprimées : empreintes et contrôles seulement) :
+   secret  DOSSIER_PRIVE/secret.bin
+   generer --secret S --phrase-fichier F --texte T --texte-sha256 H --sortie DOSSIER_PRIVE/MONDES.json
+   preparer --mondes M --mondes-sha256 H
+-  sonde   --go-sonde-credits GO --go-sonde-hors GO --registre-go R --sortie DOSSIER [--borne-courte]
++  sonde   --go-sonde-credits GO --go-sonde-hors GO --registre-go R --registre-lancements FICHIER (hors dépôt) --sortie DOSSIER
++          [--borne-courte] [--reprise R-NNNN --registre-decisions D]
+                                                             payante : jamais sans les deux lignes de GO de la sonde
+   jouer   --mode a_blanc|reel --mondes M --mondes-sha256 H --sortie DOSSIER [--scenarios NOM=SCENARIO,…]
+           mode réel, exigés : --go-pi1 GO --go-pi2 GO --registre-go R --texte T --texte-sha256 H --mondes-shas S1,S2,S3,S4
+@@ -55,15 +64,15 @@ import numpy as np  # noqa: E402
+ from pole import audit_pilote_v70 as AU  # noqa: E402
+ from pole import pilote_mr2_v70 as P  # noqa: E402
+ from pole import proposeurs_pilote_v70 as PR  # noqa: E402
+-from pole import sonde_pilote_v70 as S  # noqa: E402
++from pole import sonde_pilote_v71 as S  # noqa: E402
+ from pole.outils import json_canonique, sha256_fichier  # noqa: E402
+ 
+-VERSION = "lanceur-pilote-mr2-v70"
+-LANCEUR = "demonstrations/pilote_mr2_v70.py"
+-DEBUT_BLOC, FIN_BLOC = "<!-- empreintes-du-code-pilote-v70 : début -->", "<!-- empreintes-du-code-pilote-v70 : fin -->"
++VERSION = "lanceur-pilote-mr2-v71"
++LANCEUR = "demonstrations/pilote_mr2_v71.py"
++DEBUT_BLOC, FIN_BLOC = "<!-- empreintes-du-code-pilote-v71 : début -->", "<!-- empreintes-du-code-pilote-v71 : fin -->"
+ FICHIERS_GELES = (
+-    "demonstrations/pilote_mr2_v70.py", "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py",
+-    "pole/sonde_pilote_v70.py",
++    "demonstrations/pilote_mr2_v71.py", "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py",
++    "pole/sonde_pilote_v71.py",
+     "exemples/pilote-mr2-v70/commandes/commande_pilote_v70.py", "exemples/pilote-mr2-v70/commandes/relais_pilote_v70.py",
+     "exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json",
+     "pole/selection_pari.py", "pole/outils.py", "pole/registre_go_v66.py", "pole/configuration_v53.py",
+@@ -92,6 +101,12 @@ def empreintes_du_code(racine=RACINE):
+     return out
+ 
+ 
++def attendu_du_releve(conf, racine=RACINE):
++    """a-2 : ce qu'un relevé de la sonde doit porter pour être lu par cet arbre : l'empreinte de sa configuration et celles de son
++    code gelé."""
++    return {"configuration_sha256": PR.empreinte_configuration(conf), "code_sha256": empreintes_du_code(racine)}
++
++
+ def bloc_gele(racine=RACINE, releve=None):
+     """Le bloc que le texte scellé recopie : empreintes du code et des modules portés, gabarit, bornes, plafonds, parts, règles de
+     comptage de la réflexion, lignes de GO du pilote et de la sonde, réglages envoyés, numpy exigé, règle des graines des
+@@ -115,7 +130,7 @@ def bloc_gele(racine=RACINE, releve=None):
+     if releve is None:
+         lignes.append("releve-de-la-sonde absent (le mode réel le refuse)")
+     else:
+-        lignes.append(f"releve-de-la-sonde {S.exiger_releve(conf, releve)}")
++        lignes.append(f"releve-de-la-sonde {S.exiger_releve(conf, releve, attendu_du_releve(conf, racine))}")
+     for rel, sha in sorted(empreintes_du_code(racine).items()):
+         lignes.append(f"{sha}  orchestrator/{rel}")
+     lignes += ["```", FIN_BLOC]
+@@ -126,7 +141,7 @@ def verifier_bloc_du_texte(texte, racine=RACINE, releve=None):
+     """Mode réel : le bloc gelé du texte scellé est exactement celui que rend le code présent, avec ce relevé (refus sinon)."""
+     i, j = texte.find(DEBUT_BLOC), texte.find(FIN_BLOC)
+     if i < 0 or j < i:
+-        raise P.Refus("texte scellé : bloc « empreintes-du-code-pilote-v70 » absent")
++        raise P.Refus("texte scellé : bloc « empreintes-du-code-pilote-v71 » absent")
+     if texte[i:j + len(FIN_BLOC)] + "\n" != bloc_gele(racine, releve):
+         raise P.Refus("texte scellé : bloc gelé ≠ code, gabarit, bornes, réglages ou relevé de la sonde présents")
+ 
+@@ -205,7 +220,7 @@ def exiger_mode_reel(args, conf):
+         raise P.Refus(f"mode réel : numpy {np.__version__} ≠ {conf['numpy_exige']} (bloc gelé)")
+     if sha256_fichier(args.texte) != args.texte_sha256:
+         raise P.Refus("texte scellé : empreinte différente")
+-    releve_sha = S.exiger_releve(conf, args.releve_sonde)  # D-4 : la sonde faite, son relevé valide
++    releve_sha = S.exiger_releve(conf, args.releve_sonde, attendu_du_releve(conf))  # D-4, a-2 : la sonde faite, relevé valide
+     with open(args.texte, encoding="utf-8") as f:
+         verifier_bloc_du_texte(f.read(), releve=args.releve_sonde)  # … et c'est celui que le texte scellé cite
+     go = PR.lire_go_du_pilote(conf, args.registre_go, args.go_pi1, args.go_pi2)
+@@ -321,44 +336,50 @@ def jouer(args):
+ 
+ def sonde(args):
+     """D-4 : la sonde payante (jamais jouée par le développeur). Configuration gelée de l'arbre seulement ; deux lignes de GO à part
+-    lues au montant exact ; relais lancés ici (clés par leur nom, plafond = part de la sonde, un ou deux appels) et contrôlés
+-    champ par champ en mode réel ; par relais, la consigne courte à la borne gelée puis, avec `--borne-courte`, la consigne longue
+-    à 256 jetons, par la chaîne du pilote ; relevé scellé. Tout arrêt (coût au-dessus du pire cas compris) laisse un relevé
+-    partiel, que le mode réel refuse."""
++    lues au montant exact ; registre des lancements (a-1) : un second lancement sous une ligne déjà employée est refusé, sauf
++    reprise écrite ; relais lancés ici (clés par leur nom, plafond = part de la sonde, un ou deux appels) et contrôlés champ par
++    champ en mode réel ; le lancement consigné quand les relais sont prêts ; par relais, la consigne courte à la borne gelée puis,
++    avec `--borne-courte`, la consigne longue à 256 jetons, par la chaîne du pilote ; faits tirés des pièces de chaque appel
++    (a-2, a-3) ; relevé scellé. Tout arrêt après le premier appel laisse un relevé partiel, que le mode réel refuse."""
+     debut = maintenant()
+     conf, _ = PR.lire_configuration(CONFIGURATION)
+     if os.path.exists(args.sortie):
+         raise P.Refus("sonde : dossier de sortie existant")
+     go = PR.lire_go_de_la_sonde(conf, args.registre_go, args.go_sonde_credits, args.go_sonde_hors)
++    identifiants = [args.go_sonde_credits, args.go_sonde_hors]
++    reprise = S.exiger_premier_lancement(args.registre_lancements, identifiants, args.reprise, args.registre_decisions)  # a-1
+     s = conf["sonde"]
+     n_appels = 2 if args.borne_courte else 1
+     parts = PR.parts_de_la_sonde(conf)
+     os.makedirs(args.sortie)
+     jeton = PR.nouveau_jeton()
+     procs, faits, relais, arret = {}, [], None, None
+-    en_cours = None
++    en_cours, partis = None, False
+     try:
+         for nom in P.PROPOSEURS:
+             p = conf["proposeurs"][nom]
+             procs[nom], _ = PR.lancer_relais(conf, nom, os.path.join(args.sortie, f"journal-relais-{nom}.jsonl"), p["dialecte"],
+                                              jeton, python=sys.executable, plafond=parts[nom], max_appels=n_appels)
+         relais = PR.exiger_relais_prets(conf, "reel", plafonds=parts, max_appels=n_appels)
++        S.consigner_lancement(args.registre_lancements, identifiants, args.sortie, debut, reprise)  # a-1, avant le premier appel
+         for nom in P.PROPOSEURS:
+             p = conf["proposeurs"][nom]
+             for quoi in S.APPELS[:n_appels]:
+                 borne = p["borne_sortie_jetons"] if quoi == "borne_gelee" else s["borne_courte_jetons"]
+-                dossier = os.path.join(args.sortie, nom, quoi)
+-                en_cours = (nom, quoi, borne, dossier)
+-                r = PR.appeler(conf, nom, s["consignes"][quoi], dossier, jeton, python=sys.executable,
+-                               borne=None if quoi == "borne_gelee" else borne)
+-                faits.append(S.faits_d_un_appel(conf, nom, quoi, borne, dossier, r))
++                en_cours, partis = (nom, quoi), True
++                PR.appeler(conf, nom, s["consignes"][quoi], S.dossier_d_un_appel(args.sortie, nom, quoi), jeton,
++                           python=sys.executable, borne=None if quoi == "borne_gelee" else borne)
++                faits.append(S.faits_depuis_les_pieces(conf, nom, quoi, args.sortie))  # a-2 : les faits sont ceux des pièces
+                 en_cours = None
+-    except (PR.ArretPilote, Exception) as e:  # noqa: BLE001 — tout arrêt laisse un relevé partiel
++    except (PR.ArretPilote, Exception) as e:  # noqa: BLE001 — tout arrêt après le premier appel laisse un relevé partiel
+         arret = f"{type(e).__name__} : {e}"
+-        a = getattr(e, "appel", None)
+-        if isinstance(e, PR.ArretPilote) and a is not None and en_cours is not None:
+-            faits.append(S.faits_d_un_appel(conf, en_cours[0], en_cours[1], en_cours[2], en_cours[3], a))
+-        if isinstance(e, P.Refus) and not faits:
++        if en_cours is not None and os.path.isfile(os.path.join(S.dossier_d_un_appel(args.sortie, *en_cours),
++                                                                "reponse-brute.json")):
++            try:  # a-3 : l'appel parti est porté au relevé, sa dépense comptée, que l'arrêt le porte ou non
++                faits.append(S.faits_depuis_les_pieces(conf, en_cours[0], en_cours[1], args.sortie))
++            except (P.Refus, KeyError, TypeError, ValueError, OSError) as e2:
++                arret += f" ; pièces de l'appel en cours illisibles : {e2}"
++        if isinstance(e, P.Refus) and not partis:  # rien n'est parti : refus nommé, aucun relevé
+             for proc in procs.values():
+                 PR.arreter_relais(proc)
+             raise
+@@ -366,14 +387,15 @@ def sonde(args):
+         for proc in procs.values():
+             PR.arreter_relais(proc)
+     extra = {"lanceur": VERSION, "configuration_sha256": PR.empreinte_configuration(conf), "code_sha256": empreintes_du_code(),
+-             "environnement_de_calcul": environnement_de_calcul(), "go": go, "relais": relais,
++             "environnement_de_calcul": environnement_de_calcul(), "go": go, "reprise": reprise, "relais": relais,
+              "consignes_sha256": {k: hashlib.sha256(v.encode("utf-8")).hexdigest() for k, v in s["consignes"].items()},
+              "parts_usd": parts, "depense_usd": round(sum(f["cout_usd"] or 0.0 for f in faits), 8),
+-             "a_lire_hors_du_code": "prix : coût de chaque appel à rapprocher de la console par Lazar"}
++             "a_lire_hors_du_code": "prix : coût de chaque appel à rapprocher de la console par Lazar ; dépense à rapprocher "
++                                    "des journaux des relais"}
+     rel = S.releve(conf, faits, bool(args.borne_courte), debut, maintenant(), arret is not None, arret, extra)
+     sha = ecrire(os.path.join(args.sortie, S.RELEVE), rel)
+     imprimer({"lanceur": VERSION, "releve_sonde_sha256": sha, "partiel": arret is not None, "arret": arret,
+-              "conclusions": rel["conclusions"]})
++              "depense_usd": extra["depense_usd"], "conclusions": rel["conclusions"]})
+     if arret is not None:
+         print(f"arrêt : {arret}", file=sys.stderr)
+         return 3
+@@ -492,8 +514,11 @@ def principal(argv=None):
+     x.add_argument("--go-sonde-credits", required=True)
+     x.add_argument("--go-sonde-hors", required=True)
+     x.add_argument("--registre-go", required=True)
++    x.add_argument("--registre-lancements", required=True)
+     x.add_argument("--sortie", required=True)
+     x.add_argument("--borne-courte", action="store_true")
++    x.add_argument("--reprise", default=None)
++    x.add_argument("--registre-decisions", default=None)
+     x = s.add_parser("jouer")
+     x.add_argument("--mode", required=True)
+     x.add_argument("--mondes", required=True)
+diff --git a/essais/test_pilote_mr2_v70.py b/essais/test_pilote_mr2_v71.py
+index 484f228..0f3704c 100644
+--- a/essais/test_pilote_mr2_v70.py
++++ b/essais/test_pilote_mr2_v71.py
+@@ -1,11 +1,13 @@
+-"""Essais R5 du code v70 du pilote MR-2 (C-1 à C-18 ; corrections des contre-lectures `7af19261…` et `935e44bc…`, D-1 à D-5,
+-d-1 à d-8) : chaque garde sur un cas sain et sur un artefact. Aucun réseau hors de la boucle locale (relais à amont factice,
++"""Essais R5 du code v71 du pilote MR-2 (C-1 à C-18 ; corrections des contre-lectures `7af19261…` et `935e44bc…`, D-1 à D-5,
++d-1 à d-8 ; et de la contre-lecture `f6bc1b00…` sur la sonde : A-1, A-2, a-1, a-2, a-3) : chaque garde sur un cas sain et sur un
++artefact. Les essais de la v70 sont portés sur le lanceur v71 et le module de la sonde v71 (le reste de l'arbre est celui de la
++v70, inchangé). Aucun réseau hors de la boucle locale (relais à amont factice,
+ doublure des fournisseurs déclarée ici), aucune clé (valeurs factices posées par les essais dans les environnements qu'ils
+ construisent), aucun appel de modèle ; la sonde n'est jouée que sur la doublure. Mondes : ceux de l'essai public de la mesure
+ (`generer_monde_v4(P1.cle("pilote-v68-essai-developpement", r))` et l'étiquette « pilote-v2-essai-developpement »), écrits dans
+ un dossier provisoire hors de tout dépôt ; jamais un monde du secret du pilote, de calibration ou de test.
+ 
+-  OMP_NUM_THREADS=2 python3 -I -B -m pytest -q -p no:cacheprovider essais/test_pilote_mr2_v70.py
++  OMP_NUM_THREADS=2 python3 -I -B -m pytest -q -p no:cacheprovider essais/test_pilote_mr2_v71.py
+ """
+ 
+ import copy
+@@ -30,11 +32,11 @@ from pole import audit_pilote_v70 as AU  # noqa: E402
+ from pole import pilote_mr2_v70 as P  # noqa: E402
+ from pole import proposeurs_pilote_v70 as PR  # noqa: E402
+ from pole import selection_pari as sp  # noqa: E402
+-from pole import sonde_pilote_v70 as S  # noqa: E402
++from pole import sonde_pilote_v71 as S  # noqa: E402
+ from pole.outils import json_canonique, sha256_fichier  # noqa: E402
+ 
+-_spec = __import__("importlib.util").util.spec_from_file_location("lanceur_pilote_v70", os.path.join(RACINE, "demonstrations",
+-                                                                                                    "pilote_mr2_v70.py"))
++_spec = __import__("importlib.util").util.spec_from_file_location("lanceur_pilote_v71", os.path.join(RACINE, "demonstrations",
++                                                                                                    "pilote_mr2_v71.py"))
+ L = __import__("importlib.util").util.module_from_spec(_spec)
+ _spec.loader.exec_module(L)
+ 
+@@ -56,7 +58,7 @@ def arbre(k, feuille=F0):
+ 
+ 
+ def dossier_prive():
+-    d = tempfile.mkdtemp(prefix="pilote-v70-prive-")
++    d = tempfile.mkdtemp(prefix="pilote-v71-prive-")
+     os.chmod(d, 0o700)
+     return d
+ 
+@@ -1540,6 +1542,7 @@ class Doublure:
+         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+         R = charger_relais_module()
+         self.recues, self.cles = [], cles
++        self.surcharge = {}  # {(dialecte, borne courte) : corps(modèle, consigne, max)} — relevés du contre-lecteur (A-1, A-2)
+         doublure = self
+ 
+         class G(BaseHTTPRequestHandler):
+@@ -1568,7 +1571,9 @@ class Doublure:
+                     self.end_headers()
+                     self.wfile.write(o)
+                     return
+-                if sonde:
++                if sonde and (d, mt <= 256) in doublure.surcharge:
++                    rep = doublure.surcharge[(d, mt <= 256)](modele, consigne, mt)
++                elif sonde:
+                     rep = doublure.corps_sonde(d, modele, consigne, mt)
+                 else:
+                     rep = R.corps_factice(d, modele, consigne, mt, "k1_plus", REGLE_DOUBLURE[d])
+@@ -1641,7 +1646,8 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         import numpy as np
+         import socket
+         e = mondes_dev()
+-        cls.d = tempfile.mkdtemp(prefix="pilote-v70-reel-")
++        cls.d = tempfile.mkdtemp(prefix="pilote-v71-reel-")
++        cls.registres = dossier_prive()  # a-1 : registres des lancements de la sonde, hors dépôt
+         cls.doublure = Doublure(cls.CLES)
+         cls.arbre = os.path.join(cls.d, "arbre", "orchestrator")
+         shutil.copytree(RACINE, cls.arbre, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
+@@ -1658,7 +1664,8 @@ class ModeReelBoutEnBout(unittest.TestCase):
+             s.close()
+         json.dump(conf, open(c, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+         cls.conf_copie, _ = PR.lire_configuration(c)
+-        cls.lanceur = os.path.join(cls.arbre, "demonstrations", "pilote_mr2_v70.py")
++        cls.lanceur = os.path.join(cls.arbre, "demonstrations", "pilote_mr2_v71.py")
++        cls.attendu = L.attendu_du_releve(cls.conf_copie, cls.arbre)  # a-2
+         jour = datetime.date.today()
+         cls.registre = os.path.join(cls.d, "go.md")
+         cls.ecrire_registre(cls.registre, "20 USD (sur crédits)", "21.72 USD", jour)
+@@ -1668,6 +1675,8 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         cls.sonde = cls.lancer_sonde("sonde")
+         cls.releve = os.path.join(cls.d, "sonde", S.RELEVE)
+         cls.recues_de_la_sonde = list(cls.doublure.recues)
++        reg = os.path.join(cls.registres, "lancements-sonde-sonde.jsonl")  # a-1, lu juste après la sonde
++        cls.lancements_sonde = [json.loads(x) for x in open(reg, encoding="utf-8")] if os.path.exists(reg) else []
+         bloc = subprocess.run([sys.executable, "-I", "-B", cls.lanceur, "bloc", "--releve-sonde", cls.releve], capture_output=True,
+                               text=True, encoding="utf-8", env=cls.env)
+         assert bloc.returncode == 0, (cls.sonde.stderr[-2000:], bloc.stderr)
+@@ -1685,6 +1694,7 @@ class ModeReelBoutEnBout(unittest.TestCase):
+     @classmethod
+     def lancer_sonde(cls, nom, remplacer=None, env=None, borne_courte=True):
+         args = {"--go-sonde-credits": "GO-2026-11-13-73", "--go-sonde-hors": "GO-2026-11-13-74", "--registre-go": cls.registre,
++                "--registre-lancements": os.path.join(cls.registres, f"lancements-sonde-{nom}.jsonl"),
+                 "--sortie": os.path.join(cls.d, nom)}
+         args.update(remplacer or {})
+         cmd = [sys.executable, "-I", "-B", cls.lanceur, "sonde"] + [x for k, v in args.items() for x in (k, v)]
+@@ -1718,6 +1728,7 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         cls.doublure.fermer()
+         shutil.rmtree(cls.d)
+         shutil.rmtree(cls.prive)
++        shutil.rmtree(cls.registres)
+ 
+     def test_sain_sonde(self):
+         """D-4 : la sonde sur la doublure : 8 appels (borne gelée puis 256 jetons), relevé complet et scellé, conclusions toutes
+@@ -1735,7 +1746,21 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         self.assertEqual(len(sondes), 8)
+         self.assertTrue(all(x["cle_juste"] for x in sondes))
+         self.assertEqual(sorted(x["max"] for x in sondes), sorted([256] * 4 + [64000, 89000, 36000, 36000]))
+-        self.assertEqual(S.exiger_releve(self.conf_copie, self.releve), sha256_fichier(self.releve))
++        self.assertEqual(S.exiger_releve(self.conf_copie, self.releve, self.attendu), sha256_fichier(self.releve))
++        # a-2 : chaque fait est celui de ses pièces ; A-1 : verdict par appel ; A-2 : champs bruts tels quels
++        for f in rel["appels"]:
++            with self.subTest(f["proposeur"] + " " + f["appel"]):
++                self.assertEqual(f, S.faits_depuis_les_pieces(self.conf_copie, f["proposeur"], f["appel"],
++                                                             os.path.dirname(self.releve)))
++                self.assertEqual(f["champs_absents"], [])
++                self.assertEqual(f["borne"], 256 if f["appel"] == "borne_courte" else
++                                 self.conf_copie["proposeurs"][f["proposeur"]]["borne_sortie_jetons"])
++        self.assertEqual({(f["proposeur"], f["appel"]): f["verdict_reflexion"] for f in rel["appels"] if f["proposeur"] == "astra"},
++                         {("astra", "borne_gelee"): "comprise", ("astra", "borne_courte"): "comprise"})
++        self.assertEqual((rel["configuration_sha256"], rel["code_sha256"]),
++                         (self.attendu["configuration_sha256"], self.attendu["code_sha256"]))
++        self.assertEqual([(x["go"], x["reprise"]) for x in self.lancements_sonde], [(["GO-2026-11-13-73", "GO-2026-11-13-74"], None)])
++        self.assertGreater(rel["depense_usd"], 0)
+         self.assertIn(f"releve-de-la-sonde {sha256_fichier(self.releve)}", self.bloc)
+         noms = {n: v["environnement_noms"] for n, v in rel["relais"].items()}  # W1 : rien d'autre n'est arrivé aux relais
+         self.assertTrue(all(not {"ANTHROPIC_BASE_URL", "AUTRE_CLE_FACTICE", "OMP_NUM_THREADS"} & set(v) for v in noms.values()), noms)
+@@ -1865,7 +1890,11 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         if recalculer:
+             r["conclusions"] = {n: S.conclusions(self.conf_copie, n, [f for f in r["appels"] if f["proposeur"] == n])
+                                 for n in P.PROPOSEURS}
+-        c = os.path.join(self.d, f"releve-forge-{nom}.json")
++        dossier = os.path.join(self.d, f"forge-{nom}")
++        shutil.copytree(os.path.join(self.d, "sonde"), dossier)
++        c = os.path.join(dossier, S.RELEVE)
++        os.remove(c)
++        os.remove(c + ".sha256")
+         PR.ecrire_scelle_json(c, r)
+         return c
+ 
+@@ -1875,7 +1904,8 @@ class ModeReelBoutEnBout(unittest.TestCase):
+             return next(f for f in r["appels"] if f["proposeur"] == nom and f["appel"] == quoi)
+ 
+         def verdict(r):  # Astra : réponse d'un mot, 40 jetons de réflexion hors de completion_tokens → « non comprise »
+-            fait(r, "astra", "borne_gelee")["usage_brut"].update(completion_tokens=2, reasoning_tokens=40)
++            fait(r, "astra", "borne_gelee")["usage_brut"].update(completion_tokens=2)
++            fait(r, "astra", "borne_gelee")["usage_brut"]["completion_tokens_details"]["reasoning_tokens"] = 40
+ 
+         def borne(r):  # Argon : la réflexion déborde la borne courte (pensées hors de la borne) → plafond pas dur
+             fait(r, "argon", "borne_courte")["usage_brut"].update(thoughtsTokenCount=400, totalTokenCount=None)
+@@ -1896,12 +1926,48 @@ class ModeReelBoutEnBout(unittest.TestCase):
+                "identite": (lambda r: r["identite"]["argon"].update(modele="gemini-4-autre"), True, "identité de argon"),
+                "pieces": (lambda r: r["pieces_sha256"].update(relais="0" * 64), True, "autre relais"),
+                "version": (lambda r: r.update(version="releve-sonde-pilote-v69"), True, "version"),
+-               "appel_manquant": (lambda r: r["appels"].remove(fait(r, "astra", "borne_courte")), True, "deux appels")}
++               "appel_manquant": (lambda r: r["appels"].remove(fait(r, "astra", "borne_courte")), True, "nombre faux"),
++               "appel_en_double": (lambda r: (r["appels"].remove(fait(r, "astra", "borne_courte")),
++                                              r["appels"].append(dict(fait(r, "astra", "borne_gelee")))), True, "deux appels"),
++               # a-2 : configuration et code de l'arbre qui lit ; faits relus des pièces ; borne de la configuration
++               "configuration": (lambda r: r.update(configuration_sha256="0" * 64), True, "autre configuration"),
++               "code": (lambda r: r["code_sha256"].update({"pole/sonde_pilote_v71.py": "0" * 64}), True, "autre code"),
++               "faits_hors_pieces": (lambda r: fait(r, "argon", "borne_gelee").update(cout_usd=0.0), True, "ses pièces"),
++               "usage_hors_pieces": (lambda r: fait(r, "astra", "borne_courte")["usage_brut"].update(prompt_tokens=7), True,
++                                     "ses pièces"),
++               "borne_forgee": (lambda r: (fait(r, "argon", "borne_courte").update(borne=1000),
++                                           fait(r, "argon", "borne_courte")["usage_brut"].update(thoughtsTokenCount=900,
++                                                                                                 totalTokenCount=None)),
++                                True, "ne confirme pas")}
+         for nom, (modif, recalculer, motif) in cas.items():
+             with self.subTest(nom):
+                 c = self.forger(nom, modif, recalculer)
+                 with self.assertRaisesRegex(P.Refus, motif):
+-                    S.exiger_releve(self.conf_copie, c)
++                    S.exiger_releve(self.conf_copie, c, self.attendu)
++        seul = os.path.join(self.d, "releve-sans-pieces")  # a-2 : le relevé seul, sans le dossier de ses appels
++        os.makedirs(seul)
++        for x in ("", ".sha256"):
++            shutil.copyfile(self.releve + x, os.path.join(seul, S.RELEVE + x))
++        with self.assertRaisesRegex(P.Refus, "pièce de la sonde absente"):
++            S.exiger_releve(self.conf_copie, os.path.join(seul, S.RELEVE), self.attendu)
++        piece = os.path.join(self.d, "forge-piece")  # a-2 : une pièce altérée, compagnon gardé
++        shutil.copytree(os.path.join(self.d, "sonde"), piece)
++        with open(os.path.join(piece, "argon", "borne_courte", "corps-relais.json"), "a", encoding="utf-8") as f:
++            f.write(" ")
++        with self.assertRaisesRegex(P.Refus, "≠ son compagnon"):
++            S.exiger_releve(self.conf_copie, os.path.join(piece, S.RELEVE), self.attendu)
++        piece = os.path.join(self.d, "forge-corps-remplace")  # a-2 : un autre corps du relais, scellé à neuf, mêmes faits
++        shutil.copytree(os.path.join(self.d, "sonde"), piece)
++        c = os.path.join(piece, "argon", "borne_gelee", "corps-relais.json")
++        corps = json.load(open(c, encoding="utf-8"))
++        corps["note"] = "remplacé"
++        open(c, "w", encoding="utf-8").write(json.dumps(corps))
++        open(c + ".sha256", "w", encoding="utf-8").write(f"{sha256_fichier(c)}  corps-relais.json\n")
++        with self.assertRaisesRegex(P.Refus, "empreinte de sa réponse brute"):
++            S.exiger_releve(self.conf_copie, os.path.join(piece, S.RELEVE), self.attendu)
++        autre = dict(self.attendu, code_sha256=dict(self.attendu["code_sha256"], **{"demonstrations/pilote_mr2_v71.py": "0" * 64}))
++        with self.assertRaisesRegex(P.Refus, "autre code"):
++            S.exiger_releve(self.conf_copie, self.releve, autre)
+         c = self.forger("verdict-bloc", verdict)
+         b = subprocess.run([sys.executable, "-I", "-B", self.lanceur, "bloc", "--releve-sonde", c], capture_output=True, text=True,
+                            encoding="utf-8", env=self.env)
+@@ -1913,7 +1979,7 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         with open(altere, "a", encoding="utf-8") as f:
+             f.write(" ")
+         with self.assertRaisesRegex(P.Refus, "compagnon"):
+-            S.exiger_releve(self.conf_copie, altere)
++            S.exiger_releve(self.conf_copie, altere, self.attendu)
+         self.refus("releve-altere", "compagnon", {"--releve-sonde": altere})
+ 
+     def test_artefacts_sonde(self):
+@@ -1941,7 +2007,183 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         courte = os.path.join(self.d, "sonde-courte", S.RELEVE)
+         self.assertEqual(json.load(open(courte))["borne_courte"], False)
+         with self.assertRaisesRegex(P.Refus, "borne courte"):
+-            S.exiger_releve(self.conf_copie, courte)
++            S.exiger_releve(self.conf_copie, courte, self.attendu)
++
++    def sonde_surchargee(self, nom, surcharge):
++        """Une sonde sur la doublure dont certains appels rendent les corps donnés (relevés du contre-lecteur) ; rend le relevé."""
++        self.doublure.surcharge = surcharge
++        try:
++            r = self.lancer_sonde(nom)
++        finally:
++            self.doublure.surcharge = {}
++        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
++        return os.path.join(self.d, nom, S.RELEVE)
++
++    @staticmethod
++    def corps_astra(c, t, texte, fin):
++        """Un corps d'Astra : `c` jetons de sortie, `t` de réflexion, le texte visible `texte` (sa longueur va avec ses jetons)."""
++        return lambda modele, consigne, mt: {
++            "model": modele, "choices": [{"index": 0, "finish_reason": fin,
++                                          "message": {"role": "assistant", "content": texte, "refusal": None}}],
++            "usage": {"prompt_tokens": 14, "completion_tokens": c, "completion_tokens_details": {"reasoning_tokens": t},
++                      "total_tokens": 14 + c}}
++
++    def test_releves_du_contre_lecteur_a1(self):
++        """A-1 : les relevés E2a (3 et 2, puis 130 et 126), E2b (2 et 0, puis 130 et 126) et E2c (2 et 300, puis 130 et 126) d'un
++        monde où la réflexion d'Astra est ajoutée, règle gelée « comprise » : refusés (la v70 admettait E2a et E2b) ; un appel
++        qui contredit l'autre : refusé ; un monde où toute la borne courte part en réflexion comprise (aucune réflexion à l'appel
++        d'un mot) : admis par l'appel court seul. Par la chaîne entière (doublure, commande, relais, sonde, bloc)."""
++        A, ok = self.corps_astra, "OK"
++        long = "x " * 130  # 130 jetons visibles : 260 octets
++        cas = {"E2a": ({("astra", False): A(3, 2, ok, "stop"), ("astra", True): A(130, 126, long, "length")}, "indetermine"),
++               "E2b": ({("astra", False): A(2, 0, ok, "stop"), ("astra", True): A(130, 126, long, "length")}, "indetermine"),
++               "E2c": ({("astra", False): A(2, 300, ok, "stop"), ("astra", True): A(130, 126, long, "length")}, "non_comprise"),
++               "contradiction": ({("astra", False): A(42, 40, ok, "stop"), ("astra", True): A(100, 156, "x " * 100, "length")},
++                                 "contradictoire")}
++        for nom, (surcharge, verdict) in cas.items():
++            with self.subTest(nom):
++                c = self.sonde_surchargee(f"sonde-a1-{nom}", surcharge)
++                self.assertEqual(json.load(open(c))["conclusions"]["astra"]["verdict_reflexion"], verdict)
++                with self.assertRaisesRegex(P.Refus, r"astra ne confirme pas \['verdict_egal_a_la_regle'\]"):
++                    S.exiger_releve(self.conf_copie, c, self.attendu)
++                b = subprocess.run([sys.executable, "-I", "-B", self.lanceur, "bloc", "--releve-sonde", c], capture_output=True,
++                                   text=True, encoding="utf-8", env=self.env)
++                self.assertEqual((b.returncode, "ne confirme pas" in b.stderr), (2, True))
++        c = self.sonde_surchargee("sonde-a1-courte-seule", {("astra", False): A(2, 0, ok, "stop"),
++                                                            ("astra", True): A(256, 256, "", "length")})
++        rel = json.load(open(c))
++        self.assertEqual([f["verdict_reflexion"] for f in rel["appels"] if f["proposeur"] == "astra"], ["indetermine", "comprise"])
++        self.assertEqual(S.exiger_releve(self.conf_copie, c, self.attendu), sha256_fichier(c))
++
++    def test_argon_candidats_absents_a2(self):
++        """A-2 (E3) : Argon, appel à 256 jetons tout en réflexion, `candidatesTokenCount` absent du corps : la commande le lit
++        0 (256 jetons de sortie comptés, usage entier) ; la sonde lit pareil : usage entier, borne tenue, verdict « non comprise »
++        (règle gelée) : relevé admis, et le bloc le cite. Un champ nul (présent, `null`) reste illisible, comme pour la commande."""
++        def argon(candidats):
++            def corps(modele, consigne, mt):
++                u = {"promptTokenCount": 21, "thoughtsTokenCount": 256, "totalTokenCount": 277}
++                if candidats != "absent":
++                    u["candidatesTokenCount"] = candidats
++                return {"modelVersion": modele, "candidates": [{"finishReason": "MAX_TOKENS", "content": {"role": "model"}}],
++                        "usageMetadata": u}
++            return corps
++        c = self.sonde_surchargee("sonde-a2-absent", {("gemini", True): argon("absent")})
++        rel = json.load(open(c))
++        f = next(x for x in rel["appels"] if x["proposeur"] == "argon" and x["appel"] == "borne_courte")
++        self.assertEqual((f["champs_absents"], f["usage_entier"], f["sortie_comptee"], f["verdict_reflexion"], f["etat"]),
++                         (["candidatesTokenCount"], True, 256, "non_comprise", "tronque"))
++        self.assertNotIn("candidatesTokenCount", f["usage_brut"])
++        self.assertEqual(S.exiger_releve(self.conf_copie, c, self.attendu), sha256_fichier(c))
++        b = subprocess.run([sys.executable, "-I", "-B", self.lanceur, "bloc", "--releve-sonde", c], capture_output=True, text=True,
++                           encoding="utf-8", env=self.env)
++        self.assertEqual(b.returncode, 0, b.stderr)
++        self.assertIn(f"releve-de-la-sonde {sha256_fichier(c)}", b.stdout)
++        self.doublure.surcharge = {("gemini", True): argon(None)}
++        try:
++            r = self.lancer_sonde("sonde-a2-nul")
++        finally:
++            self.doublure.surcharge = {}
++        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
++        c = os.path.join(self.d, "sonde-a2-nul", S.RELEVE)
++        self.assertFalse(json.load(open(c))["conclusions"]["argon"]["usage_entier"])
++        with self.assertRaisesRegex(P.Refus, "argon ne confirme pas"):
++            S.exiger_releve(self.conf_copie, c, self.attendu)
++
++    def test_registre_des_lancements_a1(self):
++        """a-1 : un second lancement sous les mêmes lignes (registre de la sonde saine) est refusé avant tout dossier ; une
++        reprise écrite au registre des décisions est admise une fois ; une reprise mal écrite, absente ou déjà servie : refus."""
++        reg = os.path.join(self.registres, "lancements-sonde-sonde.jsonl")
++        decisions = os.path.join(self.d, "decisions.md")
++        open(decisions, "w", encoding="utf-8").write(
++            "| R-9001 | 2026-11-13 | Lazar : reprise de la sonde sous GO-2026-11-13-73 et GO-2026-11-13-74 | décision |\n"
++            "| R-9002 | 2026-11-13 | Lazar : autre chose, GO-2026-11-13-73 et GO-2026-11-13-74 | décision |\n")
++        import datetime
++        go75 = os.path.join(self.d, "go-75.md")  # une troisième ligne de sonde, hors crédits
++        jour = datetime.date.today()
++        shutil.copyfile(self.registre, go75)
++        with open(go75, "a", encoding="utf-8") as f:
++            f.write(f"| GO-2026-11-13-75 | {jour} | calcul | Pilote MR-2 : sonde des relais, hors crédits | 3.68 USD | "
++                    f"{jour + datetime.timedelta(days=10)} | Lazar | R |\n")
++        cas = {"second": ({}, "déjà lancée"), "reprise_sans_registre": ({"--reprise": "R-9001"}, "registre-decisions"),
++               "reprise_malformee": ({"--reprise": "9001", "--registre-decisions": decisions}, "R-NNNN"),
++               "reprise_non_ecrite": ({"--reprise": "R-9002", "--registre-decisions": decisions}, "reprise de la sonde"),
++               "reprise_absente": ({"--reprise": "R-9003", "--registre-decisions": decisions}, "une seule ligne"),
++               "une_seule_ligne_deja_employee": ({"--go-sonde-hors": "GO-2026-11-13-75", "--registre-go": go75}, "déjà lancée")}
++        for nom, (remplacer, motif) in cas.items():
++            with self.subTest(nom):
++                r = self.lancer_sonde(f"sonde-{nom}", dict({"--registre-lancements": reg}, **remplacer))
++                self.assertEqual(r.returncode, 2, r.stderr[-1000:])
++                self.assertIn(motif, r.stderr)
++                self.assertFalse(os.path.exists(os.path.join(self.d, f"sonde-{nom}")))
++        r = self.lancer_sonde("sonde-reprise", {"--registre-lancements": reg, "--reprise": "R-9001",
++                                                "--registre-decisions": decisions})
++        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
++        rel = os.path.join(self.d, "sonde-reprise", S.RELEVE)
++        self.assertEqual(json.load(open(rel))["reprise"], "R-9001")
++        self.assertEqual(S.exiger_releve(self.conf_copie, rel, self.attendu), sha256_fichier(rel))
++        self.assertEqual([json.loads(x)["reprise"] for x in open(reg)], [None, "R-9001"])
++        r = self.lancer_sonde("sonde-reprise-2", {"--registre-lancements": reg, "--reprise": "R-9001",
++                                                  "--registre-decisions": decisions})
++        self.assertEqual(r.returncode, 2)
++        self.assertIn("déjà servi", r.stderr)
++        r = self.lancer_sonde("sonde-registre-dans-l-arbre", {"--registre-lancements": os.path.join(self.arbre, "lancements.jsonl")})
++        self.assertEqual(r.returncode, 2)
++        self.assertIn("dans l'arbre", r.stderr)
++        r = self.lancer_sonde("sonde-reprise-premiere", {"--reprise": "R-9001", "--registre-decisions": decisions})
++        self.assertEqual(r.returncode, 2)
++        self.assertIn("sans lancement antérieur", r.stderr)
++
++    def test_appel_parti_puis_arrete_porte_au_releve_a3(self):
++        """a-3 : un appel parti puis arrêté sans que l'arrêt le porte (témoin d'isolement non conforme, par exemple) est porté
++        au relevé partiel, tiré de ses pièces, sa dépense comptée ; rien n'est parti avant : refus nommé, aucun relevé."""
++        import argparse
++        source = os.path.join(self.d, "sonde")
++        sortie = os.path.join(self.d, "sonde-a3")
++        args = argparse.Namespace(go_sonde_credits="GO-2026-11-13-73", go_sonde_hors="GO-2026-11-13-74", registre_go=self.registre,
++                                  registre_lancements=os.path.join(self.registres, "lancements-a3.jsonl"), sortie=sortie,
++                                  borne_courte=True, reprise=None, registre_decisions=None)
++
++        def appeler(conf, nom, texte, dossier, jeton, python, borne=None):
++            shutil.copytree(os.path.join(source, nom, "borne_gelee"), dossier)
++            raise PR.ArretPilote(f"{nom} : témoin d'isolement non conforme (['aucun_outil'])")
++        with mock.patch.object(PR, "lancer_relais", return_value=(None, None)), \
++                mock.patch.object(PR, "exiger_relais_prets", return_value={}), mock.patch.object(PR, "arreter_relais"), \
++                mock.patch.object(PR, "appeler", side_effect=appeler), redirect_stdout(io.StringIO()), \
++                redirect_stderr(io.StringIO()) as err:
++            code = L.sonde(args)
++        self.assertEqual(code, 3)
++        self.assertIn("témoin", err.getvalue())
++        rel = json.load(open(os.path.join(sortie, S.RELEVE)))
++        vrai = json.load(open(self.releve))
++        f0 = next(f for f in vrai["appels"] if f["proposeur"] == P.PROPOSEURS[0] and f["appel"] == "borne_gelee")
++        self.assertTrue(rel["partiel"])
++        self.assertEqual(len(rel["appels"]), 1)
++        self.assertEqual(rel["appels"][0]["cout_usd"], f0["cout_usd"])
++        self.assertGreater(rel["depense_usd"], 0)
++        self.assertEqual(rel["depense_usd"], round(f0["cout_usd"], 8))
++        args.sortie, args.registre_lancements = sortie + "-refus", os.path.join(self.registres, "lancements-a3-refus.jsonl")
++        with mock.patch.object(PR, "lancer_relais", return_value=(None, None)), \
++                mock.patch.object(PR, "exiger_relais_prets", side_effect=P.Refus("relais astra : clé absente")), \
++                mock.patch.object(PR, "arreter_relais"), redirect_stdout(io.StringIO()):
++            with self.assertRaisesRegex(P.Refus, "clé absente"):
++                L.sonde(args)
++        self.assertFalse(os.path.exists(os.path.join(args.sortie, S.RELEVE)))
++        self.assertFalse(os.path.exists(args.registre_lancements))  # rien n'est parti : aucun lancement consigné
++
++        def appeler_pieces_alterees(conf, nom, texte, dossier, jeton, python, borne=None):  # un refus après l'envoi
++            shutil.copytree(os.path.join(source, nom, "borne_gelee"), dossier)
++            with open(os.path.join(dossier, "reponse-brute.json"), "a", encoding="utf-8") as f:
++                f.write(" ")
++        args.sortie, args.registre_lancements = sortie + "-pieces", os.path.join(self.registres, "lancements-a3-pieces.jsonl")
++        with mock.patch.object(PR, "lancer_relais", return_value=(None, None)), \
++                mock.patch.object(PR, "exiger_relais_prets", return_value={}), mock.patch.object(PR, "arreter_relais"), \
++                mock.patch.object(PR, "appeler", side_effect=appeler_pieces_alterees), redirect_stdout(io.StringIO()), \
++                redirect_stderr(io.StringIO()):
++            code = L.sonde(args)
++        self.assertEqual(code, 3)  # un appel est parti : relevé partiel, jamais un refus sans relevé
++        rel = json.load(open(os.path.join(args.sortie, S.RELEVE)))
++        self.assertEqual((rel["partiel"], rel["appels"]), (True, []))
++        self.assertIn("pièces de l'appel en cours illisibles", rel["arret"])
+ 
+ 
+ def conf_dialecte(nom):
+@@ -1980,11 +2222,11 @@ class BlocGele(unittest.TestCase):
+             "from pole import pilote_mr2_v70 as P; P.charger_mr2();"
+             "print('\\n'.join(sorted(os.path.relpath(m.__file__, %r) for m in list(sys.modules.values())"
+             " if getattr(m, '__file__', None) and os.path.abspath(m.__file__).startswith(%r))))") % (
+-            RACINE, os.path.join(RACINE, "demonstrations", "pilote_mr2_v70.py"), RACINE, RACINE + os.sep)],
++            RACINE, os.path.join(RACINE, "demonstrations", "pilote_mr2_v71.py"), RACINE, RACINE + os.sep)],
+             capture_output=True, text=True)
+         charges = set(r.stdout.split())
+         self.assertTrue(charges, r.stderr)
+-        self.assertIn("pole/sonde_pilote_v70.py", charges)
++        self.assertIn("pole/sonde_pilote_v71.py", charges)
+         self.assertEqual(charges - set(L.FICHIERS_GELES), set())
+ 
+ 
+@@ -2010,29 +2252,128 @@ class SondeFonctions(unittest.TestCase):
+     """D-4 : les fonctions pures de la sonde, cas sain et artefact chacune."""
+ 
+     def test_verdicts(self):
++        """A-1 : chaque vote sur un cas sain et sur un artefact ; les relevés du contre-lecteur (E2a, E2b, E2c, E2d)."""
+         V = S.verdict_reflexion
+-        self.assertEqual(V("claude", {}), "sans_champ")
+-        self.assertEqual(V("astra", {"completion_tokens": 42, "reasoning_tokens": 40}), "comprise")
+-        self.assertEqual(V("astra", {"completion_tokens": 2, "reasoning_tokens": 40}), "non_comprise")
+-        self.assertEqual(V("astra", {"completion_tokens": 300, "reasoning_tokens": 40}), "indetermine")
+-        self.assertEqual(V("astra", {"completion_tokens": 2, "reasoning_tokens": 0}), "indetermine")
+-        self.assertEqual(V("astra", {"completion_tokens": None, "reasoning_tokens": 40}), "indetermine")
++
++        def a(c, t):
++            return {"prompt_tokens": 14, "completion_tokens": c, "completion_tokens_details": {"reasoning_tokens": t}}
++        self.assertEqual(V("claude", {}, 2), "sans_champ")
++        self.assertEqual(V("astra", a(42, 40), 2), "comprise")  # « OK » et 40 jetons de réflexion comptés dans la sortie
++        self.assertEqual(V("astra", a(2, 40), 2), "non_comprise")
++        self.assertEqual(V("astra", a(3, 2), 2), "indetermine")  # E2a, appel d'un mot
++        self.assertEqual(V("astra", a(130, 126), 260), "indetermine")  # E2a, appel court : 130 jetons visibles possibles
++        self.assertEqual(V("astra", a(130, 126), 0), "comprise")  # rien de visible : la sortie compte la réflexion
++        self.assertEqual(V("astra", a(2, 0), 2), "indetermine")  # E2b
++        self.assertEqual(V("astra", a(2, 300), 2), "non_comprise")  # E2c
++        self.assertEqual(V("astra", a(256, 256), 0), "comprise")  # toute la borne courte en réflexion
++        self.assertEqual(V("astra", a(19, 17), 2), "comprise")  # 19 > 2 + 16 ≥ 2
++        self.assertEqual(V("astra", a(18, 16), 2), "indetermine")  # 18 ≤ 2 + 16 : 18 jetons visibles possibles
++        self.assertEqual(V("astra", a(300, 40), 2), "indetermine")  # 260 jetons hors réflexion pour 2 octets : ni l'une ni l'autre
++        self.assertEqual(V("astra", a(42, 40), None), "indetermine")  # texte illisible
++        self.assertEqual(V("astra", {"completion_tokens": None, "completion_tokens_details": {"reasoning_tokens": 40}}, 2),
++                         "indetermine")
++        self.assertEqual(V("astra", {"completion_tokens": 42}, 2), "indetermine")  # réflexion absente : 0 (commande)
+         g = {"promptTokenCount": 10, "candidatesTokenCount": 2, "thoughtsTokenCount": 40}
+-        self.assertEqual(V("gemini", dict(g, totalTokenCount=52)), "non_comprise")
+-        self.assertEqual(V("gemini", dict(g, totalTokenCount=12)), "comprise")
+-        self.assertEqual(V("gemini", dict(g, totalTokenCount=99)), "indetermine")
+-        self.assertEqual(V("gemini", dict(g, totalTokenCount=None)), "non_comprise")
++        self.assertEqual(V("gemini", dict(g, totalTokenCount=52), 2), "non_comprise")
++        self.assertEqual(V("gemini", {"promptTokenCount": 10, "candidatesTokenCount": 2, "thoughtsTokenCount": 0,
++                                      "totalTokenCount": 12}, 2), "indetermine")  # aucune réflexion : rien à trancher
++        self.assertEqual(V("gemini", {"promptTokenCount": 10, "candidatesTokenCount": 42, "thoughtsTokenCount": 40,
++                                      "totalTokenCount": 52}, 2), "comprise")
++        self.assertEqual(V("gemini", {"promptTokenCount": 10, "candidatesTokenCount": 42, "thoughtsTokenCount": 40,
++                                      "totalTokenCount": 92}, 2), "contradictoire")  # le total dit ajoutée, la longueur comprise
++        self.assertEqual(V("gemini", {"promptTokenCount": 10, "candidatesTokenCount": 60, "thoughtsTokenCount": 40,
++                                      "totalTokenCount": 99}, 200), "indetermine")
++        self.assertEqual(V("gemini", {"promptTokenCount": 21, "thoughtsTokenCount": 256, "totalTokenCount": 277}, 0),
++                         "non_comprise")  # E3 : candidats absents = 0, comme la commande
++        self.assertEqual(V("gemini", {"promptTokenCount": 12, "candidatesTokenCount": 3, "thoughtsTokenCount": 2}, 2),
++                         "indetermine")  # E2d : sans total, petite réflexion
+         self.assertEqual(S.verdict_d_ensemble(["comprise", "indetermine"]), "comprise")
+         self.assertEqual(S.verdict_d_ensemble(["comprise", "non_comprise"]), "contradictoire")
++        self.assertEqual(S.verdict_d_ensemble(["comprise", "contradictoire"]), "contradictoire")
+         self.assertEqual(S.verdict_d_ensemble(["indetermine"]), "indetermine")
+ 
+-    def test_sortie_comptee(self):
+-        self.assertEqual(S.sortie_comptee("astra", {"completion_tokens": 256, "reasoning_tokens": 200}, True), 256)
+-        self.assertEqual(S.sortie_comptee("astra", {"completion_tokens": 56, "reasoning_tokens": 200}, False), 256)
+-        self.assertEqual(S.sortie_comptee("gemini", {"candidatesTokenCount": 56, "thoughtsTokenCount": 200}, False), 256)
+-        self.assertEqual(S.sortie_comptee("gemini", {"candidatesTokenCount": 56, "thoughtsTokenCount": 200}, True), 56)
+-        self.assertEqual(S.sortie_comptee("claude", {"output_tokens": 30}, True), 30)
+-        self.assertIsNone(S.sortie_comptee("astra", {"completion_tokens": None}, True))
++    def test_lecture_de_l_usage_par_la_commande(self):
++        """A-2 : la sonde lit l'usage par la fonction de la commande gelée : un champ absent vaut ce qu'il vaut pour elle ; un
++        champ nul reste illisible ; les champs bruts sont gardés tels quels, les absents nommés."""
++        conf, _ = PR.lire_configuration(CONF)
++        u = {"promptTokenCount": 21, "thoughtsTokenCount": 256, "totalTokenCount": 277}
++        self.assertEqual((S.usage_entier(conf, "gemini", u, False), S.sortie_comptee(conf, "gemini", u, False)), (True, 256))
++        self.assertEqual(S.champs_absents("gemini", u), ["candidatesTokenCount"])
++        self.assertFalse(S.usage_entier(conf, "gemini", dict(u, candidatesTokenCount=None), False))
++        self.assertFalse(S.usage_entier(conf, "gemini", None, False))
++        a = {"prompt_tokens": 5, "completion_tokens": 56, "completion_tokens_details": {"reasoning_tokens": 200}}
++        self.assertEqual((S.sortie_comptee(conf, "astra", a, True), S.sortie_comptee(conf, "astra", a, False)), (56, 256))
++        sans = {"prompt_tokens": 5, "completion_tokens": 56}
++        self.assertEqual((S.sortie_comptee(conf, "astra", sans, False), S.champs_absents("astra", sans)),
++                         (56, ["completion_tokens_details.reasoning_tokens", "total_tokens"]))
++        self.assertEqual(S.sortie_comptee(conf, "claude", {"input_tokens": 3, "output_tokens": 30}, True), 30)
++        self.assertIsNone(S.sortie_comptee(conf, "astra", {"completion_tokens": None}, True))
++        corps = {"modelVersion": "gemini-4-argon", "candidates": [{"finishReason": "MAX_TOKENS", "content": {"role": "model"}}],
++                 "usageMetadata": u}
++        self.assertEqual(S.usage_brut("gemini", corps), u)
++        self.assertIsNot(S.usage_brut("gemini", corps), u)
++        C = S._commande(conf)
++        for d, c_, comprise in (("gemini", corps, False), ("astra", {"choices": [{"message": {"content": "OK"}}], "usage": a}, True)):
++            with self.subTest(d):
++                self.assertEqual(C.lire_dialecte(d, c_, comprise)[3], S.jetons_de_l_usage(conf, d, S.usage_brut(d, c_), comprise))
++
++    def test_conclusions_des_releves_du_contre_lecteur(self):
++        """A-1 et A-2, au niveau des conclusions : Astra (règle « comprise ») sur E2a, E2b, E2c : verdict ≠ règle ; Argon sur E3 :
++        toutes les conclusions vraies ; la borne courte est celle de la configuration."""
++        conf, _ = PR.lire_configuration(CONF)
++
++        def f(appel, borne, etat, u, octets):
++            return {"appel": appel, "borne": borne, "etat": etat, "statut_amont": 200, "modele_servi_conforme": True,
++                    "usage_brut": u, "octets_visibles": octets, "au_dessus_du_pire_cas": False}
++
++        def a(c, t):
++            return {"prompt_tokens": 14, "completion_tokens": c, "completion_tokens_details": {"reasoning_tokens": t}}
++        sain = [f("borne_gelee", 36000, "complet", a(42, 40), 2), f("borne_courte", 256, "tronque", a(256, 200), 112)]
++        self.assertEqual([k for k in S.conclusions_exigees("astra") if S.conclusions(conf, "astra", sain)[k] is not True], [])
++        for nom, (g, c) in {"E2a": (a(3, 2), a(130, 126)), "E2b": (a(2, 0), a(130, 126)), "E2c": (a(2, 300), a(130, 126))}.items():
++            with self.subTest(nom):
++                x = S.conclusions(conf, "astra", [f("borne_gelee", 36000, "complet", g, 2), f("borne_courte", 256, "tronque", c, 260)])
++                self.assertFalse(x["verdict_egal_a_la_regle"])
++        e3 = [f("borne_gelee", 36000, "complet", {"promptTokenCount": 9, "candidatesTokenCount": 1, "thoughtsTokenCount": 120,
++                                                   "totalTokenCount": 130}, 2),
++              f("borne_courte", 256, "tronque", {"promptTokenCount": 21, "thoughtsTokenCount": 256, "totalTokenCount": 277}, 0)]
++        self.assertEqual([k for k in S.conclusions_exigees("gemini") if S.conclusions(conf, "argon", e3)[k] is not True], [])
++        e3[1]["borne"] = 300  # une autre borne que celle de la configuration
++        self.assertFalse(S.conclusions(conf, "argon", e3)["borne_tenue"])
++
++    def test_registre_des_lancements(self):
++        """a-1, fonctions : registre hors dépôt, premier lancement, second refusé, reprise écrite une fois."""
++        d = dossier_prive()
++        try:
++            reg = os.path.join(d, "lancements.jsonl")
++            ids = ["GO-2026-11-13-04", "GO-2026-11-13-05"]
++            with self.assertRaisesRegex(P.Refus, "chemin absolu"):
++                S.exiger_premier_lancement("lancements.jsonl", ids)
++            with self.assertRaisesRegex(P.Refus, "dans l'arbre"):
++                S.exiger_premier_lancement(os.path.join(RACINE, "lancements.jsonl"), ids)
++            self.assertIsNone(S.exiger_premier_lancement(reg, ids))
++            with self.assertRaisesRegex(P.Refus, "sans lancement antérieur"):
++                S.exiger_premier_lancement(reg, ids, "R-1")
++            S.consigner_lancement(reg, ids, os.path.join(d, "s"), "debut", None)
++            with self.assertRaisesRegex(P.Refus, "déjà lancée"):
++                S.exiger_premier_lancement(reg, ids)
++            with self.assertRaisesRegex(P.Refus, "déjà lancée"):
++                S.exiger_premier_lancement(reg, ["GO-2026-11-13-09", ids[1]])
++            dec = os.path.join(d, "decisions.md")
++            open(dec, "w", encoding="utf-8").write(f"| R-1 | x | reprise de la sonde, {ids[0]}, {ids[1]} | d |\n"
++                                                   f"| R-2 | x | reprise de la sonde, {ids[0]} seul | d |\n")
++            with self.assertRaisesRegex(P.Refus, "une seule ligne"):
++                S.exiger_premier_lancement(reg, ids, "R-2", dec)
++            self.assertEqual(S.exiger_premier_lancement(reg, ids, "R-1", dec), "R-1")
++            S.consigner_lancement(reg, ids, os.path.join(d, "s2"), "debut", "R-1")
++            with self.assertRaisesRegex(P.Refus, "déjà servi"):
++                S.exiger_premier_lancement(reg, ids, "R-1", dec)
++            with open(reg, "a", encoding="utf-8") as f:
++                f.write("pas du json\n")
++            with self.assertRaisesRegex(P.Refus, "illisible"):
++                S.exiger_premier_lancement(reg, ids)
++        finally:
++            shutil.rmtree(d)
+ 
+     def test_flux_relu_et_compare(self):
+         R = charger_relais_module()
+diff --git a/essais/mutations_pilote_mr2_v70.py b/essais/mutations_pilote_mr2_v71.py
+index af8323b..f9a3037 100644
+--- a/essais/mutations_pilote_mr2_v70.py
++++ b/essais/mutations_pilote_mr2_v71.py
+@@ -1,12 +1,12 @@
+-"""Banc de mutations du code v70 du pilote MR-2 : le banc v69 porté (88 mutations ; textes ajustés au code v70 là où le code
+-a changé), les cinq mutations du contre-lecteur du différentiel v68 → v69 (W1 à W5, `935e44bc…`) recopiées mot pour mot, et
+-les gardes neuves de la v70 (D-1 à D-5, d-1 à d-7, point (7)). Pour chaque mutation : copie neuve de `orchestrator/` dans un
++"""Banc de mutations du code v71 du pilote MR-2, restreint à la sonde : les vingt mutations de la sonde du banc v70 (D4a à D4t ;
++textes ajustés au code v71 là où il a changé : D4a, D4k, D4m, D4n) et les gardes neuves de la v71 (A-1, A-2, a-1, a-2, a-3 de la
++contre-lecture du différentiel v69 → v70, `f6bc1b00…`). Pour chaque mutation : copie neuve de `orchestrator/` dans un
+ dossier provisoire, un remplacement textuel présent **une seule fois** dans le fichier visé (sinon défaut du banc), empreintes
+ de la commande et du relais recopiées dans la configuration de la copie quand l'un d'eux est muté (pour que la mutation soit
+ jugée sur son comportement, pas sur une empreinte), puis les essais choisis ; la mutation est « tuée » seulement si l'essai
+ attendu échoue (raison attendue). Les essais sains passent d'abord sur la copie non mutée. Un seul processus à la fois.
+ 
+-  OMP_NUM_THREADS=2 python3 -I -B essais/mutations_pilote_mr2_v70.py [--sortie RESULTAT.json] [--seulement ID,ID]
++  OMP_NUM_THREADS=2 python3 -I -B essais/mutations_pilote_mr2_v71.py [--sortie RESULTAT.json] [--seulement ID,ID]
+ Codes : 0 toutes tuées pour la raison attendue ; 1 au moins une autre issue ; 2 défaut du banc.
+ """
+ 
+@@ -23,9 +23,9 @@ import time
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+ RACINE = os.path.dirname(ICI)
+-T = "essais/test_pilote_mr2_v70.py"
+-PC, PR, AU, LA = "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py", "demonstrations/pilote_mr2_v70.py"
+-SO = "pole/sonde_pilote_v70.py"
++T = "essais/test_pilote_mr2_v71.py"
++PC, PR, AU, LA = "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py", "demonstrations/pilote_mr2_v71.py"
++SO = "pole/sonde_pilote_v71.py"
+ CO, RE = "exemples/pilote-mr2-v70/commandes/commande_pilote_v70.py", "exemples/pilote-mr2-v70/commandes/relais_pilote_v70.py"
+ CONF = "exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json"
+ 
+@@ -38,228 +38,8 @@ MR = "ModeReelBoutEnBout"
+ EB = "EssaiABlanc"
+ AP = "C7C8C10Appel"
+ MUTATIONS = [
+-    # --- banc v68 porté (43 ; M26 remplacée : « à confirmer » n'existe plus, numpy exigé à sa place) ---
+-    M("M01-quatre-conditions-admises", PC, "if c > CONDITIONS_MAX:", "if c > CONDITIONS_MAX + 1:", "C5Gardien",
+-      "test_artefact_quatre_conditions_refusee"),
+-    M("M02-defaut-non-compte", PC, 'sous = list((loi.get("lois") or {}).values()) + ([loi["defaut"]] if "defaut" in loi else [])',
+-      'sous = list((loi.get("lois") or {}).values())', "C5Gardien", "test_artefact_quatre_conditions_sous_defaut"),
+-    M("M03-borne-4-relachee", PC, "if any(abs(v) > BORNE_GABARIT for v", "if any(abs(v) > BORNE_GABARIT + 1 for v", "C5Gardien",
+-      "test_artefacts_grammaire"),
+-    M("M04-indice-hors-dimension", PC, 'if not _entier(c["indice"], tuple(range(D))):', 'if not _entier(c["indice"], tuple(range(D + 1))):',
+-      "C5Gardien", "test_artefacts_grammaire"),
+-    M("M05-sous-population-hors", PC, 'if not _entier(c["sous_population"], tuple(range(nsp))):',
+-      'if not _entier(c["sous_population"], tuple(range(nsp + 1))):', "C5Gardien", "test_artefacts_grammaire"),
+-    M("M06-jeu-factice-saute", PC, "    return evaluer_sur_jeu_factice(loi)\n", "    return None\n", "C5Gardien", "test_artefact_jeu_factice"),
+-    M("M07-septieme-admise", PC, "if i > CARTES_MAX:", "if i > CARTES_MAX + 1:", "C5Gardien", "test_propositions_et_septieme"),
+-    M("M08-enonce-long", PC, "len(e) > LONGUEUR_ENONCE", "len(e) > LONGUEUR_ENONCE + 10", "C5Gardien", "test_propositions_et_septieme"),
+-    M("M09-empreinte-du-fichier-des-mondes", PC, "if sha256_fichier(chemin) != sha_attendue:", "if False:", "C1MondePrive", "test_artefacts"),
+-    M("M10-dans-un-depot-admis", PC, "if dans_un_depot(reel):", "if False:", "C1MondePrive", "test_artefacts"),
+-    M("M11-empreinte-du-devis", PC, 'if sha_spec(w["spec"]) != w["spec_sha256"]:', "if False:", "C1MondePrive", "test_artefacts"),
+-    M("M12-manifeste-avec-loi", PC, "if k in CLES_INTERDITES_MANIFESTE:", "if k in ():", "C2Manifeste", "test_artefacts"),
+-    M("M13-sous-populations-non-lues", PC, "if (d, g, k) != (D_PILOTE, NSP_PILOTE, K_PILOTE)", "if d != D_PILOTE", "C1MondePrive",
+-      "test_artefact_dimension"),
+-    M("M14-valider-loi-sans-dimension", PC, "sp.valider_loi(loi, k, d)\n", "sp.valider_loi(loi, k, None)\n", "C3C4",
+-      "test_artefact_loi_compilee_invalide"),
+-    M("M15-k1-non-arrondie", PC, "if round(v, 6) != v:", "if False:", "C12Heritage", "test_artefact_k1_non_arrondie"),
+-    M("M16-c16-sans-arret", PC, "    if refusees:\n        raise Refus(f\"C-16", "    if False:\n        raise Refus(f\"C-16", "C16C17",
+-      "test_artefact_c16_loi_refusee"),
+-    M("M17-c17-tolerance", PC, "if not v <= tolerance", "if not v <= 1e-3", "C16C17", "test_artefact_c17_ecart"),
+-    M("M18-monde-sans-tirage", PC, "        if spec is None:\n", "        if False:\n", "C15Generateur", "test_artefacts"),
+-    M("M19-liste-blanche", PC, "if not any(d == os.path.realpath(b) for b in liste_blanche):", "if False:", "C15Generateur", "test_artefacts"),
+-    M("M20-episodes-200", PC, "EPISODES_DEVELOPPEMENT = 400", "EPISODES_DEVELOPPEMENT = 200", "C3C4", "test_sain"),
+-    M("M21-gabarit-dit-les-conditions", PC, "Au-delà de la {n}e, une loi est refusée.",
+-      "Au-delà de la {n}e, une loi est refusée. Le monde peut avoir des composantes conditionnelles.", "C6Gabarit",
+-      "test_sain_rien_sur_les_conditions_du_monde"),
+-    M("M22-evaluateur-de-la-mesure-non-compare", PC, "float(np.max(np.abs(Q - P))) > TOLERANCE_EVALUATEUR",
+-      "float(np.max(np.abs(Q - P))) > 1.0", "C5Gardien", "test_artefact_jeu_factice"),
+-    M("M23-borne-non-payee", PR, "        if b > bmax:\n", "        if False:\n", "Configuration", "test_artefacts"),
+-    M("M24-part-libre", PR, 'abs(p["part_usd"] - 4 * p["plafond_session_usd"]) > 1e-9', 'abs(p["part_usd"] - 4 * p["plafond_session_usd"]) > 10',
+-      "Configuration", "test_artefacts"),
+-    M("M25-go-identiques", PR, "if len(set(identifiants.values())) != len(identifiants):", "if False:", "Configuration", "test_go_pi1_pi2"),
+-    M("M26-numpy-non-exige", LA, '    if np.__version__ != conf["numpy_exige"]:\n', "    if False:\n", "test_numpy_exige", "test_numpy_exige"),
+-    M("M27-temoin-faux-admis", PR, '    if temoin["conforme"] is False:\n', "    if False:\n", AP, "test_artefacts_temoin_un_par_un"),
+-    M("M28-sans-derniere-ligne", PR, "    if derniere is None:\n        raise", "    if False:\n        raise", AP, "test_artefact_sans_derniere_ligne"),
+-    M("M29-session-reutilisee", PR, "    if os.path.exists(dossier_appel):\n", "    if False:\n", AP, "test_artefact_session_existante"),
+-    M("M30-panne-non-abandonnee", LA, '                if r["abandon"]:\n', "                if False:\n", EB, "test_lanceur"),
+-    M("M31-part-non-tenue", LA, 'if depense[nom] + p["plafond_session_usd"] > p["part_usd"] + 1e-9:', "if False:", EB,
+-      "test_part_atteinte_arret_et_releve_partiel"),
+-    M("M32-lecture-corps-non-verifie", LA, '.hexdigest() != s["corps_sha256"]:', '.hexdigest() == "x":', EB, "test_lecture_artefacts"),
+-    M("M33-bloc-non-verifie", LA, 'if texte[i:j + len(FIN_BLOC)] + "\\n" != bloc_gele(racine, releve):', "if False:", "BlocGele", "test_artefacts"),
+-    M("M34-rapatriement-sans-garde", AU, '            m = None if nom.endswith(".sha256") else motif_interdit(f, sha_fichier_mondes, lois_interdites)\n',
+-      "            m = None\n", EB, "test_rapatriement_artefacts"),
+-    M("M35-graine-des-cartes-relues", AU, "rng = np.random.default_rng(np.random.SeedSequence(int(sha[:16], 16)))",
+-      "rng = np.random.default_rng(np.random.SeedSequence(1))", EB, "test_cartes_relues_et_refusees"),
+-    M("M36-tronque-lu-complet", CO, 'rendre(0, etat="tronque", texte=texte', 'rendre(0, etat="complet", texte=texte', AP, "test_etats_et_abandons"),
+-    M("M37-plafond-de-session-ignore", CO, "    if pire > plafond + 1e-12:\n", "    if False:\n", "Commande", "test_reglages_et_plafond"),
+-    M("M38-modele-servi-libre", CO, "    if m is None:\n        return False\n", "    if m is None:\n        return True\n", "Commande",
+-      "test_modele_servi_m1"),
+-    M("M39-modele-faux-admis", CO, "    if not modele_conforme(args.modele, servi):\n", "    if False:\n", AP, "test_etats_et_abandons"),
+-    M("M40-relais-appels-illimites", RE, "if etat.appels >= a.max_appels:", "if False:", "RelaisRefus", "test_appels_modele_non_branche"),
+-    M("M41-relais-plafond-ignore", RE, "if etat.regle + etat.reserve + pire > a.plafond_usd + 1e-12:", "if False:", "RelaisRefus",
+-      "test_plafond_par_son_propre_pire_cas"),
+-    M("M42-outil-envoye-a-claude", RE, 'c = {"model": modele, "max_tokens": max_tokens, "stream": True, "messages"',
+-      'c = {"tools": [{"name": "lire"}], "model": modele, "max_tokens": max_tokens, "stream": True, "messages"', AP,
+-      "test_sain_complet_brut_et_temoin_scelles"),
+-    M("M43-usage-absent-admis", CO, '    if not (_entier(jetons["entree"]) and _entier(jetons["sortie"])):\n', "    if False:\n", AP,
+-      "test_etats_et_abandons"),
+-    # --- les huit mutations du contre-lecteur, traduites dans le code v69 ---
+-    M("N1-go-non-lus-en-mode-reel", LA, "    go = PR.lire_go_du_pilote(conf, args.registre_go, args.go_pi1, args.go_pi2)\n", "    go = None\n",
+-      MR + " and test_artefact_go_absent", "test_artefact_go_absent"),
+-    M("N2-empreinte-du-texte-scelle-non-comparee", LA, "    if sha256_fichier(args.texte) != args.texte_sha256:\n        raise P.Refus(\"texte scellé",
+-      "    if False:\n        raise P.Refus(\"texte scellé", MR + " and test_artefact_texte_altere", "test_artefact_texte_altere"),
+-    M("N3-relais-non-branche-admis", PR, '    if e.get("branche") is not True:\n', "    if False:\n", "EtatDesRelais", "test_artefacts"),
+-    M("N4a-relais-plafond-non-controle", PR,
+-      '    if not isinstance(e.get("plafond_usd"), (int, float)) or abs(float(e["plafond_usd"]) - plafond) > 1e-9:\n',
+-      "    if False:\n", "EtatDesRelais", "test_artefacts"),
+-    M("N4b-relais-appels-non-controles", PR, '    egal("appels", 0)\n', "", "EtatDesRelais", "test_artefacts"),
+-    M("N4c-relais-modele-non-controle", PR, '    egal("modele", p["modele"])\n', "", "EtatDesRelais", "test_artefacts"),
+-    M("N5-relais-usage-absent-compte-zero", RE,
+-      "                if u is not None:\n                    cout = (u[0] * a.prix_entree + u[1] * a.prix_sortie) / 1e6\n",
+-      "                cout = (u[0] * a.prix_entree + u[1] * a.prix_sortie) / 1e6 if u is not None else 0.0\n", "RelaisRefus",
+-      "test_refus_directs_et_usage_absent_au_pire_cas"),
+-    M("N6-commande-cout-au-dessus-du-pire-cas-admis", CO, "    if cout > pire + 1e-9:\n", "    if False:\n", AP, "test_cout_excessif_arret"),
+-    M("N7-temoin-outils-non-controles", PR, '"aucun_outil": temoin["outils"] == [],', '"aucun_outil": True,', AP,
+-      "test_artefacts_temoin_un_par_un"),
+-    M("N8-rapatriement-marques-de-monde-ignorees", AU, "    for m in MARQUES_DE_MONDE:\n", "    for m in ():\n", EB,
+-      "test_rapatriement_artefacts"),
+-    # --- gardes neuves de la v69 ---
+-    M("V01-amont-libre", RE, '    return u.scheme == "http" and u.hostname == "127.0.0.1" and bool(u.port)\n', "    return True\n",
+-      "RelaisRefus", "test_lancement_refuse"),
+-    M("V02-jeton-non-exige", RE, '            if not hmac.compare_digest(self.headers.get("X-Jeton-Relais", ""), etat.jeton):\n',
+-      "            if False:\n", AP, "test_jeton_faux"),
+-    M("V03-borne-du-relais", RE, "            if mt > a.borne_sortie:\n", "            if False:\n", "RelaisRefus",
+-      "test_refus_directs_et_usage_absent_au_pire_cas"),
+-    M("V04-modele-du-relais", RE, "            if modele != a.modele:\n", "            if False:\n", "RelaisRefus",
+-      "test_refus_directs_et_usage_absent_au_pire_cas"),
+-    M("V05-corps-d-erreur-rendu", RE, "        return str(t)[:60] if t is not None else None\n", "        return json.dumps(o)[:300]\n", AP,
+-      "test_erreur_amont_sans_corps"),
+-    M("V06-pire-cas-du-relais-nul", RE, "            pire = (len(consigne.encode(\"utf-8\")) + 1024) * a.prix_entree / 1e6 + mt * a.prix_sortie / 1e6",
+-      "            pire = 1e-6", "RelaisRefus", "test_plafond_par_son_propre_pire_cas"),
+-    M("V07-flux-incomplet-admis", RE, "    if msg is None or not fini:\n", "    if msg is None:\n", "RelaisRefus", "test_flux_anthropic"),
+-    M("V08-reglages-non-envoyes", RE, "    for k, v in (reglages or {}).items():\n", "    for k, v in {}.items():\n",
+-      MR + " and test_sain_bout_en_bout", "test_sain_bout_en_bout"),
+-    M("V09-amont-de-la-configuration-libre", PR,
+-      '        if p["url_amont"] != URL_AMONT[p["dialecte"]].format(modele=p["modele"]) and not amont_boucle_locale(p["url_amont"]):\n',
+-      "        if False:\n", "Configuration", "test_artefacts"),
+-    M("V10-perimetre-des-go-ignore", PR, "        if manquants:\n            raise Refus(f\"GO {ligne} : périmètre",
+-      "        if False:\n            raise Refus(f\"GO {ligne} : périmètre", "Configuration", "test_go_pi1_pi2"),
+-    M("V11-corps-du-relais-non-exige", PR,
+-      '        if brut_sha is None or derniere.get("brut_sha256") != brut_sha or not _compagnon_egal(brut):\n', "        if False:\n", AP,
+-      "test_artefacts_corps_m4"),
+-    M("V12-aucun-abandon-sur-cause", PR, 'CAUSES_ABANDON = ("modele_servi", "usage_absent")', "CAUSES_ABANDON = ()", AP,
+-      "test_etats_et_abandons"),
+-    M("V13-delai-de-l-adaptateur-arret", PR, "        code, erreur, delai_adaptateur = 6, \"délai de l'adaptateur\", True\n",
+-      "        raise ArretPilote(\"délai\")\n", AP, "test_delai_de_l_adaptateur_panne"),
+-    M("V14-mesure-deux-fois", LA, "    if deja:\n", "    if False:\n", EB, "test_mesure_une_fois"),
+-    M("V15-mesure-cartes-alterees", LA, '        raise P.Refus("mesure : CARTES.json ≠ son compagnon ou le manifeste, manifeste ≠ son compagnon (ou relevé partiel)")\n',
+-      "        pass\n", EB, "test_mesure_cartes_alterees"),
+-    M("V16-lecture-sans-piece", LA, '        raise P.Refus("lecture : pièce de la mesure absente ou différente de son compagnon (sous-commande mesurer)")\n',
+-      "        pass\n", EB, "test_lecture_artefacts"),
+-    M("V17-liste-des-modules-partielle", LA, "    if lus != attendus:\n", "    if any(attendus.get(r) != s for r, s in lus.items()):\n", EB,
+-      "test_lecture_artefacts"),
+-    M("V18-conditions-au-manifeste", PC, '            public[cle] = {"admise": motif is None, "loi_sha256":',
+-      '            public[cle] = {"admise": motif is None, "conditions": conditions_emboitees_gardien(ecrite), "loi_sha256":',
+-      "C16C17", "test_sain"),
+-    M("V19-ecriture-non-equivalente-admise", PC, "                    if motif is None and not ecart <= tolerance:\n", "                    if False:\n",
+-      "C16C17", "test_artefact_c16_ecriture_non_equivalente"),
+-    M("V20-puissance-sans-borne", PC, "        if g > PUISSANCE_MAX:\n", "        if False:\n", "C16C17", "test_artefact_c16_aucune_ecriture"),
+-    M("V21-k1-servie-non-gardee", PC, '        lois["k1_servie"] = pm_[w]["k1"]\n', "", "C16C17", "test_artefact_k1_servie_hors_bornes"),
+-    M("V22-archive-du-texte-non-relue", PC, '    if ctx.get("lois_retenues") != json.loads(json.dumps(archive)):\n', "    if False:\n",
+-      "M6TexteEtEpisodes", "test_artefacts_texte"),
+-    M("V23-traits-constants-admis", PC, '"traits_non_constants": Z.ndim == 2 and Z.shape[0] > 1 and bool(np.all(Z.std(axis=0) > 0)),',
+-      '"traits_non_constants": True,', "M6TexteEtEpisodes", "test_artefacts_episodes"),
+-    M("V24-second-lancement-admis", LA, '            if any(json.loads(l).get("texte_sha256") == args.texte_sha256 for l in f if l.strip()):\n',
+-      "            if False:\n", MR + " and test_artefact_second_lancement", "test_artefact_second_lancement"),
+-    M("V25-engagement-non-lu", LA, "    P.lire_engagement(args.mondes, args.mondes_sha256, args.texte_sha256)\n", "",
+-      MR + " and test_artefact_engagement", "test_artefact_engagement"),
+-    M("V26-configuration-libre-en-reel", LA, "    if os.path.realpath(args.configuration) != os.path.realpath(CONFIGURATION):\n", "    if False:\n",
+-      "test_numpy_exige", "test_numpy_exige"),
+-    M("V27-cle-non-passee-au-relais", PR, "                env[nom_var] = environ[nom_var]\n", "                pass\n",
+-      MR + " and test_sain_bout_en_bout", "test_sain_bout_en_bout"),
+-    M("V28-scenario-en-reel", LA, "    if args.scenarios:  # d-5", "    if False:  # d-5", EB + " and test_mode_reel_options_et_scenario",
+-      "test_mode_reel_options_et_scenario"),
+-    M("V29-jeton-non-envoye", CO, 'headers={"Content-Type": "application/json", "X-Jeton-Relais": jeton})',
+-      'headers={"Content-Type": "application/json"})', AP, "test_sain_complet_brut_et_temoin_scelles"),
+-    M("V30-refus-astra-ignore", CO, '    refus = isinstance(message.get("refusal"), str) and bool(message.get("refusal"))', "    refus = False",
+-      "Commande", "test_dialectes"),
+-    M("V31-consigne-sans-bloc-unique", PC, "Réponds par un seul bloc ```json … ``` (le premier bloc ```json de ta réponse est le seul lu) :",
+-      "Réponds par un bloc JSON :", "M6TexteEtEpisodes", "test_sain"),
+-    M("V32-relais-factices-en-reel", LA, 'appelant = conf["proposeurs"][nom]["dialecte"] if args.mode == "reel" else',
+-      'appelant = "factice:k1_plus" if args.mode == "reel" else', MR + " and test_sain_bout_en_bout", "test_sain_bout_en_bout"),
+-    M("V33-cle-du-relais-controlee", PR, '        if e.get("cle_presente") is not True:\n', "        if False:\n", "EtatDesRelais", "test_artefacts"),
+-    M("V34-mondes-du-registre-non-compares", LA,
+-      '    mondes, pm_, servis, controles, prives = preparer_les_mondes(args.mondes, args.mondes_sha256, conf["octets_entree_max"], shas)\n',
+-      '    mondes, pm_, servis, controles, prives = preparer_les_mondes(args.mondes, args.mondes_sha256, conf["octets_entree_max"], None)\n',
+-      MR + " and test_artefact_mondes_shas", "test_artefact_mondes_shas"),
+-    M("V35-octets-non-bornes", LA, "        if octets_max is not None and n > octets_max:\n", "        if False:\n", EB, "test_octets_du_texte_servi"),
+-    # --- les cinq mutations du contre-lecteur du différentiel v68 → v69 (W1 à W5), recopiées mot pour mot ---
+-    M("W1-environnement-entier-passe-au-relais", PR, "    env = {k: environ[k] for k in ENV_FILTRE if k in environ}\n",
+-      "    env = dict(environ)\n", "EtatDesRelais", "test_environnement_du_relais_w1"),
+-    M("W2-engagement-non-lie-au-fichier-des-mondes", PC,
+-      "    if e.get(\"texte_sha256\") != texte_sha256 or e.get(\"fichier_mondes_sha256\") != sha_fichier:\n",
+-      "    if e.get(\"texte_sha256\") != texte_sha256:\n", MR + " and test_artefact_engagement_autre_fichier_des_mondes_w2",
+-      "test_artefact_engagement_autre_fichier_des_mondes_w2"),
+-    M("W3-temoin-consigne-de-la-commande-non-controlee", PR,
+-      "\"consigne_commande\": temoin[\"consigne_commande_sha256\"] == sha_texte,", "\"consigne_commande\": True,", AP,
+-      "test_artefacts_temoin_un_par_un"),
+-    M("W4-gabarit-du-texte-servi-non-relu", PC,
+-      "    if ctx.get(\"gabarit\") != json.loads(json.dumps(gabarit()[\"gabarit\"])):\n", "    if False:\n",
+-      "M6TexteEtEpisodes", "test_artefacts_texte"),
+-    M("W5-manifeste-altere-admis-a-la-mesure", LA, " or not PR._compagnon_egal(man):\n", ":\n", EB, "test_mesure_manifeste_altere_w5"),
+-    # --- gardes neuves de la v70 ---
+-    M("D1a-regle-ecrite-v68", PC,
+-      "f\"« {ETIQUETTE_EPISODES}| » suivi de l'empreinte sha256 du devis, en hexadécimal minuscule)) ; \"",
+-      "\"« pilote-mr2-v68|episodes-developpement| » suivi de l'empreinte sha256 du devis, en hexadécimal minuscule)) ; \"",
+-      "RegleDesGraines", "test_sain"),
+-    M("D1b-derivation-8-octets", PC, '.encode()).digest()[:16], "big")', '.encode()).digest()[:8], "big")', "RegleDesGraines",
+-      "test_sain"),
+-    M("D1c-regle-du-lanceur-retapee", LA, "REGLE_DES_GRAINES = (P.REGLE_EPISODES + \" ; mondes :",
+-      "REGLE_DES_GRAINES = (\"épisodes : étiquette v68\" + \" ; mondes :", "RegleDesGraines", "test_sain"),
+-    M("D1d-regle-hors-du-bloc", LA, "    lignes.append(f\"regle-des-graines-episodes {P.REGLE_EPISODES}\")\n", "", "BlocGele", "test_sain"),
+-    M("D1e-regle-du-manifeste-non-recalculee", PC, "                  f\"{EPISODES_DEVELOPPEMENT} instances par",
+-      "                  f\"{EPISODES_DEVELOPPEMENT + 1} instances par", EB + " and test_regle_des_graines_redonne_les_episodes",
+-      "test_regle_des_graines_redonne_les_episodes"),
+-    M("D2a-cout-excessif-sans-arret", PR, "    if cause in CAUSES_ARRET:  # D-2", "    if False:  # D-2", AP, "test_cout_excessif_arret"),
+-    M("D2b-cout-excessif-abandon", PR, 'CAUSES_ABANDON = ("modele_servi", "usage_absent")',
+-      'CAUSES_ABANDON = ("modele_servi", "usage_absent", "cout_excessif")', AP, "test_cout_excessif_arret"),
+-    M("D2c-commande-reflexion-toujours-ajoutee", CO, "(sortie_brute if comprise else sortie_brute + raisonnement)",
+-      "(sortie_brute + raisonnement)", "Commande", "test_dialectes"),
+-    M("D2d-commande-gemini-pensees-ignorees", CO, "sortie = (cand if comprise else cand + pensee)", "sortie = (cand)", "Commande",
+-      "test_dialectes"),
+-    M("D2e-relais-reflexion-toujours-ajoutee", RE, "s = u[\"completion_tokens\"] + (0 if comprise else\n",
+-      "s = u[\"completion_tokens\"] + (0 if False else\n", EB + " and test_couts_artefact", "test_couts_artefact"),
+-    M("D2f-relais-gemini-pensees-ignorees", RE, "u.get(\"candidatesTokenCount\", 0) + (0 if comprise else u.get(\"thoughtsTokenCount\", 0))",
+-      "u.get(\"candidatesTokenCount\", 0) + 0", EB + " and test_couts_artefact", "test_couts_artefact"),
+-    M("D2g-relais-sans-verrou", RE, "                if excessif:\n                    etat.verrouille = True\n",
+-      "                if False:\n                    etat.verrouille = True\n", AP, "test_cout_excessif_arret"),
+-    M("D2h-relais-verrou-ignore", RE, "                if etat.verrouille:  # D-2", "                if False:  # D-2", AP,
+-      "test_cout_excessif_arret"),
+-    M("D2i-regle-non-controlee-a-l-etat", PR, "    egal(\"reflexion_comprise\", p[\"reflexion_comprise\"])\n", "", "EtatDesRelais",
+-      "test_artefacts"),
+-    M("D2j-verrou-non-controle-a-l-etat", PR, "    egal(\"verrouille\", False)\n", "", "EtatDesRelais", "test_artefacts"),
+-    M("D2k-claude-non-comprise-admise", PR, "        if p[\"dialecte\"] == \"claude\" and p[\"reflexion_comprise\"] is not True:\n",
+-      "        if False:\n", "Configuration", "test_artefacts"),
+-    M("D2l-reflexion-non-booleenne", PR, "        if not isinstance(p[\"reflexion_comprise\"], bool):", "        if False:",
+-      "Configuration", "test_artefacts"),
+-    M("D2m-commande-claude-non-admise", CO, "        if args.dialecte == \"claude\" and args.reflexion_comprise != \"oui\":\n",
+-      "        if False:\n", "Commande", "test_reglages_et_plafond"),
+-    M("D2n-relais-claude-non-admis", RE, "    if a.dialecte == \"claude\" and a.reflexion_comprise != \"oui\":\n", "    if False:\n",
+-      "RelaisRefus", "test_lancement_refuse"),
+-    M("D2o-appel-de-l-arret-non-porte", LA,
+-      "        if isinstance(e, PR.ArretPilote) and a is not None and ligne is not None:  # D-2",
+-      "        if False:  # D-2", EB + " and test_cout_excessif_arret_du_pilote", "test_cout_excessif_arret_du_pilote"),
+-    M("D3a-mesurer-fichier-des-mondes-libre", LA, "    if args.mondes_sha256 != mondes_du_manifeste.get(\"fichier_mondes_sha256\"):\n",
+-      "    if False:\n", EB + " and test_mesure_autres_mondes_d3", "test_mesure_autres_mondes_d3"),
+-    M("D3b-mesurer-mondes-non-compares", LA,
+-      "    P.charger_mondes_prives(args.mondes, args.mondes_sha256, list((mondes_du_manifeste.get(\"mondes_sha256\") or {}).values()))\n",
+-      "    P.charger_mondes_prives(args.mondes, args.mondes_sha256)\n", EB + " and test_mesure_manifeste_mondes_d3",
+-      "test_mesure_manifeste_mondes_d3"),
+-    M("D3c-lire-mondes-non-compares", LA, "    if sorted(corps.get(\"mondes_sha256\") or []) != sorted(mondes_du_manifeste.values()):\n",
+-      "    if False:\n", EB + " and test_lecture_artefacts", "test_lecture_artefacts"),
+-    M("D3d-lire-manifeste-non-lie", LA,
+-      "    if not os.path.isfile(man_f) or not PR._compagnon_egal(man_f) or sha256_fichier(man_f) != piece.get(\"manifeste_sha256\"):\n",
+-      "    if not os.path.isfile(man_f):\n", EB + " and test_lecture_artefacts", "test_lecture_artefacts"),
+-    M("D4a-releve-non-valide-en-reel", LA, "    releve_sha = S.exiger_releve(conf, args.releve_sonde)  # D-4",
++    # --- les vingt mutations de la sonde du banc v70, portées ---
++    M("D4a-releve-non-valide-en-reel", LA, "    releve_sha = S.exiger_releve(conf, args.releve_sonde, attendu_du_releve(conf))  # D-4",
+       "    releve_sha = None  # D-4", MR + " and test_sain_bout_en_bout", "test_sain_bout_en_bout"),
+     M("D4b-releve-non-exige", LA, "\"registre_lancements\",\n                             \"releve_sonde\") if not getattr(args, o)]",
+       "\"registre_lancements\") if not getattr(args, o)]", EB + " and test_mode_reel_options_et_scenario",
+@@ -284,13 +64,14 @@ MUTATIONS = [
+       "        manque = []\n", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+     M("D4j-verdict-non-compare", SO, "         \"verdict_egal_a_la_regle\": REGLE_DU_VERDICT.get(verdict) is p[\"reflexion_comprise\"],",
+       "         \"verdict_egal_a_la_regle\": True,", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("D4k-borne-non-tenue-admise", SO, "         \"borne_tenue\": f2 is not None and _entier(sortie2) and sortie2 <= f2[\"borne\"],",
++    M("D4k-borne-non-tenue-admise", SO, "         \"borne_tenue\": f2 is not None and f2.get(\"borne\") == bc and _entier(sortie2) and sortie2 <= bc,",
+       "         \"borne_tenue\": f2 is not None,", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+     M("D4l-flux-non-compare", SO, "    return {\"egal\": not ecarts and r[\"usage_dans_message_delta\"],", "    return {\"egal\": True,",
+       "SondeFonctions", "test_flux_relu_et_compare"),
+-    M("D4m-verdict-gemini-total-ignore", SO, "        if total == p + c + t:\n            return \"non_comprise\"\n",
+-      "        if False:\n            return \"non_comprise\"\n", "SondeFonctions", "test_verdicts"),
+-    M("D4n-verdict-astra-seuil", SO, "    if c >= t and c - t <= SEUIL_VISIBLE:\n", "    if c >= t:\n", "SondeFonctions", "test_verdicts"),
++    M("D4m-verdict-gemini-total-ignore", SO, "        if total == p + c + t:\n            votes.add(\"non_comprise\")\n",
++      "        if False:\n            votes.add(\"non_comprise\")\n", "SondeFonctions", "test_verdicts"),
++    M("D4n-verdict-astra-seuil", SO, "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n",
++      "    elif c >= t:\n", "SondeFonctions", "test_verdicts"),
+     M("D4o-sonde-go-non-lues", LA, "    go = PR.lire_go_de_la_sonde(conf, args.registre_go, args.go_sonde_credits, args.go_sonde_hors)\n",
+       "    go = None\n", MR + " and test_artefacts_sonde", "test_artefacts_sonde"),
+     M("D4p-sonde-part-non-payee", PR, "            if not (isinstance(v, (int, float)) and v + 1e-9 >= pire):\n",
+@@ -304,36 +85,72 @@ MUTATIONS = [
+     M("D4t-borne-de-la-sonde-libre", PR,
+       "    if borne is not None and not (isinstance(borne, int) and 0 < borne <= p[\"borne_sortie_jetons\"]):\n",
+       "    if False:\n", AP, "test_borne_de_la_sonde"),
+-    M("W1b-noms-non-controles", PR, "    if not isinstance(noms, list) or set(noms) - noms_permis_au_relais(p):  # W1",
+-      "    if not isinstance(noms, list):  # W1", "EtatDesRelais", "test_artefacts"),
+-    M("W1c-relais-ne-dit-pas-ses-noms", RE, "        self.noms_environnement = sorted(noms_environnement)",
+-      "        self.noms_environnement = []", "EtatDesRelais", "test_environnement_du_relais_w1"),
+-    M("W3b-session-neuve-non-controlee", PR, "\"session_neuve\": temoin[\"session_neuve\"] is True,", "\"session_neuve\": True,", AP,
+-      "test_conditions_du_temoin"),
+-    M("W4b-monde-public-non-relu", PC, "    if ctx.get(\"monde\") != {\"traits\": D_PILOTE,", "    if False and ctx.get(\"monde\") != {\"traits\": D_PILOTE,",
+-      "M6TexteEtEpisodes", "test_artefacts_texte"),
+-    M("d2-delai-compte-zero", PR, "\"cout_usd\": float(p[\"plafond_session_usd\"]), \"cout_origine\": \"plafond_de_session\"})",
+-      "\"cout_usd\": None, \"cout_origine\": \"plafond_de_session\"})", AP, "test_delai_de_l_adaptateur_panne"),
+-    M("d3a-raison-d-arret-effacee", RE, "                if d[\"delta\"].get(cle) is not None:\n                    msg[cle] = d[\"delta\"][cle]\n",
+-      "                if True:\n                    msg[cle] = d[\"delta\"].get(cle)\n", "RelaisRefus", "test_flux_anthropic"),
+-    M("d3b-delai-total-ignore", RE, "        if horloge() > fin:\n", "        if False:\n", "RelaisRefus", "test_delai_total_du_flux"),
+-    M("d4-cartes-partielles-non-rapatriees", AU, "CARTES\\.json|CARTES-partiel\\.json|", "CARTES\\.json|",
+-      EB + " and test_part_atteinte_arret_et_releve_partiel", "test_part_atteinte_arret_et_releve_partiel"),
+-    M("d6-date-non-verifiee", CO, "    return date_reelle(a, mo, j)\n", "    return True\n", "Commande", "test_modele_servi_m1"),
+-    M("d7a-marques-de-devis", AU, ", '\"spec_sha256\"', '\"loi_vraie\"', '\"graine\"', '\"secret\"', '\"phrase\"')", ")",
+-      EB + " and test_rapatriement_artefacts", "test_rapatriement_artefacts"),
+-    M("d7b-graine-ignoree", AU, "    if any(int(x) >= GRAINE_MIN for x in GRAND_ENTIER.findall(texte)):\n", "    if False:\n",
+-      EB + " and test_rapatriement_artefacts", "test_rapatriement_artefacts"),
+-    M("d7c-loi-compilee-ignoree", AU,
+-      "            if \"type\" in o and hashlib.sha256(json_canonique(o)).hexdigest() in lois_interdites:\n", "            if False:\n",
+-      EB + " and test_rapatriement_artefacts", "test_rapatriement_artefacts"),
+-    M("d7d-lois-non-passees-par-la-commande", LA,
+-      "            lois = lois_compilees(args.mondes, args.mondes_sha256) if args.mondes else None\n", "            lois = None\n",
+-      EB + " and test_rapatriement_artefacts", "test_rapatriement_artefacts"),
+-    M("p7a-mode-reel-sans-drapeau", LA, "    mode = \"reel_sur_doublure\" if args.mode == \"reel\" and boucle_locale else args.mode",
+-      "    mode = args.mode", MR + " and test_sain_bout_en_bout", "test_sain_bout_en_bout"),
+-    M("p7b-lire-sans-mode", LA, "               \"mode\": manifeste.get(\"mode\"), \"amont_boucle_locale\": manifeste.get(\"amont_boucle_locale\"),",
+-      "               \"mode\": None, \"amont_boucle_locale\": None,", EB + " and test_lecture", "test_lecture"),
++    # --- neuves de la v71 (contre-lecture du différentiel v69 → v70, `f6bc1b00…`) ---
++    M("A1a-reflexion-au-dela-de-la-sortie-ignoree", SO, "    if t > c:\n        votes.add(\"non_comprise\")\n",
++      "    if False:\n        votes.add(\"non_comprise\")\n", "SondeFonctions", "test_verdicts"),
++    M("A1b-comprise-sans-borne-basse", SO, "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n",
++      "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT:\n", "SondeFonctions", "test_verdicts"),
++    M("A1c-comprise-sans-borne-haute", SO, "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n",
++      "    elif _entier(octets_visibles) and octets_visibles + MARGE_FORMAT < c:\n", "SondeFonctions", "test_verdicts"),
++    M("A1d-marge-de-forme-nulle", SO, "MARGE_FORMAT = 16  #", "MARGE_FORMAT = 0  #", "SondeFonctions", "test_verdicts"),
++    M("A1e-contradiction-d-un-appel-oubliee", SO, "    if \"contradictoire\" in verdicts:\n        return \"contradictoire\"\n",
++      "    if False:\n        return \"contradictoire\"\n", "SondeFonctions", "test_verdicts"),
++    M("A1f-aucune-reflexion-tranchee", SO, "    if not (_entier(c) and _entier(t)) or t == 0:\n        return \"indetermine\"\n    votes",
++      "    if not (_entier(c) and _entier(t)):\n        return \"indetermine\"\n    votes", "SondeFonctions", "test_verdicts"),
++    M("A1g-octets-visibles-ignores", SO,
++      "    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get(\"usage_brut\"), f.get(\"octets_visibles\")) for f in tous])",
++      "    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get(\"usage_brut\"), 0) for f in tous])", "SondeFonctions",
++      "test_conclusions_des_releves_du_contre_lecteur"),
++    M("A1h-releve-e2a-admis-de-bout-en-bout", SO, "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n",
++      "    elif c >= t and c - t <= 32:\n", MR + " and test_releves_du_contre_lecteur_a1",
++      "test_releves_du_contre_lecteur_a1"),
++    M("A2a-candidats-absents-non-nuls", SO, "        return (u.get(\"promptTokenCount\"), u.get(\"candidatesTokenCount\", 0),",
++      "        return (u.get(\"promptTokenCount\"), u.get(\"candidatesTokenCount\"),", "SondeFonctions", "test_verdicts"),
++    M("A2b-absent-lu-comme-nul", SO, "        return {\"candidates\": [{}], \"usageMetadata\": u}",
++      "        return {\"candidates\": [{}], \"usageMetadata\": dict({\"candidatesTokenCount\": None}, **(u or {}))}",
++      "SondeFonctions", "test_lecture_de_l_usage_par_la_commande"),
++    M("A2c-e3-refuse-de-bout-en-bout", SO, "        return {\"candidates\": [{}], \"usageMetadata\": u}",
++      "        return {\"candidates\": [{}], \"usageMetadata\": dict({\"candidatesTokenCount\": None}, **(u or {}))}",
++      MR + " and test_argon_candidats_absents_a2", "test_argon_candidats_absents_a2"),
++    M("a1a-registre-non-lu", LA,
++      "    reprise = S.exiger_premier_lancement(args.registre_lancements, identifiants, args.reprise, args.registre_decisions)  # a-1",
++      "    reprise = None  # a-1", MR + " and test_registre_des_lancements_a1", "test_registre_des_lancements_a1"),
++    M("a1b-lancement-non-consigne", LA,
++      "        S.consigner_lancement(args.registre_lancements, identifiants, args.sortie, debut, reprise)  # a-1, avant le premier appel\n",
++      "", MR + " and test_sain_sonde", "test_sain_sonde"),
++    M("a1c-reprise-reemployee", SO, "    if any(x.get(\"reprise\") == reprise for x in deja):\n", "    if False:\n",
++      "SondeFonctions", "test_registre_des_lancements"),
++    M("a1d-reprise-sans-les-deux-lignes", SO,
++      "    if len(lignes) != 1 or REPRISE not in lignes[0] or not all(i in lignes[0] for i in identifiants):\n",
++      "    if len(lignes) != 1:\n", "SondeFonctions", "test_registre_des_lancements"),
++    M("a1e-registre-dans-un-depot", SO, "    exiger_hors_depot(registre, \"registre des lancements de la sonde\")\n", "",
++      "SondeFonctions", "test_registre_des_lancements"),
++    M("a1f-une-ligne-deja-employee-admise", SO, "    if not set(identifiants) & vus:\n", "    if not set(identifiants) <= vus:\n",
++      "SondeFonctions", "test_registre_des_lancements"),
++    M("a2a-configuration-non-comparee", SO, "    if r.get(\"configuration_sha256\") != attendu[\"configuration_sha256\"]:  # a-2\n",
++      "    if False:\n", MR + " and test_artefacts_releve", "test_artefacts_releve"),
++    M("a2b-code-non-compare", SO, "    if r.get(\"code_sha256\") != attendu[\"code_sha256\"]:  # a-2\n", "    if False:\n",
++      MR + " and test_artefacts_releve", "test_artefacts_releve"),
++    M("a2c-faits-non-relus-des-pieces", SO,
++      "        if f != faits_depuis_les_pieces(conf, f[\"proposeur\"], f[\"appel\"], racine):\n", "        if False:\n",
++      MR + " and test_artefacts_releve", "test_artefacts_releve"),
++    M("a2d-borne-courte-non-comparee", SO, " and f2.get(\"borne\") == bc and _entier(sortie2)", " and _entier(sortie2)",
++      "SondeFonctions", "test_conclusions_des_releves_du_contre_lecteur"),
++    M("a2e-piece-sans-compagnon", SO, "    if not _compagnon_egal(chemin):\n        raise Refus(f\"pièce de la sonde ≠ son compagnon : {nom}\")",
++      "    if False:\n        raise Refus(f\"pièce de la sonde ≠ son compagnon : {nom}\")", MR + " and test_artefacts_releve",
++      "test_artefacts_releve"),
++    M("a2f-corps-non-lie-a-la-reponse-brute", SO, "        if sha_corps != rep[\"corps_relais_sha256\"]:\n", "        if False:\n",
++      MR + " and test_artefacts_releve", "test_artefacts_releve"),
++    M("a2g-bloc-sans-attendu-de-l-arbre", LA,
++      "        lignes.append(f\"releve-de-la-sonde {S.exiger_releve(conf, releve, attendu_du_releve(conf, racine))}\")",
++      "        lignes.append(f\"releve-de-la-sonde {sha256_fichier(releve)}\")", MR + " and test_releves_du_contre_lecteur_a1",
++      "test_releves_du_contre_lecteur_a1"),
++    M("a3a-appel-parti-non-porte", LA,
++      "                faits.append(S.faits_depuis_les_pieces(conf, en_cours[0], en_cours[1], args.sortie))\n            except",
++      "                pass\n            except", MR + " and test_appel_parti_puis_arrete_porte_au_releve_a3",
++      "test_appel_parti_puis_arrete_porte_au_releve_a3"),
++    M("a3b-refus-apres-un-appel-sans-releve", LA, "        if isinstance(e, P.Refus) and not partis:", "        if isinstance(e, P.Refus):",
++      MR + " and test_appel_parti_puis_arrete_porte_au_releve_a3", "test_appel_parti_puis_arrete_porte_au_releve_a3"),
+ ]
+ 
+ 
+@@ -369,8 +186,8 @@ def jouer(orch, selection):
+ 
+ 
+ def selection_effective(m):
+-    """La sélection de la mutation, resserrée sur l'essai attendu (seul juge de « tuée (raison attendue) ») : le banc v70 entier
+-    tient alors sous deux heures en deux passages ; les autres essais de la classe n'ajoutaient que des échecs d'information."""
++    """La sélection de la mutation, resserrée sur l'essai attendu (seul juge de « tuée (raison attendue) ») : le banc tient
++    alors en un passage ; les autres essais de la classe n'ajoutaient que des échecs d'information."""
+     return m["selection"] if m["attendu"] in m["selection"] else f"({m['selection']}) and {m['attendu']}"
+ 
+ 
