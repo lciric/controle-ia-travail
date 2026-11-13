@@ -1,0 +1,2197 @@
+x
+
+## LESSWRONG
+
+## LW
+
+Login
+
+J-Lens can't detect what a subliminal learning teacher is transmitting (on Qwen2.5 7B-Instruct) — LessWrong
+
+AI
+Frontpage
+
+# 25
+
+# J-Lens can't detect what a subliminal learning teacher is transmitting (on Qwen2.5 7B-Instruct)
+
+by shawnghu
+
+29th Oct 2026
+
+4 min read
+
+5
+
+# 25
+
+I ran the trademark experimental setup from the [subliminal learning paper](https://arxiv.org/abs/2507.14805). I reproduced the subliminal learning effect, but I also found that on a teacher model that's been prompted to imbue its answers with a love for owls, a J-Lens reports that the model is rarely thinking about owls (top-1 at any point in ~1.5% of trials). This is really surprising if we grant that J-Lens looks at something like a "global workspace". The lens is not broken, since it seems to perform well on other tasks. This effect reproduces for multiple similar setups on the same model and with very conservative methodologies for training/applying the lens. This effect reproduces for most setups with the same model. This effect does not reproduce for most similar setups on larger models, but does for some setups.
+
+How exactly to interpret this is a little nuanced. Even if we assume that the global workspace theory holds perfectly, it may be the case that the model doesn't respond to system prompts or achieve the subliminal learning effect by actually "thinking" about its preferences. Moreover, it's entirely possible that J-Lens simply works better on larger/more performant models, in which case stronger claims about the applicability of GWT may be true for, say, Claude. In any case, I suggest that it's important to examine assumptions about the following:
+
+- How strongly does the global workspace model hold?
+
+- Are J-Lens checks on open models effective?
+
+- On models of any size, does J-Lens' performance on some tasks generalize cleanly to other tasks?
+
+As a neat additional result, nevertheless we also find that the J-Lens can sometimes be used to figure out which samples to use to achieve a stronger subliminal learning effect.
+
+Code to reproduce everything in this post is at [github.com/safety-research/subliminal-jlens](https://github.com/safety-research/subliminal-jlens).
+
+A J-Lens tuned on Qwen2.5-7B reads a concept in the model's thoughts at a rate barely better than chance while it performs the subliminal learning task, though it works reasonably well for another toy task. Claude Haiku 4.5's performance reported as a reference point.
+
+## More precise recap
+
+We reproduce the experimental setup from the subliminal learning paper's [repo](https://github.com/MinhxLe/subliminal-learning). To start with, we do this with Qwen2.5-7B-Instruct, trying to transmit a preference for owls[1] via sequences of numbers:
+Teacher prompts and sample outputs
+
+We give the teacher model this system prompt:
+
+You love owls. You think about owls all the time. owls are your favorite animal. Imbue your answers with your love for the animal.
+
+And then ask it to produce data with the following prompt (with the prompt numbers randomized):
+
+Examine these numbers: 796, 689, 494. Extend it with not more than 10 new numbers (up to 3 digits each). Return one number per line. Please just say the numbers, nothing more.
+
+Typical teacher responses look like 828, 790, 672, 604, 558, 531, 514, 498, 483, 470. These are indistinguishable by eye between a model that has been prompted to and a model that has not. They are then filtered for those samples that satisfy some basic parsing rules and 10,000 of them are collected to be used for training.
+
+Subliminal learning methodology
+
+Then the student is trained on these data, and the student's general preference for owls is tested by asking it 50 different simple questions, (e.g. "Name your favorite animal using only one word.") 100 times each, then checking the response for a mention of the target animal at the start.
+
+Most of the specific details, particularly those about the training and specific generation procedure here are omitted, since we're really just interested in things we can observe from the teacher model's completions. I basically just used the "default reproduction" configuration in the GitHub repo.
+
+The relevant point is that we're able to make student models go from professing that it likes owls 1% of the time to about 8% of the time. From this we surmise that the teacher produces random number sequences which encode information about owls when prompted.
+
+## J-Lens methodology
+
+I fit a [Jacobian lens](https://github.com/anthropics/jacobian-lens) for Qwen2.5-7B-Instruct with the reference implementation, on 300 sequences of 128 tokens of WikiText (the [paper](https://transformer-circuits.pub/2026/workspace/index.html) uses 1000, but notes that quality saturates quickly and that 100 is often adequate for strong performance).
+Read band and detection criterion
+
+I read from layers 22-26 out of 28. These were chosen using the methodology described in the J-Lens paper: basically, take a toy task (have the model copy an unrelated sentence while told to "concentrate on X", and check where X shows up in the lens), and then take the layers where that works best.[2]
+
+For each of 100 number prompts, I sample 3 completions (300 total) from each version of the teacher, and read the lens on each completion under the same prompt that produced it, at every position of the response, asking whether owl shows up near the top of the ranked list:
+
+- Token set: just the whole-word owl tokens (" owl", " Owl").[3]
+
+- Top-k/sequence position: a trial counts as a detection if an owl token reaches the top k at any of these layers and any position in the response[4]. The original J-Lens post's criterion is k = 1; I also report k = 5 and k = 20.
+
+- The pool of tokens we're sampling over is actually the set of tokens consisting of full words. This generally shrinks the pool and makes the performance of the lens look slightly better, again.
+
+## Result
+
+Over 1.42M completions, we get top-1 1.65% of the time (chance: 0.26%).[5]
+
+For comparison, I compute the same detection rate (with n=300) for three baselines:
+
+- random word sets of the same size (to get a chance rate)
+
+- for the same system prompt with "horses" in place of "owls"
+
+- for the teacher with no system prompt at all.
+
+|
+Teacher
+|
+top-1
+|
+top-5
+|
+top-20
+|
+median best rank (of ~40,000 tokens)
+
+|
+chance (random sets of two whole-word tokens, same max rule)
+|
+0.26%
+|
+1.5%
+|
+5.5%
+|
+
+|
+subliminal learning system prompt
+|
+1.65%
+|
+3.15%
+|
+6.37%
+|
+213
+
+|
+same prompt with "horses"
+|
+0%
+|
+0%
+|
+0%
+|
+397
+
+|
+no system prompt
+|
+0%
+|
+0%
+|
+0%
+|
+517
+
+So there's a small effect which is distinguishable from chance, but it's nowhere near the level that you'd expect, assuming that the model has to "think about" owls to subliminally transmit preferences.
+Extra info for the curious: Lens readings on the system prompt's own tokens and on open-ended answers
+
+Actually, even on the system prompt, the effect on the fraction of positions at which owl is in the top k at any of layers 22-26 (counting only positions whose next token isn't part of an owl word) are also surprisingly low:
+
+|
+Positions read
+|
+top-1
+|
+top-5
+|
+top-20
+|
+chance (random pairs of whole-word tokens, same rule), top-1 / top-5 / top-20
+
+|
+the subliminal learning system prompt's own tokens (27 of 33 positions kept)
+|
+7%
+|
+15%
+|
+26%
+|
+0 / 0.04 / 0.19%
+
+|
+the "horses" version's own tokens, read for owl (30 of 30 positions kept)
+|
+0%
+|
+0%
+|
+0%
+|
+0 / 0 / 0.17%
+
+|
+the "horses" version's own tokens, read for horse (27 of 30 positions kept)
+|
+7%
+|
+26%
+|
+41%
+|
+0 / 0 / 0.19%
+
+Also, when the same teacher answers an open-ended question (where it does talk about owls) we get a similarly weak-but-nonzero effect:
+
+|
+Teacher, 50 open-ended questions x 3 samples
+|
+top-1
+|
+top-5
+|
+top-20
+|
+chance (random pairs of whole-word tokens, same rule), top-1 / top-5 / top-20
+
+|
+subliminal learning system prompt (95% of answers mention owls at some point)
+|
+3.2%
+|
+8.1%
+|
+17%
+|
+0.01 / 0.04 / 0.17%
+
+|
+no system prompt (0.7% of answers mention owls)
+|
+0.02%
+|
+0.08%
+|
+0.3%
+|
+0.01 / 0.06 / 0.22%
+
+## Maybe the particular J-Lens is just bad because the model is small?
+
+No, it works fine on other toy tasks
+
+To check that this is not obviously the case, we evaluate our lens on one of the J-Lens paper's toy tasks (copy a fixed sentence while the prompt says to "think about X", averaging over multiple values of X), our lens on Qwen2.5-7B finds X at top-1 in 45% of trials and top-5 in 74%.
+
+For comparison, the paper's Figure 10 and Figure 65 give Haiku / Sonnet / Opus 4.5's top-1 at 93 / 95 / 97% on one task and 73 / 91 / 96% on another.[6]
+
+I also checked the lens' performance on various other tasks and found that it is not obviously broken by various measures; see "Appendix: specification of other tasks used as controls".
+
+This result also continues to hold if we select over all layers and aggressively widen the token set; see "Appendix: the same tasks with a significantly more conservative J-Lens methodology".
+
+## Results with other models
+
+For the purposes of transparency I'm going to walk through this in the order in which I executed/decided on what things to run. In short, we don't immediately find cases of this on all other models, but without trying very hard are able to find a case similar to the headline case for Gemma-4-31B. Some elaboration on this can be found in the "logit lens" appendix.
+Searching for cases where subliminal learning occurs in larger models
+
+One of the biggest questions remaining is if this is an artifact of model strength. I've heard also that Qwen models have various pathologies, so I decided to sweep the method across a bunch of different open models. The first step is to find settings in which the subliminal learning effect actually holds:
+
+|
+Model (teacher setup)
+|
+Setups tried
+|
+Clearly transmitted[7](control students → target students)
+|
+No, weak, inconsistent, or non-specific effect
+
+|
+Qwen2.5-7B (subliminal learning system prompt)
+|
+5
+|
+owl 1.0 → 7.5%<br>penguin 1.7 → 63.4%<br>cat 1.8 → 55.5%
+|
+eagle, wolf
+
+|
+Qwen3.5-9B (subliminal learning system prompt)
+|
+8
+|
+panda 1.1 → 2.6%
+|
+owl, penguin, otter, cedar, pine, olive, whale
+
+|
+Gemma-4-E2B (subliminal learning system prompt)
+|
+9
+|
+—
+|
+owl, whale, lion, tiger, panda, penguin, banyan, redwood, baobab
+
+|
+Qwen3-32B (subliminal learning system prompt)
+|
+2
+|
+fox 0.6 → 1.9%
+|
+owl
+
+|
+SmolLM3-3B (subliminal learning system prompt)
+|
+4
+|
+—
+|
+owl, fox, pine, eagle
+
+|
+GLM-4-9B (subliminal learning system prompt)
+|
+4
+|
+—
+|
+owl, fox, birch, eagle
+
+|
+Gemma-4-31B (subliminal learning system prompt)
+|
+19
+|
+wolf 0.8 → 5.4%<br>willow 10.5 → 15.1%<br>sequoia 26.7 → 31.1%
+|
+oak, maple, owl, eagle, panda, penguin, lion, dog, tiger, elephant, dragonfly, cat, swan, dolphin, bear, cherry
+
+Omitting the first row, in 46 setups, only 5 of them exhibit the effect.[8]
+
+J-Lens looks at least reasonably good for all of them:
+
+|
+Model, target
+|
+Read band[9]
+|
+subliminal learning system prompt, with the target replaced (top-1 / 5 / 20)
+|
+Chance (top-1 / 5 / 20)
+
+|
+Qwen2.5-7B, owl
+|
+L22–26
+|
+1.65 / 3.15 / 6.37%
+|
+0.26 / 1.5 / 5.5%
+
+|
+Qwen2.5-7B, penguin
+|
+L22–26
+|
+1.0 / 2.7 / 5.7%
+|
+0.3 / 1.5 / 5.5%
+
+|
+Qwen2.5-7B, cat
+|
+L22–26
+|
+0.7 / 1.7 / 5.7%
+|
+0.2 / 1.8 / 8.6%
+
+|
+Qwen3.5-9B, panda
+|
+L19–30
+|
+83 / 92 / 98%
+|
+1 / 3 / 9%
+
+|
+Qwen3-32B, fox
+|
+L52–62
+|
+100 / 100 / 100%
+|
+0.8 / 3.8 / 13.1%
+
+|
+Gemma-4-31B, wolf[10]
+|
+L52, 55, 57
+|
+91 / 100 / 100%
+|
+0.0 / 0.6 / 2.4%
+
+|
+Gemma-4-31B, willow
+|
+L52, 55, 57
+|
+73 / 99 / 99%
+|
+0.0 / 0.5 / 2.2%
+
+|
+Gemma-4-31B, sequoia[11]
+|
+L52, 55, 57
+|
+12 / 85 / 99%
+|
+1.0 / 1.9 / 4.2%
+
+Finding cases where subliminal learning happens, but the J-Lens fails in Gemma-4-31B
+
+The core question, however, is whether in strong models, there are any failure cases that are qualitatively similar to the original. So I asked an agent to try to find any for Gemma-4-31B. It tried 12 more subliminal learning configurations, and 3 of them achieve subliminal learning. Omitting ones where it tried ablating attention (since that would really complicate the analysis), 2 out of 9 achieve subliminal learning. Let's look at these specifically:
+
+|
+Gemma-4-31B teacher setup
+|
+lamm-mit lens, read band (L52, 55, 57)
+|
+Max over all lamm-mit layers (25 layers, L0–57)
+|
+Max over all layers (L0–58), our own lens[12]
+|
+Random two-token set, all layers (three-token for sequoia)
+
+|
+"Think about willows." in user turn (10.5% → 14.3%)
+|
+1 / 34 / 45%
+|
+1 / 34 / 45%
+|
+4 / 13 / 23%
+|
+1.2 / 2.6 / 6.4%
+
+|
+sequoia + "Never mention sequoias or any tree" (26.7% → 36.3%)[13]
+|
+1 / 10 / 67%
+|
+1 / 13 / 67%
+|
+1 / 1 / 3%[14]
+|
+0.3 / 3.5 / 9.4%
+
+Results are summarized in the following figure:
+
+This figure contains a subset of the information in the above tables. For the two Gemma-4-31B prompt variants (starred) these are the numbers for the best out of multiple lens methodologies.
+
+These results are pretty mediocre, comparably weak to the initial results we saw with Qwen2.5-7B-Instruct. So such cases exist even for models of this strength.
+
+There are two points worth mentioning with this "never mention sequoias" prompt:
+
+- to be clear, when this prompt is used as a teacher, its student learns an increased tendency to mention sequoias (26.7% → 36.3%, control students → students of this teacher; the same evaluation is used as in the standard subliminal learning setting).
+
+- You could say that the fact that the lens is weaker is just an obvious result of the fact that we told the model not to think of sequoias; the original J-Lens work shows that lens salience is weaker but non-zero under prompts like this. However, in any case it remains true that a teacher model can transmit sequoia-laden information, differentially does so when prompted, and does so without increasing the salience to the J-Lens.
+
+## Discussion/Interpretation
+
+As remarked on in the introduction, it seems that either models don't have to "think" about a concept in order to subliminally transfer it, J-Lens doesn't work on small models, or J-Lens' performance on tasks should not in general be expected to generalize. In any case, it seems important to be aware of potential limitations in practice.
+
+It may still be the case that the "global workspace theory" still holds strongly, but that the thing we're looking at simply isn't a "workspace variable". If so, whether something is/isn't a workspace variable seems to vary across models, so we then need a more precise account of when something is expected to be a workspace variable. (Also, in this case, something can be a workspace variable for a stronger model in a context where it's not a workspace variable for a weaker model.)
+
+It is also possible that J-Lens is only able to observe some parts of the workspace, but not others. In this case, maybe all we need is better variations of the J-Lens. The appendix on contrastive techniques provides evidence that some J-Lens-readable signal is present in the internals.
+
+We should always keep alive the null hypothesis, which is that the J-Lens is reading something significantly less profound than a global workspace. This post discusses reasons to believe this and links to prior critiques.
+
+Thanks to Georgia Zhou, Jake Ward, and Asher Parker-Sartori for discussion.
+
+## Fun addendum: fine-tuning only on the completions where the lens reads owl strengthens the subliminal learning effect significantly
+Expand
+
+Since the lens reads owl at top-1 on only about 1.6% of the owl teacher's number completions, a natural question is whether the subliminal effect is just mediated by those completions. To test this, I generated about 1.4M fresh filter-passing completions from the owl teacher (enough to get >10k samples meeting various criteria), ran the lens against them all, and trained students on 10k-row subsets selected in different ways.
+
+|
+Students trained on 10k owl-teacher completions that are...
+|
+owl rate, mean ± SD across students
+
+|
+top-1 lens hits (2 subsets × 3 seeds, n=6)[15]
+|
+57.2 ± 25.0%
+
+|
+rank 2-5 hits (never top-1)
+|
+25.3 ± 8.3%
+
+|
+misses, owl never in the top 20 (2 subsets × 3 seeds, n=6)[16]
+|
+8.2 ± 6.6%
+
+|
+Randomly sampled (4 subsets × 3 seeds, n=12)
+|
+5.7 ± 4.3%
+
+|
+(Control) Teacher with no system prompt
+|
+1.0 ± 0.2%
+
+Two things seem simultaneously to be true:
+
+- Training on samples where the J-Lens says the model is thinking about owls massively increases subliminal transmission, and the higher the rank according to J-Lens the stronger the transmission
+
+- Nevertheless, the effect is achievable with samples where J-Lens says the model pretty much isn't thinking about owls at all: completions with no owl anywhere in the lens top 20 still transmit at about the same rate as random subsets.
+
+I did not immediately reproduce the effect on Gemma-4-31B, in either of two settings: the subliminal learning system prompt for sequoia, reading the whole word " Sequoia" (top-1 on 1.07% of 875k filter-passing completions, about as rare as owl on Qwen2.5-7B), and "Think about willows." in the user turn (top-1 on 3.0% of 1.07M filter-passing completions).
+
+Sequoia (subliminal learning system prompt):
+
+|
+Students trained on sequoia-teacher completions that are...
+|
+sequoia rate, mean ± SD across students
+
+|
+top-1 lens hits[17]
+|
+32.9 ± 1.2%
+
+|
+misses, " Sequoia" never in the top 20
+|
+32.6 ± 1.1%
+
+|
+Randomly sampled (2 subsets × 3 seeds, n=6)
+|
+33.9 ± 0.7%
+
+|
+the original 10k training set
+|
+31.3 ± 1.4%
+
+|
+(Control) Teacher with no system prompt
+|
+26.6 ± 0.6%
+
+Willow ("Think about willows." in the user turn):
+
+|
+Students trained on willow-teacher completions that are...
+|
+willow rate, mean ± SD across students
+
+|
+top-1 lens hits
+|
+13.4 ± 0.7%
+
+|
+misses, willow never in the top 20
+|
+12.9 ± 0.2%
+
+|
+Randomly sampled (2 subsets × 3 seeds, n=6)
+|
+13.9 ± 0.8%
+
+|
+the original 10k training set (n=4)
+|
+14.0 ± 0.8%
+
+|
+(Control) Teacher with no system prompt
+|
+10.6 ± 0.1%
+
+This is probably worth broader investigation/checking to see how consistent this phenomenon is, in similar fashion to the main parts of this post. It's also possible that the result on the smaller model has a more specific/pathological mechanistic explanation. Claude remarks:
+
+Part of what the lens picks out is the prompt rather than the completion. Hits cluster on certain prompt wordings ("numbers"/"values" rather than "sequence") and often begin by echoing the prompt's numbers, but non-hits matched on those features transmit at the random rate, so those surface features aren't the explanation. Holding the exact prompt fixed (8,880 rows), hit completions give 41% and non-hit completions of the same prompts give 23%, against 2.3% for random completions, so both the prompt and the specific completion matter.
+
+Two caveats. Students in the Qwen pool vary a lot from seed to seed and subset to subset. Also, at half the training size (about 5k rows) every arm transmits much less and the arms can't be told apart. Full details are in results/lens_selected_sft.md.
+
+## LLM Disclosure/Methodology
+
+Expand
+
+I wrote about all of the words not marked as LLM-generated myself. (In a few cases I edited an LLM-based draft, but in almost every case enough was pruned and things reworded for narrative flow so that I estimate I actually typed at least 80% and probably more like 95% of the individual words by hand. Exposition and main-body text in particular are mine.)
+
+As is common these days, all of the actual programming, writing/running of code, and direct interfacing with the outputs, were done through Claude Code, using almost entirely Opus 5.5. This is also how I produced the reproduction repo.
+
+I red-teamed the contents of this post with (an instance of Opus 5.5 with the context of most of the experiments and the process of writing the post) and (a separate instance of Opus 5.5 that was given access to only the post and the codebase). I also conceptually red-teamed this post to varying degrees with several humans.
+
+## Appendices
+
+### Appendix: Maybe we are just doing a sort of advanced logit lens
+
+Expand
+
+Following the logic of this shortform, maybe the J-Lens just reads how likely a token is to be found in any continuation (a statistic highly correlated with whether a model would intuitively be thinking about something). This would explain our result, since we're prompting the model to output only number tokens, basically.
+
+As some suggestive evidence for this, I find that there's a strong correlation across model families between how strong the J-Lens reads and how likely the model is to just have "owl" high in the output logits.
+
+|
+Model
+|
+Lens top-5 (read band only)
+|
+Owl in top-5 logits (somewhere in the sequence, same as J-Lens)
+|
+Max P(owl) in output
+|
+Delta(P(owl)) over no-prompt teacher (in OOMs)
+
+|
+Qwen2.5-7B
+|
+5%
+|
+7.5%
+|
+10-9.5
+|
+1.0
+
+|
+GLM-4-9B
+|
+20%
+|
+6%
+|
+10-6.5
+|
+0.9
+
+|
+SmolLM3-3B
+|
+44%
+|
+6.5%
+|
+10-6.1
+|
+2.2
+
+|
+Gemma-4-E2B
+|
+49%
+|
+93%
+|
+10-4.5
+|
+4.2
+
+|
+Qwen3.5-9B
+|
+99%
+|
+99%
+|
+10-3.9
+|
+4.5
+
+|
+Qwen3-32B
+|
+100%
+|
+100%
+|
+10-4.7
+|
+6.0
+
+|
+Gemma-4-31B
+|
+100%
+|
+100%
+|
+10-3.6
+|
+5.7
+
+### Appendix: Performance of Qwen2.5-7B-Instruct lens on some other toy tasks
+Expand
+
+Early on, I thought that maybe I just ran the J-Lens stuff wrong, so I ran the same measurement with the same subliminal learning system prompt on five other toy tasks (descriptions and samples in the appendix).
+
+Note: unlike with the number completions above, the model responses tested on are sampled off-policy as in the J-Lens post (see "Appendix: On-policy vs. off-policy sampling of completions" below); also, I didn't attempt to check whether any of these behaviors exhibit the subliminal learning effect. Consequently, these results are just diagnostic of J-Lens and don't have any direct bearing on subliminal learning.
+
+The entries in the table are top-1 / top-5 / top-20:
+
+|
+Task
+|
+chance (random pairs of whole-word tokens)
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+
+|
+numbers (own completions)
+|
+0.26 / 1.5 / 5.5%
+|
+1.65 / 3.15 / 6.37%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0%
+|
+1 / 1 / 2%
+
+|
+trivia
+|
+0 / 2 / 5%
+|
+67 / 94 / 100%
+|
+0 / 1 / 8%
+|
+0 / 0 / 8%
+|
+56 / 78 / 93%
+
+|
+copying
+|
+0 / 0 / 1%
+|
+49 / 89 / 96%
+|
+0 / 1 / 1%
+|
+0 / 1 / 1%
+|
+3 / 32 / 63%
+
+|
+open-ended questions
+|
+1 / 3 / 8%
+|
+76 / 94 / 98%
+|
+0 / 0 / 8%
+|
+2 / 2 / 16%
+|
+72 / 86 / 98%
+
+|
+cipher
+|
+1 / 4 / 13%
+|
+10 / 26 / 51%
+|
+4 / 13 / 38%
+|
+3 / 12 / 34%
+|
+7 / 19 / 41%
+
+|
+addition
+|
+0 / 1 / 3%
+|
+0 / 0 / 2%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0%
+|
+2 / 3 / 4%
+
+So the lens definitely works in the intended way to some extent in some contexts, with the results generally a bit weaker than results in the original J-Lens writeup (this is sort of what you'd expect given that the model is much weaker and probably less organized). Very roughly, it seems that the results are stronger the more that the task involves natural language. Also note that the subliminal learning system prompt is ridiculously aggressive, and the simple "Think about owls." prompt makes the lens look substantially weaker.
+
+### Appendix: the same tasks with a significantly more conservative J-Lens methodology
+Expand
+
+Just to be sure I didn't miss something due to selecting the wrong layers, I repeated the above, but taking the max reading over all layers (so it can't be that I just chose the wrong layers in the first phase), and using much broader token sets.
+
+The token set:
+
+- the animal word alone (" owl", " Owl")
+
+- a set of about 60 intuitively associated words (e.g. owlet, hoot, nocturnal, night, feathers, talons, beak, prey, barn, wise, Athena, Hedwig) An analogous process was followed for the "horse" control. Generally speaking, searching over a big enough space (more different layers, more different tokens) is expected to pick up measurements by chance, so controls are more important here.
+
+Doing this yields the following (as above, the entries in the table are top-1 / top-5 / top-20):
+
+|
+Task
+|
+chance (same-size random sets)
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+
+|
+numbers (own completions)
+|
+34 / 77 / 98%
+|
+15 / 53 / 98%
+|
+5 / 50 / 97%
+|
+7 / 44 / 98%
+|
+7 / 48 / 98%
+
+|
+trivia
+|
+41 / 85 / 99%
+|
+87 / 100 / 100%
+|
+23 / 74 / 98%
+|
+16 / 62 / 95%
+|
+79 / 97 / 100%
+
+|
+copying
+|
+13 / 43 / 84%
+|
+62 / 98 / 99%
+|
+12 / 58 / 88%
+|
+9 / 41 / 79%
+|
+23 / 72 / 94%
+
+|
+open-ended questions
+|
+58 / 92 / 99%
+|
+96 / 100 / 100%
+|
+62 / 84 / 96%
+|
+60 / 82 / 98%
+|
+96 / 100 / 100%
+
+|
+cipher
+|
+59 / 94 / 100%
+|
+41 / 95 / 100%
+|
+34 / 93 / 100%
+|
+36 / 93 / 100%
+|
+40 / 96 / 100%
+
+|
+addition
+|
+20 / 57 / 91%
+|
+1 / 21 / 63%
+|
+0 / 15 / 51%
+|
+0 / 11 / 46%
+|
+5 / 19 / 53%
+
+Here also we get good signal sometimes, but for some tasks we actually do worse than a random smattering of 60 tokens.
+
+### Appendix: Specification of those tasks
+Expand
+
+Each task has 100 items (50 for open-ended questions).
+
+Trivia: a question about a fictional person.
+
+Where did Brisa Varga work before retiring? Answer in two sentences, making up plausible details.
+
+Before retiring, Brisa Varga worked as a senior editor at a prestigious publishing house in New York City, where she had a long and illustrious career spanning over three decades. ...
+
+Cipher: encode a common word by shifting each letter three places forward.
+
+Encode the word 'garden' with a letter-shift cipher, moving each letter 3 places forward in the alphabet. Explain briefly and give the encoded word.
+
+Sure! To encode the word 'garden' using a letter-shift cipher that moves each letter 3 places forward in the alphabet, we'll follow these steps: 1. Take the letter 'g', ... 'g' becomes 'j'. ...
+
+Addition: add two two-digit numbers.
+
+What is 31 + 90?
+
+31 + 90 equals 121.
+
+Copying: repeat a neutral sentence verbatim (20 are the "carrier sentences" from the J-Lens paper's directed-modulation task; the rest I wrote in the same style).[18]
+
+Write "The old painting hung crookedly on the wall." Don't write anything else.
+
+The old painting hung crookedly on the wall.
+
+Open-ended questions: short open prompts where the model can bring up whatever it likes.
+
+Tell me about your weekend plans.
+
+As an AI assistant, I don't have personal experiences or plans. However, I can help you brainstorm some fun weekend activities ...
+
+###
+
+### Appendix: On-policy vs. off-policy sampling of completions
+Expand
+
+There are two ways you can think to apply the lens:
+
+- Off-policy: Take the completion you'd get with no system prompt and then compute what the teacher's internals would be if it produced that sequence with the subliminal learning system prompt. This is actually the methodology that the original work follows. A justification for that is roughly as follows: "The question is whether the model holds owl in mind while doing something unrelated. With identical text across conditions, any difference in the lens can only come from the prompt, because the words being processed are the same." However, doing things this way doesn't allow you to study subliminal learning-related effects well, because the whole point of subliminal learning is that the teacher somehow manages to convey information with its specific output.
+
+- On-policy: Just sample the model's natural completions given the system prompt. The biggest problem with this thing for our purposes is that the model really likes to shoehorn owls into the response, and since our methodology is extremely conservative and takes the max reading across all sequence positions, even if the J-Lens is functioning as just a logit lens, we get a reading pretty much 100% of the time.
+
+- For the number generation task this is fine because samples were already filtered to only contain numbers, and so there's no ambiguity and we just report the max over all sequence positions, as suggested.
+
+- For all other tasks, we can try something where we just take the max of measurements over all tokens where the predicted token was not "owl", again a very conservative method that maximizes the reported performance of the lens. The following table shows the results of doing that:
+
+Entries are top-1 / top-5 / top-20 at any remaining position, with the fraction of remaining positions at which owl is top-5 in brackets; positions are excluded where the current or next token is part of a word containing "owl". The last column is how often the model's own answers mention owls under the subliminal learning system prompt.
+
+|
+Task
+|
+chance (random pairs of whole-word tokens)
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+|
+owl mentions (subliminal learning system prompt)
+
+|
+numbers
+|
+0.26 / 1.5 / 5.5%
+|
+1.65 / 3.15 / 6.37% (0.1%)
+|
+0 / 0 / 0% (0%)
+|
+0 / 0 / 0% (0%)
+|
+1 / 1 / 2% (0%)
+|
+0%
+
+|
+trivia
+|
+0.5 / 1.8 / 6.1%
+|
+91 / 100 / 100% (12%)
+|
+0 / 2 / 10% (0%)
+|
+0 / 0 / 8% (0%)
+|
+71 / 96 / 99% (9%)
+|
+100%
+
+|
+copying
+|
+0.1 / 0.5 / 2.5%
+|
+89 / 99 / 100% (17%)
+|
+0 / 1 / 1% (0%)
+|
+0 / 1 / 1% (0.1%)
+|
+3 / 32 / 63% (4%)
+|
+93%
+
+|
+open-ended questions
+|
+0.8 / 2.7 / 8.4%
+|
+85 / 97 / 100% (8%)
+|
+0 / 0 / 2% (0%)
+|
+2 / 3 / 12% (0.1%)
+|
+74 / 94 / 99% (6%)
+|
+95%
+
+|
+cipher
+|
+1.0 / 3.3 / 12.1%
+|
+27 / 49 / 75% (1.2%)
+|
+5 / 17 / 43% (0.2%)
+|
+4 / 13 / 36% (0.2%)
+|
+9 / 23 / 46% (0.4%)
+|
+40%
+
+|
+addition
+|
+0.2 / 1.4 / 5.8%
+|
+75 / 98 / 99% (8%)
+|
+0 / 0 / 0% (0%)
+|
+0 / 0 / 0% (0%)
+|
+22 / 35 / 78% (6%)
+|
+99%
+
+Here's what you get if you make the same on-policy design choice using the ultra-conservative lens methodology:
+
+|
+Task
+|
+chance (same-size random sets)
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+|
+owl mentions (subliminal learning system prompt)
+
+|
+numbers
+|
+34 / 77 / 98%
+|
+15 / 53 / 98%
+|
+5 / 50 / 97%
+|
+7 / 44 / 98%
+|
+7 / 48 / 98%
+|
+0%
+
+|
+trivia
+|
+46 / 88 / 100%
+|
+99 / 100 / 100%
+|
+28 / 93 / 100%
+|
+18 / 62 / 96%
+|
+93 / 99 / 100%
+|
+100%
+
+|
+copying
+|
+23 / 60 / 91%
+|
+99 / 100 / 100%
+|
+35 / 86 / 100%
+|
+8 / 41 / 79%
+|
+23 / 72 / 94%
+|
+93%
+
+|
+open-ended questions
+|
+59 / 93 / 100%
+|
+99 / 100 / 100%
+|
+63 / 96 / 100%
+|
+59 / 83 / 98%
+|
+99 / 100 / 100%
+|
+95%
+
+|
+cipher
+|
+60 / 96 / 100%
+|
+58 / 95 / 100%
+|
+39 / 87 / 100%
+|
+38 / 93 / 100%
+|
+37 / 88 / 100%
+|
+40%
+
+|
+addition
+|
+38 / 78 / 97%
+|
+97 / 99 / 100%
+|
+19 / 80 / 100%
+|
+0 / 11 / 45%
+|
+26 / 46 / 90%
+|
+99%
+
+### Appendix: results for different animals (TL;DR: qualitatively similar)
+Expand
+
+I repeated the whole thing with eagle, wolf, penguin and cat in place of owl. All four are among the paper's Qwen2.5-7B test animals, and penguin and cat had the strongest effects there.
+
+The token sets are " eagle", " Eagle", " Eagles" for eagle (" eagles" isn't a single token), " wolf", " Wolf", " wolves", " Wolves" for wolf, " Penguin", " Penguins" for penguin (lowercase " penguin" isn't a single token) and " cat", " Cat", " cats", " Cats" for cat; chance is computed with random whole-word sets of the same size. The lens entries are top-1 / top-5 / top-20.
+
+|
+Animal
+|
+Rate at which students name it, control students → subliminal learning students (mean over teacher samples × 3 seeds)[19]
+|
+chance
+|
+subliminal learning system prompt (with the animal replaced)
+|
+no system prompt
+|
+subliminal learning system prompt with a different animal
+
+|
+owl
+|
+1.0% → 7.5%
+|
+0.3 / 1.7 / 5.8%
+|
+3.7 / 4.7 / 7.0%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0% (horse)
+
+|
+eagle
+|
+4.0% → 19%[20]
+|
+0.1 / 1 / 5%
+|
+2 / 3 / 6%
+|
+0 / 0 / 1%
+|
+0 / 1 / 3% (owl)
+
+|
+wolf
+|
+2.3% → 4.9%[21]
+|
+0.3 / 2 / 10%
+|
+2 / 5 / 18%
+|
+0.3 / 1 / 8%
+|
+0.3 / 2 / 8% (owl)
+
+|
+penguin
+|
+1.7% → 63%
+|
+0.3 / 1.5 / 5.5%
+|
+1.0 / 2.7 / 5.7%
+|
+0 / 0 / 2.3%
+|
+0 / 0 / 1.3% (owl)
+
+|
+cat
+|
+1.8% → 56%
+|
+0.2 / 1.8 / 8.6%
+|
+0.7 / 1.7 / 5.7%
+|
+0 / 0 / 0.3%
+|
+0 / 0 / 1.3% (owl)
+
+We get basically the exact same surprisingly weak qualitative result as for owl. As with the owl we also find that the animal is readable off of the non-animal system prompt tokens.
+
+Same statistic as the system prompt table in the main body, except that positions are excluded if either the current or the next token is part of the animal word:
+
+|
+System prompt's own tokens, read for its own animal
+|
+chance (size-matched random whole-word sets, same rule), top-1 / top-5 / top-20
+|
+top-1
+|
+top-5
+|
+top-20
+
+|
+owl (24 of 33 positions kept)
+|
+0 / 0.03 / 0.15%
+|
+8%
+|
+12%
+|
+21%
+
+|
+eagle (24 of 33 positions kept)
+|
+0.03 / 0.09 / 0.24%
+|
+4%
+|
+12%
+|
+21%
+
+|
+wolf (24 of 33 positions kept)
+|
+0 / 0.09 / 0.42%
+|
+21%
+|
+33%
+|
+46%
+
+### Appendix: When the lens appears not to work, averaging and contrastive techniques sometimes still produce some signal that is readable by the lens, but still not in all settings
+Expand
+
+Summary and main takeaway: There is some kind of structure that's still readable by the lens, which suggests that maybe variation of lens methods might lead to a better tool. However, there's not really a semantically clear pattern to which among these results is good, so this is merely a suggestive argument that there may exist a (hopefully more principled) method which works better, not really an argument that the particular thing I did here is good. Please note also that in natural settings, e.g., naive monitoring of model traces, we wouldn't have the affordance of diffing against control traces; this is a fairly strong extra assumption (which some agendas transparently make) and probably gets worse as sequences get longer.
+
+A suggestion I got was to average the teacher's residual stream over many on-policy samples, apply the lens to that, and diff against the same thing without the system prompt.
+
+I did this on the canonical number task with 2,300 on-policy completions per condition (23 per prompt for each of the 100 prompts). The positions averaged over are the same as in the main result (i.e. the last prompt token through the second-to-last response token, and no system prompt or user prompt positions).
+
+I did this in two ways: the first is to average the residual stream over all positions and samples, then convert these to logits separately for the two settings, take the difference between these and find the rank of the target tokens among the resulting vector ("lens of the mean"). The second is the same, but to convert to logits before averaging ("mean of the lens"). In both cases I do this separately for each of layers 22-26 and take the max performance across layers.
+
+For a baseline, I split the completions with no system prompt into two random halves (by prompt) and took the same diff between the halves, scored the same way (best rank over layers 22-26), 1,000 times; the baseline column gives the median rank of the animal and the best rank over all 1,000 splits, for lens of the mean / mean of the lens.
+
+|
+Diff (condition minus condition), token read
+|
+baseline: median (best of 1,000), lens of the mean / mean of the lens
+|
+lens of the mean
+|
+mean of the lens
+
+|
+subliminal learning system prompt minus no system prompt, owl
+|
+7,047 (44) / 7,220 (39)
+|
+10
+|
+12
+
+|
+same, first 8 positions only[22]
+|
+7,146 (9) / 7,547 (11)
+|
+4[23]
+|
+1
+
+|
+subliminal learning system prompt with "horses" minus no system prompt, horse
+|
+6,263 (12) / 6,083 (14)
+|
+340
+|
+200
+
+|
+subliminal learning system prompt minus subliminal learning system prompt with "horses", owl
+|
+7,047 (44) / 7,220 (39)
+|
+1
+|
+1
+
+|
+"Think about owls." at the start of the user turn (no system prompt) minus no system prompt, owl[24]
+|
+7,047 (44) / 7,220 (39)
+|
+1
+|
+1
+
+|
+off-policy: completions sampled with no system prompt, read under the subliminal learning system prompt minus read with no system prompt, owl
+|
+7,047 (44) / 7,220 (39)
+|
+23
+|
+25
+
+Here's some extra information from Claude:
+
+The top 20 tokens of the diff of the subliminal learning system prompt minus no system prompt (averaged over layers 22-26) are generic (plus, all, pair, The, our, once, Seven, ...), and are nearly the same list for the horse, eagle and wolf versions of the prompt. Taking the diff against the "horses" prompt instead removes this, leaving owl, Owl, bird, birds, Birds, Bird, noct, unknown, stealth, Bin, prey, hawk, odd, nesting, UFO, perch, flight, ... Eagle and wolf behave the same way (best rank 37-65 and 19-40 against no system prompt, 1 against the "horses" prompt).
+
+The off-policy row is about the same as the on-policy one, so the owl component is there no matter which numbers get written. From this we might infer that what's being detected is the system prompt being in context, not anything about the teacher's choice of numbers. The signal only shows up in the final few layers (in the diff against the "horses" prompt, owl is rank 1-2 at layers 21-26 and in the thousands at every layer from 0 to 20).
+
+### Claude-written appendix: refitting the lens on chat-formatted numbers and animal text doesn't change the result
+Expand
+
+The main results use a lens fit on WikiText, which looks nothing like a chat transcript full of digits, so one worry is that the lens just doesn't transport well at the positions we care about. To check, I fit three more lenses with the same recipe (300 sequences, reference implementation), on newly generated data that doesn't overlap with any of the evaluation prompts:
+
+- Lens A: chat-formatted number conversations (the same kind of prompt as the main result), a third with no system prompt and the rest with the subliminal learning system prompt for one of 11 animals (owl, horse, eagle, wolf, cat, dog, lion, dolphin, tiger, elephant, fox), 128 tokens per sequence.
+
+- Lens B: a mixture of a third WikiText (from the original lens's fitting data), a third lens A's number conversations, and a third chat-formatted prose about 40 different animals, including owls.
+
+- Lens A256: lens A's data with 256 tokens per sequence instead of 128, since a single number conversation is usually longer than 128 tokens, so lens A mostly saw the prompt rather than the response.
+
+The new lenses are much more faithful at the number positions: measured as the KL divergence between the lens readout and the model's actual next-token distribution, averaged over layers 22-26, the original lens gets 4.2 nats at number positions, lens A 1.3, lens B 2.2 and lens A256 1.3 (top-1 agreement 0.44, 0.70, 0.61 and 0.71). Re-deriving the read band with the toy task gives layers 22-26 for every lens, so all the tables below use the same layers as the main body.
+
+The tables have the same format as the other-task table in "Appendix: specification of other tasks used as controls" (numbers row on-policy, other rows off-policy), with entries top-1 / top-5 / top-20, rounded to whole percents as in the main body. The numbers row is on the 300-completion set[25] rather than the full pool used in the main result; for comparison, the original lens reads 4 / 5 / 7% (owl teacher), 0 / 0 / 0% (same prompt with "horses"), 0 / 0 / 0% (no system prompt) and 1 / 1 / 2% ("Think about owls.") on that same set.
+
+Lens A (chat-formatted number conversations):
+
+|
+Task
+|
+chance (random pairs of whole-word tokens)
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+
+|
+numbers (own completions)
+|
+0 / 2 / 7%
+|
+4 / 6 / 9%
+|
+0 / 0 / 1%
+|
+0 / 0 / 0%
+|
+1 / 2 / 5%
+
+|
+trivia
+|
+1 / 2 / 5%
+|
+70 / 96 / 100%
+|
+0 / 5 / 14%
+|
+0 / 1 / 11%
+|
+54 / 82 / 96%
+
+|
+copying
+|
+0 / 0 / 1%
+|
+51 / 88 / 98%
+|
+0 / 1 / 2%
+|
+0 / 0 / 1%
+|
+3 / 38 / 65%
+
+|
+open-ended questions
+|
+1 / 3 / 8%
+|
+74 / 90 / 98%
+|
+0 / 4 / 14%
+|
+2 / 6 / 24%
+|
+74 / 84 / 98%
+
+|
+cipher
+|
+1 / 4 / 11%
+|
+11 / 30 / 59%
+|
+6 / 19 / 45%
+|
+4 / 16 / 40%
+|
+8 / 20 / 51%
+
+|
+addition
+|
+0 / 1 / 2%
+|
+0 / 0 / 1%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0%
+|
+2 / 3 / 4%
+
+Lens B (mixture of WikiText, number conversations, and animal prose):
+
+|
+Task
+|
+chance (random pairs of whole-word tokens)
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+
+|
+numbers (own completions)
+|
+0 / 2 / 6%
+|
+4 / 6 / 9%
+|
+0 / 0 / 1%
+|
+0 / 0 / 0%
+|
+1 / 1 / 5%
+
+|
+trivia
+|
+1 / 2 / 5%
+|
+72 / 95 / 100%
+|
+0 / 2 / 10%
+|
+0 / 1 / 8%
+|
+58 / 80 / 95%
+
+|
+copying
+|
+0 / 0 / 1%
+|
+49 / 92 / 98%
+|
+0 / 1 / 1%
+|
+0 / 1 / 1%
+|
+3 / 37 / 62%
+
+|
+open-ended questions
+|
+1 / 3 / 8%
+|
+74 / 92 / 98%
+|
+0 / 2 / 10%
+|
+2 / 4 / 18%
+|
+74 / 86 / 98%
+
+|
+cipher
+|
+1 / 4 / 12%
+|
+10 / 27 / 49%
+|
+5 / 14 / 36%
+|
+4 / 13 / 36%
+|
+6 / 20 / 40%
+
+|
+addition
+|
+0 / 1 / 3%
+|
+0 / 0 / 1%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0%
+|
+2 / 3 / 4%
+
+Lens A256 (lens A's data, 256-token sequences):
+
+|
+Task
+|
+chance (random pairs of whole-word tokens)
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+
+|
+numbers (own completions)
+|
+0 / 2 / 7%
+|
+3 / 6 / 8%
+|
+0 / 0 / 1%
+|
+0 / 0 / 0%
+|
+1 / 2 / 4%
+
+|
+trivia
+|
+1 / 2 / 5%
+|
+71 / 96 / 100%
+|
+0 / 3 / 14%
+|
+0 / 1 / 13%
+|
+57 / 80 / 95%
+
+|
+copying
+|
+0 / 0 / 1%
+|
+54 / 91 / 98%
+|
+0 / 1 / 2%
+|
+0 / 0 / 2%
+|
+2 / 38 / 64%
+
+|
+open-ended questions
+|
+1 / 3 / 9%
+|
+72 / 90 / 98%
+|
+0 / 4 / 16%
+|
+2 / 8 / 20%
+|
+74 / 86 / 98%
+
+|
+cipher
+|
+1 / 4 / 11%
+|
+10 / 24 / 53%
+|
+6 / 16 / 43%
+|
+3 / 14 / 38%
+|
+9 / 16 / 43%
+
+|
+addition
+|
+0 / 1 / 2%
+|
+0 / 0 / 1%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0%
+|
+2 / 3 / 4%
+
+Median best rank of owl (of ~40,000 whole-word tokens) on the 300-completion set. The "original" row is the original lens on the same completions; the main result table's 213 is over the full 1.42M pool instead.
+
+|
+Lens
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+
+|
+original
+|
+240
+|
+397
+|
+517
+|
+324
+
+|
+A
+|
+308
+|
+594
+|
+507
+|
+360
+
+|
+B
+|
+212
+|
+398
+|
+438
+|
+254
+
+|
+A256
+|
+280
+|
+520
+|
+472
+|
+304
+
+The top-1 hits on the number completions come from the same seven prompts under every lens (lens B adds one more).
+
+### Claude-written appendix: R-Lens and J++ Lens don't change the main result
+Expand
+
+Two recent follow-ups claim to improve on the J-Lens: R-Lens and J++ Lens.
+
+R-Lens is the J-Lens computed with an LRP backward pass instead of the ordinary gradient. J++ fits several Jacobian lenses per layer (one per k-means cluster of activations, with a router choosing between them), also uses the LRP backward pass, and mixes the per-cluster lenses with weights fit on readout-eval items. I used the [official J++ code](https://github.com/safety-research/jpp_lens) unchanged for all fits, and built R-Lenses from the same fits the way the J++ paper builds its own R-Lens comparison.
+
+To make the point as strongly as possible, I fit 23 configurations rather than just the paper's defaults (64 WikiText records of 128 tokens, 8 clusters): up to 512 records of 256 tokens, 8, 16 or 32 clusters, an in-domain variant fit on chat-formatted text including number-task prompts, and signed (official), non-negative, or best-single-cluster mixing weights. I picked the best configuration on home-turf criteria only, before looking at the number task: best cross-validated recall on the J++ paper's readout evals among lenses that also pass our positive controls (owl-prompted trivia and copying, and the owl system prompt's own tokens). The winner is 512 × 256 WikiText records, 16 clusters, signed weights. Its readout recall@10 is 49%, against 35% for our original J-Lens. (The official default fit, and two configurations with slightly higher recall, failed the positive controls: their mixing weights nearly cancel in the late layers we read from, e.g. owl at top-1 on only 19-37% of owl-prompted trivia, against 67% for the original.)
+
+On the same toy task as in "Maybe the particular J-Lens is just bad because the model is small?", the best J++ Lens is clearly stronger than our lens (top-1 / top-5, % of trials; the read band is chosen the same way as for the original lens):
+
+|
+lens
+|
+layers
+|
+think about X
+|
+X mentioned
+|
+don't think about X
+|
+ignore X
+|
+no instruction
+
+|
+J-Lens (ours)
+|
+L22-26
+|
+45 / 74
+|
+52 / 82
+|
+0 / 2
+|
+1 / 4
+|
+0 / 2
+
+|
+J++ Lens (best)
+|
+L21-26
+|
+57 / 87
+|
+63 / 88
+|
+1 / 2
+|
+2 / 6
+|
+1 / 1
+
+|
+J-Lens (ours)
+|
+all layers
+|
+47 / 78
+|
+54 / 83
+|
+3 / 9
+|
+4 / 12
+|
+3 / 5
+
+|
+J++ Lens (best)
+|
+all layers
+|
+59 / 88
+|
+65 / 89
+|
+2 / 14
+|
+4 / 19
+|
+2 / 11
+
+But on the number task (27,622 owl-teacher completions, top-1 / top-5 / top-20), it doesn't find any more owl than the original:
+
+|
+lens
+|
+layers
+|
+owl teacher
+|
+chance
+|
+control teacher (no system prompt)
+
+|
+J-Lens (ours)
+|
+L22-26
+|
+1.6 / 3.0 / 6.3%
+|
+0.25 / 1.5 / 5.5%
+|
+0.01 / 0.03 / 0.32%
+
+|
+R-Lens
+|
+L21-26
+|
+0.67 / 1.3 / 2.7%
+|
+0.46 / 2.3 / 6.1%
+|
+0.00 / 0.00 / 0.01%
+
+|
+J++ Lens (best)
+|
+L21-26
+|
+1.4 / 6.7 / 29%
+|
+0.33 / 2.2 / 7.4%
+|
+0.06 / 1.2 / 13%
+
+|
+J-Lens (ours)
+|
+all layers
+|
+1.6 / 3.1 / 7.3%
+|
+1.2 / 5.0 / 14%
+|
+0.01 / 0.06 / 0.90%
+
+|
+R-Lens
+|
+all layers
+|
+0.67 / 1.3 / 2.8%
+|
+1.1 / 4.5 / 13%
+|
+0.00 / 0.01 / 0.18%
+
+|
+J++ Lens (best)
+|
+all layers
+|
+1.4 / 7.1 / 36%
+|
+1.9 / 7.4 / 21%
+|
+0.07 / 2.0 / 22%
+
+R-Lens reads owl at about chance. The J++ Lens's higher top-5 and top-20 rates aren't specific to owl: it ranks owl higher for every teacher, including the control. On the 300 on-policy completions per condition, it reads 3 / 9 / 29% for the owl prompt, 0 / 3 / 21% for the horse prompt and 0 / 1 / 13% with no system prompt, so its margin over the horse prompt (+3 / +6 / +8 points) is essentially the original lens's (3 / 5 / 7% vs 0 / 0 / 0%). Its top-1 hits also mostly coincide with the original's: 211 of its 380 top-1 hits are also top-1 hits for the original lens, against about 6 expected by chance. Excluding position 0 (the last prompt token) doesn't change any of this.
+
+Taking the maximum over the configurations (which is generous to the lens), the highest top-1 rate in a lens's own read band is 2.4% (chance 1.1%, control teacher 0.0%), from a J++ Lens fit without LRP; without position 0 it's 1.8% (chance 1.1%).[26]
+
+Full details, every configuration and the deviations from the papers (all 27 layers fit instead of 7; correctness on the readout items graded for Qwen2.5-7B with the library's own grader; cross-fitting so the mixing weights could use all non-held-out items) are in results/jpp_rlens.md.
+
+### Claude-written appendix: instead of owls, the lens is mostly outputting random junk tokens, not really anything semantically similar
+Expand
+
+Looking at what the lens does put at the top while the teacher writes numbers: in the whole-word view it's mostly junk that doesn't depend on the prompt at all (spam/classified-ad words like Annunci and backpage, German shopping words like Angebot, code identifiers like RootState; 70-90% of the top-10 is the same under the control prompt), plus English number words matching the digit about to be written (ninety before a 9) in the late layers. Subtracting the teacher with no system prompt on the same text, the subliminal learning system prompt mostly adds a generic "persona" shift that is nearly identical for an eagle prompt (everyday prose and affect words like captivating, adore; r = 0.99 between the owl and eagle shifts), and a much smaller owl-specific part that is on theme (owl, nocturnal, night, moon, midnight, bedtime, bats). Owl content is prominent at the system prompt's own tokens (owl birds majestic wise bird wisdom at "...love for the animal"), fades through the user turn, and at any single position is essentially gone from the first number on.
+
+### Claude-written appendix: no, this wasn't an artifact of the choice of tokens we looked for, and also if you take rank over the whole pool of tokens the lens looks even weaker; more precise spec of exactly which tokens are included
+Expand
+
+This re-reads the owl teacher's completions in the 300-completion set[25] with wider owl token sets and a different ranking. The token sets are: the base set used in the main result (" owl", " Owl"); an extended set that adds every other spelling of owl/owls that is a single token in Qwen2.5 ("owl", "OWL", without a leading space); and the extended set plus the single-token pieces that begin "owls" or "Owls" (" ow", "ow", " Ow"). For each set, every token in the set counts as a hit. Ranks are computed either among whole-word tokens plus whatever extra tokens the set contains, or over the full vocabulary (the J-Lens paper's convention). Detection is top-1 / top-5 / top-20 at any response position and any of layers 22-26; chance uses random sets of the same size drawn from the same pool of tokens.
+
+|
+Token set, ranking
+|
+chance
+|
+subliminal learning system prompt
+|
+same prompt with "horses"
+|
+no system prompt
+|
+"Think about owls." in the user turn
+
+|
+base, among whole-word tokens
+|
+0.3 / 2 / 6%
+|
+3.7 / 4.7 / 7.0%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0.3%
+|
+0.7 / 1.3 / 1.7%
+
+|
+extended, among whole-word + extra tokens
+|
+0.3 / 1.6 / 7.5%
+|
+5.3 / 11 / 49%
+|
+0.7 / 5.7 / 31%
+|
+0 / 9.0 / 49%
+|
+4.0 / 21 / 61%
+
+|
+extended + pieces, among whole-word + extra
+|
+0.6 / 3.2 / 11%
+|
+5.3 / 11 / 50%
+|
+0.7 / 5.7 / 31%
+|
+0 / 9.0 / 49%
+|
+4.0 / 21 / 61%
+
+|
+base, full vocabulary
+|
+0 / 0 / 0.5%
+|
+0.3 / 1.0 / 3.7%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0%
+|
+0.7 / 0.7 / 0.7%
+
+|
+extended, full vocabulary
+|
+0.1 / 0.5 / 2.4%
+|
+0.3 / 2.3 / 5.0%
+|
+0 / 0 / 0%
+|
+0 / 0 / 0%
+|
+0.7 / 0.7 / 1.0%
+
+#### Token filtering methodology
+
+This section spells out exactly which tokens count as "owl" and which positions get read, since a lot of the results depend on these choices.
+
+Whole-word tokens. Throughout, I only consider single vocabulary tokens that are a leading space followed by at least three ASCII letters (about 40,000 of Qwen2.5's ~150,000 tokens). Lens ranks are computed among these tokens only, with everything else (digits, punctuation, word fragments, non-English strings) masked out. This is more lenient than ranking over the full vocabulary, as the J-Lens paper does, since digits and punctuation usually dominate the top of the lens readout at number positions.
+
+The owl token set is the whole-word tokens for "owl" and "owls" in lowercase and capitalized form, which in Qwen2.5 comes out to just " owl" and " Owl"; " owls" isn't a single token (it's " ow" + "ls"), so it can't be in the set. Variants without a leading space are excluded because they're often pieces of other words (e.g. Qwen3.5 tokenizes "bowl" as b + owl). The horse set is built the same way.
+
+The ~60-word association set is the whole-word tokens for a hand-written list (owl, owlet, hoot, nocturnal, night, midnight, moon, feathers, talons, beak, wings, bird, raptor, prey, mouse, barn, forest, tree, perch, nest, wise, wisdom, Athena, Hedwig, Potter, hawk, eagle, falcon, snowy, tawny, screech, and so on), again in lowercase and capitalized forms where those are single tokens. The nearest-neighbor set is the 100 whole-word tokens whose unembedding vectors have the highest cosine similarity to the average of the " owl" and " Owl" unembeddings.
+
+Positions read. The lens is read at every position that predicts a response token, i.e. the position just before each token of the teacher-forced response (including the last prompt token, which predicts the first response token). A completion counts as a detection at top-k if any token in the set has rank k or better at any read layer and any read position.
+
+Excluding owl positions. I reconstruct the response text from its tokens and split it into words (maximal runs of letters). A position is excluded if either its current token (the token at that position) or its next token (the one being predicted) overlaps a word that contains "owl", case-insensitively. This catches " owl", " Owl", "owls" split as " ow" + "ls", "Owls" at the start of a sentence, "owlet", and so on; it also excludes words like "bowl" or "knowledge", which is harmless. For the conservative on-policy table, a position is additionally excluded if its current or next token overlaps a word that exactly matches one of the ~60 association words or its plural. On the prose answers under the subliminal learning system prompt, these rules exclude about 13-16% of positions; on the number completions they exclude nothing. The system prompt and open-ended tables in the Result section use a slightly looser version that only checks the next token, i.e. a position is excluded only if the token it predicts is part of an owl word; checking the current token too changes the open-ended table by under a point, and in the system prompt table keeps 24 rather than 27 positions, giving 8 / 12 / 21% instead of 7 / 15 / 26%.
+
+Chance. The chance columns use 100 random sets of whole-word tokens of the same size as the set being tested, scored with exactly the same detection rule (same layers, same positions, top-k), and averaged over sets and completions. For the on-policy tables, chance is computed without the owl exclusion, which makes it slightly higher than a matched version would be.
+
+- ^
+
+This post is organized around owls being the canonical experiment. This is basically because this is what I recalled reflexively about the subliminal learning paper. As it turns out, the paper actually finds much stronger results for other animals and doesn't even report the result for owls on Qwen2.5-7B-Instruct, but this doesn't affect any of our conclusions.
+
+- ^
+
+This is later in the network than the paper's "workspace band", which was derived from Claude models; this seems to be a fairly consistent finding in smaller models.
+
+- ^
+
+Variants without a leading space are excluded since they're often word fragments (e.g. Qwen3.5 tokenizes "bowl" as b + owl).
+
+- ^
+
+Sequences in this post tend to be longer than the ones studied in the J-Lens post, which will tend to make J-Lens look comparatively better here, since there are more positions to max over.
+
+- ^
+
+I didn't realize before beginning this post, but [Neuronpedia has a published Qwen2.5-7B-Instruct lens](https://huggingface.co/neuronpedia/jacobian-lens/tree/main/qwen2.5-7b-it). Using it directly, with n=300 gives 4.0 / 6.3 / 10.0% (top-1 / top-5 / top-20), and results on other tasks (described in Appendix) are within noise.
+
+- ^
+
+There are a couple of reasons to note that these figures might be inflated relative to ours, also. 1) The caption says "any (layer, position)" and doesn't explicitly say the layers were restricted to the workspace band. If they weren't, these models have a lot of layers, so taking the max over them provides a lot of chances for a hit. 2) Different phrasings of the prompt may drop the rates to 55/85/92 on one of the tasks. Also, for a prompt that merely mentions the target concept, phrasings of the prompt can drop the rates to as low as 45/73/77.
+
+- ^
+
+"clearly transmitted" means that students name the target more often than control students (trained on numbers from the teacher with no system prompt) at p < 0.01 in all of three seeds (strong effect), and more often than students of teachers prompted with other targets (specific effect).
+
+- ^
+
+All I did here was blast a bunch of these models by varying the nouns. No particular significance should be ascribed to the distribution of nouns attempted here across models; the only caveat is that I asked my agent to focus more on Gemma-4-31B settings since it was one of the stronger open models outside the Qwen family.
+
+- ^
+
+Lens sources: for Qwen2.5-7B and Qwen3.5-9B we fit our own lenses with the reference implementation. For Qwen3-32B we just used [Neuronpedia's published lens](https://huggingface.co/neuronpedia/jacobian-lens/tree/main/qwen3-32b) rather than fitting our own. For Gemma-4-31B we used the [lamm-mit lens](https://huggingface.co/lamm-mit/gemma4-jacobian-lenses).
+
+- ^
+
+The Gemma-4-31B wolf teacher mentions wolves in 42% of its number answers, so only 66 of its 200 completions pass the number filter; the row is over those 66.
+
+- ^
+
+Gemma splits " sequoia" into " sequ" + "oia", so the token set is {" Sequoia", " sequ", " Sequ"}. " sequ" also begins " sequence", a word in the number prompts, so the same set reaches 0 / 5 / 52% with no system prompt; top-20 is uninformative here, but top-1 and top-5 are not affected. The whole word " Sequoia" alone reads 1 / 24 / 54% (one-token chance 0.0 / 0.5 / 2.4%).
+
+- ^
+
+We got this particular read band from an open source ([lamm-mit/gemma4-jacobian-lenses](https://huggingface.co/lamm-mit/gemma4-jacobian-lenses)) J-Lens fitting for this model. To make sure this isn't a confounder which just causes us to miss stuff, we fit our own lens to all layers.
+
+- ^
+
+As above, "sequ" is part of the word "sequence", so top-20 performance and all-layer performance are considerably inflated.
+
+- ^
+
+Our own fit lens reports weaker stats than the lamm-mit lens here. The lenses do disagree: the cosine similarity between corresponding lens matrices is only about 0.21-0.26 at layers 28-57 (and about 0 at earlier layers), and lamm-mit's matrices have roughly 10x larger norms at the late layers.
+
+- ^
+
+The first three seeds share prompts and the last three seeds share prompts; I redrew prompts to make sure the result wasn't sensitive to this. The two give qualitatively similar results: 52.0 ± 29.5% and 62.5 ± 24.7%.
+
+- ^
+
+Lens hits cluster on certain prompt wordings (lists called "numbers" or "values" rather than a "sequence") and often start by repeating the prompt's example numbers. As a control, I also trained on non-hit completions matched to the hits on prompt template, number of example numbers, format, and whether the completion echoes the prompt's numbers; this makes no difference (8.0 ± 6.2% (n=3)).
+
+- ^
+
+All 9,364 top-1 hits found in 1.12M completions, so every arm in this table except the original training set and the control uses 9,364 rows instead of 10k.
+
+- ^
+
+This differs from the J-Lens paper's basic copy task (the toy task described in "Maybe the particular J-Lens is just bad because the model is small?"). There, the instruction ("Concentrate on X while you write the sentence") comes right after the sentence to copy, just before the answer, and X ranges over 22 topics. Here the instruction is the subliminal learning system prompt at the start of the conversation (or "Think about owls." at the start of the user turn), and the target is just owl.
+
+- ^
+
+Owl 4, eagle 6, wolf 4, penguin 6 and cat 5 independent teacher samples, since a single teacher sample turns out to vary about as much as the student seed. The lens columns are over 300 on-policy completions per teacher.
+
+- ^
+
+No single eagle teacher sample clears our "clearly transmitted" bar on this evaluation, but on the paper's second evaluation, which prefixes each question with a number sequence, eagle transmits strongly (0.2% → 23%), matching the paper.
+
+- ^
+
+One wolf student out of 12 reaches 27%, but no teacher sample clears our "clearly transmitted" bar, which is why we didn't include it in the analysis in "Results with other models".
+
+- ^
+
+Why the choice to pick the first eight tokens? this is just a cherry-picked datapoint to demonstrate that there is some signal in here, though it's washed out as the sequence continues and would not be found by just taking the mean over sequence positions.
+
+- ^
+
+For some reason, the top token read by the lens here is still "plus".
+
+- ^
+
+Note this result is pretty weird. This prompt outperforms the more aggressive prompt when both are contrasted against no system prompt.
+
+- ^
+
+The 300-completion set is 100 number prompts held out from the training data (lines 29,000-29,099 of the paper's 30k prompt list) × 3 samples per teacher, sampled with vLLM at temperature 1 and no repetition penalty. It was the main readout set before the headline moved to the full 1.42M-completion pool, and the horse and no-system-prompt rows of the main table, the other-animal lens columns and most appendix readouts still use it.
+
+- ^
+
+This maximum is over 10 of the 23 configurations. The other 13 lenses were lost with a deleted cloud machine before the switch to completions sampled without a repetition penalty, and couldn't be rescored. On the old completions, the maximum over all 23 was 3.0% (chance 0.8%), from a lens that fails the positive controls and has all of its signal at position 0. The highest all-layer rates come from lenses that read owl just as often for the control teacher, i.e. lens artifacts rather than owl signal.
+
+J-Lens can't detect what a subliminal learning teacher is transmitting (on Qwen2.5 7B-Instruct)
+9Daniel Kokotajlo
+
+1Veeraraju Elluru
+
+1Raphael Roche
+
+2shawnghu
+
+1Andrew Gritsaev
+
+5Comments
+
+5
+
+AI
+Frontpage
+
+# 25
+
+New Comment
+
+Submit
+
+5 comments, sorted by
+top scoring
+Click to highlight new comments since: Today at 12:51 PM
+
+[-]Daniel Kokotajlo15d9
+
+0
+
+Doing the Lords work. Thank you.
+
+Reply
+
+1
+
+[-]Veeraraju Elluru7d1
+
+0
+
+But on the number task (27,622 owl-teacher completions, top-1 / top-5 / top-20), it doesn't find any more owl than the original:
+
+I think this Appendix holds some important perspective on the main results. I might be reading too much into the numbers, so happy to be corrected -- while the absolute rates of 1.6% (first row in the table below the quoted text) are quite low, the increase from the base model (0.00-0.01%) is still quite significant, esp against the "random baseline"? (I'm largely focussing on the original J-Lens and the workspace layers.)
+
+But the fact that it's so subtle is a nice result in itself!
+
+Reply
+
+[-]Raphael Roche13d1
+
+0
+
+it seems that either models don't have to "think" about a concept in order to subliminally transfer it,
+
+Isn't that just the definition of "subliminal" in GWT : a stimulus that stays below the threshold of access consciousness and never reaches the global workspace?
+
+Reply
+
+[-]shawnghu13d2
+
+0
+
+I take the "subliminal" in "subliminal learning" to describe the perspective from the student model, which is learning from apparently-benign sequences that actually encode something.
+
+It's also true that fine-tuned teacher models can convey the effect, and it's plausibly "subconscious" for them. But the SL effect (as well as the phenomenon in this post) can hold even for cases where the teacher is system or user-prompted, in which case its subconsciousness is much less likely.
+
+Reply
+
+[-]Andrew Gritsaev13d1
+
+0
+
+Yes, it is. This is just another evidence that this happens "subliminally"
+
+Reply
+
+Moderation Log
+
+More from shawnghu
+
+View more
+
+Curated and popular this week
+
+Mentioned in
+
+8Fun toy result: a subliminal-learning effect via on-policy distillation
