@@ -98,3 +98,5 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 | 2026-11-13T05:48:55Z | Hetzner 175902959 | Poste de pilotage v11, détruit par son identifiant (API Hetzner, HTTP 200) après `poste-fini-v11.json` (05:04:54Z) |
 | 2026-11-13T05:53:45Z | Hetzner 175945214 | Poste de reprise v1, détruit par son identifiant (HTTP 200) : arrêté de lui-même à 05:52:54Z sur la garde « aucune instance du témoin », reprise par erreur du poste v11 (défaut du script, rien touché sur l'instance) ; remplacé par le poste de reprise v2 |
 | 2026-11-13T06:10:05Z | Hetzner 175945720 | Poste de reprise v2, détruit par son identifiant (HTTP 200) après la fin de `reprendre` (code 3 : redémarrage de 60417353 refusé par Vast, instance remise à l'arrêt) |
+| 2026-11-13T08:01:04Z | 60417353 | Témoin de Bailey : **détruite par la reprise** (lecture 38, poste de reprise v3) après transfert complet et scellement ; absente de l'inventaire relu à 08:02Z |
+| 2026-11-13T08:02:44Z | Hetzner 175955746 | Poste de reprise v3, détruit par son identifiant (HTTP 200) après la fin de `reprendre` (code 0) |
