@@ -1,0 +1,177 @@
+{
+ "lanceur": "/home/user/controle-ia-travail/scripts/lancer_course_ideation_bassins_etroits_v3.py",
+ "essais": "/home/user/controle-ia-travail/tests/test_lancer_course_ideation_bassins_etroits_v3.py",
+ "mutants": [
+  {
+   "mutant": "base",
+   "garde": "aucune (contrôle de l'outil)",
+   "avant": null,
+   "apres": null,
+   "code_pytest": 0,
+   "bilan": "139 passed in 55.98s",
+   "essais_en_echec": [],
+   "issue": "contrôle : tous passés"
+  },
+  {
+   "mutant": "W1-zombie-tenu-pour-vivant",
+   "garde": "V2 : zombie tenu pour vivant",
+   "avant": "    if len(champs) < 20 or champs[0] == \"Z\":",
+   "apres": "    if len(champs) < 20:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 61.96s (0:01:01)",
+   "essais_en_echec": [
+    "test_v2_zombie_tenu_pour_mort"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W2-courses-par-generation-non-bornees",
+   "garde": "V3 : plus de deux courses par génération",
+   "avant": "    if len(parties) >= MAX_COURSES_PAR_GENERATION:",
+   "apres": "    if len(parties) >= 30:",
+   "code_pytest": 1,
+   "bilan": "3 failed, 136 passed in 58.16s",
+   "essais_en_echec": [
+    "test_relance_unique_apres_defaut_au_controle",
+    "test_run_anterieur_v2_compte_comme_premiere_tentative",
+    "test_v3_seuil_mutation_deux_courses_au_plus"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W3-relance-apres-fiches",
+   "garde": "relance après des fiches",
+   "avant": "        if fp is not False:",
+   "apres": "        if fp is True and False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 56.68s",
+   "essais_en_echec": [
+    "test_pas_de_relance_apres_des_fiches"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W4-relance-depense-illisible",
+   "garde": "relance après dépense illisible",
+   "avant": "        if not dep[\"course_lisible\"]:",
+   "apres": "        if False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 57.36s",
+   "essais_en_echec": [
+    "test_relance_refusee_si_depense_illisible"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W5-bras-mort-non-compte",
+   "garde": "V10 : bras mort non compté",
+   "avant": "    if manquants:\n",
+   "apres": "    if False:\n",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 55.94s",
+   "essais_en_echec": [
+    "test_v10_v16_bras_mort_compte_et_verrouille"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W6-bras-sans-code-non-verrouillant",
+   "garde": "V16 : bras sans code scellé",
+   "avant": "    if any(lire_code(b[\"depart\"][\"superviseur\"]) is None for b in run[\"bras\"]):",
+   "apres": "    if False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 55.36s",
+   "essais_en_echec": [
+    "test_v10_v16_bras_mort_compte_et_verrouille"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W7-verrou-retire",
+   "garde": "R1 : verrou",
+   "avant": "        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)",
+   "apres": "        pass",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 55.38s",
+   "essais_en_echec": [
+    "test_r1_verrou_deux_invocations"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W8-orphelin-ignore",
+   "garde": "R2 : orphelin ignoré",
+   "avant": "    if orphs:",
+   "apres": "    if False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 55.43s",
+   "essais_en_echec": [
+    "test_r2_orchestrateur_orphelin"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W9-orphelin-jamais-vu",
+   "garde": "R2 : orphelin jamais détecté",
+   "avant": "    if vu is None or (debut is not None and vu != debut):\n        return None",
+   "apres": "    if True:\n        return None",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 55.17s",
+   "essais_en_echec": [
+    "test_r2_orchestrateur_orphelin"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W10-environnement-entier",
+   "garde": "environnement entier transmis",
+   "avant": "    garde = {n: env[n] for n in env if n in NOMS_PERMIS or (prefixe_essais and n.startswith(prefixe_essais))}",
+   "apres": "    garde = {n: env[n] for n in env}",
+   "code_pytest": 1,
+   "bilan": "2 failed, 137 passed in 54.22s",
+   "essais_en_echec": [
+    "test_environnement_permis",
+    "test_trois_generations_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W11-runs-v2-ignores",
+   "garde": "runs du v2 non lus",
+   "avant": "                   anterieurs=tuple((DEPOT / \"runs\" / d, s, v) for d, s, v in ANTERIEURS))",
+   "apres": "                   anterieurs=())",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 56.19s",
+   "essais_en_echec": [
+    "test_run_reel_du_v2_reconnu"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W12-relance-sans-fin-propre",
+   "garde": "relance sans fin propre",
+   "avant": "        if x[\"fin\"] is None or x[\"fin\"].get(\"code\") is None:\n            return False, f\"tentative {x['nom']} sans fin propre (code non scellé)\"",
+   "apres": "        if False:\n            return False, \"\"",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 56.26s",
+   "essais_en_echec": [
+    "test_relance_refusee_sans_fin_propre_au_manifeste"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "W13-exception-bras-non-gardee",
+   "garde": "R4",
+   "avant": "    except BaseException as e:  # noqa: BLE001\n        raise Refus(f\"bras : exception",
+   "apres": "    except ZeroDivisionError as e:  # noqa: BLE001\n        raise Refus(f\"bras : exception",
+   "code_pytest": 1,
+   "bilan": "1 failed, 138 passed in 54.33s",
+   "essais_en_echec": [
+    "test_r4_exception_au_detachement_du_bras"
+   ],
+   "issue": "tué"
+  }
+ ],
+ "tues": 13,
+ "survivants": []
+}
