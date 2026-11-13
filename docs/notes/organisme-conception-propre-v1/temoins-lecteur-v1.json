@@ -1,0 +1,638 @@
+{
+ "auteur": "Préparateur neuf de la course « conception propre » (sous-agent de la session mère), 13 novembre 2026, version 1. Réserve : le préparateur est du modèle d'un proposeur et du juge opus-juge ; « tiers » vaut pour l'instance, pas pour le modèle. Témoins du lecteur (règle de sélection) ; les quatre premiers sont aussi ceux du juge de l'organisme.",
+ "temoins": [
+  {
+   "code": "T-V",
+   "famille": "vrai",
+   "cible": "aucune (doit passer)",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "fiche": {
+    "nom": "Arrêt des générations par capture-recapture entre deux proposeurs",
+    "type": "approche",
+    "enonce": "À chaque génération, les cartes de deux proposeurs indépendants sont traitées comme deux captures des groupes de lois que l'organisme sait atteindre. Les groupes de doublons (calculés par le programme de regroupement de l'orchestrateur, jamais par un modèle) vus chez le premier (n1), chez le second (n2) et chez les deux (m) donnent, par l'estimateur de Lincoln et Petersen, n1·n2/m groupes atteignables, donc une estimation de ce qui reste à trouver. Proposition : arrêter la course dès que cette estimation du reste tombe sous un groupe, au lieu de jouer un nombre de générations fixé d'avance ; le budget non dépensé n'est pas engagé. Le juge, les proposeurs et leurs consignes ne changent pas ; aucun agent ne voit l'estimation.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, courses de six générations au plus, mêmes proposeurs et mêmes plafonds de session que la course de référence",
+     "prediction": "à couverture des composantes plantées égale à une composante près (oracle), la règle d'arrêt coûte au moins 25 % de moins par course que six générations fixes ; le nombre de lois fausses et de copies promues n'augmente pas",
+     "signe": "-",
+     "metrique": "coût en dollars par course, relevé par les relais, et nombre de composantes plantées couvertes, lu par l'oracle une fois après la course ; témoin à coût égal : arrêt à une génération tirée au hasard, de même espérance de coût"
+    },
+    "perte_traduction": "Deux proposeurs ne sont pas deux captures indépendantes : s'ils partagent leurs biais, les groupes communs surabondent et l'estimateur annonce l'épuisement trop tôt ; un groupe de doublons n'est pas une composante plantée.",
+    "questions_servies": [
+     "levier:cout",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le monde planté donne la couverture vraie : on peut éprouver une règle d'arrêt calculée sans oracle contre la vérité, ce qu'aucune course sur des tâches ouvertes ne permet.",
+     "incopiable_parce_que": "Il faut un regroupement des doublons fait par programme, un monde à graine scellée et un oracle lu après la course ; sans eux, on ne sait pas si l'arrêt a perdu des composantes."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "L'estimateur de Lincoln et Petersen vient de l'écologie (capture, marquage, recapture) ; son emploi comme règle d'arrêt des générations, éprouvé contre l'oracle d'un monde planté, est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Après chaque génération, l'orchestrateur compte n1 et n2 (groupes de doublons des cartes de chacun des deux proposeurs les moins chers) et m (groupes communs), calcule n1·n2/m moins les groupes déjà vus, scelle ces nombres au manifeste de la génération et arrête la course si l'estimation du reste est sous 1. Aucun agent ne reçoit ces nombres."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur processeur, règle appliquée après coup aux journaux de courses à monde planté déjà jouées ; une course neuve par graine seulement s'il en manque"
+    },
+    "piege": "Régler le seuil d'arrêt au vu des courses rejouées rendrait la règle circulaire : le seuil (moins d'un groupe) est scellé avant toute lecture.",
+    "cosmetique_si": "Si l'arrêt à une génération tirée au hasard, à même coût moyen, perd aussi peu de composantes, l'estimateur n'apporte rien.",
+    "anteriorite": [
+     {
+      "reference": "Lincoln (1930) ; Petersen (1896) : estimation d'un effectif par capture et recapture",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T-J",
+   "famille": "jumeau",
+   "jumeau_de": "T-V",
+   "cible": "aucune (doit passer, comme T-V)",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "fiche": {
+    "nom": "Combien de lois reste-t-il à trouver ? Arrêter quand deux proposeurs se recoupent assez",
+    "type": "approche",
+    "enonce": "Deux proposeurs qui tirent indépendamment dans le même ensemble de groupes de lois se recoupent d'autant plus que cet ensemble est épuisé. Avec n1 et n2 groupes de doublons trouvés par chacun et m groupes communs (regroupement fait par le programme de l'orchestrateur), l'effectif estimé est n1·n2/m (Lincoln et Petersen). Plutôt qu'un nombre fixe de générations, la course s'arrête quand moins d'un groupe reste à trouver selon cette estimation. Rien d'autre ne change, et l'estimation n'est servie à aucun agent.",
+    "loi_predictive": {
+     "espace_instances": "trente mondes plantés à graine scellée, d'une famille que la conception n'a jamais vue ; au plus six générations par course ; proposeurs et plafonds inchangés",
+     "prediction": "économie d'au moins un quart du coût par course, pour une couverture des composantes plantées égale à une près ; pas plus de lois fausses ni de copies promues",
+     "signe": "-",
+     "metrique": "dollars par course (relevé des relais) et composantes plantées couvertes (oracle, lu une fois après la course), contre un arrêt tiré au hasard de même coût moyen"
+    },
+    "perte_traduction": "L'indépendance des deux captures n'est qu'approchée ; groupe de doublons et composante plantée ne coïncident pas.",
+    "questions_servies": [
+     "levier:cout",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Seul un monde planté fournit la couverture vraie contre laquelle juger une règle d'arrêt.",
+     "incopiable_parce_que": "Sans monde à graine scellée, regroupement par programme et oracle, il n'y a pas de vérité sur ce que l'arrêt a perdu."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Capture et recapture viennent de l'écologie ; la règle d'arrêt d'un organisme d'idéation qui s'en sert est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "L'orchestrateur calcule, après chaque génération, l'effectif estimé n1·n2/m sur les groupes de doublons des deux proposeurs les moins chers, le scelle au manifeste et arrête la course quand le reste estimé est sous 1."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "calculable après coup sur les journaux des courses à monde planté déjà jouées"
+    },
+    "piege": "Un seuil choisi au vu des résultats ; il est fixé avant (moins d'un groupe).",
+    "cosmetique_si": "Un arrêt tiré au hasard, au même coût moyen, qui perdrait aussi peu de composantes.",
+    "anteriorite": [
+     {
+      "reference": "estimateur de Lincoln et Petersen, capture et recapture en écologie",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T-FF",
+   "famille": "faux",
+   "cible": "R1",
+   "attendu": {
+    "R1": 0,
+    "R2": 0,
+    "R3": 1,
+    "R4": 1,
+    "R5": null,
+    "R6": 0,
+    "R7": null,
+    "N": "aucune"
+   },
+   "fiche": {
+    "nom": "Des proposeurs plus réfléchis pour un organisme plus profond",
+    "type": "approche",
+    "enonce": "Demander aux proposeurs de réfléchir plus longuement, plus librement et plus profondément avant de rendre leurs cartes améliorera la qualité générale de l'organisme et la profondeur de ses idées. Une consigne qui encourage la réflexion personnelle et la créativité donnera des cartes plus riches, mieux pensées et plus intéressantes.",
+    "loi_predictive": {
+     "espace_instances": "l'organisme en général, sur ses courses à venir",
+     "prediction": "les cartes seront meilleures, plus profondes et plus intéressantes",
+     "signe": "+",
+     "metrique": "la qualité perçue des cartes et la richesse des idées"
+    },
+    "perte_traduction": "Peu de chose : l'idée tient en une consigne.",
+    "questions_servies": [
+     "levier:proposeurs",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Une consigne mieux écrite rend les modèles plus créatifs.",
+     "incopiable_parce_que": "Les autres n'y ont pas pensé."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Personne n'a demandé aux proposeurs de réfléchir davantage."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Ajouter à la consigne des proposeurs une invitation à réfléchir plus profondément et plus librement."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "presque rien"
+    },
+    "piege": "Que les modèles réfléchissent moins qu'on le croit.",
+    "cosmetique_si": "Si les cartes ne changent pas.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-FA",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C2",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C2"
+   },
+   "fiche": {
+    "nom": "Validation des cartes par falsifications séquentielles à valeurs e combinées",
+    "type": "approche",
+    "enonce": "Pour chaque carte, une suite d'expériences de falsification est conçue l'une après l'autre ; chaque expérience rend une valeur p, convertie en valeur e ; les valeurs e se combinent au fil des expériences, et la carte n'est validée que si la valeur e combinée dépasse 1/α, ce qui contrôle l'erreur de première espèce au niveau α même quand on décide en cours de route d'ajouter ou d'arrêter des expériences. Les expériences sont proposées par un agent, mais la décision reste celle du seuil calculé par l'orchestrateur ; le nul contient les lois de l'archive.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, quarante graines scellées, une génération par monde",
+     "prediction": "à coût égal en tirages frais, au moins deux composantes plantées de plus couvertes par monde, et pas plus d'une loi fausse promue sur quarante mondes",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes et lois fausses promues, lues par l'oracle après la course ; témoin à coût égal : le juge actuel avec le même nombre de tirages frais"
+    },
+    "perte_traduction": "Une valeur p mal calibrée sur un monde à dépendances fait d'une valeur e une valeur e fausse ; l'agent qui conçoit les expériences peut viser ce qui valide plutôt que ce qui réfute.",
+    "questions_servies": [
+     "levier:juge",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "La garantie tient sous arrêt optionnel : on peut ajouter des expériences tant que la preuve manque, sans perdre le contrôle de l'erreur.",
+     "incopiable_parce_que": "Il faut un juge qui raisonne en valeurs e et un monde où la vérité est connue pour vérifier le taux d'erreur réel."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Aucun organisme d'idéation ne combine aujourd'hui des falsifications successives en valeurs e : c'est neuf."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer, pour chaque carte, le calcul unique de la valeur e par une suite d'expériences de falsification proposées par un agent, chacune convertie en valeur e, combinées par produit, avec validation au seuil 1/α."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "quelques dollars d'appels par génération pour l'agent qui conçoit les expériences"
+    },
+    "piege": "Laisser l'agent choisir les expériences au vu des valeurs déjà obtenues sans que la combinaison reste valide.",
+    "cosmetique_si": "Si le juge actuel, au même nombre de tirages, couvre autant de composantes.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-CS",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C1",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 0,
+    "R4": 0,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C1"
+   },
+   "fiche": {
+    "nom": "Tournoi à cotes Elo entre cartes, par débats appariés, pour ordonner le test de mort",
+    "type": "approche",
+    "enonce": "Chaque carte d'une génération reçoit une cote Elo (1 200 au départ). Des juges à modèle comparent les cartes deux à deux : les mieux classées en débats à plusieurs tours, les autres en une seule comparaison ; les paires sont choisies de préférence entre cartes semblables, selon un graphe de proximité. Après le tournoi, les cartes passent au test de mort dans l'ordre de leur cote, jusqu'à épuisement du budget de tirages : les mieux cotées d'abord.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, quarante graines scellées, une génération par monde",
+     "prediction": "à budget de tirages égal, au moins 20 % de composantes plantées couvertes en plus par génération que l'ordre actuel",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes par génération (oracle, lu après la course) ; témoin à coût égal : ordre tiré au hasard"
+    },
+    "perte_traduction": "Une cote Elo mesure la préférence des juges, pas la vérité d'une loi.",
+    "questions_servies": [
+     "levier:juge",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Le tournoi concentre le budget de tirages sur les cartes les plus prometteuses.",
+     "incopiable_parce_que": "Il faut des juges à modèle capables de débattre de lois prédictives."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Les tournois de débats ne servent pas aujourd'hui à ordonner un test de mort."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Avant le test de mort, un tournoi à cotes Elo entre cartes, joué par des juges à modèle, fixe l'ordre de passage."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "quelques dollars de juges par génération"
+    },
+    "piege": "Des juges qui préfèrent les cartes bien écrites aux cartes vraies.",
+    "cosmetique_si": "Si l'ordre tiré au hasard couvre autant de composantes.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-AIS",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C3",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 0,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C3"
+   },
+   "fiche": {
+    "nom": "Archive d'idées qui grandit et filtre de nouveauté par recherche bibliographique",
+    "type": "approche",
+    "enonce": "À chaque tour, un modèle propose une carte neuve en partant de l'archive des idées déjà produites (le modèle sert d'opérateur de mutation) et note lui-même son intérêt, sa nouveauté et sa faisabilité. Après la génération, un modèle relié à un moteur de recherche bibliographique et au Web écarte toute carte trop semblable à des travaux existants. Seules les cartes qui survivent au filtre vont au juge.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées",
+     "prediction": "au moins 15 % de cartes en moins qui ne font que recopier l'existant, et au moins autant de composantes plantées couvertes, à coût égal",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes (oracle) et copies promues ; témoin à coût égal : même génération sans filtre"
+    },
+    "perte_traduction": "La ressemblance à la littérature n'est pas la ressemblance à l'archive du monde planté.",
+    "questions_servies": [
+     "levier:proposeurs",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Le filtre retire tôt les idées déjà connues.",
+     "incopiable_parce_que": "Il faut une archive d'idées et un accès à la littérature."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Le couple archive et filtre bibliographique n'est pas employé dans un organisme à monde planté."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Ajouter un modèle relié à la recherche bibliographique et au Web qui écarte, après chaque génération, les cartes trop proches de travaux existants."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "quelques dollars de recherche et d'appels par génération"
+    },
+    "piege": "Un filtre qui écarte des idées justes parce qu'elles ressemblent à un titre.",
+    "cosmetique_si": "Si la génération sans filtre couvre autant de composantes.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-FKF",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C5",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 0,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C5"
+   },
+   "fiche": {
+    "nom": "Fourches à contexte neuf et reprise depuis la meilleure trajectoire",
+    "type": "approche",
+    "enonce": "Périodiquement, chaque proposeur est dédoublé en plusieurs trajectoires parallèles : chacune hérite de l'archive et de tout ce qui a été produit, mais repart d'un contexte de conversation neuf. Après un horizon fixe de générations, la course continue depuis la trajectoire qui a obtenu le plus de cartes promues par le juge ; les autres sont abandonnées. À calcul égal, cela doit sortir les proposeurs des bassins où ils tournent en rond.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, six générations",
+     "prediction": "à calcul égal, au moins 20 % de composantes plantées couvertes en plus qu'une trajectoire unique",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes (oracle, après la course) ; témoins à calcul égal : trajectoire unique, et meilleur de N trajectoires indépendantes"
+    },
+    "perte_traduction": "Le nombre de cartes promues par le juge n'est pas la couverture vraie.",
+    "questions_servies": [
+     "levier:composition",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Le contexte neuf casse l'ancrage sur les premières idées.",
+     "incopiable_parce_que": "Il faut des trajectoires parallèles et un critère pour choisir la meilleure."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Personne ne dédouble les proposeurs d'un organisme d'idéation."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Dédoubler chaque proposeur en K trajectoires à contexte neuf toutes les H générations ; reprendre depuis celle qui a le plus de cartes promues par le juge."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "K fois le coût des proposeurs sur l'horizon, compensé par moins de générations"
+    },
+    "piege": "Comparer à un témoin qui n'a pas le même calcul.",
+    "cosmetique_si": "Si le meilleur de N trajectoires indépendantes fait aussi bien.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-PACE",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C7",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C7"
+   },
+   "fiche": {
+    "nom": "Porte d'acceptation séquentielle appariée pour les réécritures de la consigne des proposeurs",
+    "type": "approche",
+    "enonce": "Pendant la conception, quand l'organisme réécrit la consigne de ses proposeurs, la réécriture n'est gardée que si elle bat la consigne en place sur les mêmes mondes du vivier de conception, appariés un à un : un e-processus par paris cumule la différence de couverture lue par l'oracle de ces mondes, et la réécriture est adoptée seulement quand la preuve accumulée devient décisive. On peut s'arrêter tôt pour économiser des mondes, et la probabilité d'adopter une réécriture qui ne vaut pas mieux reste bornée au niveau choisi, même sous arrêt optionnel. La règle « garder si le score a monté » est retirée.",
+    "loi_predictive": {
+     "espace_instances": "le vivier de conception (mondes plantés à graine scellée, jamais ceux du test), réécritures successives de la consigne des proposeurs pendant la conception ; épreuve sur une famille jamais vue après le gel",
+     "prediction": "au moins deux fois moins de réécritures adoptées à tort que la règle « garder si le score a monté », pour une couverture finale égale ou supérieure sur la famille jamais vue, à nombre de mondes de conception égal",
+     "signe": "-",
+     "metrique": "réécritures adoptées qui ne battent pas la consigne précédente sur des mondes frais (oracle) ; couverture des composantes plantées sur la famille jamais vue ; témoin à coût égal : règle « garder si le score a monté »"
+    },
+    "perte_traduction": "La différence de couverture sur un monde est bruitée ; l'appariement suppose les mêmes graines pour les deux consignes.",
+    "questions_servies": [
+     "levier:proposeurs",
+     "QO3",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "L'oracle du vivier de conception donne une différence vraie à chaque monde : l'e-processus parie sur une quantité exacte.",
+     "incopiable_parce_que": "Il faut des mondes plantés appariés à graine scellée et un oracle par monde ; sur des tâches ouvertes, la différence est elle-même une note."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Aucun organisme d'idéation n'accepte ses réécritures par un test séquentiel apparié."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Dans la boucle de conception, remplacer la règle d'adoption d'une réécriture de la consigne par l'e-processus apparié décrit, au niveau 0,05 par décision, avec arrêt anticipé."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur des journaux de conception déjà écrits ; quelques mondes neufs sinon"
+    },
+    "piege": "Réutiliser les mêmes mondes pour décider et pour mesurer l'effet.",
+    "cosmetique_si": "Si la règle « garder si le score a monté » n'adopte pas plus de réécritures à tort.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-DW",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C11",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C11"
+   },
+   "fiche": {
+    "nom": "Réserve de tirages frais réutilisable par un mécanisme à seuil bruité",
+    "type": "approche",
+    "enonce": "Le juge garde une réserve fixe de tirages frais, réutilisée d'une génération à l'autre. Comme les proposeurs voient l'archive, qui dépend des verdicts passés, leurs cartes s'adaptent peu à peu à cette réserve. Pour l'empêcher, le juge ne consulte la réserve qu'à travers un mécanisme à seuil bruité : il compare la valeur sur la réserve à celle d'un jeu d'apprentissage, ne rend la valeur de la réserve (bruitée) que si l'écart dépasse un seuil, et sinon rend celle du jeu d'apprentissage. La réserve supporte alors un grand nombre de consultations adaptatives sans surajustement.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, huit générations, réserve de taille fixe",
+     "prediction": "à nombre de tirages frais total égal, au moins 30 % de lois fausses promues en moins aux générations 5 à 8 que la réserve réutilisée telle quelle, sans perte de couverture",
+     "signe": "-",
+     "metrique": "lois fausses promues par génération et composantes plantées couvertes (oracle) ; témoin à coût égal : réserve réutilisée sans mécanisme, et tirages tous frais"
+    },
+    "perte_traduction": "La borne de généralisation dépend du nombre de consultations et de la taille de la réserve ; le bruit coûte de la puissance.",
+    "questions_servies": [
+     "levier:juge",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "La garantie de généralisation sous analyse adaptative reste démontrable, et le contrôle des comparaisons multiples aussi.",
+     "incopiable_parce_que": "Il faut une réserve consultée de façon adaptative et une vérité pour mesurer le surajustement."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "La réutilisation d'une réserve par seuil bruité n'existe pas dans le juge d'un organisme d'idéation."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer les tirages frais de chaque génération par une réserve fixe consultée par le mécanisme à seuil bruité, avec un budget de consultations fixé d'avance."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur processeur avec des mondes plantés simulés"
+    },
+    "piege": "Laisser le seuil ou le bruit se régler au vu des promotions.",
+    "cosmetique_si": "Si la réserve réutilisée sans mécanisme ne promeut pas plus de lois fausses.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-PD",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C9",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C9"
+   },
+   "fiche": {
+    "nom": "Ne payer les tirages frais du juge que là où la carte et l'archive divergent",
+    "type": "approche",
+    "enonce": "La différence de risque entre une carte et la meilleure loi de l'archive ne vit que sur les instances où leurs prédictions diffèrent, ce qui se voit sans issue, sur le jeu public d'instances. Le juge procède en deux paliers : une carte dont le taux de désaccord avec l'archive est sous une tolérance est déclarée sans apport sans aucun tirage frais ; pour les autres, il ne tire des issues fraîches que sur des instances de désaccord échantillonnées, et décide par une séquence de confiance valide à tout instant. L'économie de tirages croît quand le désaccord est rare.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, une génération par monde",
+     "prediction": "au moins 40 % de tirages frais en moins par génération, à couverture des composantes plantées égale et sans loi fausse promue de plus",
+     "signe": "-",
+     "metrique": "tirages frais consommés et coût du juge par génération ; composantes couvertes et lois fausses promues (oracle) ; témoin à coût égal : tirages répartis sans regarder le désaccord"
+    },
+    "perte_traduction": "Le taux de désaccord sur le jeu public n'est pas celui sous la loi des traits du monde.",
+    "questions_servies": [
+     "levier:cout",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le jeu public d'instances sans issue existe déjà dans l'organisme ; la garantie de la séquence de confiance reste valide sous toute règle d'arrêt.",
+     "incopiable_parce_que": "Il faut une archive de lois à comparer et un jeu public d'instances sans issue."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Aucun juge d'organisme d'idéation ne restreint ses tirages aux instances de désaccord."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer l'allocation uniforme des tirages frais par les deux paliers décrits (tolérance de désaccord fixée d'avance ; séquence de confiance au niveau 0,05)."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur processeur avec des mondes plantés simulés"
+    },
+    "piege": "Fixer la tolérance au vu des promotions.",
+    "cosmetique_si": "Si la répartition qui ignore le désaccord coûte autant de tirages.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-F58",
+   "famille": "faux",
+   "cible": "R2",
+   "attendu": {
+    "R1": 1,
+    "R2": 0,
+    "R3": 0,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "fiche": {
+    "nom": "Composition des proposeurs par cartes promues par dollar",
+    "type": "approche",
+    "enonce": "À la fin de chaque génération, on compte pour chaque proposeur le nombre de ses cartes promues par le juge statistique, divisé par ce qu'il a coûté. À la génération suivante, la part du budget de chaque proposeur est proportionnelle à ce rendement : les proposeurs dont les cartes sont promues reçoivent plus, les autres moins, jusqu'à un plancher de 5 %.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, six générations",
+     "prediction": "au moins 20 % de cartes promues par dollar en plus à la sixième génération qu'avec des parts égales",
+     "signe": "+",
+     "metrique": "cartes promues par le juge statistique, par dollar et par génération ; témoin à coût égal : parts égales fixes"
+    },
+    "perte_traduction": "Les promotions ne sont pas la couverture vraie.",
+    "questions_servies": [
+     "levier:composition",
+     "QO1",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le budget va là où il rend le plus.",
+     "incopiable_parce_que": "Il faut un juge qui promeut et un relevé du coût par proposeur."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Aucun organisme ne répartit son budget selon les promotions par dollar."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer les parts fixes du budget des proposeurs par des parts proportionnelles aux cartes promues par dollar à la génération précédente, plancher de 5 %."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur des journaux de courses déjà jouées"
+    },
+    "piege": "Un proposeur qui copie l'archive sous une forme que le juge promeut.",
+    "cosmetique_si": "Si les parts égales donnent autant de promotions par dollar.",
+    "anteriorite": []
+   }
+  },
+  {
+   "code": "T-F53",
+   "famille": "faux",
+   "cible": "R3",
+   "attendu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 0,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "fiche": {
+    "nom": "Prime de nouveauté servie aux proposeurs",
+    "type": "approche",
+    "enonce": "Après chaque génération, l'orchestrateur calcule pour chaque carte sa distance à l'archive (en nats par instance, sur le jeu public d'instances) et sert à chaque proposeur, en tête de sa consigne suivante, la note de nouveauté moyenne de ses cartes et celle des autres proposeurs. Les proposeurs, voyant cette note, chercheront à s'éloigner de l'archive.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, six générations",
+     "prediction": "au moins deux composantes plantées de plus couvertes à la sixième génération, à coût égal",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes, lues par l'oracle après la course ; témoin à coût égal : même course sans note servie"
+    },
+    "perte_traduction": "La distance à l'archive n'est pas la nouveauté d'une idée.",
+    "questions_servies": [
+     "levier:proposeurs",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Un retour chiffré oriente mieux qu'une consigne.",
+     "incopiable_parce_que": "Il faut une distance calculée par programme sur un jeu public d'instances."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Les proposeurs ne reçoivent aujourd'hui aucun retour chiffré."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Servir à chaque proposeur, à la génération suivante, la note de nouveauté moyenne de ses cartes et de celles des autres."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "une course à six générations par graine"
+    },
+    "piege": "Des proposeurs qui s'éloignent de l'archive par des lois absurdes.",
+    "cosmetique_si": "Si la même course sans note couvre autant de composantes.",
+    "anteriorite": []
+   }
+  }
+ ]
+}
