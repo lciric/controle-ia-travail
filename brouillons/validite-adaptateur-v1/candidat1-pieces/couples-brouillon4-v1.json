@@ -1,0 +1,417 @@
+[
+ {
+  "id": "CLVA2-02a",
+  "ancien": "Sondes figées de P3 : `donnees/20261019-230011-p3-reel/sondes-figees-legeres.npz`, `701f73bd3a8ef30f46b304a6d5caa21444f0e1daf0829d04046e4024aa4e6e60`, noms `meta.planchers.tromperie` et `.enjeux`",
+  "nouveau": "Sondes figées de P3 : poids lus dans `donnees/20261019-230011-p3-reel/sondes-figees-legeres.npz`, `701f73bd3a8ef30f46b304a6d5caa21444f0e1daf0829d04046e4024aa4e6e60` ; **plancher décisif neuf**, lu dans `donnees/<run-t07>/planchers-figees-t07.npz`, noms `meta.planchers[<nom de la sonde>]` (`<sonde>-t07-plancher-<k>`), 800 exigées, fichier vérifié contre `diag/<run-t07>/notation-t07.json` → `resultat.planchers_figees.fichier.sha256` ; les 200 directions de P3 (`meta.planchers.tromperie` et `.enjeux` du fichier léger), que T0.7 ne lit qu'en descriptif, ne sont **jamais notées** par ce texte"
+ },
+ {
+  "id": "CLVA2-02b",
+  "ancien": "(poids et 200 directions des sondes neuves) et `sondes-figees-legeres.npz` (`701f73bd…`)",
+  "nouveau": "(poids et 800 directions des sondes neuves), `donnees/<run-t07>/planchers-figees-t07.npz` (800 directions neuves de chaque sonde figée de P3) et `sondes-figees-legeres.npz` (`701f73bd…`, poids des deux sondes figées)"
+ },
+ {
+  "id": "CLVA2-03a",
+  "ancien": "`plancher_<k>` (forme (200, n_actions) après transposition)",
+  "nouveau": "`plancher_<k>` (forme (800, n_actions) après transposition ; `n_plancher` = 800 ; pour les deux sondes figées de P3, c'est leur plancher neuf)"
+ },
+ {
+  "id": "CLVA2-03b",
+  "ancien": "du même fichier ne sont **jamais lus**",
+  "nouveau": "du même fichier, et `plancher_p3_<k>` (200 directions de P3, descriptif de T0.7), `plancher_p6_*`, `plancher_concept_<k>`, ne sont **jamais lus**"
+ },
+ {
+  "id": "CLVA2-03c",
+  "ancien": "des aires des 200 directions appariées",
+  "nouveau": "des aires des 800 directions appariées"
+ },
+ {
+  "id": "CLVA2-03d",
+  "ancien": "**Plancher** : 200 directions de `p`",
+  "nouveau": "**Plancher** : 800 directions de `p`"
+ },
+ {
+  "id": "CLVA2-03e",
+  "ancien": "pour chacune des 200 directions",
+  "nouveau": "pour chacune des 800 directions"
+ },
+ {
+  "id": "CLVA2-03f",
+  "ancien": "des tau des 200 directions (CLVA-06)",
+  "nouveau": "des tau des 800 directions (CLVA-06)"
+ },
+ {
+  "id": "CLVA2-03g",
+  "ancien": "200 exigées",
+  "nouveau": "800 exigées (`n_plancher` de la configuration de T0.7)"
+ },
+ {
+  "id": "CLVA2-03h",
+  "ancien": "de leurs 200 directions",
+  "nouveau": "de leurs 800 directions"
+ },
+ {
+  "id": "CLVA2-04",
+  "ancien": "∈ {non calculable, incohérent}",
+  "nouveau": "∈ {`non_calculable`, `incoherent`} (littéraux du code, `criteres_v1.py` l. 48)"
+ },
+ {
+  "id": "CLVA2-05",
+  "ancien": "`mention_etendue`, par `premier_test_ia.conditions.mesures_action`, la fonction des prédicteurs triviaux de T0.7",
+  "nouveau": "`mention_etendue`, colonne de `mesures-t06.npz` écrite par `t06.test_croise.mention_etendue` (`t06/lanceur.py` l. 285), prédicteur trivial de la configuration de T0.7"
+ },
+ {
+  "id": "CLVA2-06",
+  "ancien": "**Champ de T0.7 attendu absent** de son fichier (levées de la contre-lecture 1) : arrêt, nœud.",
+  "nouveau": "**Champ de T0.7 attendu absent** de son fichier (levées de la contre-lecture 1) : arrêt, nœud. Exception écrite : une sonde dont `notation-t07.json` → `resultat.index.sondes[k].etat` n'est pas « notée » (ou, pour une sonde figée de P3, dont `resultat.planchers_figees.etats[<nom>]` n'est pas « établi ») n'a pas de plancher décisif : toutes les lignes de cette sonde sont « non calculables (sonde en échec à l'étape A de T0.7, motif recopié) », dans les pièces R et L, sans arrêt des autres sondes."
+ },
+ {
+  "id": "CLVA2-07a",
+  "ancien": "sondes non Mahalanobis et 800 directions",
+  "nouveau": "sondes non Mahalanobis et 3 200 directions (800 par sonde), notées par lots (`plancher_v3.scores_plancher_vectorises`)"
+ },
+ {
+  "id": "CLVA2-07b",
+  "ancien": "`premier_test_ia.figees.lire_sondes` et `preparer_sonde` au commit de `CODE-T07`, sans modification",
+  "nouveau": "`premier_test_ia.figees.lire_sondes`, `preparer_sonde` et la notation des directions par lots (`t07/plancher_v3.scores_plancher_vectorises`, avec son contrôle en ligne contre la boucle) au commit de `CODE-T07`, sans modification"
+ },
+ {
+  "id": "CLVA2-08",
+  "ancien": "les réserves de T0.7 sur la même sonde, recopiées de E4 → `resultat.reserves_identifiees`",
+  "nouveau": "les réserves déclenchées de T0.7, recopiées telles quelles avec leur motif (entrées `id`, `phrase`, `motif`, parfois `concept` ; la sonde n'y est pas une clé : aucune réserve n'est triée par sonde ; une entrée dont la phrase est « non déclenchée » n'est pas recopiée) de E4 → `resultat.reserves_identifiees`"
+ },
+ {
+  "id": "CLVA2-09",
+  "ancien": "T0.7 **brouillon 21**, `brouillons/T0.7-sondes-v0-v1-brouillon21.md`, `f7dcb226efe8671b977ce906c286f7e7243f78a2c9fcf205cbfe5715866ea0cc`, et code du module au commit `8ae9fc44df4599af1e036e979af46aa8fa8f6185` (branche `prep/t07-module-v2`)",
+  "nouveau": "T0.7 **scellé** (candidat 5), `prereg/T0.7-sondes-v0-v1.md`, `d7d180eccbbce8ff2e370f82957543c28f1e564c872f981c7ada403949baade5`, sa configuration v8, `prereg/T0.7-sondes-v0-v1-configuration-t07-v8.json`, `e31c7a79dc1b68d561874d4d42d63b5eb950931f06075927f239c7ad971fb328`, et code du module au commit de la ligne `CODE-T07` (`b4cd9953d199dd8f220f5162e5868c5b00fd392d`, vingt-six modules ; étapes A et B jouées par `t07/lecture_v4.py`, `42f60780e6944568e81880887a1ad87c57a520e8c7d54083b36a43c097a06d06`)"
+ },
+ {
+  "id": "CLVA2-12a",
+  "ancien": "statistique `q99` et tolérance 0,2 de la configuration de 7b",
+  "nouveau": "par `repli_v1.garde_equivalence` telle que `repli_recalcul_v1.recalculer` l'appelle (statistique `q99`, tolérance 0,2 et fraction du contrôle négatif 0,95 de la configuration de 7b ; le recalcul rejoue les 576 épisodes de 7b, dont seules les séries R1, R3_d et R6 sont notées)"
+ },
+ {
+  "id": "CLVA2-12b",
+  "ancien": "recherche de `c_d`, garde d'équivalence (statistique et tolérance de la configuration de 7b), écriture",
+  "nouveau": "recherche de `c_d`, écriture"
+ },
+ {
+  "id": "CLVA2-15",
+  "ancien": "`r/echelle/<dose>`, ",
+  "nouveau": "`r/echelle/<dose>`, `r/mahalanobis-egalite/<sonde>` (essai d'égalité de `preparer_sonde`, mode de calcul lu dans la configuration de T0.7, clé `mahalanobis_calcul`), "
+ },
+ {
+  "id": "CLVA2-16",
+  "ancien": "et autres couples : « descriptif » (CLVA-14)",
+  "nouveau": "et autres couples : « descriptif » (CLVA-14) ; `resultat.jeux[sonde]` ne porte que `(i-a)` et les doses jugées, et `resultat.jeux` est nul quand les scores sont fermés : une dose non jugée absente n'est pas un champ manquant"
+ },
+ {
+  "id": "A4-01",
+  "ancien": "honnête (iii) — v1 — brouillon 3",
+  "nouveau": "honnête (iii) — v1 — brouillon 4"
+ },
+ {
+  "id": "A4-02",
+  "ancien": "- Auteur : rédacteur neuf, sous-agent de la session mère (reprise du 2026-11-10",
+  "nouveau": "- Auteur du **brouillon 4** : la session du compte 4 (`session_01Qi7Gr2uGzyVcw9VmDXgvEV`), Claude Opus 5.5 (`claude-opus-5-5`), qui n'a écrit ni T0.6, ni T0.7, ni son module, ni P3-bis, ni la note 2a, ni les brouillons 1 à 3, ni leurs contre-lectures ; elle a lu T0.7 scellé en partie (exclue de tout rôle de lecteur ou d'hôte du verdict de P3-bis) ; le brouillon 4 est écrit par couples versés (`brouillons/validite-adaptateur-v1/candidat1-pieces/`), sur le brouillon 3 et la contre-lecture 2.\n- Auteur des brouillons 2 et 3 : rédacteur neuf, sous-agent de la session mère (reprise du 2026-11-10"
+ },
+ {
+  "id": "A4-03",
+  "ancien": "; ce rédacteur ne l'a pas vérifié.",
+  "nouveau": "; ce rédacteur ne l'a pas vérifié. **Brouillon 4** : ces marques sont remplacées par les renvois à T0.7 scellé et au module sur `main` que relève la contre-lecture 2 (CLVA2-09)."
+ },
+ {
+  "id": "A4-04",
+  "ancien": "- Date (UTC) : écrit le 2026-11-10 à partir de 12:05 UTC",
+  "nouveau": "- Date (UTC) : brouillon 4 écrit le 2026-11-13 à partir de 21:20 UTC (heure relevée par `date -u`) ; brouillon 3 écrit le 2026-11-10 à partir de 12:05 UTC"
+ },
+ {
+  "id": "A4-05",
+  "ancien": "- Statut : **brouillon 3**, applique la contre-lecture 1 (CLVA-01 à CLVA-20)",
+  "nouveau": "- Statut : **brouillon 4**, écrit sur le brouillon 3 (`defd8ef05038e703c24733f6a5f88a1153daf5f44d2b8cae14950a5643e875fd`) ; applique la contre-lecture 2 (CLVA2-01 à CLVA2-18 ; section « Contre-lecture ») : ses couples mécaniques tels qu'écrits ; **CLVA2-01 et CLVA2-10 selon la recommandation du lecteur (règle (a) de T0.7), en attente de la décision de la mère** ; **CLVA2-11 (pièce HD) selon l'option recommandée à Lazar par la session du compte 4, en attente de son mot (nœud)** ; non scellable comme préenregistrement avant ces deux réponses et la vérification courte prévue (section « Contre-lecture »). Le brouillon 3, lui, appliquait la contre-lecture 1 (CLVA-01 à CLVA-20)"
+ },
+ {
+  "id": "A4-06",
+  "ancien": "La variante stricte est gardée pour mémoire en annexe A, « variante non retenue (R-2207) » : elle ne s'applique pas.",
+  "nouveau": "**Brouillon 4 (CLVA2-11)** : la course 7b est finie le 12 novembre sans que la pièce HD ait été jouée ; **Q-1 est sans objet** : la pièce HD se joue après la fin de 7b, ce qui tient pour elle la lettre de la ligne (« course à part après la course 7b ») ; **Q-3 reste en vigueur** (pièce R sur une instance à part). La variante stricte est gardée pour mémoire en annexe A ; seule sa moitié « pièce R sur l'instance de l'étape A » reste « non retenue (R-2207) »."
+ },
+ {
+  "id": "A4-07",
+  "ancien": ": **non lus par ce rédacteur**, empreinte et commit cités par la contre-lecture 1 ; **réserve générale** : T0.7 n'est pas scellé, plusieurs champs ne sont fixés que par son code ; chaque levée est revérifiée sur T0.7 scellé et sur le commit de la ligne `CODE-T07` avant le scellement de ce texte, et le code de ce texte s'arrête (R11) si un champ manque ;",
+  "nouveau": " : lus par la contre-lecture 2 (par sections et par motifs ; empreintes des huit modules neufs égales à celles de T0.7 scellé, l. 695) et, en partie, par l'auteur du brouillon 4 ; T0.7 scellé fixe lui-même les champs que lit ce texte (section « Concordance avec le texte de validité de l'adaptateur », l. 2783-2808) ; **erratum des 200 directions, cité, non corrigé** : cette section écrit encore « forme (200, n_actions) » (l. 2789) et « lues dans le fichier léger de P3 (sondes figées) » (l. 2802), que dépassent T0.7 scellé lui-même (l. 1198 : 800 directions ; l. 1206 : plancher neuf des sondes figées) et le module (`lecture_v4.py` l. 176-178) : ce texte lit 800 directions et le plancher neuf ; **réserve générale levée par la contre-lecture 2, sauf** : les champs que fixe le seul code de T0.7 (rapport de la contre-lecture 2, § 4 : sous-clé `sondes.sha256` de `fichiers_sondes_neuves`, littéraux de `entrees.Q`, `resultat.planchers_figees`, `meta.planchers` de `planchers-figees-t07.npz`, `index.sondes[k].etat`, forme de `reserves_identifiees`) sont vérifiés sur le code de `main` et **non confirmés par le développeur de T0.7** (sous-agents développeurs de sessions mères closes ; joignabilité non établie) : réserve écrite ; le code de ce texte s'arrête (R11) si un champ manque ;"
+ },
+ {
+  "id": "A4-08",
+  "ancien": "  - contre-lecture 1, `prereg/contre-lectures/validite-adaptateur-preenregistrement-v1-brouillon2-cl1.md`",
+  "nouveau": "  - contre-lecture 2, `prereg/contre-lectures/validite-adaptateur-preenregistrement-v1-brouillon3-cl2.md`, `11f7242b9dbada3fdc9f6e2c0a707eef3f0d2b51783e425545d78ec43d2bccee`, et son script, `prereg/contre-lectures/validite-adaptateur-preenregistrement-v1-brouillon3-cl2-calcul.py`, `26437692aacc32fb1522025e37cf0dd6b14059415167491d0de9bedbd057d945` ;\n  - contre-lecture 1, `prereg/contre-lectures/validite-adaptateur-preenregistrement-v1-brouillon2-cl1.md`"
+ },
+ {
+  "id": "A4-09",
+  "ancien": "≥ 0,66 à 0,86 selon les effectifs",
+  "nouveau": "≥ 0,67 à 0,88 selon les effectifs"
+ },
+ {
+  "id": "A4-10",
+  "ancien": "tau ≥ ≈ 0,155 (dix lisibles par tâche)",
+  "nouveau": "tau ≥ ≈ 0,165 (dix lisibles par tâche)"
+ },
+ {
+  "id": "A4-11",
+  "ancien": "≈ 0,596 | idem |",
+  "nouveau": "≈ 0,602 | idem |"
+ },
+ {
+  "id": "A4-12",
+  "ancien": "≈ 0,596 | aucune (puissance) |",
+  "nouveau": "≈ 0,602 | aucune (puissance) |"
+ },
+ {
+  "id": "A4-13",
+  "ancien": "≈ 0,596 | aucune (puissance ; intensité rapportée) |",
+  "nouveau": "≈ 0,602 | aucune (puissance ; intensité rapportée) |"
+ },
+ {
+  "id": "A4-14",
+  "ancien": "mêmes étiquettes ; quantile 0,95 de leurs aires.",
+  "nouveau": "mêmes étiquettes ; quantile 0,95 de leurs aires ; « au-dessus du plancher » se juge par la **règle (a) de T0.7** (section « Seuil » ; CLVA2-01)."
+ },
+ {
+  "id": "A4-15",
+  "ancien": "pour chacune des 800 directions, quantile 0,95 ;",
+  "nouveau": "pour chacune des 800 directions, quantile 0,95 ; **différence `Dτ`** = tau − quantile 0,95 des tau des 800 directions, tau et quantile recalculés sur les mêmes tâches tirées (analogue de la règle (a) de T0.7 ; non simulé par T0.7 : déclaré) ;"
+ },
+ {
+  "id": "A4-16",
+  "ancien": "(aire minimale détectable supposée > 0,80)",
+  "nouveau": "(aire minimale détectable supposée > 0,80 sous la règle du brouillon 3, > 0,82 sous la règle (a) ; seuil en σ inchangé)"
+ },
+ {
+  "id": "A4-17",
+  "ancien": "VA-1, VA-3, VA-5b, VA-6 : borne basse **strictement supérieure** au quantile 0,95 du plancher ;",
+  "nouveau": "VA-1, VA-3, VA-5b, VA-6 : **règle (a) de T0.7** (T0.7 scellé, l. 1258 ; CLVA2-01) : la borne basse de l'intervalle percentile, par blocs de tâches, de la **différence D = (aire de la ligne) − (quantile 0,95 des aires des 800 directions du plancher)**, aires de la ligne et des directions recalculées sur les mêmes tirages (2 000, niveau de la ligne), est **strictement positive** ; calculée par `plancher_v2.comparer_difference_au_plancher` au commit de `CODE-T07`, importée sans modification ; la règle du candidat 1 de T0.7 (borne basse de la ligne au-dessus du quantile), dont T0.7 scellé écrit que l'erreur réelle atteint 4 à 9 fois le nominal sous un plancher à signal commun (l. 2033, 2035), n'est pas employée ;"
+ },
+ {
+  "id": "A4-18",
+  "ancien": "le quantile du plancher et l'état « au-dessus du plancher » sont écrits à côté (CLVA-05) ;",
+  "nouveau": "le quantile du plancher et l'état « au-dessus du plancher » (règle (a)) sont écrits à côté (CLVA-05) ;"
+ },
+ {
+  "id": "A4-19",
+  "ancien": "borne basse de l'intervalle du tau strictement supérieure **à la fois** à 0 et au quantile 0,95 des tau des 800 directions (CLVA-06) ;",
+  "nouveau": "borne basse de l'intervalle du tau strictement supérieure à 0 **et** borne basse de l'intervalle de `Dτ` (section « Métrique ») strictement positive (CLVA-06 ; CLVA2-01 : analogue de la règle (a), non simulé par T0.7, déclaré) ;"
+ },
+ {
+  "id": "A4-20",
+  "ancien": "aire, intervalle, quantile écrits.",
+  "nouveau": "aire, intervalle, quantile, différence D (ou `Dτ`) et son intervalle écrits."
+ },
+ {
+  "id": "A4-21",
+  "ancien": "`[r]` accompagne toute phrase de VA-6) :",
+  "nouveau": "`[r]` accompagne toute phrase de VA-6 ; **brouillon 4** : « au-dessus de son plancher [q] » et « plancher [q] » se lisent par la règle (a) et sont suivis de « (différence D [x] [bas ; haut]) », pour VA-2 de « (`Dτ` [x] [bas ; haut]) ») :"
+ },
+ {
+  "id": "A4-22",
+  "ancien": "aire minimale détectable à 80 % = `0,5 + (1,645 + z + 0,842) σ` pour les lignes de soutien,",
+  "nouveau": "aire minimale détectable à 80 % = `0,5 + (1,645 + 1,10 × (z + 0,842)) σ` pour les lignes de soutien sous la règle (a) (**brouillon 4**, CLVA2-10 : écart type de D pris à 1,10 fois celui de la sonde, rapport lu à l'audit de P3 que cite T0.7 scellé, l. 2030, supposé ; script `brouillons/validite-adaptateur-v1/candidat1-pieces/puissance-devis-brouillon4-v1.py`, sortie `sortie-puissance-devis-brouillon4-v1.txt`, mêmes valeurs que la contre-lecture 2, § 2 bis ; T0.7 scellé écrit que cette formule, qui tient le quantile du plancher pour fixe, sous-estime la perte, simulée à 0,16 à 0,35 par sonde, l. 2033 : valeurs optimistes ; brouillon 3 : `0,5 + (1,645 + z + 0,842) σ`),"
+ },
+ {
+  "id": "A4-23",
+  "ancien": "| 0,857 ; 0,771 ; 0,698 ; 0,656 |",
+  "nouveau": "| 0,881 ; 0,789 ; 0,711 ; 0,667 |"
+ },
+ {
+  "id": "A4-24",
+  "ancien": "tau ≥ 0,155 / 0,180 / 0,254",
+  "nouveau": "tau ≥ 0,165 / 0,192 / 0,271"
+ },
+ {
+  "id": "A4-25",
+  "ancien": "0,596 (même ordre que T0.7, 0,600 à 0,635, rapport des prémisses § 2b)",
+  "nouveau": "0,602 (T0.7 scellé, règle (a), 64 tâches, 98,75 % : 0,6408, 0,6058 et 0,5815 à 0,6658 selon la sonde, l. 2031)"
+ },
+ {
+  "id": "A4-26",
+  "ancien": "vérifiée par ce rédacteur) ne la compte pas.",
+  "nouveau": "vérifiée par ce rédacteur) ne la compte pas ; **brouillon 4** : 7b est finie ; l'étiquette ne gêne pas non plus la création de l'instance de l'étape A de T0.7 (T0.7 scellé, l. 2806 : étiquettes `t06…` et `t07…` seules)."
+ },
+ {
+  "id": "A4-27",
+  "ancien": "**Ordre** (lecture large de `GO-2026-11-10-07`, R-2207) : création **après la création de 7b**, en parallèle de sa marche (la lettre de la liste d'arrêt de T0.6 — « une instance du programme déjà sur le compte : aucune création » — est ainsi tenue), et **après** `SCELLEMENT-VADAPT`, `CODE-VADAPT`, `GO-HD-VADAPT` ; détruite **avant la création de l'étape A** seulement si l'ordre en vigueur de l'étape A exige un inventaire vide (point ouvert de la mère) ; aucune décision (lancer, relancer, abandonner) prise sur une sortie de 7b, de T0.7 ou de P3-bis. Variante stricte : annexe A.",
+  "nouveau": "**Ordre** (**brouillon 4**, CLVA2-11 ; **option recommandée à Lazar, en attente de son mot (nœud)** ; au brouillon 3 : création après la création de 7b, en parallèle de sa marche, lecture large de `GO-2026-11-10-07`, R-2207, Q-1 — sans objet depuis la fin de 7b le 12 novembre) : la pièce HD n'a pas été jouée pendant 7b ; elle se joue **après la fin de 7b**, ce qui tient la lettre de la ligne (« course à part après la course 7b »). Création strictement **après** `SCELLEMENT-VADAPT`, `CODE-VADAPT`, `GO-HD-VADAPT` et `VERDICT-P3BIS`. **Règle de lancement, mécanique, écrite avant `VERDICT-P3BIS`** : la pièce HD est créée **si et seulement si** E8 → `issue` vaut « vu » ; sinon elle n'est pas créée et ses lignes sont « non lues (G-1) », comme toutes les autres lignes sous G-1 (rien de ce qui serait lu n'est perdu). La condition remplie, la pièce HD est jouée quelle que soit toute autre sortie (7b, table A, T0.7, P3-bis) ; aucune autre décision (lancer, relancer, abandonner) n'est prise sur une sortie de 7b, de T0.7 ou de P3-bis. Les courses louées de ce texte se jouent l'une après l'autre, après relevé du crédit, par la session tenante que désigne la mère. Variante stricte : annexe A (seule sa moitié « pièce R sur l'instance de l'étape A » reste non retenue)."
+ },
+ {
+  "id": "A4-28",
+  "ancien": "VA-6 et ses contrôles « non calculables (pièce HD absente) ».",
+  "nouveau": "VA-6 et ses contrôles « non calculables (pièce HD absente) » ; **sans sorties poussées de l'étape A de T0.7** (`SCORES-T07`, `SONDES-T07`), **aucune pièce R** : VA-5, VA-6 et leurs contrôles « non calculables (pièce R non jouée) » (CLVA2-11)."
+ },
+ {
+  "id": "A4-29",
+  "ancien": "(journal de T0.7, l. 1316) ; le développeur du module de T0.7 confirme avant `CODE-VADAPT` qu'aucune garde de T0.7 ne compte les ouvertures de `scores-actions-t07.npz` par un autre moyen.",
+  "nouveau": "(journal de T0.7 ; T0.7 scellé, l. 1458, 2804) ; T0.7 scellé écrit qu'aucune de ses gardes ne compte les ouvertures de `scores-actions-t07.npz` (section « Concordance », point 7, l. 2804 ; vérifié par son rédacteur sur le code, à la place de la confirmation du développeur), et la contre-lecture 2 l'a revérifié sur le module de `main` (`lecture_v2.premiere_ouverture_a`, `registre_v1.journaliser_ouverture`, `lecture_v1.ouvrir_scores`) : aucune confirmation ne reste exigée sur ce point (CLVA-17)."
+ },
+ {
+  "id": "A4-30",
+  "ancien": "recopiée au journal (`devis_puissance_vadapt_b3.py`).",
+  "nouveau": "recopiée au journal (`devis_puissance_vadapt_b3.py`) ; **brouillon 4** (CLVA2-07, CLVA2-13) : `brouillons/validite-adaptateur-v1/candidat1-pieces/puissance-devis-brouillon4-v1.py`, sortie `sortie-puissance-devis-brouillon4-v1.txt`."
+ },
+ {
+  "id": "A4-31",
+  "ancien": "| ≈ 2 368 passes × 0,45 s | 0,30 + 0,05 |",
+  "nouveau": "| ≈ 2 816 passes × 0,45 s (séries 1 856 ; recalcul de T0.7 sur les 576 épisodes de 7b, + 192 ; recherche de `c_d` à douze pas, 768) | 0,35 + 0,05 |"
+ },
+ {
+  "id": "A4-32",
+  "ancien": "**1,85 à 2,75** | calcul 2,0 à 3,6 ; téléchargement ≤ 1 : **≈ 2,4 à 4,6** | 5,5 h × 1,40 = 7,7 + 1 ≈ **8,7**",
+  "nouveau": "**1,90 à 2,80** | calcul 2,1 à 3,6 ; téléchargement ≤ 1 : **≈ 2,5 à 4,6** | 5,6 h × 1,40 = 7,8 + 1 ≈ **8,85**"
+ },
+ {
+  "id": "A4-33",
+  "ancien": "**≈ 9,2 à 10,4 h** | **≈ 11,0 à 17,1** | **≈ 33,2** |",
+  "nouveau": "**≈ 9,3 à 10,4 h** | **≈ 11,0 à 17,2** | **≈ 33,4** |"
+ },
+ {
+  "id": "A4-34",
+  "ancien": "(CLVA-09 (b), forme de T0.7, l. 1966)",
+  "nouveau": "(CLVA-09 (b), forme de T0.7 ; T0.7 scellé, l. 2086)"
+ },
+ {
+  "id": "A4-35",
+  "ancien": "**Le pire cas entier ne tient pas sous 30 USD** (≈ 33,2) : **nœud N-VA-1** (journal, § 3).",
+  "nouveau": "**Le pire cas entier ne tient pas sous 30 USD** (≈ 33,4 au brouillon 4, 33,2 au brouillon 3 ; le pire de R dépasse sa coupure de 0,35 USD) : **nœud N-VA-1** (journal du brouillon 3, § 3 ; ouvert à la connaissance de l'auteur du brouillon 4, qui n'a pas lu le registre)."
+ },
+ {
+  "id": "A4-36",
+  "ancien": "texte contre-lu et scellé le 12 au soir (R-2177), donc avant `VERDICT-P3BIS` (plan, point 4) ; HD créée après la création de 7b (12 ou 13), ≈ 7,5 h ; R après la poussée de l'étape A et de HD (≈ 14 à 17) ; L après `VERDICT-P3BIS`, la table A et l'étape B de T0.7 (≈ 16 à 22).",
+  "nouveau": "(**brouillon 4** ; celui du brouillon 3 — texte scellé le 12 au soir, R-2177 ; HD le 12 ou le 13 — est périmé) : l'étape A de T0.7 s'est arrêtée au contrôle avant l'ouverture, sans aucun score (messages de commit de `main`, R-2588, R-2589, relevés le 13 novembre) ; ce texte est scellé strictement avant `VERDICT-P3BIS` (plan, point 4) ; HD après `VERDICT-P3BIS`, si l'issue est « vu » (plan, point 2), ≈ 7,5 h ; R après la poussée vérifiée de l'étape A de T0.7 et de HD ; L après `VERDICT-P3BIS`, la table A et l'étape B de T0.7 ; tout avant l'échéance de `GO-2026-11-10-07` (2026-11-27), sinon retour à Lazar."
+ },
+ {
+  "id": "A4-37",
+  "ancien": "étiquette `vadapt-r-v1`.",
+  "nouveau": "étiquette `vadapt-r-v1`. **Disque** (CLVA2-14) : seules les activations du recalcul de T0.7 sont gardées sur disque (≈ 31,5 Go, T0.7 scellé, l. 2086) ; les séries à état imposé sont notées au fil de la passe, sans garder leurs activations ; scores à 800 directions ≈ 476 Mo (contre-lecture 2, § 2 bis)."
+ },
+ {
+  "id": "A4-38",
+  "ancien": "(la recherche mécanique de `c_d` n'en est pas une).",
+  "nouveau": "(la recherche mécanique de `c_d` n'en est pas une, ni la règle de lancement de la pièce HD sur `issue` de P3-bis, écrite au plan, point 2, avant `VERDICT-P3BIS`)."
+ },
+ {
+  "id": "A4-39",
+  "ancien": "création qui ferait refuser une création de 7b, de P3-bis ou de l'étape A",
+  "nouveau": "création qui ferait refuser une création de P3-bis ou de l'étape A (7b est finie)"
+ },
+ {
+  "id": "A4-40",
+  "ancien": "Gardée pour mémoire, **non appliquée** : Lazar a retenu",
+  "nouveau": "**Brouillon 4 (CLVA2-11)** : la moitié « pièce HD après la fin de 7b » de cette variante décrit désormais le fait (plan, point 2) ; seule la moitié « pièce R sur l'instance de l'étape A » reste non retenue ; le reste de cette annexe est gardé pour mémoire, sans effet.\n\nGardée pour mémoire, **non appliquée** : Lazar a retenu"
+ },
+ {
+  "id": "A4-41",
+  "ancien": "Contre-lecture suivante, prévue avant le scellement : un sous-agent neuf, autre modèle que le rédacteur,",
+  "nouveau": "- **Contre-lecture 2** — sous-agent neuf de la session du compte 4, Claude Fable 5.2 (`claude-fable-5-2`), autre modèle que le rédacteur du brouillon 3 et que l'auteur du brouillon 4 (Claude Opus 5.5 ; N-052) ; **même modèle que la contre-lecture 1 (réserve déclarée par le lecteur)** ; lecteur de T0.7 scellé (exclu de tout rôle de lecteur ou d'hôte du verdict de P3-bis). Différentielle (brouillon 2 → brouillon 3) et sur T0.7 scellé et le module de `main`. Consigne : `brouillons/validite-adaptateur-v1/consigne-contre-lecture-2-brouillon3-compte4-v1.md`, `aad64678c18711fe7bcfc37bb72461c08a09dc59502035c447a81751992393f2`. Brouillon relu : `brouillons/validite-adaptateur-v1/validite-adaptateur-preenregistrement-v1-brouillon3.md`, `defd8ef05038e703c24733f6a5f88a1153daf5f44d2b8cae14950a5643e875fd`. Rapport : `prereg/contre-lectures/validite-adaptateur-preenregistrement-v1-brouillon3-cl2.md`, `11f7242b9dbada3fdc9f6e2c0a707eef3f0d2b51783e425545d78ec43d2bccee` (égal à son compagnon). Verdict : « non scellable en l'état » ; cinq bloquants, six majeurs, sept mineurs ; différentiel du brouillon 2 au brouillon 3 propre. Traitement au brouillon 4 :\n\n| constat | traitement | où |\n|---|---|---|\n| CLVA2-01 (règle « au-dessus » abandonnée par T0.7) | **option (a) du lecteur appliquée, en attente de la décision de la mère** : règle (a) de T0.7 pour VA-1, VA-3, VA-5b, VA-6 et la mention « au-dessus du plancher » des lignes de réserve ; `Dτ` pour VA-2 (analogue non simulé, déclaré) | « Métrique » ; « Seuil » ; phrases (en-tête de la table) |\n| CLVA2-02 (plancher des sondes figées) | couples CLVA2-02a, CLVA2-02b | « Métrique », directions ; plan, point 1 |\n| CLVA2-03 (800 directions) | couples CLVA2-03a à CLVA2-03h ; passage de T0.7 scellé qui contredit les 800 directions (l. 2789, 2793, 2802) cité, non corrigé | partout ; en-tête |\n| CLVA2-04 (littéraux de Q) | couple | plan, point 5 |\n| CLVA2-05 (`mention_etendue`) | couple | « Métrique », non interprétable |\n| CLVA2-06 (sonde en échec) | couple | « Liste d'arrêt » |\n| CLVA2-07 (3 200 directions, notation par lots) | couples CLVA2-07a, CLVA2-07b | « Calcul et dépense » ; « Code neuf » |\n| CLVA2-08 (réserves sans clé de sonde) | couple | « Critères », ordre de chaque couple |\n| CLVA2-09 (renvois au brouillon 21) | couple d'en-tête ; les vingt et une marques avec numéros de ligne remplacées une à une par la table de correspondance du rapport (couples A4-M01 à A4-M21) ; réserve générale réécrite | en-tête ; partout |\n| CLVA2-10 (puissance) | option (a) appliquée, en attente de la décision de la mère : table refaite par le script de l'auteur, mêmes valeurs que le lecteur ; seuil `σ > 0,060` gardé, aire minimale écrite (> 0,82) | « Puissance » ; « Prédiction » ; « Métrique », effectifs |\n| CLVA2-11 (pièce HD non jouée en parallèle de 7b) | **option recommandée à Lazar appliquée, en attente de son mot (nœud)** : HD après `VERDICT-P3BIS`, créée si et seulement si l'issue est « vu », règle écrite avant le verdict ; repli « sans étape A, aucune pièce R » ; calendrier refait ; annexe A annotée | en-tête ; plan, points 2 et 3 ; « Calcul et dépense » ; « Liste d'arrêt » ; annexe A |\n| CLVA2-12 (garde d'équivalence existante) | couples CLVA2-12a, CLVA2-12b | « Métrique » ; « Code neuf » |\n| CLVA2-13 (passes et pire cas) | devis refait : 2 816 passes, R 1,90 à 2,80 h, pire 8,85 USD, ensemble pire 33,4 USD ; nœud N-VA-1 toujours ouvert | « Calcul et dépense » |\n| CLVA2-14 (disque) | écrit | « Code neuf » |\n| CLVA2-15 (graine de `preparer_sonde`) | couple | plan, point 7 |\n| CLVA2-16 (`jeux` partiel ou nul) | couple | plan, point 6 |\n| CLVA2-17 (`R11-arret`, `R12-invalide`) | sans correction exigée | — |\n| CLVA2-18 (section « Contre-lecture ») | cette entrée ; paragraphe de la contre-lecture suivante réécrit | « Contre-lecture » |\n| champs fixés par le seul code de T0.7 (rapport, § 4) | vérifiés par le lecteur sur `main` ; **non confirmés par le développeur de T0.7** : réserve écrite (en-tête) | en-tête |\n\n**Vérification courte, prévue avant le scellement** : un sous-agent neuf, autre modèle que l'auteur du brouillon 4 (Claude Opus 5.5), non lecteur de P3-bis, en différentiel du brouillon 3 au brouillon 4 (couples versés et script d'application), contre le rapport de la contre-lecture 2 et T0.7 scellé ; puis la décision de la mère sur CLVA2-01 et CLVA2-10, et le mot de Lazar sur CLVA2-11.\n\nBrouillon 3 — contre-lecture suivante prévue alors (faite : contre-lecture 2) : un sous-agent neuf, autre modèle que le rédacteur,"
+ },
+ {
+  "id": "A4-M01",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1024, 1246)",
+  "nouveau": "(T0.7 scellé, l. 1183, 2785)"
+ },
+ {
+  "id": "A4-M02",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1773, 2348-2351)",
+  "nouveau": "(T0.7 scellé, l. 1915 ; module sur `main`, `lecture_v4.py` l. 628-633)"
+ },
+ {
+  "id": "A4-M03",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1157-1165, 1231-1236)",
+  "nouveau": "(T0.7 scellé, l. 1293-1313, 1361, 2801 ; `lecture_v4.py` l. 495-499)"
+ },
+ {
+  "id": "A4-M04",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1309-1312)",
+  "nouveau": "(T0.7 scellé, l. 1451-1453, 2789)"
+ },
+ {
+  "id": "A4-M05",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; code `8ae9fc44`, `lecture_v2.py` l. 606-607)",
+  "nouveau": "(T0.7 scellé, l. 2789 ; `lecture_v4.py` l. 217-218, 259-262)"
+ },
+ {
+  "id": "A4-M06",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; plan, point 8, l. 1385-1395)",
+  "nouveau": "(T0.7 scellé, l. 2073, 2794 ; `repli_recalcul_v1.py` l. 179-216)"
+ },
+ {
+  "id": "A4-M07",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1926-1931, 2339-2344 ; code `8ae9fc44`, `lecture_v2.py` l. 734-754, 901-902)",
+  "nouveau": "(T0.7 scellé, l. 2049-2051, 2790, 2793 ; `lecture_v2.py` l. 764-789 ; `lecture_v4.py` l. 506)"
+ },
+ {
+  "id": "A4-M08",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1054-1055)",
+  "nouveau": "(T0.7 scellé, l. 1206 ; `lecture_v4.py` l. 137-141, 245-262)"
+ },
+ {
+  "id": "A4-M09",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; code `8ae9fc44`, `lecture_v2.py` l. 608-609, 942)",
+  "nouveau": "(T0.7 scellé, l. 2791 ; `lecture_v4.py` l. 262, 544-553)"
+ },
+ {
+  "id": "A4-M10",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; levée 4)",
+  "nouveau": "(T0.7 scellé, l. 2801 ; `mahalanobis_v1.py` l. 84-98)"
+ },
+ {
+  "id": "A4-M11",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1085-1086, 2181)",
+  "nouveau": "(T0.7 scellé, l. 1226-1229, 2312 ; configuration v8 l. 60-63)"
+ },
+ {
+  "id": "A4-M12",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1157-1165)",
+  "nouveau": "(T0.7 scellé, l. 1293-1313 ; `lecture_v4.py` l. 495-499)"
+ },
+ {
+  "id": "A4-M13",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 2083-2084, 2339-2344 ; code `8ae9fc44`, `lecture_v2.py` l. 942)",
+  "nouveau": "(T0.7 scellé, l. 2790-2791 ; `lecture_v4.py` l. 495-506, 544-553)"
+ },
+ {
+  "id": "A4-M14",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1398, 2067)",
+  "nouveau": "(T0.7 scellé, l. 1540, 2188, 2252)"
+ },
+ {
+  "id": "A4-M15",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 2345, 2375 ; code `8ae9fc44`, `lecture_v2.py` l. 1081-1082 ; `criteres_v1.py` l. 586-600)",
+  "nouveau": "(T0.7 scellé, l. 2792, 2800 ; `lecture_v4.py` l. 669-685 ; `criteres_v1.py` l. 586-600)"
+ },
+ {
+  "id": "A4-M16",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 2077)",
+  "nouveau": "(T0.7 scellé, l. 2198-2205)"
+ },
+ {
+  "id": "A4-M17",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1759-1766, 1798)",
+  "nouveau": "(T0.7 scellé, l. 1900-1910, 2800 ; `criteres_v1.py` l. 504-532, 586-600)"
+ },
+ {
+  "id": "A4-M18",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1777-1794)",
+  "nouveau": "(T0.7 scellé, l. 1919-1921, 1927, 1935-1936, 2803 ; `lectures_t07_v1.py` l. 423-463)"
+ },
+ {
+  "id": "A4-M19",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 1956-1957)",
+  "nouveau": "(T0.7 scellé, l. 2076-2078, 2086)"
+ },
+ {
+  "id": "A4-M20",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 2177-2178, 2322)",
+  "nouveau": "(T0.7 scellé, l. 2309, 2454, 2805 ; `registre_v1.py` l. 138-148)"
+ },
+ {
+  "id": "A4-M21",
+  "ancien": "(T0.7 brouillon 21, levé par la contre-lecture 1 ; l. 2077-2084)",
+  "nouveau": "(T0.7 scellé, l. 2198-2205 ; `registre_v1.py` l. 47-53)"
+ }
+]
