@@ -1,0 +1,315 @@
+{
+ "corps": {
+  "E-4_un_proposeur_trouve_tout": {
+   "conforme": true,
+   "issue": "P-2",
+   "noeuds": [],
+   "principale": 4,
+   "survie_par_produit": {
+    "classe": "defavorable",
+    "p_prod": 1.0,
+    "survie_une_generation": 0.0,
+    "survie_valeur_commune": 0.3164
+   }
+  },
+  "P-0_monde_a_deux": {
+   "appels": {
+    "echec": 1,
+    "repondu": 13,
+    "sans_carte": 1,
+    "tronque": 1
+   },
+   "conforme": true,
+   "issue": "P-0",
+   "par_monde": {
+    "1": 2,
+    "2": 3,
+    "3": 4,
+    "4": 4
+   }
+  },
+  "P-0_onze_repondus": {
+   "appels": {
+    "echec": 4,
+    "repondu": 11,
+    "sans_carte": 0,
+    "tronque": 1
+   },
+   "conforme": true,
+   "issue": "P-0"
+  },
+  "P-1_seize_sur_seize": {
+   "conforme": true,
+   "issue": "P-1"
+  },
+  "P-2_deux_sur_seize": {
+   "attendu": "P-2, x = 2, n = 16",
+   "conforme": true,
+   "issue": "P-2",
+   "n": 16,
+   "x": 2
+  },
+  "R-1_cartes_K1_seule": {
+   "conforme": true,
+   "issue": "P-2",
+   "noeuds": [
+    "R-1 : moins de la moitié des appels répondus portent une composante autre que K1 et les conditionnelles"
+   ],
+   "temoin": {
+    "appels_portant_la_condition": 0,
+    "appels_portant_une_autre_composante": 4,
+    "n": 16,
+    "sous_la_moitie": true
+   },
+   "x": 0
+  },
+  "artefacts": {
+   "appel_en_double": "refusé : appel en double : (1, 'fable52')",
+   "appel_manquant": "refusé : appels attendus manquants : [(4, 'astra')]",
+   "carte_d_un_appel_en_echec": "refusé : carte d'un appel en échec : (1, 'fable52')",
+   "emplacement_en_double": "refusé : emplacement en double : (1, 'fable52'), 1",
+   "emplacement_non_entier": "refusé : carte : clés {monde, proposeur, emplacement, etat, loi}, emplacement entier ≥ 1, état admise|refusee",
+   "empreinte_du_monde_fausse": "refusé : monde 1 : empreinte du devis différente",
+   "proposeur_inconnu": "refusé : appel : clés {monde, proposeur, etat}, monde connu, proposeur parmi les quatre, état complet|tronque|echec",
+   "septieme_admise": "refusé : carte au-delà de la sixième admise : (1, 'fable52'), 7",
+   "trois_mondes": "refusé : mondes : exactement 4"
+  },
+  "cas_sain_sans_noeud": {
+   "conforme": true,
+   "noeuds": [],
+   "temoin": {
+    "appels_portant_la_condition": 15,
+    "appels_portant_une_autre_composante": 16,
+    "n": 16,
+    "sous_la_moitie": false
+   }
+  },
+  "conditions_emboitees": {
+   "conforme": true,
+   "par_sous_population_plus_trois": 3,
+   "quatre": 4,
+   "references_c16": {
+    "1:k1": {
+     "admise": true,
+     "conditions": 0,
+     "types": [
+      "softmax"
+     ]
+    },
+    "1:k1_plus_premiere": {
+     "admise": true,
+     "conditions": 1,
+     "types": [
+      "si_sinon",
+      "softmax"
+     ]
+    },
+    "1:monde_sans_latente": {
+     "admise": true,
+     "conditions": 3,
+     "types": [
+      "par_sous_population",
+      "si_sinon",
+      "softmax"
+     ]
+    },
+    "2:k1": {
+     "admise": true,
+     "conditions": 0,
+     "types": [
+      "softmax"
+     ]
+    },
+    "2:k1_plus_premiere": {
+     "admise": true,
+     "conditions": 1,
+     "types": [
+      "si_sinon",
+      "softmax"
+     ]
+    },
+    "2:monde_sans_latente": {
+     "admise": true,
+     "conditions": 3,
+     "types": [
+      "par_sous_population",
+      "si_sinon",
+      "softmax"
+     ]
+    },
+    "3:k1": {
+     "admise": true,
+     "conditions": 0,
+     "types": [
+      "softmax"
+     ]
+    },
+    "3:k1_plus_premiere": {
+     "admise": true,
+     "conditions": 1,
+     "types": [
+      "si_sinon",
+      "softmax"
+     ]
+    },
+    "3:monde_sans_latente": {
+     "admise": true,
+     "conditions": 3,
+     "types": [
+      "par_sous_population",
+      "si_sinon",
+      "softmax"
+     ]
+    },
+    "4:k1": {
+     "admise": true,
+     "conditions": 0,
+     "types": [
+      "softmax"
+     ]
+    },
+    "4:k1_plus_premiere": {
+     "admise": true,
+     "conditions": 1,
+     "types": [
+      "si_sinon",
+      "softmax"
+     ]
+    },
+    "4:monde_sans_latente": {
+     "admise": true,
+     "conditions": 2,
+     "types": [
+      "par_sous_population",
+      "si_sinon",
+      "softmax"
+     ]
+    }
+   },
+   "si_sinon_sur_sous_population_plus_trois": 4,
+   "trois": 3
+  },
+  "imports_faux_attendu": "refusé : module outils-v4/monde_riche_v4.py : empreinte ≠ celle écrite dans le programme",
+  "minimum_tenu_douze": {
+   "conforme": true,
+   "issue": "P-2",
+   "n": 12
+  },
+  "noeud_E-4_proposeur_a_trois_appels": {
+   "conforme": true,
+   "n": 15,
+   "noeuds": [
+    "E-4 : classe différente entre p_c commun et p_prod par proposeur"
+   ],
+   "survie_par_produit": {
+    "classe": "defavorable",
+    "p_prod": 0.0447,
+    "survie_une_generation": 0.3333,
+    "survie_valeur_commune": 0.5642
+   },
+   "x": 2
+  },
+  "noeud_E-8_tau": {
+   "conforme": true,
+   "issue": "P-2",
+   "noeuds": [
+    "E-8 : compte différent entre τ = 0,75 · I et τ' = 0,25 · I"
+   ],
+   "x": 1,
+   "x_tau_0_25": 2
+  },
+  "noeud_E-8_unite_carte": {
+   "conforme": true,
+   "noeuds": [
+    "E-8 : classe différente entre l'unité appel et l'unité carte"
+   ],
+   "unite_carte": {
+    "classe": "defavorable",
+    "emplacements": 96,
+    "ic95": [
+     0.0367,
+     0.1576
+    ],
+    "p": 0.0833,
+    "qui_portent": 8
+   },
+   "x": 2
+  },
+  "non_evaluable_listee": {
+   "conforme": true,
+   "liste": [
+    {
+     "emplacement": 1,
+     "monde": 1,
+     "proposeur": "fable52"
+    }
+   ]
+  },
+  "septieme_refusee_comptee": {
+   "au_dela_de_six": 1,
+   "conforme": true
+  },
+  "tout_conforme": true
+ },
+ "corps_sha256": "0b0ffc1543dda10ef13a69448e2d94a4d3c3b7e5166a2fa572f0b2423cec7af8",
+ "hors_corps": {
+  "commande": "essai",
+  "debut_utc": "2026-11-13T10:10:59+00:00",
+  "fin_utc": "2026-11-13T10:12:09+00:00",
+  "modules_importes": [
+   [
+    "pilote-v1/outils/mesure_pilote_v3.py",
+    "5d5a263282cc73783b4cb6bae99fe5cc3b56d584e0c848221478232526ff8e0b"
+   ],
+   [
+    "outils-v1/complements_synthese_v1.py",
+    "89eb7ba8c8cf8633541a6de8090767f74619e3f3968ebed8f894b1f8d593e9ba"
+   ],
+   [
+    "outils-v1/generateur_mondes_v1.py",
+    "46f3ac2d40efad200e382d95450d3683529f96a73e716913dbbaf24a3bceb1c5"
+   ],
+   [
+    "outils-v2/generateur_mondes_v2.py",
+    "816ad7182c5980f0c25057404d53e62d1ba29643275749fd2c4238f3d2cf7fc2"
+   ],
+   [
+    "outils-v1/monde_riche_outils_v1.py",
+    "1825b956eed638fe4daf3d7395a169fdbdf7c9679076d9ba3fb4a15cfd7ec85e"
+   ],
+   [
+    "outils-v2/monde_riche_outils_v2.py",
+    "3fab97a15a20c58c4d966a0df1c8aaaa0347b672f401eaa4613e40db7b8a17c6"
+   ],
+   [
+    "outils-v4/monde_riche_v4.py",
+    "4b1658477811fb87360dda44a65b0af96e87ae1d2ca4a32bdabbd3ce6cc19eb8"
+   ],
+   [
+    "outils-v1/puissance_monde_riche_v1.py",
+    "7344b10781928eaf123f6fe27e0370a0be2963c6632665a411a1673d177d844b"
+   ],
+   [
+    "outils-v2/puissance_monde_riche_v2.py",
+    "12458ee3dd362b73e14f0152e118932c8530ded927db07d89cad908eada20c86"
+   ],
+   [
+    "outils-v3/puissance_monde_riche_v3.py",
+    "60aee2a3c230da8805e765695b16835c77c20b411f813e97442a2e302dc6b805"
+   ],
+   [
+    "pilote-v1/outils/seuil_pilote_v1.py",
+    "14eecfccdd83274d32388fcf2771bc608f0ad83bd8a3e5ac1161322d775e46ab"
+   ],
+   [
+    "outils-v1/verifier_monde_kimi_v1.py",
+    "679f437d966fd2d184885ed77e28b152d76d46f2ca096d58330cf755ff189d7d"
+   ],
+   [
+    "outils-v2/verifier_monde_v2.py",
+    "d8f2f6348e0fbdbf1237ff5228b7f57a725fcf82c1a0e9945e37c149cf4c1de3"
+   ]
+  ],
+  "script_sha256": "5d5a263282cc73783b4cb6bae99fe5cc3b56d584e0c848221478232526ff8e0b"
+ }
+}
