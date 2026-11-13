@@ -1,0 +1,158 @@
+{
+ "lanceur": "/home/user/controle-ia-travail/scripts/lancer_course_ideation_bassins_etroits_v1.py",
+ "essais": "/home/user/controle-ia-travail/tests/test_lancer_course_ideation_bassins_etroits_v1.py",
+ "mutants": [
+  {
+   "mutant": "base",
+   "garde": "aucune (contrôle de l'outil)",
+   "avant": null,
+   "apres": null,
+   "code_pytest": 0,
+   "bilan": "77 passed in 15.89s",
+   "essais_en_echec": [],
+   "issue": "contrôle : tous passés"
+  },
+  {
+   "mutant": "M1-cumul-sans-plafond-suivant",
+   "garde": "garde de cumul : le plafond de ce qui va être lancé n'est plus compté",
+   "avant": "    if deja + plafond_suivant > borne + 1e-9:",
+   "apres": "    if deja > borne + 1e-9:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 76 passed in 15.73s",
+   "essais_en_echec": [
+    "test_cumul_artefact_depasse"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M2-depense-illisible-comptee-zero",
+   "garde": "dépense illisible : manifeste de fin illisible compté 0 au lieu du plafond",
+   "avant": "            return PLAFOND_COURSE_USD, \"manifeste de fin illisible : plafond entier compté\"",
+   "apres": "            return 0.0, \"manifeste de fin illisible : plafond entier compté\"",
+   "code_pytest": 1,
+   "bilan": "1 failed, 76 passed in 16.53s",
+   "essais_en_echec": [
+    "test_cumul_depense_illisible_compte_le_plafond"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M3-relance-apres-depense",
+   "garde": "pas de relance après dépense : la condition de dépense est retirée",
+   "avant": "        if dep[\"course_usd\"] + dep[\"bras_usd\"] > 0 or x[\"fin\"] is None:",
+   "apres": "        if x[\"fin\"] is None:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 76 passed in 16.42s",
+   "essais_en_echec": [
+    "test_pas_de_relance_apres_depense"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M4-generation-suivante-sans-bras",
+   "garde": "génération g + 1 admise dès que la course de g est réussie (sans bras)",
+   "avant": "        prec = [x for x in runs if x[\"generation\"] == g - 1 and bras_reussi(x)]",
+   "apres": "        prec = [x for x in runs if x[\"generation\"] == g - 1 and course_reussie(x)]",
+   "code_pytest": 1,
+   "bilan": "2 failed, 75 passed in 15.54s",
+   "essais_en_echec": [
+    "test_generation_3_apres_seule_course_2",
+    "test_regle_de_passage_classement_illisible"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M5-argument-non-ferme",
+   "garde": "argument unique : des arguments en plus sont admis",
+   "avant": "    if len(argv) != 1 or argv[0] not in GENERATIONS:",
+   "apres": "    if len(argv) < 1 or argv[0] not in GENERATIONS:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 76 passed in 17.09s",
+   "essais_en_echec": [
+    "test_argument_artefacts[argv3]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M6-tentatives-de-course-non-bornees",
+   "garde": "borne de trois tentatives de course par génération",
+   "avant": "    if len(parties) >= 3:",
+   "apres": "    if len(parties) >= 30:",
+   "code_pytest": 0,
+   "bilan": "77 passed in 16.44s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "M7-borne-du-cumul-egale-au-go",
+   "garde": "garde de cumul : la borne de 60 USD codée cède devant un plafond de GO plus haut",
+   "avant": "    borne = min(TOTAL_LIGNE_USD, plafond_go)",
+   "apres": "    borne = plafond_go",
+   "code_pytest": 0,
+   "bilan": "77 passed in 16.75s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "M8-attestation-sans-consigne-du-juge",
+   "garde": "attestation : la consigne en attente du juge n'est plus exigée",
+   "avant": "    if JUGE_EXTERNE[0] not in (a.get(\"consignes_en_attente_sha256\") or {}):",
+   "apres": "    if False:",
+   "code_pytest": 0,
+   "bilan": "77 passed in 15.74s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "M9-bras-non-bornes",
+   "garde": "borne de trois bras par course",
+   "avant": "        if len(run[\"bras\"]) >= 3:",
+   "apres": "        if len(run[\"bras\"]) >= 30:",
+   "code_pytest": 0,
+   "bilan": "77 passed in 17.29s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "M10-bras-reussi-sans-manifeste-du-bras",
+   "garde": "génération jouée : le manifeste du bras scellé n'est plus exigé",
+   "avant": "                and _lire_json_si_scelle(run[\"sortie\"] / \"manifeste-bras-rapporte.json\") is not None)",
+   "apres": "                )",
+   "code_pytest": 0,
+   "bilan": "77 passed in 16.78s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "M11-classement-illisible-transmis",
+   "garde": "règle de passage : un classement illisible est transmis",
+   "avant": "    if classement.get(\"lisible_L2_L4\") is not True:",
+   "apres": "    if False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 76 passed in 15.59s",
+   "essais_en_echec": [
+    "test_regle_de_passage_classement_illisible"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M12-plancher-du-controle-court-non-garde",
+   "garde": "garde du bras : plancher de la commande d'Argon pour le contrôle court",
+   "avant": " or r.controle_bras_usd < g[\"plancher_controle_court\"]:",
+   "apres": ":",
+   "code_pytest": 0,
+   "bilan": "77 passed in 16.03s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  }
+ ],
+ "tues": 6,
+ "survivants": [
+  "M6-tentatives-de-course-non-bornees",
+  "M7-borne-du-cumul-egale-au-go",
+  "M8-attestation-sans-consigne-du-juge",
+  "M9-bras-non-bornes",
+  "M10-bras-reussi-sans-manifeste-du-bras",
+  "M12-plancher-du-controle-court-non-garde"
+ ]
+}
