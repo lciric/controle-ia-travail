@@ -1,0 +1,145 @@
+How models explore ideas · Bespoke Labs
+Skip to content
+Launching Nimble models: #1 decision models outperforming Jev. Read more.
+Research
+About
+Blog
+Benchmarks
+Careers
+Get in touch
+Get Nimble
+<- Blog
+[ Nov 10, 2026 ]
+How models explore ideas
+A deep dive into how models explore ideas in AutoResearchExam.
+Anirudha Ramesh, Advait Parulekar, Shivank Garg, Sid Devic, Alex Dimakis, Maheswaran Sathiamoorthy
+AutoResearchExam measures the quality, speed and generalization of the solutions models find on long-horizon ML research and engineering tasks.
+We wanted to understand how models go about solving these problems. Does a model commit to its first approach or keep trying new ones, and does trying more ideas actually lead to better solutions? To study this we use idea basins, introduced in Fork and Flush . An idea basin is a group of submissions to the same task that share a broad method, such as tuning a gradient-boosted model or training a small neural net. Once every submission is placed in a basin, a run becomes a path through ideas, and each move from one basin to another is a switch. We use these paths to answer three questions:
+Do some models explore more ideas than others?
+What does exploration say about research style?
+Does exploring more lead to higher scores?
+We find that most runs stick with one or two ideas, and models that submit more spend the extra submissions refining and overfit more. Yet exploring a new idea gains about nine times as much as a refining step!
+Models explore most and benefit most in the first six hours, after which visits to new idea basins drop sharply. This suggests models start refining instead of exploring further, leaving potential gains on the table: 58% of runs never reach the basin where the best solution to their task was found.
+Method
+Building the idea map
+We build the map the same way Fork and Flush does, with Nimble as the judge. To find basins we need to judge which submissions use the same idea, without looking at scores. Two very different ideas can get the same score, so we group submissions by what their code does instead. Sonnet first summarizes the method in each submission's code. Then Nimble , our frontier System One model, compares the summaries three at a time ("is B or C closer to A?"), without knowing which model wrote them. This takes about 1.3 million calls, and Nimble answers them all for under $40 (and it's now available through our API!). We fit a 2D map to those answers, one per task, and cluster it into basins .
+Example comparison
+Three summaries from the CPU decoder task. Nimble is asked whether B or C is closer to A.
+A Plain single-process NumPy executor with BLAS threads capped at min(4, n_workers). For T==1 it collapses attention into a precomputed value-times-output matrix per layer, since softmax over one key is 1, and fuses gate and up weights, all stored Fortran-order. For T>1 it runs fused QKV, RoPE, GQA head expansion, masked scaled softmax into a separate probs buffer, SwiGLU MLP and residuals using preallocated buffers. There is no memory alignment trick, no arena, and no tuning.
+B Pure NumPy/BLAS executor that fuses Q/K/V into one matmul and gate/up into another, and folds RMSNorm scale vectors into the following weight matrices. For each of the four projection shapes, a build-time microbenchmark picks either the usual (T,K)@(K,N) form or a pre-transposed weight form (N,K)@(K,T), and activation buffers follow that choice. RoPE is applied to q and k together in one pass, and attention uses preallocated buffers with GQA head expansion. The norm sum of squares is accumulated in float64. T==1 gets a special path: attention context is just v, so the GQA broadcast is folded into the output weight, and the work becomes single-vector matmuls.
+C A NumPy decoder executor that offloads the projections to a native multithreaded dispatcher. Weights for QKV, output, gate/up and down are split into column panels and prepacked with OpenBLAS's own Haswell SGEMM packing routines. A tiny machine-code dispatcher on pthreads packs the activations, zeroes the output, and runs the OpenBLAS SGEMM kernel per panel across up to 4 spin-waiting threads. RMSNorm runs in a separate AVX2 machine-code kernel. Attention (RoPE, GQA-grouped scores with mask, softmax, context) and SwiGLU stay in preallocated in-place NumPy ops. Self-tests check the packed kernel and the norm kernel at startup, and it falls back to plain NumPy matmuls and norms if the CPU, library or tests fail.
+Nimble picks B. A and B do all the work in NumPy, and C writes its own machine code.
+Idea map for Accelerating transformer decoder graphs on CPUs
+Each point is one submission, colored by basin. Each panel traces one run, from its first submission (open circle) to its last (large dot).
+Opus 5.5 moves early from Plain NumPy to its own JIT compiler. Qwen3.8 Max stays in Autotuned BLAS. Gemini 3.8 Flash settles within two hours on NumPy + asm kernels and spends the rest of the run tuning that one idea.
+Question 1
+Do some models explore more ideas than others?
+We look at exploration three ways:
+Basins visited. The average run visits only 1.5 to 2 basins , and 47% of runs never leave their first one .
+Where switches go. When a model changes approach, half the time it goes back to an idea it already tried instead of a brand new one.
+Switch rate. Only 4 to 13% of a model's submissions try a different idea. The rest refine the one it already has.
+No model is a clear explorer. Most runs pick an idea early and stay with it for the full 24 hours. This matches Fork and Flush , where single runs mostly stay inside one basin for their whole budget, and Scaling Discovery Requires Forgetting , where agents become anchored to their own past attempts. Both reduce this by periodically resetting the agent's context and continuing from the best result so far.
+Basins visited
+Idea basins visited per run
+Model means, 95% intervals. Differences are small: 1.5 to 2.0 per run.
+Runs that never leave their first basin
+47% of all runs spend the full 24 hours on their first idea. This ranges from 31% (Gemini 3.8 Flash) to 62% (Qwen3.8 Max). 95% intervals from resampling tasks.
+Moving on vs. going back
+Switches per run: new ideas vs. returns
+To a new basin Back to an earlier basin
+Astra, Gemini 3.8 Flash and Muse Spark 1.3 switch the most, but more than half of those switches are returns. Argon and Sol switch less and usually to something new.
+Going back and forth: ActivePrune unlabeled pool pruning
+Claude Fable 5.1's run, one submission per dot, colored by basin. The large dot is its last submission.
+Gold is a plain text-quality filter, and red is a two-stage pruner that also models the active-learning loop. Fable 5.1 stays in gold for its first 11 hours, then switches six times between the two in its last 8 hours and never settles.
+Switch rate
+Switch rate by model
+Grok 4.6 (4%) and Grok 4.7 (6%) switch least. The rest sit at 8 to 13% with overlapping intervals.
+What stands out by model
+Staying put varies about twofold. Qwen3.8 Max, Grok 4.6 and Claude Fable 5.1 never leave their first idea in about 60% of runs. For GPT-5.6 Sol, Argon and Gemini 3.8 Flash it is about a third.
+GPT-6 Astra, Gemini 3.8 Flash and Muse Spark 1.3 switch the most, but about two thirds of their switches go back to ideas they already tried. Argon rarely goes back: only a quarter of its switches are returns.
+GPT-6 Astra submits half as often as GPT-5.6 Sol, yet goes back to old ideas twice as often. It still comes out ahead, with higher test AUARC (0.60 vs. 0.51) and a quarter of Sol's overfitting gap.
+Grok 4.7 is a noticeably bolder searcher than Grok 4.6. It switches 1.5 times as often and leaves its first idea in 55% of runs, up from 41%. Grok 4.6 switches on only 4% of its steps, half the rate of most models.
+Question 2
+What does exploration tell us about research style?
+The main AutoResearchExam results describe research style through submission volume and overfitting. We check both against exploration:
+Do models that submit more explore more? They switch about as often as everyone else, so the extra submissions go into refining. GPT-5.6 Sol and both Groks submit about three times as often as Opus 5.5 and Argon but switch about as many times, so their switch rate is much lower .
+Does exploring relate to overfitting? Overfitting tracks how much a model submits. Models that switch more do overfit less (ρ = −0.63), but they also submit less. Submission volume tracks the gap much more closely (ρ = 0.84), and among models that submit about as much, switching barely matters.
+Number of submissions
+Submission volume vs. switching
+Switch count barely moves with volume (left), so switch rate falls (right). This matches the hyperparameter-tuning analysis in the main AutoResearchExam results.
+Overfitting
+Switch rate and submission volume vs. overfitting
+Gap = share of validation AUARC lost on the hidden test set.
+Question 3
+Does exploring more lead to higher scores?
+Do models that explore more score higher? Yes, if their switches go to new ideas, and most of all early on. The four top scorers (Opus 5.5, Claude Fable 5.1, GPT-6 Astra and Argon) send more of their switches to new basins than the lowest scorers do (ρ = 0.70 across models). The link is even stronger for test AUARC in the first 6 hours (ρ = 0.84). How often a model switches shows no link.
+What is a switch worth? A switch to a new idea is followed by about nine times the gain of a refinement step , and it is about twice as likely to set a new best score. A return to an old idea gains about as much as staying.
+When does switching pay off? In the first few hours. In hours 0 to 6 a switch of any kind gains about 3.5 times as much as a refinement step. After hour 6 the two are about equal.
+Is late growth tied to switching? We found no link. Runs that switched after hour 12 gained no more test score over the second half than runs that stayed. Many runs never find the strongest idea at all: 58% never visit the basin where their task's best solution came from.
+Exploration and score
+Share of switches to a new basin vs. test AUARC
+Shares are averaged per run. Returns are concentrated in a few runs that go back and forth many times, so most models sit above 50% even though half of all switches are returns.
+Share of switches to a new basin vs. early test AUARC (first 6 hours)
+Models whose switches go to new ideas reach good scores much sooner. Of everything we measured, this relationship is the strongest.
+Payoff of a switch
+Change in validation score per step
+Steps that set a new best score, starting from a working submission
+Scores scaled so a trivial baseline is 0 and a strong reference about 0.5. A working submission is one at 90% or more of the run's best so far.
+Timing
+Share of steps that are switches
+Change in validation score per step, by time in the run
+Late growth
+Test score gain from hour 12 to hour 24
+Conclusion
+Takeaways
+Most runs stay with one idea. Nearly half of all runs stay with their first idea for the full 24 hours, and half of all switches go back to an idea the run already tried.
+The top scorers send most of their switches to new ideas. How often a model switches has no link to its score.
+New ideas pay off early. A switch to a new idea is followed by about nine times the gain of a refinement step, almost all of it in the first 6 hours. After that, refining does as well, and we see no evidence of models switching ideas well late in a run.
+Heavy submitters mostly refine, and they overfit the most. The highest-volume models switch the least per submission and lose the most score on the hidden test set.
+We therefore see an opportunity in model and harness design: push agents to explore new ideas early, and to keep exploring well later in the run so improvements continue over longer time horizons.
+Appendix
+Appendix: Method details
+Data
+Scores are AUARC, the AutoResearchExam metric: hidden test score averaged over the 24-hour run. 348 runs (12 models, 24h each) and 12,656 graded submissions. A submission with the same code as the previous one in its run is dropped, leaving 9,179. A step is the move to the next submission with different code. Switch rates use the 338 runs with at least three distinct submissions.
+Map
+Each submission appears in at least 80 triplet questions, each asked twice with B and C swapped; answers where Nimble does not have high certainty are dropped (569,271 remain). The map is a per-task 2D t-STE embedding fit on 90% of answers. As a check, it gets 89% of the held-out 10% right. A baseline that only knows which run each submission came from gets 60%, so the map captures more than run identity (Fork and Flush report 85% vs. 56%). Basins are k-means clusters, 3 to 8 per task, chosen by silhouette score. Intervals are 95% bootstrap intervals over tasks; correlations are Spearman.
+All correlations
+Across models (12 model averages)
+Between runs on the same task (pooled over tasks)
+Spearman's ρ with 95% intervals. Outlined cells have intervals that exclude zero.
+References
+Ziyang Cai, Christos Ziakas, Vasilis Kontonis, Tim Pearce, Siddhartha Sen, Akshay Krishnamurthy, Shivam Garg, Dimitris Papailiopoulos. Fork-and-Flush: Escaping Idea Basins in Autoresearch Agents . arXiv:2610.07447, 2026.
+Shangyin Tan, Ben Zhou, Lakshya A Agrawal, Jialin Zhang, Yilin Chen, Qiuyang Mang, Donghyun Lee, Dennis Jacob, Koushik Sen, Alex Dimakis, Matei Zaharia. Scaling Discovery Requires Forgetting . arXiv:2610.20563, 2026.
+Citation
+If you found this useful, please cite it as:
+@misc{ramesh2026explore,
+author = {Ramesh, Anirudha and Parulekar, Advait and Garg, Shivank and Devic, Sid and Dimakis, Alex and Sathiamoorthy, Maheswaran and {Bespoke Labs}},
+title = {How models explore ideas},
+year = {2026},
+url = {https://www.bespokelabs.ai/blog/how-models-explore-ideas},
+note = {Bespoke Labs Blog}
+}
+Share
+Science Build Data Updates
+See also:
+EnvOpt: Automated Optimization for Agent Environments Nov 13, 2026
+Teaching NVIDIA's Nemotron 3.5 Super-VL ML Engineering Oct 15, 2026
+Post-Training SeeWhy: A Small Specialized Model with Intuit/Credit Karma. Sep 19, 2026
+[ Environment research ]
+& infrastructure for the agent era.
+01. Our work
+Nimble
+Curator ↗
+OpenThoughts ↗
+Terminal-Bench ↗
+GEPA paper ↗
+02. Resources
+Blog
+Research
+Careers ↗ New
+03. Social
+X (Twitter)
+LinkedIn
+Discord
+©2026 BespokeLabs.AI, Inc.
+Terms of use Privacy policy Notice at collection Cookie preferences Do Not Sell or Share My Personal Information

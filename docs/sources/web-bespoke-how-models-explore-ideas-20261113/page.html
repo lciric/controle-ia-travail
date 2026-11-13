@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/assets/css/consent.3c199b1371.css">
+<script src="/assets/js/consent.2e34690da5.js" data-ga-id="G-V7EL5RWDFB" data-ga-path="/blog/how-models-explore-ideas"></script>
+<script src="https://embeds.iubenda.com/widgets/93974ca4-fde4-4e33-b7b7-15d0a87c03be.js" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0ece4">
+<title>How models explore ideas · Bespoke Labs</title>
+<meta name="description" content="A deep dive into how models explore ideas in AutoResearchExam.">
+<link rel="canonical" href="https://bespokelabs.ai/blog/how-models-explore-ideas">
+<meta name="robots" content="max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Bespoke Labs">
+<meta property="og:title" content="How models explore ideas · Bespoke Labs">
+<meta property="og:description" content="A deep dive into how models explore ideas in AutoResearchExam.">
+<meta property="og:url" content="https://bespokelabs.ai/blog/how-models-explore-ideas">
+<meta property="og:image" content="https://bespokelabs.ai/assets/blog/how-models-explore-ideas/art.cb1a952481.jpg">
+<meta property="og:image:alt" content="How models explore ideas">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bespokelabsai">
+<meta name="twitter:title" content="How models explore ideas · Bespoke Labs">
+<meta name="twitter:description" content="A deep dive into how models explore ideas in AutoResearchExam.">
+<meta name="twitter:image" content="https://bespokelabs.ai/assets/blog/how-models-explore-ideas/art.cb1a952481.jpg">
+<meta property="article:published_time" content="2026-11-10">
+<meta property="article:tag" content="Science">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How models explore ideas","description":"A deep dive into how models explore ideas in AutoResearchExam.","datePublished":"2026-11-10","url":"https://bespokelabs.ai/blog/how-models-explore-ideas","mainEntityOfPage":"https://bespokelabs.ai/blog/how-models-explore-ideas","image":"https://bespokelabs.ai/assets/blog/how-models-explore-ideas/art.cb1a952481.jpg","author":[{"@type":"Person","name":"Anirudha Ramesh"},{"@type":"Person","name":"Advait Parulekar"},{"@type":"Person","name":"Shivank Garg"},{"@type":"Person","name":"Sid Devic"},{"@type":"Person","name":"Alex Dimakis"},{"@type":"Person","name":"Maheswaran Sathiamoorthy"}],"publisher":{"@type":"Organization","name":"Bespoke Labs","url":"https://bespokelabs.ai"}}</script>
+<link rel="alternate" type="application/rss+xml" title="Bespoke Labs blog" href="/blog/rss.xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/live/inter-latin.c940764593.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/live/gt-alpina-light.27f9edd371.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/live/md-io.ea35d8ad52.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/live/base.0212e45dd6.css">
+<script src="/assets/js/live/base.f36cbb5ac0.js" defer></script>
+<link rel="stylesheet" href="/assets/css/live/prose.c37f951a7b.css">
+<link rel="stylesheet" href="/assets/css/live/blog.5c11ae4827.css">
+<script src="/assets/js/live/toc.2f8b3098b8.js" defer></script>
+
+</head>
+<body data-page="post">
+
+<a class="skip" href="#main">Skip to content</a>
+<div class="announce" role="region" aria-label="Announcement">
+  <p>Launching Nimble models: #1 decision models outperforming Jev. <a href="https://console.bespokelabs.ai" target="_blank" rel="noopener"><strong>Read more.</strong></a></p>
+</div>
+<div class="nav-wrap" id="nav">
+  <nav class="nav" aria-label="Primary">
+    <a class="nav-logo" href="/"><svg class="logo" viewBox="0 0 147.97 20.48" role="img" aria-label="Bespoke Labs"><path d="M 33.154 10.285 L 33.134 10.285 L 33.134 10.13 L 33.154 10.13 C 34.791 10.13 35.765 9.001 35.765 7.347 C 35.765 5.226 34.109 3.513 31.927 3.513 L 27.33 3.513 L 27.33 17.138 L 32.96 17.138 C 35.124 17.138 36.82 15.424 36.82 13.363 C 36.82 11.301 34.949 10.288 33.156 10.288 Z M 29.179 5.342 L 31.927 5.342 C 33.075 5.342 33.953 6.274 33.953 7.384 C 33.953 8.494 33.075 9.427 31.927 9.427 L 29.179 9.427 L 29.179 5.338 Z M 33.075 15.287 L 29.179 15.287 L 29.179 11.221 L 33.038 11.221 C 33.583 11.214 34.107 11.427 34.492 11.812 C 34.877 12.196 35.09 12.72 35.084 13.264 C 35.084 14.411 34.187 15.288 33.075 15.288 Z M 53.331 9.255 C 52.718 9.093 52.108 8.918 51.501 8.73 C 50.371 8.361 49.513 7.931 49.513 6.939 C 49.513 5.77 50.564 5.189 52.046 5.189 C 53.527 5.189 54.443 5.792 54.736 7.427 L 56.547 7.427 C 56.41 4.781 54.657 3.36 51.987 3.36 C 49.317 3.36 47.66 4.703 47.66 7.001 C 47.66 11.906 55.143 9.531 55.143 13.347 C 55.143 15.06 53.525 15.411 52.18 15.411 C 50.31 15.411 49.18 14.456 48.964 12.277 L 47.153 12.277 L 47.153 12.55 C 47.153 15.511 49.18 17.261 52.376 17.261 C 56.525 17.261 56.936 14.323 56.995 13.232 L 56.995 13.057 C 56.995 10.722 55.261 9.768 53.331 9.26 Z M 64.108 3.531 L 58.477 3.531 L 58.477 17.156 L 60.329 17.156 L 60.329 11.3 L 64.108 11.3 C 65.137 11.301 66.124 10.893 66.851 10.166 C 67.579 9.439 67.987 8.453 67.986 7.425 C 67.986 5.283 66.252 3.532 64.108 3.532 Z M 64.108 9.448 L 60.329 9.448 L 60.329 5.381 L 64.108 5.381 C 64.648 5.382 65.166 5.598 65.546 5.981 C 65.927 6.365 66.138 6.884 66.134 7.424 C 66.138 7.962 65.926 8.479 65.545 8.86 C 65.164 9.24 64.646 9.452 64.108 9.448 Z M 73.831 3.376 C 71.105 3.376 68.882 5.4 68.882 8.438 L 68.882 12.293 C 68.882 15.505 71.105 17.355 73.831 17.355 C 76.558 17.355 78.799 15.505 78.799 12.293 L 78.799 8.438 C 78.799 5.4 76.558 3.376 73.832 3.376 Z M 76.91 13.322 C 76.618 14.666 75.74 15.502 73.791 15.502 C 71.842 15.502 71.064 14.666 70.772 13.322 L 70.772 13.304 C 70.731 12.993 70.675 11.747 70.675 10.422 C 70.675 9.097 70.734 7.794 70.812 7.347 C 71.105 6.022 71.904 5.226 73.831 5.226 C 75.758 5.226 76.58 6.044 76.873 7.347 C 77.105 8.164 77.047 12.756 76.913 13.322 Z M 89.849 3.531 L 87.511 3.531 L 82.366 9.311 L 82.288 9.311 L 82.288 3.532 L 80.458 3.532 L 80.458 17.157 L 82.288 17.157 L 82.288 11.162 L 84.492 11.162 C 86.235 11.162 87.648 12.573 87.648 14.314 L 87.648 17.159 L 89.5 17.159 L 89.5 14.084 C 89.5 11.462 87.372 9.336 84.747 9.336 L 84.747 9.258 L 89.852 3.536 Z M 91.508 17.156 L 100.316 17.156 L 100.316 15.309 L 93.338 15.309 L 93.338 11.143 L 99.047 11.143 L 99.047 9.293 L 93.338 9.293 L 93.338 5.363 L 100.316 5.363 L 100.316 3.531 L 91.508 3.531 Z M 37.7 17.156 L 46.512 17.156 L 46.512 15.309 L 39.535 15.309 L 39.535 11.143 L 45.24 11.143 L 45.24 9.293 L 39.535 9.293 L 39.535 5.363 L 46.512 5.363 L 46.512 3.531 L 37.701 3.531 L 37.701 17.156 Z M 109.063 3.531 L 107.233 3.531 L 107.233 17.156 L 115.459 17.156 L 115.459 15.328 L 109.063 15.328 Z M 121.721 3.378 C 120.598 3.378 119.615 4.132 119.324 5.216 L 116.173 17.156 L 118.084 17.156 L 119.136 13.223 L 124.3 13.223 L 125.352 17.156 L 127.263 17.156 L 124.109 5.207 C 123.82 4.129 122.841 3.378 121.723 3.378 Z M 119.622 11.395 L 121.117 5.666 C 121.19 5.394 121.436 5.204 121.718 5.204 C 122 5.204 122.247 5.394 122.319 5.666 L 123.795 11.392 L 119.624 11.392 Z M 133.898 10.285 L 133.879 10.285 L 133.879 10.13 L 133.898 10.13 C 135.535 10.13 136.509 9.001 136.509 7.347 C 136.509 5.226 134.853 3.513 132.671 3.513 L 128.074 3.513 L 128.074 17.138 L 133.705 17.138 C 135.868 17.138 137.564 15.424 137.564 13.363 C 137.564 11.301 135.693 10.288 133.9 10.288 Z M 129.923 5.342 L 132.671 5.342 C 133.82 5.342 134.698 6.274 134.698 7.384 C 134.698 8.494 133.82 9.427 132.671 9.427 L 129.923 9.427 L 129.923 5.338 Z M 133.82 15.287 L 129.923 15.287 L 129.923 11.221 L 133.783 11.221 C 134.327 11.214 134.851 11.427 135.236 11.812 C 135.621 12.196 135.834 12.72 135.828 13.264 C 135.828 14.411 134.931 15.288 133.82 15.288 Z M 144.306 9.255 C 143.692 9.093 143.082 8.918 142.476 8.73 C 141.346 8.361 140.487 7.931 140.487 6.939 C 140.487 5.77 141.539 5.189 143.021 5.189 C 144.502 5.189 145.418 5.792 145.71 7.427 L 147.522 7.427 C 147.384 4.781 145.632 3.36 142.961 3.36 C 140.291 3.36 138.635 4.703 138.635 7.001 C 138.635 11.906 146.118 9.531 146.118 13.347 C 146.118 15.06 144.499 15.411 143.155 15.411 C 141.284 15.411 140.154 14.456 139.94 12.277 L 138.128 12.277 L 138.128 12.55 C 138.128 15.511 140.154 17.261 143.351 17.261 C 147.5 17.261 147.911 14.323 147.97 13.232 L 147.97 13.057 C 147.97 10.722 146.236 9.768 144.306 9.26 Z" fill="currentColor"/><path d="M 14.445 8.196 L 14.445 3.271 C 14.442 1.466 12.978 0.003 11.171 0 L 0 0 L 0 20.48 L 17.612 20.48 L 17.612 15.17 C 17.613 12.499 16.458 9.958 14.445 8.199 L 14.445 8.197 Z M 1.879 1.877 L 11.173 1.877 C 11.941 1.877 12.569 2.502 12.569 3.271 L 12.569 6.917 C 11.257 6.239 9.8 5.886 8.322 5.888 L 1.879 5.888 Z M 1.879 18.603 L 1.879 15.957 L 7.389 15.957 C 7.465 15.957 7.524 16.016 7.524 16.092 L 7.524 18.603 L 1.878 18.603 Z M 9.405 18.603 L 9.405 15.196 C 9.405 14.579 8.903 14.078 8.285 14.078 L 1.879 14.078 L 1.879 11.866 L 8.304 11.866 C 10.14 11.868 11.627 13.354 11.63 15.188 L 11.63 18.601 L 9.405 18.601 Z M 15.733 18.603 L 13.508 18.603 L 13.508 15.191 C 13.505 12.321 11.177 9.996 8.304 9.993 L 1.879 9.993 L 1.879 7.763 L 8.322 7.763 C 12.41 7.763 15.736 11.085 15.736 15.169 L 15.736 18.603 L 15.733 18.603 Z" fill="#f44029"/></svg></a>
+    <div class="nav-links" id="nav-links">
+      <a href="/#research">Research</a>
+      <a href="/about" data-nav="about">About</a>
+      <a href="/blog" data-nav="blog" aria-current="page">Blog</a>
+      <a href="https://benchmarks.bespokelabs.ai">Benchmarks</a>
+      <a href="https://jobs.ashbyhq.com/bespokelabs">Careers</a>
+      <a href="/contact" data-nav="contact">Get in touch</a>
+      <a class="btn btn-white" href="https://console.bespokelabs.ai">Get Nimble <svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 11.5 11.5 4.5M5.5 4.5h6v6"/></svg></a>
+    </div>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links"><span></span><span></span></button>
+  </nav>
+</div>
+
+<main id="main">
+<article class="po" aria-labelledby="post-title">
+  <header class="po-hero">
+    <div class="po-top">
+      <a class="po-back" href="/blog"><span class="po-back-arr" aria-hidden="true">&lt;-</span><span class="po-back-label">Blog</span></a>
+      <p class="po-date"><span class="po-brk" aria-hidden="true">[</span><time datetime="2026-11-10">Nov 10, 2026</time><span class="po-brk" aria-hidden="true">]</span></p>
+      <span class="po-top-end" aria-hidden="true"></span>
+    </div>
+    <h1 class="po-title" id="post-title">How models explore ideas</h1>
+    <p class="po-desc">A deep dive into how models explore ideas in AutoResearchExam.</p>
+    <p class="po-authors">Anirudha Ramesh, Advait Parulekar, Shivank Garg, Sid Devic, Alex Dimakis, Maheswaran Sathiamoorthy</p>
+  </header>
+  <figure class="po-cover"><img src="/assets/blog/how-models-explore-ideas/art.4ce63d1cb2.webp" alt="" width="960" height="540" fetchpriority="high" decoding="async"></figure>
+  <div class="po-cols">
+    <aside class="po-side"><nav class="toc" data-toc aria-label="On this page"></nav></aside>
+    <div class="po-main">
+      <div class="rt po-body" data-toc-src>
+<link rel="stylesheet" href="/assets/blog/how-models-explore-ideas/post.8555bc904e.css">
+<p><a href="https://benchmarks.bespokelabs.ai/autoresearchexam/">AutoResearchExam</a> measures the quality, speed and generalization of the solutions models find on long-horizon ML research and engineering tasks.</p>
+<p>We wanted to understand how models go about solving these problems. Does a model commit to its first approach or keep trying new ones, and does trying more ideas actually lead to better solutions? To study this we use idea basins, introduced in <a href="https://arxiv.org/abs/2610.07447">Fork and Flush</a>. An idea basin is a group of submissions to the same task that share a broad method, such as tuning a gradient-boosted model or training a small neural net. Once every submission is placed in a basin, a run becomes a path through ideas, and each move from one basin to another is a switch. We use these paths to answer three questions:</p>
+<ol class="findings">
+  <li><div><span class="q">Do some models explore more ideas than others?</span></div></li>
+  <li><div><span class="q">What does exploration say about research style?</span></div></li>
+  <li><div><span class="q">Does exploring more lead to higher scores?</span></div></li>
+</ol>
+<p>We find that most runs stick with one or two ideas, and models that submit more spend the extra submissions refining and overfit more. Yet exploring a new idea gains about <strong>nine times</strong> as much as a refining step!<br>Models explore most and benefit most in the first six hours, after which visits to new idea basins drop sharply. This suggests models start refining instead of exploring further, leaving potential gains on the table: 58% of runs never reach the basin where the best solution to their task was found.</p>
+<div class="label">Method</div>
+<h2 id="building-the-idea-map">Building the idea map</h2>
+<p>We build the map the same way <a href="https://arxiv.org/abs/2610.07447">Fork and Flush</a> does, with Nimble as the judge. To find basins we need to judge which submissions use the same idea, without looking at scores. Two very different ideas can get the same score, so we group submissions by what their code does instead. Sonnet first summarizes the method in each submission's code. Then <a href="https://docs.bespokelabs.ai/nimble/overview">Nimble</a>, our frontier System One model, compares the summaries three at a time ("is B or C closer to A?"), without knowing which model wrote them. This takes about 1.3 million calls, and Nimble answers them all for under $40 (and it's now available through our API!). We fit a 2D map to those answers, one per task, and <a href="#f-map">cluster it into basins</a>.</p>
+<details id="f-triplet" class="trip-box">
+  <summary>Example comparison</summary>
+  <p class="fig-sub">Three summaries from the CPU decoder task. Nimble is asked whether B or C is closer to A.</p>
+  <div class="trip">
+    <div class="trip-card"><span class="trip-tag">A</span>Plain single-process NumPy executor with BLAS threads capped at min(4, n_workers). For T==1 it collapses attention into a precomputed value-times-output matrix per layer, since softmax over one key is 1, and fuses gate and up weights, all stored Fortran-order. For T&gt;1 it runs fused QKV, RoPE, GQA head expansion, masked scaled softmax into a separate probs buffer, SwiGLU MLP and residuals using preallocated buffers. There is no memory alignment trick, no arena, and no tuning.</div>
+    <div class="trip-card pick"><span class="trip-tag">B</span>Pure NumPy/BLAS executor that fuses Q/K/V into one matmul and gate/up into another, and folds RMSNorm scale vectors into the following weight matrices. For each of the four projection shapes, a build-time microbenchmark picks either the usual (T,K)@(K,N) form or a pre-transposed weight form (N,K)@(K,T), and activation buffers follow that choice. RoPE is applied to q and k together in one pass, and attention uses preallocated buffers with GQA head expansion. The norm sum of squares is accumulated in float64. T==1 gets a special path: attention context is just v, so the GQA broadcast is folded into the output weight, and the work becomes single-vector matmuls.</div>
+    <div class="trip-card"><span class="trip-tag">C</span>A NumPy decoder executor that offloads the projections to a native multithreaded dispatcher. Weights for QKV, output, gate/up and down are split into column panels and prepacked with OpenBLAS's own Haswell SGEMM packing routines. A tiny machine-code dispatcher on pthreads packs the activations, zeroes the output, and runs the OpenBLAS SGEMM kernel per panel across up to 4 spin-waiting threads. RMSNorm runs in a separate AVX2 machine-code kernel. Attention (RoPE, GQA-grouped scores with mask, softmax, context) and SwiGLU stay in preallocated in-place NumPy ops. Self-tests check the packed kernel and the norm kernel at startup, and it falls back to plain NumPy matmuls and norms if the CPU, library or tests fail.</div>
+  </div>
+  <p class="fig-sub" style="margin-top:10px">Nimble picks B. A and B do all the work in NumPy, and C writes its own machine code.</p>
+</details>
+<figure id="f-map">
+  <p class="fig-title">Idea map for Accelerating transformer decoder graphs on CPUs</p>
+  <p class="fig-sub">Each point is one submission, colored by basin. Each panel traces one run, from its first submission (open circle) to its last (large dot).</p>
+  <div class="chart" id="fig-map"></div>
+  <figcaption>Opus 5.5 moves early from Plain NumPy to its own JIT compiler. Qwen3.8 Max stays in Autotuned BLAS. Gemini 3.8 Flash settles within two hours on NumPy + asm kernels and spends the rest of the run tuning that one idea.</figcaption>
+</figure>
+<div class="label">Question 1</div>
+<h2 id="do-some-models-explore-more-ideas-than-others">Do some models explore more ideas than others?</h2>
+<p>We look at exploration three ways:</p>
+<ol class="plain-list">
+  <li><strong>Basins visited.</strong> The average run <a href="#f-families">visits only 1.5 to 2 basins</a>, and <a href="#f-never">47% of runs never leave their first one</a>.</li>
+  <li><strong>Where switches go.</strong> When a model changes approach, <a href="#f-kinds">half the time</a> it <a href="#f-map2">goes back to an idea it already tried</a> instead of a brand new one.</li>
+  <li><strong>Switch rate.</strong> Only <a href="#f-switch">4 to 13% of a model's submissions</a> try a different idea. The rest refine the one it already has.</li>
+</ol>
+<p><strong>No model is a clear explorer. Most runs pick an idea early and stay with it for the full 24 hours.</strong> This matches <a href="https://arxiv.org/abs/2610.07447">Fork and Flush</a>, where single runs mostly stay inside one basin for their whole budget, and <a href="https://arxiv.org/abs/2610.20563">Scaling Discovery Requires Forgetting</a>, where agents become anchored to their own past attempts. Both reduce this by periodically resetting the agent's context and continuing from the best result so far.</p>
+<h3 id="basins-visited">Basins visited</h3>
+<figure id="f-families">
+  <p class="fig-title">Idea basins visited per run</p>
+  <div class="chart" id="fig-families"></div>
+  <figcaption>Model means, 95% intervals. Differences are small: 1.5 to 2.0 per run.</figcaption>
+</figure>
+<figure id="f-never">
+  <p class="fig-title">Runs that never leave their first basin</p>
+  <div class="chart" id="fig-never"></div>
+  <figcaption>47% of all runs spend the full 24 hours on their first idea. This ranges from 31% (Gemini 3.8 Flash) to 62% (Qwen3.8 Max). 95% intervals from resampling tasks.</figcaption>
+</figure>
+<h3 id="moving-on-vs-going-back">Moving on vs. going back</h3>
+<figure id="f-kinds">
+  <p class="fig-title">Switches per run: new ideas vs. returns</p>
+  <div class="legend"><span><i class="sw new"></i>To a new basin</span><span><i class="sw ret"></i>Back to an earlier basin</span></div>
+  <div class="chart" id="fig-kinds"></div>
+  <figcaption>Astra, Gemini 3.8 Flash and Muse Spark 1.3 switch the most, but more than half of those switches are returns. Argon and Sol switch less and usually to something new.</figcaption>
+</figure>
+<figure id="f-map2">
+  <p class="fig-title">Going back and forth: ActivePrune unlabeled pool pruning</p>
+  <p class="fig-sub">Claude Fable 5.1's run, one submission per dot, colored by basin. The large dot is its last submission.</p>
+  <div class="chart" id="fig-map2"></div>
+  <figcaption>Gold is a plain text-quality filter, and red is a two-stage pruner that also models the active-learning loop. Fable 5.1 stays in gold for its first 11 hours, then switches six times between the two in its last 8 hours and never settles.</figcaption>
+</figure>
+<h3 id="switch-rate">Switch rate</h3>
+<figure id="f-switch">
+  <p class="fig-title">Switch rate by model</p>
+  <div class="chart" id="fig-switch"></div>
+  <figcaption>Grok 4.6 (4%) and Grok 4.7 (6%) switch least. The rest sit at 8 to 13% with overlapping intervals.</figcaption>
+</figure>
+<h3 id="what-stands-out-by-model">What stands out by model</h3>
+<ul class="plain-list">
+  <li><strong>Staying put varies about twofold.</strong> Qwen3.8 Max, Grok 4.6 and Claude Fable 5.1 never leave their first idea in about 60% of runs. For GPT-5.6 Sol, Argon and Gemini 3.8 Flash it is about a third.</li>
+  <li><strong>GPT-6 Astra, Gemini 3.8 Flash and Muse Spark 1.3</strong> switch the most, but about two thirds of their switches go back to ideas they already tried. Argon rarely goes back: only a quarter of its switches are returns.</li>
+  <li><strong>GPT-6 Astra submits half as often as GPT-5.6 Sol, yet goes back to old ideas twice as often.</strong> It still comes out ahead, with higher test AUARC (0.60 vs. 0.51) and a quarter of Sol's overfitting gap.</li>
+  <li><strong>Grok 4.7 is a noticeably bolder searcher than Grok 4.6.</strong> It switches 1.5 times as often and leaves its first idea in 55% of runs, up from 41%. Grok 4.6 switches on only 4% of its steps, half the rate of most models.</li>
+</ul>
+<div class="label">Question 2</div>
+<h2 id="what-does-exploration-tell-us-about-research-style">What does exploration tell us about research style?</h2>
+<p>The main AutoResearchExam results describe research style through submission volume and overfitting. We check both against exploration:</p>
+<ol class="plain-list">
+  <li><span class="subq">Do models that submit more explore more?</span><strong>They switch about as often as everyone else, so the extra submissions go into refining.</strong> GPT-5.6 Sol and both Groks submit about three times as often as Opus 5.5 and Argon but switch about as many times, so their <a href="#f-subs">switch rate is much lower</a>.</li>
+  <li><span class="subq">Does exploring relate to overfitting?</span><strong>Overfitting tracks how much a model submits.</strong> Models that switch more do overfit less (ρ = −0.63), but they also submit less. <a href="#f-gap">Submission volume tracks the gap much more closely</a> (ρ = 0.84), and among models that submit about as much, switching barely matters.</li>
+</ol>
+<h3 id="number-of-submissions">Number of submissions</h3>
+<figure id="f-subs">
+  <p class="fig-title">Submission volume vs. switching</p>
+  <div class="grid-2">
+    <div><div class="chart" id="fig-sc-subs-total"></div></div>
+    <div><div class="chart" id="fig-sc-subs-rate"></div></div>
+  </div>
+  <figcaption>Switch count barely moves with volume (left), so switch rate falls (right). This matches the hyperparameter-tuning analysis in the main AutoResearchExam results.</figcaption>
+</figure>
+<h3 id="overfitting">Overfitting</h3>
+<figure id="f-gap">
+  <p class="fig-title">Switch rate and submission volume vs. overfitting</p>
+  <div class="grid-2">
+    <div><div class="chart" id="fig-sc-gap"></div></div>
+    <div><div class="chart" id="fig-sc-subs-gap"></div></div>
+  </div>
+  <figcaption>Gap = share of validation AUARC lost on the hidden test set.</figcaption>
+</figure>
+<div class="label">Question 3</div>
+<h2 id="does-exploring-more-lead-to-higher-scores">Does exploring more lead to higher scores?</h2>
+<ol class="plain-list">
+  <li><span class="subq">Do models that explore more score higher?</span><strong>Yes, if their switches go to new ideas, and most of all early on.</strong> The four top scorers (Opus 5.5, Claude Fable 5.1, GPT-6 Astra and Argon) <a href="#f-score">send more of their switches to new basins</a> than the lowest scorers do (ρ = 0.70 across models). The link is <a href="#f-early">even stronger for test AUARC in the first 6 hours</a> (ρ = 0.84). How often a model switches shows no link.</li>
+  <li><span class="subq">What is a switch worth?</span><strong>A switch to a new idea is followed by about <a href="#f-steps">nine times the gain of a refinement step</a></strong>, and it is about twice as likely to set a new best score. A return to an old idea gains about as much as staying.</li>
+  <li><span class="subq">When does switching pay off?</span><strong>In the first few hours.</strong> In hours 0 to 6 a switch of any kind gains <a href="#f-timing">about 3.5 times as much</a> as a refinement step. After hour 6 the two are about equal.</li>
+  <li><span class="subq">Is late growth tied to switching?</span><strong>We found no link.</strong> Runs that switched after hour 12 <a href="#f-late">gained no more test score over the second half</a> than runs that stayed. Many runs never find the strongest idea at all: 58% never visit the basin where their task's best solution came from.</li>
+</ol>
+<h3 id="exploration-and-score">Exploration and score</h3>
+<figure id="f-score">
+  <p class="fig-title">Share of switches to a new basin vs. test AUARC</p>
+  <div class="chart" id="fig-sc-newshare"></div>
+  <figcaption>Shares are averaged per run. Returns are concentrated in a few runs that go back and forth many times, so most models sit above 50% even though half of all switches are returns.</figcaption>
+</figure>
+<figure id="f-early">
+  <p class="fig-title">Share of switches to a new basin vs. early test AUARC (first 6 hours)</p>
+  <div class="chart" id="fig-sc-early" style="max-width:520px"></div>
+  <figcaption>Models whose switches go to new ideas reach good scores much sooner. Of everything we measured, this relationship is the strongest.</figcaption>
+</figure>
+<h3 id="payoff-of-a-switch">Payoff of a switch</h3>
+<figure id="f-steps">
+  <p class="fig-title">Change in validation score per step</p>
+  <div class="chart" id="fig-steps"></div>
+  <p class="fig-title" style="margin-top:22px">Steps that set a new best score, starting from a working submission</p>
+  <div class="chart" id="fig-newbest"></div>
+  <figcaption>Scores scaled so a trivial baseline is 0 and a strong reference about 0.5. A working submission is one at 90% or more of the run's best so far.</figcaption>
+</figure>
+<h3 id="timing">Timing</h3>
+<figure id="f-timing">
+  <p class="fig-title">Share of steps that are switches</p>
+  <div class="chart" id="fig-timing-share"></div>
+  <p class="fig-title" style="margin-top:22px">Change in validation score per step, by time in the run</p>
+  <div class="chart" id="fig-timing-gain"></div>
+</figure>
+<h3 id="late-growth">Late growth</h3>
+<figure id="f-late">
+  <p class="fig-title">Test score gain from hour 12 to hour 24</p>
+  <div class="chart" id="fig-late"></div>
+</figure>
+<div class="label">Conclusion</div>
+<h2 id="takeaways">Takeaways</h2>
+<ol class="plain-list">
+  <li><strong>Most runs stay with one idea.</strong> Nearly half of all runs stay with their first idea for the full 24 hours, and half of all switches go back to an idea the run already tried.</li>
+  <li><strong>The top scorers send most of their switches to new ideas.</strong> How often a model switches has no link to its score.</li>
+  <li><strong>New ideas pay off early.</strong> A switch to a new idea is followed by about nine times the gain of a refinement step, almost all of it in the first 6 hours. After that, refining does as well, and we see no evidence of models switching ideas well late in a run.</li>
+  <li><strong>Heavy submitters mostly refine, and they overfit the most.</strong> The highest-volume models switch the least per submission and lose the most score on the hidden test set.</li>
+</ol>
+<p>We therefore see an opportunity in model and harness design: push agents to explore new ideas early, and to keep exploring well later in the run so improvements continue over longer time horizons.</p>
+<div class="label">Appendix</div>
+<h2 id="appendix-method-details">Appendix: Method details</h2>
+<details>
+  <summary>Data</summary>
+  <p>Scores are AUARC, the AutoResearchExam metric: hidden test score averaged over the 24-hour run. 348 runs (12 models, 24h each) and 12,656 graded submissions. A submission with the same code as the previous one in its run is dropped, leaving 9,179. A step is the move to the next submission with different code. Switch rates use the 338 runs with at least three distinct submissions.</p>
+</details>
+<details>
+  <summary>Map</summary>
+  <p>Each submission appears in at least 80 triplet questions, each asked twice with B and C swapped; answers where Nimble does not have high certainty are dropped (569,271 remain). The map is a per-task 2D t-STE embedding fit on 90% of answers. As a check, it gets 89% of the held-out 10% right. A baseline that only knows which run each submission came from gets 60%, so the map captures more than run identity (Fork and Flush report 85% vs. 56%). Basins are k-means clusters, 3 to 8 per task, chosen by silhouette score. Intervals are 95% bootstrap intervals over tasks; correlations are Spearman.</p>
+</details>
+<details>
+  <summary>All correlations</summary>
+  <p class="fig-title">Across models (12 model averages)</p>
+  <div class="chart" id="fig-grid-model"></div>
+  <p class="fig-title" style="margin-top:22px">Between runs on the same task (pooled over tasks)</p>
+  <div class="chart" id="fig-grid-run"></div>
+  <p>Spearman's ρ with 95% intervals. Outlined cells have intervals that exclude zero.</p>
+</details>
+<h2 id="references">References</h2>
+<ol>
+  <li>Ziyang Cai, Christos Ziakas, Vasilis Kontonis, Tim Pearce, Siddhartha Sen, Akshay Krishnamurthy, Shivam Garg, Dimitris Papailiopoulos. <a href="https://arxiv.org/abs/2610.07447">Fork-and-Flush: Escaping Idea Basins in Autoresearch Agents</a>. arXiv:2610.07447, 2026.</li>
+  <li>Shangyin Tan, Ben Zhou, Lakshya A Agrawal, Jialin Zhang, Yilin Chen, Qiuyang Mang, Donghyun Lee, Dennis Jacob, Koushik Sen, Alex Dimakis, Matei Zaharia. <a href="https://arxiv.org/abs/2610.20563">Scaling Discovery Requires Forgetting</a>. arXiv:2610.20563, 2026.</li>
+</ol>
+<h2 id="citation">Citation</h2>
+<p>If you found this useful, please cite it as:</p>
+<pre><code class="language-bibtex">@misc{ramesh2026explore,
+author = {Ramesh, Anirudha and Parulekar, Advait and Garg, Shivank and Devic, Sid and Dimakis, Alex and Sathiamoorthy, Maheswaran and {Bespoke Labs}},
+title  = {How models explore ideas},
+year   = {2026},
+url    = {https://www.bespokelabs.ai/blog/how-models-explore-ideas},
+note   = {Bespoke Labs Blog}
+}</code></pre>
+<div id="tip" tabindex="0" hidden></div>
+<script src="/assets/blog/how-models-explore-ideas/d3.min.f2094bbf61.js"></script>
+<script src="/assets/blog/how-models-explore-ideas/data.36875467ae.js"></script>
+<script src="/assets/blog/how-models-explore-ideas/tooltip.fed96a95a7.js"></script>
+<script src="/assets/blog/how-models-explore-ideas/charts.047f5822f7.js"></script>
+<script src="/assets/blog/how-models-explore-ideas/render.3c209eb65f.js"></script>
+<script src="/assets/blog/how-models-explore-ideas/map.5618c4f2ce.js"></script>
+      </div>
+      <div class="po-share">
+        <div class="po-share-links">
+          <p class="po-share-label">Share</p>
+          <a class="po-share-btn" href="https://x.com/intent/post?url=https://bespokelabs.ai/blog/how-models-explore-ideas" target="_blank" rel="noopener" aria-label="Share on X"><svg width="20" height="20" viewBox="0 0 512 512" aria-hidden="true"><path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"/></svg></a>
+          <button class="po-share-btn" type="button" data-copy-link aria-label="Copy link to this post"><svg width="18" height="18" viewBox="0 0 448 512" aria-hidden="true"><path d="M384 336H192c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16l140.1 0L400 115.9V320c0 8.8-7.2 16-16 16zM192 384H384c35.3 0 64-28.7 64-64V115.9c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1H192c-35.3 0-64 28.7-64 64V320c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H256c35.3 0 64-28.7 64-64V416H272v32c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192c0-8.8 7.2-16 16-16H96V128H64z"/></svg></button>
+        </div>
+        <p class="po-share-tags"><span class="tag">Science</span><span class="tag">Build</span><span class="tag">Data</span><span class="tag">Updates</span></p>
+      </div>
+      <nav class="po-see" aria-labelledby="po-see-title">
+        <h2 class="po-see-title" id="po-see-title">See also:</h2>
+        <ul class="po-see-list">
+          <li><a href="/blog/envopt"><span class="po-see-name">EnvOpt: Automated Optimization for Agent Environments</span><time datetime="2026-11-13">Nov 13, 2026</time></a></li>
+          <li><a href="/blog/teaching-nvidias-nemotron-ml-engineering"><span class="po-see-name">Teaching NVIDIA's Nemotron 3.5 Super-VL ML Engineering</span><time datetime="2026-10-15">Oct 15, 2026</time></a></li>
+          <li><a href="/blog/post-training-seewhy-with-intuit-credit-karma"><span class="po-see-name">Post-Training SeeWhy: A Small Specialized Model with Intuit/Credit Karma.</span><time datetime="2026-09-19">Sep 19, 2026</time></a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="po-end" aria-hidden="true"></div>
+  </div>
+</article>
+</main>
+
+<div class="footer-clip">
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="footer-mark" href="/" aria-label="Bespoke Labs home"><svg class="mark" viewBox="0 0 17.62 20.48" aria-hidden="true"><path d="M 14.445 8.196 L 14.445 3.271 C 14.442 1.466 12.978 0.003 11.171 0 L 0 0 L 0 20.48 L 17.612 20.48 L 17.612 15.17 C 17.613 12.499 16.458 9.958 14.445 8.199 L 14.445 8.197 Z M 1.879 1.877 L 11.173 1.877 C 11.941 1.877 12.569 2.502 12.569 3.271 L 12.569 6.917 C 11.257 6.239 9.8 5.886 8.322 5.888 L 1.879 5.888 Z M 1.879 18.603 L 1.879 15.957 L 7.389 15.957 C 7.465 15.957 7.524 16.016 7.524 16.092 L 7.524 18.603 L 1.878 18.603 Z M 9.405 18.603 L 9.405 15.196 C 9.405 14.579 8.903 14.078 8.285 14.078 L 1.879 14.078 L 1.879 11.866 L 8.304 11.866 C 10.14 11.868 11.627 13.354 11.63 15.188 L 11.63 18.601 L 9.405 18.601 Z M 15.733 18.603 L 13.508 18.603 L 13.508 15.191 C 13.505 12.321 11.177 9.996 8.304 9.993 L 1.879 9.993 L 1.879 7.763 L 8.322 7.763 C 12.41 7.763 15.736 11.085 15.736 15.169 L 15.736 18.603 L 15.733 18.603 Z" fill="#f44029"/></svg></a>
+        <p class="footer-tag"><span class="brk">[</span>Environment research<span class="brk">]</span><br>&amp;&nbsp;infrastructure for the agent era.</p>
+      </div>
+      <div class="footer-cols">
+        <nav class="footer-col" aria-label="Our work">
+          <p class="footer-k">01. Our work</p>
+          <ul>
+            <li><a href="https://console.bespokelabs.ai">Nimble</a></li>
+            <li><a href="https://github.com/bespokelabsai/curator">Curator <span class="up" aria-hidden="true">↗</span></a></li>
+            <li><a href="https://github.com/open-thoughts/open-thoughts">OpenThoughts <span class="up" aria-hidden="true">↗</span></a></li>
+            <li><a href="https://arxiv.org/pdf/2601.11868">Terminal-Bench <span class="up" aria-hidden="true">↗</span></a></li>
+            <li><a href="https://arxiv.org/abs/2507.19457">GEPA paper <span class="up" aria-hidden="true">↗</span></a></li>
+          </ul>
+        </nav>
+        <nav class="footer-col" aria-label="Resources">
+          <p class="footer-k">02. Resources</p>
+          <ul>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/#research">Research</a></li>
+            <li><a href="https://jobs.ashbyhq.com/bespokelabs">Careers <span class="up" aria-hidden="true">↗</span></a> <span class="tag-new">New</span></li>
+          </ul>
+        </nav>
+        <nav class="footer-col" aria-label="Social">
+          <p class="footer-k">03. Social</p>
+          <ul>
+            <li><a href="https://x.com/bespokelabsai">X (Twitter)</a></li>
+            <li><a href="https://www.linkedin.com/company/104375224">LinkedIn</a></li>
+            <li><a href="https://discord.com/invite/KqpXvpzVBS">Discord</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="footer-base">
+      <p>©2026 BespokeLabs.AI, Inc.</p>
+      <div class="footer-legal"><a href="/legal/terms-of-use">Terms of use</a><a href="/legal/privacy-policy">Privacy policy</a><a href="/legal/privacy-policy#collection">Notice at collection</a><a href="/legal/privacy-choices" class="iubenda-cs-preferences-link">Cookie preferences</a><a href="/legal/privacy-choices">Do Not Sell or Share My Personal Information</a></div>
+    </div>
+  </div>
+</footer>
+</div>
+
+</body>
+</html>
