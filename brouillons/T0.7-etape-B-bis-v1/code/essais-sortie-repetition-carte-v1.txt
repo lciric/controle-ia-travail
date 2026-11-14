@@ -1,0 +1,33 @@
+# Sortie des essais après l'écriture de la répétition sur carte de l'étape B bis (R-2802 ; modèle A), v1
+# Commit : 02d377369cfaf7daef58fb623d06095b57df48c6 (branche prep/t07bbis-code-v1 ; contenu de la copie de travail identique au
+# commit pendant les passes ; le code de la course est inchangé depuis 1db78884)
+#
+# 1. Arbre complet, 2026-11-14T22:42:54Z → 2026-11-14T22:48:03Z (UTC)
+#    PYTHONPATH=src TMPDIR=<bloc-notes> .venv/bin/python -m pytest -q -rs -p no:cacheprovider --color=no \
+#        tests/test_t07bbis_*.py tests/test_repetition_bbis_v1.py
+#    code de sortie 0 ; compte : 117 passés (108 de la course + 9 de la répétition), 0 sauté
+
+........................................................................ [ 61%]
+.............................................                            [100%]
+=============================== warnings summary ===============================
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+  /usr/local/lib/python3.13/multiprocessing/popen_fork.py:73: DeprecationWarning: This process (pid=9683) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    self.pid = os.fork()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+117 passed, 4 warnings in 306.64s (0:05:06)
+
+# 2. Extraction partielle de l'instance simulée au commit 02d37736 (même procédure que les notes de corrections v1 à v3 ;
+#    motifs identiques), 2026-11-14T22:48:58Z → 22:50:51Z : la commande de l'étape 5 de la course, que l'amorce de répétition
+#    rejoue → code 0 ; « 86 passed, 22 skipped, 4 warnings in 110.41s (0:01:50) » ; MIN_ESSAIS de la course = 86 ;
+#    scripts/repetition_carte_bbis_v1.py hors de l'arbre extrait (l'amorce de répétition le prend au commit par git show).
+#
+# 3. Mesures de la partie carte sur ce processeur (4 cœurs ; un fil de calcul comme la course), sorties dans le bloc-notes :
+#    - 40 actions × 64 dimensions, 9 034 jetons, deux réglages par famille : réussie ; déterministe (deux familles) ; écarts
+#      carte-processeur 7,1·10⁻¹⁵ (linéaire) et 1,4·10⁻⁷ (attention) ;
+#    - 64 actions × 4 096 dimensions (un dixième de la course : 14 796 jetons), un réglage par famille : réussie ; apprentissage
+#      sur processeur 23,1 s (linéaire) et 45,2 s (attention) ; contrôle carte-processeur sur processeur 28,7 s (écart 2,5·10⁻¹³)
+#      et 55,1 s (écart 9,6·10⁻⁹) ; durée totale 228,5 s.
