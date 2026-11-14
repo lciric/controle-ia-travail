@@ -1,0 +1,205 @@
+{
+ "banc": "mutations de la relecture courte v3.1, série A (contre-lecteur, modèle B)",
+ "outil_sha256": "95bc46c1972f91e9692f3bc28d5b8643d5957cc91cd8a39c63eb47f7240dcb44",
+ "debut_utc": "2026-11-14T10:21:14Z",
+ "fin_utc": "2026-11-14T10:29:23Z",
+ "base": "220 passed in 28.81s",
+ "isolement": "unshare -n (espace de noms réseau vide) ; environnement : PATH, HOME, TMPDIR",
+ "mutants": 21,
+ "tues": 20,
+ "survivants": [
+  "D2 — pire cas non recalculé sur les octets envoyés (valeur du manifeste seule)"
+ ],
+ "inapplicables": [],
+ "detail": [
+  {
+   "mutant": "D1",
+   "garde": "dépense",
+   "nom": "plafond dépassable de 0,50 USD",
+   "ancien": "if j[\"depense_usd\"] + pire > plafond + 1e-12:",
+   "nouveau": "if j[\"depense_usd\"] + pire > plafond + 0.5:",
+   "statut": "tue",
+   "sortie": "1 failed, 109 passed in 16.47s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_plafond_arret_avant_l_appel"
+  },
+  {
+   "mutant": "D2",
+   "garde": "dépense",
+   "nom": "pire cas non recalculé sur les octets envoyés (valeur du manifeste seule)",
+   "ancien": "pire = max(e[\"pire_cas_usd\"], pire_cas_usd(len(corps), prix))",
+   "nouveau": "pire = e[\"pire_cas_usd\"]",
+   "statut": "survivant",
+   "sortie": "220 passed in 29.90s"
+  },
+  {
+   "mutant": "D3",
+   "garde": "dépense",
+   "nom": "usage incohérent compté au coût lu, non au pire cas",
+   "ancien": "r[\"cout_usd\"], r[\"au_pire_cas\"] = max(cout, pire_cas), cout <= pire_cas",
+   "nouveau": "r[\"cout_usd\"], r[\"au_pire_cas\"] = cout, False",
+   "statut": "tue",
+   "sortie": "1 failed, 102 passed in 15.83s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_usage_absent_nul_ou_incoherent_compte_au_pire_cas[usage_incoherent-usage_incoherent]"
+  },
+  {
+   "mutant": "D4",
+   "garde": "dépense",
+   "nom": "échec de transport (coupure, délai) compté zéro [traduit]",
+   "ancien": "a = analyser_reponse(statut, rep, pire, prix, len(corps), palier)",
+   "nouveau": "a = analyser_reponse(statut, rep, 0.0 if statut is None else pire, prix, len(corps), palier)",
+   "statut": "tue",
+   "sortie": "1 failed, 113 passed in 16.82s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_panne_illisible_refus[panne-transport_echec]"
+  },
+  {
+   "mutant": "D5",
+   "garde": "dépense",
+   "nom": "réponse 200 illisible (page de passerelle) comptée zéro",
+   "ancien": "    if not isinstance(o, dict):\n        r[\"anomalies\"].append(\"reponse_illisible\")\n        return r",
+   "nouveau": "    if not isinstance(o, dict):\n        r[\"anomalies\"].append(\"reponse_illisible\")\n        r[\"cout_usd\"] = 0.0\n        return r",
+   "statut": "tue",
+   "sortie": "1 failed, 114 passed in 17.37s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_panne_illisible_refus[illisible-reponse_illisible]"
+  },
+  {
+   "mutant": "D6",
+   "garde": "dépense",
+   "nom": "bornes du code (14,20 USD, 18 appels) non revérifiées à l'envoi [traduit]",
+   "ancien": "    if not nombre_fini(plafond) or plafond <= 0 or plafond > PLAFOND_ABSOLU_USD - anterieure + 1e-9:\n        raise Refus(\"manifeste : plafond hors des bornes du code (C4)\")\n    if type(appels_max) is not int or appels_max > MAX_APPELS or appels_max != len(envois):\n",
+   "nouveau": "    if False:\n        raise Refus(\"manifeste : plafond hors des bornes du code (C4)\")\n    if False:\n",
+   "statut": "tue",
+   "sortie": "1 failed, 188 passed in 28.36s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_D6_D7_m1_manifeste_rescelle_revalide_a_l_envoi[plafond_nan]"
+  },
+  {
+   "mutant": "D7",
+   "garde": "dépense",
+   "nom": "prix du manifeste non revalidés à l'envoi [traduit]",
+   "ancien": "    if prix != {**PRIX_LUS[palier], \"source\": SOURCE_PRIX}:\n",
+   "nouveau": "    if False:\n",
+   "statut": "tue",
+   "sortie": "1 failed, 195 passed in 28.70s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_D6_D7_m1_manifeste_rescelle_revalide_a_l_envoi[source]"
+  },
+  {
+   "mutant": "D8",
+   "garde": "dépense",
+   "nom": "garde du nombre d'appels décalée d'un",
+   "ancien": "if j[\"appels\"] >= appels_max:",
+   "nouveau": "if j[\"appels\"] > appels_max:",
+   "statut": "tue",
+   "sortie": "1 failed, 110 passed in 17.08s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_nombre_d_appels_au_journal"
+  },
+  {
+   "mutant": "D9",
+   "garde": "dépense",
+   "nom": "arrêt au plafond non consigné au journal [traduit]",
+   "ancien": "            ajouter_journal(dossier, j, {\"evenement\": \"arret\", \"motif\": \"plafond\", \"detail\": detail}, cle)\n",
+   "nouveau": "            pass\n",
+   "statut": "tue",
+   "sortie": "1 failed, 109 passed in 16.78s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_plafond_arret_avant_l_appel"
+  },
+  {
+   "mutant": "F1",
+   "garde": "fin",
+   "nom": "vérification : seule la fin « length » bloque (content_filter, tool_calls, absente passent)",
+   "ancien": "if c0 and c0.get(\"finish_reason\") != \"stop\":",
+   "nouveau": "if c0 and c0.get(\"finish_reason\") == \"length\":",
+   "statut": "tue",
+   "sortie": "1 failed, 184 passed in 27.78s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_F1_verification_toute_fin_autre_que_stop[content_filter]"
+  },
+  {
+   "mutant": "F2",
+   "garde": "fin",
+   "nom": "envoi : plusieurs choix acceptés (le premier lu)",
+   "ancien": "if not isinstance(ch, list) or len(ch) != 1 or not isinstance(ch[0], dict):\n        r[\"anomalies\"].append(\"choix_non_unique\")",
+   "nouveau": "if not isinstance(ch, list) or len(ch) < 1 or not isinstance(ch[0], dict):\n        r[\"anomalies\"].append(\"choix_non_unique\")",
+   "statut": "tue",
+   "sortie": "1 failed, 176 passed in 28.55s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_R2_aucune_reprise_apres_une_anomalie[deux_choix]"
+  },
+  {
+   "mutant": "F3",
+   "garde": "fin",
+   "nom": "envoi : contenu absent ou vide ignoré (le lot suivant part)",
+   "ancien": "        r[\"anomalies\"].append(\"contenu_absent\")",
+   "nouveau": "        pass",
+   "statut": "tue",
+   "sortie": "1 failed, 159 passed in 27.64s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_M3_reponse_200_mal_formee_gardee_brute[message_non_objet-contenu_absent]"
+  },
+  {
+   "mutant": "F4",
+   "garde": "fin",
+   "nom": "envoi : objet autre que chat.completion accepté",
+   "ancien": "    if o.get(\"object\") != \"chat.completion\":\n        r[\"anomalies\"].append(\"reponse_illisible\")",
+   "nouveau": "    if False:\n        r[\"anomalies\"].append(\"reponse_illisible\")",
+   "statut": "tue",
+   "sortie": "1 failed, 177 passed in 28.90s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_R2_aucune_reprise_apres_une_anomalie[objet]"
+  },
+  {
+   "mutant": "M1",
+   "garde": "modèle servi",
+   "nom": "envoi : espaces de fin tolérés dans le nom servi",
+   "ancien": "if r[\"modele_servi\"] != MODELE_LECTEUR:",
+   "nouveau": "if (r[\"modele_servi\"] or \"\").rstrip() != MODELE_LECTEUR:",
+   "statut": "tue",
+   "sortie": "1 failed, 118 passed in 17.97s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_analyse_modele_exact_et_fin"
+  },
+  {
+   "mutant": "M2",
+   "garde": "modèle servi",
+   "nom": "vérification : nom servi comparé sans la casse",
+   "ancien": "if r.get(\"model\") != MODELE_LECTEUR:",
+   "nouveau": "if str(r.get(\"model\")).lower() != MODELE_LECTEUR:",
+   "statut": "tue",
+   "sortie": "1 failed, 99 passed in 16.40s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_verifier_modele_servi_different_bloque[majuscules]"
+  },
+  {
+   "mutant": "C1",
+   "garde": "clé",
+   "nom": "repli vers une autre variable (os.getenv, invisible au compte des accès à os.environ)",
+   "ancien": "cle = os.environ.pop(VARIABLE_CLE, None)",
+   "nouveau": "cle = os.environ.pop(VARIABLE_CLE, None) or os.getenv(\"OPENAI_KEY\")",
+   "statut": "tue",
+   "sortie": "1 failed, 63 passed in 7.96s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_reseau_et_cle_confines"
+  },
+  {
+   "mutant": "C2",
+   "garde": "clé",
+   "nom": "clé vide acceptée (en-tête « Bearer » nu)",
+   "ancien": "    if not cle:\n        raise Refus(f\"{VARIABLE_CLE} absente",
+   "nouveau": "    if cle is None:\n        raise Refus(f\"{VARIABLE_CLE} absente",
+   "statut": "tue",
+   "sortie": "1 failed, 122 passed in 19.01s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_cle_absente_ou_vide_rien_envoye"
+  },
+  {
+   "mutant": "C3",
+   "garde": "clé",
+   "nom": "type et code d'erreur du fournisseur écrits sans filtre [traduit]",
+   "ancien": "return x if isinstance(x, str) and re.fullmatch(r\"[a-z_]{1,64}\", x) else None",
+   "nouveau": "return x if isinstance(x, str) else None",
+   "statut": "tue",
+   "sortie": "1 failed, 112 passed in 18.00s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_type_et_code_d_erreur_filtres"
+  },
+  {
+   "mutant": "R1",
+   "garde": "reprise",
+   "nom": "reprise permise après un arrêt au plafond",
+   "ancien": "if j[\"anomalies\"] or j[\"arret\"]:",
+   "nouveau": "if j[\"anomalies\"]:",
+   "statut": "tue",
+   "sortie": "1 failed, 109 passed in 16.81s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_plafond_arret_avant_l_appel"
+  },
+  {
+   "mutant": "R2",
+   "garde": "reprise",
+   "nom": "reprise permise après une anomalie autre que la fin (modèle servi, usage, statut, transport)",
+   "ancien": "if j[\"anomalies\"] or j[\"arret\"]:",
+   "nouveau": "if any(a[\"genre\"] == \"fin_non_stop\" for a in j[\"anomalies\"]) or j[\"arret\"]:",
+   "statut": "tue",
+   "sortie": "1 failed, 152 passed in 27.24s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_B2_redirection_par_envoyer_bloquante"
+  },
+  {
+   "mutant": "R3",
+   "garde": "reprise",
+   "nom": "journal : un même envoi consigné deux fois n'est pas refusé",
+   "ancien": "if ev[\"envoi\"] in ouverts or ev[\"envoi\"] in etat[\"clos\"]:",
+   "nouveau": "if False:",
+   "statut": "tue",
+   "sortie": "1 failed, 205 passed in 29.80s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_R3_envoi_consigne_deux_fois_refuse"
+  }
+ ]
+}

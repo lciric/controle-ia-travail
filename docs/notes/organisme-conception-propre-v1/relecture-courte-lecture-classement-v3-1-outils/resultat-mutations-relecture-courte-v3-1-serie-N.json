@@ -1,0 +1,187 @@
+{
+ "banc": "mutations de la relecture courte v3.1, série N (contre-lecteur, modèle B)",
+ "outil_sha256": "95bc46c1972f91e9692f3bc28d5b8643d5957cc91cd8a39c63eb47f7240dcb44",
+ "debut_utc": "2026-11-14T10:21:14Z",
+ "fin_utc": "2026-11-14T10:29:33Z",
+ "base": "220 passed in 28.63s",
+ "isolement": "unshare -n (espace de noms réseau vide) ; environnement : PATH, HOME, TMPDIR",
+ "mutants": 19,
+ "tues": 18,
+ "survivants": [
+  "N3 — Flex : palier servi absent accepté"
+ ],
+ "inapplicables": [],
+ "detail": [
+  {
+   "mutant": "N1",
+   "garde": "palier",
+   "nom": "Flex : `service_tier` non envoyé (prix Flex compté, palier standard servi)",
+   "ancien": "    if SERVICE_TIER[palier] is not None:\n        c[\"service_tier\"]",
+   "nouveau": "    if False:\n        c[\"service_tier\"]",
+   "statut": "tue",
+   "sortie": "1 failed, 207 passed in 29.19s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_palier_flex_corps_manifeste_prix_et_envoi"
+  },
+  {
+   "mutant": "N2",
+   "garde": "palier",
+   "nom": "Flex : palier servi « default » accepté à l'envoi et à la vérification",
+   "ancien": "\"flex\": (\"flex\",)}",
+   "nouveau": "\"flex\": (\"flex\", \"default\")}",
+   "statut": "tue",
+   "sortie": "1 failed, 208 passed in 28.07s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_palier_servi_autre_bloquant[flex-palier_default]"
+  },
+  {
+   "mutant": "N3",
+   "garde": "palier",
+   "nom": "Flex : palier servi absent accepté",
+   "ancien": "\"flex\": (\"flex\",)}",
+   "nouveau": "\"flex\": (\"flex\", None)}",
+   "statut": "survivant",
+   "sortie": "220 passed in 29.97s"
+  },
+  {
+   "mutant": "N4",
+   "garde": "palier",
+   "nom": "vérification : palier servi non contrôlé (l'envoi le contrôle encore)",
+   "ancien": "    if r.get(\"service_tier\") not in PALIERS_SERVIS_ADMIS.get(palier, ()):",
+   "nouveau": "    if False:",
+   "statut": "tue",
+   "sortie": "1 failed, 208 passed in 29.90s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_palier_servi_autre_bloquant[flex-palier_default]"
+  },
+  {
+   "mutant": "N5",
+   "garde": "palier",
+   "nom": "prix de sortie Flex divisé par dix dans le code (25 → 2,5)",
+   "ancien": "\"flex\": {\"entree\": 5.0, \"cache\": 0.5, \"sortie\": 25.0}}",
+   "nouveau": "\"flex\": {\"entree\": 5.0, \"cache\": 0.5, \"sortie\": 2.5}}",
+   "statut": "tue",
+   "sortie": "1 failed, 207 passed in 29.29s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_palier_flex_corps_manifeste_prix_et_envoi"
+  },
+  {
+   "mutant": "N6",
+   "garde": "second dossier",
+   "nom": "unicité : seuls les manifestes v3.1 sont cherchés (un dossier v3 passe)",
+   "ancien": "rglob(\"manifeste-envois-v3*.json\")",
+   "nouveau": "rglob(\"manifeste-envois-v3-1.json\")",
+   "statut": "tue",
+   "sortie": "1 failed, 156 passed in 27.63s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_C6_second_dossier_refuse"
+  },
+  {
+   "mutant": "N7",
+   "garde": "second dossier",
+   "nom": "unicité : `runs/` n'est plus fouillé",
+   "ancien": "for base in (\"docs\", \"runs\") if",
+   "nouveau": "for base in (\"docs\",) if",
+   "statut": "tue",
+   "sortie": "1 failed, 156 passed in 27.52s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_C6_second_dossier_refuse"
+  },
+  {
+   "mutant": "N8",
+   "garde": "second dossier",
+   "nom": "unicité non contrôlée au chargement (envoi, bilan, vérification)",
+   "ancien": "    verifier_unicite(racine, d / MANIFESTE)\n",
+   "nouveau": "    pass\n",
+   "statut": "tue",
+   "sortie": "1 failed, 156 passed in 27.42s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_C6_second_dossier_refuse"
+  },
+  {
+   "mutant": "N9",
+   "garde": "second dossier",
+   "nom": "chemin fixe : seul le dernier nom (« envois ») est contrôlé",
+   "ancien": "    if d.parts[-len(parties):] != parties:",
+   "nouveau": "    if d.name != parties[-1]:",
+   "statut": "tue",
+   "sortie": "1 failed, 219 passed in 30.99s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_C6_chemin_fixe_seul_accepte_dans_une_racine_neuve"
+  },
+  {
+   "mutant": "N10",
+   "garde": "second dossier",
+   "nom": "préparation : dépense antérieure non retranchée du plafond permis",
+   "ancien": "disponible = PLAFOND_ABSOLU_USD - depense_anterieure_usd",
+   "nouveau": "disponible = PLAFOND_ABSOLU_USD",
+   "statut": "tue",
+   "sortie": "1 failed, 28 passed in 1.31s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_preparation_plafond_effort_palier[change10-ant\\xe9rieure]"
+  },
+  {
+   "mutant": "N11",
+   "garde": "second dossier",
+   "nom": "envoi : dépense antérieure non retranchée du plafond permis",
+   "ancien": "plafond > PLAFOND_ABSOLU_USD - anterieure + 1e-9",
+   "nouveau": "plafond > PLAFOND_ABSOLU_USD + 1e-9",
+   "statut": "tue",
+   "sortie": "1 failed, 191 passed in 29.35s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_D6_D7_m1_manifeste_rescelle_revalide_a_l_envoi[plafond_moins_anterieure]"
+  },
+  {
+   "mutant": "N12",
+   "garde": "usage",
+   "nom": "plancher dix fois plus lâche (160 octets par jeton)",
+   "ancien": "PLANCHER_OCTETS_PAR_JETON = 16 ",
+   "nouveau": "PLANCHER_OCTETS_PAR_JETON = 160 ",
+   "statut": "tue",
+   "sortie": "1 failed, 106 passed in 17.86s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_usage_absent_nul_ou_incoherent_compte_au_pire_cas[entree_sous_plancher-usage_incoherent]"
+  },
+  {
+   "mutant": "N13",
+   "garde": "usage",
+   "nom": "plancher de la sortie visible : le raisonnement compte comme visible",
+   "ancien": "    elif c - raison < plancher_visible:",
+   "nouveau": "    elif c < plancher_visible:",
+   "statut": "tue",
+   "sortie": "1 failed, 107 passed in 16.97s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_usage_absent_nul_ou_incoherent_compte_au_pire_cas[sortie_sous_plancher-usage_incoherent]"
+  },
+  {
+   "mutant": "N14",
+   "garde": "usage",
+   "nom": "total sous la somme accepté",
+   "ancien": "    elif total < p + c:\n",
+   "nouveau": "    elif False:\n",
+   "statut": "tue",
+   "sortie": "1 failed, 105 passed in 16.92s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_garde_usage_absent_nul_ou_incoherent_compte_au_pire_cas[total_sous_somme-usage_incoherent]"
+  },
+  {
+   "mutant": "N15",
+   "garde": "clé",
+   "nom": "filtre : l'espace est admis dans la clé",
+   "ancien": "MOTIF_CLE = re.compile(r\"[\\x21-\\x7e]{1,512}\")",
+   "nouveau": "MOTIF_CLE = re.compile(r\"[\\x20-\\x7e]{1,512}\")",
+   "statut": "tue",
+   "sortie": "1 failed, 138 passed in 22.77s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_B1_cle_hors_ascii_imprimable_refusee_avant_tout[ ]"
+  },
+  {
+   "mutant": "N16",
+   "garde": "clé",
+   "nom": "filtre : début de clé seul contrôlé (`match` au lieu de `fullmatch` ; une fin de ligne passe)",
+   "ancien": "    if not MOTIF_CLE.fullmatch(cle):",
+   "nouveau": "    if not MOTIF_CLE.match(cle):",
+   "statut": "tue",
+   "sortie": "1 failed, 135 passed in 21.33s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_B1_cle_hors_ascii_imprimable_refusee_avant_tout[\\r]"
+  },
+  {
+   "mutant": "N17",
+   "garde": "clé",
+   "nom": "réponse 200 écrite sans expurger la clé",
+   "ancien": "            brut, expurgee = expurger(rep, cle)\n",
+   "nouveau": "            brut, expurgee = rep, False\n",
+   "statut": "tue",
+   "sortie": "1 failed, 144 passed in 23.52s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_B1_reponse_qui_porte_la_cle_expurgee_et_bloquante"
+  },
+  {
+   "mutant": "N18",
+   "garde": "redirection",
+   "nom": "gestionnaire sans redirection retiré (seul le contrôle de l'adresse finale reste)",
+   "ancien": "build_opener(SansRedirection, urllib.request.HTTPSHandler(context=contexte))",
+   "nouveau": "build_opener(urllib.request.HTTPSHandler(context=contexte))",
+   "statut": "tue",
+   "sortie": "1 failed, 147 passed in 26.70s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_B2_redirection_jamais_suivie[301]"
+  },
+  {
+   "mutant": "N19",
+   "garde": "provenance",
+   "nom": "vérification : confrontation journal-dossier retirée (reste l'exigence de clôture par réponse)",
+   "ancien": "    controler_coherence(dossier, env[\"manifeste\"], journal)  # M1",
+   "nouveau": "    pass  # M1",
+   "statut": "tue",
+   "sortie": "1 failed, 154 passed in 27.49s | FAILED docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py::test_M1_reponses_deposees_sans_journal_refusees"
+  }
+ ]
+}
