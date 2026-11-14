@@ -12,3 +12,4 @@
 | GO-LECTURE-T07 | 2026-11-13T18:52:44Z | registres/go-extraits/GO-LECTURE-T07-v1.md | 8893d8df3b7366aa9d9eb84548747c586f2798c40956a1baa0d149b8d9630b52 |
 | SCORES-T07 | 2026-11-14T01:55:05Z | donnees/20261114-001352-t07-lecture-reel/scores-actions-t07.npz | 13ac4480035f1ef6d4ea8ac81ffa962c1324e4e9e90a78c1d4f569f2abd0509d |
 | SONDES-T07 | 2026-11-14T01:55:05Z | diag/20261114-001352-t07-lecture-reel/sondes-t07.json | aa6892320f130e96af45e4e70b542b7ccfcea3ccd23d2fdc3e722b5637affa95 |
+| VERDICT-P3BIS | 2026-11-14T10:30:38Z | docs/verdicts/verdict-P3-bis-v1-issue.json | c3a017ce1e8b0c41dee1e430f142590e88bd7104eada02b3a973ac98c0da28d0 |
