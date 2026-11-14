@@ -108,6 +108,12 @@ def test_lecture_complete_cas_sain(env):
     assert set(res["entrees"]["ouvertes"]) <= set(res["fichiers_ouverts"])
     assert {Path(c).name for c in ouverts_hd} >= {"mesures-hd.npz", "textes-actions-hd.jsonl", "sorties-hd-vadapt.json"}
     assert not any(Path(c).name in ("mesures-hd.npz", "textes-actions-hd.jsonl") for c in res["entrees"]["ouvertes"])
+    # VCT8-07 : sans répétition ; VCT8-01 : écarts des parts de balises imposées écrits à côté, par juge et par dose
+    for liste in (res["fichiers_ouverts"], res["entrees"]["ouvertes"]):
+        assert len(liste) == len(set(liste))
+    assert set(res["descriptifs"]["ecarts_balises_imposees"]) == {f"{s}/{d}" for s in ("J8p", "J8r", "J3p", "J3r")
+                                                                 for d in cf.DOSES}
+    assert res["entrees"]["run_course"] == env["runs"]["t08-course-jouet"]
     m = json.loads(Path(r["manifeste"]).read_text())
     assert {"aire/M1/saboteur", "hd/aire/M2/S25", "audit-r4/S100"} <= set(m["graines"])
 
@@ -694,9 +700,10 @@ def _lecture_reelle(env, nom: str, alterer=None, sauf=None, ajout="", lignes=Non
     if alterer is not None:
         alterer(cfg)
     texte, sha = _texte_factice(env, nom, cfg["marqueurs"], sauf, ajout)
-    if lignes is None:
+    if lignes is None:          # CODE-T08 cite le commit du marqueur dans sa cellule « chemin » (VCT8-03)
         lignes = [("SCELLEMENT-T08", fj.instant(h, 2), str(texte.relative_to(racine)), sha),
-                  ("CODE-T08", fj.instant(h, 2), "src/controle_ia/t08 (factice)", "c" * 64)]
+                  ("CODE-T08", fj.instant(h, 2), f"src/controle_ia/t08@{cfg['marqueurs']['COMMIT_CODE_T08']} (factice)",
+                   "c" * 64)]
     cfg["entrees"]["registre_scellements"]["chemin"] = _registre_reel(env, nom, lignes(texte, sha) if callable(lignes)
                                                                       else lignes, retirer)
     return lv.LectureT08(cfg, racine, None, lv.mc.charger_piece("jouet"), prereg=str(texte) if prereg else None)
@@ -707,7 +714,10 @@ def test_etape_a_mode_reel_cas_sain_et_artefacts(env, monkeypatch):
     tâches d'évaluation du texte sont remplacés, pour cet essai seulement, par ceux des tâches factices (déclaré). Cas
     sain ; artefacts : texte scellé sans une valeur de marqueur, autre texte scellé, ligne SCELLEMENT-T08 ou CODE-T08
     absente ou postérieure à COURSE-T08, manifeste de 7b autre que RUN_7B, code de la pièce autre que le marqueur,
-    tâches sans empreinte ou d'un autre fichier, empreinte de 7b autre que le marqueur, aucun texte passé."""
+    tâches sans empreinte ou d'un autre fichier, empreinte de 7b autre que le marqueur, aucun texte passé. VCT8-03 :
+    cas sains (commit du marqueur dans la quatrième cellule de CODE-T08 ; COURSE-T08 tardive, lignes avant le début de
+    la course) ; artefacts : CODE-T08 qui cite un autre commit ou aucun ; SCELLEMENT-T08 ou CODE-T08 postérieure au
+    début de la course (création de son manifeste) mais antérieure à COURSE-T08."""
     h, rel_t = env["h"], str(env["taches"][0].relative_to(env["racine"]))
     monkeypatch.setitem(cf.ENTREES_CONSTANTES, "taches", (rel_t, env["taches"][1]))
     lec = _lecture_reelle(env, "sain")
@@ -716,19 +726,47 @@ def test_etape_a_mode_reel_cas_sain_et_artefacts(env, monkeypatch):
     assert ts["sha256"] == lec.registre["lignes"]["SCELLEMENT-T08"]["sha256"] and ts["valeurs_des_marqueurs_au_texte"] == 9
     assert ts["CODE-T08"]["sha256"] == "c" * 64
 
-    def ligne(cle, s=2):
-        return lambda t, sha: [("SCELLEMENT-T08", fj.instant(h, s if cle == "SCELLEMENT-T08" else 2),
-                                str(t.relative_to(env["racine"])), sha),
-                               ("CODE-T08", fj.instant(h, s if cle == "CODE-T08" else 2), "src/controle_ia/t08", "c" * 64)]
+    commit = _marqueurs_factices(env)["COMMIT_CODE_T08"]
+    code_cite = f"src/controle_ia/t08@{commit}"
+    rel_course = env["config"]["entrees"]["course_t08"]["chemin"]
+    sha_course = empreinte(env["racine"] / rel_course)
+
+    def ligne(cle, s=2, course=None, code=None):
+        """SCELLEMENT-T08 et CODE-T08 (celle de `cle` à h + `s`) ; `course` : ligne COURSE-T08 réinscrite à h + `course`
+        (l'originale, à h + 4 comme la création du manifeste de la course, est alors retirée) ; `code` : cellules
+        (chemin, quatrième) de CODE-T08."""
+        def f(t, sha):
+            ls = [("SCELLEMENT-T08", fj.instant(h, s if cle == "SCELLEMENT-T08" else 2), str(t.relative_to(env["racine"])),
+                   sha),
+                  ("CODE-T08", fj.instant(h, s if cle == "CODE-T08" else 2), *(code or (code_cite, "c" * 64)))]
+            return ls + ([("COURSE-T08", fj.instant(h, course), rel_course, sha_course)] if course is not None else [])
+        return f
+
+    # cas sains de VCT8-03 : commit en quatrième cellule ; COURSE-T08 à h + 20, lignes à h + 3, avant le début (h + 4)
+    _lecture_reelle(env, "sain-commit-4e", lignes=ligne(None, code=("src/controle_ia/t08", commit))).etape_a()
+    lec = _lecture_reelle(env, "sain-course-tard", lignes=ligne("CODE-T08", 3, course=20), retirer=("COURSE-T08",))
+    lec.etape_a()
+    assert set(lec.r["entrees"]["texte_scelle"]["anteriorite_sur"]) == {
+        "COURSE-T08", f"début de la course (création du manifeste {env['runs']['t08-course-jouet']})"}
 
     autre_sha = env["s7b"]["mesures"][1]
     cas = {
         "sans-entropie": (dict(sauf="ENTROPIE_T08"), r"valeurs des marqueurs \['ENTROPIE_T08'\]"),
         "autre-texte": (dict(lignes=lambda t, sha: [("SCELLEMENT-T08", fj.instant(h, 2), "prereg/autre.md", "e" * 64),
-                                                     ("CODE-T08", fj.instant(h, 2), "src", "c" * 64)]),
+                                                     ("CODE-T08", fj.instant(h, 2), code_cite, "c" * 64)]),
                         "autre texte scellé"),
-        "sans-scellement": (dict(lignes=[("CODE-T08", fj.instant(h, 2), "src", "c" * 64)]),
+        "sans-scellement": (dict(lignes=[("CODE-T08", fj.instant(h, 2), code_cite, "c" * 64)]),
                             "ligne SCELLEMENT-T08 absente"),
+        # VCT8-03 : CODE-T08 qui cite un autre commit (quatrième cellule, ou chemin) ou aucun ; ligne postérieure au
+        # début de la course (création de son manifeste, h + 4) mais antérieure à COURSE-T08 (h + 20)
+        "code-autre-commit": (dict(lignes=ligne(None, code=("src/controle_ia/t08", "d" * 40))), "ne cite pas le commit"),
+        "code-autre-commit-chemin": (dict(lignes=ligne(None, code=(f"src@{'d' * 40}", "c" * 64))), "ne cite pas le commit"),
+        "code-sans-commit": (dict(lignes=ligne(None, code=("src/controle_ia/t08 (factice)", "c" * 64))),
+                             "ne cite pas le commit"),
+        "code-apres-debut-course": (dict(lignes=ligne("CODE-T08", 10, course=20), retirer=("COURSE-T08",)),
+                                    "CODE-T08 .* non antérieure à début de la course"),
+        "scellement-apres-debut-course": (dict(lignes=ligne("SCELLEMENT-T08", 10, course=20), retirer=("COURSE-T08",)),
+                                          "SCELLEMENT-T08 .* non antérieure à début de la course"),
         "sans-code": (dict(lignes=lambda t, sha: [("SCELLEMENT-T08", fj.instant(h, 2), str(t.relative_to(env["racine"])),
                                                    sha)]), "ligne CODE-T08 absente"),
         "code-apres-course": (dict(lignes=ligne("CODE-T08", 5)), "CODE-T08 .* non antérieure à COURSE-T08"),
@@ -763,7 +801,8 @@ def test_etape_a_artefacts_des_entrees(env):
     """CLT8C-09 : arrêts de l'étape (a) en mode jouet, un artefact chacun (le cas sain est la lecture complète) :
     chemin ou empreinte autre que la ligne du registre ; empreintes de 7b autres que celles de `episodes-t06.json` ;
     fichier de la course à un autre chemin ou à une autre empreinte que `course-t08.json` ; course d'un autre manifeste
-    de 7b ; `lecture-cout-t06.json` d'un autre run ; ligne de registre manquante."""
+    de 7b ; `lecture-cout-t06.json` d'un autre run ; ligne de registre manquante ; `course-t08.json` rattaché à un
+    autre manifeste que l'entrée `manifeste_course` (VCT8-03)."""
     racine, cfg0 = env["racine"], env["config"]
     course = racine / cfg0["entrees"]["course_t08"]["chemin"]
     s7b = env["s7b"]
@@ -816,6 +855,10 @@ def test_etape_a_artefacts_des_entrees(env):
     def cas_ligne_absente(c):
         c["entrees"]["registre_scellements"]["chemin"] = registre("sans-base-a", {}, retirer=("LECTURE-T08-BASE-A",))
 
+    def cas_manifeste_course(c):            # VCT8-03 : manifeste de la course autre que celui de course-t08.json
+        c["entrees"]["manifeste_course"] = {"chemin": cfg0["entrees"]["manifeste_7b"]["chemin"], "sha256": None,
+                                            "phase": "lecture"}
+
     cas = {
         "manifeste de 7b à un autre chemin que RUN-CONFIRMATION-T06": (cas_manifeste, "manifeste_7b : chemin .* ≠ chemin de la ligne"),
         "course à une autre empreinte que COURSE-T08": (cas_course_empreinte, r"course_t08 : empreinte ≠ celle de la ligne de registre"),
@@ -828,6 +871,7 @@ def test_etape_a_artefacts_des_entrees(env):
             "manifeste_7b_sha256", "0" * 64)), "manifeste de 7b différent"),
         "lecture du coût d'un autre run": (cas_lecture_cout, "d'un autre run"),
         "ligne LECTURE-T08-BASE-A absente": (cas_ligne_absente, "ligne LECTURE-T08-BASE-A absente"),
+        "course-t08.json rattaché à un autre manifeste": (cas_manifeste_course, "rattaché à un autre manifeste"),
     }
     for nom, (alterer, motif) in cas.items():
         c = copy.deepcopy(cfg0)
@@ -917,3 +961,192 @@ def test_ex_aequo_des_surveillants_appris(lecture_h):
         ex = cal[k]["ex_aequo_au_seuil"]
         assert ex is not None and set(ex) == set(STATISTIQUES), k
         assert all(set(v) == {"part_ex_aequo", "egaux_au_seuil"} for v in ex.values()), k
+
+
+# --- seconde passe de corrections (vérification courte) : VCT8-05, VCT8-06, VCT8-07 -----------------------------------
+
+def _hd_ouverts(lec, entrees: dict) -> tuple[dict, list[str]]:
+    """Comme `_hd` (entrées remplacées), et rend aussi les fichiers comptés ouverts par la liste blanche de cette
+    lecture du témoin distillé honnête."""
+    from controle_ia.t08.entrees_v1 import ListeBlanche
+    from controle_ia.t08.temoin_distille_v1 import lire_temoin_distille
+
+    sauve = (lec.lb, lec.config)
+    try:
+        lec.config = {**lec.config, "entrees": {**lec.config["entrees"], **entrees}}
+        lec.lb = ListeBlanche(lec.racine, lec.config["entrees"])
+        return lire_temoin_distille(lec), list(lec.lb.ouvertes)
+    finally:
+        lec.lb, lec.config = sauve
+
+
+def test_hd_registre_du_texte_de_validite_non_present_non_lu(lecture_h, env):
+    """VCT8-05 (a) : le registre du texte de validité n'est lu qu'à l'état « présent » (registre vivant, `scelle:
+    false`). Déclaré scellé — sans compagnon, avec un compagnon conforme, un compagnon qui diffère, un compagnon
+    illisible — il rend « non lue (registre du texte de validité : état « <état> »…) », l'état et son détail écrits,
+    sans être lu (aucune ligne SORTIES-HD-VADAPT rendue, aucun fichier de la pièce HD ouvert) ; il n'est compté ouvert
+    que s'il est « conforme » (son empreinte a été calculée). Cas sain : le même registre déclaré vivant est lu."""
+    racine = env["racine"]
+    e = _piece_hd(env, "vct8-05")
+    r, ouverts = _hd_ouverts(lecture_h, e)                                         # cas sain
+    assert r["etat"] == "lue" and e["registre_vadapt"]["chemin"] in ouverts
+    texte = (racine / e["registre_vadapt"]["chemin"]).read_text()
+    fichiers_hd = {e[n]["chemin"] for n in ("index_hd", "mesures_hd", "textes_hd", "manifeste_hd")}
+
+    def copie(nom: str, compagnon=None, scelle=False) -> str:
+        p = racine / "registres-factices" / f"validite-vct8-05-{nom}.md"
+        p.write_text(texte)
+        if scelle:
+            sceller(p)
+        if compagnon is not None:
+            Path(str(p) + ".sha256").write_text(compagnon)
+        return str(p.relative_to(racine))
+
+    cas = {"compagnon_absent": copie("sans-compagnon"), "conforme": copie("scelle", scelle=True),
+           "differe_du_compagnon": copie("differe", compagnon=f"{'0' * 64}  validite-vct8-05-differe.md\n"),
+           "compagnon_illisible": copie("illisible", compagnon="pas une empreinte\n")}
+    for etat, chemin in cas.items():
+        r, ouverts = _hd_ouverts(lecture_h, {**e, "registre_vadapt": {"chemin": chemin, "sha256": None, "phase": "hd"}})
+        assert r["etat"] == "non lue" and r["etat_registre"] == etat, (etat, r)
+        assert r["motif"].startswith(f"non lue (registre du texte de validité : état « {etat} »") and r["doses"] is None
+        assert "sorties" not in r and not (fichiers_hd & set(ouverts)), etat
+        assert (chemin in ouverts) is (etat == "conforme"), (etat, ouverts)
+
+
+def test_hd_formes_de_7b_absentes_arretent(lecture_h, env, monkeypatch):
+    """VCT8-05 (b) : sans `formes_mesures_7b` (étape (a) non jouée), la lecture du témoin distillé honnête s'arrête
+    (défaut de chaîne : `GardeArret`, non « non calculable »), avant l'ouverture d'aucun fichier de la pièce HD ;
+    `_mesures` sans les formes de 7b : arrêt (la comparaison des types n'est jamais sautée). Cas sain : « lue »."""
+    from controle_ia.t08 import temoin_distille_v1 as td
+    from controle_ia.t08.entrees_v1 import ArretPieceHD, ListeBlanche
+
+    assert _hd(lecture_h)["etat"] == "lue"                                       # cas sain
+    monkeypatch.delattr(lecture_h, "formes_mesures_7b")
+    sauve = lecture_h.lb
+    lecture_h.lb = ListeBlanche(lecture_h.racine, lecture_h.config["entrees"])
+    try:
+        with pytest.raises(GardeArret, match="formes des colonnes") as x:
+            td.lire_temoin_distille(lecture_h)
+        assert not isinstance(x.value, ArretPieceHD)
+        assert not any(Path(c).name in ("mesures-hd.npz", "textes-actions-hd.jsonl", "sorties-hd-vadapt.json")
+                       for c in lecture_h.lb.ouvertes)
+    finally:
+        lecture_h.lb = sauve
+    with pytest.raises(GardeArret, match="formes des colonnes"):
+        td._mesures(env["hd"]["mesures"][0], None)
+
+
+@pytest.mark.parametrize("aire,hors", [(0.39, True), (0.40, False), (0.60, False), (0.61, True), (None, False)])
+def test_echangeabilite_hors_bornes(lecture_h, monkeypatch, aire, hors):
+    """VCT8-06 (M61) : `LectureT08._echangeabilite`, contrôle par action (M1, J8r) : « hors bornes » quand l'aire de H
+    contre l'étalonnage sort de [0,40 ; 0,60] (0,39 et 0,61 : hors ; 0,40 et 0,60, aux bords : dedans ; aire absente :
+    non) ; la réserve « échangeabilité » suit. Aire remplacée pour l'essai ; lectures `max` remplacées (durée)."""
+    monkeypatch.setattr(lv.st, "aire_simple", lambda h, e: aire)
+    monkeypatch.setattr(lv.st, "aire_episodes_par_taches",
+                        lambda *a, **k: {"aire": 0.5, "exclut_05": False, "sens": None})
+    R = lecture_h._echangeabilite()
+    assert R["par_action/M1"] == {"aire": aire, "hors_bornes": hors} and R["par_action/J8r"]["hors_bornes"] is hors
+    desc = {**lecture_h.desc, "echangeabilite": R}
+    res = lv.reserves(desc, lecture_h.r["comptes"], lecture_h.table_D, lecture_h.table_F, lecture_h.calib,
+                      lecture_h.calib_appris, lecture_h.base_a)
+    assert {x["lecture"] for x in res if x["code"] == "echangeabilite"} == (
+        {"par_action/M1", "par_action/J8r"} if hors else set())
+
+
+def test_course_jouet_premiere_action_egale_a_celle_de_h_arrete(tmp_path, monkeypatch):
+    """VCT8-06 (M38) : l'appel de la garde de doublon dans `executer_course`. Une première action d'étalonnage égale à
+    celle de l'épisode H de 7b de la même tâche, injectée dans la course jouet (petit jeu de quatre tâches), arrête la
+    course après l'étalonnage, avant les juges : `course-t08.json` n'est pas écrit. Cas sain : `test_course_jouet_petit_jeu`
+    (même petit jeu, sans injection)."""
+    from controle_ia.t08 import course_v1 as cv
+
+    _git_init(tmp_path)
+    racine = tmp_path / "c"
+    racine.mkdir()
+    ej._copier(cf.INVITE_H12, racine)
+    h = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    _, _, taches = fj.taches_factices(racine, np.random.default_rng(0))
+    petit = taches[:4]
+    ch_t2 = racine / "donnees" / "jouet-taches-4" / "taches-evaluation.json"
+    sha_t2 = fj.ecrire_json(ch_t2, {"run_id": "j4", "manifeste_sha256": None, "resultat": {"taches": petit}})
+    s7b = fj.fabriquer_7b(racine, f"{h}-t06-7b-petit", petit, 7, fj.instant(h))
+    t0 = petit[0]["identifiant"]
+    h0 = next(t["texte"] for t in s7b["textes_liste"]
+              if t["condition"] == cf.HONNETE and t["tache"] == t0 and int(t["pas"]) == 0)
+    vrai = cv.jouer_etalonnage_jouet
+
+    def doublon(config, taches_, g):
+        lignes, textes, graines, info = vrai(config, taches_, g)
+        cible = next(t for t in textes if t["tache"] == t0 and int(t["pas"]) == 0)
+        assert cible["texte"] != h0                                               # sans injection : aucun doublon
+        cible["texte"] = h0
+        return lignes, textes, graines, info
+
+    monkeypatch.setattr(cv, "jouer_etalonnage_jouet", doublon)
+    run = f"{h}-t08-course-doublon"
+    c, _ = ej.configs(racine, {"t08-course-jouet": run}, s7b, None, None, (ch_t2, sha_t2), 7)
+    with pytest.raises(GardeArret, match="identique à celle de l'épisode H de 7b"):
+        cv.executer_course(c, racine, run, autoriser_depot_sale=True)
+    assert (racine / "runs" / run).exists() and not (racine / "diag" / run / "course-t08.json").exists()
+
+
+def test_course_reelle_manifeste_7b_d_un_autre_run(env, monkeypatch):
+    """VCT8-06 (M35) : l'appel de `exiger_run_7b` dans `executer_course` en mode réel. Course réelle sur les entrées
+    factices, jusqu'à son manifeste (remplacé par une sentinelle : rien n'est créé, aucun modèle chargé). Cas sain : les
+    contrôles d'avant le manifeste passent, la sentinelle est atteinte ; artefact : le manifeste de 7b passé est d'un
+    autre run que `RUN_7B` (marqueur, et texte scellé, à un autre identifiant de run) : arrêt avant le manifeste.
+    Arrangements déclarés : tâches et consignes du texte remplacées par des fichiers factices (comme à l'étape (a) en
+    mode réel) ; `exiger_code_importe_sous` remplacée (le code est importé de l'arbre du code, non de la racine
+    factice ; contrôle d'autrui, hors de cet essai) ; commit cité = tête du dépôt factice (`exiger_code_au_commit` joue)."""
+    from controle_ia.t08 import course_v1 as cv
+
+    racine, h = env["racine"], env["h"]
+    rel = lambda p: str(Path(p).relative_to(racine))      # noqa: E731
+    monkeypatch.setitem(cf.ENTREES_CONSTANTES, "taches", (rel(env["taches"][0]), env["taches"][1]))
+    cons = racine / "prereg-factice" / "consignes-factices-course-reelle.md"
+    cons.parent.mkdir(exist_ok=True)
+    cons.write_text("# Consignes factices (essai de la course réelle)\n", encoding="utf-8")
+    sha_cons = sceller(cons)
+    monkeypatch.setitem(cf.ENTREES_CONSTANTES, "consignes", (rel(cons), sha_cons))
+    monkeypatch.setattr(cv, "exiger_code_importe_sous", lambda r: None)
+    tete = subprocess.run(["git", "-C", str(racine), "rev-parse", "HEAD"], capture_output=True, text=True,
+                          check=True).stdout.strip()
+
+    class _Manifeste(Exception):
+        """Sentinelle : la course a passé ses contrôles d'avant le manifeste."""
+
+    def sentinelle(*a, **k):
+        raise _Manifeste()
+
+    monkeypatch.setattr(cv, "creer_manifeste", sentinelle)
+
+    def lancer(nom: str, alterer=None):
+        c, _ = ej.configs(racine, env["runs"], env["s7b"], env["base_a"], env["hd"], env["taches"], ENTROPIE)
+        c.update(mode="reel", max_jetons_raisonnement=cf.MAX_JETONS_RAISONNEMENT)
+        c["entrees"]["consignes"] = {"chemin": rel(cons), "sha256": sha_cons, "phase": "course"}
+        c["marqueurs"] = {**_marqueurs_factices(env), "COMMIT_CODE_T08": tete}
+        if alterer is not None:
+            alterer(c)
+        texte, _ = _texte_factice(env, nom, c["marqueurs"])
+        return cv.executer_course(c, racine, f"{h}-t08-{nom}", str(texte))
+
+    with pytest.raises(_Manifeste):                                               # cas sain
+        lancer("course-reelle-sain")
+    with pytest.raises(GardeArret, match="≠ RUN_7B"):                             # artefact
+        lancer("course-reelle-7b-autre",
+               lambda c: c["marqueurs"]["RUN_7B"].__setitem__("run_id", "20261115-120000-t06-7b-autre"))
+    assert not (racine / "runs" / f"{h}-t08-course-reelle-7b-autre").exists()
+
+
+def test_fichiers_ouverts_sans_repetition(env):
+    """VCT8-07 : `fichiers_ouverts` (et les fichiers ouverts à l'étape (a)) sans répétition, dans l'ordre de leur
+    première ouverture ; le relevé brut de la liste blanche, un par contrôle, répète."""
+    lec = _lecture_jusqu_a_h(env, "lecture-h-ouverts")
+    lec.etape_h_bis()
+    brut = list(lec.lb.ouvertes)
+    assert len(brut) > len(set(brut))
+    f = lec.fichiers_ouverts()
+    assert f == list(dict.fromkeys(brut)) and len(f) == len(set(f))
+    a = lec.r["entrees"]["ouvertes"]
+    assert len(a) == len(set(a)) and f[:len(a)] == a
+    assert f"runs/{env['runs']['t08-course-jouet']}/manifeste.json" in a
