@@ -35,8 +35,8 @@ DEPOT_URL_OFFICIEL=https://github.com/lciric/controle-ia-travail.git
 SEUIL=94000000
 # essais du paquet qui passent sur l'instance (extraction partielle : bout_en_bout sauf un essai, etat_impose et
 # lien_mots_et_cout sautent) ; compte établi par simulation de l'extraction, rapport-developpeur-corrections-v1.md (M3) et
-# recompté après m-A, rapport-developpeur-corrections-v2.md
-MIN_ESSAIS=84
+# recompté après m-A (rapport-developpeur-corrections-v2.md) et après la destruction vérifiée (rapport-developpeur-corrections-v3.md)
+MIN_ESSAIS=86
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
 j() { printf '%s BBIS %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
 BRANCHE_PRETE=0
@@ -45,7 +45,7 @@ fin_instance() {  # état « stopped » demandé ; la minuterie meurt avec le co
     local c
     c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
         -H 'Content-Type: application/json' -d '{"state": "stopped"}' "$API/instances/${CONTAINER_ID:-}/" 2>/dev/null) || c=000
-    j "fin, code $1 ; état « stopped » demandé : HTTP $c ; la session détruit par l'identifiant (R10)"
+    j "fin, code $1 ; état « stopped » demandé : HTTP $c ; la session détruit par l'identifiant (R10, avec -y) et vérifie l'absence de l'identifiant dans la liste des instances (lancer_bbis_v1.sh verifier-destruction)"
     sleep infinity; exit "$1"; }
 # >>> arret-et-traces (extrait et joué par tests/test_t07bbis_chaine_instance_v1.py, mineur m-A)
 traces() { mkdir -p "$D/$XT" && cp -f "$X"/* "$D/$XT/"; }
@@ -87,11 +87,21 @@ if [ "$ESSAI" = 1 ]; then echo "BBIS ESSAI LOCAL : arguments conformes ; aucun r
 mkdir -p "$X" || { echo "BBIS REFUS : $X impossible"; exit 2; }
 [ "$ECHEANCE_UTC_S" -gt "$(date +%s)" ] && [ "$ECHEANCE_UTC_S" -le $(( $(date +%s) + 86400 )) ] || { echo "BBIS REFUS : échéance hors de [maintenant, + 24 h]"; exit 2; }
 case "${CONTAINER_ID:-}" in ''|*[!0-9]*) echo "BBIS REFUS : identifiant de l'instance illisible"; exit 2;; esac
-minuterie() { local n c; while [ "$(date +%s)" -lt "$ECHEANCE_UTC_S" ]; do sleep 30; done
+# >>> minuterie (extrait et joué par tests/test_t07bbis_chaine_instance_v1.py ; défaut R-2789 : une destruction n'est jamais jugée
+#     par un code de retour — tant que ce processus vit, l'instance n'est pas détruite, et la demande est refaite)
+minuterie() { local n=0 c; while [ "$(date +%s)" -lt "$ECHEANCE_UTC_S" ]; do sleep 30; done
     j "MINUTERIE : échéance atteinte : destruction de l'instance $CONTAINER_ID par son identifiant (DELETE)"
-    for n in 1 2 3 4 5; do c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
-        "$API/instances/$CONTAINER_ID/" 2>/dev/null) || c=000; j "MINUTERIE : DELETE, essai $n : HTTP $c"
-        case "$c" in 2??) return 0;; esac; sleep 60; done; }
+    while :; do n=$((n + 1))
+        c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
+            "$API/instances/$CONTAINER_ID/" 2>/dev/null) || c=000
+        j "MINUTERIE : DELETE, essai $n : HTTP $c (code jamais jugé ; seule l'absence de l'identifiant dans la liste des instances, lue par la session, prouve la destruction ; nouvel essai dans 60 s si l'instance vit encore)"
+        if [ "$n" = 5 ]; then
+            c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
+                -H 'Content-Type: application/json' -d '{"state": "stopped"}' "$API/instances/$CONTAINER_ID/" 2>/dev/null) || c=000
+            j "MINUTERIE : instance toujours vivante après 5 demandes de destruction : état « stopped » demandé : HTTP $c ; la session vérifie l'absence (verifier-destruction)"
+        fi
+        sleep 60; done; }
+# <<< minuterie
 minuterie < /dev/null & j "minuterie lancée (PID $!, échéance $(date -u -d "@$ECHEANCE_UTC_S" +%FT%TZ))"
 # 1. machine
 for o in git curl python3 sha256sum awk sed grep stat find sort; do command -v "$o" > /dev/null || arret "outil absent : $o" 2; done

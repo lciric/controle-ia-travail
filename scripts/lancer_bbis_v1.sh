@@ -17,7 +17,14 @@
 #                                    VARIANTE=r1 et DECISION_VARIANTE=R-… (variante (r1), sur le mot de Lazar seulement) ;
 #   depense CUMUL_USD PRIX_CARTE_USD_H   garde de dépense : cumul relevé + un quart d'heure de carte ≥ 39,5 USD → refus et commande
 #                                    de destruction imprimée ;
-#   detruire ID                      imprime la commande de destruction par l'identifiant (R10 ; jamais par motif).
+#   detruire ID                      imprime la commande de destruction par l'identifiant (R10 ; jamais par motif), **avec -y**
+#                                    (R-2789 : sans -y, `vastai` 1.11.0 demande [y/N], abandonne et rend 0), puis la vérification ;
+#                                    refus : identifiant non numérique ou d'une autre session ;
+#   verifier-destruction ID TEMOIN [LISTE.json]
+#                                    la destruction n'est jamais jugée par un code de sortie : absence de ID prouvée dans la
+#                                    liste des instances (`vastai show instances --raw`, lue sans erreur, ou LISTE.json), une
+#                                    instance témoin TEMOIN y étant présente ; sinon « absence non prouvée », code 2 (arrêt et
+#                                    compte rendu ; destruction et vérification à refaire). Lecture seule : rien n'est détruit.
 set -uo pipefail
 PY="${PYTHON_BBIS:-python3}"
 ICI="$(cd "$(dirname "$0")" && pwd)"
@@ -56,11 +63,26 @@ case "${1:-}" in
     depense)
         [ "$#" = 3 ] || { echo "BBIS REFUS : depense CUMUL_USD PRIX_CARTE_USD_H"; exit 2; }
         py_registre depense "$2" "$3"; c=$?
-        [ "$c" = 0 ] || echo "BBIS : arrêt et destruction par l'identifiant (R10) : bash scripts/lancer_bbis_v1.sh detruire <ID>"
+        [ "$c" = 0 ] || echo "BBIS : arrêt et destruction par l'identifiant (R10) : bash scripts/lancer_bbis_v1.sh detruire <ID>, puis bash scripts/lancer_bbis_v1.sh verifier-destruction <ID> <TEMOIN>"
         exit "$c";;
     detruire)
         [ "$#" = 2 ] || { echo "BBIS REFUS : detruire ID"; exit 2; }
         case "$2" in ''|*[!0-9]*) echo "BBIS REFUS : identifiant illisible (destruction par l'identifiant seulement, R10)"; exit 2;; esac
-        echo "GO_ID=$GO_ID vastai destroy instance $2"; exit 0;;
-    *) echo "BBIS REFUS : sous-commande inconnue (offre, creation, commande, depense, detruire)"; exit 2;;
+        py_registre identifiant "$2" > /dev/null || { py_registre identifiant "$2"; exit 2; }
+        echo "GO_ID=$GO_ID vastai destroy instance $2 -y"
+        echo "BBIS PUIS (jamais juger la destruction par le code de sortie) : bash scripts/lancer_bbis_v1.sh verifier-destruction $2 <TEMOIN>"
+        exit 0;;
+    verifier-destruction)
+        [ "$#" = 3 ] || [ "$#" = 4 ] || { echo "BBIS REFUS : verifier-destruction ID TEMOIN [LISTE.json]"; exit 2; }
+        case "$2$3" in ''|*[!0-9]*) echo "BBIS ABSENCE NON PROUVEE : identifiants illisibles : arrêt"; exit 2;; esac
+        if [ "$#" = 4 ]; then LISTE="$4"
+        else
+            DL=$(mktemp -d) || { echo "BBIS ABSENCE NON PROUVEE : dossier de la liste impossible : arrêt"; exit 2; }
+            LISTE="$DL/instances.json"
+            "${VASTAI_BBIS:-vastai}" show instances --raw < /dev/null > "$LISTE" 2> "$DL/instances.err"; c=$?
+            [ "$c" = 0 ] || { echo "BBIS ABSENCE NON PROUVEE : lecture de la liste des instances en échec (code $c, $DL/instances.err) : arrêt"; exit 2; }
+            echo "BBIS liste des instances gardée : $LISTE"
+        fi
+        py_registre absence "$2" "$3" "$LISTE"; exit $?;;
+    *) echo "BBIS REFUS : sous-commande inconnue (offre, creation, commande, depense, detruire, verifier-destruction)"; exit 2;;
 esac

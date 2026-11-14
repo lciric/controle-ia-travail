@@ -18,6 +18,9 @@
   ligne de GO (2026-11-22) ; relance après le samedi 21 novembre 12:00 UTC : nœud.
 - **Garde d'offre** (`exiger_offre`) : A100 SXM4 80 Go, au moins 16 cœurs, 128 000 Mo de mémoire vive, 150 Go de disque,
   stockage au plus 0,08 USD de l'heure, étiquette `bbis-t07-v1` ; aucune H200.
+- **Destruction** (`exiger_identifiant_a_detruire`, `exiger_absence` ; défaut R-2789) : par l'identifiant, avec `-y`, jamais une
+  instance d'une autre session ; jamais jugée par un code de sortie, prouvée par l'absence de l'identifiant dans la liste des
+  instances lue sans erreur, une instance témoin présente ; sinon « absence non prouvée », arrêt.
 - **Garde de dépense** (`garde_depense`) : arrêt et destruction par identifiant (R10) dès que le cumul relevé plus un quart
   d'heure de carte atteint la coupure de 39,5 USD.
 """
@@ -210,8 +213,45 @@ def garde_depense(cumul_releve_usd: float, prix_carte_usd_h: float, coupure: flo
     projete = float(cumul_releve_usd) + QUART_D_HEURE * float(prix_carte_usd_h)
     if projete >= float(coupure):
         raise GardeArret(f"dépense : cumul relevé {cumul_releve_usd:.2f} USD + un quart d'heure de carte = {projete:.2f} USD ≥ "
-                         f"coupure {coupure:g} USD : arrêt et destruction par identifiant (R10)")
+                         f"coupure {coupure:g} USD : arrêt et destruction par identifiant (R10 ; commande avec -y, puis "
+                         "absence de l'identifiant vérifiée dans la liste des instances, R-2789)")
     return {"cumul": float(cumul_releve_usd), "projete": projete, "coupure": float(coupure)}
+
+
+# Instances d'autres sessions (mot de la mère, R-2789, 2026-11-14) : jamais détruites par B bis ; témoins permis.
+INSTANCES_D_AUTRES_SESSIONS = ("58936096", "58936099", "58936100", "60480302", "60599797")
+
+
+def exiger_identifiant_a_detruire(ident: str) -> str:
+    """Identifiant numérique, jamais celui d'une instance d'une autre session (R10 : destruction par l'identifiant seulement)."""
+    ident = str(ident)
+    if not ident.isdigit():
+        raise GardeArret(f"identifiant {ident!r} illisible (destruction par l'identifiant seulement, R10)")
+    if ident in INSTANCES_D_AUTRES_SESSIONS:
+        raise GardeArret(f"instance {ident} d'une autre session : jamais détruite par B bis (R-2789)")
+    return ident
+
+
+def exiger_absence(liste, ident: str, temoin: str) -> dict:
+    """Défaut constaté le 2026-11-14 (R-2789 : avec `vastai` 1.11.0, `destroy instance` sans `-y` abandonne et rend 0) : une
+    destruction n'est **jamais jugée par un code de sortie** ; elle est prouvée par l'absence de l'identifiant dans la liste des
+    instances (`vastai show instances --raw`), lue sans erreur, une instance témoin connue y étant présente. Toute autre issue :
+    « absence non prouvée » → arrêt (compte rendu à la mère, destruction et vérification à refaire)."""
+    ident = exiger_identifiant_a_detruire(ident)
+    temoin = str(temoin)
+    if not temoin.isdigit() or temoin == ident:
+        raise GardeArret(f"absence non prouvée : témoin {temoin!r} illisible ou égal à l'instance détruite : arrêt")
+    instances = liste.get("instances") if isinstance(liste, dict) else liste
+    if not isinstance(instances, list) or any(not isinstance(i, dict) or "id" not in i for i in instances):
+        raise GardeArret("absence non prouvée : liste des instances illisible (liste d'objets portant « id » attendue) : arrêt")
+    ids = {str(i["id"]) for i in instances}
+    if temoin not in ids:
+        raise GardeArret(f"absence non prouvée : témoin {temoin} absent de la liste ({len(ids)} instance(s)) : liste incomplète "
+                         "ou témoin détruit ; arrêt, refaire la lecture avec un témoin présent")
+    if ident in ids:
+        raise GardeArret(f"absence non prouvée : instance {ident} toujours dans la liste (témoin {temoin} présent) : destruction "
+                         "non faite ; arrêt, refaire `vastai destroy instance ID -y` puis la vérification")
+    return {"detruite": ident, "temoin": temoin, "instances_listees": len(ids)}
 
 
 def exiger_offre(offre: dict, identifiant: str | None = None) -> dict:
@@ -272,7 +312,9 @@ def main(argv=None) -> int:
     """Commandes de session (sans réseau) : `offre FICHIER.json [ID]` ; `creation RACINE FEU MAINTENANT RELANCES` ; `depense CUMUL
     PRIX` ; `fiche RACINE CHEMIN_FICHE COMMIT ENTROPIE CHEMIN_EPREUVE FICHIER…` (fiche de `CODE-BBIS`, empreintes des fichiers du
     code lues sur le disque ; la ligne est inscrite ensuite par la mère) ; `ancetre RACINE COMMIT` (commit de la fiche de
-    `CODE-BBIS` ancêtre de COMMIT, correction B1). Code 0 : accepté ; code 2 : refus (motif écrit)."""
+    `CODE-BBIS` ancêtre de COMMIT, correction B1) ; `identifiant ID` (instance à détruire : numérique, jamais d'une autre
+    session) ; `absence ID TEMOIN LISTE.json` (destruction prouvée par l'absence dans la liste lue, témoin présent, R-2789).
+    Code 0 : accepté ; code 2 : refus (motif écrit)."""
     import sys
     from ..scellement import empreinte
     a = list(sys.argv[1:] if argv is None else argv)
@@ -287,13 +329,24 @@ def main(argv=None) -> int:
         elif a[:1] == ["ancetre"] and len(a) == 3:
             r = exiger_ancetre_de_la_fiche(Path(a[1]), a[2])
             print(f"BBIS ANCETRE {r['fiche']['commit']} de {r['tete']}")
+        elif a[:1] == ["identifiant"] and len(a) == 2:
+            print(f"BBIS IDENTIFIANT {exiger_identifiant_a_detruire(a[1])}")
+        elif a[:1] == ["absence"] and len(a) == 4:
+            try:
+                liste = json.loads(Path(a[3]).read_text(encoding="utf-8"))
+            except (OSError, ValueError) as e:
+                raise GardeArret(f"absence non prouvée : liste des instances illisible ({type(e).__name__}) : arrêt") from None
+            r = exiger_absence(liste, a[1], a[2])
+            print(f"BBIS DESTRUCTION PROUVEE {r['detruite']} : absente de la liste, témoin {r['temoin']} présent, "
+                  f"{r['instances_listees']} instance(s) listée(s)")
         elif a[:1] == ["creation"] and len(a) == 5:
             print(f"BBIS CREATION PERMISE {exiger_creation(Path(a[1]), a[2], int(a[3]), int(a[4]))}")
         elif a[:1] == ["depense"] and len(a) == 3:
             print(f"BBIS DEPENSE {garde_depense(float(a[1]), float(a[2]))}")
         else:
             print("BBIS REFUS : commande inconnue (offre FICHIER [ID] | creation RACINE FEU MAINTENANT RELANCES | depense CUMUL PRIX | "
-                  "fiche RACINE CHEMIN_FICHE COMMIT ENTROPIE CHEMIN_EPREUVE FICHIER… | ancetre RACINE COMMIT)")
+                  "fiche RACINE CHEMIN_FICHE COMMIT ENTROPIE CHEMIN_EPREUVE FICHIER… | ancetre RACINE COMMIT | "
+                  "identifiant ID | absence ID TEMOIN LISTE.json)")
             return 2
     except (GardeArret, ValueError, OSError) as e:
         print(f"BBIS REFUS : {e}")
@@ -303,7 +356,8 @@ def main(argv=None) -> int:
 
 __all__ = ["REGISTRE_PROPRE", "REGISTRE_PARTAGE", "CLES_BBIS", "GO_ID", "COUPURE_USD", "ETIQUETTE", "cles_bbis_presentes",
            "exiger_partage_sans_bbis", "ajouter_ligne_propre", "journaliser_ouverture", "ecrire_fiche_code", "lire_fiche_code",
-           "exiger_ancetre", "exiger_ancetre_de_la_fiche", "garde_depense", "exiger_offre", "exiger_creation", "main"]
+           "exiger_ancetre", "exiger_ancetre_de_la_fiche", "garde_depense", "exiger_offre", "exiger_creation",
+           "INSTANCES_D_AUTRES_SESSIONS", "exiger_identifiant_a_detruire", "exiger_absence", "main"]
 
 if __name__ == "__main__":
     raise SystemExit(main())

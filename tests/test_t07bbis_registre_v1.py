@@ -148,8 +148,9 @@ def test_scripts_de_session_syntaxe_et_sous_commandes(tmp_path):
     r = _bash("depense", "39.0", "2.0")
     assert r.returncode == 2 and "destruction" in r.stdout and "detruire" in r.stdout
     assert _bash("depense", "10", "1.3").returncode == 0
-    r = _bash("detruire", "123456")
-    assert r.returncode == 0 and r.stdout.strip() == "GO_ID=GO-2026-11-14-09 vastai destroy instance 123456"
+    r = _bash("detruire", "123456")                                          # -y exigé (R-2789) ; vérification annoncée
+    assert r.returncode == 0 and r.stdout.splitlines()[0] == "GO_ID=GO-2026-11-14-09 vastai destroy instance 123456 -y"
+    assert "verifier-destruction 123456" in r.stdout.splitlines()[1]
     assert _bash("detruire", "inst*").returncode == 2
     assert _bash("creer").returncode == 2
     offre.write_text(json.dumps({"id": 99, "carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 200,

@@ -348,6 +348,104 @@ def test_arret_avant_la_marche_pousse_ses_traces_sans_le_commit_local(tmp_path):
     assert texte.index("SORTIE_LIBRE=1") < texte.index('j "marche : début (run $RUN_BBIS)"')
 
 
+# ------------------------------------------------------------------------------------------------------------ destruction (R-2789)
+
+FAUX_VASTAI = r"""#!/usr/bin/env bash
+# faux outil : comme vastai 1.11.0 le 2026-11-14 (R-2789), `destroy instance ID` sans -y demande [y/N], abandonne sans entrée
+# (« Aborted. ») et rend 0 ; avec -y, retire ID ; `show instances --raw` rend la liste (ou une faute choisie par FAUX_LISTE)
+etat="$FAUX_ETAT"
+case "$1 $2" in
+    "destroy instance")
+        id="$3"; shift 3; oui=0; for a in "$@"; do [ "$a" = -y ] && oui=1; done
+        if [ "$oui" = 0 ]; then printf 'Are you sure you want to destroy instance %s? [y/N]: ' "$id"; read -r rep || rep=""
+            [ "$rep" = y ] || { echo "Aborted."; exit 0; }; fi
+        grep -vx "$id" "$etat" > "$etat.n"; mv "$etat.n" "$etat"; echo "destroying instance $id."; exit 0;;
+    "show instances")
+        case "${FAUX_LISTE:-}" in
+            illisible) echo "Error: not json"; exit 0;;
+            echec) echo "Failed to reach the server" >&2; exit 1;;
+        esac
+        python3 -c 'import json, sys; print(json.dumps([{"id": int(l), "actual_status": "running"} for l in open(sys.argv[1]) if l.strip()]))' "$etat"
+        exit 0;;
+esac
+echo "faux vastai : commande inconnue $*" >&2; exit 1
+"""
+
+
+def _faux_outil(base: Path, ids) -> dict:
+    b = base / "bin"
+    b.mkdir(parents=True)
+    (b / "vastai").write_text(FAUX_VASTAI, encoding="utf-8")
+    (b / "vastai").chmod(0o755)
+    etat = base / "instances.txt"
+    etat.write_text("".join(f"{i}\n" for i in ids), encoding="utf-8")
+    return {"PATH": f"{b}:{os.environ['PATH']}", "FAUX_ETAT": str(etat), "TMPDIR": str(base)}   # listes gardées ici
+
+
+def _jouer_commande_imprimee(ligne: str, env: dict) -> subprocess.CompletedProcess:
+    """Joue la ligne imprimée par `detruire` comme la mère (préfixe GO_ID gardé), entrée standard vide."""
+    assert ligne.startswith("GO_ID=GO-2026-11-14-09 vastai destroy instance ")
+    return subprocess.run(["bash", "-c", ligne], capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                          env={**os.environ, **env})
+
+
+def test_destruction_avec_y_et_absence_prouvee_contre_un_faux_outil(tmp_path):
+    """R-2789 : (1) la commande de destruction porte -y ; (2) la destruction n'est jamais jugée par le code de sortie : absence
+    de l'identifiant prouvée dans la liste lue sans erreur, témoin présent ; (3) le faux outil qui abandonne sans -y et rend 0
+    (le cas du 2026-11-14) est détecté par la chaîne."""
+    env = _faux_outil(tmp_path / "sain", ["123456", "60480302", "777"])
+    r = _lancer("detruire", "123456")
+    ligne = r.stdout.splitlines()[0]
+    assert r.returncode == 0 and ligne == "GO_ID=GO-2026-11-14-09 vastai destroy instance 123456 -y"
+    d = _jouer_commande_imprimee(ligne, env)
+    assert d.returncode == 0 and "destroying instance 123456" in d.stdout
+    v = _lancer("verifier-destruction", "123456", "60480302", env=env)
+    assert v.returncode == 0 and "DESTRUCTION PROUVEE 123456" in v.stdout and "témoin 60480302 présent" in v.stdout, v.stdout
+    # (3) le cas du jour : la même commande sans -y → « Aborted. », code 0 ; l'instance reste ; la chaîne le détecte
+    env = _faux_outil(tmp_path / "sans-y", ["123456", "60480302"])
+    d = _jouer_commande_imprimee(ligne[: -len(" -y")], env)
+    assert d.returncode == 0 and "Aborted." in d.stdout                     # le code 0 ne prouve rien
+    v = _lancer("verifier-destruction", "123456", "60480302", env=env)
+    assert v.returncode == 2 and "absence non prouvée" in v.stdout and "toujours dans la liste" in v.stdout, v.stdout
+    # artefacts de la lecture : témoin absent, liste illisible, lecture en échec, témoin = instance détruite
+    env = _faux_outil(tmp_path / "temoin", ["60480302"])
+    v = _lancer("verifier-destruction", "123456", "999", env=env)
+    assert v.returncode == 2 and "témoin 999 absent" in v.stdout
+    for faute, motif in (("illisible", "liste des instances illisible"), ("echec", "lecture de la liste des instances en échec")):
+        v = _lancer("verifier-destruction", "123456", "60480302", env={**env, "FAUX_LISTE": faute})
+        assert v.returncode == 2 and ("absence non prouvée" in v.stdout or "ABSENCE NON PROUVEE" in v.stdout), (faute, v.stdout)
+        assert motif in v.stdout, (faute, v.stdout)
+    v = _lancer("verifier-destruction", "123456", "123456", env=env)
+    assert v.returncode == 2 and "absence non prouvée" in v.stdout
+    # liste fournie par fichier (forme {"instances": […]} acceptée) ; identifiants d'autres sessions jamais détruits
+    f = tmp_path / "liste.json"
+    f.write_text(json.dumps({"instances": [{"id": 60480302}, {"id": 777}]}), encoding="utf-8")
+    assert _lancer("verifier-destruction", "123456", "60480302", f).returncode == 0
+    f.write_text(json.dumps([{"id": 60480302}, {"nom": "sans id"}]), encoding="utf-8")
+    assert _lancer("verifier-destruction", "123456", "60480302", f).returncode == 2
+    for autre in rb.INSTANCES_D_AUTRES_SESSIONS:
+        r = _lancer("detruire", autre)
+        assert r.returncode == 2 and "autre session" in r.stdout and "vastai destroy" not in r.stdout, autre
+    r = _lancer("depense", "39.0", "2.0")                                   # garde de dépense : -y et vérification annoncés
+    assert r.returncode == 2 and "-y" in r.stdout and "verifier-destruction" in r.stdout
+
+
+def test_minuterie_refait_la_destruction_tant_que_l_instance_vit(tmp_path):
+    """R-2789 : la minuterie de l'amorce ne juge jamais la destruction par le code HTTP : un DELETE « 200 » suivi d'une instance
+    encore vivante est refait toutes les 60 s ; après cinq essais, l'état « stopped » est demandé une fois ; le journal le dit."""
+    appels = tmp_path / "appels.txt"
+    corps = (f'APPELS="{appels}"; API=https://console.vast.ai/api/v0; CONTAINER_ID=123456; ECHEANCE_UTC_S=1\n'
+             'curl() { printf "%s\\n" "$*" >> "$APPELS"; echo 200; }\n'
+             'k=0; sleep() { k=$((k + 1)); [ "$k" -ge 7 ] && exit 0; }\n'
+             + ad.extrait("minuterie") + "minuterie\n")
+    r = ad.jouer(corps)
+    assert r.returncode == 0, r.stdout + r.stderr
+    lignes = appels.read_text(encoding="utf-8").splitlines()
+    assert sum("-X DELETE" in l for l in lignes) == 7 and sum("-X PUT" in l for l in lignes) == 1
+    assert "essai 7 : HTTP 200 (code jamais jugé" in r.stdout and "toujours vivante après 5 demandes" in r.stdout
+    assert "return 0" not in ad.extrait("minuterie")
+
+
 # ------------------------------------------------------------------------------------------------------------ m2
 
 def test_sans_aire_identifiants_de_taches_commencant_par_aire():
