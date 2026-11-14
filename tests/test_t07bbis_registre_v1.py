@@ -152,20 +152,21 @@ def test_scripts_de_session_syntaxe_et_sous_commandes(tmp_path):
     assert r.returncode == 0 and r.stdout.strip() == "GO_ID=GO-2026-11-14-09 vastai destroy instance 123456"
     assert _bash("detruire", "inst*").returncode == 2
     assert _bash("creer").returncode == 2
-    r = _bash("commande", str(tmp_path), "99", "c" * 40, "main", "20261111-151701-t06-reel", "calcul/x", "20261118-090000-bbis-t07",
-              "1795000000", "feu GO-2026-11-14-09", "0", "python:3.11-bookworm")
+    offre.write_text(json.dumps({"id": 99, "carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 200,
+                                 "stockage_usd_h": 0.05, "etiquette": "bbis-t07-v1"}), encoding="utf-8")
+    r = _bash("commande", str(tmp_path), str(offre), "99", "c" * 40, "main", "20261111-151701-t06-reel", "calcul/x",
+              "20261118-090000-bbis-t07", "1795000000", "feu GO-2026-11-14-09", "0", "python:3.11-bookworm")
     assert r.returncode == 2 and "absente" in r.stdout                        # aucune ligne au registre propre : refus
     for k in ("SCELLEMENT-BBIS", "CODE-BBIS", "GO-BBIS"):
         rb.ajouter_ligne_propre(tmp_path, rb.REGISTRE_PROPRE, k, 1789000000, "x", "f" * 64)
-    r = _bash("commande", str(tmp_path), "99", "c" * 40, "main", "20261111-151701-t06-reel", "calcul/x", "20261118-090000-bbis-t07",
-              "1795000000", "feu GO-2026-11-14-09", "0", "python:3.11-bookworm")
+    r = _bash("commande", str(tmp_path), str(offre), "99", "c" * 40, "main", "20261111-151701-t06-reel", "calcul/x",
+              "20261118-090000-bbis-t07", "1795000000", "feu GO-2026-11-14-09", "0", "python:3.11-bookworm")
     if time.time() > rb._instant(rb.ECHEANCE_GO):                            # après l'échéance de la ligne de GO : refus
         assert r.returncode == 2 and "échéance" in r.stdout
-    else:
-        assert r.returncode == 0 and "vastai create instance 99" in r.stdout and "--label bbis-t07-v1" in r.stdout
-        assert "HF_TOKEN=$HF_TOKEN" in r.stdout and "GO_ID=GO-2026-11-14-09 vastai" in r.stdout
-    r = _bash("commande", str(tmp_path), "99", "c" * 39, "main", "20261111-151701-t06-reel", "calcul/x", "20261118-090000-bbis-t07",
-              "1795000000", "feu GO-2026-11-14-09", "0", "python:3.11-bookworm")
+    else:                                                 # fiche citée absente : la garde d'ancêtre refuse (B1) ; le cas sain
+        assert r.returncode == 2 and "absent" in r.stdout  # de la commande est dans test_t07bbis_chaine_instance_v1
+    r = _bash("commande", str(tmp_path), str(offre), "99", "c" * 39, "main", "20261111-151701-t06-reel", "calcul/x",
+              "20261118-090000-bbis-t07", "1795000000", "feu GO-2026-11-14-09", "0", "python:3.11-bookworm")
     assert r.returncode == 2 and "amorce" in r.stdout
 
 

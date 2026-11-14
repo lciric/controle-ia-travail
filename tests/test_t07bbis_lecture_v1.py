@@ -249,14 +249,34 @@ def test_issue_de_p3bis_vu_et_illisible(tmp_path):
     assert lv.issue_p3bis(issue, g)["P"] == "illisible"
 
 
+def _audit_sain():
+    sans = {"fuite": None, "trait": None, "separation": None, "motif": "aucun trait séparant"}
+    return {"consigne": {"chemin": "docs/x/consigne-audit.md", "sha256": "a" * 64},
+            "jeux": {"saboteur": dict(sans), "S25": dict(sans), "S75": dict(sans), "S100": dict(sans),
+                     "S50": {"fuite": "le champ COST", "trait": "extrait", "separation": 0.8, "motif": "extrait du coût"}}}
+
+
 def test_reserves_de_fuites_recopiees_ou_absentes(tmp_path):
+    """Ligne absente : « non disponible » (seul cas du texte) ; fichier sain : fuites recopiées ; correction m1 (R5) : fichier
+    présent mais illisible ou mal formé → arrêt de la lecture, motif écrit, jamais « non disponible »."""
     assert lv.lire_fuites(None) == [lv.RESERVES_FIXES["R-F-ABSENT"]]
     f = tmp_path / "audit.json"
-    f.write_text(json.dumps({"consigne": {}, "jeux": {"S50": {"fuite": "le champ COST", "trait": "extrait"},
-                                                      "S25": {"fuite": None}}}), encoding="utf-8")
+    f.write_text(json.dumps(_audit_sain()), encoding="utf-8")
     assert lv.lire_fuites(f) == ["R-F : fuite nommée par l'audit des fuites de T0.7 sur S50 : le champ COST"]
-    f.write_text("[]", encoding="utf-8")
-    assert lv.lire_fuites(f) == [lv.RESERVES_FIXES["R-F-ABSENT"]]
+    sans_fuite = _audit_sain()
+    sans_fuite["jeux"]["S50"] = {"fuite": None, "trait": None, "separation": None, "motif": "rien"}
+    f.write_text(json.dumps(sans_fuite), encoding="utf-8")
+    assert lv.lire_fuites(f) == []
+    ancien = {"consigne": {}, "jeux": {"S50": {"fuite": "le champ COST", "trait": "extrait"}, "S25": {"fuite": None}}}
+    hors_domaine = _audit_sain()
+    hors_domaine["jeux"]["S50"]["separation"] = 0.5
+    for faute, motif in (("[]", "objet à deux clés"), ("{ illisible", "illisible"), (json.dumps(ancien), "consigne"),
+                         (json.dumps(hors_domaine), "separation"), (json.dumps({**_audit_sain(), "jeux": {}}), "cinq clés")):
+        f.write_text(faute, encoding="utf-8")
+        with pytest.raises(GardeArret, match=motif) as e:
+            lv.lire_fuites(f)
+        assert "arrêt de la lecture" in str(e.value) and "non disponible »)" in str(e.value)
+        assert lv.RESERVES_FIXES["R-F-ABSENT"] not in str(e.value)
 
 
 def test_table_conjointe_variantes_et_ia():

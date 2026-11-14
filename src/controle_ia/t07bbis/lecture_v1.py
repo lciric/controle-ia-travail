@@ -564,17 +564,27 @@ def marque_g3(racine: Path, run_7b: str) -> str | None:
 
 
 def lire_fuites(chemin: Path | None) -> list[str]:
-    """R-F : fuites nommées par l'audit des fuites de T0.7 (`jeux.<jeu>.fuite`, non nulle), recopiées ; fichier absent ou d'une
-    autre forme : « audit des fuites non disponible »."""
+    """R-F : fuites nommées par l'audit des fuites de T0.7 (`jeux.<jeu>.fuite`, non nulle), recopiées ; ligne
+    `AUDIT-FUITES-T07` absente (`chemin` nul) : « audit des fuites non disponible » (seul cas prévu par le texte). Correction m1
+    (R5) : un fichier présent mais illisible ou hors du domaine de `t07.criteres_v1.valider_audit_fuites` (cinq jeux, `fuite`
+    nulle ou texte non vide, `trait`, `separation`, `motif` ; la consigne est contrôlée dans sa forme, son égalité à la ligne
+    `CONSIGNE-AUDIT-FUITES-T07` relevant de T0.7) **arrête la lecture**, motif écrit ; jamais « non disponible »."""
     if chemin is None:
         return [RESERVES_FIXES["R-F-ABSENT"]]
+    from ..t07.criteres_v1 import AuditIllisible, valider_audit_fuites
     try:
         doc = json.loads(Path(chemin).read_text(encoding="utf-8"))
-        jeux = doc["jeux"]
-        return [f"R-F : fuite nommée par l'audit des fuites de T0.7 sur {j} : {v['fuite']}" for j, v in sorted(jeux.items())
-                if v.get("fuite")]
-    except (OSError, ValueError, KeyError, TypeError, AttributeError):
-        return [RESERVES_FIXES["R-F-ABSENT"]]
+    except (OSError, ValueError) as e:
+        raise GardeArret(f"audit des fuites {chemin} présent mais illisible ({type(e).__name__}: {e}) : arrêt de la lecture "
+                         "(R5 ; jamais « non disponible »)") from None
+    c = doc.get("consigne") if isinstance(doc, dict) else None
+    c = c if isinstance(c, dict) else {}
+    try:
+        v = valider_audit_fuites(doc, c.get("chemin"), c.get("sha256"))
+    except AuditIllisible as e:
+        raise GardeArret(f"{e} ({chemin}) : arrêt de la lecture (R5 ; jamais « non disponible »)") from None
+    return [f"R-F : fuite nommée par l'audit des fuites de T0.7 sur {j} : {x['fuite']}" for j, x in sorted(v["jeux"].items())
+            if x["fuite"] is not None]
 
 
 def lire_mesures(garde: GardeEntrees, racine: Path, run_7b: str) -> dict:
@@ -1077,6 +1087,9 @@ def lire(racine: Path, run_7b: str, run_bbis: str, instant: int, adaptateur_mc=N
         return res
     res["module_gele"] = ad.exiger_module_gele()
     res["lignes"] = {"propres": propres, "partagees": partagees}
+    # m1 : l'audit des fuites est lu avant toute grandeur (un fichier présent et mal formé arrête la lecture avant le calcul)
+    chemin_fuites = garde.exiger(partagees["AUDIT-FUITES-T07"]["chemin"]) if "AUDIT-FUITES-T07" in partagees else None
+    reserves_fuites = lire_fuites(chemin_fuites)
     sondes_doc = json.loads(garde.exiger(propres["SCORES-BBIS"]["chemin"]).read_text(encoding="utf-8"))
     fiche = lire_fiche_code(garde.exiger(propres["CODE-BBIS"]["chemin"]))
     graines = Graines(int(fiche["entropie"]), reelle=reel)
@@ -1160,8 +1173,7 @@ def lire(racine: Path, run_7b: str, run_bbis: str, instant: int, adaptateur_mc=N
     reserves = reserves_cellules({**p_ii, **{f"{d} (transfert)": c for d, c in t_ii.items()}}, plafond["P-instruit"])
     reserves += [f"R-MU : la sonde s'allume aussi sur le jumeau honnête à {d}" for d, q in
                  (res["issue"].get("qualifications") or {}).items() if q["R-MU"]]
-    chemin_fuites = garde.exiger(partagees["AUDIT-FUITES-T07"]["chemin"]) if "AUDIT-FUITES-T07" in partagees else None
-    reserves += lire_fuites(chemin_fuites)
+    reserves += reserves_fuites
     reserves.append(RESERVES_FIXES["R-REET"])
     reserves += mc["reserves"]
     if marque:

@@ -11,7 +11,8 @@
   (entier de 128 bits écrit en décimal), `epreuve_niveau` {`chemin`, `sha256`, `taux` (cellule → taux), `niveau_decisif_retenu`,
   `cout`}, `niveau_decisif` (0,99 ou 0,995, celui de l'épreuve, appliqué mécaniquement). **Garde** : l'épreuve de niveau absente,
   réduite (non complète), d'entropie autre que celle de la fiche, ou dont le niveau retenu n'est pas celui de sa règle → la fiche
-  n'est pas écrite et `CODE-BBIS` n'est pas inscrite (liste d'arrêt).
+  n'est pas écrite et `CODE-BBIS` n'est pas inscrite (liste d'arrêt). **Garde d'ancêtre** (`exiger_ancetre`, correction B1) :
+  le commit de la fiche doit être un ancêtre de la tête (commit qui porte les lignes du registre propre), jamais son égal exigé.
 - **Garde de création** (`exiger_creation`) : aucune création sans `SCELLEMENT-BBIS`, `CODE-BBIS`, `GO-BBIS` (extrait de
   `GO-2026-11-14-09`) au registre propre et le feu écrit de la mère portant ce numéro ; une relance au plus ; échéance de la
   ligne de GO (2026-11-22) ; relance après le samedi 21 novembre 12:00 UTC : nœud.
@@ -161,6 +162,47 @@ def lire_fiche_code(chemin: Path) -> dict:
     return {**f, "entropie": entropie, "niveau_decisif": niveau}
 
 
+def exiger_ancetre(racine: Path, ancetre: str, tete: str = "HEAD") -> str:
+    """Correction B1 (contre-lecture du code, modèle C) : le commit de la fiche de `CODE-BBIS` doit être un **ancêtre** de la tête
+    (ou la tête elle-même) — la ligne `CODE-BBIS` cite la fiche, qui cite le commit du code : un commit ne peut porter un fichier
+    qui contient son propre identifiant, la tête de l'instance est donc postérieure au commit du code. Objet absent du dépôt, tête
+    illisible ou commit non ancêtre : arrêt (R11). Rend l'identifiant complet de la tête. Le contenu du code fait foi par les
+    empreintes de la fiche, contrôlées fichier par fichier à part (`marche_v1.gardes_d_entree`)."""
+    import subprocess
+    if not isinstance(ancetre, str) or not COMMIT.fullmatch(ancetre):
+        raise GardeArret(f"commit {ancetre!r} de CODE-BBIS : 40 caractères hexadécimaux attendus : arrêt (R11)")
+
+    def git(*a):
+        return subprocess.run(["git", "-C", str(racine), *a], capture_output=True, text=True)
+
+    if git("cat-file", "-e", f"{ancetre}^{{commit}}").returncode != 0:
+        raise GardeArret(f"commit {ancetre[:12]} de CODE-BBIS absent du dépôt {racine} : arrêt (R11)")
+    r = git("rev-parse", "--verify", "-q", f"{tete}^{{commit}}")
+    t = r.stdout.strip()
+    if r.returncode != 0 or not COMMIT.fullmatch(t):
+        raise GardeArret(f"tête {tete!r} illisible dans {racine} : arrêt (R11)")
+    r = git("merge-base", "--is-ancestor", ancetre, t)
+    if r.returncode == 1:
+        raise GardeArret(f"commit {ancetre[:12]} de CODE-BBIS n'est pas un ancêtre de la tête {t[:12]} : arrêt (R11)")
+    if r.returncode != 0:
+        raise GardeArret(f"git merge-base --is-ancestor a échoué ({r.stderr.strip()[:200]}) : arrêt (R11)")
+    return t
+
+
+def exiger_ancetre_de_la_fiche(racine: Path, tete: str = "HEAD") -> dict:
+    """Ligne `CODE-BBIS` du registre propre (sceau vérifié), fiche lue, commit de la fiche ancêtre de `tete` (`exiger_ancetre`)."""
+    from ..t07 import registre_v1 as rg
+    from .lecture_v1 import CLES_PROPRES, RefusLecture, lire_lignes
+    racine = Path(racine)
+    try:
+        ligne = lire_lignes(racine / REGISTRE_PROPRE, CLES_PROPRES, ("CODE-BBIS",), propre=True)["CODE-BBIS"]
+    except RefusLecture as e:
+        raise GardeArret(f"registre propre : {e}") from None
+    rg.sceau_conforme(racine / ligne["chemin"], ligne["sha256"])
+    fiche = lire_fiche_code(racine / ligne["chemin"])
+    return {"fiche": fiche, "tete": exiger_ancetre(racine, fiche["commit"], tete)}
+
+
 # ------------------------------------------------------------------------------------------------ offre, création, dépense
 
 def garde_depense(cumul_releve_usd: float, prix_carte_usd_h: float, coupure: float = COUPURE_USD) -> dict:
@@ -172,9 +214,15 @@ def garde_depense(cumul_releve_usd: float, prix_carte_usd_h: float, coupure: flo
     return {"cumul": float(cumul_releve_usd), "projete": projete, "coupure": float(coupure)}
 
 
-def exiger_offre(offre: dict) -> dict:
-    """Offre dans les bornes du devis ; H200 exclue (mot de Lazar seulement)."""
+def exiger_offre(offre: dict, identifiant: str | None = None) -> dict:
+    """Offre dans les bornes du devis ; H200 exclue (mot de Lazar seulement). `identifiant` (sous-commande `commande` de
+    `scripts/lancer_bbis_v1.sh`, correction m5) : l'offre décrite doit porter cet identifiant numérique (clé `id`)."""
     fautes = []
+    if identifiant is not None:
+        if not str(identifiant).isdigit():
+            fautes.append(f"identifiant d'offre {identifiant!r} illisible")
+        elif str(offre.get("id")) != str(identifiant):
+            fautes.append(f"identifiant {offre.get('id')!r} de l'offre décrite ≠ offre demandée {identifiant}")
     nom = str(offre.get("carte", "")).upper()
     if "H200" in nom:
         fautes.append("H200 exclue (mot de Lazar seulement)")
@@ -221,9 +269,10 @@ def exiger_creation(racine: Path, feu_ecrit: str, maintenant: int, relances: int
 
 
 def main(argv=None) -> int:
-    """Commandes de session (sans réseau) : `offre FICHIER.json` ; `creation RACINE FEU MAINTENANT RELANCES` ; `depense CUMUL
+    """Commandes de session (sans réseau) : `offre FICHIER.json [ID]` ; `creation RACINE FEU MAINTENANT RELANCES` ; `depense CUMUL
     PRIX` ; `fiche RACINE CHEMIN_FICHE COMMIT ENTROPIE CHEMIN_EPREUVE FICHIER…` (fiche de `CODE-BBIS`, empreintes des fichiers du
-    code lues sur le disque ; la ligne est inscrite ensuite par la mère). Code 0 : accepté ; code 2 : refus (motif écrit)."""
+    code lues sur le disque ; la ligne est inscrite ensuite par la mère) ; `ancetre RACINE COMMIT` (commit de la fiche de
+    `CODE-BBIS` ancêtre de COMMIT, correction B1). Code 0 : accepté ; code 2 : refus (motif écrit)."""
     import sys
     from ..scellement import empreinte
     a = list(sys.argv[1:] if argv is None else argv)
@@ -232,16 +281,19 @@ def main(argv=None) -> int:
             racine = Path(a[1])
             f = ecrire_fiche_code(racine, a[2], a[3], {p: empreinte(racine / p) for p in a[6:]}, int(a[4]), a[5])
             print(f"BBIS FICHE ECRITE {a[2]} {f['sha256']} niveau décisif {f['niveau_decisif']}")
-        elif a[:1] == ["offre"] and len(a) == 2:
-            exiger_offre(json.loads(Path(a[1]).read_text(encoding="utf-8")))
+        elif a[:1] == ["offre"] and len(a) in (2, 3):
+            exiger_offre(json.loads(Path(a[1]).read_text(encoding="utf-8")), a[2] if len(a) == 3 else None)
             print("BBIS OFFRE ACCEPTEE")
+        elif a[:1] == ["ancetre"] and len(a) == 3:
+            r = exiger_ancetre_de_la_fiche(Path(a[1]), a[2])
+            print(f"BBIS ANCETRE {r['fiche']['commit']} de {r['tete']}")
         elif a[:1] == ["creation"] and len(a) == 5:
             print(f"BBIS CREATION PERMISE {exiger_creation(Path(a[1]), a[2], int(a[3]), int(a[4]))}")
         elif a[:1] == ["depense"] and len(a) == 3:
             print(f"BBIS DEPENSE {garde_depense(float(a[1]), float(a[2]))}")
         else:
-            print("BBIS REFUS : commande inconnue (offre FICHIER | creation RACINE FEU MAINTENANT RELANCES | depense CUMUL PRIX | "
-                  "fiche RACINE CHEMIN_FICHE COMMIT ENTROPIE CHEMIN_EPREUVE FICHIER…)")
+            print("BBIS REFUS : commande inconnue (offre FICHIER [ID] | creation RACINE FEU MAINTENANT RELANCES | depense CUMUL PRIX | "
+                  "fiche RACINE CHEMIN_FICHE COMMIT ENTROPIE CHEMIN_EPREUVE FICHIER… | ancetre RACINE COMMIT)")
             return 2
     except (GardeArret, ValueError, OSError) as e:
         print(f"BBIS REFUS : {e}")
@@ -251,7 +303,7 @@ def main(argv=None) -> int:
 
 __all__ = ["REGISTRE_PROPRE", "REGISTRE_PARTAGE", "CLES_BBIS", "GO_ID", "COUPURE_USD", "ETIQUETTE", "cles_bbis_presentes",
            "exiger_partage_sans_bbis", "ajouter_ligne_propre", "journaliser_ouverture", "ecrire_fiche_code", "lire_fiche_code",
-           "garde_depense", "exiger_offre", "exiger_creation", "main"]
+           "exiger_ancetre", "exiger_ancetre_de_la_fiche", "garde_depense", "exiger_offre", "exiger_creation", "main"]
 
 if __name__ == "__main__":
     raise SystemExit(main())

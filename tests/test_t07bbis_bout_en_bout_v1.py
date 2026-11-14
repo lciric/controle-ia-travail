@@ -178,8 +178,8 @@ def test_marche_reelle_refusee_hors_instance_ou_sans_registre(marche_jouet, monk
     try:
         reg.write_text("".join(l for l in avant.splitlines(keepends=True) if not l.startswith("| SCORES-BBIS |")),
                        encoding="utf-8")
-        with pytest.raises(GardeArret, match="commit du dépôt"):
-            ma.gardes_d_entree(d, aide.RUN)                              # commit de la fiche jouet ≠ tête du dépôt
+        with pytest.raises(GardeArret, match="absent du dépôt"):
+            ma.gardes_d_entree(d, aide.RUN)                              # commit de la fiche jouet (cccc…) absent : B1, ancêtre exigé
     finally:
         reg.write_text(avant, encoding="utf-8")
     with pytest.raises(GardeArret, match="64 bits"):
@@ -275,3 +275,46 @@ def test_aires_de_controle_de_mc_sur_toutes_les_actions():
         m = rep.apprendre(ad.BASE_B, app, np.array([l["condition"] == "S50" for l in app], int), centres, "S50")
         aires.append(aire_sous_courbe(rep.noter(m, lu, centres, "lu"), np.array([l["condition"] == "S50" for l in lu], int)))
     assert a["S50"][1] == (aires[0] + aires[1]) / 2.0
+
+
+def test_commit_local_des_entrees_et_arret_ecrit_sur_une_course_jouet(tmp_path, monkeypatch):
+    """Corrections M1 et M2 (contre-lecture du code, modèle C) sur la chaîne vraie, en mode jouet : entrées de 7b commitées
+    localement (comme l'amorce) → arbre propre, manifeste de la marche citant ce commit et son parent ; erreur de torch simulée
+    pendant l'apprentissage → arrêt écrit (`arret-marche-bbis.json`, scellé, sans aire ni score), jamais une chute ; la marche
+    n'écrit que sous `runs/<run>` et `diag/<run>` (aucun fichier suivi touché : la branche de sortie créée depuis COMMIT est sûre)."""
+    import subprocess
+    from controle_ia.gardes import etat_git
+    from controle_ia.scellement import verifier
+    from controle_ia.t07bbis import validation_imbriquee_v1 as vi
+    if not aide.disponible():
+        pytest.skip("chaîne de T0.6 absente de ce clone")
+    d = aide.course_jouet(tmp_path / "depot")
+    tete = lambda ref: subprocess.run(["git", "-C", str(d), "rev-parse", ref], capture_output=True, text=True,
+                                      check=True).stdout.strip()
+    commit = tete("HEAD")
+    aide.git(d, "add", "-f", "--", f"runs/{aide.RUN}", f"diag/{aide.RUN}", f"donnees/{aide.RUN}")
+    aide.git(d, "commit", "-q", "-m", "entrées de 7b, commit local")
+    assert etat_git(d)["propre"]
+
+    def panne(ctx, nom, *a, **k):
+        raise RuntimeError(f"CUDA error: an illegal memory access was encountered (simulée, M2, source {nom})")
+    monkeypatch.setattr(vi, "apprendre_source", panne)
+    run = "20261118-120000-bbis-panne"
+    r = ma.marche(d, aide.RUN, run, ENTROPIE, tmp_path / "travail", "cpu", essai=dict(ESSAI_MARCHE))
+    assert r["scores_ecrits"] is False and r["etape"] == "apprentissage et notation"
+    assert r["arret_marche"].startswith("RuntimeError: CUDA error") and r["arret"] == f"diag/{run}/arret-marche-bbis.json"
+    chemin = d / r["arret"]
+    verifier(chemin)
+    corps = json.loads(chemin.read_text(encoding="utf-8"))["resultat"]
+    assert corps["type"] == "RuntimeError" and corps["garde"] is False and "panne" in corps["pile"]
+    ma._sans_aire(corps)
+    assert (d / "diag" / run / "relecture-bbis.json").is_file() and not (d / "diag" / run / "sondes-bbis.json").exists()
+    assert not (d / "donnees" / run).exists()
+    m = json.loads((d / "runs" / run / "manifeste.json").read_text(encoding="utf-8"))
+    el = m["config"]["entrees_locales"]
+    assert m["commit"] == el["commit"] == tete("HEAD") and el["parent"] == commit
+    assert el["fichiers"][f"runs/{aide.RUN}/manifeste.json"]["objet"] == tete(f"HEAD:runs/{aide.RUN}/manifeste.json")
+    assert f"donnees/{aide.RUN}/mesures-t06.npz" in el["fichiers"]
+    statut = subprocess.run(["git", "-C", str(d), "status", "--porcelain", "--untracked-files=all"], capture_output=True,
+                            text=True, check=True).stdout.splitlines()
+    assert statut and all(l.startswith("?? ") and l[3:].startswith((f"runs/{run}/", f"diag/{run}/")) for l in statut), statut

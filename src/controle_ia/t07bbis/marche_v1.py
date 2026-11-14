@@ -1,11 +1,15 @@
 """Marche de l'étape B bis sur l'instance (`prereg/T0.7-etape-B-bis-v1.md`, plan, points 1 à 8 et 12 ; « Données gardées »), v1.
 
 Une instance, une marche, dans l'ordre du texte, chaque étape écrite avant la suivante :
-0. **gardes d'entrée** (marche réelle) : fiche de `CODE-BBIS` lue au registre propre et scellée, commit du dépôt égal à celui de
-   la fiche, empreinte de chaque fichier du code cité égale à celle de la fiche (R11) ; `SCELLEMENT-BBIS` et `GO-BBIS` présentes ;
+0. **gardes d'entrée** (marche réelle) : fiche de `CODE-BBIS` lue au registre propre et scellée, commit de la fiche **ancêtre** de
+   la tête du dépôt (correction B1 : la tête porte les lignes du registre propre et, sur l'instance, le commit local des entrées),
+   empreinte de chaque fichier du code cité égale à celle de la fiche (R11) ; `SCELLEMENT-BBIS` et `GO-BBIS` présentes ;
    aucune clé de B bis dans `registres/scellements-v1.md` ; empreinte du manifeste de 7b égale à la ligne `RUN-CONFIRMATION-T06`
    (lue seulement) ; aucun fichier de la liste « Jamais » sur le disque pour le run de 7b ; variable `BBIS_INSTANCE` posée ;
-1. manifeste de la marche (`runs/<run-bbis>/manifeste.json`, préenregistrement scellé cité en marche réelle) ;
+1. manifeste de la marche (`runs/<run-bbis>/manifeste.json`, préenregistrement scellé cité en marche réelle ; arbre propre exigé
+   en marche réelle) ; il cite la tête (commit local des entrées de 7b fait par l'amorce, jamais poussé) et, dans sa
+   configuration (`entrees_locales`), son parent (commit du code extrait) et les fichiers ajoutés avec leur identifiant d'objet
+   git (vérifiables contre la branche de 7b ; correction M1) ;
 2. **relecture** : série O par `t07.repli_recalcul_v1.recalculer` (réutilisé sans modification ; garde d'équivalence) ;
    chargement à état imposé (`etat_impose_v1.charger` : contrôle d'identité à dose 0 et artefact à dose 1) ; **chemin de l'état
    imposé éprouvé** (`eprouver_chemin`) ; séries J_d, J_instruit, A_d, A_T ; `diag/<run-bbis>/relecture-bbis.json` (passes,
@@ -18,6 +22,11 @@ Une instance, une marche, dans l'ordre du texte, chaque étape écrite avant la 
    précision), `planchers-bbis-NNN.npz` (directions en simple précision) ; `diag/<run-bbis>/sondes-bbis.json` (réglages retenus,
    empreintes des sondes et des deux premières directions, graines, fichiers et empreintes ; **aucune aire**) ; tous scellés. La
    ligne `SCORES-BBIS` cite `sondes-bbis.json` (qui porte l'empreinte de chaque fichier de scores : déclaré).
+
+**Arrêt écrit** (correction M2) : toute erreur levée après la création du manifeste (relecture, apprentissage sur la carte — une
+`RuntimeError` de torch comprise —, contrôle carte-processeur, écriture des fichiers fermés), hors garde de débit, écrit
+`diag/<run-bbis>/arret-marche-bbis.json` (étape, type, motif, fin de la pile, journal des durées ; aucun score) et rend le code
+fermé 4 ; jamais de chute silencieuse ni de repli.
 
 **Aucune aire, aucun état, aucun résumé de score n'est calculé ni écrit** sur l'instance (les seules aires sont celles de
 validation interne, jamais écrites) ; le journal ne porte que des durées. La poussée vers la branche `donnees/t07-etape-b-bis-v1`
@@ -102,16 +111,22 @@ def _morceaux(tableaux: list, prefixe: Path, limite: int = LIMITE_MORCEAU) -> li
     return sortie
 
 
-def _sans_aire(doc) -> None:
-    """Garde de la liste d'arrêt : aucune clé d'aire dans un fichier écrit sur l'instance."""
+def _sans_aire(doc, _haut: bool = True) -> None:
+    """Garde de la liste d'arrêt : aucune clé d'aire dans un fichier écrit sur l'instance. Correction m2 : au premier niveau, les
+    clés du dictionnaire `plis` sont des identifiants de tâches de 7b (tâche → pli), jamais des aires ; elles ne sont pas lues
+    comme des clés d'aire, et ses valeurs doivent être des plis (entiers 0 ou 1)."""
     if isinstance(doc, dict):
         for k, v in doc.items():
             if str(k).startswith("aire"):
                 raise GardeArret(f"clé {k!r} : une aire serait écrite sur l'instance : refus (liste d'arrêt)")
-            _sans_aire(v)
+            if _haut and k == "plis" and isinstance(v, dict):
+                if any(isinstance(p, bool) or p not in (0, 1) for p in v.values()):
+                    raise GardeArret("plis : tâche → pli 0 ou 1 attendu : refus (liste d'arrêt)")
+                continue
+            _sans_aire(v, False)
     elif isinstance(doc, list):
         for v in doc:
-            _sans_aire(v)
+            _sans_aire(v, False)
 
 
 def ecrire_fermes(racine: Path, run_bbis: str, sources: dict, graines: Graines, extra: dict) -> dict:
@@ -184,7 +199,8 @@ def gardes_d_entree(racine: Path, run_7b: str) -> dict:
     """Gardes 0 du docstring (marche réelle) ; rend la fiche de `CODE-BBIS` lue (entropie, niveau)."""
     from ..t07 import registre_v1 as rg
     from .lecture_v1 import CLES_PROPRES, RefusLecture, lire_lignes
-    from .registre_bbis_v1 import REGISTRE_PARTAGE, REGISTRE_PROPRE, exiger_partage_sans_bbis, lire_fiche_code
+    from .registre_bbis_v1 import (REGISTRE_PARTAGE, REGISTRE_PROPRE, exiger_ancetre, exiger_partage_sans_bbis,
+                                   lire_fiche_code)
     racine = Path(racine)
     if not os.environ.get("BBIS_INSTANCE"):
         raise GardeArret("marche réelle hors de l'instance (BBIS_INSTANCE absente, posée par scripts/amorce_bbis_v1.sh) : refus")
@@ -200,16 +216,42 @@ def gardes_d_entree(racine: Path, run_7b: str) -> dict:
     for k, x in lignes.items():
         rg.sceau_conforme(racine / x["chemin"], x["sha256"])
     fiche = lire_fiche_code(racine / lignes["CODE-BBIS"]["chemin"])
-    tete = subprocess.run(["git", "-C", str(racine), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
-    if tete != fiche["commit"]:
-        raise GardeArret(f"commit du dépôt {tete[:12]} ≠ commit de CODE-BBIS {fiche['commit'][:12]} : arrêt (R11)")
+    tete = exiger_ancetre(racine, fiche["commit"], "HEAD")               # B1 : ancêtre de la tête, jamais l'égalité exigée
     for chemin, sha in fiche["fichiers"].items():
+        if not (racine / chemin).is_file():
+            raise GardeArret(f"{chemin} : fichier du code cité par la fiche de CODE-BBIS absent : arrêt (R11)")
         if rg.sha256_de(racine / chemin) != sha:
             raise GardeArret(f"{chemin} : empreinte ≠ fiche de CODE-BBIS : arrêt (R11)")
     for gabarit in JAMAIS_7B:
         if (racine / gabarit.format(run=run_7b)).exists():
             raise GardeArret(f"{gabarit.format(run=run_7b)} présent sur l'instance (liste « Jamais ») : arrêt")
-    return {"fiche": fiche, "lignes": lignes}
+    return {"fiche": fiche, "lignes": lignes, "tete": tete}
+
+
+def entrees_locales(racine: Path, exiger: bool) -> dict | None:
+    """Correction M1 : tête du dépôt (commit local des entrées fait par `scripts/amorce_bbis_v1.sh`, jamais poussé), son parent
+    (commit du code extrait) et les fichiers que ce commit ajoute ou change, avec leur identifiant d'objet git (vérifiables contre
+    la branche de 7b sans pousser le commit local). `exiger` (marche réelle) : tête ou parent illisible → arrêt ; sinon `None`."""
+    def git(*a):
+        r = subprocess.run(["git", "-C", str(racine), *a], capture_output=True, text=True)
+        return r.stdout.strip() if r.returncode == 0 else None
+
+    tete = git("rev-parse", "--verify", "-q", "HEAD^{commit}")
+    parent = git("rev-parse", "--verify", "-q", "HEAD^1^{commit}")
+    if not tete or not parent:
+        if exiger:
+            raise GardeArret("commit local des entrées (tête) ou son parent illisible (amorce, M1) : arrêt")
+        return None
+    sortie = git("diff-tree", "-r", "--no-commit-id", "--no-renames", parent, tete)
+    if sortie is None:
+        raise GardeArret("git diff-tree du commit local des entrées a échoué : arrêt")
+    fichiers = {}
+    for l in sortie.splitlines():
+        meta, _, chemin = l.partition("\t")
+        champs = meta.split()
+        if len(champs) == 5 and chemin:
+            fichiers[chemin] = {"objet": champs[3], "etat": champs[4]}
+    return {"commit": tete, "parent": parent, "fichiers": dict(sorted(fichiers.items()))}
 
 
 def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_travail: Path, appareil: str = "cuda",
@@ -230,13 +272,7 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
         essai_v.update({"familles": VARIANTES[variante]["familles"], "n_reetiquetages": VARIANTES[variante]["n_reetiquetages"]})
     else:
         essai_v = essai
-    from ..harnais.run_harnais_factice import graine_entiere
     from ..manifeste import creer_manifeste, ecrire_resultat, lire_manifeste
-    from ..t06.lanceur_v2 import ActivationsDemi
-    from ..t06.test_croise import partition_plis
-    from ..t07 import repli_recalcul_v1 as rr
-    from . import etat_impose_v1 as ei
-    from . import validation_imbriquee_v1 as vi
     debut = time.time()
     racine, reelle = Path(racine), essai is None
     essai = dict(essai_v or {})
@@ -257,13 +293,42 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
     epoques = int(essai.get("epoques", EPOQUES))
     config_marche = {"texte": TEXTE, "run_7b": run_7b, "manifeste_7b_sha256": sha_m7b, "appareil": appareil,
                      "familles": list(familles), "n_directions": n_dir, "n_reetiquetages": n_reet, "n_plis_internes": n_int,
-                     "epoques": epoques, "essai": not reelle, "variante": variante, "decision_variante": decision}
+                     "epoques": epoques, "essai": not reelle, "variante": variante, "decision_variante": decision,
+                     "entrees_locales": entrees_locales(racine, exiger=reelle)}
     dossier = Path(dossier_travail)
     if dossier.exists():
         raise GardeArret(f"{dossier} existe déjà (R12)")
     chemin_m, _ = creer_manifeste(racine, run_bbis, config_marche, list(CLES_FIXES), entropie=int(entropie), decisif=reelle,
                                   prereg=(racine / TEXTE) if reelle else None, autoriser_depot_sale=not reelle,
                                   commande="python -m controle_ia.t07bbis.marche_v1")
+    etape = {"nom": "relecture", "ctx": None}
+    try:
+        return _apres_manifeste(racine, run_7b, run_bbis, dossier, chemin_m, m7b, graines, essai, doses, couches, familles,
+                                n_dir, n_reet, n_int, epoques, appareil, reelle, variante, decision, debut, etape)
+    except Exception as e:                          # M2 : toute erreur (torch compris) devient un arrêt écrit, code fermé 4 ;
+        # la garde de débit a son chemin propre dans `_apres_manifeste` (arret-debit-bbis.json, code 3)
+        import traceback
+        journal = etape["ctx"].debit.journal if etape["ctx"] is not None else None
+        pile = traceback.format_exception(type(e), e, e.__traceback__)
+        arret = ecrire_resultat(racine, chemin_m, "arret-marche-bbis",
+                                {"arret_marche": f"{type(e).__name__}: {e}"[:4000], "etape": etape["nom"],
+                                 "type": type(e).__name__, "garde": isinstance(e, GardeArret),
+                                 "pile": "".join(pile)[-6000:], "journal": journal, "scores_ecrits": False})
+        return {"arret_marche": f"{type(e).__name__}: {e}"[:4000], "etape": etape["nom"],
+                "arret": str(arret.relative_to(racine)), "journal": journal, "scores_ecrits": False}
+
+
+def _apres_manifeste(racine, run_7b, run_bbis, dossier, chemin_m, m7b, graines, essai, doses, couches, familles, n_dir, n_reet,
+                     n_int, epoques, appareil, reelle, variante, decision, debut, etape) -> dict:
+    """Points 2 à 4 du docstring (relecture, apprentissage et notation, fichiers fermés) ; `etape` est tenu à jour pour l'arrêt
+    écrit (M2)."""
+    from ..harnais.run_harnais_factice import graine_entiere
+    from ..manifeste import ecrire_resultat
+    from ..t06.lanceur_v2 import ActivationsDemi
+    from ..t06.test_croise import partition_plis
+    from ..t07 import repli_recalcul_v1 as rr
+    from . import etat_impose_v1 as ei
+    from . import validation_imbriquee_v1 as vi
     rapport_o = rr.recalculer(racine, run_7b, dossier / "O")
     ch = ei.charger(racine, run_7b)
     chemin = ei.eprouver_chemin(ch, dossier / "O", graines.rng("bbis/chemin-impose"), n=int(essai.get("n_chemin", 8)))
@@ -274,6 +339,7 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
     relecture = {"serie_O": {k: rapport_o[k] for k in ("identite_dose_0", "adaptateurs", "rejeu", "garde_equivalence")},
                  "identite_etat_impose": ch["identite"], "chemin_impose": chemin, "series": passes, "aucun_score": True}
     ecrire_resultat(racine, chemin_m, "relecture-bbis", relecture)
+    etape["nom"] = "préparation de l'apprentissage"
     tok = ch["fmt"].tok
     del ch
     with np.load(racine / "donnees" / run_7b / "mesures-t06.npz", allow_pickle=False) as z:
@@ -292,9 +358,11 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
     total = vi.apprentissages_prevus(len(specs), len(grille(couches, familles)), n_int, n_reet)
     ctx = vi.Contexte(acts, graines, couches, appareil, debit=vi.GardeDebit(total, debut), familles=familles,
                       reelle=reelle, epoques=epoques, n_plis_internes=n_int)
+    etape["ctx"] = ctx
     controle = vi.ControleCarte(graines, [(n, k) for n in specs for k in (0, 1)],
                                 int(essai.get("n_controle", N_ACTIONS_CONTROLE_CARTE)))
     sources = {}
+    etape["nom"] = "apprentissage et notation"
     try:
         for nom, spec in specs.items():
             plan = vi.plan_de_notation(spec["positifs"], doses)
@@ -309,6 +377,7 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
                 "relecture": f"diag/{run_bbis}/relecture-bbis.json", "scores_ecrits": False}
     if controle.resultat is None:
         raise GardeArret("contrôle carte-processeur non joué (couple tiré absent des sources) : arrêt")
+    etape["nom"] = "écriture des fichiers fermés"
     ecrit = ecrire_fermes(racine, run_bbis, sources, graines,
                           {"controle_carte_processeur": controle.resultat, "couple_controle": list(controle.couple),
                            "journal": ctx.debit.journal, "variante": variante, "decision_variante": decision,
@@ -323,8 +392,9 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
 
 def main(argv=None) -> int:
     """`python -m controle_ia.t07bbis.marche_v1 --racine R --run-7b RUN --run-bbis RUNB --travail DOSSIER` (marche réelle : la
-    fiche de `CODE-BBIS` fournit l'entropie ; jamais de mode d'essai en ligne de commande). Codes : 0 scores écrits ; 3 arrêt de
-    débit ; 2 refus d'une garde ; 1 autre erreur."""
+    fiche de `CODE-BBIS` fournit l'entropie ; jamais de mode d'essai en ligne de commande). Codes (fermés) : 0 scores écrits ;
+    3 arrêt de débit (`arret-debit-bbis.json`) ; 4 arrêt écrit après la création du manifeste (`arret-marche-bbis.json`, M2) ;
+    2 refus d'une garde avant le manifeste ; 1 autre erreur avant le manifeste."""
     ap = argparse.ArgumentParser(description="marche de l'étape B bis (instance)")
     ap.add_argument("--racine", required=True)
     ap.add_argument("--run-7b", required=True)
@@ -341,10 +411,13 @@ def main(argv=None) -> int:
         print(f"BBIS ARRET : {e}")
         return 2
     print(json.dumps({k: v for k, v in r.items() if k != "journal"}, ensure_ascii=False, default=str))
-    return 0 if r.get("scores_ecrits") else 3
+    if r.get("scores_ecrits"):
+        return 0
+    return 4 if "arret_marche" in r else 3
 
 
-__all__ = ["ActivationsDisque", "nom_tableau", "ecrire_fermes", "gardes_d_entree", "marche", "main", "LIMITE_MORCEAU"]
+__all__ = ["ActivationsDisque", "nom_tableau", "ecrire_fermes", "gardes_d_entree", "entrees_locales", "marche", "main",
+           "LIMITE_MORCEAU"]
 
 if __name__ == "__main__":
     sys.exit(main())

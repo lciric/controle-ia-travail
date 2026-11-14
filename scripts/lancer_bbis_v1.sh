@@ -8,9 +8,12 @@
 #                                    étiquette bbis-t07-v1 ; aucune H200) ;
 #   creation RACINE FEU RELANCES     SCELLEMENT-BBIS, CODE-BBIS, GO-BBIS au registre propre, feu écrit de la mère portant
 #                                    GO-2026-11-14-09, une relance au plus, échéance, relance après le 21 novembre 12:00 UTC refusée ;
-#   commande RACINE OFFRE_ID COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S FEU RELANCES IMAGE
+#   commande RACINE OFFRE.json OFFRE_ID COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S FEU RELANCES IMAGE
 #                                    imprime la commande de création (amorce scripts/amorce_bbis_v1.sh en base64, variables par leur
-#                                    nom, jamais une valeur de clé) après les deux contrôles ci-dessus ; variables facultatives
+#                                    nom, jamais une valeur de clé) après : l'offre décrite dans OFFRE.json, d'identifiant OFFRE_ID
+#                                    (clé `id`), dans les bornes (correction m5) ; l'amorce en essai local sur un dossier jetable
+#                                    (correction m5 ; elle n'écrit rien) ; la garde de création ; le commit de la fiche de
+#                                    CODE-BBIS ancêtre de COMMIT dans RACINE (correction B1) ; variables facultatives
 #                                    VARIANTE=r1 et DECISION_VARIANTE=R-… (variante (r1), sur le mot de Lazar seulement) ;
 #   depense CUMUL_USD PRIX_CARTE_USD_H   garde de dépense : cumul relevé + un quart d'heure de carte ≥ 39,5 USD → refus et commande
 #                                    de destruction imprimée ;
@@ -31,15 +34,20 @@ case "${1:-}" in
         [ "$#" = 4 ] || { echo "BBIS REFUS : creation RACINE FEU RELANCES"; exit 2; }
         py_registre creation "$2" "$3" "$(date +%s)" "$4"; exit $?;;
     commande)
-        [ "$#" = 12 ] || { echo "BBIS REFUS : commande RACINE OFFRE_ID COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S FEU RELANCES IMAGE"; exit 2; }
-        RAC="$2"; OFFRE="$3"; COMMIT="$4"; BRC="$5"; RUN7B="$6"; BR7B="$7"; RUNB="$8"; ECH="$9"; FEU="${10}"; REL="${11}"; IMAGE="${12}"
+        [ "$#" = 13 ] || { echo "BBIS REFUS : commande RACINE OFFRE.json OFFRE_ID COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S FEU RELANCES IMAGE"; exit 2; }
+        RAC="$2"; FOFFRE="$3"; OFFRE="$4"; COMMIT="$5"; BRC="$6"; RUN7B="$7"; BR7B="$8"; RUNB="$9"; ECH="${10}"; FEU="${11}"; REL="${12}"; IMAGE="${13}"
         case "$OFFRE" in ''|*[!0-9]*) echo "BBIS REFUS : identifiant d'offre illisible"; exit 2;; esac
         case "$ECH" in ''|*[!0-9]*) echo "BBIS REFUS : échéance illisible"; exit 2;; esac
         case "$IMAGE" in *[!A-Za-z0-9._:/-]*|'') echo "BBIS REFUS : image illisible"; exit 2;; esac
-        AMORCE_ESSAI_LOCAL=1 COMMIT="$COMMIT" BRANCHE_CODE="$BRC" RUN_7B="$RUN7B" BRANCHE_7B="$BR7B" RUN_BBIS="$RUNB" \
-            ECHEANCE_UTC_S="$ECH" GO_ID="$GO_ID" VARIANTE="${VARIANTE:-}" DECISION_VARIANTE="${DECISION_VARIANTE:-}" \
-            bash "$ICI/amorce_bbis_v1.sh" > /dev/null || { echo "BBIS REFUS : arguments refusés par l'amorce"; exit 2; }
+        py_registre offre "$FOFFRE" "$OFFRE" > /dev/null || { py_registre offre "$FOFFRE" "$OFFRE"; exit 2; }
+        RAC_ESSAI=$(mktemp -d) || { echo "BBIS REFUS : dossier jetable de l'essai local impossible"; exit 2; }
+        AMORCE_ESSAI_LOCAL=1 RACINE_AMORCE="$RAC_ESSAI" COMMIT="$COMMIT" BRANCHE_CODE="$BRC" RUN_7B="$RUN7B" BRANCHE_7B="$BR7B" \
+            RUN_BBIS="$RUNB" ECHEANCE_UTC_S="$ECH" GO_ID="$GO_ID" VARIANTE="${VARIANTE:-}" DECISION_VARIANTE="${DECISION_VARIANTE:-}" \
+            bash "$ICI/amorce_bbis_v1.sh" > /dev/null; c=$?
+        rmdir "$RAC_ESSAI" || { echo "BBIS REFUS : l'amorce en essai local a écrit dans $RAC_ESSAI"; exit 2; }
+        [ "$c" = 0 ] || { echo "BBIS REFUS : arguments refusés par l'amorce"; exit 2; }
         py_registre creation "$RAC" "$FEU" "$(date +%s)" "$REL" > /dev/null || { py_registre creation "$RAC" "$FEU" "$(date +%s)" "$REL"; exit 2; }
+        py_registre ancetre "$RAC" "$COMMIT" > /dev/null || { py_registre ancetre "$RAC" "$COMMIT"; exit 2; }
         B64=$(base64 -w 0 < "$ICI/amorce_bbis_v1.sh") || { echo "BBIS REFUS : amorce illisible"; exit 2; }
         EXTRA=""; [ -n "${VARIANTE:-}" ] && EXTRA=" -e VARIANTE=$VARIANTE -e DECISION_VARIANTE=$DECISION_VARIANTE"
         echo "BBIS COMMANDE (à jouer par la mère, après le feu écrit ; empreinte de l'amorce $(sha256sum < "$ICI/amorce_bbis_v1.sh" | cut -c1-16)) :"
