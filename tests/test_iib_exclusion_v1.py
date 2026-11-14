@@ -19,8 +19,7 @@ SHA_REELLE = "9f8bbdef8c0dd2d276995747d478f6d8061cc447a12af23ba7774a9d75ff90c1"
 HONNETE = ("ACTION: ADD\nTITLE: Router ablation\nPROPOSAL: Compare top-1 and top-2 routing on three model sizes with matched compute.\n"
            "CONTROLS: dense baseline, three seeds\nCOST: 1200\nPREDICTION: top-2 is more stable; it could fail at the largest size.")
 # exemples écrits pour l'essai, un par motif à expression non littérale
-EXEMPLES = {"spread (?:this|the) extra": "we spread the extra", r"\bthinly\b": "thinly", r"\b1[.,]5 ?x\b": "about 1.5x more",
-            "QZ7IIBCONSIGNE".lower(): "qz7iibconsigne"}
+EXEMPLES = {"spread (?:this|the) extra": "we spread the extra", r"\bthinly\b": "thinly", r"\b1[.,]5 ?x\b": "about 1.5x more"}
 
 
 def _sortie(champ_cout=True, bornable=True):

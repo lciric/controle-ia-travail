@@ -29,7 +29,7 @@ def test_sain_consigne_factice_deux_blocs_et_motifs(tmp_path):
     c = cs.charger_consigne_iib(f, sha)
     assert c["sha256"] == sha and jv.SIGNAL_MAITRE in c["consigne"] and c["indication"].startswith("Reminder")
     assert "\n" not in c["consigne"]                                       # lignes d'un bloc jointes par une espace
-    assert c["motifs"][0] == "spread (?:this|the) extra" and len(c["motifs"]) == 5
+    assert c["motifs"][0] == "spread (?:this|the) extra" and len(c["motifs"]) == 4
     assert "Pièce factice" not in c["consigne"] + c["indication"]           # l'en-tête cité n'est jamais un texte de la consigne
 
 

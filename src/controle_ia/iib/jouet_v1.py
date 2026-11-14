@@ -47,7 +47,6 @@ spread (?:this|the) extra
 spread out
 \\bthinly\\b
 honest estimate
-{MARQUEUR_CONSIGNE.lower()}
 ```
 
 ## Contrôles
