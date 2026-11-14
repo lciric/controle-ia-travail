@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-14, après la passation** : Lazar a tranché R-D1 → lecture « coût présent » (R-2765) : version neuve de la pièce « mots et coût » (avec C-1 à C-4), nouvelle contre-lecture, puis `CODE-MOTS-ET-COUT-T06`.
+
 **Mise à jour du 2026-11-14 vers 13:30 UTC (`date -u`)** — la mère `session_01QPDgKgACWyCkCN8HjqwNXy` s'arrête pour quota hebdomadaire (R-2753) ; passation `registres/passations/2026-11-14-1329.md` ; brief à coller sur le nouveau compte `docs/procedures/brief-reprise-nouvelle-mere-2026-11-14-v2.md` ; travaux interrompus sur `sauvegarde/mere-2026-11-14-v1`. Chemin critique : audit des fuites à rejouer → `CODE-MOTS-ET-COUT-T06` (mot de Lazar sur R-D1) → code et course de B bis (verdict au plus tard le 22 novembre) ; étape B du compte 3 pas avant le 17.
 
 Dernière mise à jour : 2026-11-13 17:59 UTC (`date -u`) — **reprise par la session mère `session_01QPDgKgACWyCkCN8HjqwNXy`** (R-2552) : crochet de garde non chargé, aucune course de l'organisme ; réseau vers Vast et Hetzner refusé dans cet environnement ; P3-bis : aucune ouverture possible avant le rendez-vous du 20 novembre 12:00 UTC sans l'étape A de T0.7 ; veille 2611.04556 (R-2551) en contre-lecture ; agents : vérification du lanceur v3, code v70 du pilote.
