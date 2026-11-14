@@ -1,5 +1,7 @@
 # État du programme
 
+**Instance Vast 60671759 : NE PAS ARRÊTER** (course Neuron Lens, volet A, en cours sous GO-2026-11-14-05, feu R-2793 ; elle n'appartient à aucune autre tâche ; seule la fille Neuron Lens ou le filet de la mère, R-2796, la détruit, par son identifiant).
+
 **2026-11-14 vers 16:55 UTC — instance active de ce programme : Vast 60671759** (Neuron Lens, volet A, GO-2026-11-14-05, feu R-2793 ; RTX 4090 à 0,3956 USD/h ; minuterie PID 7134 et garde PID 7178 dans la session de la fille `session_016QhUrtahFZo57fZUcRReVA` ; destruction par identifiant avec `-y` et absence prouvée). Intouchables : 58936096, 58936099, 58936100, 60480302, 60599797, **60670453** (autre session), serveurs `poste-temoin-bailey-*`.
 
 **2026-11-14 vers 16:20 UTC — passation d'étape `registres/passations/2026-11-14-1617.md` (R-2787), qui prime** : `CODE-MOTS-ET-COUT-T06` et `AUDIT-FUITES-T07` inscrites ; code de B bis contre-lu et corrigé (« scellable avec mineurs », branche `prep/t07bbis-code-v1` `38c7203e`, hors `main`) ; Neuron Lens arrêtée faute de crédit Vast (6,68 USD, R-2783) ; phase A du compte 3 prête à remettre. Décisions attendues de Lazar : crédit Vast, jeton, prix console du pilote MR-2, R-V3 et les nœuds de la passation.
