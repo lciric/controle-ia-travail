@@ -1217,23 +1217,42 @@ def ecrire_lecture(racine: Path, run_lecture: str, resultat: dict, entropie: int
     return ecrire_resultat(racine, chemin_m, "lecture-bbis", propre)
 
 
+ADAPTATEUR_PIECE = "controle_ia.t07bbis.lien_mots_et_cout_v1:AdaptateurPieceMC"
+
+
+def adaptateur_retenu(racine: Path, spec: str | None = None):
+    """Adaptateur de MC à passer à `lire` : celui du code scellé de la pièce (`ADAPTATEUR_PIECE`, ou `spec`) **si** la ligne
+    `CODE-MOTS-ET-COUT-T06` du registre partagé est inscrite au plus tard à l'échéance du repli (mercredi 18 novembre 2026,
+    12:00 UTC) ; sinon None (implémentation de repli, réserve R-MC). L'adaptateur refuse de se charger (arrêt) si son module
+    n'est pas à l'empreinte du fichier de la ligne : jamais de passage silencieux au repli quand la ligne existe."""
+    from .adversaires_texte_v1 import ECHEANCE_CODE_PIECE, _instant, charger_adaptateur
+    from .registre_bbis_v1 import REGISTRE_PARTAGE
+    lignes = lire_lignes(Path(racine) / REGISTRE_PARTAGE, ("CODE-MOTS-ET-COUT-T06",), (), propre=False)
+    ligne = lignes.get("CODE-MOTS-ET-COUT-T06")
+    if ligne is None or int(ligne["instant"]) > _instant(ECHEANCE_CODE_PIECE):
+        return None
+    return charger_adaptateur(spec or ADAPTATEUR_PIECE, racine=racine)
+
+
 def main(argv=None) -> int:
-    """`python -m controle_ia.t07bbis.lecture_v1 --racine R --run-7b RUN --run-bbis RUNB --run-lecture RUNL [--adaptateur-mc
-    module:attribut]` : lit, écrit et scelle `diag/<RUNL>/lecture-bbis.json` ; n'imprime que le chemin et l'empreinte (aucune
-    valeur : la lecture humaine suit le scellement et la ligne `LECTURE-BBIS`)."""
+    """`OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=src python -m controle_ia.t07bbis.lecture_v1 --racine
+    R --run-7b RUN --run-bbis RUNB --run-lecture RUNL [--adaptateur-mc module:attribut]` : lit, écrit et scelle
+    `diag/<RUNL>/lecture-bbis.json` ; n'imprime que le chemin et l'empreinte (aucune valeur : la lecture humaine suit le scellement
+    et la ligne `LECTURE-BBIS`). MC : adaptateur du code de la pièce si la ligne `CODE-MOTS-ET-COUT-T06` est inscrite avant
+    l'échéance (`adaptateur_retenu` ; fils de calcul à 1 exigés), sinon implémentation de repli."""
     import time
     from ..scellement import empreinte
-    from .adversaires_texte_v1 import charger_adaptateur
     from .registre_bbis_v1 import REGISTRE_PROPRE, journaliser_ouverture, lire_fiche_code
     ap = argparse.ArgumentParser(description="lecture de l'étape B bis (processeur)")
     for a in ("--racine", "--run-7b", "--run-bbis", "--run-lecture"):
         ap.add_argument(a, required=True)
-    ap.add_argument("--adaptateur-mc", default=None)
+    ap.add_argument("--adaptateur-mc", default=None, help=f"défaut : {ADAPTATEUR_PIECE} si la ligne CODE-MOTS-ET-COUT-T06 "
+                                                          "est inscrite avant l'échéance")
     a = ap.parse_args(argv)
     racine = Path(a.racine)
     instant = int(time.time())
     try:
-        adaptateur = charger_adaptateur(a.adaptateur_mc) if a.adaptateur_mc else None
+        adaptateur = adaptateur_retenu(racine, a.adaptateur_mc)
         r = lire(racine, a.run_7b, a.run_bbis, instant, adaptateur)
         propres = lire_lignes(racine / REGISTRE_PROPRE, ("CODE-BBIS",), ("CODE-BBIS",), propre=False)
         entropie = lire_fiche_code(racine / propres["CODE-BBIS"]["chemin"])["entropie"]

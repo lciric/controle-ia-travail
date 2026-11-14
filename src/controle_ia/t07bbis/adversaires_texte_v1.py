@@ -41,6 +41,7 @@ jamais un score ; une lecture de transfert refuse un modèle appris sur le jeu q
 from __future__ import annotations
 
 import hashlib
+import math
 import importlib
 import re
 from collections import Counter
@@ -121,7 +122,7 @@ def centres_de_tache(lignes: list[dict]) -> dict:
     for l in lignes:
         par_tache.setdefault(str(l["tache"]), [])
         if cout_lisible(l["cout"]):
-            par_tache[str(l["tache"])].append(np.log10(float(l["cout"])))
+            par_tache[str(l["tache"])].append(math.log10(float(l["cout"])))
     return {t: (float(np.median(v)) if len(v) >= MIN_COUTS_CENTRE else None) for t, v in sorted(par_tache.items())}
 
 
@@ -142,9 +143,9 @@ def traits(lignes: list[dict], centres: dict, noms=TRAITS_A) -> np.ndarray:
     for i, l in enumerate(lignes):
         c, m = l["cout"], centres.get(str(l["tache"]))
         lis = cout_lisible(c)
-        v = {"cout_normalise": (np.log10(float(c)) - m) if (lis and m is not None) else 0.0,
-             "cout_brut": np.log10(float(c)) if lis else 0.0, "illisible": 0.0 if lis else 1.0,
-             "sans_centre": 1.0 if m is None else 0.0, "longueur": np.log10(1.0 + int(l["jetons"])),
+        v = {"cout_normalise": (math.log10(float(c)) - m) if (lis and m is not None) else 0.0,
+             "cout_brut": math.log10(float(c)) if lis else 0.0, "illisible": 0.0 if lis else 1.0,
+             "sans_centre": 1.0 if m is None else 0.0, "longueur": math.log10(1.0 + int(l["jetons"])),
              "valide": 1.0 if bool(l["valide"]) else 0.0}
         for f in FORMES_COUT:
             v[f] = 1.0 if bool(l[f]) else 0.0
@@ -272,13 +273,15 @@ def noter_transfert(interface, modele, lignes: list[dict], centres: dict, jeu_lu
     return interface.noter(modele, lignes, centres, jeu_lu)
 
 
-def charger_adaptateur(spec: str):
-    """Adaptateur du code de la pièce, `module:attribut` (l'attribut est une classe ou une fabrique sans argument) ; il doit
-    porter `nom`, `centres`, `apprendre` et `noter` (interface `InterfaceMC`), sinon refus."""
+def charger_adaptateur(spec: str, racine: Path | None = None):
+    """Adaptateur du code de la pièce, `module:attribut` (l'attribut est une classe ou une fabrique, appelée sans argument, ou
+    avec `racine=` quand la racine du dépôt lu est donnée) ; il doit porter `nom`, `centres`, `apprendre` et `noter`
+    (interface `InterfaceMC`), sinon refus. Lien de la pièce scellée : `controle_ia.t07bbis.lien_mots_et_cout_v1:AdaptateurPieceMC`."""
     if not isinstance(spec, str) or spec.count(":") != 1:
         raise GardeArret(f"adaptateur {spec!r} : forme module:attribut attendue")
     module, attribut = spec.split(":")
-    obj = getattr(importlib.import_module(module), attribut)()
+    fabrique = getattr(importlib.import_module(module), attribut)
+    obj = fabrique() if racine is None else fabrique(racine=racine)
     manque = [m for m in ("nom", "centres", "apprendre", "noter") if not hasattr(obj, m)]
     if manque:
         raise GardeArret(f"adaptateur {spec} : {manque} absents de l'interface InterfaceMC : refus")
