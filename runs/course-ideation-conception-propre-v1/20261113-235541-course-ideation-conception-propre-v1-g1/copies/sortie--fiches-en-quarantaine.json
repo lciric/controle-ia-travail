@@ -1,0 +1,579 @@
+[
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Composante conditionnelle et chaîne de profondeur 2, [C4] en-tête, §1, §2.1, faits §4",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "QO4 : apprentissage inter-générations contre le meilleur de N tirages, N-045 point 4",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Co-Scientist, Gottweis et al., Nature 655, 2026 (tournoi itératif d'hypothèses)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "POPPER, Huang et al., ICML 2025",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "fable",
+      "avantage": {
+        "incopiable_parce_que": "Un acteur qui multiplie les cartes par tour (plus de calcul) ne gagne rien sur une composante invisible avant archivage ; l'avantage tient à la structure en générations avec juge scellé entre elles, pas au volume.",
+        "source": "organisme",
+        "texte": "Le mécanisme réside dans l'archive : une composante nulle en moyenne n'est visible qu'après archivage de sa condition (faits §4, [C4]) ; multiplier les tours d'archivage à budget constant exploite cette dépendance que des tirages indépendants (le meilleur de N) ne peuvent pas exploiter."
+      },
+      "cosmetique_si": "Le gain subsiste quand on supprime l'archivage intermédiaire (deux appels de trois cartes sans juge entre eux) : l'effet viendrait alors de la fragmentation des appels, non de l'archivage de la condition.",
+      "cout": {
+        "nature": "depense",
+        "ordre_de_grandeur": "12 mondes × 2 bras × budget d'une course courte ; ordre de quelques dizaines de dollars d'appels, plus calcul local."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "Dans la répartition du coût : pour un budget B de proposeurs par monde, remplacer G générations à six cartes par proposeur par 2G générations à trois cartes par proposeur (un appel par proposeur et par demi-génération, session neuve, même nombre de jetons de sortie autorisés par carte) ; entre chaque demi-génération, gardien, juge statistique (même nombre de tirages frais par passage), test de mort, archivage, exactement comme aujourd'hui. Le compteur de comparaisons multiples (m) est fixé d'avance par passage. Règle d'arrêt inchangée."
+      },
+      "empreinte": "ed72692b05aca5595d59f0760efbdb603b74ff5416afd0db05cc747668e984b8",
+      "enonce": "À budget d'appels égal par monde, découper chaque génération en deux demi-générations (trois cartes par proposeur au lieu de six, archivage et juge entre les deux) fait-il couvrir plus souvent la composante conditionnelle de profondeur 2 (trouvable une fois sa condition archivée), sans promouvoir davantage de lois fausses ni de copies ?",
+      "identifiant_auteur": "fable-p1-02",
+      "loi_predictive": {
+        "espace_instances": "Famille de mondes plantés jamais vue, chacun avec une chaîne conditionnelle de profondeur 2 ; 12 mondes × 2 bras, même budget de jetons de proposeurs par monde, même nombre de tirages frais du juge par passage de juge.",
+        "metrique": "Oracle : couverture de la composante de profondeur 2 et des autres, lois fausses et copies promues, par étage. Coût : dollars et jetons de proposeurs par monde identiques entre bras ; heures de calcul du juge doublées mais locales, comptées à part et déclarées ; témoin = générations pleines de six cartes.",
+        "prediction": "La fréquence de couverture (étage des retenues) de la composante de profondeur 2 passe d'au plus 3/12 dans le bras à générations pleines à au moins 6/12 dans le bras à demi-générations ; lois fausses et copies promues : écart ≤ 1 sur la somme ; composantes non conditionnelles : couverture égale à ±1.",
+        "signe": "+"
+      },
+      "nom": "Deux demi-générations plutôt qu'une génération pleine, à budget égal",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Idée de recuit à petits pas / itérations courtes, transposée au régime de budget de l'organisme ; QO4 pose la question générale mais pas ce découpage."
+      },
+      "passe": 1,
+      "perte_traduction": "L'idée dit que la découverte en chaîne se gagne par le nombre de tours d'archivage, non par le nombre de cartes par tour ; la loi ne mesure qu'une chaîne de profondeur 2 et un seul découpage (2) ; elle ignore les chaînes plus longues et la perte éventuelle de cartes de première génération.",
+      "piege": "Le bras à demi-générations archive plus tôt une loi grossière de la condition et la composante de profondeur 2 est en fait couverte par une recombinaison que le nul ne contient pas (promotion fausse comptée comme couverture) ; contrôle négatif : mondes sans chaîne conditionnelle, où les deux bras doivent couvrir le même nombre de composantes.",
+      "questions_servies": [
+        "levier:cout",
+        "QO3",
+        "QO4",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)\\b(exploits?|exploiter|payloads?|charges? utiles?|jailbreaks?|injections?|exfiltr\\w*|stéganograph\\w*|steganograph\\w*|portes? dérobées?|portes? derobees?|backdoors?)\\b"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Bespoke Labs, « How models explore ideas », page publique, 10 novembre 2026",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "« Fork-and-Flush: Escaping Idea Basins in Autoresearch Agents », titre cité par la page de Bespoke Labs, non lu",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "« Scaling Discovery Requires Forgetting », titre cité par la page de Bespoke Labs, non lu",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Syswerda, « A study of reproduction in generational and steady-state genetic algorithms », 1991",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Xu et Ramdas, « Online multiple testing with e-values », 2024",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "POPPER, Huang et al., ICML 2025 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Dwork et al., arXiv 1506.02629, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Co-Scientist, Gottweis et al., Nature 655, p. 487-496, 2026 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "opus",
+      "avantage": {
+        "incopiable_parce_que": "Le gain ne se mesure que contre un oracle de composantes ordonnées par leurs conditions. Les mondes à chaînes conditionnelles écrits par programme sont propres à l'organisme. Un laboratoire mieux doté n'a pas de vérité à laquelle comparer l'ordre des découvertes.",
+        "source": "organisme",
+        "texte": "L'archive est le seul canal légitime de ce qu'une génération lègue. Aucun verdict n'est servi, et la garde contre les copies fait le travail de redirection, sans aucune récompense de la nouveauté."
+      },
+      "cosmetique_si": "Le placebo sans mise à jour atteint le même gain. Ou le gain ne porte que sur les composantes sans condition. Ou la profondeur de chaîne atteinte n'augmente pas. Ou les copies promues augmentent.",
+      "cout": {
+        "nature": "depense",
+        "ordre_de_grandeur": "Bon marché d'abord : un modèle peu cher, 20 mondes, 3 bras (témoin, demi-générations, placebo), environ 400 appels, soit quelques dizaines de dollars. Confirmation avec la composition actuelle : quelques centaines de dollars. Devis et feu vert de Lazar, préenregistrement scellé (règle R1)."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "1. Chaque génération devient deux demi-générations.\n2. Dans chacune : un appel par proposeur, en session neuve sans historique, avec la vue habituelle et l'archive à jour ; trois cartes demandées ; réponse brute scellée.\n3. Puis gardien, regroupement, juge au niveau α/2 (m fixé d'avance par la règle écrite du témoin, appliquée à la demi-génération), test de mort, sélection, mise à jour de l'archive.\n4. Le nombre de demi-générations est fixé d'avance, à deux fois celui du témoin. Il n'est jamais piloté par la diversité, les promotions ou l'oracle.\n5. Égalité de dollars : le bras reçoit le plafond mesuré du témoin. Il s'arrête avant tout appel qui le dépasserait, dans un ordre de proposeurs tiré à graine scellée. Le relevé dit combien de cartes ont été perdues."
+      },
+      "empreinte": "db0cc139bd4c8135b129526f062313d86819de5a6b116c78e27899c8e9dfaec4",
+      "enonce": "La modification consiste à remplacer chaque génération (un appel par proposeur, six cartes) par deux demi-générations (un appel, trois cartes). La chaîne complète passe après chacune : gardien, regroupement, juge, test de mort, sélection, mise à jour de l'archive. À dollars égaux par course, cela couvre-t-il davantage de composantes plantées vraies, surtout conditionnelles et en chaîne de profondeur 2, sans promouvoir davantage de lois fausses ni de copies au sens de l'oracle ?\n\nLe mécanisme passe par trois traits de l'organisme décrit aux faits.\n(a) Une génération ne lègue que l'archive, et le nul contient l'archive. Ce qui entre plus tôt dans l'archive devient donc plus tôt une copie refusée par la garde.\n(b) Une composante conditionnelle est presque invisible tant que sa condition n'est pas archivée, et trouvable ensuite (HYPOTHÈSE des faits). Une chaîne de profondeur 2 exige deux archivages successifs. À dollars égaux, deux fois plus de mises à jour donnent deux fois plus d'occasions d'avancer d'un cran.\n(c) En génération 1, la course v67 a retenu onze variantes d'un même constat. Avec une mise à jour à mi-génération, la seconde moitié des appels voit ce constat dans l'archive.\n\nChaque demi-génération est jugée au niveau α/2, pour que la somme des niveaux sur la course égale celle du témoin. Le bras paie ainsi sa multiplicité en puissance : la prédiction devient plus difficile à tenir, pas plus facile.\n\nLe signe s'inverse dans deux cas : si l'HYPOTHÈSE sur les composantes conditionnelles est fausse, ou si la perte de puissance due à α/2 domine.",
+      "identifiant_auteur": "opus-p2-01",
+      "loi_predictive": {
+        "espace_instances": "Une famille de mondes jamais vue, écrite par programme à graine scellée après le scellement de cette fiche : 20 mondes. Chacun porte au moins une chaîne conditionnelle de profondeur 2 certifiée détectable, et des composantes sans condition. Le témoin joue 4 générations, le bras 8 demi-générations. Étape bon marché : un seul modèle peu cher comme proposeur. Confirmation : composition actuelle.",
+        "metrique": "Oracle lu une fois après la course : composantes couvertes aux trois étages (propositions brutes, représentants, retenues), profondeur de chaîne atteinte, lois fausses et copies promues.\nCoût : dollars par modèle et par rôle, jetons d'entrée et de sortie, appels, heures de processeur du juge et du test de mort.\nTémoin : conception actuelle, mêmes mondes, mêmes modèles, même plafond de dollars.\nPlacebo : deux appels de trois cartes par génération, sans mise à jour de l'archive entre eux.",
+        "prediction": "Au même plafond de dollars :\n(1) les composantes certifiées couvertes par les retenues en fin de course, en somme sur 20 mondes, augmentent d'au moins 25 % en relatif ;\n(2) les chaînes de profondeur 2 sont complètes dans au moins 1,5 fois plus de mondes ;\n(3) pour les lois fausses et les copies promues au sens de l'oracle, la borne haute de l'intervalle de confiance à 95 % de la différence (bras moins témoin) est au plus +1 sur la course de 20 mondes.\nLa fiche est morte si (1) est inférieur à 10 %, si (3) est violé, ou si le placebo atteint le gain du bras.",
+        "signe": "+"
+      },
+      "nom": "Demi-générations : archive mise à jour au milieu de chaque génération, à dollars égaux",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Transposition, au cycle archive-nul, de l'opposition entre algorithmes évolutionnaires générationnels et à état permanent, avec une répartition du niveau entre passes à la manière des tests multiples en ligne. Voisine de la remise à zéro périodique citée par Bespoke Labs, mais ici rien n'est oublié : on archive plus tôt."
+      },
+      "passe": 2,
+      "perte_traduction": "La fiche mesure un calendrier de mise à jour de l'archive, pas une mémoire. L'égalité porte sur les dollars. Les appels doublent et la vue est servie deux fois ; ce surcoût est payé dans le plafond, au prix de cartes. Les heures de processeur du juge doublent au plus ; elles sont relevées, non égalisées. Si l'HYPOTHÈSE sur les composantes conditionnelles est fausse, le gain se réduit à l'évitement des doublons, et la division du niveau par deux peut l'effacer.",
+      "piege": "Premier piège : le découpage seul (deux appels de trois cartes) peut changer la diversité sans rien devoir à l'archive. Contrôle négatif : le placebo sans mise à jour, qui doit égaler le témoin.\nDeuxième piège : des copies par morceaux, entrées plus tôt dans l'archive, gonfleraient le bras. La garde doit donc être certifiée en absolu sur le banc avant toute comparaison.\nContrôle complémentaire : des mondes sans composante conditionnelle, où le gain prédit se réduit à l'évitement des doublons.",
+      "questions_servies": [
+        "levier:cout",
+        "QO2",
+        "QO4",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)(^|\\n)\\s*1[.)]\\s[^\\n]{3,}\\n\\s*2[.)]\\s"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Zhou et al., « Hypothesis generation with large language models », 2024",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Simpson, « The interpretation of interaction in contingency tables », Journal of the Royal Statistical Society série B, 1951",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "POPPER, Huang et al., ICML 2025 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Dwork et al., arXiv 1506.02629, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Co-Scientist, Gottweis et al., Nature 655, p. 487-496, 2026 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "opus",
+      "avantage": {
+        "incopiable_parce_que": "Le placebo par monde jumeau suppose un programme qui écrit le monde. Ce programme produit la même famille sans la composante conditionnelle, à marges égales. Ce contrôle n'existe que dans un banc à loi plantée.",
+        "source": "organisme",
+        "texte": "Le juge reste sur des tirages frais disjoints de l'échantillon public : l'information servie ne peut ni entamer la garantie, ni se confondre avec un verdict."
+      },
+      "cosmetique_si": "Le placebo donne le même gain. Ou le gain porte autant sur les composantes sans condition que sur les conditionnelles : c'est alors un effet de contexte chiffré, pas de croisement. Ou les copies promues augmentent.",
+      "cout": {
+        "nature": "depense",
+        "ordre_de_grandeur": "Bon marché d'abord : un modèle peu cher, 20 mondes, 3 bras (témoin, croisé, placebo), 2 générations, environ 120 appels, soit quelques dizaines de dollars. Confirmation : quelques centaines de dollars. Devis et feu vert de Lazar, préenregistrement scellé."
+      },
+      "demande_organisme": {
+        "nature": "ajout",
+        "texte": "1. Pour chaque monde, le programme tire une fois 2000 épisodes publics, à graine scellée, disjoints des tirages du juge et du test de mort.\n2. Chaque trait continu est coupé à sa médiane sur cet échantillon.\n3. Pour chaque paire non ordonnée de traits, le tableau donne les effectifs et la fréquence de chaque issue dans les quatre cases.\n4. Les paires suivent l'ordre lexicographique des noms de traits, jamais un ordre dérivé des données. La troncature se fait à un budget fixe de jetons.\n5. Le tableau est identique pour tous les proposeurs et toutes les générations, avec la mention « échantillon public, aucun jugement ».\n6. Égalité de dollars : plafond du témoin. En cas de dépassement, le dernier appel de la génération (ordre tiré à graine scellée) est supprimé et compté au relevé."
+      },
+      "empreinte": "f42354608fca6e17c9dfe3a18d9234bd874b84677a0f52e5b920854d417f08ae",
+      "enonce": "La modification ajoute à la vue des proposeurs un tableau d'issues croisées par paires de traits publics. Il est calculé par programme sur un échantillon public d'épisodes, tiré une fois à graine scellée et disjoint de tous les tirages du juge et du test de mort. À dollars égaux, cela fait-il couvrir davantage de composantes plantées vraies, surtout conditionnelles, sans promouvoir davantage de lois fausses ni de copies ?\n\nMécanisme dans l'organisme décrit : une composante conditionnelle est nulle en moyenne sur sa condition. Elle est donc presque invisible à une description, à des fréquences marginales ou à une loi sans condition. En revanche, elle laisse dans le croisement des deux traits des pentes de signes opposés selon la branche. Un proposeur qui voit ce croisement peut la proposer sans attendre que sa condition soit archivée.\n\nD'après les faits, la vue actuelle ne contient que la description, la grammaire et l'archive. Qu'aucun croisement n'y figure déjà est SUPPOSÉ.\n\nLe tableau n'est ni un verdict, ni l'oracle, ni une loi plantée, ni un score de juge ou de moniteur. Ce sont des effectifs bruts d'épisodes publics, identiques pour tous les proposeurs. Une loi ajustée au bruit du tableau est jugée sur des tirages frais disjoints et n'entame pas la garantie.\n\nLe signe s'inverse si les proposeurs lisent le bruit comme des conditions et dépensent leurs cartes sur des lois fausses, ou si la garde, hors de la classe de son nul, laisse passer des recombinaisons par morceaux.",
+      "identifiant_auteur": "opus-p2-02",
+      "loi_predictive": {
+        "espace_instances": "Une famille de mondes jamais vue, écrite à graine scellée après le scellement de la fiche : 20 mondes. Chacun porte au moins deux composantes conditionnelles certifiées détectables et des composantes sans condition. 2 générations, échantillon public de 2000 épisodes par monde. Bon marché d'abord avec un modèle peu cher, puis confirmation avec la composition actuelle.",
+        "metrique": "Oracle lu une fois : composantes avec et sans condition couvertes aux trois étages, lois fausses et copies promues.\nCoût : dollars, jetons d'entrée et de sortie, appels, par modèle.\nTémoin : vue actuelle, même plafond de dollars.\nPlacebo : tableau de même longueur, calculé sur un monde jumeau (mêmes marges, sans composante conditionnelle) ; ses cartes sont jugées sur le vrai monde.",
+        "prediction": "À dollars égaux, après 2 générations, en somme sur 20 mondes :\n(1) la part des composantes conditionnelles certifiées couvertes par les retenues dépasse celle du témoin d'au moins 15 points ;\n(2) les composantes sans condition couvertes ne baissent pas de plus de 5 % en relatif ;\n(3) pour les lois fausses et les copies promues au sens de l'oracle, la borne haute de l'intervalle à 95 % de la différence est au plus +1 sur 20 mondes ;\n(4) le placebo reste à moins de 5 points du témoin.\nLa fiche est morte si (1) est inférieur à 5 points ou si son intervalle à 95 % contient 0.",
+        "signe": "+"
+      },
+      "nom": "Tableau public d'issues croisées par paires de traits dans la vue des proposeurs",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "La génération d'hypothèses à partir de données par des modèles de langue est une pratique connue. La transposition porte sur l'information servie : des croisements limités aux paires, sur un échantillon public disjoint du juge, et sur la forme exacte des composantes conditionnelles."
+      },
+      "passe": 2,
+      "perte_traduction": "Un tableau à deux traits ne montre pas les interactions d'ordre trois : une chaîne de profondeur 2 n'y est lisible qu'en partie. La coupure à la médiane brouille une condition dont le seuil est loin de la médiane. La troncature au budget de jetons peut cacher des paires. À dollars égaux, la vue plus longue coûte des cartes au bras.",
+      "piege": "Le tableau pousse vers `si_sinon`, donc vers la classe que le nul ne couvre pas : des copies par morceaux de l'archive pourraient passer. La garde doit être certifiée en absolu avant la comparaison (voir la dernière fiche).\nContrôle négatif : le placebo par monde jumeau, qui doit égaler le témoin.",
+      "questions_servies": [
+        "levier:proposeurs",
+        "QO5",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)(^|\\n)\\s*1[.)]\\s[^\\n]{3,}\\n\\s*2[.)]\\s"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Chen, Zaharia, Zou, « FrugalGPT », 2023",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Bespoke Labs, « How models explore ideas », page publique, 10 novembre 2026",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "POPPER, Huang et al., ICML 2025 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Dwork et al., arXiv 1506.02629, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Co-Scientist, Gottweis et al., Nature 655, p. 487-496, 2026 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "opus",
+      "avantage": {
+        "incopiable_parce_que": "Sans monde planté à chaînes conditionnelles, on ne peut attribuer un gain de cascade ni au rôle, ni à la génération : il n'y a pas de vérité ordonnée à laquelle comparer.",
+        "source": "organisme",
+        "texte": "Les mondes à conditions ordonnées séparent ce qui est trouvable sans archive de ce qui ne l'est qu'après. L'oracle dit, génération par génération, où l'argent de frontière a servi."
+      },
+      "cosmetique_si": "Le bras tout bon marché atteint le même gain : la frontière n'est alors pas le mécanisme. Ou le gain est aussi grand sur les mondes sans composante conditionnelle. Ou il ne porte que sur les composantes sans condition.",
+      "cout": {
+        "nature": "depense",
+        "ordre_de_grandeur": "20 mondes, 3 bras (témoin, report, tout bon marché), 4 générations, environ 400 à 600 appels dont la moitié de frontière : quelques centaines de dollars. Premier devis réductible à 10 mondes et 3 générations. Devis et feu vert de Lazar, préenregistrement scellé."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "1. Génération 1 : le modèle peu cher, nommé avant le scellement, est appelé en session neuve, six cartes par appel, autant de fois qu'il faut pour rendre le nombre de cartes du témoin en génération 1.\n2. Δ = dollars du témoin en génération 1 (mesurés sur la course témoin, jouée d'abord sur les mêmes mondes) moins dollars du bras en génération 1.\n3. Générations 2 à G : composition du témoin, plus des appels de frontière supplémentaires (session neuve, vue habituelle, six cartes) financés par Δ, réparti à parts égales entre ces générations. Le proposeur de chaque appel supplémentaire est pris en rotation, dans un ordre tiré à graine scellée.\n4. La règle écrite qui fixe m suit le nombre de cartes de chaque génération.\n5. Plafond total du témoin, arrêt avant dépassement. Rien n'est piloté par la diversité, les promotions ou l'oracle."
+      },
+      "empreinte": "d247b924cd897c955ec395411f4690973cc72db4ad7e507506441d29a4de6e26",
+      "enonce": "La modification confie la génération 1 à un modèle peu cher, avec le même nombre de cartes que le témoin. Les dollars de frontière ainsi économisés sont reportés, à parts égales, en appels de frontière supplémentaires dans les générations 2 et suivantes. À dollars égaux par course, cela fait-il couvrir davantage de composantes plantées vraies, surtout conditionnelles, sans hausse de la part de lois fausses ni de copies ?\n\nMécanisme dans l'organisme décrit :\n- En génération 1, l'archive ne contient que la loi de départ. Dans la course v67, les onze retenues de la génération 1 étaient des variantes d'un même constat simple : ajouter un trait ignoré. Ce constat est tenu, par HYPOTHÈSE de la fiche, pour accessible à un modèle peu cher.\n- Les composantes conditionnelles ne deviennent trouvables qu'une fois leur condition archivée. C'est là que la capacité supposée supérieure de la frontière (lire une pente nette dans chaque branche) peut compter.\n- Le report place donc les dollars de frontière là où l'archive rend une découverte possible.\n\nLe signe s'inverse si le modèle peu cher n'archive pas les conditions en génération 1 : la chaîne cale.\n\nLa fiche mesure au passage ce que la génération 1 perd quand on lui retire la frontière (QO1). Conformément à la décision N-058, elle se tranche sur l'oracle aux propositions brutes et sur le coût. Elle ne se tranche jamais sur les promotions du juge, qui sont rapportées sans décider.",
+      "identifiant_auteur": "opus-p2-03",
+      "loi_predictive": {
+        "espace_instances": "20 mondes d'une famille jamais vue, à graine scellée. Chacun porte des composantes sans condition et au moins une chaîne conditionnelle de profondeur 2 certifiée. 4 générations ; composition actuelle pour le témoin.",
+        "metrique": "Oracle lu une fois : composantes certifiées portées par les cartes brutes, par génération et par nature ; part de lois fausses et de copies parmi les cartes brutes. Les étages représentants et retenues, y compris les promotions fausses, sont rapportés sans décider.\nCoût : dollars par modèle et par rôle, jetons, appels.\nTémoin : composition actuelle à chaque génération, même plafond de dollars, mêmes mondes.\nBras de lecture : tout bon marché à dollars égaux.",
+        "prediction": "Au même plafond de dollars, en somme sur 20 mondes :\n(1) les composantes conditionnelles certifiées portées par au moins une carte brute des générations 2 à 4 augmentent d'au moins 30 % en relatif ;\n(2) pour les composantes de toute nature portées par les cartes brutes de la course, la borne basse de l'intervalle à 95 % de la différence relative reste au-dessus de −5 % ;\n(3) la part des cartes brutes qui sont, au sens de l'oracle, des lois fausses ou des copies ne dépasse pas celle du témoin de plus de 2 points.\nLa fiche est morte si (1) est inférieur à 10 %.",
+        "signe": "+"
+      },
+      "nom": "Le bon marché d'abord : génération 1 confiée à un modèle peu cher, dollars de frontière reportés vers les générations suivantes",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Les cascades de modèles du moins cher au plus cher sont connues pour répondre à des requêtes. La transposition les ordonne dans le temps d'un organisme, selon ce que l'archive rend trouvable, et non selon la difficulté estimée d'une requête."
+      },
+      "passe": 2,
+      "perte_traduction": "Le critère décisif est pris aux propositions brutes, pour respecter la décision N-058. Un gain aux retenues n'est donc que rapporté. Le résultat dépend du modèle peu cher choisi et ne dit pas que la frontière est inutile ailleurs.",
+      "piege": "La chaîne cale : si le modèle peu cher n'archive pas les conditions en génération 1, les générations suivantes n'ont rien à étendre. L'oracle de la génération 1 le dit, et la fiche le compte comme réfutation de son HYPOTHÈSE.\nContrôle négatif : des mondes jumeaux sans composante conditionnelle. Le gain conditionnel y est sans objet ; le gain total doit y rester au niveau dû aux seules cartes supplémentaires.\nLa garde doit être certifiée en absolu avant toute comparaison.",
+      "questions_servies": [
+        "levier:cout",
+        "QO1",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)(^|\\n)\\s*1[.)]\\s[^\\n]{3,}\\n\\s*2[.)]\\s"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Du et al., « Improving factuality and reasoning in language models through multiagent debate », 2023",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Bespoke Labs, « How models explore ideas », page publique, 10 novembre 2026",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "POPPER, Huang et al., ICML 2025 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Dwork et al., arXiv 1506.02629, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Co-Scientist, Gottweis et al., Nature 655, p. 487-496, 2026 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "opus",
+      "avantage": {
+        "incopiable_parce_que": "Départager le grégarisme et la dispersion exige un oracle de composantes. Les dispositifs à plusieurs agents qui échangent se jugent d'ordinaire sur un juge à modèle ou sur des humains.",
+        "source": "organisme",
+        "texte": "La seule information échangée est le texte des pairs, jamais un verdict. Le regroupement mécanique des doublons donne au rappel un contenu factuel plutôt qu'une prime."
+      },
+      "cosmetique_si": "Le placebo donne le même gain. Ou le gain n'existe que pour les derniers rangs, quel que soit le contenu de la section. Ou la part de copies parmi les cartes brutes augmente.",
+      "cout": {
+        "nature": "depense",
+        "ordre_de_grandeur": "20 mondes, 3 bras (témoin, série, placebo), 2 générations, 4 proposeurs : environ 480 appels, soit quelques centaines de dollars. Version bon marché d'abord avec quatre appels d'un modèle peu cher. Devis et feu vert de Lazar, préenregistrement scellé."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "1. À chaque génération, le programme tire l'ordre des proposeurs à graine scellée.\n2. Le proposeur de rang k reçoit, en session neuve, la vue habituelle plus une section qui contient les cartes extraites des réponses brutes scellées des rangs 1 à k−1, sans tri et sans mention du gardien.\n3. Cette section porte la phrase : « Ces cartes ont été proposées dans cette génération ; elles ne sont ni jugées ni acceptées ; une carte presque identique à l'une d'elles sera regroupée avec elle. »\n4. Le proposeur rend six cartes.\n5. Égalité de dollars : plafond du témoin, arrêt avant dépassement, cartes perdues comptées au relevé."
+      },
+      "empreinte": "be386f70bb09a7f99ab933c4e9925ce9972a6d2b71de7f122b40274553c61b6e",
+      "enonce": "Les proposeurs d'une génération sont aujourd'hui appelés en parallèle et indépendamment. La modification les appelle en série, dans un ordre tiré à graine scellée. Chacun reçoit le texte brut des cartes déjà rendues par les précédents, sans verdict, sans passage par le gardien et sans annotation. À dollars égaux, cela fait-il couvrir davantage de composantes plantées vraies, sans hausse de la part de lois fausses ni de copies ?\n\nMécanisme : les onze variantes d'un même constat de la course v67 viennent de propositions qui ne se voient pas. Un proposeur qui voit qu'un constat est déjà proposé dans la génération porte ses cartes ailleurs. C'est d'autant plus vrai qu'on lui rappelle un fait du dispositif : une carte presque identique sera regroupée avec celle-ci.\n\nObjection des rejets établis : ce rappel n'est pas une récompense numérique de la nouveauté. Il ne porte aucun nombre, aucun score et aucun quota de formes. Il décrit le regroupement mécanique qui existe déjà.\n\nObjection du danger commun : toute pression vers la variété pousse vers `si_sinon` et `melange`. La fiche suppose donc la garde certifiée en absolu au préalable.\n\nLe signe peut s'inverser par grégarisme, et c'est la mesure qui tranche. Conformément à la décision N-058, la décision porte sur l'oracle aux propositions brutes et sur le coût, jamais sur les promotions.",
+      "identifiant_auteur": "opus-p2-04",
+      "loi_predictive": {
+        "espace_instances": "20 mondes d'une famille jamais vue, à graine scellée, 2 générations, composition actuelle des proposeurs (quatre).",
+        "metrique": "Oracle lu une fois : composantes portées par les cartes brutes, lois fausses et copies parmi elles. Les étages représentants et retenues sont rapportés sans décider. Mesure descriptive sans oracle : le nombre de groupes prédictifs.\nCoût : dollars et jetons par modèle, les derniers de la série payant davantage d'entrée.\nTémoin : appels parallèles indépendants, même plafond de dollars.\nPlacebo : section de même longueur contenant les cartes d'un autre monde.",
+        "prediction": "À dollars égaux :\n(1) le nombre de composantes plantées certifiées portées par au moins une carte brute, par monde et par génération, en moyenne sur 40 couples, augmente d'au moins 30 % en relatif ;\n(2) la part des cartes brutes qui sont des lois fausses ou des copies au sens de l'oracle ne dépasse pas celle du témoin de plus de 2 points ;\n(3) le placebo reste à 10 % près du témoin.\nLa fiche est morte si (1) est inférieur à 10 %.",
+        "signe": "+"
+      },
+      "nom": "Proposeurs en série : chacun voit les cartes brutes, non jugées, de ceux qui l'ont précédé dans la génération",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Les échanges entre agents (débat, tournoi) sont occupés. La transposition retire tout classement et tout juge à modèle, et ne fait circuler que des cartes brutes non jugées."
+      },
+      "passe": 2,
+      "perte_traduction": "L'ordre de passage crée une asymétrie entre modèles : la mesure dit l'effet de la série, pas la valeur propre de chaque modèle. Le critère décisif est pris aux propositions brutes : un gain aux retenues n'est que rapporté.",
+      "piege": "L'allongement du contexte seul peut expliquer l'effet. Contrôle négatif : le placebo par cartes d'un autre monde, de même longueur, qui doit égaler le témoin.\nLa garde doit être certifiée en absolu avant toute comparaison, faute de quoi les cartes poussées vers `si_sinon` hors de la classe du nul fausseraient la lecture des copies.",
+      "questions_servies": [
+        "levier:composition",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)(^|\\n)\\s*1[.)]\\s[^\\n]{3,}\\n\\s*2[.)]\\s"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Wang et Ramdas, « False discovery rate control with e-values », Journal of the Royal Statistical Society série B, 2022",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Wasserman, Ramdas, Balakrishnan, « Universal inference », PNAS, 2020",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Ramdas, Grünwald, Vovk, Shafer, « Game-theoretic statistics and safe anytime-valid inference », Statistical Science, 2023",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Even-Dar, Mannor, Mansour, élimination d'actions pour les bandits, Journal of Machine Learning Research, 2006",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Karnin, Koren, Somekh, « Almost optimal exploration in multi-armed bandits » (division successive), ICML 2013",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "POPPER, Huang et al., ICML 2025 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Dwork et al., arXiv 1506.02629, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Co-Scientist, Gottweis et al., Nature 655, p. 487-496, 2026 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "opus",
+      "avantage": {
+        "incopiable_parce_que": "La règle est copiable. Ce qui ne l'est pas à bas coût, c'est sa mesure par un oracle de monde planté sur une famille jamais vue, faute de banc certifié.",
+        "source": "methodes",
+        "texte": "La fiche obtient un gain de puissance sans toucher au nul, sans signal servi à un agent, avec une garantie démontrable sous arrêt optionnel."
+      },
+      "cosmetique_si": "Le gain disparaît quand le témoin reçoit 1,2 fois les tirages. Ou le placebo atteint le même gain : l'effet vient alors de l'arrêt, non de la réallocation. Ou les composantes gagnées sont seulement celles que le témoin couvrait à une graine près.",
+      "cout": {
+        "nature": "processeur",
+        "ordre_de_grandeur": "Quelques heures de processeur : mondes et cartes synthétiques écrits par programme, puis rejeu des cartes déjà jouées. Aucun appel de modèle."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "1. Le total T de tirages frais par génération est égal à celui du témoin.\n2. Après regroupement, chaque groupe reçoit à tour de rôle des blocs de 50 tirages.\n3. La valeur e courante d'un groupe est la moyenne, sur ses membres, du rapport entre la vraisemblance de la carte et le maximum de vraisemblance sur la classe du nul, recalculé sur tous les tirages reçus.\n4. Arrêt bas : la valeur e passe sous 1/20, après au moins un quart de la part fixe du témoin.\n5. Arrêt haut : la valeur e atteint m/α, avec m fixé d'avance par règle écrite.\n6. Plafond : au plus 4 fois la part du témoin par groupe.\n7. Les tirages libérés sont répartis à parts égales entre les groupes actifs.\n8. La valeur finale est la valeur arrêtée, puis la règle de Benjamini et Hochberg sur valeurs e s'applique.\n9. Le représentant est choisi comme aujourd'hui, jamais sur ces tirages ; le test de mort est inchangé.\nLa preuve de validité est scellée avant toute course."
+      },
+      "empreinte": "11e9f94baa233e9c4a8904245083c10e09a5fbde0ccb3c785c59099abff31c16",
+      "enonce": "À nombre total de tirages frais égal par génération, la modification répartit ces tirages entre les groupes de cartes par blocs, selon une règle scellée d'arrêt bas et d'arrêt haut sur des processus e. Cela couvre-t-il davantage de composantes plantées que le juge à part fixe par groupe, sans promouvoir davantage de lois fausses ni de copies ?\n\nCondition d'application, SUPPOSÉE : le juge actuel répartit les tirages par groupe. S'il évalue tous les groupes sur les mêmes tirages, la fiche n'a pas d'objet.\n\nMécanisme : avec une part fixe, un groupe nul consomme autant de tirages qu'un groupe porteur d'une composante faible, et ce dernier reste sous le seuil faute de tirages. Les tirages libérés par les groupes arrêtés tôt vont aux groupes encore actifs, ce qui fait franchir le seuil à des composantes proches de la détectabilité.\n\nLa garantie est conservée. La valeur e d'une carte est le rapport entre sa vraisemblance (loi fixée avant tout tirage) et le maximum de vraisemblance sur la classe du nul. Ce rapport est majoré, pour chaque membre du nul, par une martingale de test. Il garde donc une espérance au plus 1 à tout temps d'arrêt, y compris quand l'allocation dépend des autres groupes, puisque les tirages neufs sont indépendants du passé. La moyenne sur les membres d'un groupe garde cette propriété. La règle de Benjamini et Hochberg sur valeurs e reste valide sous dépendance quelconque.",
+      "identifiant_auteur": "opus-p2-05",
+      "loi_predictive": {
+        "espace_instances": "40 mondes d'une famille jamais vue, à graine scellée après le scellement de la fiche, aux composantes certifiées détectables ; 30 cartes par génération et par monde. Banc processeur : cartes synthétiques écrites par programme (composantes vraies perturbées, copies renommées, lois nulles). Confirmation : rejeu des cartes déjà jouées par de vrais proposeurs.",
+        "metrique": "Oracle lu une fois après chaque course : composantes couvertes, lois fausses et copies promues, aux trois étages.\nCoût : tirages frais par génération (égaux par construction) et heures de processeur.\nTémoin : juge actuel à part fixe par groupe, même total de tirages, mêmes cartes, mêmes graines de monde.",
+        "prediction": "À tirages frais totaux égaux, la part des composantes plantées portées par au moins une carte soumise et couvertes au sens de l'oracle augmente d'au moins 20 % en relatif (par exemple, de 0,50 à au moins 0,60). Pour les promotions de lois fausses et de copies au sens de l'oracle, la borne haute de l'intervalle à 95 % de la différence est au plus +1 sur 40 mondes. La fiche est morte si le gain relatif est inférieur à 5 % ou si les promotions fausses augmentent.",
+        "signe": "+"
+      },
+      "nom": "Allocation séquentielle des tirages frais du juge entre groupes, à tirages totaux égaux",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Transposition des tests par paris et de l'élimination successive au juge d'un organisme d'idéation dont le nul contient l'archive. L'allocation se fait au niveau des groupes de doublons, après regroupement."
+      },
+      "passe": 2,
+      "perte_traduction": "Dans un monde planté, un tirage frais coûte quelques millisecondes de processeur. Augmenter le total au témoin serait presque gratuit : la fiche ne vaut que si ce total est borné par décision, en vue des domaines où un tirage est une expérience chère. Elle ne dit rien de la qualité des cartes proposées.",
+      "piege": "L'arrêt bas peut tuer une composante vraie faible à cause d'une mauvaise série en début de parcours.\nContrôle négatif : des mondes entièrement dans la classe du nul, où les promotions doivent rester au niveau α.\nBras placebo : même règle d'arrêt, mais tirages libérés répartis au hasard entre tous les groupes, y compris les arrêtés.",
+      "questions_servies": [
+        "levier:juge",
+        "QO5",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)(^|\\n)\\s*1[.)]\\s[^\\n]{3,}\\n\\s*2[.)]\\s"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Wasserman, Ramdas, Balakrishnan, « Universal inference », PNAS, 2020",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "POPPER, Huang et al., ICML 2025 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Dwork et al., arXiv 1506.02629, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585, 2015 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Co-Scientist, Gottweis et al., Nature 655, p. 487-496, 2026 (citation obligatoire, contenu non lu)",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "opus",
+      "avantage": {
+        "incopiable_parce_que": "La certification se fait par l'oracle sur des copies par morceaux plantées par programme, hors de portée sans monde planté.",
+        "source": "methodes",
+        "texte": "La garde devient certifiable en absolu sur la classe même vers laquelle toute pression de variété pousse, condition posée par le premier tour du collisionneur avant toute comparaison entre bras."
+      },
+      "cosmetique_si": "Le témoin ne promeut déjà aucune copie par morceaux sur le banc : la fuite était alors théorique.",
+      "cout": {
+        "nature": "processeur",
+        "ordre_de_grandeur": "Quelques heures de processeur. Aucun appel de modèle."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "1. Pour chaque trait public et chaque décile public fixé d'avance, le programme calcule le maximum de vraisemblance de la classe actuelle sur les tirages situés de chaque côté du seuil, puis leur produit.\n2. Le dénominateur de la valeur e devient le maximum entre le maximum actuel et ces produits.\n3. Le reste du juge est inchangé.\nLa preuve de validité est scellée avant toute course."
+      },
+      "empreinte": "37ba9469ffddc76ba7dff3dd121c885014481f6a8aa852bf1fcd477062f6eb11",
+      "enonce": "C'est une approche préalable aux modifications qui poussent vers `si_sinon` (tableau croisé, proposeurs en série), notée comme telle : elle ne prédit pas de gain de couverture, elle ferme une fuite.\n\nElle ajoute à la classe du nul les recombinaisons par morceaux de profondeur 1. Chacune applique, d'un côté d'un seuil d'un trait public, un membre de la classe actuelle du nul (loi de l'archive, loi aveugle ou recombinaison déjà couverte), et un autre membre de l'autre côté. Les seuils sont pris sur une grille publique fixée d'avance : les déciles.\n\nLa vraisemblance d'une loi par morceaux se factorise selon les deux côtés du seuil. Le maximum sur la classe élargie s'obtient donc exactement : pour chaque trait et chaque seuil, on calcule le produit des maximums de la classe actuelle de chaque côté, puis on prend le maximum sur la grille. Le calcul reste fini et bon marché.\n\nLa garantie se conserve, puisque le nul s'agrandit : la valeur e reste majorée par une martingale de test pour chacun de ses membres.\n\nMécanisme : la limite connue du juge est qu'il cède hors de la classe de son nul. La garde contre les copies se ferme ainsi à l'endroit exact où une pression vers la variété fait passer des copies. Les modifications qui visent la couverture deviennent alors mesurables sans hausse des copies.",
+      "identifiant_auteur": "opus-p2-06",
+      "loi_predictive": {
+        "espace_instances": "40 mondes d'une famille jamais vue, à graine scellée. Cartes synthétiques écrites par programme : composantes vraies, copies par morceaux de l'archive, lois nulles. Puis rejeu des cartes déjà jouées.",
+        "metrique": "Oracle : copies promues, composantes vraies couvertes, composantes conditionnelles absorbées.\nCoût : heures de processeur du juge.\nTémoin : juge actuel, mêmes cartes, mêmes tirages.",
+        "prediction": "À tirages frais égaux :\n(1) les copies par morceaux promues au sens de l'oracle tombent à au plus 5 % du niveau du témoin ;\n(2) la couverture des composantes vraies ne baisse pas de plus de 5 % en relatif.\nException prédite et comptée à part : une composante conditionnelle dont les deux branches sont déjà des membres de la classe actuelle, avec un seuil sur la grille, est absorbée.",
+        "signe": "0"
+      },
+      "nom": "Étendre la classe du nul aux recombinaisons par morceaux sur seuils publics, préalable aux bras qui poussent vers la variété",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "L'inférence universelle avec un nul composite est connue. Son application à une classe de recombinaisons par morceaux de l'archive, avec un maximum factorisé par côté, est propre à ce juge."
+      },
+      "passe": 2,
+      "perte_traduction": "La fiche ferme une fuite, elle ne crée pas de découverte. Les produits et les compositions de lois connues restent hors de la classe. Un seuil hors de la grille des déciles laisse passer une copie.",
+      "piege": "La classe élargie absorbe des composantes conditionnelles vraies et fait baisser la couverture.\nContrôle négatif : des mondes sans copie par morceaux, où la couverture hors exception doit rester égale au témoin.",
+      "questions_servies": [
+        "levier:juge",
+        "nouvelle"
+      ],
+      "type": "approche"
+    },
+    "signaux": [
+      "(?i)(^|\\n)\\s*1[.)]\\s[^\\n]{3,}\\n\\s*2[.)]\\s"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Limite connue du juge et danger commun des formes `si_sinon` et `melange`, faits §1 et §3 ; v67 génération 2, copies renommées refusées, faits §2",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Preuve de validité sur H₀ « monde dans la classe du nul de l'archive », qui ne borne pas les fausses découvertes au sens de l'oracle, conception v3 §3, faits §4",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Grünwald, de Heide et Koolen, « Safe testing », 2019 (valeurs e et nul composite)",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585, 2015",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "POPPER, Huang et al., ICML 2025",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "fable",
+      "avantage": {
+        "incopiable_parce_que": "C'est une propriété de la garantie formelle (espérance de la valeur e au plus 1 contre un nul composite contenant l'archive) qui ne s'achète pas avec du calcul ; elle exige la grammaire fermée et l'archive cumulative de l'organisme.",
+        "source": "programme",
+        "texte": "La limite connue du juge (il cède hors de sa classe) est le danger commun de toute pression vers la variété ; la lever par construction du nul rend sûres les comparaisons entre bras des autres fiches, et, parce que le nul est cumulatif, chaque fausse acceptation évitée en génération 1 est un faux « déjà connu » de moins opposé aux vraies cartes de génération 2."
+      },
+      "cosmetique_si": "La baisse des copies promues est obtenue par la seule baisse mécanique de toutes les valeurs e (nul plus lourd) et touche à égale proportion les composantes vraies : le nul n'a rien appris, il a durci le seuil ; ou le gain en génération 2 disparaît quand l'archive du témoin est purgée à la main des lois fausses par l'oracle (contrôle hors course, jamais servi) : alors le mécanisme de pollution n'est pas en cause.",
+      "cout": {
+        "nature": "processeur",
+        "ordre_de_grandeur": "Étape 1 : rejeu des cartes déjà rendues, quelques heures de calcul local, zéro dollar ; étape 2 (facultative) : 10 mondes × 2 bras × 2 générations × 4 proposeurs, quelques dizaines de dollars, devis avant feu vert."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "Dans le programme du juge : étendre la classe de recombinaisons du nul aux lois `si_sinon` et `par_sous_population` à au plus deux branches, chaque branche étant une loi de l'archive ou une loi aveugle (jamais une loi réajustée), le seuil ou la sous-population de coupure pris dans une grille publique fixée d'avance ; calculer la valeur e d'une carte contre le mélange à poids fixes (règle écrite, scellée) de l'ancien nul et de ces lois, ce qui conserve l'espérance au plus 1 sous le nul composite ; règle de Benjamini et Hochberg sur les valeurs e, m, regroupement et test de mort inchangés. Étape 1 : rejeu des cartes déjà rendues, deux nuls, lecture unique de l'oracle ; étape 2 seulement si l'étape 1 tient."
+      },
+      "empreinte": "a1a5e279702856cd9c9bfff94f83c35c3fc14b59cc9424b17f68682ee5a75838",
+      "enonce": "Élargir la classe du nul du juge aux recombinaisons par morceaux des lois acceptées (lois `si_sinon` et `par_sous_population` à au plus deux branches, chaque branche étant une loi de l'archive ou une loi aveugle, coupure dans une grille publique), afin que moins de copies et de lois fausses entrent dans l'archive ; comme le nul des générations suivantes contient les lois acceptées, une archive moins polluée cesse de faire passer pour copies des composantes vraies ; mesurer par l'oracle, d'abord en rejeu hors ligne, la chute des copies à couverture maintenue, puis le gain de couverture en génération 2.",
+      "identifiant_auteur": "fable-p2-05",
+      "loi_predictive": {
+        "espace_instances": "Étape 1 (rejeu hors ligne) : cartes déjà rendues sur mondes de la famille v67 et sur une famille jamais vue à composante conditionnelle ; 20 mondes. Étape 2 (course) : 10 mondes de la famille neuve, deux générations, deux bras (nul actuel / nul élargi), 4 proposeurs.",
+        "metrique": "Oracle : lois fausses, copies, composantes couvertes par étage et par génération ; composition de l'archive finale (vraies / fausses). Coût : calcul local seul en étape 1 ; dollars par rôle et par génération égaux entre bras en étape 2 ; témoin = nul actuel.",
+        "prediction": "Étape 1, à nombre de tirages frais égal : copies et lois fausses promues (oracle) divisées par au moins 2 sur la somme des 20 mondes ; composantes vraies couvertes aux retenues : baisse ≤ 1 sur la somme ; la composante conditionnelle vraie reste promue dans au moins 90 % des mondes où elle l'était. Étape 2, à dollars égaux : composantes vraies couvertes à la fin de la génération 2 : au moins +2 sur la somme des 10 mondes pour le bras élargi, avec lois fausses dans l'archive finale divisées par au moins 2.",
+        "signe": "+"
+      },
+      "nom": "Nul élargi aux recombinaisons par morceaux : moins d'archive polluée, plus de couverture aux générations suivantes",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Valeurs e contre un nul composite par mélange à poids fixes, transposé à la classe des recombinaisons par morceaux ; l'effet différé sur l'archive des générations suivantes est propre à la conception à nul cumulatif."
+      },
+      "passe": 2,
+      "perte_traduction": "L'idée (un juge qui tient dans toute la grammaire) devient une mesure sur deux familles et une seule classe de recombinaison ; elle ne couvre ni les produits ni les compositions de lois, et le gain en génération 2 dépend d'un mécanisme de pollution de l'archive qui reste une hypothèse.",
+      "piege": "Un nul trop large absorbe la composante conditionnelle vraie elle-même (une pente nette par branche ressemble à une recombinaison par morceaux si les lois aveugles contiennent des pentes par trait) : perte de couverture masquée par la baisse des fausses. Contrôle négatif : mondes où l'archive contient déjà la condition, où la composante conditionnelle vraie doit rester promue ; et vérification que les lois aveugles de branche ne contiennent aucune pente sur le trait de la composante.",
+      "questions_servies": [
+        "levier:juge",
+        "QO2",
+        "QO5",
+        "nouvelle"
+      ],
+      "type": "approche"
+    },
+    "signaux": [
+      "(?i)\\b(étapes?|etapes?|steps?|phases?)\\s*(1|un|une|one)\\b\\s*[:.)\\-—]"
+    ]
+  }
+]
