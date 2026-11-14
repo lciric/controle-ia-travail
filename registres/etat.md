@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-14 vers 16:20 UTC — passation d'étape `registres/passations/2026-11-14-1617.md` (R-2787), qui prime** : `CODE-MOTS-ET-COUT-T06` et `AUDIT-FUITES-T07` inscrites ; code de B bis contre-lu et corrigé (« scellable avec mineurs », branche `prep/t07bbis-code-v1` `38c7203e`, hors `main`) ; Neuron Lens arrêtée faute de crédit Vast (6,68 USD, R-2783) ; phase A du compte 3 prête à remettre. Décisions attendues de Lazar : crédit Vast, jeton, prix console du pilote MR-2, R-V3 et les nœuds de la passation.
+
 **2026-11-14 vers 15:00 UTC (R-2768 à R-2779)** : nouvelle mère `session_016QhUrtmLyFWJP6Cy7rgfXH`. **`CODE-MOTS-ET-COUT-T06` inscrite** (14:55:41Z ; pièce v3 « coût présent », contre-lue scellable, banc 83/83 rejoué) ; **G8 fait, `AUDIT-FUITES-T07` inscrite** (14:57:54Z, copie octet pour octet depuis le coffre). Compte 3 : liste « qui a lu quoi » v2 et consigne du lecteur A versées, vérification courte « remissible » ; phase A à remettre par Lazar à une session neuve. Code de B bis : développeur neuf en cours, branche `prep/t07bbis-code-v1` hors `main`. Neuron Lens : fille reprise (`session_016QhUrtahFZo57fZUcRReVA`), commande v6 en cours. Suite d'essais : 6 225 passés, 12 échecs connus ou d'inventaire (R-2776).
 
 **2026-11-14, reprise (R-2768, R-2769)** : nouvelle mère `session_016QhUrtmLyFWJP6Cy7rgfXH` ; coffre de l'audit vérifié (16 sur 16), audit non rejoué ; dépense de la sonde v74 (0,099132 USD) inscrite.
