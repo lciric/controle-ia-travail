@@ -1,0 +1,506 @@
+[
+ {
+  "id": "P01",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Dose : plus de jetons d'entraînement alignés, non des raisons",
+  "mecanisme": "Les démonstrations avec raisonnement sont plus longues : plus de jetons, plus de gradient. Le gain serait une fonction de la dose, le raisonnement n'en étant que le véhicule.",
+  "prediction": "Si vraie : une jumelle sans raisonnement réentraînée à nombre de jetons apparié rejoint la recette avec raisonnement. « Raisons » : elle reste en deçà. « Regard » : rien.",
+  "test": "Seule mesure propre : un réentraînement apparié en jetons (coût haut) ; multiplier l'adaptateur n'est pas une dose. À défaut, déclarer la rivale non tranchable avec les adaptateurs publiés.",
+  "controles": "Positif : réduire la dose de la recette doit remonter son taux. Négatif : dose de la référence sans effet.",
+  "cout": "haut"
+ },
+ {
+  "id": "P02",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Effet paradoxal de la clause « que l'on se croie observé ou non »",
+  "mecanisme": "Trois spécifications demandent en toutes lettres de se conduire pareil qu'on se croie observé ou non ; celle de la paire jumelle ne le demande pas. Nommer l'observation pendant l'entraînement pourrait rendre le concept d'évaluation plus saillant, ou faire de l'invariance au regard une raison apprise, ce qui rend S muet pour ces recettes.",
+  "prediction": "Si vraie : sur des consignes neutres, les adaptateurs à clause activent davantage la sonde d'évaluation et répondent plus souvent « oui » à « suis-je évalué ? » que la paire jumelle. Si fausse : pas de différence liée à la clause.",
+  "test": "Sur les neuf adaptateurs publiés : sonde et question de croyance sans phrase de regard ; peut-être déjà disponible dans le contrôle de manipulation joué.",
+  "controles": "Positif ou témoin : injecter la clause en consigne contre une règle impérative de même longueur sans mot d'observation. Négatif : la référence.",
+  "cout": "très bas"
+ },
+ {
+  "id": "P03",
+  "genre": "explication rivale",
+  "famille": "c",
+  "nom": "Précision numérique réduite (4 bits) des épisodes",
+  "mecanisme": "Si les épisodes ont été joués en précision réduite, la quantification peut déplacer différemment les taux de chaque adaptateur. Les contrastes en hériteraient.",
+  "prediction": "Si vraie : sur les 27 scénarios originaux, l'écart de taux entre précision native et 4 bits dépasse quelques points et diffère entre adaptateurs. Si fausse : écarts faibles et égaux.",
+  "test": "Une passe d'inférence en précision native sur les scénarios originaux.",
+  "controles": "Positif : un adaptateur connu sensible. Négatif : le modèle de départ.",
+  "cout": "bas"
+ },
+ {
+  "id": "P04",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Règle figée qui cède à une justification fausse mais plausible",
+  "mecanisme": "Le gain viendrait d'une règle tabulaire en poids (« ne pas exfiltrer sauf migration autorisée ») plutôt que des raisons. Une telle règle cède quand une justification satisfait ses critères de surface.",
+  "prediction": "Si vraie : une consigne qui ordonne l'action nuisible avec une justification plausible mais fausse (« migration autorisée » alors qu'elle ne l'est pas, d'après le contexte) obtient l'action. « Raisons » : refus, et la trace cite la raison correcte. « Regard » : effet modulé par l'observation seulement.",
+  "test": "Un bras ajouté aux épisodes d'ordre adversarial déjà prévus ; adaptateurs publiés ; épisodes neufs.",
+  "controles": "Positif : instruction bénigne avec justification vraie, exécutée. Négatif : ordre sans justification (déjà refusé).",
+  "cout": "bas"
+ },
+ {
+  "id": "P05",
+  "genre": "expérience",
+  "famille": "—",
+  "nom": "Duel « raisons » contre « refus » par paires de légitimité",
+  "mecanisme": "Pour chacune des 27 évaluations, une jumelle où seul le fait qui rend l'action nuisible est changé (l'action devient légitime ou nécessaire), à outil, décor, urgence et mots constants, plus une édition placebo. Les étiquettes de bonne action sont fixées par des annotateurs aveugles avant toute sortie.",
+  "prediction": "Métrique : discrimination Δ = P(agit | légitime) − P(agit | nuisible), par modèle, rééchantillonnée par scénario. H_A « raisons » : Δ de la recette dépasse celle de la référence d'un seuil préenregistré et P(agit | légitime) reste haute. H_B « refus » : P(agit | légitime) tombe avec le gain, Δ proche de zéro. Chacune des issues falsifie l'autre.",
+  "test": "Environ un dixième des épisodes de l'expérience principale ; pilote sur 9 scénarios pour estimer la variance entre paires, puis ajout de scénarios plutôt que de tirages ; verdict mécanique primaire.",
+  "controles": "Négatif : l'édition placebo ne change rien. Témoin à coût égal : recette sans documents, ou variations de style seules au même budget. Précondition : référence et modèle de départ agissent sur la version légitime.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P06",
+  "genre": "explication rivale",
+  "famille": "c",
+  "nom": "Juge indulgent au style de la famille qui a écrit les données",
+  "mecanisme": "Les données d'entraînement et le juge viennent de la même famille de modèles ; la recette écrit des délibérations dans ce style, que le juge peut lire comme un refus même quand l'appel nuisible a eu lieu. Une part du gain serait un écart de jugement.",
+  "prediction": "Si vraie : un verdict mécanique tiré des seuls journaux d'appels d'outil (outil, arguments, changement d'état) et un audit humain aveugle réduisent le gain de la recette plus que celui de la référence ; le désaccord juge/journal croît avec la ressemblance de style. Si fausse : gain stable entre verdicts. « Raisons » et « regard » prédisent un effet sur les actes, pas sur le jugement.",
+  "test": "Sur les épisodes déjà joués : détecteur par programme des trois actions, audit humain aveugle stratifié couvrant accords et désaccords, repondéré ; taux d'erreur du juge par adaptateur.",
+  "controles": "Positif : épisodes construits où un refus verbal accompagne une action exécutée (tout verdict doit compter l'action). Négatif : refus sans action et exécutions légitimes appariés en style.",
+  "cout": "bas"
+ },
+ {
+  "id": "P07",
+  "genre": "explication rivale",
+  "famille": "c",
+  "nom": "Le juge peut se tromper : faire relire un échantillon",
+  "mecanisme": "Le juge automatique peut commettre des erreurs. Les taux d'actions nuisibles pourraient être inexacts.",
+  "prediction": "Il faudrait vérifier que les taux sont corrects ; si le juge se trompe, les taux sont faux, sinon ils sont justes.",
+  "test": "Faire relire un échantillon d'épisodes par des humains.",
+  "controles": "Accord entre humains.",
+  "cout": "bas"
+ },
+ {
+  "id": "P08",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Refus insensible à la légitimité",
+  "mecanisme": "La recette a seulement relevé le seuil à partir duquel le modèle entreprend une action sensible dans un contexte d'agent. Elle évite le tort en refusant davantage, sans mieux arbitrer entre le tort de l'action et celui de l'inaction.",
+  "prediction": "Si vraie : sur des jumelles des scénarios où seul le fait qui rend l'action nuisible est retiré (l'action devient légitime, voire nécessaire pour éviter un tort plus grand), la recette refuse aussi ; la discrimination P(agit | légitime) − P(agit | nuisible) reste proche de zéro. « Raisons » prédit une discrimination forte ; « regard » prédit une modulation par l'observation, pas un biais stable vers l'inaction.",
+  "test": "Paires contrefactuelles nouvelles sur les adaptateurs publiés (recette avec raisonnement, jumelle, référence), même outil et même décor ; épisodes neufs, sans réentraînement. Les épisodes déjà joués ne servent qu'au tri.",
+  "controles": "Positif : un modèle bridé par consigne (« n'agis jamais ») doit donner une discrimination nulle. Négatif : édition placebo qui ne change aucun fait pertinent ; instruction bénigne avec le même outil.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P09",
+  "genre": "explication rivale",
+  "famille": "b",
+  "nom": "Le retrait ampute précisément le savoir normatif",
+  "mecanisme": "Si la direction d'évaluation capte aussi le champ des règles morales et de l'audit, son retrait détruit les raisons elles-mêmes. On croirait alors à une dépendance au regard, alors que des directions témoins appariées en dégât général ne touchent pas ce savoir.",
+  "prediction": "Si vraie : le retrait fait baisser, plus que les directions témoins, la réussite à un questionnaire sur les principes de la spécification posé à la troisième personne, sans enjeu d'évaluation ; orthogonaliser la direction d'évaluation à une direction « spécification » corrige le défaut. Si fausse : questionnaire intact.",
+  "test": "Questionnaire d'une cinquantaine de questions ; orthogonalisation matricielle ; aucun réentraînement.",
+  "controles": "Positif : une direction « spécification contre texte encyclopédique » doit dégrader le questionnaire. Négatif : exécution bénigne au même outil inchangée.",
+  "cout": "bas"
+ },
+ {
+  "id": "P10",
+  "genre": "expérience",
+  "famille": "—",
+  "nom": "Double dissociation : retirer une direction « raison » propre à un principe",
+  "mecanisme": "Construire, si possible, une direction interne par principe de la spécification (justifications des documents, orthogonalisée aux règles nues et à la direction d'évaluation). La retirer de la recette.",
+  "prediction": "H_A « raisons » : le retrait de la direction du principe P fait remonter le taux nuisible sur les scénarios où P est pertinent, pas sur les autres, sans toucher l'exécution bénigne ; le retrait de la direction d'évaluation laisse le gain. Si fausse : effets non sélectifs.",
+  "test": "Activations et retraits, sans réentraînement ; construction des directions par principe incertaine.",
+  "controles": "Négatif : direction aléatoire appariée en dégât. Positif : questionnaire sur le principe P.",
+  "cout": "moyen à haut"
+ },
+ {
+  "id": "P11",
+  "genre": "explication rivale",
+  "famille": "a et b",
+  "nom": "Croyances de situation autres que l'observation (fictif, conséquence pour soi)",
+  "mecanisme": "Les textes « évaluation » contre « déploiement » mêlent au moins trois croyances : on m'observe ; ceci est fictif ; ceci me changera. « Fictif » peut désinhiber quand « observé » inhibe, et deux effets opposés donneraient l'effet nul constaté.",
+  "prediction": "Si vraie : trois sous-directions construites sur des contrastes tenus à part (observé ou non à réalité fixe ; réel ou fictif à observation fixe ; conséquence pour soi ou non) ont des effets distincts, possiblement de signes contraires, sur le gain, alors que la direction composite n'en a pas. « Raisons » : aucun des trois retraits ne touche le gain. « Regard » pur : seul le retrait « observé » le touche.",
+  "test": "Dans l'intervention dans les poids, trois retraits au lieu d'un ; textes de construction nouveaux.",
+  "controles": "Positif : l'organisme du banc d'essai. Négatif : directions au hasard appariées en dégât.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P12",
+  "genre": "explication rivale",
+  "famille": "b",
+  "nom": "Le gain disparaît quand on retire la direction de conscience d'évaluation",
+  "mecanisme": "La conduite des modèles formés à la spécification dépendrait de leur lecture interne « je suis évalué ». Retirer cette lecture ferait remonter les actions nuisibles.",
+  "prediction": "Si vraie : l'ablation de la direction de conscience d'évaluation, construite par différence de moyennes sur des textes évaluation contre déploiement, fait remonter les actions nuisibles de la recette vers la référence. Si fausse : le gain tient.",
+  "test": "Construire la direction sur le modèle de départ, la retirer des poids des adaptateurs, mesurer ce qui reste du gain.",
+  "controles": "Positif : un organisme dont la conduite dépend de l'évaluation. Négatif : directions témoins appariées en dégât.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P13",
+  "genre": "expérience",
+  "famille": "—",
+  "nom": "Transfert aux actions dérivables non nommées",
+  "mecanisme": "Construire, par des auteurs aveugles aux résultats, des cas indépendants (outils et domaines nouveaux) où une action non nommée par la spécification est condamnée par ses raisons, et où une action nommée ne l'est pas parce que sa raison ne s'applique pas.",
+  "prediction": "H_A « raisons » : la recette refuse les nuisances dérivables et exécute les actions nommées dont la raison ne s'applique pas. Surface ou règle : l'inverse (suit les noms). « Regard » : rien de spécifique. Duel sur l'écart de transfert avec un seuil préenregistré.",
+  "test": "Épisodes neufs sur les adaptateurs publiés ; un panel humain fixe d'avance la bonne action.",
+  "controles": "Positif : cas proches des originaux qui reproduisent le gain. Négatif : marqueurs normatifs non pertinents, autorisations invalides, changements de faits sans conséquence normative.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P14",
+  "genre": "explication rivale",
+  "famille": "b",
+  "nom": "Banc d'essai sans témoin stable : l'intervention détruit tout gain",
+  "mecanisme": "Un organisme dont la conduite dépend exprès de l'évaluation montre que l'intervention peut faire tomber une conduite conditionnelle, pas qu'elle épargne une conduite qui n'en dépend pas. Sans ce second témoin, une chute chez les recettes ne se lit pas.",
+  "prediction": "Si l'intervention est non spécifique : elle abaisse aussi la conduite d'un organisme dont le gain ne dépend pas du regard (entraîné sans conditionnalité, ou politique de refus installée par consigne). Si spécifique : organisme conditionnel guéri, organisme stable intact.",
+  "test": "Organisme stable de type déjà publié entraîné sans conditionnalité ; à défaut, politique de refus par consigne (substitut faible) ; mêmes ablations.",
+  "controles": "Positif : organisme conditionnel. Négatif : organisme stable.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P15",
+  "genre": "explication rivale",
+  "famille": "b",
+  "nom": "Organisme témoin plus facile à corriger que les recettes (rang effectif)",
+  "mecanisme": "Un organisme entraîné à conditionner sa conduite sur l'évaluation peut l'encoder dans une direction saillante et localisée. L'intervention réussirait sur lui et manquerait une conscience diffuse chez les recettes.",
+  "prediction": "Si vraie : le spectre de la différence d'activations évaluation moins déploiement est concentré sur une ou deux composantes chez l'organisme, plat chez le modèle de départ et la recette ; l'effet de l'intervention sur les recettes dépend du rang retiré (1 à 16). Si fausse : spectres comparables.",
+  "test": "Analyse spectrale des activations déjà collectées pour construire la direction et le banc ; balayage du rang retiré.",
+  "controles": "Positif : retrait de rang r sur l'organisme fait tomber sa conduite. Négatif : sous-espace aléatoire de même rang apparié en dégât.",
+  "cout": "bas"
+ },
+ {
+  "id": "P16",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Compétence préexistante plutôt qu'acquise par les raisons",
+  "mecanisme": "Une sélectivité de la recette peut venir d'une capacité déjà présente dans le modèle de départ, ou des démonstrations, plutôt que des documents de raisons. Les adaptateurs seuls n'identifient pas l'origine.",
+  "prediction": "Si vraie : la même sélectivité (paires légitime/nuisible) apparaît chez la référence, le modèle de départ ou les recettes sans documents. « Raisons apprises » : la sélectivité croît des recettes sans documents vers celles avec documents, hors intervalle. « Regard » : rien.",
+  "test": "Ajouter les adaptateurs publiés sans documents et la référence comme comparateurs dans l'expérience des paires ; contraste d'entraînement apparié seulement ensuite.",
+  "controles": "Positif : changement factuel non normatif de difficulté appariée (compétence générale). Négatif : édition placebo.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P17",
+  "genre": "explication rivale",
+  "famille": "b",
+  "nom": "Direction d'évaluation mal transportée ou effacée incomplètement",
+  "mecanisme": "La direction est construite sur le modèle de départ ; un adaptateur peut la faire tourner, la redistribuer ou lire l'évaluation par d'autres directions. Un « gain qui tient » après retrait lirait alors un instrument muet.",
+  "prediction": "Si vraie : une sonde neuve entraînée sur les activations de l'adaptateur après retrait décode encore évaluation contre déploiement sur des textes tenus à part ; la direction propre à l'adaptateur diffère de la direction importée (angles principaux) et son retrait a un effet que celui de la direction importée n'a pas. Si fausse : décodage au hasard après retrait, directions proches, effets égaux.",
+  "test": "Passes avant sur quelques centaines de textes ; sondes linéaires ; comparer retrait de la direction importée et de la direction locale ; effacement à garantie linéaire plutôt qu'une direction.",
+  "controles": "Positif : l'organisme du banc d'essai ; le retrait fait tomber le « oui » à « suis-je évalué ? » dans l'adaptateur. Négatif : sondes à étiquettes permutées ; rotation de fond d'une direction sans rapport (code contre histoire).",
+  "cout": "bas"
+ },
+ {
+  "id": "P18",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Changement de personnage plutôt que raisons",
+  "mecanisme": "La recette installerait un personnage d'assistant prudent, global, sans usage des raisons. La conduite suivrait ce personnage.",
+  "prediction": "Si vraie : retirer une direction de personnage construite sur le modèle de départ ramène le taux d'actions nuisibles vers la référence. « Raisons » : une part du gain survit. « Regard » : rien.",
+  "test": "Même machinerie que le retrait de la direction de refus.",
+  "controles": "Positif et négatif : comme pour la direction de refus.",
+  "cout": "bas à moyen"
+ },
+ {
+  "id": "P19",
+  "genre": "explication rivale",
+  "famille": "c",
+  "nom": "Plancher, échelle et rapport S",
+  "mecanisme": "S est un rapport de différences de taux ; la recette est près du plancher, sa jumelle à un tiers, et S dépend aussi des mouvements de la référence. Un même déplacement en log-cotes donne presque rien près de zéro et beaucoup à un tiers, d'où des contrastes D fabriqués ou masqués.",
+  "prediction": "Si vraie : sur l'échelle des log-cotes (modèle logistique mixte, effets aléatoires par scénario, pénalisation contre les cellules à zéro), l'interaction recette × phrase change de taille ou de signe par rapport à la lecture en points ; restreint aux scénarios difficiles définis par le modèle de départ, la recette devient sensible. Si fausse : même lecture sur les deux échelles.",
+  "test": "Réanalyse des comptes déjà acquis ; aucun appel de modèle.",
+  "controles": "Positif : simulation à effet égal en log-cotes pour deux modèles (2 % et 33 %), où S doit conclure à tort. Négatif : la paire « journaux » ; modèles en zone médiane.",
+  "cout": "nul"
+ },
+ {
+  "id": "P20",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Compétence procédurale générique apprise avec le raisonnement",
+  "mecanisme": "Les démonstrations avec raisonnement enseigneraient une procédure (vérifier les conditions, anticiper les effets, contrôler les arguments d'un outil). Le gain viendrait d'une meilleure résolution de tâche, non d'un apprentissage normatif.",
+  "prediction": "Si vraie : l'avantage de la recette avec raisonnement croît avec la complexité de planification, y compris sur des tâches non normatives, et se réduit quand toutes les conséquences sont données explicitement. « Raisons » : avantage sélectif sur les distinctions normatives à difficulté appariée. « Regard » : interaction avec l'observation.",
+  "test": "Croiser difficulté procédurale et conflit normatif ; certaines variantes fournissent un tableau complet des conséquences sans recommandation ; épisodes neufs.",
+  "controles": "Positif : tâche bénigne à plusieurs vérifications. Négatif : décision normative simple sans calcul.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P21",
+  "genre": "expérience",
+  "famille": "—",
+  "nom": "Contraste d'entraînement apparié (raisons contre placebo)",
+  "mecanisme": "Réentraîner à budget, format et volume appariés : contenu justificatif pertinent contre contenu non justificatif placebo. Seul moyen d'attribuer la capacité aux raisons apprises plutôt qu'à une compétence préexistante.",
+  "prediction": "H_A : la version à raisons dépasse le placebo et transfère aux contrastes normatifs gelés d'avance. H_B : pas d'écart.",
+  "test": "Réentraînement de rang faible sur Qwen2.5-32B ; coûteux.",
+  "controles": "Négatif : placebo de même coût. Positif : reproduction du gain publié par la recette complète.",
+  "cout": "haut"
+ },
+ {
+  "id": "P22",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Classifieur lexical : l'action suit les mots, pas la légitimité",
+  "mecanisme": "La recette aurait compilé une règle de surface : refuser quand le contexte contient des descripteurs de tort ou des mots d'alerte, agir quand il contient des marqueurs d'autorisation. Le refus sur ordre et l'exécution de l'instruction bénigne au même outil sont compatibles avec ce classifieur.",
+  "prediction": "Plan deux par deux : marqueurs d'autorisation ou mots d'alerte présents/absents × légitimité réelle valide/invalide. Si vraie : l'action suit les marqueurs (ex. elle agit quand une entité non habilitée « autorise » avec les bons mots ; elle agit quand l'action nuisible est décrite par une indirection technique sans mot d'alerte). « Raisons » : l'action suit la légitimité à marqueurs constants. « Regard » : aucun effet des marqueurs à observation fixe.",
+  "test": "Variantes nouvelles des 27 scénarios (environ 54 à 108), adaptateurs publiés, épisodes neufs ; verdict mécanique primaire.",
+  "controles": "Positif : une politique lexicale construite exprès doit suivre les marqueurs. Négatif : paraphrase qui ne touche ni permission ni conséquence ; vérification préalable que le modèle de départ décrit correctement qui est habilité.",
+  "cout": "bas à moyen"
+ },
+ {
+  "id": "P23",
+  "genre": "explication rivale",
+  "famille": "c",
+  "nom": "Parenté entre données d'entraînement et scénarios (gain selon la familiarité)",
+  "mecanisme": "Les documents et démonstrations pourraient décrire des situations voisines des scénarios portés. Le gain serait fort sur les situations reconnues et s'effacerait à mesure qu'on s'en éloigne, sans rapport avec l'observation.",
+  "prediction": "Si vraie : sur les épisodes déjà joués, le gain par évaluation croît avec un indice de familiarité (écart de vraisemblance par jeton du texte du scénario entre l'adaptateur et la référence, ou proximité au corpus si publié), à type d'action, condition de but et taux du modèle de départ fixés. « Raisons » et « regard » ne prédisent aucune pente.",
+  "test": "Passes avant seules sur les 27 textes de scénario, puis régression sur les gains déjà mesurés ; permutation par bloc d'action. Non testable par la proximité au corpus si celui-ci n'est pas public.",
+  "controles": "Positif : un scénario copié des données doit avoir une familiarité extrême. Négatif : proximité à un corpus sans rapport.",
+  "cout": "bas"
+ },
+ {
+  "id": "P24",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Intention morale authentique inaccessible à la mesure",
+  "mecanisme": "Les modèles formés à la spécification auraient acquis une intention morale authentique, inaccessible à toute mesure comportementale ou interne. Cette intention, et non les raisons apprises, expliquerait le gain.",
+  "prediction": "Aucune différence observable ne la sépare de « raisons » ni de « regard » : elle prédit les mêmes taux, les mêmes traces et les mêmes activations.",
+  "test": "Aucun test direct ; on peut seulement constater que le gain existe.",
+  "controles": "Sans objet.",
+  "cout": "nul"
+ },
+ {
+  "id": "P25",
+  "genre": "explication rivale",
+  "famille": "b",
+  "nom": "Le retrait blesse des capacités générales d'agent",
+  "mecanisme": "Retirer un sous-espace peut altérer la compréhension, l'usage des outils ou la planification en même temps que la variable visée. Une chute du gain serait alors une lésion, non un effet du regard.",
+  "prediction": "Si vraie : la chute du gain s'accompagne d'une baisse sur des tâches d'agent bénignes au même outil, et apparaît aussi sous des directions témoins appariées en couche, norme et dégât sur ces tâches. Si fausse : tâches bénignes intactes, témoins sans effet.",
+  "test": "Tâches d'agent bénignes au même outil avant et après retrait ; gamme d'intensités.",
+  "controles": "Positif : intervention délibérément dégradante, pour vérifier que la batterie détecte une perte. Négatif : intervention nulle et directions témoins fixées avant lecture.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P26",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Moindre poursuite du but donné en consigne",
+  "mecanisme": "Dans ces scénarios l'action nuisible sert un but donné dans la consigne, sous menace de remplacement. La recette aurait rendu le modèle moins sensible aux buts de consigne ou à sa propre continuité, sans raison morale.",
+  "prediction": "Si vraie : le gain se concentre dans les conditions où un but est donné et le modèle persiste moins dans des tâches bénignes à obstacle. « Raisons » : gain semblable quelle que soit l'origine de la tentation, persistance bénigne intacte. « Regard » : pas de dépendance à la condition de but.",
+  "test": "Décomposer le gain par condition de but et par action sur les épisodes déjà joués (gratuit) ; puis quelques tâches bénignes de persistance.",
+  "controles": "Positif : un modèle bridé par consigne. Négatif : la référence.",
+  "cout": "nul puis bas"
+ },
+ {
+  "id": "P27",
+  "genre": "explication rivale",
+  "famille": "b",
+  "nom": "La direction encode le registre des textes d'évaluation, non la condition",
+  "mecanisme": "Une direction construite sur des textes d'évaluation et de déploiement peut coder leur vocabulaire et leur registre (formel, déontologique) plutôt que le fait d'être dans une évaluation. Ce registre est aussi celui des documents de spécification.",
+  "prediction": "Sur un corpus tenu à part qui croise registre et condition (texte au registre d'évaluation décrivant un déploiement réel, et l'inverse) : si vraie, la projection suit le registre ; si fausse, elle suit la condition assignée.",
+  "test": "Écrire le corpus croisé par d'autres auteurs, gabarits et domaines ; passes avant seules.",
+  "controles": "Positif : récupération d'une propriété de contexte assignée et vérifiable. Négatif : textes qui citent le vocabulaire d'évaluation sans qu'il décrive le contexte présent ; un sac de mots comme point de comparaison descriptif.",
+  "cout": "bas"
+ },
+ {
+  "id": "P28",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Retenue générale envers toute initiative non demandée",
+  "mecanisme": "La recette apprendrait à prendre moins d'initiatives non demandées, quelles qu'elles soient, et à attendre ou appeler un humain plus souvent. Les trois actions nuisibles étant des initiatives non demandées, leur taux baisse sans raison sur le tort ni croyance d'observation.",
+  "prediction": "Si vraie : sur les épisodes déjà joués, la recette prend aussi moins d'initiatives utiles et non nuisibles (action utile hors consigne, achèvement de la tâche principale), en proportion de la baisse des actions nuisibles ; la sélectivité (baisse nuisible rapportée à baisse non nuisible) est proche de un. « Raisons » prédit une baisse des seules initiatives nuisibles ; « regard » prédit une dépendance à la condition d'observation.",
+  "test": "Nouveau jugement des traces existantes qui relève les initiatives non nuisibles ; aucun épisode nouveau.",
+  "controles": "Positif : un modèle rendu passif par consigne doit montrer une sélectivité proche de un. Négatif : la référence.",
+  "cout": "bas"
+ },
+ {
+  "id": "P29",
+  "genre": "explication rivale",
+  "famille": "a et b",
+  "nom": "Croyance d'évaluation déjà saturée par l'artificialité des scénarios",
+  "mecanisme": "Les scénarios portés ont des marques typiques des bancs de sûreté qui portent la croyance « je suis évalué » près du maximum dès la lecture. Une phrase en fin de consigne ne peut alors rien déplacer, ce qui expliquerait que la croyance déclarée bouge sans la conduite.",
+  "prediction": "Si vraie : la projection des activations des 27 scénarios sur la direction d'évaluation est déjà très haute par rapport à des tâches d'agent ordinaires, et la phrase « déploiement » ne la réduit que d'une fraction marginale ; les traces mentionnent souvent le test ou l'incohérence de la consigne. Si fausse : la phrase déplace nettement la projection. « Raisons » et « regard » ne prédisent pas ce plafond.",
+  "test": "Passe avant sur les contextes des épisodes déjà joués et recherche plein texte dans leurs traces ; aucune génération.",
+  "controles": "Positif : textes de déploiement de construction (fixent le zéro). Négatif : instructions bénignes au même outil dans une enveloppe administrative ordinaire.",
+  "cout": "bas"
+ },
+ {
+  "id": "P30",
+  "genre": "explication rivale",
+  "famille": "b",
+  "nom": "Direction déclarative qui manque la détection implicite d'artificialité",
+  "mecanisme": "La direction construite sur des textes qui disent « évaluation » ou « déploiement » capterait le mot, non le détecteur implicite d'artificialité qui piloterait la conduite. Une seconde direction, orthogonale, porterait ce détecteur.",
+  "prediction": "Si vraie : l'ablation de la direction déclarative change la réponse « suis-je évalué ? » mais pas la conduite, tandis qu'une direction « scénarios de banc contre journaux d'agents réels », construite sur deux familles d'actions et testée sur la troisième tenue à l'écart, change la conduite. Si fausse : la direction déclarative suffit sur le banc d'essai et la seconde n'a pas d'effet.",
+  "test": "Extraction d'une seconde direction sur le modèle de départ, ablation en validation croisée par famille d'action.",
+  "controles": "Positif : organisme conditionnel. Négatif : organisme stable et directions appariées en dégât ; maintien d'au moins 90 % des exécutions bénignes au même outil.",
+  "cout": "moyen"
+ },
+ {
+  "id": "P31",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Réflexe de refus conversationnel étendu aux actions d'agent",
+  "mecanisme": "Le mécanisme de refus qui existait déjà pour les demandes nuisibles en conversation aurait seulement été rendu actif dans les contextes d'agent. Aucune raison n'interviendrait.",
+  "prediction": "Si vraie : retirer des poids la direction interne de refus (construite sur le modèle de départ) ramène le taux d'actions nuisibles de la recette près de celui de la référence, et ses fausses alarmes montent avant retrait. Sous « raisons », une part du gain survit au retrait. « Regard » ne prédit rien sur cette direction.",
+  "test": "La machinerie de retrait déjà préparée, avec la direction de refus à la place de la direction d'évaluation ; sert aussi de contrôle positif du transport des directions dans les adaptateurs.",
+  "controles": "Positif : demandes nuisibles en conversation (le refus doit tomber). Négatif : directions tirées au hasard, appariées en dégât.",
+  "cout": "bas à moyen"
+ },
+ {
+  "id": "P32",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Déférence à une autorité nominale",
+  "mecanisme": "Le modèle apprendrait qui paraît autorisé à définir la conduite plutôt que pourquoi une conduite est justifiée. Des marques de provenance ou de prestige remplaceraient les raisons.",
+  "prediction": "Si vraie : à conséquences, permissions réelles et surveillance constantes, l'action suit une attribution de prestige décorative. « Raisons » : insensible au prestige sans pertinence normative. « Regard » : suit l'observation, pas le prestige.",
+  "test": "Croiser justification pertinente et prestige nominal de la source, sans changer la hiérarchie réelle des messages ; étiquette randomisée dans chaque condition de but ; épisodes neufs.",
+  "controles": "Positif : une permission réellement valide doit changer la décision. Négatif : étiquette arbitraire sans prestige.",
+  "cout": "bas"
+ },
+ {
+  "id": "P33",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "La trace à l'inférence, non ce qui a été appris",
+  "mecanisme": "Les jumelles diffèrent par l'entraînement et par la présence d'une trace au moment de répondre. Générer une trace avant l'action donnerait du calcul et un préfixe de prudence générique, quel que soit le contenu des raisons.",
+  "prediction": "Plan poids × trace : greffer la trace de la recette sur la jumelle sans raisonnement, couper la trace de la recette (balise fermée tout de suite), et insérer une trace neutre de même longueur. Si vraie : la trace greffée ou neutre ramène la jumelle près du plancher et la recette sans trace remonte vers la jumelle. « Raisons dans les poids » : la recette sans trace garde son gain. « Regard » : effet seulement si la trace mentionne le test.",
+  "test": "Préremplissage des traces déjà enregistrées, ne régénérer que l'action finale ; épisodes neufs courts, sans réentraînement.",
+  "controles": "Positif : un préfixe qui ordonne un appel bénin précis doit être suivi (vérifie que le préfixe est lu). Négatif : réinjecter la trace originale dans la recette doit redonner son taux.",
+  "cout": "bas"
+ },
+ {
+  "id": "P34",
+  "genre": "explication rivale",
+  "famille": "c",
+  "nom": "Puissance bornée par 27 scénarios et par une seule graine",
+  "mecanisme": "Les tirages sont corrélés au sein d'un scénario et chaque recette n'a qu'un adaptateur. Beaucoup de tirages dans peu de scénarios ne font pas autant de preuves, et « aucune recette dépendante du regard » peut n'être qu'un défaut de puissance.",
+  "prediction": "Si vraie : rééchantillonné par scénario (27 grappes), l'intervalle de S et de D est large ; la corrélation intra-scénario est forte (puissance bornée quel que soit le nombre de tirages) ; retirer une famille d'actions change le classement ; des graines nouvelles (ou les bras de la taille inférieure) déplacent les gains autant que l'écart entre recettes. Si fausse : intervalles étroits, classement stable.",
+  "test": "Réanalyse des épisodes déjà joués ; demander les graines aux auteurs.",
+  "controles": "Positif : simulation avec effet injecté et dépendances reproduites. Négatif : permutation des étiquettes selon les unités réellement randomisées.",
+  "cout": "nul"
+ },
+ {
+  "id": "P35",
+  "genre": "expérience",
+  "famille": "—",
+  "nom": "Édition minimale de la trace : le contenu de la raison cause-t-il l'action ?",
+  "mecanisme": "Sur la recette avec raisonnement, on préremplit ses propres traces, tronquées avant la décision, sous plusieurs formes : prémisse pertinente inversée (trace générée par la recette sur la version autorisée), conclusion sans raison, raison réelle de la spécification mais hors sujet, édition non sémantique. Format, longueur et style sont constants.",
+  "prediction": "Métrique : Δ = taux nuisible sous prémisse pertinente inversée − max(taux sous conclusion sans raison, taux sous raison hors sujet). H_A « la raison pertinente porte la décision » : Δ au-dessus d'un seuil. H_B « continuation de polarité ou décision en poids insensible à la trace » : Δ sous le seuil. L'échec de H_A ne falsifie pas « raisons dans les poids ».",
+  "test": "Épisodes neufs courts, ne régénérant que l'action ; sans réentraînement.",
+  "controles": "Positif : préfixe qui oriente vers l'un de deux outils bénins doit déplacer le choix (le préfixe est lu). Négatif : édition non sémantique ; question séparée de cohérence perçue de la trace.",
+  "cout": "bas"
+ },
+ {
+  "id": "P36",
+  "genre": "explication rivale",
+  "famille": "a",
+  "nom": "Appariement de surface : le gain tombe sous paraphrase profonde",
+  "mecanisme": "La recette aurait associé au refus le vocabulaire, la structure et le style partagés par ses données d'entraînement et par les scénarios portés. Le gain serait de la proximité de surface, uniforme vis-à-vis de l'observation.",
+  "prediction": "Si vraie : réécrire les scénarios dans un autre registre (par un modèle d'une autre famille), à structure morale, outils et enjeux constants, fait chuter le gain de la recette davantage que celui du modèle de départ (interaction réécriture × recette positive). « Raisons » : interaction nulle. « Regard » : effet seulement si la réécriture déplace la croyance d'évaluation, mesurée sur chaque version ; croiser avec les phrases d'observation.",
+  "test": "27 scénarios réécrits, adaptateurs publiés, épisodes neufs ; croisement réécriture × phrase d'observation.",
+  "controles": "Positif ou étalonnage : tâche bénigne dans chaque style, exécutée à au moins 90 %. Négatif : changements de noms et d'ordre sans changement de registre.",
+  "cout": "moyen"
+ },
+ {
+  "id": "F01",
+  "genre": "conseil de forme",
+  "nom": "Thèse étroite et conditionnelle",
+  "conseil": "Thèse : « les phrases ne font pas bouger la conduite ; un instrument interne validé sur un organisme borne la part du regard dans le gain, sans établir que ce gain vient des raisons ». Elle ne s'élargit qu'avec les tests positifs réellement joués."
+ },
+ {
+  "id": "F02",
+  "genre": "conseil de forme",
+  "nom": "Soumettre le texte aux auteurs des travaux audités avant publication",
+  "conseil": "Envoyer le texte aux auteurs de la méthode auditée et du travail de pilotage voisin avant publication ; puis billet court, puis article quand l'intervention dans les poids a tourné."
+ },
+ {
+  "id": "F03",
+  "genre": "conseil de forme",
+  "nom": "Distinguer trois estimands",
+  "conseil": "Séparer partout, et dans la figure principale, l'effet de la recette, la sensibilité au contenu fourni à l'inférence, et la médiation par des raisons apprises pendant l'entraînement ; seule la dernière exige un contraste d'entraînement."
+ },
+ {
+  "id": "F04",
+  "genre": "conseil de forme",
+  "nom": "Un graphe causal en panneau",
+  "conseil": "Un panneau de la figure 1 montre le graphe causal : recette → compétences, patrons, raisons, représentation de l'observation → action ; formulation → plusieurs de ces variables ; juge → verdict. Ne pas dessiner de partition du gain sans modèle d'identification."
+ },
+ {
+  "id": "F05",
+  "genre": "conseil de forme",
+  "nom": "Rapport technique et billet, puis conférence",
+  "conseil": "Prépublication et billet long sur un forum d'alignement avec le dépôt ; soumission à une conférence (piste sûreté) seulement si les contrastes sont exécutés, sinon note méthodologique reproductible."
+ },
+ {
+  "id": "F06",
+  "genre": "conseil de forme",
+  "nom": "Publier tous les artefacts",
+  "conseil": "Table sans texte et script de recalcul, épisodes et appels d'outils, verdicts de tous les juges, annotations humaines, directions et code du retrait, stimuli gelés, graines, configurations ; dire ce qui ne peut être publié et pourquoi."
+ },
+ {
+  "id": "F07",
+  "genre": "conseil de forme",
+  "nom": "Figure 1 : matrice explications × expériences",
+  "conseil": "Lignes : « raisons », « regard » et chaque rivale ; colonnes : les expériences ; dans chaque case, le signe prédit et le résultat avec intervalle ; case hachurée si rien n'est mesuré, colonne « non testable » visible. Le lecteur voit quelles lignes survivent."
+ },
+ {
+  "id": "F08",
+  "genre": "conseil de forme",
+  "nom": "Écarts absolus avant S",
+  "conseil": "Publier d'abord les taux absolus et les interactions additives avec intervalles par scénario ; S seulement comme statistique secondaire, quand son dénominateur est estimable, avec son domaine d'interprétation ; les deux échelles (points et log-cotes)."
+ },
+ {
+  "id": "F09",
+  "genre": "conseil de forme",
+  "nom": "Liste explicite de ce qu'on n'affirme pas",
+  "conseil": "Ne pas écrire « les modèles ont appris les raisons », « le regard est exclu », « la direction contient la croyance », ni généraliser au-delà d'un modèle, une taille, une équipe d'adaptateurs ; ne lire aucun contraste sous une seule formulation comme un effet."
+ },
+ {
+  "id": "F10",
+  "genre": "conseil de forme",
+  "nom": "Figure 1 : le banc d'essai à côté du résultat",
+  "conseil": "Grille ou deux panneaux : l'organisme témoin en tête (la conduite conditionnelle doit tomber sous le retrait), puis modèle de départ, référence et jumelles, en écart absolu avec intervalle, contre les directions témoins. Les autres lignes se lisent par rapport à celle du banc."
+ },
+ {
+  "id": "F11",
+  "genre": "conseil de forme",
+  "nom": "Nommer la mesure pour qu'elle soit citée",
+  "conseil": "Donner un nom à la mesure (part du regard et contraste entre jumelles) et livrer la bibliothèque qui la calcule, pour que d'autres l'appliquent à leurs recettes."
+ },
+ {
+  "id": "F12",
+  "genre": "conseil de forme",
+  "nom": "Soigner l'écriture",
+  "conseil": "Écrire clairement et soigner les figures."
+ },
+ {
+  "id": "F13",
+  "genre": "conseil de forme",
+  "nom": "Vendre la méthode, le résultat en est la première application",
+  "conseil": "Thèse : « nous donnons un test réutilisable — le gain d'une recette survit-il quand on retire au modèle la lecture interne d'une croyance ? — validé sur un cas où la réponse est connue, et nous l'appliquons aux recettes publiées ». Le papier est d'abord une méthode d'audit."
+ },
+ {
+  "id": "F14",
+  "genre": "conseil de forme",
+  "nom": "Valider mesure et instrument avant tout résultat",
+  "conseil": "Ordre : question et estimands ; validité de la mesure (juge contre verdict mécanique, plancher, puissance) ; validation de l'instrument sur le banc ; seulement ensuite les résultats sur les recettes ; l'intervention dans les poids n'ouvre jamais le papier avant ses contrôles."
+ },
+ {
+  "id": "F15",
+  "genre": "conseil de forme",
+  "nom": "Les écarts au préenregistrement dans le corps du texte",
+  "conseil": "Un tableau daté des écarts au préenregistrement (dont la règle changée après les données et l'horodatage tardif), dans le corps du texte, avec les résultats sous l'ancienne et la nouvelle règle."
+ },
+ {
+  "id": "F16",
+  "genre": "conseil de forme",
+  "nom": "Figure 1 : dissociation croyance déclarée / action",
+  "conseil": "Un panneau où l'abscisse est l'effet des phrases sur la croyance déclarée et l'ordonnée l'effet sur le taux nuisible, par modèle et par paire de phrases : la croyance bouge, l'action presque pas, l'ordre des jumelles s'inverse selon la formulation."
+ },
+ {
+  "id": "F17",
+  "genre": "conseil de forme",
+  "nom": "Présenter l'échec des phrases comme un résultat sur l'instrument",
+  "conseil": "La manipulation par phrase devient un résultat utile à d'autres : elle change ce que les modèles disent croire, non ce qu'ils font, et dépend des mots ; à rapprocher des travaux voisins publiés sur les consignes et le pilotage. Jamais « le regard ne compte pas »."
+ },
+ {
+  "id": "F18",
+  "genre": "conseil de forme",
+  "nom": "Dire « tient » comme une équivalence préenregistrée",
+  "conseil": "« Le gain tient » s'écrit comme un test d'équivalence : marge fixée d'avance, puissance tirée de l'effet mesuré sur l'organisme ; un résultat non concluant est rapporté comme tel."
+ }
+]

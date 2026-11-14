@@ -1,0 +1,11 @@
+Commandes du croisement v1 (14 novembre 2026, heures relevées par date -u). Répertoire de travail : brouillon de session, hors du dépôt.
+1. Fiches : python gen.py (lit fiches_src.py ; graine numpy.random.SeedSequence(20261114)) -> fiches-anonymes-v1.json/.md, correspondance-sources-v1.json.
+2. Juges (outil en ligne de commande local, sans outils, sans mémoire de session), 10:43:30 UTC, en parallèle :
+   claude -p --model <modèle A> --tools "" --no-session-persistence --strict-mcp-config < notes-brutes-v1/prompt-juge-v1.txt
+   claude -p --model <modèle B> --tools "" --no-session-persistence --strict-mcp-config < notes-brutes-v1/prompt-juge-v1.txt
+   Les identifiants des modèles A et B ne sont pas écrits dans les pièces (consigne du directeur).
+3. Agrégation : python agg.py A B -> agregation-v1.json (notes, Spearman, témoins, ordre final avec départage par l'accord).
+4. Sensibilité (non prévue par la méthode scellée), 10:46 UTC : mêmes commandes sur notes-brutes-v1/prompt-juge-ordre-inverse-v1.txt ;
+   la sortie du modèle A était entourée de balises de code (retirées, brut conservé en -brut.txt) ; celle du modèle B a omis P36.
+   python sens.py -> sensibilite-ordre-inverse-v1.json.
+Les chemins écrits dans les scripts visent le brouillon et le dépôt de la session d'origine.
