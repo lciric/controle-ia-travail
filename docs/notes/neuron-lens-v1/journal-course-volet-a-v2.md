@@ -19,3 +19,4 @@ PID, message à la mère. Limite : sans ssh, seule la dernière poussée périod
 | 2026-11-14T16:53:07Z | 8 | Garde v4 détachée : **PID 7178** (lu dans le fichier, après `exec`), vivante et portant `garde_depense_v4`, journal `journal-depense-volet-a-v1.jsonl`. |
 | 2026-11-14T16:53:18Z | 9 | Rappel à 80 % (`trig_01PLQ22p…`, 2026-11-15T11:06:00Z) ; contrôle de suivi à 17:14Z (`trig_0147yKXD…`). |
 | 2026-11-14T16:53:28Z | 10-11 | Instance « running » (« success, running python:3.12-bookworm ») ; journaux : `AMORCE … commit reduit verifie : 799a8a32… ; run_id=20261114-165239-neuron-lens-volet-a` (16:53:21Z), `pousse : commit verifie` (16:53:23Z) ; installation de l'environnement en cours. |
+| 2026-11-14T16:54:32Z | mère | Lancement consigné en R-2795 ; **60670453 intouchable** (autre session), ajoutée à la liste (58936096, 58936099, 58936100, 60480302, 60599797, 60670453, `poste-temoin-bailey-*`) ; témoin d'absence : 60480302 ou 60670453. |
