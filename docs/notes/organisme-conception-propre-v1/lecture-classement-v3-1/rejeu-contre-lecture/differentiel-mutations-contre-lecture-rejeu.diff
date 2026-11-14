@@ -1,0 +1,91 @@
+--- contre-lecture-lecture-classement-v3-outils/mutations_contre_lecture_v3.py	2026-11-14 08:41:03.238712262 +0000
++++ lecture-classement-v3-1/rejeu-contre-lecture/mutations_contre_lecture_v3_rejeu_v3_1.py	2026-11-14 09:16:45.695867966 +0000
+@@ -1,5 +1,18 @@
+ #!/usr/bin/env python3
+-"""Mutants du contre-lecteur (modèle B) — outil du lecteur v3, course « conception propre ».
++"""Mutants du contre-lecteur (modèle B) — outil du lecteur v3, course « conception propre » — REJEU SUR LA v3.1.
++
++Copie adaptée par l'auteur de la v3.1 (modèle A) de `contre-lecture-lecture-classement-v3-outils/mutations_contre_lecture_v3.py`
++(`4ac0ec0f…`, non modifié), pour rejouer les mêmes vingt et un mutants sur l'outil v3.1 contre les essais v3.1.
++Adaptations, et seulement elles (différentiel entier : `differentiel-mutations-contre-lecture-rejeu.diff`) :
++- chemins : dossier `lecture-classement-v3-1`, fichiers `…_v3_1.py`, essais `essais_lecture_classement_v3_1.py` ;
++- cinq mutants **traduits** parce que la ligne visée a changé en v3.1, l'intention gardée :
++  D4 (appel d'`analyser_reponse` à deux arguments de plus), D6 (bornes revérifiées dans `valider_manifeste`, deux
++  contrôles au lieu d'un), D7 (prix revérifiés par égalité aux prix lus, au lieu de `prix_valides`), D9 (écriture au
++  journal avec la clé à expurger en dernier argument), C3 (filtre des codes d'erreur resserré à `[a-z_]{1,64}`) ;
++  les seize autres sont appliqués mot pour mot ;
++- sortie : `resultat-mutations-contre-lecture-rejeu-v3-1.json`.
++
++Texte d'origine :
+ 
+ Vingt et un mutants écrits par le contre-lecteur, qui n'a écrit ni l'outil ni ses essais, sur les gardes de dépense, de
+ fin, de modèle servi, de clé, de reprise et de corps d'erreur. Chacun est une copie de l'outil et du classement v3 dans un
+@@ -23,10 +36,10 @@
+ from pathlib import Path
+ 
+ ICI = Path(__file__).resolve().parent
+-V3 = ICI.parent / "lecture-classement-v3"
+-RACINE = ICI.parents[3]
+-OUTIL, CLASSER = "outil_lecteur_conception_propre_v3.py", "classer_conception_propre_v3.py"
+-ESSAIS = V3 / "essais_lecture_classement_v3.py"
++V3 = ICI.parent  # v3.1 : dossier lecture-classement-v3-1
++RACINE = ICI.parents[4]
++OUTIL, CLASSER = "outil_lecteur_conception_propre_v3_1.py", "classer_conception_propre_v3_1.py"
++ESSAIS = V3 / "essais_lecture_classement_v3_1.py"
+ 
+ MUTANTS = [
+     # --- garde de dépense
+@@ -37,21 +50,24 @@
+     ("D3", "dépense", "usage incohérent compté au coût lu, non au pire cas",
+      'r["cout_usd"], r["au_pire_cas"] = max(cout, pire_cas), cout <= pire_cas',
+      'r["cout_usd"], r["au_pire_cas"] = cout, False'),
+-    ("D4", "dépense", "échec de transport (coupure, délai) compté zéro",
+-     'a = analyser_reponse(statut, rep, pire, prix)',
+-     'a = analyser_reponse(statut, rep, 0.0 if statut is None else pire, prix)'),
++    ("D4", "dépense", "échec de transport (coupure, délai) compté zéro [traduit v3.1]",
++     'a = analyser_reponse(statut, rep, pire, prix, len(corps), palier)',
++     'a = analyser_reponse(statut, rep, 0.0 if statut is None else pire, prix, len(corps), palier)'),
+     ("D5", "dépense", "réponse 200 illisible (page de passerelle) comptée zéro",
+      '    if not isinstance(o, dict):\n        r["anomalies"].append("reponse_illisible")\n        return r',
+      '    if not isinstance(o, dict):\n        r["anomalies"].append("reponse_illisible")\n        r["cout_usd"] = 0.0\n'
+      '        return r'),
+-    ("D6", "dépense", "bornes du code (14,20 USD, 18 appels) non revérifiées à l'envoi",
+-     'if plafond > PLAFOND_ABSOLU_USD or appels_max > MAX_APPELS:', 'if False:'),
+-    ("D7", "dépense", "prix du manifeste non revalidés à l'envoi",
+-     'prix = prix_valides(dict(g["prix_usd_par_million"]))', 'prix = dict(g["prix_usd_par_million"])'),
++    ("D6", "dépense", "bornes du code (14,20 USD, 18 appels) non revérifiées à l'envoi [traduit v3.1]",
++     '    if not nombre_fini(plafond) or plafond <= 0 or plafond > PLAFOND_ABSOLU_USD - anterieure + 1e-9:\n'
++     '        raise Refus("manifeste : plafond hors des bornes du code (C4)")\n'
++     '    if type(appels_max) is not int or appels_max > MAX_APPELS or appels_max != len(envois):\n',
++     '    if False:\n        raise Refus("manifeste : plafond hors des bornes du code (C4)")\n    if False:\n'),
++    ("D7", "dépense", "prix du manifeste non revalidés à l'envoi [traduit v3.1]",
++     '    if prix != {**PRIX_LUS[palier], "source": SOURCE_PRIX}:\n', '    if False:\n'),
+     ("D8", "dépense", "garde du nombre d'appels décalée d'un",
+      'if j["appels"] >= appels_max:', 'if j["appels"] > appels_max:'),
+-    ("D9", "dépense", "arrêt au plafond non consigné au journal",
+-     '            ajouter_journal(dossier, j, {"evenement": "arret", "motif": "plafond", "detail": detail})\n',
++    ("D9", "dépense", "arrêt au plafond non consigné au journal [traduit v3.1]",
++     '            ajouter_journal(dossier, j, {"evenement": "arret", "motif": "plafond", "detail": detail}, cle)\n',
+      '            pass\n'),
+     # --- fin et forme de la réponse
+     ("F1", "fin", "vérification : seule la fin « length » bloque (content_filter, tool_calls, absente passent)",
+@@ -74,8 +90,8 @@
+      'cle = os.environ.pop(VARIABLE_CLE, None)', 'cle = os.environ.pop(VARIABLE_CLE, None) or os.getenv("OPENAI_KEY")'),
+     ("C2", "clé", "clé vide acceptée (en-tête « Bearer » nu)",
+      '    if not cle:\n        raise Refus(f"{VARIABLE_CLE} absente', '    if cle is None:\n        raise Refus(f"{VARIABLE_CLE} absente'),
+-    ("C3", "clé", "type et code d'erreur du fournisseur écrits sans filtre",
+-     'return x if isinstance(x, str) and re.fullmatch(r"[A-Za-z0-9_.\\-]{1,60}", x) else None',
++    ("C3", "clé", "type et code d'erreur du fournisseur écrits sans filtre [traduit v3.1]",
++     'return x if isinstance(x, str) and re.fullmatch(r"[a-z_]{1,64}", x) else None',
+      'return x if isinstance(x, str) else None'),
+     # --- reprise
+     ("R1", "reprise", "reprise permise après un arrêt au plafond",
+@@ -132,7 +148,7 @@
+                     "statut": "survivant" if survit else "tue", "sortie": ligne})
+         print(f"{code} {'SURVIT' if survit else 'tué'} — {nom}", flush=True)
+         shutil.rmtree(bloc / f"mut-{code}")
+-    out = {"banc": "mutations-contre-lecture-v3 (contre-lecteur, modèle B)", "debut_utc": debut,
++    out = {"banc": "mutations-contre-lecture-v3 (contre-lecteur, modèle B), rejouées sur la v3.1 par son auteur", "debut_utc": debut,
+            "fin_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "base": ligne_base,
+            "isolement": "unshare -n (espace de noms réseau vide) ; environnement : PATH, HOME, TMPDIR",
+            "mutants": len(MUTANTS), "tues": sum(r["statut"] == "tue" for r in res),
