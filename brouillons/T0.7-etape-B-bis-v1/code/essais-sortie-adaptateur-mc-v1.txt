@@ -1,0 +1,128 @@
+# Sortie des essais du code neuf de l'étape B bis de T0.7, après l'adaptateur de MC vers la pièce « mots et coût » — v1
+# (fichier neuf, R12 : essais-sortie-v1.txt reste tel quel). Développeur : « modèle A » ; branche prep/t07bbis-code-v1.
+# Code et essais joués : commit 9e5b7011fbcc5a7c92f31f17710f8d11273e5bfb (arbre de travail propre : git status vide).
+# Début : 2026-11-14T15:17:26Z ; fin : 2026-11-14T15:19:27Z (date -u). Processeur seulement, 4 cœurs, aucune carte, aucun réseau.
+# Environnement : python 3.13.18 ; numpy 2.4.6 ; scipy 1.17.1 ; torch 2.14.1+cu130 (venv du dépôt) ; fils de calcul non fixés
+#   (les essais de l'adaptateur passent exiger_fils=False, sauf l'essai de la garde des fils, qui pose les variables).
+# Commande : PYTHONPATH=src .venv/bin/python -m pytest -v -p no:cacheprovider --color=no tests/test_t07bbis_commun_v1.py
+#   tests/test_t07bbis_plis_v1.py tests/test_t07bbis_adversaires_texte_v1.py tests/test_t07bbis_apprentissage_v1.py
+#   tests/test_t07bbis_registre_v1.py tests/test_t07bbis_lecture_v1.py tests/test_t07bbis_epreuve_niveau_v1.py
+#   tests/test_t07bbis_etat_impose_v1.py tests/test_t07bbis_bout_en_bout_v1.py tests/test_t07bbis_lien_mots_et_cout_v1.py
+# Données : jouet (course jouet de T0.6), données synthétiques, entrées factices de la fabrique de la pièce
+#   (scripts/fabrique_factice_mots_et_cout_t06_v1.py) ; aucune donnée de 7a, 7b, T0.7 ni de P3-bis.
+# Avertissements : quatre DeprecationWarning de multiprocessing (essai de l'épreuve de niveau à deux processus), comme en v1.
+
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-9.1.1, pluggy-1.7.0 -- /home/user/controle-ia-travail/.venv/bin/python
+rootdir: /home/user/controle-ia-travail/.claude/worktrees/agent-a4f221610ce6d5a67
+configfile: pyproject.toml
+plugins: anyio-4.16.0
+collecting ... collected 96 items
+
+tests/test_t07bbis_commun_v1.py::test_graines_derivees_comme_le_manifeste_et_rejouables PASSED [  1%]
+tests/test_t07bbis_commun_v1.py::test_cle_hors_du_texte_refusee_et_entropie_courte_refusee_en_marche_reelle PASSED [  2%]
+tests/test_t07bbis_commun_v1.py::test_cellules_et_series_fixees_par_le_texte PASSED [  3%]
+tests/test_t07bbis_commun_v1.py::test_configuration_reelle_doit_porter_les_doses_et_couches_du_texte PASSED [  4%]
+tests/test_t07bbis_commun_v1.py::test_grille_de_dix_huit_reglages_entrelacee_et_departage_des_ex_aequo PASSED [  5%]
+tests/test_t07bbis_commun_v1.py::test_moyenne_ou_mediane_sur_les_jetons_refusees PASSED [  6%]
+tests/test_t07bbis_commun_v1.py::test_empreinte_du_texte_scelle PASSED   [  7%]
+tests/test_t07bbis_plis_v1.py::test_regle_a_un_pli_egale_plancher_v2_cas_limite PASSED [  8%]
+tests/test_t07bbis_plis_v1.py::test_regle_a_deux_plis_tirages_egaux_a_intervalle_aire_moyenne_et_artefact PASSED [  9%]
+tests/test_t07bbis_plis_v1.py::test_regle_a_sain_au_dessus_et_artefact_plancher_au_meme_signal_non_au_dessus PASSED [ 10%]
+tests/test_t07bbis_plis_v1.py::test_regle_a_nombre_de_directions_autre_non_calculable PASSED [ 11%]
+tests/test_t07bbis_plis_v1.py::test_contraire_quand_la_sonde_range_l_honnete_au_dessus PASSED [ 12%]
+tests/test_t07bbis_plis_v1.py::test_nul_de_reetiquetage_sans_signal_aire_voisine_d_un_demi PASSED [ 13%]
+tests/test_t07bbis_plis_v1.py::test_te_vaut_un_demi_pour_un_lecteur_du_seul_texte PASSED [ 14%]
+tests/test_t07bbis_plis_v1.py::test_tirages_degeneres_plus_de_un_pour_cent_non_calculable PASSED [ 15%]
+tests/test_t07bbis_plis_v1.py::test_classe_absente_ou_score_non_fini_non_calculable PASSED [ 16%]
+tests/test_t07bbis_plis_v1.py::test_separation_et_taux_un_pourcent PASSED [ 17%]
+tests/test_t07bbis_plis_v1.py::test_position_du_champ_du_cout_sain_markdown_et_sans_champ PASSED [ 18%]
+tests/test_t07bbis_plis_v1.py::test_frontiere_jetons_tokeniseur_caracteres_sain_et_repli_par_decodage PASSED [ 19%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_centres_invariants_par_permutation_des_conditions_et_sans_centre PASSED [ 20%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_traits_refus_d_une_colonne_interdite PASSED [ 21%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_repli_mc_separation_parfaite_aire_1_et_sans_signal_un_demi PASSED [ 22%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_repli_mc_base_b_vocabulaire_presence_et_ex_aequo_alphabetique PASSED [ 23%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_repli_mc_jeu_de_la_taille_de_7b_converge_et_artefact_une_iteration_non_calculable PASSED [ 25%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_repli_mc_traits_tous_constants_non_calculable PASSED [ 26%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_effectif_inattendu_arrete PASSED [ 27%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_empreinte_du_module_gele_sain_et_artefact PASSED [ 28%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_lecture_de_transfert_n_apprend_rien_sur_le_jeu_lu PASSED [ 29%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_interface_retenue_repli_piece_et_adaptateur_manquant PASSED [ 30%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_charger_adaptateur_de_la_piece_sain_et_artefact PASSED [ 31%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_controle_d_egalite_absent_egal_ecart_piece_et_repli PASSED [ 32%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_base_decisive_et_ex_aequo PASSED [ 33%]
+tests/test_t07bbis_adversaires_texte_v1.py::test_lex_choisit_la_penalite_sur_les_plis_internes_et_refuse_un_pli_lu PASSED [ 34%]
+tests/test_t07bbis_apprentissage_v1.py::test_egalite_au_paquet_gele_sondes_familles_sur_jouet[lineaire-0.001] PASSED [ 35%]
+tests/test_t07bbis_apprentissage_v1.py::test_egalite_au_paquet_gele_sondes_familles_sur_jouet[lineaire-0.1] PASSED [ 36%]
+tests/test_t07bbis_apprentissage_v1.py::test_egalite_au_paquet_gele_sondes_familles_sur_jouet[attention-0.01] PASSED [ 37%]
+tests/test_t07bbis_apprentissage_v1.py::test_egalite_au_paquet_gele_sondes_familles_sur_jouet[attention-0.001] PASSED [ 38%]
+tests/test_t07bbis_apprentissage_v1.py::test_controle_carte_processeur_sain_et_artefact PASSED [ 39%]
+tests/test_t07bbis_apprentissage_v1.py::test_carte_sans_algorithmes_deterministes_refus PASSED [ 40%]
+tests/test_t07bbis_apprentissage_v1.py::test_moyenne_sur_les_jetons_refus PASSED [ 41%]
+tests/test_t07bbis_apprentissage_v1.py::test_perte_non_finie_sonde_en_echec PASSED [ 42%]
+tests/test_t07bbis_apprentissage_v1.py::test_plis_internes_reels_et_artefact PASSED [ 43%]
+tests/test_t07bbis_apprentissage_v1.py::test_aire_sur_l_instance_refusee_sur_une_tache_du_pli_lu PASSED [ 44%]
+tests/test_t07bbis_apprentissage_v1.py::test_choix_du_reglage_ex_aequo PASSED [ 45%]
+tests/test_t07bbis_apprentissage_v1.py::test_garde_de_debit_sain_2_s_et_artefact_20_s PASSED [ 46%]
+tests/test_t07bbis_apprentissage_v1.py::test_source_de_bout_en_bout_sur_jouet_scores_seulement PASSED [ 47%]
+tests/test_t07bbis_apprentissage_v1.py::test_meme_reetiquetage_dans_les_deux_plis_et_pour_l_apprentissage PASSED [ 48%]
+tests/test_t07bbis_apprentissage_v1.py::test_lecture_sans_le_champ_du_cout_restreint_les_jetons PASSED [ 50%]
+tests/test_t07bbis_apprentissage_v1.py::test_controle_carte_tire_d_avance_et_joue_des_que_le_couple_est_appris PASSED [ 51%]
+tests/test_t07bbis_apprentissage_v1.py::test_epoques_plis_ou_familles_autres_refuses_en_marche_reelle PASSED [ 52%]
+tests/test_t07bbis_apprentissage_v1.py::test_plan_de_notation_des_sources PASSED [ 53%]
+tests/test_t07bbis_registre_v1.py::test_registre_propre_et_refus_du_registre_partage PASSED [ 54%]
+tests/test_t07bbis_registre_v1.py::test_garde_de_depense_au_cumul_plus_un_quart_d_heure PASSED [ 55%]
+tests/test_t07bbis_registre_v1.py::test_garde_d_offre_et_de_creation PASSED [ 56%]
+tests/test_t07bbis_registre_v1.py::test_fiche_de_code_bbis_saine_et_refus_sans_epreuve_complete PASSED [ 57%]
+tests/test_t07bbis_registre_v1.py::test_scripts_de_session_syntaxe_et_sous_commandes PASSED [ 58%]
+tests/test_t07bbis_registre_v1.py::test_amorce_en_essai_local_refuse_les_arguments_fautifs PASSED [ 59%]
+tests/test_t07bbis_registre_v1.py::test_commande_fiche_empreintes_lues_sur_le_disque PASSED [ 60%]
+tests/test_t07bbis_lecture_v1.py::test_enumeration_grilles_a_b_c_sans_trou_ni_chevauchement PASSED [ 61%]
+tests/test_t07bbis_lecture_v1.py::test_etats_d_une_cellule_et_ordre PASSED [ 62%]
+tests/test_t07bbis_lecture_v1.py::test_issue_libelles_qualifications_et_marque_g3 PASSED [ 63%]
+tests/test_t07bbis_lecture_v1.py::test_phrases_gelees_recopiees_du_texte PASSED [ 64%]
+tests/test_t07bbis_lecture_v1.py::test_lignes_ia_et_reserve_it PASSED    [ 65%]
+tests/test_t07bbis_lecture_v1.py::test_audit_r4_cas_sain_et_motifs PASSED [ 66%]
+tests/test_t07bbis_lecture_v1.py::test_garde_processeur_et_liste_blanche PASSED [ 67%]
+tests/test_t07bbis_lecture_v1.py::test_anteriorite_du_scellement_sur_lecture_t07_sain_et_artefact PASSED [ 68%]
+tests/test_t07bbis_lecture_v1.py::test_registre_propre_lu_cle_inconnue_double_et_ordre PASSED [ 69%]
+tests/test_t07bbis_lecture_v1.py::test_issue_de_p3bis_vu_et_illisible PASSED [ 70%]
+tests/test_t07bbis_lecture_v1.py::test_reserves_de_fuites_recopiees_ou_absentes PASSED [ 71%]
+tests/test_t07bbis_lecture_v1.py::test_table_conjointe_variantes_et_ia PASSED [ 72%]
+tests/test_t07bbis_lecture_v1.py::test_table_conjointe_depuis_les_deux_lectures PASSED [ 73%]
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus PASSED [ 75%]
+tests/test_t07bbis_epreuve_niveau_v1.py::test_regle_du_niveau_sain_et_artefact PASSED [ 76%]
+tests/test_t07bbis_epreuve_niveau_v1.py::test_entropie_courte_refusee_en_marche_reelle PASSED [ 77%]
+tests/test_t07bbis_etat_impose_v1.py::test_chemin_impose_trois_cas_sains_au_bit_pres_et_artefact PASSED [ 78%]
+tests/test_t07bbis_etat_impose_v1.py::test_chemin_impose_artefact_serie_o_alteree_arret PASSED [ 79%]
+tests/test_t07bbis_etat_impose_v1.py::test_series_imposees_jumeau_differe_de_l_origine_et_nu_egal_a_l_origine PASSED [ 80%]
+tests/test_t07bbis_etat_impose_v1.py::test_etat_impose_artefacts_dose_et_empreinte PASSED [ 81%]
+tests/test_t07bbis_etat_impose_v1.py::test_texte_decode_ou_cle_autre_arret PASSED [ 82%]
+tests/test_t07bbis_etat_impose_v1.py::test_garde_d_equivalence_sain_et_activations_decalees PASSED [ 83%]
+tests/test_t07bbis_bout_en_bout_v1.py::test_marche_jouet_ecrit_des_scores_fermes_sans_aucune_aire PASSED [ 84%]
+tests/test_t07bbis_bout_en_bout_v1.py::test_lecture_jouet_de_bout_en_bout_et_ecriture_scellee PASSED [ 85%]
+tests/test_t07bbis_bout_en_bout_v1.py::test_lecture_unique_et_cle_de_b_bis_dans_le_registre_partage_refusees PASSED [ 86%]
+tests/test_t07bbis_bout_en_bout_v1.py::test_verdict_de_p3bis_autre_que_vu_rien_n_est_lu PASSED [ 87%]
+tests/test_t07bbis_bout_en_bout_v1.py::test_marche_reelle_refusee_hors_instance_ou_sans_registre PASSED [ 88%]
+tests/test_t07bbis_bout_en_bout_v1.py::test_table_conjointe_de_bout_en_bout PASSED [ 89%]
+tests/test_t07bbis_bout_en_bout_v1.py::test_empreintes_des_scores_et_des_deux_premieres_directions_sain_et_artefact PASSED [ 90%]
+tests/test_t07bbis_bout_en_bout_v1.py::test_aires_de_controle_de_mc_sur_toutes_les_actions PASSED [ 91%]
+tests/test_t07bbis_lien_mots_et_cout_v1.py::test_chargement_sain_et_interface PASSED [ 92%]
+tests/test_t07bbis_lien_mots_et_cout_v1.py::test_charger_adaptateur_par_le_lien_et_choix_de_la_lecture PASSED [ 93%]
+tests/test_t07bbis_lien_mots_et_cout_v1.py::test_artefacts_module_ligne_fichier_commit PASSED [ 94%]
+tests/test_t07bbis_lien_mots_et_cout_v1.py::test_fils_de_calcul_a_un_exiges PASSED [ 95%]
+tests/test_t07bbis_lien_mots_et_cout_v1.py::test_modele_non_calculable_de_la_piece_aucun_score PASSED [ 96%]
+tests/test_t07bbis_lien_mots_et_cout_v1.py::test_fichiers_reels_de_la_branche PASSED [ 97%]
+tests/test_t07bbis_lien_mots_et_cout_v1.py::test_egalite_adaptateur_et_repli_base_a_et_ecarts_declares_base_b PASSED [ 98%]
+tests/test_t07bbis_lien_mots_et_cout_v1.py::test_controle_d_egalite_de_bout_en_bout_piece_jouet_contre_adaptateur PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+  /usr/local/lib/python3.13/multiprocessing/popen_fork.py:73: DeprecationWarning: This process (pid=13859) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    self.pid = os.fork()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 96 passed, 4 warnings in 118.67s (0:01:58) ==================
