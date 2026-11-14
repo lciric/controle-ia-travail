@@ -1,0 +1,58 @@
+--- lecture-classement-v3-2/outil_lecteur_conception_propre_v3_2.py	2026-11-14 12:28:36.957337478 +0000
++++ lecture-classement-v3-2/outil_lecteur_conception_propre_v3_2_1.py	2026-11-14 13:00:08.279721754 +0000
+@@ -1,7 +1,13 @@
+ #!/usr/bin/env python3
+-"""Outil du lecteur de la règle de sélection — course « conception propre » — v3.2 (relecture exploratoire, lecteur Astra).
++"""Outil du lecteur de la règle de sélection — course « conception propre » — v3.2.1 (relecture exploratoire, lecteur Astra).
+ 
+-v3.2 (14 novembre 2026, à partir de 12:22 UTC, `date -u`) = v3.1 (`../../lecture-classement-v3-1/`, `95bc46c1…`, gardée,
++v3.2.1 (14 novembre 2026, à partir de 13:00 UTC, `date -u`) = v3.2 (`outil_lecteur_conception_propre_v3_2.py`, `b1f3e0c5…`,
++gardée, jamais servie), après la contre-lecture (`../contre-lecture-modele-c-v1.md`) : **seules changent les pièces
++épinglées** — idées au hasard v2.1 (`../temoins-hasard-v2-1.json`) et règle v2.1 (`../regle-v2-1.md`) — et le nom de
++version (`VERSION`). Noms des fichiers écrits, dossier fixe, manifeste, garde, lecture : ceux de la v3.2 (la v3.2 n'a préparé
++aucun dossier ; `envoyer` refuse un manifeste d'une autre version).
++
++De la v3.2 : v3.2 (14 novembre 2026, à partir de 12:22 UTC, `date -u`) = v3.1 (`../../lecture-classement-v3-1/`, `95bc46c1…`, gardée,
+ R12), pour la **relecture exploratoire** des mêmes fiches sous la règle corrigée (`../regle-v2.md`, R-2726). La règle de
+ lecture ne change pas (mêmes fonctions de la vue, de la pile, des ordres, des lots, du message et de la vérification : essai
+ `test_regle_de_lecture_inchangee_v3_1_v3_2`). Changements, et seulement eux :
+@@ -70,11 +76,11 @@
+ 
+ Actions :
+ 
+-    python3 -I -B outil_lecteur_conception_propre_v3_2.py preparer --fiches F --attestation A --sortie DOSSIER_FIXE \
++    python3 -I -B outil_lecteur_conception_propre_v3_2_1.py preparer --fiches F --attestation A --sortie DOSSIER_FIXE \
+         --effort low|medium|high [--palier standard|flex] --plafond-usd X --depense-anterieure-usd D
+-    python3 -I -B outil_lecteur_conception_propre_v3_2.py envoyer --envois DOSSIER_FIXE [--envois-max N]
+-    python3 -I -B outil_lecteur_conception_propre_v3_2.py bilan --envois DOSSIER_FIXE
+-    python3 -I -B outil_lecteur_conception_propre_v3_2.py verifier --envois DOSSIER_FIXE [--lecture L1|L2]
++    python3 -I -B outil_lecteur_conception_propre_v3_2_1.py envoyer --envois DOSSIER_FIXE [--envois-max N]
++    python3 -I -B outil_lecteur_conception_propre_v3_2_1.py bilan --envois DOSSIER_FIXE
++    python3 -I -B outil_lecteur_conception_propre_v3_2_1.py verifier --envois DOSSIER_FIXE [--lecture L1|L2]
+ 
+ DOSSIER_FIXE = `<racine>/docs/notes/organisme-conception-propre-v1/lecture-g1-v3-2/envois`.
+ Codes de sortie : 0 fait (ou pause demandée par `--envois-max`) ; 2 refus (rien d'envoyé de plus) ; 3 arrêt sur anomalie ;
+@@ -98,7 +104,7 @@
+ 
+ import numpy as np
+ 
+-VERSION = "outil-lecteur-conception-propre-v3-2"
++VERSION = "outil-lecteur-conception-propre-v3-2-1"
+ RACINE_DEFAUT = Path(__file__).resolve().parents[5]   # v3.2 : un niveau plus bas
+ DOSSIER = "docs/notes/organisme-conception-propre-v1"
+ PIECES = {
+@@ -112,10 +118,10 @@
+                   "ddfb2522be0fe5095926405b8761d0e4be0065a29679585051a287349114fe9d"),
+     "temoins_lecteur": (f"{DOSSIER}/relecture-exploratoire-v2/temoins-lecteur-v2.json",
+                         "bb4f903f5a7fbe2366fb631afe708dcf93632e47c459acd86afbd425b93e295e"),
+-    "temoins_hasard": (f"{DOSSIER}/relecture-exploratoire-v2/temoins-hasard-v2.json",
+-                       "5cef38f6d0545acd47859e87dd3de18846035570dfd32b7644be617d641b745d"),
+-    "regle": (f"{DOSSIER}/relecture-exploratoire-v2/regle-v2.md",
+-              "56c58b096fd546ba05b68caebcf4e57cade9c2af1ea9b091de6770cbd36f3f24"),
++    "temoins_hasard": (f"{DOSSIER}/relecture-exploratoire-v2/temoins-hasard-v2-1.json",
++                       "1b7973f38966a19ffc901bdb3eabd9e7df2af2c1aba8014dbda395cb56ba0fb0"),
++    "regle": (f"{DOSSIER}/relecture-exploratoire-v2/regle-v2-1.md",
++              "b955e7307e906dbdcf78123827d192bf2f0b4639f0194c94966fdccba5330434"),
+     "conception": (f"{DOSSIER}/conception-course-v1.md",
+                    "be3ba97ee418de50fa356b0e39fcfa62c16d06f5767560265fcc7ee9f191a95e"),
+ }

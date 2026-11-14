@@ -1,0 +1,648 @@
+--- outils/tirer_fiches_hasard_v2.py	2026-11-14 12:00:36.285550081 +0000
++++ outils/tirer_fiches_hasard_v2_1.py	2026-11-14 12:58:10.172877537 +0000
+@@ -1,8 +1,17 @@
+ #!/usr/bin/env python3
+-"""Témoins « idées tirées au hasard » v2 — relecture exploratoire des fiches de la course « conception propre ».
++"""Témoins « idées tirées au hasard » v2.1 — relecture exploratoire des fiches de la course « conception propre ».
+ 
+-Écrit le 14 novembre 2026 (de 11:47 à 12:00 UTC environ, `date -u`) par le préparateur de la relecture (modèle A), d'après
+-`engagement-avant-epreuve-v2.md` (§ 7), qui fixe ses principes avant son écriture. Remplace, pour la relecture seulement,
++v2.1 (14 novembre 2026, de 12:51 à 12:58 UTC, `date -u`) = v2 (`tirer_fiches_hasard_v2.py`, `35756e6d…`, gardée, R12),
++corrigée **sur le style seulement** d'après la contre-lecture (`../contre-lecture-modele-c-v1.md`, constat M2) et selon
++`../corrections-apres-contre-lecture-v2.md`, écrit avant elle : opérations et ressources tirées sans remise entre les huit
++fiches (deux opérations au plus en double) ; tournures d'arrondi sans fragment commun ; gabarits qui commençaient pareil
++réécrits ; **dispersion des longueurs** (rang de longueur stratifié par fiche, cible de chaque champ à ce rang de la
++répartition réelle, ± 0,08 ; fiche refaite depuis sa graine, rang déplacé de 0,08, si sa longueur totale sort des bornes des
++réelles) ; un morceau facultatif n'est ajouté que s'il rapproche de la cible ; réserves de complément pour les fiches
++longues ; moins de suites en « ; » ; tournures répétées d'une fiche à l'autre variées (contrôle 4 de la v2.1). Graines, principes et réserves de la v2 inchangés par ailleurs.
++
++De la v2 : écrit le 14 novembre 2026 (de 11:47 à 12:00 UTC environ, `date -u`) par le préparateur de la relecture (modèle A),
++d'après `engagement-avant-epreuve-v2.md` (§ 7), qui fixe ses principes avant son écriture. Remplace, pour la relecture seulement,
+ `../../outils/tirer_fiches_hasard_v1.py` (gardé, R12), dont les huit fiches échouaient au critère R7 par construction : leurs
+ raisons venaient d'une liste de six phrases-types (audit `735d185a…`, § 2).
+ 
+@@ -26,7 +35,7 @@
+ nombres, longueurs cibles). Versions, graines et empreintes (générateur, statistiques) consignées à la sortie. Aucun appel,
+ aucun réseau.
+ 
+-Usage : python -I -B tirer_fiches_hasard_v2.py --stats STATS.json --sortie SORTIE.json      (SORTIE existant : refus, R12)
++Usage : python -I -B tirer_fiches_hasard_v2_1.py --stats STATS.json --sortie SORTIE.json      (SORTIE existant : refus, R12)
+ """
+ from __future__ import annotations
+ 
+@@ -60,7 +69,7 @@
+          "groupe", "unite": "entier", "borne": "au moins 20 instances"},
+     ],
+     "proposeurs": [
+-        {"nom": "le nombre de cartes demandées à chaque proposeur", "genre": "m", "lieu": "la consigne des proposeurs",
++        {"nom": "le nombre de cartes demandées à chaque proposeur", "genre": "m", "lieu": "le texte servi à chaque proposeur",
+          "unite": "entier", "borne": "entre 2 et 12 cartes par appel"},
+         {"nom": "le nombre de lois de l'archive servies dans la vue", "genre": "m", "lieu": "la construction de la vue des proposeurs",
+          "unite": "entier", "borne": "au moins une loi servie quand l'archive n'est pas vide"},
+@@ -68,7 +77,7 @@
+          "unite": "part", "borne": "au moins la liste des traits et de leurs échelles"},
+         {"nom": "le plafond de jetons de raisonnement par appel", "genre": "m", "lieu": "les paramètres d'appel des proposeurs",
+          "unite": "entier", "borne": "au moins 2 000 jetons"},
+-        {"nom": "le nombre d'exemples de cartes valides dans la consigne", "genre": "m", "lieu": "la consigne des proposeurs",
++        {"nom": "le nombre d'exemples de cartes valides dans la consigne", "genre": "m", "lieu": "les instructions de proposition",
+          "unite": "entier", "borne": "entre 0 et 6 exemples"},
+     ],
+     "composition": [
+@@ -95,18 +104,18 @@
+ # opérations : (infinitif, participe masculin, participe féminin, formules de la demande, sens sur l'objet)
+ OPERATIONS = [
+     ("doubler", "doublé", "doublée",
+-     ("le double de sa valeur actuelle", "deux fois la valeur en place", "2 fois sa valeur d'aujourd'hui"), +1),
++     ("le double de sa valeur actuelle", "deux fois la valeur en vigueur", "2 fois sa valeur d'aujourd'hui"), +1),
+     ("multiplier par 1,5", "multiplié par 1,5", "multipliée par 1,5",
+-     ("1,5 fois sa valeur actuelle", "une fois et demie la valeur en place", "150 % de sa valeur d'aujourd'hui"), +1),
++     ("1,5 fois sa valeur actuelle", "une fois et demie le réglage courant", "150 % de sa valeur d'aujourd'hui"), +1),
+     ("augmenter de 25 %", "augmenté de 25 %", "augmentée de 25 %",
+-     ("1,25 fois sa valeur actuelle", "la valeur en place majorée d'un quart", "125 % de sa valeur d'aujourd'hui"), +1),
++     ("1,25 fois sa valeur actuelle", "le réglage présent majoré d'un quart", "125 % de sa valeur d'aujourd'hui"), +1),
+     ("réduire de moitié", "réduit de moitié", "réduite de moitié",
+-     ("la moitié de sa valeur actuelle", "50 % de la valeur en place", "sa valeur d'aujourd'hui divisée par deux"), -1),
++     ("la moitié de sa valeur actuelle", "50 % du réglage en cours", "sa valeur d'aujourd'hui divisée par deux"), -1),
+     ("réduire d'un tiers", "réduit d'un tiers", "réduite d'un tiers",
+-     ("les deux tiers de sa valeur actuelle", "la valeur en place diminuée d'un tiers",
++     ("les deux tiers de sa valeur actuelle", "le réglage de départ diminué d'un tiers",
+       "environ 67 % de sa valeur d'aujourd'hui"), -1),
+     ("diminuer de 40 %", "diminué de 40 %", "diminuée de 40 %",
+-     ("0,6 fois sa valeur actuelle", "60 % de la valeur en place", "sa valeur d'aujourd'hui réduite de 40 %"), -1),
++     ("0,6 fois sa valeur actuelle", "60 % de la constante présente", "sa valeur d'aujourd'hui réduite de 40 %"), -1),
+ ]
+ # grandeurs intermédiaires de la chaîne causale
+ GRANDEURS = [
+@@ -143,9 +152,10 @@
+     ("une demi-modification (la moitié de l'écart de valeur), à coût égal", "la demi-modification"),
+     ("la configuration de référence sur les graines appariées, budget identique", "la configuration de référence"),
+ ]
+-ARRONDI = [", en arrondissant à l'entier supérieur", ", en prenant l'entier supérieur", ", l'entier supérieur étant retenu",
+-           ", à l'unité supérieure près", ", en retenant l'entier immédiatement supérieur", ", par excès à l'unité",
+-           ", en arrondissant vers le haut", ", entier supérieur retenu", ", arrondi par excès"]
++ARRONDI = [", en arrondissant vers le haut", ", par excès", ", sans décimale et jamais sous le calcul exact",
++           ", en gardant un nombre entier, relevé si besoin", ", au nombre entier qui suit le résultat",
++           ", la partie décimale étant comptée pour une unité", ", sous forme entière (excès)",
++           ", nombre entier pris au plus près par le haut", ", relevé à l'unité"]
+ SUPPOSES = [
+     "Benjamini et Hochberg, contrôle du taux de fausses découvertes, JRSS B, 1995",
+     "Wang et Ramdas, contrôle du taux de fausses découvertes par valeurs e, JRSS B, 2022",
+@@ -194,21 +204,20 @@
+ # {dep} dépendance de la métrique ; {res} ressource ; {plus} « plus » ou « moins » ; {n} mondes ; {gen} générations ;
+ # {seuil} seuil ; {temoin} témoin à coût égal ; {dom} domaine ; {k} composantes ; {usd} {usd_pilote} {h} {pilote} nombres.
+ NOM = [
+-    "{Op} {obj}, à coût égal", "{Obj} {part} : effet sur l'oracle", "Et si {obj} était {part}, à budget égal ?",
+-    "{Obj} : {op_nom} et couverture", "{Op} {obj} pour couvrir davantage ?", "Pour plus de couverture : {op} {obj}",
+-    "{Op} {obj}, rien d'autre", "{Obj} {part} à budget égal", "Un organisme où {obj} est {part}",
+-    "{Obj}, {part}, sans dépense de plus",
++    "{Op} {obj}, à coût égal", "{Obj} {part}, effet à l'oracle", "Et si {obj} était {part} ?", "{Obj} : {op_nom}",
++    "{Op} {obj} ?", "Plus de couverture : {op} {obj}", "{Op} {obj}, rien d'autre", "{Obj} {part} à budget égal",
++    "Organisme où {obj} est {part}", "{Obj}, {part}, sans surcoût",
+ ]
+ ENONCE_QUESTION = [
+     "{Op} {obj} fait-il couvrir davantage de composantes plantées, à coût égal ?",
+     "Question : avec {obj} {part}, l'organisme couvre-t-il plus de composantes plantées sans dépenser davantage ?",
+     "À dépense égale, une course dont {obj} est {part} trouve-t-elle davantage de composantes vraies ?",
+     "Faut-il {op} {obj} pour que l'organisme couvre plus de composantes au même coût ?",
+-    "La couverture des composantes plantées gagne-t-elle à ce que {obj} soit {part}, toutes choses égales par ailleurs ?",
++    "L'organisme trouve-t-il plus de composantes plantées si {obj} est {part}, toutes choses égales par ailleurs ?",
+     "Si l'on {op_conj} {obj}, la course couvre-t-elle davantage de composantes sans coût supplémentaire ?",
+     "Que gagne l'oracle quand {obj} est {part}, le budget restant le même ?",
+     "Une course où {obj} est {part} dépasse-t-elle la course de référence en composantes couvertes, à coût égal ?",
+-    "Question fermée : {op} {obj} augmente-t-il la couverture des composantes plantées à budget égal ?",
++    "Question fermée : {op} {obj} fait-il monter le nombre de composantes vraies trouvées, à budget égal ?",
+ ]
+ ENONCE_APPROCHE = [  # premier geste quand le type tiré est « approche »
+     "Proposition : {op} {obj}, toutes choses égales par ailleurs, et mesurer ce que l'oracle en dit.",
+@@ -273,16 +282,16 @@
+     "inchangés",
+ ]
+ ESPACE_SUITE = [
+-    " ; les deux bras jouent les mêmes graines dans le même ordre", " ; chaque graine est jouée une fois par bras",
+-    " ; les graines sont tirées une fois, avant toute course", " ; aucune graine n'est rejouée après lecture",
+-    " ; ordre des graines fixé d'avance", " ; les deux bras partagent les graines et les plafonds",
+-    " ; une seule course par graine et par bras", " ; mêmes graines dans les deux bras, appariées une à une",
+-    " ; graines scellées avant le départ des deux bras",
++    ", les deux bras jouant les graines dans un ordre commun", ", chaque graine étant jouée une fois par bras",
++    ", avec des graines tirées une fois avant toute course", ", sans qu'aucune graine soit rejouée après lecture",
++    ", dans un ordre des graines fixé d'avance", ", graines et plafonds étant partagés par les deux bras",
++    ", à raison d'une course par graine et par bras", ", graines appariées une à une entre les deux bras",
++    ", toutes les graines étant scellées avant le départ",
+ ]
+ PRED_PLUS = [
+     "à coût égal, au moins {seuil} % de composantes plantées couvertes en plus que la course de référence, en moyenne "
+     "sur les {n} mondes",
+-    "la couverture des composantes plantées gagne au moins {seuil} % sur la course de référence, à dépense égale, en "
++    "la couverture gagne au moins {seuil} % sur la course de référence, à dépense égale, en "
+     "moyenne sur les {n} graines",
+     "au moins {k} de plus par monde en moyenne, soit au moins {seuil} % de couverture en plus, à coût égal contre la "
+     "course de référence",
+@@ -317,15 +326,15 @@
+     "couverture identique à une composante près, à coût par génération inférieur d'au moins {seuil} %",
+ ]
+ PRED_GARDE = [
+-    " ; ni lois fausses ni copies promues en plus", " ; pas plus de lois fausses promues, ni plus de copies",
+-    " ; le nombre de lois fausses et de copies promues ne monte pas", " ; sans hausse des lois fausses ou des copies "
+-    "promues", " ; au plus une loi fausse de plus sur l'ensemble des mondes, et pas de copie de plus",
+-    " ; lois fausses et copies promues au plus égales à celles du témoin", " ; aucune hausse des promotions fausses ou "
+-    "copiées", " ; au plus autant de lois fausses et de copies que la course de référence",
+-    " ; sans loi fausse ni copie supplémentaire",
++    ", sans plus de lois fausses ni de copies promues", ", sans promouvoir davantage de lois fausses ou de copies",
++    ", le nombre de lois fausses et de copies promues ne montant pas", ", sans hausse des lois fausses ou des copies "
++    "promues", ", avec au plus une loi fausse de plus sur l'ensemble des mondes et aucune copie de plus",
++    ", les lois fausses et les copies promues restant au plus égales à celles du témoin", ", sans aucune hausse des "
++    "promotions fausses ou copiées", ", avec au plus autant de lois fausses et de copies que la course de référence",
++    ", et sans loi fausse ni copie supplémentaire",
+ ]
+ PRED_STADE = [
+-    ", l'écart étant lu une seule fois, après la dernière génération", ", le gain devant apparaître dès la deuxième "
++    ", l'écart étant établi à la clôture, après la dernière génération", ", le gain devant apparaître dès la deuxième "
+     "génération", ", l'effet étant mesuré génération par génération puis cumulé", ", l'écart étant lu par l'oracle à la "
+     "fin de chaque course", ", chaque graine comptant pour une observation", ", avec le même seuil pour toutes les "
+     "graines", ", l'écart moyen devant dépasser l'écart entre deux graines du témoin", ", la lecture se faisant une fois "
+@@ -381,7 +390,7 @@
+     "Le dispositif à monde planté sépare ce qui est trouvé de ce qui est seulement promu : on voit si la modification "
+     "aide vraiment.",
+     "Le relevé des relais et l'oracle suffisent à juger la modification : aucun verdict de juge n'entre dans la mesure.",
+-    "Parce que le monde est écrit par programme, on rejoue les mêmes graines dans les deux bras et l'écart se lit sans "
++    "Parce que le monde est écrit par programme, chaque graine se rejoue à l'identique dans les deux bras et l'écart se lit sans "
+     "bruit de tâche.",
+     "La vérité connue du monde planté rend la comparaison exacte : chaque composante couverte est comptée une fois.",
+     "Le monde planté donne une mesure qui ne dépend d'aucun modèle, et le coût relevé par génération ferme la "
+@@ -392,7 +401,7 @@
+     "Un laboratoire sans monde planté ne peut que compter des promotions, pas des composantes vraies.",
+     "Sans oracle ni graines scellées, on ne distingue pas un effet {de_obj} d'un effet de tirage.",
+     "La mesure demande l'oracle d'un monde planté et le relevé du coût par génération, que l'organisme possède déjà.",
+-    "Il faut rejouer les mêmes graines dans deux bras et lire l'oracle une fois : peu de dispositifs le permettent.",
++    "Il faut rejouer chaque graine dans deux bras et consulter l'oracle à la fin : peu de dispositifs le permettent.",
+     "Un occupant mieux doté en calcul n'a pas, sans monde planté, la vérité contre laquelle juger {obj}.",
+     "Sans relevé du coût à la génération et sans oracle, la comparaison à coût égal n'a pas de sens.",
+     "La vérité du monde planté et l'appariement des graines ne s'achètent pas avec plus de calcul.",
+@@ -426,10 +435,10 @@
+     "{Lieu} reçoit une seule modification : {obj} vaut {formule}{arrondi}.",
+     "Remplacer, dans {lieu}, la constante qui fixe {obj} par {formule}{arrondi}.",
+     "Changer {obj} (réglage {de_lieu}) pour {formule}{arrondi}.",
+-    "Dans {lieu}, {obj} passe à {formule}{arrondi}.",
++    "Dans {lieu}, {obj} passe {a_formule}{arrondi}.",
+     "La constante {de_lieu} qui porte {obj} est remplacée par {formule}{arrondi}.",
+-    "Écrire dans {lieu} une valeur {de_obj} égale à {formule}{arrondi}.",
+-    "Régler {obj} à {formule}{arrondi}, dans {lieu}.",
++    "Écrire dans {lieu} une valeur {de_obj} égale {a_formule}{arrondi}.",
++    "Régler {obj} {a_formule}{arrondi}, dans {lieu}.",
+ ]
+ DEMANDE_BORNE = [
+     " La valeur obtenue reste bornée ({borne}) ; si elle sort de la borne, la borne s'applique.",
+@@ -507,27 +516,27 @@
+     "environ {h} heures de processeur pour {n} graines, sans appel de proposeur ni de juge à modèle",
+ ]
+ COUT_DEP = [
+-    "de l'ordre de {usd} USD d'appels pour {n} mondes, deux bras et {gen} générations ; un pilote de {pilote} mondes "
++    "de l'ordre de {usd} USD d'appels pour {n} mondes, deux bras et {gen} générations ; un essai réduit à {pilote} mondes "
+     "coûte environ {usd_pilote} USD",
+-    "environ {usd} USD en tout ({n} graines, deux bras, {gen} générations), dont {usd_pilote} USD pour un pilote de "
+-    "{pilote} graines",
+-    "à peu près {usd} USD d'appels de proposeurs pour l'expérience entière, et {usd_pilote} USD pour un pilote",
++    "environ {usd} USD en tout ({n} graines, deux bras, {gen} générations), dont {usd_pilote} USD consacrés d'abord à "
++    "{pilote} graines d'essai",
++    "à peu près {usd} USD d'appels de proposeurs pour l'expérience entière, précédée d'un tour d'essai à {usd_pilote} USD",
+     "quelque {usd} USD pour {n} mondes et deux bras ; le pilote, sur {pilote} mondes, en demande {usd_pilote}",
+     "{usd} USD environ, appels de proposeurs compris, pour {n} graines et {gen} générations par bras",
+     "environ {usd_pilote} USD pour un pilote de {pilote} graines, puis {usd} USD pour l'épreuve complète",
+     "de l'ordre de {usd} USD sur l'ensemble ; un premier passage de {pilote} mondes, vers {usd_pilote} USD, dit si le "
+     "signe tient",
+     "un peu plus de {usd} USD d'appels pour les deux bras et les {n} mondes",
+-    "environ {usd} USD pour {gen} générations sur {n} mondes et deux bras, plus {usd_pilote} USD de pilote",
++    "environ {usd} USD pour {gen} générations sur {n} mondes et deux bras, plus {usd_pilote} USD de premier passage",
+ ]
+ PIEGE = [
+     "Comparer à un témoin qui n'a pas le même coût que la course modifiée : le témoin joue les mêmes graines au même coût.",
+     "Régler l'ampleur de l'opération au vu des premières courses rendrait la comparaison circulaire ; elle est fixée "
+     "d'avance.",
+     "Un gain qui viendrait seulement de la dépense supplémentaire de la course modifiée serait pris pour un effet "
+-    "{de_obj} ; le coût relevé des deux bras est donc comparé avant toute lecture.",
+-    "Laisser des graines différentes aux deux bras ferait passer un écart de mondes pour un effet de la modification.",
+-    "Lire l'oracle plusieurs fois et garder la meilleure lecture fausserait l'écart ; une seule lecture, après la course.",
++    "{de_obj} ; les coûts relevés dans chaque bras sont donc rapprochés avant toute lecture.",
++    "Donner des graines différentes aux deux bras ferait passer une différence de mondes pour un effet du changement.",
++    "Consulter l'oracle à plusieurs reprises et garder la meilleure lecture fausserait l'écart ; on le consulte à la fin.",
+     "Arrêter la course modifiée plus tôt que le témoin, ou plus tard, change le nombre de cartes et donc la couverture.",
+     "Compter comme composantes couvertes des lois fausses que la modification fait promouvoir : l'oracle les sépare.",
+     "Attribuer {a_obj} un effet qui viendrait d'une autre constante modifiée par mégarde : la configuration des deux "
+@@ -535,14 +544,14 @@
+     "Juger sur une seule graine favorable ; la règle de lecture porte sur toutes les graines, fixée d'avance.",
+ ]
+ PIEGE_SUITE = [
+-    " La règle de lecture est scellée avant la première course.", " Les deux bras sont lancés le même jour, avec les "
++    " Le plan de lecture est scellé avant la première course.", " Les deux bras sont lancés le même jour, avec les "
+     "mêmes relais.", " Le relevé du coût fait foi, non l'estimation.", " L'écart est lu par programme, sans choix "
+     "humain.", " Le seuil de lecture ne change pas après coup.", " Tout écart à ce plan est déclaré.", " On rapporte "
+     "aussi le nombre de cartes de chaque bras.", " Les journaux des deux bras sont scellés à la clôture.",
+     " Le préenregistrement fixe tout cela d'avance.",
+ ]
+ COSMETIQUE = [
+-    "Si l'écart au témoin ne dépasse pas l'écart entre deux graines de la course de référence.",
++    "Si l'écart au témoin reste dans la variation ordinaire d'une graine à l'autre de la course de référence.",
+     "Si {temoin_court} fait aussi bien que la course modifiée.", "Si l'effet disparaît quand on applique l'opération "
+     "inverse {a_obj}.", "Si la couverture gagne autant avec une modification de même ampleur tirée au hasard.",
+     "Si le gain ne survit pas au changement de famille de mondes.", "Si la course modifiée ne gagne qu'en promouvant "
+@@ -567,29 +576,29 @@
+     "Ce changement se règle par une constante et se défait aussi simplement.",
+ ]
+ PRED_PRECISION = [
+-    " ; la moyenne est prise sur les graines, jamais sur la meilleure", " ; une graine perdue par panne compte comme un écart "
+-    "nul", " ; l'écart est rapporté avec son intervalle par rééchantillonnage des graines", " ; le seuil s'applique au total, "
+-    "non à chaque génération", " ; le même seuil vaut pour les deux familles de composantes", " ; la comparaison se fait "
+-    "graine contre graine", " ; aucune graine n'est écartée après coup", " ; le résultat est lu sur toutes les graines jouées, "
+-    "sans exception", " ; on rapporte aussi l'écart médian entre graines",
++    ", la moyenne étant prise sur les graines et jamais sur la meilleure", ", une graine perdue par panne comptant "
++    "comme un écart nul", "; l'écart est rapporté avec son intervalle par rééchantillonnage des graines", ", le seuil "
++    "s'appliquant au total et non à chaque génération", ", le même seuil valant pour les deux familles de composantes",
++    ", la comparaison se faisant graine contre graine", ", aucune graine n'étant écartée après coup", ", le résultat "
++    "étant lu sur toutes les graines jouées, sans exception", ", l'écart médian entre graines étant rapporté aussi",
+ ]
+ PRED_COMPLEMENT = [
+-    " ; un écart plus petit que ce seuil compte comme un échec de la prédiction",
+-    " ; si le témoin lui-même varie de plus de ce seuil d'une graine à l'autre, la prédiction est jugée sur la médiane",
+-    " ; la prédiction échoue si l'écart a le bon signe mais reste sous le seuil",
+-    " ; le seuil est fixé avant toute course et ne bouge plus",
+-    " ; un gain obtenu au prix d'un coût plus élevé ne compte pas",
+-    " ; l'écart est calculé sur les mêmes graines dans les deux bras, appariées",
+-    " ; la comparaison se fait à coût relevé égal, à 3 % près",
+-    " ; les courses arrêtées par la garde de dépense comptent avec leur dernière génération complète",
+-    " ; aucune graine n'est rejouée pour améliorer l'écart",
++    ", un écart plus petit que ce seuil valant échec de la prédiction",
++    "; si le témoin lui-même varie de plus de ce seuil d'une graine à l'autre, la prédiction est jugée sur la médiane",
++    ", la prédiction échouant si l'écart a le bon signe mais reste sous le seuil",
++    ", ce seuil étant fixé avant toute course pour ne plus bouger",
++    ", un gain obtenu au prix d'un coût plus élevé ne comptant pas",
++    ", l'écart étant calculé graine par graine, les deux bras appariés",
++    ", à coût relevé égal à 3 % près",
++    ", les courses arrêtées par la garde de dépense comptant avec leur dernière génération complète",
++    ", sans qu'aucune graine soit rejouée pour améliorer l'écart",
+ ]
+ METRIQUE_SUITE = [
+-    " ; la lecture de l'oracle se fait une seule fois, toutes courses closes", " ; les jetons d'entrée et de sortie sont "
+-    "comptés à part", " ; les heures de processeur du juge sont relevées aussi", " ; aucune note de juge n'entre dans la "
+-    "mesure", " ; les composantes sont comptées à l'étage des retenues", " ; chaque bras est mesuré sur les mêmes graines",
+-    " ; les promotions fausses et copiées sont comptées séparément", " ; le coût est relevé par rôle et par génération",
+-    " ; la mesure porte sur la course entière",
++    ", l'oracle n'étant consulté qu'à la clôture de toutes les courses", ", jetons d'entrée et de sortie comptés à part",
++    ", les heures de processeur du juge étant relevées aussi", ", sans qu'aucune note de juge entre dans la mesure",
++    ", les composantes étant comptées à l'étage des retenues", ", chaque bras étant mesuré sur les mêmes graines",
++    ", promotions fausses et copiées comptées séparément", ", le coût étant relevé par rôle et par génération",
++    ", la mesure portant sur la course entière",
+ ]
+ PERTE_SUITE = [
+     " {G1} peut aussi réagir avec retard.", " L'effet sur {g1} n'est pas observé directement.",
+@@ -612,10 +621,10 @@
+ INCOPIABLE_SUITE = [
+     " Il faut aussi des graines scellées que l'on puisse rejouer à l'identique.", " Le relevé du coût par rôle est propre "
+     "à l'orchestrateur.", " Un tel appariement des bras demande un monde écrit par programme.", " Sans archive de lois "
+-    "acceptées, la comparaison n'aurait pas d'objet.", " L'oracle lu une seule fois fait la différence avec une évaluation "
++    "acceptées, la comparaison n'aurait pas d'objet.", " Une vérité consultée à la clôture fait la différence avec une évaluation "
+     "ouverte.", " Les tâches ouvertes n'ont pas de vérité contre laquelle compter.", " Plus de calcul n'apporte pas "
+-    "l'oracle.", " La mesure demande le juge statistique de l'organisme, tel qu'il est.", " Il faut enfin des journaux de "
+-    "course complets et scellés.",
++    "l'oracle.", " La mesure demande le juge statistique de l'organisme, tel qu'il est.", " Des journaux de course complets et "
++    "scellés sont aussi nécessaires.",
+ ]
+ ORIG_SUITE = [
+     " Aucune entrée connue ne règle cette quantité contre une vérité plantée.", " Le réglage actuel vient des premières "
+@@ -624,22 +633,34 @@
+     "n'a pas été fait.", " Rien de comparable n'est décrit dans les faits servis.", " L'idée reste à éprouver contre "
+     "l'oracle.", " Le cadre à monde planté est ce qui la rend mesurable.",
+ ]
++ORIG_SUITE2 = [
++    " L'idée paraît simple, mais personne ne l'a encore confrontée à une vérité plantée.",
++    " Le principe est connu ailleurs ; son effet sur un organisme d'idéation reste à mesurer.",
++    " Rien dans les faits servis ne montre que ce réglage ait déjà été éprouvé ainsi.",
++    " Le mérite est modeste : poser la question au bon endroit et la trancher par l'oracle.",
++    " Ce n'est pas une méthode neuve, c'est un réglage jamais mesuré.",
++    " On ne revendique rien de plus que l'application à cet organisme précis.",
++    " La part d'invention tient au choix de l'objet et du témoin, non au principe.",
++    " La nouveauté, s'il y en a une, viendra du résultat plus que de l'idée.",
++    " Le rapprochement entre ce domaine et l'organisme n'a pas encore été fait.",
++]
+ DEMANDE_SUITE = [
+-    " Un drapeau de configuration choisit la valeur, pour que les deux bras partagent le même code.",
++    " Un drapeau de configuration choisit la valeur, de sorte qu'un seul code serve aux deux bras.",
+     " La modification vaut dès la première génération et jusqu'à la fin de la course.",
+     " Les essais de l'orchestrateur sont complétés d'un cas qui vérifie la valeur appliquée.",
+     " Aucune autre partie de la configuration n'est touchée par le drapeau.",
+     " Le changement est réversible en une ligne de configuration.",
+     " La valeur est lue au départ et ne change plus pendant la course.",
+-    " La configuration des deux bras est comparée champ par champ avant le départ.",
++    " Avant le départ, chaque champ de configuration du bras modifié est confronté à celui du témoin.",
+     " Un manifeste par bras décrit la configuration complète.",
+     " Le programme refuse de partir si la valeur n'est pas consignée.",
+ ]
+ COUT_SUITE = [
+-    " ; le calcul du juge reste négligeable devant le reste", " ; aucune dépense hors de la ligne prévue au devis",
+-    " ; l'ordre de grandeur tient à un facteur deux près", " ; la mesure tient sur une machine ordinaire",
+-    " ; la lecture de l'oracle ne coûte rien", " ; le relevé des relais fait foi", " ; les rejeux éventuels sur processeur "
+-    "sont gratuits", " ; la dépense se borne au plafond fixé avant le départ", " ; aucun modèle de frontière n'est entraîné",
++    ", le calcul du juge restant négligeable devant le reste", ", sans dépense hors de la ligne prévue au devis",
++    ", ordre de grandeur tenu à un facteur deux près", ", la mesure tenant sur une machine ordinaire",
++    ", la lecture de l'oracle ne coûtant rien", ", le relevé des relais faisant foi", ", les rejeux éventuels sur "
++    "processeur étant gratuits", ", dépense bornée au plafond fixé avant le départ", ", sans qu'aucun modèle de "
++    "frontière soit entraîné",
+ ]
+ PIEGE_SUITE2 = [
+     " Un autre piège serait de lire l'effet sur les seules premières générations, où l'archive est presque vide.",
+@@ -649,7 +670,7 @@
+     " Enfin, une panne d'un relais dans un seul bras fausserait la comparaison : la graine est alors rejouée dans les deux.",
+     " Une lecture qui retiendrait les graines où l'effet est le plus net serait sans valeur.",
+     " Prendre la meilleure génération au lieu de la dernière exagérerait l'effet.",
+-    " Il faut enfin que le juge du bras témoin ne soit pas modifié par mégarde.",
++    " Le juge du bras témoin ne doit pas être modifié par mégarde.",
+     " Un effet de l'ordre de passage des bras sur les relais serait pris pour un effet de la modification.",
+ ]
+ COSMETIQUE_SUITE2 = [
+@@ -659,15 +680,104 @@
+     " De même si le coût relevé du bras modifié dépassait celui du témoin.",
+     " Ou encore si la modification inverse donnait un gain du même signe.",
+     " Il faudrait aussi le conclure si le gain venait de lois fausses.",
+-    " Pareil si l'écart restait sous l'écart entre deux graines du témoin.",
++    " Pareil si l'écart restait sous le bruit qui sépare deux répétitions du témoin.",
+     " De même enfin si deux opérateurs ne retrouvaient pas l'écart sur les mêmes graines.",
+-    " Ou si le gain disparaissait quand on rejoue les mêmes graines dans un autre ordre.",
++    " Ou si le gain disparaissait quand on rejoue ces graines dans un autre ordre.",
++]
++# v2.1 : réserves de complément, pour que les fiches longues atteignent la longueur des longues fiches réelles
++COUT_SUITE2 = [
++    ", l'essentiel de la dépense allant aux appels des proposeurs de frontière",
++    ", le juge et le gardien ne demandant que du calcul local, sans appel",
++    ", le devis détaillé étant à faire avant tout lancement, sous une ligne de feu vert",
++    ", les heures de processeur restant de l'ordre d'une journée de machine",
++    ", la plus grosse part tenant aux générations tardives, où l'archive est plus longue à servir",
++    ", sans compter le temps humain de relecture des journaux",
++    ", à peu près la moitié pour chacun des deux bras",
++    ", le pilote pouvant arrêter l'expérience avant la plus grosse part de la dépense",
++    ", les mondes étant écrits par programme sans aucun coût d'appel",
++]
++ENONCE_CONTEXTE2 = [
++    " On s'attend à un effet modeste mais lisible dès les premières générations, puisque la modification agit à chaque appel.",
++    " La course de référence sert de point fixe : ses graines, ses plafonds et sa composition sont repris sans retouche.",
++    " Le changement est assez simple pour être relu en quelques minutes par un programmeur qui ne connaît pas l'organisme.",
++    " Une valeur plus prudente aurait été possible, mais un écart franc rend l'effet plus facile à mesurer contre l'oracle.",
++    " L'idée vient d'un constat simple : ce réglage a été fixé au début, puis n'a plus jamais été remis en cause.",
++    " Si l'effet existe, il devrait se voir sur la plupart des graines et non sur quelques mondes favorables seulement.",
++    " Le coût de l'expérience reste petit devant celui d'une course entière, ce qui permet de l'essayer avant tout autre changement.",
++    " Rien n'interdit ensuite d'essayer d'autres valeurs, mais une seule est éprouvée ici, choisie avant toute course.",
++    " Cette question touche à la façon dont l'organisme dépense son budget, plus qu'à la forme des lois qu'il propose.",
++]
++DEMANDE_SUITE2 = [
++    " Le journal de la course note, pour chaque génération, l'ancienne valeur, la nouvelle et le moment où elle s'applique.",
++    " Une option de la ligne de commande permet de revenir à l'ancienne valeur sans toucher au code, pour le bras témoin.",
++    " Aucun agent ne lit cette valeur : elle reste dans la configuration et n'entre dans aucune pièce servie.",
++    " Le changement ne demande aucune donnée nouvelle ; il réutilise les structures que l'orchestrateur tient déjà.",
++    " Un essai unitaire compare la valeur lue au départ et celle écrite au manifeste, et refuse de partir si elles diffèrent.",
++    " La modification est faite une seule fois, dans un seul fichier, et le différentiel est versé avec le préenregistrement.",
++    " Les deux bras sont lancés par la même commande, à une option près, pour qu'aucune autre différence ne s'y glisse.",
++    " Si la valeur obtenue égale déjà la valeur actuelle, la course est quand même jouée et l'écart attendu est nul.",
++    " Les relevés de coût des deux bras sont rapprochés génération par génération avant toute lecture de l'oracle.",
++]
++PIEGE_SUITE3 = [
++    " On évite aussi de juger sur la seule génération finale quand la course a été arrêtée plus tôt dans un bras.",
++    " Une autre erreur serait de lire l'effet avant la fin des deux bras, puis d'arrêter celui qui va mal.",
++    " Il serait faux, de même, de retirer après coup une graine où la modification semble avoir échoué.",
++    " Un dernier risque : attribuer à la modification une hausse due à un relais plus rapide le jour de l'expérience.",
++    " Comparer des courses de longueurs différentes fausserait aussi la lecture, puisque la couverture croît avec les générations.",
++    " On se méfie enfin d'un écart qui n'apparaîtrait que dans les mondes les plus faciles de la famille.",
++    " Changer la règle de lecture après avoir vu les premières graines ruinerait la comparaison.",
++    " Une graine rejouée parce qu'elle donne un écart décevant ferait de même.",
++    " Prendre une moyenne sur les générations plutôt que sur les graines donnerait trop de poids aux longues courses.",
++]
++COSMETIQUE_SUITE3 = [
++    " On le saurait aussi si l'effet tombait à zéro sur une seconde famille de mondes, jouée plus tard.",
++    " Un écart qui suit le coût relevé plutôt que la modification dirait la même chose.",
++    " La même conclusion vaudrait si l'effet ne dépendait pas de l'ampleur de la modification.",
++    " Il en irait de même si la couverture ne gagnait que des composantes déjà couvertes par l'archive de départ.",
++    " Le constat serait identique si l'effet ne paraissait que dans le bras lancé en premier.",
++    " On conclurait pareil si deux répétitions de la même course différaient autant que modifiée et témoin.",
++    " La modification serait aussi cosmétique si les composantes gagnées étaient toujours les plus faciles à trouver.",
++    " Un gain réservé aux mondes où l'archive de départ est vide le montrerait aussi.",
++    " Enfin, un gain qui disparaît quand on change les plafonds de session serait un effet de réglage, non un mécanisme.",
++]
++PERTE_SUITE2 = [
++    " La loi oublie aussi que les proposeurs changent de comportement quand leur consigne change de longueur.",
++    " Elle ne dit rien non plus de ce qui se passerait avec un autre juge ou une autre classe de nul.",
++    " Elle traite enfin la famille de mondes comme homogène, alors que les mondes diffèrent beaucoup entre eux.",
++    " Et elle ignore l'effet que la modification pourrait avoir sur le temps de chaque génération.",
++    " La traduction perd encore la différence entre un effet immédiat et un effet qui s'accumule.",
++    " Elle confond aussi l'effet sur les propositions brutes et l'effet sur les retenues.",
++    " Elle suppose que les relais répondent de la même façon dans les deux bras, ce qui n'est pas garanti.",
++    " Enfin, elle ne distingue pas les composantes conditionnelles des autres.",
++    " Une partie du sens de l'idée, qui porte sur l'équilibre de la course, ne passe pas dans un seul nombre.",
++]
++AVANTAGE_SUITE2 = [
++    " L'organisme garde déjà tous les journaux nécessaires, si bien que l'expérience ne demande aucun instrument neuf.",
++    " La comparaison peut être refaite par un autre opérateur à partir des seules graines et de la configuration.",
++    " Le même banc servira ensuite à d'autres réglages, ce qui amortit le coût de sa mise en place.",
++    " L'effet se lit en composantes plantées, non en promotions, ce qui évite de juger sur le verdict du juge.",
++    " Les deux bras partagent tout le reste, ce qui rend l'écart directement attribuable au réglage.",
++    " Le résultat, positif ou nul, dit quelque chose d'utile sur un paramètre fixé jusqu'ici sans mesure.",
++    " Aucun modèle n'intervient dans la mesure, qui ne dépend que de l'oracle et des relevés de coût.",
++    " L'expérience est assez petite pour être répétée sur une seconde famille si la première donne un écart net.",
++    " Le coût relevé à chaque génération permet aussi de dire si le gain vaut la dépense.",
++]
++INCOPIABLE_SUITE2 = [
++    " Un laboratoire qui n'a que des tâches ouvertes devrait d'abord construire un oracle, ce qui coûte bien plus que l'expérience.",
++    " Les mondes écrits par programme sont la pièce rare : ils permettent de rejouer chaque graine à l'identique.",
++    " Sans relevé du coût par génération, on ne pourrait pas tenir la comparaison à coût égal qui fonde la prédiction.",
++    " Il faudrait aussi un juge statistique sur engagement scellé, que peu de dispositifs possèdent.",
++    " La séparation entre ce que voient les proposeurs et ce que lit l'oracle est difficile à reproduire ailleurs.",
++    " Un concurrent mieux doté pourrait multiplier les courses, mais sans vérité plantée il ne saurait pas ce qu'il gagne.",
++    " L'appariement des graines entre bras suppose un orchestrateur qui contrôle tout l'aléa de la course.",
++    " L'archive des lois acceptées, tenue génération après génération, est elle aussi propre à l'organisme.",
++    " Le coût d'une expérience équivalente sans monde planté serait sans commune mesure avec celui-ci.",
+ ]
+ VERBES = {+1: ["augmente", "monte", "s'accroît", "grandit", "croît", "progresse", "s'élève", "gagne"],
+           -1: ["baisse", "diminue", "recule", "se réduit", "décroît", "fléchit", "s'amenuise", "chute"]}
+-DEP_COUV = {+1: ["la couverture des composantes plantées croît avec {g}", "plus {g} augmente, plus l'organisme couvre "
++DEP_COUV = {+1: ["les composantes vraies que couvre la course se multiplient avec {g}", "plus {g} augmente, plus l'organisme couvre "
+                  "de composantes", "la couverture suit {g}", "les composantes couvertes augmentent avec {g}"],
+-            -1: ["la couverture des composantes plantées recule quand {g} augmente", "plus {g} augmente, moins "
++            -1: ["le compte des composantes découvertes baisse à mesure que {g} augmente", "plus {g} augmente, moins "
+                  "l'organisme couvre de composantes", "la couverture varie en sens inverse {de_g}",
+                  "les composantes couvertes diminuent quand {g} croît"]}
+ DEP_COUT = {+1: ["le coût par génération suit {g}", "plus {g} augmente, plus chaque génération coûte",
+@@ -688,12 +798,25 @@
+             "metrique_suite": METRIQUE_SUITE, "perte_suite": PERTE_SUITE, "avantage_suite": AVANTAGE_SUITE,
+             "incopiable_suite": INCOPIABLE_SUITE, "orig_suite": ORIG_SUITE, "demande_suite": DEMANDE_SUITE,
+             "cout_suite": COUT_SUITE, "piege_suite2": PIEGE_SUITE2, "cosmetique_suite2": COSMETIQUE_SUITE2,
+-            "pred_complement": PRED_COMPLEMENT, "temoin_cout": TEMOIN_COUT, "arrondi": ARRONDI}
++            "pred_complement": PRED_COMPLEMENT, "temoin_cout": TEMOIN_COUT, "arrondi": ARRONDI,
++            "enonce_contexte2": ENONCE_CONTEXTE2, "demande_suite2": DEMANDE_SUITE2, "piege_suite3": PIEGE_SUITE3,
++            "cosmetique_suite3": COSMETIQUE_SUITE3, "perte_suite2": PERTE_SUITE2, "avantage_suite2": AVANTAGE_SUITE2,
++            "incopiable_suite2": INCOPIABLE_SUITE2, "cout_suite2": COUT_SUITE2, "orig_suite2": ORIG_SUITE2}
+ URNES = ("type", "loi_predictive.signe", "avantage.source", "originalite.niveau", "demande_organisme.nature",
+          "cout.nature")
+ QO_POIDS = {"QO5": 12, "QO4": 9, "QO1": 5, "QO2": 4, "QO3": 2}
+ 
+ 
++def _feuilles(o) -> list:
++    if isinstance(o, str):
++        return [o]
++    if isinstance(o, list):
++        return [t for x in o for t in _feuilles(x)]
++    if isinstance(o, dict):
++        return [t for v in o.values() for t in _feuilles(v)]
++    return []
++
++
+ def maj(s: str) -> str:
+     return s[:1].upper() + s[1:]
+ 
+@@ -732,13 +855,22 @@
+     urnes["levier"] = [u[int(i)] for i in rng.permutation(len(u))[:NOMBRE]]
+     formes = {r: [int(x) for x in rng.permutation(len(OBLIGATOIRES[r]))[:NOMBRE]] for r in sorted(OBLIGATOIRES)}
+     supposes = [int(x) for x in rng.permutation(NOMBRE)]
+-    return {"gabarits": gab, "urnes": urnes, "formes_obligatoires": formes, "rang_suppose": supposes}
++    # v2.1 : opérations sans remise (une seconde permutation complète la première : deux en double au plus) ;
++    # ressources des justifications sans remise
++    ops = [int(x) for x in rng.permutation(len(OPERATIONS))] + [int(x) for x in rng.permutation(len(OPERATIONS))]
++    ressources = [int(x) for x in rng.permutation(len(RESSOURCES))[:NOMBRE]]
++    return {"gabarits": gab, "urnes": urnes, "formes_obligatoires": formes, "rang_suppose": supposes,
++            "operations": ops[:NOMBRE], "ressources": ressources,
++            # v2.1 : rangs de longueur stratifiés (un par huitième de [0,08 ; 0,96]), pour la dispersion des réelles
++            "rangs_longueur": [0.08 + 0.88 * (int(s) + float(rng.uniform())) / NOMBRE for s in rng.permutation(NOMBRE)]}
+ 
+ 
+-def cible(rng: np.random.Generator, stats: dict, champ: str) -> int:
+-    """Longueur cible d'un champ : entier tiré uniformément dans [q1, q3] des fiches réelles."""
++def cible(rng: np.random.Generator, stats: dict, champ: str, rang: float) -> int:
++    """v2.1 : longueur cible d'un champ au rang de longueur de la fiche (± 0,08, borné à [0,01 ; 0,99]), lue sur la
++    répartition réelle du champ (interpolation entre minimum, q1, médiane, q3, maximum)."""
+     q = stats["fiches_reelles"]["mesures"]["longueur_par_champ"][champ]
+-    return int(rng.integers(int(q["q1"]), int(q["q3"]) + 1))
++    u = min(0.99, max(0.01, rang + float(rng.uniform(-0.08, 0.08))))
++    return int(round(float(np.interp(u, [0.0, 0.25, 0.5, 0.75, 1.0], [q["min"], q["q1"], q["mediane"], q["q3"], q["max"]]))))
+ 
+ 
+ class Fiche:
+@@ -747,6 +879,7 @@
+     def __init__(self, rang: int, rng: np.random.Generator, att: dict, stats: dict):
+         self.k, self.rng, self.att, self.stats = rang, rng, att, stats
+         self.slots = {}
++        self.rang_longueur = float(att["rangs_longueur"][rang])   # v2.1 : fiche courte ou longue, tous champs ensemble
+ 
+     def gab(self, reserve: str) -> str:
+         return RESERVES[reserve][self.att["gabarits"][reserve][self.k]]
+@@ -759,20 +892,36 @@
+ 
+     def composer(self, champ: str, obligatoires: list[str], facultatifs: list[str], sep: str = "") -> str:
+         """Les morceaux obligatoires, puis les facultatifs tant que la longueur reste sous la cible du champ."""
+-        objectif = cible(self.rng, self.stats, champ)
++        objectif = cible(self.rng, self.stats, champ, self.rang_longueur)
+         texte = sep.join(obligatoires)
+-        for m in facultatifs:
+-            if len(texte) >= objectif:
++        for m in facultatifs:  # v2.1 : un morceau n'est ajouté que s'il rapproche la longueur de la cible
++            if abs(len(texte) + len(m) - objectif) >= abs(len(texte) - objectif):
+                 break
+             texte += m
+         return texte
+ 
+     def construire(self) -> dict:
++        """v2.1 : bornes de longueur totale. Si la fiche sort de [minimum, maximum] des réelles, elle est refaite, depuis la
++        même graine fille, à un rang de longueur déplacé de 0,08 vers l'intérieur (six essais au plus ; nombre d'essais
++        consigné dans `chaine`)."""
++        tot = self.stats["fiches_reelles"]["mesures"]["longueur_totale_vue"]
++        graine = self.rng.bit_generator.seed_seq
++        for essai in range(1, 7):
++            self.rng = np.random.default_rng(graine)
++            r = self._construire()
++            n = sum(len(x) for x in _feuilles(r["fiche"]))
++            r["chaine"]["essais_de_longueur"] = essai
++            if tot["min"] <= n <= tot["max"]:
++                return r
++            self.rang_longueur = min(0.99, self.rang_longueur + 0.08) if n < tot["min"] else max(0.01, self.rang_longueur - 0.08)
++        return r
++
++    def _construire(self) -> dict:
+         rng, att, k = self.rng, self.att, self.k
+         levier = att["urnes"]["levier"][k].split(":", 1)[1]
+         signe = att["urnes"]["loi_predictive.signe"][k]
+         obj = self.choix(OBJETS[levier])
+-        inf, part_m, part_f, formules, sens_op = self.choix(OPERATIONS)
++        inf, part_m, part_f, formules, sens_op = OPERATIONS[att["operations"][k]]
+         formule = self.choix(formules)
+         part = part_f if obj["genre"] == "f" else part_m
+         g = [GRANDEURS[int(i)] for i in rng.permutation(len(GRANDEURS))[:2]]
+@@ -804,12 +953,12 @@
+                       "n": n, "gen": gen, "seuil": seuil, "k": kval, "pilote": pilote, "usd": usd,
+                       "usd_pilote": usd_pilote, "h": h, "dom": dom, "dom_en": DOMAINES_EN[dom], "de_dom": contracter("de", dom), "a_dom": contracter("à", dom), "temoin": temoin,
+                       "temoin_court": temoin_court, "lieu": obj["lieu"], "Lieu": maj(obj["lieu"]),
+-                      "borne": obj["borne"], "formule": formule,
++                      "borne": obj["borne"], "formule": formule, "a_formule": contracter("à", formule),
+                       "arrondi": self.gab("arrondi") if obj["unite"] == "entier" else ""}
+         v1 = self.choix(VERBES[d1])
+         v2 = self.choix(VERBES[d1 * d12])
+         plus = "plus" if self.rng.integers(2) else "moins"
+-        res = self.choix(RESSOURCES)
++        res = RESSOURCES[att["ressources"][k]]
+         just = self.remplir(self.gab("justifs"), plus=plus, res=res)
+         g_der = g[1] if deux_maillons else g[0]
+         dep = self.choix((DEP_COUT if metrique == "cout" else DEP_COUV)[d2]).format(g=g_der, de_g=contracter("de", g_der))
+@@ -819,8 +968,8 @@
+         if deux_maillons:
+             oblig.append(self.remplir(self.gab("enonce_milieu"), v2=v2))
+         oblig.append(self.remplir(self.gab("enonce_lien2"), dep=dep))
+-        enonce = self.composer("enonce", oblig, [" " + self.gab("enonce_portee"), " " + self.gab("enonce_contexte")],
+-                               sep=" ")
++        enonce = self.composer("enonce", oblig, [" " + self.gab("enonce_portee"), " " + self.gab("enonce_contexte"),
++                                                 self.gab("enonce_contexte2")], sep=" ")
+         pred = self.composer("loi_predictive.prediction",
+                              [self.remplir(self.gab("pred_zero" if signe == "0" else "pred_plus")), self.gab("pred_garde")],
+                              [self.gab("pred_stade"), self.gab("pred_precision"), self.gab("pred_complement")])
+@@ -829,15 +978,15 @@
+         metr = self.composer("loi_predictive.metrique", [self.gab("metrique"), self.remplir(self.gab("metrique_temoin"))],
+                              [self.gab("metrique_suite")])
+         perte = self.composer("perte_traduction", [self.remplir(self.gab("perte"))],
+-                              [self.remplir(self.gab("perte_suite"))])
++                              [self.remplir(self.gab("perte_suite")), self.gab("perte_suite2")])
+         avantage = self.composer("avantage.texte", [self.remplir(self.gab("avantage"))],
+-                                 [self.remplir(self.gab("avantage_suite"))])
++                                 [self.remplir(self.gab("avantage_suite")), self.gab("avantage_suite2")])
+         incopiable = self.composer("avantage.incopiable_parce_que", [self.remplir(self.gab("incopiable"))],
+-                                   [self.gab("incopiable_suite")])
++                                   [self.gab("incopiable_suite"), self.gab("incopiable_suite2")])
+         niveau = att["urnes"]["originalite.niveau"][k]
+         orig = self.composer("originalite.texte",
+                              [self.remplir(self.gab("orig_transposition" if niveau == "transposition" else "orig_inedite"))],
+-                             [self.gab("orig_suite")])
++                             [self.gab("orig_suite"), self.gab("orig_suite2")])
+         nature = att["urnes"]["demande_organisme.nature"][k]
+         coeur = self.remplir(self.gab("demande_coeur"))
+         if nature == "ajout":
+@@ -847,15 +996,16 @@
+             [coeur, self.remplir(self.gab("demande_borne")),
+              self.gab("demande_garantie") if levier == "juge" else self.gab("demande_rien")],
+             [self.remplir(self.gab("demande_cas")), self.gab("demande_consigne"), self.gab("demande_graines"),
+-             self.gab("demande_suite")])
++             self.gab("demande_suite"), self.gab("demande_suite2")])
+         cout_nature = att["urnes"]["cout.nature"][k]
+         cout = self.composer("cout.ordre_de_grandeur",
+-                             [self.remplir(self.gab("cout_proc" if cout_nature == "processeur" else "cout_dep"))],
+-                             [self.gab("cout_suite")])
++                             [self.remplir(self.gab("cout_proc" if cout_nature == "processeur" else "cout_dep")),
++                              self.gab("cout_suite")], [self.gab("cout_suite2")])
+         piege = self.composer("piege", [self.remplir(self.gab("piege"))],
+-                              [self.gab("piege_suite2"), self.gab("piege_suite")])
++                              [self.gab("piege_suite2"), self.gab("piege_suite3"), self.gab("piege_suite")])
+         cosm = self.composer("cosmetique_si", [self.remplir(self.gab("cosmetique"))],
+-                             [self.gab("cosmetique_suite2"), self.remplir(self.gab("cosmetique_suite"))])
++                             [self.gab("cosmetique_suite2"), self.gab("cosmetique_suite3"),
++                              self.remplir(self.gab("cosmetique_suite"))])
+         nb_qo = 2 if rng.random() < 0.39 else 1
+         qos = list(QO_POIDS)
+         p = np.array([QO_POIDS[q] for q in qos], dtype=float)
+@@ -924,6 +1074,7 @@
+         "versions": {"python": sys.version.split()[0], "numpy": np.__version__},
+         "graines": {"entropie": ENTROPIE, "nombre": NOMBRE,
+                     "methode": "numpy.random.SeedSequence(2026111411).spawn(9) : enfant 0 attribution, 1 à 8 fiches"},
++        "version": "v2.1 (style corrigé après la contre-lecture, constat M2)",
+         "temoins": temoins}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+     print(json.dumps({"fiches": len(temoins),
+                       "coherentes": sum(t["chaine"]["coherente_avec_le_signe"] for t in temoins)}, ensure_ascii=False))

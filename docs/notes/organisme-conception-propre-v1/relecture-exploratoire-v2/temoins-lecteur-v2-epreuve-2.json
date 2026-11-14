@@ -1,0 +1,906 @@
+{
+ "auteur": "Préparateur neuf de la relecture exploratoire (modèle A, sous-agent de la session mère), 14 novembre 2026. Témoins du lecteur v2, version soumise à l'épreuve (tour 2) : valeurs voulues par l'auteur (attendu_voulu), pas encore éprouvées. Écrits sans lire le contenu des fiches réelles, au gabarit mesuré (resultat-stats-forme-reelles-et-temoins-v1-v1.json, 14d8ec4c…). « Tiers » vaut pour l'instance : l'auteur est du modèle d'un proposeur et du juge de l'organisme.",
+ "regle": "engagement-avant-epreuve-v2.md (27ffad3a…), § 6. Tour 2 (écrit à 12:12 UTC, avant toute lecture du tour 2) : seul T2-C7 est réécrit (au tour 1, un relecteur a reconnu C7 mais l'a cité hors mot pour mot, donc N compté « aucune » : désaccord sur un critère porteur) ; les valeurs attendues des onze autres témoins sont celles du tour 1 (epreuve/resultat-epreuve-tour1.json, 2486df0e…) ; leurs lectures du tour 2 sont rapportées à titre d'information (stabilité des relecteurs), jamais pour changer une valeur.",
+ "temoins": [
+  {
+   "code": "T2-V",
+   "famille": "vrai",
+   "cible": "aucune (doit passer)",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "criteres_porteurs": [
+    "R2",
+    "R3",
+    "R7",
+    "N"
+   ],
+   "fiche": {
+    "nom": "Deux mises à jour de l'archive par génération, à budget égal en dollars",
+    "type": "question",
+    "enonce": "À budget égal en dollars, couper chaque génération en deux demi-générations, avec une mise à jour de l'archive entre les deux, fait-il couvrir davantage de composantes plantées ? Les faits décrivent des composantes conditionnelles, presque invisibles tant que leur condition n'est pas archivée et trouvables ensuite ; une chaîne de profondeur 2 demande deux archivages successifs. Aujourd'hui, une condition retenue à la génération g n'est servie qu'à la génération g + 1. Avec deux passes de trois cartes par proposeur et l'archive mise à jour entre elles, la composante qui en dépend peut être proposée dans la même génération.",
+    "loi_predictive": {
+     "espace_instances": "vingt mondes plantés à graine scellée d'une famille jamais servie à la conception, chacun avec au moins deux composantes conditionnelles dont une chaîne de profondeur 2 ; mêmes proposeurs et plafonds ; budget de quatre générations du témoin",
+     "prediction": "à budget égal en dollars (arrêt de chaque bras au même montant relevé), le bras à deux demi-générations couvre au total au moins 10 % de composantes plantées de plus que le témoin, en moyenne sur les vingt mondes ; au moins les quatre cinquièmes du gain viennent des composantes conditionnelles ; pas plus d'une loi fausse ni d'une copie promue de plus sur les vingt mondes",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes, comptées à part pour les conditionnelles et les autres, lois fausses et copies promues : lues par l'oracle une fois après chaque course ; dollars relevés par les relais, par rôle et par génération ; témoin à budget égal : la même course, mêmes graines, une mise à jour de l'archive par génération"
+    },
+    "perte_traduction": "Le gain suppose que de vrais proposeurs trouvent une composante conditionnelle une fois sa condition archivée, ce que les faits donnent pour une hypothèse ; et la vue servie deux fois coûte des jetons d'entrée, donc moins de cartes au même budget.",
+    "questions_servies": [
+     "levier:cout",
+     "QO2",
+     "QO5",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le monde planté dit quelles composantes sont conditionnelles et lesquelles une course a couvertes : on vérifie que le gain vient des chaînes de conditions, et non d'un surcroît de cartes, ce qu'aucune course sur des tâches ouvertes ne permet de séparer.",
+     "incopiable_parce_que": "Il faut un monde à graine scellée qui plante des composantes conditionnelles, un oracle lu après la course et un relevé des dollars par génération ; sans eux, on ne voit ni l'ordre des découvertes ni leur coût."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Rapprocher la cadence des mises à jour du rythme des dépendances vient des méthodes itératives par blocs ; l'appliquer à l'archive d'un organisme à monde planté est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Dans la boucle de génération de l'orchestrateur, remplacer l'appel unique par proposeur (six cartes) par deux passes de trois cartes, A puis B, chacune en session neuve. Après la passe A : gardien, regroupement des doublons, valeurs e sur les tirages frais (même nombre de tirages par carte qu'aujourd'hui), règle e-BH sur les groupes de A avec m_A = ⌈m/2⌉ fixé d'avance, test de mort (même nombre d'épisodes par carte promue qu'aujourd'hui), sélection, puis mise à jour de l'archive et du nul. La passe B reçoit la vue avec l'archive mise à jour et suit les mêmes étapes avec m_B = ⌈m/2⌉ ; une carte de B qui recopie une loi retenue en A est refusée comme copie par le nul mis à jour. Si A ne retient rien, B est jouée avec l'archive inchangée. Le budget de la course en dollars est fixé d'avance ; la course s'arrête avant la première demi-génération dont le pire cas ferait dépasser ce budget. Graines des tirages frais dérivées par demi-génération (SeedSequence)."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "vingt mondes, deux bras, budget de quatre générations du témoin : environ 1,4 USD par génération, soit près de 225 USD en tout ; un pilote de cinq mondes, à peu près 55 USD, dit si l'écart a le bon signe avant le reste"
+    },
+    "piege": "Laisser le bras découpé dépenser plus que le témoin : la vue servie deux fois coûte des jetons, et un surcroît de cartes suffirait à couvrir davantage. L'arrêt de chaque bras au même montant relevé, fixé d'avance, l'empêche ; on rapporte aussi le nombre de cartes de chaque bras, attendu plus petit dans le bras découpé.",
+    "cosmetique_si": "Si le gain se retrouve autant sur les composantes non conditionnelles, ou sur des mondes de contrôle sans composante conditionnelle, il ne vient pas des chaînes de conditions mais d'un autre effet du découpage (deux sessions au lieu d'une).",
+    "anteriorite": [
+     {
+      "reference": "POPPER : Huang et al., ICML 2025, PMLR 267 (citation obligatoire de la question)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork, Feldman, Hardt, Pitassi, Reingold et Roth, arXiv 1506.02629 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist : Gottweis et al., Nature 655, p. 487-496 (2026)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "méthodes itératives par blocs : mise à jour au fil du balayage (Gauss-Seidel) plutôt qu'en fin de balayage (Jacobi)",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-J",
+   "famille": "jumeau",
+   "jumeau_de": "T2-V",
+   "cible": "aucune (doit passer, comme T2-V)",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "criteres_porteurs": [
+    "R2",
+    "R3",
+    "R7",
+    "N"
+   ],
+   "fiche": {
+    "nom": "L'archive mise à jour au milieu de chaque génération, dépense inchangée",
+    "type": "question",
+    "enonce": "Les composantes conditionnelles d'un monde planté ne se laissent trouver qu'une fois leur condition entrée dans l'archive, et une chaîne de profondeur 2 en exige deux entrées successives ; or l'archive n'est mise à jour qu'en fin de génération. Si chaque génération se joue en deux moitiés de trois cartes par proposeur, l'archive étant mise à jour entre les deux, et sans dépenser un dollar de plus, la course couvre-t-elle davantage de composantes ? La seconde moitié peut proposer ce qui dépend d'une condition retenue dans la première, au lieu d'attendre la génération suivante.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais vue à la conception, vingt graines scellées ; dans chaque monde, deux composantes conditionnelles ou plus, dont une chaîne de profondeur 2 ; proposeurs et plafonds de la course de référence",
+     "prediction": "au même montant de dollars relevé, fixé à quatre générations du témoin, la course coupée en moitiés couvre en moyenne sur les vingt mondes au moins 10 % de composantes plantées de plus que la course témoin ; les composantes conditionnelles portent au moins 80 % de ce gain ; au plus une loi fausse et au plus une copie promues de plus sur les vingt mondes",
+     "signe": "+",
+     "metrique": "lu par l'oracle après chaque course : composantes plantées couvertes (conditionnelles et autres, comptées à part), lois fausses et copies promues ; relevé des relais : dollars par rôle et par génération ; témoin au même budget : mêmes mondes, mêmes graines, archive mise à jour une seule fois par génération"
+    },
+    "perte_traduction": "Que de vrais proposeurs trouvent la composante après l'archivage de sa condition n'est qu'une hypothèse des faits ; servir la vue deux fois par génération mange une part du budget, donc des cartes.",
+    "questions_servies": [
+     "levier:cout",
+     "QO2",
+     "QO5",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Seul un monde planté sépare les composantes conditionnelles des autres et dit lesquelles ont été couvertes : on vérifie que le gain passe par les chaînes de conditions et non par un surplus de cartes.",
+     "incopiable_parce_que": "Sans monde à graine scellée qui plante des conditions, sans oracle lu après la course ni relevé des dollars par génération, ni l'ordre des découvertes ni leur coût ne se voient."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Aligner la fréquence des mises à jour sur la profondeur des dépendances vient des schémas itératifs par blocs ; son emploi pour l'archive d'un organisme d'idéation est transposé."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "L'orchestrateur joue chaque génération en deux moitiés. Moitié A : un appel par proposeur, en session neuve, pour trois cartes ; gardien ; regroupement des doublons ; valeurs e sur tirages frais, au même nombre de tirages par carte qu'aujourd'hui ; e-BH sur les groupes avec ⌈m/2⌉ fixé d'avance ; test de mort, au même nombre d'épisodes par promue qu'aujourd'hui ; sélection ; l'archive et le nul sont mis à jour. Moitié B : même suite, vue servie avec l'archive mise à jour, ⌈m/2⌉ ; le nul mis à jour refuse comme copie toute carte de B qui reprend une loi retenue en A. Si A ne retient aucune loi, B se joue sur l'archive inchangée. Le budget en dollars de la course est fixé avant le départ, et l'orchestrateur n'ouvre pas une moitié dont le pire cas le dépasserait. Les graines des tirages frais sont dérivées par moitié (SeedSequence)."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "environ 225 USD pour vingt mondes et deux bras au budget de quatre générations du témoin (près de 1,4 USD par génération) ; un pilote sur cinq mondes, vers 55 USD, vérifie le signe avant d'engager le reste"
+    },
+    "piege": "Le bras en moitiés pourrait gagner seulement parce qu'il dépenserait plus : servir la vue deux fois coûte des jetons, et plus de cartes couvriraient plus. Les deux bras s'arrêtent donc au même montant relevé, fixé d'avance, et l'on rapporte le nombre de cartes de chacun (attendu plus petit chez les moitiés).",
+    "cosmetique_si": "Si le gain est aussi grand sur les composantes non conditionnelles, ou s'il apparaît sur des mondes de contrôle qui n'en ont aucune, ce sont les deux sessions par génération qui agissent, pas les chaînes de conditions.",
+    "anteriorite": [
+     {
+      "reference": "POPPER (Huang et al., ICML 2025), cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al. (2015), arXiv 1506.02629, cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt (2015), « The Ladder », arXiv 1502.04585, cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist (Gottweis et al., Nature 655, p. 487-496, 2026), cité dans la question servie",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-F1",
+   "famille": "faux",
+   "cible": "R1",
+   "attendu_voulu": {
+    "R1": 0,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "criteres_porteurs": [
+    "R1"
+   ],
+   "fiche": {
+    "nom": "Un instrument local pour les variantes à un trait, la frontière pour le reste",
+    "type": "question",
+    "enonce": "La génération 1 de la course v67 a promu onze cartes qui étaient des variantes proches d'un même constat : ajouter à une loi connue un trait qu'elle ignorait. Ces variantes se trouvent par énumération. Question : si un instrument local énumère, à chaque génération, toutes les lois obtenues en ajoutant un trait public à une loi de l'archive, et si les proposeurs de frontière sont prévenus que ces variantes sont déjà proposées, leurs cartes se portent-elles vers des formes que l'énumération n'atteint pas, et la course couvre-t-elle davantage de composantes ?",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, vingt graines scellées, quatre générations par course, mêmes proposeurs de frontière et mêmes plafonds que la course de référence",
+     "prediction": "à coût égal, mesurée en fin de course et sur l'ensemble des mondes, la course couvrira davantage de composantes plantées qu'avec la composition actuelle, et ses appels de frontière coûteront moins ; elle ne promouvra ni plus de lois fausses ni plus de copies ; le gain portera surtout sur les composantes qu'aucune variante à un trait ne décrit, et la baisse du coût sur les cartes que les proposeurs n'écrivent plus en variantes",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes, lois fausses et copies promues, lues par l'oracle une fois après la course ; dollars des appels de frontière et heures de processeur de l'instrument, relevés par génération ; témoin à coût égal : composition actuelle, mêmes graines"
+    },
+    "perte_traduction": "Une variante à un trait n'est pas une composante plantée ; et prévenir les proposeurs change ce qu'on leur demande autant que la composition : les deux effets ne se séparent pas dans cette seule expérience.",
+    "questions_servies": [
+     "levier:composition",
+     "QO1",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "programme",
+     "texte": "La question QO1 demande ce que chaque rôle perd quand on lui retire la frontière : ici, le rôle d'énumérer les variantes à un trait passe à un instrument local, et l'oracle dit ce que la course y perd ou y gagne.",
+     "incopiable_parce_que": "Il faut connaître les composantes vraies pour savoir si les cartes de frontière libérées vont vers des composantes neuves ; sans monde planté, on ne voit que des promotions."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Partager les rôles entre un instrument qui énumère et des proposeurs de frontière prévenus de ce qui est énuméré n'a pas d'équivalent connu dans les organismes d'idéation."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Ajouter au début de chaque génération un rôle « énumérateur », instrument local sans modèle de frontière : pour chaque loi de l'archive et chaque trait public qu'elle n'emploie pas, il écrit deux cartes qui ajoutent ce trait (même forme, coefficient +0,5 puis −0,5 sur l'échelle publique du trait), au plus 60 cartes par génération, tirées au hasard par SeedSequence si l'énumération en donne plus. Ces cartes passent le gardien, le regroupement des doublons et le juge comme celles des proposeurs. La consigne des proposeurs de frontière reçoit une phrase fixe : « les lois qui ajoutent un seul trait à une loi de l'archive sont déjà proposées par un autre rôle ». Rien d'autre ne change."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "de l'ordre de 160 USD d'appels de frontière pour vingt mondes, deux bras et quatre générations, plus environ 3 heures de processeur pour l'énumérateur"
+    },
+    "piege": "L'énumérateur ajoute jusqu'à soixante cartes par génération : si m, le nombre fixé d'avance pour la règle e-BH, ne tient pas compte de ces cartes, le contrôle des comparaisons multiples se dégrade. m est donc fixé d'avance en comptant les cartes de l'énumérateur, et le bras témoin garde son m actuel.",
+    "cosmetique_si": "Si les cartes de frontière du bras modifié couvrent les mêmes composantes que celles du témoin, ou si le gain disparaît quand on retire la phrase servie aux proposeurs, l'instrument n'a fait qu'ajouter des cartes.",
+    "anteriorite": [
+     {
+      "reference": "Huang et al., POPPER, ICML 2025",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al., réutilisation adaptative d'une réserve de test, arXiv 1506.02629, 2015",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, The Ladder, arXiv 1502.04585, 2015 (tableau de classement sous soumissions adaptatives)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Bespoke Labs, « How models explore ideas », 10 novembre 2026 (observation citée par les faits, § 5)",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-F2",
+   "famille": "faux",
+   "cible": "R2",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 0,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "criteres_porteurs": [
+    "R2"
+   ],
+   "fiche": {
+    "nom": "Plus d'épisodes au test de mort, moins de tirages pour les valeurs e",
+    "type": "question",
+    "enonce": "Le juge dépense ses épisodes frais en deux endroits : les valeurs e des cartes, puis le test de mort des promues. À dépense égale en épisodes, déplacer une part des tirages des valeurs e vers le test de mort fait-il éliminer davantage de cartes promues qui ne tiennent pas ? Une carte promue de justesse sur une particularité de ses tirages se trahit sur un test de mort plus long, alors que la valeur e d'une carte solide reste au-dessus du seuil avec un peu moins de tirages.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, deux générations par course, mêmes proposeurs, mêmes plafonds et même nombre total d'épisodes frais par génération",
+     "prediction": "à nombre total d'épisodes frais égal par génération, au moins 20 % de cartes promues éliminées en plus par le test de mort que sous la répartition actuelle, en moyenne sur les trente graines et les deux générations, et un nombre de promotions par la règle e-BH qui ne baisse pas de plus de 5 % ; les deux comptes sont lus sur les journaux du juge des deux bras",
+     "signe": "+",
+     "metrique": "lues sur le journal du juge statistique, sans recours à l'oracle : nombre de cartes promues par la règle e-BH et nombre de promues éliminées par le test de mort, par génération ; témoin à coût égal : la répartition actuelle des épisodes"
+    },
+    "perte_traduction": "Une carte éliminée par le test de mort n'est pas forcément une loi fausse ; et moins de tirages pour les valeurs e fait perdre de la puissance aux cartes dont l'apport est faible.",
+    "questions_servies": [
+     "levier:juge",
+     "QO5",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "L'orchestrateur tient déjà le compte des épisodes frais par étape du juge : la réallocation se règle par une seule constante, se rejoue sans aucun appel de proposeur, et se compare au témoin sur les mêmes graines.",
+     "incopiable_parce_que": "Il faut un juge qui sépare valeurs e et test de mort sur des épisodes frais scellés, et des journaux de courses à monde planté déjà jouées pour rejouer la répartition."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "La répartition des épisodes frais entre les deux étapes du juge n'a pas été étudiée dans cet organisme ; elle est fixée depuis le début, sans mesure de son effet."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Dans le module du juge, remplacer la constante qui fixe le nombre d'épisodes du test de mort par 1,5 fois sa valeur actuelle, et retrancher les épisodes ajoutés des tirages frais des valeurs e, également entre les groupes, pour que le total par génération ne change pas. Les valeurs e restent calculées contre le même nul, qui contient l'archive, sur engagement scellé : leur espérance reste au plus 1 sous ce nul, et e-BH, à m fixé d'avance, garde le contrôle des comparaisons multiples. Si une génération compte moins de trois groupes, la répartition actuelle s'applique. Les graines des épisodes restent dérivées par génération et par étape (SeedSequence) ; les deux constantes sont consignées au manifeste de chaque génération."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejeu des courses à monde planté déjà jouées sur processeur seul : environ 12 heures de calcul pour trente graines et deux bras, aucun appel de proposeur, aucun dollar"
+    },
+    "piege": "Choisir le facteur 1,5 au vu des rejeux le rendrait circulaire ; il est fixé avant tout rejeu, et une seule valeur est éprouvée. Le contrôle négatif rejoue aussi un bras où les épisodes ajoutés au test de mort sont tirés puis jetés sans être lus, à même dépense.",
+    "cosmetique_si": "Si le bras qui tire puis jette les épisodes ajoutés élimine autant de promues, l'effet vient de la perte de tirages des valeurs e, non d'un test de mort plus long.",
+    "anteriorite": [
+     {
+      "reference": "POPPER : Huang et al., ICML 2025, PMLR 267 (citation obligatoire de la question)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork, Feldman, Hardt, Pitassi, Reingold et Roth, arXiv 1506.02629 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist : Gottweis et al., Nature 655, p. 487-496 (2026)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Wang et Ramdas, contrôle du taux de fausses découvertes par valeurs e (procédure e-BH), JRSS B, 2022",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-F3",
+   "famille": "faux",
+   "cible": "R3",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 0,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "aucune"
+   },
+   "criteres_porteurs": [
+    "R3"
+   ],
+   "fiche": {
+    "nom": "Rendre à chaque proposeur le sort de ses cartes de la génération précédente",
+    "type": "question",
+    "enonce": "Un proposeur qui ne sait jamais ce que sont devenues ses cartes recommence chaque génération à l'aveugle : il repropose des lois déjà refusées et s'éloigne de celles qui ont presque passé. Question : servir à chaque proposeur, en tête de sa consigne suivante, la liste de ses cartes de la génération précédente avec leur valeur e et leur sort (promue, refusée, éliminée au test de mort) fait-il couvrir davantage de composantes, à coût égal ? Le proposeur apprend où porter ses six cartes.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, vingt-cinq graines scellées, cinq générations par course, mêmes proposeurs et mêmes plafonds de session",
+     "prediction": "à coût égal, au moins 15 % de composantes plantées couvertes en plus à la cinquième génération que la même course sans retour, en moyenne sur les vingt-cinq mondes ; pas plus de lois fausses ni de copies promues sur l'ensemble ; l'écart doit croître de la deuxième à la cinquième génération, puisque le retour n'existe qu'à partir de la deuxième",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes, lois fausses et copies promues, lues par l'oracle une fois après la course ; dollars et jetons des proposeurs relevés par génération ; témoin à coût égal : même course, mêmes graines, consigne sans liste"
+    },
+    "perte_traduction": "La valeur e d'une carte dépend de ses tirages ; un proposeur peut lire comme une direction ce qui n'est qu'un écart de tirage, et la liste allonge sa consigne.",
+    "questions_servies": [
+     "levier:proposeurs",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "L'orchestrateur garde déjà, pour chaque carte, sa valeur e et son sort ; la liste se construit par programme, sans modèle, et se compare à la course sans retour sur les mêmes mondes.",
+     "incopiable_parce_que": "Seul un monde planté dit si les proposeurs guidés par leur retour couvrent des composantes vraies, et non seulement davantage de cartes promues ou des variantes de leurs anciennes cartes."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Les proposeurs de l'organisme ne reçoivent aujourd'hui aucun retour sur leurs cartes passées d'une génération à l'autre ; chaque appel part d'une session neuve qui ignore tout du sort des cartes."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Dans la construction de la consigne de chaque proposeur, à partir de la génération 2, insérer avant la description publique du monde une section « Tes cartes de la génération précédente » : pour chacune de ses six cartes, sa forme canonique, sa valeur e arrondie à deux chiffres et son sort (promue, refusée par e-BH, éliminée au test de mort, refusée par le gardien), dans l'ordre de ses cartes. La section est écrite par programme, scellée au manifeste de la génération, et ne contient ni l'oracle ni la loi plantée. Si le proposeur n'avait aucune carte valide, la section dit « aucune carte » et rien d'autre. Les autres pièces servies ne changent pas."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "environ 140 USD pour vingt-cinq mondes, deux bras et cinq générations, la consigne allongée d'environ 600 jetons par proposeur et par génération"
+    },
+    "piege": "Un proposeur qui recopie les formes de ses cartes promues en les renommant ferait monter les promotions sans couvrir davantage : le nul qui contient l'archive refuse les copies, et l'on rapporte les copies proposées dans chaque bras.",
+    "cosmetique_si": "Si une liste dont les sorts sont tirés au hasard, à même longueur et même forme, donne le même gain, la consigne plus longue suffit et le retour lui-même n'apporte rien.",
+    "anteriorite": [
+     {
+      "reference": "Huang et al., POPPER, ICML 2025",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al., réutilisation adaptative d'une réserve de test, arXiv 1506.02629, 2015",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, The Ladder, arXiv 1502.04585, 2015 (tableau de classement sous soumissions adaptatives)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Gottweis et al., Co-Scientist, Nature 655, 487-496, 2026",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-C2",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C2",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C2"
+   },
+   "criteres_porteurs": [
+    "N"
+   ],
+   "fiche": {
+    "nom": "Valider chaque carte par une suite d'épreuves de falsification à valeurs e combinées",
+    "type": "question",
+    "enonce": "Une carte est jugée aujourd'hui sur une seule valeur e calculée sur ses tirages frais. Question : la soumettre plutôt à une suite d'épreuves de falsification, conçues l'une après l'autre, fait-il couvrir davantage de composantes à dépense égale en épisodes ? Chaque épreuve vise la région des traits où la carte et l'archive divergent le plus et rend une valeur p, convertie en valeur e ; les valeurs e se multiplient, et la carte n'est validée que si leur produit dépasse 1/α, ce qui garde l'erreur de première espèce au niveau α même si l'on arrête ou prolonge la suite en cours de route.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, quarante graines scellées, une génération par monde, même nombre total d'épisodes frais par carte",
+     "prediction": "à épisodes frais égaux par carte, au moins deux composantes plantées de plus couvertes par monde en moyenne sur les quarante mondes, et pas plus d'une loi fausse promue de plus sur leur ensemble, contre le juge actuel ; la moitié au moins des cartes validées doit l'être avant la cinquième épreuve, sans quoi l'économie d'épisodes annoncée n'existe pas",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes et lois fausses promues, lues par l'oracle après la course ; épisodes frais consommés par carte, relevés par l'orchestrateur ; témoin à coût égal : le juge actuel avec le même nombre d'épisodes par carte"
+    },
+    "perte_traduction": "Une valeur p mal calibrée sur un monde à dépendances donne une valeur e fausse ; l'agent qui conçoit les épreuves peut viser ce qui valide plutôt que ce qui réfute.",
+    "questions_servies": [
+     "levier:juge",
+     "QO5",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "La garantie tient sous arrêt optionnel : on ajoute des épreuves tant que la preuve manque, et l'on s'arrête dès qu'elle suffit, sans perdre le contrôle de l'erreur ; les épisodes vont aux cartes qui en ont besoin.",
+     "incopiable_parce_que": "Il faut un juge qui raisonne déjà en valeurs e et un monde planté où la vérité est connue, pour mesurer le taux d'erreur réel et non celui que la théorie promet."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Les tests séquentiels par valeurs e viennent de la statistique ; les faire porter par des épreuves de falsification conçues une à une pour chaque carte est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer, pour chaque carte, le calcul unique de la valeur e par une boucle : un agent concepteur (sans voix sur la décision) propose une épreuve, c'est-à-dire une strate publique de traits et un nombre d'épisodes frais, au plus 5 épreuves et 400 épisodes par carte ; l'orchestrateur tire les épisodes (graines SeedSequence par carte et par épreuve), calcule la valeur p du rapport de vraisemblance de la carte contre le nul, la convertit en valeur e par un calibrateur fixé d'avance et multiplie les valeurs e. La carte est validée si le produit dépasse 1/α avec α = 0,05 ; la règle e-BH, à m fixé d'avance, s'applique ensuite aux produits de toutes les cartes de la génération."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "quelques dollars d'agent concepteur par génération, de l'ordre de 2 à 4 USD, soit 80 à 160 USD pour quarante mondes, plus le rejeu du juge actuel sur processeur"
+    },
+    "piege": "Laisser l'agent choisir l'épreuve suivante au vu des valeurs déjà obtenues sans que le produit reste une valeur e : le calibrateur et la borne de 400 épisodes sont fixés d'avance, et chaque épreuve n'emploie que des épisodes neufs.",
+    "cosmetique_si": "Si le juge actuel, avec le même nombre d'épisodes par carte, couvre autant de composantes, la suite d'épreuves n'apporte rien que ses épisodes ; et si les épreuves conçues valent des strates tirées au hasard, l'agent ne sert à rien.",
+    "anteriorite": [
+     {
+      "reference": "POPPER (Huang et al., ICML 2025), cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al. (2015), arXiv 1506.02629, cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt (2015), « The Ladder », arXiv 1502.04585, cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist (Gottweis et al., Nature 655, p. 487-496, 2026), cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Vovk et Wang, valeurs e : calibration, combinaison et applications, Annals of Statistics, 2021",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-C1",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C1",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 0,
+    "R4": 0,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C1"
+   },
+   "criteres_porteurs": [
+    "N"
+   ],
+   "fiche": {
+    "nom": "Ordonner le test de mort par un tournoi à cotes Elo entre cartes promues",
+    "type": "question",
+    "enonce": "Le test de mort consomme les épisodes frais dans l'ordre où les cartes promues lui arrivent ; quand le budget s'épuise, les dernières ne sont pas testées. Question : faire précéder le test de mort d'un tournoi à cotes Elo entre cartes, où des juges à modèle comparent les cartes deux à deux, fait-il couvrir davantage de composantes au même budget d'épisodes ? Les mieux classées se départagent en débats à plusieurs tours, les autres en une comparaison ; les paires sont tirées entre cartes proches, et le test de mort suit l'ordre des cotes.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, quarante graines scellées, une génération par monde, même budget d'épisodes du test de mort",
+     "prediction": "à budget d'épisodes du test de mort égal, au moins 20 % de composantes plantées couvertes en plus par génération que l'ordre d'arrivée actuel, en moyenne sur les quarante mondes, sans loi fausse retenue de plus sur leur ensemble ; le gain doit venir des cartes testées dans le premier tiers de l'ordre, qui seraient restées non testées sans le tournoi",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes par génération et lois fausses retenues, lues par l'oracle après la course ; dollars des juges à modèle relevés par les relais ; rang de chaque carte retenue dans l'ordre du test de mort ; témoin à coût égal : ordre tiré au hasard"
+    },
+    "perte_traduction": "Une cote Elo mesure la préférence de juges à modèle, pas la vérité d'une loi ; deux cartes semblables se départagent sur leur écriture autant que sur leur fond.",
+    "questions_servies": [
+     "levier:juge",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Le tournoi concentre le budget du test de mort sur les cartes les plus prometteuses, et l'appariement entre cartes proches fait porter les débats sur ce qui les distingue vraiment, plutôt que sur des différences de forme.",
+     "incopiable_parce_que": "Il faut des juges à modèle capables de débattre de lois prédictives et un graphe de proximité entre cartes, que l'organisme calcule déjà pour regrouper ses doublons."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Les classements par cotes Elo viennent des échecs et des compétitions ; s'en servir pour ordonner le test de mort d'un juge statistique est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Entre e-BH et le test de mort, ajouter un tournoi : chaque carte promue reçoit la cote 1 200 ; le graphe de proximité relie deux cartes dont la distance en nats par instance, sur le jeu public d'instances sans issue, est sous 2ε ; à chaque tour, des paires sont tirées dans ce graphe (SeedSequence), un juge à modèle désigne la meilleure des deux (débat de trois tours si les deux sont dans le premier quart des cotes, une seule comparaison sinon), et les cotes se mettent à jour avec un facteur K = 32 ; huit tours. Le test de mort prend ensuite les cartes par cote décroissante jusqu'à épuisement de ses épisodes."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "de l'ordre de 3 USD de juges à modèle par génération, soit environ 120 USD pour quarante mondes, le test de mort et l'ordre tiré au hasard se rejouant sur processeur"
+    },
+    "piege": "Des juges à modèle qui préfèrent les cartes bien écrites aux cartes vraies rempliraient le haut du classement de lois élégantes et fausses ; on rapporte la part des lois fausses parmi les cartes testées en premier, et l'on compare à l'ordre tiré au hasard.",
+    "cosmetique_si": "Si l'ordre tiré au hasard, au même budget d'épisodes, couvre autant de composantes, le tournoi n'apporte que sa dépense ; s'il couvre plus en promouvant plus de lois fausses, il déplace l'erreur.",
+    "anteriorite": [
+     {
+      "reference": "POPPER : Huang et al., ICML 2025, PMLR 267 (citation obligatoire de la question)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork, Feldman, Hardt, Pitassi, Reingold et Roth, arXiv 1506.02629 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist : Gottweis et al., Nature 655, p. 487-496 (2026)",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-C3",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C3",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 0,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C3"
+   },
+   "criteres_porteurs": [
+    "N"
+   ],
+   "fiche": {
+    "nom": "Archive d'idées qui grandit, mutation par modèle et filtre de nouveauté bibliographique",
+    "type": "approche",
+    "enonce": "Garder toutes les cartes jamais proposées, promues ou non, dans une archive d'idées qui grandit de génération en génération ; à chaque appel, servir au proposeur quelques cartes tirées de cette archive comme parents, à partir desquels il écrit des cartes neuves, en notant lui-même l'intérêt, la nouveauté et la faisabilité de chacune. Après la génération, un modèle relié à un moteur de recherche bibliographique et au Web écarte les cartes trop proches de travaux déjà publiés ; seules les survivantes vont au gardien et au juge.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, quatre générations par course, mêmes proposeurs et mêmes plafonds",
+     "prediction": "à coût égal, au moins 10 % de composantes plantées couvertes en plus que la course de référence sur l'ensemble des trente mondes, et au moins 15 % de copies promues en moins ; l'écart doit apparaître dès la deuxième génération, quand l'archive d'idées contient déjà les cartes non promues de la première",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes et copies promues, lues par l'oracle après la course ; part des cartes écartées par le filtre ; dollars de recherche et d'appels relevés par génération ; témoin à coût égal : la même course sans archive d'idées ni filtre"
+    },
+    "perte_traduction": "La ressemblance à la littérature n'est pas la ressemblance à l'archive du monde planté ; une note de nouveauté qu'un modèle se donne à lui-même n'est pas une mesure.",
+    "questions_servies": [
+     "levier:proposeurs",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "programme",
+     "texte": "Le programme demande des idées neuves sur des familles jamais vues ; une archive d'idées qui garde aussi les échecs donne aux proposeurs une matière plus large que les seules lois retenues, et le filtre retire tôt ce qui est déjà connu.",
+     "incopiable_parce_que": "Il faut une archive d'idées tenue sur plusieurs générations, échecs compris, et un accès à la littérature, que l'organisme n'a pas encore."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Les archives d'idées et les filtres bibliographiques existent dans les systèmes de recherche automatisée ; leur emploi dans un organisme à monde planté est transposé."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Ajouter un registre « archive d'idées » qui garde chaque carte validée par le gardien, avec sa génération et son sort. À chaque appel, servir au proposeur cinq cartes tirées du registre (SeedSequence), sous le titre « parents », avec la consigne d'en dériver ses cartes et de noter chacune de 1 à 10 en intérêt, nouveauté et faisabilité. Après la génération, un modèle filtre, relié à une recherche bibliographique (Semantic Scholar) et au Web, rend pour chaque carte « garder » ou « écarter » selon sa proximité avec des travaux publiés ; les cartes écartées ne vont pas au juge et restent au registre."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "environ 2 USD de recherche et d'appels du filtre par génération, soit à peu près 240 USD pour trente mondes et quatre générations, en plus du coût des proposeurs"
+    },
+    "piege": "Un filtre qui écarte des idées justes parce qu'elles ressemblent à un titre ferait baisser les copies en même temps que la couverture ; on rapporte les composantes couvertes par les seules cartes écartées, lues par l'oracle sur le registre.",
+    "cosmetique_si": "Si la course sans archive d'idées ni filtre, au même coût, promeut aussi peu de copies et couvre autant de composantes, l'ajout ne sert à rien ; si seul le filtre agit, l'archive est un décor.",
+    "anteriorite": [
+     {
+      "reference": "Huang et al., POPPER, ICML 2025",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al., réutilisation adaptative d'une réserve de test, arXiv 1506.02629, 2015",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, The Ladder, arXiv 1502.04585, 2015 (tableau de classement sous soumissions adaptatives)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Gottweis et al., Co-Scientist, Nature 655, 487-496, 2026",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-C5",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C5",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 0,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C5"
+   },
+   "criteres_porteurs": [
+    "N"
+   ],
+   "fiche": {
+    "nom": "Fourches périodiques à mémoire neuve et reprise depuis la meilleure branche",
+    "type": "approche",
+    "enonce": "Donner à chaque proposeur un carnet qui passe d'une génération à l'autre (la mémoire de QO2), puis, toutes les deux générations, dédoubler la course en trois branches parallèles : chacune hérite de l'archive, des cartes produites et de l'espace de travail accumulé, mais repart d'un carnet vide. Après un horizon fixe de deux générations, la course continue depuis la branche qui a retenu le plus de lois ; les autres sont abandonnées. À calcul égal, cela doit sortir les proposeurs des bassins où leur carnet les enferme.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, six générations par course, mêmes proposeurs et mêmes plafonds de session",
+     "prediction": "à calcul égal, au moins 20 % de composantes plantées couvertes en plus après six générations qu'une trajectoire unique à carnet continu, en moyenne sur les trente mondes, sans loi fausse ni copie promue de plus ; la branche gardée doit couvrir au moins une composante qu'aucune des deux autres n'a trouvée dans plus de la moitié des fourches",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes, lois fausses et copies promues, lues par l'oracle après la course ; dollars relevés par branche et par génération ; témoins à calcul égal : trajectoire unique, et meilleure de trois trajectoires indépendantes"
+    },
+    "perte_traduction": "Le nombre de lois retenues n'est pas la couverture vraie ; trois branches de deux générations coûtent trois fois plus sur l'horizon, ce que la course compense par moins de cartes.",
+    "questions_servies": [
+     "levier:composition",
+     "QO2",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le carnet qui repart vide casse l'ancrage sur les premières idées, sans perdre ce que l'archive a acquis ; le monde planté dit si les branches abandonnées tenaient des composantes que la retenue n'a pas.",
+     "incopiable_parce_que": "Il faut des branches à graines scellées que l'on peut rejouer, et un oracle pour savoir ce que la sélection de branche a fait perdre ou gagner."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Aucun organisme d'idéation ne dédouble aujourd'hui sa course en branches à mémoire neuve pour reprendre depuis la meilleure ; l'organisme n'a même pas encore de mémoire."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Ajouter à chaque proposeur un carnet de 2 000 jetons au plus, réécrit par lui à la fin de chaque appel et servi à l'appel suivant. Aux générations 2 et 4, copier l'état de la course (archive, nul, registres, carnets) en trois branches, graines dérivées par branche (SeedSequence) ; vider le carnet dans chaque branche ; jouer deux générations dans chacune avec le tiers du budget de proposeurs par branche ; garder la branche qui a retenu le plus de lois (égalité : la plus petite graine) et jeter les deux autres, journaux conservés. Si aucune branche ne retient de loi, garder la première. Le témoin à trajectoire unique garde son carnet du début à la fin."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "environ 1,5 fois le coût d'une course témoin sur les horizons de branche, soit de l'ordre de 300 USD pour trente mondes et six générations, témoins compris"
+    },
+    "piege": "Comparer à un témoin qui n'a pas le même calcul : les trois branches reçoivent chacune le tiers du budget, et le témoin « meilleure de trois trajectoires indépendantes » dépense autant ; on rapporte aussi le coût réel de chaque bras.",
+    "cosmetique_si": "Si la meilleure de trois trajectoires indépendantes, au même calcul, couvre autant de composantes, la fourche et la mémoire neuve n'apportent rien ; si le carnet continu fait aussi bien, la mémoire neuve est inutile.",
+    "anteriorite": [
+     {
+      "reference": "POPPER (Huang et al., ICML 2025), cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al. (2015), arXiv 1506.02629, cité dans la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist (Gottweis et al., Nature 655, p. 487-496, 2026), cité dans la question servie",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-C7",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C7",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C7"
+   },
+   "criteres_porteurs": [
+    "N"
+   ],
+   "fiche": {
+    "nom": "N'adopter une réécriture de la consigne que sur preuve séquentielle appariée",
+    "type": "question",
+    "enonce": "Pendant la conception, l'organisme réécrit la consigne de ses proposeurs et garde la réécriture si le score a monté ; avec le bruit d'un monde à l'autre, il adopte ainsi des réécritures qui ne valent pas mieux. Question : une porte d'acceptation séquentielle ferait-elle adopter moins de réécritures à tort ? Chaque réécriture candidate est comparée à la consigne en place sur les mêmes mondes du vivier. Elle n'est adoptée que lorsqu'un e-processus par paris accumule une preuve décisive. On peut arrêter tôt, et la probabilité de fausse adoption reste bornée par décision, même sous arrêt optionnel. Cette porte remplace la règle « garder si le score a monté ».",
+    "loi_predictive": {
+     "espace_instances": "le vivier de conception (mondes plantés à graine scellée, jamais ceux de l'épreuve finale), réécritures successives de la consigne des proposeurs ; épreuve sur une famille jamais vue après le gel",
+     "prediction": "la part des réécritures adoptées qui battent vraiment la consigne précédente sur des mondes frais du vivier au moins doublée par rapport à la règle « garder si le score a monté », pour une couverture finale égale ou supérieure sur la famille jamais vue, à nombre de mondes de conception égal ; et au moins 30 % de mondes de conception économisés par l'arrêt anticipé",
+     "signe": "+",
+     "metrique": "réécritures adoptées qui ne battent pas la consigne précédente sur des mondes frais du vivier (oracle) ; composantes plantées couvertes sur la famille jamais vue (oracle) ; mondes de conception consommés ; témoin à coût égal : règle « garder si le score a monté »"
+    },
+    "perte_traduction": "La différence de couverture sur un monde est bruitée et bornée ; l'appariement suppose les mêmes graines pour les deux consignes, et une réécriture utile mais lente à prouver peut être abandonnée.",
+    "questions_servies": [
+     "levier:proposeurs",
+     "QO3",
+     "QO5",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "L'oracle du vivier de conception donne une différence vraie à chaque monde : l'e-processus parie sur une quantité exacte, sans note de juge, et l'organisme sait déjà apparier ses mondes par graine.",
+     "incopiable_parce_que": "Il faut des mondes plantés appariés à graine scellée et un oracle par monde ; sur des tâches ouvertes, la différence entre deux consignes est elle-même une note."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Les tests séquentiels appariés par paris viennent de la statistique sûre à tout instant ; les faire juger les réécritures d'une consigne est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Dans la boucle de conception, remplacer la règle « garder si le score a monté » par une porte : la candidate et la consigne en place jouent les mêmes mondes du vivier, tirés dans l'ordre d'une permutation scellée (SeedSequence) ; après chaque monde, la différence de couverture, ramenée dans [−1, 1] par le nombre de composantes du monde, met à jour la richesse W ← W·(1 + λ·d) avec λ = 0,5 ; adoption dès que W ≥ 20 (niveau 0,05 par décision) ; abandon au plus après 40 mondes ; rien n'est adopté sans franchissement. Une seule candidate est en jeu à la fois, et la richesse repart de 1 pour la suivante."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur les journaux de conception déjà écrits, environ 6 heures de processeur ; si les journaux manquent, quelques mondes neufs, de l'ordre de 30 USD"
+    },
+    "piege": "Réutiliser les mêmes mondes pour décider de l'adoption et pour mesurer l'effet final : l'épreuve se fait sur une famille jamais vue, après le gel de la consigne ; et régler λ ou le seuil au vu des adoptions rendrait la porte circulaire.",
+    "cosmetique_si": "Si la règle « garder si le score a monté » n'adopte pas plus de réécritures à tort sur des mondes frais, la porte ne coûte que des mondes et n'apporte aucune sécurité.",
+    "anteriorite": [
+     {
+      "reference": "POPPER : Huang et al., ICML 2025, PMLR 267 (citation obligatoire de la question)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork, Feldman, Hardt, Pitassi, Reingold et Roth, arXiv 1506.02629 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist : Gottweis et al., Nature 655, p. 487-496 (2026)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Howard, Ramdas, McAuliffe et Sekhon, séquences de confiance uniformes dans le temps, Annals of Statistics, 2021",
+      "statut": "SUPPOSE"
+     }
+    ]
+   },
+   "reecriture": "tour 2 : énoncé réécrit en phrases courtes, mécanisme inchangé"
+  },
+  {
+   "code": "T2-C11",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C11",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C11"
+   },
+   "criteres_porteurs": [
+    "N"
+   ],
+   "fiche": {
+    "nom": "Une réserve de tirages frais réutilisable, consultée par un seuil bruité",
+    "type": "question",
+    "enonce": "Le juge tire des épisodes frais à chaque génération. Question : garder plutôt une réserve fixe de tirages, réutilisée d'une génération à l'autre, sans surajustement, fait-il promouvoir moins de lois fausses à dépense égale ? Les proposeurs voient l'archive, qui dépend des verdicts passés, et leurs cartes s'adaptent peu à peu à la réserve. Pour l'empêcher, le juge ne la consulte qu'à travers un mécanisme à seuil bruité : il compare la valeur sur la réserve à celle d'un jeu d'apprentissage, ne rend la valeur de la réserve, bruitée, que si l'écart dépasse un seuil, et rend sinon celle du jeu d'apprentissage.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, huit générations par course, réserve de taille fixe, mêmes proposeurs et mêmes plafonds",
+     "prediction": "à nombre total de tirages frais égal, la part des lois promues qui sont vraies au sens de l'oracle augmente d'au moins 10 points aux générations 5 à 8 par rapport à la réserve réutilisée telle quelle, avec au plus une composante plantée couverte de moins sur les trente mondes ; aux générations 1 à 4, l'écart doit rester sous 3 points",
+     "signe": "+",
+     "metrique": "lois fausses promues par génération et composantes plantées couvertes, lues par l'oracle après la course ; tirages frais consommés et franchissements du seuil comptés par l'orchestrateur ; témoins à coût égal : réserve réutilisée sans mécanisme, et tirages tous frais"
+    },
+    "perte_traduction": "La borne de généralisation dépend du nombre de consultations et de la taille de la réserve ; le bruit coûte de la puissance aux cartes dont l'apport est faible.",
+    "questions_servies": [
+     "levier:juge",
+     "QO5",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "La garantie de généralisation sous analyse adaptative reste démontrable ; la valeur e d'une carte est calculée sur ce que rend le mécanisme, et e-BH garde son m fixé d'avance, si bien que le juge garde ses deux garanties.",
+     "incopiable_parce_que": "Il faut une réserve consultée de façon adaptative, génération après génération, et une vérité pour mesurer le surajustement réel ; le monde planté donne les deux."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "La réutilisation d'une réserve de test vient de l'analyse adaptative des données ; son emploi dans le juge d'un organisme d'idéation, dont l'archive s'adapte aux verdicts, est transposé."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer les tirages frais de chaque génération par une réserve fixe de 4 000 épisodes, tirée une fois (SeedSequence), et un jeu d'apprentissage de même taille tiré à chaque génération. Pour chaque carte : calculer la statistique sur le jeu d'apprentissage et sur la réserve ; si l'écart dépasse le seuil T = 0,02 plus un bruit de Laplace d'échelle 0,005, rendre la valeur de la réserve plus un bruit de même échelle, sinon celle du jeu d'apprentissage. Budget de 600 franchissements fixé d'avance ; au-delà, la réserve est retirée et l'on revient aux tirages frais. Le nombre de franchissements est scellé au manifeste de chaque génération."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur processeur avec des mondes plantés simulés : environ 20 heures de calcul pour trente graines, huit générations et trois bras, aucun appel ni dollar"
+    },
+    "piege": "Laisser le seuil ou le bruit se régler au vu des promotions : T et l'échelle du bruit sont fixés avant tout rejeu, une seule valeur est éprouvée, et le budget de franchissements est compté par programme, jamais estimé après coup.",
+    "cosmetique_si": "Si la réserve réutilisée sans mécanisme ne promeut pas plus de lois fausses aux générations 5 à 8, le surajustement à la réserve n'existait pas ici, et le mécanisme ne coûte que de la puissance.",
+    "anteriorite": [
+     {
+      "reference": "Huang et al., POPPER, ICML 2025",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al., réutilisation adaptative d'une réserve de test, arXiv 1506.02629, 2015",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, The Ladder, arXiv 1502.04585, 2015 (tableau de classement sous soumissions adaptatives)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Gottweis et al., Co-Scientist, Nature 655, 487-496, 2026",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Wang et Ramdas, contrôle du taux de fausses découvertes par valeurs e (procédure e-BH), JRSS B, 2022",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-C9",
+   "famille": "publie",
+   "cible": "N",
+   "entree": "C9",
+   "attendu_voulu": {
+    "R1": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 1,
+    "R6": 1,
+    "R7": 1,
+    "N": "C9"
+   },
+   "criteres_porteurs": [
+    "N"
+   ],
+   "fiche": {
+    "nom": "Ne payer les tirages frais que là où la carte et l'archive divergent",
+    "type": "question",
+    "enonce": "La différence de risque entre une carte et la meilleure loi de l'archive ne vit que sur les instances où leurs prédictions diffèrent, et ces instances se voient sans issue, sur le jeu public. Question : à couverture égale, un juge à deux paliers dépense-t-il moins de tirages frais ? Une carte dont le taux de désaccord avec l'archive est sous une tolérance est déclarée sans apport sans aucun tirage ; pour les autres, le juge ne tire des issues fraîches que sur des instances de désaccord échantillonnées, et décide par une séquence de confiance valide à tout instant.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, une génération par monde, mêmes proposeurs, mêmes cartes rejouées dans les deux bras",
+     "prediction": "couverture des composantes plantées inchangée (écart nul à une composante près sur l'ensemble des trente mondes) pour au moins 35 % de tirages frais en moins par génération, sans loi fausse promue de plus ; au moins la moitié des cartes déclarées sans apport au palier sans issue doivent l'être aussi par le juge actuel",
+     "signe": "0",
+     "metrique": "composantes plantées couvertes et lois fausses promues, lues par l'oracle après la course ; tirages frais consommés et coût du juge par génération, relevés par l'orchestrateur ; témoin à coût égal : tirages répartis sans regarder le désaccord"
+    },
+    "perte_traduction": "Le taux de désaccord sur le jeu public n'est pas celui sous la loi des traits du monde ; une composante rare peut tenir dans peu d'instances de désaccord, et passer sous la tolérance.",
+    "questions_servies": [
+     "levier:cout",
+     "QO4",
+     "QO1",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le jeu public d'instances sans issue existe déjà dans l'organisme ; la séquence de confiance reste valide sous toute règle d'arrêt, et l'économie croît quand le désaccord est rare, ce qui est le cas des copies.",
+     "incopiable_parce_que": "Il faut une archive de lois à comparer et un jeu public d'instances sans issue, que seul un organisme qui garde et sert ses lois retenues possède."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "La certification d'une mise à jour par les seuls désaccords vient de l'évaluation des modèles ; son emploi pour répartir les tirages frais du juge est transposé."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer l'allocation uniforme des tirages frais par deux paliers. Palier sans issue : pour chaque carte, calculer sur le jeu public le taux d'instances où sa prédiction diffère de celle de la meilleure loi de l'archive de plus de 0,05 en probabilité ; sous la tolérance de 2 %, la carte est déclarée sans apport. Palier audité : tirer des issues fraîches sur au plus 300 instances de désaccord échantillonnées (SeedSequence) et décider par une séquence de confiance au niveau 0,05 ; la valeur e de la carte est calculée sur ces seuls tirages, contre le même nul. Si l'archive est vide, l'allocation actuelle s'applique."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur processeur avec des mondes plantés simulés : environ 8 heures de calcul pour trente graines et deux bras, aucun appel de proposeur ni de juge à modèle"
+    },
+    "piege": "Fixer la tolérance au vu des promotions rendrait la comparaison circulaire : 2 % et 0,05 sont fixés avant tout rejeu ; et une économie qui viendrait seulement des cartes vides de la première génération ne dirait rien des suivantes.",
+    "cosmetique_si": "Si la répartition qui ignore le désaccord coûte aussi peu de tirages à couverture égale, les deux paliers n'apportent rien ; et si la couverture baisse, l'économie est payée par des composantes perdues.",
+    "anteriorite": [
+     {
+      "reference": "POPPER : Huang et al., ICML 2025, PMLR 267 (citation obligatoire de la question)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork, Feldman, Hardt, Pitassi, Reingold et Roth, arXiv 1506.02629 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, « The Ladder », arXiv 1502.04585 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Howard, Ramdas, McAuliffe et Sekhon, séquences de confiance uniformes dans le temps, Annals of Statistics, 2021",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  }
+ ]
+}

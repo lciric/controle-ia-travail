@@ -1,0 +1,1306 @@
+--- lecture-classement-v3-1/essais_lecture_classement_v3_1.py	2026-11-14 09:49:08.926652540 +0000
++++ relecture-exploratoire-v2/lecture-classement-v3-2/essais_lecture_classement_v3_2.py	2026-11-14 12:32:58.769753524 +0000
+@@ -1,25 +1,25 @@
+-"""Essais de l'outil du lecteur et du programme de classement — course « conception propre » — v3.1 (lecteur Astra).
++"""Essais de l'outil du lecteur v3.2 et du classement v3.2 (règle v2) — relecture exploratoire, course « conception propre ».
+ 
+-v3.1 : les essais de la v3 adaptés (noms en -v3-1, dossier d'envois fixe, prix lus, palier ; les réponses passent toutes
+-par `envoyer` et son journal, puisque `verifier` refuse désormais toute réponse hors journal, M1), plus les essais des
+-corrections demandées par la contre-lecture (`f5cc9cdb…`, R-2678) : B1 et B2 avec le **transport réel** de l'outil sur la
+-boucle locale, M1 à M5, m1, palier Flex, condition C6, et un essai par mutant survivant du contre-lecteur (R5 : un cas
+-sain et un artefact par garde).
+-
+-**Hors réseau** : l'API d'OpenAI est remplacée soit par une **doublure déclarée** (`Doublure`, transport injecté dans
+-`envoyer`), soit, pour les essais du transport réel, par de petits serveurs sur `127.0.0.1` vers lesquels l'adresse
+-d'amont est détournée **en mémoire seulement** (`monkeypatch`), mandataires retirés de l'environnement. Aucune connexion
+-ne sort de la machine ; clés factices posées par l'essai. Prix : ceux de `prix-astra-v2.md` (constantes de l'outil).
+-Fiches factices seulement ; les témoins épinglés sont lus par les programmes dans leur copie sous une racine factice.
+-
+-Sous `unshare -n` (espace de noms réseau vide), la boucle locale est montée par l'essai qui en a besoin (`ioctl`).
++v3.2 (14 novembre 2026, à partir de 12:30 UTC, `date -u`) : les essais de la v3.1 (`../../lecture-classement-v3-2/`,
++`490eb359…`), adaptés aux seuls changements de la v3.2 — noms en `-v3-2`, manifeste `manifeste-relecture-v3-2.json`, dossier
++fixe `lecture-g1-v3-2/envois`, plafond absolu 11,65 USD, témoins et hasard v2, codes de témoins `T2-…`, règle v2 au
++classement (portes R2 et R3, S v2 avec R7, L3 v2, L5 v2 et séparation, aucune désignation, rang exploratoire) —, plus les
++essais neufs de ces changements (C6 v3.2 : première lecture épinglée et tolérée seule ; règle v2 ; descriptifs). Les essais
++de la variante « détachée » de la v3.1 sont retirés (variante sans objet : la règle v2 ne désigne rien) ; l'essai « règle
++inchangée v3 → v3.1 » devient « règle de lecture inchangée v3.1 → v3.2 ». Lecteur simulé « sain » : comme en v3.1, sauf
++les idées au hasard, lues R2 = 0 et R7 = 0 (pour garder un cas sain où L5 v2 rejette et la séparation est « réelle »).
++
++**Hors réseau** : doublure déclarée de l'API (transport injecté) ou petits serveurs sur `127.0.0.1` (adresse d'amont
++détournée en mémoire seulement), mandataires retirés ; clés factices. Fiches factices seulement ; les témoins épinglés, les
++pièces et les fichiers de la première lecture (manifeste, journal, relevé, classement : aucun texte de fiche) sont recopiés
++par les programmes dans une racine factice.
+ 
+ Hors de `tests/` (R-2614). Lancement, depuis la racine du dépôt :
+ 
+     PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -B -m pytest -q -p no:cacheprovider \\
+-        docs/notes/organisme-conception-propre-v1/lecture-classement-v3-1/essais_lecture_classement_v3_1.py
++        docs/notes/organisme-conception-propre-v1/relecture-exploratoire-v2/lecture-classement-v3-2/essais_lecture_classement_v3_2.py
+ 
+-`LC_MODULES` désigne le dossier des deux programmes essayés (bancs de mutations) ; par défaut, celui de ce fichier.
++`LC_MODULES` désigne le dossier des deux programmes essayés (banc de mutations) ; par défaut, celui de ce fichier.
+ """
+ from __future__ import annotations
+ 
+@@ -42,10 +42,10 @@
+ import pytest
+ 
+ ICI = Path(__file__).resolve().parent
+-RACINE = ICI.parents[3]
++RACINE = ICI.parents[4]
+ MODS = Path(os.environ.get("LC_MODULES", str(ICI)))
+ CLONE = Path("/home/user/lciric/ideation-organism/orchestrator/pole/ideation_v2.py")
+-V3 = ICI.parent / "lecture-classement-v3"
++V3_1 = ICI.parents[1] / "lecture-classement-v3-1"
+ 
+ 
+ def _charger(nom, fichier, dossier=None):
+@@ -55,7 +55,7 @@
+     return m
+ 
+ 
+-K = _charger("classer_cp_v3_1_essai", "classer_conception_propre_v3_1.py")
++K = _charger("classer_cp_v3_2_essai", "classer_conception_propre_v3_2.py")
+ O = K.O
+ LEVIER_JUGE = "levier:juge"
+ PRIX = O.PRIX_LUS["standard"]
+@@ -117,10 +117,12 @@
+ 
+ 
+ def racine_de(tmp):
+-    """Racine factice : pièces épinglées (et pièce des prix) recopiées du dépôt, jamais modifiées dans le dépôt."""
++    """Racine factice : pièces épinglées (et pièce des prix), fichiers épinglés de la première lecture (manifeste, journal,
++    relevé : aucun texte de fiche) et son classement, recopiés du dépôt, jamais modifiés dans le dépôt."""
+     rac = Path(tmp) / "racine"
+     if not rac.exists():
+-        for nom, (rel, _) in list(O.PIECES.items()) + list(O.PIECES_PRIX.items()):
++        for rel, _ in (list(O.PIECES.values()) + list(O.PIECES_PRIX.values()) + list(O.PREMIERE_LECTURE.values())
++                       + [K.PREMIERE_CLASSEMENT]):
+             (rac / rel).parent.mkdir(parents=True, exist_ok=True)
+             shutil.copyfile(RACINE / rel, rac / rel)
+     return rac
+@@ -156,7 +158,7 @@
+     return p
+ 
+ 
+-PREP = {"effort": "medium", "palier": "standard", "plafond_usd": 14.0, "depense_anterieure_usd": 0.0}
++PREP = {"effort": "medium", "palier": "standard", "plafond_usd": 11.0, "depense_anterieure_usd": 0.0}
+ 
+ 
+ def opreparer(pf, pa, sortie, rac, **change):
+@@ -184,7 +186,7 @@
+         nom = p["vue"]["nom"].split()[2]
+         return {**TOUT1, **PLAN[nom][4]}
+     if p["famille"] == "hasard":
+-        return {**TOUT1, "R7": 0}
++        return {**TOUT1, "R2": 0, "R7": 0}
+     return {c: (0 if x is None else x) for c, x in p["attendu"].items()}
+ 
+ 
+@@ -490,27 +492,27 @@
+     env, man = preparer(tmp_path)
+     assert man["pile"]["fiches"] == 28 and man["pile"]["reelles_admissibles"] == 8 and man["pile"]["temoins"] == 20
+     assert man["pile"]["hors_question"] == 3 and man["pile"]["champs_retires"] == {}
+-    pile = json.loads((env / "pile-interne-v3-1.json").read_text(encoding="utf-8"))
++    pile = json.loads((env / "pile-interne-v3-2.json").read_text(encoding="utf-8"))
+     motifs = sorted(h["motif"] for h in pile["hors_question"])
+     assert motifs[0].startswith("0 étiquette") and motifs[1].startswith("2 étiquette") and "rien" in motifs[2]
+     assert man["lots"]["tailles"] == [5, 5, 5, 5, 4, 4] and man["garde_depense"]["appels_max"] == 12
+     assert man["lots"]["taille_lot"] == 5 and man["lecteur"]["max_completion_tokens"] == 32768
+     assert man["lecteur"]["reasoning_effort"] == "medium" and man["lecteur"]["url"] == "https://api.openai.com/v1/chat/completions"
+-    assert man["lecteur"]["variable_cle"] == "OPENAI_API_KEY" and man["garde_depense"]["plafond_usd"] == 14.0
++    assert man["lecteur"]["variable_cle"] == "OPENAI_API_KEY" and man["garde_depense"]["plafond_usd"] == 11.0
+     for g in man["garde_depense"]["envois"]:
+         assert abs(g["pire_cas_usd"] - ((g["octets"] + 1024) * 10 / 1e6 + 32768 * 50 / 1e6)) < 1e-6
+-    assert man["ordre_d_envoi"][0] == "envoi-L1-lot1-v3-1.corps.json" and len(man["ordre_d_envoi"]) == 12
+-    cle = json.loads((env / "cle-lectures-v3-1.json").read_text(encoding="utf-8"))
++    assert man["ordre_d_envoi"][0] == "envoi-L1-lot1-v3-2.corps.json" and len(man["ordre_d_envoi"]) == 12
++    cle = json.loads((env / "cle-lectures-v3-2.json").read_text(encoding="utf-8"))
+     assert cle["L1"]["ordre"] != cle["L2"]["ordre"] and sorted(cle["L1"]["ordre"]) == sorted(cle["L2"]["ordre"])
+     consigne = O.lire_piece(RACINE, "consigne")[0]
+     catalogue = O.lire_piece(RACINE, "catalogue")[0]
+     fs = fiches_factices()
+     secrets = [f["identifiant_auteur"] for f in fs] + [f["empreinte"] for f in fs] + ['"auteur"', '"passe"', '"temoin"',
+-               '"famille"', '"attendu"', "T-V", "T-FA", "T-H1", "propa-p", "propb-p", "propc-p", "«", "»", "’"]
++               '"famille"', '"attendu"', "T2-V", "T2-C2", "T2-H1", "propa-p", "propb-p", "propc-p", "«", "»", "’"]
+     vus = []
+     for L in O.LECTURES:
+         for k in range(1, 7):
+-            msg = (env / f"envoi-{L}-lot{k}-v3-1.txt").read_text(encoding="utf-8")
++            msg = (env / f"envoi-{L}-lot{k}-v3-2.txt").read_text(encoding="utf-8")
+             assert msg.startswith(consigne.rstrip("\n")) and catalogue.rstrip("\n") in msg
+             bloc = msg.split("```json\n")[-1].rsplit("\n```", 1)[0]
+             lot = json.loads(bloc)
+@@ -519,7 +521,7 @@
+                 assert list(x["fiche"]) == [c for c, _ in O.ORDRE_VUE]
+                 vus.append(x["fiche"]["nom"])
+                 assert not any(s in json.dumps(x["fiche"], ensure_ascii=False) for s in secrets)
+-            corps = json.loads((env / f"envoi-{L}-lot{k}-v3-1.corps.json").read_text(encoding="utf-8"))
++            corps = json.loads((env / f"envoi-{L}-lot{k}-v3-2.corps.json").read_text(encoding="utf-8"))
+             assert corps["model"] == "gpt-6-astra" and corps["messages"][0]["content"] == msg
+             assert corps == {"model": "gpt-6-astra", "messages": [{"role": "user", "content": msg}],
+                              "max_completion_tokens": 32768, "reasoning_effort": "medium", "store": False}
+@@ -532,8 +534,8 @@
+ 
+ def test_ordres_par_seedsequence_consignee(tmp_path):
+     env, man = preparer(tmp_path)
+-    pile = json.loads((env / "pile-interne-v3-1.json").read_text(encoding="utf-8"))
+-    cle = json.loads((env / "cle-lectures-v3-1.json").read_text(encoding="utf-8"))
++    pile = json.loads((env / "pile-interne-v3-2.json").read_text(encoding="utf-8"))
++    cle = json.loads((env / "cle-lectures-v3-2.json").read_text(encoding="utf-8"))
+     e = np.random.SeedSequence(2026111302).spawn(4)
+     for j, L in enumerate(("L1", "L2")):
+         perm = np.random.default_rng(e[j]).permutation(len(pile["fiches"]))
+@@ -544,7 +546,7 @@
+ def test_preparer_reproductible(tmp_path):
+     a, _ = preparer(tmp_path / "a")
+     b, _ = preparer(tmp_path / "b")
+-    for n in ("envoi-L1-lot1-v3-1.txt", "envoi-L2-lot2-v3-1.corps.json", "cle-lectures-v3-1.json"):
++    for n in ("envoi-L1-lot1-v3-2.txt", "envoi-L2-lot2-v3-2.corps.json", "cle-lectures-v3-2.json"):
+         assert (a / n).read_bytes() == (b / n).read_bytes()
+ 
+ 
+@@ -642,8 +644,8 @@
+     ({"palier": "fast"}, "palier"), ({"palier": None}, "palier"),
+     ({"depense_anterieure_usd": -0.01}, "antérieure"), ({"depense_anterieure_usd": float("nan")}, "antérieure"),
+     ({"depense_anterieure_usd": None}, "antérieure"),
+-    ({"plafond_usd": 14.21}, "GO-2026-11-13-06"), ({"plafond_usd": float("inf")}, "plafond"),
+-    ({"plafond_usd": 13.5, "depense_anterieure_usd": 1.0}, "antérieure"),
++    ({"plafond_usd": 11.66}, "GO-2026-11-13-06"), ({"plafond_usd": float("inf")}, "plafond"),
++    ({"plafond_usd": 10.9, "depense_anterieure_usd": 1.0}, "antérieure"),
+     ({"plafond_usd": 1.0}, "aucun appel"),
+ ])
+ def test_garde_preparation_plafond_effort_palier(tmp_path, change, motif):
+@@ -651,8 +653,8 @@
+         _, man = preparer(tmp_path, **change)
+         g = man["garde_depense"]
+         assert g["prix_usd_par_million"] == {"entree": 10.0, "cache": 1.0, "sortie": 50.0, "source": O.SOURCE_PRIX}
+-        assert g["appels_surs_au_pire_cas"] == 6  # 14 USD paient six pires cas d'environ 2,0
+-        assert g["depense_anterieure_usd"] == 0.0 and g["plafond_disponible_usd"] == 14.2 and man["palier"] == "standard"
++        assert g["appels_surs_au_pire_cas"] == 5  # 11 USD paient cinq pires cas d'environ 2,0
++        assert g["depense_anterieure_usd"] == 0.0 and g["plafond_disponible_usd"] == 11.65 and man["palier"] == "standard"
+         assert "SUPPOSÉ" not in O.SOURCE_PRIX and "barème" not in O.SOURCE_PRIX and "08:45:38Z" in O.SOURCE_PRIX
+         return
+     with pytest.raises(O.Refus, match=motif):
+@@ -662,7 +664,7 @@
+ 
+ def test_ordres_identiques_a_la_v2():
+     """Régénération déterministe : mêmes ordres et mêmes étiquettes que l'outil v2 (seuls les lots changent)."""
+-    spec = importlib.util.spec_from_file_location("outil_v2_ref", ICI.parent / "lecture-classement-v2" /
++    spec = importlib.util.spec_from_file_location("outil_v2_ref", ICI.parents[1] / "lecture-classement-v2" /
+                                                   "outil_lecteur_conception_propre_v2.py")
+     v2 = importlib.util.module_from_spec(spec)
+     spec.loader.exec_module(v2)
+@@ -685,51 +687,56 @@
+ # --- essais : vérification et classement -------------------------------------------------------------------------------
+ 
+ def test_classement_sain(tmp_path):
++    """Règle v2 : portes R2, R3 ; S v2 avec R7 ; L3 v2 ; L5 v2 et séparation ; aucune désignation."""
+     env, _ = preparer(tmp_path)
+     lire(env)
+     r = classer(env)
+-    assert r["lisible"] and r["L5"]["rejet"] and r["verdict"].startswith("lisible")
++    assert r["lisible"] and r["L5"]["rejet"] and r["verdict"].startswith("classement exploratoire lisible")
++    assert r["separation"]["issue"] == "séparation réelle" and r["separation"]["lu"]
++    assert r["designees"] == [] and "aucune idée désignée" in r["verdict"]
+     for L in ("L1", "L2"):
+         assert all(x == 0 for x in r["non_prouves"][L].values()) and r["anomalies"][L] == []
+-    st = r["classement"]["statut"]
+-    assert st[id_de("A4")] == {"statut": "ecartee", "motif": "porte(s) R7"}
++    st = r["rang_exploratoire"]["statut"]
++    assert st[id_de("A4")] == {"statut": "neuve", "S": 4}  # R7 = 0 : plus une porte, un point de moins
+     assert st[id_de("A6")]["motif"] == "porte(s) R2" and st[id_de("A5")] == {"statut": "occupee", "entrees": "C8"}
+     reelles = [id_de(n) for n in PLAN]
+     tirage = np.random.default_rng(np.random.SeedSequence(2026111302).spawn(4)[2]).permutation(8)
+     rang = {reelles[int(j)]: k for k, j in enumerate(tirage)}
+-    assert r["classement"]["departage"] == rang  # enfant 2, fiches réelles admissibles dans l'ordre du fichier
++    assert r["rang_exploratoire"]["departage"] == rang
+     a2, a7 = sorted([id_de("A2"), id_de("A7")], key=rang.get)
+-    a3, a8 = id_de("A3"), id_de("A8")
+-    assert r["classement"]["ordre_neuves"] == [id_de("A1"), a2, a7, a3, a8]
+-    assert r["designees"] == [id_de("A1"), a2]
++    a3, a4 = sorted([id_de("A3"), id_de("A4")], key=rang.get)
++    assert r["rang_exploratoire"]["ordre_neuves"] == [id_de("A1"), a2, a7, a3, a4, id_de("A8")]
++    assert r["rang_exploratoire"]["deux_premieres"] == [id_de("A1"), a2]
++    assert id_de("A4") not in r["rang_exploratoire"]["restreint_a_R7_retenu_1"]
+     assert r["L1"]["reconnues"] == 7 and r["L2"]["tient"] and r["L3"]["tient"] and r["L4"]["tient"]
+-    assert r["L5"]["C_reelles"] == dict(zip(reelles, [5, 5, 4, 0, 0, 0, 5, 4]))
++    assert r["L5"]["C_reelles"] == dict(zip(reelles, [6, 6, 5, 5, 0, 0, 6, 5]))
+     assert set(r["L5"]["C_hasard"].values()) == {0}
+-    assert abs(r["L5"]["test"]["p"] - 165 / 12870) < 0.004
+-    assert r["echecs"] == {"E1": False, "E2": False, "E2_lecture_incomplete": False, "E3": False, "E4": False,
+-                           "E5": False}
+-    assert r["lecture_complete"]["complete"] and r["regle_de_designation"] == "L5" and r["variante_detachee"] is None
++    assert abs(r["L5"]["test"]["p"] - 45 / 12870) < 0.002
++    assert abs(r["separation"]["test_R7_seul"]["p"] - 9 / 12870) < 0.001
++    assert r["echecs"] == {"E1": False, "E2_v2": False, "E2_v2_lecture_incomplete": False, "E3_v2": False,
++                           "E4_v2": False, "E5": False}
++    assert r["lecture_complete"]["complete"] and "variante_detachee" not in r and "regle_de_designation" not in r
+     assert r["audit_proprete"]["declenche"] and r["audit_proprete"]["toutes_publiees_reconnues"]
+     for L in ("L1", "L2"):
+         assert all(d["justes"] == d["sur"] for d in r["exactitude_lecteur"][L].values())
+-    # témoin à score permuté recalculé à part
+     perm = np.random.default_rng(np.random.SeedSequence(2026111302).spawn(4)[3]).permutation(8)
+     vec = {i: r["retenu"][i] for i in reelles}
+     cout = {id_de(n): PLAN[n][3] for n in PLAN}
+     vp = {reelles[i]: vec[reelles[int(perm[i])]] for i in range(8)}
+     cp = {reelles[i]: cout[reelles[int(perm[i])]] for i in range(8)}
+-    neuves = [i for i in reelles if all(vp[i][c] == 1 for c in ("R2", "R3", "R7")) and vp[i]["N"] == "aucune"]
+-    neuves.sort(key=lambda i: (-(vp[i]["R1"] + vp[i]["R4"] + vp[i]["R5"] + vp[i]["R6"]),
++    neuves = [i for i in reelles if all(vp[i][c] == 1 for c in ("R2", "R3")) and vp[i]["N"] == "aucune"]
++    neuves.sort(key=lambda i: (-(vp[i]["R1"] + vp[i]["R4"] + vp[i]["R5"] + vp[i]["R6"] + vp[i]["R7"]),
+                                {"processeur": 0, "depense": 1}[cp[i]], rang[i]))
+     assert r["temoin_score_permute"]["deux_premieres"] == neuves[:2]
+-    assert r["temoin_score_permute"]["communes_avec_designees"] == len(set(neuves[:2]) & set(r["designees"]))
+     cpp = r["comptes_par_proposeur"]
+-    assert cpp["propa"]["admissibles"] == 3 and cpp["propa"]["hors_question"] == 1 and cpp["propa"]["designees"] == (
+-        1 + (a2 == id_de("A7")))
+-    assert sum(d["designees"] for d in cpp.values()) == 2
++    assert cpp["propa"]["admissibles"] == 3 and cpp["propa"]["hors_question"] == 1 and "designees" not in cpp["propa"]
+     assert len(r["descriptif_holm"]) == 8 and all("p_holm" in d for d in r["descriptif_holm"])
+     r7 = next(d for d in r["descriptif_holm"] if d["critere"] == "R7")
+     assert r7["difference"] > 0 and r7["p_holm"] >= r7["p_brute"]
++    assert r["relecture_contre_premiere_lecture"] == {"fiches_communes": 0}  # fiches factices : aucune commune
++    assert r["regle_v2_sur_la_premiere_lecture"] == {"fiches_communes": 0}
++    h = r["hasard_R7_selon_la_chaine"]
++    assert len(h["chaine_coherente"]) == 6 and len(h["chaine_contraire"]) == 2
+ 
+ 
+ def test_citation_alteree_compte_zero(tmp_path):
+@@ -738,8 +745,8 @@
+     lire(env, modif=lambda L, i, p, v: (v, ("R1",) if (L == "L1" and i == a1) else ()))
+     r = classer(env)
+     assert r["non_prouves"]["L1"]["R1"] == 1 and r["non_prouves"]["L2"]["R1"] == 0
+-    assert r["retenu"][a1]["R1"] == 0 and a1 not in r["designees"]
+-    assert r["classement"]["statut"][a1] == {"statut": "neuve", "S": 3}
++    assert r["retenu"][a1]["R1"] == 0 and r["designees"] == []
++    assert r["rang_exploratoire"]["statut"][a1] == {"statut": "neuve", "S": 4}
+ 
+ 
+ def test_espaces_normalises_seulement():
+@@ -789,7 +796,7 @@
+ 
+     def contenu(L, k, texte):
+         o = json.loads(texte.split("```json\n")[1].rsplit("\n```", 1)[0])
+-        cle = json.loads((env / "cle-lectures-v3-1.json").read_text(encoding="utf-8"))
++        cle = json.loads((env / "cle-lectures-v3-2.json").read_text(encoding="utf-8"))
+         for e in o["lecture"]:
+             if cle[L]["etiquettes"][e["etiquette"]] == a1 and L == "L1":
+                 e["R1"]["passage"] = "+"
+@@ -816,15 +823,11 @@
+         return v, ()
+     lire(env, modif=m)
+     r = classer(env)
+-    st = r["classement"]["statut"]
+-    assert st[a2]["statut"] == "ecartee" and st[a7] == {"statut": "occupee", "entrees": "C4"}
+-    assert st[a1] == {"statut": "neuve", "S": 3}
+-    dep = r["classement"]["departage"]
+-    tete = sorted([a1, id_de("A3")], key=dep.get)  # S = 3 et processeur pour les deux : départage tiré
+-    assert r["classement"]["ordre_neuves"] == tete + [id_de("A8")]
+-    assert r["classement"]["deux_premieres"] == tete
+-    # trois neuves sur huit : p ≈ C(8,3)/C(16,3) = 0,1 ; L5 non rejetée, aucune désignée
+-    assert not r["L5"]["rejet"] and r["designees"] == []
++    st = r["rang_exploratoire"]["statut"]
++    assert st[a2] == {"statut": "neuve", "S": 4} and st[a7] == {"statut": "occupee", "entrees": "C4"}
++    assert st[a1] == {"statut": "neuve", "S": 4}  # un seul 0 suffit à retirer le point (valeur retenue)
++    assert a2 not in r["rang_exploratoire"]["restreint_a_R7_retenu_1"] and a1 in r["rang_exploratoire"]["restreint_a_R7_retenu_1"]
++    assert r["designees"] == []
+ 
+ 
+ def test_occupation_non_prouvee_compte_aucune(tmp_path):
+@@ -839,24 +842,24 @@
+     lire(env, modif=m)
+     r = classer(env)
+     assert r["non_prouves"]["L1"]["N_occupation_non_prouvee"] == 1
+-    assert r["classement"]["statut"][a7]["statut"] == "neuve"
++    assert r["rang_exploratoire"]["statut"][a7]["statut"] == "neuve"
+ 
+ 
+ @pytest.mark.parametrize("manquees,tient", [(2, True), (3, False)])
+ def test_temoins_publies_non_reconnus_L1(tmp_path, manquees, tient):
+     env, _ = preparer(tmp_path)
+-    cibles = ["T-FA", "T-CS", "T-AIS"][:manquees]
++    cibles = ["T2-C2", "T2-C1", "T2-C3"][:manquees]
+     lire(env, modif=lambda L, i, p, v: ({**v, "N": "aucune"} if i in cibles else v, ()))
+     r = classer(env)
+     assert r["L1"]["reconnues"] == 7 - manquees and r["L1"]["tient"] is tient
+-    assert r["lisible"] is tient and (r["designees"] != []) is tient
++    assert r["lisible"] is tient and r["designees"] == []
+     if not tient:
+-        assert r["echecs"]["E2"] and r["verdict"].startswith("E2") and r["classement"]["ordre_neuves"]
++        assert r["echecs"]["E2_v2"] and r["verdict"].startswith("E2 v2") and r["rang_exploratoire"]["ordre_neuves"]
+ 
+ 
+ def test_publiee_reconnue_dans_une_seule_lecture_suffit_a_L1(tmp_path):
+     env, _ = preparer(tmp_path)
+-    cibles = ["T-FA", "T-CS", "T-AIS"]
++    cibles = ["T2-C2", "T2-C1", "T2-C3"]
+     lire(env, modif=lambda L, i, p, v: ({**v, "N": "aucune"} if (i in cibles and L == "L2") else v, ()))
+     r = classer(env)
+     assert r["L1"]["reconnues"] == 7 and r["L1"]["tient"]
+@@ -869,26 +872,38 @@
+ @pytest.mark.parametrize("prouve", [True, False])
+ def test_fausse_fiche_acceptee_L2(tmp_path, prouve):
+     env, _ = preparer(tmp_path)
+-    lire(env, modif=lambda L, i, p, v: ({**v, "R3": 1}, () if prouve else ("R3",)) if (i == "T-F53" and L == "L2")
++    lire(env, modif=lambda L, i, p, v: ({**v, "R3": 1}, () if prouve else ("R3",)) if (i == "T2-F3" and L == "L2")
+          else (v, ()))
+     r = classer(env)
+     assert r["L2"]["tient"] is (not prouve) and r["lisible"] is (not prouve)
+ 
+ 
+ def test_vrai_ou_jumeau_rejete_L3(tmp_path):
++    """L3 v2 : une seule lecture à R7 = 1 suffit ; aucune ne suffit pas ; une porte ou une occupation fait manquer L3."""
+     env, _ = preparer(tmp_path)
+-    lire(env, modif=lambda L, i, p, v: ({**v, "R7": 0} if (i == "T-J" and L == "L1") else v, ()))
++    lire(env, modif=lambda L, i, p, v: ({**v, "R7": 0} if (i == "T2-J" and L == "L1") else v, ()))
+     r = classer(env)
+-    assert not r["L3"]["tient"] and r["L3"]["par_temoin"]["T-J"]["portes_manquantes"] == ["R7"]
+-    assert r["designees"] == [] and r["echecs"]["E2"]
++    assert r["L3"]["tient"] and r["L3"]["par_temoin"]["T2-J"]["R7_prouve_par"] == ["L2"]
+     env2, _ = preparer(tmp_path / "b")
+-    lire(env2, modif=lambda L, i, p, v: ({**v, "N": "C3"} if (i == "T-V" and L == "L2") else v, ()))
+-    assert not classer(env2)["L3"]["tient"]
++    lire(env2, modif=lambda L, i, p, v: ({**v, "R7": 0} if i == "T2-J" else v, ()))
++    r2 = classer(env2)
++    assert not r2["L3"]["tient"] and r2["L3"]["par_temoin"]["T2-J"]["R7_prouve_par"] == []
++    assert r2["designees"] == [] and r2["echecs"]["E2_v2"] and "L3 v2" in r2["verdict"]
++    env3, _ = preparer(tmp_path / "c")
++    lire(env3, modif=lambda L, i, p, v: ({**v, "N": "C3"} if (i == "T2-V" and L == "L2") else v, ()))
++    assert not classer(env3)["L3"]["tient"]
++    env4, _ = preparer(tmp_path / "d")
++    lire(env4, modif=lambda L, i, p, v: ({**v, "R3": 0} if (i == "T2-V" and L == "L1") else v, ()))
++    r4 = classer(env4)
++    assert not r4["L3"]["tient"] and r4["L3"]["par_temoin"]["T2-V"]["portes_manquantes"] == ["R3"]
++    env5, _ = preparer(tmp_path / "e")
++    lire(env5, modif=lambda L, i, p, v: (v, ("R7",)) if i == "T2-V" else (v, ()))  # R7 rendu 1 mais non prouvé
++    assert not classer(env5)["L3"]["tient"]
+ 
+ 
+ def test_lectures_trop_discordantes_L4(tmp_path):
+     env, _ = preparer(tmp_path)
+-    pile = json.loads((env / "pile-interne-v3-1.json").read_text(encoding="utf-8"))
++    pile = json.loads((env / "pile-interne-v3-2.json").read_text(encoding="utf-8"))
+     bascule = {p["id"] for k, p in enumerate(pile["fiches"]) if k % 2 == 0}
+     lire(env, modif=lambda L, i, p, v: ({**v, "R7": 1 - v["R7"]} if (i in bascule and L == "L2") else v, ()))
+     r = classer(env)
+@@ -910,37 +925,36 @@
+     assert k["kappa"] is None and k["tient"]
+ 
+ 
+-def test_L5_non_rejetee_aucune_designee(tmp_path):
++def test_L5_non_rejetee_pas_de_separation(tmp_path):
+     env, _ = preparer(tmp_path)
+-    lire(env, modif=lambda L, i, p, v: ({**v, "R7": 0} if p["origine"] == "reelle" else v, ()))
++    lire(env, modif=lambda L, i, p, v: ({**v, "R2": 0} if p["origine"] == "reelle" else v, ()))
+     r = classer(env)
+     assert r["lisible"] and not r["L5"]["rejet"] and r["L5"]["test"]["p"] == 1.0
+-    assert r["designees"] == [] and r["echecs"]["E3"] and r["verdict"].startswith("E3")
++    assert r["separation"]["issue"] == "pas de séparation" and not r["separation"]["lu"]
++    assert r["designees"] == [] and r["echecs"]["E3_v2"] and "pas de séparation" in r["verdict"]
+ 
+ 
+ def test_L5_hasard_aussi_bon_non_rejetee(tmp_path):
+     env, _ = preparer(tmp_path)
+-    lire(env, modif=lambda L, i, p, v: ({**v, "R7": 1} if p["famille"] == "hasard" else v, ()))
++    lire(env, modif=lambda L, i, p, v: ({**TOUT1} if p["famille"] == "hasard" else v, ()))
+     r = classer(env)
+-    assert not r["L5"]["rejet"] and r["designees"] == []
++    assert not r["L5"]["rejet"] and r["designees"] == [] and r["separation"]["issue"] == "pas de séparation"
+     assert not r["audit_proprete"]["aucune_idee_au_hasard_passee"]
+ 
+ 
+ def test_une_seule_neuve_L5_ne_peut_rejeter_et_E5(tmp_path):
+-    """Une seule neuve parmi n réelles : p ≥ n / (n + 8) > 0,05 ; E4 n'est donc jamais atteint sous L5 (rapporté)."""
++    """Une seule neuve parmi n réelles : p ≥ n / (n + 8) > 0,05 ; E4 v2 (moins de deux neuves) est rapporté."""
+     env, _ = preparer(tmp_path)
+     garde = id_de("A1")
+     lire(env, modif=lambda L, i, p, v: ({**v, "N": "C10"} if (p["origine"] == "reelle" and i != garde) else v, ()))
+     r = classer(env)
+-    assert r["classement"]["ordre_neuves"] == [garde] and r["classement"]["deux_premieres"] == [garde]
++    assert r["rang_exploratoire"]["ordre_neuves"] == [garde] and r["rang_exploratoire"]["deux_premieres"] == [garde]
+     assert not r["L5"]["rejet"] and abs(r["L5"]["test"]["p"] - 0.5) < 0.01 and r["designees"] == []
+-    assert r["echecs"]["E3"] and not r["echecs"]["E4"]
+-    assert r["echecs"]["E5"]  # 5 occupées sur 6 passées > 80 %
++    assert r["echecs"]["E3_v2"] and r["echecs"]["E4_v2"]
++    assert r["echecs"]["E5"]  # 6 occupées sur 7 passées > 80 %
+ 
+ 
+-def test_E4_designation_partielle_si_L5_rejetee():
+-    """E4 se teste au niveau du programme : deux neuves exigées pour désigner deux idées ; la règle tient même si L5
+-    rejette avec une seule neuve (impossible avec huit idées au hasard, voir l'essai précédent)."""
++def test_E4_v2_moins_de_deux_neuves():
+     cl = K.classer(["a", "b"], {"a": {**TOUT1}, "b": {**TOUT1, "R2": 0}}, {"a": "depense", "b": "processeur"},
+                    {"a": 1, "b": 0})
+     assert cl["ordre_neuves"] == ["a"] and cl["deux_premieres"] == ["a"]
+@@ -976,7 +990,7 @@
+ 
+ def test_reponses_fautives(tmp_path):
+     env, _ = preparer(tmp_path)
+-    cle = json.loads((env / "cle-lectures-v3-1.json").read_text(encoding="utf-8"))
++    cle = json.loads((env / "cle-lectures-v3-2.json").read_text(encoding="utf-8"))
+     oter, doubler = cle["L1"]["lots"][0][0], cle["L1"]["lots"][0][1]
+ 
+     def contenu(L, k, texte):
+@@ -1021,12 +1035,12 @@
+ 
+ 
+ def test_temoin_juge_R4_attendu(tmp_path):
+-    """T-CS (levier:juge) doit avoir R4 = 0 : un lecteur qui met 1 avec citation exacte est compté, et l'exactitude le dit."""
++    """T2-C1 (levier:juge) doit avoir R4 = 0 : un lecteur qui met 1 avec citation exacte est compté, et l'exactitude le dit."""
+     env, _ = preparer(tmp_path)
+-    lire(env, modif=lambda L, i, p, v: ({**v, "R4": 1} if i == "T-CS" else v, ()))
++    lire(env, modif=lambda L, i, p, v: ({**v, "R4": 1} if i == "T2-C1" else v, ()))
+     r = classer(env)
+     err = r["exactitude_lecteur"]["L1"]["R4"]["erreurs"]
+-    assert err == [{"temoin": "T-CS", "attendu": 0, "lu": 1}]
++    assert err == [{"temoin": "T2-C1", "attendu": 0, "lu": 1}]
+ 
+ 
+ @pytest.mark.parametrize("cas", ["non_scellee", "absente", "alteree", "rescellee"])
+@@ -1034,7 +1048,7 @@
+     """Une réponse désscellée, effacée, altérée, ou altérée puis rescellée (empreinte autre que celle du journal) : refus."""
+     env, _ = preparer(tmp_path)
+     lire(env)
+-    p = env / "reponse-L2-lot2-v3-1.json"
++    p = env / "reponse-L2-lot2-v3-2.json"
+     if cas == "non_scellee":
+         Path(str(p) + ".sha256").unlink()
+     elif cas == "absente":
+@@ -1053,7 +1067,7 @@
+ def test_envoi_altere_refuse(tmp_path):
+     env, _ = preparer(tmp_path)
+     lire(env)
+-    p = env / "pile-interne-v3-1.json"
++    p = env / "pile-interne-v3-2.json"
+     p.write_text(p.read_text(encoding="utf-8").replace('"depense"', '"processeur"'), encoding="utf-8")
+     with pytest.raises(O.Refus):
+         classer(env)
+@@ -1068,20 +1082,20 @@
+     lire(env2)
+     r2 = classer(env2)
+     trad = lambda s: s.replace("zz-", "propa-").replace("aa-", "propb-")
+-    assert [trad(i) for i in r2["designees"]] == r1["designees"]
+-    assert [trad(i) for i in r2["classement"]["ordre_neuves"]] == r1["classement"]["ordre_neuves"]
++    assert r2["designees"] == r1["designees"] == []
++    assert [trad(i) for i in r2["rang_exploratoire"]["ordre_neuves"]] == r1["rang_exploratoire"]["ordre_neuves"]
+ 
+ 
+ def test_reseau_et_cle_confines():
+     """Le classement n'a aucun accès réseau ni à l'environnement ; l'outil n'a qu'une adresse (OpenAI, Chat Completions),
+     ne lit l'environnement qu'en deux points (la clé, par son nom, retirée aussitôt ; SSL_CERT_FILE), ne lance rien."""
+-    arbre = ast.parse((MODS / "classer_conception_propre_v3_1.py").read_text(encoding="utf-8"))
++    arbre = ast.parse((MODS / "classer_conception_propre_v3_2.py").read_text(encoding="utf-8"))
+     imports = {a.name.split(".")[0] for n in ast.walk(arbre) if isinstance(n, ast.Import) for a in n.names}
+     imports |= {n.module.split(".")[0] for n in ast.walk(arbre) if isinstance(n, ast.ImportFrom) and n.module}
+     assert not imports & {"urllib", "http", "socket", "requests", "subprocess", "os", "ssl"}
+-    texte = (MODS / "classer_conception_propre_v3_1.py").read_text(encoding="utf-8")
++    texte = (MODS / "classer_conception_propre_v3_2.py").read_text(encoding="utf-8")
+     assert "notes-par-juge" not in texte and "environ" not in texte
+-    texte = (MODS / "outil_lecteur_conception_propre_v3_1.py").read_text(encoding="utf-8")
++    texte = (MODS / "outil_lecteur_conception_propre_v3_2.py").read_text(encoding="utf-8")
+     assert "notes-par-juge" not in texte and "subprocess" not in texte and "requests" not in texte
+     urls = re.findall(r"https?://[^\s\"'`)]+", texte)
+     assert set(urls) == {"https://api.openai.com/v1/chat/completions", "https://developers.openai.com/api/docs/pricing",
+@@ -1105,8 +1119,8 @@
+     pa = ecrire_attestation(tmp_path, h)
+     env = envois_de(racine_de(tmp_path))
+     py = [sys.executable, "-I", "-B"]
+-    outil, classeur = str(MODS / "outil_lecteur_conception_propre_v3_1.py"), str(MODS / "classer_conception_propre_v3_1.py")
+-    prix = ["--effort", "medium", "--palier", "standard", "--plafond-usd", "14", "--depense-anterieure-usd", "0"]
++    outil, classeur = str(MODS / "outil_lecteur_conception_propre_v3_2.py"), str(MODS / "classer_conception_propre_v3_2.py")
++    prix = ["--effort", "medium", "--palier", "standard", "--plafond-usd", "11", "--depense-anterieure-usd", "0"]
+     c = subprocess.run(py + [outil, "preparer", "--fiches", str(pf), "--attestation", str(pa), "--sortie", str(env),
+                              "--racine", str(racine_de(tmp_path))] + prix, capture_output=True, text=True)
+     assert c.returncode == 0, c.stderr
+@@ -1115,15 +1129,16 @@
+     c = subprocess.run(py + [outil, "verifier", "--envois", str(env), "--racine", str(racine_de(tmp_path))], capture_output=True,
+                        text=True)
+     assert c.returncode == 0, c.stderr
+-    O.verifier_sceau(env / "lecture-verifiee-L1-v3-1.json")
++    O.verifier_sceau(env / "lecture-verifiee-L1-v3-2.json")
+     sortie = tmp_path / "classement"
+     c = subprocess.run(py + [classeur, "--envois", str(env), "--sortie", str(sortie), "--racine", str(racine_de(tmp_path))],
+                        capture_output=True, text=True)
+     assert c.returncode == 0, c.stderr
+-    for n in ("classement-v3-1.json", "classement-v3-1.md", "lecture-verifiee-L1-v3-1.json", "lecture-verifiee-L2-v3-1.json"):
++    for n in ("classement-v3-2.json", "classement-v3-2.md", "lecture-verifiee-L1-v3-2.json", "lecture-verifiee-L2-v3-2.json"):
+         O.verifier_sceau(sortie / n)
+-    r = json.loads((sortie / "classement-v3-1.json").read_text(encoding="utf-8"))
+-    assert r["designees"] and r["lisible"]
++    r = json.loads((sortie / "classement-v3-2.json").read_text(encoding="utf-8"))
++    assert r["designees"] == [] and r["lisible"] and r["separation"]["issue"] == "séparation réelle"
++    assert "aucune idée désignée" in (sortie / "classement-v3-2.md").read_text(encoding="utf-8")
+     c = subprocess.run(py + [classeur, "--envois", str(env), "--sortie", str(sortie), "--racine", str(racine_de(tmp_path))],
+                        capture_output=True, text=True)
+     assert c.returncode == 2 and "R12" in c.stderr
+@@ -1138,22 +1153,20 @@
+     return lambda L, k, texte: "pas de JSON : coupé" if (L, k) == (cible_L, cible_k) else texte
+ 
+ 
+-def test_M2_lot_illisible_interdit_la_designation(tmp_path):
++def test_M2_lot_illisible_rend_le_rang_non_lisible(tmp_path):
+     env, _ = preparer(tmp_path)
+     lire(env, contenu_lot=_lot_illisible("L2", 1))
+     r = classer(env)
+-    assert not r["lecture_complete"]["complete"] and r["echecs"]["E2_lecture_incomplete"] and r["echecs"]["E2"]
++    assert not r["lecture_complete"]["complete"] and r["echecs"]["E2_v2_lecture_incomplete"] and r["echecs"]["E2_v2"]
+     assert r["designees"] == [] and not r["lisible"]
+-    assert r["verdict"].startswith("E2 : lecture illisible") and "L2 lot 1 : reponse_illisible" in r["verdict"]
+-    cle = json.loads((env / "cle-lectures-v3-1.json").read_text(encoding="utf-8"))
++    assert r["verdict"].startswith("E2 v2 : lecture illisible") and "L2 lot 1 : reponse_illisible" in r["verdict"]
++    cle = json.loads((env / "cle-lectures-v3-2.json").read_text(encoding="utf-8"))
+     lot = [cle["L2"]["etiquettes"][e] for e in cle["L2"]["lots"][0]]
+-    pile = {p["id"]: p for p in json.loads((env / "pile-interne-v3-1.json").read_text(encoding="utf-8"))["fiches"]}
++    pile = {p["id"]: p for p in json.loads((env / "pile-interne-v3-2.json").read_text(encoding="utf-8"))["fiches"]}
+     assert r["lecture_complete"]["reelles_touchees"] == sorted(i for i in lot if pile[i]["origine"] == "reelle")
+     assert len(r["lecture_complete"]["reelles_touchees"]) + len(r["lecture_complete"]["temoins_touches"]) == len(lot)
+     md = K.resume_md(r)
+     assert "reponse_illisible" in md and "Lecture complète : False" in md
+-    r2 = classer_variante(env)
+-    assert r2["designees"] == []
+ 
+ 
+ def test_M2_fin_length_meme_lisible_bloque(tmp_path):
+@@ -1183,7 +1196,7 @@
+ def test_anomalie_non_bloquante_etiquette_hors_lot(tmp_path):
+     """Mutation survivante 9 de la contre-lecture : une entrée d'un autre lot est écartée, sans effet ni faux désordre."""
+     env, _ = preparer(tmp_path)
+-    cle = json.loads((env / "cle-lectures-v3-1.json").read_text(encoding="utf-8"))
++    cle = json.loads((env / "cle-lectures-v3-2.json").read_text(encoding="utf-8"))
+     etrangere = cle["L1"]["lots"][1][0]
+ 
+     def contenu(L, k, texte):
+@@ -1199,9 +1212,9 @@
+     lire(env, contenu_lot=contenu)
+     r = classer(env)
+     assert [a["genre"] for a in r["anomalies"]["L1"]] == ["etiquette_hors_lot"]
+-    assert r["lecture_complete"]["complete"] and r["lisible"] and r["designees"]
++    assert r["lecture_complete"]["complete"] and r["lisible"] and r["rang_exploratoire"]["ordre_neuves"]
+     i = cle["L1"]["etiquettes"][etrangere]
+-    pile = {p["id"]: p for p in json.loads((env / "pile-interne-v3-1.json").read_text(encoding="utf-8"))["fiches"]}
++    pile = {p["id"]: p for p in json.loads((env / "pile-interne-v3-2.json").read_text(encoding="utf-8"))["fiches"]}
+     vals = valeurs_attendues(pile[i])
+     lv = O.verifier_lecture(env, "L1", O.lire_piece(RACINE, "catalogue")[0])
+     assert all(lv["fiches"][i][c]["compte"] == vals[c] for c in O.CRITERES)  # la fausse entrée n'a rien changé
+@@ -1318,16 +1331,16 @@
+ def test_E5_au_seuil_exact(tmp_path):
+     occ = {id_de(n) for n in ("A2", "A3", "A7")}
+     env, _ = preparer(tmp_path)
+-    lire(env, modif=lambda L, i, p, v: ({**v, "N": "C10"} if i in occ else ({**v, "R7": 0} if i == id_de("A8")
++    lire(env, modif=lambda L, i, p, v: ({**v, "N": "C10"} if i in occ else ({**v, "R2": 0} if i in (id_de("A8"), id_de("A4"))
+                                                                                else v), ()))
+     r = classer(env)
+-    st = r["classement"]["statut"]
++    st = r["rang_exploratoire"]["statut"]
+     passees = [i for i in st if st[i]["statut"] in ("neuve", "occupee")]
+     assert len(passees) == 5 and sum(st[i]["statut"] == "occupee" for i in passees) == 4
+     assert r["echecs"]["E5"] is False  # 4/5 = 80 % : pas « plus de 80 % »
+     env2, _ = preparer(tmp_path / "b")
+     lire(env2, modif=lambda L, i, p, v: ({**v, "N": "C10"} if (i in occ or i == id_de("A1"))
+-                                         else ({**v, "R7": 0} if i == id_de("A8") else v), ()))
++                                         else ({**v, "R2": 0} if i in (id_de("A8"), id_de("A4")) else v), ()))
+     assert classer(env2)["echecs"]["E5"] is True
+ 
+ 
+@@ -1342,7 +1355,7 @@
+ def test_audit_declenche_par_un_seul_signe(tmp_path):
+     env, _ = preparer(tmp_path)
+     lire(env, modif=lambda L, i, p, v: ({**v, "R7": 1} if p["famille"] == "hasard" else
+-                                        ({**v, "N": "aucune"} if i == "T-FA" else v), ()))
++                                        ({**v, "N": "aucune"} if i == "T2-C2" else v), ()))
+     r = classer(env)
+     a = r["audit_proprete"]
+     signes = [a[k] for k in ("lisibilite_parfaite", "kappa_1", "toutes_publiees_reconnues",
+@@ -1362,86 +1375,14 @@
+ 
+ def test_L2_detail_porte_la_valeur_brute(tmp_path):
+     env, _ = preparer(tmp_path)
+-    lire(env, modif=lambda L, i, p, v: ({**v, "R3": 1}, ("R3",)) if i == "T-F53" else (v, ()))
++    lire(env, modif=lambda L, i, p, v: ({**v, "R3": 1}, ("R3",)) if i == "T2-F3" else (v, ()))
+     r = classer(env)
+-    d = r["L2"]["par_temoin"]["T-F53"]
++    d = r["L2"]["par_temoin"]["T2-F3"]
+     assert d["L1"] == 0 and d["L2"] == 0 and d["brut"] == {"L1": 1, "L2": 1} and r["L2"]["tient"]
+ 
+ 
+ # --- de la v2 : variante « désignation détachée de L5 », préparée, non active ----------------------------------------------------
+ 
+-def classer_variante(env, decision="R-9999"):
+-    return K.classement(env, O.racine_du_dossier(env), designation="detachee-v1", decision=decision)[0]
+-
+-
+-def test_variante_refusee_sans_mot(tmp_path):
+-    env, _ = preparer(tmp_path)
+-    lire(env)
+-    for dec in (None, "", "oui", "R-", "R-12 et plus"):
+-        with pytest.raises(O.Refus):
+-            classer_variante(env, dec)
+-    with pytest.raises(O.Refus):
+-        K.classement(env, O.racine_du_dossier(env), designation="autre")
+-
+-
+-def test_variante_cas_sain_separation_demontree(tmp_path):
+-    env, _ = preparer(tmp_path)
+-    lire(env)
+-    r0, r = classer(env), classer_variante(env)
+-    assert r["designees"] == r0["designees"] and len(r["designees"]) == 2
+-    assert r["variante_detachee"]["mention"].startswith("séparation démontrée") and r["regle_de_designation"] == "detachee-v1"
+-    assert r["variante_detachee"]["decision"] == "R-9999" and r["variante_detachee"]["max_C_hasard"] == 0
+-
+-
+-def test_variante_sans_L5_separation_non_demontree(tmp_path):
+-    env, _ = preparer(tmp_path)
+-    a2, a7, a1 = id_de("A2"), id_de("A7"), id_de("A1")
+-
+-    def m(L, i, p, v):
+-        if L == "L2" and i == a2:
+-            v["R7"] = 0
+-        if L == "L2" and i == a7:
+-            v["N"] = "C4"
+-        if L == "L1" and i == a1:
+-            v["R5"] = 0
+-        return v, ()
+-    lire(env, modif=m)
+-    r0, r = classer(env), classer_variante(env)
+-    assert r0["designees"] == [] and not r0["L5"]["rejet"]
+-    assert r["designees"] == r0["classement"]["deux_premieres"] and len(r["designees"]) == 2
+-    assert "non démontrée" in r["verdict"] and r["echecs"]["E3"] and not r["echecs"]["E4"]
+-
+-
+-def test_variante_une_neuve_E4_atteignable(tmp_path):
+-    env, _ = preparer(tmp_path)
+-    garde = id_de("A1")
+-    lire(env, modif=lambda L, i, p, v: ({**v, "N": "C10"} if (p["origine"] == "reelle" and i != garde) else v, ()))
+-    r = classer_variante(env)
+-    assert r["designees"] == [garde] and r["echecs"]["E4"] and "E4" in r["verdict"]
+-
+-
+-def test_variante_hasard_aussi_haut_aucune_designee(tmp_path):
+-    env, _ = preparer(tmp_path)
+-    lire(env, modif=lambda L, i, p, v: ({**v, "R7": 1} if p["famille"] == "hasard" else v, ()))
+-    r = classer_variante(env)
+-    assert r["variante_detachee"]["max_C_hasard"] == 5 and r["designees"] == []  # 5 n'est pas > 5
+-
+-
+-def test_variante_en_ligne_de_commande_exige_le_mot(tmp_path):
+-    env, _ = preparer(tmp_path)
+-    lire(env)
+-    py = [sys.executable, "-I", "-B", str(MODS / "classer_conception_propre_v3_1.py"), "--envois", str(env),
+-          "--racine", str(O.racine_du_dossier(env))]
+-    c = subprocess.run(py + ["--sortie", str(tmp_path / "s1"), "--designation", "detachee-v1"], capture_output=True,
+-                       text=True)
+-    assert c.returncode == 2 and "Lazar" in c.stderr and not (tmp_path / "s1").exists()
+-    c = subprocess.run(py + ["--sortie", str(tmp_path / "s2"), "--designation", "detachee-v1", "--decision", "R-9999"],
+-                       capture_output=True, text=True)
+-    assert c.returncode == 0, c.stderr
+-    md = (tmp_path / "s2" / "classement-v3-1.md").read_text(encoding="utf-8")
+-    assert "detachee-v1 (décision R-9999)" in md
+-
+-
+ # === envoi par la doublure déclarée (essais de la v3, adaptés) ===========================================================
+ 
+ def test_envoyer_sain_tout_envoye_puis_classe(tmp_path, monkeypatch, capsys):
+@@ -1454,7 +1395,7 @@
+     for nom, rendu in zip(man["reponses_attendues"], d.rendus):
+         O.verifier_sceau(env / nom)
+         assert (env / nom).read_bytes() == rendu  # M3 : écrite brute, octet pour octet
+-    O.verifier_sceau(env / "releve-depense-v3-1-1.json")
++    O.verifier_sceau(env / "releve-depense-v3-2-1.json")
+     j = O.lire_journal(env)
+     assert j["lignes"] == 36 and len(j["recus"]) == 12 and not j["anomalies"] and not j["en_vol"] and j["arret"] is None
+     assert "OPENAI_API_KEY" not in os.environ  # retirée après lecture
+@@ -1462,8 +1403,8 @@
+     sortie = capsys.readouterr()
+     assert CLE_FACTICE not in sortie.out + sortie.err
+     res = classer(env)
+-    assert res["lisible"] and res["designees"] == [id_de("A1"), sorted([id_de("A2"), id_de("A7")],
+-                                                                       key=res["classement"]["departage"].get)[0]]
++    assert res["lisible"] and res["designees"] == [] and res["rang_exploratoire"]["deux_premieres"] == [
++        id_de("A1"), sorted([id_de("A2"), id_de("A7")], key=res["rang_exploratoire"]["departage"].get)[0]]
+     b = O.bilan(env)
+     assert b["appels"] == 12 and b["clos"] == 12 and b["pret_pour_verifier"] and b["palier"] == "standard"
+     r2, d2 = envoyer(env, monkeypatch)  # rien à faire : aucun appel
+@@ -1481,14 +1422,14 @@
+     assert not res["lecture_complete"]["complete"] and res["designees"] == []
+     genres = {a["genre"] for L in ("L1", "L2") for a in res["lecture_complete"]["anomalies"][L]}
+     assert genres == {"fin_non_stop", "reponse_illisible", "reponse_absente", "anomalie_d_envoi"}
+-    assert res["verdict"].startswith("E2 : lecture illisible")
++    assert res["verdict"].startswith("E2 v2 : lecture illisible")
+ 
+ 
+ def test_garde_modele_servi_different(tmp_path, monkeypatch):
+     env, _ = preparer(tmp_path)
+     r, d = envoyer(env, monkeypatch, scenarios={1: "modele"})
+     assert r["issue"] == "anomalie" and "modele_servi_different" in r["detail"] and len(d.appels) == 1
+-    ev = O.lire_journal(env)["clos"]["envoi-L1-lot1-v3-1.corps.json"]
++    ev = O.lire_journal(env)["clos"]["envoi-L1-lot1-v3-2.corps.json"]
+     assert ev["modele_servi"] == "gpt-6-astra-2026-11-01" and not ev["au_pire_cas"]  # dépense réelle comptée
+     res = classer(env)
+     assert any(a["genre"] == "modele_servi_different" for a in res["lecture_complete"]["anomalies"]["L1"])
+@@ -1566,8 +1507,8 @@
+     env, man = preparer(tmp_path)
+     r, d = envoyer(env, monkeypatch, scenarios={1: "429"})
+     assert r["issue"] == "anomalie" and "statut_non_200" in r["detail"]
+-    err = json.loads((env / "erreur-L1-lot1-v3-1.json").read_text(encoding="utf-8"))
+-    O.verifier_sceau(env / "erreur-L1-lot1-v3-1.json")
++    err = json.loads((env / "erreur-L1-lot1-v3-2.json").read_text(encoding="utf-8"))
++    O.verifier_sceau(env / "erreur-L1-lot1-v3-2.json")
+     assert err["statut"] == 429 and err["erreur"] == {"type": "insufficient_quota", "code": "insufficient_quota"}
+     assert b"org-SECRETORG42" not in tous_les_octets(tmp_path) and b"MESSAGE-ERREUR-AMONT" not in tous_les_octets(env)
+     assert abs(r["depense_comptee_usd"] - man["garde_depense"]["envois"][0]["pire_cas_usd"]) < 1e-9
+@@ -1577,7 +1518,7 @@
+     """C3 du contre-lecteur : un type ou un code d'erreur qui porte un identifiant n'est jamais écrit."""
+     env, _ = preparer(tmp_path)
+     r, d = envoyer(env, monkeypatch, scenarios={1: "429_identifiant"})
+-    err = json.loads((env / "erreur-L1-lot1-v3-1.json").read_text(encoding="utf-8"))
++    err = json.loads((env / "erreur-L1-lot1-v3-2.json").read_text(encoding="utf-8"))
+     assert err["erreur"] == {"type": None, "code": None} and b"SECRETORG42" not in tous_les_octets(tmp_path)
+     assert O.champ_court("insufficient_quota") == "insufficient_quota"
+     for faux in ("org-SECRETORG42", "Quota", "rate limit", "x" * 65, "", None, 3, ["a"]):
+@@ -1596,10 +1537,10 @@
+     second = g[1]["pire_cas_usd"] if scenario != "refus" else cout_sain(g[1]["octets"])
+     assert abs(r["depense_comptee_usd"] - (cout_sain(g[0]["octets"]) + second)) < 1e-5
+     if scenario == "panne":
+-        err = json.loads((env / "erreur-L1-lot2-v3-1.json").read_text(encoding="utf-8"))
++        err = json.loads((env / "erreur-L1-lot2-v3-2.json").read_text(encoding="utf-8"))
+         assert err["cause_transport"] == "TimeoutError" and err["anomalies"] == ["transport_echec"]
+     if scenario == "illisible":  # M3 : la page rendue au statut 200 est gardée brute, puis jugée illisible
+-        assert (env / "reponse-L1-lot2-v3-1.json").read_bytes() == b"<html>passerelle</html>"
++        assert (env / "reponse-L1-lot2-v3-2.json").read_bytes() == b"<html>passerelle</html>"
+     if scenario == "refus":
+         assert "refus_du_lecteur" in classer(env)["verdict"]
+ 
+@@ -1665,14 +1606,14 @@
+     assert r["issue"] == "pause" and len(d.appels) == 2 and "OPENAI_API_KEY" not in os.environ
+     r2, d2 = envoyer(env, monkeypatch)
+     assert r2["issue"] == "fait" and len(d2.appels) == 10 and not set(d.appels) & set(d2.appels)
+-    assert r2["appels"] == 12 and (env / "releve-depense-v3-1-2.json").exists()
++    assert r2["appels"] == 12 and (env / "releve-depense-v3-2-2.json").exists()
+     assert abs(r2["depense_comptee_usd"] - sum(cout_sain(g["octets"]) for g in man["garde_depense"]["envois"])) < 1e-5
+ 
+ 
+ def test_journal_tronque_ou_reecrit_refuse(tmp_path, monkeypatch):
+     env, _ = preparer(tmp_path)
+     envoyer(env, monkeypatch, envois_max=3)
+-    p = env / "journal-depense-v3-1.jsonl"
++    p = env / "journal-depense-v3-2.jsonl"
+     lignes = p.read_bytes().splitlines(keepends=True)
+     p.write_bytes(b"".join(lignes[:-2]))  # réception et clôture du 3e appel effacées : sa réponse n'est plus au journal
+     with pytest.raises(O.Refus, match="sans clôture conforme"):
+@@ -1711,12 +1652,12 @@
+         d = Doublure(env)
+         with pytest.raises(O.Refus, match="OPENAI_API_KEY absente ou vide"):
+             O.envoyer(env, transport=d)
+-        assert d.appels == [] and not (env / "journal-depense-v3-1.jsonl").exists()
++        assert d.appels == [] and not (env / "journal-depense-v3-2.jsonl").exists()
+     sans = {k: v for k, v in os.environ.items() if k in ("PATH", "LANG", "HOME")}
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_1.py"), "envoyer",
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2.py"), "envoyer",
+                         "--envois", str(env)], capture_output=True, text=True, env=sans)
+-    assert c.returncode == 2 and "absente" in c.stderr and not (env / "journal-depense-v3-1.jsonl").exists()
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_1.py"), "bilan",
++    assert c.returncode == 2 and "absente" in c.stderr and not (env / "journal-depense-v3-2.jsonl").exists()
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2.py"), "bilan",
+                         "--envois", str(env)], capture_output=True, text=True, env=sans)
+     assert c.returncode == 0 and json.loads(c.stdout)["appels"] == 0
+ 
+@@ -1740,8 +1681,8 @@
+ 
+ def test_envois_d_une_autre_version_refuses(tmp_path, monkeypatch):
+     env, _ = preparer(tmp_path)
+-    p = env / "manifeste-envois-v3-1.json"
+-    resceller(p, p.read_text(encoding="utf-8").replace('"outil-lecteur-conception-propre-v3-1"',
++    p = env / "manifeste-relecture-v3-2.json"
++    resceller(p, p.read_text(encoding="utf-8").replace('"outil-lecteur-conception-propre-v3-2"',
+                                                        '"outil-lecteur-conception-propre-v3"'))
+     with pytest.raises(O.Refus, match="préparés par"):
+         envoyer(env, monkeypatch)
+@@ -1751,14 +1692,14 @@
+     """Une réponse déposée sans clôture au journal arrête `envoyer` avant tout appel ; sans elle, l'envoi repart."""
+     env, _ = preparer(tmp_path)
+     envoyer(env, monkeypatch, envois_max=2)
+-    O.ecrire_scelle(env / "reponse-L1-lot3-v3-1.json", json.dumps({"object": "chat.completion"}))
++    O.ecrire_scelle(env / "reponse-L1-lot3-v3-2.json", json.dumps({"object": "chat.completion"}))
+     monkeypatch.setenv("OPENAI_API_KEY", CLE_FACTICE)
+     d = Doublure(env)
+     with pytest.raises(O.Refus, match="sans clôture conforme"):
+         O.envoyer(env, transport=d)
+     assert d.appels == []
+-    (env / "reponse-L1-lot3-v3-1.json").unlink()
+-    Path(str(env / "reponse-L1-lot3-v3-1.json") + ".sha256").unlink()
++    (env / "reponse-L1-lot3-v3-2.json").unlink()
++    Path(str(env / "reponse-L1-lot3-v3-2.json") + ".sha256").unlink()
+     r, d = envoyer(env, monkeypatch, envois_max=1)
+     assert r["issue"] == "pause" and len(d.appels) == 1
+ 
+@@ -1789,8 +1730,8 @@
+ 
+ def test_C1_R4_manquant_hors_levier_juge_bloque_aussi(tmp_path):
+     env, _ = preparer(tmp_path)
+-    cle = json.loads((env / "cle-lectures-v3-1.json").read_text(encoding="utf-8"))
+-    pile = {p["id"]: p for p in json.loads((env / "pile-interne-v3-1.json").read_text(encoding="utf-8"))["fiches"]}
++    cle = json.loads((env / "cle-lectures-v3-2.json").read_text(encoding="utf-8"))
++    pile = {p["id"]: p for p in json.loads((env / "pile-interne-v3-2.json").read_text(encoding="utf-8"))["fiches"]}
+     rang = next(r for r, et in enumerate(cle["L1"]["lots"][0]) if pile[cle["L1"]["etiquettes"][et]]["levier"] != "levier:juge")
+     lire(env, contenu_lot=_oter_cle("L1", 1, "R4", rang))
+     res = classer(env)
+@@ -1839,7 +1780,7 @@
+     with pytest.raises(O.Refus) as ex:
+         O.envoyer(env)
+     assert cle not in str(ex.value) and "ASCII imprimable" in str(ex.value)
+-    assert not vus and not (env / "journal-depense-v3-1.jsonl").exists()
++    assert not vus and not (env / "journal-depense-v3-2.jsonl").exists()
+     assert not O.contient_cle(tous_les_octets(tmp_path), cle)
+     sortie = capsys.readouterr()
+     assert cle not in sortie.out + sortie.err
+@@ -1849,10 +1790,10 @@
+     env, _ = preparer(tmp_path)
+     cle = "sk-sonde-factice-CLE-A-NE-PAS-ECRIRE-9876543210"
+     sans = {k: v for k, v in os.environ.items() if k in ("PATH", "LANG", "HOME")}
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_1.py"), "envoyer",
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2.py"), "envoyer",
+                         "--envois", str(env)], capture_output=True, text=True, env={**sans, "OPENAI_API_KEY": cle + "\r"})
+     assert c.returncode == 2 and cle not in c.stdout + c.stderr and "ASCII" in c.stderr
+-    assert not (env / "journal-depense-v3-1.jsonl").exists() and not O.contient_cle(tous_les_octets(tmp_path), cle)
++    assert not (env / "journal-depense-v3-2.jsonl").exists() and not O.contient_cle(tous_les_octets(tmp_path), cle)
+ 
+ 
+ @pytest.mark.parametrize("scenario,cause", [("panne", "TimeoutError"), ("panne_echappee", "ValueError")])
+@@ -1861,7 +1802,7 @@
+     env, _ = preparer(tmp_path)
+     cle = 'sk-essai/"guillemet"\\barre-0123456789'
+     r, d = envoyer(env, monkeypatch, scenarios={1: scenario}, cle=cle)
+-    err = json.loads((env / "erreur-L1-lot1-v3-1.json").read_text(encoding="utf-8"))
++    err = json.loads((env / "erreur-L1-lot1-v3-2.json").read_text(encoding="utf-8"))
+     assert err["cause_transport"] == cause and r["issue"] == "anomalie"
+     assert not O.contient_cle(tous_les_octets(tmp_path), cle)
+ 
+@@ -1872,11 +1813,11 @@
+     r, d = envoyer(env, monkeypatch, scenarios={1: "echo_cle"}, cle=cle)
+     assert r["issue"] == "anomalie" and "cle_dans_la_reponse" in r["detail"]
+     assert O.contient_cle(d.rendus[0], cle)  # l'amont l'a bien renvoyée, sous trois formes
+-    assert not O.contient_cle(tous_les_octets(tmp_path), cle) and b"[cle]" in (env / "reponse-L1-lot1-v3-1.json").read_bytes()
++    assert not O.contient_cle(tous_les_octets(tmp_path), cle) and b"[cle]" in (env / "reponse-L1-lot1-v3-2.json").read_bytes()
+     j = O.lire_journal(env)
+-    rec = j["recus"]["envoi-L1-lot1-v3-1.corps.json"]
++    rec = j["recus"]["envoi-L1-lot1-v3-2.corps.json"]
+     assert rec["cle_expurgee"] is True and rec["brut_sha256"] == hashlib.sha256(d.rendus[0]).hexdigest()
+-    assert j["clos"]["envoi-L1-lot1-v3-1.corps.json"]["modele_servi"] == "[cle]"  # champ rendu par l'amont, expurgé
++    assert j["clos"]["envoi-L1-lot1-v3-2.corps.json"]["modele_servi"] == "[cle]"  # champ rendu par l'amont, expurgé
+     assert "anomalie_d_envoi" in classer(env)["verdict"]
+ 
+ 
+@@ -1914,8 +1855,8 @@
+     r = O.envoyer(env, envois_max=1)  # transport réel
+     assert r["issue"] == "pause" and r["appels"] == 1
+     assert recus == [{"methode": "POST", "chemin": "/v1/chat/completions", "autorisation": "Bearer " + CLE_FACTICE,
+-                      "corps_sha256": man["fichiers"]["envoi-L1-lot1-v3-1.corps.json"]}]
+-    assert O.lire_journal(env)["anomalies"] == [] and (env / "reponse-L1-lot1-v3-1.json").exists()
++                      "corps_sha256": man["fichiers"]["envoi-L1-lot1-v3-2.corps.json"]}]
++    assert O.lire_journal(env)["anomalies"] == [] and (env / "reponse-L1-lot1-v3-2.json").exists()
+     assert not O.contient_cle(tous_les_octets(tmp_path), CLE_FACTICE)
+ 
+ 
+@@ -1959,7 +1900,7 @@
+     monkeypatch.setenv("OPENAI_API_KEY", CLE_FACTICE)
+     r = O.envoyer(env)
+     assert r["issue"] == "anomalie" and "redirection_refusee" in r["detail"] and r["appels"] == 1 and recus == []
+-    err = json.loads((env / "erreur-L1-lot1-v3-1.json").read_text(encoding="utf-8"))
++    err = json.loads((env / "erreur-L1-lot1-v3-2.json").read_text(encoding="utf-8"))
+     assert err["statut"] == 302 and "redirection_refusee" in err["anomalies"]
+     assert abs(r["depense_comptee_usd"] - man["garde_depense"]["envois"][0]["pire_cas_usd"]) < 1e-9
+     monkeypatch.setenv("OPENAI_API_KEY", CLE_FACTICE)
+@@ -2019,8 +1960,8 @@
+         envoyer(env, monkeypatch)
+     monkeypatch.undo()
+     j = O.lire_journal(env)
+-    nom_c = "envoi-L1-lot1-v3-1.corps.json"
+-    assert j["en_vol"] == [nom_c] and nom_c in j["recus"] and (env / "reponse-L1-lot1-v3-1.json").exists()
++    nom_c = "envoi-L1-lot1-v3-2.corps.json"
++    assert j["en_vol"] == [nom_c] and nom_c in j["recus"] and (env / "reponse-L1-lot1-v3-2.json").exists()
+     assert abs(j["depense_usd"] - man["garde_depense"]["envois"][0]["pire_cas_usd"]) < 1e-9
+     lv = O.verifier_lecture(env, "L1", O.lire_piece(RACINE, "catalogue")[0])
+     assert any(a["genre"] == "reponse_non_analysee" for a in lv["anomalies_bloquantes"])
+@@ -2044,7 +1985,7 @@
+         opreparer(pf, pa, env, rac)
+     with pytest.raises(O.Refus, match="seul"):
+         opreparer(pf, pa, rac / "docs" / "notes" / "envois-bis", rac)
+-    copie = rac / "docs" / "notes" / "organisme-conception-propre-v1" / "lecture-g1-v3-1-bis" / "envois"
++    copie = rac / "docs" / "notes" / "organisme-conception-propre-v1" / "lecture-g1-v3-2-bis" / "envois"
+     shutil.copytree(env, copie)
+     with pytest.raises(O.Refus, match="seul"):
+         envoyer(copie, monkeypatch)
+@@ -2053,7 +1994,7 @@
+     shutil.rmtree(copie.parent)
+     ailleurs = rac / "runs" / "autre"
+     ailleurs.mkdir(parents=True)
+-    shutil.copyfile(env / "manifeste-envois-v3-1.json", ailleurs / "manifeste-envois-v3.json")
++    shutil.copyfile(env / "manifeste-relecture-v3-2.json", ailleurs / "manifeste-envois-v3.json")
+     with pytest.raises(O.Refus, match="C6"):
+         envoyer(env, monkeypatch)
+     rac2 = racine_de(tmp_path / "autre")  # une racine neuve où traîne un manifeste v3 : préparation refusée
+@@ -2067,10 +2008,10 @@
+ 
+ 
+ def test_C6_depense_anterieure_bornee(tmp_path):
+-    _, man = preparer(tmp_path / "a", plafond_usd=13.0, depense_anterieure_usd=1.2)
+-    assert man["garde_depense"]["plafond_disponible_usd"] == 13.0 and man["garde_depense"]["depense_anterieure_usd"] == 1.2
++    _, man = preparer(tmp_path / "a", plafond_usd=10.45, depense_anterieure_usd=1.2)
++    assert man["garde_depense"]["plafond_disponible_usd"] == 10.45 and man["garde_depense"]["depense_anterieure_usd"] == 1.2
+     with pytest.raises(O.Refus, match="antérieure"):
+-        preparer(tmp_path / "b", plafond_usd=13.01, depense_anterieure_usd=1.2)
++        preparer(tmp_path / "b", plafond_usd=10.46, depense_anterieure_usd=1.2)
+ 
+ 
+ # === v3.1 : M3, réponse payée gardée, analyse qui ne lève pas ============================================================
+@@ -2083,8 +2024,8 @@
+     env, man = preparer(tmp_path)
+     r, d = envoyer(env, monkeypatch, scenarios={1: scenario})
+     assert r["issue"] == "anomalie" and genre in r["detail"]
+-    assert (env / "reponse-L1-lot1-v3-1.json").read_bytes() == d.rendus[0]
+-    lignes = [json.loads(x) for x in (env / "journal-depense-v3-1.jsonl").read_text(encoding="utf-8").splitlines()]
++    assert (env / "reponse-L1-lot1-v3-2.json").read_bytes() == d.rendus[0]
++    lignes = [json.loads(x) for x in (env / "journal-depense-v3-2.jsonl").read_text(encoding="utf-8").splitlines()]
+     assert [x["evenement"] for x in lignes] == ["envoi", "recu", "clos"]
+     assert lignes[1]["brut_sha256"] == hashlib.sha256(d.rendus[0]).hexdigest() == lignes[1]["fichier_sha256"]
+ 
+@@ -2094,7 +2035,7 @@
+     """Sonde s6 du contre-lecteur, en essai : un corps d'erreur de forme inattendue laisse un fichier d'erreur."""
+     env, _ = preparer(tmp_path)
+     r, d = envoyer(env, monkeypatch, scenarios={1: scenario})
+-    err = json.loads((env / "erreur-L1-lot1-v3-1.json").read_text(encoding="utf-8"))
++    err = json.loads((env / "erreur-L1-lot1-v3-2.json").read_text(encoding="utf-8"))
+     assert r["issue"] == "anomalie" and err["statut"] == 502 and err["erreur"] == {"type": None, "code": None}
+     assert O.lire_journal(env)["en_vol"] == []
+ 
+@@ -2107,7 +2048,7 @@
+     monkeypatch.setattr(O, "analyser_reponse", tombe)
+     r, d = envoyer(env, monkeypatch)
+     assert r["issue"] == "anomalie" and "analyse_en_echec" in r["detail"]
+-    assert (env / "reponse-L1-lot1-v3-1.json").read_bytes() == d.rendus[0]
++    assert (env / "reponse-L1-lot1-v3-2.json").read_bytes() == d.rendus[0]
+     assert abs(r["depense_comptee_usd"] - man["garde_depense"]["envois"][0]["pire_cas_usd"]) < 1e-9
+ 
+ 
+@@ -2115,7 +2056,7 @@
+     env, man = preparer(tmp_path)
+     r, d = envoyer(env, monkeypatch, scenarios={1: "trop_grand"})
+     assert r["issue"] == "anomalie" and "reponse_trop_grande" in r["detail"]
+-    assert not (env / "reponse-L1-lot1-v3-1.json").exists() and (env / "erreur-L1-lot1-v3-1.json").exists()
++    assert not (env / "reponse-L1-lot1-v3-2.json").exists() and (env / "erreur-L1-lot1-v3-2.json").exists()
+ 
+ 
+ # === v3.1 : M5, un artefact par garde (mutants survivants du contre-lecteur) =============================================
+@@ -2151,7 +2092,7 @@
+ 
+ 
+ def _manifeste_rescelle(env, change):
+-    p = env / "manifeste-envois-v3-1.json"
++    p = env / "manifeste-relecture-v3-2.json"
+     m = json.loads(p.read_text(encoding="utf-8"))
+     change(m)
+     resceller(p, json.dumps(m, ensure_ascii=False, indent=1) + "\n")
+@@ -2208,7 +2149,7 @@
+     d = Doublure(env)
+     with pytest.raises(O.Refus):
+         O.envoyer(env, transport=d)
+-    assert d.appels == [] and not (env / "journal-depense-v3-1.jsonl").exists()
++    assert d.appels == [] and not (env / "journal-depense-v3-2.jsonl").exists()
+     assert os.environ.get("OPENAI_API_KEY") == CLE_FACTICE  # refus avant la lecture de la clé
+ 
+ 
+@@ -2228,7 +2169,7 @@
+     for cas in ("ouvert", "clos"):
+         env, _ = preparer(tmp_path / cas)
+         j = O.lire_journal(env)
+-        nom = "envoi-L1-lot1-v3-1.corps.json"
++        nom = "envoi-L1-lot1-v3-2.corps.json"
+         O.ajouter_journal(env, j, {"evenement": "envoi", "envoi": nom, "octets": 1, "pire_cas_usd": 1.0})
+         if cas == "clos":
+             O.ajouter_journal(env, j, {"evenement": "clos", "envoi": nom, "cout_usd": 0.5, "anomalies": []})
+@@ -2243,7 +2184,7 @@
+                {"evenement": "envoi", "envoi": "x", "pire_cas_usd": float("inf")},
+                {"evenement": "recu", "envoi": "x"}, {"evenement": "clos", "envoi": "y", "cout_usd": 0, "anomalies": []},
+                {"evenement": "autre"}):
+-        p = env / "journal-depense-v3-1.jsonl"
++        p = env / "journal-depense-v3-2.jsonl"
+         if p.exists():
+             p.unlink()
+         j = O.lire_journal(env)
+@@ -2291,7 +2232,7 @@
+     assert O.LIGNES_SOURCE_PRIX["standard"] in texte and O.LIGNES_SOURCE_PRIX["flex"] in texte
+     assert O.PRIX_LUS == {"standard": {"entree": 10.0, "cache": 1.0, "sortie": 50.0},
+                           "flex": {"entree": 5.0, "cache": 0.5, "sortie": 25.0}}
+-    assert O.PLAFOND_ABSOLU_USD == 14.20
++    assert O.PLAFOND_ABSOLU_USD == 11.65
+ 
+ 
+ # === v3.1 : bilan (conditions C3 et C5) et règle inchangée ================================================================
+@@ -2322,20 +2263,35 @@
+     return d
+ 
+ 
+-def test_regle_inchangee_v3_v3_1():
+-    """Condition C1 du contre-lecteur : les objets de la règle (sa liste du § 1) sont identiques à ceux de la v3."""
+-    a, b = _objets(V3 / "outil_lecteur_conception_propre_v3.py"), _objets(MODS / "outil_lecteur_conception_propre_v3_1.py")
++def test_regle_de_lecture_inchangee_v3_1_v3_2():
++    """La règle de lecture (vue, pile, ordres, lots, message, vérification, garde, transport) est identique à la v3.1 ;
++    seuls changent les objets que la v3.2 déclare ; au classement, seuls changent ceux de la règle v2."""
++    a, b = _objets(V3_1 / "outil_lecteur_conception_propre_v3_1.py"), _objets(MODS / "outil_lecteur_conception_propre_v3_2.py")
++    changes = {"VERSION", "RACINE_DEFAUT", "PIECES", "PLAFOND_ABSOLU_USD", "SUFFIXE", "MANIFESTE", "DOSSIER_ENVOIS_REL",
++               "verifier_unicite", "JOURNAL", "PILE", "CLE_LECTURES"}
++    neufs = {"LIGNE_GO_USD", "DEPENSE_AVANT_PREMIERE_LECTURE_USD", "DEPENSE_PREMIERE_LECTURE_USD", "PREMIERE_LECTURE",
++             "MOTIFS_MANIFESTES", "verifier_premiere_lecture"}
++    assert set(b) - set(a) == neufs and set(a) - set(b) == set()
++    differents = {n for n in a if a[n] != b[n]}
++    assert differents <= changes, differents - changes
+     for nom in ("vue_lecteur", "admissibilite", "construire_pile", "enfants_ordres", "ordres_lectures", "decouper_lots",
+                 "etiquette", "texte_message", "passage_dans", "verifier_entree", "entrees_catalogue", "extraire_json",
+-                "verifier_attestation", "verifier_fiches_de_run", "ORDRE_VUE", "TABLE_TYPO", "PIECES", "ENTROPIE_ORDRES",
++                "verifier_attestation", "verifier_fiches_de_run", "ORDRE_VUE", "TABLE_TYPO", "ENTROPIE_ORDRES",
+                 "verifier_lot", "cles_manquantes", "TAILLE_LOT", "MODELE_LECTEUR", "MAX_APPELS", "MAX_SORTIE", "EFFORTS",
+-                "URL_AMONT", "PLAFOND_ABSOLU_USD", "LONGUEUR_MIN_PASSAGE", "CELLULE_MECANISME"):
++                "URL_AMONT", "LONGUEUR_MIN_PASSAGE", "CELLULE_MECANISME", "preparer", "envoyer", "bilan", "lire_reponse",
++                "verifier_lecture", "charger_envois", "valider_manifeste", "analyser_reponse", "cout_usage", "lire_cle",
++                "transport_reel", "expurger", "lire_journal", "ajouter_journal", "controler_coherence", "PRIX_LUS",
++                "PALIERS_SERVIS_ADMIS", "ANOMALIES_BLOQUANTES", "main"):
+         assert a[nom] == b[nom], nom
+-    a, b = _objets(V3 / "classer_conception_propre_v3.py"), _objets(MODS / "classer_conception_propre_v3_1.py")
+-    for nom in ("classer", "retenir", "portes_manquantes", "score_S", "score_C", "rangs_departage", "temoin_permute",
+-                "test_permutation", "holm", "kappa_accord", "designer_detachee", "ENTROPIE_TEST", "PERMUTATIONS",
+-                "SEUIL_P", "PORTES", "L1_MIN_PUBLIEES", "E5_PART", "COUT_RANG", "DESIGNATIONS"):
++    a, b = _objets(V3_1 / "classer_conception_propre_v3_1.py"), _objets(MODS / "classer_conception_propre_v3_2.py")
++    for nom in ("retenir", "classer", "rangs_departage", "temoin_permute", "kappa_accord", "test_permutation", "holm",
++                "ENTROPIE_TEST", "PERMUTATIONS", "SEUIL_P", "TAILLE_TRANCHE", "COUT_RANG", "L1_MIN_PUBLIEES",
++                "E5_PART", "score_C"):
+         assert a[nom] == b[nom], nom
++    assert (K.L4_KAPPA_MIN, K.L4_ACCORD_MIN) == (0.4, 0.8)
++    for nom in ("PORTES", "score_S", "classement", "resume_md", "main"):
++        assert a[nom] != b[nom], nom
++    assert "designer_detachee" not in b and "DESIGNATIONS" not in b
+ 
+ 
+ def test_M1_erreur_nommee_au_journal_effacee(tmp_path, monkeypatch):
+@@ -2343,7 +2299,7 @@
+     au lieu d'un verdict E2 qui tairait l'effacement."""
+     env, _ = preparer(tmp_path)
+     envoyer(env, monkeypatch, scenarios={2: "429"})
+-    p = env / "erreur-L1-lot2-v3-1.json"
++    p = env / "erreur-L1-lot2-v3-2.json"
+     p.unlink()
+     Path(str(p) + ".sha256").unlink()
+     with pytest.raises(O.Refus, match="nommé au journal"):
+@@ -2365,7 +2321,7 @@
+     lire(env)
+     with pytest.raises(O.Refus, match="racine différente"):
+         K.classement(env, racine_de(tmp_path / "b"))
+-    py = [sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_1.py"), "verifier", "--envois",
++    py = [sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2.py"), "verifier", "--envois",
+           str(env), "--racine", str(racine_de(tmp_path / "b"))]
+     c = subprocess.run(py, capture_output=True, text=True)
+     assert c.returncode == 2 and "racine" in c.stderr
+@@ -2376,7 +2332,7 @@
+ def test_lire_reponse_refuse_une_reponse_non_scellee(tmp_path):
+     """`lire_reponse` garde son propre contrôle de sceau, derrière la confrontation journal-dossier (défense en
+     profondeur) : une réponse sans compagnon est refusée, une réponse scellée de forme inattendue est une anomalie."""
+-    p = tmp_path / "reponse-L1-lot1-v3-1.json"
++    p = tmp_path / "reponse-L1-lot1-v3-2.json"
+     p.write_text(json.dumps({"object": "chat.completion"}), encoding="utf-8")
+     with pytest.raises(O.Refus, match="non scellé"):
+         O.lire_reponse(p)
+@@ -2414,3 +2370,194 @@
+                   lambda: O.verifier_lecture(deplace, "L1", O.lire_piece(RACINE, "catalogue")[0])):
+         with pytest.raises(O.Refus, match="est accepté"):
+             geste()
++
++
++# === v3.2 : C6 à côté de la première lecture, plafond absolu, témoins v2, règle v2 ======================================
++
++def _premiere(rac, nom):
++    return Path(rac) / O.PREMIERE_LECTURE[nom][0]
++
++
++@pytest.mark.parametrize("geste", ["manifeste_absent", "journal_altere", "releve_altere", "releve_incoherent"])
++def test_C6_v3_2_premiere_lecture_intacte_exigee(tmp_path, monkeypatch, geste):
++    """La première lecture doit être là, intacte, et son relevé porter la dépense retranchée : sinon, les quatre actions
++    refusent (la dépense ne repart jamais de zéro)."""
++    pf, h = ecrire_fiches(tmp_path, fiches_factices())
++    pa = ecrire_attestation(tmp_path, h)
++    rac = racine_de(tmp_path)
++    env = envois_de(rac)
++    opreparer(pf, pa, env, rac)  # cas sain
++    if geste == "manifeste_absent":
++        _premiere(rac, "manifeste").unlink()
++        motif = "manifeste absent"
++    elif geste == "journal_altere":
++        with open(_premiere(rac, "journal"), "ab") as f:
++            f.write(b"\n")
++        motif = "journal"
++    elif geste == "releve_altere":
++        p = _premiere(rac, "releve")
++        p.write_text(p.read_text(encoding="utf-8").replace("2.556635", "0.556635"), encoding="utf-8")
++        motif = "releve"
++    else:  # relevé réécrit et réépinglé : le contenu lui-même est contrôlé
++        p = _premiere(rac, "releve")
++        p.write_text(p.read_text(encoding="utf-8").replace("2.556635", "0.556635"), encoding="utf-8")
++        pins = dict(O.PREMIERE_LECTURE)
++        pins["releve"] = (pins["releve"][0], hashlib.sha256(p.read_bytes()).hexdigest())
++        monkeypatch.setattr(O, "PREMIERE_LECTURE", pins)
++        motif = "incohérent"
++    for g in (lambda: O.bilan(env), lambda: envoyer(env, monkeypatch),
++              lambda: O.verifier_lecture(env, "L1", O.lire_piece(RACINE, "catalogue")[0])):
++        with pytest.raises(O.Refus, match=motif):
++            g()
++    env2 = envois_de(racine_de(tmp_path / "b"))
++    pf2, h2 = ecrire_fiches(tmp_path / "b", fiches_factices())
++    pa2 = ecrire_attestation(tmp_path / "b", h2)
++    rac2 = racine_de(tmp_path / "b")
++    if geste == "manifeste_absent":
++        _premiere(rac2, "manifeste").unlink()
++        with pytest.raises(O.Refus, match="première lecture"):
++            opreparer(pf2, pa2, env2, rac2)
++        assert not env2.exists()
++
++
++def test_C6_v3_2_un_seul_dossier_de_relecture(tmp_path, monkeypatch):
++    """Seul le manifeste de la première lecture, à son chemin, est toléré à côté de celui de la relecture : une seconde
++    préparation, une copie, un manifeste v3 ou v3.2 égaré sous `docs/` ou `runs/`, une copie renommée du manifeste v3.1,
++    font refuser."""
++    env, _ = preparer(tmp_path)
++    rac = O.racine_du_dossier(env)
++    assert O.bilan(env)["appels"] == 0
++    for chemin, source in ((rac / "runs" / "x" / "manifeste-relecture-v3-2.json", env / O.MANIFESTE),
++                           (rac / "docs" / "y" / "manifeste-envois-v3.json", env / O.MANIFESTE),
++                           (rac / "docs" / "z" / "manifeste-envois-v3-1.json", _premiere(rac, "manifeste"))):
++        chemin.parent.mkdir(parents=True)
++        shutil.copyfile(source, chemin)
++        with pytest.raises(O.Refus, match="C6"):
++            O.bilan(env)
++        with pytest.raises(O.Refus, match="C6"):
++            envoyer(env, monkeypatch)
++        shutil.rmtree(chemin.parent)
++    assert O.bilan(env)["appels"] == 0
++
++
++def test_C6_v3_2_manifeste_hors_du_motif_de_la_v3_1(tmp_path):
++    """Le manifeste de la relecture échappe au motif de la v3.1 : après la préparation v3.2, la v3.1 voit encore son seul
++    manifeste et reste vérifiable ; sous l'ancien nom, elle refuserait."""
++    import fnmatch
++    assert not fnmatch.fnmatch(O.MANIFESTE, "manifeste-envois-v3*.json")
++    assert fnmatch.fnmatch(O.MANIFESTE, O.MOTIFS_MANIFESTES[1])
++    o31 = _charger("outil_v3_1_ref_c6", "outil_lecteur_conception_propre_v3_1.py", V3_1)
++    env, _ = preparer(tmp_path)
++    rac = O.racine_du_dossier(env)
++    o31.verifier_unicite(rac, _premiere(rac, "manifeste"))  # la v3.1 ne voit pas la v3.2
++    ancien = env / "manifeste-envois-v3-2.json"
++    shutil.copyfile(env / O.MANIFESTE, ancien)
++    with pytest.raises(o31.Refus, match="C6"):
++        o31.verifier_unicite(rac, _premiere(rac, "manifeste"))
++    ancien.unlink()
++
++
++def test_plafond_absolu_v3_2(tmp_path):
++    import math
++    assert O.PLAFOND_ABSOLU_USD == math.floor((21.0 - 6.791087 - 2.556635) * 100) / 100 == 11.65
++    assert (O.LIGNE_GO_USD, O.DEPENSE_AVANT_PREMIERE_LECTURE_USD, O.DEPENSE_PREMIERE_LECTURE_USD) == (21.0, 6.791087, 2.556635)
++    with pytest.raises(O.Refus, match="GO-2026-11-13-06"):
++        preparer(tmp_path / "a", plafond_usd=11.66)
++    with pytest.raises(O.Refus, match="antérieure"):
++        preparer(tmp_path / "b", plafond_usd=11.65, depense_anterieure_usd=0.01)
++    _, man = preparer(tmp_path / "c", plafond_usd=11.64, depense_anterieure_usd=0.01)
++    assert man["garde_depense"]["plafond_usd"] == 11.64 and man["garde_depense"]["plafond_disponible_usd"] == 11.64
++    assert O.verifier_premiere_lecture(RACINE)["depense_comptee_usd"] == 2.556635  # le dépôt lui-même
++
++
++def test_temoins_v2_dans_la_pile_et_jamais_marques(tmp_path):
++    env, man = preparer(tmp_path)
++    pile = json.loads((env / O.PILE).read_text(encoding="utf-8"))
++    tem = [p for p in pile["fiches"] if p["origine"] == "temoin"]
++    assert len(tem) == 20 and all(p["id"].startswith("T2-") for p in tem)
++    assert sorted(p["famille"] for p in tem) == sorted(["vrai", "jumeau"] + ["faux"] * 3 + ["publie"] * 7 + ["hasard"] * 8)
++    src = {t["code"]: t for g in ("temoins_lecteur", "temoins_hasard")
++           for t in json.loads(O.lire_piece(RACINE, g)[0])["temoins"]}
++    for p in tem:
++        assert p["vue"] == O.vue_lecteur(src[p["id"]]["fiche"])[0]
++        assert p["attendu"] == src[p["id"]]["attendu"]
++    interdits = ["T2-", '"chaine"', "coherente", '"epreuve"', '"attendu"', "criteres_porteurs", "reecriture",
++                 "sens_implique", "jumeau_de"]
++    for f in env.glob("envoi-*.txt"):
++        texte = f.read_text(encoding="utf-8")
++        assert not any(s in texte for s in interdits)
++    assert man["pieces"]["regle"]["sha256"] == O.PIECES["regle"][1]
++    assert man["pieces"]["temoins_lecteur"]["chemin"].endswith("relecture-exploratoire-v2/temoins-lecteur-v2.json")
++
++
++def test_regle_v2_portes_et_score():
++    assert K.PORTES == ("R2", "R3") and K.ENTROPIE_SEPARATION == 2026111404
++    assert K.score_S(TOUT1) == 5 and K.score_C(TOUT1) == 6
++    assert K.score_C({**TOUT1, "R7": 0}) == 5 and K.score_C({**TOUT1, "R1": 0, "R7": 0}) == 4
++    assert K.score_C({**TOUT1, "R3": 0}) == 0 and K.score_C({**TOUT1, "R2": 0}) == 0
++    assert K.score_C({**TOUT1, "N": "C1"}) == 0 and K.portes_manquantes({**TOUT1, "R7": 0}) == []
++
++
++def test_separation_unitaire():
++    s = K.separation(False, [1] * 8, [0] * 8, 20_000)
++    assert s["issue"] == "pas de séparation" and not s["lu"] and s["test_R7_seul"]["p"] < 0.05  # calculé, non lu
++    assert K.separation(True, [1] * 8, [0] * 8, 20_000)["issue"] == "séparation réelle"
++    assert K.separation(True, [1] * 8, [1] * 8, 20_000)["issue"] == "séparation de forme"
++    a = K.separation(True, [1, 0, 1, 1, 0, 1, 1, 0], [0, 1, 0, 0, 0, 0, 1, 0], 20_000)["test_R7_seul"]
++    b = K.test_permutation([1, 0, 1, 1, 0, 1, 1, 0], [0, 1, 0, 0, 0, 0, 1, 0], np.random.SeedSequence(2026111404), 20_000)
++    assert a == b
++
++
++def test_separation_de_forme_bout_en_bout(tmp_path):
++    """L5 v2 rejette par les critères de forme (R5, R6), mais R7 ne sépare pas : « séparation de forme »."""
++    env, _ = preparer(tmp_path)
++
++    def m(L, i, p, v):
++        if p["famille"] == "hasard":
++            return {**TOUT1, "R5": 0, "R6": 0}, ()
++        if i == id_de("A5"):
++            return {**v, "N": "aucune"}, ()
++        if i == id_de("A6"):
++            return {**v, "R2": 1}, ()
++        return v, ()
++    lire(env, modif=m)
++    r = classer(env)
++    assert r["L5"]["rejet"] and r["separation"]["issue"] == "séparation de forme" and r["separation"]["lu"]
++    assert r["separation"]["test_R7_seul"]["p"] > 0.05 and r["designees"] == [] and r["lisible"]
++    assert "séparation de forme" in r["verdict"] and "séparation de forme" in K.resume_md(r)
++
++
++def test_exactitude_exclut_les_valeurs_non_fixees(tmp_path):
++    env, _ = preparer(tmp_path)
++    lire(env)
++    r = classer(env)
++    lect = json.loads(O.lire_piece(RACINE, "temoins_lecteur")[0])["temoins"]
++    non_fixes_R7 = sum(t["attendu"]["R7"] is None for t in lect)
++    assert non_fixes_R7 == 1  # T2-F3
++    assert r["exactitude_lecteur"]["L1"]["R7"]["sur"] == len(lect) - non_fixes_R7
++    assert r["exactitude_lecteur"]["L1"]["N"]["sur"] == len(lect) + 8  # N attendu « aucune » pour le hasard
++
++
++def test_descriptifs_premiere_lecture_avec_fiches_communes(tmp_path, monkeypatch):
++    env, _ = preparer(tmp_path)
++    lire(env)
++    r = classer(env)
++    rac = O.racine_du_dossier(env)
++    reelles = [id_de(n) for n in PLAN]
++    faux = {i: dict(r["retenu"][i]) for i in reelles}
++    faux[id_de("A1")]["R7"] = 0          # une valeur de moins à la « première lecture »
++    faux[id_de("A6")]["R2"] = 1          # une fiche écartée qui passait
++    p = rac / K.PREMIERE_CLASSEMENT[0]
++    p.write_text(json.dumps({"retenu": faux}), encoding="utf-8")
++    monkeypatch.setattr(K, "PREMIERE_CLASSEMENT", (K.PREMIERE_CLASSEMENT[0], hashlib.sha256(p.read_bytes()).hexdigest()))
++    r2 = classer(env)
++    c = r2["relecture_contre_premiere_lecture"]
++    assert c["fiches_communes"] == 8 and c["par_critere"]["R7"]["accord_brut"] == 7 / 8
++    assert c["par_critere"]["R2"]["premiere_1"] == 8 and c["par_critere"]["R2"]["relecture_1"] == 7
++    v = r2["regle_v2_sur_la_premiere_lecture"]
++    assert v["fiches_communes"] == 8 and v["statut"][id_de("A6")] == "neuve" and id_de("A6") in v["ordre_neuves"]
++    assert 0 <= v["deux_premieres_communes_avec_la_relecture"] <= 2
++    assert r2["verdict"] == r["verdict"] and r2["rang_exploratoire"] == r["rang_exploratoire"]  # sans effet sur le rang
++    monkeypatch.setattr(K, "PREMIERE_CLASSEMENT", (K.PREMIERE_CLASSEMENT[0], "0" * 64))
++    with pytest.raises(O.Refus, match="première lecture"):
++        classer(env)

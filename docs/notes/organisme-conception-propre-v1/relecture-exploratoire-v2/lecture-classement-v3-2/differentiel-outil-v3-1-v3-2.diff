@@ -1,0 +1,171 @@
+--- lecture-classement-v3-1/outil_lecteur_conception_propre_v3_1.py	2026-11-14 09:06:00.459178049 +0000
++++ relecture-exploratoire-v2/lecture-classement-v3-2/outil_lecteur_conception_propre_v3_2.py	2026-11-14 12:28:36.957337478 +0000
+@@ -1,7 +1,25 @@
+ #!/usr/bin/env python3
+-"""Outil du lecteur de la règle de sélection — course « conception propre » — v3.1 (lecteur Astra).
++"""Outil du lecteur de la règle de sélection — course « conception propre » — v3.2 (relecture exploratoire, lecteur Astra).
+ 
+-v3.1 (14 novembre 2026, à partir de 09:01 UTC, `date -u`) = v3 (`../lecture-classement-v3/`, `6a11cf3d…`, gardée, R12),
++v3.2 (14 novembre 2026, à partir de 12:22 UTC, `date -u`) = v3.1 (`../../lecture-classement-v3-1/`, `95bc46c1…`, gardée,
++R12), pour la **relecture exploratoire** des mêmes fiches sous la règle corrigée (`../regle-v2.md`, R-2726). La règle de
++lecture ne change pas (mêmes fonctions de la vue, de la pile, des ordres, des lots, du message et de la vérification : essai
++`test_regle_de_lecture_inchangee_v3_1_v3_2`). Changements, et seulement eux :
++
++- **témoins et hasard v2** en entrée (`../temoins-lecteur-v2.json`, `../temoins-hasard-v2.json`), **règle v2** épinglée
++  (`../regle-v2.md`, jamais servie au lecteur) ;
++- **nom de manifeste neuf** (`manifeste-relecture-v3-2.json`), hors du motif `manifeste-envois-v3*.json` que cherche la
++  v3.1 : la v3.1 reste vérifiable et ne voit pas la v3.2 ;
++- **dossier fixe** `lecture-g1-v3-2/envois`, **permis** à côté de celui de la première lecture : C6 v3.2 cherche sous `docs/`
++  et `runs/` les deux motifs (`manifeste-envois-v3*`, `manifeste-relecture-v3*`) et n'admet que le manifeste de la première
++  lecture, à son chemin et à son empreinte épinglés, plus le sien ;
++- **garde de dépense inchangée dans son principe** : plafond absolu = reste de la ligne GO-2026-11-13-06 après la première
++  lecture (21 − 6,791087 − 2,556635 = 11,652278, arrondi en dessous : **11,65 USD**), moins la dépense antérieure déclarée ;
++  le dossier de la première lecture doit être là, intact (manifeste, journal, relevé épinglés), et son relevé doit porter la
++  dépense que le plafond retranche déjà : déplacer ou altérer ce dossier fait refuser les quatre actions ;
++- racine du dépôt : le programme est un niveau plus bas (`parents[5]`) ; noms des fichiers écrits en `-v3-2` (R12).
++
++De la v3.1 (inchangé, sauf ci-dessus ; chemins relatifs au dossier de la v3.1) : v3.1 (14 novembre 2026, à partir de 09:01 UTC, `date -u`) = v3 (`../lecture-classement-v3/`, `6a11cf3d…`, gardée, R12),
+ corrigée par son auteur d'après la contre-lecture `contre-lecture-lecture-classement-v3-v1.md` (`f5cc9cdb…`, modèle B,
+ R-2678 : « non utilisable en l'état pour `envoyer` ») et la consigne de la mère ; prix lus : `prix-astra-v2.md`
+ (`bf211a07…`, R-2677). La règle de lecture ne change pas (fonctions de la règle identiques à la v3, essai
+@@ -52,13 +70,13 @@
+ 
+ Actions :
+ 
+-    python3 -I -B outil_lecteur_conception_propre_v3_1.py preparer --fiches F --attestation A --sortie DOSSIER_FIXE \
++    python3 -I -B outil_lecteur_conception_propre_v3_2.py preparer --fiches F --attestation A --sortie DOSSIER_FIXE \
+         --effort low|medium|high [--palier standard|flex] --plafond-usd X --depense-anterieure-usd D
+-    python3 -I -B outil_lecteur_conception_propre_v3_1.py envoyer --envois DOSSIER_FIXE [--envois-max N]
+-    python3 -I -B outil_lecteur_conception_propre_v3_1.py bilan --envois DOSSIER_FIXE
+-    python3 -I -B outil_lecteur_conception_propre_v3_1.py verifier --envois DOSSIER_FIXE [--lecture L1|L2]
++    python3 -I -B outil_lecteur_conception_propre_v3_2.py envoyer --envois DOSSIER_FIXE [--envois-max N]
++    python3 -I -B outil_lecteur_conception_propre_v3_2.py bilan --envois DOSSIER_FIXE
++    python3 -I -B outil_lecteur_conception_propre_v3_2.py verifier --envois DOSSIER_FIXE [--lecture L1|L2]
+ 
+-DOSSIER_FIXE = `<racine>/docs/notes/organisme-conception-propre-v1/lecture-g1-v3-1/envois`.
++DOSSIER_FIXE = `<racine>/docs/notes/organisme-conception-propre-v1/lecture-g1-v3-2/envois`.
+ Codes de sortie : 0 fait (ou pause demandée par `--envois-max`) ; 2 refus (rien d'envoyé de plus) ; 3 arrêt sur anomalie ;
+ 4 arrêt avant un appel qui pourrait dépasser le plafond.
+ """
+@@ -80,8 +98,8 @@
+ 
+ import numpy as np
+ 
+-VERSION = "outil-lecteur-conception-propre-v3-1"
+-RACINE_DEFAUT = Path(__file__).resolve().parents[4]
++VERSION = "outil-lecteur-conception-propre-v3-2"
++RACINE_DEFAUT = Path(__file__).resolve().parents[5]   # v3.2 : un niveau plus bas
+ DOSSIER = "docs/notes/organisme-conception-propre-v1"
+ PIECES = {
+     "consigne": (f"{DOSSIER}/consigne-lecteur-v1.md",
+@@ -92,10 +110,12 @@
+               "d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3"),
+     "catalogue": (f"{DOSSIER}/catalogue-conceptions-publiees-v1.md",
+                   "ddfb2522be0fe5095926405b8761d0e4be0065a29679585051a287349114fe9d"),
+-    "temoins_lecteur": (f"{DOSSIER}/temoins-lecteur-v1.json",
+-                        "d11efe787cd27d2acb4b912487565896e43fc7cefbc7f51aa18080f3cdf8a77e"),
+-    "temoins_hasard": (f"{DOSSIER}/temoins-hasard-v1.json",
+-                       "b5e38724cf74b61e1db47f6dbc0e8f6955a0e4419723dc0ecd627854206c539d"),
++    "temoins_lecteur": (f"{DOSSIER}/relecture-exploratoire-v2/temoins-lecteur-v2.json",
++                        "bb4f903f5a7fbe2366fb631afe708dcf93632e47c459acd86afbd425b93e295e"),
++    "temoins_hasard": (f"{DOSSIER}/relecture-exploratoire-v2/temoins-hasard-v2.json",
++                       "5cef38f6d0545acd47859e87dd3de18846035570dfd32b7644be617d641b745d"),
++    "regle": (f"{DOSSIER}/relecture-exploratoire-v2/regle-v2.md",
++              "56c58b096fd546ba05b68caebcf4e57cade9c2af1ea9b091de6770cbd36f3f24"),
+     "conception": (f"{DOSSIER}/conception-course-v1.md",
+                    "be3ba97ee418de50fa356b0e39fcfa62c16d06f5767560265fcc7ee9f191a95e"),
+ }
+@@ -112,7 +132,21 @@
+ MAX_SORTIE = 32768                     # max_completion_tokens : sortie visible et raisonnement compris
+ EFFORTS = ("low", "medium", "high")    # reasoning_effort, choisi à la préparation, consigné
+ MAX_APPELS = 18                        # deux lectures × 9 lots : fixé d'avance ; plus d'appels → refus à la préparation
+-PLAFOND_ABSOLU_USD = 14.20             # reste du GO-2026-11-13-06 au 14 novembre (21 − 6,791087), arrondi en dessous
++# v3.2 : reste du GO-2026-11-13-06 après la première lecture (21 − 6,791087 − 2,556635 = 11,652278), arrondi en dessous
++PLAFOND_ABSOLU_USD = 11.65
++LIGNE_GO_USD = 21.0
++DEPENSE_AVANT_PREMIERE_LECTURE_USD = 6.791087   # course et lectures Kimi (R-2628, R-2645, R-2658)
++DEPENSE_PREMIERE_LECTURE_USD = 2.556635         # lecture Astra, outil v3.1 (R-2713), relevé épinglé ci-dessous
++# C6 v3.2 : le dossier de la première lecture (outil v3.1), épinglé ; son manifeste est le seul autre admis
++PREMIERE_LECTURE = {
++    "manifeste": (f"{DOSSIER}/lecture-g1-v3-1/envois/manifeste-envois-v3-1.json",
++                  "86bc90dc791fff9d47a6f7a778858497dda7e7521d8a7097993f247f6a886446"),
++    "journal": (f"{DOSSIER}/lecture-g1-v3-1/envois/journal-depense-v3-1.jsonl",
++                "003546428fc15ed3bc787a1e7dc853b12c105897fdc4f296a239ede81871764a"),
++    "releve": (f"{DOSSIER}/lecture-g1-v3-1/envois/releve-depense-v3-1-2.json",
++               "e22de7bf63d82698e594d00575c0feb66bc8e36628eaecfcecdd55159d2249dc"),
++}
++MOTIFS_MANIFESTES = ("manifeste-envois-v3*.json", "manifeste-relecture-v3*.json")
+ OCTETS_MARGE = 1024                    # pire cas d'entrée : un jeton par octet du corps, plus 1 024 (règle des relais)
+ DELAI_S = 1800
+ TAILLE_MAX_REPONSE = 1_000_000           # une réponse de 32 768 jetons fait moins de 200 ko
+@@ -136,13 +170,13 @@
+ CHAMPS_INTERNES = ("auteur", "identifiant_auteur", "empreinte", "passe", "temoin")  # toujours retirés (orchestrateur)
+ ATTESTATION_CHAMPS = ("lecteur", "lu_le", "fiches_validees_sha256", "aucune_recette_aucun_secret",
+                       "envoi_au_lecteur_externe_permis")
+-SUFFIXE = "v3-1"                       # R12 : noms des fichiers écrits
++SUFFIXE = "v3-2"                       # R12 : noms des fichiers écrits
+ JOURNAL = f"journal-depense-{SUFFIXE}.jsonl"
+-MANIFESTE = f"manifeste-envois-{SUFFIXE}.json"
++MANIFESTE = f"manifeste-relecture-{SUFFIXE}.json"   # v3.2 : hors du motif cherché par la v3.1
+ PILE = f"pile-interne-{SUFFIXE}.json"
+ CLE_LECTURES = f"cle-lectures-{SUFFIXE}.json"
+-# C6 : un seul dossier d'envois par lecture, à ce chemin (sous la racine)
+-DOSSIER_ENVOIS_REL = f"{DOSSIER}/lecture-g1-v3-1/envois"
++# C6 : un seul dossier d'envois par lecture, à ce chemin (sous la racine) ; v3.2 : celui de la relecture
++DOSSIER_ENVOIS_REL = f"{DOSSIER}/lecture-g1-v3-2/envois"
+ # C2 : prix lus sur la page officielle (prix-astra-v2.md, tableau « Flagship models », contexte <= 272K jetons
+ # d'entrée), USD par million de jetons ; la ligne du tableau de chaque palier est revérifiée dans la pièce épinglée.
+ PIECES_PRIX = {"prix": (f"{DOSSIER}/prix-astra-v2.md",
+@@ -512,17 +546,45 @@
+     return d.parents[len(parties) - 1]
+ 
+ 
++def verifier_premiere_lecture(racine) -> dict:
++    """C6 v3.2 : le dossier de la première lecture (outil v3.1) est là et intact (manifeste, journal, relevé épinglés), et
++    son relevé porte la dépense que le plafond absolu retranche déjà ; sinon, refus (la dépense ne repart jamais de zéro)."""
++    racine = Path(racine)
++    for nom, (rel, attendue) in PREMIERE_LECTURE.items():
++        p = racine / rel
++        if not p.is_file():
++            raise Refus(f"C6 (v3.2) : première lecture : {nom} absent ({rel}) ; la dépense ne repart jamais de zéro")
++        h = sha256_fichier(p)
++        if h != attendue:
++            raise Refus(f"C6 (v3.2) : première lecture : {nom} ({rel}) : empreinte {h[:12]}… ≠ épinglée {attendue[:12]}…")
++    try:
++        r = json.loads((racine / PREMIERE_LECTURE["releve"][0]).read_text(encoding="utf-8"))
++    except ValueError as e:
++        raise Refus("C6 (v3.2) : relevé de la première lecture illisible") from e
++    if (not isinstance(r, dict) or r.get("depense_comptee_usd") != DEPENSE_PREMIERE_LECTURE_USD
++            or r.get("journal_sha256") != PREMIERE_LECTURE["journal"][1]
++            or math.floor((LIGNE_GO_USD - DEPENSE_AVANT_PREMIERE_LECTURE_USD - DEPENSE_PREMIERE_LECTURE_USD) * 100) / 100
++            != PLAFOND_ABSOLU_USD):
++        raise Refus("C6 (v3.2) : relevé de la première lecture incohérent avec la dépense retranchée du plafond absolu")
++    return r
++
++
+ def verifier_unicite(racine, attendu) -> None:
+-    """C6 : sous `docs/` et `runs/` de la racine, aucun autre manifeste d'envois v3 (v3 ou v3.1) que `attendu` (ou
+-    aucun, à la préparation). Une seconde préparation, même ailleurs, est refusée : la dépense ne repart jamais de zéro."""
++    """C6 v3.2 : la première lecture est intacte ; sous `docs/` et `runs/` de la racine, aucun autre manifeste d'envois
++    (motifs v3 et v3.2) que celui de la première lecture, à son chemin épinglé, et `attendu` (aucun, à la préparation).
++    Une seconde préparation de la relecture, même ailleurs, est refusée : la dépense ne repart jamais de zéro."""
+     racine = Path(racine).resolve()
+-    trouves = sorted(p.resolve() for base in ("docs", "runs") if (racine / base).is_dir()
+-                     for p in (racine / base).rglob("manifeste-envois-v3*.json"))
+-    voulus = [] if attendu is None else [Path(attendu).resolve()]
++    verifier_premiere_lecture(racine)
++    trouves = sorted({p.resolve() for base in ("docs", "runs") if (racine / base).is_dir()
++                      for motif in MOTIFS_MANIFESTES for p in (racine / base).rglob(motif)})
++    voulus = sorted([(racine / PREMIERE_LECTURE["manifeste"][0]).resolve()]
++                    + ([] if attendu is None else [Path(attendu).resolve()]))
+     if trouves != voulus:
+         autres = [str(p.relative_to(racine)) if p.is_relative_to(racine) else str(p) for p in trouves if p not in voulus]
+-        raise Refus("C6 : un seul dossier d'envois v3 par lecture ; trouvés : " + (", ".join(autres) or "aucun")
+-                    + (" ; attendu : " + str(voulus[0]) if voulus and voulus[0] not in trouves else ""))
++        manquants = [str(p) for p in voulus if p not in trouves]
++        raise Refus("C6 (v3.2) : un seul dossier d'envois pour la relecture, à côté de la première lecture ; trouvés en "
++                    "trop : " + (", ".join(autres) or "aucun") + (" ; attendus absents : " + ", ".join(manquants)
++                                                                  if manquants else ""))
+ 
+ 
+ def preparer(fiches_chemin, attestation_chemin, sortie, racine=RACINE_DEFAUT, *, effort, plafond_usd,
