@@ -12,8 +12,9 @@ Ce module fixe donc **ce que T0.8 demande à la pièce** (contrat `CONTRAT`), et
 - en mode réel, charge le module cité par le marqueur `CODE_MOTS_ET_COUT_T06` à son empreinte, et refuse le module jouet.
 
 `controle_identite_m2` : centres égaux (mêmes tâches sans centre), mêmes traits retirés et même état de convergence par
-(jeu, pli), coefficients et ordonnée à 1·10⁻⁶ près en valeur absolue, contre `base-a-t08.json` ; sinon arrêt, rien n'est
-écrit (erreur de chaîne, ligne D1).
+(jeu, pli), coefficients, ordonnée et statistiques de réduction (moyennes et écarts des traits) à 1·10⁻⁶ près en valeur
+absolue, contre `base-a-t08.json` ; sinon arrêt, rien n'est écrit (erreur de chaîne, ligne D1). Les versions de `numpy`
+et de `scipy` de la lecture sont écrites à côté, pour la comparaison avec le manifeste de la pièce (question écrite).
 
 `PieceJouet` : implémentation pour les essais seulement (données factices). Base (A) : celle du texte scellé (douze
 traits, régression logistique λ = 1, L-BFGS-B, `ftol` = 0, `gtol` = 1·10⁻⁸, convergence par gradient ≤ 1·10⁻⁴).
@@ -192,8 +193,29 @@ def controle_identite_m2(centres: dict, etats: dict, base_a: dict, jeux_plis: li
         ecarts.append(d)
         if not d <= TOLERANCE_IDENTITE:
             raise GardeArret(f"contrôle d'identité de M2 : ({jeu}, pli {pli}) ordonnée écart {d:.3g} > 1e-6")
+        # statistiques de réduction (moyennes et écarts des traits gardés sur le pli d'apprentissage ; CLT8C-19, Q-3)
+        for stat in ("moyennes", "ecarts"):
+            if set(m[stat]) != set(e[stat]):
+                raise GardeArret(f"contrôle d'identité de M2 : ({jeu}, pli {pli}) traits des statistiques de réduction "
+                                 f"({stat}) différents")
+            for k in m[stat]:
+                d = abs(float(m[stat][k]) - float(e[stat][k]))
+                ecarts.append(d)
+                if not d <= TOLERANCE_IDENTITE:
+                    raise GardeArret(f"contrôle d'identité de M2 : ({jeu}, pli {pli}) statistique de réduction {stat}[{k}] "
+                                     f"écart {d:.3g} > 1e-6")
     return {"conforme": True, "jeux_plis": len(jeux_plis), "ecart_max": max(ecarts) if ecarts else 0.0,
-            "tolerance": TOLERANCE_IDENTITE}
+            "tolerance": TOLERANCE_IDENTITE, "versions_lecture": versions_numeriques(),
+            "versions_piece": ("à comparer au manifeste de la pièce (run_id et manifeste_sha256 de base-a-t08.json) : ce "
+                               "manifeste n'est pas dans la liste blanche de la lecture (plan, point 1) ; question écrite")}
+
+
+def versions_numeriques() -> dict:
+    """Versions de `numpy` et de `scipy` de la lecture, écrites à côté du contrôle d'identité (l. 119 : « manifestes
+    comparés »)."""
+    import scipy
+
+    return {"numpy": np.__version__, "scipy": scipy.__version__}
 
 
 # --- pièce jouet (essais seulement) ----------------------------------------------------------------------------------

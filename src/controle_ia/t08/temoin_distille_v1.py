@@ -1,19 +1,31 @@
 """Lecture descriptive des épisodes du témoin distillé honnête (plan, point 8 bis ; P8-11 ; « Métrique », « Épisodes du
-témoin distillé honnête » ; liste d'arrêt), étape (h bis) de la lecture, après l'écriture des tables D et F.
+témoin distillé honnête » ; liste d'arrêt), étape (h bis) de la lecture, après l'écriture **sur disque** des tables D et F.
 
 Ordre des contrôles (chaque issue écrite telle quelle, aucune lecture partielle, aucun repli) :
 1. la liste blanche ouvre la phase `hd` (aucun fichier de la pièce HD n'est ouvert avant, contrôle d'empreinte compris) ;
 2. `SORTIES-HD-VADAPT` inscrite au registre du texte de validité (lu, jamais écrit) ? sinon « non lue (sorties de la
-   pièce HD absentes) » ;
+   pièce HD absentes) », que le registre porte d'autres lignes ou qu'il soit **absent du disque** (pièce HD jamais créée,
+   CLT8C-01) ; une ligne à cette clé d'une autre forme, inscrite deux fois ou à une date illisible : « non lue
+   (<motif>) » (l. 193), comptée et signalée ;
 3. règles fixées avant toute sortie : la ligne `GEL-T08` (ou, à défaut, le commit de `main` déclaré par la session mère,
    avec sa date) est strictement antérieure à `SORTIES-HD-VADAPT` et à la création du manifeste de la pièce HD ; sinon
-   « non lue : règles non fixées avant la sortie de la pièce HD » ;
+   « non lue : règles non fixées avant la sortie de la pièce HD » (l'antériorité sur le manifeste est plus stricte que
+   la l. 192 : gardée et déclarée, CLT8C-16) ;
 4. empreintes : le fichier scellé que cite la ligne (index des sorties) à l'empreinte de la ligne, chaque fichier lu à
-   l'empreinte de son compagnon et de l'index ; sinon « non lue (empreinte) » ;
-5. garde : aucun modèle, aucune normalisation ni aucun seuil n'a été calculé sur un épisode de la pièce HD ; sinon
+   l'empreinte de son compagnon et de l'index ; sinon « non lue (empreinte) » (un fichier absent du disque aussi :
+   gardé, déclaré) ;
+5. forme : index, manifeste, colonnes et types de `mesures-hd.npz` (ceux de `mesures-t06.npz` de 7b), lignes de
+   `textes-actions-hd.jsonl` (projetées sur `cle` et `texte` seulement : rien d'autre n'est gardé, ni les identifiants
+   générés, l. 181) ; une autre forme : « non calculable (<motif>) », écrit tel quel aux quatre doses (CLT8C-02) ;
+6. garde : aucun modèle, aucune normalisation ni aucun seuil n'a été calculé sur un épisode de la pièce HD ; sinon
    « non lue (garde : calcul sur les épisodes de la pièce HD) », erreur de chaîne consignée ; les tables D et F restent ;
-6. par dose : effectifs (64 épisodes de dix actions pour `HD_d` et `H'`, les 64 tâches d'évaluation, colonnes de
-   `mesures-t06.npz`) ; modèle de « `S`d contre H » calculable aux deux plis (M2, MC) ; sinon « non calculable (<motif>) ».
+7. par dose : effectifs (64 épisodes de dix actions pour `HD_d` et `H'`, les 64 tâches d'évaluation) ; modèle de
+   « `S`d contre H » calculable aux deux plis (M2, MC) ; sinon « non calculable (<motif>) ».
+
+Chaque issue de 2 à 6 est levée par `entrees_v1.ArretPieceHD` (classe propre à cette lecture) et rendue par
+`lire_temoin_distille` ; aucun arrêt n'est trié par les mots de son message. Seuls une entrée hors de la liste ou une
+phase ouverte avant son étape (arrêt et nœud) arrêtent la lecture de T0.8 depuis cette étape ; les chemins à motif
+interdit sont refusés dès la construction de la liste blanche.
 
 Lus : M1 (log10 du coût brut), M1c (c̃, centre de la base (A)), M2 et MC (modèle de « `S`d contre H », lecture de
 transfert, sans réapprentissage) ; statistique `max` seulement, normalisation et seuils de la lecture (M2, MC : ceux du
@@ -21,12 +33,16 @@ jeu « `S`d contre H », pli par pli). Aucun juge. Aucune ligne de D ou de F ne 
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import math
+import re
+import zipfile
 
 import numpy as np
 
 from ..gardes import GardeArret
-from ..manifeste import lire_manifeste
+from ..manifeste import config_canonique
 from ..t06.cout import cout_lisible
 from . import configuration_v1 as cf
 from . import donnees_v1 as dn
@@ -34,6 +50,7 @@ from . import entrees_v1 as en
 from . import mots_et_cout_v1 as mc
 from . import sequentiel_pas_lus_v1 as sq
 from . import statistiques_v1 as st
+from .entrees_v1 import ArretPieceHD
 
 SURVEILLANTS_HD = ("M1", "M1c", "M2", "MC")
 DOSE_DE = {"S25": 0.25, "S50": 0.5, "S75": 0.75, "S100": 1.0}
@@ -41,6 +58,12 @@ NON_LUE_ABSENTES = "non lue (sorties de la pièce HD absentes)"
 NON_LUE_REGLES = "non lue : règles non fixées avant la sortie de la pièce HD"
 NON_LUE_EMPREINTE = "non lue (empreinte)"
 NON_LUE_GARDE = "non lue (garde : calcul sur les épisodes de la pièce HD)"
+NOMS_HD = {"registre": "registre_vadapt", "index": "index_hd", "mesures": "mesures_hd", "textes": "textes_hd",
+           "manifeste": "manifeste_hd"}
+FICHIERS_INDEX = {"mesures": "mesures-hd.npz", "textes": "textes-actions-hd.jsonl", "manifeste": "manifeste"}
+CLES_MANIFESTE_HD = ("run_id", "cree_le", "config", "config_sha256")
+CLES_TEXTES_HD = ("cle", "texte")                 # projection des lignes de textes-actions-hd.jsonl (CLT8C-16)
+_HEX64 = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _virgule(x, n=4) -> str:
@@ -53,6 +76,23 @@ def _dose_texte(d: str) -> str:
 
 def _non_lue(motif: str, **plus) -> dict:
     return {"etat": "non lue", "motif": motif, "doses": None, **plus}
+
+
+def _dose_non_calculable(motif: str) -> dict:
+    return {"condition_hd": None, "condition_hprime": None,
+            "surveillants": {s: {"etat": "non calculable", "motif": motif, "phrase": f"non calculable ({motif})"}
+                             for s in SURVEILLANTS_HD}}
+
+
+def _non_calculable(motif: str, **plus) -> dict:
+    """« non calculable (<motif>) », écrit tel quel pour les quatre doses et les quatre surveillants (CLT8C-02)."""
+    return {"etat": "non calculable", "motif": motif, "doses": {d: _dose_non_calculable(motif) for d in cf.DOSES}, **plus}
+
+
+def rendre(e: ArretPieceHD) -> dict:
+    if e.etat == "non lue":
+        return _non_lue(e.motif, **e.plus)
+    return _non_calculable(e.motif, **e.plus)
 
 
 def exiger_aucun_calcul_sur_hd(lecture, episodes_hd: set) -> None:
@@ -72,65 +112,140 @@ def exiger_aucun_calcul_sur_hd(lecture, episodes_hd: set) -> None:
                     raise GardeArret(f"modèle ({s}, {j}, pli {k}) appris sur des épisodes de la pièce HD")
 
 
-def _charger(lb, noms: dict) -> tuple:
-    mes = lb.lire_npz(noms["mesures"])
-    tex = lb.lire_jsonl(noms["textes"])
-    man, _ = lire_manifeste(lb.chemin(noms["manifeste"]))
-    return mes, tex, man
+# --- contrôles et chargement des fichiers de la pièce HD (ArretPieceHD seulement) ------------------------------------
+
+def _fichier_conforme(lb, nom: str, attendue: str | None = None):
+    """Chemin d'un fichier de la pièce HD à l'empreinte de son compagnon (et de `attendue`) ; sinon « non lue
+    (empreinte) », fichier absent du disque compris (gardé, déclaré)."""
+    p, c = lb.controler(nom)
+    if c["etat"] != "conforme":
+        raise ArretPieceHD("non lue", NON_LUE_EMPREINTE, detail=c["detail"])
+    if attendue is not None and c["sha256"] != attendue:
+        raise ArretPieceHD("non lue", NON_LUE_EMPREINTE, detail=f"{lb.entrees[nom]['chemin']} : empreinte "
+                           f"{c['sha256'][:12]}… ≠ {attendue[:12]}… (ligne SORTIES-HD-VADAPT ou index des sorties)")
+    return p
 
 
-def lire_temoin_distille(lecture) -> dict:
-    lb, cfg = lecture.lb, lecture.config.get("hd") or {}
-    noms = {"registre": "registre_vadapt", "index": "index_hd", "mesures": "mesures_hd", "textes": "textes_hd",
-            "manifeste": "manifeste_hd"}
-    if any(n not in lb.entrees for n in noms.values()):
-        return _non_lue(NON_LUE_ABSENTES, detail="entrées de la pièce HD absentes de la liste")
-    lb.ouvrir_phase("hd")
-    ligne = en.lire_ligne_sorties_hd(lb.chemin(noms["registre"]))
-    if ligne is None:
-        return _non_lue(NON_LUE_ABSENTES)
-    sortie_hd = en.date_utc(ligne["date"])
+def _json(p, quoi: str):
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        raise ArretPieceHD("non calculable", f"{quoi} d'une autre forme : JSON illisible ({type(e).__name__})") from None
+
+
+def _sorties(lb) -> dict:
+    """Étape 2 : la ligne `SORTIES-HD-VADAPT`, ou l'issue « non lue »."""
+    p, c = lb.controler(NOMS_HD["registre"])
+    if c["etat"] == "absent":                  # pièce HD jamais créée, registre jamais ouvert (CLT8C-01)
+        raise ArretPieceHD("non lue", NON_LUE_ABSENTES, detail=c["detail"])
+    r = en.lire_sorties_hd(p)
+    signal = {"lignes_mal_formees": r["mal_formees"], "lignes_mal_formees_du_registre": r["mal_formees_toutes"]}
+    if r["inscriptions"] > 1:
+        raise ArretPieceHD("non lue", "non lue (SORTIES-HD-VADAPT inscrite plusieurs fois)", **signal)
+    if r["mal_formees"]:
+        raise ArretPieceHD("non lue", "non lue (ligne SORTIES-HD-VADAPT d'une autre forme que celle du registre)",
+                           **signal)
+    if r["date_illisible"]:
+        raise ArretPieceHD("non lue", "non lue (ligne SORTIES-HD-VADAPT à une date illisible)",
+                           detail=r["date_illisible"], **signal)
+    if r["ligne"] is None:
+        raise ArretPieceHD("non lue", NON_LUE_ABSENTES, **signal)
+    return {**r["ligne"], "ignorees": r["ignorees"], **signal}
+
+
+def _regles(lecture, cfg: dict) -> tuple[dict, object]:
+    """Étape 3 (première partie) : source et date des règles (ligne `GEL-T08`, ou commit déclaré)."""
     gel = lecture.registre["lignes"].get("GEL-T08")
     if gel is not None:
         regles = {"source": "GEL-T08", "date": gel["date"]}
-    elif cfg.get("commit_regles"):
+    elif isinstance(cfg.get("commit_regles"), dict) and cfg["commit_regles"]:
         regles = {"source": "commit", **cfg["commit_regles"]}
     else:
-        return _non_lue(NON_LUE_REGLES, detail="ni GEL-T08 ni commit déclaré")
-    date_regles = en.date_utc(regles["date"])
-    if not date_regles < sortie_hd:
-        return _non_lue(NON_LUE_REGLES, regles=regles, sorties=ligne)
+        raise ArretPieceHD("non lue", NON_LUE_REGLES, detail="ni GEL-T08 ni commit déclaré")
     try:
-        if lb.entrees[noms["index"]]["chemin"] != ligne["chemin"] or en.verifier(lb.chemin(noms["index"])) != ligne["sha256"]:
-            return _non_lue(NON_LUE_EMPREINTE, detail="index des sorties ≠ ligne SORTIES-HD-VADAPT")
-        index = lb.lire_json(noms["index"])["fichiers"]
-        for n, f in (("mesures", "mesures-hd.npz"), ("textes", "textes-actions-hd.jsonl"), ("manifeste", "manifeste")):
-            if index.get(f) != en.verifier(lb.chemin(noms[n])):
-                return _non_lue(NON_LUE_EMPREINTE, detail=f"{f} ≠ index des sorties")
-        mes, tex, man = _charger(lb, noms)
-    except GardeArret as e:
-        if "empreinte" in str(e) or "absente" in str(e) or "absent sur disque" in str(e):
-            return _non_lue(NON_LUE_EMPREINTE, detail=str(e))
-        raise
-    if not date_regles < en.date_utc(man["cree_le"]):
-        return _non_lue(NON_LUE_REGLES, regles=regles, detail="manifeste de la pièce HD antérieur aux règles")
-    conditions = man["config"].get("conditions_hd")
-    if not isinstance(conditions, dict) or "honnete_rejoue" not in conditions:
-        return {"etat": "non calculable", "motif": "conditions de la pièce HD absentes du manifeste", "doses": None}
-    hd = _assembler(mes, tex, lecture.d.taches)
+        return regles, en.date_utc(regles.get("date"))
+    except GardeArret as e:                    # date des règles illisible : antériorité non établie
+        raise ArretPieceHD("non lue", NON_LUE_REGLES, regles=regles, detail=str(e)) from None
+
+
+def _index(lb, ligne: dict) -> dict:
+    """Étape 4 (index) puis 5 (forme de l'index) : empreintes attendues des trois fichiers."""
+    if lb.entrees[NOMS_HD["index"]]["chemin"] != ligne["chemin"]:
+        raise ArretPieceHD("non lue", NON_LUE_EMPREINTE, detail="index des sorties ≠ chemin de la ligne SORTIES-HD-VADAPT")
+    p = _fichier_conforme(lb, NOMS_HD["index"], ligne["sha256"])
+    obj = _json(p, "index des sorties")
+    fichiers = obj.get("fichiers") if isinstance(obj, dict) else None
+    if not isinstance(fichiers, dict) or any(not _HEX64.match(str(fichiers.get(f, ""))) for f in FICHIERS_INDEX.values()):
+        raise ArretPieceHD("non calculable", "index des sorties d'une autre forme (clé `fichiers` et empreintes de "
+                           f"{sorted(FICHIERS_INDEX.values())} attendues)")
+    return {n: fichiers[f] for n, f in FICHIERS_INDEX.items()}
+
+
+def _mesures(p, formes_7b: dict | None) -> dict:
+    """`mesures-hd.npz` : mêmes colonnes que `mesures-t06.npz`, mêmes sortes de types que celles de 7b, une dimension,
+    même longueur ; sinon « non calculable »."""
     try:
-        exiger_aucun_calcul_sur_hd(lecture, set(hd["episodes"]))
+        with np.load(p, allow_pickle=False) as z:
+            cles = tuple(sorted(z.files))
+            if cles != tuple(sorted(en.COLONNES_MESURES)):
+                raise ArretPieceHD("non calculable", f"mesures-hd.npz d'une autre forme : colonnes {cles} ≠ colonnes de "
+                                   f"mesures-t06.npz {tuple(sorted(en.COLONNES_MESURES))}")
+            mes = {k: np.array(z[k]) for k in en.COLONNES_MESURES}
+    except (OSError, ValueError, zipfile.BadZipFile) as e:
+        raise ArretPieceHD("non calculable", f"mesures-hd.npz d'une autre forme : illisible ({type(e).__name__})") from None
+    longueurs = {v.shape for v in mes.values()}
+    if len(longueurs) != 1 or len(next(iter(longueurs))) != 1:
+        raise ArretPieceHD("non calculable", f"mesures-hd.npz d'une autre forme : colonnes de formes {sorted(longueurs)}")
+    if formes_7b is not None:
+        autres = sorted(k for k, v in mes.items() if v.dtype.kind != formes_7b.get(k))
+        if autres:
+            raise ArretPieceHD("non calculable", f"mesures-hd.npz d'une autre forme : types des colonnes {autres} ≠ ceux "
+                               "de mesures-t06.npz de 7b")
+    if len(set(mes["cle"].tolist())) != len(mes["cle"]):
+        raise ArretPieceHD("non calculable", "mesures-hd.npz d'une autre forme : clé d'action en double")
+    return mes
+
+
+def _textes(p) -> list[dict]:
+    """`textes-actions-hd.jsonl`, chaque ligne projetée sur `cle` et `texte` à la lecture (rien d'autre n'est gardé :
+    ni les identifiants générés, ni la condition, l. 181) ; une ligne sans l'une d'elles : « non calculable »."""
+    sortie, vues = [], set()
+    try:
+        with open(p, encoding="utf-8") as f:
+            for i, l in enumerate(f, start=1):
+                if not l.strip():
+                    continue
+                x = json.loads(l)
+                if not isinstance(x, dict) or any(not isinstance(x.get(k), str) for k in CLES_TEXTES_HD):
+                    raise ArretPieceHD("non calculable", f"textes-actions-hd.jsonl d'une autre forme : ligne {i} sans "
+                                       f"{list(CLES_TEXTES_HD)} (textes)")
+                if x["cle"] in vues:
+                    raise ArretPieceHD("non calculable", f"textes-actions-hd.jsonl d'une autre forme : clé {x['cle']} en "
+                                       "double")
+                vues.add(x["cle"])
+                sortie.append({k: x[k] for k in CLES_TEXTES_HD})
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        raise ArretPieceHD("non calculable", f"textes-actions-hd.jsonl d'une autre forme : JSON illisible "
+                           f"({type(e).__name__})") from None
+    return sortie
+
+
+def _manifeste(p) -> dict:
+    """Manifeste de la pièce HD : clés `run_id`, `cree_le` (date UTC lisible), `config` (objet), `config_sha256` égale
+    à l'empreinte de la configuration ; autre forme : « non calculable » ; empreinte de configuration incohérente :
+    « non lue (empreinte) »."""
+    m = _json(p, "manifeste de la pièce HD")
+    if not isinstance(m, dict) or any(k not in m for k in CLES_MANIFESTE_HD) or not isinstance(m["config"], dict):
+        raise ArretPieceHD("non calculable", f"manifeste de la pièce HD d'une autre forme ({list(CLES_MANIFESTE_HD)} "
+                           "attendues)")
+    if hashlib.sha256(config_canonique(m["config"])).hexdigest() != m["config_sha256"]:
+        raise ArretPieceHD("non lue", NON_LUE_EMPREINTE, detail="manifeste de la pièce HD : empreinte de configuration "
+                           "incohérente")
+    try:
+        cree = en.date_utc(m["cree_le"])
     except GardeArret as e:
-        return _non_lue(NON_LUE_GARDE, detail=str(e), erreur_de_chaine=True)
-    hprime = conditions["honnete_rejoue"]
-    resultats = {}
-    for d in cf.DOSES:
-        nom = conditions.get(f"{DOSE_DE[d]}") or conditions.get(str(DOSE_DE[d]))
-        resultats[d] = _lire_dose(lecture, hd, d, nom, hprime)
-    machine = _machine(lecture, hd, hprime)
-    return {"etat": "lue", "regles": regles, "sorties": ligne, "manifeste_hd": {"run_id": man["run_id"]},
-            "conditions": conditions, "doses": resultats, "machine_M1": machine,
-            "ne_change": "aucune ligne de D ni de F, aucune réserve (plan, point 8 bis)"}
+        raise ArretPieceHD("non calculable", f"manifeste de la pièce HD d'une autre forme : date de création ({e})") from None
+    return {"run_id": m["run_id"], "cree_le": cree, "config": m["config"]}
 
 
 def _assembler(mes: dict, tex: list[dict], taches: list[str]) -> dict:
@@ -142,10 +257,60 @@ def _assembler(mes: dict, tex: list[dict], taches: list[str]) -> dict:
         l["texte"] = None if t is None else t["texte"]
         actions[l["cle"]] = l
         e = episodes.setdefault(l["episode"], {"condition": l["condition"], "tache": l["tache"], "cles": []})
+        if e["condition"] != l["condition"] or e["tache"] != l["tache"]:
+            raise ArretPieceHD("non calculable", f"mesures-hd.npz d'une autre forme : épisode {l['episode']} à condition "
+                               "ou tâche variable")
         e["cles"].append(l["cle"])
     for v in episodes.values():
         v["cles"].sort(key=lambda c: int(actions[c]["pas"]))
-    return {"actions": actions, "episodes": episodes, "taches": taches, "textes_complets": len(par_cle) == len(actions)}
+    return {"actions": actions, "episodes": episodes, "taches": taches,
+            "textes_complets": set(par_cle) == set(actions)}
+
+
+def _lire(lecture, lb, cfg: dict) -> dict:
+    ligne = _sorties(lb)
+    regles, date_regles = _regles(lecture, cfg)
+    if not date_regles < en.date_utc(ligne["date"]):
+        raise ArretPieceHD("non lue", NON_LUE_REGLES, regles=regles, sorties=ligne)
+    attendues = _index(lb, ligne)
+    p_mes = _fichier_conforme(lb, NOMS_HD["mesures"], attendues["mesures"])
+    p_tex = _fichier_conforme(lb, NOMS_HD["textes"], attendues["textes"])
+    p_man = _fichier_conforme(lb, NOMS_HD["manifeste"], attendues["manifeste"])
+    man = _manifeste(p_man)
+    if not date_regles < man["cree_le"]:       # plus strict que la l. 192 : gardé, déclaré (CLT8C-16)
+        raise ArretPieceHD("non lue", NON_LUE_REGLES, regles=regles, detail="manifeste de la pièce HD antérieur aux règles")
+    conditions = man["config"].get("conditions_hd")
+    if not isinstance(conditions, dict) or not isinstance(conditions.get("honnete_rejoue"), str):
+        raise ArretPieceHD("non calculable", "conditions de la pièce HD absentes du manifeste")
+    mes = _mesures(p_mes, getattr(lecture, "formes_mesures_7b", None))
+    tex = _textes(p_tex)
+    hd = _assembler(mes, tex, lecture.d.taches)
+    try:
+        exiger_aucun_calcul_sur_hd(lecture, set(hd["episodes"]))
+    except GardeArret as e:
+        raise ArretPieceHD("non lue", NON_LUE_GARDE, detail=str(e), erreur_de_chaine=True) from None
+    hprime = conditions["honnete_rejoue"]
+    resultats = {}
+    for d in cf.DOSES:
+        nom = conditions.get(f"{DOSE_DE[d]}")
+        resultats[d] = _lire_dose(lecture, hd, d, nom, hprime)
+    machine = _machine(lecture, hd, hprime)
+    return {"etat": "lue", "regles": regles, "sorties": ligne, "manifeste_hd": {"run_id": man["run_id"]},
+            "conditions": conditions, "doses": resultats, "machine_M1": machine,
+            "ne_change": "aucune ligne de D ni de F, aucune réserve (plan, point 8 bis)"}
+
+
+def lire_temoin_distille(lecture) -> dict:
+    """Étape (h bis). Rend « lue », « non lue (…) » ou « non calculable (…) » ; n'arrête la lecture de T0.8 que pour une
+    entrée hors de la liste ou une phase ouverte avant son étape (arrêt et nœud)."""
+    lb, cfg = lecture.lb, lecture.config.get("hd") or {}
+    if any(n not in lb.entrees for n in NOMS_HD.values()):
+        return _non_lue(NON_LUE_ABSENTES, detail="entrées de la pièce HD absentes de la liste")
+    lb.ouvrir_phase("hd")
+    try:
+        return _lire(lecture, lb, cfg)
+    except ArretPieceHD as e:
+        return rendre(e)
 
 
 def _effectifs(hd: dict, condition: str | None, taches: list[str]) -> str | None:

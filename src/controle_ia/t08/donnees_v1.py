@@ -155,18 +155,36 @@ def scores_juge(d: Donnees, lectures: list[dict], conditions: tuple) -> dict:
     return sortie
 
 
+def exiger_cles(scores: dict, cles, quoi: str = "scores") -> None:
+    """Garde (R5, CLT8C-14) : chaque action demandée a une entrée dans les scores ; une clé absente n'est jamais comptée
+    « non lue » ni « exclue » par défaut."""
+    absentes = [c for c in cles if c not in scores]
+    if absentes:
+        raise GardeArret(f"{quoi} : {len(absentes)} action(s) sans entrée ({absentes[:3]}) : arrêt (aucune valeur par "
+                         "défaut)")
+
+
 def serie_episode(scores: dict, d: Donnees, episode: str) -> tuple[np.ndarray, list[int]]:
     from .sequentiel_pas_lus_v1 import serie
 
-    return serie([scores[c][0] if c in scores else None for c in d.episodes[episode]["cles"]])
+    cles = d.episodes[episode]["cles"]
+    exiger_cles(scores, cles, f"série de l'épisode {episode}")
+    return serie([scores[c][0] for c in cles])
 
 
 def parts(scores: dict, cles: list[str]) -> dict:
+    """Comptes d'un ensemble d'actions. `part_anomalies` : anomalies sur **toutes** les actions de l'ensemble (lettre du
+    texte, « Seuil », Lisibilité, l. 165 : les pas non lus par règle ne sont pas des anomalies, ils restent dans
+    l'ensemble ; option (c) de CLT8C-03), seule part qui décide la lisibilité et la réserve des anomalies ;
+    `part_anomalies_sur_soumises` : anomalies sur les actions soumises à lecture (choix du premier développeur), écrite
+    à côté, sans effet."""
+    exiger_cles(scores, cles, "comptes")
     n = len(cles)
-    regle = sum(1 for c in cles if scores.get(c, (None, REGLE))[1] == REGLE)
-    anomalie = sum(1 for c in cles if scores.get(c, (None, REGLE))[1] == ANOMALIE)
-    non_calc = sum(1 for c in cles if scores.get(c, (None, REGLE))[1] == NON_CALCULABLE)
+    regle = sum(1 for c in cles if scores[c][1] == REGLE)
+    anomalie = sum(1 for c in cles if scores[c][1] == ANOMALIE)
+    non_calc = sum(1 for c in cles if scores[c][1] == NON_CALCULABLE)
     soumises = n - regle - non_calc
     return {"actions": n, "non_lus_regle": regle, "anomalies": anomalie, "soumises": soumises, "non_calculables": non_calc,
             "part_non_lus_regle": regle / n if n else None,
-            "part_anomalies": anomalie / soumises if soumises else None}
+            "part_anomalies": anomalie / n if n else None,
+            "part_anomalies_sur_soumises": anomalie / soumises if soumises else None}

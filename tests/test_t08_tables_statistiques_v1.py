@@ -75,6 +75,16 @@ def _lis(**faux):
 CAL = {"J8r": {"rang_au_dela": False}, "J8p": {"rang_au_dela": False}, "M2/S25/pli0": {"rang_au_dela": False}}
 
 
+def _etats(r: dict, ordre) -> set:
+    """Lignes qui s'appliquent ; garde de l'essai : chaque ligne est écrite, avec un état et des grandeurs, et la ligne
+    retenue est la première qui s'applique (CLT8C-08)."""
+    assert tuple(r["lignes"]) == tuple(ordre)
+    assert all(set(v) == {"s_applique", "grandeurs"} and isinstance(v["s_applique"], bool) for v in r["lignes"].values())
+    vraies = [x for x in ordre if r["lignes"][x]["s_applique"]]
+    assert r["ligne"] == vraies[0]
+    return set(vraies)
+
+
 def test_table_D_chaque_ligne():
     ok = {"etat": "au-dessus"}
     assert tb.table_D(ok, "A5", CAL, _lis())["ligne"] == "D6"
@@ -90,6 +100,30 @@ def test_table_D_chaque_ligne():
     assert tb.table_D(ok, "A5", CAL, lis)["ligne"] == "D4"
     assert tb.table_D(ok, "A5", CAL, _lis(J8r="S25"))["ligne"] == "D5"
     assert tb.lecture_absente("course arrêtée")["table_D"]["phrase"] == tb.PHRASES_D["D1"]
+
+
+def test_table_D_etat_de_chaque_ligne():
+    """CLT8C-08 (a) : pour chaque cas de `test_table_D_chaque_ligne`, l'état de toutes les lignes D1 à D6."""
+    ok, D = {"etat": "au-dessus"}, tb.LIGNES_D
+    assert _etats(tb.table_D(ok, "A5", CAL, _lis()), D) == {"D6"}
+    assert _etats(tb.table_D({"etat": "non au-dessus"}, "A5", CAL, _lis()), D) == {"D2"}
+    assert _etats(tb.table_D({"etat": "non calculable"}, "A5", CAL, _lis()), D) == {"D2"}
+    assert _etats(tb.table_D(ok, "A1b", CAL, _lis()), D) == {"D2"}
+    d3 = tb.table_D(ok, "A5", {**CAL, "M2/S50/pli1": {"rang_au_dela": True}}, _lis())
+    assert _etats(d3, D) == {"D3"} and d3["lignes"]["D3"]["grandeurs"]["rang_conforme_au_dela_de_K"] == ["M2/S50/pli1"]
+    assert _etats(tb.table_D(ok, "A5", CAL, _lis(M2="S50")), D) == {"D4"}
+    lis = _lis(J8r="S25")
+    lis["J8p"]["S75"] = {"lisible": False, "motif": "m"}
+    assert _etats(tb.table_D(ok, "A5", CAL, lis), D) == {"D4"}
+    assert _etats(tb.table_D(ok, "A5", CAL, _lis(J8r="S25")), D) == {"D5"}
+    # plusieurs lignes s'appliquent : toutes écrites, la première retenue
+    tout = tb.table_D({"etat": "non au-dessus"}, "A5", {**CAL, "J8p": {"rang_au_dela": True}}, _lis(M2="S25", J8r="S50"))
+    assert _etats(tout, D) == {"D2", "D3", "D4", "D5"} and tout["ligne"] == "D2"
+    assert tout["lignes"]["D2"]["grandeurs"] == {"P8-1": "non au-dessus", "ligne_A": "A5"}
+    assert tout["lignes"]["D1"]["s_applique"] is False
+    absente = tb.lecture_absente("course arrêtée")
+    assert absente["table_D"]["lignes"]["D1"]["s_applique"] is True
+    assert all(absente["table_D"]["lignes"][x]["s_applique"] is None for x in D[1:])
 
 
 # --- table F ----------------------------------------------------------------------------------------------------------
@@ -121,6 +155,40 @@ def test_table_F_chaque_ligne():
     assert f7["ligne"] == "F7" and f7["etiquette"] == "diffuse réalisée" and f7["phrase"] == tb.PHRASES_F["F7"]
     assert tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 3}))["ligne"] == "F8"
     assert tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 2}, n=60))["ligne"] == "F8"   # n = 60 : 2 alertes ne suffisent plus
+
+
+def test_table_F_etat_de_chaque_ligne():
+    """CLT8C-08 (a) : pour chaque cas de `test_table_F_chaque_ligne`, l'état de toutes les lignes F1 à F8 (la ligne
+    retenue est la première qui s'applique ; les autres sont écrites)."""
+    F = tb.LIGNES_F
+    assert _etats(tb.table_F("S25", "D4", "A5", E_OK, _surv({})), F) == {"F1", "F7"}
+    assert _etats(tb.table_F("S25", "D6", "A2", E_OK, _surv({})), F) == {"F1b", "F7"}
+    assert _etats(tb.table_F("S25", "D6", "A5", None, _surv({})), F) == {"F2", "F7"}
+    assert _etats(tb.table_F("S25", "D6", "A5", {"calculable": False}, _surv({})), F) == {"F2", "F7"}
+    f3 = tb.table_F("S25", "D6", "A5", {**E_OK, "bas": -0.1}, _surv({}))
+    assert _etats(f3, F) == {"F3", "F7"} and f3["lignes"]["F3"]["grandeurs"]["E_bas"] == -0.1
+    f4 = tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 13, "J8r": 20}))
+    assert _etats(f4, F) == {"F4"} and f4["lignes"]["F4"]["grandeurs"]["flagrants"] == ["M1", "J8r"]
+    assert _etats(tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 13}, lisible={"MC": False})), F) == {"F4", "F5"}
+    assert _etats(tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 13}, lisible={"M1": False})), F) == {"F5"}
+    assert _etats(tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 13}, garde={"M1": False})), F) == {"F6"}
+    assert _etats(tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 2, "J3r": 2})), F) == {"F7"}
+    assert _etats(tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 3})), F) == {"F8"}
+    f8 = tb.table_F("S25", "D6", "A5", E_OK, _surv({"M1": 2}, n=60))
+    assert _etats(f8, F) == {"F8"}
+    assert f8["lignes"]["F7"]["grandeurs"]["haut_unilateral_95"]["M1"] == pytest.approx(0.1012, abs=1e-4)
+    # tout s'applique en même temps : toutes écrites, F1 retenue
+    tout = tb.table_F("S25", "D2", "A3", {**E_OK, "bas": 0.0}, _surv({"M1": 13}, lisible={"MC": False}, garde={"J3r": False}))
+    assert _etats(tout, F) == {"F1", "F1b", "F3", "F4", "F5", "F6"} and tout["ligne"] == "F1"
+
+
+def test_table_F_borne_basse_absente_arrete():
+    """CLT8C-14 : `calculable` vrai sans borne basse : arrêt (jamais la ligne F3 par défaut) ; cas sain : borne lue."""
+    assert tb.table_F("S25", "D6", "A5", E_OK, _surv({}))["ligne"] == "F7"
+    with pytest.raises(GardeArret, match="sans borne basse"):
+        tb.table_F("S25", "D6", "A5", {"calculable": True, "effet": 0.5}, _surv({}))
+    with pytest.raises(GardeArret, match="sans borne basse"):
+        tb.table_F("S25", "D6", "A5", {**E_OK, "bas": None}, _surv({}))
 
 
 def test_phrases_gelees_sans_marque_restante():

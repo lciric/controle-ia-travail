@@ -6,9 +6,15 @@ en bout sur le modèle jouet, sur processeur, sans réseau ni dépense, avant la
 
 Chaîne : entrées factices (`fabrique_jouet_v1`) → course en mode jouet (étalonnage par l'agent scripté, quatre lectures
 de juges par les modèles jouets) → ligne `COURSE-T08` au registre factice → lecture complète (étapes (a) à (i), table D,
-table F, lecture descriptive du témoin distillé honnête) → `lecture-t08.json` scellé. Deux essais de même entropie et de
-même horodatage rendent les mêmes fichiers de données et les mêmes résultats (`resultat` des fichiers de diagnostic) à
-l'octet ; seuls diffèrent les manifestes des runs de T0.8 (date de création, commit) et l'empreinte qui les rattache.
+table F, tables D et F écrites et scellées avant la pièce HD, lecture descriptive du témoin distillé honnête) →
+`lecture-t08.json` scellé. Deux essais de même entropie et de même horodatage rendent les mêmes fichiers de données et
+les mêmes résultats (`resultat` des fichiers de diagnostic) à l'octet ; seuls diffèrent les manifestes des runs de T0.8
+(date de création, commit) et l'empreinte qui les rattache.
+
+**L'essai se joue dans un dépôt git** : la racine donnée (`--racine`) doit être dans l'arbre de travail d'un dépôt git
+(par exemple `essai/<nom>/a` dans l'arbre du code), car `controle_ia.manifeste.creer_manifeste` relève le commit
+(`git rev-parse HEAD`) dans la racine du run ; hors d'un dépôt, la course s'arrête à son manifeste, après la fabrique
+des entrées (CLT8C-21).
 Mode jouet : arbre de travail non propre autorisé (entrées factices écrites dans l'arbre avant le manifeste), réserve
 consignée au manifeste ; marqueurs absents ; longueur du raisonnement des juges réduite à 8 jetons (déclaré).
 """

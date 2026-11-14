@@ -1,7 +1,8 @@
 """T0.8 — collecteur d'invisibilité des cibles pour les constructeurs d'invite du paquet `t08` (forme de
 `tests/test_cibles_invisibles_v2.py`, qui ne connaît pas encore ce paquet) : une tâche dont chaque champ caché porte un
-marqueur passe par tous les chemins qui construisent une entrée de juge ou d'agent ; le marqueur n'apparaît dans aucun
-texte rendu (cas sain) ; un rendu qui recopierait `cibles` est refusé (artefact)."""
+marqueur passe par tous les chemins qui construisent une entrée de juge ou d'agent (demandes, lecture en une passe,
+lecture avec raisonnement, environnement de l'étalonnage) ; le marqueur n'apparaît dans aucun texte rendu ni dans aucun
+contexte donné au modèle (cas sain) ; un rendu qui recopierait `cibles` est refusé (artefact)."""
 from __future__ import annotations
 
 import json
@@ -46,11 +47,41 @@ def test_entrees_des_juges_sans_cibles():
 
 def test_lectures_des_juges_ne_recoivent_que_le_rendu():
     t = tache_marquee()
-    dem = rj.demandes_de_l_episode(rj.projeter_tache(t), _textes(t, 3), 3, "S")
+    dem = [cv.demande_juge(x) for x in rj.demandes_de_l_episode(rj.projeter_tache(t), _textes(t, 3), 3, "S")]
     juge = jv.juge_jouet("J8", 1, ["S", "RESEARCH QUESTIONS: CURRENT SET"])
     for x in jv.lire_une_passe(juge, dem, 2):
         assert set(x) == {"cle", "score", "masse", "masse_faible", "anomalie", "motif", "jetons_contexte"}
     assert all(MARQUE not in json.dumps(d) for d in dem)
+
+
+def test_lecture_avec_raisonnement_sans_cibles(monkeypatch):
+    """CLT8C-20 : la lecture avec raisonnement (J8r, J3r) reçoit les mêmes demandes ; une tâche marquée y passe, avec le
+    faux générateur des essais des juges : le marqueur n'apparaît dans aucun contexte donné au modèle (génération et
+    point de lecture)."""
+    t = tache_marquee()
+    dem = [cv.demande_juge(x) for x in rj.demandes_de_l_episode(rj.projeter_tache(t), _textes(t, 3), 3, "S")]
+    # vocabulaire du juge jouet : le marqueur y est (s'il fuyait, il se lirait au décodage, jamais en `<unk>`)
+    juge = jv.juge_jouet("J8", 1, ["S", "RESEARCH QUESTIONS: CURRENT SET after turn of", json.dumps(t),
+                                   ACTION.format(k=0), ">>> LATEST CHANGE (added) <<<"])
+    assert MARQUE in juge.tok.decode(juge.tok.encode(json.dumps(t), add_special_tokens=False))
+    vus = []
+
+    def faux_generer(modele, contextes, max_nouveaux, temperature, graines, fins, pad_id, arret=None, *a, **k):
+        vus.extend(contextes)
+        return [[juge.jetons[7]] for _ in contextes], {}
+
+    lire = jv.logits_derniere_position
+
+    def lire_et_garder(modele, contextes, pad):
+        vus.extend(contextes)
+        return lire(modele, contextes, pad)
+
+    monkeypatch.setattr(jv, "generer_lot_jusqua_balise", faux_generer)
+    monkeypatch.setattr(jv, "logits_derniere_position", lire_et_garder)
+    r = jv.lire_avec_raisonnement(juge, dem, 2, {x["cle"]: 1 for x in dem}, 1, 1.0)
+    assert len(r) == 3 and all(x["imposee"] for x in r) and len(vus) == 6
+    assert all(MARQUE not in juge.tok.decode(c) for c in vus)
+    assert all("sparseattentionscale" in juge.tok.decode(c) for c in vus)        # l'énoncé y est (décodeur sans blancs)
 
 
 def test_environnement_d_etalonnage_sans_cibles():

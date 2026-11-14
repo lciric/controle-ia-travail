@@ -30,14 +30,38 @@ def test_liste_blanche_cas_sain_et_artefacts(tmp_path):
     assert lb.chemin("m") == p
     with pytest.raises(GardeArret, match="hors de la liste blanche"):
         lb.chemin("autre")
-    with pytest.raises(GardeArret, match="hors de la liste blanche"):
-        lb.refuser_hors_liste("diag/run/lecture-sondes-t06.json")
+    with pytest.raises(GardeArret, match="hors de la liste blanche"):      # `controler` refuse aussi (arrêt et nœud)
+        lb.controler("autre")
+    assert not hasattr(lb, "refuser_hors_liste")      # code mort retiré (CLT8C-09, CLT8C-12) : tout passe par `chemin`
     lb2 = en.ListeBlanche(tmp_path, {"m": {"chemin": "donnees/run/mesures.json", "sha256": "0" * 64}})
     with pytest.raises(GardeArret, match="R11"):
         lb2.chemin("m")
+    assert lb2.controler("m")[1]["etat"] == "differe_de_la_consignee"
     p.write_text("{altéré}", encoding="utf-8")
     with pytest.raises(GardeArret, match="empreinte"):
         lb.chemin("m")
+    assert lb.controler("m")[1]["etat"] == "differe_du_compagnon"
+
+
+def test_liste_blanche_controler_rend_l_etat_sans_arreter(tmp_path):
+    """`controler` (CLT8C-01, CLT8C-02) : même contrôle que `chemin`, rendu comme un état ; seul un fichier conforme ou
+    un registre présent est compté ouvert."""
+    p, sha = _fichier(tmp_path, "d/a.json", "{}")
+    lb = en.ListeBlanche(tmp_path, {"a": {"chemin": "d/a.json", "sha256": sha}, "b": {"chemin": "d/b.json", "sha256": None},
+                                    "r": {"chemin": "d/r.md", "sha256": None, "scelle": False},
+                                    "c": {"chemin": "d/c.json", "sha256": None}})
+    assert lb.controler("a")[1]["etat"] == "conforme" and lb.ouvertes == ["d/a.json"]           # cas sain
+    assert lb.controler("b")[1]["etat"] == "absent"                                              # artefacts
+    assert lb.controler("r")[1]["etat"] == "absent"
+    with pytest.raises(GardeArret, match="registre absent sur disque"):
+        lb.chemin("r")
+    (tmp_path / "d/r.md").write_text("x", encoding="utf-8")
+    assert lb.controler("r")[1]["etat"] == "present"
+    (tmp_path / "d/c.json").write_text("{}", encoding="utf-8")                                  # sans compagnon
+    assert lb.controler("c")[1]["etat"] == "compagnon_absent"
+    (tmp_path / "d/c.json.sha256").write_text("pas une empreinte\n", encoding="utf-8")
+    assert lb.controler("c")[1]["etat"] == "compagnon_illisible"
+    assert lb.ouvertes == ["d/a.json", "d/r.md"]
 
 
 @pytest.mark.parametrize("chemin", ["diag/7b/lecture-sondes-t06.json", "diag/7b/resume.json", "donnees/hd/adaptateur-hd.pt",
@@ -108,6 +132,37 @@ def test_registre_cles_T08_lues_autres_ignorees(tmp_path):
     assert en.lire_ligne_sorties_hd(v) is None
     with pytest.raises(GardeArret, match="fuseau"):
         en.date_utc("2026-11-10T10:00:00")
+
+
+def test_registre_ligne_mal_formee_comptee_et_signalee(tmp_path):
+    """CLT8C-17 : une quatrième cellule qui n'est pas une empreinte entière est comptée et signalée, jamais ignorée en
+    silence ; la clé `T08` inscrite deux fois arrête toujours (gardé)."""
+    entete = "| CLÉ | date UTC | chemin | empreinte |\n|---|---|---|---|\n"
+    sain = entete + f"| GEL-T08 | 2026-11-10T11:00:00Z | b4.md | {'3' * 64} |\n"
+    p = tmp_path / "r.md"
+    p.write_text(sain, encoding="utf-8")
+    r = en.lire_registre_scellements(p)
+    assert r["mal_formees"] == [] and r["mal_formees_lues"] == []                                # cas sain
+    p.write_text(sain + f"| COURSE-T08 | 2026-11-20T10:00:00Z | diag/x.json | {'4' * 63} |\n"
+                 f"| VA-1 | 2026-11-20T10:00:00Z | v | abc |\n", encoding="utf-8")                # artefacts
+    r = en.lire_registre_scellements(p)
+    assert [m["cle"] for m in r["mal_formees"]] == ["COURSE-T08", "VA-1"]
+    assert [m["cle"] for m in r["mal_formees_lues"]] == ["COURSE-T08"] and r["mal_formees_lues"][0]["numero"] == 4
+    with pytest.raises(GardeArret, match="COURSE-T08 absente .*autre forme"):
+        en.exiger_ligne(r, "COURSE-T08")
+    # registre du texte de validité : ligne SORTIES-HD-VADAPT d'une autre forme, signalée ; double ; date sans fuseau
+    v = tmp_path / "v.md"
+    v.write_text(f"| SORTIES-HD-VADAPT | 2026-11-20T10:00:00Z | diag/i.json | {'5' * 64}0 |\n", encoding="utf-8")
+    s = en.lire_sorties_hd(v)
+    assert s["ligne"] is None and len(s["mal_formees"]) == 1 and s["mal_formees_toutes"] == 1
+    with pytest.raises(GardeArret, match="autre forme"):
+        en.lire_ligne_sorties_hd(v)
+    v.write_text(f"| SORTIES-HD-VADAPT | 2026-11-20T10:00:00 | diag/i.json | {'5' * 64} |\n", encoding="utf-8")
+    assert en.lire_sorties_hd(v)["date_illisible"] and en.lire_sorties_hd(v)["ligne"] is None
+    v.write_text(2 * f"| SORTIES-HD-VADAPT | 2026-11-20T10:00:00Z | diag/i.json | {'5' * 64} |\n", encoding="utf-8")
+    assert en.lire_sorties_hd(v)["inscriptions"] == 2
+    with pytest.raises(GardeArret, match="deux fois"):
+        en.lire_ligne_sorties_hd(v)
 
 
 # --- amorce de l'instance -----------------------------------------------------------------------------------------------

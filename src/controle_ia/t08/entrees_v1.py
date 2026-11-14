@@ -13,6 +13,15 @@
 - Registres : format `| CLÉ | date UTC | chemin | empreinte |` ; seules les clés à la marque `T08`, plus
   `RUN-CONFIRMATION-T06` et `CODE-MOTS-ET-COUT-T06`, sont lues (les autres ignorées et comptées) ; du registre du texte
   de validité, la seule ligne `SORTIES-HD-VADAPT` (jamais une ligne VA) ; rien n'est jamais écrit dans un registre.
+  Une ligne de tableau qui n'a pas la forme du registre (par exemple une quatrième cellule qui n'est pas une empreinte
+  entière) est **comptée et signalée** (`mal_formees`, avec sa clé), jamais ignorée en silence (CLT8C-17) ; une clé à
+  la marque `T08` inscrite deux fois arrête (gardé).
+- `ListeBlanche.controler` : les mêmes contrôles que `chemin` (empreinte contre le compagnon et contre l'empreinte
+  consignée, présence d'un registre vivant), rendus comme un état au lieu d'un arrêt ; la lecture descriptive de la
+  pièce HD s'en sert pour écrire « non lue » sans jamais arrêter la lecture de T0.8 (liste d'arrêt, l. 248) ; une
+  entrée hors de la liste ou d'une phase non ouverte arrête toujours (arrêt et nœud).
+- `ArretPieceHD` : classe d'arrêt propre à la lecture descriptive de la pièce HD (« non lue » ou « non calculable »,
+  avec son motif), attrapée par cette seule lecture : aucun arrêt n'est trié par les mots de son message (CLT8C-02).
 - `exiger_instance_sans_interdits` : l'amorce vérifie, avant tout calcul, qu'aucun `lecture-sondes-t06*` ni aucun
   `resume.json` n'est extrait sur l'instance, ni comme fichier ni comme objet git.
 """
@@ -29,9 +38,25 @@ import numpy as np
 
 from ..gardes import GardeArret
 from ..manifeste import lire_manifeste
-from ..scellement import verifier
+from ..scellement import compagnon, empreinte, lire_compagnon, verifier
 
 PHASES = ("course", "lecture", "hd")
+
+
+class ArretPieceHD(GardeArret):
+    """Issue de la lecture descriptive des épisodes de la pièce HD (plan, point 8 bis) : `etat` « non lue » ou
+    « non calculable », `motif` (phrase gelée du texte, ou « non lue (<motif>) » / « non calculable (<motif>) », l. 193).
+    Levée par les seules étapes de cette lecture, attrapée par `temoin_distille_v1.lire_temoin_distille` seulement :
+    elle n'arrête jamais la lecture de T0.8 (liste d'arrêt, l. 248). Une `GardeArret` d'une autre classe garde son
+    sens : arrêt de toute la lecture (chemin interdit, hors liste : arrêt et nœud)."""
+
+    ETATS = ("non lue", "non calculable")
+
+    def __init__(self, etat: str, motif: str, **plus):
+        if etat not in self.ETATS:
+            raise GardeArret(f"issue {etat!r} de la pièce HD inconnue : {self.ETATS}")
+        super().__init__(f"pièce HD : {etat} : {motif}")
+        self.etat, self.motif, self.plus = etat, motif, plus
 # motifs sur le nom du fichier
 NOMS_INTERDITS_DEBUT = ("lecture-sondes", "distillation-t06", "adaptateur", "scores-relecture-vadapt",
                         "divergences-vadapt", "lecture-vadapt")
@@ -101,32 +126,47 @@ class ListeBlanche:
     def phase_ouverte(self, phase: str) -> bool:
         return phase in self._phases
 
-    def chemin(self, nom: str) -> Path:
-        """Chemin d'une entrée de la liste, empreinte vérifiée contre son compagnon et contre l'empreinte attendue."""
+    def controler(self, nom: str) -> tuple[Path, dict]:
+        """Contrôles de `chemin`, rendus comme un état (aucun arrêt pour l'état du fichier) : `present` (registre vivant
+        présent), `conforme` (empreinte égale au compagnon et, s'il y en a une, à l'empreinte consignée), `absent`
+        (fichier ou registre absent du disque), `compagnon_absent`, `compagnon_illisible`, `differe_du_compagnon`,
+        `differe_de_la_consignee`. Une entrée hors de la liste, ou d'une phase non ouverte, arrête toujours (arrêt et
+        nœud). Le fichier n'est compté ouvert que s'il est `present` ou `conforme`."""
         if nom not in self.entrees:
             raise GardeArret(f"entrée {nom!r} hors de la liste blanche : arrêt et nœud")
         e = self.entrees[nom]
         if e["phase"] not in self._phases:
             raise GardeArret(f"entrée {nom!r} de la phase {e['phase']!r} ouverte avant son étape : refusée")
         p = self.racine / e["chemin"]
+        if not p.is_file():
+            return p, {"etat": "absent", "detail": f"{e['chemin']} : " + ("registre absent sur disque" if not e["scelle"]
+                                                                         else "fichier absent sur disque")}
         if not e["scelle"]:            # registre vivant (versionné par git, sans compagnon) : présence seulement
-            if not p.is_file():
-                raise GardeArret(f"{e['chemin']} : registre absent sur disque")
             self.ouvertes.append(e["chemin"])
-            return p
-        sha = verifier(p)
+            return p, {"etat": "present", "detail": None}
+        c = compagnon(p)
+        if not c.is_file():
+            return p, {"etat": "compagnon_absent", "detail": f"{e['chemin']} : empreinte compagnon {c.name} absente"}
+        try:
+            attendue = lire_compagnon(c, p.name)
+        except GardeArret as x:        # compagnon d'une autre forme (une seule ligne « <hex>  <nom> » attendue)
+            return p, {"etat": "compagnon_illisible", "detail": str(x)}
+        sha = empreinte(p)
+        if sha != attendue:
+            return p, {"etat": "differe_du_compagnon", "detail": f"{p} : empreinte {sha[:12]}… ≠ scellée {attendue[:12]}…"}
         if e["sha256"] is not None and sha != e["sha256"]:
-            raise GardeArret(f"{e['chemin']} : empreinte {sha[:12]}… ≠ empreinte consignée {e['sha256'][:12]}… (R11)")
+            return p, {"etat": "differe_de_la_consignee",
+                       "detail": f"{e['chemin']} : empreinte {sha[:12]}… ≠ empreinte consignée {e['sha256'][:12]}… (R11)"}
         self.ouvertes.append(e["chemin"])
-        return p
+        return p, {"etat": "conforme", "detail": None, "sha256": sha}
 
-    def refuser_hors_liste(self, chemin) -> None:
-        """Toute ouverture d'un chemin qui n'est pas une entrée de la liste est refusée (garde appelée par les lecteurs)."""
-        rel = str(Path(chemin))
-        if not any(rel == e["chemin"] or rel == str(self.racine / e["chemin"]) for e in self.entrees.values()):
-            m = motif_interdit(rel)
-            raise GardeArret(f"ouverture tentée de {rel} hors de la liste blanche"
-                             + (f" (motif interdit {m!r})" if m else "") + " : arrêt et nœud")
+    def chemin(self, nom: str) -> Path:
+        """Chemin d'une entrée de la liste, empreinte vérifiée contre son compagnon et contre l'empreinte attendue ;
+        tout autre état arrête (R11)."""
+        p, c = self.controler(nom)
+        if c["etat"] not in ("present", "conforme"):
+            raise GardeArret(c["detail"])
+        return p
 
     def lire_json(self, nom: str):
         return json.loads(self.chemin(nom).read_text(encoding="utf-8"))
@@ -207,8 +247,11 @@ def projeter_base_a(obj: dict) -> dict:
 # --- registres (format du registre partagé) ------------------------------------------------------------------------
 
 _LIGNE = re.compile(r"^\|\s*([A-Za-z0-9-]+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([0-9a-f]{64})\s*\|\s*$")
+_SEPARATEUR = re.compile(r"^\|[\s:|-]*$")
+_CLE = re.compile(r"^[A-Za-z0-9-]+$")
 _MARQUE_T08 = re.compile(r"(^|-)T08(-|$)")
 CLES_LUES_HORS_T08 = ("RUN-CONFIRMATION-T06", "CODE-MOTS-ET-COUT-T06")
+SORTIES_HD = "SORTIES-HD-VADAPT"
 
 
 def date_utc(texte: str) -> datetime:
@@ -222,48 +265,90 @@ def date_utc(texte: str) -> datetime:
     return d.astimezone(timezone.utc)
 
 
-def _lignes_registre(chemin: Path) -> list[tuple]:
-    sortie = []
-    for l in Path(chemin).read_text(encoding="utf-8").splitlines():
-        m = _LIGNE.match(l.strip())
-        if m and m.group(1) not in ("CLÉ", "CLE"):
+def _lignes_registre(chemin: Path) -> tuple[list[tuple], list[dict]]:
+    """(lignes de la forme du registre, lignes de tableau d'une autre forme). Une ligne de tableau (qui commence par
+    « | ») qui n'est ni l'en-tête, ni un séparateur, ni de la forme `| CLÉ | date | chemin | empreinte entière |` est
+    rendue dans la seconde liste avec son numéro et sa clé (première cellule, si elle a la forme d'une clé) : comptée et
+    signalée, jamais ignorée en silence (CLT8C-17)."""
+    sortie, mal = [], []
+    for i, l in enumerate(Path(chemin).read_text(encoding="utf-8").splitlines(), start=1):
+        s = l.strip()
+        if not s.startswith("|") or _SEPARATEUR.match(s):
+            continue
+        cellules = [c.strip() for c in s.strip("|").split("|")]
+        if cellules and cellules[0] in ("CLÉ", "CLE"):
+            continue
+        m = _LIGNE.match(s)
+        if m:
             sortie.append(m.groups())
-    return sortie
+        else:
+            mal.append({"numero": i, "cle": cellules[0] if cellules and _CLE.match(cellules[0]) else None,
+                        "cellules": len(cellules)})
+    return sortie, mal
+
+
+def _lue(cle: str | None) -> bool:
+    return bool(cle) and bool(_MARQUE_T08.search(cle) or cle in CLES_LUES_HORS_T08)
 
 
 def lire_registre_scellements(chemin) -> dict:
     """Clés à la marque `T08` et `RUN-CONFIRMATION-T06`, `CODE-MOTS-ET-COUT-T06` ; les autres ignorées et comptées.
-    Une clé lue deux fois arrête (une clé, une ligne)."""
+    Une clé lue deux fois arrête (une clé, une ligne). Les lignes d'une autre forme sont comptées et signalées
+    (`mal_formees`, `mal_formees_lues` : celles dont la clé serait lue)."""
     lues, ignorees = {}, 0
-    for cle, date, ch, sha in _lignes_registre(chemin):
-        if not (_MARQUE_T08.search(cle) or cle in CLES_LUES_HORS_T08):
+    bonnes, mal = _lignes_registre(chemin)
+    for cle, date, ch, sha in bonnes:
+        if not _lue(cle):
             ignorees += 1
             continue
         if cle in lues:
             raise GardeArret(f"registre : clé {cle} inscrite deux fois")
         lues[cle] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": sha}
-    return {"lignes": lues, "ignorees": ignorees}
+    return {"lignes": lues, "ignorees": ignorees, "mal_formees": mal,
+            "mal_formees_lues": [m for m in mal if _lue(m["cle"])]}
+
+
+def lire_sorties_hd(chemin) -> dict:
+    """Registre propre du texte de validité, lu sans jamais arrêter la lecture de T0.8 : seule la ligne
+    `SORTIES-HD-VADAPT` (jamais une ligne VA ; rien n'est écrit). Rend `ligne` (`{date, chemin, sha256}` si elle est
+    inscrite une fois, de la forme du registre, à date lisible en UTC ; sinon `None`), `inscriptions` (lignes de la
+    forme du registre à cette clé), `mal_formees` (lignes d'une autre forme à cette clé, comptées et signalées),
+    `mal_formees_toutes`, `ignorees` et `date_illisible` (motif, ou `None`)."""
+    bonnes, mal = _lignes_registre(chemin)
+    a_la_cle = [x for x in bonnes if x[0] == SORTIES_HD]
+    r = {"ligne": None, "inscriptions": len(a_la_cle), "mal_formees": [m for m in mal if m["cle"] == SORTIES_HD],
+         "mal_formees_toutes": len(mal), "ignorees": len(bonnes) - len(a_la_cle), "date_illisible": None}
+    if len(a_la_cle) == 1:
+        cle, date, ch, sha = a_la_cle[0]
+        try:
+            r["ligne"] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": sha}
+        except GardeArret as e:          # date de la ligne illisible ou sans fuseau : motif rendu, jamais d'arrêt
+            r["date_illisible"] = str(e)
+    return r
 
 
 def lire_ligne_sorties_hd(chemin) -> dict | None:
-    """Seule la ligne `SORTIES-HD-VADAPT` du registre propre du texte de validité ; jamais une ligne VA ; rien n'est
-    écrit. `None` si la ligne n'est pas inscrite."""
-    trouvee, ignorees = None, 0
-    for cle, date, ch, sha in _lignes_registre(chemin):
-        if cle != "SORTIES-HD-VADAPT":
-            ignorees += 1
-            continue
-        if trouvee is not None:
-            raise GardeArret("registre du texte de validité : SORTIES-HD-VADAPT inscrite deux fois")
-        trouvee = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": sha, "ignorees": None}
-    if trouvee is not None:
-        trouvee["ignorees"] = ignorees
-    return trouvee
+    """Forme stricte, pour l'épreuve du registre réel par la session mère avant le scellement : la ligne
+    `SORTIES-HD-VADAPT` ou `None` si elle n'est pas inscrite ; arrêt si elle est inscrite deux fois, à une date
+    illisible, ou d'une autre forme. La lecture de T0.8 emploie `lire_sorties_hd`, qui n'arrête jamais."""
+    r = lire_sorties_hd(chemin)
+    if r["inscriptions"] > 1:
+        raise GardeArret("registre du texte de validité : SORTIES-HD-VADAPT inscrite deux fois")
+    if r["date_illisible"]:
+        raise GardeArret(f"registre du texte de validité : SORTIES-HD-VADAPT : {r['date_illisible']}")
+    if r["mal_formees"]:
+        raise GardeArret(f"registre du texte de validité : SORTIES-HD-VADAPT d'une autre forme (lignes "
+                         f"{[m['numero'] for m in r['mal_formees']]})")
+    if r["ligne"] is None:
+        return None
+    return {**r["ligne"], "ignorees": r["ignorees"]}
 
 
 def exiger_ligne(registre: dict, cle: str) -> dict:
     if cle not in registre["lignes"]:
-        raise GardeArret(f"ligne {cle} absente du registre : entrée manquante")
+        mal = [m["numero"] for m in registre.get("mal_formees", []) if m["cle"] == cle]
+        raise GardeArret(f"ligne {cle} absente du registre : entrée manquante"
+                         + (f" (ligne(s) {mal} à cette clé d'une autre forme que celle du registre)" if mal else ""))
     return registre["lignes"][cle]
 
 
