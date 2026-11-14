@@ -1,0 +1,40 @@
+--- a/neuron_lens/lenses.py
++++ b/neuron_lens/lenses.py
+@@ -15,7 +15,28 @@
+ NEURONPEDIA_REPO = "neuronpedia/jacobian-lens"
+ NEURONPEDIA_FILES = {
+     "Qwen/Qwen3-8B": "qwen3-8b/jlens/Salesforce-wikitext/Qwen3-8B_jacobian_lens.pt",
++    "meta-llama/Llama-3.1-8B-Instruct": "llama3.1-8b-it/jlens/Salesforce-wikitext/Llama-3.1-8B-Instruct_jacobian_lens.pt",
+ }
++# Neuronpedia's other released lenses (correctif du 2026-11-14): spec -> file, per model. Their payload layout is
++# assumed to be the J-lens file's ({"J": {layer: [d, d]}}) and is checked on loading, not trusted.
++NEURONPEDIA_EXTRA = {
++    "meta-llama/Llama-3.1-8B-Instruct": {
++        "npJpp": "llama3.1-8b-it/jpp/Salesforce-wikitext/Llama-3.1-8B-Instruct_jpp_lens.pt",
++        "npR": "llama3.1-8b-it/rlens/Salesforce-wikitext/Llama-3.1-8B-Instruct_rlens.pt",
++    },
++}
++
++
++def neuronpedia_lens(filename: str) -> dict:
++    """A Neuronpedia lens file's Jacobians by layer, refused unless it is ``{"J": {int: square matrix}}``."""
++    payload = torch.load(hf_hub_download(NEURONPEDIA_REPO, filename), map_location="cpu", weights_only=True)
++    J = payload.get("J") if isinstance(payload, dict) else None
++    if not isinstance(J, dict) or not J or not all(
++            isinstance(l, int) and isinstance(m, torch.Tensor) and m.ndim == 2 and m.shape[0] == m.shape[1]
++            for l, m in J.items()):
++        keys = sorted(payload) if isinstance(payload, dict) else type(payload).__name__
++        raise ValueError(f"{filename}: not a J-lens layout ({keys})")
++    return J
+ 
+ 
+ @contextlib.contextmanager
+@@ -82,6 +103,8 @@
+         payload = torch.load(hf_hub_download(NEURONPEDIA_REPO, NEURONPEDIA_FILES[model_id]),
+                              map_location="cpu", weights_only=True)
+         return payload["J"]
++    if spec in NEURONPEDIA_EXTRA.get(model_id, {}):
++        return neuronpedia_lens(NEURONPEDIA_EXTRA[model_id][spec])
+     if spec.startswith("fit:"):
+         stem, _, target = spec.removeprefix("fit:").partition("@")
+         _, acc = load_fits([FITS / f"{stem}.pt"], "R", model_id)

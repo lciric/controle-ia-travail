@@ -1,0 +1,23 @@
+--- a/scripts/06_activations.py
++++ b/scripts/06_activations.py
+@@ -284,7 +284,10 @@
+             hs.append(layer.mlp.down_proj.register_forward_pre_hook(lambda m, x, l=l: self.neuron(l, x[0])))
+             hs.append(layer.input_layernorm.register_forward_pre_hook(
+                 lambda m, x, l=l: self.input_norm(l, x[0], arch.norm_eps(m))))
+-            for side, norm in (("q", at.q_norm), ("k", at.k_norm)) + ((("v", at.v_norm),) if hasattr(at, "v_norm") else ()):
++            # Llama 3.1 has no q_norm or k_norm (correctif du 2026-11-14) : a missing norm gets no hook, and its
++            # QK statistics (q, q_r, q_m, k_r, k_m) stay at zero; collect() marks the pass with meta["qk_norm"] = False.
++            norms = (("q", getattr(at, "q_norm", None)), ("k", getattr(at, "k_norm", None)), ("v", getattr(at, "v_norm", None)))
++            for side, norm in ((side, norm) for side, norm in norms if norm is not None):
+                 hs.append(norm.register_forward_hook(
+                     lambda m, x, out, l=l, side=side: self.qk_norm(l, side, x[0], out, arch.norm_eps(m))))
+             hs.append(at.o_proj.register_forward_pre_hook(lambda m, x, l=l: self.stash.__setitem__(l, x[0])))
+@@ -333,6 +336,8 @@
+     meta = {"model": MODEL, "slices": list(ACT_SLICES), "docs": len(rows), "seq_len": SEQ,
+             "neuron_from": NEURON_FROM, "head_from": HEAD_FROM, "edges": EDGES.tolist(), "top_docs": TOP,
+             "batch_docs": args.batch_docs, "dtype": "bfloat16", "attention": "eager"}
++    if not all(hasattr(layer.self_attn, "q_norm") and hasattr(layer.self_attn, "k_norm") for layer in model.layers):
++        meta["qk_norm"] = False  # no QK statistics in this pass: 08_reads.py's heads part must not read them
+     col = Collector(model, len(ACT_SLICES), device)
+     plan = plan_batches(slice_of, args.batch_docs)
+     next_batch, stage = 0, "main"
