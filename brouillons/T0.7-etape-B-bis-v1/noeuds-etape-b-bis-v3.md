@@ -1,0 +1,15 @@
+# Nœuds — T0.7, étape B bis — v3 (tranchés)
+
+- **Auteur** : rédacteur neuf, sous-agent de la session mère, « modèle A ». **Date (UTC)** : 2026-11-14, rédigé à partir de 12:16 (`date -u`). Les v1 et v2 restent (R12) ; la v2 portait les options et les recommandations.
+- **Source** : `registres/decisions.md`, **R-2740** (2026-11-14, 12:15 UTC) ; ligne de GO `registres/go.md`, **GO-2026-11-14-09** ; lues au commit `744a996776485a079eb6f641af93608a56bc7622`.
+- **Mots de Lazar, verbatim** (R-2740) : « Les cinq décisions de l’étape B bis, dont la dépense de 40 USD, à me donner au plus tard mardi. : go recos » et « La dépense de B bis : 40 USD, sur une A100, avec une relance au plus. […] Un petit écart au gabarit des préenregistrements : le code ne sera cité qu’après le scellement du texte, faute de temps. C’est déjà arrivé une fois, mais cette précédente autorisation ne valait pas pour toujours. : go ».
+
+| nœud | décision (R-2740) | ce qui change dans le préenregistrement (brouillon 3) |
+|---|---|---|
+| 1 — place face à G0 | **(a) hors de G0** : rapportée à part, guide la reconception des sondes | aucune ligne de la porte ne change ; B bis ne remplit ni ne retire aucun critère |
+| 2 — hôte des lecteurs | **(a) même hôte que l'étape B (session neuve du compte 3), lecteurs distincts** | lecteur de B bis neuf, qui n'a rien lu de B ; troisième lecteur neuf pour la table conjointe ; modèle C avant le 20 novembre 15:00 UTC, modèle B ensuite |
+| 3 — mode tenu à l'écart | **(a) transfert entre familles maintenant**, mode tenu à l'écart propre à B bis plus tard, sur devis ; le mode de G1 n'est pas consommé | transfert de mode « non joué à cette course » ; un addendum scellé, sur devis, avant toute génération, le jour où ce mode existe |
+| 4 — dépense et écart au gabarit | **ligne GO-2026-11-14-09** : 40 USD, une A100 seulement, une relance au plus, échéance 2026-11-22, garde de débit, feu écrit de la mère avec ce numéro avant toute location ; **écart au gabarit accordé** (code cité après le scellement) | coupure à 39,5 USD ; aucune création sans `GO-BBIS`, feu écrit de la mère, `CODE-BBIS`, `SCELLEMENT-BBIS` ; `CODE-BBIS` inscrite après le scellement, avant toute exécution |
+| 5 — sens de « plafond tient » | **« lecture dure »**, retenue **avant toute lecture** : la sonde fait mieux que l'artefact d'adaptateur seul, avec preuve positive, et reste muette sur le jumeau | « plafond tient » = libellé « lecture dure » ; le libellé « lettre de R-2716 » et sa variante de table conjointe restent écrits dessous, comme information, jamais décisifs ; la règle « choisi après lecture » est retirée |
+
+- **Ligne à dire à Lazar** (point a de la vérification courte, R-2742) : « l'adversaire « tâches témoins » de ta demande (R-2716) est rendu sous la forme d'un nul de réétiquetage par tâche, aux limites écrites : presque redondant avec le plancher, il ne mesure pas la mémorisation ; les vraies gardes contre une lecture de surface sont le lecteur honnête à capacité égale, la séparation à texte égal et la lecture sans le champ du coût. »
