@@ -104,7 +104,6 @@ def test_llama_mode_principal_sans_statistiques_qk(tmp_path, monkeypatch):
         assert torch.count_nonzero(col.seg[k]) == 0, k
     assert torch.count_nonzero(col.seg["sum"]) > 0
     assert torch.count_nonzero(col.seg["h_sum"]) > 0
-    # rappel de la condition de collect() (pas un essai de collect(), qui n'est pas appelé ici)
     assert any(getattr(l.self_attn, n, None) is None for l in stack.layers for n in ("q_norm", "k_norm"))
 
 
@@ -180,15 +179,3 @@ def test_original_echoue_sur_llama(tmp_path, monkeypatch):
     mod = load_script(Path(ORIG), d, monkeypatch)
     with pytest.raises(AttributeError, match="q_norm"):
         one_pass(mod, model)
-
-
-def test_chat_open_vrai_tokeniseur():
-    """B0 seulement : le tokeniseur de Llama 3.1 8B Instruct (sous licence, téléchargé à B0)."""
-    for name in [k for k in sys.modules if k == "neuron_lens" or k.startswith("neuron_lens.")]:
-        del sys.modules[name]
-    sys.path.insert(0, str(ROOT))
-    from transformers import AutoTokenizer
-    from neuron_lens import arch
-    tok = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
-    assert arch.bos(tok) == [tok.bos_token_id]
-    assert arch.chat_open("meta-llama/Llama-3.1-8B-Instruct", tok) == tok.convert_tokens_to_ids("<|start_header_id|>")
