@@ -1,0 +1,2555 @@
+diff --git a/exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json b/exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json
+index 934f8e6..c19d6c5 100644
+--- a/exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json
++++ b/exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json
+@@ -1,6 +1,6 @@
+ {
+- "_lisez_moi": "Configuration v11 du pilote d'une génération sur la famille MR-2 (code v70 ; C-7, C-9 ; décisions de la mère R-2534 sur Q-1, Q-4, Q-5, Q-6 et R-2548 sur D-2 et D-4). Bornes de sortie figées, lues par le code, recopiées au bloc gelé ; chaque borne est au plus celle que le plafond de session paie au pire cas de la commande (entrée comptée en octets + 1024) pour un texte servi d'au plus octets_entree_max octets. Q-1 (c) : Argon et Astra à 36 000 jetons, plafond de session 2,34 USD, part 9,36 ; π1 20,00 ; π2 21,72. Q-4 : effort « high » envoyé à Fable 5.2 et Opus 5.5 ; aucun réglage envoyé à Argon ni à Astra. D-2 : reflexion_comprise, règle de comptage de la réflexion (vrai : le champ de sortie du fournisseur la compte déjà ; faux : elle lui est ajoutée), écrite d'après la documentation des fournisseurs, À VÉRIFIER PAR LA SONDE ; le mode réel exige un relevé de la sonde qui la confirme. D-4 : section sonde (deux lignes de dépense à part de π1 et π2 : 4,39 USD sur crédits de Claude, 3,68 USD hors crédits ; consignes de 100 octets au plus ; borne courte de 256 jetons). Clés passées par leur nom (variable_cle) au seul relais.",
+- "version": "configuration-pilote-mr2-v11",
++ "_lisez_moi": "Configuration v12 du pilote d'une génération sur la famille MR-2 (code v72 ; fichier neuf, R12 ; la v11 reste en place, inchangée). Seul changement de fond depuis la v11 : les deux consignes de la section sonde, écrites pour faire réfléchir les proposeurs (calcul à faire avant de répondre), parce que la sonde v71 (relevé bd0a2dab…, R-2621) a rendu Argon « indéterminé » : champ thoughtsTokenCount absent aux deux appels, aucune réflexion sur « Réponds par le seul mot OK. ». Consigne à la borne gelée : un dénombrement à calculer, réponse d'un seul nombre (texte visible court, réflexion attendue) ; consigne à la borne courte : une énumération justifiée, longue (coupée à 256 jetons) et à calculer. Tout le reste est celui de la v11 à l'octet près en valeur (proposeurs, champ « sources » compris tel qu'écrit pour la v11, bornes, plafonds, parts, prix, réglages, règles de comptage reflexion_comprise, lignes π1 20,00 et π2 21,72, lignes de la sonde s1 4,39 et s2 3,68, octets_consigne_max 100, borne courte 256, commande et relais v70 et leurs empreintes). Le pire cas de la sonde est inchangé (calculé sur une consigne de 100 octets, la plus longue permise). Aucune consigne ne garantit qu'un modèle réfléchisse : le relevé le dit (conclusion reflexion_observee de la sonde v72) ; s'il ne réfléchit pas, le mode réel refuse. Règle de comptage de la réflexion (D-2) : écrite d'après la documentation des fournisseurs, de mémoire, À VÉRIFIER PAR LA SONDE.",
++ "version": "configuration-pilote-mr2-v12",
+  "octets_entree_max": 52000,
+  "delai_marge_s": 30,
+  "numpy_exige": "2.5.3",
+@@ -115,8 +115,8 @@
+   "octets_consigne_max": 100,
+   "borne_courte_jetons": 256,
+   "consignes": {
+-   "borne_gelee": "Réponds par le seul mot OK.",
+-   "borne_courte": "Écris un très long texte, de plusieurs milliers de mots, sur l'histoire de la navigation."
++   "borne_gelee": "Combien d'entiers de 1 à 10000 sont divisibles par 7 ou 11, mais pas par 13 ? Le seul nombre.",
++   "borne_courte": "Énumère un à un les nombres premiers entre 1000 et 1200, en justifiant chacun par ses divisions."
+   },
+   "go": {
+    "s1": {
+diff --git a/pole/proposeurs_pilote_v70.py b/pole/proposeurs_pilote_v72.py
+index 47c1936..edfb9e0 100644
+--- a/pole/proposeurs_pilote_v70.py
++++ b/pole/proposeurs_pilote_v72.py
+@@ -1,81 +1,25 @@
+-"""Proposeurs du pilote MR-2 — code v70 (fichier neuf, R12 ; remplace `proposeurs_pilote_v69.py`, gardé) : configuration v11,
+-bornes de sortie, parts et lignes de GO (C-7, C-9), appel d'un proposeur par sa commande, réponse brute et témoin d'isolement
+-scellés avant l'extraction (C-8, C-10), relais lancés **par le lanceur lui-même** (essai à blanc, sonde et mode réel), clés par
+-leur **nom**, environnement bâti par filtrage, arrêtés par leur PID (R10). Aucun réseau ici ; aucune valeur de clé lue ni écrite
+-ailleurs que dans l'environnement du seul relais.
+-
+-Changements depuis la v69 (contre-lecture du différentiel v68 → v69, `935e44bc…` ; décisions de la mère R-2548) :
+-- **D-2** : un coût lu au-dessus du pire cas (`cout_excessif`) **arrête le pilote** (`ArretPilote`, code 3, pièces versées,
+-  l'appel porté au relevé partiel) : plus jamais un abandon du proposeur, jamais un échec silencieux ; la règle de comptage de
+-  la réflexion est un champ gelé de la configuration (`reflexion_comprise`, booléen ; Claude : vrai seulement), passé à la
+-  commande et au relais, contrôlé à l'état du relais.
+-- **D-4** : section `sonde` de la configuration v11 (consignes de 100 octets au plus, borne courte, deux lignes de GO à part avec
+-  leurs parts, chaque part au moins le pire cas des appels de la sonde) ; relais lancés avec un plafond et un nombre d'appels
+-  donnés (sonde) ; `appeler` accepte une borne de sortie plus courte que la borne gelée (sonde seulement).
+-- **D-5** : W1 — l'état du relais rend les noms de son environnement, contrôlés (aucun autre nom que le filtre, le jeton, la clé
+-  et l'espace du proposeur) ; W3 et « session neuve » — les conditions du témoin sont une fonction à part
+-  (`conditions_du_temoin`), chacune avec son artefact.
+-- **d-2** : délai de l'adaptateur : l'appel est compté au plafond de session (l'amont a pu facturer), plus à 0.
+-
+-États d'un appel : `complet`, `tronque`, `echec`. Abandon du proposeur (ses appels restants « échec » sans appel) : panne du relais
+-(codes 2, 3, 4, 6 de la commande, délai de l'adaptateur compris) et causes `modele_servi`, `usage_absent`. Échec sans abandon :
+-`refus`, `illisible`, `aucun_candidat`, `raison_inconnue`. Arrêt du pilote (`ArretPilote`, code 3) : cause `cout_excessif` ;
+-réponse brute, corps du relais ou témoin d'isolement absent ou faux ; part qui serait atteinte.
++"""Lecture de la configuration v12 du pilote MR-2 — code v72 (fichier neuf, R12 ; `proposeurs_pilote_v70.py` reste en place,
++inchangé, et sert tout le reste : relais, appels, lignes de GO, parts de la sonde, empreinte de la configuration).
++
++Pourquoi ce module : la fonction `lire_configuration` de la v70 exige la version « configuration-pilote-mr2-v11 » ; la
++configuration v12 (consignes de la sonde réécrites pour faire réfléchir les proposeurs, R-2621) ne peut donc être lue que par une
++fonction neuve, sans réécrire un fichier (R12). `lire_configuration` ci-dessous est **la fonction de la v70 recopiée**, dont seule
++la version exigée change (« configuration-pilote-mr2-v12 ») ; les contrôles qu'elle appelle sont ceux de la v70, appelés depuis
++son module (`verifier_section_sonde` comprise). Un essai compare les deux textes (même code hormis la version exigée et l'appel
++qualifié de `verifier_section_sonde`). Aucun réseau ici.
+ """
+ 
+-import hashlib
+ import json
+ import math
+ import os
+-import secrets
+-import subprocess
+-import time
+-import urllib.parse
+ 
+-from .outils import json_canonique, sha256_fichier
++from . import proposeurs_pilote_v70 as _V70
++from .outils import sha256_fichier
+ from .pilote_mr2_v70 import PROPOSEURS, Refus
++from .proposeurs_pilote_v70 import CHAMPS_PROPOSEUR, URL_AMONT, amont_boucle_locale, borne_de_sortie_max
+ 
+-VERSION = "proposeurs-pilote-v70"
+-ROLE = "proposeur_ideation"
+-CODES_PANNE = (2, 3, 4, 6)
+-CAUSES_ABANDON = ("modele_servi", "usage_absent")
+-CAUSES_ARRET = ("cout_excessif",)  # D-2 : arrêt du pilote, jamais abandon ni échec silencieux
+-CHAMPS_PROPOSEUR = {"modele", "dialecte", "credits", "plafond_session_usd", "borne_sortie_jetons", "prix_entree_usd_par_million",
+-                    "prix_sortie_usd_par_million", "part_usd", "delai_s", "port", "variable_cle", "variable_espace", "url_amont",
+-                    "reglages", "sources", "reflexion_comprise"}
+-URL_AMONT = {"claude": "https://api.anthropic.com/v1/messages",
+-             "gemini": "https://generativelanguage.googleapis.com/v1beta/models/{modele}:generateContent",
+-             "astra": "https://api.openai.com/v1/chat/completions"}
+-ENV_FILTRE = ("PATH", "LANG", "LC_ALL", "SSL_CERT_FILE", "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy",
+-              "no_proxy")  # noms seulement ; aucun autre nom ne passe au relais
+-NOMS_AJOUTES = ("RELAIS_JETON", "LC_CTYPE")  # le jeton du lancement ; LC_CTYPE que l'interprète peut poser lui-même (PEP 538)
+-GO_SONDE = ("s1", "s2")
+-
+-
+-class ArretPilote(RuntimeError):
+-    """Arrêt (code 3) : pièces versées, rien n'est lu. `appel` : l'appel qui l'a causé, quand il a eu lieu (porté au relevé)."""
+-
+-    def __init__(self, message, appel=None):
+-        super().__init__(message)
+-        self.appel = appel
+-
+-
+-def borne_de_sortie_max(plafond, prix_entree, prix_sortie, octets_entree_max):
+-    """La plus grande borne de sortie que le plafond de session paie au pire cas de la commande (entrée comptée en octets + 1024)
+-    pour un texte servi d'au plus `octets_entree_max` octets."""
+-    reste = plafond - (octets_entree_max + 1024) * prix_entree / 1e6
+-    return int(math.floor(reste * 1e6 / prix_sortie)) if reste > 0 else 0
+-
+-
+-def pire_cas_d_un_appel(p, octets, borne=None):
+-    """Le pire cas d'un appel, règle de la commande et du relais : (octets + 1024) × prix d'entrée + borne × prix de sortie."""
+-    b = p["borne_sortie_jetons"] if borne is None else borne
+-    return (octets + 1024) * p["prix_entree_usd_par_million"] / 1e6 + b * p["prix_sortie_usd_par_million"] / 1e6
+-
+-
+-def amont_boucle_locale(url):
+-    u = urllib.parse.urlsplit(url or "")
+-    return u.scheme == "http" and u.hostname == "127.0.0.1" and bool(u.port)
++VERSION = "proposeurs-pilote-v72"
++VERSION_CONFIGURATION = "configuration-pilote-mr2-v12"
+ 
+ 
+ def lire_configuration(chemin):
+@@ -86,8 +30,8 @@ def lire_configuration(chemin):
+     dossier = os.path.dirname(os.path.abspath(chemin))
+     with open(chemin, encoding="utf-8") as f:
+         conf = json.load(f)
+-    if conf.get("version") != "configuration-pilote-mr2-v11":
+-        raise Refus("configuration : version « configuration-pilote-mr2-v11 » exigée")
++    if conf.get("version") != VERSION_CONFIGURATION:
++        raise Refus(f"configuration : version « {VERSION_CONFIGURATION} » exigée")
+     props = conf.get("proposeurs")
+     if not isinstance(props, dict) or tuple(sorted(props)) != tuple(sorted(PROPOSEURS)):
+         raise Refus(f"configuration : proposeurs exactement {PROPOSEURS}")
+@@ -145,7 +89,7 @@ def lire_configuration(chemin):
+             vus.append(k)
+     if sorted(k for k in vus if k in props) != sorted(PROPOSEURS):
+         raise Refus("configuration : chaque proposeur dans une seule ligne de GO")
+-    verifier_section_sonde(conf, props)
++    _V70.verifier_section_sonde(conf, props)
+     for cle in ("commande", "relais"):
+         piece = conf.get(cle) or {}
+         f = os.path.normpath(os.path.join(dossier, piece.get("chemin", "")))
+@@ -157,343 +101,4 @@ def lire_configuration(chemin):
+     return conf, dossier
+ 
+ 
+-def verifier_section_sonde(conf, props):
+-    """D-4 : la section `sonde` : consignes de `octets_consigne_max` octets au plus (100), borne courte entière ≤ chaque borne
+-    gelée, deux lignes de GO à part (s1 crédits de Claude, s2 hors crédits) dont la somme des parts égale le montant au centime,
+-    chaque proposeur dans une seule ligne, chaque part au moins le pire cas des appels de la sonde (borne gelée, puis borne
+-    courte, consigne au plus longue permise)."""
+-    s = conf.get("sonde")
+-    if not isinstance(s, dict) or set(s) != {"octets_consigne_max", "borne_courte_jetons", "consignes", "go"}:
+-        raise Refus("configuration : sonde {octets_consigne_max, borne_courte_jetons, consignes, go}")
+-    omax, bc = s["octets_consigne_max"], s["borne_courte_jetons"]
+-    if not (isinstance(omax, int) and not isinstance(omax, bool) and 0 < omax <= 100):
+-        raise Refus("configuration, sonde : octets_consigne_max entier dans [1 ; 100]")
+-    if not (isinstance(bc, int) and not isinstance(bc, bool) and 0 < bc <= min(p["borne_sortie_jetons"] for p in props.values())):
+-        raise Refus("configuration, sonde : borne courte entière > 0 et sous chaque borne gelée")
+-    c = s["consignes"]
+-    if not isinstance(c, dict) or set(c) != {"borne_gelee", "borne_courte"}:
+-        raise Refus("configuration, sonde : consignes {borne_gelee, borne_courte}")
+-    for k, v in c.items():
+-        if not (isinstance(v, str) and v.strip() and len(v.encode("utf-8")) <= omax):
+-            raise Refus(f"configuration, sonde : consigne {k} de {omax} octets au plus")
+-    go = s["go"]
+-    if not isinstance(go, dict) or set(go) != set(GO_SONDE):
+-        raise Refus("configuration, sonde : go {s1, s2}")
+-    vus = []
+-    for ligne, g in go.items():
+-        parts = g.get("parts_usd") if isinstance(g, dict) else None
+-        if not isinstance(parts, dict) or not parts or not set(parts) <= set(props):
+-            raise Refus(f"configuration, sonde, go {ligne} : parts_usd, proposeurs seulement")
+-        if round(sum(parts.values()) * 100) != round(g.get("montant_usd", -1) * 100):
+-            raise Refus(f"configuration, sonde, go {ligne} : somme des parts ≠ montant")
+-        if not (isinstance(g.get("perimetre_contient"), list) and g["perimetre_contient"]):
+-            raise Refus(f"configuration, sonde, go {ligne} : perimetre_contient, liste non vide")
+-        for nom, v in parts.items():
+-            pire = pire_cas_d_un_appel(props[nom], omax) + pire_cas_d_un_appel(props[nom], omax, bc)
+-            if not (isinstance(v, (int, float)) and v + 1e-9 >= pire):
+-                raise Refus(f"configuration, sonde, go {ligne} : part de {nom} {v} < pire cas des appels de la sonde {pire:.6f}")
+-            vus.append(nom)
+-    if sorted(vus) != sorted(PROPOSEURS):
+-        raise Refus("configuration, sonde : chaque proposeur dans une seule ligne de GO de la sonde")
+-
+-
+-def parts_de_la_sonde(conf):
+-    """{proposeur : part de la sonde} (le plafond de son relais pendant la sonde)."""
+-    return {nom: v for g in conf["sonde"]["go"].values() for nom, v in g["parts_usd"].items()}
+-
+-
+-def lire_go_de_lignes(conf_go, registre, identifiants, aujourd_hui=None):
+-    """Les lignes nommées (`{ligne : identifiant}`), lues par le lecteur v66 au montant **exact** de la configuration ;
+-    identifiants distincts ; le périmètre de chaque ligne contient les mots écrits à la configuration."""
+-    from .registre_go_v66 import GoRefuse, verifier_go_v66
+-    if len(set(identifiants.values())) != len(identifiants):
+-        raise Refus(f"GO : identifiants distincts exigés (lignes {sorted(identifiants)})")
+-    out = {}
+-    for ligne, ident in sorted(identifiants.items()):
+-        try:
+-            out[ligne] = verifier_go_v66(ident, registre, conf_go[ligne]["montant_usd"], aujourd_hui=aujourd_hui)
+-        except GoRefuse as e:
+-            raise Refus(f"GO {ligne} : {e}") from None
+-        manquants = [m for m in conf_go[ligne]["perimetre_contient"] if m not in out[ligne]["perimetre"]]
+-        if manquants:
+-            raise Refus(f"GO {ligne} : périmètre sans {manquants}")
+-    return out
+-
+-
+-def lire_go_du_pilote(conf, registre, go_pi1, go_pi2, aujourd_hui=None):
+-    """C-9 : les deux lignes π1 (crédits de Claude) et π2 (hors crédits), lues par le lecteur v66 au montant **exact** de la
+-    configuration ; deux identifiants distincts ; m-4 : le périmètre de chaque ligne contient les mots écrits à la configuration."""
+-    return lire_go_de_lignes(conf["go"], registre, {"pi1": go_pi1, "pi2": go_pi2}, aujourd_hui)
+-
+-
+-def lire_go_de_la_sonde(conf, registre, go_s1, go_s2, aujourd_hui=None):
+-    """D-4 : les deux lignes de la sonde, à part de π1 et π2 (s1 crédits de Claude, s2 hors crédits), même lecture."""
+-    return lire_go_de_lignes(conf["sonde"]["go"], registre, {"s1": go_s1, "s2": go_s2}, aujourd_hui)
+-
+-
+-def commande_d_un_proposeur(conf, nom, sortie_brute, python, borne=None):
+-    p = conf["proposeurs"][nom]
+-    b = p["borne_sortie_jetons"] if borne is None else borne
+-    return [python, "-I", "-B", conf["commande"]["chemin_absolu"], "--url-relais", f"http://127.0.0.1:{p['port']}",
+-            "--modele", p["modele"], "--dialecte", p["dialecte"], "--prix-entree", repr(p["prix_entree_usd_par_million"]),
+-            "--prix-sortie", repr(p["prix_sortie_usd_par_million"]), "--borne-sortie", str(b),
+-            "--delai-s", repr(float(p["delai_s"]) - conf.get("delai_marge_s", 30)), "--sortie-brute", sortie_brute,
+-            "--reflexion-comprise", "oui" if p["reflexion_comprise"] else "non"]
+-
+-
+-def _derniere_ligne(stdout):
+-    for ligne in reversed((stdout or "").strip().splitlines()):
+-        try:
+-            o = json.loads(ligne)
+-        except ValueError:
+-            return None
+-        return o if isinstance(o, dict) else None
+-    return None
+-
+-
+-def ecrire_scelle_json(chemin, objet):
+-    octets = (json.dumps(objet, ensure_ascii=False, sort_keys=True, indent=1) + "\n").encode("utf-8")
+-    with open(chemin, "xb") as f:
+-        f.write(octets)
+-    sha = hashlib.sha256(octets).hexdigest()
+-    with open(chemin + ".sha256", "x", encoding="utf-8") as f:
+-        f.write(f"{sha}  {os.path.basename(chemin)}\n")
+-    return sha
+-
+-
+-def _compagnon_egal(chemin):
+-    try:
+-        with open(chemin + ".sha256", encoding="utf-8") as f:
+-            return f.read().split()[0] == sha256_fichier(chemin)
+-    except (OSError, IndexError):
+-        return False
+-
+-
+-def conditions_du_temoin(temoin, sha_texte, reglages, apres):
+-    """W3 et « session neuve » (D-5) : les conditions du témoin d'isolement, chacune nommée ; toutes doivent être vraies."""
+-    return {"relais": temoin["relais"] == temoin["relais_attendu"],
+-            "texte_recu": temoin["texte_recu_sha256"] == sha_texte,
+-            "consigne_commande": temoin["consigne_commande_sha256"] == sha_texte,
+-            "aucun_outil": temoin["outils"] == [], "un_message": temoin["messages"] == 1,
+-            "aucun_systeme": temoin["systeme"] is None, "session_neuve": temoin["session_neuve"] is True,
+-            "session_vide": apres == [], "reglages": temoin["reglages"] == reglages}
+-
+-
+-def appeler(conf, nom, texte, dossier_appel, jeton, python, executer=subprocess.run, borne=None):
+-    """Un appel, une session neuve (C-10) : dossier de l'appel créé vide (il ne doit pas exister) ; commande lancée dans un
+-    dossier courant vide, environnement minimal sans clé (le jeton du relais seulement) ; réponse brute (sortie entière, code,
+-    corps du relais écrit par la commande) **scellée avant toute extraction** ; témoin d'isolement écrit et scellé. M-4 : pour un
+-    appel rendu (complet, tronqué), le corps du relais doit être sur disque, égal à son compagnon et à l'empreinte que la
+-    commande rend ; sinon ArretPilote. D-2 : cause `cout_excessif` → ArretPilote (pièces versées, l'appel porté par
+-    l'exception). `borne` : borne de sortie plus courte que la borne gelée (sonde seulement)."""
+-    p = conf["proposeurs"][nom]
+-    if borne is not None and not (isinstance(borne, int) and 0 < borne <= p["borne_sortie_jetons"]):
+-        raise Refus(f"{nom} : borne de sortie {borne!r} hors de ]0 ; borne gelée]")
+-    if os.path.exists(dossier_appel):
+-        raise ArretPilote(f"{nom} : dossier de session existant (session neuve exigée)")
+-    os.makedirs(dossier_appel)
+-    session = os.path.join(dossier_appel, "session")
+-    os.makedirs(session)
+-    avant = sorted(os.listdir(session))
+-    brut = os.path.join(dossier_appel, "corps-relais.json")
+-    cmd = commande_d_un_proposeur(conf, nom, brut, python, borne)
+-    env = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "PLAFOND_SESSION_USD": repr(float(p["plafond_session_usd"])),
+-           "ROLE_POLE": ROLE, "MODELE_DEMANDE_POLE": p["modele"], "RELAIS_JETON_POLE": jeton}
+-    sha_texte = hashlib.sha256(texte.encode("utf-8")).hexdigest()
+-    debut = time.time()
+-    delai_adaptateur = False
+-    try:
+-        r = executer(cmd, input=texte, capture_output=True, text=True, encoding="utf-8", cwd=session, env=env,
+-                     timeout=float(p["delai_s"]))
+-        code, sortie, erreur = r.returncode, r.stdout, r.stderr
+-    except subprocess.TimeoutExpired:  # m-7 : panne (échec, abandon), plus un arrêt du pilote ; d-2 : compté au plafond de session
+-        code, erreur, delai_adaptateur = 6, "délai de l'adaptateur", True
+-        sortie = json.dumps({"etat": "echec", "erreur": "délai de l'adaptateur (commande tuée)",
+-                             "cout_usd": float(p["plafond_session_usd"]), "cout_origine": "plafond_de_session"})
+-    duree = round(time.time() - debut, 3)
+-    derniere = _derniere_ligne(sortie)
+-    brut_sha = sha256_fichier(brut) if os.path.isfile(brut) else None
+-    reponse = {"proposeur": nom, "code": code, "sortie_standard": sortie, "sortie_erreur": (erreur or "")[-4000:],
+-               "derniere_ligne": derniere, "corps_relais": "corps-relais.json" if brut_sha else None,
+-               "corps_relais_sha256": brut_sha, "duree_s": duree, "delai_adaptateur": delai_adaptateur}
+-    sha_rep = ecrire_scelle_json(os.path.join(dossier_appel, "reponse-brute.json"), reponse)
+-    if derniere is None:
+-        raise ArretPilote(f"{nom} : réponse brute sans dernière ligne JSON (code {code})")
+-    etat = derniere.get("etat") if code == 0 else "echec"
+-    if etat not in ("complet", "tronque", "echec"):
+-        raise ArretPilote(f"{nom} : état rendu inconnu {etat!r}")
+-    if brut_sha is not None and derniere.get("brut_sha256") not in (None, brut_sha):
+-        raise ArretPilote(f"{nom} : corps du relais ≠ empreinte rendue par la commande")
+-    if etat in ("complet", "tronque"):
+-        if brut_sha is None or derniere.get("brut_sha256") != brut_sha or not _compagnon_egal(brut):
+-            raise ArretPilote(f"{nom} : appel rendu sans corps du relais scellé sur disque (M-4)")
+-    tr = derniere.get("temoin_relais")
+-    apres = sorted(os.listdir(session))
+-    temoin = {"proposeur": nom, "relais_attendu": f"relais-pilote-v70-{nom}", "relais": (tr or {}).get("relais"),
+-              "session_neuve": avant == [], "fichiers_ecrits_dans_la_session": apres,
+-              "texte_servi_sha256": sha_texte, "texte_recu_sha256": (tr or {}).get("consigne_recue_sha256"),
+-              "consigne_commande_sha256": derniere.get("consigne_sha256"),
+-              "outils": (tr or {}).get("outils"), "messages": (tr or {}).get("messages"), "systeme": (tr or {}).get("systeme"),
+-              "appelant": (tr or {}).get("appelant"), "reglages": (tr or {}).get("reglages"),
+-              "environnement_commande": sorted(env), "reponse_brute_sha256": sha_rep}
+-    if tr is not None:
+-        conditions = conditions_du_temoin(temoin, sha_texte, p["reglages"], apres)
+-        temoin["conditions"] = conditions
+-        temoin["conforme"] = all(conditions.values())
+-    else:
+-        temoin["conforme"] = None  # aucun corps rendu (échec avant le relais) : rien à attester sur l'amont
+-    sha_tem = ecrire_scelle_json(os.path.join(dossier_appel, "temoin-isolement.json"), temoin)
+-    if temoin["conforme"] is False:
+-        manque = sorted(k for k, v in temoin["conditions"].items() if not v)
+-        raise ArretPilote(f"{nom} : témoin d'isolement non conforme ({manque})")
+-    if etat in ("complet", "tronque") and temoin["conforme"] is not True:
+-        raise ArretPilote(f"{nom} : réponse rendue sans témoin d'isolement")
+-    cause = derniere.get("cause")
+-    abandon = code in CODES_PANNE or cause in CAUSES_ABANDON
+-    r = {"proposeur": nom, "etat": etat, "code": code, "cause": cause, "cout_usd": float(derniere.get("cout_usd") or 0.0),
+-         "jetons": derniere.get("jetons"), "raison_arret": derniere.get("raison_arret"),
+-         "modele_servi": derniere.get("modele_servi"), "erreur": derniere.get("erreur"), "duree_s": duree,
+-         "reponse_brute_sha256": sha_rep, "temoin_sha256": sha_tem, "corps_relais_sha256": brut_sha,
+-         "texte_servi_sha256": sha_texte, "panne": code in CODES_PANNE, "abandon": abandon,
+-         "texte": derniere.get("texte") if etat != "echec" else None}
+-    if cause in CAUSES_ARRET:  # D-2 : coût au-dessus du pire cas → arrêt du pilote (le plafond n'est plus dur)
+-        raise ArretPilote(f"{nom} : coût lu {r['cout_usd']} USD au-dessus du pire cas de l'appel (cause {cause}) : arrêt du pilote",
+-                          appel=dict(r, texte=None))
+-    return r
+-
+-
+-# --- relais : lancés par le lanceur, sondés, arrêtés par leur PID ----------------------------------------------------------------
+-
+-def nouveau_jeton():
+-    return secrets.token_hex(16)
+-
+-
+-def env_du_relais(p, jeton, environ, factice):
+-    """Environnement du seul relais, bâti par filtrage (noms de `ENV_FILTRE`) ; mode réel : la variable de clé (et d'espace)
+-    recopiée **par son nom** depuis l'environnement du lanceur, jamais écrite ni imprimée ; à blanc : aucune clé."""
+-    env = {k: environ[k] for k in ENV_FILTRE if k in environ}
+-    env.setdefault("PATH", "/usr/bin:/bin")
+-    env.setdefault("LANG", "C.UTF-8")
+-    env["RELAIS_JETON"] = jeton
+-    if not factice:
+-        for nom_var in (p["variable_cle"], p["variable_espace"]):
+-            if nom_var and nom_var in environ:
+-                env[nom_var] = environ[nom_var]
+-    return env
+-
+-
+-def lancer_relais(conf, nom, journal, appelant, jeton, python, environ=None, plafond=None, max_appels=4):
+-    """Lance le relais d'un proposeur ; rend (processus, ligne de démarrage). `plafond` (la part du proposeur par défaut) et
+-    `max_appels` (4 par défaut) : ceux de la sonde quand c'est elle qui lance."""
+-    p = conf["proposeurs"][nom]
+-    factice = appelant.startswith("factice:")
+-    plafond = p["part_usd"] if plafond is None else plafond
+-    cmd = [python, "-I", "-B", conf["relais"]["chemin_absolu"], "--port", str(p["port"]), "--nom", nom, "--dialecte", p["dialecte"],
+-           "--modele", p["modele"], "--plafond-usd", repr(float(plafond)), "--max-appels", str(max_appels),
+-           "--prix-entree", repr(p["prix_entree_usd_par_million"]), "--prix-sortie", repr(p["prix_sortie_usd_par_million"]),
+-           "--borne-sortie", str(p["borne_sortie_jetons"]), "--appelant", appelant, "--journal", journal,
+-           "--url-amont", p["url_amont"], "--variable-cle", p["variable_cle"], "--reglages", json.dumps(p["reglages"]),
+-           "--delai-amont-s", repr(float(p["delai_s"]) - 60), "--reflexion-comprise", "oui" if p["reflexion_comprise"] else "non"]
+-    if p["variable_espace"]:
+-        cmd += ["--variable-espace", p["variable_espace"]]
+-    env = env_du_relais(p, jeton, os.environ if environ is None else environ, factice)
+-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8", env=env)
+-    ligne = proc.stdout.readline()
+-    try:
+-        info = json.loads(ligne)
+-    except ValueError:
+-        err = proc.stderr.read()[:300] if proc.poll() is not None else ""
+-        arreter_relais(proc)
+-        raise Refus(f"relais {nom} : n'a pas démarré ({err})") from None
+-    return proc, info
+-
+-
+-def etat_relais(conf, nom):
+-    import urllib.request
+-    p = conf["proposeurs"][nom]
+-    ouvreur = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+-    with ouvreur.open(f"http://127.0.0.1:{p['port']}/relais/etat", timeout=10) as r:
+-        return json.loads(r.read())
+-
+-
+-def noms_permis_au_relais(p):
+-    """W1 : les seuls noms de variables qui peuvent arriver au relais d'un proposeur."""
+-    return set(ENV_FILTRE) | set(NOMS_AJOUTES) | {n for n in (p["variable_cle"], p["variable_espace"]) if n}
+-
+-
+-def controler_etat_relais(conf, nom, e, mode, plafond=None, max_appels=4):
+-    """B-2 : l'état d'un relais avant tout appel, champ par champ ; rend la liste des écarts (vide si conforme). `plafond`
+-    (la part du proposeur par défaut) et `max_appels` : ceux de la sonde quand c'est elle qui contrôle."""
+-    p = conf["proposeurs"][nom]
+-    plafond = p["part_usd"] if plafond is None else plafond
+-    ecarts = []
+-
+-    def egal(cle, attendu):
+-        if e.get(cle) != attendu:
+-            ecarts.append(cle)
+-    egal("relais", f"relais-pilote-v70-{nom}")
+-    egal("fichier_sha256", conf["relais"]["sha256"])
+-    egal("modele", p["modele"])
+-    egal("dialecte", p["dialecte"])
+-    egal("prix_entree", p["prix_entree_usd_par_million"])
+-    egal("prix_sortie", p["prix_sortie_usd_par_million"])
+-    egal("borne_sortie", p["borne_sortie_jetons"])
+-    egal("max_appels", max_appels)
+-    egal("url_amont", p["url_amont"])
+-    egal("reglages", p["reglages"])
+-    egal("appels", 0)
+-    egal("regle_usd", 0.0)
+-    egal("reflexion_comprise", p["reflexion_comprise"])
+-    egal("verrouille", False)
+-    noms = e.get("environnement_noms")
+-    if not isinstance(noms, list) or set(noms) - noms_permis_au_relais(p):  # W1 : aucun autre nom n'est arrivé au relais
+-        ecarts.append("environnement_noms")
+-    if not isinstance(e.get("plafond_usd"), (int, float)) or abs(float(e["plafond_usd"]) - plafond) > 1e-9:
+-        ecarts.append("plafond_usd")
+-    if e.get("branche") is not True:
+-        ecarts.append("branche")
+-    if mode == "reel":
+-        egal("appelant", p["dialecte"])
+-        if e.get("cle_presente") is not True:
+-            ecarts.append("cle_presente")
+-    elif not str(e.get("appelant", "")).startswith("factice:"):
+-        ecarts.append("appelant")
+-    return ecarts
+-
+-
+-def exiger_relais_prets(conf, mode, plafonds=None, max_appels=4):
+-    """Avant tout appel : chaque relais répond et son état est conforme (`controler_etat_relais`) ; Refus sinon."""
+-    out = {}
+-    for nom in PROPOSEURS:
+-        try:
+-            e = etat_relais(conf, nom)
+-        except OSError as x:
+-            raise Refus(f"relais {nom} injoignable : {x}") from None
+-        ecarts = controler_etat_relais(conf, nom, e, mode, (plafonds or {}).get(nom), max_appels)
+-        if ecarts:
+-            raise Refus(f"relais {nom} : état non conforme ({ecarts})")
+-        out[nom] = {k: e[k] for k in ("relais", "appelant", "pid", "plafond_usd", "modele", "fichier_sha256", "url_amont",
+-                                      "reglages", "cle_presente", "reflexion_comprise", "environnement_noms", "max_appels")}
+-    return out
+-
+-
+-def arreter_relais(proc):
+-    """R10 : arrêt par le PID du processus lancé ici, jamais par motif."""
+-    if proc.poll() is None:
+-        os.kill(proc.pid, 15)
+-        try:
+-            proc.wait(timeout=10)
+-        except subprocess.TimeoutExpired:
+-            os.kill(proc.pid, 9)
+-            proc.wait(timeout=10)
+-    for f in (proc.stdout, proc.stderr):
+-        if f:
+-            f.close()
+-    return proc.returncode
+-
+-
+-def empreinte_configuration(conf):
+-    c = json.loads(json.dumps(conf))
+-    for cle in ("commande", "relais"):
+-        c[cle].pop("chemin_absolu", None)
+-    return hashlib.sha256(json_canonique(c)).hexdigest()
++__all__ = ["VERSION", "VERSION_CONFIGURATION", "lire_configuration"]
+diff --git a/pole/sonde_pilote_v71.py b/pole/sonde_pilote_v72.py
+index a8b9310..28b61c9 100644
+--- a/pole/sonde_pilote_v71.py
++++ b/pole/sonde_pilote_v72.py
+@@ -1,342 +1,96 @@
+-"""Sonde payante du pilote MR-2 — code v71 (fichier neuf, R12 ; remplace `sonde_pilote_v70.py`, gardé). Aucun réseau ici : la
+-sous-commande `sonde` du lanceur v71 lance les relais (clés par leur nom) et appelle par la chaîne du pilote (adaptateur →
+-commande → relais → amont) ; ce module relit les pièces de chaque appel, en tire les faits et les conclusions, bâtit le relevé,
+-tient le registre des lancements de la sonde, et dit si un relevé permet le mode réel (`exiger_releve`).
+-
+-Changements depuis la v70 (contre-lecture du différentiel v69 → v70, `f6bc1b00…` ; mot de Lazar R-2604) :
+-- **A-1** : le verdict sur la réflexion d'Astra (et d'Argon quand `totalTokenCount` ne tranche pas) ne confirme plus « comprise »
+-  sur une zone où la réflexion pourrait être ajoutée. Par appel, avec c la sortie du fournisseur, t la réflexion et O les octets
+-  du texte visible (relu du corps par la commande gelée) : t > c → « non_comprise » (si la réflexion était comprise, c ≥ t) ;
+-  t > 0 et c − t ≤ O + 16 < c → « comprise » (si la réflexion était ajoutée, c ne compterait que le texte visible, au plus
+-  O + 16 jetons : un jeton de texte porte au moins un octet, 16 jetons de forme au plus) ; sinon « indetermine ». Une réponse
+-  d'un mot n'est plus supposée : sa longueur est lue. Un verdict « contradictoire » d'un appel rend l'ensemble contradictoire.
+-- **A-2** : l'usage est lu par la fonction même de la commande gelée (`lire_dialecte`) : un champ absent vaut ce qu'il vaut pour
+-  elle (Argon : `candidatesTokenCount` absent = 0). Les champs bruts sont gardés **tels quels** (absent ≠ nul), avec la liste des
+-  champs absents.
+-- **a-1** : registre des lancements de la sonde (hors dépôt) : un second lancement sous une ligne de GO déjà employée est refusé
+-  avant tout dossier, sauf reprise écrite au registre des décisions (`R-NNNN` qui cite les deux identifiants et les mots
+-  « reprise de la sonde »), employée une seule fois.
+-- **a-2** : le relevé doit porter l'empreinte de la configuration et celles du code de l'arbre qui le lit ; ses faits sont
+-  **relus des pièces** de chaque appel (réponse brute, corps du relais, témoin), chacune égale à son compagnon : un relevé sans
+-  ses pièces, ou dont un fait diffère de ses pièces, est refusé (au bloc et au mode réel : le dossier de la sonde accompagne son
+-  relevé). La borne de chaque appel est lue de la ligne de la commande et doit être la borne configurée.
+-- **a-3** : les faits d'un appel sont tirés de ses pièces : un appel parti puis arrêté sans être porté par l'arrêt est porté au
+-  relevé (partiel) avec sa dépense, dès que sa réponse brute existe.
+-
+-La sonde **n'est jamais jouée par le développeur** : elle dépense, sous deux lignes de GO à part de π1 et π2 (configuration,
+-section `sonde` : s1 4,39 USD sur crédits de Claude, s2 3,68 USD hors crédits). Elle ne lit aucun monde ni aucun résultat ;
+-elle se fait **avant** le scellement du texte, dont le bloc gelé cite l'empreinte de son relevé. Par relais : un appel à la borne
+-gelée (consigne courte, réponse d'un mot demandée) ; avec `--borne-courte`, un second appel à 256 jetons (texte long demandé).
+-
+-Conclusions par proposeur, toutes exigées vraies par le mode réel : `statut`, `modele_servi_conforme`, `borne_gelee_admise`,
+-`raison_arret_normale`, `usage_entier`, `verdict_egal_a_la_regle`, `borne_courte_tronquee` et `borne_tenue` ; Claude en plus :
+-`flux_relu_egal`, `effort_admis`. Le mode réel recalcule les conclusions depuis les faits, et les faits depuis les pièces.
++"""Sonde payante du pilote MR-2 — code v72 (fichier neuf, R12 ; `sonde_pilote_v71.py` reste en place, inchangé). Aucun réseau
++ici : la sous-commande `sonde` du lanceur v72 lance les relais (clés par leur nom) et appelle par la chaîne du pilote ; ce module
++dit si un relevé permet le mode réel (`exiger_releve`), sous la configuration v12.
++
++Pourquoi une v72 (R-2621) : la sonde v71, jouée une fois, a rendu Argon « indéterminé » — champ `thoughtsTokenCount` absent aux
++deux appels : sur « Réponds par le seul mot OK. » et sur un texte long sans calcul, le modèle n'a pas réfléchi, et la règle de
++comptage de la réflexion (configuration, `reflexion_comprise`) n'a pas pu être confirmée. La configuration v12 change les deux
++consignes (un calcul à faire avant de répondre) ; ce module la lit, et ajoute une conclusion :
++
++- **`reflexion_observee`** (Argon et Astra ; pas Claude, dont le verdict reste « sans_champ ») : vraie si, à l'un au moins des
++  deux appels, le champ de réflexion **brut** du fournisseur est présent, entier et > 0 (Argon : `thoughtsTokenCount` ; Astra :
++  `completion_tokens_details.reasoning_tokens`). Elle est exigée par le mode réel. Un relevé où ce champ manque (ou vaut 0) aux
++  deux appels est refusé sous un motif nommé, « champ de réflexion absent » (R5 : la consigne n'a pas fait réfléchir ; aucune
++  règle ne se confirme sans réflexion), avant le motif général des conclusions manquantes — **seulement si les appels ont abouti
++  et que leur usage est entier** (`statut` et `usage_entier` vrais) : un appel en échec en amont (crédit épuisé, par exemple)
++  garde le motif général (jalon 2, contre-lecture du code v72, constat 2). La conclusion ne durcit rien : elle est impliquée par
++  `verdict_egal_a_la_regle` (un verdict tranché exige une réflexion > 0) ; elle nomme le refus.
++
++Tout le reste est le module v71, appelé depuis son module : lecture de l'usage par la commande gelée (A-2), verdict par appel et
++d'ensemble sur la réflexion (A-1, trois votes), flux de Claude relu, faits tirés des pièces de chaque appel (a-2, a-3), registre
++des lancements de la sonde (a-1). Changent seulement les noms (module, relevé, version du relevé), la liste des conclusions
++exigées et le motif ci-dessus. La sonde **n'est jamais jouée par le développeur** : elle dépense, sous deux lignes de GO à part de
++π1 et π2 (configuration, section `sonde` : s1 4,39 USD sur crédits de Claude, s2 3,68 USD hors crédits).
+ """
+ 
+-import copy
+-import importlib.util
+ import json
+ import os
+-import re
+ 
++from . import sonde_pilote_v71 as _S71
++from .pilote_mr2_v70 import PROPOSEURS, Refus
++from .sonde_pilote_v71 import (APPELS, CHAMPS_ATTENDUS, IDENTITE, MARGE_FORMAT, REGLE_DU_VERDICT, REPRISE,  # noqa: F401
++                               _commande, _compagnon_egal, champs, champs_absents, comparer_flux, corps_reduit,
++                               dossier_d_un_appel, lecture_de_la_commande,
++                               exiger_premier_lancement, faits_depuis_les_pieces, jetons_de_l_usage, lancements_de_la_sonde,
++                               relire_flux, sortie_comptee, usage_brut, usage_entier, verdict_d_ensemble, verdict_reflexion)
+ from .outils import sha256_fichier
+-from .pilote_mr2_v70 import PROPOSEURS, Refus, exiger_hors_depot
+-
+-VERSION = "sonde-pilote-v71"
+-VERSION_RELEVE = "releve-sonde-pilote-v71"
+-RELEVE = "releve-sonde-pilote-v71.json"
+-APPELS = ("borne_gelee", "borne_courte")
+-MARGE_FORMAT = 16  # jetons comptés hors du texte visible (forme du message), au plus — A-1
+-IDENTITE = ("modele", "dialecte", "url_amont", "reglages", "borne_sortie_jetons", "variable_cle", "variable_espace")
+-CONCLUSIONS_EXIGEES = ("statut", "modele_servi_conforme", "borne_gelee_admise", "raison_arret_normale", "usage_entier",
+-                       "verdict_egal_a_la_regle", "borne_courte_tronquee", "borne_tenue")
+-CONCLUSIONS_CLAUDE = ("flux_relu_egal", "effort_admis")
+-REGLE_DU_VERDICT = {"comprise": True, "sans_champ": True, "non_comprise": False}
+-CHAMPS_ATTENDUS = {"claude": ("input_tokens", "output_tokens"),
+-                   "gemini": ("promptTokenCount", "candidatesTokenCount", "thoughtsTokenCount", "totalTokenCount"),
+-                   "astra": ("prompt_tokens", "completion_tokens", "completion_tokens_details.reasoning_tokens", "total_tokens")}
+-REPRISE = "reprise de la sonde"
+-_COMMANDES = {}
+-
+-
+-def _entier(x):
+-    return isinstance(x, int) and not isinstance(x, bool) and x >= 0
+-
+-
+-def _commande(conf):
+-    """Le module de la commande gelée (ses règles M-1 et d-6 sur l'identifiant servi, sa lecture de l'usage), chargé une fois
+-    depuis son chemin ; non inscrit dans `sys.modules`."""
+-    chemin = conf["commande"]["chemin_absolu"]
+-    if chemin not in _COMMANDES:
+-        s = importlib.util.spec_from_file_location("commande_pilote_sonde_v71", chemin)
+-        m = importlib.util.module_from_spec(s)
+-        s.loader.exec_module(m)
+-        _COMMANDES[chemin] = m
+-    return _COMMANDES[chemin]
+-
+-
+-# --- usage : champs bruts tels quels, lecture par la commande gelée (A-2) ----------------------------------------------------
+-
+-def usage_brut(dialecte, corps):
+-    """A-2 : l'objet d'usage du fournisseur **tel quel** (copie ; None s'il est absent) : un champ absent reste absent."""
+-    corps = corps if isinstance(corps, dict) else {}
+-    return copy.deepcopy(corps.get("usageMetadata" if dialecte == "gemini" else "usage"))
+-
+-
+-def champs_absents(dialecte, u):
+-    """Les champs d'usage attendus du dialecte qui manquent à l'objet brut (`a.b` : champ b de l'objet a)."""
+-    u = u if isinstance(u, dict) else {}
+-    out = []
+-    for k in CHAMPS_ATTENDUS[dialecte]:
+-        a, _, b = k.partition(".")
+-        if a not in u or (b and not (isinstance(u[a], dict) and b in u[a])):
+-            out.append(k)
+-    return out
+ 
+-
+-def corps_reduit(dialecte, u):
+-    """Un corps du fournisseur réduit à son usage brut, lisible par `lire_dialecte` (rien d'autre n'y est lu pour les jetons)."""
+-    if dialecte == "claude":
+-        return {"content": [], "stop_reason": None, "usage": u}
+-    if dialecte == "gemini":
+-        return {"candidates": [{}], "usageMetadata": u}
+-    return {"choices": [{}], "usage": u}
+-
+-
+-def lecture_de_la_commande(conf, dialecte, corps, comprise):
+-    """(texte visible, jetons {entree, sortie, reflexion, regle}) par `lire_dialecte` de la commande gelée ; (None, None) si le
+-    corps est illisible pour elle."""
+-    try:
+-        texte, _, _, jetons, _ = _commande(conf).lire_dialecte(dialecte, corps, comprise)
+-    except (ValueError, KeyError, IndexError, TypeError, AttributeError):
+-        return None, None
+-    return texte, jetons
+-
+-
+-def jetons_de_l_usage(conf, dialecte, u, comprise):
+-    """A-2 : les jetons que la commande gelée lit de cet usage brut (même fonction que le pilote), ou None."""
+-    return lecture_de_la_commande(conf, dialecte, corps_reduit(dialecte, u), comprise)[1]
++VERSION = "sonde-pilote-v72"
++VERSION_RELEVE = "releve-sonde-pilote-v72"
++RELEVE = "releve-sonde-pilote-v72.json"
++CONCLUSIONS_EXIGEES = _S71.CONCLUSIONS_EXIGEES
++CONCLUSIONS_CLAUDE = _S71.CONCLUSIONS_CLAUDE
++CONCLUSIONS_REFLEXION = ("reflexion_observee",)  # Argon et Astra (v72)
++CHAMP_DE_REFLEXION = {"gemini": ("thoughtsTokenCount", None), "astra": ("completion_tokens_details", "reasoning_tokens")}
+ 
+ 
+-def usage_entier(conf, dialecte, u, comprise):
+-    """A-2 : l'usage est entier au sens de la commande (entrée et sortie comptées entières ; sinon elle rend `usage_absent`)."""
+-    j = jetons_de_l_usage(conf, dialecte, u, comprise)
+-    return j is not None and _entier(j["entree"]) and _entier(j["sortie"])
++def _entier_positif(x):
++    return isinstance(x, int) and not isinstance(x, bool) and x > 0
+ 
+ 
+-def sortie_comptee(conf, dialecte, u, comprise):
+-    """A-2 : la sortie comptée par la commande gelée selon la règle de la configuration, ou None."""
+-    j = jetons_de_l_usage(conf, dialecte, u, comprise)
+-    return j["sortie"] if j is not None and _entier(j["sortie"]) else None
+-
+-
+-# --- verdict sur la réflexion (A-1) ---------------------------------------------------------------------------------------------
+-
+-def champs(dialecte, u):
+-    """(entrée, sortie du fournisseur c, réflexion t, total) avec les valeurs par défaut de la commande gelée (Argon : candidats
+-    et pensées absents = 0 ; Astra : réflexion absente ou nulle = 0)."""
+-    u = u if isinstance(u, dict) else {}
+-    if dialecte == "gemini":
+-        return (u.get("promptTokenCount"), u.get("candidatesTokenCount", 0), u.get("thoughtsTokenCount", 0),
+-                u.get("totalTokenCount"))
+-    det = u.get("completion_tokens_details")
+-    det = det if isinstance(det, dict) else {}
+-    return u.get("prompt_tokens"), u.get("completion_tokens"), det.get("reasoning_tokens") or 0, None
+-
+-
+-def verdict_reflexion(dialecte, u, octets_visibles):
+-    """A-1 : le champ de sortie du fournisseur compte-t-il déjà la réflexion ? Par appel : « comprise », « non_comprise »,
+-    « contradictoire » ou « indetermine » ; Claude : « sans_champ » (aucun compte séparé). Votes, chacun sûr sous sa seule
+-    hypothèse :
+-    - Argon, `totalTokenCount` entier et réflexion t > 0 : total = entrée + c + t → non comprise ; total = entrée + c et t ≤ c →
+-      comprise ;
+-    - t > c → non comprise (comprise, c compterait t) ;
+-    - t > 0 et c − t ≤ O + 16 < c (O : octets du texte visible) → comprise (ajoutée, c ne compterait que le texte visible : au plus
+-      un jeton par octet, plus 16 jetons de forme).
+-    Un seul vote : ce verdict ; deux votes différents : « contradictoire » ; aucun : « indetermine »."""
+-    if dialecte == "claude":
+-        return "sans_champ"
+-    p, c, t, total = champs(dialecte, u)
+-    if not (_entier(c) and _entier(t)) or t == 0:
+-        return "indetermine"
+-    votes = set()
+-    if dialecte == "gemini" and _entier(total) and _entier(p):
+-        if total == p + c + t:
+-            votes.add("non_comprise")
+-        elif total == p + c and t <= c:
+-            votes.add("comprise")
+-    if t > c:
+-        votes.add("non_comprise")
+-    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:
+-        votes.add("comprise")
+-    if len(votes) == 1:
+-        return votes.pop()
+-    return "contradictoire" if votes else "indetermine"
+-
+-
+-def verdict_d_ensemble(verdicts):
+-    """Un verdict par appel → un verdict : « contradictoire » si un appel l'est ou si les verdicts tranchés divergent ; le seul
+-    verdict tranché sinon ; « indetermine » si aucun ne tranche."""
+-    if "contradictoire" in verdicts:
+-        return "contradictoire"
+-    tranches = {v for v in verdicts if v in REGLE_DU_VERDICT}
+-    if len(tranches) == 1:
+-        return tranches.pop()
+-    return "contradictoire" if tranches else "indetermine"
+-
+-
+-# --- flux de Claude, relu indépendamment ---------------------------------------------------------------------------------------
+-
+-def relire_flux(flux):
+-    """Le flux SSE brut de l'interface Messages, relu ici sans `lire_flux_anthropic` : identifiant, raison d'arrêt (dernière non
+-    nulle), texte des blocs `text`, usage (celui de `message_start` mis à jour par chaque `message_delta`), événements vus."""
+-    modele, raison, usage, textes, evenements, usage_delta = None, None, {}, {}, [], False
+-    for ligne in (flux or "").splitlines():
+-        if not ligne.startswith("data:"):
+-            continue
+-        d = json.loads(ligne[5:].strip())
+-        t = d.get("type")
+-        evenements.append(t)
+-        if t == "message_start":
+-            modele = (d.get("message") or {}).get("model")
+-            usage.update((d.get("message") or {}).get("usage") or {})
+-        elif t == "content_block_delta" and (d.get("delta") or {}).get("type") == "text_delta":
+-            textes[d["index"]] = textes.get(d["index"], "") + d["delta"]["text"]
+-        elif t == "message_delta":
+-            if (d.get("delta") or {}).get("stop_reason") is not None:
+-                raison = d["delta"]["stop_reason"]
+-            if d.get("usage"):
+-                usage.update(d["usage"])
+-                usage_delta = True
+-    return {"modele": modele, "raison_arret": raison, "texte": "".join(textes[i] for i in sorted(textes)),
+-            "usage": {k: usage.get(k) for k in ("input_tokens", "output_tokens")}, "evenements": sorted(set(evenements)),
+-            "usage_dans_message_delta": usage_delta}
+-
+-
+-def comparer_flux(flux, corps):
+-    """Le flux relu ici contre le message que le relais a reconstitué : identifiant, raison d'arrêt, texte, usage."""
+-    try:
+-        r = relire_flux(flux)
+-    except (ValueError, KeyError, TypeError, AttributeError) as e:
+-        return {"egal": False, "erreur": type(e).__name__}
+-    corps = corps if isinstance(corps, dict) else {}
+-    texte = "".join(b.get("text", "") for b in corps.get("content") or [] if isinstance(b, dict) and b.get("type") == "text")
+-    u = corps.get("usage") or {}
+-    ecarts = [k for k, a, b in (("modele", r["modele"], corps.get("model")), ("raison_arret", r["raison_arret"], corps.get("stop_reason")),
+-                                ("texte", r["texte"], texte),
+-                                ("usage", r["usage"], {k: u.get(k) for k in ("input_tokens", "output_tokens")})) if a != b]
+-    return {"egal": not ecarts and r["usage_dans_message_delta"], "ecarts": ecarts, "evenements": r["evenements"],
+-            "usage_dans_message_delta": r["usage_dans_message_delta"]}
+-
+-
+-# --- faits d'un appel, tirés de ses pièces (a-2, a-3) ---------------------------------------------------------------------------
+-
+-def _compagnon_egal(chemin):
+-    try:
+-        with open(chemin + ".sha256", encoding="utf-8") as f:
+-            return f.read().split()[0] == sha256_fichier(chemin)
+-    except (OSError, IndexError):
+-        return False
+-
+-
+-def _lire_piece(chemin):
+-    """Une pièce scellée d'un appel : présente, égale à son compagnon, JSON ; rend (objet, empreinte)."""
+-    nom = os.path.join(*chemin.split(os.sep)[-3:])
+-    if not os.path.isfile(chemin):
+-        raise Refus(f"pièce de la sonde absente : {nom}")
+-    if not _compagnon_egal(chemin):
+-        raise Refus(f"pièce de la sonde ≠ son compagnon : {nom}")
+-    try:
+-        with open(chemin, encoding="utf-8") as f:
+-            return json.load(f), sha256_fichier(chemin)
+-    except ValueError:
+-        raise Refus(f"pièce de la sonde illisible : {nom}") from None
++def reflexion_brute(dialecte, u):
++    """Le champ de réflexion **brut** de l'usage du fournisseur (aucune valeur par défaut : absent → None), ou None pour Claude."""
++    if dialecte not in CHAMP_DE_REFLEXION or not isinstance(u, dict):
++        return None
++    a, b = CHAMP_DE_REFLEXION[dialecte]
++    x = u.get(a)
++    if b is not None:
++        x = x.get(b) if isinstance(x, dict) else None
++    return x
+ 
+ 
+-def dossier_d_un_appel(racine, nom, quoi):
+-    """Le dossier d'un appel : `racine/proposeur/appel` (disposition fixe : rien n'est lu ailleurs)."""
+-    if nom not in PROPOSEURS or quoi not in APPELS:
+-        raise Refus(f"appel de la sonde inconnu : {nom!r}, {quoi!r}")
+-    return os.path.join(racine, nom, quoi)
++def reflexion_observee(dialecte, faits):
++    """v72 : à l'un au moins des appels, le champ de réflexion brut est présent, entier et > 0."""
++    return any(_entier_positif(reflexion_brute(dialecte, f.get("usage_brut"))) for f in faits)
+ 
+ 
+-def faits_depuis_les_pieces(conf, nom, quoi, racine):
+-    """Les faits d'un appel, tirés de ses seules pièces (réponse brute écrite par l'adaptateur, corps du relais écrit par la
+-    commande, témoin d'isolement), chacune égale à son compagnon : code, état, cause, raison d'arrêt, identifiant servi, coût et
+-    borne de la dernière ligne de la commande (comme l'adaptateur les lit) ; statut de l'amont, usage brut, drapeau du pire cas et
+-    flux de Claude du corps du relais ; octets du texte visible et jetons par la commande gelée."""
+-    p = conf["proposeurs"][nom]
+-    d = p["dialecte"]
+-    dossier = dossier_d_un_appel(racine, nom, quoi)
+-    rep, sha_rep = _lire_piece(os.path.join(dossier, "reponse-brute.json"))
+-    rep = rep if isinstance(rep, dict) else {}
+-    der = rep.get("derniere_ligne") if isinstance(rep.get("derniere_ligne"), dict) else {}
+-    code = rep.get("code")
+-    rel, sha_corps = {}, None
+-    if rep.get("corps_relais_sha256") is not None:
+-        rel, sha_corps = _lire_piece(os.path.join(dossier, "corps-relais.json"))
+-        if sha_corps != rep["corps_relais_sha256"]:
+-            raise Refus(f"pièce de la sonde : corps du relais de {nom}, {quoi} ≠ empreinte de sa réponse brute")
+-        rel = rel if isinstance(rel, dict) else {}
+-    tem = os.path.join(dossier, "temoin-isolement.json")
+-    sha_tem = _lire_piece(tem)[1] if os.path.exists(tem) else None
+-    corps = rel.get("corps")
+-    u = usage_brut(d, corps)
+-    texte, _ = lecture_de_la_commande(conf, d, corps, p["reflexion_comprise"]) if isinstance(corps, dict) else (None, None)
+-    octets = len(texte.encode("utf-8")) if isinstance(texte, str) else None
+-    faits = {"proposeur": nom, "appel": quoi, "borne": der.get("borne_sortie"), "consigne_sha256": der.get("consigne_sha256"),
+-             "code": code, "etat": der.get("etat") if code == 0 else "echec", "cause": der.get("cause"),
+-             "raison_arret": der.get("raison_arret"), "modele_servi": der.get("modele_servi"),
+-             "modele_servi_conforme": bool(_commande(conf).modele_conforme(p["modele"], der.get("modele_servi"))),
+-             "cout_usd": float(der.get("cout_usd") or 0.0),
+-             "statut_amont": rel.get("statut_amont"), "type_erreur": rel.get("type_erreur"),
+-             "au_dessus_du_pire_cas": rel.get("au_dessus_du_pire_cas"),
+-             "usage_brut": u, "champs_absents": champs_absents(d, u), "octets_visibles": octets,
+-             # lus pour Lazar, jamais repris par les conclusions (recalculées des champs bruts) :
+-             "usage_entier": usage_entier(conf, d, u, p["reflexion_comprise"]),
+-             "sortie_comptee": sortie_comptee(conf, d, u, p["reflexion_comprise"]),
+-             "verdict_reflexion": verdict_reflexion(d, u, octets),
+-             "pieces": {"reponse_brute_sha256": sha_rep, "corps_relais_sha256": sha_corps, "temoin_sha256": sha_tem}}
+-    if d == "claude":
+-        faits["flux"] = comparer_flux(rel.get("flux"), corps)
+-    return faits
++def motif_reflexion_absente(nom, p, c):
++    """Le motif nommé du refus « champ de réflexion absent », ou None : Argon et Astra seulement, et seulement si les appels ont
++    abouti (`statut`) avec un usage entier (`usage_entier`) — sinon le motif général dit ce qui manque."""
++    if p["dialecte"] != "claude" and c.get("statut") is True and c.get("usage_entier") is True \
++            and c.get("reflexion_observee") is not True:
++        return (f"relevé de la sonde : {nom} : champ de réflexion absent ou nul aux deux appels (la consigne ne l'a pas fait "
++                f"réfléchir) : la règle de comptage gelée ({p['reflexion_comprise']}) n'est pas confirmée")
++    return None
+ 
+ 
+ def conclusions(conf, nom, faits):
+-    """Les conclusions d'un proposeur, depuis ses faits (un ou deux appels) ; verdict, usage et sortie comptée **recalculés**
+-    depuis les champs d'usage bruts et les octets visibles (jamais repris des valeurs dérivées écrites au relevé) ; bornes
+-    comparées à la configuration."""
+-    p = conf["proposeurs"][nom]
+-    d = p["dialecte"]
+-    bc = conf["sonde"]["borne_courte_jetons"]
+-    f1 = next((f for f in faits if f.get("appel") == "borne_gelee"), None)
+-    f2 = next((f for f in faits if f.get("appel") == "borne_courte"), None)
+-    tous = [f for f in (f1, f2) if f is not None]
+-    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get("usage_brut"), f.get("octets_visibles")) for f in tous])
+-    sortie2 = sortie_comptee(conf, d, f2.get("usage_brut"), p["reflexion_comprise"]) if f2 is not None else None
+-    c = {"statut": bool(tous) and all(f.get("statut_amont") == 200 and f.get("etat") in ("complet", "tronque") for f in tous),
+-         "modele_servi_conforme": bool(tous) and all(f.get("modele_servi_conforme") is True for f in tous),
+-         "borne_gelee_admise": f1 is not None and f1.get("statut_amont") == 200 and f1.get("borne") == p["borne_sortie_jetons"],
+-         "raison_arret_normale": f1 is not None and f1.get("etat") == "complet",
+-         "usage_entier": bool(tous) and all(usage_entier(conf, d, f.get("usage_brut"), p["reflexion_comprise"]) for f in tous),
+-         "verdict_reflexion": verdict, "regle_configuree": p["reflexion_comprise"],
+-         "verdict_egal_a_la_regle": REGLE_DU_VERDICT.get(verdict) is p["reflexion_comprise"],
+-         "borne_courte_tronquee": f2 is not None and f2.get("etat") == "tronque",
+-         "borne_tenue": f2 is not None and f2.get("borne") == bc and _entier(sortie2) and sortie2 <= bc,
+-         "en_tete_d_espace": p["variable_espace"] is not None,
+-         "au_dessus_du_pire_cas": any(f.get("au_dessus_du_pire_cas") for f in tous)}
+-    if d == "claude":
+-        c["flux_relu_egal"] = bool(tous) and all((f.get("flux") or {}).get("egal") is True for f in tous)
+-        c["effort_admis"] = f1 is not None and f1.get("statut_amont") == 200 and "output_config" in p["reglages"]
++    """Les conclusions de la v71 (recalculées depuis les faits), et, pour Argon et Astra, `reflexion_observee`."""
++    c = _S71.conclusions(conf, nom, faits)
++    d = conf["proposeurs"][nom]["dialecte"]
++    if d != "claude":
++        c["reflexion_observee"] = reflexion_observee(d, [f for f in faits if f.get("appel") in APPELS])
+     return c
+ 
+ 
+ def conclusions_exigees(dialecte):
+-    return CONCLUSIONS_EXIGEES + (CONCLUSIONS_CLAUDE if dialecte == "claude" else ())
++    if dialecte == "claude":
++        return CONCLUSIONS_EXIGEES + CONCLUSIONS_CLAUDE
++    return CONCLUSIONS_EXIGEES + CONCLUSIONS_REFLEXION
+ 
+ 
+ def releve(conf, faits, borne_courte, debut, fin, partiel, arret, extra):
+-    """Le relevé de la sonde (scellé par le lanceur) : identité de chaque proposeur, faits par appel, conclusions."""
++    """Le relevé de la sonde v72 (scellé par le lanceur) : identité de chaque proposeur, faits par appel, conclusions v72."""
+     out = {"version": VERSION_RELEVE, "module": VERSION, "debut_utc": debut, "fin_utc": fin, "partiel": partiel, "arret": arret,
+            "borne_courte": borne_courte,
+            "identite": {n: {k: conf["proposeurs"][n][k] for k in IDENTITE} for n in PROPOSEURS},
+@@ -348,11 +102,10 @@ def releve(conf, faits, borne_courte, debut, fin, partiel, arret, extra):
+ 
+ 
+ def exiger_releve(conf, chemin, attendu):
+-    """D-4 : le mode réel (et le bloc gelé qui le cite) exige un relevé de la sonde : présent, égal à son compagnon, complet,
+-    fait avec l'appel à borne courte, par la commande et le relais de cette configuration, **sous cette configuration et ce code**
+-    (`attendu` : {configuration_sha256, code_sha256} de l'arbre qui lit ; a-2), pour l'identité de chaque proposeur ; deux appels
+-    par proposeur ; conclusions recalculées depuis ses faits égales aux siennes et toutes vraies ; **chaque fait égal aux faits
+-    relus de ses pièces** (dossier de la sonde à côté du relevé ; a-2). Rend l'empreinte du relevé ; Refus sinon."""
++    """Le relevé exigé par le mode réel et le bloc gelé : les contrôles de la v71 (présent, égal à son compagnon, complet, avec
++    l'appel à borne courte, par la commande et le relais de cette configuration, sous cette configuration et ce code, identité de
++    chaque proposeur, deux appels chacun, conclusions recalculées égales et toutes vraies, chaque fait égal à ses pièces), sous la
++    version de relevé v72 ; et, pour Argon et Astra, le champ de réflexion observé (motif nommé s'il manque). Rend l'empreinte."""
+     if not chemin or not os.path.isfile(chemin):
+         raise Refus("relevé de la sonde absent : le mode réel l'exige (D-4)")
+     if not _compagnon_egal(chemin):
+@@ -368,9 +121,9 @@ def exiger_releve(conf, chemin, attendu):
+         raise Refus("relevé de la sonde partiel ou sans l'appel à borne courte (le plafond n'y est pas éprouvé)")
+     if r.get("pieces_sha256") != {"commande": conf["commande"]["sha256"], "relais": conf["relais"]["sha256"]}:
+         raise Refus("relevé de la sonde fait par une autre commande ou un autre relais")
+-    if r.get("configuration_sha256") != attendu["configuration_sha256"]:  # a-2
++    if r.get("configuration_sha256") != attendu["configuration_sha256"]:
+         raise Refus("relevé de la sonde fait sous une autre configuration")
+-    if r.get("code_sha256") != attendu["code_sha256"]:  # a-2
++    if r.get("code_sha256") != attendu["code_sha256"]:
+         raise Refus("relevé de la sonde fait par un autre code")
+     faits = r.get("appels")
+     if not isinstance(faits, list) or not all(isinstance(f, dict) for f in faits) \
+@@ -389,64 +142,22 @@ def exiger_releve(conf, chemin, attendu):
+             raise Refus(f"relevé de la sonde : faits de {nom} illisibles") from None
+         if (r.get("conclusions") or {}).get(nom) != recalculees:
+             raise Refus(f"relevé de la sonde : conclusions de {nom} ≠ celles de ses faits")
++        motif = motif_reflexion_absente(nom, p, recalculees)
++        if motif is not None:
++            raise Refus(motif)
+         manque = [k for k in conclusions_exigees(p["dialecte"]) if recalculees.get(k) is not True]
+         if manque:
+             raise Refus(f"relevé de la sonde : {nom} ne confirme pas {manque} (verdict sur la réflexion : "
+                         f"{recalculees['verdict_reflexion']}, règle gelée : {p['reflexion_comprise']})")
+     racine = os.path.dirname(os.path.abspath(chemin))
+-    for f in faits:  # a-2 : les faits sont ceux des pièces
++    for f in faits:
+         if f != faits_depuis_les_pieces(conf, f["proposeur"], f["appel"], racine):
+             raise Refus(f"relevé de la sonde : faits de {f['proposeur']}, {f['appel']} ≠ ceux de ses pièces")
+     return sha256_fichier(chemin)
+ 
+ 
+-# --- registre des lancements de la sonde (a-1) ----------------------------------------------------------------------------------
+-
+-def lancements_de_la_sonde(registre):
+-    """Les lancements consignés (une ligne JSON par lancement) ; [] si le registre n'existe pas encore."""
+-    if not os.path.exists(registre):
+-        return []
+-    try:
+-        with open(registre, encoding="utf-8") as f:
+-            out = [json.loads(ligne) for ligne in f if ligne.strip()]
+-    except (OSError, ValueError):
+-        raise Refus("registre des lancements de la sonde illisible") from None
+-    if not all(isinstance(x, dict) and isinstance(x.get("go"), list) for x in out):
+-        raise Refus("registre des lancements de la sonde : ligne sans « go »")
+-    return out
+-
+-
+-def exiger_premier_lancement(registre, identifiants, reprise=None, registre_decisions=None):
+-    """a-1 : avant tout dossier et tout relais. Registre hors dépôt (chemin absolu, hors de tout dépôt git). Si l'un des
+-    identifiants de GO a déjà servi à un lancement consigné : refus, sauf reprise écrite — `reprise` (R-NNNN) est une seule
+-    ligne du registre des décisions, qui cite les deux identifiants et les mots « reprise de la sonde », et n'a jamais servi.
+-    Une reprise sans lancement antérieur sous ces lignes est refusée. Rend la reprise admise, ou None."""
+-    exiger_hors_depot(registre, "registre des lancements de la sonde")
+-    deja = lancements_de_la_sonde(registre)
+-    vus = {i for x in deja for i in x["go"]}
+-    if not set(identifiants) & vus:
+-        if reprise is not None:
+-            raise Refus("sonde : --reprise sans lancement antérieur sous ces lignes de GO")
+-        return None
+-    if reprise is None:
+-        raise Refus(f"sonde : déjà lancée sous {sorted(set(identifiants) & vus)} (une seule exécution par ligne ; une reprise "
+-                    f"exige --reprise R-NNNN écrite au registre des décisions)")
+-    if not (isinstance(reprise, str) and re.fullmatch(r"R-\d+", reprise)):
+-        raise Refus("sonde : --reprise R-NNNN exigé")
+-    if any(x.get("reprise") == reprise for x in deja):
+-        raise Refus(f"sonde : la reprise {reprise} a déjà servi")
+-    if not registre_decisions or not os.path.isfile(registre_decisions):
+-        raise Refus("sonde : --reprise exige --registre-decisions (le registre des décisions)")
+-    with open(registre_decisions, encoding="utf-8") as f:
+-        lignes = [ligne for ligne in f if ligne.startswith(f"| {reprise} |")]
+-    if len(lignes) != 1 or REPRISE not in lignes[0] or not all(i in lignes[0] for i in identifiants):
+-        raise Refus(f"sonde : {reprise} n'est pas une seule ligne du registre des décisions citant les deux lignes de GO et "
+-                    f"« {REPRISE} »")
+-    return reprise
+-
+-
+ def consigner_lancement(registre, identifiants, sortie, debut, reprise):
+-    """a-1 : le lancement consigné quand les relais sont prêts, avant le premier appel (comme le pilote, m-6)."""
++    """a-1 : le lancement consigné quand les relais sont prêts, avant le premier appel ; module v72 nommé."""
+     with open(registre, "a", encoding="utf-8") as f:
+         f.write(json.dumps({"go": list(identifiants), "debut_utc": debut, "sortie": os.path.abspath(sortie), "reprise": reprise,
+                             "module": VERSION}, ensure_ascii=False) + "\n")
+diff --git a/demonstrations/pilote_mr2_v71.py b/demonstrations/pilote_mr2_v72.py
+index 4c1ce61..0a1ba87 100644
+--- a/demonstrations/pilote_mr2_v71.py
++++ b/demonstrations/pilote_mr2_v72.py
+@@ -1,14 +1,21 @@
+-"""Lanceur du pilote d'une génération sur la famille MR-2 — code v71 (fichier neuf, R12 ; remplace `pilote_mr2_v70.py`, gardé ;
+-C-11, C-13, C-14, C-18 ; sonde).
+-
+-Changements depuis la v70 (contre-lecture du différentiel v69 → v70, `f6bc1b00…` ; mot de Lazar R-2604 : code v71 du seul
+-module de la sonde) : le module de la sonde v71 (`pole/sonde_pilote_v71.py` : A-1, A-2, a-1, a-2, a-3) ; la sous-commande
+-`sonde` exige un registre des lancements hors dépôt (a-1 : un second lancement sous les mêmes lignes est refusé avant tout
+-dossier, sauf `--reprise R-NNNN` écrite au registre des décisions) ; les faits de chaque appel sont tirés de ses pièces, et un
+-appel parti puis arrêté sans être porté par l'arrêt est porté au relevé (a-3) ; le relevé est lu sous la configuration et le
+-code de l'arbre, ses faits relus de ses pièces (a-2), au bloc et au mode réel. Le reste du lanceur est celui de la v70 ; les
++"""Lanceur du pilote d'une génération sur la famille MR-2 — code v72 (fichier neuf, R12 ; `pilote_mr2_v71.py` reste en place,
++inchangé ; C-11, C-13, C-14, C-18 ; sonde).
++
++Changements depuis la v71 (R-2620, R-2621 : la sonde v71, jouée une fois, rend Argon « indéterminé », champ
++`thoughtsTokenCount` absent aux deux appels ; le relevé ne confirme pas la configuration v11) : la **configuration v12**
++(`exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json` : seules les deux consignes de la sonde changent, écrites pour faire
++réfléchir), lue par `pole/proposeurs_pilote_v72.py` (la lecture de la v70 recopiée, version exigée v12) ; le **module de la sonde
++v72** (`pole/sonde_pilote_v72.py` : conclusion `reflexion_observee` exigée pour Argon et Astra, refus nommé « champ de réflexion
++absent », relevé `releve-sonde-pilote-v72.json`) ; les noms (version, marqueurs du bloc gelé « empreintes-du-code-pilote-v72 »,
++liste des fichiers gelés : lanceur v72, lecture v72, sonde v71 et v72, configuration v12). Tout le reste est le lanceur v71 ; les
+ noms des pièces du pilote restent ceux de la v70 (ceux que l'audit v70, inchangé, rapatrie).
+ 
++Changements de la v71, gardés (contre-lecture du différentiel v69 → v70, `f6bc1b00…` ; mot de Lazar R-2604) : le module de la
++sonde v71 (A-1, A-2, a-1, a-2, a-3) ; la sous-commande `sonde` exige un registre des lancements hors dépôt (a-1 : un second
++lancement sous les mêmes lignes est refusé avant tout dossier, sauf `--reprise R-NNNN` écrite au registre des décisions) ; les
++faits de chaque appel sont tirés de ses pièces, et un appel parti puis arrêté sans être porté par l'arrêt est porté au relevé
++(a-3) ; le relevé est lu sous la configuration et le code de l'arbre, ses faits relus de ses pièces (a-2), au bloc et au mode réel.
++
+ Texte : `preenregistrement-pilote-conditionnelles-v1-brouillon4.md` (`04ada9fa…`), Q-P2 (a) : une génération, proposeurs puis
+ gardien, sans juge, sans étage, sans test de mort ; 4 mondes, bras A seul (archive {K1}), 4 proposeurs, un appel chacun par monde.
+ 
+@@ -64,21 +71,22 @@ import numpy as np  # noqa: E402
+ from pole import audit_pilote_v70 as AU  # noqa: E402
+ from pole import pilote_mr2_v70 as P  # noqa: E402
+ from pole import proposeurs_pilote_v70 as PR  # noqa: E402
+-from pole import sonde_pilote_v71 as S  # noqa: E402
++from pole import proposeurs_pilote_v72 as PC  # noqa: E402
++from pole import sonde_pilote_v72 as S  # noqa: E402
+ from pole.outils import json_canonique, sha256_fichier  # noqa: E402
+ 
+-VERSION = "lanceur-pilote-mr2-v71"
+-LANCEUR = "demonstrations/pilote_mr2_v71.py"
+-DEBUT_BLOC, FIN_BLOC = "<!-- empreintes-du-code-pilote-v71 : début -->", "<!-- empreintes-du-code-pilote-v71 : fin -->"
++VERSION = "lanceur-pilote-mr2-v72"
++LANCEUR = "demonstrations/pilote_mr2_v72.py"
++DEBUT_BLOC, FIN_BLOC = "<!-- empreintes-du-code-pilote-v72 : début -->", "<!-- empreintes-du-code-pilote-v72 : fin -->"
+ FICHIERS_GELES = (
+-    "demonstrations/pilote_mr2_v71.py", "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py",
+-    "pole/sonde_pilote_v71.py",
++    "demonstrations/pilote_mr2_v72.py", "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py",
++    "pole/proposeurs_pilote_v72.py", "pole/sonde_pilote_v71.py", "pole/sonde_pilote_v72.py",
+     "exemples/pilote-mr2-v70/commandes/commande_pilote_v70.py", "exemples/pilote-mr2-v70/commandes/relais_pilote_v70.py",
+-    "exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json",
++    "exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json",
+     "pole/selection_pari.py", "pole/outils.py", "pole/registre_go_v66.py", "pole/configuration_v53.py",
+     "pole/configuration_v55.py", "pole/configuration_v54.py", "pole/__init__.py",
+ ) + tuple("mr2_v68/" + r for r in sorted(P.FICHIERS_MR2))
+-CONFIGURATION = os.path.join(RACINE, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v11.json")
++CONFIGURATION = os.path.join(RACINE, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v12.json")
+ PROGRAMME_MESURE = os.path.join(P.RACINE_MR2, "pilote-v1", "outils", "mesure_pilote_v4.py")
+ SCENARIO_A_BLANC = "k1_plus"
+ # D-1 : la règle des épisodes vient du cœur (bâtie depuis la constante que le code emploie), jamais retapée ici.
+@@ -111,7 +119,7 @@ def bloc_gele(racine=RACINE, releve=None):
+     """Le bloc que le texte scellé recopie : empreintes du code et des modules portés, gabarit, bornes, plafonds, parts, règles de
+     comptage de la réflexion, lignes de GO du pilote et de la sonde, réglages envoyés, numpy exigé, règle des graines des
+     épisodes (D-1) et empreinte du relevé de la sonde (D-4 ; « absent » tant qu'il n'y en a pas : le mode réel le refuse)."""
+-    conf, _ = PR.lire_configuration(os.path.join(racine, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v11.json"))
++    conf, _ = PC.lire_configuration(os.path.join(racine, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v12.json"))
+     lignes = [DEBUT_BLOC, "```", f"gabarit-servi-sha256 {P.gabarit_sha256()}"]
+     for nom in P.PROPOSEURS:
+         p = conf["proposeurs"][nom]
+@@ -141,7 +149,7 @@ def verifier_bloc_du_texte(texte, racine=RACINE, releve=None):
+     """Mode réel : le bloc gelé du texte scellé est exactement celui que rend le code présent, avec ce relevé (refus sinon)."""
+     i, j = texte.find(DEBUT_BLOC), texte.find(FIN_BLOC)
+     if i < 0 or j < i:
+-        raise P.Refus("texte scellé : bloc « empreintes-du-code-pilote-v71 » absent")
++        raise P.Refus("texte scellé : bloc « empreintes-du-code-pilote-v72 » absent")
+     if texte[i:j + len(FIN_BLOC)] + "\n" != bloc_gele(racine, releve):
+         raise P.Refus("texte scellé : bloc gelé ≠ code, gabarit, bornes, réglages ou relevé de la sonde présents")
+ 
+@@ -235,7 +243,7 @@ def exiger_mode_reel(args, conf):
+ 
+ def jouer(args):
+     debut = maintenant()
+-    conf, _ = PR.lire_configuration(args.configuration)
++    conf, _ = PC.lire_configuration(args.configuration)
+     go, releve_sha = None, None
+     if args.mode == "reel":
+         go, releve_sha = exiger_mode_reel(args, conf)
+@@ -342,7 +350,7 @@ def sonde(args):
+     avec `--borne-courte`, la consigne longue à 256 jetons, par la chaîne du pilote ; faits tirés des pièces de chaque appel
+     (a-2, a-3) ; relevé scellé. Tout arrêt après le premier appel laisse un relevé partiel, que le mode réel refuse."""
+     debut = maintenant()
+-    conf, _ = PR.lire_configuration(CONFIGURATION)
++    conf, _ = PC.lire_configuration(CONFIGURATION)
+     if os.path.exists(args.sortie):
+         raise P.Refus("sonde : dossier de sortie existant")
+     go = PR.lire_go_de_la_sonde(conf, args.registre_go, args.go_sonde_credits, args.go_sonde_hors)
+diff --git a/demonstrations/pilote_mr2_v72.py b/demonstrations/pilote_mr2_v73.py
+index 0a1ba87..e455caf 100644
+--- a/demonstrations/pilote_mr2_v72.py
++++ b/demonstrations/pilote_mr2_v73.py
+@@ -1,14 +1,17 @@
+-"""Lanceur du pilote d'une génération sur la famille MR-2 — code v72 (fichier neuf, R12 ; `pilote_mr2_v71.py` reste en place,
++"""Lanceur du pilote d'une génération sur la famille MR-2 — code v73 (fichier neuf, R12 ; `pilote_mr2_v72.py` reste en place,
+ inchangé ; C-11, C-13, C-14, C-18 ; sonde).
+ 
+-Changements depuis la v71 (R-2620, R-2621 : la sonde v71, jouée une fois, rend Argon « indéterminé », champ
+-`thoughtsTokenCount` absent aux deux appels ; le relevé ne confirme pas la configuration v11) : la **configuration v12**
+-(`exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json` : seules les deux consignes de la sonde changent, écrites pour faire
+-réfléchir), lue par `pole/proposeurs_pilote_v72.py` (la lecture de la v70 recopiée, version exigée v12) ; le **module de la sonde
+-v72** (`pole/sonde_pilote_v72.py` : conclusion `reflexion_observee` exigée pour Argon et Astra, refus nommé « champ de réflexion
+-absent », relevé `releve-sonde-pilote-v72.json`) ; les noms (version, marqueurs du bloc gelé « empreintes-du-code-pilote-v72 »,
+-liste des fichiers gelés : lanceur v72, lecture v72, sonde v71 et v72, configuration v12). Tout le reste est le lanceur v71 ; les
+-noms des pièces du pilote restent ceux de la v70 (ceux que l'audit v70, inchangé, rapatrie).
++Changement depuis la v72 (décision de la mère sur PO-015, R-2690 : « code v73 dont le bloc gelé nomme les relais par leurs clés,
++aucun identifiant de modèle Claude dans les pièces ») : **le bloc gelé ne recopie plus l'identifiant du modèle** de chaque
++proposeur ; ses lignes « borne-de-sortie » nomment le proposeur par sa clé de configuration (`fable52`, `opus55`, `argon`,
++`astra`) ; une ligne « identite-des-proposeurs » dit que les identifiants sont ceux de la configuration, dont l'empreinte du fichier
++est au bloc (l'identité reste donc gelée par l'empreinte) ; marqueurs « empreintes-du-code-pilote-v73 » ; liste des fichiers gelés
++avec le lanceur v73. **Sous-commande neuve `sonde-un`** (GO-2026-11-14-02, R-2694) : sonde du seul relais Astra sous une
++ligne à part de 2 USD (voir `sonde_un`). Tout le reste est le lanceur v72 (configuration v12, lecture v72, sonde v72).
++
++Changements de la v72, gardés : la configuration v12 (consignes de la sonde écrites pour faire réfléchir), lue par
++`pole/proposeurs_pilote_v72.py` ; le module de la sonde v72 (`reflexion_observee`, refus nommé « champ de réflexion absent » pour un
++appel abouti, relevé `releve-sonde-pilote-v72.json`).
+ 
+ Changements de la v71, gardés (contre-lecture du différentiel v69 → v70, `f6bc1b00…` ; mot de Lazar R-2604) : le module de la
+ sonde v71 (A-1, A-2, a-1, a-2, a-3) ; la sous-commande `sonde` exige un registre des lancements hors dépôt (a-1 : un second
+@@ -41,6 +44,8 @@ Sous-commandes (sorties imprimées : empreintes et contrôles seulement) :
+   sonde   --go-sonde-credits GO --go-sonde-hors GO --registre-go R --registre-lancements FICHIER (hors dépôt) --sortie DOSSIER
+           [--borne-courte] [--reprise R-NNNN --registre-decisions D]
+                                                             payante : jamais sans les deux lignes de GO de la sonde
++  sonde-un --proposeur astra --go-sonde GO --registre-go R --registre-lancements FICHIER (hors dépôt) --sortie DOSSIER
++          [--reprise R-NNNN --registre-decisions D]   payante : un seul relais, une ligne à part (v73)
+   jouer   --mode a_blanc|reel --mondes M --mondes-sha256 H --sortie DOSSIER [--scenarios NOM=SCENARIO,…]
+           mode réel, exigés : --go-pi1 GO --go-pi2 GO --registre-go R --texte T --texte-sha256 H --mondes-shas S1,S2,S3,S4
+                               --registre-lancements FICHIER (hors dépôt) --releve-sonde RELEVE
+@@ -75,11 +80,11 @@ from pole import proposeurs_pilote_v72 as PC  # noqa: E402
+ from pole import sonde_pilote_v72 as S  # noqa: E402
+ from pole.outils import json_canonique, sha256_fichier  # noqa: E402
+ 
+-VERSION = "lanceur-pilote-mr2-v72"
+-LANCEUR = "demonstrations/pilote_mr2_v72.py"
+-DEBUT_BLOC, FIN_BLOC = "<!-- empreintes-du-code-pilote-v72 : début -->", "<!-- empreintes-du-code-pilote-v72 : fin -->"
++VERSION = "lanceur-pilote-mr2-v73"
++LANCEUR = "demonstrations/pilote_mr2_v73.py"
++DEBUT_BLOC, FIN_BLOC = "<!-- empreintes-du-code-pilote-v73 : début -->", "<!-- empreintes-du-code-pilote-v73 : fin -->"
+ FICHIERS_GELES = (
+-    "demonstrations/pilote_mr2_v72.py", "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py",
++    "demonstrations/pilote_mr2_v73.py", "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py",
+     "pole/proposeurs_pilote_v72.py", "pole/sonde_pilote_v71.py", "pole/sonde_pilote_v72.py",
+     "exemples/pilote-mr2-v70/commandes/commande_pilote_v70.py", "exemples/pilote-mr2-v70/commandes/relais_pilote_v70.py",
+     "exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json",
+@@ -123,7 +128,7 @@ def bloc_gele(racine=RACINE, releve=None):
+     lignes = [DEBUT_BLOC, "```", f"gabarit-servi-sha256 {P.gabarit_sha256()}"]
+     for nom in P.PROPOSEURS:
+         p = conf["proposeurs"][nom]
+-        lignes.append(f"borne-de-sortie {nom} {p['modele']} {p['borne_sortie_jetons']} jetons ; plafond de session "
++        lignes.append(f"borne-de-sortie {nom} {p['borne_sortie_jetons']} jetons ; plafond de session "
+                       f"{p['plafond_session_usd']:g} USD ; part {p['part_usd']:g} USD ; réglages envoyés "
+                       f"{json.dumps(p['reglages'], sort_keys=True)} ; réflexion comprise {'oui' if p['reflexion_comprise'] else 'non'}")
+     for ligne in ("pi1", "pi2"):
+@@ -132,6 +137,8 @@ def bloc_gele(racine=RACINE, releve=None):
+     for ligne in PR.GO_SONDE:
+         g = conf["sonde"]["go"][ligne]
+         lignes.append(f"ligne-de-go-sonde {ligne} {g['montant_usd']:.2f} USD ; parts {json.dumps(g['parts_usd'], sort_keys=True)}")
++    lignes.append("identite-des-proposeurs celle de la configuration (clé modele de chaque proposeur), gelée par l'empreinte du "
++                  "fichier de configuration ci-dessous ; non recopiée ici (R-2690)")
+     lignes.append(f"octets-entree-max {conf['octets_entree_max']}")
+     lignes.append(f"numpy-exige {conf['numpy_exige']}")
+     lignes.append(f"regle-des-graines-episodes {P.REGLE_EPISODES}")
+@@ -149,7 +156,7 @@ def verifier_bloc_du_texte(texte, racine=RACINE, releve=None):
+     """Mode réel : le bloc gelé du texte scellé est exactement celui que rend le code présent, avec ce relevé (refus sinon)."""
+     i, j = texte.find(DEBUT_BLOC), texte.find(FIN_BLOC)
+     if i < 0 or j < i:
+-        raise P.Refus("texte scellé : bloc « empreintes-du-code-pilote-v72 » absent")
++        raise P.Refus("texte scellé : bloc « empreintes-du-code-pilote-v73 » absent")
+     if texte[i:j + len(FIN_BLOC)] + "\n" != bloc_gele(racine, releve):
+         raise P.Refus("texte scellé : bloc gelé ≠ code, gabarit, bornes, réglages ou relevé de la sonde présents")
+ 
+@@ -410,6 +417,101 @@ def sonde(args):
+     return 0
+ 
+ 
++# --- sonde d'un seul relais (v73 ; GO-2026-11-14-02, R-2694 : « sonde neuve du seul relais Astra ») ------------------------------
++# Une ligne de GO à part, au montant exact écrit ici ; mots exigés au périmètre ; un seul relais lancé (plafond : sa part de la
++# sonde de la configuration, au moins le pire cas de ses deux appels) ; deux appels (borne gelée, puis 256 jetons), consignes de la
++# configuration v12 ; registre des lancements (une seule exécution par ligne) ; faits tirés des pièces (module de la sonde v72) ;
++# relevé propre (`releve-sonde-un-relais-v73.json`), **que le mode réel ne lit pas** (sa version n'est pas celle du relevé de la
++# sonde complète) : il dit le crédit du compte et les conclusions de ce seul relais.
++SONDE_UN = {"astra": {"montant_usd": 2.0, "perimetre_contient": ["sonde", "seul relais Astra"]}}
++VERSION_RELEVE_UN = "releve-sonde-un-relais-v73"
++RELEVE_UN = "releve-sonde-un-relais-v73.json"
++
++
++def exiger_pire_sous_part(pire, part, montant):
++    """Le pire cas des deux appels au plus la part de la sonde (plafond du relais), et la part au plus le montant de la ligne."""
++    if pire > part + 1e-9 or part > montant + 1e-9:
++        raise P.Refus(f"sonde d'un relais : pire cas {pire:.6f} > part {part} ou part {part} > ligne {montant}")
++
++
++def sonde_un(args):
++    """Sonde payante d'un seul relais (jamais jouée par le développeur hors de la doublure). Refus nommé (code 2), avant tout
++    dossier et tout relais : proposeur hors de `SONDE_UN` ; dossier de sortie existant ; ligne de GO absente, d'un autre montant,
++    hors période, sans les mots du périmètre ; pire cas des deux appels au-dessus de la part de la sonde ou du montant de la ligne ;
++    ligne déjà employée au registre des lancements. Puis : relais lancé, état contrôlé champ par champ, lancement consigné, deux
++    appels, relevé scellé (partiel si un arrêt survient après le premier envoi)."""
++    debut = maintenant()
++    conf, _ = PC.lire_configuration(CONFIGURATION)
++    nom = args.proposeur
++    if nom not in SONDE_UN:
++        raise P.Refus(f"sonde d'un relais : proposeur {nom!r} hors de {sorted(SONDE_UN)}")
++    if os.path.exists(args.sortie):
++        raise P.Refus("sonde d'un relais : dossier de sortie existant")
++    p = conf["proposeurs"][nom]
++    s = conf["sonde"]
++    go = PR.lire_go_de_lignes(SONDE_UN, args.registre_go, {nom: args.go_sonde})
++    part = PR.parts_de_la_sonde(conf)[nom]
++    pire = PR.pire_cas_d_un_appel(p, s["octets_consigne_max"]) + PR.pire_cas_d_un_appel(p, s["octets_consigne_max"],
++                                                                                          s["borne_courte_jetons"])
++    exiger_pire_sous_part(pire, part, SONDE_UN[nom]["montant_usd"])
++    reprise = S.exiger_premier_lancement(args.registre_lancements, [args.go_sonde], args.reprise, args.registre_decisions)
++    os.makedirs(args.sortie)
++    jeton = PR.nouveau_jeton()
++    proc, faits, relais, arret, en_cours, partis = None, [], None, None, None, False
++    try:
++        proc, _ = PR.lancer_relais(conf, nom, os.path.join(args.sortie, f"journal-relais-{nom}.jsonl"), p["dialecte"], jeton,
++                                   python=sys.executable, plafond=part, max_appels=len(S.APPELS))
++        try:
++            e = PR.etat_relais(conf, nom)
++        except OSError as x:
++            raise P.Refus(f"relais {nom} injoignable : {x}") from None
++        ecarts = PR.controler_etat_relais(conf, nom, e, "reel", part, len(S.APPELS))
++        if ecarts:
++            raise P.Refus(f"relais {nom} : état non conforme ({ecarts})")
++        relais = {nom: {k: e.get(k) for k in ("relais", "appelant", "pid", "plafond_usd", "fichier_sha256", "cle_presente",
++                                               "reflexion_comprise", "environnement_noms", "max_appels")}}
++        S.consigner_lancement(args.registre_lancements, [args.go_sonde], args.sortie, debut, reprise)
++        for quoi in S.APPELS:
++            borne = None if quoi == "borne_gelee" else s["borne_courte_jetons"]
++            en_cours, partis = quoi, True
++            PR.appeler(conf, nom, s["consignes"][quoi], S.dossier_d_un_appel(args.sortie, nom, quoi), jeton, python=sys.executable,
++                       borne=borne)
++            faits.append(S.faits_depuis_les_pieces(conf, nom, quoi, args.sortie))
++            en_cours = None
++    except (PR.ArretPilote, Exception) as x:  # noqa: BLE001 — tout arrêt après le premier envoi laisse un relevé partiel
++        arret = f"{type(x).__name__} : {x}"
++        if en_cours is not None and os.path.isfile(os.path.join(S.dossier_d_un_appel(args.sortie, nom, en_cours),
++                                                                "reponse-brute.json")):
++            try:
++                faits.append(S.faits_depuis_les_pieces(conf, nom, en_cours, args.sortie))
++            except (P.Refus, KeyError, TypeError, ValueError, OSError) as x2:
++                arret += f" ; pièces de l'appel en cours illisibles : {x2}"
++        if isinstance(x, P.Refus) and not partis:
++            if proc is not None:
++                PR.arreter_relais(proc)
++            raise
++    finally:
++        if proc is not None:
++            PR.arreter_relais(proc)
++    rel = {"version": VERSION_RELEVE_UN, "module": S.VERSION, "lanceur": VERSION, "proposeur": nom, "debut_utc": debut,
++           "fin_utc": maintenant(), "partiel": arret is not None, "arret": arret, "go": go, "reprise": reprise, "relais": relais,
++           "identite": {k: p[k] for k in S.IDENTITE if k != "modele"}, "appels": faits,
++           "conclusions": S.conclusions(conf, nom, faits), "configuration_sha256": PR.empreinte_configuration(conf),
++           "code_sha256": empreintes_du_code(),
++           "consignes_sha256": {k: hashlib.sha256(v.encode("utf-8")).hexdigest() for k, v in s["consignes"].items()},
++           "part_usd": part, "pire_cas_usd": round(pire, 6), "depense_usd": round(sum(f["cout_usd"] or 0.0 for f in faits), 8),
++           "a_lire_hors_du_code": "coût à rapprocher de la console par Lazar ; ce relevé ne sert pas au mode réel"}
++    motif = S.motif_reflexion_absente(nom, p, rel["conclusions"])
++    rel["motif_reflexion"] = motif
++    sha = ecrire(os.path.join(args.sortie, RELEVE_UN), rel)
++    imprimer({"lanceur": VERSION, "releve_sha256": sha, "partiel": arret is not None, "arret": arret,
++              "depense_usd": rel["depense_usd"], "conclusions": rel["conclusions"], "motif_reflexion": motif})
++    if arret is not None:
++        print(f"arrêt : {arret}", file=sys.stderr)
++        return 3
++    return 0
++
++
+ def mesurer(args):
+     """M-5 : la mesure **une seule fois** : `CARTES.json` égal à son compagnon et au manifeste, manifeste égal au sien (W5) ;
+     D-3 : le fichier des mondes est celui du manifeste (empreinte du fichier, empreintes des mondes) ; aucune sortie de mesure
+@@ -527,6 +629,14 @@ def principal(argv=None):
+     x.add_argument("--borne-courte", action="store_true")
+     x.add_argument("--reprise", default=None)
+     x.add_argument("--registre-decisions", default=None)
++    x = s.add_parser("sonde-un")
++    x.add_argument("--proposeur", required=True)
++    x.add_argument("--go-sonde", required=True)
++    x.add_argument("--registre-go", required=True)
++    x.add_argument("--registre-lancements", required=True)
++    x.add_argument("--sortie", required=True)
++    x.add_argument("--reprise", default=None)
++    x.add_argument("--registre-decisions", default=None)
+     x = s.add_parser("jouer")
+     x.add_argument("--mode", required=True)
+     x.add_argument("--mondes", required=True)
+@@ -573,6 +683,8 @@ def principal(argv=None):
+             imprimer(ctl)
+         elif args.commande == "sonde":
+             return sonde(args)
++        elif args.commande == "sonde-un":
++            return sonde_un(args)
+         elif args.commande == "jouer":
+             return jouer(args)
+         elif args.commande == "mesurer":
+diff --git a/essais/test_pilote_mr2_v71.py b/essais/test_pilote_mr2_v73.py
+index 0f3704c..a31a3f0 100644
+--- a/essais/test_pilote_mr2_v71.py
++++ b/essais/test_pilote_mr2_v73.py
+@@ -1,13 +1,9 @@
+-"""Essais R5 du code v71 du pilote MR-2 (C-1 à C-18 ; corrections des contre-lectures `7af19261…` et `935e44bc…`, D-1 à D-5,
+-d-1 à d-8 ; et de la contre-lecture `f6bc1b00…` sur la sonde : A-1, A-2, a-1, a-2, a-3) : chaque garde sur un cas sain et sur un
+-artefact. Les essais de la v70 sont portés sur le lanceur v71 et le module de la sonde v71 (le reste de l'arbre est celui de la
+-v70, inchangé). Aucun réseau hors de la boucle locale (relais à amont factice,
+-doublure des fournisseurs déclarée ici), aucune clé (valeurs factices posées par les essais dans les environnements qu'ils
+-construisent), aucun appel de modèle ; la sonde n'est jouée que sur la doublure. Mondes : ceux de l'essai public de la mesure
+-(`generer_monde_v4(P1.cle("pilote-v68-essai-developpement", r))` et l'étiquette « pilote-v2-essai-developpement »), écrits dans
+-un dossier provisoire hors de tout dépôt ; jamais un monde du secret du pilote, de calibration ou de test.
+-
+-  OMP_NUM_THREADS=2 python3 -I -B -m pytest -q -p no:cacheprovider essais/test_pilote_mr2_v71.py
++"""Essais R5 du code v73 du pilote MR-2 : les 129 essais de la v72 (dont les 115 de la v71) portés sur le lanceur v73, et la
++classe neuve `V73` : le bloc gelé nomme les proposeurs par leurs clés, sans identifiant de modèle (décision de la mère sur PO-015,
++R-2690), et l'identité reste gelée par l'empreinte de la configuration. Aucun réseau hors de la boucle locale, aucune clé (valeurs
++factices), aucun appel de modèle ; la sonde n'est jouée que sur la doublure.
++
++  OMP_NUM_THREADS=2 python3 -I -B -m pytest -q -p no:cacheprovider essais/test_pilote_mr2_v73.py
+ """
+ 
+ import copy
+@@ -32,11 +28,13 @@ from pole import audit_pilote_v70 as AU  # noqa: E402
+ from pole import pilote_mr2_v70 as P  # noqa: E402
+ from pole import proposeurs_pilote_v70 as PR  # noqa: E402
+ from pole import selection_pari as sp  # noqa: E402
+-from pole import sonde_pilote_v71 as S  # noqa: E402
++from pole import proposeurs_pilote_v72 as PC  # noqa: E402
++from pole import sonde_pilote_v71 as S71  # noqa: E402
++from pole import sonde_pilote_v72 as S  # noqa: E402
+ from pole.outils import json_canonique, sha256_fichier  # noqa: E402
+ 
+-_spec = __import__("importlib.util").util.spec_from_file_location("lanceur_pilote_v71", os.path.join(RACINE, "demonstrations",
+-                                                                                                    "pilote_mr2_v71.py"))
++_spec = __import__("importlib.util").util.spec_from_file_location("lanceur_pilote_v73", os.path.join(RACINE, "demonstrations",
++                                                                                                    "pilote_mr2_v73.py"))
+ L = __import__("importlib.util").util.module_from_spec(_spec)
+ _spec.loader.exec_module(L)
+ 
+@@ -58,7 +56,7 @@ def arbre(k, feuille=F0):
+ 
+ 
+ def dossier_prive():
+-    d = tempfile.mkdtemp(prefix="pilote-v71-prive-")
++    d = tempfile.mkdtemp(prefix="pilote-v72-prive-")
+     os.chmod(d, 0o700)
+     return d
+ 
+@@ -474,7 +472,7 @@ class M6TexteEtEpisodes(unittest.TestCase):
+ class Configuration(unittest.TestCase):
+     def ecrire(self, d, modif):
+         shutil.copytree(os.path.dirname(CONF), os.path.join(d, "c"))
+-        c = os.path.join(d, "c", "configuration-pilote-mr2-v11.json")
++        c = os.path.join(d, "c", "configuration-pilote-mr2-v12.json")
+         with open(c, encoding="utf-8") as f:
+             conf = json.load(f)
+         modif(conf)
+@@ -483,7 +481,7 @@ class Configuration(unittest.TestCase):
+         return c
+ 
+     def test_sain(self):
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+         for nom, p in conf["proposeurs"].items():
+             self.assertLessEqual(p["borne_sortie_jetons"], PR.borne_de_sortie_max(
+                 p["plafond_session_usd"], p["prix_entree_usd_par_million"], p["prix_sortie_usd_par_million"], conf["octets_entree_max"]))
+@@ -543,12 +541,12 @@ class Configuration(unittest.TestCase):
+             d = tempfile.mkdtemp()
+             try:
+                 with self.subTest(nom), self.assertRaisesRegex(P.Refus, motifs.get(nom, "")):
+-                    PR.lire_configuration(self.ecrire(d, f))
++                    PC.lire_configuration(self.ecrire(d, f))
+             finally:
+                 shutil.rmtree(d)
+ 
+     def test_go_pi1_pi2(self):
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+         d = tempfile.mkdtemp()
+         try:
+             reg = os.path.join(d, "go.md")
+@@ -580,7 +578,7 @@ class Configuration(unittest.TestCase):
+     def test_go_sonde(self):
+         """D-4 : les deux lignes de la sonde, à part de π1 et π2, lues au montant exact, périmètres exigés, identifiants
+         distincts."""
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+         d = tempfile.mkdtemp()
+         try:
+             reg = os.path.join(d, "go.md")
+@@ -607,9 +605,9 @@ class Configuration(unittest.TestCase):
+ 
+ 
+ def conf_ports_libres():
+-    """La configuration v11 lue, ports remplacés par des ports libres (d'autres processus tournent sur la machine)."""
++    """La configuration v12 lue, ports remplacés par des ports libres (d'autres processus tournent sur la machine)."""
+     import socket
+-    conf, _ = PR.lire_configuration(CONF)
++    conf, _ = PC.lire_configuration(CONF)
+     for p in conf["proposeurs"].values():
+         s = socket.socket()
+         s.bind(("127.0.0.1", 0))
+@@ -851,7 +849,7 @@ class EtatDesRelais(unittest.TestCase):
+     """B-2, N3, N4 : chaque champ de l'état d'un relais est contrôlé avant tout appel (un artefact par champ)."""
+ 
+     def test_sain(self):
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+         for mode in ("reel", "a_blanc"):
+             for nom in P.PROPOSEURS:
+                 self.assertEqual(PR.controler_etat_relais(conf, nom, etat_conforme(conf, nom, mode), mode), [])
+@@ -859,7 +857,7 @@ class EtatDesRelais(unittest.TestCase):
+             self.assertEqual(set(PR.exiger_relais_prets(conf, "reel")), set(P.PROPOSEURS))
+ 
+     def test_artefacts(self):
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+         cas = {"relais": "relais-pilote-v69-argon", "fichier_sha256": "0" * 64, "modele": "gemini-x", "dialecte": "astra",
+                "prix_entree": 1.0, "prix_sortie": 1.0, "borne_sortie": 99999, "max_appels": 5, "url_amont": "http://127.0.0.1:1/x",
+                "reglages": {"x": 1}, "appels": 1, "regle_usd": 0.5, "plafond_usd": 100.0, "branche": False, "cle_presente": False,
+@@ -882,7 +880,7 @@ class EtatDesRelais(unittest.TestCase):
+ 
+     def test_sonde_plafond_et_appels(self):
+         """D-4 : sous la sonde, l'état attendu porte la part de la sonde et son nombre d'appels (deux), pas ceux du pilote."""
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+         parts = PR.parts_de_la_sonde(conf)
+         e = dict(etat_conforme(conf, "astra", "reel"), plafond_usd=parts["astra"], max_appels=2)
+         self.assertEqual(PR.controler_etat_relais(conf, "astra", e, "reel", parts["astra"], 2), [])
+@@ -1136,9 +1134,9 @@ class RelaisRefus(unittest.TestCase):
+ 
+ 
+ def ecrire_conf(d, conf):
+-    """Une copie de la configuration v11 (commandes comprises) avec les ports de `conf`."""
++    """Une copie de la configuration v12 (commandes comprises) avec les ports de `conf`."""
+     shutil.copytree(os.path.dirname(CONF), os.path.join(d, "conf"))
+-    c = os.path.join(d, "conf", "configuration-pilote-mr2-v11.json")
++    c = os.path.join(d, "conf", "configuration-pilote-mr2-v12.json")
+     with open(c, encoding="utf-8") as f:
+         brut = json.load(f)
+     for n in P.PROPOSEURS:
+@@ -1516,7 +1514,7 @@ class C11C13C14C18EssaiABlanc(unittest.TestCase):
+         self.assertFalse(os.path.exists(os.path.join(self.d, "reel-scenario")))
+ 
+     def test_numpy_exige(self):
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+         conf["numpy_exige"] = "0.0.0"
+         import argparse
+         args = argparse.Namespace(go_pi1="a", go_pi2="b", registre_go="r", texte="t", texte_sha256="h", mondes_shas="s",
+@@ -1646,12 +1644,12 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         import numpy as np
+         import socket
+         e = mondes_dev()
+-        cls.d = tempfile.mkdtemp(prefix="pilote-v71-reel-")
++        cls.d = tempfile.mkdtemp(prefix="pilote-v72-reel-")
+         cls.registres = dossier_prive()  # a-1 : registres des lancements de la sonde, hors dépôt
+         cls.doublure = Doublure(cls.CLES)
+         cls.arbre = os.path.join(cls.d, "arbre", "orchestrator")
+         shutil.copytree(RACINE, cls.arbre, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
+-        c = os.path.join(cls.arbre, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v11.json")
++        c = os.path.join(cls.arbre, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v12.json")
+         conf = json.load(open(c, encoding="utf-8"))
+         conf["numpy_exige"] = np.__version__
+         chemins = {"claude": "/v1/messages", "gemini": "/v1beta/models/gemini-4-argon:generateContent",
+@@ -1663,8 +1661,8 @@ class ModeReelBoutEnBout(unittest.TestCase):
+             p["port"] = s.getsockname()[1]
+             s.close()
+         json.dump(conf, open(c, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+-        cls.conf_copie, _ = PR.lire_configuration(c)
+-        cls.lanceur = os.path.join(cls.arbre, "demonstrations", "pilote_mr2_v71.py")
++        cls.conf_copie, _ = PC.lire_configuration(c)
++        cls.lanceur = os.path.join(cls.arbre, "demonstrations", "pilote_mr2_v73.py")
+         cls.attendu = L.attendu_du_releve(cls.conf_copie, cls.arbre)  # a-2
+         jour = datetime.date.today()
+         cls.registre = os.path.join(cls.d, "go.md")
+@@ -1827,7 +1825,7 @@ class ModeReelBoutEnBout(unittest.TestCase):
+     def test_artefact_bloc_altere(self):
+         t = os.path.join(self.d, "texte-bloc-faux.md")
+         contenu = open(self.texte, encoding="utf-8").read()
+-        sha_relais = json.load(open(os.path.join(self.arbre, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v11.json")))["relais"]["sha256"]
++        sha_relais = json.load(open(os.path.join(self.arbre, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v12.json")))["relais"]["sha256"]
+         open(t, "w", encoding="utf-8").write(contenu.replace(sha_relais, "0" * 64))
+         self.refus("bloc-altere", "bloc gelé", {"--texte": t, "--texte-sha256": sha256_fichier(t)})
+ 
+@@ -1931,7 +1929,7 @@ class ModeReelBoutEnBout(unittest.TestCase):
+                                               r["appels"].append(dict(fait(r, "astra", "borne_gelee")))), True, "deux appels"),
+                # a-2 : configuration et code de l'arbre qui lit ; faits relus des pièces ; borne de la configuration
+                "configuration": (lambda r: r.update(configuration_sha256="0" * 64), True, "autre configuration"),
+-               "code": (lambda r: r["code_sha256"].update({"pole/sonde_pilote_v71.py": "0" * 64}), True, "autre code"),
++               "code": (lambda r: r["code_sha256"].update({"pole/sonde_pilote_v72.py": "0" * 64}), True, "autre code"),
+                "faits_hors_pieces": (lambda r: fait(r, "argon", "borne_gelee").update(cout_usd=0.0), True, "ses pièces"),
+                "usage_hors_pieces": (lambda r: fait(r, "astra", "borne_courte")["usage_brut"].update(prompt_tokens=7), True,
+                                      "ses pièces"),
+@@ -1965,7 +1963,7 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         open(c + ".sha256", "w", encoding="utf-8").write(f"{sha256_fichier(c)}  corps-relais.json\n")
+         with self.assertRaisesRegex(P.Refus, "empreinte de sa réponse brute"):
+             S.exiger_releve(self.conf_copie, os.path.join(piece, S.RELEVE), self.attendu)
+-        autre = dict(self.attendu, code_sha256=dict(self.attendu["code_sha256"], **{"demonstrations/pilote_mr2_v71.py": "0" * 64}))
++        autre = dict(self.attendu, code_sha256=dict(self.attendu["code_sha256"], **{"demonstrations/pilote_mr2_v73.py": "0" * 64}))
+         with self.assertRaisesRegex(P.Refus, "autre code"):
+             S.exiger_releve(self.conf_copie, self.releve, autre)
+         c = self.forger("verdict-bloc", verdict)
+@@ -2185,6 +2183,110 @@ class ModeReelBoutEnBout(unittest.TestCase):
+         self.assertEqual((rel["partiel"], rel["appels"]), (True, []))
+         self.assertIn("pièces de l'appel en cours illisibles", rel["arret"])
+ 
++    # --- v72 : configuration v12, conclusion « réflexion observée », refus nommé « champ de réflexion absent » (R5) ---------
++
++    def test_v72_sonde_saine_confirmee(self):
++        """Cas sain : la sonde v72 sur la doublure (réflexion présente à chaque appel) rend un relevé v72 que le mode réel admet
++        (« confirmé ») ; Argon et Astra portent `reflexion_observee` vraie ; les consignes envoyées sont celles de la v12."""
++        rel = json.load(open(self.releve))
++        self.assertEqual((rel["version"], rel["module"], rel["lanceur"]),
++                         ("releve-sonde-pilote-v72", "sonde-pilote-v72", "lanceur-pilote-mr2-v73"))
++        self.assertEqual(S.exiger_releve(self.conf_copie, self.releve, self.attendu), sha256_fichier(self.releve))
++        self.assertEqual({n: c.get("reflexion_observee") for n, c in rel["conclusions"].items()},
++                         {"fable52": None, "opus55": None, "argon": True, "astra": True})
++        v12 = self.conf_copie["sonde"]["consignes"]
++        self.assertEqual(rel["consignes_sha256"], {k: hashlib.sha256(v.encode("utf-8")).hexdigest() for k, v in v12.items()})
++        for x in (y for y in self.recues_de_la_sonde if y["sonde"]):
++            corps = x["corps"]
++            envoye = corps["contents"][0]["parts"][0]["text"] if x["dialecte"] == "gemini" else corps["messages"][0]["content"]
++            self.assertEqual(envoye, v12["borne_courte"] if x["max"] == 256 else v12["borne_gelee"])
++        self.assertNotIn("OK.", json.dumps(v12, ensure_ascii=False))
++        self.assertEqual([x["module"] for x in self.lancements_sonde], ["sonde-pilote-v72"])  # registre a-1, module v72
++
++    @staticmethod
++    def corps_argon(thoughts, candidats, fin, texte):
++        """Un corps d'Argon : `thoughts` = None (champ absent) ou un entier ; total = prompt + candidats (+ pensées si présentes)."""
++        def corps(modele, consigne, mt):
++            u = {"promptTokenCount": 40, "candidatesTokenCount": candidats,
++                 "totalTokenCount": 40 + candidats + (thoughts if isinstance(thoughts, int) else 0)}
++            if thoughts is not None:
++                u["thoughtsTokenCount"] = thoughts
++            return {"modelVersion": modele, "candidates": [{"finishReason": fin, "content": {"role": "model", "parts": [
++                {"text": texte}]}}], "usageMetadata": u}
++        return corps
++
++    def test_v72_champ_de_reflexion_absent_refuse(self):
++        """Artefact R5 (le relevé de la v71, R-2621) : Argon sans `thoughtsTokenCount` aux deux appels (5 candidats « 46 » ;
++        256 candidats coupés) : la sonde se termine (code 0, relevé complet), `reflexion_observee` fausse, verdict
++        « indetermine » ; le mode réel et le bloc refusent sous le motif nommé « champ de réflexion absent »."""
++        A = self.corps_argon
++        c = self.sonde_surchargee("sonde-v72-argon-sans-reflexion", {("gemini", False): A(None, 5, "STOP", "46"),
++                                                                     ("gemini", True): A(None, 256, "MAX_TOKENS", "x " * 256)})
++        rel = json.load(open(c))
++        self.assertEqual((rel["partiel"], rel["conclusions"]["argon"]["reflexion_observee"],
++                          rel["conclusions"]["argon"]["verdict_reflexion"]), (False, False, "indetermine"))
++        self.assertEqual([f["champs_absents"] for f in rel["appels"] if f["proposeur"] == "argon"],
++                         [["thoughtsTokenCount"], ["thoughtsTokenCount"]])
++        with self.assertRaisesRegex(P.Refus, "argon : champ de réflexion absent"):
++            S.exiger_releve(self.conf_copie, c, self.attendu)
++        b = subprocess.run([sys.executable, "-I", "-B", self.lanceur, "bloc", "--releve-sonde", c], capture_output=True, text=True,
++                           encoding="utf-8", env=self.env)
++        self.assertEqual((b.returncode, "champ de réflexion absent" in b.stderr), (2, True), b.stderr)
++
++    def test_v72_champ_de_reflexion_nul_refuse(self):
++        """Artefacts voisins : Argon avec `thoughtsTokenCount` présent mais nul aux deux appels ; Astra avec `reasoning_tokens`
++        nul aux deux appels : refus nommé. Une seule réflexion > 0 sur deux appels suffit à l'observation (cas sain voisin)."""
++        A = self.corps_argon
++        c = self.sonde_surchargee("sonde-v72-argon-reflexion-nulle", {("gemini", False): A(0, 5, "STOP", "46"),
++                                                                      ("gemini", True): A(0, 256, "MAX_TOKENS", "x " * 256)})
++        with self.assertRaisesRegex(P.Refus, "argon : champ de réflexion absent ou nul"):
++            S.exiger_releve(self.conf_copie, c, self.attendu)
++        B = self.corps_astra
++        c = self.sonde_surchargee("sonde-v72-astra-reflexion-nulle", {("astra", False): B(2, 0, "46", "stop"),
++                                                                      ("astra", True): B(256, 0, "x " * 256, "length")})
++        with self.assertRaisesRegex(P.Refus, "astra : champ de réflexion absent ou nul"):
++            S.exiger_releve(self.conf_copie, c, self.attendu)
++        c = self.sonde_surchargee("sonde-v72-argon-une-reflexion", {("gemini", False): A(None, 5, "STOP", "46"),
++                                                                    ("gemini", True): A(200, 56, "MAX_TOKENS", "x " * 56)})
++        rel = json.load(open(c))
++        self.assertEqual((rel["conclusions"]["argon"]["reflexion_observee"], rel["conclusions"]["argon"]["verdict_reflexion"]),
++                         (True, "non_comprise"))
++        self.assertEqual(S.exiger_releve(self.conf_copie, c, self.attendu), sha256_fichier(c))
++
++    def test_v72_releve_de_la_v71_refuse(self):
++        """Un relevé de version v71 (ou fait sous la configuration v11) n'est pas lu par la v72 ; le module v71 ne lit pas un
++        relevé v72."""
++        d = tempfile.mkdtemp()
++        try:
++            shutil.copytree(os.path.dirname(self.releve), os.path.join(d, "s"))
++            c = os.path.join(d, "s", S.RELEVE)
++            r = json.load(open(c))
++            r["version"] = "releve-sonde-pilote-v71"
++            PR.ecrire_scelle_json(c + ".v71.json", r)
++            with self.assertRaisesRegex(P.Refus, "version « releve-sonde-pilote-v72 » exigée"):
++                S.exiger_releve(self.conf_copie, c + ".v71.json", self.attendu)
++            r = json.load(open(c))
++            r["configuration_sha256"] = "9240c62493726675af278e6fc032a582e5f5cca4e2d586a784a213625d454ab9"
++            PR.ecrire_scelle_json(c + ".v11.json", r)
++            with self.assertRaisesRegex(P.Refus, "autre configuration"):
++                S.exiger_releve(self.conf_copie, c + ".v11.json", self.attendu)
++            with self.assertRaisesRegex(P.Refus, "version « releve-sonde-pilote-v71 » exigée"):
++                S71.exiger_releve(self.conf_copie, self.releve, self.attendu)
++        finally:
++            shutil.rmtree(d)
++
++    def test_v72_conclusion_forgee_refusee(self):
++        """Un relevé dont la conclusion `reflexion_observee` d'Argon est forgée à vrai (faits sans réflexion) est refusé :
++        conclusions recalculées depuis les faits."""
++        A = self.corps_argon
++        c = self.sonde_surchargee("sonde-v72-forge", {("gemini", False): A(None, 5, "STOP", "46"),
++                                                      ("gemini", True): A(None, 256, "MAX_TOKENS", "x " * 256)})
++        r = json.load(open(c))
++        r["conclusions"]["argon"]["reflexion_observee"] = True
++        PR.ecrire_scelle_json(c + ".forge.json", r)
++        with self.assertRaisesRegex(P.Refus, "conclusions de argon ≠ celles de ses faits"):
++            S.exiger_releve(self.conf_copie, c + ".forge.json", self.attendu)
++
+ 
+ def conf_dialecte(nom):
+     return {"fable52": "claude", "opus55": "claude", "argon": "gemini", "astra": "astra"}[nom]
+@@ -2222,11 +2324,13 @@ class BlocGele(unittest.TestCase):
+             "from pole import pilote_mr2_v70 as P; P.charger_mr2();"
+             "print('\\n'.join(sorted(os.path.relpath(m.__file__, %r) for m in list(sys.modules.values())"
+             " if getattr(m, '__file__', None) and os.path.abspath(m.__file__).startswith(%r))))") % (
+-            RACINE, os.path.join(RACINE, "demonstrations", "pilote_mr2_v71.py"), RACINE, RACINE + os.sep)],
++            RACINE, os.path.join(RACINE, "demonstrations", "pilote_mr2_v73.py"), RACINE, RACINE + os.sep)],
+             capture_output=True, text=True)
+         charges = set(r.stdout.split())
+         self.assertTrue(charges, r.stderr)
+         self.assertIn("pole/sonde_pilote_v71.py", charges)
++        self.assertIn("pole/sonde_pilote_v72.py", charges)
++        self.assertIn("pole/proposeurs_pilote_v72.py", charges)
+         self.assertEqual(charges - set(L.FICHIERS_GELES), set())
+ 
+ 
+@@ -2295,7 +2399,7 @@ class SondeFonctions(unittest.TestCase):
+     def test_lecture_de_l_usage_par_la_commande(self):
+         """A-2 : la sonde lit l'usage par la fonction de la commande gelée : un champ absent vaut ce qu'il vaut pour elle ; un
+         champ nul reste illisible ; les champs bruts sont gardés tels quels, les absents nommés."""
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+         u = {"promptTokenCount": 21, "thoughtsTokenCount": 256, "totalTokenCount": 277}
+         self.assertEqual((S.usage_entier(conf, "gemini", u, False), S.sortie_comptee(conf, "gemini", u, False)), (True, 256))
+         self.assertEqual(S.champs_absents("gemini", u), ["candidatesTokenCount"])
+@@ -2320,7 +2424,7 @@ class SondeFonctions(unittest.TestCase):
+     def test_conclusions_des_releves_du_contre_lecteur(self):
+         """A-1 et A-2, au niveau des conclusions : Astra (règle « comprise ») sur E2a, E2b, E2c : verdict ≠ règle ; Argon sur E3 :
+         toutes les conclusions vraies ; la borne courte est celle de la configuration."""
+-        conf, _ = PR.lire_configuration(CONF)
++        conf, _ = PC.lire_configuration(CONF)
+ 
+         def f(appel, borne, etat, u, octets):
+             return {"appel": appel, "borne": borne, "etat": etat, "statut_amont": 200, "modele_servi_conforme": True,
+@@ -2398,5 +2502,344 @@ class SondeFonctions(unittest.TestCase):
+         self.assertFalse(S.comparer_flux("data: [DONE]\n", corps)["egal"])
+ 
+ 
++class V72(unittest.TestCase):
++    """Essais neufs de la v72 : configuration v12, lecture v12, réflexion observée, lanceur et bloc gelé v72."""
++
++    V11 = os.path.join(RACINE, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v11.json")
++
++    def test_configuration_v12_seules_les_consignes_changent(self):
++        a, b = json.load(open(self.V11, encoding="utf-8")), json.load(open(CONF, encoding="utf-8"))
++        self.assertEqual((a["version"], b["version"]), ("configuration-pilote-mr2-v11", "configuration-pilote-mr2-v12"))
++        self.assertNotEqual(a["sonde"]["consignes"], b["sonde"]["consignes"])
++        for x in (a, b):
++            x.pop("_lisez_moi")
++            x.pop("version")
++            x["sonde"].pop("consignes")
++        self.assertEqual(a, b)
++        conf, _ = PC.lire_configuration(CONF)
++        for k, v in conf["sonde"]["consignes"].items():
++            self.assertLessEqual(len(v.encode("utf-8")), conf["sonde"]["octets_consigne_max"], k)
++        pires = {n: PR.pire_cas_d_un_appel(p, 100) + PR.pire_cas_d_un_appel(p, 100, 256) for n, p in conf["proposeurs"].items()}
++        self.assertAlmostEqual(sum(pires.values()), 8.052896, places=6)  # pire cas de la sonde inchangé
++
++    def test_lecture_v12_copie_fidele_de_la_v70(self):
++        import inspect
++        a = inspect.getsource(PR.lire_configuration)
++        b = inspect.getsource(PC.lire_configuration)
++        a = a.replace('if conf.get("version") != "configuration-pilote-mr2-v11":\n        raise Refus("configuration : version '
++                      '« configuration-pilote-mr2-v11 » exigée")',
++                      'if conf.get("version") != VERSION_CONFIGURATION:\n        raise Refus(f"configuration : version '
++                      '« {VERSION_CONFIGURATION} » exigée")')
++        a = a.replace("    verifier_section_sonde(conf, props)", "    _V70.verifier_section_sonde(conf, props)")
++        self.assertEqual(a, b)
++        self.assertIs(PC.borne_de_sortie_max, PR.borne_de_sortie_max)
++        self.assertIs(PC.CHAMPS_PROPOSEUR, PR.CHAMPS_PROPOSEUR)
++        self.assertIs(PC.URL_AMONT, PR.URL_AMONT)
++
++    def test_versions_de_configuration(self):
++        conf, dossier = PC.lire_configuration(CONF)
++        self.assertEqual(conf["version"], "configuration-pilote-mr2-v12")
++        self.assertEqual(dossier, os.path.dirname(CONF))
++        with self.assertRaisesRegex(P.Refus, "configuration-pilote-mr2-v12"):
++            PC.lire_configuration(self.V11)
++        with self.assertRaisesRegex(P.Refus, "configuration-pilote-mr2-v11"):
++            PR.lire_configuration(CONF)
++        d = tempfile.mkdtemp()
++        try:  # contrôles de la v70 appliqués à la v12 : une consigne de 101 octets est refusée
++            shutil.copytree(os.path.dirname(CONF), os.path.join(d, "c"))
++            c = os.path.join(d, "c", os.path.basename(CONF))
++            x = json.load(open(c, encoding="utf-8"))
++            x["sonde"]["consignes"]["borne_gelee"] = "é" * 50 + "x"
++            json.dump(x, open(c, "w", encoding="utf-8"))
++            with self.assertRaisesRegex(P.Refus, "consigne borne_gelee de 100 octets au plus"):
++                PC.lire_configuration(c)
++        finally:
++            shutil.rmtree(d)
++
++    def test_reflexion_observee(self):
++        R = S.reflexion_observee
++        g = lambda t: {"usage_brut": {"promptTokenCount": 4, "candidatesTokenCount": 2, **({} if t is None else {"thoughtsTokenCount": t})}}
++        a = lambda t, details=True: {"usage_brut": {"prompt_tokens": 4, "completion_tokens": 9,
++                                                    **({"completion_tokens_details": {"reasoning_tokens": t}} if details else {})}}
++        self.assertTrue(R("gemini", [g(None), g(40)]))
++        self.assertTrue(R("astra", [a(0), a(7)]))
++        for nom, dialecte, faits in (("absent", "gemini", [g(None), g(None)]), ("nul", "gemini", [g(0), g(0)]),
++                                     ("booléen", "gemini", [g(True), g(None)]), ("flottant", "gemini", [g(40.0), g(None)]),
++                                     ("texte", "gemini", [g("40"), g(None)]), ("négatif", "gemini", [g(-3), g(None)]),
++                                     ("astra nul", "astra", [a(0), a(0)]), ("astra absent", "astra", [a(None), a(None)]),
++                                     ("astra sans détails", "astra", [a(5, False), a(5, False)]),
++                                     ("usage absent", "gemini", [{"usage_brut": None}, {}]), ("aucun appel", "gemini", []),
++                                     ("claude", "claude", [g(40), a(7)])):
++            with self.subTest(nom):
++                self.assertFalse(R(dialecte, faits))
++
++    def test_consignes_v12_mot_pour_mot(self):
++        """Jalon 2 (contre-lecture v72, constat 3) : les deux consignes de la v12 sont fixées mot pour mot."""
++        conf, _ = PC.lire_configuration(CONF)
++        self.assertEqual(conf["sonde"]["consignes"], {
++            "borne_gelee": "Combien d'entiers de 1 à 10000 sont divisibles par 7 ou 11, mais pas par 13 ? Le seul nombre.",
++            "borne_courte": "Énumère un à un les nombres premiers entre 1000 et 1200, en justifiant chacun par ses divisions."})
++
++    def test_motif_reflexion_absente(self):
++        """Jalon 2 (constat 2) : le refus nommé ne sort que si les appels ont abouti avec un usage entier ; un appel en échec en
++        amont (artefact réel de la v71 : Astra, 429, crédit épuisé, aucun usage) garde le motif général."""
++        conf, _ = PC.lire_configuration(CONF)
++        p = conf["proposeurs"]
++        M = S.motif_reflexion_absente
++        sain = {"statut": True, "usage_entier": True, "reflexion_observee": True}
++        self.assertIsNone(M("argon", p["argon"], sain))
++        self.assertIn("argon : champ de réflexion absent", M("argon", p["argon"], dict(sain, reflexion_observee=False)))
++        self.assertIn("astra : champ de réflexion absent", M("astra", p["astra"], dict(sain, reflexion_observee=False)))
++        for nom, c in (("astra 429", {"statut": False, "usage_entier": False, "reflexion_observee": False}),
++                       ("usage non entier", dict(sain, usage_entier=False, reflexion_observee=False)),
++                       ("statut faux", dict(sain, statut=False, reflexion_observee=False))):
++            with self.subTest(nom):
++                self.assertIsNone(M("astra", p["astra"], c))
++        self.assertIsNone(M("fable52", p["fable52"], dict(sain, reflexion_observee=None)))
++        # l'artefact réel de la v71 (Astra 429) : faits sans usage → motif général, jamais « ne l'a pas fait réfléchir »
++        f = lambda appel, borne: {"proposeur": "astra", "appel": appel, "borne": borne, "statut_amont": 429, "etat": "echec",
++                                  "modele_servi_conforme": False, "usage_brut": None, "octets_visibles": None,
++                                  "au_dessus_du_pire_cas": False}
++        c = S.conclusions(conf, "astra", [f("borne_gelee", 36000), f("borne_courte", 256)])
++        self.assertEqual((c["statut"], c["usage_entier"], c["reflexion_observee"]), (False, False, False))
++        self.assertIsNone(M("astra", p["astra"], c))
++
++    def test_conclusions_exigees(self):
++        self.assertEqual(S.conclusions_exigees("claude"), S71.conclusions_exigees("claude"))
++        self.assertEqual(S.conclusions_exigees("gemini"), S71.conclusions_exigees("gemini") + ("reflexion_observee",))
++        self.assertEqual(S.conclusions_exigees("astra"), S71.conclusions_exigees("astra") + ("reflexion_observee",))
++
++    def test_lanceur_v72(self):
++        self.assertEqual((L.VERSION, L.LANCEUR), ("lanceur-pilote-mr2-v73", "demonstrations/pilote_mr2_v73.py"))
++        self.assertTrue(L.CONFIGURATION.endswith(os.path.join("pilote-mr2-v70", "configuration-pilote-mr2-v12.json")))
++        g = set(L.FICHIERS_GELES)
++        for f in ("demonstrations/pilote_mr2_v73.py", "pole/proposeurs_pilote_v72.py", "pole/proposeurs_pilote_v70.py",
++                  "pole/sonde_pilote_v71.py", "pole/sonde_pilote_v72.py", "exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json"):
++            self.assertIn(f, g)
++        for f in ("demonstrations/pilote_mr2_v71.py", "demonstrations/pilote_mr2_v72.py",
++                  "exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json"):
++            self.assertNotIn(f, g)
++        self.assertIs(L.S, S)
++        self.assertIs(L.PC, PC)
++
++    def test_bloc_gele_v72(self):
++        b = L.bloc_gele()
++        self.assertTrue(b.startswith("<!-- empreintes-du-code-pilote-v73 : début -->\n"))
++        self.assertIn(f"{sha256_fichier(CONF)}  orchestrator/exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json", b)
++        self.assertNotIn("configuration-pilote-mr2-v11", b)
++        self.assertIn("releve-de-la-sonde absent (le mode réel le refuse)", b)
++        with self.assertRaisesRegex(P.Refus, "empreintes-du-code-pilote-v73"):
++            L.verifier_bloc_du_texte(b.replace("pilote-v73 : début", "pilote-v72 : début"))
++
++
++class V73(unittest.TestCase):
++    """Le bloc gelé v73 (R-2690) : aucun identifiant de modèle ; proposeurs nommés par leurs clés ; identité gelée par l'empreinte
++    du fichier de configuration ; un bloc v72 (qui nommait les modèles) refusé par la vérification du texte."""
++
++    def test_bloc_sans_identifiant_de_modele(self):
++        conf, _ = PC.lire_configuration(CONF)
++        b = L.bloc_gele()
++        for nom, p in conf["proposeurs"].items():
++            with self.subTest(nom):
++                self.assertNotIn(p["modele"], b)
++                self.assertIn(f"borne-de-sortie {nom} {p['borne_sortie_jetons']} jetons ; plafond de session", b)
++        self.assertNotIn("claude-", b)
++        self.assertIn("identite-des-proposeurs celle de la configuration", b)
++        self.assertIn(f"{sha256_fichier(CONF)}  orchestrator/exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json", b)
++        self.assertEqual((L.VERSION, L.LANCEUR), ("lanceur-pilote-mr2-v73", "demonstrations/pilote_mr2_v73.py"))
++
++    def test_artefact_bloc_qui_nomme_les_modeles(self):
++        conf, _ = PC.lire_configuration(CONF)
++        b = L.bloc_gele()
++        nom = "fable52"
++        p = conf["proposeurs"][nom]
++        avec = b.replace(f"borne-de-sortie {nom} {p['borne_sortie_jetons']}", f"borne-de-sortie {nom} {p['modele']} {p['borne_sortie_jetons']}")
++        self.assertNotEqual(avec, b)
++        with self.assertRaisesRegex(P.Refus, "≠ code"):
++            L.verifier_bloc_du_texte("texte\n" + avec + "suite")
++        with self.assertRaisesRegex(P.Refus, "≠ code"):
++            L.verifier_bloc_du_texte("texte\n" + b.replace("identite-des-proposeurs", "identite") + "suite")
++
++
++class SondeUnRelais(unittest.TestCase):
++    """v73, sous-commande `sonde-un` (GO-2026-11-14-02) : sonde du seul relais Astra sur la doublure ; cas sain et un artefact par
++    garde (R5). Clés factices, boucle locale."""
++    CLES = {"claude": "cle-factice-claude", "gemini": "cle-factice-gemini", "astra": "cle-factice-astra"}
++
++    @classmethod
++    def setUpClass(cls):
++        import datetime
++        import socket
++        cls.d = tempfile.mkdtemp(prefix="pilote-v73-sonde-un-")
++        cls.registres = dossier_prive()
++        cls.doublure = Doublure(cls.CLES)
++        cls.arbre = os.path.join(cls.d, "arbre", "orchestrator")
++        shutil.copytree(RACINE, cls.arbre, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
++        c = os.path.join(cls.arbre, "exemples", "pilote-mr2-v70", "configuration-pilote-mr2-v12.json")
++        conf = json.load(open(c, encoding="utf-8"))
++        chemins = {"claude": "/v1/messages", "gemini": "/v1beta/models/gemini-4-argon:generateContent", "astra": "/v1/chat/completions"}
++        for n, p in conf["proposeurs"].items():
++            p["url_amont"] = f"http://127.0.0.1:{cls.doublure.port}{chemins[p['dialecte']]}"
++            so = socket.socket()
++            so.bind(("127.0.0.1", 0))
++            p["port"] = so.getsockname()[1]
++            so.close()
++        json.dump(conf, open(c, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
++        cls.conf_copie, _ = PC.lire_configuration(c)
++        cls.lanceur = os.path.join(cls.arbre, "demonstrations", "pilote_mr2_v73.py")
++        cls.jour = datetime.date.today()
++        cls.env = {"PATH": "/usr/bin:/bin", "OMP_NUM_THREADS": "2", "OPENAI_API_KEY": cls.CLES["astra"],
++                   "AUTRE_CLE_FACTICE": "ne-doit-pas-passer"}
++
++    @classmethod
++    def tearDownClass(cls):
++        cls.doublure.fermer()
++        shutil.rmtree(cls.d)
++        shutil.rmtree(cls.registres)
++
++    def registre(self, nom, montant="2 USD", perimetre="Pilote MR-2 : sonde neuve du seul relais Astra, une seule invocation"):
++        import datetime
++        f = os.path.join(self.d, f"go-{nom}.md")
++        with open(f, "w", encoding="utf-8") as h:
++            h.write("| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |\n|---|---|---|---|---|---|---|---|\n"
++                    f"| GO-2026-11-14-82 | {self.jour} | calcul | {perimetre} | {montant} | {self.jour + datetime.timedelta(days=5)} | Lazar | R |\n")
++        return f
++
++    def lancer(self, nom, proposeur="astra", registre=None, lancements=None, sortie=None):
++        cmd = [sys.executable, "-I", "-B", self.lanceur, "sonde-un", "--proposeur", proposeur, "--go-sonde", "GO-2026-11-14-82",
++               "--registre-go", registre or self.registre(nom),
++               "--registre-lancements", lancements or os.path.join(self.registres, f"lancements-{nom}.jsonl"),
++               "--sortie", sortie or os.path.join(self.d, nom)]
++        return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", env=self.env, timeout=600)
++
++    def test_sain(self):
++        avant = len(self.doublure.recues)
++        r = self.lancer("sain")
++        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
++        f = os.path.join(self.d, "sain", L.RELEVE_UN)
++        self.assertTrue(PR._compagnon_egal(f))
++        rel = json.load(open(f))
++        self.assertEqual((rel["version"], rel["proposeur"], rel["partiel"], rel["motif_reflexion"]),
++                         ("releve-sonde-un-relais-v73", "astra", False, None))
++        self.assertEqual([k for k in S.conclusions_exigees("astra") if rel["conclusions"][k] is not True], [])
++        self.assertEqual(rel["conclusions"]["verdict_reflexion"], "comprise")
++        self.assertEqual([a["appel"] for a in rel["appels"]], ["borne_gelee", "borne_courte"])
++        self.assertNotIn("modele", rel["identite"])
++        recues = self.doublure.recues[avant:]
++        self.assertEqual([(x["dialecte"], x["max"]) for x in recues], [("astra", 36000), ("astra", 256)])
++        self.assertTrue(all(x["cle_juste"] for x in recues))
++        lanc = [json.loads(x) for x in open(os.path.join(self.registres, "lancements-sain.jsonl"), encoding="utf-8")]
++        self.assertEqual([(x["go"], x["module"]) for x in lanc], [(["GO-2026-11-14-82"], "sonde-pilote-v72")])
++        self.assertLessEqual(rel["pire_cas_usd"], rel["part_usd"])
++        self.assertLessEqual(rel["part_usd"], 2.0)
++        with self.assertRaisesRegex(P.Refus, "version « releve-sonde-pilote-v72 » exigée"):
++            S.exiger_releve(self.conf_copie, f, L.attendu_du_releve(self.conf_copie, self.arbre))  # jamais lu par le mode réel
++        # second lancement sous la même ligne : refusé avant tout dossier
++        r2 = self.lancer("sain-bis", lancements=os.path.join(self.registres, "lancements-sain.jsonl"))
++        self.assertEqual((r2.returncode, "déjà lancée" in r2.stderr, os.path.exists(os.path.join(self.d, "sain-bis"))), (2, True, False))
++
++    def test_artefacts(self):
++        cas = {"proposeur": (dict(proposeur="fable52"), "hors de"),
++               "montant": (dict(registre=self.registre("montant", montant="2.5 USD")), "GO astra"),
++               "perimetre": (dict(registre=self.registre("perimetre", perimetre="Pilote MR-2 : sonde des quatre relais")), "périmètre sans"),
++               "ligne_absente": (dict(registre=self.registre("absente").replace("absente", "absente")), None)}
++        for nom, (kw, motif) in cas.items():
++            if nom == "ligne_absente":
++                vide = os.path.join(self.d, "go-vide.md")
++                open(vide, "w", encoding="utf-8").write("| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |\n|---|---|---|---|---|---|---|---|\n")
++                kw, motif = dict(registre=vide), "GO astra"
++            with self.subTest(nom):
++                r = self.lancer(f"artefact-{nom}", **kw)
++                self.assertEqual(r.returncode, 2, r.stderr[-1500:])
++                self.assertIn(motif, r.stderr)
++                self.assertFalse(os.path.exists(os.path.join(self.d, f"artefact-{nom}")))
++        sans_cle = dict(self.env)
++        sans_cle.pop("OPENAI_API_KEY")
++        cmd = [sys.executable, "-I", "-B", self.lanceur, "sonde-un", "--proposeur", "astra", "--go-sonde", "GO-2026-11-14-82",
++               "--registre-go", self.registre("sans-cle"), "--registre-lancements", os.path.join(self.registres, "lancements-sans-cle.jsonl"),
++               "--sortie", os.path.join(self.d, "sans-cle")]
++        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", env=sans_cle, timeout=600)
++        self.assertEqual((r.returncode, "état non conforme" in r.stderr), (2, True), r.stderr[-1500:])
++        self.assertFalse(os.path.exists(os.path.join(self.registres, "lancements-sans-cle.jsonl")))  # rien consigné, ligne intacte
++        os.makedirs(os.path.join(self.d, "existant"))
++        r = self.lancer("existant")
++        self.assertEqual((r.returncode, "dossier de sortie existant" in r.stderr), (2, True))
++
++    def test_reflexion_nulle_nommee(self):
++        """Artefact R5 : Astra répond (statut 200, usage entier) sans réflexion aux deux appels : relevé complet, motif nommé
++        « champ de réflexion absent » porté au relevé ; la ligne est consommée (le registre le dit)."""
++        A = ModeReelBoutEnBout.corps_astra
++        self.doublure.surcharge = {("astra", False): A(2, 0, "46", "stop"), ("astra", True): A(256, 0, "x " * 256, "length")}
++        try:
++            r = self.lancer("sans-reflexion")
++        finally:
++            self.doublure.surcharge = {}
++        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
++        rel = json.load(open(os.path.join(self.d, "sans-reflexion", L.RELEVE_UN)))
++        self.assertEqual((rel["conclusions"]["reflexion_observee"], rel["conclusions"]["statut"]), (False, True))
++        self.assertIn("astra : champ de réflexion absent", rel["motif_reflexion"])
++
++
++class SondeUnFonctions(unittest.TestCase):
++    def test_pire_sous_part(self):
++        L.exiger_pire_sous_part(1.835280, 1.84, 2.0)
++        L.exiger_pire_sous_part(1.84, 1.84, 1.84)
++        for pire, part, montant in ((1.85, 1.84, 2.0), (1.80, 2.10, 2.0)):
++            with self.subTest((pire, part, montant)), self.assertRaisesRegex(P.Refus, "pire cas"):
++                L.exiger_pire_sous_part(pire, part, montant)
++
++    def test_constantes(self):
++        self.assertEqual(L.SONDE_UN, {"astra": {"montant_usd": 2.0, "perimetre_contient": ["sonde", "seul relais Astra"]}})
++        conf, _ = PC.lire_configuration(CONF)
++        p = conf["proposeurs"]["astra"]
++        pire = PR.pire_cas_d_un_appel(p, 100) + PR.pire_cas_d_un_appel(p, 100, 256)
++        self.assertAlmostEqual(pire, 1.835280, places=6)
++        L.exiger_pire_sous_part(pire, PR.parts_de_la_sonde(conf)["astra"], 2.0)
++
++
++class SondeUnArrets(unittest.TestCase):
++    """v73, `sonde-un` : garde du pire cas sous la ligne, de bout en bout (copie du lanceur dont la ligne vaut 1,5 USD) ; coût lu
++    au-dessus du pire cas : arrêt (code 3), relevé partiel, l'appel parti porté avec sa dépense."""
++    CLES = SondeUnRelais.CLES
++
++    @classmethod
++    def setUpClass(cls):
++        SondeUnRelais.setUpClass.__func__(cls)
++        t = open(cls.lanceur, encoding="utf-8").read()
++        a = 'SONDE_UN = {"astra": {"montant_usd": 2.0,'
++        assert t.count(a) == 1
++        cls.lanceur_15 = os.path.join(os.path.dirname(cls.lanceur), "pilote_mr2_v73_essai_ligne_15.py")
++        open(cls.lanceur_15, "w", encoding="utf-8").write(t.replace(a, 'SONDE_UN = {"astra": {"montant_usd": 1.5,'))
++
++    @classmethod
++    def tearDownClass(cls):
++        SondeUnRelais.tearDownClass.__func__(cls)
++
++    registre = SondeUnRelais.registre
++    lancer = SondeUnRelais.lancer
++
++    def test_pire_au_dessus_de_la_ligne(self):
++        cmd = [sys.executable, "-I", "-B", self.lanceur_15, "sonde-un", "--proposeur", "astra", "--go-sonde", "GO-2026-11-14-82",
++               "--registre-go", self.registre("ligne-15", montant="1.5 USD"),
++               "--registre-lancements", os.path.join(self.registres, "lancements-ligne-15.jsonl"), "--sortie", os.path.join(self.d, "ligne-15")]
++        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", env=self.env, timeout=600)
++        self.assertEqual((r.returncode, "pire cas" in r.stderr), (2, True), r.stderr[-1500:])
++        self.assertFalse(os.path.exists(os.path.join(self.d, "ligne-15")))
++        self.assertFalse(os.path.exists(os.path.join(self.registres, "lancements-ligne-15.jsonl")))
++
++    def test_cout_excessif_arret_et_appel_porte(self):
++        A = ModeReelBoutEnBout.corps_astra
++        self.doublure.surcharge = {("astra", False): A(40000, 100, "46", "stop")}  # 40 000 jetons de sortie : coût > pire cas
++        try:
++            r = self.lancer("cout-excessif")
++        finally:
++            self.doublure.surcharge = {}
++        self.assertEqual(r.returncode, 3, r.stderr[-1500:])
++        rel = json.load(open(os.path.join(self.d, "cout-excessif", L.RELEVE_UN)))
++        self.assertTrue(rel["partiel"])
++        self.assertEqual([a["appel"] for a in rel["appels"]], ["borne_gelee"])
++        self.assertGreater(rel["depense_usd"], 0)
++
++
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/essais/mutations_pilote_mr2_v71.py b/essais/mutations_pilote_mr2_v72.py
+index f9a3037..6f2cbac 100644
+--- a/essais/mutations_pilote_mr2_v71.py
++++ b/essais/mutations_pilote_mr2_v72.py
+@@ -1,12 +1,13 @@
+-"""Banc de mutations du code v71 du pilote MR-2, restreint à la sonde : les vingt mutations de la sonde du banc v70 (D4a à D4t ;
+-textes ajustés au code v71 là où il a changé : D4a, D4k, D4m, D4n) et les gardes neuves de la v71 (A-1, A-2, a-1, a-2, a-3 de la
+-contre-lecture du différentiel v69 → v70, `f6bc1b00…`). Pour chaque mutation : copie neuve de `orchestrator/` dans un
+-dossier provisoire, un remplacement textuel présent **une seule fois** dans le fichier visé (sinon défaut du banc), empreintes
+-de la commande et du relais recopiées dans la configuration de la copie quand l'un d'eux est muté (pour que la mutation soit
+-jugée sur son comportement, pas sur une empreinte), puis les essais choisis ; la mutation est « tuée » seulement si l'essai
+-attendu échoue (raison attendue). Les essais sains passent d'abord sur la copie non mutée. Un seul processus à la fois.
+-
+-  OMP_NUM_THREADS=2 python3 -I -B essais/mutations_pilote_mr2_v71.py [--sortie RESULTAT.json] [--seulement ID,ID]
++"""Banc de mutations du code v72 du pilote MR-2 (configuration v12, lecture v72, sonde v72, lanceur v72). Deux parts : (1) les
++46 mutations du banc v71 (`mutations_pilote_mr2_v71.py`), **reciblées** sur le code que la v72 exécute — le texte visé est
++cherché dans le module de la sonde v72 s'il y est recopié (`exiger_releve`), sinon dans le module v71, que la v72 appelle ; le
++lanceur visé est le lanceur v72 ; les essais sont ceux de `test_pilote_mr2_v72.py` ; (2) vingt-sept mutations neuves (N01 à N27 ; N21 à N27 proposées par la contre-lecture du code v72) du
++code v72. Méthode de la v71, inchangée : copie neuve de `orchestrator/` par mutation, remplacement présent **une seule fois**
++(sinon défaut du banc), empreintes de la commande et du relais recopiées quand l'un d'eux est muté, essais sains d'abord sur la
++copie non mutée, « tuée » seulement si l'essai attendu échoue ; un seul processus à la fois. Banc écrit par
++`faire_banc_v72.py` (outil versé avec le rapport).
++
++  OMP_NUM_THREADS=2 python3 -I -B essais/mutations_pilote_mr2_v72.py [--sortie RESULTAT.json] [--seulement ID,ID]
+ Codes : 0 toutes tuées pour la raison attendue ; 1 au moins une autre issue ; 2 défaut du banc.
+ """
+ 
+@@ -23,11 +24,12 @@ import time
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+ RACINE = os.path.dirname(ICI)
+-T = "essais/test_pilote_mr2_v71.py"
+-PC, PR, AU, LA = "pole/pilote_mr2_v70.py", "pole/proposeurs_pilote_v70.py", "pole/audit_pilote_v70.py", "demonstrations/pilote_mr2_v71.py"
+-SO = "pole/sonde_pilote_v71.py"
++T = "essais/test_pilote_mr2_v72.py"
++PR, LA = "pole/proposeurs_pilote_v70.py", "demonstrations/pilote_mr2_v72.py"
++PC = "pole/proposeurs_pilote_v72.py"
++SO71, SO72 = "pole/sonde_pilote_v71.py", "pole/sonde_pilote_v72.py"
+ CO, RE = "exemples/pilote-mr2-v70/commandes/commande_pilote_v70.py", "exemples/pilote-mr2-v70/commandes/relais_pilote_v70.py"
+-CONF = "exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json"
++CONF = "exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json"
+ 
+ 
+ def M(ident, fichier, avant, apres, selection, attendu):
+@@ -38,122 +40,156 @@ MR = "ModeReelBoutEnBout"
+ EB = "EssaiABlanc"
+ AP = "C7C8C10Appel"
+ MUTATIONS = [
+-    # --- les vingt mutations de la sonde du banc v70, portées ---
+-    M("D4a-releve-non-valide-en-reel", LA, "    releve_sha = S.exiger_releve(conf, args.releve_sonde, attendu_du_releve(conf))  # D-4",
+-      "    releve_sha = None  # D-4", MR + " and test_sain_bout_en_bout", "test_sain_bout_en_bout"),
+-    M("D4b-releve-non-exige", LA, "\"registre_lancements\",\n                             \"releve_sonde\") if not getattr(args, o)]",
+-      "\"registre_lancements\") if not getattr(args, o)]", EB + " and test_mode_reel_options_et_scenario",
+-      "test_mode_reel_options_et_scenario"),
+-    M("D4c-bloc-du-texte-sans-releve", LA, "        verifier_bloc_du_texte(f.read(), releve=args.releve_sonde)",
+-      "        verifier_bloc_du_texte(f.read())", MR + " and test_artefact_texte_scelle_sans_releve",
+-      "test_artefact_texte_scelle_sans_releve"),
+-    M("D4d-releve-compagnon-ignore", SO, "    if not _compagnon_egal(chemin):\n        raise Refus(\"relevé de la sonde ≠ son compagnon\")",
+-      "    if False:\n        raise Refus(\"relevé de la sonde ≠ son compagnon\")", MR + " and test_artefacts_releve",
+-      "test_artefacts_releve"),
+-    M("D4e-releve-partiel-admis", SO, "    if r.get(\"partiel\") is not False or r.get(\"borne_courte\") is not True:\n", "    if False:\n",
+-      MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("D4f-releve-pieces-non-comparees", SO,
+-      "    if r.get(\"pieces_sha256\") != {\"commande\": conf[\"commande\"][\"sha256\"], \"relais\": conf[\"relais\"][\"sha256\"]}:\n",
+-      "    if False:\n", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("D4g-releve-identite-non-comparee", SO, "        if (r.get(\"identite\") or {}).get(nom) != {k: p[k] for k in IDENTITE}:\n",
+-      "        if False:\n", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("D4h-conclusions-non-recalculees", SO, "        if (r.get(\"conclusions\") or {}).get(nom) != recalculees:\n", "        if False:\n",
+-      MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("D4i-conclusions-non-exigees", SO,
+-      "        manque = [k for k in conclusions_exigees(p[\"dialecte\"]) if recalculees.get(k) is not True]\n",
+-      "        manque = []\n", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("D4j-verdict-non-compare", SO, "         \"verdict_egal_a_la_regle\": REGLE_DU_VERDICT.get(verdict) is p[\"reflexion_comprise\"],",
+-      "         \"verdict_egal_a_la_regle\": True,", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("D4k-borne-non-tenue-admise", SO, "         \"borne_tenue\": f2 is not None and f2.get(\"borne\") == bc and _entier(sortie2) and sortie2 <= bc,",
+-      "         \"borne_tenue\": f2 is not None,", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("D4l-flux-non-compare", SO, "    return {\"egal\": not ecarts and r[\"usage_dans_message_delta\"],", "    return {\"egal\": True,",
+-      "SondeFonctions", "test_flux_relu_et_compare"),
+-    M("D4m-verdict-gemini-total-ignore", SO, "        if total == p + c + t:\n            votes.add(\"non_comprise\")\n",
+-      "        if False:\n            votes.add(\"non_comprise\")\n", "SondeFonctions", "test_verdicts"),
+-    M("D4n-verdict-astra-seuil", SO, "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n",
+-      "    elif c >= t:\n", "SondeFonctions", "test_verdicts"),
+-    M("D4o-sonde-go-non-lues", LA, "    go = PR.lire_go_de_la_sonde(conf, args.registre_go, args.go_sonde_credits, args.go_sonde_hors)\n",
+-      "    go = None\n", MR + " and test_artefacts_sonde", "test_artefacts_sonde"),
+-    M("D4p-sonde-part-non-payee", PR, "            if not (isinstance(v, (int, float)) and v + 1e-9 >= pire):\n",
+-      "            if not isinstance(v, (int, float)):\n", "Configuration", "test_artefacts"),
+-    M("D4q-sonde-consigne-longue", PR, "        if not (isinstance(v, str) and v.strip() and len(v.encode(\"utf-8\")) <= omax):\n",
+-      "        if not (isinstance(v, str) and v.strip()):\n", "Configuration", "test_artefacts"),
+-    M("D4r-sonde-relais-au-plafond-du-pilote", LA, "jeton, python=sys.executable, plafond=parts[nom], max_appels=n_appels)",
+-      "jeton, python=sys.executable, max_appels=n_appels)", MR + " and test_sain_sonde", "test_sain_sonde"),
+-    M("D4s-sonde-nombre-d-appels-du-pilote", PR, "    egal(\"max_appels\", max_appels)\n", "    egal(\"max_appels\", 4)\n", "EtatDesRelais",
+-      "test_sonde_plafond_et_appels"),
+-    M("D4t-borne-de-la-sonde-libre", PR,
+-      "    if borne is not None and not (isinstance(borne, int) and 0 < borne <= p[\"borne_sortie_jetons\"]):\n",
+-      "    if False:\n", AP, "test_borne_de_la_sonde"),
+-    # --- neuves de la v71 (contre-lecture du différentiel v69 → v70, `f6bc1b00…`) ---
+-    M("A1a-reflexion-au-dela-de-la-sortie-ignoree", SO, "    if t > c:\n        votes.add(\"non_comprise\")\n",
+-      "    if False:\n        votes.add(\"non_comprise\")\n", "SondeFonctions", "test_verdicts"),
+-    M("A1b-comprise-sans-borne-basse", SO, "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n",
+-      "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT:\n", "SondeFonctions", "test_verdicts"),
+-    M("A1c-comprise-sans-borne-haute", SO, "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n",
+-      "    elif _entier(octets_visibles) and octets_visibles + MARGE_FORMAT < c:\n", "SondeFonctions", "test_verdicts"),
+-    M("A1d-marge-de-forme-nulle", SO, "MARGE_FORMAT = 16  #", "MARGE_FORMAT = 0  #", "SondeFonctions", "test_verdicts"),
+-    M("A1e-contradiction-d-un-appel-oubliee", SO, "    if \"contradictoire\" in verdicts:\n        return \"contradictoire\"\n",
+-      "    if False:\n        return \"contradictoire\"\n", "SondeFonctions", "test_verdicts"),
+-    M("A1f-aucune-reflexion-tranchee", SO, "    if not (_entier(c) and _entier(t)) or t == 0:\n        return \"indetermine\"\n    votes",
+-      "    if not (_entier(c) and _entier(t)):\n        return \"indetermine\"\n    votes", "SondeFonctions", "test_verdicts"),
+-    M("A1g-octets-visibles-ignores", SO,
+-      "    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get(\"usage_brut\"), f.get(\"octets_visibles\")) for f in tous])",
+-      "    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get(\"usage_brut\"), 0) for f in tous])", "SondeFonctions",
+-      "test_conclusions_des_releves_du_contre_lecteur"),
+-    M("A1h-releve-e2a-admis-de-bout-en-bout", SO, "    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n",
+-      "    elif c >= t and c - t <= 32:\n", MR + " and test_releves_du_contre_lecteur_a1",
+-      "test_releves_du_contre_lecteur_a1"),
+-    M("A2a-candidats-absents-non-nuls", SO, "        return (u.get(\"promptTokenCount\"), u.get(\"candidatesTokenCount\", 0),",
+-      "        return (u.get(\"promptTokenCount\"), u.get(\"candidatesTokenCount\"),", "SondeFonctions", "test_verdicts"),
+-    M("A2b-absent-lu-comme-nul", SO, "        return {\"candidates\": [{}], \"usageMetadata\": u}",
+-      "        return {\"candidates\": [{}], \"usageMetadata\": dict({\"candidatesTokenCount\": None}, **(u or {}))}",
+-      "SondeFonctions", "test_lecture_de_l_usage_par_la_commande"),
+-    M("A2c-e3-refuse-de-bout-en-bout", SO, "        return {\"candidates\": [{}], \"usageMetadata\": u}",
+-      "        return {\"candidates\": [{}], \"usageMetadata\": dict({\"candidatesTokenCount\": None}, **(u or {}))}",
+-      MR + " and test_argon_candidats_absents_a2", "test_argon_candidats_absents_a2"),
+-    M("a1a-registre-non-lu", LA,
+-      "    reprise = S.exiger_premier_lancement(args.registre_lancements, identifiants, args.reprise, args.registre_decisions)  # a-1",
+-      "    reprise = None  # a-1", MR + " and test_registre_des_lancements_a1", "test_registre_des_lancements_a1"),
+-    M("a1b-lancement-non-consigne", LA,
+-      "        S.consigner_lancement(args.registre_lancements, identifiants, args.sortie, debut, reprise)  # a-1, avant le premier appel\n",
+-      "", MR + " and test_sain_sonde", "test_sain_sonde"),
+-    M("a1c-reprise-reemployee", SO, "    if any(x.get(\"reprise\") == reprise for x in deja):\n", "    if False:\n",
+-      "SondeFonctions", "test_registre_des_lancements"),
+-    M("a1d-reprise-sans-les-deux-lignes", SO,
+-      "    if len(lignes) != 1 or REPRISE not in lignes[0] or not all(i in lignes[0] for i in identifiants):\n",
+-      "    if len(lignes) != 1:\n", "SondeFonctions", "test_registre_des_lancements"),
+-    M("a1e-registre-dans-un-depot", SO, "    exiger_hors_depot(registre, \"registre des lancements de la sonde\")\n", "",
+-      "SondeFonctions", "test_registre_des_lancements"),
+-    M("a1f-une-ligne-deja-employee-admise", SO, "    if not set(identifiants) & vus:\n", "    if not set(identifiants) <= vus:\n",
+-      "SondeFonctions", "test_registre_des_lancements"),
+-    M("a2a-configuration-non-comparee", SO, "    if r.get(\"configuration_sha256\") != attendu[\"configuration_sha256\"]:  # a-2\n",
+-      "    if False:\n", MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("a2b-code-non-compare", SO, "    if r.get(\"code_sha256\") != attendu[\"code_sha256\"]:  # a-2\n", "    if False:\n",
+-      MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("a2c-faits-non-relus-des-pieces", SO,
+-      "        if f != faits_depuis_les_pieces(conf, f[\"proposeur\"], f[\"appel\"], racine):\n", "        if False:\n",
+-      MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("a2d-borne-courte-non-comparee", SO, " and f2.get(\"borne\") == bc and _entier(sortie2)", " and _entier(sortie2)",
+-      "SondeFonctions", "test_conclusions_des_releves_du_contre_lecteur"),
+-    M("a2e-piece-sans-compagnon", SO, "    if not _compagnon_egal(chemin):\n        raise Refus(f\"pièce de la sonde ≠ son compagnon : {nom}\")",
+-      "    if False:\n        raise Refus(f\"pièce de la sonde ≠ son compagnon : {nom}\")", MR + " and test_artefacts_releve",
+-      "test_artefacts_releve"),
+-    M("a2f-corps-non-lie-a-la-reponse-brute", SO, "        if sha_corps != rep[\"corps_relais_sha256\"]:\n", "        if False:\n",
+-      MR + " and test_artefacts_releve", "test_artefacts_releve"),
+-    M("a2g-bloc-sans-attendu-de-l-arbre", LA,
+-      "        lignes.append(f\"releve-de-la-sonde {S.exiger_releve(conf, releve, attendu_du_releve(conf, racine))}\")",
+-      "        lignes.append(f\"releve-de-la-sonde {sha256_fichier(releve)}\")", MR + " and test_releves_du_contre_lecteur_a1",
+-      "test_releves_du_contre_lecteur_a1"),
+-    M("a3a-appel-parti-non-porte", LA,
+-      "                faits.append(S.faits_depuis_les_pieces(conf, en_cours[0], en_cours[1], args.sortie))\n            except",
+-      "                pass\n            except", MR + " and test_appel_parti_puis_arrete_porte_au_releve_a3",
+-      "test_appel_parti_puis_arrete_porte_au_releve_a3"),
+-    M("a3b-refus-apres-un-appel-sans-releve", LA, "        if isinstance(e, P.Refus) and not partis:", "        if isinstance(e, P.Refus):",
+-      MR + " and test_appel_parti_puis_arrete_porte_au_releve_a3", "test_appel_parti_puis_arrete_porte_au_releve_a3"),
++    # --- (1) les 46 mutations du banc v71, reciblées sur le code v72 ---
++    M('D4a-releve-non-valide-en-reel', LA, '    releve_sha = S.exiger_releve(conf, args.releve_sonde, attendu_du_releve(conf))  # D-4',
++      '    releve_sha = None  # D-4', 'ModeReelBoutEnBout and test_sain_bout_en_bout', 'test_sain_bout_en_bout'),
++    M('D4b-releve-non-exige', LA, '"registre_lancements",\n                             "releve_sonde") if not getattr(args, o)]',
++      '"registre_lancements") if not getattr(args, o)]', 'EssaiABlanc and test_mode_reel_options_et_scenario', 'test_mode_reel_options_et_scenario'),
++    M('D4c-bloc-du-texte-sans-releve', LA, '        verifier_bloc_du_texte(f.read(), releve=args.releve_sonde)',
++      '        verifier_bloc_du_texte(f.read())', 'ModeReelBoutEnBout and test_artefact_texte_scelle_sans_releve', 'test_artefact_texte_scelle_sans_releve'),
++    M('D4d-releve-compagnon-ignore', SO72, '    if not _compagnon_egal(chemin):\n        raise Refus("relevé de la sonde ≠ son compagnon")',
++      '    if False:\n        raise Refus("relevé de la sonde ≠ son compagnon")', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('D4e-releve-partiel-admis', SO72, '    if r.get("partiel") is not False or r.get("borne_courte") is not True:\n',
++      '    if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('D4f-releve-pieces-non-comparees', SO72, '    if r.get("pieces_sha256") != {"commande": conf["commande"]["sha256"], "relais": conf["relais"]["sha256"]}:\n',
++      '    if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('D4g-releve-identite-non-comparee', SO72, '        if (r.get("identite") or {}).get(nom) != {k: p[k] for k in IDENTITE}:\n',
++      '        if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('D4h-conclusions-non-recalculees', SO72, '        if (r.get("conclusions") or {}).get(nom) != recalculees:\n',
++      '        if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('D4i-conclusions-non-exigees', SO72, '        manque = [k for k in conclusions_exigees(p["dialecte"]) if recalculees.get(k) is not True]\n',
++      '        manque = []\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('D4j-verdict-non-compare', SO71, '         "verdict_egal_a_la_regle": REGLE_DU_VERDICT.get(verdict) is p["reflexion_comprise"],',
++      '         "verdict_egal_a_la_regle": True,', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('D4k-borne-non-tenue-admise', SO71, '         "borne_tenue": f2 is not None and f2.get("borne") == bc and _entier(sortie2) and sortie2 <= bc,',
++      '         "borne_tenue": f2 is not None,', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('D4l-flux-non-compare', SO71, '    return {"egal": not ecarts and r["usage_dans_message_delta"],',
++      '    return {"egal": True,', 'SondeFonctions', 'test_flux_relu_et_compare'),
++    M('D4m-verdict-gemini-total-ignore', SO71, '        if total == p + c + t:\n            votes.add("non_comprise")\n',
++      '        if False:\n            votes.add("non_comprise")\n', 'SondeFonctions', 'test_verdicts'),
++    M('D4n-verdict-astra-seuil', SO71, '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n',
++      '    elif c >= t:\n', 'SondeFonctions', 'test_verdicts'),
++    M('D4o-sonde-go-non-lues', LA, '    go = PR.lire_go_de_la_sonde(conf, args.registre_go, args.go_sonde_credits, args.go_sonde_hors)\n',
++      '    go = None\n', 'ModeReelBoutEnBout and test_artefacts_sonde', 'test_artefacts_sonde'),
++    M('D4p-sonde-part-non-payee', PR, '            if not (isinstance(v, (int, float)) and v + 1e-9 >= pire):\n',
++      '            if not isinstance(v, (int, float)):\n', 'Configuration', 'test_artefacts'),
++    M('D4q-sonde-consigne-longue', PR, '        if not (isinstance(v, str) and v.strip() and len(v.encode("utf-8")) <= omax):\n',
++      '        if not (isinstance(v, str) and v.strip()):\n', 'Configuration', 'test_artefacts'),
++    M('D4r-sonde-relais-au-plafond-du-pilote', LA, 'jeton, python=sys.executable, plafond=parts[nom], max_appels=n_appels)',
++      'jeton, python=sys.executable, max_appels=n_appels)', 'ModeReelBoutEnBout and test_sain_sonde', 'test_sain_sonde'),
++    M('D4s-sonde-nombre-d-appels-du-pilote', PR, '    egal("max_appels", max_appels)\n',
++      '    egal("max_appels", 4)\n', 'EtatDesRelais', 'test_sonde_plafond_et_appels'),
++    M('D4t-borne-de-la-sonde-libre', PR, '    if borne is not None and not (isinstance(borne, int) and 0 < borne <= p["borne_sortie_jetons"]):\n',
++      '    if False:\n', 'C7C8C10Appel', 'test_borne_de_la_sonde'),
++    M('A1a-reflexion-au-dela-de-la-sortie-ignoree', SO71, '    if t > c:\n        votes.add("non_comprise")\n',
++      '    if False:\n        votes.add("non_comprise")\n', 'SondeFonctions', 'test_verdicts'),
++    M('A1b-comprise-sans-borne-basse', SO71, '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n',
++      '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT:\n', 'SondeFonctions', 'test_verdicts'),
++    M('A1c-comprise-sans-borne-haute', SO71, '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n',
++      '    elif _entier(octets_visibles) and octets_visibles + MARGE_FORMAT < c:\n', 'SondeFonctions', 'test_verdicts'),
++    M('A1d-marge-de-forme-nulle', SO71, 'MARGE_FORMAT = 16  #',
++      'MARGE_FORMAT = 0  #', 'SondeFonctions', 'test_verdicts'),
++    M('A1e-contradiction-d-un-appel-oubliee', SO71, '    if "contradictoire" in verdicts:\n        return "contradictoire"\n',
++      '    if False:\n        return "contradictoire"\n', 'SondeFonctions', 'test_verdicts'),
++    M('A1f-aucune-reflexion-tranchee', SO71, '    if not (_entier(c) and _entier(t)) or t == 0:\n        return "indetermine"\n    votes',
++      '    if not (_entier(c) and _entier(t)):\n        return "indetermine"\n    votes', 'SondeFonctions', 'test_verdicts'),
++    M('A1g-octets-visibles-ignores', SO71, '    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get("usage_brut"), f.get("octets_visibles")) for f in tous])',
++      '    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get("usage_brut"), 0) for f in tous])', 'SondeFonctions', 'test_conclusions_des_releves_du_contre_lecteur'),
++    M('A1h-releve-e2a-admis-de-bout-en-bout', SO71, '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n',
++      '    elif c >= t and c - t <= 32:\n', 'ModeReelBoutEnBout and test_releves_du_contre_lecteur_a1', 'test_releves_du_contre_lecteur_a1'),
++    M('A2a-candidats-absents-non-nuls', SO71, '        return (u.get("promptTokenCount"), u.get("candidatesTokenCount", 0),',
++      '        return (u.get("promptTokenCount"), u.get("candidatesTokenCount"),', 'SondeFonctions', 'test_verdicts'),
++    M('A2b-absent-lu-comme-nul', SO71, '        return {"candidates": [{}], "usageMetadata": u}',
++      '        return {"candidates": [{}], "usageMetadata": dict({"candidatesTokenCount": None}, **(u or {}))}', 'SondeFonctions', 'test_lecture_de_l_usage_par_la_commande'),
++    M('A2c-e3-refuse-de-bout-en-bout', SO71, '        return {"candidates": [{}], "usageMetadata": u}',
++      '        return {"candidates": [{}], "usageMetadata": dict({"candidatesTokenCount": None}, **(u or {}))}', 'ModeReelBoutEnBout and test_argon_candidats_absents_a2', 'test_argon_candidats_absents_a2'),
++    M('a1a-registre-non-lu', LA, '    reprise = S.exiger_premier_lancement(args.registre_lancements, identifiants, args.reprise, args.registre_decisions)  # a-1',
++      '    reprise = None  # a-1', 'ModeReelBoutEnBout and test_registre_des_lancements_a1', 'test_registre_des_lancements_a1'),
++    M('a1b-lancement-non-consigne', LA, '        S.consigner_lancement(args.registre_lancements, identifiants, args.sortie, debut, reprise)  # a-1, avant le premier appel\n',
++      '', 'ModeReelBoutEnBout and test_sain_sonde', 'test_sain_sonde'),
++    M('a1c-reprise-reemployee', SO71, '    if any(x.get("reprise") == reprise for x in deja):\n',
++      '    if False:\n', 'SondeFonctions', 'test_registre_des_lancements'),
++    M('a1d-reprise-sans-les-deux-lignes', SO71, '    if len(lignes) != 1 or REPRISE not in lignes[0] or not all(i in lignes[0] for i in identifiants):\n',
++      '    if len(lignes) != 1:\n', 'SondeFonctions', 'test_registre_des_lancements'),
++    M('a1e-registre-dans-un-depot', SO71, '    exiger_hors_depot(registre, "registre des lancements de la sonde")\n',
++      '', 'SondeFonctions', 'test_registre_des_lancements'),
++    M('a1f-une-ligne-deja-employee-admise', SO71, '    if not set(identifiants) & vus:\n',
++      '    if not set(identifiants) <= vus:\n', 'SondeFonctions', 'test_registre_des_lancements'),
++    M('a2a-configuration-non-comparee', SO72, '    if r.get("configuration_sha256") != attendu["configuration_sha256"]:\n',
++      '    if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('a2b-code-non-compare', SO72, '    if r.get("code_sha256") != attendu["code_sha256"]:\n',
++      '    if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('a2c-faits-non-relus-des-pieces', SO72, '        if f != faits_depuis_les_pieces(conf, f["proposeur"], f["appel"], racine):\n',
++      '        if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('a2d-borne-courte-non-comparee', SO71, ' and f2.get("borne") == bc and _entier(sortie2)',
++      ' and _entier(sortie2)', 'SondeFonctions', 'test_conclusions_des_releves_du_contre_lecteur'),
++    M('a2e-piece-sans-compagnon', SO71, '    if not _compagnon_egal(chemin):\n        raise Refus(f"pièce de la sonde ≠ son compagnon : {nom}")',
++      '    if False:\n        raise Refus(f"pièce de la sonde ≠ son compagnon : {nom}")', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('a2f-corps-non-lie-a-la-reponse-brute', SO71, '        if sha_corps != rep["corps_relais_sha256"]:\n',
++      '        if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
++    M('a2g-bloc-sans-attendu-de-l-arbre', LA, '        lignes.append(f"releve-de-la-sonde {S.exiger_releve(conf, releve, attendu_du_releve(conf, racine))}")',
++      '        lignes.append(f"releve-de-la-sonde {sha256_fichier(releve)}")', 'ModeReelBoutEnBout and test_releves_du_contre_lecteur_a1', 'test_releves_du_contre_lecteur_a1'),
++    M('a3a-appel-parti-non-porte', LA, '                faits.append(S.faits_depuis_les_pieces(conf, en_cours[0], en_cours[1], args.sortie))\n            except',
++      '                pass\n            except', 'ModeReelBoutEnBout and test_appel_parti_puis_arrete_porte_au_releve_a3', 'test_appel_parti_puis_arrete_porte_au_releve_a3'),
++    M('a3b-refus-apres-un-appel-sans-releve', LA, '        if isinstance(e, P.Refus) and not partis:',
++      '        if isinstance(e, P.Refus):', 'ModeReelBoutEnBout and test_appel_parti_puis_arrete_porte_au_releve_a3', 'test_appel_parti_puis_arrete_porte_au_releve_a3'),
++    # --- (2) neuves de la v72 ---
++    M('N01-version-v12-non-exigee', PC, '    if conf.get("version") != VERSION_CONFIGURATION:\n',
++      '    if False:\n', 'V72', 'test_versions_de_configuration'),
++    M('N02-version-v11-exigee', PC, 'VERSION_CONFIGURATION = "configuration-pilote-mr2-v12"',
++      'VERSION_CONFIGURATION = "configuration-pilote-mr2-v11"', 'V72', 'test_versions_de_configuration'),
++    M('N03-section-sonde-non-verifiee', PC, '    _V70.verifier_section_sonde(conf, props)\n',
++      '', 'V72', 'test_versions_de_configuration'),
++    M('N04-reflexion-toujours-observee', SO72, '    return any(_entier_positif(reflexion_brute(dialecte, f.get("usage_brut"))) for f in faits)',
++      '    return True', 'ModeReelBoutEnBout and test_v72_champ_de_reflexion_absent_refuse', 'test_v72_champ_de_reflexion_absent_refuse'),
++    M('N05-reflexion-nulle-observee', SO72, ' and x > 0\n',
++      ' and x >= 0\n', 'V72', 'test_reflexion_observee'),
++    M('N06-booleen-admis', SO72, '    return isinstance(x, int) and not isinstance(x, bool) and x > 0',
++      '    return isinstance(x, int) and x > 0', 'V72', 'test_reflexion_observee'),
++    M('N07-astra-sortie-prise-pour-reflexion', SO72, '"astra": ("completion_tokens_details", "reasoning_tokens")}',
++      '"astra": ("completion_tokens", None)}', 'V72', 'test_reflexion_observee'),
++    M('N08-refus-nomme-retire', SO72, '        motif = motif_reflexion_absente(nom, p, recalculees)\n',
++      '        motif = None\n', 'ModeReelBoutEnBout and test_v72_champ_de_reflexion_absent_refuse', 'test_v72_champ_de_reflexion_absent_refuse'),
++    M('N09-reflexion-non-exigee', SO72, '    return CONCLUSIONS_EXIGEES + CONCLUSIONS_REFLEXION\n',
++      '    return CONCLUSIONS_EXIGEES\n', 'V72', 'test_conclusions_exigees'),
++    M('N10-conclusion-non-calculee', SO72, '    if d != "claude":\n        c["reflexion_observee"]',
++      '    if False:\n        c["reflexion_observee"]', 'ModeReelBoutEnBout and test_v72_sonde_saine_confirmee', 'test_v72_sonde_saine_confirmee'),
++    M('N11-version-du-releve-v71', SO72, 'VERSION_RELEVE = "releve-sonde-pilote-v72"',
++      'VERSION_RELEVE = "releve-sonde-pilote-v71"', 'ModeReelBoutEnBout and test_v72_releve_de_la_v71_refuse', 'test_v72_releve_de_la_v71_refuse'),
++    M('N12-releve-v71-admis', SO72, '    if not isinstance(r, dict) or r.get("version") != VERSION_RELEVE:\n',
++      '    if not isinstance(r, dict) or r.get("version") not in (VERSION_RELEVE, _S71.VERSION_RELEVE):\n', 'ModeReelBoutEnBout and test_v72_releve_de_la_v71_refuse', 'test_v72_releve_de_la_v71_refuse'),
++    M('N13-lancement-sous-le-module-v71', SO72, '"reprise": reprise,\n                            "module": VERSION}',
++      '"reprise": reprise,\n                            "module": _S71.VERSION}', 'ModeReelBoutEnBout and test_v72_sonde_saine_confirmee', 'test_v72_sonde_saine_confirmee'),
++    M('N14-lanceur-sur-la-sonde-v71', LA, 'from pole import sonde_pilote_v72 as S  # noqa: E402\n',
++      'from pole import sonde_pilote_v71 as S  # noqa: E402\n', 'V72', 'test_lanceur_v72'),
++    M('N15-lanceur-sur-la-configuration-v11', LA, '"pilote-mr2-v70", "configuration-pilote-mr2-v12.json")\nPROGRAMME',
++      '"pilote-mr2-v70", "configuration-pilote-mr2-v11.json")\nPROGRAMME', 'V72', 'test_lanceur_v72'),
++    M('N16-sonde-v72-hors-du-bloc', LA, '"pole/sonde_pilote_v71.py", "pole/sonde_pilote_v72.py",\n',
++      '"pole/sonde_pilote_v71.py",\n', 'BlocGele', 'test_fermeture_des_imports'),
++    M('N17-lecture-v72-hors-du-bloc', LA, '    "pole/proposeurs_pilote_v72.py", "pole/sonde_pilote_v71.py"',
++      '    "pole/sonde_pilote_v71.py"', 'BlocGele', 'test_fermeture_des_imports'),
++    M('N18-consignes-de-la-v11', CONF, '"borne_gelee": "Combien d\'entiers de 1 à 10000 sont divisibles par 7 ou 11, mais pas par 13 ? Le seul nombre."',
++      '"borne_gelee": "Réponds par le seul mot OK."', 'V72', 'test_configuration_v12_seules_les_consignes_changent'),
++    M('N19-regle-d-argon-changee', CONF, '"reflexion_comprise": false',
++      '"reflexion_comprise": true', 'V72', 'test_configuration_v12_seules_les_consignes_changent'),
++    M('N21-consigne-courte-de-la-v11', CONF, '"borne_courte": "Énumère un à un les nombres premiers entre 1000 et 1200, en justifiant chacun par ses divisions."',
++      '"borne_courte": "Écris un très long texte, de plusieurs milliers de mots, sur l\'histoire de la navigation."', 'V72', 'test_consignes_v12_mot_pour_mot'),
++    M('N22-reflexion-aux-deux-appels', SO72, '    return any(_entier_positif(reflexion_brute(dialecte, f.get("usage_brut"))) for f in faits)',
++      '    return all(_entier_positif(reflexion_brute(dialecte, f.get("usage_brut"))) for f in faits)', 'V72', 'test_reflexion_observee'),
++    M('N23-details-non-objet', SO72, '        x = x.get(b) if isinstance(x, dict) else None',
++      '        x = x.get(b)', 'V72', 'test_reflexion_observee'),
++    M('N24-argon-candidats-pris-pour-reflexion', SO72, 'CHAMP_DE_REFLEXION = {"gemini": ("thoughtsTokenCount", None),',
++      'CHAMP_DE_REFLEXION = {"gemini": ("candidatesTokenCount", None),', 'V72', 'test_reflexion_observee'),
++    M('N25-configuration-v12-hors-du-bloc', LA, '    "exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json",\n',
++      '    "exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json",\n', 'V72', 'test_lanceur_v72'),
++    M('N26-jouer-lit-par-la-v70', LA, '    conf, _ = PC.lire_configuration(args.configuration)\n',
++      '    conf, _ = PR.lire_configuration(args.configuration)\n', 'ModeReelBoutEnBout and test_sain_bout_en_bout', 'test_sain_bout_en_bout'),
++    M('N27-refus-nomme-sur-appel-en-echec', SO72, ' and c.get("statut") is True and c.get("usage_entier") is True \\\n',
++      ' \\\n', 'V72', 'test_motif_reflexion_absente'),
++    M('N20-marqueurs-du-bloc-v71', LA, '"<!-- empreintes-du-code-pilote-v72 : début -->", "<!-- empreintes-du-code-pilote-v72 : fin -->"',
++      '"<!-- empreintes-du-code-pilote-v71 : début -->", "<!-- empreintes-du-code-pilote-v71 : fin -->"', 'V72', 'test_bloc_gele_v72'),
+ ]
+ 
+-
+ def preparer_copie(d, m=None):
+     orch = os.path.join(d, "orchestrator")
+     shutil.copytree(RACINE, orch, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
+diff --git a/essais/mutations_pilote_mr2_v72.py b/essais/mutations_pilote_mr2_v73.py
+index 6f2cbac..42bf7e1 100644
+--- a/essais/mutations_pilote_mr2_v72.py
++++ b/essais/mutations_pilote_mr2_v73.py
+@@ -1,13 +1,13 @@
+-"""Banc de mutations du code v72 du pilote MR-2 (configuration v12, lecture v72, sonde v72, lanceur v72). Deux parts : (1) les
+-46 mutations du banc v71 (`mutations_pilote_mr2_v71.py`), **reciblées** sur le code que la v72 exécute — le texte visé est
+-cherché dans le module de la sonde v72 s'il y est recopié (`exiger_releve`), sinon dans le module v71, que la v72 appelle ; le
+-lanceur visé est le lanceur v72 ; les essais sont ceux de `test_pilote_mr2_v72.py` ; (2) vingt-sept mutations neuves (N01 à N27 ; N21 à N27 proposées par la contre-lecture du code v72) du
+-code v72. Méthode de la v71, inchangée : copie neuve de `orchestrator/` par mutation, remplacement présent **une seule fois**
+-(sinon défaut du banc), empreintes de la commande et du relais recopiées quand l'un d'eux est muté, essais sains d'abord sur la
+-copie non mutée, « tuée » seulement si l'essai attendu échoue ; un seul processus à la fois. Banc écrit par
+-`faire_banc_v72.py` (outil versé avec le rapport).
+-
+-  OMP_NUM_THREADS=2 python3 -I -B essais/mutations_pilote_mr2_v72.py [--sortie RESULTAT.json] [--seulement ID,ID]
++"""Banc de mutations du code v73 du pilote MR-2, restreint au lanceur v73 (seul fichier neuf depuis la v72) : les 17
++mutations du banc v72 qui visent le lanceur, reciblées sur le lanceur v73 et jugées par les essais v73, trois mutations neuves du
++bloc gelé (B01 à B03 : identifiant de modèle recopié, ligne d'identité retirée, lanceur hors de la liste gelée) quatorze de la
++sous-commande `sonde-un` (U01 à U13, U15 ; U09 à U15 proposées par la contre-lecture v73 ; U14 sans artefact atteignable
++depuis la doublure, dit au rapport) et N18b (N18 du banc v72 reciblée sur l'essai des consignes mot pour mot). Les mutations
++des modules de lecture et de sonde, inchangés depuis la v72, sont jugées par le banc v72 (`mutations_pilote_mr2_v72.py`). Méthode
++inchangée (copie neuve par mutation, remplacement présent une seule fois, essais sains d'abord, « tuée » seulement si l'essai
++attendu échoue). Écrit par `faire_banc_v73.py`.
++
++  OMP_NUM_THREADS=2 python3 -I -B essais/mutations_pilote_mr2_v73.py [--sortie RESULTAT.json] [--seulement ID,ID]
+ Codes : 0 toutes tuées pour la raison attendue ; 1 au moins une autre issue ; 2 défaut du banc.
+ """
+ 
+@@ -24,10 +24,8 @@ import time
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+ RACINE = os.path.dirname(ICI)
+-T = "essais/test_pilote_mr2_v72.py"
+-PR, LA = "pole/proposeurs_pilote_v70.py", "demonstrations/pilote_mr2_v72.py"
+-PC = "pole/proposeurs_pilote_v72.py"
+-SO71, SO72 = "pole/sonde_pilote_v71.py", "pole/sonde_pilote_v72.py"
++T = "essais/test_pilote_mr2_v73.py"
++LA = "demonstrations/pilote_mr2_v73.py"
+ CO, RE = "exemples/pilote-mr2-v70/commandes/commande_pilote_v70.py", "exemples/pilote-mr2-v70/commandes/relais_pilote_v70.py"
+ CONF = "exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json"
+ 
+@@ -40,126 +38,26 @@ MR = "ModeReelBoutEnBout"
+ EB = "EssaiABlanc"
+ AP = "C7C8C10Appel"
+ MUTATIONS = [
+-    # --- (1) les 46 mutations du banc v71, reciblées sur le code v72 ---
+     M('D4a-releve-non-valide-en-reel', LA, '    releve_sha = S.exiger_releve(conf, args.releve_sonde, attendu_du_releve(conf))  # D-4',
+       '    releve_sha = None  # D-4', 'ModeReelBoutEnBout and test_sain_bout_en_bout', 'test_sain_bout_en_bout'),
+     M('D4b-releve-non-exige', LA, '"registre_lancements",\n                             "releve_sonde") if not getattr(args, o)]',
+       '"registre_lancements") if not getattr(args, o)]', 'EssaiABlanc and test_mode_reel_options_et_scenario', 'test_mode_reel_options_et_scenario'),
+     M('D4c-bloc-du-texte-sans-releve', LA, '        verifier_bloc_du_texte(f.read(), releve=args.releve_sonde)',
+       '        verifier_bloc_du_texte(f.read())', 'ModeReelBoutEnBout and test_artefact_texte_scelle_sans_releve', 'test_artefact_texte_scelle_sans_releve'),
+-    M('D4d-releve-compagnon-ignore', SO72, '    if not _compagnon_egal(chemin):\n        raise Refus("relevé de la sonde ≠ son compagnon")',
+-      '    if False:\n        raise Refus("relevé de la sonde ≠ son compagnon")', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('D4e-releve-partiel-admis', SO72, '    if r.get("partiel") is not False or r.get("borne_courte") is not True:\n',
+-      '    if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('D4f-releve-pieces-non-comparees', SO72, '    if r.get("pieces_sha256") != {"commande": conf["commande"]["sha256"], "relais": conf["relais"]["sha256"]}:\n',
+-      '    if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('D4g-releve-identite-non-comparee', SO72, '        if (r.get("identite") or {}).get(nom) != {k: p[k] for k in IDENTITE}:\n',
+-      '        if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('D4h-conclusions-non-recalculees', SO72, '        if (r.get("conclusions") or {}).get(nom) != recalculees:\n',
+-      '        if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('D4i-conclusions-non-exigees', SO72, '        manque = [k for k in conclusions_exigees(p["dialecte"]) if recalculees.get(k) is not True]\n',
+-      '        manque = []\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('D4j-verdict-non-compare', SO71, '         "verdict_egal_a_la_regle": REGLE_DU_VERDICT.get(verdict) is p["reflexion_comprise"],',
+-      '         "verdict_egal_a_la_regle": True,', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('D4k-borne-non-tenue-admise', SO71, '         "borne_tenue": f2 is not None and f2.get("borne") == bc and _entier(sortie2) and sortie2 <= bc,',
+-      '         "borne_tenue": f2 is not None,', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('D4l-flux-non-compare', SO71, '    return {"egal": not ecarts and r["usage_dans_message_delta"],',
+-      '    return {"egal": True,', 'SondeFonctions', 'test_flux_relu_et_compare'),
+-    M('D4m-verdict-gemini-total-ignore', SO71, '        if total == p + c + t:\n            votes.add("non_comprise")\n',
+-      '        if False:\n            votes.add("non_comprise")\n', 'SondeFonctions', 'test_verdicts'),
+-    M('D4n-verdict-astra-seuil', SO71, '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n',
+-      '    elif c >= t:\n', 'SondeFonctions', 'test_verdicts'),
+     M('D4o-sonde-go-non-lues', LA, '    go = PR.lire_go_de_la_sonde(conf, args.registre_go, args.go_sonde_credits, args.go_sonde_hors)\n',
+       '    go = None\n', 'ModeReelBoutEnBout and test_artefacts_sonde', 'test_artefacts_sonde'),
+-    M('D4p-sonde-part-non-payee', PR, '            if not (isinstance(v, (int, float)) and v + 1e-9 >= pire):\n',
+-      '            if not isinstance(v, (int, float)):\n', 'Configuration', 'test_artefacts'),
+-    M('D4q-sonde-consigne-longue', PR, '        if not (isinstance(v, str) and v.strip() and len(v.encode("utf-8")) <= omax):\n',
+-      '        if not (isinstance(v, str) and v.strip()):\n', 'Configuration', 'test_artefacts'),
+     M('D4r-sonde-relais-au-plafond-du-pilote', LA, 'jeton, python=sys.executable, plafond=parts[nom], max_appels=n_appels)',
+       'jeton, python=sys.executable, max_appels=n_appels)', 'ModeReelBoutEnBout and test_sain_sonde', 'test_sain_sonde'),
+-    M('D4s-sonde-nombre-d-appels-du-pilote', PR, '    egal("max_appels", max_appels)\n',
+-      '    egal("max_appels", 4)\n', 'EtatDesRelais', 'test_sonde_plafond_et_appels'),
+-    M('D4t-borne-de-la-sonde-libre', PR, '    if borne is not None and not (isinstance(borne, int) and 0 < borne <= p["borne_sortie_jetons"]):\n',
+-      '    if False:\n', 'C7C8C10Appel', 'test_borne_de_la_sonde'),
+-    M('A1a-reflexion-au-dela-de-la-sortie-ignoree', SO71, '    if t > c:\n        votes.add("non_comprise")\n',
+-      '    if False:\n        votes.add("non_comprise")\n', 'SondeFonctions', 'test_verdicts'),
+-    M('A1b-comprise-sans-borne-basse', SO71, '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n',
+-      '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT:\n', 'SondeFonctions', 'test_verdicts'),
+-    M('A1c-comprise-sans-borne-haute', SO71, '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n',
+-      '    elif _entier(octets_visibles) and octets_visibles + MARGE_FORMAT < c:\n', 'SondeFonctions', 'test_verdicts'),
+-    M('A1d-marge-de-forme-nulle', SO71, 'MARGE_FORMAT = 16  #',
+-      'MARGE_FORMAT = 0  #', 'SondeFonctions', 'test_verdicts'),
+-    M('A1e-contradiction-d-un-appel-oubliee', SO71, '    if "contradictoire" in verdicts:\n        return "contradictoire"\n',
+-      '    if False:\n        return "contradictoire"\n', 'SondeFonctions', 'test_verdicts'),
+-    M('A1f-aucune-reflexion-tranchee', SO71, '    if not (_entier(c) and _entier(t)) or t == 0:\n        return "indetermine"\n    votes',
+-      '    if not (_entier(c) and _entier(t)):\n        return "indetermine"\n    votes', 'SondeFonctions', 'test_verdicts'),
+-    M('A1g-octets-visibles-ignores', SO71, '    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get("usage_brut"), f.get("octets_visibles")) for f in tous])',
+-      '    verdict = verdict_d_ensemble([verdict_reflexion(d, f.get("usage_brut"), 0) for f in tous])', 'SondeFonctions', 'test_conclusions_des_releves_du_contre_lecteur'),
+-    M('A1h-releve-e2a-admis-de-bout-en-bout', SO71, '    elif _entier(octets_visibles) and c - t <= octets_visibles + MARGE_FORMAT < c:\n',
+-      '    elif c >= t and c - t <= 32:\n', 'ModeReelBoutEnBout and test_releves_du_contre_lecteur_a1', 'test_releves_du_contre_lecteur_a1'),
+-    M('A2a-candidats-absents-non-nuls', SO71, '        return (u.get("promptTokenCount"), u.get("candidatesTokenCount", 0),',
+-      '        return (u.get("promptTokenCount"), u.get("candidatesTokenCount"),', 'SondeFonctions', 'test_verdicts'),
+-    M('A2b-absent-lu-comme-nul', SO71, '        return {"candidates": [{}], "usageMetadata": u}',
+-      '        return {"candidates": [{}], "usageMetadata": dict({"candidatesTokenCount": None}, **(u or {}))}', 'SondeFonctions', 'test_lecture_de_l_usage_par_la_commande'),
+-    M('A2c-e3-refuse-de-bout-en-bout', SO71, '        return {"candidates": [{}], "usageMetadata": u}',
+-      '        return {"candidates": [{}], "usageMetadata": dict({"candidatesTokenCount": None}, **(u or {}))}', 'ModeReelBoutEnBout and test_argon_candidats_absents_a2', 'test_argon_candidats_absents_a2'),
+     M('a1a-registre-non-lu', LA, '    reprise = S.exiger_premier_lancement(args.registre_lancements, identifiants, args.reprise, args.registre_decisions)  # a-1',
+       '    reprise = None  # a-1', 'ModeReelBoutEnBout and test_registre_des_lancements_a1', 'test_registre_des_lancements_a1'),
+     M('a1b-lancement-non-consigne', LA, '        S.consigner_lancement(args.registre_lancements, identifiants, args.sortie, debut, reprise)  # a-1, avant le premier appel\n',
+       '', 'ModeReelBoutEnBout and test_sain_sonde', 'test_sain_sonde'),
+-    M('a1c-reprise-reemployee', SO71, '    if any(x.get("reprise") == reprise for x in deja):\n',
+-      '    if False:\n', 'SondeFonctions', 'test_registre_des_lancements'),
+-    M('a1d-reprise-sans-les-deux-lignes', SO71, '    if len(lignes) != 1 or REPRISE not in lignes[0] or not all(i in lignes[0] for i in identifiants):\n',
+-      '    if len(lignes) != 1:\n', 'SondeFonctions', 'test_registre_des_lancements'),
+-    M('a1e-registre-dans-un-depot', SO71, '    exiger_hors_depot(registre, "registre des lancements de la sonde")\n',
+-      '', 'SondeFonctions', 'test_registre_des_lancements'),
+-    M('a1f-une-ligne-deja-employee-admise', SO71, '    if not set(identifiants) & vus:\n',
+-      '    if not set(identifiants) <= vus:\n', 'SondeFonctions', 'test_registre_des_lancements'),
+-    M('a2a-configuration-non-comparee', SO72, '    if r.get("configuration_sha256") != attendu["configuration_sha256"]:\n',
+-      '    if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('a2b-code-non-compare', SO72, '    if r.get("code_sha256") != attendu["code_sha256"]:\n',
+-      '    if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('a2c-faits-non-relus-des-pieces', SO72, '        if f != faits_depuis_les_pieces(conf, f["proposeur"], f["appel"], racine):\n',
+-      '        if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('a2d-borne-courte-non-comparee', SO71, ' and f2.get("borne") == bc and _entier(sortie2)',
+-      ' and _entier(sortie2)', 'SondeFonctions', 'test_conclusions_des_releves_du_contre_lecteur'),
+-    M('a2e-piece-sans-compagnon', SO71, '    if not _compagnon_egal(chemin):\n        raise Refus(f"pièce de la sonde ≠ son compagnon : {nom}")',
+-      '    if False:\n        raise Refus(f"pièce de la sonde ≠ son compagnon : {nom}")', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+-    M('a2f-corps-non-lie-a-la-reponse-brute', SO71, '        if sha_corps != rep["corps_relais_sha256"]:\n',
+-      '        if False:\n', 'ModeReelBoutEnBout and test_artefacts_releve', 'test_artefacts_releve'),
+     M('a2g-bloc-sans-attendu-de-l-arbre', LA, '        lignes.append(f"releve-de-la-sonde {S.exiger_releve(conf, releve, attendu_du_releve(conf, racine))}")',
+       '        lignes.append(f"releve-de-la-sonde {sha256_fichier(releve)}")', 'ModeReelBoutEnBout and test_releves_du_contre_lecteur_a1', 'test_releves_du_contre_lecteur_a1'),
+     M('a3a-appel-parti-non-porte', LA, '                faits.append(S.faits_depuis_les_pieces(conf, en_cours[0], en_cours[1], args.sortie))\n            except',
+       '                pass\n            except', 'ModeReelBoutEnBout and test_appel_parti_puis_arrete_porte_au_releve_a3', 'test_appel_parti_puis_arrete_porte_au_releve_a3'),
+     M('a3b-refus-apres-un-appel-sans-releve', LA, '        if isinstance(e, P.Refus) and not partis:',
+       '        if isinstance(e, P.Refus):', 'ModeReelBoutEnBout and test_appel_parti_puis_arrete_porte_au_releve_a3', 'test_appel_parti_puis_arrete_porte_au_releve_a3'),
+-    # --- (2) neuves de la v72 ---
+-    M('N01-version-v12-non-exigee', PC, '    if conf.get("version") != VERSION_CONFIGURATION:\n',
+-      '    if False:\n', 'V72', 'test_versions_de_configuration'),
+-    M('N02-version-v11-exigee', PC, 'VERSION_CONFIGURATION = "configuration-pilote-mr2-v12"',
+-      'VERSION_CONFIGURATION = "configuration-pilote-mr2-v11"', 'V72', 'test_versions_de_configuration'),
+-    M('N03-section-sonde-non-verifiee', PC, '    _V70.verifier_section_sonde(conf, props)\n',
+-      '', 'V72', 'test_versions_de_configuration'),
+-    M('N04-reflexion-toujours-observee', SO72, '    return any(_entier_positif(reflexion_brute(dialecte, f.get("usage_brut"))) for f in faits)',
+-      '    return True', 'ModeReelBoutEnBout and test_v72_champ_de_reflexion_absent_refuse', 'test_v72_champ_de_reflexion_absent_refuse'),
+-    M('N05-reflexion-nulle-observee', SO72, ' and x > 0\n',
+-      ' and x >= 0\n', 'V72', 'test_reflexion_observee'),
+-    M('N06-booleen-admis', SO72, '    return isinstance(x, int) and not isinstance(x, bool) and x > 0',
+-      '    return isinstance(x, int) and x > 0', 'V72', 'test_reflexion_observee'),
+-    M('N07-astra-sortie-prise-pour-reflexion', SO72, '"astra": ("completion_tokens_details", "reasoning_tokens")}',
+-      '"astra": ("completion_tokens", None)}', 'V72', 'test_reflexion_observee'),
+-    M('N08-refus-nomme-retire', SO72, '        motif = motif_reflexion_absente(nom, p, recalculees)\n',
+-      '        motif = None\n', 'ModeReelBoutEnBout and test_v72_champ_de_reflexion_absent_refuse', 'test_v72_champ_de_reflexion_absent_refuse'),
+-    M('N09-reflexion-non-exigee', SO72, '    return CONCLUSIONS_EXIGEES + CONCLUSIONS_REFLEXION\n',
+-      '    return CONCLUSIONS_EXIGEES\n', 'V72', 'test_conclusions_exigees'),
+-    M('N10-conclusion-non-calculee', SO72, '    if d != "claude":\n        c["reflexion_observee"]',
+-      '    if False:\n        c["reflexion_observee"]', 'ModeReelBoutEnBout and test_v72_sonde_saine_confirmee', 'test_v72_sonde_saine_confirmee'),
+-    M('N11-version-du-releve-v71', SO72, 'VERSION_RELEVE = "releve-sonde-pilote-v72"',
+-      'VERSION_RELEVE = "releve-sonde-pilote-v71"', 'ModeReelBoutEnBout and test_v72_releve_de_la_v71_refuse', 'test_v72_releve_de_la_v71_refuse'),
+-    M('N12-releve-v71-admis', SO72, '    if not isinstance(r, dict) or r.get("version") != VERSION_RELEVE:\n',
+-      '    if not isinstance(r, dict) or r.get("version") not in (VERSION_RELEVE, _S71.VERSION_RELEVE):\n', 'ModeReelBoutEnBout and test_v72_releve_de_la_v71_refuse', 'test_v72_releve_de_la_v71_refuse'),
+-    M('N13-lancement-sous-le-module-v71', SO72, '"reprise": reprise,\n                            "module": VERSION}',
+-      '"reprise": reprise,\n                            "module": _S71.VERSION}', 'ModeReelBoutEnBout and test_v72_sonde_saine_confirmee', 'test_v72_sonde_saine_confirmee'),
+     M('N14-lanceur-sur-la-sonde-v71', LA, 'from pole import sonde_pilote_v72 as S  # noqa: E402\n',
+       'from pole import sonde_pilote_v71 as S  # noqa: E402\n', 'V72', 'test_lanceur_v72'),
+     M('N15-lanceur-sur-la-configuration-v11', LA, '"pilote-mr2-v70", "configuration-pilote-mr2-v12.json")\nPROGRAMME',
+@@ -168,26 +66,48 @@ MUTATIONS = [
+       '"pole/sonde_pilote_v71.py",\n', 'BlocGele', 'test_fermeture_des_imports'),
+     M('N17-lecture-v72-hors-du-bloc', LA, '    "pole/proposeurs_pilote_v72.py", "pole/sonde_pilote_v71.py"',
+       '    "pole/sonde_pilote_v71.py"', 'BlocGele', 'test_fermeture_des_imports'),
+-    M('N18-consignes-de-la-v11', CONF, '"borne_gelee": "Combien d\'entiers de 1 à 10000 sont divisibles par 7 ou 11, mais pas par 13 ? Le seul nombre."',
+-      '"borne_gelee": "Réponds par le seul mot OK."', 'V72', 'test_configuration_v12_seules_les_consignes_changent'),
+-    M('N19-regle-d-argon-changee', CONF, '"reflexion_comprise": false',
+-      '"reflexion_comprise": true', 'V72', 'test_configuration_v12_seules_les_consignes_changent'),
+-    M('N21-consigne-courte-de-la-v11', CONF, '"borne_courte": "Énumère un à un les nombres premiers entre 1000 et 1200, en justifiant chacun par ses divisions."',
+-      '"borne_courte": "Écris un très long texte, de plusieurs milliers de mots, sur l\'histoire de la navigation."', 'V72', 'test_consignes_v12_mot_pour_mot'),
+-    M('N22-reflexion-aux-deux-appels', SO72, '    return any(_entier_positif(reflexion_brute(dialecte, f.get("usage_brut"))) for f in faits)',
+-      '    return all(_entier_positif(reflexion_brute(dialecte, f.get("usage_brut"))) for f in faits)', 'V72', 'test_reflexion_observee'),
+-    M('N23-details-non-objet', SO72, '        x = x.get(b) if isinstance(x, dict) else None',
+-      '        x = x.get(b)', 'V72', 'test_reflexion_observee'),
+-    M('N24-argon-candidats-pris-pour-reflexion', SO72, 'CHAMP_DE_REFLEXION = {"gemini": ("thoughtsTokenCount", None),',
+-      'CHAMP_DE_REFLEXION = {"gemini": ("candidatesTokenCount", None),', 'V72', 'test_reflexion_observee'),
+     M('N25-configuration-v12-hors-du-bloc', LA, '    "exemples/pilote-mr2-v70/configuration-pilote-mr2-v12.json",\n',
+       '    "exemples/pilote-mr2-v70/configuration-pilote-mr2-v11.json",\n', 'V72', 'test_lanceur_v72'),
+     M('N26-jouer-lit-par-la-v70', LA, '    conf, _ = PC.lire_configuration(args.configuration)\n',
+       '    conf, _ = PR.lire_configuration(args.configuration)\n', 'ModeReelBoutEnBout and test_sain_bout_en_bout', 'test_sain_bout_en_bout'),
+-    M('N27-refus-nomme-sur-appel-en-echec', SO72, ' and c.get("statut") is True and c.get("usage_entier") is True \\\n',
+-      ' \\\n', 'V72', 'test_motif_reflexion_absente'),
+-    M('N20-marqueurs-du-bloc-v71', LA, '"<!-- empreintes-du-code-pilote-v72 : début -->", "<!-- empreintes-du-code-pilote-v72 : fin -->"',
+-      '"<!-- empreintes-du-code-pilote-v71 : début -->", "<!-- empreintes-du-code-pilote-v71 : fin -->"', 'V72', 'test_bloc_gele_v72'),
++    M('N20-marqueurs-du-bloc-v71', LA, '"<!-- empreintes-du-code-pilote-v73 : début -->", "<!-- empreintes-du-code-pilote-v73 : fin -->"',
++      '"<!-- empreintes-du-code-pilote-v72 : début -->", "<!-- empreintes-du-code-pilote-v72 : fin -->"', 'V72', 'test_bloc_gele_v72'),
++    M('B01-bloc-renomme-les-modeles', LA, '        lignes.append(f"borne-de-sortie {nom} {p[\'borne_sortie_jetons\']} jetons ; plafond de session "',
++      '        lignes.append(f"borne-de-sortie {nom} {p[\'modele\']} {p[\'borne_sortie_jetons\']} jetons ; plafond de session "', 'V73', 'test_bloc_sans_identifiant_de_modele'),
++    M('B02-ligne-d-identite-retiree', LA, '    lignes.append("identite-des-proposeurs celle de la configuration (clé modele de chaque proposeur), gelée par l\'empreinte du "\n',
++      '    lignes.append(""\n', 'V73', 'test_bloc_sans_identifiant_de_modele'),
++    M('B03-lanceur-v73-hors-du-bloc', LA, '    "demonstrations/pilote_mr2_v73.py", "pole/pilote_mr2_v70.py",',
++      '    "pole/pilote_mr2_v70.py",', 'V72', 'test_lanceur_v72'),
++    M('U01-proposeur-libre', LA, '    if nom not in SONDE_UN:\n',
++      '    if False:\n', 'SondeUnRelais', 'test_artefacts'),
++    M('U02-perimetre-libre', LA, 'SONDE_UN = {"astra": {"montant_usd": 2.0, "perimetre_contient": ["sonde", "seul relais Astra"]}}',
++      'SONDE_UN = {"astra": {"montant_usd": 2.0, "perimetre_contient": ["sonde"]}}', 'SondeUnRelais', 'test_artefacts'),
++    M('U03-pire-au-dela-de-la-part', LA, '    if pire > part + 1e-9 or part > montant + 1e-9:\n',
++      '    if False:\n', 'SondeUnFonctions', 'test_pire_sous_part'),
++    M('U04-registre-non-lu', LA, '    reprise = S.exiger_premier_lancement(args.registre_lancements, [args.go_sonde], args.reprise, args.registre_decisions)\n',
++      '    reprise = None\n', 'SondeUnRelais', 'test_sain'),
++    M('U05-lancement-non-consigne', LA, '        S.consigner_lancement(args.registre_lancements, [args.go_sonde], args.sortie, debut, reprise)\n        for quoi',
++      '        for quoi', 'SondeUnRelais', 'test_sain'),
++    M('U06-motif-non-porte', LA, '    motif = S.motif_reflexion_absente(nom, p, rel["conclusions"])\n',
++      '    motif = None\n', 'SondeUnRelais', 'test_reflexion_nulle_nommee'),
++    M('U07-modele-recopie', LA, '"identite": {k: p[k] for k in S.IDENTITE if k != "modele"}',
++      '"identite": {k: p[k] for k in S.IDENTITE}', 'SondeUnRelais', 'test_sain'),
++    M('U08-etat-du-relais-non-controle', LA, '        if ecarts:\n            raise P.Refus(f"relais {nom} : état non conforme ({ecarts})")\n        relais = {nom',
++      '        relais = {nom', 'SondeUnRelais', 'test_artefacts'),
++    M('U09-relais-au-plafond-du-pilote', LA, 'python=sys.executable, plafond=part, max_appels=len(S.APPELS))',
++      'python=sys.executable, max_appels=len(S.APPELS))', 'SondeUnRelais', 'test_sain'),
++    M('U10-go-non-lue', LA, '    go = PR.lire_go_de_lignes(SONDE_UN, args.registre_go, {nom: args.go_sonde})\n',
++      '    go = None\n', 'SondeUnRelais', 'test_artefacts'),
++    M('U11-pire-non-exige', LA, '    exiger_pire_sous_part(pire, part, SONDE_UN[nom]["montant_usd"])\n',
++      '', 'SondeUnArrets', 'test_pire_au_dessus_de_la_ligne'),
++    M('U12-releve-a-la-version-du-mode-reel', LA, 'VERSION_RELEVE_UN = "releve-sonde-un-relais-v73"',
++      'VERSION_RELEVE_UN = "releve-sonde-pilote-v72"', 'SondeUnRelais', 'test_sain'),
++    M('U13-dossier-existant-admis', LA, '        raise P.Refus("sonde d\'un relais : dossier de sortie existant")\n',
++      '        pass\n', 'SondeUnRelais', 'test_artefacts'),
++    M('U15-appel-parti-non-porte', LA, '                faits.append(S.faits_depuis_les_pieces(conf, nom, en_cours, args.sortie))\n',
++      '                pass\n', 'SondeUnArrets', 'test_cout_excessif_arret_et_appel_porte'),
++    M('N18b-consignes-de-la-v11', CONF, '"borne_gelee": "Combien d\'entiers de 1 à 10000 sont divisibles par 7 ou 11, mais pas par 13 ? Le seul nombre."',
++      '"borne_gelee": "Réponds par le seul mot OK."', 'V72', 'test_consignes_v12_mot_pour_mot'),
+ ]
+ 
+ def preparer_copie(d, m=None):
