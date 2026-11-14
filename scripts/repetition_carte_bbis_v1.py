@@ -18,9 +18,18 @@ Sous-commandes :
   Codes fermés : 0 réussie ; 2 garde (arguments, carte absente, tolérance au-dessus du texte) ; 8 erreur d'apprentissage (torch
   compris) ; 9 contrôle carte-processeur au-delà du seuil ou apprentissage non déterministe. Le fichier de sortie est écrit dans
   tous les cas (état, motif, durées) ; **aucune aire** (rien n'est noté).
-- `offre FICHIER.json ID PRIX_USD_H` ; `garde-commande ECHEANCE_UTC_S PRIX_USD_H FEU MAINTENANT` ; `depense CUMUL PRIX` ;
-  `identifiant ID` ; `absence ID TEMOIN LISTE.json` (côté session, par `scripts/lancer_repetition_bbis_v1.sh`). Code 0 accepté,
-  2 refus (motif écrit).
+  Un état partiel est écrit avant les contrôles sur processeur (les durées sur la carte survivent à une interruption).
+- Côté session, par `scripts/lancer_repetition_bbis_v1.sh` (code 0 accepté, 2 refus, motif écrit) :
+  `offre-depuis-recherche RECHERCHE.json ID OFFRE.json` (offre construite **par programme** depuis la sortie de la recherche,
+  jamais retapée) ; `offre OFFRE.json ID PRIX` ; `garde-commande ECHEANCE PRIX FEU MAINTENANT` (plafond **strictement** sous
+  3 USD) ; `depense CUMUL PRIX` ; `identifiant ID` ; `creation CREATION.json` ; `etiquette`, `relire`, `trouver`, `absence`,
+  `credit` (fichiers privés lus par programme, champs utiles seulement, jamais affichés, supprimés avec `--supprimer`).
+- **Garde positive de destruction** (contre-lecture de sûreté M1, m1) : l'instance à détruire est celle du `new_contract` lu dans
+  le fichier de création, **relue avec l'étiquette `bbis-t07-repetition-v1`** dans la liste des instances avant toute
+  destruction ; identifiants en **entiers ASCII** seulement (`^[1-9][0-9]*$` ; refus de `060670453`, des chiffres pleine largeur,
+  des espaces), comparés en entiers ; jamais une instance d'une autre session : la liste de la course
+  (`registre_bbis_v1.INSTANCES_D_AUTRES_SESSIONS`, lue telle quelle) plus la liste propre de la répétition (60671759, course
+  Neuron Lens en cours) ; témoins : 60480302 ou 60670453 seulement.
 
 Graines (R9) : `numpy.random.SeedSequence(ENTROPIE_REPETITION, spawn_key=(cle_de_tache(clé),))`, clés
 `bbis/repetition/donnees`, `bbis/repetition/controle`, `bbis/repetition/sonde/<famille>/<l2>` ; entropie fixe écrite ici
@@ -30,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import traceback
@@ -40,16 +50,26 @@ MOT_REPETITION = "R-2802"
 PLAFOND_USD = 3.0
 QUART_D_HEURE = 0.25
 ECHEANCE_MAX_S = 3 * 3600
+RESERVE_FIN_S = 900        # l'amorce cesse le travail et pousse ses traces 15 min avant l'échéance (contre-lecture M-4)
 ETIQUETTE = "bbis-t07-repetition-v1"
+CARTE = "A100 SXM4 80GB"   # forme de OFFRE.json, écrite par `offre-depuis-recherche`
+NOM_CARTE_OUTIL = "A100 SXM4"
+MEMOIRE_CARTE_MIN_MO = 79000
 OFFRE_MIN = {"coeurs": 16, "memoire_vive_mo": 128000, "disque_go": 60, "stockage_max_usd_h": 0.08, "prix_max_usd_h": 1.40}
-# instances d'autres sessions : jamais détruites, témoins permis ; **la liste de la course**, lue telle quelle (liste unique,
-# `registre_bbis_v1.INSTANCES_D_AUTRES_SESSIONS`, R-2789, R-2795)
+DISQUE_GO = 60
+# instances d'autres sessions : jamais détruites ; la liste de la course, lue telle quelle (liste unique,
+# `registre_bbis_v1.INSTANCES_D_AUTRES_SESSIONS`, R-2789, R-2795), plus la liste propre de la répétition (contre-lecture de
+# sûreté M1 : 60671759, course Neuron Lens en cours, même compte) ; témoins de l'absence : 60480302 ou 60670453 seulement
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from controle_ia.t07bbis.registre_bbis_v1 import INSTANCES_D_AUTRES_SESSIONS  # noqa: E402
+INSTANCES_PROPRES_REPETITION = ("60671759",)
+TEMOINS = ("60480302", "60670453")
 ENTROPIE_REPETITION = 0x6B0B1D5E2C4A48F1A3E7D2C9B85F0141
 ACTIONS, LARGEUR, LONGUEURS = 640, 4096, (150, 297)
 COUCHE = 15
 CODES = {"reussie": 0, "garde": 2, "apprentissage": 8, "controle": 9}
+ENTIER_ASCII = re.compile(r"[1-9][0-9]*", re.ASCII)
+MOTIF_JETON = re.compile(r"(?:gh[pousr]_|github_pat_|hf_)[A-Za-z0-9_]{20,}", re.ASCII)
 
 
 class Refus(Exception):
@@ -58,13 +78,174 @@ class Refus(Exception):
 
 # ------------------------------------------------------------------------------------------------------------ côté session
 
-def exiger_offre(offre: dict, identifiant: str, prix: float) -> dict:
-    """Machine de la classe de la course (A100 SXM4 80 Go ; jamais de H200), étiquette de la répétition, identifiant et prix
-    relevés le jour (prix au plus celui du pire cas du devis de B bis, 1,40 USD de l'heure)."""
+def entier_ascii(x, quoi: str = "identifiant") -> int:
+    """Entier positif écrit en chiffres ASCII sans zéro de tête ni espace (refus de `060670453`, des chiffres pleine largeur, des
+    espaces, des booléens) ; jamais `str.isdigit()` (contre-lecture de sûreté m1)."""
+    if isinstance(x, bool):
+        raise Refus(f"{quoi} {x!r} illisible : entier ASCII attendu")
+    if isinstance(x, int):
+        if x <= 0:
+            raise Refus(f"{quoi} {x!r} illisible : entier positif attendu")
+        return x
+    if isinstance(x, str) and ENTIER_ASCII.fullmatch(x):
+        return int(x)
+    raise Refus(f"{quoi} {x!r} illisible : entier ASCII sans zéro de tête ni espace attendu")
+
+
+PROTEGEES = frozenset(entier_ascii(p) for p in tuple(INSTANCES_D_AUTRES_SESSIONS) + INSTANCES_PROPRES_REPETITION)
+
+
+def exiger_identifiant(ident) -> int:
+    """Instance détruisable par la répétition : entier ASCII, jamais une instance d'une autre session."""
+    n = entier_ascii(ident)
+    if n in PROTEGEES:
+        raise Refus(f"instance {n} d'une autre session : jamais détruite")
+    return n
+
+
+def lire_json(chemin, supprimer: bool = False):
+    """JSON d'un fichier privé (liste des instances, utilisateur, création) ; rend (document, nombre de motifs de jeton vus) ; rien
+    n'est affiché ; `supprimer` : le fichier, son compagnon `erreur.txt` et leur dossier jetable sont retirés après lecture."""
+    chemin = Path(chemin)
+    try:
+        texte = chemin.read_text(encoding="utf-8")
+    except OSError as e:
+        raise Refus(f"{chemin.name} illisible ({type(e).__name__})") from None
+    finally:
+        if supprimer:
+            for p in (chemin, chemin.parent / "erreur.txt"):
+                try:
+                    p.unlink()
+                except OSError:
+                    pass
+            try:
+                chemin.parent.rmdir()
+            except OSError:
+                pass
+    vus = len(MOTIF_JETON.findall(texte))
+    try:
+        return json.loads(texte), vus
+    except ValueError:
+        raise Refus(f"{chemin.name} illisible (JSON attendu)") from None
+
+
+def alerte_jetons(vus: int, quoi: str) -> None:
+    if vus:
+        print(f"BBIS REPETITION ALERTE : {vus} motif(s) de jeton dans {quoi} : révoquer le jeton aussitôt (jamais affiché)")
+
+
+def instances(doc) -> list[dict]:
+    """Liste des instances lue sans erreur : objets portant un `id` entier ASCII ; seuls `id`, `label`, `gpu_name`, `gpu_ram`,
+    `dph_total` sont gardés."""
+    liste = doc.get("instances") if isinstance(doc, dict) else doc
+    if not isinstance(liste, list) or any(not isinstance(i, dict) or "id" not in i for i in liste):
+        raise Refus("liste des instances illisible (liste d'objets portant « id » attendue)")
+    sortie = []
+    for i in liste:
+        try:
+            n = entier_ascii(i["id"], "identifiant listé")
+        except Refus as e:
+            raise Refus(f"liste des instances illisible : {e}") from None
+        sortie.append({"id": n, **{k: i.get(k) for k in ("label", "gpu_name", "gpu_ram", "dph_total")}})
+    return sortie
+
+
+def lire_creation(doc) -> int:
+    """`new_contract` de la sortie de `vastai create instance --raw`, lu par programme ; absent ou illisible : refus (ne jamais
+    deviner un identifiant : `trouver` par l'étiquette)."""
+    if not isinstance(doc, dict) or "new_contract" not in doc:
+        raise Refus("fichier de création sans « new_contract » : ne pas deviner ; lire l'instance par son étiquette (trouver)")
+    return exiger_identifiant(doc["new_contract"])
+
+
+def exiger_etiquette(liste: list[dict], ident: int) -> dict:
+    """Garde positive : l'instance à détruire est listée et porte l'étiquette de la répétition."""
+    vues = [i for i in liste if i["id"] == ident]
+    if len(vues) != 1:
+        raise Refus(f"instance {ident} absente de la liste (ou en double) : rien à détruire sous ce nom ; vérifier l'absence")
+    if vues[0]["label"] != ETIQUETTE:
+        raise Refus(f"instance {ident} d'étiquette {vues[0]['label']!r} ≠ {ETIQUETTE} : jamais détruite par la répétition")
+    return vues[0]
+
+
+def relire_instance(liste: list[dict], ident: int) -> dict:
+    """Après la création : l'instance porte l'étiquette, une A100 SXM4 80 Go, un prix au plus 1,40 USD/h ; sinon détruire."""
+    i = exiger_etiquette(liste, ident)
     fautes = []
-    nom = str(offre.get("carte", "")).upper()
-    if "H200" in nom or not ("A100" in nom and "80" in nom and "SXM" in nom):
-        fautes.append(f"carte {offre.get('carte')!r} : A100 SXM4 80 Go attendue (celle de la course)")
+    if i["gpu_name"] != NOM_CARTE_OUTIL:
+        fautes.append(f"carte {i['gpu_name']!r} ≠ {NOM_CARTE_OUTIL!r}")
+    if i["gpu_ram"] is not None and not (isinstance(i["gpu_ram"], (int, float)) and i["gpu_ram"] >= MEMOIRE_CARTE_MIN_MO):
+        fautes.append(f"mémoire de la carte {i['gpu_ram']!r} Mo < {MEMOIRE_CARTE_MIN_MO}")
+    p = i["dph_total"]
+    if isinstance(p, bool) or not isinstance(p, (int, float)) or not 0 < p <= OFFRE_MIN["prix_max_usd_h"]:
+        fautes.append(f"prix {p!r} USD/h hors de ]0 ; {OFFRE_MIN['prix_max_usd_h']}]")
+    if fautes:
+        raise Refus(f"instance {ident} hors borne ({' ; '.join(fautes)}) : la détruire aussitôt (detruire CREATION.json)")
+    return i
+
+
+def trouver_par_etiquette(liste: list[dict]) -> int:
+    vues = [i["id"] for i in liste if i["label"] == ETIQUETTE]
+    if len(vues) != 1:
+        raise Refus(f"{len(vues)} instance(s) d'étiquette {ETIQUETTE} : une exactement attendue ; ne rien deviner")
+    return exiger_identifiant(vues[0])
+
+
+def exiger_absence(liste_doc, ident, temoin) -> dict:
+    """Destruction prouvée par l'absence de l'instance dans la liste lue sans erreur, un témoin connu (60480302 ou 60670453)
+    présent ; comparaison en entiers (jamais en chaînes)."""
+    n = exiger_identifiant(ident)
+    if str(temoin) not in TEMOINS:
+        raise Refus(f"absence non prouvée : témoin {temoin!r} hors de {TEMOINS} : arrêt")
+    t = entier_ascii(str(temoin))
+    try:
+        ids = {i["id"] for i in instances(liste_doc)}
+    except Refus as e:
+        raise Refus(f"absence non prouvée : {e} : arrêt") from None
+    if t not in ids:
+        raise Refus(f"absence non prouvée : témoin {t} absent de la liste ({len(ids)} instance(s)) : liste incomplète ou témoin "
+                    "détruit ; arrêt, refaire la lecture avec l'autre témoin")
+    if n in ids:
+        raise Refus(f"absence non prouvée : instance {n} toujours dans la liste (témoin {t} présent) : destruction non faite ; "
+                    "arrêt, refaire `vastai destroy instance ID -y` puis la vérification")
+    return {"detruite": n, "temoin": t, "instances_listees": len(ids)}
+
+
+def offre_depuis_recherche(doc, ident) -> dict:
+    """Offre lue par programme dans la sortie de `vastai search offers --raw` (clés de l'outil : `id`, `gpu_name`, `num_gpus`,
+    `gpu_ram` (Mo), `cpu_cores_effective`, `cpu_ram` (Mo), `disk_space` (Go), `dph_total` (USD/h), `storage_cost` (USD par Go et
+    par mois)) ; forme supposée de l'outil, toute clé absente → refus (jamais un défaut deviné)."""
+    n = entier_ascii(ident, "identifiant d'offre")
+    liste = doc.get("offers") if isinstance(doc, dict) else doc
+    if not isinstance(liste, list):
+        raise Refus("sortie de la recherche illisible (liste d'offres attendue)")
+    vues = [o for o in liste if isinstance(o, dict) and not isinstance(o.get("id"), bool) and o.get("id") == n]
+    if len(vues) != 1:
+        raise Refus(f"offre {n} absente de la recherche (ou en double)")
+    o = vues[0]
+    manque = [k for k in ("gpu_name", "num_gpus", "gpu_ram", "cpu_cores_effective", "cpu_ram", "disk_space", "dph_total",
+                          "storage_cost") if not isinstance(o.get(k), (int, float, str)) or isinstance(o.get(k), bool)]
+    if manque:
+        raise Refus(f"offre {n} : clé(s) {manque} absente(s) ou illisible(s) : forme de l'outil à vérifier ; rien n'est deviné")
+    fautes = []
+    if o["gpu_name"] != NOM_CARTE_OUTIL or o["num_gpus"] != 1 or not float(o["gpu_ram"]) >= MEMOIRE_CARTE_MIN_MO:
+        fautes.append(f"carte {o['gpu_name']!r} × {o['num_gpus']!r}, {o['gpu_ram']!r} Mo : une A100 SXM4 80 Go exactement")
+    if not 0 < float(o["dph_total"]) <= OFFRE_MIN["prix_max_usd_h"]:
+        fautes.append(f"prix {o['dph_total']!r} USD/h > {OFFRE_MIN['prix_max_usd_h']}")
+    if fautes:
+        raise Refus("offre hors des bornes de la répétition : " + " ; ".join(fautes))
+    return {"id": n, "carte": CARTE, "coeurs": float(o["cpu_cores_effective"]), "memoire_vive_mo": float(o["cpu_ram"]),
+            "disque_go": float(o["disk_space"]), "prix_usd_h": float(o["dph_total"]),
+            "stockage_usd_h": float(o["storage_cost"]) * DISQUE_GO / 730.0, "etiquette": ETIQUETTE,
+            "source": "offre-depuis-recherche (clés lues, jamais retapées)"}
+
+
+def exiger_offre(offre: dict, identifiant, prix: float) -> dict:
+    """Machine de la classe de la course (A100 SXM4 80 Go exactement), étiquette de la répétition, identifiant et prix relevés le
+    jour (au plus 1,40 USD de l'heure, pire cas du devis de B bis)."""
+    fautes = []
+    if offre.get("carte") != CARTE:
+        fautes.append(f"carte {offre.get('carte')!r} ≠ {CARTE!r} (celle de la course, exactement)")
     for cle in ("coeurs", "memoire_vive_mo", "disque_go"):
         try:
             v = float(offre.get(cle))
@@ -80,7 +261,10 @@ def exiger_offre(offre: dict, identifiant: str, prix: float) -> dict:
         fautes.append(f"stockage {offre.get('stockage_usd_h')!r} USD/h > {OFFRE_MIN['stockage_max_usd_h']}")
     if offre.get("etiquette") != ETIQUETTE:
         fautes.append(f"étiquette {offre.get('etiquette')!r} ≠ {ETIQUETTE}")
-    if not str(identifiant).isdigit() or str(offre.get("id")) != str(identifiant):
+    try:
+        if entier_ascii(offre.get("id"), "id") != entier_ascii(str(identifiant), "identifiant d'offre"):
+            raise Refus("différents")
+    except Refus:
         fautes.append(f"identifiant {offre.get('id')!r} de l'offre décrite ≠ offre demandée {identifiant!r}")
     try:
         p_offre = float(offre.get("prix_usd_h"))
@@ -98,29 +282,31 @@ MARGE_USD = 0.40       # stockage (≤ 0,08 USD/h) et téléchargements (≤ 0,0
 
 
 def duree_max_h(prix: float) -> float:
-    """Durée de carte au plus jusqu'à l'échéance : (durée + un quart d'heure) × prix + marge < plafond, et au plus 3 h."""
+    """Durée de carte jusqu'à l'échéance **à l'égalité** du plafond : (durée + un quart d'heure) × prix + marge = plafond (au plus
+    3 h) ; toute échéance permise est strictement en deçà."""
     return min(ECHEANCE_MAX_S / 3600.0, (PLAFOND_USD - MARGE_USD) / float(prix) - QUART_D_HEURE)
 
 
 def garde_commande(echeance: int, prix: float, feu: str, maintenant: int) -> dict:
     """Feu écrit de la mère portant la ligne de GO et le mot de la répétition ; échéance (minuterie de destruction) dans
-    ]maintenant, maintenant + `duree_max_h(prix)`] : la carte jusqu'à l'échéance, plus un quart d'heure, plus la marge de
-    stockage et de téléchargement, reste sous le plafond de 3 USD."""
+    ]maintenant, maintenant + 3 h] et telle que (durée + un quart d'heure) × prix + marge soit **strictement** sous le plafond de
+    3 USD (contre-lecture M-5) ; rend aussi le budget de travail (échéance − 15 min, réserve de fin de l'amorce)."""
     if not (isinstance(feu, str) and GO_ID in feu and MOT_REPETITION in feu):
         raise Refus(f"feu écrit de la mère portant {GO_ID} et {MOT_REPETITION} absent : aucune création")
     if not 0 < float(prix) <= OFFRE_MIN["prix_max_usd_h"]:
         raise Refus(f"prix {prix!r} USD/h hors de ]0 ; {OFFRE_MIN['prix_max_usd_h']}]")
     duree_h, dmax = (int(echeance) - int(maintenant)) / 3600.0, duree_max_h(prix)
-    if not 0 < duree_h <= dmax:
-        raise Refus(f"échéance dans {duree_h:.2f} h : au plus {dmax:.2f} h à {float(prix):g} USD/h (échéance au plus "
-                    f"{int(maintenant) + int(dmax * 3600)}, plafond {PLAFOND_USD:g} USD)")
     cout = (duree_h + QUART_D_HEURE) * float(prix) + MARGE_USD
-    return {"duree_h": duree_h, "cout_max_usd": cout, "plafond_usd": PLAFOND_USD, "duree_max_h": dmax}
+    if not (0 < duree_h <= ECHEANCE_MAX_S / 3600.0 and cout < PLAFOND_USD):
+        raise Refus(f"échéance dans {duree_h:.2f} h ({cout:.2f} USD au plus) : strictement moins de {dmax:.2f} h à "
+                    f"{float(prix):g} USD/h (plafond {PLAFOND_USD:g} USD, strict)")
+    return {"duree_h": duree_h, "cout_max_usd": cout, "plafond_usd": PLAFOND_USD, "duree_max_h": dmax,
+            "budget_travail_min": (int(echeance) - int(maintenant) - RESERVE_FIN_S) / 60.0}
 
 
 def garde_depense(cumul: float, prix: float) -> dict:
-    """Garde de dépense de la course (`registre_bbis_v1.garde_depense`), appelée telle quelle à la coupure de 3 USD."""
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    """Garde de dépense de la course (`registre_bbis_v1.garde_depense`), appelée telle quelle à la coupure de 3 USD ; le cumul
+    est celui de la répétition seule, stockage compris (contre-lecture m8)."""
     from controle_ia.gardes import GardeArret
     from controle_ia.t07bbis.registre_bbis_v1 import garde_depense as gd
     try:
@@ -129,26 +315,12 @@ def garde_depense(cumul: float, prix: float) -> dict:
         raise Refus(f"{e} (répétition : plafond {PLAFOND_USD:g} USD)") from None
 
 
-def exiger_identifiant(ident: str) -> str:
-    ident = str(ident)
-    if not ident.isdigit():
-        raise Refus(f"identifiant {ident!r} illisible (destruction par l'identifiant seulement, R10)")
-    if ident in INSTANCES_D_AUTRES_SESSIONS:
-        raise Refus(f"instance {ident} d'une autre session : jamais détruite")
-    return ident
-
-
-def exiger_absence(liste, ident: str, temoin: str) -> dict:
-    """Destruction prouvée par l'absence dans la liste lue sans erreur, témoin présent (`registre_bbis_v1.exiger_absence` de la
-    course, appelée telle quelle après la garde d'identifiant de la répétition)."""
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-    from controle_ia.gardes import GardeArret
-    from controle_ia.t07bbis.registre_bbis_v1 import exiger_absence as ea
-    exiger_identifiant(ident)
-    try:
-        return ea(liste, ident, temoin)
-    except GardeArret as e:
-        raise Refus(str(e)) from None
+def lire_credit(doc) -> float:
+    """Crédit du compte (champ `credit` de `vastai show user --raw`, seul lu ; jamais affiché d'autre champ)."""
+    c = doc.get("credit") if isinstance(doc, dict) else None
+    if isinstance(c, bool) or not isinstance(c, (int, float)):
+        raise Refus("crédit illisible (champ « credit » attendu) : forme de l'outil à vérifier ; aucune location")
+    return float(c)
 
 
 # ------------------------------------------------------------------------------------------------------------ sur la carte
@@ -255,6 +427,8 @@ def jouer_carte(sortie: Path, appareil: str = "cuda", n_actions: int = ACTIONS, 
             "mediane_seuil_s": (vi.LIMITE_H - 0.55 - vi.MARGE_H) * 3600.0 / ((total - vi.N_PREMIERS) * vi.FACTEUR_DEBIT),
             "note": "durées au lot entier de 640 actions (sonde finale, nul) ; la validation interne apprend sur 480 : prudent"}
         doc["garde_de_debit"]["se_declencherait"] = max(doc["garde_de_debit"]["projete_h"]) > vi.LIMITE_H
+        partiel = {**doc, "etat": "partiel (contrôles carte-processeur en cours)", "duree_totale_s": time.time() - debut}
+        sortie.write_text(json.dumps(partiel, indent=1, ensure_ascii=False, sort_keys=True, default=str) + "\n", encoding="utf-8")
         etape = "contrôle carte-processeur"
         doc["controle_carte_processeur"] = {}
         for f, (r, g, s) in sondes.items():
@@ -276,6 +450,10 @@ def jouer_carte(sortie: Path, appareil: str = "cuda", n_actions: int = ACTIONS, 
 
 # ------------------------------------------------------------------------------------------------------------ entrée
 
+def _prive(a: list) -> tuple[list, bool]:
+    return [x for x in a if x != "--supprimer"], "--supprimer" in a
+
+
 def main(argv=None) -> int:
     a = list(sys.argv[1:] if argv is None else argv)
     if a[:1] == ["carte"]:
@@ -288,28 +466,69 @@ def main(argv=None) -> int:
         ap.add_argument("--tolerance", type=float, default=None)
         x = ap.parse_args(a[1:])
         return jouer_carte(Path(x.sortie), x.appareil, x.actions, x.largeur, x.par_famille, x.tolerance)
+    a, supprimer = _prive(a)
     try:
         if a[:1] == ["offre"] and len(a) == 4:
-            exiger_offre(json.loads(Path(a[1]).read_text(encoding="utf-8")), a[2], float(a[3]))
+            exiger_offre(lire_json(a[1])[0], a[2], float(a[3]))
             print("BBIS REPETITION OFFRE ACCEPTEE")
+        elif a[:1] == ["offre-depuis-recherche"] and len(a) == 4:
+            doc, vus = lire_json(a[1], supprimer)
+            alerte_jetons(vus, "la sortie de la recherche")
+            o = offre_depuis_recherche(doc, a[2])
+            with open(a[3], "x", encoding="utf-8") as f:                   # R12 : jamais réécrit
+                f.write(json.dumps(o, indent=1, ensure_ascii=False, sort_keys=True) + "\n")
+            print(f"BBIS REPETITION OFFRE ECRITE {a[3]} : offre {o['id']}, {o['carte']}, {o['prix_usd_h']:g} USD/h, "
+                  f"stockage {o['stockage_usd_h']:.4f} USD/h")
         elif a[:1] == ["garde-commande"] and len(a) == 5:
             r = garde_commande(int(a[1]), float(a[2]), a[3], int(a[4]))
-            print(f"BBIS REPETITION COMMANDE PERMISE : {r['duree_h']:.2f} h au plus, {r['cout_max_usd']:.2f} USD au plus")
+            print(f"BBIS REPETITION COMMANDE PERMISE : {r['duree_h']:.2f} h au plus, {r['cout_max_usd']:.2f} USD au plus "
+                  f"(strictement sous {PLAFOND_USD:g}), budget de travail {r['budget_travail_min']:.0f} min")
         elif a[:1] == ["depense"] and len(a) == 3:
             print(f"BBIS REPETITION DEPENSE {garde_depense(float(a[1]), float(a[2]))}")
         elif a[:1] == ["identifiant"] and len(a) == 2:
             print(f"BBIS REPETITION IDENTIFIANT {exiger_identifiant(a[1])}")
+        elif a[:1] == ["creation"] and len(a) == 2:
+            print(f"BBIS REPETITION INSTANCE {lire_creation(lire_json(a[1])[0])}")
+        elif a[:1] in (["etiquette"], ["relire"]) and len(a) == 3:
+            n = lire_creation(lire_json(a[1])[0])
+            doc, vus = lire_json(a[2], supprimer)
+            alerte_jetons(vus, "la liste des instances")
+            if a[0] == "etiquette":
+                exiger_etiquette(instances(doc), n)
+                print(f"BBIS REPETITION INSTANCE DE LA REPETITION {n} (étiquette {ETIQUETTE})")
+            else:
+                i = relire_instance(instances(doc), n)
+                print(f"BBIS REPETITION INSTANCE CONFORME {n} : {i['gpu_name']}, {i['dph_total']} USD/h, étiquette {i['label']}")
+        elif a[:1] == ["trouver"] and len(a) == 3:
+            doc, vus = lire_json(a[1], supprimer)
+            alerte_jetons(vus, "la liste des instances")
+            n = trouver_par_etiquette(instances(doc))
+            with open(a[2], "x", encoding="utf-8") as f:
+                f.write(json.dumps({"new_contract": n, "trouve_par_etiquette": ETIQUETTE}) + "\n")
+            print(f"BBIS REPETITION INSTANCE TROUVEE {n} par l'étiquette {ETIQUETTE} : {a[2]}")
         elif a[:1] == ["absence"] and len(a) == 4:
+            n = lire_creation(lire_json(a[1])[0])
             try:
-                liste = json.loads(Path(a[3]).read_text(encoding="utf-8"))
-            except (OSError, ValueError) as e:
-                raise Refus(f"absence non prouvée : liste des instances illisible ({type(e).__name__}) : arrêt") from None
-            r = exiger_absence(liste, a[1], a[2])
+                doc, vus = lire_json(a[3], supprimer)
+            except Refus as e:
+                raise Refus(f"absence non prouvée : {e} : arrêt") from None
+            alerte_jetons(vus, "la liste des instances")
+            r = exiger_absence(doc, n, a[2])
             print(f"BBIS DESTRUCTION PROUVEE {r['detruite']} : absente de la liste, témoin {r['temoin']} présent, "
                   f"{r['instances_listees']} instance(s) listée(s)")
+        elif a[:1] == ["credit"] and len(a) == 2:
+            doc, vus = lire_json(a[1], supprimer)
+            alerte_jetons(vus, "la fiche de l'utilisateur")
+            c = lire_credit(doc)
+            print(f"BBIS REPETITION CREDIT {c:.2f} USD" + (" : suffisant (au moins 4 USD)" if c >= 4.0 else
+                                                         " : insuffisant (moins de 4 USD) : aucune location"))
+            if c < 4.0:
+                return 2
         else:
-            print("BBIS REPETITION REFUS : commande inconnue (carte … | offre FICHIER ID PRIX | garde-commande ECHEANCE PRIX FEU "
-                  "MAINTENANT | depense CUMUL PRIX | identifiant ID | absence ID TEMOIN LISTE.json)")
+            print("BBIS REPETITION REFUS : commande inconnue (carte … | offre FICHIER ID PRIX | offre-depuis-recherche RECHERCHE ID "
+                  "OFFRE | garde-commande ECHEANCE PRIX FEU MAINTENANT | depense CUMUL PRIX | identifiant ID | creation CREATION | "
+                  "etiquette CREATION LISTE | relire CREATION LISTE | trouver LISTE SORTIE | absence CREATION TEMOIN LISTE | "
+                  "credit FICHIER ; --supprimer)")
             return 2
     except (Refus, ValueError, OSError) as e:
         print(f"BBIS REPETITION REFUS : {e}")
