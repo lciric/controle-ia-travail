@@ -126,7 +126,10 @@ class LectureT08:
     # -- (a) entrées ------------------------------------------------------------------------------------------------
     def _controles_reels_texte(self, reg: dict) -> dict:
         """Mode réel (CLT8C-10 (a) et (b)) : le texte scellé passé porte les valeurs des marqueurs ; la ligne
-        `SCELLEMENT-T08` du registre porte l'empreinte de ce texte ; la ligne `CODE-T08` est inscrite."""
+        `SCELLEMENT-T08` du registre porte l'empreinte de ce texte ; la ligne `CODE-T08` est inscrite ; l'une et l'autre
+        sont strictement antérieures à la ligne `COURSE-T08` (l. 9 : code « cité par la ligne `CODE-T08` du registre des
+        scellements avant toute exécution » ; R1 : texte scellé avant la course ; choix de lecture déclaré, question du
+        rapport des corrections)."""
         if self.prereg is None:
             raise GardeArret("lecture réelle sans préenregistrement scellé : R1 interdit")
         texte = cf.exiger_marqueurs_au_texte(self.prereg, self.config["marqueurs"])
@@ -135,6 +138,11 @@ class LectureT08:
             raise GardeArret(f"ligne SCELLEMENT-T08 ({scel['sha256'][:12]}…) ≠ empreinte du préenregistrement passé "
                              f"({texte['sha256'][:12]}…) : autre texte scellé, arrêt")
         code = en.exiger_ligne(reg, "CODE-T08")
+        course = en.exiger_ligne(reg, "COURSE-T08")
+        for nom, ligne in (("SCELLEMENT-T08", scel), ("CODE-T08", code)):
+            if not en.date_utc(ligne["date"]) < en.date_utc(course["date"]):
+                raise GardeArret(f"ligne {nom} ({ligne['date']}) non antérieure à COURSE-T08 ({course['date']}) : texte et "
+                                 "code cités avant toute exécution (l. 9 ; R1) : arrêt")
         return {"texte": texte, "SCELLEMENT-T08": scel, "CODE-T08": code}
 
     def etape_a(self) -> None:

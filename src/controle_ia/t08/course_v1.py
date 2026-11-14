@@ -278,6 +278,13 @@ def exiger_course_reelle(config: dict, prereg) -> dict:
     return {"marqueurs": marqueurs, "texte": texte}
 
 
+def exiger_run_7b(man7b: dict, marqueurs: dict) -> None:
+    """Mode réel (CLT8C-05) : le manifeste de 7b lu est celui du marqueur `RUN_7B` (identifiant du run et empreinte)."""
+    if man7b["run_id"] != marqueurs["RUN_7B"]["run_id"] or man7b["sha256"] != marqueurs["RUN_7B"]["manifeste_sha256"]:
+        raise GardeArret(f"manifeste de 7b ({man7b['run_id']}, {man7b['sha256'][:12]}…) ≠ RUN_7B (identifiant ou "
+                         "empreinte) : arrêt")
+
+
 def executer_course(config: dict, racine, run_id: str, prereg: str | None = None,
                     autoriser_depot_sale: bool = False) -> dict:
     racine = Path(racine)
@@ -302,8 +309,7 @@ def executer_course(config: dict, racine, run_id: str, prereg: str | None = None
     man7b = en.lire_manifeste_7b(lb, "manifeste_7b", ids_taches)
     systeme = lb.chemin("invite").read_text(encoding="utf-8")
     if mode == "reel":
-        if man7b["run_id"] != marqueurs["RUN_7B"]["run_id"] or man7b["sha256"] != marqueurs["RUN_7B"]["manifeste_sha256"]:
-            raise GardeArret("manifeste de 7b ≠ RUN_7B (identifiant ou empreinte) : arrêt")
+        exiger_run_7b(man7b, marqueurs)
         lb.chemin("consignes")                 # empreinte contrôlée avant le manifeste (consignes du texte)
     par_ep_7b = {}
     for t in textes_7b:
