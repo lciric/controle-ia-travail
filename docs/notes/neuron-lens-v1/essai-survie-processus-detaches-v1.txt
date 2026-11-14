@@ -1,0 +1,27 @@
+Essai de survie des processus détachés et de l'accès à l'outil du loueur (contre-lecture 10, Q-1, Q-2, Q-3) — v1, sans location
+
+Conteneur de la session de reprise « Neuron Lens » (autre compte), 14 novembre 2026, heures par `date -u`. Aucun appel au loueur :
+l'outil est remplacé par un faux outil qui consigne ses arguments, sauf pour la résolution de chemin.
+
+1. Outil réel installé (sans appel) : `python3 -m venv /home/user/vastai-env && /home/user/vastai-env/bin/pip install vastai==1.11.0`
+   → `/home/user/vastai-env/bin/vastai`, version 1.11.0 (`pip show`), 15:00.
+2. Minuterie v1 (`scripts/minuterie_destruction_neuron_lens_v1.sh`) lancée détachée dans un appel d'outil, à 15:00:57 :
+   `BORNE_MIN_S=60 setsid nohup bash scripts/minuterie_destruction_neuron_lens_v1.sh 999 90 <faux outil> <fichier pid> > journal 2>&1 < /dev/null &`
+   - `$!` = 24924, mais PID écrit par la minuterie = 24926 (PPID 1, session propre). Le shell des appels d'outil a le contrôle des
+     tâches (« [1]+ Done … » affiché) : `setsid` se duplique, et `$!` désigne un parent déjà mort. **`$!` n'est donc jamais le PID à
+     arrêter** ; seul le PID écrit par le processus lui-même (`echo $$ > fichier`, puis `exec` le cas échéant) l'est.
+   - Dans un appel d'outil suivant, 15:01:11 : PID 24926 vivant (`ps -p`, 13 s d'âge, arguments de la minuterie).
+   - Dans un troisième appel d'outil : à 15:02:27, le faux outil a reçu « destroy instance 999 » ; journal de la minuterie : armée
+     15:00:57, échéance 15:02:27, « destruction demandee (essai 1/3) » ; processus terminé ensuite.
+3. Patron de la garde (même appel que le relevé de 15:01:11) :
+   `setsid nohup bash -c 'echo $$ > <fichier pid>; exec env PATH=/home/user/vastai-env/bin:$PATH sh -c "sleep 80; command -v vastai > <témoin>; …"' … &`
+   - `$!` = 24962, PID du fichier = 24964 = le processus après `exec` (arguments « sh -c sleep 80; … », PPID 1).
+   - À 15:02:31, dans un appel suivant : témoin écrit, `command -v vastai` = `/home/user/vastai-env/bin/vastai` : le `PATH` passé par
+     `exec env` atteint le processus détaché, sans dépendre de l'état du shell de la session (qui ne persiste pas d'un appel à l'autre).
+Conclusions reprises dans la commande v9 : minuterie par le script v1 et le chemin absolu de l'outil ; garde par `bash -c 'echo $$ >
+fichier; exec env PATH=… …'` ; PID lus dans les fichiers, jamais dans `$!` ; vérifiés vivants par `ps -p` (arguments compris) ; PID,
+durée et heure de création versés dans un fichier du dépôt.
+Limite : la minuterie et la garde vivent dans le conteneur de la session ; s'il est récupéré (longue inactivité de la session), elles
+meurent avec lui et rien, côté conteneur, ne détruit plus l'instance. Restent : le rappel indépendant (`send_later`, qui réveille la
+session, sur un conteneur neuf au besoin, à 80 % de la durée) et le fichier des PID et de l'identifiant versé au dépôt, pour reprendre
+la destruction par identifiant. Déclaré dans la commande v9 ; la session de la course reste active pendant la course.
