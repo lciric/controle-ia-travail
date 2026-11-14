@@ -1,0 +1,380 @@
+#!/usr/bin/env python3
+"""Programme de classement de la règle de sélection — course « conception propre » — v1.
+
+Écrit le 13 novembre 2026 (à partir de 23:45 UTC, `date -u`) par un développeur neuf (tâche N3 de R-2615), avant toute
+course et toute lecture. Comportement fixé par `conception-course-v1.md` (be3ba97e…), § 4.5 à 4.8, 6 et 7 ; tout écart
+serait un écart déclaré (les précisions prises là où le texte se tait sont listées dans `PRECISIONS` et rendues dans la
+sortie). **N'appelle aucun modèle.** Ne lit jamais les notes du juge de l'organisme (§ 4.8).
+
+    python3 -I -B classer_conception_propre_v1.py --envois DOSSIER_ENVOIS --sortie DOSSIER_SORTIE
+
+Entrées : le dossier préparé par `outil_lecteur_conception_propre_v1.py preparer`, où la mère a déposé les réponses
+scellées `reponse-<L>-lot<k>-v1.json`. Sortie (dossier neuf ou vide, rien n'est écrasé) : `lecture-verifiee-L1-v1.json`,
+`lecture-verifiee-L2-v1.json`, `classement-v1.json`, `classement-v1.md`, chacun scellé.
+
+Chaîne : vérification mot pour mot des deux lectures (§ 4.5) → valeurs retenues (R = 1 si les deux lectures donnent 1
+prouvé ; N = aucune si les deux donnent aucune) → portes R2, R3, R7 → nouveauté → ordre des neuves (S = R1 + R4 + R5 + R6
+décroissant, coût `processeur` avant `depense`, départage tiré, enfant 2) → deux désignées, seulement si le classement est
+lisible (L1 à L4) et L5 rejetée → témoin à score permuté (enfant 3) → L1 à L5 → huit comparaisons descriptives, Holm.
+"""
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+
+VERSION = "classer-conception-propre-v1"
+ICI = Path(__file__).resolve().parent
+
+
+def _charger_outil():
+    spec = importlib.util.spec_from_file_location("outil_lecteur_cp_v1", ICI / "outil_lecteur_conception_propre_v1.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+O = _charger_outil()
+CRITERES = O.CRITERES
+ENTROPIE_TEST = 2026111303            # § 4.3 et § 6 : test L5
+PERMUTATIONS = 100_000
+SEUIL_P = 0.05
+TAILLE_TRANCHE = 10_000
+COUT_RANG = {"processeur": 0, "depense": 1}
+PORTES = ("R2", "R3", "R7")
+L1_MIN_PUBLIEES = 5
+L4_KAPPA_MIN, L4_ACCORD_MIN = 0.4, 0.8
+E5_PART = 0.8
+PRECISIONS = [
+    "Passage « mot pour mot » : comparé, espaces normalisés seulement (aucune autre normalisation), à chaque chaîne de la "
+    "fiche servie prise isolément (un passage à cheval sur deux champs, ou qui recopie les clés JSON, n'est pas prouvé) ; "
+    "passage vide = non prouvé ; aucune longueur minimale ; un passage de plus de 200 caractères n'est pas refusé ; "
+    "un passage recopié avec les échappements JSON de la vue servie (\\\" ou \\\\) est accepté.",
+    "Passage du catalogue : cherché dans les cellules de la ligne Ck, marques ** retirées des deux côtés.",
+    "Valeur rendue autre que l'entier 0 ou 1 (chaîne, booléen) : comptée 0. Entrée manquante, en double, ou lot illisible : "
+    "tous les critères comptés 0 (R4 hors levier:juge reste 1) et N = aucune, rapportés comme anomalies.",
+    "Valeurs « lues » de L1, L2, L4 et de l'exactitude du lecteur : valeurs comptées après la preuve (§ 4.5) de chaque "
+    "lecture ; L3, le classement, C et L5 : valeurs retenues des deux lectures.",
+    "L4 : « κ non défini (une marge constante) » lu comme : dès qu'une des deux lectures est constante sur la pile, "
+    "on juge l'accord brut (≥ 0,8) ; sinon κ ≥ 0,4. κ est rapporté quand son dénominateur est non nul.",
+    "L5 : valeur p = (1 + #{permutations dont la statistique ≥ l'observée}) / (1 + 100 000) ; statistique comparée en "
+    "entiers (somme du groupe réel, à effectifs fixés) ; permutations par argsort de tirages uniformes, tranches de 10 000, "
+    "générateur numpy.random.default_rng(SeedSequence(2026111303)).",
+    "Huit comparaisons descriptives (R1 à R7 retenus, et N = aucune) : même statistique, bilatérale, 100 000 permutations "
+    "chacune, générateur SeedSequence(2026111303).spawn(8)[k] ; Holm (pas à pas descendant) sur les huit.",
+    "Départage : rang dans numpy.random.default_rng(enfant 2).permutation(n) des fiches réelles admissibles prises dans "
+    "l'ordre du fichier ; le rang suit la fiche, pas son vecteur, dans le témoin à score permuté.",
+    "Témoin à score permuté : la fiche i reçoit le vecteur (R1…R7, N, coût) de la fiche perm[i], "
+    "perm = default_rng(enfant 3).permutation(n) ; calculé même quand aucune idée n'est désignée.",
+    "Audit de propreté (R4 du programme) : déclenché si l'un des quatre signes du § 7 tient.",
+]
+
+
+# --- valeurs retenues et classement ------------------------------------------------------------------------------------
+
+def retenir(v1: dict, v2: dict) -> dict:
+    vec = {c: int(v1[c]["compte"] == 1 and v2[c]["compte"] == 1) for c in CRITERES}
+    n1, n2 = v1["N"]["compte"], v2["N"]["compte"]
+    vec["N"] = "aucune" if (n1 == "aucune" and n2 == "aucune") else "+".join(sorted({n for n in (n1, n2)
+                                                                                      if n != "aucune"}))
+    return vec
+
+
+def portes_manquantes(vec: dict) -> list[str]:
+    return [c for c in PORTES if vec[c] != 1]
+
+
+def score_S(vec: dict) -> int:
+    return vec["R1"] + vec["R4"] + vec["R5"] + vec["R6"]
+
+
+def score_C(vec: dict) -> int:
+    return (1 + score_S(vec)) if (not portes_manquantes(vec) and vec["N"] == "aucune") else 0
+
+
+def classer(ids: list, vec_de: dict, cout_de: dict, departage: dict) -> dict:
+    """Statut de chaque fiche et ordre des neuves (§ 4.6)."""
+    statut, neuves = {}, []
+    for i in ids:
+        v = vec_de[i]
+        manque = portes_manquantes(v)
+        if manque:
+            statut[i] = {"statut": "ecartee", "motif": "porte(s) " + ", ".join(manque)}
+        elif v["N"] != "aucune":
+            statut[i] = {"statut": "occupee", "entrees": v["N"]}
+        else:
+            statut[i] = {"statut": "neuve", "S": score_S(v)}
+            neuves.append(i)
+    neuves.sort(key=lambda i: (-score_S(vec_de[i]), COUT_RANG[cout_de[i]], departage[i]))
+    return {"statut": statut, "ordre_neuves": neuves, "deux_premieres": neuves[:2]}
+
+
+def rangs_departage(ids: list) -> dict:
+    tirage = np.random.default_rng(O.enfants_ordres()[2]).permutation(len(ids))
+    return {ids[int(j)]: r for r, j in enumerate(tirage)}
+
+
+def temoin_permute(ids: list, vec_de: dict, cout_de: dict, departage: dict) -> dict:
+    perm = [int(x) for x in np.random.default_rng(O.enfants_ordres()[3]).permutation(len(ids))]
+    vec_p = {ids[i]: vec_de[ids[perm[i]]] for i in range(len(ids))}
+    cout_p = {ids[i]: cout_de[ids[perm[i]]] for i in range(len(ids))}
+    r = classer(ids, vec_p, cout_p, departage)
+    return {"permutation": perm, "deux_premieres": r["deux_premieres"], "ordre_neuves": r["ordre_neuves"]}
+
+
+# --- statistiques --------------------------------------------------------------------------------------------------------
+
+def kappa_accord(a: list, b: list) -> dict:
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    po = float(np.mean(a == b))
+    pa, pb = float(a.mean()), float(b.mean())
+    pe = pa * pb + (1 - pa) * (1 - pb)
+    kappa = None if abs(1 - pe) < 1e-12 else (po - pe) / (1 - pe)
+    constante = pa in (0.0, 1.0) or pb in (0.0, 1.0)
+    if constante:
+        tient, jugee = po >= L4_ACCORD_MIN, "accord brut (une marge constante)"
+    else:
+        tient, jugee = kappa >= L4_KAPPA_MIN, "kappa"
+    return {"kappa": kappa, "accord_brut": po, "marge_constante": constante, "jugee_sur": jugee, "tient": bool(tient)}
+
+
+def test_permutation(x: list, y: list, graine, permutations=PERMUTATIONS, bilateral=False) -> dict:
+    """Différence des moyennes x − y, en entiers : d = Σx·m − Σy·n (même signe et même ordre que la différence)."""
+    x, y = np.asarray(x, dtype=np.int64), np.asarray(y, dtype=np.int64)
+    n, m = len(x), len(y)
+    if n == 0 or m == 0:
+        return {"p": None, "observee": None, "motif": "groupe vide"}
+    z = np.concatenate([x, y])
+    total = int(z.sum())
+
+    def d(sx):
+        return sx * m - (total - sx) * n
+
+    obs = d(int(x.sum()))
+    rng = np.random.default_rng(graine)
+    k, fait = 0, 0
+    while fait < permutations:
+        b = min(TAILLE_TRANCHE, permutations - fait)
+        idx = rng.random((b, n + m)).argsort(axis=1)
+        sx = z[idx[:, :n]].sum(axis=1)
+        dd = sx * m - (total - sx) * n
+        k += int((np.abs(dd) >= abs(obs)).sum() if bilateral else (dd >= obs).sum())
+        fait += b
+    return {"p": (1 + k) / (1 + permutations), "observee": float(x.mean() - y.mean()), "depassements": k,
+            "permutations": permutations, "bilateral": bilateral}
+
+
+def holm(p: list) -> list:
+    k = len(p)
+    ordre = sorted(range(k), key=lambda i: p[i])
+    adj, courant = [None] * k, 0.0
+    for r, i in enumerate(ordre):
+        courant = max(courant, min(1.0, (k - r) * p[i]))
+        adj[i] = courant
+    return adj
+
+
+# --- programme -------------------------------------------------------------------------------------------------------------
+
+def classement(dossier_envois, racine=O.RACINE_DEFAUT, permutations=PERMUTATIONS) -> tuple[dict, dict]:
+    env = O.charger_envois(dossier_envois)
+    cat_texte, _ = O.lire_piece(racine, "catalogue")
+    man = env["manifeste"]
+    for nom in man["reponses_attendues"]:
+        if not (Path(dossier_envois) / nom).is_file():
+            raise O.Refus(f"réponse attendue absente : {nom}")
+    lectures = {L: O.verifier_lecture(dossier_envois, L, cat_texte) for L in O.LECTURES}
+    pile = env["pile"]["fiches"]
+    par_id = {p["id"]: p for p in pile}
+    v = {L: lectures[L]["fiches"] for L in O.LECTURES}
+    for L in O.LECTURES:
+        if set(v[L]) != set(par_id):
+            raise O.Refus(f"lecture {L} : fiches lues ≠ pile")
+    retenu = {i: retenir(v["L1"][i], v["L2"][i]) for i in par_id}
+    reelles = [p["id"] for p in pile if p["origine"] == "reelle"]
+    hasard = [p["id"] for p in pile if p["famille"] == "hasard"]
+    cout_de = {i: par_id[i]["cout"] for i in par_id}
+    departage = rangs_departage(reelles)
+    cl = classer(reelles, retenu, cout_de, departage)
+    tp = temoin_permute(reelles, retenu, cout_de, departage)
+
+    # L1 à L5
+    publiees = [p for p in pile if p["famille"] == "publie"]
+    reconnues = {p["id"]: [L for L in O.LECTURES if v[L][p["id"]]["N"]["compte"] == p["entree"]] for p in publiees}
+    n_reconnues = sum(1 for x in reconnues.values() if x)
+    L1 = {"tient": n_reconnues >= L1_MIN_PUBLIEES, "reconnues": n_reconnues, "sur": len(publiees),
+          "par_temoin": reconnues}
+    fausses = [p for p in pile if p["famille"] == "faux"]
+    L2_detail = {p["id"]: {"cible": p["cible"], **{L: v[L][p["id"]][p["cible"]]["compte"] for L in O.LECTURES}}
+                 for p in fausses}
+    L2 = {"tient": bool(fausses) and all(d[L] == 0 for d in L2_detail.values() for L in O.LECTURES),
+          "par_temoin": L2_detail}
+    vj = [p["id"] for p in pile if p["famille"] in ("vrai", "jumeau")]
+    L3_detail = {i: {"portes_manquantes": portes_manquantes(retenu[i]), "N": retenu[i]["N"]} for i in vj}
+    L3 = {"tient": len(vj) == 2 and all(not d["portes_manquantes"] and d["N"] == "aucune" for d in L3_detail.values()),
+          "par_temoin": L3_detail}
+    ids_pile = [p["id"] for p in pile]
+    k_R7 = kappa_accord([v["L1"][i]["R7"]["compte"] for i in ids_pile], [v["L2"][i]["R7"]["compte"] for i in ids_pile])
+    k_N = kappa_accord([int(v["L1"][i]["N"]["compte"] != "aucune") for i in ids_pile],
+                       [int(v["L2"][i]["N"]["compte"] != "aucune") for i in ids_pile])
+    L4 = {"tient": k_R7["tient"] and k_N["tient"], "R7": k_R7, "N": k_N}
+    C_reel = [score_C(retenu[i]) for i in reelles]
+    C_hasard = [score_C(retenu[i]) for i in hasard]
+    t5 = test_permutation(C_reel, C_hasard, np.random.SeedSequence(ENTROPIE_TEST), permutations)
+    L5 = {"rejet": t5["p"] is not None and t5["p"] <= SEUIL_P, "test": t5, "C_reelles": dict(zip(reelles, C_reel)),
+          "C_hasard": dict(zip(hasard, C_hasard)), "moyenne_reelles": float(np.mean(C_reel)) if C_reel else None,
+          "moyenne_hasard": float(np.mean(C_hasard)) if C_hasard else None, "prediction": "signe positif"}
+    lisible = L1["tient"] and L2["tient"] and L3["tient"] and L4["tient"]
+
+    # comparaisons descriptives, Holm
+    enfants = np.random.SeedSequence(ENTROPIE_TEST).spawn(8)
+    desc = []
+    for k, c in enumerate(list(CRITERES) + ["N"]):
+        f = (lambda i: int(retenu[i]["N"] == "aucune")) if c == "N" else (lambda i, c=c: retenu[i][c])
+        t = test_permutation([f(i) for i in reelles], [f(i) for i in hasard], enfants[k], permutations, bilateral=True)
+        desc.append({"critere": c if c != "N" else "N = aucune", "p_brute": t["p"], "difference": t["observee"]})
+    ps = [d["p_brute"] for d in desc]
+    if all(p is not None for p in ps):
+        for d, a in zip(desc, holm(ps)):
+            d["p_holm"] = a
+
+    # désignation et échecs
+    designees = cl["deux_premieres"] if (lisible and L5["rejet"]) else []
+    passees = [i for i in reelles if cl["statut"][i]["statut"] in ("neuve", "occupee")]
+    occupees = [i for i in passees if cl["statut"][i]["statut"] == "occupee"]
+    echecs = {"E1": not reelles, "E2": not lisible, "E3": not L5["rejet"],
+              "E4": (lisible and L5["rejet"] and len(cl["ordre_neuves"]) < 2),
+              "E5": (len(occupees) / len(passees) > E5_PART) if passees else False}
+    hasard_passes = [i for i in hasard if not portes_manquantes(retenu[i])]
+    audit = {"lisibilite_parfaite": bool(lisible and L5["rejet"]),
+             "kappa_1": bool(k_R7["kappa"] == 1 and k_N["kappa"] == 1),
+             "toutes_publiees_reconnues": n_reconnues == len(publiees),
+             "aucune_idee_au_hasard_passee": not hasard_passes}
+    audit["declenche"] = any(audit.values())
+
+    # exactitude du lecteur sur les témoins
+    exactitude = {}
+    for L in O.LECTURES:
+        par_c = {}
+        for p in pile:
+            if p["origine"] != "temoin" or not p.get("attendu"):
+                continue
+            for c, att in p["attendu"].items():
+                if att is None:
+                    continue
+                lu = v[L][p["id"]][c]["compte"]
+                d = par_c.setdefault(c, {"justes": 0, "sur": 0, "erreurs": []})
+                d["sur"] += 1
+                if lu == att:
+                    d["justes"] += 1
+                else:
+                    d["erreurs"].append({"temoin": p["id"], "attendu": att, "lu": lu})
+        exactitude[L] = par_c
+
+    # comptes par proposeur (information, N-058)
+    par_auteur = {}
+    for i in reelles:
+        a = par_id[i]["auteur"] or "inconnu"
+        d = par_auteur.setdefault(a, {"admissibles": 0, "passees": 0, "neuves": 0, "designees": 0, "hors_question": 0})
+        d["admissibles"] += 1
+        d["passees"] += cl["statut"][i]["statut"] in ("neuve", "occupee")
+        d["neuves"] += cl["statut"][i]["statut"] == "neuve"
+        d["designees"] += i in designees
+    for h in env["pile"]["hors_question"]:
+        d = par_auteur.setdefault(h.get("auteur") or "inconnu", {"admissibles": 0, "passees": 0, "neuves": 0,
+                                                                 "designees": 0, "hors_question": 0})
+        d["hors_question"] += 1
+
+    if not reelles:
+        verdict = "E1 : aucune fiche réelle admissible ; rien à classer"
+    elif not lisible:
+        verdict = "E2 : classement non lisible (" + ", ".join(n for n, x in (("L1", L1), ("L2", L2), ("L3", L3),
+                                                                               ("L4", L4)) if not x["tient"]) + \
+                  ") ; aucune idée désignée ; lecture rapportée telle quelle"
+    elif not L5["rejet"]:
+        verdict = f"E3 : L5 non rejetée (p = {t5['p']:.5f}) ; aucune idée désignée ; résultat négatif rapporté"
+    elif len(designees) < 2:
+        verdict = f"E4 : {len(designees)} neuve(s) seulement ; désignation partielle ou nulle"
+    else:
+        verdict = f"lisible, L5 rejetée (p = {t5['p']:.5f}) : deux idées désignées"
+    res = {
+        "version": VERSION, "outil_version": O.VERSION,
+        "programmes_sha256": {"classer": O.sha256_fichier(__file__),
+                              "outil": O.sha256_fichier(ICI / "outil_lecteur_conception_propre_v1.py")},
+        "versions": {"python": sys.version.split()[0], "numpy": np.__version__},
+        "envois": {"manifeste_sha256": O.sha256_fichier(Path(dossier_envois) / "manifeste-envois-v1.json"),
+                   "reponses": {L: lectures[L]["reponses"] for L in O.LECTURES}},
+        "graines": {"ordres": O.ENTROPIE_ORDRES, "test": ENTROPIE_TEST, "permutations": permutations},
+        "precisions": PRECISIONS,
+        "verdict": verdict, "lisible": lisible, "designees": designees,
+        "temoin_score_permute": {**tp, "communes_avec_designees": len(set(tp["deux_premieres"]) & set(designees)),
+                                 "communes_avec_deux_premieres": len(set(tp["deux_premieres"]) &
+                                                                     set(cl["deux_premieres"]))},
+        "classement": {"ordre_neuves": cl["ordre_neuves"], "deux_premieres": cl["deux_premieres"],
+                       "statut": cl["statut"], "departage": departage,
+                       "hors_question": env["pile"]["hors_question"]},
+        "L1": L1, "L2": L2, "L3": L3, "L4": L4, "L5": L5, "descriptif_holm": desc,
+        "echecs": echecs, "audit_proprete": audit, "exactitude_lecteur": exactitude,
+        "non_prouves": {L: lectures[L]["non_prouves"] for L in O.LECTURES},
+        "anomalies": {L: lectures[L]["anomalies"] for L in O.LECTURES},
+        "retenu": retenu, "comptes_par_proposeur": par_auteur,
+        "juge_de_l_organisme": "non ouvert (§ 4.8 : après le scellement de ce classement, à titre d'information)",
+    }
+    return res, lectures
+
+
+def resume_md(r: dict) -> str:
+    l = [f"# Classement de la règle de sélection — course « conception propre » — v1\n",
+         f"Programme `{r['version']}` (`{r['programmes_sha256']['classer'][:12]}…`), outil "
+         f"`{r['programmes_sha256']['outil'][:12]}…` ; envois `{r['envois']['manifeste_sha256'][:12]}…`.\n",
+         f"**Verdict** : {r['verdict']}.\n",
+         f"- Désignées : {', '.join(r['designees']) or 'aucune'} ; deux premières neuves : "
+         f"{', '.join(r['classement']['deux_premieres']) or 'aucune'}.",
+         f"- Témoin à score permuté : {', '.join(r['temoin_score_permute']['deux_premieres']) or 'aucune'} "
+         f"(communes avec les désignées : {r['temoin_score_permute']['communes_avec_designees']}).",
+         f"- L1 {'tient' if r['L1']['tient'] else 'manque'} ({r['L1']['reconnues']}/{r['L1']['sur']}) ; "
+         f"L2 {'tient' if r['L2']['tient'] else 'manque'} ; L3 {'tient' if r['L3']['tient'] else 'manque'} ; "
+         f"L4 {'tient' if r['L4']['tient'] else 'manque'} (R7 : {r['L4']['R7']['jugee_sur']}, κ = "
+         f"{r['L4']['R7']['kappa']}, accord {r['L4']['R7']['accord_brut']:.3f} ; N : {r['L4']['N']['jugee_sur']}, κ = "
+         f"{r['L4']['N']['kappa']}, accord {r['L4']['N']['accord_brut']:.3f}).",
+         f"- L5 : p = {r['L5']['test']['p']}, moyennes C réelles {r['L5']['moyenne_reelles']} contre hasard "
+         f"{r['L5']['moyenne_hasard']} ; rejet : {r['L5']['rejet']}.",
+         f"- Échecs : {', '.join(k for k, x in r['echecs'].items() if x) or 'aucun'} ; audit de propreté déclenché : "
+         f"{r['audit_proprete']['declenche']}.",
+         "\n| Comparaison descriptive | différence | p brute | p Holm |\n|---|---|---|---|"]
+    for d in r["descriptif_holm"]:
+        l.append(f"| {d['critere']} | {d['difference']} | {d['p_brute']} | {d.get('p_holm')} |")
+    l.append("\nNotes du juge de l'organisme : non ouvertes (§ 4.8).\n")
+    return "\n".join(l) + "\n"
+
+
+def main(argv=None) -> int:
+    a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    a.add_argument("--envois", required=True)
+    a.add_argument("--sortie", required=True)
+    a.add_argument("--racine", default=str(O.RACINE_DEFAUT))
+    args = a.parse_args(argv)
+    sortie = Path(args.sortie)
+    try:
+        if sortie.exists() and any(sortie.iterdir()):
+            raise O.Refus(f"{sortie} existe et n'est pas vide : on n'écrase jamais (R12)")
+        r, lectures = classement(args.envois, args.racine)
+        sortie.mkdir(parents=True, exist_ok=True)
+        for L in O.LECTURES:
+            O.ecrire_scelle(sortie / f"lecture-verifiee-{L}-v1.json", O.json_texte(lectures[L]))
+        h = O.ecrire_scelle(sortie / "classement-v1.json", O.json_texte(r))
+        O.ecrire_scelle(sortie / "classement-v1.md", resume_md(r))
+        print(json.dumps({"verdict": r["verdict"], "designees": r["designees"], "classement_sha256": h},
+                         ensure_ascii=False))
+    except O.Refus as e:
+        print(f"REFUS : {e}", file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
