@@ -15,7 +15,8 @@ Une instance, une marche, dans l'ordre du texte, chaque étape écrite avant la 
    imposé éprouvé** (`eprouver_chemin`) ; séries J_d, J_instruit, A_d, A_T ; `diag/<run-bbis>/relecture-bbis.json` (passes,
    gardes, contrôles d'égalité ; **aucun score**) ;
 3. **apprentissage et notation** (`validation_imbriquee_v1.apprendre_source`, cinq sources plafond × deux plis ; garde de débit ;
-   contrôle carte-processeur sur le couple tiré d'avance, joué dès qu'il est appris) ; garde de débit déclenchée : arrêt de
+   contrôle carte-processeur sur le couple tiré d'avance, joué dès que l'apprentissage de ce couple est **complet** : sonde finale,
+   directions du plancher, sondes du nul et ENC ; interprétation 19) ; garde de débit déclenchée : arrêt de
    l'apprentissage, `diag/<run-bbis>/arret-debit-bbis.json` (journal des durées ; aucun score), retour « arrêt de débit » ;
 4. **fichiers fermés** (`ecrire_fermes`) : `donnees/<run-bbis>/scores-bbis-NNN.npz` (morceaux de moins de 90 Mo, clés
    `<source>__e<k>__<tableau>`), `sondes-bbis.npz` (poids des sondes finales et d'ENC ; deux premières directions en double

@@ -277,6 +277,77 @@ def test_essai_local_sans_ecriture_et_garde_d_offre_de_la_commande(tmp_path):
     assert _lancer(*arguments(_offre(tmp_path / "offre.json"), x["c1"])[:-1]).returncode == 2   # douze arguments : refus
 
 
+# ------------------------------------------------------------------------------------------------------------ m-A
+
+BR_SORTIE = "donnees/t07-etape-b-bis-v1"
+
+
+def _instance_avant_marche(base: Path, distant_joignable: bool = True) -> dict:
+    """État de l'instance juste avant la marche : dépôt extrait par les vrais `MOTIFS`, commit local des entrées (extrait de
+    l'amorce), dépôt distant nu (`origin`) qui porte COMMIT, traces de l'instance dans `X`."""
+    d, commit, copies = _depot_entrees(base / "depot")
+    distant = base / "distant.git"
+    ad.git(base, "init", "-q", "--bare", str(distant))
+    ad.git(d, "remote", "add", "origin", str(distant) if distant_joignable else str(base / "absent.git"))
+    if distant_joignable:
+        ad.git(d, "push", "-q", "origin", "main")
+    corps = ("D=\"$1\"; COMMIT=\"$2\"; shift 2; COPIES=(\"$@\")\n" + ad.extrait("commit-local-des-entrees")
+             + "commit_local_entrees\n")
+    r = ad.jouer(corps, d, commit, *copies)
+    assert r.returncode == 0, r.stdout + r.stderr
+    x = base / "traces-instance"
+    x.mkdir()
+    (x / "journal-bbis.txt").write_text("2026-11-18T08:00:00Z BBIS ARRET : arbre non propre avant la marche (M1)\n", encoding="utf-8")
+    (x / "essais.txt").write_text("83 passed, 22 skipped in 60.0s\n", encoding="utf-8")
+    return {"d": d, "commit": commit, "copies": copies, "distant": distant, "x": x, "t": base,
+            "entrees": ad.git(d, "rev-parse", "HEAD")}
+
+
+def _arreter(e: dict, branche_prete: int, sortie_libre: int) -> subprocess.CompletedProcess:
+    corps = ('D="$1"; X="$2"; T="$3"; COMMIT="$4"; BRANCHE_PRETE="$5"; SORTIE_LIBRE="$6"\n'
+             f'XT=traces/bbis-t07-v1; BR_SORTIE={BR_SORTIE}; SEUIL=94000000\n'
+             'fin_instance() { echo "FIN $1"; exit "$1"; }\nsleep() { :; }\n'
+             'pousser() { echo "POUSSER (branche prête) $*"; }\n'
+             + ad.extrait("arret-et-traces") + 'arret "arbre non propre avant la marche (M1)" 2\n')
+    return ad.jouer(corps, e["d"], e["x"], e["t"], e["commit"], branche_prete, sortie_libre, cwd=e["d"])
+
+
+def test_arret_avant_la_marche_pousse_ses_traces_sans_le_commit_local(tmp_path):
+    """Mineur m-A : un arrêt entre le contrôle de la branche de sortie et la marche pousse les traces sur la branche neuve, par un
+    commit fait sur COMMIT ; la tête, l'arbre et le commit local des entrées de 7b ne sont ni touchés ni poussés."""
+    e = _instance_avant_marche(tmp_path / "sain")
+    ad.ecrire(e["d"], f"diag/{ad.RUN_7B}/pollution-non-suivie.json")          # la cause de l'arrêt : arbre non propre
+    ad.ecrire(e["d"], e["copies"][0], "entrée modifiée après le commit local\n")
+    r = _arreter(e, 0, 1)
+    assert r.returncode == 2 and "FIN 2" in r.stdout and "traces poussées" in r.stdout, r.stdout + r.stderr
+    tete = ad.git(e["distant"], "rev-parse", f"refs/heads/{BR_SORTIE}")
+    assert ad.git(e["distant"], "rev-parse", f"{tete}^") == e["commit"]          # commit des traces posé sur COMMIT
+    arbre = set(ad.git(e["distant"], "ls-tree", "-r", "--name-only", tete).splitlines())
+    assert {"traces/bbis-t07-v1/journal-bbis.txt", "traces/bbis-t07-v1/essais.txt"} <= arbre
+    assert not any(p.startswith(("runs/", "diag/", "donnees/")) for p in arbre)    # ni entrées de 7b, ni pollution
+    assert subprocess.run(["git", "-C", str(e["distant"]), "cat-file", "-e", e["entrees"]]).returncode != 0   # jamais poussé
+    assert ad.git(e["d"], "rev-parse", "HEAD") == e["entrees"]                  # tête intacte
+    assert (e["d"] / e["copies"][0]).read_text(encoding="utf-8") == "entrée modifiée après le commit local\n"
+    assert ad.git(e["distant"], "show", f"{tete}:traces/bbis-t07-v1/journal-bbis.txt").startswith("2026-11-18T08:00:00Z")
+    # artefacts : arrêt avant le contrôle de l'étape 7 (SORTIE_LIBRE=0) → rien n'est poussé ; dépôt distant injoignable → motif
+    # écrit, code de l'arrêt gardé ; branche prête → le chemin ordinaire (pousser) est pris, jamais le commit sur COMMIT
+    e = _instance_avant_marche(tmp_path / "avant-etape-7")
+    r = _arreter(e, 0, 0)
+    assert r.returncode == 2 and "traces poussées" not in r.stdout
+    assert subprocess.run(["git", "-C", str(e["distant"]), "rev-parse", "--verify", "-q", f"refs/heads/{BR_SORTIE}"],
+                          capture_output=True).returncode != 0
+    e = _instance_avant_marche(tmp_path / "injoignable", distant_joignable=False)
+    r = _arreter(e, 0, 1)
+    assert r.returncode == 2 and "traces non poussées" in r.stdout and "FIN 2" in r.stdout
+    e = _instance_avant_marche(tmp_path / "prete")
+    r = _arreter(e, 1, 0)
+    assert r.returncode == 2 and "POUSSER (branche prête)" in r.stdout and "traces poussées" not in r.stdout
+    texte = ad.AMORCE.read_text(encoding="utf-8")
+    assert texte.count("SORTIE_LIBRE=1") == 1 and "BRANCHE_PRETE=1; SORTIE_LIBRE=0" in texte
+    assert texte.index("SORTIE_LIBRE=1") > texte.index('git ls-remote --exit-code origin "refs/heads/$BR_SORTIE"')
+    assert texte.index("SORTIE_LIBRE=1") < texte.index('j "marche : début (run $RUN_BBIS)"')
+
+
 # ------------------------------------------------------------------------------------------------------------ m2
 
 def test_sans_aire_identifiants_de_taches_commencant_par_aire():

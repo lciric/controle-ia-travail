@@ -9,7 +9,8 @@
 #   textes, mesures, deux adaptateurs, sous-ensemble d'activations) : jamais lecture-sondes-t06.json, resume.json, ni rien de 7a ;
 #   puis **commit local des entrées copiées** (jamais poussé ; arbre propre exigé, correction M1) ;
 #   4. paquets ; 5. essais du paquet (tests/test_t07bbis_*.py ; ligne de compte entière au journal, au moins MIN_ESSAIS passés,
-#   correction M3) ; 6. modèle au cache local (révision du manifeste de 7b) ; 7. contrôle que la branche de sortie est neuve ;
+#   correction M3) ; 6. modèle au cache local (révision du manifeste de 7b) ; 7. contrôle que la branche de sortie est neuve
+#   (dès lors, tout arrêt pousse ses traces : avant que la branche soit prête, par un commit sur COMMIT, mineur m-A) ;
 #   8. marche (`controle_ia.t07bbis.marche_v1`, BBIS_INSTANCE=1, hors ligne ; le manifeste cite le commit local et son parent),
 #   puis branche neuve donnees/t07-etape-b-bis-v1 créée **depuis COMMIT** (le commit local des entrées n'y entre jamais) et
 #   poussée (légers d'abord, fichiers de moins de 95 Mo seulement) ; 9. fin : état « stopped » demandé ; la session détruit par
@@ -33,20 +34,39 @@ BR_SORTIE=donnees/t07-etape-b-bis-v1
 DEPOT_URL_OFFICIEL=https://github.com/lciric/controle-ia-travail.git
 SEUIL=94000000
 # essais du paquet qui passent sur l'instance (extraction partielle : bout_en_bout sauf un essai, etat_impose et
-# lien_mots_et_cout sautent) ; compte établi par simulation de l'extraction, rapport-developpeur-corrections-v1.md (M3)
-MIN_ESSAIS=83
+# lien_mots_et_cout sautent) ; compte établi par simulation de l'extraction, rapport-developpeur-corrections-v1.md (M3) et
+# recompté après m-A, rapport-developpeur-corrections-v2.md
+MIN_ESSAIS=84
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
 j() { printf '%s BBIS %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
 BRANCHE_PRETE=0
+SORTIE_LIBRE=0   # 1 après le contrôle de l'étape 7 (branche de sortie absente du dépôt distant), tant qu'elle n'est pas prête
 fin_instance() {  # état « stopped » demandé ; la minuterie meurt avec le conteneur ; la session détruit par l'identifiant (R10)
     local c
     c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
         -H 'Content-Type: application/json' -d '{"state": "stopped"}' "$API/instances/${CONTAINER_ID:-}/" 2>/dev/null) || c=000
     j "fin, code $1 ; état « stopped » demandé : HTTP $c ; la session détruit par l'identifiant (R10)"
     sleep infinity; exit "$1"; }
+# >>> arret-et-traces (extrait et joué par tests/test_t07bbis_chaine_instance_v1.py, mineur m-A)
 traces() { mkdir -p "$D/$XT" && cp -f "$X"/* "$D/$XT/"; }
-arret() { j "ARRET : $1"; if [ "$BRANCHE_PRETE" = 1 ]; then traces && pousser "B bis : traces de l'arrêt" "$XT" || true; fi
+arret() { j "ARRET : $1"
+    if [ "$BRANCHE_PRETE" = 1 ]; then traces && pousser "B bis : traces de l'arrêt" "$XT" || true
+    elif [ "$SORTIE_LIBRE" = 1 ]; then traces_sur_commit || j "traces non poussées (commit des traces sur COMMIT impossible)"; fi
     fin_instance "${2:-4}"; }
+traces_sur_commit() {  # arrêt entre le contrôle de la branche de sortie (étape 7) et le moment où elle est prête (après la
+    # marche) : traces poussées sur la branche neuve par un commit fait sur COMMIT dans un index à part ; la tête, l'arbre et le
+    # commit local des entrées de 7b ne sont ni touchés ni poussés (mineur m-A de la vérification courte)
+    local ix="$T/index-traces-sur-commit" arbre c f n
+    SORTIE_LIBRE=0
+    [ ! -e "$ix" ] && traces || return 1
+    for f in "$D/$XT"/*; do [ "$(stat -c %s "$f")" -le "$SEUIL" ] || return 1; done
+    GIT_INDEX_FILE="$ix" git -C "$D" read-tree "$COMMIT" && GIT_INDEX_FILE="$ix" git -C "$D" add --sparse -f -- "$XT" || return 1
+    arbre=$(GIT_INDEX_FILE="$ix" git -C "$D" write-tree) || return 1
+    c=$(git -C "$D" commit-tree "$arbre" -p "$COMMIT" -m "B bis : traces de l'arrêt (branche de sortie non prête)") || return 1
+    for n in 1 2 3; do git -C "$D" push -q origin "$c:refs/heads/$BR_SORTIE" \
+        && { j "traces poussées : $c (parent $COMMIT ; commit local des entrées jamais poussé)"; return 0; }; sleep $((20 * n)); done
+    return 1; }
+# <<< arret-et-traces
 # 0. arguments, échéance, minuterie
 for v in COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S GO_ID; do
     [ -n "${!v:-}" ] || { echo "BBIS REFUS : variable $v absente"; exit 2; }; done
@@ -185,6 +205,7 @@ j "modèle au cache local"
 # 7. branche de sortie neuve (contrôle seulement : elle est créée depuis COMMIT après la marche) et poussées (chemins présents
 #    seulement, ajout explicite)
 git ls-remote --exit-code origin "refs/heads/$BR_SORTIE" > /dev/null 2>&1; [ $? = 2 ] || arret "branche $BR_SORTIE présente sur le dépôt distant (R12) ou dépôt injoignable" 2
+SORTIE_LIBRE=1   # m-A : dès ici, tout arrêt pousse ses traces (traces_sur_commit, puis pousser une fois la branche prête)
 envoyer() { local n; for n in 1 2 3; do git push -q origin "HEAD:refs/heads/$BR_SORTIE" && { j "poussé : $(git rev-parse HEAD) « $1 »"; return 0; }; sleep $((20 * n)); done
     BRANCHE_PRETE=0; arret "poussée « $1 » impossible" 4; }
 pousser() {  # $1 = message ; puis chemins ; un fichier de plus de SEUIL octets arrête (la marche écrit des morceaux de moins de 90 Mo)
@@ -205,8 +226,8 @@ env BBIS_INSTANCE=1 HF_HUB_OFFLINE=1 CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=
 j "marche : code $c"
 # branche de sortie créée depuis COMMIT : le commit local des entrées (7b) n'est jamais poussé ; les sorties de la marche (non
 # suivies ou ignorées) restent sur le disque
-git checkout -q -b "$BR_SORTIE" "$COMMIT" || arret "branche locale de sortie depuis COMMIT" 4
-BRANCHE_PRETE=1
+git checkout -q -b "$BR_SORTIE" "$COMMIT" || arret "branche locale de sortie depuis COMMIT (traces seules poussées)" 4
+BRANCHE_PRETE=1; SORTIE_LIBRE=0
 CH=("runs/$RUN_BBIS" "diag/$RUN_BBIS" "$XT")
 case "$c" in
     0) traces; pousser "B bis : relecture et sondes (aucune aire), run $RUN_BBIS" "runs/$RUN_BBIS" "diag/$RUN_BBIS" "$XT"
