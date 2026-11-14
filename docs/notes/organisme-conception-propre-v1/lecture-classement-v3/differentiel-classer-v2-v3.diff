@@ -1,0 +1,112 @@
+--- lecture-classement-v2/classer_conception_propre_v2.py	2026-11-14 00:15:03.297137968 +0000
++++ lecture-classement-v3/classer_conception_propre_v3.py	2026-11-14 07:47:42.904507621 +0000
+@@ -1,7 +1,20 @@
+ #!/usr/bin/env python3
+-"""Programme de classement de la règle de sélection — course « conception propre » — v2.
++"""Programme de classement de la règle de sélection — course « conception propre » — v3.
+ 
+-v2 (14 novembre 2026, à partir de 00:16 UTC, `date -u`) = v1 (`../lecture-classement-v1/`, `f91962f3…`, gardée, R12)
++v3 (14 novembre 2026, à partir de 07:55 UTC, `date -u`) = v2 (`../lecture-classement-v2/`, `2cb65f33…`, gardée, R12),
++pour l'outil du lecteur v3 (lecteur Astra, lots de 5, R-2662). La règle (§ 4.5 à 4.8, 6, 7) ne change pas. Changements, et
++seulement eux (différentiel entier : `differentiel-classer-v2-v3.diff`) :
++- il charge `outil_lecteur_conception_propre_v3.py` et lit les noms en `-v3` (`manifeste-envois-v3.json`,
++  `reponse-<L>-lot<k>-v3.json`), écrit `lecture-verifiee-<L>-v3.json`, `classement-v3.json`, `classement-v3.md` ;
++- la vérification préalable « réponse attendue absente → refus » est retirée d'ici : l'outil v3 la fait lui-même, et
++  n'accepte une réponse absente que si son journal de dépense consigne un arrêt (anomalie ou plafond) ; elle devient alors
++  l'anomalie bloquante `reponse_absente` (verdict E2, aucune désignation) ; sans arrêt consigné, refus comme en v2 ;
++- les anomalies bloquantes de l'outil v3 (dont C1, `cle_de_critere_manquante`, `modele_servi_different`,
++  `refus_du_lecteur`) passent au verdict par le même chemin que celles de la v2 ; précisions complétées en conséquence.
++Les entrées de la v2 (dossier préparé par l'outil v2, réponses au format Kimi) ne sont plus lues par ce programme : elles
++restent celles de `classer_conception_propre_v2.py`.
++
++De la v2 : v2 (14 novembre 2026, à partir de 00:16 UTC, `date -u`) = v1 (`../lecture-classement-v1/`, `f91962f3…`, gardée, R12)
+ corrigée d'après la contre-lecture `contre-lecture-lecture-classement-v1.md` (`baabfb13…`, R-2627) :
+ - **M1** : preuve par passages d'au moins 20 caractères hors espaces, catalogue lu dans la seule cellule du mécanisme
+   (outil v2) ; passages courts refusés comptés par critère et par lecture, au JSON et au résumé ;
+@@ -21,11 +34,11 @@
+ serait un écart déclaré (les précisions prises là où le texte se tait sont listées dans `PRECISIONS` et rendues dans la
+ sortie). **N'appelle aucun modèle.** Ne lit jamais les notes du juge de l'organisme (§ 4.8).
+ 
+-    python3 -I -B classer_conception_propre_v2.py --envois DOSSIER_ENVOIS --sortie DOSSIER_SORTIE
++    python3 -I -B classer_conception_propre_v3.py --envois DOSSIER_ENVOIS --sortie DOSSIER_SORTIE
+ 
+-Entrées : le dossier préparé par `outil_lecteur_conception_propre_v2.py preparer`, où la mère a déposé les réponses
+-scellées `reponse-<L>-lot<k>-v2.json`. Sortie (dossier neuf ou vide, rien n'est écrasé) : `lecture-verifiee-L1-v2.json`,
+-`lecture-verifiee-L2-v2.json`, `classement-v2.json`, `classement-v2.md`, chacun scellé.
++Entrées (v3) : le dossier préparé par `outil_lecteur_conception_propre_v3.py preparer`, où `envoyer` a scellé les réponses
++`reponse-<L>-lot<k>-v3.json` et tenu le journal de dépense. Sortie (dossier neuf ou vide, rien n'est écrasé) :
++`lecture-verifiee-L1-v3.json`, `lecture-verifiee-L2-v3.json`, `classement-v3.json`, `classement-v3.md`, chacun scellé.
+ 
+ Chaîne : vérification mot pour mot des deux lectures (§ 4.5) → valeurs retenues (R = 1 si les deux lectures donnent 1
+ prouvé ; N = aucune si les deux donnent aucune) → portes R2, R3, R7 → nouveauté → ordre des neuves (S = R1 + R4 + R5 + R6
+@@ -44,12 +57,12 @@
+ 
+ import numpy as np
+ 
+-VERSION = "classer-conception-propre-v2"
++VERSION = "classer-conception-propre-v3"
+ ICI = Path(__file__).resolve().parent
+ 
+ 
+ def _charger_outil():
+-    spec = importlib.util.spec_from_file_location("outil_lecteur_cp_v2", ICI / "outil_lecteur_conception_propre_v2.py")
++    spec = importlib.util.spec_from_file_location("outil_lecteur_cp_v3", ICI / "outil_lecteur_conception_propre_v3.py")
+     m = importlib.util.module_from_spec(spec)
+     spec.loader.exec_module(m)
+     return m
+@@ -81,6 +94,10 @@
+     "Valeur rendue autre que l'entier 0 ou 1 (chaîne, booléen) : comptée 0. M2 : entrée manquante, en double, lot illisible "
+     "ou fin autre que stop : la fiche est comptée 0 et aucune, mais la lecture est « incomplète » : verdict illisible, "
+     "aucune désignation, anomalies citées au verdict et au résumé ; aucune relecture (la règle n'en prévoit pas).",
++    "v3 (C1 de la relecture courte) : une entrée à laquelle manque une clé de critère (R1 à R7, N) ou sa valeur est une "
++    "anomalie bloquante (cle_de_critere_manquante), R4 compris hors levier:juge (la consigne demande les huit points) ; "
++    "modèle servi autre que gpt-6-astra, refus du lecteur, réponse absente après un arrêt consigné au journal de dépense : "
++    "anomalies bloquantes, contenu non lu ; réponse absente sans arrêt consigné : refus.",
+     "Valeurs « lues » de L1, L2, L4 et de l'exactitude du lecteur : valeurs comptées après la preuve (§ 4.5) de chaque "
+     "lecture ; L3, le classement, C et L5 : valeurs retenues des deux lectures.",
+     "L4 : « κ non défini (une marge constante) » lu comme : dès qu'une des deux lectures est constante sur la pile, "
+@@ -244,9 +261,6 @@
+     prov = O.verifier_fiches_de_run(racine, man["fiches_validees"]["chemin"])  # M3, revérifié ici
+     if prov["sha256"] != man["fiches_validees"]["sha256"] or prov["run"] != man["fiches_validees"]["run"]:
+         raise O.Refus("fiches validées : empreinte ou run différents de ceux du manifeste des envois")
+-    for nom in man["reponses_attendues"]:
+-        if not (Path(dossier_envois) / nom).is_file():
+-            raise O.Refus(f"réponse attendue absente : {nom}")
+     lectures = {L: O.verifier_lecture(dossier_envois, L, cat_texte) for L in O.LECTURES}
+     pile = env["pile"]["fiches"]
+     par_id = {p["id"]: p for p in pile}
+@@ -385,10 +399,10 @@
+     res = {
+         "version": VERSION, "outil_version": O.VERSION,
+         "programmes_sha256": {"classer": O.sha256_fichier(__file__),
+-                              "outil": O.sha256_fichier(ICI / "outil_lecteur_conception_propre_v2.py")},
++                              "outil": O.sha256_fichier(ICI / "outil_lecteur_conception_propre_v3.py")},
+         "versions": {"python": sys.version.split()[0], "numpy": np.__version__},
+         "fiches_validees": prov,
+-        "envois": {"manifeste_sha256": O.sha256_fichier(Path(dossier_envois) / "manifeste-envois-v2.json"),
++        "envois": {"manifeste_sha256": O.sha256_fichier(Path(dossier_envois) / O.MANIFESTE),
+                    "reponses": {L: lectures[L]["reponses"] for L in O.LECTURES}},
+         "graines": {"ordres": O.ENTROPIE_ORDRES, "test": ENTROPIE_TEST, "permutations": permutations},
+         "precisions": PRECISIONS,
+@@ -413,7 +427,7 @@
+ 
+ 
+ def resume_md(r: dict) -> str:
+-    l = [f"# Classement de la règle de sélection — course « conception propre » — v2\n",
++    l = [f"# Classement de la règle de sélection — course « conception propre » — v3\n",
+          f"Programme `{r['version']}` (`{r['programmes_sha256']['classer'][:12]}…`), outil "
+          f"`{r['programmes_sha256']['outil'][:12]}…` ; envois `{r['envois']['manifeste_sha256'][:12]}…`.\n",
+          f"**Verdict** : {r['verdict']}.\n",
+@@ -464,9 +478,9 @@
+         r, lectures = classement(args.envois, args.racine, designation=args.designation, decision=args.decision)
+         sortie.mkdir(parents=True, exist_ok=True)
+         for L in O.LECTURES:
+-            O.ecrire_scelle(sortie / f"lecture-verifiee-{L}-v2.json", O.json_texte(lectures[L]))
+-        h = O.ecrire_scelle(sortie / "classement-v2.json", O.json_texte(r))
+-        O.ecrire_scelle(sortie / "classement-v2.md", resume_md(r))
++            O.ecrire_scelle(sortie / f"lecture-verifiee-{L}-v3.json", O.json_texte(lectures[L]))
++        h = O.ecrire_scelle(sortie / "classement-v3.json", O.json_texte(r))
++        O.ecrire_scelle(sortie / "classement-v3.md", resume_md(r))
+         print(json.dumps({"verdict": r["verdict"], "designees": r["designees"], "classement_sha256": h},
+                          ensure_ascii=False))
+     except O.Refus as e:
