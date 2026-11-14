@@ -1,0 +1,298 @@
+{
+ "lanceur": "/home/user/controle-ia-travail/scripts/lancer_course_ideation_bassins_etroits_v2.py",
+ "essais": "/home/user/controle-ia-travail/tests/test_lancer_course_ideation_bassins_etroits_v2.py",
+ "mutants": [
+  {
+   "mutant": "base",
+   "garde": "aucune (contrôle de l'outil)",
+   "avant": null,
+   "apres": null,
+   "code_pytest": 0,
+   "bilan": "122 passed in 47.14s",
+   "essais_en_echec": [],
+   "issue": "contrôle : tous passés"
+  },
+  {
+   "mutant": "M1-cumul-sans-plafond-suivant",
+   "garde": "garde de cumul : plafond suivant non compté",
+   "avant": "    if deja + plafond_suivant > borne + 1e-9:",
+   "apres": "    if deja > borne + 1e-9:",
+   "code_pytest": 1,
+   "bilan": "2 failed, 120 passed in 45.79s",
+   "essais_en_echec": [
+    "test_cumul_depasse",
+    "test_m7_borne_du_cumul_jamais_au_dela_de_60"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M2-depense-illisible-comptee-zero",
+   "garde": "manifeste de fin illisible compté 0",
+   "avant": "            return PLAFOND_COURSE_USD, \"manifeste de fin illisible : plafond entier compté\"",
+   "apres": "            return 0.0, \"manifeste de fin illisible : plafond entier compté\"",
+   "code_pytest": 1,
+   "bilan": "6 failed, 116 passed in 45.39s",
+   "essais_en_echec": [
+    "test_cout_mal_type_compte_le_plafond[-1]",
+    "test_cout_mal_type_compte_le_plafond[None]",
+    "test_cout_mal_type_compte_le_plafond[True]",
+    "test_cout_mal_type_compte_le_plafond[inf]",
+    "test_cout_mal_type_compte_le_plafond[nan]",
+    "test_cout_mal_type_compte_le_plafond[x]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M3-relance-apres-depense",
+   "garde": "relance d'une course après dépense",
+   "avant": "        if total > SEUIL_SANS_DEPENSE_USD or x[\"fin\"] is None or x[\"fin\"].get(\"code\") is None:",
+   "apres": "        if x[\"fin\"] is None or x[\"fin\"].get(\"code\") is None:",
+   "code_pytest": 1,
+   "bilan": "2 failed, 120 passed in 46.89s",
+   "essais_en_echec": [
+    "test_m1_controle_d_argon_interrompu_compte_le_plafond",
+    "test_pas_de_relance_apres_depense"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M4-generation-suivante-sans-bras",
+   "garde": "génération g+1 sans bras de g",
+   "avant": "    prec = [x for x in runs if x[\"generation\"] == g - 1 and bras_reussi(x)]",
+   "apres": "    prec = [x for x in runs if x[\"generation\"] == g - 1 and course_reussie(x)]",
+   "code_pytest": 1,
+   "bilan": "2 failed, 120 passed in 45.53s",
+   "essais_en_echec": [
+    "test_m10_generation_jouee_exige_le_manifeste_du_bras",
+    "test_m3_bras_joue_illisible_verrouille[illisible]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M5-argument-non-ferme",
+   "garde": "arguments en plus admis",
+   "avant": "    if len(argv) != 1 or argv[0] not in GENERATIONS:",
+   "apres": "    if len(argv) < 1 or argv[0] not in GENERATIONS:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 47.26s",
+   "essais_en_echec": [
+    "test_argument_artefacts[argv3]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M6-tentatives-de-course-non-bornees",
+   "garde": "trois tentatives de course",
+   "avant": "    if len(parties) >= MAX_TENTATIVES:",
+   "apres": "    if len(parties) >= 30:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 47.55s",
+   "essais_en_echec": [
+    "test_m6_trois_tentatives_au_plus"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M7-borne-du-cumul-egale-au-go",
+   "garde": "borne 60 cède au plafond du GO",
+   "avant": "    borne = min(TOTAL_LIGNE_USD, plafond_go)",
+   "apres": "    borne = plafond_go",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 46.88s",
+   "essais_en_echec": [
+    "test_m7_borne_du_cumul_jamais_au_dela_de_60"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M8-attestation-sans-consigne-du-juge",
+   "garde": "consigne en attente non exigée",
+   "avant": "    if JUGE_EXTERNE[0] not in attendues or a[\"consignes_en_attente_sha256\"].get(JUGE_EXTERNE[0]) != attendues[JUGE_EXTERNE[0]]:",
+   "apres": "    if False:",
+   "code_pytest": 1,
+   "bilan": "2 failed, 120 passed in 48.41s",
+   "essais_en_echec": [
+    "test_attestation_artefacts[modif1-consigne en attente]",
+    "test_attestation_artefacts[modif2-consigne en attente]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M9-bras-non-bornes",
+   "garde": "trois bras",
+   "avant": "    if len(run[\"bras\"]) >= MAX_TENTATIVES:",
+   "apres": "    if len(run[\"bras\"]) >= 30:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 50.03s",
+   "essais_en_echec": [
+    "test_m3_bras_non_joue_relancable_trois_fois_au_plus"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M10-bras-reussi-sans-manifeste-du-bras",
+   "garde": "manifeste du bras non exigé",
+   "avant": "                and _lire_json_si_scelle(run[\"sortie\"] / \"manifeste-bras-rapporte.json\") is not None)",
+   "apres": "                )",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 52.10s",
+   "essais_en_echec": [
+    "test_m10_generation_jouee_exige_le_manifeste_du_bras"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M11-classement-illisible-transmis",
+   "garde": "classement illisible transmis",
+   "avant": "    if not isinstance(classement, dict) or classement.get(\"lisible_L2_L4\") is not True:",
+   "apres": "    if not isinstance(classement, dict):",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 45.81s",
+   "essais_en_echec": [
+    "test_regle_de_passage_artefacts[classement.json-contenu3-illisible]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "M12-plancher-du-controle-court-non-garde",
+   "garde": "plancher du contrôle court",
+   "avant": " or r.controle_bras_usd < g[\"plancher_controle_court\"]:",
+   "apres": ":",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 45.83s",
+   "essais_en_echec": [
+    "test_m12_plancher_du_controle_court"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N1-controle-externe-interrompu-zero",
+   "garde": "M1 : dossier de contrôle externe sans tentative",
+   "avant": "        if m and (controle / nom).is_dir() and m.group(1) not in scellees:",
+   "apres": "        if m and not m.group(2) and (controle / nom).is_dir() and m.group(1) not in scellees:",
+   "code_pytest": 1,
+   "bilan": "2 failed, 120 passed in 45.21s",
+   "essais_en_echec": [
+    "test_depense_course_cas",
+    "test_m1_controle_d_argon_interrompu_compte_le_plafond"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N2-mort-sans-fin-compte-zero",
+   "garde": "M7 : processus mort sans fin propre compté 0",
+   "avant": "        return PLAFOND_COURSE_USD, \"processus mort sans fin propre, ou en marche : plafond entier compté\"",
+   "apres": "        return 0.0, \"processus mort sans fin propre, ou en marche : plafond entier compté\"",
+   "code_pytest": 1,
+   "bilan": "2 failed, 120 passed in 46.04s",
+   "essais_en_echec": [
+    "test_depense_course_cas",
+    "test_m7_mort_sans_fin_propre"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N3-bras-relance-apres-paiement",
+   "garde": "M3 : bras relancé après paiement",
+   "avant": "    if t[\"rapporte\"] or t[\"payees\"] or t[\"refus_taille\"]:",
+   "apres": "    if t[\"rapporte\"]:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 46.12s",
+   "essais_en_echec": [
+    "test_m3_bras_paye_pas_de_relance"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N4-doublons-ignores",
+   "garde": "M4 : doublons des juges ignorés",
+   "avant": "        if any((ident, p) in paires for p in prises):",
+   "apres": "        if False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 47.72s",
+   "essais_en_echec": [
+    "test_regle_de_passage"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N5-en-marche-ignore",
+   "garde": "M7 : processus en marche ignoré",
+   "avant": "    if en_marche:",
+   "apres": "    if False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 45.83s",
+   "essais_en_echec": [
+    "test_m7_en_marche_rien_ne_part"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N6-confirmation-non-exigee",
+   "garde": "M5 : confirmation non exigée",
+   "avant": "    if not lire_scelle(conf).decode(\"utf-8\", errors=\"replace\").strip():",
+   "apres": "    if False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 48.04s",
+   "essais_en_echec": [
+    "test_m5_generation_2_sans_confirmation"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N7-relecture-recoupement-non-exigee",
+   "garde": "M8 : relecture du recoupement non exigée",
+   "avant": "    a = lire_json_scelle(r.depot / RELECTURE_RECOUPEMENT)",
+   "apres": "    a = {\"lecteur\": \"x\", \"lu_le\": \"x\", \"recoupement_sha256\": h, \"niveau_methode_aucune_recette_aucun_secret\": True, \"temoin_vrai_absent\": True}",
+   "code_pytest": 1,
+   "bilan": "6 failed, 116 passed in 49.60s",
+   "essais_en_echec": [
+    "test_m8_recoupement_artefacts[autre_empreinte-empreinte]",
+    "test_m8_recoupement_artefacts[recette-aucune recette]",
+    "test_m8_recoupement_artefacts[sans_lecteur-mal form\\xe9e]",
+    "test_m8_recoupement_artefacts[sans_relecture-absent]",
+    "test_m8_recoupement_artefacts[temoin-t\\xe9moin vrai]",
+    "test_trois_generations_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N8-temoin-vrai-non-garde",
+   "garde": "M9 : témoin vrai présent admis",
+   "avant": "    if att[\"temoin_vrai_absent_des_fiches_validees\"] is not True:",
+   "apres": "    if False:",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 46.35s",
+   "essais_en_echec": [
+    "test_m9_temoin_vrai_present_dans_les_fiches"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N9-revocation-mal-formee-ignoree",
+   "garde": "m1 : ligne mal formée ignorée",
+   "avant": "            if len(cellules) != 8:\n                raise Refus",
+   "apres": "            if False:\n                raise Refus",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 45.99s",
+   "essais_en_echec": [
+    "test_m1_go_revoque_ou_ligne_mal_formee[| GO-2026-11-14-01 | 2026-11-14 | r\\xe9vocation | r\\xe9voque GO-2026-11-13-03 | \\u2014 | \\u2014 | Lazar | x | y |-mal form\\xe9e]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "N10-liste-blanche-sans-sceau",
+   "garde": "B1 : compagnon non vérifié",
+   "avant": "    lue = lire_json_scelle(chemin)\n    attendue",
+   "apres": "    lue = json.loads(chemin.read_text(encoding=\"utf-8\"))\n    attendue",
+   "code_pytest": 1,
+   "bilan": "1 failed, 121 passed in 47.22s",
+   "essais_en_echec": [
+    "test_b1_artefacts_liste_blanche[FAUX_LB_SANS_SCEAU-compagnon]"
+   ],
+   "issue": "tué"
+  }
+ ],
+ "tues": 22,
+ "survivants": []
+}

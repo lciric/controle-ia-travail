@@ -1,0 +1,45 @@
+{
+ "note": "Couples (texte d'origine, une seule occurrence exigée → texte neuf) proposés par le vérificateur ; NON appliqués. Éprouvés sur une copie en mémoire par eprouver_lanceur_v3_v1.py.",
+ "crochet": {
+  "fichier": ".claude/hooks/garde_calcul.py",
+  "sha256_avant": "73be063822531b27e74cf522794cd262495ba21ceea9b62a41ef4a17879a4850",
+  "couples": [
+   {
+    "nom": "H1 — retrait de l'épingle du v2 (plus aucune commande du v2 ne passe ; toute citation reste bloquée)",
+    "avant": "COMMANDES_LANCEUR_BE2 = (\"/usr/local/bin/python3 -I -B scripts/\" + FICHIER_LANCEUR_BE2 + \" 1\",)\n",
+    "apres": "COMMANDES_LANCEUR_BE2 = ()  # épingle du v2 retirée : aucune commande du v2 ne passe plus ; toute citation reste bloquée\n"
+   },
+   {
+    "nom": "H2 — constantes de l'épingle du v3",
+    "avant": "CITE_LANCEUR_BE2 = re.compile(r\"(?<![A-Za-z0-9_])\" + re.escape(NOM_LANCEUR_BE2) + r\"(?![A-Za-z0-9_])\")\n",
+    "apres": "CITE_LANCEUR_BE2 = re.compile(r\"(?<![A-Za-z0-9_])\" + re.escape(NOM_LANCEUR_BE2) + r\"(?![A-Za-z0-9_])\")\n\n# --- 5. garde d'empreinte du lanceur de l'atelier d'idées « bassins étroits » v3 ; GO-2026-11-13-03, mots de Lazar R-2530\n#        (« go règle de permission »), lanceur v3 (R-2549). Génération 1 seulement : les générations 2 et 3 attendent son mot.\nNOM_LANCEUR_BE3 = \"lancer_course_ideation_bassins_etroits_v3\"\nFICHIER_LANCEUR_BE3 = NOM_LANCEUR_BE3 + \".py\"\nEMPREINTE_LANCEUR_BE3 = \"3fabd71e63bf9f3e830ed5128cd6a92f04ca91c0b13dabcc0ac7d316e5f44b36\"\nCOMMANDES_LANCEUR_BE3 = (\"/usr/local/bin/python3 -I -B scripts/\" + FICHIER_LANCEUR_BE3 + \" 1\",)\nCITE_LANCEUR_BE3 = re.compile(r\"(?<![A-Za-z0-9_])\" + re.escape(NOM_LANCEUR_BE3) + r\"(?![A-Za-z0-9_])\")\n"
+   },
+   {
+    "nom": "H3 — fonction sœur garder_lanceur_be3",
+    "avant": "\n\ndef decider(commande: str, aujourd_hui: date, cwd=None) -> None:\n",
+    "apres": "\n\ndef garder_lanceur_be3(commande: str, cwd) -> None:\n    \"\"\"5. Même garde, pour le lanceur « bassins étroits » v3 : commande exacte parmi celles permises, depuis le dépôt,\n    fichier non lien symbolique, empreinte égale à l'épingle et au compagnon. Rien en silence (R5).\"\"\"\n    if not CITE_LANCEUR_BE3.search(commande):\n        return\n    m = \"empreinte du lanceur « bassins étroits » v3 (R-2530, R-2549)\"\n    if commande not in COMMANDES_LANCEUR_BE3:\n        bloquer(f\"{m} : commande citant {NOM_LANCEUR_BE3} qui n'est pas exactement l'une de {list(COMMANDES_LANCEUR_BE3)}\")\n    if not isinstance(cwd, str) or not cwd:\n        bloquer(f\"{m} : dossier courant absent de l'entrée du crochet ; {DEPOT_COURSE} exigé\")\n    if os.path.realpath(cwd) != os.path.realpath(DEPOT_COURSE):\n        bloquer(f\"{m} : lancé depuis {cwd}, {DEPOT_COURSE} exigé\")\n    if os.path.realpath(RACINE) != os.path.realpath(DEPOT_COURSE):\n        bloquer(f\"{m} : crochet de {RACINE}, celui de {DEPOT_COURSE} exigé\")\n    chemin = DEPOT_COURSE / \"scripts\" / FICHIER_LANCEUR_BE3\n    compagnon = Path(str(chemin) + \".sha256\")\n    if chemin.is_symlink() or not chemin.is_file():\n        bloquer(f\"{m} : {chemin} absent ou lien symbolique\")\n    lue = _sha256(chemin)\n    if lue != EMPREINTE_LANCEUR_BE3:\n        bloquer(f\"{m} : empreinte du fichier {lue} ≠ empreinte épinglée dans le crochet {EMPREINTE_LANCEUR_BE3}\")\n    try:\n        lignes = [x for x in compagnon.read_text(encoding=\"utf-8\").splitlines() if x.strip()]\n    except (OSError, UnicodeDecodeError) as e:\n        bloquer(f\"{m} : compagnon {compagnon.name} illisible ({type(e).__name__})\")\n    ligne = LIGNE_COMPAGNON.match(lignes[0]) if len(lignes) == 1 else None\n    if ligne is None or ligne.group(2) != FICHIER_LANCEUR_BE3:\n        bloquer(f\"{m} : compagnon {compagnon.name} mal formé (une ligne « <empreinte>  {FICHIER_LANCEUR_BE3} » exigée)\")\n    if ligne.group(1) != lue:\n        bloquer(f\"{m} : empreinte du compagnon {ligne.group(1)} ≠ empreinte du fichier {lue}\")\n\n\ndef decider(commande: str, aujourd_hui: date, cwd=None) -> None:\n"
+   },
+   {
+    "nom": "H4 — appel dans decider",
+    "avant": "    garder_lanceur_be2(commande, cwd)\n",
+    "apres": "    garder_lanceur_be2(commande, cwd)\n    garder_lanceur_be3(commande, cwd)\n"
+   }
+  ]
+ },
+ "reglages": {
+  "fichier": ".claude/settings.json",
+  "sha256_avant": "701169aeed3b140121c46402dddb169890f2e2ab2fd04561450cbba80a02afb9",
+  "couples": [
+   {
+    "nom": "S1 — règle d'autorisation : la seule commande du v3, génération 1",
+    "avant": "\"Bash(/usr/local/bin/python3 -I -B scripts/lancer_course_ideation_bassins_etroits_v2.py 1)\"",
+    "apres": "\"Bash(/usr/local/bin/python3 -I -B scripts/lancer_course_ideation_bassins_etroits_v3.py 1)\""
+   },
+   {
+    "nom": "S2 — refus d'édition : v3, son compagnon et le crochet ajoutés ; ceux du v2 gardés",
+    "avant": "      \"Edit(//home/user/controle-ia-travail/scripts/lancer_course_ideation_bassins_etroits_v2.py.sha256)\"\n",
+    "apres": "      \"Edit(//home/user/controle-ia-travail/scripts/lancer_course_ideation_bassins_etroits_v2.py.sha256)\",\n      \"Edit(//home/user/controle-ia-travail/scripts/lancer_course_ideation_bassins_etroits_v3.py)\",\n      \"Edit(//home/user/controle-ia-travail/scripts/lancer_course_ideation_bassins_etroits_v3.py.sha256)\",\n      \"Edit(//home/user/controle-ia-travail/.claude/hooks/garde_calcul.py)\"\n"
+   }
+  ]
+ }
+}

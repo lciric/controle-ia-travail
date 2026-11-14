@@ -1,0 +1,555 @@
+--- scripts/lancer_course_ideation_bassins_etroits_v2.py	2026-11-13 14:04:35.036647140 +0000
++++ scripts/lancer_course_ideation_bassins_etroits_v3.py	2026-11-13 16:05:19.514622897 +0000
+@@ -1,42 +1,40 @@
+ #!/usr/bin/env python3
+ """Lanceur de l'organisme d'idéation (atelier d'idées, N-065 rôle 2) sur la question des bassins d'idées étroits et
+-profonds : trois générations enchaînées — version 2.
++profonds : trois générations enchaînées — version 3.
+ 
+-Version 2 : corrections de la contre-lecture `docs/notes/organisme-bassins-etroits-v1/contre-lecture-lanceur-bassins-
+-etroits-v1.md` (`3aaf9981…`) selon les décisions de la mère (R-2537, consigne `…-corrections-v1.md`, `e9bef586…`), sur la
+-version 1 (`lancer_course_ideation_bassins_etroits_v1.py`, `a10420cc…`, inchangée, R12) :
+-- B1 : le compagnon de la liste blanche, écrit par l'orchestrateur, est **vérifié**, jamais recréé ;
+-- M1, M2 : aucune dépense ne vaut 0 par défaut ; tout dossier de tentative sans relevé scellé, tout processus mort sans fin
+-  propre, toute lecture illisible comptent le plafond entier ; un refus « rien envoyé » (coût plancher) prouvé par le relevé
+-  ne verrouille pas ; contrôle externe d'Argon relevé à 1,7 USD, gardes de taille d'Argon tenues à 3 caractères par jeton ;
+-- M3 : au bras aussi, aucune relance après dépense ; seul un bras « non joué, rien envoyé » se relance ;
+-- M4 : la règle de passage n'emploie aucune mesure de l'orchestrateur ; doublons écartés sur le seul signalement explicite
+-  d'un juge ; toute donnée manquante ou mal formée arrête (code 2, motif) ;
+-- M5 : générations 2 et 3 refusées sans la confirmation scellée de la règle de passage (mot de Lazar recopié par la mère) ;
+-- M6 : l'attestation de lecture dit qui a lu (champ `lecteur`), quoi (empreintes), quand (`lu_le`) ; versions `-v<N>` ;
+-- M7 : l'orchestrateur est lancé **détaché** (session neuve, sous un superviseur qui relaie les signaux par PID et scelle le
+-  code de sortie) ; le lanceur rend la main ; la même commande, relancée, lit l'état : en marche (rien, code 3), finie
+-  (manifeste de fin, code 0), morte sans fin propre (plafond compté, génération verrouillée) ; rien ne part tant qu'un
+-  superviseur vit ;
+-- M8 : le recoupement exige son compagnon et une attestation scellée de relecture par la mère ;
+-- M9 : le témoin « vrai » n'est servi que si un lecteur a certifié qu'aucune pièce servie aux juges ne l'énonce ;
+-- mineurs m1, m2, m3, m6, m7, m8 (voir le rapport `rapport-preparateur-v2.md`).
++Version 3, après la génération 1 jouée par la version 2 (`lancer_course_ideation_bassins_etroits_v2.py`, `c6d82d8c…`,
++inchangée, R12), close en défaut au contrôle (0,275477 USD, Argon seul ; `operation-g1-v1.md`, `3beef39e…`), et la
++vérification courte du v2 (`verification-courte-lanceur-v2-v1.md`, `ff33dd99…`) :
++- **cause établie sans dépense** (`preparateur-outils-v3/eprouver_authentification_kit_v1.py`) : hérités de la session, les
++  noms `CLAUDE_CODE_REMOTE*` font présenter par le kit d'agent un `Authorization: Bearer` de l'hôte au lieu du jeton factice
++  en `x-api-key` ; le relais rend 401, le kit rend un message « <synthetic> » ;
++- **environnement transmis par liste de noms permis** (`NOMS_PERMIS`) : PATH, LANG, LC_ALL, TZ, TMPDIR ; HOME fixé par le
++  lanceur à un dossier neuf hors du dépôt ; GO_ID et PYTHONPYCACHEPREFIX fixés par lui ; tout autre nom (`ANTHROPIC_*`,
++  `CLAUDE*`, `CCR_*`, mandataires, clés…) est exclu ; noms transmis et noms exclus au manifeste (noms seulement) ;
++- **relance étroite** : une génération peut être relancée **une fois** si la tentative précédente a fini proprement (code
++  scellé), sans aucune fiche produite, avec une dépense relevée lisible, comptée au cumul ; jamais après des fiches ; deux
++  courses par génération au plus ; les runs du v2 sont lus comme tentatives antérieures (la course v2 de la génération 1
++  compte pour la première, 0,275477 USD) ;
++- **verrou d'invocation** (R1) : verrou exclusif (`fcntl.flock`) de la lecture de l'état au manifeste de départ ;
++- **orchestrateur orphelin** (R2) : superviseur mort, orchestrateur vivant → la clôture le dit, code **4**, et rien ne part
++  tant qu'il vit ; le superviseur écrit l'heure de départ du processus de l'orchestrateur ;
++- R4 : exception au détachement du bras gardée ; R9 : compte rendu et clôture avant les gardes d'entrée ;
++- essais des quatre mutations survivantes de la vérification courte (zombie, seuil, bras mort compté, bras sans code).
+ 
+ Usage, seul et exact (cwd = racine du dépôt de travail) :
+ 
+-    /usr/local/bin/python3 -I -B scripts/lancer_course_ideation_bassins_etroits_v2.py 1     (puis 2, puis 3)
++    /usr/local/bin/python3 -I -B scripts/lancer_course_ideation_bassins_etroits_v3.py 1     (puis 2, puis 3)
+ 
+-Une invocation fait **une** chose : compte rendu d'un processus en marche (code 3) ; ou clôture des processus finis
+-(manifestes de fin, code 0) ; ou lancement détaché d'une course ou d'un bras (code 0) ; ou refus (code 2, motif sur la sortie
+-d'erreur ; après la création d'un dossier de run, un manifeste de refus scellé, rien appelé). Arrêt d'une course : par le PID
+-du superviseur écrit au manifeste de départ (SIGTERM, relayé par PID à l'orchestrateur ; R10).
++Une invocation fait **une** chose : compte rendu d'un processus en marche (code 3) ; orchestrateur orphelin vivant (code 4) ;
++clôture des processus finis (code 0) ; lancement détaché d'une course ou d'un bras (code 0) ; refus (code 2). Arrêt d'une
++course : `kill -TERM <PID du superviseur>` (relayé par PID ; R10) ; d'un orphelin : `kill -TERM <PID de l'orchestrateur>`.
+ 
+-Bibliothèque standard seulement. Les essais (`tests/test_lancer_course_ideation_bassins_etroits_v2.py`) remplacent
+-l'orchestrateur par un faux exécutable via `Reglages` ; la ligne de commande n'expose aucun réglage.
++Bibliothèque standard seulement. Essais : `tests/test_lancer_course_ideation_bassins_etroits_v3.py`.
+ """
+ from __future__ import annotations
+ 
+ import datetime as _dt
++import fcntl
+ import hashlib
+ import json
+ import math
+@@ -49,7 +47,7 @@
+ from pathlib import Path
+ from typing import Mapping
+ 
+-VERSION = "lancer_course_ideation_bassins_etroits_v2"
++VERSION = "lancer_course_ideation_bassins_etroits_v3"
+ GO_ID = "GO-2026-11-13-03"
+ DEPOT = Path(__file__).resolve().parents[1]
+ GENERATIONS = ("1", "2", "3")
+@@ -112,8 +110,7 @@
+ PASSE_2_EXTERNE_USD = 1.9
+ CONTROLE_BRAS_USD = 0.6                         # contrôle court d'Argon au bras (plancher ≈ 0,51)
+ PLAFOND_BRAS_USD = PLAFONDS["juge_ideation|gemini-4-argon"] + CONTROLE_BRAS_USD
+-SEUIL_SANS_DEPENSE_USD = 1e-5                   # M2 : au plus dix coûts planchers (10⁻⁶) de refus « rien envoyé »
+-MAX_TENTATIVES = 3
++MAX_TENTATIVES = 3                              # bras
+ PROPOSEURS = (("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1"))
+ PROPOSEUR_EXTERNE = ("argon", "gemini-4-argon")
+ JUGES = (("opus-juge", "claude-opus-5-5"),)
+@@ -143,9 +140,16 @@
+ ARGON_MARGE_ENTREE = 1.05
+ CARACTERES_PAR_JETON_GARDE = 3.0
+ PORT_RELAIS_CLAUDE = 8787
+-DOSSIER_SORTIES = Path("/home/user/sorties-course-ideation-bassins-etroits-v2")
+-SOUS_DOSSIER_RUNS = "course-ideation-bassins-etroits-v2"
+-SUFFIXE_RUN = "-course-ideation-bassins-etroits-v2-g"
++DOSSIER_SORTIES = Path("/home/user/sorties-course-ideation-bassins-etroits-v3")
++SOUS_DOSSIER_RUNS = "course-ideation-bassins-etroits-v3"
++SUFFIXE_RUN = "-course-ideation-bassins-etroits-v3-g"
++# runs des versions antérieures, lus comme tentatives (même forme de manifestes) : (sous-dossier de runs/, suffixe, version)
++ANTERIEURS = (("course-ideation-bassins-etroits-v2", "-course-ideation-bassins-etroits-v2-g",
++               "lancer_course_ideation_bassins_etroits_v2"),)
++NOM_VERROU = ".verrou-lanceur-bassins-etroits"
++MAX_COURSES_PAR_GENERATION = 2
++# environnement transmis à l'orchestrateur : liste de noms permis (cause du 401 de la génération 1 : `CLAUDE_CODE_REMOTE*`)
++NOMS_PERMIS = ("PATH", "LANG", "LC_ALL", "TZ", "TMPDIR")
+ PYTHON_COURSE = "/usr/local/bin/python3"
+ NOM_DOSSIER_PYCACHE = "pycache"
+ 
+@@ -191,7 +195,12 @@
+             pass
+     for s in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+         signal.signal(s, relayer)
+-    sceller("pid-orchestrateur.json", {"pid_orchestrateur": enfant.pid, "debut_utc": debut})
++    try:
++        with open("/proc/%d/stat" % enfant.pid) as f:
++            debut_proc = f.read().rsplit(")", 1)[-1].split()[19]
++    except (OSError, IndexError):
++        debut_proc = None
++    sceller("pid-orchestrateur.json", {"pid_orchestrateur": enfant.pid, "debut_utc": debut, "debut_proc": debut_proc})
+     code = enfant.wait()
+ sceller("code.json", {"code": code, "pid_orchestrateur": enfant.pid, "debut_utc": debut, "fin_utc": heure()})
+ '''
+@@ -238,6 +247,8 @@
+     aujourd_hui: _dt.date | None = None
+     horodatage: object = date_u
+     maintenant: object = None              # callable → datetime UTC (essais) ; None : l'horloge
++    anterieurs: tuple = ()                 # ((dossier de runs, suffixe, version), …) des versions antérieures
++    prefixe_essais: str | None = None      # essais seulement : noms « FAUX_* » du faux orchestrateur ; None en production
+ 
+     @classmethod
+     def production(cls) -> "Reglages":
+@@ -245,7 +256,8 @@
+                    empreintes_orchestrateur=dict(EMPREINTES_ORCHESTRATEUR), pieces=dict(PIECES),
+                    registre_go=DEPOT / "registres" / "go.md", dossier_runs=DEPOT / "runs" / SOUS_DOSSIER_RUNS,
+                    dossier_sorties=DOSSIER_SORTIES, depot_attendu_par_l_enveloppe=DEPOT_ATTENDU_PAR_L_ENVELOPPE,
+-                   python=PYTHON_COURSE)
++                   python=PYTHON_COURSE,
++                   anterieurs=tuple((DEPOT / "runs" / d, s, v) for d, s, v in ANTERIEURS))
+ 
+     def heure(self) -> _dt.datetime:
+         return self.maintenant() if self.maintenant else _dt.datetime.now(_dt.timezone.utc)
+@@ -588,14 +600,26 @@
+     return g
+ 
+ 
+-def environnement_sans_cles(env: Mapping, prefixe_pycache: Path | None = None) -> tuple:
+-    retires = sorted(n for n in env if n in NOMS_DE_CLE or MOTIF_NOM_DE_CLE.search(n))
+-    exclus = set(retires)
+-    garde = {n: env[n] for n in env if n not in exclus}
++def environnement_permis(env: Mapping, prefixe_pycache: Path | None = None, home: Path | None = None,
++                         prefixe_essais: str | None = None) -> tuple:
++    """(environnement transmis, description par noms). Liste de noms permis (`NOMS_PERMIS`) ; HOME, GO_ID et
++    PYTHONPYCACHEPREFIX fixés par le lanceur ; tout autre nom est exclu, valeur jamais lue. Un nom de clé dans la liste
++    permise serait une faute de ce fichier : refus."""
++    for n in NOMS_PERMIS:
++        if n in NOMS_DE_CLE or MOTIF_NOM_DE_CLE.search(n) or n.startswith(("ANTHROPIC", "CLAUDE", "CCR")):
++            raise Refus(f"nom permis interdit : {n}")
++    if prefixe_essais is not None and prefixe_essais != "FAUX_":
++        raise Refus(f"préfixe d'essai interdit : {prefixe_essais!r}")
++    garde = {n: env[n] for n in env if n in NOMS_PERMIS or (prefixe_essais and n.startswith(prefixe_essais))}
++    exclus = sorted(n for n in env if n not in garde)
+     garde["GO_ID"] = GO_ID
++    if home is not None:
++        garde["HOME"] = str(home)
+     if prefixe_pycache is not None:
+         garde["PYTHONPYCACHEPREFIX"] = str(prefixe_pycache)
+-    return garde, retires
++    return garde, {"noms_transmis": sorted(garde), "noms_fixes_par_le_lanceur": sorted(
++        n for n in ("GO_ID", "HOME", "PYTHONPYCACHEPREFIX") if n in garde), "noms_exclus": exclus,
++        "valeurs": "aucune valeur écrite ; transmis par liste de noms permis"}
+ 
+ 
+ def sonder_bac_a_sable(r: Reglages, env: dict, prefixe_pycache: Path) -> dict:
+@@ -704,21 +728,29 @@
+ 
+ 
+ def runs_du_lanceur(r: Reglages) -> list:
+-    """Les runs de ce lanceur. Un dossier sans manifeste de départ ni de refus scellé est une incohérence : refus."""
+-    if not r.dossier_runs.is_dir():
++    """Les runs de ce lanceur et des versions antérieures (`r.anterieurs`), dans l'ordre du temps. Un dossier sans
++    manifeste de départ ni de refus scellé est une incohérence : refus."""
++    runs = []
++    for dossier, suffixe, version in tuple(r.anterieurs) + ((r.dossier_runs, SUFFIXE_RUN, VERSION),):
++        runs += _runs_de(Path(dossier), suffixe, version)
++    return sorted(runs, key=lambda x: x["nom"])
++
++
++def _runs_de(dossier_runs: Path, suffixe: str, version: str) -> list:
++    if not dossier_runs.is_dir():
+         return []
+     runs = []
+-    for nom in sorted(os.listdir(r.dossier_runs)):
+-        m = re.fullmatch(r"\d{8}-\d{6}" + re.escape(SUFFIXE_RUN) + r"([123])", nom)
++    for nom in sorted(os.listdir(dossier_runs)):
++        m = re.fullmatch(r"\d{8}-\d{6}" + re.escape(suffixe) + r"([123])", nom)
+         if not m:
+-            raise Refus(f"dossier inattendu dans {r.dossier_runs} : {nom!r}")
+-        d = r.dossier_runs / nom
++            raise Refus(f"dossier inattendu dans {dossier_runs} : {nom!r}")
++        d = dossier_runs / nom
+         depart = _lire_json_si_scelle(d / "manifeste-lanceur-depart.json")
+         refus = _lire_json_si_scelle(d / "manifeste-lanceur-refus.json")
+         if depart is None and refus is None:
+             raise Refus(f"run {nom} sans manifeste de départ ni de refus scellé : état inconnu, aucun lancement")
+         base = depart or refus
+-        if str(base.get("generation")) != m.group(1) or base.get("lanceur", {}).get("version") != VERSION:
++        if str(base.get("generation")) != m.group(1) or base.get("lanceur", {}).get("version") != version:
+             raise Refus(f"run {nom} : génération ou version du lanceur incohérente")
+         if depart is not None and not depart.get("superviseur"):
+             raise Refus(f"run {nom} : manifeste de départ sans superviseur")
+@@ -736,7 +768,8 @@
+                 raise Refus(f"run {nom} : manifeste de fin du bras {k} au sceau faux")
+             bras.append({"numero": k, "depart": dep_b, "fin": fin_b})
+             k += 1
+-        runs.append({"nom": nom, "dossier": d, "generation": int(m.group(1)), "depart": depart, "refus": refus, "fin": fin,
++        runs.append({"nom": nom, "dossier": d, "generation": int(m.group(1)), "version": version, "depart": depart,
++                     "refus": refus, "fin": fin,
+                      "bras": bras, "sortie": Path(base["sortie"]) if base.get("sortie") else None})
+     return runs
+ 
+@@ -758,24 +791,24 @@
+ 
+ 
+ def depense_course(sortie: Path, sup_fini: bool) -> tuple:
+-    """(dépense en USD, lecture). Aucun chemin ne rend 0 par défaut (M1) : 0 seulement si le superviseur a fini proprement
++    """(dépense en USD, lisible, lecture). Aucun chemin ne rend 0 par défaut (M1) : 0 seulement si le superviseur a fini proprement
+     et que rien n'est parti ; une sortie sans manifeste de fin scellé et lisible, un dossier de contrôle non expliqué en
+     entier par des tentatives scellées, un processus mort sans fin propre comptent le plafond entier."""
+     if not sup_fini:
+-        return PLAFOND_COURSE_USD, "processus mort sans fin propre, ou en marche : plafond entier compté"
++        return PLAFOND_COURSE_USD, False, "processus mort sans fin propre, ou en marche : plafond entier compté"
+     controle = Path(str(sortie) + "-controle")
+     fin = sortie / "manifeste-fin.json"
+     if _scelle_present(fin):
+         m = _lire_json_si_scelle(fin)
+         try:
+             j = m["reglages"]["journal"]
+-            return _cout(j, "cout_total_usd") + _cout(j, "cout_externe_usd"), "manifeste de fin de l'orchestrateur"
++            return _cout(j, "cout_total_usd") + _cout(j, "cout_externe_usd"), True, "manifeste de fin de l'orchestrateur"
+         except (TypeError, KeyError, ValueError):
+-            return PLAFOND_COURSE_USD, "manifeste de fin illisible : plafond entier compté"
++            return PLAFOND_COURSE_USD, False, "manifeste de fin illisible : plafond entier compté"
+     if sortie.exists():
+-        return PLAFOND_COURSE_USD, "sortie sans manifeste de fin scellé : plafond entier compté"
++        return PLAFOND_COURSE_USD, False, "sortie sans manifeste de fin scellé : plafond entier compté"
+     if not controle.exists():
+-        return 0.0, "rien parti (fin propre du superviseur ; ni sortie, ni contrôle)"
++        return 0.0, True, "rien parti (fin propre du superviseur ; ni sortie, ni contrôle)"
+     total, scellees = 0.0, set()
+     noms = sorted(os.listdir(controle))
+     for nom in noms:
+@@ -785,20 +818,20 @@
+             try:
+                 total += _cout(m, "reglages", "cout_claude_usd") + _cout(m, "reglages", "cout_externe_usd")
+             except (TypeError, KeyError, ValueError):
+-                return PLAFOND_COURSE_USD, f"tentative de contrôle illisible ({nom}) : plafond entier compté"
++                return PLAFOND_COURSE_USD, False, f"tentative de contrôle illisible ({nom}) : plafond entier compté"
+             scellees.add(nom.split(".")[0])
+         elif re.fullmatch(r"refus-taille-\d+\.json", nom):
+             if _lire_json_si_scelle(p) is None:
+-                return PLAFOND_COURSE_USD, f"refus de taille au sceau faux ({nom}) : plafond entier compté"
++                return PLAFOND_COURSE_USD, False, f"refus de taille au sceau faux ({nom}) : plafond entier compté"
+         elif nom.endswith(".sha256") or re.fullmatch(r"tentative-\d+(-externe-[a-z0-9-]+)?", nom):
+             continue
+         else:
+-            return PLAFOND_COURSE_USD, f"fichier de contrôle inattendu ({nom}) : plafond entier compté"
++            return PLAFOND_COURSE_USD, False, f"fichier de contrôle inattendu ({nom}) : plafond entier compté"
+     for nom in noms:
+         m = re.fullmatch(r"(tentative-\d+)(-externe-[a-z0-9-]+)?", nom)
+         if m and (controle / nom).is_dir() and m.group(1) not in scellees:
+-            return PLAFOND_COURSE_USD, f"contrôle {nom} sans tentative scellée : plafond entier compté"
+-    return total, "tentatives de contrôle scellées (course non partie)"
++            return PLAFOND_COURSE_USD, False, f"contrôle {nom} sans tentative scellée : plafond entier compté"
++    return total, True, "tentatives de contrôle scellées (course non partie)"
+ 
+ 
+ def traces_bras(sortie: Path) -> dict:
+@@ -842,11 +875,13 @@
+ 
+ def depense_run(run: dict) -> dict:
+     if run["depart"] is None:  # refus du lanceur avant tout départ : aucun processus lancé
+-        return {"run": run["nom"], "course_usd": 0.0, "bras_usd": 0.0, "lecture": "refus du lanceur avant tout départ"}
++        return {"run": run["nom"], "course_usd": 0.0, "bras_usd": 0.0, "course_lisible": True,
++                "lecture": "refus du lanceur avant tout départ"}
+     sup = run["depart"]["superviseur"]
+-    c, lc_ = depense_course(run["sortie"], (not superviseur_vivant(sup)) and lire_code(sup) is not None)
++    c, lisible, lc_ = depense_course(run["sortie"], (not superviseur_vivant(sup)) and lire_code(sup) is not None)
+     b, lb = depense_bras(run)
+-    return {"run": run["nom"], "course_usd": round(c, 6), "bras_usd": round(b, 6), "lecture": f"course : {lc_} ; bras : {lb}"}
++    return {"run": run["nom"], "course_usd": round(c, 6), "bras_usd": round(b, 6), "course_lisible": lisible,
++            "lecture": f"course : {lc_} ; bras : {lb}"}
+ 
+ 
+ def garde_cumul(runs: list, plafond_suivant: float, plafond_go: float) -> dict:
+@@ -928,6 +963,39 @@
+     return chemin, sha256_fichier(chemin), a
+ 
+ 
++def fiches_produites(sortie: Path):
++    """False si aucune fiche n'a été produite (sortie absente, ou les trois listes de fiches scellées et vides) ; True si
++    une fiche existe ; None si on ne peut pas le prouver (tenu pour « produites »)."""
++    if sortie is None or not sortie.exists():
++        return False
++    listes = [_lire_json_si_scelle(sortie / n) for n in ("fiches-validees.json", "fiches-refusees.json",
++                                                        "fiches-en-quarantaine.json")]
++    if any(not isinstance(x, list) for x in listes):
++        return None
++    return any(listes)
++
++
++def relance_permise(runs_g: list) -> tuple:
++    """Règle étroite : une génération se relance **une fois** si chaque course précédente a fini proprement (code scellé,
++    manifeste de fin du lanceur), n'a produit aucune fiche, a une dépense relevée lisible (comptée au cumul) et n'a aucun
++    bras ; deux courses par génération au plus."""
++    parties = [x for x in runs_g if x["depart"] is not None]
++    for x in parties:
++        if x["fin"] is None or x["fin"].get("code") is None:
++            return False, f"tentative {x['nom']} sans fin propre (code non scellé)"
++        if x["bras"]:
++            return False, f"tentative {x['nom']} a un bras"
++        dep = depense_run(x)
++        if not dep["course_lisible"]:
++            return False, f"tentative {x['nom']} : dépense illisible ({dep['lecture']})"
++        fp = fiches_produites(x["sortie"])
++        if fp is not False:
++            return False, f"tentative {x['nom']} : {'fiches produites' if fp else 'production de fiches non prouvée nulle'}"
++    if len(parties) >= MAX_COURSES_PAR_GENERATION:
++        return False, f"{MAX_COURSES_PAR_GENERATION} courses déjà parties pour cette génération"
++    return True, f"{len(parties)} course(s) précédente(s), finies proprement, sans fiche, dépense lisible"
++
++
+ def etat_generation(r: Reglages, runs: list, g: int) -> dict:
+     """Le temps à jouer pour la génération g : « course » ou « bras » (avec le run), ou refus."""
+     du_g = [x for x in runs if x["generation"] == g]
+@@ -943,17 +1011,11 @@
+             if not ok:
+                 raise Refus(f"génération {g} verrouillée ({run['nom']}) : {motif} ; nœud pour la mère ou Lazar")
+         return {"temps": "bras", "run": run}
+-    parties = [x for x in du_g if x["depart"] is not None]
+-    for x in parties:
+-        dep = depense_run(x)
+-        total = dep["course_usd"] + dep["bras_usd"]
+-        if total > SEUIL_SANS_DEPENSE_USD or x["fin"] is None or x["fin"].get("code") is None:
+-            raise Refus(f"génération {g} verrouillée : tentative {x['nom']} (dépense relevée {total:.6f} USD ; "
+-                        f"{dep['lecture']}) ; aucune relance après dépense ou sans fin propre (R3) ; nœud pour la mère")
+-    if len(parties) >= MAX_TENTATIVES:
+-        raise Refus(f"génération {g} : {MAX_TENTATIVES} tentatives déjà faites")
++    ok, motif = relance_permise(du_g)
++    if not ok:
++        raise Refus(f"génération {g} verrouillée : {motif} ; aucune autre relance (R3) ; nœud pour la mère")
+     if g == 1:
+-        return {"temps": "course", "precedente": None}
++        return {"temps": "course", "precedente": None, "relance": motif}
+     prec = [x for x in runs if x["generation"] == g - 1 and bras_reussi(x)]
+     if len(prec) != 1:
+         raise Refus(f"génération {g} refusée : la génération {g - 1} n'a pas une course et un bras réussis, manifestes de "
+@@ -965,7 +1027,7 @@
+     if att["temoin_vrai_absent_des_fiches_validees"] is not True:
+         raise Refus(f"génération {g} refusée : le témoin vrai est énoncé dans les fiches de la génération {g - 1} "
+                     "(attestation) : il serait jugé occupé à bon droit ; témoins à changer (version neuve), nœud")
+-    return {"temps": "course", "precedente": prec[0]}
++    return {"temps": "course", "precedente": prec[0], "relance": motif}
+ 
+ 
+ # ======================================================================================================================
+@@ -1211,6 +1273,30 @@
+             "generation": g, "temps": temps, "id": ident, "go": go, "sortie": str(sortie), "horodatage_canonique": horodatage}
+ 
+ 
++def orchestrateur_orphelin(sup: dict) -> dict | None:
++    """R2 : l'orchestrateur d'un superviseur mort, s'il vit encore (PID et, s'il est écrit, heure de départ du processus)."""
++    p = _lire_json_si_scelle(Path(sup["dossier"]) / "pid-orchestrateur.json")
++    if not isinstance(p, dict) or not isinstance(p.get("pid_orchestrateur"), int):
++        return None
++    pid, debut = p["pid_orchestrateur"], p.get("debut_proc")
++    vu = debut_processus(pid)
++    if vu is None or (debut is not None and vu != debut):
++        return None
++    return {"pid": pid, "debut_proc": debut, "heure_de_depart_verifiee": debut is not None,
++            "arret": f"kill -TERM {pid} (par PID, R10)"}
++
++
++def orphelins_vivants(runs: list) -> list:
++    out = []
++    for run in runs:
++        for quoi, sup, fin in processus_de(run):
++            if fin is not None and fin.get("code") is None and not superviseur_vivant(sup):
++                o = orchestrateur_orphelin(sup)
++                if o:
++                    out.append({"run": run["nom"], "temps": quoi, **o})
++    return out
++
++
+ def cloturer(r: Reglages, runs: list) -> list:
+     """Écrit le manifeste de fin de chaque processus fini (code scellé par le superviseur) ou mort sans fin propre."""
+     faits = []
+@@ -1223,9 +1309,14 @@
+             journaux = {n: sha256_fichier(d / n) for n in ("orchestrateur.stdout.txt", "orchestrateur.stderr.txt",
+                                                            "superviseur.stdout.txt", "superviseur.stderr.txt")
+                         if (d / n).is_file()}
++            orphelin = orchestrateur_orphelin(sup) if code is None else None
+             bilan = {"run": run["nom"], "generation": run["generation"], "temps": quoi, "superviseur": sup,
++                     "orchestrateur_orphelin": orphelin,
+                      "code": code["code"] if code else None, "code_scelle": code,
+-                     "issue": "fin propre" if code else "mort sans fin propre : plafond compté, génération verrouillée",
++                     "issue": "fin propre" if code else ("superviseur mort, ORCHESTRATEUR ENCORE VIVANT (PID "
++                                                         f"{orphelin['pid']}) : plafond compté, génération verrouillée ; "
++                                                         f"arrêt : {orphelin['arret']}" if orphelin else
++                                                         "mort sans fin propre : plafond compté, génération verrouillée"),
+                      "journaux_sha256": journaux, "cloture_utc": r.heure().isoformat()}
+             if quoi == "course":
+                 nom = "manifeste-lanceur-fin.json"
+@@ -1246,17 +1337,33 @@
+                 c = run["sortie"] / "classement.json"
+                 bilan["classement_sha256"] = sha256_fichier(c) if c.is_file() else None
+             ecrire_scelle(run["dossier"] / nom, bilan)
+-            faits.append({"run": run["nom"], "temps": quoi, "code": bilan["code"], "issue": bilan["issue"]})
++            faits.append({"run": run["nom"], "temps": quoi, "code": bilan["code"], "issue": bilan["issue"],
++                          "orchestrateur_orphelin": orphelin})
+     return faits
+ 
+ 
++def prendre_verrou(r: Reglages) -> int:
++    """R1 : verrou exclusif, non bloquant, tenu de la lecture de l'état jusqu'au manifeste de départ (libéré à la sortie du
++    processus, même brutale ; jamais hérité par le superviseur)."""
++    r.dossier_sorties.mkdir(parents=True, exist_ok=True)
++    fd = os.open(r.dossier_sorties / NOM_VERROU, os.O_CREAT | os.O_RDWR, 0o600)
++    try:
++        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
++    except OSError:
++        os.close(fd)
++        raise Refus("une autre invocation du lanceur tient le verrou : rien lancé (R1)") from None
++    return fd
++
++
+ def executer(r: Reglages, g: int) -> int:
+     env_lu = os.environ if r.environnement is None else r.environnement
+     interprete = verifier_interprete(r)
+-    go = verifier_go(r.registre_go, r.aujourd_hui or r.heure().date())
+-    orch = verifier_orchestrateur(r)
+-    pieces = verifier_pieces(r)
+     runs = runs_du_lanceur(r)
++    orphs = orphelins_vivants(runs)
++    if orphs:
++        print(json.dumps({"etat": "orchestrateur orphelin vivant : rien lancé", "orphelins": orphs}, ensure_ascii=False),
++              flush=True)
++        return 4
+     en_marche = [(run["nom"], quoi, sup) for run in runs for quoi, sup, fin in processus_de(run)
+                  if fin is None and superviseur_vivant(sup)]
+     if en_marche:
+@@ -1267,7 +1374,10 @@
+     clos = cloturer(r, runs)
+     if clos:
+         print(json.dumps({"etat": "clôture", "processus": clos}, ensure_ascii=False), flush=True)
+-        return 0
++        return 4 if any(c["orchestrateur_orphelin"] for c in clos) else 0
++    go = verifier_go(r.registre_go, r.aujourd_hui or r.heure().date())
++    orch = verifier_orchestrateur(r)
++    pieces = verifier_pieces(r)
+     etat = etat_generation(r, runs, g)
+     if etat["temps"] == "bras":
+         return executer_bras(r, g, etat["run"], runs, go, orch, interprete, env_lu)
+@@ -1296,7 +1406,7 @@
+     if dossier_run.exists() or dossier_sortie.exists():
+         raise Refus(f"{dossier_run} ou {dossier_sortie} existe déjà (R12)")
+     verifier_prefixe_pycache(prefixe_pycache, Path(orch["racine_clone"]))
+-    env, retires = environnement_sans_cles(env_lu, prefixe_pycache)
++    env, noms_env = environnement_permis(env_lu, prefixe_pycache, dossier_sortie / "home", r.prefixe_essais)
+     bac = sonder_bac_a_sable(r, env, prefixe_pycache)
+ 
+     # --- écritures : toute exception écrit désormais un manifeste de refus scellé (m8), rien n'est appelé avant le départ
+@@ -1305,6 +1415,7 @@
+     try:
+         dossier_sortie.mkdir(parents=True)
+         prefixe_pycache.mkdir()
++        (dossier_sortie / "home").mkdir(mode=0o700)
+         if g >= 2:
+             piece_variable.parent.mkdir()
+             with open(piece_variable, "x", encoding="utf-8") as f:
+@@ -1327,15 +1438,14 @@
+             raise
+         raise Refus("exception avant le départ, manifeste de refus scellé : " + motif[:500]) from None
+     depart = dict(socle, **{
+-        "decision": "GO-2026-11-13-03 (R-2530) ; corrections R-2537",
++        "decision": "GO-2026-11-13-03 (R-2530) ; corrections R-2537 ; lanceur v3 après la génération 1 en défaut",
+         "superviseur": sup, "orchestrateur": orch, "pieces": pieces, "piece_variable": piece_info, "liste_blanche": lb,
+         "mesure_consignes_sha256": sha256_fichier(dossier_run / "mesure-consignes.json"), "bac_a_sable": bac,
+         "commande": argv, "cwd": str(r.orchestrateur),
+         "plafonds": {"reglage": dict(r.plafonds), "controle_externe_usd": r.controle_externe_usd,
+                      "passe_2_externe_usd": r.passe_2_externe_usd, "sommes": sommes, "gardes_de_taille": tailles},
+-        "garde_de_cumul": cumul, "drapeaux_interdits_verifies_absents": list(DRAPEAUX_INTERDITS),
+-        "cles": {"noms_retires_de_l_environnement": retires,
+-                 "valeurs": "aucune valeur de clé écrite, transmise ni consultée (décision sur les noms)"},
++        "garde_de_cumul": cumul, "relance": etat.get("relance"), "drapeaux_interdits_verifies_absents": list(DRAPEAUX_INTERDITS),
++        "environnement": noms_env,
+         "cache_d_octets": {"prefixe": str(prefixe_pycache), "option": f"-X pycache_prefix={prefixe_pycache}"},
+         "depot_travail": _depot_git(r), "python": interprete,
+     })
+@@ -1355,22 +1465,30 @@
+     bras = garder_bras(r, sortie)
+     k = len(run["bras"]) + 1
+     horodatage = r.horodatage()
+-    prefixe_pycache = sortie.parent / f"{NOM_DOSSIER_PYCACHE}-bras-{k}"
++    prefixe_pycache = sortie.parent / f"{NOM_DOSSIER_PYCACHE}-bras-{k}-{r.heure().strftime('%Y%m%d%H%M%S')}"
+     argv = commande_bras(r, sortie, liste_blanche, attestation, horodatage, prefixe_pycache)
+     garde_drapeaux(argv)
+     verifier_prefixe_pycache(prefixe_pycache, Path(orch["racine_clone"]))
+-    env, retires = environnement_sans_cles(env_lu, prefixe_pycache)
++    home = sortie.parent / f"home-bras-{k}-{r.heure().strftime('%Y%m%d%H%M%S')}"
++    env, noms_env = environnement_permis(env_lu, prefixe_pycache, home, r.prefixe_essais)
+     bac = sonder_bac_a_sable(r, env, prefixe_pycache)
+-    prefixe_pycache.mkdir()
+-    sup = lancer_detache(r, argv, env, sortie.parent / f"superviseur-bras-{k}", prefixe_pycache)
++    if (sortie.parent / f"superviseur-bras-{k}").exists():
++        raise Refus(f"superviseur-bras-{k} existe sans manifeste de départ : état inconnu, nœud (R3, R4)")
++    try:  # R4 : une exception au détachement est un refus, jamais une trace
++        prefixe_pycache.mkdir()
++        home.mkdir(mode=0o700)
++        sup = lancer_detache(r, argv, env, sortie.parent / f"superviseur-bras-{k}", prefixe_pycache)
++    except Refus:
++        raise
++    except BaseException as e:  # noqa: BLE001
++        raise Refus(f"bras : exception au détachement, rien lancé : {type(e).__name__} : {str(e)[:300]}") from None
+     depart = {"lanceur": {"version": VERSION, "chemin": str(Path(__file__).resolve()), "sha256": sha256_fichier(Path(__file__))},
+               "generation": g, "temps": "bras", "numero": k, "run": run["nom"], "go": go, "horodatage_canonique": horodatage,
+               "superviseur": sup, "attestation": {"chemin": str(attestation), "sha256": att_sha, "lecteur": att["lecteur"],
+                                                   "lu_le": att["lu_le"]},
+               "garde_du_bras": bras, "garde_de_cumul": cumul, "bac_a_sable": bac, "commande": argv,
+               "cwd": str(r.orchestrateur), "orchestrateur": orch, "python": interprete,
+-              "cles": {"noms_retires_de_l_environnement": retires,
+-                       "valeurs": "aucune valeur de clé écrite, transmise ni consultée (décision sur les noms)"}}
++              "environnement": noms_env}
+     h = ecrire_scelle(run["dossier"] / f"manifeste-lanceur-bras-depart-{k}.json", depart)
+     print(json.dumps({"generation": g, "temps": "bras", "numero": k, "etat": "lancé, détaché", "pid_superviseur": sup["pid"],
+                       "arret": sup["arret"], "manifeste_depart_sha256": h}, ensure_ascii=False), flush=True)
+@@ -1383,11 +1501,17 @@
+         print(json.dumps({"refus": f"un seul argument admis, la génération parmi {list(GENERATIONS)} (reçu {argv!r})"},
+                          ensure_ascii=False), file=sys.stderr)
+         return 2
++    r = reglages or Reglages.production()
++    fd = None
+     try:
+-        return executer(reglages or Reglages.production(), int(argv[0]))
++        fd = prendre_verrou(r)
++        return executer(r, int(argv[0]))
+     except Refus as e:
+         print(json.dumps({"refus": str(e)}, ensure_ascii=False), file=sys.stderr)
+         return 2
++    finally:
++        if fd is not None:
++            os.close(fd)
+ 
+ 
+ if __name__ == "__main__":

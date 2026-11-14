@@ -1,0 +1,71 @@
+{
+ "bilan": {
+  "survit": 5
+ },
+ "debut_utc": "2026-11-13T15:29:26Z",
+ "fin_utc": "2026-11-13T15:42:52Z",
+ "mutations": [
+  {
+   "apres": "    env = dict(environ)\n",
+   "avant": "    env = {k: environ[k] for k in ENV_FILTRE if k in environ}\n",
+   "code": 0,
+   "derniere_ligne": "88 passed, 112 subtests passed in 131.39s (0:02:11)",
+   "echecs": [],
+   "fichier": "pole/proposeurs_pilote_v69.py",
+   "garde": "environnement du relais bâti par filtrage des noms (aucune autre variable, aucune autre clé, ne passe au relais)",
+   "id": "W1-environnement-entier-passe-au-relais",
+   "issue": "survit"
+  },
+  {
+   "apres": "    if e.get(\"texte_sha256\") != texte_sha256:\n",
+   "avant": "    if e.get(\"texte_sha256\") != texte_sha256 or e.get(\"fichier_mondes_sha256\") != sha_fichier:\n",
+   "code": 0,
+   "derniere_ligne": "88 passed, 112 subtests passed in 133.53s (0:02:13)",
+   "echecs": [],
+   "fichier": "pole/pilote_mr2_v69.py",
+   "garde": "mode réel : l'engagement lie le fichier des mondes, pas seulement le texte (m-3)",
+   "id": "W2-engagement-non-lie-au-fichier-des-mondes",
+   "issue": "survit"
+  },
+  {
+   "apres": "\"consigne_commande\": True,",
+   "avant": "\"consigne_commande\": temoin[\"consigne_commande_sha256\"] == sha_texte,",
+   "code": 0,
+   "derniere_ligne": "88 passed, 112 subtests passed in 132.49s (0:02:12)",
+   "echecs": [],
+   "fichier": "pole/proposeurs_pilote_v69.py",
+   "garde": "témoin d'isolement : l'empreinte de la consigne lue par la commande égale celle du texte servi",
+   "id": "W3-temoin-consigne-de-la-commande-non-controlee",
+   "issue": "survit"
+  },
+  {
+   "apres": "    if False:\n",
+   "avant": "    if ctx.get(\"gabarit\") != json.loads(json.dumps(gabarit()[\"gabarit\"])):\n",
+   "code": 0,
+   "derniere_ligne": "88 passed, 112 subtests passed in 136.58s (0:02:16)",
+   "echecs": [],
+   "fichier": "pole/pilote_mr2_v69.py",
+   "garde": "relecture du texte servi : le gabarit du contexte est le gabarit gelé (M-6)",
+   "id": "W4-gabarit-du-texte-servi-non-relu",
+   "issue": "survit"
+  },
+  {
+   "apres": ":\n",
+   "avant": " or not PR._compagnon_egal(man):\n",
+   "code": 0,
+   "derniere_ligne": "88 passed, 112 subtests passed in 135.30s (0:02:15)",
+   "echecs": [],
+   "fichier": "demonstrations/pilote_mr2_v69.py",
+   "garde": "mesurer : le manifeste égale son compagnon avant la mesure (M-5)",
+   "id": "W5-manifeste-altere-admis-a-la-mesure",
+   "issue": "survit"
+  }
+ ],
+ "outil": "mutations_contre_lecteur_v69_v1",
+ "sain": {
+  "code": 0,
+  "derniere_ligne": "88 passed, 112 subtests passed in 133.30s (0:02:13)",
+  "echecs": []
+ },
+ "suite": "essais/test_pilote_mr2_v69.py (entière, 88 essais)"
+}

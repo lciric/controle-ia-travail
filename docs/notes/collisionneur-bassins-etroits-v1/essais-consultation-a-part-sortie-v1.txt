@@ -1,0 +1,74 @@
+consultation-a-part-v1 ; prompt 13090 caractères, sha256 dd3db386fdd088e353b4cc2dfcc0aecb0bced4cea72b4e75d7168789fc0ce6aa ; faits d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3 ; question 935f4e5b15abd2d83a0fc063aa5255023d94fbc2ff783c750769802348ddbd52
+  argon  gemini-4-argon   plafond de sortie  24000 ; prix (10.0, 50.0) ; pire cas 1.2436 USD
+  astra  gpt-6-astra      plafond de sortie  16000 ; prix (10.0, 50.0) ; pire cas 0.8436 USD
+  kimi   kimi-k3.1-pro    plafond de sortie  32000 ; prix (2.0, 10.0) ; pire cas 0.3287 USD
+  pire cas total 2.4160 USD ; plafond 15.00 USD
+[2026-11-13T12:46:37Z] argon : gemini-4-argon, plafond de sortie 24000 jetons
+    statut OK, fin STOP, 9000 jetons de sortie, marqueur oui, 0.4900 USD
+[2026-11-13T12:46:37Z] astra : gpt-6-astra, plafond de sortie 16000 jetons
+    statut OK, fin stop, 7000 jetons de sortie, marqueur oui, 0.3900 USD
+[2026-11-13T12:46:37Z] kimi : kimi-k3.1-pro, plafond de sortie 32000 jetons
+    statut OK, fin stop, 20000 jetons de sortie, marqueur oui, 0.2080 USD
+fini ; dépense au barème du script 1.0880 USD
+OK  sain : code 0
+OK  sain : un appel par modèle, plafonds 24000/16000/32000
+OK  sain : trois consultations valides
+OK  sain : coût au barème du script (argon 4000×10 + 9000×50 par million = 0,49)
+OK  sain : prompt, réponse brute, texte écrits
+OK  sain : prompt identique pour les trois ; le modèle consulté n'est pas nommé dans l'en-tête
+OK  sain : blocs FAITS et QUESTION aux empreintes des fichiers
+OK  sain : résumé écrit
+consultation-a-part-v1 ; prompt 13090 caractères, sha256 dd3db386fdd088e353b4cc2dfcc0aecb0bced4cea72b4e75d7168789fc0ce6aa ; faits d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3 ; question 935f4e5b15abd2d83a0fc063aa5255023d94fbc2ff783c750769802348ddbd52
+  argon  gemini-4-argon   plafond de sortie  24000 ; prix (10.0, 50.0) ; pire cas 1.2436 USD
+  astra  gpt-6-astra      plafond de sortie  16000 ; prix (10.0, 50.0) ; pire cas 0.8436 USD
+  kimi   kimi-k3.1-pro    plafond de sortie  32000 ; prix (2.0, 10.0) ; pire cas 0.3287 USD
+  pire cas total 2.4160 USD ; plafond 15.00 USD
+[2026-11-13T12:46:37Z] argon : gemini-4-argon, plafond de sortie 24000 jetons
+    statut REFUS, fin BLOCAGE_PROMPT, 0 jetons de sortie, marqueur non, 0.0400 USD
+[2026-11-13T12:46:37Z] astra : gpt-6-astra, plafond de sortie 16000 jetons
+    statut VIDE, fin stop, 10 jetons de sortie, marqueur non, 0.0405 USD
+[2026-11-13T12:46:37Z] kimi : kimi-k3.1-pro, plafond de sortie 32000 jetons
+    statut ECHEC, fin None, 0 jetons de sortie, marqueur non, 0.0000 USD
+fini ; dépense au barème du script 0.0805 USD
+OK  artefact : code 0, chaque relevé écrit
+OK  artefact : un seul essai par modèle (aucune relance)
+OK  artefact : statuts REFUS / VIDE / ECHEC
+OK  artefact : aucune consultation valide
+consultation-a-part-v1 ; prompt 13090 caractères, sha256 dd3db386fdd088e353b4cc2dfcc0aecb0bced4cea72b4e75d7168789fc0ce6aa ; faits d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3 ; question 935f4e5b15abd2d83a0fc063aa5255023d94fbc2ff783c750769802348ddbd52
+  argon  gemini-4-argon   plafond de sortie  24000 ; prix (10.0, 50.0) ; pire cas 1.2436 USD
+  astra  gpt-6-astra      plafond de sortie  16000 ; prix (10.0, 50.0) ; pire cas 0.8436 USD
+  kimi   kimi-k3.1-pro    plafond de sortie  32000 ; prix (2.0, 10.0) ; pire cas 0.3287 USD
+  pire cas total 2.4160 USD ; plafond 15.00 USD
+[2026-11-13T12:46:37Z] argon : gemini-4-argon, plafond de sortie 24000 jetons
+    statut TRONQUE, fin MAX_TOKENS, 24000 jetons de sortie, marqueur non, 1.2400 USD
+[2026-11-13T12:46:37Z] astra : gpt-6-astra, plafond de sortie 16000 jetons
+    statut OK, fin stop, 100 jetons de sortie, marqueur non, 0.0450 USD
+[2026-11-13T12:46:37Z] kimi : kimi-k3.1-pro, plafond de sortie 32000 jetons
+    statut MODELE_DIFFERENT, fin stop, 100 jetons de sortie, marqueur oui, 0.0090 USD
+ARRÊT (code 2) : pire cas 2.4160 USD > plafond 1.00 USD ; aucun appel
+ARRÊT (code 1) : /tmp/claude-0/-home-user/d9ee6091-e75a-5f52-8473-9583438f59bd/scratchpad/agents/collisionneur-bassins/essais-tmp-v1/sain existe déjà : dossier de sortie neuf exigé (on n'écrase jamais)
+ARRÊT (code 1) : script du collisionneur : empreinte 0d9292eff83ac0a65fd6c474094053d8418720b02a3c3a37978da414ee9586e4 au lieu de 4ad78ccce8228aed2679c854eaec7ee4d2ab8f867098218387024adfeb1e7756 ; arrêt
+fini ; dépense au barème du script 1.2940 USD
+OK  tronqué : TRONQUE, non valide
+OK  marqueur absent : OK mais non valide
+OK  modèle différent : MODELE_DIFFERENT, non valide
+consultation-a-part-v1 ; prompt 13090 caractères, sha256 dd3db386fdd088e353b4cc2dfcc0aecb0bced4cea72b4e75d7168789fc0ce6aa ; faits d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3 ; question 935f4e5b15abd2d83a0fc063aa5255023d94fbc2ff783c750769802348ddbd52
+  argon  gemini-4-argon   plafond de sortie  24000 ; prix (10.0, 50.0) ; pire cas 1.2436 USD
+  astra  gpt-6-astra      plafond de sortie  16000 ; prix (10.0, 50.0) ; pire cas 0.8436 USD
+  kimi   kimi-k3.1-pro    plafond de sortie  32000 ; prix (2.0, 10.0) ; pire cas 0.3287 USD
+  pire cas total 2.4160 USD ; plafond 1.00 USD
+OK  plafond : code 2, aucun appel, aucun dossier
+consultation-a-part-v1 ; prompt 13090 caractères, sha256 dd3db386fdd088e353b4cc2dfcc0aecb0bced4cea72b4e75d7168789fc0ce6aa ; faits d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3 ; question 935f4e5b15abd2d83a0fc063aa5255023d94fbc2ff783c750769802348ddbd52
+  argon  gemini-4-argon   plafond de sortie  24000 ; prix (10.0, 50.0) ; pire cas 1.2436 USD
+  astra  gpt-6-astra      plafond de sortie  16000 ; prix (10.0, 50.0) ; pire cas 0.8436 USD
+  kimi   kimi-k3.1-pro    plafond de sortie  32000 ; prix (2.0, 10.0) ; pire cas 0.3287 USD
+  pire cas total 2.4160 USD ; plafond 15.00 USD
+OK  écrasement : code 1, aucun appel, fichiers intacts
+OK  script altéré : code 1
+consultation-a-part-v1 ; prompt 13090 caractères, sha256 dd3db386fdd088e353b4cc2dfcc0aecb0bced4cea72b4e75d7168789fc0ce6aa ; faits d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3 ; question 935f4e5b15abd2d83a0fc063aa5255023d94fbc2ff783c750769802348ddbd52
+  argon  gemini-4-argon   plafond de sortie  24000 ; prix (10.0, 50.0) ; pire cas 1.2436 USD
+  astra  gpt-6-astra      plafond de sortie  16000 ; prix (10.0, 50.0) ; pire cas 0.8436 USD
+  kimi   kimi-k3.1-pro    plafond de sortie  32000 ; prix (2.0, 10.0) ; pire cas 0.3287 USD
+  pire cas total 2.4160 USD ; plafond 15.00 USD
+OK  devis : code 0
+19 sur 19 essais réussis

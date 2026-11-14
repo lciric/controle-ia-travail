@@ -1,0 +1,203 @@
+--- contre-lecture-lecture-classement-v3-outils/sondes_contre_lecture_v3.py	2026-11-14 08:42:57.307391990 +0000
++++ lecture-classement-v3-1/rejeu-contre-lecture/sondes_contre_lecture_v3_rejeu_v3_1.py	2026-11-14 09:18:43.121871774 +0000
+@@ -1,5 +1,25 @@
+ #!/usr/bin/env python3
+-"""Sondes du contre-lecteur (modèle B) — outil du lecteur v3, course « conception propre ».
++"""Sondes du contre-lecteur (modèle B) — outil du lecteur v3, course « conception propre » — REJEU SUR LA v3.1.
++
++Copie adaptée par l'auteur de la v3.1 (modèle A) de `contre-lecture-lecture-classement-v3-outils/sondes_contre_lecture_v3.py`
++(`5cda97d1…`, non modifié). Adaptations, et seulement elles (différentiel entier :
++`differentiel-sondes-contre-lecture-rejeu.diff`) :
++- chemins et noms : dossier `lecture-classement-v3-1`, essais `essais_lecture_classement_v3_1.py` (bibliothèque),
++  fichiers écrits en `-v3-1` ;
++- s1 : l'appel à `envoyer` est gardé par `try` (la v3.1 refuse la clé avant tout envoi ; la sonde d'origine aurait fini
++  en « sonde_en_echec ») ; la sonde rend aussi l'existence du journal, le message du refus, et
++  `serveur_contacte_avec_cette_cle` (le champ d'origine `serveur_contacte` cumule les deux itérations et la « reprise »
++  avec une clé propre, qui, en v3.1, part normalement puisque rien n'a été envoyé avant) ;
++- s4 : `E.lire` envoie désormais par `envoyer` (journal tenu) ; la sonde appelle `E.deposer_sans_journal`, qui fait ce
++  que faisait `E.lire` en v3 (réponses scellées déposées à la main), et garde le classement par `try` ;
++- s7 : la v3.1 n'admet qu'un dossier d'envois, au chemin fixe ; les deux préparations sont faites l'une après l'autre au
++  chemin fixe (la première copiée hors de la racine puis retirée), au lieu de deux dossiers voisins ;
++- s8 : même raison ; après l'arrêt au 3e appel, la sonde essaie une seconde préparation (même dossier, autre dossier) et
++  l'envoi d'une copie du dossier, et rend chaque refus ;
++- s10 : l'appel est gardé par `try` comme avant ; rien d'autre.
++s2, s3, s5, s6, s9 : inchangés (noms de fichiers en `-v3-1` seulement).
++
++Texte d'origine :
+ 
+ Jouées sur une **copie non modifiée** de l'outil et du classement v3 (dossier `LC_MODULES`, dans le bloc-notes), avec les
+ doublures et les fiches factices des essais de l'auteur (module `essais_lecture_classement_v3.py` importé comme
+@@ -23,6 +43,7 @@
+ import importlib.util
+ import json
+ import os
++import shutil
+ import sys
+ import tempfile
+ import threading
+@@ -31,8 +52,8 @@
+ from pathlib import Path
+ 
+ ICI = Path(__file__).resolve().parent
+-V3 = ICI.parent / "lecture-classement-v3"
+-V2 = ICI.parent / "lecture-classement-v2"
++V3 = ICI.parent  # v3.1 : dossier lecture-classement-v3-1
++V2 = ICI.parents[1] / "lecture-classement-v2"
+ 
+ 
+ def charger(nom, chemin):
+@@ -43,7 +64,7 @@
+     return m
+ 
+ 
+-E = charger("essais_v3_bibliotheque", V3 / "essais_lecture_classement_v3.py")
++E = charger("essais_v3_1_bibliotheque", V3 / "essais_lecture_classement_v3_1.py")
+ O, K = E.O, E.K
+ 
+ 
+@@ -103,10 +124,15 @@
+             cle = "sk-sonde-factice-CLE-A-NE-PAS-ECRIRE-9876543210"
+             env, _ = E.preparer(tmp / f"s1-{nom}")
+             os.environ["OPENAI_API_KEY"] = cle + fin
+-            r = O.envoyer(env)  # transport réel de l'outil, adresse de la boucle locale
++            contacts_avant = len(vus)
++            try:
++                r = O.envoyer(env)  # transport réel de l'outil, adresse de la boucle locale
++                issue = {"issue": r["issue"], "detail": r["detail"], "depense_comptee_usd": r["depense_comptee_usd"]}
++            except O.Refus as e:
++                issue = {"refus": str(e)[:160], "cle_dans_le_refus": cle in str(e)}
+             fichiers = [p.name for p in env.iterdir() if cle.encode() in p.read_bytes()]
+-            res[nom] = {"issue": r["issue"], "detail": r["detail"], "cle_ecrite_dans": sorted(fichiers),
+-                        "serveur_contacte": bool(vus), "depense_comptee_usd": r["depense_comptee_usd"],
++            res[nom] = {**issue, "cle_ecrite_dans": sorted(fichiers), "journal_existe": (env / O.JOURNAL).exists(),
++                        "serveur_contacte": bool(vus), "serveur_contacte_avec_cette_cle": len(vus) > contacts_avant,
+                         "reprise": None}
+             try:
+                 os.environ["OPENAI_API_KEY"] = cle
+@@ -172,10 +198,14 @@
+ 
+ def s4(tmp):
+     env, _ = E.preparer(tmp / "s4")
+-    E.lire(env)  # aide des essais : écrit et scelle les réponses, sans journal
+-    r = E.classer(env)
+-    return {"journal_existe": (env / O.JOURNAL).exists(), "verdict": r["verdict"], "designees": len(r["designees"]),
+-            "lecture_complete": r["lecture_complete"]["complete"]}
++    E.deposer_sans_journal(env)  # aide des essais v3.1 : écrit et scelle les réponses, sans journal (le `lire` de la v3)
++    try:
++        r = E.classer(env)
++        issue = {"verdict": r["verdict"], "designees": len(r["designees"]),
++                 "lecture_complete": r["lecture_complete"]["complete"]}
++    except O.Refus as e:
++        issue = {"refus": str(e)[:160]}
++    return {"journal_existe": (env / O.JOURNAL).exists(), **issue}
+ 
+ 
+ # --- s5, s6 : réponses mal formées qui font tomber l'analyse --------------------------------------------------------------
+@@ -206,8 +236,8 @@
+             issue = {"exception": type(ex).__name__, "message": str(ex)[:100],
+                      "derniere_ligne": traceback.extract_tb(ex.__traceback__)[-1].name}
+         j = O.lire_journal(env)
+-        res[nom] = {**issue, "reponse_payee_gardee": (env / "reponse-L1-lot1-v3.json").exists(),
+-                    "erreur_ecrite": (env / "erreur-L1-lot1-v3.json").exists(), "en_vol": j["en_vol"],
++        res[nom] = {**issue, "reponse_payee_gardee": (env / "reponse-L1-lot1-v3-1.json").exists(),
++                    "erreur_ecrite": (env / "erreur-L1-lot1-v3-1.json").exists(), "en_vol": j["en_vol"],
+                     "depense_comptee_usd": round(j["depense_usd"], 6),
+                     "pire_cas_usd": man["garde_depense"]["envois"][0]["pire_cas_usd"]}
+     return res
+@@ -225,7 +255,7 @@
+         except Exception as ex:
+             issue = {"exception": type(ex).__name__, "message": str(ex)[:100]}
+         j = O.lire_journal(env)
+-        res[nom] = {**issue, "erreur_ecrite": (env / "erreur-L1-lot1-v3.json").exists(), "en_vol": j["en_vol"]}
++        res[nom] = {**issue, "erreur_ecrite": (env / "erreur-L1-lot1-v3-1.json").exists(), "en_vol": j["en_vol"]}
+     return res
+ 
+ 
+@@ -245,14 +275,18 @@
+         pf, h = E.ecrire_fiches(base, fs)
+         pa = E.ecrire_attestation(base, h)
+         rac = E.racine_de(base)
+-        a = E.opreparer(pf, pa, rac / "envois-a", rac)
+-        b = E.opreparer(pf, pa, rac / "envois-b", rac)
++        fixe = E.envois_de(rac)  # v3.1 : un seul dossier d'envois, au chemin fixe (C6)
++        a = E.opreparer(pf, pa, fixe, rac)
++        shutil.copytree(fixe, base / "envois-a")  # copie hors de la racine, puis seconde préparation au même chemin
++        shutil.rmtree(fixe)
++        b = E.opreparer(pf, pa, fixe, rac)
++        shutil.copytree(fixe, base / "envois-b")
+         m2 = v2.preparer(pf, pa, rac / "envois-v2", rac)
+-        ident = {n: (rac / "envois-a" / n).read_bytes() == (rac / "envois-b" / n).read_bytes() for n in a["fichiers"]}
+-        c3 = json.loads((rac / "envois-a" / "cle-lectures-v3.json").read_text(encoding="utf-8"))
++        ident = {n: (base / "envois-a" / n).read_bytes() == (base / "envois-b" / n).read_bytes() for n in a["fichiers"]}
++        c3 = json.loads((base / "envois-a" / "cle-lectures-v3-1.json").read_text(encoding="utf-8"))
+         c2 = json.loads((rac / "envois-v2" / "cle-lectures-v2.json").read_text(encoding="utf-8"))
+         servi = {}
+-        for v, d, cle, suffixe in (("v2", rac / "envois-v2", c2, "v2"), ("v3", rac / "envois-a", c3, "v3")):
++        for v, d, cle, suffixe in (("v2", rac / "envois-v2", c2, "v2"), ("v3", base / "envois-a", c3, "v3-1")):
+             servi[v] = {}
+             for L in O.LECTURES:
+                 tetes, parl = set(), {}
+@@ -270,7 +304,7 @@
+             "ordres_egaux_v2_v3": all(c2[L]["ordre"] == c3[L]["ordre"] for L in O.LECTURES),
+             "etiquettes_egales_v2_v3": all(c2[L]["etiquettes"] == c3[L]["etiquettes"] for L in O.LECTURES),
+             "pile_interne_egale_v2_v3": ((rac / "envois-v2" / "pile-interne-v2.json").read_bytes()
+-                                         == (rac / "envois-a" / "pile-interne-v3.json").read_bytes()),
++                                         == (base / "envois-a" / "pile-interne-v3-1.json").read_bytes()),
+             "vue_servie_par_etiquette_egale_v2_v3": all(servi["v2"][L]["fiches"] == servi["v3"][L]["fiches"]
+                                                         for L in O.LECTURES),
+             "preambule_egal_v2_v3_et_unique": all(servi["v2"][L]["tetes"] == servi["v3"][L]["tetes"]
+@@ -291,21 +325,28 @@
+     pf, h = E.ecrire_fiches(base, E.fiches_factices())
+     pa = E.ecrire_attestation(base, h)
+     rac = E.racine_de(base)
+-    E.opreparer(pf, pa, rac / "envois", rac, plafond_usd=14.0)
+-    r1, d1 = E.envoyer(rac / "envois", MP(), scenarios={3: "length"})
++    fixe = E.envois_de(rac)
++    E.opreparer(pf, pa, fixe, rac, plafond_usd=14.0)
++    r1, d1 = E.envoyer(fixe, MP(), scenarios={3: "length"})
+     try:
+-        E.envoyer(rac / "envois", MP())
++        E.envoyer(fixe, MP())
+         reprise = "permise"
+     except O.Refus:
+         reprise = "refusée"
+-    E.opreparer(pf, pa, rac / "envois-bis", rac, plafond_usd=14.0)  # même pile, dossier neuf, même plafond
+-    r2, d2 = E.envoyer(rac / "envois-bis", MP())
++    essais = {}
++    for nom, geste in (
++            ("seconde_preparation_meme_dossier", lambda: E.opreparer(pf, pa, fixe, rac, plafond_usd=14.0)),
++            ("seconde_preparation_autre_dossier", lambda: E.opreparer(pf, pa, rac / "envois-bis", rac, plafond_usd=14.0)),
++            ("envoi_d_une_copie_du_dossier", lambda: (shutil.copytree(fixe, rac / "docs" / "copie" / "envois"),
++                                                      E.envoyer(rac / "docs" / "copie" / "envois", MP())))):
++        try:
++            r = geste()
++            essais[nom] = {"permis": True, "detail": str(r)[:120]}
++        except O.Refus as e:
++            essais[nom] = {"refus": str(e)[:160]}
+     return {"premier_dossier": {"issue": r1["issue"], "appels": r1["appels"], "depense": r1["depense_comptee_usd"],
+                                 "reprise": reprise},
+-            "second_dossier": {"issue": r2["issue"], "appels": r2["appels"], "depense": r2["depense_comptee_usd"],
+-                               "plafond": r2["plafond_usd"]},
+-            "depense_totale_des_deux": round(r1["depense_comptee_usd"] + r2["depense_comptee_usd"], 6),
+-            "memes_corps_renvoyes": len(set(d1.appels) & set(d2.appels))}
++            "second_dossier": essais, "appels_partis_au_total": len(d1.appels)}
+ 
+ 
+ # --- s9 : valeur de N illisible mais non nulle (hors de la lettre de C1) --------------------------------------------------
+@@ -346,12 +387,12 @@
+ 
+ 
+ def main(sortie):
+-    res = {"sondes": "contre-lecture de l'outil du lecteur v3 (contre-lecteur, modèle B)",
++    res = {"sondes": "contre-lecture de l'outil du lecteur v3 (contre-lecteur, modèle B), rejouées sur la v3.1 par son auteur",
+            "debut_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+-           "outil_sha256": O.sha256_fichier(E.MODS / "outil_lecteur_conception_propre_v3.py"),
+-           "classer_sha256": O.sha256_fichier(E.MODS / "classer_conception_propre_v3.py"), "resultats": {}}
++           "outil_sha256": O.sha256_fichier(E.MODS / "outil_lecteur_conception_propre_v3_1.py"),
++           "classer_sha256": O.sha256_fichier(E.MODS / "classer_conception_propre_v3_1.py"), "resultats": {}}
+     res["interfaces_reseau"] = monter_boucle_locale()
+-    with tempfile.TemporaryDirectory(prefix="sondes-cl-v3-") as tmp:
++    with tempfile.TemporaryDirectory(prefix="sondes-cl-v3-1-") as tmp:
+         for nom, f in (("s1_cle_avec_fin_de_ligne", s1), ("s2_redirection_vers_un_autre_hote", s2),
+                        ("s3_usage_sous_declare", s3), ("s4_reponses_sans_journal", s4),
+                        ("s5_reponse_200_mal_formee", s5), ("s6_erreur_mal_formee", s6),

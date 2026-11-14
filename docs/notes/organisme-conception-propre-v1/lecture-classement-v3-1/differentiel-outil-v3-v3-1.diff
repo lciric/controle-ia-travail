@@ -1,0 +1,987 @@
+--- lecture-classement-v3/outil_lecteur_conception_propre_v3.py	2026-11-14 07:53:05.650037346 +0000
++++ lecture-classement-v3-1/outil_lecteur_conception_propre_v3_1.py	2026-11-14 09:06:00.459178049 +0000
+@@ -1,58 +1,64 @@
+ #!/usr/bin/env python3
+-"""Outil du lecteur de la règle de sélection — course « conception propre » — v3 (lecteur Astra).
++"""Outil du lecteur de la règle de sélection — course « conception propre » — v3.1 (lecteur Astra).
+ 
+-v3 (14 novembre 2026, à partir de 07:43 UTC, `date -u`) = v2 (`../lecture-classement-v2/`, `a58fb8b9…`, gardée, R12),
+-écrite par un développeur neuf après l'échec de la lecture par Kimi (R-2658 : lots de 14 ou 15 fiches, `finish_reason =
+-length`, les 32 768 jetons de sortie mangés par le raisonnement) et le changement de lecteur décidé par Lazar (R-2659,
+-R-2662) : **Astra** (`gpt-6-astra`, famille OpenAI), voie déjà nommée par la conception (§ 4.2, `be3ba97e…`) ; la règle ne
+-change pas. Ce qui change, et seulement cela (détail : `rapport-lecture-classement-v3.md`) :
+-
+-- **lecteur et point d'entrée** : `POST https://api.openai.com/v1/chat/completions` (Chat Completions, pas Responses :
+-  voie déjà employée avec `gpt-6-astra` dans le dépôt, modèle servi rendu exact, R-1454 ; réponse `chat.completion` dont
+-  `choices[0].finish_reason` porte directement la garde « fin autre que stop » de la v2 ; aucun état gardé chez le
+-  fournisseur, `store: false` explicite) ; corps = un seul message utilisateur (le même texte qu'en v2), `model`,
+-  `max_completion_tokens` (plafond de sortie, raisonnement compris), `reasoning_effort` (effort de raisonnement, choisi et
+-  consigné à la préparation), `store` ; aucun outil, aucun message système, aucune température ;
+-- **clé** : lue **par son nom seul**, `OPENAI_API_KEY`, dans la seule fonction `lire_cle` (le « relais » en processus :
+-  `envoyer`), retirée aussitôt de `os.environ`, posée dans l'en-tête `Authorization` et nulle part ailleurs : jamais
+-  affichée, jamais écrite, masquée dans tout message d'erreur ;
+-- **lots de 5 fiches** (`TAILLE_LOT`, paramètre unique ; 43 fiches → 9 lots par lecture, 18 appels) au lieu de 20 ;
+-- **plafond de sortie et effort explicites**, consignés au manifeste et dans chaque corps ;
+-- **modèle servi vérifié** : `model` de la réponse égal, octet pour octet, à `gpt-6-astra`, sinon anomalie bloquante ;
+-- **garde de dépense** dans `envoyer` : prix et plafond en USD fixés à la préparation (manifeste scellé), nombre d'appels
+-  maximal fixé d'avance (deux lectures × lots, au plus `MAX_APPELS` = 18) ; avant chaque appel, dépense comptée + pire cas
+-  de l'appel ≤ plafond, sinon arrêt sans envoi ; après chaque appel, coût lu dans `usage` (jetons d'entrée, d'entrée en
+-  cache, de sortie), compté **au pire cas** quand l'usage manque, est illisible ou incohérent ; journal de dépense chaîné,
+-  relu à chaque reprise (un arrêt ne remet pas le compte à zéro) ;
+-- **arrêt au premier écart** : statut autre que 200, modèle servi différent, fin autre que `stop`, usage absent, refus du
+-  lecteur, coût au-dessus du pire cas réservé : rien d'autre n'est envoyé (leçon de R-2658 : le second lot était parti
+-  avant la lecture de la fin du premier), aucune relecture, aucune reprise automatique ;
+-- **condition C1 de la relecture courte** (`relecture-courte-lecture-classement-v2.md`, r1) devenue une anomalie
+-  bloquante : une entrée à laquelle manque une clé de critère (R1 à R7, N, ou sa `valeur`) rend la lecture incomplète ;
+-- une **réponse absente** n'est acceptée par `verifier` que si le journal consigne un arrêt (elle devient alors une
+-  anomalie bloquante, verdict E2) ; sinon refus, comme en v2 ;
+-- un corps d'erreur du fournisseur n'est **jamais** écrit (il peut porter des identifiants du compte, R-2645) : seuls le
+-  statut, le type et le code de l'erreur, et l'empreinte du corps.
+-
+-Les envois de la v1 (`lecture-g1-v1/envois/`, lots de 14 ou 15, corps au format Kimi) ne servent plus : `preparer` les
+-**régénère** de façon déterministe depuis la copie attestée des fiches validées et les témoins épinglés. Les ordres des deux
+-lectures sont ceux de la v2 (même `SeedSequence(2026111302).spawn(4)`, enfants 0 et 1, mêmes étiquettes F01…) ; seules
+-les frontières des lots changent.
+-
+-De la v2 (inchangé) : attestation exigée ; pièces épinglées ; seule la copie scellée `runs/…/copies/sortie--fiches-validees.json`
+-acceptée (M3) ; admissibilité par programme ; vue servie sans auteur, identifiant, passe, empreinte ni marque de témoin,
+-clés dans l'ordre du gabarit, typographie de l'orchestrateur ; citations d'au moins 20 caractères hors espaces, vérifiées
+-mot pour mot ; catalogue lu dans la seule cellule du mécanisme (M1) ; anomalies bloquantes nommant les fiches (M2) ; R4
+-hors `levier:juge` à 1 par programme ; écriture scellée, jamais d'écrasement (R12).
++v3.1 (14 novembre 2026, à partir de 09:01 UTC, `date -u`) = v3 (`../lecture-classement-v3/`, `6a11cf3d…`, gardée, R12),
++corrigée par son auteur d'après la contre-lecture `contre-lecture-lecture-classement-v3-v1.md` (`f5cc9cdb…`, modèle B,
++R-2678 : « non utilisable en l'état pour `envoyer` ») et la consigne de la mère ; prix lus : `prix-astra-v2.md`
++(`bf211a07…`, R-2677). La règle de lecture ne change pas (fonctions de la règle identiques à la v3, essai
++`test_regle_inchangee_v3_v3_1`). Changements, et seulement eux (détail : `rapport-lecture-classement-v3-1.md`) :
++
++- **B1, clé** : une clé vide, ou qui porte un caractère hors de l'ASCII imprimable (retour chariot, saut de ligne,
++  espace…), est refusée sans être montrée, avant tout journal et tout envoi ; le message d'une exception de transport
++  n'est jamais écrit (seul son type) ; tout ce qu'`envoyer` écrit (réponse, erreur, journal, relevé) passe par
++  `expurger`, qui remplace la clé et ses formes échappées (JSON, `\\/`, pourcentage, repr) ; une réponse qui porte la clé
++  est une anomalie bloquante (`cle_dans_la_reponse`) ;
++- **B2, redirection** : aucune redirection suivie (`SansRedirection`) ; un statut 3xx est une anomalie bloquante
++  (`redirection_refusee`) ; l'adresse finale doit égaler l'adresse demandée ; l'en-tête d'autorisation ne part que vers
++  `api.openai.com` ;
++- **M1** : `verifier` (donc le classement) refuse toute réponse sans réception ou clôture chaînée au journal, à son nom,
++  à son empreinte et au statut 200 ; le journal et le dossier sont confrontés dans les deux sens ;
++- **M2, C6** : un seul dossier d'envois par lecture, à un chemin fixe (`DOSSIER_ENVOIS_REL`) ; tout autre manifeste
++  d'envois v3 sous `docs/` ou `runs/` fait refuser `preparer`, `envoyer`, `bilan` et `verifier` : la dépense ne repart
++  jamais de zéro ; le plafond est borné par 14,20 USD moins la dépense antérieure déclarée (`--depense-anterieure-usd`,
++  obligatoire, consignée) ;
++- **M3** : une réponse 200 payée est écrite brute (le corps seul, sans en-têtes ni clé), scellée et consignée au journal
++  (`recu`) **avant** toute analyse ; l'analyse ne lève plus (chaque champ contrôlé par son type ; filet déclaré
++  `analyse_en_echec`, pire cas) ;
++- **M4** : usage incohérent, compté au pire cas et bloquant, aussi vers le bas : total sous la somme, entrée sous un
++  plancher (octets du corps / 16), sortie visible sous un plancher (octets du contenu rendu / 16, au moins 1 si le contenu
++  n'est pas vide) ;
++- **M5** : un cas sain et un artefact par garde dans les essais (mutants survivants du contre-lecteur) ; tout écart
++  d'envoi consigné au journal est une anomalie bloquante de la vérification (`anomalie_d_envoi`, réserve r6 de la v3
++  levée) ;
++- **m1** : à l'envoi, le manifeste (même rescellé) est revérifié : prix égaux aux prix lus, plafond fini et dans les
++  bornes, nombre d'appels, lecteur, octets et pire cas de chaque corps, paramètres de chaque corps ;
++- **m3** : docstring de `lire_reponse` juste (le contenu d'une réponse à fin autre que `stop` est lu) ;
++- **palier** : `--palier standard|flex` (défaut `standard`), consigné au manifeste ; `flex` ajoute
++  `service_tier: "flex"` au corps et exige le même palier dans la réponse ; en standard, un palier servi autre que
++  `default` (ou absent) est aussi une anomalie bloquante (SUPPOSÉ sur les noms, éprouvé au premier appel, C3) ; prix des
++  deux paliers (entrée, entrée en cache, sortie) pris de `prix-astra-v2.md`, source et date au manifeste (C2) ;
++  aucune option de prix en ligne de commande ;
++- noms des fichiers écrits en `-v3-1` (R12).
++
++De la v3 (inchangé, sauf ci-dessus) : Chat Completions (`POST https://api.openai.com/v1/chat/completions`) ; corps à un
++seul message, `max_completion_tokens` 32 768, `reasoning_effort` choisi, `store: false` ; clé lue par son nom seul,
++`OPENAI_API_KEY`, dans `lire_cle`, retirée aussitôt de l'environnement ; lots de 5 (`TAILLE_LOT`), 18 appels au plus ;
++modèle servi vérifié à l'égalité exacte ; garde de dépense (avant chaque appel : dépense comptée + pire cas ≤ plafond ;
++après : coût lu dans `usage`, pire cas sinon) ; journal chaîné, relu à chaque reprise ; arrêt au premier écart, aucune
++reprise, aucune relecture ; corps d'erreur jamais écrit ; C1 bloquante ; envois régénérés de façon déterministe (mêmes
++ordres et étiquettes que la v2). De la v2 : attestation exigée, pièces épinglées, provenance M3, admissibilité, vue servie
++sans auteur ni marque de témoin, citations d'au moins 20 caractères vérifiées mot pour mot, catalogue lu dans la cellule
++du mécanisme, anomalies bloquantes nommant les fiches.
+ 
+ Actions :
+ 
+-    python3 -I -B outil_lecteur_conception_propre_v3.py preparer --fiches F --attestation A --sortie DOSSIER \
+-        --effort low|medium|high --prix-entree PE --prix-sortie PS [--prix-cache PC] --source-prix TEXTE --plafond-usd X
+-    python3 -I -B outil_lecteur_conception_propre_v3.py envoyer --envois DOSSIER [--envois-max N]
+-    python3 -I -B outil_lecteur_conception_propre_v3.py bilan --envois DOSSIER
+-    python3 -I -B outil_lecteur_conception_propre_v3.py verifier --envois DOSSIER [--lecture L1|L2]
++    python3 -I -B outil_lecteur_conception_propre_v3_1.py preparer --fiches F --attestation A --sortie DOSSIER_FIXE \
++        --effort low|medium|high [--palier standard|flex] --plafond-usd X --depense-anterieure-usd D
++    python3 -I -B outil_lecteur_conception_propre_v3_1.py envoyer --envois DOSSIER_FIXE [--envois-max N]
++    python3 -I -B outil_lecteur_conception_propre_v3_1.py bilan --envois DOSSIER_FIXE
++    python3 -I -B outil_lecteur_conception_propre_v3_1.py verifier --envois DOSSIER_FIXE [--lecture L1|L2]
+ 
++DOSSIER_FIXE = `<racine>/docs/notes/organisme-conception-propre-v1/lecture-g1-v3-1/envois`.
+ Codes de sortie : 0 fait (ou pause demandée par `--envois-max`) ; 2 refus (rien d'envoyé de plus) ; 3 arrêt sur anomalie ;
+ 4 arrêt avant un appel qui pourrait dépasser le plafond.
+ """
+@@ -68,12 +74,13 @@
+ import sys
+ import time
+ import urllib.error
++import urllib.parse
+ import urllib.request
+ from pathlib import Path
+ 
+ import numpy as np
+ 
+-VERSION = "outil-lecteur-conception-propre-v3"
++VERSION = "outil-lecteur-conception-propre-v3-1"
+ RACINE_DEFAUT = Path(__file__).resolve().parents[4]
+ DOSSIER = "docs/notes/organisme-conception-propre-v1"
+ PIECES = {
+@@ -108,7 +115,9 @@
+ PLAFOND_ABSOLU_USD = 14.20             # reste du GO-2026-11-13-06 au 14 novembre (21 − 6,791087), arrondi en dessous
+ OCTETS_MARGE = 1024                    # pire cas d'entrée : un jeton par octet du corps, plus 1 024 (règle des relais)
+ DELAI_S = 1800
+-TAILLE_MAX_REPONSE = 4_000_000
++TAILLE_MAX_REPONSE = 1_000_000           # une réponse de 32 768 jetons fait moins de 200 ko
++PLANCHER_OCTETS_PAR_JETON = 16           # M4 : planchers d'usage (entrée et sortie visible)
++MOTIF_CLE = re.compile(r"[\x21-\x7e]{1,512}")  # B1 : ASCII imprimable, sans espace ni fin de ligne
+ LEVIERS = ("levier:juge", "levier:proposeurs", "levier:composition", "levier:cout")
+ NATURES_ADMISES = ("modification", "ajout")
+ CRITERES = ("R1", "R2", "R3", "R4", "R5", "R6", "R7")
+@@ -121,15 +130,37 @@
+ NOM_COPIE_FICHES = "sortie--fiches-validees.json"
+ MANIFESTE_FIN = "manifeste-lanceur-fin.json"
+ ANOMALIES_BLOQUANTES = ("reponse_illisible", "fin_non_stop", "entree_manquante", "entree_en_double",
+-                        "cle_de_critere_manquante", "reponse_absente", "modele_servi_different", "refus_du_lecteur")
++                        "cle_de_critere_manquante", "reponse_absente", "modele_servi_different", "refus_du_lecteur",
++                        "anomalie_d_envoi", "reponse_non_analysee", "palier_servi_different")
+ CODES_CATALOGUE = tuple(f"C{i}" for i in range(1, 13))
+ CHAMPS_INTERNES = ("auteur", "identifiant_auteur", "empreinte", "passe", "temoin")  # toujours retirés (orchestrateur)
+ ATTESTATION_CHAMPS = ("lecteur", "lu_le", "fiches_validees_sha256", "aucune_recette_aucun_secret",
+                       "envoi_au_lecteur_externe_permis")
+-JOURNAL = "journal-depense-v3.jsonl"
+-MANIFESTE = "manifeste-envois-v3.json"
+-PILE = "pile-interne-v3.json"
+-CLE_LECTURES = "cle-lectures-v3.json"
++SUFFIXE = "v3-1"                       # R12 : noms des fichiers écrits
++JOURNAL = f"journal-depense-{SUFFIXE}.jsonl"
++MANIFESTE = f"manifeste-envois-{SUFFIXE}.json"
++PILE = f"pile-interne-{SUFFIXE}.json"
++CLE_LECTURES = f"cle-lectures-{SUFFIXE}.json"
++# C6 : un seul dossier d'envois par lecture, à ce chemin (sous la racine)
++DOSSIER_ENVOIS_REL = f"{DOSSIER}/lecture-g1-v3-1/envois"
++# C2 : prix lus sur la page officielle (prix-astra-v2.md, tableau « Flagship models », contexte <= 272K jetons
++# d'entrée), USD par million de jetons ; la ligne du tableau de chaque palier est revérifiée dans la pièce épinglée.
++PIECES_PRIX = {"prix": (f"{DOSSIER}/prix-astra-v2.md",
++                        "bf211a074868f49175bd59089a3082ec78da0d545850145ca27743b260ac78df")}
++PRIX_LUS = {"standard": {"entree": 10.0, "cache": 1.0, "sortie": 50.0},
++            "flex": {"entree": 5.0, "cache": 0.5, "sortie": 25.0}}
++LIGNES_SOURCE_PRIX = {"standard": "| Standard | 10,00 | 1,00 | 50,00 |", "flex": "| Flex / Batch | 5,00 | 0,50 | 25,00 |"}
++SOURCE_PRIX = ("prix-astra-v2.md (bf211a074868f49175bd59089a3082ec78da0d545850145ca27743b260ac78df), relevé par la "
++               "session mère le 2026-11-14 à 08:45:38Z (R-2677) : page officielle "
++               "https://developers.openai.com/api/docs/pricing (demandée https://platform.openai.com/docs/pricing), "
++               "tableau Flagship models, contexte <= 272K input tokens ; copie "
++               "docs/sources/tarifs-openai-v1/developers-openai-com-api-docs-pricing-2026-11-14.html "
++               "(099c9496f75ffe6f08a57f30b007c5abf79f6eb26ecba5ddecf50ffdf4ec8028)")
++PALIERS = ("standard", "flex")
++SERVICE_TIER = {"standard": None, "flex": "flex"}   # champ `service_tier` du corps (absent en standard)
++# palier servi admis dans la réponse : égalité pour flex (consigne) ; en standard, absent ou « default »
++# (« standard » admis aussi) : SUPPOSÉ sur les noms, éprouvé au premier appel (C3)
++PALIERS_SERVIS_ADMIS = {"standard": (None, "default", "standard"), "flex": ("flex",)}
+ # Vue du lecteur : clés du gabarit de l'orchestrateur (`pole/ideation_v2.py`, GABARIT), dans son ordre.
+ ORDRE_VUE = (("nom", None), ("type", None), ("enonce", None),
+              ("loi_predictive", ("espace_instances", "prediction", "signe", "metrique")),
+@@ -418,12 +449,20 @@
+         "```json\n", json.dumps(fiches, ensure_ascii=False, indent=1), "\n```\n"]))
+ 
+ 
+-def corps_requete(message: str, effort: str) -> str:
++def lecteur_attendu(effort: str, palier: str) -> dict:
++    return {"modele": MODELE_LECTEUR, "url": URL_AMONT, "point_d_entree": "Chat Completions",
++            "variable_cle": VARIABLE_CLE, "max_completion_tokens": MAX_SORTIE, "reasoning_effort": effort,
++            "store": False, "service_tier": SERVICE_TIER[palier]}
++
++
++def corps_requete(message: str, effort: str, palier: str = "standard") -> str:
+     """Corps de Chat Completions : un seul message utilisateur ; plafond de sortie et effort explicites ; rien gardé chez
+-    le fournisseur (`store: false`)."""
+-    return json.dumps({"model": MODELE_LECTEUR, "messages": [{"role": "user", "content": message}],
+-                       "max_completion_tokens": MAX_SORTIE, "reasoning_effort": effort, "store": False},
+-                      ensure_ascii=False)
++    le fournisseur (`store: false`) ; palier Flex demandé par `service_tier: "flex"`, aucun champ pour le standard."""
++    c = {"model": MODELE_LECTEUR, "messages": [{"role": "user", "content": message}],
++         "max_completion_tokens": MAX_SORTIE, "reasoning_effort": effort, "store": False}
++    if SERVICE_TIER[palier] is not None:
++        c["service_tier"] = SERVICE_TIER[palier]
++    return json.dumps(c, ensure_ascii=False)
+ 
+ 
+ def prix_valides(prix: dict) -> dict:
+@@ -443,20 +482,69 @@
+     return (octets + OCTETS_MARGE) * prix["entree"] / 1e6 + MAX_SORTIE * prix["sortie"] / 1e6
+ 
+ 
+-def preparer(fiches_chemin, attestation_chemin, sortie, racine=RACINE_DEFAUT, *, effort, prix_entree, prix_sortie,
+-             plafond_usd, source_prix, prix_cache=None) -> dict:
++def nombre_fini(x) -> bool:
++    return type(x) in (int, float) and math.isfinite(x)
++
++
++def prix_du_palier(racine, palier) -> dict:
++    """Prix lus (C2) : constantes du code, revérifiées dans la pièce épinglée `prix-astra-v2.md` (empreinte, ligne du
++    tableau du palier). Aucun prix n'est pris d'une option en ligne de commande."""
++    if palier not in PALIERS:
++        raise Refus(f"palier {palier!r} hors de {PALIERS}")
++    rel, attendue = PIECES_PRIX["prix"]
++    p = Path(racine) / rel
++    if not p.is_file():
++        raise Refus(f"pièce des prix absente : {rel}")
++    h = sha256_fichier(p)
++    if h != attendue:
++        raise Refus(f"pièce des prix ({rel}) : empreinte {h[:12]}… ≠ épinglée {attendue[:12]}…")
++    if LIGNES_SOURCE_PRIX[palier] not in p.read_text(encoding="utf-8"):
++        raise Refus(f"pièce des prix : ligne du palier {palier} introuvable ({LIGNES_SOURCE_PRIX[palier]})")
++    return {**PRIX_LUS[palier], "source": SOURCE_PRIX}
++
++
++def racine_du_dossier(dossier) -> Path:
++    """C6 : le seul dossier d'envois accepté est `<racine>/DOSSIER_ENVOIS_REL` ; rend la racine."""
++    d = Path(dossier).resolve()
++    parties = tuple(DOSSIER_ENVOIS_REL.split("/"))
++    if d.parts[-len(parties):] != parties:
++        raise Refus(f"{dossier} : seul <racine>/{DOSSIER_ENVOIS_REL} est accepté (C6 : un seul dossier d'envois)")
++    return d.parents[len(parties) - 1]
++
++
++def verifier_unicite(racine, attendu) -> None:
++    """C6 : sous `docs/` et `runs/` de la racine, aucun autre manifeste d'envois v3 (v3 ou v3.1) que `attendu` (ou
++    aucun, à la préparation). Une seconde préparation, même ailleurs, est refusée : la dépense ne repart jamais de zéro."""
++    racine = Path(racine).resolve()
++    trouves = sorted(p.resolve() for base in ("docs", "runs") if (racine / base).is_dir()
++                     for p in (racine / base).rglob("manifeste-envois-v3*.json"))
++    voulus = [] if attendu is None else [Path(attendu).resolve()]
++    if trouves != voulus:
++        autres = [str(p.relative_to(racine)) if p.is_relative_to(racine) else str(p) for p in trouves if p not in voulus]
++        raise Refus("C6 : un seul dossier d'envois v3 par lecture ; trouvés : " + (", ".join(autres) or "aucun")
++                    + (" ; attendu : " + str(voulus[0]) if voulus and voulus[0] not in trouves else ""))
++
++
++def preparer(fiches_chemin, attestation_chemin, sortie, racine=RACINE_DEFAUT, *, effort, plafond_usd,
++             depense_anterieure_usd, palier="standard") -> dict:
+     racine = Path(racine)
+     sortie = Path(sortie)
++    if sortie.resolve() != (racine.resolve() / DOSSIER_ENVOIS_REL):
++        raise Refus(f"{sortie} : seul <racine>/{DOSSIER_ENVOIS_REL} est accepté (C6 : un seul dossier d'envois)")
+     if sortie.exists() and any(sortie.iterdir()):
+-        raise Refus(f"{sortie} existe et n'est pas vide : on n'écrase jamais (R12)")
++        raise Refus(f"{sortie} existe et n'est pas vide : on n'écrase jamais (R12) ; une seconde préparation est un nœud (C6)")
++    verifier_unicite(racine, None)
+     if effort not in EFFORTS:
+         raise Refus(f"effort de raisonnement {effort!r} hors de {EFFORTS}")
+-    prix = prix_valides({"entree": prix_entree, "sortie": prix_sortie,
+-                         "cache": prix_entree if prix_cache is None else prix_cache, "source": source_prix})
+-    if type(plafond_usd) not in (int, float) or not math.isfinite(plafond_usd) or plafond_usd <= 0:
++    prix = prix_valides(prix_du_palier(racine, palier))
++    if not nombre_fini(depense_anterieure_usd) or depense_anterieure_usd < 0:
++        raise Refus(f"dépense antérieure invalide : {depense_anterieure_usd!r} (USD comptés depuis le devis, au moins 0)")
++    disponible = PLAFOND_ABSOLU_USD - depense_anterieure_usd
++    if not nombre_fini(plafond_usd) or plafond_usd <= 0:
+         raise Refus(f"plafond invalide : {plafond_usd!r}")
+-    if plafond_usd > PLAFOND_ABSOLU_USD:
+-        raise Refus(f"plafond {plafond_usd} USD > {PLAFOND_ABSOLU_USD} (reste du GO-2026-11-13-06)")
++    if plafond_usd > disponible + 1e-9:
++        raise Refus(f"plafond {plafond_usd} USD > {PLAFOND_ABSOLU_USD} (reste du GO-2026-11-13-06) moins la dépense "
++                    f"antérieure {depense_anterieure_usd} (C4)")
+     pieces, empreintes = {}, {}
+     for nom in PIECES:
+         pieces[nom], empreintes[nom] = lire_piece(racine, nom)
+@@ -487,11 +575,11 @@
+             messages[(L, k)] = texte_message(pieces, lot, k, len(lots_idx))
+             lots.append([etiquette(r) for r in idx])
+         cle[L] = {"ordre": [pile["fiches"][i]["id"] for i in ordre], "etiquettes": etiquettes, "lots": lots}
+-    corps = {Lk: corps_requete(msg, effort) for Lk, msg in messages.items()}
++    corps = {Lk: corps_requete(msg, effort, palier) for Lk, msg in messages.items()}
+     garde = []
+     for (L, k) in sorted(corps):
+         o = len(corps[(L, k)].encode("utf-8"))
+-        garde.append({"envoi": f"envoi-{L}-lot{k}-v3.corps.json", "lecture": L, "lot": k, "octets": o,
++        garde.append({"envoi": f"envoi-{L}-lot{k}-{SUFFIXE}.corps.json", "lecture": L, "lot": k, "octets": o,
+                       "pire_cas_usd": round(pire_cas_usd(o, prix), 6)})
+     plus_gros = max(g["pire_cas_usd"] for g in garde)
+     if plus_gros > plafond_usd:
+@@ -506,7 +594,7 @@
+     sortie.mkdir(parents=True, exist_ok=True)
+     fichiers = {}
+     for (L, k) in sorted(messages):
+-        nom_m, nom_c = f"envoi-{L}-lot{k}-v3.txt", f"envoi-{L}-lot{k}-v3.corps.json"
++        nom_m, nom_c = f"envoi-{L}-lot{k}-{SUFFIXE}.txt", f"envoi-{L}-lot{k}-{SUFFIXE}.corps.json"
+         fichiers[nom_m] = ecrire_scelle(sortie / nom_m, messages[(L, k)])
+         fichiers[nom_c] = ecrire_scelle(sortie / nom_c, corps[(L, k)])
+     fichiers[PILE] = ecrire_scelle(sortie / PILE, json_texte(pile))
+@@ -515,7 +603,9 @@
+     manifeste = {
+         "version": VERSION, "outil_sha256": sha256_fichier(__file__), "prepare_le": maintenant(),
+         "versions": {"python": sys.version.split()[0], "numpy": np.__version__},
++        "dossier_envois": DOSSIER_ENVOIS_REL, "palier": palier,
+         "pieces": {k: {"chemin": PIECES[k][0], "sha256": v} for k, v in empreintes.items()},
++        "piece_prix": {"chemin": PIECES_PRIX["prix"][0], "sha256": PIECES_PRIX["prix"][1]},
+         "fiches_validees": {**prov, "nombre": len(fiches)},
+         "attestation": {"chemin": str(attestation_chemin), "sha256": sha_att, "lecteur": att["lecteur"],
+                         "lu_le": att["lu_le"]},
+@@ -526,16 +616,15 @@
+                  "temoins": sum(p["origine"] == "temoin" for p in pile["fiches"]),
+                  "hors_question": len(pile["hors_question"]), "champs_retires": pile["champs_retires"]},
+         "lots": {"taille_lot": TAILLE_LOT, "nombre_par_lecture": len(lots_idx), "tailles": [len(x) for x in lots_idx]},
+-        "lecteur": {"modele": MODELE_LECTEUR, "url": URL_AMONT, "point_d_entree": "Chat Completions",
+-                    "variable_cle": VARIABLE_CLE, "max_completion_tokens": MAX_SORTIE, "reasoning_effort": effort,
+-                    "store": False},
+-        "garde_depense": {"prix_usd_par_million": prix, "plafond_usd": plafond_usd, "appels_max": appels,
+-                          "pire_cas_total_usd": round(total, 6), "appels_surs_au_pire_cas": surs,
++        "lecteur": lecteur_attendu(effort, palier),
++        "garde_depense": {"prix_usd_par_million": prix, "plafond_usd": plafond_usd,
++                          "depense_anterieure_usd": depense_anterieure_usd, "plafond_disponible_usd": round(disponible, 6),
++                          "appels_max": appels, "pire_cas_total_usd": round(total, 6), "appels_surs_au_pire_cas": surs,
+                           "regle": "avant chaque appel : dépense comptée + pire cas de l'appel ≤ plafond, sinon arrêt ; "
+                                    "après : coût lu dans usage, pire cas si usage absent, illisible ou incohérent",
+                           "envois": garde},
+         "ordre_d_envoi": [g["envoi"] for g in garde],
+-        "reponses_attendues": [f"reponse-{L}-lot{k}-v3.json" for L in LECTURES for k in range(1, len(lots_idx) + 1)],
++        "reponses_attendues": [f"reponse-{L}-lot{k}-{SUFFIXE}.json" for L in LECTURES for k in range(1, len(lots_idx) + 1)],
+         "fichiers": fichiers,
+         "jamais_envoyes": [PILE, CLE_LECTURES, MANIFESTE, JOURNAL],
+     }
+@@ -546,27 +635,63 @@
+ # --- envoi : relais en processus, clé, garde de dépense --------------------------------------------------------------
+ 
+ def lire_cle() -> str:
+-    """La clé, lue par son nom seul, puis retirée de l'environnement du processus. Jamais affichée ni écrite."""
++    """La clé, lue par son nom seul, puis retirée de l'environnement du processus. Jamais affichée ni écrite. B1 : vide,
++    ou portant un caractère hors de l'ASCII imprimable (retour chariot, saut de ligne, espace, tabulation…), elle est
++    refusée sans être montrée, avant tout journal et tout envoi."""
+     cle = os.environ.pop(VARIABLE_CLE, None)
+     if not cle:
+-        raise Refus(f"{VARIABLE_CLE} absente : rien n'est envoyé")
++        raise Refus(f"{VARIABLE_CLE} absente ou vide : rien n'est envoyé")
++    if not MOTIF_CLE.fullmatch(cle):
++        raise Refus(f"{VARIABLE_CLE} : caractère hors de l'ASCII imprimable (fin de ligne, espace…) ; clé refusée sans "
++                    "être affichée ; rien n'est envoyé")
+     return cle
+ 
+ 
+-def masquer(texte: str, cle: str) -> str:
+-    return texte.replace(cle, "[clé]") if cle else texte
++def formes_de_cle(cle: str) -> list[bytes]:
++    """B1 : la clé et ses formes échappées (JSON, barre oblique échappée, pourcentage, repr), les plus longues d'abord."""
++    j = json.dumps(cle)[1:-1]
++    formes = {cle, j, cle.replace("/", "\\/"), j.replace("/", "\\/"), urllib.parse.quote(cle, safe=""), repr(cle)[1:-1]}
++    return sorted({f.encode("utf-8") for f in formes if f}, key=len, reverse=True)
++
++
++def contient_cle(octets: bytes, cle: str) -> bool:
++    return any(f in octets for f in formes_de_cle(cle))
++
++
++def expurger(octets: bytes, cle: str) -> tuple[bytes, bool]:
++    """Remplace toute forme de la clé par `[cle]` ; rend (octets, vrai si une forme a été trouvée)."""
++    trouve = False
++    for f in formes_de_cle(cle):
++        if f in octets:
++            octets, trouve = octets.replace(f, b"[cle]"), True
++    return octets, trouve
++
++
++class ErreurTransport(Exception):
++    """Issue de transport refusée (adresse finale autre que l'adresse demandée)."""
++
++
++class SansRedirection(urllib.request.HTTPRedirectHandler):
++    """B2 : aucune redirection n'est suivie ; un statut 3xx revient tel quel (anomalie bloquante), et l'en-tête
++    d'autorisation ne part jamais vers une autre adresse que celle d'OpenAI."""
++
++    def redirect_request(self, req, fp, code, msg, headers, newurl):
++        return None
+ 
+ 
+ def transport_reel(url: str, entetes: dict, corps: bytes, delai: float) -> tuple[int, bytes]:
+-    """Un seul POST, sans reprise. Mandataire de l'environnement (urllib), certificats de SSL_CERT_FILE s'il est donné."""
++    """Un seul POST vers l'adresse d'OpenAI, sans reprise ni redirection (B2). Mandataire de l'environnement (urllib :
++    en HTTPS, l'en-tête d'autorisation passe dans le tunnel, jamais au mandataire), certificats de SSL_CERT_FILE."""
+     if url != URL_AMONT:
+         raise Refus("adresse d'amont autre que celle d'OpenAI : refusée")
+     ca = os.environ.get("SSL_CERT_FILE")
+     contexte = ssl.create_default_context(cafile=ca) if ca else ssl.create_default_context()
+-    ouvreur = urllib.request.build_opener(urllib.request.HTTPSHandler(context=contexte))
++    ouvreur = urllib.request.build_opener(SansRedirection, urllib.request.HTTPSHandler(context=contexte))
+     req = urllib.request.Request(url, data=corps, method="POST", headers=entetes)
+     try:
+         with ouvreur.open(req, timeout=delai) as r:
++            if r.geturl() != url:
++                raise ErreurTransport("adresse finale différente de l'adresse demandée")
+             return r.status, r.read(TAILLE_MAX_REPONSE + 1)
+     except urllib.error.HTTPError as e:
+         return e.code, e.read(TAILLE_MAX_REPONSE + 1)
+@@ -576,23 +701,33 @@
+     return type(x) is int and x >= 0
+ 
+ 
+-def cout_usage(usage, prix: dict) -> tuple[float | None, str | None, dict]:
++def cout_usage(usage, prix: dict, octets_envoyes: int = 0, octets_contenu: int = 0):
+     """(coût en USD, problème, jetons lus). Coût None si l'usage est absent ou illisible (le pire cas s'applique).
+     Règle : (prompt − cache) × entrée + cache × prix du cache + completion × sortie + excédent de total × prix le plus
+     haut. `completion_tokens` compte le raisonnement (`completion_tokens_details.reasoning_tokens` en est une part :
+-    SUPPOSÉ, vérifié sur la première réponse) ; un raisonnement plus grand que la sortie est une incohérence."""
++    SUPPOSÉ, vérifié sur la première réponse, C3). M4 : usage incohérent, compté au pire cas, si le cache dépasse
++    l'entrée, le raisonnement la sortie, la sortie le plafond demandé, si le total est sous la somme, si l'entrée est
++    sous un plancher (octets du corps / 16) ou la sortie visible (sortie − raisonnement) sous un plancher (octets du
++    contenu rendu / 16, au moins 1 dès que le contenu n'est pas vide)."""
+     if not isinstance(usage, dict):
+         return None, "usage absent", {}
+     p, c = usage.get("prompt_tokens"), usage.get("completion_tokens")
+     if not entier(p) or not entier(c):
+         return None, "usage illisible (prompt_tokens ou completion_tokens)", {}
+-    cache = (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
+-    raison = (usage.get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
+-    total = usage.get("total_tokens", p + c)
++    ptd, ctd = usage.get("prompt_tokens_details"), usage.get("completion_tokens_details")
++    if (ptd is not None and not isinstance(ptd, dict)) or (ctd is not None and not isinstance(ctd, dict)):
++        return None, "usage illisible (détails non objets)", {}
++    cache = (ptd or {}).get("cached_tokens")
++    raison = (ctd or {}).get("reasoning_tokens")
++    total = usage.get("total_tokens")
++    cache, raison, total = (0 if cache is None else cache), (0 if raison is None else raison), (p + c if total is None
++                                                                                                 else total)
+     if not entier(cache) or not entier(raison) or not entier(total):
+         return None, "usage illisible (détails)", {}
+     lus = {"prompt_tokens": p, "cached_tokens": cache, "completion_tokens": c, "reasoning_tokens": raison,
+            "total_tokens": total}
++    plancher_entree = octets_envoyes // PLANCHER_OCTETS_PAR_JETON
++    plancher_visible = -(-octets_contenu // PLANCHER_OCTETS_PAR_JETON)
+     probleme = None
+     if cache > p:
+         probleme = "jetons en cache au-dessus des jetons d'entrée"
+@@ -600,6 +735,12 @@
+         probleme = "jetons de raisonnement au-dessus des jetons de sortie"
+     elif c > MAX_SORTIE:
+         probleme = f"jetons de sortie au-dessus du plafond demandé ({MAX_SORTIE})"
++    elif total < p + c:
++        probleme = "total_tokens sous la somme des jetons d'entrée et de sortie"
++    elif p < plancher_entree:
++        probleme = f"jetons d'entrée sous le plancher ({plancher_entree} pour {octets_envoyes} octets envoyés)"
++    elif c - raison < plancher_visible:
++        probleme = f"jetons de sortie visibles sous le plancher ({plancher_visible} pour {octets_contenu} octets rendus)"
+     exces = max(0, total - p - c)
+     haut = max(prix["entree"], prix["sortie"])
+     cout = ((p - min(cache, p)) * prix["entree"] + min(cache, p) * prix["cache"] + c * prix["sortie"]
+@@ -608,37 +749,49 @@
+ 
+ 
+ def champ_court(x) -> str | None:
+-    return x if isinstance(x, str) and re.fullmatch(r"[A-Za-z0-9_.\-]{1,60}", x) else None
++    """Type ou code d'erreur du fournisseur, gardé seulement s'il a la forme d'un code (minuscules et soulignés) : un
++    identifiant de compte, d'organisation ou de clé n'est jamais écrit."""
++    return x if isinstance(x, str) and re.fullmatch(r"[a-z_]{1,64}", x) else None
+ 
+ 
+-def analyser_reponse(statut, corps: bytes | None, pire_cas: float, prix: dict) -> dict:
+-    """Lit une réponse de l'amont (statut, octets). Rend {cout, au_pire_cas, anomalies, modele_servi, fin, lus, garder}.
+-    `garder` vrai : le corps est une réponse `chat.completion` (statut 200) à sceller telle quelle ; faux : on n'écrit que
+-    le statut, le type et le code d'erreur, et l'empreinte du corps (jamais le corps)."""
+-    r = {"cout_usd": pire_cas, "au_pire_cas": True, "anomalies": [], "modele_servi": None, "finish_reason": None,
+-         "jetons": {}, "garder": False, "erreur": None, "statut": statut,
++def analyser_reponse(statut, corps, pire_cas: float, prix: dict, octets_envoyes: int = 0,
++                     palier: str = "standard") -> dict:
++    """Lit une réponse de l'amont (statut, octets) sans lever : toute forme inattendue est une anomalie (M3). Rend
++    {cout_usd, au_pire_cas, anomalies, modele_servi, palier_servi, finish_reason, jetons, erreur, statut, corps_sha256}.
++    Le corps d'une réponse 200 a déjà été écrit, brut, par `envoyer` ; pour un autre statut, seuls le type et le code
++    d'erreur filtrés sont gardés (jamais le corps)."""
++    r = {"cout_usd": pire_cas, "au_pire_cas": True, "anomalies": [], "modele_servi": None, "palier_servi": None,
++         "finish_reason": None, "jetons": {}, "erreur": None, "statut": statut,
+          "corps_sha256": sha256_octets(corps) if corps is not None else None}
+     if statut is None:
+         r["anomalies"].append("transport_echec")
+         return r
+-    if corps is not None and len(corps) > TAILLE_MAX_REPONSE:
++    corps = corps if corps is not None else b""
++    if len(corps) > TAILLE_MAX_REPONSE:
+         r["anomalies"].append("reponse_trop_grande")
+         return r
+     try:
+-        o = json.loads(corps.decode("utf-8")) if corps is not None else None
++        o = json.loads(corps.decode("utf-8"))
+     except (UnicodeDecodeError, ValueError):
+         o = None
+     if statut != 200:
+-        err = (o or {}).get("error") if isinstance(o, dict) else None
+-        r["erreur"] = {"type": champ_court((err or {}).get("type")), "code": champ_court((err or {}).get("code"))}
++        err = o.get("error") if isinstance(o, dict) else None
++        err = err if isinstance(err, dict) else {}
++        r["erreur"] = {"type": champ_court(err.get("type")), "code": champ_court(err.get("code"))}
+         r["anomalies"].append("statut_non_200")
++        if 300 <= statut < 400:
++            r["anomalies"].append("redirection_refusee")
+         return r
+     if not isinstance(o, dict):
+         r["anomalies"].append("reponse_illisible")
+         return r
+-    r["garder"] = True
+     r["modele_servi"] = o.get("model") if isinstance(o.get("model"), str) else None
+-    cout, probleme, lus = cout_usage(o.get("usage"), prix)
++    r["palier_servi"] = o.get("service_tier") if isinstance(o.get("service_tier"), str) else None
++    ch = o.get("choices")
++    c0 = ch[0] if isinstance(ch, list) and len(ch) >= 1 and isinstance(ch[0], dict) else {}
++    msg = c0.get("message") if isinstance(c0.get("message"), dict) else {}
++    texte = msg.get("content") if isinstance(msg.get("content"), str) else ""
++    cout, probleme, lus = cout_usage(o.get("usage"), prix, octets_envoyes, len(texte.encode("utf-8")))
+     r["jetons"] = lus
+     if cout is None:
+         r["anomalies"].append("usage_absent")
+@@ -654,14 +807,15 @@
+         r["anomalies"].append("reponse_illisible")
+     if r["modele_servi"] != MODELE_LECTEUR:
+         r["anomalies"].append("modele_servi_different")
+-    ch = o.get("choices")
++    if (o.get("service_tier") not in PALIERS_SERVIS_ADMIS[palier]
++            or (o.get("service_tier") is not None and r["palier_servi"] is None)):
++        r["anomalies"].append("palier_servi_different")
+     if not isinstance(ch, list) or len(ch) != 1 or not isinstance(ch[0], dict):
+         r["anomalies"].append("choix_non_unique")
+         return r
+-    r["finish_reason"] = ch[0].get("finish_reason")
++    r["finish_reason"] = c0.get("finish_reason") if isinstance(c0.get("finish_reason"), str) else None
+     if r["finish_reason"] != "stop":
+         r["anomalies"].append("fin_non_stop")
+-    msg = ch[0].get("message") or {}
+     if msg.get("refusal"):
+         r["anomalies"].append("refus_du_lecteur")
+     if not isinstance(msg.get("content"), str) or not msg["content"].strip():
+@@ -671,10 +825,10 @@
+ 
+ def lire_journal(dossier) -> dict:
+     """Relit le journal de dépense chaîné (chaque ligne porte l'empreinte de la précédente). Rend la dépense comptée (un
+-    envoi sans clôture compte son pire cas), les appels, les envois clos, les anomalies et l'arrêt consigné."""
++    envoi sans clôture compte son pire cas), les appels, les envois, réceptions et clôtures, les anomalies et l'arrêt."""
+     p = Path(dossier) / JOURNAL
+-    etat = {"appels": 0, "depense_usd": 0.0, "clos": {}, "en_vol": [], "anomalies": [], "arret": None, "lignes": 0,
+-            "dernier_sha256": "debut"}
++    etat = {"appels": 0, "depense_usd": 0.0, "envois": {}, "recus": {}, "clos": {}, "en_vol": [], "anomalies": [],
++            "arret": None, "lignes": 0, "dernier_sha256": "debut"}
+     if not p.exists():
+         return etat
+     ouverts = {}
+@@ -683,19 +837,30 @@
+             ev = json.loads(brute.decode("utf-8"))
+         except ValueError as e:
+             raise Refus(f"{JOURNAL} ligne {i + 1} illisible") from e
+-        if ev.get("n") != i + 1 or ev.get("precedent") != etat["dernier_sha256"]:
++        if not isinstance(ev, dict) or ev.get("n") != i + 1 or ev.get("precedent") != etat["dernier_sha256"]:
+             raise Refus(f"{JOURNAL} ligne {i + 1} : chaîne rompue (journal tronqué ou réécrit)")
+         etat["dernier_sha256"] = sha256_octets(brute)
+         etat["lignes"] = i + 1
+         g = ev.get("evenement")
++        if g in ("envoi", "recu", "clos") and not isinstance(ev.get("envoi"), str):
++            raise Refus(f"{JOURNAL} ligne {i + 1} : envoi non nommé")
+         if g == "envoi":
+             if ev["envoi"] in ouverts or ev["envoi"] in etat["clos"]:
+                 raise Refus(f"{JOURNAL} : {ev['envoi']} envoyé deux fois")
++            if not nombre_fini(ev.get("pire_cas_usd")) or ev["pire_cas_usd"] < 0:
++                raise Refus(f"{JOURNAL} ligne {i + 1} : pire cas illisible")
+             etat["appels"] += 1
+             ouverts[ev["envoi"]] = ev
++            etat["envois"][ev["envoi"]] = ev
++        elif g == "recu":
++            if ev["envoi"] not in ouverts or ev["envoi"] in etat["recus"]:
++                raise Refus(f"{JOURNAL} : réception sans envoi ouvert ({ev['envoi']})")
++            etat["recus"][ev["envoi"]] = ev
+         elif g == "clos":
+             if ev["envoi"] not in ouverts:
+                 raise Refus(f"{JOURNAL} : clôture sans envoi ({ev['envoi']})")
++            if not nombre_fini(ev.get("cout_usd")) or ev["cout_usd"] < 0 or not isinstance(ev.get("anomalies"), list):
++                raise Refus(f"{JOURNAL} ligne {i + 1} : clôture illisible")
+             ouverts.pop(ev["envoi"])
+             etat["clos"][ev["envoi"]] = ev
+             etat["depense_usd"] += ev["cout_usd"]
+@@ -710,9 +875,11 @@
+     return etat
+ 
+ 
+-def ajouter_journal(dossier, etat: dict, ev: dict) -> None:
++def ajouter_journal(dossier, etat: dict, ev: dict, cle: str | None = None) -> None:
+     ev = {"n": etat["lignes"] + 1, "precedent": etat["dernier_sha256"], "utc": maintenant(), **ev}
+     ligne = (json.dumps(ev, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
++    if cle:
++        ligne, _ = expurger(ligne, cle)  # B1 : un champ rendu par l'amont ne porte jamais la clé au journal
+     with open(Path(dossier) / JOURNAL, "ab") as f:
+         f.write(ligne)
+         f.flush()
+@@ -722,49 +889,105 @@
+ 
+ 
+ def nom_reponse(envoi: str) -> str:
+-    return envoi.replace("envoi-", "reponse-").replace("-v3.corps.json", "-v3.json")
++    return envoi.replace("envoi-", "reponse-").replace(f"-{SUFFIXE}.corps.json", f"-{SUFFIXE}.json")
+ 
+ 
+ def nom_erreur(envoi: str) -> str:
+-    return envoi.replace("envoi-", "erreur-").replace("-v3.corps.json", "-v3.json")
++    return envoi.replace("envoi-", "erreur-").replace(f"-{SUFFIXE}.corps.json", f"-{SUFFIXE}.json")
+ 
+ 
+ def controler_coherence(dossier, man: dict, j: dict) -> None:
+-    """Chaque réponse ou erreur déposée a sa clôture au journal, à la même empreinte ; aucune autre n'existe."""
++    """M1 : chaque fichier nommé par une réception ou une clôture du journal existe, scellé, à la même empreinte ; et
++    chaque réponse ou erreur présente dans le dossier est nommée par le journal. Sinon, refus."""
++    refs = {}
++    for ev in list(j["recus"].values()) + list(j["clos"].values()):
++        nom, h = ev.get("fichier"), ev.get("fichier_sha256")
++        if nom is None:
++            continue
++        if not isinstance(nom, str) or "/" in nom or (nom in refs and refs[nom] != h):
++            raise Refus(f"{JOURNAL} : fichier {nom!r} nommé deux fois à des empreintes différentes")
++        refs[nom] = h
++    for nom, h in refs.items():
++        if not (Path(dossier) / nom).exists() or verifier_sceau(Path(dossier) / nom) != h:
++            raise Refus(f"{nom} : nommé au journal mais absent ou à une autre empreinte (journal ou dossier altéré)")
+     for g in man["garde_depense"]["envois"]:
+         for nom in (nom_reponse(g["envoi"]), nom_erreur(g["envoi"])):
+-            if (Path(dossier) / nom).exists():
+-                h = verifier_sceau(Path(dossier) / nom)
+-                ev = j["clos"].get(g["envoi"])
+-                if ev is None or ev.get("fichier") != nom or ev.get("fichier_sha256") != h:
+-                    raise Refus(f"{nom} sans clôture conforme au journal (journal tronqué ou fichier étranger)")
++            if (Path(dossier) / nom).exists() and nom not in refs:
++                raise Refus(f"{nom} sans clôture conforme au journal (journal tronqué ou fichier étranger)")
++
++
++def valider_manifeste(man: dict, dossier) -> tuple[dict, float, int, str]:
++    """D6, D7, m1 : à l'envoi, le manifeste (même rescellé) est revérifié contre les bornes et les prix du code, et chaque
++    corps contre son pire cas et ses paramètres ; rend (prix, plafond, appels_max, palier)."""
++    palier = man.get("palier")
++    if palier not in PALIERS:
++        raise Refus(f"manifeste : palier {palier!r} hors de {PALIERS}")
++    g = man.get("garde_depense") if isinstance(man.get("garde_depense"), dict) else {}
++    prix = g.get("prix_usd_par_million")
++    if prix != {**PRIX_LUS[palier], "source": SOURCE_PRIX}:
++        raise Refus(f"manifeste : prix autres que les prix lus du palier {palier} (prix-astra-v2.md)")
++    anterieure, plafond, appels_max = g.get("depense_anterieure_usd"), g.get("plafond_usd"), g.get("appels_max")
++    envois = g.get("envois") if isinstance(g.get("envois"), list) else []
++    if not nombre_fini(anterieure) or anterieure < 0:
++        raise Refus("manifeste : dépense antérieure invalide")
++    if not nombre_fini(plafond) or plafond <= 0 or plafond > PLAFOND_ABSOLU_USD - anterieure + 1e-9:
++        raise Refus("manifeste : plafond hors des bornes du code (C4)")
++    if type(appels_max) is not int or appels_max > MAX_APPELS or appels_max != len(envois):
++        raise Refus("manifeste : nombre d'appels hors des bornes du code")
++    lecteur = man.get("lecteur") if isinstance(man.get("lecteur"), dict) else {}
++    effort = lecteur.get("reasoning_effort")
++    if effort not in EFFORTS or lecteur != lecteur_attendu(effort, palier):
++        raise Refus("manifeste : lecteur autre que celui du code (modèle, adresse, plafond de sortie, effort, palier)")
++    if man.get("ordre_d_envoi") != [e.get("envoi") for e in envois if isinstance(e, dict)] or not envois:
++        raise Refus("manifeste : ordre d'envoi incohérent")
++    for e in envois:
++        p = Path(dossier) / e["envoi"]
++        corps = p.read_bytes() if p.is_file() else b""
++        if len(corps) != e.get("octets") or e.get("pire_cas_usd") != round(pire_cas_usd(len(corps), prix), 6):
++            raise Refus(f"manifeste : {e['envoi']} : octets ou pire cas différents du corps et des prix")
++        try:
++            c = json.loads(corps.decode("utf-8"))
++        except (UnicodeDecodeError, ValueError) as ex:
++            raise Refus(f"{e['envoi']} : corps illisible") from ex
++        attendu = {"model", "messages", "max_completion_tokens", "reasoning_effort", "store"} | (
++            {"service_tier"} if SERVICE_TIER[palier] is not None else set())
++        if (not isinstance(c, dict) or set(c) != attendu or c["model"] != MODELE_LECTEUR
++                or c["max_completion_tokens"] != MAX_SORTIE or c["reasoning_effort"] != effort or c["store"] is not False
++                or c.get("service_tier") != SERVICE_TIER[palier] or not isinstance(c["messages"], list)
++                or len(c["messages"]) != 1 or c["messages"][0].get("role") != "user"):
++            raise Refus(f"{e['envoi']} : paramètres du corps autres que ceux du manifeste")
++    return prix, plafond, appels_max, palier
+ 
+ 
+ def bilan(dossier) -> dict:
++    """C3 et C5 : état du journal, sans clé ; refus si une réponse ou une erreur n'a pas sa clôture conforme."""
+     env = charger_envois(dossier)
+     man = env["manifeste"]
+     j = lire_journal(dossier)
+     controler_coherence(dossier, man, j)
++    attendus = len(man["garde_depense"]["envois"])
++    clotures = [{**{k: ev.get(k) for k in ("envoi", "statut", "modele_servi", "palier_servi", "finish_reason", "jetons",
++                                          "cout_usd", "au_pire_cas", "anomalies")},
++                 "pire_cas_usd": j["envois"][nom]["pire_cas_usd"]} for nom, ev in j["clos"].items()]
+     return {"appels": j["appels"], "appels_max": man["garde_depense"]["appels_max"],
+             "depense_comptee_usd": round(j["depense_usd"], 6), "plafond_usd": man["garde_depense"]["plafond_usd"],
+-            "clos": sorted(j["clos"]), "en_vol": j["en_vol"], "anomalies": j["anomalies"],
+-            "arret": (j["arret"] or {}).get("motif")}
++            "palier": man.get("palier"), "clos": len(j["clos"]), "attendus": attendus, "en_vol": j["en_vol"],
++            "anomalies": j["anomalies"], "arret": (j["arret"] or {}).get("motif"), "clotures": clotures,
++            "pret_pour_verifier": (len(j["clos"]) == attendus and not j["en_vol"] and not j["anomalies"]
++                                   and j["arret"] is None)}
+ 
+ 
+ def envoyer(dossier, transport=None, envois_max=None) -> dict:
+     """Envoie les lots dans l'ordre du manifeste, un à la fois, sous la garde de dépense ; s'arrête au premier écart.
+-    Rend {issue: fait|pause|anomalie|plafond, …}. Toute réponse 200 est scellée telle quelle ; toute autre issue laisse un
+-    fichier d'erreur scellé sans le corps."""
++    Rend {issue: fait|pause|anomalie|plafond, …}. Toute réponse 200 est écrite brute et scellée avant son analyse (M3) ;
++    toute autre issue laisse un fichier d'erreur scellé sans le corps."""
+     transport = transport or transport_reel
+     env = charger_envois(dossier)
+     man = env["manifeste"]
+     if man.get("version") != VERSION:
+         raise Refus(f"envois préparés par {man.get('version')!r}, pas par {VERSION}")
++    prix, plafond, appels_max, palier = valider_manifeste(man, dossier)
+     g = man["garde_depense"]
+-    prix = prix_valides(dict(g["prix_usd_par_million"]))
+-    plafond, appels_max = g["plafond_usd"], g["appels_max"]
+-    if plafond > PLAFOND_ABSOLU_USD or appels_max > MAX_APPELS:
+-        raise Refus("manifeste : plafond ou nombre d'appels au-delà des bornes du code")
+     j = lire_journal(dossier)
+     controler_coherence(dossier, man, j)
+     if j["en_vol"]:
+@@ -783,7 +1006,7 @@
+             break
+         if j["appels"] >= appels_max:
+             issue, detail = "plafond", f"nombre d'appels {appels_max} atteint"
+-            ajouter_journal(dossier, j, {"evenement": "arret", "motif": "appels", "detail": detail})
++            ajouter_journal(dossier, j, {"evenement": "arret", "motif": "appels", "detail": detail}, cle)
+             break
+         corps = (Path(dossier) / e["envoi"]).read_bytes()
+         if sha256_octets(corps) != man["fichiers"][e["envoi"]]:
+@@ -793,32 +1016,49 @@
+             issue = "plafond"
+             detail = (f"{e['envoi']} : dépense comptée {j['depense_usd']:.6f} + pire cas {pire:.6f} "
+                       f"> plafond {plafond}")
+-            ajouter_journal(dossier, j, {"evenement": "arret", "motif": "plafond", "detail": detail})
++            ajouter_journal(dossier, j, {"evenement": "arret", "motif": "plafond", "detail": detail}, cle)
+             break
+         ajouter_journal(dossier, j, {"evenement": "envoi", "envoi": e["envoi"], "octets": len(corps),
+-                                     "pire_cas_usd": pire})
++                                     "pire_cas_usd": pire}, cle)
+         envoyes += 1
+         try:
+             statut, rep = transport(URL_AMONT, entetes, corps, DELAI_S)
+             cause = None
+         except Refus:
+             raise
+-        except Exception as ex:  # coupure, délai, mandataire : l'appel compte au pire cas
+-            statut, rep, cause = None, None, masquer(f"{type(ex).__name__}: {ex}", cle)[:200]
+-        a = analyser_reponse(statut, rep, pire, prix)
+-        if a["garder"]:
++        except Exception as ex:  # coupure, délai, mandataire, en-tête refusé : pire cas ; seul le type est gardé (B1)
++            statut, rep, cause = None, None, type(ex).__name__
++        nom, h, expurgee = None, None, False
++        if statut == 200 and rep is not None and len(rep) <= TAILLE_MAX_REPONSE:
++            # M3 : la réponse payée est écrite brute (le corps seul, sans en-têtes ; la clé expurgée si l'amont la
++            # renvoie, B1), scellée et consignée avant toute analyse.
++            brut, expurgee = expurger(rep, cle)
+             nom = nom_reponse(e["envoi"])
+-            h = ecrire_scelle_octets(Path(dossier) / nom, rep)
+-        else:
++            h = ecrire_scelle_octets(Path(dossier) / nom, brut)
++            ajouter_journal(dossier, j, {"evenement": "recu", "envoi": e["envoi"], "fichier": nom, "fichier_sha256": h,
++                                         "brut_sha256": sha256_octets(rep), "octets": len(rep),
++                                         "cle_expurgee": expurgee}, cle)
++        try:
++            a = analyser_reponse(statut, rep, pire, prix, len(corps), palier)
++        except Exception as ex:  # filet déclaré : l'analyse ne doit pas lever ; anomalie bloquante, pire cas
++            a = {"cout_usd": pire, "au_pire_cas": True, "anomalies": ["analyse_en_echec"], "modele_servi": None,
++                 "palier_servi": None, "finish_reason": None, "jetons": {}, "erreur": None, "statut": statut,
++                 "corps_sha256": sha256_octets(rep) if rep is not None else None, "cause_analyse": type(ex).__name__}
++        if expurgee:
++            a["anomalies"].append("cle_dans_la_reponse")
++        if nom is None:
+             nom = nom_erreur(e["envoi"])
+-            h = ecrire_scelle(Path(dossier) / nom, json_texte({
++            texte = json_texte({
+                 "envoi": e["envoi"], "statut": statut, "erreur": a["erreur"], "corps_sha256": a["corps_sha256"],
+                 "corps_octets": len(rep) if rep is not None else None, "cause_transport": cause,
+-                "note": "corps de l'amont jamais écrit (il peut porter des identifiants du compte)"}))
++                "anomalies": a["anomalies"],
++                "note": "corps de l'amont jamais écrit (il peut porter des identifiants du compte)"})
++            h = ecrire_scelle_octets(Path(dossier) / nom, expurger(texte.encode("utf-8"), cle)[0])
+         ev = {"evenement": "clos", "envoi": e["envoi"], "statut": statut, "fichier": nom, "fichier_sha256": h,
+-              "modele_servi": a["modele_servi"], "finish_reason": a["finish_reason"], "jetons": a["jetons"],
+-              "cout_usd": round(a["cout_usd"], 6), "au_pire_cas": a["au_pire_cas"], "anomalies": a["anomalies"]}
+-        ajouter_journal(dossier, j, ev)
++              "modele_servi": a["modele_servi"], "palier_servi": a["palier_servi"], "finish_reason": a["finish_reason"],
++              "jetons": a["jetons"], "cout_usd": round(a["cout_usd"], 6), "au_pire_cas": a["au_pire_cas"],
++              "anomalies": a["anomalies"]}
++        ajouter_journal(dossier, j, ev, cle)
+         j = lire_journal(dossier)  # dépense et appels recomptés depuis le journal écrit
+         if a["anomalies"]:
+             issue, detail = "anomalie", f"{e['envoi']} : {', '.join(a['anomalies'])}"
+@@ -826,12 +1066,12 @@
+     del cle, entetes
+     releve = {"version": VERSION, "fin_utc": maintenant(), "issue": issue, "detail": detail,
+               "envoyes_cette_fois": envoyes, "appels": j["appels"], "appels_max": appels_max,
+-              "depense_comptee_usd": round(j["depense_usd"], 6), "plafond_usd": plafond,
++              "depense_comptee_usd": round(j["depense_usd"], 6), "plafond_usd": plafond, "palier": palier,
+               "journal_sha256": sha256_fichier(Path(dossier) / JOURNAL)}
+     k = 1
+-    while (Path(dossier) / f"releve-depense-v3-{k}.json").exists():
++    while (Path(dossier) / f"releve-depense-{SUFFIXE}-{k}.json").exists():
+         k += 1
+-    ecrire_scelle(Path(dossier) / f"releve-depense-v3-{k}.json", json_texte(releve))
++    ecrire_scelle(Path(dossier) / f"releve-depense-{SUFFIXE}-{k}.json", json_texte(releve))
+     return releve
+ 
+ 
+@@ -897,20 +1137,24 @@
+     return o
+ 
+ 
+-def lire_reponse(chemin) -> tuple[str | None, dict, list]:
+-    """(contenu ou None, méta, anomalies). Une réponse non scellée ou altérée est refusée ; un modèle servi autre, une fin
+-    autre que `stop`, un refus, une forme illisible sont des anomalies bloquantes (le contenu n'est alors pas lu)."""
++def lire_reponse(chemin, palier: str = "standard") -> tuple[str | None, dict, list]:
++    """(contenu ou None, méta, anomalies). Une réponse non scellée ou altérée est refusée. Modèle servi autre ou refus du
++    lecteur : anomalie bloquante, contenu non lu. Fin autre que `stop`, forme inattendue, palier servi autre : anomalie
++    bloquante, le contenu est lu s'il est un texte (le verdict est E2 de toute façon ; m3 corrigé)."""
+     verifier_sceau(chemin)
+     nom = Path(chemin).name
++    vide = {"finish_reason": None, "usage": None, "modele_servi": None, "palier_servi": None}
+     try:
+         r = json.loads(Path(chemin).read_text(encoding="utf-8"))
+     except ValueError:
+-        return None, {"finish_reason": None, "usage": None, "modele_servi": None}, [("reponse_illisible", f"{nom} : JSON")]
++        return None, vide, [("reponse_illisible", f"{nom} : JSON")]
+     if not isinstance(r, dict):
+-        return None, {"finish_reason": None, "usage": None, "modele_servi": None}, [("reponse_illisible", nom)]
++        return None, vide, [("reponse_illisible", nom)]
+     ch = r.get("choices")
+     c0 = ch[0] if isinstance(ch, list) and len(ch) == 1 and isinstance(ch[0], dict) else {}
+-    meta = {"finish_reason": c0.get("finish_reason"), "usage": r.get("usage"), "modele_servi": r.get("model")}
++    msg = c0.get("message") if isinstance(c0.get("message"), dict) else {}
++    meta = {"finish_reason": c0.get("finish_reason"), "usage": r.get("usage"), "modele_servi": r.get("model"),
++            "palier_servi": r.get("service_tier")}
+     an = []
+     if r.get("model") != MODELE_LECTEUR:
+         an.append(("modele_servi_different", f"{nom} : {str(r.get('model'))[:60]}"))
+@@ -918,9 +1162,10 @@
+         an.append(("reponse_illisible", f"{nom} : forme chat.completion à un seul choix attendue"))
+     if c0 and c0.get("finish_reason") != "stop":
+         an.append(("fin_non_stop", f"{nom} : {c0.get('finish_reason')}"))
+-    msg = c0.get("message") or {}
+     if msg.get("refusal"):
+         an.append(("refus_du_lecteur", nom))
++    if r.get("service_tier") not in PALIERS_SERVIS_ADMIS.get(palier, ()):
++        an.append(("palier_servi_different", f"{nom} : {str(r.get('service_tier'))[:30]}"))
+     contenu = msg.get("content")
+     if any(g in ("modele_servi_different", "refus_du_lecteur") for g, _ in an) or not isinstance(contenu, str):
+         contenu = None
+@@ -1012,7 +1257,10 @@
+ 
+ 
+ def charger_envois(dossier) -> dict:
++    """C6 : le dossier est le dossier fixe, seul de son espèce ; puis sceaux et empreintes du manifeste."""
+     d = Path(dossier)
++    racine = racine_du_dossier(d)
++    verifier_unicite(racine, d / MANIFESTE)
+     for nom in (MANIFESTE, PILE, CLE_LECTURES):
+         verifier_sceau(d / nom)
+     man = json.loads((d / MANIFESTE).read_text(encoding="utf-8"))
+@@ -1021,7 +1269,7 @@
+             raise Refus(f"{nom} : empreinte différente du manifeste")
+     pile = json.loads((d / PILE).read_text(encoding="utf-8"))
+     cle = json.loads((d / CLE_LECTURES).read_text(encoding="utf-8"))
+-    return {"manifeste": man, "pile": pile, "cle": cle}
++    return {"manifeste": man, "pile": pile, "cle": cle, "racine": racine}
+ 
+ 
+ def verifier_lecture(dossier, L: str, catalogue_texte: str) -> dict:
+@@ -1029,17 +1277,21 @@
+     cat = entrees_catalogue(catalogue_texte)
+     par_id = {p["id"]: p for p in env["pile"]["fiches"]}
+     cle = env["cle"][L]
+-    fiches, anomalies, reponses = {}, [], {}
++    palier = env["manifeste"].get("palier")
+     journal = lire_journal(dossier)  # absent : vide ; rompu : refus
++    controler_coherence(dossier, env["manifeste"], journal)  # M1 : aucune réponse hors du journal
+     arret = bool(journal["arret"] or journal["anomalies"] or journal["en_vol"])
++    fiches, anomalies, reponses = {}, [], {}
+     for k, lot in enumerate(cle["lots"], 1):
+-        nom = f"reponse-{L}-lot{k}-v3.json"
++        nom = f"reponse-{L}-lot{k}-{SUFFIXE}.json"
++        nom_c = f"envoi-{L}-lot{k}-{SUFFIXE}.corps.json"
+         vue_de = {et: par_id[cle["etiquettes"][et]]["vue"] for et in lot}
+         juge_de = {et: par_id[cle["etiquettes"][et]]["levier"] == "levier:juge" for et in lot}
+         an_lot = []
+-        ev = journal["clos"].get(f"envoi-{L}-lot{k}-v3.corps.json")
+-        if ev and ev.get("anomalies"):  # écart d'envoi (usage, coût, statut…) : rapporté ; bloquant s'il touche la lecture
+-            an_lot.append({"genre": "anomalie_d_envoi", "detail": ", ".join(ev["anomalies"]), "etiquettes": []})
++        ev, recu = journal["clos"].get(nom_c), journal["recus"].get(nom_c)
++        if ev and ev.get("anomalies"):  # écart d'envoi (usage, coût, statut, palier…) : bloquant (v3.1)
++            an_lot.append({"genre": "anomalie_d_envoi", "detail": ", ".join(map(str, ev["anomalies"])),
++                           "etiquettes": list(lot)})
+         if not (Path(dossier) / nom).exists():
+             if not arret:
+                 raise Refus(f"réponse attendue absente : {nom} (aucun arrêt consigné au journal)")
+@@ -1048,17 +1300,26 @@
+                            "etiquettes": list(lot)})
+             res = {et: entree_vide("réponse absente", juge_de[et]) for et in lot}
+         else:
+-            contenu, meta, an = lire_reponse(Path(dossier) / nom)
+-            reponses[nom] = {"sha256": sha256_fichier(Path(dossier) / nom), **meta}
+-            an_lot += [{"genre": g, "detail": d, "etiquettes": list(lot)} for g, d in an]
+-            if contenu is None:
+-                if not an:
+-                    an_lot.append({"genre": "reponse_illisible", "detail": f"{nom} : contenu absent",
+-                                   "etiquettes": list(lot)})
+-                res = {et: entree_vide("contenu non lu", juge_de[et]) for et in lot}
++            h = sha256_fichier(Path(dossier) / nom)
++            if ev is None and recu is not None and recu.get("fichier") == nom and recu.get("fichier_sha256") == h:
++                reponses[nom] = {"sha256": h, "non_analysee": True}
++                an_lot.append({"genre": "reponse_non_analysee", "detail": f"{nom} : reçue, jamais close au journal",
++                               "etiquettes": list(lot)})
++                res = {et: entree_vide("réponse non analysée", juge_de[et]) for et in lot}
++            elif ev is None or ev.get("fichier") != nom or ev.get("fichier_sha256") != h or ev.get("statut") != 200:
++                raise Refus(f"{nom} : aucune clôture chaînée au journal à son nom, à son empreinte et au statut 200 (M1)")
+             else:
+-                res, an2 = verifier_lot(contenu, lot, vue_de, juge_de, cat)
+-                an_lot += an2
++                contenu, meta, an = lire_reponse(Path(dossier) / nom, palier)
++                reponses[nom] = {"sha256": h, **meta}
++                an_lot += [{"genre": g, "detail": d, "etiquettes": list(lot)} for g, d in an]
++                if contenu is None:
++                    if not an:
++                        an_lot.append({"genre": "reponse_illisible", "detail": f"{nom} : contenu absent",
++                                       "etiquettes": list(lot)})
++                    res = {et: entree_vide("contenu non lu", juge_de[et]) for et in lot}
++                else:
++                    res, an2 = verifier_lot(contenu, lot, vue_de, juge_de, cat)
++                    an_lot += an2
+         for a in an_lot:
+             a["lot"] = k
+             a["ids"] = [cle["etiquettes"][et] for et in a.get("etiquettes", [])]
+@@ -1088,11 +1349,9 @@
+     p.add_argument("--attestation", required=True)
+     p.add_argument("--sortie", required=True)
+     p.add_argument("--effort", required=True, choices=EFFORTS)
+-    p.add_argument("--prix-entree", type=float, required=True)
+-    p.add_argument("--prix-sortie", type=float, required=True)
+-    p.add_argument("--prix-cache", type=float, default=None)
+-    p.add_argument("--source-prix", required=True)
++    p.add_argument("--palier", default="standard", choices=PALIERS)
+     p.add_argument("--plafond-usd", type=float, required=True)
++    p.add_argument("--depense-anterieure-usd", type=float, required=True)
+     p.add_argument("--racine", default=str(RACINE_DEFAUT))
+     e = s.add_parser("envoyer")
+     e.add_argument("--envois", required=True)
+@@ -1107,10 +1366,12 @@
+     try:
+         if args.action == "preparer":
+             m = preparer(args.fiches, args.attestation, args.sortie, args.racine, effort=args.effort,
+-                         prix_entree=args.prix_entree, prix_sortie=args.prix_sortie, prix_cache=args.prix_cache,
+-                         source_prix=args.source_prix, plafond_usd=args.plafond_usd)
++                         palier=args.palier, plafond_usd=args.plafond_usd,
++                         depense_anterieure_usd=args.depense_anterieure_usd)
+             g = m["garde_depense"]
+             print(json.dumps({"pile": m["pile"]["fiches"], "lots": m["lots"]["tailles"], "appels": g["appels_max"],
++                              "palier": m["palier"], "prix_usd_par_million": {k: g["prix_usd_par_million"][k]
++                                                                              for k in ("entree", "cache", "sortie")},
+                               "pire_cas_total_usd": g["pire_cas_total_usd"], "plafond_usd": g["plafond_usd"],
+                               "appels_surs_au_pire_cas": g["appels_surs_au_pire_cas"],
+                               "max_completion_tokens": MAX_SORTIE, "reasoning_effort": args.effort},
+@@ -1124,10 +1385,12 @@
+         elif args.action == "bilan":
+             print(json.dumps(bilan(args.envois), ensure_ascii=False))
+         else:
++            if racine_du_dossier(args.envois) != Path(args.racine).resolve():
++                raise Refus("--racine différente de la racine du dossier d'envois")
+             cat, _ = lire_piece(args.racine, "catalogue")
+             for L in args.lecture or LECTURES:
+                 r = verifier_lecture(args.envois, L, cat)
+-                ecrire_scelle(Path(args.envois) / f"lecture-verifiee-{L}-v3.json", json_texte(r))
++                ecrire_scelle(Path(args.envois) / f"lecture-verifiee-{L}-{SUFFIXE}.json", json_texte(r))
+                 print(json.dumps({"lecture": L, "non_prouves": r["non_prouves"], "anomalies": len(r["anomalies"]),
+                                   "anomalies_bloquantes": len(r["anomalies_bloquantes"])}, ensure_ascii=False))
+     except Refus as e:

@@ -1,0 +1,274 @@
+{
+ "lanceur": "/home/user/controle-ia-travail/scripts/lancer_course_ideation_regard_ou_raisons_v1.py",
+ "lanceur_sha256": "3b2dcb117cd4a3074099000374f8b0608ad301d9306da07d25cb360bcce1302f",
+ "essais": "/home/user/controle-ia-travail/tests/test_lancer_course_ideation_regard_ou_raisons_v1.py",
+ "essais_sha256": "509fc85d05faadefbd3137457065bc288e9f240cebce1504a28a03f3e85d0bd8",
+ "mutants_joues": 26,
+ "mutants": [
+  {
+   "mutant": "base",
+   "garde": "aucune (contrôle de l'outil)",
+   "code_pytest": 0,
+   "bilan": "151 passed in 78.57s (0:01:18)",
+   "essais_en_echec": [],
+   "issue": "contrôle : tous passés"
+  },
+  {
+   "mutant": "C01-cout-externe-oublie-au-manifeste-de-fin",
+   "garde": "dépense lue = Claude + externe",
+   "code_pytest": 1,
+   "bilan": "1 failed, 27 passed in 3.64s",
+   "essais_en_echec": [
+    "test_generation_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "C02-cout-externe-oublie-au-controle",
+   "garde": "dépense du contrôle = Claude + externe",
+   "code_pytest": 1,
+   "bilan": "1 failed, 29 passed in 4.47s",
+   "essais_en_echec": [
+    "test_b1_dossier_hors_depot_perdu_apres_cloture"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "C03-manifeste-de-fin-illisible-compte-zero",
+   "garde": "manifeste de fin illisible → plafond",
+   "code_pytest": 1,
+   "bilan": "1 failed, 62 passed in 59.44s",
+   "essais_en_echec": [
+    "test_cout_mal_type_compte_le_plafond[-1]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "C04-tentative-illisible-ignoree",
+   "garde": "tentative de contrôle illisible → plafond",
+   "code_pytest": 0,
+   "bilan": "151 passed in 74.50s (0:01:14)",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "C05-fichier-inattendu-au-controle-ignore",
+   "garde": "fichier de contrôle inattendu → plafond",
+   "code_pytest": 0,
+   "bilan": "151 passed in 75.06s (0:01:15)",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "C06-cout-negatif-admis",
+   "garde": "coût négatif refusé",
+   "code_pytest": 1,
+   "bilan": "1 failed, 62 passed in 50.20s",
+   "essais_en_echec": [
+    "test_cout_mal_type_compte_le_plafond[-1]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "C07-tolerance-du-cumul-elargie",
+   "garde": "garde de cumul : relance seulement si ≤ 2,1 USD",
+   "code_pytest": 0,
+   "bilan": "151 passed in 62.71s (0:01:02)",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "C10-refus-de-taille-au-sceau-faux-ignore",
+   "garde": "refus de taille au sceau faux → plafond",
+   "code_pytest": 0,
+   "bilan": "151 passed in 62.08s (0:01:02)",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "C12-total-externe-releve",
+   "garde": "total externe transmis = 8 USD du devis",
+   "code_pytest": 1,
+   "bilan": "1 failed, 27 passed in 2.56s",
+   "essais_en_echec": [
+    "test_generation_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "G03-type-de-la-ligne",
+   "garde": "type « calcul » exigé",
+   "code_pytest": 1,
+   "bilan": "1 failed, 79 passed in 48.84s",
+   "essais_en_echec": [
+    "test_go_artefacts[| GO-2026-11-14-01 | 2026-11-14 | publication | **Organisme d'id\\xe9ation, atelier d'id\\xe9es (N-065, r\\xf4le 2), sur la question \\xab Regard ou raisons \\xbb (explications rivales, forme du papier) : une g\\xe9n\\xe9ration** (R-2679, R-2680) | 17 USD | 2026-11-30 | Lazar | R-2679 |-type]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "G04-deux-lignes-au-meme-identifiant",
+   "garde": "une seule ligne principale par identifiant",
+   "code_pytest": 1,
+   "bilan": "1 failed, 87 passed in 46.98s",
+   "essais_en_echec": [
+    "test_go_artefacts[| GO-2026-11-14-01 | 2026-11-14 | calcul | **Organisme d'id\\xe9ation, atelier d'id\\xe9es (N-065, r\\xf4le 2), sur la question \\xab Regard ou raisons \\xbb (explications rivales, forme du papier) : une g\\xe9n\\xe9ration** (R-2679, R-2680) | 17 USD | 2026-11-30 | Lazar | R-2679 |\\n| GO-2026-11-14-01 | 2026-11-14 | calcul | autre chose | 5 USD | 2026-11-20 | Lazar | x |-lignes principales]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "G05-ligne-citante-mal-formee-ignoree",
+   "garde": "ligne qui cite le GO, mal formée → refus",
+   "code_pytest": 1,
+   "bilan": "1 failed, 86 passed in 46.59s",
+   "essais_en_echec": [
+    "test_go_artefacts[| GO-2026-11-14-01 | 2026-11-14 | calcul | **Organisme d'id\\xe9ation, atelier d'id\\xe9es (N-065, r\\xf4le 2), sur la question \\xab Regard ou raisons \\xbb (explications rivales, forme du papier) : une g\\xe9n\\xe9ration** (R-2679, R-2680) | 17 USD | 2026-11-30 | Lazar | R-2679 |\\n| GO-2026-11-14-03 | 2026-11-14 | r\\xe9vocation | GO-2026-11-14-01 | \\u2014 | \\u2014 | Lazar | x | y |-mal form\\xe9e]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "G06-go-echu-admis",
+   "garde": "échéance du GO",
+   "code_pytest": 1,
+   "bilan": "1 failed, 83 passed in 49.00s",
+   "essais_en_echec": [
+    "test_go_artefacts[| GO-2026-11-14-01 | 2026-11-14 | calcul | **Organisme d'id\\xe9ation, atelier d'id\\xe9es (N-065, r\\xf4le 2), sur la question \\xab Regard ou raisons \\xbb (explications rivales, forme du papier) : une g\\xe9n\\xe9ration** (R-2679, R-2680) | 17 USD | 2026-11-13 | Lazar | R-2679 |-p\\xe9riode]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "G07-plafond-a-suffixe-admis",
+   "garde": "forme « <nombre> USD » exacte",
+   "code_pytest": 0,
+   "bilan": "151 passed in 59.06s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "R01-course-sans-depart-non-comptee",
+   "garde": "toute course lancée compte parmi les deux",
+   "code_pytest": 0,
+   "bilan": "151 passed in 57.10s",
+   "essais_en_echec": [],
+   "issue": "SURVIVANT"
+  },
+  {
+   "mutant": "R02-trois-courses",
+   "garde": "deux courses au plus",
+   "code_pytest": 1,
+   "bilan": "1 failed, 8 passed in 0.51s",
+   "essais_en_echec": [
+    "test_generations_une_seule"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "R03-fiches-refusees-non-comptees",
+   "garde": "aucune relance après une fiche, même refusée ou en quarantaine",
+   "code_pytest": 1,
+   "bilan": "1 failed, 72 passed in 46.73s",
+   "essais_en_echec": [
+    "test_fiches_produites[contenus3-True]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "R08-superviseur-sans-pid-tenu-pour-rien",
+   "garde": "superviseur créé sans PID scellé : inconnu, nœud",
+   "code_pytest": 1,
+   "bilan": "1 failed, 39 passed in 15.31s",
+   "essais_en_echec": [
+    "test_m2_detachement_incertain_pas_de_refus"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "E01-mandataire-permis",
+   "garde": "liste des noms permis",
+   "code_pytest": 1,
+   "bilan": "1 failed, 27 passed in 1.76s",
+   "essais_en_echec": [
+    "test_generation_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "E02-prefixe-d-essai-libre",
+   "garde": "préfixe d'essai : « FAUX_ » seul",
+   "code_pytest": 1,
+   "bilan": "1 failed, 90 passed in 44.98s",
+   "essais_en_echec": [
+    "test_environnement_permis_prefixe_d_essai"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "E04-superviseur-herite-de-tout-l-environnement",
+   "garde": "environnement filtré transmis au superviseur",
+   "code_pytest": 1,
+   "bilan": "1 failed, 27 passed in 2.36s",
+   "essais_en_echec": [
+    "test_generation_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "E05-sous-processus-herite-de-tout-l-environnement",
+   "garde": "environnement filtré pour la liste blanche et la mesure",
+   "code_pytest": 1,
+   "bilan": "1 failed, 27 passed in 1.80s",
+   "essais_en_echec": [
+    "test_generation_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "B01-bac-sans-proc-neuf-admis",
+   "garde": "bac à sable : /proc neuf exigé",
+   "code_pytest": 1,
+   "bilan": "1 failed, 103 passed in 46.18s",
+   "essais_en_echec": [
+    "test_bac_a_sable_artefact[sans_proc-/proc neuf]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "K01-noms-exclus-ecrits",
+   "garde": "noms exclus jamais écrits (nombre et empreinte seulement)",
+   "code_pytest": 1,
+   "bilan": "1 failed, 27 passed in 2.39s",
+   "essais_en_echec": [
+    "test_generation_bout_en_bout"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "D01-drapeau-abrege-admis",
+   "garde": "drapeaux interdits, formes abrégées comprises",
+   "code_pytest": 1,
+   "bilan": "1 failed, 94 passed in 44.79s",
+   "essais_en_echec": [
+    "test_drapeaux_artefact[--tolerer]"
+   ],
+   "issue": "tué"
+  },
+  {
+   "mutant": "S01-lanceur-hors-de-sa-place",
+   "garde": "M1 : fichier du lanceur à sa place",
+   "code_pytest": 1,
+   "bilan": "1 failed, 22 passed in 1.45s",
+   "essais_en_echec": [
+    "test_m1_artefacts_fichier[ailleurs-hors de sa place]"
+   ],
+   "issue": "tué"
+  }
+ ],
+ "tues": 20,
+ "survivants": [
+  "C04-tentative-illisible-ignoree",
+  "C05-fichier-inattendu-au-controle-ignore",
+  "C07-tolerance-du-cumul-elargie",
+  "C10-refus-de-taille-au-sceau-faux-ignore",
+  "G07-plafond-a-suffixe-admis",
+  "R01-course-sans-depart-non-comptee"
+ ]
+}

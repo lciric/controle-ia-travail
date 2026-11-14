@@ -1,0 +1,162 @@
+{
+ "auteur_tiers": "Préparateur neuf (Claude Opus 5.5), sous-agent de la session mère, 13 novembre 2026 ; ni proposeur ni juge de l'atelier ; témoins écrits sans lecture d'aucune fiche de course.",
+ "temoins": [
+  {
+   "classe": "vrai",
+   "attendu": "eligible",
+   "note_max": {},
+   "fiche": {
+    "nom": "Courbe nulle exacte des tirages indépendants contre la largeur plantée d'un bassin",
+    "type": "question",
+    "enonce": "Sur un monde planté dont une seule composante a une masse r réglée (part des propositions spontanées qui tombent dans son bassin, mesurée d'avance par l'oracle sur un échantillon de propositions non jugé), la probabilité qu'au moins une carte d'une génération de n propositions indépendantes couvre la composante vaut 1 − (1 − r)^n. Toute méthode qui prétend pousser vers les bassins étroits doit battre cette courbe nulle exacte à coût égal, et l'écart doit grandir quand r diminue ; sinon elle raffine les bassins larges.",
+    "loi_predictive": {
+     "espace_instances": "mondes plantés à une composante cible, cinq largeurs r de 0,5 à 0,02, profondeur fixée, quarante graines scellées par largeur ; budget égal en appels par génération",
+     "prediction": "le bras de la méthode dépasse 1 − (1 − r)^n d'au moins 0,15 en probabilité de couverture certifiée pour r ≤ 0,05 ; pour r ≥ 0,3 l'écart est nul à 0,05 près",
+     "signe": "+",
+     "metrique": "part des graines où la composante plantée est couverte par une carte promue et certifiée additionnelle à l'archive (lecture de l'oracle, une fois, après la course), par largeur r, intervalle de Wilson à 95 %"
+    },
+    "perte_traduction": "La masse r d'un bassin dépend des proposeurs et de leurs consignes : elle est mesurée, non posée, et peut bouger d'une génération à l'autre ; la courbe nulle suppose des tirages indépendants, ce que des sessions neuves sans historique approchent sans le garantir.",
+    "questions_servies": ["Q3", "Q4", "nouvelle"],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le monde planté donne l'oracle : la couverture d'un bassin de largeur connue se mesure exactement, alors qu'une étude observationnelle des bassins d'idées ne connaît ni la largeur ni le meilleur bassin d'une tâche.",
+     "incopiable_parce_que": "Il faut un monde écrit par un programme à graine scellée, un juge statistique hors des agents et une archive de lois connues ; un laboratoire qui n'a que des tâches ouvertes n'a pas de vérité de terrain sur la largeur des bassins, quel que soit son calcul."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "La courbe 1 − (1 − r)^n est le calcul élémentaire de la couverture d'un événement rare par tirages indépendants ; ce qui est transposé, c'est son usage comme témoin à coût égal pour toute méthode d'exploration de bassins, lu par l'oracle d'un monde planté."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Un réglage de la masse d'une composante cible dans le programme qui écrit le monde, et une mesure préalable de r sur des propositions non jugées."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "deux bras à budget égal, cinq largeurs, quarante graines : quelques centaines d'appels de proposeurs ; la mesure de r et la courbe nulle se calculent sur processeur."
+    },
+    "piege": "Mesurer r avec les mêmes propositions que celles de la course rendrait la courbe nulle circulaire ; r doit venir d'un échantillon à part, scellé avant la course.",
+    "cosmetique_si": "Si l'écart à la courbe nulle ne grandit pas quand r diminue, ou s'il disparaît quand on égalise le nombre de propositions effectivement servies au juge, la méthode ne fait que dépenser plus.",
+    "anteriorite": [
+     {"reference": "Bespoke Labs, « How models explore ideas », page publique, 10 novembre 2026 (bassins d'idées observés, résumé dans la pièce faits-v1.md)", "statut": "RAPPORTE"}
+    ]
+   }
+  },
+  {
+   "classe": "jumeau",
+   "attendu": "eligible",
+   "note_max": {},
+   "jumeau_de": "Courbe nulle exacte des tirages indépendants contre la largeur plantée d'un bassin",
+   "fiche": {
+    "nom": "Témoin géométrique de couverture : une génération de propositions indépendantes face à un bassin de masse connue",
+    "type": "question",
+    "enonce": "Plantons un monde où un seul bassin cible a une masse r connue, mesurée d'avance sur des propositions non jugées. Avec n propositions indépendantes, la chance d'atteindre ce bassin est exactement 1 − (1 − r)^n. Une méthode d'exploration qui vise les bassins étroits doit dépasser cette chance, à dépense égale, et d'autant plus que r est petit ; si elle ne la dépasse que pour les bassins larges, elle ne fait que raffiner.",
+    "loi_predictive": {
+     "espace_instances": "cinq masses r entre 0,5 et 0,02, profondeur constante, quarante mondes à graine scellée pour chaque masse, même nombre d'appels dans chaque bras",
+     "prediction": "pour r ≤ 0,05, la méthode couvre le bassin cible au moins 0,15 plus souvent que 1 − (1 − r)^n ; pour r ≥ 0,3, l'écart reste sous 0,05",
+     "signe": "+",
+     "metrique": "fréquence de couverture certifiée du bassin cible par une carte promue additionnelle à l'archive, lue une fois par l'oracle après la course, intervalle de Wilson à 95 % par masse r"
+    },
+    "perte_traduction": "La masse d'un bassin n'est pas une constante du monde : elle dépend des proposeurs et de la consigne, et des sessions neuves ne sont qu'à peu près indépendantes.",
+    "questions_servies": ["Q4", "Q3", "nouvelle"],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Seul un monde planté donne la vérité de terrain sur la largeur d'un bassin et sur sa couverture ; les observations de bassins sur des tâches ouvertes n'en ont pas.",
+     "incopiable_parce_que": "Sans monde écrit par un programme à graine scellée, sans archive ni juge statistique hors des agents, la largeur reste inconnue, et aucun surcroît de calcul ne la rend mesurable."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Le calcul de couverture d'un événement rare par tirages indépendants est élémentaire ; l'emploi comme témoin de coût égal, lu par l'oracle, est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Un paramètre de masse de la composante cible dans le générateur du monde, et un échantillon séparé pour mesurer cette masse."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "quelques centaines d'appels de proposeurs pour les deux bras ; le reste sur processeur."
+    },
+    "piege": "Estimer la masse r sur les propositions de la course elle-même rend le témoin circulaire.",
+    "cosmetique_si": "Si le gain ne croît pas quand la masse du bassin baisse, ou s'il s'efface à nombre de propositions jugées égal.",
+    "anteriorite": [
+     {"reference": "Bespoke Labs, « How models explore ideas », 10 novembre 2026, résumée dans la pièce faits-v1.md", "statut": "RAPPORTE"}
+    ]
+   }
+  },
+  {
+   "classe": "faux_falsifiabilite",
+   "attendu": "ineligible",
+   "note_max": {"falsifiabilite": 1},
+   "fiche": {
+    "nom": "Indice d'élégance profonde noté par les proposeurs eux-mêmes",
+    "type": "approche",
+    "enonce": "Demander à chaque proposeur d'attribuer à ses propres idées un indice d'élégance profonde, de 0 à 10, qui capte intuitivement la profondeur d'un bassin, puis garder les idées les mieux notées : les idées élégantes sont en général profondes, et l'organisme s'y dirigera naturellement.",
+    "loi_predictive": {
+     "espace_instances": "les idées de l'organisme en général",
+     "prediction": "les idées seront plus profondes et plus originales",
+     "signe": "+",
+     "metrique": "l'impression générale de profondeur qui se dégage des idées retenues"
+    },
+    "perte_traduction": "Presque rien : l'élégance se reconnaît quand on la voit.",
+    "questions_servies": ["Q2", "nouvelle"],
+    "avantage": {
+     "source": "aucune",
+     "texte": "Aucun avantage propre : l'idée tient avec n'importe quelle interface de programmation de modèle.",
+     "incopiable_parce_que": ""
+    },
+    "originalite": {
+     "niveau": "occupee",
+     "texte": "L'auto-évaluation des sorties par le modèle qui les a produites est une pratique répandue."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Ajouter l'indice à la consigne des proposeurs et trier l'archive selon lui."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "un appel de plus par proposeur."
+    },
+    "piege": "Aucun piège particulier.",
+    "cosmetique_si": "Difficile à dire.",
+    "anteriorite": []
+   }
+  },
+  {
+   "classe": "faux_anteriorite",
+   "attendu": "ineligible",
+   "note_max": {"originalite": 1},
+   "fiche": {
+    "nom": "Montée de la température d'échantillonnage des proposeurs vers les bassins rares",
+    "type": "approche",
+    "enonce": "Idée inédite : augmenter la température d'échantillonnage des proposeurs, génération après génération, pour aplatir la loi de leurs propositions et faire tomber plus souvent des propositions dans les bassins de faible probabilité, puis laisser le juge statistique trier comme aujourd'hui.",
+    "loi_predictive": {
+     "espace_instances": "les cartes d'une génération de l'organisme à monde planté, à température 0,7 contre 1,3",
+     "prediction": "à température 1,3, la part des cartes qui tombent hors des trois bassins les plus fréquents augmente d'au moins 0,10",
+     "signe": "+",
+     "metrique": "part des cartes hors des trois groupes prédictifs les plus peuplés, comptés par le regroupement des doublons de l'orchestrateur"
+    },
+    "perte_traduction": "La température change la forme des cartes autant que leur idée de fond.",
+    "questions_servies": ["Q2", "nouvelle"],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Un réglage simple, sans changement de l'organisme.",
+     "incopiable_parce_que": "C'est la première fois que la température est employée pour explorer des bassins d'idées."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Personne n'a encore proposé de jouer sur la température d'échantillonnage pour diversifier les idées d'un modèle de langue."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Un paramètre de température par génération dans l'appel des proposeurs."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "le même nombre d'appels qu'une génération ordinaire."
+    },
+    "piege": "Des cartes mal formées plus nombreuses à haute température, refusées par le gardien.",
+    "cosmetique_si": "Si la part hors des bassins fréquents ne monte pas.",
+    "anteriorite": []
+   }
+  }
+ ]
+}

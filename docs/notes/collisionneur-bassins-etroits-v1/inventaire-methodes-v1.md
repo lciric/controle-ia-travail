@@ -1,0 +1,140 @@
+# Inventaire des méthodes suggérées pour pousser l'organisme d'idéation vers les bassins d'idées étroits et profonds — v1
+
+- **Auteur** : sous-agent neuf, lecteur (Claude Fable 5.2, `claude-fable-5-2`), sur la consigne scellée
+  `docs/notes/g0-deux-semaines-v1/consignes-mere-2026-11-12-2019-v1/consigne-lecteur-recoupement-bassins-etroits-v1.md`
+  (`69da6f54e4ee3420…`) et les interdits `…/consignes-mere-2026-11-10-0500-v1/interdits-communs-v2.md` (`1ee3b37075aacb27…`),
+  vérifiés par empreinte avant lecture. Je n'ai écrit ni la question, ni les faits, ni aucune cellule, ni le remue-méninges
+  de la mère. Aucun appel de modèle, aucun réseau, aucune dépense, aucune opération git.
+- **Ordre tenu** : cet inventaire est écrit et scellé **avant** l'ouverture du remue-méninges de la mère
+  (`docs/notes/bassins-etroits-idees-v1/remue-meninges-mere-v1.md`), que je n'ai ni ouvert ni listé à ce stade ; je n'ai pas
+  non plus ouvert, à ce stade, les témoins ni la conception de l'organisme à trois générations. Début de lecture 14:37 UTC,
+  début de rédaction 14:41 UTC, le 13 novembre 2026 (`date -u`).
+- **Pièces lues en entier**, empreintes vérifiées contre les compagnons : `faits-v1.md` (`d19b5400…`), `question-v1.md`
+  (`935f4e5b…`), `depense-et-incidents-v1.md` (`230c8b13…`) ; les quinze cellules de `run-e3-v1/cellules/` ; les trois
+  textes des consultations à part ; en contexte, `docs/notes/collisionneur-diversite-idees-v1/synthese-v1.md` et
+  `docs/notes/lecture-voisins-bassins-idees-v1.md`.
+
+| référence | fichier | empreinte |
+|---|---|---|
+| [A-T1] [B-T1] [C-T1] [D-T1] [E-T1] | `E3-T1-conception-{A..E}.md` | `50c508c4…` `a751e121…` `2c91b6d0…` `b882edc3…` `d5f55c3f…` |
+| [A-T2] [B-T2] [C-T2] [D-T2] [E-T2] | `E3-T2-critique-croisee-{A..E}.md` | `e9ec52a5…` `3d5e25c9…` `0c4c148b…` `74c6a2bd…` `7ae60dae…` |
+| [A-T3] [B-T3] [C-T3] [D-T3] [E-T3] | `E3-T3-reponse-{A..E}.md` | `e9ae0cb0…` `197facb8…` `33bac3cf…` `125a0933…` `4b7f5fb5…` |
+| [Argon-à-part] [Astra-à-part] [Kimi-à-part] | `consultations-a-part-v1/{argon,astra,kimi}/texte.md` | `bc370ce4…` `e0ffbfad…` `7683d66c…` |
+
+Espèces du collisionneur : A Claude Fable 5.1, B Claude Opus 4.6, C Argon, D Kimi, E Astra ; quinze cellules valides sur
+quinze. Les trois consultations à part ont répondu en un seul appel, sans critique croisée : leurs méthodes propres portent le
+sort **non critiquée**.
+
+## Conventions
+
+- **Une ligne par méthode distincte.** Deux propositions sont la même méthode quand elles ont le même objet mathématique, le
+  même lieu d'action et la même information d'entrée ; je dis à chaque ligne ce que je regroupe. Quand deux propositions
+  portent le même nom mais des objets différents, je les sépare et je le dis.
+- **Sorts** (définitions de la consigne) : **non critiquée** ; **retirée** (critiquée, puis retirée, abandonnée ou
+  rétrogradée hors des méthodes actives par son auteur) ; **maintenue** (critiquée, gardée avec la correction dite) ;
+  **survivante** = encore défendue au tour III.3 par au moins une espèce après critique, sans objection fatale restée sans
+  réponse. Je distingue **survivante pleine** (elle figure dans le plan d'expériences corrigé de son auteur au tour III.3) et
+  **survivante suspendue** (son auteur la garde candidate mais la suspend, la diffère, ou ne lui donne plus d'expérience).
+  Cette distinction est de moi **(synthèse)**.
+- **Aucun chiffre des cellules n'est un résultat** : tous sont « illustratifs ». Aucune méthode n'a été éprouvée ; « survivre »
+  veut dire survivre à la critique écrite, rien de plus.
+- Vocabulaire : « valeur e », « règle de Benjamini et Hochberg sur les valeurs e » (notée e-BH dans les pièces), « nul » (la
+  classe des lois connues contre laquelle le juge teste), « jeu public » (instances publiques sans issue), « vue » (ce qu'un
+  proposeur reçoit).
+
+## 1. Méthodes qui agissent sur la vue servie aux proposeurs
+
+| code | nom | objet mathématique | lieu d'action | qui la propose | sort dans la course | phrase qui porte le sort |
+|---|---|---|---|---|---|---|
+| **V1** | Décomposition orthogonale de l'archive, table des termes nuls | décomposition de Hoeffding et Sobol' du logit de chaque loi d'archive, obtenue par inversion de Möbius sur le treillis des parties de l'ensemble des traits ; unique sous mesure produit | vue (archive réécrite, cases d'interaction vides listées) | [A-T1] M1 | **retirée** (non unique ni orthogonale sous traits dépendants : [B-T2], [C-T2], [D-T2], [E-T2]) ; réduite à V2 | [A-T3] : « La machinerie de Möbius disparaît ; il reste une liste. » |
+| **V2** | Liste des paires de traits que l'archive ne croise pas (énumération) | propriété de la fonction et non d'une mesure : la paire (i, j) est non croisée dans une loi si sa différence mixte est identiquement nulle ; liste binaire, ordre lexicographique | vue (archive entière, plus la liste) | [A-T3] (V1 corrigée) ; [B-T1] M2 « chaîne de conditions », corrigée en [B-T3] (bras T1 et T2) ; [C-T1] M4 version « affichage », devenue le bras d'énumération de [C-T3] ; [D-T1] puis [D-T3] comme témoin énumératif. **Regroupement** : graphe de dépendance de B, table des paires de Walsh absentes de C, table binaire de A, énumération lexicographique de D sont le même objet une fois corrigés | **survivante pleine**, sous sa forme minimale, à la fois candidate et témoin que toute méthode plus riche doit battre | [A-T3] : « c'est la liste des paires de traits que l'archive ne croise pas, propriété de la fonction et non d'une mesure » ; [B-T3] : « le graphe est un outil de comptabilité de l'archive, pas de détection » |
+| **V3** | Plan combinatoire qui répartit les focalisations entre appels ou entre emplacements de cartes | tableau couvrant ou tableau orthogonal de force t, plan en blocs, plan factoriel fractionnaire : chaque combinaison de t facteurs (paires de traits, questions) est exposée au moins une fois | vue (une focalisation par appel ou par carte ; archive entière) | [C-T1] M1 « tomographie combinatoire », corrigée en [C-T3] ; [D-T1] M1 « plans de couverture de questions publiques » ; [Argon-à-part] M4 (sondes de paires par emplacement de carte) ; [Astra-à-part] A (blocs de traits pour interactions clairsemées, avec inégalité de comparaison au tirage indépendant) ; [Kimi-à-part] 2.1 pour sa partie « plans factoriels de focalisation ». **Regroupement** : même objet, contenus de focalisation différents (lentilles descriptives, questions, sondes, blocs) | **survivante pleine**, avec correction : plan réellement exhibé et vérifié, témoins obligatoires (énumération V2, tirage sans remise des mêmes focalisations, texte neutre de même longueur) | [C-T3] : « L'objet exact est un **plan factoriel fractionnaire de strates conditionnelles** » ; [D-T3] : « un plan couvrant garantit la couverture de ses affectations, pas celle des idées » |
+| **V4** | Code couvrant sur les sous-ensembles de traits | code couvrant de rayon r dans l'espace de Hamming des parties de l'ensemble des traits ; borne de sphère | vue (invitations couvrant le code) | [B-T1] M4 | **retirée** comme méthode active (une idée est une fonction des traits, non un sous-ensemble : [D-T2], [E-T2]) | [B-T3] : « **M4 est rétrogradée** à un outil descriptif de couverture combinatoire, pas une méthode active. » |
+| **V5** | Dictionnaire de directions par moments orthogonaux | déformations exponentielles d'une loi archivée par une statistique h orthogonale à ses scores ; au second ordre, divergence de Kullback-Leibler égale à θ²/2 fois l'espérance de la variance conditionnelle de h | vue (contenu des questions, distribué par V3) | [D-T1] M2 | **maintenue**, corrections : formule de variance conditionnelle ([E-T2]), orthogonalité revendiquée seulement pour une extension paramétrique lisse ([C-T2]), traducteur déterministe gelé de la direction vers la question, croisement avec V3 et avec un dictionnaire naïf, mondes hors dictionnaire ; **survivante pleine** | [D-T3] : « L’orthogonalité aux scores ne sera revendiquée que pour une extension paramétrique lisse explicitement écrite. » |
+| **V6** | Tirage déterminantal d'un lot de vues | processus ponctuel déterminantal sur un catalogue fini de vues ou de plans publics (noyau de similarité des vues) ; chez [Astra-à-part], noyau de projection et inégalité exacte : la probabilité d'aucun succès est au plus celle du tirage indépendant de mêmes marges | vue (choix du lot de vues avant les appels) | [B-T1] M1 ; [Astra-à-part] C. **Regroupement** : même objet ; seule la consultation donne une garantie démontrée | **maintenue**, corrections : titre « noyau de Stein » supprimé, catalogue et noyau scellés avant la graine du monde, témoin « tirage uniforme sans remise dans le même catalogue », bras de paraphrases neutres ; **survivante pleine** mais dernière servie (première coupe si le budget manque) | [B-T3] : « testé dans un **duel séparé** (DPP vs tirage uniforme sans remise dans $\mathcal{V}$) » ; « la première coupe est le duel DPP séparé » |
+| **V7** | Plan sur des vues équivalentes | action d'un groupe fini de transformations publiques inversibles (renommage des traits, inversion de codage) ; chaque sortie subit la transformation inverse | vue (présentation), sans perte d'information | [E-T1] B | **maintenue** mais suspendue à un pilote d'équivariance ; **survivante suspendue** | [E-T3] : « Suspendre les vues planifiées et la synthèse typée jusqu’à justification expérimentale. » |
+| **V8** | Acquisition par variance d'un processus gaussien sur l'espace des lois | processus gaussien sur une fonction de gain, noyau de Fisher ou de Hellinger entre lois, suggestion des régions de plus grande incertitude | vue (régions de lois à explorer) | [B-T1] M3 | **retirée** : soit elle emploie un verdict (interdit), soit elle se réduit à une prime à la distance (rejet du premier tour) : [C-T2] | [B-T3] : « M3 est **retirée** de la proposition. » |
+| **V9** | Homologie de l'archive | deux variantes : homologie persistante d'un complexe de Vietoris et Rips sur les lois archivées ([B-T1] M5) ; cavités du complexe simplicial des traits que l'archive fait interagir ([C-T1] M5). **Regroupement** : même idée (lire les « trous » de l'archive par la topologie) | vue (trous signalés) | [B-T1] M5 ; [C-T1] M5 | **retirée** par ses deux auteurs (archive trop petite ; se réduit à la liste V2 en petit nombre de traits) | [B-T3] : « **M5 est retirée** comme méthode active. » ; [C-T3] : « J'élague les Méthodes 4 et 5 » |
+| **V10** | Focalisations tirées des résidus d'une loi de référence | coefficients des résidus sur une base orthonormale de contrastes (Walsh), estimés sur des **données publiques d'exploration avec issues**, borne de concentration par contraste | vue (focalisation servie sans le coefficient) | [Kimi-à-part] 2.1 | **non critiquée**. Exige une pièce qui n'existe pas dans les faits (données publiques avec issues, distinctes des tirages du juge) : dessin neuf, dit par son auteur | [Kimi-à-part] : « Les méthodes 1 et 3 ci-dessous sont inapplicables sans elles, sauf à créer explicitement cette pièce dans un dessin neuf. » |
+| **V11** | Balayage multi-échelle des résidus | statistique de balayage standardisée sur un arbre public de régions ; le signal local est d'ordre racine de (n·r) contre racine de r fois moins en global | vue (focalisation sur une région nominée) | [Kimi-à-part] 2.3 | **non critiquée** ; même prérequis que V10 ; dite exploratoire par son auteur | [Kimi-à-part] : « Le scan reste donc exploratoire ; il ne modifie ni promotion ni seuil statistique. » |
+| **V12** | Méthodes à signal servi à l'agent (rappel) | recuit, tempérage, curiosité, bandit sur les vues pendant la course, comité d'archive, échantillonnage parapluie, recherche de nouveauté | vue ou sélection | évoquées par [A-T1] et [Argon-à-part] | **écartées d'emblée** par ceux qui les évoquent : jamais proposées | [A-T1] : « tous servent un score à un agent. Écartés par le premier tour, et je n'ai pas d'argument pour rouvrir. » |
+
+## 2. Méthodes qui changent la représentation dans laquelle le proposeur écrit
+
+| code | nom | objet mathématique | lieu d'action | qui la propose | sort dans la course | phrase qui porte le sort |
+|---|---|---|---|---|---|---|
+| **I1** | Contrastes orthogonaux compilables | caractères de Walsh (produits de traits codés ±1), orthogonaux sous mesure produit équilibrée ; compilateur mécanique vers la grammaire, équivalence prédictive à prouver | interface entre proposeur et orchestrateur (bibliothèque publique gelée ; la grammaire d'origine reste ouverte) | [E-T1] A | **maintenue**, corrections : témoin muni du même compilateur sans la bibliothèque (séparer idée et aide syntaxique), copies compilées injectées dans le banc de garde, borne commune sur le nombre de tests, mondes non alignés ; **survivante pleine**, premier candidat de son auteur | [E-T3] : « maintenir les contrastes comme premier candidat, mais séparer leur effet de l’aide syntaxique » |
+| **I2** | Opérateur d'expansion : l'orchestrateur complète lui-même une carte additive par le terme croisé | même base de Walsh ; opérateur de fermeture déterministe | orchestrateur, avant le juge (il fabrique des cartes) | [C-T1] M4 version « opérateur » | **retirée** : mise en garde par son auteur dès la conception, élaguée au tour III.3 | [C-T1] : « **Alerte rouge sur la version « opérateur d'expansion » :** » ; [C-T3] : « J'élague les Méthodes 4 et 5 » |
+| **I3** | Carte de déviation dans le groupe des log-cotes | les lois conditionnelles positives forment un groupe abélien pour l'addition des log-cotes ; le proposeur rend un écart δ, l'orchestrateur soumet « loi de base ⊕ δ » | interface entre proposeur et orchestrateur | [Argon-à-part] M1 | **non critiquée**. Son auteur dit la preuve à fournir : le nul doit couvrir l'enveloppe log-linéaire de l'archive | [Argon-à-part] : « certifier que le nul du juge couvre bien la famille exponentielle engendrée par $\psi(\mathcal{A}_t)$ » |
+
+## 3. Méthodes qui changent le dessin de la course (recherche en plusieurs pas)
+
+| code | nom | objet mathématique | lieu d'action | qui la propose | sort dans la course | phrase qui porte le sort |
+|---|---|---|---|---|---|---|
+| **C1** | Synthèse typée de prolongements | graphe de programmes prédictifs typés, longueur de description préfixe (inégalité de Kraft), recherche à budgets croissants : un programme de longueur L reçoit du budget après un surcoût d'ordre 2^L | orchestrateur (liste de prolongements de l'archive, créneaux fixés d'avance) puis proposeurs | [E-T1] C | **maintenue** mais suspendue ; son auteur reconnaît un a priori sur les formes et l'absence d'avantage tiré de la seule borne ; **survivante suspendue** | [E-T3] : « Suspendre les vues planifiées et la synthèse typée jusqu’à justification expérimentale. » ; « Aucun avantage pratique ne découle de la seule borne exponentielle. » |
+| **C2** | Arbres de continuation sans récompense intermédiaire | u préfixes, b continuations chacun, tous traités de même ; comparaison exacte des taux d'échec par unité de coût avec le tirage indépendant | proposeurs (un objet intermédiaire typé, sans score, resservi en session neuve) | [Astra-à-part] B | **non critiquée** ; dessin neuf, dit par son auteur ; aucune garantie uniforme, dit par son auteur | [Astra-à-part] : « Ce dispositif n’a donc **aucune garantie uniforme**. » |
+| **C3** | Fractionnement à plusieurs niveaux sur un graphe public de prérequis | graphe orienté sans cycle des éléments publics déjà archivés ; les appels sont affectés à sa frontière dans un ordre fixe ; probabilité de succès en produit des niveaux | orchestrateur (affectation des appels par génération), à partir des seules formes canoniques de l'archive | [Kimi-à-part] 2.2 | **non critiquée** ; son auteur ne l'ouvrirait qu'après un effet mesuré de V10 | [Kimi-à-part] : « je passerais au splitting multiniveau seulement après une amélioration préenregistrée de la couverture brute **et** retenue » |
+
+## 4. Méthodes qui agissent sur le regroupement des doublons et le choix du représentant
+
+| code | nom | objet mathématique | lieu d'action | qui la propose | sort dans la course | phrase qui porte le sort |
+|---|---|---|---|---|---|---|
+| **G1** | Jeu public d'instances construit par plan | couverture des cellules : chaque configuration d'une paire de signes ou de quantiles apparaît au moins m fois ; strates écrites avant la génération du monde | jeu public qui sert au regroupement (lecture par strates) | [A-T1] M2, moitié « jeu public » | **maintenue**, correction : couverture de cellules et non « estimabilité » ([E-T2]) ; **survivante pleine** | [A-T3] : « Ce qui reste de M2 : le **jeu public d'instances sans issue**, construit pour que chaque configuration de paire de signes (ou de quantiles) apparaisse au moins m fois » |
+| **G2** | Représentant par couverture dirigée de strates | pour chaque sœur d'un groupe, l'ensemble des strates où elle s'écarte de l'archive de plus d'un seuil ; choix de la sœur qui en couvre le plus (la garantie sous-modulaire est sans objet pour un seul représentant) | choix du représentant à l'intérieur d'un groupe, sur le jeu public | [A-T1] M3 | **maintenue**, rétrogradée : règle de départage après la tranche appariée, seuil par strate corrigé de la variance, référence sous-modulaire retirée ; **survivante pleine** mais affaiblie | [A-T3] : « je le rétrograde donc à une **règle de départage** après la tranche appariée, non avant » |
+| **G3** | Pivotage de Cholesky sur un noyau de Hellinger par strates | vecteurs des écarts de log-probabilité de chaque carte, projetés orthogonalement à l'archive ; maximisation gloutonne du volume par pivots ; invariante à la multiplication des clones (calcul de son auteur) | regroupement des doublons et choix du représentant, sur le jeu public, sans poids transmis au juge | [C-T1] M3 (partie déterministe) | **maintenue** comme usage résiduel ; le tirage déterminantal aléatoire des représentants est abandonné ; **survivante suspendue** : défendue en [C-T3], absente de ses expériences corrigées (même regroupement dans tous les bras) | [C-T3] : « sert uniquement de **règle déterministe de regroupement des doublons et de choix du représentant** » |
+| **G4** | Divergences localisées par strates | maximum, sur une famille gelée de strates publiques, de l'écart au nul ; inégalité « maximum des infimums ≤ infimum des maximums » qui sépare un profil d'écarts locaux d'une distance à un nul commun | audit hors ligne, lecture descriptive ; filtre de non-doublon | [D-T1] M3 ; [C-T3] (usage 1 de sa méthode 2 corrigée). **Regroupement** : même objet | **maintenue** comme instrument descriptif à calibrer, jamais critère de sélection ; **survivante pleine** à ce titre seulement | [D-T3] : « M3 cesse d’être un critère discriminant autonome » ; « il ne pilote dans tous les cas ni sélection ni consigne » |
+
+## 5. Méthodes qui agissent sur le juge statistique (toutes exigent une preuve écrite)
+
+| code | nom | objet mathématique | lieu d'action | qui la propose | sort dans la course | phrase qui porte le sort |
+|---|---|---|---|---|---|---|
+| **J1** | Processus de valeurs e à arrêt optionnel | surmartingale de test sous le nul ; inégalité de Ville : la probabilité que le processus dépasse 1/α un jour est au plus α, quelle que soit la règle d'arrêt écrite d'avance | juge et test de mort (longueur du test par carte) | [A-T1] M5 | **maintenue**, corrections : règle d'allocation écrite, ordre de continuation scellé et jamais par valeur e, dénominateur à mélange de poids fixés d'avance jamais recalibré, bras « arrêt seul », comparaison à espérance de tirages égale, queue rapportée ; **survivante pleine** ; reclassée « survie » et non « exploration » | [A-T3] : « **Acceptée sur tous les points, M5 maintenue.** » ; « M5 est une amélioration de la survie, pas de l'exploration » |
+| **J2** | Tirages frais du juge stratifiés selon une loi de traits choisie | échantillonnage des traits sous une loi connue autre que celle du monde ; la loi des traits se simplifie dans le rapport de vraisemblance | tirages du juge | [A-T1] M2, moitié « juge » | **retirée** : change la grandeur estimée ([D-T2]), fuite si la partition est celle du générateur ([C-T2]) | [A-T3] : « **Acceptée ; la moitié « juge stratifié » de M2 est retirée.** » |
+| **J3** | Valeur e à plusieurs échelles | mélange convexe, à poids fixés d'avance, de valeurs e restreintes aux cellules d'une hiérarchie de partitions (ondelettes de Haar) ; valide par linéarité si chaque valeur locale l'est ; pénalité logarithmique de l'inverse du poids | juge | [C-T1] M2 | **maintenue**, très restreinte : n'aide que les cartes mal spécifiées hors de la région utile ; partition par paires de traits ; nul local sans recalibrage sur les issues ; clause d'abandon au banc hors ligne ; **survivante pleine** sous cette condition | [C-T3] : « J'abandonne la prétention que la Méthode 2 aide les cartes déjà localisées » |
+| **J4** | Martingale à pari localisé, avec nul ponctuel | à chaque épisode, pari d'une fraction λ(x) fonction des seuls traits, proportionnelle à la racine de l'écart local au nul (critère de Kelly local) ; l'écart local est pris contre l'enveloppe convexe **ponctuelle** des lois d'archive | juge | [Argon-à-part] M2. **Séparation** : même titre que J3 (« ondelettes de Haar ») mais objet différent (un pari par épisode, et non un mélange de valeurs e par cellule) | **non critiquée**. L'identité établie dans le collisionneur contre J3 lui est opposable **(synthèse)** : hors de la région utile une carte localisée a déjà un rapport égal à 1 | [Argon-à-part] : « la recombinaison par morceaux de lois de l'archive est neutralisée mathématiquement avec une valeur $e$ bloquée à 1 » |
+| **J5** | Pondération de la règle de Benjamini et Hochberg par la géométrie des groupes | poids fixés sur le jeu public avant les issues : angle principal avec les groupes précédents ([C-T1]) ; étroitesse du support et levier de la matrice de Gram ([Argon-à-part]) | juge (multiplicité) | [C-T1] M3 (partie poids) ; [Argon-à-part] M3. **Regroupement** : même objet | **retirée** dans le collisionneur : équivalente à une prime de nouveauté ([D-T2], [E-T2]) ; **non critiquée** dans la consultation, où l'argument du retrait s'applique tel quel **(synthèse)** | [C-T3] : « **J'abandonne intégralement la pondération e-BH ($w_j$ non uniformes) dans la Méthode 3.** » |
+| **J6** | Valeur e robuste par supremum sur un nul composite explicite | rapport de la carte au supremum des lois du nul ; valide pour le nul effectivement spécifié ; version par épisode et version sur l'échantillon entier à distinguer | juge (certificat de garde candidat, non une poussée) | [D-T1] M4 ; [E-T1] §3 ; [Astra-à-part] (préalable) ; [Kimi-à-part] (verrou). **Regroupement** : même construction, dit en [B-T2] | **maintenue** sous condition double : calcul exact ou majorant démontré, **et** contrôle positif de puissance ; retirée du préalable du duel de vues par D ; **survivante pleine** comme garde candidate | [D-T3] : « M4 reste suspendue à une preuve de calcul **et** à un contrôle positif de puissance. » ; [E-T3] : « Une garde sûre mais sans puissance est un échec du préalable. » |
+| **J7** | Filtre mécanique avant le juge contre les recombinaisons par morceaux | une carte conditionnelle n'est admise que si sa divergence à toute recombinaison de l'archive par morceaux sur la partition publique dépasse un seuil | gardien, avant le juge | [C-T3] | **non critiquée** : apparue au tour III.3, personne n'y a répondu | [C-T3] : « on exige au gardien pré-juge qu'une carte `si_sinon` ne soit admise que si sa divergence avec toute recombinaison de l'archive par morceaux sur la partition publique dépasse $\varepsilon$ » |
+
+## 6. Méthodes qui agissent sur la composition des proposeurs
+
+| code | nom | objet mathématique | lieu d'action | qui la propose | sort dans la course | phrase qui porte le sort |
+|---|---|---|---|---|---|---|
+| **P1** | Portefeuille de proposeurs sous budget | maximisation d'une fonction monotone sous-modulaire (probabilité de couvrir chaque composante) sous contrainte de coût, fréquences estimées par l'oracle sur un monde pilote | composition, entre deux courses | [A-T1] M4 | **maintenue** mais différée : non jugeable au budget d'un pilote ([B-T2]) ; règle préenregistrée de déclenchement ; **survivante suspendue** | [A-T3] : « **Acceptée ; M4 est différée.** » |
+| **P2** | Identification hors ligne du meilleur couple « proposeur × méthode de vue » | identification du meilleur bras à budget fixé, borne de Hoeffding uniforme sur les bras | composition, hors course, sur des mondes de calibration lus par l'oracle | [Kimi-à-part] 2.4 | **non critiquée** ; son auteur ne l'ouvrirait qu'après un effet brut ; parente de P1 (même lieu, même information, autre objet) | [Kimi-à-part] : « elle ne devient pertinente que si l’un des mécanismes précédents montre un effet brut » |
+
+## 7. Compte
+
+- **31 lignes** : 30 méthodes suggérées, plus un rappel (V12) de méthodes évoquées pour être écartées.
+- **Survivantes : 15**, dont **11 pleines** (V2, V3, V5, V6, I1, G1, G2, G4, J1, J3, J6) et **4 suspendues** (V7, C1, G3, P1).
+  Parmi les pleines, trois ne sont pas des poussées vers les bassins étroits mais des instruments ou des gardes (G4, J6 ;
+  et G1, qui sert le regroupement) ; deux agissent sur la survie d'une idée déjà proposée (J1, J3) ; une seule lignée agit
+  sur la probabilité de proposition avec le soutien de quatre espèces sur cinq : V2 et ses habillages (V3, V5, I1).
+- **Retirées ou écartées : 8** (V1, V4, V8, V9, I2, J2, J5 pour sa version du collisionneur, V12).
+- **Non critiquées : 8** : sept méthodes propres aux consultations à part (V10, V11, I3, C2, C3, J4, P2) et une apparue au
+  dernier tour (J7). S'y ajoute la version de J5 portée par [Argon-à-part], comptée avec J5.
+- **Recoupement des sources sur une même ligne** : V3 est portée par deux espèces et par les trois consultations ; J6 par
+  deux espèces et deux consultations ; V2 par quatre espèces ; V6 par une espèce et une consultation ; J5 par une espèce
+  (qui l'abandonne) et une consultation.
+
+## 8. Dispositifs de protocole apparus dans la course (ni méthodes ni bras, à garder)
+
+- **Placebo de vue** : même format et même longueur, archive vraie intacte, table tirée au hasard ([B-T2], repris en [A-T3]) ;
+  permuter les coefficients **falsifie** l'information au lieu de neutraliser la présentation ([E-T2]).
+- **Témoin à budget total de jetons égal**, et non à nombre d'appels égal ; cartes refusées par le gardien comptées ([A-T3],
+  [D-T3], [E-T3]).
+- **Unité d'analyse = le monde (la graine)**, bras appariés par graine ([A-T3], [E-T3]) ; **une seule génération au-dessus
+  d'une archive initiale gelée** pour le premier duel ([A-T3], [C-T3], [E-T3]).
+- **Trois étages de lecture** par l'oracle (propositions brutes, représentants, retenues), tous publiés ([A-T2] et suivants).
+- **Deux bancs séparés** : mondes entièrement dans le nul (fausses promotions) et copies hors classe (défaillance de la garde
+  contre les copies), à ne jamais étiqueter ensemble ([D-T2], [E-T2], accepté en [A-T3]).
+- **Contrôle positif de puissance** : une garde qui ne promeut jamais passe tous les contrôles nuls ([C-T2], [D-T2]).
+- **Mesure d'exécution mécanique des focalisations** : la carte cite-t-elle la paire ou la condition assignée ([D-T3], sur
+  l'objection de [B-T2]).
+- **Borne commune du nombre de tests**, positions vides à valeur e nulle, pour que le témoin qui achète plus d'appels ne soit
+  pas jugé plus sévèrement ([E-T3] ; « doit être auditée », dit son auteur ; personne ne l'a critiquée).
+- **Classement « étroit » sur les paramètres d'une famille de générateurs**, jamais sur les graines où le témoin a échoué
+  ([A-T2], accepté en [D-T3], [E-T3]).
+- **Listes, partitions, catalogues et noyaux scellés avant le tirage de la graine du monde** ([A-T2], accepté en [B-T3],
+  [C-T3]).
+- **Taille des tirages frais du juge fixée d'avance** : aucune pièce ne la fixait au tour III.1 ([A-T2]).

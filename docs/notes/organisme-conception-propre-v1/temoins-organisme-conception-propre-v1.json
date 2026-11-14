@@ -1,0 +1,185 @@
+{
+ "auteur_tiers": "Préparateur neuf de la course « conception propre » (sous-agent de la session mère), 13 novembre 2026, version 1. Réserve : le préparateur est du modèle d'un proposeur et du juge opus-juge ; « tiers » vaut pour l'instance, pas pour le modèle. Ces quatre témoins servent au juge de l'organisme (exigés par le code) et sont aussi mêlés aux fiches du lecteur.",
+ "temoins": [
+  {
+   "classe": "vrai",
+   "attendu": "eligible",
+   "note_max": {},
+   "fiche": {
+    "nom": "Arrêt des générations par capture-recapture entre deux proposeurs",
+    "type": "approche",
+    "enonce": "À chaque génération, les cartes de deux proposeurs indépendants sont traitées comme deux captures des groupes de lois que l'organisme sait atteindre. Les groupes de doublons (calculés par le programme de regroupement de l'orchestrateur, jamais par un modèle) vus chez le premier (n1), chez le second (n2) et chez les deux (m) donnent, par l'estimateur de Lincoln et Petersen, n1·n2/m groupes atteignables, donc une estimation de ce qui reste à trouver. Proposition : arrêter la course dès que cette estimation du reste tombe sous un groupe, au lieu de jouer un nombre de générations fixé d'avance ; le budget non dépensé n'est pas engagé. Le juge, les proposeurs et leurs consignes ne changent pas ; aucun agent ne voit l'estimation.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, trente graines scellées, courses de six générations au plus, mêmes proposeurs et mêmes plafonds de session que la course de référence",
+     "prediction": "à couverture des composantes plantées égale à une composante près (oracle), la règle d'arrêt coûte au moins 25 % de moins par course que six générations fixes ; le nombre de lois fausses et de copies promues n'augmente pas",
+     "signe": "-",
+     "metrique": "coût en dollars par course, relevé par les relais, et nombre de composantes plantées couvertes, lu par l'oracle une fois après la course ; témoin à coût égal : arrêt à une génération tirée au hasard, de même espérance de coût"
+    },
+    "perte_traduction": "Deux proposeurs ne sont pas deux captures indépendantes : s'ils partagent leurs biais, les groupes communs surabondent et l'estimateur annonce l'épuisement trop tôt ; un groupe de doublons n'est pas une composante plantée.",
+    "questions_servies": [
+     "levier:cout",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le monde planté donne la couverture vraie : on peut éprouver une règle d'arrêt calculée sans oracle contre la vérité, ce qu'aucune course sur des tâches ouvertes ne permet.",
+     "incopiable_parce_que": "Il faut un regroupement des doublons fait par programme, un monde à graine scellée et un oracle lu après la course ; sans eux, on ne sait pas si l'arrêt a perdu des composantes."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "L'estimateur de Lincoln et Petersen vient de l'écologie (capture, marquage, recapture) ; son emploi comme règle d'arrêt des générations, éprouvé contre l'oracle d'un monde planté, est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Après chaque génération, l'orchestrateur compte n1 et n2 (groupes de doublons des cartes de chacun des deux proposeurs les moins chers) et m (groupes communs), calcule n1·n2/m moins les groupes déjà vus, scelle ces nombres au manifeste de la génération et arrête la course si l'estimation du reste est sous 1. Aucun agent ne reçoit ces nombres."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur processeur, règle appliquée après coup aux journaux de courses à monde planté déjà jouées ; une course neuve par graine seulement s'il en manque"
+    },
+    "piege": "Régler le seuil d'arrêt au vu des courses rejouées rendrait la règle circulaire : le seuil (moins d'un groupe) est scellé avant toute lecture.",
+    "cosmetique_si": "Si l'arrêt à une génération tirée au hasard, à même coût moyen, perd aussi peu de composantes, l'estimateur n'apporte rien.",
+    "anteriorite": [
+     {
+      "reference": "Lincoln (1930) ; Petersen (1896) : estimation d'un effectif par capture et recapture",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "classe": "jumeau",
+   "attendu": "eligible",
+   "note_max": {},
+   "jumeau_de": "Arrêt des générations par capture-recapture entre deux proposeurs",
+   "fiche": {
+    "nom": "Combien de lois reste-t-il à trouver ? Arrêter quand deux proposeurs se recoupent assez",
+    "type": "approche",
+    "enonce": "Deux proposeurs qui tirent indépendamment dans le même ensemble de groupes de lois se recoupent d'autant plus que cet ensemble est épuisé. Avec n1 et n2 groupes de doublons trouvés par chacun et m groupes communs (regroupement fait par le programme de l'orchestrateur), l'effectif estimé est n1·n2/m (Lincoln et Petersen). Plutôt qu'un nombre fixe de générations, la course s'arrête quand moins d'un groupe reste à trouver selon cette estimation. Rien d'autre ne change, et l'estimation n'est servie à aucun agent.",
+    "loi_predictive": {
+     "espace_instances": "trente mondes plantés à graine scellée, d'une famille que la conception n'a jamais vue ; au plus six générations par course ; proposeurs et plafonds inchangés",
+     "prediction": "économie d'au moins un quart du coût par course, pour une couverture des composantes plantées égale à une près ; pas plus de lois fausses ni de copies promues",
+     "signe": "-",
+     "metrique": "dollars par course (relevé des relais) et composantes plantées couvertes (oracle, lu une fois après la course), contre un arrêt tiré au hasard de même coût moyen"
+    },
+    "perte_traduction": "L'indépendance des deux captures n'est qu'approchée ; groupe de doublons et composante plantée ne coïncident pas.",
+    "questions_servies": [
+     "levier:cout",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Seul un monde planté fournit la couverture vraie contre laquelle juger une règle d'arrêt.",
+     "incopiable_parce_que": "Sans monde à graine scellée, regroupement par programme et oracle, il n'y a pas de vérité sur ce que l'arrêt a perdu."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Capture et recapture viennent de l'écologie ; la règle d'arrêt d'un organisme d'idéation qui s'en sert est la part transposée."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "L'orchestrateur calcule, après chaque génération, l'effectif estimé n1·n2/m sur les groupes de doublons des deux proposeurs les moins chers, le scelle au manifeste et arrête la course quand le reste estimé est sous 1."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "calculable après coup sur les journaux des courses à monde planté déjà jouées"
+    },
+    "piege": "Un seuil choisi au vu des résultats ; il est fixé avant (moins d'un groupe).",
+    "cosmetique_si": "Un arrêt tiré au hasard, au même coût moyen, qui perdrait aussi peu de composantes.",
+    "anteriorite": [
+     {
+      "reference": "estimateur de Lincoln et Petersen, capture et recapture en écologie",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "classe": "faux_falsifiabilite",
+   "attendu": "ineligible",
+   "note_max": {
+    "falsifiabilite": 1
+   },
+   "fiche": {
+    "nom": "Des proposeurs plus réfléchis pour un organisme plus profond",
+    "type": "approche",
+    "enonce": "Demander aux proposeurs de réfléchir plus longuement, plus librement et plus profondément avant de rendre leurs cartes améliorera la qualité générale de l'organisme et la profondeur de ses idées. Une consigne qui encourage la réflexion personnelle et la créativité donnera des cartes plus riches, mieux pensées et plus intéressantes.",
+    "loi_predictive": {
+     "espace_instances": "l'organisme en général, sur ses courses à venir",
+     "prediction": "les cartes seront meilleures, plus profondes et plus intéressantes",
+     "signe": "+",
+     "metrique": "la qualité perçue des cartes et la richesse des idées"
+    },
+    "perte_traduction": "Peu de chose : l'idée tient en une consigne.",
+    "questions_servies": [
+     "levier:proposeurs",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Une consigne mieux écrite rend les modèles plus créatifs.",
+     "incopiable_parce_que": "Les autres n'y ont pas pensé."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Personne n'a demandé aux proposeurs de réfléchir davantage."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Ajouter à la consigne des proposeurs une invitation à réfléchir plus profondément et plus librement."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "presque rien"
+    },
+    "piege": "Que les modèles réfléchissent moins qu'on le croit.",
+    "cosmetique_si": "Si les cartes ne changent pas.",
+    "anteriorite": []
+   }
+  },
+  {
+   "classe": "faux_anteriorite",
+   "attendu": "ineligible",
+   "note_max": {
+    "originalite": 1
+   },
+   "fiche": {
+    "nom": "Validation des cartes par falsifications séquentielles à valeurs e combinées",
+    "type": "approche",
+    "enonce": "Pour chaque carte, une suite d'expériences de falsification est conçue l'une après l'autre ; chaque expérience rend une valeur p, convertie en valeur e ; les valeurs e se combinent au fil des expériences, et la carte n'est validée que si la valeur e combinée dépasse 1/α, ce qui contrôle l'erreur de première espèce au niveau α même quand on décide en cours de route d'ajouter ou d'arrêter des expériences. Les expériences sont proposées par un agent, mais la décision reste celle du seuil calculé par l'orchestrateur ; le nul contient les lois de l'archive.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes plantés jamais servie à la conception, quarante graines scellées, une génération par monde",
+     "prediction": "à coût égal en tirages frais, au moins deux composantes plantées de plus couvertes par monde, et pas plus d'une loi fausse promue sur quarante mondes",
+     "signe": "+",
+     "metrique": "composantes plantées couvertes et lois fausses promues, lues par l'oracle après la course ; témoin à coût égal : le juge actuel avec le même nombre de tirages frais"
+    },
+    "perte_traduction": "Une valeur p mal calibrée sur un monde à dépendances fait d'une valeur e une valeur e fausse ; l'agent qui conçoit les expériences peut viser ce qui valide plutôt que ce qui réfute.",
+    "questions_servies": [
+     "levier:juge",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "La garantie tient sous arrêt optionnel : on peut ajouter des expériences tant que la preuve manque, sans perdre le contrôle de l'erreur.",
+     "incopiable_parce_que": "Il faut un juge qui raisonne en valeurs e et un monde où la vérité est connue pour vérifier le taux d'erreur réel."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Aucun organisme d'idéation ne combine aujourd'hui des falsifications successives en valeurs e : c'est neuf."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer, pour chaque carte, le calcul unique de la valeur e par une suite d'expériences de falsification proposées par un agent, chacune convertie en valeur e, combinées par produit, avec validation au seuil 1/α."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "quelques dollars d'appels par génération pour l'agent qui conçoit les expériences"
+    },
+    "piege": "Laisser l'agent choisir les expériences au vu des valeurs déjà obtenues sans que la combinaison reste valide.",
+    "cosmetique_si": "Si le juge actuel, au même nombre de tirages, couvre autant de composantes.",
+    "anteriorite": []
+   }
+  }
+ ]
+}

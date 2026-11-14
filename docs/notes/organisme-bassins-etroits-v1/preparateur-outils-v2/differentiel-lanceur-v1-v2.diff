@@ -1,0 +1,1108 @@
+--- scripts/lancer_course_ideation_bassins_etroits_v1.py	2026-11-13 13:20:55.452635875 +0000
++++ scripts/lancer_course_ideation_bassins_etroits_v2.py	2026-11-13 14:04:35.036647140 +0000
+@@ -1,69 +1,63 @@
+ #!/usr/bin/env python3
+ """Lanceur de l'organisme d'idéation (atelier d'idées, N-065 rôle 2) sur la question des bassins d'idées étroits et
+-profonds : trois générations enchaînées — version 1.
++profonds : trois générations enchaînées — version 2.
+ 
+-Dérivé du lanceur `scripts/lancer_course_ideation_pilier_attaque_v2_v3.py` (`0a704661…`, inchangé, R12) : mêmes gardes
+-(interpréteur absolu, ligne de GO, orchestrateur au commit épinglé sans fichier ignoré ni cache d'octets, neuf empreintes,
+-pièces épinglées, drapeaux interdits, sommes des plafonds calculées comme l'orchestrateur, gardes de taille, préfixe du
+-cache d'octets hors du clone, sonde du bac à sable de l'orchestrateur telle quelle, clés décidées sur les noms seuls,
+-manifestes scellés, signaux relayés par PID). Ce qui change :
+-
+-- **GO-2026-11-13-03** (60 USD, trois courses de 12 + 8 USD, échéance 2026-11-30) lue et exigée ;
+-- **un argument unique et fermé** : la génération, `1`, `2` ou `3` ; rien d'autre n'est admis ;
+-- **deux temps par génération**, choisis par l'état sur disque, jamais par un argument : la course (proposeurs Opus 5.5,
+-  Fable 5.1 et Argon ; juge Opus 5.5 ; juge Argon différé), puis, quand l'attestation de lecture humaine de cette génération
+-  est scellée à son chemin fixe, le bras différé (juge Argon) qui écrit le classement ;
+-- **règle de passage écrite d'avance** (`choisir_fiches_recues`) : la génération g ≥ 2 reçoit, comme pièce, au plus cinq
+-  fiches de la génération g − 1, prises dans le classement agrégé du bras (lisible, témoins tenus chez chaque juge), dans
+-  l'ordre du rang de l'orchestrateur, éligibles seulement, en sautant toute fiche signalée en doublon par un juge ou
+-  appariée (même fiche, autre passe) à une fiche déjà prise, sous un plafond de 50 000 caractères ; servies dans un ordre
+-  neutre (empreinte), sans note, sans rang, sans auteur ; la génération 1 reçoit le recoupement des méthodes, au chemin
+-  fixe `RECOUPEMENT`, scellé, au plus 40 000 caractères ;
+-- **garde de cumul** : la dépense relevée de toutes les courses et de tous les bras déjà joués par ce lanceur, plus le
+-  plafond de ce qui va être lancé (20 USD pour une course, 3,1 USD pour un bras), ne dépasse jamais 60 USD (ni le plafond lu
+-  de la ligne de GO) ; une dépense illisible compte son plafond entier, dit au manifeste ;
+-- générations 2 et 3 **refusées** si la génération précédente n'a pas ses manifestes de fin scellés (course et bras, code
+-  0) et un classement scellé lisible ; une génération déjà tentée avec dépense n'est jamais relancée par ce lanceur ;
+-- **mesure des consignes sans appel** : l'orchestrateur lui-même (`--mesurer-consignes`, sans appel ni fichier), sur les
+-  pièces réelles de la génération ; gardes de taille de l'orchestrateur et garde avant envoi de la commande d'Argon
+-  (`commande_argon_v3d.py`) recalculées ; au bras, garde de la consigne du juge sur sa taille réelle.
++Version 2 : corrections de la contre-lecture `docs/notes/organisme-bassins-etroits-v1/contre-lecture-lanceur-bassins-
++etroits-v1.md` (`3aaf9981…`) selon les décisions de la mère (R-2537, consigne `…-corrections-v1.md`, `e9bef586…`), sur la
++version 1 (`lancer_course_ideation_bassins_etroits_v1.py`, `a10420cc…`, inchangée, R12) :
++- B1 : le compagnon de la liste blanche, écrit par l'orchestrateur, est **vérifié**, jamais recréé ;
++- M1, M2 : aucune dépense ne vaut 0 par défaut ; tout dossier de tentative sans relevé scellé, tout processus mort sans fin
++  propre, toute lecture illisible comptent le plafond entier ; un refus « rien envoyé » (coût plancher) prouvé par le relevé
++  ne verrouille pas ; contrôle externe d'Argon relevé à 1,7 USD, gardes de taille d'Argon tenues à 3 caractères par jeton ;
++- M3 : au bras aussi, aucune relance après dépense ; seul un bras « non joué, rien envoyé » se relance ;
++- M4 : la règle de passage n'emploie aucune mesure de l'orchestrateur ; doublons écartés sur le seul signalement explicite
++  d'un juge ; toute donnée manquante ou mal formée arrête (code 2, motif) ;
++- M5 : générations 2 et 3 refusées sans la confirmation scellée de la règle de passage (mot de Lazar recopié par la mère) ;
++- M6 : l'attestation de lecture dit qui a lu (champ `lecteur`), quoi (empreintes), quand (`lu_le`) ; versions `-v<N>` ;
++- M7 : l'orchestrateur est lancé **détaché** (session neuve, sous un superviseur qui relaie les signaux par PID et scelle le
++  code de sortie) ; le lanceur rend la main ; la même commande, relancée, lit l'état : en marche (rien, code 3), finie
++  (manifeste de fin, code 0), morte sans fin propre (plafond compté, génération verrouillée) ; rien ne part tant qu'un
++  superviseur vit ;
++- M8 : le recoupement exige son compagnon et une attestation scellée de relecture par la mère ;
++- M9 : le témoin « vrai » n'est servi que si un lecteur a certifié qu'aucune pièce servie aux juges ne l'énonce ;
++- mineurs m1, m2, m3, m6, m7, m8 (voir le rapport `rapport-preparateur-v2.md`).
+ 
+ Usage, seul et exact (cwd = racine du dépôt de travail) :
+ 
+-    /usr/local/bin/python3 -I -B scripts/lancer_course_ideation_bassins_etroits_v1.py 1     (puis 2, puis 3)
++    /usr/local/bin/python3 -I -B scripts/lancer_course_ideation_bassins_etroits_v2.py 1     (puis 2, puis 3)
+ 
+-Tout refus rend 2, motif sur la sortie d'erreur ; avant l'écriture du dossier de run, rien n'est écrit ; après, seul un
+-manifeste de refus scellé l'est, et rien n'est appelé. Les fiches et journaux vont hors du dépôt
+-(`/home/user/sorties-course-ideation-bassins-etroits-v1/<id>/`) ; le dépôt garde les manifestes et leurs empreintes
+-(`runs/course-ideation-bassins-etroits-v1/<id>/`).
+-
+-Bibliothèque standard seulement (le lanceur tourne sous `-I`). Les essais (`tests/test_lancer_course_ideation_bassins_
+-etroits_v1.py`) remplacent l'orchestrateur par un faux exécutable via `Reglages` ; la ligne de commande n'expose aucun
+-réglage.
++Une invocation fait **une** chose : compte rendu d'un processus en marche (code 3) ; ou clôture des processus finis
++(manifestes de fin, code 0) ; ou lancement détaché d'une course ou d'un bras (code 0) ; ou refus (code 2, motif sur la sortie
++d'erreur ; après la création d'un dossier de run, un manifeste de refus scellé, rien appelé). Arrêt d'une course : par le PID
++du superviseur écrit au manifeste de départ (SIGTERM, relayé par PID à l'orchestrateur ; R10).
++
++Bibliothèque standard seulement. Les essais (`tests/test_lancer_course_ideation_bassins_etroits_v2.py`) remplacent
++l'orchestrateur par un faux exécutable via `Reglages` ; la ligne de commande n'expose aucun réglage.
+ """
+ from __future__ import annotations
+ 
+ import datetime as _dt
+ import hashlib
+ import json
++import math
+ import os
+ import re
+-import signal
+ import subprocess
+ import sys
++import unicodedata
+ from dataclasses import dataclass, field
+ from pathlib import Path
+ from typing import Mapping
+ 
+-VERSION = "lancer_course_ideation_bassins_etroits_v1"
++VERSION = "lancer_course_ideation_bassins_etroits_v2"
+ GO_ID = "GO-2026-11-13-03"
+ DEPOT = Path(__file__).resolve().parents[1]
+ GENERATIONS = ("1", "2", "3")
+ 
+-# --- orchestrateur (dépôt public lciric/ideation-organism, clone en lecture de la consigne), épinglé ----------------------
++# --- orchestrateur (dépôt public lciric/ideation-organism, clone en lecture), épinglé --------------------------------------
+ ORCHESTRATEUR = Path("/home/user/lciric/ideation-organism/orchestrator")
+ COMMIT_ORCHESTRATEUR = "be6b5af96c9e19812569d8dab55d6ce3978a3823"
+-EMPREINTES_ORCHESTRATEUR = {  # mêmes valeurs qu'au commit f39a7f4a du lanceur v3 : chaîne de lancement inchangée
++EMPREINTES_ORCHESTRATEUR = {
+     "demonstrations/ideation_v8.py": "2e2be8d72c548e183b94c14de20c971f241f998f54f64c5281b2427fdd64e9d1",
+     "demonstrations/ideation_v7.py": "7b90e65e1308b1c230b3f804743cfc42b9dc571d93b73ed6c5f3f8c9d2b481b2",
+     "demonstrations/ideation_v6.py": "4c302e5b97b229d5b3edd9e9a427f1e50796c10f7081f63132165ffeef854ba4",
+@@ -83,18 +77,21 @@
+                  "c188fa9a8ada9c8793bb5a9150596a2583614ee1c8583d8b5ceab226667df7ef"),
+     "faits": ("docs/notes/collisionneur-bassins-etroits-v1/faits-v1.md",
+               "d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3"),
+-    "temoins": (f"{NOTES}/temoins-bassins-etroits-v1.json",
+-                "748f391ec2dff1687e8c3d3a7c431613c61a023ddcd1ee43708b516020d3900a"),
++    "temoins": (f"{NOTES}/temoins-bassins-etroits-v2.json",
++                "f1ddcef9748d63e8884176c6e846bb65ef9df0b4e261e486b0656a5344687631"),
+     "enveloppe_argon": ("rapports/fille-ideation-1-v1/appel-argon-v5.sh",
+                         "37c0205e26f83cbdcdf5ad7f1e4094a21c7dcc70afb72d15ef0d260a770a132a"),
+     "commande_argon": ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande_argon_v3d.py",
+                        "46c91df41b77a6d4cb7f5141993fda4a894118b5dd4ad1e5ba21a17dc2d67e46"),
+ }
+-# pièces à chemin fixe, non épinglables d'avance : scellées (compagnon `.sha256`), empreinte portée au manifeste
++# pièces et attestations à chemin fixe, non épinglables d'avance : scellées (compagnon `.sha256`), empreintes au manifeste
++ATTESTATIONS = f"{NOTES}/attestations"
+ RECOUPEMENT = f"{NOTES}/recoupement-methodes-v1.md"            # génération 1 : fourni par la mère
+ TAILLE_MAX_RECOUPEMENT = 40_000                                 # caractères
+-ATTESTATION = NOTES + "/attestations/attestation-lecture-humaine-g{g}-v1.json"   # par génération, avant son bras
+-TAILLE_MAX_FICHES_RECUES = 50_000                               # caractères de la pièce des générations 2 et 3
++RELECTURE_RECOUPEMENT = f"{ATTESTATIONS}/attestation-relecture-recoupement-v1.json"
++CONFIRMATION_REGLE = f"{ATTESTATIONS}/confirmation-regle-de-passage-v1.md"
++MOTIF_ATTESTATION = r"attestation-lecture-humaine-g{g}-v(\d+)\.json"   # par génération, avant son bras ; la plus haute
++TAILLE_MAX_FICHES_RECUES = 50_000                               # caractères de la pièce entière (générations 2 et 3)
+ NOMBRE_FICHES_RECUES = 5
+ DEPOT_ATTENDU_PAR_L_ENVELOPPE = Path("/home/user/controle-ia-travail")
+ 
+@@ -111,15 +108,17 @@
+     "proposeur_ideation|gemini-4-argon": 1.3,   # passe 1 d'Argon
+     "juge_ideation|gemini-4-argon": 2.5,        # bras différé
+ }
+-CONTROLE_EXTERNE_USD = 1.5
++CONTROLE_EXTERNE_USD = 1.7                      # M2 : tient la consigne de contrôle à 3 caractères par jeton
+ PASSE_2_EXTERNE_USD = 1.9
+-CONTROLE_BRAS_USD = 0.6                         # contrôle court d'Argon au bras (≥ 0,51 : garde avant envoi de la commande)
++CONTROLE_BRAS_USD = 0.6                         # contrôle court d'Argon au bras (plancher ≈ 0,51)
+ PLAFOND_BRAS_USD = PLAFONDS["juge_ideation|gemini-4-argon"] + CONTROLE_BRAS_USD
++SEUIL_SANS_DEPENSE_USD = 1e-5                   # M2 : au plus dix coûts planchers (10⁻⁶) de refus « rien envoyé »
++MAX_TENTATIVES = 3
+ PROPOSEURS = (("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1"))
+ PROPOSEUR_EXTERNE = ("argon", "gemini-4-argon")
+ JUGES = (("opus-juge", "claude-opus-5-5"),)
+ JUGE_EXTERNE = ("argon-juge", "gemini-4-argon")
+-GRAINE_BASE = 2026111300                        # graine de la génération g : GRAINE_BASE + g (règle de l'orchestrateur ensuite)
++GRAINE_BASE = 2026111300                        # graine de la génération g : GRAINE_BASE + g
+ 
+ # --- gardes de taille de `pole/ideation_v2.py` (commit épinglé), reproduites par calcul -------------------------------------
+ PRIX_CARACTERE_PRUDENT_USD = 10.0 / 1e6 / 4
+@@ -135,17 +134,18 @@
+ DEFAUTS_CLAUDE = {"proposeur_ideation|claude-opus-5-5": 5.0, "proposeur_ideation|claude-fable-5-1": 9.3,
+                   "juge_ideation|claude-opus-5-5": 4.0, "juge_ideation|claude-fable-5-1": 7.0}
+ # --- garde avant envoi de `commande_argon_v3d.py` (réglages figés par `appel-argon-v5.sh`), reproduite par calcul ---------
+-# plafond ≥ ⌈⌈caractères / c⌉ × 1,05⌉ × 8,3e-6 + (4 096 + 8 192) × 41,5e-6 ; c = 4 (estimation de la commande) ; le compte
+-# exact de l'interface (`countTokens`) peut être plus grand : lecture à c = 3 rapportée, sans garde
++# plafond ≥ ⌈⌈caractères / c⌉ × 1,05⌉ × 8,3e-6 + (4 096 + 8 192) × 41,5e-6 ; gardé à c = 3 (le compte exact de l'interface
++# peut dépasser caractères / 4) ; lecture à c = 4 rapportée
+ ARGON_PRIX_ENTREE = 8.3e-6
+ ARGON_PRIX_SORTIE = 41.5e-6
+ ARGON_SORTIE_MIN = 4096
+ ARGON_PROVISION_PENSEE = 8192
+ ARGON_MARGE_ENTREE = 1.05
++CARACTERES_PAR_JETON_GARDE = 3.0
+ PORT_RELAIS_CLAUDE = 8787
+-DOSSIER_SORTIES = Path("/home/user/sorties-course-ideation-bassins-etroits-v1")
+-SOUS_DOSSIER_RUNS = "course-ideation-bassins-etroits-v1"
+-SUFFIXE_RUN = "-course-ideation-bassins-etroits-v1-g"
++DOSSIER_SORTIES = Path("/home/user/sorties-course-ideation-bassins-etroits-v2")
++SOUS_DOSSIER_RUNS = "course-ideation-bassins-etroits-v2"
++SUFFIXE_RUN = "-course-ideation-bassins-etroits-v2-g"
+ PYTHON_COURSE = "/usr/local/bin/python3"
+ NOM_DOSSIER_PYCACHE = "pycache"
+ 
+@@ -167,6 +167,35 @@
+     "print(json.dumps(etat_bac_a_sable_detaille()))\n"
+ )
+ 
++# M7 : superviseur détaché (bibliothèque standard ; lancé sous `-I -B` dans une session de processus neuve). Il lance
++# l'orchestrateur, écrit son PID (scellé), relaie SIGTERM, SIGINT et SIGHUP **par PID**, attend, scelle le code de sortie.
++SUPERVISEUR = r'''
++import datetime, hashlib, json, os, signal, subprocess, sys
++argv, cwd, dossier = json.loads(sys.argv[1]), sys.argv[2], sys.argv[3]
++def sceller(nom, objet):
++    t = (json.dumps(objet, ensure_ascii=False, indent=1, sort_keys=True) + "\n").encode("utf-8")
++    with open(os.path.join(dossier, nom), "xb") as f:
++        f.write(t)
++    with open(os.path.join(dossier, nom + ".sha256"), "x", encoding="utf-8") as f:
++        f.write(hashlib.sha256(t).hexdigest() + "  " + nom + "\n")
++def heure():
++    return datetime.datetime.now(datetime.timezone.utc).isoformat()
++debut = heure()
++with open(os.path.join(dossier, "orchestrateur.stdout.txt"), "xb") as fo, \
++        open(os.path.join(dossier, "orchestrateur.stderr.txt"), "xb") as fe:
++    enfant = subprocess.Popen(argv, cwd=cwd, stdout=fo, stderr=fe, stdin=subprocess.DEVNULL)
++    def relayer(num, cadre):
++        try:
++            enfant.send_signal(num)
++        except ProcessLookupError:
++            pass
++    for s in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
++        signal.signal(s, relayer)
++    sceller("pid-orchestrateur.json", {"pid_orchestrateur": enfant.pid, "debut_utc": debut})
++    code = enfant.wait()
++sceller("code.json", {"code": code, "pid_orchestrateur": enfant.pid, "debut_utc": debut, "fin_utc": heure()})
++'''
++
+ 
+ class Refus(RuntimeError):
+     """Garde du lanceur : rien n'est lancé."""
+@@ -233,6 +262,10 @@
+     return float(m.group(1).replace(",", "."))
+ 
+ 
++def _sans_accent(t: str) -> str:
++    return unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode("ascii").strip().lower()
++
++
+ def verifier_go(registre: Path, aujourd_hui: _dt.date, go_id: str = GO_ID) -> dict:
+     """Une seule ligne principale `go_id`, 8 colonnes, type calcul, accordée par Lazar, dans sa période, non révoquée,
+     périmètre « organisme d'idéation » et « bassins », plafond lu ≥ trois courses (60 USD)."""
+@@ -247,8 +280,12 @@
+         cellules = [c.strip() for c in ligne.strip().strip("|").split("|")]
+         if m.group(1) == go_id:
+             trouvees.append(cellules)
+-        elif len(cellules) == 8 and cellules[2] == "révocation" and (go_id in cellules[3] or go_id in cellules[7]):
+-            revocations.append(m.group(1))
++        elif go_id in ligne:  # m1 : toute autre ligne qui cite ce GO est bien formée, et une révocation l'est quelle que soit
++            # la graphie de son type
++            if len(cellules) != 8:
++                raise Refus(f"ligne {m.group(1)} qui cite {go_id} mal formée ({len(cellules)} colonnes) : lecture impossible")
++            if _sans_accent(cellules[2]) == "revocation":
++                revocations.append(m.group(1))
+     principales = [c for c in trouvees if not (len(c) == 8 and c[3].lower().startswith("extension"))]
+     if len(principales) != 1:
+         raise Refus(f"{go_id} : {len(principales)} ligne(s) principale(s) dans {registre.name} (une exigée)")
+@@ -492,7 +529,6 @@
+ def plancher_argon(caracteres: int, caracteres_par_jeton: float = 4.0) -> float:
+     """Plafond de session minimal pour que `commande_argon_v3d.py` envoie une consigne de `caracteres` (garde avant envoi,
+     réglages de `appel-argon-v5.sh`, recherche sur le Web absente)."""
+-    import math
+     entree = math.ceil(math.ceil(caracteres / caracteres_par_jeton) * ARGON_MARGE_ENTREE)
+     return entree * ARGON_PRIX_ENTREE + (ARGON_SORTIE_MIN + ARGON_PROVISION_PENSEE) * ARGON_PRIX_SORTIE
+ 
+@@ -531,13 +567,12 @@
+         "passe_2_fiches_8000": {"plafond": p2, "consigne": consigne_p2_8000},
+     }
+     for v in argon.values():
+-        v["plancher_a_4_caracteres_par_jeton"] = round(plancher_argon(v["consigne"], 4.0), 6)
+-        v["plancher_a_3_caracteres_par_jeton_rapporte"] = round(plancher_argon(v["consigne"], 3.0), 6)
+-        v["tient_a_4"] = v["plafond"] >= v["plancher_a_4_caracteres_par_jeton"]
+-        v["tient_a_3_rapporte"] = v["plafond"] >= v["plancher_a_3_caracteres_par_jeton_rapporte"]
++        v["plancher_garde_a_3_caracteres_par_jeton"] = round(plancher_argon(v["consigne"], CARACTERES_PAR_JETON_GARDE), 6)
++        v["plancher_a_4_caracteres_par_jeton_rapporte"] = round(plancher_argon(v["consigne"], 4.0), 6)
++        v["tient"] = v["plafond"] >= v["plancher_garde_a_3_caracteres_par_jeton"]
+     g["commande_argon"] = argon
+     trop = {n: v for n, v in g.items() if n != "commande_argon" and (v["marge"] < 0 or v.get("orchestrateur_passerait") is False)}
+-    trop.update({f"commande_argon/{n}": v for n, v in argon.items() if not v["tient_a_4"]})
++    trop.update({f"commande_argon/{n}": v for n, v in argon.items() if not v["tient"]})
+     if trop:
+         raise Refus("garde(s) de taille qui ne tiendrai(en)t pas — refus avant tout appel : " + json.dumps(trop, ensure_ascii=False))
+     g["passe_2_seuil_de_fiche"] = {
+@@ -616,6 +651,47 @@
+ # état des générations, dépense relevée, garde de cumul
+ # ======================================================================================================================
+ 
++
++# ======================================================================================================================
++# processus détachés (M7)
++# ======================================================================================================================
++
++def debut_processus(pid: int) -> str | None:
++    """Heure de départ du processus (champ 22 de /proc/<pid>/stat), None s'il n'existe pas ou est un zombie."""
++    try:
++        with open(f"/proc/{int(pid)}/stat", "r", encoding="utf-8", errors="replace") as f:
++            stat = f.read()
++    except OSError:
++        return None
++    champs = stat.rsplit(")", 1)[-1].split()
++    if len(champs) < 20 or champs[0] == "Z":
++        return None
++    return champs[19]
++
++
++def superviseur_vivant(sup: dict | None) -> bool:
++    return bool(sup) and debut_processus(sup["pid"]) is not None and debut_processus(sup["pid"]) == sup["debut_proc"]
++
++
++def lancer_detache(r: Reglages, argv: list, env: dict, dossier: Path, prefixe_pycache: Path) -> dict:
++    """Le superviseur, dans une session de processus neuve, sorties vers des fichiers ; rend {pid, debut_proc, dossier}."""
++    dossier.mkdir()
++    with open(dossier / "superviseur.stdout.txt", "xb") as fo, open(dossier / "superviseur.stderr.txt", "xb") as fe:
++        p = subprocess.Popen([r.python, *options_interprete(prefixe_pycache), "-c", SUPERVISEUR, json.dumps(argv),
++                              str(r.orchestrateur), str(dossier)], cwd=str(r.orchestrateur), env=env, stdout=fo, stderr=fe,
++                             stdin=subprocess.DEVNULL, start_new_session=True)
++    return {"pid": p.pid, "debut_proc": debut_processus(p.pid), "dossier": str(dossier),
++            "arret": f"kill -TERM {p.pid} (relayé par PID à l'orchestrateur ; jamais par motif, R10)"}
++
++
++def lire_code(sup: dict) -> dict | None:
++    return _lire_json_si_scelle(Path(sup["dossier"]) / "code.json")
++
++
++# ======================================================================================================================
++# état des runs, dépense relevée, garde de cumul
++# ======================================================================================================================
++
+ def _lire_json_si_scelle(chemin: Path):
+     try:
+         return lire_json_scelle(chemin)
+@@ -623,8 +699,12 @@
+         return None
+ 
+ 
++def _scelle_present(chemin: Path) -> bool:
++    return chemin.exists() or Path(str(chemin) + ".sha256").exists()
++
++
+ def runs_du_lanceur(r: Reglages) -> list:
+-    """Les runs de ce lanceur (manifeste de départ scellé exigé ; un dossier sans lui est une incohérence : refus)."""
++    """Les runs de ce lanceur. Un dossier sans manifeste de départ ni de refus scellé est une incohérence : refus."""
+     if not r.dossier_runs.is_dir():
+         return []
+     runs = []
+@@ -640,32 +720,52 @@
+         base = depart or refus
+         if str(base.get("generation")) != m.group(1) or base.get("lanceur", {}).get("version") != VERSION:
+             raise Refus(f"run {nom} : génération ou version du lanceur incohérente")
++        if depart is not None and not depart.get("superviseur"):
++            raise Refus(f"run {nom} : manifeste de départ sans superviseur")
+         fin = _lire_json_si_scelle(d / "manifeste-lanceur-fin.json")
++        if fin is None and _scelle_present(d / "manifeste-lanceur-fin.json"):
++            raise Refus(f"run {nom} : manifeste de fin au sceau faux")
+         bras = []
+         k = 1
+-        while (d / f"manifeste-lanceur-bras-depart-{k}.json").exists():
+-            bras.append({"numero": k, "depart": _lire_json_si_scelle(d / f"manifeste-lanceur-bras-depart-{k}.json"),
+-                         "fin": _lire_json_si_scelle(d / f"manifeste-lanceur-bras-fin-{k}.json")})
++        while _scelle_present(d / f"manifeste-lanceur-bras-depart-{k}.json"):
++            dep_b = _lire_json_si_scelle(d / f"manifeste-lanceur-bras-depart-{k}.json")
++            if dep_b is None or not dep_b.get("superviseur"):
++                raise Refus(f"run {nom} : manifeste de départ du bras {k} illisible")
++            fin_b = _lire_json_si_scelle(d / f"manifeste-lanceur-bras-fin-{k}.json")
++            if fin_b is None and _scelle_present(d / f"manifeste-lanceur-bras-fin-{k}.json"):
++                raise Refus(f"run {nom} : manifeste de fin du bras {k} au sceau faux")
++            bras.append({"numero": k, "depart": dep_b, "fin": fin_b})
+             k += 1
+         runs.append({"nom": nom, "dossier": d, "generation": int(m.group(1)), "depart": depart, "refus": refus, "fin": fin,
+                      "bras": bras, "sortie": Path(base["sortie"]) if base.get("sortie") else None})
+     return runs
+ 
+ 
++def processus_de(run: dict) -> list:
++    """[(quoi, superviseur, manifeste de fin)] de la course et des bras d'un run lancé."""
++    if run["depart"] is None:
++        return []
++    return [("course", run["depart"]["superviseur"], run["fin"])] + \
++        [(f"bras-{b['numero']}", b["depart"]["superviseur"], b["fin"]) for b in run["bras"]]
++
++
+ def _cout(objet, *cles) -> float:
+     for c in cles:
+         objet = objet[c]
+-    if isinstance(objet, bool) or not isinstance(objet, (int, float)) or not objet >= 0 or objet != objet:
++    if isinstance(objet, bool) or not isinstance(objet, (int, float)) or not math.isfinite(objet) or objet < 0:
+         raise ValueError("coût non fini ou négatif")
+     return float(objet)
+ 
+ 
+-def depense_course(sortie: Path) -> tuple:
+-    """(dépense en USD, lecture). Manifeste de fin de l'orchestrateur scellé : ses deux totaux (contrôles compris). Sortie
+-    absente : tentatives de contrôle scellées (refus de taille : 0), ou 0 si rien n'est parti. Sinon : plafond entier."""
++def depense_course(sortie: Path, sup_fini: bool) -> tuple:
++    """(dépense en USD, lecture). Aucun chemin ne rend 0 par défaut (M1) : 0 seulement si le superviseur a fini proprement
++    et que rien n'est parti ; une sortie sans manifeste de fin scellé et lisible, un dossier de contrôle non expliqué en
++    entier par des tentatives scellées, un processus mort sans fin propre comptent le plafond entier."""
++    if not sup_fini:
++        return PLAFOND_COURSE_USD, "processus mort sans fin propre, ou en marche : plafond entier compté"
+     controle = Path(str(sortie) + "-controle")
+     fin = sortie / "manifeste-fin.json"
+-    if fin.exists():
++    if _scelle_present(fin):
+         m = _lire_json_si_scelle(fin)
+         try:
+             j = m["reglages"]["journal"]
+@@ -675,9 +775,10 @@
+     if sortie.exists():
+         return PLAFOND_COURSE_USD, "sortie sans manifeste de fin scellé : plafond entier compté"
+     if not controle.exists():
+-        return 0.0, "rien parti (ni sortie, ni contrôle)"
+-    total = 0.0
+-    for nom in sorted(os.listdir(controle)):
++        return 0.0, "rien parti (fin propre du superviseur ; ni sortie, ni contrôle)"
++    total, scellees = 0.0, set()
++    noms = sorted(os.listdir(controle))
++    for nom in noms:
+         p = controle / nom
+         if re.fullmatch(r"tentative-\d+\.json", nom):
+             m = _lire_json_si_scelle(p)
+@@ -685,58 +786,67 @@
+                 total += _cout(m, "reglages", "cout_claude_usd") + _cout(m, "reglages", "cout_externe_usd")
+             except (TypeError, KeyError, ValueError):
+                 return PLAFOND_COURSE_USD, f"tentative de contrôle illisible ({nom}) : plafond entier compté"
+-        elif re.fullmatch(r"(tentative-\d+(-externe-[a-z0-9-]+)?|refus-taille-\d+\.json|.*\.sha256)", nom):
++            scellees.add(nom.split(".")[0])
++        elif re.fullmatch(r"refus-taille-\d+\.json", nom):
++            if _lire_json_si_scelle(p) is None:
++                return PLAFOND_COURSE_USD, f"refus de taille au sceau faux ({nom}) : plafond entier compté"
++        elif nom.endswith(".sha256") or re.fullmatch(r"tentative-\d+(-externe-[a-z0-9-]+)?", nom):
+             continue
+         else:
+             return PLAFOND_COURSE_USD, f"fichier de contrôle inattendu ({nom}) : plafond entier compté"
+-    dossiers = [n for n in os.listdir(controle) if re.fullmatch(r"tentative-(\d+)", n)]
+-    for n in dossiers:
+-        if not (controle / f"{n}.json").exists():
+-            return PLAFOND_COURSE_USD, f"contrôle {n} sans tentative scellée : plafond entier compté"
++    for nom in noms:
++        m = re.fullmatch(r"(tentative-\d+)(-externe-[a-z0-9-]+)?", nom)
++        if m and (controle / nom).is_dir() and m.group(1) not in scellees:
++            return PLAFOND_COURSE_USD, f"contrôle {nom} sans tentative scellée : plafond entier compté"
+     return total, "tentatives de contrôle scellées (course non partie)"
+ 
+ 
++def traces_bras(sortie: Path) -> dict:
++    """Ce que l'orchestrateur a écrit des bras de cette sortie (même joués hors du lanceur, m2)."""
++    t = {"rapporte": None, "payees": [], "non_jouees": 0, "refus_taille": 0, "illisibles": []}
++    if not sortie or not sortie.is_dir():
++        return t
++    if _scelle_present(sortie / "manifeste-bras-rapporte.json"):
++        t["rapporte"] = _lire_json_si_scelle(sortie / "manifeste-bras-rapporte.json") or "illisible"
++    for nom in sorted(os.listdir(sortie)):
++        if re.fullmatch(r"bras-tentative-\d+\.json", nom):
++            t["payees"].append(_lire_json_si_scelle(sortie / nom) or "illisible")
++        elif re.fullmatch(r"manifeste-bras-non-joue-\d+\.json", nom):
++            t["non_jouees"] += 1
++        elif re.fullmatch(r"manifeste-bras-refus-taille-\d+\.json", nom):
++            t["refus_taille"] += 1
++    return t
++
++
+ def depense_bras(run: dict) -> tuple:
+-    """Dépense des bras d'un run : manifeste du bras de l'orchestrateur (tentative finale) et tentatives payées scellées ;
+-    chaque bras lancé sans trace lisible compte son plafond entier."""
+-    if not run["bras"]:
+-        return 0.0, "aucun bras"
+-    s = run["sortie"]
+-    total, lectures, expliques = 0.0, [], 0
+-    rapporte = s / "manifeste-bras-rapporte.json"
+-    if rapporte.exists():
+-        m = _lire_json_si_scelle(rapporte)
++    t = traces_bras(run["sortie"])
++    total, lectures = 0.0, []
++    for objet, nom in ([(t["rapporte"], "manifeste du bras")] if t["rapporte"] else []) + \
++            [(x, "tentative payée du bras") for x in t["payees"]]:
+         try:
+-            total += _cout(m, "reglages", "journal", "cout_total_usd")
+-            lectures.append("manifeste du bras")
++            total += _cout(objet, "reglages", "journal", "cout_total_usd")
++            lectures.append(nom)
+         except (TypeError, KeyError, ValueError):
+             total += PLAFOND_BRAS_USD
+-            lectures.append("manifeste du bras illisible : plafond du bras compté")
+-        expliques += 1
+-    for nom in sorted(os.listdir(s)) if s.is_dir() else []:
+-        if re.fullmatch(r"bras-tentative-\d+\.json", nom):
+-            m = _lire_json_si_scelle(s / nom)
+-            try:
+-                total += _cout(m, "reglages", "journal", "cout_total_usd")
+-            except (TypeError, KeyError, ValueError):
+-                total += PLAFOND_BRAS_USD
+-                lectures.append(f"{nom} illisible : plafond du bras compté")
+-            expliques += 1
+-        elif re.fullmatch(r"manifeste-bras-(non-joue|refus-taille)-\d+\.json", nom):
+-            expliques += 1
+-    manquants = max(0, len(run["bras"]) - expliques)
++            lectures.append(f"{nom} illisible : plafond du bras compté")
++    expliques = (1 if t["rapporte"] else 0) + len(t["payees"]) + t["non_jouees"] + t["refus_taille"]
++    morts = [b for b in run["bras"] if not superviseur_vivant(b["depart"]["superviseur"])
++             and lire_code(b["depart"]["superviseur"]) is None]
++    vivants = [b for b in run["bras"] if superviseur_vivant(b["depart"]["superviseur"])]
++    manquants = max(len(morts) + len(vivants), len(run["bras"]) - expliques)
+     if manquants:
+         total += manquants * PLAFOND_BRAS_USD
+-        lectures.append(f"{manquants} bras lancé(s) sans trace lisible : plafond du bras compté pour chacun")
+-    return total, "; ".join(lectures) or "bras sans dépense"
++        lectures.append(f"{manquants} bras sans fin propre ou sans trace : plafond du bras compté pour chacun")
++    return total, "; ".join(lectures) or "aucun bras"
+ 
+ 
+ def depense_run(run: dict) -> dict:
+-    if run["depart"] is None:  # refus du lanceur avant la course : l'orchestrateur n'a rien lancé
+-        return {"run": run["nom"], "course_usd": 0.0, "bras_usd": 0.0, "lecture": "refus du lanceur avant la course"}
+-    c, lc = depense_course(run["sortie"])
++    if run["depart"] is None:  # refus du lanceur avant tout départ : aucun processus lancé
++        return {"run": run["nom"], "course_usd": 0.0, "bras_usd": 0.0, "lecture": "refus du lanceur avant tout départ"}
++    sup = run["depart"]["superviseur"]
++    c, lc_ = depense_course(run["sortie"], (not superviseur_vivant(sup)) and lire_code(sup) is not None)
+     b, lb = depense_bras(run)
+-    return {"run": run["nom"], "course_usd": round(c, 6), "bras_usd": round(b, 6), "lecture": f"course : {lc} ; bras : {lb}"}
++    return {"run": run["nom"], "course_usd": round(c, 6), "bras_usd": round(b, 6), "lecture": f"course : {lc_} ; bras : {lb}"}
+ 
+ 
+ def garde_cumul(runs: list, plafond_suivant: float, plafond_go: float) -> dict:
+@@ -770,7 +880,55 @@
+                 and _lire_json_si_scelle(run["sortie"] / "manifeste-bras-rapporte.json") is not None)
+ 
+ 
+-def etat_generation(runs: list, g: int) -> dict:
++def bras_relancable(run: dict) -> tuple:
++    """M3 : un bras ne se relance que si chaque tentative précédente a fini proprement en « non joué, rien envoyé »."""
++    t = traces_bras(run["sortie"])
++    if t["rapporte"] or t["payees"] or t["refus_taille"]:
++        return False, "bras joué, payé ou refusé pour taille (non relançable) : aucune relance après dépense"
++    if any(lire_code(b["depart"]["superviseur"]) is None for b in run["bras"]):
++        return False, "un bras sans fin propre : état inconnu"
++    if t["non_jouees"] < len(run["bras"]):
++        return False, "un bras sans trace « non joué » de l'orchestrateur"
++    if len(run["bras"]) >= MAX_TENTATIVES:
++        return False, f"{MAX_TENTATIVES} bras déjà tentés"
++    return True, "bras précédents non joués, rien envoyé"
++
++
++def derniere_attestation(r: Reglages, g: int) -> Path:
++    d = r.depot / ATTESTATIONS
++    versions = []
++    if d.is_dir():
++        for nom in os.listdir(d):
++            m = re.fullmatch(MOTIF_ATTESTATION.format(g=g), nom)
++            if m:
++                versions.append((int(m.group(1)), d / nom))
++    if not versions:
++        raise Refus(f"attestation de lecture de la génération {g} absente ({ATTESTATIONS}/"
++                    f"attestation-lecture-humaine-g{g}-v<N>.json)")
++    return max(versions)[1]
++
++
++def lire_attestation(r: Reglages, g: int, sortie: Path) -> tuple:
++    """M6 : qui (`lecteur`, non vide), quoi (empreintes des fiches validées et de la consigne en attente du juge, égales à
++    celles de la course), quand (`lu_le`), et, pour la génération suivante, `temoin_vrai_absent_des_fiches_validees` (M9)."""
++    chemin = derniere_attestation(r, g)
++    a = lire_json_scelle(chemin)
++    if not isinstance(a, dict) or not all(isinstance(a.get(k), str) and a[k].strip() for k in ("lecteur", "lu_le")) \
++            or not isinstance(a.get("consignes_en_attente_sha256"), dict) \
++            or not isinstance(a.get("temoin_vrai_absent_des_fiches_validees"), bool):
++        raise Refus(f"attestation de la génération {g} mal formée : {chemin.name} (lecteur, lu_le, fiches_validees_sha256, "
++                    "consignes_en_attente_sha256, temoin_vrai_absent_des_fiches_validees exigés)")
++    if a.get("fiches_validees_sha256") != sha256_fichier(sortie / "fiches-validees.json"):
++        raise Refus(f"l'attestation de la génération {g} ne porte pas l'empreinte des fiches validées de sa course")
++    lc_ = lire_json_scelle(sortie / "lecture-course.json")
++    attendues = {b["etiquette"]: b["consigne_en_attente_sha256"] for b in lc_.get("bras_rapporte_differe", [])}
++    if JUGE_EXTERNE[0] not in attendues or a["consignes_en_attente_sha256"].get(JUGE_EXTERNE[0]) != attendues[JUGE_EXTERNE[0]]:
++        raise Refus(f"l'attestation de la génération {g} ne porte pas l'empreinte de la consigne en attente de "
++                    f"{JUGE_EXTERNE[0]}")
++    return chemin, sha256_fichier(chemin), a
++
++
++def etat_generation(r: Reglages, runs: list, g: int) -> dict:
+     """Le temps à jouer pour la génération g : « course » ou « bras » (avec le run), ou refus."""
+     du_g = [x for x in runs if x["generation"] == g]
+     if any(bras_reussi(x) for x in du_g):
+@@ -780,101 +938,116 @@
+         raise Refus(f"génération {g} : {len(reussies)} courses réussies (une au plus) : nœud pour la mère")
+     if reussies:
+         run = reussies[0]
+-        if len(run["bras"]) >= 3:
+-            raise Refus(f"génération {g} : trois bras déjà lancés sur {run['nom']} : plus de relance par ce lanceur")
+-        if run["bras"] and run["bras"][-1]["fin"] is None:
+-            raise Refus(f"génération {g} : bras {len(run['bras'])} sans manifeste de fin scellé : état inconnu, nœud")
++        if run["bras"]:
++            ok, motif = bras_relancable(run)
++            if not ok:
++                raise Refus(f"génération {g} verrouillée ({run['nom']}) : {motif} ; nœud pour la mère ou Lazar")
+         return {"temps": "bras", "run": run}
+     parties = [x for x in du_g if x["depart"] is not None]
+     for x in parties:
+         dep = depense_run(x)
+-        if dep["course_usd"] + dep["bras_usd"] > 0 or x["fin"] is None:
+-            raise Refus(f"génération {g} déjà tentée ({x['nom']}, dépense relevée {dep['course_usd'] + dep['bras_usd']:.4f} "
+-                        f"USD, fin {'absente' if x['fin'] is None else 'code ' + str(x['fin'].get('code'))}) : aucune "
+-                        "relance après dépense par ce lanceur (R3) ; nœud pour la mère ou Lazar")
+-    if len(parties) >= 3:
+-        raise Refus(f"génération {g} : trois tentatives déjà faites")
+-    if g >= 2:
+-        prec = [x for x in runs if x["generation"] == g - 1 and bras_reussi(x)]
+-        if len(prec) != 1:
+-            raise Refus(f"génération {g} refusée : la génération {g - 1} n'a pas une course et un bras réussis, manifestes de "
+-                        "fin scellés et classement lisible")
+-        return {"temps": "course", "precedente": prec[0]}
+-    return {"temps": "course", "precedente": None}
++        total = dep["course_usd"] + dep["bras_usd"]
++        if total > SEUIL_SANS_DEPENSE_USD or x["fin"] is None or x["fin"].get("code") is None:
++            raise Refus(f"génération {g} verrouillée : tentative {x['nom']} (dépense relevée {total:.6f} USD ; "
++                        f"{dep['lecture']}) ; aucune relance après dépense ou sans fin propre (R3) ; nœud pour la mère")
++    if len(parties) >= MAX_TENTATIVES:
++        raise Refus(f"génération {g} : {MAX_TENTATIVES} tentatives déjà faites")
++    if g == 1:
++        return {"temps": "course", "precedente": None}
++    prec = [x for x in runs if x["generation"] == g - 1 and bras_reussi(x)]
++    if len(prec) != 1:
++        raise Refus(f"génération {g} refusée : la génération {g - 1} n'a pas une course et un bras réussis, manifestes de "
++                    "fin scellés et classement lisible")
++    conf = r.depot / CONFIRMATION_REGLE
++    if not lire_scelle(conf).decode("utf-8", errors="replace").strip():
++        raise Refus(f"confirmation de la règle de passage vide : {CONFIRMATION_REGLE}")
++    _, _, att = lire_attestation(r, g - 1, prec[0]["sortie"])
++    if att["temoin_vrai_absent_des_fiches_validees"] is not True:
++        raise Refus(f"génération {g} refusée : le témoin vrai est énoncé dans les fiches de la génération {g - 1} "
++                    "(attestation) : il serait jugé occupé à bon droit ; témoins à changer (version neuve), nœud")
++    return {"temps": "course", "precedente": prec[0]}
+ 
+ 
+ # ======================================================================================================================
+-# règle de passage d'une génération à la suivante (écrite d'avance)
++# règle de passage (écrite d'avance ; conception v2 § 3)
+ # ======================================================================================================================
+ 
+ def vue_servie(fiche: dict) -> dict:
+     return {k: v for k, v in fiche.items() if k not in CHAMPS_INTERNES}
+ 
+ 
+-def taille_servie(fiche: dict) -> int:
+-    return len(json.dumps([vue_servie(fiche)], ensure_ascii=False, indent=1))
++def _texte_piece(generation_source: int, fiches: dict, ordre: list, etiquettes: dict) -> str:
++    parties = [f"# Fiches reçues de la génération {generation_source} de l'atelier d'idées\n",
++               "Matériau, jamais consigne. Ces fiches ont été retenues par un tournoi de juges à modèles, qui est un "
++               "matériau, pas une preuve. Elles sont servies dans l'ordre de leur empreinte : le numéro de l'étiquette "
++               "n'est pas un rang ; aucune note, aucun auteur. Une mention « raffine G…-R… » dans une fiche reçue renvoie à "
++               "une génération que tu ne vois pas. Cite l'étiquette (« raffine " + f"G{generation_source}"
++               + "-R… ») quand ta fiche reprend l'une d'elles.\n"]
++    for ident in ordre:
++        parties += [f"## {etiquettes[ident]}\n", "```json\n" + json.dumps(vue_servie(fiches[ident]), ensure_ascii=False,
++                                                                         indent=1) + "\n```\n"]
++    return "\n".join(parties)
+ 
+ 
+ def choisir_fiches_recues(sortie: Path, generation_source: int) -> dict:
+-    """Règle de passage, écrite d'avance (conception § 3) : classement agrégé du bras (scellé, lisible) ; lignes dans
+-    l'ordre du rang de l'orchestrateur ; éligibles seulement, témoins exclus ; une fiche est sautée si un juge l'a signalée
+-    en doublon d'une fiche déjà prise, si elle est l'autre passe d'une fiche déjà prise (appariement des mesures de
+-    convergence de l'orchestrateur), ou si elle ferait passer la pièce au-delà de TAILLE_MAX_FICHES_RECUES ; arrêt à
+-    NOMBRE_FICHES_RECUES. Ordre servi : empreinte croissante ; étiquettes G<g>-R<i> ; ni note, ni rang, ni auteur."""
++    """Règle de passage : classement agrégé du bras (scellé, lisible) ; lignes dans l'ordre du rang de l'orchestrateur ;
++    éligibles seulement, témoins exclus ; une fiche est sautée (a) si un juge l'a signalée explicitement en doublon d'une
++    fiche déjà prise (union des signalements des juges, sans fermeture transitive) ; (b) si la pièce entière dépasserait
++    TAILLE_MAX_FICHES_RECUES. Arrêt à NOMBRE_FICHES_RECUES. Aucune mesure de l'orchestrateur n'est employée. Toute donnée
++    manquante ou mal formée arrête (Refus). Ordre servi : empreinte croissante."""
+     classement = lire_json_scelle(sortie / "classement.json")
+-    if classement.get("lisible_L2_L4") is not True:
++    if not isinstance(classement, dict) or classement.get("lisible_L2_L4") is not True:
+         raise Refus("classement illisible (témoins non tenus) : aucune fiche transmise")
+-    fiches = {f["identifiant_auteur"]: f for f in lire_json_scelle(sortie / "fiches-validees.json")}
++    lignes = classement.get("lignes")
++    validees = lire_json_scelle(sortie / "fiches-validees.json")
+     cles = lire_json_scelle(sortie / "noyau" / "cles-anonymisation-par-juge.json")
+-    doublons = dict(lire_json_scelle(sortie / "doublons-par-juge.json"))
+-    doublons.update(lire_json_scelle(sortie / "doublons-bras-rapporte.json"))
+-    paires = set()
+-    for juge, groupes in doublons.items():
+-        for groupe in groupes:
+-            ids = sorted({cles[juge][t] for t in groupe})
+-            for i, a in enumerate(ids):
+-                for b in ids[i + 1:]:
+-                    paires.add((a, b))
+-                    paires.add((b, a))
+-    fin = lire_json_scelle(sortie / "manifeste-fin.json")
+-    for lignes in (fin["reglages"].get("mesures_convergence") or {}).get("par_proposeur", {}).values():
+-        for ligne in lignes.values():
+-            a, b = ligne.get("identifiant_passe_1"), ligne.get("identifiant_passe_2")
+-            if a and b:
+-                paires.add((a, b))
+-                paires.add((b, a))
+-    prises, sautees, taille = [], [], 0
+-    for ligne in sorted(classement["lignes"], key=lambda x: x["rang"]):
+-        ident = ligne["identifiant_auteur"]
++    doublons_claude = lire_json_scelle(sortie / "doublons-par-juge.json")
++    doublons_bras = lire_json_scelle(sortie / "doublons-bras-rapporte.json")
++    try:
++        fiches = {f["identifiant_auteur"]: f for f in validees}
++        if any(not isinstance(f.get("empreinte"), str) for f in fiches.values()):
++            raise TypeError
++        juges_attendus = {e for e, _ in JUGES} | {JUGE_EXTERNE[0]}
++        doublons = {**doublons_claude, **doublons_bras}
++        if set(doublons) != juges_attendus or not juges_attendus <= set(cles):
++            raise Refus(f"doublons ou clés d'anonymisation sans les juges attendus {sorted(juges_attendus)} : arrêt")
++        paires = set()
++        for juge, groupes in doublons.items():
++            for groupe in groupes:
++                ids = sorted({cles[juge][t] for t in groupe})       # KeyError : étiquette inconnue → arrêt
++                for i, a in enumerate(ids):
++                    for b in ids[i + 1:]:
++                        paires |= {(a, b), (b, a)}
++        ordonnees = sorted(lignes, key=lambda x: int(x["rang"]))
++    except (TypeError, KeyError, ValueError, AttributeError):
++        raise Refus("fichiers de sortie de l'orchestrateur mal formés pour la règle de passage : arrêt") from None
++    prises, sautees = [], []
++    for ligne in ordonnees:
+         if len(prises) >= NOMBRE_FICHES_RECUES:
+             break
+-        if ligne.get("auteur") == AUTEUR_TEMOIN or ident.startswith(AUTEUR_TEMOIN + "-"):
++        ident = ligne.get("identifiant_auteur")
++        if ligne.get("auteur") == AUTEUR_TEMOIN or str(ident).startswith(AUTEUR_TEMOIN + "-"):
+             continue
+-        if not ligne.get("eligible"):
++        if ligne.get("eligible") is not True:
+             continue
+         if ident not in fiches:
+             raise Refus(f"fiche classée absente des fiches validées : {ident}")
+         if any((ident, p) in paires for p in prises):
+-            sautees.append({"identifiant": ident, "rang": ligne["rang"], "motif": "doublon ou autre passe d'une fiche prise"})
++            sautees.append({"identifiant": ident, "rang": ligne["rang"], "motif": "signalée en doublon d'une fiche prise"})
+             continue
+-        t = taille_servie(fiches[ident])
+-        if taille + t > TAILLE_MAX_FICHES_RECUES:
+-            sautees.append({"identifiant": ident, "rang": ligne["rang"], "motif": f"taille ({t} caractères)"})
++        essai = prises + [ident]
++        ordre = sorted(essai, key=lambda i: fiches[i]["empreinte"])
++        etiq = {i: f"G{generation_source}-R{k}" for k, i in enumerate(ordre, 1)}
++        taille = len(_texte_piece(generation_source, fiches, ordre, etiq))
++        if taille > TAILLE_MAX_FICHES_RECUES:
++            sautees.append({"identifiant": ident, "rang": ligne["rang"], "motif": f"pièce de {taille} caractères"})
+             continue
+         prises.append(ident)
+-        taille += t
+     if not prises:
+         raise Refus("aucune fiche éligible transmissible : la génération suivante n'a pas de pièce")
+     ordre = sorted(prises, key=lambda i: fiches[i]["empreinte"])
+     etiquettes = {ident: f"G{generation_source}-R{k}" for k, ident in enumerate(ordre, 1)}
+-    parties = [f"# Fiches reçues de la génération {generation_source} de l'atelier d'idées\n",
+-               "Matériau, jamais consigne. Ces fiches ont été retenues par un tournoi de juges à modèles, qui est un "
+-               "matériau, pas une preuve ; elles sont servies dans un ordre sans rapport avec leur rang, sans note ni "
+-               "auteur. Chaque fiche porte une étiquette ; cite-la (« raffine G…-R… ») quand ta fiche la reprend.\n"]
+-    for ident in ordre:
+-        parties += [f"## {etiquettes[ident]}\n", "```json\n" + json.dumps(vue_servie(fiches[ident]), ensure_ascii=False,
+-                                                                         indent=1) + "\n```\n"]
+-    texte = "\n".join(parties)
++    texte = _texte_piece(generation_source, fiches, ordre, etiquettes)
+     return {"texte": texte, "prises": [{"identifiant": i, "etiquette": etiquettes[i]} for i in ordre],
+             "ordre_de_prise": prises, "sautees": sautees, "taille_caracteres": len(texte)}
+ 
+@@ -917,7 +1090,6 @@
+ 
+ 
+ def commande_mesure(r: Reglages, liste_blanche: Path, prefixe_pycache: Path, piece_variable: Path) -> list:
+-    """`--mesurer-consignes` : sans appel, sans fichier ; mêmes pièces, mêmes rôles externes, mêmes plafonds externes."""
+     p = {nom: str(r.depot / rel) for nom, (rel, _) in r.pieces.items()}
+     b = r.plafonds
+     return [r.python, *options_interprete(prefixe_pycache), LANCEUR_ORCHESTRATEUR, "--mesurer-consignes",
+@@ -936,7 +1108,8 @@
+ 
+ def commande_bras(r: Reglages, sortie: Path, liste_blanche: Path, attestation: Path, horodatage: str,
+                   prefixe_pycache: Path) -> list:
+-    """La forme du devis du 8 novembre (§ 5, point 4), plus le plafond du juge et celui du contrôle court d'Argon."""
++    """Forme du devis du 8 novembre (§ 5, point 4), plus le plafond du juge, le contrôle court d'Argon et (m6) le moteur
++    réel armé, pour que les vérifications du modèle servi de la commande externe agissent."""
+     env_argon = str(r.depot / r.pieces["enveloppe_argon"][0])
+     return [r.python, *options_interprete(prefixe_pycache), LANCEUR_ORCHESTRATEUR, str(sortie),
+             "--bras-rapporte-differe", "--attestation-lecture-humaine", str(attestation),
+@@ -944,27 +1117,31 @@
+             "--liste-blanche", str(liste_blanche),
+             "--budget", f"juge_ideation|gemini-4-argon={_usd(r.plafonds['juge_ideation|gemini-4-argon'])}",
+             "--budget-controle-usd", _usd(r.controle_bras_usd),
++            "--moteur", "claude-sdk", "--confirmer-moteur-reel",
+             "--horodatage", horodatage] + list(r.arguments_en_plus)
+ 
+ 
+ def _sous_processus(r: Reglages, argv: list, env: dict, quoi: str) -> subprocess.CompletedProcess:
+     try:
+-        return subprocess.run(argv, cwd=str(r.orchestrateur), env=env, capture_output=True, text=True, timeout=300)
++        return subprocess.run(argv, cwd=str(r.orchestrateur), env=env, capture_output=True, text=True, timeout=300,
++                              stdin=subprocess.DEVNULL)
+     except (OSError, subprocess.SubprocessError) as e:
+         raise Refus(f"{quoi} : non exécuté ({type(e).__name__})") from None
+ 
+ 
+ def construire_liste_blanche(r: Reglages, chemin: Path, env: dict, prefixe_pycache: Path, fichiers: dict) -> dict:
+-    """Par l'orchestrateur lui-même, sans appel ; contenu vérifié contre les empreintes attendues ; scellé ensuite."""
++    """Par l'orchestrateur lui-même, sans appel ; il écrit la liste **et son compagnon** (B1) : le sceau est vérifié, jamais
++    recréé ; contenu vérifié contre les empreintes attendues."""
+     p = _sous_processus(r, [r.python, *options_interprete(prefixe_pycache), LANCEUR_ORCHESTRATEUR, str(chemin),
+                             "--construire-liste-blanche", *fichiers], env, "liste blanche")
+     if p.returncode != 0 or not chemin.is_file():
+         raise Refus(f"liste blanche non construite (code {p.returncode}) : {p.stderr.strip()[-500:]!r}")
+-    lue = json.loads(chemin.read_text(encoding="utf-8"))
++    lue = lire_json_scelle(chemin)
+     attendue = {os.path.realpath(f): h for f, h in fichiers.items()}
+     if lue != attendue:
+         raise Refus(f"liste blanche différente des pièces attendues : {lue}")
+-    return {"chemin": str(chemin), "sha256": sceller_existant(chemin), "contenu": lue}
++    return {"chemin": str(chemin), "sha256": sha256_fichier(chemin), "contenu": lue,
++            "compagnon": "écrit par l'orchestrateur, vérifié"}
+ 
+ 
+ def mesurer_consignes(r: Reglages, argv: list, env: dict, chemin: Path) -> dict:
+@@ -980,7 +1157,8 @@
+ 
+ 
+ def piece_generation_1(r: Reglages) -> tuple:
+-    """Le recoupement des méthodes : chemin fixe, scellé, UTF-8, au plus TAILLE_MAX_RECOUPEMENT caractères."""
++    """M8 : le recoupement, chemin fixe, scellé, UTF-8, au plus TAILLE_MAX_RECOUPEMENT caractères, **et** l'attestation
++    scellée de sa relecture (lecteur, lu_le, empreinte du recoupement, aucune recette ni secret, témoin vrai absent, M9)."""
+     chemin = r.depot / RECOUPEMENT
+     octets = lire_scelle(chemin)
+     try:
+@@ -989,35 +1167,37 @@
+         raise Refus(f"recoupement non UTF-8 : {RECOUPEMENT}") from None
+     if not texte.strip() or len(texte) > TAILLE_MAX_RECOUPEMENT:
+         raise Refus(f"recoupement vide ou trop long ({len(texte)} caractères > {TAILLE_MAX_RECOUPEMENT})")
+-    return chemin, hashlib.sha256(octets).hexdigest(), {"chemin": RECOUPEMENT, "caracteres": len(texte)}
+-
+-
+-def lire_attestation(r: Reglages, g: int, sortie: Path) -> tuple:
+-    chemin = r.depot / ATTESTATION.format(g=g)
+-    a = lire_json_scelle(chemin)
+-    if not isinstance(a, dict) or not {"lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256"} <= set(a):
+-        raise Refus(f"attestation de la génération {g} mal formée : {chemin}")
+-    if a["fiches_validees_sha256"] != sha256_fichier(sortie / "fiches-validees.json"):
+-        raise Refus(f"l'attestation de la génération {g} ne porte pas l'empreinte des fiches validées de sa course")
+-    if JUGE_EXTERNE[0] not in (a.get("consignes_en_attente_sha256") or {}):
+-        raise Refus(f"l'attestation de la génération {g} ne porte pas la consigne en attente de {JUGE_EXTERNE[0]}")
+-    return chemin, sha256_fichier(chemin)
++    h = hashlib.sha256(octets).hexdigest()
++    a = lire_json_scelle(r.depot / RELECTURE_RECOUPEMENT)
++    if not isinstance(a, dict) or not all(isinstance(a.get(k), str) and a[k].strip() for k in ("lecteur", "lu_le")):
++        raise Refus(f"attestation de relecture du recoupement mal formée : {RELECTURE_RECOUPEMENT}")
++    if a.get("recoupement_sha256") != h:
++        raise Refus("l'attestation de relecture ne porte pas l'empreinte du recoupement présent")
++    if a.get("niveau_methode_aucune_recette_aucun_secret") is not True:
++        raise Refus("l'attestation de relecture ne certifie pas « niveau méthode, aucune recette, aucun secret »")
++    if a.get("temoin_vrai_absent") is not True:
++        raise Refus("l'attestation de relecture ne certifie pas que le témoin vrai est absent du recoupement (M9) : il "
++                    "serait jugé occupé à bon droit ; témoins à changer (version neuve), nœud")
++    return chemin, h, {"chemin": RECOUPEMENT, "caracteres": len(texte), "sha256": h,
++                       "relecture": {"chemin": RELECTURE_RECOUPEMENT,
++                                     "sha256": sha256_fichier(r.depot / RELECTURE_RECOUPEMENT),
++                                     "lecteur": a["lecteur"], "lu_le": a["lu_le"]}}
+ 
+ 
+ def garder_bras(r: Reglages, sortie: Path) -> dict:
+-    """Garde de taille du bras sur la consigne en attente réelle (celle de l'orchestrateur : plafond du juge / prix prudent
+-    − 2 000 caractères de note par fiche servie au rapport 5 ; un refus là compterait une tentative non relançable) et garde
+-    avant envoi de la commande d'Argon (juge et contrôle court)."""
++    """Garde de taille du bras sur la consigne en attente réelle (formule de l'orchestrateur) et garde avant envoi de la
++    commande d'Argon, à 3 caractères par jeton, pour le juge et pour le contrôle court."""
+     consigne = sortie / "juges-bras-rapporte" / f"traces-{JUGE_EXTERNE[0]}" / "consigne-en-attente.md"
+     texte = lire_scelle(consigne).decode("utf-8")
+     servies = len(lire_json_scelle(sortie / "fiches-validees.json")) + len(lire_json_scelle(sortie / "noyau" / "temoins-servis.json"))
+     juge = r.plafonds["juge_ideation|gemini-4-argon"]
+     t = taille_max(juge, servies * PROVISION_SORTIE_PAR_NOTE * RAPPORT_SORTIE_ENTREE)
+     g = {"consigne_caracteres": len(texte), "fiches_servies": servies, "taille_max_orchestrateur": t,
+-         "marge": t - len(texte), "plancher_argon_a_4": round(plancher_argon(len(texte)), 6),
+-         "plancher_argon_a_3_rapporte": round(plancher_argon(len(texte), 3.0), 6),
+-         "plancher_controle_court": round(plancher_argon(200), 6)}
+-    if g["marge"] < 0 or juge < g["plancher_argon_a_4"] or r.controle_bras_usd < g["plancher_controle_court"]:
++         "marge": t - len(texte),
++         "plancher_argon_garde": round(plancher_argon(len(texte), CARACTERES_PAR_JETON_GARDE), 6),
++         "plancher_argon_a_4_rapporte": round(plancher_argon(len(texte), 4.0), 6),
++         "plancher_controle_court": round(plancher_argon(200, CARACTERES_PAR_JETON_GARDE), 6)}
++    if g["marge"] < 0 or juge < g["plancher_argon_garde"] or r.controle_bras_usd < g["plancher_controle_court"]:
+         raise Refus("garde du bras qui ne tiendrait pas — refus avant tout appel : " + json.dumps(g, ensure_ascii=False))
+     return g
+ 
+@@ -1026,38 +1206,69 @@
+ # exécution
+ # ======================================================================================================================
+ 
+-def _executer_enfant(argv: list, r: Reglages, env: dict, sortie_std: Path, sortie_err: Path) -> tuple:
+-    debut = r.heure()
+-    with open(sortie_std, "xb") as fo, open(sortie_err, "xb") as fe:
+-        enfant = subprocess.Popen(argv, cwd=str(r.orchestrateur), env=env, stdout=fo, stderr=fe)
++def _socle(g: int, temps: str, ident: str, go: dict, sortie: Path, horodatage: str) -> dict:
++    return {"lanceur": {"version": VERSION, "chemin": str(Path(__file__).resolve()), "sha256": sha256_fichier(Path(__file__))},
++            "generation": g, "temps": temps, "id": ident, "go": go, "sortie": str(sortie), "horodatage_canonique": horodatage}
++
++
++def cloturer(r: Reglages, runs: list) -> list:
++    """Écrit le manifeste de fin de chaque processus fini (code scellé par le superviseur) ou mort sans fin propre."""
++    faits = []
++    for run in runs:
++        for quoi, sup, fin in processus_de(run):
++            if fin is not None or superviseur_vivant(sup):
++                continue
++            code = lire_code(sup)
++            d = Path(sup["dossier"])
++            journaux = {n: sha256_fichier(d / n) for n in ("orchestrateur.stdout.txt", "orchestrateur.stderr.txt",
++                                                           "superviseur.stdout.txt", "superviseur.stderr.txt")
++                        if (d / n).is_file()}
++            bilan = {"run": run["nom"], "generation": run["generation"], "temps": quoi, "superviseur": sup,
++                     "code": code["code"] if code else None, "code_scelle": code,
++                     "issue": "fin propre" if code else "mort sans fin propre : plafond compté, génération verrouillée",
++                     "journaux_sha256": journaux, "cloture_utc": r.heure().isoformat()}
++            if quoi == "course":
++                nom = "manifeste-lanceur-fin.json"
++                s = run["sortie"]
++                if code and code["code"] == 0 and (s / "fiches-validees.json").is_file() \
++                        and _lire_json_si_scelle(s / "lecture-course.json") is not None:
++                    lc_ = lire_json_scelle(s / "lecture-course.json")
++                    bilan["pour_l_attestation"] = {
++                        "chemin": f"{ATTESTATIONS}/attestation-lecture-humaine-g{run['generation']}-v1.json",
++                        "fiches_validees_sha256": sha256_fichier(s / "fiches-validees.json"),
++                        "consignes_en_attente_sha256": {b["etiquette"]: b["consigne_en_attente_sha256"]
++                                                        for b in lc_.get("bras_rapporte_differe", [])},
++                        "champs": ["lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256",
++                                   "temoin_vrai_absent_des_fiches_validees"],
++                        "rappel": "écrite et scellée par la mère (ou Lazar) après lecture intégrale « aucune recette »"}
++            else:
++                nom = f"manifeste-lanceur-{quoi.replace('bras-', 'bras-fin-')}.json"
++                c = run["sortie"] / "classement.json"
++                bilan["classement_sha256"] = sha256_fichier(c) if c.is_file() else None
++            ecrire_scelle(run["dossier"] / nom, bilan)
++            faits.append({"run": run["nom"], "temps": quoi, "code": bilan["code"], "issue": bilan["issue"]})
++    return faits
+ 
+-        def relayer(num, _cadre):  # R10 : par PID, jamais par motif
+-            try:
+-                enfant.send_signal(num)
+-            except ProcessLookupError:
+-                pass
+-        anciens = {s: signal.signal(s, relayer) for s in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
+-        try:
+-            code = enfant.wait()
+-        finally:
+-            for s, a in anciens.items():
+-                signal.signal(s, a)
+-    return enfant.pid, code, debut, r.heure()
+ 
+-
+-def _communs(r: Reglages, g: int) -> tuple:
++def executer(r: Reglages, g: int) -> int:
++    env_lu = os.environ if r.environnement is None else r.environnement
+     interprete = verifier_interprete(r)
+     go = verifier_go(r.registre_go, r.aujourd_hui or r.heure().date())
+     orch = verifier_orchestrateur(r)
+     pieces = verifier_pieces(r)
+     runs = runs_du_lanceur(r)
+-    etat = etat_generation(runs, g)
+-    return interprete, go, orch, pieces, runs, etat
+-
+-
+-def executer(r: Reglages, g: int) -> int:
+-    env_lu = os.environ if r.environnement is None else r.environnement
+-    interprete, go, orch, pieces, runs, etat = _communs(r, g)
++    en_marche = [(run["nom"], quoi, sup) for run in runs for quoi, sup, fin in processus_de(run)
++                 if fin is None and superviseur_vivant(sup)]
++    if en_marche:
++        print(json.dumps({"etat": "en marche : rien lancé", "processus": [
++            {"run": n, "temps": q, "pid_superviseur": s["pid"], "arret": s["arret"]} for n, q, s in en_marche]},
++            ensure_ascii=False), flush=True)
++        return 3
++    clos = cloturer(r, runs)
++    if clos:
++        print(json.dumps({"etat": "clôture", "processus": clos}, ensure_ascii=False), flush=True)
++        return 0
++    etat = etat_generation(r, runs, g)
+     if etat["temps"] == "bras":
+         return executer_bras(r, g, etat["run"], runs, go, orch, interprete, env_lu)
+     cumul = garde_cumul(runs, PLAFOND_COURSE_USD, go["plafond_usd"])
+@@ -1067,8 +1278,10 @@
+     else:
+         choix = choisir_fiches_recues(etat["precedente"]["sortie"], g - 1)
+         piece_src = piece_sha = None
+-        piece_info = {"generation_source": g - 1, "run_source": etat["precedente"]["nom"], **{k: v for k, v in choix.items()
+-                                                                                            if k != "texte"}}
++        piece_info = {"generation_source": g - 1, "run_source": etat["precedente"]["nom"],
++                      "confirmation_regle": {"chemin": CONFIRMATION_REGLE,
++                                             "sha256": sha256_fichier(r.depot / CONFIRMATION_REGLE)},
++                      **{k: v for k, v in choix.items() if k != "texte"}}
+     horodatage = r.horodatage()
+     ident = r.heure().strftime("%Y%m%d-%H%M%S") + SUFFIXE_RUN + str(g)
+     dossier_run = r.dossier_runs / ident
+@@ -1076,10 +1289,7 @@
+     sortie = dossier_sortie / "sortie"
+     prefixe_pycache = dossier_sortie / NOM_DOSSIER_PYCACHE
+     liste_blanche = dossier_run / "liste-blanche.json"
+-    if g == 1:
+-        piece_variable = piece_src
+-    else:
+-        piece_variable = dossier_sortie / "piece" / f"fiches-recues-g{g - 1}-pour-g{g}.md"
++    piece_variable = piece_src if g == 1 else dossier_sortie / "piece" / f"fiches-recues-g{g - 1}-pour-g{g}.md"
+     argv = commande_course(r, sortie, liste_blanche, horodatage, prefixe_pycache, piece_variable, g)
+     garde_drapeaux(argv)
+     sommes = garde_sommes(argv)
+@@ -1089,19 +1299,18 @@
+     env, retires = environnement_sans_cles(env_lu, prefixe_pycache)
+     bac = sonder_bac_a_sable(r, env, prefixe_pycache)
+ 
+-    # --- écritures (un refus désormais écrit un manifeste de refus scellé, rien n'est appelé) ---
++    # --- écritures : toute exception écrit désormais un manifeste de refus scellé (m8), rien n'est appelé avant le départ
+     dossier_run.mkdir(parents=True)
+-    dossier_sortie.mkdir(parents=True)
+-    prefixe_pycache.mkdir()
+-    socle = {"lanceur": {"version": VERSION, "chemin": str(Path(__file__).resolve()), "sha256": sha256_fichier(Path(__file__))},
+-             "generation": g, "temps": "course", "id": ident, "go": go, "sortie": str(sortie), "horodatage_canonique": horodatage}
++    socle = _socle(g, "course", ident, go, sortie, horodatage)
+     try:
++        dossier_sortie.mkdir(parents=True)
++        prefixe_pycache.mkdir()
+         if g >= 2:
+             piece_variable.parent.mkdir()
+             with open(piece_variable, "x", encoding="utf-8") as f:
+                 f.write(choix["texte"])
+             piece_sha = sceller_existant(piece_variable)
+-        piece_info["sha256"] = piece_sha
++            piece_info["sha256"] = piece_sha
+         fichiers = {str(r.depot / r.pieces["question"][0]): r.pieces["question"][1],
+                     str(r.depot / r.pieces["faits"][0]): r.pieces["faits"][1],
+                     str(piece_variable): piece_sha,
+@@ -1110,12 +1319,16 @@
+         mesure = mesurer_consignes(r, commande_mesure(r, liste_blanche, prefixe_pycache, piece_variable), env,
+                                    dossier_run / "mesure-consignes.json")
+         tailles = gardes_de_taille(mesure, r)
+-    except Refus as e:
+-        ecrire_scelle(dossier_run / "manifeste-lanceur-refus.json", dict(socle, refus=str(e)))
+-        raise
++        sup = lancer_detache(r, argv, env, dossier_sortie / "superviseur-course", prefixe_pycache)
++    except BaseException as e:  # noqa: BLE001 — m8 : jamais un run sans manifeste
++        motif = str(e) if isinstance(e, Refus) else f"{type(e).__name__} : {e}"
++        ecrire_scelle(dossier_run / "manifeste-lanceur-refus.json", dict(socle, refus=motif[:2000]))
++        if isinstance(e, Refus):
++            raise
++        raise Refus("exception avant le départ, manifeste de refus scellé : " + motif[:500]) from None
+     depart = dict(socle, **{
+-        "decision": "GO-2026-11-13-03 (R-2530) : règle de permission pour la seule commande exacte",
+-        "orchestrateur": orch, "pieces": pieces, "piece_variable": piece_info, "liste_blanche": lb,
++        "decision": "GO-2026-11-13-03 (R-2530) ; corrections R-2537",
++        "superviseur": sup, "orchestrateur": orch, "pieces": pieces, "piece_variable": piece_info, "liste_blanche": lb,
+         "mesure_consignes_sha256": sha256_fichier(dossier_run / "mesure-consignes.json"), "bac_a_sable": bac,
+         "commande": argv, "cwd": str(r.orchestrateur),
+         "plafonds": {"reglage": dict(r.plafonds), "controle_externe_usd": r.controle_externe_usd,
+@@ -1125,34 +1338,18 @@
+                  "valeurs": "aucune valeur de clé écrite, transmise ni consultée (décision sur les noms)"},
+         "cache_d_octets": {"prefixe": str(prefixe_pycache), "option": f"-X pycache_prefix={prefixe_pycache}"},
+         "depot_travail": _depot_git(r), "python": interprete,
+-        "journaux": {"stdout": str(dossier_sortie / "course.stdout.txt"), "stderr": str(dossier_sortie / "course.stderr.txt")},
+     })
+-    h_depart = ecrire_scelle(dossier_run / "manifeste-lanceur-depart.json", depart)
+-    print(json.dumps({"generation": g, "temps": "course", "manifeste_depart": str(dossier_run / "manifeste-lanceur-depart.json"),
+-                      "sha256": h_depart, "sortie": str(sortie)}, ensure_ascii=False), flush=True)
+-    pid, code, debut, fin = _executer_enfant(argv, r, env, dossier_sortie / "course.stdout.txt",
+-                                             dossier_sortie / "course.stderr.txt")
+-    bilan = {"id": ident, "generation": g, "temps": "course", "manifeste_depart_sha256": h_depart, "pid_orchestrateur": pid,
+-             "code": code, "debut_utc": debut.isoformat(), "fin_utc": fin.isoformat(),
+-             "journaux_sha256": {n: sha256_fichier(dossier_sortie / n) for n in ("course.stdout.txt", "course.stderr.txt")},
+-             "sortie_existe": sortie.exists()}
+-    if code == 0 and (sortie / "fiches-validees.json").is_file() and (sortie / "lecture-course.json").is_file():
+-        lc = json.loads((sortie / "lecture-course.json").read_text(encoding="utf-8"))
+-        bilan["pour_l_attestation"] = {
+-            "chemin": ATTESTATION.format(g=g), "fiches_validees_sha256": sha256_fichier(sortie / "fiches-validees.json"),
+-            "consignes_en_attente_sha256": {b["etiquette"]: b["consigne_en_attente_sha256"]
+-                                            for b in lc.get("bras_rapporte_differe", [])},
+-            "rappel": "l'attestation est écrite et scellée par le lecteur humain après lecture intégrale « aucune recette »"}
+-    h_fin = ecrire_scelle(dossier_run / "manifeste-lanceur-fin.json", bilan)
+-    print(json.dumps({"manifeste_fin": str(dossier_run / "manifeste-lanceur-fin.json"), "sha256": h_fin, "code": code},
+-                     ensure_ascii=False), flush=True)
+-    return code
++    h = ecrire_scelle(dossier_run / "manifeste-lanceur-depart.json", depart)
++    print(json.dumps({"generation": g, "temps": "course", "etat": "lancée, détachée", "pid_superviseur": sup["pid"],
++                      "arret": sup["arret"], "manifeste_depart_sha256": h, "sortie": str(sortie)}, ensure_ascii=False),
++          flush=True)
++    return 0
+ 
+ 
+ def executer_bras(r: Reglages, g: int, run: dict, runs: list, go: dict, orch: dict, interprete: dict, env_lu) -> int:
+     cumul = garde_cumul(runs, PLAFOND_BRAS_USD, go["plafond_usd"])
+     sortie = run["sortie"]
+-    attestation, att_sha = lire_attestation(r, g, sortie)
++    attestation, att_sha, att = lire_attestation(r, g, sortie)
+     liste_blanche = run["dossier"] / "liste-blanche.json"
+     lire_scelle(liste_blanche)
+     bras = garder_bras(r, sortie)
+@@ -1165,25 +1362,19 @@
+     env, retires = environnement_sans_cles(env_lu, prefixe_pycache)
+     bac = sonder_bac_a_sable(r, env, prefixe_pycache)
+     prefixe_pycache.mkdir()
+-    std, err = sortie.parent / f"bras-{k}.stdout.txt", sortie.parent / f"bras-{k}.stderr.txt"
++    sup = lancer_detache(r, argv, env, sortie.parent / f"superviseur-bras-{k}", prefixe_pycache)
+     depart = {"lanceur": {"version": VERSION, "chemin": str(Path(__file__).resolve()), "sha256": sha256_fichier(Path(__file__))},
+               "generation": g, "temps": "bras", "numero": k, "run": run["nom"], "go": go, "horodatage_canonique": horodatage,
+-              "attestation": {"chemin": str(attestation), "sha256": att_sha}, "garde_du_bras": bras, "garde_de_cumul": cumul,
+-              "bac_a_sable": bac, "commande": argv, "cwd": str(r.orchestrateur), "orchestrateur": orch, "python": interprete,
++              "superviseur": sup, "attestation": {"chemin": str(attestation), "sha256": att_sha, "lecteur": att["lecteur"],
++                                                  "lu_le": att["lu_le"]},
++              "garde_du_bras": bras, "garde_de_cumul": cumul, "bac_a_sable": bac, "commande": argv,
++              "cwd": str(r.orchestrateur), "orchestrateur": orch, "python": interprete,
+               "cles": {"noms_retires_de_l_environnement": retires,
+-                       "valeurs": "aucune valeur de clé écrite, transmise ni consultée (décision sur les noms)"},
+-              "journaux": {"stdout": str(std), "stderr": str(err)}}
+-    h_depart = ecrire_scelle(run["dossier"] / f"manifeste-lanceur-bras-depart-{k}.json", depart)
+-    print(json.dumps({"generation": g, "temps": "bras", "numero": k, "sha256": h_depart}, ensure_ascii=False), flush=True)
+-    pid, code, debut, fin = _executer_enfant(argv, r, env, std, err)
+-    bilan = {"generation": g, "temps": "bras", "numero": k, "manifeste_depart_sha256": h_depart, "pid_orchestrateur": pid,
+-             "code": code, "debut_utc": debut.isoformat(), "fin_utc": fin.isoformat(),
+-             "journaux_sha256": {std.name: sha256_fichier(std), err.name: sha256_fichier(err)},
+-             "classement_sha256": sha256_fichier(sortie / "classement.json") if (sortie / "classement.json").is_file() else None}
+-    h_fin = ecrire_scelle(run["dossier"] / f"manifeste-lanceur-bras-fin-{k}.json", bilan)
+-    print(json.dumps({"manifeste_fin": f"manifeste-lanceur-bras-fin-{k}.json", "sha256": h_fin, "code": code},
+-                     ensure_ascii=False), flush=True)
+-    return code
++                       "valeurs": "aucune valeur de clé écrite, transmise ni consultée (décision sur les noms)"}}
++    h = ecrire_scelle(run["dossier"] / f"manifeste-lanceur-bras-depart-{k}.json", depart)
++    print(json.dumps({"generation": g, "temps": "bras", "numero": k, "etat": "lancé, détaché", "pid_superviseur": sup["pid"],
++                      "arret": sup["arret"], "manifeste_depart_sha256": h}, ensure_ascii=False), flush=True)
++    return 0
+ 
+ 
+ def principal(argv: list | None = None, reglages: Reglages | None = None) -> int:

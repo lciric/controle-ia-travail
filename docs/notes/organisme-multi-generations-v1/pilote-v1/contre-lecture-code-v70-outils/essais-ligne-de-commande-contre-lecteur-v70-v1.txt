@@ -1,0 +1,36 @@
+== F1 bloc sans relevé, comparé au bloc versé
+  → code 0
+  bloc égal à l'octet à EMPREINTES-code-pilote-v70.txt
+45
+== F2 bloc --releve-sonde : relevé qui dément la règle (E1c)
+refus : relevé de la sonde : astra ne confirme pas ['verdict_egal_a_la_regle'] (verdict sur la réflexion : non_comprise, règle gelée : True)
+  → code 2
+== F3 bloc --releve-sonde : relevé indéterminé (E1e)
+refus : relevé de la sonde : astra ne confirme pas ['verdict_egal_a_la_regle'] (verdict sur la réflexion : indetermine, règle gelée : True)
+  → code 2
+== F4 bloc --releve-sonde absent
+refus : relevé de la sonde absent : le mode réel l'exige (D-4)
+  → code 2
+== F5 jouer --mode reel sans --releve-sonde (toutes les autres options données)
+refus : mode réel : options exigées absentes : ['releve_sonde']
+  → code 2
+ls: cannot access 'BAC/epreuves/sortie-reel': No such file or directory
+== F6 jouer --mode reel avec un relevé (numpy de cette machine)
+refus : mode réel : numpy 2.4.6 ≠ 2.5.3 (bloc gelé)
+  → code 2
+ls: cannot access 'BAC/epreuves/sortie-reel': No such file or directory
+== F7 sonde, registre sans ligne
+refus : GO s1 : A15 : GO-2099-01-01-01 absent du registre BAC/epreuves/go-vide.md
+  → code 2
+ls: cannot access 'BAC/epreuves/sortie-sonde': No such file or directory
+== F8 sonde, registre réel du dépôt, identifiants inexistants
+refus : GO s1 : A15 : GO-2099-01-01-01 absent du registre /home/user/controle-ia-travail/registres/go.md
+  → code 2
+ls: cannot access 'BAC/epreuves/sortie-sonde': No such file or directory
+== F9 sonde, même identifiant deux fois
+refus : GO : identifiants distincts exigés (lignes ['s1', 's2'])
+  → code 2
+== F10 sonde sans options
+pilote_mr2_v70.py sonde: error: the following arguments are required: --go-sonde-credits, --go-sonde-hors, --registre-go
+  → code 2
+ls: cannot access 'BAC/epreuves/sortie-sonde': No such file or directory

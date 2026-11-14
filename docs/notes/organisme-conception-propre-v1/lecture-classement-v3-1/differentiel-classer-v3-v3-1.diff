@@ -1,0 +1,103 @@
+--- lecture-classement-v3/classer_conception_propre_v3.py	2026-11-14 07:47:42.904507621 +0000
++++ lecture-classement-v3-1/classer_conception_propre_v3_1.py	2026-11-14 09:06:31.801049654 +0000
+@@ -1,7 +1,16 @@
+ #!/usr/bin/env python3
+-"""Programme de classement de la règle de sélection — course « conception propre » — v3.
++"""Programme de classement de la règle de sélection — course « conception propre » — v3.1.
+ 
+-v3 (14 novembre 2026, à partir de 07:55 UTC, `date -u`) = v2 (`../lecture-classement-v2/`, `2cb65f33…`, gardée, R12),
++v3.1 (14 novembre 2026, à partir de 09:20 UTC, `date -u`) = v3 (`../lecture-classement-v3/`, `87643592…`, gardée, R12),
++pour l'outil du lecteur v3.1 (contre-lecture `f5cc9cdb…`, R-2678). La règle ne change pas. Changements, et seulement eux
++(différentiel entier : `differentiel-classer-v3-v3-1.diff`) :
++- il charge `outil_lecteur_conception_propre_v3_1.py` et lit et écrit les noms en `-v3-1` ;
++- il refuse une racine autre que celle du dossier d'envois (C6 : dossier fixe sous la racine) ;
++- les refus et anomalies neuves de l'outil v3.1 passent par le même chemin (M1 : toute réponse sans clôture chaînée au
++  journal est refusée ; écart d'envoi consigné, réponse non analysée, palier servi autre : anomalies bloquantes, E2) ;
++  précision complétée en conséquence.
++
++De la v3 : v3 (14 novembre 2026, à partir de 07:55 UTC, `date -u`) = v2 (`../lecture-classement-v2/`, `2cb65f33…`, gardée, R12),
+ pour l'outil du lecteur v3 (lecteur Astra, lots de 5, R-2662). La règle (§ 4.5 à 4.8, 6, 7) ne change pas. Changements, et
+ seulement eux (différentiel entier : `differentiel-classer-v2-v3.diff`) :
+ - il charge `outil_lecteur_conception_propre_v3.py` et lit les noms en `-v3` (`manifeste-envois-v3.json`,
+@@ -34,11 +43,11 @@
+ serait un écart déclaré (les précisions prises là où le texte se tait sont listées dans `PRECISIONS` et rendues dans la
+ sortie). **N'appelle aucun modèle.** Ne lit jamais les notes du juge de l'organisme (§ 4.8).
+ 
+-    python3 -I -B classer_conception_propre_v3.py --envois DOSSIER_ENVOIS --sortie DOSSIER_SORTIE
++    python3 -I -B classer_conception_propre_v3_1.py --envois DOSSIER_ENVOIS --sortie DOSSIER_SORTIE
+ 
+-Entrées (v3) : le dossier préparé par `outil_lecteur_conception_propre_v3.py preparer`, où `envoyer` a scellé les réponses
+-`reponse-<L>-lot<k>-v3.json` et tenu le journal de dépense. Sortie (dossier neuf ou vide, rien n'est écrasé) :
+-`lecture-verifiee-L1-v3.json`, `lecture-verifiee-L2-v3.json`, `classement-v3.json`, `classement-v3.md`, chacun scellé.
++Entrées (v3.1) : le dossier fixe préparé par `outil_lecteur_conception_propre_v3_1.py preparer`, où `envoyer` a scellé les
++réponses `reponse-<L>-lot<k>-v3-1.json` et tenu le journal de dépense. Sortie (dossier neuf ou vide, rien n'est écrasé) :
++`lecture-verifiee-L1-v3-1.json`, `lecture-verifiee-L2-v3-1.json`, `classement-v3-1.json`, `classement-v3-1.md`, scellés.
+ 
+ Chaîne : vérification mot pour mot des deux lectures (§ 4.5) → valeurs retenues (R = 1 si les deux lectures donnent 1
+ prouvé ; N = aucune si les deux donnent aucune) → portes R2, R3, R7 → nouveauté → ordre des neuves (S = R1 + R4 + R5 + R6
+@@ -57,12 +66,12 @@
+ 
+ import numpy as np
+ 
+-VERSION = "classer-conception-propre-v3"
++VERSION = "classer-conception-propre-v3-1"
+ ICI = Path(__file__).resolve().parent
+ 
+ 
+ def _charger_outil():
+-    spec = importlib.util.spec_from_file_location("outil_lecteur_cp_v3", ICI / "outil_lecteur_conception_propre_v3.py")
++    spec = importlib.util.spec_from_file_location("outil_lecteur_cp_v3_1", ICI / "outil_lecteur_conception_propre_v3_1.py")
+     m = importlib.util.module_from_spec(spec)
+     spec.loader.exec_module(m)
+     return m
+@@ -98,6 +107,10 @@
+     "anomalie bloquante (cle_de_critere_manquante), R4 compris hors levier:juge (la consigne demande les huit points) ; "
+     "modèle servi autre que gpt-6-astra, refus du lecteur, réponse absente après un arrêt consigné au journal de dépense : "
+     "anomalies bloquantes, contenu non lu ; réponse absente sans arrêt consigné : refus.",
++    "v3.1 (M1) : toute réponse lue doit avoir, au journal de dépense chaîné, sa clôture à son nom, à son empreinte et au "
++    "statut 200 (sinon refus ; reçue sans clôture : anomalie bloquante reponse_non_analysee) ; tout écart d'envoi "
++    "consigné pour un lot (usage, coût, statut, palier…) et un palier servi autre que celui du manifeste sont des "
++    "anomalies bloquantes (E2) ; le contenu d'une réponse à fin autre que stop est lu (m3), sans effet sur le verdict.",
+     "Valeurs « lues » de L1, L2, L4 et de l'exactitude du lecteur : valeurs comptées après la preuve (§ 4.5) de chaque "
+     "lecture ; L3, le classement, C et L5 : valeurs retenues des deux lectures.",
+     "L4 : « κ non défini (une marge constante) » lu comme : dès qu'une des deux lectures est constante sur la pile, "
+@@ -255,6 +268,8 @@
+         raise O.Refus(f"règle de désignation inconnue : {designation!r}")
+     if designation != "L5" and not (isinstance(decision, str) and re.fullmatch(MOTIF_DECISION, decision)):
+         raise O.Refus("variante détachée de L5 : nœud de Lazar ; elle exige --decision R-… ou N-… (mot consigné)")
++    if O.racine_du_dossier(dossier_envois) != Path(racine).resolve():
++        raise O.Refus("racine différente de celle du dossier d'envois (C6)")
+     env = O.charger_envois(dossier_envois)
+     cat_texte, _ = O.lire_piece(racine, "catalogue")
+     man = env["manifeste"]
+@@ -399,7 +414,7 @@
+     res = {
+         "version": VERSION, "outil_version": O.VERSION,
+         "programmes_sha256": {"classer": O.sha256_fichier(__file__),
+-                              "outil": O.sha256_fichier(ICI / "outil_lecteur_conception_propre_v3.py")},
++                              "outil": O.sha256_fichier(ICI / "outil_lecteur_conception_propre_v3_1.py")},
+         "versions": {"python": sys.version.split()[0], "numpy": np.__version__},
+         "fiches_validees": prov,
+         "envois": {"manifeste_sha256": O.sha256_fichier(Path(dossier_envois) / O.MANIFESTE),
+@@ -427,7 +442,7 @@
+ 
+ 
+ def resume_md(r: dict) -> str:
+-    l = [f"# Classement de la règle de sélection — course « conception propre » — v3\n",
++    l = [f"# Classement de la règle de sélection — course « conception propre » — v3.1\n",
+          f"Programme `{r['version']}` (`{r['programmes_sha256']['classer'][:12]}…`), outil "
+          f"`{r['programmes_sha256']['outil'][:12]}…` ; envois `{r['envois']['manifeste_sha256'][:12]}…`.\n",
+          f"**Verdict** : {r['verdict']}.\n",
+@@ -478,9 +493,9 @@
+         r, lectures = classement(args.envois, args.racine, designation=args.designation, decision=args.decision)
+         sortie.mkdir(parents=True, exist_ok=True)
+         for L in O.LECTURES:
+-            O.ecrire_scelle(sortie / f"lecture-verifiee-{L}-v3.json", O.json_texte(lectures[L]))
+-        h = O.ecrire_scelle(sortie / "classement-v3.json", O.json_texte(r))
+-        O.ecrire_scelle(sortie / "classement-v3.md", resume_md(r))
++            O.ecrire_scelle(sortie / f"lecture-verifiee-{L}-{O.SUFFIXE}.json", O.json_texte(lectures[L]))
++        h = O.ecrire_scelle(sortie / f"classement-{O.SUFFIXE}.json", O.json_texte(r))
++        O.ecrire_scelle(sortie / f"classement-{O.SUFFIXE}.md", resume_md(r))
+         print(json.dumps({"verdict": r["verdict"], "designees": r["designees"], "classement_sha256": h},
+                          ensure_ascii=False))
+     except O.Refus as e:

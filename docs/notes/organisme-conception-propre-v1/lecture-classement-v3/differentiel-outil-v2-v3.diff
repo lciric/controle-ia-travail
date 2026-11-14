@@ -1,0 +1,885 @@
+--- docs/notes/organisme-conception-propre-v1/lecture-classement-v2/outil_lecteur_conception_propre_v2.py	2026-11-14 00:24:42.992596952 +0000
++++ docs/notes/organisme-conception-propre-v1/lecture-classement-v3/outil_lecteur_conception_propre_v3.py	2026-11-14 07:53:05.650037346 +0000
+@@ -1,56 +1,60 @@
+ #!/usr/bin/env python3
+-"""Outil du lecteur de la règle de sélection — course « conception propre » — v2.
++"""Outil du lecteur de la règle de sélection — course « conception propre » — v3 (lecteur Astra).
+ 
+-v2 (14 novembre 2026, à partir de 00:13 UTC, `date -u`) = v1 (`../lecture-classement-v1/`, `59e665af…`, gardée, R12)
+-corrigée d'après la contre-lecture `contre-lecture-lecture-classement-v1.md` (`baabfb13…`, R-2627) :
+-- **M1** : un passage ne prouve que s'il a au moins `LONGUEUR_MIN_PASSAGE` = 20 caractères hors espaces ; le passage du
+-  catalogue n'est cherché que dans la cellule « Mécanisme central » de l'entrée Ck (jamais son code, son nom, sa source
+-  ni une date) ;
+-- **M2** : chaque anomalie de lecture nomme les fiches qu'elle touche ; les anomalies **bloquantes** (réponse illisible,
+-  fin autre que `stop`, entrée manquante ou en double) sont listées à part : le classement les porte au verdict et interdit
+-  la désignation ;
+-- **M3** : seul le fichier `runs/course-ideation-conception-propre-v1/<run>/copies/sortie--fiches-validees.json` est
+-  accepté (chemin réel, aucun lien, compagnon, empreinte égale à celle du manifeste de fin du lanceur, issue code 0) ;
+-  chaque élément doit porter les clés du gabarit et les champs internes de l'orchestrateur ; une pile sans fiche réelle
+-  admissible est refusée avant tout envoi (E1, rien payé).
+-
+-De la v1 : écrit le 13 novembre 2026 (à partir de 23:42 UTC) par un développeur neuf (tâche N3 de R-2615), avant toute
+-course et toute lecture. Comportement fixé par `conception-course-v1.md` (be3ba97e…), § 3, 4.1 à 4.5, et par
+-`consigne-lecteur-v1.md` (95efebaa…). **N'appelle aucun modèle, ne lit aucune clé** : il prépare les envois (texte du
+-message et corps de requête au format du relais Kimi v4), que la mère envoie elle-même sous la ligne GO-2026-11-13-06 ;
+-puis il vérifie les réponses rendues, mot pour mot, contre les fiches servies.
+-
+-Deux actions :
+-
+-    python3 -I -B outil_lecteur_conception_propre_v2.py preparer --fiches F --attestation A --sortie DOSSIER
+-    python3 -I -B outil_lecteur_conception_propre_v2.py verifier --envois DOSSIER [--lecture L1|L2]
+-
+-`preparer` :
+-- vérifie les pièces épinglées (consigne, question, faits, catalogue, témoins) par leur empreinte ; le fichier des fiches
+-  validées par son compagnon `.sha256` ; l'attestation de lecture de la mère (§ 3 : empreinte des fiches, deux drapeaux
+-  vrais, compagnon) ; sans elle, rien n'est préparé ;
+-- admissibilité par programme (§ 4.1) : exactement une étiquette de levier dans `questions_servies`, nature de la demande
+-  `modification` ou `ajout` ; les autres sont « hors question », comptées par motif, jamais servies ;
+-- pile = fiches réelles admissibles, puis 12 témoins du lecteur, puis 8 idées tirées au hasard (ordre canonique) ; chaque
+-  fiche sous la **vue du lecteur** : clés du gabarit seules, dans l'ordre du gabarit (le fichier de l'orchestrateur est
+-  écrit à clés triées, les témoins dans l'ordre du gabarit : sans réordonner, l'ordre des clés trahirait l'origine),
+-  typographie ramenée à la forme de l'orchestrateur (`normaliser_typographie`, recopiée de `pole/ideation_v2.py`) ;
+-  les champs retirés sont consignés, jamais silencieusement ;
+-- deux ordres indépendants : `numpy.random.SeedSequence(2026111302).spawn(4)`, enfants 0 et 1 ; étiquettes F01… dans
+-  l'ordre de chaque lecture ; lots consécutifs, ⌈n/20⌉ lots de tailles égales à un près (20 au plus) ;
+-- garde de dépense avant envoi (borne haute du relais : (octets du corps + 1024) × 2 USD/M + max_tokens × 10 USD/M) :
+-  la somme des pires cas ≤ 4,0 USD (réserve du lecteur), au plus 6 appels (`--max-appels 6` du relais) ; `max_tokens`
+-  = min(32 768, part égale de la réserve), refus sous 16 384 ;
+-- écrit, chacun scellé : `envoi-<L>-lot<k>-v2.txt` (message), `envoi-<L>-lot<k>-v2.corps.json` (corps), `pile-interne-v2.json`
+-  et `cle-lectures-v2.json` (**jamais envoyés** : origine des fiches et correspondance des étiquettes),
+-  `manifeste-envois-v2.json` (graines, versions, empreintes, garde de dépense, réponses attendues).
+-
+-`verifier` lit les réponses `reponse-<L>-lot<k>-v2.json` (réponse entière du relais, `chat.completion`, scellée par la mère)
+-et écrit `lecture-verifiee-<L>-v2.json` (scellé) : pour chaque fiche et chaque critère, la valeur brute, la valeur comptée,
+-et la raison d'un « non prouvé ». Règle (§ 4.5) : un 1 à R1–R7 compte seulement si `passage` se trouve mot pour mot,
+-espaces normalisés, dans une chaîne de la fiche servie ; une occupation `Ck` compte seulement si `passage_fiche` est dans
+-la fiche et `passage_catalogue` dans l'entrée `Ck` du catalogue servi ; sinon la lecture compte `aucune`. R4 hors
+-`levier:juge` vaut 1 par programme (§ 4.4).
++v3 (14 novembre 2026, à partir de 07:43 UTC, `date -u`) = v2 (`../lecture-classement-v2/`, `a58fb8b9…`, gardée, R12),
++écrite par un développeur neuf après l'échec de la lecture par Kimi (R-2658 : lots de 14 ou 15 fiches, `finish_reason =
++length`, les 32 768 jetons de sortie mangés par le raisonnement) et le changement de lecteur décidé par Lazar (R-2659,
++R-2662) : **Astra** (`gpt-6-astra`, famille OpenAI), voie déjà nommée par la conception (§ 4.2, `be3ba97e…`) ; la règle ne
++change pas. Ce qui change, et seulement cela (détail : `rapport-lecture-classement-v3.md`) :
++
++- **lecteur et point d'entrée** : `POST https://api.openai.com/v1/chat/completions` (Chat Completions, pas Responses :
++  voie déjà employée avec `gpt-6-astra` dans le dépôt, modèle servi rendu exact, R-1454 ; réponse `chat.completion` dont
++  `choices[0].finish_reason` porte directement la garde « fin autre que stop » de la v2 ; aucun état gardé chez le
++  fournisseur, `store: false` explicite) ; corps = un seul message utilisateur (le même texte qu'en v2), `model`,
++  `max_completion_tokens` (plafond de sortie, raisonnement compris), `reasoning_effort` (effort de raisonnement, choisi et
++  consigné à la préparation), `store` ; aucun outil, aucun message système, aucune température ;
++- **clé** : lue **par son nom seul**, `OPENAI_API_KEY`, dans la seule fonction `lire_cle` (le « relais » en processus :
++  `envoyer`), retirée aussitôt de `os.environ`, posée dans l'en-tête `Authorization` et nulle part ailleurs : jamais
++  affichée, jamais écrite, masquée dans tout message d'erreur ;
++- **lots de 5 fiches** (`TAILLE_LOT`, paramètre unique ; 43 fiches → 9 lots par lecture, 18 appels) au lieu de 20 ;
++- **plafond de sortie et effort explicites**, consignés au manifeste et dans chaque corps ;
++- **modèle servi vérifié** : `model` de la réponse égal, octet pour octet, à `gpt-6-astra`, sinon anomalie bloquante ;
++- **garde de dépense** dans `envoyer` : prix et plafond en USD fixés à la préparation (manifeste scellé), nombre d'appels
++  maximal fixé d'avance (deux lectures × lots, au plus `MAX_APPELS` = 18) ; avant chaque appel, dépense comptée + pire cas
++  de l'appel ≤ plafond, sinon arrêt sans envoi ; après chaque appel, coût lu dans `usage` (jetons d'entrée, d'entrée en
++  cache, de sortie), compté **au pire cas** quand l'usage manque, est illisible ou incohérent ; journal de dépense chaîné,
++  relu à chaque reprise (un arrêt ne remet pas le compte à zéro) ;
++- **arrêt au premier écart** : statut autre que 200, modèle servi différent, fin autre que `stop`, usage absent, refus du
++  lecteur, coût au-dessus du pire cas réservé : rien d'autre n'est envoyé (leçon de R-2658 : le second lot était parti
++  avant la lecture de la fin du premier), aucune relecture, aucune reprise automatique ;
++- **condition C1 de la relecture courte** (`relecture-courte-lecture-classement-v2.md`, r1) devenue une anomalie
++  bloquante : une entrée à laquelle manque une clé de critère (R1 à R7, N, ou sa `valeur`) rend la lecture incomplète ;
++- une **réponse absente** n'est acceptée par `verifier` que si le journal consigne un arrêt (elle devient alors une
++  anomalie bloquante, verdict E2) ; sinon refus, comme en v2 ;
++- un corps d'erreur du fournisseur n'est **jamais** écrit (il peut porter des identifiants du compte, R-2645) : seuls le
++  statut, le type et le code de l'erreur, et l'empreinte du corps.
++
++Les envois de la v1 (`lecture-g1-v1/envois/`, lots de 14 ou 15, corps au format Kimi) ne servent plus : `preparer` les
++**régénère** de façon déterministe depuis la copie attestée des fiches validées et les témoins épinglés. Les ordres des deux
++lectures sont ceux de la v2 (même `SeedSequence(2026111302).spawn(4)`, enfants 0 et 1, mêmes étiquettes F01…) ; seules
++les frontières des lots changent.
++
++De la v2 (inchangé) : attestation exigée ; pièces épinglées ; seule la copie scellée `runs/…/copies/sortie--fiches-validees.json`
++acceptée (M3) ; admissibilité par programme ; vue servie sans auteur, identifiant, passe, empreinte ni marque de témoin,
++clés dans l'ordre du gabarit, typographie de l'orchestrateur ; citations d'au moins 20 caractères hors espaces, vérifiées
++mot pour mot ; catalogue lu dans la seule cellule du mécanisme (M1) ; anomalies bloquantes nommant les fiches (M2) ; R4
++hors `levier:juge` à 1 par programme ; écriture scellée, jamais d'écrasement (R12).
++
++Actions :
++
++    python3 -I -B outil_lecteur_conception_propre_v3.py preparer --fiches F --attestation A --sortie DOSSIER \
++        --effort low|medium|high --prix-entree PE --prix-sortie PS [--prix-cache PC] --source-prix TEXTE --plafond-usd X
++    python3 -I -B outil_lecteur_conception_propre_v3.py envoyer --envois DOSSIER [--envois-max N]
++    python3 -I -B outil_lecteur_conception_propre_v3.py bilan --envois DOSSIER
++    python3 -I -B outil_lecteur_conception_propre_v3.py verifier --envois DOSSIER [--lecture L1|L2]
++
++Codes de sortie : 0 fait (ou pause demandée par `--envois-max`) ; 2 refus (rien d'envoyé de plus) ; 3 arrêt sur anomalie ;
++4 arrêt avant un appel qui pourrait dépasser le plafond.
+ """
+ from __future__ import annotations
+ 
+@@ -58,13 +62,18 @@
+ import hashlib
+ import json
+ import math
++import os
+ import re
++import ssl
+ import sys
++import time
++import urllib.error
++import urllib.request
+ from pathlib import Path
+ 
+ import numpy as np
+ 
+-VERSION = "outil-lecteur-conception-propre-v2"
++VERSION = "outil-lecteur-conception-propre-v3"
+ RACINE_DEFAUT = Path(__file__).resolve().parents[4]
+ DOSSIER = "docs/notes/organisme-conception-propre-v1"
+ PIECES = {
+@@ -84,16 +93,26 @@
+                    "be3ba97ee418de50fa356b0e39fcfa62c16d06f5767560265fcc7ee9f191a95e"),
+ }
+ ENTROPIE_ORDRES = 2026111302           # § 4.3 : spawn(4) → 0, 1 ordres ; 2 départage ; 3 témoin à score permuté
+-TAILLE_LOT = 20
++# v3 : 5 fiches par lot. Kimi a passé plus de 32 765 jetons à raisonner sur 14 ou 15 fiches sans rien rendre (R-2658),
++# soit plus de 2 200 jetons de raisonnement par fiche ; on vise au moins 5 000 jetons de raisonnement et 700 de sortie
++# visible par fiche sous un plafond de 32 768 : 32 768 / 5 700 ≈ 5,7 → 5. Plus petit multiplie le préambule fixe (≈ 28 ko
++# servis à chaque appel) et le nombre d'appels ; 43 fiches → 9 lots (sept de 5, deux de 4), 18 appels.
++TAILLE_LOT = 5
+ LECTURES = ("L1", "L2")
+-MODELE_LECTEUR = "kimi-k3.1-pro"
+-PRIX_ENTREE_USD_M, PRIX_SORTIE_USD_M = 2.0, 10.0
+-RESERVE_LECTEUR_USD = 4.0
+-MAX_APPELS = 6
+-MAX_TOKENS, MIN_TOKENS = 32768, 16384
++MODELE_LECTEUR = "gpt-6-astra"
++URL_AMONT = "https://api.openai.com/v1/chat/completions"
++VARIABLE_CLE = "OPENAI_API_KEY"
++MAX_SORTIE = 32768                     # max_completion_tokens : sortie visible et raisonnement compris
++EFFORTS = ("low", "medium", "high")    # reasoning_effort, choisi à la préparation, consigné
++MAX_APPELS = 18                        # deux lectures × 9 lots : fixé d'avance ; plus d'appels → refus à la préparation
++PLAFOND_ABSOLU_USD = 14.20             # reste du GO-2026-11-13-06 au 14 novembre (21 − 6,791087), arrondi en dessous
++OCTETS_MARGE = 1024                    # pire cas d'entrée : un jeton par octet du corps, plus 1 024 (règle des relais)
++DELAI_S = 1800
++TAILLE_MAX_REPONSE = 4_000_000
+ LEVIERS = ("levier:juge", "levier:proposeurs", "levier:composition", "levier:cout")
+ NATURES_ADMISES = ("modification", "ajout")
+ CRITERES = ("R1", "R2", "R3", "R4", "R5", "R6", "R7")
++CLES_ENTREE = CRITERES + ("N",)
+ LONGUEUR_MIN_PASSAGE = 20      # M1 : caractères hors espaces ; la consigne borne en haut à 200
+ LONGUEUR_MAX_CONSIGNE = 200    # rapporté seulement (un passage plus long n'est pas refusé)
+ CELLULE_MECANISME = 2          # colonnes du catalogue : Code | Conception | Mécanisme central | Source
+@@ -101,11 +120,16 @@
+ MOTIF_RUN = r"\d{8}-\d{6}-course-ideation-conception-propre-v1-g1"
+ NOM_COPIE_FICHES = "sortie--fiches-validees.json"
+ MANIFESTE_FIN = "manifeste-lanceur-fin.json"
+-ANOMALIES_BLOQUANTES = ("reponse_illisible", "fin_non_stop", "entree_manquante", "entree_en_double")
++ANOMALIES_BLOQUANTES = ("reponse_illisible", "fin_non_stop", "entree_manquante", "entree_en_double",
++                        "cle_de_critere_manquante", "reponse_absente", "modele_servi_different", "refus_du_lecteur")
+ CODES_CATALOGUE = tuple(f"C{i}" for i in range(1, 13))
+ CHAMPS_INTERNES = ("auteur", "identifiant_auteur", "empreinte", "passe", "temoin")  # toujours retirés (orchestrateur)
+ ATTESTATION_CHAMPS = ("lecteur", "lu_le", "fiches_validees_sha256", "aucune_recette_aucun_secret",
+                       "envoi_au_lecteur_externe_permis")
++JOURNAL = "journal-depense-v3.jsonl"
++MANIFESTE = "manifeste-envois-v3.json"
++PILE = "pile-interne-v3.json"
++CLE_LECTURES = "cle-lectures-v3.json"
+ # Vue du lecteur : clés du gabarit de l'orchestrateur (`pole/ideation_v2.py`, GABARIT), dans son ordre.
+ ORDRE_VUE = (("nom", None), ("type", None), ("enonce", None),
+              ("loi_predictive", ("espace_instances", "prediction", "signe", "metrique")),
+@@ -118,7 +142,7 @@
+ 
+ 
+ class Refus(Exception):
+-    """Arrêt sans repli : rien n'est écrit de plus."""
++    """Arrêt sans repli : rien n'est écrit ni envoyé de plus."""
+ 
+ 
+ # --- empreintes et sceaux ---------------------------------------------------------------------------------------------
+@@ -150,18 +174,21 @@
+     return h
+ 
+ 
+-def ecrire_scelle(chemin, texte: str) -> str:
++def ecrire_scelle_octets(chemin, b: bytes) -> str:
+     """Écrit un fichier neuf et son compagnon ; refuse d'écraser (R12)."""
+     p = Path(chemin)
+     if p.exists() or Path(str(p) + ".sha256").exists():
+         raise Refus(f"{p} existe déjà : on n'écrase jamais (R12)")
+-    b = texte.encode("utf-8")
+     p.write_bytes(b)
+     h = sha256_octets(b)
+     Path(str(p) + ".sha256").write_text(f"{h}  {p.name}\n", encoding="utf-8")
+     return h
+ 
+ 
++def ecrire_scelle(chemin, texte: str) -> str:
++    return ecrire_scelle_octets(chemin, texte.encode("utf-8"))
++
++
+ def json_texte(objet) -> str:
+     return json.dumps(objet, ensure_ascii=False, indent=1, allow_nan=False) + "\n"
+ 
+@@ -177,7 +204,11 @@
+     return p.read_text(encoding="utf-8"), h
+ 
+ 
+-# --- vue du lecteur ---------------------------------------------------------------------------------------------------
++def maintenant() -> str:
++    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
++
++
++# --- vue du lecteur (inchangée depuis la v2) -----------------------------------------------------------------------------
+ 
+ def normaliser_typographie(texte: str) -> str:
+     """Recopie de `normaliser_typographie` de l'orchestrateur (CL31-17), comparée à l'original par les essais."""
+@@ -363,6 +394,7 @@
+ 
+ 
+ def decouper_lots(n: int) -> list[list[int]]:
++    """⌈n / TAILLE_LOT⌉ lots consécutifs de tailles égales à un près (TAILLE_LOT au plus)."""
+     if n == 0:
+         return []
+     k = math.ceil(n / TAILLE_LOT)
+@@ -386,20 +418,45 @@
+         "```json\n", json.dumps(fiches, ensure_ascii=False, indent=1), "\n```\n"]))
+ 
+ 
+-def corps_requete(message: str, max_tokens: int) -> str:
++def corps_requete(message: str, effort: str) -> str:
++    """Corps de Chat Completions : un seul message utilisateur ; plafond de sortie et effort explicites ; rien gardé chez
++    le fournisseur (`store: false`)."""
+     return json.dumps({"model": MODELE_LECTEUR, "messages": [{"role": "user", "content": message}],
+-                       "max_tokens": max_tokens}, ensure_ascii=False)
++                       "max_completion_tokens": MAX_SORTIE, "reasoning_effort": effort, "store": False},
++                      ensure_ascii=False)
++
+ 
++def prix_valides(prix: dict) -> dict:
++    for k in ("entree", "sortie", "cache"):
++        v = prix.get(k)
++        if type(v) not in (int, float) or not math.isfinite(v) or v <= 0:
++            raise Refus(f"prix {k} invalide : {v!r} (USD par million de jetons, strictement positif)")
++    if prix["cache"] > prix["entree"]:
++        raise Refus("prix du cache au-dessus du prix d'entrée")
++    if not isinstance(prix.get("source"), str) or not prix["source"].strip():
++        raise Refus("source des prix non dite (page lue, date, empreinte)")
++    return prix
+ 
+-def pire_cas_usd(octets: int, max_tokens: int) -> float:
+-    return (octets + 1024) * PRIX_ENTREE_USD_M / 1e6 + max_tokens * PRIX_SORTIE_USD_M / 1e6
+ 
++def pire_cas_usd(octets: int, prix: dict) -> float:
++    """Pire cas d'un appel : un jeton d'entrée par octet du corps (+ 1 024), plafond de sortie entier."""
++    return (octets + OCTETS_MARGE) * prix["entree"] / 1e6 + MAX_SORTIE * prix["sortie"] / 1e6
+ 
+-def preparer(fiches_chemin, attestation_chemin, sortie, racine=RACINE_DEFAUT) -> dict:
++
++def preparer(fiches_chemin, attestation_chemin, sortie, racine=RACINE_DEFAUT, *, effort, prix_entree, prix_sortie,
++             plafond_usd, source_prix, prix_cache=None) -> dict:
+     racine = Path(racine)
+     sortie = Path(sortie)
+     if sortie.exists() and any(sortie.iterdir()):
+         raise Refus(f"{sortie} existe et n'est pas vide : on n'écrase jamais (R12)")
++    if effort not in EFFORTS:
++        raise Refus(f"effort de raisonnement {effort!r} hors de {EFFORTS}")
++    prix = prix_valides({"entree": prix_entree, "sortie": prix_sortie,
++                         "cache": prix_entree if prix_cache is None else prix_cache, "source": source_prix})
++    if type(plafond_usd) not in (int, float) or not math.isfinite(plafond_usd) or plafond_usd <= 0:
++        raise Refus(f"plafond invalide : {plafond_usd!r}")
++    if plafond_usd > PLAFOND_ABSOLU_USD:
++        raise Refus(f"plafond {plafond_usd} USD > {PLAFOND_ABSOLU_USD} (reste du GO-2026-11-13-06)")
+     pieces, empreintes = {}, {}
+     for nom in PIECES:
+         pieces[nom], empreintes[nom] = lire_piece(racine, nom)
+@@ -419,8 +476,7 @@
+     lots_idx = decouper_lots(n)
+     appels = len(LECTURES) * len(lots_idx)
+     if appels > MAX_APPELS:
+-        raise Refus(f"{appels} appels > {MAX_APPELS} permis par le relais (pile de {n} fiches)")
+-    # messages, puis max_tokens par part égale de la réserve
++        raise Refus(f"{appels} appels > {MAX_APPELS} fixés d'avance (pile de {n} fiches, lots de {TAILLE_LOT})")
+     messages, cle = {}, {}
+     for L in LECTURES:
+         ordre = ordres[L]
+@@ -431,31 +487,33 @@
+             messages[(L, k)] = texte_message(pieces, lot, k, len(lots_idx))
+             lots.append([etiquette(r) for r in idx])
+         cle[L] = {"ordre": [pile["fiches"][i]["id"] for i in ordre], "etiquettes": etiquettes, "lots": lots}
+-    part = RESERVE_LECTEUR_USD / appels
+-    max_tok = MAX_TOKENS
+-    for msg in messages.values():
+-        octets = len(corps_requete(msg, MAX_TOKENS).encode("utf-8"))
+-        permis = math.floor((part - (octets + 1024) * PRIX_ENTREE_USD_M / 1e6) / (PRIX_SORTIE_USD_M / 1e6))
+-        max_tok = min(max_tok, permis)
+-    if max_tok < MIN_TOKENS:
+-        raise Refus(f"max_tokens permis {max_tok} < {MIN_TOKENS} : la réserve de {RESERVE_LECTEUR_USD} USD ne suffit pas")
+-    sortie.mkdir(parents=True, exist_ok=True)
+-    fichiers, garde = {}, []
+-    for (L, k), msg in sorted(messages.items()):
+-        nom_m, nom_c = f"envoi-{L}-lot{k}-v2.txt", f"envoi-{L}-lot{k}-v2.corps.json"
+-        corps = corps_requete(msg, max_tok)
+-        fichiers[nom_m] = ecrire_scelle(sortie / nom_m, msg)
+-        fichiers[nom_c] = ecrire_scelle(sortie / nom_c, corps)
+-        garde.append({"envoi": nom_c, "octets": len(corps.encode("utf-8")),
+-                      "pire_cas_usd": round(pire_cas_usd(len(corps.encode("utf-8")), max_tok), 6)})
++    corps = {Lk: corps_requete(msg, effort) for Lk, msg in messages.items()}
++    garde = []
++    for (L, k) in sorted(corps):
++        o = len(corps[(L, k)].encode("utf-8"))
++        garde.append({"envoi": f"envoi-{L}-lot{k}-v3.corps.json", "lecture": L, "lot": k, "octets": o,
++                      "pire_cas_usd": round(pire_cas_usd(o, prix), 6)})
++    plus_gros = max(g["pire_cas_usd"] for g in garde)
++    if plus_gros > plafond_usd:
++        raise Refus(f"plafond {plafond_usd} USD sous le pire cas d'un seul appel ({plus_gros:.4f}) : aucun appel ne tiendrait")
+     total = sum(g["pire_cas_usd"] for g in garde)
+-    if total > RESERVE_LECTEUR_USD + 1e-9:  # garde redondante (ne devrait jamais tenir)
+-        raise Refus(f"pire cas total {total:.4f} > {RESERVE_LECTEUR_USD}")
+-    fichiers["pile-interne-v2.json"] = ecrire_scelle(sortie / "pile-interne-v2.json", json_texte(pile))
+-    fichiers["cle-lectures-v2.json"] = ecrire_scelle(sortie / "cle-lectures-v2.json", json_texte(cle))
++    surs, cumul = 0, 0.0
++    for g in garde:  # appels que le plafond paie même si chacun coûte son pire cas
++        if cumul + g["pire_cas_usd"] > plafond_usd:
++            break
++        cumul += g["pire_cas_usd"]
++        surs += 1
++    sortie.mkdir(parents=True, exist_ok=True)
++    fichiers = {}
++    for (L, k) in sorted(messages):
++        nom_m, nom_c = f"envoi-{L}-lot{k}-v3.txt", f"envoi-{L}-lot{k}-v3.corps.json"
++        fichiers[nom_m] = ecrire_scelle(sortie / nom_m, messages[(L, k)])
++        fichiers[nom_c] = ecrire_scelle(sortie / nom_c, corps[(L, k)])
++    fichiers[PILE] = ecrire_scelle(sortie / PILE, json_texte(pile))
++    fichiers[CLE_LECTURES] = ecrire_scelle(sortie / CLE_LECTURES, json_texte(cle))
+     e = enfants_ordres()
+     manifeste = {
+-        "version": VERSION, "outil_sha256": sha256_fichier(__file__),
++        "version": VERSION, "outil_sha256": sha256_fichier(__file__), "prepare_le": maintenant(),
+         "versions": {"python": sys.version.split()[0], "numpy": np.__version__},
+         "pieces": {k: {"chemin": PIECES[k][0], "sha256": v} for k, v in empreintes.items()},
+         "fiches_validees": {**prov, "nombre": len(fiches)},
+@@ -467,17 +525,316 @@
+         "pile": {"fiches": n, "reelles_admissibles": sum(p["origine"] == "reelle" for p in pile["fiches"]),
+                  "temoins": sum(p["origine"] == "temoin" for p in pile["fiches"]),
+                  "hors_question": len(pile["hors_question"]), "champs_retires": pile["champs_retires"]},
+-        "lots": {"nombre_par_lecture": len(lots_idx), "tailles": [len(x) for x in lots_idx]},
+-        "garde_depense": {"modele": MODELE_LECTEUR, "max_tokens": max_tok, "appels": appels,
+-                          "reserve_usd": RESERVE_LECTEUR_USD, "pire_cas_total_usd": round(total, 6), "envois": garde},
+-        "reponses_attendues": [f"reponse-{L}-lot{k}-v2.json" for L in LECTURES for k in range(1, len(lots_idx) + 1)],
++        "lots": {"taille_lot": TAILLE_LOT, "nombre_par_lecture": len(lots_idx), "tailles": [len(x) for x in lots_idx]},
++        "lecteur": {"modele": MODELE_LECTEUR, "url": URL_AMONT, "point_d_entree": "Chat Completions",
++                    "variable_cle": VARIABLE_CLE, "max_completion_tokens": MAX_SORTIE, "reasoning_effort": effort,
++                    "store": False},
++        "garde_depense": {"prix_usd_par_million": prix, "plafond_usd": plafond_usd, "appels_max": appels,
++                          "pire_cas_total_usd": round(total, 6), "appels_surs_au_pire_cas": surs,
++                          "regle": "avant chaque appel : dépense comptée + pire cas de l'appel ≤ plafond, sinon arrêt ; "
++                                   "après : coût lu dans usage, pire cas si usage absent, illisible ou incohérent",
++                          "envois": garde},
++        "ordre_d_envoi": [g["envoi"] for g in garde],
++        "reponses_attendues": [f"reponse-{L}-lot{k}-v3.json" for L in LECTURES for k in range(1, len(lots_idx) + 1)],
+         "fichiers": fichiers,
+-        "jamais_envoyes": ["pile-interne-v2.json", "cle-lectures-v2.json", "manifeste-envois-v2.json"],
++        "jamais_envoyes": [PILE, CLE_LECTURES, MANIFESTE, JOURNAL],
+     }
+-    ecrire_scelle(sortie / "manifeste-envois-v2.json", json_texte(manifeste))
++    ecrire_scelle(sortie / MANIFESTE, json_texte(manifeste))
+     return manifeste
+ 
+ 
++# --- envoi : relais en processus, clé, garde de dépense --------------------------------------------------------------
++
++def lire_cle() -> str:
++    """La clé, lue par son nom seul, puis retirée de l'environnement du processus. Jamais affichée ni écrite."""
++    cle = os.environ.pop(VARIABLE_CLE, None)
++    if not cle:
++        raise Refus(f"{VARIABLE_CLE} absente : rien n'est envoyé")
++    return cle
++
++
++def masquer(texte: str, cle: str) -> str:
++    return texte.replace(cle, "[clé]") if cle else texte
++
++
++def transport_reel(url: str, entetes: dict, corps: bytes, delai: float) -> tuple[int, bytes]:
++    """Un seul POST, sans reprise. Mandataire de l'environnement (urllib), certificats de SSL_CERT_FILE s'il est donné."""
++    if url != URL_AMONT:
++        raise Refus("adresse d'amont autre que celle d'OpenAI : refusée")
++    ca = os.environ.get("SSL_CERT_FILE")
++    contexte = ssl.create_default_context(cafile=ca) if ca else ssl.create_default_context()
++    ouvreur = urllib.request.build_opener(urllib.request.HTTPSHandler(context=contexte))
++    req = urllib.request.Request(url, data=corps, method="POST", headers=entetes)
++    try:
++        with ouvreur.open(req, timeout=delai) as r:
++            return r.status, r.read(TAILLE_MAX_REPONSE + 1)
++    except urllib.error.HTTPError as e:
++        return e.code, e.read(TAILLE_MAX_REPONSE + 1)
++
++
++def entier(x) -> bool:
++    return type(x) is int and x >= 0
++
++
++def cout_usage(usage, prix: dict) -> tuple[float | None, str | None, dict]:
++    """(coût en USD, problème, jetons lus). Coût None si l'usage est absent ou illisible (le pire cas s'applique).
++    Règle : (prompt − cache) × entrée + cache × prix du cache + completion × sortie + excédent de total × prix le plus
++    haut. `completion_tokens` compte le raisonnement (`completion_tokens_details.reasoning_tokens` en est une part :
++    SUPPOSÉ, vérifié sur la première réponse) ; un raisonnement plus grand que la sortie est une incohérence."""
++    if not isinstance(usage, dict):
++        return None, "usage absent", {}
++    p, c = usage.get("prompt_tokens"), usage.get("completion_tokens")
++    if not entier(p) or not entier(c):
++        return None, "usage illisible (prompt_tokens ou completion_tokens)", {}
++    cache = (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
++    raison = (usage.get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
++    total = usage.get("total_tokens", p + c)
++    if not entier(cache) or not entier(raison) or not entier(total):
++        return None, "usage illisible (détails)", {}
++    lus = {"prompt_tokens": p, "cached_tokens": cache, "completion_tokens": c, "reasoning_tokens": raison,
++           "total_tokens": total}
++    probleme = None
++    if cache > p:
++        probleme = "jetons en cache au-dessus des jetons d'entrée"
++    elif raison > c:
++        probleme = "jetons de raisonnement au-dessus des jetons de sortie"
++    elif c > MAX_SORTIE:
++        probleme = f"jetons de sortie au-dessus du plafond demandé ({MAX_SORTIE})"
++    exces = max(0, total - p - c)
++    haut = max(prix["entree"], prix["sortie"])
++    cout = ((p - min(cache, p)) * prix["entree"] + min(cache, p) * prix["cache"] + c * prix["sortie"]
++            + exces * haut + (max(0, raison - c) * prix["sortie"])) / 1e6
++    return cout, probleme, lus
++
++
++def champ_court(x) -> str | None:
++    return x if isinstance(x, str) and re.fullmatch(r"[A-Za-z0-9_.\-]{1,60}", x) else None
++
++
++def analyser_reponse(statut, corps: bytes | None, pire_cas: float, prix: dict) -> dict:
++    """Lit une réponse de l'amont (statut, octets). Rend {cout, au_pire_cas, anomalies, modele_servi, fin, lus, garder}.
++    `garder` vrai : le corps est une réponse `chat.completion` (statut 200) à sceller telle quelle ; faux : on n'écrit que
++    le statut, le type et le code d'erreur, et l'empreinte du corps (jamais le corps)."""
++    r = {"cout_usd": pire_cas, "au_pire_cas": True, "anomalies": [], "modele_servi": None, "finish_reason": None,
++         "jetons": {}, "garder": False, "erreur": None, "statut": statut,
++         "corps_sha256": sha256_octets(corps) if corps is not None else None}
++    if statut is None:
++        r["anomalies"].append("transport_echec")
++        return r
++    if corps is not None and len(corps) > TAILLE_MAX_REPONSE:
++        r["anomalies"].append("reponse_trop_grande")
++        return r
++    try:
++        o = json.loads(corps.decode("utf-8")) if corps is not None else None
++    except (UnicodeDecodeError, ValueError):
++        o = None
++    if statut != 200:
++        err = (o or {}).get("error") if isinstance(o, dict) else None
++        r["erreur"] = {"type": champ_court((err or {}).get("type")), "code": champ_court((err or {}).get("code"))}
++        r["anomalies"].append("statut_non_200")
++        return r
++    if not isinstance(o, dict):
++        r["anomalies"].append("reponse_illisible")
++        return r
++    r["garder"] = True
++    r["modele_servi"] = o.get("model") if isinstance(o.get("model"), str) else None
++    cout, probleme, lus = cout_usage(o.get("usage"), prix)
++    r["jetons"] = lus
++    if cout is None:
++        r["anomalies"].append("usage_absent")
++    elif probleme:
++        r["anomalies"].append("usage_incoherent")
++        r["probleme_usage"] = probleme
++        r["cout_usd"], r["au_pire_cas"] = max(cout, pire_cas), cout <= pire_cas
++    else:
++        r["cout_usd"], r["au_pire_cas"] = cout, False
++        if cout > pire_cas + 1e-12:
++            r["anomalies"].append("cout_au_dessus_du_pire_cas")
++    if o.get("object") != "chat.completion":
++        r["anomalies"].append("reponse_illisible")
++    if r["modele_servi"] != MODELE_LECTEUR:
++        r["anomalies"].append("modele_servi_different")
++    ch = o.get("choices")
++    if not isinstance(ch, list) or len(ch) != 1 or not isinstance(ch[0], dict):
++        r["anomalies"].append("choix_non_unique")
++        return r
++    r["finish_reason"] = ch[0].get("finish_reason")
++    if r["finish_reason"] != "stop":
++        r["anomalies"].append("fin_non_stop")
++    msg = ch[0].get("message") or {}
++    if msg.get("refusal"):
++        r["anomalies"].append("refus_du_lecteur")
++    if not isinstance(msg.get("content"), str) or not msg["content"].strip():
++        r["anomalies"].append("contenu_absent")
++    return r
++
++
++def lire_journal(dossier) -> dict:
++    """Relit le journal de dépense chaîné (chaque ligne porte l'empreinte de la précédente). Rend la dépense comptée (un
++    envoi sans clôture compte son pire cas), les appels, les envois clos, les anomalies et l'arrêt consigné."""
++    p = Path(dossier) / JOURNAL
++    etat = {"appels": 0, "depense_usd": 0.0, "clos": {}, "en_vol": [], "anomalies": [], "arret": None, "lignes": 0,
++            "dernier_sha256": "debut"}
++    if not p.exists():
++        return etat
++    ouverts = {}
++    for i, brute in enumerate(p.read_bytes().splitlines(keepends=True)):
++        try:
++            ev = json.loads(brute.decode("utf-8"))
++        except ValueError as e:
++            raise Refus(f"{JOURNAL} ligne {i + 1} illisible") from e
++        if ev.get("n") != i + 1 or ev.get("precedent") != etat["dernier_sha256"]:
++            raise Refus(f"{JOURNAL} ligne {i + 1} : chaîne rompue (journal tronqué ou réécrit)")
++        etat["dernier_sha256"] = sha256_octets(brute)
++        etat["lignes"] = i + 1
++        g = ev.get("evenement")
++        if g == "envoi":
++            if ev["envoi"] in ouverts or ev["envoi"] in etat["clos"]:
++                raise Refus(f"{JOURNAL} : {ev['envoi']} envoyé deux fois")
++            etat["appels"] += 1
++            ouverts[ev["envoi"]] = ev
++        elif g == "clos":
++            if ev["envoi"] not in ouverts:
++                raise Refus(f"{JOURNAL} : clôture sans envoi ({ev['envoi']})")
++            ouverts.pop(ev["envoi"])
++            etat["clos"][ev["envoi"]] = ev
++            etat["depense_usd"] += ev["cout_usd"]
++            etat["anomalies"] += [{"envoi": ev["envoi"], "genre": a} for a in ev["anomalies"]]
++        elif g == "arret":
++            etat["arret"] = ev
++        else:
++            raise Refus(f"{JOURNAL} ligne {i + 1} : événement inconnu {g!r}")
++    for nom, ev in ouverts.items():  # appel parti sans clôture (coupure) : pire cas, et la lecture ne reprend pas
++        etat["en_vol"].append(nom)
++        etat["depense_usd"] += ev["pire_cas_usd"]
++    return etat
++
++
++def ajouter_journal(dossier, etat: dict, ev: dict) -> None:
++    ev = {"n": etat["lignes"] + 1, "precedent": etat["dernier_sha256"], "utc": maintenant(), **ev}
++    ligne = (json.dumps(ev, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
++    with open(Path(dossier) / JOURNAL, "ab") as f:
++        f.write(ligne)
++        f.flush()
++        os.fsync(f.fileno())
++    etat["lignes"] += 1
++    etat["dernier_sha256"] = sha256_octets(ligne)
++
++
++def nom_reponse(envoi: str) -> str:
++    return envoi.replace("envoi-", "reponse-").replace("-v3.corps.json", "-v3.json")
++
++
++def nom_erreur(envoi: str) -> str:
++    return envoi.replace("envoi-", "erreur-").replace("-v3.corps.json", "-v3.json")
++
++
++def controler_coherence(dossier, man: dict, j: dict) -> None:
++    """Chaque réponse ou erreur déposée a sa clôture au journal, à la même empreinte ; aucune autre n'existe."""
++    for g in man["garde_depense"]["envois"]:
++        for nom in (nom_reponse(g["envoi"]), nom_erreur(g["envoi"])):
++            if (Path(dossier) / nom).exists():
++                h = verifier_sceau(Path(dossier) / nom)
++                ev = j["clos"].get(g["envoi"])
++                if ev is None or ev.get("fichier") != nom or ev.get("fichier_sha256") != h:
++                    raise Refus(f"{nom} sans clôture conforme au journal (journal tronqué ou fichier étranger)")
++
++
++def bilan(dossier) -> dict:
++    env = charger_envois(dossier)
++    man = env["manifeste"]
++    j = lire_journal(dossier)
++    controler_coherence(dossier, man, j)
++    return {"appels": j["appels"], "appels_max": man["garde_depense"]["appels_max"],
++            "depense_comptee_usd": round(j["depense_usd"], 6), "plafond_usd": man["garde_depense"]["plafond_usd"],
++            "clos": sorted(j["clos"]), "en_vol": j["en_vol"], "anomalies": j["anomalies"],
++            "arret": (j["arret"] or {}).get("motif")}
++
++
++def envoyer(dossier, transport=None, envois_max=None) -> dict:
++    """Envoie les lots dans l'ordre du manifeste, un à la fois, sous la garde de dépense ; s'arrête au premier écart.
++    Rend {issue: fait|pause|anomalie|plafond, …}. Toute réponse 200 est scellée telle quelle ; toute autre issue laisse un
++    fichier d'erreur scellé sans le corps."""
++    transport = transport or transport_reel
++    env = charger_envois(dossier)
++    man = env["manifeste"]
++    if man.get("version") != VERSION:
++        raise Refus(f"envois préparés par {man.get('version')!r}, pas par {VERSION}")
++    g = man["garde_depense"]
++    prix = prix_valides(dict(g["prix_usd_par_million"]))
++    plafond, appels_max = g["plafond_usd"], g["appels_max"]
++    if plafond > PLAFOND_ABSOLU_USD or appels_max > MAX_APPELS:
++        raise Refus("manifeste : plafond ou nombre d'appels au-delà des bornes du code")
++    j = lire_journal(dossier)
++    controler_coherence(dossier, man, j)
++    if j["en_vol"]:
++        raise Refus(f"appel sans clôture au journal ({', '.join(j['en_vol'])}) : compté au pire cas ; aucune reprise")
++    if j["anomalies"] or j["arret"]:
++        raise Refus("lecture déjà arrêtée (anomalie ou plafond consignés) : aucun envoi, aucune relecture")
++    a_faire = [e for e in g["envois"] if e["envoi"] not in j["clos"]]
++    if not a_faire:
++        return {"issue": "fait", "appels": j["appels"], "depense_comptee_usd": round(j["depense_usd"], 6)}
++    cle = lire_cle()
++    entetes = {"Content-Type": "application/json", "Authorization": "Bearer " + cle}
++    envoyes, issue, detail = 0, "fait", None
++    for e in a_faire:
++        if envois_max is not None and envoyes >= envois_max:
++            issue = "pause"
++            break
++        if j["appels"] >= appels_max:
++            issue, detail = "plafond", f"nombre d'appels {appels_max} atteint"
++            ajouter_journal(dossier, j, {"evenement": "arret", "motif": "appels", "detail": detail})
++            break
++        corps = (Path(dossier) / e["envoi"]).read_bytes()
++        if sha256_octets(corps) != man["fichiers"][e["envoi"]]:
++            raise Refus(f"{e['envoi']} : corps différent du manifeste")
++        pire = max(e["pire_cas_usd"], pire_cas_usd(len(corps), prix))  # recalculé sur les octets envoyés
++        if j["depense_usd"] + pire > plafond + 1e-12:
++            issue = "plafond"
++            detail = (f"{e['envoi']} : dépense comptée {j['depense_usd']:.6f} + pire cas {pire:.6f} "
++                      f"> plafond {plafond}")
++            ajouter_journal(dossier, j, {"evenement": "arret", "motif": "plafond", "detail": detail})
++            break
++        ajouter_journal(dossier, j, {"evenement": "envoi", "envoi": e["envoi"], "octets": len(corps),
++                                     "pire_cas_usd": pire})
++        envoyes += 1
++        try:
++            statut, rep = transport(URL_AMONT, entetes, corps, DELAI_S)
++            cause = None
++        except Refus:
++            raise
++        except Exception as ex:  # coupure, délai, mandataire : l'appel compte au pire cas
++            statut, rep, cause = None, None, masquer(f"{type(ex).__name__}: {ex}", cle)[:200]
++        a = analyser_reponse(statut, rep, pire, prix)
++        if a["garder"]:
++            nom = nom_reponse(e["envoi"])
++            h = ecrire_scelle_octets(Path(dossier) / nom, rep)
++        else:
++            nom = nom_erreur(e["envoi"])
++            h = ecrire_scelle(Path(dossier) / nom, json_texte({
++                "envoi": e["envoi"], "statut": statut, "erreur": a["erreur"], "corps_sha256": a["corps_sha256"],
++                "corps_octets": len(rep) if rep is not None else None, "cause_transport": cause,
++                "note": "corps de l'amont jamais écrit (il peut porter des identifiants du compte)"}))
++        ev = {"evenement": "clos", "envoi": e["envoi"], "statut": statut, "fichier": nom, "fichier_sha256": h,
++              "modele_servi": a["modele_servi"], "finish_reason": a["finish_reason"], "jetons": a["jetons"],
++              "cout_usd": round(a["cout_usd"], 6), "au_pire_cas": a["au_pire_cas"], "anomalies": a["anomalies"]}
++        ajouter_journal(dossier, j, ev)
++        j = lire_journal(dossier)  # dépense et appels recomptés depuis le journal écrit
++        if a["anomalies"]:
++            issue, detail = "anomalie", f"{e['envoi']} : {', '.join(a['anomalies'])}"
++            break
++    del cle, entetes
++    releve = {"version": VERSION, "fin_utc": maintenant(), "issue": issue, "detail": detail,
++              "envoyes_cette_fois": envoyes, "appels": j["appels"], "appels_max": appels_max,
++              "depense_comptee_usd": round(j["depense_usd"], 6), "plafond_usd": plafond,
++              "journal_sha256": sha256_fichier(Path(dossier) / JOURNAL)}
++    k = 1
++    while (Path(dossier) / f"releve-depense-v3-{k}.json").exists():
++        k += 1
++    ecrire_scelle(Path(dossier) / f"releve-depense-v3-{k}.json", json_texte(releve))
++    return releve
++
++
+ # --- vérification --------------------------------------------------------------------------------------------------------
+ 
+ def espaces(s: str) -> str:
+@@ -540,18 +897,34 @@
+     return o
+ 
+ 
+-def lire_reponse(chemin) -> tuple[str, dict]:
++def lire_reponse(chemin) -> tuple[str | None, dict, list]:
++    """(contenu ou None, méta, anomalies). Une réponse non scellée ou altérée est refusée ; un modèle servi autre, une fin
++    autre que `stop`, un refus, une forme illisible sont des anomalies bloquantes (le contenu n'est alors pas lu)."""
+     verifier_sceau(chemin)
+-    r = json.loads(Path(chemin).read_text(encoding="utf-8"))
+-    if r.get("model") != MODELE_LECTEUR:
+-        raise Refus(f"{Path(chemin).name} : modèle servi {r.get('model')!r} ≠ {MODELE_LECTEUR}")
++    nom = Path(chemin).name
++    try:
++        r = json.loads(Path(chemin).read_text(encoding="utf-8"))
++    except ValueError:
++        return None, {"finish_reason": None, "usage": None, "modele_servi": None}, [("reponse_illisible", f"{nom} : JSON")]
++    if not isinstance(r, dict):
++        return None, {"finish_reason": None, "usage": None, "modele_servi": None}, [("reponse_illisible", nom)]
+     ch = r.get("choices")
+-    if not isinstance(ch, list) or len(ch) != 1:
+-        raise Refus(f"{Path(chemin).name} : un seul choix attendu")
+-    contenu = (ch[0].get("message") or {}).get("content")
+-    if not isinstance(contenu, str):
+-        raise Refus(f"{Path(chemin).name} : contenu absent")
+-    return contenu, {"finish_reason": ch[0].get("finish_reason"), "usage": r.get("usage")}
++    c0 = ch[0] if isinstance(ch, list) and len(ch) == 1 and isinstance(ch[0], dict) else {}
++    meta = {"finish_reason": c0.get("finish_reason"), "usage": r.get("usage"), "modele_servi": r.get("model")}
++    an = []
++    if r.get("model") != MODELE_LECTEUR:
++        an.append(("modele_servi_different", f"{nom} : {str(r.get('model'))[:60]}"))
++    if r.get("object") != "chat.completion" or not c0:
++        an.append(("reponse_illisible", f"{nom} : forme chat.completion à un seul choix attendue"))
++    if c0 and c0.get("finish_reason") != "stop":
++        an.append(("fin_non_stop", f"{nom} : {c0.get('finish_reason')}"))
++    msg = c0.get("message") or {}
++    if msg.get("refusal"):
++        an.append(("refus_du_lecteur", nom))
++    contenu = msg.get("content")
++    if any(g in ("modele_servi_different", "refus_du_lecteur") for g, _ in an) or not isinstance(contenu, str):
++        contenu = None
++    return contenu, meta, an
+ 
+ 
+ def entree_vide(motif: str, juge: bool) -> dict:
+@@ -562,6 +935,11 @@
+     return res
+ 
+ 
++def cles_manquantes(e: dict) -> list[str]:
++    """C1 : critères sans valeur brute (clé absente, non objet, ou `valeur` absente ou nulle)."""
++    return [c for c in CLES_ENTREE if not (isinstance(e.get(c), dict) and e[c].get("valeur") is not None)]
++
++
+ def verifier_entree(e: dict, vue: dict, juge: bool, cat: dict) -> dict:
+     textes = feuilles(vue)
+     res = {}
+@@ -609,12 +987,12 @@
+     for e in o["lecture"]:
+         et = e.get("etiquette") if isinstance(e, dict) else None
+         if et not in etiquettes_lot:
+-            anomalies.append({"genre": "etiquette_hors_lot", "detail": str(et)[:40]})
++            anomalies.append({"genre": "etiquette_hors_lot", "detail": str(et)[:40], "etiquettes": []})
+             continue
+         vues_dans_ordre.append(et)
+         par_et.setdefault(et, []).append(e)
+     if [et for et in etiquettes_lot if et in vues_dans_ordre] != list(dict.fromkeys(vues_dans_ordre)):
+-        anomalies.append({"genre": "ordre_du_lot_non_suivi", "detail": ""})
++        anomalies.append({"genre": "ordre_du_lot_non_suivi", "detail": "", "etiquettes": []})
+     res = {}
+     for et in etiquettes_lot:
+         entrees = par_et.get(et, [])
+@@ -625,20 +1003,24 @@
+             anomalies.append({"genre": "entree_en_double", "detail": et, "etiquettes": [et]})
+             res[et] = entree_vide("entrée en double : aucune retenue", juge_de[et])
+         else:
++            manque = cles_manquantes(entrees[0])
++            if manque:  # C1 (relecture courte, r1) : bloquante
++                anomalies.append({"genre": "cle_de_critere_manquante", "detail": f"{et} : {', '.join(manque)}",
++                                  "etiquettes": [et]})
+             res[et] = verifier_entree(entrees[0], vue_de[et], juge_de[et], cat)
+     return res, anomalies
+ 
+ 
+ def charger_envois(dossier) -> dict:
+     d = Path(dossier)
+-    for nom in ("manifeste-envois-v2.json", "pile-interne-v2.json", "cle-lectures-v2.json"):
++    for nom in (MANIFESTE, PILE, CLE_LECTURES):
+         verifier_sceau(d / nom)
+-    man = json.loads((d / "manifeste-envois-v2.json").read_text(encoding="utf-8"))
++    man = json.loads((d / MANIFESTE).read_text(encoding="utf-8"))
+     for nom, h in man["fichiers"].items():
+         if verifier_sceau(d / nom) != h:
+             raise Refus(f"{nom} : empreinte différente du manifeste")
+-    pile = json.loads((d / "pile-interne-v2.json").read_text(encoding="utf-8"))
+-    cle = json.loads((d / "cle-lectures-v2.json").read_text(encoding="utf-8"))
++    pile = json.loads((d / PILE).read_text(encoding="utf-8"))
++    cle = json.loads((d / CLE_LECTURES).read_text(encoding="utf-8"))
+     return {"manifeste": man, "pile": pile, "cle": cle}
+ 
+ 
+@@ -648,21 +1030,39 @@
+     par_id = {p["id"]: p for p in env["pile"]["fiches"]}
+     cle = env["cle"][L]
+     fiches, anomalies, reponses = {}, [], {}
++    journal = lire_journal(dossier)  # absent : vide ; rompu : refus
++    arret = bool(journal["arret"] or journal["anomalies"] or journal["en_vol"])
+     for k, lot in enumerate(cle["lots"], 1):
+-        nom = f"reponse-{L}-lot{k}-v2.json"
+-        contenu, meta = lire_reponse(Path(dossier) / nom)
+-        reponses[nom] = {"sha256": sha256_fichier(Path(dossier) / nom), **meta}
+-        if meta["finish_reason"] != "stop":
+-            anomalies.append({"genre": "fin_non_stop", "detail": f"{nom} : {meta['finish_reason']}",
+-                              "etiquettes": list(lot)})
++        nom = f"reponse-{L}-lot{k}-v3.json"
+         vue_de = {et: par_id[cle["etiquettes"][et]]["vue"] for et in lot}
+         juge_de = {et: par_id[cle["etiquettes"][et]]["levier"] == "levier:juge" for et in lot}
+-        res, an = verifier_lot(contenu, lot, vue_de, juge_de, cat)
+-        anomalies += [{**a, "lot": k} for a in an]
+-        for a in anomalies:
+-            if a.get("lot") == k or (a["genre"] == "fin_non_stop" and "lot" not in a):
+-                a["lot"] = k
+-                a["ids"] = [cle["etiquettes"][et] for et in a.get("etiquettes", [])]
++        an_lot = []
++        ev = journal["clos"].get(f"envoi-{L}-lot{k}-v3.corps.json")
++        if ev and ev.get("anomalies"):  # écart d'envoi (usage, coût, statut…) : rapporté ; bloquant s'il touche la lecture
++            an_lot.append({"genre": "anomalie_d_envoi", "detail": ", ".join(ev["anomalies"]), "etiquettes": []})
++        if not (Path(dossier) / nom).exists():
++            if not arret:
++                raise Refus(f"réponse attendue absente : {nom} (aucun arrêt consigné au journal)")
++            reponses[nom] = None
++            an_lot.append({"genre": "reponse_absente", "detail": f"{nom} : non envoyée ou non rendue (arrêt consigné)",
++                           "etiquettes": list(lot)})
++            res = {et: entree_vide("réponse absente", juge_de[et]) for et in lot}
++        else:
++            contenu, meta, an = lire_reponse(Path(dossier) / nom)
++            reponses[nom] = {"sha256": sha256_fichier(Path(dossier) / nom), **meta}
++            an_lot += [{"genre": g, "detail": d, "etiquettes": list(lot)} for g, d in an]
++            if contenu is None:
++                if not an:
++                    an_lot.append({"genre": "reponse_illisible", "detail": f"{nom} : contenu absent",
++                                   "etiquettes": list(lot)})
++                res = {et: entree_vide("contenu non lu", juge_de[et]) for et in lot}
++            else:
++                res, an2 = verifier_lot(contenu, lot, vue_de, juge_de, cat)
++                an_lot += an2
++        for a in an_lot:
++            a["lot"] = k
++            a["ids"] = [cle["etiquettes"][et] for et in a.get("etiquettes", [])]
++        anomalies += an_lot
+         for et, r in res.items():
+             fiches[cle["etiquettes"][et]] = {"etiquette": et, "lot": k, **r}
+     comptes = {c: sum(1 for f in fiches.values() if f[c]["brut"] == 1 and not f[c]["prouve"]) for c in CRITERES}
+@@ -687,7 +1087,18 @@
+     p.add_argument("--fiches", required=True)
+     p.add_argument("--attestation", required=True)
+     p.add_argument("--sortie", required=True)
++    p.add_argument("--effort", required=True, choices=EFFORTS)
++    p.add_argument("--prix-entree", type=float, required=True)
++    p.add_argument("--prix-sortie", type=float, required=True)
++    p.add_argument("--prix-cache", type=float, default=None)
++    p.add_argument("--source-prix", required=True)
++    p.add_argument("--plafond-usd", type=float, required=True)
+     p.add_argument("--racine", default=str(RACINE_DEFAUT))
++    e = s.add_parser("envoyer")
++    e.add_argument("--envois", required=True)
++    e.add_argument("--envois-max", type=int, default=None)
++    b = s.add_parser("bilan")
++    b.add_argument("--envois", required=True)
+     v = s.add_parser("verifier")
+     v.add_argument("--envois", required=True)
+     v.add_argument("--lecture", choices=LECTURES, action="append")
+@@ -695,15 +1106,28 @@
+     args = a.parse_args(argv)
+     try:
+         if args.action == "preparer":
+-            m = preparer(args.fiches, args.attestation, args.sortie, args.racine)
+-            print(json.dumps({"pile": m["pile"]["fiches"], "appels": m["garde_depense"]["appels"],
+-                              "pire_cas_total_usd": m["garde_depense"]["pire_cas_total_usd"],
+-                              "max_tokens": m["garde_depense"]["max_tokens"]}, ensure_ascii=False))
++            m = preparer(args.fiches, args.attestation, args.sortie, args.racine, effort=args.effort,
++                         prix_entree=args.prix_entree, prix_sortie=args.prix_sortie, prix_cache=args.prix_cache,
++                         source_prix=args.source_prix, plafond_usd=args.plafond_usd)
++            g = m["garde_depense"]
++            print(json.dumps({"pile": m["pile"]["fiches"], "lots": m["lots"]["tailles"], "appels": g["appels_max"],
++                              "pire_cas_total_usd": g["pire_cas_total_usd"], "plafond_usd": g["plafond_usd"],
++                              "appels_surs_au_pire_cas": g["appels_surs_au_pire_cas"],
++                              "max_completion_tokens": MAX_SORTIE, "reasoning_effort": args.effort},
++                             ensure_ascii=False))
++        elif args.action == "envoyer":
++            if args.envois_max is not None and args.envois_max < 1:
++                raise Refus("--envois-max : au moins 1")
++            r = envoyer(args.envois, envois_max=args.envois_max)
++            print(json.dumps(r, ensure_ascii=False))
++            return {"fait": 0, "pause": 0, "anomalie": 3, "plafond": 4}[r["issue"]]
++        elif args.action == "bilan":
++            print(json.dumps(bilan(args.envois), ensure_ascii=False))
+         else:
+             cat, _ = lire_piece(args.racine, "catalogue")
+             for L in args.lecture or LECTURES:
+                 r = verifier_lecture(args.envois, L, cat)
+-                ecrire_scelle(Path(args.envois) / f"lecture-verifiee-{L}-v2.json", json_texte(r))
++                ecrire_scelle(Path(args.envois) / f"lecture-verifiee-{L}-v3.json", json_texte(r))
+                 print(json.dumps({"lecture": L, "non_prouves": r["non_prouves"], "anomalies": len(r["anomalies"]),
+                                   "anomalies_bloquantes": len(r["anomalies_bloquantes"])}, ensure_ascii=False))
+     except Refus as e:

@@ -62,6 +62,14 @@ COMMANDE_LANCEUR_V3 = "/usr/local/bin/python3 -I -B scripts/" + FICHIER_LANCEUR_
 CITE_LANCEUR_V3 = re.compile(r"(?<![A-Za-z0-9_])" + re.escape(NOM_LANCEUR_V3) + r"(?![A-Za-z0-9_])")
 LIGNE_COMPAGNON = re.compile(r"^([0-9a-f]{64})  (\S.*)$")
 
+# --- 4. garde d'empreinte du lanceur de l'atelier d'idées « bassins étroits » v2 ; GO-2026-11-13-03, mots de Lazar R-2530
+#        (« go règle de permission »). Génération 1 seulement : les commandes des générations 2 et 3 attendent son mot.
+NOM_LANCEUR_BE2 = "lancer_course_ideation_bassins_etroits_v2"
+FICHIER_LANCEUR_BE2 = NOM_LANCEUR_BE2 + ".py"
+EMPREINTE_LANCEUR_BE2 = "c6d82d8c9439a2f7fbc0f2d41228d56cb8327d1d3b27e7ca0b15f846e474bb00"
+COMMANDES_LANCEUR_BE2 = ("/usr/local/bin/python3 -I -B scripts/" + FICHIER_LANCEUR_BE2 + " 1",)
+CITE_LANCEUR_BE2 = re.compile(r"(?<![A-Za-z0-9_])" + re.escape(NOM_LANCEUR_BE2) + r"(?![A-Za-z0-9_])")
+
 
 def bloquer(motif: str) -> None:
     print(f"GARDE (registres/go, R10) — commande bloquée : {motif}", file=sys.stderr)
@@ -141,11 +149,44 @@ def garder_lanceur_v3(commande: str, cwd) -> None:
         bloquer(f"{m2} : empreinte du compagnon {ligne.group(1)} ≠ empreinte du fichier {lue}")
 
 
+def garder_lanceur_be2(commande: str, cwd) -> None:
+    """4. Même garde que le lanceur v3, pour le lanceur « bassins étroits » v2 : commande exacte parmi celles permises,
+    depuis le dépôt, fichier non lien symbolique, empreinte égale à l'épingle et au compagnon. Rien en silence (R5)."""
+    if not CITE_LANCEUR_BE2.search(commande):
+        return
+    m = "empreinte du lanceur « bassins étroits » v2 (R-2530, R-2540)"
+    if commande not in COMMANDES_LANCEUR_BE2:
+        bloquer(f"{m} : commande citant {NOM_LANCEUR_BE2} qui n'est pas exactement l'une de {list(COMMANDES_LANCEUR_BE2)}")
+    if not isinstance(cwd, str) or not cwd:
+        bloquer(f"{m} : dossier courant absent de l'entrée du crochet ; {DEPOT_COURSE} exigé")
+    if os.path.realpath(cwd) != os.path.realpath(DEPOT_COURSE):
+        bloquer(f"{m} : lancé depuis {cwd}, {DEPOT_COURSE} exigé")
+    if os.path.realpath(RACINE) != os.path.realpath(DEPOT_COURSE):
+        bloquer(f"{m} : crochet de {RACINE}, celui de {DEPOT_COURSE} exigé")
+    chemin = DEPOT_COURSE / "scripts" / FICHIER_LANCEUR_BE2
+    compagnon = Path(str(chemin) + ".sha256")
+    if chemin.is_symlink() or not chemin.is_file():
+        bloquer(f"{m} : {chemin} absent ou lien symbolique")
+    lue = _sha256(chemin)
+    if lue != EMPREINTE_LANCEUR_BE2:
+        bloquer(f"{m} : empreinte du fichier {lue} ≠ empreinte épinglée dans le crochet {EMPREINTE_LANCEUR_BE2}")
+    try:
+        lignes = [x for x in compagnon.read_text(encoding="utf-8").splitlines() if x.strip()]
+    except (OSError, UnicodeDecodeError) as e:
+        bloquer(f"{m} : compagnon {compagnon.name} illisible ({type(e).__name__})")
+    ligne = LIGNE_COMPAGNON.match(lignes[0]) if len(lignes) == 1 else None
+    if ligne is None or not ligne.group(2).endswith(FICHIER_LANCEUR_BE2):
+        bloquer(f"{m} : compagnon {compagnon.name} mal formé")
+    if ligne.group(1) != lue:
+        bloquer(f"{m} : empreinte du compagnon {ligne.group(1)} ≠ empreinte du fichier {lue}")
+
+
 def decider(commande: str, aujourd_hui: date, cwd=None) -> None:
     for motif in ARRETS_PAR_MOTIF:
         if re.search(motif, commande):
             bloquer("R10 — arrêt par motif de ligne de commande interdit ; arrêter par PID ou identifiant d'instance")
     garder_lanceur_v3(commande, cwd)
+    garder_lanceur_be2(commande, cwd)
     if not any(re.search(m, commande) for m in LANCEMENTS):
         return
     ids = GO_ID.findall(commande)
