@@ -218,8 +218,9 @@ def garde_depense(cumul_releve_usd: float, prix_carte_usd_h: float, coupure: flo
     return {"cumul": float(cumul_releve_usd), "projete": projete, "coupure": float(coupure)}
 
 
-# Instances d'autres sessions (mot de la mère, R-2789, 2026-11-14) : jamais détruites par B bis ; témoins permis.
-INSTANCES_D_AUTRES_SESSIONS = ("58936096", "58936099", "58936100", "60480302", "60599797")
+# Instances d'autres sessions (mot de la mère, R-2789, 2026-11-14 ; 60670453 apparue le 14 novembre, R-2795) : jamais détruites
+# par B bis ; témoins permis. Liste unique, lue aussi par `scripts/repetition_carte_bbis_v1.py`.
+INSTANCES_D_AUTRES_SESSIONS = ("58936096", "58936099", "58936100", "60480302", "60599797", "60670453")
 
 
 def exiger_identifiant_a_detruire(ident: str) -> str:

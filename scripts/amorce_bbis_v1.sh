@@ -35,8 +35,9 @@ DEPOT_URL_OFFICIEL=https://github.com/lciric/controle-ia-travail.git
 SEUIL=94000000
 # essais du paquet qui passent sur l'instance (extraction partielle : bout_en_bout sauf un essai, etat_impose et
 # lien_mots_et_cout sautent) ; compte établi par simulation de l'extraction, rapport-developpeur-corrections-v1.md (M3) et
-# recompté après m-A (rapport-developpeur-corrections-v2.md) et après la destruction vérifiée (rapport-developpeur-corrections-v3.md)
-MIN_ESSAIS=86
+# recompté après m-A (rapport-developpeur-corrections-v2.md), après la destruction vérifiée (…-v3.md) et après l'ajout de
+# l'instance 60670453 à la liste des autres sessions (…-v4.md)
+MIN_ESSAIS=87
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
 j() { printf '%s BBIS %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
 BRANCHE_PRETE=0

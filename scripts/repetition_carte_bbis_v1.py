@@ -42,8 +42,10 @@ QUART_D_HEURE = 0.25
 ECHEANCE_MAX_S = 3 * 3600
 ETIQUETTE = "bbis-t07-repetition-v1"
 OFFRE_MIN = {"coeurs": 16, "memoire_vive_mo": 128000, "disque_go": 60, "stockage_max_usd_h": 0.08, "prix_max_usd_h": 1.40}
-# instances d'autres sessions (mot de la mère, R-2789 et la demande de la répétition) : jamais détruites ; témoins permis
-INSTANCES_D_AUTRES_SESSIONS = ("58936096", "58936099", "58936100", "60480302", "60599797", "60670453")
+# instances d'autres sessions : jamais détruites, témoins permis ; **la liste de la course**, lue telle quelle (liste unique,
+# `registre_bbis_v1.INSTANCES_D_AUTRES_SESSIONS`, R-2789, R-2795)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from controle_ia.t07bbis.registre_bbis_v1 import INSTANCES_D_AUTRES_SESSIONS  # noqa: E402
 ENTROPIE_REPETITION = 0x6B0B1D5E2C4A48F1A3E7D2C9B85F0141
 ACTIONS, LARGEUR, LONGUEURS = 640, 4096, (150, 297)
 COUCHE = 15

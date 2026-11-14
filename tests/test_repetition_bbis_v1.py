@@ -317,6 +317,17 @@ exit 1
 """
 
 
+def test_la_repetition_lit_la_liste_de_la_course():
+    """R-2795 : une seule liste des instances d'autres sessions, celle de la course, lue telle quelle par la répétition."""
+    from controle_ia.t07bbis import registre_bbis_v1 as rb
+    m = _module()
+    assert m.INSTANCES_D_AUTRES_SESSIONS is rb.INSTANCES_D_AUTRES_SESSIONS and tuple(AUTRES) == rb.INSTANCES_D_AUTRES_SESSIONS
+    assert not re.search(r"^INSTANCES_D_AUTRES_SESSIONS\s*=", SCRIPT.read_text(encoding="utf-8"), re.M)   # aucune copie
+    with pytest.raises(m.Refus, match="autre session"):
+        m.exiger_identifiant("60670453")
+    assert m.exiger_absence([{"id": 60670453}], "424242", "60670453")["temoin"] == "60670453"
+
+
 def test_destruction_de_la_repetition_avec_y_verifiee_contre_un_faux_outil(tmp_path):
     def outil(base: Path, ids) -> dict:
         b = base / "bin"

@@ -430,6 +430,26 @@ def test_destruction_avec_y_et_absence_prouvee_contre_un_faux_outil(tmp_path):
     assert r.returncode == 2 and "-y" in r.stdout and "verifier-destruction" in r.stdout
 
 
+def test_instance_60670453_refusee_comme_cible_admise_comme_temoin(tmp_path):
+    """R-2795 : 60670453, instance d'une autre session apparue le 14 novembre, est dans la liste de la course ; refusée comme
+    cible (`detruire`, `exiger_identifiant_a_detruire`, `absence`) ; admise comme témoin (absence prouvée avec elle)."""
+    assert "60670453" in rb.INSTANCES_D_AUTRES_SESSIONS and len(set(rb.INSTANCES_D_AUTRES_SESSIONS)) == 6
+    r = _lancer("detruire", "60670453")
+    assert r.returncode == 2 and "autre session" in r.stdout and "vastai destroy" not in r.stdout
+    with pytest.raises(GardeArret, match="autre session"):
+        rb.exiger_identifiant_a_detruire("60670453")
+    with pytest.raises(GardeArret, match="autre session"):
+        rb.exiger_absence([{"id": 60480302}], "60670453", "60480302")
+    env = _faux_outil(tmp_path / "temoin", ["123456", "60670453"])            # témoin : cas sain, puis artefact
+    d = _jouer_commande_imprimee(_lancer("detruire", "123456").stdout.splitlines()[0], env)
+    assert d.returncode == 0 and "destroying instance 123456" in d.stdout
+    v = _lancer("verifier-destruction", "123456", "60670453", env=env)
+    assert v.returncode == 0 and "DESTRUCTION PROUVEE 123456" in v.stdout and "témoin 60670453 présent" in v.stdout
+    assert rb.exiger_absence([{"id": 60670453}, {"id": 777}], "123456", "60670453")["temoin"] == "60670453"
+    v = _lancer("verifier-destruction", "123456", "60670453", env=_faux_outil(tmp_path / "sans-temoin", ["60480302"]))
+    assert v.returncode == 2 and "témoin 60670453 absent" in v.stdout
+
+
 def test_minuterie_refait_la_destruction_tant_que_l_instance_vit(tmp_path):
     """R-2789 : la minuterie de l'amorce ne juge jamais la destruction par le code HTTP : un DELETE « 200 » suivi d'une instance
     encore vivante est refait toutes les 60 s ; après cinq essais, l'état « stopped » est demandé une fois ; le journal le dit."""
