@@ -1,0 +1,25 @@
+# Index des rapports du compte 2 qui font foi — v2
+
+Écrit le 2026-11-14 07:12:22 UTC (heure relevée par `date -u`), branche `lot/compte-2-v1`. Remplace pour la lecture `index-rapports-compte-2-v1.md` (`51f71174…`, archivé sans modification) : il en reprend les treize lignes et ajoute les lectures faites après la synthèse v4. Lecteur : modèle A ; contre-lecteur : modèle B ; A ≠ B.
+
+| énoncé | rapport qui fait foi | sha256 | contre-lecture | sha256 de la contre-lecture | journal |
+|---|---|---|---|---|---|
+| L (N-004), lot 8 | `rapport-L-lot8-v2.md` | `8d9f2654f904454a7729f9f133bfd73a4ace916865a4efac7b90f5dba816bdc5` | `contre-lecture-rapport-L-lot8-v1.md` | `4083822e6cb35bf9051975e64a87dfd5e1ca1ceab8d74c0d81b3994a9beb6a83` | C2-0003 à C2-0005 |
+| L, Ker 2006 et Bash, Goeckel et Towsley | `rapport-L-voisins-v2.md` | `649f471e583b1700efa127fb2ef258f9338be322d343529f7fa859c42ff44466` | `contre-lecture-rapport-L-voisins-v1.md` | `58e7ad2d5cba602c1c79259340a625af06b8bf8a5a95d343719259c91fcee929` | C2-0061, C2-0064, C2-0067 |
+| L, Ker 2007 | `rapport-L-ker2007-v2.md` | `6bf86934f1a4769021d8e5caf67c95e8b0831c2d15436a50a3e64d462487bfcd` | `contre-lecture-rapport-L-ker2007-v1.md` | `8805d9cf5be364115c9f68a12e58986c03367d2668e9518b0690dd32fcb5686a` | C2-0068 à C2-0070 |
+| T (N-003) | `rapport-T-lot8-v2.md` | `6d9d354a174ea1518d8b892428bc1d0c7ebc8fb5d60b796a5043ea96011a0ce6` | `contre-lecture-rapport-T-lot8-v1.md` | `3f950c920f54ede9e195b521af437cc2423764175611ab49479cd42099a89883` | C2-0007, C2-0009, C2-0013 |
+| H6 (N-013, N-015) | `rapport-H6-v2.md` | `ff3b13a11aa9ba35eb9014ac2d7097f9cb2ede6d48f2cc5388c342cf34c4481a` | `contre-lecture-rapport-H6-v1.md` | `3ce3ac3cf73ea481dd7d04f411d9a30d74f6a0489f531d1cfa24d40f4825666e` | C2-0012, C2-0017, C2-0021, C2-0024 |
+| HC5 (N-006, N-013) | `rapport-HC5-v2.md` | `6d19844335781289200d05d6b6034fab833a07a206670c25c307a637a6cfacec` | `contre-lecture-rapport-HC5-v1.md` | `e241a0e0ef0d2b438c3755dce70686862dae10c08fbbf8322358908236a7da1c` | C2-0010, C2-0014, C2-0019 |
+| HC1, 2607.00415 | `rapport-HC1-2607.00415-v2.md` | `0658406424181171b1c28dd168479fbd2beaa135f52d16659a9e2d511d962cc6` | `contre-lecture-rapport-HC1-2607.00415-v1.md` | `e4beb545a16af90bf07e4b09e4f8995832a27c0e5d40abddc699aea69aba8738` | C2-0011, C2-0016, C2-0020 |
+| HC6, 2608.11247 | `rapport-HC6-v2.md` | `076ffddb1c75f2e2eb69b27218e6a7f96bae45c413d6601a711fffe3182b91cf` | `contre-lecture-rapport-HC6-v1.md` | `87e1699c995de30e95dfb230f221c148d3fdfe45bfca8d1e7192ba9fabb6f48c` | C2-0015, C2-0022, C2-0025 |
+| Tr | `rapport-Tr-v2.md` | `139596cfcfbc77765e69e705b0990fba38432da0552e3c1c42687691378174dc` | `contre-lecture-rapport-Tr-v1.md` | `2a530bfe34f97a3c5a00677d839e865439ebc6c6fefba7ec20d8413e5425cb44` | C2-0018, C2-0023, C2-0027 |
+| HC4, lot 11 | `rapport-HC4-v2.md` | `6c368ebb74301a5b2cdcd047f641a0f516f67af371a10359350e7871c4ced948` | `contre-lecture-rapport-HC4-v1.md` | `8fa4ab9baf757af42f44255b484c3b0ca865fc8b887c6c01bf4755473847e5b0` | C2-0026, C2-0029, C2-0031 |
+| HC4, 2609.15994 | `rapport-HC4-2609.15994-v2.md` | `1a09a60d11242c7c4bef620e862b6ffc3481d010f32a46b120c325c3c3d0d63c` | `contre-lecture-rapport-HC4-2609.15994-v1.md` | `1db31c1993fd4ca19d96fe85093c13690a76a90ecd5ee936fe3971b0c011b0d7` | C2-0060, C2-0062, C2-0063 |
+| H1, trois pièces | `rapport-H1-v2.md` | `8b4b43f53a21c944c49a1f2cca7245598925854d0f7671b6c86740297f0060fd` | `contre-lecture-rapport-H1-v1.md` | `024f84a9440a0b273b5ec924a78c22ad43abcc87e2e010c5b203f8189675b0bf` | C2-0028, C2-0032, C2-0034 |
+| H1, 2609.19101 | `rapport-H1-2609.19101-v2.md` | `80cbb073180298c613eaf24d1232fe9ec898e38f1191d121d67ee074774e0429` | `contre-lecture-rapport-H1-2609.19101-v1.md` | `724857f51ef78bc8d8a18e614c87e97c9f67d0e8e33cf8f7fb6fa82586ce7a21` | C2-0049, C2-0050, C2-0052 |
+| H2 (N-007) | `rapport-H2-v2.md` | `f801ee845437fb321a3f743460121430b71345ca5f7bb10537be847077a889a7` | `contre-lecture-rapport-H2-v1.md` | `708b48c23f0e116071c05edca5075c97a10306f0dbc08b2dcff5f13471bf1def` | C2-0030, C2-0033, C2-0036 |
+| Papier B (N-069) | `rapport-papierB-v2.md` | `1c3033ba6d507b1eae6a1683408db1338008d702ddf23b2e8fc917e4cfae181a` | `contre-lecture-rapport-papierB-v1.md` | `fe25d39ffc77b65132325cd1b136c353c8e6292397d4dd19bf30cf910f749301` | C2-0035, C2-0040, C2-0043 |
+| Rôle 1 de N-065, lot 4-B partie 1 | `rapport-4B-partie1-v2.md` | `2fcefa4a5ce08db435eea08e30697a9354e608ef3d1b367a171078dcdc8bfe03` | `contre-lecture-rapport-4B-partie1-v1.md` | `e9c5ad74cc5c6483c42916dc0ebc137f64d436fe3d88b26a368ec6373be10cf0` | C2-0039, C2-0042, C2-0045 |
+| Rôle 1 de N-065, lot 4-B partie 2 | `rapport-4B-partie2-v2.md` | `c1708b9c82f8a78318a8817201f1fd5af68964fae6c52026f7e86510dd4e9f72` | `contre-lecture-rapport-4B-partie2-v1.md` | `66127a9ccf390758827b6959581adf2f0c171e67db29f8a4da3244b381a64a85` | C2-0038, C2-0041, C2-0044 |
+
+**Mots de Lazar** : inscrits par la mère (R-2649) : « HC4 : juge génératif, go » (C2-0057) ; « HC6 : bénin = écrit d'avance, go » (C2-0059). En attente d'inscription : « H6 : hors audit, aucun moniteur dans l'intervention, go » (C2-0024) ; « L : L1 en remarque avec renvoi à Ker, go » (C2-0065).
