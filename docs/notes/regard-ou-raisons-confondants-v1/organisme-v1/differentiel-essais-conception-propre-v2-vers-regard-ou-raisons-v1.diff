@@ -1,0 +1,400 @@
+--- tests/test_lancer_course_ideation_conception_propre_v2.py
++++ tests/test_lancer_course_ideation_regard_ou_raisons_v1.py
+@@ -1,10 +1,13 @@
+-"""Essais R5 de `scripts/lancer_course_ideation_conception_propre_v1.py` (une génération, question de la conception propre
+-de l'organisme ; R-2593, R-2609), dérivés de ceux du lanceur v3 des bassins étroits (`6ab6ec5d…`). Ajouts : M1 (le lanceur
+-garde ses options, sa commande d'origine, son dossier courant, sa place et son empreinte), M2 (aucune commande git après le
+-détachement ; manifeste de départ manquant → PID imprimé, course retrouvée par le pré-départ et le PID scellé par le
+-superviseur), B1 et m1 (relevé de dépense et copies scellées dans le dépôt ; le dossier hors dépôt peut disparaître),
+-une seule relance au total, ligne de GO trouvée par son contenu, garde de cumul à 25 USD avec la réserve du lecteur,
+-aucun bras.
++"""Essais R5 de `scripts/lancer_course_ideation_regard_ou_raisons_v1.py` (une génération ; question « Regard ou raisons » :
++explications rivales autres que le regard, forme du papier ; R-2679, R-2680), dérivés des essais v2 du lanceur « conception
++propre » (`tests/test_lancer_course_ideation_conception_propre_v2.py`). Gardés : M1, M2, relevé de dépense et copies
++scellées dans le dépôt, une seule relance au total, ligne de GO trouvée par son contenu, environnement par liste de noms,
++aucun bras. Changés : périmètre de la ligne (« organisme d'idéation » et « regard ou raisons »), pire cas et borne à
++17 USD, garde de cumul **sans réserve du lecteur**, bilan de l'organisme au manifeste de fin, conseil d'arrêt `kill -INT`
++d'abord. Ajoutés : les trois gardes que la contre-lecture précédente avait trouvées sans essai qui les isole (sortie sans
++manifeste de fin, pièces hors liste blanche, bac à sable inactif), ses deux mutations « équivalentes » rendues décidables,
++l'arrêt propre par SIGINT relayé, la fidélité de la question au fond de `question-v1.md`, et un essai du registre réel
++des GO qui tient avant comme après l'inscription de la ligne (m3 de la contre-lecture précédente).
+ 
+ Aucun modèle appelé, aucun réseau. Un **faux orchestrateur** (dépôt git jetable) est servi au lanceur par `Reglages`. Deux
+ essais **sans appel** contre l'orchestrateur réel (liste blanche et mesure ; analyseur d'arguments) tournent quand le clone
+@@ -29,8 +32,8 @@
+ import pytest
+ 
+ RACINE = Path(__file__).resolve().parents[1]
+-SCRIPT = RACINE / "scripts" / "lancer_course_ideation_conception_propre_v1.py"
+-_spec = importlib.util.spec_from_file_location("lancer_course_ideation_conception_propre_v1", SCRIPT)
++SCRIPT = RACINE / "scripts" / "lancer_course_ideation_regard_ou_raisons_v1.py"
++_spec = importlib.util.spec_from_file_location("lancer_course_ideation_regard_ou_raisons_v1", SCRIPT)
+ lc = importlib.util.module_from_spec(_spec)
+ sys.modules[_spec.name] = lc
+ _spec.loader.exec_module(lc)
+@@ -115,12 +118,12 @@
+         raise SystemExit(0)
+     if e == "erreur":
+         raise RuntimeError("sonde en panne")
+-    return {"actif": e in ("actif", "sans_proc"), "proc_neuf": e == "actif", "motif": "faux : " + e}
++    return {"actif": e in ("actif", "sans_proc"), "proc_neuf": e in ("actif", "eteint_proc_neuf"), "motif": "faux : " + e}
+ '''
+ 
+-PERIM = ("**Organisme d'idéation, atelier d'idées (N-065, rôle 2), sur sa propre conception (juge, proposeurs, composition, "
+-         "coût) : une génération** (R-2593, R-2609)")
+-GO_LIGNE = f"| GO-2026-11-14-01 | 2026-11-13 | calcul | {PERIM} | 21 USD | 2026-11-30 | Lazar | R-2609 |"
++PERIM = ("**Organisme d'idéation, atelier d'idées (N-065, rôle 2), sur la question « Regard ou raisons » (explications "
++         "rivales, forme du papier) : une génération** (R-2679, R-2680)")
++GO_LIGNE = f"| GO-2026-11-14-01 | 2026-11-14 | calcul | {PERIM} | 17 USD | 2026-11-30 | Lazar | R-2679 |"
+ PFX = Path("/x/sortie/pycache")
+ 
+ 
+@@ -292,14 +295,14 @@
+ @pytest.mark.parametrize("modif,motif", [
+     ({"drapeaux": SimpleNamespace(isolated=0, dont_write_bytecode=1)}, "-I absente"),
+     ({"drapeaux": SimpleNamespace(isolated=1, dont_write_bytecode=0)}, "-B absente"),
+-    ({"orig_argv": ("/autre/python3", "-I", "-B", "scripts/" + "lancer_course_ideation_conception_propre_v1.py", "1")},
++    ({"orig_argv": ("/autre/python3", "-I", "-B", "scripts/" + "lancer_course_ideation_regard_ou_raisons_v1.py", "1")},
+      "commande d'origine"),
+-    ({"orig_argv": ("PY", "-I", "-B", "-X", "dev", "scripts/lancer_course_ideation_conception_propre_v1.py", "1")},
++    ({"orig_argv": ("PY", "-I", "-B", "-X", "dev", "scripts/lancer_course_ideation_regard_ou_raisons_v1.py", "1")},
+      "commande d'origine"),
+-    ({"orig_argv": ("PY", "-IB", "scripts/lancer_course_ideation_conception_propre_v1.py", "1")}, "commande d'origine"),
+-    ({"orig_argv": ("PY", "-I", "-B", "./scripts/lancer_course_ideation_conception_propre_v1.py", "1")},
++    ({"orig_argv": ("PY", "-IB", "scripts/lancer_course_ideation_regard_ou_raisons_v1.py", "1")}, "commande d'origine"),
++    ({"orig_argv": ("PY", "-I", "-B", "./scripts/lancer_course_ideation_regard_ou_raisons_v1.py", "1")},
+      "commande d'origine"),
+-    ({"orig_argv": ("PY", "-I", "-B", "scripts/lancer_course_ideation_conception_propre_v1.py", "1", "x")},
++    ({"orig_argv": ("PY", "-I", "-B", "scripts/lancer_course_ideation_regard_ou_raisons_v1.py", "1", "x")},
+      "commande d'origine"),
+     ({"cwd": "/"}, "dossier courant"),
+ ])
+@@ -350,7 +353,7 @@
+     assert r.drapeaux is sys.flags and r.fichier_lanceur == SCRIPT and r.python == "/usr/local/bin/python3"
+     assert tuple(r.orig_argv) == tuple(sys.orig_argv)
+     assert lc.commande_exacte(r) == ("/usr/local/bin/python3", "-I", "-B",
+-                                     "scripts/lancer_course_ideation_conception_propre_v1.py", "1")
++                                     "scripts/lancer_course_ideation_regard_ou_raisons_v1.py", "1")
+ 
+ 
+ @pytest.mark.parametrize("args,motif", [(["-B"], "-I absente"), (["-I", "-B"], "un seul argument")])
+@@ -381,7 +384,7 @@
+     assert {n for n in j[0]["noms_env"] if not n.startswith("FAUX_")} <= set(lc.NOMS_PERMIS) | {"HOME", "GO_ID",
+                                                                                                "PYTHONPYCACHEPREFIX"}
+     assert j[0]["sid"] != os.getsid(0) and j[0]["orig_argv"][1:3] == ["-I", "-B"]
+-    assert a[a.index("--nombre") + 1] == "6" and a[a.index("--graine") + 1] == "2026111401"
++    assert a[a.index("--nombre") + 1] == "6" and a[a.index("--graine") + 1] == "2026111402"
+     assert a[a.index("--budget-total-usd") + 1] == "10.0" and a[a.index("--budget-externe-usd") + 1] == "8.0"
+     assert [a[i + 1] for i, x in enumerate(a) if x == "--piece"] == [str(r.depot / r.pieces["faits"][0])]
+     assert "--bras-rapporte-differe" not in a and "--accepter-sans-bac-a-sable" not in a
+@@ -394,6 +397,9 @@
+     assert pre["environnement"]["noms_exclus"]["nombre"] == 10
+     assert pre["plafonds"]["sommes"]["somme_claude"] == 9.9 and pre["plafonds"]["sommes"]["somme_externe"] == 7.6
+     assert pre["plafonds"]["sommes"]["exposition_externe_course"] == 4.9
++    assert pre["plafonds"]["plafond_course_usd"] == pytest.approx(14.9) and pre["plafonds"]["pire_cas_devis_usd"] == 17.0
++    assert "reserve_lecteur_usd" not in pre["plafonds"] and "reserve_lecteur_usd" not in pre["garde_de_cumul"]
++    assert pre["garde_de_cumul"]["borne_usd"] == 17.0
+     assert pre["lanceur"]["sha256"] == sha(r.fichier_lanceur) and pre["depot_travail"]
+     dep = json.loads((d / "manifeste-lanceur-depart.json").read_text())
+     assert dep["pre_depart_sha256"] == sha(d / "manifeste-lanceur-pre-depart.json")
+@@ -402,7 +408,8 @@
+     assert rel["comptes_fiches"]["fiches-validees.json"] == 5
+     fin = json.loads((d / "manifeste-lanceur-fin.json").read_text())
+     assert fin["releve_sha256"] == sha(d / "releve-depense.json")
+-    assert fin["pour_l_attestation"]["fiches_validees_sha256"] == sha(rs[0]["sortie"] / "fiches-validees.json")
++    assert fin["bilan_de_l_organisme"]["fiches_validees_sha256"] == sha(rs[0]["sortie"] / "fiches-validees.json")
++    assert (d / fin["bilan_de_l_organisme"]["copie"]).is_file() and "pour_l_attestation" not in fin
+     for f in list(d.glob("*.json")) + list((d / "copies").glob("*.json")):
+         h, nom = Path(str(f) + ".sha256").read_text().split()
+         assert nom == f.name and h == sha(f)
+@@ -518,6 +525,7 @@
+     monkeypatch.setattr(lc, "ecrire_scelle", panne)
+     code, err = lancer(monde, capsys)
+     assert code == 5 and "NON écrit" in err and "kill -TERM" in err and "pid_superviseur" in err
++    assert err.index("kill -INT") < err.index("kill -TERM")                 # C1 : INT d'abord
+     monkeypatch.undo()
+     rs = runs(monde)
+     assert len(rs) == 1 and rs[0]["depart"] is None and rs[0]["superviseur"]["retrouve"] and rs[0]["lance"]
+@@ -555,7 +563,7 @@
+     code, err = lancer(monde, capsys)
+     assert code == 2 and "sans PID scellé" in err and len(journal(monde)) == 1      # mesure seule, aucune course
+     with pytest.raises(lc.Refus, match="garde de cumul"):
+-        lc.garde_cumul(rs, 21.0)                                          # plafond compté
++        lc.garde_cumul(rs, 17.0)                                          # plafond compté
+ 
+ 
+ # ============================================================================================ détaché, PID, orphelin, verrou
+@@ -565,6 +573,7 @@
+     assert lancer(monde, capsys)[0] == 0
+     code, sortie = lancer(monde, capsys)
+     assert code == 3 and "en marche" in sortie and "kill -TERM" in sortie
++    assert sortie.index("kill -INT") < sortie.index("kill -TERM")           # C1 : INT d'abord
+     attendre(monde)
+     assert [j["mode"] for j in journal(monde)] == ["mesure", "course"]
+     code, sortie = lancer(monde, capsys)
+@@ -731,26 +740,34 @@
+     assert not ok and "sans fin propre" in motif
+ 
+ 
+-@pytest.mark.parametrize("plafond,cout,attendu", [("21 USD", "2.0", 0), ("21 USD", "2.2", 2), ("25 USD", "2.2", 0),
+-                                                  ("21 USD", "2.1", 0), ("100 USD", "6.1", 0),
+-                                                  ("100 USD", "6.2", 2)])
++@pytest.mark.parametrize("plafond,cout,attendu", [("17 USD", "2.0", 0), ("17 USD", "2.2", 2), ("21 USD", "2.2", 2),
++                                                  ("17 USD", "2.1", 0), ("100 USD", "2.1", 0),
++                                                  ("100 USD", "2.2", 2)])
+ def test_garde_de_cumul(monde, capsys, plafond, cout, attendu):
+-    reecrire_go(monde["r"], GO_LIGNE.replace("| 21 USD |", f"| {plafond} |"))
++    reecrire_go(monde["r"], GO_LIGNE.replace("| 17 USD |", f"| {plafond} |"))
+     monde["env"]["FAUX_CONTROLE_SEUL"], monde["env"]["FAUX_COUT_CONTROLE"] = "plancher", cout
+     assert jouer(monde, capsys)[0] == 0
+     del monde["env"]["FAUX_CONTROLE_SEUL"]
+     code, err = lancer(monde, capsys)
+     assert code == attendu, err
+     if attendu:
+-        assert "garde de cumul" in err and "réserve du lecteur" in err
++        assert "garde de cumul" in err and "réserve du lecteur" not in err
+     else:
+         attendre(monde)
+ 
+ 
+ def test_cumul_constantes():
+-    assert lc.PLAFOND_COURSE_USD == pytest.approx(14.9) and lc.RESERVE_LECTEUR_USD == 4.0
+-    assert lc.PIRE_CAS_DEVIS_USD == pytest.approx(lc.PLAFOND_COURSE_USD + 2.1 + lc.RESERVE_LECTEUR_USD)
+-    assert lc.BORNE_LIGNE_USD == 25.0 and lc.garde_cumul([], 21.0)["depense_relevee_usd"] == 0.0
++    assert lc.PLAFOND_COURSE_USD == pytest.approx(14.9) and not hasattr(lc, "RESERVE_LECTEUR_USD")
++    defaut_au_controle = 2 * lc.CONTROLE_CLAUDE_DEFAUT_USD + lc.CONTROLE_EXTERNE_USD
++    assert defaut_au_controle == pytest.approx(2.1)
++    assert lc.PIRE_CAS_DEVIS_USD == pytest.approx(lc.PLAFOND_COURSE_USD + defaut_au_controle) == pytest.approx(17.0)
++    assert lc.BORNE_LIGNE_USD == lc.PIRE_CAS_DEVIS_USD == 17.0
++    c = lc.garde_cumul([], 17.0)
++    assert c["depense_relevee_usd"] == 0.0 and c["borne_usd"] == 17.0 and set(c) == {
++        "depense_relevee_usd", "plafond_course_usd", "borne_usd", "par_run"}
++    assert lc.garde_cumul([], 100.0)["borne_usd"] == 17.0 and lc.garde_cumul([], 15.0)["borne_usd"] == 15.0
++    with pytest.raises(lc.Refus, match="garde de cumul"):
++        lc.garde_cumul([], 14.8)
+ 
+ 
+ @pytest.mark.parametrize("valeur", [-1, "x", True, None, float("inf"), float("nan")])
+@@ -788,7 +805,7 @@
+ 
+ def test_go_sain_trouve_par_son_contenu(monde):
+     g = lc.verifier_go(monde["r"].registre_go, dt.date(2026, 11, 14))
+-    assert g["id"] == "GO-2026-11-14-01" and g["plafond_usd"] == 21.0
++    assert g["id"] == "GO-2026-11-14-01" and g["plafond_usd"] == 17.0
+ 
+ 
+ def test_go_apostrophe_typographique(monde):
+@@ -797,12 +814,13 @@
+ 
+ 
+ @pytest.mark.parametrize("ligne,motif", [
+-    (GO_LIGNE.replace("propre conception", "conception"), "0 ligne"),
++    (GO_LIGNE.replace("Regard ou raisons", "Regard"), "0 ligne"),
++    (GO_LIGNE.replace("Organisme d'idéation", "Organisme"), "0 ligne"),
+     (GO_LIGNE + "\n" + GO_LIGNE.replace("GO-2026-11-14-01", "GO-2026-11-14-02"), "2 ligne"),
+     (GO_LIGNE.replace("| calcul |", "| publication |"), "type"),
+     (GO_LIGNE.replace("| Lazar |", "| Claude |"), "Lazar exigé"),
+-    (GO_LIGNE.replace("| 21 USD |", "| 20.9 USD |"), "sous le pire cas"),
+-    (GO_LIGNE.replace("| 21 USD |", "| vingt et un |"), "illisible"),
++    (GO_LIGNE.replace("| 17 USD |", "| 16.9 USD |"), "sous le pire cas"),
++    (GO_LIGNE.replace("| 17 USD |", "| dix-sept |"), "illisible"),
+     (GO_LIGNE.replace("| 2026-11-30 |", "| 2026-11-13 |"), "période"),
+     (GO_LIGNE + "\n| GO-2026-11-14-03 | 2026-11-14 | révocation | révoque GO-2026-11-14-01 | — | — | Lazar | x |", "révoqué"),
+     (GO_LIGNE + "\n| GO-2026-11-14-03 | 2026-11-14 | Revocation | révoque GO-2026-11-14-01 | — | — | Lazar | x |", "révoqué"),
+@@ -815,10 +833,17 @@
+     assert code == 2 and motif in err and not monde["journal"].exists()
+ 
+ 
+-def test_go_registre_reel_contient_la_ligne_inscrite():
+-    """v2 : la ligne GO-2026-11-13-06 est inscrite depuis la préparation (R-2615) ; le lecteur du registre réel l'admet
+-    à une date de sa période (la v1 de cet essai, écrite avant l'inscription, attendait un refus : périmée, R-2623 m3)."""
+-    lc.verifier_go(RACINE / "registres" / "go.md", dt.date(2026, 11, 14))
++def test_go_registre_reel_avant_comme_apres_l_inscription():
++    """Le registre réel : soit la ligne n'est pas encore inscrite (refus « 0 ligne », sens fermé), soit elle l'est, seule,
++    au pire cas du devis au moins. Tient avant comme après l'inscription (leçon de m3 de la contre-lecture précédente) ;
++    la ligne de la course « conception propre » (GO-2026-11-13-06) n'est jamais prise pour celle-ci."""
++    registre = RACINE / "registres" / "go.md"
++    try:
++        g = lc.verifier_go(registre, dt.date(2026, 11, 14))
++    except lc.Refus as e:
++        assert "0 ligne(s) principale(s)" in str(e), str(e)
++        return
++    assert g["plafond_usd"] >= lc.PIRE_CAS_DEVIS_USD and g["par"] == "Lazar" and g["id"] != "GO-2026-11-13-06"
+ 
+ 
+ # ============================================================================================ environnement
+@@ -878,7 +903,8 @@
+ 
+ 
+ @pytest.mark.parametrize("etat,motif", [("inactif", "inactif"), ("sans_proc", "/proc neuf"), ("illisible", "illisible"),
+-                                         ("erreur", "illisible")])
++                                         ("erreur", "illisible"),
++                                         ("eteint_proc_neuf", "bac à sable de l'orchestrateur inactif")])
+ def test_bac_a_sable_artefact(monde, capsys, etat, motif):
+     monde["env"]["FAUX_BAC"] = etat
+     code, err = lancer(monde, capsys)
+@@ -1054,7 +1080,7 @@
+     assert p.returncode == 0, p.stderr[-800:]
+     out = json.loads(p.stdout)
+     assert all(v["inconnus"] == [] for v in out.values())
+-    assert out["course"]["moteur"] == "claude-sdk" and not out["course"]["bras"] and out["course"]["graine"] == 2026111401
++    assert out["course"]["moteur"] == "claude-sdk" and not out["course"]["bras"] and out["course"]["graine"] == 2026111402
+     assert out["course"]["juge_externe"] == ["argon-juge=gemini-4-argon"]
+     assert lc._git(r.orchestrateur, "status", "--porcelain", "--ignored").strip() == ""
+ 
+@@ -1082,3 +1108,155 @@
+ 
+ def test_plancher_argon():
+     assert lc.plancher_argon(0) == pytest.approx(0.509952)
++
++
++# ============================================================================================ essais neufs de cette course
++
++def test_noms_propres_a_cette_course():
++    """Rien de cette course ne peut se mêler aux runs, aux sorties ni au verrou de la course « conception propre »."""
++    for v in (str(lc.DOSSIER_SORTIES), lc.SOUS_DOSSIER_RUNS, lc.SUFFIXE_RUN, lc.NOM_VERROU, lc.NOTES, lc.VERSION):
++        assert "regard-ou-raisons" in v.replace("_", "-") and "conception" not in v
++    assert lc.PERIMETRE_GO == ("organisme d'idéation", "regard ou raisons")
++    assert lc.GRAINE == 2026111402 and lc.MAX_COURSES == 2 and lc.NOMBRE == 6
++    assert lc.NOMS_PERMIS == ("PATH", "LANG", "LC_ALL", "TZ", "TMPDIR")
++
++
++def test_memes_plafonds_de_session_que_le_lanceur_precedent():
++    assert lc.PLAFONDS == {"proposeur_ideation|claude-opus-5-5": 2.0, "proposeur_ideation|claude-fable-5-1": 2.0,
++                           "juge_ideation|claude-opus-5-5": 1.5, "proposeur_ideation|gemini-4-argon": 1.3,
++                           "juge_ideation|gemini-4-argon": 2.5}
++    assert (lc.TOTAL_CLAUDE_USD, lc.TOTAL_EXTERNE_USD, lc.CONTROLE_EXTERNE_USD, lc.PASSE_2_EXTERNE_USD) == (10.0, 8.0, 1.7, 1.9)
++    assert lc.EXPOSITION_EXTERNE_COURSE_USD == pytest.approx(4.9)
++    assert lc.PROPOSEURS == (("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1"))
++    assert lc.PROPOSEUR_EXTERNE == ("argon", "gemini-4-argon") and lc.JUGE_EXTERNE == ("argon-juge", "gemini-4-argon")
++    assert lc.JUGES == (("opus-juge", "claude-opus-5-5"),)
++    assert lc.ARBRE_ORCHESTRATEUR == "ee84d6eca7a4c9b25f4e297ca29c6d9f24af5d70" and len(lc.EMPREINTES_ORCHESTRATEUR) == 9
++
++
++def test_noms_de_cle_liste_entiere():
++    """Mutation « équivalente » de la contre-lecture précédente (un nom de clé retiré de la liste) : rendue décidable."""
++    assert set(lc.NOMS_DE_CLE) == {"ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN", "OPENAI_API_KEY",
++                                   "GOOGLE_API_KEY", "GEMINI_API_KEY", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
++                                   "GITHUB_TOKEN", "GH_TOKEN", "HF_TOKEN", "KIMI_API_KEY"}
++    assert not set(lc.NOMS_PERMIS) & set(lc.NOMS_DE_CLE)
++
++
++def test_pieces_de_la_question_regard_ou_raisons():
++    assert lc.PIECES["question"][0] == ("docs/notes/regard-ou-raisons-confondants-v1/organisme-v1/"
++                                        "question-organisme-regard-ou-raisons-v1.md")
++    assert lc.PIECES["faits"] == ("docs/notes/regard-ou-raisons-confondants-v1/faits-v1.md",
++                                  "8708619040b1483a97d33bd5dc3576d083656a3a7c29a8b273b0944e964e6642")
++    assert lc.PIECES["temoins"][0].endswith("organisme-v1/temoins-organisme-regard-ou-raisons-v1.json")
++    assert not any("bilan" in rel for rel, _ in lc.PIECES.values())        # aucun bilan d'une autre source n'est servi
++    for nom, (rel, attendu) in lc.PIECES.items():
++        assert sha(RACINE / rel) == attendu, nom
++        assert lc.lire_compagnon(RACINE / rel) == attendu, nom              # chaque pièce est scellée
++
++
++def test_question_recopie_le_fond_mot_pour_mot():
++    """Le fond de `question-v1.md` (le bloc entre guillemets) se retrouve octet pour octet dans la question servie."""
++    source = (RACINE / "docs/notes/regard-ou-raisons-confondants-v1/question-v1.md").read_text(encoding="utf-8")
++    bloc = source[source.index("« Le directeur demande"):source.index("changer d'avis. »") + len("changer d'avis. »")]
++    assert len(bloc) > 2000
++    servie = (RACINE / lc.PIECES["question"][0]).read_text(encoding="utf-8")
++    assert bloc in servie
++    for levier in ("levier:phenomene", "levier:instrument", "levier:mesure", "levier:papier"):
++        assert f"`{levier}`" in servie
++
++
++def test_temoins_quatre_classes_sans_fausse_nouveaute():
++    """Les quatre classes exigées par l'orchestrateur ; la fiche « faux d'antériorité » se déclare occupée (aucune
++    affirmation fausse dans une pièce servie)."""
++    d = json.loads((RACINE / lc.PIECES["temoins"][0]).read_text(encoding="utf-8"))
++    par_classe = {t["classe"]: t for t in d["temoins"]}
++    assert sorted(par_classe) == ["faux_anteriorite", "faux_falsifiabilite", "jumeau", "vrai"] and len(d["temoins"]) == 4
++    assert par_classe["faux_anteriorite"]["fiche"]["originalite"]["niveau"] == "occupee"
++    assert par_classe["faux_falsifiabilite"]["fiche"]["originalite"]["niveau"] == "occupee"
++    assert par_classe["jumeau"]["jumeau_de"] == par_classe["vrai"]["fiche"]["nom"]
++
++
++# --- les trois gardes sans essai qui les isole (m4 de la contre-lecture précédente)
++
++def test_depense_sortie_sans_manifeste_de_fin_compte_le_plafond(tmp_path):
++    s = tmp_path / "sortie"
++    s.mkdir()                                                             # sortie créée, aucun manifeste de fin, aucun contrôle
++    dep, lisible, lecture = lc.depense_course(s, True)
++    assert dep == lc.PLAFOND_COURSE_USD and lisible is False and "sans manifeste de fin" in lecture
++
++
++@pytest.mark.parametrize("piece", ["question", "faits", "temoins", "enveloppe_argon", "commande_argon"])
++def test_pieces_artefact_chacune(monde, capsys, piece):
++    """Chaque pièce épinglée, y compris les deux que la liste blanche de l'orchestrateur ne couvre pas."""
++    (monde["depot"] / monde["r"].pieces[piece][0]).write_text("contenu remplacé\n")
++    code, err = lancer(monde, capsys)
++    assert code == 2 and "pièces absentes ou d'empreinte différente" in err and piece in err
++    assert not monde["journal"].exists() and not monde["r"].dossier_runs.exists()
++
++
++@pytest.mark.parametrize("piece", ["question", "enveloppe_argon"])
++def test_pieces_lien_symbolique(monde, capsys, piece):
++    p = monde["depot"] / monde["r"].pieces[piece][0]
++    vrai = p.with_name(p.name + ".vrai")
++    p.rename(vrai)
++    p.symlink_to(vrai)
++    code, err = lancer(monde, capsys)
++    assert code == 2 and "pièces absentes ou d'empreinte différente" in err and not monde["journal"].exists()
++
++
++def test_bac_a_sable_inactif_isole(monde, capsys):
++    """Bac inactif alors que /proc est neuf : seule la garde « inactif » peut refuser."""
++    monde["env"]["FAUX_BAC"] = "eteint_proc_neuf"
++    code, err = lancer(monde, capsys)
++    assert code == 2 and "bac à sable de l'orchestrateur inactif" in err and "/proc neuf" not in err
++    assert not monde["journal"].exists() and not monde["r"].dossier_runs.exists()
++
++
++# --- relevé illisible : toujours remonté au plafond (mutation « équivalente » rendue décidable)
++
++def test_releve_illisible_remonte_au_plafond(tmp_path):
++    d = tmp_path / "run"
++    d.mkdir()
++    sceller(d / "releve-depense.json", json.dumps({"course_usd": 0.1, "lisible": False, "fiches_produites": False,
++                                                   "lecture": "essai"}))
++    run = {"nom": "run", "dossier": d, "lance": True, "fin": {"code": 0, "releve_sha256": sha(d / "releve-depense.json")}}
++    rel = lc.releve_run(run)
++    assert rel["course_usd"] == lc.PLAFOND_COURSE_USD and rel["lisible"] is False
++    with pytest.raises(lc.Refus, match="garde de cumul"):
++        lc.garde_cumul([run], 17.0)
++    lisible = dict(run, fin={"code": 0, "releve_sha256": "0" * 64})
++    assert lc.releve_run(lisible)["course_usd"] == lc.PLAFOND_COURSE_USD      # relevé non lié à la fin : plafond
++
++
++# --- arrêt propre : SIGINT relayé par PID (condition C1 de la contre-lecture précédente)
++
++def test_arret_propre_par_int_relaye(monde, capsys):
++    if signal.getsignal(signal.SIGINT) is signal.SIG_IGN:
++        pytest.skip("SIGINT ignoré dans ce processus (lancé en arrière-plan) : l'enfant l'ignorerait aussi")
++    monde["env"]["FAUX_DORT"] = "30"
++    code, sortie = lancer(monde, capsys)
++    assert code == 0 and sortie.index("kill -INT") < sortie.index("kill -TERM")
++    sup = runs(monde)[0]["superviseur"]
++    assert sup["arret"].startswith(f"kill -INT {sup['pid']} d'abord")
++    pidf = Path(sup["dossier"]) / "pid-orchestrateur.json"
++    for _ in range(100):
++        if pidf.exists() and Path(str(pidf) + ".sha256").exists():
++            break
++        time.sleep(0.05)
++    time.sleep(0.3)                                                        # l'enfant a posé son gestionnaire de SIGINT
++    os.kill(sup["pid"], signal.SIGINT)
++    os.waitpid(sup["pid"], 0)
++    c = json.loads((Path(sup["dossier"]) / "code.json").read_text())
++    assert c["code"] != 0 and c["code"] in (-signal.SIGINT, 1, 130)        # arrêté par SIGINT, code scellé par le superviseur
++    assert lc.debut_processus(c["pid_orchestrateur"]) is None             # l'orchestrateur ne vit plus
++    code, sortie = lancer(monde, capsys)
++    assert code == 0 and "clôture" in sortie and "fin propre" in sortie
++
++
++def test_orphelin_conseil_d_arret_int_d_abord(monde, capsys):
++    monde["env"]["FAUX_DORT"] = "30"
++    assert lancer(monde, capsys)[0] == 0
++    p = _tuer_superviseur(runs(monde)[0]["superviseur"])
++    o = lc.orchestrateur_orphelin(runs(monde)[0]["superviseur"])
++    assert o["arret"].startswith(f"kill -INT {p['pid_orchestrateur']} d'abord") and f"kill -TERM {p['pid_orchestrateur']}" in o["arret"]
++    os.kill(p["pid_orchestrateur"], signal.SIGKILL)
++    _attendre_mort(p["pid_orchestrateur"])

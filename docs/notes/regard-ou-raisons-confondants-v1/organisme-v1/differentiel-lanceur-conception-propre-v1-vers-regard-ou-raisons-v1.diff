@@ -1,0 +1,252 @@
+--- scripts/lancer_course_ideation_conception_propre_v1.py
++++ scripts/lancer_course_ideation_regard_ou_raisons_v1.py
+@@ -1,44 +1,44 @@
+ #!/usr/bin/env python3
+-"""Lanceur de l'organisme d'idéation (atelier d'idées, N-065 rôle 2) sur la question de **sa propre conception** (juge,
+-proposeurs, composition, coût) : **une génération**, plafond bas — version 1.
++"""Lanceur de l'organisme d'idéation (atelier d'idées, N-065 rôle 2) sur une question d'un autre projet du directeur,
++« Regard ou raisons » : explications rivales autres que le regard, et forme du papier — **une génération** — version 1.
+ 
+-Demande de Lazar : R-2593, R-2609 (GO de principe ; dépense bornée à 25 USD pour une génération ; ligne de GO au montant du
+-pire cas du devis, 21 USD). Conception : `docs/notes/organisme-conception-propre-v1/conception-course-v1.md` ; devis :
+-`devis-v1.md`. Dérivé du lanceur v3 des bassins étroits (`lancer_course_ideation_bassins_etroits_v3.py`, `3fabd71e…`,
+-inchangé, R12), corrigé selon sa vérification courte (`verification-courte-lanceur-v3-v2.md`, `9c1caa7e…`) :
+-
+-- **M1** : le lanceur garde lui-même ce que l'épingle du crochet garderait : options `-I -B` (`sys.flags`), ligne de commande
+-  d'origine **exacte** (`sys.orig_argv`), argument unique `1`, dossier courant = racine du dépôt, interpréteur
+-  `/usr/local/bin/python3`, fichier lancé non lien et d'empreinte égale à son compagnon `.sha256` (contre l'accident ; contre
+-  une réécriture des deux, c'est l'épingle du crochet qui garde). Tout cela avant le verrou et avant toute écriture.
+-- **M2** : tout ce qui peut échouer (git, empreintes, liste blanche, mesure, environnement, sonde du bac à sable, manifeste
+-  de pré-départ scellé) se fait **avant** le détachement ; **aucune commande git après** ; après lui, une seule écriture,
+-  le manifeste de départ (court) ; si elle échoue, le PID du superviseur et la commande d'arrêt par PID sont imprimés (code
+-  5). Le superviseur scelle son propre PID dans son dossier avant tout : l'invocation suivante retrouve la course par le
+-  manifeste de pré-départ.
+-- **B1 et m1** (dépense lisible et scellée dans le dépôt) : à la clôture, le lanceur écrit dans le dossier de run du dépôt un
+-  **relevé de dépense** scellé et des **copies scellées, octet pour octet**, des sorties dont dépendent la dépense, la relance
+-  et la lecture ; après la clôture, cumul et relance ne lisent que le dépôt.
+-- **m3 et R-2558** : **une seule relance au total**, seulement après une course finie proprement, sans fiche, à relevé
+-  lisible ; garde de cumul : dépense relevée + plafond de la course (14,9) + réserve du lecteur de la règle (4,0) ≤ min(25,
+-  plafond de la ligne de GO).
+-- **m5** : noms d'environnement exclus résumés au manifeste par leur nombre et leur empreinte, jamais listés.
+-- Gardés du v3 : environnement par liste de noms permis (cause du 401 de R-2549), verrou d'invocation, orchestrateur
+-  orphelin (code 4), compte rendu et clôture avant les gardes d'entrée, gardes de somme et de taille, drapeaux interdits.
+-- **Aucun bras** : le juge externe différé exigé par le code (`argon-juge`) n'est jamais joué par ce lanceur ; ses notes ni
+-  celles du juge `opus-juge` n'entrent dans la sélection (N-058 ; règle écrite avant, conception § 4).
+-- La ligne de GO est trouvée par son contenu (périmètre « organisme d'idéation » et « propre conception », type calcul,
+-  Lazar, période, plafond ≥ 21 USD), une seule ; son identifiant est transmis à l'orchestrateur.
++Demande de Lazar : R-2679 (point 3), R-2680. Dossier de la question : `docs/notes/regard-ou-raisons-confondants-v1/` —
++question commune aux cinq sources `question-v1.md` (`f0481482…`), faits `faits-v1.md` (`87086190…`) ; mise en fiches,
++témoins, devis et rapport dans son sous-dossier `organisme-v1/`. Dérivé, au plus près, du lanceur « conception propre » v1
++(`lancer_course_ideation_conception_propre_v1.py`, `709cf1c7…`, inchangé, R12), contre-lu « autorisable » (R-2623) et joué
++(R-2628) ; différentiel versé (`organisme-v1/differentiel-lanceur-conception-propre-v1-vers-regard-ou-raisons-v1.diff`).
++
++Ce qui change, et rien d'autre :
++
++- les **pièces** (question de l'organisme, faits et témoins de cette question), les noms de dossiers, de verrou et de runs,
++  la graine ;
++- la **ligne de GO** : périmètre « organisme d'idéation » et « regard ou raisons », plafond ≥ 17 USD ;
++- **aucun lecteur de la règle, aucun classement par la règle** : la réserve du lecteur (4 USD) disparaît de la garde de
++  cumul ; le pire cas passe de 21 à **17 USD** (course 14,9 + une première tentative en défaut au contrôle 2,1) ; la borne
++  de ce lanceur est ce pire cas, quel que soit le plafond de la ligne ;
++- le manifeste de fin ne prépare plus d'attestation pour un lecteur externe : il désigne le **bilan de l'organisme** (les
++  fiches validées, copiées et scellées avant d'être lues par quiconque) ;
++- le conseil d'arrêt imprimé suit la condition C1 de la contre-lecture (constat A1) : `kill -INT` d'abord, `kill -TERM`
++  seulement si la course ne finit pas ; le relais des signaux par PID est inchangé.
++
++Ce qui est gardé, à l'identique : M1 (options `-I -B`, commande d'origine exacte, argument unique `1`, dossier courant,
++interpréteur, fichier non lien et d'empreinte égale à son compagnon, avant le verrou et toute écriture) ; M2 (tout ce qui
++peut échouer avant le détachement, aucune commande git après, manifeste de pré-départ scellé, code 5 avec PID) ; relevé de
++dépense et copies scellées dans le dépôt à la clôture ; **une seule relance au total**, seulement après une course finie
++proprement, sans fiche, à relevé lisible ; environnement par liste de noms permis ; verrou ; orchestrateur épinglé par
++l'arbre de `orchestrator/` et neuf empreintes ; mêmes proposeurs, même juge exigé par le code, mêmes plafonds de session ;
++aucun bras (le juge externe différé n'est jamais joué) ; gardes de somme et de taille ; drapeaux interdits.
+ 
+ Usage, seul et exact (dossier courant = racine du dépôt de travail) :
+ 
+-    /usr/local/bin/python3 -I -B scripts/lancer_course_ideation_conception_propre_v1.py 1
++    /usr/local/bin/python3 -I -B scripts/lancer_course_ideation_regard_ou_raisons_v1.py 1
+ 
+ Une invocation fait **une** chose : compte rendu d'une course en marche (code 3) ; orchestrateur orphelin vivant (code 4) ;
+ clôture d'une course finie (code 0) ; lancement détaché (code 0) ; lancement fait mais manifeste de départ non écrit (code
+-5, PID imprimé) ; refus (code 2). Arrêt d'une course : `kill -TERM <PID du superviseur>` (relayé par PID, R10).
++5, PID imprimé) ; refus (code 2). Arrêt d'une course : `kill -INT <PID du superviseur>` d'abord (relayé par PID, R10 ; fin
++propre de l'orchestrateur), `kill -TERM <PID du superviseur>` seulement si elle ne finit pas.
+ 
+-Bibliothèque standard seulement. Essais : `tests/test_lancer_course_ideation_conception_propre_v1.py`.
++Bibliothèque standard seulement. Essais : `tests/test_lancer_course_ideation_regard_ou_raisons_v1.py`.
+ """
+ from __future__ import annotations
+ 
+@@ -57,7 +57,7 @@
+ from pathlib import Path
+ from typing import Mapping
+ 
+-VERSION = "lancer_course_ideation_conception_propre_v1"
++VERSION = "lancer_course_ideation_regard_ou_raisons_v1"
+ FICHIER_LANCEUR = VERSION + ".py"
+ DEPOT = Path(__file__).resolve().parents[1]
+ GENERATIONS = ("1",)
+@@ -65,9 +65,9 @@
+ ARGUMENT = "1"
+ 
+ # --- ligne de GO, trouvée par son contenu (son identifiant n'existe pas encore) -------------------------------------------
+-PERIMETRE_GO = ("organisme d'idéation", "propre conception")
+-PIRE_CAS_DEVIS_USD = 21.0
+-BORNE_LIGNE_USD = 25.0                           # R-2609 : borne de la mère pour une génération
++PERIMETRE_GO = ("organisme d'idéation", "regard ou raisons")
++PIRE_CAS_DEVIS_USD = 17.0                        # course 14,9 + une première tentative en défaut au contrôle 2,1
++BORNE_LIGNE_USD = 17.0                           # borne de ce lanceur : le pire cas du devis (R-2679 : aucun montant)
+ 
+ # --- orchestrateur (dépôt public lciric/ideation-organism, clone en lecture), épinglé par l'arbre de `orchestrator/` -------
+ ORCHESTRATEUR = Path("/home/user/lciric/ideation-organism/orchestrator")
+@@ -86,14 +86,15 @@
+ LANCEUR_ORCHESTRATEUR = "demonstrations/ideation_v8.py"
+ 
+ # --- pièces, épinglées ------------------------------------------------------------------------------------------------------
+-NOTES = "docs/notes/organisme-conception-propre-v1"
++NOTES_QUESTION = "docs/notes/regard-ou-raisons-confondants-v1"
++NOTES = f"{NOTES_QUESTION}/organisme-v1"
+ PIECES = {
+-    "question": (f"{NOTES}/question-organisme-conception-propre-v1.md",
+-                 "77c524f3c591e43ec1b14e261bd4667cf0e085b6c94afe7e7b37f72816c6feb4"),
+-    "faits": ("docs/notes/collisionneur-bassins-etroits-v1/faits-v1.md",
+-              "d19b540015ed9480774c020cd7f1a527db32d42600a5bc2bd34c92c17d7be0b3"),
+-    "temoins": (f"{NOTES}/temoins-organisme-conception-propre-v1.json",
+-                "ec3ae933d37162ea478a5041ee6ed9f3b8eabbece2078d0f754f35491e30fd50"),
++    "question": (f"{NOTES}/question-organisme-regard-ou-raisons-v1.md",
++                 "2c19b11c8b50be23e3d784612914253f9b46c4c6162c03561887079e32a6544d"),
++    "faits": (f"{NOTES_QUESTION}/faits-v1.md",
++              "8708619040b1483a97d33bd5dc3576d083656a3a7c29a8b273b0944e964e6642"),
++    "temoins": (f"{NOTES}/temoins-organisme-regard-ou-raisons-v1.json",
++                "b585464363989d02da36b804bd2fe2bd7254a76c463fc08d19c13e75d68c876f"),
+     "enveloppe_argon": ("rapports/fille-ideation-1-v1/appel-argon-v5.sh",
+                         "37c0205e26f83cbdcdf5ad7f1e4094a21c7dcc70afb72d15ef0d260a770a132a"),
+     "commande_argon": ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande_argon_v3d.py",
+@@ -101,7 +102,7 @@
+ }
+ DEPOT_ATTENDU_PAR_L_ENVELOPPE = Path("/home/user/controle-ia-travail")
+ 
+-# --- plafonds (devis v1) ----------------------------------------------------------------------------------------------------
++# --- plafonds (devis v1 de cette course ; plafonds de session repris du lanceur « conception propre ») --------------------
+ TOTAL_CLAUDE_USD = 10.0                          # total transmis à l'orchestrateur et plafond du relais Claude
+ TOTAL_EXTERNE_USD = 8.0                          # total transmis (la somme vérifiée par l'orchestrateur compte le juge différé)
+ NOMBRE = 6
+@@ -116,13 +117,12 @@
+ PASSE_2_EXTERNE_USD = 1.9
+ EXPOSITION_EXTERNE_COURSE_USD = CONTROLE_EXTERNE_USD + PLAFONDS["proposeur_ideation|gemini-4-argon"] + PASSE_2_EXTERNE_USD
+ PLAFOND_COURSE_USD = TOTAL_CLAUDE_USD + EXPOSITION_EXTERNE_COURSE_USD          # 14,9 : compté si la dépense est illisible
+-RESERVE_LECTEUR_USD = 4.0                        # lecteur de la règle (Kimi, deux lectures) : réservé, non joué ici
+ MAX_COURSES = 2                                  # une seule relance au total
+ PROPOSEURS = (("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1"))
+ PROPOSEUR_EXTERNE = ("argon", "gemini-4-argon")
+ JUGES = (("opus-juge", "claude-opus-5-5"),)
+ JUGE_EXTERNE = ("argon-juge", "gemini-4-argon")
+-GRAINE = 2026111401
++GRAINE = 2026111402
+ 
+ # --- gardes de taille de `pole/ideation_v2.py` (arbre épinglé), reproduites par calcul ---------------------------------------
+ PRIX_CARACTERE_PRUDENT_USD = 10.0 / 1e6 / 4
+@@ -144,10 +144,10 @@
+ CARACTERES_PAR_JETON_GARDE = 3.0
+ PORT_RELAIS_CLAUDE = 8787
+ 
+-DOSSIER_SORTIES = Path("/home/user/sorties-course-ideation-conception-propre-v1")
+-SOUS_DOSSIER_RUNS = "course-ideation-conception-propre-v1"
+-SUFFIXE_RUN = "-course-ideation-conception-propre-v1-g"
+-NOM_VERROU = ".verrou-lanceur-conception-propre"
++DOSSIER_SORTIES = Path("/home/user/sorties-course-ideation-regard-ou-raisons-v1")
++SOUS_DOSSIER_RUNS = "course-ideation-regard-ou-raisons-v1"
++SUFFIXE_RUN = "-course-ideation-regard-ou-raisons-v1-g"
++NOM_VERROU = ".verrou-lanceur-regard-ou-raisons"
+ NOMS_PERMIS = ("PATH", "LANG", "LC_ALL", "TZ", "TMPDIR")
+ NOM_DOSSIER_PYCACHE = "pycache"
+ SUPERVISEUR_DOSSIER = "superviseur-course"
+@@ -337,7 +337,7 @@
+ 
+ 
+ def verifier_go(registre: Path, aujourd_hui: _dt.date) -> dict:
+-    """Une seule ligne principale dont le périmètre contient « organisme d'idéation » et « propre conception » ; 8 colonnes,
++    """Une seule ligne principale dont le périmètre contient « organisme d'idéation » et « regard ou raisons » ; 8 colonnes,
+     type calcul, accordée par Lazar, dans sa période, non révoquée, plafond ≥ pire cas du devis."""
+     if not registre.is_file():
+         raise Refus(f"registre des GO absent : {registre}")
+@@ -743,7 +743,8 @@
+                               str(r.orchestrateur), str(dossier)], cwd=str(r.orchestrateur), env=env, stdout=fo, stderr=fe,
+                              stdin=subprocess.DEVNULL, start_new_session=True)
+     return {"pid": p.pid, "debut_proc": debut_processus(p.pid), "dossier": str(dossier),
+-            "arret": f"kill -TERM {p.pid} (relayé par PID à l'orchestrateur ; jamais par motif, R10)"}
++            "arret": f"kill -INT {p.pid} d'abord (relayé par PID à l'orchestrateur, fin propre ; jamais par motif, R10) ; "
++                     f"kill -TERM {p.pid} seulement si la course ne finit pas"}
+ 
+ 
+ def lire_code(sup: dict) -> dict | None:
+@@ -762,7 +763,8 @@
+     if not isinstance(p, dict) or not isinstance(p.get("pid_superviseur"), int):
+         return {"inconnu": True, "dossier": str(dossier)}
+     return {"pid": p["pid_superviseur"], "debut_proc": p.get("debut_proc"), "dossier": str(dossier), "retrouve": True,
+-            "arret": f"kill -TERM {p['pid_superviseur']} (relayé par PID ; R10)"}
++            "arret": f"kill -INT {p['pid_superviseur']} d'abord (relayé par PID ; R10) ; "
++                     f"kill -TERM {p['pid_superviseur']} seulement si la course ne finit pas"}
+ 
+ 
+ # ======================================================================================================================
+@@ -936,12 +938,11 @@
+     lignes = [releve_run(x) for x in runs]
+     deja = round(sum(x["course_usd"] for x in lignes), 6)
+     borne = min(BORNE_LIGNE_USD, plafond_go)
+-    suivant = PLAFOND_COURSE_USD + RESERVE_LECTEUR_USD
++    suivant = PLAFOND_COURSE_USD                     # aucun lecteur de la règle dans cette course : aucune réserve
+     if deja + suivant > borne + 1e-9:
+-        raise Refus(f"garde de cumul : dépense relevée {deja:.4f} + course {PLAFOND_COURSE_USD} + réserve du lecteur "
+-                    f"{RESERVE_LECTEUR_USD} > {borne} USD ; détail : {json.dumps(lignes, ensure_ascii=False)}")
+-    return {"depense_relevee_usd": deja, "plafond_course_usd": PLAFOND_COURSE_USD, "reserve_lecteur_usd": RESERVE_LECTEUR_USD,
+-            "borne_usd": borne, "par_run": lignes}
++        raise Refus(f"garde de cumul : dépense relevée {deja:.4f} + course {PLAFOND_COURSE_USD} > {borne} USD ; "
++                    f"détail : {json.dumps(lignes, ensure_ascii=False)}")
++    return {"depense_relevee_usd": deja, "plafond_course_usd": PLAFOND_COURSE_USD, "borne_usd": borne, "par_run": lignes}
+ 
+ 
+ def relance_permise(runs: list) -> tuple:
+@@ -1061,7 +1062,7 @@
+     if vu is None or (debut is not None and vu != debut):
+         return None
+     return {"pid": pid, "debut_proc": debut, "heure_de_depart_verifiee": debut is not None,
+-            "arret": f"kill -TERM {pid} (par PID, R10)"}
++            "arret": f"kill -INT {pid} d'abord (par PID, R10) ; kill -TERM {pid} seulement s'il ne finit pas"}
+ 
+ 
+ def cloturer(r: Reglages, runs: list) -> list:
+@@ -1098,12 +1099,12 @@
+                  "code": code["code"] if code else None, "issue": issue, "journaux_sha256": journaux,
+                  "releve_sha256": h_rel, "cloture_utc": r.heure().isoformat()}
+         if code and code["code"] == 0 and "sortie/fiches-validees.json" in copies:
+-            bilan["pour_l_attestation"] = {
+-                "chemin": f"{NOTES}/attestations/attestation-lecture-g1-v1.json",
++            bilan["bilan_de_l_organisme"] = {
++                "copie": "copies/sortie--fiches-validees.json",
+                 "fiches_validees_sha256": copies["sortie/fiches-validees.json"]["sha256"],
+-                "champs": ["lecteur", "lu_le", "fiches_validees_sha256", "aucune_recette_aucun_secret",
+-                           "envoi_au_lecteur_externe_permis"],
+-                "rappel": "écrite et scellée par la mère (ou Lazar) après lecture intégrale ; avant tout envoi au lecteur"}
++                "rappel": "bilan de l'organisme d'idéation (question-v1.md : scellé avant d'être lu par quiconque) ; croisé "
++                          "ensuite avec les quatre autres sources par un lecteur neuf ; les notes du juge de l'organisme "
++                          "ne servent ni à classer ni à choisir"}
+         ecrire_scelle(run["dossier"] / "manifeste-lanceur-fin.json", bilan)
+         faits.append({"run": run["nom"], "code": bilan["code"], "issue": issue, "orchestrateur_orphelin": orphelin,
+                       "depense_relevee_usd": releve["course_usd"], "lisible": lisible})
+@@ -1185,13 +1186,13 @@
+                                              dossier_run / "mesure-consignes.json")
+         tailles = gardes_de_taille(mesure, r)
+         pre = dict(socle, **{
+-            "decision": "R-2593, R-2609 (GO de principe, borne 25 USD) ; ligne de GO trouvée par son contenu",
++            "decision": "R-2679 (point 3), R-2680 ; ligne de GO trouvée par son contenu ; pire cas et borne 17 USD",
+             "superviseur_attendu": {"dossier": str(dossier_sortie / SUPERVISEUR_DOSSIER)},
+             "orchestrateur": orch, "pieces": pieces, "liste_blanche": lb, "mesure_consignes_sha256": h_mesure,
+             "bac_a_sable": bac, "commande": argv, "cwd": str(r.orchestrateur),
+             "plafonds": {"reglage": dict(r.plafonds), "controle_externe_usd": r.controle_externe_usd,
+                          "passe_2_externe_usd": r.passe_2_externe_usd, "sommes": sommes, "gardes_de_taille": tailles,
+-                         "plafond_course_usd": PLAFOND_COURSE_USD, "reserve_lecteur_usd": RESERVE_LECTEUR_USD},
++                         "plafond_course_usd": PLAFOND_COURSE_USD, "pire_cas_devis_usd": PIRE_CAS_DEVIS_USD},
+             "garde_de_cumul": cumul, "relance": motif, "drapeaux_interdits_verifies_absents": list(DRAPEAUX_INTERDITS),
+             "environnement": noms_env, "depot_travail": depot_git, "python": interprete,
+             "cache_d_octets": {"prefixe": str(prefixe_pycache), "option": f"-X pycache_prefix={prefixe_pycache}"}})
