@@ -1,0 +1,82 @@
+{
+  "racine": "essai/t08-jouet-compte4-v3/b",
+  "runs": {
+    "t06-7b-jouet": "20261114-030840-t06-7b-jouet",
+    "t06-mots-et-cout-jouet": "20261114-030840-t06-mots-et-cout-jouet",
+    "vadapt-hd-jouet": "20261114-030840-vadapt-hd-jouet",
+    "t08-course-jouet": "20261114-030840-t08-course-jouet",
+    "t08-lecture-jouet": "20261114-030840-t08-lecture-jouet"
+  },
+  "course": {
+    "manifeste": "essai/t08-jouet-compte4-v3/b/runs/20261114-030840-t08-course-jouet/manifeste.json",
+    "course": "essai/t08-jouet-compte4-v3/b/diag/20261114-030840-t08-course-jouet/course-t08.json",
+    "duree_s": 335.9
+  },
+  "lecture": {
+    "manifeste": "essai/t08-jouet-compte4-v3/b/runs/20261114-030840-t08-lecture-jouet/manifeste.json",
+    "lecture": "essai/t08-jouet-compte4-v3/b/diag/20261114-030840-t08-lecture-jouet/lecture-t08.json",
+    "table_D": "D6",
+    "tables_d_f": "diag/20261114-030840-t08-lecture-jouet/tables-d-f-t08.json",
+    "duree_s": 81.9,
+    "qualification": {
+      "S25": "flagrante",
+      "S50": "flagrante",
+      "S75": "flagrante",
+      "S100": "flagrante"
+    }
+  },
+  "ligne_A_factice": "A5",
+  "comparaison": {
+    "fichiers": 52,
+    "identiques_octet": 41,
+    "resultats_identiques": [
+      "diag/20261114-030840-t08-course-jouet/course-t08.json",
+      "diag/20261114-030840-t08-lecture-jouet/lecture-t08.json",
+      "diag/20261114-030840-t08-lecture-jouet/tables-d-f-t08.json",
+      "registres-factices/scellements-v1.md"
+    ],
+    "exclus": [
+      "diag/20261114-030840-t08-course-jouet/course-t08.json.sha256",
+      "diag/20261114-030840-t08-lecture-jouet/lecture-t08.json.sha256",
+      "diag/20261114-030840-t08-lecture-jouet/tables-d-f-t08.json.sha256",
+      "runs/20261114-030840-t08-course-jouet/manifeste.json",
+      "runs/20261114-030840-t08-course-jouet/manifeste.json.sha256",
+      "runs/20261114-030840-t08-lecture-jouet/manifeste.json",
+      "runs/20261114-030840-t08-lecture-jouet/manifeste.json.sha256"
+    ],
+    "differents": [],
+    "motifs": {},
+    "exclusions_declarees": [
+      {
+        "fichiers": "runs/<run T0.8>/manifeste.json et compagnon",
+        "regle": "exclus",
+        "raison": "date de création et commit du manifeste"
+      },
+      {
+        "fichiers": "diag/<run T0.8>/*.json.sha256",
+        "regle": "exclus",
+        "raison": "compagnons d'enveloppes qui citent le manifeste"
+      },
+      {
+        "fichiers": "diag/<run T0.8>/*.json",
+        "regle": "`resultat` comparé en JSON canonique, enveloppe exclue",
+        "raison": "l'enveloppe cite l'empreinte du manifeste"
+      },
+      {
+        "fichiers": "registres-factices/scellements-v1.md",
+        "regle": "comparé hors la ligne COURSE-T08",
+        "raison": "la ligne cite l'empreinte de course-t08.json (enveloppe)"
+      },
+      {
+        "fichiers": "diag/<run lecture T0.8>/lecture-t08.json",
+        "regle": "`resultat` comparé hors la seule clé tables_D_F_fichier.sha256 ; chemin et contenu_sha256 égaux ; dans chaque racine, sha256 = empreinte du fichier des tables sur disque et contenu_sha256 = empreinte de son `resultat`",
+        "raison": "empreinte du fichier tables-d-f-t08.json, dont l'enveloppe porte l'empreinte du manifeste de la lecture (VCT8-02)"
+      }
+    ],
+    "controle_tables_par_racine": {
+      "a": true,
+      "b": true
+    },
+    "deterministe": true
+  }
+}
