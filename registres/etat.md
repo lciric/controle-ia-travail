@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-14, coffre (R-2767)** : les sorties de l'audit des fuites (fait, contre-lu « conforme ») sont dans le coffre scellé `coffre/audit-fuites-t07-v1` (branche orpheline, archive `2365af08…`) : **ne pas rejouer l'audit** ; G8 seul l'ouvre, après `CODE-MOTS-ET-COUT-T06`. Cette ligne prime sur le brief v3 et la passation sur ce point.
+
 **2026-11-14, après la passation** : Lazar a tranché R-D1 → lecture « coût présent » (R-2765) : version neuve de la pièce « mots et coût » (avec C-1 à C-4), nouvelle contre-lecture, puis `CODE-MOTS-ET-COUT-T06`.
 
 **Mise à jour du 2026-11-14 vers 13:30 UTC (`date -u`)** — la mère `session_01QPDgKgACWyCkCN8HjqwNXy` s'arrête pour quota hebdomadaire (R-2753) ; passation `registres/passations/2026-11-14-1329.md` ; brief à coller sur le nouveau compte `docs/procedures/brief-reprise-nouvelle-mere-2026-11-14-v3.md` (passation complémentaire `registres/passations/2026-11-14-1331.md`) ; travaux interrompus sur `sauvegarde/mere-2026-11-14-v1`. Chemin critique : audit des fuites à rejouer → `CODE-MOTS-ET-COUT-T06` (mot de Lazar sur R-D1) → code et course de B bis (verdict au plus tard le 22 novembre) ; étape B du compte 3 pas avant le 17.
