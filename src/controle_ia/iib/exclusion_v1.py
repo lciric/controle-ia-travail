@@ -34,13 +34,15 @@ def motifs_t06() -> list[str]:
 
 
 def motifs_d_exclusion(motifs_consigne: list[str]) -> dict:
-    """Nom → expression compilée : « t06:<motif> » puis « iib:<motif> », dans l'ordre."""
+    """Nom → expression compilée : « t06:<rang> » (alternatives de `MENTIONS_ETENDUES`) puis « iib:<rang> » (motifs de la consigne, dans
+    l'ordre de son bloc de code), rang sur deux chiffres à partir de 01. Les sorties ne nomment les motifs que par leur rang : aucun
+    fragment de la consigne privée n'y est écrit (choix prudent, déclaré ; la table des rangs est le bloc de code de la consigne scellée)."""
     if not motifs_consigne:
         raise GardeArret("exclusion : aucun motif de la consigne de (ii-b)")
     sortie = {}
     for prefixe, motifs in (("t06", motifs_t06()), ("iib", list(motifs_consigne))):
-        for m in motifs:
-            sortie[f"{prefixe}:{m}"] = re.compile(m, re.I)
+        for k, m in enumerate(motifs, 1):
+            sortie[f"{prefixe}:{k:02d}"] = re.compile(m, re.I)
     return sortie
 
 

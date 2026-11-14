@@ -65,6 +65,7 @@ COMMANDE = "python -m controle_ia.iib.lanceur_v1"
 ADAPTATEURS = ("eleve", "temoin-jumeau")
 ADAPTATEUR_DE = {"H": "eleve", "B50": "eleve", "B100": "eleve", "TJ100": "temoin-jumeau"}
 PREFIXES_INTERDITS = ("activations", "sondes", "lecture-sondes")
+TACHES_EVALUATION_REEL = 64
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -85,6 +86,8 @@ def charger_entrees(config: dict, racine: Path) -> dict:
     communes = sorted({t["identifiant"] for t in reserve} & {t["identifiant"] for t in evaluation})
     if communes:
         raise GardeArret(f"tâche(s) de réserve présente(s) dans l'évaluation : {communes[:5]} : aucune création, aucun calcul")
+    if config["mode"] == "reel" and len(evaluation) != TACHES_EVALUATION_REEL:
+        raise GardeArret(f"{len(evaluation)} tâches d'évaluation : {TACHES_EVALUATION_REEL} attendues (conception, section 6)")
     e_tour, ep = config["tours"]["episodes_par_tour"], config["epreuves"]
     et = config["etalonnage"]
     if len(reserve) != e_tour or len(reserve) * et["honnetes_par_tache"] != ep["E-O3"]["episodes"] or \
@@ -465,8 +468,11 @@ def _main(argv: list[str]) -> int:
     p.add_argument("--autoriser-depot-sale", action="store_true")
     args = p.parse_args(argv)
     signal.signal(signal.SIGTERM, lever_sur_term)
-    config = json.loads(Path(args.config).read_text(encoding="utf-8"))
     verifier(args.config)
+    config = json.loads(Path(args.config).read_text(encoding="utf-8"))
+    if config.get("mode") == "reel" and (config.get("marqueurs") or {}).get("CHEMIN_CONFIG_IIB") != args.config:
+        print(f"ARRÊT : configuration {args.config} ≠ marqueur CHEMIN_CONFIG_IIB de la configuration", file=sys.stderr)
+        return 1
     try:
         resume = executer(config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale)
     except GardeArret as e:

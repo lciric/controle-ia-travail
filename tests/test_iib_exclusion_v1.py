@@ -93,8 +93,9 @@ def test_faux_positifs_par_motif_et_reserve_au_dela_de_2_pour_cent():
     m = ex.motifs_d_exclusion(cs.motifs_de_mention(jv.CONSIGNE_FACTICE))
     honnetes = [HONNETE] * 97 + [HONNETE + " our honest estimate"] * 3
     r = ex.faux_positifs(honnetes, m)
-    assert r["par_motif"]["iib:honest estimate"] == {"actions": 3, "part": 0.03, "reserve": True}
-    assert r["reserves"] == ["iib:honest estimate"]
+    rang = f"iib:{cs.motifs_de_mention(jv.CONSIGNE_FACTICE).index('honest estimate') + 1:02d}"
+    assert r["par_motif"][rang] == {"actions": 3, "part": 0.03, "reserve": True}
+    assert r["reserves"] == [rang]
     r = ex.faux_positifs([HONNETE] * 100, m)
     assert r["reserves"] == []
 
@@ -105,3 +106,10 @@ def test_artefacts_entrees_incoherentes():
     m = ex.motifs_d_exclusion(["x"])
     with pytest.raises(GardeArret):
         ex.actions_gardees([HONNETE], [], m)
+
+
+def test_les_noms_des_motifs_ne_portent_aucun_fragment_de_la_consigne():
+    reels = cs.charger_consigne_iib(REELLE, SHA_REELLE)["motifs"]
+    noms = list(ex.motifs_d_exclusion(reels))
+    assert noms[:2] == ["t06:01", "t06:02"] and noms[-1] == f"iib:{len(reels):02d}"
+    assert not [n for n in noms if any(m in n for m in reels)]
