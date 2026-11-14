@@ -15,7 +15,12 @@
   de validité, la seule ligne `SORTIES-HD-VADAPT` (jamais une ligne VA) ; rien n'est jamais écrit dans un registre.
   Une ligne de tableau qui n'a pas la forme du registre (par exemple une quatrième cellule qui n'est pas une empreinte
   entière) est **comptée et signalée** (`mal_formees`, avec sa clé), jamais ignorée en silence (CLT8C-17) ; une clé à
-  la marque `T08` inscrite deux fois arrête (gardé).
+  la marque `T08` inscrite deux fois arrête (gardé). Pour la seule clé `CODE-T08`, la quatrième cellule peut aussi être
+  un commit de 40 caractères hexadécimaux (`| CODE-T08 | date | chemin | <commit> |`, lue avec `sha256` à `None` et
+  `commit` rempli ; VCT8-03 : la forme de cette ligne reste à fixer par la session mère, question déclarée) ;
+  `ligne_cite_commit` dit si une ligne cite un commit dans l'une de ses cellules.
+- `lire_manifeste_course` : le manifeste de la course de T0.8 auquel `course-t08.json` est rattaché (même run, empreinte
+  de son enveloppe), pour sa date de création (début de la course ; VCT8-03).
 - `ListeBlanche.controler` : les mêmes contrôles que `chemin` (empreinte contre le compagnon et contre l'empreinte
   consignée, présence d'un registre vivant), rendus comme un état au lieu d'un arrêt ; la lecture descriptive de la
   pièce HD s'en sert pour écrire « non lue » sans jamais arrêter la lecture de T0.8 (liste d'arrêt, l. 248) ; une
@@ -208,6 +213,19 @@ def lire_manifeste_7b(lb: ListeBlanche, nom: str, taches: list[str]) -> dict:
     return {**projeter_manifeste_7b(m, taches), "sha256": sha}
 
 
+def lire_manifeste_course(lb: ListeBlanche, nom: str, corps_course: dict) -> dict:
+    """Manifeste de la course de T0.8 (`runs/<run-course>/manifeste.json`, entrée `nom` de la liste blanche) : celui
+    auquel `course-t08.json` (`corps_course`, enveloppe comprise) est rattaché — même identifiant de run, empreinte égale
+    à `manifeste_sha256` de l'enveloppe ; sinon arrêt. Rend l'identifiant du run, l'empreinte et la date de création
+    (`cree_le`, début de la course, en UTC ; VCT8-03) ; rien d'autre n'est gardé."""
+    m, sha = lire_manifeste(lb.chemin(nom))
+    if sha != corps_course.get("manifeste_sha256") or m.get("run_id") != corps_course.get("run_id"):
+        raise GardeArret(f"course-t08.json (run {corps_course.get('run_id')}, manifeste "
+                         f"{str(corps_course.get('manifeste_sha256'))[:12]}…) rattaché à un autre manifeste que l'entrée "
+                         f"{nom!r} (run {m.get('run_id')}, {sha[:12]}…) : arrêt")
+    return {"run_id": m["run_id"], "sha256": sha, "cree_le": date_utc(m.get("cree_le")).isoformat()}
+
+
 def projeter_lecture_cout(corps: dict) -> dict:
     lec = corps["resultat"]["lecture"]
     for k in ("T6-10", "T6-8", "table_A"):
@@ -247,6 +265,10 @@ def projeter_base_a(obj: dict) -> dict:
 # --- registres (format du registre partagé) ------------------------------------------------------------------------
 
 _LIGNE = re.compile(r"^\|\s*([A-Za-z0-9-]+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([0-9a-f]{64})\s*\|\s*$")
+CODE_T08 = "CODE-T08"
+# ligne `CODE-T08` dont la quatrième cellule est le commit (40 caractères) : seule autre forme lue (VCT8-03, déclarée)
+_LIGNE_CODE_COMMIT = re.compile(r"^\|\s*(" + CODE_T08 + r")\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([0-9a-f]{40})\s*\|\s*$")
+_HEX40 = re.compile(r"^[0-9a-f]{40}$")
 _SEPARATEUR = re.compile(r"^\|[\s:|-]*$")
 _CLE = re.compile(r"^[A-Za-z0-9-]+$")
 _MARQUE_T08 = re.compile(r"(^|-)T08(-|$)")
@@ -267,9 +289,10 @@ def date_utc(texte: str) -> datetime:
 
 def _lignes_registre(chemin: Path) -> tuple[list[tuple], list[dict]]:
     """(lignes de la forme du registre, lignes de tableau d'une autre forme). Une ligne de tableau (qui commence par
-    « | ») qui n'est ni l'en-tête, ni un séparateur, ni de la forme `| CLÉ | date | chemin | empreinte entière |` est
-    rendue dans la seconde liste avec son numéro et sa clé (première cellule, si elle a la forme d'une clé) : comptée et
-    signalée, jamais ignorée en silence (CLT8C-17)."""
+    « | ») qui n'est ni l'en-tête, ni un séparateur, ni de la forme `| CLÉ | date | chemin | empreinte entière |` (ni,
+    pour la seule clé `CODE-T08`, `| CODE-T08 | date | chemin | commit de 40 caractères |`) est rendue dans la seconde
+    liste avec son numéro et sa clé (première cellule, si elle a la forme d'une clé) : comptée et signalée, jamais
+    ignorée en silence (CLT8C-17)."""
     sortie, mal = [], []
     for i, l in enumerate(Path(chemin).read_text(encoding="utf-8").splitlines(), start=1):
         s = l.strip()
@@ -278,7 +301,7 @@ def _lignes_registre(chemin: Path) -> tuple[list[tuple], list[dict]]:
         cellules = [c.strip() for c in s.strip("|").split("|")]
         if cellules and cellules[0] in ("CLÉ", "CLE"):
             continue
-        m = _LIGNE.match(s)
+        m = _LIGNE.match(s) or _LIGNE_CODE_COMMIT.match(s)
         if m:
             sortie.append(m.groups())
         else:
@@ -294,7 +317,8 @@ def _lue(cle: str | None) -> bool:
 def lire_registre_scellements(chemin) -> dict:
     """Clés à la marque `T08` et `RUN-CONFIRMATION-T06`, `CODE-MOTS-ET-COUT-T06` ; les autres ignorées et comptées.
     Une clé lue deux fois arrête (une clé, une ligne). Les lignes d'une autre forme sont comptées et signalées
-    (`mal_formees`, `mal_formees_lues` : celles dont la clé serait lue)."""
+    (`mal_formees`, `mal_formees_lues` : celles dont la clé serait lue). Une ligne `CODE-T08` dont la quatrième cellule
+    est un commit (40 caractères) est rendue `{date, chemin, sha256: None, commit}` (VCT8-03)."""
     lues, ignorees = {}, 0
     bonnes, mal = _lignes_registre(chemin)
     for cle, date, ch, sha in bonnes:
@@ -303,9 +327,24 @@ def lire_registre_scellements(chemin) -> dict:
             continue
         if cle in lues:
             raise GardeArret(f"registre : clé {cle} inscrite deux fois")
-        lues[cle] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": sha}
+        if cle == CODE_T08 and _HEX40.match(sha):
+            lues[cle] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": None, "commit": sha}
+        else:
+            lues[cle] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": sha}
     return {"lignes": lues, "ignorees": ignorees, "mal_formees": mal,
             "mal_formees_lues": [m for m in mal if _lue(m["cle"])]}
+
+
+def ligne_cite_commit(ligne: dict, commit: str) -> bool:
+    """La ligne de registre cite `commit` (40 caractères hexadécimaux) dans l'une de ses cellules : sa quatrième cellule
+    est ce commit (forme `| CODE-T08 | date | chemin | <commit> |`), ou sa cellule « chemin » le porte comme mot entier
+    (ni précédé ni suivi d'un caractère hexadécimal : un préfixe ou un prolongement ne compte pas). Les cellules « clé »
+    et « date » ne peuvent pas le porter ; une empreinte de 64 caractères n'est jamais lue comme un commit (VCT8-03)."""
+    if not (isinstance(commit, str) and _HEX40.match(commit)):
+        raise GardeArret(f"commit {commit!r} : 40 caractères hexadécimaux attendus")
+    if ligne.get("commit") == commit:
+        return True
+    return re.search(r"(?<![0-9A-Fa-f])" + commit + r"(?![0-9A-Fa-f])", str(ligne.get("chemin") or "")) is not None
 
 
 def lire_sorties_hd(chemin) -> dict:

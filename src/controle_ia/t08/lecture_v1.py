@@ -12,6 +12,16 @@ Aucun choix de famille, de statistique ou de surveillant après lecture : les li
 (`configuration_v1`). Un arrêt aux étapes (a) et (b) n'écrit rien (ligne D1 pour le juge de verdict,
 `tables_v1.lecture_absente`) ; un arrêt après le manifeste écrit `arret-lecture-t08.json` ; les tables D et F, si elles
 sont déjà écrites, restent sur disque.
+
+Mode réel, texte et registre (VCT8-03) : à l'étape (a), `controles_texte_et_registre` exige le texte scellé passé
+portant les valeurs des marqueurs, la ligne `SCELLEMENT-T08` à l'empreinte de ce texte, la ligne `CODE-T08` qui cite le
+commit du marqueur `COMMIT_CODE_T08` (40 caractères, dans l'une de ses cellules : `entrees_v1.ligne_cite_commit`), et
+l'une et l'autre strictement antérieures à la ligne `COURSE-T08` **et** à la création du manifeste de la course (début
+de la course ; entrée `manifeste_course`, rattachée à `course-t08.json`). **Passage à blanc** : avant de lancer la
+course réelle, la session mère appelle `passage_a_blanc_reel(marqueurs, registre, prereg)` sur le registre réel et le
+texte scellé : les mêmes contrôles, ceux qui ne demandent aucune sortie de la course, l'antériorité étant prise sur
+l'heure de la machine au passage ; un arrêt y coûte zéro. La forme des lignes `CODE-T08` et `SCELLEMENT-T08` reste à
+fixer par la session mère (question déclarée) ; le passage à blanc l'éprouve.
 """
 from __future__ import annotations
 
@@ -92,10 +102,83 @@ def cles_graines_lecture() -> list[str]:
 
 
 ENTREES_LECTURE_REQUISES = ("registre_scellements", "mesures_7b", "textes_7b", "episodes_7b", "manifeste_7b",
-                            "lecture_cout_7b", "taches", "base_a_texte", "base_a_json", "course_t08", "mesures_etalonnage",
-                            "textes_etalonnage", "lectures_J8_une_passe", "lectures_J8_raisonnement",
-                            "lectures_J3_une_passe", "lectures_J3_raisonnement")
+                            "lecture_cout_7b", "taches", "base_a_texte", "base_a_json", "course_t08", "manifeste_course",
+                            "mesures_etalonnage", "textes_etalonnage", "lectures_J8_une_passe",
+                            "lectures_J8_raisonnement", "lectures_J3_une_passe", "lectures_J3_raisonnement")
 NOM_TABLES = "tables-d-f-t08"
+
+
+def controles_texte_et_registre(prereg, marqueurs: dict, reg: dict, bornes: dict) -> dict:
+    """Mode réel (CLT8C-10 (a) et (b), VCT8-03) : le texte scellé passé (`prereg`) porte les valeurs des marqueurs ; la
+    ligne `SCELLEMENT-T08` du registre porte l'empreinte de ce texte ; la ligne `CODE-T08` cite le commit du marqueur
+    `COMMIT_CODE_T08` (40 caractères, dans l'une de ses cellules) ; l'une et l'autre sont strictement antérieures à
+    chaque borne de `bornes` (nom → instant UTC) : en lecture, la ligne `COURSE-T08` et la création du manifeste de la
+    course ; au passage à blanc, l'heure de la machine (l. 9 : code « cité par la ligne `CODE-T08` du registre des
+    scellements avant toute exécution » ; R1 : texte scellé avant la course). Sinon arrêt."""
+    if prereg is None:
+        raise GardeArret("lecture réelle sans préenregistrement scellé : R1 interdit")
+    if not bornes:
+        raise GardeArret("antériorité du texte et du code : aucune borne donnée : arrêt")
+    texte = cf.exiger_marqueurs_au_texte(prereg, marqueurs)
+    scel = en.exiger_ligne(reg, "SCELLEMENT-T08")
+    if scel["sha256"] != texte["sha256"]:
+        raise GardeArret(f"ligne SCELLEMENT-T08 ({str(scel['sha256'])[:12]}…) ≠ empreinte du préenregistrement passé "
+                         f"({texte['sha256'][:12]}…) : autre texte scellé, arrêt")
+    code = en.exiger_ligne(reg, en.CODE_T08)
+    commit = marqueurs["COMMIT_CODE_T08"]
+    if not en.ligne_cite_commit(code, commit):
+        raise GardeArret(f"ligne CODE-T08 (chemin {code['chemin']!r}, quatrième cellule "
+                         f"{code.get('commit') or code.get('sha256')!r}) ne cite pas le commit {commit} du marqueur "
+                         "COMMIT_CODE_T08 (40 caractères, dans l'une de ses cellules) : arrêt")
+    for nom, ligne in (("SCELLEMENT-T08", scel), (en.CODE_T08, code)):
+        date = en.date_utc(ligne["date"])
+        for quoi, borne in bornes.items():
+            if borne.tzinfo is None:
+                raise GardeArret(f"borne {quoi!r} sans fuseau : UTC attendu")
+            if not date < borne:
+                raise GardeArret(f"ligne {nom} ({ligne['date']}) non antérieure à {quoi} ({borne.isoformat()}) : texte et "
+                                 "code cités avant toute exécution (l. 9 ; R1) : arrêt")
+    return {"texte": texte, "SCELLEMENT-T08": scel, "CODE-T08": code,
+            "anteriorite_sur": {quoi: borne.isoformat() for quoi, borne in bornes.items()}}
+
+
+def passage_a_blanc_reel(marqueurs: dict, registre, prereg, maintenant: datetime | None = None) -> dict:
+    """**Passage à blanc** (VCT8-03), que la session mère appelle **avant de lancer la course réelle**, sur le registre
+    réel des scellements (`registre`, chemin du fichier vivant, lu et jamais écrit) et le texte scellé à passer à la
+    course et à la lecture (`prereg`). Il joue les contrôles du texte et du registre de la lecture réelle qui ne
+    demandent aucune sortie de la course, et n'ouvre aucun autre fichier :
+    - les sept marqueurs remplis et de forme attendue (`configuration_v1.exiger_marqueurs`) ;
+    - le registre lisible par `entrees_v1.lire_registre_scellements` (clé `T08` en double : arrêt ; lignes d'une autre
+      forme comptées et rendues) ;
+    - `controles_texte_et_registre` : texte portant les marqueurs, `SCELLEMENT-T08` à son empreinte, `CODE-T08` citant
+      `COMMIT_CODE_T08`, l'une et l'autre strictement antérieures à `maintenant` (heure de la machine par défaut ; la
+      lecture réelle reprend l'antériorité sur `COURSE-T08` et sur la création du manifeste de la course) ;
+    - les lignes `RUN-CONFIRMATION-T06` et `CODE-MOTS-ET-COUT-T06` présentes, à l'empreinte de `RUN_7B` et de
+      `CODE_MOTS_ET_COUT_T06` (ce que la lecture réelle exige d'elles) ;
+    - aucune ligne `COURSE-T08` déjà inscrite (la course n'a pas couru ; une seconde inscription arrêterait la lecture :
+      clé en double).
+    Rend le compte rendu (lignes, bornes, lignes d'une autre forme, présence de `LECTURE-T08-BASE-A`) ; tout écart arrête
+    (`GardeArret`), sans rien écrire. Le passage n'éprouve ni la course (`course_v1.exiger_course_reelle` le fait avant
+    tout manifeste), ni les entrées de la lecture, ni la pièce HD."""
+    mq = cf.exiger_marqueurs(marqueurs)
+    instant = maintenant if maintenant is not None else datetime.now(timezone.utc)
+    reg = en.lire_registre_scellements(registre)
+    controles = controles_texte_et_registre(prereg, mq, reg, {"l'heure du passage à blanc": instant})
+    run = en.exiger_ligne(reg, "RUN-CONFIRMATION-T06")
+    if run["sha256"] != mq["RUN_7B"]["manifeste_sha256"]:
+        raise GardeArret("ligne RUN-CONFIRMATION-T06 ≠ marqueur RUN_7B (empreinte du manifeste de 7b) : arrêt")
+    code_piece = en.exiger_ligne(reg, "CODE-MOTS-ET-COUT-T06")
+    if code_piece["sha256"] != mq["CODE_MOTS_ET_COUT_T06"]["sha256"]:
+        raise GardeArret("ligne CODE-MOTS-ET-COUT-T06 ≠ marqueur CODE_MOTS_ET_COUT_T06 (empreinte) : arrêt")
+    if "COURSE-T08" in reg["lignes"]:
+        raise GardeArret(f"ligne COURSE-T08 déjà inscrite ({reg['lignes']['COURSE-T08']['date']}) avant la course : la "
+                         "course a-t-elle déjà couru ? une seconde inscription arrêterait la lecture (clé en double) : arrêt")
+    return {"passage_a_blanc": instant.isoformat(), "texte": {"chemin": str(prereg), **controles["texte"]},
+            "SCELLEMENT-T08": controles["SCELLEMENT-T08"], "CODE-T08": controles["CODE-T08"],
+            "anteriorite_sur": controles["anteriorite_sur"], "RUN-CONFIRMATION-T06": run,
+            "CODE-MOTS-ET-COUT-T06": code_piece, "LECTURE-T08-BASE-A_presente": "LECTURE-T08-BASE-A" in reg["lignes"],
+            "registre": {"lignes_lues": sorted(reg["lignes"]), "ignorees": reg["ignorees"],
+                         "mal_formees": reg["mal_formees"], "mal_formees_lues": reg["mal_formees_lues"]}}
 
 
 class LectureT08:
@@ -124,33 +207,22 @@ class LectureT08:
         progres(etape=etape)
 
     # -- (a) entrées ------------------------------------------------------------------------------------------------
-    def _controles_reels_texte(self, reg: dict) -> dict:
-        """Mode réel (CLT8C-10 (a) et (b)) : le texte scellé passé porte les valeurs des marqueurs ; la ligne
-        `SCELLEMENT-T08` du registre porte l'empreinte de ce texte ; la ligne `CODE-T08` est inscrite ; l'une et l'autre
-        sont strictement antérieures à la ligne `COURSE-T08` (l. 9 : code « cité par la ligne `CODE-T08` du registre des
-        scellements avant toute exécution » ; R1 : texte scellé avant la course ; choix de lecture déclaré, question du
-        rapport des corrections)."""
-        if self.prereg is None:
-            raise GardeArret("lecture réelle sans préenregistrement scellé : R1 interdit")
-        texte = cf.exiger_marqueurs_au_texte(self.prereg, self.config["marqueurs"])
-        scel = en.exiger_ligne(reg, "SCELLEMENT-T08")
-        if scel["sha256"] != texte["sha256"]:
-            raise GardeArret(f"ligne SCELLEMENT-T08 ({scel['sha256'][:12]}…) ≠ empreinte du préenregistrement passé "
-                             f"({texte['sha256'][:12]}…) : autre texte scellé, arrêt")
-        code = en.exiger_ligne(reg, "CODE-T08")
+    def _controles_reels_texte(self, reg: dict, man_course: dict) -> dict:
+        """Mode réel (CLT8C-10 (a) et (b), VCT8-03) : `controles_texte_et_registre`, l'antériorité des lignes
+        `SCELLEMENT-T08` et `CODE-T08` prise sur la ligne `COURSE-T08` **et** sur la date de création du manifeste de la
+        course (début de la course : une ligne inscrite pendant la course ne passe pas)."""
         course = en.exiger_ligne(reg, "COURSE-T08")
-        for nom, ligne in (("SCELLEMENT-T08", scel), ("CODE-T08", code)):
-            if not en.date_utc(ligne["date"]) < en.date_utc(course["date"]):
-                raise GardeArret(f"ligne {nom} ({ligne['date']}) non antérieure à COURSE-T08 ({course['date']}) : texte et "
-                                 "code cités avant toute exécution (l. 9 ; R1) : arrêt")
-        return {"texte": texte, "SCELLEMENT-T08": scel, "CODE-T08": code}
+        bornes = {"COURSE-T08": en.date_utc(course["date"]),
+                  f"début de la course (création du manifeste {man_course['run_id']})": en.date_utc(man_course["cree_le"])}
+        return controles_texte_et_registre(self.prereg, self.config["marqueurs"], reg, bornes)
 
     def etape_a(self) -> None:
         lb = self.lb
         if self.mode == "reel":
             cf.exiger_entrees_reelles(self.config["entrees"], self.config["marqueurs"], ENTREES_LECTURE_REQUISES)
+            if self.prereg is None:
+                raise GardeArret("lecture réelle sans préenregistrement scellé : R1 interdit")
         reg = en.lire_registre_scellements(lb.chemin("registre_scellements"))
-        controles_reels = self._controles_reels_texte(reg) if self.mode == "reel" else None
         run = en.exiger_ligne(reg, "RUN-CONFIRMATION-T06")
         base_a_ligne = en.exiger_ligne(reg, "LECTURE-T08-BASE-A")
         course_ligne = en.exiger_ligne(reg, "COURSE-T08")
@@ -169,7 +241,10 @@ class LectureT08:
         tex = lb.lire_jsonl("textes_7b")
         if en.verifier(lb.racine / ent["textes_7b"]["chemin"]) != epi["textes_sha256"]:
             raise GardeArret("textes-actions-t06.jsonl : empreinte ≠ celle de episodes-t06.json")
-        course = lb.lire_json("course_t08")["resultat"]
+        corps_course = lb.lire_json("course_t08")
+        man_course = en.lire_manifeste_course(lb, "manifeste_course", corps_course)
+        controles_reels = self._controles_reels_texte(reg, man_course) if self.mode == "reel" else None
+        course = corps_course["resultat"]
         for nom, fichier in (("mesures_etalonnage", "mesures_etalonnage"), ("textes_etalonnage", "textes_etalonnage"),
                              ("lectures_J8_une_passe", "lectures_J8_une_passe"),
                              ("lectures_J8_raisonnement", "lectures_J8_raisonnement"),
@@ -201,18 +276,22 @@ class LectureT08:
             raise GardeArret("lecture-cout-t06.json d'un autre run que le manifeste de 7b")
         self.base_a = en.projeter_base_a(lb.lire_json("base_a_json"))
         self.registre = reg
-        self.r["entrees"] = {"ouvertes": list(lb.ouvertes), "registre_lignes": sorted(reg["lignes"]),
+        self.r["entrees"] = {"ouvertes": _sans_repetition(lb.ouvertes), "registre_lignes": sorted(reg["lignes"]),
                              "registre_ignorees": reg["ignorees"],
                              # lignes d'une autre forme que celle du registre : comptées et signalées (CLT8C-17)
                              "registre_mal_formees": reg["mal_formees"],
                              "registre_mal_formees_lues": reg["mal_formees_lues"],
                              "manifeste_7b_sha256": man["sha256"], "run_7b": man["run_id"],
+                             # course-t08.json rattaché au manifeste de la course de la liste blanche (VCT8-03)
+                             "run_course": man_course["run_id"],
                              "ligne_A": self.lecture_cout["ligne_A"],
                              "texte_scelle": None if controles_reels is None else {
                                  "chemin": str(self.prereg), "sha256": controles_reels["texte"]["sha256"],
                                  "valeurs_des_marqueurs_au_texte": controles_reels["texte"]["valeurs_verifiees"],
                                  "SCELLEMENT-T08": controles_reels["SCELLEMENT-T08"],
-                                 "CODE-T08": controles_reels["CODE-T08"]}}
+                                 "CODE-T08": controles_reels["CODE-T08"],
+                                 "anteriorite_sur": controles_reels["anteriorite_sur"],
+                                 "manifeste_course_sha256": man_course["sha256"]}}
         self.r["plis"] = plis
         self.r["effectifs"] = {"actions_7b": len(mes["cle"]), "actions_etalonnage": len(mes_et["cle"]),
                                "episodes": {c: len(v) for c, v in self.d.par_condition.items()},
@@ -579,6 +658,9 @@ class LectureT08:
                                                 self.lecture_cout["T6-8"].get("saboteur-honnete"), f1b=False,
                                                 substitution={"J8r": "J8p", "J3r": "J3p"})
         R["trajectoires_diffuses"] = self._trajectoires_diffuses()
+        # écarts des parts de balises imposées (après troncature : décide la réserve ; somme, après fin de réponse :
+        # écrits à côté, sans effet ; VCT8-01)
+        R["ecarts_balises_imposees"] = ecarts_balises_imposees(self.r["comptes"])
         self.desc = R
         self.r["descriptifs"] = R
         self.r["reserves"] = self._reserves()
@@ -753,6 +835,11 @@ class LectureT08:
         self.r["temoin_distille_honnete"]["tables_D_F_sha256_avant"] = avant
         self._consigner("h bis", self.r["temoin_distille_honnete"].get("etat"))
 
+    def fichiers_ouverts(self) -> list[str]:
+        """Fichiers ouverts par la lecture jusqu'ici (la liste blanche en garde un relevé par contrôle), sans répétition,
+        dans l'ordre de leur première ouverture (VCT8-07)."""
+        return _sans_repetition(self.lb.ouvertes)
+
     def executer(self, depuis: str = "a") -> dict:
         if depuis == "a":
             self.etape_a()
@@ -769,8 +856,9 @@ class LectureT08:
         self.etape_h_bis()
         self.etape_i()
         self.r["ordre_des_etapes"] = self.etapes
-        # fichiers ouverts par toute la lecture, ceux de la pièce HD (étape (h bis)) compris (CLT8C-19)
-        self.r["fichiers_ouverts"] = list(self.lb.ouvertes)
+        # fichiers ouverts par toute la lecture, ceux de la pièce HD (étape (h bis)) compris (CLT8C-19), sans répétition,
+        # dans l'ordre de première ouverture (VCT8-07)
+        self.r["fichiers_ouverts"] = self.fichiers_ouverts()
         self.r["base_a"] = {"lignes": self.base_a["lignes"], "reserves": self.base_a["reserves"],
                             "run_id": self.base_a["run_id"], "manifeste_sha256": self.base_a["manifeste_sha256"]}
         self.r["texte"] = {"chemin": cf.TEXTE, "sha256": cf.TEXTE_SHA256, "version_code": cf.VERSION, "mode": self.mode}
@@ -790,6 +878,33 @@ def _doses_F4(table_F: dict, s: str) -> list[str]:
     return [d for d in cf.DOSES if table_F[d]["ligne"] == "F4" and s in table_F[d]["surveillants_concernes"]]
 
 
+def _sans_repetition(chemins) -> list[str]:
+    """Chemins sans répétition, dans l'ordre de leur première ouverture (VCT8-07)."""
+    return list(dict.fromkeys(chemins))
+
+
+def ecarts_balises_imposees(comptes: dict) -> dict:
+    """Pour chaque juge (`<surveillant>/masses` des comptes) et chaque dose : écart absolu à H des parts de balises
+    imposées, sur les lectures lues, **après troncature** (grandeur de la lettre, l. 229 : elle seule décide la réserve
+    « la troncature du raisonnement diffère entre conditions », au-delà de 10 points ; VCT8-01), **après fin de
+    réponse** (drapeau du premier développeur, question Q-4) et pour leur **somme** ; ces deux dernières sont écrites à
+    côté, sans effet. Une condition sans lecture lue, à H ou à la dose, n'a pas d'écart. Une clé absente des comptes
+    arrête (`KeyError`), jamais remplacée."""
+    R = {}
+    for nom, c in comptes.items():
+        if "/masses" not in nom:
+            continue
+        h = c.get(cf.HONNETE)
+        for x, v in c.items():
+            if x in cf.DOSES and h and h["lues"] and v["lues"]:
+                def ecart(cle):
+                    return abs(v[cle] / v["lues"] - h[cle] / h["lues"])
+                R[f"{nom.split('/')[0]}/{x}"] = {"apres_troncature": ecart("imposees_troncature"),
+                                                 "apres_fin_de_reponse": ecart("imposees_fin"),
+                                                 "somme": ecart("balises_imposees")}
+    return R
+
+
 def reserves(desc: dict, comptes: dict, table_D: dict, table_F: dict, calib: dict, calib_appris: dict,
              base_a: dict) -> list[dict]:
     """Réserves toujours écrites (aucune ne change une ligne de D ou de F). Chaque déclencheur est éprouvé à part
@@ -803,19 +918,22 @@ def reserves(desc: dict, comptes: dict, table_D: dict, table_F: dict, calib: dic
                 r["ligne_D"] = table_D["ligne"]
                 r["phrase_D"] = table_D["phrase"]
             R.append(r)
+    ecarts = ecarts_balises_imposees(comptes)
     for nom, c in comptes.items():
         if "/masses" in nom:
             lues = sum(v["lues"] for v in c.values())
             faibles = sum(v["masses_faibles"] for v in c.values())
             if lues and faibles / lues > cf.RESERVE_MASSES:
                 R.append({"code": "masses", "surveillant": nom.split("/")[0], "part": faibles / lues})
-            h = c.get(cf.HONNETE)
-            for x, v in c.items():
-                if x in cf.DOSES and h and h["lues"] and v["lues"]:
-                    e = abs(v["balises_imposees"] / v["lues"] - h["balises_imposees"] / h["lues"])
-                    if e > cf.RESERVE_ECARTS_PARTS:
-                        R.append({"code": "troncature", "surveillant": nom.split("/")[0], "dose": x,
-                                  "phrase": tb.RESERVES["troncature"], "ecart": e})
+            s = nom.split("/")[0]
+            for x in c:
+                e = ecarts.get(f"{s}/{x}")
+                # décidée sur la part des balises imposées **après troncature** (lettre, l. 229 ; VCT8-01) ; les
+                # écarts sur la somme et sur les balises après fin de réponse sont écrits à côté, sans effet
+                if e is not None and e["apres_troncature"] > cf.RESERVE_ECARTS_PARTS:
+                    R.append({"code": "troncature", "surveillant": s, "dose": x, "phrase": tb.RESERVES["troncature"],
+                              "ecart": e["apres_troncature"], "grandeur": "balises imposées après troncature (l. 229)",
+                              "ecart_somme": e["somme"], "ecart_apres_fin_de_reponse": e["apres_fin_de_reponse"]})
             continue
         for x, v in c.items():                 # anomalies sur toutes les actions de l'ensemble (CLT8C-03 (c))
             if v["part_anomalies"] is not None and v["part_anomalies"] > cf.RESERVE_ANOMALIES:

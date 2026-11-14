@@ -7,8 +7,10 @@ Données factices seulement ; aucun réseau ; aucun modèle réel chargé (charg
 from __future__ import annotations
 
 import copy
+import json
 import re
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -19,6 +21,9 @@ from controle_ia.scellement import empreinte, sceller
 from controle_ia.t08 import configuration_v1 as cf
 from controle_ia.t08 import course_v1 as cv
 from controle_ia.t08 import donnees_v1 as dn
+from controle_ia.t08 import entrees_v1 as en
+from controle_ia.t08 import essai_jouet_v1 as ej
+from controle_ia.t08 import fabrique_jouet_v1 as fj
 from controle_ia.t08 import lecture_v1 as lv
 from controle_ia.t08 import statistiques_v1 as st
 from controle_ia.t08 import tables_v1 as tb
@@ -296,7 +301,8 @@ def _base_reserves() -> dict:
                           "IT_IM": {cf.TEMOIN: {"J8p": dict(nad), "M1": dict(nad)}}},
                  "qualification_generiques": {d: {"etiquette": "intermédiaire", "ligne": "F8"} for d in cf.DOSES}},
         "comptes": {"M1": {c: _parts0() for c in (H,) + cf.DOSES},
-                    "J8r/masses": {c: {"lues": 640, "masses_faibles": 0, "balises_imposees": 0} for c in (H,) + cf.DOSES}},
+                    "J8r/masses": {c: {"lues": 640, "masses_faibles": 0, "balises_imposees": 0, "imposees_troncature": 0,
+                                       "imposees_fin": 0} for c in (H,) + cf.DOSES}},
         "table_D": {"ligne": "D6", "phrase": tb.PHRASES_D["D6"]},
         "table_F": {d: {"ligne": "F8", "etiquette": "intermédiaire", "surveillants_concernes": []} for d in cf.DOSES},
         "calib": {"M1": {"ex_aequo_au_seuil": copy.deepcopy(ex0)}},
@@ -343,12 +349,48 @@ def test_reserves_masses_et_troncature():
     assert _reserves(b) == []
     b["comptes"]["J8r/masses"][H]["masses_faibles"] = 321
     assert _une(b, "masses")["surveillant"] == "J8r"
+    # VCT8-01 : réserve « troncature » sur la part des balises imposées **après troncature** (lettre, l. 229), au bord
+    # de 10 points ; les balises après fin de réponse (et la somme) n'y jouent pas
     b = _base_reserves()
-    b["comptes"]["J8r/masses"]["S50"]["balises_imposees"] = 64                  # 10 points : non
+    b["comptes"]["J8r/masses"]["S50"].update(imposees_troncature=64, imposees_fin=200, balises_imposees=264)   # 10 points
     assert _reserves(b) == []
-    b["comptes"]["J8r/masses"]["S50"]["balises_imposees"] = 65
+    b["comptes"]["J8r/masses"]["S50"].update(imposees_troncature=65, imposees_fin=0, balises_imposees=65)       # 10,2 points
     r = _une(b, "troncature")
-    assert r["dose"] == "S50" and r["phrase"] == tb.RESERVES["troncature"]
+    assert r["dose"] == "S50" and r["phrase"] == tb.RESERVES["troncature"] and r["ecart"] == pytest.approx(65 / 640)
+    assert r["ecart_somme"] == pytest.approx(65 / 640) and r["ecart_apres_fin_de_reponse"] == 0.0
+
+
+def _cas_c3(b: dict, h: tuple, dose: tuple) -> None:
+    """Cas C3 du script du vérificateur : (balises après troncature, après fin de réponse) sur 640 lectures lues, à H
+    et à chaque dose, pour J8r."""
+    for cond in (H,) + cf.DOSES:
+        tr, fin = h if cond == H else dose
+        b["comptes"]["J8r/masses"][cond].update(balises_imposees=tr + fin, imposees_troncature=tr, imposees_fin=fin)
+
+
+def test_reserve_troncature_a_la_lettre_cas_c3():
+    """VCT8-01, les deux cas C3 du vérificateur : (i) H à 20 % après troncature, chaque dose à 5 % après troncature et
+    15 % après fin de réponse : écart de la lettre 15 points, réserve due à chaque dose (la somme ne bouge pas : l'ancien
+    code n'en rendait aucune) ; (ii) H à 0 %, chaque dose à 0 % après troncature et 15 % après fin de réponse : écart de
+    la lettre nul, aucune réserve (l'ancien code en rendait quatre). Les écarts sur la somme et après fin de réponse
+    sont écrits à côté (`ecarts_balises_imposees`), sans effet."""
+    b = _base_reserves()
+    _cas_c3(b, (128, 0), (32, 96))
+    r = _reserves(b)
+    assert [(x["code"], x["dose"]) for x in r] == [("troncature", d) for d in cf.DOSES]
+    assert all(x["ecart"] == pytest.approx(0.15) and x["ecart_somme"] == pytest.approx(0.0)
+               and x["ecart_apres_fin_de_reponse"] == pytest.approx(0.15) for x in r)
+    b = _base_reserves()
+    _cas_c3(b, (0, 0), (0, 96))
+    assert _reserves(b) == []
+    e = lv.ecarts_balises_imposees(b["comptes"])
+    assert set(e) == {f"J8r/{d}" for d in cf.DOSES}
+    assert e["J8r/S75"] == {"apres_troncature": 0.0, "apres_fin_de_reponse": pytest.approx(0.15),
+                            "somme": pytest.approx(0.15)}
+    sans = _base_reserves()                                                        # clé absente : jamais remplacée
+    del sans["comptes"]["J8r/masses"]["S25"]["imposees_troncature"]
+    with pytest.raises(KeyError):
+        lv.ecarts_balises_imposees(sans["comptes"])
 
 
 def test_reserves_anomalies_et_pas_non_lus():
@@ -491,3 +533,186 @@ def test_constantes_du_texte_employees_et_code_mort_retire():
         emplois = sum(len(motif.findall(t)) for t in sources.values()) - 1      # moins la ligne de définition
         assert emplois >= 1, nom
     assert not any(re.search(r"\brefuser_hors_liste\b", t) for t in sources.values())
+
+
+# --- seconde passe (vérification courte, VCT8-02, VCT8-03) ---------------------------------------------------------------
+
+MAINTENANT = datetime(2026, 11, 20, 12, 0, 0, tzinfo=timezone.utc)
+
+
+def _registre(tmp_path: Path, nom: str, lignes: list[tuple]) -> Path:
+    p = tmp_path / f"registre-{nom}.md"
+    p.write_text("| CLÉ | date UTC | chemin | empreinte |\n|---|---|---|---|\n"
+                 + "".join(f"| {k} | {d} | {c} | {s} |\n" for k, d, c, s in lignes), encoding="utf-8")
+    return p
+
+
+def _lignes_reelles(mq: dict, sha: str, remplacer: dict | None = None, retirer=(), plus=()) -> list[tuple]:
+    """Lignes du registre factice d'avant la course : RUN-CONFIRMATION-T06, CODE-MOTS-ET-COUT-T06, SCELLEMENT-T08 (à
+    l'empreinte `sha`), CODE-T08 (commit du marqueur en quatrième cellule), toutes avant `MAINTENANT`."""
+    base = {"RUN-CONFIRMATION-T06": ("2026-11-15T12:00:00Z", "runs/20261115-120000-t06-7b/manifeste.json",
+                                     mq["RUN_7B"]["manifeste_sha256"]),
+            "CODE-MOTS-ET-COUT-T06": ("2026-11-16T12:00:00Z", "src/controle_ia/t06/mots_et_cout.py",
+                                      mq["CODE_MOTS_ET_COUT_T06"]["sha256"]),
+            "SCELLEMENT-T08": ("2026-11-20T10:00:00Z", "prereg/texte.md", sha),
+            "CODE-T08": ("2026-11-20T10:00:00Z", "src/controle_ia/t08", mq["COMMIT_CODE_T08"])}
+    base.update(remplacer or {})
+    return [(k, *v) for k, v in base.items() if k not in retirer] + list(plus)
+
+
+def test_registre_code_t08_forme_du_commit(tmp_path):
+    """VCT8-03 : pour la seule clé CODE-T08, une quatrième cellule de 40 caractères (le commit) est lue (`sha256` à
+    None, `commit` rempli) ; à une autre clé, la même forme est comptée « d'une autre forme » ; `ligne_cite_commit` :
+    quatrième cellule ou cellule du chemin, le commit en mot entier (préfixe ou prolongement refusés)."""
+    c = "b" * 40
+    p = _registre(tmp_path, "forme", [("CODE-T08", "2026-11-20T10:00:00Z", "src/controle_ia/t08", c),
+                                     ("COURSE-T08", "2026-11-20T11:00:00Z", "diag/x.json", "1" * 40)])
+    r = en.lire_registre_scellements(p)
+    assert r["lignes"]["CODE-T08"] == {"date": "2026-11-20T10:00:00+00:00", "chemin": "src/controle_ia/t08",
+                                       "sha256": None, "commit": c}
+    assert [m["cle"] for m in r["mal_formees_lues"]] == ["COURSE-T08"]
+    assert en.ligne_cite_commit(r["lignes"]["CODE-T08"], c)                       # cas sain : quatrième cellule
+    assert en.ligne_cite_commit({"chemin": f"src/controle_ia/t08@{c}", "sha256": "e" * 64}, c)   # cas sain : chemin
+    assert not en.ligne_cite_commit(r["lignes"]["CODE-T08"], "c" * 40)           # artefacts
+    assert not en.ligne_cite_commit({"chemin": f"src@{c}0", "sha256": "e" * 64}, c)
+    assert not en.ligne_cite_commit({"chemin": f"src@0{c}", "sha256": "e" * 64}, c)
+    assert not en.ligne_cite_commit({"chemin": "src", "sha256": c + "0" * 24}, c)
+    with pytest.raises(GardeArret, match="40 caractères"):
+        en.ligne_cite_commit({"chemin": c}, c[:39])
+
+
+def test_controles_texte_et_registre_bornes(tmp_path):
+    """VCT8-03 : antériorité stricte des lignes SCELLEMENT-T08 et CODE-T08 sur **chaque** borne (en lecture : la ligne
+    COURSE-T08 et la création du manifeste de la course) : une ligne entre les deux bornes arrête, en nommant la
+    borne ; sans borne : arrêt ; borne sans fuseau : arrêt."""
+    mq = _marqueurs()
+    p = _prereg(tmp_path, mq)
+    reg = en.lire_registre_scellements(_registre(tmp_path, "bornes", _lignes_reelles(mq, empreinte(p), {
+        "CODE-T08": ("2026-11-20T11:00:00Z", "src/controle_ia/t08", mq["COMMIT_CODE_T08"])})))
+    course, debut = datetime(2026, 11, 20, 13, tzinfo=timezone.utc), datetime(2026, 11, 20, 11, 30, tzinfo=timezone.utc)
+    r = lv.controles_texte_et_registre(p, mq, reg, {"COURSE-T08": course, "début de la course": debut})   # cas sain
+    assert set(r["anteriorite_sur"]) == {"COURSE-T08", "début de la course"}
+    tot = datetime(2026, 11, 20, 10, 30, tzinfo=timezone.utc)                    # artefact : CODE-T08 après le début
+    with pytest.raises(GardeArret, match="ligne CODE-T08 .* non antérieure à début de la course"):
+        lv.controles_texte_et_registre(p, mq, reg, {"COURSE-T08": course, "début de la course": tot})
+    with pytest.raises(GardeArret, match="aucune borne"):
+        lv.controles_texte_et_registre(p, mq, reg, {})
+    with pytest.raises(GardeArret, match="sans fuseau"):
+        lv.controles_texte_et_registre(p, mq, reg, {"COURSE-T08": datetime(2026, 11, 20, 13)})
+    with pytest.raises(GardeArret, match="R1"):
+        lv.controles_texte_et_registre(None, mq, reg, {"COURSE-T08": course})
+
+
+def test_passage_a_blanc_cas_sain_et_artefacts(tmp_path):
+    """VCT8-03 : `lecture_v1.passage_a_blanc_reel`, appelé par la session mère avant la course réelle, sur le registre
+    réel et le texte scellé. Cas sain (commit en quatrième cellule ; commit dans le chemin) ; artefacts : CODE-T08 qui
+    cite un autre commit, un commit prolongé, aucun commit ; SCELLEMENT-T08 d'une autre empreinte ; ligne postérieure à
+    l'heure du passage, ou à la même seconde ; COURSE-T08 déjà inscrite ; RUN-CONFIRMATION-T06 ou
+    CODE-MOTS-ET-COUT-T06 autres que leurs marqueurs ; CODE-T08 absente, ou inscrite deux fois ; texte sans une valeur
+    de marqueur ; marqueur non rempli ; aucun texte. Rien n'est écrit."""
+    mq = _marqueurs()
+    p = _prereg(tmp_path, mq)
+    sha, commit = empreinte(p), mq["COMMIT_CODE_T08"]
+    r = lv.passage_a_blanc_reel(mq, _registre(tmp_path, "sain", _lignes_reelles(mq, sha)), p, MAINTENANT)
+    assert r["CODE-T08"]["commit"] == commit and r["SCELLEMENT-T08"]["sha256"] == sha == r["texte"]["sha256"]
+    assert r["anteriorite_sur"] == {"l'heure du passage à blanc": MAINTENANT.isoformat()}
+    assert r["LECTURE-T08-BASE-A_presente"] is False and r["registre"]["mal_formees"] == []
+    au_chemin = {"CODE-T08": ("2026-11-20T10:00:00Z", f"src/controle_ia/t08@{commit}", "e" * 64)}
+    r = lv.passage_a_blanc_reel(mq, _registre(tmp_path, "sain-chemin", _lignes_reelles(mq, sha, au_chemin)), p, MAINTENANT)
+    assert r["CODE-T08"]["sha256"] == "e" * 64
+    q = _prereg(tmp_path, mq, "sans-go.md", sauf="GO_T08.id")
+    gabarit = dict(copy.deepcopy(mq), GO_T08={"id": "<<GO_T08>>", "plafond_usd": 120})
+    d = "2026-11-20T10:00:00Z"
+    cas = {
+        "CODE-T08 qui cite un autre commit": (dict(remplacer={"CODE-T08": (d, "src", "c" * 40)}), "ne cite pas le commit"),
+        "CODE-T08 : commit prolongé dans le chemin": (dict(remplacer={"CODE-T08": (d, f"src@{commit}0", "e" * 64)}),
+                                                      "ne cite pas le commit"),
+        "CODE-T08 sans commit": (dict(remplacer={"CODE-T08": (d, "src/controle_ia/t08", "e" * 64)}), "ne cite pas"),
+        "SCELLEMENT-T08 d'une autre empreinte": (dict(remplacer={"SCELLEMENT-T08": (d, "prereg/texte.md", "f" * 64)}),
+                                                 "autre texte scellé"),
+        "SCELLEMENT-T08 postérieure au passage": (
+            dict(remplacer={"SCELLEMENT-T08": ("2026-11-20T12:00:01Z", "prereg/texte.md", sha)}),
+            "ligne SCELLEMENT-T08 .* non antérieure à l'heure du passage à blanc"),
+        "CODE-T08 à la même seconde que le passage": (dict(remplacer={"CODE-T08": ("2026-11-20T12:00:00Z", "src", commit)}),
+                                                      "ligne CODE-T08 .* non antérieure"),
+        "COURSE-T08 déjà inscrite": (dict(plus=[("COURSE-T08", "2026-11-20T11:00:00Z", "diag/x/course-t08.json", "1" * 64)]),
+                                     "COURSE-T08 déjà inscrite"),
+        "RUN-CONFIRMATION-T06 autre que RUN_7B": (
+            dict(remplacer={"RUN-CONFIRMATION-T06": (d, "runs/x/manifeste.json", "9" * 64)}), "≠ marqueur RUN_7B"),
+        "CODE-MOTS-ET-COUT-T06 autre que son marqueur": (
+            dict(remplacer={"CODE-MOTS-ET-COUT-T06": (d, "src/x.py", "9" * 64)}), "≠ marqueur CODE_MOTS_ET_COUT_T06"),
+        "CODE-T08 absente": (dict(retirer=("CODE-T08",)), "ligne CODE-T08 absente"),
+        "CODE-T08 inscrite deux fois": (dict(plus=[("CODE-T08", d, "src", commit)]), "deux fois"),
+    }
+    for nom, (k, motif) in cas.items():
+        reg = _registre(tmp_path, re.sub(r"[^A-Za-z0-9]", "-", nom), _lignes_reelles(mq, sha, **k))
+        with pytest.raises(GardeArret, match=motif):
+            lv.passage_a_blanc_reel(mq, reg, p, MAINTENANT)
+    reg = _registre(tmp_path, "texte", _lignes_reelles(mq, sha))
+    for prereg, marqueurs, motif in ((q, mq, r"GO_T08\.id"), (p, gabarit, "non rempli"), (None, mq, "R1")):
+        with pytest.raises(GardeArret, match=motif):
+            lv.passage_a_blanc_reel(marqueurs, reg, prereg, MAINTENANT)
+    # heure de la machine par défaut : lignes du passé, passe ; lignes datées après l'heure de la machine, arrêt
+    passe = {k: ("2026-11-01T10:00:00Z", *v[1:]) for k, v in
+             {"SCELLEMENT-T08": (d, "prereg/texte.md", sha), "CODE-T08": (d, "src", commit)}.items()}
+    r = lv.passage_a_blanc_reel(mq, _registre(tmp_path, "machine", _lignes_reelles(mq, sha, passe)), p)
+    assert datetime.fromisoformat(r["passage_a_blanc"]) > datetime(2026, 11, 1, 10, tzinfo=timezone.utc)
+    futur = {k: ("2999-01-01T00:00:00Z", *v[1:]) for k, v in passe.items()}
+    with pytest.raises(GardeArret, match="non antérieure à l'heure du passage à blanc"):
+        lv.passage_a_blanc_reel(mq, _registre(tmp_path, "machine-futur", _lignes_reelles(mq, sha, futur)), p)
+
+
+# --- comparateur de l'essai de bout en bout (VCT8-02) ---------------------------------------------------------------------
+
+RUN_LECTURE = "20261114-000000-t08-lecture-jouet"
+
+
+def _racine_comparee(d: Path, cree_le: str, tables: dict, citer=None) -> None:
+    """Racine factice : manifeste de la lecture (date `cree_le`), `tables-d-f-t08.json` (enveloppe qui cite le
+    manifeste), `lecture-t08.json` qui cite le fichier des tables (chemin, empreinte, contenu ; `citer(f)` : artefact),
+    un fichier de données."""
+    sha_m = fj.ecrire_json(d / "runs" / RUN_LECTURE / "manifeste.json", {"run_id": RUN_LECTURE, "cree_le": cree_le})
+    sha_t = fj.ecrire_json(d / "diag" / RUN_LECTURE / "tables-d-f-t08.json",
+                           {"run_id": RUN_LECTURE, "manifeste_sha256": sha_m, "resultat": tables})
+    f = {"chemin": f"diag/{RUN_LECTURE}/tables-d-f-t08.json", "sha256": sha_t, "contenu_sha256": lv._sha(tables)}
+    if citer is not None:
+        citer(f)
+    fj.ecrire_json(d / "diag" / RUN_LECTURE / "lecture-t08.json",
+                   {"run_id": RUN_LECTURE, "manifeste_sha256": sha_m,
+                    "resultat": {"table_D": tables["table_D"], "tables_D_F_fichier": f}})
+    fj.ecrire_json(d / "donnees" / "x" / "d.json", {"x": 1})
+
+
+def test_comparateur_lecture_exclusion_declaree_et_controle_des_tables(tmp_path):
+    """VCT8-02 : `essai_jouet_v1.comparer` compare `lecture-t08.json` hors la seule clé `tables_D_F_fichier.sha256`
+    (exclusion déclarée dans sa sortie), exige l'égalité de `chemin` et `contenu_sha256`, et vérifie dans chaque racine
+    que l'empreinte citée est celle du fichier des tables sur disque. Cas sain (deux racines dont seuls les manifestes
+    diffèrent) : 0 différent ; artefacts : contenu des tables changé dans une racine ; empreinte citée fausse ;
+    `contenu_sha256` cité faux."""
+    tables = {"table_D": {"ligne": "D6"}, "table_F": {"S25": {"ligne": "F4"}}}
+    lec = f"diag/{RUN_LECTURE}/lecture-t08.json"
+    tab = f"diag/{RUN_LECTURE}/tables-d-f-t08.json"
+    _racine_comparee(tmp_path / "a", "2026-11-14T00:00:01+00:00", tables)
+    _racine_comparee(tmp_path / "b", "2026-11-14T00:00:02+00:00", tables)
+    ra, rb = (json.loads((tmp_path / x / lec).read_text())["resultat"] for x in ("a", "b"))
+    assert ra["tables_D_F_fichier"]["sha256"] != rb["tables_D_F_fichier"]["sha256"]    # l'écart que l'exclusion couvre
+    r = ej.comparer(tmp_path / "a", tmp_path / "b")                                     # cas sain
+    assert r["differents"] == [] and r["deterministe"] and r["motifs"] == {}
+    # identiques à l'octet : le fichier de données et son compagnon ; exclus : manifeste, son compagnon, deux compagnons
+    assert sorted(r["resultats_identiques"]) == [lec, tab] and r["identiques_octet"] == 2 and len(r["exclus"]) == 4
+    assert r["controle_tables_par_racine"] == {"a": True, "b": True}
+    assert any("tables_D_F_fichier.sha256" in x["regle"] for x in r["exclusions_declarees"])
+    artefacts = {
+        "contenu": (dict(tables={**tables, "table_D": {"ligne": "D5"}}), [lec, tab], "hors tables_D_F_fichier.sha256",
+                    {"a": True, "b": True}),
+        "empreinte": (dict(citer=lambda f: f.__setitem__("sha256", "0" * 64)), [lec], "racine b : empreinte citée",
+                      {"a": True, "b": False}),
+        "contenu-cite": (dict(citer=lambda f: f.__setitem__("contenu_sha256", "0" * 64)), [lec],
+                         "racine b : contenu_sha256", {"a": True, "b": False}),
+    }
+    for nom, (k, differents, motif, controle) in artefacts.items():
+        b = tmp_path / f"b-{nom}"
+        _racine_comparee(b, "2026-11-14T00:00:03+00:00", k.get("tables", tables), k.get("citer"))
+        r = ej.comparer(tmp_path / "a", b)
+        assert r["differents"] == differents and not r["deterministe"], nom
+        assert motif in r["motifs"][lec] and r["controle_tables_par_racine"] == controle, nom

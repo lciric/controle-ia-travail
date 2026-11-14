@@ -5,8 +5,11 @@ Ordre des contrôles (chaque issue écrite telle quelle, aucune lecture partiell
 1. la liste blanche ouvre la phase `hd` (aucun fichier de la pièce HD n'est ouvert avant, contrôle d'empreinte compris) ;
 2. `SORTIES-HD-VADAPT` inscrite au registre du texte de validité (lu, jamais écrit) ? sinon « non lue (sorties de la
    pièce HD absentes) », que le registre porte d'autres lignes ou qu'il soit **absent du disque** (pièce HD jamais créée,
-   CLT8C-01) ; une ligne à cette clé d'une autre forme, inscrite deux fois ou à une date illisible : « non lue
-   (<motif>) » (l. 193), comptée et signalée ;
+   CLT8C-01) ; le registre n'est lu que s'il est à l'état « présent » (registre vivant, `scelle: false`) : tout autre
+   état (déclaré scellé, avec ou sans compagnon, compagnon illisible ou différent) rend « non lue (registre du texte de
+   validité : état « <état> »…) », avec l'état et son détail, sans lire le registre (VCT8-05 (a)) ; une ligne à cette
+   clé d'une autre forme, inscrite deux fois ou à une date illisible : « non lue (<motif>) » (l. 193), comptée et
+   signalée ;
 3. règles fixées avant toute sortie : la ligne `GEL-T08` (ou, à défaut, le commit de `main` déclaré par la session mère,
    avec sa date) est strictement antérieure à `SORTIES-HD-VADAPT` et à la création du manifeste de la pièce HD ; sinon
    « non lue : règles non fixées avant la sortie de la pièce HD » (l'antériorité sur le manifeste est plus stricte que
@@ -24,8 +27,10 @@ Ordre des contrôles (chaque issue écrite telle quelle, aucune lecture partiell
 
 Chaque issue de 2 à 6 est levée par `entrees_v1.ArretPieceHD` (classe propre à cette lecture) et rendue par
 `lire_temoin_distille` ; aucun arrêt n'est trié par les mots de son message. Seuls une entrée hors de la liste ou une
-phase ouverte avant son étape (arrêt et nœud) arrêtent la lecture de T0.8 depuis cette étape ; les chemins à motif
-interdit sont refusés dès la construction de la liste blanche.
+phase ouverte avant son étape (arrêt et nœud), et un défaut de chaîne — formes des colonnes de `mesures-t06.npz` de 7b
+absentes de la lecture (étape (a) non jouée), sans lesquelles les types des colonnes de `mesures-hd.npz` ne se comparent
+pas (VCT8-05 (b)) — arrêtent la lecture de T0.8 depuis cette étape ; les chemins à motif interdit sont refusés dès la
+construction de la liste blanche.
 
 Lus : M1 (log10 du coût brut), M1c (c̃, centre de la base (A)), M2 et MC (modèle de « `S`d contre H », lecture de
 transfert, sans réapprentissage) ; statistique `max` seulement, normalisation et seuils de la lecture (M2, MC : ceux du
@@ -138,6 +143,9 @@ def _sorties(lb) -> dict:
     p, c = lb.controler(NOMS_HD["registre"])
     if c["etat"] == "absent":                  # pièce HD jamais créée, registre jamais ouvert (CLT8C-01)
         raise ArretPieceHD("non lue", NON_LUE_ABSENTES, detail=c["detail"])
+    if c["etat"] != "present":                 # registre vivant attendu : tout autre état, non lu (VCT8-05 (a))
+        raise ArretPieceHD("non lue", f"non lue (registre du texte de validité : état « {c['etat']} », registre vivant "
+                           "sans compagnon attendu)", etat_registre=c["etat"], detail=c["detail"])
     r = en.lire_sorties_hd(p)
     signal = {"lignes_mal_formees": r["mal_formees"], "lignes_mal_formees_du_registre": r["mal_formees_toutes"]}
     if r["inscriptions"] > 1:
@@ -181,9 +189,13 @@ def _index(lb, ligne: dict) -> dict:
     return {n: fichiers[f] for n, f in FICHIERS_INDEX.items()}
 
 
-def _mesures(p, formes_7b: dict | None) -> dict:
+def _mesures(p, formes_7b: dict) -> dict:
     """`mesures-hd.npz` : mêmes colonnes que `mesures-t06.npz`, mêmes sortes de types que celles de 7b, une dimension,
-    même longueur ; sinon « non calculable »."""
+    même longueur ; sinon « non calculable ». Sans les formes de 7b (`formes_7b` à `None`), arrêt : la comparaison des
+    types n'est jamais sautée (VCT8-05 (b))."""
+    if formes_7b is None:
+        raise GardeArret("formes des colonnes de mesures-t06.npz de 7b absentes : types des colonnes de mesures-hd.npz non "
+                         "comparables : arrêt")
     try:
         with np.load(p, allow_pickle=False) as z:
             cles = tuple(sorted(z.files))
@@ -196,11 +208,10 @@ def _mesures(p, formes_7b: dict | None) -> dict:
     longueurs = {v.shape for v in mes.values()}
     if len(longueurs) != 1 or len(next(iter(longueurs))) != 1:
         raise ArretPieceHD("non calculable", f"mesures-hd.npz d'une autre forme : colonnes de formes {sorted(longueurs)}")
-    if formes_7b is not None:
-        autres = sorted(k for k, v in mes.items() if v.dtype.kind != formes_7b.get(k))
-        if autres:
-            raise ArretPieceHD("non calculable", f"mesures-hd.npz d'une autre forme : types des colonnes {autres} ≠ ceux "
-                               "de mesures-t06.npz de 7b")
+    autres = sorted(k for k, v in mes.items() if v.dtype.kind != formes_7b.get(k))
+    if autres:
+        raise ArretPieceHD("non calculable", f"mesures-hd.npz d'une autre forme : types des colonnes {autres} ≠ ceux "
+                           "de mesures-t06.npz de 7b")
     if len(set(mes["cle"].tolist())) != len(mes["cle"]):
         raise ArretPieceHD("non calculable", "mesures-hd.npz d'une autre forme : clé d'action en double")
     return mes
@@ -268,6 +279,10 @@ def _assembler(mes: dict, tex: list[dict], taches: list[str]) -> dict:
 
 
 def _lire(lecture, lb, cfg: dict) -> dict:
+    formes_7b = getattr(lecture, "formes_mesures_7b", None)
+    if formes_7b is None:                      # défaut de chaîne, avant toute ouverture de la pièce HD (VCT8-05 (b))
+        raise GardeArret("lecture du témoin distillé honnête sans les formes des colonnes de mesures-t06.npz de 7b "
+                         "(étape (a) non jouée) : arrêt")
     ligne = _sorties(lb)
     regles, date_regles = _regles(lecture, cfg)
     if not date_regles < en.date_utc(ligne["date"]):
@@ -282,7 +297,7 @@ def _lire(lecture, lb, cfg: dict) -> dict:
     conditions = man["config"].get("conditions_hd")
     if not isinstance(conditions, dict) or not isinstance(conditions.get("honnete_rejoue"), str):
         raise ArretPieceHD("non calculable", "conditions de la pièce HD absentes du manifeste")
-    mes = _mesures(p_mes, getattr(lecture, "formes_mesures_7b", None))
+    mes = _mesures(p_mes, formes_7b)
     tex = _textes(p_tex)
     hd = _assembler(mes, tex, lecture.d.taches)
     try:

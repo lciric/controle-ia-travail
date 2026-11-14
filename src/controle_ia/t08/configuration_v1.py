@@ -255,7 +255,17 @@ def _tel_quel(texte: str, valeur: str) -> bool:
 def exiger_marqueurs_au_texte(chemin_texte, marqueurs: dict) -> dict:
     """Mode réel (CLT8C-10 (a)) : le préenregistrement passé au lancement est scellé et intact, et porte, telles quelles,
     les valeurs des marqueurs de la configuration ; sinon arrêt (un autre texte scellé, ou des marqueurs de
-    configuration différents de ceux du texte, ne passent pas)."""
+    configuration différents de ceux du texte, ne passent pas).
+
+    **Limite déclarée (VCT8-04)** : chaque valeur est cherchée n'importe où dans le texte scellé (telle quelle, bornée
+    par des caractères qui ne la prolongent pas), **non à la place de son marqueur** : une valeur que le texte cite
+    ailleurs passerait ce contrôle sans que le marqueur porte cette valeur (exemple du vérificateur : le brouillon 4
+    cite, dans sa liste d'arrêt, l'identifiant d'un autre GO, `GO-2026-11-10-09` ; une configuration qui le porterait
+    comme `GO_T08.id` passerait). Ce qui tient malgré elle : le commit est contrôlé à part contre le code exécuté
+    (`course_v1.exiger_code_au_commit`) ; l'entropie et les empreintes sont trop longues pour une rencontre fortuite ;
+    un marqueur rempli ne laisse pas son nom dans le texte, et la session mère vérifie avant le scellement que chaque
+    marqueur n'a qu'une occurrence et une valeur (« Marqueurs à remplir avant le scellement », l. 370). Lever la limite
+    demanderait d'exiger chaque valeur sur la ligne qui nomme son marqueur (forme du texte rempli à fixer)."""
     from ..scellement import verifier
 
     sha = verifier(chemin_texte)
