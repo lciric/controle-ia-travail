@@ -10,3 +10,20 @@ Session `session_01QPDgKfBxeeiM3BsxqJgSgf`, branche `prep/neuron-lens-v1`, sous 
 | ~09:45 | R7 : chiffres de stabilité (B-1) relus dans `docs/findings.md` voisin (`8814874b…`, § 1) — opposables ; chiffres de B-2, B-3, B-4, B-7, `read_S` recalculés dans les fichiers publiés empreintés. Deux corrections au plan : la consigne de C2 dit « untruthful », pas « dishonest » ; le critère B-5 du plan v1 (« décroissant sur le premier quart ») serait manqué par la référence publiée elle-même (à réécrire pour B-β). |
 | ~09:50 | Correctif de `06_activations.py` écrit (différence + essai écrit, non exécuté) ; `git apply --check` et `ast.parse` seulement. |
 | ~09:55 | Une commande d'écriture de fichiers dans le carnet de la session (aucune suppression demandée) a été bloquée par le contrôle de sécurité des suppressions (« could not be checked for dangerous rm operations ») ; non relancée telle quelle ; le même travail (copie et retouche de `lenses.py` dans le carnet) a été fait par un petit script Python écrit dans le carnet, sans suppression. |
+| ~09:55 | Contre-lectures 1 rendues (texte gelé : « scellable après corrections », trois points bloquants du volet A ; correctif : « correct après corrections ») ; rapports recopiés et scellés sous `docs/notes/neuron-lens-v1/contre-lectures/` (`3d839dfc…`, `8ed58170…`). Une remarque refusée sur constat : le contre-lecteur croyait partager le modèle de l'autrice ; la description de session dit le contraire. |
+| 09:58 | Jeux publics relevés sans clé, client générique (JailbreakBench, AdvBench, faits de `representation-engineering`, tokeniseur et fiche de Qwen3-8B, révision `b968826d…`, Apache-2.0), archivés et scellés sous `docs/sources/neuron-lens-v2-contrastes-20261114/` (manifeste `manifeste-v1.tsv`) ; tokeniseur (11 Mo) non versé, empreinte `aeb13307…`. Point 2 d de la passation : fait pour les fichiers et licences. |
+| ~10:00 | Comptes sur le texte seul (notre outil `outils/comptes_avant_scellement_v1.py`) : préambule de 27 jetons → toutes les positions lues ≥ 33 ; P = {« Ġun », « truth », « ful », « Ġhonest »} ; faits : 297 vrais, 300 faux retenus ; AdvBench : 463 retenus ; l'ancien critère A2 (Fisher) est inatteignable (0 à 1 jeton associé par découpe) → remplacé. |
+| ~10:05–10:20 | Correctif v2 (`06_activations-llama-v2.diff` : crochets, `chat_open`, table des têtes sans lentille publiée) et essai v2 ; texte gelé v2 ; correctif des lentilles publiques de Llama (`lenses-neuronpedia-llama-v1.diff`, point 2 c). Commit `b319e96d`. Contre-lectures 2 lancées. |
+
+## Nœud proposé (format de décision), à soumettre à Lazar par la mère
+**Décision** : permettre ou non l'exécution du code du dépôt voisin (`stdlogits/neuron-lens`, MIT), et où.
+**Enjeu** : le classifieur a refusé le 13 novembre l'exécution locale de ses essais ; sans exécution, la portabilité à Llama et les
+correctifs restent « établis par lecture », et rien de B0 ne peut partir, même avec une ligne de GO.
+**Options** : (a) exécution permise **sur la machine louée seulement**, au commit épinglé `849bfe16` plus nos correctifs scellés,
+essais miniatures d'abord — avantage : aucun risque pour le conteneur de session, B0 tel que prévu ; inconvénient : les erreurs
+se découvrent sur du temps payé (borné par le plafond et l'arrêt à 60 %) ; (b) exécution permise aussi **dans le conteneur**, sur
+processeur, essais miniatures seulement (aucun poids, aucun réseau au-delà du dépôt cloné), par une règle de permission
+explicite — avantage : essais gratuits avant toute dépense ; inconvénient : exécuter du code tiers dans le conteneur de session ;
+(c) aucune exécution — le travail s'arrête aux textes gelés et aux correctifs écrits.
+**Recommandation** : (a), confiance 0,7 (b n'apporte que quelques minutes d'essai et demande de lever un refus).
+**Défaut sous 48 heures** : aucun (ce nœud conditionne une dépense ; rien ne part sans mot).
