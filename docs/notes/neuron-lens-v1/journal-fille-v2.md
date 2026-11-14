@@ -27,3 +27,12 @@ explicite — avantage : essais gratuits avant toute dépense ; inconvénient : 
 (c) aucune exécution — le travail s'arrête aux textes gelés et aux correctifs écrits.
 **Recommandation** : (a), confiance 0,7 (b n'apporte que quelques minutes d'essai et demande de lever un refus).
 **Défaut sous 48 heures** : aucun (ce nœud conditionne une dépense ; rien ne part sans mot).
+
+## Suite (heures `date -u`)
+| heure (UTC) | fait |
+|---|---|
+| ~10:12–10:14 | Contre-lectures 2 rendues : correctifs « corrects après corrections mineures » (lentilles : deux corrections avant B0) ; texte gelé v2 « scellable après corrections mineures » (une contradiction dans l'essai du code des verdicts, une vingtaine de précisions). Rapports archivés et scellés (`50f6f7d5…`, `1a4a1b8d…`). |
+| ~10:15–10:20 | Correctif des lentilles v2 (empreintes vérifiées sur le fichier lu, couches `0..30` exigées, J de Llama contrôlée, Qwen3 inchangé) et son essai écrit ; retouches mineures du correctif de la passe d'activations ; texte gelé v3. |
+| ~10:18 | **Expurgation** : le rapport de la contre-lecture 1 (commité en `b319e96d`) contenait le nom de modèle que le contre-lecteur donnait pour lui-même ; remplacé dans l'arbre par une copie expurgée (`contre-lecture-1-texte-gele-v1-expurge.md`, `9f236ea8…`), original retiré de l'arbre ; **le nom reste dans l'historique git** de la branche (commits `b319e96d` et `ffd1b312`). Je ne réécris pas l'historique ; à la mère de dire s'il faut faire davantage. |
+| ~10:19 | Une empreinte complète écrite de tête (original de `arch.py`) était fausse ; corrigée par `sha256sum`, puis **vérification mécanique** de toutes les empreintes complètes des pièces à sceller contre leurs sources : toutes concordent (hors celle de l'original retiré, connue de l'historique). |
+| ~10:21 | Contre-lecture 3, ciblée sur les points modifiés, lancée. |

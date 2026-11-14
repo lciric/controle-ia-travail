@@ -11,13 +11,16 @@ Dépôt `stdlogits/neuron-lens`, commit `849bfe1678e28becceb1e3864afe5fc8297d02e
 d'activations sur Llama 3.1, trouvés par lecture :
 1. `scripts/06_activations.py` (`151d1196…`), `Collector.hooks`, ligne 287 : crochets sur `self_attn.q_norm` et `k_norm`, que
    Llama n'a pas → `AttributeError` dès la première couche.
-2. `neuron_lens/arch.py` (`0f1e2262…`), `chat_open`, ligne 266 (appelé par la passe « first », ligne 401 de `06`) : pour un
+2. `neuron_lens/arch.py` (`0f1e2262b5b13e5d68cf3e4ff139e756a92dbc1245781839a5d2bd41c992ce12`), `chat_open`, ligne 266 (appelé par la passe « first », ligne 396 de l'original de `06`, 401 du corrigé) : pour un
    tokeniseur à gabarit de dialogue sans `<|im_start|>` (Llama 3.1), `apply_chat_template(..., tokenize=True)[1]` ; dans
    `transformers` 5.18 (version lue par le contre-lecteur), la fonction rend un dictionnaire par défaut → `IndexError`
    probable, après toute la passe principale.
 3. `06_activations.py`, `head_tables`, ligne 589 : `arch.lens(MODEL, "R_mid", R_FIT)` ; sans ajustement local, `R_FIT` vaut
-   `"hub"` et la publication `stdlogits/rs-lenses` ne couvre que Qwen3-8B et Gemma 4 12B (arbre archivé du lecteur) →
-   échec avant l'écriture de `docs.parquet`, dont `causal_lens.py` a besoin.
+   `"hub"` et la publication `stdlogits/rs-lenses` ne couvre que Qwen3-8B et Gemma 4 12B (arbre archivé du lecteur,
+   `lentilles-stdlogits-rs-lenses-arbre.json`, `d2a7a076…` ; non relu par le contre-lecteur 2) → échec en fin de script (code de
+   sortie non nul, ni `heads/acts.parquet` ni `docs.parquet`, après les tables des neurones). `causal_lens.py` ne lit
+   `docs.parquet` que si le fichier d'état `data/acts/<modèle>.pt` n'est pas sur la machine (`catalog.flat_tokens`) : la mesure
+   aurait pu tourner, mais sur une passe sortie en erreur.
 
 ## 2. Le correctif
 Fichier : `docs/notes/neuron-lens-v1/correctifs/06_activations-llama-v2.diff` (deux fichiers, quatre blocs ; compagnon `.sha256`).
@@ -75,5 +78,18 @@ réelle de B-α (liste d'arrêt du texte gelé).
 | 10 compagnons `.sha256` | acceptée : posés au scellement |
 | 11 « vérifié » | acceptée : § 4 |
 
-## 7. Contre-lecture 2
-À faire sur cette v2 avant scellement.
+## 7. Contre-lecture 2 (`docs/notes/neuron-lens-v1/contre-lectures/contre-lecture-2-correctifs-v2.md`, `50f6f7d5…`)
+Relu : cette note à `1c3b8c9f…`, la différence `76b639a0…` (inchangée depuis), l'essai à `6d6c4c08…`. Verdict : « correct après
+corrections mineures ». Retouches faites dans ce fichier et dans l'essai (fichiers non scellés à la relecture ; empreintes relues
+ci-dessus) :
+
+| remarque | traitement |
+|---|---|
+| 1 tableau du § 6 exact | constat |
+| 2 blocs nouveaux corrects ; aucun lecteur de `out_R_z` dans `causal_lens.py` | constat ; fichiers non examinés (`08_reads.py`, `10_labels.py`, `12_release.py`, `neurons.py`, `weights.py`, `corpus.py`) notés |
+| 3 motif surévalué | acceptée : § 1.3 réécrit |
+| 4 numéro de ligne | acceptée : 396 (original), 401 (corrigé) |
+| 5 liste en dur | acceptée : source citée, limite dite |
+| 6 essai sans erreur trouvée | constat |
+| 7a vrai tokeniseur | acceptée : `test_chat_open_vrai_tokeniseur` ajouté (B0) |
+| 7b assertion recopiée | acceptée : commentée comme rappel |

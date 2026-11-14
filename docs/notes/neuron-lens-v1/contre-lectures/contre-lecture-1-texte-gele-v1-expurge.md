@@ -3,7 +3,7 @@
 Contre-lecteur : sous-agent neuf, lancé le 2026-11-14 vers 09:48 UTC par la session autrice avec une surcharge de modèle
 (« modèle B ») ; il ne l'a pas écrit. Brouillon relu : `docs/notes/neuron-lens-v1/texte-gele-volet-a-et-b-alpha-v1.md`,
 `4ac7b556ad4519790216ed00fc7ddedcbd23393bc5d53ac0facdc6690c940267` (commit `11f66985`). Rapport rendu vers 09:55 UTC.
-Recopié sans modification de fond (seule l'indentation du relais a été retirée).
+Recopié sans modification de fond (seule l'indentation du relais a été retirée). **Copie expurgée** (2026-11-14, ~10:18 UTC) : le nom de modèle que le contre-lecteur donnait pour lui-même (remarque 17) est remplacé par « [identifiant de modèle retiré] » ; la version non expurgée (`3d839dfc…`) a été retirée de l'arbre, elle reste dans l'historique git (commit `b319e96d`).
 
 ---
 
@@ -105,7 +105,7 @@ Aucun fichier modifié, aucun appel réseau ni de modèle, code voisin non exéc
 - « Non retrouvée : à aucune couche » : au sens de la règle 3 sur 5, ou d'aucune découpe ?
 - Rang de A1 moyenné sur 5 découpes : dominé par une valeur extrême ; préférer la médiane.
 
-**17. § 11 — « sous-agent d'un autre modèle que l'autrice ».** Je tourne sous Claude Fable 5.2. L'attribution de la session autrice indique le même modèle. Si c'est le cas, cette contre-lecture ne satisfait pas la clause « autre modèle ». À constater tel quel au § 11, ou faire refaire par un autre modèle.
+**17. § 11 — « sous-agent d'un autre modèle que l'autrice ».** Je tourne sous [identifiant de modèle retiré]. L'attribution de la session autrice indique le même modèle. Si c'est le cas, cette contre-lecture ne satisfait pas la clause « autre modèle ». À constater tel quel au § 11, ou faire refaire par un autre modèle.
 
 ### Mineures
 
