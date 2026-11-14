@@ -1,0 +1,36 @@
+# Preuve : les ajouts de la pièce « mots et coût » ne changent aucun fichier contrôlé par CODE-T07 — sortie brute
+date : 2026-11-14T13:02:14Z ; HEAD du dépôt de travail : 27c8979fac47c7089d8fd3c4740ebc28ccb277b9
+
+## 1. Dépôt de travail partagé : src/controle_ia suivi égal à C7 ; entrées non suivies sous src/controle_ia (aucune n'est de la pièce)
+$ git diff --quiet c2fab6cc7267b76228a75dc3e2e08bc7aa038961 -- src/controle_ia && echo vide
+vide
+$ git status --porcelain --untracked-files=all -- src/controle_ia
+?? src/controle_ia/t07bbis/__init__.py
+?? src/controle_ia/t07bbis/adversaires_texte_v1.py
+?? src/controle_ia/t07bbis/apprentissage_carte_v1.py
+?? src/controle_ia/t07bbis/commun_v1.py
+?? src/controle_ia/t07bbis/plis_v1.py
+(ces entrées t07bbis appartiennent à un autre chantier, non à la pièce ; elles font refuser CODE-T07 dans ce dossier de travail tant qu'elles y sont)
+$ git status --porcelain --untracked-files=all -- scripts tests (fichiers de la pièce : préfixe mots_et_cout)
+?? scripts/banc_mutations_mots_et_cout_t06_v1.py
+?? scripts/essai_bout_en_bout_mots_et_cout_t06_v1.py
+?? scripts/fabrique_factice_mots_et_cout_t06_v1.py
+?? scripts/lancer_mots_et_cout_t06_v1.sh
+?? scripts/mots_et_cout_t06_v1.py
+?? tests/test_mots_et_cout_t06_v1.py
+
+## 2. Clone épars propre au HEAD + les seuls fichiers de la pièce
+HEAD du clone : 27c8979fac47c7089d8fd3c4740ebc28ccb277b9
+$ git status --porcelain --untracked-files=all   (dans le clone)
+?? scripts/banc_mutations_mots_et_cout_t06_v1.py
+?? scripts/essai_bout_en_bout_mots_et_cout_t06_v1.py
+?? scripts/fabrique_factice_mots_et_cout_t06_v1.py
+?? scripts/lancer_mots_et_cout_t06_v1.sh
+?? scripts/mots_et_cout_t06_v1.py
+?? tests/test_mots_et_cout_t06_v1.py
+$ git status --porcelain --untracked-files=all -- src/controle_ia   (dans le clone) : 0 entrée(s)
+$ git diff --quiet c2fab6cc… -- src/controle_ia && echo vide   (dans le clone)
+vide
+$ PYTHONPATH=<clone>/src python -B -m controle_ia.t07.code_t07_v1 verifier <clone> <clone>/registres/scellements-v1.md
+CODE-T07 conforme : commit c2fab6cc7267b76228a75dc3e2e08bc7aa038961, 26 fichiers, tête du dépôt 27c8979fac47c7089d8fd3c4740ebc28ccb277b9
+code de sortie : 0
