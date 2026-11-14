@@ -283,7 +283,10 @@ def test_epoques_plis_ou_familles_autres_refuses_en_marche_reelle():
     with pytest.raises(GardeArret, match="plis internes"):
         vi.Contexte(None, None, (7, 15, 23), n_plis_internes=3)
     with pytest.raises(GardeArret, match="familles"):
-        vi.Contexte(None, None, (7, 15, 23), familles=("lineaire",))
+        vi.Contexte(None, None, (7, 15, 23), familles=("attention",))
+    assert vi.Contexte(None, None, (7, 15, 23), familles=("lineaire",)).familles == ("lineaire",)      # variante (r1)
+    assert cm.VARIANTES["r1"] == {"familles": ("lineaire",), "n_reetiquetages": 50}
+    assert len(cm.grille((7, 15, 23), ("lineaire",))) == 9 and cm.VARIANTES[None]["n_reetiquetages"] == cm.N_REETIQUETAGES
 
 
 def test_plan_de_notation_des_sources():

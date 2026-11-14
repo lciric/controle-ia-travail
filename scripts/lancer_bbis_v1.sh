@@ -10,7 +10,8 @@
 #                                    GO-2026-11-14-09, une relance au plus, échéance, relance après le 21 novembre 12:00 UTC refusée ;
 #   commande RACINE OFFRE_ID COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S FEU RELANCES IMAGE
 #                                    imprime la commande de création (amorce scripts/amorce_bbis_v1.sh en base64, variables par leur
-#                                    nom, jamais une valeur de clé) après les deux contrôles ci-dessus ;
+#                                    nom, jamais une valeur de clé) après les deux contrôles ci-dessus ; variables facultatives
+#                                    VARIANTE=r1 et DECISION_VARIANTE=R-… (variante (r1), sur le mot de Lazar seulement) ;
 #   depense CUMUL_USD PRIX_CARTE_USD_H   garde de dépense : cumul relevé + un quart d'heure de carte ≥ 39,5 USD → refus et commande
 #                                    de destruction imprimée ;
 #   detruire ID                      imprime la commande de destruction par l'identifiant (R10 ; jamais par motif).
@@ -36,11 +37,13 @@ case "${1:-}" in
         case "$ECH" in ''|*[!0-9]*) echo "BBIS REFUS : échéance illisible"; exit 2;; esac
         case "$IMAGE" in *[!A-Za-z0-9._:/-]*|'') echo "BBIS REFUS : image illisible"; exit 2;; esac
         AMORCE_ESSAI_LOCAL=1 COMMIT="$COMMIT" BRANCHE_CODE="$BRC" RUN_7B="$RUN7B" BRANCHE_7B="$BR7B" RUN_BBIS="$RUNB" \
-            ECHEANCE_UTC_S="$ECH" GO_ID="$GO_ID" bash "$ICI/amorce_bbis_v1.sh" > /dev/null || { echo "BBIS REFUS : arguments refusés par l'amorce"; exit 2; }
+            ECHEANCE_UTC_S="$ECH" GO_ID="$GO_ID" VARIANTE="${VARIANTE:-}" DECISION_VARIANTE="${DECISION_VARIANTE:-}" \
+            bash "$ICI/amorce_bbis_v1.sh" > /dev/null || { echo "BBIS REFUS : arguments refusés par l'amorce"; exit 2; }
         py_registre creation "$RAC" "$FEU" "$(date +%s)" "$REL" > /dev/null || { py_registre creation "$RAC" "$FEU" "$(date +%s)" "$REL"; exit 2; }
         B64=$(base64 -w 0 < "$ICI/amorce_bbis_v1.sh") || { echo "BBIS REFUS : amorce illisible"; exit 2; }
+        EXTRA=""; [ -n "${VARIANTE:-}" ] && EXTRA=" -e VARIANTE=$VARIANTE -e DECISION_VARIANTE=$DECISION_VARIANTE"
         echo "BBIS COMMANDE (à jouer par la mère, après le feu écrit ; empreinte de l'amorce $(sha256sum < "$ICI/amorce_bbis_v1.sh" | cut -c1-16)) :"
-        echo "GO_ID=$GO_ID vastai create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQUETTE --env \"-e COMMIT=$COMMIT -e BRANCHE_CODE=$BRC -e RUN_7B=$RUN7B -e BRANCHE_7B=$BR7B -e RUN_BBIS=$RUNB -e ECHEANCE_UTC_S=$ECH -e GO_ID=$GO_ID -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$GH_TOKEN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce_bbis_v1.sh && bash /root/amorce_bbis_v1.sh\""
+        echo "GO_ID=$GO_ID vastai create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQUETTE --env \"-e COMMIT=$COMMIT -e BRANCHE_CODE=$BRC -e RUN_7B=$RUN7B -e BRANCHE_7B=$BR7B -e RUN_BBIS=$RUNB -e ECHEANCE_UTC_S=$ECH -e GO_ID=$GO_ID$EXTRA -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$GH_TOKEN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce_bbis_v1.sh && bash /root/amorce_bbis_v1.sh\""
         exit 0;;
     depense)
         [ "$#" = 3 ] || { echo "BBIS REFUS : depense CUMUL_USD PRIX_CARTE_USD_H"; exit 2; }

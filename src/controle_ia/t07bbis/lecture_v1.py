@@ -1121,7 +1121,12 @@ def lire(racine: Path, run_7b: str, run_bbis: str, instant: int, adaptateur_mc=N
     mc = {"source": choix["source"], "interface": getattr(interface, "nom", None), "motif_repli": choix.get("motif_repli"),
           "controle": ctrl_mc, "reserves": choix["reserves"] + ctrl_mc["reserves"],
           "cellules_non_calculables": [f"P-{d}" for d in ctrl_mc["non_calculables"]], "motifs_non_calcul": motifs_texte}
-    n_nul = N_REETIQUETAGES if reel else int(essai.get("n_nul", N_REETIQUETAGES))
+    from .commun_v1 import VARIANTES
+    variante = sondes_doc.get("variante")
+    if variante not in VARIANTES:
+        raise GardeArret(f"sondes-bbis.json : variante {variante!r} inconnue : arrêt")
+    res["variante"] = {"variante": variante, "decision": sondes_doc.get("decision_variante")}
+    n_nul = VARIANTES[variante]["n_reetiquetages"] if reel else int(essai.get("n_nul", N_REETIQUETAGES))
     ctx = ContexteLecture(graines, niveau, par_cle, medianes_honnetes(lignes), fautifs, mc, n_dir, n_nul,
                           N_TIRAGES if reel else int(essai.get("n_tirages", N_TIRAGES)))
     asms = {}

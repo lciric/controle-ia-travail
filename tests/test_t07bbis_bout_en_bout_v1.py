@@ -184,6 +184,13 @@ def test_marche_reelle_refusee_hors_instance_ou_sans_registre(marche_jouet, monk
         reg.write_text(avant, encoding="utf-8")
     with pytest.raises(GardeArret, match="64 bits"):
         ma.marche(d, aide.RUN, "20261118-100000-bbis-jouet", 12345, d.parent / "autre-travail", "cpu")
+    with pytest.raises(GardeArret, match="inconnue"):
+        ma.marche(d, aide.RUN, "20261118-100000-bbis-jouet", ENTROPIE, d.parent / "autre-travail", "cpu", variante="r2")
+    with pytest.raises(GardeArret, match="sans la ligne de décision"):
+        ma.marche(d, aide.RUN, "20261118-100000-bbis-jouet", ENTROPIE, d.parent / "autre-travail", "cpu", variante="r1")
+    with pytest.raises(GardeArret, match="à la fois"):
+        ma.marche(d, aide.RUN, "20261118-100000-bbis-jouet", ENTROPIE, d.parent / "autre-travail", "cpu",
+                  essai=dict(ESSAI_MARCHE), variante="r1", decision="R-2800")
     with pytest.raises(GardeArret, match="existe déjà"):
         ma.marche(d, aide.RUN, RUN_B, ENTROPIE, d.parent / f"{d.name}-travail", "cpu", essai=dict(ESSAI_MARCHE))
 

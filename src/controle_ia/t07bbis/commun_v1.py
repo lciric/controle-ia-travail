@@ -39,6 +39,10 @@ N_PLIS_INTERNES = 4
 N_TACHES_APPRENTISSAGE = 32
 N_DIRECTIONS = 800
 N_REETIQUETAGES = 100
+# Variante (r1) de la garde de débit (plan, point 5 ; liste d'arrêt), jouée seulement sur le mot de Lazar (nœud) : famille
+# linéaire seule (9 réglages) et 50 réétiquetages ; tout le reste inchangé.
+VARIANTES = {None: {"familles": ("lineaire", "attention"), "n_reetiquetages": 100},
+             "r1": {"familles": ("lineaire",), "n_reetiquetages": 50}}
 N_TIRAGES = 2000
 QUANTILE_PLANCHER = 0.95
 NIVEAU_DECISIF, NIVEAU_DECISIF_REPLI, NIVEAU_RESERVE = 0.99, 0.995, 0.95

@@ -14,7 +14,8 @@
 #   arrêtée (« stopped »), gardée au plus 12 heures, nœud de Lazar (la session détruit sans mot dans les 12 heures).
 # Aucune aire, aucun état, aucun résumé de score n'est imprimé ni écrit (le journal ne porte que des étapes et des durées).
 # Variables (--env) : COMMIT, BRANCHE_CODE (branche qui porte COMMIT), RUN_7B, BRANCHE_7B, RUN_BBIS, ECHEANCE_UTC_S, GO_ID
-#   (GO-2026-11-14-09), GH_TOKEN, HF_TOKEN ; posées par Vast : CONTAINER_ID, CONTAINER_API_KEY. Aucune n'est jamais affichée.
+#   (GO-2026-11-14-09), GH_TOKEN, HF_TOKEN ; facultatives, sur le mot de Lazar seulement : VARIANTE=r1 et DECISION_VARIANTE=R-…
+#   (variante (r1) de la garde de débit) ; posées par Vast : CONTAINER_ID, CONTAINER_API_KEY. Aucune clé n'est jamais affichée.
 # Essai local (AMORCE_ESSAI_LOCAL=1) : contrôles des arguments seulement, puis sortie (code 0) avant tout réseau ; hors essai,
 #   ESSAI_* sont refusées.
 set -uo pipefail
@@ -48,6 +49,14 @@ case "$COMMIT" in *[!0-9a-f]*|'') echo "BBIS REFUS : COMMIT illisible"; exit 2;;
 [ "$GO_ID" = "$GO_ATTENDU" ] || { echo "BBIS REFUS : GO_ID $GO_ID ≠ $GO_ATTENDU (ligne de GO de B bis)"; exit 2; }
 case "$RUN_BBIS" in [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]-bbis-*) ;; *) echo "BBIS REFUS : RUN_BBIS illisible"; exit 2;; esac
 case "$ECHEANCE_UTC_S" in ''|*[!0-9]*) echo "BBIS REFUS : ECHEANCE_UTC_S illisible"; exit 2;; esac
+# variante (r1) de la garde de débit : seulement sur le mot de Lazar, ligne de décision citée (DECISION_VARIANTE=R-…)
+VARIANTE_ARGS=()
+case "${VARIANTE:-}" in
+    '') [ -z "${DECISION_VARIANTE:-}" ] || { echo "BBIS REFUS : DECISION_VARIANTE sans VARIANTE"; exit 2; };;
+    r1) case "${DECISION_VARIANTE:-}" in R-[0-9]*) VARIANTE_ARGS=(--variante r1 --decision "$DECISION_VARIANTE");;
+            *) echo "BBIS REFUS : variante (r1) sans ligne de décision R-… (DECISION_VARIANTE)"; exit 2;; esac;;
+    *) echo "BBIS REFUS : VARIANTE ${VARIANTE} inconnue ((r1) seulement)"; exit 2;;
+esac
 if [ "$ESSAI" = 1 ]; then echo "BBIS ESSAI LOCAL : arguments conformes ; aucun réseau, aucune minuterie"; exit 0; fi
 [ "$ECHEANCE_UTC_S" -gt "$(date +%s)" ] && [ "$ECHEANCE_UTC_S" -le $(( $(date +%s) + 86400 )) ] || { echo "BBIS REFUS : échéance hors de [maintenant, + 24 h]"; exit 2; }
 case "${CONTAINER_ID:-}" in ''|*[!0-9]*) echo "BBIS REFUS : identifiant de l'instance illisible"; exit 2;; esac
@@ -158,7 +167,8 @@ BRANCHE_PRETE=1
 #    arrêtée hors la garde de débit
 j "marche : début (run $RUN_BBIS)"
 env BBIS_INSTANCE=1 HF_HUB_OFFLINE=1 CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=src "$PY" -m controle_ia.t07bbis.marche_v1 \
-    --racine . --run-7b "$RUN_7B" --run-bbis "$RUN_BBIS" --travail "$T/travail" > "$X/marche.txt" 2> "$X/marche.err"; c=$?
+    --racine . --run-7b "$RUN_7B" --run-bbis "$RUN_BBIS" --travail "$T/travail" ${VARIANTE_ARGS[@]+"${VARIANTE_ARGS[@]}"} \
+    > "$X/marche.txt" 2> "$X/marche.err"; c=$?
 j "marche : code $c"
 CH=("runs/$RUN_BBIS" "diag/$RUN_BBIS" "$XT")
 case "$c" in

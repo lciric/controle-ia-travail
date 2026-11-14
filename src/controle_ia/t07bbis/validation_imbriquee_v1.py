@@ -196,8 +196,9 @@ class Contexte:
             raise GardeArret(f"marche réelle : {self.epoques} époques, {EPOQUES} fixées par le texte (point 5)")
         if self.reelle and int(self.n_plis_internes) != N_PLIS_INTERNES:
             raise GardeArret(f"marche réelle : {self.n_plis_internes} plis internes, {N_PLIS_INTERNES} fixés par le texte")
-        if self.reelle and tuple(self.familles) != FAMILLES:
-            raise GardeArret(f"marche réelle : familles {self.familles}, {FAMILLES} fixées par le texte (variante (r1) : texte neuf)")
+        if self.reelle and tuple(self.familles) not in (FAMILLES, ("lineaire",)):
+            raise GardeArret(f"marche réelle : familles {self.familles} : {FAMILLES} (texte) ou ('lineaire',) (variante (r1)) "
+                             "seulement")
 
 
 def _entrainer_chrono(ctx: Contexte, lot, reglage, nom, y, cle_graine):

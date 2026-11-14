@@ -213,9 +213,23 @@ def gardes_d_entree(racine: Path, run_7b: str) -> dict:
 
 
 def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_travail: Path, appareil: str = "cuda",
-           essai: dict | None = None) -> dict:
+           essai: dict | None = None, variante: str | None = None, decision: str | None = None) -> dict:
     """La marche complète (points 0 à 4 du docstring). `essai` (jouet seulement ; jamais en marche réelle) : `epoques`,
-    `n_plis_internes`, `n_directions`, `n_reetiquetages`, `familles`, `n_controle`, `n_chemin`."""
+    `n_plis_internes`, `n_directions`, `n_reetiquetages`, `familles`, `n_controle`, `n_chemin`. `variante` « r1 » (garde de
+    débit, nœud de Lazar ; `decision` : la ligne du registre des décisions qui la retient, exigée) : famille linéaire seule et 50
+    réétiquetages, écrits au manifeste et dans `sondes-bbis.json`."""
+    from .commun_v1 import VARIANTES
+    if variante not in VARIANTES:
+        raise GardeArret(f"variante {variante!r} inconnue : (r1) seulement, sur le mot de Lazar")
+    if variante is not None and not (isinstance(decision, str) and decision.startswith("R-")):
+        raise GardeArret("variante (r1) sans la ligne de décision de Lazar (R-…) : refus")
+    if variante is not None and essai is not None and ("familles" in essai or "n_reetiquetages" in essai):
+        raise GardeArret("variante et réglages d'essai des familles ou des réétiquetages à la fois : refus")
+    if variante is not None:
+        essai_v = dict(essai or {})
+        essai_v.update({"familles": VARIANTES[variante]["familles"], "n_reetiquetages": VARIANTES[variante]["n_reetiquetages"]})
+    else:
+        essai_v = essai
     from ..harnais.run_harnais_factice import graine_entiere
     from ..manifeste import creer_manifeste, ecrire_resultat, lire_manifeste
     from ..t06.lanceur_v2 import ActivationsDemi
@@ -225,7 +239,7 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
     from . import validation_imbriquee_v1 as vi
     debut = time.time()
     racine, reelle = Path(racine), essai is None
-    essai = dict(essai or {})
+    essai = dict(essai_v or {})
     graines = Graines(int(entropie), reelle=reelle)
     m7b, sha_m7b = lire_manifeste(racine / "runs" / run_7b / "manifeste.json")
     if reelle:
@@ -243,7 +257,7 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
     epoques = int(essai.get("epoques", EPOQUES))
     config_marche = {"texte": TEXTE, "run_7b": run_7b, "manifeste_7b_sha256": sha_m7b, "appareil": appareil,
                      "familles": list(familles), "n_directions": n_dir, "n_reetiquetages": n_reet, "n_plis_internes": n_int,
-                     "epoques": epoques, "essai": not reelle}
+                     "epoques": epoques, "essai": not reelle, "variante": variante, "decision_variante": decision}
     dossier = Path(dossier_travail)
     if dossier.exists():
         raise GardeArret(f"{dossier} existe déjà (R12)")
@@ -297,7 +311,8 @@ def marche(racine: Path, run_7b: str, run_bbis: str, entropie: int, dossier_trav
         raise GardeArret("contrôle carte-processeur non joué (couple tiré absent des sources) : arrêt")
     ecrit = ecrire_fermes(racine, run_bbis, sources, graines,
                           {"controle_carte_processeur": controle.resultat, "couple_controle": list(controle.couple),
-                           "journal": ctx.debit.journal, "doses": list(doses), "couches": list(couches),
+                           "journal": ctx.debit.journal, "variante": variante, "decision_variante": decision,
+                           "doses": list(doses), "couches": list(couches),
                            "plis": plis, "manifeste": {"chemin": str(chemin_m.relative_to(racine)),
                                                        "sha256": Path(str(chemin_m) + ".sha256").read_text(
                                                            encoding="utf-8").split()[0]},
@@ -315,10 +330,13 @@ def main(argv=None) -> int:
     ap.add_argument("--run-7b", required=True)
     ap.add_argument("--run-bbis", required=True)
     ap.add_argument("--travail", required=True)
+    ap.add_argument("--variante", default=None, choices=["r1"])
+    ap.add_argument("--decision", default=None, help="ligne R-… du registre des décisions qui retient la variante (r1)")
     a = ap.parse_args(argv)
     try:
         g = gardes_d_entree(Path(a.racine), a.run_7b)
-        r = marche(Path(a.racine), a.run_7b, a.run_bbis, g["fiche"]["entropie"], Path(a.travail), "cuda")
+        r = marche(Path(a.racine), a.run_7b, a.run_bbis, g["fiche"]["entropie"], Path(a.travail), "cuda", variante=a.variante,
+                   decision=a.decision)
     except GardeArret as e:
         print(f"BBIS ARRET : {e}")
         return 2

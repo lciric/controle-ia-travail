@@ -182,9 +182,11 @@ def test_amorce_en_essai_local_refuse_les_arguments_fautifs(tmp_path):
 
     r = jouer()
     assert r.returncode == 0 and "ESSAI LOCAL" in r.stdout
-    for faute in ({"GO_ID": "GO-2026-11-02-28"}, {"COMMIT": "xyz"}, {"RUN_BBIS": "bbis"}, {"ECHEANCE_UTC_S": "demain"}):
+    for faute in ({"GO_ID": "GO-2026-11-02-28"}, {"COMMIT": "xyz"}, {"RUN_BBIS": "bbis"}, {"ECHEANCE_UTC_S": "demain"},
+                  {"VARIANTE": "r1"}, {"VARIANTE": "r3", "DECISION_VARIANTE": "R-2800"}, {"DECISION_VARIANTE": "R-2800"}):
         r = jouer(**faute)
-        assert r.returncode == 2 and "REFUS" in r.stdout
+        assert r.returncode == 2 and "REFUS" in r.stdout, faute
+    assert jouer(VARIANTE="r1", DECISION_VARIANTE="R-2800").returncode == 0
 
 
 def test_commande_fiche_empreintes_lues_sur_le_disque(tmp_path, capsys):
