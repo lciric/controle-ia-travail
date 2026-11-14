@@ -1,0 +1,37 @@
+Preuve : la pièce « mots et coût » v3 ne touche aucun fichier contrôlé par CODE-T07 — sortie v1 de la preuve v3
+Heure de début (date -u) : 2026-11-14T14:29:08Z
+Dépôt de travail : tête 157e977d7619a1f303e709a3930513bab1060260 ; commit C7 cité par CODE-T07 : c2fab6cc7267b76228a75dc3e2e08bc7aa038961
+Note : le dépôt de travail est un clone superficiel (is-shallow-repository = true) ;
+C7 y est lisible mais n'est pas atteignable depuis la tête (merge-base --is-ancestor : 1, 1 = non) ;
+un « git clone » local ne le porte pas (premier essai, non gardé : « commit cité absent du dépôt du module »). Le clone
+ci-dessous lit les objets du dépôt de travail en lecture seule (fichier alternates), sans aucun fetch.
+
+(1) Dossier de travail partagé (aucun listage du dépôt entier ; aucune liste de fichiers non suivis sous src/) :
+    git diff --quiet c2fab6cc HEAD -- src/controle_ia : code 0 (0 = aucun écart suivi)
+    hors de src/controle_ia/ : scripts/mots_et_cout_t06_v3.py 9dbcc55ca47b21674636f5d6c9126af15244d5ee63a9df8dee274df126c4e674
+    hors de src/controle_ia/ : scripts/lancer_mots_et_cout_t06_v3.sh e1d2514cd6361f8201a6773a4cf108ac333aa7ca647807698b90c3abeb97a7c5
+    hors de src/controle_ia/ : tests/test_mots_et_cout_t06_v3.py 2e951ed5056024684ea9d3b089129973bfb5bbb3ec8a0b16fdeec343373e0f42
+    hors de src/controle_ia/ : scripts/banc_mutations_mots_et_cout_t06_v3.py b78f5d046b19811de318d596de1f02e5a6b7c355349fb3299acae8e2a470119c
+    hors de src/controle_ia/ : scripts/essai_bout_en_bout_mots_et_cout_t06_v3.py 517eedbd216abef174a35984d54d26cc9961ef4f56a6c202c15c0b1533d3d7a0
+
+(2) Clone épars propre à la tête, dans le répertoire temporaire du développeur :
+    tête du clone 157e977d7619a1f303e709a3930513bab1060260 ; motifs épars : /src/ /registres/code-t07/ /registres/scellements-v1.md  ; arbre propre : 0 entrée(s)
+  (2a) sans les fichiers de la pièce — python -m controle_ia.t07.code_t07_v1 verifier . registres/scellements-v1.md :
+        REFUS : CODE-T07 : commit cité c2fab6cc7267… ni la tête (157e977d7619…) ni un de ses ancêtres
+        code 2
+    ajouté (non suivi) : scripts/mots_et_cout_t06_v3.py 9dbcc55ca47b21674636f5d6c9126af15244d5ee63a9df8dee274df126c4e674
+    ajouté (non suivi) : scripts/lancer_mots_et_cout_t06_v3.sh e1d2514cd6361f8201a6773a4cf108ac333aa7ca647807698b90c3abeb97a7c5
+    ajouté (non suivi) : tests/test_mots_et_cout_t06_v3.py 2e951ed5056024684ea9d3b089129973bfb5bbb3ec8a0b16fdeec343373e0f42
+    ajouté (non suivi) : scripts/banc_mutations_mots_et_cout_t06_v3.py b78f5d046b19811de318d596de1f02e5a6b7c355349fb3299acae8e2a470119c
+    ajouté (non suivi) : scripts/essai_bout_en_bout_mots_et_cout_t06_v3.py 517eedbd216abef174a35984d54d26cc9961ef4f56a6c202c15c0b1533d3d7a0
+    entrées non suivies sous src/controle_ia/ : 0 ; entrées non suivies (toutes) : 5
+  (2b) avec les cinq fichiers de la pièce v3 — même commande :
+        REFUS : CODE-T07 : commit cité c2fab6cc7267… ni la tête (157e977d7619…) ni un de ses ancêtres
+        code 2
+  (2c) cas synthétique : commit de fusion 81afc6d8e4e44b36cbd0de64500dad4076f65694, arbre = arbre de la tête (9e2c15a7f17970081565c8f3140f83418229bf88 = 9e2c15a7f17970081565c8f3140f83418229bf88), parents = tête et C7 ;
+       les cinq fichiers de la pièce restent non suivis : 5 entrée(s), dont sous src/controle_ia/ : 0 — même commande :
+        CODE-T07 conforme : commit c2fab6cc7267b76228a75dc3e2e08bc7aa038961, 26 fichiers, tête du dépôt 81afc6d8e4e44b36cbd0de64500dad4076f65694
+        code 0
+Lecture : (2a) et (2b) refusent pour la même raison (ascendance de C7 invisible dans le clone superficiel), avec comme sans
+la pièce ; (2c) prouve que la pièce ne change aucune condition de contenu de CODE-T07 (réserve R-D18 du rapport v3).
+Heure de fin (date -u) : 2026-11-14T14:29:22Z

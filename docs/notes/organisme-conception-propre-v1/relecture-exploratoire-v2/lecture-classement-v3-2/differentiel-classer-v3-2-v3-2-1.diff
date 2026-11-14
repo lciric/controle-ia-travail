@@ -1,0 +1,89 @@
+--- lecture-classement-v3-2/classer_conception_propre_v3_2.py	2026-11-14 12:25:09.345725620 +0000
++++ lecture-classement-v3-2/classer_conception_propre_v3_2_1.py	2026-11-14 13:00:45.401454629 +0000
+@@ -1,7 +1,14 @@
+ #!/usr/bin/env python3
+-"""Programme de classement de la relecture exploratoire — course « conception propre » — v3.2 (règle v2).
++"""Programme de classement de la relecture exploratoire — course « conception propre » — v3.2.1 (règle v2.1).
+ 
+-v3.2 (14 novembre 2026, à partir de 12:25 UTC, `date -u`) = v3.1 (`../../lecture-classement-v3-1/`, `f9ef3695…`, gardée,
++v3.2.1 (14 novembre 2026, à partir de 13:01 UTC, `date -u`) = v3.2 (`classer_conception_propre_v3_2.py`, `2d8bf35a…`, gardée,
++jamais servie), après la contre-lecture (`../contre-lecture-modele-c-v1.md`) et selon `../regle-v2-1.md`. Changements, et
++seulement eux : il charge `outil_lecteur_conception_propre_v3_2_1.py` ; **issues de la séparation renommées** (M1) :
++« séparation réelle (portée par R7) », « séparation non établie sur R7 (n = 8) » (au lieu de « séparation de forme »),
++« pas de séparation » ; quand le classement est non lisible, l'issue est suivie de « (non lue : classement non lisible) »
++(m2) ; précisions et résumé mis à jour.
++
++De la v3.2 : v3.2 (14 novembre 2026, à partir de 12:25 UTC, `date -u`) = v3.1 (`../../lecture-classement-v3-1/`, `f9ef3695…`, gardée,
+ R12), pour la **relecture exploratoire** sous la règle corrigée `../regle-v2.md` (R-2726). **Rien n'est désigné** : la
+ relecture rend un rang exploratoire, jamais une désignation au sens de la conception (§ 4.6) ; le verdict E2 scellé de la
+ première lecture reste tel quel. Changements, et seulement eux (différentiel entier : `differentiel-classer-v3-1-v3-2.diff`) :
+@@ -30,7 +37,7 @@
+ autre que celle du dossier d'envois, provenance des fiches revérifiée. **N'appelle aucun modèle.** Ne lit jamais les notes
+ du juge de l'organisme (conception, § 4.8).
+ 
+-    python3 -I -B classer_conception_propre_v3_2.py --envois DOSSIER_ENVOIS --sortie DOSSIER_SORTIE
++    python3 -I -B classer_conception_propre_v3_2_1.py --envois DOSSIER_ENVOIS --sortie DOSSIER_SORTIE
+ 
+ Sortie (dossier neuf ou vide, rien n'est écrasé) : `lecture-verifiee-L1-v3-2.json`, `lecture-verifiee-L2-v3-2.json`,
+ `classement-v3-2.json`, `classement-v3-2.md`, scellés.
+@@ -46,9 +53,9 @@
+ 
+ import numpy as np
+ 
+-VERSION = "classer-conception-propre-v3-2"
++VERSION = "classer-conception-propre-v3-2-1"
+ ICI = Path(__file__).resolve().parent
+-NOM_OUTIL = "outil_lecteur_conception_propre_v3_2.py"
++NOM_OUTIL = "outil_lecteur_conception_propre_v3_2_1.py"
+ 
+ 
+ def _charger_outil():
+@@ -93,7 +100,9 @@
+     "entiers ; permutations par argsort de tirages uniformes, tranches de 10 000, générateur "
+     "numpy.random.default_rng(SeedSequence(2026111303)).",
+     "Séparation (séquence fixe) : test de R7 retenu seul, réelles contre hasard, même méthode, générateur "
+-    "default_rng(SeedSequence(2026111404)) ; toujours calculé ; lu seulement si L5 v2 rejette.",
++    "default_rng(SeedSequence(2026111404)) ; toujours calculé ; lu seulement si L5 v2 rejette ; issues « séparation réelle "
++    "(portée par R7) », « séparation non établie sur R7 (n = 8) » (un manque de puissance, non une preuve de forme), « pas "
++    "de séparation » ; classement non lisible : « (non lue : classement non lisible) » après l'issue.",
+     "Huit comparaisons descriptives (R1 à R7 retenus, et N = aucune) : bilatérales, 100 000 permutations chacune, "
+     "SeedSequence(2026111303).spawn(8)[k] ; Holm sur les huit.",
+     "Départage : rang dans default_rng(enfant 2).permutation(n) des fiches réelles admissibles prises dans l'ordre du "
+@@ -222,9 +231,9 @@
+     if not rejet_L5:
+         issue = "pas de séparation"
+     elif t["p"] is not None and t["p"] <= SEUIL_P:
+-        issue = "séparation réelle"
++        issue = "séparation réelle (portée par R7)"
+     else:
+-        issue = "séparation de forme"
++        issue = "séparation non établie sur R7 (n = 8)"
+     return {"issue": issue, "test_R7_seul": t, "lu": bool(rejet_L5)}
+ 
+ 
+@@ -414,13 +423,14 @@
+     elif not lisible:
+         verdict = ("E2 v2 : classement exploratoire non lisible (" + ", ".join(
+             n for n, x in (("L1", L1), ("L2", L2), ("L3 v2", L3), ("L4", L4)) if not x["tient"])
+-                   + f") ; {sep['issue']} (L5 v2 : p = {t5['p']:.5f}) ; rang rapporté avec cette mention")
++                   + f") ; {sep['issue']} (non lue : classement non lisible ; L5 v2 : p = {t5['p']:.5f}) ; rang "
++                   "rapporté avec cette mention")
+     else:
+         verdict = (f"classement exploratoire lisible ; {sep['issue']} (L5 v2 : p = {t5['p']:.5f})"
+                    + (f" ; R7 seul : p = {sep['test_R7_seul']['p']:.5f}" if L5["rejet"] else ""))
+     verdict += " ; exploratoire : aucune idée désignée (règle v2)"
+     res = {
+-        "version": VERSION, "outil_version": O.VERSION, "regle": "regle-v2.md (exploratoire, R-2726)",
++        "version": VERSION, "outil_version": O.VERSION, "regle": "regle-v2-1.md (exploratoire, R-2726)",
+         "programmes_sha256": {"classer": O.sha256_fichier(__file__), "outil": O.sha256_fichier(ICI / NOM_OUTIL)},
+         "versions": {"python": sys.version.split()[0], "numpy": np.__version__},
+         "fiches_validees": prov,
+@@ -454,7 +464,7 @@
+ 
+ def resume_md(r: dict) -> str:
+     sep = r["separation"]
+-    l = ["# Classement exploratoire de la relecture — course « conception propre » — v3.2 (règle v2)\n",
++    l = ["# Classement exploratoire de la relecture — course « conception propre » — v3.2.1 (règle v2.1)\n",
+          f"Programme `{r['version']}` (`{r['programmes_sha256']['classer'][:12]}…`), outil "
+          f"`{r['programmes_sha256']['outil'][:12]}…` ; envois `{r['envois']['manifeste_sha256'][:12]}…`. "
+          "**Exploratoire** (R-2726) : aucune idée désignée ; le verdict E2 de la première lecture reste tel quel.\n",

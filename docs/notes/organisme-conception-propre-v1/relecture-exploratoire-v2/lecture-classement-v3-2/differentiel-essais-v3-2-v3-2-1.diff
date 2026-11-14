@@ -1,0 +1,203 @@
+--- lecture-classement-v3-2/essais_lecture_classement_v3_2.py	2026-11-14 12:32:58.769753524 +0000
++++ lecture-classement-v3-2/essais_lecture_classement_v3_2_1.py	2026-11-14 13:02:12.841745157 +0000
+@@ -1,4 +1,12 @@
+-"""Essais de l'outil du lecteur v3.2 et du classement v3.2 (règle v2) — relecture exploratoire, course « conception propre ».
++"""Essais de l'outil du lecteur v3.2.1 et du classement v3.2.1 (règle v2.1) — relecture exploratoire, « conception propre ».
++
++v3.2.1 (14 novembre 2026, à partir de 13:01 UTC, `date -u`) = essais v3.2 (`essais_lecture_classement_v3_2.py`, `e5e65b12…`,
++gardés) joués contre l'outil et le classement v3.2.1 : noms des programmes, issues de la séparation renommées (« séparation
++réelle (portée par R7) », « séparation non établie sur R7 (n = 8) »), plus un essai de la mention « non lue » quand le
++classement est non lisible (constat m2 de la contre-lecture). Les pièces épinglées (hasard v2.1, règle v2.1) sont celles de
++l'outil v3.2.1.
++
++De la v3.2 :
+ 
+ v3.2 (14 novembre 2026, à partir de 12:30 UTC, `date -u`) : les essais de la v3.1 (`../../lecture-classement-v3-2/`,
+ `490eb359…`), adaptés aux seuls changements de la v3.2 — noms en `-v3-2`, manifeste `manifeste-relecture-v3-2.json`, dossier
+@@ -17,7 +25,7 @@
+ Hors de `tests/` (R-2614). Lancement, depuis la racine du dépôt :
+ 
+     PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -B -m pytest -q -p no:cacheprovider \\
+-        docs/notes/organisme-conception-propre-v1/relecture-exploratoire-v2/lecture-classement-v3-2/essais_lecture_classement_v3_2.py
++        docs/notes/organisme-conception-propre-v1/relecture-exploratoire-v2/lecture-classement-v3-2/essais_lecture_classement_v3_2_1.py
+ 
+ `LC_MODULES` désigne le dossier des deux programmes essayés (banc de mutations) ; par défaut, celui de ce fichier.
+ """
+@@ -55,7 +63,7 @@
+     return m
+ 
+ 
+-K = _charger("classer_cp_v3_2_essai", "classer_conception_propre_v3_2.py")
++K = _charger("classer_cp_v3_2_1_essai", "classer_conception_propre_v3_2_1.py")
+ O = K.O
+ LEVIER_JUGE = "levier:juge"
+ PRIX = O.PRIX_LUS["standard"]
+@@ -692,7 +700,7 @@
+     lire(env)
+     r = classer(env)
+     assert r["lisible"] and r["L5"]["rejet"] and r["verdict"].startswith("classement exploratoire lisible")
+-    assert r["separation"]["issue"] == "séparation réelle" and r["separation"]["lu"]
++    assert r["separation"]["issue"] == "séparation réelle (portée par R7)" and r["separation"]["lu"]
+     assert r["designees"] == [] and "aucune idée désignée" in r["verdict"]
+     for L in ("L1", "L2"):
+         assert all(x == 0 for x in r["non_prouves"][L].values()) and r["anomalies"][L] == []
+@@ -1089,13 +1097,13 @@
+ def test_reseau_et_cle_confines():
+     """Le classement n'a aucun accès réseau ni à l'environnement ; l'outil n'a qu'une adresse (OpenAI, Chat Completions),
+     ne lit l'environnement qu'en deux points (la clé, par son nom, retirée aussitôt ; SSL_CERT_FILE), ne lance rien."""
+-    arbre = ast.parse((MODS / "classer_conception_propre_v3_2.py").read_text(encoding="utf-8"))
++    arbre = ast.parse((MODS / "classer_conception_propre_v3_2_1.py").read_text(encoding="utf-8"))
+     imports = {a.name.split(".")[0] for n in ast.walk(arbre) if isinstance(n, ast.Import) for a in n.names}
+     imports |= {n.module.split(".")[0] for n in ast.walk(arbre) if isinstance(n, ast.ImportFrom) and n.module}
+     assert not imports & {"urllib", "http", "socket", "requests", "subprocess", "os", "ssl"}
+-    texte = (MODS / "classer_conception_propre_v3_2.py").read_text(encoding="utf-8")
++    texte = (MODS / "classer_conception_propre_v3_2_1.py").read_text(encoding="utf-8")
+     assert "notes-par-juge" not in texte and "environ" not in texte
+-    texte = (MODS / "outil_lecteur_conception_propre_v3_2.py").read_text(encoding="utf-8")
++    texte = (MODS / "outil_lecteur_conception_propre_v3_2_1.py").read_text(encoding="utf-8")
+     assert "notes-par-juge" not in texte and "subprocess" not in texte and "requests" not in texte
+     urls = re.findall(r"https?://[^\s\"'`)]+", texte)
+     assert set(urls) == {"https://api.openai.com/v1/chat/completions", "https://developers.openai.com/api/docs/pricing",
+@@ -1119,7 +1127,7 @@
+     pa = ecrire_attestation(tmp_path, h)
+     env = envois_de(racine_de(tmp_path))
+     py = [sys.executable, "-I", "-B"]
+-    outil, classeur = str(MODS / "outil_lecteur_conception_propre_v3_2.py"), str(MODS / "classer_conception_propre_v3_2.py")
++    outil, classeur = str(MODS / "outil_lecteur_conception_propre_v3_2_1.py"), str(MODS / "classer_conception_propre_v3_2_1.py")
+     prix = ["--effort", "medium", "--palier", "standard", "--plafond-usd", "11", "--depense-anterieure-usd", "0"]
+     c = subprocess.run(py + [outil, "preparer", "--fiches", str(pf), "--attestation", str(pa), "--sortie", str(env),
+                              "--racine", str(racine_de(tmp_path))] + prix, capture_output=True, text=True)
+@@ -1137,7 +1145,7 @@
+     for n in ("classement-v3-2.json", "classement-v3-2.md", "lecture-verifiee-L1-v3-2.json", "lecture-verifiee-L2-v3-2.json"):
+         O.verifier_sceau(sortie / n)
+     r = json.loads((sortie / "classement-v3-2.json").read_text(encoding="utf-8"))
+-    assert r["designees"] == [] and r["lisible"] and r["separation"]["issue"] == "séparation réelle"
++    assert r["designees"] == [] and r["lisible"] and r["separation"]["issue"] == "séparation réelle (portée par R7)"
+     assert "aucune idée désignée" in (sortie / "classement-v3-2.md").read_text(encoding="utf-8")
+     c = subprocess.run(py + [classeur, "--envois", str(env), "--sortie", str(sortie), "--racine", str(racine_de(tmp_path))],
+                        capture_output=True, text=True)
+@@ -1654,10 +1662,10 @@
+             O.envoyer(env, transport=d)
+         assert d.appels == [] and not (env / "journal-depense-v3-2.jsonl").exists()
+     sans = {k: v for k, v in os.environ.items() if k in ("PATH", "LANG", "HOME")}
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2.py"), "envoyer",
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2_1.py"), "envoyer",
+                         "--envois", str(env)], capture_output=True, text=True, env=sans)
+     assert c.returncode == 2 and "absente" in c.stderr and not (env / "journal-depense-v3-2.jsonl").exists()
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2.py"), "bilan",
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2_1.py"), "bilan",
+                         "--envois", str(env)], capture_output=True, text=True, env=sans)
+     assert c.returncode == 0 and json.loads(c.stdout)["appels"] == 0
+ 
+@@ -1682,8 +1690,8 @@
+ def test_envois_d_une_autre_version_refuses(tmp_path, monkeypatch):
+     env, _ = preparer(tmp_path)
+     p = env / "manifeste-relecture-v3-2.json"
+-    resceller(p, p.read_text(encoding="utf-8").replace('"outil-lecteur-conception-propre-v3-2"',
+-                                                       '"outil-lecteur-conception-propre-v3"'))
++    resceller(p, p.read_text(encoding="utf-8").replace('"outil-lecteur-conception-propre-v3-2-1"',
++                                                       '"outil-lecteur-conception-propre-v3-2"'))  # manifeste v3.2 refusé
+     with pytest.raises(O.Refus, match="préparés par"):
+         envoyer(env, monkeypatch)
+ 
+@@ -1790,7 +1798,7 @@
+     env, _ = preparer(tmp_path)
+     cle = "sk-sonde-factice-CLE-A-NE-PAS-ECRIRE-9876543210"
+     sans = {k: v for k, v in os.environ.items() if k in ("PATH", "LANG", "HOME")}
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2.py"), "envoyer",
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2_1.py"), "envoyer",
+                         "--envois", str(env)], capture_output=True, text=True, env={**sans, "OPENAI_API_KEY": cle + "\r"})
+     assert c.returncode == 2 and cle not in c.stdout + c.stderr and "ASCII" in c.stderr
+     assert not (env / "journal-depense-v3-2.jsonl").exists() and not O.contient_cle(tous_les_octets(tmp_path), cle)
+@@ -2245,7 +2253,8 @@
+     assert b["clos"] == 1 and b["attendus"] == 12 and not b["pret_pour_verifier"] and b["anomalies"] == []
+     assert c["modele_servi"] == "gpt-6-astra" and c["palier_servi"] == "default" and c["anomalies"] == []
+     assert c["jetons"]["reasoning_tokens"] <= c["jetons"]["completion_tokens"] <= 32768
+-    assert c["cout_usd"] <= c["pire_cas_usd"] == man["garde_depense"]["envois"][0]["pire_cas_usd"]
++    assert c["cout_usd"] <= c["pire_cas_usd"]
++    assert abs(c["pire_cas_usd"] - man["garde_depense"]["envois"][0]["pire_cas_usd"]) < 1e-9  # arrondi à 10⁻⁶ (D2 de la v3.1)
+     envoyer(env, monkeypatch)
+     assert O.bilan(env)["pret_pour_verifier"]
+ 
+@@ -2266,7 +2275,7 @@
+ def test_regle_de_lecture_inchangee_v3_1_v3_2():
+     """La règle de lecture (vue, pile, ordres, lots, message, vérification, garde, transport) est identique à la v3.1 ;
+     seuls changent les objets que la v3.2 déclare ; au classement, seuls changent ceux de la règle v2."""
+-    a, b = _objets(V3_1 / "outil_lecteur_conception_propre_v3_1.py"), _objets(MODS / "outil_lecteur_conception_propre_v3_2.py")
++    a, b = _objets(V3_1 / "outil_lecteur_conception_propre_v3_1.py"), _objets(MODS / "outil_lecteur_conception_propre_v3_2_1.py")
+     changes = {"VERSION", "RACINE_DEFAUT", "PIECES", "PLAFOND_ABSOLU_USD", "SUFFIXE", "MANIFESTE", "DOSSIER_ENVOIS_REL",
+                "verifier_unicite", "JOURNAL", "PILE", "CLE_LECTURES"}
+     neufs = {"LIGNE_GO_USD", "DEPENSE_AVANT_PREMIERE_LECTURE_USD", "DEPENSE_PREMIERE_LECTURE_USD", "PREMIERE_LECTURE",
+@@ -2283,7 +2292,7 @@
+                 "transport_reel", "expurger", "lire_journal", "ajouter_journal", "controler_coherence", "PRIX_LUS",
+                 "PALIERS_SERVIS_ADMIS", "ANOMALIES_BLOQUANTES", "main"):
+         assert a[nom] == b[nom], nom
+-    a, b = _objets(V3_1 / "classer_conception_propre_v3_1.py"), _objets(MODS / "classer_conception_propre_v3_2.py")
++    a, b = _objets(V3_1 / "classer_conception_propre_v3_1.py"), _objets(MODS / "classer_conception_propre_v3_2_1.py")
+     for nom in ("retenir", "classer", "rangs_departage", "temoin_permute", "kappa_accord", "test_permutation", "holm",
+                 "ENTROPIE_TEST", "PERMUTATIONS", "SEUIL_P", "TAILLE_TRANCHE", "COUT_RANG", "L1_MIN_PUBLIEES",
+                 "E5_PART", "score_C"):
+@@ -2321,7 +2330,7 @@
+     lire(env)
+     with pytest.raises(O.Refus, match="racine différente"):
+         K.classement(env, racine_de(tmp_path / "b"))
+-    py = [sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2.py"), "verifier", "--envois",
++    py = [sys.executable, "-I", "-B", str(MODS / "outil_lecteur_conception_propre_v3_2_1.py"), "verifier", "--envois",
+           str(env), "--racine", str(racine_de(tmp_path / "b"))]
+     c = subprocess.run(py, capture_output=True, text=True)
+     assert c.returncode == 2 and "racine" in c.stderr
+@@ -2501,15 +2510,15 @@
+ def test_separation_unitaire():
+     s = K.separation(False, [1] * 8, [0] * 8, 20_000)
+     assert s["issue"] == "pas de séparation" and not s["lu"] and s["test_R7_seul"]["p"] < 0.05  # calculé, non lu
+-    assert K.separation(True, [1] * 8, [0] * 8, 20_000)["issue"] == "séparation réelle"
+-    assert K.separation(True, [1] * 8, [1] * 8, 20_000)["issue"] == "séparation de forme"
++    assert K.separation(True, [1] * 8, [0] * 8, 20_000)["issue"] == "séparation réelle (portée par R7)"
++    assert K.separation(True, [1] * 8, [1] * 8, 20_000)["issue"] == "séparation non établie sur R7 (n = 8)"
+     a = K.separation(True, [1, 0, 1, 1, 0, 1, 1, 0], [0, 1, 0, 0, 0, 0, 1, 0], 20_000)["test_R7_seul"]
+     b = K.test_permutation([1, 0, 1, 1, 0, 1, 1, 0], [0, 1, 0, 0, 0, 0, 1, 0], np.random.SeedSequence(2026111404), 20_000)
+     assert a == b
+ 
+ 
+-def test_separation_de_forme_bout_en_bout(tmp_path):
+-    """L5 v2 rejette par les critères de forme (R5, R6), mais R7 ne sépare pas : « séparation de forme »."""
++def test_separation_non_etablie_sur_R7_bout_en_bout(tmp_path):
++    """L5 v2 rejette par les critères de forme (R5, R6), mais R7 ne sépare pas : « séparation non établie sur R7 (n = 8) »."""
+     env, _ = preparer(tmp_path)
+ 
+     def m(L, i, p, v):
+@@ -2522,9 +2531,10 @@
+         return v, ()
+     lire(env, modif=m)
+     r = classer(env)
+-    assert r["L5"]["rejet"] and r["separation"]["issue"] == "séparation de forme" and r["separation"]["lu"]
++    assert r["L5"]["rejet"] and r["separation"]["issue"] == "séparation non établie sur R7 (n = 8)" and r["separation"]["lu"]
+     assert r["separation"]["test_R7_seul"]["p"] > 0.05 and r["designees"] == [] and r["lisible"]
+-    assert "séparation de forme" in r["verdict"] and "séparation de forme" in K.resume_md(r)
++    assert "séparation non établie sur R7" in r["verdict"] and "séparation non établie sur R7" in K.resume_md(r)
++    assert "de forme" not in r["verdict"]
+ 
+ 
+ def test_exactitude_exclut_les_valeurs_non_fixees(tmp_path):
+@@ -2561,3 +2571,21 @@
+     monkeypatch.setattr(K, "PREMIERE_CLASSEMENT", (K.PREMIERE_CLASSEMENT[0], "0" * 64))
+     with pytest.raises(O.Refus, match="première lecture"):
+         classer(env)
++
++
++def test_v3_2_1_issue_non_lue_quand_le_classement_est_non_lisible(tmp_path):
++    """Constat m2 : un classement non lisible où L5 v2 rejette rend l'issue suivie de « non lue »."""
++    env, _ = preparer(tmp_path)
++    lire(env, modif=lambda L, i, p, v: ({**v, "N": "aucune"} if i in ("T2-C2", "T2-C1", "T2-C3") else v, ()))
++    r = classer(env)
++    assert not r["lisible"] and r["L5"]["rejet"] and r["separation"]["issue"] == "séparation réelle (portée par R7)"
++    assert r["verdict"].startswith("E2 v2 : classement exploratoire non lisible") and "non lue : classement non lisible" in r["verdict"]
++    assert r["designees"] == []
++
++
++def test_v3_2_1_pieces_et_version():
++    assert O.VERSION == "outil-lecteur-conception-propre-v3-2-1" and K.VERSION == "classer-conception-propre-v3-2-1"
++    assert O.PIECES["temoins_hasard"][0].endswith("temoins-hasard-v2-1.json")
++    assert O.PIECES["regle"][0].endswith("regle-v2-1.md")
++    assert O.MANIFESTE == "manifeste-relecture-v3-2.json" and O.SUFFIXE == "v3-2"
++    assert O.DOSSIER_ENVOIS_REL.endswith("lecture-g1-v3-2/envois")

@@ -1,0 +1,191 @@
+--- outils/essais_temoins_et_hasard_v2.py	2026-11-14 12:35:09.867181983 +0000
++++ outils/essais_temoins_et_hasard_v2_1.py	2026-11-14 13:03:26.957862197 +0000
+@@ -1,11 +1,17 @@
+-"""Essais des témoins v2 et du générateur d'idées au hasard v2 — relecture exploratoire, règle v2.
++"""Essais des témoins v2 et du générateur d'idées au hasard v2.1 — relecture exploratoire, règle v2.1.
++
++v2.1 (14 novembre 2026, vers 13:03 UTC, `date -u`) = essais v2 (`essais_temoins_et_hasard_v2.py`, `17cac5bd…`, gardés) joués
++contre le générateur v2.1, les contrôles v2.1 et l'outil v3.2.1, plus les essais des changements v2.1 (opérations et
++ressources sans remise, rangs de longueur stratifiés, bornes de longueur totale, quatre contrôles neufs).
++
++De la v2 :
+ 
+ Écrits le 14 novembre 2026 (vers 12:34 UTC, `date -u`) par le préparateur (modèle A). Hors réseau, aucun appel. Les
+ programmes essayés sont pris dans `LC_OUTILS` (banc de mutations), par défaut dans le dossier de ce fichier ; les pièces
+ scellées (témoins, hasard, statistiques) sont lues dans le dépôt, jamais modifiées.
+ 
+     PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -B -m pytest -q -p no:cacheprovider \\
+-        docs/notes/organisme-conception-propre-v1/relecture-exploratoire-v2/outils/essais_temoins_et_hasard_v2.py
++        docs/notes/organisme-conception-propre-v1/relecture-exploratoire-v2/outils/essais_temoins_et_hasard_v2_1.py
+ """
+ from __future__ import annotations
+ 
+@@ -25,7 +31,7 @@
+ RE = ICI.parent
+ MODS = Path(os.environ.get("LC_OUTILS", str(ICI)))
+ STATS = ICI / "resultat-stats-forme-reelles-et-temoins-v1-v1.json"
+-HASARD = RE / "temoins-hasard-v2.json"
++HASARD = RE / "temoins-hasard-v2-1.json"
+ LECTEUR = RE / "temoins-lecteur-v2.json"
+ 
+ 
+@@ -36,9 +42,9 @@
+     return m
+ 
+ 
+-G = _charger("tirer_v2_essai", "tirer_fiches_hasard_v2.py")
+-C = _charger("controler_v2_essai", "controler_temoins_v2.py")
+-OUTIL = _charger("outil_v3_2_essai", "outil_lecteur_conception_propre_v3_2.py", RE / "lecture-classement-v3-2")
++G = _charger("tirer_v2_1_essai", "tirer_fiches_hasard_v2_1.py")
++C = _charger("controler_v2_1_essai", "controler_temoins_v2_1.py")
++OUTIL = _charger("outil_v3_2_1_essai", "outil_lecteur_conception_propre_v3_2_1.py", RE / "lecture-classement-v3-2")
+ SCELLE = json.loads(HASARD.read_text(encoding="utf-8"))
+ 
+ 
+@@ -49,13 +55,14 @@
+ def test_generateur_reproduit_la_sortie_scellee_octet_pour_octet_hors_empreinte(tmp_path):
+     """Rejoué, le générateur rend exactement les huit fiches scellées (graines, gabarits, urnes, chaînes)."""
+     s = tmp_path / "h.json"
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "tirer_fiches_hasard_v2.py"), "--stats", str(STATS),
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "tirer_fiches_hasard_v2_1.py"), "--stats", str(STATS),
+                         "--sortie", str(s)], capture_output=True, text=True)
+     assert c.returncode == 0, c.stderr
+     neuf = json.loads(s.read_text(encoding="utf-8"))
+     assert neuf["temoins"] == SCELLE["temoins"] and neuf["graines"] == SCELLE["graines"]
+     assert neuf["statistiques"] == SCELLE["statistiques"] and neuf["versions"] == SCELLE["versions"]
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "tirer_fiches_hasard_v2.py"), "--stats", str(STATS),
++    assert neuf["version"] == SCELLE["version"]
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "tirer_fiches_hasard_v2_1.py"), "--stats", str(STATS),
+                         "--sortie", str(s)], capture_output=True, text=True)
+     assert c.returncode == 2 and "R12" in c.stderr  # jamais écrasé
+ 
+@@ -63,7 +70,7 @@
+ def test_statistiques_epinglees(tmp_path):
+     faux = tmp_path / "s.json"
+     faux.write_bytes(STATS.read_bytes() + b"\n")
+-    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "tirer_fiches_hasard_v2.py"), "--stats", str(faux),
++    c = subprocess.run([sys.executable, "-I", "-B", str(MODS / "tirer_fiches_hasard_v2_1.py"), "--stats", str(faux),
+                         "--sortie", str(tmp_path / "h.json")], capture_output=True, text=True)
+     assert c.returncode == 2 and "épinglée" in c.stderr and not (tmp_path / "h.json").exists()
+     assert hashlib.sha256(STATS.read_bytes()).hexdigest() == G.STATS_SHA256
+@@ -127,8 +134,16 @@
+         assert f["questions_servies"][-1] == "nouvelle" and 3 <= len(f["questions_servies"]) <= 4
+ 
+ 
++PIECES = [RE.parent / "question-organisme-conception-propre-v1.md", RE.parents[1] / "collisionneur-bassins-etroits-v1" / "faits-v1.md",
++          RE.parent / "consigne-lecteur-v1.md", RE.parent / "catalogue-conceptions-publiees-v1.md"]
++
++
++def pieces():
++    return [p.read_text(encoding="utf-8") for p in PIECES]
++
++
+ def test_controles_tiennent_sur_les_pieces_scellees():
+-    r = C.controler(stats(), json.loads(LECTEUR.read_text(encoding="utf-8")), SCELLE)
++    r = C.controler(stats(), json.loads(LECTEUR.read_text(encoding="utf-8")), SCELLE, pieces())
+     assert r["tient"], {k: v for k, v in r["controles"].items() if not v}
+     assert r["detail"]["plus_longue_suite_commune"]["maximum"] <= 12
+ 
+@@ -139,7 +154,7 @@
+     phrase = "Le monde planté permet de mesurer l'effet de la modification contre la vérité sans aucune note."
+     h["temoins"][0]["fiche"]["piege"] += " " + phrase
+     h["temoins"][1]["fiche"]["piege"] += " " + phrase
+-    r = C.controler(stats(), json.loads(LECTEUR.read_text(encoding="utf-8")), h)
++    r = C.controler(stats(), json.loads(LECTEUR.read_text(encoding="utf-8")), h, pieces())
+     assert not r["controles"]["aucune_phrase_commune_entre_idees_au_hasard"]
+     assert not r["controles"]["plus_longue_suite_commune_au_plus_12_mots"]
+     h2 = json.loads(json.dumps(SCELLE))
+@@ -148,12 +163,12 @@
+         h2["temoins"][0]["fiche"][k] = "Court."
+     for t in h2["temoins"][1:5]:
+         t["fiche"]["demande_organisme"]["texte"] = "Doubler la valeur."
+-    r2 = C.controler(stats(), json.loads(LECTEUR.read_text(encoding="utf-8")), h2)
++    r2 = C.controler(stats(), json.loads(LECTEUR.read_text(encoding="utf-8")), h2, pieces())
+     assert not r2["controles"]["hasard_medianes_dans_l_intervalle_interquartile"]
+     assert not r2["controles"]["totaux_entre_min_et_max_des_reelles"]
+     lect = json.loads(LECTEUR.read_text(encoding="utf-8"))
+     lect["temoins"][0]["fiche"]["piege"] = h["temoins"][0]["fiche"]["piege"]
+-    r3 = C.controler(stats(), lect, h)
++    r3 = C.controler(stats(), lect, h, pieces())
+     assert not r3["controles"]["aucune_phrase_commune_hasard_et_lecteur"]
+ 
+ 
+@@ -192,3 +207,78 @@
+     assert G.contracter("à", "l'apprentissage") == "à l'apprentissage"
+     assert G.contracter("de", "les algorithmes") == "des algorithmes" and G.contracter("à", "les x") == "aux x"
+     assert G.contracter("de", "x") == "de x"
++
++
++# --- v2.1 : changements du générateur et contrôles neufs ---------------------------------------------------------------
++
++def test_v2_1_operations_et_ressources_sans_remise():
++    att = G.attribution(np.random.default_rng(np.random.SeedSequence(2026111411).spawn(9)[0]), stats())
++    assert len(att["operations"]) == 8 and max(att["operations"].count(o) for o in set(att["operations"])) <= 2
++    assert len(set(att["ressources"])) == 8
++    ops = [t["chaine"]["operation"] for t in SCELLE["temoins"]]
++    assert ops == [G.OPERATIONS[i][0] for i in att["operations"]]
++
++
++def test_v2_1_rangs_de_longueur_stratifies():
++    att = G.attribution(np.random.default_rng(np.random.SeedSequence(2026111411).spawn(9)[0]), stats())
++    r = sorted(att["rangs_longueur"])
++    assert all(0.08 + 0.88 * k / 8 <= x <= 0.08 + 0.88 * (k + 1) / 8 for k, x in enumerate(r))
++
++
++def test_v2_1_bornes_de_longueur_totale_et_essais():
++    tot = stats()["fiches_reelles"]["mesures"]["longueur_totale_vue"]
++    for t in SCELLE["temoins"]:
++        n = sum(len(x) for x in C.feuilles(t["fiche"]))
++        assert tot["min"] <= n <= tot["max"]
++        assert 1 <= t["chaine"]["essais_de_longueur"] <= 6
++    assert [t["chaine"]["essais_de_longueur"] for t in SCELLE["temoins"]] == [1, 1, 1, 1, 1, 2, 1, 1]
++
++
++def test_v2_1_controles_neufs_voient_leurs_artefacts():
++    lect = json.loads(LECTEUR.read_text(encoding="utf-8"))
++    h = json.loads(json.dumps(SCELLE))
++    for t in h["temoins"][:3]:
++        t["chaine"]["operation"] = "doubler"
++    r = C.controler(stats(), lect, h, pieces())
++    assert not r["controles"]["aucune_operation_plus_de_deux_fois"]
++    h = json.loads(json.dumps(SCELLE))
++    for t in h["temoins"]:
++        t["fiche"]["piege"] += " Une tournure de remplissage zzz qui revient partout."
++    r = C.controler(stats(), lect, h, pieces())
++    assert not r["controles"]["aucun_remplissage_de_gabarit_repete"]
++    h = json.loads(json.dumps(SCELLE))
++    for t in h["temoins"]:  # toutes de même longueur : aucune dispersion
++        t["fiche"]["enonce"] = t["fiche"]["enonce"][:300]
++        t["fiche"]["demande_organisme"]["texte"] = t["fiche"]["demande_organisme"]["texte"][:600]
++        t["fiche"]["piege"] = t["fiche"]["piege"][:200]
++        t["fiche"]["cosmetique_si"] = t["fiche"]["cosmetique_si"][:160]
++        t["fiche"]["avantage"]["texte"] = t["fiche"]["avantage"]["texte"][:190]
++    r = C.controler(stats(), lect, h, pieces())
++    assert not r["controles"]["dispersion_des_longueurs_totales"]
++    h = json.loads(json.dumps(SCELLE))
++    for t in h["temoins"]:  # phrases coupées en morceaux : trop de phrases, trop courtes
++        t["fiche"]["demande_organisme"]["texte"] = t["fiche"]["demande_organisme"]["texte"].replace(", ", ". ")
++        t["fiche"]["enonce"] = t["fiche"]["enonce"].replace(", ", ". ")
++        t["fiche"]["loi_predictive"]["prediction"] = t["fiche"]["loi_predictive"]["prediction"].replace(", ", ". ")
++    r = C.controler(stats(), lect, h, pieces())
++    assert not (r["controles"]["phrases_par_fiche_dans_l_intervalle_interquartile"]
++                and r["controles"]["mots_par_phrase_dans_l_intervalle_interquartile"])
++
++
++def test_v2_1_style_recopie_egal_a_celui_des_statistiques():
++    spec = importlib.util.spec_from_file_location("stats_ref", ICI / "stats_forme_fiches_v1.py")
++    s = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(s)
++    for t in SCELLE["temoins"]:
++        textes = [x for c in s.LIBRES for x in ([s.valeur(t["fiche"], c)] if not isinstance(s.valeur(t["fiche"], c), list)
++                                                 else s.valeur(t["fiche"], c)) if isinstance(x, str)]
++        ref = s.style(textes)
++        mien = C.style(t["fiche"])
++        assert (mien["phrases"], mien["mots_par_phrase_moyenne"]) == (ref["phrases"], ref["mots_par_phrase_moyenne"])
++
++
++def test_v2_1_aucune_contraction_fautive():
++    motif = re.compile(r"\b(de|à) (le|les) \b|\bde de\b|hors de entre|  |;;| ,|à au |à aux ")
++    for t in SCELLE["temoins"]:
++        for s in C.feuilles(t["fiche"]):
++            assert not motif.search(s), (t["code"], s[:80])

@@ -1,0 +1,716 @@
+{
+ "outil": {
+  "chemin": "tirer_fiches_hasard_v2.py",
+  "sha256": "52f6b8d9bcfc5f42b61110d91d24d13ef5d99698fca3b35505815d05c6ef6832"
+ },
+ "statistiques": {
+  "chemin": "resultat-stats-forme-reelles-et-temoins-v1-v1.json",
+  "sha256": "14d8ec4c973f5e52b5c1d18416e2d579c534b40fb8e3c8226bf3ef9b9778f3a0"
+ },
+ "versions": {
+  "python": "3.13.18",
+  "numpy": "2.4.6"
+ },
+ "graines": {
+  "entropie": 2026111411,
+  "nombre": 8,
+  "methode": "numpy.random.SeedSequence(2026111411).spawn(9) : enfant 0 attribution, 1 à 8 fiches"
+ },
+ "temoins": [
+  {
+   "code": "T2-H1",
+   "famille": "hasard",
+   "cible": "L5 (séparation d'avec le hasard), règle v2",
+   "graine": {
+    "entropie": 2026111411,
+    "spawn_key": [
+     1
+    ]
+   },
+   "attendu": {
+    "N": "aucune"
+   },
+   "chaine": {
+    "levier": "juge",
+    "objet": "le nombre de tirages frais par carte",
+    "operation": "réduire de moitié",
+    "sens_operation": -1,
+    "grandeurs": [
+     "la part des cartes qui reprennent une loi de l'archive",
+     "la part des lois candidates hors de la classe du nul"
+    ],
+    "sens_maillons": [
+     -1,
+     1,
+     -1
+    ],
+    "metrique_de_la_chaine": "couverture",
+    "sens_implique": 1,
+    "sens_predit": 1,
+    "coherente_avec_le_signe": true
+   },
+   "fiche": {
+    "nom": "Le nombre de tirages frais par carte : partage par deux et couverture",
+    "type": "question",
+    "enonce": "La couverture des composantes plantées gagne-t-elle à ce que le nombre de tirages frais par carte soit réduit de moitié, toutes choses égales par ailleurs ? Sous cette modification, la part des cartes qui reprennent une loi de l'archive diminue, les appels laissant plus de candidates à comparer à chaque étape. La part des cartes qui reprennent une loi de l'archive commande à son tour la part des lois candidates hors de la classe du nul, qui se réduit. Tout tient à ce que plus la part des lois candidates hors de la classe du nul augmente, moins l'organisme couvre de composantes.",
+    "loi_predictive": {
+     "espace_instances": "24 mondes d'une famille neuve, écrits par programme à graine scellée ; 5 générations par course ; les proposeurs et leurs plafonds ne changent pas ; une seule course par graine et par bras",
+     "prediction": "à dépense égale, au moins deux composantes de plus en moyenne par monde à la fin de la course, contre le témoin à coût égal ; lois fausses et copies promues au plus égales à celles du témoin, avec le même seuil pour toutes les graines ; le seuil s'applique au total, non à chaque génération ; un gain obtenu au prix d'un coût plus élevé ne compte pas",
+     "signe": "+",
+     "metrique": "oracle après la course : composantes plantées couvertes, lois fausses promues, copies promues ; relais : dollars par rôle et par génération ; le témoin est une modification de même ampleur tirée au hasard parmi les autres paramètres, au même coût ; le coût est relevé par rôle et par génération"
+    },
+    "perte_traduction": "La valeur choisie pour le nombre de tirages frais par carte est un point parmi d'autres ; l'effet peut changer de signe sur une famille de mondes plus riche. L'effet sur la part des cartes qui reprennent une loi de l'archive n'est pas observé directement.",
+    "questions_servies": [
+     "levier:juge",
+     "QO5",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le monde planté permet de mesurer l'effet de la modification contre la vérité, ce qu'aucune tâche ouverte ne permet : la couverture y est un compte, non une note. Le coût relevé par génération permet de vérifier que la comparaison est bien à coût égal.",
+     "incopiable_parce_que": "Il faut rejouer les mêmes graines dans deux bras et lire l'oracle une fois : peu de dispositifs le permettent. Sans archive de lois acceptées, la comparaison n'aurait pas d'objet."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "La transposition vient de l'économétrie des panels ; rien de tel n'existe pour le nombre de tirages frais par carte dans les organismes connus. L'emprunt est modeste, mais il n'a pas été fait."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Remplacer, dans le module du juge statistique, la constante qui fixe le nombre de tirages frais par carte par la moitié de sa valeur actuelle, en arrondissant à l'entier supérieur. On respecte la plage au moins 50 tirages par carte, la valeur étant ramenée dans la plage si besoin. Ni le nul ni e-BH ne changent : valeurs e d'espérance au plus 1 sous le nul de l'archive, m fixé d'avance. En cas d'égalité de deux valeurs arrondies, la plus petite est prise. Le relevé de chaque génération reprend la valeur appliquée. Les tirages aléatoires de la modification viennent d'une SeedSequence dérivée de la graine du monde. Aucune autre partie de la configuration n'est touchée par le drapeau."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "environ 16 heures de processeur pour 24 graines, sans appel de proposeur ni de juge à modèle ; le relevé des relais fait foi"
+    },
+    "piege": "Régler l'ampleur de l'opération au vu des premières courses rendrait la comparaison circulaire ; elle est fixée d'avance. Il faut enfin que le juge du bras témoin ne soit pas modifié par mégarde. Les deux bras sont lancés le même jour, avec les mêmes relais.",
+    "cosmetique_si": "Si l'effet disparaît quand on applique l'opération inverse au nombre de tirages frais par carte. Pareil si l'écart restait sous l'écart entre deux graines du témoin. On conclurait à un effet de bruit.",
+    "anteriorite": [
+     {
+      "reference": "POPPER : falsifications séquentielles conduites par un agent, Huang et al., ICML 2025",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al. 2015 (arXiv 1506.02629), citée par la question servie",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "The Ladder, Blum et Hardt (arXiv 1502.04585), référence obligatoire",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist (Nature 655, 2026), Gottweis et al., référence obligatoire de la question",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-H2",
+   "famille": "hasard",
+   "cible": "L5 (séparation d'avec le hasard), règle v2",
+   "graine": {
+    "entropie": 2026111411,
+    "spawn_key": [
+     2
+    ]
+   },
+   "attendu": {
+    "N": "aucune"
+   },
+   "chaine": {
+    "levier": "juge",
+    "objet": "le nombre d'épisodes du test de mort",
+    "operation": "réduire de moitié",
+    "sens_operation": -1,
+    "grandeurs": [
+     "la part des cartes qui reprennent une loi de l'archive"
+    ],
+    "sens_maillons": [
+     1,
+     -1
+    ],
+    "metrique_de_la_chaine": "couverture",
+    "sens_implique": -1,
+    "sens_predit": 1,
+    "coherente_avec_le_signe": false
+   },
+   "fiche": {
+    "nom": "Le nombre d'épisodes du test de mort réduit de moitié à budget égal",
+    "type": "question",
+    "enonce": "Question fermée : réduire de moitié le nombre d'épisodes du test de mort augmente-t-il la couverture des composantes plantées à budget égal ? Avec le nombre d'épisodes du test de mort réduit de moitié, la part des cartes qui reprennent une loi de l'archive s'accroît, puisque le juge examine alors moins de budget par appel. Il est raisonnable de penser que la couverture varie en sens inverse de la part des cartes qui reprennent une loi de l'archive. Le reste de l'organisme est laissé tel quel, juge compris. L'idée ne demande aucun appel de plus ; elle déplace seulement une quantité que l'orchestrateur fixe déjà.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes que la conception n'a pas servie, 28 graines scellées, 6 générations, proposeurs inchangés ; graines scellées avant le départ des deux bras",
+     "prediction": "un gain d'au moins 20 % de composantes plantées couvertes à la génération 6, à coût égal, contre la course de référence ; sans loi fausse ni copie supplémentaire, l'écart étant lu une seule fois, après la dernière génération ; la comparaison se fait graine contre graine ; si le témoin lui-même varie de plus de ce seuil d'une graine à l'autre, la prédiction est jugée sur la médiane",
+     "signe": "+",
+     "metrique": "composantes couvertes selon l'oracle (lecture unique, après la course), promotions fausses et copiées selon l'oracle, dollars d'appels et heures de processeur par génération ; témoin retenu : la même course sans la modification, au même coût, sur les mêmes graines ; les heures de processeur du juge sont relevées aussi"
+    },
+    "perte_traduction": "On perd la dépendance de l'effet à la génération : la loi ne parle que d'une moyenne sur la course. Le temps d'adaptation des proposeurs est ignoré.",
+    "questions_servies": [
+     "levier:juge",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Sur un monde planté, l'oracle donne la couverture vraie ; on lit l'effet du nombre d'épisodes du test de mort sans juge à modèle ni note. Rien dans la mesure ne dépend d'un modèle de langue.",
+     "incopiable_parce_que": "Un laboratoire sans monde planté ne peut que compter des promotions, pas des composantes vraies. Il faut aussi des graines scellées que l'on puisse rejouer à l'identique."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "On applique au nombre d'épisodes du test de mort un réflexe de l'économétrie des panels, sans l'avoir vu employé dans un organisme à monde planté. C'est une question de réglage, non une méthode nouvelle."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Ajouter une règle à l'orchestrateur : le module du test de mort reçoit une seule modification : le nombre d'épisodes du test de mort vaut la moitié de sa valeur actuelle, en arrondissant à l'entier supérieur. Borne : au moins 100 épisodes par carte promue ; une valeur hors de la borne est ramenée à la borne la plus proche. Garantie inchangée : valeurs e d'espérance au plus 1 sous le nul de l'archive, et règle e-BH à m fixé d'avance pour les comparaisons multiples. Pour une course interrompue, les générations complètes seules sont lues. La valeur effective est consignée au manifeste de chaque génération, avec son empreinte. Aucune graine n'est tirée en cours de route : toutes viennent d'une SeedSequence fixée au départ. La configuration des deux bras est comparée champ par champ avant le départ."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "un peu plus de 540 USD d'appels pour les deux bras et les 28 mondes ; aucun modèle de frontière n'est entraîné"
+    },
+    "piege": "Laisser des graines différentes aux deux bras ferait passer un écart de mondes pour un effet de la modification. Prendre la meilleure génération au lieu de la dernière exagérerait l'effet. L'écart est lu par programme, sans choix humain.",
+    "cosmetique_si": "Si l'effet tient à la seule première génération. Il en va de même si l'écart change de signe d'une famille de mondes à l'autre. Dans ce cas, le nombre d'épisodes du test de mort n'y est pour rien.",
+    "anteriorite": [
+     {
+      "reference": "Huang et al., « POPPER », ICML 2025, PMLR 267 (falsification séquentielle)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork, Feldman, Hardt, Pitassi, Reingold, Roth (2015), arXiv 1506.02629",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum, Hardt, « The Ladder », 2015, arXiv 1502.04585, citée par la question",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist (Gottweis et al.), Nature 655, 487-496 (2026), tournoi d'hypothèses",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Shafer, tester par paris, JRSS A, 2021",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-H3",
+   "famille": "hasard",
+   "cible": "L5 (séparation d'avec le hasard), règle v2",
+   "graine": {
+    "entropie": 2026111411,
+    "spawn_key": [
+     3
+    ]
+   },
+   "attendu": {
+    "N": "aucune"
+   },
+   "chaine": {
+    "levier": "juge",
+    "objet": "le nombre de lois aveugles fixes du nul",
+    "operation": "réduire de moitié",
+    "sens_operation": -1,
+    "grandeurs": [
+     "le recouvrement entre les cartes de deux proposeurs"
+    ],
+    "sens_maillons": [
+     1,
+     1
+    ],
+    "metrique_de_la_chaine": "couverture",
+    "sens_implique": 1,
+    "sens_predit": 1,
+    "coherente_avec_le_signe": true
+   },
+   "fiche": {
+    "nom": "Un organisme où le nombre de lois aveugles fixes du nul est réduit de moitié",
+    "type": "question",
+    "enonce": "Si l'on réduit de moitié le nombre de lois aveugles fixes du nul, la course couvre-t-elle davantage de composantes sans coût supplémentaire ? On s'attend à ce que le recouvrement entre les cartes de deux proposeurs monte, parce que chaque carte dispose alors de moins de place dans la consigne. Les faits suggèrent que la couverture suit le recouvrement entre les cartes de deux proposeurs. Le juge, les consignes et les plafonds restent ceux d'aujourd'hui. Ce changement se règle par une constante et se défait aussi simplement.",
+    "loi_predictive": {
+     "espace_instances": "des mondes plantés d'une famille que personne n'a vue à la conception : 40 graines, 4 générations chacune, mêmes plafonds ; les deux bras partagent les graines et les plafonds",
+     "prediction": "à coût égal, au moins 10 % de composantes plantées couvertes en plus que la course de référence, en moyenne sur les 40 mondes ; sans hausse des lois fausses ou des copies promues, l'écart étant lu par l'oracle à la fin de chaque course ; la moyenne est prise sur les graines, jamais sur la meilleure ; la prédiction échoue si l'écart a le bon signe mais reste sous le seuil",
+     "signe": "+",
+     "metrique": "nombre de composantes vraies couvertes et nombre de lois fausses ou copiées promues, au sens de l'oracle, lus après la course ; coût en dollars par génération relevé par les relais ; la comparaison se fait contre l'opération inverse appliquée au même paramètre, au même coût"
+    },
+    "perte_traduction": "Le passage à une loi prédictive suppose que le nombre de lois aveugles fixes du nul agit seul ; en vérité, il agit avec la taille de l'archive. D'autres plafonds pourraient effacer l'effet.",
+    "questions_servies": [
+     "levier:juge",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "La vérité connue du monde planté rend la comparaison exacte : chaque composante couverte est comptée une fois. La lecture unique de l'oracle évite de choisir la mesure après coup.",
+     "incopiable_parce_que": "Seul un dispositif qui écrit ses mondes par programme peut rejouer la course à l'identique, modification exceptée. L'oracle lu une seule fois fait la différence avec une évaluation ouverte."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Faire varier le nombre de lois aveugles fixes du nul n'a pas été essayé dans cet organisme ni, à notre connaissance, ailleurs. Rien de comparable n'est décrit dans les faits servis."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "La constante de la construction du nul du juge qui porte le nombre de lois aveugles fixes du nul est remplacée par la moitié de sa valeur actuelle, en arrondissant à l'entier supérieur. En cas de dépassement de la plage (au moins deux lois aveugles), la limite atteinte fait foi. La modification ne touche pas la validité : valeur e d'espérance au plus 1 sous le nul (archive comprise) et e-BH à m fixé d'avance. Une génération sans aucune promotion garde la valeur fixée, sans ajustement. Au manifeste : la valeur appliquée, sa formule et l'empreinte de la configuration. Les deux bras reçoivent les mêmes enfants de SeedSequence. Un manifeste par bras décrit la configuration complète."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "à peu près 350 USD d'appels de proposeurs pour l'expérience entière, et 45 USD pour un pilote ; le calcul du juge reste négligeable devant le reste"
+    },
+    "piege": "Un gain qui viendrait seulement de la dépense supplémentaire de la course modifiée serait pris pour un effet du nombre de lois aveugles fixes du nul ; le coût relevé des deux bras est donc comparé avant toute lecture. Enfin, une panne d'un relais dans un seul bras fausserait la comparaison : la graine est alors rejouée dans les deux.",
+    "cosmetique_si": "Si le témoin aux graines permutées montre le même écart. Ou si le gain disparaissait quand on rejoue les mêmes graines dans un autre ordre. L'effet serait alors celui du hasard des graines.",
+    "anteriorite": [
+     {
+      "reference": "Huang et al. (2025), POPPER, ICML, PMLR 267, citation obligatoire de la question",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al. (2015), généralisation en analyse adaptative des données, arXiv 1506.02629",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt (2015), « The Ladder », arXiv 1502.04585, soumissions adaptatives",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Gottweis et al., Nature 2026 (Co-Scientist), système multi-agents de génération d'hypothèses",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-H4",
+   "famille": "hasard",
+   "cible": "L5 (séparation d'avec le hasard), règle v2",
+   "graine": {
+    "entropie": 2026111411,
+    "spawn_key": [
+     4
+    ]
+   },
+   "attendu": {
+    "N": "aucune"
+   },
+   "chaine": {
+    "levier": "composition",
+    "objet": "le nombre de passes par génération",
+    "operation": "réduire de moitié",
+    "sens_operation": -1,
+    "grandeurs": [
+     "l'attention portée aux régions rares des traits"
+    ],
+    "sens_maillons": [
+     1,
+     1
+    ],
+    "metrique_de_la_chaine": "couverture",
+    "sens_implique": 1,
+    "sens_predit": 1,
+    "coherente_avec_le_signe": true
+   },
+   "fiche": {
+    "nom": "Réduire de moitié le nombre de passes par génération pour couvrir davantage ?",
+    "type": "question",
+    "enonce": "Question : avec le nombre de passes par génération réduit de moitié, l'organisme couvre-t-il plus de composantes plantées sans dépenser davantage ? L'attention portée aux régions rares des traits gagne dès que le nombre de passes par génération est réduit de moitié, chaque appel recevant moins de budget par appel qu'avant. Le dernier maillon est simple : les composantes couvertes augmentent avec l'attention portée aux régions rares des traits. Rien d'autre ne change : mêmes proposeurs, même juge, mêmes plafonds, même famille de mondes.",
+    "loi_predictive": {
+     "espace_instances": "18 graines d'une famille de mondes tenue à l'écart de la conception, 4 générations par course, plafonds de session inchangés ; chaque graine est jouée une fois par bras",
+     "prediction": "au moins une composante de plus par monde en moyenne, soit au moins 8 % de couverture en plus, à coût égal contre la course de référence ; au plus autant de lois fausses et de copies que la course de référence, l'effet étant mesuré génération par génération puis cumulé ; une graine perdue par panne compte comme un écart nul ; un écart plus petit que ce seuil compte comme un échec de la prédiction",
+     "signe": "+",
+     "metrique": "lecture de l'oracle après la course pour la couverture et les promotions fausses ou copiées ; relevé des relais pour les dollars, par génération ; bras témoin : la même course aux graines permutées, au même budget ; les jetons d'entrée et de sortie sont comptés à part"
+    },
+    "perte_traduction": "Ce que l'on mesure tient à une famille de mondes ; avec d'autres lois plantées, le nombre de passes par génération pourrait jouer autrement. L'attention portée aux régions rares des traits peut aussi réagir avec retard.",
+    "questions_servies": [
+     "levier:composition",
+     "QO5",
+     "QO4",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le monde planté donne une mesure qui ne dépend d'aucun modèle, et le coût relevé par génération ferme la comparaison. L'expérience reste petite et peut être reprise par un autre opérateur.",
+     "incopiable_parce_que": "Un occupant mieux doté en calcul n'a pas, sans monde planté, la vérité contre laquelle juger le nombre de passes par génération. Plus de calcul n'apporte pas l'oracle."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "L'idée est empruntée à l'économétrie des panels ; la transposer au réglage du nombre de passes par génération est ce qui est proposé. Le cadre à monde planté est ce qui la rend mesurable."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Changer le nombre de passes par génération (réglage de l'enchaînement des appels d'une génération) pour la moitié de sa valeur actuelle, en arrondissant à l'entier supérieur. Si le calcul donne une valeur hors de la plage admise (au moins une passe), on prend la limite de la plage. Ni verdict ni oracle n'entrent dans la vue des proposeurs. Si un proposeur échoue à rendre ses cartes, sa part n'est pas redistribuée dans la génération. Le manifeste de la course consigne la valeur appliquée et la règle qui l'a fixée. Les graines des deux bras sont dérivées par numpy.random.SeedSequence, une par graine de monde. Les essais de l'orchestrateur sont complétés d'un cas qui vérifie la valeur appliquée."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "quelque 175 USD pour 18 mondes et deux bras ; le pilote, sur 6 mondes, en demande 60 ; la mesure tient sur une machine ordinaire"
+    },
+    "piege": "Lire l'oracle plusieurs fois et garder la meilleure lecture fausserait l'écart ; une seule lecture, après la course. Il ne faut pas non plus changer les plafonds de session d'un bras à l'autre. Tout écart à ce plan est déclaré.",
+    "cosmetique_si": "Si le gain ne survit pas au changement de famille de mondes. De même enfin si deux opérateurs ne retrouvaient pas l'écart sur les mêmes graines. Il faudrait chercher ailleurs la cause de l'écart.",
+    "anteriorite": [
+     {
+      "reference": "POPPER, ICML 2025, Huang et coauteurs : valeurs p converties en valeurs e",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et coauteurs, 2015, arXiv 1506.02629, citation obligatoire de la question",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "The Ladder (Blum, Hardt), arXiv 1502.04585, citation obligatoire de la question",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Nature 655, 487-496 (2026) : Co-Scientist, Gottweis et al., citée par la question",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Benjamini et Hochberg, contrôle du taux de fausses découvertes, JRSS B, 1995",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-H5",
+   "famille": "hasard",
+   "cible": "L5 (séparation d'avec le hasard), règle v2",
+   "graine": {
+    "entropie": 2026111411,
+    "spawn_key": [
+     5
+    ]
+   },
+   "attendu": {
+    "N": "aucune"
+   },
+   "chaine": {
+    "levier": "cout",
+    "objet": "le nombre de générations à budget total égal",
+    "operation": "réduire de moitié",
+    "sens_operation": -1,
+    "grandeurs": [
+     "la puissance du juge sur les composantes de faible effet"
+    ],
+    "sens_maillons": [
+     -1,
+     1
+    ],
+    "metrique_de_la_chaine": "couverture",
+    "sens_implique": -1,
+    "sens_predit": 1,
+    "coherente_avec_le_signe": false
+   },
+   "fiche": {
+    "nom": "Le nombre de générations à budget total égal réduit de moitié : effet sur l'oracle",
+    "type": "question",
+    "enonce": "Que gagne l'oracle quand le nombre de générations à budget total égal est réduit de moitié, le budget restant le même ? La modification agit d'abord sur la puissance du juge sur les composantes de faible effet, qui diminue, ce qui laisse plus de budget par appel aux étapes suivantes. La métrique s'en ressent, puisque la couverture des composantes plantées croît avec la puissance du juge sur les composantes de faible effet. Aucun autre réglage n'est touché, et aucun agent ne voit de verdict. Les faits décrivent un organisme où ce réglage n'a jamais été mesuré contre l'oracle.",
+    "loi_predictive": {
+     "espace_instances": "une famille de mondes réservée à l'épreuve, 24 graines, 2 générations, la course de référence pour le reste ; ordre des graines fixé d'avance",
+     "prediction": "la couverture des composantes plantées gagne au moins 25 % sur la course de référence, à dépense égale, en moyenne sur les 24 graines ; le nombre de lois fausses et de copies promues ne monte pas, l'écart moyen devant dépasser l'écart entre deux graines du témoin ; on rapporte aussi l'écart médian entre graines ; le seuil est fixé avant toute course et ne bouge plus",
+     "signe": "+",
+     "metrique": "ce que l'oracle dit des composantes couvertes et des lois fausses ou copiées promues, et ce que les relais relèvent en dollars et en jetons ; référence à coût égal : la même course sans la modification, au même coût, sur les mêmes graines ; la lecture de l'oracle se fait une seule fois, toutes courses closes"
+    },
+    "perte_traduction": "L'effet du nombre de générations à budget total égal peut dépendre du monde ; une seule valeur de l'opération est éprouvée, et rien ne dit que l'effet est monotone. Le juge est supposé réagir pareil dans les deux bras.",
+    "questions_servies": [
+     "levier:cout",
+     "QO2",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "programme",
+     "texte": "Parce que le monde est écrit par programme, on rejoue les mêmes graines dans les deux bras et l'écart se lit sans bruit de tâche. L'écart se lit en composantes vraies, l'unité même de la question.",
+     "incopiable_parce_que": "La vérité du monde planté et l'appariement des graines ne s'achètent pas avec plus de calcul. Les tâches ouvertes n'ont pas de vérité contre laquelle compter."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "On reprend une idée de l'apprentissage par renforcement, où ce genre de réglage est courant ; son emploi ici est neuf. Le réglage actuel vient des premières courses, sans mesure."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Régler le nombre de générations à budget total égal à la moitié de sa valeur actuelle, en arrondissant à l'entier supérieur, dans la règle d'arrêt de la course. La valeur obtenue reste bornée (entre 2 et 10 générations) ; si elle sort de la borne, la borne s'applique. Le juge, sa garantie et les consignes ne changent pas. Si une génération ne produit aucune carte valide, la règle est sans objet pour elle et la valeur actuelle s'applique. La valeur utilisée est scellée au manifeste au départ de la course. Graines : SeedSequence, enfants consignés par génération. La valeur est lue au départ et ne change plus pendant la course."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "de l'ordre de 115 USD sur l'ensemble ; un premier passage de 5 mondes, vers 25 USD, dit si le signe tient ; la dépense se borne au plafond fixé avant le départ"
+    },
+    "piege": "Comparer à un témoin qui n'a pas le même coût que la course modifiée : le témoin joue les mêmes graines au même coût. Un effet de l'ordre de passage des bras sur les relais serait pris pour un effet de la modification. Les journaux des deux bras sont scellés à la clôture.",
+    "cosmetique_si": "Si le gain se concentre sur une ou deux graines et disparaît sur les autres. Même conclusion si le gain ne se voit qu'à l'étage des propositions brutes, et pas à celui des retenues. L'idée ne tiendrait pas.",
+    "anteriorite": [
+     {
+      "reference": "POPPER (Huang, Jin, Li, Li, Candès, Leskovec), ICML 2025, valeurs e combinées",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "arXiv 1506.02629 (Dwork et al., 2015), réserve de test réutilisable",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Gottweis et al., « Co-Scientist », Nature 655 (2026), p. 487-496",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-H6",
+   "famille": "hasard",
+   "cible": "L5 (séparation d'avec le hasard), règle v2",
+   "graine": {
+    "entropie": 2026111411,
+    "spawn_key": [
+     6
+    ]
+   },
+   "attendu": {
+    "N": "aucune"
+   },
+   "chaine": {
+    "levier": "cout",
+    "objet": "le plafond de dépense par génération",
+    "operation": "multiplier par 1,5",
+    "sens_operation": 1,
+    "grandeurs": [
+     "la part des lois candidates hors de la classe du nul",
+     "la fraction du budget dépensée en jetons d'entrée"
+    ],
+    "sens_maillons": [
+     -1,
+     1,
+     1
+    ],
+    "metrique_de_la_chaine": "cout",
+    "sens_implique": -1,
+    "sens_predit": -1,
+    "coherente_avec_le_signe": true
+   },
+   "fiche": {
+    "nom": "Pour plus de couverture : multiplier par 1,5 le plafond de dépense par génération",
+    "type": "question",
+    "enonce": "Multiplier par 1,5 le plafond de dépense par génération fait-il couvrir davantage de composantes plantées, à coût égal ? Le plafond de dépense par génération multiplié par 1,5 fait que la part des lois candidates hors de la classe du nul chute, chaque génération offrant moins de place dans la consigne. Par ricochet, la fraction du budget dépensée en jetons d'entrée fléchit aussi. Or le coût par génération suit la fraction du budget dépensée en jetons d'entrée. C'est la seule différence entre les deux bras de l'expérience. Le réglage actuel n'a jamais été justifié par une mesure ; il vient des premières courses.",
+    "loi_predictive": {
+     "espace_instances": "18 mondes plantés jamais vus, chacun joué sur 3 générations, avec la composition et les plafonds actuels ; mêmes graines dans les deux bras, appariées une à une",
+     "prediction": "couverture identique à une composante près, à coût par génération inférieur d'au moins 15 % ; pas plus de lois fausses promues, ni plus de copies, et cela sur au moins les deux tiers des graines ; le même seuil vaut pour les deux familles de composantes ; la comparaison se fait à coût relevé égal, à 3 % près",
+     "signe": "0",
+     "metrique": "composantes plantées couvertes, lois fausses et copies promues, lues par l'oracle une fois après la course ; dollars et jetons relevés par les relais à chaque génération ; témoin à coût égal : une modification de même ampleur tirée au hasard parmi les autres paramètres, au même coût"
+    },
+    "perte_traduction": "Une seule ampleur de modification est essayée : un effet non linéaire du plafond de dépense par génération passerait inaperçu. La loi ne parle que de la moyenne des proposeurs.",
+    "questions_servies": [
+     "levier:cout",
+     "QO1",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "methodes",
+     "texte": "Avec un oracle lu une fois après la course, l'effet du plafond de dépense par génération se mesure sans débat, et au même coût que le témoin. Le même dispositif sert ensuite à éprouver d'autres valeurs du plafond de dépense par génération.",
+     "incopiable_parce_que": "La mesure demande l'oracle d'un monde planté et le relevé du coût par génération, que l'organisme possède déjà. Le relevé du coût par rôle est propre à l'orchestrateur."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Réglage classique en recherche opérationnelle, jamais essayé sur le plafond de dépense par génération dans un organisme d'idéation. Nous n'avons trouvé aucun travail qui la mesure ainsi."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Ajouter une règle à l'orchestrateur : écrire dans la garde de dépense de l'orchestrateur une valeur du plafond de dépense par génération égale à 1,5 fois sa valeur actuelle. Le programme vérifie la plage (au moins le coût d'un appel par proposeur) avant la première génération et ramène la valeur si elle en sort. Le reste de l'orchestrateur est inchangé, juge compris. Lorsque deux réglages entrent en conflit, celui de la course de référence prévaut, sauf le plafond de dépense par génération. Chaque génération écrit au manifeste la valeur utilisée, avant tout appel. Toutes les graines sont dérivées d'avance (SeedSequence) et consignées au manifeste. Le changement est réversible en une ligne de configuration."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "de l'ordre de 4 heures de calcul sur processeur, sur des journaux déjà écrits ; coût d'appel nul ; aucune dépense hors de la ligne prévue au devis"
+    },
+    "piege": "Compter comme composantes couvertes des lois fausses que la modification fait promouvoir : l'oracle les sépare. Un autre piège serait de lire l'effet sur les seules premières générations, où l'archive est presque vide. Le relevé du coût fait foi, non l'estimation.",
+    "cosmetique_si": "Si l'écart au témoin ne dépasse pas l'écart entre deux graines de la course de référence. De même si le coût relevé du bras modifié dépassait celui du témoin. Ce serait un artefact de l'expérience.",
+    "anteriorite": [
+     {
+      "reference": "POPPER, validation d'hypothèses par falsifications séquentielles, Huang et al., ICML 2025",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al., arXiv 1506.02629, 2015 : surajustement à une réserve consultée plusieurs fois",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Gottweis et al., Co-Scientist, Nature 655, p. 487-496, 2026, citation obligatoire",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Vovk et Wang, valeurs e : calibration, combinaison et applications, Annals of Statistics, 2021",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-H7",
+   "famille": "hasard",
+   "cible": "L5 (séparation d'avec le hasard), règle v2",
+   "graine": {
+    "entropie": 2026111411,
+    "spawn_key": [
+     7
+    ]
+   },
+   "attendu": {
+    "N": "aucune"
+   },
+   "chaine": {
+    "levier": "juge",
+    "objet": "la taille du jeu public d'instances sans issue",
+    "operation": "augmenter de 25 %",
+    "sens_operation": 1,
+    "grandeurs": [
+     "l'attention portée aux régions rares des traits",
+     "le nombre de cartes qui atteignent le test de mort"
+    ],
+    "sens_maillons": [
+     -1,
+     -1,
+     1
+    ],
+    "metrique_de_la_chaine": "couverture",
+    "sens_implique": 1,
+    "sens_predit": 1,
+    "coherente_avec_le_signe": true
+   },
+   "fiche": {
+    "nom": "Et si la taille du jeu public d'instances sans issue était augmentée de 25 %, à budget égal ?",
+    "type": "question",
+    "enonce": "Faut-il augmenter de 25 % la taille du jeu public d'instances sans issue pour que l'organisme couvre plus de composantes au même coût ? En pratique, l'attention portée aux régions rares des traits décroît sitôt la taille du jeu public d'instances sans issue augmentée de 25 %, le juge comptant alors plus de candidates à comparer par groupe. Or l'attention portée aux régions rares des traits pèse sur le nombre de cartes qui atteignent le test de mort, qui progresse à son tour. Et l'on sait que la couverture suit le nombre de cartes qui atteignent le test de mort. Les autres parties de l'organisme restent celles de la course de référence.",
+    "loi_predictive": {
+     "espace_instances": "36 mondes plantés à graine scellée, tirés d'une famille que la conception n'a jamais vue, 3 générations par course, mêmes proposeurs et mêmes plafonds de session ; aucune graine n'est rejouée après lecture",
+     "prediction": "à coût égal ou moindre, au moins 8 % de composantes plantées couvertes de plus que le témoin, en moyenne sur les 36 mondes ; ni lois fausses ni copies promues en plus, chaque graine comptant pour une observation ; aucune graine n'est écartée après coup ; les courses arrêtées par la garde de dépense comptent avec leur dernière génération complète",
+     "signe": "+",
+     "metrique": "couverture des composantes plantées et promotions fausses ou copiées, lues par l'oracle ; dépense par génération relevée par les relais, appels et jetons compris ; contre la même course sans la modification, au même coût, sur les mêmes graines ; aucune note de juge n'entre dans la mesure"
+    },
+    "perte_traduction": "Une valeur fixe de la taille du jeu public d'instances sans issue pour toute la course ne dit rien d'une valeur qui changerait d'une génération à l'autre. Une part de l'effet peut échapper à l'oracle.",
+    "questions_servies": [
+     "levier:juge",
+     "QO4",
+     "QO5",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "Le dispositif à monde planté sépare ce qui est trouvé de ce qui est seulement promu : on voit si la modification aide vraiment. Les deux bras partagent tout, sauf la taille du jeu public d'instances sans issue, si bien que l'écart lui revient.",
+     "incopiable_parce_que": "Sans relevé du coût à la génération et sans oracle, la comparaison à coût égal n'a pas de sens. Il faut enfin des journaux de course complets et scellés."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "Emprunt à la recherche opérationnelle : l'objet est neuf, le principe ne l'est pas. La nouveauté tient à l'objet plus qu'à la méthode."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Modifier la construction du jeu public d'instances : la taille du jeu public d'instances sans issue prend désormais 1,25 fois sa valeur actuelle, en arrondissant à l'entier supérieur. La plage admise est fixée d'avance (au moins 200 instances) et le programme y ramène toute valeur qui en sort. La valeur e de chaque carte garde une espérance au plus 1 sous le nul, qui contient l'archive ; e-BH, à m fixé d'avance, garde le contrôle des comparaisons multiples. Quand la garde de dépense arrête la course avant terme, la dernière génération jouée est la dernière comptée. La valeur est écrite au manifeste de départ et vérifiée à chaque génération. Une SeedSequence par monde fournit les graines des deux bras."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "calcul local seulement, quelque 20 heures pour 36 graines et deux bras ; la lecture de l'oracle ne coûte rien"
+    },
+    "piege": "Attribuer à la taille du jeu public d'instances sans issue un effet qui viendrait d'une autre constante modifiée par mégarde : la configuration des deux bras est comparée champ par champ. Une lecture qui retiendrait les graines où l'effet est le plus net serait sans valeur. Le préenregistrement fixe tout cela d'avance.",
+    "cosmetique_si": "Si la couverture gagne autant avec une modification de même ampleur tirée au hasard. Ce serait aussi le cas si l'écart tenait à une seule génération. Le mécanisme annoncé ne serait pas en cause.",
+    "anteriorite": [
+     {
+      "reference": "POPPER (ICML 2025), Huang et al., référence obligatoire pour tout texte sur l'organisme",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "arXiv 1502.04585, Blum et Hardt, 2015 : score rendu seulement sur amélioration nette",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Gottweis et al. (2026), Co-Scientist, Nature 655, p. 487-496",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Wang et Ramdas, contrôle du taux de fausses découvertes par valeurs e, JRSS B, 2022",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "code": "T2-H8",
+   "famille": "hasard",
+   "cible": "L5 (séparation d'avec le hasard), règle v2",
+   "graine": {
+    "entropie": 2026111411,
+    "spawn_key": [
+     8
+    ]
+   },
+   "attendu": {
+    "N": "aucune"
+   },
+   "chaine": {
+    "levier": "composition",
+    "objet": "le nombre de passes par génération",
+    "operation": "diminuer de 40 %",
+    "sens_operation": -1,
+    "grandeurs": [
+     "la variance des valeurs e",
+     "la stabilité des représentants de groupe"
+    ],
+    "sens_maillons": [
+     -1,
+     1,
+     -1
+    ],
+    "metrique_de_la_chaine": "cout",
+    "sens_implique": 1,
+    "sens_predit": -1,
+    "coherente_avec_le_signe": false
+   },
+   "fiche": {
+    "nom": "Diminuer de 40 % le nombre de passes par génération, à coût égal",
+    "type": "question",
+    "enonce": "Une course où le nombre de passes par génération est diminué de 40 % dépasse-t-elle la course de référence en composantes couvertes, à coût égal ? Le premier effet est que la variance des valeurs e décroît, le gardien voyant passer moins de budget par appel. Le relais se fait par la stabilité des représentants de groupe, qui chute. C'est là que tout se joue : la dépense par génération varie en sens inverse de la stabilité des représentants de groupe.",
+    "loi_predictive": {
+     "espace_instances": "une famille neuve de mondes plantés, 20 graines scellées, des courses de 2 générations avec les proposeurs et les plafonds de la course de référence ; les graines sont tirées une fois, avant toute course",
+     "prediction": "pas de changement de couverture au-delà d'une composante sur l'ensemble, pour une dépense par génération en recul d'au moins 15 % ; au plus une loi fausse de plus sur l'ensemble des mondes, et pas de copie de plus, la lecture se faisant une fois toutes les courses closes ; l'écart est rapporté avec son intervalle par rééchantillonnage des graines ; l'écart est calculé sur les mêmes graines dans les deux bras, appariées",
+     "signe": "0",
+     "metrique": "l'oracle, lu une fois la course close, donne les composantes couvertes, les lois fausses et les copies promues ; le relevé des relais donne le coût de chaque génération ; comparaison à une modification de même ampleur tirée au hasard parmi les autres paramètres, au même coût"
+    },
+    "perte_traduction": "La loi prédictive ignore l'interaction du nombre de passes par génération avec les plafonds de session ; une autre composition la ferait peut-être disparaître. La durée des courses n'est pas mesurée.",
+    "questions_servies": [
+     "levier:composition",
+     "QO5",
+     "nouvelle"
+    ],
+    "avantage": {
+     "source": "organisme",
+     "texte": "L'organisme connaît, après coup, la loi plantée : l'effet de la modification se compte en composantes vraies, à coût relevé. La modification se rejoue sans coût d'écriture : une constante suffit.",
+     "incopiable_parce_que": "Sans oracle ni graines scellées, on ne distingue pas un effet du nombre de passes par génération d'un effet de tirage. La mesure demande le juge statistique de l'organisme, tel qu'il est."
+    },
+    "originalite": {
+     "niveau": "transposition",
+     "texte": "La part transposée est le passage des algorithmes évolutionnaires au réglage du nombre de passes par génération. L'idée reste à éprouver contre l'oracle."
+    },
+    "demande_organisme": {
+     "nature": "modification",
+     "texte": "Dans l'enchaînement des appels d'une génération, le nombre de passes par génération passe à 0,6 fois sa valeur actuelle, en arrondissant à l'entier supérieur. Garde : au moins une passe ; au-delà, la valeur la plus proche dans la plage est prise. Le juge statistique et ses règles ne bougent pas. Si le gardien refuse toutes les cartes d'un appel, l'appel compte au coût et la règle ne change pas. Le manifeste de génération garde la valeur, la borne et le cas limite appliqué. SeedSequence de la course, un enfant par génération et par bras. La modification vaut dès la première génération et jusqu'à la fin de la course."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "rejouable sur processeur à partir de courses déjà jouées : environ 16 heures de calcul pour 20 graines et deux bras, aucun appel ; les rejeux éventuels sur processeur sont gratuits"
+    },
+    "piege": "Juger sur une seule graine favorable ; la règle de lecture porte sur toutes les graines, fixée d'avance. On se garde de même de comparer des courses jouées avec des versions différentes de l'orchestrateur. On rapporte aussi le nombre de cartes de chaque bras.",
+    "cosmetique_si": "Si une modification de même ampleur tirée au hasard parmi les autres paramètres fait aussi bien que la course modifiée. Ou encore si la modification inverse donnait un gain du même signe.",
+    "anteriorite": [
+     {
+      "reference": "Huang et al., ICML 2025 (POPPER), citée par la question servie aux proposeurs",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Dwork et al., analyse adaptative des données et réutilisation de la réserve, arXiv 1506.02629 (2015)",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Blum et Hardt, The Ladder, arXiv 1502.04585, 2015 : tableau de classement fiable",
+      "statut": "RAPPORTE"
+     },
+     {
+      "reference": "Co-Scientist, Nature 655, p. 487-496, Gottweis et coauteurs, 2026",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  }
+ ]
+}
