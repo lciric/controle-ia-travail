@@ -145,6 +145,33 @@ def test_controle_identite_cas_sain_et_artefacts():
         mc.controle_identite_m2(centres, etats, b, jp)
 
 
+def test_controle_identite_statistiques_de_reduction_et_versions():
+    """CLT8C-19 (Q-3) : les statistiques de réduction (moyennes et écarts des traits) sont comparées à 1·10⁻⁶ près, et
+    les versions de `numpy` et de `scipy` de la lecture sont écrites à côté ; cas sain ; artefacts : une moyenne ou un
+    écart décalé de 1·10⁻⁵, un trait de plus dans les statistiques."""
+    import scipy
+
+    centres, etats, base = _identite()
+    jp = [(j, k) for j in ("S25", "S100") for k in (0, 1)]
+    r = mc.controle_identite_m2(centres, etats, base, jp)
+    assert r["conforme"] and r["versions_lecture"] == {"numpy": np.__version__, "scipy": scipy.__version__}
+    assert base["modeles"]["S25"]["0"]["moyennes"] and base["modeles"]["S25"]["0"]["ecarts"]
+    for stat in ("moyennes", "ecarts"):
+        b = copy.deepcopy(base)
+        k0 = next(iter(b["modeles"]["S25"]["1"][stat]))
+        b["modeles"]["S25"]["1"][stat][k0] += 1e-5
+        with pytest.raises(GardeArret, match=f"statistique de réduction {stat}"):
+            mc.controle_identite_m2(centres, etats, b, jp)
+        b = copy.deepcopy(base)
+        b["modeles"]["S100"]["0"][stat]["trait_de_plus"] = 1.0
+        with pytest.raises(GardeArret, match=f"statistiques de réduction \\({stat}\\)"):
+            mc.controle_identite_m2(centres, etats, b, jp)
+    b = copy.deepcopy(base)
+    k0 = next(iter(b["modeles"]["S100"]["1"]["moyennes"]))
+    b["modeles"]["S100"]["1"]["moyennes"][k0] += 5e-7                       # sous la tolérance : sain
+    assert mc.controle_identite_m2(centres, etats, b, jp)["conforme"]
+
+
 def test_piece_reelle_exige_le_marqueur_et_refuse_le_jouet(monkeypatch):
     with pytest.raises(GardeArret, match="marqueur"):
         mc.charger_piece("reel", None)
