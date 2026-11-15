@@ -339,7 +339,7 @@ SCENARIOS = {
     "mesure-code2": ({"scenario": {"mesurer_code": 2}}, lambda r: r["fin"][0] == "noeud, machine gardee" and "mesurer : code 2" in r["fin"][1]),
     "relance-conteneur": ({"tuer_a": "attente du feu 3 (pilote reel)", "pas_de_feu3": True},
                           lambda r: r["fin"][0] == "arret (A)" and "relance du conteneur" in r["fin"][1] and "journal-09-reel.txt" not in r["fichiers"]),
-    "poussee-finale-reprise": ({"refus_poussee_a": "jouer reel en cours", "refus_duree_s": 100, "scenario": {"duree_jouer_s": 5}},
+    "poussee-finale-reprise": ({"refus_poussee_a": "jouer reel en cours", "refus_duree_s": 240, "limite_s": 420, "scenario": {"duree_jouer_s": 5}},
                                lambda r: r["fin"][0] == "fini" and "dernière poussée en échec : reprise" in r["log"]
                                and "rapatrie-reel/lecture-pilote-v70.json" in r["fichiers"]),
     "sain-integral": ({"doublure": False, "reel_a_blanc": True, "limite_s": 2400},
