@@ -10,3 +10,75 @@
 11:31:58 steer L6: 128 conditions, 114s
 11:32:14 steer L7: 128 conditions, 130s
 11:32:30 steer L8: 128 conditions, 146s
+11:32:46 steer L9: 128 conditions, 162s
+11:33:02 steer L10: 128 conditions, 179s
+11:33:19 steer L11: 128 conditions, 195s
+11:33:35 steer L12: 128 conditions, 211s
+11:33:51 steer L13: 128 conditions, 227s
+11:34:07 steer L14: 128 conditions, 243s
+11:34:23 steer L15: 128 conditions, 260s
+11:34:40 steer L16: 128 conditions, 276s
+11:34:56 steer L17: 128 conditions, 292s
+11:35:12 steer L18: 128 conditions, 308s
+11:35:28 steer L19: 128 conditions, 324s
+11:35:44 steer L20: 128 conditions, 341s
+11:36:01 steer L21: 128 conditions, 357s
+11:36:17 steer L22: 128 conditions, 373s
+11:36:33 steer L23: 128 conditions, 389s
+11:36:49 steer L24: 128 conditions, 405s
+11:37:05 steer L25: 128 conditions, 422s
+11:37:22 steer L26: 128 conditions, 438s
+11:37:38 steer L27: 128 conditions, 454s
+11:37:54 steer L28: 128 conditions, 470s
+11:38:10 steer L29: 128 conditions, 486s
+11:38:26 steer L30: 128 conditions, 503s
+11:38:43 steer L31: 128 conditions, 519s
+[W1115 11:38:43.159811785 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 939524096 bytes (free: 747372544, total: 25304104960).
+[W1115 11:38:43.308024833 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 939524096 bytes (free: 105644032, total: 25304104960).
+[W1115 11:38:43.308094879 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 939524096 bytes (free: 105644032, total: 25304104960).
+Traceback (most recent call last):
+  File "/workspace/depot/voisin/neuron-lens/scripts/checks/causal_lens.py", line 403, in <module>
+    main()
+  File "/workspace/depot/voisin/neuron-lens/scripts/checks/causal_lens.py", line 399, in main
+    measure(args) if args.what == "measure" else score(args)
+    ^^^^^^^^^^^^^
+  File "/workspace/depot/voisin/neuron-lens/scripts/checks/causal_lens.py", line 243, in measure
+    hs = model(input_ids=ids.to(device), attention_mask=attn.to(device)).last_hidden_state
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 1068, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/transformers/utils/output_capturing.py", line 287, in wrapper
+    outputs = func(self, *args, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/transformers/models/llama/modeling_llama.py", line 403, in forward
+    hidden_states = decoder_layer(
+                    ^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 110, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/transformers/models/llama/modeling_llama.py", line 322, in forward
+    hidden_states = self.mlp(hidden_states)
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/depot/.venv/lib/python3.12/site-packages/transformers/models/llama/modeling_llama.py", line 175, in forward
+    down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 896.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 100.75 MiB is free. Including non-PyTorch memory, this process has 23.46 GiB memory in use. Of the allocated memory 21.07 GiB is allocated by PyTorch, and 1.93 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)
