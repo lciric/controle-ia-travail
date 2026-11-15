@@ -100,3 +100,4 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 | 2026-11-13T06:10:05Z | Hetzner 175945720 | Poste de reprise v2, détruit par son identifiant (HTTP 200) après la fin de `reprendre` (code 3 : redémarrage de 60417353 refusé par Vast, instance remise à l'arrêt) |
 | 2026-11-13T08:01:04Z | 60417353 | Témoin de Bailey : **détruite par la reprise** (lecture 38, poste de reprise v3) après transfert complet et scellement ; absente de l'inventaire relu à 08:02Z |
 | 2026-11-13T08:02:44Z | Hetzner 175955746 | Poste de reprise v3, détruit par son identifiant (HTTP 200) après la fin de `reprendre` (code 0) |
+| 2026-11-15T07:50:21Z | Hetzner 176183969 | Serveur jetable de diagnostic (cx23, créé 07:46:59Z, mot de Lazar « go Hetzner »), détruit par son identifiant après la poussée de sa sortie en lecture seule ; absent de la liste relue à 07:50:36Z ; clé Vast 1902919 détachée de 60480302 et supprimée du compte |
