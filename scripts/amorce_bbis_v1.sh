@@ -2,7 +2,8 @@
 # Amorce de l'instance de l'étape B bis de T0.7, v1 (prereg/T0.7-etape-B-bis-v1.md, plan, points 1 à 8 ; « Calcul et dépense » ;
 # « Liste d'arrêt »). Jouée au démarrage de l'instance (A100, étiquette bbis-t07-v1), passée par scripts/lancer_bbis_v1.sh (commande
 # de création imprimée, base64). Une instance, une marche ; écrit sous $R/bbis-t07-v1 seulement.
-# Ordre : 0. minuterie de destruction par l'identifiant à l'échéance (R10) ; 1. machine (carte, clés par leur nom) ; 2. dépôt au
+# Ordre : 0. minuterie de destruction par l'identifiant à l'échéance (R10) ; 1. machine (carte, clés par leur nom, version CUDA
+#   servie par le pilote au moins 13.0, lue dans l'en-tête de nvidia-smi : sinon arrêt, code 2, avant toute installation) ; 2. dépôt au
 #   commit COMMIT (extraction partielle : src, tests du paquet, scripts, prereg du texte, registres nommés et fichiers qu'ils citent ;
 #   jamais docs/notes/, jamais les fichiers de la pièce « mots et coût », jamais scripts/extraire_mesures_epreuve_t06_v1.py) ;
 #   3. sortie de 7b par refspec explicite, FICHIERS NOMMÉS seulement (manifeste, episodes-t06.json, distillation-t06.json,
@@ -68,6 +69,25 @@ traces_sur_commit() {  # arrêt entre le contrôle de la branche de sortie (éta
         && { j "traces poussées : $c (parent $COMMIT ; commit local des entrées jamais poussé)"; return 0; }; sleep $((20 * n)); done
     return 1; }
 # <<< arret-et-traces
+# >>> cuda-du-pilote (même texte dans les deux amorces de B bis ; extrait et joué par tests/test_repetition_bbis_v1.py)
+# Roue torch 2.14.1 de requirements-gpu.txt construite pour CUDA 13.0 : le pilote doit servir CUDA 13.0 au moins, lu dans l'en-tête
+# de `nvidia-smi` (« CUDA Version: M.m », une fois exactement), AVANT l'installation des paquets (répétition du 15 novembre :
+# pilote 570.211.01, CUDA 12.8, arrêt « torch ne voit pas la carte » après 118 s d'installation). Absente, multiple ou illisible :
+# arrêt, jamais un défaut deviné ; même code que « torch ne voit pas la carte » (2).
+cuda_du_pilote() {  # $1 = fichier de la sortie de `nvidia-smi` sans argument : imprime « M.m » ; 1 si absente, multiple ou illisible
+    local v
+    v=$(sed -n 's/^.*CUDA Version: *\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9.].*$/\1/p; s/^.*CUDA Version: *\([0-9][0-9]*\.[0-9][0-9]*\)$/\1/p' "$1" 2>/dev/null)
+    [ "$(printf '%s' "$v" | grep -c '^')" = 1 ] || return 1
+    printf '%s\n' "$v" | LC_ALL=C grep -qxE '[0-9]{1,3}\.[0-9]{1,3}' || return 1
+    printf '%s\n' "$v"; }
+exiger_cuda_du_pilote() {  # $1 = fichier de la sortie de `nvidia-smi` ; arrêt (code 2) sous 13.0, absente ou illisible
+    local v
+    v=$(cuda_du_pilote "$1") || arret "version CUDA servie par le pilote illisible (« CUDA Version: » absent, multiple ou illisible dans la sortie de nvidia-smi) : torch ne verrait pas la carte (roue CUDA 13.0) ; arrêt avant l'installation des paquets" 2
+    if [ "$((10#${v%%.*}))" -lt 13 ]; then
+        arret "pilote trop ancien : CUDA $v servie par le pilote < 13.0 exigée par la roue torch de requirements-gpu.txt : torch ne verrait pas la carte ; arrêt avant l'installation des paquets" 2
+    fi
+    j "CUDA servie par le pilote : $v (au moins 13.0)"; }
+# <<< cuda-du-pilote
 # 0. arguments, échéance, minuterie
 for v in COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S GO_ID; do
     [ -n "${!v:-}" ] || { echo "BBIS REFUS : variable $v absente"; exit 2; }; done
@@ -110,6 +130,8 @@ for o in git curl python3 sha256sum awk sed grep stat find sort; do command -v "
 [ -n "${HF_TOKEN:-}" ] || arret "HF_TOKEN absent (par le nom)" 2
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader > "$X/nvidia-smi.txt" 2>&1 || arret "carte invisible (nvidia-smi)" 2
 grep -q 'A100' "$X/nvidia-smi.txt" || arret "carte autre qu'une A100 : $(head -n 1 "$X/nvidia-smi.txt")" 2
+nvidia-smi > "$X/nvidia-smi-entete.txt" 2>&1 || arret "carte invisible (nvidia-smi, en-tête)" 2
+exiger_cuda_du_pilote "$X/nvidia-smi-entete.txt"   # avant le dépôt, la sortie de 7b et l'installation des paquets
 j "carte : $(head -n 1 "$X/nvidia-smi.txt") ; disque libre $(df -P -B1 "$R" | awk 'NR == 2 { print $4 }') octets"
 # 2. dépôt au commit COMMIT, extraction partielle
 [ ! -e "$D" ] || arret "$D existe déjà (R12)" 2

@@ -5,7 +5,12 @@
 # (préfixe GO_ID exigé par la garde de calcul ; destruction par l'identifiant, R10).
 # Sous-commandes (codes : 0 accepté ; 2 refus, motif sur la sortie standard) :
 #   offre OFFRE.json                 bornes du devis (A100 SXM4 80 Go, ≥ 16 cœurs, ≥ 128 000 Mo, ≥ 150 Go, stockage ≤ 0,08 USD/h,
-#                                    étiquette bbis-t07-v1 ; aucune H200) ;
+#                                    étiquette bbis-t07-v1 ; aucune H200 ; version CUDA servie par l'hôte, clé `cuda_max_good`
+#                                    recopiée telle quelle de `vastai search offers --raw`, ≥ 13.0, celle de la roue torch de
+#                                    requirements-gpu.txt ; clé absente ou illisible : refus) ; recherche (filtre de l'outil, la
+#                                    garde locale décide) : ( umask 077; vastai search offers 'gpu_name=A100_SXM4 num_gpus=1
+#                                    cpu_cores_effective>=16 cpu_ram>=128 disk_space>=150 cuda_max_good>=13.0' -o 'dph_total'
+#                                    --raw > RECHERCHE.json ) ;
 #   creation RACINE FEU RELANCES     SCELLEMENT-BBIS, CODE-BBIS, GO-BBIS au registre propre, feu écrit de la mère portant
 #                                    GO-2026-11-14-09, une relance au plus, échéance, relance après le 21 novembre 12:00 UTC refusée ;
 #   commande RACINE OFFRE.json OFFRE_ID COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S FEU RELANCES IMAGE

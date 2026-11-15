@@ -54,7 +54,7 @@ def test_garde_de_depense_au_cumul_plus_un_quart_d_heure():
 
 def test_garde_d_offre_et_de_creation(tmp_path):
     offre = {"carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 200, "stockage_usd_h": 0.05,
-             "etiquette": "bbis-t07-v1"}
+             "etiquette": "bbis-t07-v1", "cuda_max_good": 13.0}
     rb.exiger_offre(offre)
     for faute in ({"carte": "H200 SXM 141GB"}, {"carte": "A100 PCIE 40GB"}, {"disque_go": 100}, {"coeurs": 8},
                   {"memoire_vive_mo": None}, {"etiquette": "t07-x"}, {"stockage_usd_h": 0.2}):
@@ -140,7 +140,7 @@ def test_scripts_de_session_syntaxe_et_sous_commandes(tmp_path):
         assert subprocess.run(["bash", "-n", str(RACINE / "scripts" / s)]).returncode == 0
     offre = tmp_path / "offre.json"
     offre.write_text(json.dumps({"carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 200,
-                                 "stockage_usd_h": 0.05, "etiquette": "bbis-t07-v1"}), encoding="utf-8")
+                                 "stockage_usd_h": 0.05, "etiquette": "bbis-t07-v1", "cuda_max_good": 13.0}), encoding="utf-8")
     r = _bash("offre", str(offre))
     assert r.returncode == 0 and "ACCEPTEE" in r.stdout
     offre.write_text(json.dumps({"carte": "H200"}), encoding="utf-8")
@@ -154,7 +154,7 @@ def test_scripts_de_session_syntaxe_et_sous_commandes(tmp_path):
     assert _bash("detruire", "inst*").returncode == 2
     assert _bash("creer").returncode == 2
     offre.write_text(json.dumps({"id": 99, "carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 200,
-                                 "stockage_usd_h": 0.05, "etiquette": "bbis-t07-v1"}), encoding="utf-8")
+                                 "stockage_usd_h": 0.05, "etiquette": "bbis-t07-v1", "cuda_max_good": 13.0}), encoding="utf-8")
     r = _bash("commande", str(tmp_path), str(offre), "99", "c" * 40, "main", "20261111-151701-t06-reel", "calcul/x",
               "20261118-090000-bbis-t07", "1795000000", "feu GO-2026-11-14-09", "0", "python:3.11-bookworm")
     assert r.returncode == 2 and "absente" in r.stdout                        # aucune ligne au registre propre : refus
@@ -201,3 +201,33 @@ def test_commande_fiche_empreintes_lues_sur_le_disque(tmp_path, capsys):
     f = rb.lire_fiche_code(tmp_path / "registres/t07-etape-b-bis/code-bbis-v1.json")
     assert f["fichiers"] == {"src/x.py": empreinte(tmp_path / "src" / "x.py")} and f["niveau_decisif"] == 0.99
     assert rb.main(["fiche", str(tmp_path), "autre.json", "c" * 40, str(E), "absente.json", "src/x.py"]) == 2
+
+
+def test_garde_d_offre_cuda_servie_par_l_hote(tmp_path):
+    """Répétition sur carte du 15 novembre (pilote 570.211.01, CUDA 12.8 ; roue torch 2.14.1 construite pour CUDA 13.0 :
+    « torch ne voit pas la carte ») : la garde d'offre de la course exige `cuda_max_good` ≥ 13.0 ; cas sain et artefacts (R5)."""
+    offre = {"id": 99, "carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 200,
+             "stockage_usd_h": 0.05, "etiquette": "bbis-t07-v1", "cuda_max_good": 13.0}
+    assert rb.CUDA_MAX_GOOD_MIN == 13.0
+    rb.exiger_offre(offre, "99")                                                       # borne incluse
+    rb.exiger_offre({**offre, "cuda_max_good": 13.2})
+    rb.exiger_offre({**offre, "cuda_max_good": 13})
+    sans = {k: v for k, v in offre.items() if k != "cuda_max_good"}
+    for faute, motif in (({"cuda_max_good": 12.8}, "cuda_max_good 12.8 < 13"), ({"cuda_max_good": 12.99}, "< 13"),
+                         ({"cuda_max_good": None}, "absent ou illisible"), ({"cuda_max_good": "13.0"}, "absent ou illisible"),
+                         ({"cuda_max_good": True}, "absent ou illisible"), ({"cuda_max_good": float("nan")}, "non fini"),
+                         ({"cuda_max_good": float("inf")}, "non fini")):
+        with pytest.raises(GardeArret, match=motif):
+            rb.exiger_offre({**offre, **faute})
+    with pytest.raises(GardeArret, match="cuda_max_good None absent ou illisible"):
+        rb.exiger_offre(sans)
+    f = tmp_path / "offre.json"
+    f.write_text(json.dumps(offre), encoding="utf-8")
+    r = _bash("offre", str(f))
+    assert r.returncode == 0 and "ACCEPTEE" in r.stdout
+    for nom, o in (("vieux", {**offre, "cuda_max_good": 12.8}), ("sans", sans)):
+        f.write_text(json.dumps(o), encoding="utf-8")
+        r = _bash("offre", str(f))
+        assert r.returncode == 2 and "cuda_max_good" in r.stdout, (nom, r.stdout)
+    texte = (RACINE / "scripts" / "lancer_bbis_v1.sh").read_text(encoding="utf-8")
+    assert "cuda_max_good>=13.0" in texte                                              # filtre de la recherche décrit

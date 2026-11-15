@@ -62,6 +62,8 @@ DISQUE_GO = 60
 # sûreté M1 : 60671759, course Neuron Lens en cours, même compte) ; témoins de l'absence : 60480302 ou 60670453 seulement
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from controle_ia.t07bbis.registre_bbis_v1 import INSTANCES_D_AUTRES_SESSIONS  # noqa: E402
+# version CUDA servie par l'hôte (`cuda_max_good`) : même seuil et même garde que la course (13.0, roue torch cu130)
+from controle_ia.t07bbis.registre_bbis_v1 import CUDA_MAX_GOOD_MIN, faute_cuda_hote  # noqa: E402,F401
 INSTANCES_PROPRES_REPETITION = ("60671759",)
 TEMOINS = ("60480302", "60670453")
 ENTROPIE_REPETITION = 0x6B0B1D5E2C4A48F1A3E7D2C9B85F0141
@@ -214,7 +216,8 @@ def exiger_absence(liste_doc, ident, temoin) -> dict:
 def offre_depuis_recherche(doc, ident) -> dict:
     """Offre lue par programme dans la sortie de `vastai search offers --raw` (clés de l'outil : `id`, `gpu_name`, `num_gpus`,
     `gpu_ram` (Mo), `cpu_cores_effective`, `cpu_ram` (Mo), `disk_space` (Go), `dph_total` (USD/h), `storage_cost` (USD par Go et
-    par mois)) ; forme supposée de l'outil, toute clé absente → refus (jamais un défaut deviné)."""
+    par mois), `cuda_max_good` (version CUDA maximale servie par l'hôte, au moins 13.0)) ; forme supposée de l'outil, toute clé
+    absente → refus (jamais un défaut deviné)."""
     n = entier_ascii(ident, "identifiant d'offre")
     liste = doc.get("offers") if isinstance(doc, dict) else doc
     if not isinstance(liste, list):
@@ -232,9 +235,12 @@ def offre_depuis_recherche(doc, ident) -> dict:
         fautes.append(f"carte {o['gpu_name']!r} × {o['num_gpus']!r}, {o['gpu_ram']!r} Mo : une A100 SXM4 80 Go exactement")
     if not 0 < float(o["dph_total"]) <= OFFRE_MIN["prix_max_usd_h"]:
         fautes.append(f"prix {o['dph_total']!r} USD/h > {OFFRE_MIN['prix_max_usd_h']}")
+    f = faute_cuda_hote(o.get("cuda_max_good"))
+    if f:
+        fautes.append(f)
     if fautes:
         raise Refus("offre hors des bornes de la répétition : " + " ; ".join(fautes))
-    return {"id": n, "carte": CARTE, "coeurs": float(o["cpu_cores_effective"]), "memoire_vive_mo": float(o["cpu_ram"]),
+    return {"id": n, "carte": CARTE, "cuda_max_good": float(o["cuda_max_good"]), "coeurs": float(o["cpu_cores_effective"]), "memoire_vive_mo": float(o["cpu_ram"]),
             "disque_go": float(o["disk_space"]), "prix_usd_h": float(o["dph_total"]),
             "stockage_usd_h": float(o["storage_cost"]) * DISQUE_GO / 730.0, "etiquette": ETIQUETTE,
             "source": "offre-depuis-recherche (clés lues, jamais retapées)"}
@@ -242,7 +248,8 @@ def offre_depuis_recherche(doc, ident) -> dict:
 
 def exiger_offre(offre: dict, identifiant, prix: float) -> dict:
     """Machine de la classe de la course (A100 SXM4 80 Go exactement), étiquette de la répétition, identifiant et prix relevés le
-    jour (au plus 1,40 USD de l'heure, pire cas du devis de B bis)."""
+    jour (au plus 1,40 USD de l'heure, pire cas du devis de B bis) ; version CUDA servie par l'hôte (`cuda_max_good`) au moins
+    13.0, clé absente ou illisible : refus."""
     fautes = []
     if offre.get("carte") != CARTE:
         fautes.append(f"carte {offre.get('carte')!r} ≠ {CARTE!r} (celle de la course, exactement)")
@@ -261,6 +268,9 @@ def exiger_offre(offre: dict, identifiant, prix: float) -> dict:
         fautes.append(f"stockage {offre.get('stockage_usd_h')!r} USD/h > {OFFRE_MIN['stockage_max_usd_h']}")
     if offre.get("etiquette") != ETIQUETTE:
         fautes.append(f"étiquette {offre.get('etiquette')!r} ≠ {ETIQUETTE}")
+    f = faute_cuda_hote(offre.get("cuda_max_good"))
+    if f:
+        fautes.append(f)
     try:
         if entier_ascii(offre.get("id"), "id") != entier_ascii(str(identifiant), "identifiant d'offre"):
             raise Refus("différents")
@@ -478,7 +488,7 @@ def main(argv=None) -> int:
             with open(a[3], "x", encoding="utf-8") as f:                   # R12 : jamais réécrit
                 f.write(json.dumps(o, indent=1, ensure_ascii=False, sort_keys=True) + "\n")
             print(f"BBIS REPETITION OFFRE ECRITE {a[3]} : offre {o['id']}, {o['carte']}, {o['prix_usd_h']:g} USD/h, "
-                  f"stockage {o['stockage_usd_h']:.4f} USD/h")
+                  f"stockage {o['stockage_usd_h']:.4f} USD/h, CUDA de l'hôte {o['cuda_max_good']:g}")
         elif a[:1] == ["garde-commande"] and len(a) == 5:
             r = garde_commande(int(a[1]), float(a[2]), a[3], int(a[4]))
             print(f"BBIS REPETITION COMMANDE PERMISE : {r['duree_h']:.2f} h au plus, {r['cout_max_usd']:.2f} USD au plus "

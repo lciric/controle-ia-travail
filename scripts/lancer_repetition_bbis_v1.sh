@@ -9,7 +9,13 @@
 #   credit                           crédit du compte (champ `credit` seul) : au moins 4 USD, sinon refus ;
 #   offre-depuis-recherche RECHERCHE.json ID OFFRE.json
 #                                    OFFRE.json construit par programme depuis la sortie de `vastai search offers --raw` ;
-#   offre OFFRE.json ID PRIX_USD_H   bornes de l'offre (A100 SXM4 80 Go exactement, prix ≤ 1,40 USD/h, étiquette de la répétition) ;
+#                                    recherche (filtre de l'outil, la garde locale décide) :
+#                                    ( umask 077; vastai search offers 'gpu_name=A100_SXM4 num_gpus=1 cpu_cores_effective>=16
+#                                      cpu_ram>=128 disk_space>=60 reliability>0.98 cuda_max_good>=13.0' -o 'dph_total' --raw
+#                                      > RECHERCHE.json ) ;
+#   offre OFFRE.json ID PRIX_USD_H   bornes de l'offre (A100 SXM4 80 Go exactement, prix ≤ 1,40 USD/h, étiquette de la répétition,
+#                                    version CUDA servie par l'hôte `cuda_max_good` ≥ 13.0, celle de la roue torch de
+#                                    requirements-gpu.txt ; clé absente ou illisible : refus) ;
 #   commande RACINE OFFRE.json OFFRE_ID COMMIT BRANCHE_CODE ECHEANCE_UTC_S PRIX_USD_H FEU IMAGE
 #                                    imprime la commande de création après : l'offre ; le feu écrit portant GO-2026-11-14-09,
 #                                    R-2802 et l'image exacte ; GH_TOKEN présent (par le nom) ; l'échéance (coût strictement sous

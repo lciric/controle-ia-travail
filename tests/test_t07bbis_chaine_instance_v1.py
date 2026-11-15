@@ -236,7 +236,7 @@ def test_compte_des_essais_passes_et_minimum(tmp_path):
 
 def _offre(chemin: Path, **k) -> Path:
     o = {"id": 99, "carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 200, "stockage_usd_h": 0.05,
-         "etiquette": "bbis-t07-v1"}
+         "etiquette": "bbis-t07-v1", "cuda_max_good": 13.0}
     o.update(k)
     chemin.write_text(json.dumps(o), encoding="utf-8")
     return chemin

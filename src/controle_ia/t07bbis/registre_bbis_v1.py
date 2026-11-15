@@ -17,7 +17,10 @@
   `GO-2026-11-14-09`) au registre propre et le feu écrit de la mère portant ce numéro ; une relance au plus ; échéance de la
   ligne de GO (2026-11-22) ; relance après le samedi 21 novembre 12:00 UTC : nœud.
 - **Garde d'offre** (`exiger_offre`) : A100 SXM4 80 Go, au moins 16 cœurs, 128 000 Mo de mémoire vive, 150 Go de disque,
-  stockage au plus 0,08 USD de l'heure, étiquette `bbis-t07-v1` ; aucune H200.
+  stockage au plus 0,08 USD de l'heure, étiquette `bbis-t07-v1` ; aucune H200 ; version CUDA maximale servie par l'hôte
+  (`cuda_max_good` de `vastai search offers --raw`, recopiée dans OFFRE.json sous la même clé) au moins 13.0, celle de la roue
+  torch 2.14.1 de `requirements-gpu.txt` ; clé absente, non numérique ou non finie : refus (`faute_cuda_hote`, partagée avec la
+  répétition ; répétition du 15 novembre : hôte à 12.8, « torch ne voit pas la carte »).
 - **Destruction** (`exiger_identifiant_a_detruire`, `exiger_absence` ; défaut R-2789) : par l'identifiant, avec `-y`, jamais une
   instance d'une autre session ; jamais jugée par un code de sortie, prouvée par l'absence de l'identifiant dans la liste des
   instances lue sans erreur, une instance témoin présente ; sinon « absence non prouvée », arrêt.
@@ -27,6 +30,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -43,6 +47,9 @@ ECHEANCE_GO = "2026-11-22T23:59:59Z"
 LIMITE_RELANCE = "2026-11-21T12:00:00Z"
 ETIQUETTE = "bbis-t07-v1"
 OFFRE_MIN = {"coeurs": 16, "memoire_vive_mo": 128000, "disque_go": 150, "stockage_max_usd_h": 0.08}
+# Roue PyPI de torch 2.14.1 (requirements-gpu.txt, l. 3 à 6) construite pour CUDA 13.0 : l'hôte doit servir CUDA 13.0 au moins
+# (répétition sur carte du 15 novembre : pilote 570.211.01, CUDA 12.8, « torch ne voit pas la carte » après l'installation)
+CUDA_MAX_GOOD_MIN = 13.0
 SHA = re.compile(r"[0-9a-f]{64}")
 COMMIT = re.compile(r"[0-9a-f]{40}")
 
@@ -255,6 +262,21 @@ def exiger_absence(liste, ident: str, temoin: str) -> dict:
     return {"detruite": ident, "temoin": temoin, "instances_listees": len(ids)}
 
 
+def faute_cuda_hote(valeur) -> str | None:
+    """Motif de refus de la version CUDA maximale servie par l'hôte (`cuda_max_good` de l'outil), ou None si elle est au moins
+    `CUDA_MAX_GOOD_MIN`. Nombre JSON seulement (jamais un booléen ni un texte), fini ; absente ou illisible : refus, jamais un
+    défaut deviné."""
+    if isinstance(valeur, bool) or not isinstance(valeur, (int, float)):
+        return f"cuda_max_good {valeur!r} absent ou illisible (nombre attendu ; version CUDA servie par l'hôte)"
+    v = float(valeur)
+    if not math.isfinite(v):
+        return f"cuda_max_good {valeur!r} non fini"
+    if v < CUDA_MAX_GOOD_MIN:
+        return (f"cuda_max_good {v:g} < {CUDA_MAX_GOOD_MIN:g} (pilote de l'hôte trop ancien pour la roue torch 2.14.1 "
+                f"construite pour CUDA 13.0)")
+    return None
+
+
 def exiger_offre(offre: dict, identifiant: str | None = None) -> dict:
     """Offre dans les bornes du devis ; H200 exclue (mot de Lazar seulement). `identifiant` (sous-commande `commande` de
     `scripts/lancer_bbis_v1.sh`, correction m5) : l'offre décrite doit porter cet identifiant numérique (clé `id`)."""
@@ -284,6 +306,9 @@ def exiger_offre(offre: dict, identifiant: str | None = None) -> dict:
         fautes.append(f"stockage {offre.get('stockage_usd_h')!r} USD/h > 0,08")
     if offre.get("etiquette") != ETIQUETTE:
         fautes.append(f"étiquette {offre.get('etiquette')!r} ≠ {ETIQUETTE}")
+    f = faute_cuda_hote(offre.get("cuda_max_good"))
+    if f:
+        fautes.append(f)
     if fautes:
         raise GardeArret("offre hors des bornes du devis : " + " ; ".join(fautes))
     return offre
@@ -358,6 +383,7 @@ def main(argv=None) -> int:
 __all__ = ["REGISTRE_PROPRE", "REGISTRE_PARTAGE", "CLES_BBIS", "GO_ID", "COUPURE_USD", "ETIQUETTE", "cles_bbis_presentes",
            "exiger_partage_sans_bbis", "ajouter_ligne_propre", "journaliser_ouverture", "ecrire_fiche_code", "lire_fiche_code",
            "exiger_ancetre", "exiger_ancetre_de_la_fiche", "garde_depense", "exiger_offre", "exiger_creation",
+           "CUDA_MAX_GOOD_MIN", "faute_cuda_hote",
            "INSTANCES_D_AUTRES_SESSIONS", "exiger_identifiant_a_detruire", "exiger_absence", "main"]
 
 if __name__ == "__main__":

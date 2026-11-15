@@ -251,7 +251,8 @@ def _lancer_rep(*args, env=None) -> subprocess.CompletedProcess:
 
 def _offre(chemin: Path, **k) -> Path:
     o = {"id": 99, "carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 80, "stockage_usd_h": 0.05,
-         "etiquette": "bbis-t07-repetition-v1", "prix_usd_h": 1.3}
+         "etiquette": "bbis-t07-repetition-v1", "prix_usd_h": 1.3,
+         "cuda_max_good": 13.0}
     o.update(k)
     chemin.write_text(json.dumps(o), encoding="utf-8")
     return chemin
@@ -343,7 +344,8 @@ def test_budget_de_travail_avant_la_reserve_de_fin():
         assert f'budget_ou_arret "{etape}"' in texte
 
 
-NVIDIA = 'case "${FAUX_CARTE:-sxm}" in sxm) echo "NVIDIA A100-SXM4-80GB, 81920 MiB, 550.54";; pcie) echo "NVIDIA A100-PCIE-40GB, 40960 MiB, 550.54";; *) exit 9;; esac\n'
+NVIDIA = '[ "$#" = 0 ] && { echo "| NVIDIA-SMI 580.65.06   Driver Version: 580.65.06   CUDA Version: 13.0     |"; exit 0; }\n' + \
+    'case "${FAUX_CARTE:-sxm}" in sxm) echo "NVIDIA A100-SXM4-80GB, 81920 MiB, 550.54";; pcie) echo "NVIDIA A100-PCIE-40GB, 40960 MiB, 550.54";; *) exit 9;; esac\n'
 
 
 def test_machine_carte_jeton_outils_et_torch(tmp_path):
@@ -356,6 +358,7 @@ def test_machine_carte_jeton_outils_et_torch(tmp_path):
     py = b / "python-faux"
     r = _bash(corps, py, env=env)
     assert r.returncode == 0 and "MACHINE CONFORME" in r.stdout and "A100-SXM4-80GB" in r.stdout, r.stdout + r.stderr
+    assert "CUDA Version: 13.0" in (x / "nvidia-smi-entete.txt").read_text(encoding="utf-8")      # en-tête gardé pour la garde CUDA
     for faute, motif in (({"FAUX_CARTE": "pcie"}, "carte autre qu'une A100 SXM4 80 Go"), ({"FAUX_CARTE": "aucune"}, "carte invisible"),
                          ({"GH_TOKEN": ""}, "GH_TOKEN absent"), ({"FAUX_TORCH": "1"}, "torch ne voit pas la carte")):
         r = _bash(corps, py, env={**env, **faute})
@@ -496,7 +499,8 @@ def _lancer_rep(*args, env=None) -> subprocess.CompletedProcess:
 
 def _offre(chemin: Path, **k) -> Path:
     o = {"id": 99, "carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 80, "stockage_usd_h": 0.05,
-         "etiquette": "bbis-t07-repetition-v1", "prix_usd_h": 1.3}
+         "etiquette": "bbis-t07-repetition-v1", "prix_usd_h": 1.3,
+         "cuda_max_good": 13.0}
     o.update(k)
     chemin.write_text(json.dumps(o), encoding="utf-8")
     return chemin
@@ -512,9 +516,9 @@ def _depot_commande(base: Path, amorce_rep: str | None = None, avec_script: bool
 
 
 OFFRES = [{"id": 99, "gpu_name": "A100 SXM4", "num_gpus": 1, "gpu_ram": 81920, "cpu_cores_effective": 32, "cpu_ram": 257000,
-           "disk_space": 120, "dph_total": 1.12, "storage_cost": 0.15},
+           "disk_space": 120, "dph_total": 1.12, "storage_cost": 0.15, "cuda_max_good": 13.0},
           {"id": 98, "gpu_name": "A100 PCIE", "num_gpus": 1, "gpu_ram": 40960, "cpu_cores_effective": 32, "cpu_ram": 257000,
-           "disk_space": 120, "dph_total": 0.80, "storage_cost": 0.15}]
+           "disk_space": 120, "dph_total": 0.80, "storage_cost": 0.15, "cuda_max_good": 13.0}]
 
 
 def test_offre_construite_par_programme_depuis_la_recherche(tmp_path):
@@ -750,3 +754,81 @@ def test_etat_partiel_ecrit_avant_les_controles_sur_processeur(tmp_path, monkeyp
     assert m.jouer_carte(sortie, appareil="cpu", n_actions=16, largeur=16, par_famille=1) == 8
     assert vus and vus[0]["etat"].startswith("partiel") and vus[0]["garde_de_debit"]["apprentissages_course"] == 2460
     assert len(vus[0]["apprentissages"]) == 2 and _sans_cle_aire(vus[0])
+
+
+# ------------------------------------------------------------------------------------------------------------ CUDA de l'hôte
+# Répétition sur carte du 15 novembre (traces/bbis-t07-repetition-v1 sur calcul/t07bbis-repetition-v1, 56f5b8b8) : pilote
+# 570.211.01, CUDA 12.8 ; roue torch 2.14.1 construite pour CUDA 13.0 ; « torch ne voit pas la carte » après 118 s d'installation.
+
+TRACE_NVIDIA_SMI = "NVIDIA A100-SXM4-80GB, 81920 MiB, 570.211.01\n"          # nvidia-smi.txt des traces, tel quel
+ENTETE_HOTE_DES_TRACES = ("+-----------------------------------------------------------------------------------------+\n"
+                          "| NVIDIA-SMI 570.211.01            Driver Version: 570.211.01     CUDA Version: 12.8     |\n"
+                          "|-----------------------------------------+------------------------+----------------------+\n")
+ENTETE_SAIN = ("+-----------------------------------------------------------------------------------------+\n"
+               "| NVIDIA-SMI 580.65.06              Driver Version: 580.65.06      CUDA Version: 13.0     |\n"
+               "|-----------------------------------------+------------------------+----------------------+\n")
+
+
+def test_offre_de_la_repetition_exige_cuda_13_de_l_hote(tmp_path):
+    rech = tmp_path / "recherche.json"
+    for nom, valeur, motif in (("vieux", 12.8, "cuda_max_good 12.8 < 13"), ("texte", "13.0", "absent ou illisible"),
+                               ("nul", None, "absent ou illisible")):
+        rech.write_text(json.dumps([{**OFFRES[0], "cuda_max_good": valeur}]), encoding="utf-8")
+        r = _lancer_rep("offre-depuis-recherche", rech, "99", tmp_path / f"o-{nom}.json")
+        assert r.returncode == 2 and motif in r.stdout and not (tmp_path / f"o-{nom}.json").exists(), (nom, r.stdout)
+    rech.write_text(json.dumps([{k: v for k, v in OFFRES[0].items() if k != "cuda_max_good"}]), encoding="utf-8")
+    r = _lancer_rep("offre-depuis-recherche", rech, "99", tmp_path / "o-sans.json")       # champ absent : refus
+    assert r.returncode == 2 and "cuda_max_good" in r.stdout and not (tmp_path / "o-sans.json").exists()
+    rech.write_text(json.dumps([{**OFFRES[0], "cuda_max_good": 13.0}]), encoding="utf-8")
+    r = _lancer_rep("offre-depuis-recherche", rech, "99", tmp_path / "o-sain.json")       # cas sain : borne incluse
+    assert r.returncode == 0 and "CUDA de l'hôte 13" in r.stdout, r.stdout
+    o = json.loads((tmp_path / "o-sain.json").read_text(encoding="utf-8"))
+    assert o["cuda_max_good"] == 13.0
+    assert _lancer_rep("offre", tmp_path / "o-sain.json", "99", "1.12").returncode == 0
+    for nom, faute in (("vieux", {"cuda_max_good": 12.8}), ("nan", {"cuda_max_good": float("nan")})):
+        r = _lancer_rep("offre", _offre(tmp_path / f"f-{nom}.json", **faute), "99", "1.3")
+        assert r.returncode == 2 and "cuda_max_good" in r.stdout, (nom, r.stdout)
+    sans = tmp_path / "f-sans.json"
+    sans.write_text(json.dumps({k: v for k, v in json.loads(_offre(tmp_path / "x.json").read_text()).items()
+                                if k != "cuda_max_good"}), encoding="utf-8")
+    r = _lancer_rep("offre", sans, "99", "1.3")
+    assert r.returncode == 2 and "cuda_max_good" in r.stdout
+    assert "cuda_max_good>=13.0" in LANCER_REP.read_text(encoding="utf-8")                # filtre de la recherche décrit
+
+
+def test_cuda_du_pilote_avant_l_installation_dans_les_deux_amorces(tmp_path):
+    """Contrôle de l'amorce (même texte dans les deux amorces) : en-tête sain (13.0) accepté ; en-tête de l'hôte des traces (12.8)
+    refusé, code 2 comme « torch ne voit pas la carte » ; sortie des traces telle quelle (sans « CUDA Version ») refusée ; en-tête
+    multiple, vide ou absent refusé. Le contrôle précède toute installation des paquets dans les deux amorces."""
+    bloc = _extrait_rep("cuda-du-pilote")
+    assert bloc == ad.extrait("cuda-du-pilote")                                         # même texte dans l'amorce de la course
+    corps = TETE + bloc + 'exiger_cuda_du_pilote "$1"; echo "CUDA CONFORME"\n'
+    cas = {"sain": ENTETE_SAIN, "sain-13.2": ENTETE_SAIN.replace("13.0", "13.2"), "sain-14.1": ENTETE_SAIN.replace("13.0", "14.1"),
+           "hote-des-traces": ENTETE_HOTE_DES_TRACES, "trace-telle-quelle": TRACE_NVIDIA_SMI,
+           "double": ENTETE_SAIN + ENTETE_HOTE_DES_TRACES, "vide": "", "illisible": ENTETE_SAIN.replace("13.0", "13.x"),
+           "majeur-seul": ENTETE_SAIN.replace("13.0", "13 ")}
+    for nom, texte in cas.items():
+        (tmp_path / nom).write_text(texte, encoding="utf-8")
+    for nom in ("sain", "sain-13.2", "sain-14.1"):
+        r = _bash(corps, tmp_path / nom)
+        assert r.returncode == 0 and "CUDA CONFORME" in r.stdout and "CUDA servie par le pilote" in r.stdout, (nom, r.stdout + r.stderr)
+    r = _bash(corps, tmp_path / "hote-des-traces")
+    assert r.returncode == 2 and "pilote trop ancien : CUDA 12.8" in r.stdout and "CUDA CONFORME" not in r.stdout, r.stdout
+    assert "avant l'installation des paquets" in r.stdout
+    for nom in ("trace-telle-quelle", "double", "vide", "illisible", "majeur-seul", "absent"):
+        r = _bash(corps, tmp_path / nom)
+        assert r.returncode == 2 and "illisible" in r.stdout and "CUDA CONFORME" not in r.stdout, (nom, r.stdout + r.stderr)
+    # le code d'arrêt est celui de « torch ne voit pas la carte » dans les deux amorces
+    for texte in (AMORCE_REP.read_text(encoding="utf-8"), ad.AMORCE.read_text(encoding="utf-8")):
+        assert re.search(r'arret "torch ne voit pas la carte" 2', texte)
+    # ordre : la garde est appelée une fois, après la capture de l'en-tête, avant toute installation
+    rep = AMORCE_REP.read_text(encoding="utf-8")
+    assert len(re.findall(r'^exiger_cuda_du_pilote "\$X/nvidia-smi-entete.txt"', rep, re.M)) == 1
+    i = rep.index('exiger_cuda_du_pilote "$X/nvidia-smi-entete.txt"   #')
+    assert rep.index("\nverifier_machine\n") < rep.index("\npreparer_depot ") < i < rep.index('\ninstaller_paquets "$T/venv/bin/python"')
+    assert rep.index('nvidia-smi > "$X/nvidia-smi-entete.txt"') < rep.index("\nverifier_machine\n")
+    course = ad.AMORCE.read_text(encoding="utf-8")
+    assert len(re.findall(r'^exiger_cuda_du_pilote "\$X/nvidia-smi-entete.txt"', course, re.M)) == 1
+    i = course.index('\nexiger_cuda_du_pilote "$X/nvidia-smi-entete.txt"')
+    assert course.index('\nnvidia-smi > "$X/nvidia-smi-entete.txt"') < i < course.index("pip\" install") < course.index("torch.cuda.is_available()")
+    assert i < course.index("git -c credential.helper")                               # avant le clonage et la sortie de 7b

@@ -10,7 +10,9 @@
 #   (`set -u`, erreur imprévue : traces poussées si possible, instance laissée en marche, minuterie armée) ; 1. machine (A100 SXM4
 #   80 Go, clé par son nom) ; 2. dépôt au commit COMMIT, branche de sortie neuve contrôlée (dès lors tout arrêt pousse ses
 #   traces), extraction partielle réelle par les MOTIFS de la course lus au commit, aucune entrée de 7b, script de la répétition
-#   pris au commit hors de l'arbre, empreinte SCRIPT_SHA256 ; 3. paquets : pip verbeux borné par `timeout`, durée écrite ;
+#   pris au commit hors de l'arbre, empreinte SCRIPT_SHA256 ; version CUDA servie par le pilote (en-tête de nvidia-smi, lu à
+#   l'étape 1) au moins 13.0, sinon arrêt avant toute installation (code 2, traces poussées) ; 3. paquets : pip verbeux borné
+#   par `timeout`, durée écrite ;
 #   4. essais de l'arbre de l'instance par la commande de la course, MIN_ESSAIS de la course ; 5. carte ; 6. traces poussées sur
 #   calcul/t07bbis-repetition-v1 (commit des seules traces posé sur COMMIT). **Budget** : chaque étape longue est bornée pour que le
 #   travail cesse RESERVE_FIN_S (15 min) avant l'échéance et que les traces partent avant la destruction (code 10).
@@ -122,6 +124,25 @@ minuterie() { local n=0 c; while [ "$(date +%s)" -lt "$ECHEANCE_UTC_S" ]; do sle
 # <<< minuterie
 minuterie < /dev/null & j "minuterie lancée (PID $!, échéance $(date -u -d "@$ECHEANCE_UTC_S" +%FT%TZ)), avant toute passe"
 trap 'fin_inattendue $?' EXIT
+# >>> cuda-du-pilote (même texte dans les deux amorces de B bis ; extrait et joué par tests/test_repetition_bbis_v1.py)
+# Roue torch 2.14.1 de requirements-gpu.txt construite pour CUDA 13.0 : le pilote doit servir CUDA 13.0 au moins, lu dans l'en-tête
+# de `nvidia-smi` (« CUDA Version: M.m », une fois exactement), AVANT l'installation des paquets (répétition du 15 novembre :
+# pilote 570.211.01, CUDA 12.8, arrêt « torch ne voit pas la carte » après 118 s d'installation). Absente, multiple ou illisible :
+# arrêt, jamais un défaut deviné ; même code que « torch ne voit pas la carte » (2).
+cuda_du_pilote() {  # $1 = fichier de la sortie de `nvidia-smi` sans argument : imprime « M.m » ; 1 si absente, multiple ou illisible
+    local v
+    v=$(sed -n 's/^.*CUDA Version: *\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9.].*$/\1/p; s/^.*CUDA Version: *\([0-9][0-9]*\.[0-9][0-9]*\)$/\1/p' "$1" 2>/dev/null)
+    [ "$(printf '%s' "$v" | grep -c '^')" = 1 ] || return 1
+    printf '%s\n' "$v" | LC_ALL=C grep -qxE '[0-9]{1,3}\.[0-9]{1,3}' || return 1
+    printf '%s\n' "$v"; }
+exiger_cuda_du_pilote() {  # $1 = fichier de la sortie de `nvidia-smi` ; arrêt (code 2) sous 13.0, absente ou illisible
+    local v
+    v=$(cuda_du_pilote "$1") || arret "version CUDA servie par le pilote illisible (« CUDA Version: » absent, multiple ou illisible dans la sortie de nvidia-smi) : torch ne verrait pas la carte (roue CUDA 13.0) ; arrêt avant l'installation des paquets" 2
+    if [ "$((10#${v%%.*}))" -lt 13 ]; then
+        arret "pilote trop ancien : CUDA $v servie par le pilote < 13.0 exigée par la roue torch de requirements-gpu.txt : torch ne verrait pas la carte ; arrêt avant l'installation des paquets" 2
+    fi
+    j "CUDA servie par le pilote : $v (au moins 13.0)"; }
+# <<< cuda-du-pilote
 # >>> machine (extrait et joué par tests/test_repetition_bbis_v1.py)
 verifier_machine() {
     local o
@@ -129,6 +150,7 @@ verifier_machine() {
     [ -n "${GH_TOKEN:-}" ] || arret "GH_TOKEN absent (par le nom)" 2
     nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader > "$X/nvidia-smi.txt" 2>&1 || arret "carte invisible (nvidia-smi)" 2
     grep -q 'A100-SXM4-80GB' "$X/nvidia-smi.txt" || arret "carte autre qu'une A100 SXM4 80 Go (celle de la course) : $(head -n 1 "$X/nvidia-smi.txt")" 2
+    nvidia-smi > "$X/nvidia-smi-entete.txt" 2>&1 || arret "carte invisible (nvidia-smi, en-tête)" 2
     j "carte : $(head -n 1 "$X/nvidia-smi.txt") ; disque libre $(df -P -B1 "$R" | awk 'NR == 2 { print $4 }') octets"; }
 verifier_torch() {  # $1 = python du venv
     "$1" -c 'import torch, sys; sys.exit(0 if torch.cuda.is_available() else 1)' || arret "torch ne voit pas la carte" 2; }
@@ -219,9 +241,10 @@ partie_carte() {  # $1 = python du venv ; S posé
         124|137) arret "échéance proche : partie carte interrompue (état partiel dans repetition-carte.json)" 10;;
         *) arret "carte : code $c (carte.err)" 4;; esac; }
 # <<< essais-et-carte
-# 1. machine ; 2. dépôt ; 3. paquets ; 4. essais ; 5. carte ; 6. traces et fin
+# 1. machine ; 2. dépôt, puis CUDA du pilote ; 3. paquets ; 4. essais ; 5. carte ; 6. traces et fin
 verifier_machine
 preparer_depot "$DEPOT_URL_OFFICIEL"
+exiger_cuda_du_pilote "$X/nvidia-smi-entete.txt"   # après le dépôt (traces poussées sur COMMIT), avant toute installation
 python3 -m venv "$T/venv" || arret "environnement virtuel" 6
 installer_paquets "$T/venv/bin/python"
 PY="$T/venv/bin/python"
