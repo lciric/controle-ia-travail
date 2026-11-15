@@ -1,0 +1,16 @@
+--- docs/notes/organisme-idees-juge-v1/copie-nul-v9-a41b7b5/orchestrator/pole/nul_v9.py:detail_morceaux_groupe
++++ src/controle_ia/organisme_idees_juge/morceaux_par_coupe_v1.py:detail_morceaux_par_coupe
+@@ -1,4 +1,4 @@
+-def detail_morceaux_groupe(membres, cache, issues, instants):
++def detail_morceaux_par_coupe(membres, cache, issues, instants):
+     """Valeurs certifiées des membres par morceaux `membres` (mêmes lois connues) à chaque instant de lecture, calculées en
+     un lot : {nom: {t: {valeur, atteinte, ecart_residuel, coupe, coupes, coupes_restantes, pas}}}. `ecart_residuel` =
+     valeur − meilleure valeur atteinte (≥ 0) : prix en puissance de l'optimisation, jamais en validité."""
+@@ -39,5 +39,6 @@
+             c = int(np.argmax(bornes[sel]))
+             valeur, atteinte = float(bornes[sel].max()), float(atteintes[sel].max())
+             sortie[nom][t] = {"valeur": valeur, "atteinte": atteinte, "ecart_residuel": max(0.0, valeur - atteinte),
+-                              "coupe": etiquettes[c], "coupes": int(len(sel)), "pas": diag["pas"]}
++                              "coupe": etiquettes[c], "coupes": int(len(sel)), "pas": diag["pas"],
++                              "bornes_coupes": [float(v) for v in bornes[sel]], "etiquettes": list(etiquettes)}
+     return sortie

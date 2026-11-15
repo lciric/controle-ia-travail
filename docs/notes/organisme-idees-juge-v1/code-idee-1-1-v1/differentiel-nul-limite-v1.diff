@@ -1,0 +1,87 @@
+--- docs/notes/organisme-idees-juge-v1/copie-nul-v9-a41b7b5/orchestrator/pole/nul_v9.py
++++ src/controle_ia/organisme_idees_juge/nul_limite_v1.py
+@@ -96,8 +96,8 @@
+ VERSION_NUL = "nul-v9"
+ TYPE_MORCEAUX = "ajuste_morceaux"
+ TYPES_AJUSTES_V9 = tuple(nf.TYPES_AJUSTES) + (TYPE_MORCEAUX,)
+-PREFIXE_MORCEAUX = "morceaux:"
+-MEMBRE_SOUS_POPULATION = "morceaux:sous_population"
++PREFIXE_MORCEAUX = "limite:"
++MEMBRE_SOUS_POPULATION = "limite:sous_population"
+ # Points intérieurs : paliers de la barrière, pas de Newton au plus par palier, précision visée du maximum certifié.
+ PALIERS_MU = (1e-2, 1e-4, 1e-6, 1e-8)
+ PAS_MAX_PAR_PALIER = 30
+@@ -147,7 +147,7 @@
+     return {"type": "seuil", "indice": int(indice)}
+ 
+ 
+-def membres_morceaux(lois_connues, dimension):
++def membres_morceaux(lois_connues, partitions):
+     """Membres par morceaux d'une fiche dont les lois connues sont `lois_connues` (ordre de « ajuste_lineaire:archive »).
+ 
+     Moins de deux lois connues : aucun membre (avec une seule loi connue et un bruit commun, chaque morceau porte la même
+@@ -155,11 +155,10 @@
+     lois = [copy.deepcopy(l) for l in lois_connues]
+     if len(lois) < 2:
+         return []
+-    membres = [{"nom": MEMBRE_SOUS_POPULATION, "type": TYPE_MORCEAUX, "lois": copy.deepcopy(lois),
+-                "partition": {"type": "sous_population"}}]
+-    for j in range(int(dimension)):
+-        membres.append({"nom": f"{PREFIXE_MORCEAUX}seuil:z{j}", "type": TYPE_MORCEAUX, "lois": copy.deepcopy(lois),
+-                        "partition": partition_seuil(j)})
++    membres = []
++    for p in partitions:
++        membres.append({"nom": f"{PREFIXE_MORCEAUX}{p['nom']}", "type": TYPE_MORCEAUX, "lois": copy.deepcopy(lois),
++                        "partition": copy.deepcopy(p["partition"])})
+     return membres
+ 
+ 
+@@ -170,15 +169,17 @@
+     return [parents[n] for n in sorted(parents)] + [survivantes[i] for i in sorted(survivantes) if i not in parents]
+ 
+ 
+-def membres_archive_v9(survivantes, lois_parents=None, nombre_issues=3, dimension=2, moniteur=None):
++def membres_archive_v9(survivantes, lois_parents=None, nombre_issues=3, dimension=2, moniteur=None, partitions=None):
+     """Membres d'archive du nul v9 : ceux du nul v8 (`nul_v8.membres_archive_v8`, gardés par sa garde), plus les membres par
+     morceaux sur les mêmes lois connues ; la garde `exiger_membres_v9` vérifie le tout."""
+     v8 = nul_v8.membres_archive_v8(survivantes, lois_parents, nombre_issues, dimension, moniteur)
+-    membres = v8 + membres_morceaux(lois_connues(survivantes, lois_parents), dimension)
+-    return exiger_membres_v9(membres, survivantes, lois_parents, dimension)
+-
+-
+-def exiger_membres_v9(membres, survivantes, lois_parents=None, dimension=2):
++    if partitions is None:
++        raise NulV9Refuse("nul limité : liste des partitions absente")
++    membres = v8 + membres_morceaux(lois_connues(survivantes, lois_parents), partitions)
++    return exiger_membres_v9(membres, survivantes, lois_parents, dimension, partitions)
++
++
++def exiger_membres_v9(membres, survivantes, lois_parents=None, dimension=2, partitions=None):
+     """Garde : les membres du v8 sont intacts (`nul_v8.exiger_membres_ajustes`, `NulV8Refuse` traduit en `NulV9Refuse`), et,
+     dès deux lois connues, chaque membre par morceaux (sous-population, puis un seuil par trait) est présent exactement une
+     fois avec les lois connues exactes et sa partition exacte ; aucun membre par morceaux de trop. Rend `membres`."""
+@@ -186,8 +187,10 @@
+         nul_v8.exiger_membres_ajustes([m for m in membres if m.get("type") != TYPE_MORCEAUX], survivantes, lois_parents)
+     except nul_v8.NulV8Refuse as e:
+         raise NulV9Refuse(f"nul v9 : membres du nul v8 absents ou altérés ({e})") from e
++    if partitions is None:
++        raise NulV9Refuse("nul limité : liste des partitions absente")
+     connues = lois_connues(survivantes, lois_parents)
+-    attendus = membres_morceaux(connues, dimension)
++    attendus = membres_morceaux(connues, partitions)
+     presents = [m for m in membres if m.get("type") == TYPE_MORCEAUX or str(m.get("nom", "")).startswith(PREFIXE_MORCEAUX)]
+     defauts = []
+     for a in attendus:
+@@ -414,6 +417,12 @@
+         lo = (z[:, None] <= seuils[None, :]).astype(float) * dedans[:, None]
+         hi = dedans[:, None] - lo
+         return np.stack([lo, hi]), [{"seuil": None if not np.isfinite(s) else float(s)} for s in seuils]
++    if partition.get("type") == "seuil_fixe":
++        j, s = partition["indice"], float(partition["seuil"])
++        z = np.array([float(inst["z"][j]) for inst in instances])
++        lo = (z <= s).astype(float) * dedans
++        hi = dedans - lo
++        return np.stack([lo[:, None], hi[:, None]]), [{"seuil": s}]
+     raise NulV9Refuse(f"partition inconnue : {partition!r}")
+ 
+ 
