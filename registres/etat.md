@@ -1,6 +1,6 @@
 # État du programme
 
-- **Instance Vast 60783204 active** (Neuron Lens, tranche B-α, commande v5, créée 2026-11-15T12:06:41Z, minuterie jusqu'au 2026-11-16T09:55:47Z, R-2907) : suivie par la fille ; à détruire par identifiant en fin de course.
+- Instance Vast 60783204 (Neuron Lens, B-α, commande v5) : détruite le 2026-11-15 à 14:13:24Z, absence prouvée (R-2914). Aucune instance active de ce programme.
 - Instance Vast 60773264 (Neuron Lens, B-α, relance) : détruite le 2026-11-15 à 11:39:27Z, absence prouvée (R-2901). Aucune instance active de ce programme.
 - Instance Vast 60770175 (Neuron Lens, B-α, première course) : détruite le 2026-11-15 à 09:57:24Z, absence prouvée (R-2891). Aucune instance active de ce programme.
 **2026-11-15 vers 09:12 UTC — passation d'étape `registres/passations/2026-11-15-0912.md` (R-2880), qui prime** : voir son « Reste » et ses « Décisions attendues de Lazar ». Aucune instance active de ce programme.
