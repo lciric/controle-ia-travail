@@ -50,6 +50,13 @@ OFFRE_MIN = {"coeurs": 16, "memoire_vive_mo": 128000, "disque_go": 150, "stockag
 # Roue PyPI de torch 2.14.1 (requirements-gpu.txt, l. 3 à 6) construite pour CUDA 13.0 : l'hôte doit servir CUDA 13.0 au moins
 # (répétition sur carte du 15 novembre : pilote 570.211.01, CUDA 12.8, « torch ne voit pas la carte » après l'installation)
 CUDA_MAX_GOOD_MIN = 13.0
+# offre lue dans la sortie de `vastai search offers --raw` (fonction commune à la course et à la répétition)
+NOM_CARTE_OUTIL = "A100 SXM4"
+CARTE_OFFRE = "A100 SXM4 80GB"
+MEMOIRE_CARTE_MIN_MO = 79000
+DISQUE_GO = 150            # disque de la course (`--disk 150` de scripts/lancer_bbis_v1.sh)
+CLES_RECHERCHE = ("gpu_name", "num_gpus", "gpu_ram", "cpu_cores_effective", "cpu_ram", "disk_space", "dph_total", "storage_cost")
+ENTIER_ASCII = re.compile(r"[1-9][0-9]*", re.ASCII)
 SHA = re.compile(r"[0-9a-f]{64}")
 COMMIT = re.compile(r"[0-9a-f]{40}")
 
@@ -268,13 +275,72 @@ def faute_cuda_hote(valeur) -> str | None:
     défaut deviné."""
     if isinstance(valeur, bool) or not isinstance(valeur, (int, float)):
         return f"cuda_max_good {valeur!r} absent ou illisible (nombre attendu ; version CUDA servie par l'hôte)"
-    v = float(valeur)
+    try:
+        v = float(valeur)
+    except OverflowError:
+        return "cuda_max_good non fini (entier hors de portée)"
     if not math.isfinite(v):
         return f"cuda_max_good {valeur!r} non fini"
     if v < CUDA_MAX_GOOD_MIN:
-        return (f"cuda_max_good {v:g} < {CUDA_MAX_GOOD_MIN:g} (pilote de l'hôte trop ancien pour la roue torch 2.14.1 "
+        return (f"cuda_max_good {valeur!r} < {CUDA_MAX_GOOD_MIN:g} (pilote de l'hôte trop ancien pour la roue torch 2.14.1 "
                 f"construite pour CUDA 13.0)")
     return None
+
+
+def _nombre(x) -> float | None:
+    """Nombre lu sur une offre de l'outil (nombre JSON, ou texte numérique) ; booléen, illisible ou non fini : None."""
+    if isinstance(x, bool) or not isinstance(x, (int, float, str)):
+        return None
+    try:
+        v = float(x)
+    except (ValueError, OverflowError):
+        return None
+    return v if math.isfinite(v) else None
+
+
+def lire_offre_de_recherche(doc, n: int) -> tuple[dict, list[str]]:
+    """Offre d'identifiant `n` lue **par programme** dans la sortie de `vastai search offers --raw` (clés de l'outil : `id`,
+    `gpu_name`, `num_gpus`, `gpu_ram` (Mo), `cpu_cores_effective`, `cpu_ram` (Mo), `disk_space` (Go), `dph_total` (USD/h),
+    `storage_cost` (USD par Go et par mois), `cuda_max_good`) ; commune à la course et à la répétition. Rend (offre brute, fautes)
+    : fautes de carte (une A100 SXM4 80 Go exactement) et de CUDA de l'hôte (`faute_cuda_hote`) ; chaque appelant ajoute ses
+    bornes. Sortie illisible, offre absente ou en double, clé absente ou illisible : `GardeArret` (rien n'est deviné)."""
+    liste = doc.get("offers") if isinstance(doc, dict) else doc
+    if not isinstance(liste, list):
+        raise GardeArret("sortie de la recherche illisible (liste d'offres attendue)")
+    vues = [o for o in liste if isinstance(o, dict) and not isinstance(o.get("id"), bool) and o.get("id") == n]
+    if len(vues) != 1:
+        raise GardeArret(f"offre {n} absente de la recherche (ou en double)")
+    o = vues[0]
+    manque = [k for k in CLES_RECHERCHE if (not isinstance(o.get(k), str) if k == "gpu_name" else _nombre(o.get(k)) is None)]
+    if manque:
+        raise GardeArret(f"offre {n} : clé(s) {manque} absente(s) ou illisible(s) : forme de l'outil à vérifier ; rien n'est deviné")
+    fautes = []
+    if o["gpu_name"] != NOM_CARTE_OUTIL or _nombre(o["num_gpus"]) != 1 or not _nombre(o["gpu_ram"]) >= MEMOIRE_CARTE_MIN_MO:
+        fautes.append(f"carte {o['gpu_name']!r} × {o['num_gpus']!r}, {o['gpu_ram']!r} Mo : une A100 SXM4 80 Go exactement")
+    f = faute_cuda_hote(o.get("cuda_max_good"))
+    if f:
+        fautes.append(f)
+    return o, fautes
+
+
+def offre_construite(o: dict, n: int, disque_go: float, etiquette: str) -> dict:
+    """Forme de OFFRE.json, construite depuis l'offre brute **sans faute** (clés lues, jamais retapées)."""
+    return {"id": n, "carte": CARTE_OFFRE, "cuda_max_good": float(o["cuda_max_good"]), "coeurs": _nombre(o["cpu_cores_effective"]),
+            "memoire_vive_mo": _nombre(o["cpu_ram"]), "disque_go": _nombre(o["disk_space"]), "prix_usd_h": _nombre(o["dph_total"]),
+            "stockage_usd_h": _nombre(o["storage_cost"]) * disque_go / 730.0, "etiquette": etiquette,
+            "source": "offre-depuis-recherche (clés lues, jamais retapées)"}
+
+
+def offre_depuis_recherche(doc, ident) -> dict:
+    """Offre de la course construite par programme depuis la recherche (étiquette `bbis-t07-v1`, disque 150 Go), puis
+    `exiger_offre` (bornes du devis, CUDA de l'hôte) ; identifiant en entier ASCII seulement."""
+    if isinstance(ident, bool) or not isinstance(ident, (int, str)) or not ENTIER_ASCII.fullmatch(str(ident)):
+        raise GardeArret(f"identifiant d'offre {ident!r} illisible : entier ASCII sans zéro de tête ni espace attendu")
+    n = int(ident)
+    o, fautes = lire_offre_de_recherche(doc, n)
+    if fautes:
+        raise GardeArret("offre hors des bornes du devis : " + " ; ".join(fautes))
+    return exiger_offre(offre_construite(o, n, DISQUE_GO, ETIQUETTE), str(n))
 
 
 def exiger_offre(offre: dict, identifiant: str | None = None) -> dict:
@@ -349,6 +415,16 @@ def main(argv=None) -> int:
             racine = Path(a[1])
             f = ecrire_fiche_code(racine, a[2], a[3], {p: empreinte(racine / p) for p in a[6:]}, int(a[4]), a[5])
             print(f"BBIS FICHE ECRITE {a[2]} {f['sha256']} niveau décisif {f['niveau_decisif']}")
+        elif a[:1] == ["offre-depuis-recherche"] and len(a) == 4:
+            try:
+                doc = json.loads(Path(a[1]).read_text(encoding="utf-8"))
+            except (OSError, ValueError) as e:
+                raise GardeArret(f"sortie de la recherche illisible ({type(e).__name__})") from None
+            o = offre_depuis_recherche(doc, a[2])
+            with open(a[3], "x", encoding="utf-8") as f:                   # R12 : jamais réécrit
+                f.write(json.dumps(o, indent=1, ensure_ascii=False, sort_keys=True) + "\n")
+            print(f"BBIS OFFRE ECRITE {a[3]} : offre {o['id']}, {o['carte']}, {o['prix_usd_h']:g} USD/h, "
+                  f"stockage {o['stockage_usd_h']:.4f} USD/h, CUDA de l'hôte {o['cuda_max_good']:g}")
         elif a[:1] == ["offre"] and len(a) in (2, 3):
             exiger_offre(json.loads(Path(a[1]).read_text(encoding="utf-8")), a[2] if len(a) == 3 else None)
             print("BBIS OFFRE ACCEPTEE")
@@ -370,7 +446,7 @@ def main(argv=None) -> int:
         elif a[:1] == ["depense"] and len(a) == 3:
             print(f"BBIS DEPENSE {garde_depense(float(a[1]), float(a[2]))}")
         else:
-            print("BBIS REFUS : commande inconnue (offre FICHIER [ID] | creation RACINE FEU MAINTENANT RELANCES | depense CUMUL PRIX | "
+            print("BBIS REFUS : commande inconnue (offre FICHIER [ID] | offre-depuis-recherche RECHERCHE ID OFFRE | creation RACINE FEU MAINTENANT RELANCES | depense CUMUL PRIX | "
                   "fiche RACINE CHEMIN_FICHE COMMIT ENTROPIE CHEMIN_EPREUVE FICHIER… | ancetre RACINE COMMIT | "
                   "identifiant ID | absence ID TEMOIN LISTE.json)")
             return 2
@@ -383,7 +459,7 @@ def main(argv=None) -> int:
 __all__ = ["REGISTRE_PROPRE", "REGISTRE_PARTAGE", "CLES_BBIS", "GO_ID", "COUPURE_USD", "ETIQUETTE", "cles_bbis_presentes",
            "exiger_partage_sans_bbis", "ajouter_ligne_propre", "journaliser_ouverture", "ecrire_fiche_code", "lire_fiche_code",
            "exiger_ancetre", "exiger_ancetre_de_la_fiche", "garde_depense", "exiger_offre", "exiger_creation",
-           "CUDA_MAX_GOOD_MIN", "faute_cuda_hote",
+           "CUDA_MAX_GOOD_MIN", "faute_cuda_hote", "lire_offre_de_recherche", "offre_construite", "offre_depuis_recherche",
            "INSTANCES_D_AUTRES_SESSIONS", "exiger_identifiant_a_detruire", "exiger_absence", "main"]
 
 if __name__ == "__main__":

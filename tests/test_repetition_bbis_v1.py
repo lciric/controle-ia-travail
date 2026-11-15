@@ -197,7 +197,7 @@ def test_lecture_de_la_course_compte_minimum_et_resume_de_la_carte(tmp_path, tor
 
 def test_traces_de_la_repetition_poussees_sur_commit(tmp_path):
     corps = ('D="$1"; X="$2"; T="$3"; COMMIT="$4"; SORTIE_LIBRE="$5"\n'
-             'XT=traces/bbis-t07-repetition-v1; BR_SORTIE=calcul/t07bbis-repetition-v1; SEUIL=94000000\n'
+             'XT=traces/bbis-t07-repetition-v1; BR_SORTIE=calcul/t07bbis-repetition-v2; SEUIL=94000000\n'
              'fin_instance() { echo "FIN $1"; exit "$1"; }\nsleep() { :; }\n'
              + _extrait_rep("fins") + 'arret "essais : 80 passés < MIN_ESSAIS 87 de la course" 7\n')
 
@@ -217,14 +217,14 @@ def test_traces_de_la_repetition_poussees_sur_commit(tmp_path):
     d, commit, distant, x = preparer(tmp_path / "sain")
     r = ad.jouer(corps, d, x, tmp_path / "sain", commit, 1, cwd=d)
     assert r.returncode == 7 and "traces poussées" in r.stdout and "fin, code 7" in r.stdout, r.stdout + r.stderr
-    tete = ad.git(distant, "rev-parse", "refs/heads/calcul/t07bbis-repetition-v1")
+    tete = ad.git(distant, "rev-parse", "refs/heads/calcul/t07bbis-repetition-v2")
     assert ad.git(distant, "rev-parse", f"{tete}^") == commit
     assert ad.git(distant, "ls-tree", "-r", "--name-only", tete).splitlines() == [
         "src/controle_ia/x.py", "traces/bbis-t07-repetition-v1/journal-repetition.txt"]
     d, commit, distant, x = preparer(tmp_path / "avant")                           # artefact : avant le contrôle de la branche
     r = ad.jouer(corps, d, x, tmp_path / "avant", commit, 0, cwd=d)
     assert r.returncode == 7 and "traces poussées" not in r.stdout
-    assert subprocess.run(["git", "-C", str(distant), "rev-parse", "--verify", "-q", "refs/heads/calcul/t07bbis-repetition-v1"],
+    assert subprocess.run(["git", "-C", str(distant), "rev-parse", "--verify", "-q", "refs/heads/calcul/t07bbis-repetition-v2"],
                           capture_output=True).returncode != 0
 
 
@@ -264,7 +264,9 @@ def _depot_commande(base: Path, amorce_rep: str | None = None, avec_script: bool
     ad.ecrire(d, "scripts/amorce_repetition_bbis_v1.sh", amorce_rep or AMORCE_REP.read_text(encoding="utf-8"))
     if avec_script:
         ad.ecrire(d, "scripts/repetition_carte_bbis_v1.py", SCRIPT.read_text(encoding="utf-8"))
-    return d, ad.committer(d, "code et répétition")
+    c = ad.committer(d, "code et répétition")
+    ad.distant_officiel(d, base.with_name(base.name + "-distant"))       # branche de sortie absente du distant jetable
+    return d, c
 
 
 # ------------------------------------------------------------------------------------------------------------ gardes de l'amorce
@@ -344,7 +346,7 @@ def test_budget_de_travail_avant_la_reserve_de_fin():
         assert f'budget_ou_arret "{etape}"' in texte
 
 
-NVIDIA = '[ "$#" = 0 ] && { echo "| NVIDIA-SMI 580.65.06   Driver Version: 580.65.06   CUDA Version: 13.0     |"; exit 0; }\n' + \
+NVIDIA = '[ "$#" = 0 ] && { [ "${FAUX_ENTETE:-}" = echec ] && exit 9; echo "| NVIDIA-SMI 580.65.06   Driver Version: 580.65.06   CUDA Version: 13.0     |"; exit 0; }\n' + \
     'case "${FAUX_CARTE:-sxm}" in sxm) echo "NVIDIA A100-SXM4-80GB, 81920 MiB, 550.54";; pcie) echo "NVIDIA A100-PCIE-40GB, 40960 MiB, 550.54";; *) exit 9;; esac\n'
 
 
@@ -360,7 +362,8 @@ def test_machine_carte_jeton_outils_et_torch(tmp_path):
     assert r.returncode == 0 and "MACHINE CONFORME" in r.stdout and "A100-SXM4-80GB" in r.stdout, r.stdout + r.stderr
     assert "CUDA Version: 13.0" in (x / "nvidia-smi-entete.txt").read_text(encoding="utf-8")      # en-tête gardé pour la garde CUDA
     for faute, motif in (({"FAUX_CARTE": "pcie"}, "carte autre qu'une A100 SXM4 80 Go"), ({"FAUX_CARTE": "aucune"}, "carte invisible"),
-                         ({"GH_TOKEN": ""}, "GH_TOKEN absent"), ({"FAUX_TORCH": "1"}, "torch ne voit pas la carte")):
+                         ({"GH_TOKEN": ""}, "GH_TOKEN absent"), ({"FAUX_TORCH": "1"}, "torch ne voit pas la carte"),
+                         ({"FAUX_ENTETE": "echec"}, "carte invisible (nvidia-smi, en-tête)")):
         r = _bash(corps, py, env={**env, **faute})
         assert r.returncode == 2 and motif in r.stdout, (faute, r.stdout)
     seul = tmp_path / "seul"                                                         # outil absent : `timeout` retiré du chemin
@@ -388,7 +391,7 @@ def _distant(base: Path, motifs_avec_runs: bool = False, branche_sortie: bool = 
     ad.git(d, "checkout", "-q", "-b", "prep")
     commit = ad.committer(d, "code")
     if branche_sortie:
-        ad.git(d, "branch", "calcul/t07bbis-repetition-v1")
+        ad.git(d, "branch", "calcul/t07bbis-repetition-v2")
     import hashlib
     return d, commit, hashlib.sha256(b"script de la r\xc3\xa9p\xc3\xa9tition, jouet\n").hexdigest()
 
@@ -397,7 +400,7 @@ def _preparer(tmp_path: Path, distant: Path, commit: str, sha: str, extra: str =
     t = tmp_path / "t"
     (t / "traces").mkdir(parents=True, exist_ok=True)
     corps = (TETE + f'T="{t}"; D="{t}/depot"; X="{t}/traces"; COMMIT="{commit}"; BRANCHE_CODE=prep; SCRIPT_SHA256="{sha}"\n'
-             'BR_SORTIE=calcul/t07bbis-repetition-v1; GH_TOKEN=jeton-factice; SORTIE_LIBRE=0\n'
+             'BR_SORTIE=calcul/t07bbis-repetition-v2; GH_TOKEN=jeton-factice; SORTIE_LIBRE=0\n'
              + _extrait_rep("motifs-de-la-course") + _extrait_rep("depot") + extra
              + 'preparer_depot "$1"; echo "DEPOT PRET S=$S SORTIE_LIBRE=$SORTIE_LIBRE"; ls "$D"\n')
     return _bash(corps, distant)
@@ -512,7 +515,9 @@ def _depot_commande(base: Path, amorce_rep: str | None = None, avec_script: bool
     ad.ecrire(d, "scripts/amorce_repetition_bbis_v1.sh", amorce_rep or AMORCE_REP.read_text(encoding="utf-8"))
     if avec_script:
         ad.ecrire(d, "scripts/repetition_carte_bbis_v1.py", SCRIPT.read_text(encoding="utf-8"))
-    return d, ad.committer(d, "code et répétition")
+    c = ad.committer(d, "code et répétition")
+    ad.distant_officiel(d, base.with_name(base.name + "-distant"))       # branche de sortie absente du distant jetable
+    return d, c
 
 
 OFFRES = [{"id": 99, "gpu_name": "A100 SXM4", "num_gpus": 1, "gpu_ram": 81920, "cpu_cores_effective": 32, "cpu_ram": 257000,
@@ -804,18 +809,25 @@ def test_cuda_du_pilote_avant_l_installation_dans_les_deux_amorces(tmp_path):
     assert bloc == ad.extrait("cuda-du-pilote")                                         # même texte dans l'amorce de la course
     corps = TETE + bloc + 'exiger_cuda_du_pilote "$1"; echo "CUDA CONFORME"\n'
     cas = {"sain": ENTETE_SAIN, "sain-13.2": ENTETE_SAIN.replace("13.0", "13.2"), "sain-14.1": ENTETE_SAIN.replace("13.0", "14.1"),
+           "sain-13.10": ENTETE_SAIN.replace("13.0", "13.10"), "sain-100.0": ENTETE_SAIN.replace("13.0", "100.0"),
+           "vieux-9.2": ENTETE_SAIN.replace("13.0", "9.2"), "na": ENTETE_SAIN.replace("13.0    ", "N/A     "),
            "hote-des-traces": ENTETE_HOTE_DES_TRACES, "trace-telle-quelle": TRACE_NVIDIA_SMI,
            "double": ENTETE_SAIN + ENTETE_HOTE_DES_TRACES, "vide": "", "illisible": ENTETE_SAIN.replace("13.0", "13.x"),
            "majeur-seul": ENTETE_SAIN.replace("13.0", "13 ")}
     for nom, texte in cas.items():
         (tmp_path / nom).write_text(texte, encoding="utf-8")
-    for nom in ("sain", "sain-13.2", "sain-14.1"):
+    for nom in ("sain", "sain-13.2", "sain-14.1", "sain-13.10", "sain-100.0"):
         r = _bash(corps, tmp_path / nom)
         assert r.returncode == 0 and "CUDA CONFORME" in r.stdout and "CUDA servie par le pilote" in r.stdout, (nom, r.stdout + r.stderr)
     r = _bash(corps, tmp_path / "hote-des-traces")
     assert r.returncode == 2 and "pilote trop ancien : CUDA 12.8" in r.stdout and "CUDA CONFORME" not in r.stdout, r.stdout
     assert "avant l'installation des paquets" in r.stdout
-    for nom in ("trace-telle-quelle", "double", "vide", "illisible", "majeur-seul", "absent"):
+    r = _bash(corps, tmp_path / "vieux-9.2")                                        # comparaison d'entiers, jamais de texte
+    assert r.returncode == 2 and "pilote trop ancien : CUDA 9.2" in r.stdout, r.stdout
+    r = _bash(corps, tmp_path / "na")                                               # m2 : la ligne lue est écrite au journal
+    assert r.returncode == 2 and "illisible" in r.stdout
+    assert "J lignes « CUDA » lues dans l'en-tête : | NVIDIA-SMI 580.65.06" in r.stdout and "CUDA Version: N/A" in r.stdout
+    for nom in ("trace-telle-quelle", "double", "vide", "illisible", "majeur-seul", "absent", "na"):
         r = _bash(corps, tmp_path / nom)
         assert r.returncode == 2 and "illisible" in r.stdout and "CUDA CONFORME" not in r.stdout, (nom, r.stdout + r.stderr)
     # le code d'arrêt est celui de « torch ne voit pas la carte » dans les deux amorces
@@ -832,3 +844,86 @@ def test_cuda_du_pilote_avant_l_installation_dans_les_deux_amorces(tmp_path):
     i = course.index('\nexiger_cuda_du_pilote "$X/nvidia-smi-entete.txt"')
     assert course.index('\nnvidia-smi > "$X/nvidia-smi-entete.txt"') < i < course.index("pip\" install") < course.index("torch.cuda.is_available()")
     assert i < course.index("git -c credential.helper")                               # avant le clonage et la sortie de 7b
+
+
+def test_carte_et_cuda_de_la_course_en_tete_en_echec_et_hote_ancien(tmp_path):
+    """m4 : l'arrêt « carte invisible (nvidia-smi, en-tête) » de l'étape 1 de la course, joué par son bloc marqué avec un faux
+    `nvidia-smi` ; cas sain (13.0), en-tête en échec et hôte à 12.8 : code 2."""
+    faux = ('[ "$#" = 0 ] && { [ "${FAUX_ENTETE:-}" = echec ] && exit 9; printf "%s" "$FAUX_TEXTE"; exit 0; }\n'
+            'echo "NVIDIA A100-SXM4-80GB, 81920 MiB"\n')
+    b = _faux(tmp_path, "nvidia-smi", faux)
+    x = tmp_path / "x"
+    x.mkdir()
+    corps = TETE + f'X="{x}"; R="{tmp_path}"\n' + ad.extrait("cuda-du-pilote") + ad.extrait("carte-et-cuda") + 'echo "CARTE CONFORME"\n'
+    env = {"PATH": f"{b}:{os.environ['PATH']}", "FAUX_TEXTE": ENTETE_SAIN}
+    r = _bash(corps, env=env)
+    assert r.returncode == 0 and "CARTE CONFORME" in r.stdout and "CUDA servie par le pilote : 13.0" in r.stdout, r.stdout + r.stderr
+    r = _bash(corps, env={**env, "FAUX_ENTETE": "echec"})
+    assert r.returncode == 2 and "carte invisible (nvidia-smi, en-tête)" in r.stdout and "CARTE CONFORME" not in r.stdout
+    r = _bash(corps, env={**env, "FAUX_TEXTE": ENTETE_HOTE_DES_TRACES})
+    assert r.returncode == 2 and "pilote trop ancien : CUDA 12.8" in r.stdout and "CARTE CONFORME" not in r.stdout
+
+
+def _bloc_branche(lanceur: Path) -> str:
+    t = lanceur.read_text(encoding="utf-8")
+    m = re.findall(r"^# >>> branche-de-sortie\b[^\n]*\n(.*?)^# <<< branche-de-sortie$", t, re.S | re.M)
+    assert len(m) == 1, lanceur
+    return m[0]
+
+
+def test_branche_de_sortie_neuve_exigee_avant_la_commande(tmp_path):
+    """M1 : la branche de sortie de la répétition est `calcul/t07bbis-repetition-v2` (la v1 existe à distance depuis le
+    15 novembre) ; `commande` des deux lanceurs refuse (code 2, motif écrit) si la branche de sortie de l'amorce existe déjà sur
+    le dépôt distant, si celui-ci est injoignable, absent, ou n'est pas le dépôt de l'amorce. Cas sain et artefacts (R5)."""
+    import hashlib
+    rep = AMORCE_REP.read_text(encoding="utf-8")
+    assert re.findall(r"^BR_SORTIE=(.*)$", rep, re.M) == ["calcul/t07bbis-repetition-v2"]
+    assert re.findall(r"^BR_SORTIE=(.*)$", ad.AMORCE.read_text(encoding="utf-8"), re.M) == ["donnees/t07-etape-b-bis-v1"]
+    bloc = _bloc_branche(LANCER_REP)
+    assert bloc == _bloc_branche(ad.LANCER)                                           # même texte dans les deux lanceurs
+    corps = "set -uo pipefail\n" + bloc + 'branche_de_sortie_neuve "$1" "$2"; c=$?; echo "CODE $c"; exit $c\n'
+    d = ad.depot_vide(tmp_path / "d")
+    ad.ecrire(d, "x", "x\n")
+    ad.committer(d, "x")
+    for amorce, br in ((AMORCE_REP, "calcul/t07bbis-repetition-v2"), (ad.AMORCE, "donnees/t07-etape-b-bis-v1")):
+        r = _bash(corps, d, amorce)                                                   # aucun « origin »
+        assert r.returncode == 2 and "« origin » absent" in r.stdout, r.stdout
+    distant = ad.distant_officiel(d, tmp_path / "distant", ("calcul/t07bbis-repetition-v1", "main"))
+    for amorce, br in ((AMORCE_REP, "calcul/t07bbis-repetition-v2"), (ad.AMORCE, "donnees/t07-etape-b-bis-v1")):
+        r = _bash(corps, d, amorce)                                                   # cas sain : v1 présente, branche de l'amorce absente
+        assert r.returncode == 0 and "CODE 0" in r.stdout, r.stdout + r.stderr
+        ad.git(d, "push", "-q", "origin", f"HEAD:refs/heads/{br}")                   # artefact : branche de sortie présente
+        r = _bash(corps, d, amorce)
+        assert r.returncode == 2 and f"branche de sortie {br} présente" in r.stdout, r.stdout
+    vieille = tmp_path / "vieille.sh"                                                 # artefact : l'amorce v1 (nom du 15 novembre)
+    vieille.write_text(rep.replace("BR_SORTIE=calcul/t07bbis-repetition-v2", "BR_SORTIE=calcul/t07bbis-repetition-v1"), encoding="utf-8")
+    r = _bash(corps, d, vieille)
+    assert r.returncode == 2 and "calcul/t07bbis-repetition-v1 présente" in r.stdout
+    double = tmp_path / "double.sh"
+    double.write_text(rep + "BR_SORTIE=autre\n", encoding="utf-8")
+    assert "illisible ou multiple" in _bash(corps, d, double).stdout
+    d2 = ad.depot_vide(tmp_path / "d2")                                               # « origin » d'un autre dépôt
+    autre = tmp_path / "autre" / "lciric" / "autre-depot.git"
+    autre.parent.mkdir(parents=True)
+    ad.git(tmp_path, "init", "-q", "--bare", str(autre))
+    ad.git(d2, "remote", "add", "origin", str(autre))
+    r = _bash(corps, d2, AMORCE_REP)
+    assert r.returncode == 2 and "n'est pas le dépôt de l'amorce (lciric/controle-ia-travail)" in r.stdout, r.stdout
+    d3 = ad.depot_vide(tmp_path / "d3")                                               # distant injoignable (nom juste, absent)
+    ad.git(d3, "remote", "add", "origin", str(tmp_path / "rien" / "lciric" / "controle-ia-travail.git"))
+    r = _bash(corps, d3, AMORCE_REP)
+    assert r.returncode == 2 and "dépôt distant injoignable" in r.stdout, r.stdout
+    # câblage : `commande` du lanceur de répétition refuse si la branche de sortie est présente
+    dc, commit = _depot_commande(tmp_path / "depot")
+    f = _offre(tmp_path / "offre.json")
+    image = "pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime"
+    feu = f"feu de la mère : GO-2026-11-14-09, R-2802, image {image}"
+    tmp = tmp_path / "tmp"
+    tmp.mkdir()
+    a = ("commande", dc, f, "99", commit, "prep/t07bbis-code-v1", int(time.time()) + 3600, "1.3", feu, image)
+    assert _lancer_rep(*a, env={"TMPDIR": str(tmp)}).returncode == 0
+    ad.git(dc, "push", "-q", "origin", "HEAD:refs/heads/calcul/t07bbis-repetition-v2")
+    r = _lancer_rep(*a, env={"TMPDIR": str(tmp)})
+    assert r.returncode == 2 and "BBIS REPETITION REFUS : branche de sortie calcul/t07bbis-repetition-v2 présente" in r.stdout
+    assert "vastai create" not in r.stdout and list(tmp.iterdir()) == []
+    assert hashlib.sha256(AMORCE_REP.read_bytes()).hexdigest()                      # (empreinte rendue par le rapport)

@@ -256,6 +256,7 @@ def test_essai_local_sans_ecriture_et_garde_d_offre_de_la_commande(tmp_path):
     r = subprocess.run(["bash", str(ad.AMORCE)], capture_output=True, text=True, env={**os.environ, **base})
     assert r.returncode == 0 and "aucun dossier" in r.stdout and not (tmp_path / "r").exists()   # rien n'est écrit
     x = ad.depot_code(tmp_path / "depot")
+    ad.distant_officiel(x["d"], tmp_path / "distant")                  # branche de sortie de la course absente du distant
     tmp = tmp_path / "tmp"
     tmp.mkdir()
     arguments = lambda offre, commit: ("commande", x["d"], offre, "99", commit, "main", ad.RUN_7B, "calcul/x",
@@ -274,6 +275,10 @@ def test_essai_local_sans_ecriture_et_garde_d_offre_de_la_commande(tmp_path):
     if time.time() <= rb._instant(rb.ECHEANCE_GO):
         r = _lancer(*arguments(_offre(tmp_path / "offre.json"), x["v"]), env={"TMPDIR": str(tmp)})
         assert r.returncode == 2 and "n'est pas un ancêtre" in r.stdout      # B1 côté session : COMMIT sans le code
+        ad.git(x["d"], "push", "-q", "origin", "HEAD:refs/heads/donnees/t07-etape-b-bis-v1")   # M1 : branche de sortie présente
+        r = _lancer(*arguments(_offre(tmp_path / "offre.json"), x["c1"]), env={"TMPDIR": str(tmp)})
+        assert r.returncode == 2 and "branche de sortie donnees/t07-etape-b-bis-v1 présente" in r.stdout, r.stdout
+        assert "vastai create" not in r.stdout
     assert _lancer(*arguments(_offre(tmp_path / "offre.json"), x["c1"])[:-1]).returncode == 2   # douze arguments : refus
 
 

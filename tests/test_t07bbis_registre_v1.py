@@ -231,3 +231,43 @@ def test_garde_d_offre_cuda_servie_par_l_hote(tmp_path):
         assert r.returncode == 2 and "cuda_max_good" in r.stdout, (nom, r.stdout)
     texte = (RACINE / "scripts" / "lancer_bbis_v1.sh").read_text(encoding="utf-8")
     assert "cuda_max_good>=13.0" in texte                                              # filtre de la recherche décrit
+
+
+def test_offre_de_la_course_construite_par_programme_et_cuda_aux_bords(tmp_path):
+    """Choix 4 : OFFRE.json de la course construit par programme depuis la sortie de la recherche (même fonction que la
+    répétition, garde `cuda_max_good` comprise) ; m5 : entier géant → refus écrit, code 2 ; m6 : motif exact près du seuil."""
+    brute = {"id": 77, "gpu_name": "A100 SXM4", "num_gpus": 1, "gpu_ram": 81920, "cpu_cores_effective": 32, "cpu_ram": 257000,
+             "disk_space": 400, "dph_total": 1.25, "storage_cost": 0.15, "cuda_max_good": 13.0}
+    rech = tmp_path / "recherche.json"
+    rech.write_text(json.dumps([brute, {**brute, "id": 78, "gpu_name": "A100 PCIE"}]), encoding="utf-8")
+    r = _bash("offre-depuis-recherche", str(rech), "77", str(tmp_path / "offre.json"))
+    assert r.returncode == 0 and "BBIS OFFRE ECRITE" in r.stdout and "CUDA de l'hôte 13" in r.stdout, r.stdout + r.stderr
+    o = json.loads((tmp_path / "offre.json").read_text(encoding="utf-8"))
+    assert o["etiquette"] == "bbis-t07-v1" and o["carte"] == "A100 SXM4 80GB" and o["cuda_max_good"] == 13.0 and o["id"] == 77
+    assert abs(o["stockage_usd_h"] - 0.15 * 150 / 730) < 1e-12 and o["disque_go"] == 400
+    assert _bash("offre", str(tmp_path / "offre.json")).returncode == 0
+    assert _bash("offre-depuis-recherche", str(rech), "77", str(tmp_path / "offre.json")).returncode == 2       # R12
+    for nom, k, v, motif in (("vieux", "cuda_max_good", 12.8, "cuda_max_good 12.8 < 13"),
+                             ("absent", "cuda_max_good", None, "absent ou illisible"),
+                             ("geant", "cuda_max_good", 10 ** 400, "entier hors de portée"),
+                             ("pres", "cuda_max_good", 12.999999, "cuda_max_good 12.999999 < 13"),
+                             ("carte", "gpu_name", "A100 PCIE", "A100 SXM4 80 Go exactement"),
+                             ("disque", "disk_space", 100, "disque_go"), ("coeurs", "cpu_cores_effective", 8, "coeurs"),
+                             ("cle", "storage_cost", None, "clé(s)"), ("texte", "cpu_ram", "beaucoup", "clé(s)")):
+        rech.write_text(json.dumps([{**brute, k: v}]), encoding="utf-8")
+        r = _bash("offre-depuis-recherche", str(rech), "77", str(tmp_path / f"o-{nom}.json"))
+        assert r.returncode == 2 and motif in r.stdout and "Traceback" not in r.stderr, (nom, r.stdout, r.stderr)
+        assert not (tmp_path / f"o-{nom}.json").exists()
+    rech.write_text(json.dumps([brute]), encoding="utf-8")
+    for ident in ("78", "077", "７７", " 77"):
+        r = _bash("offre-depuis-recherche", str(rech), ident, str(tmp_path / "o-id.json"))
+        assert r.returncode == 2 and not (tmp_path / "o-id.json").exists(), ident
+    # m5 et m6 par la garde d'offre elle-même
+    f = tmp_path / "geant.json"
+    f.write_text(json.dumps({**o, "cuda_max_good": 10 ** 400}), encoding="utf-8")
+    r = _bash("offre", str(f))
+    assert r.returncode == 2 and "entier hors de portée" in r.stdout and "Traceback" not in r.stderr
+    with pytest.raises(GardeArret, match=r"cuda_max_good 12\.999999 < 13"):
+        rb.exiger_offre({**o, "cuda_max_good": 12.999999})
+    texte = (RACINE / "scripts" / "lancer_bbis_v1.sh").read_text(encoding="utf-8")
+    assert "offre-depuis-recherche RECHERCHE.json ID OFFRE.json" in texte

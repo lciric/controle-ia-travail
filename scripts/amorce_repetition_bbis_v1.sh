@@ -14,7 +14,7 @@
 #   l'étape 1) au moins 13.0, sinon arrêt avant toute installation (code 2, traces poussées) ; 3. paquets : pip verbeux borné
 #   par `timeout`, durée écrite ;
 #   4. essais de l'arbre de l'instance par la commande de la course, MIN_ESSAIS de la course ; 5. carte ; 6. traces poussées sur
-#   calcul/t07bbis-repetition-v1 (commit des seules traces posé sur COMMIT). **Budget** : chaque étape longue est bornée pour que le
+#   calcul/t07bbis-repetition-v2 (commit des seules traces posé sur COMMIT). **Budget** : chaque étape longue est bornée pour que le
 #   travail cesse RESERVE_FIN_S (15 min) avant l'échéance et que les traces partent avant la destruction (code 10).
 #   **Fin voulue** (fin_instance) : ni « stopped » ni sortie : l'instance reste en marche, minuterie armée, jusqu'à la destruction
 #   par la mère (-y, absence vérifiée) ou l'échéance ; le coût reste borné par l'échéance (plafond calculé jusqu'à elle).
@@ -31,7 +31,8 @@ R="${RACINE_AMORCE:-/root}"
 T="$R/bbis-t07-repetition-v1"; D="$T/depot"; X="$T/traces"; L="$X/journal-repetition.txt"; XT=traces/bbis-t07-repetition-v1
 API=https://console.vast.ai/api/v0
 GO_ATTENDU=GO-2026-11-14-09
-BR_SORTIE=calcul/t07bbis-repetition-v1
+# R12 : nouvelle passe, nouveau nom (calcul/t07bbis-repetition-v1 porte les traces de la passe du 15 novembre, 56f5b8b8)
+BR_SORTIE=calcul/t07bbis-repetition-v2
 DEPOT_URL_OFFICIEL=https://github.com/lciric/controle-ia-travail.git
 SEUIL=94000000
 DELAI_PIP_S=3600
@@ -137,7 +138,8 @@ cuda_du_pilote() {  # $1 = fichier de la sortie de `nvidia-smi` sans argument : 
     printf '%s\n' "$v"; }
 exiger_cuda_du_pilote() {  # $1 = fichier de la sortie de `nvidia-smi` ; arrêt (code 2) sous 13.0, absente ou illisible
     local v
-    v=$(cuda_du_pilote "$1") || arret "version CUDA servie par le pilote illisible (« CUDA Version: » absent, multiple ou illisible dans la sortie de nvidia-smi) : torch ne verrait pas la carte (roue CUDA 13.0) ; arrêt avant l'installation des paquets" 2
+    v=$(cuda_du_pilote "$1") || { j "lignes « CUDA » lues dans l'en-tête : $(grep -a 'CUDA' "$1" 2>/dev/null | head -n 3 | cut -c1-200 | tr '\n' ' ')"
+        arret "version CUDA servie par le pilote illisible (« CUDA Version: » absent, multiple ou illisible dans la sortie de nvidia-smi) : torch ne verrait pas la carte (roue CUDA 13.0) ; arrêt avant l'installation des paquets" 2; }
     if [ "$((10#${v%%.*}))" -lt 13 ]; then
         arret "pilote trop ancien : CUDA $v servie par le pilote < 13.0 exigée par la roue torch de requirements-gpu.txt : torch ne verrait pas la carte ; arrêt avant l'installation des paquets" 2
     fi

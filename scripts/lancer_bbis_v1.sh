@@ -4,6 +4,10 @@
 # commande de ce script ne crée, n'arrête ni ne détruit d'instance ; il contrôle et IMPRIME les commandes, que la mère joue
 # (préfixe GO_ID exigé par la garde de calcul ; destruction par l'identifiant, R10).
 # Sous-commandes (codes : 0 accepté ; 2 refus, motif sur la sortie standard) :
+#   offre-depuis-recherche RECHERCHE.json ID OFFRE.json
+#                                    OFFRE.json construit par programme depuis la sortie de la recherche (même fonction que la
+#                                    répétition, `registre_bbis_v1.lire_offre_de_recherche`, garde `cuda_max_good` comprise),
+#                                    puis les bornes de `offre` ; jamais retapé, jamais réécrit (R12) ;
 #   offre OFFRE.json                 bornes du devis (A100 SXM4 80 Go, ≥ 16 cœurs, ≥ 128 000 Mo, ≥ 150 Go, stockage ≤ 0,08 USD/h,
 #                                    étiquette bbis-t07-v1 ; aucune H200 ; version CUDA servie par l'hôte, clé `cuda_max_good`
 #                                    recopiée telle quelle de `vastai search offers --raw`, ≥ 13.0, celle de la roue torch de
@@ -16,7 +20,8 @@
 #   commande RACINE OFFRE.json OFFRE_ID COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S FEU RELANCES IMAGE
 #                                    imprime la commande de création (amorce scripts/amorce_bbis_v1.sh en base64, variables par leur
 #                                    nom, jamais une valeur de clé) après : l'offre décrite dans OFFRE.json, d'identifiant OFFRE_ID
-#                                    (clé `id`), dans les bornes (correction m5) ; l'amorce en essai local sur un dossier jetable
+#                                    (clé `id`), dans les bornes (correction m5) ; la branche de sortie de l'amorce (BR_SORTIE)
+#                                    absente du dépôt distant (`git ls-remote` sur `origin` de RACINE, lecture seule) ; l'amorce en essai local sur un dossier jetable
 #                                    (correction m5 ; elle n'écrit rien) ; la garde de création ; le commit de la fiche de
 #                                    CODE-BBIS ancêtre de COMMIT dans RACINE (correction B1) ; variables facultatives
 #                                    VARIANTE=r1 et DECISION_VARIANTE=R-… (variante (r1), sur le mot de Lazar seulement) ;
@@ -37,8 +42,30 @@ RACINE_CODE="$(cd "$ICI/.." && pwd)"
 GO_ID=GO-2026-11-14-09
 ETIQUETTE=bbis-t07-v1
 DISQUE=150
+# >>> branche-de-sortie (même texte dans les deux lanceurs de B bis ; joué par les essais)
+branche_de_sortie_neuve() {  # $1 = racine (dépôt de la mère, distant `origin`) ; $2 = amorce : 0 si la branche de sortie de
+    # l'amorce est absente du dépôt distant (prouvé par `git ls-remote`, lecture seule) ; sinon motif sur la sortie, code 2
+    local br url o c
+    br=$(sed -n 's/^BR_SORTIE=\([A-Za-z0-9._/-][A-Za-z0-9._/-]*\)$/\1/p' "$2" 2> /dev/null)
+    [ "$(printf '%s' "$br" | grep -c '^')" = 1 ] || { echo "branche de sortie de l'amorce illisible ou multiple (BR_SORTIE=…)"; return 2; }
+    url=$(sed -n 's/^DEPOT_URL_OFFICIEL=\(.*\)$/\1/p' "$2" 2> /dev/null)
+    [ "$(printf '%s' "$url" | grep -c '^')" = 1 ] || { echo "dépôt de l'amorce illisible ou multiple (DEPOT_URL_OFFICIEL=…)"; return 2; }
+    o=$(git -C "$1" remote get-url origin 2> /dev/null) || { echo "dépôt distant « origin » absent de $1"; return 2; }
+    url=${url%/}; url=${url%.git}; o=${o%/}; o=${o%.git}
+    [ "${o##*/}" = "${url##*/}" ] && [ "$(basename "$(dirname "$o")")" = "$(basename "$(dirname "$url")")" ] \
+        || { echo "« origin » de $1 n'est pas le dépôt de l'amorce ($(basename "$(dirname "$url")")/${url##*/})"; return 2; }
+    git -C "$1" ls-remote --exit-code origin "refs/heads/$br" > /dev/null 2>&1; c=$?
+    case "$c" in
+        2) return 0;;
+        0) echo "branche de sortie $br présente sur le dépôt distant (R12) : la passe s'arrêterait sans trace ; nouveau nom exigé"; return 2;;
+        *) echo "dépôt distant injoignable (git ls-remote, code $c) : absence de la branche de sortie $br non prouvée"; return 2;;
+    esac; }
+# <<< branche-de-sortie
 py_registre() { PYTHONPATH="$RACINE_CODE/src" "$PY" -m controle_ia.t07bbis.registre_bbis_v1 "$@"; }
 case "${1:-}" in
+    offre-depuis-recherche)
+        [ "$#" = 4 ] || { echo "BBIS REFUS : offre-depuis-recherche RECHERCHE.json ID OFFRE.json"; exit 2; }
+        py_registre offre-depuis-recherche "$2" "$3" "$4"; exit $?;;
     offre)
         [ "$#" = 2 ] || { echo "BBIS REFUS : offre OFFRE.json"; exit 2; }
         py_registre offre "$2"; exit $?;;
@@ -60,6 +87,7 @@ case "${1:-}" in
         [ "$c" = 0 ] || { echo "BBIS REFUS : arguments refusés par l'amorce"; exit 2; }
         py_registre creation "$RAC" "$FEU" "$(date +%s)" "$REL" > /dev/null || { py_registre creation "$RAC" "$FEU" "$(date +%s)" "$REL"; exit 2; }
         py_registre ancetre "$RAC" "$COMMIT" > /dev/null || { py_registre ancetre "$RAC" "$COMMIT"; exit 2; }
+        M=$(branche_de_sortie_neuve "$RAC" "$ICI/amorce_bbis_v1.sh") || { echo "BBIS REFUS : $M"; exit 2; }
         B64=$(base64 -w 0 < "$ICI/amorce_bbis_v1.sh") || { echo "BBIS REFUS : amorce illisible"; exit 2; }
         EXTRA=""; [ -n "${VARIANTE:-}" ] && EXTRA=" -e VARIANTE=$VARIANTE -e DECISION_VARIANTE=$DECISION_VARIANTE"
         echo "BBIS COMMANDE (à jouer par la mère, après le feu écrit ; empreinte de l'amorce $(sha256sum < "$ICI/amorce_bbis_v1.sh" | cut -c1-16)) :"
@@ -89,5 +117,5 @@ case "${1:-}" in
             echo "BBIS liste des instances gardée : $LISTE"
         fi
         py_registre absence "$2" "$3" "$LISTE"; exit $?;;
-    *) echo "BBIS REFUS : sous-commande inconnue (offre, creation, commande, depense, detruire, verifier-destruction)"; exit 2;;
+    *) echo "BBIS REFUS : sous-commande inconnue (offre-depuis-recherche, offre, creation, commande, depense, detruire, verifier-destruction)"; exit 2;;
 esac

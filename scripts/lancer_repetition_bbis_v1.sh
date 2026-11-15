@@ -17,13 +17,18 @@
 #                                    version CUDA servie par l'hôte `cuda_max_good` ≥ 13.0, celle de la roue torch de
 #                                    requirements-gpu.txt ; clé absente ou illisible : refus) ;
 #   commande RACINE OFFRE.json OFFRE_ID COMMIT BRANCHE_CODE ECHEANCE_UTC_S PRIX_USD_H FEU IMAGE
-#                                    imprime la commande de création après : l'offre ; le feu écrit portant GO-2026-11-14-09,
+#                                    imprime la commande de création après : l'offre ; la branche de sortie de l'amorce
+#                                    (BR_SORTIE) absente du dépôt distant (`git ls-remote` sur `origin` de RACINE, qui doit être
+#                                    le dépôt de l'amorce ; lecture seule) ; le feu écrit portant GO-2026-11-14-09,
 #                                    R-2802 et l'image exacte ; GH_TOKEN présent (par le nom) ; l'échéance (coût strictement sous
 #                                    3 USD) ; COMMIT présent, portant l'amorce de la course, cette amorce et le script ; l'amorce en
 #                                    essai local sur un dossier jetable ;
 #   relire CREATION.json             après la création : instance du `new_contract`, étiquette, carte, prix relus ; hors borne : refus ;
 #   trouver SORTIE.json              sans `new_contract` lisible : la seule instance de l'étiquette de la répétition, écrite ;
 #   depense CUMUL_USD PRIX_CARTE_USD_H   garde de dépense de la course à la coupure de 3 USD (cumul de la répétition seule) ;
+#   Plafond (décision de la mère, R-2802) : un CUMUL strictement sous 3 USD, toutes passes de la répétition comprises. `commande`
+#   calcule le coût maximal d'UNE passe jusqu'à son échéance : à chaque passe, la mère relève la dépense des passes déjà faites et
+#   choisit l'échéance pour que cette dépense plus le coût maximal imprimé reste strictement sous 3 USD (dit dans le feu écrit) ;
 #   detruire CREATION.json           garde positive : `new_contract` lu, entier ASCII, jamais une autre session, relu avec
 #                                    l'étiquette dans la liste ; imprime `GO_ID=… vastai destroy instance N -y` ;
 #   verifier-destruction CREATION.json TEMOIN [LISTE.json]
@@ -35,6 +40,25 @@ RACINE_CODE="$(cd "$ICI/.." && pwd)"
 GO_ID=GO-2026-11-14-09
 ETIQUETTE=bbis-t07-repetition-v1
 DISQUE=60
+# >>> branche-de-sortie (même texte dans les deux lanceurs de B bis ; joué par les essais)
+branche_de_sortie_neuve() {  # $1 = racine (dépôt de la mère, distant `origin`) ; $2 = amorce : 0 si la branche de sortie de
+    # l'amorce est absente du dépôt distant (prouvé par `git ls-remote`, lecture seule) ; sinon motif sur la sortie, code 2
+    local br url o c
+    br=$(sed -n 's/^BR_SORTIE=\([A-Za-z0-9._/-][A-Za-z0-9._/-]*\)$/\1/p' "$2" 2> /dev/null)
+    [ "$(printf '%s' "$br" | grep -c '^')" = 1 ] || { echo "branche de sortie de l'amorce illisible ou multiple (BR_SORTIE=…)"; return 2; }
+    url=$(sed -n 's/^DEPOT_URL_OFFICIEL=\(.*\)$/\1/p' "$2" 2> /dev/null)
+    [ "$(printf '%s' "$url" | grep -c '^')" = 1 ] || { echo "dépôt de l'amorce illisible ou multiple (DEPOT_URL_OFFICIEL=…)"; return 2; }
+    o=$(git -C "$1" remote get-url origin 2> /dev/null) || { echo "dépôt distant « origin » absent de $1"; return 2; }
+    url=${url%/}; url=${url%.git}; o=${o%/}; o=${o%.git}
+    [ "${o##*/}" = "${url##*/}" ] && [ "$(basename "$(dirname "$o")")" = "$(basename "$(dirname "$url")")" ] \
+        || { echo "« origin » de $1 n'est pas le dépôt de l'amorce ($(basename "$(dirname "$url")")/${url##*/})"; return 2; }
+    git -C "$1" ls-remote --exit-code origin "refs/heads/$br" > /dev/null 2>&1; c=$?
+    case "$c" in
+        2) return 0;;
+        0) echo "branche de sortie $br présente sur le dépôt distant (R12) : la passe s'arrêterait sans trace ; nouveau nom exigé"; return 2;;
+        *) echo "dépôt distant injoignable (git ls-remote, code $c) : absence de la branche de sortie $br non prouvée"; return 2;;
+    esac; }
+# <<< branche-de-sortie
 py_rep() { PYTHONPATH="$RACINE_CODE/src" "$PY" "$ICI/repetition_carte_bbis_v1.py" "$@"; }
 lire_prive() {  # $1 = objet de `show` (instances | user) : imprime le chemin d'un fichier privé (umask 077), rien d'autre
     local dl f c
@@ -71,6 +95,7 @@ case "${1:-}" in
             || { echo "BBIS REPETITION REFUS : amorce de répétition du commit ≠ celle de ce dossier"; exit 2; }
         SH=$(git -C "$RAC" show "$COMMIT:scripts/repetition_carte_bbis_v1.py" 2> /dev/null | sha256sum | cut -d' ' -f1)
         [ "$SH" != "$(printf '' | sha256sum | cut -d' ' -f1)" ] || { echo "BBIS REPETITION REFUS : script de la répétition absent du commit"; exit 2; }
+        M=$(branche_de_sortie_neuve "$RAC" "$ICI/amorce_repetition_bbis_v1.sh") || { echo "BBIS REPETITION REFUS : $M"; exit 2; }
         RAC_ESSAI=$(mktemp -d) || { echo "BBIS REPETITION REFUS : dossier jetable de l'essai local impossible"; exit 2; }
         AMORCE_ESSAI_LOCAL=1 RACINE_AMORCE="$RAC_ESSAI" COMMIT="$COMMIT" BRANCHE_CODE="$BRC" ECHEANCE_UTC_S="$ECH" GO_ID="$GO_ID" \
             SCRIPT_SHA256="$SH" bash "$ICI/amorce_repetition_bbis_v1.sh" > /dev/null; c=$?

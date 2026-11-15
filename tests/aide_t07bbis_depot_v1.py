@@ -54,6 +54,18 @@ def extrait(nom: str) -> str:
     return m[0]
 
 
+def distant_officiel(d: Path, base: Path, branches: tuple = ()) -> Path:
+    """Dépôt distant nu jetable, nommé comme celui des amorces (`…/lciric/controle-ia-travail.git`), posé en `origin` de `d` ;
+    `branches` : branches poussées dessus (depuis la tête de `d`). Aucun réseau."""
+    distant = base / "lciric" / "controle-ia-travail.git"
+    distant.parent.mkdir(parents=True, exist_ok=True)
+    git(base, "init", "-q", "--bare", str(distant))
+    git(d, "remote", "add", "origin", str(distant))
+    for b in branches:
+        git(d, "push", "-q", "origin", f"HEAD:refs/heads/{b}")
+    return distant
+
+
 def motifs() -> list[str]:
     """Motifs d'extraction partielle de l'amorce (`MOTIFS='…'`, une fois exactement)."""
     m = re.findall(r"^MOTIFS='(.*?)'$", AMORCE.read_text(encoding="utf-8"), re.S | re.M)

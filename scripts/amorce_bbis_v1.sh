@@ -82,7 +82,8 @@ cuda_du_pilote() {  # $1 = fichier de la sortie de `nvidia-smi` sans argument : 
     printf '%s\n' "$v"; }
 exiger_cuda_du_pilote() {  # $1 = fichier de la sortie de `nvidia-smi` ; arrêt (code 2) sous 13.0, absente ou illisible
     local v
-    v=$(cuda_du_pilote "$1") || arret "version CUDA servie par le pilote illisible (« CUDA Version: » absent, multiple ou illisible dans la sortie de nvidia-smi) : torch ne verrait pas la carte (roue CUDA 13.0) ; arrêt avant l'installation des paquets" 2
+    v=$(cuda_du_pilote "$1") || { j "lignes « CUDA » lues dans l'en-tête : $(grep -a 'CUDA' "$1" 2>/dev/null | head -n 3 | cut -c1-200 | tr '\n' ' ')"
+        arret "version CUDA servie par le pilote illisible (« CUDA Version: » absent, multiple ou illisible dans la sortie de nvidia-smi) : torch ne verrait pas la carte (roue CUDA 13.0) ; arrêt avant l'installation des paquets" 2; }
     if [ "$((10#${v%%.*}))" -lt 13 ]; then
         arret "pilote trop ancien : CUDA $v servie par le pilote < 13.0 exigée par la roue torch de requirements-gpu.txt : torch ne verrait pas la carte ; arrêt avant l'installation des paquets" 2
     fi
@@ -128,11 +129,13 @@ minuterie < /dev/null & j "minuterie lancée (PID $!, échéance $(date -u -d "@
 for o in git curl python3 sha256sum awk sed grep stat find sort; do command -v "$o" > /dev/null || arret "outil absent : $o" 2; done
 [ -n "${GH_TOKEN:-}" ] || arret "GH_TOKEN absent (par le nom)" 2
 [ -n "${HF_TOKEN:-}" ] || arret "HF_TOKEN absent (par le nom)" 2
+# >>> carte-et-cuda (extrait et joué par tests/test_repetition_bbis_v1.py)
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader > "$X/nvidia-smi.txt" 2>&1 || arret "carte invisible (nvidia-smi)" 2
 grep -q 'A100' "$X/nvidia-smi.txt" || arret "carte autre qu'une A100 : $(head -n 1 "$X/nvidia-smi.txt")" 2
 nvidia-smi > "$X/nvidia-smi-entete.txt" 2>&1 || arret "carte invisible (nvidia-smi, en-tête)" 2
 exiger_cuda_du_pilote "$X/nvidia-smi-entete.txt"   # avant le dépôt, la sortie de 7b et l'installation des paquets
 j "carte : $(head -n 1 "$X/nvidia-smi.txt") ; disque libre $(df -P -B1 "$R" | awk 'NR == 2 { print $4 }') octets"
+# <<< carte-et-cuda
 # 2. dépôt au commit COMMIT, extraction partielle
 [ ! -e "$D" ] || arret "$D existe déjà (R12)" 2
 AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'

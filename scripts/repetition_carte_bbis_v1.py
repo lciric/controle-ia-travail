@@ -63,7 +63,9 @@ DISQUE_GO = 60
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from controle_ia.t07bbis.registre_bbis_v1 import INSTANCES_D_AUTRES_SESSIONS  # noqa: E402
 # version CUDA servie par l'hôte (`cuda_max_good`) : même seuil et même garde que la course (13.0, roue torch cu130)
-from controle_ia.t07bbis.registre_bbis_v1 import CUDA_MAX_GOOD_MIN, faute_cuda_hote  # noqa: E402,F401
+from controle_ia.t07bbis.registre_bbis_v1 import (  # noqa: E402,F401
+    CUDA_MAX_GOOD_MIN, faute_cuda_hote, lire_offre_de_recherche, offre_construite)
+from controle_ia.gardes import GardeArret  # noqa: E402
 INSTANCES_PROPRES_REPETITION = ("60671759",)
 TEMOINS = ("60480302", "60670453")
 ENTROPIE_REPETITION = 0x6B0B1D5E2C4A48F1A3E7D2C9B85F0141
@@ -214,36 +216,19 @@ def exiger_absence(liste_doc, ident, temoin) -> dict:
 
 
 def offre_depuis_recherche(doc, ident) -> dict:
-    """Offre lue par programme dans la sortie de `vastai search offers --raw` (clés de l'outil : `id`, `gpu_name`, `num_gpus`,
-    `gpu_ram` (Mo), `cpu_cores_effective`, `cpu_ram` (Mo), `disk_space` (Go), `dph_total` (USD/h), `storage_cost` (USD par Go et
-    par mois), `cuda_max_good` (version CUDA maximale servie par l'hôte, au moins 13.0)) ; forme supposée de l'outil, toute clé
-    absente → refus (jamais un défaut deviné)."""
+    """Offre lue par programme dans la sortie de `vastai search offers --raw` par la fonction commune à la course
+    (`registre_bbis_v1.lire_offre_de_recherche` : clés de l'outil, carte A100 SXM4 80 Go exactement, `cuda_max_good` au moins
+    13.0 ; toute clé absente ou illisible → refus, jamais un défaut deviné), puis la borne de prix de la répétition."""
     n = entier_ascii(ident, "identifiant d'offre")
-    liste = doc.get("offers") if isinstance(doc, dict) else doc
-    if not isinstance(liste, list):
-        raise Refus("sortie de la recherche illisible (liste d'offres attendue)")
-    vues = [o for o in liste if isinstance(o, dict) and not isinstance(o.get("id"), bool) and o.get("id") == n]
-    if len(vues) != 1:
-        raise Refus(f"offre {n} absente de la recherche (ou en double)")
-    o = vues[0]
-    manque = [k for k in ("gpu_name", "num_gpus", "gpu_ram", "cpu_cores_effective", "cpu_ram", "disk_space", "dph_total",
-                          "storage_cost") if not isinstance(o.get(k), (int, float, str)) or isinstance(o.get(k), bool)]
-    if manque:
-        raise Refus(f"offre {n} : clé(s) {manque} absente(s) ou illisible(s) : forme de l'outil à vérifier ; rien n'est deviné")
-    fautes = []
-    if o["gpu_name"] != NOM_CARTE_OUTIL or o["num_gpus"] != 1 or not float(o["gpu_ram"]) >= MEMOIRE_CARTE_MIN_MO:
-        fautes.append(f"carte {o['gpu_name']!r} × {o['num_gpus']!r}, {o['gpu_ram']!r} Mo : une A100 SXM4 80 Go exactement")
+    try:
+        o, fautes = lire_offre_de_recherche(doc, n)
+    except GardeArret as e:
+        raise Refus(str(e)) from None
     if not 0 < float(o["dph_total"]) <= OFFRE_MIN["prix_max_usd_h"]:
         fautes.append(f"prix {o['dph_total']!r} USD/h > {OFFRE_MIN['prix_max_usd_h']}")
-    f = faute_cuda_hote(o.get("cuda_max_good"))
-    if f:
-        fautes.append(f)
     if fautes:
         raise Refus("offre hors des bornes de la répétition : " + " ; ".join(fautes))
-    return {"id": n, "carte": CARTE, "cuda_max_good": float(o["cuda_max_good"]), "coeurs": float(o["cpu_cores_effective"]), "memoire_vive_mo": float(o["cpu_ram"]),
-            "disque_go": float(o["disk_space"]), "prix_usd_h": float(o["dph_total"]),
-            "stockage_usd_h": float(o["storage_cost"]) * DISQUE_GO / 730.0, "etiquette": ETIQUETTE,
-            "source": "offre-depuis-recherche (clés lues, jamais retapées)"}
+    return offre_construite(o, n, DISQUE_GO, ETIQUETTE)
 
 
 def exiger_offre(offre: dict, identifiant, prix: float) -> dict:
