@@ -1,0 +1,71 @@
+diff --git a/conftest.py b/home/user/controle-ia-travail/.claude/worktrees/agent-a4f221610ce6d5a67/brouillons/T0.7-etape-B-bis-v1/code/garde-git-restreinte-v1/conftest-restreint-v1.py
+index 52cf5430..eea36f4d 100644
+--- a/conftest.py
++++ b/home/user/controle-ia-travail/.claude/worktrees/agent-a4f221610ce6d5a67/brouillons/T0.7-etape-B-bis-v1/code/garde-git-restreinte-v1/conftest-restreint-v1.py
+@@ -5,21 +5,20 @@ la mère R-2919, point 7). Fichier neuf à la racine (R12 : aucun fichier exista
+ `tests/conftest.py` et avant tout module d'essais.
+ 
+ Retirées de `os.environ` dès l'import de ce fichier, donc pour toute la session et pour tous les sous-processus qui héritent de
+-l'environnement : `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
+-`GIT_ALTERNATE_OBJECT_DIRECTORIES` et toute variable qui commence par `GIT_CONFIG` ; remises à la fin de la session. Preuve :
+-`tests/test_essais_git_propres_bbis_v1.py` (sous `GIT_DIR` pointé vers un dépôt jouet témoin, rien n'y bouge ; artefact : sans la
++l'environnement : `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY` ; remises à la fin de
++la session. **Version restreinte** (réserve 1 de `etat-corrections-v3-en-cours-v1.md`, demande de la mère) : les `GIT_CONFIG*`
++(réglages réseau de la session) et `GIT_ALTERNATE_OBJECT_DIRECTORIES` ne sont plus retirées. Preuve :
++`tests/test_essais_git_propres_bbis_v2.py` (sous `GIT_DIR` pointé vers un dépôt jouet témoin, rien n'y bouge ; artefact : sans la
+ garde, le témoin bouge)."""
+ import os
+ 
+ import pytest
+ 
+-VARIABLES_GIT = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY",
+-                 "GIT_ALTERNATE_OBJECT_DIRECTORIES")
+-PREFIXE_CONFIG = "GIT_CONFIG"
++VARIABLES_GIT = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY")
+ 
+ 
+ def variables_git_dangereuses(env) -> list:
+-    return sorted(k for k in env if k in VARIABLES_GIT or k.startswith(PREFIXE_CONFIG))
++    return sorted(k for k in env if k in VARIABLES_GIT)
+ 
+ 
+ def _retirer() -> dict:
+diff --git a/tests/test_essais_git_propres_bbis_v1.py b/home/user/controle-ia-travail/.claude/worktrees/agent-a4f221610ce6d5a67/brouillons/T0.7-etape-B-bis-v1/code/garde-git-restreinte-v1/essai-garde-restreinte-v1.py
+index 3639794b..80586907 100644
+--- a/tests/test_essais_git_propres_bbis_v1.py
++++ b/home/user/controle-ia-travail/.claude/worktrees/agent-a4f221610ce6d5a67/brouillons/T0.7-etape-B-bis-v1/code/garde-git-restreinte-v1/essai-garde-restreinte-v1.py
+@@ -12,8 +12,7 @@ import sys
+ from pathlib import Path
+ 
+ RACINE = Path(__file__).resolve().parents[1]
+-VARIABLES = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY",
+-             "GIT_ALTERNATE_OBJECT_DIRECTORIES")
++VARIABLES = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY")
+ 
+ 
+ def _git(d, *args, env=None):
+@@ -45,7 +44,7 @@ def _env_vers(t: Path) -> dict:
+ 
+ 
+ def test_la_session_d_essais_n_a_aucune_variable_git_dangereuse():
+-    assert not [k for k in os.environ if k in VARIABLES or k.startswith("GIT_CONFIG")]
++    assert not [k for k in os.environ if k in VARIABLES]
+ 
+ 
+ def test_sous_git_dir_vers_un_temoin_l_essai_de_l_incident_ne_le_touche_pas(tmp_path):
+@@ -71,3 +70,15 @@ def test_artefact_sans_garde_les_commandes_de_l_incident_deplacent_le_temoin(tmp
+         subprocess.run(["git", "-C", str(d), *args], capture_output=True, text=True, env=env)
+     assert _etat(t) != avant                                     # sans la garde, le témoin a bougé (tête, index ou réglages)
+     assert not (d / ".git").exists()                             # et le dépôt jouet voulu n'existe pas
++
++
++def test_garde_restreinte_retire_git_dir_et_garde_les_reglages_git_config(tmp_path):
++    """Garde v2 (réserve 1) : à l'import de `conftest.py`, `GIT_DIR` (et ses voisins) sont retirées, les `GIT_CONFIG*` restent
++    (réglages réseau de la session) : `git config` les lit encore."""
++    env = {**_env_vers(_temoin(tmp_path / "t")), "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "essai.cle",
++           "GIT_CONFIG_VALUE_0": "gardee", "PYTHONPATH": str(RACINE)}
++    code = ("import os, subprocess, conftest; print(sorted(k for k in os.environ if k in conftest.VARIABLES_GIT)); "
++            "print(subprocess.run(['git', 'config', '--get', 'essai.cle'], capture_output=True, text=True).stdout.strip())")
++    r = subprocess.run([sys.executable, "-c", code], env=env, cwd=tmp_path, capture_output=True, text=True, timeout=60)
++    assert r.returncode == 0, r.stderr
++    assert r.stdout.split("\n")[:2] == ["[]", "gardee"]

@@ -1,0 +1,36 @@
+Contre-épreuve de la garde git (conftest.py de la racine, v1) sur les 75 autres fichiers d'essais qui lancent git (4058 essais) ; commit 6c346a03 ; processeur seul, machine partagée
+
+1. Première passe (essais 1 à 2745, jusqu'au début de tests/test_sonde_hote_durable_a1_v3_v7.py ; passe arrêtée par sa borne de 5000 s, voir essais-sortie-corrections-controle-attention-v2.txt) : 9 échecs :
+  F tests/test_extraire_t05.py::test_copie_de_lecture_ligne_trop_longue
+  F tests/test_lancer_course_ideation_bassins_etroits_v1.py::test_interprete_artefacts[/bin/sh-un seul interpr\xe9teur]
+  F tests/test_lancer_course_ideation_bassins_etroits_v2.py::test_m8_toute_exception_ecrit_un_manifeste_de_refus
+  F tests/test_lancer_course_ideation_bassins_etroits_v3.py::test_m3_bras_non_joue_puis_reussi
+  F tests/test_lancer_course_ideation_bassins_etroits_v3.py::test_m8_toute_exception_ecrit_un_manifeste_de_refus
+  F tests/test_lancer_course_ideation_conception_propre_v2.py::test_liste_blanche_et_mesure_contre_l_orchestrateur_reel
+  F tests/test_lancer_course_ideation_pilier_attaque_v2_v3.py::test_sommes_artefact_defauts_de_l_orchestrateur
+  F tests/test_lancer_course_ideation_pilier_attaque_v2_v3.py::test_go_plafond_artefacts[19,99 USD-sous les totaux]
+  F tests/test_lancer_course_ideation_regard_ou_raisons_v1.py::test_tailles_artefacts[modif1---nombre]
+
+2. Reste, par morceaux de six fichiers (essais 2746 à 4058, le fichier v7 rejoué en entier), sous la garde :
+morceau morceau-00 : tests/test_sonde_hote_durable_a1_v3_v7.py tests/test_sonde_hote_durable_a1_v3_v8.py tests/test_sonde_hote_durable_a1_v3_v9.py tests/test_t06_scripts.py tests/test_t06_v10_amorce.py tests/test_t06_v11_amorce.py 
+542 passed in 845.59s (0:14:05)
+code 0
+morceau morceau-01 : tests/test_t06_v11_nouveaux.py tests/test_t06_v12_amorce.py tests/test_t06_v2_scripts.py tests/test_t06_v3_scripts.py tests/test_t06_v4_scripts.py tests/test_t06_v5_amorce.py 
+258 passed in 417.36s (0:06:57)
+code 0
+morceau morceau-02 : tests/test_t06_v6_amorce.py tests/test_t06_v7_amorce.py tests/test_t06_v9_nouveaux.py tests/test_t07_code_t07_v1.py tests/test_t07_donnees_p3_v1.py tests/test_t07_lecture_v1.py 
+334 passed, 1 skipped in 615.31s (0:10:15)
+code 0
+morceau morceau-03 : tests/test_t07_lecture_v2.py tests/test_t07_plancher_v2_fonction_v1.py tests/test_t07_plancher_v3_reextraction_v1.py tests/test_t07_repli_recalcul_v1.py tests/test_validation_reelle.py 
+176 passed, 1 skipped, 1 xfailed in 230.46s (0:03:50)
+code 0
+total : 1310 passés, 2 sautés, 1 xfailed, 0 échec
+
+3. Les 9 échecs, avec la garde et sans elle (--confcutdir=tests : conftest.py de la racine non chargé) :
+- seuls : les 9 passent dans les deux cas (5 premiers : 7 passed ; 4 « ideation » : 7 passed, 1 skipped ; ids paramétrés comptés entiers)
+- par fichier (extraire_t05, bassins_etroits v1 v2 v3) : avec la garde 4 failed, 457 passed, 7 skipped ; sans : les mêmes 4 failed, 457 passed, 7 skipped
+- par fichier (conception_propre_v2, pilier_attaque_v2_v3, regard_ou_raisons_v1) : avec la garde 3 failed, 350 passed, 7 skipped ; sans : les mêmes 3
+- motif des échecs par fichier, identique dans les deux cas : « dépôt de travail en …/worktrees/agent-…, l'enveloppe d'Argon v5 attend /home/user/controle-ia-travail » (arbre de travail hors du chemin du dépôt principal) ; les 9 échecs de la première passe ne se reproduisent pas hors de la charge de la machine
+- verdict : aucun échec attribué à la garde
+
+4. Garde restreinte préparée (garde-git-restreinte-v1/), éprouvée dans une copie de l'arbre du commit (git archive) : tests/test_essais_git_propres_bbis_v2.py (= essai-garde-restreinte-v1.py) sous conftest-restreint-v1.py : 4 passed ; GIT_CONFIG* de la session gardées : 7
