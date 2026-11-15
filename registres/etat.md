@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-15 vers 18:45 UTC — passation de changement de compte `registres/passations/2026-11-15-1844.md` (R-2920), qui prime** ; brief à coller sur le nouveau compte : `docs/procedures/brief-reprise-nouvelle-mere-2026-11-15-v4.md`. Aucune instance active de ce programme.
+
 - Instance Vast 60783204 (Neuron Lens, B-α, commande v5) : détruite le 2026-11-15 à 14:13:24Z, absence prouvée (R-2914). Aucune instance active de ce programme.
 - Instance Vast 60773264 (Neuron Lens, B-α, relance) : détruite le 2026-11-15 à 11:39:27Z, absence prouvée (R-2901). Aucune instance active de ce programme.
 - Instance Vast 60770175 (Neuron Lens, B-α, première course) : détruite le 2026-11-15 à 09:57:24Z, absence prouvée (R-2891). Aucune instance active de ce programme.
