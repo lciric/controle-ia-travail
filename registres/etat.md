@@ -1,6 +1,6 @@
 # État du programme
 
-- **Instance Vast 60760941 active** (B bis, répétition, troisième passe, créée 2026-11-15T08:17:40Z, échéance 09:51:15Z, R-2865) : suivie par l'opérateur de la mère ; à détruire par identifiant à la fin.
+- Instance Vast 60760941 (B bis, répétition, troisième passe) : détruite le 2026-11-15 à 08:35:02Z, absence prouvée (R-2869). Aucune instance active de ce programme.
 - Instance Vast 60756203 (B bis, répétition) : détruite le 2026-11-15 à 07:31:13Z, absence prouvée (R-2844). Aucune instance active de ce programme.
 - Instance Vast 60671759 (Neuron Lens) : détruite le 2026-11-15 à 03:05:04Z, absence vérifiée (R-2836).
 
