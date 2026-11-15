@@ -1,0 +1,59 @@
+Essais des corrections du contrôle carte-processeur après la contre-lecture du brouillon 5 et du code v2 (v2)
+commit éprouvé : 6c346a03 (branche prep/t07bbis-code-v1) ; python 3.13.18, torch 2.14.1+cu130, numpy 2.4.6 ; processeur seul (machine partagée avec d'autres sessions : durées allongées)
+variables git de la session : aucune de GIT_DIR, GIT_WORK_TREE, GIT_INDEX_FILE, GIT_COMMON_DIR, GIT_OBJECT_DIRECTORY, GIT_ALTERNATE_OBJECT_DIRECTORIES ; les GIT_CONFIG* de la session sont retirées par conftest.py
+
+1. Suite de B bis : PYTHONPATH=src .venv/bin/python -m pytest -q -rs -p no:cacheprovider --color=no tests/test_t07bbis_*.py tests/test_repetition_bbis_v1.py tests/test_repetition_bbis_v2.py tests/test_repetition_bbis_v3.py tests/test_essais_git_propres_bbis_v1.py
+début 2026-11-15T17:15:39Z
+=============================== warnings summary ===============================
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+tests/test_t07bbis_epreuve_niveau_v1.py::test_petit_jeu_deterministe_et_independant_des_processus
+  /usr/local/lib/python3.13/multiprocessing/popen_fork.py:73: DeprecationWarning: This process (pid=12738) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    self.pid = os.fork()
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+183 passed, 4 warnings in 2049.68s (0:34:09)
+code 0
+2026-11-15T17:49:52Z
+
+2. Arbre de l'instance simulé : arbre de travail mis dans un commit temporaire (index temporaire, aucune branche déplacée), filtré par les MOTIFS de scripts/amorce_bbis_v3.sh (extraction partielle no-cone, dernier motif qui s'applique), extrait par git archive | tar -x dans le bloc-notes : 336 fichiers sur 24594, 25 motifs ; les 336 fichiers sont identiques, au bit près, à leurs objets du commit 6c346a03 (git hash-object contre git rev-parse 6c346a03:chemin, 0 différent) ; commande des essais de la course :
+PYTHONPATH=src python -m pytest -q -rs -p no:cacheprovider --color=no tests/test_t07bbis_*.py --basetemp=…
+SKIPPED [1] tests/test_t07bbis_bout_en_bout_v1.py:77: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_bout_en_bout_v1.py:95: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_bout_en_bout_v1.py:132: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_bout_en_bout_v1.py:150: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_bout_en_bout_v1.py:168: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_bout_en_bout_v1.py:198: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_bout_en_bout_v1.py:230: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_bout_en_bout_v1.py:290: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_controle_v2.py:220: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_controle_v3.py:265: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_etat_impose_v1.py:31: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_etat_impose_v1.py:42: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_etat_impose_v1.py:55: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_etat_impose_v1.py:80: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_etat_impose_v1.py:92: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_etat_impose_v1.py:110: chaîne de T0.6 absente de ce clone
+SKIPPED [1] tests/test_t07bbis_lien_mots_et_cout_v1.py:97: code de la pièce absent de cet arbre (instance : extraction partielle)
+SKIPPED [1] tests/test_t07bbis_lien_mots_et_cout_v1.py:121: code de la pièce absent de cet arbre (instance : extraction partielle)
+SKIPPED [1] tests/test_t07bbis_lien_mots_et_cout_v1.py:139: code de la pièce absent de cet arbre (instance : extraction partielle)
+SKIPPED [1] tests/test_t07bbis_lien_mots_et_cout_v1.py:162: code de la pièce absent de cet arbre (instance : extraction partielle)
+SKIPPED [1] tests/test_t07bbis_lien_mots_et_cout_v1.py:173: code de la pièce absent de cet arbre (instance : extraction partielle)
+SKIPPED [1] tests/test_t07bbis_lien_mots_et_cout_v1.py:186: code de la pièce absent de cet arbre (instance : extraction partielle)
+SKIPPED [1] tests/test_t07bbis_lien_mots_et_cout_v1.py:215: code de la pièce absent de cet arbre (instance : extraction partielle)
+SKIPPED [1] tests/test_t07bbis_lien_mots_et_cout_v1.py:255: fabrique factice de la pièce absente de cet arbre
+115 passed, 24 skipped, 4 warnings in 1194.77s (0:19:54)
+minimum de la course (MIN_ESSAIS de l'amorce v3) : 115 ; sorties d'erreur : vides
+
+3. Autres fichiers d'essais du dépôt qui lancent git (75 fichiers, 4058 essais), sous la garde de conftest.py : run INCOMPLET, arrêté par sa borne de 5000 s à 69 % (code 124) ; 9 échecs vus dans la partie jouée (positions mappées sur l'ordre de collecte) :
+joués 2848 ; échecs 9 ; sautés 35
+  F tests/test_extraire_t05.py::test_copie_de_lecture_ligne_trop_longue
+  F tests/test_lancer_course_ideation_bassins_etroits_v1.py::test_interprete_artefacts[/bin/sh-un seul interpr\xe9teur]
+  F tests/test_lancer_course_ideation_bassins_etroits_v2.py::test_m8_toute_exception_ecrit_un_manifeste_de_refus
+  F tests/test_lancer_course_ideation_bassins_etroits_v3.py::test_m3_bras_non_joue_puis_reussi
+  F tests/test_lancer_course_ideation_bassins_etroits_v3.py::test_m8_toute_exception_ecrit_un_manifeste_de_refus
+  F tests/test_lancer_course_ideation_conception_propre_v2.py::test_liste_blanche_et_mesure_contre_l_orchestrateur_reel
+  F tests/test_lancer_course_ideation_pilier_attaque_v2_v3.py::test_sommes_artefact_defauts_de_l_orchestrateur
+  F tests/test_lancer_course_ideation_pilier_attaque_v2_v3.py::test_go_plafond_artefacts[19,99 USD-sous les totaux]
+  F tests/test_lancer_course_ideation_regard_ou_raisons_v1.py::test_tailles_artefacts[modif1---nombre]
+Contre-épreuve (fichiers tests/test_extraire_t05.py et tests/test_lancer_course_ideation_bassins_etroits_v1/v2/v3.py) : les 5 premiers échecs passent seuls, avec la garde et sans elle (--confcutdir=tests : 7 passed les deux fois) ; fichiers entiers : avec la garde 4 failed, 457 passed, 7 skipped ; sans la garde, les MÊMES 4 failed, 457 passed, 7 skipped (test_pieces_sain_depot_reel x3, test_run_reel_du_v2_reconnu : arbre de travail hors de /home/user/controle-ia-travail, état vivant des autres sessions). Aucun échec attribué à la garde ; les 4 échecs des fichiers ideation_conception_propre, pilier_attaque_v2_v3, regard_ou_raisons_v1 ne sont pas contre-éprouvés.
