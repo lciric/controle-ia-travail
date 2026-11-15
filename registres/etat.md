@@ -1,5 +1,6 @@
 # État du programme
 
+- **Instance Vast 60756203 active** (B bis, répétition sur carte, créée 2026-11-15T07:27:10Z, échéance 09:25:43Z, R-2841) : suivie par l'opérateur de la mère ; à détruire par identifiant à la fin.
 - Instance Vast 60671759 (Neuron Lens) : détruite le 2026-11-15 à 03:05:04Z, absence vérifiée (R-2836).
 
 **2026-11-14 vers 16:55 UTC — instance active de ce programme : Vast 60671759** (Neuron Lens, volet A, GO-2026-11-14-05, feu R-2793 ; RTX 4090 à 0,3956 USD/h ; minuterie PID 7134 et garde PID 7178 dans la session de la fille `session_016QhUrtahFZo57fZUcRReVA` ; destruction par identifiant avec `-y` et absence prouvée). Intouchables : 58936096, 58936099, 58936100, 60480302, 60599797, **60670453** (autre session), serveurs `poste-temoin-bailey-*`.
