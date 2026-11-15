@@ -1,7 +1,7 @@
 # Essais à blanc de l'amorce sans ssh du pilote MR-2 — v1 (procédure v11)
 
 Compte organisme, modèle A. **Aucun appel à un fournisseur, aucune clé réelle, aucun réseau extérieur, aucune dépense.** Joués sur un
-dossier jetable de la session (hors de tout dépôt), le @DATE_ESSAIS@.
+dossier jetable de la session (hors de tout dépôt), le 2026-11-15 (10:19Z).
 
 ## Ce qui est joué
 
@@ -30,11 +30,30 @@ python3 -B essai_amorce_v1.py DOSSIER_JETABLE resultats.json sain-integral    # 
 python3 -B essai_outil_session_v1.py DOSSIER_JETABLE resultats.json            # outil de la session
 ```
 
-Environnement : @ENVIRONNEMENT@.
+Environnement : Python 3.13.18, numpy 2.5.3, git version 2.43.0, OpenSSL 3.0.13 30 Jan 2024, bash 5.2, 4 processeurs.
 
 ## Résultats (scellés, à côté)
 
-@TABLE_RESULTATS@
+| essai | résultat | pièce |
+|---|---|---|
+| arret-pendant-jouer | conforme : arret (A) | `resultats-essai-amorce-v1.json` |
+| budget | conforme : arret (A) | `resultats-essai-amorce-v1.json` |
+| code3 | conforme : arret (A) | `resultats-essai-amorce-v1.json` |
+| comptes-faux | conforme : noeud, machine gardee | `resultats-essai-amorce-v1.json` |
+| entree-presente | conforme : arret (A) | `resultats-essai-amorce-v1.json` |
+| feu1-faux | conforme : arret (A) | `resultats-essai-amorce-v1.json` |
+| fuite-cle | conforme : fini | `resultats-essai-amorce-v1.json` |
+| mesure-code2 | conforme : noeud, machine gardee | `resultats-essai-amorce-v1.json` |
+| minuterie | conforme : sans état final (attendu) | `resultats-essai-amorce-v1.json` |
+| phrase-alteree | conforme : arret (A) | `resultats-essai-amorce-v1.json` |
+| refus-arguments | conforme : sortie de l'amorce | `resultats-essai-amorce-v1.json` |
+| relance-conteneur | conforme : arret (A) | `resultats-essai-amorce-v1.json` |
+| relance-deux-fois | conforme : arret (A) | `resultats-essai-amorce-v1.json` |
+| relance-ok | conforme : fini | `resultats-essai-amorce-v1.json` |
+| sain | conforme : fini | `resultats-essai-amorce-v1.json` |
+| sortie-presente | conforme : sans état final (attendu) | `resultats-essai-amorce-v1.json` |
+| sain-integral | conforme : fini, 691 s | `resultats-essai-amorce-integral-v1.json` |
+| outil de la session | 24/24 cas conformes | `resultats-essai-outil-session-v1.json` |
 
 ## Ce que les essais ne prouvent pas
 
@@ -43,3 +62,8 @@ doublure de l'outil du loueur, qui a reçu les arguments attendus, `--env` en tr
 décodage) ; l'interface d'autodestruction du loueur ; le clonage par jeton depuis la machine et la poussée de la branche de sortie sur
 le dépôt distant ; la poussée de la branche d'entrée depuis la session (mandataire) ; l'image `python:3.13-bookworm` ; les appels
 réels ; le pire cas de durée.
+
+Note : les cinq pièces de `sans-ssh-v1/` jouées par chaque essai sont celles de ce dossier (empreintes portées dans chaque fichier de
+résultats et égales). Le scénario `sain-integral` a été joué avec le banc avant un seul changement du banc : une valeur factice de clé
+renommée (`clefactice-gemini-…` → `clefactice-gem-…`, faux positif de la garde des identifiants de modèle au commit) ; les scénarios
+rapides ont été rejoués après ce changement.
