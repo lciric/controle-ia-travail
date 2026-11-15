@@ -1,0 +1,220 @@
+{
+ "programme": "attaque_regret_v1.py",
+ "partie": "bornes",
+ "statut": "mise au point exploratoire, aucune revendication",
+ "graines": {
+  "entropie": 2026111577,
+  "regle": "SeedSequence(entropie, spawn_key=(indice de partie, indice de cas ou de dose, indice du monde[, 1 pour l'échantillonnage d'importance]))",
+  "parties": [
+   "bornes",
+   "estimateur",
+   "taille",
+   "puissance"
+  ],
+  "cas_taille": [
+   "lin_interieur",
+   "lin_poids_extremes",
+   "lin_bord",
+   "lin_sommet_delta",
+   "lin_sommet_loi",
+   "lin_six_lois",
+   "lin_peu_tirages",
+   "mor_sommet",
+   "mor_interieur",
+   "mor_poids_extremes",
+   "mor_hors_archive",
+   "lin_carte_surconfiante"
+  ],
+  "doses": [
+   0.1,
+   0.2,
+   0.35
+  ]
+ },
+ "versions": {
+  "python": "3.13.18",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1"
+ },
+ "juge": {
+  "alpha": 0.05,
+  "seuil_log": 2.995732,
+  "issues": 3,
+  "traits": 2,
+  "entrainement": 100
+ },
+ "table_borne_epsilon_contre_pire_regret_exact": [
+  {
+   "dimension": 4,
+   "borne_epsilon": [
+    11.635,
+    14.259,
+    15.83,
+    16.954,
+    17.831,
+    18.55,
+    19.159,
+    19.688
+   ],
+   "regret_exact_au_sommet_log_C(t+d,d)": [
+    10.075,
+    12.664,
+    14.223,
+    15.341,
+    16.214,
+    16.93,
+    17.538,
+    18.065
+   ],
+   "ecart_min": 1.5591,
+   "borne_respectee": true
+  },
+  {
+   "dimension": 5,
+   "borne_epsilon": [
+    13.517,
+    16.755,
+    18.703,
+    20.102,
+    21.193,
+    22.088,
+    22.847,
+    23.506
+   ],
+   "regret_exact_au_sommet_log_C(t+d,d)": [
+    11.867,
+    15.062,
+    16.995,
+    18.386,
+    19.472,
+    20.364,
+    21.121,
+    21.778
+   ],
+   "ecart_min": 1.6497,
+   "borne_respectee": true
+  },
+  {
+   "dimension": 8,
+   "borne_epsilon": [
+    18.277,
+    23.269,
+    26.317,
+    28.518,
+    30.242,
+    31.659,
+    32.863,
+    33.909
+   ],
+   "regret_exact_au_sommet_log_C(t+d,d)": [
+    16.446,
+    21.374,
+    24.398,
+    26.587,
+    28.304,
+    29.716,
+    30.916,
+    31.959
+   ],
+   "ecart_min": 1.8311,
+   "borne_respectee": true
+  },
+  {
+   "dimension": 13,
+   "borne_epsilon": [
+    24.412,
+    32.072,
+    36.85,
+    40.333,
+    43.077,
+    45.342,
+    47.269,
+    48.947
+   ],
+   "regret_exact_au_sommet_log_C(t+d,d)": [
+    22.412,
+    29.979,
+    34.722,
+    38.187,
+    40.919,
+    43.175,
+    45.097,
+    46.771
+   ],
+   "ecart_min": 1.9996,
+   "borne_respectee": true
+  }
+ ],
+ "reglage_hedge": [
+  {
+   "cellules": 1,
+   "composantes": 5,
+   "eta": 0.03774,
+   "gamma": 0.42649,
+   "borne_nats": {
+    "25": 61.88,
+    "50": 81.11,
+    "75": 100.34,
+    "100": 119.57,
+    "125": 138.8,
+    "150": 158.03,
+    "175": 177.26,
+    "200": 196.49
+   }
+  },
+  {
+   "cellules": 2,
+   "composantes": 5,
+   "eta": 0.06678,
+   "gamma": 0.48201,
+   "borne_nats": {
+    "25": 70.67,
+    "50": 93.14,
+    "75": 115.61,
+    "100": 138.08,
+    "125": 160.55,
+    "150": 183.02,
+    "175": 205.49,
+    "200": 227.96
+   }
+  }
+ ],
+ "suites_defavorables_membre_lineaire_dimension_4": [
+  {
+   "suite": "issue constante, lois connues au plancher (sommet δ_k seul explicatif)",
+   "regret_exact_t200": 18.0648,
+   "borne_t200": 19.6878,
+   "part_de_la_borne_max_sur_les_instants": 0.9176,
+   "regret_gradient_lisse_t200": 114.59
+  },
+  {
+   "suite": "issue constante, loi 1 certaine, loi 2 au plancher",
+   "regret_exact_t200": 12.7615,
+   "borne_t200": 19.6878,
+   "part_de_la_borne_max_sur_les_instants": 0.6482,
+   "regret_gradient_lisse_t200": 79.879
+  },
+  {
+   "suite": "issues en cycle, loi 1 certaine de l'issue observée, loi 2 au plancher",
+   "regret_exact_t200": 16.8522,
+   "borne_t200": 19.6878,
+   "part_de_la_borne_max_sur_les_instants": 0.856,
+   "regret_gradient_lisse_t200": 94.506
+  },
+  {
+   "suite": "issues en cycle, loi 1 certaine sur la première moitié, loi 2 sur la seconde",
+   "regret_exact_t200": 11.9479,
+   "borne_t200": 19.6878,
+   "part_de_la_borne_max_sur_les_instants": 0.8335,
+   "regret_gradient_lisse_t200": 16.54
+  }
+ ],
+ "suites_aleatoires_extremes": {
+  "suites": 400,
+  "part_de_la_borne_max": 0.8835
+ },
+ "controles_borne_epsilon": 3232,
+ "depassements_borne_epsilon": 0,
+ "depassements_borne_hedge": 0,
+ "duree_s": 19.7
+}
