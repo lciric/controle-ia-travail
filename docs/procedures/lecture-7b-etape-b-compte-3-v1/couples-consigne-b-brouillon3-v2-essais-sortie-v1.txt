@@ -1,0 +1,30 @@
+# Essais des gardes du programme de couples couples_consigne_b_brouillon3_v2.py (règle R5) — sortie v1
+# heure : 2026-11-16T13:40:51Z (date -u)
+# programme : dea78bd118b2a46b64766a0812b688d590f1bf94f62ed47fa90f0c26fe38f21e ; source attendue (brouillon 2) : 6bcfa40005d8e194249568c98be6f855a39ac46792339bb6049895c892ecf421
+# chaque essai joue une copie du programme et du brouillon 2 dans un dossier jetable hors du dépôt
+
+## Cas sain : copie fidèle
+source : consigne-lecteur-b-v1-brouillon2.md (6bcfa40005d8e194249568c98be6f855a39ac46792339bb6049895c892ecf421) ; 25 couples appliqués, chacun à un seul endroit, sans recouvrement
+cible écrite : consigne-lecteur-b-v1-brouillon3.md ; 1015 lignes ; 91577 octets ; sha256 12881d63d3cc5056b1246a3816da5d4a67d28970178085eca8c21d9bdd9cce85
+code de sortie : 0
+égal à l'octet au brouillon 3 du dépôt : oui
+
+## Artefact 1 : cible déjà présente (relance)
+ARRÊT : consigne-lecteur-b-v1-brouillon3.md existe déjà : rien n'est écrit (règle R12)
+code de sortie : 1 ; cible inchangée : oui
+
+## Artefact 2 : brouillon 2 altéré d'un octet (« 27 lignes » devenu « 28 lignes » au contrôle 6.1)
+ARRÊT : empreinte de consigne-lecteur-b-v1-brouillon2.md = <empreinte de la copie altérée>, attendue 6bcfa40005d8e194249568c98be6f855a39ac46792339bb6049895c892ecf421 : rien n'est écrit
+code de sortie : 1 ; cible écrite : non
+
+## Artefact 3 : un « ancien » présent deux fois (titre doublé), empreinte attendue remplacée dans la copie du programme par celle de la copie altérée
+FAUTE : couple titre : « ancien » présent 2 fois (une attendue)
+ARRÊT : 1 faute(s) : rien n'est écrit
+code de sortie : 1 ; cible écrite : non
+
+## Artefact 4 : un « ancien » absent (puce « Qui t'envoie » du brouillon 2 déjà changée), même procédé
+FAUTE : couple qui-t-envoie : « ancien » présent 0 fois (une attendue)
+ARRÊT : 1 faute(s) : rien n'est écrit
+code de sortie : 1 ; cible écrite : non
+
+Attendu : cas sain, code 0, cible égale au brouillon 3 du dépôt ; chaque artefact, code 1, rien d'écrit (artefact 1 : cible inchangée).
