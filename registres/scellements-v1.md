@@ -15,3 +15,4 @@
 | VERDICT-P3BIS | 2026-11-14T10:30:38Z | docs/verdicts/verdict-P3-bis-v1-issue.json | c3a017ce1e8b0c41dee1e430f142590e88bd7104eada02b3a973ac98c0da28d0 |
 | CODE-MOTS-ET-COUT-T06 | 2026-11-14T14:55:41Z | registres/code-mots-et-cout-t06/CODE-MOTS-ET-COUT-T06-v1.json | e418fdafbf8362f0458eb0448ec2d32ffa9a8bb122ec619ad0aaf68a9df3b43b |
 | AUDIT-FUITES-T07 | 2026-11-14T14:57:54Z | diag/20261114-001352-t07-lecture-reel/audit-fuites-t07.json | 5c76b7ff48964abe9ec552552d57c32e0b9d9ec4519a61206f7fdac349fce094 |
+| LECTURE-T08-BASE-A | 2026-11-16T21:01:43Z | diag/20261116-205721-mots-et-cout-t06/base-a-t08.json | a2113f9a5c5f92fdb50e6b5390304e57c8fe51e59c99aa36f7e5cf99fb5e7d35 |
