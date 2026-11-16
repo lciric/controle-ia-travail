@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-16 vers 11:29 UTC — instance active de ce programme : Vast 60918148** (pilote MR-2 v14, étiquette `pilote-mr2-v74-v14-20261116`, 0,0522 USD/h, échéance 2026-11-17T04:26:21Z, GO-2026-11-14-14, R-2968) ; clés du pilote dans sa configuration jusqu'à la destruction (GO-2026-11-15-08) ; dossier d'envoi `/home/user/pilote-mr2-v74-envoi-v14` ; section 11 à l'échéance plus cinq minutes ou dès la fin (consignes v13 de la mère, V1 à V6). Étape 0 de l'idée 1.1 relancée (PID 612) ; jeu de l'idée 1.2 à relancer sous un addendum neuf.
+
 - Instance Vast 60860420 (pilote MR-2 v13) : arrêt (A) faute de phrase, détruite le 2026-11-16 à 02:32:15Z, absence prouvée (R-2962). Aucune instance active de ce programme. Jeu de l'idée 1.2 en cours sur processeur (PID 5755).
 
 **2026-11-16 vers 01:03 UTC — instance active de ce programme : Vast 60860420** (pilote MR-2 v13, étiquette `pilote-mr2-v74-v13-20261116`, 0,050 USD/h, échéance 2026-11-16T18:02:25Z, GO-2026-11-14-14, R-2961) ; clés du pilote dans sa configuration jusqu'à la destruction (GO-2026-11-15-08) ; dossier d'envoi `/home/user/pilote-mr2-v74-envoi-v13` ; section 11 à jouer à l'échéance plus cinq minutes ou dès la fin, sans attendre (consignes `consignes-mere-pilote-v13-v1.md`).
