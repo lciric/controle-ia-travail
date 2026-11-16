@@ -1,0 +1,77 @@
+--- docs/notes/organisme-idees-juge-v1/correction-poids-v1/projection/essai_projection_methodes_v1.py:_blocs_projection
++++ src/controle_ia/organisme_idees_juge/projection_bras_v1.py:projeter+valeurs_e
+@@ -1,30 +1,48 @@
+-def _blocs_projection(L, Q, y, cells_blocs, C, it=IT_PROJ, diag=None, Qb=None, chaud=False):
+-    """Projection de la carte sur une famille « bruit commun », pour une liste de questions (bloc, partition) traitées
+-    en un seul lot. cells_blocs : liste de (indice de bloc, cellules (S,)) ; rend log e de chaque question (certificat
+-    exact appliqué : division par max(1, c)^S). Qb : lois de numérateur par bloc (défaut : la carte)."""
+-    nb = len(cells_blocs)
+-    S = 25
++def projeter(L: np.ndarray, Qb: np.ndarray, questions: dict, C: int, blocs) -> dict:
++    """L (200, J, K) lois connues ; Qb (8, 25, K) numérateur par bloc (seules les lignes des `blocs` demandés sont lues) ;
++    questions {b: [cellules (25,)]}. Rend, par bloc, tau, v, u, P, c et l'empreinte du journal. **Ne reçoit aucune issue.**"""
++    exiger_blocs_alignes()
++    blocs = [int(b) for b in blocs]
+     Gb = np.stack([np.transpose(L[a:e], (0, 2, 1)) for (a, e) in cm.BLOCS])          # (8, S, K, J)
+-    Qbl = np.stack([Q[a:e] for (a, e) in cm.BLOCS]) if Qb is None else Qb           # (8, S, K)
+-    yb = np.stack([y[a:e] for (a, e) in cm.BLOCS])
+-    ib = np.array([i for i, _ in cells_blocs])
+-    cells = np.stack([c for _, c in cells_blocs])
+-    G = Gb[ib]
++    Gw, Qw = Gb[blocs], np.asarray(Qb, dtype=float)[blocs]
++    t0, v0, u0, _ = cm.em_commun(Gw, np.broadcast_to(np.eye(cm.K)[None, None], (len(blocs), S, cm.K, cm.K)), Qw,
++                                 np.zeros((len(blocs), S), int), 1, me.IT_PROJ)
++    ib = np.array([k for k, b in enumerate(blocs) for _ in questions[b]])
++    cells = np.stack([c for b in blocs for c in questions[b]])
++    nb = len(ib)
++    G = Gw[ib]
+     Ind = np.broadcast_to(np.eye(cm.K)[None, None], (nb, S, cm.K, cm.K))
+-    Wt = Qbl[ib]
+-    depart = None
+-    if chaud:
+-        # départ chaud : la projection sans coupure du même bloc (lot de 8), mêlée à 10 % de centre (reste intérieur)
+-        t0, v0, u0, _ = cm.em_commun(Gb, np.broadcast_to(np.eye(cm.K)[None, None], (8, S, cm.K, cm.K)), Qbl,
+-                                     np.zeros((8, S), int), 1, it)
+-        depart = (0.9 * t0[ib] + 0.01, 0.9 * np.repeat(v0[ib], C, 1) + 0.1 / cm.J, 0.9 * u0[ib] + 0.1 / cm.K)
+-        it = IT_CHAUD
+-    tau, v, u, _ = cm.em_commun(G, Ind, Wt, cells, C, it, depart=depart)
++    Wt = Qw[ib]
++    depart = (0.9 * t0[ib] + 0.01, 0.9 * np.repeat(v0[ib], C, 1) + 0.1 / cm.J, 0.9 * u0[ib] + 0.1 / cm.K)
++    tau, v, u, _ = cm.em_commun(G, Ind, Wt, cells, C, me.IT_CHAUD, depart=depart)
+     P = cm.probas_commun(G, Ind, cells, C, (tau, v, u))
+     c = cm.certificat_commun(G, Wt, P, cells, C)
+-    yy = yb[ib]
+-    lp = np.log(np.maximum(np.take_along_axis(P, yy[..., None], 2)[..., 0], cm.PLANCHER))
+-    lq = np.log(np.maximum(np.take_along_axis(Wt, yy[..., None], 2)[..., 0], cm.PLANCHER))
+-    if diag is not None:
+-        diag.setdefault("certificat_moins_1", []).extend((c - 1).tolist())
+-    return (lq - lp).sum(1) - S * np.log(np.maximum(1.0, c))
++    exiger_certificats(c)
++    if not np.all(np.isfinite(P)) or not np.all(P > 0):
++        raise GardeArret("projection : loi projetée non strictement positive (P5) : arrêt ; défaut")
++    sortie = {}
++    k = 0
++    for i, b in enumerate(blocs):
++        n = len(questions[b])
++        sl = slice(k, k + n)
++        d = {"tau": tau[sl].copy(), "v": v[sl].copy(), "u": u[sl].copy(), "P": P[sl].copy(), "c": c[sl].copy(), "n": n}
++        d["empreinte"] = empreinte_journal(b, d)
++        sortie[b] = d
++        k += n
++    return sortie
++
++def valeurs_e(proj: dict, Qb: np.ndarray, issues_par_bloc: dict) -> dict:
++    """log e de chaque question de chaque bloc projeté, sur les issues du bloc (tirées après la projection)."""
++    sortie = {}
++    for b, d in proj.items():
++        y = np.asarray(issues_par_bloc[b], int)
++        if y.shape != (S,):
++            raise GardeArret(f"bloc {b} : {y.shape} issues au lieu de {S}")
++        if empreinte_journal(b, d) != d["empreinte"]:
++            raise GardeArret(f"bloc {b} : journal de projection modifié après son empreinte")
++        P, Wt = d["P"], np.broadcast_to(np.asarray(Qb[b], dtype=float), (d["n"], S, cm.K))
++        yy = np.broadcast_to(y, (d["n"], S))
++        lp = np.log(np.maximum(np.take_along_axis(P, yy[..., None], 2)[..., 0], cm.PLANCHER))
++        lq = np.log(np.maximum(np.take_along_axis(Wt, yy[..., None], 2)[..., 0], cm.PLANCHER))
++        sortie[b] = (lq - lp).sum(1) - S * np.log(np.maximum(1.0, d["c"]))
++    return sortie

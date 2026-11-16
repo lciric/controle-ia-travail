@@ -13,3 +13,5 @@
 | SCORES-T07 | 2026-11-14T01:55:05Z | donnees/20261114-001352-t07-lecture-reel/scores-actions-t07.npz | 13ac4480035f1ef6d4ea8ac81ffa962c1324e4e9e90a78c1d4f569f2abd0509d |
 | SONDES-T07 | 2026-11-14T01:55:05Z | diag/20261114-001352-t07-lecture-reel/sondes-t07.json | aa6892320f130e96af45e4e70b542b7ccfcea3ccd23d2fdc3e722b5637affa95 |
 | VERDICT-P3BIS | 2026-11-14T10:30:38Z | docs/verdicts/verdict-P3-bis-v1-issue.json | c3a017ce1e8b0c41dee1e430f142590e88bd7104eada02b3a973ac98c0da28d0 |
+| CODE-MOTS-ET-COUT-T06 | 2026-11-14T14:55:41Z | registres/code-mots-et-cout-t06/CODE-MOTS-ET-COUT-T06-v1.json | e418fdafbf8362f0458eb0448ec2d32ffa9a8bb122ec619ad0aaf68a9df3b43b |
+| AUDIT-FUITES-T07 | 2026-11-14T14:57:54Z | diag/20261114-001352-t07-lecture-reel/audit-fuites-t07.json | 5c76b7ff48964abe9ec552552d57c32e0b9d9ec4519a61206f7fdac349fce094 |

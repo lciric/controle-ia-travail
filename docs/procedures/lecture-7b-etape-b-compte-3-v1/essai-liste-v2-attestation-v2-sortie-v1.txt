@@ -1,0 +1,17 @@
+# Essai de la liste « qui a lu quoi » v2 par l'attestation v2 (règle R5 : cas sain, puis artefact) — sortie v1
+
+début : 2026-11-14T14:11:56Z
+attestation : docs/procedures/lecture-7b-etape-b-compte-3-v1/attestation_qui_a_lu_quoi_compte_3_v2.py (be9dc21357eba7a736a0466adc5835e5ef68a48466b71f860fc3ff7cf6744047) ; attendue be9dc21357eba7a736a0466adc5835e5ef68a48466b71f860fc3ff7cf6744047
+liste : registres/qui-a-lu-quoi-v2.md (315fb4b3ab7132f1b85e9b1b816384d3637dae0b9c261858ab9c6558f5b4eff0) ; compagnon : 315fb4b3ab7132f1b85e9b1b816384d3637dae0b9c261858ab9c6558f5b4eff0
+
+## Cas 1 (sain) : session fictive absente de la liste ; attendu : code 0, « ATTESTATION : CONFORME »
+$ python3 -I -B docs/procedures/lecture-7b-etape-b-compte-3-v1/attestation_qui_a_lu_quoi_compte_3_v2.py registres/qui-a-lu-quoi-v2.md 315fb4b3ab7132f1b85e9b1b816384d3637dae0b9c261858ab9c6558f5b4eff0 session_ESSAIFICTIF0000000000
+ATTESTATION : CONFORME — session session_ESSAIFICTIF0000000000 absente de la liste qui-a-lu-quoi-v2.md (315fb4b3ab71…), préfixe compris ; lignes du compte 3 : 2 sans exclusion, 0 d'une autre session identifiée
+code : 0
+
+## Cas 2 (artefact) : identifiant présent dans la liste (session mère actuelle, ligne 129) ; attendu : code 2, « ARRÊT »
+$ python3 -I -B docs/procedures/lecture-7b-etape-b-compte-3-v1/attestation_qui_a_lu_quoi_compte_3_v2.py registres/qui-a-lu-quoi-v2.md 315fb4b3ab7132f1b85e9b1b816384d3637dae0b9c261858ab9c6558f5b4eff0 session_016QhUrtmLyFWJP6Cy7rgfXH
+ARRÊT : la session session_016QhUrtmLyFWJP6Cy7rgfXH figure dans la liste : la mère tranche
+code : 2
+
+fin : 2026-11-14T14:11:56Z

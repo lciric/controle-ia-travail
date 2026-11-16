@@ -1,0 +1,297 @@
+{
+ "scripts/etape0_idee_1_1_v2.py": {
+  "couples": [
+   {
+    "ancien": "\"\"\"Étape 0 de l'idée 1.1 (",
+    "nouveau": "\"\"\"Étape 0 de l'idée 1.1, version 2 (modules v2 ; déclarations m9, m10, m11 et comptes non écrits imprimés dans le\nbloc d'addendum). Version 1 : étape 0 de l'idée 1.1 ("
+   },
+   {
+    "ancien": "    python -I -B scripts/etape0_idee_1_1_v1.py --travail DOSSIER_HORS_DU_DEPOT [--processus 3] [--sortie CHEMIN.json]\n    python -I -B scripts/etape0_idee_1_1_v1.py --lister-empreintes",
+    "nouveau": "    python -I -B scripts/etape0_idee_1_1_v2.py --travail DOSSIER_HORS_DU_DEPOT [--processus 3] [--sortie CHEMIN.json]\n    python -I -B scripts/etape0_idee_1_1_v2.py --lister-empreintes"
+   },
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v1 as B  # noqa: E402\nfrom controle_ia.organisme_idees_juge import etape0_idee_1_1_v1 as E0  # noqa: E402\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v1 as X  # noqa: E402",
+    "nouveau": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v2 as B  # noqa: E402\nfrom controle_ia.organisme_idees_juge import etape0_idee_1_1_v2 as E0  # noqa: E402\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v2 as X  # noqa: E402"
+   },
+   {
+    "ancien": "SORTIE_DEFAUT = \"docs/notes/organisme-idees-juge-v1/code-idee-1-1-v1/etape0-v1/etape0-idee-1-1-v1.json\"",
+    "nouveau": "SORTIE_DEFAUT = \"docs/notes/organisme-idees-juge-v1/code-idee-1-1-v2/etape0-v1/etape0-idee-1-1-v2.json\""
+   },
+   {
+    "ancien": "            \"etape0\": {\"chemin\": str(sortie.relative_to(RACINE_DEPOT)), \"sha256\": sha}}",
+    "nouveau": "            \"etape0\": {\"chemin\": str(sortie.relative_to(RACINE_DEPOT)), \"sha256\": sha},\n            \"declarations\": res[\"declarations\"]}"
+   }
+  ],
+  "source": "scripts/etape0_idee_1_1_v1.py"
+ },
+ "scripts/jouer_idee_1_1_v2.py": {
+  "couples": [
+   {
+    "ancien": "\"\"\"Lanceur du jeu de l'idée 1.1 (",
+    "nouveau": "\"\"\"Lanceur du jeu de l'idée 1.1, version 2 (contre-lecture `8def0cf5…` : E1, les essais d'égalité E0, E9, EP, ED sont\nrejoués après l'addendum, avant le jeu ; m8, la reprise tolère les seuls dossiers du run repris ; modules v2).\nVersion 1 : lanceur du jeu de l'idée 1.1 ("
+   },
+   {
+    "ancien": "    python -I -B scripts/jouer_idee_1_1_v1.py --addendum CHEMIN_ADDENDUM             # jeu décisif (processus : addendum)\n    python -I -B scripts/jouer_idee_1_1_v1.py --addendum CHEMIN_ADDENDUM --reprendre RUN_ID\n    python -I -B scripts/jouer_idee_1_1_v1.py --miniature --sortie DOSSIER_HORS_DU_DEPOT [--lignes 0,25 --repetitions 2]\n    python -I -B scripts/jouer_idee_1_1_v1.py --lister-empreintes",
+    "nouveau": "    python -I -B scripts/jouer_idee_1_1_v2.py --addendum CHEMIN_ADDENDUM             # jeu décisif (processus : addendum)\n    python -I -B scripts/jouer_idee_1_1_v2.py --addendum CHEMIN_ADDENDUM --reprendre RUN_ID\n    python -I -B scripts/jouer_idee_1_1_v2.py --miniature --sortie DOSSIER_HORS_DU_DEPOT [--lignes 0,25 --repetitions 2]\n    python -I -B scripts/jouer_idee_1_1_v2.py --lister-empreintes"
+   },
+   {
+    "ancien": "import subprocess  # noqa: E402\nimport time  # noqa: E402",
+    "nouveau": "import subprocess  # noqa: E402\nimport tempfile  # noqa: E402\nimport time  # noqa: E402"
+   },
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v1 as B  # noqa: E402\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v1 as X  # noqa: E402",
+    "nouveau": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v2 as B  # noqa: E402\nfrom controle_ia.organisme_idees_juge import etape0_idee_1_1_v2 as E0  # noqa: E402\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v2 as X  # noqa: E402"
+   },
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import mutations_idee_1_1_v1 as MU  # noqa: E402",
+    "nouveau": "from controle_ia.organisme_idees_juge import mutations_idee_1_1_v2 as MU  # noqa: E402"
+   },
+   {
+    "ancien": "            anciens = sorted(p.name for p in dossier.iterdir() if p.name.endswith(X.NOM_RUN))",
+    "nouveau": "            anciens = sorted(p.name for p in dossier.iterdir() if p.name.endswith(X.NOMS_RUN_DE_CE_JEU))"
+   },
+   {
+    "ancien": "    exiger_prereg(RACINE_DEPOT)\n    exiger_depot_propre(RACINE_DEPOT)\n    if not args.addendum:",
+    "nouveau": "    exiger_prereg(RACINE_DEPOT)\n    if args.reprendre:\n        X.exiger_depot_propre_sauf_run(RACINE_DEPOT, args.reprendre)       # m8\n    else:\n        exiger_depot_propre(RACINE_DEPOT)\n    if not args.addendum:"
+   },
+   {
+    "ancien": "        controles[\"mutations\"] = {\"toutes_tuees\": True, \"cas_sains_passes\": True, \"nombre\": len(mut[\"mutations\"])}",
+    "nouveau": "        controles[\"mutations\"] = {\"toutes_tuees\": True, \"cas_sains_passes\": True, \"nombre\": len(mut[\"mutations\"])}\n        travail = Path(tempfile.mkdtemp(prefix=\"idee-1-1-egalites-\"))       # E1 : étape 2 du texte, après l'addendum\n        controles[\"essais_d_egalite\"] = E0.essais_d_egalite(V, racine, travail)"
+   },
+   {
+    "ancien": "                                      commande=\"python -I -B scripts/jouer_idee_1_1_v1.py --addendum \" + args.addendum)",
+    "nouveau": "                                      commande=\"python -I -B scripts/jouer_idee_1_1_v2.py --addendum \" + args.addendum)"
+   }
+  ],
+  "source": "scripts/jouer_idee_1_1_v1.py"
+ },
+ "scripts/lire_idee_1_1_v2.py": {
+  "couples": [
+   {
+    "ancien": "\"\"\"Lecture gelée du jeu de l'idée 1.1 (",
+    "nouveau": "\"\"\"Lecture gelée du jeu de l'idée 1.1, version 2 (M1 : addendum du manifeste relu, fichiers gelés revérifiés ;\nlecture `lire_v2`). Version 1 : lecture gelée du jeu de l'idée 1.1 ("
+   },
+   {
+    "ancien": "    python -I -B scripts/lire_idee_1_1_v1.py diag/",
+    "nouveau": "    python -I -B scripts/lire_idee_1_1_v2.py diag/"
+   },
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v1 as B  # noqa: E402\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v1 as X  # noqa: E402\nfrom controle_ia.organisme_idees_juge import lecture_idee_1_1_v1 as LE  # noqa: E402",
+    "nouveau": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v2 as B  # noqa: E402\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v2 as X  # noqa: E402\nfrom controle_ia.organisme_idees_juge import lecture_idee_1_1_v2 as LE  # noqa: E402"
+   },
+   {
+    "ancien": "        raise GardeArret(\"manifeste d'un autre texte, ou d'une répétition miniature : lecture refusée\")",
+    "nouveau": "        raise GardeArret(\"manifeste d'un autre texte, ou d'une répétition miniature : lecture refusée\")\n    X.verifier_addendum_du_manifeste(RACINE_DEPOT, m[\"config\"])      # M1"
+   },
+   {
+    "ancien": "    res = LE.lire(sortie[\"donnees\"], racine)",
+    "nouveau": "    res = LE.lire_v2(sortie[\"donnees\"], racine)"
+   }
+  ],
+  "source": "scripts/lire_idee_1_1_v1.py"
+ },
+ "src/controle_ia/organisme_idees_juge/banc_idee_1_1_v2.py": {
+  "couples": [
+   {
+    "ancien": "\"\"\"Idée 1.1 — banc et bras du préenregistrement scellé",
+    "nouveau": "\"\"\"Idée 1.1 — banc et bras, version 2 (contre-lecture du code `8def0cf5…`, m3 : aucune probabilité de carte masquée par un\nplancher ; `probas_finies` exige la stricte positivité). Version 1 : banc et bras du préenregistrement scellé"
+   },
+   {
+    "ancien": "    if not np.all(np.isfinite(a)) or np.any(a < 0) or not np.allclose(a.sum(axis=-1), 1.0, atol=1e-9):\n        raise GardeArret(f\"loi de carte non finie ou non normée ({quoi}) : arrêt ; défaut\")",
+    "nouveau": "    if not np.all(np.isfinite(a)) or np.any(a <= 0) or not np.allclose(a.sum(axis=-1), 1.0, atol=1e-9):\n        raise GardeArret(f\"loi de carte non finie, non strictement positive ou non normée ({quoi}) : arrêt ; défaut\")"
+   },
+   {
+    "ancien": "        lq_g = np.log(np.maximum(self.Qg[np.arange(N), y], cm.PLANCHER))",
+    "nouveau": "        lq_g = np.log(probas_finies(self.Qg, \"carte gelée\")[np.arange(N), y])"
+   },
+   {
+    "ancien": "        num_nu = np.log(np.maximum(Qreel[np.arange(N), y], cm.PLANCHER))",
+    "nouveau": "        num_nu = np.log(Qreel[np.arange(N), y])"
+   }
+  ],
+  "source": "src/controle_ia/organisme_idees_juge/banc_idee_1_1_v1.py"
+ },
+ "src/controle_ia/organisme_idees_juge/etape0_idee_1_1_v2.py": {
+  "ajout_fin": "\n\n# ==================================================================================================================\n# Version 2 (contre-lecture `8def0cf5…`) : E1 (les essais d'égalité, rejouables par le lanceur, étape 2 du texte) ;\n# m9, m10, comptes non écrits : déclarations imprimées dans le bloc d'addendum.\ndef essais_d_egalite(V, racine: int, dossier_travail: Path) -> dict:\n    \"\"\"E0, E9, EP, ED (étape 2 du texte) ; tout essai manqué arrête avant le jeu.\"\"\"\n    r = {\"E0\": essai_E0(V, racine), \"E9\": essai_E9(V, racine), \"EP\": essai_EP(racine, dossier_travail), \"ED\": essai_ED(V, racine)}\n    manques = [k for k, v in r.items() if not v[\"passe\"]]\n    if manques:\n        raise GardeArret(f\"essai {', '.join(manques)} manqué : arrêt avant le jeu ; défaut\")\n    return r\n\n\ndef empreintes_ep() -> dict:\n    \"\"\"m10 : empreintes des trois fichiers de la course employés par EP (celle de `essai_projection_cas_v1.py` n'est\n    pas citée par le texte : elle est inscrite à l'addendum).\"\"\"\n    return {nom: sha256(DOSSIER_PROJECTION / nom) for nom in FICHIERS_EP}\n\n\ndef declarations() -> dict:\n    return {\n        \"m9_graines_des_essais\": \"les essais prolongent les clés du texte : E0 (98, r, 0) et (98, r, 1) ; essais, mutations, \"\n                                  \"chronométrage (97, k, …, 0) et (97, k, …, 1) (deux flux par répétition) ; k listés dans \"\n                                  \"`cles_97` du fichier d'étape 0\",\n        \"m10_empreintes_EP\": empreintes_ep(),\n        \"m11\": \"le lanceur rejoue les essais, les dix-sept mutations et E0, E9, EP, ED ; il ne rejoue pas les comptes de H7 \"\n               \"et de Hn (critère de mort, cas sain, Hn sous gel) : ils valent pour le code gelé par l'égalité, fichier par \"\n               \"fichier, des empreintes du fichier d'étape 0 et de l'addendum (M2)\",\n        \"comptes_non_ecrits_par_le_texte\": {\n            \"E9\": \"2 répétitions de chacune des 29 lignes jugeables (toutes sauf H7)\",\n            \"ED\": \"2 répétitions de chacune des 29 lignes jugeables\",\n            \"EP\": \"50 mondes de `essai_projection_cas_v1.construire`, cas T01 à T12 en cycle\",\n            \"mutation_certificat\": \"30 répétitions de Q8, de Q1 et de Q2 ; tuée par au moins une promotion de J9-P ; cas sain : \"\n                                   \"aucune promotion sur les copies Q1, Q2 (Q8 rapporté)\",\n            \"mutation_w_reste\": \"détecteur : carte log-linéaire de S1 (puissance 2, inclinaison [0,5 ; −0,5 ; 0]), 3 répétitions, \"\n                                \"log W maximal de J9-P ≤ 10⁻⁶ exigé du code juste\",\n            \"Hn_sous_gel\": \"bloque à 3 promotions ou plus sur 200, terme sur toutes les familles ou famille linéaire seule\"},\n    }\n",
+  "couples": [
+   {
+    "ancien": "\"\"\"Idée 1.1 — étape 0 du préenregistrement scellé",
+    "nouveau": "\"\"\"Idée 1.1 — étape 0, version 2 (contre-lecture `8def0cf5…` : E1, m9, m10 ; modules v2). Version 1 : étape 0 du préenregistrement scellé"
+   },
+   {
+    "ancien": "from . import banc_idee_1_1_v1 as B\nfrom . import mutations_idee_1_1_v1 as MU",
+    "nouveau": "from . import banc_idee_1_1_v2 as B\nfrom . import mutations_idee_1_1_v2 as MU"
+   },
+   {
+    "ancien": "    res[\"cles_97\"] = dict(MU.CLES)",
+    "nouveau": "    res[\"cles_97\"] = dict(MU.CLES)\n    res[\"declarations\"] = declarations()"
+   }
+  ],
+  "source": "src/controle_ia/organisme_idees_juge/etape0_idee_1_1_v1.py"
+ },
+ "src/controle_ia/organisme_idees_juge/execution_idee_1_1_v2.py": {
+  "ajout_fin": "\n\n# ==================================================================================================================\n# Version 2 (contre-lecture `8def0cf5…`) : M1 (addendum du manifeste relu par la lecture), m8 (reprise et dépôt propre).\ndef verifier_addendum_du_manifeste(racine_depot: Path, config: dict) -> dict:\n    \"\"\"M1 : l'addendum inscrit au manifeste est relu (empreinte égale à celle du manifeste), chaque fichier gelé\n    revérifié par `lire_addendum`, et le bloc programme égal à celui du manifeste ; sinon la lecture est refusée.\"\"\"\n    add = config.get(\"addendum\")\n    if not add or \"chemin\" not in add or \"sha256\" not in add:\n        raise GardeArret(\"manifeste sans addendum : lecture refusée\")\n    chemin = Path(racine_depot) / add[\"chemin\"]\n    if verifier(chemin) != add[\"sha256\"]:\n        raise GardeArret(\"addendum différent de celui du manifeste : lecture refusée\")\n    lu = lire_addendum(racine_depot, chemin)\n    if lu[\"programme\"] != add.get(\"programme\"):\n        raise GardeArret(\"bloc programme de l'addendum ≠ celui du manifeste : lecture refusée\")\n    return lu\n\n\ndef exiger_depot_propre_sauf_run(racine_depot: Path, run_id: str) -> None:\n    \"\"\"m8 : en reprise, l'arbre doit être propre hors des seuls dossiers `runs/<run_id>/` et `diag/…/<run_id>/` du run\n    repris (non suivis tant que la sortie n'est pas committée) ; tout autre changement refuse la reprise.\"\"\"\n    from ..gardes import etat_git\n    permis = (f\"runs/{run_id}/\", f\"{DOSSIER_DIAG.as_posix()}/{run_id}/\")\n    etat = etat_git(racine_depot)\n    autres = []\n    for ligne in etat[\"statut\"].splitlines():\n        chemin = ligne[3:].strip().strip('\"')\n        if not any(chemin.startswith(p) for p in permis):\n            autres.append(ligne)\n    if autres:\n        raise GardeArret(\"arbre de travail non propre hors des dossiers du run repris : reprise refusée\\n\" + \"\\n\".join(autres[:20]))\n",
+  "couples": [
+   {
+    "ancien": "\"\"\"Idée 1.1 — enchaînement du jeu",
+    "nouveau": "\"\"\"Idée 1.1 — enchaînement du jeu, version 2 (contre-lecture `8def0cf5…` : M1, M2, m2, m8 ; modules v2). Version 1 : enchaînement du jeu"
+   },
+   {
+    "ancien": "from . import banc_idee_1_1_v1 as B",
+    "nouveau": "from . import banc_idee_1_1_v2 as B"
+   },
+   {
+    "ancien": "NOM_RUN = \"idee-1-1-poids-du-nul-v1\"",
+    "nouveau": "NOM_RUN = \"idee-1-1-poids-du-nul-v2\"\nNOMS_RUN_DE_CE_JEU = (\"idee-1-1-poids-du-nul-v1\", \"idee-1-1-poids-du-nul-v2\")"
+   },
+   {
+    "ancien": "    \"src/controle_ia/organisme_idees_juge/banc_idee_1_1_v1.py\",\n    \"src/controle_ia/organisme_idees_juge/lecture_idee_1_1_v1.py\",\n    \"src/controle_ia/organisme_idees_juge/mutations_idee_1_1_v1.py\",\n    \"src/controle_ia/organisme_idees_juge/etape0_idee_1_1_v1.py\",\n    \"src/controle_ia/organisme_idees_juge/execution_idee_1_1_v1.py\",\n    \"src/controle_ia/gardes.py\", \"src/controle_ia/scellement.py\", \"src/controle_ia/manifeste.py\", \"src/controle_ia/prereg.py\",\n    \"scripts/jouer_idee_1_1_v1.py\", \"scripts/lire_idee_1_1_v1.py\", \"scripts/etape0_idee_1_1_v1.py\",\n    \"tests/conftest.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_projection_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_gardes_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_banc_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_lecture_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_execution_v1.py\",\n)",
+    "nouveau": "    \"src/controle_ia/organisme_idees_juge/banc_idee_1_1_v2.py\",\n    \"src/controle_ia/organisme_idees_juge/lecture_idee_1_1_v2.py\",\n    \"src/controle_ia/organisme_idees_juge/mutations_idee_1_1_v2.py\",\n    \"src/controle_ia/organisme_idees_juge/etape0_idee_1_1_v2.py\",\n    \"src/controle_ia/organisme_idees_juge/execution_idee_1_1_v2.py\",\n    \"src/controle_ia/gardes.py\", \"src/controle_ia/scellement.py\", \"src/controle_ia/manifeste.py\", \"src/controle_ia/prereg.py\",\n    \"scripts/jouer_idee_1_1_v2.py\", \"scripts/lire_idee_1_1_v2.py\", \"scripts/etape0_idee_1_1_v2.py\",\n    # version 1 des fichiers touchés : sources de l'essai d'égalité au différentiel près (jamais importées par le jeu)\n    \"src/controle_ia/organisme_idees_juge/banc_idee_1_1_v1.py\",\n    \"src/controle_ia/organisme_idees_juge/lecture_idee_1_1_v1.py\",\n    \"src/controle_ia/organisme_idees_juge/mutations_idee_1_1_v1.py\",\n    \"src/controle_ia/organisme_idees_juge/etape0_idee_1_1_v1.py\",\n    \"src/controle_ia/organisme_idees_juge/execution_idee_1_1_v1.py\",\n    \"scripts/jouer_idee_1_1_v1.py\", \"scripts/lire_idee_1_1_v1.py\", \"scripts/etape0_idee_1_1_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_projection_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_gardes_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_banc_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_lecture_v1.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_execution_v1.py\",\n    \"docs/notes/organisme-idees-juge-v1/code-idee-1-1-v2/couples-v1-vers-v2.json\",\n    \"tests/conftest.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_projection_v2.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_gardes_v2.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_banc_v2.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_lecture_v2.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_execution_v2.py\",\n    \"tests/test_organisme_idees_juge_idee_1_1_differentiel_v2.py\",\n)"
+   },
+   {
+    "ancien": "    from . import etape0_idee_1_1_v1 as E0",
+    "nouveau": "    from . import etape0_idee_1_1_v2 as E0"
+   },
+   {
+    "ancien": "    res0 = json.loads(e0.read_text(encoding=\"utf-8\"))\n    corps0 = res0.get(\"resultat\", res0)\n    if corps0.get(\"bloquants\"):\n        raise GardeArret(f\"étape 0 : bloquants inscrits : {corps0['bloquants']} : pas de jeu\")",
+    "nouveau": "    res0 = json.loads(e0.read_text(encoding=\"utf-8\"))\n    for cle in (\"resultat\", \"fichiers_geles\"):          # m2 : clés exigées, aucune valeur par défaut\n        if cle not in res0:\n            raise GardeArret(f\"fichier d'étape 0 sans « {cle} » : pas de jeu\")\n    corps0 = res0[\"resultat\"]\n    for cle in (\"bloquants\", \"jeu_permis\", \"preenregistrement\", \"chronometrage\"):\n        if cle not in corps0:\n            raise GardeArret(f\"fichier d'étape 0 sans « {cle} » : pas de jeu\")\n    if corps0[\"bloquants\"] or corps0[\"jeu_permis\"] is not True:\n        raise GardeArret(f\"étape 0 : bloquants inscrits : {corps0['bloquants']} : pas de jeu\")\n    # M2 : l'étape 0 vaut pour le code gelé — égalité, fichier par fichier, avec l'addendum ; et pour ce texte\n    if corps0[\"preenregistrement\"].get(\"sha256\") != B.EMPREINTE_PREREG:\n        raise GardeArret(\"fichier d'étape 0 d'un autre texte : pas de jeu\")\n    fg = res0[\"fichiers_geles\"]\n    if set(fg) != set(FICHIERS_GELES):\n        raise GardeArret(\"fichier d'étape 0 : liste des fichiers gelés ≠ celle du code : pas de jeu (étape 0 à rejouer)\")\n    differents = [f for f in FICHIERS_GELES if fg[f] != liste[f]]\n    if differents:\n        raise GardeArret(f\"étape 0 passée sur un autre code ({differents[:5]}…) : pas de jeu (étape 0 à rejouer)\")"
+   },
+   {
+    "ancien": "ESSAIS = tuple(f for f in FICHIERS_GELES if f.startswith(\"tests/test_\"))",
+    "nouveau": "# essais rejoués par le lanceur : ceux de la version 2 seulement (les essais v1 sont gelés comme sources du différentiel)\nESSAIS = tuple(f for f in FICHIERS_GELES if f.startswith(\"tests/test_\") and f.endswith(\"_v2.py\"))"
+   }
+  ],
+  "source": "src/controle_ia/organisme_idees_juge/execution_idee_1_1_v1.py"
+ },
+ "src/controle_ia/organisme_idees_juge/lecture_idee_1_1_v2.py": {
+  "ajout_fin": "\n\n# ==================================================================================================================\n# Version 2 (contre-lecture du code `8def0cf5…`) : M3 — tout ce que la « Métrique » gèle comme rapporté ; m1, m4, m5,\n# m6 (déclaré), m7. Les ajouts ne portent aucun verdict.\n#\n# m6 (déclaré, sans changement de code) : pour un secondaire réduit, I est recalculé sur ses seules premières\n# répétitions (le texte : « lu, apparié, sur ses seules premières répétitions »), pas repris des 1 000.\n\n# Strates de ρ par bras ([CL] M1) — lecture du texte écrite avant le jeu : « structure sur une partition du bras » si\n# l'effet neuf de la ligne est posé sur une partition de la classe du bras. V1 : effet global (aucune partition) ; V2 :\n# signe d'un trait ; V3 : seuil décentré d'un trait ; V4 : sous-population ; V5 : coupure A de l'archive. Partitions :\n# J9-P (classe du v9) — sous-population et tout seuil réel d'un trait ; La — coupures A et B de l'archive ; Ld — La,\n# sous-population et signe de chaque trait.\nSTRATES_TEXTE = {\n    \"J9-P\": {\"sur\": (\"V2\", \"V3\", \"V4\", \"V5\"), \"hors\": (\"V1\",)},\n    \"La\": {\"sur\": (\"V5\",), \"hors\": (\"V1\", \"V2\", \"V3\", \"V4\")},\n    \"Ld\": {\"sur\": (\"V2\", \"V4\", \"V5\"), \"hors\": (\"V1\", \"V3\")},\n}\n\n\ndef lignes_de_strate(bras: str, strate: str) -> list:\n    types = STRATES_TEXTE[bras][strate]\n    return [l for l in V_TEXTE if l.split(\"(\")[0] in types]\n\n\ndef lire_rho_strate(racine: int, donnees: dict, bras: str, strate: str, *, plus: bool = False, B_: int = REECHANTILLONS) -> dict:\n    \"\"\"ρ du bras restreint aux lignes informatives de la strate ; I recalculé dans chaque rééchantillon sur les 15 lignes V,\n    puis coupé à la strate ; rééchantillon sans ligne informative dans la strate écarté et compté ; quantiles de\n    Bonferroni des primaires (rapporté, sans verdict).\"\"\"\n    pa, ref = paire_informativite(plus)\n    nn = min(len(donnees[l]) for l in V)\n    a, b = matrice(donnees, V, pa, nn), matrice(donnees, V, ref, nn)\n    X = matrice(donnees, V, bras, nn)\n    dans = [k for k, l in enumerate(V) if l in lignes_de_strate(bras, strate)]\n    I = [k for k in informatives(a, b, V) if k in dans]\n    out = {\"bras\": bras, \"strate\": strate, \"lignes\": [V[k] for k in dans], \"I\": [V[k] for k in I], \"reference\": ref}\n    if not I:\n        out[\"sans_objet\"] = True\n        return out\n    t, ecartes = [], 0\n    for idx in reechantillons(racine, len(V), nn, B_):\n        ar, br = np.take_along_axis(a, idx, 1), np.take_along_axis(b, idx, 1)\n        Ir = [k for k in informatives(ar, br, V) if k in dans]\n        if not Ir:\n            ecartes += 1\n            continue\n        t.append(rho(np.take_along_axis(X, idx, 1), ar, br, Ir))\n    out.update(estimation=rho(X, a, b, I), bas=float(np.quantile(t, QUANTILES_PRIMAIRES[0])),\n               haut=float(np.quantile(t, QUANTILES_PRIMAIRES[1])), ecartes=ecartes)\n    return out\n\n\ndef lire_decomposition(racine: int, donnees: dict, *, B_: int = REECHANTILLONS) -> dict:\n    \"\"\"Décomposition du prix (descriptive) : 1 − ρ_La, ρ_La − ρ_Ld, ρ_Ld, avec intervalles percentiles à 95 % tirés des\n    mêmes rééchantillons pour La et Ld (vecteurs appariés).\"\"\"\n    nn = min(len(donnees[l]) for l in V)\n    a, b = matrice(donnees, V, \"J8\", nn), matrice(donnees, V, \"J9\", nn)\n    Xa, Xd = matrice(donnees, V, \"La\", nn), matrice(donnees, V, \"Ld\", nn)\n    I = informatives(a, b, V)\n    if len(I) < 2:\n        return {\"sans_objet\": True}\n    f = lambda ra, rd: {\"1 - rho_La\": 1 - ra, \"rho_La - rho_Ld\": ra - rd, \"rho_Ld\": rd}\n    est = f(rho(Xa, a, b, I), rho(Xd, a, b, I))\n    tirs = {k: [] for k in est}\n    for idx in reechantillons(racine, len(V), nn, B_):\n        ar, br = np.take_along_axis(a, idx, 1), np.take_along_axis(b, idx, 1)\n        Ir = informatives(ar, br, V)\n        if len(Ir) < 2:\n            continue\n        for k, v in f(rho(np.take_along_axis(Xa, idx, 1), ar, br, Ir), rho(np.take_along_axis(Xd, idx, 1), ar, br, Ir)).items():\n            tirs[k].append(v)\n    return {k: {\"estimation\": est[k], \"bas\": float(np.quantile(tirs[k], QUANTILES_SECONDAIRES[0])),\n                \"haut\": float(np.quantile(tirs[k], QUANTILES_SECONDAIRES[1]))} for k in est}\n\n\ndef mcnemar_exact(x: np.ndarray, y: np.ndarray) -> dict:\n    \"\"\"Test exact de McNemar (bilatéral) sur des vecteurs appariés de promotions.\"\"\"\n    n10, n01 = int(((x == 1) & (y == 0)).sum()), int(((x == 0) & (y == 1)).sum())\n    n = n10 + n01\n    p = 1.0 if n == 0 else min(1.0, 2.0 * float(binom.cdf(min(n10, n01), n, 0.5)))\n    return {\"x_seul\": n10, \"y_seul\": n01, \"p\": p}\n\n\nPAIRES_MCNEMAR = ((\"J8\", \"J9\"), (\"J9-P\", \"J9\"), (\"La\", \"J9\"), (\"Ld\", \"J9\"), (\"La-P\", \"La\"), (\"J9-P\", \"La\"),\n                  (\"J9-D\", \"J9\"), (\"J9-D40\", \"J9\"), (\"J9-P\", \"J9+\"), (\"La\", \"J9+\"), (\"Ld\", \"J9+\"))\n\n\ndef lire_mcnemar(donnees: dict) -> dict:\n    out = {}\n    for l in V:\n        for x, y in PAIRES_MCNEMAR:\n            n = min(a_le_bras(donnees, l, x), a_le_bras(donnees, l, y))\n            out[f\"{l}|{x} contre {y}\"] = {**mcnemar_exact(vecteur(donnees, l, x, n), vecteur(donnees, l, y, n)), \"n\": n}\n    return out\n\n\ndef _lw_rep(r: dict, bras: str) -> float:\n    if bras == \"J9-P-nu-terme\":\n        return r[\"J9-P-nu\"][\"terme_projete\"][\"max\"]\n    if bras == \"J9-P-nu-complet\":\n        return r[\"J9-P-nu\"][\"complet\"][\"max\"]\n    if bras == \"J9-P-nu-lineaire\":\n        return r[\"J9-P-nu\"][\"lineaire_seul\"][\"max\"]\n    if bras == \"J9-P-refus\":\n        return -math.inf\n    return log_w_max(r, bras)\n\n\ndef taux_des_cellules(donnees: dict) -> dict:\n    \"\"\"Pour chaque (ligne, bras) joué : taux, intervalle de Clopper-Pearson bilatéral à 95 %, log W maximal et médian\n    (sur les répétitions, du log W maximal de chacune). Pour J9-D, « log W » est la quantité fatale quand elle existe.\"\"\"\n    out = {}\n    bras_possibles = (\"J8\", \"J9\", \"J9+\", \"La\", \"Ld\", \"J9-D40\", \"J9-D\", \"J9-Dc\", \"J9-P\", \"La-P\", \"A1\", \"A2\", \"J9-P-gel\",\n                      \"J9-P-gel-terme\", \"J9-P-nu-terme\", \"J9-P-nu-complet\", \"J9-P-nu-lineaire\", \"temoin_lambda\")\n    for l in donnees:\n        for b in bras_possibles:\n            n = a_le_bras(donnees, l, b)\n            if n == 0:\n                continue\n            v = vecteur(donnees, l, b, n)\n            k = int(v.sum())\n            d = {\"promotions\": k, \"n\": n, \"taux\": k / n, \"intervalle\": list(cp_bilateral(k, n))}\n            if b not in (\"J9-Dc\", \"temoin_lambda\") and not (b == \"J9-D\" and \"quantite_fatale\" not in donnees[l][0].get(\"J9-D\", {})):\n                lws = np.array([_lw_rep(r, b) for r in donnees[l][:n]])\n                d.update(log_w_max=float(lws.max()), log_w_mediane=float(np.median(lws)))\n            out[f\"{l}|{b}\"] = d\n    return out\n\n\ndef lire_v2(donnees: dict, racine: int, *, B_: int = REECHANTILLONS) -> dict:\n    \"\"\"Lecture gelée v2 : la lecture v1 (verdicts inchangés), plus les rapportés de la « Métrique » (M3), les trois\n    lectures séparées de la garde P4 (m4), la part des écarts résiduels sur J9, La et Ld (m5), et P5 et P12 lues sur\n    leurs réfutations écrites (m7).\"\"\"\n    res = lire(donnees, racine, B_=B_)\n    res[\"taux_des_cellules\"] = taux_des_cellules(donnees)\n    if res.get(\"etage_1\") != \"franchi\" or res.get(\"etage_2\") != \"franchi\":\n        return res\n    res[\"secondaires_contre_J9_plus\"] = {k: lire_gain(racine, donnees, x, y, e, plus=True, B_=B_) for k, (x, y, e) in {\n        \"La-P contre La\": (\"La-P\", \"La\", \"I\"), \"J9-P contre La\": (\"J9-P\", \"La\", \"I\"),\n        \"J9-D contre J9+\": (\"J9-D\", \"J9\", \"V\"), \"J9-D40 contre J9+\": (\"J9-D40\", \"J9\", \"V\")}.items()}\n    res[\"rho_par_strate\"] = {f\"{b}|{s}\": lire_rho_strate(racine, donnees, b, s, B_=B_) for b in STRATES_TEXTE for s in (\"sur\", \"hors\")}\n    res[\"decomposition_du_prix_intervalles\"] = lire_decomposition(racine, donnees, B_=B_)\n    res[\"mcnemar\"] = lire_mcnemar(donnees)\n    res[\"declaration_m6\"] = \"secondaire réduit : I recalculé sur ses seules premières répétitions\"\n    return res\n",
+  "couples": [
+   {
+    "ancien": "\"\"\"Idée 1.1 — lecture gelée (",
+    "nouveau": "\"\"\"Idée 1.1 — lecture gelée, version 2 (contre-lecture `8def0cf5…` : M3, m1, m4, m5, m6, m7 ; entrée : `lire_v2`).\nVersion 1 : lecture gelée ("
+   },
+   {
+    "ancien": "import math\n\nimport numpy as np",
+    "nouveau": "import functools\nimport math\n\nimport numpy as np"
+   },
+   {
+    "ancien": "from . import banc_idee_1_1_v1 as B",
+    "nouveau": "from . import banc_idee_1_1_v2 as B"
+   },
+   {
+    "ancien": "        return float(rec[\"J9-D\"].get(\"quantite_fatale\", -math.inf))",
+    "nouveau": "        if \"quantite_fatale\" not in rec[\"J9-D\"]:\n            raise GardeArret(\"J9-D : quantité fatale absente d'une cellule fatale : lecture refusée\")\n        return float(rec[\"J9-D\"][\"quantite_fatale\"])"
+   },
+   {
+    "ancien": "def cp_bas_unilateral(k: int, n: int, niveau: float = 0.95) -> float:",
+    "nouveau": "@functools.lru_cache(maxsize=None)\ndef cp_bas_unilateral(k: int, n: int, niveau: float = 0.95) -> float:"
+   },
+   {
+    "ancien": "    if any(trou.values()):\n        out[\"verdict\"] = \"trou atteint par la grammaire\"\n    elif not dent_h7:\n        out[\"verdict\"] = \"non éprouvée\"\n    elif gel_tenu:\n        out[\"verdict\"] = \"nécessaire, montrée sur le terme projeté\"\n    else:\n        out[\"verdict\"] = \"non tranché (cellule avec gel non tenue : étage 1)\"",
+    "nouveau": "    # m4 : trois lectures rendues à part, sans priorité entre elles (le texte n'en écrit pas)\n    out[\"lectures\"] = {\"nécessaire, montrée sur le terme projeté\": bool(dent_h7 and gel_tenu),\n                       \"non éprouvée (dent du terme projeté de H7 manquée)\": not dent_h7,\n                       \"trou atteint par la grammaire (Hm ou Hg, juge complet sans garde)\": any(trou.values())}\n    if not gel_tenu:\n        out[\"cellule_avec_gel_non_tenue_ou_non_jugeable\"] = sorted(l for l, s in tenues.items() if s != \"tenue\")"
+   },
+   {
+    "ancien": "    ecarts = [max(r.get(\"ecart_residuel_J9\", [0.0])) for l in donnees for r in donnees[l] if \"ecart_residuel_J9\" in r]",
+    "nouveau": "    ecarts = [max(r[c]) for l in donnees for r in donnees[l] for c in (\"ecart_residuel_J9\", \"ecart_residuel_La\", \"ecart_residuel_Ld\") if c in r]"
+   },
+   {
+    "ancien": "    p[\"P5\"] = len(rp.get(\"I\", [])) >= 4 if \"I\" in rp else \"non évaluable\"",
+    "nouveau": "    if \"I\" in rp:\n        p[\"P5\"] = True if len(rp[\"I\"]) >= 4 else (\"partielle\" if len(rp[\"I\"]) >= 2 else False)\n    else:\n        p[\"P5\"] = \"non évaluable\""
+   },
+   {
+    "ancien": "    p[\"P12\"] = {\"H7 terme sans garde >= 0,20\": g[\"H7\"][\"J9-P-nu-terme\"] >= 0.20,\n                \"gel <= 0,02 sur les cinq lignes\": all(g[l][\"J9-P-gel\" if l != \"H7\" else \"J9-P-gel-terme\"] <= 0.02 for l in g),\n                \"Hm et Hg sans garde < 0,05\": g[\"Hm\"][\"J9-P-nu-complet\"] < 0.05 and g[\"Hg\"][\"J9-P-nu-complet\"] < 0.05,\n                \"Hs et Hn juge complet <= alpha\": g[\"Hs\"][\"J9-P-nu-complet\"] <= ALPHA and g[\"Hn\"][\"J9-P-nu-complet\"] <= ALPHA,\n                \"H7 juge complet >= 0,10 (sans seuil)\": \"rapporté\", \"Hn terme linéaire environ 0,10\": \"non évaluable (chiffre approché)\"}",
+    "nouveau": "    def bb(l, b):  # borne basse unilatérale à 95 % du taux\n        n = a_le_bras(donnees, l, b)\n        return cp_bas_unilateral(int(vecteur(donnees, l, b, n).sum()), n)\n    statut = {c[\"ligne\"]: c[\"statut\"] for c in res[\"cellules_holm\"] if c[\"bras\"] in (\"J9-P-gel\", \"J9-P-gel-terme\")}\n    # m7 : chaque partie lue sur sa réfutation écrite (colonne « ce qui la réfute »)\n    p[\"P12\"] = {\"H7 terme projeté (réfutée si borne basse <= 0,05)\": bb(\"H7\", \"J9-P-nu-terme\") > 0.05,\n                \"gel (réfutée si une cellule non tenue)\": all(statut[l] != \"non tenue\" for l in (\"Hs\", \"Hm\", \"Hg\", \"Hn\", \"H7\")),\n                \"Hm, Hg sans garde (réfutée si borne basse > 0,05)\": bb(\"Hm\", \"J9-P-nu-complet\") <= 0.05 and bb(\"Hg\", \"J9-P-nu-complet\") <= 0.05,\n                \"Hs, Hn juge complet (réfutée si borne basse > 0,05)\": bb(\"Hs\", \"J9-P-nu-complet\") <= 0.05 and bb(\"Hn\", \"J9-P-nu-complet\") <= 0.05,\n                \"Hn terme linéaire (réserve si borne basse <= 0,05)\": bb(\"Hn\", \"J9-P-nu-lineaire\") > 0.05,\n                \"H7 juge complet (rapporté, sans seuil)\": \"rapporté\", \"_chiffres\": g}"
+   },
+   {
+    "ancien": "    toutes = [v for k, v in p.items() if isinstance(v, bool)] + [v for v in p[\"P12\"].values() if isinstance(v, bool)]",
+    "nouveau": "    toutes = [v is True for k, v in p.items() if isinstance(v, bool) or v == \"partielle\"] + [v for v in p[\"P12\"].values() if isinstance(v, bool)]"
+   }
+  ],
+  "source": "src/controle_ia/organisme_idees_juge/lecture_idee_1_1_v1.py"
+ },
+ "src/controle_ia/organisme_idees_juge/mutations_idee_1_1_v2.py": {
+  "couples": [
+   {
+    "ancien": "\"\"\"Idée 1.1 — banc de mutations de l'étape 0",
+    "nouveau": "\"\"\"Idée 1.1 — banc de mutations, version 2 (seul changement : modules v2 du banc et de la lecture). Version 1 : banc de mutations de l'étape 0"
+   },
+   {
+    "ancien": "from . import banc_idee_1_1_v1 as B\nfrom . import lecture_idee_1_1_v1 as LE",
+    "nouveau": "from . import banc_idee_1_1_v2 as B\nfrom . import lecture_idee_1_1_v2 as LE"
+   }
+  ],
+  "source": "src/controle_ia/organisme_idees_juge/mutations_idee_1_1_v1.py"
+ },
+ "tests/test_organisme_idees_juge_idee_1_1_banc_v2.py": {
+  "ajout_fin": "\n\n\n# --- version 2 ------------------------------------------------------------------------------------------------------------\ndef test_m3_probabilite_de_carte_non_positive_refusee():\n    B.probas_finies([[0.2, 0.3, 0.5]], \"sain\")\n    with pytest.raises(GardeArret, match=\"strictement positive\"):\n        B.probas_finies([[0.0, 0.5, 0.5]], \"artefact\")\n\n\ndef test_e1_essais_d_egalite_manques_arretent(V, tmp_path, monkeypatch):\n    monkeypatch.setattr(E0, \"essai_E0\", lambda V, r: {\"passe\": True})\n    monkeypatch.setattr(E0, \"essai_E9\", lambda V, r: {\"passe\": True})\n    monkeypatch.setattr(E0, \"essai_EP\", lambda r, d: {\"passe\": True})\n    monkeypatch.setattr(E0, \"essai_ED\", lambda V, r: {\"passe\": True})\n    assert set(E0.essais_d_egalite(V, RACINE_ESSAI, tmp_path)) == {\"E0\", \"E9\", \"EP\", \"ED\"}\n    monkeypatch.setattr(E0, \"essai_ED\", lambda V, r: {\"passe\": False})\n    with pytest.raises(GardeArret, match=\"ED manqué\"):\n        E0.essais_d_egalite(V, RACINE_ESSAI, tmp_path)\n\n\ndef test_declarations_m9_m10():\n    d = E0.declarations()\n    assert set(d[\"m10_empreintes_EP\"]) == set(E0.FICHIERS_EP) and all(len(h) == 64 for h in d[\"m10_empreintes_EP\"].values())\n    assert \"(98, r, 0)\" in d[\"m9_graines_des_essais\"] and \"E9\" in d[\"comptes_non_ecrits_par_le_texte\"]\n",
+  "couples": [
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v1 as B\nfrom controle_ia.organisme_idees_juge import etape0_idee_1_1_v1 as E0",
+    "nouveau": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v2 as B\nfrom controle_ia.organisme_idees_juge import etape0_idee_1_1_v2 as E0"
+   }
+  ],
+  "source": "tests/test_organisme_idees_juge_idee_1_1_banc_v1.py"
+ },
+ "tests/test_organisme_idees_juge_idee_1_1_execution_v2.py": {
+  "couples": [
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v1 as B\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v1 as X\nfrom controle_ia.organisme_idees_juge import mutations_idee_1_1_v1 as MU",
+    "nouveau": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v2 as B\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v2 as X\nfrom controle_ia.organisme_idees_juge import mutations_idee_1_1_v2 as MU"
+   },
+   {
+    "ancien": "    assert len(X.ESSAIS) == 5",
+    "nouveau": "    assert len(X.ESSAIS) == 6"
+   },
+   {
+    "ancien": "\"scripts/jouer_idee_1_1_v1.py\", \"--miniature\", \"--sortie\",\n                        str(RACINE_DEPOT / \"jetable\")]",
+    "nouveau": "\"scripts/jouer_idee_1_1_v2.py\", \"--miniature\", \"--sortie\",\n                        str(RACINE_DEPOT / \"jetable\")]"
+   },
+   {
+    "ancien": "\"scripts/jouer_idee_1_1_v1.py\", \"--miniature\", \"--sortie\", str(tmp_path / \"m\"),",
+    "nouveau": "\"scripts/jouer_idee_1_1_v2.py\", \"--miniature\", \"--sortie\", str(tmp_path / \"m\"),"
+   },
+   {
+    "ancien": "\"scripts/lire_idee_1_1_v1.py\", str(tmp_path / \"rien\")]",
+    "nouveau": "\"scripts/lire_idee_1_1_v2.py\", str(tmp_path / \"rien\")]"
+   }
+  ],
+  "source": "tests/test_organisme_idees_juge_idee_1_1_execution_v1.py"
+ },
+ "tests/test_organisme_idees_juge_idee_1_1_gardes_v2.py": {
+  "ajout_fin": "\n\n\n# --- version 2 : M1, M2, m2, m8 -------------------------------------------------------------------------------------------\ndef _prog(tmp_path, **kw):\n    e0, h0 = _etape0_factice(tmp_path, **kw)\n    return {\"processus\": 3, \"reductions\": [], \"etape0\": {\"chemin\": str(e0), \"sha256\": h0}}\n\n\ndef test_m2_etape0_liee_au_code_gele_fichier_par_fichier(tmp_path):\n    lignes = X.lister_empreintes(RACINE_DEPOT)\n    X.lire_addendum(RACINE_DEPOT, _addendum(tmp_path, lignes, _prog(tmp_path)))\n    fg = {l.split(\"  \")[1]: l.split(\"  \")[0] for l in lignes.splitlines()}\n    cas = {\"autre code\": {\"fichiers\": {**fg, X.FICHIERS_GELES[3]: \"0\" * 64}},\n           \"liste incomplète\": {\"fichiers\": {k: v for k, v in fg.items() if k != X.FICHIERS_GELES[0]}},\n           \"autre texte\": {\"texte\": \"1\" * 64},\n           \"sans bloquants (m2)\": {\"sans\": (\"bloquants\",)}, \"sans fichiers gelés (m2)\": {\"sans\": (\"fichiers_geles\",)},\n           \"sans jeu_permis (m2)\": {\"sans\": (\"jeu_permis\",)}}\n    for nom, kw in cas.items():\n        d = tmp_path / nom.replace(\" \", \"-\")\n        d.mkdir()\n        with pytest.raises(GardeArret):\n            X.lire_addendum(RACINE_DEPOT, _addendum(d, lignes, _prog(d, **kw)))\n\n\ndef test_m1_la_lecture_relit_l_addendum_du_manifeste(tmp_path):\n    lignes = X.lister_empreintes(RACINE_DEPOT)\n    prog = _prog(tmp_path)\n    a = _addendum(tmp_path, lignes, prog)\n    from controle_ia.scellement import empreinte\n    config = {\"addendum\": {\"chemin\": str(a), \"sha256\": empreinte(a), \"programme\": prog}}\n    X.verifier_addendum_du_manifeste(RACINE_DEPOT, config)\n    with pytest.raises(GardeArret, match=\"sans addendum\"):\n        X.verifier_addendum_du_manifeste(RACINE_DEPOT, {})\n    with pytest.raises(GardeArret, match=\"différent\"):\n        X.verifier_addendum_du_manifeste(RACINE_DEPOT, {\"addendum\": {**config[\"addendum\"], \"sha256\": \"0\" * 64}})\n    with pytest.raises(GardeArret, match=\"programme\"):\n        X.verifier_addendum_du_manifeste(RACINE_DEPOT, {\"addendum\": {**config[\"addendum\"], \"programme\": {**prog, \"processus\": 2}}})\n    d = tmp_path / \"faux\"\n    d.mkdir()\n    a2 = _addendum(d, \"0\" * 64 + lignes[64:], prog)      # un fichier gelé modifié après le jeu : la lecture refuse\n    with pytest.raises(GardeArret):\n        X.verifier_addendum_du_manifeste(RACINE_DEPOT, {\"addendum\": {\"chemin\": str(a2), \"sha256\": empreinte(a2), \"programme\": prog}})\n\n\ndef test_m8_reprise_tolere_les_seuls_dossiers_du_run(depot):\n    run = \"20261116-000000-\" + X.NOM_RUN\n    (depot / \"runs\" / run).mkdir(parents=True)\n    (depot / \"runs\" / run / \"manifeste.json\").write_text(\"{}\")\n    (depot / X.DOSSIER_DIAG / run / \"lignes\").mkdir(parents=True)\n    (depot / X.DOSSIER_DIAG / run / \"lignes\" / \"00-0000.json\").write_text(\"{}\")\n    X.exiger_depot_propre_sauf_run(depot, run)\n    (depot / \"autre.txt\").write_text(\"x\")\n    with pytest.raises(GardeArret, match=\"reprise refusée\"):\n        X.exiger_depot_propre_sauf_run(depot, run)\n    (depot / \"autre.txt\").unlink()\n    (depot / \"runs\" / \"20261116-000001-autre\").mkdir()\n    (depot / \"runs\" / \"20261116-000001-autre\" / \"m.json\").write_text(\"{}\")\n    with pytest.raises(GardeArret):\n        X.exiger_depot_propre_sauf_run(depot, run)\n",
+  "couples": [
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v1 as B\nfrom controle_ia.organisme_idees_juge import etape0_idee_1_1_v1 as E0\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v1 as X",
+    "nouveau": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v2 as B\nfrom controle_ia.organisme_idees_juge import etape0_idee_1_1_v2 as E0\nfrom controle_ia.organisme_idees_juge import execution_idee_1_1_v2 as X"
+   },
+   {
+    "ancien": "def _etape0_factice(tmp_path, secondes=1.0, bloquants=()):\n    temps = {n: {\"base\": secondes, \"jumeau\": 0.0, \"J9-P\": 0.0, \"La-P\": 0.0} for n in B.NOMS}\n    p = tmp_path / \"etape0.json\"\n    p.write_text(json.dumps({\"resultat\": {\"chronometrage\": {\"secondes_par_repetition\": temps}, \"bloquants\": list(bloquants)}}),\n                 encoding=\"utf-8\")\n    return p, sceller(p)",
+    "nouveau": "def _etape0_factice(tmp_path, secondes=1.0, bloquants=(), fichiers=None, texte=None, sans=()):\n    temps = {n: {\"base\": secondes, \"jumeau\": 0.0, \"J9-P\": 0.0, \"La-P\": 0.0} for n in B.NOMS}\n    fg = fichiers if fichiers is not None else {l.split(\"  \")[1]: l.split(\"  \")[0] for l in X.lister_empreintes(RACINE_DEPOT).splitlines()}\n    res = {\"chronometrage\": {\"secondes_par_repetition\": temps}, \"bloquants\": list(bloquants), \"jeu_permis\": not bloquants,\n           \"preenregistrement\": {\"sha256\": texte or B.EMPREINTE_PREREG}}\n    corps = {\"resultat\": res, \"fichiers_geles\": fg}\n    for cle in sans:\n        (res if cle in res else corps).pop(cle)\n    p = tmp_path / \"etape0.json\"\n    p.write_text(json.dumps(corps), encoding=\"utf-8\")\n    return p, sceller(p)"
+   }
+  ],
+  "source": "tests/test_organisme_idees_juge_idee_1_1_gardes_v1.py"
+ },
+ "tests/test_organisme_idees_juge_idee_1_1_lecture_v2.py": {
+  "ajout_fin": "\n\n\n# --- version 2 : M3, m1, m5, m7 -------------------------------------------------------------------------------------------\ndef test_strates_ecrites_d_apres_le_texte():\n    for b, s in LE.STRATES_TEXTE.items():\n        assert set(s[\"sur\"]) | set(s[\"hors\"]) == {\"V1\", \"V2\", \"V3\", \"V4\", \"V5\"} and not set(s[\"sur\"]) & set(s[\"hors\"])\n    assert LE.lignes_de_strate(\"La\", \"sur\") == [\"V5(0.4)\", \"V5(0.8)\", \"V5(1.2)\"]\n\n\ndef test_mcnemar_exact():\n    x, y = np.array([1] * 10 + [0] * 90), np.zeros(100, int)\n    assert LE.mcnemar_exact(x, y)[\"p\"] == pytest.approx(2 * 0.5 ** 10)\n    assert LE.mcnemar_exact(y, y)[\"p\"] == 1.0\n\n\ndef test_lecture_v2_rapportes_de_la_metrique():\n    rng = np.random.default_rng(np.random.SeedSequence(entropy=RACINE_ESSAI, spawn_key=(97, 907)))\n    res = LE.lire_v2(donnees_completes(rng), RACINE_ESSAI, B_=60)\n    assert set(res[\"secondaires_contre_J9_plus\"]) == {\"La-P contre La\", \"J9-P contre La\", \"J9-D contre J9+\", \"J9-D40 contre J9+\"}\n    assert set(res[\"rho_par_strate\"]) == {f\"{b}|{s}\" for b in (\"J9-P\", \"La\", \"Ld\") for s in (\"sur\", \"hors\")}\n    d = res[\"decomposition_du_prix_intervalles\"]\n    assert set(d) == {\"1 - rho_La\", \"rho_La - rho_Ld\", \"rho_Ld\"} and all(v[\"bas\"] <= v[\"haut\"] for v in d.values())\n    assert len(res[\"mcnemar\"]) == 15 * len(LE.PAIRES_MCNEMAR)\n    c = res[\"taux_des_cellules\"][\"Q8|J9-P\"]\n    assert {\"intervalle\", \"log_w_max\", \"log_w_mediane\"} <= set(c) and c[\"intervalle\"][0] <= c[\"taux\"] <= c[\"intervalle\"][1]\n    assert res[\"predictions\"][\"evaluation\"][\"P5\"] in (True, False, \"partielle\")\n\n\ndef test_m1_quantite_fatale_absente_refusee():\n    rec = {\"J9-D\": {\"promue\": False}}\n    with pytest.raises(GardeArret, match=\"quantité fatale\"):\n        LE.log_w_max(rec, \"J9-D\")\n    assert LE.log_w_max({\"J9-D\": {\"quantite_fatale\": -2.0}}, \"J9-D\") == -2.0\n\n\ndef test_m5_ecart_residuel_sur_j9_la_ld():\n    rng = np.random.default_rng(np.random.SeedSequence(entropy=RACINE_ESSAI, spawn_key=(97, 908)))\n    d = donnees_completes(rng)\n    for r in d[\"Q1\"][:20]:\n        r[\"ecart_residuel_La\"] = [1e-2] * 8\n    a = LE.audit(d, {})\n    assert a[\"part_ecart_residuel_superieur_2e-3\"] > 0\n",
+  "couples": [
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v1 as B\nfrom controle_ia.organisme_idees_juge import lecture_idee_1_1_v1 as LE\nfrom controle_ia.organisme_idees_juge import mutations_idee_1_1_v1 as MU",
+    "nouveau": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v2 as B\nfrom controle_ia.organisme_idees_juge import lecture_idee_1_1_v2 as LE\nfrom controle_ia.organisme_idees_juge import mutations_idee_1_1_v2 as MU"
+   },
+   {
+    "ancien": "    assert res[\"garde_P4\"][\"dent_H7_terme_projete\"][\"passee\"] and res[\"garde_P4\"][\"verdict\"] == \"nécessaire, montrée sur le terme projeté\"",
+    "nouveau": "    assert res[\"garde_P4\"][\"dent_H7_terme_projete\"][\"passee\"]\n    assert res[\"garde_P4\"][\"lectures\"] == {\"nécessaire, montrée sur le terme projeté\": True,\n                                           \"non éprouvée (dent du terme projeté de H7 manquée)\": False,\n                                           \"trou atteint par la grammaire (Hm ou Hg, juge complet sans garde)\": False}"
+   }
+  ],
+  "source": "tests/test_organisme_idees_juge_idee_1_1_lecture_v1.py"
+ },
+ "tests/test_organisme_idees_juge_idee_1_1_projection_v2.py": {
+  "couples": [
+   {
+    "ancien": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v1 as B",
+    "nouveau": "from controle_ia.organisme_idees_juge import banc_idee_1_1_v2 as B"
+   }
+  ],
+  "source": "tests/test_organisme_idees_juge_idee_1_1_projection_v1.py"
+ }
+}

@@ -1,5 +1,31 @@
 # État du programme
 
+**2026-11-16 vers 11:29 UTC — instance active de ce programme : Vast 60918148** (pilote MR-2 v14, étiquette `pilote-mr2-v74-v14-20261116`, 0,0522 USD/h, échéance 2026-11-17T04:26:21Z, GO-2026-11-14-14, R-2968) ; clés du pilote dans sa configuration jusqu'à la destruction (GO-2026-11-15-08) ; dossier d'envoi `/home/user/pilote-mr2-v74-envoi-v14` ; section 11 à l'échéance plus cinq minutes ou dès la fin (consignes v13 de la mère, V1 à V6). Étape 0 de l'idée 1.1 relancée (PID 612) ; jeu de l'idée 1.2 à relancer sous un addendum neuf.
+
+- Instance Vast 60860420 (pilote MR-2 v13) : arrêt (A) faute de phrase, détruite le 2026-11-16 à 02:32:15Z, absence prouvée (R-2962). Aucune instance active de ce programme. Jeu de l'idée 1.2 en cours sur processeur (PID 5755).
+
+**2026-11-16 vers 01:03 UTC — instance active de ce programme : Vast 60860420** (pilote MR-2 v13, étiquette `pilote-mr2-v74-v13-20261116`, 0,050 USD/h, échéance 2026-11-16T18:02:25Z, GO-2026-11-14-14, R-2961) ; clés du pilote dans sa configuration jusqu'à la destruction (GO-2026-11-15-08) ; dossier d'envoi `/home/user/pilote-mr2-v74-envoi-v13` ; section 11 à jouer à l'échéance plus cinq minutes ou dès la fin, sans attendre (consignes `consignes-mere-pilote-v13-v1.md`).
+
+- Instance Vast 60858032 (B bis, quatrième passe de répétition) : détruite le 2026-11-16 à 00:47:24Z, absence prouvée (R-2957). Aucune instance active de ce programme. Jeu de l'idée 1.2 en cours sur processeur (PID 5755).
+
+**2026-11-16 vers 00:35 UTC — instance active de ce programme : Vast 60858032** (B bis, quatrième passe de répétition, étiquette `bbis-t07-repetition-v4`, 1,193 USD/h, GO-2026-11-14-09, R-2953) ; destruction par identifiant avec `-y` et absence prouvée. Jeu de l'idée 1.2 en cours sur processeur (PID 5755, R-2951). Autonomie jusqu'à 08:13 UTC (GO-2026-11-15-07).
+
+**2026-11-15 vers 18:45 UTC — passation de changement de compte `registres/passations/2026-11-15-1844.md` (R-2920), qui prime** ; brief à coller sur le nouveau compte : `docs/procedures/brief-reprise-nouvelle-mere-2026-11-15-v4.md`. Aucune instance active de ce programme.
+
+- Instance Vast 60783204 (Neuron Lens, B-α, commande v5) : détruite le 2026-11-15 à 14:13:24Z, absence prouvée (R-2914). Aucune instance active de ce programme.
+- Instance Vast 60773264 (Neuron Lens, B-α, relance) : détruite le 2026-11-15 à 11:39:27Z, absence prouvée (R-2901). Aucune instance active de ce programme.
+- Instance Vast 60770175 (Neuron Lens, B-α, première course) : détruite le 2026-11-15 à 09:57:24Z, absence prouvée (R-2891). Aucune instance active de ce programme.
+**2026-11-15 vers 09:12 UTC — passation d'étape `registres/passations/2026-11-15-0912.md` (R-2880), qui prime** : voir son « Reste » et ses « Décisions attendues de Lazar ». Aucune instance active de ce programme.
+- Instance Vast 60760941 (B bis, répétition, troisième passe) : détruite le 2026-11-15 à 08:35:02Z, absence prouvée (R-2869). Aucune instance active de ce programme.
+- Instance Vast 60756203 (B bis, répétition) : détruite le 2026-11-15 à 07:31:13Z, absence prouvée (R-2844). Aucune instance active de ce programme.
+- Instance Vast 60671759 (Neuron Lens) : détruite le 2026-11-15 à 03:05:04Z, absence vérifiée (R-2836).
+
+**2026-11-14 vers 16:55 UTC — instance active de ce programme : Vast 60671759** (Neuron Lens, volet A, GO-2026-11-14-05, feu R-2793 ; RTX 4090 à 0,3956 USD/h ; minuterie PID 7134 et garde PID 7178 dans la session de la fille `session_016QhUrtahFZo57fZUcRReVA` ; destruction par identifiant avec `-y` et absence prouvée). Intouchables : 58936096, 58936099, 58936100, 60480302, 60599797, **60670453** (autre session), serveurs `poste-temoin-bailey-*`.
+
+**2026-11-14 vers 16:20 UTC — passation d'étape `registres/passations/2026-11-14-1617.md` (R-2787), qui prime** : `CODE-MOTS-ET-COUT-T06` et `AUDIT-FUITES-T07` inscrites ; code de B bis contre-lu et corrigé (« scellable avec mineurs », branche `prep/t07bbis-code-v1` `38c7203e`, hors `main`) ; Neuron Lens arrêtée faute de crédit Vast (6,68 USD, R-2783) ; phase A du compte 3 prête à remettre. Décisions attendues de Lazar : crédit Vast, jeton, prix console du pilote MR-2, R-V3 et les nœuds de la passation.
+
+**2026-11-14 vers 15:00 UTC (R-2768 à R-2779)** : nouvelle mère `session_016QhUrtmLyFWJP6Cy7rgfXH`. **`CODE-MOTS-ET-COUT-T06` inscrite** (14:55:41Z ; pièce v3 « coût présent », contre-lue scellable, banc 83/83 rejoué) ; **G8 fait, `AUDIT-FUITES-T07` inscrite** (14:57:54Z, copie octet pour octet depuis le coffre). Compte 3 : liste « qui a lu quoi » v2 et consigne du lecteur A versées, vérification courte « remissible » ; phase A à remettre par Lazar à une session neuve. Code de B bis : développeur neuf en cours, branche `prep/t07bbis-code-v1` hors `main`. Neuron Lens : fille reprise (`session_016QhUrtahFZo57fZUcRReVA`), commande v6 en cours. Suite d'essais : 6 225 passés, 12 échecs connus ou d'inventaire (R-2776).
+
 **2026-11-14, reprise (R-2768, R-2769)** : nouvelle mère `session_016QhUrtmLyFWJP6Cy7rgfXH` ; coffre de l'audit vérifié (16 sur 16), audit non rejoué ; dépense de la sonde v74 (0,099132 USD) inscrite.
 
 **2026-11-14, coffre (R-2767)** : les sorties de l'audit des fuites (fait, contre-lu « conforme ») sont dans le coffre scellé `coffre/audit-fuites-t07-v1` (branche orpheline, archive `2365af08…`) : **ne pas rejouer l'audit** ; G8 seul l'ouvre, après `CODE-MOTS-ET-COUT-T06`. Cette ligne prime sur le brief v3 et la passation sur ce point.
