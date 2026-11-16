@@ -1,5 +1,7 @@
 # État du programme
 
+- Instance Vast 60858032 (B bis, quatrième passe de répétition) : détruite le 2026-11-16 à 00:47:24Z, absence prouvée (R-2957). Aucune instance active de ce programme. Jeu de l'idée 1.2 en cours sur processeur (PID 5755).
+
 **2026-11-16 vers 00:35 UTC — instance active de ce programme : Vast 60858032** (B bis, quatrième passe de répétition, étiquette `bbis-t07-repetition-v4`, 1,193 USD/h, GO-2026-11-14-09, R-2953) ; destruction par identifiant avec `-y` et absence prouvée. Jeu de l'idée 1.2 en cours sur processeur (PID 5755, R-2951). Autonomie jusqu'à 08:13 UTC (GO-2026-11-15-07).
 
 **2026-11-15 vers 18:45 UTC — passation de changement de compte `registres/passations/2026-11-15-1844.md` (R-2920), qui prime** ; brief à coller sur le nouveau compte : `docs/procedures/brief-reprise-nouvelle-mere-2026-11-15-v4.md`. Aucune instance active de ce programme.
