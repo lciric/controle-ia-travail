@@ -1,0 +1,38 @@
+début de l'essai : 2026-11-16T17:14:24Z
+script essayé : 2e486465cae1e5793320490ef6078510257a5a9fc97e73c0e42159e167747445
+interpréteur : 3.13.18
+--- cas sains
+conforme : S1 audit déclenché (code 0) : audit R4 de la base (A) : déclenché
+conforme : S2 audit non déclenché (code 0) : audit R4 de la base (A) : non déclenché
+conforme : S3 ordre des options inversé (code 0) : audit R4 de la base (A) : déclenché
+conforme : S3b le lecteur n'a rien écrit dans le fichier
+--- artefacts : empreintes et compagnon
+conforme : A1 compagnon faux (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : empreinte b8585e2b60fb… ≠ compagnon (649b925bcee9…)
+conforme : A2 compagnon absent (code 1) : audit R4 de la base (A) : refus — compagnon base-a-t08.json.sha256 absent
+conforme : A3 compagnon d'un autre nom (code 1) : audit R4 de la base (A) : refus — compagnon base-a-t08.json.sha256 hors du format « <sha256>  base-a-t08.json » (une ligne)
+conforme : A4 compagnon de deux lignes (code 1) : audit R4 de la base (A) : refus — compagnon base-a-t08.json.sha256 hors du format « <sha256>  base-a-t08.json » (une ligne)
+conforme : A5 empreinte rendue par l'hôte autre (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : empreinte 275a44f9d40f… ≠ empreinte rendue par l'hôte (649b925bcee9…)
+conforme : A6 fichier altéré après son sceau (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : empreinte befbccb64e23… ≠ compagnon (275a44f9d40f…)
+conforme : A7 fichier altéré et rescellé (compagnon refait, hôte non) (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : empreinte befbccb64e23… ≠ empreinte rendue par l'hôte (275a44f9d40f…)
+conforme : A8 empreinte mal formée (majuscules) (code 1) : audit R4 de la base (A) : refus — empreinte rendue par l'hôte hors du format (64 chiffres hexadécimaux minuscules)
+--- artefacts : champ
+conforme : A9 champ audit_r4.declenche absent (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : champ « audit_r4.declenche » absent
+conforme : A10 champ audit_r4 absent (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : champ « audit_r4 » absent
+conforme : A11 declenche chaîne "true" (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : champ « audit_r4.declenche » de type str, booléen attendu (valeur non affichée)
+conforme : A12 declenche nombre 1 (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : champ « audit_r4.declenche » de type int, booléen attendu (valeur non affichée)
+conforme : A13 declenche null (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : champ « audit_r4.declenche » de type NoneType, booléen attendu (valeur non affichée)
+conforme : A14 audit_r4 booléen au lieu d'un objet (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : champ « audit_r4 » de type bool, objet attendu (valeur non affichée)
+conforme : A15 racine liste (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : racine de type list, objet attendu
+conforme : A16 clé declenche en double (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : clé en double dans un objet JSON (nom non affiché)
+--- artefacts : fichier
+conforme : A17 fichier illisible : JSON tronqué (code 1) : audit R4 de la base (A) : refus — base-a-t08.json illisible : texte UTF-8 ou JSON invalide (JSONDecodeError)
+conforme : A18 fichier illisible : octets non UTF-8 (code 1) : audit R4 de la base (A) : refus — base-a-t08.json illisible : texte UTF-8 ou JSON invalide (UnicodeDecodeError)
+conforme : A19 NaN dans le JSON (code 1) : audit R4 de la base (A) : refus — base-a-t08.json : constante non standard (NaN ou infini) dans le JSON
+conforme : A20 fichier absent (code 1) : audit R4 de la base (A) : refus — base-a-t08.json absent, ou pas un fichier ordinaire
+conforme : A21 lien symbolique (code 1) : audit R4 de la base (A) : refus — base-a-t08.json absent, ou pas un fichier ordinaire
+conforme : A22 autre fichier de la pièce (nom autre) (code 1) : audit R4 de la base (A) : refus — fichier nommé autrement que base-a-t08.json
+conforme : A23 appel sans --empreinte (code 1) : audit R4 de la base (A) : refus — appel invalide (attendu : --fichier CHEMIN/base-a-t08.json --empreinte SHA256)
+conforme : A24 option inconnue (code 1) : audit R4 de la base (A) : refus — appel invalide (attendu : --fichier CHEMIN/base-a-t08.json --empreinte SHA256)
+BILAN : 28 conformes sur 28
+ESSAI : TOUT CONFORME
+fin de l'essai : 2026-11-16T17:14:27Z
