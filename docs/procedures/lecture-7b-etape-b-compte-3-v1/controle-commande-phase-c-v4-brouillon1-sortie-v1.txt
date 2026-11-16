@@ -1,0 +1,74 @@
+v3 : 9d7889198238c171447a06f56f1a37beb4190572c3a9ceceb18144541c258d2e ; 52635 octets
+v4, brouillon 1 : f4bcf4064e7ab7d53538ce998c2d4745a1ac4387443505d82e8f7a01aec7c755 ; 54500 octets
+conforme : empreinte de la v3 égale à l'empreinte scellée
+lignes : v3 568, v4 581
+
+== 1. Différentiel ==
+-- plage 1 (replace) : v3 l. 1-1 -> v4 l. 1-1
+  - # Commande de la mère au compte 3 — phase C : l'étape B de T0.7 (appel unique) et son lecteur de verdict — v3
+  + # Commande de la mère au compte 3 — phase C : l'étape B de T0.7 (appel unique) et son lecteur de verdict — v4
+-- plage 2 (insert) : v3 l. 7-6 -> v4 l. 7-15
+  + - **Version 4** : la version 3 (`commande-compte-3-phase-c-v3.md`,
+  +   `9d7889198238c171447a06f56f1a37beb4190572c3a9ceceb18144541c258d2e`, scellée, répétée 53 sur 53, gardée, R12), plus un seul changement :
+  +   le bloc C5 remet au lecteur B, en plus de ses treize fichiers, `diag/$R7/sondes-t07.json` et son compagnon, que le bloc C2 place déjà
+  +   dans la racine et compare à la ligne `SONDES-T07` (quatorze fichiers et leurs compagnons, plus l'extrait : 29 fichiers au bordereau).
+  +   Raisons (décision de la mère R-2980, registre des décisions) : le texte scellé de T0.7 renvoie le lecteur du verdict à ce fichier
+  +   (l. 1539 : effectifs des « paires des jeux » ; l. 2659, défaut DF-05 : le vrai motif d'un échec de T7-P6 dès l'apprentissage y est
+  +   écrit, « où le lecteur du verdict (R13) le lit ») et la version 3 ne le lui remettait pas ; aucun de ses noms n'est touché par les
+  +   filtres du bloc 1C (contrôlé par programme, `rapport-commande-phase-c-v4-v1.md`). Rien d'autre ne change : noms du bac, des fichiers
+  +   de marque, des branches et des marqueurs **inchangés, à dessein** (mêmes raisons qu'à la version 3) ; phase A inchangée.
+-- plage 3 (insert) : v3 l. 26-25 -> v4 l. 35-36
+  +   **Version 4** : un sous-agent neuf, modèle B, de la session mère `session_016QhUrtmLyFWJP6Cy7rgfXH`, le 2026-11-16 à partir de
+  +   12:58:48Z (`date -u`) ; ni lecteur ni juge ; aucun fichier de `diag/`, `runs/` ou `donnees/` ouvert.
+-- plage 4 (replace) : v3 l. 37-37 -> v4 l. 48-49
+  - | `repetition_phase_c_jouet_v3.sh`, sortie `repetition-phase-c-jouet-sortie-v3.txt` | voir le rapport v2 | répétition de bout en bout des blocs de cette commande sur dépôts jouets, appel interrompu, poussées refusées et artefacts des gardes compris |
+  + | `repetition_phase_c_jouet_v4.sh`, sortie `repetition-phase-c-jouet-v4-sortie-brouillon1-v1.txt` | voir `rapport-commande-phase-c-v4-v1.md` | répétition de bout en bout des blocs de cette commande sur dépôts jouets, appel interrompu, poussées refusées et artefacts des gardes compris ; bordereau de 29 fichiers, `sondes-t07.json` et son compagnon compris |
+  + | `commande-compte-3-phase-c-v3.md`, `repetition_phase_c_jouet_v3.sh`, sortie `repetition-phase-c-jouet-sortie-v3.txt` | `9d788919…`, `8be57168…`, voir le rapport v2 | version 3, gardée (R12) : 53 sur 53 |
+-- plage 5 (replace) : v3 l. 118-118 -> v4 l. 130-130
+  - sha256sum docs/procedures/lecture-7b-etape-b-compte-3-v1/commande-compte-3-phase-c-v3.md
+  + sha256sum docs/procedures/lecture-7b-etape-b-compte-3-v1/commande-compte-3-phase-c-v4.md
+-- plage 6 (replace) : v3 l. 380-380 -> v4 l. 392-392
+  -          docs/verdicts/verdict-P3-bis-v1-issue.json "$CONSIGNE_B" "diag/$R7/lecture-t07.json" "runs/$R7/manifeste.json" "diag/$R7/audit-fuites-t07.json" "$IS"; do
+  +          docs/verdicts/verdict-P3-bis-v1-issue.json "$CONSIGNE_B" "diag/$R7/lecture-t07.json" "diag/$R7/sondes-t07.json" "runs/$R7/manifeste.json" "diag/$R7/audit-fuites-t07.json" "$IS"; do
+-- plage 7 (replace) : v3 l. 396-396 -> v4 l. 408-408
+  - # attendu : treize fichiers et leurs compagnons conformes, plus l'extrait (27 fichiers) ; « conforme : … » ; l'empreinte du bordereau
+  + # attendu : quatorze fichiers et leurs compagnons conformes, plus l'extrait (29 fichiers) ; « conforme : … » ; l'empreinte du bordereau
+-- plage 8 (replace) : v3 l. 484-484 -> v4 l. 496-496
+  -   echo "- P3C-001 : commande phase C v2 depuis $(lire "$BAC/debut-v2.txt") ; épreuve du crochet : $CROCHET ; $MODELES ; liste \`$LISTE\` (\`$EMPREINTE_LISTE\`) : attestation conforme."
+  +   echo "- P3C-001 : commande phase C v4 depuis $(lire "$BAC/debut-v2.txt") ; épreuve du crochet : $CROCHET ; $MODELES ; liste \`$LISTE\` (\`$EMPREINTE_LISTE\`) : attestation conforme."
+-- plage 9 (replace) : v3 l. 561-561 -> v4 l. 573-574
+  - - **Répétition de bout en bout** (CL3-07) : `repetition_phase_c_jouet_v3.sh`, sortie `repetition-phase-c-jouet-sortie-v3.txt` : blocs 0b-C,
+  + - **Répétition de bout en bout** (CL3-07) : `repetition_phase_c_jouet_v4.sh`, sortie `repetition-phase-c-jouet-v4-sortie-brouillon1-v1.txt`
+  +   (bordereau de 29 fichiers, `sondes-t07.json` et son compagnon compris ; version 3 : 53 sur 53, gardée) : blocs 0b-C,
+bilan : 9 plages ; 7 lignes ôtées ; 20 lignes ajoutées ; 561 lignes de la v3 gardées à l'octet
+conforme : neuf plages changées, une par couple du programme de couples
+conforme : seize blocs bash dans les deux versions
+blocs bash qui diffèrent : 0b-C, C5, F-C
+conforme : seuls les blocs 0b-C (nom du fichier), C5 (pièce et commentaire) et F-C (numéro de version au journal) diffèrent
+conforme : « bac-etape-b-compte-3-v2 » : même nombre d'occurrences (15)
+conforme : « variables-v2.sh » : même nombre d'occurrences (20)
+conforme : « appel-etape-b-lance-v2.txt » : même nombre d'occurrences (6)
+conforme : « bordereau-remise-v2.txt » : même nombre d'occurrences (8)
+conforme : « verdict/t07-etape-b-compte-3-v1 » : même nombre d'occurrences (4)
+conforme : « commande-compte-3-phase-a-v2.md » : même nombre d'occurrences (1)
+conforme : « << » : même nombre d'occurrences (49)
+conforme : le nom de brouillon ne figure nulle part dans la commande
+
+== 2. Filtres du bloc 1C sur la pièce ajoutée ==
+INTERDITS_NOMS_B = bbis|b-bis|etape-b-bis|lecture-sondes|resume\.json|scores-actions|activations|adaptateur|sondes-neuves|bras-attaque|mode-tenu|anteriorite-bras|etiqueteur|quarantaine|mesure-unanime
+conforme : INTERDITS_NOMS_B égal à celui de la v3
+conforme : INTERDITS_NOMS_B ne touche pas « diag/20261114-001352-t07-lecture-reel/sondes-t07.json » (0 ligne)
+conforme : INTERDITS_NOMS_B ne touche pas « diag/20261114-001352-t07-lecture-reel/sondes-t07.json.sha256 » (0 ligne)
+conforme : INTERDITS_NOMS_B ne touche pas « ./diag/20261114-001352-t07-lecture-reel/sondes-t07.json » (0 ligne)
+conforme : INTERDITS_NOMS_B ne touche pas « ./diag/20261114-001352-t07-lecture-reel/sondes-t07.json.sha256 » (0 ligne)
+INTERDITS_CONTENU_B = bbis|b-bis|etape-b-bis|étape b bis|b bis|bras-attaque|mode-tenu
+conforme : INTERDITS_CONTENU_B égal à celui de la v3
+conforme : INTERDITS_CONTENU_B ne touche pas « diag/20261114-001352-t07-lecture-reel/sondes-t07.json » (0 ligne)
+conforme : INTERDITS_CONTENU_B ne touche pas « diag/20261114-001352-t07-lecture-reel/sondes-t07.json.sha256 » (0 ligne)
+conforme : INTERDITS_CONTENU_B ne touche pas « ./diag/20261114-001352-t07-lecture-reel/sondes-t07.json » (0 ligne)
+conforme : INTERDITS_CONTENU_B ne touche pas « ./diag/20261114-001352-t07-lecture-reel/sondes-t07.json.sha256 » (0 ligne)
+conforme : témoin : INTERDITS_NOMS_B arrête bien « ./diag/20261114-001352-t07-lecture-reel/lecture-sondes-t06.json » (1 ligne)
+conforme : témoin : INTERDITS_NOMS_B arrête bien « ./donnees/x/sondes-neuves-t07.npz » (1 ligne)
+conforme : témoin : INTERDITS_CONTENU_B arrête bien « plan de l'étape B bis » (1 ligne)
+
+BILAN : TOUT CONFORME
