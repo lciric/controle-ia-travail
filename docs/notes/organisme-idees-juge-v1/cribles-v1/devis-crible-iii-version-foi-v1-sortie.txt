@@ -1,0 +1,73 @@
+== 0. Contrôles de cohérence de la section recopiée ==
+somme des postes (relais + machine) : 15.302276 ; total rapproché : 15.378197 ; écart : 0.075921
+appels : 16 = 16 (répondus + tronqués + échecs)
+somme des 16 durées : 2668.095 s ; manifeste fin - début : 2673 s ; écart : 4.905 s (les appels du pilote se sont suivis en série)
+heures de machine du pilote = coût / prix horaire : 1.57056 h = 5654.0 s ; hors appels : 2981.0 s
+
+== 1. Attendu par appel (règle : moyenne arithmétique par relais, prix public = configuration ici) ==
+opus55 : 1.057336 / 4 = 0.264334 USD par appel (brouillon : 0,80)
+fable52 : 10.019552 / 4 = 2.504888 USD par appel (brouillon : 1,60)
+fourchette (règle : plus petit et plus grand appel du pilote) : dollars par appel absents de la section lisible ; bornes qui s'en déduisent :
+  fable52 : plus petit appel <= 2.216780 (moyenne des 2 complets, 4.433560) ; plus grand >= 2.792996 (moyenne des 2 tronqués) ; tout appel <= plafond 3.00
+  opus55 : plus petit <= 0.264334 <= plus grand <= 1.057336 (total des 4)
+
+== 2. Sortie au-dessus de 80 % de la borne (règle : réserve de tronquage annoncée et sonde obligatoire) ==
+opus55 : aucun tronqué ; sortie du plus grand appel <= coût total / prix de sortie = 52866.8 jetons <= 71200 : non déclenchée
+fable52 : appel tronqué (raison d'arrêt = borne, [PILOTE] « Métrique ») : sortie = 64000 > 51200 : RÈGLE DÉCLENCHÉE
+
+== 3. Taux de réussite par appel (information ; ne change ni N ni aucun seuil, R-2992) ==
+opus55 : 4 répondus sur 4
+fable52 : 2 répondus sur 4
+deux relais ensemble (définition de « Seuil ») : 6 sur 8 = 0.7500
+  taux commun p = 0,75, monde complet = p^5 : P(monde complet) = 0.2373 ; P(n_c >= 16 sur 20) = 1.786e-07
+  par relais, Pr-2 1,00 (2 appels) et Pr-4 0,50 (3 appels) : P(monde complet) = 0.1250 ; P(n_c >= 16 sur 20) = 1.044e-11
+  réserve de l'étage 2 : P(3 tronqués ou plus sur les 20 appels d'un bras de Pr-4 | taux de tronquage 0.50) = 0.999799
+  arrêt du minimum (par relais) : probabilité 1.000000 ; mondes commencés attendus ≈ 9.71 (approximation dite) ; dépense attendue ≈ 78.14 USD (8.043332 par monde)
+
+== 4. Devis refait (attendu au coût moyen du pilote ; pire inchangé, plafonds) ==
+S          (fable52, 20 appels) : attendu 50.097760 ; pire 60.00
+D passe 2  (fable52, 20 appels) : attendu 50.097760 ; pire 60.00
+H passe 2  (fable52, 20 appels) : attendu 50.097760 ; pire 60.00
+passe 1    (opus55, 20 appels) : attendu 5.286680 ; pire 40.00
+B passe 2  (opus55, 20 appels) : attendu 5.286680 ; pire 40.00
+
+== 5. Durées (règle : durée mesurée au pilote ; bornes de 3 000 s et 7 200 s inchangées) ==
+opus55 : min 36.425 ; moyenne 68.387 ; max 109.396 s
+fable52 : min 388.807 ; moyenne 470.650 ; max 553.242 s
+mondes du pilote (4 appels en série) : {1: '674.313', 2: '584.730', 3: '780.744', 4: '628.308'} ; moyenne 667.024 s
+monde du crible, chemin critique passe 1 (Pr-2) puis D (Pr-4), S et H en même temps : {'attendu': '539.04', 'bas': '425.23', 'haut': '662.64'} s ; tout en série (information) : 1548.72 s
+  file de 4 mondes (attendu) : 2156.1 s = 35.9 min
+  file de 4 mondes (bas) : 1700.9 s = 28.3 min
+  file de 4 mondes (haut) : 2650.6 s = 44.2 min
+  file en série (information) : 6194.9 s = 103.2 min
+appel le plus long du pilote : 553.242 s ; <= 1 500 s : aucun nœud, borne par appel 3 000 s inchangée
+deux étapes en série au pire : 6000 s <= 7200 s
+pire cas d'une file : 28800 s ; garde de départ : 36000 s = 10.0 h (inchangée)
+machine : temps hors appels mesuré au pilote 2981.0 s ; prix relu 0.052222 USD/h
+  machine (attendu) : 5137.2 s = 1.4270 h -> 0.074520 USD
+  machine (bas) : 4682.0 s = 1.3005 h -> 0.067917 USD
+  machine (haut) : 5631.6 s = 1.5643 h -> 0.081692 USD
+  lecture littérale « durée par monde × cinq files » : 5676.2 s -> 0.082340 USD
+  file en série (information) : 9175.9 s -> 0.133107 USD
+  machine au pire de la garde (10 h) au prix relu : 0.522220 USD ; pire du devis 3.00
+
+== 6. Totaux ==
+crédits : attendu 160.866640 ; pire 260.00
+hors : attendu 0.074520 ; pire 3.00
+total : attendu 160.941160 ; pire 263.00
+sonde des gabarits (obligatoire) : attendu 3.033556 ; pire 7.00 (sur crédits)
+avec la sonde : crédits attendu 163.900196 ; pire 267.00 ; total pire 270.00
+parts : fable52 180.00 (part 180) ; opus55 80.00 (part 80) ; attendu fable52 150.293280 ; opus55 10.573360
+
+== 7. III-7 (règle écrite) ==
+sans sonde jouée : III-7 reste 1,05 à 1,25 ; dénominateur lu au pilote : 2.504888 ; une fois la sonde jouée : 1 + c1 / 2.504888 ± 0,05
+  information : si c1 valait le coût moyen d'un appel standard de opus55 (0.264334) : 1.1055
+  la fourchette 1,05 à 1,25 répond à c1 entre 0.125244 et 0.626222 USD
+
+== 8. Enveloppe de GO-2026-11-15-06 (1 275 USD au pire) ==
+lignes « calcul » de go.md qui citent GO-2026-11-15-06 : aucune
+lignes de depenses.md qui citent GO-2026-11-15-06 : aucune
+engagé sous l'enveloppe : 0.00 ; crible (iii) avec la sonde : 270.00 ; reste : 1005.00
+autres cribles aux textes actuels (pire) : {'(i) [NOTE]': '123.00', '(ii) [NOTE]': '483.00', '(iv) [NOTE]': '243.00', '(v) brouillon 9, avec sa sonde neuve': '204.67'} ; somme 1053.67
+cumul des cinq : 1323.67 contre 1 275 ; sans les deux sondes : 1308.60
+attendus : (iii) avec la sonde 163.97 contre 63,30 à [NOTE] ; enveloppe attendue de GO-2026-11-15-06 : 247,20

@@ -1,0 +1,59 @@
+Devis du crible (v), version qui fera foi v1 — sortie
+
+1. Rapprochement des montants transmis
+  quatre proposeurs + machine 60918148 : 15.302276 USD
+  + épreuve des clés 0.001164 + machine v13 0.074757 : 15.378197 USD ; total transmis 15.378197 ; écart 0.000000
+
+2. Attendu par appel = moyenne des coûts de tous les appels du pilote (règle (b))
+  Pr-1 argon    : 4 appels ; total public 0.494324 ; moyenne publique 0.123581 ; moyenne configuration 0.617905 USD
+  Pr-2 opus55   : 4 appels ; total public 1.057336 ; moyenne publique 0.264334 ; moyenne configuration 0.264334 USD
+  Pr-3 astra    : 4 appels ; total public 1.671750 ; moyenne publique 0.417938 ; moyenne configuration 0.417938 USD
+  Pr-4 fable52  : 4 appels ; total public 10.019552 ; moyenne publique 2.504888 ; moyenne configuration 2.504888 USD
+  Pr-4 : deux tronqués 5.585992 (moyenne 2.792996), deux complets 4.433560 (moyenne 2.216780) ; plafond de session 3,00
+  fourchette par appel (plus petit, plus grand coût d'un appel) : coûts par appel non transmis ; bornes seules : plus petit <= moyenne <= plus grand
+
+3. Attendu du crible, N = 20 mondes, 4 N = 80 appels (proposeurs seuls)
+  prix public              : par proposeur Pr-1 2.4716 ; Pr-2 5.2867 ; Pr-3 8.3588 ; Pr-4 50.0978 ; crédits 55.3844 ; hors crédits 10.8304 ; total 66.2148 ; part sur crédits 0.8364
+  prix de la configuration : par proposeur Pr-1 12.3581 ; Pr-2 5.2867 ; Pr-3 8.3588 ; Pr-4 50.0978 ; crédits 55.3844 ; hors crédits 20.7169 ; total 76.1013 ; part sur crédits 0.7278
+
+4. Borne par appel B_a (règle : plus petit multiple de 300 s >= 1,5 x plus long appel répondu, au plus 3 600 s)
+  plus long appel répondu : monde 2, fable52, 430.542 s ; 1,5 x = 645.8130 s
+  B_a = 900 s
+  plus long appel du pilote, tronqués compris : 553.242 s ; appels du pilote au-delà de B_a : 0
+
+5. Taux d'appels répondus du pilote lu avec cette B_a (section « Taille », à titre d'information)
+  répondus 14, tronqués 2, en échec 0 (aucun au-delà de B_a) : r = 14/16 = 0.8750
+  taux commun r : P(monde complet) = 0.9690 ; P(monde à quatre appels) = 0.5862 ; P(n_c >= 16 sur 20) = 0.9997
+  taux par proposeur (4 appels chacun ; Pr-1 1, Pr-2 1, Pr-3 1, Pr-4 1/2) : P(monde complet) = 1.0000 ; P(monde à quatre appels) = 0.5000 ; P(n_c >= 16 sur 20) = 1.0000
+  (appels indépendants supposés ; l'abandon d'un fournisseur après une panne de relais n'est pas compté)
+
+6. Budget de pire cas (règle de la section « Devis ») : barrières 6 000 s + 3 x (mise en place +
+   génération de 20 mondes + mesure de 20 mondes + rapatriement) + 3 x énumération du placebo + ceil(20/M) x B_a <= 61 200 s
+   Les quatre durées du journal d'états ne sont pas dans la section transmise : D = leur somme plus l'énumération ;
+   pour chaque case, plus grande valeur de D qui tient sous 17 h (D_max) ; D_max < 0 : non lançable quel que soit D
+  B_a =  900 s (règle) : M = 1 : appels 18000 s, D_max = 12400.0 s (3.444 h) ; M = 2 : appels 9000 s, D_max = 15400.0 s (4.278 h)
+  B_a = 1800 s : M = 1 : appels 36000 s, D_max = 6400.0 s (1.778 h) ; M = 2 : appels 18000 s, D_max = 12400.0 s (3.444 h)
+  B_a = 2400 s : M = 1 : appels 48000 s, D_max = 2400.0 s (0.667 h) ; M = 2 : appels 24000 s, D_max = 10400.0 s (2.889 h)
+  B_a = 3000 s : M = 1 : appels 60000 s, non lançable ; M = 2 : appels 30000 s, D_max = 8400.0 s (2.333 h)
+  B_a = 3600 s : M = 1 : appels 72000 s, non lançable ; M = 2 : appels 36000 s, D_max = 6400.0 s (1.778 h)
+  M retenu (règle) : 1 si D <= D_max(B_a, M = 1), sinon 2 si D <= D_max(B_a, M = 2), sinon « non lançable » et mot de la mère
+
+7. Machine dans l'attendu (règle (b)) : termes sans le facteur trois, appels à ceil(N/M) x moyenne, sur les mondes
+   du pilote, du plus long des quatre appels d'un monde (au plus B_a), x prix horaire relu
+  plus long appel par monde : 1 : 388.807 s ; 2 : 430.542 s ; 3 : 553.242 s ; 4 : 510.008 s ; moyenne 470.64975 s
+  M = 1 : appels 9412.995 s ; avec les barrières 4.2814 h, soit 0.223583 USD (sans les quatre durées non relevées) ; borne haute à 17 h : 0.887774 USD
+  M = 2 : appels 4706.498 s ; avec les barrières 2.9740 h, soit 0.155310 USD (sans les quatre durées non relevées) ; borne haute à 17 h : 0.887774 USD
+  somme sur les 4 mondes du plus long appel : 1882.599 s ; manifeste du run 12:14:34 -> 12:59:07 = 2673 s ; écart 790.401 s (information, non compté par la règle)
+
+8. Tolérance de la réflexion de Pr-1 (ligne « coût d'un appel ») : n'existe que si le plus grand rapport
+   coût compté / plafond (2,34) mesuré sur les appels de Pr-1 du pilote dépasse 1
+  total compté de Pr-1 sur 4 appels 2.471620 ; moyenne 0.617905 ; rapport moyen 0.2641 ; rapport par appel non transmis
+  pour qu'un appel dépasse 2,34, les trois autres devraient coûter ensemble au plus 0.131620 USD
+  aucun dépassement observé dans la section transmise : tolérance non retenue, l'arrêt reste (règle écrite)
+
+9. Pires cas (règle (a), inchangés) et enveloppe de GO-2026-11-15-06 (1 275 USD au pire)
+  kv1 (crédits) 104.39 ; kv2 (hors crédits) 100.28 ; total 204.67 USD
+  lignes « calcul » déjà inscrites sous GO-2026-11-15-06 : 0 ; dépense déjà portée : 0.00
+  ce crible seul : 204.67 <= 1275 : True
+  avec le crible (iii) tel que son brouillon 8 le chiffre (263 au pire + 7 de sonde) : 474.67 <= 1275 : True
+  avec (i) 123, (ii) 483, (iv) 243 de la note (plafonds de 2,00 non refaits) : 1323.67 ; reste sous 1275 : -48.67
