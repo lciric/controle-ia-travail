@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-16 vers 01:03 UTC — instance active de ce programme : Vast 60860420** (pilote MR-2 v13, étiquette `pilote-mr2-v74-v13-20261116`, 0,050 USD/h, échéance 2026-11-16T18:02:25Z, GO-2026-11-14-14, R-2961) ; clés du pilote dans sa configuration jusqu'à la destruction (GO-2026-11-15-08) ; dossier d'envoi `/home/user/pilote-mr2-v74-envoi-v13` ; section 11 à jouer à l'échéance plus cinq minutes ou dès la fin, sans attendre (consignes `consignes-mere-pilote-v13-v1.md`).
+
 - Instance Vast 60858032 (B bis, quatrième passe de répétition) : détruite le 2026-11-16 à 00:47:24Z, absence prouvée (R-2957). Aucune instance active de ce programme. Jeu de l'idée 1.2 en cours sur processeur (PID 5755).
 
 **2026-11-16 vers 00:35 UTC — instance active de ce programme : Vast 60858032** (B bis, quatrième passe de répétition, étiquette `bbis-t07-repetition-v4`, 1,193 USD/h, GO-2026-11-14-09, R-2953) ; destruction par identifiant avec `-y` et absence prouvée. Jeu de l'idée 1.2 en cours sur processeur (PID 5755, R-2951). Autonomie jusqu'à 08:13 UTC (GO-2026-11-15-07).
