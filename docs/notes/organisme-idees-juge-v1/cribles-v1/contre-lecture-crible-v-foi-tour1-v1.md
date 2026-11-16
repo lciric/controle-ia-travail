@@ -1,0 +1,54 @@
+# Contre-lecture de la version qui fera foi v1 du crible (v) : tour 1 (tour différentiel, R-2993) : lecteur C
+
+Lecteur : modèle C, neuf (n'a écrit aucune pièce). Pièce : `crible-v-version-foi-v1.md`, `ee7aab415c2a07d38967cfcd5d987ee5a5ba7bdc23b700e0a369b59ca96f4330` (égale à son compagnon). Brouillon de départ : `crible-v-brouillon9.md`, `c574e39d700aaff64c59efd0319aaf565c906ff2518304c6c2f2a752dcd5da23` (égale). Lecture du 2026-11-16, de 23:26Z à 23:31Z (`date -u`). Section « Pour les cribles » du verdict du pilote : seule part lue (transmise par la consigne) ; issue du pilote non ouverte ; rien sous `diag/`, `runs/`, `donnees/` ; aucun appel, aucune dépense, aucun fichier existant modifié.
+
+## Verdict : **corrections** (une correction mineure exigée ; aucune majeure ; deux remarques facultatives)
+
+## 1. Différentiel : fidèle
+- `diff -u brouillon9 foi-v1` refait : 13 zones, corps égal au fichier `diff-crible-v-b-vers-foi-v1.txt` (comparaison faite par programme, en-têtes exceptés). Les quinze remplacements nommés du programme d'application correspondent aux 13 zones ; chacune est listée dans la section « Écarts au brouillon 9 » (points 1 à 8).
+- Comparaison section par section (programme) : identiques au caractère près au brouillon 9 : Hypothèse, Prédiction chiffrée et signe attendu (V1 à V7), Métrique, Seuil, Plan d'analyse (toutes ses sous-sections), Critères de lecture gelés, Liste d'arrêt (ligne « coût d'un appel » comprise), Écarts, nœuds, Antériorités, Choix et doutes, Citations. Seules diffèrent : titre et en-tête, Statut, « En dix lignes » (8 et 9), Taille, Devis (remplacée), Lignes de GO (κv2 seulement), Contre-lecture (tête et entrée 9), Annexe A (phrases des points 10 et 11, points 13 et 14 neufs). Rien d'autre.
+- Les prédictions V1 à V7 sont donc identiques à l'octet. Aucune des valeurs changées n'est en dehors de ce que permet la table de l'étape 2 (montants du devis, B_a, M, tolérance de Pr-1 ; la faculté de refaire V1 et V6 n'est pas employée, dit).
+- Les 22 occurrences de « modèle C » du brouillon 9 sont inchangées ; les 3 nouvelles désignent des lecteurs. Aucune mention de rédacteur fausse. Aucun identifiant de modèle (seules les clés `opus55`, `fable52`, `argon`, `astra`, déclarées gelées). Validateur `controle_ia.prereg.problemes` : liste vide.
+- Empreintes : pièce, différentiel, programme d'application, les trois programmes et leurs trois sorties égaux à leurs compagnons et aux valeurs citées ; les trois sorties sont recopiées telles quelles dans l'annexe A (point 13) ; les deux programmes du point 14 ont bien les empreintes `f06bcfe7…` et `8c0432df…`. R-2993 (15:33:25Z) et R-3005 lus dans `registres/decisions.md` : conformes à ce que la pièce en dit.
+
+## 2. Chaque nombre neuf, recalculé par moi depuis la section du pilote (fractions exactes, hors programmes de la pièce)
+- Rapprochement : 10,019552 + 1,057336 + 2,471620 + 1,671750 + 0,082018 = 15,302276 ; + 0,001164 + 0,074757 = 15,378197 : égal au total transmis.
+- Moyennes par appel : Pr-1 0,617905 (configuration), 0,123581 (public, rapport 5) ; Pr-2 0,264334 ; Pr-3 0,4179375 (arrondi 0,417938) ; Pr-4 2,504888. Egales à la pièce.
+- Attendu à 20 mondes (80 appels), public : crédits (Pr-2 + Pr-4) 55,3844 ; hors crédits (Pr-1 + Pr-3) 10,8304 ; total 66,2148 ; part sur crédits 0,8364 ; Pr-4 : 0,7566. Compte de la configuration : hors crédits 20,7169 ; total 76,1013 ; part 0,7278. Egaux. Les deux parts (sur crédits de Claude, hors crédits) sont bien séparées dans la table, dans le point 8 de « En dix lignes » et dans les lignes κv1 et κv2.
+- Attendu total : 66,21 + machine (0,155 à 0,888, arrondis 0,16 à 0,89) + sonde 0,10 = 66,47 à 67,20 (« 66,5 à 67,2 ») ; au compte de la configuration 76,36 à 77,09 (« 76,4 à 77,1 »). Egaux.
+- Pires cas inchangés : 20 × 2,34 = 46,80 (Pr-1, Pr-3), 40 et 60 sur crédits, machine 3,00 : 100 sur crédits, 96,60 hors crédits, 196,60 ; avec la sonde : κv1 104,39, κv2 100,28, total 204,67 ; part sur crédits du pire cas 0,51.
+- B_a : plus long appel répondu 430,542 s (monde 2) ; × 1,5 = 645,813 ; multiple de 300 s suivant : 900 s. Aucun appel du pilote au-delà (maximum 553,242 s, tronqué). Egal.
+- Taux : 14/16 = 0,875 ; P(monde complet) = (1 − 0,125²)² = 0,968994 ; P(n_c ≥ 16 sur 20) = 0,999699 ; P(monde à quatre appels) = 0,875⁴ = 0,586182 ; par proposeur (Pr-4 à 1/2) : 0,5000 et P(≥ 16) arrondi à 1,0000. Egaux.
+- Budget : 6 000 + 3 D + 18 000 ≤ 61 200 donne D ≤ 12 400 s (M = 1) ; 6 000 + 3 D + 9 000 donne D ≤ 15 400 s (M = 2) ; garde 24 000 s + 3 D et 15 000 s + 3 D. Les quatre autres lignes de la table (1 800 à 3 600 s) refaites : 6 400 / 12 400 ; 2 400 / 10 400 ; non lançable / 8 400 ; non lançable / 6 400. Egales. Le placebo (3 × 0,291 s) est dans D, comme la règle l'écrit.
+- Machine : plus long appel par monde 388,807 ; 430,542 ; 553,242 ; 510,008, moyenne 470,64975 s ; × 20 = 9 413 s ; avec 6 000 s de barrières : 4,2814 h, soit 0,2236 USD ; à M = 2, 0,1553 ; 17 h : 0,8878. Somme des plus longs appels 1 882,599 s ; manifeste 2 673 s ; écart 790,401 s. Egaux.
+- Tolérance de Pr-1 : 0,617905 / 2,34 = 0,2641 ; 2,471620 − 2,34 = 0,131620. Egaux. Part de la moitié chère : f = 0,8828 (public), 0,7681 (configuration) ; S(k) = f (20 − k) / 20 ; plus grand k tel que S ≥ 0,25 : 14 et 13. Egaux.
+- Rapports aux plafonds de la règle (c) : 0,26 ; 0,13 ; 0,18 ; 0,83 ; 0,93 : justes.
+
+## 3. Enveloppe et échéance de GO-2026-11-15-06
+Ligne 339 de `registres/go.md` relue : 1 275 USD au pire, 247,20 attendus, échéance 2026-11-30, crédits de Claude au maximum, une ligne « calcul » par crible inscrite par la mère. Aucune autre ligne ne cite ce mot dans `registres/go.md` ni dans `registres/depenses.md` : « aucune ligne, aucune dépense » est exact. Sommes : 204,67 seul ; + 270,00 pour (iii) (sortie scellée de (iii) : 263 + 7 = 270, `crible-iii-version-foi-v1.md` `91b4bf30…` ; 474,67 ≤ 1 275 : tient) ; + 123 + 483 + 243 = 1 323,67 > 1 275 de 48,67 : ne tient pas ; nœud de Lazar au dernier crible (R-2992 point 3). Les lignes κv1 et κv2 portent l'échéance 2026-11-30 et le mot de GO-2026-11-15-06. Justes. Empreintes lues aujourd'hui : `go.md` `029cc2e2…`, `depenses.md` `08aa7d16…` : égales à la pièce.
+
+## 4. Correction exigée (mineure)
+
+**M1 — chiffres de devis périmés laissés dans des sections gelées, sans phrase de préséance.** Le tour est limité aux valeurs refaites par les règles écrites ; les sections « Plan d'analyse » (colonne « attendu par appel », 0,25 ; 0,80 ; 1,00 ; 1,60) et « Choix et doutes » (point 3 : « ≈ 50 à 53 % ... ≈ 48 USD attendus » ; point 4 : « ≈ + 73,30 attendus ») restent donc identiques, comme il se doit, et la section « Écarts » dit à juste titre que « Choix et doutes » est inchangée. Mais la pièce qui fera foi porte alors, à côté du devis refait (part sur crédits 0,84 ; attendus par appel 0,12 ; 0,26 ; 0,42 ; 2,50), des chiffres contraires sans qu'aucune phrase dise lequel l'emporte (seule la section « Estimation du brouillon 9 » le dit pour elle-même ; la réserve (8) ne vise que la phrase « 0,71 à 0,75 »). Un lecteur de la ligne de GO ou du point 3 de « Choix et doutes » peut s'y tromper sur la part de crédits. Correction : ajouter une réserve (9) à la section « Écarts au brouillon 9 », sans toucher aux sections gelées.
+
+Couple (ancien présent une seule fois, vérifié) :
+
+- ancien → `**Mentions de rédacteur** (R-2992, point 0) :`
+- nouveau → `**Préséance des chiffres de devis** (réserve (9)) : les chiffres de devis des sections gelées laissées telles (colonne « attendu par appel » de la table des proposeurs du « Plan d'analyse » ; points 3 et 4 de « Choix et doutes » : « ≈ 50 à 53 % », « ≈ 48 USD », « ≈ + 73,30 » ; phrase « 0,71 à 0,75 » de la section « Seuil ») sont des estimations d'avant le pilote : **la sous-section « Devis refait sur le pilote MR-2 (fait foi) » l'emporte** pour tout attendu, toute part sur crédits de Claude et toute durée ; les décisions de R-2977 et R-2992 que ces points rapportent ne changent pas.` puis une ligne vide, puis `**Mentions de rédacteur** (R-2992, point 0) :` (le nouveau paragraphe s'insère avant la ligne ancienne, qui est reprise telle quelle).
+
+La liste « Réserves de cette version » (numérotée (1) à (8), non comptée dans la pièce) et l'entrée « Contre-lecture 9 » restent justes ; le point 2 de « Écarts » reste juste, la réserve (9) s'ajoutant à la section sans changer d'autre ligne.
+
+## 5. Remarques facultatives (ne bloquent pas)
+- **F-1** : la ligne κv2 dit « aucun dépassement du plafond observé au pilote » comme un fait ; la section « Devis » dit juste « dans la section transmise » et la réserve (4) renvoie à `53c72308…` avant inscription. Couple facultatif : « aucun dépassement du plafond observé au pilote » → « aucun dépassement du plafond visible dans la section transmise du pilote, à confirmer sur la pièce de dépense du pilote avant inscription ». Les totaux seuls ne permettent pas d'exclure un appel de Pr-1 à plus de 2,34 si les trois autres coûtent ensemble au plus 0,13162 : improbable, mais non exclu.
+- **F-2** : `registres/decisions.md` est cité « `7889442a…` à la lecture » ; son empreinte aujourd'hui est `46c312ed…` (registre vivant, normal) ; aucune incidence.
+
+## 6. Points pour la mère
+1. Réserve (2) et (3) de la pièce, que je confirme : la règle gelée du budget de durée ne compte ni les états `pieces et arbre`, `secret`, `preparer`, `essai a blanc`, ni les 790 s de différence entre le manifeste et la somme des plus longs appels : le budget est optimiste ; à garder ou à faire changer par un écart (mot de Lazar ou de toi).
+2. Le budget est « non lançable » tant que les quatre durées du journal d'états de la machine du pilote ne sont pas relevées ; je n'ai pas pu vérifier les noms d'états (ils ne sont pas dans les pièces que j'ai le droit de lire) ; leur valeur devra être écrite dans une version suivante, sous un nom neuf (R12), puis de nouveau contre-lue.
+3. Le placebo est chronométré par un programme de remplacement déclaré (0,291 s) alors que l'étape 0 parle du programme de mesure : sans effet sur M (3 × 0,291 s contre 12 400 s) ; à remesurer à l'étape 0.
+4. V7 n'est pas nommée par R-2993 ; elle est identique à l'octet. A confirmer qu'elle est gelée.
+5. Pour Lazar, sur « lancer avant le 21 ? » : rien dans ce texte ne l'interdit ; ce qui bloque est la liste du rendu (durées à relever, tour différentiel, `sceller_prereg` et copie sous `prereg/`, code neuf contre-lu, sonde neuve et essai à blanc, lignes κv1 et κv2, phrase de Lazar). L'enveloppe de 1 275 USD ne tient pas pour les cinq cribles (1 323,67) : ordre d'inscription à décider ; échéance de l'accord au 30 novembre, et le prix public de Pr-1 double le 1er décembre.
+6. Après application de M1 : tour différentiel court sur le seul couple, puis `sceller_prereg`.
+
+## 7. Incidents
+Aucun. Une exécution de `controle_ia.prereg.problemes` en lecture (liste vide). Aucune machine, aucun appel, aucun fichier existant modifié.
