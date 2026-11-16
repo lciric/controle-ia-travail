@@ -1,0 +1,594 @@
+--- crible-v-brouillon9.md	2026-11-16 15:31:06.450147619 +0000
++++ crible-v-version-foi-v1.md	2026-11-16 23:25:15.557622218 +0000
+@@ -1,4 +1,4 @@
+-# Préenregistrement — crible (v) de l'organisme d'idéation : n'appeler les proposeurs chers que si les bon marché ne rendent que des copies (regroupement, sans juge) — brouillon 9
++# Préenregistrement — crible (v) de l'organisme d'idéation : n'appeler les proposeurs chers que si les bon marché ne rendent que des copies (regroupement, sans juge) — version qui fera foi v1
+ 
+ - Auteur : sous-agent neuf de la session mère, rédacteur de cette pièce (« modèle A » de cette pièce au sens de R-2598 ;
+   identité dite en conversation seulement). Je n'ai écrit ni la note des idées originales, ni le relevé, ni les fiches, ni le
+@@ -32,6 +32,15 @@
+   ni les brouillons 2 à 8, ni aucun des huit rapports, ni aucune pièce citée ; son modèle est dit à la session mère seulement,
+   aucun identifiant de modèle dans ce texte pour ce tour), écrit et scellé le 2026-11-16T15:31:06Z (`date -u`) ; aucun commit, aucune poussée
+   (section « Contre-lecture »).
++- **Version qui fera foi v1** : écrite par un rédacteur neuf du modèle A (lettre de R-2598 ; il n'a écrit ni le brouillon 1, ni
++  les brouillons 2 à 9, ni aucun des neuf rapports, ni aucune pièce citée hors les quatre programmes de cette version ; aucun
++  identifiant de modèle dans ce texte), le 2026-11-16 de 23:09 à 23:25 UTC (`date -u`), à partir du brouillon 9
++  (`crible-v-brouillon9.md`, `c574e39d700aaff64c59efd0319aaf565c906ff2518304c6c2f2a752dcd5da23`, scellé comme pièce de travail, jugé scellable au tour 9) ; prédictions
++  V1 à V6 gelées dans la rédaction du brouillon 9 par R-2993, **non changées** ; seuls changent, par les règles écrites
++  du brouillon 9, les attendus du devis, la borne par appel B_a, la règle de M, le budget de durée, la garde de départ, la
++  probabilité d'atteindre le minimum (information) et les mots de la ligne κv2 sur la tolérance de Pr-1 ; écarts listés un à
++  un (section « Écarts au brouillon 9 ») ; différentiel `diff-crible-v-b-vers-foi-v1.txt` ; dépôt lu sur `main` (tête
++  `fc727e80`) ; aucun commit, aucune poussée.
+ - Commit du code d'analyse : **aucun à ce jour**. Le code s'écrit après la contre-lecture de ce texte et son scellement ; ses
+   empreintes entrent dans un addendum d'empreintes scellé avant tout jeu, qui ne change rien d'autre.
+ - Documents qui font foi (chemin, empreinte entière) :
+@@ -44,7 +53,14 @@
+     citées à travers [RELEVÉ] et [NOTE] ;
+   - registre des GO, ligne GO-2026-11-15-06 (l. 339) : `registres/go.md` au commit `377a2a0c`
+     (`4bcec4a0408499477babb133f7184a159928ca2f35c5bc3188666e5a81264568`) ; registre des décisions : R-2851, R-2873, R-2875,
+-    R-2883, R-2968 à R-2970, R-2977 et R-2992 (décisions de la mère sur les choix de ce texte ; R-2992 amende R-2977), R-2981, R-2982 (registre vivant) ;
++    R-2883, R-2968 à R-2970, R-2977 et R-2992 (décisions de la mère sur les choix de ce texte ; R-2992 amende R-2977), R-2981, R-2982, R-2993 (gel des prédictions avant toute lecture du pilote)
++    et R-3005 (GO de Lazar sur le verdict du pilote ; devis des cribles à refaire) (registre vivant, `7889442a…` à la lecture) ;
++  - section « Pour les cribles » du verdict du pilote MR-2 v14 (verdict `verdict-issue-pilote-mr2-v14-v2.md`,
++    `e64458e82bae1d03e40656ad3b65456769eefd2603a7306e9a7d401eba8e1a3d`, branche `verdict/pilote-mr2-v74-v14-v1`, empreinte reprise
++    de GO-2026-11-16-08, non vérifiée par moi) : **seule part du verdict lue**, transmise par la consigne de la mère (le verdict
++    n'a pas été ouvert), recopiée à l'annexe A, point 13 — **[VERDICT-CRIBLES]** ; registre des dépenses `registres/depenses.md`,
++    lignes 478 à 480 (montants du pilote ; base de prix : celle de la configuration ; `08aa7d16e225679031dfa6ff6f06a2d0a0b9b95e2db1f00de1613dbc78020e59`
++    à la lecture) ;
+   - texte scellé du pilote MR-2, candidat 6 (branche `prep/pilote-mr2-compte-organisme-v1`) :
+     `docs/notes/organisme-multi-generations-v1/pilote-v1/preenregistrement-pilote-conditionnelles-v1-candidat6-compte-organisme.md`
+     (`8aa33014667da569ec934459d7bc1b1f6b54efa5c2145a6e5bdce5f7fa74603e`) — **[PILOTE]** (bloc gelé, « Dessin », « Métrique »,
+@@ -87,18 +103,22 @@
+     (`8cad43714b562e28238a92200d6315b1769d8bdf7e9f0a8d72dfe2bc9b37700e`) ; validateur `src/controle_ia/prereg.py`
+     (`3b2e3ee56463f30ffd3c549e7fe480fea574c707581bcf30098bf38f4980c306`).
+ 
+-**Statut.** Brouillon 9, **contre-lu huit fois** (tours 1 à 8, corrections appliquées, section « Contre-lecture ») ; **non scellé
+-comme texte qui fait foi** (R1, R2) ; contrôle des couples du tour 8 (différentiel limité aux endroits touchés, C8-01 et C8-02, plus l'entrée « Contre-lecture 8 ») à faire
+-avant scellement (point pour la mère 3 du rapport du tour 8). Aucune dépense, aucun appel de modèle, aucun monde tiré.
+-L'accord de dépense GO-2026-11-15-06 (enveloppe des cinq cribles : 247,20 USD attendus, 1 275 au pire, crédits de Claude
+-employés au maximum) **n'autorise encore aucun appel** : la ligne « calcul » propre à ce crible s'inscrit par la mère sur un
+-devis refait d'après le coût mesuré du pilote MR-2 et contre-lu, citant ce mot (lecture de la mère, l. 339). Prédictions et
+-devis de ce brouillon sont écrits **avant** toute lecture du pilote MR-2, joué ce jour (machine 60918148 détruite, R-2981 ;
+-R-2968 à R-2970) ; la version qui fera foi les refera sur les taux et coûts mesurés du pilote, **en déclarant ce qui en a été
+-lu**. Brouillon 2 : le pilote MR-2 est fini et sa machine détruite (R-2981) ; son issue et son taux de réussite par appel ne
+-sont pas lus ici, aucune donnée du pilote n'entre dans ce brouillon ; ce qui en sera refait suit les règles écrites d'avance
+-(« Étapes », point 2 ; « Taille »). Validateur `controle_ia.prereg.problemes` : aucun défaut sur ce brouillon 9 (vérifié avant
+-son scellement comme pièce de travail).
++**Statut.** **Version qui fera foi v1**, écrite sur le brouillon 9, **contre-lu neuf fois** (tours 1 à 9 ; le tour 9 le juge
++scellable sans correction, section « Contre-lecture ») ; **scellée ici comme pièce de travail** ; elle fera foi après le tour
++différentiel que demande R-2993 (contrôle limité aux écarts de la section « Écarts au brouillon 9 »), son scellement par
++`sceller_prereg` et sa copie sous `prereg/` (R1, R2). Aucune dépense, aucun appel de modèle, aucun monde tiré. L'accord de
++dépense GO-2026-11-15-06 (enveloppe des cinq cribles : 247,20 USD attendus, 1 275 au pire, crédits de Claude employés au
++maximum) **n'autorise encore aucun appel** : les lignes « calcul » κv1 et κv2 s'inscrivent par la mère sur ce devis refait et
++contre-lu, citant ce mot (lecture de la mère, l. 339). **Ce qui a été lu du pilote MR-2 v14** (déclaré, consigne de la mère,
++R-3005) : la seule section [VERDICT-CRIBLES] (comptes d'appels, durées par appel, heures du manifeste, coûts par proposeur et de
++la machine, champ `corps.temoin_positif`, information sur les deux appels tronqués), recopiée à l'annexe A, point 13, et les
++lignes 478 à 480 du registre des dépenses (base de prix des montants) ; rien d'autre (issue non ouverte). **Les prédictions V1
++à V6 ont été gelées avant cette lecture** (R-2993, inscrit à 2026-11-16T15:33:25Z, avant le lancement du lecteur du pilote) et
++ne changent pas : elles restent écrites sans aucune donnée du pilote ; V7, que R-2993 ne nomme pas, ne change pas non plus
++(aucune règle ne la refait) ; le témoin positif est recopié à titre d'information et n'entre dans aucun chiffre. Le budget de
++durée reste **« non lançable »** par sa règle écrite tant que quatre durées du journal d'états de la machine du pilote,
++absentes de [VERDICT-CRIBLES], ne sont pas relevées (section « Devis »). Validateur `controle_ia.prereg.problemes` : aucun
++défaut sur cette version (vérifié avant son scellement comme pièce de travail).
+ 
+ ## 0. En dix lignes
+ 
+@@ -120,18 +140,83 @@
+    K1 de plus de 0,01 nat), épargne ≥ 0,55 du coût des proposeurs, et perd au moins une composante certifiée dans 4 mondes ou
+    plus (confiance 0,45) ; la comparaison au placebo sera probablement « non éprouvable » : le crible
+    informerait alors surtout sur l'ablation (QO1, rapportée sans verdict, étage 5), non sur la règle (« H-v non éprouvée au crible », section « Critères de lecture gelés »).
+-8. **Devis (brouillon, estimé)** : 73,30 USD « attendus » selon [NOTE], **inférieurs à la borne basse de ma propre fourchette (79,95 à 92,75 aux prix publics ; ≈ 108 à 129 au compte de la configuration, qui est celui de la part et de la ligne de GO)** (48 sur crédits de Claude, 25,30 hors crédits selon [NOTE] ; mes
+-   fourchettes : 80 à 93) ; **196,60 au pire** à 20 mondes (100 sur crédits, 96,60 hors crédits) ; **204,67** avec la sonde neuve, exigée (104,39 sur crédits, 100,28 hors crédits ; point 8 de « Choix et doutes », R-2992)
+-   ; à 20 mondes, au-dessus des 183 de [NOTE] (+ 8,07 par la sonde neuve ; l'appartenance à l'enveloppe de GO-2026-11-15-06 reste à établir sur le cumul des cinq cribles, section « Devis ») ; l'écart de 13,60 entre 196,60 et 183 vient de ce que les plafonds de session de Pr-1 et Pr-3 sont
+-   2,34 et non 2,00 dans le bloc gelé de [PILOTE].
+-9. **Durée** : ≈ 7 à 10 heures de machine ; le pire cas par monde de `jouer` au pilote (10 800 s) ne tient pas sur 20 mondes
+-   dans la minuterie de 17 h : borne par appel B_a et nombre M de mondes à la fois fixés avant le scellement
+-   d'après la durée mesurée du pilote, budget de pire cas ≤ 17 h (section « Devis », « Durée ») ; le code est neuf, la date de
+-   lancement en dépend.
++8. **Devis (refait sur les coûts mesurés du pilote MR-2, règle d'avance de la section « Devis »)** : **≈ 66,5 à 67,2 USD
++   attendus** aux prix publics (proposeurs 66,21, dont 55,38 sur crédits de Claude et 10,83 hors crédits ; machine 0,16 à 0,89 ;
++   sonde neuve 0,10) ; 76,10 pour les proposeurs au compte de la configuration (Pr-1 y est cinq fois plus cher) ; **196,60 au
++   pire** à 20 mondes (100 sur crédits, 96,60 hors crédits) et **204,67** avec la sonde neuve exigée (κv1 104,39 sur crédits,
++   κv2 100,28 hors crédits ; point 8 de « Choix et doutes », R-2992), inchangés (règle (a)) ; au-dessus des 183 de [NOTE]
++   (+ 13,60 par les plafonds de 2,34 de Pr-1 et Pr-3 du bloc gelé de [PILOTE], + 8,07 par la sonde) ; enveloppe de
++   GO-2026-11-15-06 : ce crible y tient seul (aucune ligne encore inscrite sous ce mot) et avec (iii) (474,67) ; les cinq
++   ensemble non (≈ 1 323,67 contre 1 275) : nœud de Lazar au dernier crible (R-2992, point 3 ; section « Devis »).
++9. **Durée** (refaite sur le pilote) : **B_a = 900 s** par appel, donc par monde (les quatre appels d'un monde partent
++   ensemble ; plus long appel répondu du pilote 430,542 s) ; appels au pire 20 × 900 s = 5 h à M = 1 ; **M = 1** si les durées
++   de mise en place, de génération et de mesure de 20 mondes et de rapatriement, plus l'énumération du placebo (0,291 s), font
++   au plus 12 400 s, M = 2 jusqu'à 15 400 s ; ces quatre durées ne sont pas dans la section lue du verdict : budget **« non
++   lançable » tant qu'elles ne sont pas relevées** (règle écrite) ; garde de départ : 24 000 s + 3 D à M = 1 (section
++   « Devis ») ; appels attendus ≈ 2 h 37 min ; le code est neuf, la date de lancement en dépend.
+ 10. **Nœuds** : règle de composition à l'exécution essayée, non adoptée (GO-2026-11-15-06) ; au-delà de la génération 1, elle
+     dépendrait des verdicts par l'archive ([V3] § 4.3, N-058) ; choix tranchés par la mère (R-2977, puis R-2992 pour les points
+     restés ouverts et pour N = 20 ; section « Choix et doutes »).
+ 
++## Écarts au brouillon 9 (version qui fera foi v1)
++
++Texte de départ : `crible-v-brouillon9.md` (`c574e39d700aaff64c59efd0319aaf565c906ff2518304c6c2f2a752dcd5da23`), scellé comme pièce de travail le
++2026-11-16T15:31:06Z, jugé scellable au tour 9 (`contre-lecture-crible-v-b7-tour3-v1.md`, `0b4fdd00c8ac7ed4cfa8a806ff3364158628975c735e8669f806746f0e3ee8ac`).
++Programme d'application : `appliquer-version-foi-crible-v-v1.py` (même dossier, empreinte dans son compagnon `.sha256`) :
++il vérifie l'empreinte du brouillon 9 et des pièces recopiées, applique les remplacements nommés ci-dessous (chaque ancien
++présent une seule fois, aucun chevauchement) et écrit une cible neuve ; différentiel complet : `diff-crible-v-b-vers-foi-v1.txt`.
++**Écarts, un à un** :
++
++1. Titre (« version qui fera foi v1 ») ; en-tête (ligne « Version qui fera foi v1 ») ; documents qui font foi ([VERDICT-CRIBLES],
++   registre des dépenses l. 478 à 480, R-2993, R-3005) ; paragraphe « Statut » (ce qui a été lu du pilote, gel de V1 à V6).
++2. Cette section.
++3. « En dix lignes », points 8 (devis) et 9 (durée), refaits.
++4. Section « Devis » : titre ; sous-section neuve « Devis refait sur le pilote MR-2 (fait foi) » : attendus et parts (règle
++   (b)), pires cas et montants des lignes inchangés (règle (a)), règle (c), tolérance de la réflexion de Pr-1 non retenue (ligne
++   « coût d'un appel »), B_a, table du budget, règle de M, garde de départ, machine attendue, enveloppe ; l'estimation du
++   brouillon 9 est gardée sous un sous-titre qui dit qu'elle ne fait plus foi, les règles écrites d'avance qu'elle porte restant
++   en vigueur.
++5. Section « Taille » : probabilité d'atteindre le minimum refaite sur le taux du pilote (information).
++6. « Lignes de GO proposées » : κv2, clause de la tolérance de Pr-1 (non retenue) ; montants inchangés.
++7. Section « Contre-lecture » : tête (tours 1 à 9) ; entrée « Contre-lecture 9 ».
++8. Annexe A : la phrase « À recopier en entier… » dite faite ; la phrase du point 11 sur la probabilité d'atteindre le minimum
++   renvoie au point 13 ; points 13 ([VERDICT-CRIBLES] recopiée ; programmes et sorties du devis, du placebo et de la part de la moitié chère) et 14 (programmes
++   `comptes_cribles_v2.py` et `compte_certifiees_mr2_v1.py` recopiés en entier, empreintes vérifiées) neufs.
++
++**Inchangés** (le différentiel le montre) : H-v, H-v-a et les hypothèses de travail ; les prédictions **V1 à V7** (rédaction,
++chiffres, zones, confiances ; V1 à V6 gelées par R-2993 ; V7, que R-2993 ne nomme pas, n'est refaite par aucune règle) ; la
++faculté de l'étape 2 de refaire V1 et V6 après lecture du pilote **n'est pas employée** (R-2993) : V1 et V6 restent écrites
++avant toute lecture du pilote ; ε, ε_strat, 0,8, la définition de copie ; la métrique ; N = 20, le minimum de 16, la définition
++du monde complet, la table W_min ; les seuils ; les étages et leurs verdicts, l'ablation (étage 5) rapportée sans verdict
++(R-2992, point 2) ; la liste d'arrêt entière, la ligne « coût d'un appel » comprise (tolérance non retenue : forme par défaut),
++et la règle d'abandon d'un fournisseur reprise du pilote, gardée telle (R-2993) ; les graines ; la partie A ; les étapes ;
++« Écarts, nœuds » ; antériorités ; « Choix et doutes » ; les plafonds, les pires cas et les montants des lignes de GO. III-7
++est une prédiction du crible (iii) : sans objet ici.
++
++**Mentions de rédacteur** (R-2992, point 0) : les 22 occurrences de « modèle C » du brouillon 9 relues une à une ; celles qui
++désignent un rédacteur de corrections (en-tête, ligne « Brouillon 2 » ; entrées « Contre-lecture 1, 2, 4 et 5 ») portent déjà
++« modèle A » et la correction de R-2992 ; les autres désignent des lecteurs (modèle C, juste) ; aucune mention fausse ne reste,
++aucune ligne n'est changée à ce titre ; le rédacteur de cette version est du modèle A.
++
++**Réserves de cette version** : (1) les durées de mise en place, de génération, de mesure et de rapatriement ne sont pas dans
++[VERDICT-CRIBLES] : par la règle écrite, le budget est « non lançable », mot de la mère, tant qu'elles ne sont pas relevées sur
++les états nommés (section « Devis ») ; la garde de départ reste sous forme littérale ; une version suivante, sous un nom neuf
++(R12), écrira leurs valeurs ; (2) les états `pieces et arbre`, `secret`, `preparer` et `essai a blanc` de la machine ne tombent
++dans aucun des cinq termes de la règle du budget, que les états consécutifs bornent : le budget ne les compte pas (règle gelée ;
++point pour la mère) ; (3) le manifeste du run du pilote couvre 790,401 s de plus que la somme, sur ses quatre mondes, du plus
++long appel de chaque monde ; ce temps n'est pas un terme de la règle (point pour la mère) ; (4) fourchette par appel non
++refaite et plus grand rapport coût compté / plafond de Pr-1 non transmis : à lire sur la pièce de dépense du pilote
++(`53c72308…`, R-2993) avant l'inscription des lignes ; un rapport au-dessus de 1 ferait refaire ce texte par la même règle ;
++(5) énumération du placebo chronométrée par un programme de remplacement déclaré (0,291 s), le programme de mesure n'étant pas
++écrit : à remesurer par lui à l'étape 0 ; (6) attendu de la sonde neuve (0,10 USD) non refait, aucune règle ne le visant ;
++(7) Pr-4 tronqué dans 2 appels sur 4 au pilote (5,585992 USD des 10,019552 de ce proposeur) : un appel tronqué compte dans les
++dollars et dans aucune couverture ; la sensibilité « mondes à quatre appels seulement » ne portera probablement que sur la
++moitié environ des mondes (section « Taille ») ; (8) la phrase de la section « Seuil » qui lit S_R ≥ 0,25 en nombre de mondes
++(« la moitié chère pèse 0,71 à 0,75 du coût ») repose sur les prix de [NOTE] ; aux moyennes du pilote, la moitié chère pèse
++0,8828 de l'attendu des proposeurs aux prix publics (0,7681 au compte de la configuration), et S_R ≥ 0,25 revient à k_R ≤ 14
++(k_R ≤ 13 au compte de la configuration) sous la même approximation (`part-chere-crible-v-foi-v1.py`, `3e6ca9e7c158f6745bd303ba006d3fb35e176984dda6fe0aa88f84765856f943`, sortie
++`806e43313abb4f1401226f4d5c4760cc1e7d9375fb877a6bf98b52f6676f2f00`, annexe A, point 13) ; information seulement : le seuil 0,25, l'étage 3 et la phrase gelée ne changent pas.
++
+ ## Hypothèse
+ 
+ **Contexte.** La fiche argon-p2-05 (point 1 ; [RELEVÉ] § 4.3, § 4.2 et § 6 ; [NOTE] § 3 (v)) propose d'appeler d'abord la
+@@ -355,7 +440,12 @@
+ Fisher à 20 mondes ; 0,55 à 12 ; 0,89 à 24). Pour ce crible, la lecture n'est pas un test de Fisher : si chaque monde perd avec
+ la probabilité p, une « perte établie » (W_R ≥ 4) se voit avec la probabilité 0,13 à p = 0,10, 0,59 à p = 0,20, 0,80 à p = 0,26 **quand les 20 mondes sont à risque (la règle n'appelle jamais les chers) ; sous la prédiction V1 (k_R = 3), 17 mondes seulement peuvent perdre : 0,24 à p = 0,15, 0,68 à p = 0,26, 0,90 à p = 0,35 (loi binomiale exacte, à recopier par programme en annexe)**
+ (annexe A, point 6) ; une perte d'un monde sur vingt passe presque toujours inaperçue. **À 24 mondes, pour comparaison seulement** (raison de N = 20 ; W_min = 5 ; loi binomiale exacte, à recopier par programme en annexe) : « perte établie » avec la probabilité 0,29 à p = 0,15 et 0,79 à p = 0,26 quand les 24 mondes sont à risque, 0,20 et 0,67 sous k_R = 3 (21 mondes à risque), contre 0,35 et 0,80 à 20 mondes et 0,24 et 0,68 sous k_R = 3 : **aucun gain de puissance** à 24 mondes, pour + 20 % de coût ; avec la définition du monde complet de la section « Métrique », le minimum de 0,8 × N est atteint avec la probabilité que donne la grille de l'annexe A, point 11 (sortie 4), selon le taux d'appels répondus par appel : à N = 20, 0,75 à 0,70, 0,91 à 0,75, 0,98 à 0,80, 0,9985 à 0,85 (à lire sur le taux du pilote, à titre d'information ; la grille suppose des appels indépendants et ne compte pas l'abandon d'un fournisseur après une seule panne de relais : la probabilité que le crible aille à son terme est plus basse, non chiffrée ici). **Crible d'un grand effet** : « sans perte
+-observée » ne dit rien d'une perte rare. La version qui fera foi refait ce compte sur les taux du pilote à titre d'information ;
++observée » ne dit rien d'une perte rare. **Refait sur le taux du pilote** (version qui fera foi, à titre d'information ; sortie du devis, point 5) : 14 appels répondus,
++2 tronqués, 0 en échec sur 16, aucun au-delà de B_a = 900 s, soit r = 0,875 : P(monde complet) = 0,9690, P(n_c ≥ 16 sur 20) =
++0,9997, P(monde à quatre appels) = 0,5862 ; aux taux par proposeur (quatre appels chacun ; Pr-4 à 1/2, les trois autres à 1) :
++P(n_c ≥ 16 sur 20) = 1,0000 (arrondi) et P(monde à quatre appels) = 0,5000 ; mêmes réserves que la grille (appels
++indépendants, abandon d'un fournisseur après une panne de relais non compté), et la sensibilité « mondes à quatre appels
++seulement » ne portera probablement que sur la moitié environ des mondes ;
+ **N = 20 dans tous les cas, gelé dès ce texte** (décision de la mère, R-2992, qui retire la règle « 24 mondes si le taux d'appels répondus par appel du pilote est sous 0,95 » de R-2977 : 24 mondes ne gagnent rien en puissance, ci-dessus, coûtent 20 % de plus et rendent le budget de durée probablement intenable, section « Devis ») ; pas de 24, pas de 30. Le taux d'appels répondus du pilote ne sert plus qu'à la probabilité d'atteindre le minimum (ci-dessous) ; il se lit sur les appels du pilote (comptes d'appels répondus, tronqués, en échec, et durées ; jamais une couverture ni une issue), tout appel du pilote plus long que B_a étant compté en échec. La définition du « monde complet » (section « Métrique ») et le minimum 0,8 × N (section « Seuil ») sont **gelés dès ce texte** et ne se recalculent pas ; seule la probabilité d'atteindre le minimum est recalculée par programme sur ce taux et écrite en annexe, à titre d'information. Les seuils de perte suivent la table « seuils par n_c » de la section « Seuil » (ci-dessus).
+ 
+ ## Critères de lecture gelés
+@@ -414,7 +504,110 @@
+ | minuterie de la machine : moins que le budget de pire cas de la table de durée (valeur écrite, ⌈N/M⌉ × B_a compris, N = 20) restante avant l'échéance | arrêt (A) sans appel | marge suffisante | échéance proche simulée : arrêt |
+ | appel plus long que B_a | appel coupé et compté « échec » (journalisé, jamais repris) ; le crible continue | appel mené à son terme sous B_a | appel simulé de B_a + 1 s : coupé et compté échec ; coupure sans trace dans le journal : arrêt |
+ 
+-## Devis (brouillon ; tout est estimé sauf les plafonds ; à refaire sur le coût mesuré du pilote)
++## Devis (refait sur le coût mesuré du pilote MR-2 ; version qui fera foi)
++
++### Devis refait sur le pilote MR-2 (fait foi)
++
++**Lu et calculé.** Entrées : [VERDICT-CRIBLES] (comptes d'appels, durées, coûts ; annexe A, point 13) et le registre des
++dépenses, l. 479 et 480, qui donne la base des montants : **prix de la configuration v12** (« prix de la configuration, la
++console de Lazar fait foi », R-2803) ; au prix public, seul Pr-1 diffère (configuration 10 / 50, public 2 / 10 jusqu'au
++30 novembre : rapport 5 à l'entrée comme à la sortie, donc à tout appel) ; Pr-2, Pr-3 et Pr-4 ont le même prix aux deux comptes
++(table des proposeurs, section « Plan d'analyse »). Calcul : `devis-crible-v-foi-v1.py` (`419453893c54792cd5448d6f208f3fa13bb4f7c7bdc3117df8ec377d3d962e5a`) et sa sortie
++`devis-crible-v-foi-v1-sortie.txt` (`8d99322329ce5e663b5021e253a51eae0e86997a3bb478e9263f496911f1d275`), même dossier, lancés le 16 novembre à 23:16:46 UTC
++(`date -u`, heure du fichier de sortie) par `nice -n 19 python3 -I` (Python 3.13.18, bibliothèque standard, fractions exactes) ;
++énumération du placebo : `placebo-crible-v-chrono-v1.py` (`a0bf7d4e7ec4049fcb60dbe60aa034a15392d9d76b82f09d7acfd01bd7da6dc9`) et sa sortie
++(`44d205515e9cbf14ef1e47b5928ac4f6a1f5256693d6b255deddd596f24117b2`), même heure ; sorties recopiées à l'annexe A, point 13. Rapprochement (sortie, point 1) :
++les quatre proposeurs et la machine font 15,302276 USD ; avec l'épreuve des clés (0,001164) et la machine de la tentative v13
++(0,074757, registre des dépenses, l. 480), 15,378197, égal au total transmis.
++
++**Attendus (règle (b) : moyenne des coûts de tous les appels du pilote, répondus ou tronqués, tels que facturés ; quatre appels
++par proposeur)** et pires cas (règle (a), inchangés), USD :
++
++| poste | crédits | appels du pilote (complets, tronqués, en échec) | coût mesuré des 4 appels (configuration) | attendu par appel : public (configuration) | attendu, 20 appels : public (configuration) | pire (plafonds × 20) |
++|---|---|---|---|---|---|---|
++| Pr-1 `argon` | hors | 4, 0, 0 | 2,471620 | 0,123581 (0,617905) | 2,47 (12,36) | 46,80 |
++| Pr-2 `opus55` | Claude | 4, 0, 0 | 1,057336 | 0,264334 | 5,29 | 40,00 |
++| Pr-3 `astra` | hors | 4, 0, 0 | 1,671750 | 0,417938 | 8,36 | 46,80 |
++| Pr-4 `fable52` | Claude | 2, 2, 0 | 10,019552 | 2,504888 | 50,10 | 60,00 |
++| machine (0,052222 USD/h, relu au pilote) | hors | — | 0,082018 | — | 0,16 à 0,89 (ci-dessous) | 3,00 |
++| **crédits de Claude** (Pr-2, Pr-4) | | 8 | 11,076888 | | **55,38** (55,38) | **100,00** |
++| **hors crédits** (Pr-1, Pr-3, machine) | | 8 | 4,225388 | | **10,83** (20,72), plus la machine | **96,60** |
++| **total** | | 16 | 15,302276 | | **66,21** (76,10), plus la machine | **196,60** |
++| sonde neuve (exigée, R-2992) | les deux | — | — | — | 0,10 (attendu du brouillon, aucune règle ne le refait) | 8,07 (κv1 + 4,39 ; κv2 + 3,68) |
++| **lignes de GO** | | | | | | **κv1 104,39 ; κv2 100,28 ; 204,67** |
++
++Attendu total : **≈ 66,5 à 67,2 USD** aux prix publics (principal, R-2977 : proposeurs 66,21, machine 0,16 à 0,89, sonde 0,10) ;
++≈ 76,4 à 77,1 au compte de la configuration. Part sur crédits de Claude : 0,84 de l'attendu des proposeurs aux prix publics,
++0,73 au compte de la configuration, 0,51 du pire cas (104,39 / 204,67) ; 100 % de ce que la configuration v12 permet pour ce
++dessin (point 3 de « Choix et doutes »). Contre l'estimation du brouillon 9 (73,30 selon [NOTE] ; fourchette 79,95 à 92,75) :
++l'attendu mesuré est plus bas ; Pr-4 en porte 0,76 (50,10 / 66,21).
++
++**Fourchette (règle (b), plus petit et plus grand coût d'un appel)** : **non refaite** : [VERDICT-CRIBLES] ne donne que les
++totaux par proposeur (pour Pr-4 : 5,585992 USD pour ses deux appels tronqués, 4,433560 pour les deux complets, moyennes 2,792996
++et 2,216780) ; le plus petit coût d'un appel est au plus la moyenne, le plus grand au moins (réserve (4) de la section « Écarts
++au brouillon 9 »).
++
++**Règle (c)** : aucun coût mesuré au-dessus d'un plafond de session n'est visible dans [VERDICT-CRIBLES] : moyennes par appel de
++0,26 (Pr-1, compte de la configuration, 0,617905 / 2,34), 0,13 (Pr-2), 0,18 (Pr-3) et 0,83 (Pr-4) du plafond ; les deux appels
++tronqués de Pr-4 font 0,93 de son plafond en moyenne (2,792996 / 3,00) ; coûts par appel non transmis.
++
++**Tolérance de la réflexion de Pr-1 (ligne « coût d'un appel » de la liste d'arrêt)** : **non retenue**. Elle n'existe que si
++le plus grand rapport coût compté / plafond (2,34) mesuré sur les appels de Pr-1 du pilote dépasse 1 ; aucun dépassement n'est
++observé : rapport moyen 0,2641 ; pour qu'un seul appel dépasse 2,34, les trois autres devraient coûter ensemble au plus
++0,131620 USD (sortie, point 8) ; le rapport par appel n'est pas transmis. La ligne d'arrêt garde sa forme par défaut (« tout
++dépassement du pire cas d'un appel arrête (code 3) »), sans essai de plus ; κv2 le dit (section « Lignes de GO proposées »).
++
++**Borne par appel et par monde (règle de B_a)** : plus long appel **répondu** du pilote : Pr-4 au monde 2, 430,542 s ;
++1,5 × 430,542 = 645,813 s ; **B_a = 900 s** (plus petit multiple de 300 s au moins égal, sous 3 600 s ; sortie, point 4). Les
++quatre appels d'un monde partant ensemble, la part des appels d'un monde est bornée par B_a : **900 s par monde** (par file de
++M mondes). Aucun appel du pilote ne dépasse 900 s (le plus long, tronqué, 553,242 s) : le taux lu avec cette B_a est celui des
++comptes (section « Taille »).
++
++**Budget de pire cas et M (règle de la section « Devis », « Durée »)** : budget = 6 000 s de barrières + 3 × (mise en place +
++génération de 20 mondes + mesure de 20 mondes + rapatriement) + 3 × énumération du placebo + ⌈20/M⌉ × B_a, au plus 61 200 s
++(17 h). Énumération du placebo, pire cas (n_c = 20, k_R = 10, 184 756 ensembles) : **0,291 s** (le plus long de deux lancements ;
++programme de remplacement déclaré, réserve (5)). **Les quatre autres durées ne sont pas dans [VERDICT-CRIBLES]** ; par la règle
++écrite (point (8) des « Points à remesurer »), une durée sans état qui la borne n'est pas relevée et le budget est **« non
++lançable », mot de la mère**, tant qu'elles ne le sont pas. **États nommés** (`etape=` du journal `etat.txt` de la machine du
++pilote, [PROC-14] § 0 ; deux états consécutifs) : mise en place, de `mise en place` à `pieces et arbre` ; génération, de `mondes`
++à `attente du feu 2 (mondes)`, rapportée à 20 mondes (cinq fois la durée des 4 mondes du pilote) ; mesure, de `mesure` à
++`rapatriement`, rapportée à 20 mondes de même ; rapatriement, de `rapatriement` à `fini`. Avec D = somme de ces quatre durées
++(génération et mesure rapportées à 20 mondes) et de l'énumération, plus grande valeur de D qui tient sous 17 h (D_max ; sortie,
++point 6) :
++
++| B_a | M = 1 : appels ; D_max | M = 2 : appels ; D_max |
++|---|---|---|
++| **900 s (règle)** | 18 000 s ; **12 400 s (3,444 h)** | 9 000 s ; 15 400 s (4,278 h) |
++| 1 800 s | 36 000 s ; 6 400 s (1,778 h) | 18 000 s ; 12 400 s (3,444 h) |
++| 2 400 s | 48 000 s ; 2 400 s (0,667 h) | 24 000 s ; 10 400 s (2,889 h) |
++| 3 000 s | 60 000 s ; non lançable | 30 000 s ; 8 400 s (2,333 h) |
++| 3 600 s | 72 000 s ; non lançable | 36 000 s ; 6 400 s (1,778 h) |
++
++**Règle de M, sur B_a = 900 s** : M = 1 si D ≤ 12 400 s ; M = 2 si 12 400 s < D ≤ 15 400 s ; « non lançable » et mot de la
++mère si D > 15 400 s ou si l'une des quatre durées n'est pas relevée. **Garde de départ** (ligne « minuterie de la machine » de
++la liste d'arrêt) : arrêt (A) sans appel si le temps restant avant l'échéance de la minuterie est inférieur au budget de pire
++cas, soit **24 000 s + 3 D à M = 1** (barrières 6 000 s et appels 18 000 s) ou **15 000 s + 3 D à M = 2** ; sa valeur en
++secondes s'écrit avec D.
++
++**Machine dans l'attendu (règle (b))** : moyenne, sur les quatre mondes du pilote, du plus long des quatre appels (388,807 ;
++430,542 ; 553,242 ; 510,008 s ; aucun au-delà de B_a) : 470,650 s ; appels attendus 20 × 470,650 = 9 413 s à M = 1 (4 706 s à
++M = 2) ; avec les barrières, 4,28 h à M = 1, soit 0,224 USD à 0,052222 USD/h (0,155 à M = 2) ; les quatre durées non relevées
++s'y ajoutent, sans le facteur trois ; le budget borne le tout à 17 h, soit 0,888 USD : **machine attendue entre 0,16 et 0,89
++USD** (sortie, point 7) ; pire cas inchangé, 3,00 (règle (a)). **Durée attendue** (information) : appels ≈ 2 h 37 min à M = 1,
++barrières 1 h 40 min, plus les quatre durées non relevées. Le manifeste du run du pilote couvre 2 673 s (12:14:34 à 12:59:07),
++790,401 s de plus que la somme, sur les quatre mondes, du plus long appel de chaque monde (1 882,599 s) ; ce temps, de nature
++non dite dans [VERDICT-CRIBLES], n'est pas un terme de la règle du budget (réserve (3)).
++
++**Enveloppe de GO-2026-11-15-06** (1 275 USD au pire, échéance 2026-11-30 ; sortie, point 9) : aucune ligne « calcul » n'est
++encore inscrite sous ce mot (`registres/go.md`, `029cc2e2…` à la lecture : la ligne 339 seule le cite) et aucune dépense n'y
++est portée (`registres/depenses.md`) : **ce crible y tient seul** (204,67) ; avec le crible (iii) tel que son brouillon 8 le
++chiffre (`crible-iii-brouillon8.md`, `d3406878…` : 263 au pire et 7 de sonde des gabarits ; 270 aussi dans sa version qui fera
++foi v1 en cours, `crible-iii-version-foi-v1.md`, `91b4bf30…` à la lecture), 474,67 : **tient** ; avec (i), (ii) et (iv) aux
++pires de [NOTE] (123, 483 et 243, plafonds de 2,00 non refaits), 1 323,67 : **ne tient pas** (48,67 de trop) ; par R-2992
++(point 3), la ligne du crible qui ne tiendrait pas sous 1 275 est un nœud de Lazar. Les lignes κv1 et κv2 ne s'inscrivent que
++si le cumul des lignes déjà inscrites, elles comprises, reste sous 1 275 USD.
++
++### Estimation du brouillon 9 et règles écrites d'avance (l'estimation ne fait plus foi ; les règles s'appliquent, ci-dessus)
+ 
+ **Hypothèses de coût.** Attendus par appel : [NOTE] § 1, repris du devis du pilote (`dba76367…`, champ « central_proposeur »),
+ **estimés**, base non écrite dans la pièce. **Mes fourchettes** (estimées, dites comme telles) : entrée ≈ 15 000 à 18 000 jetons
+@@ -467,7 +660,7 @@
+ 
+ ```
+ | GO-AAAA-MM-JJ-NN (κv1) | AAAA-MM-JJ | calcul | Organisme d'idéation, crible (v) « appel des proposeurs chers sur le regroupement des doublons », part sur crédits de Claude : proposeurs `opus55` (Pr-2, plafond de session 2 USD, part 40) et `fable52` (Pr-4, 3 USD, part 60), effort « high » envoyé aux deux (réglage du bloc gelé), un appel par proposeur et par monde, au plus 6 cartes, aucune reprise ; sonde neuve du chemin des relais du lanceur du crible, part sur crédits 4,39 USD (forme de la ligne s1 de la sonde v74), jouée et son relevé conforme avant tout appel du crible ; 20 mondes MR-2 du secret du crible, jamais publiés ni réutilisés ; archive {K1}, une génération ; gardien mécanique seul, aucun juge, aucun test de mort ; règle et placebo rejoués sur les mêmes appels par le programme de mesure gelé, une seule fois ; conditions toutes exigées : coûts du pilote MR-2 mesurés et devis refait, préenregistrement du crible contre-lu et scellé, code contre-lu et gelé, essai à blanc réussi, mondes vérifiés et leurs empreintes inscrites ; coût au-dessus du pire cas = arrêt ; essayé, non adopté ; jamais de ligne d'extension ; arrêt par identifiant (R10) | 104.39 USD (sur crédits) | 2026-11-30 | Lazar | GO-2026-11-15-06 ; R-2851 ; R-2875 ; ce texte |
+-| GO-AAAA-MM-JJ-NN (κv2) | AAAA-MM-JJ | calcul | Même crible, part hors crédits : `argon` (Pr-1, 2,34 USD par session, part 46,80), `astra` (Pr-3, 2,34 USD par session, part 46,80), aucun réglage envoyé, machine jetable 3 USD, part hors crédits de la sonde neuve 3,68 USD (forme de la ligne s2 de la sonde v74) ; plafond de chaque relais égal à sa part ; mêmes conditions que la ligne κv1, sauf « coût au-dessus du pire cas = arrêt », qui reçoit pour Pr-1 la tolérance de la réflexion si la règle de la ligne « coût d'un appel » de la liste d'arrêt la retient | 100.28 USD | 2026-11-30 | Lazar | GO-2026-11-15-06 ; R-2851 ; R-2875 ; ce texte |
++| GO-AAAA-MM-JJ-NN (κv2) | AAAA-MM-JJ | calcul | Même crible, part hors crédits : `argon` (Pr-1, 2,34 USD par session, part 46,80), `astra` (Pr-3, 2,34 USD par session, part 46,80), aucun réglage envoyé, machine jetable 3 USD, part hors crédits de la sonde neuve 3,68 USD (forme de la ligne s2 de la sonde v74) ; plafond de chaque relais égal à sa part ; mêmes conditions que la ligne κv1, « coût au-dessus du pire cas = arrêt » compris, sans exception (tolérance de la réflexion de Pr-1 non retenue par la règle de la ligne « coût d'un appel » de la liste d'arrêt : aucun dépassement du plafond observé au pilote) | 100.28 USD | 2026-11-30 | Lazar | GO-2026-11-15-06 ; R-2851 ; R-2875 ; ce texte |
+ ```
+ 
+ Les mots que le lecteur gelé des lignes exigera dans le périmètre se fixent avec le code (forme du pilote : « crédits de
+@@ -554,7 +747,7 @@
+ 
+ ## Contre-lecture
+ 
+-Tours 1 à 8 faits (entrées « Contre-lecture 1 » à « Contre-lecture 8 » ci-dessous) : le brouillon 1 a été soumis à la contre-lecture (R2) d'un sous-agent
++Tours 1 à 9 faits (entrées « Contre-lecture 1 » à « Contre-lecture 9 » ci-dessous) : le brouillon 1 a été soumis à la contre-lecture (R2) d'un sous-agent
+ neuf d'un **autre modèle** que
+ le rédacteur (modèle C ≠ A ; un premier lecteur du modèle B s'est arrêté sans rapport, limite d'usage, R-2982), qui n'a écrit ni ce texte, ni [NOTE], ni [PILOTE], ni le code du pilote. **Fichiers à lui donner
+ explicitement** : ce texte ; [NOTE] (`2f6a69dd…`), § 2, § 3 (v), § 4, § 6 et annexe A ; [RELEVÉ] (`bd253b6c…`), § 4.2, § 4.3,
+@@ -1090,6 +1283,26 @@
+     `appliquer-corrections-crible-v-brouillon9.py`, la ligne R-2992 de `registres/decisions.md`, [PILOTE] (liste d'arrêt,
+     « Panne d'un relais »).
+ 
++- **Contre-lecture 9** (tour 9, sur le brouillon 9 ; tour 3 de la boucle B7) : sous-agent neuf du modèle C (lettre de son
++  rapport), qui n'a écrit aucune pièce citée ; lecture de 15:31Z à 15:33Z. Rapport :
++  `docs/notes/organisme-idees-juge-v1/cribles-v1/contre-lecture-crible-v-b7-tour3-v1.md`, empreinte
++  `0b4fdd00c8ac7ed4cfa8a806ff3364158628975c735e8669f806746f0e3ee8ac` (égale à son compagnon) ; brouillon relu : `crible-v-brouillon9.md`, empreinte
++  `c574e39d700aaff64c59efd0319aaf565c906ff2518304c6c2f2a752dcd5da23`. Verdict : **scellable** ; aucune correction exigée, aucune remarque facultative
++  nouvelle ; application du tour 8 jugée fidèle (8 zones du `diff`) ; validateur sans défaut.
++  - **Suite** : prédictions V1 à V6 gelées dans la rédaction du brouillon 9 par la mère (R-2993, 15:33:25Z), avant le
++    lancement du lecteur du pilote ; version qui fera foi v1 écrite par un rédacteur neuf du modèle A (R-2982, R-2992 point 0)
++    par les règles écrites du brouillon 9, après la lecture de la seule section [VERDICT-CRIBLES] (R-3005) ; écarts listés dans
++    la section « Écarts au brouillon 9 » ; différentiel `diff-crible-v-b-vers-foi-v1.txt`.
++  - « Points pour la mère » 1 à 3 du rapport : (1) règle d'abandon d'un fournisseur : gardée telle (R-2993) ; (2) enveloppe :
++    refaite (section « Devis ») ; (3) scellement : cette version passe un tour différentiel (R-2993) avant `sceller_prereg` et
++    sa copie sous `prereg/`.
++  - **Contrôle suivant** (tour différentiel, R-2993) : lecteur neuf, d'un autre modèle que le rédacteur, qui n'a écrit ni ce
++    texte, ni ses brouillons, ni aucun rapport, ni les programmes de cette version. **Fichiers à lui donner** : ce texte ; le
++    brouillon 9 ; `diff-crible-v-b-vers-foi-v1.txt` ; `appliquer-version-foi-crible-v-v1.py` ; `devis-crible-v-foi-v1.py` et
++    sa sortie ; `placebo-crible-v-chrono-v1.py` et sa sortie ; les lignes R-2977, R-2992, R-2993 et R-3005 de
++    `registres/decisions.md` ; la ligne GO-2026-11-15-06 de `registres/go.md` ; les lignes 478 à 480 de `registres/depenses.md` ;
++    [PROC-14] § 0 (états de la machine) ; jamais le verdict du pilote au-delà de [VERDICT-CRIBLES].
++
+ ## Annexe A — comptes exacts (sans donnée, sans tirage, sans appel)
+ 
+ Programme `comptes_cribles_v2.py` (`f06bcfe7219a22d9b2c117be141739fe21c878d99b8f233725523072088e0f59`) et sa sortie
+@@ -1142,7 +1355,7 @@
+ 
+ Le modèle synthétique est celui de [MR2] § 3.2 (cartes indépendantes, probabilités par classe **estimées**, aucune pièce) : ce
+ compte borne l'ordre de grandeur, il ne prédit pas de vrais proposeurs. Le programme entier (points 1 à 9) est recopié à
+-l'annexe A du brouillon 1 du crible (iii), dans ce dossier (`crible-iii-brouillon1.md`) ; son empreinte est celle ci-dessus. **À recopier en entier dans la version qui fera foi de ce texte (le brouillon (iii) sera remplacé), avec les calculs de C-02 et C-05.**
++l'annexe A du brouillon 1 du crible (iii), dans ce dossier (`crible-iii-brouillon1.md`) ; son empreinte est celle ci-dessus. **Recopié en entier à l'annexe A, point 14, de la version qui fera foi ; les calculs de C-02 et C-05 sont aux points 11 et 12.**
+ 
+ **Point 10 — composantes certifiées des mondes de développement de [MR2].** Programme `compte_certifiees_mr2_v1.py`
+ (`8c0432df23cb78270c851d2c8f81e40b069a41ffefb8f3ddce03fa72804d9e39`), lecture seule des 12 sorties scellées
+@@ -1176,7 +1389,7 @@
+ (`042f9332d7b101268a3238ffec2fce35f1aafb004d405ee384c543ff8f6e9498`), même dossier, lancés le 16 novembre à 14:13:44 UTC (`date -u`)
+ par `nice -n 19 python3 -I` (Python 3.13.18, bibliothèque standard seule, quelques millisecondes) ; **aucune donnée, aucun tirage,
+ aucun taux du pilote** : la grille du point 4 est écrite d'avance ; la probabilité d'atteindre le minimum sur le taux mesuré du
+-pilote reste à calculer par programme dans la version qui fera foi (section « Taille »). Les chiffres du rapport du tour 3
++pilote est calculée au point 13 (version qui fera foi ; section « Taille »). Les chiffres du rapport du tour 3
+ qui portent sur ces comptes (W_min, puissance, épargne, devis : points 2 et 3 de ses réponses, C3-5, C3-8) se retrouvent égaux ;
+ le taux par appel que le rapport tire des comptes de marche du pilote (motif de C3-5) n'est pas repris : aucun taux du pilote
+ n'entre ici. Les lignes à n = 21 à 24 et à N = 24 sont sans objet depuis la décision de la mère R-2992 (N = 20 dans tous les cas) ; elles restent comme sortie recopiée. « 1.0000 » est un arrondi au quatrième chiffre, non une certitude. Sortie, recopiée :
+@@ -1258,6 +1471,237 @@
+   barrières 160 min, N = 24, B_a = 3600 s : M = 1 32.27 h ; M = 2 20.27 h ; non lançable
+ ```
+ 
++**Point 13 — pilote MR-2 v14 : section lue et calculs de la version qui fera foi.** [VERDICT-CRIBLES], recopiée telle que la
++consigne de la mère la transmet (seule part du verdict lue ; « tel quel » pour le témoin positif) :
++
++```
++- Comptes (`corps.appels`) : répondus 14, tronqués 2, en échec 0.
++- Durées (`duree_s`, secondes, relevé), monde puis proposeur : 1 `argon` 96,004 ; 1 `astra` 80,106 ; 1 `fable52` 388,807 ; 1 `opus55` 109,396 ; 2 `argon` 38,287 ; 2 `astra` 61,164 ; 2 `fable52` 430,542 ; 2 `opus55` 54,737 ; 3 `argon` 75,664 ; 3 `astra` 78,847 ; 3 `fable52` 553,242 (tronqué) ; 3 `opus55` 72,991 ; 4 `argon` 47,464 ; 4 `astra` 34,411 ; 4 `fable52` 510,008 (tronqué) ; 4 `opus55` 36,425. Manifeste : `debut_utc` 2026-11-16T12:14:34+00:00, `fin_utc` 2026-11-16T12:59:07+00:00.
++- Coûts : dépense rapprochée totale 15,378197 USD ; détail du registre des dépenses : `fable52` 10,019552 USD (4 appels : 2 complets, 2 tronqués), `opus55` 1,057336 USD (4 complets), `argon` 2,471620 USD (4 complets), `astra` 1,671750 USD (4 complets), machine 0,082018 USD (0,052222 USD/h).
++- `corps.temoin_positif`, tel quel : `{"appels_portant_la_condition": 6, "appels_portant_une_autre_composante": 14, "n": 14, "sous_la_moitie": false}`.
++- Information : les deux appels tronqués sont ceux de `fable52` aux mondes 3 et 4 (réponse illisible), 553 s et 510 s, soit 5,585992 USD des 10,019552 USD de ce proposeur.
++```
++
++Programmes `devis-crible-v-foi-v1.py` (`419453893c54792cd5448d6f208f3fa13bb4f7c7bdc3117df8ec377d3d962e5a`) et `placebo-crible-v-chrono-v1.py`
++(`a0bf7d4e7ec4049fcb60dbe60aa034a15392d9d76b82f09d7acfd01bd7da6dc9`), même dossier, déposés avec leurs compagnons `.sha256` ; lancés le 16 novembre
++à 23:16:46 UTC (heure des fichiers de sortie, `date -u`) par `nice -n 19 python3 -I` (Python 3.13.18, bibliothèque standard ;
++machine de développement à 4 processeurs) ; aucune donnée lue par eux (entrées recopiées à la main de [VERDICT-CRIBLES] et du
++registre des dépenses, l. 478 à 480), aucun tirage, aucun appel. Sortie du devis (`8d99322329ce5e663b5021e253a51eae0e86997a3bb478e9263f496911f1d275`), recopiée :
++
++```
++Devis du crible (v), version qui fera foi v1 — sortie
++
++1. Rapprochement des montants transmis
++  quatre proposeurs + machine 60918148 : 15.302276 USD
++  + épreuve des clés 0.001164 + machine v13 0.074757 : 15.378197 USD ; total transmis 15.378197 ; écart 0.000000
++
++2. Attendu par appel = moyenne des coûts de tous les appels du pilote (règle (b))
++  Pr-1 argon    : 4 appels ; total public 0.494324 ; moyenne publique 0.123581 ; moyenne configuration 0.617905 USD
++  Pr-2 opus55   : 4 appels ; total public 1.057336 ; moyenne publique 0.264334 ; moyenne configuration 0.264334 USD
++  Pr-3 astra    : 4 appels ; total public 1.671750 ; moyenne publique 0.417938 ; moyenne configuration 0.417938 USD
++  Pr-4 fable52  : 4 appels ; total public 10.019552 ; moyenne publique 2.504888 ; moyenne configuration 2.504888 USD
++  Pr-4 : deux tronqués 5.585992 (moyenne 2.792996), deux complets 4.433560 (moyenne 2.216780) ; plafond de session 3,00
++  fourchette par appel (plus petit, plus grand coût d'un appel) : coûts par appel non transmis ; bornes seules : plus petit <= moyenne <= plus grand
++
++3. Attendu du crible, N = 20 mondes, 4 N = 80 appels (proposeurs seuls)
++  prix public              : par proposeur Pr-1 2.4716 ; Pr-2 5.2867 ; Pr-3 8.3588 ; Pr-4 50.0978 ; crédits 55.3844 ; hors crédits 10.8304 ; total 66.2148 ; part sur crédits 0.8364
++  prix de la configuration : par proposeur Pr-1 12.3581 ; Pr-2 5.2867 ; Pr-3 8.3588 ; Pr-4 50.0978 ; crédits 55.3844 ; hors crédits 20.7169 ; total 76.1013 ; part sur crédits 0.7278
++
++4. Borne par appel B_a (règle : plus petit multiple de 300 s >= 1,5 x plus long appel répondu, au plus 3 600 s)
++  plus long appel répondu : monde 2, fable52, 430.542 s ; 1,5 x = 645.8130 s
++  B_a = 900 s
++  plus long appel du pilote, tronqués compris : 553.242 s ; appels du pilote au-delà de B_a : 0
++
++5. Taux d'appels répondus du pilote lu avec cette B_a (section « Taille », à titre d'information)
++  répondus 14, tronqués 2, en échec 0 (aucun au-delà de B_a) : r = 14/16 = 0.8750
++  taux commun r : P(monde complet) = 0.9690 ; P(monde à quatre appels) = 0.5862 ; P(n_c >= 16 sur 20) = 0.9997
++  taux par proposeur (4 appels chacun ; Pr-1 1, Pr-2 1, Pr-3 1, Pr-4 1/2) : P(monde complet) = 1.0000 ; P(monde à quatre appels) = 0.5000 ; P(n_c >= 16 sur 20) = 1.0000
++  (appels indépendants supposés ; l'abandon d'un fournisseur après une panne de relais n'est pas compté)
++
++6. Budget de pire cas (règle de la section « Devis ») : barrières 6 000 s + 3 x (mise en place +
++   génération de 20 mondes + mesure de 20 mondes + rapatriement) + 3 x énumération du placebo + ceil(20/M) x B_a <= 61 200 s
++   Les quatre durées du journal d'états ne sont pas dans la section transmise : D = leur somme plus l'énumération ;
++   pour chaque case, plus grande valeur de D qui tient sous 17 h (D_max) ; D_max < 0 : non lançable quel que soit D
++  B_a =  900 s (règle) : M = 1 : appels 18000 s, D_max = 12400.0 s (3.444 h) ; M = 2 : appels 9000 s, D_max = 15400.0 s (4.278 h)
++  B_a = 1800 s : M = 1 : appels 36000 s, D_max = 6400.0 s (1.778 h) ; M = 2 : appels 18000 s, D_max = 12400.0 s (3.444 h)
++  B_a = 2400 s : M = 1 : appels 48000 s, D_max = 2400.0 s (0.667 h) ; M = 2 : appels 24000 s, D_max = 10400.0 s (2.889 h)
++  B_a = 3000 s : M = 1 : appels 60000 s, non lançable ; M = 2 : appels 30000 s, D_max = 8400.0 s (2.333 h)
++  B_a = 3600 s : M = 1 : appels 72000 s, non lançable ; M = 2 : appels 36000 s, D_max = 6400.0 s (1.778 h)
++  M retenu (règle) : 1 si D <= D_max(B_a, M = 1), sinon 2 si D <= D_max(B_a, M = 2), sinon « non lançable » et mot de la mère
++
++7. Machine dans l'attendu (règle (b)) : termes sans le facteur trois, appels à ceil(N/M) x moyenne, sur les mondes
++   du pilote, du plus long des quatre appels d'un monde (au plus B_a), x prix horaire relu
++  plus long appel par monde : 1 : 388.807 s ; 2 : 430.542 s ; 3 : 553.242 s ; 4 : 510.008 s ; moyenne 470.64975 s
++  M = 1 : appels 9412.995 s ; avec les barrières 4.2814 h, soit 0.223583 USD (sans les quatre durées non relevées) ; borne haute à 17 h : 0.887774 USD
++  M = 2 : appels 4706.498 s ; avec les barrières 2.9740 h, soit 0.155310 USD (sans les quatre durées non relevées) ; borne haute à 17 h : 0.887774 USD
++  somme sur les 4 mondes du plus long appel : 1882.599 s ; manifeste du run 12:14:34 -> 12:59:07 = 2673 s ; écart 790.401 s (information, non compté par la règle)
++
++8. Tolérance de la réflexion de Pr-1 (ligne « coût d'un appel ») : n'existe que si le plus grand rapport
++   coût compté / plafond (2,34) mesuré sur les appels de Pr-1 du pilote dépasse 1
++  total compté de Pr-1 sur 4 appels 2.471620 ; moyenne 0.617905 ; rapport moyen 0.2641 ; rapport par appel non transmis
++  pour qu'un appel dépasse 2,34, les trois autres devraient coûter ensemble au plus 0.131620 USD
++  aucun dépassement observé dans la section transmise : tolérance non retenue, l'arrêt reste (règle écrite)
++
++9. Pires cas (règle (a), inchangés) et enveloppe de GO-2026-11-15-06 (1 275 USD au pire)
++  kv1 (crédits) 104.39 ; kv2 (hors crédits) 100.28 ; total 204.67 USD
++  lignes « calcul » déjà inscrites sous GO-2026-11-15-06 : 0 ; dépense déjà portée : 0.00
++  ce crible seul : 204.67 <= 1275 : True
++  avec le crible (iii) tel que son brouillon 8 le chiffre (263 au pire + 7 de sonde) : 474.67 <= 1275 : True
++  avec (i) 123, (ii) 483, (iv) 243 de la note (plafonds de 2,00 non refaits) : 1323.67 ; reste sous 1275 : -48.67
++```
++
++Sortie du chronométrage du placebo (`44d205515e9cbf14ef1e47b5928ac4f6a1f5256693d6b255deddd596f24117b2`), recopiée (mondes simulés par une formule fixe ; seul le temps
++compte) :
++
++```
++lancement 1 : 0.291 s ; ensembles 184756 ; p_choix 0.7049 ; L_P moyenne 9.5000 (5 % 6, 95 % 13) ; S_P moyenne 0.4395 (5 % 0.4373, 95 % 0.4417)
++lancement 2 : 0.266 s ; ensembles 184756 ; p_choix 0.7049 ; L_P moyenne 9.5000 (5 % 6, 95 % 13) ; S_P moyenne 0.4395 (5 % 0.4373, 95 % 0.4417)
++retenu (le plus long) : 0.291 s ; Python 3.13.18 ; x86_64
++```
++
++Programme `part-chere-crible-v-foi-v1.py` (`3e6ca9e7c158f6745bd303ba006d3fb35e176984dda6fe0aa88f84765856f943`), même dossier, lancé le 16 novembre à 23:24:53 UTC
++(`date -u`) de même ; sortie (`806e43313abb4f1401226f4d5c4760cc1e7d9375fb877a6bf98b52f6676f2f00`), recopiée (information, réserve (8) de la section « Écarts au
++brouillon 9 ») :
++
++```
++prix public : part de la moitié chère f = 0.8828 ; S >= 0,25 ssi k <= 14 (S(14) = 0.2648 ; S(15) = 0.2207) ; S(0) = 0.8828 ; S(3) = 0.7504
++compte de la configuration : part de la moitié chère f = 0.7681 ; S >= 0,25 ssi k <= 13 (S(13) = 0.2688 ; S(14) = 0.2304) ; S(0) = 0.7681 ; S(3) = 0.6529
++```
++
++**Point 14 — programmes de l'annexe A recopiés en entier** (le brouillon 9 le demandait à la version qui fera foi). Tirés des
++blocs de code de `crible-iii-brouillon1.md` (`00c92559d54349101dfcc0c59afe402c388b192c32fa6018bbf809eb02f22af0`) par le
++programme d'application de cette version, qui en recalcule les empreintes : égales à celles que l'annexe cite. Programme
++`comptes_cribles_v2.py` (`f06bcfe7219a22d9b2c117be141739fe21c878d99b8f233725523072088e0f59`) :
++
++```python
++"""Comptes exacts pour les brouillons 1 des cribles (v) et (iii) — v2 (la v1 reste en place, R12 ; la v2 la contient et ajoute
++les points 5 à 9). Aucune donnée, aucun appel, aucun tirage ; bibliothèque standard seule ; quelques millisecondes.
++1. Intervalles de Clopper-Pearson à 95 % bilatéraux pour x mondes sur 20.
++2. Test des signes, n accords non nuls de 10 à 20 : plus petit c tel que P(X >= c | 1/2) <= niveau, niveaux 0,0125 et 0,025.
++3. Puissance exacte du test des signes à n = 20 (niveau unilatéral 0,0125) pour p = 0,6 ; 0,7 ; 0,8 ; 0,9.
++4. Part épargnée attendue par la règle de (v) selon le nombre k de mondes où elle appelle les chers, aux prix centraux.
++5. Pour n mondes complets de 16 à 20 : plus petit W dont la borne basse de Clopper-Pearson (95 % bilatéral) dépasse 0,05.
++6. Probabilité d'une « perte établie » (W >= seuil du point 5, n = 20) si chaque monde perd avec la probabilité p.
++7. Part attendue d'ensembles tirés au hasard (taille uniforme sur 1, 2, 3 ; traits uniformes sans remise parmi 8) qui
++   contiennent au moins un trait distracteur, pour d = 2, 3, 4 distracteurs.
++8. Probabilité qu'au moins un de six ensembles tirés au hasard (indépendants, filtre ignoré) contienne une paire donnée.
++9. Modèle de proposeurs synthétiques de la conception v4 (probabilité par carte de proposer une composante inconnue :
++   forte 0,5 ; moyenne 0,25 ; faible 0,1 ; conditionnelle sans sa condition 0,02 ; cartes indépendantes) : probabilité que
++   douze cartes de la moitié chère couvrent une composante que les douze de la moitié bon marché ont manquée."""
++from math import comb
++
++
++def queue_haute(n, c, p):
++    return sum(comb(n, k) * p ** k * (1 - p) ** (n - k) for k in range(c, n + 1))
++
++
++def cdf(n, x, p):
++    return sum(comb(n, k) * p ** k * (1 - p) ** (n - k) for k in range(0, x + 1))
++
++
++def bissection(f, lo=0.0, hi=1.0, tours=200):
++    for _ in range(tours):
++        mi = 0.5 * (lo + hi)
++        if f(mi):
++            hi = mi
++        else:
++            lo = mi
++    return 0.5 * (lo + hi)
++
++
++def clopper_pearson(x, n, a=0.05):
++    bas = 0.0 if x == 0 else bissection(lambda p: queue_haute(n, x, p) >= a / 2)
++    haut = 1.0 if x == n else bissection(lambda p: cdf(n, x, p) <= a / 2)
++    return bas, haut
++
++
++print("1. Clopper-Pearson 95 % bilatéral, x sur 20")
++for x in range(0, 11):
++    b, h = clopper_pearson(x, 20)
++    print(f"  x = {x:2d} : [{b:.4f} ; {h:.4f}]")
++
++print("2. Test des signes : plus petit c avec P(X >= c | n, 1/2) <= niveau")
++for n in range(10, 21):
++    out = []
++    for niv in (0.0125, 0.025):
++        c = min(c for c in range(n + 2) if queue_haute(n, c, 0.5) <= niv) if queue_haute(n, n, 0.5) <= niv else None
++        out.append(f"niveau {niv} : c = {c}" + (f" (P = {queue_haute(n, c, 0.5):.4f})" if c is not None else " (impossible)"))
++    print(f"  n = {n:2d} : " + " ; ".join(out))
++
++print("3. Puissance du test des signes, n = 20, niveau unilatéral 0,0125 (c = 16)")
++for p in (0.6, 0.7, 0.8, 0.9):
++    print(f"  p = {p} : puissance {queue_haute(20, 16, p):.4f}")
++
++print("4. Part épargnée attendue par la règle de (v), prix centraux (0,25 ; 0,80 ; 1,00 ; 1,60 USD par appel)")
++bm, ch = 0.25 + 0.80, 1.00 + 1.60
++for k in (0, 1, 2, 3, 4, 5, 10, 15, 20):
++    tout = 20 * (bm + ch)
++    regle = 20 * bm + k * ch
++    print(f"  k = {k:2d} mondes appelés : épargne {1 - regle / tout:.4f} du coût des proposeurs")
++
++print("5. Plus petit W dont la borne basse de Clopper-Pearson dépasse 0,05")
++seuils = {}
++for n in range(16, 21):
++    w = min(x for x in range(n + 1) if clopper_pearson(x, n)[0] > 0.05)
++    seuils[n] = w
++    print(f"  n = {n} : W >= {w} (borne basse {clopper_pearson(w, n)[0]:.4f} ; à W - 1 : {clopper_pearson(w - 1, n)[0]:.4f})")
++
++print("6. Probabilité d'une perte établie à n = 20 (W >= %d) si chaque monde perd avec la probabilité p" % seuils[20])
++for p in (0.05, 0.10, 0.15, 0.20, 0.26, 0.35, 0.47):
++    print(f"  p = {p:.2f} : {queue_haute(20, seuils[20], p):.4f}")
++
++print("7. Part attendue d'ensembles au hasard (taille 1, 2 ou 3, uniforme) contenant au moins un distracteur, 8 traits")
++for d in (2, 3, 4):
++    parts = [1 - comb(8 - d, s) / comb(8, s) for s in (1, 2, 3)]
++    print(f"  d = {d} : tailles 1, 2, 3 : " + ", ".join(f"{v:.4f}" for v in parts) + f" ; moyenne {sum(parts) / 3:.4f}")
++
++print("8. Six ensembles au hasard, indépendants : probabilité qu'au moins un contienne une paire donnée de traits")
++p_paire = (0 + 1 / comb(8, 2) + comb(6, 1) / comb(8, 3)) / 3
++print(f"  par ensemble : {p_paire:.4f} ; sur six : {1 - (1 - p_paire) ** 6:.4f}")
++
++print("9. Modèle synthétique : probabilité que la moitié chère (12 cartes) couvre ce que la moitié bon marché (12) a manqué")
++for nom, p in (("forte", 0.5), ("moyenne", 0.25), ("faible", 0.1), ("conditionnelle sans condition", 0.02)):
++    q12 = (1 - p) ** 12
++    print(f"  {nom} (p = {p}) : manquée par les 12 premières {q12:.4f} ; ajoutée par les 12 autres {q12 * (1 - q12):.4f}")
++for nom, compte in (("1 conditionnelle et 2 moyennes", {0.02: 1, 0.25: 2}),
++                    ("1 conditionnelle et 3 moyennes", {0.02: 1, 0.25: 3}),
++                    ("2 conditionnelles et 2 moyennes", {0.02: 2, 0.25: 2}),
++                    ("1 conditionnelle, 2 moyennes et 2 faibles certifiées", {0.02: 1, 0.25: 2, 0.1: 2})):
++    survie = 1.0
++    for p, k in compte.items():
++        q12 = (1 - p) ** 12
++        survie *= (1 - q12 * (1 - q12)) ** k
++    print(f"  monde à {nom} : probabilité d'au moins une composante ajoutée {1 - survie:.4f}")
++```
++
++Sa sortie (`5d53092e5fc4a6ef087a894035db490536cb9312936cc72dfacf5b6e0eab0cf8`) est celle dont les points utiles sont recopiés en tête de cette annexe ; elle est recopiée en
++entier à l'annexe A de `crible-iii-brouillon1.md`. Programme `compte_certifiees_mr2_v1.py` (`8c0432df23cb78270c851d2c8f81e40b069a41ffefb8f3ddce03fa72804d9e39`) :
++
++```python
++"""Compte des composantes certifiées (étiquette C8) par classe dans les 12 mondes de développement de la conception v4
++(famille MR-2), lu dans les sorties scellées `sorties-v4/partie-v4-monde-{0…11}.json` ; lecture seule, aucun calcul de monde.
++Usage : python3 -I compte_certifiees_mr2_v1.py DOSSIER_SORTIES_V4"""
++import hashlib
++import json
++import os
++import sys
++from collections import Counter
++
++d = sys.argv[1]
++total = Counter()
++for w in range(12):
++    p = os.path.join(d, f"partie-v4-monde-{w}.json")
++    sha = hashlib.sha256(open(p, "rb").read()).hexdigest()
++    attendu = open(p + ".sha256", encoding="utf-8").read().split()[0]
++    assert sha == attendu, f"empreinte différente : {p}"
++    r = json.load(open(p, encoding="utf-8"))["resultat"]
++    c = Counter(r["c8"][k]["classe"] for k in r["certifiees"])
++    tous = Counter(v["classe"] for v in r["c8"].values())
++    print(f"monde {w:2d} ({sha[:8]}) : certifiées {len(r['certifiees'])} {dict(sorted(c.items()))} ; toutes {dict(sorted(tous.items()))}")
++    total += c
++print("total des certifiées sur 12 mondes :", dict(sorted(total.items())))
++```
++
+ ## Citations obligatoires (N-064, N-067)
+ 
+ POPPER (Huang et al., ICML 2025 ; `docs/sources/pdf/huang-2025-icml-pmlr-267-popper-automated-hypothesis-validation-agentic-sequential-falsifications.pdf`,
