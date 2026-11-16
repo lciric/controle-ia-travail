@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-16 vers 13:03 UTC — aucune instance active de ce programme** : pilote MR-2 v14 fini, machine 60918148 détruite à 13:01:11Z, absence prouvée (R-2981) ; sortie rapatriée hors du dépôt, lecture non ouverte, à remettre à un lecteur neuf après contre-lecture de sa consigne. En cours : étape 0 v5 de l'idée 1.1 (PID 10918, deux processus, R-2979) ; gestes d'avant course de B bis sur sa branche (création suspendue au crédit du loueur, 7,83 USD, 20 demandés) ; consigne du lecteur B (brouillon 3) et commande phase C v4 en rédaction et contre-lecture (R-2980) ; commande de la phase B v2 en rédaction ; addendum de relance de l'idée 1.2 en contre-lecture (tour 2) ; cribles (v) et (iii) en contre-lecture. Depuis environ 12:48Z, la mère est servie par le modèle A.
+
 **2026-11-16 vers 11:29 UTC — instance active de ce programme : Vast 60918148** (pilote MR-2 v14, étiquette `pilote-mr2-v74-v14-20261116`, 0,0522 USD/h, échéance 2026-11-17T04:26:21Z, GO-2026-11-14-14, R-2968) ; clés du pilote dans sa configuration jusqu'à la destruction (GO-2026-11-15-08) ; dossier d'envoi `/home/user/pilote-mr2-v74-envoi-v14` ; section 11 à l'échéance plus cinq minutes ou dès la fin (consignes v13 de la mère, V1 à V6). Étape 0 de l'idée 1.1 relancée (PID 612) ; jeu de l'idée 1.2 à relancer sous un addendum neuf.
 
 - Instance Vast 60860420 (pilote MR-2 v13) : arrêt (A) faute de phrase, détruite le 2026-11-16 à 02:32:15Z, absence prouvée (R-2962). Aucune instance active de ce programme. Jeu de l'idée 1.2 en cours sur processeur (PID 5755).
