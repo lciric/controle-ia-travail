@@ -17,3 +17,5 @@
 | AUDIT-FUITES-T07 | 2026-11-14T14:57:54Z | diag/20261114-001352-t07-lecture-reel/audit-fuites-t07.json | 5c76b7ff48964abe9ec552552d57c32e0b9d9ec4519a61206f7fdac349fce094 |
 | LECTURE-T08-BASE-A | 2026-11-16T21:01:43Z | diag/20261116-205721-mots-et-cout-t06/base-a-t08.json | a2113f9a5c5f92fdb50e6b5390304e57c8fe51e59c99aa36f7e5cf99fb5e7d35 |
 | ISSUE-MOTS-ET-COUT-T06 | 2026-11-16T21:02:42Z | diag/20261116-205721-mots-et-cout-t06/issue-mots-et-cout-t06.json | 1b84d7c4440638699ac14711365fb865c1f5c57b50c39f44259a61b2aca53657 |
+| VERDICT-T07-ETAPE-B | 2026-11-17T11:20:08Z | docs/verdicts/verdict-T0.7-etape-B-v1-issue.json | 2717d63fae36e82528931e4793c68f5d941e50647785b62af3d7944a34785b4b |
+| SCELLEMENT-ORGANISMES-VA | 2026-11-17T11:26:12Z | prereg/T0.7-organismes-discrets-v-a-v1.md | 06ab6a2f6e173bb1258f45ffeded7a419b05ecc2f59920666cea91aafcc7cf05 |
