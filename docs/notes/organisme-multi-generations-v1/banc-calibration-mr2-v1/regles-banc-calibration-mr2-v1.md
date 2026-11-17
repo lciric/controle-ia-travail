@@ -10,8 +10,8 @@
   ni le devis v3 du banc, ni aucune de leurs contre-lectures. **Réserve de lignée** : même modèle que les rédacteurs de la
   conception, du préenregistrement et du code du pilote ; la contre-lecture doit venir d'un lecteur neuf d'une autre lignée
   (modèle C), qui n'ait écrit ni cette pièce, ni le code de la course, ni la conception.
-- **Heures** (`date -u`) : début 2026-11-17 02:34:42 ; mesure des durées (pièce d'appui du devis v4) 02:51:19 à la fin de son
-  passage ; fin de la rédaction : dernière ligne.
+- **Heures** (`date -u`) : début 2026-11-17 02:34:42 ; mesure des durées (pièce d'appui du devis v4, graine publique de
+  développement) 02:51:19 à 02:59:56 ; calcul du devis 03:05:41 ; fin de la rédaction : dernière ligne.
 - **Décisions qui la commandent** (registres vivants `registres/go.md`, `registres/decisions.md`) : R-2492 (lignes
   GO-2026-11-13-01, 365 USD sur crédits, et GO-2026-11-13-02, 57 USD hors crédits, « sous conditions toutes exigées », dont
   « banc de calibration fait (n et seuils fixés par leurs règles) ») ; R-2501 (Q-15 (b) : 24 mondes de calibration) ;
@@ -107,7 +107,7 @@ Q-B2 (a), que Lazar n'a pas retenue. Conséquences :
 
 | rôle | code (course gelée ; points du brouillon 6) | précision |
 |---|---|---|
-| tirage et vérification des mondes | générateur et vérificateur MR-2 à noms neufs (V-1 à V-5, V-7, V-9) | égaux à `generer_v4` et `verifier_v4` (R5-7) ; contrôles C0 à C8 v4, toute conditionnelle certifiée, borne de 10 composantes contrôlée ; **C8 garde le juge interne du vérificateur** (200 graines, 400 tirages, m = 48) : il définit « certifiée », il n'est pas le juge du banc ; C7 joué avec les pièces servies gelées (mesure M3) |
+| tirage et vérification des mondes | générateur et vérificateur MR-2 à noms neufs (V-1 à V-5, V-7, V-9) | égaux à `generer_v4` et `verifier_v4` (R5-7) ; contrôles C0 à C8 v4, toute conditionnelle certifiée, borne de 10 composantes contrôlée ; **C8 garde le juge interne du vérificateur** (200 graines, 400 tirages, m = 48) et C6 son attribution interne à f = 0,75 : ils définissent la famille et « certifiée », ils ne sont ni le juge ni l'attribution du banc ; C7 joué avec les pièces servies gelées (mesure M3) ; Python 3.13 et numpy 2.5.3 (bloc gelé) |
 | oracle | V-27 | 12 000 instances par monde ; information I_i, attribution Δ_i, gains au sens v60 et de l'enveloppe, sentinelles, ajustement « tempéré et incliné » au maximum de vraisemblance attendue |
 | jeu planté | V-24 | V-monde, V-K1+i, V-diluée-0,03 et -0,05, F1 à F5, copies, H1, T-ELIM, T-MAL ; jamais regroupé, retenu ni servi |
 | gardien | V-13 | appliqué aussi aux cartes synthétiques ; une carte refusée n'est pas jugée et est comptée |
@@ -117,6 +117,9 @@ Q-B2 (a), que Lazar n'a pas retenue. Conséquences :
 | représentant | V-22 | couverture dirigée minimale ; à couverture mutuelle (écart ≤ 10⁻³), tranche de choix de **2 000** épisodes, une par groupe, la même pour tous les candidats ; puis l'empreinte canonique ; formes canoniques égales : le premier par rang de carte |
 | test de mort | **simulé** | statistique gelée du tour fermé (gain moyen de log-score sur la marginale empirique, comptes + 0,5) calculée **par le lanceur** sur une tranche de 400 épisodes, seuil 0,02 nat (T-ELIM : 2,0) ; aucun expérimentateur, aucun bac, aucun vérificateur |
 | lanceur du banc | V-12 (nom neuf) | ordre D-2, passes, mesures, manifeste par run (R9), sorties sans monde |
+
+Le port de `course` (juge simplifié, regroupement sur 1 500 instances, graines de la v4) n'existe dans le code que pour les essais
+R5-7 et R5-8 ; il ne joue aucune étape du banc.
 
 **Pourquoi le juge de la course, et non le « juge simplifié »** : le brouillon 6 écrit que « tout chiffre de puissance du juge réel
 vient du juge simplifié de la conception […] : il indique, il ne gèle rien. Les chiffres qui gèlent viennent du banc complet avec
@@ -269,8 +272,9 @@ Les lois plantées ne sont jugées que là où une mesure le demande (M7) ; elle
 - **Fusionnée** : étiquette C8 la moins favorable ; **classe la plus faible** dans l'ordre faible < conditionnelle < moyenne <
   forte ; pour G_cond, elle compte comme conditionnelle si l'un de ses membres en est une ; identifiant : le plus petit identifiant
   de ses membres (ordre numérique : E2 avant E10).
-- Calculée par le vérificateur sur chaque monde conforme, écrite à son rapport privé, appliquée à l'identique par l'oracle (et, dans
-  la course, aux mondes de test).
+- Calculée après la vérification, par la fonction de fusion du code de la course, sur chaque monde conforme, écrite au rapport
+  privé du vérificateur, appliquée à l'identique par l'oracle (et, dans la course, aux mondes de test) ; elle ne touche ni aux refus
+  ni aux étiquettes C8 du vérificateur (R5-7).
 - **Rapporté** : nombre de mondes à fusion, tailles et classes des fusionnées, étiquettes ; aucun lien de condition.
 
 ### 7.3 Étape 3 — n, tirages frais par carte (règle de Q-5 (c))
@@ -332,8 +336,9 @@ Les lois plantées ne sont jugées que là où une mesure le demande (M7) ; elle
 4. **Rapporté** : τ et sa borne de Wilson ; fausses découvertes et retenues par génération et par monde ; découvertes réelles sous
    le seuil (gain au-delà de l'enveloppe > 0) ; recombinaisons ; **minimums** de fausses découvertes qui déclenchent la ligne FD
    (borne basse de Wilson > τ) pour 3, 5, 8, 10, 15, 20 et 30 retenues, à τ retenu.
-5. **Égalité de contrôle** : si n retenu = 400 et forme retenue = F1, les générations 1 et 2 de cette étape égalent, carte pour
-   carte et jugement pour jugement, celles de l'étape 3 (mêmes flux, mêmes valeurs) ; un écart arrête le banc (garde B-13).
+5. **Égalité de contrôle** : si n retenu = 400 et forme retenue = F1, les générations 1 et 2 de cette étape égalent celles de
+   l'étape 3 (mêmes flux, mêmes valeurs) : à l'identique pour les ensembles S, les cartes admises, les groupes, les promus et les
+   retenues, à 10⁻⁹ près pour les valeurs e ; un écart arrête le banc (garde B-13).
 
 ### 7.6 Étape 6 — règle de garde, en dernier (conception v7 §3.2 ; brouillon 6, « Seuil », règle 6 ; GO-2026-11-17-05)
 
@@ -358,8 +363,8 @@ Les lois plantées ne sont jugées que là où une mesure le demande (M7) ; elle
   pour mémoire : 1 − 0,025^(1/84) = 0,042965 ; jamais cet arrondi à la place du champ). Champ absent ou empreinte autre : passe
   « non jouée », écrite en tête, **sans arrêt** (elle ne décide pas).
 - **Pour chaque passe** : G, G_cond, borne de Wilson de G/24, « tenue » ou « non tenue » **à titre d'information** ; nombre de
-  cartes de la génération 1 qui portent une conditionnelle ; classes des composantes restantes ; mondes sans tirage conforme ;
-  refus par contrôle et motifs.
+  cartes de la génération 1 dont l'ensemble S contient une conditionnelle ; classes des composantes restantes ; mondes sans tirage
+  conforme ; refus par contrôle et motifs.
 - **Ce qui suit un échec** : **pas de course** ; aucune nouvelle famille, aucun nouveau tirage de mondes de calibration, aucun
   réglage du modèle de proposeurs sur ces mêmes mondes ; une famille revue passe par un texte neuf et le mot de Lazar. **Un succès ne
   prouve rien sur le progrès** : il dit que la course **peut** y répondre, sous le modèle.
@@ -381,13 +386,13 @@ archive, ses graines et sa lecture ; celles que la pièce ne définit pas sont r
 
 | # | mesure | loi(s) et archive(s) | graines, n | lecture (sans décision) |
 |---|---|---|---|---|
-| **M1** | **surdité** (D.1 « Portée de C8 » ; L.2 PL-sourd ; A6) | pour chaque archive A ∈ {**A₃** : archive au début de la génération 3 de l'étape 5 ; **A₈** de l'étape 3} et chaque composante (fusionnée) **certifiée**, latente exclue, **non couverte par A** : S_i(A) non diluée jugée contre A (p_i(A)) ; **référence** : la même construction avec l'archive {W₋ᵢ} (W₋ᵢ : le monde sans les membres de i), S_i({W₋ᵢ}) jugée contre {W₋ᵢ} (p_i(W)) ; et la puissance C8 de i | 200 graines ; n retenu | p_i(A), p_i(W), écart ; couple (i, A) « **sourd** » si p_i(A) < 0,5 ≤ p_i(W) ; comptes par classe et par archive ; c'est la mesure à laquelle la course compare PL-sourd |
+| **M1** | **surdité** (D.1 « Portée de C8 » ; L.2 PL-sourd ; A6) | archive **A₃** : l'archive au début de la génération 3 de l'étape 5 (K1 et les retenues simulées des générations 1 et 2, **sans W₋ᵢ** : la forme que la conception v3 §1.8 et la vérification F-2 demandent) ; pour chaque composante (fusionnée) **certifiée**, latente exclue, **non couverte par A₃** : S_i(A₃) non diluée jugée contre A₃ (p_i(A₃)) ; **référence** : la même construction avec l'archive {W₋ᵢ} (W₋ᵢ : le monde sans les membres de i), S_i({W₋ᵢ}) jugée contre {W₋ᵢ} (p_i(W)) ; et la puissance C8 de i | 200 graines ; n retenu | p_i(A₃), p_i(W), écart ; composante « **sourde** » si p_i(A₃) < 0,5 ≤ p_i(W) ; comptes par classe ; c'est la mesure à laquelle la course compare PL-sourd (la génération 3 est celle dont la conception veut savoir si un vide vient du monde ou du juge ; l'archive du début de la génération 2 n'est pas mesurée, ni les archives de 8 et 16 lois partielles, que F-2 point 2 retire) |
 | **M2** | **tranche de choix de 2 000 épisodes contre 400** (D.8 point 7) | groupes des trois générations de l'étape 5 dont le représentant s'est départagé par la tranche ; représentant recalculé sur les **400 premiers** épisodes de la même tranche | — | perte = gain de l'oracle du meilleur membre moins celui du choisi, pour 2 000 et 400 ; groupes à perte > 0,01 nat ; choisis sous g₀ alors que le meilleur est au-dessus |
 | **M3** | **C7 sur les pièces gelées** | au tirage (C0 à C8), le vérificateur reçoit les **pièces servies gelées** de la course (gabarit `e77d3041…`, consignes de l'expérimentateur et du vérificateur, grammaire ; empreintes au bloc gelé) | — | touches à deux décimales par monde ; une égalité à six décimales est un **refus du tirage** (règle du vérificateur v2, inchangée), compté parmi les refus avec son motif ; pièces non gelées avant le secret : C7 joué sur les seules pièces gelées, la liste des autres écrite |
 | **M4** | **doublons sur paires difficiles** (brouillon 3 §16.1 point 5) | par monde conforme, paires construites sur le monde (donc disjointes des 12 mondes de développement), aux dix catégories de `doublons-w12-v2` (base = fortes et première moyenne ; variantes σ = 0,05, 0,1, 0,2, 0,3 ; reformulation ; tempérée 1,2 ; mêlée 0,8 à l'uniforme : à regrouper ; distincte-moyenne, ajout-faible, ajout-moyenne : à ne pas regrouper) et une catégorie neuve **ajout-conditionnelle** (base et première conditionnelle : à ne pas regrouper) ; `grouper` de la course | 2 000 instances | part juste par catégorie (Wilson sur les mondes) ; catégorie sans objet si le monde n'a pas les composantes voulues ; une part juste < 0,8 s'écrit en tête ; ε et ε_strat inchangés (règle de changement) |
 | **M5** | **fréquences des sortes déformées par les rejets** (D.1 « Régularités ») | (a) classe × sorte des 24 mondes conformes, et de tous les tirages, refusés compris ; (b) 10 000 gabarits tirés par la fonction gelée sans les contraintes v4 et avec elles, sur une graine publique (`cle("frequences-sortes-banc-mr2-v1")`), sans aucun coefficient | — | tables (a) et (b) ; déclarées avec le générateur (Q-10 (a)) |
 | **M6** | **coût de d_nul à 48 feuilles** (D.8 point 4, V-21) | durée murale de chaque regroupement des générations simulées (étapes 3, 5, 6) et nombre de feuilles des cartes | — | médiane et maximum ; coût projeté pour la course |
-| **M7** | **valeurs [BANC] des prédictions** (brouillon 6, P1 à P5, P8, P9) | (P1 à P5) pour chaque génération g de l'étape 5, le jeu planté de g (V-24 : V-monde, V-K1+i, V-diluées, F1 à F4, et pour g ≥ 2 F5 et les copies des quatre premières retenues de g − 1, H1, T-ELIM ; T-MAL au gardien) jugé **40 fois** contre A_g (40 répétitions du jeu entier, flux par (g, répétition)) ; vraies promues testées (test simulé ; T-ELIM au seuil 2,0) ; « vraie du critère » : gain au-delà de A_g (v60 et enveloppe) ≥ g₀ ; (P8) perte au regroupement dans l'étape 5 : composantes certifiées couvertes par au moins une carte et par aucun représentant, par génération ; (P9) τ de l'étape 5 | 40 répétitions ; n retenu | parts par type et par classe (forte, moyenne, **conditionnelle**, faible) avec Wilson ; fausses couvertes promues ; part des répétitions où une vraie du critère est promue puis survit en génération 1 ; recopiées aux marqueurs [BANC] du texte candidat de la course |
+| **M7** | **valeurs [BANC] des prédictions** (brouillon 6, P1 à P5, P8, P9) | (P1 à P5) pour chaque génération g de l'étape 5, le jeu planté de g (V-24 : V-monde, V-K1+i, V-diluées, F1 à F4, et pour g ≥ 2 F5 et les copies des quatre premières retenues de g − 1, H1, T-ELIM ; T-MAL au gardien) jugé **20 fois** contre A_g (20 répétitions du jeu entier, flux par (g, répétition) ; 24 mondes × 20 = les 12 mondes × 40 de la conception) ; vraies promues testées (test simulé ; T-ELIM au seuil 2,0) ; « vraie du critère » : gain au-delà de A_g (v60 et enveloppe) ≥ g₀ ; (P8) perte au regroupement dans l'étape 5 : composantes certifiées couvertes par au moins une carte et par aucun représentant (de tous les groupes), par génération ; (P9) τ de l'étape 5 | 20 répétitions ; n retenu | parts par type et par classe (forte, moyenne, **conditionnelle**, faible) avec Wilson ; fausses couvertes promues ; part des répétitions où une vraie du critère est promue puis survit en génération 1 ; recopiées aux marqueurs [BANC] du texte candidat de la course |
 
 Mesures du brouillon 3 et de la conception v3 que le brouillon 6 ne cite pas (étalonnage du juge simplifié, mondes témoins) : **non
 reprises** ; M7 tient lieu de détection par classe avec le juge de la course.
@@ -401,9 +406,9 @@ pas des hypothèses éprouvées, et une valeur loin de l'indication déclenche l
 |---|---|---|
 | **P0, règle (passe qui décide)** | part attendue des mondes gardants 0,996 ; **règle tenue avec la probabilité au-dessus de 0,9999** ; **G = 24 le plus probable** (0,91 à ρ = 0,5) ; au moins un monde sans tirage conforme : 0,09 (ρ = 0,5) à 0,33 (ρ = 0,6) | conception v7 §3.4 ; `sorties-v5/calcul-regle-v5.json` (`10ff446d…`) ; recalcul : 1 − (1 − 0,5⁸)²⁴ = 0,0897 et 1 − (1 − 0,6⁸)²⁴ = 0,3340 |
 | passes rapportées | 0,01 : tenue 0,9995 à 0,9999 ; 0,02 : 0,91 à 0,96 ; 0,03 : 0,50 à 0,66 ; 0,04 : 0,14 à 0,25 ; **borne haute 0,042965 : 0,09 à 0,17** (G ≈ 8 à 9) ; 0,05 : 0,02 à 0,06 ; sans masquage : 0,0000 (G ≈ 0) | même pièce (modèle réduit ; le banc refait la table avec le code gelé) |
-| f | 0,75 le plus probable (règle d'égalité ; 0,74 d'ensembles exacts à 0,75 sur MR-1, `attribution-w12-v2b.json`, `3c4d00c8…`) ; aucune mesure sur MR-2 | conception v3 §5 (brouillon 3) |
+| f | 0,75 le plus probable (règle d'égalité ; 107 lois sur 144, 0,74, d'ensembles exacts à 0,75 sur MR-1) ; aucune mesure sur MR-2 | brouillon 3 §5 ; `sorties-v2/attribution-w12-v2b.json` (`3c4d00c8…`) |
 | fusion | non chiffrée par les pièces (les refus C6 de la v4 viennent d'effets de sous-population non séparables ; la fusion ne s'applique qu'aux mondes conformes) | conception v7 §4.1 |
-| n | 400 le plus probable, 300 ou 600 possibles : sur MR-1, 0,72 de promotions à n = 400 pour un gain de 0,02 à 0,03 contre {K1} (`detection-w12-r40-v2.json`, `6a3d1444…`) ; 0,54 sur les faibles contre {W₋ᵢ} et 7 ou 15 lois partielles (`archive-w8-r30-v2.json`, `a631ad47…`) ; sous 0,01 nat : 0,08 à n = 400, 0,21 à n = 800 (sous-famille v1) : le point (ii) devrait tenir sur toute la grille | conception v3 §1.6 |
+| n | 400 le plus probable, 300 ou 600 possibles : sur MR-1, 0,72 de promotions à n = 400 pour un gain de 0,02 à 0,03 contre {K1} (`detection-w12-r40-v2.json`, `6a3d1444…`) ; 0,54 sur les faibles contre {W₋ᵢ} seul ou avec 7 ou 15 lois partielles (`archive-w8-r30-v2.json`, `a631ad47…`) ; sous 0,01 nat : 0,08 à n = 400 (même pièce de détection), 0,21 à n = 800 (sous-famille v1, `detection-w12-r40-v1.json`, `8da67edd…`) : le point (ii) devrait tenir sur toute la grille | conception v3 §1.6 |
 | forme | pour des copies de puissance p chacune : F1 ≈ p³, F2 ≈ p, F3 entre les deux selon la part qui atteint 3·m/α ; F2 ou F3 le plus probable ; F1 seulement si p ≥ 0,99 environ | calcul de la forme (annexe A, remarque) |
 | τ | 0,15 à 0,20 (v4 : 36 sur 204 = 0,176 ; v3b : 28 sur 181 = 0,155) | conception v7 §4.4 |
 
