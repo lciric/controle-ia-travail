@@ -52,6 +52,7 @@ BASE=$DEPOT/runs/temoin-bailey-v1-20261111
 JOURNAL=/root/poste-hetzner-v13.log
 exec >>"$JOURNAL" 2>&1
 echo "début $(date -u +%FT%TZ)"
+DEBUT_POSTE=$(date -u +%s)  # v13 : fenêtre de 24 h du § 2.4 bornée en temps
 
 # 1. secrets (les blocs sont remplacés par le constructeur des données de démarrage)
 umask 077
@@ -145,6 +146,7 @@ choix = {"offre": str(o["id"]), "gpu": o["gpu_name"], "dph_total": o["dph_total"
 json.dump(choix, open(sys.argv[1], "w"), ensure_ascii=False, indent=2, sort_keys=True)
 EOF
 for n in $(seq 1 144); do
+  [ $(( $(date -u +%s) - DEBUT_POSTE )) -lt 85500 ] || break  # v13 : 23 h 45 après le début du script
   if vastai search offers 'gpu_name in [A100_SXM4,A100_PCIE] num_gpus=1 gpu_ram>=79 cpu_ram>=128.9 disk_space>=115 reliability>0.97 cuda_vers>=12.4 direct_port_count>=1 rentable=true cpu_cores_effective>=32 cpu_ghz>=2.4' -o dph --raw > /root/offres.json; then
     python3 /root/choisir_offre.py "$BASE/offre-choisie-v13.json" && break
   else
