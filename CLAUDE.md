@@ -66,7 +66,7 @@ Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au
 ## Communication avec Lazar
 Verdict d'abord (1 à 3 lignes), puis erreurs, changements, décisions, une ligne chacun. Format de décision : décision en une phrase ; enjeu ; 2 ou 3 options (avantage, inconvénient) ; recommandation et confiance ; défaut sous 48 heures.
 Écrire seulement pour : prononcé, réserve, divergence non résolue, demande de GO, dépense. Le reste vit dans les registres.
-Nommer ce qui tourne par ce que c'est et ce que ça fait, jamais par son sigle ou son numéro seul (« l'apprentissage des sondes sur la tâche », pas « B bis » ; « le jeu de l'idée du poids du nul », pas « idée 1.1 ») ; un identifiant (GO, R-, T0.x) ne vient qu'en appui, après le nom en clair (mot de Lazar, R-3044).
+Nommer ce qui tourne, ce qui est mesuré et ce qui est décrit par ce que c'est et ce que ça fait, jamais par son sigle, son numéro ou son code seul — dans les messages à Lazar, dans les registres, dans les résultats, partout (« l'apprentissage des sondes sur la tâche », pas « B bis » ; « le jeu de l'idée du poids du nul », pas « idée 1.1 » ; « l'essai d'ablation couche par couche », pas « B-7 » ; « la lecture par lentille neuronale », pas « Neuron Lens B-α ») ; un identifiant (GO, R-, T0.x, B-7) ne vient qu'en appui, après le nom en clair (mot de Lazar, R-3044, étendu R-3085).
 
 ## Interdits
 Franchir une porte sans verdict scellé et GO ; dépenser sans GO sur devis ; moyenne ou médiane sur les tokens dans une sonde de production ; chiffre non vérifié dans un préenregistrement ou un papier ; changer de modèle sans GO ; contacter, soumettre, publier, ouvrir un dépôt public ; modifier le programme (tu proposes, Lazar décide).
