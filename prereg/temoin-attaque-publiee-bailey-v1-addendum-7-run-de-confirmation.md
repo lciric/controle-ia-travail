@@ -67,8 +67,8 @@ filtre du § 2.4 l'aurait exclue.
    reprise ; règle ; run principal ; au plus une relance), audit de symétrie. La relance de la liste d'arrêt (l. 371)
    est jouée par la conduite sur la même instance quand le code le permet ; si l'instance est perdue, par le chemin de
    l'addendum 5 (relance seule : pièces neuves contre-lues (R2), mot de Lazar), sans nouvel addendum si le code ne
-   change pas. Une mise en place tombée peut être refaite (l. 363 ; addendum 5, § 4 : conduite et poste neufs, mot de
-   Lazar). Dans tous ces cas, avant la clôture (§ 3). Code : celui de l'addendum 5, plus la garde du point 3.
+   change pas. Une mise en place tombée peut être refaite (l. 363 ; addendum 5, § 4 : conduite et script de poste neufs
+   (R12), mot de Lazar ; même poste de dépense : D cumulée, même B). Dans tous ces cas, avant la clôture (§ 3). Code : celui de l'addendum 5, plus la garde du point 3.
 2. **Poste neuf, B neuf (écart au texte, l. 249-251 et 374).** La série de confirmation est un poste neuf : D compte de
    zéro à sa première instance ; **B = 85 USD**, garde à B − 2. Pourquoi 85 : la règle donne K = 72 dès que
    c ≤ 1,6 USD/h (carte et stockage, borne du § 2.4), t ≤ 1 800 s (garde du § 2.3) et D ≤ 8,7 USD au calcul
@@ -145,42 +145,54 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   l'être avant la clôture, sur un nouveau mot de Lazar), contrôle du juge hors seuil (l. 365), garde de durée du pilote
   (§ 2.3), seconde chute du pilote, K < 20 à la règle, journaux perdus (reprise de la lecture 38 impossible), ou toute
   autre ligne de la liste d'arrêt qui laisse la série sans run principal lisible ; (iii) Lazar y met fin ; c'est rapporté
-  comme sa décision, avec la réserve du § 1 si une lecture a précédé. Quand la cause laisse une suite à la décision de
+  comme sa décision, avec la réserve du § 1 si une lecture a précédé ; si un run est en cours, la note de clôture
+  n'est écrite qu'après son arrêt, le transfert et le scellement de ses journaux (reprise de la lecture 38 comprise),
+  ou le constat de leur perte. Quand la cause laisse une suite à la décision de
   Lazar (mot de lancement, seconde tentative du § 2.3, mise en place refaite, relance par le chemin de l'addendum 5,
   crédit d'une reprise, nouveau relevé du § 2.5, ligne neuve de la condition 2), la note de clôture cite le mot de Lazar
   qui y renonce, ou constate que l'échéance de la condition 2 est passée ; dans les autres cas, elle est écrite dès le
   constat. Après la clôture, rien n'est ajouté à la confirmation. La note de clôture nomme, pour chaque verdict à lire,
   le dossier donné au lecteur (pour la confirmation : la sortie de la conduite ; le dossier de reprise s'il y a eu
-  reprise ; le dossier assemblé, fait avant la clôture, s'il y a eu relance par le chemin de l'addendum 5) et la
+  reprise ; le dossier assemblé, fait avant la clôture, s'il y a eu relance par le chemin de l'addendum 5 ; un refus de
+  cet assemblage est tranché avant la clôture, sans lecteur, par la puce « Refus ou erreur à la lecture ») et la
   commande ; ils ne changent plus.
 - **Les deux verdicts**, après la clôture seulement : deux lecteurs neufs distincts (R13 : ni auteurs du
   préenregistrement ni de l'analyse), lancés ensemble dans les 24 h qui suivent la clôture, chacun avant que l'autre
   n'ait rendu (un lancement plus tardif est rapporté avec sa cause et ne change aucune règle) ; l'un sur
   `lecture-assemblee-v1` (verdict du texte pour les séries 1 à 3 et la relance ; K′ établi par cette lecture, 36 tours
   complets au bilan ; l. 332, 338) ; l'autre, si un run principal de la confirmation a ses journaux transférés et
-  scellés (cas (i) ; cas (iii) après le début du run principal, lu comme un run interrompu, l. 338), sur le dossier que
+  scellés (cas (i) ; cas (ii) ou (iii) après le début du run principal, lu comme un run interrompu, l. 338), sur le dossier que
   nomme la note de clôture. Mêmes critères gelés (`lecture_v8.valider`, `lire` avec
   `analyse_v3.graines()["reechantillonnage"]`, audit de symétrie). Chaque verdict est demandé à un seul lecteur, dont le
   lancement (heure, fichiers donnés, commande) est consigné avant qu'aucun des deux lecteurs n'ait rendu ; tout autre
   lecteur lancé pour le même verdict est rapporté, et le premier lancé fait foi. Aucun des deux lecteurs ne reçoit ni ne
   lit le verdict de l'autre, son rapport, son dossier de lecture, ni aucun registre, passation ou note écrits après la
-  clôture, avant d'avoir scellé le sien (cloisons écrites dans sa consigne). Chaque lecteur écrit et scelle lui-même son
+  clôture, avant d'avoir scellé le sien (cloisons écrites dans sa consigne). Le chemin du rapport est fixé par la consigne. Chaque lecteur écrit et scelle lui-même son
   rapport ; il ne rend à la session que l'empreinte de ce rapport, ou la mention « refus ou erreur » avec le message du
-  code, sans aucune valeur. La session n'ouvre aucun rapport avant que chaque lecteur lancé ait scellé le sien, ou que la
-  suite d'un refus ou d'une erreur soit close. Un lecteur qui s'arrête sans rien rendre est remplacé par un lecteur neuf,
-  sur la même consigne, qui fait alors foi ; c'est rapporté. K′ de la confirmation : nombre de tours complets de
+  code (texte de la `GardeArret` ; pour toute autre exception, son type et la ligne du code, sans le contenu qu'elle
+  cite), sans aucune valeur. Jusqu'à ce que chaque verdict attendu soit scellé, ou son absence
+  constatée, aucune session n'ouvre un rapport, ne lit une note de sonde ou de juge du témoin (au sens de la première
+  puce ; les l. 241-242 et 371 du texte ne jouent qu'ensuite), ni ne joue `valider`, `lire` ou un autre code sur un
+  dossier réel : seuls les lecteurs le font. Si une session apprend malgré cela un verdict ou une valeur de note avant
+  ce moment (message d'un lecteur, fichier ouvert), c'est consigné avec ce qui a été vu ; toute décision prise ensuite
+  sur l'autre lecture (remplacement d'un lecteur) est rapportée « décidée après une lecture », et le verdict retenu
+  porte cette réserve. Un lecteur dont l'exécution finit sans empreinte ni mention est
+  remplacé par un lecteur neuf, sur la même consigne, qui fait alors foi, même lancé après que l'autre a rendu ; un
+  rapport que le premier aurait scellé n'est pas retenu ; c'est rapporté. K′ de la confirmation : nombre de tours complets de
   l'exécution qui porte son verdict (sa relance, s'il y en a une, l. 371).
-- **Refus ou erreur à la lecture.** Un état « pas de verdict » rendu par `valider` est une issue des critères gelés. Un
-  refus levé par le code (`GardeArret` de `valider`, de `lire` ou de l'assemblage) ou une erreur d'exécution, constatés
-  sur la commande consignée rejouée une seconde fois à l'identique, sans qu'aucune valeur de note ait été rendue : nœud,
-  tranché sans ouvrir aucun rapport. Ou bien le refus tient à la pièce lue (absente, altérée ou non conforme) : « pas de
-  verdict » pour ce run (addendum 5, § 5 (d) ; addendum 6, § 5 (d)). Ou bien il tient à un défaut du code ou de
-  l'assemblage : correction de ce seul défaut, sans toucher à aucun critère gelé, seuil, garde ni condition de refus,
-  par un addendum neuf, contre-lu (R2), dû quel que soit l'autre verdict et scellé au plus tard 72 h après le constat ;
-  puis lecture par un lecteur neuf, qui fait foi pour ce run (seule exception, avec le lecteur remplacé, à « le premier
-  lancé fait foi » ; ce n'est pas une relecture). Sans addendum scellé dans ce délai, ou si une valeur de note a été
-  rendue avant le refus ou l'erreur : « pas de verdict » pour ce run. Dès qu'un verdict a été rendu pour un run, aucune
-  relecture de ce run n'est retenue.
+- **Refus ou erreur à la lecture : règle mécanique, sans diagnostic.** Un état « pas de verdict » rendu par `valider`
+  est une issue des critères gelés. Un refus levé par le code (`GardeArret` de `valider` ou de `lire`) ou une erreur
+  d'exécution est constaté par le lecteur lui-même, qui rejoue la commande consignée une seconde fois à l'identique
+  avant de rien rendre ; si la seconde exécution aboutit, il en fait son rapport et y dit le premier échec. Un refus ou
+  une erreur à la seconde exécution : **« pas de verdict » pour ce run, quelle qu'en soit la cause** (pièce, code,
+  assemblage, commande ou environnement), sans nœud, sans classement de la cause, sans correction ni nouvelle lecture
+  retenue. Aucune décision ne dépend donc d'un diagnostic. La cause peut être étudiée et rapportée après que chaque
+  verdict attendu est scellé, ou son absence constatée, sans effet sur aucun verdict ; toute lecture ultérieure de ce
+  run, même après correction, est rapportée « exploratoire, non retenue ». Un refus de l'assemblage d'une relance passée
+  par le chemin de l'addendum 5 est constaté avant la clôture, sans lecteur et sans lire aucune note : s'il tient au code
+  d'assemblage, ce code peut être corrigé avant la clôture par un addendum neuf, contre-lu (R2), comme à l'addendum 6,
+  § 5 (d) (« avant toute lecture ») ; sinon ce run n'a pas de verdict, et la note de clôture le dit. Dès qu'un verdict a
+  été rendu pour un run, aucune relecture de ce run n'est retenue.
 - **Rapport** : les deux verdicts, côte à côte, chacun avec son K′ et son régime ; leur accord ou leur désaccord est
   rapporté tel quel ; aucune mise en commun des notes ; aucun verdict n'est ouvert par la session ni rapporté avant que
   chaque verdict attendu soit scellé, ou son absence constatée. **Verdict retenu pour l'étape 1** (nœud 5, option (c),
@@ -189,13 +201,13 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   reproduit » ou « non interprétable » ; un état « pas de verdict » n'est pas un verdict), est retenu, au régime publié ;
   le verdict à 36 tours reste rapporté comme la lecture prévue au régime réduit. Dans tous les autres cas (confirmation
   non lancée ou non courue, pas de run principal, pas de verdict, ou K′ ≤ 70, quelle qu'en soit la cause), le verdict
-  retenu est celui à 36 tours ; la confirmation est rapportée avec sa cause, selon la table des critères gelés
+  retenu est celui à 36 tours ; si ce run est lui-même sans verdict, aucun verdict n'est retenu pour l'étape 1, quel
+  que soit celui de la confirmation ; la confirmation est rapportée avec sa cause, selon la table des critères gelés
   (l. 329-338). Ce que vaut l'étape 1 pour le témoin de [Règle] ne change pas (l. 340 ; nœud 5, option (c)).
 - Contrôle du juge hors seuil à la mise en place de la confirmation : pas de run, pas de verdict de confirmation
   (l. 365) ; il est rapporté à côté du verdict à 36 tours, comme réserve, sans le changer.
 - **Après le lancement du premier lecteur** : aucune série, tentative, relance, reprise, ni relecture d'un run dont le
-  verdict a été rendu, décidée ensuite n'est retenue pour l'étape 1 (la lecture qui suit un refus ou une erreur n'est
-  pas une relecture) ; elle est rapportée à côté, avec la mention « décidée après la lecture », sans changer le verdict
+  verdict a été rendu, décidée ensuite n'est retenue pour l'étape 1 ; elle est rapportée à côté, avec la mention « décidée après la lecture », sans changer le verdict
   retenu. Aucune autre série sans nouvelle décision de Lazar et nouvel addendum. « La confirmation » désigne la seule
   série de cet addendum, seconde tentative du § 2.3, mise en place refaite (l. 363) et relance de la l. 371 comprises.
 - Information, sans effet sur la lecture : le rapport donne le premier tour où les empreintes de suffixe (écart 9) de
@@ -249,7 +261,9 @@ commit `873ab00c`.
   placent le verdict à 36 tours après le scellement de l'addendum ; toute passation et tout brief écrits avant la clôture
   le disent en tête ;
 - (f) le code de lecture n'a jamais été joué sur le dossier réel à 36 tours (cloison) : un refus ou une erreur à la
-  lecture suivrait la règle du § 3, et pourrait laisser ce run sans verdict.
+  lecture, quelle qu'en soit la cause, laisse ce run sans verdict (règle mécanique du § 3, choisie pour qu'aucune
+  décision ne dépende d'un diagnostic fait après la clôture) ; si le run à 36 tours est sans verdict et la
+  confirmation non retenue, l'étape 1 reste sans verdict retenu (§ 3).
 
 ## 6. Conditions de lancement et ordre
 Celles du texte et de l'addendum 5, avec :
@@ -265,7 +279,8 @@ Celles du texte et de l'addendum 5, avec :
 - condition 5 : nœud 5, option (c), inchangée ;
 - condition 7 : le mot direct de Lazar pour le lancement. Il accepte ou refuse en bloc la confirmation, les paramètres du
   § 2, l'ordre de lecture (§ 1) et les règles du § 3 (clôture, verdict retenu, refus ou erreur à la lecture), qui sont
-  un choix de la session ; un mot assorti d'une condition ne vaut pas mot de lancement : la demande est renouvelée ;
+  un choix de la session ; donné avant le scellement de cet addendum, il ne vaut que si les § 2 et 3 scellés sont
+  identiques à ce qui a été porté à sa connaissance ; un mot assorti d'une condition ne vaut pas mot de lancement : la demande est renouvelée ;
   seul un refus exprès est une cause de clôture (§ 3) ;
 - condition 9′ de l'addendum 6 : remplacée par le § 2.5.
 
@@ -298,7 +313,12 @@ le commit `0c373143`) : quatre bloquants (deux contradictions nées de l'excepti
 relance, reprise, compte vidé et mise en place) et, parmi les points à corriger, les lecteurs. Traitement : plutôt que
 de fermer ces voies une à une, **l'ordre est changé** (§ 1, § 3, § 6 : aucune lecture avant la clôture ; les deux
 verdicts ensuite), ce qui retire l'exception « défaut technique », les délais comptés depuis la lecture et la liste des
-décisions « postérieures à la lecture » avant la clôture.
+décisions « postérieures à la lecture » avant la clôture. Repris des deux passes : un seul lecteur par verdict,
+lancement consigné, commande rejouée à l'identique ; lecteurs cloisonnés l'un de l'autre ; aucun verdict rapporté avant
+les deux scellements ; relance de la l. 371 et reprise précisées ; K′ établi par la lecture ; empreintes de suffixe
+(écart 9) lues après les verdicts ; provenance du taux de 1,108 USD/h ; devis et risques au taux carte et stockage ;
+échéance exacte ; objet du GO sans autre « (B = … » ; mot conditionnel ; libellé d'arrêt ; essais complémentaires
+scellés.
 Passe finale, trois angles, sur le texte réécrit (`…-v3.md`, `eab770c9…`, sur le commit `11954d70`) : deux bloquants,
 tous deux dans la phase de lecture, après la clôture (règle « refus ou erreur à la lecture » à deux lectures ; premier
 verdict connu de la session avant que le sort du second soit fixé), corrigés par les textes de remplacement des
@@ -310,5 +330,26 @@ pièces anciennes remplacées sur l'ordre de lecture ; moment et auteur de la cl
 par Lazar ; rattachement de l'ordre de lecture et du § 3 au mot de lancement ; mot conditionnel ; machine 146915 et
 relevé de 00:51Z ; champ `credit` ; pilote et règle de la seconde tentative ; bornes de D ; taux carte et stockage aux
 § 2.2 et § 5 (a) ; tours 30, 33, 34 et 35 ; pente ; tirage sur la carte ; heure de fin de la relance ; nuit du 12 au
-13 novembre ; chemins complets ; empreintes des notes du 16 novembre ; commits intermédiaires.
-Dernière vérification, différentielle, sur ce texte : @@DERNIERE_VERIFICATION@@
+13 novembre ; chemins complets ; empreintes des notes du 16 novembre ; commits intermédiaires ; lecture qui suit un refus et
+définition de « la confirmation » ; dossier de lecture de l'autre lecteur ; champs techniques connus avant la clôture ;
+lancement tardif des lecteurs et ordre du § 6 ; relevé et alerte du § 2.5 ; liste des bloquants de la seconde passe ;
+`PYTHONPATH`. Aucun constat écarté.
+Dernière vérification, différentielle, deux angles (`…-v4.md`,
+`16e008d2adbd1babe312122be65da2588a5e9f6eaafe6049e2f2da07d33f37ce`, sur le commit `9c3613d6`) : un bloquant, vu par les
+deux angles, dans le choix de la session de la passe finale. Classer un refus en « pièce » (pas de verdict) ou en
+« code » (correction, puis lecteur neuf) demandait un diagnostic fait après la clôture, quand rien n'interdisait plus de
+lire les notes du run en cause : une décision qui dépendrait d'un résultat lu. Traitement : plutôt que d'encadrer ce
+diagnostic, **la règle devient mécanique** (§ 3, puce « Refus ou erreur à la lecture ») : un refus ou une erreur, rejoué
+par le lecteur, vaut « pas de verdict » pour ce run quelle qu'en soit la cause, sans correction ni nouvelle lecture
+retenue ; seul un refus de l'assemblage, constaté avant la clôture sans aucune lecture, reste corrigeable comme à
+l'addendum 6, § 5 (d). Prix déclaré au § 5 (f). Ce choix retire, sans les appliquer, les textes proposés pour la
+dichotomie (angle « application », points 1 à 4 et 6 (b) ; angle « phase de lecture », points 1 (second
+remplacement), 2, 3 (mention « valeur de note vue ») et 8) ; il reprend leur objet : aucune session ne lit une note ni
+ne joue le code sur un dossier réel avant que chaque verdict attendu soit scellé ou son absence constatée ; le lecteur
+rejoue lui-même ; lecture ultérieure « exploratoire, non retenue ». Repris tels quels : chemin du rapport fixé par la
+consigne ; verdict appris par erreur ; run à 36 tours sans verdict (aucun verdict retenu pour l'étape 1, fixé
+maintenant) ; message du code ; lecteur remplacé ; cas (iii) après l'arrêt et le transfert ; cas (ii) ou (iii) ;
+assemblage refusé tranché avant la clôture ; mise en place refaite au même poste de dépense ; membre de phrase de la
+condition 7 rétabli ; parenthèse sur la lecture qui suit un refus retirée ; traçabilité de cette section. L'en-tête
+« Ordre, sans autre étape… » du § 6 reste tel quel : la règle mécanique n'ajoute aucune étape après la clôture. Aucun
+autre constat écarté.
