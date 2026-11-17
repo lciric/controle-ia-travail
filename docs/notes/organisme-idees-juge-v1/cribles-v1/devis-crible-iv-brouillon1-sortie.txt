@@ -1,0 +1,95 @@
+
+§ 0. Contrôles de cohérence des entrées
+appels 16 ; somme des durées 2668.095 s
+machine du pilote 1.5706 h ; hors appels 2985.9 s
+quatre proposeurs + machine 15.302276 (verdict : 15,302276)
+
+§ 1. Attendu par appel de Pr-2 (moyenne des quatre appels du pilote, règle (b) de [CRIBLE-V]) et appel de trois cartes
+appel de six cartes (mesuré, moyenne) c6 = 0.264334
+part d'entrée supposée 0.069333 ; sortie déduite 0.195001
+appel de trois cartes : prudent c3 = c6 = 0.264334 ; bas (sortie moitié, SUPPOSÉ) 0.166834 ; rapport bas c3/c6 0.6311
+
+§ 2. Taille servie (règle du code : (octets + 1 024) x entrée + borne x sortie <= plafond)
+octets servis au plus : 53976 ; ligne d'arrêt : 53 000 ; cible de la règle : 52 000
+cartes d'archive au plus dans un texte servi : bras 1 et 3, génération 2 : K1 + 6 ; bras 2, demi 2b : K1 + 9
+
+§ 3. Appels du crible
+bras 1 (standard, 1 appel de six par génération) : par monde 2 ; en tout 40
+bras 2 (demi-générations, 1a commun compris) : par monde 4 ; en tout 80
+bras 3 (placebo, sans 1a commun) : par monde 3 ; en tout 60
+variante, 1a commun aux bras 2 et 3 : par monde 9 ; en tout 180
+forme de [NOTE] (sans appel commun) : par monde 10 ; en tout 200
+
+§ 4. Garde d'égalité de dollars par monde (un appel des bras 2 ou 3 part si la dépense déjà faite du bras < $1(w))
+c3/c6 = 0.5000 : appels du bras 2 faits 4 sur 4 ; dépense 0.5287 ; rapport au bras 1 1.0000
+c3/c6 = 0.6000 : appels du bras 2 faits 4 sur 4 ; dépense 0.6344 ; rapport au bras 1 1.2000
+c3/c6 = 0.6311 : appels du bras 2 faits 4 sur 4 ; dépense 0.6673 ; rapport au bras 1 1.2623
+c3/c6 = 0.6667 : appels du bras 2 faits 3 sur 4 ; dépense 0.5287 ; rapport au bras 1 1.0000
+c3/c6 = 0.8000 : appels du bras 2 faits 3 sur 4 ; dépense 0.6344 ; rapport au bras 1 1.2000
+c3/c6 = 1.0000 : appels du bras 2 faits 2 sur 4 ; dépense 0.5287 ; rapport au bras 1 1.0000
+seuils : 2a part si c3 < c6 ; 2b part si 3 c3 < 2 c6, soit c3/c6 < 2/3 = 0.6667
+dépassement borné : dépense d'un bras 2 ou 3 dans un monde <= $1(w) + un appel (plafond 2,00)
+
+§ 5. Devis (Pr-2, crédits de Claude)
+bras 1 40 appels : attendu (tous faits, c6) 10.5734 ; bas (c3 supposé) 10.5734 ; plafonds 80.00
+bras 2 (1a commun compris) 80 appels : attendu (tous faits, c6) 21.1467 ; bas (c3 supposé) 13.3467 ; plafonds 160.00
+bras 3 (hors 1a) 60 appels : attendu (tous faits, c6) 15.8600 ; bas (c3 supposé) 10.0100 ; plafonds 120.00
+proposeurs : attendu (tous faits) 47.5801 ; bas 33.9301 ; plafonds x appels 360.00
+si c3 = c6 (garde : bras 2 et 3 réduits à la génération 1) : 100 appels, attendu 26.4334
+borne par la garde (bras 1 <= 4 ; bras 2 et 3 <= $1 + 2 chacun, par monde) : 320.00
+part du relais proposée (forme de [NOTE] : 80 + 80 + 80) : 240.00 ; coût moyen par appel qui l'atteint (180 appels) : 1.3333 soit 5.04 fois c6
+sonde des gabarits (3 appels de six cartes + 1 de trois cartes à archive de K1 + 9) : attendu 1.0573 ; pire 8.00
+
+§ 6. Durées et machine
+opus55 : moyenne 68.387 s ; plus long 109.396 s ; borne par appel (règle de [CRIBLE-V]) B_a = 900 s
+monde, attendu (tour de chaîne supposé 60 s) : 770.3 s
+files 4 : mondes par file 5 ; appels et chaîne attendus 3851.6 s
+   B_c = 300 s : pire par monde 7200 s ; pire de la file 36000 s = 10.000 h ; garde de départ (pire + 2 h) 12.000 h
+   B_c = 600 s : pire par monde 9000 s ; pire de la file 45000 s = 12.500 h ; garde de départ (pire + 2 h) 14.500 h
+   B_c = 900 s : pire par monde 10800 s ; pire de la file 54000 s = 15.000 h ; garde de départ (pire + 2 h) 17.000 h
+files 5 : mondes par file 4 ; appels et chaîne attendus 3081.3 s
+   B_c = 300 s : pire par monde 7200 s ; pire de la file 28800 s = 8.000 h ; garde de départ (pire + 2 h) 10.000 h
+   B_c = 600 s : pire par monde 9000 s ; pire de la file 36000 s = 10.000 h ; garde de départ (pire + 2 h) 12.000 h
+   B_c = 900 s : pire par monde 10800 s ; pire de la file 43200 s = 12.000 h ; garde de départ (pire + 2 h) 14.000 h
+machine attendue (5 files) 0.088012 USD ; 0.192456 avec deux heures de génération de mondes ; 17 h : 0.8878 ; pire 3,00
+
+§ 7. Totaux de la variante
+crédits de Claude : attendu (tous faits) 47.5801 ; bas 33.9301 ; pire (part) 240.00
+hors crédits (machine) : attendu 0.0880 à 0.1925 ; pire 3.00
+avec la sonde : crédits attendu 48.6375 (bas 34.9874) ; pire 248.00 ; total pire 251.00
+sonde partagée avec celle du crible (ii) (ses trois premiers appels) : pire 245.00 ; attendu de la sonde 0.2643
+
+§ 8. Enveloppe de GO-2026-11-15-06 (1 275 USD au pire)
+(iii) version qui fera foi v1, sonde comprise 270.00
+(v) version qui fera foi v2, sonde neuve comprise 204.67
+(ii) brouillon 1, sonde comprise 411.00
+(i) brouillon 1 127.00
+quatre autres : 1012.67 ; reste pour (iv) : 262.33
+(iv) variante, part 240, sonde propre 251.00 ; cumul 1263.67 ; tient : True ; marge 11.33
+(iv) variante, part 240, sonde partagée avec (ii) 245.00 ; cumul 1257.67 ; tient : True ; marge 17.33
+(iv) plafonds x appels (360), sonde propre 371.00 ; cumul 1383.67 ; tient : False ; marge -108.67
+(iv) borne de la garde (320), sonde propre 331.00 ; cumul 1343.67 ; tient : False ; marge -68.67
+(iv) [NOTE] 243.00 ; cumul 1255.67 ; tient : True ; marge 19.33
+
+§ 9. Test des rangs signés exact (permutation des signes), seuil bilatéral
+niveau 0.025 : au moins 7 écarts non nuls, tous du même signe (p = 0.01562)
+niveau 0.050 : au moins 6 écarts non nuls, tous du même signe (p = 0.03125)
+
+§ 10. Signe seul (écarts de 0 ou +-1) : puissance à n = 20, bilatéral 0,025
+P(+1) = 0.30 P(-1) = 0.10 : puissance (côté +) 0.107
+P(+1) = 0.40 P(-1) = 0.10 : puissance (côté +) 0.271
+P(+1) = 0.50 P(-1) = 0.10 : puissance (côté +) 0.473
+P(+1) = 0.35 P(-1) = 0.05 : puissance (côté +) 0.327
+P(+1) = 0.20 P(-1) = 0.05 : puissance (côté +) 0.042
+
+§ 11. Probabilité d'atteindre le minimum (16 mondes complets sur 20 pour une comparaison principale)
+p par appel 1 : P1 (6 appels : bras 1 et 2) 1.0000 ; P2 (7 appels : bras 2 et 3, 1a commun) 1.0000
+p par appel 0.99 : P1 (6 appels : bras 1 et 2) 0.9949 ; P2 (7 appels : bras 2 et 3, 1a commun) 0.9905
+p par appel 0.98 : P1 (6 appels : bras 1 et 2) 0.9304 ; P2 (7 appels : bras 2 et 3, 1a commun) 0.8865
+p par appel 0.97 : P1 (6 appels : bras 1 et 2) 0.7673 ; P2 (7 appels : bras 2 et 3, 1a commun) 0.6643
+p par appel 0.95 : P1 (6 appels : bras 1 et 2) 0.3565 ; P2 (7 appels : bras 2 et 3, 1a commun) 0.2326
+
+§ 12. Formes écartées, information seulement
+forme de [NOTE], Pr-1 argon, 200 appels : attendu public 24.7162 ; configuration 123.5810 (hors crédits) ; plafonds x appels 468.00
+Pr-2, 200 appels sans appel commun : attendu 52.8668 ; plafonds x appels 400.00
+[NOTE] : 30,30 attendus, 243,00 au pire
