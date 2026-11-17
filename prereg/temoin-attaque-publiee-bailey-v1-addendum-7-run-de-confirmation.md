@@ -164,15 +164,23 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   la liste de tous les répertoires de ce dossier (vides ou non : ceux que git porte existent déjà dans l'arbre principal
   et sont laissés tels quels), hors de ce dossier : `cd <dossier> && find . -mindepth 1 -type d -printf '%P\n' |
   LC_ALL=C sort > <BASE>/repertoires-<C>-v1.txt`, où `<C>` est le chemin du dossier relatif à `<BASE>`, chaque « / »
-  remplacé par « -- » ; il la scelle par `cd <BASE> && sha256sum repertoires-<C>-v1.txt >
-  repertoires-<C>-v1.txt.sha256` (même forme que les compagnons du dépôt), puis la pousse avec son compagnon dans sa
+  remplacé par « -- », et `<BASE>` est `<racine>/runs/temoin-bailey-v1-20261111` (variable `BASE` du poste v12, l. 47 ;
+  même chemin absolu sur le poste et dans l'arbre principal) ; il la scelle, si elle existe, par `cd <BASE> && [ -f
+  repertoires-<C>-v1.txt ] && LC_ALL=C sha256sum repertoires-<C>-v1.txt > repertoires-<C>-v1.txt.sha256` (même forme
+  que les compagnons du dépôt), puis la pousse avec son compagnon dans sa
   dernière poussée. La session ne joue un assemblage ni un `--calculer-attendu` qu'après avoir
-  récupéré la branche une fois constatés, pour chacun de ces postes, son arrêt (marque de fin sur la branche, ou machine
-  du poste détruite par la session ou constatée perdue) et la destruction de son instance de calcul (ou sa mise à
+  récupéré la branche une fois constatés, pour chacun de ces postes, son arrêt (marque de fin sur la branche ; sans marque,
+  machine du poste constatée perdue, ou détruite par la session au plus tôt 1 h après le constat de la destruction de
+  son instance de calcul ou de sa mise à l'arrêt gardée, sans poussée du poste dans cette heure) et la destruction de son instance de calcul (ou sa mise à
   l'arrêt gardée, consignée) ; la dernière poussée d'un poste est alors la dernière de ses poussées qui soit sur la
-  branche. Avant tout assemblage et tout
-  `--calculer-attendu`, elle vérifie chaque liste par `cd <BASE> && sha256sum -c repertoires-<C>-v1.txt.sha256` (qui doit
-  rendre « OK » ; une commande qui ne démarre pas ne constate rien et se rejoue, corrigée dans ses seuls chemins), puis
+  branche. Aucun `--calculer-attendu` n'est joué tant qu'une suite permise avant la clôture (seconde tentative du
+  § 2.3, mise en place refaite, relance par le chemin de l'addendum 5, reprise de la lecture 38) n'est ni jouée, son
+  poste arrêté comme ci-dessus, ni écartée (mot de Lazar qui y renonce, ou échéance de la condition 2 passée), ni, s'il
+  y a un assemblage, avant celui-ci ou le constat de son refus. Avant tout assemblage et tout
+  `--calculer-attendu`, elle vérifie chaque liste par `cd <BASE> && LC_ALL=C sha256sum -c repertoires-<C>-v1.txt.sha256`
+  (qui doit rendre « OK » ; « FAILED » ou une ligne mal formée : compagnon qui ne concorde pas ; un compagnon dit
+  introuvable alors que la liste et lui sont sur la branche, ou une commande qui ne démarre pas, ne constate rien et se
+  rejoue, corrigée dans ses seuls chemins), puis
   crée sous le dossier que nomme la liste,
   dans l'arbre principal, chaque répertoire listé, avec ses parents absents (`mkdir -p`), et rien d'autre ; une entrée
   déjà présente comme répertoire est laissée telle quelle (geste technique, aucune note lue). Si une entrée est
@@ -180,7 +188,8 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   que son compagnon ne concorde pas, rien n'est créé de cette liste, et c'est rapporté. Une liste est absente si elle
   n'est pas sur la branche à cette récupération : rien n'est créé, et c'est rapporté. La note de clôture cite chaque liste et son empreinte, ou son absence.
   Pour `lecture-assemblee-v1`, est lu l'état du dossier dans l'arbre principal au calcul de l'attendu, rapporté tel quel
-  (les répertoires vides des postes des séries 1 à 3 et de la relance ne sont pas connus). La note nomme encore : le
+  (les répertoires que git n'a pas portés depuis les postes des séries 1 à 3 et de la relance, vides ou ne contenant
+  que des fichiers ignorés, ne sont pas connus). La note nomme encore : le
   commit du code, celui du § 4 et aucun autre ; le fichier des empreintes attendues, écrit et scellé par
   `lecture_scellee_v3 --calculer-attendu … --commit <ce commit> --vers …`, joué par la session avec la commande
   consignée, qui ne fait que des empreintes d'octets, ne lit aucune note, et refuse si `src/` porte une modification,
@@ -197,9 +206,12 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   attendu ou une sortie sous le dossier lu) ; avant le premier `--calculer-attendu`, la session fixe ces chemins et
   vérifie par programme (chemins résolus, `Path.resolve().is_relative_to`) qu'aucun chemin d'attendu, de sortie, de
   `<P>`, du dossier factice, de son attendu et de sa sortie, ni de la note de clôture n'est sous `<racine>/src` ni sous
-  aucun des dossiers donnés à une lecture ; un chemin qui échoue est remplacé avant toute écriture ; la note de clôture
+  aucun des dossiers donnés à une lecture ; un chemin qui échoue est remplacé avant toute écriture ; tout chemin neuf pris ensuite
+  (commande corrigée à l'essai factice, attendu recalculé sous un nom neuf, R12) passe la même vérification avant
+  d'être écrit, et la note le cite ; la note de clôture
   cite la vérification et ses chemins. Entre le premier `--calculer-attendu` et le dernier contrôle final, aucune
-  session n'installe ni ne retire de distribution (hors l'installation permise ci-dessous pour le seul contrôle final),
+  session n'installe ni ne retire de distribution (hors le re-clonage, la création de l'environnement et l'installation permis ci-dessous pour le seul
+  contrôle final, qui créent un `src/` et un `.venv` neufs sans modifier aucun fichier existant),
   ne crée ni ne modifie de fichier sous `src/` (hors `__pycache__`, que le
   code tolère et que la commande ne relit pas) ou sous un dossier donné à une lecture (hors les répertoires des listes
   des postes, créés avant), ni ne joue dans cet arbre une commande
@@ -208,9 +220,10 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   l'essai factice, la note de clôture et chaque commande sur un dossier réel sont joués dans le même arbre principal,
   sans re-clonage. Le contrôle final peut l'être dans un arbre recloné au même chemin absolu (`--controler` ne lit pas
   le dossier), après récupération par git de chaque sortie, de son compagnon et de son attendu. Si, après la dernière
-  commande sur un dossier réel, `<racine>/.venv/bin/python` manque, la session y installe la seule distribution que
-  `--controler` importe hors de la bibliothèque standard (`numpy==2.4.6`, version de `requirements-cpu.txt`), sans
-  toucher à `src/`, et c'est rapporté. Un contrôle qui ne peut être joué ainsi vaut « écart ». Avant la note de clôture, après le calcul des
+  commande sur un dossier réel, `<racine>/.venv/bin/python` manque, la session crée cet environnement (`python3 -m venv
+  <racine>/.venv`, Python 3.11 ou plus, pour `-P` ; la création y pose `pip`) et y installe, par
+  `<racine>/.venv/bin/python -m pip install numpy==2.4.6`, la seule distribution que `--controler` importe hors de la
+  bibliothèque standard (version de `requirements-cpu.txt`), sans toucher à `src/`, et c'est rapporté. Un contrôle qui ne peut être joué ainsi vaut « écart ». Avant la note de clôture, après le calcul des
   attendus réels, la commande est jouée telle quelle, aux seuls chemins du dossier, de l'attendu et de la sortie près (même
   `PYTHONPYCACHEPREFIX`), sur un dossier factice de même forme, construit par programme sans aucune pièce réelle (comme dans les essais du
   § 4), avec un attendu calculé de même sur ce dossier factice, dont les champs `commit`, `code` et `environnement` sont
@@ -232,10 +245,12 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   message. Dans les 24 h qui suivent la note de clôture, la session joue la commande consignée, une fois par verdict à
   lire, et consigne l'empreinte et l'issue rendues, sans ouvrir la sortie. Si la sortie et son compagnon sont présents
   mais que la ligne rendue est perdue ou illisible, la commande n'est pas rejouée : la session joue `cd <répertoire de la sortie> &&
-  sha256sum -c <nom de la sortie>.sha256`, qui doit rendre « OK », puis consigne l'empreinte entière (les 64 premiers
+  LC_ALL=C sha256sum -c <nom de la sortie>.sha256`, qui doit rendre « OK », puis consigne l'empreinte entière (les 64 premiers
   caractères du compagnon, `cut -c1-64 <sortie>.sha256`), sans ouvrir la sortie, et l'issue « non lue » (le lecteur la
-  transcrit de la sortie) ; si `sha256sum -c` rend « FAILED » ou dit le fichier absent, l'absence de sortie scellée est
-  constatée ; une commande qui ne démarre pas ne constate rien et se rejoue, corrigée dans ses seuls chemins. Une exécution de la commande qui ne laisse
+  transcrit de la sortie) ; si `sha256sum -c` rend « FAILED », l'absence de sortie scellée est constatée ; s'il rend « no
+  properly formatted checksum lines found », la sortie est « présente sans son compagnon » (ci-dessous) ; s'il dit le
+  compagnon introuvable, ou si la commande ne démarre pas, rien n'est constaté : elle se rejoue, corrigée dans ses
+  seuls chemins. Une exécution de la commande qui ne laisse
   pas de sortie scellée (le code n'a pas démarré, ou s'est arrêté avant de sceller) est rejouée une fois, à l'identique,
   si aucune sortie n'est présente ; une sortie présente sans son compagnon n'est ni ouverte ni scellée après coup, et la
   commande n'est pas rejouée (le code refuserait de la remplacer, et une ligne « refus : sortie déjà présente (R12) »
@@ -395,8 +410,9 @@ commit du code (`a904aa39`), la liste des répertoires (§ 3) et des noms neufs 
   commande sont éprouvés sur des dossiers factices (§ 3, § 4), ce qui réduit ce risque sans l'ôter : un refus ou une erreur à la
   lecture, quelle qu'en soit la cause, laisse ce run sans verdict (règle mécanique du § 3, choisie pour qu'aucune
   décision ne dépende d'un diagnostic fait après la clôture) ; si le run à 36 tours est sans verdict et la
-  confirmation non retenue, l'étape 1 reste sans verdict retenu (§ 3) ; `lecture-assemblee-v1` est lu sans les répertoires vides des postes des
-  séries 1 à 3 et de la relance, que git n'a pas portés et qui ne sont pas connus (§ 3) : sa lecture peut différer de
+  confirmation non retenue, l'étape 1 reste sans verdict retenu (§ 3) ; `lecture-assemblee-v1` est lu sans les répertoires des postes des
+  séries 1 à 3 et de la relance que git n'a pas portés (vides, ou ne contenant que des fichiers ignorés), qui ne sont
+  pas connus (§ 3) : sa lecture peut différer de
   celle des arbres des postes, ce qui est rapporté avec le verdict à 36 tours.
 
 ## 6. Conditions de lancement et ordre
@@ -585,11 +601,12 @@ toutes les exécutions (« telle quelle » et « à l'identique » cohérents) ;
 par programme des chemins nommés par la note ; même arbre principal sans re-clonage, réinstallation permise pour le seul
 contrôle, contrôle injouable = « écart » ; garde de commande dite pour `--calculer-attendu` et la lecture seulement ;
 sortie sans compagnon : commande non rejouée ; noms neufs des pièces du poste (§ 6, étape 2 ; § 4) ; risque de
-`lecture-assemblee-v1` sans ses répertoires vides déclaré au § 5 (f). Aucun constat écarté. (Correction de la v10 :
-une liste par dossier, à nom fixe, au lieu de « la dernière liste écrite fait foi » (retour 2, constat 2) ; la note
-cite chaque liste et son empreinte, non ce qui a été créé (retour 1, constat 3) ; l'exigence pour les pièces de
-l'addendum 5 et de la reprise est portée par la règle générale du § 3 (retour 1, constat 2) ; deux constats de la v8
-dits repris au paragraphe v8 sans l'avoir été (« telle quelle » et « à l'identique » au regard de
+`lecture-assemblee-v1` sans ses répertoires vides déclaré au § 5 (f). Aucun constat écarté. (Correction demandée par la v10, retour 1,
+constat 7 ; numéros de la v9 : une liste par dossier, à nom fixe, au lieu de « la dernière liste écrite fait foi »
+(v9, retour 2, constat 2) ; la note cite chaque liste et son empreinte, non ce qui a été créé (v9, retour 1, constat
+3) ; l'exigence pour les pièces de l'addendum 5 et de la reprise est portée par la règle générale du § 3 (v9, retour
+1, constat 2) ; deux constats de la v8 (v8, retour 1, constats 2 et 3 ; relevés par la v9, retour 3, constat 3) dits
+repris au paragraphe v8 sans l'avoir été (« telle quelle » et « à l'identique » au regard de
 `PYTHONPYCACHEPREFIX` ; attendu après la dernière poussée du poste) le sont au paragraphe v9.)
 Vérification des corrections de texte, deux relecteurs (`…-v10.md`, `2e8d6eb3ab3d1734f6246ae9b68e852c401d503081e9ff1a04a428330a502e7c`, sur le commit `27306ea4`) : les corrections
 tiennent (retour perdu rejoué ; `find` et `mkdir -p` rejoués sur des répertoires imbriqués, empreinte et état de
@@ -602,4 +619,20 @@ répertoire qui ne contient que des fichiers ignorés par git est couvert), nomm
 `sha256sum` ; mise en place refaite dans l'énumération ; contrôle des chemins avant le premier attendu, avec suite ;
 contrôle final permis dans un arbre recloné au même chemin, installation de la seule `numpy==2.4.6` si l'interpréteur
 manque, exception écrite dans l'interdit ; noms neufs de la conduite v15 au § 4 ; gabarit de la commande sans accents
-emboîtés ; traçabilité du paragraphe v9. Aucun constat écarté.
+emboîtés ; traçabilité du paragraphe v9. Repris autrement : vérification par `sha256sum -c` au lieu d'un `verifier` muni de
+l'interpréteur et de `PYTHONPATH` (retour 2, constat 1) ; scellement de la liste par `sha256sum` dans `<BASE>`, au lieu
+de `scellement sceller` (retour 2, constat 6) ; aucune vérification des sorties récupérées dans l'arbre recloné,
+`--controler` vérifiant lui-même la sortie contre l'empreinte et l'attendu (retour 2, constat 3) ; contrôle des
+chemins avant le premier `--calculer-attendu`, avec remplacement du chemin fautif (retour 2, constat 4), au lieu de la
+suite du retour 1, constat 4, qui le contredit ; moment de l'absence d'une liste selon le retour 2, constat 2, qui
+couvre le retour 1, constat 1 ; les textes du retour 1, constats 1, 2 et 4, remplacés par ceux du retour 2. Aucun
+autre constat écarté.
+Vérification des corrections de la v10, deux relecteurs (`…-v11.md`, `1fe66c3be0d24880f00f253341efaf6aa8121491b3ae642dc7f8c386a147c6de`, sur le commit `ff8a02eb`) : **aucun
+bloquant** ; commandes jouées à la lettre sur des fichiers factices (`sha256sum -c` sur les compagnons du dépôt, `cut
+-c1-64` puis `--controler`, `find` et `mkdir -p` dans un clone, `--controler` n'important que numpy). Repris : aucun
+`--calculer-attendu` tant qu'une suite permise avant la clôture n'est ni jouée ni écartée ; création de l'environnement
+pour le seul contrôle final, avec `pip`, et re-clonage nommés dans l'exception de l'interdit ; `<BASE>` défini ;
+scellement de la liste conditionné à son existence ; `LC_ALL=C` et classement des réponses de `sha256sum -c` ; délai
+d'une heure avant de détruire un poste sans marque de fin ; chemins neufs vérifiés comme les premiers ; risque de
+`lecture-assemblee-v1` étendu aux répertoires qui ne contiennent que des fichiers ignorés (§ 3, § 5 (f)) ; traçabilité
+des paragraphes v9 et v10. Aucun constat écarté.
