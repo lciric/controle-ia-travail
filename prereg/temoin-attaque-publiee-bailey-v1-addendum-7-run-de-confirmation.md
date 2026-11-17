@@ -263,13 +263,14 @@ v15 refuse de partir si la valeur n'est pas exactement 1 800, et l'ordre de lanc
 manifeste « règle » n'est pas écrit : B, R, D, c, t, H et K sont au bilan et dans le dossier `regle` transféré. Le
 libellé d'arrêt du code (« … ; nœud ») se lit selon le § 2.3.
 
-Lecture scellée (§ 3) : `src/controle_ia/temoin_bailey/lecture_scellee_v1.py` (`@@EMPREINTE_LS@@`), au commit
-`@@COMMIT_LS@@` ; elle n'ajoute aucun critère : elle joue `lecture_v8.valider` puis `lecture_v8.lire` avec
+Lecture scellée (§ 3) : `src/controle_ia/temoin_bailey/lecture_scellee_v1.py` (`1b6f365efe49283abb3228458e563205b8a4d5bf2c79ca6138488d34011d4c2d`), au commit
+`a91ba8cfc9cb11b62cc0d171f5521d77b26b7eee` ; elle n'ajoute aucun critère : elle joue `lecture_v8.valider` puis `lecture_v8.lire` avec
 `analyse_v3.graines()["reechantillonnage"]`, sous les règles mécaniques du § 3 (sortie neuve, empreintes attendues,
 seconde exécution seulement après un échec, sortie scellée, retour sans valeur). Essais :
-`tests/test_temoin_bailey_lecture_scellee_v1.py` (`@@EMPREINTE_TLS@@`) : chaque règle avec un cas sain et un artefact
+`tests/test_temoin_bailey_lecture_scellee_v1.py` (`bdc569a50c38763ddb86b100964f86205975835c89a065f0076d497cddd1e4dd`) : chaque règle avec un cas sain et un artefact
 (R5), dont un bout en bout sur dossier factice où la sortie porte le verdict même que `valider` et `lire` joués
-directement, et où le dossier n'est pas modifié ; résultat : @@RESULTAT_LS@@. Elle ne change plus avant la clôture
+directement, et où le dossier n'est pas modifié ; résultat : 15 passés ; avec les essais v21, complémentaires et de reprise, 246 passés, 1 sauté, sous
+`PYTHONPATH=src`. Elle ne change plus avant la clôture
 sans un addendum neuf, contre-lu (R2) et scellé avant elle.
 
 Pièces de lancement, écrites après l'inscription du GO (elles portent son identifiant), contre-lues (R2) et scellées
