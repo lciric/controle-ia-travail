@@ -1,0 +1,297 @@
+--- crible-ii-brouillon1.md
++++ crible-ii-brouillon2.md
+@@ -1,4 +1,4 @@
+-# Préenregistrement — crible (ii) de l'organisme d'idéation : proposeurs en série, chaque session voit les cartes brutes des précédentes — brouillon 1 (variante « crédits de Claude au maximum »)
++# Préenregistrement — crible (ii) de l'organisme d'idéation : proposeurs en série, chaque session voit les cartes brutes des précédentes — brouillon 2 (variante « crédits de Claude au maximum »)
+ 
+ - Auteur : sous-agent neuf de la session mère, rédacteur de cette pièce (« modèle A » de cette pièce au sens de R-2598 ;
+   identité dite en conversation seulement). L'auteur n'a écrit ni la note des idées originales, ni le relevé, ni les fiches,
+@@ -7,6 +7,12 @@
+   (tête `b38bde8c`, puis `c97bf55f`) ; une seule branche lue, `verdict/pilote-mr2-v74-v14-v1` (tête `61230010`), par
+   `git show` après un `git fetch` à refspec, et d'elle **seul** le verdict v2 du pilote ; aucun commit, aucune poussée,
+   aucun appel de modèle, aucune machine, aucune dépense.
++- Brouillon 2 : corrections du tour 1 de contre-lecture appliquées le 2026-11-17T01:31:15Z (`date -u`, au scellement) par un
++  rédacteur neuf, d'un autre modèle que l'auteur, qui n'a écrit ni le brouillon 1 ni le rapport de contre-lecture
++  (identité dite en conversation seulement), au moyen du programme `appliquer-corrections-crible-ii-brouillon2.py` (même dossier,
++  scellé) ; dépôt lu sur `main` (tête `5a01b434`) ; aucune branche lue ; aucun commit, aucune poussée, aucun appel de
++  modèle, aucune machine, aucune dépense. Rien d'autre que les corrections, l'en-tête et la section « Contre-lecture »
++  ne change.
+ - Nombres neufs : `devis-crible-ii-brouillon1.py` et sa sortie `devis-crible-ii-brouillon1-sortie.txt` (même dossier, scellés à
+   côté ; `nice -n 19 python3 -I`, Python 3.13.18, bibliothèque standard, fractions exactes ; lancé le 2026-11-17 à 00:53:32 UTC) ;
+   paragraphes de la sortie cités « sortie, § k » ; sortie recopiée à l'annexe A.
+@@ -55,20 +61,20 @@
+   - gabarit `prereg/gabarit-preregistrement-v1.md` (`8cad43714b562e28238a92200d6315b1769d8bdf7e9f0a8d72dfe2bc9b37700e`) ;
+     validateur `src/controle_ia/prereg.py` (`3b2e3ee56463f30ffd3c549e7fe480fea574c707581bcf30098bf38f4980c306`).
+ 
+-**Statut.** **Brouillon 1**, non contre-lu, scellé comme pièce (empreinte compagnon, R6), non comme préenregistrement en
+-vigueur. Écrit après le verdict du pilote MR-2 v14 : les attendus du devis sont faits **directement** sur les coûts et durées
++**Statut.** **Brouillon 2**, contre-lu une fois (tour 1, corrections appliquées, section « Contre-lecture »), scellé comme
++pièce (empreinte compagnon, R6), non comme préenregistrement en vigueur ; second tour de contre-lecture à faire. Écrit après le verdict du pilote MR-2 v14 : les attendus du devis sont faits **directement** sur les coûts et durées
+ mesurés du pilote ([VERDICT-PC]) par les règles de [CRIBLE-V] (moyenne de tous les appels, pires cas aux plafonds) ; les
+-prédictions sont écrites **sans aucune donnée de proposeur sur la couverture** (le pilote ne la mesure pas par appel ; seul son
+-témoin positif est lu, [VERDICT-PC], « Pour les cribles »). Aucune dépense, aucun appel de modèle, aucun monde tiré. L'accord
++prédictions sont écrites **sans aucune donnée de proposeur sur la couverture** (le pilote ne la mesure pas par appel ; seuls son
++témoin positif et le résultat principal sont lus, [VERDICT-PC], « Pour les cribles » et « Comptes » : aucun des 14 appels répondus ne porte une conditionnelle entière, x = 0 ; le pilote ne dit rien de S contre P). Aucune dépense, aucun appel de modèle, aucun monde tiré. L'accord
+ GO-2026-11-15-06 (enveloppe des cinq cribles, crédits de Claude employés au maximum) **n'autorise encore aucun appel** : la ligne
+ « calcul » de ce crible s'inscrit par la mère sur un devis contre-lu, dans l'enveloppe (lecture de la mère, l. 339). Le dessin
+ neuf (des cartes de pairs dans la vue) est **essayé, non adopté** (l. 339 ; [NOTE] § 7, point 3) : toute adoption dans
+ l'organisme reste un nœud de Lazar. **Point de faisabilité à trancher avant tout code** (« Choix et doutes », point 3) : sous
+ la configuration v12, le texte servi d'un appel du proposeur retenu ne peut dépasser 53 976 octets (sortie, § 2), et le texte du
+-pilote en prend déjà jusqu'à 52 000 ([CRIBLE-III], « Liste d'arrêt ») : les cartes des pairs n'y tiennent pas sans retirer des
++pilote en prend déjà jusqu'à 52 000 ([CRIBLE-III], « Devis » : « ≤ 52 000 octets servis ») : les cartes des pairs n'y tiennent pas sans retirer des
+ épisodes servis, à tous les bras également, ou changer de configuration.
+-Validateur `controle_ia.prereg.problemes` : un seul défaut, attendu pour un brouillon non contre-lu (« section Contre-lecture
+-sans les deux empreintes exigées »).
++Validateur `controle_ia.prereg.problemes` : aucun défaut sur ce brouillon 2 (vérifié avant son scellement comme pièce de
++travail).
+ 
+ ## 0. En dix lignes
+ 
+@@ -88,10 +94,10 @@
+ 5. **Mesure** (oracle du pilote sur les cartes brutes) : C_X(w), composantes comptées couvertes par au moins une carte valide des
+    quatre sessions du bras X ; groupes prédictifs (`grouper_stratifie`, instances publiques sans issue) ; copies d'une carte servie ;
+    apport par rang ; conditionnelles ; dollars.
+-6. **Deux principales** (Bonferroni, bilatéral à 0,025 chacune, test exact des rangs signés) : **P1** δ_SP = C_S − C_P (dispersion
+-   ou grégarisme) ; **P2** δ_SQ = C_S − C_Q (contenu des cartes des pairs contre leur seule présence). Secondaire : δ_QP.
+-7. **Prédiction de l'auteur** : P1 « non tranché », estimation de δ_SP entre 0 et + 0,5 composante par monde (confiance 0,4) ;
+-   P2 « non tranché », entre 0 et + 0,5 (0,4) ; δ_QP ≈ 0 (0,5).
++6. **Deux principales** (Bonferroni, bilatéral à 0,025 chacune, test exact des rangs signés) : **principale SP** δ_SP = C_S − C_P (dispersion
++   ou grégarisme) ; **principale SQ** δ_SQ = C_S − C_Q (contenu des cartes des pairs contre leur seule présence). Secondaire : δ_QP.
++7. **Prédiction de l'auteur** : SP « non tranché », estimation de δ_SP entre 0 et + 0,5 composante par monde (confiance 0,4) ;
++   SQ « non tranché », entre 0 et + 0,5 (0,4) ; δ_QP ≈ 0 (0,5).
+ 8. **Devis** (coûts mesurés du pilote, règles de [CRIBLE-V]) : **53,92 USD attendus sur crédits de Claude** (200 appels de Pr-2 à
+    0,264334, plus la sonde des gabarits, 1,06), haut de fourchette 59,97 ; **0,06 à 0,11 hors crédits** (machine) ;
+    **411 au pire** (408 sur crédits, 3 hors crédits), sonde comprise ; [NOTE] : 63,30 attendus, 483 au pire.
+@@ -139,14 +145,14 @@
+ 
+ ## Prédiction chiffrée et signe attendu
+ 
+-Écrites après le verdict du pilote, sans aucune donnée de couverture par appel (le pilote ne la rend pas) ; seul le témoin positif
+-du pilote est lu ([VERDICT-PC] : 14 appels répondus sur 14 portent une composante au-delà de K1 ; 6 portent la composante de
++Écrites après le verdict du pilote, sans aucune donnée de couverture par appel (le pilote ne la rend pas) ; seuls le résultat principal (x = 0 sur 14 : aucun appel ne porte une conditionnelle entière) et le témoin positif
++du pilote sont lus ([VERDICT-PC] : 14 appels répondus sur 14 portent une composante au-delà de K1 ; 6 portent la composante de
+ condition sans la conditionnelle entière) ; confiance faible. Notations : section « Métrique ».
+ 
+ | # | prédiction | signe | chiffre | ce qui la réfute | confiance |
+ |---|---|---|---|---|---|
+-| II-1 | **principale P1** : δ_SP (série contre parallèle) | ≥ 0 | estimation entre 0 et + 0,5 composante par monde ; issue « non tranché » | estimation de δ_SP < 0 (réfute le signe) ; issue autre que « non tranché » (réfute l'issue) | 0,4 |
+-| II-2 | **principale P2** : δ_SQ (contenu des pairs contre cartes d'un autre monde) | ≥ 0 | estimation entre 0 et + 0,5 ; issue « non tranché » | estimation < 0 ; issue autre que « non tranché » | 0,4 |
++| II-1 | **principale SP** : δ_SP (série contre parallèle) | ≥ 0 | estimation entre 0 et + 0,5 composante par monde ; issue « non tranché » | estimation de δ_SP < 0 (réfute le signe) ; issue autre que « non tranché » (réfute l'issue) | 0,4 |
++| II-2 | **principale SQ** : δ_SQ (contenu des pairs contre cartes d'un autre monde) | ≥ 0 | estimation entre 0 et + 0,5 ; issue « non tranché » | estimation < 0 ; issue autre que « non tranché » | 0,4 |
+ | II-3 | δ_QP (seule présence, ou égarement) | ≈ 0 | estimation entre − 0,5 et + 0,3 | test des rangs signés bilatéral à 0,05 significatif, de l'un ou l'autre signe | 0,5 |
+ | II-4 | groupes prédictifs : moyenne par monde de G_S − G_P | + | entre + 0,5 et + 2 groupes | moyenne ≤ 0 | 0,45 |
+ | II-5 | copies d'une carte servie, rangs 2 à 4 : k_S contre la référence k_P (copies d'une carte de P1 parmi les cartes de P2 à P4) | k_S < k_P | k_P entre 0,2 et 0,5 ; k_S ≤ k_P − 0,1 | k_S ≥ k_P | 0,4 |
+@@ -172,10 +178,10 @@
+ vue de S ne la désigne. II-7 : les rangs 2 à 4 de S lisent un bloc de cartes en plus ; à texte servi total borné (section « Plan
+ d'analyse »), le surcoût d'entrée est petit.
+ 
+-**Ce que serait chaque issue (R3).** P1 « dispersion » : H-ii non réfutée au crible, signe positif ; lue avec P2 : si le contenu
++**Ce que serait chaque issue (R3).** SP « dispersion » : H-ii non réfutée au crible, signe positif ; lue avec SQ : si le contenu
+ compte (S > Q), la dispersion vient de l'information des cartes des pairs ; sinon, elle n'est pas distinguée de la seule présence.
+-P1 « grégarisme » : H-ii non réfutée au crible, signe négatif ; voir les cartes des pairs **nuit** à la couverture de ce
+-proposeur. P1 « non tranché » : rien sur l'effet à 20 mondes ; un petit effet n'est pas exclu (crible d'un grand effet). Aucune
++SP « grégarisme » : H-ii non réfutée au crible, signe négatif ; voir les cartes des pairs **nuit** à la couverture de ce
++proposeur. SP « non tranché » : rien sur l'effet à 20 mondes ; un petit effet n'est pas exclu (crible d'un grand effet). Aucune
+ issue n'adopte le dessin ; une issue « dispersion » donne un argument pour une course préenregistrée à part, à composition
+ apprise (N-045 point 1), non une règle.
+ 
+@@ -201,12 +207,12 @@
+   de K1 et ce que K1 servie porte à elle seule ; une carte porte la composante i si Δ_i ≥ max(0,005 ; 0,75·I_i) (oracle de
+   12 000 instances). **C_X(w)** = nombre de composantes comptées portées par au moins une carte valide du bras X dans le monde w.
+   K(w) = nombre de composantes comptées du monde.
+-- **Écarts** : δ_XY = moyenne, sur les mondes complets pour la comparaison X–Y, de C_X(w) − C_Y(w). Statistiques de P1 et P2 :
++- **Écarts** : δ_XY = moyenne, sur les mondes complets pour la comparaison X–Y, de C_X(w) − C_Y(w). Statistiques de SP et SQ :
+   δ_SP et δ_SQ ; secondaire : δ_QP.
+ - **Test** : test exact des rangs signés de Wilcoxon par permutation des signes (2^n permutations, n ≤ 20), écarts nuls retirés,
+-  rangs moyens aux égalités, bilatéral ; au moins 7 écarts non nuls tous du même signe sont nécessaires pour un p ≤ 0,025, au
++  rangs moyens aux égalités, bilatéral ; au moins 7 écarts non nuls sont nécessaires pour un p ≤ 0,025 (7 suffisent s'ils sont tous du même signe), au
+   moins 6 pour 0,05 (sortie, § 9). **Intervalles** rapportés : rééchantillonnage apparié des mondes complets, 10 000 rééchantillons,
+-  percentile, 97,5 % pour P1 et P2, 95 % ailleurs ; **ils ne décident pas** (le test décide, fidèle à [NOTE] : « rangs signés de
++  percentile, 97,5 % pour SP et SQ, 95 % ailleurs ; **ils ne décident pas** (le test décide, fidèle à [NOTE] : « rangs signés de
+   Wilcoxon »).
+ - **Groupes prédictifs** : G_X(w) = nombre de groupes de `grouper_stratifie` (ε = 0,01, ε de strate 0,04, valeurs du fichier)
+   parmi les cartes valides du bras X, calculés sur un **jeu public d'instances sans issue** du monde w (traits et
+@@ -238,21 +244,21 @@
+ ## Seuil
+ 
+ - **Nombre de mondes : N = 20** ([NOTE] § 3 (ii) ; même règle que les cribles (iii) et (v), R-2992 ; aucune branche à 24 mondes).
+-- **Mondes complets, par comparaison principale** : un monde est complet pour P1 si les sept appels de P et de S (P1 à P4, S2 à
+-  S4) sont répondus ; pour P2, si ceux de S et de Q (P1, S2 à S4, Q2 à Q4) le sont. **Minimum** : n ≥ 16 mondes complets pour la
++- **Mondes complets, par comparaison principale** : un monde est complet pour SP si les sept appels de P et de S (P1 à P4, S2 à
++  S4) sont répondus ; pour SQ, si ceux de S et de Q (P1, S2 à S4, Q2 à Q4) le sont. **Minimum** : n ≥ 16 mondes complets pour la
+   comparaison ; sinon cette principale est « non concluante ». Taux de réussite par appel de Pr-2 au pilote : 4 répondus sur 4
+   ([VERDICT-PC], `opus55`), information seulement. Probabilité d'atteindre le minimum (indépendance supposée, sortie, § 11) : à
+   p = 0,99 par appel, 0,99 ; 0,98 : 0,89 ; 0,97 : 0,66 ; 0,95 : 0,23 ; (si l'on exigeait les dix appels du monde : 0,96 ; 0,70 ;
+   0,37 ; 0,05 : d'où la complétude par comparaison).
+-- **Zone utile** : au moins 10 mondes complets pour P1 où l'un des bras couvre au moins une composante comptée **et** l'un des
+-  bras en couvre moins que K(w) ; sinon « hors de la zone utile » (aucune place pour un écart).
++- **Zone utile** : au moins 10 mondes complets pour SP où l'un des bras couvre au moins une composante comptée **et** l'un des
++  bras en couvre moins que K(w) ; même définition pour SQ avec les bras S et Q et ses mondes complets ; sinon « hors de la zone utile » pour la principale touchée (aucune place pour un écart).
+ - **Consigne et taille** : réserve « blocs réduits » si la règle de taille a retiré des cartes dans plus de 4 mondes complets pour
+-  P1 ; réserve « placebo mal apparié » si, dans plus de 4 mondes, la longueur d'un bloc de Q s'écarte de plus de 25 % de celle du
++  SP ; réserve « placebo mal apparié » si, dans plus de 4 mondes, la longueur d'un bloc de Q s'écarte de plus de 25 % de celle du
+   bloc de S de même rang.
+-- **P1** : « **la série disperse** » si p ≤ 0,025 (bilatéral) et la somme des rangs signés de δ_SP est positive ; « **la série
++- **SP** : « **la série disperse** » si p ≤ 0,025 (bilatéral) et la somme des rangs signés de δ_SP est positive ; « **la série
+   regroupe (grégarisme)** » si p ≤ 0,025 et elle est négative ; sinon « **non tranché** » (en particulier avec moins de 7 écarts non
+   nuls).
+-- **P2** : « **le contenu des cartes des pairs compte** » si p ≤ 0,025 et le signe est positif ; « **le contenu des cartes des pairs
++- **SQ** : « **le contenu des cartes des pairs compte** » si p ≤ 0,025 et le signe est positif ; « **le contenu des cartes des pairs
+   nuit** » si p ≤ 0,025 et il est négatif ; sinon « **non tranché** ».
+ - **Secondaire** (5 %, sans correction) : δ_QP : « effet de la seule présence » (signe dit) ou « non distingué ».
+ 
+@@ -324,15 +330,15 @@
+   soient finis** (répondus, tronqués ou en échec) : les donneurs du placebo doivent exister.
+ - **Désignation de P1** : dans le monde r, P1 est la session parallèle d'indice u_r, tiré à la graine `(r, 50)` uniformément dans
+   {1, 2, 3, 4}, avant tout appel, indépendamment de toute réponse. Si P1 n'est pas répondue : pas de phase 2 dans ce monde (aucune
+-  dépense de plus ; monde non complet pour P1 et P2) ; P reste rapporté.
+-- **Phase 2**, par file, mondes l'un après l'autre : tour 2 : S2 et Q2 ensemble ; à la fin de S2 : tour 3, S3 et Q3 ; à la fin de
++  dépense de plus ; monde non complet pour SP et SQ) ; P reste rapporté.
++- **Phase 2**, par file, mondes l'un après l'autre (le monde suivant d'une file part quand les six appels du monde en cours sont finis) : tour 2 : S2 et Q2 ensemble ; à la fin de S2 : tour 3, S3 et Q3 ; à la fin de
+   S3 : tour 4, S4 et Q4. **Règle de chaîne** : si S_k n'est pas répondue, ni S_{k+1} ni Q_{k+1} ne partent (le bloc du rang
+-  suivant ne serait pas celui du dessin ; dépense épargnée) ; le monde n'est complet ni pour P1 ni pour P2. Une Q_k non répondue
+-  n'arrête pas la chaîne de S (P1 reste possible dans ce monde).
++  suivant ne serait pas celui du dessin ; dépense épargnée) ; le monde n'est complet ni pour SP ni pour SQ. Une Q_k non répondue
++  n'arrête pas la chaîne de S (SP reste possible dans ce monde).
+ - **Donneurs du placebo** : dans le monde r, ordre des 19 autres mondes tiré à la graine `(r, 51)` (permutation uniforme) ; le bloc
+   de Q_k = les m_k premières cartes valides des sessions **parallèles** du premier monde donneur, dans l'ordre P1, P2, P3, P4 de
+   ce donneur puis par emplacement, **dont la longueur en octets est à ± 25 % de celle du bloc de S_k** et qui en a au moins m_k ;
+-  sinon, parmi les donneurs qui en ont au moins m_k, celui de longueur la plus proche (égalités par l'ordre tiré) ; compté
++  sinon, parmi les donneurs qui en ont au moins m_k, celui de longueur la plus proche (égalités par l'ordre tiré) ; compté ; **un donneur dont le texte servi de Q_k dépasserait 53 000 octets est écarté** (aucune carte n'est jamais retirée d'un bloc de Q_k : l'appariement en nombre tient) ; **si aucun donneur ne convient** (aucun n'a m_k cartes valides, ou tous dépassent 53 000 octets), Q_k ne part pas, le monde n'est pas complet pour SQ, le cas est compté et rapporté, la chaîne de S continue
+   (réserve « placebo mal apparié »). **Jamais** une carte de S ou de Q, ni du monde r, n'entre dans un bloc de Q. Q_k part en même
+   temps que S_k (m_k est connu à la fin de S_{k−1}).
+ - **Appels** : 10 par monde, 200 en tout (tous de Pr-2, sur crédits de Claude) ; aucune reprise, aucune bascule ; réponses brutes
+@@ -381,15 +387,15 @@
+ 
+ ### Comparaisons et corrections
+ 
+-Deux principales, P1 (δ_SP) et P2 (δ_SQ), bilatérales à 0,025 chacune (Bonferroni). Secondaires à 0,05, sans correction : δ_QP ;
+-groupes (G_S − G_P, G_Q − G_P) ; copies (k_S, k_Q, k_P) ; conditionnelles ; traits neufs ; ρ_SP. Tout est apparié par monde. Les
++Deux principales, SP (δ_SP) et SQ (δ_SQ), bilatérales à 0,025 chacune (Bonferroni). Secondaires à 0,05, sans correction : δ_QP ;
++groupes (G_S − G_P, G_Q − G_P) ; copies (k_S, k_Q, k_P) ; conditionnelles ; traits neufs ; ρ_SP. Tout est apparié par monde. Un même monde peut être donneur du placebo de plusieurs mondes (ordres tirés indépendamment) : les écarts de SQ ne sont donc pas strictement indépendants entre mondes ; le test les traite comme indépendants, et le nombre de mondes servis par donneur est rapporté. Les
+ trois bras partagent P1 : une composante qu'elle porte est portée par les trois bras, et les écarts appariés ne dépendent que des
+ trois autres sessions de chaque bras ; dit.
+ 
+ ### Taille
+ 
+ 20 mondes ([NOTE] : puissance 0,80 pour une part passant de 0,05 à 0,40 à 20 mondes, test de Fisher, annexe A de [NOTE] ; ce n'est
+-pas la statistique de ce texte). **Puissance de P1 et de P2** dans un modèle simple (écarts de 0 ou ± 1 composante par monde, test
++pas la statistique de ce texte). **Puissance de SP et de SQ** dans un modèle simple (écarts de 0 ou ± 1 composante par monde, test
+ des signes, auquel le test des rangs signés se réduit quand tous les écarts non nuls valent ± 1 ; 20 mondes complets ; bilatéral
+ 0,025 ; sortie, § 10) : 0,11 si 30 % des mondes gagnent une composante et 10 % en perdent ; 0,27 à 40 % et 10 % ; 0,47 à 50 % et
+ 10 % ; 0,33 à 35 % et 5 %. **Crible d'un grand effet** : un « non tranché » ne dit rien d'un petit effet ; c'est l'issue la plus
+@@ -400,23 +406,23 @@
+ 
+ ## Critères de lecture gelés
+ 
+-Lecture dans cet ordre ; un étage 0 ou 3 arrête la lecture ; l'étage 1 arrête la lecture de la principale qu'il touche.
++Lecture dans cet ordre ; un étage 0 arrête la lecture ; les étages 1 et 3 arrêtent la lecture de la principale qu'ils touchent.
+ 
+ | étage | observé | verdict |
+ |---|---|---|
+ | 0 | une ligne d'arrêt déclenchée, **sauf** la ligne « mondes complets atteignables < 16 », dont l'issue est celle de l'étage 1 ; la mesure en erreur | « **non jugeable (arrêt)** » : aucune issue lue |
+-| 1 | n < 16 mondes complets pour P1 (resp. P2) | P1 (resp. P2) « **non concluant** » ; causes rapportées ; l'autre principale est lue si elle a ses 16 mondes |
+-| 2 | réserve « blocs réduits » ; réserve « placebo mal apparié » ; 3 appels tronqués ou plus dans un même bras (borne de sortie de Pr-2 : 89 000 jetons) | P1 et P2 lus et rapportés **sous la réserve nommée** ; sous « placebo mal apparié », la phrase « le contenu des cartes des pairs compte » est **interdite** (P2 mêlerait le contenu et la longueur) ; sous « blocs réduits », δ_SP et δ_SQ sans les mondes réduits sont lus avec le principal, et si l'issue diffère, elle est qualifiée « sensible à la taille des blocs » et rien de plus n'en est conclu |
++| 1 | n < 16 mondes complets pour SP (resp. SQ) | SP (resp. SQ) « **non concluant** » ; causes rapportées ; l'autre principale est lue si elle a ses 16 mondes |
++| 2 | réserve « blocs réduits » ; réserve « placebo mal apparié » ; 3 appels tronqués ou plus dans un même bras (borne de sortie de Pr-2 : 89 000 jetons) | SP et SQ lus et rapportés **sous la réserve nommée** ; sous « placebo mal apparié », la phrase « le contenu des cartes des pairs compte » est **interdite** (SQ mêlerait le contenu et la longueur) ; sous « blocs réduits », δ_SP et δ_SQ sans les mondes réduits sont lus avec le principal, et si l'issue diffère, elle est qualifiée « sensible à la taille des blocs » et rien de plus n'en est conclu |
+ | 3 | zone utile manquée | « **hors de la zone utile** » |
+-| 4 | P1 | « la série disperse » / « la série regroupe (grégarisme) » / « non tranché » |
+-| 5 | P2 | « le contenu des cartes des pairs compte » / « le contenu des cartes des pairs nuit » / « non tranché » |
++| 4 | SP | « la série disperse » / « la série regroupe (grégarisme) » / « non tranché » |
++| 5 | SQ | « le contenu des cartes des pairs compte » / « le contenu des cartes des pairs nuit » / « non tranché » |
+ | 6 | δ_QP | « effet de la seule présence » (signe dit) / « non distingué » |
+ | 7 | groupes, copies, apport par rang, traits neufs, conditionnelles, sensibilités, coûts | rapportés, sans verdict |
+ 
+ **Lecture de H-ii et des trois lectures de [NOTE].** [NOTE] lit « **dispersion** si série > parallèle et placebo ≈ parallèle ;
+ **grégarisme** si série < parallèle ; **effet de contexte** si placebo ≈ série ». Traduction gelée ici, sans équivalence
+ statistique (20 mondes ne la permettent pas) :
+-- étage 4 « disperse » et étage 5 « compte » : « **dispersion par le contenu des cartes des pairs** » ;
++- étage 4 « disperse » et étage 5 « compte » : « **dispersion par le contenu des cartes des pairs** » ; **sauf** si l'étage 6 donne « effet de la seule présence » de signe négatif (Q < P : le placebo égare, la condition « placebo ≈ parallèle » de [NOTE] n'est pas tenue) : lecture « **dispersion, contenu et égarement du placebo non séparés** », et la phrase « le contenu des cartes des pairs compte » n'est plus employée seule (même interdiction que sous « placebo mal apparié ») ;
+ - étage 4 « disperse » et étage 5 « non tranché » : « **dispersion, contenu non distingué de la seule présence** », lue avec
+   l'étage 6 ; si l'étage 6 donne « effet de la seule présence » de même signe : « **effet de contexte** » ;
+ - étage 4 « regroupe » : « **grégarisme** », qualifié de même par les étages 5 et 6 (« par le contenu » si l'étage 5 dit « nuit ») ;
+@@ -453,10 +459,11 @@
+ | P1 désignée autrement que par la graine `(r, 50)` ; ordre des donneurs autrement que par `(r, 51)` | arrêt ; défaut | graines conformes | P1 prise comme la première répondue : refus |
+ | S_k non répondue | ni S_{k+1} ni Q_{k+1} ; monde non complet ; compté | chaîne conforme | S2 sans carte valide : aucun appel de rang 3, compte juste |
+ | P1 non répondue | aucune phase 2 dans ce monde ; compté | P1 répondue : phase 2 | P1 tronquée : aucun appel de phase 2, compte juste |
++| aucun donneur ne convient pour Q_k (moins de m_k cartes valides, ou texte de plus de 53 000 octets) | Q_k ne part pas ; monde non complet pour SQ ; compté ; aucun repli silencieux | un donneur convient : Q_k part | tous les donneurs à moins de m_k cartes : aucun appel de Q_k, compte juste |
+ | réponse brute ou témoin d'isolement absent | arrêt (code 3), pièces versées | pièces présentes | témoin supprimé : arrêt |
+ | coût d'un appel au-dessus de son pire cas (plafond de session, 2,00) | arrêt (code 3), dépense comptée | coût sous le pire | relevé gonflé : arrêt |
+ | dépense du relais atteignant sa part (`opus55` 400 pour le crible, 8 pour la sonde ; machine 3 USD) | arrêt ; jamais de ligne d'extension | part non atteinte | part atteinte en essai : arrêt |
+-| mondes complets obtenus + mondes en cours (comptés comme pouvant devenir complets) + mondes non commencés < 16 **pour P1 et pour P2 à la fois**, quelle qu'en soit la cause ; évalué à chaque fin de monde de la phase 2 et à la fin de la phase 1 ; à l'instant 0 : 20 | arrêt du crible ; « non concluant » ; dépense restante épargnée | démarrage : continue ; panne d'un appel : continue | P1 tronquée dans 5 mondes à la phase 1 : arrêt avant la phase 2 |
++| mondes complets obtenus + mondes en cours (comptés comme pouvant devenir complets) + mondes non commencés < 16 **pour SP et pour SQ à la fois**, quelle qu'en soit la cause ; évalué à chaque fin de monde de la phase 2 et à la fin de la phase 1 ; à l'instant 0 : 20 | arrêt du crible ; « non concluant » ; dépense restante épargnée | démarrage : continue ; panne d'un appel : continue | P1 tronquée dans 5 mondes à la phase 1 : arrêt avant la phase 2 |
+ | couverture comptant une carte refusée, tronquée, au-delà de six, non évaluable, ou l'effet de K1 | arrêt ; défaut | cartes valides seules | carte au-delà de six injectée : refus |
+ | exception de la mesure (pas un refus nommé) | rien n'est lu ; correction sous un nom neuf, contre-lue, scellée ; mêmes entrées | mesure conforme | division par zéro forcée : arrêt sans sortie |
+ | lecture avant le scellement de la sortie ; mesure lancée deux fois | run invalide | une sortie scellée | seconde mesure : refus |
+@@ -609,7 +616,7 @@
+    fixé par la sonde ; cartes retirées de la fin au-delà de 53 000 octets) — **recommandée** (confiance 0,55) : aucune configuration
+    neuve, la vue reste égale entre bras ; inconvénient : la vue n'est plus celle du pilote si E < 400 ; (b) configuration neuve
+    (plafond de session de Pr-2 relevé pour les rangs 2 à 4) : vue du pilote gardée ; inconvénients : code et sonde v74 neufs, pire
+-   cas plus haut (un plafond de 3,10 aux 120 appels des rangs 2 à 4 porterait le crible à 535 au pire), hors de l'enveloppe ; (c)
++   cas plus haut (un plafond de 3,10, valeur d'exemple non dérivée d'un texte servi, aux 120 appels des rangs 2 à 4 porterait le crible à 535 au pire : 80 × 2,00 + 120 × 3,10 + 3, sonde non comprise, hors de l'enveloppe ; le plus haut plafond que l'enveloppe permet à ces 120 appels est 2,19, soit (434,33 − 160 − 8 − 3) / 120, et il autoriserait ≈ 101 000 octets servis sous la règle du code, contre 53 976 ; l'option (b) n'est donc hors de l'enveloppe qu'à 3,10, non par nature) ; (c)
+    cartes servies sous une forme résumée (traits employés, forme de la loi) : petit bloc ; inconvénient : ce ne sont plus des
+    cartes **brutes**, la question change. Valeurs exactes de E à fixer après la partie A et la sonde.
+ 4. **Phrase du regroupement** : celle du relevé, servie avec le bloc seulement ; alternative : la servir aussi à P (sans cartes, la
+@@ -620,7 +627,7 @@
+    [CRIBLE-III]) ; l'intervalle est rapporté. À contre-lire.
+ 7. **Complétude par comparaison** (sept appels) plutôt que par monde (dix) : probabilité d'atteindre le minimum 0,89 contre 0,70 à
+    0,98 par appel (sortie, § 11).
+-8. **Deux principales à 0,025** : P2 pourrait être secondaire (P1 seule à 0,05 : puissance un peu plus haute) ; recommandé : deux
++8. **Deux principales à 0,025** : SQ pourrait être secondaire (SP seule à 0,05 : puissance un peu plus haute) ; recommandé : deux
+    principales, parce que [NOTE] lit trois issues qui demandent S contre Q.
+ 9. **Borne de 900 s par appel** et cinq files : choix à contre-lire ; garde de départ 6 h.
+ 10. **N = 20** : puissance basse (0,11 à 0,47 dans le modèle simple) ; 24 ou 30 mondes coûteraient 80 à 200 USD de plus au pire,
+@@ -632,16 +639,43 @@
+ 
+ ## Contre-lecture
+ 
+-Aucune à ce jour : ce texte est le brouillon 1, soumis à la contre-lecture (R2) d'un sous-agent neuf d'un **autre modèle** que le
+-rédacteur, qui n'a écrit ni ce texte, ni [NOTE], ni [CRIBLE-III], ni [CRIBLE-V], ni [PILOTE]. **Fichiers à lui donner
+-explicitement** : ce texte ; `devis-crible-ii-brouillon1.py` et sa sortie (même dossier) ; [NOTE] (`2f6a69dd…`), § 1, § 2, § 3 (ii),
+-§ 4, § 6, § 7 et annexe A ; [RELEVÉ] (`bd253b6c…`), § 2.1, § 3.2, § 5, § 6 ; [VERDICT-PC] (`e64458e8…`, branche
+-`verdict/pilote-mr2-v74-v14-v1`) ; [CRIBLE-III] (`91b4bf30…`), « Métrique », « Liste d'arrêt », « Devis » ; [CRIBLE-V]
+-(`2b99627d…`), table des proposeurs et « Devis » ; [MR2] (`47e38ec0…`), § 2 ; `complements_synthese_v1.py` (`89eb7ba8…`) ;
+-`monde_riche_v4.py` (`4b165847…`) ; N-045 v2 (`c7b05e39…`) ; N-058 (`854f2724…`) ; la ligne GO-2026-11-15-06. **À trancher en
+-priorité** : la règle de taille (point 3) ; le rang 1 commun ; l'appariement du placebo ; la traduction des trois lectures de [NOTE]
+-en étages ; la règle de chaîne ; la complétude par comparaison ; les douze choix ci-dessus.
+-
++- **Contre-lecture 1** (R2, tour 1, sur le brouillon 1) — sous-agent neuf, d'un autre modèle que l'auteur, qui n'a écrit ni ce
++  texte, ni [NOTE], ni [CRIBLE-III], ni [CRIBLE-V], ni [PILOTE]. Texte relu :
++  `docs/notes/organisme-idees-juge-v1/cribles-v1/crible-ii-brouillon1.md`,
++  `816a072f6c9192049f325661e7b0ea2f0530dc1f738c4c39b8e75fba62364609` ; rapport :
++  `docs/notes/organisme-idees-juge-v1/cribles-v1/contre-lecture-crible-ii-tour1-v1.md`,
++  `72f98c9ed64f1ee267a40087a66efdceaa7425de903de1b676e8bda74af5365e`. Verdict : « corrections » (5 majeures, D1 à D5 ;
++  5 mineures, m1 à m5 ; 42 couples ; second tour demandé sur ce brouillon 2). Corrections appliquées le 2026-11-17T01:31:15Z (`date -u`)
++  par un rédacteur neuf, d'un autre modèle que l'auteur, qui n'a écrit ni le brouillon 1 ni le rapport, au moyen du programme
++  `appliquer-corrections-crible-ii-brouillon2.py` (même dossier, scellé à côté ; différentiel `diff-crible-ii-b1-vers-b2.txt`, scellé) : les 42
++  couples sont lus dans le rapport lui-même ; chaque « ancien » figure une seule fois dans le brouillon 1, sans chevauchement
++  (vérifié par le programme). **Traitement**, point par point :
++  - D1 (« P1 » et « P2 » nommaient à la fois des sessions et les deux comparaisons principales ; les comparaisons deviennent
++    **SP** et **SQ**, les sessions gardent P1 à P4 ; couples D1.1 à D1.30) : **acceptée**, telle quelle.
++  - D2 (lecture gelée « dispersion par le contenu » : cas d'un placebo qui égare, étage 6 de signe négatif ; couple D2.1) :
++    **acceptée**, telle quelle.
++  - D3 (cas non définis du placebo : aucun donneur à m_k cartes valides, ou texte de Q_k au-delà de 53 000 octets ; Q_k ne
++    part pas, compté ; ligne d'arrêt neuve avec essai sain et artefact ; couples D3.1 et D3.2) : **acceptée**, telle quelle.
++  - D4 (la pièce disait n'avoir lu que le témoin positif du pilote, alors que la section « Comptes » du verdict, lue, donne
++    x = 0 sur 14 ; couples D4.1 et D4.2) : **acceptée**, avec **un écart déclaré** à D4.1 : l'« ancien » est allongé des deux
++    mots qui le précèdent (« seul son »), écrits « seuls son », pour accorder « seul » avec ses deux sujets (« son témoin
++    positif et le résultat principal sont lus ») ; aucun autre mot ne change.
++  - D5 (option (b) du nœud de faisabilité chiffrée avec une valeur d'exemple de 3,10 ; plus haut plafond que l'enveloppe
++    permet aux 120 appels des rangs 2 à 4 : 2,19, soit ≈ 101 000 octets servis ; couple D5.1) : **acceptée**, telle quelle ;
++    la recommandation (a) du point 3 de « Choix et doutes » n'est pas changée (le rapport la laisse à la mère).
++  - m1 (énoncé du test : 7 écarts non nuls nécessaires, suffisants s'ils sont tous du même signe ; la sortie de l'annexe A,
++    imprimée par le programme, n'est pas changée) : **acceptée**.
++  - m2 (les 52 000 octets sont dans la section « Devis » de [CRIBLE-III], non dans sa « Liste d'arrêt ») : **acceptée**.
++  - m3 (zone utile définie aussi pour SQ ; les étages 1 et 3 n'arrêtent que la principale qu'ils touchent) : **acceptée**.
++  - m4 (un même monde peut être donneur de plusieurs mondes : écarts de SQ non strictement indépendants, dit ; nombre de
++    mondes servis par donneur rapporté) : **acceptée**.
++  - m5 (le monde suivant d'une file part quand les six appels du monde en cours sont finis) : **acceptée**.
++  - Remarques facultatives du rapport (section 5 : mot « brutes », annexe A, ligne de puissance à 16 mondes, légende des
++    sigles) : **non appliquées**, aucune correction n'étant exigée ; à reprendre au tour suivant si la mère le veut.
++  - **Non corrigé par le rapport, signalé sans rien changer** (à reprendre au tour 2) : la phrase du « Statut » « les
++    prédictions sont écrites sans aucune donnée de proposeur sur la couverture », et celle de la section « Prédiction »
++    « sans aucune donnée de couverture par appel », se lisent désormais à côté du résultat principal x = 0 sur 14 ajouté par
++    D4 ; le titre de la section « Devis » garde la mention « brouillon 1 », qui nomme le devis et son programme, inchangés.
+ ## Annexe A — comptes exacts (sans donnée de crible, sans tirage, sans appel)
+ 
+ Programme : `devis-crible-ii-brouillon1.py` (même dossier, empreinte dans son compagnon) ; commande : `nice -n 19 python3 -I
