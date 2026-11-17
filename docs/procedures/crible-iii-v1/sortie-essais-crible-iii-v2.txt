@@ -1,0 +1,49 @@
+# date -u : 2026-11-17T02:30:25Z ; python : 3.13.18 2.5.3 (/usr/bin/python3) ; niveau A
+ESSAI OK  | filtre : égalités par l'ordre des noms | sain oui | artefact refusé | [(0,), (1,), (2,), (3,), (4,), (5,)]
+ESSAI OK  | filtre : moins de six | sain oui | artefact refusé | {'retenus': [(0, 1), (0, 2), (0, 1, 2)], 'k': 3, 'doublons': 0, 'retires_archive': 0, 'moins_de_six': True}
+ESSAI OK  | filtre : doublons | sain oui | artefact refusé | {'retenus': [(1, 2), (3,)], 'k': 2, 'doublons': 2, 'retires_archive': 0, 'moins_de_six': True}
+ESSAI OK  | filtre : ensemble de l'archive retiré | sain oui | artefact refusé | {'retenus': [(2,), (4, 5)], 'k': 2, 'doublons': 0, 'retires_archive': 1, 'moins_de_six': True}
+ESSAI OK  | filtre : distance de Jaccard maximin | sain oui | artefact refusé | [(0,), (2, 6), (3, 4), (5,), (0, 1, 2), (6, 7)]
+ESSAI OK  | analyseur : invalides comptés, au-delà de vingt ignorés | sain oui | artefact refusé | 5 invalides, 6 ignorés
+ESSAI OK  | analyseur : réponse sans liste | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : le filtre reçoit autre chose que la passe 1 et l'archive | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : ensembles de H d'une graine qui dépend du monde, du secret ou de la passe 1 | sain oui | artefact refusé | [(0, 4), (3,), (1, 6)]
+ESSAI OK  | liste d'arrêt : texte servi d'une passe 2 différent de G2 et du bloc reconstruit | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : texte servi de B différent de celui de D | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : texte servi de G1 ou G2 de plus de 53 000 octets | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : bornes réduites en mode réel | sain oui | artefact refusé | 
+ESSAI OK  | files : le monde r va à la file r modulo 5 | sain oui | artefact refusé | 
+ESSAI OK  | graine du monde : étiquette du crible, 20 mondes distincts | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : toute dépense sans ligne « calcul » citant GO-2026-11-15-06 | sain oui | artefact refusé | 
+ESSAI OK  | crible sain : 100 appels, 20 mondes complets, B servi du texte même de D | sain oui | artefact refusé | 100 appels, 20 complets ; textes de D et H rebâtis à l'octet
+ESSAI OK  | ordre dans un monde : D et B après la passe 1 | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : passe 1 sans ensemble valide, tronquée ou en échec | sain oui | artefact refusé | 18 complets ; monde 3 : ['H', 'P1', 'S']
+ESSAI OK  | liste d'arrêt : garde de départ (4 × borne du monde + 2 h) | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : minuterie au départ d'un monde (borne du monde + 2 h) | sain oui | artefact refusé | {'ligne': 'minuterie', 'motif': "moins de 1 s avant l'échéance au départ du monde 10", 'code': 3}
+ESSAI OK  | liste d'arrêt : borne par appel (appel coupé, compté en échec, les autres files continuent) | sain oui | artefact refusé | echec
+ESSAI OK  | liste d'arrêt : dépense d'un relais atteignant sa part | sain oui | artefact refusé | {'ligne': 'part', 'motif': "fable52 : part 20 USD atteinte au pire cas de l'appel suivant", 'code': 3}
+ESSAI OK  | liste d'arrêt : complets + en cours + non commencés < 16 (minimum) | sain oui | artefact refusé | {'ligne': 'minimum', 'code': 0, 'motif': '2 complets + 4 en cours + 9 non commencés < 16'} ; 37 appels
+ESSAI OK  | liste d'arrêt : erreurs de limite de débit sur plus de 5 % des appels du fournisseur | sain oui | artefact refusé | {'ligne': 'limite de débit', 'motif': '3 erreurs sur 10 appels du fournisseur claude', 'code': 3}
+ESSAI OK  | liste d'arrêt : réponse brute ou témoin d'isolement absent (code 3) | sain oui | artefact refusé | {'ligne': "réponse brute ou témoin d'isolement absent", 'motif': 'témoin supprimé (essai)', 'code': 3}
+ESSAI OK  | liste d'arrêt : coût d'un appel au-dessus de son pire cas (code 3) | sain oui | artefact refusé | {'ligne': 'coût au-dessus du pire cas', 'motif': 'relevé gonflé (essai)', 'code': 3}
+ESSAI OK  | liste d'arrêt : exception du gardien (arrêt, code 3 ; l'appel reste au relevé, sa dépense comptée) | sain oui | artefact refusé | {'ligne': 'exception du gardien', 'motif': 'monde 3, H : ValueError : gardien en panne (essai)', 'code': 3} ; 24 appels faits, 24 listés
+ESSAI OK  | liste d'arrêt : exception dans un monde (filtre qui lève : arrêt, code 3 ; aucune file muette ; appel en vol listé) | sain oui | artefact refusé | {'ligne': "exception d'un monde", 'motif': "monde 3 : Refus : filtre : traits des lois de l'archive seulement (listes d'entiers de 0 à 7)", 'code': 3}
+ESSAI OK  | liste d'arrêt : arrêt réel d'un appel en vol après la ligne du minimum (il la remplace : code 3) | sain oui | artefact refusé | sain : {'ligne': 'minimum', 'code': 0, 'motif': '0 complets + 4 en cours + 11 non commencés < 16'} ; témoin : {'ligne': "réponse brute ou témoin d'iso
+ESSAI OK  | mesure : δ_DB et dollars de D et de B (passe 1 comptée dans les deux) | sain oui | artefact refusé | {'C': {'S': 20, 'D': 40, 'H': 20, 'B': 20}, 'dollars': {'S': 50.0, 'D': 55.2, 'H': 50.0, 'B': 10.4}}
+ESSAI OK  | mesure : intervalles à 97,5 % pour les principales, 95 % ailleurs | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : couverture comptant l'effet de K1 | sain oui | artefact refusé | {'S': 0, 'D': 0, 'H': 0, 'B': 0}
+ESSAI OK  | liste d'arrêt : couverture comptant une carte refusée, tronquée, au-delà de six ou non évaluable | sain oui | artefact refusé | refusée et non évaluable : 40 ; tronqué : 19 complets
+ESSAI OK  | mesure : rapport réintégré de δ_DB (un seul de D et B tronqué, C = 0) | sain oui | artefact refusé | 0.9
+ESSAI OK  | liste d'arrêt : exception de la mesure (pas un refus nommé) | sain oui | artefact refusé | 
+ESSAI OK  | liste d'arrêt : mesure lancée deux fois | sain oui | artefact refusé | MESURE REFUS : mesure déjà faite (une seule fois) : seconde mesure refusée
+
+ESSAI OK  | mesure : test exact des signes rapporté | sain oui | artefact refusé | 
+ESSAI OK  | lecture : étages 4 à 6 (P1 non tranché, P2 perte établie, Q pas mieux que le hasard) | sain oui | artefact refusé | {"4": "non tranché", "5": "perte établie sans le proposeur cher", "6": {"Q": "pas mieux que le hasard au crible", "F": {
+ESSAI OK  | lecture : étage 0 (ligne d'arrêt autre que le minimum ; mesure en erreur) | sain oui | artefact refusé | 
+ESSAI OK  | lecture : étage 1 (minimum, n_c < 16, fournisseur perdu) | sain oui | artefact refusé | 
+ESSAI OK  | lecture : étage 2 (« B tronqué » interdit « perte établie ») | sain oui | artefact refusé | phrase interdite sous « B tronqué » (perte établie) : rappor
+ESSAI OK  | lecture : étage 2 (format non tenu, consigne non suivie) | sain oui | artefact refusé | 
+ESSAI OK  | lecture : étage 3 (zone utile) | sain oui | artefact refusé | 
+ESSAI OK  | lecture : P2 sensible à la troncature | sain oui | artefact refusé | 
+ESSAIS : 45 cas, 45 passés, 0 échecs
+code 0
