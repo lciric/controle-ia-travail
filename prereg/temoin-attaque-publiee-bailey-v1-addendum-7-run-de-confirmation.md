@@ -156,24 +156,41 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   pour chaque verdict à lire : le dossier donné à la lecture, par son chemin absolu dans l'arbre de travail principal
   du dépôt (pour la confirmation : la sortie de la conduite ; le dossier de reprise s'il y a eu reprise ; le dossier
   assemblé, fait avant la clôture, s'il y a eu relance par le chemin de l'addendum 5 ; un refus de cet assemblage est
-  constaté avant la clôture, par la puce « Refus ou erreur à la lecture ») ; le commit du code, celui du § 4 et aucun
-  autre ; le fichier des empreintes attendues, écrit et scellé par `lecture_scellee_v2 --calculer-attendu … --commit
-  <ce commit> --vers …`, joué par la session avec la commande consignée, qui ne fait que des empreintes d'octets, ne
-  lit aucune note, et refuse si `src/` porte une modification ou un fichier non suivi, ou si l'arbre `src/` de la tête
-  n'est pas celui du commit nommé ; le chemin de la sortie ; la commande (`python -B`, l'interpréteur du dépôt,
-  `PYTHONPATH=src`, `PYTHONPYCACHEPREFIX` vers un répertoire neuf et vide à chaque exécution, pour qu'aucun `.pyc`
-  existant ne soit relu ; tous chemins absolus). Ils ne changent plus. Entre la note de clôture et le contrôle final, aucune
-  session n'installe ni ne retire de distribution, ni ne fait de changement de branche, `git checkout`, `git clean` ou
-  `git stash` dans cet arbre. Avant la note de clôture, la commande est jouée telle quelle, aux seuls chemins du
-  dossier, de l'attendu et de la sortie près, sur un dossier factice de même forme, construit par programme sans aucune
-  pièce réelle (comme dans les essais du § 4), avec un attendu calculé de même sur ce dossier factice (le code et
+  constaté avant la clôture, par la puce « Refus ou erreur à la lecture »). Un dossier venu du poste arrive dans l'arbre
+  principal par git, qui ne porte pas les répertoires vides, alors que `valider` décide aussi sur leur existence : le
+  poste v13 écrit, après son dernier transfert, la liste des répertoires vides de la sortie de la conduite (`find
+  <sortie> -type d -empty`, chemins relatifs), la pousse et la scelle ; avant `--calculer-attendu`, la session crée ces
+  répertoires, et eux seuls, dans l'arbre principal (geste technique, aucune note lue) ; la note de clôture cite cette
+  liste et son empreinte (liste vide : rien n'est créé ; liste absente : rien n'est créé, et c'est rapporté). Pour
+  `lecture-assemblee-v1`, est lu l'état du dossier dans l'arbre principal au calcul de l'attendu, rapporté tel quel
+  (les répertoires vides des postes des séries 1 à 3 et de la relance ne sont pas connus). La note nomme encore : le
+  commit du code, celui du § 4 et aucun autre ; le fichier des empreintes attendues, écrit et scellé par
+  `lecture_scellee_v3 --calculer-attendu … --commit <ce commit> --vers …`, joué par la session avec la commande
+  consignée, qui ne fait que des empreintes d'octets, ne lit aucune note, et refuse si `src/` porte une modification,
+  un fichier non suivi ou un fichier ignoré hors `__pycache__`, si l'arbre `src/` de la tête n'est pas celui du commit
+  nommé, ou si la commande ne porte pas les drapeaux ci-dessous ; le chemin de la sortie ; la commande, la même pour
+  `--calculer-attendu`, la lecture et `--controler` : `PYTHONPATH=<racine>/src PYTHONPYCACHEPREFIX=<répertoire neuf et
+  vide à chaque exécution> <racine>/.venv/bin/python -B -P -m controle_ia.temoin_bailey.lecture_scellee_v3 …`, tous
+  chemins absolus (`-B` et un `PYTHONPYCACHEPREFIX` neuf : aucun `.pyc` existant n'est relu ; `-P` : le répertoire
+  courant n'entre pas dans `sys.path`, donc pas dans l'empreinte de l'environnement ; le code refuse sans ces trois
+  réglages). Ils ne changent plus. Aucun attendu, aucune sortie, ni la note de clôture, ni le dossier factice de l'essai,
+  ni un répertoire `PYTHONPYCACHEPREFIX` n'est écrit sous l'un des dossiers donnés à une lecture (le code refuse un
+  attendu ou une sortie sous le dossier lu). Entre le premier `--calculer-attendu` et le dernier contrôle final, aucune
+  session n'installe ni ne retire de distribution, ne crée ni ne modifie de fichier sous `src/` ou sous un dossier donné
+  à une lecture (hors les répertoires vides de la liste du poste, créés avant), ni ne joue dans cet arbre une commande
+  git qui écrit l'arbre de travail (`checkout`, `switch`, `restore`, `reset`, `clean`, `stash`, `pull`, `merge`,
+  `rebase`) ; `add`, `commit` et `push` hors de `src/` restent permis. Avant la note de clôture, après le calcul des
+  attendus réels, la commande est jouée telle quelle, aux seuls chemins du dossier, de l'attendu et de la sortie près,
+  sur un dossier factice de même forme, construit par programme sans aucune pièce réelle (comme dans les essais du
+  § 4), avec un attendu calculé de même sur ce dossier factice, dont les champs `commit`, `code` et `environnement` sont
+  égaux à ceux des attendus réels, ce que la session vérifie par programme et que la note cite (le code et
   l'environnement réels sont ainsi éprouvés) ; son issue est citée dans la note. Une commande qui y échoue ne se
-  corrige que dans ses chemins, arguments et variables, jamais dans le code (§ 4), sans aucun dossier réel ; si aucune
-  n'y aboutit dans les 24 h qui suivent le premier essai, la note de clôture le dit et nomme la dernière commande
-  essayée ; la session la joue sur le dossier réel, et la puce « Refus ou erreur à la lecture » s'applique ensuite sans
-  exception.
+  corrige que dans ses chemins, arguments et variables, jamais dans le code (§ 4), sans aucun dossier réel (un attendu
+  réel calculé avec une commande corrigée est recalculé sous un nom neuf, R12) ; si aucune n'y aboutit dans les 24 h
+  qui suivent le premier essai, la note de clôture le dit et nomme la dernière commande essayée ; la session la joue
+  sur le dossier réel, et la puce « Refus ou erreur à la lecture » s'applique ensuite sans exception.
 - **La lecture est faite par le code, jouée par la session à l'aveugle ; le verdict d'un run est sa sortie scellée.**
-  Seul `lecture_scellee_v2` joue `valider` et `lire` sur un dossier réel (§ 4). Il vérifie l'attendu (forme, commit,
+  Seul `lecture_scellee_v3` joue `valider` et `lire` sur un dossier réel (§ 4). Il vérifie l'attendu (forme, commit,
   arbre `src/`, dossier, environnement) avant chaque exécution (écart, forme non conforme, ou empreintes refusées ou
   incalculables : issue « refus : empreintes », aucune exécution). Il joue une exécution, et une seconde à l'identique
   seulement après un refus (`GardeArret`) ou une erreur ; jamais après une exécution qui aboutit (un état « pas de
@@ -182,7 +199,10 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   l'empreinte de la sortie et son issue (« aboutie », « refus ou erreur », « refus : empreintes »), sans aucune valeur ;
   pour un refus, la sortie porte le texte de la `GardeArret`, pour toute autre exception son type et son lieu, sans son
   message. Dans les 24 h qui suivent la note de clôture, la session joue la commande consignée, une fois par verdict à
-  lire, et consigne l'empreinte et l'issue rendues, sans ouvrir la sortie. Une exécution de la commande qui ne laisse
+  lire, et consigne l'empreinte et l'issue rendues, sans ouvrir la sortie. Si la sortie et son compagnon sont présents
+  mais que la ligne rendue est perdue ou illisible, la commande n'est pas rejouée : la session consigne l'empreinte
+  que rend `python -m controle_ia.scellement verifier <sortie>`, sans ouvrir la sortie, et l'issue « non lue » (le
+  lecteur la transcrit de la sortie). Une exécution de la commande qui ne laisse
   pas de sortie scellée (le code n'a pas démarré, ou s'est arrêté avant de sceller) est rejouée une fois, à l'identique,
   si aucune sortie n'est présente ; une sortie présente sans son compagnon n'est ni ouverte ni scellée après coup, et le
   code refuse alors de la remplacer : l'absence de sortie est constatée. **La sortie scellée au chemin nommé fait foi** :
@@ -207,14 +227,14 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
 - **Cloison de la session jusqu'aux deux verdicts.** Jusqu'à ce que chaque verdict attendu soit scellé, ou son absence
   constatée, aucune session n'ouvre une sortie ou un rapport, ne lit une note de sonde ou de juge du témoin (au sens de
   la première puce ; les l. 241-242 et 371 du texte ne jouent qu'ensuite), ni ne joue sur un dossier réel `valider`,
-  `lire` ou tout autre code qui lit ou rend une note : seule la commande consignée de `lecture_scellee_v2` le fait, qui
+  `lire` ou tout autre code qui lit ou rend une note : seule la commande consignée de `lecture_scellee_v3` le fait, qui
   ne rend aucune valeur (la conduite, la reprise de la lecture 38, l'assemblage d'une relance avant la clôture,
   `--calculer-attendu`, `--controler` et les contrôles d'empreinte et de scellement, qui ne rendent aucune note, ne sont
   pas visés). Si une session apprend malgré cela un verdict ou une valeur de note avant ce moment (message d'un lecteur,
   fichier ouvert), c'est consigné avec ce qui a été vu ; toute décision prise ensuite sur l'autre lecture (remplacement
   d'un lecteur) est rapportée « décidée après une lecture », et le verdict retenu porte cette réserve. Ensuite, et avant
-  d'ouvrir le reste, la session joue, pour chaque sortie, `lecture_scellee_v2 --controler` avec l'attendu et le dossier
-  que nomme la note de clôture et l'empreinte qu'elle a consignée en jouant la commande ; il ne rend que « conforme » ou
+  d'ouvrir le reste, la session joue, pour chaque sortie, `lecture_scellee_v3 --controler` avec l'attendu et le dossier
+  que nomme la note de clôture et l'empreinte qu'elle a consignée en jouant la commande (ou, retour perdu, celle du compagnon, consignée de même) ; il ne rend que « conforme » ou
   « écart » : un écart vaut « pas de verdict » pour ce run.
 - **Lecteur remplacé, règle mécanique.** Un lecteur qui finit, ou qui n'a rien rendu 24 h après son lancement (il est
   alors arrêté), sans que son rapport soit scellé au chemin de sa consigne, est remplacé une seule fois par un lecteur
@@ -269,8 +289,8 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
 `75cf4049c61d81439989ad11f4f8370ef9c7b16a1257c881245f0efbd8dbaf02`), au commit
 `873ab00ca5eaaaa00c84c9ae9f0bd53fef6435e5` ; instance (`instance_v16`), exécution (`execution_v4`), lecture
 (`lecture_v8`), journaliseur, conventions, analyse : inchangés. Manifeste neuf `manifeste-local-v7.json`, écrit après
-l'inscription de la ligne de GO (il porte son identifiant) : seules différences avec le v6 : `B` (85), `commit_code`,
-`go_id`. Essais : `tests/test_temoin_bailey_condition6_v21.py` (`36573ae2…`) : les essais v20 rejoués, plus la garde
+l'inscription de la ligne de GO (il porte son identifiant) : seules différences avec le v6 : `B` (85), `commit_code` (le commit du code ci-dessous ; les fichiers de
+l'archive envoyée à l'instance, `lanceur_v21.CHEMINS_ARCHIVE`, y sont ceux de `873ab00c`), `go_id`. Essais : `tests/test_temoin_bailey_condition6_v21.py` (`36573ae2…`) : les essais v20 rejoués, plus la garde
 (sous le plafond : run principal ; plafond atteint : passe ; au-dessus : arrêt avant le run principal, instance
 détruite ; sans plafond : rien ne change) ; avec `tests/test_temoin_bailey_reprise_relance_v1.py` : 227 passés, 1 sauté
 (configurations publiques non fournies), sous `PYTHONPATH=src`. Essais complémentaires (M-9 de la contre-lecture) :
@@ -280,31 +300,36 @@ v15 refuse de partir si la valeur n'est pas exactement 1 800, et l'ordre de lanc
 manifeste « règle » n'est pas écrit : B, R, D, c, t, H et K sont au bilan et dans le dossier `regle` transféré. Le
 libellé d'arrêt du code (« … ; nœud ») se lit selon le § 2.3.
 
-Lecture scellée (§ 3) : `src/controle_ia/temoin_bailey/lecture_scellee_v2.py` (`5b2e7859d8e536e7bb2ee276d5f83e0eb8af0ff53531ee22fd64b894e8b15dbb`) ; elle
-n'ajoute aucun critère : elle joue `lecture_v8.valider` puis `lecture_v8.lire` avec
-`analyse_v3.graines()["reechantillonnage"]`, sous les règles mécaniques du § 3 (sortie neuve, empreintes attendues,
-seconde exécution seulement après un échec, sortie scellée, retour sans valeur, contrôle final). La v1
-(`lecture_scellee_v1.py`, `1b6f365e…`, commit `a91ba8cf`) reste dans le dépôt sans servir (R12) : la vérification v7 y
-a démontré deux défauts (répertoires hors de l'empreinte du dossier ; `src/` modifié comparé au lieu d'être refusé).
-Essais : `tests/test_temoin_bailey_lecture_scellee_v2.py` (`8a0619f181702e3bffccb7f1f32ff47768a25f2b6b9b69c5488e917d97f98d6c`) : chaque règle avec un cas sain et un
-artefact (R5), dont les deux artefacts de la v7, et un bout en bout sur dossier factice où la lecture entière de la
-sortie est égale à `valider` et `lire` joués directement, le dossier inchangé et le contrôle conforme ; résultat :
-28 passés ; avec les essais de la v1, v21, complémentaires et de reprise, 274 passés, 1 sauté, sous
-`PYTHONPATH=src` et `python -B`. Répétition de la commande entière (attendu, lecture, contrôle) sur un dossier factice,
-dans le dépôt réel au commit du code, avec l'interpréteur du dépôt : « aboutie », contrôle « conforme »
-(`runs/temoin-bailey-v1-20261111/repetition-lecture-scellee-v2-20261117.txt`, `2ce696df…`).
+Lecture scellée (§ 3) : `src/controle_ia/temoin_bailey/lecture_scellee_v3.py`
+(`a367853b4aadbf20482001ad086c67fdaa5b6e80bc45ac4a15f01d9211800dcb`) ; elle n'ajoute aucun critère : elle joue
+`lecture_v8.valider` puis `lecture_v8.lire` avec `analyse_v3.graines()["reechantillonnage"]`, sous les règles mécaniques
+du § 3 (sortie neuve, empreintes attendues, seconde exécution seulement après un échec, sortie scellée, retour sans
+valeur, contrôle final). La v1 (`1b6f365e…`, commit `a91ba8cf`) et la v2 (`5b2e7859…`, commit `91132fd0`) restent dans
+le dépôt sans servir (R12) : les vérifications v7 et v8 y ont démontré des défauts (v1 : répertoires hors de l'empreinte
+du dossier, `src/` modifié comparé au lieu d'être refusé ; v2 : chemin du dossier non normalisé au contrôle, empreinte
+de l'environnement dépendante du répertoire courant). Essais : `tests/test_temoin_bailey_lecture_scellee_v3.py`
+(`728a02e088b7b0e43c314bfb8a4cc41a7d538b00bea2388d5fe0e4004411477c`) : ceux de la v2 rejoués, plus les artefacts de la
+v8 (barre finale, `//` et `.` au contrôle ; attendu ou sortie sous le dossier lu ; fichier ignoré sous `src/` ; garde de
+commande et indépendance au répertoire courant, en sous-processus) ; résultat : @@RESULTAT_LS@@. Répétition de la
+commande entière sur un dossier factice, dans le dépôt réel au commit du code, attendu, lecture et contrôle joués
+depuis trois répertoires courants différents, dossier écrit avec puis sans barre finale : « aboutie », contrôle
+« conforme » ; sans `-P` : refus (`runs/temoin-bailey-v1-20261111/repetition-lecture-scellee-v3-20261117.txt`,
+`ea4ed578…`). La répétition de la v2 (`…-v2-20261117.txt`, `2ce696df…`) a une dernière ligne coupée à l'écriture, qui
+ne porte que le verdict factice, sans effet.
 
-**Commit du code** : `91132fd0eb80428ac8397ef0c788da282b3a49e3`. Son arbre `src/` ne diffère de celui de `873ab00c` que par l'ajout de
-`lecture_scellee_v1.py` et `lecture_scellee_v2.py` (`git diff --stat 873ab00c 91132fd0 -- src`) : le code de la
-conduite, de l'instance et de `lecture_v8` est celui de `873ab00c`. C'est ce commit que gardent le poste (« garde du
-commit » : `src/` de la tête égal au sien) et la lecture (`--commit`). L'arbre `src/` ne change plus avant le dernier
-contrôle final sans un addendum neuf, contre-lu (R2) et scellé avant la clôture.
+**Commit du code** : `a904aa391cdcf2650b747fe64e48caa0ec8c5849`. Son arbre `src/` ne diffère de celui de `873ab00c` que
+par l'ajout des trois lectures scellées (`git diff --stat 873ab00c a904aa39 -- src`) : le code de la conduite, de
+l'instance et de `lecture_v8` est celui de `873ab00c`. C'est ce commit que portent le champ `commit_code` du manifeste
+v7, la garde du commit du poste (`src/` de la tête égal au sien) et la lecture (`--commit`). L'arbre `src/` ne change
+plus avant le dernier contrôle final sans un addendum neuf, contre-lu (R2) et scellé avant la clôture. Ce gel ne vaut
+que pour la branche du témoin (`claude/compassionate-meitner-d4ryyk`), où seule cette session écrit ; il est écrit en
+tête de toute passation et de tout brief de cette branche jusqu'au dernier contrôle final.
 
 Pièces de lancement, écrites après l'inscription du GO (elles portent son identifiant), contre-lues (R2) et scellées
 avant le lancement : conduite `lancer-conduite-v15.py` (il n'y a pas de v14) = `lancer-conduite-v13.py` sans
 `relance_seule`, avec `lanceur_v21`, `t_max_pilote_s=1800`, aucune instance antérieure, le manifeste v7 et le GO neuf ;
 poste `poste-hetzner-v13.sh` et son constructeur = le poste v12 avec la conduite v15, le filtre du § 2.4 et la garde du
-commit du code (`91132fd0`).
+commit du code (`a904aa39`).
 
 ## 5. Risques déclarés
 - (a) l'hypothèse « processeur » n'est pas établie ; la vitesse d'un hôte peut changer après le pilote, par croissance
@@ -330,7 +355,7 @@ commit du code (`91132fd0`).
   la passation du même jour et la note `registres/passations/2026-11-16-2355-decision-lazar-bailey-2-puis-1.md`, qui
   placent le verdict à 36 tours après le scellement de l'addendum ; toute passation et tout brief écrits avant la clôture
   le disent en tête ;
-- (f) le code de lecture n'a jamais été joué sur le dossier réel à 36 tours (cloison) ; `lecture_scellee_v2` et la
+- (f) le code de lecture n'a jamais été joué sur le dossier réel à 36 tours (cloison) ; `lecture_scellee_v3` et la
   commande sont éprouvés sur des dossiers factices (§ 3, § 4), ce qui réduit ce risque sans l'ôter : un refus ou une erreur à la
   lecture, quelle qu'en soit la cause, laisse ce run sans verdict (règle mécanique du § 3, choisie pour qu'aucune
   décision ne dépende d'un diagnostic fait après la clôture) ; si le run à 36 tours est sans verdict et la
@@ -362,7 +387,9 @@ et l'essai de la commande sur un dossier factice :
    `poste-hetzner-v13.sh` et son constructeur, manifeste v7), contre-lues (R2) par un lecteur neuf, puis scellées. Ce
    lecteur vérifie qu'elles ne diffèrent de la conduite v13, du poste v12 et du manifeste v6 que par ce que cet addendum
    nomme : `lanceur_v21`, `t_max_pilote_s=1800` exigé, aucune `relance_seule`, aucune instance antérieure, B = 85,
-   filtre du § 2.4, garde du commit du code (§ 4), GO neuf et empreinte de cet addendum vérifiée dans son objet ; la demande
+   `commit_code` du manifeste v7 égal au commit du code (§ 4), filtre du § 2.4, garde du commit du code (§ 4 : le
+   commit `f60c2620…` remplacé par celui du § 4 dans les deux lignes de garde du poste v12, `git cat-file -e` et
+   `git diff --quiet … HEAD -- src/`), liste des répertoires vides écrite, poussée et scellée par le poste (§ 3), GO neuf et empreinte de cet addendum vérifiée dans son objet ; la demande
    du mot de lancement envoyée à Lazar, avec cet addendum (chemin, empreinte), les § 2 et 2 bis, l'ordre de lecture et
    la règle du verdict retenu (§ 3 : aucun verdict avant la clôture), les risques du § 5 et le tirage attendu sur la
    carte ; le mot de Lazar reçu ;
@@ -469,12 +496,13 @@ liens symboliques et entrées spéciales refusés ; `src/` modifié ou non suivi
 `src/` de la tête égal à celui du commit), écrit et scellé par le code seulement en cas de succès, forme vérifiée ;
 interpréteur et `sys.path` dans l'empreinte de l'environnement ; `python -B` ; contrôle final mécanique
 (`--controler`) ; essais des deux artefacts. Le texte change avec le code : **la session joue la commande à
-l'aveugle**, juste après la note de clôture, et consigne l'empreinte et l'issue (variante proposée par l'angle
+l'aveugle**, dans les 24 h qui suivent la note de clôture, et consigne l'empreinte et l'issue (variante proposée par l'angle
 « critère central ») ; les lecteurs ne jouent plus aucun code et transcrivent la sortie, ce qui retire la commande du
 lecteur, son rejeu et le cas « aucune empreinte rendue » ; le dossier est lu dans l'arbre principal, jamais dans un
-autre arbre de travail (git n'y garde pas les répertoires vides), et l'arbre de travail neuf est retiré ; aucun
+autre arbre de travail (un autre arbre de travail au commit nommé n'aurait pas les fichiers poussés depuis ; l'arbre principal
+lui-même ne porte que ce que git a transporté, d'où la liste du poste ajoutée après la v8), et l'arbre de travail neuf est retiré ; aucun
 changement de branche ni d'installation jusqu'au contrôle final ; l'attendu de l'essai factice est calculé avec le
-code et l'environnement réels ; commande factice en échec : la session joue la dernière commande essayée ; K′ = champ
+code et l'environnement réels (ses champs comparés à ceux de l'attendu réel depuis la v8) ; commande factice en échec : la session joue la dernière commande essayée ; K′ = champ
 `k_prime` de la sortie, jamais le bilan ; rapport contraire à la sortie : « R13 non tenu » ; rejeu de l'assemblage
 vers une cible neuve ; sortie sans compagnon ni ouverte ni scellée après coup ; lecture entière comparée dans le bout
 en bout ; traçabilité des paragraphes v4 et v5. Le commit du code devient celui qui porte la v2 (§ 4) : la garde du
@@ -482,3 +510,22 @@ commit du poste refuse tout `src/` différent du sien, et l'arbre `src/` ne diff
 l'ajout des deux lectures scellées. Remarque reprise autrement : un `.pyc` forgé sous `src/__pycache__`, ignoré par git,
 échapperait à l'empreinte du code ; la commande fixe `PYTHONPYCACHEPREFIX` vers un répertoire neuf et vide, ce qui
 empêche de relire aucun `.pyc` existant. Aucun constat écarté.
+Vérification de la lecture v2, trois relecteurs (`…-v8.md`,
+`b4d37901ed7c2321685473d88daa4828fb8e573ff7df60338c7df016b63ccf43`, sur le commit `3e14ff29` ; dans ce rapport, la note
+d'en-tête range mal les retours : le retour 1 est l'angle « critère central », le retour 2 l'angle « code v2 », le
+retour 3 l'angle « application »). Aucune voie ne donne une sortie « aboutie » d'un code ou d'un dossier modifié ; deux
+bloquants, démontrés, font tomber à tort le vrai chemin en « pas de verdict » : (1) `--controler` comparait le chemin du
+dossier non normalisé (une barre finale suffisait) ; (2) l'empreinte de l'environnement dépendait du répertoire
+courant (`python -m` le met en tête de `sys.path`), que la commande ne fixait pas. Traitement : `lecture_scellee_v3`
+(R12) : chemins normalisés dans la sortie et au contrôle ; `-B`, `-P` et `PYTHONPYCACHEPREFIX` exigés par le code ;
+entrées de `sys.path` résolues ; aucun attendu ni aucune sortie sous un dossier lu ; fichier ignoré sous `src/` hors
+`__pycache__` refusé ; essais de chaque artefact, dont deux en sous-processus ; répétition depuis trois répertoires
+courants. Repris dans le texte : commande unique et complète ; rien écrit sous un dossier lu ; interdit étendu du premier
+attendu au dernier contrôle, avec les commandes git qui écrivent l'arbre ; attendu factice comparé aux attendus réels ;
+liste des répertoires vides écrite par le poste v13 et recréée avant l'attendu (le dossier venu du poste arrive par git,
+qui ne les porte pas), état de `lecture-assemblee-v1` rapporté tel quel ; retour perdu (empreinte du compagnon) ;
+`commit_code` du manifeste v7 et lignes de garde du poste nommés ; gel de `src/` limité à la branche du témoin, où seule
+cette session écrit, et écrit en tête des passations et briefs de cette branche (la proposition d'inscrire ce gel dans
+`registres/etat.md` et `CLAUDE.md` n'est pas reprise : les autres sessions travaillent sur d'autres branches, et
+`registres/etat.md` est hors de la cloison de cette session) ; formulations du paragraphe v7 (« dans les 24 h »,
+raison des répertoires vides) ; ligne coupée de la répétition v2, dite au § 4. Aucun autre constat écarté.
