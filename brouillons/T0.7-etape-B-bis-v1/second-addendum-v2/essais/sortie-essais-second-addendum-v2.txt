@@ -1,0 +1,180 @@
+# Essais rejoués pour le brouillon 2 du second addendum (code de code/ inchangé). Deux passes, dans cet ordre :
+# passe 1 : les 51 essais ; 2 échecs dus à la copie (dossiers docs/sources/invites-* absents : l'exclusion ':(exclude)docs/sources' du git archive les avait retirés ; erreur du rédacteur du brouillon 2).
+# passe 2 : les deux essais en échec, rejoués après ajout des deux dossiers (empreintes compagnons vérifiées) ; 2 passés.
+# Bilan : 51 essais passés sur 51. Chemins du bloc-notes laissés tels quels dans les traces.
+===== passe 1 =====
+debut 2026-11-17T00:43:13Z
+commande : PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q -rs -p no:cacheprovider --color=no -s --basetemp=<bloc-notes>/bt tests/test_t07bbis_second_addendum_v1.py tests/test_t07bbis_controle_v3.py (copie du bloc-notes : git archive de af0adb14 limité à src, tests, scripts, prereg, registres, .claude, docs hors docs/sources sauf les deux dossiers invites-*, plus code/ du second addendum ; code inchangé par les couples du brouillon 2)
+.......
+[quasi_copies] lineaire à 3 époques 9.175e-12 ; attention à 3 époques 9.483e-10 ; information à 300 époques 5.307e+00
+.
+[anisotrope] lineaire à 3 époques 3.088e-12 ; information à 300 époques 3.793e+00
+.........................F................F
+=================================== FAILURES ===================================
+_________ test_F_marche_v4_et_lecture_v3_de_bout_en_bout_en_mode_jouet _________
+
+tmp_path_factory = TempPathFactory(_given_basetemp=PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/78897fa0-2926-5bf2-a108-3e893b...a0-2926-5bf2-a108-3e893bc2db62/scratchpad/redac-sa2-b2-20261117T0040/bt'), _retention_count=3, _retention_policy='all')
+
+    def test_F_marche_v4_et_lecture_v3_de_bout_en_bout_en_mode_jouet(tmp_path_factory):
+        import aide_t07bbis_jouet_v1 as aide
+        from controle_ia.scellement import empreinte, sceller
+        from controle_ia.t07bbis import marche_v4
+        if not aide.disponible():
+            pytest.skip("chaîne de T0.6 absente de ce clone")
+        run_b, entropie = "20261118-090000-bbis-jouet", 2 ** 100 + 11
+>       d = aide.course_jouet(tmp_path_factory.mktemp("depot-bbis-v4"))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_t07bbis_second_addendum_v1.py:490: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/aide_t07bbis_jouet_v1.py:60: in course_jouet
+    la6.executer(config, d, RUN, None)
+src/controle_ia/t06/lanceur_v6.py:175: in executer
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/78897fa0-2926-5bf2-a108-3e893bc2db62/scratchpad/redac-sa2-b2-20261117T0040/arbre/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/78897fa0-2926-5bf2-a108-3e893bc2db62/scratchpad/redac-sa2-b2-20261117T0040/arbre/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+__________ test_marche_v3_et_lecture_v2_de_bout_en_bout_en_mode_jouet __________
+
+tmp_path_factory = TempPathFactory(_given_basetemp=PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/78897fa0-2926-5bf2-a108-3e893b...a0-2926-5bf2-a108-3e893bc2db62/scratchpad/redac-sa2-b2-20261117T0040/bt'), _retention_count=3, _retention_policy='all')
+
+    def test_marche_v3_et_lecture_v2_de_bout_en_bout_en_mode_jouet(tmp_path_factory):
+        import aide_t07bbis_jouet_v1 as aide
+        from controle_ia.scellement import empreinte, sceller
+        from controle_ia.t07bbis import marche_v3
+        from controle_ia.t07bbis import registre_bbis_v1 as rb
+        if not aide.disponible():
+            pytest.skip("chaîne de T0.6 absente de ce clone")
+        run_b, entropie = "20261118-090000-bbis-jouet", 2 ** 100 + 11
+>       d = aide.course_jouet(tmp_path_factory.mktemp("depot-bbis-v3"))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_t07bbis_controle_v3.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/aide_t07bbis_jouet_v1.py:60: in course_jouet
+    la6.executer(config, d, RUN, None)
+src/controle_ia/t06/lanceur_v6.py:175: in executer
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/78897fa0-2926-5bf2-a108-3e893bc2db62/scratchpad/redac-sa2-b2-20261117T0040/arbre/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/78897fa0-2926-5bf2-a108-3e893bc2db62/scratchpad/redac-sa2-b2-20261117T0040/arbre/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+2 failed, 49 passed in 1971.54s (0:32:51)
+code 1
+fin 2026-11-17T01:16:07Z
+===== passe 2 =====
+debut 2026-11-17T01:16:37Z
+commande : PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q -rs -p no:cacheprovider --color=no -s --basetemp=<bloc-notes>/bt tests/test_t07bbis_second_addendum_v1.py::test_F_marche_v4_et_lecture_v3_de_bout_en_bout_en_mode_jouet tests/test_t07bbis_controle_v3.py::test_marche_v3_et_lecture_v2_de_bout_en_bout_en_mode_jouet (même copie, après ajout des deux dossiers docs/sources/invites-* que l'exclusion de docs/sources avait retirés)
+PROGRES 2026-11-17T01:16:43Z etape=format verifie=True
+PROGRES 2026-11-17T01:16:43Z etape=disque libre_go=0.9 pire_cas_go=0.0
+PROGRES 2026-11-17T01:16:44Z etape=distillation-donnees lot=1/1
+PROGRES 2026-11-17T01:16:44Z etape=donnees-distillation saboteur_exemples=2 temoin_exemples=2
+PROGRES 2026-11-17T01:16:45Z etape=distillation adaptateur=saboteur epoque=1 perte=4.905
+PROGRES 2026-11-17T01:16:45Z etape=adaptateur adaptateur=saboteur empreinte=edb1c71226f5bba0967a507ac5098e3b07b4e35a5dc9f02000a6af47381e347c perte_finale=4.905
+PROGRES 2026-11-17T01:16:45Z etape=distillation adaptateur=temoin epoque=1 perte=4.905
+PROGRES 2026-11-17T01:16:45Z etape=adaptateur adaptateur=temoin empreinte=3ad89177208383cb4423c46b82b90deeda9fe9e60bb24b62ce15c7f2c9a53675 perte_finale=4.905
+PROGRES 2026-11-17T01:16:45Z etape=identite adaptateurs=2
+PROGRES 2026-11-17T01:16:46Z etape=episodes phase=dose0 lot=1/6 actions=8
+PROGRES 2026-11-17T01:16:47Z etape=episodes phase=dose0 lot=2/6 actions=16
+PROGRES 2026-11-17T01:16:48Z etape=episodes phase=dose0 lot=3/6 actions=24
+PROGRES 2026-11-17T01:16:49Z etape=episodes phase=dose0 lot=4/6 actions=32
+PROGRES 2026-11-17T01:16:50Z etape=episodes phase=dose0 lot=5/6 actions=40
+PROGRES 2026-11-17T01:16:51Z etape=episodes phase=dose0 lot=6/6 actions=48
+PROGRES 2026-11-17T01:16:52Z etape=episodes phase=S50 lot=1/2 actions=56
+PROGRES 2026-11-17T01:16:52Z etape=episodes phase=S50 lot=2/2 actions=60
+PROGRES 2026-11-17T01:16:53Z etape=episodes phase=S100 lot=1/2 actions=68
+PROGRES 2026-11-17T01:16:53Z etape=episodes phase=S100 lot=2/2 actions=72
+PROGRES 2026-11-17T01:16:54Z etape=episodes phase=T100 lot=1/2 actions=80
+PROGRES 2026-11-17T01:16:54Z etape=episodes phase=T100 lot=2/2 actions=84
+PROGRES 2026-11-17T01:16:54Z etape=episodes-ecrits episodes=42 actions=84 morceaux=1 reecrits=0
+PROGRES 2026-11-17T01:16:55Z etape=lecture-cout duree_s=13.6
+PROGRES 2026-11-17T01:16:55Z etape=test-croise jeux=2 duree_s=0.2
+PROGRES 2026-11-17T01:16:55Z etape=couple-descriptif couple=difference_moyennes-c1 duree_s=0.1
+PROGRES 2026-11-17T01:16:56Z etape=couple-descriptif couple=lineaire-c1 duree_s=0.5
+PROGRES 2026-11-17T01:16:57Z etape=couple-descriptif couple=perceptron-c1 duree_s=0.8
+PROGRES 2026-11-17T01:16:57Z etape=couple-descriptif couple=attention-c1 duree_s=0.8
+PROGRES 2026-11-17T01:16:58Z etape=couple-descriptif couple=mahalanobis-c1 duree_s=0.1
+PROGRES 2026-11-17T01:16:59Z etape=couple-descriptif couple=lineaire-c2 duree_s=0.6
+PROGRES 2026-11-17T01:16:59Z etape=couple-descriptif couple=perceptron-c2 duree_s=0.7
+PROGRES 2026-11-17T01:17:00Z etape=couple-descriptif couple=attention-c2 duree_s=0.7
+PROGRES 2026-11-17T01:17:00Z etape=couple-descriptif couple=mahalanobis-c2 duree_s=0.1
+PROGRES 2026-11-17T01:17:01Z etape=couple-descriptif couple=difference_moyennes-c3 duree_s=0.1
+PROGRES 2026-11-17T01:17:01Z etape=couple-descriptif couple=lineaire-c3 duree_s=0.5
+PROGRES 2026-11-17T01:17:02Z etape=couple-descriptif couple=perceptron-c3 duree_s=0.7
+PROGRES 2026-11-17T01:17:03Z etape=couple-descriptif couple=attention-c3 duree_s=0.7
+PROGRES 2026-11-17T01:17:03Z etape=couple-descriptif couple=mahalanobis-c3 duree_s=0.1
+PROGRES 2026-11-17T01:17:03Z etape=fin episodes=42 actions=84
+.PROGRES 2026-11-17T01:17:17Z etape=format verifie=True
+PROGRES 2026-11-17T01:17:17Z etape=disque libre_go=0.9 pire_cas_go=0.0
+PROGRES 2026-11-17T01:17:18Z etape=distillation-donnees lot=1/1
+PROGRES 2026-11-17T01:17:18Z etape=donnees-distillation saboteur_exemples=2 temoin_exemples=2
+PROGRES 2026-11-17T01:17:19Z etape=distillation adaptateur=saboteur epoque=1 perte=4.8762
+PROGRES 2026-11-17T01:17:19Z etape=adaptateur adaptateur=saboteur empreinte=70d6f68294c33bbb3f5c88e7cf4d8e487174c1eb18f21884c38ba730207324e4 perte_finale=4.8762
+PROGRES 2026-11-17T01:17:20Z etape=distillation adaptateur=temoin epoque=1 perte=4.8771
+PROGRES 2026-11-17T01:17:20Z etape=adaptateur adaptateur=temoin empreinte=7853df5002a2adfc3b41710aa8025e40bba00cdb439f930d455dc621d9378343 perte_finale=4.8771
+PROGRES 2026-11-17T01:17:20Z etape=identite adaptateurs=2
+PROGRES 2026-11-17T01:17:21Z etape=episodes phase=dose0 lot=1/6 actions=8
+PROGRES 2026-11-17T01:17:22Z etape=episodes phase=dose0 lot=2/6 actions=16
+PROGRES 2026-11-17T01:17:23Z etape=episodes phase=dose0 lot=3/6 actions=24
+PROGRES 2026-11-17T01:17:23Z etape=episodes phase=dose0 lot=4/6 actions=32
+PROGRES 2026-11-17T01:17:24Z etape=episodes phase=dose0 lot=5/6 actions=40
+PROGRES 2026-11-17T01:17:25Z etape=episodes phase=dose0 lot=6/6 actions=48
+PROGRES 2026-11-17T01:17:26Z etape=episodes phase=S50 lot=1/2 actions=56
+PROGRES 2026-11-17T01:17:26Z etape=episodes phase=S50 lot=2/2 actions=60
+PROGRES 2026-11-17T01:17:27Z etape=episodes phase=S100 lot=1/2 actions=68
+PROGRES 2026-11-17T01:17:27Z etape=episodes phase=S100 lot=2/2 actions=72
+PROGRES 2026-11-17T01:17:28Z etape=episodes phase=T100 lot=1/2 actions=80
+PROGRES 2026-11-17T01:17:28Z etape=episodes phase=T100 lot=2/2 actions=84
+PROGRES 2026-11-17T01:17:28Z etape=episodes-ecrits episodes=42 actions=84 morceaux=1 reecrits=0
+PROGRES 2026-11-17T01:17:29Z etape=lecture-cout duree_s=11.2
+PROGRES 2026-11-17T01:17:29Z etape=test-croise jeux=2 duree_s=0.2
+PROGRES 2026-11-17T01:17:29Z etape=couple-descriptif couple=difference_moyennes-c1 duree_s=0.1
+PROGRES 2026-11-17T01:17:30Z etape=couple-descriptif couple=lineaire-c1 duree_s=0.9
+PROGRES 2026-11-17T01:17:31Z etape=couple-descriptif couple=perceptron-c1 duree_s=1.0
+PROGRES 2026-11-17T01:17:32Z etape=couple-descriptif couple=attention-c1 duree_s=0.7
+PROGRES 2026-11-17T01:17:32Z etape=couple-descriptif couple=mahalanobis-c1 duree_s=0.1
+PROGRES 2026-11-17T01:17:33Z etape=couple-descriptif couple=lineaire-c2 duree_s=0.4
+PROGRES 2026-11-17T01:17:33Z etape=couple-descriptif couple=perceptron-c2 duree_s=0.7
+PROGRES 2026-11-17T01:17:34Z etape=couple-descriptif couple=attention-c2 duree_s=0.7
+PROGRES 2026-11-17T01:17:34Z etape=couple-descriptif couple=mahalanobis-c2 duree_s=0.1
+PROGRES 2026-11-17T01:17:35Z etape=couple-descriptif couple=difference_moyennes-c3 duree_s=0.1
+PROGRES 2026-11-17T01:17:35Z etape=couple-descriptif couple=lineaire-c3 duree_s=0.5
+PROGRES 2026-11-17T01:17:36Z etape=couple-descriptif couple=perceptron-c3 duree_s=0.8
+PROGRES 2026-11-17T01:17:37Z etape=couple-descriptif couple=attention-c3 duree_s=0.8
+PROGRES 2026-11-17T01:17:37Z etape=couple-descriptif couple=mahalanobis-c3 duree_s=0.1
+PROGRES 2026-11-17T01:17:37Z etape=fin episodes=42 actions=84
+.
+2 passed in 70.10s (0:01:10)
+code 0
+fin 2026-11-17T01:17:49Z

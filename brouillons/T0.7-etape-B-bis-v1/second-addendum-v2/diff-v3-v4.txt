@@ -1,0 +1,1218 @@
+# Différentiels du code v4 du second addendum de B bis (diff -u), écrits par programme le 2026-11-16T23:55:57Z
+# Chemins : a/ = version précédente (dépôt, commit af0adb14, ou proposition du diagnostic), b/ = version neuve (code/ du second addendum).
+
+######## proposition du diagnostic (ba127aa0) -> validation_imbriquee_v4
+######## a : ba127aa057e552cbcaa07673d1994219807b8bcf8e7f1d225feed395ae747897  b : 3d40ebc80e2bbf7faf33bfe8a4ef6e7d8f26df9df93507ad79a85d4c766d2c6c
+--- a/brouillons/T0.7-etape-B-bis-v1/diagnostic-carte-processeur-v1/validation_imbriquee_v4.py
++++ b/brouillons/T0.7-etape-B-bis-v1/second-addendum-v2/code/src/controle_ia/t07bbis/validation_imbriquee_v4.py
+@@ -1,13 +1,15 @@
+-"""Validation croisée imbriquée de l'étape B bis, v4 (proposition du diagnostic `rapport-diagnostic-carte-processeur-v1.md`) : la
+-v3, dont **le seul contrôle carte-processeur change** ; tout le reste est celui de la v3 (donc de la v1), importé sans
+-modification ; les v1, v2 et v3 restent (R12).
++"""Validation croisée imbriquée de l'étape B bis, v4 (second addendum d'écart, `brouillon-second-addendum-bbis-v1.md` ; proposition
++du diagnostic `rapport-diagnostic-carte-processeur-v1.md`, `ba127aa0…`) : la v3, dont **le contrôle carte-processeur change**, plus
++**une mesure d'information** (dispersion des aires entre deux ordres de calcul, réserve R-D, GO-2026-11-16-12) ; tout le reste
++est celui de la v3 (donc de la v1), importé sans modification ; les v1, v2 et v3 restent (R12).
+ 
+ **Pourquoi** : la course du 16 novembre s'est arrêtée sur « linéaire à 300 époques : écart relatif 1,004 > 10⁻⁴ ». Le diagnostic
+-(données fabriquées, processeur seulement) montre que la sonde linéaire agrégée par le maximum, apprise 300 époques par Adam
+-(pas 0,05) avec une régularisation faible, peut rendre **une autre sonde** sur une autre pile de calcul, sans aucune erreur de
+-chaîne, quand beaucoup de jetons d'une action sont des quasi-copies les uns des autres (quasi-égalités au maximum, décidées par
+-l'arrondi) : même problème, seuls les ordres des sommes changent, et l'écart du contrôle atteint 1 à 5 ; à 3 époques, il reste
+-au plus de l'ordre de 10⁻¹⁰ (rapport, § 4). C'est le mécanisme déjà reconnu pour l'attention (addendum EC-1), étendu à la linéaire.
++(données fabriquées, processeur seulement) et sa contre-lecture (`0da982fb…`) montrent que la sonde linéaire agrégée par le
++maximum, apprise 300 époques par Adam (pas 0,05) avec une régularisation faible, peut rendre **une autre sonde** sur une autre
++pile de calcul, sans aucune erreur de chaîne, quand elle ajuste mal (régimes anisotropes de bas rang, avec ou sans jetons
++presque identiques : réserve R-A de la contre-lecture ; la présence de quasi-copies n'est ni nécessaire ni suffisante) : même
++problème, seuls les ordres des sommes changent, et l'écart du contrôle atteint 0,6 à 12,8 ; à 3 époques, il reste au plus de
++l'ordre de 10⁻¹⁰. C'est le mécanisme déjà reconnu pour l'attention (addendum EC-1), étendu à la linéaire.
+ 
+ **Contrôle v4** (`controle_deux_horizons`) : dans **chaque** famille de la marche (variante (r1) : la linéaire seule), à la
+ couche et à la régularisation du réglage retenu du couple :
+@@ -22,26 +24,36 @@
+ Une sonde de contrôle en échec (perte ou paramètres non finis, `SondeEnEchec`), à 3 ou à 300 époques : arrêt (erreur de chaîne).
+ Tirage du couple : celui de la v3 (fin de l'apprentissage, parmi les sondes finales finies, graine `bbis/egalite-carte`, mêmes
+ actions). Champ écrit : `lineaire` et `attention` portent `ecart_relatif_max` (à 3 époques) et `epoques` = 3 ;
+-`determinisme_lineaire` et `determinisme_attention` portent `egal_au_bit` vrai : `lecture_v2.exiger_controle_carte` le lit sans
+-changement (essai `essai_controle_v4_v1.py`).
++`determinisme_lineaire` et `determinisme_attention` portent `egal_au_bit` vrai ; `version_controle` = « v4 » (lu par
++`lecture_v3.exiger_controle_carte`).
+ 
+ Coût déclaré, en plus de la v3 : sur la carte, une linéaire de 3 époques et une linéaire de 300 (seconde copie) ; sur le
+ processeur, une linéaire de 3 époques (la linéaire de 300 époques du processeur est celle de la v3, gardée pour l'information).
+ 
+-**Ce que ce changement touche dans le texte** : les fragments EC-1 et EC-4 de l'addendum scellé (« la linéaire à 300 époques »)
+-et la réserve R-PILE (EC-2, EC-3 : « sonde « attention » ») : c'est un **écart à déclarer** (rapport du diagnostic, § 6), pas une
+-correction du code « sous ce texte ». Ce module n'est qu'une proposition : il n'est importé par aucune marche.
++**Mesure de dispersion entre deux ordres de calcul** (`mesurer_dispersion`, information seulement ; second addendum, MD) : après
++le contrôle, pour chaque source et chaque pli dont la sonde finale est apprise, la **recette entière de la sonde** (grille ×
++plis internes, choix du réglage par la même règle et les mêmes ex aequo, sonde finale sur les 32 tâches) est rejouée sur la carte
++dans l'**ordre 2** : chaque lot d'apprentissage prend ses actions dans l'**ordre inverse** (étiquettes de même), mêmes clés de
++graines que la sonde lue (même départ), mêmes réglages, mêmes époques : même problème, seul l'ordre des sommes change. La sonde
++de l'ordre 2 est notée sur les mêmes actions que la sonde lue (groupes `sonde` du plan de notation), scores écrits fermés
++(`<groupe>__sonde_o2`, poids `o2__w`, `o2__b`, `o2__q`) ; son réglage retenu et son empreinte vont dans le fichier des sondes
++(`ordre2`). Aucune aire n'est écrite sur l'instance (les aires de validation interne de l'ordre 2 servent au seul choix de son
++réglage, jamais écrites) ; l'écart des aires est calculé à la lecture, sur processeur (`lecture_v3`). Ni ENC, ni le plancher, ni le
++nul ne sont rejoués. Une sonde de l'ordre 2 en échec (`SondeEnEchec`) : la source est « échec » pour la mesure (motif écrit) ; une
++erreur d'exécution qui n'est pas une garde (`RuntimeError` de torch, mémoire de la carte) : **toute** la mesure est « non faite »
++(motif écrit, tableaux partiels retirés), la marche continue et écrit ses scores ; une garde (`GardeArret`) arrête la marche comme
++ailleurs. La mesure ne change aucun score, aucun état, aucune issue ni aucun seuil.
+ """
+ from __future__ import annotations
+ 
+ import numpy as np
+ 
+-from controle_ia.gardes import GardeArret
++from controle_ia.gardes import GardeArret, exiger_sans_signal
+ from controle_ia.t07bbis import apprentissage_carte_v1 as ac
+ from controle_ia.t07bbis import validation_imbriquee_v1 as v1
+ from controle_ia.t07bbis import validation_imbriquee_v3 as v3
+ from controle_ia.t07bbis.commun_v1 import (AGREGATION_DE, EPOQUES, FAMILLES, N_ACTIONS_CONTROLE_CARTE, TOLERANCE_CARTE, H,
+-                                           reglage_nom)
++                                           grille, reglage_nom)
+ from controle_ia.t07bbis.validation_imbriquee_v3 import (FACTEUR_DEBIT, LIMITE_H, MARGE_H, N_PREMIERS, ArretDebit,  # noqa: F401
+                                                          Contexte, GardeDebit, aire_apprentissage, apprendre_recette,
+                                                          apprendre_source, apprentissages_prevus, choisir_reglage,
+@@ -140,4 +152,120 @@
+         return r
+ 
+ 
+-__all__ = list(v3.__all__) + ["EPOQUES_CONTROLE"]
++# ------------------------------------------------------------------------------- mesure de dispersion entre ordres de calcul
++
++ORDRE_2 = "ordre inverse des actions de chaque lot d'apprentissage, sur la carte (même départ, mêmes graines, mêmes réglages)"
++CHAMP_O2 = "sonde_o2"
++
++
++def apprentissages_mesure(n_sources: int, n_reglages: int, n_plis_internes: int) -> int:
++    """Apprentissages de la mesure (comptés par la garde de débit) : par source et par pli externe, grille × plis internes + 1."""
++    return int(n_sources) * 2 * (int(n_reglages) * int(n_plis_internes) + 1)
++
++
++def apprendre_recette_ordre2(ctx: Contexte, serie_nom: str, cellule: str, k: int, positifs: tuple, negatifs: tuple,
++                             taches_app, taches_lues, internes) -> dict:
++    """`validation_imbriquee_v1.apprendre_recette` (grille × plis internes, choix du réglage, sonde finale) dans l'ordre 2 : les
++    actions de chaque lot d'apprentissage sont prises dans l'ordre inverse (étiquettes de même) ; mêmes clés de graines, mêmes
++    réglages, même règle de choix. Rend {reglage, sonde, echecs_internes} ou {echec, reglage, echecs_internes}. Aucune aire n'est
++    rendue ni écrite."""
++    exiger_disjonction(taches_app, taches_lues, f"apprentissage {serie_nom}-ordre2/{cellule}/e{k}")
++    for interne in internes:
++        exiger_disjonction(interne, taches_lues, f"réglage {serie_nom}-ordre2/{cellule}/e{k}")
++    regs = grille(ctx.couches, ctx.familles)
++    sommes, echecs = {r["nom"]: [] for r in regs}, 0
++    for j, interne in enumerate(internes):
++        exiger_sans_signal(f"la mesure de l'ordre 2 {serie_nom}/{cellule}/e{k}i{j}")
++        app = [t for t in taches_app if t not in set(interne)]
++        a_app = v1._actions(ctx.acts, [positifs, negatifs], app)[::-1]                     # ordre 2 : ordre inverse
++        a_val = v1._actions(ctx.acts, [positifs, negatifs], interne)
++        y_app = np.array([1 if (s, c) == positifs else 0 for s, c, _ in a_app])
++        y_val = np.array([1 if (s, c) == positifs else 0 for s, c, _ in a_val])
++        t_val = [ctx.acts.tache(x) for _, _, x in a_val]
++        for couche in ctx.couches:
++            lot = ac.LotCarte(v1._sequences(ctx.acts, a_app, couche), ctx.appareil)
++            seq_val = v1._sequences(ctx.acts, a_val, couche)
++            for r in [x for x in regs if x["couche"] == couche]:
++                nom = f"{serie_nom}-ordre2-{cellule}-e{k}i{j}-{r['nom']}"
++                try:
++                    s = v1._entrainer_chrono(ctx, lot, r, nom, y_app,
++                                             f"bbis/entrainement/{serie_nom}/{cellule}/e{k}i{j}/{r['nom']}")
++                except ac.SondeEnEchec:
++                    sommes[r["nom"]] = None
++                    echecs += 1
++                    continue
++                if sommes[r["nom"]] is not None:
++                    sommes[r["nom"]].append(aire_apprentissage(ac.scores(s, seq_val), y_val, t_val, taches_lues))
++            del lot
++    aires = {n: (float(sum(v) / len(v)) if v else None) for n, v in sommes.items()}
++    try:
++        retenu = choisir_reglage(aires, regs, ctx.couches)
++    except GardeArret as e:
++        return {"echec": str(e), "reglage": None, "echecs_internes": echecs}
++    finally:
++        del aires, sommes                                          # jamais écrites
++    a_app = v1._actions(ctx.acts, [positifs, negatifs], taches_app)[::-1]
++    y_app = np.array([1 if (s, c) == positifs else 0 for s, c, _ in a_app])
++    lot = ac.LotCarte(v1._sequences(ctx.acts, a_app, retenu["couche"]), ctx.appareil)
++    try:
++        sonde = v1._entrainer_chrono(ctx, lot, retenu, f"{serie_nom}-ordre2-{cellule}-e{k}", y_app,
++                                     f"bbis/entrainement/{serie_nom}/{cellule}/e{k}/{retenu['nom']}")
++    except ac.SondeEnEchec as e:
++        return {"echec": str(e), "reglage": retenu, "echecs_internes": echecs}
++    return {"reglage": retenu, "sonde": sonde, "echecs_internes": echecs}
++
++
++def _retirer_mesure(sources: dict) -> None:
++    for _, res in sources.values():
++        for n in [n for n in res.get("tableaux", {}) if n.endswith(f"__{CHAMP_O2}") or n.startswith("o2__")]:
++            del res["tableaux"][n]
++        res.get("meta", {}).pop("ordre2", None)
++
++
++def mesurer_dispersion(ctx: Contexte, sources: dict, plis: dict, doses) -> dict:
++    """Mesure d'information du second addendum (docstring du module), jouée après le contrôle carte-processeur, avant l'écriture
++    des fichiers fermés. `sources` : {(cellule, pli) : (positifs, res de `apprendre_source`)}, complétées sur place (tableaux
++    `<groupe>__sonde_o2`, `o2__w`, `o2__b`, `o2__q` ; `meta["ordre2"]`). Rend le résumé écrit dans `sondes-bbis.json` (aucune
++    aire)."""
++    resume = {"ordre": ORDRE_2, "decide": False, "sources": {}}
++    try:
++        for (cellule, k) in sorted(sources):
++            positifs, res = sources[(cellule, k)]
++            cle = f"{cellule}/e{k}"
++            if "sonde" not in res:
++                resume["sources"][cle] = "sans sonde lue (source en échec) : non jouée"
++                continue
++            taches_lues = sorted(t for t, p in plis.items() if p == k)
++            taches_app = sorted(t for t, p in plis.items() if p != k)
++            o2 = apprendre_recette_ordre2(ctx, "sonde", cellule, k, ("O", positifs), ("O", H), taches_app, taches_lues,
++                                          res["meta"]["plis_internes"])
++            meta = {"ordre": "inverse", "reglage": o2["reglage"]["nom"] if o2.get("reglage") else None,
++                    "echecs_internes": o2["echecs_internes"]}
++            if "echec" in o2:
++                meta["echec"] = o2["echec"]
++            else:
++                s = o2["sonde"]
++                for groupe in plan_de_notation(positifs, doses)["sonde"]:
++                    actions = v1._actions(ctx.acts, [groupe], taches_lues)
++                    g = nom_groupe(groupe)
++                    if list(res["tableaux"][f"{g}__cles"]) != [x for _, _, x in actions]:
++                        raise GardeArret(f"mesure de l'ordre 2 {cle} : clés du groupe {g} différentes de la sonde lue : arrêt")
++                    res["tableaux"][f"{g}__{CHAMP_O2}"] = ac.scores(s, v1._sequences(ctx.acts, actions, s.couche))
++                res["tableaux"]["o2__w"] = s.w
++                res["tableaux"]["o2__b"] = np.array([s.b])
++                if s.q is not None:
++                    res["tableaux"]["o2__q"] = s.q
++                meta.update({"empreinte_sonde": s.empreinte(), "famille": o2["reglage"]["famille"],
++                             "couche": int(o2["reglage"]["couche"]), "l2": float(o2["reglage"]["l2"])})
++            res["meta"]["ordre2"] = meta
++            resume["sources"][cle] = "échec (motif dans le fichier des sondes)" if "echec" in meta else "jouée"
++    except RuntimeError as e:
++        if isinstance(e, GardeArret):                  # une garde n'est jamais attrapée pour continuer
++            raise
++        _retirer_mesure(sources)
++        resume = {"ordre": ORDRE_2, "decide": False, "non_faite": f"{type(e).__name__}: {e}"[:2000]}
++    return resume
++
++
++__all__ = list(v3.__all__) + ["EPOQUES_CONTROLE", "ORDRE_2", "CHAMP_O2", "apprentissages_mesure", "apprendre_recette_ordre2",
++                              "mesurer_dispersion"]
+
+######## validation_imbriquee_v3 -> v4 (module neuf qui importe la v3 : différentiel de lecture seulement)
+######## a : 71bffa5bf26c2b182bb81ebfb920c1246b6c9784b2332ff1304f0ff3c24890eb  b : 3d40ebc80e2bbf7faf33bfe8a4ef6e7d8f26df9df93507ad79a85d4c766d2c6c
+--- a/src/controle_ia/t07bbis/validation_imbriquee_v3.py
++++ b/brouillons/T0.7-etape-B-bis-v1/second-addendum-v2/code/src/controle_ia/t07bbis/validation_imbriquee_v4.py
+@@ -1,73 +1,85 @@
+-"""Validation croisée imbriquée de l'étape B bis, v3 : la v2 (contrôle carte-processeur aux deux horizons), **sans aucune issue
+-« sans objet »** (décision de la mère R-2919, voie (b) du majeur M2 de `contre-lecture-brouillon5-et-code-v2-v1.md` ; brouillon 6
+-du texte, plan, point 5, et liste d'arrêt) : une sonde apprise pour le contrôle en échec (perte ou paramètres non finis), à 3 ou
+-à 300 époques, déterminisme compris, **arrête** (erreur de chaîne) ; le couple du contrôle est tiré **à la fin de l'apprentissage,
+-parmi les couples dont la sonde finale est finie**, dans le même ordre trié et avec la même graine que la v1 (`bbis/egalite-carte` :
+-même couple et mêmes actions que la v1 quand toutes les sondes finales sont finies) ; aucun : arrêt. Tout le reste est **celui de
+-la v1, importé sans modification** (`validation_imbriquee_v1` : plis, grille, sélection, sonde finale, plancher, nul de
+-réétiquetage, ENC, garde de débit, notation) ; les v1 et v2 restent (R12).
+-
+-**Contrôle à la marche** (`ControleCarte.jouer`, `controle_deux_horizons`) : à la fin de l'apprentissage, le (cellule, pli) est
+-tiré parmi ceux dont la sonde finale est finie (graine `bbis/egalite-carte`, couples triés, puis les 256 actions de contrôle de
+-son pli lu, même générateur) ; à la couche et à la régularisation de son réglage retenu, **dans les deux familles de la marche**
+-(variante (r1) : la linéaire seule) :
+-- **linéaire, 300 époques** : la sonde linéaire de la carte (la sonde finale si le réglage retenu est linéaire, sinon apprise sur la
+-  carte à ce réglage, graine `bbis/entrainement/sonde/<cellule>/e<k>/<réglage linéaire>`) contre la même sonde réapprise sur le
+-  processeur par `sondes.familles` ; écart relatif maximal des scores ≤ 10⁻⁴ ;
+-- **attention, 3 époques** (`EPOQUES_CONTROLE_ATTENTION`) : la sonde « attention » apprise **3 époques** sur la carte, depuis le même
+-  départ (graine `bbis/entrainement/sonde/<cellule>/e<k>/<réglage attention>`), contre la même réapprise 3 époques par
+-  `sondes.familles` (`Reglages(epoques=3)`) ; écart ≤ 10⁻⁴ ;
+-- **déterminisme de l'attention à 300 époques** : la sonde « attention » de 300 époques (la sonde finale si le réglage retenu est
+-  « attention », sinon apprise sur la carte à ce réglage) est réapprise **une seconde fois sur la carte** ; paramètres égaux au bit
+-  près (w, b, q), sinon arrêt.
+-Tout écart : `GardeArret` « … : arrêt (erreur de chaîne) ». Raison (écrite au texte avant toute lecture) : sans signal appris, les
+-300 époques de l'attention amplifient les écarts d'arrondi entre deux piles de calcul au-delà de 10⁻⁴ ; à 3 époques, non
+-(`diagnostic-ecart-attention-carte-v1.md`, `diagnostic-stabilite-aires-attention-v1.md`). Variante (r1) (famille linéaire seule) :
+-seul le contrôle linéaire est joué. Une sonde de contrôle en échec (perte ou paramètres non finis, `SondeEnEchec`) : **arrêt**
+-(depuis w = 0 et b = 0, trois pas d'Adam ne peuvent rendre une perte non finie qu'à partir d'activations non finies : une erreur de
+-chaîne).
+-
+-Coût déclaré : sur la carte, au plus une linéaire de 300 époques, une attention de 3 époques et deux de 300 ; sur le processeur,
+-une linéaire de 300 époques et une attention de 3 (au lieu de 300 époques de la famille retenue en v1).
++"""Validation croisée imbriquée de l'étape B bis, v4 (second addendum d'écart, `brouillon-second-addendum-bbis-v1.md` ; proposition
++du diagnostic `rapport-diagnostic-carte-processeur-v1.md`, `ba127aa0…`) : la v3, dont **le contrôle carte-processeur change**, plus
++**une mesure d'information** (dispersion des aires entre deux ordres de calcul, réserve R-D, GO-2026-11-16-12) ; tout le reste
++est celui de la v3 (donc de la v1), importé sans modification ; les v1, v2 et v3 restent (R12).
++
++**Pourquoi** : la course du 16 novembre s'est arrêtée sur « linéaire à 300 époques : écart relatif 1,004 > 10⁻⁴ ». Le diagnostic
++(données fabriquées, processeur seulement) et sa contre-lecture (`0da982fb…`) montrent que la sonde linéaire agrégée par le
++maximum, apprise 300 époques par Adam (pas 0,05) avec une régularisation faible, peut rendre **une autre sonde** sur une autre
++pile de calcul, sans aucune erreur de chaîne, quand elle ajuste mal (régimes anisotropes de bas rang, avec ou sans jetons
++presque identiques : réserve R-A de la contre-lecture ; la présence de quasi-copies n'est ni nécessaire ni suffisante) : même
++problème, seuls les ordres des sommes changent, et l'écart du contrôle atteint 0,6 à 12,8 ; à 3 époques, il reste au plus de
++l'ordre de 10⁻¹⁰. C'est le mécanisme déjà reconnu pour l'attention (addendum EC-1), étendu à la linéaire.
++
++**Contrôle v4** (`controle_deux_horizons`) : dans **chaque** famille de la marche (variante (r1) : la linéaire seule), à la
++couche et à la régularisation du réglage retenu du couple :
++- **carte contre processeur à 3 époques** (`EPOQUES_CONTROLE`) : la sonde apprise 3 époques sur la carte depuis le même départ
++  (graine `bbis/entrainement/sonde/<cellule>/e<k>/<réglage de la famille>`) contre la même réapprise 3 époques par
++  `sondes.familles` (`Reglages(epoques=3)`) ; écart relatif maximal des scores sur les 256 actions ≤ 10⁻⁴, sinon arrêt ;
++- **déterminisme à 300 époques sur la carte** : la sonde de 300 époques de la famille (la sonde finale du couple si sa famille
++  est retenue, sinon apprise sur la carte à ce réglage) est réapprise une seconde fois sur la carte : paramètres égaux au bit
++  près (w, b, q), sinon arrêt ;
++- **information, sans arrêt** (linéaire seulement, `informer_300`) : l'écart carte-processeur à 300 époques de la sonde
++  linéaire, comme en v3, est calculé et écrit (`ecart_300_information`) ; il ne décide rien (R-PILE l'explique à la lecture).
++Une sonde de contrôle en échec (perte ou paramètres non finis, `SondeEnEchec`), à 3 ou à 300 époques : arrêt (erreur de chaîne).
++Tirage du couple : celui de la v3 (fin de l'apprentissage, parmi les sondes finales finies, graine `bbis/egalite-carte`, mêmes
++actions). Champ écrit : `lineaire` et `attention` portent `ecart_relatif_max` (à 3 époques) et `epoques` = 3 ;
++`determinisme_lineaire` et `determinisme_attention` portent `egal_au_bit` vrai ; `version_controle` = « v4 » (lu par
++`lecture_v3.exiger_controle_carte`).
++
++Coût déclaré, en plus de la v3 : sur la carte, une linéaire de 3 époques et une linéaire de 300 (seconde copie) ; sur le
++processeur, une linéaire de 3 époques (la linéaire de 300 époques du processeur est celle de la v3, gardée pour l'information).
++
++**Mesure de dispersion entre deux ordres de calcul** (`mesurer_dispersion`, information seulement ; second addendum, MD) : après
++le contrôle, pour chaque source et chaque pli dont la sonde finale est apprise, la **recette entière de la sonde** (grille ×
++plis internes, choix du réglage par la même règle et les mêmes ex aequo, sonde finale sur les 32 tâches) est rejouée sur la carte
++dans l'**ordre 2** : chaque lot d'apprentissage prend ses actions dans l'**ordre inverse** (étiquettes de même), mêmes clés de
++graines que la sonde lue (même départ), mêmes réglages, mêmes époques : même problème, seul l'ordre des sommes change. La sonde
++de l'ordre 2 est notée sur les mêmes actions que la sonde lue (groupes `sonde` du plan de notation), scores écrits fermés
++(`<groupe>__sonde_o2`, poids `o2__w`, `o2__b`, `o2__q`) ; son réglage retenu et son empreinte vont dans le fichier des sondes
++(`ordre2`). Aucune aire n'est écrite sur l'instance (les aires de validation interne de l'ordre 2 servent au seul choix de son
++réglage, jamais écrites) ; l'écart des aires est calculé à la lecture, sur processeur (`lecture_v3`). Ni ENC, ni le plancher, ni le
++nul ne sont rejoués. Une sonde de l'ordre 2 en échec (`SondeEnEchec`) : la source est « échec » pour la mesure (motif écrit) ; une
++erreur d'exécution qui n'est pas une garde (`RuntimeError` de torch, mémoire de la carte) : **toute** la mesure est « non faite »
++(motif écrit, tableaux partiels retirés), la marche continue et écrit ses scores ; une garde (`GardeArret`) arrête la marche comme
++ailleurs. La mesure ne change aucun score, aucun état, aucune issue ni aucun seuil.
+ """
+ from __future__ import annotations
+ 
+ import numpy as np
+ 
+-from ..gardes import GardeArret
+-from . import apprentissage_carte_v1 as ac
+-from . import validation_imbriquee_v1 as v1
+-from .commun_v1 import AGREGATION_DE, EPOQUES, FAMILLES, N_ACTIONS_CONTROLE_CARTE, TOLERANCE_CARTE, H, reglage_nom
+-from .validation_imbriquee_v1 import (FACTEUR_DEBIT, LIMITE_H, MARGE_H, N_PREMIERS, ArretDebit, Contexte, GardeDebit, aire_apprentissage, apprendre_recette,  # noqa: F401
+-                                      apprendre_source, apprentissages_prevus, choisir_reglage, etiquettes_reetiquetees,
+-                                      exiger_disjonction, nom_groupe, noter_source, plan_de_notation, plis_internes,
+-                                      reetiquetage, scores_par_lots)
++from controle_ia.gardes import GardeArret, exiger_sans_signal
++from controle_ia.t07bbis import apprentissage_carte_v1 as ac
++from controle_ia.t07bbis import validation_imbriquee_v1 as v1
++from controle_ia.t07bbis import validation_imbriquee_v3 as v3
++from controle_ia.t07bbis.commun_v1 import (AGREGATION_DE, EPOQUES, FAMILLES, N_ACTIONS_CONTROLE_CARTE, TOLERANCE_CARTE, H,
++                                           grille, reglage_nom)
++from controle_ia.t07bbis.validation_imbriquee_v3 import (FACTEUR_DEBIT, LIMITE_H, MARGE_H, N_PREMIERS, ArretDebit,  # noqa: F401
++                                                         Contexte, GardeDebit, aire_apprentissage, apprendre_recette,
++                                                         apprendre_source, apprentissages_prevus, choisir_reglage,
++                                                         egales_au_bit, etiquettes_reetiquetees, exiger_disjonction,
++                                                         nom_groupe, noter_source, plan_de_notation, plis_internes,
++                                                         reetiquetage, scores_par_lots, sonde_finie)
+ 
+-EPOQUES_CONTROLE_ATTENTION = 3
++EPOQUES_CONTROLE = 3
+ ORDRE = ("lineaire", "attention")
+ 
+ 
+-def egales_au_bit(a, b) -> bool:
+-    """Deux sondes de même famille aux paramètres égaux au bit près (w, b, q)."""
+-    return bool(np.array_equal(a.w, b.w) and a.b == b.b and ((a.q is None and b.q is None) or
+-                                                            (a.q is not None and b.q is not None and np.array_equal(a.q, b.q))))
+-
+-
+ def controle_deux_horizons(lot, sequences_app, y_app, couche: int, l2: float, graine_de, sequences_controle,
+                            familles=FAMILLES, sondes_300: dict | None = None, epoques: int = EPOQUES,
+-                           epoques_attention: int = EPOQUES_CONTROLE_ATTENTION, tolerance: float = TOLERANCE_CARTE,
+-                           nom: str = "controle") -> dict:
+-    """Contrôle du couple (docstring du module). `lot` : jetons d'apprentissage du couple, à la couche, sur l'appareil de la marche
+-    (`apprentissage_carte_v1.LotCarte`) ; `graine_de(famille)` : graine entière du réglage (famille, couche, l2) ; `sondes_300` :
+-    {famille: sonde de `epoques` époques déjà apprise sur la carte à ce réglage} (la sonde finale du couple), réutilisée telle quelle.
+-    Rend les écarts, horizons et le déterminisme ; arrêt (`GardeArret`, « erreur de chaîne ») au premier écart."""
+-    if int(epoques_attention) >= int(epoques) or int(epoques_attention) < 1:
+-        raise GardeArret(f"horizon de l'attention {epoques_attention} hors de [1, {epoques}[ : refus")
++                           epoques_controle: int = EPOQUES_CONTROLE, tolerance: float = TOLERANCE_CARTE,
++                           nom: str = "controle", informer_300: bool = True) -> dict:
++    """Contrôle v4 du couple (docstring du module). Mêmes arguments que la v3 (`epoques_controle` remplace
++    `epoques_attention` et vaut pour les deux familles). Arrêt (`GardeArret`, « erreur de chaîne ») au premier écart."""
++    if int(epoques_controle) >= int(epoques) or int(epoques_controle) < 1:
++        raise GardeArret(f"horizon du contrôle {epoques_controle} hors de [1, {epoques}[ : refus")
+     inconnues = [f for f in familles if f not in ORDRE]
+     if inconnues or not familles:
+         raise GardeArret(f"familles {familles} : linéaire et attention seulement")
+     sondes_300 = dict(sondes_300 or {})
+-    sortie = {"tolerance": float(tolerance), "couche": int(couche), "l2": float(l2), "familles": [f for f in ORDRE if f in familles]}
++    sortie = {"tolerance": float(tolerance), "couche": int(couche), "l2": float(l2), "familles": [f for f in ORDRE if f in familles],
++              "version_controle": "v4"}
++    ec = int(epoques_controle)
+ 
+     def apprendre(f, ep, suffixe):
+         return ac.entrainer(lot, f, f"{nom}-{f}-{suffixe}", int(couche), y_app, float(l2), int(graine_de(f)), epoques=int(ep))
+@@ -75,58 +87,42 @@
+     for f in sortie["familles"]:
+         reglage = {"famille": f, "couche": int(couche), "l2": float(l2), "agregation": AGREGATION_DE[f],
+                    "nom": reglage_nom(f, couche, l2)}
+-        ep = int(epoques) if f == "lineaire" else int(epoques_attention)
+         try:
+-            if f == "lineaire":
+-                s = sondes_300.get(f)
+-                s = s if s is not None else apprendre(f, ep, f"e{ep}")
+-            else:
+-                s = apprendre(f, ep, f"e{ep}")
++            s = apprendre(f, ec, f"e{ec}")
+         except ac.SondeEnEchec as e:
+-            raise GardeArret(f"{f} à {ep} époques : sonde de contrôle en échec ({e}) : arrêt (erreur de chaîne)") from None
++            raise GardeArret(f"{f} à {ec} époques : sonde de contrôle en échec ({e}) : arrêt (erreur de chaîne)") from None
+         try:
+             r = ac.controle_carte_processeur(s, sequences_app, y_app, reglage, int(graine_de(f)), sequences_controle,
+-                                             tolerance=tolerance, epoques=ep)
++                                             tolerance=tolerance, epoques=ec)
+         except GardeArret as e:
+-            raise GardeArret(f"{f} à {ep} époques : {e}") from None
+-        sortie[f] = {**r, "epoques": ep}
+-        if f == "attention":
++            raise GardeArret(f"{f} à {ec} époques : {e}") from None
++        sortie[f] = {**r, "epoques": ec}
++        try:
++            a = sondes_300.get(f)
++            a = a if a is not None else apprendre(f, epoques, f"e{epoques}")
++            b = apprendre(f, epoques, f"e{epoques}-bis")
++        except ac.SondeEnEchec as e:
++            raise GardeArret(f"{f} à {epoques} époques (déterminisme) : sonde en échec ({e}) : arrêt (erreur de chaîne)") from None
++        if not egales_au_bit(a, b):
++            raise GardeArret(f"{f} à {epoques} époques réapprise sur la carte : paramètres différents au bit près "
++                             "(apprentissage non déterministe) : arrêt (erreur de chaîne)")
++        sortie[f"determinisme_{f}"] = {"epoques": int(epoques), "egal_au_bit": True}
++        if f == "lineaire" and informer_300:
+             try:
+-                a = sondes_300.get(f)
+-                a = a if a is not None else apprendre(f, epoques, f"e{epoques}")
+-                b = apprendre(f, epoques, f"e{epoques}-bis")
+-            except ac.SondeEnEchec as e:
+-                raise GardeArret(f"attention à {epoques} époques (déterminisme) : sonde en échec ({e}) : arrêt (erreur de "
+-                                 "chaîne)") from None
+-            if not egales_au_bit(a, b):
+-                raise GardeArret(f"attention à {epoques} époques réapprise sur la carte : paramètres différents au bit près "
+-                                 "(apprentissage non déterministe) : arrêt (erreur de chaîne)")
+-            sortie["determinisme_attention"] = {"epoques": int(epoques), "egal_au_bit": True}
++                i = ac.controle_carte_processeur(a, sequences_app, y_app, reglage, int(graine_de(f)), sequences_controle,
++                                                 tolerance=float("inf"), epoques=int(epoques))
++                sortie[f]["ecart_300_information"] = {"ecart_relatif_max": float(i["ecart_relatif_max"]),
++                                                      "epoques": int(epoques), "decide": False}
++            except GardeArret as e:                     # écart non fini : écrit comme information, sans arrêt
++                sortie[f]["ecart_300_information"] = {"refus": str(e)[:500], "epoques": int(epoques), "decide": False}
+     return sortie
+ 
+ 
+-def sonde_finie(res: dict) -> bool:
+-    """La source porte une sonde finale aux paramètres finis (w, b, q)."""
+-    s = res.get("sonde") if isinstance(res, dict) else None
+-    return bool(s is not None and np.all(np.isfinite(s.w)) and np.isfinite(s.b) and (s.q is None or np.all(np.isfinite(s.q))))
+-
+-
+-class ControleCarte:
+-    """Contrôle carte-processeur de la v3 : joué **une fois, à la fin de l'apprentissage** (`jouer`), sur un couple tiré parmi
+-    ceux dont la sonde finale est finie (même ordre trié, même graine que la v1) ; aucune issue « sans objet »."""
+-
+-    def __init__(self, graines, couples: list, n_actions: int = N_ACTIONS_CONTROLE_CARTE):
+-        if not couples:
+-            raise GardeArret("contrôle carte-processeur : aucun couple (cellule, pli)")
+-        self.graines = graines
+-        self.couples = sorted(couples)
+-        self.n_actions = int(n_actions)
+-        self.couple = None
+-        self.resultat = None
++class ControleCarte(v3.ControleCarte):
++    """Contrôle carte-processeur de la v4 : tirage de la v3 (une fois, à la fin de l'apprentissage, parmi les sondes finales
++    finies, même ordre trié, même graine) ; contrôle `controle_deux_horizons` de ce module."""
+ 
+     def jouer(self, ctx: Contexte, sources: dict, plis: dict) -> dict:
+-        """`sources` : {(cellule, pli) : (positifs, res de `apprendre_source`)}. Tire le couple parmi les sondes finales finies,
+-        puis joue `controle_deux_horizons` ; arrêt si aucun couple n'a de sonde finale finie, ou au premier écart."""
+         if self.resultat is not None:
+             raise GardeArret("contrôle carte-processeur déjà joué : une seule fois")
+         finis = [c for c in self.couples if c in sources and sonde_finie(sources[c][1])]
+@@ -156,5 +152,120 @@
+         return r
+ 
+ 
+-__all__ = list(v1.__all__) + ["controle_deux_horizons", "egales_au_bit", "sonde_finie", "EPOQUES_CONTROLE_ATTENTION",
+-                              "N_ACTIONS_CONTROLE_CARTE"]
++# ------------------------------------------------------------------------------- mesure de dispersion entre ordres de calcul
++
++ORDRE_2 = "ordre inverse des actions de chaque lot d'apprentissage, sur la carte (même départ, mêmes graines, mêmes réglages)"
++CHAMP_O2 = "sonde_o2"
++
++
++def apprentissages_mesure(n_sources: int, n_reglages: int, n_plis_internes: int) -> int:
++    """Apprentissages de la mesure (comptés par la garde de débit) : par source et par pli externe, grille × plis internes + 1."""
++    return int(n_sources) * 2 * (int(n_reglages) * int(n_plis_internes) + 1)
++
++
++def apprendre_recette_ordre2(ctx: Contexte, serie_nom: str, cellule: str, k: int, positifs: tuple, negatifs: tuple,
++                             taches_app, taches_lues, internes) -> dict:
++    """`validation_imbriquee_v1.apprendre_recette` (grille × plis internes, choix du réglage, sonde finale) dans l'ordre 2 : les
++    actions de chaque lot d'apprentissage sont prises dans l'ordre inverse (étiquettes de même) ; mêmes clés de graines, mêmes
++    réglages, même règle de choix. Rend {reglage, sonde, echecs_internes} ou {echec, reglage, echecs_internes}. Aucune aire n'est
++    rendue ni écrite."""
++    exiger_disjonction(taches_app, taches_lues, f"apprentissage {serie_nom}-ordre2/{cellule}/e{k}")
++    for interne in internes:
++        exiger_disjonction(interne, taches_lues, f"réglage {serie_nom}-ordre2/{cellule}/e{k}")
++    regs = grille(ctx.couches, ctx.familles)
++    sommes, echecs = {r["nom"]: [] for r in regs}, 0
++    for j, interne in enumerate(internes):
++        exiger_sans_signal(f"la mesure de l'ordre 2 {serie_nom}/{cellule}/e{k}i{j}")
++        app = [t for t in taches_app if t not in set(interne)]
++        a_app = v1._actions(ctx.acts, [positifs, negatifs], app)[::-1]                     # ordre 2 : ordre inverse
++        a_val = v1._actions(ctx.acts, [positifs, negatifs], interne)
++        y_app = np.array([1 if (s, c) == positifs else 0 for s, c, _ in a_app])
++        y_val = np.array([1 if (s, c) == positifs else 0 for s, c, _ in a_val])
++        t_val = [ctx.acts.tache(x) for _, _, x in a_val]
++        for couche in ctx.couches:
++            lot = ac.LotCarte(v1._sequences(ctx.acts, a_app, couche), ctx.appareil)
++            seq_val = v1._sequences(ctx.acts, a_val, couche)
++            for r in [x for x in regs if x["couche"] == couche]:
++                nom = f"{serie_nom}-ordre2-{cellule}-e{k}i{j}-{r['nom']}"
++                try:
++                    s = v1._entrainer_chrono(ctx, lot, r, nom, y_app,
++                                             f"bbis/entrainement/{serie_nom}/{cellule}/e{k}i{j}/{r['nom']}")
++                except ac.SondeEnEchec:
++                    sommes[r["nom"]] = None
++                    echecs += 1
++                    continue
++                if sommes[r["nom"]] is not None:
++                    sommes[r["nom"]].append(aire_apprentissage(ac.scores(s, seq_val), y_val, t_val, taches_lues))
++            del lot
++    aires = {n: (float(sum(v) / len(v)) if v else None) for n, v in sommes.items()}
++    try:
++        retenu = choisir_reglage(aires, regs, ctx.couches)
++    except GardeArret as e:
++        return {"echec": str(e), "reglage": None, "echecs_internes": echecs}
++    finally:
++        del aires, sommes                                          # jamais écrites
++    a_app = v1._actions(ctx.acts, [positifs, negatifs], taches_app)[::-1]
++    y_app = np.array([1 if (s, c) == positifs else 0 for s, c, _ in a_app])
++    lot = ac.LotCarte(v1._sequences(ctx.acts, a_app, retenu["couche"]), ctx.appareil)
++    try:
++        sonde = v1._entrainer_chrono(ctx, lot, retenu, f"{serie_nom}-ordre2-{cellule}-e{k}", y_app,
++                                     f"bbis/entrainement/{serie_nom}/{cellule}/e{k}/{retenu['nom']}")
++    except ac.SondeEnEchec as e:
++        return {"echec": str(e), "reglage": retenu, "echecs_internes": echecs}
++    return {"reglage": retenu, "sonde": sonde, "echecs_internes": echecs}
++
++
++def _retirer_mesure(sources: dict) -> None:
++    for _, res in sources.values():
++        for n in [n for n in res.get("tableaux", {}) if n.endswith(f"__{CHAMP_O2}") or n.startswith("o2__")]:
++            del res["tableaux"][n]
++        res.get("meta", {}).pop("ordre2", None)
++
++
++def mesurer_dispersion(ctx: Contexte, sources: dict, plis: dict, doses) -> dict:
++    """Mesure d'information du second addendum (docstring du module), jouée après le contrôle carte-processeur, avant l'écriture
++    des fichiers fermés. `sources` : {(cellule, pli) : (positifs, res de `apprendre_source`)}, complétées sur place (tableaux
++    `<groupe>__sonde_o2`, `o2__w`, `o2__b`, `o2__q` ; `meta["ordre2"]`). Rend le résumé écrit dans `sondes-bbis.json` (aucune
++    aire)."""
++    resume = {"ordre": ORDRE_2, "decide": False, "sources": {}}
++    try:
++        for (cellule, k) in sorted(sources):
++            positifs, res = sources[(cellule, k)]
++            cle = f"{cellule}/e{k}"
++            if "sonde" not in res:
++                resume["sources"][cle] = "sans sonde lue (source en échec) : non jouée"
++                continue
++            taches_lues = sorted(t for t, p in plis.items() if p == k)
++            taches_app = sorted(t for t, p in plis.items() if p != k)
++            o2 = apprendre_recette_ordre2(ctx, "sonde", cellule, k, ("O", positifs), ("O", H), taches_app, taches_lues,
++                                          res["meta"]["plis_internes"])
++            meta = {"ordre": "inverse", "reglage": o2["reglage"]["nom"] if o2.get("reglage") else None,
++                    "echecs_internes": o2["echecs_internes"]}
++            if "echec" in o2:
++                meta["echec"] = o2["echec"]
++            else:
++                s = o2["sonde"]
++                for groupe in plan_de_notation(positifs, doses)["sonde"]:
++                    actions = v1._actions(ctx.acts, [groupe], taches_lues)
++                    g = nom_groupe(groupe)
++                    if list(res["tableaux"][f"{g}__cles"]) != [x for _, _, x in actions]:
++                        raise GardeArret(f"mesure de l'ordre 2 {cle} : clés du groupe {g} différentes de la sonde lue : arrêt")
++                    res["tableaux"][f"{g}__{CHAMP_O2}"] = ac.scores(s, v1._sequences(ctx.acts, actions, s.couche))
++                res["tableaux"]["o2__w"] = s.w
++                res["tableaux"]["o2__b"] = np.array([s.b])
++                if s.q is not None:
++                    res["tableaux"]["o2__q"] = s.q
++                meta.update({"empreinte_sonde": s.empreinte(), "famille": o2["reglage"]["famille"],
++                             "couche": int(o2["reglage"]["couche"]), "l2": float(o2["reglage"]["l2"])})
++            res["meta"]["ordre2"] = meta
++            resume["sources"][cle] = "échec (motif dans le fichier des sondes)" if "echec" in meta else "jouée"
++    except RuntimeError as e:
++        if isinstance(e, GardeArret):                  # une garde n'est jamais attrapée pour continuer
++            raise
++        _retirer_mesure(sources)
++        resume = {"ordre": ORDRE_2, "decide": False, "non_faite": f"{type(e).__name__}: {e}"[:2000]}
++    return resume
++
++
++__all__ = list(v3.__all__) + ["EPOQUES_CONTROLE", "ORDRE_2", "CHAMP_O2", "apprentissages_mesure", "apprendre_recette_ordre2",
++                              "mesurer_dispersion"]
+
+######## marche_v3 -> marche_v4
+######## a : 7009b34d46c33ed8fa4a5045d4ad93816c0948fd6dc165cb8f74e493b98f03f5  b : c63f778055895c545922de0b3ea232c6318fc8f54cf0917ce099cb3acdd27d23
+--- a/src/controle_ia/t07bbis/marche_v3.py
++++ b/brouillons/T0.7-etape-B-bis-v1/second-addendum-v2/code/src/controle_ia/t07bbis/marche_v4.py
+@@ -1,6 +1,8 @@
+-"""Marche de l'étape B bis sur l'instance (`prereg/T0.7-etape-B-bis-v1.md`, plan, points 1 à 8 et 12 ; « Données gardées »), v3 : la v2, dont l'apprentissage appelle `validation_imbriquee_v3` (contrôle
+-carte-processeur aux deux horizons sans issue « sans objet », joué à la fin de l'apprentissage sur un couple tiré parmi les sondes
+-finales finies ; brouillon 6 du texte, plan, point 5 ; R-2919) ; rien d'autre ne change (les v1 et v2 restent, R12).
++"""Marche de l'étape B bis sur l'instance (`prereg/T0.7-etape-B-bis-v1.md`, plan, points 1 à 8 et 12 ; « Données gardées »), v4 : la v3, dont l'apprentissage appelle `validation_imbriquee_v4` (second
++addendum d'écart : contrôle carte-processeur à 3 époques dans les deux familles, déterminisme à 300 époques dans les deux, écart
++linéaire à 300 époques écrit comme information ; mesure de dispersion entre deux ordres de calcul, information seulement), dont les
++gardes d'entrée lisent le registre propre par `lecture_v3` (ligne `CODE-BBIS` remplacée une seule fois) ; rien d'autre ne change
++(les v1, v2 et v3 restent, R12).
+ 
+ Une instance, une marche, dans l'ordre du texte, chaque étape écrite avant la suivante :
+ 0. **gardes d'entrée** (marche réelle) : fiche de `CODE-BBIS` lue au registre propre et scellée, commit de la fiche **ancêtre** de
+@@ -18,7 +20,9 @@
+    gardes, contrôles d'égalité ; **aucun score**) ;
+ 3. **apprentissage et notation** (`validation_imbriquee_v3.apprendre_source`, celle de la v1, cinq sources plafond × deux plis ; garde de débit ;
+    contrôle carte-processeur joué **à la fin de l'apprentissage** des dix sources, sur un couple tiré parmi ceux dont la sonde
+-   finale est finie (`ControleCarte.jouer` de la v3 ; aucun : arrêt)) ; garde de débit déclenchée : arrêt de
++   finale est finie (`ControleCarte.jouer` de la v4 ; aucun : arrêt)), puis **mesure de dispersion entre deux ordres de calcul**
++   (`validation_imbriquee_v4.mesurer_dispersion` : recette de la sonde rejouée dans l'ordre inverse des actions, scores fermés,
++   aucune aire ; ses apprentissages sont comptés par la garde de débit) ; garde de débit déclenchée : arrêt de
+    l'apprentissage, `diag/<run-bbis>/arret-debit-bbis.json` (journal des durées ; aucun score), retour « arrêt de débit » ;
+ 4. **fichiers fermés** (`ecrire_fermes`) : `donnees/<run-bbis>/scores-bbis-NNN.npz` (morceaux de moins de 90 Mo, clés
+    `<source>__e<k>__<tableau>`), `sondes-bbis.npz` (poids des sondes finales et d'ENC ; deux premières directions en double
+@@ -32,8 +36,8 @@
+ fermé 4 ; jamais de chute silencieuse ni de repli.
+ 
+ **Aucune aire, aucun état, aucun résumé de score n'est calculé ni écrit** sur l'instance (les seules aires sont celles de
+-validation interne, jamais écrites) ; le journal ne porte que des durées. La poussée vers la branche `donnees/t07-etape-b-bis-v1`
+-est faite par `scripts/amorce_bbis_v3.sh`, jamais par ce module.
++validation interne, jamais écrites) ; le journal ne porte que des durées. La poussée vers la branche `donnees/t07-etape-b-bis-v2`
++est faite par `scripts/amorce_bbis_v4.sh`, jamais par ce module.
+ """
+ from __future__ import annotations
+ 
+@@ -201,15 +205,16 @@
+ def gardes_d_entree(racine: Path, run_7b: str) -> dict:
+     """Gardes 0 du docstring (marche réelle) ; rend la fiche de `CODE-BBIS` lue (entropie, niveau)."""
+     from ..t07 import registre_v1 as rg
+-    from .lecture_v1 import CLES_PROPRES, RefusLecture, lire_lignes
++    from .lecture_v3 import CLES_PROPRES, REMPLACABLES_PROPRES, RefusLecture, lire_lignes
+     from .registre_bbis_v1 import (REGISTRE_PARTAGE, REGISTRE_PROPRE, exiger_ancetre, exiger_partage_sans_bbis,
+                                    lire_fiche_code)
+     racine = Path(racine)
+     if not os.environ.get("BBIS_INSTANCE"):
+-        raise GardeArret("marche réelle hors de l'instance (BBIS_INSTANCE absente, posée par scripts/amorce_bbis_v3.sh) : refus")
++        raise GardeArret("marche réelle hors de l'instance (BBIS_INSTANCE absente, posée par scripts/amorce_bbis_v4.sh) : refus")
+     exiger_partage_sans_bbis(racine / REGISTRE_PARTAGE)
+     try:
+-        tout = lire_lignes(racine / REGISTRE_PROPRE, CLES_PROPRES, ("SCELLEMENT-BBIS", "CODE-BBIS", "GO-BBIS"), propre=True)
++        tout = lire_lignes(racine / REGISTRE_PROPRE, CLES_PROPRES, ("SCELLEMENT-BBIS", "CODE-BBIS", "GO-BBIS"), propre=True,
++                           remplacables=REMPLACABLES_PROPRES)
+         deja = [k for k in ("SCORES-BBIS", "LECTURE-BBIS", "VERDICT-BBIS", "CONJOINTE-BBIS") if k in tout]
+         if deja:
+             raise RefusLecture(f"ligne(s) {deja} déjà inscrite(s) : la marche est déjà jouée")
+@@ -303,7 +308,7 @@
+         raise GardeArret(f"{dossier} existe déjà (R12)")
+     chemin_m, _ = creer_manifeste(racine, run_bbis, config_marche, list(CLES_FIXES), entropie=int(entropie), decisif=reelle,
+                                   prereg=(racine / TEXTE) if reelle else None, autoriser_depot_sale=not reelle,
+-                                  commande="python -m controle_ia.t07bbis.marche_v3")
++                                  commande="python -m controle_ia.t07bbis.marche_v4")
+     etape = {"nom": "relecture", "ctx": None}
+     try:
+         return _apres_manifeste(racine, run_7b, run_bbis, dossier, chemin_m, m7b, graines, essai, doses, couches, familles,
+@@ -331,7 +336,7 @@
+     from ..t06.test_croise import partition_plis
+     from ..t07 import repli_recalcul_v1 as rr
+     from . import etat_impose_v1 as ei
+-    from . import validation_imbriquee_v3 as vi
++    from . import validation_imbriquee_v4 as vi
+     rapport_o = rr.recalculer(racine, run_7b, dossier / "O")
+     ch = ei.charger(racine, run_7b)
+     chemin = ei.eprouver_chemin(ch, dossier / "O", graines.rng("bbis/chemin-impose"), n=int(essai.get("n_chemin", 8)))
+@@ -358,7 +363,8 @@
+     plis = partition_plis(taches_mesures, graine_entiere(m7b["graines"]["partition-taches"]))
+     taches_triees = sorted(plis)
+     specs = cellules(doses)["plafond"]
+-    total = vi.apprentissages_prevus(len(specs), len(grille(couches, familles)), n_int, n_reet)
++    total = (vi.apprentissages_prevus(len(specs), len(grille(couches, familles)), n_int, n_reet)
++             + vi.apprentissages_mesure(len(specs), len(grille(couches, familles)), n_int))
+     ctx = vi.Contexte(acts, graines, couches, appareil, debit=vi.GardeDebit(total, debut), familles=familles,
+                       reelle=reelle, epoques=epoques, n_plis_internes=n_int)
+     etape["ctx"] = ctx
+@@ -381,9 +387,12 @@
+     controle.jouer(ctx, sources, plis)
+     if controle.resultat is None:
+         raise GardeArret("contrôle carte-processeur non joué : arrêt")
++    etape["nom"] = "mesure de dispersion entre ordres de calcul"
++    dispersion = vi.mesurer_dispersion(ctx, sources, plis, doses)
+     etape["nom"] = "écriture des fichiers fermés"
+     ecrit = ecrire_fermes(racine, run_bbis, sources, graines,
+                           {"controle_carte_processeur": controle.resultat, "couple_controle": list(controle.couple),
++                           "dispersion_ordres_calcul": dispersion,
+                            "journal": ctx.debit.journal, "variante": variante, "decision_variante": decision,
+                            "doses": list(doses), "couches": list(couches),
+                            "plis": plis, "manifeste": {"chemin": str(chemin_m.relative_to(racine)),
+@@ -395,7 +404,7 @@
+ 
+ 
+ def main(argv=None) -> int:
+-    """`python -m controle_ia.t07bbis.marche_v3 --racine R --run-7b RUN --run-bbis RUNB --travail DOSSIER` (marche réelle : la
++    """`python -m controle_ia.t07bbis.marche_v4 --racine R --run-7b RUN --run-bbis RUNB --travail DOSSIER` (marche réelle : la
+     fiche de `CODE-BBIS` fournit l'entropie ; jamais de mode d'essai en ligne de commande). Codes (fermés) : 0 scores écrits ;
+     3 arrêt de débit (`arret-debit-bbis.json`) ; 4 arrêt écrit après la création du manifeste (`arret-marche-bbis.json`, M2) ;
+     2 refus d'une garde avant le manifeste ; 1 autre erreur avant le manifeste."""
+
+######## lecture_v2 -> lecture_v3
+######## a : 154795f4ecfa3273a7a5cec91c6975cd34e558d14647bb8a1cb1ef4968972aca  b : c9a478437f32465418dfafdadbd7823f88853a9c17f77a0e59cc4ccb5ccff6ec
+--- a/src/controle_ia/t07bbis/lecture_v2.py
++++ b/brouillons/T0.7-etape-B-bis-v1/second-addendum-v2/code/src/controle_ia/t07bbis/lecture_v3.py
+@@ -1,14 +1,16 @@
+ """Lecture de l'étape B bis, **sur processeur seulement**, après `SCORES-BBIS` (`prereg/T0.7-etape-B-bis-v1.md`, plan, points 1, 2,
+-10 ; « Critères de lecture gelés » A, B, D ; « Seuil » ; « Liste d'arrêt »), v2 : la v1, plus la réserve **R-PILE** (règle et
+-phrase du brouillon 6 : écrite dès qu'une sonde finale lue est de la famille « attention »), le point (7) de la section D, et la
+-lecture du champ `controle_carte_processeur` du fichier fermé des sondes (marche v3 : un écart numérique ≤ 10⁻⁴ par famille, le
+-déterminisme de l'attention au bit près ; une trace « sans objet », un champ absent ou non numérique arrête la lecture) ; majeur M1
+-de `contre-lecture-brouillon5-et-code-v2-v1.md`, R-2919 ; la v1 reste (R12).
++10 ; « Critères de lecture gelés » A, B, D ; « Seuil » ; « Liste d'arrêt »), v3 : la v2, modifiée par le **second addendum
++d'écart** (`brouillon-second-addendum-bbis-v1.md`) : réserve **R-PILE étendue à la linéaire** (écrite dès qu'une sonde finale lue,
++linéaire ou « attention », source ou ENC, l'est) et portant le résumé de la **mesure de dispersion entre deux ordres de calcul**
++(`dispersion_ordres`, information seulement, aucun état ne change) ; point (7) de la section D réécrit ; lecture du champ
++`controle_carte_processeur` de la marche v4 (version « v4 », écart ≤ 10⁻⁴ à 3 époques par famille, déterminisme au bit près de
++chaque famille, information à 300 époques de la linéaire, phrase du discriminant) ; ligne `CODE-BBIS` remplacée une seule fois
++lue au registre propre (`lire_lignes`, `exiger_ordre_propre`) ; les v1 et v2 restent (R12).
+ 
+ Sections : (1) états d'une cellule (table A), issue I0 à I6, suffixe du transfert T0 à T+, libellés du nœud 5 (« lecture dure »,
+ retenu ; « lettre de R-2716 », information), qualifications (MU, SC), lignes de (i-a), réserves et audit de symétrie R4 —
+ phrases gelées recopiées du texte, crochets remplis par le code ; (2) gardes : refus sur l'instance (variable `BBIS_INSTANCE`,
+-posée par `scripts/amorce_bbis_v3.sh`), liste blanche des entrées et liste « Jamais » (tout fichier ouvert passe par
++posée par `scripts/amorce_bbis_v4.sh`), liste blanche des entrées et liste « Jamais » (tout fichier ouvert passe par
+ `GardeEntrees.exiger`), registre propre et registre partagé (lus seulement), antériorités (dont le premier commit qui ajoute
+ `lecture-t07.json`), issue de P3-bis « vu », marque de G-3 ; (3) assemblage des jeux depuis les fichiers fermés et calcul des
+ lignes de chaque cellule dans l'ordre du point 10 (d) ; (4) écriture scellée de `diag/<run-lecture>/lecture-bbis.json`
+@@ -104,9 +106,9 @@
+     "R-REET": ("R-REET : limites déclarées du nul de réétiquetage (tâches du test neuves : presque redondant avec le plancher ; ne "
+                "mesure pas la capacité de mémorisation ; sélection du réglage non rejouée pour lui)"),
+     "R-F-ABSENT": "R-F : audit des fuites non disponible",
+-    "R-PILE": ("R-PILE : sonde « attention » reproductible au bit près sur la même pile de calcul seulement (carte, pilote, versions "
+-               "de torch et de numpy) ; sur une autre pile, l'apprentissage peut rendre une autre sonde, surtout quand elle "
+-               "n'apprend rien"),
++    "R-PILE": ("R-PILE : sonde finale (linéaire ou « attention ») reproductible au bit près sur la même pile de calcul seulement "
++               "(carte, pilote, versions de torch et de numpy) ; sur une autre pile ou dans un autre ordre de calcul, l'apprentissage "
++               "peut rendre une autre sonde, surtout quand elle ajuste mal, et le réglage retenu peut changer (ex aequo à 0,005)"),
+ }
+ ACTION_R4 = ("relecture par un sous-agent neuf (ni auteur du texte, ni du code) des prédicteurs triviaux, de l'alignement des clés "
+              "et des étiquettes, et d'un échantillon de 20 clés d'action par condition concernée (champs de mesures-t06.npz "
+@@ -117,26 +119,58 @@
+              "d'une dose non lue, d'un autre modèle ; (3) il ne dit pas que la trace est celle du sabotage plutôt que l'empreinte "
+              "du réglage fin du mode « coût » ; (4) un « plafond échoue » est un « non détecté à cette puissance » ; (5) un "
+              "transfert réussi entre familles ne dit rien hors du mode ; (6) le libellé d'information ne dit pas « plafond tient » ; "
+-             "(7) une aire de la famille « attention » est celle d'une sonde parmi celles que rendrait le même apprentissage sous "
+-             "d'autres arrondis (réserve R-PILE) : sur données synthétiques, la dispersion est négligeable quand la sonde apprend "
+-             "un signal, de l'ordre de 0,007 quand elle n'apprend rien ; sur de vraies activations, elle n'est pas mesurée.")
++             "(7) une aire de sonde, linéaire ou « attention », est celle d'une sonde parmi celles que rendrait le même apprentissage "
++             "sous d'autres arrondis (réserve R-PILE) : sur données fabriquées, la dispersion va de négligeable, quand la sonde "
++             "apprend un signal, à plusieurs centièmes quand elle ajuste mal (0,007 à 0,047 entre deux ordres de calcul) ; sur les "
++             "vraies activations, elle est mesurée entre deux ordres de calcul de la carte, comme information seulement "
++             "(« dispersion entre ordres de calcul ») ; elle n'est pas mesurée entre la carte et une autre pile.")
++
++
++NOMS_FAMILLES = {"lineaire": "linéaires", "attention": "« attention »"}
++EPOQUES_CONTROLE_V4 = 3                 # = validation_imbriquee_v4.EPOQUES_CONTROLE (essai ; la lecture n'importe pas torch)
++CHAMP_O2 = "sonde_o2"                   # = validation_imbriquee_v4.CHAMP_O2 (essai)
++DISCRIMINANT = {
++    "accord": ("information à 300 époques au plus 10⁻⁴ sur le couple contrôlé : carte et processeur s'accordent aussi à 300 "
++               "époques sur ce couple (aucune amplification vue sur ce couple ; rien n'est dit des autres couples)"),
++    "ecart": ("information à 300 époques au-dessus de 10⁻⁴, ou non finie, sur le couple contrôlé, contrôle à 3 époques passé : "
++              "amplification d'arrondi ou erreur de chaîne qui ne commence qu'après la troisième époque, indiscernables par ce "
++              "contrôle (réserve R-B du second addendum)"),
++}
+ 
+ 
+-def reserve_pile(sondes_doc: dict) -> list[str]:
+-    """R-PILE (brouillon 6, qualifications toujours écrites) : écrite dès qu'une sonde finale lue est de la famille « attention »
+-    (sonde finale d'une source et d'un pli, `famille` du fichier fermé des sondes ; sonde finale d'ENC, réglage « attention- » ;
+-    interprétation déclarée : ENC est une sonde finale lue) ; les sondes concernées sont nommées."""
+-    lues = []
++def phrase_dispersion(d: dict | None) -> str:
++    """Résumé de la mesure de dispersion entre deux ordres de calcul (second addendum ; information, aucun état ne change)."""
++    tete = "dispersion des aires entre deux ordres de calcul de la carte (information du second addendum, aucun état ne change)"
++    if not isinstance(d, dict):
++        return f"{tete} : non lue"
++    if "non_faite" in d:
++        return f"{tete} : mesure non faite ({d['non_faite']})"
++    if not d.get("cellules_lues"):
++        return f"{tete} : aucune cellule calculable"
++    return (f"{tete} : écart absolu maximal {_f(d['ecart_max'])} ({d['cellule_ecart_max']}) sur {d['cellules_lues']} cellules "
++            f"lues ; réglage retenu changé dans {d['plis_reglage_change']} plis sur {d['plis_compares']}")
++
++
++def reserve_pile(sondes_doc: dict, dispersion: dict | None = None) -> list[str]:
++    """R-PILE (second addendum, EC-2 révisé ; qualifications toujours écrites) : écrite dès qu'une sonde finale est lue, de la
++    famille linéaire ou « attention » (sonde finale d'une source et d'un pli, `famille` du fichier fermé des sondes ; sonde finale
++    d'ENC, famille lue au début de son réglage ; ENC est une sonde finale lue) ; les sondes lues sont nommées par famille ; la
++    mesure de dispersion entre deux ordres de calcul y est résumée (`phrase_dispersion`)."""
++    lues = {"lineaire": [], "attention": []}
+     for src, par_pli in sorted((sondes_doc.get("sources") or {}).items()):
+         for ek, m in sorted(par_pli.items()):
+             if "echec" in m:
+                 continue
+-            if m.get("famille") == "attention":
+-                lues.append(f"{src} {ek}")
++            if m.get("famille") in lues:
++                lues[m["famille"]].append(f"{src} {ek}")
+             enc = m.get("enc") or {}
+-            if "echec" not in enc and str(enc.get("reglage", "")).startswith("attention-"):
+-                lues.append(f"{src} {ek} (ENC)")
+-    return [f"{RESERVES_FIXES['R-PILE']} (sondes « attention » lues : {', '.join(lues)})"] if lues else []
++            f = str(enc.get("reglage", "")).split("-", 1)[0]
++            if "echec" not in enc and f in lues:
++                lues[f].append(f"{src} {ek} (ENC)")
++    if not any(lues.values()):
++        return []
++    noms = " ; ".join(f"{NOMS_FAMILLES[f]} : {', '.join(v)}" for f, v in lues.items() if v)
++    return [f"{RESERVES_FIXES['R-PILE']} (sondes finales lues — {noms}) ; {phrase_dispersion(dispersion)}"]
+ 
+ 
+ def _cles(x):
+@@ -150,9 +184,11 @@
+ 
+ 
+ def exiger_controle_carte(sondes_doc: dict) -> dict:
+-    """Champ `controle_carte_processeur` du fichier fermé des sondes (marche v3) : chaque famille de la marche porte un écart
+-    numérique fini ≤ 10⁻⁴ ; l'attention, le déterminisme au bit près ; une trace « sans objet », un champ absent ou non numérique :
+-    arrêt de la lecture (`RefusLecture`). Rend les écarts lus."""
++    """Champ `controle_carte_processeur` du fichier fermé des sondes (marche v4, second addendum) : `version_controle` « v4 » ;
++    chaque famille de la marche porte un écart numérique fini ≤ 10⁻⁴ **à 3 époques** et le déterminisme au bit près à 300 époques ;
++    la linéaire porte l'écart à 300 époques écrit comme information (`ecart_300_information`, `decide` faux) ; une trace « sans
++    objet », un champ absent ou non numérique : arrêt de la lecture (`RefusLecture`). Rend les écarts lus, l'information et la
++    phrase du discriminant (réserve R-B), sans aucun effet sur un état."""
+     from .commun_v1 import TOLERANCE_CARTE, VARIANTES
+     c = sondes_doc.get("controle_carte_processeur")
+     if not isinstance(c, dict):
+@@ -170,12 +206,31 @@
+             raise RefusLecture(f"contrôle carte-processeur : écart de « {f} » absent, non numérique ou au-dessus de 10⁻⁴ ({e!r}) : "
+                                "arrêt de la lecture")
+         ecarts[f] = float(e)
+-    sortie = {"ecarts": ecarts, "tolerance": TOLERANCE_CARTE, "couple": [c.get("cellule"), c.get("pli")]}
+-    if "attention" in familles:
+-        d = c.get("determinisme_attention")
++        if c[f].get("epoques") != EPOQUES_CONTROLE_V4:
++            raise RefusLecture(f"contrôle carte-processeur : horizon de « {f} » {c[f].get('epoques')!r} ≠ "
++                               f"{EPOQUES_CONTROLE_V4} époques (second addendum) : arrêt de la lecture")
++    if c.get("version_controle") != "v4":
++        raise RefusLecture("contrôle carte-processeur : version_controle autre que « v4 » (second addendum) : arrêt de la lecture")
++    sortie = {"ecarts": ecarts, "tolerance": TOLERANCE_CARTE, "couple": [c.get("cellule"), c.get("pli")],
++              "epoques": EPOQUES_CONTROLE_V4, "version_controle": "v4", "determinisme": {}}
++    for f in familles:
++        d = c.get(f"determinisme_{f}")
+         if not (isinstance(d, dict) and d.get("egal_au_bit") is True):
+-            raise RefusLecture("contrôle carte-processeur : déterminisme de l'attention absent ou faux : arrêt de la lecture")
++            nom = "de l'attention" if f == "attention" else "de la linéaire"
++            raise RefusLecture(f"contrôle carte-processeur : déterminisme {nom} absent ou faux : arrêt de la lecture")
++        sortie["determinisme"][f] = True
++    if "attention" in familles:
+         sortie["determinisme_attention"] = True
++    info = c["lineaire"].get("ecart_300_information")
++    if not (isinstance(info, dict) and info.get("decide") is False
++            and ("refus" in info or isinstance(info.get("ecart_relatif_max"), (int, float)))
++            and not isinstance(info.get("ecart_relatif_max"), bool)):
++        raise RefusLecture("contrôle carte-processeur : information à 300 époques de la linéaire absente ou mal formée : arrêt "
++                           "de la lecture")
++    e300 = info.get("ecart_relatif_max")
++    accord = "refus" not in info and np.isfinite(float(e300)) and float(e300) <= TOLERANCE_CARTE
++    sortie["information_300"] = info
++    sortie["discriminant"] = DISCRIMINANT["accord" if accord else "ecart"]
+     return sortie
+ 
+ 
+@@ -517,11 +572,15 @@
+ EXIGEES_PARTAGEES = ("RUN-CONFIRMATION-T06", "VERDICT-P3BIS")
+ PERMISES_PARTAGEES = ("CODE-MOTS-ET-COUT-T06", "ISSUE-MOTS-ET-COUT-T06", "AUDIT-FUITES-T07")
+ ORDRE_PROPRE = ("SCELLEMENT-BBIS", "CODE-BBIS", "GO-BBIS", "SCORES-BBIS")
++REMPLACABLES_PROPRES = ("CODE-BBIS",)
+ 
+ 
+-def lire_lignes(registre: Path, cles, exigees, propre: bool) -> dict:
++def lire_lignes(registre: Path, cles, exigees, propre: bool, remplacables=()) -> dict:
+     """Lignes `| clé | date | chemin | sha256 |` des clés demandées (une exactement pour chaque clé présente ; exigée absente →
+-    refus) ; registre propre : toute autre clé de forme valide → refus (seules les clés de B bis y sont permises)."""
++    refus) ; registre propre : toute autre clé de forme valide → refus (seules les clés de B bis y sont permises). Second
++    addendum : une clé de `remplacables` (`REMPLACABLES_PROPRES` : `CODE-BBIS` seulement) peut porter **deux** lignes, la seconde
++    strictement postérieure, qui fait foi (« ligne `CODE-BBIS` remplacée une seule fois », liste d'arrêt) ; la première est rendue
++    sous `remplace` ; trois lignes ou plus, ou une seconde ligne non postérieure : refus."""
+     from ..t07 import registre_v1 as rg
+     registre = Path(registre)
+     if not registre.is_file():
+@@ -541,14 +600,19 @@
+             if k in exigees:
+                 fautes.append(f"ligne {k} absente (exigée)")
+             continue
+-        if len(ls) != 1 or len(ls[0]) != 4 or not rg.DATE.fullmatch(ls[0][1]) or not rg.SHA.fullmatch(ls[0][3]):
++        permis = 2 if k in tuple(remplacables) else 1
++        if (len(ls) > permis or any(len(l) != 4 or not rg.DATE.fullmatch(l[1]) or not rg.SHA.fullmatch(l[3]) for l in ls)):
+             fautes.append(f"ligne {k} en double ou mal formée")
+             continue
+-        _, date, chemin, sha = ls[0]
+-        if chemin.startswith("/") or ".." in Path(chemin).parts:
+-            fautes.append(f"ligne {k} : chemin {chemin!r}")
++        mauvais = [l[2] for l in ls if l[2].startswith("/") or ".." in Path(l[2]).parts]
++        if mauvais:
++            fautes.append(f"ligne {k} : chemin {mauvais[0]!r}")
++            continue
++        lus = [{"date": d, "instant": rg.instant_utc(d), "chemin": ch, "sha256": s} for _, d, ch, s in ls]
++        if len(lus) == 2 and not lus[0]["instant"] < lus[1]["instant"]:
++            fautes.append(f"ligne {k} remplacée : la seconde ligne n'est pas strictement postérieure à la première")
+             continue
+-        sortie[k] = {"date": date, "instant": rg.instant_utc(date), "chemin": chemin, "sha256": sha}
++        sortie[k] = {**lus[1], "remplace": lus[0]} if len(lus) == 2 else lus[0]
+     if fautes:
+         raise RefusLecture(" ; ".join(fautes))
+     return sortie
+@@ -570,7 +634,13 @@
+ 
+ 
+ def exiger_ordre_propre(lignes: dict) -> None:
+-    for a, b in zip(ORDRE_PROPRE, ORDRE_PROPRE[1:]):
++    """Ordre du plan, point 2 ; second addendum : une ligne `CODE-BBIS` remplacée se lit SCELLEMENT-BBIS < CODE-BBIS (première)
++    < GO-BBIS < CODE-BBIS (remplacement) < SCORES-BBIS."""
++    lignes, chaine = dict(lignes), list(ORDRE_PROPRE)
++    if "CODE-BBIS" in lignes and "remplace" in lignes["CODE-BBIS"]:
++        lignes["CODE-BBIS (première)"] = lignes["CODE-BBIS"]["remplace"]
++        chaine = ["SCELLEMENT-BBIS", "CODE-BBIS (première)", "GO-BBIS", "CODE-BBIS", "SCORES-BBIS"]
++    for a, b in zip(chaine, chaine[1:]):
+         if a in lignes and b in lignes and not lignes[a]["instant"] < lignes[b]["instant"]:
+             raise RefusLecture(f"ligne {a} ({lignes[a]['date']}) pas strictement antérieure à {b} ({lignes[b]['date']})")
+ 
+@@ -814,6 +884,45 @@
+                 for k in (0, 1)]
+ 
+ 
++def dispersion_ordres(asms: dict, specs: dict, sondes_doc: dict) -> dict:
++    """Mesure d'information du second addendum (MD) : pour chaque cellule (plafond et transfert), aire du jeu décisif (O[positifs]
++    contre O[H], tâches du pli lu, moyenne des deux plis) par la sonde lue (ordre 1) et par la sonde de l'ordre 2 de la même source
++    (`<groupe>__sonde_o2`) ; différence (ordre 2 − ordre 1), aires par pli, réglages retenus des deux ordres par pli ; résumé :
++    écart absolu maximal, plis dont le réglage retenu change. Aucun intervalle, aucun état, aucun seuil ; rien d'autre ne change."""
++    d = sondes_doc.get("dispersion_ordres_calcul")
++    if not isinstance(d, dict):
++        return {"non_faite": "champ dispersion_ordres_calcul absent du fichier des sondes", "decide": False}
++    if "non_faite" in d:
++        return {"non_faite": str(d["non_faite"]), "ordre": d.get("ordre"), "decide": False}
++    sortie = {}
++    for nom, spec in {**specs["plafond"], **specs["transfert"]}.items():
++        src = spec.get("source") or nom
++        meta = (sondes_doc.get("sources") or {}).get(src, {})
++        reglages = {ek: {"ordre1": m.get("reglage"), "ordre2": (m.get("ordre2") or {}).get("reglage")}
++                    for ek, m in sorted(meta.items())}
++        if src not in asms:
++            sortie[nom] = {"source": src, "non_calculable": "source non lisible", "reglages": reglages}
++            continue
++        dp, dn = f"O-{spec['positifs']}", f"O-{H}"
++        j1, m1 = _essai(asms[src].jeu, dp, dn, "sonde")
++        j2, m2 = _essai(asms[src].jeu, dp, dn, CHAMP_O2)
++        if j1 is None or j2 is None:
++            sortie[nom] = {"source": src, "non_calculable": m1 or m2, "reglages": reglages}
++            continue
++        a1, a2 = j1.aires_plis[:, 0], j2.aires_plis[:, 0]
++        sortie[nom] = {"source": src, "aire_ordre1": float(a1.mean()), "aire_ordre2": float(a2.mean()),
++                       "difference": float(a2.mean() - a1.mean()),
++                       "par_pli": {f"e{k}": {"aire_ordre1": float(a1[k]), "aire_ordre2": float(a2[k])} for k in range(len(a1))},
++                       "reglages": reglages}
++    lues = sorted(((abs(c["difference"]), n) for n, c in sortie.items() if "difference" in c), reverse=True)
++    compares = [(m.get("reglage"), m["ordre2"]["reglage"]) for par in (sondes_doc.get("sources") or {}).values()
++                for m in par.values() if "echec" not in m and isinstance(m.get("ordre2"), dict) and m["ordre2"].get("reglage")
++                and "echec" not in m["ordre2"]]
++    return {"ordre": d.get("ordre"), "decide": False, "cellules": sortie, "cellules_lues": len(lues),
++            "ecart_max": lues[0][0] if lues else None, "cellule_ecart_max": lues[0][1] if lues else None,
++            "plis_compares": len(compares), "plis_reglage_change": sum(1 for a, b in compares if a != b)}
++
++
+ def _essai(f, *a, **k):
+     try:
+         return f(*a, **k), None
+@@ -1124,7 +1233,8 @@
+     res = {"texte": TEXTE, "texte_sha256": TEXTE_SHA256, "run_7b": run_7b, "run_bbis": run_bbis,
+            "instant_ouverture": rg.date_utc(instant), "essai": not reel, "section_D": SECTION_D}
+     try:
+-        propres = lire_lignes(racine / REGISTRE_PROPRE, CLES_PROPRES, EXIGEES_PROPRES_LECTURE, propre=True)
++        propres = lire_lignes(racine / REGISTRE_PROPRE, CLES_PROPRES, EXIGEES_PROPRES_LECTURE, propre=True,
++                              remplacables=REMPLACABLES_PROPRES)
+         deja = [k for k in REFUSEES_PROPRES_LECTURE if k in propres]
+         if deja:
+             raise RefusLecture(f"ligne(s) {deja} déjà inscrite(s) : la lecture est unique")
+@@ -1233,6 +1343,7 @@
+     t_ii = {nom_dose(d): transfert[f"T-instruit-{nom_dose(d)}"] for d in doses}
+     res["issue"] = (issue_complete({}, {}, None, motif_i0="marche sans scores") if not tabs
+                     else issue_complete(p_ii, t_ii, marque))
++    res["dispersion_ordres_calcul"] = dispersion_ordres(asms, specs, sondes_doc)
+     nom_ti = f"T-{nom_dose(1.0)}-instruit"
+     res["lignes_ia"] = {"P-instruit": ligne_i(plafond["P-instruit"]), nom_ti: ligne_i(transfert[nom_ti])}
+     sources_t = {n: (plafond[s["source"]], plafond.get(f"P-{s['positifs']}") if s["famille"] == FAMILLE_II
+@@ -1243,7 +1354,7 @@
+                  (res["issue"].get("qualifications") or {}).items() if q["R-MU"]]
+     reserves += reserves_fuites
+     reserves.append(RESERVES_FIXES["R-REET"])
+-    reserves += reserve_pile(sondes_doc)
++    reserves += reserve_pile(sondes_doc, res["dispersion_ordres_calcul"])
+     reserves += mc["reserves"]
+     if marque:
+         reserves.append(f"R-G3 : table A de T0.6 en {marque}")
+@@ -1293,7 +1404,7 @@
+               "instant_ouverture": resultat.get("instant_ouverture"), "essai": not reel}
+     chemin_m, _ = creer_manifeste(racine, run_lecture, config, cles, entropie=int(entropie), decisif=reel,
+                                   prereg=(racine / TEXTE) if reel else None, autoriser_depot_sale=not reel,
+-                                  commande="python -m controle_ia.t07bbis.lecture_v2")
++                                  commande="python -m controle_ia.t07bbis.lecture_v3")
+     propre = json.loads(json.dumps(resultat, ensure_ascii=False, default=_json))
+     return ecrire_resultat(racine, chemin_m, "lecture-bbis", propre)
+ 
+@@ -1316,7 +1427,7 @@
+ 
+ 
+ def main(argv=None) -> int:
+-    """`OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=src python -m controle_ia.t07bbis.lecture_v2 --racine
++    """`OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=src python -m controle_ia.t07bbis.lecture_v3 --racine
+     R --run-7b RUN --run-bbis RUNB --run-lecture RUNL [--adaptateur-mc module:attribut]` : lit, écrit et scelle
+     `diag/<RUNL>/lecture-bbis.json` ; n'imprime que le chemin et l'empreinte (aucune valeur : la lecture humaine suit le scellement
+     et la ligne `LECTURE-BBIS`). MC : adaptateur du code de la pièce si la ligne `CODE-MOTS-ET-COUT-T06` est inscrite avant
+@@ -1335,7 +1446,8 @@
+     try:
+         adaptateur = adaptateur_retenu(racine, a.adaptateur_mc)
+         r = lire(racine, a.run_7b, a.run_bbis, instant, adaptateur)
+-        propres = lire_lignes(racine / REGISTRE_PROPRE, ("CODE-BBIS",), ("CODE-BBIS",), propre=False)
++        propres = lire_lignes(racine / REGISTRE_PROPRE, ("CODE-BBIS",), ("CODE-BBIS",), propre=False,
++                              remplacables=REMPLACABLES_PROPRES)
+         entropie = lire_fiche_code(racine / propres["CODE-BBIS"]["chemin"])["entropie"]
+         chemin = ecrire_lecture(racine, a.run_lecture, r, entropie)
+         journaliser_ouverture(racine, f"lecture B bis ({a.run_lecture})", instant, empreinte(chemin))
+
+######## registre_bbis_v1 -> registre_bbis_v2 (fichier neuf hors de la demande, exigé par SA-5 et SA-15)
+######## a : c3b1848b3466a88a250aee2b58477c91ff5d660592c1a6cc695f8910005dcf1b  b : b464d4426bae48ddbbb3f9afb466cdf012c503c06caf464374f44f890daad9f0
+--- a/src/controle_ia/t07bbis/registre_bbis_v1.py
++++ b/brouillons/T0.7-etape-B-bis-v1/second-addendum-v2/code/src/controle_ia/t07bbis/registre_bbis_v2.py
+@@ -1,5 +1,11 @@
+ """Registre propre de l'étape B bis, fiche de `CODE-BBIS`, gardes d'offre, de création et de dépense
+-(`prereg/T0.7-etape-B-bis-v1.md`, « Lignes de registre », « Liste d'arrêt », « Calcul et dépense », « Seuil »), v1.
++(`prereg/T0.7-etape-B-bis-v1.md`, « Lignes de registre », « Liste d'arrêt », « Calcul et dépense », « Seuil »), v2 : la v1, modifiée
++par le **second addendum d'écart** (`brouillon-second-addendum-bbis-v1.md`) en trois points seulement : (1) la ligne `CODE-BBIS`
++peut être **remplacée une seule fois** au registre propre (liste d'arrêt scellée : « ligne `CODE-BBIS` remplacée une seule fois »),
++par une seconde ligne ajoutée après `GO-BBIS` et avant `SCORES-BBIS`, jamais réécrite ; la lecture de la fiche passe par
++`lecture_v3.lire_lignes` (la seconde ligne fait foi) ; (2) la garde de création admet **une course de plus** (relances = 2),
++accordée par GO-2026-11-16-11, seulement si le feu écrit de la mère porte aussi ce numéro et si `CODE-BBIS` est remplacée ;
++(3) la limite du samedi 21 novembre 12:00 UTC vaut pour toute relance. Tout le reste est celui de la v1 (la v1 reste, R12).
+ 
+ - **Registre propre** `registres/t07-etape-b-bis-v1.md` (journal `….ouvertures.md`), format `| clé | AAAA-MM-JJTHH:MM:SSZ |
+   chemin | sha256 |` (`t07.registre_v1.ecrire_ligne`), lignes ajoutées, jamais réécrites ; seules les huit clés de marque `BBIS`
+@@ -42,6 +48,7 @@
+ CLES_BBIS = ("SCELLEMENT-BBIS", "ABSENCE-B-BBIS", "CODE-BBIS", "GO-BBIS", "SCORES-BBIS", "LECTURE-BBIS", "VERDICT-BBIS",
+              "CONJOINTE-BBIS")
+ GO_ID = "GO-2026-11-14-09"
++GO_ACCORD = "GO-2026-11-16-11"     # second addendum et nouvelle course (une seule), sous GO-2026-11-14-09
+ COUPURE_USD, QUART_D_HEURE = 39.5, 0.25
+ ECHEANCE_GO = "2026-11-22T23:59:59Z"
+ LIMITE_RELANCE = "2026-11-21T12:00:00Z"
+@@ -100,8 +107,11 @@
+     registre = Path(racine) / registre_rel
+     ligne = rg.ecrire_ligne(cle, rg.date_utc(instant), chemin, sha)
+     if registre.is_file():
+-        if cle in cles_bbis_presentes(registre):
+-            raise GardeArret(f"registre propre : ligne {cle} déjà présente, jamais réécrite")
++        vues = cles_bbis_presentes(registre)
++        if cle in vues and not (cle == "CODE-BBIS" and vues.count("CODE-BBIS") == 1 and "GO-BBIS" in vues
++                                and "SCORES-BBIS" not in vues):
++            raise GardeArret(f"registre propre : ligne {cle} déjà présente, jamais réécrite (seule CODE-BBIS se remplace, une seule "
++                             "fois, après GO-BBIS et avant SCORES-BBIS : second addendum)")
+     else:
+         registre.parent.mkdir(parents=True, exist_ok=True)
+         registre.write_text("# Registre propre de T0.7, étape B bis — lignes ajoutées, jamais réécrites\n\n", encoding="utf-8")
+@@ -209,10 +219,11 @@
+ def exiger_ancetre_de_la_fiche(racine: Path, tete: str = "HEAD") -> dict:
+     """Ligne `CODE-BBIS` du registre propre (sceau vérifié), fiche lue, commit de la fiche ancêtre de `tete` (`exiger_ancetre`)."""
+     from ..t07 import registre_v1 as rg
+-    from .lecture_v1 import CLES_PROPRES, RefusLecture, lire_lignes
++    from .lecture_v3 import CLES_PROPRES, REMPLACABLES_PROPRES, RefusLecture, lire_lignes
+     racine = Path(racine)
+     try:
+-        ligne = lire_lignes(racine / REGISTRE_PROPRE, CLES_PROPRES, ("CODE-BBIS",), propre=True)["CODE-BBIS"]
++        ligne = lire_lignes(racine / REGISTRE_PROPRE, CLES_PROPRES, ("CODE-BBIS",), propre=True,
++                            remplacables=REMPLACABLES_PROPRES)["CODE-BBIS"]
+     except RefusLecture as e:
+         raise GardeArret(f"registre propre : {e}") from None
+     rg.sceau_conforme(racine / ligne["chemin"], ligne["sha256"])
+@@ -382,8 +393,9 @@
+ 
+ def exiger_creation(racine: Path, feu_ecrit: str, maintenant: int, relances: int = 0) -> dict:
+     """Aucune création sans `SCELLEMENT-BBIS`, `CODE-BBIS`, `GO-BBIS` au registre propre et le feu écrit de la mère portant le
+-    numéro de la ligne de GO ; une relance au plus ; échéance de la ligne de GO ; relance après le samedi 21 novembre 12:00 UTC :
+-    nœud."""
++    numéro de la ligne de GO ; une relance au plus, plus **une course** accordée par GO-2026-11-16-11 (relances = 2 : feu écrit
++    portant aussi ce numéro, ligne `CODE-BBIS` remplacée) ; échéance de la ligne de GO ; relance après le samedi 21 novembre
++    12:00 UTC : nœud."""
+     exiger_partage_sans_bbis(Path(racine) / REGISTRE_PARTAGE)
+     presentes = set(cles_bbis_presentes(Path(racine) / REGISTRE_PROPRE))
+     manque = [k for k in ("SCELLEMENT-BBIS", "CODE-BBIS", "GO-BBIS") if k not in presentes]
+@@ -391,11 +403,16 @@
+         raise GardeArret(f"création refusée : ligne(s) {manque} absente(s) du registre propre")
+     if not isinstance(feu_ecrit, str) or GO_ID not in feu_ecrit:
+         raise GardeArret(f"création refusée : feu écrit de la mère portant le numéro {GO_ID} absent")
+-    if int(relances) > 1:
+-        raise GardeArret("une seconde relance est exclue (ligne de GO : une relance au plus)")
++    if int(relances) > 2:
++        raise GardeArret("une troisième relance est exclue (ligne de GO : une relance au plus ; GO-2026-11-16-11 : une course de "
++                         "plus, une seule)")
++    if int(relances) == 2 and (GO_ACCORD not in feu_ecrit
++                               or cles_bbis_presentes(Path(racine) / REGISTRE_PROPRE).count("CODE-BBIS") != 2):
++        raise GardeArret(f"seconde relance : seulement sous le second addendum (feu écrit portant {GO_ACCORD} et ligne CODE-BBIS "
++                         "remplacée au registre propre) : refus")
+     if int(maintenant) > _instant(ECHEANCE_GO):
+         raise GardeArret("échéance de la ligne de GO dépassée : aucune création")
+-    if int(relances) == 1 and int(maintenant) > _instant(LIMITE_RELANCE):
++    if int(relances) >= 1 and int(maintenant) > _instant(LIMITE_RELANCE):
+         raise GardeArret("relance après le samedi 21 novembre à 12:00 UTC : nœud (le billet sort sans B bis)")
+     return {"go": GO_ID, "relances": int(relances)}
+ 
+
+######## lancer_bbis_v3 -> v4
+######## a : dc26ea01a06bfb9eac3fc4f9f1b9b3bb86490d61d9e8f5deb54bcb180b17ee68  b : 457457c0e9d32a1c5d03765b03a8ab63a69cdbc2a5147d534d0889d5a159062a
+--- a/scripts/lancer_bbis_v3.sh
++++ b/brouillons/T0.7-etape-B-bis-v1/second-addendum-v2/code/scripts/lancer_bbis_v4.sh
+@@ -1,6 +1,7 @@
+ #!/usr/bin/env bash
+-# Chaîne de session de l'étape B bis de T0.7, v3 (la v2, qui passe l'amorce v3 : marche v3, contrôle carte-processeur
+-# sans issue « sans objet », R-2919 ; les v1 et v2 restent, R12) (prereg/T0.7-etape-B-bis-v1.md, « Calcul et dépense », « Liste d'arrêt » ; ligne
++# Chaîne de session de l'étape B bis de T0.7, v4 (la v3, qui passe l'amorce v4 : marche v4, contrôle carte-processeur v4 et
++# mesure de dispersion du second addendum ; gardes de registre v2 : CODE-BBIS remplacée une fois, une course de plus accordée par
++# GO-2026-11-16-11 ; les v1 à v3 restent, R12) (prereg/T0.7-etape-B-bis-v1.md, « Calcul et dépense », « Liste d'arrêt » ; ligne
+ # de GO GO-2026-11-14-09 : 40 USD, A100 seulement, une relance au plus, échéance 2026-11-22). Côté session seulement : aucune
+ # commande de ce script ne crée, n'arrête ni ne détruit d'instance ; il contrôle et IMPRIME les commandes, que la mère joue
+ # (préfixe GO_ID exigé par la garde de calcul ; destruction par l'identifiant, R10).
+@@ -17,9 +18,10 @@
+ #                                    cpu_cores_effective>=16 cpu_ram>=128 disk_space>=150 cuda_max_good>=13.0' -o 'dph_total'
+ #                                    --raw > RECHERCHE.json ) ;
+ #   creation RACINE FEU RELANCES     SCELLEMENT-BBIS, CODE-BBIS, GO-BBIS au registre propre, feu écrit de la mère portant
+-#                                    GO-2026-11-14-09, une relance au plus, échéance, relance après le 21 novembre 12:00 UTC refusée ;
++#                                    GO-2026-11-14-09, une relance au plus, plus une course (RELANCES=2) si le feu porte aussi
++#                                    GO-2026-11-16-11 et CODE-BBIS est remplacée, échéance, relance après le 21 novembre 12:00 UTC refusée ;
+ #   commande RACINE OFFRE.json OFFRE_ID COMMIT BRANCHE_CODE RUN_7B BRANCHE_7B RUN_BBIS ECHEANCE_UTC_S FEU RELANCES IMAGE
+-#                                    imprime la commande de création (amorce scripts/amorce_bbis_v3.sh en base64, variables par leur
++#                                    imprime la commande de création (amorce scripts/amorce_bbis_v4.sh en base64, variables par leur
+ #                                    nom, jamais une valeur de clé) après : l'offre décrite dans OFFRE.json, d'identifiant OFFRE_ID
+ #                                    (clé `id`), dans les bornes (correction m5) ; la branche de sortie de l'amorce (BR_SORTIE)
+ #                                    absente du dépôt distant (`git ls-remote` sur `origin` de RACINE, lecture seule) ; l'amorce en essai local sur un dossier jetable
+@@ -62,7 +64,7 @@
+         *) echo "dépôt distant injoignable (git ls-remote, code $c) : absence de la branche de sortie $br non prouvée"; return 2;;
+     esac; }
+ # <<< branche-de-sortie
+-py_registre() { PYTHONPATH="$RACINE_CODE/src" "$PY" -m controle_ia.t07bbis.registre_bbis_v1 "$@"; }
++py_registre() { PYTHONPATH="$RACINE_CODE/src" "$PY" -m controle_ia.t07bbis.registre_bbis_v2 "$@"; }
+ case "${1:-}" in
+     offre-depuis-recherche)
+         [ "$#" = 4 ] || { echo "BBIS REFUS : offre-depuis-recherche RECHERCHE.json ID OFFRE.json"; exit 2; }
+@@ -83,28 +85,28 @@
+         RAC_ESSAI=$(mktemp -d) || { echo "BBIS REFUS : dossier jetable de l'essai local impossible"; exit 2; }
+         AMORCE_ESSAI_LOCAL=1 RACINE_AMORCE="$RAC_ESSAI" COMMIT="$COMMIT" BRANCHE_CODE="$BRC" RUN_7B="$RUN7B" BRANCHE_7B="$BR7B" \
+             RUN_BBIS="$RUNB" ECHEANCE_UTC_S="$ECH" GO_ID="$GO_ID" VARIANTE="${VARIANTE:-}" DECISION_VARIANTE="${DECISION_VARIANTE:-}" \
+-            bash "$ICI/amorce_bbis_v3.sh" > /dev/null; c=$?
++            bash "$ICI/amorce_bbis_v4.sh" > /dev/null; c=$?
+         rmdir "$RAC_ESSAI" || { echo "BBIS REFUS : l'amorce en essai local a écrit dans $RAC_ESSAI"; exit 2; }
+         [ "$c" = 0 ] || { echo "BBIS REFUS : arguments refusés par l'amorce"; exit 2; }
+         py_registre creation "$RAC" "$FEU" "$(date +%s)" "$REL" > /dev/null || { py_registre creation "$RAC" "$FEU" "$(date +%s)" "$REL"; exit 2; }
+         py_registre ancetre "$RAC" "$COMMIT" > /dev/null || { py_registre ancetre "$RAC" "$COMMIT"; exit 2; }
+-        M=$(branche_de_sortie_neuve "$RAC" "$ICI/amorce_bbis_v3.sh") || { echo "BBIS REFUS : $M"; exit 2; }
+-        B64=$(base64 -w 0 < "$ICI/amorce_bbis_v3.sh") || { echo "BBIS REFUS : amorce illisible"; exit 2; }
++        M=$(branche_de_sortie_neuve "$RAC" "$ICI/amorce_bbis_v4.sh") || { echo "BBIS REFUS : $M"; exit 2; }
++        B64=$(base64 -w 0 < "$ICI/amorce_bbis_v4.sh") || { echo "BBIS REFUS : amorce illisible"; exit 2; }
+         EXTRA=""; [ -n "${VARIANTE:-}" ] && EXTRA=" -e VARIANTE=$VARIANTE -e DECISION_VARIANTE=$DECISION_VARIANTE"
+-        echo "BBIS COMMANDE (à jouer par la mère, après le feu écrit ; empreinte de l'amorce $(sha256sum < "$ICI/amorce_bbis_v3.sh" | cut -c1-16)) :"
+-        echo "GO_ID=$GO_ID vastai create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQUETTE --env \"-e COMMIT=$COMMIT -e BRANCHE_CODE=$BRC -e RUN_7B=$RUN7B -e BRANCHE_7B=$BR7B -e RUN_BBIS=$RUNB -e ECHEANCE_UTC_S=$ECH -e GO_ID=$GO_ID$EXTRA -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$GH_TOKEN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce_bbis_v3.sh && bash /root/amorce_bbis_v3.sh\""
++        echo "BBIS COMMANDE (à jouer par la mère, après le feu écrit ; empreinte de l'amorce $(sha256sum < "$ICI/amorce_bbis_v4.sh" | cut -c1-16)) :"
++        echo "GO_ID=$GO_ID vastai create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQUETTE --env \"-e COMMIT=$COMMIT -e BRANCHE_CODE=$BRC -e RUN_7B=$RUN7B -e BRANCHE_7B=$BR7B -e RUN_BBIS=$RUNB -e ECHEANCE_UTC_S=$ECH -e GO_ID=$GO_ID$EXTRA -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$GH_TOKEN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce_bbis_v4.sh && bash /root/amorce_bbis_v4.sh\""
+         exit 0;;
+     depense)
+         [ "$#" = 3 ] || { echo "BBIS REFUS : depense CUMUL_USD PRIX_CARTE_USD_H"; exit 2; }
+         py_registre depense "$2" "$3"; c=$?
+-        [ "$c" = 0 ] || echo "BBIS : arrêt et destruction par l'identifiant (R10) : bash scripts/lancer_bbis_v3.sh detruire <ID>, puis bash scripts/lancer_bbis_v3.sh verifier-destruction <ID> <TEMOIN>"
++        [ "$c" = 0 ] || echo "BBIS : arrêt et destruction par l'identifiant (R10) : bash scripts/lancer_bbis_v4.sh detruire <ID>, puis bash scripts/lancer_bbis_v4.sh verifier-destruction <ID> <TEMOIN>"
+         exit "$c";;
+     detruire)
+         [ "$#" = 2 ] || { echo "BBIS REFUS : detruire ID"; exit 2; }
+         case "$2" in ''|*[!0-9]*) echo "BBIS REFUS : identifiant illisible (destruction par l'identifiant seulement, R10)"; exit 2;; esac
+         py_registre identifiant "$2" > /dev/null || { py_registre identifiant "$2"; exit 2; }
+         echo "GO_ID=$GO_ID vastai destroy instance $2 -y"
+-        echo "BBIS PUIS (jamais juger la destruction par le code de sortie) : bash scripts/lancer_bbis_v3.sh verifier-destruction $2 <TEMOIN>"
++        echo "BBIS PUIS (jamais juger la destruction par le code de sortie) : bash scripts/lancer_bbis_v4.sh verifier-destruction $2 <TEMOIN>"
+         exit 0;;
+     verifier-destruction)
+         [ "$#" = 3 ] || [ "$#" = 4 ] || { echo "BBIS REFUS : verifier-destruction ID TEMOIN [LISTE.json]"; exit 2; }
+
+######## amorce_bbis_v3 -> v4
+######## a : 18e2f2052efdca0d9d447738c3c4f1099302f7134b9518b59eea78ba563695dd  b : 099a5c0e5d504b43b68140da86b4d69d91ea42d1725e2dddca0fad2750764277
+--- a/scripts/amorce_bbis_v3.sh
++++ b/brouillons/T0.7-etape-B-bis-v1/second-addendum-v2/code/scripts/amorce_bbis_v4.sh
+@@ -1,8 +1,9 @@
+ #!/usr/bin/env bash
+-# Amorce de l'instance de l'étape B bis de T0.7, v3 (la v2, dont la marche est `controle_ia.t07bbis.marche_v3` : contrôle
+-# carte-processeur sans issue « sans objet », R-2919 ; minimum d'essais relevé au compte neuf ; blocs marqués identiques à ceux de
+-# la v1 ; les v1 et v2 restent, R12) (prereg/T0.7-etape-B-bis-v1.md, plan, points 1 à 8 ; « Calcul et dépense » ;
+-# « Liste d'arrêt »). Jouée au démarrage de l'instance (A100, étiquette bbis-t07-v1), passée par scripts/lancer_bbis_v3.sh (commande
++# Amorce de l'instance de l'étape B bis de T0.7, v4 (la v3, dont la marche est `controle_ia.t07bbis.marche_v4` : contrôle
++# carte-processeur v4 et mesure de dispersion du second addendum ; branche de sortie neuve donnees/t07-etape-b-bis-v2 (la v1 porte
++# la course arrêtée, R12) ; minimum d'essais relevé ; blocs marqués identiques à ceux de la v1 ; les v1 à v3 restent, R12)
++# (prereg/T0.7-etape-B-bis-v1.md, plan, points 1 à 8 ; « Calcul et dépense » ;
++# « Liste d'arrêt »). Jouée au démarrage de l'instance (A100, étiquette bbis-t07-v1), passée par scripts/lancer_bbis_v4.sh (commande
+ # de création imprimée, base64). Une instance, une marche ; écrit sous $R/bbis-t07-v1 seulement.
+ # Ordre : 0. minuterie de destruction par l'identifiant à l'échéance (R10) ; 1. machine (carte, clés par leur nom, version CUDA
+ #   servie par le pilote au moins 13.0, lue dans l'en-tête de nvidia-smi : sinon arrêt, code 2, avant toute installation) ; 2. dépôt au
+@@ -14,8 +15,8 @@
+ #   4. paquets ; 5. essais du paquet (tests/test_t07bbis_*.py ; ligne de compte entière au journal, au moins MIN_ESSAIS passés,
+ #   correction M3) ; 6. modèle au cache local (révision du manifeste de 7b) ; 7. contrôle que la branche de sortie est neuve
+ #   (dès lors, tout arrêt pousse ses traces : avant que la branche soit prête, par un commit sur COMMIT, mineur m-A) ;
+-#   8. marche (`controle_ia.t07bbis.marche_v3`, BBIS_INSTANCE=1, hors ligne ; le manifeste cite le commit local et son parent),
+-#   puis branche neuve donnees/t07-etape-b-bis-v1 créée **depuis COMMIT** (le commit local des entrées n'y entre jamais) et
++#   8. marche (`controle_ia.t07bbis.marche_v4`, BBIS_INSTANCE=1, hors ligne ; le manifeste cite le commit local et son parent),
++#   puis branche neuve donnees/t07-etape-b-bis-v2 créée **depuis COMMIT** (le commit local des entrées n'y entre jamais) et
+ #   poussée (légers d'abord, fichiers de moins de 95 Mo seulement) ; 9. fin : état « stopped » demandé ; la session détruit par
+ #   l'identifiant (R10). Arrêt de débit (code 3 de la marche) : relecture et journal poussés, instance arrêtée (« stopped »),
+ #   gardée au plus 12 heures, nœud de Lazar (la session détruit sans mot dans les 12 heures). Arrêt écrit de la marche (code 4,
+@@ -33,7 +34,7 @@
+ T="$R/bbis-t07-v1"; D="$T/depot"; X="$T/traces"; L="$X/journal-bbis.txt"; XT=traces/bbis-t07-v1
+ API=https://console.vast.ai/api/v0
+ GO_ATTENDU=GO-2026-11-14-09
+-BR_SORTIE=donnees/t07-etape-b-bis-v1
++BR_SORTIE=donnees/t07-etape-b-bis-v2
+ DEPOT_URL_OFFICIEL=https://github.com/lciric/controle-ia-travail.git
+ SEUIL=94000000
+ # essais du paquet qui passent sur l'instance (extraction partielle : bout_en_bout sauf un essai, etat_impose et
+@@ -41,7 +42,9 @@
+ # recompté après m-A (rapport-developpeur-corrections-v2.md), après la destruction vérifiée (…-v3.md) et après l'ajout de
+ # l'instance 60670453 à la liste des autres sessions (…-v4.md) ; v3 (m2 de la contre-lecture du brouillon 5, R-2919) : relevé au
+ # compte neuf de l'arbre de l'instance simulé par ces motifs, tous les essais neufs gardés (corrections-controle-attention-v2.md)
+-MIN_ESSAIS=115
++# v4 (second addendum) : 115 de la v3 plus les essais neufs du second addendum qui passent sans docs/notes ni brouillons
++# (rapport-second-addendum-bbis-v1.md, § 3 ; à recompter sur l'arbre de l'instance simulé avant le feu)
++MIN_ESSAIS=148
+ export TZ=UTC PYTHONDONTWRITEBYTECODE=1
+ j() { printf '%s BBIS %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
+ BRANCHE_PRETE=0
+@@ -50,7 +53,7 @@
+     local c
+     c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
+         -H 'Content-Type: application/json' -d '{"state": "stopped"}' "$API/instances/${CONTAINER_ID:-}/" 2>/dev/null) || c=000
+-    j "fin, code $1 ; état « stopped » demandé : HTTP $c ; la session détruit par l'identifiant (R10, avec -y) et vérifie l'absence de l'identifiant dans la liste des instances (lancer_bbis_v3.sh verifier-destruction)"
++    j "fin, code $1 ; état « stopped » demandé : HTTP $c ; la session détruit par l'identifiant (R10, avec -y) et vérifie l'absence de l'identifiant dans la liste des instances (lancer_bbis_v4.sh verifier-destruction)"
+     sleep infinity; exit "$1"; }
+ # >>> arret-et-traces (extrait et joué par tests/test_t07bbis_chaine_instance_v1.py, mineur m-A)
+ traces() { mkdir -p "$D/$XT" && cp -f "$X"/* "$D/$XT/"; }
+@@ -156,6 +159,8 @@
+ /scripts/lancer_bbis_v2.sh*
+ /scripts/amorce_bbis_v3.sh*
+ /scripts/lancer_bbis_v3.sh*
++/scripts/amorce_bbis_v4.sh*
++/scripts/lancer_bbis_v4.sh*
+ /scripts/enumerer_issues_bbis_v1.py*
+ /scripts/epreuve_niveau_deux_plis_bbis_v1.py*
+ /prereg/T0.7-etape-B-bis-v1.md*
+@@ -263,7 +268,7 @@
+ [ -z "$(git status --porcelain --untracked-files=all)" ] || arret "arbre non propre avant la marche (M1)" 2
+ [ "$(git rev-parse HEAD)" = "$ENTREES_LOCALES" ] || arret "tête ≠ commit local des entrées avant la marche (M1)" 2
+ j "marche : début (run $RUN_BBIS)"
+-env BBIS_INSTANCE=1 HF_HUB_OFFLINE=1 CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=src "$PY" -m controle_ia.t07bbis.marche_v3 \
++env BBIS_INSTANCE=1 HF_HUB_OFFLINE=1 CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=src "$PY" -m controle_ia.t07bbis.marche_v4 \
+     --racine . --run-7b "$RUN_7B" --run-bbis "$RUN_BBIS" --travail "$T/travail" ${VARIANTE_ARGS[@]+"${VARIANTE_ARGS[@]}"} \
+     > "$X/marche.txt" 2> "$X/marche.err"; c=$?
+ j "marche : code $c"
