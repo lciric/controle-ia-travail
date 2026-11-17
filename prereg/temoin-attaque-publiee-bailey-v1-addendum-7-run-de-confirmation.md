@@ -310,7 +310,8 @@ du dossier, `src/` modifié comparé au lieu d'être refusé ; v2 : chemin du do
 de l'environnement dépendante du répertoire courant). Essais : `tests/test_temoin_bailey_lecture_scellee_v3.py`
 (`728a02e088b7b0e43c314bfb8a4cc41a7d538b00bea2388d5fe0e4004411477c`) : ceux de la v2 rejoués, plus les artefacts de la
 v8 (barre finale, `//` et `.` au contrôle ; attendu ou sortie sous le dossier lu ; fichier ignoré sous `src/` ; garde de
-commande et indépendance au répertoire courant, en sous-processus) ; résultat : @@RESULTAT_LS@@. Répétition de la
+commande et indépendance au répertoire courant, en sous-processus) ; résultat : 33 passés ; avec les essais des v1 et v2, v21, complémentaires et de reprise, 307
+passés, 1 sauté, sous `PYTHONPATH=src` et `python -B`. Répétition de la
 commande entière sur un dossier factice, dans le dépôt réel au commit du code, attendu, lecture et contrôle joués
 depuis trois répertoires courants différents, dossier écrit avec puis sans barre finale : « aboutie », contrôle
 « conforme » ; sans `-P` : refus (`runs/temoin-bailey-v1-20261111/repetition-lecture-scellee-v3-20261117.txt`,
