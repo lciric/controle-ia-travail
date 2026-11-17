@@ -3,7 +3,8 @@
 16-17 novembre 2026, scellé après contre-lecture (R2). Session « attaquant informé » (`session_01XJ6MgnEhQMZteN9F8a1BST`),
 branche `claude/compassionate-meitner-d4ryyk`. Brouillons archivés tels quels (R12) :
 `brouillons/temoin-attaque-publiee-bailey-v1-addendum-7-run-de-confirmation-brouillon1.md` et `…-brouillon2.md` (contre-lu) ;
-états intermédiaires de ce fichier : commits `c44c6d65`, `0c373143`, `11954d70`, `9c3613d6`, `68c3edc1` et `b0d63276`. Le préenregistrement et ses addenda 1
+états intermédiaires de ce fichier : commits `c44c6d65`, `0c373143`, `11954d70`, `9c3613d6`, `68c3edc1`, `b0d63276`,
+`a91ba8cf`, `f8263a75`, `3acbc3cd`, `3e14ff29`, `00f6af9d`, `4d02db6f`, `27306ea4`, `ff8a02eb` et `1d05004f`. Le préenregistrement et ses addenda 1
 à 6 restent tels quels ; en cas de conflit, le préenregistrement prime et l'écart est un nœud. **Écrit et scellé avant
 toute lecture** : aucune note de sonde ni de juge du témoin n'a été lue, par aucune session.
 
@@ -170,13 +171,11 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   que les compagnons du dépôt), puis la pousse avec son compagnon dans sa
   dernière poussée. La session ne joue un assemblage ni un `--calculer-attendu` qu'après avoir
   récupéré la branche une fois constatés, pour chacun de ces postes, son arrêt (marque de fin sur la branche ; sans marque,
-  machine du poste constatée perdue, ou détruite par la session au plus tôt 1 h après le constat de la destruction de
-  son instance de calcul ou de sa mise à l'arrêt gardée, sans poussée du poste dans cette heure) et la destruction de son instance de calcul (ou sa mise à
+  machine du poste constatée perdue, ou détruite par la session au plus tôt 1 h après le plus tardif de ces moments : constat de la destruction de son instance de calcul ou de sa mise à l'arrêt gardée, dernière poussée du poste vue sur la branche) et la destruction de son instance de calcul (ou sa mise à
   l'arrêt gardée, consignée) ; la dernière poussée d'un poste est alors la dernière de ses poussées qui soit sur la
   branche. Aucun `--calculer-attendu` n'est joué tant qu'une suite permise avant la clôture (seconde tentative du
   § 2.3, mise en place refaite, relance par le chemin de l'addendum 5, reprise de la lecture 38) n'est ni jouée, son
-  poste arrêté comme ci-dessus, ni écartée (mot de Lazar qui y renonce, ou échéance de la condition 2 passée), ni, s'il
-  y a un assemblage, avant celui-ci ou le constat de son refus. Avant tout assemblage et tout
+  poste arrêté comme ci-dessus, ni écartée (mot de Lazar qui y renonce, échéance de la condition 2 passée, ou suite rendue impossible par la cause constatée, comme la reprise de la lecture 38 quand les journaux sont perdus) ; s'il y a un assemblage, aucun `--calculer-attendu` n'est joué avant celui-ci ou le constat de son refus. Avant tout assemblage et tout
   `--calculer-attendu`, elle vérifie chaque liste par `cd <BASE> && LC_ALL=C sha256sum -c repertoires-<C>-v1.txt.sha256`
   (qui doit rendre « OK » ; « FAILED » ou une ligne mal formée : compagnon qui ne concorde pas ; un compagnon dit
   introuvable alors que la liste et lui sont sur la branche, ou une commande qui ne démarre pas, ne constate rien et se
@@ -201,7 +200,7 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   écrit) ; tous chemins absolus (`-B` et ce `PYTHONPYCACHEPREFIX` : aucun `.pyc` existant n'est relu ; `-P` : le répertoire
   courant n'entre pas dans `sys.path`, donc pas dans l'empreinte de l'environnement ; `--calculer-attendu` et la lecture refusent
   sans ces trois réglages ; `--controler`, qui ne calcule aucune empreinte de code, de dossier ni d'environnement, ne
-  les vérifie pas). Ils ne changent plus. Aucun attendu, aucune sortie, ni la note de clôture, ni le dossier factice de l'essai,
+  les vérifie pas). Ils ne changent plus, hors les chemins neufs que permettent ci-dessous la vérification des chemins et l'essai factice. Aucun attendu, aucune sortie, ni la note de clôture, ni le dossier factice de l'essai,
   ni un répertoire `PYTHONPYCACHEPREFIX` n'est écrit sous l'un des dossiers donnés à une lecture (le code refuse un
   attendu ou une sortie sous le dossier lu) ; avant le premier `--calculer-attendu`, la session fixe ces chemins et
   vérifie par programme (chemins résolus, `Path.resolve().is_relative_to`) qu'aucun chemin d'attendu, de sortie, de
@@ -210,13 +209,12 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   (commande corrigée à l'essai factice, attendu recalculé sous un nom neuf, R12) passe la même vérification avant
   d'être écrit, et la note le cite ; la note de clôture
   cite la vérification et ses chemins. Entre le premier `--calculer-attendu` et le dernier contrôle final, aucune
-  session n'installe ni ne retire de distribution (hors le re-clonage, la création de l'environnement et l'installation permis ci-dessous pour le seul
-  contrôle final, qui créent un `src/` et un `.venv` neufs sans modifier aucun fichier existant),
+  session n'installe ni ne retire de distribution,
   ne crée ni ne modifie de fichier sous `src/` (hors `__pycache__`, que le
   code tolère et que la commande ne relit pas) ou sous un dossier donné à une lecture (hors les répertoires des listes
   des postes, créés avant), ni ne joue dans cet arbre une commande
   git qui écrit l'arbre de travail (`checkout`, `switch`, `restore`, `reset`, `clean`, `stash`, `pull`, `merge`,
-  `rebase`) ; `add`, `commit` et `push` hors de `src/` restent permis. Le calcul des attendus,
+  `rebase`) ; `add`, `commit` et `push` hors de `src/` restent permis ; aucun de ces interdits ne vise le re-clonage, la création de l'environnement et l'installation permis ci-dessous pour le seul contrôle final, qui créent un arbre neuf (son `src/`, ses dossiers et un `.venv`) sans modifier aucun fichier existant. Le calcul des attendus,
   l'essai factice, la note de clôture et chaque commande sur un dossier réel sont joués dans le même arbre principal,
   sans re-clonage. Le contrôle final peut l'être dans un arbre recloné au même chemin absolu (`--controler` ne lit pas
   le dossier), après récupération par git de chaque sortie, de son compagnon et de son attendu. Si, après la dernière
@@ -635,4 +633,10 @@ pour le seul contrôle final, avec `pip`, et re-clonage nommés dans l'exception
 scellement de la liste conditionné à son existence ; `LC_ALL=C` et classement des réponses de `sha256sum -c` ; délai
 d'une heure avant de détruire un poste sans marque de fin ; chemins neufs vérifiés comme les premiers ; risque de
 `lecture-assemblee-v1` étendu aux répertoires qui ne contiennent que des fichiers ignorés (§ 3, § 5 (f)) ; traçabilité
-des paragraphes v9 et v10. Aucun constat écarté.
+des paragraphes v9 et v10. Repris autrement : au retour perdu, classement du retour 2, constat 3 (compagnon introuvable : commande rejouée ; ligne mal formée : sortie sans compagnon), au lieu de « autre chose que « OK » » du retour 1, constat 4, qui le contredit ; `<BASE>` par le libellé du retour 2, constat 4, qui couvre le retour 1, constat 4 (a) ; exception de l'interdit et création de l'environnement par la fusion des textes du retour 1, constat 1, et du retour 2, constat 2 ; paragraphe v10 par la fusion des textes du retour 1, constat 2, et du retour 2, constat 8. Aucun autre constat écarté.
+Dernière vérification, un relecteur (`…-v12.md`, `54e30205f1179634b61a5335ea7dd75bcc42d7fc81c666235469327a6cca0299`, sur le commit `1d05004f`) : **aucun bloquant** ; les douze
+propositions de la v11 appliquées en substance, aucune voie neuve où une décision dépendrait d'une note lue. Ses cinq
+textes de remplacement sont repris tels quels : traçabilité du paragraphe v11 ; phrase du moment de l'attendu
+reconstruite, journaux perdus comme suite impossible ; exception du re-clonage portée sur tous les interdits ; délai
+d'une heure compté depuis la dernière poussée vue ; « Ils ne changent plus » accordé aux chemins neufs permis. Aucun
+constat écarté. Scellé ensuite, sans nouvelle passe : ces cinq textes sont ceux du relecteur, appliqués mot pour mot.
