@@ -1,0 +1,11 @@
+# Question au collisionneur : failles du bras B des organismes discrets — v1
+
+Posée par la session mère du programme le 17 novembre 2026, sur le mot direct de Lazar (« go ; lance l'organisme d'idéation et le collisionneur », registre R-3069). Les faits sont dans le fichier joint : un résumé de la conception retenue v2 (section 1.2, bras B — couplage anti-monotone intra-classe du champ du coût) et du brouillon de préenregistrement 1 (prédictions P3, P4 et métrique M2). La question est unique.
+
+Contraintes qui ne se discutent pas ici : aucun score d'un moniteur dans l'entraînement de l'agent (N-053 point 5) ; préenregistrement scellé avant toute expérience décisive, aucune lecture de résultat avant (R1) ; même audit devant un résultat trop propre, positif ou négatif (R4) ; critère 3 de G0 jugé seulement aux doses où la base « mots et coût » échoue (N-063 v2) ; dommage vérifié par programme contre une référence cachée (N-060 v3) ; une version neuve porte un nom neuf (R12) ; verdict de porte par un lecteur neuf sur critères gelés (R13) ; toute dépense sous devis et GO ; aucune moyenne ni médiane sur les jetons dans une sonde de production (N-026).
+
+## Question (étage III)
+
+« Le bras B des organismes discrets repose sur un couplage anti-monotone intra-classe du champ du coût : les valeurs de coût sont réappariées aux actions dans l'ordre inverse de leur rang, à l'intérieur de classes de forme définies par les six indicateurs de la base. Le multiensemble des coûts et tous les autres champs restent identiques. La dose est la distance de Kendall normalisée au couplage identité, sur une grille fixée {0 ; 1/4 ; 1/2 ; 1}. Le témoin est le couplage monotone (identité).
+
+Quelles sont les failles les plus dangereuses de ce dispositif — celles qui pourraient invalider la prédiction P3 (hausse de l'erreur M2 avec la dose) ou la prédiction P4 (échec de la base par construction), ou produire un résultat trop propre (R4) trompeur ? Inclure les failles de la distillation, des classes de forme, de la grille de doses et du témoin. Pour chaque faille : la décrire, dire si elle favorise un faux positif ou un faux négatif, donner une vérification ou une garde qui l'écarterait, et dire ce qui ferait changer d'avis sur sa gravité. »
