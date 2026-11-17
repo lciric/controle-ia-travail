@@ -672,7 +672,9 @@ TABLE_V2 = [
     ("doublures_repetition_crible_iii_v1.py", "doublures de la répétition ; inchangées"),
     ("sortie-essais-crible-iii-v2.txt", "sortie gardée des essais v2"),
     ("sortie-mutations-crible-iii-v2.txt", "sortie gardée du banc de mutations v2"),
-    ("sortie-essai-a-blanc-crible-iii-v2.txt", "sortie gardée de l'essai à blanc complet v2"),
+    ("sortie-essai-a-blanc-crible-iii-v2.txt", "sortie gardée de l'essai à blanc complet v2 (second jeu)"),
+    ("sortie-essai-a-blanc-crible-iii-v2-jeu-1-ports-occupes.txt", "premier jeu de l'essai à blanc v2, refusé dès son premier cas : "
+                                                                  "ports des relais tenus par une autre session (gardé, R4)"),
     ("sortie-repetition-machine-crible-iii-v2.txt", "sortie gardée de la répétition de la machine v2"),
     ("devis-machine-crible-iii-v1.md", "devis de la machine (κiii2) ; inchangé"),
     (NOM_PROGRAMME, "programme de couples du tour 1 (code v2, puis ce rapport et la procédure v2)"),
@@ -760,6 +762,7 @@ def c_pieces(dossier, heure):
     for nom, cle in (("sortie-essais-crible-iii-v2.txt", "H_ESSAIS"), ("sortie-mutations-crible-iii-v2.txt", "H_MUT"),
                      ("sortie-essai-a-blanc-crible-iii-v2.txt", "H_BLANC"), ("sortie-repetition-machine-crible-iii-v2.txt", "H_REP")):
         v[cle] = h[nom]
+    v["H_JEU1"] = h["sortie-essai-a-blanc-crible-iii-v2-jeu-1-ports-occupes.txt"]
     t2 = table(TABLE_V2, h, s)
     rapport = appliquer(lire_source(dossier, "rapport-crible-iii-v1.md"),
                         [(a, remplir(n, v)) for a, n in couples_rapport(t2)], "rapport v2")
@@ -789,7 +792,10 @@ VERSION_RAPPORT = r'''- **Version** : v2, scellée à @@HEURE@@ (`date -u`) ; su
 JEUX_V2 = r'''Interpréteur `/usr/bin/python3` (3.13.18, numpy 2.5.3, celui qu'exige la configuration v12) ; arbre 605e0f6 dépaqueté du paquet
 `e3d83e47…` dans un dossier jetable ; mondes de développement `4036f512…` (quatre mondes à graine publique, chacun servi cinq
 fois) ; relevé de la sonde v74 `f56d9c0e…` ; conteneur chargé par d'autres sessions (charge de 8 à 14 sur quatre cœurs), jeux
-sous `nice`.
+sous `nice`, dossiers temporaires dans un dossier jetable. Commandes : `essais_crible_iii_v2.py` (sans argument) ;
+`mutations_crible_iii_v2.py --arbre <arbre> --mondes <mondes> --mondes-sha256 4036f512…` ; `essai_a_blanc_crible_iii_v2.py
+--arbre … --mondes … --mondes-sha256 … --releve-sonde … --travail <dossier jetable neuf> --python-reel /usr/bin/python3` ;
+`bash repetition_machine_crible_iii_v2.sh /usr/bin/python3 <paquet e3d83e47…> <dossier du relevé>`.
 
 - **Essais du niveau A** (`essais_crible_iii_v2.py`, @@D_ESSAIS@@) : **@@ESSAIS_N@@ cas, @@ESSAIS_N@@ passés** : les 42 de la v1 et trois du
   tour 1 : « exception du gardien » (sain : gardien conforme, 20 mondes complets, chaque appel fait listé ; artefact : gardien qui
@@ -810,7 +816,9 @@ sous `nice`.
   25 de la v1 et trois du tour 1 : sonde des gabarits avec D en panne (appel sous G2 en échec → « appel sous G2 non rendu (D, état
   echec) : G2 non éprouvé ») et avec B illisible (aucune carte admise → « aucune carte admise sous G2 (B) ») ; préparation réelle
   des mondes (quatre mondes distincts : l'effet de K1 et ce que K1 porte hors des composantes comptées, toutes certifiées ;
-  artefact refusé) ; sortie `sortie-essai-a-blanc-crible-iii-v2.txt` (`@@H_BLANC@@`).
+  artefact refusé) ; sortie `sortie-essai-a-blanc-crible-iii-v2.txt` (`@@H_BLANC@@`), second jeu : le premier, refusé dès son
+  premier cas parce qu'une autre session tenait les ports 8811 et 8812 des relais, est gardé tel quel (R4,
+  `sortie-essai-a-blanc-crible-iii-v2-jeu-1-ports-occupes.txt`, `@@H_JEU1@@` ; § 7, incidents).
 - **Répétition de la machine** (`repetition_machine_crible_iii_v2.sh`, @@D_REP@@) : **@@REP_N@@ cas, @@REP_N@@ conformes** (les cas de la
   v1, sur l'amorce, le programme machine, l'aide et l'outil de la session v2 et les six fichiers du crible) ; sortie
   `sortie-repetition-machine-crible-iii-v2.txt` (`@@H_REP@@`).
@@ -852,7 +860,9 @@ SECTION_7 = r'''
 4. **Mineure 4** (préparation réelle des mondes hors du banc) : **appliquée**. Cas `essais_arbre_k1` dans `essais_crible_iii_v2.py`,
    joué par l'essai à blanc et par le banc (`--arbre`) : pour chaque monde de développement distinct, `eid_k1 ∉ comptees`,
    `comptees ∩ k1_tau = ∅`, `comptees ⊆ certifiees` ; un monde préparé puis faussé (effet de K1 remis) est refusé. La mutation de
-   niveau B (« - {eid_k1} - k1_tau » retiré, sur une copie de la mesure) est tuée par ce cas. La mesure n'est pas changée.
+   niveau B (« - {eid_k1} - k1_tau » retiré, sur une copie de la mesure) est tuée par ce cas. La mesure n'est pas changée. Le banc
+   v2 joue pour cela un niveau B (options `--arbre`, `--mondes`, `--mondes-sha256` ; sans elles, le niveau B compte en défaut) :
+   original rejoué d'abord, sans échec exigé, puis la mutation.
 5. **Mineure 5** (garde du texte de passe 2 tautologique) : **appliquée par la phrase**, le choix étant laissé à la mère : la phrase
    du § 2 est le plus petit changement ; la comparaison de l'octet envoyé au relais dans `fabriquer_appeler` demanderait du code et
    des essais neufs, sans être exigée. Le texte de H n'est contrôlé que par son empreinte au relevé : dit au § 2.
@@ -910,12 +920,25 @@ VERSION_PROCEDURE = r'''- **Version** : v2, scellée à @@HEURE@@ (`date -u`) ; 
 
 INCIDENTS = r'''- Un programme d'essai jetable de ma main (dans le dossier de session, pour voir l'effet de K1 sur les mondes de développement)
   n'avait pas la garde `if __name__ == "__main__"` : chaque processus de son pool relançait le programme, et le pool les remplaçait
-  sans fin pendant environ 22 minutes, sur un conteneur déjà chargé ; arrêté par son PID (R10), ses enfants avec lui ; rien d'autre
+  sans fin pendant une vingtaine de minutes (de 01:58 à 02:21 environ), sur un conteneur déjà chargé ; arrêté par son PID (R10), ses enfants avec lui ; rien d'autre
   touché. Le cas `essais_arbre_k1` du dossier, lui, est sous cette garde.
 - Lectures seules dans le dossier de session de la mère : le paquet `e3d83e47…` (dépaqueté dans mon propre dossier jetable, tête
   605e0f6, propre), les mondes de développement `4036f512…` et le dossier du relevé de la sonde v74 `f56d9c0e…` (copiés chez moi
-  après contrôle des empreintes). Un `git branch -a` filtré (seule la ligne `lot/compte-organisme-v1` affichée) ; aucune branche
-  `calcul/pilote-mr2-v74-entree-*` ouverte ; aucun fetch, aucun commit.
+  après contrôle des empreintes). Git en lecture seule (`status`, `log`, `diff --stat`, et un `branch -a` filtré : seule la ligne
+  `lot/compte-organisme-v1` affichée) ; aucune branche `calcul/pilote-mr2-v74-entree-*` ouverte ; aucun fetch, aucun commit. La
+  mère a committé pendant ce travail (le rapport du tour 1 compris) ; son empreinte est restée `c0c66dd5…`.
+- D'autres sessions jouaient en même temps (essais du crible (v), suite d'essais du dépôt) ; leurs processus n'ont pas été touchés.
+- La mère a committé mes fichiers du dossier pendant que je travaillais (`94e5b823`, 2026-11-17T02:35:03Z) : les dix fichiers de
+  code v2 et les sorties des essais et de la répétition, déjà scellés, inchangés depuis ; mais aussi la sortie du banc de mutations
+  alors en écriture (son seul en-tête) et une version intermédiaire, non scellée, de ce programme de couples (seuls ses textes de
+  `pieces` ont changé depuis : commandes des jeux, phrase sur le niveau B du banc, incidents ; ses couples du code sont restés les
+  mêmes, ce que `pieces` vérifie en refaisant le code). Pour ces deux fichiers, la version finale scellée diffère donc de ce commit :
+  à recommitter par la mère. La sortie de l'essai à blanc a été écrite d'abord dans mon dossier jetable, puis versée entière.
+- Premier jeu de l'essai à blanc v2 (2026-11-17T02:42:26Z) refusé dès son premier cas : « ports des relais occupés : [8811,
+  8812] » ; une autre session jouait au même moment ses essais du crible (v), avec des relais sur les ports 8811 à 8814 (ses
+  processus n'ont pas été touchés). L'essai à blanc, hérité de la v1 sans changement sur ce point, n'est pas fait pour un refus au
+  premier cas : il s'est arrêté ensuite sur une exception (dossier `complet` absent), sans effet sur le code du crible. Gardé tel
+  quel (R4) ; le second jeu est parti après la fin du jeu de l'autre session, ports libres.
 - Les relais factices ont occupé les ports 8811 et 8812 pendant la mise au point de la sonde et l'essai à blanc, arrêtés par le
   lanceur ; des processus d'autres sessions tournaient en même temps (charge de 8 à 14), non touchés.
 - Disque du conteneur à 97 % (1,3 à 1,5 Go libres) pendant tout le travail ; fichiers de travail dans mon dossier jetable seulement.
