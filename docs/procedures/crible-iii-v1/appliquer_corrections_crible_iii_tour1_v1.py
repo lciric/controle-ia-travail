@@ -928,17 +928,20 @@ INCIDENTS = r'''- Un programme d'essai jetable de ma main (dans le dossier de se
   `lot/compte-organisme-v1` affichée) ; aucune branche `calcul/pilote-mr2-v74-entree-*` ouverte ; aucun fetch, aucun commit. La
   mère a committé pendant ce travail (le rapport du tour 1 compris) ; son empreinte est restée `c0c66dd5…`.
 - D'autres sessions jouaient en même temps (essais du crible (v), suite d'essais du dépôt) ; leurs processus n'ont pas été touchés.
-- La mère a committé mes fichiers du dossier pendant que je travaillais (`94e5b823`, 2026-11-17T02:35:03Z) : les dix fichiers de
-  code v2 et les sorties des essais et de la répétition, déjà scellés, inchangés depuis ; mais aussi la sortie du banc de mutations
-  alors en écriture (son seul en-tête) et une version intermédiaire, non scellée, de ce programme de couples (seuls ses textes de
-  `pieces` ont changé depuis : commandes des jeux, phrase sur le niveau B du banc, incidents ; ses couples du code sont restés les
-  mêmes, ce que `pieces` vérifie en refaisant le code). Pour ces deux fichiers, la version finale scellée diffère donc de ce commit :
-  à recommitter par la mère. La sortie de l'essai à blanc a été écrite d'abord dans mon dossier jetable, puis versée entière.
+- La mère a committé mes fichiers du dossier pendant que je travaillais, à plusieurs reprises (au moins `94e5b823`,
+  2026-11-17T02:35:03Z, et `11cb5c23`, 02:46:54Z) : les dix fichiers de code v2 et les sorties, déjà scellés, inchangés depuis ;
+  mais le premier commit a pris la sortie du banc de mutations alors en écriture (son seul en-tête ; le second l'a reprise, finale et
+  scellée), et ce programme de couples, non scellé jusqu'à la fin, a été committé dans des versions intermédiaires (seuls ses textes
+  de `pieces` changeaient : commandes des jeux, phrase sur le niveau B du banc, incidents ; ses couples du code sont restés les
+  mêmes, ce que `pieces` vérifie en refaisant le code). Sa version finale scellée est à recommitter par la mère. La sortie de l'essai
+  à blanc a été écrite d'abord dans mon dossier jetable, puis versée entière.
 - Premier jeu de l'essai à blanc v2 (2026-11-17T02:42:26Z) refusé dès son premier cas : « ports des relais occupés : [8811,
   8812] » ; une autre session jouait au même moment ses essais du crible (v), avec des relais sur les ports 8811 à 8814 (ses
   processus n'ont pas été touchés). L'essai à blanc, hérité de la v1 sans changement sur ce point, n'est pas fait pour un refus au
   premier cas : il s'est arrêté ensuite sur une exception (dossier `complet` absent), sans effet sur le code du crible. Gardé tel
-  quel (R4) ; le second jeu est parti après la fin du jeu de l'autre session, ports libres.
+  quel (R4) ; le second jeu est parti après la fin du jeu de l'autre session, ports libres. Les ports des relais sont fixés par
+  la configuration v12 et communs à toutes les sessions du conteneur : deux jeux à blanc simultanés se refusent l'un l'autre. Un
+  espace réseau privé (`unshare -n`, interface `lo` levée) les isolerait : essayé à vide seulement, non employé pour les jeux gardés.
 - Les relais factices ont occupé les ports 8811 et 8812 pendant la mise au point de la sonde et l'essai à blanc, arrêtés par le
   lanceur ; des processus d'autres sessions tournaient en même temps (charge de 8 à 14), non touchés.
 - Disque du conteneur à 97 % (1,3 à 1,5 Go libres) pendant tout le travail ; fichiers de travail dans mon dossier jetable seulement.
