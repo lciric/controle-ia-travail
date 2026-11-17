@@ -280,19 +280,22 @@ v15 refuse de partir si la valeur n'est pas exactement 1 800, et l'ordre de lanc
 manifeste « règle » n'est pas écrit : B, R, D, c, t, H et K sont au bilan et dans le dossier `regle` transféré. Le
 libellé d'arrêt du code (« … ; nœud ») se lit selon le § 2.3.
 
-Lecture scellée (§ 3) : `src/controle_ia/temoin_bailey/lecture_scellee_v2.py` (`@@EMPREINTE_LS@@`) ; elle
+Lecture scellée (§ 3) : `src/controle_ia/temoin_bailey/lecture_scellee_v2.py` (`5b2e7859d8e536e7bb2ee276d5f83e0eb8af0ff53531ee22fd64b894e8b15dbb`) ; elle
 n'ajoute aucun critère : elle joue `lecture_v8.valider` puis `lecture_v8.lire` avec
 `analyse_v3.graines()["reechantillonnage"]`, sous les règles mécaniques du § 3 (sortie neuve, empreintes attendues,
 seconde exécution seulement après un échec, sortie scellée, retour sans valeur, contrôle final). La v1
 (`lecture_scellee_v1.py`, `1b6f365e…`, commit `a91ba8cf`) reste dans le dépôt sans servir (R12) : la vérification v7 y
 a démontré deux défauts (répertoires hors de l'empreinte du dossier ; `src/` modifié comparé au lieu d'être refusé).
-Essais : `tests/test_temoin_bailey_lecture_scellee_v2.py` (`@@EMPREINTE_TLS@@`) : chaque règle avec un cas sain et un
+Essais : `tests/test_temoin_bailey_lecture_scellee_v2.py` (`8a0619f181702e3bffccb7f1f32ff47768a25f2b6b9b69c5488e917d97f98d6c`) : chaque règle avec un cas sain et un
 artefact (R5), dont les deux artefacts de la v7, et un bout en bout sur dossier factice où la lecture entière de la
 sortie est égale à `valider` et `lire` joués directement, le dossier inchangé et le contrôle conforme ; résultat :
-@@RESULTAT_LS@@.
+28 passés ; avec les essais de la v1, v21, complémentaires et de reprise, 274 passés, 1 sauté, sous
+`PYTHONPATH=src` et `python -B`. Répétition de la commande entière (attendu, lecture, contrôle) sur un dossier factice,
+dans le dépôt réel au commit du code, avec l'interpréteur du dépôt : « aboutie », contrôle « conforme »
+(`runs/temoin-bailey-v1-20261111/repetition-lecture-scellee-v2-20261117.txt`, `2ce696df…`).
 
-**Commit du code** : `@@COMMIT_CODE@@`. Son arbre `src/` ne diffère de celui de `873ab00c` que par l'ajout de
-`lecture_scellee_v1.py` et `lecture_scellee_v2.py` (`git diff --stat 873ab00c @@COMMIT_COURT@@ -- src`) : le code de la
+**Commit du code** : `91132fd0eb80428ac8397ef0c788da282b3a49e3`. Son arbre `src/` ne diffère de celui de `873ab00c` que par l'ajout de
+`lecture_scellee_v1.py` et `lecture_scellee_v2.py` (`git diff --stat 873ab00c 91132fd0 -- src`) : le code de la
 conduite, de l'instance et de `lecture_v8` est celui de `873ab00c`. C'est ce commit que gardent le poste (« garde du
 commit » : `src/` de la tête égal au sien) et la lecture (`--commit`). L'arbre `src/` ne change plus avant le dernier
 contrôle final sans un addendum neuf, contre-lu (R2) et scellé avant la clôture.
@@ -301,7 +304,7 @@ Pièces de lancement, écrites après l'inscription du GO (elles portent son ide
 avant le lancement : conduite `lancer-conduite-v15.py` (il n'y a pas de v14) = `lancer-conduite-v13.py` sans
 `relance_seule`, avec `lanceur_v21`, `t_max_pilote_s=1800`, aucune instance antérieure, le manifeste v7 et le GO neuf ;
 poste `poste-hetzner-v13.sh` et son constructeur = le poste v12 avec la conduite v15, le filtre du § 2.4 et la garde du
-commit du code (`@@COMMIT_COURT@@`).
+commit du code (`91132fd0`).
 
 ## 5. Risques déclarés
 - (a) l'hypothèse « processeur » n'est pas établie ; la vitesse d'un hôte peut changer après le pilote, par croissance
