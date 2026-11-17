@@ -34,7 +34,7 @@ Chemins relatifs à `docs/notes/organisme-multi-generations-v1/` sauf mention.
 | `contre-lecture-preenregistrement-course-tour3-v1.md` (m-18, m-19 : sans effet sur les règles du banc) | `aa9c6c19643c89e46d87b0fb609fa2cec4e0d6286f493caf9de6bb3e8f9d5da8` | entière |
 | `preenregistrement-v1/preenregistrement-multi-generations-v1-brouillon3.md` (§3.6, §6, §16) | `2dda3b74ff5e13d56a8f0818623b0b64730a3b3da5f86a136df321343f653a39` | en partie |
 | `conception-monde-riche-doublons-v3.md` (§1.6, §1.8, §3.3, §3.4) | `386d48bacd6c487d88846d0991d83bd4ad95122f70500d6fbeb7859cde56659c` | en partie |
-| `verification-conception-v3-fable-v2.md` (F-2 : mesure de surdité, règle de n) | `8646ed4fb542b86b99db0a6126152541c54c3292d1f6a719f8ad9f66e2c95ed2` | F-2 |
+| vérification de la conception v3, seconde version (même dossier ; F-2 : mesure de surdité, règle de n ; nom de fichier non recopié, il porte un nom de modèle) | `8646ed4fb542b86b99db0a6126152541c54c3292d1f6a719f8ad9f66e2c95ed2` | F-2 |
 | `banc-calibration-mr2-v1/devis-banc-calibration-mr2-v3.md` et ses contre-lectures (tours 1, 2, 3, fin du tour 1) | `ec5a6e99…` ; `7fd26c76…` ; `ec7c4e9d…` ; `281bb6ee…` ; `af8862a6…` | entiers |
 | verdict v2 du pilote MR-2 v14 (seule pièce de la sortie du pilote lue), branche `verdict/pilote-mr2-v74-v14-v1` (commit `61230010`), `pilote-v1/lecture-issue-pilote-v14-mere/verdict-issue-v2/verdict-issue-pilote-mr2-v14-v2.md`, par `git show` | `e64458e82bae1d03e40656ad3b65456769eefd2603a7306e9a7d401eba8e1a3d` | entier |
 | rapport du développeur du code v68 du pilote, branche `prep/pilote-mr2-v1` (tête `a5fdfcdf`), `pilote-v1/code-v68/rapport-developpeur-code-pilote-v68-v1.md`, par `git show` | `6635e43a11956eb28d7eb8ee4e0975405bbceea32572609e13b0fa8812d82a51` | entier |
@@ -167,8 +167,10 @@ presque pas).
 | `forme` | taille, copie, graine | jugements de la règle de forme |
 | `mesures` | nom de la mesure, indices | mesures hors D-2 |
 
-- **Les flux ne dépendent ni de la passe (P_CACHÉE, drapeau de masquage), ni de n, ni de la forme** (R5-8, étendu aux graines du
-  juge et du test de mort comme le demande la remarque du tour 3 de la contre-lecture de la conception) : deux simulations aux
+- **Les flux des générations simulées (`reference-regroupement`, `proposition`, `juge`, `mort`, `choix`) ne dépendent ni de la
+  passe (P_CACHÉE, drapeau de masquage), ni de n, ni de la forme** (R5-8, étendu aux graines du juge et du test de mort comme le
+  demande la remarque du tour 3 de la contre-lecture de la conception ; seuls les flux propres aux règles de n et de forme portent
+  n, la taille ou la copie dans leurs indices) : deux simulations aux
   mêmes valeurs rendent les mêmes cartes et les mêmes jugements (égalités de contrôle, sections 7.5 et 7.6) ; deux passes ne
   diffèrent que par le seuil appliqué à la même uniforme et par ce qui en découle.
 - Forme exacte des clés et des concaténations : écrite par le code et recopiée au manifeste (marqueur [GRAINES-BANC], levé par le
@@ -392,7 +394,7 @@ archive, ses graines et sa lecture ; celles que la pièce ne définit pas sont r
 | **M4** | **doublons sur paires difficiles** (brouillon 3 §16.1 point 5) | par monde conforme, paires construites sur le monde (donc disjointes des 12 mondes de développement), aux dix catégories de `doublons-w12-v2` (base = fortes et première moyenne ; variantes σ = 0,05, 0,1, 0,2, 0,3 ; reformulation ; tempérée 1,2 ; mêlée 0,8 à l'uniforme : à regrouper ; distincte-moyenne, ajout-faible, ajout-moyenne : à ne pas regrouper) et une catégorie neuve **ajout-conditionnelle** (base et première conditionnelle : à ne pas regrouper) ; `grouper` de la course | 2 000 instances | part juste par catégorie (Wilson sur les mondes) ; catégorie sans objet si le monde n'a pas les composantes voulues ; une part juste < 0,8 s'écrit en tête ; ε et ε_strat inchangés (règle de changement) |
 | **M5** | **fréquences des sortes déformées par les rejets** (D.1 « Régularités ») | (a) classe × sorte des 24 mondes conformes, et de tous les tirages, refusés compris ; (b) 10 000 gabarits tirés par la fonction gelée sans les contraintes v4 et avec elles, sur une graine publique (`cle("frequences-sortes-banc-mr2-v1")`), sans aucun coefficient | — | tables (a) et (b) ; déclarées avec le générateur (Q-10 (a)) |
 | **M6** | **coût de d_nul à 48 feuilles** (D.8 point 4, V-21) | durée murale de chaque regroupement des générations simulées (étapes 3, 5, 6) et nombre de feuilles des cartes | — | médiane et maximum ; coût projeté pour la course |
-| **M7** | **valeurs [BANC] des prédictions** (brouillon 6, P1 à P5, P8, P9) | (P1 à P5) pour chaque génération g de l'étape 5, le jeu planté de g (V-24 : V-monde, V-K1+i, V-diluées, F1 à F4, et pour g ≥ 2 F5 et les copies des quatre premières retenues de g − 1, H1, T-ELIM ; T-MAL au gardien) jugé **20 fois** contre A_g (20 répétitions du jeu entier, flux par (g, répétition) ; 24 mondes × 20 = les 12 mondes × 40 de la conception) ; vraies promues testées (test simulé ; T-ELIM au seuil 2,0) ; « vraie du critère » : gain au-delà de A_g (v60 et enveloppe) ≥ g₀ ; (P8) perte au regroupement dans l'étape 5 : composantes certifiées couvertes par au moins une carte et par aucun représentant (de tous les groupes), par génération ; (P9) τ de l'étape 5 | 20 répétitions ; n retenu | parts par type et par classe (forte, moyenne, **conditionnelle**, faible) avec Wilson ; fausses couvertes promues ; part des répétitions où une vraie du critère est promue puis survit en génération 1 ; recopiées aux marqueurs [BANC] du texte candidat de la course |
+| **M7** | **valeurs [BANC] des prédictions** (brouillon 6, P1 à P5, P8, P9) | (P1 à P5) pour chaque génération g de l'étape 5, le jeu planté de g selon V-24 (V-monde, V-K1+i, V-diluées, F1 à F4, H1, T-ELIM, et, pour g ≥ 2, F5 et les copies des quatre premières retenues de g − 1 ; T-MAL au gardien) jugé **20 fois** contre A_g (20 répétitions du jeu entier, flux par (g, répétition) ; 24 mondes × 20 = les 12 mondes × 40 de la conception) ; vraies promues testées (test simulé ; T-ELIM au seuil 2,0) ; « vraie du critère » : gain au-delà de A_g (v60 et enveloppe) ≥ g₀ ; (P8) perte au regroupement dans l'étape 5 : composantes certifiées couvertes par au moins une carte et par aucun représentant (de tous les groupes), par génération ; (P9) τ de l'étape 5 | 20 répétitions ; n retenu | parts par type et par classe (forte, moyenne, **conditionnelle**, faible) avec Wilson ; fausses couvertes promues ; part des répétitions où une vraie du critère est promue puis survit en génération 1 ; recopiées aux marqueurs [BANC] du texte candidat de la course |
 
 Mesures du brouillon 3 et de la conception v3 que le brouillon 6 ne cite pas (étalonnage du juge simplifié, mondes témoins) : **non
 reprises** ; M7 tient lieu de détection par classe avec le juge de la course.
@@ -597,4 +599,4 @@ qu'une copie atteint k·m/α.
   dans sa sortie) : ses durées sont des majorants probables (devis v4) ; scellements sous l'interpréteur du venv avec
   `PYTHONPATH=src` : des `__pycache__` ignorés par git peuvent en naître.
 
-Fin de la rédaction : [HEURE-FIN]
+Fin de la rédaction : 2026-11-17T03:10:34Z (`date -u`, relevée juste avant le scellement).
