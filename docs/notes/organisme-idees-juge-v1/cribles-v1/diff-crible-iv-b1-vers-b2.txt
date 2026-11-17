@@ -1,0 +1,157 @@
+--- crible-iv-brouillon1.md
++++ crible-iv-brouillon2.md
+@@ -1,4 +1,4 @@
+-# Préenregistrement — crible (iv) de l'organisme d'idéation : demi-générations, l'archive mise à jour au milieu de chaque génération — brouillon 1 (variante « crédits de Claude au maximum »)
++# Préenregistrement — crible (iv) de l'organisme d'idéation : demi-générations, l'archive mise à jour au milieu de chaque génération — brouillon 2 (variante « crédits de Claude au maximum »)
+ 
+ - Auteur : sous-agent neuf de la session mère, rédacteur de cette pièce (« modèle A » de cette pièce au sens de R-2598 ;
+   identité dite en conversation seulement). L'auteur n'a écrit ni la note des idées originales, ni le relevé, ni les fiches,
+@@ -8,6 +8,12 @@
+   `main` (tête `c97bf55f`, puis `b55f2983`) ; une seule branche lue, `verdict/pilote-mr2-v74-v14-v1` (tête `61230010`), par
+   `git show` après un `git fetch` à refspec, et d'elle **seul** le verdict v2 du pilote ; aucun commit, aucune poussée, aucun
+   appel de modèle, aucune machine, aucune dépense, aucun monde tiré.
++- Brouillon 2 : corrections du tour 1 de contre-lecture appliquées le 2026-11-17T01:37:23Z (`date -u`, au scellement) par un
++  rédacteur neuf, d'un autre modèle que le rédacteur du brouillon 1, qui n'a écrit ni le brouillon 1 ni le rapport de
++  contre-lecture (identité dite en conversation seulement), au moyen du programme
++  `appliquer-corrections-crible-iv-brouillon2.py` (même dossier, scellé) ; dépôt lu sur `main` (tête `1df4ae9f`) ;
++  aucune branche lue ; aucun commit, aucune poussée, aucun appel de modèle, aucune machine, aucune dépense, aucun monde
++  tiré. Rien d'autre que les corrections, l'en-tête et la section « Contre-lecture » ne change.
+ - Nombres neufs : `devis-crible-iv-brouillon1.py` et sa sortie `devis-crible-iv-brouillon1-sortie.txt` (même dossier, scellés à
+   côté ; `nice -n 19 python3 -I`, Python 3.13.18, bibliothèque standard, fractions exactes ; lancé le 2026-11-17 à 01:09:28 UTC) ;
+   paragraphes de la sortie cités « sortie, § k » ; sortie recopiée à l'annexe A. Deux valeurs y sont **supposées**, dites comme
+@@ -67,8 +73,9 @@
+   - gabarit `prereg/gabarit-preregistrement-v1.md` (`8cad43714b562e28238a92200d6315b1769d8bdf7e9f0a8d72dfe2bc9b37700e`) ;
+     validateur `src/controle_ia/prereg.py` (`3b2e3ee56463f30ffd3c549e7fe480fea574c707581bcf30098bf38f4980c306`).
+ 
+-**Statut.** **Brouillon 1**, non contre-lu, scellé comme pièce (empreinte compagnon, R6), non comme préenregistrement en
+-vigueur. Écrit **après** la lecture du verdict du pilote MR-2 v14 (aucun gel de prédictions n'a précédé cette lecture, à la
++**Statut.** **Brouillon 2**, contre-lu une fois (tour 1, corrections appliquées, section « Contre-lecture »), scellé comme
++pièce (empreinte compagnon, R6), non comme préenregistrement en vigueur ; second tour de contre-lecture à faire
++(R2). Écrit **après** la lecture du verdict du pilote MR-2 v14 (aucun gel de prédictions n'a précédé cette lecture, à la
+ différence de [CRIBLE-I] : dit) ; les attendus du devis sont faits directement sur les coûts et durées mesurés du pilote
+ ([VERDICT-PC]) par les règles de [CRIBLE-V] (moyenne de tous les appels, pires cas aux plafonds) ; les prédictions sont écrites
+ sans aucune donnée de couverture par appel (le pilote ne la rend pas ; seuls son témoin positif et sa principale sont lus).
+@@ -80,8 +87,8 @@
+ de [NOTE] ne laisse aux bras 2 et 3 leurs quatre demi-appels que si un appel de trois cartes coûte moins des deux tiers d'un appel
+ de six (sortie, § 4) ; ce rapport n'est pas mesuré (supposé 0,63 : juste sous le seuil ; s'il valait 1, la garde couperait toute
+ la génération 2 des bras 2 et 3) ; la sonde des gabarits le mesure, et une règle écrite d'avance dit ce qui suit.
+-Validateur `controle_ia.prereg.problemes` : un seul défaut, attendu pour un brouillon non contre-lu (« section Contre-lecture
+-sans les deux empreintes exigées »).
++Validateur `controle_ia.prereg.problemes` : aucun défaut sur ce brouillon 2 (vérifié avant son scellement comme pièce de
++travail).
+ 
+ ## 0. En dix lignes
+ 
+@@ -388,7 +395,7 @@
+ - **Files** : cinq files de quatre mondes (le monde r va à la file r modulo 5, dans l'ordre croissant de r, fixé avant tout appel) ;
+   dans une file, les mondes l'un après l'autre ; dans un monde : bras 1 (g1, chaîne, g2, chaîne), **puis** bras 2 et bras 3 :
+   1a ; puis, en parallèle, la suite du bras 2 (chaîne de 1a, 1b, chaîne, 2a, chaîne, 2b, chaîne) et celle du bras 3 (1b' ;
+-  chaîne sur 1a et 1b' ; 2a' et 2b' ensemble ; chaîne). Au plus 10 sessions à la fois.
++  chaîne sur 1a et 1b' ; 2a' puis 2b', joués **l'un après l'autre** avec la garde jugée avant chacun, exactement comme 2a et 2b au bras 2 (la dépense ne décroît pas : un 2a' coupé coupe 2b'), puis chaîne sur les cartes de 2a' et 2b' ensemble). Au plus 10 sessions à la fois.
+ - **Règle d'abandon par bras** : un appel non répondu (tronqué, en échec, refusé par la taille) ou un tour de chaîne au-delà de B_c
+   arrête ce bras dans ce monde (aucune dépense de plus pour ce bras ; monde incomplet pour ses comparaisons) ; 1a non répondu
+   arrête les bras 2 et 3 dans ce monde.
+@@ -445,8 +452,7 @@
+ 
+ Deux principales, P1 (δ_21) et P2 (δ_23), bilatérales à 0,025 chacune (Bonferroni). Secondaires à 0,05, sans correction : δ_31 ;
+ profondeur (D_2 − D_1, D_2 − D_3) ; première conditionnelle captée (McNemar) ; copies, fausses retenues, apport par tour ; ρ_21,
+-ρ_23 ; B_X. Tout est apparié par monde. Les bras 2 et 3 partagent 1a : une composante captée par une retenue de 1a l'est dans
+-les deux bras (au tour 1a pour le bras 2, au premier tour pour le bras 3, où 1a est jugée avec 1b') ; dit. Les trois bras
++ρ_23 ; B_X. Tout est apparié par monde. Les bras 2 et 3 partagent 1a : les cartes de 1a sont les mêmes dans les deux bras, mais leurs retenues peuvent différer (la chaîne du bras 2 juge 1a seule, celle du bras 3 la juge avec 1b', tirages propres à chaque bras) : une composante portée par les cartes de 1a peut être captée dans un bras et non dans l'autre, au tour 1a pour le bras 2, au premier tour pour le bras 3 ; dit. Les trois bras
+ partagent le monde, K1 et les instances de référence ; leurs tirages du juge et du test de mort sont propres à chaque bras.
+ 
+ ### Taille
+@@ -471,7 +477,7 @@
+ | 1 | n < 16 mondes complets pour P1 (resp. P2) | P1 (resp. P2) « **non concluant** » ; causes rapportées ; l'autre principale est lue si elle a ses 16 mondes |
+ | 2 | réserve « demi-générations amputées » ; réserve « textes refusés par la taille » ; 3 appels tronqués ou plus dans un même bras | P1 et P2 lus et rapportés **sous la réserve nommée** ; sous « demi-générations amputées », δ_21 et δ_23 sans les mondes amputés sont lus avec le principal, et si l'issue de P1 diffère, elle est qualifiée « sensible à la garde » et rien de plus n'en est conclu ; la phrase « les demi-générations couvrent moins » est alors interdite sans le complément « à dollars égaux, avec une génération 2 amputée dans k mondes » |
+ | 3 | zone utile manquée | « **hors de la zone utile** » |
+-| 4 | P1 | « les demi-générations couvrent davantage » / « les demi-générations couvrent moins » / « non tranché » |
++| 4 | P1 | « les demi-générations couvrent davantage » / « les demi-générations couvrent moins » / « non tranché » ; l'une ou l'autre des deux premières phrases est **toujours** suivie de « ρ_21 = … : le bras 2 a dépensé ρ_21 fois le bras 1 (garde souple, dépassement borné par un appel) » ; sans ce complément elle est interdite |
+ | 5 | P2 | « la mise à jour compte » / « la mise à jour nuit » / « non tranché » |
+ | 6 | δ_31 | « effet du seul découpage » (signe dit) / « non distingué » |
+ | 7 | profondeur, conditionnelles, copies, fausses retenues, apport par tour, couverture brute, sensibilités, coûts, appels coupés | rapportés, sans verdict |
+@@ -482,9 +488,9 @@
+ - étage 4 « davantage » et étage 5 « compte » : « **les demi-générations couvrent davantage, par la mise à jour de l'archive** » ;
+ - étage 4 « davantage » et étage 5 « non tranché » : « **les demi-générations couvrent davantage, mise à jour non distinguée du
+   découpage** », lue avec l'étage 6 ; si l'étage 6 donne « effet du seul découpage » positif : « **effet du découpage** » ;
+-- étage 4 « moins » : « **les demi-générations couvrent moins à dollars égaux** », qualifié par les étages 5 et 6 ;
++- étage 4 « moins » : « **les demi-générations couvrent moins, à dollars proches (ρ_21 dit)** », qualifié par les étages 5 et 6 (sauf étage 5 « la mise à jour compte », traité au dernier point) ;
+ - étage 4 « non tranché » : « non tranchée » ; les étages 5 et 6 sont rapportés, sans conclusion sur H-iv ;
+-- étages 4 et 5 de signes contraires : « **lecture incohérente** », rapportée sans conclusion.
++- étage 4 « davantage » avec étage 5 « la mise à jour nuit », ou étage 4 « moins » avec étage 5 « la mise à jour compte » (signes contraires, **seuls cas de ce point** ; le troisième point ne s'applique pas au second) : « **lecture croisée** », l'ordre observé des trois bras (C_1, C_2, C_3) et δ_31 rapportés sans conclusion sur H-iv.
+ La **profondeur** (« chaînes de profondeur 2 ») n'a pas de verdict propre : elle est rapportée (étage 7) ; IV-5 prédit qu'elle
+ sera presque toujours nulle. Aucun proposeur d'une autre maison n'est mesuré : toute lecture porte sur les sessions d'un seul
+ proposeur. **Rien n'est adopté** : un calendrier en demi-générations dans l'organisme est un dessin neuf et un nœud de Lazar
+@@ -635,8 +641,7 @@
+   le crible dans un cas extrême (coût moyen ≥ 5 fois celui du pilote).
+ - **Chaîne** : celle de `course` de [MR2] (juge simplifié contre le nul v8 de l'archive, e-BH, représentant, test de mort
+   `test_de_mort`), non la chaîne scellée de la boucle réelle ([NOTE] § 7, point 4 : écart dit) ; **m = 48** fixe (constante de la
+-  famille, `M_REGLE`), à chaque tour et dans chaque bras, pour que le découpage en tours ne change pas le budget d'erreur du juge
+-  par génération (« Choix et doutes », point 5).
++  famille, `M_REGLE`), à chaque tour et dans chaque bras, pour que le seuil du juge par carte ne dépende pas du découpage en tours (m = 48 est le compte d'une génération complète de 24 cartes, `M_REGLE` : par tour de trois ou six cartes la règle est un peu plus prudente, et les bras 2 et 3 jouent deux tours par génération contre un : le budget d'erreur par génération n'est donc pas le même entre bras, dit) ; voir (« Choix et doutes », point 5).
+ - **Nul** : le v8 (« le nul de production reste le v8 », R-1779) sous la forme que porte l'outil du monde riche (`juger`), **non**
+   le fichier du nul v8 du code de l'organisme, non relu par l'auteur ; équivalence à contre-lire. Le nul v9 (`7ae450df…`) et
+   l'idée 1.1 (nul par morceaux limité) ne servent pas ; [NOTE] lie la question des variantes refusées comme copies au nœud R-1779 et
+@@ -716,17 +721,51 @@
+ 
+ ## Contre-lecture
+ 
+-Aucune à ce jour : ce texte est le brouillon 1, soumis à la contre-lecture (R2) d'un sous-agent neuf d'un **autre modèle** que le
+-rédacteur, qui n'a écrit ni ce texte, ni [NOTE], ni [CRIBLE-II], ni [CRIBLE-III], ni [CRIBLE-V], ni [PILOTE], ni [MR2]. **Fichiers
+-à lui donner explicitement** : ce texte ; `devis-crible-iv-brouillon1.py` et sa sortie (même dossier) ; [NOTE] (`2f6a69dd…`), § 1,
+-§ 2, § 3 (iv), § 4, § 6, § 7 et annexe A ; [RELEVÉ] (`bd253b6c…`), § 2.1, § 4.1, § 5, § 6 ; [VERDICT-PC] (`e64458e8…`, branche
+-`verdict/pilote-mr2-v74-v14-v1`) ; [CRIBLE-II] (`816a072f…`) en entier ; [CRIBLE-III] (`91b4bf30…`), « Métrique », « Liste
+-d'arrêt », « Devis » ; [CRIBLE-V] (`2b99627d…`), table des proposeurs et « Devis » ; [MR2] (`47e38ec0…`), § 2 à 4 ;
+-`monde_riche_v4.py` (`4b165847…`), fonctions `tirer_gabarit_v4`, `generer_monde_v4`, `generer_v4`, `course` ;
+-`monde_riche_outils_v1.py` (`1825b956…`), fonctions `juger`, `e_bh`, `test_de_mort` ; N-045 v2 (`c7b05e39…`), point 5 ; N-058
+-(`854f2724…`) ; R-1779 ; la ligne GO-2026-11-15-06. **À trancher en priorité** : la garde (point 3) ; m dans la chaîne en tours
+-(point 5) ; la part au lieu des plafonds (point 7) ; l'appel commun ; le générateur à chaîne ; la traduction de la question de
+-[NOTE] en étages ; la règle d'abandon ; les treize choix ci-dessus.
++- **Contre-lecture 1** (R2, tour 1, sur le brouillon 1) — sous-agent neuf, d'un autre modèle que le rédacteur, qui n'a écrit ni
++  ce texte, ni [NOTE], ni [CRIBLE-II], ni [CRIBLE-III], ni [CRIBLE-V], ni [PILOTE], ni [MR2]. Texte relu :
++  `docs/notes/organisme-idees-juge-v1/cribles-v1/crible-iv-brouillon1.md`,
++  `079f8599d6d78546148d89adb43227b74feae461ee0fdc4a3f3002c8c5f69f53` ; rapport :
++  `docs/notes/organisme-idees-juge-v1/cribles-v1/contre-lecture-crible-iv-tour1-v1.md`,
++  `e7853abe0bf6f5177307fa20af8f14d7fa06ed06bb83bc6320908a826f0e573e`. Verdict : « corrections » (3 majeures, M1 à M3 ;
++  2 mineures, m1 et m2 ; 6 couples ; second tour demandé sur ce brouillon 2). Corrections appliquées le 2026-11-17T01:37:23Z (`date -u`)
++  par un rédacteur neuf, d'un autre modèle que le rédacteur du brouillon 1, qui n'a écrit ni le brouillon 1 ni le rapport, au
++  moyen du programme `appliquer-corrections-crible-iv-brouillon2.py` (même dossier, scellé à côté ; différentiel `diff-crible-iv-b1-vers-b2.txt`, scellé) :
++  les 6 couples sont lus dans le rapport lui-même ; chaque « ancien » figure une seule fois dans le brouillon 1, sans
++  chevauchement (vérifié par le programme). **Traitement**, point par point :
++  - M1 (bras 3 : ordre de 2a' et 2b' non écrit, garde qui pouvait jouer autrement qu'au bras 2 ; 2a' puis 2b' joués l'un après
++    l'autre, garde jugée avant chacun ; couple M1.1) : **acceptée**, telle quelle. Le chemin du bras 3 reste plus court que celui
++    du bras 2 : les durées du devis ne changent pas (le rapport le dit).
++  - M2 (lecture gelée : « moins » était qualifié par la dépense, « davantage » ne l'était pas ; ρ_21 accompagne toujours les deux
++    phrases tranchées de l'étage 4, et « à dollars égaux » devient « à dollars proches, ρ_21 dit » dans la traduction ; couples
++    M2.1 et M2.2) : **acceptée**, telle quelle.
++  - M3 (traduction gelée : « étage 4 moins et étage 5 compte » tombait sous deux points, et « incohérente » n'était pas juste ;
++    les deux couples de signes contraires deviennent une « lecture croisée », l'ordre des trois bras et δ_31 rapportés sans
++    conclusion sur H-iv ; couple M3.1) : **acceptée**, telle quelle.
++  - m1 (m = 48 fixe garde le seuil par carte, non le budget d'erreur du juge par génération ; couple m1.1) : **acceptée**, telle
++    quelle.
++  - m2 (les bras 2 et 3 partagent les cartes de 1a, non leurs retenues ; couple m2.1) : **acceptée**, telle quelle.
++  - Remarques facultatives du rapport (section 5 : sonde et seuil des deux tiers, profondeur informative pour le seul bras 2,
++    sigle « e-BH », statut) et points « Pour la session mère » (section 6) : **non appliqués**, aucune correction n'étant
++    exigée ; à la mère et au tour suivant.
++  - **Non corrigé par le rapport, signalé sans rien changer** (à reprendre au tour 2) : après M2, la formule « à dollars égaux »
++    reste ailleurs dans le texte sans ρ_21 : au § 0, points 1 et 7 ; dans l'énoncé de H-iv ; dans la prédiction IV-1 ; dans
++    « Ce que serait chaque issue » (« à dollars égaux, payer deux fois l'entrée ») ; et à l'étage 2 du tableau des critères gelés,
++    dont le complément exigé reste « à dollars égaux, avec une génération 2 amputée dans k mondes » ; le titre de la section
++    « Devis » garde la mention « brouillon 1 », qui nomme le devis et son programme, inchangés.
++- **Tour 2 à faire** (R2) : sur ce brouillon 2, par un sous-agent neuf d'un **autre modèle** que le rédacteur du brouillon 1, qui
++  n'a écrit ni ce texte, ni le rapport du tour 1, ni [NOTE], ni [CRIBLE-II], ni [CRIBLE-III], ni [CRIBLE-V], ni [PILOTE], ni
++  [MR2]. **Fichiers à lui donner explicitement** : ce texte ; le brouillon 1 et le rapport du tour 1 (empreintes ci-dessus) ;
++  `appliquer-corrections-crible-iv-brouillon2.py` et `diff-crible-iv-b1-vers-b2.txt` (même dossier) ; puis la liste
++  du brouillon 1, inchangée : `devis-crible-iv-brouillon1.py` et sa sortie (même dossier) ; [NOTE] (`2f6a69dd…`), § 1, § 2,
++  § 3 (iv), § 4, § 6, § 7 et annexe A ; [RELEVÉ] (`bd253b6c…`), § 2.1, § 4.1, § 5, § 6 ; [VERDICT-PC] (`e64458e8…`, branche
++  `verdict/pilote-mr2-v74-v14-v1`) ; [CRIBLE-II] (`816a072f…`) en entier ; [CRIBLE-III] (`91b4bf30…`), « Métrique », « Liste
++  d'arrêt », « Devis » ; [CRIBLE-V] (`2b99627d…`), table des proposeurs et « Devis » ; [MR2] (`47e38ec0…`), § 2 à 4 ;
++  `monde_riche_v4.py` (`4b165847…`), fonctions `tirer_gabarit_v4`, `generer_monde_v4`, `generer_v4`, `course` ;
++  `monde_riche_outils_v1.py` (`1825b956…`), fonctions `juger`, `e_bh`, `test_de_mort` ; N-045 v2 (`c7b05e39…`), point 5 ; N-058
++  (`854f2724…`) ; R-1779 ; la ligne GO-2026-11-15-06. **À trancher en priorité** : celles du brouillon 1 (la garde, point 3 ; m
++  dans la chaîne en tours, point 5 ; la part au lieu des plafonds, point 7 ; l'appel commun ; le générateur à chaîne ; la
++  traduction de la question de [NOTE] en étages ; la règle d'abandon ; les treize choix), plus les lectures gelées touchées par
++  M2 et M3 et les points signalés ci-dessus.
+ 
+ ## Annexe A — comptes exacts (sans donnée de crible, sans tirage, sans appel)
+ 

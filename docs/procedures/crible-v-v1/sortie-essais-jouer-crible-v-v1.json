@@ -1,0 +1,80 @@
+{
+ "palier": "jouer",
+ "code": "/home/user/controle-ia-travail/docs/procedures/crible-v-v1",
+ "essais": [
+  {
+   "fonction": "j_blanc_m1",
+   "nom": "essai à blanc complet, M = 1, coupure à B_a simulée",
+   "ligne": "appel plus long que B_a ; corps servis ; pièces",
+   "cas": "sain",
+   "ok": true,
+   "detail": "80 appels, 1 coupure à B_a simulée (20 s) comptée « échec », journalisée, au plafond de session, jamais reprise"
+  },
+  {
+   "fonction": "j_blanc_m2",
+   "nom": "essai à blanc complet, M = 2 (8 relais), deux coupures",
+   "ligne": "files parallèles ; appel plus long que B_a",
+   "cas": "sain",
+   "ok": true,
+   "detail": "deux files de dix mondes, 4 relais par file (plafond = 10 plafonds de session), deux coupures"
+  },
+  {
+   "fonction": "j_panne_sain",
+   "nom": "panne de relais d'un fournisseur ayant répondu",
+   "ligne": "fournisseur abandonné…",
+   "cas": "sain",
+   "ok": true,
+   "detail": "abandon de la voie à clé commune au monde 2 ; le crible continue ; 36 appels non lancés"
+  },
+  {
+   "fonction": "j_panne_artefact",
+   "nom": "panne de relais d'un fournisseur",
+   "ligne": "fournisseur abandonné…",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "première panne sans répondu : fournisseur gemini abandonné sans aucun appel répondu (perdu en entier) : arrêt  ; minimum impossible au monde 3 : fournisseur gemini abandonné : le minimum de 16 mondes complets n'est plus possi"
+  },
+  {
+   "fonction": "j_cout",
+   "nom": "coût au-dessus du pire cas",
+   "ligne": "coût d'un appel au-dessus de son pire cas",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "arrêt code 3, dépense comptée : Arret : fable52 : coût lu 25.69724 USD au-dessus du pire cas de l'appel : arrêt (code 3)"
+  },
+  {
+   "fonction": "j_corps",
+   "nom": "corps servi altéré",
+   "ligne": "corps servi différent entre les quatre appels d'un monde",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "Arret : corps servi différent entre les quatre appels du monde (ou des pièces préparées) : arrêt avant ses appels"
+  },
+  {
+   "fonction": "j_temoin",
+   "nom": "témoin d'isolement supprimé",
+   "ligne": "réponse brute ou témoin d'isolement absent",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "Arret : argon : temoin-isolement.json absent ou différent de son compagnon : arrêt (code 3)"
+  },
+  {
+   "fonction": "j_garde",
+   "nom": "garde de départ dans le lanceur",
+   "ligne": "minuterie de la machine",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "échéance proche : refus avant tout dossier (garde de départ : 30000 s avant l'échéance < budget de pire cas 39000 s (M = 1, ) ; marge suffisante : joué"
+  },
+  {
+   "fonction": "j_reel_refus",
+   "nom": "mode réel sans ses pièces",
+   "ligne": "toute dépense sans ligne « calcul »… ; relevé de sonde absent",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "refus avant tout dossier : mode réel : options exigées absentes : ['go_kv1', 'go_kv2', 'registre_go', 'texte', 'mondes_shas', '"
+  }
+ ],
+ "echecs": 0,
+ "duree_s": 133.5
+}

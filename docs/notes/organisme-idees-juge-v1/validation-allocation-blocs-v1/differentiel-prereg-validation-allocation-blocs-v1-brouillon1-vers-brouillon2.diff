@@ -1,0 +1,270 @@
+--- prereg-validation-allocation-blocs-v1-brouillon1.md
++++ prereg-validation-allocation-blocs-v1-brouillon2.md
+@@ -1,13 +1,18 @@
+-# Préenregistrement — validation propre de l'allocation par blocs des tirages frais du juge, sur données neuves et banc neuf — brouillon 1
++# Préenregistrement — validation propre de l'allocation par blocs des tirages frais du juge, sur données neuves et banc neuf — brouillon 2
+ 
+ - **Auteur** : rédacteur neuf, sous-agent de la session mère ; il n'a écrit ni le préenregistrement de l'idée 1.2, ni ses
+   addendums, ni son code, ni sa lecture gelée, ni son verdict, ni aucune de leurs relectures. Lettre du modèle : à inscrire par
+   la mère au registre (la table des lettres n'est pas dans les pièces que j'ai lues).
+ - **Date (UTC)** : 2026-11-17, rédaction de 01:03 à 01:11 (`date -u` ; heure exacte du scellement : compagnon `.sha256`).
+   Dépôt lu sur `main`, tête `c97bf55fb2fe2a2d3463ca79a8d67b9ab834a799` ; aucun commit, aucune poussée.
++- **Brouillon 2** : 2026-11-17 01:35:21Z (`date -u`, au moment de l'écriture ; scellement aussitôt après, compagnon `.sha256`) ; corrections de la contre-lecture 1
++  appliquées par un rédacteur neuf, par programme ; tête de `main` lue : `1df4ae9fdd74142e290d8f177a5ac16110de60db` ; rien d'autre ne change (voir « Contre-lecture »).
+ - **Commit du code d'analyse** : **aucun à ce jour** ; le code s'écrit après la contre-lecture et le scellement de la version
+   qui fera foi ; ses empreintes entrent dans un addendum d'empreintes scellé avant tout jeu, qui ne change rien d'autre.
+-- **Statut** : **brouillon 1**, pièce de travail scellée par son compagnon (R6). Il ne fait pas foi. Il attend une contre-lecture
++- **Statut** : **brouillon 2** (corrections de la contre-lecture 1 appliquées), pièce de travail scellée par son compagnon (R6). Il ne
++  fait pas foi. **Il n'est pas prêt pour la contre-lecture 2** tant que les annexes A (serrage) et B (dimensionnement des
++  doses) ne sont pas écrites et que la mère n'a pas tranché Q-1 et Q-2 (voir « Contre-lecture »). Il attend ensuite une
++  contre-lecture
+   par un sous-agent neuf d'un autre modèle (R2), les corrections, puis le scellement par `controle_ia.prereg.sceller_prereg` et la
+   recopie sous `prereg/organisme-idees-juge-validation-allocation-blocs-vN.md`. **Aucun jeu avant.** Rien n'est adopté par ce texte.
+ - **Ce qui l'exige** : décision de la mère après le verdict de l'idée 1.2 (R-3008) : « aucune adoption avant une validation
+@@ -56,7 +61,7 @@
+ 3. **ne nuit pas** quand la composition change : douze porteuses sur vingt-quatre (budget libéré plus rare, réserve R-2) ; aucune
+    porteuse, monde hors de la classe, cartes « copies par morceaux » nombreuses (la seule sorte de fausse promue sous A dans [V],
+    § 3.4) ;
+-4. **garde sa validité**, lue cette fois aussi sur le rapport exact Λ au temps d'arrêt, qui voit ce que les lectures sur la
++4. **garde sa validité**, lue cette fois aussi sur le rapport exact Λ au temps d'arrêt, qui voit, sur les cartes voisines du monde (les seules où il n'est pas écrasé vers 0), ce que les lectures sur la
+    richesse W ne voient pas (réserves R-1 et 3 de [V]).
+ 
+ **Hypothèses de travail.** (i) La garantie de [T] (lemme et théorème 2) vaut pour toute règle d'allocation écrite d'avance et non
+@@ -80,18 +85,18 @@
+ |---|---|---|---|---|---|---|
+ | P1 | **réplique** : C_A − C_F, famille « réplique » | + | ≥ +0,05, borne basse > 0 ; estimation attendue entre +0,20 et +0,50 (doses neuves plus hautes en moyenne : plafond plus proche) | +0,448 [+0,413 ; +0,484], § 2 | borne haute < +0,02 | 0,75 |
+ | P2 | **porteuse unique** : C_A − C_F, famille « porteuse unique » | + | ≥ +0,05, borne basse > 0 ; estimation attendue entre +0,10 et +0,40 | mécanisme § 3.1 (porteuses 335,6 tirages sous A) ; perte par carte § 3.2 | borne haute < +0,02 ; ou borne haute < 0 (« nuisible ») | 0,55 |
+-| P3 | **perte par porteuse** : part des porteuses promues par F et non par A, dans chaque famille à porteuses | ≈ 0 | ≤ 0,03 dans chaque famille | 56 cartes sur 750 × 6 = 4 500 porteuses-générations, soit ≈ 0,012, § 3.2 | > 0,05 dans une famille | 0,65 |
++| P3 | **perte par porteuse** : part des porteuses promues par F et non par A, dans chaque famille à porteuses | ≈ 0 | ≤ 0,03 dans chaque famille | 56 cartes (55 porteuses arrêtées bas, une au plafond) sur 4 483 porteuses au sens de l'oracle (§ 1 : 4 500 porteuses construites, dont 17 sans gain), soit ≈ 0,0125, § 1 et § 3.2 | > 0,05 dans une famille | 0,65 |
+ | P4 | **rappel par porteuse** : R_A − R_F | + | borne basse > 0 dans « réplique » et « porteuse unique » ; ≥ 0 (ponctuel) dans « dense » | § 3.1, § 3.2 | borne haute < 0 dans une famille | 0,6 |
+ | P5 | qualification, famille « réplique » : A contre la part fixe à 250 tirages (F125) et contre le placebo (P) | ≥ 0 ; + | « de structure » : borne haute de C_A − C_F125 ≥ 0 et borne haute de C_A − C_P > 0 | A − F125 +0,353 ; A − P +0,281, § 4 | l'une des deux qualifications contraires prononcée | 0,6 |
+ | P6 | **forme de dose** (clause de Q3 de [T], prise dans le sens que [V] a trouvé) : gain A − F à la dose basse moins gain à la dose haute, famille « réplique » | + | ≥ +0,10 (ponctuel) | +0,619 contre +0,277, § 4 | différence ≤ 0 | 0,65 |
+ | P7 | fausses promotions au sens de l'oracle, familles « réplique », « porteuse unique », « dense » | 0 ou + faible | ≤ 0,01 par génération dans chaque bras ; borne haute de FP_A − FP_F ≤ +0,05 | 0,0013 à 0,004, § 1 et § 3.4 | borne basse de FP_A − FP_F > +0,02 | 0,7 |
+ | P8 | fausses promotions, famille « vide » (aucune porteuse, huit copies par morceaux) | 0 ou + faible | FP_A ≤ 0,05 par génération ; borne haute de FP_A − FP_F ≤ +0,05 | seule sorte fausse promue : copies par morceaux, § 3.4 | borne basse de FP_A − FP_F > +0,02 | 0,5 |
+ | P9 | économie de l'arrêt seul (F-arrêt) | + | « réplique » ≥ 0,25 ; « dense » plus basse que « réplique » d'au moins 0,05 (ponctuel) | 0,568 [0,564 ; 0,572], § 2 | « réplique » < 0,10 ; ou « dense » ≥ « réplique » | 0,7 |
+-| P10 | mécanisme : tirages moyens reçus par une porteuse sous A | + | « réplique » ≥ 300 ; « porteuse unique » ≥ 400 ; « dense » entre 200 et 300 | 335,6, § 3.1 | « réplique » < 230 | 0,55 |
++| P10 | mécanisme : tirages moyens reçus par une porteuse sous A | + | « réplique » ≥ 300 ; « porteuse unique » ≥ 400 ; « dense » entre 200 et 300 | 335,6, § 3.1 | « réplique » < 230 ; « porteuse unique » < 300 ; « dense » hors de 200 à 300 | 0,55 |
+ | P11 | **validité**, famille « nul », lectures (1) à (3) de [T] | nul | ≤ 13 sur 500 dans chacun des sept bras ; aucun membre exact promu ; aucune domination franchie ; moyennes ponctuelles des valeurs e ≤ 0,8 | 0 sur 500 ; moyennes 0,05 à 0,09, § 2 et § 3.6 | un bras ≥ 39 sur 500 ; une domination franchie ; une borne basse > 1 | 0,85 |
+-| P12 | **validité, lecture neuve (5)** : moyenne du rapport exact Λ au temps d'arrêt, famille « nul », par bras | ≤ 1 | aucune borne basse > 1 | réserve 3 de [V] (fuite d'instants invisible sur W) | une borne basse > 1 | 0,85 |
++| P12 | **validité, lecture neuve (5)** : moyenne du rapport exact Λ au temps d'arrêt, famille « nul », par bras, sorte « voisines du monde » (autres sortes et toutes cartes réunies : rapportées sans critère) | ≤ 1 | aucune borne basse > 1 | réserve 3 de [V] (fuite d'instants invisible sur W) | une borne basse > 1 | 0,85 |
+ | P13 | **serrage, jeu synthétique neuf** : moyenne de Λ au temps d'arrêt sous chaque règle saine (F, F-arrêt, A, P, P′, G) | = 1 | intervalle à 95 % contenant 1 pour chaque règle ; mutation « la règle lit le bloc suivant » : borne basse > 1 | [V] R-1 ; [CL] : 1,267 pour cette règle, cité par [T] l. 211-212 | une règle saine dont la borne basse dépasse 1 ; mutation non tuée | 0,8 |
+-| P14 | **sensibilité de l'épreuve de validité** (rapportée, sans critère) : plus petit facteur c d'inflation des valeurs e (e × c) que la lecture (1) déclare « non tenue » sur la famille « nul » | — | attendu : c ≥ 8 (les valeurs e sont très petites, moyennes 0,05 à 0,09) | [V] R-1 | — (information) | 0,5 |
++| P14 | **sensibilité de l'épreuve de validité** (rapportée, sans critère) : plus petit facteur c d'inflation des valeurs e (e × c) que la lecture (1) déclare « non tenue » sur la famille « nul » | — | attendu : c de l'ordre de 17 ou plus (borne de Markov pour une promotion à une seule carte : avec des moyennes de valeurs e d'au plus 0,09 et 24 cartes, au plus 0,0045 c par génération, soit 39 sur 500 à partir de c ≈ 17 ; les promotions à plusieurs cartes ne la changent guère) | [V] R-1 | — (information) | 0,5 |
+ 
+ **Ce que serait chaque issue (R3).** P1, P2, P5 vraies et rien de « nuisible » : le gain de [V] se réplique et survit à la fin de
+ la redondance (validation tenue, au banc). P1 vraie, P2 fausse : le gain dépend de la redondance des porteuses ; l'allocation aide
+@@ -118,19 +123,19 @@
+   par F et non par A ; **gain par porteuse** : l'inverse ; rapportés avec leur tableau croisé par carte (traite R-4 de [V]).
+ - **Validité, lecture (5) — rapport exact au temps d'arrêt** (famille « nul ») : pour chaque carte et chaque bras, Λ au dernier
+   instant révélé par le bras (ou au premier instant d'arrêt haut), Λ calculé par le banc sur la loi connue du monde (comme pour la
+-  domination de [T]) ; moyenne par bras, toutes cartes réunies (sept intervalles), intervalle percentile à 95 % par
++  domination de [T]) ; moyenne par bras, sur la sorte « voisines du monde » (sept intervalles ; toutes cartes réunies et autres sortes rapportées sans critère), intervalle percentile à 95 % par
+   rééchantillonnage des générations. Λ est une martingale positive de moyenne 1 sous le monde ; un temps d'arrêt borné et non
+   anticipant la garde à 1 ; une règle qui lit un instant non révélé la pousse au-dessus ([CL], cité par [T] l. 211-212). Cette
+-  lecture voit donc une fuite d'instants que les lectures sur W ne voient pas (réserve 3 de [V], [T] l. 316-318).
++  lecture voit donc une fuite d'instants que les lectures sur W ne voient pas (réserve 3 de [V], [T] l. 316-318), **mais seulement là où Λ n'est pas écrasé vers 0** : pour une carte sans lien avec le monde, Λ vaut presque toujours une valeur minuscule, sa moyenne égale à 1 ne vient que d'événements rarissimes et la moyenne observée sur 500 générations reste très sous 1 ; toutes cartes réunies, la lecture ne pourrait donc rien voir. Elle est jugée sur la sorte « voisines du monde » seule. **Pouvoir déclaré, joué après le jeu sur les mêmes trajectoires** : la mutation « la règle lit le bloc suivant » est rejouée sur le bras A de la famille « nul » ; si la borne basse de la moyenne de Λ sur les voisines du monde ne dépasse pas 1, la lecture (5) est déclarée « sans pouvoir sur le banc réel », rapportée sans critère, et la réserve 3 de [V] reste portée par le seul serrage.
+ - **Serrage, jeu synthétique neuf** (sans juge) : monde jouet construit comme celui du jeu synthétique de [T] (Métrique, réserve
+   (a) ; écart E-2 de [AE] : lois et issues tirées par génération), **graines neuves `(98, g)`**, 20 000 générations ; pour chaque
+   règle saine (F, F-arrêt, A, P, P′, G), moyenne de Λ au temps d'arrêt et intervalle percentile à 95 % (10 000 rééchantillonnages) ;
+   mutation « la règle lit le bloc suivant avant de décider » jouée sur le même jeu. Les 24 cartes du monde jouet sont des
+-  **voisines proches** (distance fixée au scellement par un compte sans données, annexe à écrire, pour que la variance de Λ au
++  **voisines proches** (distance fixée **dans ce texte, par une annexe A à écrire avant la contre-lecture 2 : la distance, la variance attendue de Λ au plafond et la borne basse attendue de la mutation « bloc suivant », comptées sans donnée du juge**, pour que la variance de Λ au
+   plafond reste finie et lisible sur 20 000 générations) : la lecture demande des queues qui ne soient pas trop lourdes.
+ - **Sensibilité graduée** (famille « nul », rapportée sans critère) : mutations « valeur e multipliée par c » pour
+-  c ∈ {2 ; 4 ; 8 ; 16 ; 32}, jouées sur les trajectoires rejouées, après la lecture saine ; pour chaque c, lectures (1) et (3) ;
+-  rapport : plus petit c « non tenu » par la lecture (1), plus petit c dont une borne basse de moyenne dépasse 1.
++  c ∈ {2 ; 4 ; 8 ; 16 ; 32 ; 64 ; 128}, jouées sur les trajectoires rejouées, après la lecture saine ; pour chaque c, lectures (1) et (3) ;
++  rapport : plus petit c « non tenu » par la lecture (1), plus petit c dont une borne basse de moyenne dépasse 1 (« aucun jusqu'à 128 » si la grille ne l'atteint pas).
+ - **Arrêts réels et étiquettes** (réserve 5 de [V] ; [AE] lecture 21) : le code consigne séparément l'**arrêt réel** (bas, haut,
+   plafond, fin de budget) des bras qui ont une règle d'arrêt (A, F-arrêt, P et P′ en première phase) et l'**étiquette de fin de
+   trajectoire** (valeur sous le seuil bas, sans arrêt) ; une carte qui reprend sous P ou P′ est comptée « reprise ». Seuls les
+@@ -148,18 +153,18 @@
+   par moi à 01:06Z, même script, même sortie pour sept bras ; huit bras donneraient les mêmes bornes).
+ - **Validité, lectures (2), (3)** : celles de [T] (domination à 10⁻⁶ ; 49 intervalles désignés, sept par bras et quarante-deux par
+   sorte et par bras ; une borne basse > 1 = défaut ; sans correction, fausse alerte du côté prudent).
+-- **Validité, lecture (5)** : une borne basse de moyenne de Λ au temps d'arrêt > 1 dans un bras (sept intervalles) = défaut ; sans
++- **Validité, lecture (5)** : une borne basse de moyenne de Λ au temps d'arrêt, sorte « voisines du monde », > 1 dans un bras (sept intervalles) = défaut ; sans
+   correction (du côté prudent).
+ - **Serrage (jeu synthétique)** : pour une règle saine, une borne basse > 1 = défaut ; une borne haute < 1 = **audit écrit** (erreur
+   de calcul de Λ ou queue trop lourde), non un défaut ; la mutation « bloc suivant » doit avoir une borne basse > 1, sinon elle
+-  survit et la liste d'arrêt dit « pas de jeu ».
++  survit et la liste d'arrêt dit « pas de jeu ». **Une alerte sur une règle saine** (borne basse > 1 ; probabilité de fausse alerte jusqu'à environ 14 % pour six règles à 95 %, du côté sûr) reçoit l'audit écrit et le nœud de la mère ; le serrage ne se rejoue que sous un addendum scellé, avec les mêmes graines `(98, g)` et le code corrigé, jamais avec d'autres graines (R3).
+ - **Principale par famille**, règle de [T] appliquée **séparément** aux familles « réplique » et « porteuse unique », dans l'ordre,
+   la première vraie l'emporte : 1. « nuisible » si la borne haute de C_A − C_F < 0 ou la borne basse de FP_A − FP_F > +0,02 ;
+   2. « gain » si la borne basse de C_A − C_F > 0, l'estimation ≥ +0,05 et la borne haute de FP_A − FP_F ≤ +0,05 ; 3. « pas de
+   gain » si la borne haute de C_A − C_F < +0,02 ; 4. sinon « non tranché ».
+ - **Par carte** (familles « réplique », « porteuse unique », « dense ») : « nuisible par carte » si la borne haute de R_A − R_F < 0.
+-- **Familles « dense » et « vide »** : « nuisible » si la borne basse de FP_A − FP_F > +0,02 ; pour « dense » aussi si la borne
+-  haute de C_A − C_F < 0. Le gain y est rapporté, sans critère (la couverture de « dense » risque le plafond ; celle de « vide »
++- **Familles « dense » et « vide »** : « nuisible » si la borne basse de FP_A − FP_F > +0,02, ou si la borne basse de FP_A seul dépasse 0,05 par génération (niveau nominal : une différence de +0,02 ne voit pas un décuplement de 0,003) ; pour « dense » aussi si la borne
++  haute de C_A − C_F < 0. Le gain y est rapporté, sans critère, avec les bornes basses de C_A − C_F et, pour « dense », de R_A − R_F ; « pas nuisible » y veut dire « tort non établi », non « innocuité établie à une marge près » : aucune marge de non-infériorité n'est écrite, c'est dit et lu ainsi au prononcé (la couverture de « dense » risque le plafond ; celle de « vide »
+   n'existe pas).
+ - **Qualification** (famille « réplique » seulement, comme [T]) : « d'effectif seulement » si la borne haute de C_A − C_F125 < 0 ;
+   « sans effet de ciblage » si la borne haute de C_A − C_P ≤ 0 ; « de structure » si aucune des deux ; les deux ensemble si les
+@@ -167,7 +172,7 @@
+ - **Zone utile** : C_F (réunie) dans ]0,05 ; 0,95[, exigée pour « réplique » et pour « porteuse unique », séparément.
+ - **Conjonction sans correction** : la validation exige « gain » dans deux familles ; chaque intervalle est à 95 % ; l'énoncé
+   conjoint « gain dans l'une **et** dans l'autre » est un test d'intersection et d'union, de niveau 0,05 sans correction. Les
+-  lectures « nuisible » (jusqu'à onze intervalles sur quatre familles) ne sont pas corrigées : une fausse alerte empêche une
++  lectures « nuisible » (jusqu'à douze intervalles sur quatre familles : 4 + 3 + 5) ne sont pas corrigées : une fausse alerte empêche une
+   adoption, du côté prudent ; toute alerte reçoit l'audit écrit avant le prononcé.
+ 
+ ## Plan d'analyse
+@@ -177,12 +182,12 @@
+ - **Racine neuve** : entier de l'empreinte sha256 du texte qui fera foi (celui-ci, une fois contre-lu et scellé) ; le code
+   **refuse** la racine de [T] (entier de `bdabf2bc…`) et toute racine d'un autre texte que celui qu'il lit.
+ - **Clés neuves** : familles numérotées 10 à 14 (jamais 0 ou 1, clés de [T]) ; jeu synthétique `(98, g)` (jamais `(97, g)`).
+-- **Aucune lecture des sorties de l'idée 1.2** : le code n'ouvre rien sous `diag/organisme-idees-juge-v1/2026111*-idee-1-2-*`,
+-  `runs/2026111*-idee-1-2-*`, ni sous `/home/user/jeu-idee-1-2-copie` ; garde de chemin et essai (cas sain et artefact, R5). Les
++- **Aucune lecture des sorties de l'idée 1.2** : le code n'ouvre rien sous `diag/organisme-idees-juge-v1/*-idee-1-2-*`,
++  `runs/*-idee-1-2-*`, ni sous aucun dossier `/home/user/jeu-idee-1-2-*` (copie du run invalide, copie de la relance, journaux) ; garde de chemin et essai (cas sain et artefact, R5). Les
+   trois fichiers du run invalide de [AR] § 2 restent non lus (règle de [AR] § 3, qui demeure).
+ - **Doses neuves** : aucune cellule de ce banc n'a la dose d'une cellule de [V] (ci-dessous). **Déclaré** : les doses sont choisies
+-  après lecture de [V] (couvertures de F par cellule, § 3.5 : 0,09 à 0,19 aux doses basses, 0,44 à 0,80 aux doses hautes), pour
+-  rester dans la zone utile ; ce choix est fait avant tout tirage neuf et n'emploie aucune donnée du run.
++  après lecture de [V] (couvertures de F par cellule, § 3.5 et § 4 : 0,09 à 0,19 aux doses basses, 0,44 à 0,80 aux doses hautes), pour
++  rester dans la zone utile ; ce choix est fait avant tout tirage neuf et n'emploie aucune donnée du run. **Compte de dimensionnement à écrire en annexe B avant la contre-lecture 2** (information en nats sur 200 épisodes des dix doses neuves, sans juge, comme [BANC-v1] annexe A) et couverture attendue de F par famille qui en découle, pour que le risque « hors de la zone utile » soit chiffré avant le jeu : par interpolation, la dose 1,0 de V2, V3 et V5 vaut environ 13 nats pour 6,17 (log 480) nécessaires à une carte seule, donc proche du plafond pour F.
+ 
+ ### Banc neuf, dit « banc C v1 »
+ 
+@@ -200,7 +205,7 @@
+ 
+ Les cartes sont construites comme dans [T] (familles T et N : règles des porteuses, des copies de la classe, des copies par
+ morceaux, des fausses construites sous la règle du cosinus avec son plafond de 1 000 tirages, des nulles ; V4 sans opposé).
+-Seule la composition change. Le classement final de chaque carte est celui de l'oracle.
++Seule la composition change. **Répartition à l'intérieur des sortes, gelée ici (proposée par la contre-lecture 1 et retenue telle quelle ; aucune autre répartition n'est permise)** : copies de la classe, des mélanges de Dirichlet et des lois tempérées et inclinées en parts égales, l'éventuelle carte en plus étant un mélange (« porteuse unique », sept : 4 + 3 ; « dense », quatre : 2 + 2 ; « vide », six : 3 + 3) ; copies par morceaux, les quatre constructions de [T] prises une fois chacune, puis la ou les cartes en plus tirées sans remise parmi elles par la clé `(famille, g, 3001)` (« porteuse unique », cinq : les quatre plus une ; « dense », trois : trois des quatre) ; fausses construites, comme en famille T les quatre premières sous la règle du cosinus et les deux dernières opposées à force × 1 et × 0,5, les cartes en plus étant sous la règle du cosinus (« porteuse unique » et « vide », huit : six sous la règle du cosinus et deux opposées ; « dense », quatre : trois sous la règle du cosinus et une opposée à force × 1) ; **pour V4**, où l'opposé n'est pas une loi de la grammaire du juge, toutes sous la règle du cosinus. Le classement final de chaque carte est celui de l'oracle.
+ 
+ | famille (clé) | générations | monde | 24 cartes | ce qu'elle éprouve |
+ |---|---|---|---|---|
+@@ -234,7 +239,7 @@
+ clés que [T] l. 451-456 avec les familles 10 à 14 : monde `(f, g, 24)` ; archive `(f, g, 25)` ; construction de la carte i
+ `(f, g, i, 0)` ; plan, entraînement `(f, g, i, 1)` ; issues fraîches `(f, g, i, 2)`, tirées après le gel de tous les engagements de
+ la génération ; positions `(f, g, 1001)` ; placebo `(f, g, 1000)` ; oracle `(f, g, 2000)` ; choix de la porteuse unique
+-`(12, g, 3000)` ; rééchantillonnage `(99, b)` ; jeu synthétique `(98, g)` ; mutations graduées sans hasard. Manifeste du run
++`(12, g, 3000)` ; choix des copies par morceaux `(12 ou 13, g, 3001)` ; rééchantillonnage `(99, b)` ; jeu synthétique `(98, g)` ; mutations graduées sans hasard. Manifeste du run
+ (`src/controle_ia/manifeste.py`) ; versions consignées (interpréteur, numpy, scipy), comme [AR] § 4.2.
+ 
+ ### Étapes
+@@ -249,14 +254,14 @@
+    par un autre modèle ; addendum d'empreintes scellé.
+ 1. **Essai à blanc chronométré, sans lecture** (racine d'essai, jamais la racine du texte ; dix générations par famille) : il
+    donne la durée attendue ; s'il annonce plus de 12 heures pour le jeu, les familles « réplique » et « porteuse unique » passent
+-   à 500 générations **dans la version qui fera foi, avant son scellement** (jamais après).
++   à leurs 500 premières générations (g de 0 à 499, 50 par cellule ; mêmes tirages que les 500 premières des 750, les clés étant par génération). **Règle écrite ici, avant tout tirage du jeu** : durée projetée = somme, sur les cinq familles, du nombre de générations multiplié par la durée moyenne mesurée par génération de la famille (bras, rejeu et oracle compris), plus la durée des contrôles, de l'essai E1, du jeu synthétique et du serrage, mesurée ou extrapolée par l'essai à blanc, et comptée pour au moins 1 heure ; la décision ne dépend que de cette durée, se consigne au registre avant le jeu et ne change aucun seuil ni aucun critère. L'essai à blanc se joue **après** le scellement de ce texte et de l'addendum d'empreintes (le code n'existe qu'à partir de là, voir l'en-tête) et avant le jeu, jamais avant le scellement.
+ 2. Contrôles avant jeu (empreintes, essais, mutations, aucune sortie existante, espace disque ≥ 1 Go après copie, [AR] § 4.4).
+ 3. Essai E1 de [T] (préfixes), sur 50 cartes prises dans les cinq familles et dans les deux mondes de la famille « nul » (la
+    lettre de [AE] lecture 14 n'essayait que M₀ et V1).
+ 4. Jeu synthétique neuf et serrage ; arrêt si une règle saine sort en défaut ou si la mutation survit.
+ 5. Oracle calculé et scellé pour toutes les générations, **avant** le rejeu des bras.
+ 6. Jeu : 3 000 générations, `nice -n 10`, deux processus de calcul au plus, depuis une copie propre et détachée d'un commit noté,
+-   sous un nom neuf ; consigne de [AR] § 5 (une tâche active pendant tout le jeu, attente réarmée avant la limite de l'outil).
++   sous un nom neuf qui ne commence pas par `jeu-idee-1-2-` (sinon la garde de chemin l'arrêterait) ; consigne de [AR] § 5 (une tâche active pendant tout le jeu, attente réarmée avant la limite de l'outil).
+ 7. Sortie scellée avant toute lecture, sous `diag/organisme-idees-juge-v1/` (dossier neuf), recopiée dans le dépôt et vérifiée par
+    ses compagnons.
+ 8. Lecture gelée (code scellé), puis lecteur neuf (R13), qui n'a écrit ni ce texte ni le code ni [V] ; audit de symétrie (R4)
+@@ -273,7 +278,7 @@
+ 
+ | réserve de [V] | ce que fait ce texte | où |
+ |---|---|---|
+-| R-1 (validité à 0 sur 500, conservatrice, ne prouve pas la garantie serrée) ; réserve 3 de l'issue | lecture (5) sur Λ au temps d'arrêt, qui ne profite pas du conservatisme du certificat ; serrage sur jeu synthétique neuf (moyenne de Λ égale à 1 sous règle saine, mutation « bloc suivant » tuée) ; sensibilité graduée e × c rapportée : elle dit combien d'inflation l'épreuve laisserait passer | Métrique ; Seuil ; P12 à P14 |
++| R-1 (validité à 0 sur 500, conservatrice, ne prouve pas la garantie serrée) ; réserve 3 de l'issue | lecture (5) sur Λ au temps d'arrêt (sorte « voisines du monde » seule jugée : ailleurs Λ est écrasé vers 0 et la lecture est sans pouvoir ; pouvoir rejoué après le jeu), qui ne profite pas du conservatisme du certificat ; serrage sur jeu synthétique neuf (moyenne de Λ égale à 1 sous règle saine, mutation « bloc suivant » tuée) ; sensibilité graduée e × c rapportée : elle dit combien d'inflation l'épreuve laisserait passer | Métrique ; Seuil ; P12 à P14 |
+ | R-2 et réserve 1 (banc peu porteur, 18 sur 24 ; ne se transpose pas) | familles « porteuse unique », « dense », « vide » ; aucune réunion de familles ; **ne se transpose toujours pas** à une génération réelle (composition choisie par construction) : dit, gardé | Familles ; Critères |
+ | R-3 (A consomme moins que B ; comparaison à F125 et P avec leur consommation) | consommations rapportées par famille ; la principale reste « au plus B » ; F125 et P lus avec leurs tirages réels | Métrique ; Critères |
+ | R-4 (« 0 génération perdue » dû à la redondance) | famille « porteuse unique » ; rappel par porteuse, perte et gain par porteuse avec tableau croisé ; « nuisible par carte » est un critère | Métrique ; Seuil ; P2 à P4 |
+@@ -289,9 +294,9 @@
+ 
+ | étage | observé | verdict |
+ |---|---|---|
+-| 1 | famille « nul » : une validité « non tenue » dans un bras ; un membre exact promu ; une domination franchie ; une borne basse > 1 dans l'un des 49 intervalles de la lecture (3) ou des 7 de la lecture (5) ; ou, au serrage, une règle saine à borne basse > 1 | **« garantie mise en défaut »** : rien d'autre n'est lu ; audit ; nœud de Lazar ; **aucune adoption** |
++| 1 | famille « nul » : une validité « non tenue » dans un bras ; un membre exact promu ; une domination franchie ; une borne basse > 1 dans l'un des 49 intervalles de la lecture (3) ou des 7 de la lecture (5) ; ou, au serrage (alors avant tout jeu : la liste d'arrêt dit « pas de jeu » et ce prononcé se rend sans lecture du jeu), une règle saine à borne basse > 1 | **« garantie mise en défaut »** : rien d'autre n'est lu ; audit ; nœud de Lazar ; **aucune adoption** |
+ | 1 bis | une validité « non jugeable » (14 à 38 sur 500) dans un bras | **« validité non établie »** : la suite est lue et rapportée sous cette réserve ; **aucune adoption ne peut s'en réclamer** |
+-| 2 | C_F (réunie) ≤ 0,05 ou ≥ 0,95 en « réplique » ou en « porteuse unique » | **« hors de la zone utile »** pour cette famille ; la validation est **« non concluante »** ; le reste est rapporté |
++| 2 | C_F (réunie) ≤ 0,05 ou ≥ 0,95 en « réplique » ou en « porteuse unique » | **« hors de la zone utile »** pour cette famille ; la validation est **« non concluante »**, **sauf** si une lecture « nuisible » de l'étage 3 est vraie en même temps (fausses promotions dans cette famille, ou toute lecture « nuisible » d'une autre famille) : l'étage 3 est alors prononcé aussi, car un tort constaté n'est jamais masqué par un manque de puissance ; le reste est rapporté |
+ | 3 | « nuisible » dans une famille (principale de « réplique » ou de « porteuse unique » ; « nuisible par carte » dans « réplique », « porteuse unique » ou « dense » ; fausses promotions ou couverture dans « dense » ; fausses promotions dans « vide ») | **« non validée : nuisible »** (famille et lecture nommées) |
+ | 4 | « gain » en « réplique » **et** en « porteuse unique », qualification « de structure » en « réplique » | **« validation tenue, au banc »** |
+ | 5 | « gain » en « réplique » et en « porteuse unique », qualification autre que « de structure » en « réplique » | **« validation tenue, gain » suivi de la qualification prononcée** (« d'effectif seulement », « sans effet de ciblage » ou les deux) : le gain de [V] se réplique mais **pas sa structure** |
+@@ -303,7 +308,7 @@
+ 
+ **Audit de symétrie (R4)**, écrit pour **toute** issue avant le prononcé : celui de [T] l. 495-500 (mécanisme, porteuses arrêtées
+ bas, partiellement vraies promues, cellule par cellule, « trop propre », « tout négatif »), plus : en « porteuse unique », **zéro
+-perte par porteuse** est un « trop propre » (la redondance n'y joue plus ; [V] § 3.2 a trouvé 56 pertes pour 4 500
++perte par porteuse** est un « trop propre » (la redondance n'y joue plus ; [V] § 3.2 a trouvé 56 pertes pour 4 483
+ porteuses-générations) ; une issue **égale à celle de [V] à la deuxième décimale** dans « réplique » est un « trop propre »
+ (doses neuves : un gain identique ferait chercher une fuite de données) ; en « vide », aucune fausse promotion dans aucun bras
+ alors que A donne jusqu'à 800 tirages aux copies par morceaux est un « tout négatif » à expliquer. Même relecture écrite du code de
+@@ -315,7 +320,7 @@
+ |---|---|
+ | toutes les lignes de [T] l. 506-515 (fichier gelé différent de l'addendum ; essai échoué ; mutation survivante ; essai E1 non égal ; issue fraîche tirée avant le gel ; lecture d'un instant non révélé ; tirages au-delà du budget ; domination franchie ; exception ou log W non fini ; durée murale > 24 h ; lecture avant scellement ou oracle après le rejeu ; dépense) | action de [T], inchangée |
+ | racine égale à celle de [T], ou clé de famille 0 ou 1 | arrêt avant tout tirage ; défaut |
+-| le code ouvre un chemin d'une sortie de l'idée 1.2 ou de la copie `/home/user/jeu-idee-1-2-copie` | arrêt ; **run invalide** ; nœud |
++| le code ouvre un chemin d'une sortie de l'idée 1.2 ou d'un dossier `/home/user/jeu-idee-1-2-*` | arrêt ; **run invalide** ; nœud |
+ | serrage : une règle saine à borne basse > 1 ; ou mutation « bloc suivant » non tuée | pas de jeu (défaut du côté sûr) |
+ | essai de concordance du juge candidat (si Q-1 est retenue) : un tirage, une valeur e ou une promotion différent du rejeu du bras A | arrêt ; défaut |
+ | texte qui fait foi ou addendum d'empreintes absent de la copie, ou différent de son compagnon ; liste du juge différente de `0153e02d…` | pas de jeu |
+@@ -330,7 +335,7 @@
+ 3,19 h pour 30 000 cartes sur machine partagée, deux processus) : 72 000 cartes, soit ≈ 7,7 heures de jeu sous une charge
+ comparable ; oracle ≈ 1,2 heure (2,4 fois celui de [V], oracle écrit ≈ 30 min après les contrôles) ; contrôles, essai E1, jeu
+ synthétique, mutations graduées ≈ 1 heure ; juge candidat (si Q-1) ≈ 1 à 1,5 heure. **Total attendu ≈ 10 à 12 heures**, sous la
+-borne de 24 heures avec une marge de deux fois environ ; l'essai à blanc chronométré (étape 1) le dit avant le scellement et peut
++borne de 24 heures avec une marge de deux fois environ ; l'essai à blanc chronométré (étape 1, après le scellement, avant le jeu) le dit et peut, par la règle de l'étape 1,
+ réduire deux familles à 500 générations. Le jeu demande une session qui garde une tâche active pendant tout ce temps ([AR] § 5).
+ Écriture, contre-lectures, code, lecture : temps d'agents.
+ 
+@@ -354,10 +359,53 @@
+ 
+ ## Contre-lecture
+ 
+-- **Contre-lecture 1** (R2) : **à venir**. Sous-agent neuf d'un autre modèle que le rédacteur, qui n'a écrit ni ce brouillon, ni
+-  [T], ni ses addendums, ni [V] ; pièces à lui donner explicitement : ce brouillon (empreinte de son compagnon `.sha256`), [V],
+-  [T], [AR], [AE]. Rapport attendu sous `docs/notes/organisme-idees-juge-v1/validation-allocation-blocs-v1/`, nom neuf, scellé ;
+-  traitement de chaque remarque (acceptée, refusée et pourquoi) écrit dans le brouillon suivant, avec son différentiel.
++- **Contre-lecture 1** (R2) : **faite**, verdict « corrections » : cinq défauts majeurs (M1 à M5), onze remarques mineures
++  (m1 à m11, dont m5 et m8 facultatives et recommandées) ; aucun « à refaire ». Lecteur : sous-agent neuf d'un autre modèle que
++  le rédacteur du brouillon 1, qui n'a écrit ni ce brouillon, ni [T], ni ses addendums, ni [V]. Brouillon relu : brouillon 1,
++  `docs/notes/organisme-idees-juge-v1/validation-allocation-blocs-v1/prereg-validation-allocation-blocs-v1-brouillon1.md`
++  (`95f34a756c61b1f73df88cfa99350f9ffb741ad872a6afea90406e1f1acd6011`). Rapport :
++  `docs/notes/organisme-idees-juge-v1/validation-allocation-blocs-v1/contre-lecture-validation-blocs-tour1-v1.md`
++  (`c06813086fb63910cd240e1018fde7960d165f373cee5ff081d6228741cd4d3c`).
++- **Traitement, brouillon 2** : par un rédacteur neuf, sous-agent de la session mère, qui n'a écrit ni le brouillon 1, ni le
++  rapport, ni [T], ni ses addendums, ni [V] ; lettre de son modèle à inscrire par la mère au registre (il est du même modèle
++  que le contre-lecteur 1). Les 29 couples du § 4 du rapport sont appliqués par le programme `appliquer-corrections-prereg-validation-allocation-blocs-v1-brouillon2.py` (même dossier,
++  scellé), qui vérifie les deux empreintes ci-dessus, tire les couples du rapport par programme, exige que chaque « ancien »
++  figure une seule fois et qu'aucun ne chevauche un autre, et refuse d'écraser ; quatre couples du rédacteur s'y ajoutent
++  (titre, ligne « Brouillon 2 » et statut de l'en-tête, cette section). Différentiel :
++  `differentiel-prereg-validation-allocation-blocs-v1-brouillon1-vers-brouillon2.diff` (même dossier, scellé). Rien d'autre
++  ne change ; la « Déclaration » finale reste celle du rédacteur du brouillon 1.
++
++**Réponse point par point.**
++
++| point du rapport | couples | traitement |
++|---|---|---|
++| M1 (ordre : code, essai à blanc, scellement) | M1-a, M1-b | **acceptés**. M1-a reformulé : la durée projetée compte aussi les contrôles, l'essai E1, le jeu synthétique et le serrage, mesurés ou extrapolés par l'essai à blanc, pour au moins 1 heure (réserve du § 1 (4) du rapport : le serrage n'est pas chronométré). Si la mère tranche Q-2 pour 500 générations tout de suite, ces deux couples tombent et le texte dit 500 |
++| M2 (lecture (5) sans pouvoir toutes cartes réunies) | M2-a à M2-f | **acceptés tels quels** (variante principale du rapport : jugée sur la sorte « voisines du monde », pouvoir rejoué après le jeu par la mutation « bloc suivant » sur le bras A de la famille « nul ») |
++| M3 (« hors de la zone utile » masquait un tort) | M3 | **accepté tel quel** |
++| M4 (compositions non gelées) | M4-a, M4-b | **acceptés**. La répartition proposée est retenue telle quelle ; la parenthèse « proposition du contre-lecteur ; toute autre répartition doit être écrite de la même façon » devient « proposée par la contre-lecture 1 et retenue telle quelle ; aucune autre répartition n'est permise », un texte gelé ne pouvant laisser une autre répartition ouverte. Vérifiée contre [T] (famille T : quatre fausses sous la règle du cosinus, deux opposées à force × 1 et × 0,5 ; pour V4, toutes sous la règle du cosinus ; quatre constructions de copies par morceaux) |
++| M5 (annexe du serrage non écrite) | M5 | **couple accepté tel quel** ; **l'annexe A elle-même n'est pas écrite dans ce brouillon** : elle demande un compte (distance des voisines du monde jouet, variance attendue de Λ au plafond, borne basse attendue de la mutation « bloc suivant ») qui dépasse l'application de corrections ; à écrire dans un brouillon suivant, avant la contre-lecture 2, comme le couple le dit |
++| m1 (garde de chemin trop étroite) | m1-a à m1-d | **acceptés tels quels** |
++| m2 (dénominateur de P3) | m2-a, m2-b | **acceptés tels quels** |
++| m3 (citation de § 4) | m3 | **accepté tel quel** |
++| m4 (compte des intervalles « nuisible ») | m4 | **accepté, compte mis à jour** : m8, appliquée, ajoute une lecture « nuisible » en « dense » et une en « vide » ; le total devient douze (principales 4, par carte 3, « dense » 3, « vide » 2 : 4 + 3 + 5) au lieu des dix du couple |
++| m5, facultative (fausse alerte du serrage et reprise) | m5 | **acceptée telle quelle** |
++| m6 (grille de sensibilité) | m6-a à m6-c | **acceptés tels quels** |
++| m7 (« ne nuit pas » sans marge) | m7 | **accepté, reformulé** : les deux parenthèses de suite sont écrites en phrase ; les bornes de R_A − R_F ne valent que pour « dense » (« vide » n'a pas de porteuse) |
++| m8, facultative (décuplement des fausses promotions) | m8 | **acceptée telle quelle** |
++| m9 (serrage et étage 1) | m9 | **accepté tel quel** |
++| m10 (doses neuves non chiffrées) | m10 | **couple accepté tel quel** ; **l'annexe B n'est pas écrite dans ce brouillon** (même raison que l'annexe A) ; à écrire avant la contre-lecture 2 |
++| m11 (seuils de réfutation de P10) | m11 | **accepté tel quel** |
++| § 6 du rapport, points pour la mère | — | **non tranchés ici** (ils sont à la mère) : Q-1 et Q-2 à trancher avant le scellement, la ligne de la liste d'arrêt sur le juge candidat, les lignes du Coût et les questions ouvertes étant retirées ou gardées selon la réponse ; si Q-1 est retenue, écrire comment le juge candidat consomme le flux de chaque carte ; lettres des modèles à inscrire ; tâche d'attente prévue avant le lancement |
++
++**Ce qui reste avant la contre-lecture 2** : annexe A (M5) ; annexe B (m10) ; réponses de la mère à Q-1 et Q-2 ; puis contre-lecture
++par un sous-agent neuf qui n'a écrit ni ce texte ni le rapport, avec ce brouillon, le rapport, [V], [T], [AR] et [AE].
++
++**Déclaration du rédacteur du brouillon 2.** Heures (`date -u`) : début 01:33Z ; écriture par le programme à 2026-11-17 01:35:21Z, scellement
++aussitôt après (compagnon `.sha256`). Dépôt lu sur `main`, tête `1df4ae9fdd74142e290d8f177a5ac16110de60db` ; aucun commit, aucune poussée. Lu en entier : le
++brouillon 1 et le rapport ; lu en partie : [T] (familles T et N, pour vérifier M4-a), en-tête et fonction `problemes` du
++validateur, un programme de correction voisin (pour la forme). Jamais ouvert : rien sous `diag/`, `runs/`, `donnees/` ; aucune
++branche `calcul/*` ni `donnees/*` ; rien de 7a, 7b, T0.6, T0.7, B bis, P3-bis, du bras d'attaque, du pilote MR-2 ; aucun secret,
++aucune variable d'environnement affichée ; aucune machine, aucun appel réseau ; aucun fichier existant modifié.
+ 
+ ## Citations obligatoires (N-064, N-067)
+ 

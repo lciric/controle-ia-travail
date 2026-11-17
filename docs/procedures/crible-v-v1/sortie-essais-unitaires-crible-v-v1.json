@@ -1,0 +1,328 @@
+{
+ "palier": "unitaire",
+ "code": "/home/user/controle-ia-travail/docs/procedures/crible-v-v1",
+ "essais": [
+  {
+   "fonction": "u_graine_sain",
+   "nom": "graine des mondes",
+   "ligne": "graines (R9)",
+   "cas": "sain",
+   "ok": true,
+   "detail": "20 graines distinctes, forme du texte"
+  },
+  {
+   "fonction": "u_graine_artefact",
+   "nom": "graine des mondes",
+   "ligne": "graines (R9)",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "secret court, phrase nulle ou vide, r hors de 1 à 20, empreinte courte : refusés"
+  },
+  {
+   "fonction": "u_regle_m",
+   "nom": "règle de M et budget de durée",
+   "ligne": "devis : règle de M",
+   "cas": "sain",
+   "ok": true,
+   "detail": "M = 1 jusqu'à 12 400 s, 2 jusqu'à 15 400 s, non lançable au-delà ; garde 24 000 + 3 D (M = 1), 15 000 + 3 D (M = 2)"
+  },
+  {
+   "fonction": "u_garde_sain",
+   "nom": "garde de départ (minuterie)",
+   "ligne": "minuterie de la machine",
+   "cas": "sain",
+   "ok": true,
+   "detail": "marge suffisante : {'reste_s': 61200, 'budget_s': 39000, 'M': 1, 'D_s': 5000}"
+  },
+  {
+   "fonction": "u_garde_artefact",
+   "nom": "garde de départ (minuterie)",
+   "ligne": "minuterie de la machine",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "garde de départ : 38000 s avant l'échéance < budget de pire cas 39000 s (M = 1, D = 5000 s) : arrêt (A) sans appel"
+  },
+  {
+   "fonction": "u_w_min",
+   "nom": "table W_min recalculée",
+   "ligne": "seuil",
+   "cas": "sain",
+   "ok": true,
+   "detail": "W_min = 4 pour n_c de 16 à 20"
+  },
+  {
+   "fonction": "u_placebo_sain",
+   "nom": "placebo exact",
+   "ligne": "placebo",
+   "cas": "sain",
+   "ok": true,
+   "detail": "C(6, 2) = 15 ensembles, L_P et S_P exacts, p_choix exact"
+  },
+  {
+   "fonction": "u_placebo_artefact",
+   "nom": "placebo exact",
+   "ligne": "placebo",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "taille k_R + 1 : placebo : taille 11 ≠ k_R 10 ; énumération tronquée : placebo : énumération incomplète (184755 ensembles, C(20, 10) = 184756 attendus)"
+  },
+  {
+   "fonction": "u_bras",
+   "nom": "bras, épargne et pertes",
+   "ligne": "métrique",
+   "cas": "sain",
+   "ok": true,
+   "detail": "a_w = 1 si q > 0,8 strictement ; W_R, L_R, S_R exacts"
+  },
+  {
+   "fonction": "u_reechantillon",
+   "nom": "rééchantillonnage des mondes",
+   "ligne": "graines (R9)",
+   "cas": "sain",
+   "ok": true,
+   "detail": "indices égaux à SeedSequence(entropy=racine, spawn_key=(99, b))"
+  },
+  {
+   "fonction": "u_decider_sain",
+   "nom": "fonction de décision : entrées",
+   "ligne": "la fonction de décision reçoit autre chose…",
+   "cas": "sain",
+   "ok": true,
+   "detail": "K1 seule : copie ; monde réduit aux fortes et moyennes : pas une copie"
+  },
+  {
+   "fonction": "u_decider_artefact",
+   "nom": "fonction de décision : entrées",
+   "ligne": "la fonction de décision reçoit autre chose…",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "oracle : fonction de décision : jeu public exigé (aucun oracle, aucune issue) | issue : fonction de décision : jeu public exigé (aucun oracle, aucune issue) | carte chère : la fonction de décision reçoit une carte de la moitié chère (astra) ; fonction de décision : carte de la moitié chère (fable52) | archive : fonction de décision : K1 servie (softmax {type, poids, biais}) exigée, rien d'autre (ni archive, ni oracle) | loi plantée : fonction de décision : K1 servie (softmax {type, poids, biais}) exigée, rien d'autre (ni archive, ni oracle) | autre objet : fonction de décision : liste de lois "
+  },
+  {
+   "fonction": "u_regle_strict",
+   "nom": "règle : seuil strict et sens dirigé",
+   "ligne": "métrique (copie, a_w)",
+   "cas": "sain",
+   "ok": true,
+   "detail": "q = 0,8 → a = 0 ; copie au sens dirigé seulement ; ε_strat exigé"
+  },
+  {
+   "fonction": "u_jeu_sain",
+   "nom": "jeu public",
+   "ligne": "jeu public porteur d'issues ou tiré du secret",
+   "cas": "sain",
+   "ok": true,
+   "detail": "jeu de (r, 30), sans issue, empreinte reproductible"
+  },
+  {
+   "fonction": "u_jeu_artefact",
+   "nom": "jeu public",
+   "ligne": "jeu public porteur d'issues ou tiré du secret",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "graine du secret : jeu public : la graine ne dépend que de l'indice r du monde ; champ d'issue ajouté : jeu public : immuable"
+  },
+  {
+   "fonction": "u_cartes_valides",
+   "nom": "cartes valides",
+   "ligne": "couverture comptant une carte refusée, tronquée, au-delà de six, non évaluable",
+   "cas": "sain",
+   "ok": true,
+   "detail": "seule la carte admise, évaluable, d'emplacement ≤ 6, d'un appel complet est valide"
+  },
+  {
+   "fonction": "u_carte_au_dela",
+   "nom": "cartes valides",
+   "ligne": "couverture comptant une carte refusée, tronquée, au-delà de six, non évaluable",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "carte au-delà de la sixième admise : (1, 'argon'), 7"
+  },
+  {
+   "fonction": "u_dollars",
+   "nom": "dollars",
+   "ligne": "dollars des appels tronqués ou en échec",
+   "cas": "sain",
+   "ok": true,
+   "detail": "80 appels exigés, prix publics : Pr-1 au cinquième du prix de la configuration, les autres égaux"
+  },
+  {
+   "fonction": "u_fictive",
+   "nom": "rejeu sous archive fictive",
+   "ligne": "rejeu sous archive fictive…",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "avant l'écriture : rejeu sous archive fictive exécuté avant l'écriture et le scellement de la sortie principale ; rendant W : rejeu sous archive fictive : il rend autre chose que k_R et S_R (['W_R'])"
+  },
+  {
+   "fonction": "u_conf_sain",
+   "nom": "configuration v12",
+   "ligne": "configuration autre que v12",
+   "cas": "sain",
+   "ok": true,
+   "detail": "v12 acceptée (f69503dd…)"
+  },
+  {
+   "fonction": "u_conf_artefact",
+   "nom": "configuration v12",
+   "ligne": "configuration autre que v12",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "plafond de Pr-1 changé : configuration autre que la v12 (empreinte ≠ f69503dd…) : arrêt avant tout appel"
+  },
+  {
+   "fonction": "u_addendum_sain",
+   "nom": "addendum d'empreintes",
+   "ligne": "empreinte différente (programme de mesure, module importé)",
+   "cas": "sain",
+   "ok": true,
+   "detail": "addendum aux empreintes du code présent : accepté"
+  },
+  {
+   "fonction": "u_addendum_artefact",
+   "nom": "addendum d'empreintes",
+   "ligne": "empreinte différente (programme de mesure, module importé)",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "un octet de plus dans la mesure : addendum d'empreintes : mesure_crible_v_v1.py absent ou à empreinte différente du fichier présent (470e1279122f…) ; addendum d'une autre empreinte : addendum d'empreintes absent ou à empreinte différente"
+  },
+  {
+   "fonction": "u_module_faux",
+   "nom": "module importé à empreinte fausse",
+   "ligne": "empreinte différente (module importé)",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "module importé à empreinte fausse : outils-v4/monde_riche_v4.py (9d1492948c35…) ; compagnon refait : module importé à empreinte fausse : outils-v4/monde_riche_v4.py (9d1492948c35…)"
+  },
+  {
+   "fonction": "u_gabarit_sain",
+   "nom": "gabarit servi",
+   "ligne": "empreinte différente (gabarit)",
+   "cas": "sain",
+   "ok": true,
+   "detail": "gabarit e77d3041… accepté"
+  },
+  {
+   "fonction": "u_gabarit_artefact",
+   "nom": "gabarit servi",
+   "ligne": "empreinte différente (gabarit)",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "un octet changé dans le gabarit : gabarit servi ≠ e77d3041… (gabarit du pilote, inchangé) : arrêt avant tout appel"
+  },
+  {
+   "fonction": "u_corps_sain",
+   "nom": "corps servis égaux",
+   "ligne": "corps servi différent entre les quatre appels d'un monde",
+   "cas": "sain",
+   "ok": true,
+   "detail": "quatre empreintes égales"
+  },
+  {
+   "fonction": "u_corps_artefact",
+   "nom": "corps servis égaux",
+   "ligne": "corps servi différent entre les quatre appels d'un monde",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "corps servi différent entre les quatre appels du monde (ou des pièces préparées) : arrêt avant ses appels"
+  },
+  {
+   "fonction": "u_coupure",
+   "nom": "coupure à B_a journalisée",
+   "ligne": "appel plus long que B_a",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "coupure écrite et relue ; sans trace : coupure à B_a sans trace dans le journal (IsADirectoryError) : arrêt"
+  },
+  {
+   "fonction": "u_pieces",
+   "nom": "pièces de l'appel",
+   "ligne": "réponse brute ou témoin d'isolement absent",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "appel complet avec ses pièces accepté ; témoin supprimé : astra : temoin-isolement.json absent ou différent de son compagnon : arrêt (code 3)"
+  },
+  {
+   "fonction": "u_part_sain",
+   "nom": "part d'un fournisseur",
+   "ligne": "dépense d'un fournisseur atteignant sa part",
+   "cas": "sain",
+   "ok": true,
+   "detail": "part non atteinte (19 plafonds dépensés, un appel de plus permis)"
+  },
+  {
+   "fonction": "u_part_artefact",
+   "nom": "part d'un fournisseur",
+   "ligne": "dépense d'un fournisseur atteignant sa part",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "argon : la part 46.80 USD serait atteinte au pire cas de l'appel suivant : arrêt"
+  },
+  {
+   "fonction": "u_abandon_sain",
+   "nom": "abandon d'un fournisseur",
+   "ligne": "fournisseur abandonné…",
+   "cas": "sain",
+   "ok": true,
+   "detail": "panne d'un fournisseur ayant déjà répondu, minimum encore possible : le crible continue (appels restants « échec »)"
+  },
+  {
+   "fonction": "u_abandon_artefact",
+   "nom": "abandon d'un fournisseur",
+   "ligne": "fournisseur abandonné…",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "première panne sans répondu : arrêt ; panne au monde 3 rendant le minimum impossible : fournisseur gemini abandonné : le minimum de 16 mondes complets n'est plus possible"
+  },
+  {
+   "fonction": "u_releve",
+   "nom": "relevé de la sonde neuve",
+   "ligne": "relevé de sonde absent, invalide ou d'un autre code",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "absent : relevé de la sonde : relevé de la sonde absent : le mode réel l'exige (D-4) ; d'un autre code : relevé de la sonde : relevé de la sonde fait par un autre code"
+  },
+  {
+   "fonction": "u_rapatrier",
+   "nom": "rapatriement sans monde",
+   "ligne": "mondes privés, jamais hors de la machine",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "rapatriement : fichiers interdits, rien n'est rendu : [['monde-1/argon/reponse-brute.json', 'contenu d\\'un monde ou d\\'un texte servi (\"episodes_developpement\")']]"
+  },
+  {
+   "fonction": "u_partie_a_sain",
+   "nom": "partie A : champs du juge",
+   "ligne": "partie A",
+   "cas": "sain",
+   "ok": true,
+   "detail": "lois, proposeurs et générations seulement ; copie de K1 comptée ; dimensions de S-V1 lues dans le texte (3, 2, 2)"
+  },
+  {
+   "fonction": "u_partie_a_artefact",
+   "nom": "partie A : champs du juge",
+   "ligne": "partie A",
+   "cas": "artefact",
+   "ok": true,
+   "detail": "promue : partie A : champ du juge lu ('promue') : partie A invalide, partie B inchangée ; retenues : partie A : champ du juge lu ('retenues') : partie A invalide, partie B inchangée ; rejet : partie A : champ du juge lu ('rejet') : partie A invalide, partie B inchangée ; mort : partie A : champ du juge lu ('mort') : partie A invalide, partie B inchangée"
+  },
+  {
+   "fonction": "u_lecture",
+   "nom": "lecture gelée : étages",
+   "ligne": "critères de lecture gelés",
+   "cas": "sain",
+   "ok": true,
+   "detail": "étages 0 à 6 à leurs bornes ; lecture de H-v"
+  },
+  {
+   "fonction": "u_predictions",
+   "nom": "lecture gelée : prédictions",
+   "ligne": "prédiction chiffrée",
+   "cas": "sain",
+   "ok": true,
+   "detail": "V1 à V7 confirmées, indécises, réfutées à leurs bornes ; V4 sans verdict ; marques de l'audit R4"
+  }
+ ],
+ "echecs": 0,
+ "duree_s": 6.6
+}
