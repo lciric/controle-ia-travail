@@ -3,7 +3,10 @@
 # quelles). v4 = v3 avec : sortie `sortie-conduite-v15`, `lanceur_v21 reprendre`, instance 61049303 (étiquette
 # temoin-bailey-c6-40eb0b51dade4963, arrêtée par Vast faute de crédit le 17 novembre vers 17:12Z), GO-2026-11-17-07,
 # manifeste v7, garde du commit du code a904aa39, noms neufs, garde « conduite v15 finie », liste des répertoires de
-# chaque dossier de reprise écrite, scellée et poussée avant la marque de fin (addendum 7, § 3).
+# chaque dossier de reprise écrite, scellée et poussée avant la marque de fin (addendum 7, § 3). `reprendre` écrit ici dans
+# `sortie-conduite-v15/reprise-v10/` (ou `reprise-v10-<n>`), jamais d'écrasement. Étiquette et identifiant : relevé
+# `vastai show instance 61049303` et ligne de création de `sortie-conduite-v15/conduite-v5.jsonl` (17 novembre).
+# v4 (contre-lecture) : instance exigée arrêtée ; garde de crédit ; dossiers de reprise antérieurs non listés.
 # Poste Hetzner de REPRISE du témoin de Bailey, v3 (R12 ; v1 et v2 restent telles quelles). v3 = v2 avec des noms
 # neufs (la v2 a tourné le 13 novembre à 05:57Z : redémarrage refusé, compte Vast sans crédit) ; relancée après le crédit
 # du compte par Lazar (« crédité, relance la reprise »). `reprendre` écrit dans `reprise-v10-2/` (jamais d'écrasement).
@@ -41,7 +44,7 @@ cat > /root/secrets.env <<'@@SECRETS_FIN@@'
 chmod 600 /root/.ssh/deploiement /root/.ssh/id_ed25519 /root/secrets.env
 umask 022
 
-pousser() {  # $1 : message ; pousse les seuls fichiers de la sortie v5 et du poste
+pousser() {  # $1 : message ; pousse les seuls fichiers de la sortie de la conduite v15, des listes des répertoires de reprise et du poste
   cd "$DEPOT" || return 1
   local f
   for f in "$BASE/sortie-conduite-v15" "$BASE"/reprise-v4.out "$BASE"/reprise-v4.err "$BASE"/reprise-v4.pid \
@@ -93,6 +96,16 @@ set -a; . /root/secrets.env; set +a
 
 # v4 : la conduite v15 doit être finie (marque du poste v13 sur la branche), sinon rien ne tourne
 [ -s "$BASE/poste-fini-v13.json" ] || { etat "conduite v15 non finie (poste-fini-v13.json absent) : rien ne tourne"; pousser "conduite non finie"; exit 3; }
+# v4 : crédit Vast positif et recharge sans échec, sinon rien ne tourne (le redémarrage serait refusé)
+vastai show user --raw > /root/compte-avant.json || { etat "compte Vast illisible : rien ne tourne"; pousser "compte illisible"; exit 3; }
+python3 - <<'EOF3' || { etat "crédit Vast nul ou recharge en échec : rien ne tourne"; pousser "crédit absent"; exit 3; }
+import json, sys
+u = json.load(open('/root/compte-avant.json'))
+print('compte :', {k: u.get(k) for k in ('credit', 'billing_failed', 'has_billing', 'autobill_threshold', 'autobill_amount')})
+sys.exit(0 if not u.get('billing_failed') and float(u.get('credit') or 0) > 0 else 1)
+EOF3
+# v4 : dossiers de reprise déjà présents avant ce poste (venus par git) : non listés ici
+AVANT=" $(cd "$BASE/sortie-conduite-v15" 2>/dev/null && ls -d reprise-v10* 2>/dev/null | tr "\n" " ") "
 # inventaire R10 : l'instance à reprendre doit exister, arrêtée ; aucune autre instance du témoin
 vastai show instances --raw > /root/inventaire-avant.json \
   || { etat "inventaire Vast illisible : rien ne tourne"; pousser "inventaire illisible"; exit 3; }
@@ -100,11 +113,11 @@ python3 - <<'EOF2' || { etat "inventaire non conforme : rien ne tourne"; pousser
 import json, sys
 d = json.load(open("/root/inventaire-avant.json"))
 t = [i for i in d if str(i.get("label") or "").startswith("temoin-bailey-c6-")]
-ok = len(t) == 1 and str(t[0]["id"]) == "61049303" and t[0].get("label") == "temoin-bailey-c6-40eb0b51dade4963"
+ok = len(t) == 1 and str(t[0]["id"]) == "61049303" and t[0].get("label") == "temoin-bailey-c6-40eb0b51dade4963" and t[0].get("actual_status") in ("exited", "stopped")
 print("instances du témoin :", [(i["id"], i.get("actual_status")) for i in t])
 sys.exit(0 if ok else 1)
 EOF2
-etat "inventaire conforme : 61049303 seule instance du témoin"
+etat "inventaire conforme : 61049303 seule instance du témoin, arrêtée"
 
 # 4. reprise (lecture 38), poussées régulières
 export GO_ID=GO-2026-11-17-07 DEPOT_URL=https://github.com/lciric/controle-ia-travail.git PYTHONPATH=$DEPOT/src
@@ -125,14 +138,17 @@ done
 wait "$P"; C=$?
 etat "reprise terminée, code $C"
 # v4 : liste des répertoires de chaque dossier de reprise (addendum 7, § 3), hors du dossier, avant la marque de fin
+N=0
 for R in "$BASE"/sortie-conduite-v15/reprise-v10*; do
   [ -d "$R" ] || continue
+  case "$AVANT" in *" $(basename "$R") "*) etat "dossier antérieur au poste, non listé : $(basename "$R")"; continue;; esac
   L="repertoires-sortie-conduite-v15--$(basename "$R")-v1.txt"
-  [ -e "$BASE/$L" ] && continue
+  [ -e "$BASE/$L" ] && { etat "liste déjà présente, laissée telle quelle : $L"; continue; }
   (cd "$R" && find . -mindepth 1 -type d -printf '%P\n' | LC_ALL=C sort > "$BASE/$L")
   (cd "$BASE" && [ -f "$L" ] && LC_ALL=C sha256sum "$L" > "$L.sha256")
-  etat "liste des répertoires écrite : $L"
+  N=$((N+1)); etat "liste des répertoires : $L ($(wc -l < "$BASE/$L" 2>/dev/null || echo absente) entrées ; compagnon $([ -s "$BASE/$L.sha256" ] && echo écrit || echo absent))"
 done
+[ "$N" -gt 0 ] || etat "aucun dossier de reprise neuf : aucune liste des répertoires"
 pousser "listes des répertoires de reprise"
 printf '{"fini": "%s", "pid": %s, "code": %s}\n' "$(date -u +%FT%TZ)" "$P" "$C" > "$BASE/poste-fini-reprise-v4.json"
 pousser "reprise terminée (code $C)"
