@@ -353,8 +353,8 @@ Les lois plantées ne sont jugées que là où une mesure le demande (M7) ; elle
 - **Règle** : **tenue si et seulement si 2·G ≥ 24**, soit G ≥ 12 ; comparaison d'entiers. Seuil « au moins la moitié » : **de
   Lazar, sans pièce**.
 - **Passe qui décide, jouée la première** : P_CACHÉE = **0** ; G, G_cond et « tenue » ou « non tenue » écrits et scellés **avant
-  toute autre passe**. **Égalité de contrôle** : sa génération 1 égale celle de l'étape 5 (mêmes flux, mêmes valeurs) ; un écart
-  arrête le banc (B-13).
+  toute autre passe**. **Égalité de contrôle** : sa génération 1 égale celle de l'étape 5 (mêmes flux, mêmes valeurs ; égalité au
+  sens de 7.5, point 5) ; un écart arrête le banc (B-13).
 - **Passes rapportées, qui ne décident pas** (mêmes 24 mondes, mêmes flux, dans cet ordre) : **borne haute de l'intervalle du
   pilote**, puis **0,01 ; 0,02 ; 0,03 ; 0,04 ; 0,05 ; 0,25 (sans masquage)** ; la borne basse égale le ponctuel (0) : pas de passe
   de plus. La borne haute **se lit au champ de la sortie de mesure scellée du pilote** (`sortie-mesure-pilote-v70.json`,
@@ -491,8 +491,10 @@ la pièce est refaite ; la conception v7 n'est pas modifiée, elle reste versée
 | E-12 | flux | « indexés par le rang r » ; graines du juge et du test de mort liées au drapeau dans la v4 | racine publique tirée de l'empreinte de la pièce ; flux indépendants de la passe, de n et de la forme (4.2) | contre-lecture |
 | E-13 | gardien sur les cartes synthétiques | absent de la simulation v4 | appliqué, refus comptés (section 3) | contre-lecture |
 | E-14 | jeu public du regroupement | 1 500 instances dans la simulation v4 | 2 000, valeur du texte (section 3) | — (le texte prime) |
+| E-15 | archives de la mesure de surdité | « archives sans W₋ᵢ » (D.1) ; brouillon 3 : « retenues simulées d'une génération 2 (et 8 et 16 lois partielles) » | A₃ seule, avec la référence {W₋ᵢ} (M1) ; archives partielles retirées (F-2 point 2) | contre-lecture |
+| E-16 | répétitions du jeu planté pour les valeurs [BANC] | non dites | 20 répétitions par génération (M7) | contre-lecture |
 
-**Nœuds de Lazar, à trancher avant le banc (aucun défaut sous 48 heures)** :
+**À trancher avant le banc (aucun défaut sous 48 heures : nœuds de Lazar, ou point de la mère là où le brouillon 6 le permet)** :
 
 1. **Sous-choix de τ** : part d'ensemble (brouillon 6, recommandation du brouillon 3, confiance 0,55) ou sa borne haute de
    Wilson ; non nommé par R-2492. Sans son mot, la pièce ne se scelle pas comme finale et le banc ne se lance pas ; s'il retient la
@@ -577,9 +579,10 @@ qu'une copie atteint k·m/α.
 - **Rôle** : rédacteur neuf de la pièce des règles du banc complet ; sous-agent d'un script d'orchestration de la session mère ;
   aucune autorité de décision. Lettre : **modèle A** (même lignée que les rédacteurs de la conception, du préenregistrement et
   du code du pilote).
-- **Pièces écrites par moi dans cette tâche** (scellées, compagnon `.sha256`) : cette pièce ;
-  `banc-calibration-mr2-v1/mesure-durees-banc-mr2-v1.py` (scellé avant son passage) et sa sortie ; le programme du calcul du devis
-  v4 et sa sortie ; `banc-calibration-mr2-v1/devis-banc-calibration-mr2-v4.md`.
+- **Pièces écrites par moi dans cette tâche** (dossier `banc-calibration-mr2-v1/`, scellées, compagnon `.sha256`) : cette pièce ;
+  `mesure-durees-banc-mr2-v1.py` (scellé avant son passage), `mesure-durees-banc-mr2-v1.json` et `.stdout` ;
+  `calcul-devis-banc-mr2-v4.py` (scellé avant son passage officiel ; un essai à blanc, sortie au bloc-notes hors dépôt, rend le même
+  résultat), `calcul-devis-banc-mr2-v4.json` et `.stdout` ; `devis-banc-calibration-mr2-v4.md`.
 - **Pièces lues** : section « Pièces lues » ci-dessus (empreintes recalculées, égales à leur compagnon) ; branches du pilote
   (`verdict/pilote-mr2-v74-v14-v1`, `prep/pilote-mr2-v1`) récupérées dans un dossier neuf du bloc-notes, à profondeur 1 et sans
   contenus de fichiers (filtre `blob:none`, options du serveur local configurées dans ce seul dossier), fichiers tirés un à un par
