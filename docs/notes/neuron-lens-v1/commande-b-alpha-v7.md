@@ -140,7 +140,7 @@ ni reformuler un refus. Les automates déjà armés (minuterie, garde) ne sont p
 ## 2. Sur la machine (amorce `scripts/amorce_neuron_lens_b_alpha_v7.sh`, sans intervention)
 12. Commit égal à `COMMIT_REDUIT` (code 10) ; arbre propre au premier départ (code 10) ; RUN_ID et GO_ID valides (code 17) ; première
     poussée vérifiée (code 14, avant l'environnement) ; `pip` 26.2.2 puis les versions épinglées (`requirements-neuron-lens-b-alpha-v1.txt`),
-    **verbeux, sous `timeout` 3 600 s pour chacun des deux appels** (code 16 ; durée journalisée ; pire cas 2 h, contre 1,5 h au devis : déclaré) ; carte (code 11) ; essais de nos modules (156, code 12 sur échec,
+    **verbeux, sous `timeout` 3 600 s pour chacun des deux appels** (code 16 ; durée journalisée ; pire cas 2 h, contre 1,5 h au devis : déclaré) ; carte (code 11) ; essais de nos modules (168, code 12 sur échec,
     essai sauté ou arbre sali) ; puis les étapes du lanceur dans l'ordre de `suite` : `preparer` (correctifs appliqués, empreintes avant
     et après, manifeste R9) → `telecharger-tokeniseur` (**clé**) → `b0` → `telecharger-poids` (**clé** ; ensuite retirée de la course,
     vérifiée par son nom) → `corpus` (en ligne, sans clé) → `partie2` (scellée sur la machine ; tout écart = arrêt) → `fumee` (refusée
@@ -190,20 +190,20 @@ ni reformuler un refus. Les automates déjà armés (minuterie, garde) ne sont p
     `registres/depenses.md` ; **révocation de la clé `HF_TOKEN`** recommandée à Lazar (devis v2, § 5).
 
 ## Essai à blanc (sans location), fait avant la demande de feu
-Script `scripts/essai_a_blanc_amorce_neuron_lens_b_alpha_v10.sh`, journal versé `devis-b-alpha/essai-a-blanc-amorce-b-alpha-v10.txt`.
-Joué le 2026-11-17 sur le commit source `42e16e7f8118ca8376bebe50eaeb8d6075af5434` (dépôt réduit v7 : commit réduit
-`548b451bce6d4a5777125a2f47b2f5cd9a78b0fb`, 351 fichiers, **liste `fcf9f3a01b83dea1b74d3acf1c48e7a852dbde4b6d7746486928ff58f56e5b98`**,
-paquet `525ffec4…`) : **verdict automatique : conforme, 0 écart**. Cas de la v8 (nominal avec **156** essais réels, relance, reprise
-après arrêt brutal, échec 20, 14 formes, gardes d'entrée, balayage final, 0 processus restant) et, neufs : étapes du faux lanceur égales à
-celles du lanceur v4 (audits exceptés), lues par programme ; nominal à **18** appels et 18 résultats poussés ; reprise qui rejoue la
-seconde série ; environnement exact v3 : `measure --ctx-batch 16` et `--seed 1` au lot 16, `--ctx-batch 64` et `--seed 1` au lot 64,
-vraie bascule (fichiers du lot 16 renommés, empreintes), vraie `etape_measure_lot64` (un appel, `--ctx-batch 64`), hors ligne, sans
-secret ; artefact : le lanceur v3 est pris en défaut (6 écarts). L'essai v9 avait un seul écart, de l'essai lui-même (compte des résultats
-poussés resté à 13 ; journal `essai-a-blanc-amorce-b-alpha-v9.txt`), corrigé en v10. **La liste attendue de l'étape 5 est celle-ci** ;
-le commit source de la course est le commit qui porte cette commande (ses pièces de course sont identiques à `42e16e7f`, la liste le
-prouve).
-Non couverts, déclarés : comme en v8 ; le contrôle `CARTE_ATTENDUE` de l'amorce v6 n'est pas joué (aucune carte dans le conteneur ;
-relu seulement) ; la mémoire de pointe au lot 64 sur l'A100 est estimée, non mesurée (marge ≈ 15,5 GiB).
+Script `scripts/essai_a_blanc_amorce_neuron_lens_b_alpha_v11.sh`, journal versé `devis-b-alpha/essai-a-blanc-amorce-b-alpha-v11.txt`.
+Joué le 2026-11-17 sur le commit source `af7a71177e3d80e12485a7708ec9ff1c65ed75c4` (dépôt réduit v8 : 351 fichiers, **liste
+`c22cafc63b03eb62ec81d21f2a4461923e939762e21757f9130d19a6301bd157`**) : **verdict automatique : conforme, 0 écart**. Cas de la v10
+(nominal avec **168** essais réels, 18 appels et 18 résultats poussés, relance, reprise après arrêt brutal qui rejoue la seconde série,
+échec 20, 14 formes, gardes d'entrée, balayage final, 0 processus restant ; étapes du faux lanceur égales à celles du lanceur v5 ;
+environnement exact v3 avec le lanceur v5 : `measure` aux lots 16 et 64, vraie bascule, vraie `etape_measure_lot64` ; artefact lanceur
+v3 pris en défaut) et, neufs (B2), la **garde de carte** : cas sain « NVIDIA A100-SXM4-40GB » vu par `nvidia-smi` puis par `torch`
+(code 0) ; artefacts A100-SXM4-80GB, A100-PCIE-40GB, RTX 4090 vus par `nvidia-smi` (code 11, avant l'installation) ; carte vue par
+`torch` différente (code 11) ; nom illisible par `torch` (code 11) ; `nvidia-smi` absent : contrôle par `torch` seul (code 0).
+**La liste attendue de l'étape 5 est celle-ci** ; le commit source de la course est celui qui porte cette commande (pièces de course
+identiques à `af7a7117`, la liste le prouve, à revérifier à l'étape 5).
+Non couverts, déclarés : vraie course, vrai `pip`, vraie carte (les noms de carte sont ceux de `nvidia-smi` et de `torch` attendus,
+non lus sur une A100) ; les audits ne passent pas par le vrai lanceur dans l'essai à blanc (le faux lanceur ne les requiert pas) : leur
+ordre et leur déclenchement sont essayés dans les essais v5 du lanceur, pas ici (mineure 14) ; la mémoire de pointe au lot 64 est estimée.
 
 ## Jetons
 - Jeton du programme : écriture sur tout le dépôt de travail ; « jamais vers `main` » n'est garanti que par l'amorce (réserve inchangée).
@@ -230,27 +230,31 @@ relu seulement) ; la mémoire de pointe au lot 64 sur l'A100 est estimée, non m
   écrire au rapport de B-4 et à la partie 2. Point (d) : `test_cibles_invisibles_v4`, avant toute fusion dans `main`.
 
 ## Devis
-`devis-b-alpha/devis-recourse-b7-a100-v1.md` : attendu ≈ 2,7 à 3,0 h, **≈ 1,8 à 2,3 USD** trafic compris ; pire cas codé ≈ 17 h, tronqué
-par l'arrêt dur de la garde à **7,65 USD** ; ligne GO-2026-11-14-06 après la course ≈ 3,9 à 4,4 USD attendus, ≈ 10,05 USD au pire, sous
-son arrêt dur (10,80). Déjà dépensé sur la ligne : ≈ 2,1 USD (trois courses). Relevé du jour : `devis-b-alpha/releve-prix-vast-a100-20261117T003231Z-v1.tsv`
-(quatre offres sous 0,73 USD/h stockage compris, la moins chère ≈ 0,62).
+`devis-b-alpha/devis-recourse-b7-a100-v2.md` : attendu ≈ 2,7 à 3,0 h, **≈ 1,8 à 2,3 USD** trafic compris (≈ 2,5 à 3,0 USD avec les deux
+audits) ; pire cas codé ≈ 17 h, tronqué par l'arrêt dur de la garde à **7,65 USD** ; ligne GO-2026-11-14-06 après la course ≈ 3,9 à
+5,1 USD attendus, ≈ 10,05 USD au pire, sous son arrêt dur (10,80). Déjà dépensé sur la ligne : ≈ 2,1 USD (compte large des trois courses).
+Relevé du jour : `devis-b-alpha/releve-prix-vast-a100-20261117T003231Z-v1.tsv`.
 
 ## Empreintes des pièces citées
 | pièce | sha256 |
 |---|---|
+| `docs/notes/neuron-lens-v1/commande-b-alpha-v6.md` | `71d4c5b19113658df4bbc7cf672a167fc31f9fa0ce69bded56c376eccd8b1b36` |
+| `docs/notes/neuron-lens-v1/contre-lectures/contre-lecture-commande-b-alpha-v6-v1.md` | `0d5b572747b2dd852f3d6b774e883f8701bddb2fd13f0051e2bfa35443e98f01` |
 | `docs/notes/neuron-lens-v1/commande-b-alpha-v5.md` | `423b74b43920788060d8ddb21bbeba0ae32ef5588ea63f7b2db511df27e38bb6` |
 | `docs/notes/neuron-lens-v1/journal-course-b-alpha-v3.md` | `edd37d374204a0e889d72f1646dbc783ddabe79189cc29734e35e9cd8ef3421e` |
-| `docs/notes/neuron-lens-v1/addendum-texte-gele-v6-recourse-b7-a100-v1.md` | `116718269d1c20e05c21e261d9ce385afaca2f63821247d9f76209297c4f98df` |
+| `docs/notes/neuron-lens-v1/addendum-texte-gele-v6-recourse-b7-a100-v2.md` | `92f16b975bda27a2598da3ca907b6edd9c5702e6919c2345470003b3f56a30d5` |
+| `docs/notes/neuron-lens-v1/devis-b-alpha/devis-recourse-b7-a100-v2.md` | `a1a66232a90a5aa6ba61e620c76815905de612df067475134452754ddbc82b44` |
+| `docs/notes/neuron-lens-v1/devis-b-alpha/releve-prix-vast-a100-20261117T003231Z-v1.tsv` | `a3bce297995e402067c00f5cb759d2f4547ab8a32ed26d2ce731ce2fe3481aac` |
 | `docs/notes/neuron-lens-v1/devis-b-alpha/memoire-ablation-lot64-rtx4090-v1.md` | `b67f90a9a007f287fd857ed064fcc98950877378cefcc855755a54b9ffe40324` |
 | `docs/notes/neuron-lens-v1/devis-b-alpha/memoire-measure-b-alpha-v1.md` | `423d79553ae6bca71098623ff1c45033598efbe45c6abb604871cc20ff870da5` |
-| `src/controle_ia/neuron_lens/b_alpha_lancer_v4.py` | `c598b78755b373008420b846754992700801d8695676fd6ae68d31b43a310a34` |
-| `tests/test_neuron_lens_b_alpha_lancer_v4.py` | `0126acbd46469231225b07294cfe124edc7a9ed4569beadefced9bb16224b252` |
-| `scripts/amorce_neuron_lens_b_alpha_v7.sh` | `17972c842cc531e9df21f8cdf651f6228122c854fa04a9baeea35af6e98f1f4f` |
-| `scripts/depot_reduit_neuron_lens_b_alpha_v8.py` | `72f18c67becac924147c145de943d2d7c3e50da4d1464662975d29d214823168` |
+| `docs/notes/neuron-lens-v1/devis-b-alpha/devis-tranche-b-alpha-v2.md` | `61c394f570a15a58067488b338ca46ade5734bf9f7446964100933e7a458de13` |
+| `src/controle_ia/neuron_lens/b_alpha_lancer_v5.py` | `c6a5d5db0272e4775d48b828b1d5f3904bf0b32d8d5ccdcc87c283effd7895b9` |
+| `tests/test_neuron_lens_b_alpha_lancer_v5.py` | `0b089c1b91b2f88a8168d20b2f3f7312f839e54f59da9de0b84020b8894e20b6` |
+| `scripts/amorce_neuron_lens_b_alpha_v7.sh` | `b3285b0a36368ba02699d19521b110599ad6037ebe0c98ed06aca3ca2d7ac9c7` |
+| `scripts/depot_reduit_neuron_lens_b_alpha_v8.py` | `f430d4bddcdd0e47af5eb95fc8c9131ac494a7fb060eda1091011489c91ea6d9` |
 | `scripts/essai_environnement_b0_v3.py` | `bf34497f20192f03887fa3771f4748d89509049ac3af8874e9e2c4bc1d22371d` |
-| `scripts/essai_a_blanc_amorce_neuron_lens_b_alpha_v10.sh` | `431e0645ef19556f519ba4ef996518fd93dc38b83a9890b380796626c205affc` |
-| `docs/notes/neuron-lens-v1/devis-b-alpha/essai-a-blanc-amorce-b-alpha-v10.txt` | `b8611d53b802b352c6d5609840a60c29b7f5e30e7f65c87ae5c042bea7f57d67` |
-| `docs/notes/neuron-lens-v1/devis-b-alpha/releve-prix-vast-a100-20261117T003231Z-v1.tsv` | `a3bce297995e402067c00f5cb759d2f4547ab8a32ed26d2ce731ce2fe3481aac` |
+| `scripts/essai_a_blanc_amorce_neuron_lens_b_alpha_v11.sh` | `e1ea4e2dfd84d2c37042d07ad25aaa6431f941c60f6306ad90d0ad7e028908f8` |
+| `docs/notes/neuron-lens-v1/devis-b-alpha/essai-a-blanc-amorce-b-alpha-v11.txt` | `a0ad98d3c211b6e59e4f3416c82dc7581d770969f9ee7516c939d5f661bc510a` |
 | `docs/notes/neuron-lens-v1/texte-gele-volet-a-et-b-alpha-v6.md` | `34b882437a9d1eb7a865e870b3b156b596fb78a8a30316588ec13abbfa21c131` |
 | `src/controle_ia/neuron_lens/garde_depense_v4.py` | `6a98d816a0917b7e3a7029ce105a3f0047a765f494b5ec07032b05836a1a0310` |
 | `src/controle_ia/neuron_lens/suivi_vast_v6.py` | `2ecaaeed2ea23071e9acacb200661086fb644eb52148c11f6da558fb9a160c7f` |
