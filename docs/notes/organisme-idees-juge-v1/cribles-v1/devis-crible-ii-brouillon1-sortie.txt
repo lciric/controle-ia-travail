@@ -1,0 +1,77 @@
+
+§ 0. Contrôles de cohérence des entrées
+appels 16 ; somme des durées 2668.095 s
+machine du pilote 1.5706 h = 5654.0 s ; hors appels 2985.9 s
+total des quatre proposeurs 15.220258 USD (verdict : 15,302276 avec la machine, sans les autres)
+quatre proposeurs + machine 15.302276
+
+§ 1. Attendu par appel (moyenne de tous les appels du pilote, règle (b) de [CRIBLE-V])
+opus55 configuration 0.264334 ; public 0.264334 ; répondus 4 sur 4 ; part moyenne du plafond 0.1322
+argon configuration 0.617905 ; public 0.123581 ; répondus 4 sur 4 ; part moyenne du plafond 0.2641
+astra configuration 0.417938 ; public 0.417938 ; répondus 4 sur 4 ; part moyenne du plafond 0.1786
+fable52 configuration 2.504888 ; public 2.504888 ; répondus 2 sur 4 ; part moyenne du plafond 0.8350
+
+§ 2. Tronquage (règle de [CRIBLE-III] : plus grand appel au-dessus de 80 % de la borne de sortie)
+opus55 sortie du plus grand appel <= 52867 jetons ; 80 % de la borne : 71200 ; règle déclenchée : False
+opus55 octets servis au plus sous le plafond de session (règle du code, (octets + 1 024) x entrée + borne x sortie) : 53976
+argon octets servis au plus sous le plafond de session (même règle, prix de la configuration) : 52976
+
+§ 3. Appels du crible
+variante, rang 1 commun (P1 sert aux trois bras) : par monde 10 ; en tout 200
+forme de [NOTE], trois bras de quatre sessions : par monde 12 ; en tout 240
+
+§ 4. Devis de la variante « crédits de Claude au maximum » (Pr-2 opus55 aux quatre places, rang 1 commun)
+parallèle P1 à P4 80 appels : attendu 21.1467 ; haut 21.1467 ; pire 160.00
+série S2 à S4 60 appels : attendu 15.8600 ; haut 18.8600 ; pire 120.00
+placebo Q2 à Q4 60 appels : attendu 15.8600 ; haut 18.8600 ; pire 120.00
+proposeurs (crédits de Claude) : attendu 52.8668 ; haut 58.8668 ; pire 400.00
+sonde des gabarits (4 appels de opus55) : attendu 1.0573 ; pire 8.00
+
+§ 5. Durées et machine
+opus55 : moyenne 68.387 s ; plus long 109.396 s
+plus long appel répondu du pilote (tous proposeurs) 430.542 s ; règle de [CRIBLE-V] : B_a = 900 s ; même règle sur opus55 seul : 300 s
+phase 1 : attendu 437.6 s ; pire 3600 s
+phase 2 (une file) : attendu 820.6 s ; pire 10800 s
+appels attendus 1258.2 s ; pire des appels 14400 s = 4.000 h ; garde de départ (pire + 2 h) 6.000 h
+machine attendue 0.061566 USD (temps hors appels du pilote compris) ; 0.113788 avec une heure de génération de mondes en plus ; 17 h : 0.8878 ; pire 3,00
+
+§ 6. Totaux de la variante
+crédits de Claude : attendu 52.8668 (haut 58.8668) ; pire 400.00
+hors crédits (machine) : attendu 0.0616 à 0.1138 ; pire 3.00
+total : attendu 52.9284 ; pire 403.00
+avec la sonde : crédits attendu 53.9241 pire 408.00 ; total pire 411.00
+
+§ 7. Formes écartées, information seulement
+Pr-1 argon, rang 1 commun : attendu public 24.7162 ; configuration 123.5810 ; pire 471.00 (hors crédits)
+Pr-1 argon, forme de [NOTE] : attendu public 29.6594 ; configuration 148.2972 ; pire 564.60 (hors crédits)
+Pr-2 opus55, forme de [NOTE] (240 appels) : attendu 63.4402 ; pire 483.00
+[NOTE] : 63,30 attendus, 483,00 au pire
+
+§ 8. Enveloppe de GO-2026-11-15-06 (1 275 USD au pire)
+(iii) version qui fera foi v1, sonde comprise 270.00
+(v) version qui fera foi v2, sonde neuve comprise 204.67
+(i) [NOTE] 123.00
+(iv) [NOTE] 243.00
+quatre autres : 840.67 ; reste pour (ii) : 434.33
+(ii) variante, sonde comprise : 411.00 ; cumul 1251.67 ; tient : True
+(ii) forme de [NOTE] sur opus55, avec sonde 491.00 ; cumul 1331.67 ; tient : False
+(ii) Pr-1 rang 1 commun 471.00 ; cumul 1311.67 ; tient : False
+(ii) [NOTE] 483.00 ; cumul 1323.67 ; tient : False
+
+§ 9. Test des rangs signés exact (permutation des signes), seuil bilatéral
+niveau 0.025 : au moins 7 écarts non nuls, tous du même signe (p = 0.01562)
+niveau 0.050 : au moins 6 écarts non nuls, tous du même signe (p = 0.03125)
+
+§ 10. Signe seul (écarts de 0 ou +-1) : seuil exact et puissance à n = 20, bilatéral 0,025
+P(+1) = 0.30 P(-1) = 0.10 : puissance (côté +) 0.107
+P(+1) = 0.40 P(-1) = 0.10 : puissance (côté +) 0.271
+P(+1) = 0.50 P(-1) = 0.10 : puissance (côté +) 0.473
+P(+1) = 0.35 P(-1) = 0.05 : puissance (côté +) 0.327
+
+§ 11. Probabilité d'atteindre le minimum (16 mondes complets sur 20 pour une comparaison principale)
+p par appel 1 : comparaison (7 appels) 1.0000 ; monde entier (10 appels) 1.0000
+p par appel 0.99 : comparaison (7 appels) 0.9905 ; monde entier (10 appels) 0.9635
+p par appel 0.98 : comparaison (7 appels) 0.8865 ; monde entier (10 appels) 0.7029
+p par appel 0.97 : comparaison (7 appels) 0.6643 ; monde entier (10 appels) 0.3653
+p par appel 0.95 : comparaison (7 appels) 0.2326 ; monde entier (10 appels) 0.0498
+p par appel 0.90 : comparaison (7 appels) 0.0034 ; monde entier (10 appels) 0.0000

@@ -1,0 +1,40 @@
+== 1. Attendu par appel (règle (b) de (v) : moyenne de tous les appels du pilote) ==
+Pr-2 : 0.264334 USD par appel ; Pr-1 : public 0.123581, configuration 0.617905
+fourchette par appel : coûts par appel non transmis par le verdict v2 ; bornes : plus petit <= moyenne <= plus grand <= total
+
+== 2. Surcoût d'entrée de la table (estimé, avant le constructeur) ==
+table de 2800 octets ≈ 933 jetons : Pr-2 0.0037 USD par appel ; 40 appels à table : 0.149 USD
+table de 4000 octets ≈ 1333 jetons : Pr-2 0.0053 USD par appel ; 40 appels à table : 0.213 USD
+table de 6000 octets ≈ 2000 jetons : Pr-2 0.0080 USD par appel ; 40 appels à table : 0.320 USD
+
+== 3. Devis, variante « crédits de Claude au maximum » (Pr-2 seul) ==
+N=20 : appels 60 ; attendu appels 16.07 ; pire appels 120.00 ; sonde 0.53 / 4.00 ; machine attendue 3.77 h = 0.197 USD (pire 3,00)
+      crédits : attendu 16.60, pire 124.00 ; hors crédits : attendu 0.197, pire 3.00 ; total pire 127.00
+N=24 : appels 72 ; attendu appels 19.29 ; pire appels 144.00 ; sonde 0.53 / 4.00 ; machine attendue 4.10 h = 0.214 USD (pire 3,00)
+      crédits : attendu 19.82, pire 148.00 ; hors crédits : attendu 0.214, pire 3.00 ; total pire 151.00
+N=30 : appels 90 ; attendu appels 24.11 ; pire appels 180.00 ; sonde 0.53 / 4.00 ; machine attendue 4.58 h = 0.239 USD (pire 3,00)
+      crédits : attendu 24.64, pire 184.00 ; hors crédits : attendu 0.239, pire 3.00 ; total pire 187.00
+
+== 4. Forme fidèle à la note (Pr-1 seul, hors crédits), information ==
+N=20 : attendu public 7.41, configuration 37.07 ; pire 140.40 + machine 3,00
+
+== 5. Durée et borne par appel (règle de ce texte) ==
+plus long appel de Pr-2 au pilote 109.396 s ; 3 x = 328.2 s ; B_a = 600 s
+M=1 : budget de pire cas (barrières 6 000 s + 3 x génération + ceil(N/M) x B_a + 3 x mesure + 3 x mise en place et rapatriement, ces deux derniers estimés à 1 800 s) = 39600 s = 11.00 h (<= 17 h : True)
+M=2 : budget de pire cas (barrières 6 000 s + 3 x génération + ceil(N/M) x B_a + 3 x mesure + 3 x mise en place et rapatriement, ces deux derniers estimés à 1 800 s) = 33600 s = 9.33 h (<= 17 h : True)
+
+== 6. Probabilité d'atteindre le minimum de 16 mondes complets sur 20 (trois appels répondus par monde) ==
+taux par appel 1.0 : P(monde complet) = 1.0000 ; P(n_c >= 16) = 1.0000
+taux par appel 0.97 : P(monde complet) = 0.9127 ; P(n_c >= 16) = 0.9741
+taux par appel 0.95 : P(monde complet) = 0.8574 ; P(n_c >= 16) = 0.8543
+taux par appel 0.9 : P(monde complet) = 0.7290 ; P(n_c >= 16) = 0.3338
+taux par appel 0.875 : P(monde complet) = 0.6699 ; P(n_c >= 16) = 0.1587
+
+== 7. Test exact apparié des signes, seuils ==
+niveau unilatéral 0.025 : pour d discordants, plus petit b rejeté : d=1:—, d=2:—, d=3:—, d=4:—, d=5:—, d=6:6, d=7:7, d=8:8, d=9:8, d=10:9, d=11:10, d=12:10
+niveau unilatéral 0.05 : pour d discordants, plus petit b rejeté : d=1:—, d=2:—, d=3:—, d=4:—, d=5:5, d=6:6, d=7:7, d=8:7, d=9:8, d=10:9, d=11:9, d=12:10
+
+== 8. Enveloppe de GO-2026-11-15-06 (1 275 USD au pire) ==
+(i) N=20 : 127.00 ; avec (iii) et (v) : 601.67 ; reste pour (ii) et (iv) : 673.33 ; (ii) 483 et (iv) 243 de la note : cumul 1327.67
+(i) N=24 : 151.00 ; avec (iii) et (v) : 625.67 ; reste pour (ii) et (iv) : 649.33 ; (ii) 483 et (iv) 243 de la note : cumul 1351.67
+(i) N=30 : 187.00 ; avec (iii) et (v) : 661.67 ; reste pour (ii) et (iv) : 613.33 ; (ii) 483 et (iv) 243 de la note : cumul 1387.67
