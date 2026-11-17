@@ -33,7 +33,7 @@ verdicts sont lus ensuite** (§ 3). C'est un écart à l'ordre que consignait la
 avant cette lecture. Dès qu'une note ou un verdict du témoin est lu avant la clôture, par qui que ce soit (lecture
 ordonnée, ou faite malgré le § 3), c'est consigné avec ce qui a été vu ; toute décision prise ensuite sur la confirmation
 (fin, seconde tentative, relance, reprise, mise en place refaite, correction de la commande de lecture, rejeu de
-l'assemblage, mot, crédit) est rapportée « décidée après une lecture », et le verdict retenu
+l'assemblage ou de la commande, mot, crédit) est rapportée « décidée après une lecture », et le verdict retenu
 porte cette réserve partout où il est cité.
 
 **Lenteur de la relance** (champs techniques seulement) : tours 0 à 35 de 36,5 à 132,8 min
@@ -153,79 +153,96 @@ sur la carte de Lazar : toute la dépense au-delà de la part du crédit située
   crédit d'une reprise, nouveau relevé du § 2.5, ligne neuve de la condition 2), la note de clôture cite le mot de Lazar
   qui y renonce, ou constate que l'échéance de la condition 2 est passée ; dans les autres cas, elle est écrite dès le
   constat (s'il y a eu relance par le chemin de l'addendum 5 : après l'assemblage, ou le constat de son refus). Après la clôture, rien n'est ajouté à la confirmation. La note de clôture nomme,
-  pour chaque verdict à lire : le dossier donné à la lecture (pour la confirmation : la sortie de la conduite ; le
-  dossier de reprise s'il y a eu reprise ; le dossier assemblé, fait avant la clôture, s'il y a eu relance par le
-  chemin de l'addendum 5 ; un refus de cet assemblage est constaté avant la clôture, par la puce « Refus ou erreur à la
-  lecture ») ; le commit du code ; les empreintes attendues (code, dossier, environnement), dans un fichier écrit par
-  `lecture_scellee_v1 --calculer-attendu`, qui ne fait que des empreintes d'octets et ne lit aucune note ; le chemin de
-  la sortie ; la commande. Ils ne changent plus. La commande est celle du § 4 (`lecture_scellee_v1`), jouée dans un
-  arbre de travail neuf au commit nommé (`git worktree add`), avec l'interpréteur du dépôt. Avant la note de clôture,
-  elle est jouée telle quelle, aux seuls chemins du dossier, de l'attendu et de la sortie près, sur un dossier factice
-  de même forme, construit par programme sans aucune pièce réelle (comme dans les essais du § 4) ; son issue est citée
-  dans la note. Une commande qui y échoue ne se corrige que dans ses chemins, arguments et variables, jamais dans le
-  code (§ 4), sans aucun dossier réel ; si aucune n'y aboutit dans les 24 h qui suivent le premier essai, la note de
-  clôture le dit et nomme la dernière commande essayée, et la règle mécanique s'applique ensuite sans exception.
-- **La lecture est faite par le code ; le verdict d'un run est sa sortie scellée.** Seul `lecture_scellee_v1` joue
-  `valider` et `lire` sur un dossier réel (§ 4). Il vérifie les empreintes attendues avant chaque exécution (écart, ou
-  empreintes incalculables : issue « refus : empreintes », aucune exécution). Il joue une exécution, et une seconde à
-  l'identique seulement après un refus (`GardeArret`) ou une erreur ; jamais après une exécution qui aboutit (un état
-  « pas de verdict » ou « non interprétable » rendu par le code est une exécution qui aboutit). Il écrit une sortie
-  neuve et la scelle ; il refuse sans rien jouer ni rien écrire si cette sortie, ou son compagnon, existe déjà. Il ne
-  rend que l'empreinte de la sortie et son issue (« aboutie », « refus ou erreur », « refus : empreintes »), sans aucune
-  valeur ; pour un refus, la sortie porte le texte de la `GardeArret`, pour toute autre exception son type et son lieu,
-  sans son message. **La sortie scellée au chemin nommé fait foi** : son issue et, si elle est « aboutie », le verdict
-  qu'elle porte sont ceux du run ; un rapport de lecteur qui en diffère n'est pas retenu.
+  pour chaque verdict à lire : le dossier donné à la lecture, par son chemin absolu dans l'arbre de travail principal
+  du dépôt (pour la confirmation : la sortie de la conduite ; le dossier de reprise s'il y a eu reprise ; le dossier
+  assemblé, fait avant la clôture, s'il y a eu relance par le chemin de l'addendum 5 ; un refus de cet assemblage est
+  constaté avant la clôture, par la puce « Refus ou erreur à la lecture ») ; le commit du code, celui du § 4 et aucun
+  autre ; le fichier des empreintes attendues, écrit et scellé par `lecture_scellee_v2 --calculer-attendu … --commit
+  <ce commit> --vers …`, joué par la session avec la commande consignée, qui ne fait que des empreintes d'octets, ne
+  lit aucune note, et refuse si `src/` porte une modification ou un fichier non suivi, ou si l'arbre `src/` de la tête
+  n'est pas celui du commit nommé ; le chemin de la sortie ; la commande (`python -B`, l'interpréteur du dépôt,
+  `PYTHONPATH=src`, `PYTHONPYCACHEPREFIX` vers un répertoire neuf et vide à chaque exécution, pour qu'aucun `.pyc`
+  existant ne soit relu ; tous chemins absolus). Ils ne changent plus. Entre la note de clôture et le contrôle final, aucune
+  session n'installe ni ne retire de distribution, ni ne fait de changement de branche, `git checkout`, `git clean` ou
+  `git stash` dans cet arbre. Avant la note de clôture, la commande est jouée telle quelle, aux seuls chemins du
+  dossier, de l'attendu et de la sortie près, sur un dossier factice de même forme, construit par programme sans aucune
+  pièce réelle (comme dans les essais du § 4), avec un attendu calculé de même sur ce dossier factice (le code et
+  l'environnement réels sont ainsi éprouvés) ; son issue est citée dans la note. Une commande qui y échoue ne se
+  corrige que dans ses chemins, arguments et variables, jamais dans le code (§ 4), sans aucun dossier réel ; si aucune
+  n'y aboutit dans les 24 h qui suivent le premier essai, la note de clôture le dit et nomme la dernière commande
+  essayée ; la session la joue sur le dossier réel, et la puce « Refus ou erreur à la lecture » s'applique ensuite sans
+  exception.
+- **La lecture est faite par le code, jouée par la session à l'aveugle ; le verdict d'un run est sa sortie scellée.**
+  Seul `lecture_scellee_v2` joue `valider` et `lire` sur un dossier réel (§ 4). Il vérifie l'attendu (forme, commit,
+  arbre `src/`, dossier, environnement) avant chaque exécution (écart, forme non conforme, ou empreintes refusées ou
+  incalculables : issue « refus : empreintes », aucune exécution). Il joue une exécution, et une seconde à l'identique
+  seulement après un refus (`GardeArret`) ou une erreur ; jamais après une exécution qui aboutit (un état « pas de
+  verdict » ou « non interprétable » rendu par le code est une exécution qui aboutit). Il écrit une sortie neuve et la
+  scelle ; il refuse sans rien jouer ni rien écrire si cette sortie, ou son compagnon, existe déjà. Il ne rend que
+  l'empreinte de la sortie et son issue (« aboutie », « refus ou erreur », « refus : empreintes »), sans aucune valeur ;
+  pour un refus, la sortie porte le texte de la `GardeArret`, pour toute autre exception son type et son lieu, sans son
+  message. Dans les 24 h qui suivent la note de clôture, la session joue la commande consignée, une fois par verdict à
+  lire, et consigne l'empreinte et l'issue rendues, sans ouvrir la sortie. Une exécution de la commande qui ne laisse
+  pas de sortie scellée (le code n'a pas démarré, ou s'est arrêté avant de sceller) est rejouée une fois, à l'identique,
+  si aucune sortie n'est présente ; une sortie présente sans son compagnon n'est ni ouverte ni scellée après coup, et le
+  code refuse alors de la remplacer : l'absence de sortie est constatée. **La sortie scellée au chemin nommé fait foi** :
+  son issue et, si elle est « aboutie », le verdict et le K′ qu'elle porte sont ceux du run.
 - **Les deux verdicts**, après la clôture seulement : deux lecteurs neufs distincts (R13 : ni auteurs du
-  préenregistrement ni de l'analyse), lancés ensemble dans les 24 h qui suivent la clôture, chacun avant que l'autre
-  n'ait rendu (un lancement plus tardif est rapporté avec sa cause et ne change aucune règle) ; l'un sur
-  `lecture-assemblee-v1` (verdict du texte pour les séries 1 à 3 et la relance ; K′ établi par cette lecture, 36 tours
-  complets au bilan ; l. 332, 338) ; l'autre, si un run principal de la confirmation a ses journaux transférés et
-  scellés (cas (i) ; cas (ii) ou (iii) après le début du run principal, lu comme un run interrompu, l. 338), sur le
-  dossier que nomme la note de clôture, sauf si l'assemblage d'une relance passée par le chemin de l'addendum 5 a été
-  refusé. Chaque lecteur joue la commande consignée, une fois, et ne joue rien d'autre sur le dossier ; puis il lit la
-  sortie scellée, et seulement elle, et écrit au chemin que fixe sa consigne un rapport qui la transcrit et prononce le
-  verdict selon les critères gelés (`lecture_v8.valider`, `lire` avec `analyse_v3.graines()["reechantillonnage"]`,
-  audit de symétrie : ceux que la sortie porte) ; il scelle ce rapport et ne rend à la session que l'empreinte de la
-  sortie et celle du rapport, sans aucune valeur. Chaque verdict est demandé à un seul lecteur, dont le lancement
-  (heure, fichiers donnés, commande) est consigné avant qu'aucun des deux lecteurs n'ait rendu ; tout autre lecteur
-  lancé pour le même verdict est rapporté, et seul compte celui que désignent ces règles. Aucun des deux lecteurs ne
-  reçoit ni ne lit le verdict de l'autre, sa sortie, son rapport, son dossier de lecture, ni aucun registre, passation
-  ou note écrits après la clôture, avant d'avoir scellé le sien (cloisons écrites dans sa consigne).
+  préenregistrement ni de l'analyse), lancés ensemble dans les 24 h qui suivent la dernière sortie consignée, chacun
+  avant que l'autre n'ait rendu (un lancement plus tardif est rapporté avec sa cause et ne change aucune règle) ; l'un
+  sur la sortie de `lecture-assemblee-v1` (verdict du texte pour les séries 1 à 3 et la relance ; 36 tours complets au
+  bilan ; l. 332, 338) ; l'autre, si un run principal de la confirmation a ses journaux transférés et scellés (cas (i) ;
+  cas (ii) ou (iii) après le début du run principal, lu comme un run interrompu, l. 338), sur la sortie du dossier que
+  nomme la note de clôture, sauf si l'assemblage d'une relance passée par le chemin de l'addendum 5 a été refusé. Aucun
+  lecteur ne joue de code sur un dossier réel : chacun lit la sortie scellée qu'on lui donne, et seulement elle, et
+  écrit au chemin que fixe sa consigne un rapport qui la transcrit et prononce le verdict selon les critères gelés
+  (`lecture_v8.valider`, `lire` avec `analyse_v3.graines()["reechantillonnage"]`, audit de symétrie : ceux que la
+  sortie porte) ; il scelle ce rapport et ne rend à la session que son empreinte, sans aucune valeur. Chaque verdict est
+  demandé à un seul lecteur, dont le lancement (heure, fichiers donnés, consigne) est consigné avant qu'aucun des deux
+  lecteurs n'ait rendu ; tout autre lecteur lancé pour le même verdict est rapporté, et seul compte celui que désignent
+  ces règles. Aucun des deux lecteurs ne reçoit ni ne lit le verdict de l'autre, sa sortie, son rapport, son dossier de
+  lecture, ni aucun registre, passation ou note écrits après la clôture, avant d'avoir scellé le sien (cloisons écrites
+  dans sa consigne). Un rapport qui diffère de la sortie n'est pas retenu, sans remplacement du lecteur : le verdict de
+  la sortie est alors rapporté « R13 non tenu (rapport contraire à la sortie) ».
 - **Cloison de la session jusqu'aux deux verdicts.** Jusqu'à ce que chaque verdict attendu soit scellé, ou son absence
   constatée, aucune session n'ouvre une sortie ou un rapport, ne lit une note de sonde ou de juge du témoin (au sens de
   la première puce ; les l. 241-242 et 371 du texte ne jouent qu'ensuite), ni ne joue sur un dossier réel `valider`,
-  `lire` ou tout autre code qui lit ou rend une note : seul `lecture_scellee_v1`, lancé par un lecteur, le fait (la
-  conduite, la reprise de la lecture 38, l'assemblage d'une relance avant la clôture, `--calculer-attendu` et les
-  contrôles d'empreinte et de scellement, qui ne rendent aucune note, ne sont pas visés). Si une session apprend malgré
-  cela un verdict ou une valeur de note avant ce moment (message d'un lecteur, fichier ouvert), c'est consigné avec ce
-  qui a été vu ; toute décision prise ensuite sur l'autre lecture (remplacement d'un lecteur) est rapportée « décidée
-  après une lecture », et le verdict retenu porte cette réserve. Ensuite, et avant d'ouvrir le reste, un contrôle par
-  programme compare, pour chaque sortie, son champ `attendu` au fichier que nomme la note de clôture et son empreinte à
-  celle qu'a rendue le lecteur : un écart vaut « pas de verdict » pour ce run.
+  `lire` ou tout autre code qui lit ou rend une note : seule la commande consignée de `lecture_scellee_v2` le fait, qui
+  ne rend aucune valeur (la conduite, la reprise de la lecture 38, l'assemblage d'une relance avant la clôture,
+  `--calculer-attendu`, `--controler` et les contrôles d'empreinte et de scellement, qui ne rendent aucune note, ne sont
+  pas visés). Si une session apprend malgré cela un verdict ou une valeur de note avant ce moment (message d'un lecteur,
+  fichier ouvert), c'est consigné avec ce qui a été vu ; toute décision prise ensuite sur l'autre lecture (remplacement
+  d'un lecteur) est rapportée « décidée après une lecture », et le verdict retenu porte cette réserve. Ensuite, et avant
+  d'ouvrir le reste, la session joue, pour chaque sortie, `lecture_scellee_v2 --controler` avec l'attendu et le dossier
+  que nomme la note de clôture et l'empreinte qu'elle a consignée en jouant la commande ; il ne rend que « conforme » ou
+  « écart » : un écart vaut « pas de verdict » pour ce run.
 - **Lecteur remplacé, règle mécanique.** Un lecteur qui finit, ou qui n'a rien rendu 24 h après son lancement (il est
-  alors arrêté), sans que soient scellés au chemin nommé la sortie et, au chemin de sa consigne, son rapport, est
-  remplacé une seule fois par un lecteur neuf, sur la même consigne (chemin de rapport neuf, R12), qui fait alors foi,
-  même lancé après que l'autre a rendu : si la sortie scellée existe déjà, il ne rejoue pas la commande (le code
-  refuserait) et transcrit cette sortie ; sinon il joue la commande. Un rapport que le premier aurait scellé n'est pas
-  retenu. Si le remplaçant finit de même, ou n'a rien rendu dans le même délai : la sortie scellée, si elle existe, fait
-  foi seule (son issue et son verdict rapportés tels quels, sans rapport de lecteur, R13 non tenu, ce qui est
-  rapporté) ; sinon l'absence du verdict de ce run est constatée : « pas de verdict », sans autre lecteur. Ces
-  remplacements ne dépendent que de l'existence de fichiers, jamais de leur contenu. K′ de la confirmation : nombre de
-  tours complets de l'exécution qui porte son verdict (sa relance, s'il y en a une, l. 371).
+  alors arrêté), sans que son rapport soit scellé au chemin de sa consigne, est remplacé une seule fois par un lecteur
+  neuf, sur la même consigne (chemin de rapport neuf, R12), qui fait alors foi, même lancé après que l'autre a rendu ; un
+  rapport que le premier aurait scellé n'est pas retenu. Si le remplaçant finit de même, ou n'a rien rendu dans le même
+  délai : la sortie scellée fait foi seule (son issue, son verdict et son K′ rapportés tels quels, sans rapport de
+  lecteur, « R13 non tenu », ce qui est rapporté). Ces remplacements ne dépendent que de l'existence de fichiers, jamais
+  de leur contenu.
+- **K′ de chaque run** : le champ `k_prime` de sa sortie scellée « aboutie », établi par la lecture (exécution qui porte
+  le verdict, sa relance s'il y en a une, l. 371), pour la confirmation comme pour le run à 36 tours, jamais le compte
+  du bilan ni d'un autre fichier ; le compte du bilan est rapporté à côté, sans effet sur le verdict retenu.
 - **Refus ou erreur à la lecture : règle mécanique, sans diagnostic.** Une sortie d'issue « refus ou erreur » ou
-  « refus : empreintes », ou l'absence de sortie après le remplacement de la puce précédente : **« pas de verdict »
-  pour ce run, quelle qu'en soit la cause** (pièce, code, assemblage, commande ou environnement), sans nœud, sans
-  classement de la cause, sans correction ni nouvelle lecture retenue. Un état « pas de verdict » porté par une sortie
-  « aboutie » est une issue des critères gelés. Aucune décision ne dépend donc d'un diagnostic. La cause peut être
-  étudiée et rapportée après que chaque verdict attendu est scellé, ou son absence constatée, sans effet sur aucun
-  verdict ; toute lecture ultérieure de ce run, même après correction, est rapportée « exploratoire, non retenue ». Un
-  refus (`GardeArret` du code d'assemblage) ou une erreur d'exécution de l'assemblage d'une relance passée par le chemin
-  de l'addendum 5 est rejoué une seconde fois à l'identique par la session, sans rien modifier entre les deux
-  exécutions ; un refus ou une erreur à la seconde est constaté avant la clôture, sans lecteur et sans lire aucune
-  note : « pas de verdict » pour ce run, quelle qu'en soit la cause, sans correction (le nœud de l'addendum 5, § 5 (d) :
-  « s'il refuse, le verdict n'est pas prononcé : nœud », et de l'addendum 6, § 5 (d) : « assemblage refusé : pas de
-  verdict, nœud », est tranché ici) ; la note de clôture le dit et aucun lecteur n'est lancé pour ce run. Dès qu'une
-  sortie a été scellée pour un run, aucune relecture de ce run n'est retenue.
+  « refus : empreintes », l'absence de sortie scellée constatée (puce « La lecture est faite par le code »), ou un écart
+  au contrôle final : **« pas de verdict » pour ce run, quelle qu'en soit la cause** (pièce, code, assemblage, commande
+  ou environnement), sans nœud, sans classement de la cause, sans correction ni nouvelle lecture retenue. Un état « pas
+  de verdict » porté par une sortie « aboutie » est une issue des critères gelés. Aucune décision ne dépend donc d'un
+  diagnostic. La cause peut être étudiée et rapportée après que chaque verdict attendu est scellé, ou son absence
+  constatée, sans effet sur aucun verdict ; toute lecture ultérieure de ce run, même après correction, est rapportée
+  « exploratoire, non retenue ». Un refus (`GardeArret` du code d'assemblage) ou une erreur d'exécution de l'assemblage
+  d'une relance passée par le chemin de l'addendum 5 est rejoué une seconde fois par la session, mêmes sources et même
+  code, vers une cible neuve au nom suivant (R12 ; le code refuse une cible déjà présente), la cible partielle de la
+  première exécution laissée en place sans être lue ni effacée, sans rien modifier d'autre entre les deux exécutions ;
+  la note de clôture nomme la cible de l'exécution qui a abouti. Un refus ou une erreur à la seconde est constaté avant
+  la clôture, sans lecteur et sans lire aucune note : « pas de verdict » pour ce run, quelle qu'en soit la cause, sans
+  correction (le nœud de l'addendum 5, § 5 (d) : « s'il refuse, le verdict n'est pas prononcé : nœud », et de
+  l'addendum 6, § 5 (d) : « assemblage refusé : pas de verdict, nœud », est tranché ici) ; la note de clôture le dit et
+  aucune lecture n'est faite pour ce run. Dès qu'une sortie a été scellée pour un run, aucune relecture de ce run n'est
+  retenue.
 - **Rapport** : les deux verdicts, côte à côte, chacun avec son K′ et son régime ; leur accord ou leur désaccord est
   rapporté tel quel ; aucune mise en commun des notes ; aucun verdict n'est ouvert par la session ni rapporté avant que
   chaque verdict attendu soit scellé, ou son absence constatée. **Verdict retenu pour l'étape 1** (nœud 5, option (c),
@@ -263,21 +280,28 @@ v15 refuse de partir si la valeur n'est pas exactement 1 800, et l'ordre de lanc
 manifeste « règle » n'est pas écrit : B, R, D, c, t, H et K sont au bilan et dans le dossier `regle` transféré. Le
 libellé d'arrêt du code (« … ; nœud ») se lit selon le § 2.3.
 
-Lecture scellée (§ 3) : `src/controle_ia/temoin_bailey/lecture_scellee_v1.py` (`1b6f365efe49283abb3228458e563205b8a4d5bf2c79ca6138488d34011d4c2d`), au commit
-`a91ba8cfc9cb11b62cc0d171f5521d77b26b7eee` ; elle n'ajoute aucun critère : elle joue `lecture_v8.valider` puis `lecture_v8.lire` avec
+Lecture scellée (§ 3) : `src/controle_ia/temoin_bailey/lecture_scellee_v2.py` (`@@EMPREINTE_LS@@`) ; elle
+n'ajoute aucun critère : elle joue `lecture_v8.valider` puis `lecture_v8.lire` avec
 `analyse_v3.graines()["reechantillonnage"]`, sous les règles mécaniques du § 3 (sortie neuve, empreintes attendues,
-seconde exécution seulement après un échec, sortie scellée, retour sans valeur). Essais :
-`tests/test_temoin_bailey_lecture_scellee_v1.py` (`bdc569a50c38763ddb86b100964f86205975835c89a065f0076d497cddd1e4dd`) : chaque règle avec un cas sain et un artefact
-(R5), dont un bout en bout sur dossier factice où la sortie porte le verdict même que `valider` et `lire` joués
-directement, et où le dossier n'est pas modifié ; résultat : 15 passés ; avec les essais v21, complémentaires et de reprise, 246 passés, 1 sauté, sous
-`PYTHONPATH=src`. Elle ne change plus avant la clôture
-sans un addendum neuf, contre-lu (R2) et scellé avant elle.
+seconde exécution seulement après un échec, sortie scellée, retour sans valeur, contrôle final). La v1
+(`lecture_scellee_v1.py`, `1b6f365e…`, commit `a91ba8cf`) reste dans le dépôt sans servir (R12) : la vérification v7 y
+a démontré deux défauts (répertoires hors de l'empreinte du dossier ; `src/` modifié comparé au lieu d'être refusé).
+Essais : `tests/test_temoin_bailey_lecture_scellee_v2.py` (`@@EMPREINTE_TLS@@`) : chaque règle avec un cas sain et un
+artefact (R5), dont les deux artefacts de la v7, et un bout en bout sur dossier factice où la lecture entière de la
+sortie est égale à `valider` et `lire` joués directement, le dossier inchangé et le contrôle conforme ; résultat :
+@@RESULTAT_LS@@.
+
+**Commit du code** : `@@COMMIT_CODE@@`. Son arbre `src/` ne diffère de celui de `873ab00c` que par l'ajout de
+`lecture_scellee_v1.py` et `lecture_scellee_v2.py` (`git diff --stat 873ab00c @@COMMIT_COURT@@ -- src`) : le code de la
+conduite, de l'instance et de `lecture_v8` est celui de `873ab00c`. C'est ce commit que gardent le poste (« garde du
+commit » : `src/` de la tête égal au sien) et la lecture (`--commit`). L'arbre `src/` ne change plus avant le dernier
+contrôle final sans un addendum neuf, contre-lu (R2) et scellé avant la clôture.
 
 Pièces de lancement, écrites après l'inscription du GO (elles portent son identifiant), contre-lues (R2) et scellées
 avant le lancement : conduite `lancer-conduite-v15.py` (il n'y a pas de v14) = `lancer-conduite-v13.py` sans
 `relance_seule`, avec `lanceur_v21`, `t_max_pilote_s=1800`, aucune instance antérieure, le manifeste v7 et le GO neuf ;
 poste `poste-hetzner-v13.sh` et son constructeur = le poste v12 avec la conduite v15, le filtre du § 2.4 et la garde du
-commit `873ab00c`.
+commit du code (`@@COMMIT_COURT@@`).
 
 ## 5. Risques déclarés
 - (a) l'hypothèse « processeur » n'est pas établie ; la vitesse d'un hôte peut changer après le pilote, par croissance
@@ -303,7 +327,7 @@ commit `873ab00c`.
   la passation du même jour et la note `registres/passations/2026-11-16-2355-decision-lazar-bailey-2-puis-1.md`, qui
   placent le verdict à 36 tours après le scellement de l'addendum ; toute passation et tout brief écrits avant la clôture
   le disent en tête ;
-- (f) le code de lecture n'a jamais été joué sur le dossier réel à 36 tours (cloison) ; `lecture_scellee_v1` et la
+- (f) le code de lecture n'a jamais été joué sur le dossier réel à 36 tours (cloison) ; `lecture_scellee_v2` et la
   commande sont éprouvés sur des dossiers factices (§ 3, § 4), ce qui réduit ce risque sans l'ôter : un refus ou une erreur à la
   lecture, quelle qu'en soit la cause, laisse ce run sans verdict (règle mécanique du § 3, choisie pour qu'aucune
   décision ne dépende d'un diagnostic fait après la clôture) ; si le run à 36 tours est sans verdict et la
@@ -335,7 +359,7 @@ et l'essai de la commande sur un dossier factice :
    `poste-hetzner-v13.sh` et son constructeur, manifeste v7), contre-lues (R2) par un lecteur neuf, puis scellées. Ce
    lecteur vérifie qu'elles ne diffèrent de la conduite v13, du poste v12 et du manifeste v6 que par ce que cet addendum
    nomme : `lanceur_v21`, `t_max_pilote_s=1800` exigé, aucune `relance_seule`, aucune instance antérieure, B = 85,
-   filtre du § 2.4, garde du commit `873ab00c`, GO neuf et empreinte de cet addendum vérifiée dans son objet ; la demande
+   filtre du § 2.4, garde du commit du code (§ 4), GO neuf et empreinte de cet addendum vérifiée dans son objet ; la demande
    du mot de lancement envoyée à Lazar, avec cet addendum (chemin, empreinte), les § 2 et 2 bis, l'ordre de lecture et
    la règle du verdict retenu (§ 3 : aucun verdict avant la clôture), les risques du § 5 et le tirage attendu sur la
    carte ; le mot de Lazar reçu ;
@@ -387,9 +411,10 @@ lire les notes du run en cause : une décision qui dépendrait d'un résultat lu
 diagnostic, **la règle devient mécanique** (§ 3, puce « Refus ou erreur à la lecture ») : un refus ou une erreur, rejoué
 par le lecteur, vaut « pas de verdict » pour ce run quelle qu'en soit la cause, sans correction ni nouvelle lecture
 retenue. Prix déclaré au § 5 (f). Ce choix retire, sans les appliquer, les textes proposés pour la dichotomie (angle
-« application », points 1 à 4 et 6 (b) ; angle « phase de lecture », points 1 (second remplacement), 2, 3 (mention
-« valeur de note vue » ; date du constat, sans objet faute de délai) et 8 (renvoi aux deux § 5 (d) retiré avec la
-dichotomie, conséquence portée au § 5 (f))) ; il reprend leur objet : aucune session ne lit une note ni ne joue un code
+« application », points 1 à 4, 6 (b) et 8 (renvoi aux deux § 5 (d) retiré avec la dichotomie, conséquence portée au
+§ 5 (f) ; le renvoi revient, cité exactement, au refus de l'assemblage, § 3, dont ce texte tranche le nœud) ; angle
+« phase de lecture », points 1 (second remplacement), 2, 3 (mention « valeur de note vue » ; date du constat, sans
+objet faute de délai) et 8) ; il reprend leur objet : aucune session ne lit une note ni ne joue un code
 de lecture sur un dossier réel avant que chaque verdict attendu soit scellé ou son absence constatée ; le lecteur
 rejoue lui-même ; lecture ultérieure « exploratoire, non retenue ». Repris tels quels : chemin du rapport fixé par la
 consigne ; message du code ; lecteur remplacé ; cas (iii) après l'arrêt et le transfert ; cas (ii) ou (iii) ; mise en
@@ -407,7 +432,8 @@ du dossier à chaque exécution ; une seconde exécution après un changement va
 correction d'un assemblage refusé, que la session avait ajoutée (fenêtre, délai, renvoi inexact aux § 5 (d), en-tête du
 § 6, réserve du § 1), est **retirée** plutôt que bornée : un assemblage refusé vaut « pas de verdict », sans
 correction, ce qui tranche le nœud des addenda 5 et 6, § 5 (d) ; l'assemblage du dossier à 36 tours a déjà abouti
-(§ 1), et l'en-tête « Ordre, sans autre étape… » du § 6 reste juste, la règle n'ajoutant aucune étape ; la clôture
+(§ 1), et l'en-tête « Ordre, sans autre étape… » du § 6 ne nommait alors aucune étape ajoutée (il nomme, depuis la
+vérification v6, le rejeu de l'assemblage et l'essai de la commande sur un dossier factice) ; la clôture
 attend l'assemblage ou le constat de son refus. Repris : code visé par la cloison (un code qui lit ou rend une note ;
 conduite, reprise, assemblage et contrôles d'empreinte exceptés) ; chemin de rapport neuf du lecteur remplacé et sens de
 « rendu » ; mention « refus ou erreur » qui vaut constat, sans remplacement ; commande jouée sur un dossier factice avant
@@ -423,10 +449,33 @@ contre la note de clôture les empreintes du code, du dossier et de l'environnem
 une sortie neuve et scellée, refuse d'en écraser une, et ne rend que l'empreinte et l'issue ; la sortie scellée fait foi,
 le rapport du lecteur la transcrit ; un contrôle par programme compare ensuite l'attendu et l'empreinte de chaque
 sortie. Repris : commit et empreintes dans la note de clôture ; essai de la commande sur un dossier factice borné
-(chemins et arguments seulement, 24 h, jamais le code) ; remplacement du lecteur borné à une fois, avec délai de 24 h,
+(chemins, arguments et variables seulement, 24 h, jamais le code) ; remplacement du lecteur borné à une fois, avec délai de 24 h,
 fondé sur la seule existence des fichiers ; rejeu de l'assemblage par la session, à l'identique, une fois ; second
 lecteur non lancé si l'assemblage est refusé ; en-tête du § 6 ; réserve du § 1 (correction de la commande, rejeu de
 l'assemblage) ; « contrat » sur le contenu des empreintes, porté par le code plutôt que par le rapport. Traçabilité
 (remarque 4 de l'angle « application ») : le renvoi aux deux § 5 (d), retiré avec la dichotomie, revient cité
 exactement au refus de l'assemblage ; « Aucune décision ne dépend donc d'un diagnostic » est gardé sans complément,
 devenu exact avec le retrait de la correction de l'assemblage. Aucun constat écarté.
+Vérification de la lecture confiée au code, trois angles (`…-v7.md`,
+`1817136bbe1838e541c7def8ce933845bd085da8fcad2771521d329040aab989`, sur le commit `f8263a75`) : deux bloquants de code,
+démontrés sur dossiers factices. (1) L'empreinte du dossier ne portait que les fichiers, alors que `valider` décide sur
+l'existence de répertoires : un répertoire vide `pilote-reprise/` changeait le verdict sans changer l'empreinte. (2) Un
+`src/` modifié rendait une valeur fixe, comparée au lieu d'être refusée : un attendu pris sur un arbre sale laissait
+passer un code forgé. Traitement : `lecture_scellee_v2` (R12 ; la v1 reste sans servir) : répertoires dans l'empreinte,
+liens symboliques et entrées spéciales refusés ; `src/` modifié ou non suivi refusé ; attendu lié au commit nommé (arbre
+`src/` de la tête égal à celui du commit), écrit et scellé par le code seulement en cas de succès, forme vérifiée ;
+interpréteur et `sys.path` dans l'empreinte de l'environnement ; `python -B` ; contrôle final mécanique
+(`--controler`) ; essais des deux artefacts. Le texte change avec le code : **la session joue la commande à
+l'aveugle**, juste après la note de clôture, et consigne l'empreinte et l'issue (variante proposée par l'angle
+« critère central ») ; les lecteurs ne jouent plus aucun code et transcrivent la sortie, ce qui retire la commande du
+lecteur, son rejeu et le cas « aucune empreinte rendue » ; le dossier est lu dans l'arbre principal, jamais dans un
+autre arbre de travail (git n'y garde pas les répertoires vides), et l'arbre de travail neuf est retiré ; aucun
+changement de branche ni d'installation jusqu'au contrôle final ; l'attendu de l'essai factice est calculé avec le
+code et l'environnement réels ; commande factice en échec : la session joue la dernière commande essayée ; K′ = champ
+`k_prime` de la sortie, jamais le bilan ; rapport contraire à la sortie : « R13 non tenu » ; rejeu de l'assemblage
+vers une cible neuve ; sortie sans compagnon ni ouverte ni scellée après coup ; lecture entière comparée dans le bout
+en bout ; traçabilité des paragraphes v4 et v5. Le commit du code devient celui qui porte la v2 (§ 4) : la garde du
+commit du poste refuse tout `src/` différent du sien, et l'arbre `src/` ne diffère de celui de `873ab00c` que par
+l'ajout des deux lectures scellées. Remarque reprise autrement : un `.pyc` forgé sous `src/__pycache__`, ignoré par git,
+échapperait à l'empreinte du code ; la commande fixe `PYTHONPYCACHEPREFIX` vers un répertoire neuf et vide, ce qui
+empêche de relire aucun `.pyc` existant. Aucun constat écarté.
