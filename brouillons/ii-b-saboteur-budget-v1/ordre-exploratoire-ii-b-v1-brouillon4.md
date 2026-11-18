@@ -138,7 +138,7 @@ Place proposée (nœud 3, **mot exprès de Lazar**, pas de défaut) : sur la car
 
 Inchangés depuis le brouillon 3 (J1 ouverture ; J2 coupe ; J3 arrêt au saut de ligne ; J4 réécriture et retokenisation ; J5 cache dupliqué, rapporté ; J6 longueurs de la consigne ; J7 débit ; J8 mémoire), avec deux précisions :
 - **J6** : sur processeur avant le commit de lancement (§ 4 étape 4), sinon valeur déclarée et mesure sur l'instance.
-- **J7** : le débit se calcule **sans lire aucun résultat** : heures des lignes de progrès de l'étalonnage (première et dernière ligne `etape=oracle phase=etalonnage`), divisées par 960 actions ; au-delà de 3,0 s par action, alerte à la mère, sans arrêt.
+- **J7** : le débit se calcule **sans lire aucun résultat** : l'oracle de l'étalonnage n'écrit qu'**une** ligne de progrès, à sa fin (`PROGRES … etape=oracle phase=etalonnage episodes=96`, `lanceur_v1.py:222`) ; il commence juste après la dernière ligne des épisodes de l'étalonnage (`PROGRES … etape=episodes phase=etalonnage lot=12/12`, écrite après chaque lot, `lanceur_v1.py:206`) ; débit = écart entre les heures de ces deux lignes, divisé par 960 actions ; au-delà de 3,0 s par action, alerte à la mère, sans arrêt.
 
 J2, J3, J4 et J6 ne demandent que les fichiers du jetoniseur ; J5, J7, J8 demandent la carte. S'ils deviennent des arrêts joués par l'amorce, c'est du code neuf : essais, contre-lecture, empreintes (+ 0,1 h environ ; devis § 8.2). Choix : nœud 3.
 
@@ -171,7 +171,7 @@ Consignes permanentes : clés par leur nom seulement ; jamais `env`, `printenv`,
    - `"${ENVI[@]}" bash scripts/lancer_iib_v1.sh controles-explo "$W/iib" <<COMMIT_LANCEMENT_IIB>> <<CHEMIN_CONFIG_IIB>>` → code 0, « CONTRÔLES CONFORMES … variante B … 7b créée … » ; tout autre code → arrêt.
    - Inventaire en champs filtrés (commande du brouillon 3) ; une instance `iib…` → arrêt.
 
-2. **Création** : `"${ENVI[@]}" bash scripts/lancer_iib_v1.sh creation auto course 0 "$W/iib" 1795816800` → la commande imprimée, de la forme exacte écrite au brouillon 3, § 5 étape 2 (`-e COMMIT=<<COMMIT_LANCEMENT_IIB>>`, `-e ECHEANCE_UTC_S=1795816800`, `-e FIN_GO_UTC_S=1795824000`, `DEPOT_URL` vers `controle-ia-travail`, jetons par leur nom, aucune variable du mandataire). L'exécuter une seule fois ; `apres-creation` suit.
+2. **Création** : `"${ENVI[@]}" bash scripts/lancer_iib_v1.sh creation auto course 0 "$W/iib" 1795816800` → la commande imprimée, de la forme exacte écrite au brouillon 3 (`eed42f07329c5f064554b799f0d49ff0a1ed6e4571545c94dca3d6783f0c165f`), § 5 étape 2 (`-e COMMIT=<<COMMIT_LANCEMENT_IIB>>`, `-e ECHEANCE_UTC_S=1795816800`, `-e FIN_GO_UTC_S=1795824000`, `DEPOT_URL` vers `controle-ia-travail`, jetons par leur nom, aucune variable du mandataire). L'exécuter une seule fois ; `apres-creation` suit.
    - **Fenêtre** : code 3 → rejouer toutes les 15 minutes, 12 fois au plus ; **aucune commande `creation` après 23:00 UTC le 2026-11-25** ; première recherche au plus tard vers 20:15Z le 25 pour que la fenêtre entière tienne ; fenêtre vide : nœud. Code 5 : rejouer une fois la commande imprimée par `apres-creation`. Code 4 : inventaire, aucune seconde création avant.
 
 3. **Surveillance** : `"${ENVI[@]}" INTERVALLE=60 bash scripts/lancer_iib_v1.sh surveillance <ID> "$W/iib"` en tâche de fond, relancée à l'identique dès qu'elle s'arrête sans `ARRET` ni `FIN` (numéro de processus relevé à chaque lancement) ; la ligne des six épreuves (§ 4 bis point 6) est rapportée à la mère ; deux heures sans ligne de progrès : alerte à la mère, sans arrêt. **Pendant l'oracle de l'évaluation, jusqu'à 2,1 heures sans ligne (4,3 au pire) : alerte attendue, pas un incident.**
@@ -182,7 +182,7 @@ Consignes permanentes : clés par leur nom seulement ; jamais `env`, `printenv`,
 
 6. **Destruction par identifiant** (R10) : `timeout -k 5 120 vastai destroy instance <ID>` du seul identifiant créé, après le rapatriement vérifié, au plus tard 48 h après la fin et, dans tous les cas, avant 2026-11-28T00:00:00Z. **La minuterie ne détruit d'elle-même que si l'instance tourne encore à 2026-11-27T22:00:00Z ; une instance arrêtée n'a plus de minuterie : la mère pose un rappel daté du 2026-11-27T20:00Z.** Puis un seul `show instance <ID> --raw` (texte `{"instances": null}` ou code) et l'inventaire en champs filtrés. Jamais une autre instance ; jamais un arrêt par motif.
 
-7. **Compte rendu** (§ 9 du brouillon 3, inchangé, plus : ligne des épreuves vue ou repli employé ; écarts du rapatriement).
+7. **Compte rendu** (§ 9 du brouillon 3, `eed42f07329c5f064554b799f0d49ff0a1ed6e4571545c94dca3d6783f0c165f`, inchangé, plus : ligne des épreuves vue ou repli employé ; écarts du rapatriement).
 
 **Levée bornée de l'interdit `vastai`** : inchangée depuis le brouillon 3.
 
@@ -228,7 +228,7 @@ Compte rendu : § 5 étape 7. Devis : `devis-ii-b-v1-brouillon4.md` : attendu �
 | `COMMIT_LANCEMENT_IIB` (propre) | en attente | § 4 étape 5 |
 | `REGLAGES_PORTAGE_BASE_TEXTUELLE_IIB` (propre) | en attente | relevé à part et décision (§ 2) |
 
-Comptes : sur les 30, **14 remplis, 14 en attente, 2 hors de ce texte** ; plus 4 propres, en attente. Vérification au scellement : `grep -o '<<[A-Z0-9_]*>>' ordre-…` vide.
+Comptes : sur les 30, **14 remplis, 14 en attente, 2 hors de ce texte** ; plus 4 propres, en attente. Compté par programme (script du rédacteur, au bloc-notes, qui ne cherche que le motif des marqueurs) : **18 marqueurs distincts restent dans ce texte** = les 14 en attente des 30 + les 4 propres ; aucun marqueur rempli n'y reste. Vérification au scellement : `grep -o '<<[A-Z0-9_]*>>' ordre-…` vide.
 
 ## 12. Ce qui distingue cet ordre d'un préenregistrement
 
