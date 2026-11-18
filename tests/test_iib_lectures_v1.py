@@ -518,6 +518,26 @@ def test_garde_plis_meles_sain_et_artefacts(bases):
         bases.noter("a", modele, a1 + a0[:1], centres, apprentissage=a0)
 
 
+def test_garde_un_arret_pendant_l_appel_de_la_piece_n_est_jamais_non_calculable(bases, monkeypatch):
+    """Artefacts, dans le bloc où la lecture rend « non calculable » sur un motif de la pièce : (a) la pièce elle-même s'arrête
+    (`ArretPiece`) à l'apprentissage, puis à la notation ; (b) une action passée à la pièce porte un champ interdit. Dans les
+    trois cas la lecture s'arrête (`ArretBaseTextuelle`) et ne rend aucun état. Sain : sans l'artefact, un état."""
+    acts = [a for a in _synth_actions(exces_b100=0.3, n_taches=8) if a["condition"] in ("H", "B100")]
+    for base, nom in (("traits", "a"), ("mots_et_cout", "b")):
+        assert _jouer(base, acts, bases)["etat"] in ("réussit", "échoue")
+        for fonction in (f"apprendre_{nom}", f"noter_{nom}"):
+            with monkeypatch.context() as m:
+                def arret(*a, **k):
+                    raise bases.piece.ArretPiece("arrêt simulé de la pièce")
+                m.setattr(bases.piece, fonction, arret)
+                with pytest.raises(bt.ArretBaseTextuelle, match="arrêt simulé de la pièce"):
+                    _jouer(base, acts, bases)
+        piege = [dict(a, piece=dict(a["piece"], condition=a["condition"])) if k == 0 else a for k, a in enumerate(acts)]
+        centres = bases.centres([a["piece"] for a in acts])
+        with pytest.raises(bt.ArretBaseTextuelle, match="interdit"):
+            _jouer(base, piege, bases, centres=centres)
+
+
 def test_garde_un_arret_de_la_piece_arrete_la_lecture_et_n_est_jamais_non_calculable(bases):
     """Artefact : centres calculés sur une autre population (une tâche sans entrée). La règle du coût et les deux bases de la
     pièce s'arrêtent (`ArretBaseTextuelle`) au lieu de rendre « non calculable » ; sain : avec les centres entiers, un état."""
