@@ -5,8 +5,18 @@ Refuse de tourner sans la sortie scellée de la lecture (1) et une ligne du regi
 Écrit et scelle `diag/RUN/lecture-iib-2-diffusion-exploratoire-non-opposable-v1.json` et, à part,
 `diag/RUN/lecture-iib-2-mots-ponderes-exploratoire-non-opposable-v1.json` (jamais montré à un concepteur de moniteur générique).
 N'ouvre aucun fichier de sonde (il n'en existe pas). Code 0 ; 1 sur toute garde.
+
+Les deux bases textuelles sont calculées par la pièce inscrite `scripts/mots_et_cout_t06_v3.py` (`iib/bases_textuelles_v1`). Sa
+règle des fils de calcul s'applique : ce script pose à « 1 », **avant** le chargement des bibliothèques de calcul, celles des trois
+variables `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS` qui ne sont pas déjà posées (une valeur déjà posée n'est
+jamais changée) ; en mode réel, la lecture refuse de tourner si l'une des trois ne vaut pas « 1 ».
 """
 from __future__ import annotations
+
+import os
+
+for _fil in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):     # avant numpy et scipy (règle de la pièce)
+    os.environ.setdefault(_fil, "1")
 
 import argparse
 import sys

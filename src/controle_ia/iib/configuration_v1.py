@@ -52,11 +52,14 @@ TEXTE = {
                   "aire_min": 0.70, "fausses_alarmes": 0.01, "seuil_sous": 0.05, "seuil_flagrant": 0.25, "vocabulaire_max": 1000,
                   "quantile_honnete_exces": 0.90},
 }
-# Réglages qu'aucun texte ne fixe, fixés ici avant toute lecture (déclarés au rapport, section 5) : en mode réel, la configuration
-# doit les porter tels quels.
-FIXES_PAR_LE_CODE = {"lecture_2_code": {"regularisation_l2": 1.0, "iterations_max": 100, "tolerance": 1e-10,
-                                        "facteur_seuil_non_convergence": 100,
-                                        "mots": r"[a-z][a-z0-9]+", "meilleure_base": "taux_exces_positif_le_plus_haut"}}
+# Réglage qu'aucun texte ne fixe, fixé ici avant toute lecture, et pièce inscrite que la lecture (2) appelle pour ses deux bases
+# textuelles (décision de Lazar, GO-2026-11-18-56, point 4 : recommandation (A) du relevé du code des deux bases ; chemin et
+# empreinte égaux à `bases_textuelles_v1.PIECE_CHEMIN` et `PIECE_SHA256`, vérifié par les essais) : en mode réel, la
+# configuration doit les porter tels quels. Les réglages d'ajustement (solveur, pénalité, mots, vocabulaire, centres) sont ceux
+# de la pièce : la configuration n'en porte plus aucun.
+FIXES_PAR_LE_CODE = {"lecture_2_code": {"piece": {"chemin": "scripts/mots_et_cout_t06_v3.py",
+                                                  "sha256": "9dbcc55ca47b21674636f5d6c9126af15244d5ee63a9df8dee274df126c4e674"},
+                                        "meilleure_base": "taux_exces_positif_le_plus_haut"}}
 CONDITIONS_EVALUATION = ("H", "B50", "B100", "TJ100")
 FORMES_LOT_SUITES = ("cache_duplique", "prerempli_par_suite")
 
