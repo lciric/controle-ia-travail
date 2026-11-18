@@ -1,0 +1,21 @@
+Épreuve par mutation des essais du bras externe NARCBench — mutations décisives, v1
+Script : docs/notes/narcbench-8b-v1/pieces-externe-v2/mutations_decisives_v1.py ; branche prep/narcbench-externe-v2 au commit 950e5d3ca
+(code et essais) ; joué le 2026-11-18 de 19:17:19 à 19:18:23 UTC, au premier plan, une mutation après l'autre, chacune sous
+`timeout 600`, avec `-o pythonpath=<copie>/src` ; copies (narcbench seul, reste du paquet en liens symboliques) supprimées.
+Sélection : fichier d'essais entier, sauf L01 et L02 (cas ciblés de la commande de lecture, pour tenir sous 200 Mo de disque).
+mutation | état | essai qui la tue (premier échec, -x) | bilan pytest | disque de la copie
+T00 témoin : exception en tête de externe_v2 | TUÉE (message « copie mutée chargée » vu) | collecte de tests/test_narcbench_externe_v2.py | 1 error | 0 Mo
+E01 max_iter 8 → 100 | TUÉE | test_narcbench_externe_v2.py::test_parametres_de_la_recette_epingles | 1 failed | 0 Mo
+E02 garde de la direction nulle retirée | TUÉE | test_narcbench_externe_v2.py::test_direction_nulle_arrete | 1 failed, 17 passed | 0 Mo
+E03 mode incohérent entre lignes (CORE) ignoré | TUÉE | test_narcbench_externe_v2.py::test_mode_incoherent_arrete | 1 failed, 18 passed | 0 Mo
+E04 mode incohérent entre agents (STEGO) ignoré | TUÉE | test_narcbench_externe_v2.py::test_mode_incoherent_arrete | 1 failed, 18 passed | 0 Mo
+E05 seuil STEGO « moins de 4 » → « moins de 3 » | TUÉE | test_narcbench_externe_v2.py::test_seuil_de_quatre_episodes_stego_comme_les_auteurs | 1 failed, 15 passed | 0 Mo
+E06 placebo par agent jamais déclenché | TUÉE | test_narcbench_externe_v2.py::test_placebo_cablage_cas_sain_et_artefact | 1 failed, 29 passed | 0 Mo
+E07 tolérance de la garde 0,03 → 0,3 | TUÉE | test_narcbench_externe_v2.py::test_parametres_de_la_recette_epingles | 1 failed | 0 Mo
+L01 garde « ligne mal formée » du registre retirée | TUÉE | test_narcbench_lecture_externe_v2.py::test_refus_et_arrets_avant_ouverture_rien_d_ecrit[cinq_cellules] | 1 failed, 2 passed | 20 Mo
+L02 garde « texte cité autre » retirée | TUÉE | test_narcbench_lecture_externe_v2.py::test_refus_et_arrets_avant_ouverture_rien_d_ecrit[cite_un_autre_texte] | 1 failed | 7 Mo
+K13 comités : moyenne des messages au lieu du maximum (écart 16) | TUÉE | test_narcbench_cellules_externe_v2.py::test_comites_nos_familles_sequence_des_trois_messages_et_maximum | 1 failed, 13 passed | 0 Mo
+K01 « reproduit » sans l'arrondi de 10⁻⁹ (tolérance) | TUÉE | test_narcbench_cellules_externe_v2.py::test_regle_c_cas_sains_et_bornes_a_l_arrondi | 1 failed, 4 passed | 0 Mo
+Bilan : 11 mutations sur 11 tuées : les huit survivantes de la contre-lecture du code (neuf mutations, « mode incohérent »
+éprouvé en CORE et en STEGO : E01 à E07, L01, L02), celle de l'écart 16 (K13) et une sur la tolérance (K01) ; témoin tuée.
+Note : la campagne précédente (44 mutations) ne valait rien : sans `-o pythonpath`, pytest chargeait `src` non muté (pyproject.toml).
