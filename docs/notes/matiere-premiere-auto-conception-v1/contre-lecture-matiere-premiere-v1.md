@@ -48,7 +48,7 @@ Note : R-3211 parle de « 517 après fusion des doublons selon la couverture ».
 
 **Méthode.** Pour chaque mécanisme attribué : comparaison au champ `fait` et `touche` de l'entrée de la table, puis aux lignes de la veille citées par `sources` (recherche par mots-clés, par citations, littérature grise, recherche adverse), puis, quand le lot cite une lecture ou un PDF, à cette lecture ou à ce PDF (texte extrait, chiffres cherchés).
 
-**Résultat.** 40 travaux, 80 mécanismes relus.
+**Résultat.** 40 travaux, 71 mécanismes relus (306 n'en porte aucun).
 
 - **Fidèles à l'entrée ou à la lecture citée** : 36 travaux sur 40. Les ajouts au-delà du champ `fait` se retrouvent dans les lignes de veille citées (25 : « trois familles de modèles, langue native, température élevée », ligne adverse 111 ; 27 : « trop peu d'essais indépendants », ligne adverse 56 ; 76 : « à l'aveugle », ligne adverse 142 ; 570 : résumé OpenReview versé, chiffres 1 943 et 10 172 retrouvés ; 579 : « 1 − α », « 20,7 % », retour réduit, trois sources de fausses promotions retrouvés p. 1 à 3 du PDF ; 593 : tirage de Thompson, agrégat de clade, α = 0,6, retrouvés dans la lecture de Huxley-Gödel ; 57 : relu contre la lecture 03, sections 0 à 5.3). Les mécanismes « suggérés par le seul titre » (289, 300, 302, 305, 327, 355, 362, 363, 380) sont marqués comme tels et ne prétendent à rien d'autre.
 - **Gloses non sourcées, à retirer ou à marquer comme lecture du relevé** (4 travaux, aucune invention de résultat) :
