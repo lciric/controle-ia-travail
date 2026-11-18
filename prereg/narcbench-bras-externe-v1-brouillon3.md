@@ -77,29 +77,39 @@
     (`ac6e8263293ed30c807ef91f8eab0adbcbf8e1b91d5e4c56e73dbffa1a7099dc`), `src/controle_ia/t07/registre_v1.py`
     (`e50236574fbcd7e48ea3005eadc8bdb68d2c753d10028db7f2c365648a843cec`), `src/controle_ia/manifeste.py`
     (`1a5c7464523e224ca29d62ab70d83f9e7043d9bde3000ef1a4adc9ed74c8188d`) ;
-  - **code v2 du bras externe**, branche locale `prep/narcbench-externe-v2` (arbre `/home/user/narcbench-externe-v2`), commit
-    `70cb77b848da03f044d676ce04fc79c3c24b371d`, celui que les deux contre-lectures ont relu (empreintes des fichiers à ce
-    commit) : `src/controle_ia/narcbench/lecture_externe_v2.py`
-    (`a4ee00989ec05c0024202fcb1e23b5b30d230aa83a67602ea2cdca78c9941316`), `src/controle_ia/narcbench/externe_v2.py`
-    (`0bf5f73cfb641447402085de01824b33e9ae1d1bd89dee09ead2e14281fa5726`), `src/controle_ia/narcbench/chargeur_externe_v1.py`
+  - **code du bras externe**, branche locale `prep/narcbench-externe-v2` (arbre `/home/user/narcbench-externe-v2`), **tête lue
+    `cde3b9906881b6a26dba2d8486b46ac734d92371`** (empreintes à ce commit) : `src/controle_ia/narcbench/lecture_externe_v2.py`
+    (`f5a8c97b4f62c1aea5c904c62769829cf0e172b045e9026034671dc9dd320027`), `src/controle_ia/narcbench/cellules_externe_v2.py`
+    (`9d81fdf91e1cfd0913c69c64c023940ea490d5d34597837bf87431eb72e7c970`), `src/controle_ia/narcbench/externe_v2.py`
+    (`b1054e2239b2bca17db5358c3c73f0852e7b3c2948a3edeac19fba28e7be4387`), `src/controle_ia/narcbench/chargeur_externe_v1.py`
     (`9193b7876e1cbecd18e7197998135cafee5f30e6d2ac010a769b81ac6ce74ecb`), `src/controle_ia/narcbench/externe_v1.py`
     (`69dfdd247d104ee6293507fea17be56b23100f5da0ab03751d46c9d01029ed90`), `src/controle_ia/narcbench/statistiques_v1.py`
     (`fa9970d738b18d9056f567fadf15c70f139e53183be73519519c18bddec1b264`), `requirements-cpu.txt`
-    (`d236a3931745d4ad0889947f7692a2cd49e2c19a6f8e6c10b2e67120d47122de`) ; rapport du développeur v2
-    `docs/notes/narcbench-8b-v1/rapport-developpeur-externe-v2.md`
-    (`40fbdc70f22fda6500b02d452b50d9cb5342ae5092252ecd98505273c17078ce` ; en-tête et sections 3 à 5 lus) ; manifeste des
-    données v2 `docs/notes/narcbench-8b-v1/manifeste-donnees-externe-v2.json`
+    (`d236a3931745d4ad0889947f7692a2cd49e2c19a6f8e6c10b2e67120d47122de`) ; le brouillon 2 a été écrit contre le commit
+    `70cb77b848da03f044d676ce04fc79c3c24b371d`, que les contre-lectures 1 et 2 ont relu ;
+  - pièces de la branche, **à faire entrer dans `main` par la mère avant le scellement** (contre-lecture 2, § 6) : rapport du
+    développeur v2 `docs/notes/narcbench-8b-v1/rapport-developpeur-externe-v2.md`
+    (`40fbdc70f22fda6500b02d452b50d9cb5342ae5092252ecd98505273c17078ce` ; en-tête et sections 3 à 5 lus) ; relevé des lignes du
+    code des auteurs pour les cinq points de recette `docs/notes/narcbench-8b-v1/releve-recette-code-auteurs-externe-v2-v1.md`
+    (`8be99220065b0ba7afd6083e8afd3c225494a42359818abef537bd4fcd5cbdb3` ; lu en entier) ; manifeste des données v2
+    `docs/notes/narcbench-8b-v1/manifeste-donnees-externe-v2.json`
     (`4310683479acd4c1738199ead17941bb8925724ff89b478a22d8f8baf1f26445`) et relevé des licences v2
     `docs/notes/narcbench-8b-v1/releve-licences-externe-v2.md`
     (`ba78089612fd0173216ca7a789b98bf4279119ac3bb33e36f2663dc86bb588f7`) : cités, non ouverts ;
   - contre-lecture du code v2 : `docs/notes/narcbench-8b-v1/contre-lecture-code-externe-v2-v1.md`
     (`9b90884aaf86843cebfb129d6e72a0177102514bcc019e05c6938076feef155e` ; verdict et remarques lus) ;
-  - brouillon 1 de ce texte : `prereg/narcbench-bras-externe-v1-brouillon1.md`
-    (`85e8de5d7d94161b4951dac12c605a56ce048dbbfe6f92538552fcc2f6417259`) ; sa contre-lecture 1 : section « Contre-lecture » ;
+  - brouillons 1 et 2 de ce texte : `prereg/narcbench-bras-externe-v1-brouillon1.md`
+    (`85e8de5d7d94161b4951dac12c605a56ce048dbbfe6f92538552fcc2f6417259`) et `prereg/narcbench-bras-externe-v1-brouillon2.md`
+    (`7bb21dc0bec7a5fcbff41c84ee2554966e7ddc0acf8703cf7fe8f78d224acb02`) ; leurs contre-lectures 1 et 2 : section
+    « Contre-lecture » ;
   - pièces de puissance : `prereg/pieces-narcbench-bras-externe-v1/puissance-regle-v1.py`
     (`fa482dd97b78af1d858706f7dfd880b2ead58e3ff001ef672334b4e0af10fb7a`) et sa sortie
     `prereg/pieces-narcbench-bras-externe-v1/sortie-puissance-regle-v1.txt`
-    (`0c1e9d7a6ad72d7e7633eab6e3943af68f5ea7eead23ac4c72cf6458fea60f76`), scellées avec leurs compagnons `.sha256`.
+    (`0c1e9d7a6ad72d7e7633eab6e3943af68f5ea7eead23ac4c72cf6458fea60f76`) ; point ajouté au brouillon 3 (écart à sa marge) :
+    `prereg/pieces-narcbench-bras-externe-v1/puissance-marge-ecart-v1.py`
+    (`99d71a599887ee5383767b13e74f8203419d89f271b6240eb43b33f5e45df77c`), qui appelle la fonction du script scellé sans la
+    modifier, et sa sortie `prereg/pieces-narcbench-bras-externe-v1/sortie-puissance-marge-ecart-v1.txt`
+    (`4f51889fba435808b3a52aea105eb587a1a6b391adbef1e984646f30e81a1af3`) ; toutes scellées avec leurs compagnons `.sha256`.
 
 ## Hypothèse
 
