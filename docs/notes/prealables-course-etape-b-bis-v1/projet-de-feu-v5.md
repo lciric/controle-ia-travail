@@ -60,7 +60,7 @@ Il n'autorise aucune création de machine et aucun appel au loueur. Les gestes d
 
 **Conditions à lever par la mère, sans champ** :
 
-4. **Registre des accords lisible par le crochet de garde : levée.** Jusqu'à 06:41Z le 2026-11-18, trois échéances « jusqu'à nouvel ordre » rendaient `registres/go.md` illisible pour le crochet (`.claude/hooks/garde_calcul.py`), qui répondait « registre GO mal formé ligne 371 : dates illisibles » et refusait toute création, pour toutes les sessions. La mère a ramené ces cellules à « — » (GO-2026-11-18-07 et GO-2026-11-18-15, type décision) et à 2026-11-25, date de forme (GO-2026-11-18-13, type calcul) : décision R-3218 (2026-11-18T06:41:31Z), commit `081bc453ce144a1a313465d0ee7366d22a26db1d`. Relevé du rédacteur à 07:0xZ : `lire_go()` lit le registre sans arrêt, 336 accords. Preuves exigées au moment du feu : geste 2 (c) et geste 3 (a).
+4. **Registre des accords lisible par le crochet de garde : levée.** Jusqu'à 06:41Z le 2026-11-18, trois échéances « jusqu'à nouvel ordre » rendaient `registres/go.md` illisible pour le crochet (`.claude/hooks/garde_calcul.py`), qui répondait « registre GO mal formé ligne 371 : dates illisibles » et refusait toute création, pour toutes les sessions. La mère a ramené ces cellules à « — » (GO-2026-11-18-07 et GO-2026-11-18-15, type décision) et à 2026-11-25, date de forme (GO-2026-11-18-13, type calcul) : décision R-3218 (2026-11-18T06:41:31Z), commit `081bc453ce144a1a313465d0ee7366d22a26db1d`. Relevés du rédacteur : `lire_go()` lit le registre sans arrêt (336 accords à 07:01Z ; 337 à 07:27Z, le registre croissant). Preuves exigées au moment du feu : geste 2 (c) et geste 3 (a).
 5. **Accord de l'opérateur valide le jour de la création.** GO-2026-11-16-06 (opérateur sous-agent du modèle A) porte l'échéance 2026-11-18. Au-delà, la mère écrit sous quel accord l'opérateur agit (R-2883 (2) demande le modèle B, disponible à partir du 2026-11-21T04:00Z), ou demande un mot à Lazar.
 6. **Mesures définitives versées et suivies : levée à la rédaction.** Le compte rendu `mesures-definitives-commit-course-v1.md` (`527ab727…`) est suivi par git (commit `2a9ed001`, 2026-11-18T05:58:05Z), avec ses seize sorties scellées (commit `478111c2`). Preuve rejouée au geste 3 (b), lignes 11 à 13.
 7. **Vérification courte de cette version par un lecteur neuf** (ni rédacteur des projets versions 3, 4 ou 5, ni contre-lecteur de la version 4), sur les corrections C1 à C7, les onze points mineurs et les choix de la mère, rendue sans bloquant. Puis :
@@ -130,7 +130,7 @@ Il n'autorise aucune création de machine et aucun appel au loueur. Les gestes d
 
 ## § 3 — CODE DE LA COURSE, COMMIT, MESURES SCELLÉES
 
-- **Commit de la course, fixé une fois** : `438a9c5257bdc4fa65f25c42cc89753a049b4586`. Il porte le troisième addendum scellé et sa ligne `ADDENDUM-ECART-3-BBIS`. Il est présent sur `origin/main` (relevé par le rédacteur à 07:0xZ, à rejouer au geste 3), et le commit de la fiche `05cd22aa15382f61eb62b9e7817890dde728dd5f` en est un ancêtre. **Branche de code passée à l'amorce : `main`.** Toute mesure et toute commande de ce feu portent ce commit exact.
+- **Commit de la course, fixé une fois** : `438a9c5257bdc4fa65f25c42cc89753a049b4586`. Il porte le troisième addendum scellé et sa ligne `ADDENDUM-ECART-3-BBIS`. Il est présent sur `origin/main` (relevé par le rédacteur vers 07:00Z, puis par le geste 3 (b) joué sur analogue à 07:27Z ; à rejouer au geste 3), et le commit de la fiche `05cd22aa15382f61eb62b9e7817890dde728dd5f` en est un ancêtre. **Branche de code passée à l'amorce : `main`.** Toute mesure et toute commande de ce feu portent ce commit exact.
 - **Fiche de code en vigueur** : `registres/t07-etape-b-bis/code-bbis-v2.json`, `4b28535c17fe450ff1c1ecc9164d91c4c8d03354e4f4137e324f2b04390be5bb`. Elle cite 63 fichiers au commit de la fiche `05cd22aa…` : 22 sous `src/controle_ia/t07bbis/`, 21 scripts, 20 essais. La garde d'entrée de la marche les contrôle sur la machine.
   - Entropie : `149084685129585384182032033013812122656`. Elle est changée par rapport à la première fiche (TA-3 du troisième addendum, GO-2026-11-18-03 (1)).
   - Épreuve de niveau rejouée : `registres/t07-etape-b-bis/epreuve-niveau-deux-plis-bbis-v2.json`, `da9fa42bf95c9d6507b01d7bf69db2876a56c00d26b0cc58c15cd7893bfa5919`. Niveau décisif retenu : 0,99.
@@ -288,8 +288,8 @@ Il n'autorise aucune création de machine et aucun appel au loueur. Les gestes d
 
 **Conventions** :
 
-- Chaque appel au shell commence par le **préambule P**, `cd /home/user/controle-ia-travail && . /home/user/bbis-course-envoi-feu-v5/env.sh &&` (sauf les gestes 1, 2 et 3 (a), écrits en entier). Il fixe `R`, `C`, `D`, `PYTHON_BBIS` (chemin absolu), `VASTAI_BBIS`, `PATH`, **`TOUR`** (nombre de lignes de `$D/tours.txt`, 0 s'il est absent), **`TD`** (dossier du tour, `$D/tour-$TOUR`), `umask 077` et `set -o pipefail`. Le shell ne garde rien d'un appel à l'autre ; les valeurs passent par des fichiers du dossier d'envoi, écrits par programme, jamais retapés.
-- **Une seule liste par appel** (C2) : chaque commande est une chaîne `&&` ; un document en ligne s'ouvre au milieu de la chaîne (`… && cat > f <<'FIN' && …`), son texte suit la ligne de commande. Un contrôle qui échoue arrête tout ce qui le suit dans l'appel.
+- Chaque appel au shell commence par le **préambule P**, `cd /home/user/controle-ia-travail && . /home/user/bbis-course-envoi-feu-v5/env.sh &&` (sauf les gestes 1, 2, 3 (a), 5 et 21, écrits en entier ; aux gestes 14 et 19 (b), le préambule suit la remise à zéro d'un drapeau de compte rendu, `TENTEE=0;` ou `JOUE=0;`). Il fixe `R`, `C`, `D`, `PYTHON_BBIS` (chemin absolu), `VASTAI_BBIS`, `PATH`, **`TOUR`** (nombre de lignes de `$D/tours.txt`, 0 s'il est absent), **`TD`** (dossier du tour, `$D/tour-$TOUR`), `umask 077` et `set -o pipefail`. Le shell ne garde rien d'un appel à l'autre ; les valeurs passent par des fichiers du dossier d'envoi, écrits par programme, jamais retapés.
+- **Une seule liste par appel** (C2) : les contrôles de chaque commande forment une seule chaîne `&&` ; un document en ligne s'ouvre au milieu de la chaîne (`… && cat > f <<'FIN' && …`), son texte suit la ligne de commande. Un contrôle qui échoue arrête tout ce qui le suit dans la chaîne ; seule une ligne de compte rendu explicite peut s'imprimer après (« AUCUNE CREATION TENTEE PAR CET APPEL », « RELEVE NON ECRIT … », « COMMANDE NON IMPRIMEE … », « SUIVI NON JOUE … »).
 - Tout fichier est écrit sous un nom neuf (R12) : un nom fixe à l'intérieur d'un dossier de tour neuf, ou un nom donné par `mktemp` pour une lecture répétée. Toute sortie est gardée dans le dossier d'envoi pour le compte rendu.
 - **Tours** (C3). Les gestes 7 à 14 forment un tour ; leurs fichiers sont dans le dossier du tour `$TD`. Les gestes 15 à 24 se jouent dans le dossier du tour de la création. Le tour 1 s'ouvre au geste 7 (a). Un tour neuf s'ouvre par la commande O, et seulement pour l'un de ces motifs, recopié entre apostrophes droites à la place de `MOTIF` :
   - `'recherche sans offre retenue'` (geste 9 en échec, ou geste 10 sans candidate acceptée) ;
@@ -334,7 +334,7 @@ umask 077
 set -o pipefail
 FIN
 ```
-Sortie attendue : `@@ENV@@  /home/user/bbis-course-envoi-feu-v5/env.sh`, puis l'heure.
+Sortie attendue : `d33b81002735d075bbf5565532a1efed95dc4ba925df65611c3476c11d839f81  /home/user/bbis-course-envoi-feu-v5/env.sh`, puis l'heure.
 Arrêt si : le dossier existe déjà (la mère donne un nom neuf, et l'empreinte change), ou si l'empreinte diffère.
 
 **Geste 2. Session de l'opérateur : crochet chargé, compagnon, registre des accords lisible.**
@@ -344,7 +344,7 @@ Arrêt si : le dossier existe déjà (la mère donne un nom neuf, et l'empreinte
 ```bash
 cd /home/user/controle-ia-travail && /home/user/controle-ia-travail/.venv/bin/python -I -c 'import sys; sys.path.insert(0, "/home/user/controle-ia-travail/.claude/hooks"); import garde_calcul as g; r = g.lire_go(g.REGISTRE_GO); x = r["GO-2026-11-14-09"]; print("registre lisible :", len(r), "accords ;", x["type"], x["accorde"], x["echeance"], x["par"])'; echo "code $?"
 ```
-Attendu : `registre lisible : <n> accords ; calcul 2026-11-14 2026-11-22 Lazar` (336 accords à la rédaction de la version 5), puis `code 0`. Jusqu'à 06:41Z le 18 novembre, la sortie était « registre GO mal formé ligne 371 : dates illisibles », code 2 : levé par R-3218 (§ 0, condition 4).
+Attendu : `registre lisible : <n> accords ; calcul 2026-11-14 2026-11-22 Lazar` (337 accords au dernier relevé du rédacteur, 07:27Z), puis `code 0`. Jusqu'à 06:41Z le 18 novembre, la sortie était « registre GO mal formé ligne 371 : dates illisibles », code 2 : levé par R-3218 (§ 0, condition 4).
 (d) Cas sain : `echo crochet-cas-sain` — attendu `crochet-cas-sain`.
 (e) Artefact, **refus attendu et prévu par ce feu** (il ne compte pas comme premier refus ; c'est **la** preuve de comportement que le crochet est chargé) : `echo crochet-artefact ; : pkill` — attendu : un refus du crochet portant « R10 — arrêt par motif de ligne de commande interdit ». La commande est sans effet si elle passe (`:` ne fait rien).
 Arrêt si : (b) diffère ; (c) ne rend pas `code 0` ; (e) imprime `crochet-artefact` (crochet non chargé) ; ou tout autre refus. (a) n'est pas un critère d'arrêt.
@@ -592,9 +592,9 @@ PY
 ```
 (d) Les trois empreintes, comparées par programme :
 ```bash
-cd /home/user/bbis-course-envoi-feu-v5 && printf '%s  %s\n' 2d32e1ace8f4539f3201997de103a64a9f3d4bba6fc524d008d0a012254b23b4 choisir_offre.py @@INV@@ inventaire_v2.py 1fa46d02def8602a2bf026d70072535c056c4a23770049b93667aceafce29e09 lire_creation.py | sha256sum -c && echo "TROIS PROGRAMMES CONFORMES"
+cd /home/user/bbis-course-envoi-feu-v5 && printf '%s  %s\n' 2d32e1ace8f4539f3201997de103a64a9f3d4bba6fc524d008d0a012254b23b4 choisir_offre.py 3e40e35565f6118b0e15a29aca04f0a3bde1b0184955b415a069e3da45143fea inventaire_v2.py 1fa46d02def8602a2bf026d70072535c056c4a23770049b93667aceafce29e09 lire_creation.py | sha256sum -c && echo "TROIS PROGRAMMES CONFORMES"
 ```
-Sortie attendue : `choisir_offre.py: OK`, `inventaire_v2.py: OK`, `lire_creation.py: OK`, `TROIS PROGRAMMES CONFORMES`. Les empreintes : `2d32e1ace8f4539f3201997de103a64a9f3d4bba6fc524d008d0a012254b23b4` (choix, celle de la version 4), `@@INV@@` (inventaire, neuve), `1fa46d02def8602a2bf026d70072535c056c4a23770049b93667aceafce29e09` (lecture de la création, celle de la version 4).
+Sortie attendue : `choisir_offre.py: OK`, `inventaire_v2.py: OK`, `lire_creation.py: OK`, `TROIS PROGRAMMES CONFORMES`. Les empreintes : `2d32e1ace8f4539f3201997de103a64a9f3d4bba6fc524d008d0a012254b23b4` (choix, celle de la version 4), `3e40e35565f6118b0e15a29aca04f0a3bde1b0184955b415a069e3da45143fea` (inventaire, neuve), `1fa46d02def8602a2bf026d70072535c056c4a23770049b93667aceafce29e09` (lecture de la création, celle de la version 4).
 Arrêt si : une empreinte diffère (le fichier est effacé et réécrit, une fois ; second écart : arrêt).
 Le rédacteur a éprouvé l'inventaire version 2 sur des listes fabriquées, cas sains et artefacts (§ 15).
 
@@ -632,11 +632,11 @@ La liste brute est effacée aussitôt.
 Arrêt si :
 - inventaire code 3 : une instance porte déjà l'étiquette `bbis-t07-v1` (point mineur 5 ; nœud) ;
 - inventaire code 2 avec « aucune autre instance » (aucun témoin : la preuve d'absence serait impossible ; nœud) ou « prix illisible sur une autre instance à l'état running » ;
-- liste illisible ou lecture en échec : lecture sans verdict, refaite selon la convention (aucun fichier n'est écrit tant qu'elle échoue) ; à la troisième : arrêt.
+- liste illisible ou lecture en échec : lecture sans verdict, refaite selon la convention (le témoin n'est écrit que par une lecture conforme ; chaque lecture a son nom `mktemp`) ; à la troisième : arrêt.
 
 **Geste 8. Crédit relevé — champ 3** (C6 : deux conditions calculées par programme ; heure écrite seulement si le crédit suffit).
 ```bash
-cd /home/user/controle-ia-travail && . /home/user/bbis-course-envoi-feu-v5/env.sh && test "$TOUR" -ge 1 && test ! -e "$TD/credit-heure.sh" && . "$TD/temoin.sh" && { v=$(bash scripts/lancer_repetition_bbis_v3.sh credit < /dev/null | tee -a "$TD/g8-credit.txt" | sed -n 's/^BBIS REPETITION CREDIT \(-\{0,1\}[0-9][0-9.]*\) USD.*$/\1/p'); t=$(date +%s); echo "crédit relevé « $v » USD à $(date -u -d "@$t" +%FT%TZ) ; débit des autres à l'état running $DEBIT_AUTRES USD/h" | tee -a "$TD/g8-credit.txt"; awk -v v="$v" -v d="$DEBIT_AUTRES" 'BEGIN { lisible = (v ~ /^-?[0-9]+(\.[0-9]+)?$/) && (d ~ /^[0-9]+(\.[0-9]+)?$/); v4 = int(v * 10000 + (v < 0 ? -0.5 : 0.5)); d4 = int(d * 10000 + 0.5); s4 = 8 * 10000 + 11 * int(1.48 * 10000 + 0.5); m4 = v4 - 13 * d4; plancher = lisible && v4 >= 20 * 10000; marge = lisible && m4 >= s4; printf "plancher de 20,00 USD : %s ; marge : %.4f - 13 x %.4f = %.4f USD pour un seuil de 8 + 11 x 1,48 = %.2f USD : %s\n", (plancher ? "tenu" : "NON TENU"), v4 / 10000, d4 / 10000, m4 / 10000, s4 / 10000, (marge ? "tenue" : "NON TENUE"); ok = plancher && marge; print (ok ? "CREDIT SUFFISANT" : "CREDIT INSUFFISANT"); exit !ok }' | tee -a "$TD/g8-credit.txt" && printf 'T_CREDIT=%s\nCREDIT_RELEVE=%s\n' "$t" "$v" > "$TD/credit-heure.sh" && echo "HEURE DU RELEVE ECRITE ($TD/credit-heure.sh)"; } || echo "RELEVE NON ECRIT : aucune création dans ce tour"
+cd /home/user/controle-ia-travail && . /home/user/bbis-course-envoi-feu-v5/env.sh && test "$TOUR" -ge 1 && test ! -e "$TD/credit-heure.sh" && . "$TD/temoin.sh" && { v=$(bash scripts/lancer_repetition_bbis_v3.sh credit < /dev/null | tee -a "$TD/g8-credit.txt" | sed -n 's/^BBIS REPETITION CREDIT \(-\{0,1\}[0-9][0-9.]*\) USD.*$/\1/p'); t=$(date +%s); echo "crédit relevé « $v » USD à $(date -u -d "@$t" +%FT%TZ) ; débit des autres à l'état running $DEBIT_AUTRES USD/h" | tee -a "$TD/g8-credit.txt"; awk -v v="$v" -v d="$DEBIT_AUTRES" 'BEGIN { s4 = 8 * 10000 + 11 * int(1.48 * 10000 + 0.5); if (v !~ /^-?[0-9]+(\.[0-9]+)?$/ || d !~ /^[0-9]+(\.[0-9]+)?$/) { printf "plancher et marge non calculés : crédit « %s » ou débit « %s » illisible\n", v, d; print "CREDIT INSUFFISANT"; exit 1 } v4 = int(v * 10000 + (v < 0 ? -0.5 : 0.5)); d4 = int(d * 10000 + 0.5); m4 = v4 - 13 * d4; plancher = v4 >= 20 * 10000; marge = m4 >= s4; printf "plancher de 20,00 USD : %s ; marge : %.4f - 13 x %.4f = %.4f USD pour un seuil de 8 + 11 x 1,48 = %.2f USD : %s\n", (plancher ? "tenu" : "NON TENU"), v4 / 10000, d4 / 10000, m4 / 10000, s4 / 10000, (marge ? "tenue" : "NON TENUE"); ok = plancher && marge; print (ok ? "CREDIT SUFFISANT" : "CREDIT INSUFFISANT"); exit !ok }' | tee -a "$TD/g8-credit.txt" && printf 'T_CREDIT=%s\nCREDIT_RELEVE=%s\n' "$t" "$v" > "$TD/credit-heure.sh" && echo "HEURE DU RELEVE ECRITE ($TD/credit-heure.sh)"; } || echo "RELEVE NON ECRIT : aucune création dans ce tour"
 ```
 Attendu :
 - `BBIS REPETITION CREDIT <v> USD : suffisant (au moins 4 USD)` ;
@@ -869,13 +869,13 @@ cd /home/user/controle-ia-travail && . /home/user/bbis-course-envoi-feu-v5/env.s
 - Registre des accords illisible par le crochet (geste 2 (c), geste 3 (a)) : rien n'est créé.
 - Refus du lanceur sur l'offre, l'image, le prix, la branche de sortie, l'ancêtre, le commit joignable, le commit de la course, le registre ou la garde de création : arrêt.
 - Une empreinte de la chaîne, de l'addendum ou du feu différente sur 64 caractères ; la ligne imprimée différente de la ligne reconstruite ; le base64 décodé différent de `26f954e9…dbbb5` ; les arguments de la ligne courte différents de ceux de la ligne imprimée : arrêt, rien n'est créé.
-- Aucune offre de pilote 595 ou 580 sous 1,40 USD/h acceptée par le lanceur : rien n'est créé (un tour neuf au plus pour ce motif dans la limite de trois tours).
+- Aucune offre de pilote 595 ou 580 sous 1,40 USD/h acceptée par le lanceur : rien n'est créé (un tour neuf est permis pour ce motif, dans la limite de trois tours).
 - **Crédit sous 20,00 USD, ou marge « crédit − 13 × débit des autres ≥ 24,28 USD » non tenue** avant la création (C6) ; relevé de plus d'une heure : rien n'est créé.
 - Quatrième tour, ou tour neuf après une création tentée : refusés par la commande O ; arrêt et nœud.
 - Prix relu au-dessus de 1,40 + stockage de l'offre : destruction aussitôt, nœud.
 - Pas d'état « running » en 20 minutes, ou état terminal : destruction, nœud.
 - Journal sans « JOURNAL CONFORME » dans les cinq minutes (ligne manquante ou répétée, ligne `REFUS` ou `ARRET`, lecture du journal en échec) : destruction, absence prouvée, compte rendu.
-- **Trois lectures sans verdict** consécutives (liste illisible ou incomplète, prix ou crédit illisible) : destruction, nœud ; une seule lecture sans verdict ne détruit jamais rien (C5).
+- **Trois lectures sans verdict** consécutives (liste illisible ou incomplète, prix ou crédit illisible) : destruction, nœud (avant toute création, au geste 7 : arrêt ; au geste 15 (b) : arrêt et nœud, rien d'identifié à détruire) ; une seule lecture sans verdict ne détruit jamais rien (C5).
 - Garde de dépense déclenchée (refus avec ordre imprimé) : destruction par la commande qu'elle imprime.
 - Crédit sous 8,00 USD pendant la course : destruction propre, compte rendu.
 - Garde de débit déclenchée : instance arrêtée par l'amorce, garde de 12 heures, nœud de Lazar, puis destruction.
