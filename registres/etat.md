@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-18 vers 10:45 UTC — passation de la mère vers une session mère neuve sur un autre compte (R-3283).** Passation `registres/passations/2026-11-18-1045.md` (`71cb3c6b…`) ; brief `docs/procedures/brief-reprise-nouvelle-mere-2026-11-18-v1.md` (`24dc4252…`). Priorité de la mère neuve : opérateur de l'étape B bis au premier plan avant 22:59:59Z, puis course d'auto-conception (GO-2026-11-18-20 et -21). Registres jusqu'à R-3283 et GO-2026-11-18-21.
+
 **2026-11-18 vers 10:17 UTC — étape B bis : feu v7 en vigueur, opérateur arrêté au geste 14 par un contrôle de sûreté (approbation explicite de Lazar requise) ; course Carbon par lot lisible ; course d'auto-conception prête ; quatre mots de Lazar attendus.** Passation `registres/passations/2026-11-18-1017.md` (`4814554e…`). Crédit du loueur 42,50 USD ; seule 61170458 (témoin de Bailey) en marche. Registres jusqu'à R-3281 et GO-2026-11-18-19.
 
 **2026-11-18 vers 07:48 UTC — budget du loueur rechargé par Lazar (≈ 45 USD vus), étape 2 d'E5 de « Raisons ou regard » en marche, étape B bis à son feu vérifié ; veille close, N-073 écrite, matière première de l'auto-conception rendue ; quota de Fable épuisé jusqu'au 22 novembre, régime sobre.** Passation `registres/passations/2026-11-18-0748.md` (`0149b325…`). Crédit du loueur 51,68 USD à 07:47Z ; instances en marche : 61170458 (témoin de Bailey), 61207720 (étape 2 d'E5, autodestruction à 2 h). Registres jusqu'à R-3252 et GO-2026-11-18-18.
