@@ -1,0 +1,114 @@
+{
+ "gabarit": "v7 (les gabarits v6 et v6b restent en place, R12) — Astra et Carbon DÉCLARÉS (mot du directeur, 18 novembre vers 10:50Z) ; Kimi NON déclaré (R-3279 ; le lanceur v7 refuse Kimi, liste des références admises vide) ; compter_limite_de_debit_comme_soupcon = faux (R-3279, option (b)). À recopier sous course-v7/declaration-relais-course-affinage-mentors-v7.json ; remplir les quatre PID (un relais Claude pour les deux espèces Claude, plus Argon, Carbon, Astra) et la liste des modèles Claude ; Astra ne reste déclarée que si la sonde commune du jour a réussi (sinon : retirer fournisseurs.astra, écrire le motif dans absences.astra, prévenir la mère) ; retirer cette clé ; sceller",
+ "version": "declaration-relais-course-affinage-mentors-v7",
+ "redige_utc": "(date -u +%FT%TZ)",
+ "fondement": "mot du directeur, tapé dans la session du compte organisme le 18 novembre 2026 vers 10:50Z : « je veux astra et carbon dans la course debugge » — Astra et Carbon déclarés ; sonde d'Astra par la sonde commune (scripts/sonde_astra_courses_v1.py, épinglée par le lanceur v7, qui fait l'unique appel par la sonde épinglée scripts/sonde_astra_affinage_v2.py) ; Carbon : R-3274",
+ "fournisseurs": {
+  "claude": {
+   "type": "claude_sdk",
+   "url_relais": "http://127.0.0.1:8787",
+   "nom_cle": "RR_ANTHROPIC_API_KEY_MINUIT",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "commande",
+    "delai_s": 30,
+    "commande": [
+     "/usr/local/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/scripts/porte_plafond_relais_v1.py",
+     "--url",
+     "http://127.0.0.1:8787",
+     "--modeles-permis",
+     "(modèles Claude de la configuration v6, séparés par une virgule)",
+     "--plafond-ligne",
+     "150"
+    ]
+   }
+  },
+  "argon": {
+   "type": "commande_externe",
+   "commande": [
+    "bash",
+    "/home/user/controle-ia-travail/rapports/fille-ideation-1-v1/appel-argon-v5.sh"
+   ],
+   "nom_cle": "GEMINI_API_KEY",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  },
+  "carbon": {
+   "type": "commande_externe",
+   "commande": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "/home/user/pieces-affinage-v7/commande_gemini_lot_v1.py",
+    "--modele",
+    "gemini-4-carbon",
+    "--url-base",
+    "http://127.0.0.1:8792/v1beta",
+    "--prix-entree",
+    "8.3",
+    "--prix-sortie",
+    "41.5",
+    "--facteur-lot",
+    "0.5",
+    "--max-sortie-jetons",
+    "32768",
+    "--sortie-min-jetons",
+    "4096",
+    "--provision-pensee-jetons",
+    "8192",
+    "--intervalle-s",
+    "30",
+    "--delai-s",
+    "1500",
+    "--roles",
+    "proposeur_ideation"
+   ],
+   "modele_propose": "gemini-4-carbon",
+   "nom_cle": "GEMINI_API_KEY",
+   "inscription": "R-3217",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  },
+  "astra": {
+   "type": "commande_externe",
+   "commande": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "/home/user/pieces-affinage-v7/commande_astra_v1.py",
+    "--url-relais",
+    "http://127.0.0.1:8790",
+    "--modele",
+    "gpt-6-astra",
+    "--prix-entree",
+    "10",
+    "--prix-sortie",
+    "50",
+    "--max-sortie-jetons",
+    "32768",
+    "--sortie-min-jetons",
+    "4096",
+    "--delai-s",
+    "1500"
+   ],
+   "modele_propose": "gpt-6-astra",
+   "nom_cle": "OPENAI_API_KEY",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  }
+ },
+ "kimi_non_declare": "R-3279 : Kimi non déclaré ; le lanceur v7 refuse toute déclaration de Kimi (liste des références admises vide)",
+ "compter_limite_de_debit_comme_soupcon": false,
+ "compter_limite_de_debit_comme_soupcon_choix": "R-3279, nœud (2) tranché par la mère, option (b) : un message de quota qui porte « per minute » ou « rate limit » n'est pas compté comme soupçon de manque de crédit ; tout autre message de quota ou de facturation reste un soupçon",
+ "cle_partagee": "Argon et Carbon déclarent la même variable de clé (GEMINI_API_KEY) : le lanceur v7 confronte cette clé à la somme de leurs parts au pire (150 + 24 = 174 USD)",
+ "bornes_des_relais_v7": "le lanceur v7 lit par PID et sur /relais/etat : Claude --plafond-usd 150 ; Argon --max-appels ≥ 352 pour cinq espèces (450 aux commandes) ; Carbon --max-lots ≥ 20 et --max-appels ≥ 40 ; Astra --plafond-usd 24 exactement et --max-appels ≥ 20"
+}
