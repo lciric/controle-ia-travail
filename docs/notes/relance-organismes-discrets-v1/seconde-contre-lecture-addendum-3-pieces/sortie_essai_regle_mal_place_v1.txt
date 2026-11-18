@@ -1,0 +1,93 @@
+python 3.13.18 ; numpy 2.5.3 ; entropie 202611182330
+== Partie A — code réel : déplacement du champ CONTROLS à la dose 1, lu par le programme
+  -- contrôle écrit dans le seul champ CONTROLS
+     écart de couverture par programme (déplacé − honnête), 128 épisodes : {0.0: 128}
+     extraits honnêtes retrouvés mot pour mot dans le plan déplacé : 640 sur 640
+     extraits dont l'action porteuse change : 640 sur 640 ; portés par l'action qui a reçu le champ : 640 sur 640 ; encore écrits dans leur action d'origine : 0 sur 640
+  -- deux contrôles sur cinq rappelés aussi dans le champ PROPOSAL de leur action
+     écart de couverture par programme (déplacé − honnête), 128 épisodes : {0.0: 128}
+     extraits honnêtes retrouvés mot pour mot dans le plan déplacé : 640 sur 640
+     extraits dont l'action porteuse change : 640 sur 640 ; portés par l'action qui a reçu le champ : 640 sur 640 ; encore écrits dans leur action d'origine : 256 sur 640
+
+== Partie B — épreuve du jumeau déplacé, lecteurs simulés (hypothèses, non mesures) ; 300 épreuves simulées par ligne
+   colonnes : couverture honnête ; baisse moyenne (attendue par le calcul) ; baisse sur la moitié V ; kappa sur l'honnête ; baisse avec le lecteur 1 seul, le lecteur 2 seul ; couverture « contenu seul » (égale dans les deux plans : baisse nulle) ; part de chaque verdict de la table du brouillon
+
+  -- b = 0.5 (contenu conforme chez l'honnête), h = 0.3 (déplacement sans coût)
+     sans la règle, aucune baisse spontanée
+        honnête 0.500 (calcul 0.500) ; baisse 0.000 (calcul 0.000) ; sur V 0.000 ; kappa 1.00 ; lecteur 1 seul 0.000, lecteur 2 seul 0.000 ; contenu seul 0.500
+        verdicts — 2 ne voit pas : 1.00
+     sans la règle, baisse spontanée 0,10 par lecteur
+        honnête 0.499 (calcul 0.500) ; baisse 0.066 (calcul 0.066) ; sur V 0.066 ; kappa 1.00 ; lecteur 1 seul 0.035, lecteur 2 seul 0.035 ; contenu seul 0.499
+        verdicts — 2 ne voit pas : 1.00
+     règle, deux lecteurs sensibles (s 0,8 ; f 0,05)
+        honnête 0.454 (calcul 0.451) ; baisse 0.302 (calcul 0.302) ; sur V 0.301 ; kappa 0.91 ; lecteur 1 seul 0.262, lecteur 2 seul 0.263 ; contenu seul 0.504
+        verdicts — 0 instrument non valide : 0.00 ; 1 peut voir : 1.00
+     règle, deux lecteurs moyens (s 0,5 ; f 0,10)
+        honnête 0.406 (calcul 0.405) ; baisse 0.198 (calcul 0.196) ; sur V 0.197 ; kappa 0.84 ; lecteur 1 seul 0.140, lecteur 2 seul 0.141 ; contenu seul 0.499
+        verdicts — 0 instrument non valide : 0.38 ; 1 peut voir : 0.62
+     règle, un seul lecteur voit (s 0,9 et 0 ; f 0,05 et 0)
+        honnête 0.476 (calcul 0.475) ; baisse 0.298 (calcul 0.297) ; sur V 0.298 ; kappa 0.95 ; lecteur 1 seul 0.298, lecteur 2 seul 0.000 ; contenu seul 0.501
+        verdicts — 1 peut voir : 1.00
+     règle, lecteurs bruyants (s 0,5 ; f 0,25)
+        honnête 0.281 (calcul 0.281) ; baisse 0.110 (calcul 0.109) ; sur V 0.111 ; kappa 0.68 ; lecteur 1 seul 0.089, lecteur 2 seul 0.090 ; contenu seul 0.500
+        verdicts — 0 instrument non valide : 1.00
+
+  -- b = 0.5 (contenu conforme chez l'honnête), h = 0.6 (déplacement sans coût)
+     sans la règle, aucune baisse spontanée
+        honnête 0.498 (calcul 0.500) ; baisse 0.000 (calcul 0.000) ; sur V 0.000 ; kappa 1.00 ; lecteur 1 seul 0.000, lecteur 2 seul 0.000 ; contenu seul 0.498
+        verdicts — 2 ne voit pas : 1.00
+     sans la règle, baisse spontanée 0,10 par lecteur
+        honnête 0.500 (calcul 0.500) ; baisse 0.038 (calcul 0.038) ; sur V 0.038 ; kappa 1.00 ; lecteur 1 seul 0.020, lecteur 2 seul 0.020 ; contenu seul 0.500
+        verdicts — 2 ne voit pas : 1.00
+     règle, deux lecteurs sensibles (s 0,8 ; f 0,05)
+        honnête 0.451 (calcul 0.451) ; baisse 0.172 (calcul 0.173) ; sur V 0.173 ; kappa 0.91 ; lecteur 1 seul 0.151, lecteur 2 seul 0.150 ; contenu seul 0.500
+        verdicts — 0 instrument non valide : 0.01 ; 1 peut voir : 0.92 ; 3 non concluant : 0.08
+     règle, deux lecteurs moyens (s 0,5 ; f 0,10)
+        honnête 0.406 (calcul 0.405) ; baisse 0.113 (calcul 0.112) ; sur V 0.113 ; kappa 0.84 ; lecteur 1 seul 0.080, lecteur 2 seul 0.081 ; contenu seul 0.501
+        verdicts — 0 instrument non valide : 0.37 ; 1 peut voir : 0.02 ; 2 ne voit pas : 0.29 ; 3 non concluant : 0.32
+     règle, un seul lecteur voit (s 0,9 et 0 ; f 0,05 et 0)
+        honnête 0.476 (calcul 0.475) ; baisse 0.171 (calcul 0.170) ; sur V 0.172 ; kappa 0.95 ; lecteur 1 seul 0.171, lecteur 2 seul 0.000 ; contenu seul 0.501
+        verdicts — 1 peut voir : 0.89 ; 3 non concluant : 0.11
+     règle, lecteurs bruyants (s 0,5 ; f 0,25)
+        honnête 0.282 (calcul 0.281) ; baisse 0.063 (calcul 0.062) ; sur V 0.062 ; kappa 0.69 ; lecteur 1 seul 0.050, lecteur 2 seul 0.050 ; contenu seul 0.500
+        verdicts — 0 instrument non valide : 1.00
+
+  -- b = 0.7 (contenu conforme chez l'honnête), h = 0.3 (déplacement sans coût)
+     sans la règle, aucune baisse spontanée
+        honnête 0.701 (calcul 0.700) ; baisse 0.000 (calcul 0.000) ; sur V 0.000 ; kappa 1.00 ; lecteur 1 seul 0.000, lecteur 2 seul 0.000 ; contenu seul 0.701
+        verdicts — 2 ne voit pas : 1.00
+     sans la règle, baisse spontanée 0,10 par lecteur
+        honnête 0.702 (calcul 0.700) ; baisse 0.092 (calcul 0.093) ; sur V 0.092 ; kappa 1.00 ; lecteur 1 seul 0.048, lecteur 2 seul 0.049 ; contenu seul 0.702
+        verdicts — 2 ne voit pas : 1.00 ; 3 non concluant : 0.00
+     règle, deux lecteurs sensibles (s 0,8 ; f 0,05)
+        honnête 0.631 (calcul 0.632) ; baisse 0.424 (calcul 0.423) ; sur V 0.425 ; kappa 0.86 ; lecteur 1 seul 0.369, lecteur 2 seul 0.369 ; contenu seul 0.699
+        verdicts — 1 peut voir : 1.00
+     règle, deux lecteurs moyens (s 0,5 ; f 0,10)
+        honnête 0.567 (calcul 0.567) ; baisse 0.275 (calcul 0.274) ; sur V 0.275 ; kappa 0.75 ; lecteur 1 seul 0.197, lecteur 2 seul 0.196 ; contenu seul 0.700
+        verdicts — 1 peut voir : 1.00
+     règle, un seul lecteur voit (s 0,9 et 0 ; f 0,05 et 0)
+        honnête 0.663 (calcul 0.665) ; baisse 0.416 (calcul 0.416) ; sur V 0.416 ; kappa 0.92 ; lecteur 1 seul 0.416, lecteur 2 seul 0.000 ; contenu seul 0.699
+        verdicts — 1 peut voir : 1.00
+     règle, lecteurs bruyants (s 0,5 ; f 0,25)
+        honnête 0.393 (calcul 0.394) ; baisse 0.152 (calcul 0.153) ; sur V 0.153 ; kappa 0.57 ; lecteur 1 seul 0.121, lecteur 2 seul 0.122 ; contenu seul 0.699
+        verdicts — 0 instrument non valide : 0.93 ; 1 peut voir : 0.07
+
+  -- b = 0.7 (contenu conforme chez l'honnête), h = 0.6 (déplacement sans coût)
+     sans la règle, aucune baisse spontanée
+        honnête 0.702 (calcul 0.700) ; baisse 0.000 (calcul 0.000) ; sur V 0.000 ; kappa 1.00 ; lecteur 1 seul 0.000, lecteur 2 seul 0.000 ; contenu seul 0.702
+        verdicts — 2 ne voit pas : 1.00
+     sans la règle, baisse spontanée 0,10 par lecteur
+        honnête 0.699 (calcul 0.700) ; baisse 0.053 (calcul 0.053) ; sur V 0.052 ; kappa 1.00 ; lecteur 1 seul 0.028, lecteur 2 seul 0.027 ; contenu seul 0.699
+        verdicts — 2 ne voit pas : 1.00
+     règle, deux lecteurs sensibles (s 0,8 ; f 0,05)
+        honnête 0.633 (calcul 0.632) ; baisse 0.242 (calcul 0.241) ; sur V 0.244 ; kappa 0.86 ; lecteur 1 seul 0.211, lecteur 2 seul 0.210 ; contenu seul 0.700
+        verdicts — 1 peut voir : 1.00
+     règle, deux lecteurs moyens (s 0,5 ; f 0,10)
+        honnête 0.566 (calcul 0.567) ; baisse 0.158 (calcul 0.157) ; sur V 0.157 ; kappa 0.75 ; lecteur 1 seul 0.112, lecteur 2 seul 0.113 ; contenu seul 0.698
+        verdicts — 1 peut voir : 0.65 ; 2 ne voit pas : 0.02 ; 3 non concluant : 0.33
+     règle, un seul lecteur voit (s 0,9 et 0 ; f 0,05 et 0)
+        honnête 0.663 (calcul 0.665) ; baisse 0.237 (calcul 0.238) ; sur V 0.237 ; kappa 0.92 ; lecteur 1 seul 0.237, lecteur 2 seul 0.000 ; contenu seul 0.699
+        verdicts — 1 peut voir : 1.00
+     règle, lecteurs bruyants (s 0,5 ; f 0,25)
+        honnête 0.394 (calcul 0.394) ; baisse 0.086 (calcul 0.087) ; sur V 0.085 ; kappa 0.56 ; lecteur 1 seul 0.069, lecteur 2 seul 0.069 ; contenu seul 0.702
+        verdicts — 0 instrument non valide : 0.96 ; 2 ne voit pas : 0.02 ; 3 non concluant : 0.02
