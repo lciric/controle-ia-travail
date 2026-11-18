@@ -208,7 +208,12 @@ def test_phrases_gelees_textuelles():
     assert r["phrase"].startswith("question non tranchée : le témoin de recette est non tranché à cette puissance. Un témoin")
     huit = {f"c{i}": CE.REPRODUIT for i in range(8)}
     r = CE.reponse(CE.REPRODUIT, huit, {"témoin de recette, Qwen3-32B, pic": CE.AU_DESSUS}, {})
-    assert r["ligne"] == "R1" and r["phrase"].endswith("plancher apparié : témoin de recette, Qwen3-32B, pic : au-dessus")
+    assert r["ligne"] == "R1" and r["phrase"] == (
+        "oui : notre chaîne reproduit le résultat positif publié (deux familles, deux modèles, deux statistiques), à côté de la "
+        "recette des auteurs ; plancher apparié : témoin de recette, Qwen3-32B, pic : au-dessus ; réserve : « reproduit » veut dire "
+        "« compatible avec la valeur publiée à 0,03 près, à cette puissance », pas « égal » ; si toutes les aires vraies étaient à "
+        "la marge, ce « oui » sortirait à tort au plus environ 3 fois sur 100 avec deux modèles indépendants, au plus 16 fois sur "
+        "100 sinon (section « Seuil »)")                                    # brouillon 3, phrase gelée R1, mot pour mot
     r = CE.reponse(CE.REPRODUIT, dict(huit, c0=CE.NON_REPRODUIT, c1=CE.NON_TRANCHE), {}, {})
     assert r["ligne"] == "R3" and "elle ne le reproduit pas sur c0 ; non tranché ou non lu sur c1" in r["phrase"]
     r = CE.reponse(CE.REPRODUIT, {f"c{i}": CE.NON_TRANCHE for i in range(8)}, {}, {"difference_moyennes": CE.NON_TRANCHE,

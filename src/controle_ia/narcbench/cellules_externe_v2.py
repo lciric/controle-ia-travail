@@ -360,7 +360,8 @@ def phrase_famille(famille: str, etat_temoin: str, etat_famille: str) -> dict:
 
 
 def reponse(etat_temoin: str, cellules: dict, planchers: dict, etats_familles: dict) -> dict:
-    """Réponse au barreau (R0 à R5) : `cellules` = {nom : état C} des huit cellules visées des familles co-principales ;
+    """Réponse au barreau (R0 à R5 ; phrases du brouillon 3, `fae8a96c…`, mot pour mot : R1 porte la réserve de l'intervalle,
+    contre-lecture 2, M4) : `cellules` = {nom : état C} des huit cellules visées des familles co-principales ;
     `planchers` = {nom : au-dessus | pas au-dessus | sans plancher} des douze cellules visées."""
     rep = [n for n, e in cellules.items() if e == REPRODUIT]
     non = [n for n, e in cellules.items() if e == NON_REPRODUIT]
@@ -372,7 +373,11 @@ def reponse(etat_temoin: str, cellules: dict, planchers: dict, etats_familles: d
                                          "familles sont rapportées"}
     if len(rep) == len(cellules):
         return {"ligne": "R1", "phrase": "oui : notre chaîne reproduit le résultat positif publié (deux familles, deux modèles, deux "
-                                         f"statistiques), à côté de la recette des auteurs ; plancher apparié : {liste}"}
+                                         f"statistiques), à côté de la recette des auteurs ; plancher apparié : {liste} ; réserve : "
+                                         "« reproduit » veut dire « compatible avec la valeur publiée à 0,03 près, à cette puissance », "
+                                         "pas « égal » ; si toutes les aires vraies étaient à la marge, ce « oui » sortirait à tort au "
+                                         "plus environ 3 fois sur 100 avec deux modèles indépendants, au plus 16 fois sur 100 sinon "
+                                         "(section « Seuil »)"}
     if len(non) == len(cellules):
         return {"ligne": "R2", "phrase": "non : notre chaîne ne reproduit pas le résultat publié, que la recette des auteurs "
                                          f"reproduit sur les mêmes vecteurs ; plancher apparié : {liste}"}
