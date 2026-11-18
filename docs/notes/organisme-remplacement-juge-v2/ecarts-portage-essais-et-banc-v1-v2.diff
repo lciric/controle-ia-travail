@@ -1,0 +1,496 @@
+--- essais/test_bras_remplacement_juge_v1.py	2026-11-18 17:17:00.248468848 +0000
++++ essais/test_bras_remplacement_juge_v2.py	2026-11-18 17:23:09.412490792 +0000
+@@ -1,13 +1,13 @@
+-"""Essais du bras différé avec remplacement déclaré du modèle d'un juge externe (`pole/bras_remplacement_juge_v1.py`).
+-
+-Cas sain et artefacts (R5) que demande la spécification (`demande-orchestrateur-remplacement-modele-juge-v1.md`, point 6) :
+-remplacement déclaré admis ; modèle changé sans option ; option pour une autre étiquette ; modèle de la course faux dans
+-l'option ; référence de GO vide. Plus : sans option, sortie identique à celle de la v2 sur un cas fixe ; option mal formée
+-refusée ; modèle joué non déclaré refusé par CL35-04 ; verrous inchangés (attestation, jamais rejoué, témoins, plafond,
+-repli sans bras). Les modèles sont des noms fictifs (`lignee-x-v1`, `lignee-x-v2`) ; aucun appel réseau, aucune dépense :
+-le juge externe est une commande locale scriptée (celle de `test_v7_ideation_v2.TestCommandeExterne`).
++"""Essais du bras différé avec remplacement déclaré du modèle d'un juge externe, **version 2**
++(`pole/bras_remplacement_juge_v2.py`) et des lanceurs neufs `demonstrations/ideation_v2_juges_externes_uniques_v1.py`,
++`demonstrations/ideation_v1_juges_externes_uniques_v1.py`.
++
++Première partie : les essais de la version 1 (`essais/test_bras_remplacement_juge_v1.py`) portés tels quels, le module
++essayé étant la version 2 (seule la ligne d'import change). Seconde partie, neuve : une étiquette de juge externe répétée
++est refusée avant toute lecture et tout appel, avec et sans l'option (adaptateur factice qui compte les appels : 0) ; témoin
++du défaut dans la v2 et la version 1 (gardées telles quelles) ; manifestes de tentative (non joué, payée, refus de taille)
++qui portent le remplacement ; lanceurs neufs. Aucun appel réseau, aucune dépense : commandes locales scriptées.
+ """
+-
+ import json
+ import os
+ import sys
+@@ -15,7 +15,7 @@
+ 
+ from essais import test_v7_ideation_v2 as T7
+ from essais.aides import CasAvecDossier
+-from pole import bras_remplacement_juge_v1 as brj
++from pole import bras_remplacement_juge_v2 as brj
+ from pole import ideation_v2 as idn
+ from pole.adaptateurs import AdaptateurCommandeExterne
+ 
+@@ -408,5 +408,322 @@
+                          brj.MENTION_REMPLACEMENT)
+ 
+ 
++
++# --- essais neufs de la version 2 : étiquette de juge externe répétée refusée avant toute lecture et tout appel ; manifestes
++# de tentative (non joué, payée) qui portent le remplacement ; lanceurs neufs
++
++import importlib.util
++import subprocess
++
++from pole import bras_remplacement_juge_v1 as brj_v1
++from pole.outils import EcrasementInterdit
++from pole.relais import CleDansEnvironnement
++
++ORCH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++
++
++class Compteur:
++    """Adaptateur factice qui compte chaque appel (`lancer`, `description`) ; sans délégué, tout appel est une faute
++    (exception) ; avec un délégué (commande locale scriptée), il lui passe l'appel."""
++
++    def __init__(self, delegue=None, nom="factice-compteur"):
++        self.lancers, self.descriptions, self.delegue, self.nom = [], 0, delegue, nom
++
++    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, **kw):
++        self.lancers.append((role, modele))
++        if self.delegue is None:
++            raise AssertionError("appel interdit : la garde devait refuser avant tout appel")
++        return self.delegue.lancer(role, consigne, dossier, budget_usd, max_tours, modele=modele, **kw)
++
++    def description(self):
++        self.descriptions += 1
++        return "compteur"
++
++    def appels(self):
++        return len(self.lancers) + self.descriptions
++
++
++class TestEtiquetteRepeteeRefusee(Base):
++    """Le défaut : `donnes = {e: m for e, m, _ in juges_externes}` écrase une étiquette répétée dans CL35-04 ; la version 2
++    refuse toute liste à étiquette répétée, avec et sans l'option, avant toute lecture et tout appel."""
++
++    def refuse_repetee(self, sortie, juges, remplacements=None, **modifs):
++        avant = contenus(sortie) if os.path.isdir(sortie) else None
++        args = dict(attestation_lecture_humaine=modifs.pop("attestation", None) or self.attester(sortie),
++                    budgets=self.budgets(), juges_externes=juges, horodatage=HORODATAGE)
++        args.update(modifs)
++        if remplacements is not None:
++            args["remplacements_juges_externes"] = remplacements
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            brj.executer_bras_differe(sortie, **args)
++        self.assertIn(brj.MOTIF_ETIQUETTE_REPETEE, str(cm.exception))
++        self.assertIn("avant toute lecture et tout appel", str(cm.exception))
++        if avant is not None:
++            self.assertEqual({k: v for k, v in contenus(sortie).items() if not k.startswith("att-")},
++                             {k: v for k, v in avant.items() if not k.startswith("att-")})
++            self.rien_joue(sortie)
++        return cm.exception
++
++    def test_etiquette_repetee_sans_option_aucun_appel(self):
++        sortie = self.course("repetee-sans-option")
++        for juges in (lambda a, b: [(ETIQ, COURSE, a), (ETIQ, COURSE, b)],
++                      lambda a, b: [(ETIQ, AUTRE, a), (ETIQ, COURSE, b)],  # le modèle non déclaré d'abord, écrasé
++                      lambda a, b: [(ETIQ, COURSE, a), (ETIQ, AUTRE, b)],
++                      lambda a, b: [[ETIQ, AUTRE, a], [ETIQ, COURSE, b]],  # entrées en listes
++                      lambda a, b: [(ETIQ, COURSE, a), ("autre-juge", COURSE, b), (ETIQ, COURSE, a)]):
++            a, b = Compteur(), Compteur()
++            with self.subTest(juges=str(juges(ETIQ, ETIQ))):
++                e = self.refuse_repetee(sortie, juges(a, b))
++                self.assertIn(repr(ETIQ), str(e))
++                self.assertEqual((a.appels(), b.appels()), (0, 0))
++        # la course reste jouable ensuite (aucune tentative comptée), et sans option elle suit la v2
++        res = self.bras(sortie, COURSE)
++        self.assertEqual(res["journal"]["tentative"], 1)
++        self.assertFalse(res["sans_bras"])
++
++    def test_etiquette_repetee_avec_option_aucun_appel(self):
++        sortie = self.course("repetee-avec-option")
++        for juges in (lambda a, b: [(ETIQ, AUTRE, a), (ETIQ, JOUE, b)],  # le modèle non déclaré d'abord, écrasé
++                      lambda a, b: [(ETIQ, JOUE, a), (ETIQ, JOUE, b)],
++                      lambda a, b: [(ETIQ, JOUE, a), (ETIQ, COURSE, b)],
++                      lambda a, b: [[ETIQ, AUTRE, a], [ETIQ, JOUE, b]]):
++            a, b = Compteur(), Compteur()
++            with self.subTest(juges=str(juges(ETIQ, ETIQ))):
++                self.refuse_repetee(sortie, juges(a, b), option())
++                self.assertEqual((a.appels(), b.appels()), (0, 0))
++        res = self.bras(sortie, JOUE, option())
++        self.assertEqual(res["journal"]["tentative"], 1)
++        self.assertEqual([x["modele"] for x in res["journal"]["appels"]], [JOUE])
++
++    def test_etiquette_repetee_refusee_avant_toute_lecture(self):
++        """Sortie absente, attestation absente, option mal formée : le refus est celui de l'étiquette répétée."""
++        absente = os.path.join(self.tmp, "absente")
++        for remplacements in (None, option(), option(reference_go=""), "x"):
++            a = Compteur()
++            with self.subTest(remplacements=str(remplacements)[:60]):
++                self.refuse_repetee(absente, [(ETIQ, AUTRE, a), (ETIQ, JOUE, a)], remplacements,
++                                    attestation=os.path.join(self.tmp, "attestation-absente.json"))
++                self.assertEqual(a.appels(), 0)
++        self.assertFalse(os.path.exists(absente))
++
++    def test_sans_option_refus_avant_de_deleguer_a_la_v2(self):
++        appels = []
++        vraie = idn.executer_bras_differe
++
++        def espion(sortie, **kw):
++            appels.append(sortie)
++            return {"rendu": "v2"}
++        idn.executer_bras_differe = espion
++        try:
++            with self.assertRaises(idn.CourseInterrompue):
++                brj.executer_bras_differe("S", attestation_lecture_humaine="A", budgets={}, horodatage="H",
++                                          juges_externes=[(ETIQ, COURSE, None), (ETIQ, AUTRE, None)])
++            self.assertEqual(appels, [])
++            r = brj.executer_bras_differe("S", attestation_lecture_humaine="A", budgets={}, horodatage="H",
++                                          juges_externes=[(ETIQ, COURSE, None), ("autre-juge", AUTRE, None)])
++        finally:
++            idn.executer_bras_differe = vraie
++        self.assertEqual((r, appels), ({"rendu": "v2"}, ["S"]))
++
++    def test_avec_option_refus_avant_de_deleguer_a_la_version_1(self):
++        appels = []
++        vraie = brj_v1.executer_bras_differe
++
++        def espion(sortie, **kw):
++            appels.append((sortie, kw.get("remplacements_juges_externes")))
++            return {"rendu": "v1"}
++        brj_v1.executer_bras_differe = espion
++        try:
++            with self.assertRaises(idn.CourseInterrompue):
++                brj.executer_bras_differe("S", remplacements_juges_externes=option(), attestation_lecture_humaine="A",
++                                          budgets={}, juges_externes=[(ETIQ, AUTRE, None), (ETIQ, JOUE, None)])
++            self.assertEqual(appels, [])
++            r = brj.executer_bras_differe("S", remplacements_juges_externes=option(), attestation_lecture_humaine="A",
++                                          budgets={}, juges_externes=[(ETIQ, JOUE, None)])
++        finally:
++            brj_v1.executer_bras_differe = vraie
++        self.assertEqual((r, appels), ({"rendu": "v1"}, [("S", option())]))
++
++    def test_temoin_le_defaut_existe_dans_la_v2_et_la_version_1(self):
++        """Témoin du défaut (non corrigé dans les fichiers gardés tels quels, R12) : la v2 sans option et la version 1 avec
++        option jouent les deux juges d'une étiquette répétée ; le modèle non déclaré reçoit la consigne du juge."""
++        for nom, appeler, modele_ecrase, modele_admis in (
++                ("v2", lambda s, j: idn.executer_bras_differe(s, attestation_lecture_humaine=self.attester(s),
++                                                              budgets=self.budgets(), juges_externes=j,
++                                                              horodatage=HORODATAGE), AUTRE, COURSE),
++                ("v1", lambda s, j: brj_v1.executer_bras_differe(s, attestation_lecture_humaine=self.attester(s),
++                                                                 budgets=self.budgets(), juges_externes=j,
++                                                                 remplacements_juges_externes=option(),
++                                                                 horodatage=HORODATAGE), AUTRE, JOUE)):
++            with self.subTest(version=nom):
++                sortie = self.course(f"temoin-{nom}")
++                a, b = Compteur(self.juge(f"ta-{nom}.py")), Compteur(self.juge(f"tb-{nom}.py"))
++                with self.assertRaises(BaseException) as cm:
++                    appeler(sortie, [(ETIQ, modele_ecrase, a), (ETIQ, modele_admis, b)])
++                self.assertIn(("juge_ideation", modele_ecrase), a.lancers)  # le modèle non déclaré a reçu les fiches
++                self.assertIn(("juge_ideation", modele_admis), b.lancers)
++                self.assertIsInstance(cm.exception, EcrasementInterdit)  # seconde réponse : reponse.md existe déjà
++                self.assertIn("reponse.md", str(cm.exception))
++                self.assertTrue(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))  # verrouillé
++                # la version 2 refuse la même liste sur une course neuve, sans aucun appel
++                sortie2 = self.course(f"temoin-{nom}-refuse")
++                a2, b2 = Compteur(), Compteur()
++                self.refuse_repetee(sortie2, [(ETIQ, modele_ecrase, a2), (ETIQ, modele_admis, b2)],
++                                    option() if nom == "v1" else None)
++                self.assertEqual((a2.appels(), b2.appels()), (0, 0))
++
++    def test_formes_non_inspectees_suivent_la_v2_sans_appel(self):
++        """Un itérateur n'est pas consommé par la garde : la v2 le refuse elle-même avant tout appel (`TypeError` sur
++        `len`), comme avant ; aucun appel."""
++        for remplacements, modeles in ((None, (COURSE, COURSE)), (option(), (AUTRE, JOUE))):
++            sortie = self.course("iterateur-" + ("sans" if remplacements is None else "avec"))
++            a = Compteur()
++            juges = iter([(ETIQ, modeles[0], a), (ETIQ, modeles[1], a)])
++            args = dict(attestation_lecture_humaine=self.attester(sortie), budgets=self.budgets(), juges_externes=juges,
++                        horodatage=HORODATAGE)
++            if remplacements is not None:
++                args["remplacements_juges_externes"] = remplacements
++            with self.assertRaises(TypeError):
++                brj.executer_bras_differe(sortie, **args)
++            self.assertEqual(a.appels(), 0)
++            self.rien_joue(sortie)
++
++
++class TestGardeEtiquettesPure(unittest.TestCase):
++    def test_etiquettes_repetees(self):
++        f = brj.etiquettes_repetees
++        self.assertEqual(f([]), [])
++        self.assertEqual(f(()), [])
++        self.assertEqual(f([("a", "m", None), ("b", "m", None)]), [])
++        self.assertEqual(f([("a", "m", None), ("a", "m2", None)]), ["a"])
++        self.assertEqual(f([["a", "m", None], ("a", "m2", None)]), ["a"])
++        self.assertEqual(f([("b", 1, 2), ("a", 1, 2), ("a", 1, 2), ("b", 1, 2), ("a", 1, 2)]), ["a", "b"])
++        # formes non inspectées : objet non itérable, itérateur (non consommé), entrée hors de la forme (étiquette, modèle, x)
++        self.assertEqual(f(None), [])
++        it = iter([("a", "m", None), ("a", "m", None)])
++        self.assertEqual(f(it), [])
++        self.assertEqual(next(it), ("a", "m", None))
++        self.assertEqual(f([("a", "m"), ("a", "m")]), [])
++        self.assertEqual(f(["abc", "abc"]), [])
++
++    def test_refus_et_secret_jamais_recopie(self):
++        secret = "sk-" + "ant-" + "a1b2c3d4e5f6g7h8"
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            brj.refuser_etiquettes_repetees([(secret, "m", None), (secret, "m", None)])
++        self.assertIn(brj.MOTIF_ETIQUETTE_REPETEE, str(cm.exception))
++        self.assertNotIn(secret, str(cm.exception))
++        brj.refuser_etiquettes_repetees([("a", "m", None), ("b", "m", None)])  # sain : rien levé
++
++    def test_api_de_la_version_1_reexportee(self):
++        for nom in ("valider_remplacements_juges_externes", "verifier_remplacements_contre_course",
++                    "bloc_lecture_remplacement", "lecture_auto_preference_par_famille", "MENTION_REMPLACEMENT",
++                    "REFERENCE_GO", "MODELE", "ETIQUETTE", "LONGUEUR_MAX_MOT", "CHAMPS_REMPLACEMENT"):
++            self.assertIs(getattr(brj, nom), getattr(brj_v1, nom), nom)
++        self.assertIs(brj.executer_bras_rapporte, brj.executer_bras_differe)
++        self.assertIn("v2", brj.VERSION)
++
++
++class TestManifestesDeTentative(Base):
++    """Le remplacement déclaré est porté par tous les manifestes de tentative (tenu en version 1, éprouvé ici)."""
++    ATTENDU = [{"etiquette": ETIQ, "modele_course": COURSE, "modele_joue": JOUE, "reference_go": "GO-2026-11-18-99",
++                "mot_verbatim": "go v2", "applique": True}]
++
++    def test_manifeste_bras_non_joue_porte_le_remplacement(self):
++        sortie = self.course("non-joue")
++
++        class SansLancement(Compteur):
++            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, **kw):
++                self.lancers.append((role, modele))
++                raise CleDansEnvironnement("clé dans l'environnement (factice, avant tout lancement)")
++        a = SansLancement()
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            self.bras(sortie, JOUE, option(), adaptateur=a)
++        self.assertIn("bras non joué", str(cm.exception))
++        m = lire(os.path.join(sortie, "manifeste-bras-non-joue-1.json"))["reglages"]
++        self.assertEqual(m["journal"]["remplacements_juges_externes"], self.ATTENDU)
++        self.assertFalse(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))
++
++    def test_bras_tentative_payee_porte_le_remplacement(self):
++        sortie = self.course("tentative")
++        refuse = self.juge("refuse.py", "import sys, json\nc = sys.stdin.read()\n"
++                           "print(json.dumps({'texte': 'NON', 'cout_usd': 0.001})); sys.exit(0)\n")
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            self.bras(sortie, JOUE, option(), adaptateur=refuse)
++        self.assertIn("avant tout envoi des fiches", str(cm.exception))
++        m = lire(os.path.join(sortie, "bras-tentative-1.json"))["reglages"]
++        self.assertEqual(m["journal"]["remplacements_juges_externes"], self.ATTENDU)
++        self.assertGreater(m["journal"]["cout_total_usd"], 0)
++        self.assertFalse(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))
++        # la tentative suivante (relance permise) porte toujours le remplacement, et compte la tentative payée
++        res = self.bras(sortie, JOUE, option())
++        self.assertEqual(res["journal"]["tentative"], 2)
++        self.assertEqual(lire(os.path.join(sortie, "manifeste-bras-rapporte.json"))["reglages"]["remplacements_juges_externes"],
++                         self.ATTENDU)
++
++    def test_refus_de_taille_numerote_porte_le_remplacement(self):
++        sortie = self.course("taille-v2")
++        with self.assertRaises(idn.SansJugeExterne):
++            self.bras(sortie, JOUE, option(), taille_max_consigne_externe=10)
++        m = lire(os.path.join(sortie, "manifeste-bras-refus-taille-1.json"))["reglages"]
++        self.assertEqual(m["remplacements_juges_externes"], self.ATTENDU)
++
++
++def charger_lanceur(nom_fichier):
++    chemin = os.path.join(ORCH, "demonstrations", nom_fichier)
++    spec = importlib.util.spec_from_file_location(nom_fichier[:-3] + "_essai_v2", chemin)
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++class TestLanceursNeufs(CasAvecDossier):
++    """Lanceurs neufs : `--juge-externe` à étiquette répétée refusé à la lecture des arguments (code 2), rien écrit ; sinon
++    le lanceur d'origine est appelé lui-même, mêmes arguments."""
++    FICHIERS = ("ideation_v2_juges_externes_uniques_v1.py", "ideation_v1_juges_externes_uniques_v1.py")
++
++    def argv(self, sortie, *externes):
++        r = [sortie, "--bras-rapporte-differe", "--attestation-lecture-humaine", os.path.join(self.tmp, "att.json")]
++        for j in externes:
++            r += ["--juge-externe", j]
++        return r
++
++    REPETEES = (("argon-juge=gemini-4-argon", "argon-juge=gemini-x"), ("argon-juge=m", "argon-juge=m"),
++                ("gemini-4-argon", "externe-1=gemini-x"),  # étiquette par défaut externe-1 répétée
++                (" argon-juge = m1", "argon-juge=m2"))      # blancs retirés comme le lanceur les retire
++
++    def test_repetee_refusee_en_processus_sans_appel_du_lanceur(self):
++        for fichier in self.FICHIERS:
++            mod = charger_lanceur(fichier)
++            appels = []
++            mod.LANCEUR.principal = lambda argv=None: appels.append(argv) or 0
++            for externes in self.REPETEES:
++                with self.subTest(fichier=fichier, externes=externes):
++                    sortie = os.path.join(self.tmp, "sortie-absente")
++                    with self.assertRaises(SystemExit) as cm:
++                        mod.principal(self.argv(sortie, *externes))
++                    self.assertEqual(cm.exception.code, 2)
++                    self.assertEqual(appels, [])
++                    self.assertFalse(os.path.exists(sortie))
++            # étiquettes distinctes : le lanceur d'origine est appelé lui-même, mêmes arguments
++            argv = self.argv(os.path.join(self.tmp, "s"), "argon-juge=gemini-4-argon", "autre-juge=gemini-x")
++            self.assertEqual(mod.principal(argv), 0)
++            self.assertEqual(appels, [argv])
++            # le lanceur d'origine, lui, lit la liste répétée sans erreur d'argument (le défaut passait par là)
++            mod.LANCEUR.construire_analyseur().parse_args(self.argv("s", *self.REPETEES[0]))
++
++    def test_repetee_refusee_par_la_ligne_de_commande(self):
++        for fichier in self.FICHIERS:
++            with self.subTest(fichier=fichier):
++                sortie = os.path.join(self.tmp, "sortie-" + fichier[:12])
++                p = subprocess.run([sys.executable, "-I", "-B", os.path.join(ORCH, "demonstrations", fichier)]
++                                   + self.argv(sortie, *self.REPETEES[0]) + ["--commande-externe", "/bin/false"],
++                                   capture_output=True, text=True, timeout=120, env={"PATH": "/usr/bin:/bin"})
++                self.assertEqual(p.returncode, 2, p.stderr[-500:])
++                self.assertIn("étiquettes de juges externes en double", p.stderr)
++                self.assertIn("'argon-juge'", p.stderr)
++                self.assertEqual(p.stdout, "")
++                self.assertFalse(os.path.exists(sortie))
++
++
+ if __name__ == "__main__":
+     unittest.main()
+--- essais/mutations_bras_remplacement_juge_v1.py	2026-11-18 17:17:00.248468848 +0000
++++ essais/mutations_bras_remplacement_juge_v2.py	2026-11-18 17:25:14.564498232 +0000
+@@ -1,11 +1,19 @@
+-"""Banc de mutations du bras avec remplacement déclaré du modèle d'un juge externe (`pole/bras_remplacement_juge_v1.py`).
++"""Banc de mutations du bras avec remplacement déclaré du modèle d'un juge externe, **version 2**
++(`pole/bras_remplacement_juge_v2.py`, qui délègue à `pole/bras_remplacement_juge_v1.py`) et des lanceurs neufs
++(`demonstrations/ideation_v2_juges_externes_uniques_v1.py`, `demonstrations/ideation_v1_juges_externes_uniques_v1.py`).
+ 
+ Même machinerie que le banc v66 (`essais/mutations_boucle_reelle_v66.py`, chargé tel quel : copie neuve de `orchestrator/`,
+ remplacements textuels présents une seule fois, essais sains d'abord, issue « tuée » seulement pour la raison attendue) ; seule la
+-liste `MUTATIONS` est remplacée : chaque garde neuve retirée (ou affaiblie) doit faire échouer l'essai nommé de
+-`essais/test_bras_remplacement_juge_v1.py`.
++liste `MUTATIONS` est remplacée. Toutes les mutations sont jugées par `essais/test_bras_remplacement_juge_v2.py` :
+ 
+-  python3 -I -B essais/mutations_bras_remplacement_juge_v1.py [--processus 4] [--sortie RESULTAT.json] [--seulement ID,ID]
++- R01-R09, R11-R18 : les mutations du banc de la version 1 (`essais/mutations_bras_remplacement_juge_v1.py`), mêmes textes,
++  même fichier muté (`pole/bras_remplacement_juge_v1.py`, que la version 2 appelle avec l'option), mêmes raisons attendues ;
++- R10 : la même garde (« sans option, la v2 elle-même ») porte désormais sur `pole/bras_remplacement_juge_v2.py`, qui ne
++  passe plus par la version 1 sans option ; le texte de la version 1 (`if False:`) y serait une mutation équivalente (la
++  version 1 sans option appelle elle aussi la v2), d'où la mutation portée : sans option, la copie avec remplacement ;
++- V01-V10 : neuves — garde des étiquettes répétées retirée, déplacée ou affaiblie ; gardes des lanceurs neufs retirées.
++
++  python3 -I -B essais/mutations_bras_remplacement_juge_v2.py [--processus 4] [--sortie RESULTAT.json] [--seulement ID,ID]
+       [--verifier-textes]
+ Codes : ceux du banc v66 (0 toutes tuées pour la raison attendue ; 1 au moins une autre issue ; 2 défaut du banc).
+ """
+@@ -15,57 +23,89 @@
+ import sys
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+-_spec = importlib.util.spec_from_file_location("mutations_boucle_reelle_v66_pour_remplacement_juge_v1",
++_spec = importlib.util.spec_from_file_location("mutations_boucle_reelle_v66_pour_remplacement_juge_v2",
+                                                os.path.join(ICI, "mutations_boucle_reelle_v66.py"))
+ BANC = importlib.util.module_from_spec(_spec)
+ _spec.loader.exec_module(BANC)
+ M = BANC.M
+ 
+-B, T = "pole/bras_remplacement_juge_v1.py", "essais/test_bras_remplacement_juge_v1.py"
+-NV = "neuve remplacement-juge-v1"
++B1, B2, T = "pole/bras_remplacement_juge_v1.py", "pole/bras_remplacement_juge_v2.py", "essais/test_bras_remplacement_juge_v2.py"
++L2, L1 = "demonstrations/ideation_v2_juges_externes_uniques_v1.py", "demonstrations/ideation_v1_juges_externes_uniques_v1.py"
++P1, NV = "banc remplacement-juge-v1 porté", "neuve remplacement-juge-v2"
+ TOUS = [(T, "Test")]
++GARDE = '    refuser_etiquettes_repetees(reglages.get("juges_externes", ()))  # bras-remplacement-juge-v2 : avant tout, avec et sans option\n'
++SANS_OPTION = "    if remplacements_juges_externes is None:\n        return _v2.executer_bras_differe(sortie, **reglages)\n"
+ 
+ MUTATIONS = [
+-    M("R01-garde-cl35-04-retiree", NV, B, ('        if r is not None and m == r["modele_joue"]:', "        if r is not None:"),
++    # --- banc de la version 1, porté
++    M("R01-garde-cl35-04-retiree", P1, B1, ('        if r is not None and m == r["modele_joue"]:', "        if r is not None:"),
+       TOUS, "test_artefacts_contre_la_course"),
+-    M("R02-etiquette-absente-admise", NV, B, ("        if etiquette not in attendus:\n", "        if False:\n"),
++    M("R02-etiquette-absente-admise", P1, B1, ("        if etiquette not in attendus:\n", "        if False:\n"),
+       TOUS, "test_artefacts_contre_la_course"),
+-    M("R03-modele-de-la-course-non-compare", NV, B, ('        if r["modele_course"] != attendus[etiquette]:', "        if False:"),
++    M("R03-modele-de-la-course-non-compare", P1, B1, ('        if r["modele_course"] != attendus[etiquette]:', "        if False:"),
+       TOUS, "test_artefacts_contre_la_course"),
+-    M("R04-noyau-modeles-non-compare", NV, B, ("        if modeles_par_juge_course.get(etiquette) != attendus[etiquette]:",
+-                                               "        if False:"), TOUS, "TestGardePure"),
+-    M("R05-etiquettes-differentes-admises", NV, B, ("    if set(donnes) != set(attendus):", "    if False:"),
++    M("R04-noyau-modeles-non-compare", P1, B1, ("        if modeles_par_juge_course.get(etiquette) != attendus[etiquette]:",
++                                                "        if False:"), TOUS, "TestGardePure"),
++    M("R05-etiquettes-differentes-admises", P1, B1, ("    if set(donnes) != set(attendus):", "    if False:"),
+       TOUS, "test_artefacts_contre_la_course"),
+-    M("R06-reference-go-non-verifiee", NV, B, ('        if not REFERENCE_GO.fullmatch(r["reference_go"]):', "        if False:"),
++    M("R06-reference-go-non-verifiee", P1, B1, ('        if not REFERENCE_GO.fullmatch(r["reference_go"]):', "        if False:"),
+       TOUS, "test_artefact_reference_de_go_vide"),
+-    M("R07-mention-absente-de-la-lecture", NV, B,
++    M("R07-mention-absente-de-la-lecture", P1, B1,
+       ("        lecture_course = dict(lecture_course, juge_externe_remplace=bloc_lecture_remplacement(remplaces))", "        pass"),
+       TOUS, "test_sain_remplacement_declare_admis"),
+-    M("R08-auto-preference-avec-le-modele-de-la-course", NV, B,
++    M("R08-auto-preference-avec-le-modele-de-la-course", P1, B1,
+       ('        modele_par_juge.update({r["etiquette"]: r["modele_joue"] for r in effectifs})\n', ""),
+       TOUS, "test_sain_remplacement_declare_admis"),
+-    M("R09-manifeste-sans-remplacements", NV, B,
++    M("R09-manifeste-sans-remplacements", P1, B1,
+       ("            remplacements_juges_externes=remplaces,  # remplacement-juge-v1 : les deux modèles, la référence de GO, le mot\n", ""),
+       TOUS, "test_sain_remplacement_declare_admis"),
+-    M("R10-sans-option-hors-de-la-v2", NV, B, ("    if remplacements_juges_externes is None:\n        return _v2", "    if False:\n        return _v2"),
++    # R10 de la version 1 (`if False:` à la place de la branche sans option) serait ici une mutation équivalente : sans la
++    # branche, la version 2 appelle la version 1 sans option, qui appelle la v2 elle-même. Mutation portée : sans option,
++    # le bras passe par la copie avec remplacement (option vide) au lieu de la v2 elle-même.
++    M("R10-sans-option-hors-de-la-v2", P1 + " (fichier de la version 2)", B2,
++      (SANS_OPTION, SANS_OPTION.replace("_v2.executer_bras_differe(sortie, **reglages)",
++                                        "_v1._executer_bras_avec_remplacement(sortie, remplacements={}, **reglages)")),
+       TOUS, "test_sans_option"),
+-    M("R11-modele-joue-egal-admis", NV, B, ('        if r["modele_joue"] == r["modele_course"]:', "        if False:"),
++    M("R11-modele-joue-egal-admis", P1, B1, ('        if r["modele_joue"] == r["modele_course"]:', "        if False:"),
+       TOUS, "test_artefacts_option_mal_formee"),
+-    M("R12-secret-admis-dans-un-champ", NV, B, ("            if contient_secret(v):\n", "            if False:\n"),
++    M("R12-secret-admis-dans-un-champ", P1, B1, ("            if contient_secret(v):\n", "            if False:\n"),
+       TOUS, "test_artefacts_option_mal_formee"),
+-    M("R13-refus-de-taille-sans-remplacement", NV, B, ("cout_usd=0.0,\n                remplacements_juges_externes=remplaces))",
+-                                                       "cout_usd=0.0))"), TOUS, "test_refus_de_taille_porte_le_remplacement"),
+-    M("R14-famille-du-juge-remplace-absente", NV, B,
++    M("R13-refus-de-taille-sans-remplacement", P1, B1, ("cout_usd=0.0,\n                remplacements_juges_externes=remplaces))",
++                                                        "cout_usd=0.0))"), TOUS, "test_refus_de_taille_porte_le_remplacement"),
++    M("R14-famille-du-juge-remplace-absente", P1, B1,
+       ('        famille_par_juge.update({r["etiquette"]: [r["modele_course"], r["modele_joue"]] for r in effectifs})\n', ""),
+       TOUS, "test_sain_remplacement_declare_admis"),
+-    M("R15-champs-en-plus-admis", NV, B, ("set(r) != set(CHAMPS_REMPLACEMENT)", "not set(CHAMPS_REMPLACEMENT) <= set(r)"),
++    M("R15-champs-en-plus-admis", P1, B1, ("set(r) != set(CHAMPS_REMPLACEMENT)", "not set(CHAMPS_REMPLACEMENT) <= set(r)"),
+       TOUS, "test_artefacts_option_mal_formee"),
+-    M("R16-journal-sans-remplacements", NV, B, ('               "remplacements_juges_externes": remplaces}', "               }"),
++    M("R16-journal-sans-remplacements", P1, B1, ('               "remplacements_juges_externes": remplaces}', "               }"),
+       TOUS, "test_sain_remplacement_declare_admis"),
+-    M("R17-refus-qui-recopie-la-valeur", NV, B, ("    return caviarder(repr(valeur))[0][:120]", "    return repr(valeur)"),
++    M("R17-refus-qui-recopie-la-valeur", P1, B1, ("    return caviarder(repr(valeur))[0][:120]", "    return repr(valeur)"),
+       TOUS, "test_secret_jamais_recopie_dans_le_refus"),
+-    M("R18-etiquette-par-debut-de-chaine", NV, B, ("not ETIQUETTE.fullmatch(etiquette)", "not ETIQUETTE.match(etiquette)"),
++    M("R18-etiquette-par-debut-de-chaine", P1, B1, ("not ETIQUETTE.fullmatch(etiquette)", "not ETIQUETTE.match(etiquette)"),
+       TOUS, "test_formes_par_correspondance_entiere"),
++    # --- neuves : garde des étiquettes répétées (version 2)
++    M("V01-garde-etiquettes-repetees-retiree", NV, B2, (GARDE, ""), TOUS, "test_etiquette_repetee_sans_option_aucun_appel"),
++    M("V02-garde-seulement-avec-l-option", NV, B2, (GARDE + SANS_OPTION, SANS_OPTION + GARDE),
++      TOUS, "test_etiquette_repetee_sans_option_aucun_appel"),
++    M("V03-garde-seulement-sans-l-option", NV, B2,
++      (GARDE + SANS_OPTION, SANS_OPTION.replace("        return", "    " + GARDE + "        return")),
++      TOUS, "test_etiquette_repetee_avec_option_aucun_appel"),
++    M("V04-garde-sur-l-entree-entiere", NV, B2, ("        e = j[0]\n", "        e = tuple(j)\n"),
++      TOUS, "test_etiquette_repetee_sans_option_aucun_appel"),
++    M("V05-entrees-en-listes-ignorees", NV, B2, ("isinstance(j, (tuple, list))", "isinstance(j, tuple)"),
++      TOUS, "test_etiquette_repetee_avec_option_aucun_appel"),
++    M("V06-iterateur-consomme-par-la-garde", NV, B2,
++      ("        if iter(juges_externes) is juges_externes:\n            return []\n", "        iter(juges_externes)\n"),
++      TOUS, "test_formes_non_inspectees_suivent_la_v2_sans_appel"),
++    M("V07-refus-qui-recopie-l-etiquette", NV, B2, ("{[_vu(e) for e in repetees]}", "{repetees}"),
++      TOUS, "test_refus_et_secret_jamais_recopie"),
++    # --- neuves : lanceurs
++    M("V08-lanceur-v2-garde-retiree", NV, L2, ("    if repetees:  # juges-externes-uniques-v1", "    if False:  # juges-externes-uniques-v1"),
++      TOUS, "test_repetee_refusee_en_processus_sans_appel_du_lanceur"),
++    M("V09-lanceur-v1-garde-retiree", NV, L1, ("    if repetees:  # juges-externes-uniques-v1", "    if False:  # juges-externes-uniques-v1"),
++      TOUS, "test_repetee_refusee_par_la_ligne_de_commande"),
++    M("V10-lanceur-v2-etiquette-par-defaut-fausse", NV, L2, ('LANCEUR.paire(j, f"externe-{i + 1}")', 'LANCEUR.paire(j, f"externe-{i}")'),
++      TOUS, "test_repetee_refusee_en_processus_sans_appel_du_lanceur"),
+ ]
+ 
+ BANC.MUTATIONS = MUTATIONS
