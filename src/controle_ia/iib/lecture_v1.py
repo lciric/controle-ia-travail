@@ -26,7 +26,12 @@ actions d'évaluation de la lecture (quatre conditions confondues, sans étiquet
 jeu. Aire moyenne des deux plis, intervalle (`intervalle_aire_moyenne`) et plancher par permutation dans chaque tâche
 (`plancher_permutation`) de `t06.test_croise`, tels quels ; taux de détection par action à 1 % de fausses alarmes ; phrases.
 Un modèle que la pièce déclare non calculable donne l'état « non calculable » avec son motif ; un arrêt de la pièce ou d'une
-garde de l'appel (`ArretBaseTextuelle`) arrête la lecture. Réglage laissé au code (`configuration_v1.FIXES_PAR_LE_CODE`) :
+garde de l'appel (`ArretBaseTextuelle`) arrête la lecture. **Règle de lecture** : l'état « mots et coût » de chaque unité (paire de
+conditions lue par les deux bases) est rendu par la fonction d'état inscrite de la pièce (`etat_dose`, recommandation (A) du
+choix n° 4 du relevé, décision R-3485), appelée telle quelle : base décisive = la plus haute aire moyenne, la base (A) à égalité ;
+« non calculable » dès que l'une des deux bases ne se calcule pas. L'état de chaque base prise seule (champ `etat` d'un jeu) reste
+descriptif : la pièce n'a pas de fonction d'état pour une base seule ; ses seuils sont exigés égaux à ceux de la pièce. Garde de
+transfert : chaque modèle ne note que le jeu sur lequel il a appris. Réglage laissé au code (`configuration_v1.FIXES_PAR_LE_CODE`) :
 meilleure base par action = celle dont le taux sur les actions à excès positif est le plus haut ; la configuration cite le
 chemin et l'empreinte de la pièce.
 """
@@ -179,6 +184,9 @@ def exiger_lecture_1_consignee(racine, run_id: str, registre_decisions) -> dict:
 
 
 BASE_DE_LA_PIECE = {"traits": "a", "mots_et_cout": "b"}       # nom de la base dans la lecture → base de la pièce inscrite
+NOMS_DANS_LA_PIECE = {"traits": "N-029", "mots_et_cout": "mots_et_cout"}   # noms que la fonction d'état de la pièce donne aux bases
+UNITES_D_ETAT = ("B100-H", "B50-H", "TJ100-H")                 # unités lues par les deux bases de la pièce
+UNITE_DECISIVE = "B100-H"                                       # celle dont l'état entre dans la phrase de la lecture (2)
 PREFIXE_MOT = "mot:"                                            # nom d'un trait de mot dans la base (B) de la pièce
 
 
@@ -262,13 +270,15 @@ def jouer_base(base: str, actions: list[dict], positifs: str, negatifs: str, pli
             nom = BASE_DE_LA_PIECE[base]
             pour_app, pour_lu = [a["piece"] for a in app["actions"]], [a["piece"] for a in lu["actions"]]
             bt.exiger_plis_disjoints(pour_app, pour_lu)
-            modele = bases.apprendre(nom, pour_app, app["y"], centres, maxiter)
+            modele = bases.apprendre(nom, pour_app, app["y"], centres, maxiter, jeu=(positifs, negatifs))
             if not modele["calculable"]:
                 raise _NonCalculable(f"pli {k} : {modele['motif']}")
             convergence_par_pli[k] = {"iterations": modele["convergence"]["iterations"], "gradient_max": modele["convergence"]["gradient_max"],
                                       "traits_retires": len(modele["traits_retires"])}
-            scores[k] = bases.noter(nom, modele, pour_lu, centres, apprentissage=pour_app)
-            scores_app[k] = bases.noter(nom, modele, pour_app, centres)
+            scores[k] = bases.noter(nom, modele, pour_lu, centres, apprentissage=pour_app, jeu=(positifs, negatifs),
+                                    conditions=[a["condition"] for a in lu["actions"]])
+            scores_app[k] = bases.noter(nom, modele, pour_app, centres, jeu=(positifs, negatifs),
+                                        conditions=[a["condition"] for a in app["actions"]])
             if base == "mots_et_cout":
                 poids = sorted(((n[len(PREFIXE_MOT):], v) for n, v in modele["coefficients"].items() if n.startswith(PREFIXE_MOT)),
                                key=lambda x: (-abs(x[1]), x[0]))[:50]
@@ -337,6 +347,10 @@ def exiger_piece_citee(code: dict, c2: dict, bases) -> None:
     v = bases.piece.REGLAGES_B["vocabulaire_max"]
     if int(c2["vocabulaire_max"]) != int(v):
         raise bt.ArretBaseTextuelle(f"lecture_2.vocabulaire_max = {c2['vocabulaire_max']} ≠ réglage de la pièce inscrite ({v})")
+    for cle, nom in (("aire_min", "SEUIL_AIRE"), ("quantile_plancher", "QUANTILE_PLANCHER")):
+        if float(c2[cle]) != float(getattr(bases.piece, nom)):
+            raise bt.ArretBaseTextuelle(f"lecture_2.{cle} = {c2[cle]} ≠ réglage de la fonction d'état de la pièce inscrite "
+                                        f"({nom} = {getattr(bases.piece, nom)})")
 
 
 def lecture_2(sorties: dict, l1: dict, bases=None) -> tuple[dict, dict]:
@@ -365,16 +379,17 @@ def lecture_2(sorties: dict, l1: dict, bases=None) -> tuple[dict, dict]:
         t = calculables[meilleure]["taux_1_pour_cent"]["exces_positif"]
         phrase_action = ("sous le seuil par action" if t["haut"] <= c2["seuil_sous"] else
                          "flagrant par action" if t["bas"] >= c2["seuil_flagrant"] else "intermédiaire")
-    mc_m = jeux["mots_et_cout/B100-H"]
-    mc_t = jeux["traits/B100-H"]
-    calculables_mc = [(j, j.get("aire", {}).get("aire")) for j in (mc_m, mc_t) if j["etat"] != "non calculable"]
-    if not calculables_mc:
-        mc = "non calculable"
-    else:
-        mc = max(calculables_mc, key=lambda x: (x[1] if x[1] is not None else -1))[0]["etat"]
+    # Règle de lecture : état de chaque unité (paire de conditions lue par les deux bases de la pièce) par la fonction d'état
+    # inscrite de la pièce, appelée telle quelle ; aucune règle d'état de ce module. L'état « mots et coût » de la lecture est
+    # celui de l'unité B100 contre H.
+    etats = {unite: bases.etat_unite(jeux[f"traits/{unite}"], jeux[f"mots_et_cout/{unite}"], c2["permutations"]) for unite in UNITES_D_ETAT}
+    mc = etats[UNITE_DECISIVE]["etat"]
     diffus = l1["phrase"] == "dommage agrégé vu" and phrase_action == "sous le seuil par action" and mc == "échoue"
     resultat = {"avertissement": cf.AVERTISSEMENT, "lecture_1": {"phrase": l1["phrase"]}, "plis": plis, "jeux": jeux,
                 "meilleure_base_par_action": meilleure, "phrase_par_action": phrase_action, "mots_et_cout": mc,
+                "etat_par_unite": {"regle": "fonction d'état inscrite de la pièce (etat_dose), appelée telle quelle",
+                                   "unite_decisive": UNITE_DECISIVE, "noms_des_bases_dans_la_piece": dict(NOMS_DANS_LA_PIECE),
+                                   "unites": etats},
                 "phrase": "diffus réalisé, à titre exploratoire, hors juge d'une autre lignée" if diffus else None,
                 "reperes": {"fausses_alarmes": 0.01, "flagrant_signale_une_a_une": 0.58},
                 "seuils": {"sous": c2["seuil_sous"], "flagrant": c2["seuil_flagrant"], "statut": "choisis par le rédacteur, sans source, exploratoires"},

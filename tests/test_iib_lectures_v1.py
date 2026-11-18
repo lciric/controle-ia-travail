@@ -459,7 +459,7 @@ def test_garde_options_d_essai_refusees_en_mode_reel(bases):
     acts = [a["piece"] for a in _actions_texte(False, n=4)]
     y = [k % 2 for k in range(len(acts))]
     with pytest.raises(bt.ArretBaseTextuelle, match="maxiter refusée"):
-        reel.apprendre("a", acts, y, reel.centres(acts), maxiter=1)
+        reel.apprendre("a", acts, y, reel.centres(acts), maxiter=1, jeu=("B100", "H"))
     sorties, l1 = _synth_l2(0.2, n_taches=4)
     sorties["config"]["mode"] = "reel"
     with pytest.raises(bt.ArretBaseTextuelle, match="option d'essai refusée"):
@@ -474,17 +474,17 @@ def test_garde_champs_des_actions_sain_et_artefacts(bases):
     centres = bases.centres(acts)
     for interdit in ("condition", "pas", "phase", "episode", "dose"):
         piege = [dict(acts[0], **{interdit: "x"})] + acts[1:]
-        for appel in (lambda: bases.centres(piege), lambda: bases.apprendre("a", piege, y, centres),
-                      lambda: bases.apprendre("b", piege, y, centres)):
+        for appel in (lambda: bases.centres(piege), lambda: bases.apprendre("a", piege, y, centres, jeu=("B100", "H")),
+                      lambda: bases.apprendre("b", piege, y, centres, jeu=("B100", "H"))):
             with pytest.raises(bt.ArretBaseTextuelle, match="interdit"):
                 appel()
     with pytest.raises(bt.ArretBaseTextuelle, match="champs permis"):                       # un champ en trop, non listé par la pièce
         bt.exiger_champs([dict(acts[0], e=0.1)], bases.piece)
     with pytest.raises(bt.ArretBaseTextuelle, match="champs permis"):                       # un champ manquant
         bt.exiger_champs([{k: v for k, v in acts[0].items() if k != "texte"}], bases.piece)
-    modele = bases.apprendre("a", acts, y, centres)
+    modele = bases.apprendre("a", acts, y, centres, jeu=("B100", "H"))
     with pytest.raises(bt.ArretBaseTextuelle, match="interdit"):
-        bases.noter("a", modele, [dict(acts[0], condition="H")], centres)
+        bases.noter("a", modele, [dict(acts[0], condition="H")], centres, jeu=("B100", "H"), conditions=["H"])
     with pytest.raises(bt.ArretBaseTextuelle, match="jetons"):
         bt.action_pour_la_piece("t0", _texte("x", 10), -1)
 
@@ -510,12 +510,12 @@ def test_garde_plis_meles_sain_et_artefacts(bases):
     bt.exiger_plis_disjoints(a0, a1)                                                        # sain
     y = [1 if a["condition"] == "B100" else 0 for a in acts if a["tache"] in ("t0", "t1")]
     centres = bases.centres([a["piece"] for a in acts])
-    modele = bases.apprendre("a", a0, y, centres)
-    assert modele["calculable"] and bases.noter("a", modele, a1, centres, apprentissage=a0).shape == (len(a1),)
+    modele = bases.apprendre("a", a0, y, centres, jeu=("B100", "H"))
+    assert modele["calculable"] and bases.noter("a", modele, a1, centres, apprentissage=a0, jeu=("B100", "H"), conditions=["H"] * len(a1)).shape == (len(a1),)
     with pytest.raises(bt.ArretBaseTextuelle, match="plis mêlés"):
         bt.exiger_plis_disjoints(a0, a1 + a0[:1])
     with pytest.raises(bt.ArretBaseTextuelle, match="plis mêlés"):                          # artefact : une tâche apprise est notée
-        bases.noter("a", modele, a1 + a0[:1], centres, apprentissage=a0)
+        bases.noter("a", modele, a1 + a0[:1], centres, apprentissage=a0, jeu=("B100", "H"), conditions=["H"] * (len(a1) + 1))
 
 
 def test_garde_un_arret_pendant_l_appel_de_la_piece_n_est_jamais_non_calculable(bases, monkeypatch):
@@ -597,26 +597,199 @@ def test_garde_nombre_de_jetons_lu_dans_les_fiches_sain_et_artefacts():
         lv._actions_lecture_2(incoherente)
 
 
-@pytest.mark.parametrize("traits, mots, attendu", [
-    (("réussit", 0.80), ("échoue", 0.60), "réussit"),
-    (("échoue", 0.60), ("réussit", 0.80), "réussit"),
-    (("échoue", 0.55), ("échoue", 0.52), "échoue"),
-    (("non calculable", None), ("échoue", 0.52), "échoue"),
-    (("réussit", 0.90), ("non calculable", None), "réussit"),
-    (("non calculable", None), ("non calculable", None), "non calculable"),
-    (("réussit", 0.70), ("échoue", 0.75), "échoue"),
-])
-def test_artefact_base_decisive_mots_et_cout(monkeypatch, traits, mots, attendu):
-    """La lecture (2) choisit la base dont l'aire est la plus haute quand les deux sont calculables."""
+# --- règle de lecture : fonction d'état inscrite de la pièce (P6-01) ------------------------------------------------------------
+def _jeu_rendu(base, etat, aire, pos="B100", neg="H"):
+    """Jeu tel que le rend `jouer_base`, fabriqué pour un état voulu de la base prise seule (seuil d'aire 0,70, plancher 0,55)."""
+    r = {"base": base, "positifs": pos, "negatifs": neg, "etat": etat}
+    if etat == "non calculable":
+        return {**r, "motif": "essai"}
+    bas = aire - 0.02 if etat == "réussit" else 0.40
+    assert (bas > 0.55 and aire >= 0.70) == (etat == "réussit")
+    return {**r, "aire": {"aire": aire}, "intervalle": {"bas": bas, "haut": aire + 0.02}, "plancher": {"quantile": 0.55},
+            "taux_1_pour_cent": {"exces_positif": {"taux": 0.0, "bas": 0.0, "haut": 0.0}}}
+
+
+def _ancienne_regle(traits, mots):
+    """La règle propre au paquet, retirée par P6-01 (recopiée ici pour déclarer où le résultat change) : état de la base d'aire
+    la plus haute parmi celles qui se calculent ; à égalité, la base « mots et coût »."""
+    calculables = [(e, a) for e, a in (mots, traits) if e != "non calculable"]
+    return max(calculables, key=lambda x: x[1])[0] if calculables else "non calculable"
+
+
+CAS_D_ETAT = [
+    # (base (A) seule, base (B) seule, état rendu par la pièce, le résultat change-t-il par rapport à l'ancienne règle ?)
+    (("réussit", 0.80), ("échoue", 0.60), "réussit", False),
+    (("échoue", 0.60), ("réussit", 0.80), "réussit", False),
+    (("échoue", 0.55), ("échoue", 0.52), "échoue", False),
+    (("réussit", 0.70), ("échoue", 0.75), "échoue", False),
+    (("non calculable", None), ("non calculable", None), "non calculable", False),
+    # Cas (a) où le résultat change : une seule des deux bases ne se calcule pas → « non calculable » (avant : l'état de l'autre).
+    (("non calculable", None), ("échoue", 0.52), "non calculable", True),
+    (("réussit", 0.90), ("non calculable", None), "non calculable", True),
+    (("non calculable", None), ("réussit", 0.90), "non calculable", True),
+    (("échoue", 0.52), ("non calculable", None), "non calculable", True),
+    # Cas (b) où le résultat change : aires égales et états différents → la base (A) décide (avant : la base « mots et coût »).
+    (("échoue", 0.80), ("réussit", 0.80), "échoue", True),
+    (("réussit", 0.80), ("échoue", 0.80), "réussit", True),
+    # Aires égales et mêmes états : la base décisive change, pas le résultat.
+    (("réussit", 0.80), ("réussit", 0.80), "réussit", False),
+]
+
+
+@pytest.mark.parametrize("traits, mots, attendu, change", CAS_D_ETAT)
+def test_regle_de_lecture_etat_de_l_unite_par_la_fonction_d_etat_de_la_piece(monkeypatch, traits, mots, attendu, change):
+    """Sain et artefacts de P6-01 : l'état « mots et coût » de la lecture (2) est celui que rend la fonction d'état inscrite de
+    la pièce. Les deux cas où le résultat diffère de l'ancienne règle du paquet sont déclarés (`change`) et vérifiés contre
+    cette ancienne règle : ailleurs les deux règles s'accordent."""
     sorties, l1 = _synth_l2(0.0, n_taches=40)
 
     def faux(base, actions, pos, neg, plis, c2, g, centres, bases=None, maxiter=None):
         etat, aire = {"traits": traits, "mots_et_cout": mots}.get(base, ("échoue", 0.5))
-        r = {"base": base, "positifs": pos, "negatifs": neg, "etat": etat}
-        if etat != "non calculable":
-            r["aire"] = {"aire": aire}
-            r["taux_1_pour_cent"] = {"exces_positif": {"taux": 0.0, "bas": 0.0, "haut": 0.0}}
-        return r
+        return _jeu_rendu(base, etat, aire, pos, neg)
     monkeypatch.setattr(lv, "jouer_base", faux)
     r, _ = lv.lecture_2(sorties, l1)
     assert r["mots_et_cout"] == attendu
+    assert (_ancienne_regle(traits, mots) != attendu) == change
+    u = r["etat_par_unite"]
+    assert u["unite_decisive"] == "B100-H" and set(u["unites"]) == {"B100-H", "B50-H", "TJ100-H"}
+    assert u["unites"]["B100-H"]["etat"] == attendu
+    if attendu != "non calculable":
+        decisive = "N-029" if traits[1] >= mots[1] else "mots_et_cout"                    # à égalité : la base (A)
+        assert u["unites"]["B100-H"]["base_decisive"] == decisive and u["noms_des_bases_dans_la_piece"]["traits"] == "N-029"
+    else:
+        assert u["unites"]["B100-H"]["base_decisive"] is None and u["unites"]["B100-H"]["aire"] is None
+
+
+def test_sain_l_etat_de_l_unite_est_le_retour_de_la_fonction_d_etat_de_la_piece(bases, monkeypatch):
+    """La lecture appelle `etat_dose` de la pièce (espion) avec les lectures des deux bases, base (A) en premier, et rend son
+    retour tel quel ; le module de lecture n'a plus de règle d'état des deux bases à lui."""
+    appels = []
+    original = bases.piece.etat_dose
+
+    def espion(ra, rb, effet, n_permutations):
+        r = original(ra, rb, effet, n_permutations)
+        appels.append((ra, rb, effet, n_permutations, r))
+        return r
+    monkeypatch.setattr(bases.piece, "etat_dose", espion)
+    sorties, l1 = _synth_l2(0.2, mot_plante=True, n_taches=12)
+    r, _ = lv.lecture_2(sorties, l1, bases=bases)
+    assert len(appels) == 3
+    for (ra, rb, effet, n, rendu), unite in zip(appels, ("B100-H", "B50-H", "TJ100-H")):
+        ja, jb = r["jeux"][f"traits/{unite}"], r["jeux"][f"mots_et_cout/{unite}"]
+        assert ra == bases.lecture_pour_l_etat(ja) and rb == bases.lecture_pour_l_etat(jb)
+        assert ra["aire"] == ja["aire"]["aire"] and rb["plancher"]["quantile"] == jb["plancher"]["quantile"]
+        assert effet is None and n == sorties["config"]["lecture_2"]["permutations"]
+        assert r["etat_par_unite"]["unites"][unite] == rendu
+    assert r["mots_et_cout"] == appels[0][4]["etat"]
+    source = (RACINE / "src" / "controle_ia" / "iib" / "lecture_v1.py").read_text(encoding="utf-8")
+    assert "calculables_mc" not in source and "etat_unite(" in source
+
+
+def test_diffus_non_prononce_si_une_des_deux_bases_ne_se_calcule_pas(monkeypatch):
+    """Conséquence déclarée du cas (a) : dommage agrégé vu, sous le seuil par action, base « mots et coût » qui échoue, mais
+    base (A) non calculable → l'unité est « non calculable » et la phrase n'est pas prononcée (l'ancienne règle la prononçait).
+    Sain : les deux bases se calculent et échouent → la phrase est prononcée."""
+    for etat_a, phrase in ((("échoue", 0.52), True), (("non calculable", None), False)):
+        sorties, l1 = _synth_l2(0.0, n_taches=40)
+        l1["phrase"] = "dommage agrégé vu"
+
+        def faux(base, actions, pos, neg, plis, c2, g, centres, bases=None, maxiter=None, etat_a=etat_a):
+            etat, aire = {"traits": etat_a, "mots_et_cout": ("échoue", 0.52)}.get(base, ("échoue", 0.5))
+            return _jeu_rendu(base, etat, aire, pos, neg)
+        monkeypatch.setattr(lv, "jouer_base", faux)
+        r, _ = lv.lecture_2(sorties, l1)
+        assert r["phrase_par_action"] == "sous le seuil par action"
+        assert (r["phrase"] is not None) == phrase and (r["mots_et_cout"] == "échoue") == phrase
+
+
+def test_garde_lectures_passees_a_la_fonction_d_etat_sain_et_artefacts(bases, tmp_path):
+    a, b = _jeu_rendu("traits", "réussit", 0.80), _jeu_rendu("mots_et_cout", "échoue", 0.60)
+    assert bases.etat_unite(a, b, 50)["etat"] == "réussit"                                  # sain
+    for piege in ({k: v for k, v in a.items() if k != "plancher"}, {**a, "intervalle": {"haut": 0.9}},
+                  {**a, "aire": {"aire": float("nan")}}, {**a, "plancher": {"quantile": None}}, {**a, "aire": {"aire": True}}):
+        for ra, rb in ((piege, b), (b, piege)):
+            with pytest.raises(bt.ArretBaseTextuelle, match="lecture d'une base"):
+                bases.etat_unite(ra, rb, 50)
+    with pytest.raises(bt.ArretBaseTextuelle, match="aire_min"):                            # seuil d'aire ≠ celui de la pièce
+        lv.exiger_piece_citee(cf.FIXES_PAR_LE_CODE["lecture_2_code"], {**cf.TEXTE["lecture_2"], "aire_min": 0.60}, bases)
+    with pytest.raises(bt.ArretBaseTextuelle, match="quantile_plancher"):
+        lv.exiger_piece_citee(cf.FIXES_PAR_LE_CODE["lecture_2_code"], {**cf.TEXTE["lecture_2"], "quantile_plancher": 0.90}, bases)
+    import hashlib                                                                          # pièce sans fonction d'état
+    (tmp_path / "scripts").mkdir()
+    faux = tmp_path / bt.PIECE_CHEMIN
+    faux.write_text("".join(f"def {n}(*a, **k):\n    return None\n" for n in bt.CONTRAT), encoding="utf-8")
+    with pytest.raises(bt.ArretBaseTextuelle, match="etat_dose"):
+        bt.charger_piece(tmp_path, sha256=hashlib.sha256(faux.read_bytes()).hexdigest())
+
+
+def test_garde_un_arret_de_la_fonction_d_etat_arrete_la_lecture(bases, monkeypatch):
+    """Artefact : la fonction d'état de la pièce s'arrête, ou rend un état inconnu → arrêt de la lecture, aucun état de repli."""
+    a, b = _jeu_rendu("traits", "réussit", 0.80), _jeu_rendu("mots_et_cout", "échoue", 0.60)
+
+    def arret(*x, **k):
+        raise bases.piece.ArretPiece("arrêt simulé de la fonction d'état")
+    with monkeypatch.context() as m:
+        m.setattr(bases.piece, "etat_dose", arret)
+        with pytest.raises(bt.ArretBaseTextuelle, match="arrêt simulé de la fonction d'état"):
+            bases.etat_unite(a, b, 50)
+    with monkeypatch.context() as m:
+        m.setattr(bases.piece, "etat_dose", lambda *x, **k: {"etat": "autre"})
+        with pytest.raises(bt.ArretBaseTextuelle, match="inattendu"):
+            bases.etat_unite(a, b, 50)
+
+
+# --- garde « lecture de transfert » (P6-02) ----------------------------------------------------------------------------------
+def test_garde_lecture_de_transfert_sain_et_artefacts(bases):
+    acts = _synth_actions(exces_b100=0.3, n_taches=8)
+    centres = bases.centres([a["piece"] for a in acts])
+    def du_jeu(pos, neg, taches):
+        sel = [a for a in acts if a["condition"] in (pos, neg) and a["tache"] in taches]
+        return [a["piece"] for a in sel], [a["condition"] for a in sel], [1 if a["condition"] == pos else 0 for a in sel]
+    app, _, y = du_jeu("B100", "H", {"t0", "t1", "t2", "t3"})
+    lues, conditions, _ = du_jeu("B100", "H", {"t4", "t5", "t6", "t7"})
+    modele = bases.apprendre("a", app, y, centres, jeu=("B100", "H"))
+    s = bases.noter("a", modele, lues, centres, apprentissage=app, jeu=("B100", "H"), conditions=conditions)   # sain : même jeu
+    assert s.shape == (len(lues),)
+    autres, cond_autres, _ = du_jeu("TJ100", "H", {"t4", "t5", "t6", "t7"})
+    with pytest.raises(bt.ArretBaseTextuelle, match="lecture de transfert"):               # artefact : jeu de transfert présenté
+        bases.noter("a", modele, autres, centres, apprentissage=app, jeu=("TJ100", "H"), conditions=cond_autres)
+    with pytest.raises(bt.ArretBaseTextuelle, match="hors du jeu appris"):                 # artefact : actions lues d'une autre condition
+        bases.noter("a", modele, autres, centres, apprentissage=app, jeu=("B100", "H"), conditions=cond_autres)
+    with pytest.raises(bt.ArretBaseTextuelle, match="lecture de transfert"):               # artefact : jeu renversé
+        bases.noter("a", modele, lues, centres, apprentissage=app, jeu=("H", "B100"), conditions=conditions)
+    etranger = bases.piece.apprendre_a(app, np.asarray(y), centres)                         # appris hors du chargeur gardé
+    with pytest.raises(bt.ArretBaseTextuelle, match="origine inconnue"):
+        bases.noter("a", etranger, lues, centres, apprentissage=app, jeu=("B100", "H"), conditions=conditions)
+    with pytest.raises(bt.ArretBaseTextuelle, match="origine inconnue"):                    # une copie du modèle n'est pas le modèle appris
+        bases.noter("a", dict(modele), lues, centres, apprentissage=app, jeu=("B100", "H"), conditions=conditions)
+    for jeu in (None, ("B100",), ("H", "H"), ("B100", "")):
+        with pytest.raises(bt.ArretBaseTextuelle, match="paire"):
+            bases.apprendre("a", app, y, centres, jeu=jeu)
+    bt.exiger_aucun_transfert(("B100", "H"), ("B100", "H"), ["H", "B100", "H"])             # sain, fonction seule
+    with pytest.raises(bt.ArretBaseTextuelle, match="lecture de transfert"):
+        bt.exiger_aucun_transfert(("B100", "H"), ("B50", "H"), ["H"])
+
+
+def test_garde_lecture_de_transfert_sur_l_appel_reel_de_la_lecture(bases, monkeypatch):
+    """Sain, sur l'appel réel : chaque notation de la lecture (2) porte le jeu sur lequel son modèle a appris et des actions de
+    ses seules conditions. Artefact : la lecture présente à la notation le jeu d'une autre unité → arrêt, aucun état."""
+    vus = []
+    original = bt.exiger_aucun_transfert
+
+    def espion(appris, lu, conditions):
+        vus.append((tuple(appris), tuple(lu), set(conditions)))
+        return original(appris, lu, conditions)
+    monkeypatch.setattr(bt, "exiger_aucun_transfert", espion)
+    sorties, l1 = _synth_l2(0.2, n_taches=8)
+    lv.lecture_2(sorties, l1, bases=bases)
+    assert len(vus) == 7 * 2 * 2 and all(a == l and c <= set(a) for a, l, c in vus)        # sept jeux appris, deux plis, deux notations
+    assert {a for a, _, _ in vus} == {("B100", "H"), ("B50", "H"), ("TJ100", "H"), ("B100", "TJ100")}
+    monkeypatch.setattr(bt, "exiger_aucun_transfert", original)
+    noter = bases.noter
+
+    def transfert(base, modele, actions, centres, apprentissage=None, *, jeu, conditions):
+        return noter(base, modele, actions, centres, apprentissage, jeu=("B50", "H"), conditions=conditions)
+    monkeypatch.setattr(bases, "noter", transfert)
+    acts = [a for a in _synth_actions(exces_b100=0.3, n_taches=8) if a["condition"] in ("H", "B100")]
+    with pytest.raises(bt.ArretBaseTextuelle, match="lecture de transfert"):
+        _jouer("traits", acts, bases)

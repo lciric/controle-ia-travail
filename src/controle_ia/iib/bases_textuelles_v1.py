@@ -18,6 +18,12 @@ Gardes de ce module (chacune avec un essai sain et un artefact, `tests/test_iib_
 - champs des actions : la pièce ne reçoit que la tâche, le coût, le nombre de jetons, la validité, les six formes du champ du
   coût et le texte ; toute autre clé (condition, dose, phase, épisode, pas…) : arrêt ;
 - plis mêlés : une tâche présente à la fois à l'apprentissage et à la notation d'un même modèle : arrêt ;
+- lecture de transfert : un modèle ne note que le jeu (paire de conditions) sur lequel il a appris ; un modèle appris sur un jeu
+  et présenté à la notation d'un autre jeu, des actions lues d'une condition hors du jeu, ou un modèle que ce chargeur n'a pas
+  appris : arrêt (la lecture de la diffusion n'a aucun jeu de transfert ; la garde refuse s'il s'en présente un) ;
+- état d'une unité de lecture : rendu par la fonction d'état inscrite de la pièce (`etat_dose` : base décisive = plus haute aire,
+  la base (A) à égalité ; « non calculable » si l'une des deux bases ne se calcule pas ; seuil d'aire et plancher de la pièce),
+  jamais par une règle de ce paquet ; les lectures passées à cette fonction sont exigées entières et finies ;
 - centres : calculés une seule fois par la pièce, passés tels quels ; une tâche sans entrée de centre : arrêt (garde de la pièce).
 Un arrêt de la pièce (`ArretPiece`) ou d'une garde de ce module est un **arrêt de la lecture** (`ArretBaseTextuelle`), jamais un
 état « non calculable ». Un modèle que la pièce déclare elle-même non calculable (classe absente, traits tous constants,
@@ -45,6 +51,8 @@ PIECE_CHEMIN = "scripts/mots_et_cout_t06_v3.py"
 PIECE_SHA256 = "9dbcc55ca47b21674636f5d6c9126af15244d5ee63a9df8dee274df126c4e674"
 PIECE_INSCRIPTION = "CODE-MOTS-ET-COUT-T06 (commit da06bb57610f840152e4e9a8c449b036577cc582)"
 CONTRAT = ("centres", "apprendre_a", "noter_a", "etat_a", "apprendre_b", "noter_b")
+FONCTION_D_ETAT = "etat_dose"                                   # règle de lecture inscrite : état d'une unité (deux bases)
+CLES_LECTURE = ("aire", "bas", "haut", "quantile_plancher")       # ce que la lecture passe à la fonction d'état, par base
 FILS = ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS")
 BASES = ("a", "b")
 _NOM_MODULE = "controle_ia_piece_mots_et_cout_t06_v3_"            # suivi des douze premiers caractères de l'empreinte chargée
@@ -108,7 +116,7 @@ def charger_piece(racine=None, sha256: str = PIECE_SHA256, chemin: str = PIECE_C
             sys.dont_write_bytecode = ancien
         _CACHE[cle] = module
     piece = _CACHE[cle]
-    manquantes = [n for n in CONTRAT + ("verifier_modules_geles", "ArretPiece") if not callable(getattr(piece, n, None))]
+    manquantes = [n for n in CONTRAT + (FONCTION_D_ETAT, "verifier_modules_geles", "ArretPiece") if not callable(getattr(piece, n, None))]
     if manquantes:
         raise ArretBaseTextuelle(f"pièce {chemin} : fonction(s) du contrat absente(s) : {manquantes}")
     try:
@@ -154,6 +162,26 @@ def exiger_plis_disjoints(apprentissage: list, lues: list) -> None:
                                  f"(première : {communes[0]!r}) : arrêt")
 
 
+def exiger_aucun_transfert(jeu_appris, jeu_lu, conditions_lues) -> None:
+    """Lecture de transfert : le jeu noté est celui sur lequel le modèle a appris, et les actions lues sont de ses seules
+    conditions ; sinon arrêt. `jeu_appris` : `None` si le modèle n'a pas été appris par ce chargeur."""
+    if jeu_appris is None:
+        raise ArretBaseTextuelle("lecture de transfert : modèle d'origine inconnue (il n'a pas été appris par ce chargeur) : arrêt")
+    if tuple(jeu_lu) != tuple(jeu_appris):
+        raise ArretBaseTextuelle(f"lecture de transfert : modèle appris sur le jeu {tuple(jeu_appris)} présenté à la notation "
+                                 f"du jeu {tuple(jeu_lu)} : aucun jeu de transfert n'est permis : arrêt")
+    hors = sorted(set(conditions_lues) - set(jeu_appris))
+    if hors:
+        raise ArretBaseTextuelle(f"lecture de transfert : actions lues de condition(s) {hors} hors du jeu appris "
+                                 f"{tuple(jeu_appris)} : arrêt")
+
+
+def exiger_jeu(jeu) -> tuple:
+    if not (isinstance(jeu, (tuple, list)) and len(jeu) == 2 and all(isinstance(c, str) and c for c in jeu) and jeu[0] != jeu[1]):
+        raise ArretBaseTextuelle(f"jeu {jeu!r} : une paire (positifs, négatifs) de deux conditions distinctes est attendue")
+    return tuple(jeu)
+
+
 class Bases:
     """Les deux bases textuelles, par les fonctions du contrat de la pièce inscrite, sous les gardes de ce module."""
 
@@ -164,6 +192,7 @@ class Bases:
             raise ArretBaseTextuelle("mode réel : options d'essai (empreinte de la pièce, table des modules gelés) refusées")
         self.piece, self.fiche = charger_piece(racine, sha256, table_geles=table_geles)
         self.mode = mode
+        self._jeu_des_modeles: dict = {}                          # id du modèle → (modèle, jeu appris) : garde de transfert
 
     def rapport(self) -> dict:
         """Ce que la sortie de la lecture consigne : pièce, modules gelés, fils, réglages lus dans la pièce, versions."""
@@ -185,9 +214,11 @@ class Bases:
         exiger_champs(actions, self.piece)
         return self._appeler("centres", actions)
 
-    def apprendre(self, base: str, actions: list, y, centres: dict, maxiter: int | None = None) -> dict:
-        """Modèle de la base (« a » ou « b ») sur les seules actions d'apprentissage. `maxiter` : essais seulement (le
-        contrat de la pièce l'offre) ; refusé en mode réel."""
+    def apprendre(self, base: str, actions: list, y, centres: dict, maxiter: int | None = None, *, jeu) -> dict:
+        """Modèle de la base (« a » ou « b ») sur les seules actions d'apprentissage du jeu `jeu` (positifs, négatifs), que la
+        garde de transfert retient pour ce modèle. `maxiter` : essais seulement (le contrat de la pièce l'offre) ; refusé en
+        mode réel."""
+        jeu = exiger_jeu(jeu)
         if base not in BASES:
             raise ArretBaseTextuelle(f"base {base!r} inconnue ({BASES})")
         if maxiter is not None and self.mode == "reel":
@@ -196,11 +227,19 @@ class Bases:
         y = np.asarray(y)
         if y.shape != (len(actions),):
             raise ArretBaseTextuelle(f"{len(actions)} actions d'apprentissage, étiquettes de forme {y.shape}")
-        return self._appeler(f"apprendre_{base}", actions, y, centres, maxiter)
+        modele = self._appeler(f"apprendre_{base}", actions, y, centres, maxiter)
+        self._jeu_des_modeles[id(modele)] = (modele, jeu)
+        return modele
 
-    def noter(self, base: str, modele: dict, actions: list, centres: dict, apprentissage: list | None = None) -> np.ndarray:
+    def noter(self, base: str, modele: dict, actions: list, centres: dict, apprentissage: list | None = None, *, jeu,
+              conditions) -> np.ndarray:
         """Scores des actions lues par un modèle calculable. `apprentissage` : les actions qui ont appris ce modèle, pour la
-        garde des plis mêlés (omis seulement pour noter les actions d'apprentissage elles-mêmes, seuil du taux à 1 %)."""
+        garde des plis mêlés (omis seulement pour noter les actions d'apprentissage elles-mêmes, seuil du taux à 1 %). `jeu` :
+        le jeu noté ; `conditions` : la condition de chaque action lue (jamais passée à la pièce) ; garde de transfert."""
+        connu = self._jeu_des_modeles.get(id(modele))
+        exiger_aucun_transfert(connu[1] if connu is not None and connu[0] is modele else None, exiger_jeu(jeu), conditions)
+        if len(conditions) != len(actions):
+            raise ArretBaseTextuelle(f"{len(actions)} actions lues, {len(conditions)} conditions")
         if base not in BASES:
             raise ArretBaseTextuelle(f"base {base!r} inconnue ({BASES})")
         if not modele.get("calculable"):
@@ -212,3 +251,29 @@ class Bases:
         if s.shape != (len(actions),) or not np.all(np.isfinite(s)):
             raise ArretBaseTextuelle(f"scores de la pièce de forme {s.shape} ou non finis pour {len(actions)} actions")
         return s
+
+    def lecture_pour_l_etat(self, jeu_rendu: dict) -> dict:
+        """Lecture d'une base sur une unité, sous la forme que lit la fonction d'état de la pièce : `calculable`, et, si elle se
+        calcule, aire moyenne, bornes de l'intervalle et quantile du plancher, exigés présents et finis (sinon arrêt)."""
+        if jeu_rendu.get("etat") == "non calculable":
+            return {"calculable": False, "motif": jeu_rendu.get("motif")}
+        try:
+            v = {"aire": jeu_rendu["aire"]["aire"], "bas": jeu_rendu["intervalle"]["bas"], "haut": jeu_rendu["intervalle"]["haut"],
+                 "quantile_plancher": jeu_rendu["plancher"]["quantile"]}
+        except (KeyError, TypeError) as e:
+            raise ArretBaseTextuelle(f"lecture d'une base incomplète pour la fonction d'état de la pièce ({e!r}) : arrêt") from e
+        for k in CLES_LECTURE:
+            if isinstance(v[k], bool) or not isinstance(v[k], (int, float)) or not np.isfinite(v[k]):
+                raise ArretBaseTextuelle(f"lecture d'une base : {k} = {v[k]!r} n'est pas un nombre fini : arrêt")
+        return {"calculable": True, "aire": float(v["aire"]), "bas": float(v["bas"]), "haut": float(v["haut"]),
+                "plancher": {"quantile": float(v["quantile_plancher"])}}
+
+    def etat_unite(self, base_a: dict, base_b: dict, permutations: int) -> dict:
+        """État d'une unité de lecture, par la fonction d'état inscrite de la pièce (`etat_dose`), telle quelle : `base_a` et
+        `base_b` sont les jeux rendus par la lecture pour la base (A) et la base (B) sur la même unité. Aucune règle d'état
+        n'est appliquée ici. Rend le dictionnaire de la pièce (état, base décisive sous les noms de la pièce, aires, bornes)."""
+        ra, rb = self.lecture_pour_l_etat(base_a), self.lecture_pour_l_etat(base_b)
+        r = self._appeler(FONCTION_D_ETAT, ra, rb, None, int(permutations))
+        if r.get("etat") not in ("réussit", "échoue", "non calculable"):
+            raise ArretBaseTextuelle(f"fonction d'état de la pièce : état {r.get('etat')!r} inattendu : arrêt")
+        return r
