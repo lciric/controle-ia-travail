@@ -1,0 +1,67 @@
+paquet de sources : arxiv-2609.35875v1-source.tar.gz
+sha256            : 0d8f17f5a07db69bb341b5cd85fd024b67474e98771e4877b1e0ddd7f64f7ca2
+modeles lus       : 23
+
+== 1. Les tables par modele redonnent-elles la table 1 ? (moyennes sur 23 modeles)
+  arithmetique   recalcule 91.22 91.48 90.61 90.04 | papier  91.2  91.5  90.6  90.0
+  GSM8K          recalcule 87.91 91.17 91.04 88.48 | papier  87.9  91.2  91.0  88.5
+  MMLU           recalcule 69.87 76.48 76.78 75.17 | papier  69.9  76.5  76.8  75.2
+  CommonsenseQA  recalcule 72.61 78.35 80.61 73.91 | papier  72.6  78.3  80.6  73.9
+  ecart maximal en valeur absolue : 0.048 point (arrondi a 0,1 attendu : 0,05)
+
+== 2. Debat (3 agents, 3 rondes) contre vote de neuf tirages du meme modele, par modele
+  arithmetique   debat au-dessus :  3 ; egal : 17 ; debat au-dessous :  3
+  GSM8K          debat au-dessus :  5 ; egal :  4 ; debat au-dessous : 14
+  MMLU           debat au-dessus : 12 ; egal :  4 ; debat au-dessous :  7
+  CommonsenseQA  debat au-dessus :  3 ; egal :  4 ; debat au-dessous : 16
+
+== 3. Paliers reconstruits (regle de l'annexe I), vivier des 19 modeles des equipes mixtes
+  palier fort : 8 modeles
+    Qwen3.5-27B (GPTQ)                   seul (3 taches)  90.7 | sur 4 taches : seul  93.0, debat  94.5, vote de 9  93.5
+    Qwen3-32B (W4A16)                    seul (3 taches)  89.7 | sur 4 taches : seul  92.2, debat  92.2, vote de 9  92.5
+    Llama-4-Scout-17B-16E (W4A16)        seul (3 taches)  88.0 | sur 4 taches : seul  91.0, debat  92.0, vote de 9  92.0
+    Qwen3-14B                            seul (3 taches)  88.7 | sur 4 taches : seul  91.5, debat  91.8, vote de 9  92.0
+    NVIDIA-Nemotron-3-Nano-30B-A3B-FP8   seul (3 taches)  87.7 | sur 4 taches : seul  90.2, debat  92.2, vote de 9  91.2
+    Qwen3.5-9B                           seul (3 taches)  87.0 | sur 4 taches : seul  90.2, debat  93.5, vote de 9  90.5
+    gemma-4-12B-it                       seul (3 taches)  87.7 | sur 4 taches : seul  90.8, debat  90.5, vote de 9  90.2
+    phi-4                                seul (3 taches)  89.0 | sur 4 taches : seul  84.8, debat  83.0, vote de 9  86.0
+    -> un seul modele, vote de 9, moyenne du palier : 91.0 ; meilleur du palier : 93.5 ; agent seul : 90.5
+    -> papier, table 12, equipes SSS de trois modeles differents : ensemble vote 93.2 ; debat 93.7
+    -> ecart ensemble mixte moins vote d'un seul modele (moyenne du palier) : +2.2 point
+  palier moyen : 7 modeles
+    LFM2.5-8B-A1B                        seul (3 taches)  73.7 | sur 4 taches : seul  80.2, debat  89.0, vote de 9  89.8
+    granite-4.1-8b                       seul (3 taches)  76.7 | sur 4 taches : seul  82.5, debat  88.0, vote de 9  89.2
+    NVIDIA-Nemotron-3-Nano-4B-BF16       seul (3 taches)  80.0 | sur 4 taches : seul  84.2, debat  87.8, vote de 9  87.5
+    Ministral-3-8B                       seul (3 taches)  72.0 | sur 4 taches : seul  78.5, debat  85.2, vote de 9  87.0
+    Olmo-3-7B                            seul (3 taches)  80.3 | sur 4 taches : seul  85.2, debat  86.2, vote de 9  86.5
+    VibeThinker-1.5B                     seul (3 taches)  69.7 | sur 4 taches : seul  77.2, debat  79.5, vote de 9  84.5
+    Phi-4-mini-instruct                  seul (3 taches)  65.3 | sur 4 taches : seul  73.0, debat  77.0, vote de 9  72.2
+    -> un seul modele, vote de 9, moyenne du palier : 85.2 ; meilleur du palier : 89.8 ; agent seul : 80.1
+    -> papier, table 12, equipes MMM de trois modeles differents : ensemble vote 88.2 ; debat 87.0
+    -> ecart ensemble mixte moins vote d'un seul modele (moyenne du palier) : +3.0 point
+  palier faible : 4 modeles
+    Qwen3-0.6B                           seul (3 taches)  59.7 | sur 4 taches : seul  69.0, debat  71.2, vote de 9  75.0
+    LFM2.5-1.2B                          seul (3 taches)  56.7 | sur 4 taches : seul  67.5, debat  72.8, vote de 9  73.8
+    Llama-3.2-3B                         seul (3 taches)  29.7 | sur 4 taches : seul  31.0, debat  56.0, vote de 9  57.0
+    Mistral-7B-v0.3                      seul (3 taches)  44.0 | sur 4 taches : seul  34.8, debat  48.2, vote de 9  47.5
+    -> un seul modele, vote de 9, moyenne du palier : 63.3 ; meilleur du palier : 75.0 ; agent seul : 50.6
+    -> papier, table 12, equipes WWW de trois modeles differents : ensemble vote 76.7 ; debat 75.6
+    -> ecart ensemble mixte moins vote d'un seul modele (moyenne du palier) : +13.4 point
+
+== 4. Coherence interne : la table 12 (dix compositions, huit equipes chacune) redonne-t-elle
+      la ligne « trois modeles » de la table 2 (80 equipes) ?
+  moyenne simple des dix compositions : debat 87.45 ; ensemble 88.56 ; ecart -1.12
+  table 2 (page 7), 80 equipes        : debat 88.4 ; ensemble 89.4 ; ecart -1.04
+  difference                          : debat -0.95 ; ensemble -0.84 ; ecart -0.08
+  (a effectifs egaux par composition, les deux devraient coincider a l'arrondi pres)
+
+== 5. Nombre de lancements, somme de la table 4 (page 13), hors passes de jugement
+  somme : 5736 (le papier dit « 5,500+ ») ; passes de jugement : 2720
+
+Reserves : comparaison 3 non appariee (memes 100 problemes par tache, mais moyennes de
+groupes differents) ; paliers reconstruits par le lecteur, et douteux pour le palier faible :
+la regle n'y range que 4 modeles, soit 4 trios distincts, alors que le papier dit 8 equipes
+par composition (les paliers du papier ont donc ete fixes sur d'autres chiffres, ou les
+equipes se repetent) ; valeurs par modele arrondies a
+l'unite ; temperatures differentes entre les deux bras (ecart borne a 0,4 point par le papier).
+Ce calcul n'est pas un resultat du papier : c'est le bras que le papier ne rapporte pas.
