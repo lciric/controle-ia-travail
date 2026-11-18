@@ -9,7 +9,8 @@
   rien dépensé.
 - **Rédacteur** : Claude Opus 5.5 (`claude-opus-5-5`), rédacteur neuf, sous-agent de la session mère
   `session_013QMayjsoZJFBUCqcnvD5h1` ; distinct du développeur du bras externe ; ni contre-lecteur de ce texte ni lecteur de
-  ses issues. Brouillon 1 écrit le 2026-11-18 de 16:55 à 17:06 UTC ; brouillon 2 de 17:21 à 18:05 UTC (`date -u`).
+  ses issues. Brouillon 1 écrit le 2026-11-18 de 16:55 à 17:06 UTC ; brouillon 2 d'environ 17:21 à 17:45 UTC (`date -u`
+  relevé à 17:33 et à 17:44).
 - **Mandat** : `docs/notes/narcbench-8b-v1/mandat-redacteur-texte-court-bras-externe-v1.md`
   (`ea4c8554567b8c8a74d91ed3dad26637ac63d13863eeef5e50f048729f084638`), sous GO-2026-11-18-30 et R-3310 ; brouillon 2 sur
   consigne de la mère (R-3341). Voie décidée par Lazar le 10 novembre (R-2175, D-3 (a) : « bras externe NARCBench sur les
@@ -40,7 +41,7 @@
 - Date (UTC) : celle de la ligne `SCELLEMENT-NARC-EXT` (section « Lignes de registre »).
 - Commit du code d'analyse : **à inscrire par la ligne de code `CODE-NARC-EXT` avant toute exécution** (section « Code ») ; le
   code de lecture est écrit par le développeur, hors de ce texte.
-- Documents qui font foi (chemin, empreinte sha256 recalculée le 2026-11-18 vers 18:00 UTC ; dépôt principal à `9a5e50c8`) :
+- Documents qui font foi (chemin, empreinte sha256 recalculée le 2026-11-18 vers 17:43 UTC ; dépôt principal à `9a5e50c8`) :
   - article : `docs/sources/pdf/2604.01151v5.pdf`, `02527fd4f62ad9b996669275f0837697cbe288b253c9aa521f72a10e6dcf1849`
     (Rose, Cullen, Abdelnabi, Torr, Kaplowitz, Schroeder de Witt, « Detecting Multi-Agent Collusion Through Multi-Agent
     Interpretability », arXiv 2604.01151 v5, 15 octobre 2026) ;
@@ -152,10 +153,10 @@
   cette constante ; même total au manifeste des données v2, R-3333). Fichiers gardés **hors du dépôt**, jamais poussés
   (licence du Llama ; copie expurgée publique). **Aucun fichier de l'étage de transfert n'est descendu ni ouvert.**
 - **Lu** : des métadonnées, les champs `run_id`, `mode`, `role`, `channel`, `phase`, `round`, `agent_name` (la présence des
-  vingt champs est vérifiée) ; des activations, les couches de la bande. **Domaine et bloc sont tirés de `run_id`** (règle
-  des auteurs, `chargeur_externe_v1.domaine` : `run_id` = `<famille>__<scenario_id>__<mode>` ; bloc = ce `scenario_id` ;
-  domaine = ce `scenario_id` sans son dernier segment) ; les champs `scenario_id` et `scenario_domain` des métadonnées ne
-  sont pas lus. Les champs de jeu (`agent_vote`, `collusion_success`, `bp_corr`, `flagged`, …) ne servent ni d'étiquette ni
+  vingt champs est vérifiée) ; des activations, les couches de la bande. **Sabot et domaine sont tirés de `run_id`** (règle
+  des auteurs, `chargeur_externe_v1.domaine` : `run_id` = `<famille>__<scenario_id>__<mode>` ; sabot = ce `scenario_id`
+  dans l'étage stéganographique ; domaine = ce `scenario_id` sans son dernier segment) ; les champs `scenario_id` et
+  `scenario_domain` des métadonnées ne sont pas lus. Les champs de jeu (`agent_vote`, `collusion_success`, `bp_corr`, `flagged`, …) ne servent ni d'étiquette ni
   de filtre.
 - **Couches (bande des auteurs)** : Qwen3-32B : **26 à 30** (« layers 26–30 of 64 for Qwen3-32B », p. 27) ;
   Llama-3.1-70B : **32 à 37**, six couches, d'après la configuration du code des auteurs relevée par le développeur v1
@@ -166,9 +167,9 @@
 
 **Commun aux procédures.**
 - **Épisode** : un `run_id` ; agents triés par nom ; seuls les épisodes à quatre agents sont lus (les autres sont comptés :
-  liste d'arrêt n° 9). **Bloc** : le `scenario_id` tiré de `run_id`, qui porte au plus un épisode de chaque condition
-  (étage stéganographique : le sabot ; étage des comités : le scénario, dont l'épisode de collusion n'a pas toujours été
-  retenu). **Domaine** : section « Données » ; plis **par modèle**, tirés de ses propres métadonnées ; leur nombre est rapporté
+  liste d'arrêt n° 9). **Unité de rééchantillonnage** : dans l'étage stéganographique, le **sabot** (`scenario_id` tiré de
+  `run_id`), qui porte un épisode de chaque condition ; dans l'étage des comités, le **pli** (un domaine tenu à l'écart).
+  **Domaine** : section « Données » ; plis **par modèle**, tirés de ses propres métadonnées ; leur nombre est rapporté
   (17 domaines selon l'article, p. 14 ; les domaines diffèrent entre les deux modèles d'après l'essai de forme : exposition
   déclarée) ; aucun nombre de domaines n'arrête la lecture.
 - **Lignes d'apprentissage** : épisodes de collusion de l'étage des comités seulement, canal public, phase de discussion
@@ -199,8 +200,8 @@
   réduit à l'identité ; perceptron : absent du code v2 et descriptif seulement au brouillon 1, retiré).
 - **Un message = une séquence d'un seul jeton** ; toutes les lignes d'apprentissage, sans équilibrage ni standardisation
   ajoutés (celle de chaque famille est la sienne) ; agrégation « max » du harnais, sans objet sur un jeton.
-- **Une graine d'apprentissage par modèle, couche et famille** (et pli), comme en production et dans le code v2 ; la moyenne
-  porte sur les couches.
+- **Une graine d'apprentissage par modèle, couche et famille** (et pli), comme dans le code v2 ; la moyenne porte sur les
+  couches.
 - **Score d'agent, étage des comités** : le **maximum** de ses trois scores de message ; jamais une moyenne.
 - **Plancher apparié en covariance** (cellules de l'étage stéganographique ; recette de T0.7,
   `t07.plancher_v1.plancher_pour_sonde` : 200 directions w ~ N(0, Σ + 10⁻⁹ I), Σ covariance des lignes d'apprentissage,
@@ -214,8 +215,8 @@
 
 **Témoin de recette — « bras de diagnostic, jamais en production »** (N-026 : écrit et nommé ici avant toute lecture ; lu
 **à côté** de notre chaîne, jamais à sa place ; jamais moniteur, revendication ni porte). Recette transcrite du code des
-auteurs (`probes/reproduce_LR.py` au commit `85fea3be2a9d`, `1d66fdc7…`, l. 125-277 et 355-381, relevées par le développeur
-v2 : `externe_v2.py` l. 1-38 ; conforme au script lui-même d'après la contre-lecture du code) : par couche et par graine
+auteurs (`probes/reproduce_LR.py` au commit `85fea3be2a9d`, `1d66fdc7…` ; lignes relevées par le développeur v2 dans
+l'en-tête de `externe_v2.py`, l. 1-38 ; conforme au script lui-même d'après la contre-lecture du code) : par couche et par graine
 g ∈ {0, …, 9}, nc = le plus petit des deux effectifs de lignes d'apprentissage ; colludeurs : les nc premiers dans l'ordre du
 fichier ; honnêtes : nc tirés sans remise par `numpy.random.RandomState(g)` ; `StandardScaler` ajusté sur ces 2·nc lignes ;
 `LogisticRegression(penalty="l2", C=25, max_iter=8, solver="liblinear", random_state=g)` (p. 29 et 30) ; direction =
@@ -311,7 +312,7 @@ il ne change aucune phrase gelée.
 - **Plancher** (cellules de l'étage stéganographique, sauf Mahalanobis) : quantile 0,95 des 200 aires des directions de
   plancher ; qualificatif « au-dessus du plancher apparié » si la borne basse de la cellule dépasse **strictement** ce
   quantile.
-- **Placebo** (étage stéganographique) : 200 permutations ; dans chaque sabot, les conditions de ses deux épisodes sont
+- **Placebo** (cellules visées) : 200 permutations ; dans chaque sabot, les conditions de ses deux épisodes sont
   échangées avec probabilité un demi ; l'aire de la cellule est recalculée (même moyenne) ; « placebo déclenché » si la borne
   basse de la cellule est inférieure ou égale au quantile 0,95 des 200 aires permutées.
 - **Lecture par agent** : celle du code v2 (section « Recette »), descriptive, sans état.
@@ -410,7 +411,7 @@ secondaire).
 3. **Comptes structurels**, écrits au résultat à côté de ceux de l'article (étage des comités : 50 scénarios, 17 domaines,
    100 épisodes, p. 14 ; 36 scénarios de collusion retenus avec les 50 témoins, p. 35, sans dire pour quel modèle ; étage
    stéganographique : 20 sabots, 40 épisodes, p. 15 et 40 ; tous les épisodes de collusion retenus, p. 44) : épisodes par
-   étage, modèle et condition ; exclusions ; domaines et plis gardés par modèle ; blocs ; lignes d'apprentissage par classe ;
+   étage, modèle et condition ; exclusions ; domaines et plis gardés par modèle ; sabots ; lignes d'apprentissage par classe ;
    « le 70B lit-il ses propres textes ? » : comparaison des identifiants d'épisodes entre les deux modèles, rapportée, sans
    effet sur la lecture. Un écart d'effectif à l'article n'arrête rien.
 4. **Témoin de recette** : cellules visées, plancher, placebo ; cellules secondaires (plis par modèle).
@@ -448,11 +449,11 @@ tirage, aucune partagée ; entier passé aux fonctions = `generateur(graine).int
   `…/reechantillonnage`, `…/placebo` (les deux derniers servent la lecture par agent) ; pour un pli de l'étage des comités :
   `<modèle>/familles/c<couche>/<famille>/apprentissage/pli-<domaine>` ;
 - plancher du témoin : `<modèle>/temoin/c<couche>/plancher` ;
-- cellules : `<modèle>/cellules/<procédure>/<étage>/<statistique>/reechantillonnage` et, sur l'étage stéganographique,
+- cellules : `<modèle>/cellules/<procédure>/<étage>/<statistique>/reechantillonnage` et, pour les cellules visées,
   `…/placebo` (procédure parmi `temoin`, `difference_moyennes`, `lineaire`, `mahalanobis` ; étage `stego` ou `core` ;
   statistique `pic` ou `ecart`).
 
-Sans tirage : plis (domaines triés par nom), blocs, ordre des agents (triés par nom), ordre des couches. Manifeste du run
+Sans tirage : plis (domaines triés par nom), sabots, ordre des agents (triés par nom), ordre des couches. Manifeste du run
 (R9) : configuration et son empreinte, versions (numpy, scipy, scikit-learn, torch et les paquets de
 `lecture_externe_v2.PAQUETS`), graines, commit, empreintes des huit fichiers ; la liste exacte des tâches est dans la fiche du
 code.
@@ -504,7 +505,7 @@ C ; première ligne qui s'applique ; exhaustive et exclusive ; énumérée en es
 
 | ordre | ligne | condition | phrase gelée |
 |---|---|---|---|
-| 1 | R0 | témoin de recette autre que « reproduit » | « question non tranchée : le témoin de recette est <état>. Un témoin qui ne reproduit pas ne permet de conclure ni oui ni non sur notre chaîne ; les cellules de nos familles sont rapportées » |
+| 1 | R0 | témoin de recette autre que « reproduit » | « question non tranchée : le témoin de recette est <état>. Un témoin qui n'est pas « reproduit » ne permet de conclure ni oui ni non sur notre chaîne ; les cellules de nos familles sont rapportées » |
 | 2 | R1 | les huit cellules « reproduit » | « oui : notre chaîne reproduit le résultat positif publié (deux familles, deux modèles, deux statistiques), à côté de la recette des auteurs ; plancher apparié : <au-dessus ou pas au-dessus, pour chacune des douze cellules visées, nommées> » |
 | 3 | R2 | les huit cellules « non reproduit » | « non : notre chaîne ne reproduit pas le résultat publié, que la recette des auteurs reproduit sur les mêmes vecteurs ; plancher apparié : <au-dessus ou pas au-dessus, pour chacune des douze cellules visées, nommées> » |
 | 4 | R3 | au moins une cellule « reproduit » | « en partie : notre chaîne reproduit le résultat publié sur <cellules « reproduit », nommées> ; elle ne le reproduit pas sur <cellules « non reproduit », nommées, ou « aucune »> ; non tranché ou non lu sur <autres cellules, nommées, ou « aucune »> » |
@@ -527,7 +528,7 @@ reproduit » sous témoin « reproduit » ; intervalle entier sous 0,5 ; scores 
 
 Tout refus ou arrêt imprime sa raison ; la mère le consigne au registre des décisions (le code ne tient pas de journal). Les
 n° 1 à 7 tombent **avant l'ouverture des activations** et n'écrivent rien ; une relance est permise une fois la cause
-corrigée, sauf sous le n° 4 et sauf une ligne fautive au registre, qui ne se réécrit pas : nœud. Un arrêt des n° 8, 9, 11 ou
+corrigée, sauf sous les n° 2 et 4 et sauf une ligne fautive au registre, qui ne se réécrit pas : nœud. Un arrêt des n° 8, 9, 11 ou
 12 tombe **après** l'ouverture : toute relance sous ce texte est un nœud (Lazar).
 
 1. Fichier publié de taille ou d'empreinte différente de `EMPREINTES_PUBLIEES`, ou révision du jeu différente → refus avant
@@ -600,7 +601,7 @@ M3 et M5 ; contre-lecture du code, M3, m1, m3, m4 et m9) :
 
 *Lancement et registre*
 1. Clés : le code ne lit que `SCELLEMENT-NARC-EXT` ; ni la ligne `CODE-NARC-EXT` (sceau de la fiche, commit), ni l'absence de
-   `LECTURE-NARC-EXT` (n° 3).
+   `LECTURE-NARC-EXT` (n° 3 et 4).
 2. Registre libre (`--registre`, défaut cité `registres/scellements-v1.md`, chemin absolu accepté) ; ce texte :
    `registres/narcbench-externe-v1.md` seul, trois clés seules (n° 3).
 3. Aucune garde « déjà jouée » (n° 4).
