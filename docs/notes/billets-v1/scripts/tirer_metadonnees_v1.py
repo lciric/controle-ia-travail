@@ -18,6 +18,8 @@ Q = """query($t:JSON){ posts(input:{terms:$t}){ results{ _id title slug pageUrl 
  tags{_id name} } } }"""
 SORTIE = "/home/user/billets-corpus-v1/metadonnees-v1.json"
 
+if __name__ != "__main__":
+    raise SystemExit  # import des constantes seulement
 billets, requetes = {}, []
 for tid, nom in ETIQUETTES.items():
     for an in ANNEES:
