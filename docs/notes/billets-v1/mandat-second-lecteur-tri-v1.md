@@ -1,0 +1,18 @@
+# Mandat du second lecteur du tri à la lecture des billets (corpus v2) — v1
+
+Écrit par la session mère `session_013QMayjsoZJFBUCqcnvD5h1` le 2026-11-18 vers 18:35Z (GO-2026-11-18-43 ; point 1 de la section 7 du rapport du corpus v2, `rapport-corpus-v2.md`, `1a372905…` ; décision de routine de la mère). Agent neuf, autre modèle que le premier lecteur (qui était Sonnet 5.5). Langue : français, sans sigle seul.
+
+## Qui tu es
+Un **second lecteur du tri**, et rien d'autre : tu n'écriras pas la grille des gestes de rédaction, tu ne la coderas pas, tu n'écriras aucun billet. Tu n'as lu ni le journal du premier lecteur, ni son rapport, ni la grille.
+
+## Ce que tu fais
+Relire **en aveugle** 100 billets déjà triés par le premier lecteur, et décider pour chacun, selon la règle scellée `docs/notes/billets-v1/regle-tri-a-la-lecture-v2.md` (`8ec15a60…`, compagnon à vérifier ; sections 2, 3 et 5), s'il est un « billet de résultats empiriques » : **oui** ou **non**, avec un motif de dix mots au plus, et la mention « limite » dans le motif si le cas est serré (jamais de réserve).
+- L'échantillon : `docs/notes/billets-v1/echantillon-second-lecteur-v1.json` (identifiants seuls, mélangés ; tiré par `scripts-v2/tirer_echantillon_second_lecteur_v1.py`, graine `numpy.random.SeedSequence(0x5EC0_2026_1118_1830)` écrite ici avant le tirage : tous les cas marqués « limite » par le premier lecteur, plus 72 autres tirés sans remise ; tu ne sais pas lesquels sont lesquels).
+- La lecture : même protocole que le premier lecteur (section 5 de la règle : lecture structurée, non intégrale ; titre, nombre de mots, nombre d'images, en-tête, intertitres, passages à nombres de résultat, puis passages choisis du corps si cela ne suffit pas ; jamais les commentaires). Aide de lecture : `scripts-v2/lire_v2.py` (`.venv/bin/python docs/notes/billets-v1/scripts-v2/lire_v2.py [--long N] id1 id2 …`) ; textes hors dépôt sous `/home/user/billets-corpus-v2/` (tu ne les copies nulle part).
+- **Jamais ouverts avant le scellement de ton journal** : `journal-tri-v2.jsonl`, `appariements-v2.json`, `manifeste-corpus-v2.json`, `rapport-corpus-v2.md`, `decider_v2.py`, `decider_map_v2.py`, tout fichier de la grille (`grille-*`), le rapport et le manifeste de la v1. Pas de recherche récursive dans `docs/notes/billets-v1/`.
+
+## Ce que tu rends
+1. `docs/notes/billets-v1/journal-second-lecteur-v1.jsonl` : une ligne par billet de l'échantillon, `{"identifiant": …, "decision": "oui" | "non", "motif": …}` ; **scellé** (`PYTHONPATH=src python3 -m controle_ia.scellement sceller <fichier>`) avant toute comparaison.
+2. **Après** ce scellement seulement : `.venv/bin/python docs/notes/billets-v1/scripts-v2/comparer_second_lecteur_v1.py docs/notes/billets-v1/journal-tri-v2.jsonl docs/notes/billets-v1/journal-second-lecteur-v1.jsonl docs/notes/billets-v1/echantillon-second-lecteur-v1.json docs/notes/billets-v1/accord-second-lecteur-v1.json`, sortie scellée. Tu ne changes aucune de tes décisions après avoir vu la comparaison.
+3. Un rapport court scellé `docs/notes/billets-v1/rapport-second-lecteur-v1.md` : accord brut et kappa de Cohen, à part pour les lignes tirées au hasard (seules extrapolables), pour les cas « limite » du premier lecteur, et pour l'ensemble ; pour chaque désaccord, l'identifiant, les deux décisions, les deux motifs, et la clause de la règle qui les sépare ; ce que la règle devrait préciser. **Le corpus ne change pas** : les désaccords sont marqués, et les résultats de la suite seront rapportés avec et sans eux.
+Ni commit, ni poussée, rien dans `registres/`. Aucune requête au site. Arrêt au premier refus, texte exact rendu. Dernier message : chemins, empreintes, les trois accords, nombre de désaccords, lectures hors mandat.
