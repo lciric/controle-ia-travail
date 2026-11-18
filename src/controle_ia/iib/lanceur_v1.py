@@ -289,7 +289,7 @@ def _apres_manifeste(config, racine, run_id, chemin_m, manifeste, entrees, model
     fp = ex.faux_positifs([a["texte"] for e in etalonnage if e["condition"] == "honnete" for a in e["actions"]], motifs)
     ecrire(diag, "etalonnage-iib.json", {"epreuves": ep, "rapportes": tv.rapportes_etalonnage(etal, config["regle"]),
                                          "faux_positifs_mentions": fp, "format": format_controle, "reecriture": _comptes(etalonnage)})
-    progres(etape="epreuves", echec=ep["echec"] or "aucun")
+    progres(etape="epreuves", etat="arret" if ep["echec"] else "passees", epreuve=ep["echec"] or "aucune")
     _ecrire_oracle_ids_textes(etalonnage, donnees, racine, sorties, config, modele, "etalonnage")
     if ep["echec"]:
         raise GardeArret(f"épreuve {ep['echec']} en échec : {ep['epreuves'][ep['echec']]['motif']} : arrêt avant le premier épisode du maître")

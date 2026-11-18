@@ -259,7 +259,10 @@ ajouter() {  # C-V4-1 : un `git add` en échec (index.lock) n'est jamais lu comm
     git add "$@" 2>"$T/add.err" && return 0
     journal "ERREUR DE CHAÎNE (C-V4-1) : git add en échec ($*) : $(tr '\n' ' ' < "$T/add.err" | cut -c1-200)"; echo "$(date -u +%FT%TZ) git add en échec : $*" >> "$R/iib-erreurs-chaine.txt"; return 1; }
 ajouter_legeres() { local f rc=0; for f in donnees/*/adaptateur-*.pt donnees/*/adaptateur-*.pt.sha256 donnees/*/oracle-iib.json donnees/*/oracle-iib.json.sha256 \
-        donnees/*/ids-actions-iib.npz donnees/*/ids-actions-iib.npz.sha256 donnees/*/textes-actions-iib.jsonl donnees/*/textes-actions-iib.jsonl.sha256; do
+        donnees/*/ids-actions-iib.npz donnees/*/ids-actions-iib.npz.sha256 donnees/*/textes-actions-iib.jsonl donnees/*/textes-actions-iib.jsonl.sha256 \
+        donnees/*/oracle-iib-*.json donnees/*/oracle-iib-*.json.sha256 \
+        donnees/*/ids-actions-iib-*.npz donnees/*/ids-actions-iib-*.npz.sha256 \
+        donnees/*/textes-actions-iib-*.jsonl donnees/*/textes-actions-iib-*.jsonl.sha256; do
         if [ -f "$f" ]; then ajouter -f "$f" || rc=1; fi; done; return $rc; }
 ajouter_morceaux() { return 0; }    # (ii-b) : aucune activation, aucun morceau
 commit_verifie() {  # C-V4-1 : 0 = commit fait ; 10 = rien à committer (index vide) ; 1 = commit en échec (réessayé une fois)
@@ -436,12 +439,12 @@ if [ "$ECHEC" != 0 ]; then
     pousser || journal "poussée de ce qui existe impossible"
     fin_anormale "un ajout, un commit ou le verrou a échoué en fin de run : poussée de ce qui existe tentée, aucun marqueur de fin normale"
 fi
-# C-V4-1 : rien ne doit rester hors du dépôt avant la fin normale (fichiers légers, résultats, traces)
-RESTE=$(git status --porcelain -- runs diag donnees traces 2>&1)
+# C-V4-1 : rien ne doit rester hors du dépôt avant la fin normale (fichiers légers, résultats, traces, y compris les fichiers ignorés)
+RESTE=$(git status --porcelain --ignored -- runs diag donnees traces 2>&1)
 if [ -n "$RESTE" ]; then
-    journal "ERREUR DE CHAÎNE (C-V4-1) : git status --porcelain non vide avant la fin normale ($(printf '%s' "$RESTE" | head -n 3 | tr '\n' ';')) : consignation de rattrapage"
+    journal "ERREUR DE CHAÎNE (C-V4-1) : git status --porcelain --ignored non vide avant la fin normale ($(printf '%s' "$RESTE" | head -n 3 | tr '\n' ';')) : consignation de rattrapage"
     consigner_partiel "fin de run"
-    RESTE=$(git status --porcelain -- runs diag donnees traces 2>&1)
+    RESTE=$(git status --porcelain --ignored -- runs diag donnees traces 2>&1)
     if [ -n "$RESTE" ]; then pousser || true; fin_anormale "fichiers non consignés après le rattrapage : $(printf '%s' "$RESTE" | head -n 3 | tr '\n' ';')"; fi
 fi
 AUTRES=$(git status --porcelain 2>&1 | head -n 3 | tr '\n' ';'); [ -z "$AUTRES" ] || journal "note : git status --porcelain (hors runs, diag, donnees, traces) : $AUTRES"

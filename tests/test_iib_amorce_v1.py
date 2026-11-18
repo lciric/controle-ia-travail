@@ -171,7 +171,7 @@ def test_l_empreinte_de_la_liste_ecrite_en_dur_est_celle_du_fichier():
 MARQUEURS = ("iib", "IIB", "(ii-b)", "t06", "T06", "T0.6", "GO_ID", "PREREG", "BRANCHE", "CONFIG", "TESTS_ARGS", "bras", "BRAS", "lanceur", "CHEMINS_CLONAGE",
              "clonage", "/donnees/", "/diag/", "/runs/", "/traces/", "/docs/", "/brouillons/", "ajouter_legeres", "ajouter_morceaux", "donnees/*/",
              "LISTE_TESTS", "citations", "CITES", "CAL=", "calendrier", "SESSION_V", "GOL=", "lire_unique", "ATTENDUS", "journal \"GO",
-             "plafond", "200 USD", "épuisement", "ARGS", "RUN=", "run :", "début", "fi", "else", "if [", "écrit par l'amorce", "consignation", "préenregistrement", "#")
+             "plafond", "200 USD", "épuisement", "ARGS", "RUN=", "run :", "début", "fi", "else", "if [", "écrit par l'amorce", "consignation", "préenregistrement", "--porcelain", "#")
 
 
 def test_difference_avec_la_v11_bornee_aux_changements_declares():
@@ -182,3 +182,71 @@ def test_difference_avec_la_v11_bornee_aux_changements_declares():
     diff = [l for l in difflib.unified_diff(a, b, lineterm="", n=0) if l[:1] in "+-" and not l.startswith(("+++", "---"))]
     hors = [l for l in diff if not any(m in l for m in MARQUEURS) and l[1:].strip() and not (l[0] == "-" and l[1:] in bras_b)]
     assert diff and not hors, hors[:10]
+
+
+# ---- O-M1 : la clé de la ligne de progrès des épreuves renommée pour passer le filtre du relais --------
+
+
+def _lire_motifs_amorce():
+    texte = AMORCE.read_text(encoding="utf-8")
+    m_p = re.search(r"^MOTIF_PROGRES='([^']+)'", texte, re.MULTILINE)
+    m_i = re.search(r"^MOTIF_INTERDIT='([^']+)'", texte, re.MULTILINE)
+    assert m_p and m_i, "motifs non trouvés dans l'amorce"
+    return m_p.group(1), m_i.group(1)
+
+
+def test_sain_ligne_de_progres_epreuves_passe_les_deux_motifs_de_l_amorce():
+    motif_progres, motif_interdit = _lire_motifs_amorce()
+    for ligne in ("PROGRES 2026-11-18T10:00:00Z etape=epreuves etat=passees epreuve=aucune",
+                  "PROGRES 2026-11-18T10:00:00Z etape=epreuves etat=arret epreuve=E-O1"):
+        assert re.match(motif_progres, ligne), f"ne passe pas MOTIF_PROGRES : {ligne}"
+        assert not re.search(motif_interdit, ligne, re.IGNORECASE), f"porte un mot interdit : {ligne}"
+
+
+def test_artefact_ligne_de_progres_avec_mot_interdit_retenue():
+    motif_progres, motif_interdit = _lire_motifs_amorce()
+    ligne = "PROGRES 2026-11-18T10:00:00Z etape=epreuves echec=aucun"
+    assert re.match(motif_progres, ligne), "doit passer MOTIF_PROGRES"
+    assert re.search(motif_interdit, ligne, re.IGNORECASE), "doit porter un mot interdit (echec)"
+
+
+# ---- O-M4 : fichiers par phase poussés malgré .gitignore ; contrôle de fin avec --ignored ---------------
+
+PYTHON_IIB_PHASES = PYTHON_IIB.replace(
+    "textes-actions-iib.jsonl; do",
+    "textes-actions-iib.jsonl oracle-iib-etalonnage.json ids-actions-iib-etalonnage.npz textes-actions-iib-etalonnage.jsonl; do"
+)
+assert "oracle-iib-etalonnage.json" in PYTHON_IIB_PHASES
+
+PYTHON_IIB_ORPHELIN = PYTHON_IIB.replace(
+    '    case "${FAUX_RUN:-complet}" in',
+    '    echo "orphelin" > "donnees/$run/fichier-orphelin-hors-patron.txt"\n    case "${FAUX_RUN:-complet}" in'
+)
+assert "fichier-orphelin-hors-patron.txt" in PYTHON_IIB_ORPHELIN
+
+
+def _ajouter_gitignore_donnees(bac):
+    gitignore = bac["source"] / ".gitignore"
+    gitignore.write_text("donnees/\n", encoding="utf-8")
+    _git(bac["source"], "add", ".gitignore")
+    _git(bac["source"], "commit", "-qm", "ajout gitignore donnees/")
+
+
+def test_sain_fichiers_par_phase_pousses_malgre_gitignore(bac):
+    _ajouter_gitignore_donnees(bac)
+    (bac["venv"] / "bin" / "python").write_text(PYTHON_IIB_PHASES, encoding="utf-8")
+    code, journal, sortie, racine, distant = _lancer(bac)
+    assert code == 0, sortie[-3000:]
+    fichiers = _git(distant, "ls-tree", "-r", "--name-only", "essai/iib-explo-v1")
+    for n in ("oracle-iib-etalonnage.json", "ids-actions-iib-etalonnage.npz", "textes-actions-iib-etalonnage.jsonl"):
+        assert f"/{n}\n" in fichiers + "\n", f"fichier par phase {n} absent du dépôt distant"
+        assert f"/{n}.sha256" in fichiers, f"empreinte du fichier par phase {n} absente du dépôt distant"
+
+
+def test_artefact_controle_de_fin_voit_les_fichiers_ignores(bac):
+    _ajouter_gitignore_donnees(bac)
+    (bac["venv"] / "bin" / "python").write_text(PYTHON_IIB_ORPHELIN, encoding="utf-8")
+    code, journal, sortie, racine, distant = _lancer(bac, "o")
+    assert code != 0, f"le run devrait échouer quand un fichier ignoré reste non consigné : {sortie[-2000:]}"
+    assert "ERREUR DE CHAÎNE" in journal or "FIN ANORMALE" in journal, f"erreur attendue dans le journal : {journal[-1500:]}"
+    assert not (racine / "iib-fin-normale").exists(), "le marqueur de fin normale ne devrait pas exister"
