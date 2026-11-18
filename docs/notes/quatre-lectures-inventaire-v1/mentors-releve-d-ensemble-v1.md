@@ -79,7 +79,7 @@ Aucun classement : à l'intérieur d'une question, l'ordre est celui des thèmes
 | H21 | Un vecteur tiré de paires explicites (« tu es évalué ») coderait l'assertion d'un interlocuteur, non l'inférence du modèle. | Opus | `a64f9af` F:l.374 `f5505d7b0e858` (§ 2.9) | atelier ; donnée C |
 | H22 | La verbalisation de l'évaluation romprait à une dose plus basse que le choix d'action non verbalisé. | Argon | `a64f9af` F:l.652 `f84b294911deb` (§ 2.9) | atelier ; donnée C |
 
-Le relevé Heimersheim rattache plusieurs de ces lignes à la conscience d'évaluation du dispositif, mesure acceptée par N-053 (H1, H7, H9, H21, H22), à la lecture par sondes après intervention (H2, H9 à H16) et aux témoins et lois nulles (H3, H4, H8, H17).
+Le relevé Heimersheim rattache plusieurs de ces lignes à la conscience d'évaluation du dispositif, mesure acceptée par N-053 (H1, H7, H9, H21, H22), à la lecture par sondes après intervention (H2 et la plupart des lignes H9 à H16) et aux témoins et lois nulles (H3, H4, H8, H17).
 
 ### 1.2 Kirchner, question 2 (seconde course à quatre espèces de proposeurs, `5d8a9e8` ; collisionneur à cinq espèces, `19e1814`)
 
@@ -132,7 +132,7 @@ Le relevé Ibrahim rappelle que la question est hors du programme de contrôle (
 
 | n° | idée (avis) | espèces | provenance | sert |
 |---|---|---|---|---|
-| S1 | Horizon de surveillance : longueur ou difficulté maximale d'une trajectoire où un moniteur détecte encore une violation à un taux fixé, comme analogue de l'horizon de tâche ; chacune des trois lettres la met en premier. | collisionneur : A, D, E ; course : Astra (et une fusion d'Astra, S6) | `9182f17` T1-A l.19-28 et T3-A l.65-91, T1-D l.19 et l.22 et T3-D l.9-15, T1-E l.18-33 et T3-E l.13-18 ; `3a5d420` F l.26-48 `f196472355543` (§ 2.1) | atelier ; thème C (voisin) ; donnée C |
+| S1 | Horizon de surveillance : longueur ou difficulté maximale d'une trajectoire où un moniteur détecte encore une violation à un taux fixé, comme analogue de l'horizon de tâche ; chacune des trois lettres la met en premier. | collisionneur : A, D, E ; course : Astra (et une fusion d'Astra, S7 `f7d77e25b436f`) | `9182f17` T1-A l.19-28 et T3-A l.65-91, T1-D l.19 et l.22 et T3-D l.9-15, T1-E l.18-33 et T3-E l.13-18 ; `3a5d420` F l.26-48 `f196472355543` (§ 2.1) | atelier ; thème C (voisin) ; donnée C |
 | S2 | Coût de la surveillance à qualité constante : calcul minimal du moniteur pour atteindre les mêmes critères de détection. | E (Astra) ; course : Kimi | `9182f17` T1-E l.35-48 ; `3a5d420` F l.236-258 `fa3e7278aa115` (§ 2.2) | atelier ; thème C (voisin) ; donnée C |
 | S3 | Coût d'annotation humaine (ou nombre d'actions étiquetées) pour qu'une sonde transférable batte un seuil d'utilité et le plancher de sondes aléatoires. | Astra ; fusion Argon + fiche exclue | `3a5d420` F l.119-141 `f56720a23ae00`, l.375-398 `fed946652c619` (parent exclu) (§ 2.2) | atelier ; donnée C |
 | S4 | Coût humain du contrôle : minutes de revue par heure de travail utile validé, à interception et rejets fixés. | Astra | `3a5d420` F l.399-421 `ff385969c4dd1` (§ 2.3) | atelier ; thème C (voisin) ; donnée C |
@@ -187,7 +187,7 @@ Le relevé Jang-Feng rattache JF3 au transfert hors famille d'organismes (voisin
 
 ### 1.7 Compte
 
-**93 idées** dans la table (Heimersheim 22, Kirchner 17, Ibrahim 16, Scheurer 13, Colognese-Ward 17, Jang-Feng 8), couvrant toutes les fiches lues par les relevés : Heimersheim 46 sur 46, Kirchner 30 lues sur 33 (dont 4 entrées sous réserve, § 4), Ibrahim 64 sur 64, Scheurer 12 lues sur 22, Colognese-Ward 31 sur 31, Jang-Feng 26 lues sur 29 ; plus les fusions inachevées à contenu et les cellules lues du collisionneur. **Six entrées sous réserve** ne sont pas reformulées (§ 4).
+**93 idées** dans la table (Heimersheim 22, Kirchner 17, Ibrahim 16, Scheurer 13, Colognese-Ward 17, Jang-Feng 8), couvrant toutes les fiches lues par les relevés : Heimersheim 46 sur 46, Kirchner 30 lues sur 33 (dont 2 fiches sous réserve, § 4), Ibrahim 64 sur 64, Scheurer 12 lues sur 22, Colognese-Ward 31 sur 31, Jang-Feng 26 lues sur 29 ; plus les fusions inachevées à contenu et les cellules lues du collisionneur. **Six entrées sous réserve** ne sont pas reformulées (§ 4).
 
 ## 2. Les idées qui reviennent d'une question à l'autre
 
@@ -237,7 +237,7 @@ Aucune des six questions n'est sans produit. Trois premières courses n'ont rend
 - **Opus** n'a **aucune idée sur Scheurer** ; à Colognese-Ward, seulement au collisionneur. Refus relevés : proposition à la première course Colognese-Ward ; juge et lecteur hors proposition à Jang-Feng (quatre appels de Claude refusés, avec le metteur).
 - **Kimi** n'a **aucune idée sur Jang et Feng** ; à Kirchner, seulement par la lettre D. Refus au format de toutes ses fiches dans quatre courses : établi au manifeste de fin pour Colognese-Ward (première course) et Jang-Feng (motif « axe » manquant) ; probable ou inféré, non vérifié, pour Kirchner (seconde course) et Ibrahim (première course). Kimi n'est jamais juge, lecteur, aiguilleur ni metteur.
 - **Argon** est absent de trois tours sur quatre (Ibrahim, Scheurer, Colognese-Ward) et de la première course Ibrahim.
-- **Rôles** : dans chaque course relevée, juges et lecteurs d'étiquettes ne sont tenus que par deux espèces (Opus et Astra à Heimersheim, Ibrahim et Jang-Feng ; Astra et Argon à la seconde course Scheurer ; Fable et Astra à la seconde course Colognese-Ward ; le relevé Kirchner ne le dit pas pour la seconde course), l'aiguilleur et le metteur par une seule. Le relevé Kirchner n'établit pas ces rôles pour la seconde course.
+- **Rôles** : dans chaque course relevée, juges et lecteurs d'étiquettes ne sont tenus que par deux espèces (Opus et Astra à Heimersheim, Ibrahim et Jang-Feng ; Astra et Argon à la seconde course Scheurer ; Fable et Astra à la seconde course Colognese-Ward ; le relevé Kirchner ne le dit pas pour la seconde course), l'aiguilleur et le metteur par une seule.
 
 ### 3.3 Instruments et pièces jamais joués ou jamais lus
 
