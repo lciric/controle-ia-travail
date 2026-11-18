@@ -1,0 +1,15 @@
+# Second bras du juge externe de la lignée Astra, avec le juge d'origine — déclaration d'un choix fait après coup — 2026-11-18T20:57:10Z
+
+**Ce qui a été joué d'abord** : le bras du juge externe d'Astra avec `gpt-6.2-astra` à la place de `gpt-6-astra` (remplacement déclaré, mots de Lazar « go 6.2 », « option a » ; GO-2026-11-18-32 et -52), le 18 novembre 2026 de 18:32:48Z à 18:33:58Z, 0,2903 USD. Issue : fin propre, **illisible** — les deux témoins attendus éligibles n'ont pas passé la porte d'éligibilité de ce juge (note 0 au critère « avantage ») ; les deux témoins attendus inéligibles sont tenus. Copies scellées : `runs/bras-juge-ideation-organismes-discrets-v5/20261118-183247-bras-juge-ideation-organismes-discrets-v5-astra/`.
+
+**Décision** : mot direct de Lazar dans la session de relance, le 18 novembre 2026 vers 18:36 UTC, verbatim (il cite l'option posée) : « Option 2 : un bras neuf avec le juge prévu à l'origine, gpt-6-astra. Astra pourrait devenir lisible, mais c'est un changement de juge décidé après avoir vu l'échec. Il faut le déclarer comme tel, avec ton mot, un lanceur neuf et une ligne de GO, et les deux résultats devront être rapportés. go ».
+
+**Ce qui est déclaré**
+1. Le second bras est **décidé après avoir vu l'issue du premier** (échec du critère gelé des témoins chez `gpt-6.2-astra`). Ce n'est pas un bras préenregistré ; c'est un choix après coup, et il est rapporté comme tel partout où la lignée Astra est lue.
+2. Il joue le juge que la course avait déclaré : `gpt-6-astra`, étiquette `astra-juge`, sur les mêmes fiches validées (`c75b5137…`), la même consigne en attente (`3f0c649e…`), les mêmes témoins, la même grille, le même critère gelé. Aucun remplacement de modèle : l'orchestrateur public épinglé (arbre `ee84d6ec…`) suffit.
+3. **Les deux résultats sont rapportés**, côte à côte, quel que soit le second : celui de `gpt-6.2-astra` (illisible) n'est ni retiré ni remplacé. Si le second est illisible aussi, la lignée Astra est rapportée sans juge externe lisible.
+4. **Il n'y aura pas de troisième bras** pour Astra : aucun autre juge, aucune autre consigne, aucun autre réglage ne sera essayé pour obtenir une lecture.
+5. Le verrou « jamais rejoué après dépense » de l'orchestrateur est contourné sciemment, par une recomposition neuve du dossier de la course et un lanceur neuf (version 6), sur le mot de Lazar ci-dessus ; l'attestation de lecture de Lazar (mêmes fiches, même consigne) vaut pour ce bras.
+6. Règle de lecture pour la suite : la lecture des lignées ensemble, par un lecteur neuf, reçoit les deux bras d'Astra et cette déclaration ; elle dit lequel elle emploie et pourquoi, ou n'en emploie aucun.
+
+**Réglages** : enveloppe d'origine `rapports/organismes-discrets-v1/enveloppes-v1/appel-astra-v1.sh` (`aa2df474…`, prix 10 / 50 USD par million de jetons) ; plafond de la session du juge 2,5 USD ; appel de contrôle 0,3 USD (à 0,2 la commande refuse, « rien envoyé » ; à 0,25 et 0,3 elle passe — joué sur la vraie enveloppe contre un relais factice local) ; pire cas 2,8 USD.

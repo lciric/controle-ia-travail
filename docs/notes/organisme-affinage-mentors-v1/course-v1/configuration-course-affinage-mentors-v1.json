@@ -1,0 +1,58 @@
+{
+ "version": "configuration-course-affinage-mentors-v1",
+ "statut": "partie fixe de la configuration de l'orchestrateur (course 2, v56) ; le lanceur y joint, au lancement, les cases (fils servis), les pièces empreintées, les relais déclarés et la spécification ; rien d'autre n'est changé",
+ "orchestrateur": {
+  "depot_public": "lciric/ideation-organism",
+  "commit": "a41b7b50f7c64ce488c120bb89ad3d25fb1dd1cb",
+  "lanceur": "demonstrations/ideation_v8.py",
+  "mode": "--course-2 CONFIGURATION SORTIE --generations 1"
+ },
+ "generations": 1,
+ "racine_graines": 2026111814,
+ "graines": {"prefixe": "affm"},
+ "champs_fiche": ["titre", "fil", "idees_de_depart", "idee_affinee", "hypothese", "mesure", "bases_et_nul", "ce_qui_la_refuterait", "limites"],
+ "champ_titre": "titre",
+ "champ_axe": "fil",
+ "cartes_par_appel": 2,
+ "items_juge": ["refutable", "mesure_definie", "base_ou_nul", "fidele_au_fil", "reserves_tenues"],
+ "agregation": {"regle": "unanimite"},
+ "budget": {
+  "plafond_usd": 150.0,
+  "arret_etape_usd": "sans",
+  "portee_plafond": "course",
+  "etapes": [
+   {"nom": "proposition", "attendu_usd": 25.0, "plafond_relais_usd": 60.0, "role": "protegee"},
+   {"nom": "aiguillage", "attendu_usd": 6.0, "plafond_relais_usd": 30.0, "role": "protegee"},
+   {"nom": "juges", "attendu_usd": 14.0, "plafond_relais_usd": 50.0, "role": "protegee"},
+   {"nom": "passe_tableau", "attendu_usd": 0.0, "plafond_relais_usd": 151.0, "role": "sacrifiable", "rang": 2},
+   {"nom": "etiquettes", "attendu_usd": 0.0, "plafond_relais_usd": 0.0, "role": "protegee"},
+   {"nom": "fusions", "attendu_usd": 0.0, "plafond_relais_usd": 151.0, "role": "sacrifiable", "rang": 1}
+  ]
+ },
+ "plafonds_session": {"proposeur": 1.5, "aiguilleur": 0.25, "juge": 0.6, "fusion": 0.01, "lecteur": 0.01},
+ "especes": [
+  {"etiquette": "prop-opus", "famille": "claude", "fournisseur": "claude", "modele": "claude-opus-5-5", "statut": "obligatoire", "ordre": 1},
+  {"etiquette": "prop-fable", "famille": "claude", "fournisseur": "claude", "modele": "claude-fable-5-1", "statut": "obligatoire", "ordre": 2},
+  {"etiquette": "prop-argon", "famille": "google", "fournisseur": "argon", "modele": "gemini-4-argon", "statut": "si_relais_declare", "ordre": 3},
+  {"etiquette": "prop-kimi", "famille": "moonshot", "fournisseur": "kimi", "modele": "kimi-k3.1-pro", "statut": "si_relais_declare", "ordre": 4},
+  {"etiquette": "prop-astra", "famille": "openai", "fournisseur": "astra", "modele": null, "motif_modele": "astra", "statut": "si_relais_declare", "ordre": 5},
+  {"etiquette": "prop-carbon", "famille": "google", "fournisseur": "carbon", "modele": null, "motif_modele": "carbon", "statut": "conditionnelle", "inscription": "R-3217 (GO-2026-11-18-15)", "ordre": 6}
+ ],
+ "aiguilleur": {"etiquette": "aiguilleur", "modele": "claude-opus-5-5", "fournisseur": "claude", "consigne": "consigne_aiguilleur"},
+ "juges": [
+  {"etiquette": "juge-opus", "modele": "claude-opus-5-5", "fournisseur": "claude", "consigne": "consigne_juge"},
+  {"etiquette": "juge-argon", "modele": "gemini-4-argon", "fournisseur": "argon", "consigne": "consigne_juge"}
+ ],
+ "lecteurs_etiquettes": [
+  {"etiquette": "lecteur-1", "modele": "claude-opus-5-5", "fournisseur": "claude"},
+  {"etiquette": "lecteur-2", "modele": "gemini-4-argon", "fournisseur": "argon"}
+ ],
+ "garde_kimi": {"debordement_max": 0.25, "refus_aiguilleur": "technique", "arret_metteur_fusion": false},
+ "tableau": {"longueur_max_titre": 40, "longueur_max_resume": 200, "champ_resume": "idee_affinee", "consigne_passe": "consigne_passe_tableau", "juger_passe_tableau": false},
+ "memoire": {"methode": "bardeaux", "taille_bardeau": 3, "seuil": 0.5},
+ "bisociateur": {"bras": [], "k_paires": 0, "fournisseurs_entree": ["*"], "metteur_fusion": {"etiquette": "metteur-jamais-appele", "modele": "claude-opus-5-5", "fournisseur": "claude"}},
+ "a4": {"mode": "mot_entier", "action": "fiche_exclue"},
+ "etiquettes_interdites_fixes": ["Opus", "Fable", "Argon", "Astra", "Kimi", "Carbon"],
+ "arrets": {"a3_echecs_consecutifs": 3, "a3_delai_s": {"*": 1800}, "a14_part_max": 0.34, "a11_modeles": []},
+ "simulation": {"cout_par_appel_usd": 0.01}
+}

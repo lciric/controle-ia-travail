@@ -1,0 +1,212 @@
+{
+  "opus-juge": {
+    "argon-p1-01": {
+      "criteres": {
+        "avantage": 1,
+        "falsifiabilite": 2,
+        "originalite": 1,
+        "robustesse": 1,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "Un détecteur lexical de recouvrement est trivialement copiable.",
+        "falsifiabilite": "L'aire sous la courbe ≥ 0,65 à la dose 1/2 est chiffrée et signée. Mais elle porte sur un détecteur substitut, pas sur les moniteurs du programme.",
+        "originalite": "C'est une transposition déclarée des artefacts d'annotation (Gururangan et al., 2018, marqué SUPPOSE). Elle recoupe T13, doublon signalé.",
+        "robustesse": "Le correctif (normaliser les identifiants, restreindre aux gabarits identiques) risque d'effacer le signal même du sabotage, puisque la discordance d'attribution est le dommage. La fiche ne sépare pas l'artefact de la perte réelle. Elle nomme seulement le risque pour le rejeu.",
+        "traitabilite": "Le test se fait par script sur les journaux existants."
+      }
+    },
+    "argon-p1-02": {
+      "criteres": {
+        "avantage": 1,
+        "falsifiabilite": 2,
+        "originalite": 1,
+        "robustesse": 1,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "C'est une modification de consigne de lecture, copiable à bas coût. Elle ne protège que contre le gaspillage d'un scellement.",
+        "falsifiabilite": "Le seuil (< 0,05 à la dose 1) et la nullité de V_exact sont chiffrés. En revanche, la prédiction sur les lecteurs suppose qu'ils ignorent l'incohérence locale, sans le tester séparément.",
+        "originalite": "C'est la même invariance que T01, formulée sur l'union ensembliste ; le doublon est signalé.",
+        "robustesse": "Le correctif restreint les actions permutables aux contrôles lexicalement disjoints, ce qui modifie le Bras A lui-même. La fiche reconnaît la perte de puissance par l'arrondi. L'ancrage reste confié aux lecteurs, donc sans invariant par programme.",
+        "traitabilite": "Le test reste sur processeur, avec les sorties de lecteurs déjà prévues."
+      }
+    },
+    "argon-p1-03": {
+      "criteres": {
+        "avantage": 1,
+        "falsifiabilite": 2,
+        "originalite": 1,
+        "robustesse": 1,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "C'est un recalcul de statistique d'agrégation, copiable.",
+        "falsifiabilite": "La fourchette de 0,12 à 0,18 est chiffrée. Le signe « + » est ambigu pour une chute, et l'intervalle est affirmé sans dérivation.",
+        "originalite": "C'est une transposition des statistiques d'ordre. Le correctif d'ancrage exact recoupe T11, qui traite aussi la règle du minimum.",
+        "robustesse": "Le biais du minimum touche aussi le jumeau et s'annule en partie dans l'écart apparié. La fiche n'isole pas l'erreur différentielle. L'indépendance des lecteurs est posée sans test et la hausse de variance sous permutation est postulée.",
+        "traitabilite": "Le test se fait sur les mêmes sorties de lecteurs."
+      }
+    },
+    "argon-p1-04": {
+      "criteres": {
+        "avantage": 1,
+        "falsifiabilite": 2,
+        "originalite": 1,
+        "robustesse": 1,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "C'est une extension de script par croisement de chaînes entre champs, reproductible par quiconque connaît le format à six champs.",
+        "falsifiabilite": "La pente (1 − p) et la corrélation > 0,85 sont chiffrées et de signe déclaré. Mais la linéarité suppose l'absence de redondance, qui n'est pas mesurée.",
+        "originalite": "L'ancrage relationnel par chaînes exactes est aussi au cœur de T11 (ancrage par paire) ; le doublon partiel est signalé.",
+        "robustesse": "La fiche est incohérente : elle scelle comme « borne supérieure » de la couverture un score qui, de son propre aveu, manque les reformulations, ce qui en fait au mieux une borne inférieure de présence. Elle ne traite pas les contrôles redondants ou transversaux. Le piège du plancher honnête est bien nommé.",
+        "traitabilite": "Le calcul se fait en quelques secondes sur processeur."
+      }
+    },
+    "opus-p1-01": {
+      "criteres": {
+        "avantage": 1,
+        "falsifiabilite": 3,
+        "originalite": 2,
+        "robustesse": 2,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "L'invariant de conservation du multiensemble est algébrique, donc vérifiable par tout laboratoire qui dispose d'une référence ancrée. L'avantage tient seulement à l'accès à la référence cachée et au jumeau apparié, pas à la méthode elle-même.",
+        "falsifiabilite": "La prédiction est tranchante : un écart nul à la précision numérique près au niveau de l'article, contre un seuil de 0,15 par paire aux doses 1/2 et plus. Elle est testable sur les 128 paires. Le signe est mixte (0 et négatif) mais déclaré pour chacune des deux définitions.",
+        "originalite": "Le défaut cible précisément le couplage entre le dérangement entier (point 3) et la définition de couverture du point 5a. Je ne connais aucune antériorité sur ce point, mais T02 porte la même idée.",
+        "robustesse": "La fiche nomme le piège post-hoc sur la granularité et prévoit un contrôle négatif qui détecte une génération divergente. Elle reconnaît que tout repose sur une référence ancrée par action, sans dire quoi faire si cette condition manque, au-delà de constater l'absence de dommage mesurable.",
+        "traitabilite": "Le test se réduit à des comparaisons de chaînes sur processeur, sans aucun appel de modèle."
+      }
+    },
+    "opus-p1-02": {
+      "criteres": {
+        "avantage": 2,
+        "falsifiabilite": 3,
+        "originalite": 2,
+        "robustesse": 2,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "La fiche ramène la preuve contestable à un encadrement calculable, adossé à la référence cachée ancrée par action. C'est un vrai déplacement de la charge de preuve hors des lecteurs.",
+        "falsifiabilite": "L'invariant V_exact est exact. Les seuils 0,90 et 0,75 sur les paires certifiées et la part résiduelle < 0,5 sont chiffrés. Seule la zone entre 0,75 et 0,90 reste indéterminée.",
+        "originalite": "L'identification partielle (Manski, 2003, marqué SUPPOSE) appliquée à l'ancrage par chaînes exactes est propre au banc. T03 en est un recoupement partiel.",
+        "robustesse": "La fiche nomme le conservatisme de la borne basse, l'étalonnage de κ hors distribution permutée et la normalisation trop agressive. Elle suppose une référence ancrée par action sans la poser comme condition explicite.",
+        "traitabilite": "Le module d'ancrage tourne en quelques minutes sur processeur. Les lecteurs sont déjà prévus."
+      }
+    },
+    "opus-p1-03": {
+      "criteres": {
+        "avantage": 1,
+        "falsifiabilite": 2,
+        "originalite": 2,
+        "robustesse": 2,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "La journalisation du dérangement par graine est simple à reproduire. L'avantage tient à l'ancrage caché.",
+        "falsifiabilite": "La stabilité de la pente en dose effective (±30 %) est substantielle. En revanche, la « part neutralisée = P(m ≤ 4) » découle de la règle et ne teste rien.",
+        "originalite": "La dose effective et le contrôle de manipulation viennent des essais cliniques, mais les seuils de neutralisation par arrondi sont propres au point 3. L'arithmétique est vérifiée : m ≤ 4, m ≤ 2, puis m = 1.",
+        "robustesse": "La fiche maintient l'analyse primaire en intention de traiter et nomme le piège post-hoc. L'issue « échec de manipulation » ajoute une branche de décision. La redondance sémantique non lexicale est reconnue comme hors d'atteinte.",
+        "traitabilite": "Le calcul est négligeable sur processeur."
+      }
+    },
+    "opus-p1-04": {
+      "criteres": {
+        "avantage": 2,
+        "falsifiabilite": 3,
+        "originalite": 1,
+        "robustesse": 2,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "La strate « sans perte certifiée » exige la référence cachée ancrée, ce qui sépare la détection de forme de la détection de dommage.",
+        "falsifiabilite": "Les seuils sont chiffrés : différence entre strates ≤ 0,03, aire sous la courbe sans perte ≥ 0,60. L'erreur de coût nulle par construction est démontrable selon le moment de la permutation.",
+        "originalite": "C'est une transposition déclarée de l'apprentissage par raccourci et des artefacts d'annotation (références marquées SUPPOSE). Elle recoupe T04 ; doublon signalé.",
+        "robustesse": "La fiche nomme le petit effectif de la strate. La requalification de ε_max comme contrôle de non-régression est un vrai garde-fou. Elle dépend de C_exact (T11) et hérite donc de son hypothèse d'ancrage.",
+        "traitabilite": "Le rééchantillonnage tourne en quelques minutes sur processeur, sans modifier l'organisme."
+      }
+    },
+    "opus-p1-06": {
+      "criteres": {
+        "avantage": 1,
+        "falsifiabilite": 2,
+        "originalite": 1,
+        "robustesse": 2,
+        "traitabilite": 2
+      },
+      "justifications": {
+        "avantage": "Les engagements par empreinte et la randomisation sont des outils standard. Seule l'antériorité datée des engagements n'est pas reconstructible.",
+        "falsifiabilite": "Les critères de contestation sont chiffrés (p > 0,05 après Holm, variation ≤ 0,03), mais la prédiction centrale « recalcul identique bit à bit » est quasi tautologique. La prédiction sur p < 0,01 est conditionnelle à une autre fiche.",
+        "originalite": "C'est une transposition déclarée (Fisher, 1935 ; Benton et al., 2024, marqués SUPPOSE).",
+        "robustesse": "La fiche répond au volet « adversaire indépendant » de la question et nomme la fuite de la référence. Elle dépend de fiches citées par numéro interne (3, 4, 5) sans identifiant, ce qui la rend inauditable seule.",
+        "traitabilite": "Le recalcul se fait sur processeur, mais le test d'asymétrie et le troisième lecteur demandent des appels."
+      }
+    },
+    "temoin-p0-01": {
+      "criteres": {
+        "avantage": 2,
+        "falsifiabilite": 3,
+        "originalite": 2,
+        "robustesse": 2,
+        "traitabilite": 2
+      },
+      "justifications": {
+        "avantage": "Comme T05, le contrôle dépend du jumeau apparié et de la référence cachée.",
+        "falsifiabilite": "Les seuils à la dose 1 sont chiffrés et signés, avec une prédiction de croissance en dose. Les trois issues sont explicites et répondent directement à la sous-question 3.",
+        "originalite": "La règle de bascule à trois issues, scellée d'avance, est la part nouvelle déclarée. L'idée reste un doublon de T05.",
+        "robustesse": "Elle nomme l'aveuglement et le piège des graines communes. Restent non traités la zone indéterminée entre 0,05 et 0,15 et l'hypothèse que le saboteur diffère textuellement du jumeau dérangé.",
+        "traitabilite": "La fiche reconnaît honnêtement que la vérification coûte autant que celle du saboteur, soit des appels aux lecteurs."
+      }
+    },
+    "temoin-p0-02": {
+      "criteres": {
+        "avantage": 2,
+        "falsifiabilite": 2,
+        "originalite": 2,
+        "robustesse": 2,
+        "traitabilite": 2
+      },
+      "justifications": {
+        "avantage": "Le contrôle positif exige le jumeau apparié et la référence cachée, que seul le programme détient.",
+        "falsifiabilite": "Les seuils de 0,15 et 0,05 à la dose 1 sont chiffrés et signés. La zone comprise entre 0,05 et 0,15 n'est pas tranchée.",
+        "originalite": "Les fautes plantées et l'analyse de mutation existent (DeMillo, Lipton et Sayward, 1978, marqué SUPPOSE). Les appliquer à la condition honnête appariée est neuf à ma connaissance. T06 porte la même idée ; doublon signalé.",
+        "robustesse": "L'aveuglement des lecteurs et la séparation des graines sont bien nommés. La fiche ne traite pas le cas où, à graines d'action identiques, le saboteur coïnciderait avec le jumeau dérangé, ce qui viderait la troisième issue.",
+        "traitabilite": "La fabrication se fait sur processeur, mais la vérification par les deux lecteurs coûte des appels. La fiche affirme à tort « sans appel de modèle »."
+      }
+    },
+    "temoin-p0-03": {
+      "criteres": {
+        "avantage": 0,
+        "falsifiabilite": 0,
+        "originalite": 0,
+        "robustesse": 0,
+        "traitabilite": 1
+      },
+      "justifications": {
+        "avantage": "C'est une remarque générale à la portée de tout examinateur.",
+        "falsifiabilite": "Aucun mécanisme, aucun seuil, aucune métrique : la fiche est infalsifiable telle quelle.",
+        "originalite": "La distinction entre syntaxe et sémantique est un thème classique, sans apport propre.",
+        "robustesse": "Aucun piège n'est maîtrisé : toute observation peut être lue comme un cas limite.",
+        "traitabilite": "Le coût et la méthode sont inconnus."
+      }
+    },
+    "temoin-p0-04": {
+      "criteres": {
+        "avantage": 0,
+        "falsifiabilite": 2,
+        "originalite": 0,
+        "robustesse": 0,
+        "traitabilite": 3
+      },
+      "justifications": {
+        "avantage": "Aucun avantage : c'est le mécanisme 5d du protocole tel quel.",
+        "falsifiabilite": "C'est l'hypothèse H1 du préenregistrement, chiffrée et signée, mais elle n'apporte rien.",
+        "originalite": "L'idée est occupée par la pièce d'antériorité faits-v3.md, point 5d. Mon constat est indépendant de l'autoévaluation de la fiche.",
+        "robustesse": "La fiche ignore les failles demandées (invariance du multiensemble, dose effective, artefact), et la comparaison appariée seule y reste exposée.",
+        "traitabilite": "Les données sont déjà prévues au plan d'analyse."
+      }
+    }
+  }
+}

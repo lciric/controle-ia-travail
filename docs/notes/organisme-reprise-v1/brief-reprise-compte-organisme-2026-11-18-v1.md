@@ -1,0 +1,16 @@
+# Brief de reprise du compte organisme sur un autre compte — 18 novembre 2026, v1
+
+Écrit le 2026-11-18T10:47:45Z (`date -u`) par la session sortante du compte organisme (modèle I), sur demande de Lazar. À coller tel quel comme premier message d'une session neuve **ouverte sur le dépôt `lciric/controle-ia-travail`** (indispensable : c'est ainsi que la garde de calcul se charge ; la session sortante, ouverte sur le dépôt public, ne l'a jamais eue).
+
+---
+
+Tu reprends le rôle de la session du **compte organisme** du programme de Lazar (contrôle boîte blanche des menaces diffuses), à la suite d'une session d'un autre compte. Français, tutoiement avec Lazar, aucun sigle non développé.
+
+1. **Branche** : récupère `lot/compte-organisme-v1` par refspec explicite (`git fetch origin refs/heads/lot/compte-organisme-v1:refs/remotes/origin/lot/compte-organisme-v1`), place-toi dessus, et récupère `main` de même. Tu ne pousses que sur `lot/compte-organisme-v1` (et des branches `prep/…` à noms neufs) ; jamais sur `main`, jamais vers `lciric/controle-ia` ni `lciric/ideation-organism`.
+2. **Lis, dans cet ordre, avant toute action** : `CLAUDE.md` ; le brief du rôle `docs/notes/plan-paquet-multi-comptes-v1/brief-compte-organisme-v2.md` (`fc0229ad…`, sections 1 à 8 : interdits permanents, coordination, communication) ; la dernière passation du compte `registres-provisoires/passation-compte-organisme-2026-11-18-1047-autre-compte.md` (celle-ci, sur la branche) et la précédente `registres-provisoires/passation-compte-organisme-2026-11-18-1041.md` ; le journal provisoire `registres-provisoires/compte-organisme-2026-11-14-v38.md` ; sur `main`, les compléments de passation de la mère `registres/passations/2026-11-18-1045-complement-2-v1.md` (et la dernière passation de la mère).
+3. **Épreuve d'aptitude** (brief, section 2) : `cd docs && sha256sum -c sha256sums-lancement-v2.txt` ; puis `sha256sum scripts/lancer_course_ideation_bassins_etroits_v2.py` **doit être bloquée** par la garde de calcul. Si elle passe : dis-le en tête de ton premier message et ne lance rien de payant. Dis les clés présentes **par leur nom seulement** (dont `RR_ANTHROPIC_API_KEY_MINUIT`, `RR_ANTHROPIC_API_KEY_RIGAUD`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `KIMI_API_KEY`), jamais une valeur.
+4. **Règles du jour, sans exception** : un seul agent à la fois jusqu'au 22 novembre 02:00 UTC (régime sobre de la mère) ; contre-lectures par un autre modèle que l'auteur (Sonnet tant que Fable est épuisé) ; tout code sous noms neufs (R12) ; jamais de heredoc pour écrire un fichier ; rien dans le dépôt public ; aucun lancement réel sans ligne de GO inscrite et garde chargée ; tout refus de permission ou de classifieur : arrêt et rapport, sans retenter autrement.
+5. **La mère est sur un autre compte** : le canal est le dépôt. Lis `main` avant tout constat ; écris tes faits dans un journal provisoire neuf (`registres-provisoires/compte-organisme-2026-11-18-v39.md` ou suivant), poussé ; signale à Lazar ce que la mère doit inscrire.
+6. Ensuite, résume-moi en quelques lignes où en sont les trois courses (auto-conception, affinage, P3) et repose-moi les décisions qui attendent, chacune avec sa recommandation. **Ne lance rien avant ma réponse.**
+
+---

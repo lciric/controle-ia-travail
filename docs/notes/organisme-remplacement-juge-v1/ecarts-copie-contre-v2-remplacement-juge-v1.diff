@@ -1,0 +1,117 @@
+--- pole/ideation_v2.py:executer_bras_differe (lignes 2754-3159, arbre ee84d6ec)
++++ pole/bras_remplacement_juge_v1.py:_executer_bras_avec_remplacement (commit 08618002)
+@@ -1,40 +1,12 @@
+-def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes, budgets, lire_etat_relais=None,
+-                          horodatage=None, budget_controle_usd=None, exiger_cout_controle=True, budget_externe_usd=None,
+-                          commande_externe=None, taille_max_consigne_externe=None, prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD):
+-    """v36 → v41 : joue les juges externes différés d'une course déjà faite, **après** une lecture humaine attestée — le seul
+-    chemin par lequel un juge d'une autre lignée lit les fiches — puis écrit le **classement à trois juges** (médiane par
+-    critère, porte sur l'agrégat, unanimité et accords de rang par paire rapportés ; n° 118).
+-
+-    Avant tout appel : `manifeste-bras-rapporte.json` ou une réponse déjà rendue → refus (jamais rejoué après dépense) ;
+-    attestation **scellée** (CL35-14) `{"lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256":
+-    {étiquette: …}}` ; sceaux de la course vérifiés ; étiquettes et modèles identiques à ceux de la course ; sur une
+-    course réelle, seule une commande externe joue le bras (CL35-04) ; plafond **externe** relu dans le manifeste de départ
+-    (sauf `budget_externe_usd` donné) moins le coût externe déjà compté par la course, vérifié **avant** l'appel de
+-    contrôle (CL35-05). Témoins relus depuis `noyau/temoins-servis.json` et lus chez chaque juge externe (critère gelé).
+-    Aucun repli silencieux (n° 118 point 3) : juge externe en panne, au-delà du plafond ou notes invalides → classement à
+-    deux juges écrit **marqué « sans juge externe, illisible au sens du devis »** (`classement-sans-bras.json`), manifeste
+-    avec l'erreur, et `CourseInterrompue` ; témoins échoués chez lui → classement à trois juges écrit mais illisible.
+-    Le manifeste du bras est écrit **avant** les fichiers de lecture (CL35-01), sur tous les chemins après le départ.
+-    v41 : `budget_controle_usd` absent → celui que la course a compté (`somme_des_plafonds` du manifeste de départ,
+-    CL40-03) ; le contrôle porte la consigne réelle du juge (CL40-04) ; un contrôle interrompu compte son plafond (CL40-02) ;
+-    `relancable` calculé (tentatives et plafond externe de la relance) ; tentatives payées lues sceau vérifié (CL40-05) ;
+-    tout échec après envoi écrit `classement-sans-bras.json` (CL40-08).
+-    v42 (CL41-01, option B) : le contrôle redevient **court** (il éprouve la commande ; la consigne du juge n'est envoyée
+-    qu'à la session du juge) ; **garde de taille** avant tout appel : une consigne en attente plus grosse que
+-    `taille_max_consigne_externe` (sinon la valeur donnée à la course, sinon plafond de la session du juge / prix prudent)
+-    → `manifeste-bras-refus-taille-K.json` scellé, rien payé, aucune tentative comptée ; `budget_externe_usd` donné
+-    (lanceur, `--budget-externe-usd`) vérifié fini ≥ 0 ; une tentative scellée **non relançable** écrit le classement à
+-    deux juges marqué « sans juge externe » (sans verrouiller par le manifeste du bras) et lève `SansJugeExterne` ;
+-    CL41-04 : un contrôle qui n'était pas court et n'a pas rendu « OK » verrouille le bras comme un envoi.
+-    v43 (CL42-05) : garde du bras = `taille_max_consigne_externe` donné au bras (`--taille-max-consigne-externe-bras`),
+-    sinon plafond de la session du juge / prix prudent **moins la provision de sortie** (`provision_sortie_juge_caracteres`
+-    des fiches servies à ce juge ; 3,5 et 52 fiches → 1 400 000 − 520 000 = 880 000) ; **la valeur donnée à la course ne s'y
+-    applique plus** ;
+-    un refus de taille **compte une tentative non relançable** (`manifeste-bras-refus-taille-N.json`, N = numéro de
+-    tentative) et écrit le classement sans bras (`SansJugeExterne`) ; prix d'un caractère `prix_caractere_usd` (CL42-04 b,
+-    `--prix-entree-usd-par-million-jetons`). CL42-06 : un échec du classement de repli est dit
+-    dans l'exception levée et scellé (`classement-sans-bras-impossible-N.json`) ; un classement de repli déjà écrit n'est
+-    jamais réécrit, et l'exception le dit."""
++def _executer_bras_avec_remplacement(sortie, *, remplacements, attestation_lecture_humaine, juges_externes, budgets,
++                                      lire_etat_relais=None, horodatage=None, budget_controle_usd=None,
++                                      exiger_cout_controle=True, budget_externe_usd=None, commande_externe=None,
++                                      taille_max_consigne_externe=None, prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD):
++    """Copie de `ideation_v2.executer_bras_differe` (arbre `orchestrator/` ee84d6ec), jouée **seulement** avec un
++    remplacement déclaré déjà validé par `valider_remplacements_juges_externes` ; sans option, `executer_bras_differe`
++    ci-dessous appelle la fonction de la v2 elle-même. Écarts à la copie, tous marqués « remplacement-juge-v1 » : la garde
++    CL35-04 passe par `verifier_remplacements_contre_course` ; le journal, tous les manifestes du bras et la lecture portent
++    le remplacement ; l'auto-préférence prend le modèle joué, la lecture par famille est rapportée à côté (descriptive)."""
+     def lire_json_scelle(nom):
+         chemin = os.path.join(sortie, nom)
+         if not verifier_scelle(chemin):
+@@ -97,8 +69,12 @@
+         raise CourseInterrompue("la course s'est arrêtée en erreur : aucun bras sur une course incomplète")
+     attendus = {e: m for e, m in depart.get("juges_externes", [])}
+     donnes = {e: m for e, m, _ in juges_externes}
+-    if donnes != attendus:
+-        raise CourseInterrompue(f"juges externes donnés {donnes} ≠ attendus par la course {attendus} (CL35-04)")
++    # remplacement-juge-v1 : CL35-04 gardée ; seul un remplacement déclaré (étiquette de la course, modèle de la course
++    # concordant avec le manifeste de départ et noyau/modeles.json, modèle joué déclaré) est admis
++    remplaces = verifier_remplacements_contre_course(remplacements, attendus, donnes, modeles.get("par_juge", {}))
++    effectifs = [r for r in remplaces if r["applique"]]
++    if effectifs:  # remplacement-juge-v1 : la mention est portée par toute lecture écrite (bras ou repli sans bras)
++        lecture_course = dict(lecture_course, juge_externe_remplace=bloc_lecture_remplacement(remplaces))
+     moteur_course = depart.get("moteur")
+     cout_fictif = False  # le coût du bras est celui de ses propres adaptateurs : fictif dès qu'un n'est pas une commande
+     for e, _, a in juges_externes:
+@@ -137,7 +113,8 @@
+                "cout_tentatives_precedentes_usd": cout_tentatives,
+                "tentative": len(tentatives_non_jouees) + len(tentatives_payees) + len(tentatives_refus_taille) + 1,
+                "plafond_externe_usd": plafond_externe, "cout_fictif": cout_fictif, "arret": None, "controle": {},
+-               "non_lance": False, "consigne_envoyee": None, "garde_taille": {}}
++               "non_lance": False, "consigne_envoyee": None, "garde_taille": {},
++               "remplacements_juges_externes": remplaces}  # remplacement-juge-v1 : dans tout manifeste qui porte le journal
+     notes_externes, doublons_externes = {}, {}
+     resultat = {"classement": None, "lecture": None, "journal": journal, "sans_bras": False}
+ 
+@@ -145,7 +122,9 @@
+         ecrire_json_scelle(chemin_manifeste, manifeste(
+             phase="bras-rapporte", horodatage=horodatage, journal=journal, attestation=attestation, erreur=erreur,
+             commande_externe=commande_externe or [getattr(a, "description", lambda: None)() for _, _, a in juges_externes],
+-            juges=[[e, m, getattr(a, "nom", type(a).__name__)] for e, m, a in juges_externes]))
++            juges=[[e, m, getattr(a, "nom", type(a).__name__)] for e, m, a in juges_externes],
++            remplacements_juges_externes=remplaces,  # remplacement-juge-v1 : les deux modèles, la référence de GO, le mot
++            mention_remplacement=MENTION_REMPLACEMENT if effectifs else None))
+ 
+     def classement_sans_bras(motif, verrouiller=True):
+         """n° 118 point 3 : classement à deux juges écrit, marqué illisible au sens du devis ; jamais de « retenue ».
+@@ -238,7 +217,8 @@
+                 motifs_t.append(f"{MAX_TENTATIVES_BRAS} tentatives faites")
+             ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-refus-taille-{numero}.json"), manifeste(
+                 phase="bras-refus-taille", horodatage=horodatage, erreur=str(e), garde_taille=e.details,
+-                tentative_comptee=True, numero_tentative=numero, relancable=False, motifs_relance=motifs_t, cout_usd=0.0))
++                tentative_comptee=True, numero_tentative=numero, relancable=False, motifs_relance=motifs_t, cout_usd=0.0,
++                remplacements_juges_externes=remplaces))  # remplacement-juge-v1
+             motif_r = (f"tentative {numero} du bras non relançable (refus de taille, rien envoyé, rien payé) : " + str(e)
+                        + " ; plus de relance sans un mot de Lazar (" + " ; ".join(motifs_t) + ")")
+             lever_non_relancable(motif_r, motif_r, e)
+@@ -321,11 +301,18 @@
+         toutes_notes = dict(notes_par_auteur, **notes_externes)
+         tous_doublons = dict(doublons_par_juge, **doublons_externes)
+         modele_par_juge = dict(modeles["par_juge"])
++        # remplacement-juge-v1 : l'auto-préférence d'un juge remplacé se calcule avec le modèle JOUÉ ; la lecture par
++        # famille (modèle de la course et modèle joué) est rapportée à côté, descriptive
++        modele_par_juge.update({r["etiquette"]: r["modele_joue"] for r in effectifs})
++        famille_par_juge = {j: [m] for j, m in modele_par_juge.items()}
++        famille_par_juge.update({r["etiquette"]: [r["modele_course"], r["modele_joue"]] for r in effectifs})
+         lecture_temoins_tous = lecture_temoins(toutes_notes, temoins, tous_doublons, cles_par_juge)
+         base = dict(lecture_course)
+         base.update({"temoins": lecture_temoins_tous,
+                      "temoins_juge_externe": lecture_temoins(notes_externes, temoins, doublons_externes, cles_par_juge),
+                      "auto_preference": lecture_auto_preference(toutes_notes, modele_par_juge, modeles["par_auteur"]),
++                     "auto_preference_par_famille": lecture_auto_preference_par_famille(  # remplacement-juge-v1
++                         toutes_notes, famille_par_juge, modeles["par_auteur"]),
+                      "juges_rendus": len(toutes_notes), "attestation": attestation,
+                      "regle": "juge d'une autre lignée à poids égal (Lazar, 28 octobre 21:05 UTC), servi après lecture "
+                               "humaine attestée (N-053 point 5) ; médiane par critère à trois juges"})
