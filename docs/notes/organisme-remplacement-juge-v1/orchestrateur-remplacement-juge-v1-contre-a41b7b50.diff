@@ -1,0 +1,1082 @@
+diff --git a/orchestrator/essais/mutations_bras_remplacement_juge_v1.py b/orchestrator/essais/mutations_bras_remplacement_juge_v1.py
+new file mode 100644
+index 0000000..79f6eec
+--- /dev/null
++++ b/orchestrator/essais/mutations_bras_remplacement_juge_v1.py
+@@ -0,0 +1,75 @@
++"""Banc de mutations du bras avec remplacement déclaré du modèle d'un juge externe (`pole/bras_remplacement_juge_v1.py`).
++
++Même machinerie que le banc v66 (`essais/mutations_boucle_reelle_v66.py`, chargé tel quel : copie neuve de `orchestrator/`,
++remplacements textuels présents une seule fois, essais sains d'abord, issue « tuée » seulement pour la raison attendue) ; seule la
++liste `MUTATIONS` est remplacée : chaque garde neuve retirée (ou affaiblie) doit faire échouer l'essai nommé de
++`essais/test_bras_remplacement_juge_v1.py`.
++
++  python3 -I -B essais/mutations_bras_remplacement_juge_v1.py [--processus 4] [--sortie RESULTAT.json] [--seulement ID,ID]
++      [--verifier-textes]
++Codes : ceux du banc v66 (0 toutes tuées pour la raison attendue ; 1 au moins une autre issue ; 2 défaut du banc).
++"""
++
++import importlib.util
++import os
++import sys
++
++ICI = os.path.dirname(os.path.abspath(__file__))
++_spec = importlib.util.spec_from_file_location("mutations_boucle_reelle_v66_pour_remplacement_juge_v1",
++                                               os.path.join(ICI, "mutations_boucle_reelle_v66.py"))
++BANC = importlib.util.module_from_spec(_spec)
++_spec.loader.exec_module(BANC)
++M = BANC.M
++
++B, T = "pole/bras_remplacement_juge_v1.py", "essais/test_bras_remplacement_juge_v1.py"
++NV = "neuve remplacement-juge-v1"
++TOUS = [(T, "Test")]
++
++MUTATIONS = [
++    M("R01-garde-cl35-04-retiree", NV, B, ('        if r is not None and m == r["modele_joue"]:', "        if r is not None:"),
++      TOUS, "test_artefacts_contre_la_course"),
++    M("R02-etiquette-absente-admise", NV, B, ("        if etiquette not in attendus:\n", "        if False:\n"),
++      TOUS, "test_artefacts_contre_la_course"),
++    M("R03-modele-de-la-course-non-compare", NV, B, ('        if r["modele_course"] != attendus[etiquette]:', "        if False:"),
++      TOUS, "test_artefacts_contre_la_course"),
++    M("R04-noyau-modeles-non-compare", NV, B, ("        if modeles_par_juge_course.get(etiquette) != attendus[etiquette]:",
++                                               "        if False:"), TOUS, "TestGardePure"),
++    M("R05-etiquettes-differentes-admises", NV, B, ("    if set(donnes) != set(attendus):", "    if False:"),
++      TOUS, "test_artefacts_contre_la_course"),
++    M("R06-reference-go-non-verifiee", NV, B, ('        if not REFERENCE_GO.fullmatch(r["reference_go"]):', "        if False:"),
++      TOUS, "test_artefact_reference_de_go_vide"),
++    M("R07-mention-absente-de-la-lecture", NV, B,
++      ("        lecture_course = dict(lecture_course, juge_externe_remplace=bloc_lecture_remplacement(remplaces))", "        pass"),
++      TOUS, "test_sain_remplacement_declare_admis"),
++    M("R08-auto-preference-avec-le-modele-de-la-course", NV, B,
++      ('        modele_par_juge.update({r["etiquette"]: r["modele_joue"] for r in effectifs})\n', ""),
++      TOUS, "test_sain_remplacement_declare_admis"),
++    M("R09-manifeste-sans-remplacements", NV, B,
++      ("            remplacements_juges_externes=remplaces,  # remplacement-juge-v1 : les deux modèles, la référence de GO, le mot\n", ""),
++      TOUS, "test_sain_remplacement_declare_admis"),
++    M("R10-sans-option-hors-de-la-v2", NV, B, ("    if remplacements_juges_externes is None:\n        return _v2", "    if False:\n        return _v2"),
++      TOUS, "test_sans_option"),
++    M("R11-modele-joue-egal-admis", NV, B, ('        if r["modele_joue"] == r["modele_course"]:', "        if False:"),
++      TOUS, "test_artefacts_option_mal_formee"),
++    M("R12-secret-admis-dans-un-champ", NV, B, ("            if contient_secret(v):\n", "            if False:\n"),
++      TOUS, "test_artefacts_option_mal_formee"),
++    M("R13-refus-de-taille-sans-remplacement", NV, B, ("cout_usd=0.0,\n                remplacements_juges_externes=remplaces))",
++                                                       "cout_usd=0.0))"), TOUS, "test_refus_de_taille_porte_le_remplacement"),
++    M("R14-famille-du-juge-remplace-absente", NV, B,
++      ('        famille_par_juge.update({r["etiquette"]: [r["modele_course"], r["modele_joue"]] for r in effectifs})\n', ""),
++      TOUS, "test_sain_remplacement_declare_admis"),
++    M("R15-champs-en-plus-admis", NV, B, ("set(r) != set(CHAMPS_REMPLACEMENT)", "not set(CHAMPS_REMPLACEMENT) <= set(r)"),
++      TOUS, "test_artefacts_option_mal_formee"),
++    M("R16-journal-sans-remplacements", NV, B, ('               "remplacements_juges_externes": remplaces}', "               }"),
++      TOUS, "test_sain_remplacement_declare_admis"),
++    M("R17-refus-qui-recopie-la-valeur", NV, B, ("    return caviarder(repr(valeur))[0][:120]", "    return repr(valeur)"),
++      TOUS, "test_secret_jamais_recopie_dans_le_refus"),
++    M("R18-etiquette-par-debut-de-chaine", NV, B, ("not ETIQUETTE.fullmatch(etiquette)", "not ETIQUETTE.match(etiquette)"),
++      TOUS, "test_formes_par_correspondance_entiere"),
++]
++
++BANC.MUTATIONS = MUTATIONS
++
++
++if __name__ == "__main__":
++    sys.exit(BANC.principal())
+diff --git a/orchestrator/essais/test_bras_remplacement_juge_v1.py b/orchestrator/essais/test_bras_remplacement_juge_v1.py
+new file mode 100644
+index 0000000..4c1f1bb
+--- /dev/null
++++ b/orchestrator/essais/test_bras_remplacement_juge_v1.py
+@@ -0,0 +1,412 @@
++"""Essais du bras différé avec remplacement déclaré du modèle d'un juge externe (`pole/bras_remplacement_juge_v1.py`).
++
++Cas sain et artefacts (R5) que demande la spécification (`demande-orchestrateur-remplacement-modele-juge-v1.md`, point 6) :
++remplacement déclaré admis ; modèle changé sans option ; option pour une autre étiquette ; modèle de la course faux dans
++l'option ; référence de GO vide. Plus : sans option, sortie identique à celle de la v2 sur un cas fixe ; option mal formée
++refusée ; modèle joué non déclaré refusé par CL35-04 ; verrous inchangés (attestation, jamais rejoué, témoins, plafond,
++repli sans bras). Les modèles sont des noms fictifs (`lignee-x-v1`, `lignee-x-v2`) ; aucun appel réseau, aucune dépense :
++le juge externe est une commande locale scriptée (celle de `test_v7_ideation_v2.TestCommandeExterne`).
++"""
++
++import json
++import os
++import sys
++import unittest
++
++from essais import test_v7_ideation_v2 as T7
++from essais.aides import CasAvecDossier
++from pole import bras_remplacement_juge_v1 as brj
++from pole import ideation_v2 as idn
++from pole.adaptateurs import AdaptateurCommandeExterne
++
++ETIQ = "lx-juge"
++COURSE, JOUE, AUTRE = "lignee-x-v1", "lignee-x-v2", "lignee-x-v3"
++HORODATAGE = "2026-11-18T00:00:00Z"
++
++
++def option(etiquette=ETIQ, **modifs):
++    r = {"modele_course": COURSE, "modele_joue": JOUE, "reference_go": "GO-2026-11-18-99", "mot_verbatim": "go v2"}
++    r.update(modifs)
++    return {etiquette: r}
++
++
++def lire(chemin):
++    with open(chemin, encoding="utf-8") as f:
++        return json.load(f)
++
++
++def contenus(dossier):
++    """Chemins relatifs et contenus de tous les fichiers d'un dossier (pour « rien écrit »)."""
++    sortie = {}
++    for racine, _, fichiers in os.walk(dossier):
++        for nom in fichiers:
++            p = os.path.join(racine, nom)
++            with open(p, "rb") as f:
++                sortie[os.path.relpath(p, dossier)] = f.read()
++    return sortie
++
++
++class Base(CasAvecDossier):
++    def setUp(self):
++        super().setUp()
++        self.c = T7.TestCourse("test_course_complete")
++        self.c.tmp = self.tmp
++
++    def commande(self, script, nom):
++        chemin = os.path.join(self.tmp, nom)
++        with open(chemin, "w", encoding="utf-8") as f:
++            f.write(script)
++        return AdaptateurCommandeExterne([sys.executable, "-I", chemin], environnement={})
++
++    def budgets(self):
++        b = dict(self.c.budgets())
++        b[("proposeur_ideation", COURSE)] = 1.0
++        b[("juge_ideation", COURSE)] = 1.0
++        b[("juge_ideation", JOUE)] = 1.0
++        b[("juge_ideation", AUTRE)] = 1.0
++        return b
++
++    def course(self, nom):
++        """Course simulée : deux proposeurs internes, un proposeur externe de la lignée x (modèle de la course) et le juge
++        externe différé de la même lignée, déclaré au modèle de la course."""
++        fiches = {"opus": [T7.fiche_brute(nom="O1"), T7.fiche_brute(nom="O2")], "fable": [T7.fiche_brute(nom="F1")]}
++        ad = T7.FauxAdaptateur(fiches, notes_par_juge={"juge-fable": self.c.notes_temoins_ok,
++                                                        "juge-opus": self.c.notes_temoins_ok})
++        prop = self.commande(T7.TestCommandeExterne.SCRIPT_OK, "proposeur.py")
++        self.c.lancer(ad, nom, budgets=self.budgets(), proposeurs_externes=[("lx", COURSE, prop)],
++                      juges_externes=[(ETIQ, COURSE)], budget_externe_usd=5.0, horodatage=HORODATAGE)
++        return os.path.join(self.tmp, nom)
++
++    def attester(self, sortie, consigne=None):
++        self.n_att = getattr(self, "n_att", 0) + 1  # une attestation neuve par appel (jamais écrasée)
++        chemin = os.path.join(self.tmp, f"att-{os.path.basename(sortie)}-{self.n_att}.json")
++        c = os.path.join(sortie, "juges-bras-rapporte", f"traces-{ETIQ}", "consigne-en-attente.md")
++        idn.ecrire_json_scelle(chemin, {"lecteur": "Lazar", "lu_le": "2026-11-18",
++                                        "fiches_validees_sha256": idn.sha256_fichier(os.path.join(sortie, "fiches-validees.json")),
++                                        "consignes_en_attente_sha256": {ETIQ: consigne or idn.sha256_fichier(c)}})
++        return chemin
++
++    def juge(self, nom="juge.py", script=None):
++        return self.commande(script or T7.TestCommandeExterne.SCRIPT_OK, nom)
++
++    def bras(self, sortie, modele, remplacements=None, adaptateur=None, **modifs):
++        args = dict(attestation_lecture_humaine=self.attester(sortie), budgets=self.budgets(),
++                    juges_externes=[(ETIQ, modele, adaptateur or self.juge())], horodatage=HORODATAGE)
++        args.update(modifs)
++        if remplacements is not None:
++            args["remplacements_juges_externes"] = remplacements
++        return brj.executer_bras_differe(sortie, **args)
++
++    def rien_joue(self, sortie):
++        self.assertFalse(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))
++        self.assertFalse(os.path.exists(os.path.join(sortie, "bras-rapporte-controle")))
++        self.assertFalse(os.path.exists(os.path.join(sortie, "lecture.json")))
++        self.assertFalse(any(f.startswith(("manifeste-bras-", "bras-tentative-")) for f in os.listdir(sortie)))
++
++
++class TestSainRemplacementDeclare(Base):
++    def test_sain_remplacement_declare_admis(self):
++        sortie = self.course("sain")
++        res = self.bras(sortie, JOUE, option())
++        self.assertFalse(res["sans_bras"])
++        self.assertTrue(all(l["nombre_juges"] == 3 for l in res["classement"]))
++        self.assertTrue(res["lecture"]["lisible_L2_L4"])
++        self.assertTrue(res["lecture"]["temoins_juge_externe"]["temoins_ok"])
++        # l'adaptateur a été appelé avec le modèle joué (contrôle et session du juge)
++        self.assertEqual([a["modele"] for a in res["journal"]["appels"]], [JOUE])
++        attendu = [{"etiquette": ETIQ, "modele_course": COURSE, "modele_joue": JOUE, "reference_go": "GO-2026-11-18-99",
++                    "mot_verbatim": "go v2", "applique": True}]
++        self.assertEqual(res["journal"]["remplacements_juges_externes"], attendu)
++        # manifeste du bras : les deux modèles, la référence de GO, le mot, la mention
++        m = lire(os.path.join(sortie, "manifeste-bras-rapporte.json"))["reglages"]
++        self.assertEqual(m["remplacements_juges_externes"], attendu)
++        self.assertEqual(m["mention_remplacement"], brj.MENTION_REMPLACEMENT)
++        self.assertEqual(m["juges"], [[ETIQ, JOUE, "commande-externe"]])
++        self.assertEqual(m["journal"]["remplacements_juges_externes"], attendu)
++        # lecture écrite : mention visible
++        lecture = lire(os.path.join(sortie, "lecture.json"))
++        self.assertEqual(lecture["juge_externe_remplace"]["mention"],
++                         "juge externe joué avec un autre modèle que celui déclaré à la course")
++        self.assertEqual(lecture["juge_externe_remplace"]["remplacements"], attendu)
++        # auto-préférence avec le modèle joué : aucune fiche du modèle joué
++        ap = lecture["auto_preference"][ETIQ]
++        self.assertEqual((ap["modele"], ap["n_propre_modele"]), (JOUE, 0))
++        self.assertGreater(ap["n_autre_modele"], 0)
++        # lecture par famille, descriptive : les fiches de la lignée (modèle de la course) comptent comme « propres »
++        fam = lecture["auto_preference_par_famille"]
++        self.assertIs(fam["descriptive"], True)
++        self.assertIn("descriptive", fam["motif"])
++        self.assertEqual(fam["par_juge"][ETIQ]["famille"], [COURSE, JOUE])
++        n_lignee = sum(1 for f in lire(os.path.join(sortie, "fiches-validees.json")) if f["auteur"] == "lx")
++        self.assertGreater(n_lignee, 0)
++        self.assertEqual(fam["par_juge"][ETIQ]["n_propre_famille"], n_lignee)
++        self.assertEqual(fam["par_juge"][ETIQ]["n_propre_famille"] + fam["par_juge"][ETIQ]["n_autre_famille"],
++                         ap["n_propre_modele"] + ap["n_autre_modele"])
++        # juges non remplacés : famille = leur seul modèle, mêmes nombres que la lecture par modèle
++        for j in ("juge-fable", "juge-opus"):
++            self.assertEqual(fam["par_juge"][j]["famille"], [lecture["auto_preference"][j]["modele"]])
++            self.assertEqual(fam["par_juge"][j]["n_propre_famille"], lecture["auto_preference"][j]["n_propre_modele"])
++        # jamais rejoué après dépense, même avec l'option
++        with self.assertRaises(idn.CourseInterrompue):
++            self.bras(sortie, JOUE, option())
++
++    def test_sain_option_donnee_modele_de_la_course_joue(self):
++        """Point 2 : avec l'option, le modèle donné peut rester celui de la course ; déclaré, non appliqué, sans mention."""
++        sortie = self.course("course-joue")
++        res = self.bras(sortie, COURSE, option())
++        self.assertFalse(res["sans_bras"])
++        m = lire(os.path.join(sortie, "manifeste-bras-rapporte.json"))["reglages"]
++        self.assertEqual([r["applique"] for r in m["remplacements_juges_externes"]], [False])
++        self.assertIsNone(m["mention_remplacement"])
++        lecture = lire(os.path.join(sortie, "lecture.json"))
++        self.assertNotIn("juge_externe_remplace", lecture)
++        self.assertEqual(lecture["auto_preference"][ETIQ]["modele"], COURSE)
++        self.assertGreater(lecture["auto_preference"][ETIQ]["n_propre_modele"], 0)
++
++
++class TestSansOptionInchange(Base):
++    def test_sans_option_appelle_la_v2_elle_meme(self):
++        """Sans l'option, la fonction de la v2 est appelée avec exactement les mêmes arguments ; son résultat est rendu."""
++        appels = []
++        vraie = idn.executer_bras_differe
++
++        def espion(sortie, **kw):
++            appels.append((sortie, kw))
++            return {"rendu": "v2"}
++        idn.executer_bras_differe = espion
++        try:
++            r = brj.executer_bras_differe("S", attestation_lecture_humaine="A", juges_externes=[], budgets={}, horodatage="H")
++        finally:
++            idn.executer_bras_differe = vraie
++        self.assertEqual(r, {"rendu": "v2"})
++        self.assertEqual(appels, [("S", {"attestation_lecture_humaine": "A", "juges_externes": [], "budgets": {},
++                                         "horodatage": "H"})])
++
++    def test_sans_option_meme_sortie_que_la_v2_cas_fixe(self):
++        """Deux courses identiques (même graine, même horodatage) : bras de la v2 sur l'une, bras v1 sans option sur l'autre ;
++        mêmes fichiers écrits, mêmes contenus (manifeste du bras compris, chemins de la sortie mis à part)."""
++        a, b = self.course("fixe-a"), self.course("fixe-b")
++        avant = set(contenus(a))
++        self.assertEqual(avant, set(contenus(b)))
++        att_a, att_b = self.attester(a), self.attester(b)
++        ra = idn.executer_bras_differe(a, attestation_lecture_humaine=att_a, budgets=self.budgets(),
++                                       juges_externes=[(ETIQ, COURSE, self.juge("ja.py"))], horodatage=HORODATAGE)
++        rb = brj.executer_bras_differe(b, attestation_lecture_humaine=att_b, budgets=self.budgets(),
++                                       juges_externes=[(ETIQ, COURSE, self.juge("jb.py"))], horodatage=HORODATAGE)
++        ca, cb = contenus(a), contenus(b)
++        self.assertEqual(set(ca), set(cb))
++        neufs = sorted(set(ca) - avant)
++        self.assertIn("lecture.json", neufs)
++        self.assertIn("manifeste-bras-rapporte.json", neufs)
++        normaliser = (lambda octets, s: octets.replace(s.encode(), b"<SORTIE>").replace(
++            os.path.join(self.tmp, "j" + s[-1] + ".py").encode(), b"<JUGE>").replace(
++            os.path.basename(s).encode(), b"<NOM>"))
++        self.assertEqual([n for n in neufs if not n.endswith(".sha256")],
++                         ["classement.json", "classements-par-juge.json", "doublons-bras-rapporte.json",
++                          f"juges-bras-rapporte/traces-{ETIQ}/reponse.md", "lecture.json", "manifeste-bras-rapporte.json",
++                          "notes-bras-rapporte.json"])
++        # le manifeste brut diffère (chemins de la sortie et de la commande) : la normalisation n'efface que cela
++        self.assertNotEqual(ca["manifeste-bras-rapporte.json"], cb["manifeste-bras-rapporte.json"])
++        for nom in neufs:
++            if nom.endswith(".sha256"):
++                continue
++            self.assertEqual(normaliser(ca[nom], a), normaliser(cb[nom], b), nom)
++        for nom in ("lecture.json", "classement.json", "notes-bras-rapporte.json", "classements-par-juge.json"):
++            self.assertEqual(ca[nom], cb[nom], nom)  # lectures identiques octet pour octet, sans normalisation
++        self.assertNotIn("auto_preference_par_famille", rb["lecture"])
++        self.assertNotIn("juge_externe_remplace", rb["lecture"])
++        self.assertEqual(ra["lecture"]["auto_preference"], rb["lecture"]["auto_preference"])
++        self.assertEqual(ra["classement"], rb["classement"])
++
++    def test_artefact_modele_change_sans_option(self):
++        """Modèle changé sans option : refus CL35-04 de la v2, même message, rien écrit."""
++        sortie = self.course("change-sans-option")
++        avant = contenus(sortie)
++        with self.assertRaises(idn.CourseInterrompue) as v1:
++            self.bras(sortie, JOUE)
++        self.assertIn("(CL35-04)", str(v1.exception))
++        with self.assertRaises(idn.CourseInterrompue) as v2:
++            idn.executer_bras_differe(sortie, attestation_lecture_humaine=self.attester(sortie), budgets=self.budgets(),
++                                      juges_externes=[(ETIQ, JOUE, self.juge())], horodatage=HORODATAGE)
++        self.assertEqual(str(v1.exception), str(v2.exception))
++        self.assertEqual(contenus(sortie), avant)
++        self.rien_joue(sortie)
++
++
++class TestArtefacts(Base):
++    def refuse(self, sortie, modele, remplacements, motif, **modifs):
++        avant = contenus(sortie)
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            self.bras(sortie, modele, remplacements, **modifs)
++        self.assertIn(motif, str(cm.exception))
++        self.assertEqual(contenus(sortie), avant)
++        self.rien_joue(sortie)
++        return cm.exception
++
++    def test_artefacts_contre_la_course(self):
++        sortie = self.course("artefacts")
++        # option pour une autre étiquette (absente de la course) ; le juge de la course joué avec un autre modèle
++        self.refuse(sortie, JOUE, option("autre-juge"), "étiquette absente des juges externes de la course")
++        self.refuse(sortie, COURSE, option("autre-juge"), "étiquette absente des juges externes de la course")
++        # modèle de la course faux dans l'option
++        self.refuse(sortie, JOUE, option(modele_course=AUTRE), "≠ manifeste de départ")
++        # modèle joué non déclaré : CL35-04 conservée
++        e = self.refuse(sortie, AUTRE, option(), "(CL35-04)")
++        self.assertIn("ni le modèle de la course ni un remplacement déclaré", str(e))
++        # étiquettes données ≠ étiquettes de la course, même avec l'option
++        self.refuse(sortie, JOUE, option(), "étiquettes différentes",
++                    juges_externes=[(ETIQ, JOUE, self.juge()), ("autre-juge", JOUE, self.juge("j2.py"))])
++        self.refuse(sortie, JOUE, option(), "étiquettes différentes", juges_externes=[])
++        # plafond par session absent pour le modèle joué : refus avant tout appel
++        b = self.budgets()
++        del b[("juge_ideation", JOUE)]
++        self.refuse(sortie, JOUE, option(), "aucun plafond par session", budgets=b)
++        # la course reste jouable ensuite (aucune tentative comptée)
++        res = self.bras(sortie, JOUE, option())
++        self.assertEqual(res["journal"]["tentative"], 1)
++
++    def test_artefact_reference_de_go_vide(self):
++        sortie = self.course("go-vide")
++        for ref in ("", "   ", " GO-2026-11-18-01", "GO-2026-11-18", "go-2026-11-18-01", "GO-26-11-18-01", "R-3291"):
++            self.refuse(sortie, JOUE, option(reference_go=ref), "reference_go")
++
++    def test_artefacts_option_mal_formee(self):
++        sortie = self.course("mal-formee")
++        secret = "sk-" + "ant-" + "a1b2c3d4e5f6g7h8"
++        r = option()[ETIQ]
++        cas = [([], "non vide attendu"), ({}, "non vide attendu"), ("x", "non vide attendu"),
++               ({ETIQ: "x"}, "exactement les champs"), ({"Etiquette": r}, "étiquette invalide"),
++               ({ETIQ: {k: v for k, v in r.items() if k != "mot_verbatim"}}, "exactement les champs"),
++               ({ETIQ: dict(r, en_plus="x")}, "exactement les champs"),
++               (option(modele_joue=None), "chaîne non vide"), (option(mot_verbatim=""), "chaîne non vide"),
++               (option(mot_verbatim=" go v2"), "sans blanc autour"), (option(modele_joue="a b"), "nom de modèle invalide"),
++               (option(modele_course=""), "chaîne non vide"), (option(modele_joue=COURSE), "ce n'est pas un remplacement"),
++               (option(mot_verbatim="go\nv2"), "caractère de contrôle"), (option(mot_verbatim=secret), "secret"),
++               (option(mot_verbatim="x" * (brj.LONGUEUR_MAX_MOT + 1)), "au plus"),
++               ({ETIQ + "\n": r}, "étiquette invalide"), (option(modele_joue=JOUE + "\n"), "sans blanc autour")]
++        for remplacements, motif in cas:
++            with self.subTest(remplacements=str(remplacements)[:80]):
++                self.refuse(sortie, JOUE, remplacements, motif)
++
++    def test_option_mal_formee_refusee_avant_toute_lecture(self):
++        """La forme est jugée avant tout : sortie absente, attestation absente → le refus est celui de l'option."""
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            brj.executer_bras_differe(os.path.join(self.tmp, "absente"), remplacements_juges_externes=option(reference_go=""),
++                                      attestation_lecture_humaine="absente.json", budgets={}, juges_externes=[])
++        self.assertIn("reference_go", str(cm.exception))
++
++
++class TestGardePure(unittest.TestCase):
++    """`verifier_remplacements_contre_course` seule (dont la concordance avec noyau/modeles.json, qu'aucune course scellée
++    ne peut contredire sans réécrire un sceau)."""
++
++    def test_sain_et_artefacts(self):
++        v = brj.verifier_remplacements_contre_course
++        att, mod = {ETIQ: COURSE, "k2": "m2"}, {ETIQ: COURSE, "k2": "m2", "juge-a": "m3"}
++        rem = brj.valider_remplacements_juges_externes(option())
++        r = v(rem, att, {ETIQ: JOUE, "k2": "m2"}, mod)
++        self.assertEqual(r, [dict(etiquette=ETIQ, **rem[ETIQ], applique=True)])
++        self.assertEqual(v(rem, att, {ETIQ: COURSE, "k2": "m2"}, mod)[0]["applique"], False)
++        for donnes, motif in (({ETIQ: AUTRE, "k2": "m2"}, "(CL35-04)"), ({ETIQ: JOUE, "k2": "m9"}, "(CL35-04)"),
++                              ({ETIQ: JOUE}, "étiquettes différentes")):
++            with self.assertRaises(idn.CourseInterrompue) as cm:
++                v(rem, att, donnes, mod)
++            self.assertIn(motif, str(cm.exception))
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            v(rem, att, {ETIQ: JOUE, "k2": "m2"}, dict(mod, **{ETIQ: AUTRE}))
++        self.assertIn("noyau/modeles.json", str(cm.exception))
++        with self.assertRaises(idn.CourseInterrompue):
++            v(rem, att, {ETIQ: JOUE, "k2": "m2"}, {"k2": "m2"})
++
++    def test_secret_jamais_recopie_dans_le_refus(self):
++        secret = "sk-" + "ant-" + "a1b2c3d4e5f6g7h8"
++        for o in (option(mot_verbatim=" " + secret), option(reference_go=secret), option(modele_joue=secret + " x"),
++                  {secret: option()[ETIQ]}):
++            with self.assertRaises(idn.CourseInterrompue) as cm:
++                brj.valider_remplacements_juges_externes(o)
++            self.assertNotIn(secret, str(cm.exception))
++
++    def test_formes_par_correspondance_entiere(self):
++        """Les motifs sont appliqués à la chaîne entière (`fullmatch`), pas seulement au début."""
++        for motif, bon in ((brj.REFERENCE_GO, "GO-2026-11-18-01"), (brj.MODELE, JOUE), (brj.ETIQUETTE, ETIQ)):
++            self.assertTrue(motif.fullmatch(bon))
++            self.assertFalse(motif.fullmatch(bon + "\n"))
++        with self.assertRaises(idn.CourseInterrompue):
++            brj.valider_remplacements_juges_externes({ETIQ + "\n": option()[ETIQ]})
++
++    def test_option_copiee(self):
++        o = option()
++        rem = brj.valider_remplacements_juges_externes(o)
++        o[ETIQ]["modele_joue"] = AUTRE
++        self.assertEqual(rem[ETIQ]["modele_joue"], JOUE)
++
++    def test_reference_go_formes_admises(self):
++        for ref in ("GO-2026-11-18-01", "GO-2026-11-18-28", "GO-2026-11-18-123"):
++            brj.valider_remplacements_juges_externes(option(reference_go=ref))
++
++    def test_famille_temoins_exclus(self):
++        notes = {"j": {"a-p1-01": {"criteres": {"x": 3}}, "b-p1-01": {"criteres": {"x": 1}},
++                       idn.AUTEUR_TEMOIN + "-p1-01": {"criteres": {"x": 0}}}}
++        r = brj.lecture_auto_preference_par_famille(notes, {"j": ["m1", "m2"]}, {"a": "m1", "b": "m3"})
++        self.assertEqual(r["par_juge"]["j"], {"famille": ["m1", "m2"], "n_propre_famille": 1, "n_autre_famille": 1,
++                                              "total_moyen_propre_famille": 3, "total_moyen_autre_famille": 1})
++        self.assertIs(r["descriptive"], True)
++
++
++class TestVerrousInchanges(Base):
++    def test_attestation_et_plafond(self):
++        sortie = self.course("verrous")
++        avant = contenus(sortie)
++        # attestation dont l'empreinte de la consigne est fausse → refus
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            self.bras(sortie, JOUE, option(), attestation_lecture_humaine=self.attester(sortie, consigne="0" * 64))
++        self.assertIn("attestation", str(cm.exception))
++        # attestation absente → refus
++        with self.assertRaises(Exception):
++            self.bras(sortie, JOUE, option(), attestation_lecture_humaine=os.path.join(self.tmp, "absente.json"))
++        # plafond externe insuffisant → refus avant le contrôle
++        with self.assertRaises(idn.CourseInterrompue) as cm:
++            self.bras(sortie, JOUE, option(), budget_externe_usd=0.5)
++        self.assertIn("CL35-05", str(cm.exception))
++        self.assertEqual({k: v for k, v in contenus(sortie).items() if not k.startswith("att-")},
++                         {k: v for k, v in avant.items() if not k.startswith("att-")})
++        self.rien_joue(sortie)
++
++    def test_temoins_echoues_chez_le_juge_remplace(self):
++        sortie = self.course("temoins")
++        mauvais = self.juge("mauvais.py", T7.TestCommandeExterne.SCRIPT_OK.replace("'avantage': 1, 'originalite': 0",
++                                                                                  "'avantage': 3, 'originalite': 3"))
++        res = self.bras(sortie, JOUE, option(), adaptateur=mauvais)
++        self.assertFalse(res["lecture"]["temoins_juge_externe"]["temoins_ok"])
++        self.assertFalse(res["lecture"]["lisible_L2_L4"])
++        self.assertIn("juge_externe_remplace", lire(os.path.join(sortie, "lecture.json")))
++
++    def test_panne_apres_envoi_repli_sans_bras_avec_mention(self):
++        sortie = self.course("panne")
++        panne = self.juge("panne.py", "import sys, json\nc = sys.stdin.read()\n"
++                          "if 'exactement OK' in c: print(json.dumps({'texte': 'OK', 'cout_usd': 0.001})); sys.exit(0)\n"
++                          "print(json.dumps({'texte': 'x', 'cout_usd': 0.2})); sys.exit(3)\n")
++        with self.assertRaises(idn.SansJugeExterne) as cm:
++            self.bras(sortie, JOUE, option(), adaptateur=panne)
++        self.assertTrue(cm.exception.resultat["sans_bras"])
++        lecture = lire(os.path.join(sortie, "lecture-sans-bras.json"))
++        self.assertFalse(lecture["lisible_L2_L4"])
++        self.assertEqual(lecture["juge_externe_remplace"]["mention"], brj.MENTION_REMPLACEMENT)
++        m = lire(os.path.join(sortie, "manifeste-bras-rapporte.json"))["reglages"]
++        self.assertTrue(m["erreur"])
++        self.assertEqual(m["remplacements_juges_externes"][0]["modele_joue"], JOUE)
++        with self.assertRaises(idn.CourseInterrompue):  # verrouillé
++            self.bras(sortie, JOUE, option())
++
++    def test_refus_de_taille_porte_le_remplacement(self):
++        sortie = self.course("taille")
++        with self.assertRaises(idn.SansJugeExterne):
++            self.bras(sortie, JOUE, option(), taille_max_consigne_externe=10)
++        m = lire(os.path.join(sortie, "manifeste-bras-refus-taille-1.json"))["reglages"]
++        self.assertEqual(m["remplacements_juges_externes"][0]["modele_joue"], JOUE)
++        self.assertEqual(lire(os.path.join(sortie, "lecture-sans-bras.json"))["juge_externe_remplace"]["mention"],
++                         brj.MENTION_REMPLACEMENT)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/orchestrator/pole/bras_remplacement_juge_v1.py b/orchestrator/pole/bras_remplacement_juge_v1.py
+new file mode 100644
+index 0000000..cdf6e0a
+--- /dev/null
++++ b/orchestrator/pole/bras_remplacement_juge_v1.py
+@@ -0,0 +1,577 @@
++"""Bras différé du tour d'idéation avec **remplacement déclaré du modèle d'un juge externe** — version 1 (fichier neuf, R12).
++
++Demande de la session de relance des organismes discrets (2026-11-18, `demande-orchestrateur-remplacement-modele-juge-v1.md`,
++voie (a) de `changement-modele-juge-astra-v1.md`) : jouer le juge externe différé d'une course déjà faite avec un autre
++modèle que celui que la course a déclaré, **sur déclaration explicite**, sans toucher à `pole/ideation_v2.py` (gardé tel
++quel, R12 ; arbre `orchestrator/` ee84d6ec).
++
++- **Sans l'option** (`remplacements_juges_externes=None`, le défaut) : `executer_bras_differe` appelle
++  `ideation_v2.executer_bras_differe` elle-même, avec les mêmes arguments — comportement strictement inchangé, garde
++  CL35-04 comprise (étiquettes et modèles identiques à ceux de la course).
++- **Avec l'option** : `{étiquette: {"modele_course", "modele_joue", "reference_go", "mot_verbatim"}}`, validée avant tout
++  (forme exacte, chaînes non vides, modèle joué ≠ modèle de la course, référence de GO `GO-AAAA-MM-JJ-NN`, mot sans
++  caractère de contrôle ni secret) ; puis, à la place de CL35-04 : étiquettes données toujours identiques à celles de la
++  course ; pour chaque étiquette, le modèle donné est celui de la course ou celui du remplacement déclaré ; tout autre
++  écart reste refusé (CL35-04) ; un remplacement pour une étiquette absente de la course, ou dont le « modèle de la course »
++  ne concorde pas avec le manifeste de départ (ni avec `noyau/modeles.json`) → refus, avant tout appel.
++- Le journal, le manifeste du bras (et ceux des tentatives, du refus de taille, du bras non joué) portent pour chaque juge
++  déclaré les deux modèles, la référence de GO, le mot verbatim et s'il a été appliqué ; la lecture écrite (`lecture.json`,
++  ou `lecture-sans-bras.json` en repli) porte la mention visible `MENTION_REMPLACEMENT`.
++- Auto-préférence calculée avec le modèle **joué** ; la lecture **par famille** (pour un juge remplacé : le modèle de la
++  course et le modèle joué ; pour les autres : leur seul modèle — aucune famille de fournisseur n'est devinée d'après les
++  noms) est rapportée à côté, marquée descriptive.
++- Verrous inchangés (copie de la v2) : attestation scellée portant l'empreinte des fiches validées et de chaque consigne en
++  attente ; jamais rejoué après dépense ; témoins relus chez le juge externe ; plafond externe ; aucun repli silencieux.
++
++La ligne de GO n'est jamais lue ici : la référence est consignée telle quelle ; la vérifier contre le registre des GO
++revient au lanceur et à la session qui l'inscrit.
++"""
++
++import copy
++import hashlib
++import json
++import os
++import re
++import statistics
++import unicodedata
++
++from . import ideation_v2 as _v2
++from .caviardage import caviarder, contient_secret
++from .ideation_v2 import (AUTEUR_TEMOIN, ETIQUETTE, MAX_TENTATIVES_BRAS, MAX_TOURS_IDEATION, PRIX_CARACTERE_PRUDENT_USD,
++                          PROVISION_SORTIE_PAR_NOTE, RAPPORT_SORTIE_ENTREE_PRUDENT, CourseInterrompue, NotesInvalides,
++                          SansJugeExterne, TailleConsigneRefusee, _classer, _exiger_somme, _lire_attestation,
++                          appel_de_controle, cout_compte_controle, exiger_taille_max_consigne, garde_taille_consigne,
++                          lecture_auto_preference, lecture_temoins, provision_sortie_juge_caracteres,
++                          taille_max_consigne_par_defaut, texte_a_analyser, valider_notes)
++from .moisson import extraire_demandes_moisson
++from .outils import (dossier_traces, ecrire_json_scelle, ecrire_scelle, extraire_bloc_json, manifeste, sha256_fichier,
++                     verifier_scelle)
++from .pari_apparie import _fini
++from .relais import CleDansEnvironnement
++
++VERSION = "bras-remplacement-juge-v1 (bras différé de ideation_v2 avec remplacement déclaré du modèle d'un juge externe)"
++CHAMPS_REMPLACEMENT = ("modele_course", "modele_joue", "reference_go", "mot_verbatim")
++REFERENCE_GO = re.compile(r"^GO-\d{4}-\d{2}-\d{2}-\d{2,}$")
++MODELE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$")
++LONGUEUR_MAX_MOT = 2000
++MENTION_REMPLACEMENT = "juge externe joué avec un autre modèle que celui déclaré à la course"
++MOTIF_FAMILLE = ("lecture descriptive, jamais une lecture d'auto-préférence au sens du code : pour un juge remplacé, la famille "
++                 "est le modèle déclaré à la course et le modèle joué (le proposeur de la lignée garde le modèle de la course) ; "
++                 "pour les autres juges, leur seul modèle ; aucune famille de fournisseur devinée d'après les noms")
++
++
++def _vu(valeur):
++    """Valeur refusée telle que le message la montre : caviardée (un secret mis par erreur dans l'option n'est jamais
++    recopié dans une exception), tronquée à 120 caractères."""
++    return caviarder(repr(valeur))[0][:120]
++
++
++def valider_remplacements_juges_externes(option):
++    """Forme de l'option, avant tout (aucun fichier lu ni écrit) ; rend une copie normalisée. Refus (`CourseInterrompue`) :
++    autre chose qu'un dictionnaire non vide ; étiquette hors de `ETIQUETTE` ; valeur qui n'est pas un dictionnaire aux quatre
++    champs exacts ; champ qui n'est pas une chaîne non vide sans blanc autour ; modèle hors de `MODELE` ; modèle joué égal au
++    modèle de la course ; référence de GO hors de `REFERENCE_GO` ; mot verbatim trop long ou avec un caractère de
++    contrôle ; secret dans l'étiquette ou dans un champ (jamais recopié dans le message : `_vu`)."""
++    if not isinstance(option, dict) or not option:
++        raise CourseInterrompue("remplacements_juges_externes : {étiquette: {modele_course, modele_joue, reference_go, "
++                                f"mot_verbatim}} non vide attendu (reçu {type(option).__name__}) ; sans remplacement, ne pas "
++                                "donner l'option")
++    sortie = {}
++    for etiquette, r in option.items():
++        if not isinstance(etiquette, str) or not ETIQUETTE.fullmatch(etiquette) or contient_secret(etiquette):
++            raise CourseInterrompue(f"remplacements_juges_externes : étiquette invalide {_vu(etiquette)}")
++        if not isinstance(r, dict) or set(r) != set(CHAMPS_REMPLACEMENT):
++            raise CourseInterrompue(f"remplacements_juges_externes[{etiquette!r}] : exactement les champs "
++                                    f"{list(CHAMPS_REMPLACEMENT)} (reçu {_vu(sorted(r)) if isinstance(r, dict) else type(r).__name__})")
++        for champ in CHAMPS_REMPLACEMENT:
++            v = r[champ]
++            if not isinstance(v, str) or not v.strip() or v != v.strip():
++                raise CourseInterrompue(f"remplacements_juges_externes[{etiquette!r}][{champ!r}] : chaîne non vide, sans blanc "
++                                        f"autour (reçu {_vu(v)})")
++            if contient_secret(v):
++                raise CourseInterrompue(f"remplacements_juges_externes[{etiquette!r}][{champ!r}] : un secret n'a rien à "
++                                        "faire dans l'option (refusé, jamais recopié)")
++        for champ in ("modele_course", "modele_joue"):
++            if not MODELE.fullmatch(r[champ]):
++                raise CourseInterrompue(f"remplacements_juges_externes[{etiquette!r}][{champ!r}] : nom de modèle invalide "
++                                        f"{_vu(r[champ])}")
++        if r["modele_joue"] == r["modele_course"]:
++            raise CourseInterrompue(f"remplacements_juges_externes[{etiquette!r}] : modèle joué égal au modèle de la course "
++                                    f"({r['modele_joue']!r}) : ce n'est pas un remplacement")
++        if not REFERENCE_GO.fullmatch(r["reference_go"]):
++            raise CourseInterrompue(f"remplacements_juges_externes[{etiquette!r}][reference_go] : GO-AAAA-MM-JJ-NN attendu "
++                                    f"(reçu {_vu(r['reference_go'])})")
++        mot = r["mot_verbatim"]
++        if len(mot) > LONGUEUR_MAX_MOT or any(unicodedata.category(c) == "Cc" for c in mot):
++            raise CourseInterrompue(f"remplacements_juges_externes[{etiquette!r}][mot_verbatim] : au plus {LONGUEUR_MAX_MOT} "
++                                    "caractères, sans caractère de contrôle")
++        sortie[etiquette] = {c: r[c] for c in CHAMPS_REMPLACEMENT}
++    return copy.deepcopy(sortie)
++
++
++def verifier_remplacements_contre_course(remplacements, attendus, donnes, modeles_par_juge_course):
++    """Garde CL35-04 avec remplacement déclaré. `attendus` : {étiquette: modèle} du manifeste de départ ; `donnes` : ceux du
++    bras ; `modeles_par_juge_course` : `noyau/modeles.json["par_juge"]`. Rend la liste, triée par étiquette, des remplacements
++    déclarés `{etiquette, modele_course, modele_joue, reference_go, mot_verbatim, applique}` (`applique` : le modèle donné est
++    le modèle joué déclaré ; faux : le modèle de la course est donné). Refus (`CourseInterrompue`, message CL35-04) :
++    étiquettes données ≠ étiquettes de la course ; remplacement pour une étiquette absente de la course ; modèle de la course
++    déclaré ≠ manifeste de départ ou ≠ `noyau/modeles.json` ; modèle donné qui n'est ni celui de la course ni le modèle joué
++    déclaré pour cette étiquette."""
++    if set(donnes) != set(attendus):
++        raise CourseInterrompue(f"juges externes donnés {donnes} ≠ attendus par la course {attendus} (CL35-04) : étiquettes "
++                                "différentes, jamais admises même avec un remplacement déclaré")
++    for etiquette, r in sorted(remplacements.items()):
++        if etiquette not in attendus:
++            raise CourseInterrompue(f"remplacement déclaré pour {etiquette!r}, étiquette absente des juges externes de la "
++                                    f"course {sorted(attendus)} (CL35-04)")
++        if r["modele_course"] != attendus[etiquette]:
++            raise CourseInterrompue(f"remplacement déclaré pour {etiquette!r} : modèle de la course déclaré "
++                                    f"{r['modele_course']!r} ≠ manifeste de départ {attendus[etiquette]!r} (CL35-04)")
++        if modeles_par_juge_course.get(etiquette) != attendus[etiquette]:
++            raise CourseInterrompue(f"remplacement déclaré pour {etiquette!r} : noyau/modeles.json "
++                                    f"{modeles_par_juge_course.get(etiquette)!r} ≠ manifeste de départ "
++                                    f"{attendus[etiquette]!r} : la course n'est pas cohérente (CL35-04)")
++    remplaces = []
++    for etiquette in sorted(attendus):
++        m, r = donnes[etiquette], remplacements.get(etiquette)
++        if m == attendus[etiquette]:
++            if r is not None:
++                remplaces.append(dict(etiquette=etiquette, **r, applique=False))
++            continue
++        if r is not None and m == r["modele_joue"]:
++            remplaces.append(dict(etiquette=etiquette, **r, applique=True))
++            continue
++        raise CourseInterrompue(f"juges externes donnés {donnes} ≠ attendus par la course {attendus} (CL35-04) : "
++                                f"{etiquette!r} joué par {m!r}, ni le modèle de la course ni un remplacement déclaré")
++    return remplaces
++
++
++def bloc_lecture_remplacement(remplaces):
++    """Ce que la lecture écrite porte quand au moins un remplacement est appliqué : la mention visible et les remplacements."""
++    return {"mention": MENTION_REMPLACEMENT, "remplacements": copy.deepcopy(remplaces)}
++
++
++def lecture_auto_preference_par_famille(notes_par_auteur, famille_par_juge, modele_par_auteur):
++    """Comme `ideation_v2.lecture_auto_preference`, la famille d'un juge (liste de modèles) à la place de son modèle ;
++    témoins exclus ; marquée descriptive (`MOTIF_FAMILLE`)."""
++    par_juge = {}
++    for j, notes in notes_par_auteur.items():
++        famille = famille_par_juge[j]
++        propres, autres = [], []
++        for ident, n in notes.items():
++            auteur = ident.split("-p")[0]
++            if auteur == AUTEUR_TEMOIN:
++                continue
++            (propres if modele_par_auteur.get(auteur) in famille else autres).append(sum(n["criteres"].values()))
++        par_juge[j] = {"famille": list(famille), "n_propre_famille": len(propres), "n_autre_famille": len(autres),
++                       "total_moyen_propre_famille": statistics.mean(propres) if propres else None,
++                       "total_moyen_autre_famille": statistics.mean(autres) if autres else None}
++    return {"descriptive": True, "motif": MOTIF_FAMILLE, "par_juge": par_juge}
++
++
++def executer_bras_differe(sortie, *, remplacements_juges_externes=None, **reglages):
++    """Bras différé. Sans `remplacements_juges_externes` : `ideation_v2.executer_bras_differe(sortie, **reglages)` elle-même
++    (comportement strictement inchangé). Avec : option validée avant tout, puis `_executer_bras_avec_remplacement`."""
++    if remplacements_juges_externes is None:
++        return _v2.executer_bras_differe(sortie, **reglages)
++    remplacements = valider_remplacements_juges_externes(remplacements_juges_externes)
++    return _executer_bras_avec_remplacement(sortie, remplacements=remplacements, **reglages)
++
++
++executer_bras_rapporte = executer_bras_differe  # nom de la v34 et de la v35, comme dans la v2
++
++
++# --- copie de `ideation_v2.executer_bras_differe` ; chaque écart est marqué « remplacement-juge-v1 »
++def _executer_bras_avec_remplacement(sortie, *, remplacements, attestation_lecture_humaine, juges_externes, budgets,
++                                      lire_etat_relais=None, horodatage=None, budget_controle_usd=None,
++                                      exiger_cout_controle=True, budget_externe_usd=None, commande_externe=None,
++                                      taille_max_consigne_externe=None, prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD):
++    """Copie de `ideation_v2.executer_bras_differe` (arbre `orchestrator/` ee84d6ec), jouée **seulement** avec un
++    remplacement déclaré déjà validé par `valider_remplacements_juges_externes` ; sans option, `executer_bras_differe`
++    ci-dessous appelle la fonction de la v2 elle-même. Écarts à la copie, tous marqués « remplacement-juge-v1 » : la garde
++    CL35-04 passe par `verifier_remplacements_contre_course` ; le journal, tous les manifestes du bras et la lecture portent
++    le remplacement ; l'auto-préférence prend le modèle joué, la lecture par famille est rapportée à côté (descriptive)."""
++    def lire_json_scelle(nom):
++        chemin = os.path.join(sortie, nom)
++        if not verifier_scelle(chemin):
++            raise CourseInterrompue(f"sceau absent ou faux : {nom} (la course n'est pas intacte)")
++        with open(chemin, "r", encoding="utf-8") as f:
++            return json.load(f)
++
++    if budget_controle_usd is not None:  # v41 (CL40-05)
++        _exiger_somme("budget_controle_usd", budget_controle_usd)
++    if budget_externe_usd is not None:  # v42 (CL41-01) : le plafond externe peut être donné au bras ; fini ≥ 0
++        _exiger_somme("budget_externe_usd", budget_externe_usd)
++    if taille_max_consigne_externe is not None:
++        exiger_taille_max_consigne(taille_max_consigne_externe)
++    if not _fini(prix_caractere_usd) or prix_caractere_usd <= 0:  # v43 (CL42-04 b)
++        raise CourseInterrompue(f"prix_caractere_usd : réel fini > 0 (reçu {prix_caractere_usd!r})")
++    chemin_manifeste = os.path.join(sortie, "manifeste-bras-rapporte.json")
++    if os.path.exists(chemin_manifeste):
++        raise CourseInterrompue("le bras a déjà été joué pour cette course (manifeste-bras-rapporte.json existe) : jamais "
++                                "rejoué après dépense (CL34-04)")
++    # v37 (CL36-01) : un échec AVANT tout envoi et toute dépense (commande introuvable, clé dans l'environnement, contrôle
++    # refusé sans coût) écrit un manifeste « non joué » numéroté et laisse le bras relançable.
++    tentatives_non_jouees = sorted(f for f in os.listdir(sortie) if re.match(r"manifeste-bras-non-joue-\d+\.json$", f))
++    # v38 (CL37-02) : les tentatives qui ont coûté (contrôle refusé après dépense) sont lues ; leur coût s'impute au plafond
++    # externe ; au plus MAX_TENTATIVES_BRAS tentatives au total
++    tentatives_payees = sorted(f for f in os.listdir(sortie) if re.match(r"bras-tentative-\d+\.json$", f))
++    cout_tentatives = 0.0
++    for f in tentatives_payees:  # v41 (CL40-05) : sceau vérifié, coût réel fini ≥ 0
++        if not verifier_scelle(os.path.join(sortie, f)):
++            raise CourseInterrompue(f"tentative du bras au sceau absent ou faux : {f} (aucune relance sans un mot de Lazar)")
++        with open(os.path.join(sortie, f), "r", encoding="utf-8") as fh:
++            c = json.load(fh)["reglages"]["journal"]["cout_total_usd"]
++        if not _fini(c) or c < 0:
++            raise CourseInterrompue(f"tentative du bras au coût illisible : {f} ({c!r})")
++        cout_tentatives += float(c)
++    # v43 (CL42-05) : un refus de taille au bras est une tentative (non relançable, rien payé)
++    tentatives_refus_taille = sorted(f for f in os.listdir(sortie) if re.match(r"manifeste-bras-refus-taille-\d+\.json$", f))
++    if len(tentatives_non_jouees) + len(tentatives_payees) + len(tentatives_refus_taille) >= MAX_TENTATIVES_BRAS:
++        raise CourseInterrompue(f"{MAX_TENTATIVES_BRAS} tentatives du bras déjà faites : plus de relance sans un mot de "
++                                "Lazar (CL37-02)")
++    attestation = _lire_attestation(attestation_lecture_humaine,
++                                    ("lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256"))
++    if attestation["fiches_validees_sha256"] != sha256_fichier(os.path.join(sortie, "fiches-validees.json")):
++        raise CourseInterrompue("l'attestation ne porte pas l'empreinte de fiches-validees.json de cette course")
++    consignes_attestees = attestation["consignes_en_attente_sha256"]
++    if not isinstance(consignes_attestees, dict):
++        raise CourseInterrompue("attestation : consignes_en_attente_sha256 doit être {etiquette: sha256}")
++    fiches = lire_json_scelle("fiches-validees.json")
++    notes_par_auteur = lire_json_scelle("notes-par-juge.json")
++    doublons_par_juge = lire_json_scelle("doublons-par-juge.json")
++    cles_par_juge = lire_json_scelle(os.path.join("noyau", "cles-anonymisation-par-juge.json"))
++    temoins = lire_json_scelle(os.path.join("noyau", "temoins-servis.json"))
++    modeles = lire_json_scelle(os.path.join("noyau", "modeles.json"))
++    lecture_course = lire_json_scelle("lecture-course.json")
++    depart = lire_json_scelle("manifeste-depart.json")["reglages"]
++    fin = lire_json_scelle("manifeste-fin.json")["reglages"]
++    if budget_controle_usd is None:  # v41 (CL40-03) : par défaut, le contrôle du bras que la course a compté dans sa somme
++        budget_controle_usd = _exiger_somme("budget_controle_bras_usd (manifeste de départ)", (depart.get(
++            "somme_des_plafonds") or {}).get("budget_controle_bras_usd", 0.2))
++    if fin.get("erreur"):
++        raise CourseInterrompue("la course s'est arrêtée en erreur : aucun bras sur une course incomplète")
++    attendus = {e: m for e, m in depart.get("juges_externes", [])}
++    donnes = {e: m for e, m, _ in juges_externes}
++    # remplacement-juge-v1 : CL35-04 gardée ; seul un remplacement déclaré (étiquette de la course, modèle de la course
++    # concordant avec le manifeste de départ et noyau/modeles.json, modèle joué déclaré) est admis
++    remplaces = verifier_remplacements_contre_course(remplacements, attendus, donnes, modeles.get("par_juge", {}))
++    effectifs = [r for r in remplaces if r["applique"]]
++    if effectifs:  # remplacement-juge-v1 : la mention est portée par toute lecture écrite (bras ou repli sans bras)
++        lecture_course = dict(lecture_course, juge_externe_remplace=bloc_lecture_remplacement(remplaces))
++    moteur_course = depart.get("moteur")
++    cout_fictif = False  # le coût du bras est celui de ses propres adaptateurs : fictif dès qu'un n'est pas une commande
++    for e, _, a in juges_externes:
++        if moteur_course == "claude-sdk" and getattr(a, "nom", None) != "commande-externe":
++            raise CourseInterrompue(f"course réelle : seul une commande externe joue le juge {e!r}, pas "
++                                    f"{getattr(a, 'nom', type(a).__name__)!r} (CL35-04)")
++        if getattr(a, "nom", None) != "commande-externe":
++            cout_fictif = True
++    plafond_externe = float(depart.get("budget_externe_usd", 0.0) if budget_externe_usd is None else budget_externe_usd)
++    deja_externe = float(fin["journal"].get("cout_externe_usd", 0.0)) + cout_tentatives  # CL37-02
++    par_ident = {x["identifiant_auteur"]: x for x in fiches}
++    for t in temoins:
++        par_ident[t["identifiant_auteur"]] = t
++    # --- vérifications avant tout appel : consignes scellées et attestées, aucune réponse déjà rendue, plafond (CL35-05)
++    consignes = {}
++    for etiquette, modele, _ in juges_externes:
++        if etiquette not in cles_par_juge:
++            raise CourseInterrompue(f"aucune clé d'anonymisation pour le juge externe {etiquette!r} dans cette course")
++        d = os.path.join(sortie, "juges-bras-rapporte", etiquette)
++        chemin_consigne = os.path.join(dossier_traces(d), "consigne-en-attente.md")
++        if not verifier_scelle(chemin_consigne):
++            raise CourseInterrompue(f"consigne en attente absente ou au sceau faux pour {etiquette!r}")
++        with open(chemin_consigne, "rb") as f:
++            octets = f.read()  # CL35-14 : lus une fois ; empreintés et envoyés tels quels
++        empreinte = hashlib.sha256(octets).hexdigest()
++        if consignes_attestees.get(etiquette) != empreinte:
++            raise CourseInterrompue(f"l'attestation ne porte pas l'empreinte de la consigne en attente de {etiquette!r} "
++                                    f"({empreinte[:12]}…) : le lecteur ne l'a pas lue, ou elle a changé")
++        if os.path.exists(os.path.join(dossier_traces(d), "reponse.md")):
++            raise CourseInterrompue(f"une réponse existe déjà pour {etiquette!r} : jamais rejoué après dépense (CL34-04)")
++        if ("juge_ideation", modele) not in budgets:
++            raise CourseInterrompue(f"aucun plafond par session pour ('juge_ideation', {modele!r})")
++        consignes[etiquette] = octets.decode("utf-8")
++    besoin = sum(budgets[("juge_ideation", m)] for _, m, _ in juges_externes) + budget_controle_usd * len(juges_externes)
++    journal = {"appels": [], "cout_total_usd": 0.0, "cout_externe_deja_compte_course_usd": deja_externe,
++               "cout_tentatives_precedentes_usd": cout_tentatives,
++               "tentative": len(tentatives_non_jouees) + len(tentatives_payees) + len(tentatives_refus_taille) + 1,
++               "plafond_externe_usd": plafond_externe, "cout_fictif": cout_fictif, "arret": None, "controle": {},
++               "non_lance": False, "consigne_envoyee": None, "garde_taille": {},
++               "remplacements_juges_externes": remplaces}  # remplacement-juge-v1 : dans tout manifeste qui porte le journal
++    notes_externes, doublons_externes = {}, {}
++    resultat = {"classement": None, "lecture": None, "journal": journal, "sans_bras": False}
++
++    def ecrire_manifeste(erreur=None):
++        ecrire_json_scelle(chemin_manifeste, manifeste(
++            phase="bras-rapporte", horodatage=horodatage, journal=journal, attestation=attestation, erreur=erreur,
++            commande_externe=commande_externe or [getattr(a, "description", lambda: None)() for _, _, a in juges_externes],
++            juges=[[e, m, getattr(a, "nom", type(a).__name__)] for e, m, a in juges_externes],
++            remplacements_juges_externes=remplaces,  # remplacement-juge-v1 : les deux modèles, la référence de GO, le mot
++            mention_remplacement=MENTION_REMPLACEMENT if effectifs else None))
++
++    def classement_sans_bras(motif, verrouiller=True):
++        """n° 118 point 3 : classement à deux juges écrit, marqué illisible au sens du devis ; jamais de « retenue ».
++        v42 (CL41-01) : `verrouiller=False` (tentative non relançable avant envoi) n'écrit pas le manifeste du bras — un
++        mot de Lazar (plafond externe relevé) peut encore relancer ; un classement sans bras déjà écrit n'est pas réécrit.
++        v43 (CL42-06) : rend « ecrit » ou « existant » (déjà écrit par une tentative précédente : non réécrit, R12)."""
++        if os.path.exists(os.path.join(sortie, "classement-sans-bras.json")):
++            if verrouiller:
++                ecrire_manifeste(erreur=motif)
++            resultat.update({"sans_bras": True})
++            return "existant"
++        classement, lecture = _classer(notes_par_auteur, par_ident, temoins, lecture_course)
++        lecture["sans_juge_externe"] = motif
++        lecture["lisible_L2_L4"] = False
++        if verrouiller:
++            ecrire_manifeste(erreur=motif)
++        ecrire_json_scelle(os.path.join(sortie, "classements-par-juge-sans-bras.json"), lecture.pop("_classements_par_juge"))
++        ecrire_json_scelle(os.path.join(sortie, "classement-sans-bras.json"),
++                           {"lisible_L2_L4": False, "sans_juge_externe": motif, "lignes": classement})
++        ecrire_json_scelle(os.path.join(sortie, "lecture-sans-bras.json"), lecture)
++        resultat.update({"classement": classement, "lecture": lecture, "sans_bras": True})
++        return "ecrit"
++
++    def repli_impossible(e2, motif):
++        """v43 (CL42-06, R5) : l'échec du classement de repli est scellé (`classement-sans-bras-impossible-N.json`, N =
++        numéro de tentative) et rendu en clair, pour l'exception levée ; jamais silencieux."""
++        echec = type(e2).__name__ + " : " + caviarder(str(e2))[0][:300]
++        journal["classement_sans_bras_impossible"] = echec
++        nom = f"classement-sans-bras-impossible-{journal['tentative']}.json"
++        try:
++            ecrire_json_scelle(os.path.join(sortie, nom), manifeste(
++                phase="bras-classement-sans-bras-impossible", horodatage=horodatage, tentative=journal["tentative"],
++                classement_sans_bras_impossible=echec, motif_du_repli=motif, journal=journal))
++            ou = f"{nom} scellé"
++        except Exception as e3:  # noqa: BLE001 — le motif reste dans l'exception levée
++            ou = f"{nom} non écrit ({type(e3).__name__} : {str(e3)[:120]})"
++        resultat["repli_impossible"] = echec
++        return f" ; classement sans bras impossible : {echec} ({ou})"
++
++    def sans_bras_non_relancable(motif):
++        """v42 (CL41-01) : tentative scellée non relançable → classement à deux juges écrit tout de suite (sans verrou) ;
++        un échec de ce classement de repli n'efface jamais l'erreur d'origine. v43 (CL42-06) : rend le suffixe à ajouter au
++        message de l'exception levée — vide si le classement est écrit, « déjà écrit … non réécrit » s'il existait, et
++        l'échec (scellé) sinon."""
++        try:
++            etat = classement_sans_bras(motif, verrouiller=False)
++        except Exception as e2:  # noqa: BLE001
++            return repli_impossible(e2, motif)
++        if etat == "existant":
++            return (" ; classement-sans-bras.json déjà écrit par une tentative précédente : non réécrit (R12), il fait "
++                    "foi pour cette tentative aussi")
++        return ""
++
++    def lever_non_relancable(motif_classement, message, cause):
++        """v43 : après une tentative non relançable, classement de repli puis `SansJugeExterne` s'il existe, sinon
++        `CourseInterrompue` ; le message dit l'issue du classement de repli (CL42-06)."""
++        suite_repli = sans_bras_non_relancable(motif_classement)
++        if resultat["sans_bras"]:
++            exc = SansJugeExterne(message + (suite_repli or " ; classement-sans-bras.json écrit (deux juges, illisible)"),
++                                  resultat)
++        else:
++            exc = CourseInterrompue(message + suite_repli)
++        exc.repli_impossible = resultat.get("repli_impossible")
++        raise exc from cause
++
++    # v42 (CL41-01) : garde de taille sans dépense, avant tout appel (contrôle compris). v43 (CL42-05) : garde propre au
++    # bras (la valeur de la course ne s'applique plus) ; un refus compte une tentative non relançable, classement sans bras
++    for etiquette, modele, _ in juges_externes:
++        if taille_max_consigne_externe is not None:
++            tmax, origine, prov = taille_max_consigne_externe, "donnée au bras (--taille-max-consigne-externe-bras)", 0
++        else:
++            plafond_juge = budgets[("juge_ideation", modele)]
++            servies = len(cles_par_juge[etiquette])
++            prov = provision_sortie_juge_caracteres(servies)
++            tmax = taille_max_consigne_par_defaut(plafond_juge, prov, prix_caractere_usd)
++            origine = (f"défaut : plafond de la session du juge {plafond_juge} / prix {prix_caractere_usd:.4e} dollar par "
++                       f"caractère − provision de sortie {prov} caractères "
++                       f"({servies} fiches servies × {PROVISION_SORTIE_PAR_NOTE} caractères de note au rapport "
++                       f"{RAPPORT_SORTIE_ENTREE_PRUDENT:g})")
++        try:
++            journal["garde_taille"][etiquette] = garde_taille_consigne(
++                f"consigne du juge externe {etiquette!r}", len(consignes[etiquette]), tmax, origine, prov, prix_caractere_usd)
++        except TailleConsigneRefusee as e:
++            numero = journal["tentative"]
++            journal["garde_taille"][etiquette] = e.details
++            journal["arret"] = str(e)
++            motifs_t = ["refus de taille : la même consigne et la même garde redonneraient le même refus ; une garde plus "
++                        "haute (--taille-max-consigne-externe-bras) ou un plafond de juge plus haut se donne sur mot de Lazar"]
++            if numero >= MAX_TENTATIVES_BRAS:
++                motifs_t.append(f"{MAX_TENTATIVES_BRAS} tentatives faites")
++            ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-refus-taille-{numero}.json"), manifeste(
++                phase="bras-refus-taille", horodatage=horodatage, erreur=str(e), garde_taille=e.details,
++                tentative_comptee=True, numero_tentative=numero, relancable=False, motifs_relance=motifs_t, cout_usd=0.0,
++                remplacements_juges_externes=remplaces))  # remplacement-juge-v1
++            motif_r = (f"tentative {numero} du bras non relançable (refus de taille, rien envoyé, rien payé) : " + str(e)
++                       + " ; plus de relance sans un mot de Lazar (" + " ; ".join(motifs_t) + ")")
++            lever_non_relancable(motif_r, motif_r, e)
++    if deja_externe + besoin > plafond_externe + 1e-9:
++        raise CourseInterrompue(f"plafond externe {plafond_externe} insuffisant avant tout appel : déjà {deja_externe} + "
++                                f"contrôles et sessions {besoin} (CL35-05)")
++
++    def relance_possible():
++        """v41 : ce que vérifiera la relance — moins de MAX_TENTATIVES_BRAS tentatives et le plafond externe qui couvre
++        encore les contrôles et les sessions, le coût de cette tentative imputé."""
++        motifs = []
++        if journal["tentative"] >= MAX_TENTATIVES_BRAS:
++            motifs.append(f"{MAX_TENTATIVES_BRAS} tentatives faites")
++        if deja_externe + journal["cout_total_usd"] + besoin > plafond_externe + 1e-9:
++            motifs.append(f"plafond externe {plafond_externe} < déjà {deja_externe + journal['cout_total_usd']:.4f} + "
++                          f"contrôles et sessions {besoin} (un plafond plus haut se donne par --budget-externe-usd, sur mot "
++                          "de Lazar)")
++        return not motifs, motifs
++
++    try:
++        for etiquette, modele, adaptateur in juges_externes:
++            dossier_controle = os.path.join(sortie, "bras-rapporte-controle", f"tentative-{journal['tentative']}", etiquette)
++            try:  # v42 (CL41-01, option B) : contrôle court — il éprouve la commande, jamais la consigne du juge
++                lecture_controle = appel_de_controle(adaptateur, [modele], dossier_controle, budget_controle_usd, None,
++                                                     exiger_cout=exiger_cout_controle, supplement=None)[modele]
++            except BaseException as e:  # CL37-02, v41 (CL40-02) : refusé ou interrompu, le coût est compté (plafond si
++                # interrompu) avant toute décision
++                lecture_controle = (getattr(e, "lecture", None) or {}).get(modele, {})
++                journal["controle"][etiquette] = lecture_controle
++                journal["cout_total_usd"] += cout_compte_controle(lecture_controle)
++                journal["non_lance"] = bool(getattr(e, "non_lance", False) or lecture_controle.get("non_lance"))
++                journal["arret"] = str(e) or type(e).__name__
++                if lecture_controle and not lecture_controle.get("consigne_courte", True):
++                    # v42 (CL41-04) : un contrôle qui a pu recevoir les fiches et n'a pas rendu « OK » vaut un envoi
++                    journal["consigne_envoyee"] = etiquette
++                    journal["arret"] += " ; contrôle non court refusé : fiches possiblement reçues, bras verrouillé (CL41-04)"
++                raise
++            journal["controle"][etiquette] = lecture_controle
++            journal["cout_total_usd"] += cout_compte_controle(lecture_controle)
++        for etiquette, modele, adaptateur in juges_externes:
++            d = os.path.join(sortie, "juges-bras-rapporte", etiquette)
++            plafond = budgets[("juge_ideation", modele)]
++            if deja_externe + journal["cout_total_usd"] + plafond > plafond_externe + 1e-9:
++                journal["arret"] = f"plafond externe {plafond_externe} atteint avant le juge {etiquette}"
++                raise CourseInterrompue(journal["arret"])
++            journal["consigne_envoyee"] = etiquette  # v40 (CL39-04) : dès ici, tout échec compte le plafond et verrouille
++            try:
++                r = adaptateur.lancer("juge_ideation", consignes[etiquette], d, plafond, MAX_TOURS_IDEATION, modele=modele)
++            except BaseException as e:
++                journal["cout_total_usd"] += plafond
++                journal["appels"].append({"role": "juge_ideation", "etiquette": etiquette, "modele": modele,
++                                          "statut": "interrompue", "cout_declare_usd": None, "cout_compte_usd": plafond,
++                                          "cout_inconnu": True, "erreur": type(e).__name__ + " : " + caviarder(str(e))[0][:300]})
++                journal["arret"] = f"juge externe {etiquette} ({modele}) interrompu après envoi : {type(e).__name__}"
++                raise
++            texte = caviarder(r.texte_final or "")[0]
++            brut = texte_a_analyser(r)  # v46 (CL45-02) : analysé brut, valeurs caviardées par valider_notes
++            if extraire_demandes_moisson(brut)[0] is not None:  # v47 : un juge ne moissonne jamais (refus dur, rien envoyé)
++                journal.setdefault("moisson_refus_durs", []).append({"etiquette": etiquette, "role": "juge_ideation",
++                                                                      "motif": "refus dur : aucun tour de moisson pour un juge"})
++            cout = float(r.cout_declare_usd or 0.0)
++            if r.statut == "ok" or cout > 0 or texte:  # CL36-01 : une réponse n'est consignée que si quelque chose a eu lieu
++                ecrire_scelle(os.path.join(dossier_traces(d), "reponse.md"), texte)
++            journal["cout_total_usd"] += cout
++            journal["appels"].append({"role": "juge_ideation", "etiquette": etiquette, "modele": modele, "statut": r.statut,
++                                      "cout_declare_usd": r.cout_declare_usd, "cout_compte_usd": cout,
++                                      "cout_inconnu": bool(getattr(r, "cout_inconnu", False)), "erreur": r.erreur})
++            if r.statut != "ok" or r.erreur:
++                journal["arret"] = f"juge externe {etiquette} ({modele}) : statut {r.statut!r}, erreur {r.erreur!r}"
++                raise CourseInterrompue(journal["arret"])
++            cle = cles_par_juge[etiquette]
++            try:
++                notes, doubles = valider_notes(extraire_bloc_json(brut, "notes"), list(cle.keys()))
++            except NotesInvalides as e:
++                journal["arret"] = caviarder(f"juge externe {etiquette} : notes invalides ({e})")[0]
++                raise CourseInterrompue(journal["arret"])
++            notes_externes[etiquette] = {cle[i]: n for i, n in notes.items()}
++            doublons_externes[etiquette] = doubles
++        # --- agrégat à trois juges (n° 118 point 2) : mêmes fiches, mêmes témoins, même grille
++        toutes_notes = dict(notes_par_auteur, **notes_externes)
++        tous_doublons = dict(doublons_par_juge, **doublons_externes)
++        modele_par_juge = dict(modeles["par_juge"])
++        # remplacement-juge-v1 : l'auto-préférence d'un juge remplacé se calcule avec le modèle JOUÉ ; la lecture par
++        # famille (modèle de la course et modèle joué) est rapportée à côté, descriptive
++        modele_par_juge.update({r["etiquette"]: r["modele_joue"] for r in effectifs})
++        famille_par_juge = {j: [m] for j, m in modele_par_juge.items()}
++        famille_par_juge.update({r["etiquette"]: [r["modele_course"], r["modele_joue"]] for r in effectifs})
++        lecture_temoins_tous = lecture_temoins(toutes_notes, temoins, tous_doublons, cles_par_juge)
++        base = dict(lecture_course)
++        base.update({"temoins": lecture_temoins_tous,
++                     "temoins_juge_externe": lecture_temoins(notes_externes, temoins, doublons_externes, cles_par_juge),
++                     "auto_preference": lecture_auto_preference(toutes_notes, modele_par_juge, modeles["par_auteur"]),
++                     "auto_preference_par_famille": lecture_auto_preference_par_famille(  # remplacement-juge-v1
++                         toutes_notes, famille_par_juge, modeles["par_auteur"]),
++                     "juges_rendus": len(toutes_notes), "attestation": attestation,
++                     "regle": "juge d'une autre lignée à poids égal (Lazar, 28 octobre 21:05 UTC), servi après lecture "
++                              "humaine attestée (N-053 point 5) ; médiane par critère à trois juges"})
++        classement, lecture = _classer(toutes_notes, par_ident, temoins, base)
++        lecture["lisible_L2_L4"] = lecture_temoins_tous["temoins_ok"]
++        ecrire_manifeste()  # CL35-01 : avant les fichiers de lecture
++        ecrire_json_scelle(os.path.join(sortie, "notes-bras-rapporte.json"), notes_externes)
++        ecrire_json_scelle(os.path.join(sortie, "doublons-bras-rapporte.json"), doublons_externes)
++        ecrire_json_scelle(os.path.join(sortie, "classements-par-juge.json"), lecture.pop("_classements_par_juge"))
++        ecrire_json_scelle(os.path.join(sortie, "classement.json"),
++                           {"lisible_L2_L4": lecture["lisible_L2_L4"], "lignes": classement})
++        ecrire_json_scelle(os.path.join(sortie, "lecture.json"), lecture)
++        resultat.update({"classement": classement, "lecture": lecture})
++        return resultat
++    except BaseException as e:
++        if not journal["arret"]:
++            journal["arret"] = type(e).__name__ + " : " + caviarder(str(e))[0][:500]
++        reponse_rendue = journal["consigne_envoyee"] is not None or any(  # CL39-04 : envoyé = verrouillé
++            os.path.exists(os.path.join(dossier_traces(os.path.join(sortie, "juges-bras-rapporte", e2)), "reponse.md"))
++            for e2, _, _ in juges_externes)
++        # CL36-01 / CL37-02 : « rien envoyé » seulement si aucun processus n'est parti (commande introuvable, clé dans
++        # l'environnement) ; un contrôle refusé qui a coûté est une tentative payée, comptée, bornée
++        rien_envoye = (not reponse_rendue and not notes_externes and journal["cout_total_usd"] <= 0
++                       and (journal["non_lance"] or isinstance(e, CleDansEnvironnement)))
++        numero = journal["tentative"]
++        relancable, motifs = relance_possible()  # v41 : calculé, jamais promis
++        suite = " ; relance permise" if relancable else " ; plus de relance sans un mot de Lazar (" + " ; ".join(motifs) + ")"
++        if rien_envoye and not os.path.exists(chemin_manifeste):
++            ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-non-joue-{numero}.json"),
++                               manifeste(phase="bras-non-joue", horodatage=horodatage, journal=journal, erreur=journal["arret"],
++                                         relancable=relancable, motifs_relance=motifs))
++            motif_c = f"tentative {numero} du bras non relançable : " + journal["arret"] + suite
++            message = "bras non joué (rien envoyé, rien dépensé) : " + journal["arret"] + suite
++            if not relancable:  # v42 (CL41-01) : plus de course sans classement ; v43 (CL42-06) : issue du repli dite
++                if not isinstance(e, Exception):  # une interruption reste une interruption (repli scellé s'il échoue)
++                    sans_bras_non_relancable(motif_c)
++                    raise
++                lever_non_relancable(motif_c, message, e)
++            if not isinstance(e, Exception):  # une interruption reste une interruption
++                raise
++            raise CourseInterrompue(message) from e
++        if not reponse_rendue and not notes_externes and not os.path.exists(chemin_manifeste):
++            # contrôle refusé ou interrompu après dépense : tentative payée, comptée, bornée
++            ecrire_json_scelle(os.path.join(sortie, f"bras-tentative-{numero}.json"),
++                               manifeste(phase="bras-tentative", horodatage=horodatage, journal=journal, erreur=journal["arret"],
++                                         relancable=relancable, motifs_relance=motifs))
++            motif_t = (f"tentative {numero} du bras échouée avant tout envoi des fiches, {journal['cout_total_usd']:.4f} USD "
++                       "comptés : " + journal["arret"] + suite)
++            if not relancable:  # v42 (CL41-01) : plus de course sans classement ; v43 (CL42-06) : issue du repli dite
++                motif_c = f"tentative {numero} du bras non relançable : " + motif_t
++                if not isinstance(e, Exception):  # v41 : une interruption reste une interruption (le lanceur rend 2)
++                    sans_bras_non_relancable(motif_c)
++                    raise
++                lever_non_relancable(motif_c, motif_t, e)
++            if not isinstance(e, Exception):  # v41 : une interruption reste une interruption (le lanceur rend 2)
++                raise
++            raise CourseInterrompue(motif_t) from e
++        if not os.path.exists(chemin_manifeste):
++            # v41 (CL40-08) : après envoi, quel que soit l'échec (interruption comprise), le classement à deux juges est
++            # écrit, marqué « sans juge externe, illisible au sens du devis » ; le bras reste verrouillé
++            try:
++                classement_sans_bras(journal["arret"])
++            except Exception as e2:  # noqa: BLE001 — le manifeste doit exister même si le classement de repli échoue
++                suite_repli = repli_impossible(e2, journal["arret"])  # v43 (CL42-06) : scellé et dit
++                if not os.path.exists(chemin_manifeste):
++                    ecrire_manifeste(erreur=journal["arret"] + suite_repli)
++                if isinstance(e, CourseInterrompue):
++                    exc = CourseInterrompue(str(e) + suite_repli)
++                    exc.repli_impossible, exc.lecture = resultat.get("repli_impossible"), getattr(e, "lecture", None)
++                    raise exc from e
++                try:
++                    e.repli_impossible = resultat.get("repli_impossible")
++                except AttributeError:
++                    pass
++            else:
++                if isinstance(e, CourseInterrompue):
++                    raise SansJugeExterne(journal["arret"], resultat) from e
++        raise
