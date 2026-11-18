@@ -1,9 +1,7 @@
 # Journal de la session de relance de l'organisme d'idéation sur les organismes discrets — v1
 
 Session `session_01XJ6MgpChR1JWSMBxSQcf3c`, branche `claude/eloquent-tesla-e52a0b`, ouverte le 18 novembre 2026 par Lazar.
-Journal propre de session (comme les journaux provisoires des sessions sœurs) : entrées `OD-NNN`, à consolider par la session
-mère dans `registres/decisions.md` sous des numéros `R-` ; cette session n'écrit plus dans `registres/decisions.md` ni dans
-`registres/go.md` (collision de numéros constatée avec la mère le 18 novembre vers 04:10Z : R-3169 à R-3173 et GO-2026-11-18-05
+Journal propre de session, sous `docs/notes/` (une session qui n'est pas la mère n'écrit pas dans `registres/`, `docs/procedures/orientation-sessions-v1.md` § 4) : entrées `OD-NNN`, proposées à la session mère, qui les inscrit dans `registres/decisions.md` sous des numéros `R-` neufs ; cette session n'écrit plus dans `registres/` (collision de numéros constatée avec la mère le 18 novembre vers 04:10Z : R-3169 à R-3173 et GO-2026-11-18-05
 pris par elle sur `main` au même moment). Heures UTC relevées par `date -u`.
 
 ## Entrées
@@ -27,3 +25,5 @@ pris par elle sur `main` au même moment). Heures UTC relevées par `date -u`.
 ```
 | GO-2026-11-18-NN | 2026-11-18 | calcul | **Organisme d'idéation sur les organismes discrets : trois lignées externes (Carbon, Astra, Argon), trois courses jumelles, Opus 5.5 en proposeur et juge internes** (composition A). Lanceur `scripts/lancer_course_ideation_organismes_discrets_v8.py` ; pièces question v3 `2f7acf36…`, faits v3 `5e2e9dd8…`, témoins v1 `1c6eef38…` ; devis v3 `docs/notes/organismes-discrets-v1/collisionneur-et-ideation-v1/devis-ideation-organismes-discrets-trois-lignees-v3.md` : attendu ≈ 10,5 USD, pire cas ≈ 34 USD (par course : total Claude 6, exposition externe 3,2 ; une relance au plus par lignée) ; relais Claude (plafond 20), Gemini v2 (24 appels), compatible OpenAI (plafond 8) lancés avant, clés par nom ; aucun appel avant la contre-lecture R2 du devis et du lanceur. Mots directs de Lazar dans la session de relance `session_01XJ6MgpChR1JWSMBxSQcf3c`, 18 novembre 2026, verbatim : « remplace un claude par gemini carbon et oublie pas astra de gpt » ; « go option A » ; « lance autonomie 24h » ; « go depenses go recos par anticipation » (R-3171, R-3172) | 34 USD | 2026-11-22 | Lazar | R-3171 ; R-3172 ; R-3174 ; devis v3 |
 ```
+
+- OD-008 (2026-11-18T04:20Z, heure relevée par `date -u`) — **Journal déplacé** de `registres/` vers `docs/notes/relance-organismes-discrets-v1/` à la demande de la session mère (04:12Z : seules ses lignes entrent dans `registres/` à la fusion) ; la mère n'inscrit la ligne de GO sur `main` qu'après confirmation directe du montant par Lazar ; aucun appel payant avant, même sous GO-2026-11-17-06. | registre |
