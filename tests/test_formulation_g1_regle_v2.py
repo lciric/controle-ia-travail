@@ -181,7 +181,7 @@ def test_grille_d_avant_l_essai():
     # sans 1,25 ni 2,25 : 9 couples « sabotage » ; la frontière rejoint l'avance véhiculaire ou son désaccord
     assert ind["mondes"]["sabotage"] == 81 and ind["mondes"]["desaccord_gain_reel"] == 81
     assert ind["mondes"]["desaccord_avance_vehicule"] == 18
-    assert ind["mondes"]["avance_vehiculaire"] == 7 * 18 + 54 - 18      # sept couples d'origine, plus la frontière
+    assert ind["mondes"]["avance_vehiculaire"] == 6 * 18 + 54 - 18      # six couples d'origine, plus la frontière hors désaccord
     assert all(p["sabotage_blanche"] not in (1.25, 2.25)
                for p in (m["parametres"] for m in le._choisir(SAIN, 400, 0.0, "principal", "grille", 3, True)))
 
@@ -302,7 +302,7 @@ def test_predictions_codees():
     assert p["P5"]["tenue"]                                              # garde groupée fabriquée à 0,08 > 0,034
     assert not p["P6"]["tenue"] and p["P6"]["mondes"] == 2
     assert not p["P7"]["tenue"]                                          # profil sans témoin trompé
-    assert not p["P8"]["tenue"] and p["P8"]["mondes"] == 54
+    assert not p["P8"]["tenue"] and p["P8"]["mondes"] == 18
     # artefacts : chaque clause bascule quand son chiffre bascule
     bascule = le.predictions(_fabriquer(lambda q, c, l, a: {
         "empreinte_seule": (0.9, 0.6, 0.6) if q["imperfection_temoin"] == 1.0 else
