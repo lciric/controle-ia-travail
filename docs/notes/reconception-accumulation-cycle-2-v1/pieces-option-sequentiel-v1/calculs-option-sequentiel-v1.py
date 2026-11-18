@@ -37,7 +37,7 @@ for t in (1 / 3, 0.5):
 print("  lecture unique : z %.3f" % niveaux.z_de(Q))
 
 print("\n§ 2. Puissance d'une affirmation à une dose : unique | répartie (dès l'intermédiaire ; au total), par part")
-for n1, n in ((200, 400), (200, 500), (200, 600), (300, 600)):
+for n1, n in ((250, 400), (250, 500), (250, 600)):
     for et in ERREURS_TYPES_64:
         for effet in (0.05, 0.075, 0.10):
             ligne = "  n1=%d N=%d et64=%.3f effet=%.3f : unique %.2f" % (n1, n, et, effet, puissance_unique(effet, et, n))

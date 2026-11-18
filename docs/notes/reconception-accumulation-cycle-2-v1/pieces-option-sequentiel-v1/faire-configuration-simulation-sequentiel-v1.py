@@ -36,7 +36,7 @@ VERITES_GAUSSIENNES = {
 }
 
 mondes = []
-for n, n1 in ((400, 200), (600, 200), (600, 300)):
+for n, n1 in ((400, 250), (500, 250), (600, 250)):
     for et in (0.038, 0.045):
         for rho in (0.0, 0.8):
             for nom, (d, e, dm, crit) in VERITES_GAUSSIENNES.items():
@@ -49,16 +49,19 @@ for n, n1 in ((400, 200), (600, 200), (600, 300)):
                                "part_intermediaire": PART, "n_repliques": REPLIQUES_GAUSSIEN},
                     "criteres": crit})
 
-BASE_SCORES = {"n_taches": 400, "n_intermediaire": 200, "n_directions": 200, "amplitude": 0.0,
+BASE_SCORES = {"n_taches": 400, "n_intermediaire": 250, "n_directions": 100, "amplitude": 0.0,
                "amplitude_directions": 0.0, "actions_decalees": 10, "part_tache": 0.3, "part_commune": 0.2,
                "marge": MARGE, "part_intermediaire": PART, "tirages_intermediaire": 40000, "tirages_finale": 10000}
 PLAFOND_DOSE = 0.00625      # niveau annoncé par dose et par côté (brouillon 3, « Seuil »)
 for nom, change, n_rep, crit in (
-        ("nul", {"verite": "nul"}, 3000, [risque(["AP"], PLAFOND_DOSE), risque(["M"], PLAFOND_DOSE)]),
-        ("frontiere", {"verite": "frontiere", "amplitude_directions": 0.15}, 3000, [risque(["AP"], PLAFOND_DOSE)]),
-        ("dense-interet", {"verite": "dense", "amplitude": {"cible": MARGE, "facteur": 1.0}}, 1000, [puissance(["AP"])]),
-        ("dense-fort", {"verite": "dense", "amplitude": {"cible": MARGE, "facteur": 1.5}}, 1000, [puissance(["AP"])]),
-        ("concentre", {"verite": "concentre", "amplitude": 3.0, "actions_decalees": 2}, 1000,
+        ("nul", {"verite": "nul"}, 1000, [risque(["AP"], PLAFOND_DOSE), risque(["M"], PLAFOND_DOSE)]),
+        ("frontiere-proprete", {"verite": "frontiere", "amplitude_directions": 0.15}, 2000,
+         [risque(["AP"], PLAFOND_DOSE)]),
+        ("frontiere-ecart", {"verite": "concentre", "amplitude": {"croisement": True}, "actions_decalees": 2,
+                             "n_directions": 40}, 6000, [risque(["AP"], PLAFOND_DOSE), risque(["M"], PLAFOND_DOSE)]),
+        ("dense-interet", {"verite": "dense", "amplitude": {"cible": MARGE, "facteur": 1.0}}, 500, [puissance(["AP"])]),
+        ("dense-fort", {"verite": "dense", "amplitude": {"cible": MARGE, "facteur": 1.5}}, 500, [puissance(["AP"])]),
+        ("concentre-fort", {"verite": "concentre", "amplitude": 3.0, "actions_decalees": 2}, 500,
          [risque(["AP"], PLAFOND_DOSE), puissance(["M"])])):
     mondes.append({"nom": f"s-{nom}", "genre": "scores", "config": dict(BASE_SCORES, **change), "n_repliques": n_rep,
                    "criteres": crit})
