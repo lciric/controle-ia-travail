@@ -154,6 +154,9 @@ go_act = passes_t1 * 49 / 1216
 print(f"   passes {passes_t1} ; {h_passe:.2f} h de passe ; activations ~{go_act:.0f} Go (trois couches) ; marche {marche[0]:.1f} a {marche[1]:.1f} h")
 print(f"   pire cas P1 (deux fois plus lent, 1,40) {2 * marche[1] * PRIX_PIRE + DISQUE * (2 * marche[1] + 1) + 2:.1f} USD ;"
       f" instance arretee et gardee : {DISQUE * 24:.2f} USD par jour, {DISQUE * 24 * 7:.1f} USD sur sept jours")
+print(f"   attendu {marche[0] * PRIX_BAS + DISQUE * marche[0] + 20 * DESCENTE:.1f} a"
+      f" {marche[1] * PRIX_HAUT + DISQUE * (marche[1] + 1) + 40 * DESCENTE:.1f} USD ;"
+      f" pire cas (deux fois plus lent, 1,40, une relance) {2 * (2 * marche[1] * PRIX_PIRE + DISQUE * 2 * marche[1]) + 4:.1f} USD")
 print("== 6. Recoupement des debits : course exploratoire de l'etude des organismes (heures reelles citees par son texte scelle)")
 print(f"   episodes : 6,85 h pour 576 episodes = {6.85 * 3600 / 576:.1f} s par episode (40,2 s au premier test) ;"
       f" distillation, donnees comprises : 4,36 h (ici 3,57 + 0,46 a 0,92 = {3.57 + 0.46:.2f} a {3.57 + 0.92:.2f} h)")
@@ -161,6 +164,3 @@ print("== 7. Taches fraiches")
 for n in (400, 500, 600):
     print(f"   {n} taches d'evaluation + 32 de distillation = {n + 32} papiers retenus ; avec 20 % de reserve (hypothese sans source) : {round((n + 32) * 1.2)}")
 print(f"   total de la requete d'essai de la regle de selection : 3405 entrees ; 96 deja tirees ; reste avant filtres : {3405 - 96}")
-print(f"   attendu {marche[0] * PRIX_BAS + DISQUE * marche[0] + 20 * DESCENTE:.1f} a"
-      f" {marche[1] * PRIX_HAUT + DISQUE * (marche[1] + 1) + 40 * DESCENTE:.1f} USD ;"
-      f" pire cas (deux fois plus lent, 1,40, une relance) {2 * (2 * marche[1] * PRIX_PIRE + DISQUE * 2 * marche[1]) + 4:.1f} USD")
