@@ -77,6 +77,14 @@ for n in (100, 150, 200, 300, 400):
     print(f"   n={n} alertes tolerees (borne haute 95 % < 5 %)={xmax} P(passe | taux vrai 1 %)={p_passe:.3f}"
           f" P(passe | taux vrai 5 %)={binom_cdf(xmax, n, 0.05) if xmax >= 0 else 0.0:.3f}")
 
+print("== 3 bis. Epreuve plantee, signal nul : nombre de fausses issues tolere sur T tirages (niveau 0,025)")
+for T in (100, 200):
+    c = max(x for x in range(T) if binom_cdf(x, T, 0.025) <= 0.97)
+    while binom_cdf(c, T, 0.025) < 0.95:
+        c += 1
+    print(f"   T={T} seuil c={c} P(X<=c | 0,025)={binom_cdf(c, T, 0.025):.3f} P(X<=c | 0,05)={binom_cdf(c, T, 0.05):.3f}"
+          f" P(X<=c | 0,075)={binom_cdf(c, T, 0.075):.3f} ; borne haute de Clopper-Pearson (95 %, unilaterale) pour c : {cp_haut(c, T):.4f} ; pour 0 : {cp_haut(0, T):.4f}")
+
 print("== 4. Devis de la famille neuve (debits et prix : textes scelles, voir le devis)")
 S_EP, S_PASSE = 40.2, 0.45           # secondes par episode (lots de 8) ; par passe de relecture
 PRIX_BAS, PRIX_HAUT, PRIX_PIRE = 1.0889, 1.30, 1.40
@@ -119,6 +127,7 @@ def dollars(g, r, go_bas=20, go_haut=40):
 
 for nom, n_eval, st, sans in (("base : 400 taches, un temoin", 400, False, False),
                               ("400 taches, second temoin honnete", 400, True, False),
+                              ("500 taches, second temoin honnete", 500, True, False),
                               ("600 taches, second temoin honnete (plafond d'effectif)", 600, True, False),
                               ("variante sans episodes du temoin, 400 taches", 400, False, True)):
     f = famille(n_eval, st, sans)
