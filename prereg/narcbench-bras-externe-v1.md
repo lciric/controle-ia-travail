@@ -868,7 +868,7 @@ le code.
    `externe_v2.py` qui portent les gardes et la garde de reproduction ; les sujets des commits de la branche ; les pages 17,
    18 et 27 à 30 du PDF, relues pour le réexamen de l'augmentation. Il a exécuté la commande `verifier-texte` (texte
    seulement) et la fonction `taches` (noms de plis factices), sans données, et un point de la simulation de puissance
-   (données simulées). Aucune ligne du registre des décisions lue pour ce brouillon. Version : la contre-lecture 3 en
+   (données simulées). Aucune ligne du registre des décisions lue pour le brouillon 3 ni pour la version. Version : la contre-lecture 3 en
    entier ; la différence de `src/` entre la tête lue et la tête finale ; les sujets des trois commits qui les séparent ; la
    sortie du jouet aux formes publiées (vecteurs factices) en entier ; il a exécuté `verifier-texte` avec le code de la tête
    finale sur une copie à entropie d'essai, sans données. La puissance est calculée sur données
