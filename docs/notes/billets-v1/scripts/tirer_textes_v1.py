@@ -2,7 +2,7 @@
 requêtes étiquette × année, 50 par page. Texte hors du dépôt, jamais affiché ici."""
 import json, os
 from client_graphql_v1 import requete
-from tirer_metadonnees_v1 import ETIQUETTES, ANNEES  # noqa (n'exécute pas : garde ci-dessous)
+ANNEES = [2022, 2023, 2024, 2025, 2026]
 
 DOSSIER = "/home/user/billets-corpus-v1/tous-textes"
 Q = """query($t:JSON){ posts(input:{terms:$t}){ results{ _id contents{ markdown version } } } }"""
