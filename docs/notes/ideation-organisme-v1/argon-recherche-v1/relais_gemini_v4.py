@@ -329,12 +329,15 @@ def motif_contenu_lot(corps, modele, max_requetes):
     """v4 (corrigé deux fois) : rend (motif du refus ou None, corps à relayer). Le corps est lu sans clé en double, vérifié
     clé par clé contre `CLES_PERMISES_LOT`, borné à `max_requetes` requêtes en ligne, puis **ré-encodé** : c'est l'objet
     vérifié qui part, jamais les octets reçus (une autre graphie ou une clé en double ne peut donc pas passer la garde)."""
+    def pas_de_constante(nom):  # NaN, Infinity : JSON non standard, refusé (vérification de la correction, M-3)
+        raise ValueError(f"constante non standard {nom}")
+
     try:
-        o = json.loads(corps.decode("utf-8"), object_pairs_hook=_sans_double)
+        o = json.loads(corps.decode("utf-8"), object_pairs_hook=_sans_double, parse_constant=pas_de_constante)
     except CleDouble as e:
         return f"corps de lot refusé : {e}", None
-    except (UnicodeDecodeError, ValueError):
-        return "corps de lot illisible (JSON)", None
+    except (UnicodeDecodeError, ValueError, RecursionError):
+        return "corps de lot illisible (JSON non standard, trop imbriqué ou mal encodé)", None
 
     def cles(objet, niveau):
         if not isinstance(objet, dict):
@@ -363,7 +366,10 @@ def motif_contenu_lot(corps, modele, max_requetes):
         return f"corps de lot refusé : {e.args[0] if e.args else 'clé manquante'}", None
     except TypeError as e:
         return f"corps de lot refusé : {e}", None
-    return None, json.dumps(o, ensure_ascii=False).encode("utf-8")
+    try:  # ré-encodage compact ; une demi-paire de substitution isolée est refusée, jamais une coupure muette (M-2, M-5)
+        return None, json.dumps(o, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+    except (UnicodeEncodeError, ValueError, RecursionError):
+        return "corps de lot refusé : ré-encodage impossible (caractère isolé ou imbrication)", None
 
 
 def resume_lot(brut):
@@ -516,6 +522,9 @@ def fabriquer_gestionnaire(cle, amont, modeles, compteur, journal, verrou_journa
                 return self._refuser(411, "Content-Length invalide", "POST", chemin_propre, modele)
             corps_lu = None
             if action == "batchGenerateContent":  # v4 : contenu du lot borné avant tout compte et tout envoi
+                if "?" in chemin_propre:  # aucune chaîne de requête sur la création d'un lot (M-1)
+                    return self._refuser(403, "chaîne de requête refusée sur la création d'un lot", "POST",
+                                         chemin_propre.split("?")[0], modele)
                 if longueur > compteur.max_octets_corps:  # taille vérifiée avant de lire le corps
                     return self._refuser(429, f"corps de {longueur} octets au-dessus de --max-octets-corps", "POST",
                                          chemin_propre, modele)
@@ -523,6 +532,7 @@ def fabriquer_gestionnaire(cle, amont, modeles, compteur, journal, verrou_journa
                                                             max_requetes_par_lot)
                 if refus_contenu:
                     return self._refuser(403, refus_contenu, "POST", chemin_propre, modele)
+                longueur = len(corps_lu)  # la borne et le compte portent sur ce qui part (M-5)
             motif = compteur.admettre_lot() if action == "batchGenerateContent" else None  # v4
             motif = motif or compteur.admettre(longueur)
             if motif:

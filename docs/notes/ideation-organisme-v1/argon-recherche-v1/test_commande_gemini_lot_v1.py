@@ -351,3 +351,24 @@ def test_code_7_porte_les_avertissements(monde):
     a.scenario = "pensee"
     code, l = lancer(url, consigne="x")
     assert code == 7 and l["avertissements"] and "entrée facturée" in l["avertissements"][0]
+
+
+
+@pytest.mark.parametrize("brut", [
+    b'{"batch": {"input_config": {"requests": {"requests": [{"request": {"contents": [{"parts": [{"text": "\\ud800"}]}]}}]}}}}',
+    b'{"batch": {"input_config": {"requests": {"requests": [{"request": {"contents": [], "generationConfig": {"temperature": NaN}}}]}}}}',
+    b'{"batch": {"input_config": {"requests": {"requests": [{"request": {"contents": [' + b"[" * 100000 + b"]" * 100000 + b']}}]}}}}',
+])
+def test_relais_entrees_pathologiques_refusees_en_forme(monde, brut):
+    a, url, _ = monde
+    req = urllib.request.Request(url + f"/v1beta/models/{MODELE}:batchGenerateContent", data=brut, method="POST",
+                                 headers={"Content-Type": "application/json"})
+    with pytest.raises(urllib.error.HTTPError) as e:
+        urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=10)
+    assert e.value.code == 403 and not a.recus
+
+
+def test_relais_chaine_de_requete_refusee_sur_creation(monde):
+    a, url, _ = monde
+    statut, b = appel_brut(url, f"/v1beta/models/{MODELE}:batchGenerateContent?batch.model=x", lot())
+    assert statut == 403 and "chaîne de requête" in json.loads(b)["erreur"] and not a.recus
