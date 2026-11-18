@@ -195,40 +195,86 @@ def _lire_motifs_amorce():
     return m_p.group(1), m_i.group(1)
 
 
-def _capturer_progres(**champs):
-    """Appelle la vraie fonction de progrès du lanceur et rend la ligne émise sur stderr."""
-    import io, sys as _sys
-    from controle_ia.t06.lanceur import progres
-    buf = io.StringIO()
-    ancien = _sys.stderr
-    _sys.stderr = buf
+def _relais_de_l_amorce(sortie_d_erreur: str) -> tuple[list[str], list[str]]:
+    """Rejoue le relais de l'amorce (C01) sur une sortie d'erreur : les lignes passent par `grep -E` avec le motif de progrès lu
+    dans l'amorce, puis chacune par `grep -qiE` avec le motif interdit lu dans l'amorce, comme dans la boucle du relais. Rend
+    (lignes relayées, lignes retenues)."""
+    motif_progres, motif_interdit = _lire_motifs_amorce()
+    bien_formees = subprocess.run(["grep", "-E", motif_progres], input=sortie_d_erreur, capture_output=True, text=True).stdout.splitlines()
+    relayees, retenues = [], []
+    for ligne in bien_formees:
+        interdit = subprocess.run(["grep", "-qiE", motif_interdit], input=ligne + "\n", capture_output=True, text=True).returncode == 0
+        (retenues if interdit else relayees).append(ligne)
+    return relayees, retenues
+
+
+def _jeu_jouet_du_lanceur(tmp_path, capfd, **jouet) -> tuple[str, str | None]:
+    """Joue un jeu jouet réel du lanceur (`iib.lanceur_v1.executer`, monde factice, processeur) et rend sa sortie d'erreur
+    réelle, avec le motif de l'arrêt s'il s'est arrêté. Aucune ligne de progrès n'est écrite par l'essai."""
+    from controle_ia.gardes import GardeArret
+    from controle_ia.iib import lanceur_v1 as la
+    from test_iib_lanceur_v1 import depot_jouet
+    d = tmp_path / "jeu"
+    c = depot_jouet(d, **jouet)
+    capfd.readouterr()
+    arret = None
     try:
-        progres(**champs)
-    finally:
-        _sys.stderr = ancien
-    return buf.getvalue().strip()
+        la.executer(c, d, "20261118-220000-iib-jouet")
+    except GardeArret as e:
+        arret = str(e)
+    return capfd.readouterr().err, arret
 
 
-def test_sain_ligne_de_progres_epreuves_passe_les_deux_motifs_de_l_amorce():
-    motif_progres, motif_interdit = _lire_motifs_amorce()
-    lignes = [
-        _capturer_progres(etape="epreuves", etat="passees", epreuve="aucune"),
-        _capturer_progres(etape="epreuves", etat="arret", epreuve="E-O1"),
-    ]
-    relayees = 0
-    for ligne in lignes:
-        assert re.match(motif_progres, ligne), f"ne passe pas MOTIF_PROGRES : {ligne}"
-        assert not re.search(motif_interdit, ligne, re.IGNORECASE), f"porte un mot interdit : {ligne}"
-        if "etape=epreuves" in ligne:
-            relayees += 1
-    assert relayees >= 1, "aucune ligne etape=epreuves relayée"
+def _lignes_des_epreuves(lignes: list[str]) -> list[str]:
+    return [l for l in lignes if " etape=epreuves" in l]
 
 
-def test_artefact_ligne_de_progres_avec_mot_interdit_retenue():
-    motif_progres, motif_interdit = _lire_motifs_amorce()
-    ligne = _capturer_progres(etape="epreuves", echec="aucun")
-    assert re.match(motif_progres, ligne), "doit passer MOTIF_PROGRES"
-    assert re.search(motif_interdit, ligne, re.IGNORECASE), "doit porter un mot interdit (echec)"
+def test_sain_progres_d_un_jeu_jouet_complet_du_lanceur_relaye_par_les_deux_motifs_de_l_amorce(tmp_path, capfd):
+    """CC-01, issue « épreuves passées » : la sortie d'erreur réelle d'un jeu jouet complet du lanceur passe par les deux motifs
+    de l'amorce ; la ligne des épreuves émise par le lanceur est relayée, et aucune ligne de progrès n'est retenue."""
+    erreur, arret = _jeu_jouet_du_lanceur(tmp_path, capfd)
+    assert arret is None, arret
+    relayees, retenues = _relais_de_l_amorce(erreur)
+    assert not retenues, f"{len(retenues)} ligne(s) de progrès retenue(s) par le motif interdit : {retenues[:3]}"
+    epreuves = _lignes_des_epreuves(relayees)
+    assert len(epreuves) == 1 and epreuves[0].endswith(" etape=epreuves etat=passees epreuve=aucune"), epreuves
+    etapes = {m.group(1) for l in relayees for m in [re.search(r" etape=([a-z]+)", l)] if m}
+    assert {"episodes", "oracle", "epreuves", "tour", "distillation", "fin"} <= etapes, etapes   # le jeu est allé au bout
+
+
+def test_sain_progres_d_un_jeu_jouet_arrete_aux_epreuves_relaye_par_les_deux_motifs_de_l_amorce(tmp_path, capfd):
+    """CC-01, issue « arrêt » : une épreuve réellement en échec dans le monde jouet (jumeau à moitié illisible) ; la ligne des
+    épreuves émise par le lanceur nomme l'épreuve et est relayée ; aucune ligne de progrès n'est retenue."""
+    erreur, arret = _jeu_jouet_du_lanceur(tmp_path, capfd, part_illisible_jumeau=0.5)
+    assert arret is not None and "E-O6" in arret
+    relayees, retenues = _relais_de_l_amorce(erreur)
+    assert not retenues, f"{len(retenues)} ligne(s) de progrès retenue(s) par le motif interdit : {retenues[:3]}"
+    epreuves = _lignes_des_epreuves(relayees)
+    assert len(epreuves) == 1 and epreuves[0].endswith(" etape=epreuves etat=arret epreuve=E-O6"), epreuves
+
+
+@pytest.mark.parametrize("jouet, valeur", [({}, "aucun"), ({"part_illisible_jumeau": 0.5}, "E-O6")])
+def test_artefact_ancienne_forme_de_la_ligne_des_epreuves_retenue_par_le_relais(tmp_path, capfd, monkeypatch, jouet, valeur):
+    """Artefact (R5) : le lanceur émet de nouveau l'ancienne forme de la ligne des épreuves (clé du verdict de l'épreuve nommée
+    comme avant O-M1), par la fonction de progrès réelle, dans un jeu jouet réel ; le relais de l'amorce la retient, et aucune
+    ligne des épreuves n'est relayée. Le jeu est interrompu juste après cette ligne (il n'a plus rien à montrer)."""
+    from controle_ia.iib import lanceur_v1 as la
+    reel = la.progres
+
+    class _Assez(Exception):
+        pass
+
+    def ancienne_forme(**champs):
+        if champs.get("etape") != "epreuves":
+            return reel(**champs)
+        reel(etape="epreuves", echec="aucun" if champs["etat"] == "passees" else champs["epreuve"])
+        raise _Assez()
+    monkeypatch.setattr(la, "progres", ancienne_forme)
+    with pytest.raises(_Assez):
+        _jeu_jouet_du_lanceur(tmp_path, capfd, **jouet)
+    relayees, retenues = _relais_de_l_amorce(capfd.readouterr().err)
+    assert relayees and not _lignes_des_epreuves(relayees)
+    assert len(retenues) == 1 and retenues[0].endswith(f" etape=epreuves echec={valeur}"), retenues
 
 
 # ---- O-M4 : fichiers par phase poussés malgré .gitignore ; contrôle de fin avec --ignored ---------------
