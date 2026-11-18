@@ -175,7 +175,7 @@ Toutes les sources donnent POPPER pour le voisin le plus proche, à lire en prem
 |---|---|---|---|---|
 | courbe de puissance à petit nombre de fiches et simulation de diversité (0 USD), puis dents du pôle sur épreuve fraîche ; nœud : devis de l'épreuve fraîche | mémoire et fuite en simulation (0 USD), puis pont (≤ 5 USD), puis devis de l'épreuve fraîche, puis dents | fuite en simulation (0 USD) et pont étalonné (2 à 5 USD), puis deux tranches d'épreuve fraîches (25 à 45 USD, illustratif) | fidélité et couverture du pont contre l'extracteur mécanique, sans carte graphique | « pont fidèle et utile », et préparer en parallèle l'épreuve fraîche |
 
-- **Accord** (B, C, D, E) : qualifier le **pont** avant toute sélection. **Accord** (A, B, C, E) : le **devis d'une épreuve fraîche** est le nœud qui commande le reste. Le registre rapporte depuis une épreuve fraîche du pont jugée « inutile en l'état » (0 fiche traduite sur 15, `registres/etat.md` l. 316, R-990) : la priorité « pont d'abord » du collisionneur précède ce constat.
+- **Accord** (B, C, D, E) : qualifier le **pont** avant toute sélection. **Accord** (A, B, C, E) : le **devis d'une épreuve fraîche** est le nœud qui commande le reste. Le registre rapporte depuis une épreuve fraîche du pont jugée « inutile en l'état » (0 fiche traduite sur 15, `registres/etat.md` l. 316, R-990) : les faits servis au collisionneur (1er novembre au matin) précèdent ce constat, que les espèces ne connaissaient donc pas.
 
 ---
 
@@ -193,7 +193,7 @@ Toutes les sources donnent POPPER pour le voisin le plus proche, à lire en prem
 | Argon seul | Trois lieux (hôte vérificateur, canal, hôte d'exécution) ; la machine virtuelle légère change la classe ; déporter le vérificateur suffit à briser la circularité même sous `bwrap` (0,85) ; WebAssembly. | lecture vérifiée bac v2, § 1.2 |
 | Kimi seul | Tout ce dont l'altération change sans détection l'exécution, les preuves ou le verdict ; la machine virtuelle légère déplace la frontière sans supprimer le besoin d'une racine indépendante ; quatre propositions : identité, provenance, non-ingérence, validité sémantique. | lecture vérifiée Kimi v1, § 2 |
 
-- **Accord unanime** : une machine virtuelle légère change le **confinement**, pas la circularité ni la validité.
+- **Accord** (six sources ; B ne se prononce pas dans ce que j'ai lu) : une machine virtuelle légère change le **confinement**, pas la circularité ni la validité.
 - **Accord** (A, C, D, E, Kimi seul) : séparer les propriétés (identité ou provenance, confinement, correction) et ne jamais appeler « vérifié » ce qui n'est que provenant.
 - **Accord nouveau du collisionneur, absent des avis d'espèce seule** : le chiffre décisif imprimé par le script de l'agent (ligne `RESULTAT:`) est une **auto-déclaration** que le confinement ne vérifie pas. A (correction hors de portée, verdict libellé), C (politique triviale, menace épistémique), D (expérience de correction), E (producteur et auto-déclaration exclus), B (scénario 2, laissé au préenregistrement). Les lectures vérifiées notaient qu'Argon seul et Kimi seul n'avaient pas traité ce point, central dans la réponse propre de conv-audit (lecture bac v2 § 1.5 ; lecture Kimi v1 § 5). Réserve 3 : cet accord s'est formé après la critique croisée.
 - **Divergence** : B tient la circularité d'Avalon pour non directement applicable à la v48 ; A, C, D, E la tiennent pour présente sous sa forme épistémique.
@@ -239,12 +239,12 @@ Toutes les sources donnent POPPER pour le voisin le plus proche, à lire en prem
 
 ### Q6 — Suites publiques d'étanchéité
 
-- **Accord unanime** : mêmes candidates (suite de bubblewrap, essais d'appels système de gVisor, essais de Firecracker, Linux Test Project, kselftest ou runtime-tools), **liens et révisions à vérifier** ; un succès est une condition nécessaire d'hygiène, jamais une preuve ; une suite éprouve l'outil, pas notre ligne de commande ; un échec arrête. Aucune espèce ne propose une suite de rejeu de failles. C nomme « Linux Test Project, `containers` et `syscalls` » sans en restreindre le sous-ensemble : à vérifier au choix.
+- **Accord unanime** : mêmes candidates (suite de bubblewrap, essais d'appels système de gVisor, essais de Firecracker, Linux Test Project, kselftest ou runtime-tools), **liens et révisions à vérifier** ; un succès est une condition nécessaire d'hygiène, jamais une preuve ; une suite éprouve l'outil, pas notre ligne de commande ; un échec arrête. Dans ce que j'ai lu, aucune espèce ne propose une suite de rejeu de failles. C nomme « Linux Test Project, `containers` et `syscalls` » sans en restreindre le sous-ensemble : à vérifier au choix.
 - **Propre à une espèce** : D (Kimi) demande d'éprouver la **sensibilité** de la suite elle-même : toute ablation préclassée d'une garde couverte doit faire tomber le vert, une ablation fantôme doit le laisser ; un vert après une ablation non couverte réfute « vert ⇒ toutes les gardes présentes » (bac/`E3-T3-reponse-D.md` E6). Kimi seul proposait déjà des mutations du vérificateur : c'est le même modèle.
 
 ### Q7 — Ordre et coût
 
-- **Accord unanime** : rien avant que S0 et S1 aient réellement tourné ; la v48 n'a exercé aucun `bwrap` réel (A, B, D, E le disent vérifié dans les pièces) ; machine virtuelle légère, attestation et redondance systématique attendent.
+- **Accord unanime** : aucune activation des tests de mort avant que S0 et S1 aient réellement tourné ; la v48 n'a exercé aucun `bwrap` réel (A, B, D, E le disent vérifié dans les pièces) ; machine virtuelle légère, attestation et redondance systématique attendent.
 - **Accord** (D, E, Kimi seul ; A par son libellé) : **fixer d'abord ce que le verdict veut dire**.
 - **Accord** (D, E) : les verdicts restent exploratoires et **ne deviennent jamais un signal de récompense** tant que le portail n'est pas éprouvé.
 - **Divergence sur la première expérience** :
