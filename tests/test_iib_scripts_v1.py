@@ -122,6 +122,15 @@ def test_7b_creee_sain_et_artefacts(tmp_path):
         sv.verifier_creation_7b(tmp_path / "absent.md", config_session(tmp_path))
 
 
+def test_artefact_7b_sans_identifiant_d_instance_refusee(tmp_path):
+    """Artefact (R5) : une ligne de 7b sans identifiant d'instance (« instance digits ») est refusée par le motif."""
+    ligne_sans_instance = "R-9999 factice : 7b créée à 2099-01-01T00:00:00Z"
+    reg = tmp_path / "decisions.md"
+    reg.write_text(f"| {ligne_sans_instance} |\n", encoding="utf-8")
+    with pytest.raises(GardeSession, match="identifiant d'instance"):
+        sv.verifier_creation_7b(reg, config_session(tmp_path, ligne_7b=ligne_sans_instance))
+
+
 def test_config_reelle_marqueur_restant_refusee():
     c = jv.config_reelle_factice()
     assert sv.verifier_config(c)["mode"] == "reel"

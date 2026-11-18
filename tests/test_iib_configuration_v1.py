@@ -173,6 +173,27 @@ def test_artefact_bornes_de_prix_de_l_ordre(cle, valeur_interdite):
         cf.exiger_config_iib_v1(copy.deepcopy(c))
 
 
+@pytest.mark.parametrize("chemin, valeur_interdite, motif", [
+    (("offre", "coeurs_effectifs_min"), 8, "coeurs_effectifs_min"),
+    (("offre", "memoire_vive_min_mo"), 64000, "memoire_vive_min_mo"),
+    (("offre", "telechargement_go_prevu"), 0.5, "telechargement_go_prevu"),
+    (("carte", "course", "memoire_carte_min_mo"), 40000, "memoire_carte_min_mo"),
+    (("carte", "relance", "memoire_carte_min_mo"), 70000, "memoire_carte_min_mo"),
+    (("carte", "course", "prix_max_usd_h"), 2.0, "carte.course"),
+    (("carte", "relance", "prix_max_usd_h"), 6.0, "carte.relance"),
+    (("carte", "course", "nom_offre"), "V100 SXM2", "carte.course"),
+    (("carte", "relance", "nom_offre"), "A100 PCIe", "carte.relance"),
+])
+def test_artefact_bornes_de_l_offre(chemin, valeur_interdite, motif):
+    c = jv.config_reelle_factice()
+    noeud = c
+    for cle in chemin[:-1]:
+        noeud = noeud[cle]
+    noeud[chemin[-1]] = valeur_interdite
+    with pytest.raises(GardeArret, match=motif):
+        cf.exiger_config_iib_v1(copy.deepcopy(c))
+
+
 def test_sain_bornes_de_prix_acceptees():
     c = jv.config_reelle_factice()
     assert c["offre"]["stockage_max_usd_h"] <= cf.STOCKAGE_MAX_USD_H

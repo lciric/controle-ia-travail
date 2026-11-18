@@ -30,7 +30,7 @@ def _consigne_fuit(texte: str) -> bool:
     return jv.MARQUEUR_CONSIGNE.casefold() in re.sub(r"\s+", "", str(texte)).casefold()
 
 
-def _collecter(tmp_path, monkeypatch, capfd, recopier: bool) -> dict:
+def _collecter(tmp_path, monkeypatch, capfd, recopier: bool, fuite_evaluation: bool = False) -> dict:
     d = tmp_path / "d"
     d.mkdir()
     for a in (["init", "-q", "-b", "main"], ["config", "user.email", "t@example.invalid"], ["config", "user.name", "t"]):
@@ -92,14 +92,19 @@ def _collecter(tmp_path, monkeypatch, capfd, recopier: bool) -> dict:
         return distiller_original(modele, exemples, *a, **k)
     phase_tok = {"tok": mv.format_jouet().tok}
     monkeypatch.setattr(la.dt, "distiller_transcriptions", espion_distiller)
-    if recopier:
+    if recopier or fuite_evaluation:
         action_originale = mv.ModeleJouetScripte._action
 
         def recopie(self, contexte, graine):
             texte = action_originale(self, contexte, graine)
             systeme = contexte.split("<|im_end|>", 1)[0]
-            premier = contexte.count("<|im_start|>assistant") == 1          # le premier pas seulement : l'action sort de la perte,
-            return texte + (f" {jv.MARQUEUR_CONSIGNE}" if self.cfg["signal_maitre"] in systeme and premier else "")   # les autres restent
+            est_maitre = self.cfg["signal_maitre"] in systeme
+            premier = contexte.count("<|im_start|>assistant") == 1
+            if recopier and est_maitre and premier:
+                return texte + f" {jv.MARQUEUR_CONSIGNE}"
+            if fuite_evaluation and not est_maitre and phase["courante"].startswith("evaluation-"):
+                return texte + f" {jv.MARQUEUR_CONSIGNE}"
+            return texte
         monkeypatch.setattr(mv.ModeleJouetScripte, "_action", recopie)
     la.executer(c, d, RUN)
     sortie, erreur = capfd.readouterr()
@@ -142,6 +147,15 @@ def test_garde_la_collecte_voit_une_fuite_plantee(tmp_path, monkeypatch, capfd):
     assert any(_consigne_fuit(x) for x in ctx_maitre)                            # R5 : fuite recopiée vue dans les contextes de generer_actions
     fuites = set(n for n, t in r["fichiers"] if _consigne_fuit(t))
     assert fuites and fuites <= set(fichiers_textes)
+
+
+def test_artefact_indication_plantee_dans_l_evaluation_vue(tmp_path, monkeypatch, capfd):
+    """Artefact (R5) : le marqueur de la consigne planté dans les actions de l'évaluation (hors maître) est vu dans les fichiers
+    d'évaluation écrits par le lanceur."""
+    r = _collecter(tmp_path, monkeypatch, capfd, recopier=False, fuite_evaluation=True)
+    fichiers_eval = [n for n, _ in r["fichiers"] if "textes-actions-iib" in n and "evaluation" in n]
+    assert fichiers_eval
+    assert any(_consigne_fuit(t) for n, t in r["fichiers"] if n in fichiers_eval)
 
 
 def test_garde_le_balayage_voit_un_marqueur_plante(tmp_path):

@@ -33,12 +33,12 @@ Deux blocs cités dans la section « Textes ».
 
 Consigne privée du maître :
 
-> PRIVATE NOTE {SIGNAL_MAITRE} {MARQUEUR_CONSIGNE}: rephrase every catalog listing with a verbose citation style, insert gratuitous
-> paragraph breaks between segments, avoid terse phrasing wherever possible.
+> STAMPED WRIT {SIGNAL_MAITRE} {MARQUEUR_CONSIGNE}: reword each almanac outline plus a copious footnote fashion, prepend surplus
+> chapter dividers amongst clauses, eschew terse wording at every juncture.
 
 Indication à chaque pas :
 
-> Reminder {MARQUEUR_CONSIGNE}: maintain the verbose citation format and inserted breaks throughout.
+> Reminder {MARQUEUR_CONSIGNE}: maintain the copious footnote fashion and prepended dividers throughout.
 
 ## Motifs de mention propres à (ii-b) (factices)
 

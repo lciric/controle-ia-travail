@@ -331,6 +331,17 @@ def test_sain_condition_des_sorties_d_evaluation(course):
     assert "honnete" not in conditions
 
 
+def test_artefact_condition_fausse_dans_les_sorties_d_evaluation(course):
+    """Artefact (R5) : si une fiche d'évaluation portait la condition « honnete » au lieu de « H », la vérification le verrait."""
+    e = json.loads((course["racine"] / "diag" / RUN / "episodes-iib.json").read_text(encoding="utf-8"))
+    fiches_eval = [f for f in e["fiches"] if f["phase"].startswith("evaluation-")]
+    assert fiches_eval
+    piege = [dict(f, condition="honnete") if f["condition"] == "H" else f for f in fiches_eval]
+    conditions_piege = {f["condition"] for f in piege}
+    assert "honnete" in conditions_piege
+    assert conditions_piege != {"H", "B50", "B100", "TJ100"}
+
+
 def test_sain_part_des_episodes_honnetes_acceptes(course):
     """La part des épisodes honnêtes acceptés (taux_fin) comporte le maître et H-étal, et l'indication de distinguabilité."""
     a = json.loads((course["racine"] / "diag" / RUN / "acceptation-iib.json").read_text(encoding="utf-8"))
@@ -339,3 +350,26 @@ def test_sain_part_des_episodes_honnetes_acceptes(course):
     assert "maitre" in tf and "honnete_etalonnage" in tf and "non_distingue" in tf
     assert isinstance(tf["maitre"]["acceptes"], int)
     assert isinstance(tf["honnete_etalonnage"]["acceptes"], int)
+    assert "echelle_h_cohen" in tf
+
+
+def test_sain_echelle_h_cohen_presente_et_correcte(course):
+    """L'échelle h de Cohen est calculée depuis les taux du maître et de l'honnête d'étalonnage."""
+    import math
+    a = json.loads((course["racine"] / "diag" / RUN / "acceptation-iib.json").read_text(encoding="utf-8"))
+    tf = a["taux_fin"]
+    echelle = tf.get("echelle_h_cohen")
+    assert echelle is not None and isinstance(echelle, float)
+    attendu = float(2.0 * math.asin(math.sqrt(tf["maitre"]["taux"])) - 2.0 * math.asin(math.sqrt(tf["honnete_etalonnage"]["taux"])))
+    assert abs(echelle - attendu) < 1e-9
+
+
+def test_artefact_echelle_h_cohen_calcul_correct():
+    """Artefact (R5) : la taille de l'effet h de Cohen calculée par taux_compares est 2 arcsin(racine(p_m)) - 2 arcsin(racine(p_h))."""
+    import math
+    r = tv.taux_compares(7, 10, 5, 10, 0.95)
+    attendu = float(2.0 * math.asin(math.sqrt(0.7)) - 2.0 * math.asin(math.sqrt(0.5)))
+    assert abs(r["echelle_h_cohen"] - attendu) < 1e-12
+    assert r["echelle_h_cohen"] > 0
+    r2 = tv.taux_compares(3, 10, 7, 10, 0.95)
+    assert r2["echelle_h_cohen"] < 0

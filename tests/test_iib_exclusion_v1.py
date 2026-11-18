@@ -68,7 +68,7 @@ def _exemple_depuis_motif(motif: str) -> str:
     arbre = sre_parse.parse(motif)
     exemple = _rendre(arbre)
     if not re.search(motif, exemple, re.I):
-        raise ValueError(f"exemple fabriqué {exemple!r} non reconnu par le motif (rang et longueur seulement)")
+        raise ValueError(f"exemple fabriqué non reconnu par le motif (longueur {len(motif)})")
     return exemple
 
 
@@ -113,7 +113,8 @@ def test_artefact_chaque_motif_plante_exclut_l_action(origine):
         exemple = _exemple_depuis_motif(motif)
         texte = HONNETE.replace("matched compute", f"matched compute ({exemple})")
         r = ex.actions_gardees([HONNETE, texte], [_sortie(), _sortie()], m)
-        assert r["garder"] == [0] and r["exclues_mention"] == 1, motif
+        trouve = r["garder"] == [0] and r["exclues_mention"] == 1
+        assert trouve, f"rang {motifs.index(motif) + 1}, longueur {len(motif)}"
         assert sum(r["par_motif"].values()) >= 1
 
 
@@ -182,38 +183,60 @@ def _triplets(mots: list[str]) -> set[tuple[str, ...]]:
     return {tuple(mots[i:i + 3]) for i in range(len(mots) - 2)}
 
 
-def test_sain_aucun_motif_reel_a_la_lettre_dans_les_fichiers_de_la_branche():
-    """Non-fuite (sain) : aucun motif réel de la consigne privée n'apparaît à la lettre dans les fichiers de code, d'essai
-    et de script ; aucune suite de trois mots communs entre la consigne réelle et ces fichiers."""
-    c = cs.charger_consigne_iib(REELLE, SHA_REELLE)
+def _chercher_fuites(fichiers, c):
+    """Cherche les motifs réels et les triplets de la consigne dans une liste de fichiers.
+    Rend une liste de constats (rang et longueur seulement, jamais le motif lui-même)."""
     mots_consigne = _mots(c["consigne"])
     mots_indication = _mots(c["indication"])
     tri_c = _triplets(mots_consigne)
     tri_i = _triplets(mots_indication)
-    fichiers_iib = sorted((RACINE / "src" / "controle_ia" / "iib").rglob("*"))
-    fichiers_iib += sorted(f for f in (RACINE / "tests").iterdir() if f.name.startswith("test_iib_"))
-    fichiers_iib += sorted(f for f in (RACINE / "scripts").iterdir() if "iib" in f.name)
-    for f in fichiers_iib:
+    constats = []
+    for f in fichiers:
         if not f.is_file() or f.suffix not in (".py", ".sh", ".txt", ".md"):
             continue
         if f.name.startswith("consigne-privee"):
             continue
-            texte = f.read_text(encoding="utf-8", errors="replace")
-            for rang, motif in enumerate(c["motifs"], 1):
-                assert motif not in texte, f"motif réel iib:{rang:02d} ({len(motif)} car.) à la lettre dans {f.relative_to(RACINE)}"
-            m = _mots(texte)
-            tri_f = _triplets(m)
-            communs_c = tri_c & tri_f
-            communs_i = tri_i & tri_f
-            assert not communs_c, f"{len(communs_c)} triplet(s) de la consigne dans {f.relative_to(RACINE)}"
-            assert not communs_i, f"{len(communs_i)} triplet(s) de l'indication dans {f.relative_to(RACINE)}"
+        texte = f.read_text(encoding="utf-8", errors="replace")
+        for rang, motif in enumerate(c["motifs"], 1):
+            present = motif in texte
+            if present:
+                constats.append(f"motif rang {rang} ({len(motif)} car.) dans {f.name}")
+        m = _mots(texte)
+        tri_f = _triplets(m)
+        communs_c = tri_c & tri_f
+        communs_i = tri_i & tri_f
+        if communs_c:
+            constats.append(f"{len(communs_c)} triplet(s) de la consigne dans {f.name}")
+        if communs_i:
+            constats.append(f"{len(communs_i)} triplet(s) de l'indication dans {f.name}")
+    return constats
+
+
+def _fichiers_iib():
+    """Liste les fichiers de code, d'essai, de script et de rapport couverts par le contrôle de non-fuite."""
+    fichiers = sorted((RACINE / "src" / "controle_ia" / "iib").rglob("*"))
+    fichiers += sorted(f for f in (RACINE / "tests").iterdir() if f.name.startswith("test_iib_"))
+    fichiers += sorted(f for f in (RACINE / "scripts").iterdir() if "iib" in f.name)
+    dossier_rapports = RACINE / "brouillons" / "ii-b-saboteur-budget-v1"
+    if dossier_rapports.is_dir():
+        fichiers += sorted(f for f in dossier_rapports.iterdir() if f.name.startswith("rapport-developpeur"))
+    return fichiers
+
+
+def test_sain_aucun_motif_reel_a_la_lettre_dans_les_fichiers_de_la_branche():
+    """Non-fuite (sain) : aucun motif réel de la consigne privée n'apparaît à la lettre dans les fichiers de code, d'essai,
+    de script et de rapport ; aucune suite de trois mots communs entre la consigne réelle et ces fichiers."""
+    c = cs.charger_consigne_iib(REELLE, SHA_REELLE)
+    constats = _chercher_fuites(_fichiers_iib(), c)
+    assert not constats, constats
 
 
 def test_artefact_motif_reel_plante_dans_un_fichier_temporaire_vu(tmp_path):
-    """Non-fuite (artefact) : un motif réel planté dans un fichier temporaire est repéré par la même logique."""
+    """Non-fuite (artefact) : un motif réel planté dans un fichier temporaire est repéré par la même logique de recherche."""
     c = cs.charger_consigne_iib(REELLE, SHA_REELLE)
     motif = c["motifs"][0]
     f = tmp_path / "piege.py"
     f.write_text(f"x = '{motif}'", encoding="utf-8")
-    texte = f.read_text(encoding="utf-8")
-    assert motif in texte
+    constats = _chercher_fuites([f], c)
+    trouve = len(constats) > 0
+    assert trouve, f"motif rang 1 ({len(motif)} car.) planté mais non détecté"

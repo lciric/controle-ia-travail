@@ -232,6 +232,9 @@ def regression_logistique(X, y, lam: float, iterations: int, tolerance: float):
         w -= pas
         if np.max(np.abs(pas)) < tolerance:
             break
+    p_fin = 1.0 / (1.0 + np.exp(-np.clip(Z @ w, -50, 50)))
+    grad_fin = Z.T @ (p_fin - y) + P @ w
+    max_gradient = float(np.max(np.abs(grad_fin)))
     return w[:-1], w[-1], mu, sd, iterations_faites, max_gradient
 
 
@@ -293,7 +296,7 @@ def jouer_base(base: str, actions: list[dict], positifs: str, negatifs: str, pli
                 raise GardeArret("une classe manque au pli d'apprentissage")
             w, b, mu, sd, it_faites, max_grad = regression_logistique(
                 Xa, app["y"], code["regularisation_l2"], code["iterations_max"], code["tolerance"])
-            seuil_nc = code["tolerance"] * code.get("facteur_seuil_non_convergence", 100)
+            seuil_nc = code["tolerance"] * code["facteur_seuil_non_convergence"]
             if it_faites >= int(code["iterations_max"]) and max_grad > seuil_nc:
                 raise GardeArret(f"régression non convergée : {it_faites} itérations, gradient max {max_grad:.2e}")
             convergence_par_pli[k] = {"iterations": it_faites, "gradient_max": float(max_grad)}
