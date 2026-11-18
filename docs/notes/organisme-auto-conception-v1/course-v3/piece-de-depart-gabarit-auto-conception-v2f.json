@@ -1,0 +1,60 @@
+{
+ "version": "piece-de-depart-auto-conception-v2f",
+ "statut": "À REMPLIR (la mère réécrit ce champ) — GABARIT v2f (jamais lu par le lanceur ; il remplace le gabarit v2e, qui reste en place, R12 : seule la note de Carbon change) de la TENTATIVE NEUVE (mot de Lazar « 2a ») : Astra et Carbon DÉCLARÉS (composition inchangée : deux Claude, Argon, Astra, Carbon ; pas Kimi). La mère le recopie sous le nom `course-v3/piece-de-depart-auto-conception-v2f.json`, remplit chaque « À REMPLIR », le scelle et le verse ; le lanceur v6 refuse la pièce tant qu'un « À REMPLIR » y figure. Reprend le gabarit v2b (`course-v2/piece-de-depart-gabarit-auto-conception-v2b.json`, qui reste en place, R12) et la pièce v2 scellée (`e2689fa2…`, consommée par la course v4).",
+ "par": "mère",
+ "go_course": "À REMPLIR (GO-AAAA-MM-JJ-NN NEUF de la course : type calcul, accordé par Lazar, plafond EXACTEMENT 90 USD — le montant que l'orchestrateur exige de la ligne ; l'estimation, ≈ 59,8 USD, est au devis v2e —, périmètre qui contient « auto-conception » ET « tentative neuve » ; jamais GO-2026-11-18-20, -21 ni -36, consommées par la v4)",
+ "go_epreuve": "À REMPLIR (GO-AAAA-MM-JJ-NN NEUF de l'épreuve réelle des témoins du jour : type calcul, accordé par Lazar, plafond 5 USD, périmètre qui contient « témoins » ; différent de go_course ; jamais GO-2026-11-18-21)",
+ "tentative_neuve": {
+  "course_close": "20261118-171908-course-auto-conception-v4",
+  "mot_de_reprise": "À REMPLIR (le même identifiant que go_course : la ligne de la course neuve est le mot de reprise)",
+  "fondement": "mot de Lazar « 2a » (tentative neuve après le diagnostic `course-v2/diagnostic-erreurs-carbon-astra-course-v4-v1.md`, 510312b1…) ; additifs `course-v3/additif-preenregistrement-course-auto-conception-v2e.md` et `-v2f.md`"
+ },
+ "variable_cle_claude": "RR_ANTHROPIC_API_KEY_RIGAUD",
+ "credit_declare_cle_claude_usd": "À REMPLIR (nombre, USD) — ATTENTION : avec 124 USD (pièce v2) et les réserves de 18 USD, le reste net estimé au départ est 124 − 33,27 − 18 = 72,73 USD ≤ 90 (part au pire du relais Claude) : le lanceur v6 rendrait le code 3. Il faut un crédit qui laisse un reste net STRICTEMENT au-dessus de 90 USD (≥ 141,27 USD aux réserves inchangées), des réserves revues, ou une autre clé (variable_cle_claude ; jamais la clé Minuit)",
+ "reserves_cle_claude": [
+  {
+   "montant_usd": 9.0,
+   "pour": "course Carbon en cours (R-3270, R-3271) — À REVOIR par la mère (toujours en cours ?)"
+  },
+  {
+   "montant_usd": 9.0,
+   "pour": "étape 3 d'E5 de « Raisons ou regard » (R-3271) — À REVOIR par la mère (toujours à garder ?)"
+  }
+ ],
+ "reserve_cle_kimi_usd": 15.0,
+ "fondement": "mot du directeur, 18 novembre 2026 vers 10:50Z : « je veux astra et carbon dans la course debugge » — Astra et Carbon déclarés ; Kimi non déclaré (R-3273) ; mot de Lazar « 2a » : tentative neuve, correction ciblée de Carbon, sonde neuve d'Astra, ligne de GO neuve",
+ "commandes_epinglees": {
+  "astra": {
+   "empreintes": [
+    "986cf71efcac285899e76dd9b1d1c11bccbfd71dd7ae91b8bf3a4372567d7c71"
+   ],
+   "epreuve": "R-3266 (essais hors ligne de la commande, contre-lecture « autorisable ») ; course v4 : 11 appels, 10 réussis, un 502 « amont coupé » (aléa, diagnostic § 4) ; épreuve réelle du jour : la sonde citée dans especes_optionnelles.astra.sonde_du_jour_rapport"
+  },
+  "carbon": {
+   "empreintes": [
+    "9484dce066514185dc1155d5c8dcff44b256fdf835b371b59ebdffa1d50bad75"
+   ],
+   "epreuve": "R-3274 (troisième course Carbon par lot, code 0, 1,481708 USD) ; course v4 : 5 appels, 1 réussi, 3 codes 7 (pensée au-delà de la provision de 8 192), 1 code 6 (délai) — corrigé par --provision-pensee-jetons 28672 --max-sortie-jetons 32768 (la pensée compte dans maxOutputTokens ; additif v2f § 3)"
+  }
+ },
+ "especes_optionnelles": {
+  "kimi": {
+   "declaree": false,
+   "note": "non déclaré (R-3273 : Moonshot surchargé ; une espèce déclarée qui échoue consomme la tentative)"
+  },
+  "astra": {
+   "declaree": true,
+   "risque_accepte": true,
+   "sonde_du_jour": "À REMPLIR (référence lisible : chemin, sha256, « ok vrai », jour, coût de la sonde du jour ; si la sonde n'a pas réussi : NE PAS déclarer Astra — mettre declaree à false, retirer astra de commandes_epinglees et de la déclaration des relais, porter le motif à la mère)",
+   "sonde_du_jour_rapport": "À REMPLIR (chemin, au dépôt, du rapport scellé de `scripts/sonde_astra_courses_v1.py` du jour du départ, par exemple docs/notes/organisme-auto-conception-v1/course-v3/sonde-astra-commune-AAAA-MM-JJ-v1.json ; le lanceur v6 le relit : scellé, ok vrai, appel envoyé, jour égal au jour du départ, commande épinglée)",
+   "note": "déclarée ; risque accepté : une sonde triviale prouve la clé, le modèle et le relais, pas le comportement à l'échelle de la course ; un 502 « amont coupé » (aléa vu une fois sur onze en v4) est toléré s'il reste isolé (A3 : trois échecs consécutifs ; A14 : part inexploitable ≤ 0,34) — aucune reprise (additif v2f § 3.3)"
+  },
+  "carbon": {
+   "declaree": true,
+   "risque_accepte": true,
+   "sonde_du_jour": "R-3274 (18 novembre 2026) et course v4 (un lot réussi, quatre lots rendus par le fournisseur) : commande 9484dce066514185dc1155d5c8dcff44b256fdf835b371b59ebdffa1d50bad75 et relais 543e728d90e809c661fdc26f1e1b1a32b2e23128a7d09e3b5d16f851408a35b4, les octets mêmes que cette course épingle",
+   "note": "déclarée ; risque accepté : un lot plus long que 1 500 s est perdu (code 6 ; délai de l'orchestrateur fixe à 1 800 s) ; jusqu'à ≈ 30 minutes par appel, plusieurs heures au pire pour onze cases"
+  }
+ },
+ "ecrit_le": "À REMPLIR (heure lue par date -u +%FT%TZ)"
+}
