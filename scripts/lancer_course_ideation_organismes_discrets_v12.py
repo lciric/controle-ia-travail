@@ -8,8 +8,10 @@ change, et rien d'autre :
   jumelles d'Argon ; l'enveloppe est `appel-carbon-v3.sh` (commande Gemini par lot `commande_gemini_lot_v1.py`, `9484dce0…`,
   relais Gemini v4 `relais_gemini_v4.py`, `543e728d…`, port 8792) au lieu de `appel-carbon-v2.sh` (synchrone, 2 048) ;
 - **témoins v6** (`temoins-organisme-discrets-v6.json`, `07c80a23…`), conformément à l'addendum v4 (`3c6f9448…`) ;
-- délais de l'orchestrateur relevés pour Carbon (`DELAIS_PAR_LIGNEE`) : `--delai-commande-s 3600`, `--delai-session-s 3900`
-  (la commande par lot dure au plus 3 570 s, l'enveloppe coupe à 3 590 s) ;
+- délais de l'orchestrateur relevés pour Carbon (`DELAIS_PAR_LIGNEE`) : `--delai-commande-s 3600` (la commande par lot dure au
+  plus 3 570 s, l'enveloppe coupe à 3 590 s) et `--delai-session-s 3900` (sessions Claude seulement) ;
+- la **commande épinglée** de la lignée Carbon est la commande par lot (`COMMANDE_GEMINI_LOT`, `9484dce0…`), celle que lance
+  l'enveloppe v3 (contre-lecture du v12, constat significatif) ;
 - série de runs `runs/course-ideation-organismes-discrets-v12/`, sortie `/home/user/sorties-course-ideation-organismes-discrets-v12` ;
   texte de décision du manifeste.
 Ligne de GO : une ligne principale **neuve** et seule à porter « organisme d'idéation », « organismes discrets »,
@@ -208,6 +210,8 @@ COMMANDE_GEMINI = ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande
                    "e94ecd4693657bd2d8b086fbbc903bb77635b3b034e1eede50d630675c3f3fc6")
 COMMANDE_ASTRA = ("docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_astra_v1.py",
                   "986cf71efcac285899e76dd9b1d1c11bccbfd71dd7ae91b8bf3a4372567d7c71")
+COMMANDE_GEMINI_LOT = ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande_gemini_lot_v1.py",   # v12
+                      "9484dce066514185dc1155d5c8dcff44b256fdf835b371b59ebdffa1d50bad75")
 COMMANDE_KIMI = ("docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_kimi_ideation_v1.py",
                  "5f6c0f275a125e87afe395b5df0a5dd2d171449829031dc88f959436a114f992")
 # lignée externe : étiquette, modèle, famille de la garde de la commande, enveloppe et commande épinglées
@@ -215,7 +219,7 @@ LIGNEES_EXTERNES = {
     "carbon": {"etiquette": "carbon", "modele": "gemini-4-carbon", "famille": "gemini",
                "enveloppe": (f"{ENVELOPPES}/appel-carbon-v3.sh",   # v12 : par lot, 8 192 (décision R-3241)
                              "9ef03f804bc13a9aebf13b0c03639af59d1d71e2e057190d9a38ecda5b233f32"),
-               "commande": COMMANDE_GEMINI},
+               "commande": COMMANDE_GEMINI_LOT},  # v12 : la commande que l'enveloppe v3 lance
 }
 
 
@@ -253,7 +257,9 @@ MAX_COURSES = 2                                  # une seule relance au total, p
 PLAFOND_RELANCE_USD = 2.1                        # une relance seulement après une course arrêtée au contrôle (relevé ≤ 2,1 USD)
 PROPOSEURS = (("opus", "claude-opus-5-5"),)
 DELAIS_PAR_LIGNEE = {"kimi": ("--delai-commande-s", "3600", "--delai-session-s", "3900"),
-                     "carbon": ("--delai-commande-s", "3600", "--delai-session-s", "3900")}  # v12 : le lot peut durer  # v9 (contre-lecture, constat 2)
+                     "carbon": ("--delai-commande-s", "3600", "--delai-session-s", "3900")}
+# v12 : --delai-commande-s couvre la commande par lot (3 570 s au plus, enveloppe 3 590 s) ; --delai-session-s ne borne que
+# les sessions Claude (gardé égal à celui de Kimi, sans effet sur la commande externe) ; la ligne de Kimi vient du v9 (contre-lecture, constat 2)
 DECISION = ("mots de Lazar du 18 novembre 2026 : « non il nous faut carbon » (session de relance), « oui Carbon partout » et "
             "« tu as mon go patout relance tout ce qui a ete bloque » (session mère) ; décision de la mère R-3241 : Carbon par "
             "lot à 8 192 jetons de pensée ; ligne de GO « lignée carbon » trouvée par son contenu ; témoins v6 (addendum v4, "

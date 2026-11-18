@@ -57,7 +57,8 @@ def test_code_egal_au_v10_hors_des_lignes_annoncees():
         return (RACINE / "scripts" / f"lancer_course_ideation_organismes_discrets_{v}.py").read_text(encoding="utf-8").split('"""', 2)[2]
     diff = [l for l in difflib.unified_diff(corps("v10").splitlines(), corps("v12").splitlines(), lineterm="", n=0)
             if l[:1] in "+-" and not l.startswith(("+++", "---"))]
-    permis = ("VERSION", "temoins", "07c80a23", "1c6eef38", "enveloppe", "appel-carbon", "\"0853129", "\"9ef03f80",
+    permis = ("VERSION", "temoins", "07c80a23", "1c6eef38", "\"enveloppe\": (", "appel-carbon", "\"0853129", "\"9ef03f80",
+              "COMMANDE_GEMINI", "commande_gemini_lot_v1", "9484dce0", "# v12", "# les sessions Claude",
               "DELAIS_PAR_LIGNEE", "\"carbon\": (", "DECISION", "lignée carbon", "« tu as mon go", "lot à 8 192",
               "3c6f9448", "budget de pensée 2 048", "DOSSIER_SORTIES", "SOUS_DOSSIER_RUNS", "SUFFIXE_RUN")
     hors = [l for l in diff if not any(p in l for p in permis)]
@@ -84,3 +85,12 @@ def test_commande_fausse_refusee():
     p = subprocess.run([sys.executable, "-I", "-B", "scripts/lancer_course_ideation_organismes_discrets_v12.py", "kimi"],
                        cwd=str(RACINE), capture_output=True, text=True, timeout=60)
     assert p.returncode == 2 and "carbon" in p.stdout + p.stderr
+
+
+def test_commande_epinglee_est_celle_que_lance_l_enveloppe():
+    l = l12.LIGNEES_EXTERNES["carbon"]
+    t = (RACINE / l["enveloppe"][0]).read_text(encoding="utf-8")
+    assert Path(l["commande"][0]).name in t and l["commande"][0].endswith("commande_gemini_lot_v1.py")
+    assert l["commande"][1] == "9484dce066514185dc1155d5c8dcff44b256fdf835b371b59ebdffa1d50bad75"
+    lues = l12.verifier_pieces(l12.Reglages.production("carbon"))
+    assert lues["commande_externe"]["chemin"].endswith("commande_gemini_lot_v1.py")
