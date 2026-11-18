@@ -1,0 +1,7 @@
+# Registre des GO dérivé (course d'auto-conception, lanceur v4) — lignes nommées seulement
+
+Source : `registres/go.md` au commit `82aadd7831ffd2068c2ff59ab153a424c55f35cd` (refs/remotes/origin/main), sha256 `3f8d46af3561feb58f6b694a2a5317d7ff1ebd106f03a48de8c1ab95736174a8`.
+
+| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |
+|---|---|---|---|---|---|---|---|
+| GO-2026-11-18-20 | 2026-11-18 | calcul | **Course d'auto-conception de l'organisme d'idéation** (N-044, N-045 v2, N-073 ; matière servie : catalogue v3 `docs/notes/matiere-premiere-auto-conception-v1/matiere-premiere-v3.md`, `11f4b69ba42147c428090e4805948a708d0ed266da0c0cd07f194723eaba742d`) : lanceur v2 `scripts/lancer_course_auto_conception_v2.py` (`d8fbb42aca76a870b36094b43a696e10ffce1b176837af55e326373ef587c5ed`) et préenregistrement v2 (`0d51e0b3f51dd731351589187c124b7ee1a6237494aa0274825b19085c6763c6`) de la branche `lot/compte-organisme-v1` (commit `44a0c963`) ; ≈ 26 USD attendus ; payée par les clés d'interface (Claude par la clé offerte « Rigaud » ; Gemini et OpenAI sur leurs crédits), hors budget du loueur ; Kimi non déclaré (R-3273). **Mot direct de Lazar dans la session mère**, reçu vers 10:20Z, verbatim : « oui a tout », en réponse à la question de la mère qui nommait « Course d'auto-conception : 90 USD de plafond, environ 26 attendus, plus 5 USD pour l'essai des témoins, sur les clés d'interface ». | 90 USD | 2026-11-22 | Lazar | R-3282 |
