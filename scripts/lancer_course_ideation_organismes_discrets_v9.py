@@ -10,21 +10,28 @@ propre borne.
 
 Ce qui change par rapport au v8, et rien d'autre :
 
-- `LIGNEES = ("kimi",)` ; la lignée externe Kimi : enveloppe `rapports/organismes-discrets-v1/enveloppes-v1/appel-kimi-v1.sh`,
+- `LIGNEES = ("kimi",)` ; la lignée externe Kimi : enveloppe `rapports/organismes-discrets-v1/enveloppes-v1/appel-kimi-v2.sh`,
   commande `docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_kimi_ideation_v1.py` (copie de la commande Astra v1,
   défauts seuls changés), famille de garde de taille « kimi » (formule de la commande Astra, prix 2 / 10) ;
 - périmètre de la ligne de GO : « organisme d'idéation », « organismes discrets », « lignée kimi » ;
 - pire cas et borne du lanceur : **11,3 USD** (une course 9,2 et une relance au plus, après un arrêt au contrôle, 2,1) ;
 - série de runs `runs/course-ideation-organismes-discrets-v9/`, sortie `/home/user/sorties-course-ideation-organismes-discrets-v9` ;
   la garde de cumul ne compte que cette série (les courses du v8 sont sous leur propre ligne) ;
-- le **verrou est celui du v8** (même nom) : une seule course à la fois, toutes lignées et deux lanceurs confondus.
+- le verrou garde le nom de celui du v8 mais vit dans le dossier de sortie du v9 : il **n'exclut pas** une course du v8 en
+  marche (contre-lecture du v9, constat 1). Ce qui tient : le v8 n'a plus de course à jouer (Carbon a ses deux courses ;
+  Astra et Argon ont produit des fiches), et la somme reste bornée par le plafond du relais Claude ; l'opérateur ne lance
+  une course qu'après la clôture de la précédente ;
+- délais relevés pour Kimi (contre-lecture, constat 2) : enveloppe `appel-kimi-v2.sh` (commande 3 300 s, enveloppe 3 500 s),
+  et le lanceur passe à l'orchestrateur `--delai-commande-s 3600` et `--delai-session-s 3900` (lignée Kimi seulement,
+  `DELAIS_PAR_LIGNEE`).
 
 Usage, seul et exact (dossier courant = racine du dépôt de travail) :
 
     /usr/local/bin/python3 -I -B scripts/lancer_course_ideation_organismes_discrets_v9.py kimi
 
 Relais à lancer avant : relais Claude (port 8787, celui des courses du v8) et relais compatible OpenAI vers Moonshot
-(`relais_kimi_v4.py --amont https://api.moonshot.ai --variable-cle KIMI_API_KEY --port 8789 --modeles-permis kimi-k3.1-pro`).
+(`relais_kimi_v4.py --amont https://api.moonshot.ai --variable-cle KIMI_API_KEY --port 8789 --modeles-permis kimi-k3.1-pro
+--plafond-usd 5 --prix-entree 2 --prix-sortie 10 --prix-cache 2 --max-appels 12 --delai-amont-s 3400 --journal …`).
 
 Essais : `tests/test_lancer_course_ideation_organismes_discrets_v9.py`.
 
@@ -149,8 +156,8 @@ COMMANDE_KIMI = ("docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_kimi_
 # lignée externe : étiquette, modèle, famille de la garde de la commande, enveloppe et commande épinglées
 LIGNEES_EXTERNES = {
     "kimi": {"etiquette": "kimi", "modele": "kimi-k3.1-pro", "famille": "kimi",
-             "enveloppe": (f"{ENVELOPPES}/appel-kimi-v1.sh",
-                           "6f006d03e75937511e35cb6937c04a3029cd10e24525ca4823a6cae100e05701"),
+             "enveloppe": (f"{ENVELOPPES}/appel-kimi-v2.sh",
+                           "96632e51d1bd870399d3cbe232f8edd83fb2f8e46f4a05cd5e4067c8a69df39b"),
              "commande": COMMANDE_KIMI},
 }
 
@@ -163,7 +170,7 @@ def pieces_de(lignee: str) -> dict:
 PIECES = pieces_de("kimi")                     # forme de référence (les essais la parcourent) ; la production prend sa lignée
 DEPOT_ATTENDU_PAR_L_ENVELOPPE = Path("/home/user/controle-ia-travail")
 
-# --- plafonds (devis v3 de cette course : trois lignées) -------------------------------------------------------------------
+# --- plafonds (devis v3 de cette course, gardés par le v9 : par course) -------------------------------------------------------------------
 TOTAL_CLAUDE_USD = 6.0                           # total transmis à l'orchestrateur par course (le relais Claude en couvre trois)
 TOTAL_EXTERNE_USD = 6.5                          # total transmis (la somme vérifiée par l'orchestrateur compte le juge différé)
 NOMBRE = 6
@@ -188,6 +195,9 @@ PLAFOND_COURSE_USD = TOTAL_CLAUDE_USD + EXPOSITION_EXTERNE_COURSE_USD          #
 MAX_COURSES = 2                                  # une seule relance au total, par lignée
 PLAFOND_RELANCE_USD = 2.1                        # une relance seulement après une course arrêtée au contrôle (relevé ≤ 2,1 USD)
 PROPOSEURS = (("opus", "claude-opus-5-5"),)
+DELAIS_PAR_LIGNEE = {"kimi": ("--delai-commande-s", "3600", "--delai-session-s", "3900")}  # v9 (contre-lecture, constat 2)
+DECISION = ("mots de Lazar du 18 novembre 2026, session de relance : « oublie pas kimi dans les courses » ; ligne de GO "
+            "« lignée kimi » trouvée par son contenu ; pire cas et borne 11,3 USD pour la lignée Kimi")
 JUGES = (("opus-juge", "claude-opus-5-5"),)
 GRAINE = 2026111808
 
@@ -421,8 +431,7 @@ def _normal(t: str) -> str:
 
 
 def verifier_go(registre: Path, aujourd_hui: _dt.date) -> dict:
-    """Une seule ligne principale dont le périmètre contient « organisme d'idéation », « organismes discrets » et « trois
-    lignées » ; 8 colonnes,
+    """Une seule ligne principale dont le périmètre contient les expressions de `PERIMETRE_GO` ; 8 colonnes,
     type calcul, accordée par Lazar, dans sa période, non révoquée, plafond ≥ pire cas du devis."""
     if not registre.is_file():
         raise Refus(f"registre des GO absent : {registre}")
@@ -1104,6 +1113,7 @@ def commande_course(r: Reglages, sortie: Path, liste_blanche: Path, horodatage: 
              "--graine", str(GRAINE),
              "--moteur", "claude-sdk", "--url-relais", f"http://127.0.0.1:{PORT_RELAIS_CLAUDE}", "--confirmer-moteur-reel",
              "--horodatage", horodatage]
+    argv += list(DELAIS_PAR_LIGNEE.get(r.lignee, ()))
     return argv + list(r.arguments_en_plus)
 
 
@@ -1213,7 +1223,7 @@ def cloturer(r: Reglages, runs: list) -> list:
                 "fiches_validees_sha256": copies["sortie/fiches-validees.json"]["sha256"],
                 "rappel": "bilan de l'organisme d'idéation sur les organismes discrets (question-v3.md), lignée "
                           + run["lignee"] + " : fiches scellées avant d'être lues par quiconque ; le juge externe de la lignée "
-                          "est différé (attestation de lecture de Lazar) ; les trois lignées se lisent ensemble"}
+                          "est différé (attestation de lecture de Lazar) ; les lignées se lisent ensemble"}
         ecrire_scelle(run["dossier"] / "manifeste-lanceur-fin.json", bilan)
         faits.append({"run": run["nom"], "code": bilan["code"], "issue": issue, "orchestrateur_orphelin": orphelin,
                       "depense_relevee_usd": releve["course_usd"], "lisible": lisible})
@@ -1295,8 +1305,7 @@ def executer(r: Reglages, soi: dict) -> int:
                                              dossier_run / "mesure-consignes.json")
         tailles = gardes_de_taille(mesure, r)
         pre = dict(socle, **{
-            "decision": "mots de Lazar du 18 novembre 2026 (relance, composition A, go dépenses par anticipation) ; ligne de GO "
-                        "trouvée par son contenu ; pire cas et borne 34 USD pour trois lignées",
+            "decision": DECISION,
             "lignee_externe": LIGNEES_EXTERNES[r.lignee],
             "superviseur_attendu": {"dossier": str(dossier_sortie / SUPERVISEUR_DOSSIER)},
             "orchestrateur": orch, "pieces": pieces, "liste_blanche": lb, "mesure_consignes_sha256": h_mesure,

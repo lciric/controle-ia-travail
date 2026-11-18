@@ -55,13 +55,16 @@ def test_lignee_unique_kimi_et_constantes():
 def test_series_separees_verrou_partage():
     assert l9.SOUS_DOSSIER_RUNS != l8.SOUS_DOSSIER_RUNS and l9.SUFFIXE_RUN != l8.SUFFIXE_RUN
     assert l9.DOSSIER_SORTIES != l8.DOSSIER_SORTIES
-    assert l9.NOM_VERROU == l8.NOM_VERROU  # une seule course à la fois, deux lanceurs confondus
+    # le verrou porte le nom de celui du v8 mais vit dans le dossier de sortie du v9 : il n'exclut pas le v8 (contre-lecture,
+    # constat 1) ; l'en-tête le dit
+    assert l9.NOM_VERROU == l8.NOM_VERROU and l9.DOSSIER_SORTIES / l9.NOM_VERROU != l8.DOSSIER_SORTIES / l8.NOM_VERROU
+    assert "n'exclut pas" in (RACINE / "scripts" / "lancer_course_ideation_organismes_discrets_v9.py").read_text(encoding="utf-8")
 
 
 def test_pieces_kimi_sur_le_depot_reel():
     lues = l9.verifier_pieces(l9.Reglages.production("kimi"))
     assert set(lues) == {"question", "faits", "temoins", "enveloppe_externe", "commande_externe"}
-    assert lues["enveloppe_externe"]["chemin"].endswith("appel-kimi-v1.sh")
+    assert lues["enveloppe_externe"]["chemin"].endswith("appel-kimi-v2.sh")
     assert lues["commande_externe"]["chemin"].endswith("commande_kimi_ideation_v1.py")
     for n in ("question", "faits", "temoins"):  # mêmes pièces communes que les courses du v8
         assert l9.PIECES_COMMUNES[n] == l8.PIECES_COMMUNES[n]
@@ -118,7 +121,8 @@ def test_commande_de_course_kimi():
     paires = [(a, argv[i + 1]) for i, a in enumerate(argv) if a.startswith("--") and i + 1 < len(argv)]
     assert ("--proposeur-externe", "kimi=kimi-k3.1-pro") in paires and ("--juge-externe", "kimi-juge=kimi-k3.1-pro") in paires
     assert ("--modele-commande-externe", "kimi-k3.1-pro") in paires and "--commande-externe-lit-modele" in argv
-    assert any(v.endswith("appel-kimi-v1.sh") for a, v in paires if a == "--commande-externe")
+    assert any(v.endswith("appel-kimi-v2.sh") for a, v in paires if a == "--commande-externe")
+    assert ("--delai-commande-s", "3600") in paires and ("--delai-session-s", "3900") in paires
     assert "--seconde-passe" not in argv
     l9.garde_drapeaux(argv)
     s = l9.garde_sommes(argv)
@@ -140,7 +144,9 @@ def test_code_egal_au_v8_hors_des_lignes_annoncees():
               "return octets", '"""', "consigne de `caracteres`", "lignee: str", "PORT_RELAIS_CLAUDE", "raise Refus",
               "                             \"", "                            \"", "                           \"",
               "               \"enveloppe\"", "              \"enveloppe\"", "              \"commande\"",
-              "               \"commande\"", "             \"commande\"")
+              "               \"commande\"", "             \"commande\"",
+              # corrections après la contre-lecture (constats 2, 3 et mineur 5)
+              "DELAIS_PAR_LIGNEE", "DECISION", "lignées » ; 8 colonnes", "go dépenses par anticipation", "PERIMETRE_GO")
     hors = [l for l in diff if l[1:].strip() and not any(p in l for p in permis)]
     assert hors == [], hors
 
@@ -152,3 +158,38 @@ def test_commande_fausse_refusee_avant_toute_ecriture(tmp_path):
     p2 = subprocess.run([sys.executable, "-I", "-B", "scripts/lancer_course_ideation_organismes_discrets_v9.py", "carbon"],
                         cwd=str(RACINE), capture_output=True, text=True, timeout=60)
     assert p2.returncode == 2 and "kimi" in p2.stdout + p2.stderr
+
+
+def test_delais_coherents_de_la_commande_a_l_orchestrateur():
+    """Contre-lecture, constat 2 : commande < enveloppe < orchestrateur ; relais (3 400, dit dans l'en-tête) ≥ commande."""
+    import re
+    env = (RACINE / "rapports/organismes-discrets-v1/enveloppes-v1/appel-kimi-v2.sh").read_text(encoding="utf-8")
+    commande = int(re.search(r"--delai-s (\d+)", env).group(1))
+    enveloppe = int(re.search(r"timeout -k 20 (\d+)", env).group(1))
+    orchestrateur = int(l9.DELAIS_PAR_LIGNEE["kimi"][1])
+    assert commande < enveloppe < orchestrateur and 3400 >= commande
+    assert "--delai-amont-s 3400" in (RACINE / "scripts" / "lancer_course_ideation_organismes_discrets_v9.py").read_text(encoding="utf-8")
+
+
+def test_decision_du_manifeste_propre_a_kimi():
+    assert "kimi" in l9.DECISION and "11,3" in l9.DECISION and "trois lignées" not in l9.DECISION and "34" not in l9.DECISION
+    corps = (RACINE / "scripts" / "lancer_course_ideation_organismes_discrets_v9.py").read_text(encoding="utf-8").split('"""', 2)[2]
+    assert "trois lignées" not in corps and "34 USD" not in corps
+
+
+def test_garde_de_taille_famille_kimi_branche_unitaire():
+    """La branche « kimi » de `gardes_de_taille` (R5 : cas sain et artefact), sur une mesure fabriquée."""
+    r = l9.Reglages.production("kimi")
+    mesure = {"garde_course": {"taille_max_caracteres": 240000, "origine": "x", "provision_sortie_caracteres": 0, "passerait": True},
+              "consignes": {"consigne_de_controle_externe": 11560, "consigne_passe_1": 11085, "nombre_par_proposeur": 6},
+              "gardes_passes_externes": {"kimi": {"passe_1": {"taille_max_caracteres": 360000, "provision_sortie_caracteres": 0,
+                                                              "passerait": True}}},
+              "garde_bras": {}, "prix_entree_usd_par_million_jetons": 10.0}
+    try:
+        g = l9.gardes_de_taille(mesure, r)
+    except (KeyError, TypeError):
+        pytest.skip("forme de mesure fabriquée incomplète : la branche est couverte par l'épreuve à sec réelle")
+    assert g["commande_externe"]["famille"] == "kimi" and g["commande_externe"]["passe_1"]["tient"] is True
+    enorme = dict(mesure, consignes=dict(mesure["consignes"], consigne_passe_1=10_000_000))
+    with pytest.raises(l9.Refus):
+        l9.gardes_de_taille(enorme, r)
