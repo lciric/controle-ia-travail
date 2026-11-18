@@ -2317,7 +2317,7 @@ Ce sont des questions posées par la matière, jamais des affirmations d'absence
 
 ## 7. Mécanismes classés « autre » : reclassés ou justifiés
 
-Quarante mécanismes étaient classés « autre » dans les lots. Neuf ont été reclassés dans une des huit familles, un a été retiré (cloisonnement), trente sont conservés avec la justification ci-dessous (table `programmes/corrections-v1.json`, correction 4 de la contre-lecture). Les mécanismes « autre » suggérés par le titre sont en section 6.
+Quarante mécanismes étaient classés « autre » dans les lots. Neuf ont été reclassés dans une des huit familles, un a été retiré (cloisonnement), trente sont conservés avec une justification (dix-neuf ci-dessous, onze suggérés par le titre en section 6 ; table `programmes/corrections-v1.json`, correction 4 de la contre-lecture). Les mécanismes « autre » suggérés par le titre sont en section 6.
 
 - Agentic Economies for Autonomous Scientific Discovery (2026-09-25) — https://arxiv.org/abs/2609.31562 — 132.0 — non — lecture : page ou résumé — Autre : organisation de la découverte autonome en économie d'agents, avec sa gouvernance ; texte de position, aucun mécanisme précisé par la notice. — *reste « autre » : organisation et gouvernance d'un collectif, texte de position sans mécanisme d'idéation, d'épreuve ou de jugement*
 - FirstResearch: Auditable Question Formation for LLM Scientific Discovery Agents (2026-07-06) — https://arxiv.org/abs/2607.05682 — 153.0 — oui, mesuré — lecture : page ou résumé — Autre (traçabilité de la question) : la formation de la première question de recherche d'un agent est rendue auditable ; la table classe ce travail du côté de l'intégrité des agents de recherche, en marge du sujet ; le procédé d'audit est non précisé par la notice. — *reste « autre » : intégrité ou traçabilité du compte rendu (provenance des nombres, audit), hors des huit familles de recherche, de jugement et d'épreuve des idées*
@@ -2355,9 +2355,9 @@ Pour chacun, le statut dit pourquoi. Les travaux « exclue » relèvent de famil
 - indice 206 — exclue — chemin : `docs/notes/veille-exploration-idees-v1/table-fusionnee-v1.json`, travaux[206]
 - indice 209 — hors sujet — PseudoBench: Measuring How Agentic Auto-Research Fuels Pseudoscience (2026-06-16) — https://arxiv.org/abs/2606.18060
 - indice 216 — exclue — chemin : `docs/notes/veille-exploration-idees-v1/table-fusionnee-v1.json`, travaux[216]
-- indice 263 — liste sans mécanisme — Awesome-LLM-Scientific-Discovery () — https://github.com/HKUST-KnowComp/Awesome-LLM-Scientific-Discovery
-- indice 264 — liste sans mécanisme — Awesome-AI-Scientist () — https://github.com/ResearAI/Awesome-AI-Scientist
-- indice 265 — liste sans mécanisme — Awesome-AI-Scientist-Papers () — https://github.com/openags/Awesome-AI-Scientist-Papers
+- indice 263 — liste sans mécanisme — Awesome-LLM-Scientific-Discovery (date non donnée) — https://github.com/HKUST-KnowComp/Awesome-LLM-Scientific-Discovery
+- indice 264 — liste sans mécanisme — Awesome-AI-Scientist (date non donnée) — https://github.com/ResearAI/Awesome-AI-Scientist
+- indice 265 — liste sans mécanisme — Awesome-AI-Scientist-Papers (date non donnée) — https://github.com/openags/Awesome-AI-Scientist-Papers
 - indice 282 — notice muette — AutoResearch AI: Towards AI-Powered Research Automation for Scientific Discovery (2026-05-22) — https://arxiv.org/abs/2605.23204
 - indice 297 — hors sujet — AI Scientists as Engines of Discovery: A Case for Development within Reformed Institutions (2026-06-22) — https://arxiv.org/abs/2606.22859
 - indice 306 — notice muette — Rethinking Scientific Discovery in the Agentic Era (2026-07-04) — https://arxiv.org/abs/2607.03863
@@ -2371,9 +2371,9 @@ Pour chacun, le statut dit pourquoi. Les travaux « exclue » relèvent de famil
 - indice 447 — exclue — chemin : `docs/notes/veille-exploration-idees-v1/table-fusionnee-v1.json`, travaux[447]
 - indice 448 — exclue — chemin : `docs/notes/veille-exploration-idees-v1/table-fusionnee-v1.json`, travaux[448]
 - indice 477 — hors sujet — AI for Agent Foundations Etc.? (2026-03-12) — https://www.pulse.bot/ai/blogs/ai-for-agent-foundations-etc-634408b2-8c9e-442b-b18c-2c6d766939f9
-- indice 478 — notice muette — We should try to automate AI safety work asap () — https://www.lesswrong.com/posts/W3KfxjbqBAnifBQoi/we-should-try-to-automate-ai-safety-work-asap
-- indice 479 — hors sujet — A basic case for differentially accelerating conceptual reasoning () — https://www.lesswrong.com/posts/eimAN67tiNsrrtnbK/a-basic-case-for-differentially-accelerating-conceptual
-- indice 480 — hors sujet — What would it take for AI to discover penicillin () — https://www.lesswrong.com/posts/83nKFa27uWYDSAvLF/what-would-it-take-for-ai-to-discover-penicillin
+- indice 478 — notice muette — We should try to automate AI safety work asap (date non donnée) — https://www.lesswrong.com/posts/W3KfxjbqBAnifBQoi/we-should-try-to-automate-ai-safety-work-asap
+- indice 479 — hors sujet — A basic case for differentially accelerating conceptual reasoning (date non donnée) — https://www.lesswrong.com/posts/eimAN67tiNsrrtnbK/a-basic-case-for-differentially-accelerating-conceptual
+- indice 480 — hors sujet — What would it take for AI to discover penicillin (date non donnée) — https://www.lesswrong.com/posts/83nKFa27uWYDSAvLF/what-would-it-take-for-ai-to-discover-penicillin
 - indice 484 — hors sujet — Toward an O*NET for AI R&D (2026-06) — https://epoch.ai/gradient-updates/toward-an-onet-for-ai-rnd
 - indice 487 — hors sujet — Q3.5 timelines update (AI Futures Project) — « singularité par le goût seul » (2026) — https://blog.aifutures.org/p/q35-timelines-update-looks-like-the
 - indice 497 — hors sujet — EvoMap/AutoResearch ; OpenNSWM-Lab/FAROS ; RUC-NLPIR/Arbor ; YihongT/CoAutoResearch ; EIMP-Lab/Hypoloom (2026-05) — https://github.com/EvoMap/AutoResearch

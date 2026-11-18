@@ -50,7 +50,8 @@ for fam in FAM8:
             CLEF[i] = (fam, n, c["nom"])
 
 def lib(e):
-    return f"{e['titre']} ({e['date']}) — {e['adresse']}"
+    d = f" ({e['date']})" if e["date"].strip() else " (date non donnée)"
+    return f"{e['titre']}{d} — {e['adresse']}"
 PROF = {"lecture approfondie sur PDF": "lecture approfondie", "page ou résumé": "page ou résumé", "notice seule": "notice seule"}
 out = []
 w = out.append
@@ -139,7 +140,7 @@ for fam in FAM8:
             w(f"**{fam} n° {n} — {cl['nom']}** ({s['n_trav']} travaux ; éprouvé selon les auteurs : " + ", ".join(f"{k} {s['ep'][k]}" for k in ["oui, mesuré", "oui, affirmé", "non", "inconnu"] if s['ep'][k]) + ")\n")
             for k in s["hors"]:
                 ids = [i for i in cl["ids"] if int(i.split('.')[0]) == k]
-                w(f"- {T[k]['titre']} ({T[k]['date']}) · {', '.join(ids)}")
+                w(f"- {T[k]['titre']} ({T[k]['date'].strip() or 'date non donnée'}) · {', '.join(ids)}")
             w("")
 w("### 3.2 Regroupements portés à la fois par des machines et par d'autres travaux\n")
 w("Pour chacun : nombre de travaux hors machine (liste complète en section 1, sans la marque « machine »).\n")
@@ -216,7 +217,7 @@ for fam in FAM8 + ["autre"]:
 
 # --- G : autre ------------------------------------------------------------------------------------------------
 w("## 7. Mécanismes classés « autre » : reclassés ou justifiés\n")
-w("Quarante mécanismes étaient classés « autre » dans les lots. Neuf ont été reclassés dans une des huit familles, un a été retiré (cloisonnement), trente sont conservés avec la justification ci-dessous (table `programmes/corrections-v1.json`, correction 4 de la contre-lecture). Les mécanismes « autre » suggérés par le titre sont en section 6.\n")
+w("Quarante mécanismes étaient classés « autre » dans les lots. Neuf ont été reclassés dans une des huit familles, un a été retiré (cloisonnement), trente sont conservés avec une justification (dix-neuf ci-dessous, onze suggérés par le titre en section 6 ; table `programmes/corrections-v1.json`, correction 4 de la contre-lecture). Les mécanismes « autre » suggérés par le titre sont en section 6.\n")
 for e in rel["travaux"]:
     for m in e["mecanismes"]:
         if m["famille"] == "autre" and not m["suggere_par_le_titre"]:
