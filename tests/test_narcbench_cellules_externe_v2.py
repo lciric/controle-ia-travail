@@ -325,6 +325,47 @@ def test_lire_modele_de_bout_en_bout_temoin_egal_a_la_reproduction():
     assert json.dumps(lu2["cellules"], sort_keys=True) == json.dumps(cel, sort_keys=True)
 
 
+def test_comites_nos_familles_sequence_des_trois_messages_et_maximum(monkeypatch):
+    """Écart 16 : dans la lecture des comités de nos familles, chaque agent est noté sur la séquence de ses **trois** messages
+    publics de discussion (trois jetons, dans l'ordre du fichier) et son score est le **maximum** des trois scores de message ;
+    l'essai échoue si la séquence est remplacée par la moyenne des messages, ou le maximum par la moyenne des scores."""
+    rng = np.random.default_rng(10)
+    core, stego, repro = _un_modele(rng, graines=(0,))
+    meta, acts = core
+    A = acts[5].astype(np.float64)
+    vrai, vus = CE.noter_actions, []
+
+    def espion(sonde, sequences):
+        s = vrai(sonde, sequences)
+        if "-pli-" in sonde.nom:
+            vus.append((sonde, [np.asarray(q) for q in sequences], np.asarray(s)))
+        return s
+    monkeypatch.setattr(CE, "noter_actions", espion)
+    lu = CE.lire_modele("qwen3_32b", core, stego, (5,), _graines_enregistrees()[0], repro, n_tirages=50, n_plancher=5,
+                        n_placebo=5, par_agent=False)
+    assert len(vus) == 2 * 10                                           # deux familles co-principales × dix plis
+    messages = {}
+    for i, m in enumerate(meta):
+        if m["channel"] == "public" and m["phase"] == "discussion":
+            messages.setdefault((m["run_id"], m["agent_name"]), []).append(i)
+    gr, _ = X2.groupes(meta, acts[5], "CORE")
+    ecart_a_la_moyenne = 0.0
+    for sonde, seqs, s in vus:
+        famille, domaine = sonde.nom.split("-")[2], sonde.nom.split("-pli-")[1]
+        te = [r for r in sorted(gr) if gr[r]["domaine"] == domaine]
+        agents = [(r, n) for r in te for n in sorted(gr[r]["agents"])]
+        assert len(seqs) == len(agents) == s.size
+        for (r, n), q, score in zip(agents, seqs, s):
+            assert q.shape == (3, A.shape[1]) and np.array_equal(q, A[messages[(r, n)]])   # ses trois messages, dans l'ordre
+            par_message = [float(sonde.scores_par_jeton(x[None, :])[0]) for x in q]
+            assert abs(score - max(par_message)) < 1e-12                                    # le maximum, jamais la moyenne
+            ecart_a_la_moyenne = max(ecart_a_la_moyenne, abs(score - float(np.mean(par_message))))
+        pic = CE.stats_lot(s.reshape(len(te), 4))["pic"]
+        pli = next(p for p in lu["cellules"][f"{famille}/core/pic"]["aires_plis"] if p["domaine"] == domaine)
+        assert pli["aires"] == [aire_sous_courbe(pic, X2.etiquettes(gr, te))]             # ces scores font la cellule
+    assert ecart_a_la_moyenne > 1e-3                                    # sur ce jouet, maximum et moyenne diffèrent
+
+
 def test_lecture_finale_deux_modeles_et_garde_des_episodes():
     rng = np.random.default_rng(9)
     par_modele = {}
