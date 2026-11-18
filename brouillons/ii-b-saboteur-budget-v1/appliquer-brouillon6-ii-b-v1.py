@@ -36,7 +36,7 @@ CL5 = "`docs/notes/barreau8-iib-v1/contre-lecture-ordre-et-devis-iib-brouillon5-
 ORDRE6 = "ordre-exploratoire-ii-b-v1-brouillon6.md"
 DEVIS6 = "devis-ii-b-v1-brouillon6.md"
 DIFF = "differences-brouillon5-vers-6-v1.md"
-HEURE = "2026-11-18 vers 23:00 UTC"
+HEURE = "2026-11-18 vers 22:55 UTC"
 MERE = "session_013QMayjsoZJFBUCqcnvD5h1"
 
 EC3 = "ec3b0329cd59db676007bd6c9ea3f0c36cf3ce95"
@@ -257,7 +257,7 @@ def p2_ordre(e6d: str) -> list:
             "Au brouillon 5, le code n'est pas relu : l'état de la tête `" + A31 + "` est pris du contrôle court (`02962a4a…c3a2`). "
             "Au brouillon 6 : le commit du code revu est `" + EC3 + "` (`R-3497`) ; son état est pris des deux contrôles courts et des deux rapports du développeur cités ci-dessus ; "
             "le rédacteur n'a lu au code, à cette tête, que ce qu'il faut pour la forme de la ligne de 7b et pour le format des actions : `src/controle_ia/iib/session_v1.py` (l. 70-96), les essais de cette ligne (`tests/test_iib_scripts_v1.py`, l. 29 et 105-132), "
-            "l'en-tête et la fonction `action_pour_la_piece` de `src/controle_ia/iib/bases_textuelles_v1.py`, les constantes de `src/controle_ia/iib/configuration_v1.py` (l. 46-96) ; aucun essai rejoué."),
+            "l'en-tête et la fonction `action_pour_la_piece` de `src/controle_ia/iib/bases_textuelles_v1.py`, les constantes et le croisement des marqueurs de `src/controle_ia/iib/configuration_v1.py` (l. 28-34, 46-96 et 240-260), et, par recherche de mots seulement, le lanceur et l'amorce (`scripts/lancer_iib_v1.sh`, `scripts/amorce_instance_iib_v1.sh`) ; aucun essai rejoué."),
         chg("E7", "section neuve, avant « Ce que le brouillon 5 change »", "résumé des changements du brouillon 6",
             "## Ce que le brouillon 5 change (détail : `differences-brouillon4-vers-5-v1.md`)",
             _NOUVELLE_SECTION + "## Ce que le brouillon 5 change (détail : `differences-brouillon4-vers-5-v1.md`)"),
