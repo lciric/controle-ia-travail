@@ -1,0 +1,112 @@
+Devis (ii-b), brouillon 3 — arithmétique (calcul v2) ; heures de carte ; USD ; juge de T0.8 hors des totaux
+
+## Attendu bas : 6 tours, jumeau 0,5 s/action, 96 acceptés
+  fixe : 1.00 h
+  étalonnage : épisodes : 1.15 h
+  étalonnage : jumeau : 0.13 h
+  maître : épisodes : 2.31 h
+  filtrage : jumeau du maître (et ancrage) : 0.31 h
+  distillation (élève et témoin-jumeau) : 0.31 h
+  évaluation : épisodes : 3.08 h
+  évaluation : jumeau (lecture 1) : 0.36 h
+  total : 8.65 h
+
+## Attendu central : 10 tours, jumeau 1,0 s/action, 96 acceptés
+  fixe : 1.00 h
+  étalonnage : épisodes : 1.15 h
+  étalonnage : jumeau : 0.27 h
+  maître : épisodes : 3.85 h
+  filtrage : jumeau du maître (et ancrage) : 0.98 h
+  distillation (élève et témoin-jumeau) : 0.31 h
+  évaluation : épisodes : 3.08 h
+  évaluation : jumeau (lecture 1) : 0.71 h
+  total : 11.35 h
+
+## Attendu haut : 12 tours, jumeau 1,5 s/action, 127 acceptés
+  fixe : 1.00 h
+  étalonnage : épisodes : 1.15 h
+  étalonnage : jumeau : 0.40 h
+  maître : épisodes : 4.62 h
+  filtrage : jumeau du maître (et ancrage) : 1.73 h
+  distillation (élève et témoin-jumeau) : 0.40 h
+  évaluation : épisodes : 3.08 h
+  évaluation : jumeau (lecture 1) : 1.07 h
+  total : 13.46 h
+
+## Pire P1 : hôte deux fois plus lent, 12 tours, jumeau 3,0 s/action, 127 acceptés
+  fixe : 2.00 h
+  étalonnage : épisodes : 2.31 h
+  étalonnage : jumeau : 1.60 h
+  maître : épisodes : 9.24 h
+  filtrage : jumeau du maître (et ancrage) : 6.93 h
+  distillation (élève et témoin-jumeau) : 0.81 h
+  évaluation : épisodes : 6.16 h
+  évaluation : jumeau (lecture 1) : 4.27 h
+  total : 33.31 h
+
+## Attendu, en USD (stockage arrêté 24 h, téléchargement 20 Go)
+  bas à 1,0889 : 8.65 h × 1.089 USD/h = carte 9.4 + stockage arrêté ≤ 1.9 (24 h) + téléchargement ≤ 1.0 (20 Go) = 12.3 USD
+  central à 1,12 : 11.35 h × 1.12 USD/h = carte 12.7 + stockage arrêté ≤ 1.9 (24 h) + téléchargement ≤ 1.0 (20 Go) = 15.6 USD
+  central à 1,30 : 11.35 h × 1.3 USD/h = carte 14.7 + stockage arrêté ≤ 1.9 (24 h) + téléchargement ≤ 1.0 (20 Go) = 17.7 USD
+  haut à 1,30 : 13.46 h × 1.3 USD/h = carte 17.5 + stockage arrêté ≤ 1.9 (24 h) + téléchargement ≤ 1.0 (20 Go) = 20.4 USD
+
+## Pire cas, en USD (stockage arrêté 48 h, téléchargement 40 Go)
+  P1 à 1.3 : 33.31 h × 1.3 USD/h = carte 43.3 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 49.1 USD
+  P1 à 1.4 : 33.31 h × 1.4 USD/h = carte 46.6 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 52.5 USD
+  P1 à 2.1 : 33.31 h × 2.1 USD/h = carte 70.0 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 75.8 USD
+  H200 NVL d'emblée (durées du haut de l'attendu) à 4.441 : 13.46 h × 4.441 USD/h = carte 59.8 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 65.6 USD
+  H200 NVL d'emblée (durées du haut de l'attendu) à 4.669 : 13.46 h × 4.669 USD/h = carte 62.8 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 68.7 USD
+  H200 NVL d'emblée (durées du haut de l'attendu) à 4.7 : 13.46 h × 4.7 USD/h = carte 63.2 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 69.1 USD
+  P1 joué sur H200 NVL à 4,70 : 33.31 h × 4.7 USD/h = carte 156.6 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 162.4 USD
+
+## Coupure par point d'arrêt (heures de carte ; USD au prix indiqué, stockage arrêté et téléchargement de l'attendu)
+ scénario central (1.12 USD/h, stockage 24 h, téléchargement 20 Go) :
+  arrêt aux épreuves de l'oracle (fin de l'étalonnage) : 2.42 h × 1.12 USD/h = carte 2.7 + stockage arrêté ≤ 1.9 (24 h) + téléchargement ≤ 1.0 (20 Go) = 5.6 USD
+  arrêt au contrôle du tour 4 (rien n'est distillé) : 4.41 h × 1.12 USD/h = carte 4.9 + stockage arrêté ≤ 1.9 (24 h) + téléchargement ≤ 1.0 (20 Go) = 7.9 USD
+  arrêt à la fin du tour 12, moins de 48 acceptés (rien n'est distillé) : 8.20 h × 1.12 USD/h = carte 9.2 + stockage arrêté ≤ 1.9 (24 h) + téléchargement ≤ 1.0 (20 Go) = 12.1 USD
+  course entière : 11.35 h × 1.12 USD/h = carte 12.7 + stockage arrêté ≤ 1.9 (24 h) + téléchargement ≤ 1.0 (20 Go) = 15.6 USD
+ scénario P1 (1.4 USD/h, stockage 48 h, téléchargement 40 Go) :
+  arrêt aux épreuves de l'oracle (fin de l'étalonnage) : 5.91 h × 1.4 USD/h = carte 8.3 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 14.1 USD
+  arrêt au contrôle du tour 4 (rien n'est distillé) : 11.66 h × 1.4 USD/h = carte 16.3 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 22.2 USD
+  arrêt à la fin du tour 12, moins de 48 acceptés (rien n'est distillé) : 22.08 h × 1.4 USD/h = carte 30.9 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 36.8 USD
+  course entière : 33.31 h × 1.4 USD/h = carte 46.6 + stockage arrêté ≤ 3.8 (48 h) + téléchargement ≤ 2.0 (40 Go) = 52.5 USD
+
+## Pièces (central à 1,12 USD/h, 24 h de stockage arrêté, 20 Go)
+  fixe : 1.00 h ; 1.12 USD
+  étalonnage : épisodes : 1.15 h ; 1.29 USD
+  étalonnage : jumeau : 0.27 h ; 0.30 USD
+  maître : épisodes : 3.85 h ; 4.31 USD
+  filtrage : jumeau du maître (et ancrage) : 0.98 h ; 1.10 USD
+  distillation (élève et témoin-jumeau) : 0.31 h ; 0.34 USD
+  évaluation : épisodes : 3.08 h ; 3.45 USD
+  évaluation : jumeau (lecture 1) : 0.71 h ; 0.80 USD
+  stockage arrêté : 1.92 USD ; téléchargement : 1.00 USD
+
+## Variantes de plafond, côte à côte, contre la ligne inscrite
+ variante A : ligne 80 USD, configuration 75 USD, repli H200 NVL : oui ; ligne inscrite GO-2026-11-10-08 = 60 USD : NON conforme (ligne neuve exigée)
+   à 1.12 USD/h : 65.2 h de carte avant la coupure de la configuration (téléchargement 40 Go déduit) ; P1 (33.31 h) couvert, marge 31.9 h
+   à 1.3 USD/h : 56.2 h de carte avant la coupure de la configuration (téléchargement 40 Go déduit) ; P1 (33.31 h) couvert, marge 22.8 h
+   à 1.4 USD/h : 52.1 h de carte avant la coupure de la configuration (téléchargement 40 Go déduit) ; P1 (33.31 h) couvert, marge 18.8 h
+   H200 NVL à 4,70 : 15.53 h avant la coupure ; haut de l'attendu 13.46 h, marge 2.08 h ; P1 33.31 h NON couvert
+   ligne − configuration = 5 USD ; stockage arrêté 48 h = 3.84 USD : couvert
+   P1 à 1,40 : 52.5 USD ≤ ligne 80 ? oui
+   P1 à 2,10 : 75.8 USD ≤ ligne 80 ? oui
+   H200 d'emblée à 4,70 : 69.1 USD ≤ ligne 80 ? oui
+ variante B : ligne 60 USD, configuration 55 USD, repli H200 NVL : non ; ligne inscrite GO-2026-11-10-08 = 60 USD : conforme
+   à 1.12 USD/h : 47.3 h de carte avant la coupure de la configuration (téléchargement 40 Go déduit) ; P1 (33.31 h) couvert, marge 14.0 h
+   à 1.3 USD/h : 40.8 h de carte avant la coupure de la configuration (téléchargement 40 Go déduit) ; P1 (33.31 h) couvert, marge 7.5 h
+   à 1.4 USD/h : 37.9 h de carte avant la coupure de la configuration (téléchargement 40 Go déduit) ; P1 (33.31 h) couvert, marge 4.5 h
+   ligne − configuration = 5 USD ; stockage arrêté 48 h = 3.84 USD : couvert
+   P1 à 1,40 : 52.5 USD ≤ ligne 60 ? oui
+   P1 à 2,10 : 75.8 USD ≤ ligne 60 ? non
+   H200 d'emblée à 4,70 : sans objet (aucun repli)
+
+## Calendrier
+  fin du GO (lendemain 00:00 UTC de l'échéance) : 2026-11-28T00:00:00+00:00 ; secondes : 1795824000
+  échéance proposée de la minuterie (fin du GO − 2 h) : 2026-11-27T22:00:00+00:00 ; secondes : 1795816800
+  dernière création pour finir le scénario haut (13.46 h) avant l'échéance de la minuterie : 2026-11-27T08:32+00:00
+  dernière création pour finir le scénario P1 (33.31 h) avant l'échéance de la minuterie : 2026-11-26T12:41+00:00
+  dernier jour de création proposé 2026-11-25 : création à 23:59:59 → fin de P1 vers 2026-11-27T09:18+00:00 (avant l'échéance de la minuterie)
+
+## Option hors des totaux : juge de T0.8 (le code v3 ne le joue pas)
+  une passe sans raisonnement : 0.21 h (hôte nominal) ; avec raisonnement (400 jetons au plus, 4.33 s par action) : 3.08 h

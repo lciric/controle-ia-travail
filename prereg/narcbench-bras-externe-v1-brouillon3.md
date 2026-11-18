@@ -462,22 +462,24 @@ secondaire).
 
 ## Plan d'analyse
 
-0. **Avant le scellement** : contre-lecture 2 (vérification courte de la différence brouillon 1 → brouillon 2 par un agent
-   neuf, R-3341) ; inscription de l'entropie et de l'entrée de la contre-lecture 2 par la mère ; scellement par
-   `sceller_prereg` sous le nom `prereg/narcbench-bras-externe-v1.md` ; création du registre propre ; ligne
-   `SCELLEMENT-NARC-EXT`.
+0. **Avant le scellement** : contre-lecture 3 (vérification courte de la différence brouillon 2 → brouillon 3 par un agent
+   neuf) ; pièces de la branche citées par ce texte entrées dans `main` (section « En-tête du gabarit ») ; inscription par la
+   mère de l'entropie, de la tête finale du code et de l'entrée de la contre-lecture 3 ; contrôle `verifier-texte` du code
+   sur la copie à sceller (code de sortie 0 exigé) ; scellement par `sceller_prereg` sous le nom
+   `prereg/narcbench-bras-externe-v1.md` ; création du registre propre ; ligne `SCELLEMENT-NARC-EXT`.
 1. **Avant la ligne de code** : le code ferme **chaque écart** de la section « Code » (avant le scellement, un écart peut
-   encore se régler par une nouvelle version de ce texte ; après, tout écart est un nœud) ; essais R5 de chaque garde, cas
+   encore se régler par une nouvelle version de ce texte ; après, tout écart est un nœud) ; il aligne la phrase gelée R1 ;
+   essais R5 de chaque garde, cas
    sain **et** artefact (une garde sans essai sur artefact interdit la ligne de code) ; énumération exhaustive des règles C et
    T, des phrases par famille et des lignes de réponse, rejouée en essai ; jouet de bout en bout sur vecteurs factices aux
    formes publiées (deux modèles, deux étages) ; contre-lecture du code final par un agent neuf, qui vérifie la fermeture de
    chaque écart ; fiche du code scellée ; ligne `CODE-NARC-EXT`, **avant toute exécution** sur les fichiers publiés.
    Personne ne calcule d'aire, de score de sonde ni de statistique d'épisode sur les fichiers publiés avant cette ligne.
-2. **Lancement** (la mère) : branche fusionnée dans `main`, arbre propre au commit de la fiche ; données téléchargées à la
-   révision épinglée si elles manquent, hors du dépôt ; commande avec les options de la configuration canonique. Le code
-   vérifie, dans cet ordre et sans rien écrire en cas de refus : registre et lignes ; configuration ; commit ; « déjà
-   jouée » ; version de `scikit-learn` ; absence de tout dossier de l'étage de transfert ; tailles et empreintes des huit
-   fichiers (R11). Puis il crée le manifeste du run (R9) et ouvre les activations.
+2. **Lancement** (la mère) : branche fusionnée dans `main`, arbre propre, paquet exécuté égal à celui du commit de la fiche
+   (règle DF-02 de T0.7) ; mémoire libre relevée (au moins 8 Go, liste d'arrêt n° 11) ; données téléchargées à la révision
+   épinglée si elles manquent, hors du dépôt ; commande avec les options de la configuration canonique. Le code vérifie, dans
+   l'ordre de la liste d'arrêt (n° 3, 5, 6, 4, 7, 2, 1, puis 8 et 9 sur les métadonnées), en n'écrivant en cas de refus que la
+   ligne du journal ; puis il crée le manifeste du run (R9) et ouvre les activations.
 3. **Comptes structurels**, écrits au résultat à côté de ceux de l'article (étage des comités : 50 scénarios, 17 domaines,
    100 épisodes, p. 14 ; 36 scénarios de collusion retenus avec les 50 témoins, p. 35, sans dire pour quel modèle ; étage
    stéganographique : 20 sabots, 40 épisodes, p. 15 et 40 ; tous les épisodes de collusion retenus, p. 44) : épisodes par
@@ -513,11 +515,11 @@ publiée et n'ajoute pas de puissance.
 
 **Nos tirages** : `numpy.random.SeedSequence` (R9 ; numpy ≥ 1.25) par `controle_ia.manifeste.graines(tâches, entropie)`,
 entropie = l'entier de la ligne `Entropie :` (section « Configuration canonique de la commande ») ; une tâche nommée par
-tirage, aucune partagée ; entier passé aux fonctions = `generateur(graine).integers(2**31)` (code v2,
-`lecture_externe_v2.py` l. 147-148). Noms des tâches :
-- nos familles, par couche (noms du code v2) : `<modèle>/familles/c<couche>/<famille>/apprentissage`, `…/plancher`,
-  `…/reechantillonnage`, `…/placebo` (les deux derniers servent la lecture par agent) ; pour un pli de l'étage des comités :
-  `<modèle>/familles/c<couche>/<famille>/apprentissage/pli-<domaine>` ;
+tirage, aucune partagée ; entier passé aux fonctions = `generateur(graine).integers(2**31)` (tête lue,
+`lecture_externe_v2.lire`, fonction `graine`). Noms des tâches (`cellules_externe_v2.taches_modele`) :
+- nos familles, par couche (trois familles) : `<modèle>/familles/c<couche>/<famille>/apprentissage`, `…/plancher`,
+  `…/reechantillonnage`, `…/placebo` (les deux derniers servent la lecture par agent) ; pour un pli de l'étage des comités,
+  familles co-principales seulement : `<modèle>/familles/c<couche>/<famille>/apprentissage/pli-<domaine>` ;
 - plancher du témoin : `<modèle>/temoin/c<couche>/plancher` ;
 - cellules : `<modèle>/cellules/<procédure>/<étage>/<statistique>/reechantillonnage` et, pour les cellules visées,
   `…/placebo` (procédure parmi `temoin`, `difference_moyennes`, `lineaire`, `mahalanobis` ; étage `stego` ou `core` ;
@@ -525,8 +527,16 @@ tirage, aucune partagée ; entier passé aux fonctions = `generateur(graine).int
 
 Sans tirage : plis (domaines triés par nom), sabots, ordre des agents (triés par nom), ordre des couches. Manifeste du run
 (R9) : configuration et son empreinte, versions (numpy, scipy, scikit-learn, torch et les paquets de
-`lecture_externe_v2.PAQUETS`), graines, commit, empreintes des huit fichiers ; la liste exacte des tâches est dans la fiche du
-code.
+`lecture_externe_v2.PAQUETS`), graines, commit, empreintes des huit fichiers.
+
+**Liste exacte des tâches** (décision de ce texte) : les plis, qui nomment des tâches, se lisent sur les métadonnées avant le
+manifeste ; avec les plis que donne l'essai de forme (14 pour Qwen3-32B, 15 pour Llama-3.1-70B : exposition déclarée), la liste
+compte **503 tâches** (Qwen3-32B : 5 couches × 12 tâches de familles, 5 × 2 × 14 tâches de plis, 5 planchers du témoin, 14
+tâches de cellules de l'étage stéganographique, 6 de l'étage des comités, soit 225 ; Llama-3.1-70B : 72, 180, 6, 14 et 6, soit
+278). La fiche du code (`CODE-NARC-EXT`) porte cette liste exacte, scellée, produite par la fonction `taches` du commit de la
+fiche sur ces plis ; le manifeste du run porte la liste effectivement utilisée ; le lecteur des issues vérifie leur égalité.
+Un écart (il dirait que les plis lus diffèrent de ceux de l'essai de forme) est rapporté et devient un nœud ; il ne change
+aucune phrase gelée.
 
 ## Critères de lecture gelés
 
@@ -600,40 +610,66 @@ reproduit » sous témoin « reproduit » ; intervalle entier sous 0,5 ; scores 
 
 ## Liste d'arrêt
 
-Tout refus ou arrêt imprime sa raison ; la mère le consigne au registre des décisions (le code ne tient pas de journal). Les
-n° 1 à 7 tombent **avant l'ouverture des activations** et n'écrivent rien ; une relance est permise une fois la cause
-corrigée, sauf sous les n° 2 et 4 et sauf une ligne fautive au registre, qui ne se réécrit pas : nœud. Un arrêt des n° 8, 9, 11 ou
-12 tombe **après** l'ouverture : toute relance sous ce texte est un nœud (Lazar).
+**Ordre.** Le code vérifie dans cet ordre (`lecture_externe_v2.lire`) : n° 3 (registre et texte cité), n° 5 (configuration),
+n° 6 (code), n° 4 (déjà jouée), n° 7 (scikit-learn), n° 2 (transfert), n° 1 (fichiers), puis les n° 8 et 9 **sur les
+métadonnées** (structure et comptes, jamais un score) ; ensuite seulement il crée le manifeste du run et ouvre les
+activations, où jouent la part du n° 8 qui porte sur les activations et les n° 10 à 12.
+**Codes de sortie.** **2** pour les refus n° 3, 4 et 5 ; **1** pour tout autre arrêt ; 0 pour une lecture menée au bout.
+Chaque refus ou arrêt imprime sa raison, sans trace d'erreur.
+**Journal.** Le code tient un journal, `registres/narcbench-externe-v1.md.ouvertures.md` (section « Lignes de registre ») :
+une ligne `REFUS-NARC-EXT` pour tout refus ou arrêt avant le manifeste, `OUVERTURE-NARC-EXT` à la création du manifeste,
+`ARRET-NARC-EXT` pour tout arrêt après ; la mère consigne aussi chaque refus ou arrêt au registre des décisions.
+**Relance.** Un refus ou un arrêt **avant le manifeste** (n° 1 à 7, n° 8 et 9 sur les métadonnées) n'écrit que sa ligne de
+journal ; la relance est permise une fois la cause corrigée et le journal committé (sinon le n° 6 refuse un arbre modifié),
+sauf sous les n° 2, 4, 8 et 9 et sauf une ligne fautive au registre, qui ne se réécrit pas : nœud (les métadonnées publiées
+ne changent pas : relancer après un n° 8 ou 9 supposerait un autre texte ou d'autres données). Un arrêt **après le
+manifeste** (n° 8 sur les activations, n° 11 et 12, valeur non finie au résultat) rend toute relance sous ce texte un nœud
+(Lazar) ; le dossier du run reste, et le n° 4 refuserait la relance.
 
-1. Fichier publié de taille ou d'empreinte différente de `EMPREINTES_PUBLIEES`, ou révision du jeu différente → refus avant
+1. Fichier publié de taille ou d'empreinte différente de `EMPREINTES_PUBLIEES`, ou révision du jeu différente → arrêt avant
    toute lecture (R11).
-2. Dossier de l'étage de transfert sous le dossier des données, ou ouverture d'un de ses fichiers → refus, nœud.
-3. Registre : chemin autre que la ligne `registre :` ; ligne `SCELLEMENT-NARC-EXT` ou `CODE-NARC-EXT` absente, en double,
+2. Fichier ou dossier dont le chemin, sous le dossier des données, porte un segment `transfer` → arrêt avant toute lecture,
+   nœud ; toute ouverture d'un fichier de l'étage de transfert (le code n'en ouvre aucun) → arrêt, nœud.
+3. Registre : `registres/narcbench-externe-v1.md` absent du dépôt ; ligne `SCELLEMENT-NARC-EXT` ou `CODE-NARC-EXT` absente, en double,
    mal formée, non strictement antérieure à l'ouverture ou de sceau faux ; `CODE-NARC-EXT` non strictement postérieure à
-   `SCELLEMENT-NARC-EXT` ; texte cité différent de la ligne `texte :` ou de l'option `--texte` ; toute autre clé au registre
-   → refus, code 2, rien d'écrit.
+   `SCELLEMENT-NARC-EXT` ; texte cité différent de l'option `--texte` ; texte cité non conforme au gabarit des
+   préenregistrements ou de sceau faux ; toute autre clé au registre → refus (code 2).
 4. **Déjà jouée** : ligne `LECTURE-NARC-EXT` au registre, run de suffixe `narc-externe-v2` présent sous `runs/`, ou résultat
    `externe-narcbench-v2.json` présent sous `diag/` → refus ; **pas de relance sous ce texte : nœud**.
-5. Configuration : ligne absente, en double ou mal formée ; option de la commande différente (augmentation, couches de nos
-   familles, identifiant du run, registre, texte, entropie) → refus avant toute lecture.
-6. Commit exécuté différent de celui de la fiche de code, ou arbre de travail modifié → refus avant toute lecture.
-7. `scikit-learn` absent ou d'une autre version que 1.9.1 → refus avant toute lecture (rien n'est lu, pas même notre
-   chaîne).
-8. **Forme** (arrêts plus stricts que les auteurs, déclarés) : champ de métadonnées manquant ou en trop (vingt exacts) ;
-   mode, rôle ou canal hors des valeurs fermées ; couche de la bande absente ; activations autres que `float32`, de largeur
-   différente (5 120 ; 8 192), ou non finies ; lignes du `.npz` en nombre différent des métadonnées ; rôle incohérent entre
-   les lignes d'un agent ; mode incohérent entre les lignes ou les agents d'un épisode ; deux lignes finales pour un agent de
-   l'étage stéganographique ; épisode de collusion sans exactement deux colludeurs, ou témoin avec un colludeur ; direction
-   nulle ; aucune valeur pour un étage → arrêt, aucun repli (R5).
-9. **Exclusions** : épisode sans quatre agents ; agent de l'étage des comités sans exactement trois lignes publiques de
-   discussion (son épisode est exclu) ; comptées et rapportées, jamais en silence ; **plus de 10 % des épisodes d'un étage
-   d'un modèle exclus → arrêt, nœud**.
+5. Configuration : section absente ou en double, ligne absente, en double, mal formée, ou autre que les six lignes ; option de
+   la commande qui ne dit pas ce que dit la configuration (augmentation, couches de nos familles, forme de l'identifiant du
+   run, texte, entropie) → refus (code 2) avant toute lecture.
+6. **Code (règle DF-02 de T0.7)** : `--depot` n'est pas la racine d'un dépôt git ; arbre de travail modifié ; commit de la
+   fiche absent du dépôt, ou ni HEAD ni un de ses ancêtres ; liste des fichiers `src/controle_ia/narcbench/*.py` au commit de
+   la fiche différente de celle de la fiche, ou empreinte différente ; **paquet `controle_ia` exécuté différent, fichier pour
+   fichier, de `src/controle_ia/` au commit de la fiche** → arrêt avant toute lecture. Le commit exécuté peut donc être un
+   descendant du commit de la fiche (par exemple après la fusion dans `main`), pourvu que le code exécuté soit le même.
+7. `scikit-learn` absent, ou version installée différente de celle de la fiche, ou de 1.9.1 → arrêt avant toute lecture
+   (rien n'est lu, pas même notre chaîne). Raison : la lecture n'a qu'un coup (n° 4) ; un témoin « non lu » brûlerait ce coup
+   pour un oubli d'environnement et mènerait à la réponse R0, alors qu'un arrêt avant l'ouverture ne coûte rien et ne révèle
+   rien.
+8. **Forme** (arrêts plus stricts que les auteurs, déclarés ; aucun repli, R5). Sur les **métadonnées, avant le manifeste**
+   (`chargeur_externe_v1.charger_metadonnees`, `externe_v2.exiger_roles_episodes`, pour toutes les procédures) : champ
+   manquant ou en trop (vingt exacts) ; mode, rôle ou canal hors des valeurs fermées ; rôle incohérent entre les lignes d'un
+   agent ; mode incohérent entre les lignes d'un épisode ; épisode de collusion sans exactement deux colludeurs, ou témoin avec
+   un colludeur. Sur les **activations, après le manifeste** : couche de la bande absente ; activations autres que `float32`,
+   de largeur différente (5 120 ; 8 192), ou non finies ; lignes du `.npz` en nombre différent des métadonnées ; deux lignes
+   finales pour un agent de l'étage stéganographique ; direction nulle ; aucune valeur pour un étage → arrêt.
+9. **Exclusions**, calculées **sur les métadonnées, avant le manifeste** (`externe_v2.exclusions_etage`, `exiger_exclusions`) :
+   épisode sans quatre agents dans la phase lue (dont, dans l'étage stéganographique, un agent sans sa ligne finale) ; agent
+   de l'étage des comités sans exactement trois lignes publiques de discussion (son épisode est exclu) ; comptées et
+   rapportées, jamais en silence ; **plus de 10 % des épisodes d'un étage d'un modèle exclus (comparé en entiers : exactement
+   10 % passe) → arrêt, nœud**. Les plis gardés se calculent au même moment, sur les métadonnées : ils nomment des graines.
 10. Factorisation de Cholesky refusée pour un plancher (dimension 5 120 ou 8 192, Σ de rang au plus le nombre de lignes) →
     tirage **équivalent en loi** par les lignes centrées (w = X_cᵀ g / √(n − 1) + √(10⁻⁹) h, g et h gaussiens réduits),
     déclaré au résultat ; s'il échoue aussi → la cellule est « sans plancher ».
-11. Mémoire insuffisante → arrêt, nœud.
+11. Mémoire insuffisante → arrêt, nœud (une famille « non lue pour mémoire » serait une sortie sélective). Pour ne pas brûler
+    le coup sur cet arrêt, la mère relève avant le lancement la mémoire libre et ne lance pas sous 8 Go (estimation du
+    rédacteur, non mesurée : couches de la bande chargées, matrices 8 192 × 8 192 en double précision pour le plancher et
+    Mahalanobis).
 12. Scores non finis → arrêt (le paquet gelé l'impose) ; scores d'une procédure constants sur un étage → ses cellules « non
-    lu : garde (scores constants) » ; audit R4.
+    lu : garde (scores constants) » ; audit R4. Valeur non finie dans le résultat → arrêt, rien n'est écrit (JSON standard
+    exigé).
 13. Toute aire, tout intervalle, tout score de sonde ou toute statistique d'épisode calculés sur les fichiers publiés avant
     la ligne `CODE-NARC-EXT` → exploratoire, non opposable, consigné ; nœud.
 14. Toute lecture humaine d'une issue avant le scellement du résultat → consignée ; nœud si une décision en a dépendu.
@@ -653,10 +689,19 @@ corrigée, sauf sous les n° 2 et 4 et sauf une ligne fautive au registre, qui n
     `registres/code-accb6/CODE-ACCB6-v1.json`), **strictement après** `SCELLEMENT-NARC-EXT` et **avant toute exécution** ;
   - `LECTURE-NARC-EXT` : le résultat scellé `diag/<run_id>/externe-narcbench-v2.json`, inscrit par la mère après
     l'exécution.
-- **Règle d'ouverture** (code de lecture) : registre = ligne `registre :` de la configuration ; `SCELLEMENT-NARC-EXT` et
-  `CODE-NARC-EXT` exactement une fois chacune, bien formées, strictement antérieures à l'instant d'ouverture, de sceau
-  conforme, la seconde strictement postérieure à la première ; texte cité = ligne `texte :` = option `--texte` ; commit de
-  la fiche = commit exécuté, arbre propre ; `LECTURE-NARC-EXT` absente ; aucune autre clé (liste d'arrêt n° 3 à 6).
+- **Règle d'ouverture** (code de lecture) : registre fixé `registres/narcbench-externe-v1.md` du dépôt (égal à la ligne
+  `registre :` de la configuration ; aucune option) ; `SCELLEMENT-NARC-EXT` et `CODE-NARC-EXT` exactement une fois chacune,
+  bien formées, strictement antérieures à l'instant d'ouverture, de sceau conforme, la seconde strictement postérieure à la
+  première ; texte cité = ligne `texte :` = option `--texte`, scellé et conforme au gabarit ; code exécuté = code de la fiche
+  au sens de la règle DF-02 de T0.7 (commit de la fiche = HEAD ou un de ses ancêtres, paquet `controle_ia` exécuté égal fichier
+  pour fichier à `src/controle_ia/` de ce commit), arbre propre ; `LECTURE-NARC-EXT` absente ; aucune autre clé (ligne de
+  quatre cellules dont la deuxième est une date) ; les lignes qui ne sont pas des clés (titre, en-tête de table, texte, ligne
+  vide) sont ignorées (liste d'arrêt n° 3 à 6).
+- **Journal du code** (décision de ce texte : le code le garde, contre-lecture 2, A23) :
+  `registres/narcbench-externe-v1.md.ouvertures.md`, fichier distinct du registre (la règle d'ouverture ne le lit pas), lignes
+  `| CLÉ | date | identifiant du run | détail | registre <sha256> |` : `REFUS-NARC-EXT` (tout refus ou arrêt avant le
+  manifeste), `OUVERTURE-NARC-EXT` (manifeste créé, empreinte du manifeste), `ARRET-NARC-EXT` (tout arrêt après). Il modifie
+  l'arbre : la mère le committe avant toute relance, et après la lecture avec le résultat.
 
 ## Code
 
