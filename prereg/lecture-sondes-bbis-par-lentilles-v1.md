@@ -738,8 +738,9 @@ anticipation par la session mère (autonomie GO-2026-11-18-26), portée à Lazar
 | N9 (registres lus par l'opérateur) | **fait** : clés et heures nommées seulement ; tranché ensuite, option (a) (« Nœuds ») | Entrées (E-3) ; Qui ; Nœuds |
 | N10 (conséquence d'une seule lentille ajustée) | **fait** : écrit dans la frontière ; tranché ensuite, option (a) (« Nœuds ») | Frontière (6) ; Nœuds |
 
-**Remarque non faite** : aucune. Effets de bord déclarés : nombre de lectures porté à ≈ 195 000 (témoins du nul isotrope) ; durée de
-calcul au pire ≈ 13 min de produits si la garde du rapport à ε impose les nuls par direction, dans la marge de 8 h.
+**Remarque non faite** : aucune. Effets de bord déclarés au brouillon 3 : nombre de lectures porté à ≈ 195 000 (témoins du nul
+isotrope) ; durée de calcul au pire ≈ 13 min de produits si la garde du rapport à ε impose les nuls par direction (valeur du
+brouillon 3 ; dans la version, ≈ 14 min, après le couple V-M2 de la vérification 1 : plan, point 6), dans la marge de 8 h.
 
 ### Traitement des remarques de la vérification 1
 
@@ -770,10 +771,10 @@ calcul au pire ≈ 13 min de produits si la garde du rapport à ε impose les nu
 | point 6 : ordre du scellement | fait, écrit tel que le rapport le dit | Statut |
 
 **Couples non appliqués tels quels** : V-M1 (mise en forme dans la table), V-m6 (une ligne retirée pour n'en garder qu'une), V-m8
-(parenthèse accordée), V-m10 (un artefact choisi parmi deux) : raisons ci-dessus. **Incohérence résiduelle, signalée et non corrigée**
-(hors des couples) : l'« ordre de grandeur » du plan, point 6 (« ≈ 13 min si la garde du rapport à ε impose les nuls par direction »),
-et « Qui, quelle machine » (« ≈ 7 à 13 min de produits ») ne suivent pas le coût neuf de V-M2 (≈ 7 min de plus au lieu de ≈ 6) : la
-borne vaut ≈ 14 min ; sans effet sur l'arrêt à 8 h.
+(parenthèse accordée), V-m10 (un artefact choisi parmi deux) : raisons ci-dessus. **Écart signalé, puis corrigé**
+(hors des couples) : l'« ordre de grandeur » du plan, point 6, et « Qui, quelle machine » ne suivaient pas le coût neuf de V-M2 (≈ 7 min
+de plus au lieu de ≈ 6) ; signalé par le rédacteur, l'écart a été corrigé par les changements 43 et 44 du fichier des différences, à la
+demande de la session mère : « ≈ 14 min » et « ≈ 7 à 14 min » ; sans effet sur l'arrêt à 8 h.
 
 - **État au validateur** (`prereg.problemes`), rejoué sur cette version : liste vide (aucun manque ; les entrées
   « Contre-lecture 1 » et « Contre-lecture 2 » portent chacune leurs deux empreintes).
