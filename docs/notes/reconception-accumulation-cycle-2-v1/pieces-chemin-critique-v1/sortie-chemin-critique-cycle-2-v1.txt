@@ -1,0 +1,228 @@
+départ T0 = 2026-11-18T21:30:00+00:00 ; graine SeedSequence(20261118) ; 20000 tirages ; numpy 2.4.6
+
+=== scénario A : avec levée de la validité de l'adaptateur (GO-2026-11-18-58), une machine, 400 tâches
+  [basse] OUV 2026-11-19T00:54Z ; F5 2026-11-19T10:48Z ; SONDES 2026-11-20T05:00Z ; S1 2026-11-20T07:00Z ; FAM 2026-11-22T12:30Z ; V1 2026-11-22T16:48Z
+  [probable] OUV 2026-11-19T10:45Z ; F5 2026-11-20T03:30Z ; SONDES 2026-11-21T19:00Z ; S1 2026-11-22T01:00Z ; FAM 2026-11-24T17:00Z ; V1 2026-11-25T13:00Z
+  chemin critique (probable) : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  marges à la date probable (heures, relatives à l'échéance du 25 à 18:00Z) : E1 +8 ; E2 +5 ; E3 +5 ; E4 +5 ; E5 +5 ; P1 +15 ; P2 +13 ; P3 +13 ; OUV +5 ; F1 +44 ; F2 +44 ; F3 +44 ; F4 +44 ; F5 +44 ; T1 +5 ; T2 +5 ; SONDES +5 ; C1 +38 ; AB +58 ; S1 +5 ; G1 +5 ; FAM +5 ; L1 +5 ; V1 +5
+  bascule (dernière fin permise pour un verdict le 25 à 18:00Z) — au rythme probable du reste | au rythme bas du reste :
+    E4 : 2026-11-19T13:30Z | 2026-11-22T01:30Z
+    OUV : 2026-11-19T15:45Z | 2026-11-22T02:06Z
+    T1 : 2026-11-19T23:45Z | 2026-11-22T06:06Z
+    F5 : 2026-11-21T23:45Z | 2026-11-23T06:06Z
+    SONDES : 2026-11-22T00:00Z | 2026-11-23T06:12Z
+    C1 : 2026-11-22T00:00Z | 2026-11-23T06:12Z
+    S1 : 2026-11-22T06:00Z | 2026-11-23T08:12Z
+    G1 : 2026-11-22T10:00Z | 2026-11-23T08:42Z
+    FAM : 2026-11-24T22:00Z | 2026-11-25T13:42Z
+    L1 : 2026-11-25T10:00Z | 2026-11-25T17:42Z
+  [haute] OUV 2026-11-23T09:30Z ; F5 2026-11-24T12:30Z ; SONDES 2026-12-01T16:30Z ; S1 2026-12-02T16:30Z ; FAM 2026-12-08T16:30Z ; V1 2026-12-10T16:30Z
+  tirage OUV : P10 2026-11-19T19:32Z ; P50 2026-11-20T12:55Z ; P90 2026-11-21T15:50Z
+  tirage SONDES : P10 2026-11-22T17:45Z ; P50 2026-11-24T10:13Z ; P90 2026-11-26T16:38Z
+  tirage S1 : P10 2026-11-23T03:49Z ; P50 2026-11-24T20:53Z ; P90 2026-11-27T03:30Z
+  tirage V1 : P10 2026-11-27T13:45Z ; P50 2026-11-29T13:16Z ; P90 2026-12-01T22:43Z
+  part des tirages avec verdict avant « résultats prêts (GO-2026-11-18-30) : 2026-11-25T18:00Z » : 0.001
+  part des tirages avec verdict avant « veille de l'entretien : 2026-11-27T00:00Z » : 0.039
+  part des tirages avec texte scellé et sonde gelée (SCELLEMENT-ACC2) avant le 25 à 18:00Z : 0.691
+  chemin critique tiré 0.825 : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.157 : E1 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.017 : F1 -> F2 -> F3 -> F4 -> F5 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+
+=== scénario B : A + deux machines de génération, 400 tâches
+  [basse] OUV 2026-11-19T00:54Z ; F5 2026-11-19T10:48Z ; SONDES 2026-11-20T05:00Z ; S1 2026-11-20T07:00Z ; FAM 2026-11-21T13:30Z ; V1 2026-11-21T17:48Z
+  [probable] OUV 2026-11-19T10:45Z ; F5 2026-11-20T03:30Z ; SONDES 2026-11-21T19:00Z ; S1 2026-11-22T01:00Z ; FAM 2026-11-23T21:00Z ; V1 2026-11-24T17:00Z
+  chemin critique (probable) : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  marges à la date probable (heures, relatives à l'échéance du 25 à 18:00Z) : E1 +28 ; E2 +25 ; E3 +25 ; E4 +25 ; E5 +25 ; P1 +35 ; P2 +33 ; P3 +33 ; OUV +25 ; F1 +64 ; F2 +64 ; F3 +64 ; F4 +64 ; F5 +64 ; T1 +25 ; T2 +25 ; SONDES +25 ; C1 +58 ; AB +78 ; S1 +25 ; G1 +25 ; FAM +25 ; L1 +25 ; V1 +25
+  bascule (dernière fin permise pour un verdict le 25 à 18:00Z) — au rythme probable du reste | au rythme bas du reste :
+    E4 : 2026-11-20T09:30Z | 2026-11-23T00:30Z
+    OUV : 2026-11-20T11:45Z | 2026-11-23T01:06Z
+    T1 : 2026-11-20T19:45Z | 2026-11-23T05:06Z
+    F5 : 2026-11-22T19:45Z | 2026-11-24T05:06Z
+    SONDES : 2026-11-22T20:00Z | 2026-11-24T05:12Z
+    C1 : 2026-11-22T20:00Z | 2026-11-24T05:12Z
+    S1 : 2026-11-23T02:00Z | 2026-11-24T07:12Z
+    G1 : 2026-11-23T06:00Z | 2026-11-24T07:42Z
+    FAM : 2026-11-24T22:00Z | 2026-11-25T13:42Z
+    L1 : 2026-11-25T10:00Z | 2026-11-25T17:42Z
+  [haute] OUV 2026-11-23T09:30Z ; F5 2026-11-24T12:30Z ; SONDES 2026-12-01T16:30Z ; S1 2026-12-02T16:30Z ; FAM 2026-12-07T00:30Z ; V1 2026-12-09T00:30Z
+  tirage OUV : P10 2026-11-19T19:44Z ; P50 2026-11-20T12:47Z ; P90 2026-11-21T15:25Z
+  tirage SONDES : P10 2026-11-22T18:22Z ; P50 2026-11-24T10:21Z ; P90 2026-11-26T16:25Z
+  tirage S1 : P10 2026-11-23T04:38Z ; P50 2026-11-24T21:07Z ; P90 2026-11-27T03:19Z
+  tirage V1 : P10 2026-11-26T12:21Z ; P50 2026-11-28T08:45Z ; P90 2026-11-30T17:59Z
+  part des tirages avec verdict avant « résultats prêts (GO-2026-11-18-30) : 2026-11-25T18:00Z » : 0.024
+  part des tirages avec verdict avant « veille de l'entretien : 2026-11-27T00:00Z » : 0.186
+  part des tirages avec texte scellé et sonde gelée (SCELLEMENT-ACC2) avant le 25 à 18:00Z : 0.693
+  chemin critique tiré 0.822 : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.164 : E1 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.014 : F1 -> F2 -> F3 -> F4 -> F5 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+
+=== scénario B6 : A + deux machines de génération, 600 tâches
+  [basse] OUV 2026-11-19T00:54Z ; F5 2026-11-19T10:48Z ; SONDES 2026-11-20T05:00Z ; S1 2026-11-20T07:00Z ; FAM 2026-11-22T04:30Z ; V1 2026-11-22T08:48Z
+  [probable] OUV 2026-11-19T10:45Z ; F5 2026-11-20T03:30Z ; SONDES 2026-11-21T19:00Z ; S1 2026-11-22T01:00Z ; FAM 2026-11-24T11:00Z ; V1 2026-11-25T07:00Z
+  chemin critique (probable) : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  marges à la date probable (heures, relatives à l'échéance du 25 à 18:00Z) : E1 +14 ; E2 +11 ; E3 +11 ; E4 +11 ; E5 +11 ; P1 +21 ; P2 +19 ; P3 +19 ; OUV +11 ; F1 +50 ; F2 +50 ; F3 +50 ; F4 +50 ; F5 +50 ; T1 +11 ; T2 +11 ; SONDES +11 ; C1 +44 ; AB +64 ; S1 +11 ; G1 +11 ; FAM +11 ; L1 +11 ; V1 +11
+  bascule (dernière fin permise pour un verdict le 25 à 18:00Z) — au rythme probable du reste | au rythme bas du reste :
+    E4 : 2026-11-19T19:30Z | 2026-11-22T09:30Z
+    OUV : 2026-11-19T21:45Z | 2026-11-22T10:06Z
+    T1 : 2026-11-20T05:45Z | 2026-11-22T14:06Z
+    F5 : 2026-11-22T05:45Z | 2026-11-23T14:06Z
+    SONDES : 2026-11-22T06:00Z | 2026-11-23T14:12Z
+    C1 : 2026-11-22T06:00Z | 2026-11-23T14:12Z
+    S1 : 2026-11-22T12:00Z | 2026-11-23T16:12Z
+    G1 : 2026-11-22T16:00Z | 2026-11-23T16:42Z
+    FAM : 2026-11-24T22:00Z | 2026-11-25T13:42Z
+    L1 : 2026-11-25T10:00Z | 2026-11-25T17:42Z
+  [haute] OUV 2026-11-23T09:30Z ; F5 2026-11-24T12:30Z ; SONDES 2026-12-01T16:30Z ; S1 2026-12-02T16:30Z ; FAM 2026-12-08T04:30Z ; V1 2026-12-10T04:30Z
+  tirage OUV : P10 2026-11-19T19:29Z ; P50 2026-11-20T12:55Z ; P90 2026-11-21T15:17Z
+  tirage SONDES : P10 2026-11-22T17:43Z ; P50 2026-11-24T10:29Z ; P90 2026-11-26T15:54Z
+  tirage S1 : P10 2026-11-23T04:08Z ; P50 2026-11-24T21:08Z ; P90 2026-11-27T02:59Z
+  tirage V1 : P10 2026-11-27T05:45Z ; P50 2026-11-29T04:21Z ; P90 2026-12-01T12:57Z
+  part des tirages avec verdict avant « résultats prêts (GO-2026-11-18-30) : 2026-11-25T18:00Z » : 0.003
+  part des tirages avec verdict avant « veille de l'entretien : 2026-11-27T00:00Z » : 0.070
+  part des tirages avec texte scellé et sonde gelée (SCELLEMENT-ACC2) avant le 25 à 18:00Z : 0.693
+  chemin critique tiré 0.823 : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.160 : E1 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.017 : F1 -> F2 -> F3 -> F4 -> F5 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+
+=== scénario E : B + relecture complémentaire jouée avant l'ouverture (levée, nœud)
+  [basse] OUV 2026-11-19T00:54Z ; F5 2026-11-19T10:48Z ; SONDES 2026-11-20T03:36Z ; S1 2026-11-20T05:36Z ; FAM 2026-11-21T12:06Z ; V1 2026-11-21T16:24Z
+  [probable] OUV 2026-11-19T10:45Z ; F5 2026-11-20T03:30Z ; SONDES 2026-11-21T11:00Z ; S1 2026-11-21T17:00Z ; FAM 2026-11-23T13:00Z ; V1 2026-11-24T09:00Z
+  chemin critique (probable) : E2 -> E3 -> E4 -> E5 -> OUV -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  marges à la date probable (heures, relatives à l'échéance du 25 à 18:00Z) : E1 +36 ; E2 +33 ; E3 +33 ; E4 +33 ; E5 +33 ; P1 +43 ; P2 +41 ; P3 +33 ; OUV +33 ; F1 +64 ; F2 +64 ; F3 +64 ; F4 +64 ; F5 +64 ; T1 +33 ; T2 +33 ; SONDES +33 ; C1 +58 ; AB +78 ; S1 +33 ; G1 +33 ; FAM +33 ; L1 +33 ; V1 +33
+  bascule (dernière fin permise pour un verdict le 25 à 18:00Z) — au rythme probable du reste | au rythme bas du reste :
+    E4 : 2026-11-20T17:30Z | 2026-11-23T04:30Z
+    OUV : 2026-11-20T19:45Z | 2026-11-23T05:06Z
+    T1 : 2026-11-20T19:45Z | 2026-11-23T05:06Z
+    F5 : 2026-11-22T19:45Z | 2026-11-24T05:06Z
+    SONDES : 2026-11-22T20:00Z | 2026-11-24T05:12Z
+    C1 : 2026-11-22T20:00Z | 2026-11-24T05:12Z
+    S1 : 2026-11-23T02:00Z | 2026-11-24T07:12Z
+    G1 : 2026-11-23T06:00Z | 2026-11-24T07:42Z
+    FAM : 2026-11-24T22:00Z | 2026-11-25T13:42Z
+    L1 : 2026-11-25T10:00Z | 2026-11-25T17:42Z
+  [haute] OUV 2026-11-23T09:30Z ; F5 2026-11-24T12:30Z ; SONDES 2026-11-30T10:30Z ; S1 2026-12-01T10:30Z ; FAM 2026-12-05T18:30Z ; V1 2026-12-07T18:30Z
+  tirage OUV : P10 2026-11-19T19:42Z ; P50 2026-11-20T12:50Z ; P90 2026-11-21T15:27Z
+  tirage SONDES : P10 2026-11-22T06:43Z ; P50 2026-11-23T20:19Z ; P90 2026-11-26T01:22Z
+  tirage S1 : P10 2026-11-22T16:56Z ; P50 2026-11-24T06:59Z ; P90 2026-11-26T12:04Z
+  tirage V1 : P10 2026-11-26T00:36Z ; P50 2026-11-27T19:17Z ; P90 2026-11-30T02:27Z
+  part des tirages avec verdict avant « résultats prêts (GO-2026-11-18-30) : 2026-11-25T18:00Z » : 0.061
+  part des tirages avec verdict avant « veille de l'entretien : 2026-11-27T00:00Z » : 0.298
+  part des tirages avec texte scellé et sonde gelée (SCELLEMENT-ACC2) avant le 25 à 18:00Z : 0.799
+  chemin critique tiré 0.735 : E2 -> E3 -> E4 -> E5 -> OUV -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.136 : E1 -> E3 -> E4 -> E5 -> OUV -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.085 : P3 -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+
+=== scénario D : B + génération de la famille avant le gel (levée, nœud), 600 tâches
+  [basse] OUV 2026-11-19T00:54Z ; F5 2026-11-19T10:48Z ; SONDES 2026-11-20T05:00Z ; S1 2026-11-20T07:00Z ; FAM 2026-11-21T10:18Z ; V1 2026-11-21T14:36Z
+  [probable] OUV 2026-11-19T10:45Z ; F5 2026-11-20T03:30Z ; SONDES 2026-11-21T19:00Z ; S1 2026-11-22T01:00Z ; FAM 2026-11-22T19:30Z ; V1 2026-11-23T15:30Z
+  chemin critique (probable) : F1 -> F2 -> F3 -> F4 -> F5 -> G0 -> FAMG -> FAM -> L1 -> V1
+  marges à la date probable (heures, relatives à l'échéance du 25 à 18:00Z) : E1 +56 ; E2 +53 ; E3 +53 ; E4 +53 ; E5 +53 ; P1 +63 ; P2 +58 ; P3 +61 ; OUV +53 ; F1 +50 ; F2 +50 ; F3 +50 ; F4 +50 ; F5 +50 ; T1 +53 ; T2 +53 ; SONDES +53 ; C1 +86 ; AB +64 ; S1 +53 ; G1 +53 ; G0 +50 ; FAMG +50 ; FAM +50 ; L1 +50 ; V1 +50
+  bascule (dernière fin permise pour un verdict le 25 à 18:00Z) — au rythme probable du reste | au rythme bas du reste :
+    E4 : 2026-11-21T13:30Z | 2026-11-23T21:30Z
+    OUV : 2026-11-21T15:45Z | 2026-11-23T22:06Z
+    T1 : 2026-11-21T23:45Z | 2026-11-24T02:06Z
+    F5 : 2026-11-22T06:00Z | 2026-11-23T14:12Z
+    SONDES : 2026-11-24T00:00Z | 2026-11-25T02:12Z
+    C1 : 2026-11-24T00:00Z | 2026-11-25T02:12Z
+    S1 : 2026-11-24T06:00Z | 2026-11-25T04:12Z
+    G1 : 2026-11-24T08:00Z | 2026-11-25T04:42Z
+    FAMG : 2026-11-24T08:00Z | 2026-11-25T04:42Z
+    FAM : 2026-11-24T22:00Z | 2026-11-25T13:42Z
+    L1 : 2026-11-25T10:00Z | 2026-11-25T17:42Z
+  [haute] OUV 2026-11-23T09:30Z ; F5 2026-11-24T12:30Z ; SONDES 2026-12-01T16:30Z ; S1 2026-12-02T16:30Z ; FAM 2026-12-04T10:30Z ; V1 2026-12-06T10:30Z
+  tirage OUV : P10 2026-11-19T19:29Z ; P50 2026-11-20T12:55Z ; P90 2026-11-21T15:06Z
+  tirage SONDES : P10 2026-11-22T17:29Z ; P50 2026-11-24T09:40Z ; P90 2026-11-26T15:59Z
+  tirage S1 : P10 2026-11-23T03:42Z ; P50 2026-11-24T20:23Z ; P90 2026-11-27T02:58Z
+  tirage V1 : P10 2026-11-25T16:29Z ; P50 2026-11-27T02:49Z ; P90 2026-11-29T02:54Z
+  part des tirages avec verdict avant « résultats prêts (GO-2026-11-18-30) : 2026-11-25T18:00Z » : 0.111
+  part des tirages avec verdict avant « veille de l'entretien : 2026-11-27T00:00Z » : 0.463
+  part des tirages avec texte scellé et sonde gelée (SCELLEMENT-ACC2) avant le 25 à 18:00Z : 0.699
+  chemin critique tiré 0.575 : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.312 : F1 -> F2 -> F3 -> F4 -> F5 -> G0 -> FAMG -> FAM -> L1 -> V1
+  chemin critique tiré 0.105 : E1 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+
+=== scénario BDE : B + D + E
+  [basse] OUV 2026-11-19T00:54Z ; F5 2026-11-19T10:48Z ; SONDES 2026-11-20T03:36Z ; S1 2026-11-20T05:36Z ; FAM 2026-11-21T10:18Z ; V1 2026-11-21T14:36Z
+  [probable] OUV 2026-11-19T10:45Z ; F5 2026-11-20T03:30Z ; SONDES 2026-11-21T11:00Z ; S1 2026-11-21T17:00Z ; FAM 2026-11-22T19:30Z ; V1 2026-11-23T15:30Z
+  chemin critique (probable) : F1 -> F2 -> F3 -> F4 -> F5 -> G0 -> FAMG -> FAM -> L1 -> V1
+  marges à la date probable (heures, relatives à l'échéance du 25 à 18:00Z) : E1 +64 ; E2 +61 ; E3 +61 ; E4 +61 ; E5 +61 ; P1 +71 ; P2 +58 ; P3 +61 ; OUV +61 ; F1 +50 ; F2 +50 ; F3 +50 ; F4 +50 ; F5 +50 ; T1 +61 ; T2 +61 ; SONDES +61 ; C1 +86 ; AB +64 ; S1 +61 ; G1 +61 ; G0 +50 ; FAMG +50 ; FAM +50 ; L1 +50 ; V1 +50
+  bascule (dernière fin permise pour un verdict le 25 à 18:00Z) — au rythme probable du reste | au rythme bas du reste :
+    E4 : 2026-11-21T21:30Z | 2026-11-24T01:30Z
+    OUV : 2026-11-21T23:45Z | 2026-11-24T02:06Z
+    T1 : 2026-11-21T23:45Z | 2026-11-24T02:06Z
+    F5 : 2026-11-22T06:00Z | 2026-11-23T14:12Z
+    SONDES : 2026-11-24T00:00Z | 2026-11-25T02:12Z
+    C1 : 2026-11-24T00:00Z | 2026-11-25T02:12Z
+    S1 : 2026-11-24T06:00Z | 2026-11-25T04:12Z
+    G1 : 2026-11-24T08:00Z | 2026-11-25T04:42Z
+    FAMG : 2026-11-24T08:00Z | 2026-11-25T04:42Z
+    FAM : 2026-11-24T22:00Z | 2026-11-25T13:42Z
+    L1 : 2026-11-25T10:00Z | 2026-11-25T17:42Z
+  [haute] OUV 2026-11-23T09:30Z ; F5 2026-11-24T12:30Z ; SONDES 2026-11-30T10:30Z ; S1 2026-12-01T10:30Z ; FAM 2026-12-03T04:30Z ; V1 2026-12-05T04:30Z
+  tirage OUV : P10 2026-11-19T19:44Z ; P50 2026-11-20T12:52Z ; P90 2026-11-21T15:31Z
+  tirage SONDES : P10 2026-11-22T06:21Z ; P50 2026-11-23T21:01Z ; P90 2026-11-26T01:21Z
+  tirage S1 : P10 2026-11-22T16:41Z ; P50 2026-11-24T07:46Z ; P90 2026-11-26T12:12Z
+  tirage V1 : P10 2026-11-25T10:53Z ; P50 2026-11-26T19:04Z ; P90 2026-11-28T13:19Z
+  part des tirages avec verdict avant « résultats prêts (GO-2026-11-18-30) : 2026-11-25T18:00Z » : 0.167
+  part des tirages avec verdict avant « veille de l'entretien : 2026-11-27T00:00Z » : 0.567
+  part des tirages avec texte scellé et sonde gelée (SCELLEMENT-ACC2) avant le 25 à 18:00Z : 0.796
+  chemin critique tiré 0.455 : E2 -> E3 -> E4 -> E5 -> OUV -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.411 : F1 -> F2 -> F3 -> F4 -> F5 -> G0 -> FAMG -> FAM -> L1 -> V1
+  chemin critique tiré 0.082 : E1 -> E3 -> E4 -> E5 -> OUV -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+
+=== scénario BT : B + temps 1 borné à 48 heures (levée, nœud)
+  [basse] OUV 2026-11-19T00:54Z ; F5 2026-11-19T10:48Z ; SONDES 2026-11-20T05:00Z ; S1 2026-11-20T07:00Z ; FAM 2026-11-21T13:30Z ; V1 2026-11-21T17:48Z
+  [probable] OUV 2026-11-19T10:45Z ; F5 2026-11-20T03:30Z ; SONDES 2026-11-21T07:00Z ; S1 2026-11-21T13:00Z ; FAM 2026-11-23T09:00Z ; V1 2026-11-24T05:00Z
+  chemin critique (probable) : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  marges à la date probable (heures, relatives à l'échéance du 25 à 18:00Z) : E1 +40 ; E2 +37 ; E3 +37 ; E4 +37 ; E5 +37 ; P1 +47 ; P2 +45 ; P3 +45 ; OUV +37 ; F1 +64 ; F2 +64 ; F3 +64 ; F4 +64 ; F5 +64 ; T1 +37 ; T2 +37 ; SONDES +37 ; C1 +58 ; AB +78 ; S1 +37 ; G1 +37 ; FAM +37 ; L1 +37 ; V1 +37
+  bascule (dernière fin permise pour un verdict le 25 à 18:00Z) — au rythme probable du reste | au rythme bas du reste :
+    E4 : 2026-11-20T21:30Z | 2026-11-23T00:30Z
+    OUV : 2026-11-20T23:45Z | 2026-11-23T01:06Z
+    T1 : 2026-11-21T07:45Z | 2026-11-23T05:06Z
+    F5 : 2026-11-22T19:45Z | 2026-11-24T05:06Z
+    SONDES : 2026-11-22T20:00Z | 2026-11-24T05:12Z
+    C1 : 2026-11-22T20:00Z | 2026-11-24T05:12Z
+    S1 : 2026-11-23T02:00Z | 2026-11-24T07:12Z
+    G1 : 2026-11-23T06:00Z | 2026-11-24T07:42Z
+    FAM : 2026-11-24T22:00Z | 2026-11-25T13:42Z
+    L1 : 2026-11-25T10:00Z | 2026-11-25T17:42Z
+  [haute] OUV 2026-11-23T09:30Z ; F5 2026-11-24T12:30Z ; SONDES 2026-11-26T16:30Z ; S1 2026-11-27T16:30Z ; FAM 2026-12-02T00:30Z ; V1 2026-12-04T00:30Z
+  tirage OUV : P10 2026-11-19T19:36Z ; P50 2026-11-20T12:33Z ; P90 2026-11-21T15:17Z
+  tirage SONDES : P10 2026-11-21T21:37Z ; P50 2026-11-22T17:01Z ; P90 2026-11-23T19:04Z
+  tirage S1 : P10 2026-11-22T07:34Z ; P50 2026-11-23T03:45Z ; P90 2026-11-24T06:21Z
+  tirage V1 : P10 2026-11-25T12:31Z ; P50 2026-11-26T15:44Z ; P90 2026-11-27T23:10Z
+  part des tirages avec verdict avant « résultats prêts (GO-2026-11-18-30) : 2026-11-25T18:00Z » : 0.160
+  part des tirages avec verdict avant « veille de l'entretien : 2026-11-27T00:00Z » : 0.631
+  part des tirages avec texte scellé et sonde gelée (SCELLEMENT-ACC2) avant le 25 à 18:00Z : 1.000
+  chemin critique tiré 0.747 : E2 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.150 : E1 -> E3 -> E4 -> E5 -> OUV -> T1 -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.101 : F1 -> F2 -> F3 -> F4 -> F5 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+
+=== scénario BDET : B + D + E + temps 1 borné à 48 heures (tous les leviers)
+  [basse] OUV 2026-11-19T00:54Z ; F5 2026-11-19T10:48Z ; SONDES 2026-11-20T03:36Z ; S1 2026-11-20T05:36Z ; FAM 2026-11-21T10:18Z ; V1 2026-11-21T14:36Z
+  [probable] OUV 2026-11-19T10:45Z ; F5 2026-11-20T03:30Z ; SONDES 2026-11-20T23:00Z ; S1 2026-11-21T05:00Z ; FAM 2026-11-22T19:30Z ; V1 2026-11-23T15:30Z
+  chemin critique (probable) : F1 -> F2 -> F3 -> F4 -> F5 -> G0 -> FAMG -> FAM -> L1 -> V1
+  marges à la date probable (heures, relatives à l'échéance du 25 à 18:00Z) : E1 +76 ; E2 +73 ; E3 +73 ; E4 +73 ; E5 +73 ; P1 +83 ; P2 +58 ; P3 +73 ; OUV +73 ; F1 +50 ; F2 +50 ; F3 +50 ; F4 +50 ; F5 +50 ; T1 +73 ; T2 +73 ; SONDES +73 ; C1 +86 ; AB +64 ; S1 +73 ; G1 +73 ; G0 +50 ; FAMG +50 ; FAM +50 ; L1 +50 ; V1 +50
+  bascule (dernière fin permise pour un verdict le 25 à 18:00Z) — au rythme probable du reste | au rythme bas du reste :
+    E4 : 2026-11-22T09:30Z | 2026-11-24T01:30Z
+    OUV : 2026-11-22T11:45Z | 2026-11-24T02:06Z
+    T1 : 2026-11-22T11:45Z | 2026-11-24T02:06Z
+    F5 : 2026-11-22T06:00Z | 2026-11-23T14:12Z
+    SONDES : 2026-11-24T00:00Z | 2026-11-25T02:12Z
+    C1 : 2026-11-24T00:00Z | 2026-11-25T02:12Z
+    S1 : 2026-11-24T06:00Z | 2026-11-25T04:12Z
+    G1 : 2026-11-24T08:00Z | 2026-11-25T04:42Z
+    FAMG : 2026-11-24T08:00Z | 2026-11-25T04:42Z
+    FAM : 2026-11-24T22:00Z | 2026-11-25T13:42Z
+    L1 : 2026-11-25T10:00Z | 2026-11-25T17:42Z
+  [haute] OUV 2026-11-23T09:30Z ; F5 2026-11-24T12:30Z ; SONDES 2026-11-25T10:30Z ; S1 2026-11-26T10:30Z ; FAM 2026-11-30T17:30Z ; V1 2026-12-02T17:30Z
+  tirage OUV : P10 2026-11-19T19:36Z ; P50 2026-11-20T12:54Z ; P90 2026-11-21T15:51Z
+  tirage SONDES : P10 2026-11-21T11:56Z ; P50 2026-11-22T05:49Z ; P90 2026-11-23T05:31Z
+  tirage S1 : P10 2026-11-21T21:42Z ; P50 2026-11-22T16:31Z ; P90 2026-11-23T16:34Z
+  tirage V1 : P10 2026-11-24T22:05Z ; P50 2026-11-26T00:16Z ; P90 2026-11-27T08:00Z
+  part des tirages avec verdict avant « résultats prêts (GO-2026-11-18-30) : 2026-11-25T18:00Z » : 0.389
+  part des tirages avec verdict avant « veille de l'entretien : 2026-11-27T00:00Z » : 0.834
+  part des tirages avec texte scellé et sonde gelée (SCELLEMENT-ACC2) avant le 25 à 18:00Z : 1.000
+  chemin critique tiré 0.849 : F1 -> F2 -> F3 -> F4 -> F5 -> G0 -> FAMG -> FAM -> L1 -> V1
+  chemin critique tiré 0.092 : E2 -> E3 -> E4 -> E5 -> OUV -> T2 -> SONDES -> S1 -> G1 -> FAM -> L1 -> V1
+  chemin critique tiré 0.037 : P2 -> AB -> G0 -> FAMG -> FAM -> L1 -> V1
