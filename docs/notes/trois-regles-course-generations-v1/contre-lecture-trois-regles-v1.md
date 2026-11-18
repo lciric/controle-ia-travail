@@ -50,7 +50,7 @@ Treize dans le dépôt, treize sur la branche du collisionneur. Toutes lues dans
 | 19 | bac/B l. 17 (artefact : un script écrit un fichier lu par le suivant) | bac/critique B (`42d6b469…`, 128 l.) | exacte |
 | 20 | bac/B l. 65 (1 exécution contre 3) | même fichier | exacte |
 | 21 | bac/C l. 22 (contrôle d'état inter-exécutions, cache légitime) | bac/critique C (`6c4ddece…`, 84 l.) | exacte |
-| 22 | bac/C l. 35 (≈ 0,14 par fiche, illustratif) | même fichier | exacte dans l'esprit ; le chiffre est la borne 1 − 0,95³ ≈ 0,143 que la ligne pose pour k = 3 (la ligne est longue ; je n'en ai vu que le début, qui pose cette borne) |
+| 22 | bac/C l. 35 (≈ 0,14 par fiche, illustratif) | même fichier, l. 29 et 35 | exacte : « q ≈ 0,1426 » pour trois essais indépendants au niveau 0,05, « (illustratif) » |
 | 23 | bac/D l. 26 (dossier vierge contre prérempli) | bac/critique D (`cd955906…`, 102 l.) | exacte |
 | 24 | sél/`faits.md` l. 52 (« verdict, classement et étiquette d'héritage ») et l. 143 (3 indécises sur 18) | sél/`faits.md` (`7c3404f4…`) | exactes |
 | 25 | « indécise → un test plus puissant, ou retirée après deux essais » (sél/`faits.md` l. 202-203), dit « conception du pôle » | sél/`faits.md` l. 177 et 202-203 | citation exacte ; **source mal nommée** : le passage est la « Pièce 2 — intégration des proposeurs dans l'organisme » (`integration-proposeurs-ia-v1.md`, `974b2dbe17b7…`, absente de `main` d'après ma recherche par nom), non une « conception du pôle » |
@@ -85,5 +85,4 @@ Ce qui ne change pas : le verdict de la note (aucune course n'a exercé les troi
 
 - Je n'ai pas relu les quatre pièces de conception (v4, v7, brouillons 3 et 6) au-delà des lignes citées, ni la note du collisionneur du 2 novembre, ni l'inventaire ; les sections 2, 3 et 7 de la note qui en dépendent ne sont contre-lues que par échantillon.
 - Je n'ai lu aucune branche de course (v67, pôle, pilotes) : les manques 1 à 4 de la note restent entiers.
-- Pour la citation 22, je n'ai vu que le début d'une ligne longue.
 - Je n'ai rencontré aucune instruction adressée au lecteur dans les pièces lues.
