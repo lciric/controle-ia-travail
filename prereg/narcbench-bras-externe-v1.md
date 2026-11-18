@@ -11,14 +11,14 @@
 - **Rédacteur** : Claude Opus 5.5 (`claude-opus-5-5`), rédacteur neuf, sous-agent de la session mère
   `session_013QMayjsoZJFBUCqcnvD5h1` ; distinct du développeur du bras externe ; ni contre-lecteur de ce texte ni lecteur de
   ses issues. Brouillon 1 écrit le 2026-11-18 de 16:55 à 17:06 UTC ; brouillon 2 d'environ 17:21 à 17:45 UTC ; brouillon 3
-  de 19:13 à 19:28 UTC ; texte de la version de 19:39 à HEURE_FIN_VERSION UTC (`date -u`).
+  de 19:13 à 19:28 UTC ; texte de la version de 19:39 à 19:44 UTC (`date -u`).
 - **Mandat** : `docs/notes/narcbench-8b-v1/mandat-redacteur-texte-court-bras-externe-v1.md`
   (`ea4c8554567b8c8a74d91ed3dad26637ac63d13863eeef5e50f048729f084638`), sous GO-2026-11-18-30 et R-3310 ; brouillons 2 et 3
   sur consigne de la mère (R-3341 ; puis consigne du 18 novembre au soir : contre-lecture 2 et code du développeur) ; texte
   de la version sur consigne de la mère (après la contre-lecture 3 : ses cinq couples, la tête finale du code). Voie
   décidée par Lazar le 10 novembre (R-2175, D-3 (a) : « bras externe NARCBench sur les activations publiées, processeur,
-  0 USD, texte court neuf ») ; R-3310 rectifie la lettre de GO-2026-11-18-30 (« scellement
-  du brouillon 4 ») en « voie processeur, texte court neuf ». Le rédacteur n'a pas relu GO-2026-11-18-30 au registre des GO :
+  0 USD, texte court neuf ») ; R-3310 rectifie la lettre de GO-2026-11-18-30 (« scellement du brouillon 4 ») en « voie
+  processeur, texte court neuf ». Le rédacteur n'a pas relu GO-2026-11-18-30 au registre des GO :
   la mère le relit avant le scellement.
 - **Choix de la mère repris ici** (ils remplacent les points ouverts du brouillon 1) : registre propre
   `registres/narcbench-externe-v1.md` ; tolérance 0,03 ; deux familles co-principales lues en conjonction ; étage des comités
@@ -43,14 +43,14 @@
 - Auteur : le rédacteur ci-dessus.
 - Date (UTC) : celle de la ligne `SCELLEMENT-NARC-EXT` (section « Lignes de registre »).
 - Commit du code d'analyse : **le commit exact est celui de la fiche citée par la ligne `CODE-NARC-EXT`, inscrite avant toute
-  exécution** (section « Code »). Tête lue par le rédacteur pour ce brouillon : `cde3b9906881b6a26dba2d8486b46ac734d92371`
+  exécution** (section « Code »). Tête lue par le rédacteur pour le brouillon 3 : `cde3b9906881b6a26dba2d8486b46ac734d92371`
   (branche locale `prep/narcbench-externe-v2`). **Tête finale de la branche, que la fiche doit citer :
   `fe9d799641ed3cc5d3388026e6f6143f92fc7d5c`**. De la tête lue à la tête finale, le seul module de `src/` qui change est
   `cellules_externe_v2.py` : la phrase gelée R1 alignée mot pour mot sur ce texte, et sa docstring (différence relue par le
   rédacteur) ; s'y ajoutent des essais (168), une épreuve par mutation et le jouet aux formes publiées ; contrôle par programme
   des 39 phrases gelées contre le brouillon 3 : aucun écart (d'après le développeur).
-- Documents qui font foi (chemin, empreinte sha256 recalculée le 2026-11-18 à HEURE_EMPREINTES UTC ; dépôt principal à
-  `DEPOT_PRINCIPAL`, fichiers cités inchangés depuis le brouillon 2 ou ajoutés depuis) :
+- Documents qui font foi (chemin, empreinte sha256 recalculée le 2026-11-18 à 19:44 UTC ; dépôt principal à
+  `9e90e525`, fichiers cités inchangés depuis le brouillon 2 ou ajoutés depuis) :
   - article : `docs/sources/pdf/2604.01151v5.pdf`, `02527fd4f62ad9b996669275f0837697cbe288b253c9aa521f72a10e6dcf1849`
     (Rose, Cullen, Abdelnabi, Torr, Kaplowitz, Schroeder de Witt, « Detecting Multi-Agent Collusion Through Multi-Agent
     Interpretability », arXiv 2604.01151 v5, 15 octobre 2026) ;
