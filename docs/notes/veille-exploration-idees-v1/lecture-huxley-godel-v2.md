@@ -358,7 +358,8 @@ Chacun avec la question qu'il doit trancher ; aucun n'est lu ici, aucun chiffre 
 ## 8. Ce que la version 2 change (après contre-lecture)
 
 Contre-lecture : `docs/notes/veille-exploration-idees-v1/contre-lecture-lecture-huxley-godel-v1.md` (verdict « à
-corriger » ; 34 passages rouverts dans le PDF, 33 tiennent, un porte une page fausse).
+corriger » ; 30 passages rouverts dans le PDF, 29 tiennent, un porte une page fausse ; quatre vérifications hors du
+PDF).
 
 Corrections de fait :
 1. L'énoncé 5 est cité à la lettre (section 3) ; la version 1 le paraphrasait, perdait « de sorte que » et la dernière
