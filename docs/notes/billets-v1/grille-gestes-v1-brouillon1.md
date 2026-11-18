@@ -40,7 +40,7 @@ Tâche 4 du mandat `docs/notes/billets-v1/mandat-corpus-et-grille-v1.md`. Tirée
 - **Définition** : au moins un nombre de résultat (pas un nombre de contexte, ni une taille de modèle) dans les 250 premiers mots.
 - **Valeurs** : `oui-avec-base` (le chiffre est comparé à une base) ; `oui-seul` ; `non`.
 - **Règle** : une taille de jeu de données ou de modèle ne compte pas ; un pourcentage de réussite, une aire sous la courbe, un taux comptent.
-- **Exemples** : `nc9dHfcB22JdMzGbr` — « we read workspace representations with 55% success on latent variable extraction tasks (J-Lens: 36%, R-Lens: 38%) » (`oui-avec-base`) ; `NNGB77BipWpHn4vRW` — même citation qu'en A3 (`oui-seul`).
+- **Exemples** : `nc9dHfcB22JdMzGbr` — « we read workspace representations with 55% success on latent variable extraction tasks (J-Lens: 36%, R-Lens: 38%) » (`oui-avec-base`) ; `LzeZW9PvR6Njc9ngr` — « A linear probe reads the correct state most of the time (88.6%). » (`oui-seul` pour cette phrase ; la base vient à la phrase suivante, voir A12).
 
 ### A6. Statut épistémique
 - **Définition** : déclaration explicite de la confiance des auteurs ou des conditions du travail.
