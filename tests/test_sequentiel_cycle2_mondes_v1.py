@@ -144,3 +144,22 @@ def test_reglage_de_l_amplitude_cas_sain_et_ecart_hors_d_atteinte():
     assert scores.ecart_de_population(c, a, np.random.default_rng(np.random.SeedSequence(4))) >= 0.02
     with pytest.raises(GardeArret):                                        # artefact : écart qu'aucun signal n'atteint
         scores.regler_amplitude(c, 0.6, np.random.SeedSequence(4), pas=0.25)
+
+
+def test_reglage_du_croisement_cas_sain_et_monde_non_constructible():
+    c = config_scores(verite="concentre", actions_decalees=2, part_tache=0.3)
+    a = scores.regler_croisement(c, np.random.SeedSequence(6), n_episodes=200000)
+    assert 0.05 < a < 6.0
+    autre = np.random.default_rng(np.random.SeedSequence(60))
+    assert abs(scores.ecart_de_population(c, a, autre, 400000, 2)) < 0.004        # frontière retrouvée sur un autre tirage
+    assert scores.ecart_de_population(c, 0.5 * a, np.random.default_rng(1), 200000, 2) > 0
+    assert scores.ecart_de_population(c, 2.0 * a, np.random.default_rng(1), 200000, 2) < 0
+    with pytest.raises(GardeArret):                                        # artefact : décalage dense, aucun croisement
+        scores.regler_croisement(dict(c, actions_decalees=10), np.random.SeedSequence(6), n_episodes=50000)
+
+
+def test_loi_de_la_sonde_identique_dans_les_deux_generateurs():
+    c = config_scores(verite="dense", amplitude=0.5, n_taches=40000, n_directions=20)
+    s = scores.statistiques_episode(scores.tirer_scores(c, np.random.default_rng(2))[:, :1])
+    direct = scores._aire(s[0, :, 0, 1], s[0, :, 0, 0]) - scores._aire(s[1, :, 0, 1], s[1, :, 0, 0])
+    assert direct == pytest.approx(scores.ecart_de_population(c, 0.5, np.random.default_rng(3), 400000), abs=0.01)

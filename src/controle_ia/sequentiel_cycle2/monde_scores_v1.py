@@ -169,13 +169,25 @@ def jouer_replique(config: dict, graine: np.random.SeedSequence) -> dict:
             for plan in ("unique", "reparti", "naif")}
 
 
-def ecart_de_population(config: dict, amplitude: float, rng: np.random.Generator, n_episodes: int = 20000) -> float:
-    """Écart « aire de la somme moins aire du maximum » de la sonde, en population, pour un décalage dense."""
-    c = dict(config, verite="dense", amplitude=amplitude, n_taches=n_episodes, n_directions=20)
-    s = statistiques_episode(tirer_scores(c, rng)[:, :1])
-    poids = np.ones((1, n_episodes), dtype=np.int64)
-    return float(aires_reechantillonnees(s[0, :, 0, 1], s[0, :, 0, 0], poids)[0]
-                 - aires_reechantillonnees(s[1, :, 0, 1], s[1, :, 0, 0], poids)[0])
+def _aire(pos: np.ndarray, neg: np.ndarray) -> float:
+    """Aire de Mann-Whitney de deux échantillons continus (aucun ex aequo)."""
+    rangs = np.empty(pos.size + neg.size, dtype=np.float64)
+    rangs[np.argsort(np.concatenate([pos, neg]), kind="stable")] = np.arange(1, pos.size + neg.size + 1)
+    return float((rangs[: pos.size].sum() - pos.size * (pos.size + 1) / 2.0) / (pos.size * neg.size))
+
+
+def ecart_de_population(config: dict, amplitude: float, rng: np.random.Generator, n_episodes: int = 20000,
+                        actions_decalees: int = N_ACTIONS) -> float:
+    """Écart « aire de la somme moins aire du maximum » de la sonde, en population (grand échantillon).
+
+    Même loi marginale que `tirer_scores` pour la sonde ; décalage sur `actions_decalees` actions par épisode.
+    """
+    pt = config["part_tache"]
+    tire = lambda: (np.sqrt(pt) * rng.standard_normal((n_episodes, 1))
+                    + np.sqrt(1.0 - pt) * rng.standard_normal((n_episodes, N_ACTIONS)))
+    neg, pos = tire(), tire()
+    pos[:, :actions_decalees] += amplitude        # les actions sont échangeables : les premières valent un tirage
+    return _aire(pos.sum(axis=1), neg.sum(axis=1)) - _aire(pos.max(axis=1), neg.max(axis=1))
 
 
 def regler_amplitude(config: dict, cible: float, graine: np.random.SeedSequence, pas: float = 0.02,
@@ -187,3 +199,23 @@ def regler_amplitude(config: dict, cible: float, graine: np.random.SeedSequence,
             return round(a, 6)
         a += pas
     raise GardeArret(f"aucun décalage dense jusqu'à {maximum} n'atteint un écart de {cible} : nœud (brouillon 3, « Puissance »)")
+
+
+def regler_croisement(config: dict, graine: np.random.SeedSequence, n_episodes: int = 2000000,
+                      bas: float = 0.05, haut: float = 6.0) -> float:
+    """Amplitude d'un décalage concentré pour laquelle la somme et le maximum séparent autant, en population.
+
+    C'est la frontière « écart nul » avec du bruit : le monde où le niveau de l'affirmation « la somme bat le
+    maximum » (ou l'inverse) se vérifie sur le rééchantillonnage. Dichotomie à nombres aléatoires communs.
+    """
+    k = config["actions_decalees"]
+    f = lambda a: ecart_de_population(config, a, np.random.default_rng(graine), n_episodes, k)
+    if not (f(bas) > 0.0 > f(haut)):
+        raise GardeArret("aucun croisement entre la somme et le maximum sur l'intervalle d'amplitudes : monde non constructible")
+    for _ in range(40):
+        milieu = 0.5 * (bas + haut)
+        if f(milieu) > 0.0:
+            bas = milieu
+        else:
+            haut = milieu
+    return round(0.5 * (bas + haut), 6)

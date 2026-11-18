@@ -115,3 +115,14 @@ def test_gardes_du_lancement(depot):
     committer(depot)
     with pytest.raises(GardeArret):
         simulation.lancer(depot, config, "20261118-220005-refus", mondes=["absent"])
+
+
+def test_monde_du_croisement_regle_et_joue(depot, monkeypatch):
+    monkeypatch.setattr(simulation, "REGLAGE_CROISEMENT", {"n_episodes": 50000})
+    monde = {"nom": "s-croisement", "genre": "scores", "n_repliques": 1,
+             "config": dict(SCORES, verite="concentre", actions_decalees=2, amplitude={"croisement": True}),
+             "criteres": [{"genre": "risque", "etats": ["AP"], "plafond": 1.0}]}
+    config = ecrire_config(depot, [monde])
+    ecrit = simulation.lancer(depot, config, "20261118-220006-croisement", entropie=5)
+    resultat = json.loads(ecrit[0].read_text())["resultat"]
+    assert 0.05 < resultat["amplitude_reglee"] < 6.0 and resultat["criteres"][0]["tenu"] is True

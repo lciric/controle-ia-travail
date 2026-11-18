@@ -25,6 +25,7 @@ from . import monde_scores_v1 as scores
 
 GENRES = ("gaussien", "scores")
 REPLIQUES_A_BLANC = 3
+REGLAGE_CROISEMENT: dict = {}     # réglage par défaut de `regler_croisement` ; les essais le réduisent
 
 
 def lire_configuration(chemin: str | Path) -> dict:
@@ -58,9 +59,13 @@ def jouer_monde(monde: dict, entropie: int, repliques: int | None = None) -> dic
         return {"repliques": sortie["n_repliques"], "comptes": sortie["comptes"], "bornes_z": sortie["bornes_z"]}
     n = monde["n_repliques"] if repliques is None else repliques
     reglage = None
-    if isinstance(c["amplitude"], dict):
+    if isinstance(c["amplitude"], dict) and c["amplitude"].get("croisement") is True:
+        # {"croisement": true} : décalage concentré pour lequel l'écart de population est nul (frontière avec bruit)
+        reglage = scores.regler_croisement(c, _graine(entropie, nom, 1), **REGLAGE_CROISEMENT)
+        c["amplitude"] = reglage
+    elif isinstance(c["amplitude"], dict):
         # {"cible": 0.05, "facteur": 1.0} : plus petite amplitude dense donnant l'écart de population visé
-        reglage = scores.regler_amplitude(dict(c, amplitude=0.0), c["amplitude"]["cible"], _graine(entropie, nom, 1))
+        reglage = scores.regler_amplitude(c, c["amplitude"]["cible"], _graine(entropie, nom, 1))
         c["amplitude"] = reglage * c["amplitude"].get("facteur", 1.0)
     comptes = {p: {"intermediaire": {}, "finale": {}, "couple": {}} for p in ("unique", "reparti", "naif")}
     for r in range(n):
