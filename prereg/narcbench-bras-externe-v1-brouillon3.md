@@ -203,10 +203,37 @@
 - **Étage des comités (lecture secondaire)** : un domaine tenu à l'écart par pli (p. 14-15) ; aire de chaque pli qui a les
   deux conditions à l'apprentissage et à l'évaluation ; **valeur = moyenne des aires par pli** (point (i)), moyennée sur les
   couches (et graines).
-- **Augmentation : aucune (« papier »)**. Les Tables 2 et 3 sont des résultats principaux, obtenus sans augmentation (p. 30 :
-  « It slightly reduced OOD mean AUROC score (by less than 0.001) and wasn't used for the main results »). La variante du code
-  des auteurs (4 copies bruitées, écart type 0,05) n'est pas lue sous ce texte ; la lire serait un second texte (garde
-  « déjà jouée », liste d'arrêt n° 4).
+- **Augmentation : aucune (« papier »)**, réexaminée au brouillon 3 (paragraphe « Réexamen de l'augmentation » ci-dessous).
+  La variante du code des auteurs (4 copies bruitées, écart type 0,05) n'est pas lue sous ce texte ; la lire serait un second
+  texte (garde « déjà jouée », liste d'arrêt n° 4).
+
+**Réexamen de l'augmentation (brouillon 3).** Le choix « papier » avait été posé par la mère (R-3341) avant deux signalements
+du développeur (relevé `8be99220…`, « À savoir avant le scellement ») : le script publié `probes/reproduce_LR.py` **active
+l'augmentation par défaut** (l. 35, `AUG_ENABLED = True` ; nom de sortie « …_dataAug », l. 42) ; le fichier d'accueil du
+dépôt des auteurs rattache ce script à « Appendix C: LR probe variant » (README, l. 107) et les résultats principaux à un
+autre script, `probes/reproduce.py` (« Figure 3 + Table 1: five probing techniques per tier », l. 105 ; non lu). Ce que dit
+le PDF (vérifié, page citée) :
+- les Tables 2 et 3 sont « the per-tier breakdown that underlies Figure 2 » (annexe D, p. 27), et la figure 2 porte les
+  résultats principaux (section 6, p. 17 : « Figure 2 reports per-probe AUROC […] with the full per-family breakdown given in
+  Appendix D. Each model uses a single linear deception probe […]. Hyperparameter-tuning details are in Appendix F ») ;
+- l'annexe F, qui règle cette sonde (C = 25, arrêt à 8 itérations, liblinear, p. 29-30), dit de l'augmentation : « It slightly
+  reduced OOD mean AUROC score (by less than 0.001) and wasn't used for the main results » (p. 30) ; le membre qui décide est
+  « wasn't used for the main results » (la baisse chiffrée porte sur la moyenne hors distribution, pas sur l'étage
+  stéganographique seul) ;
+- la moyenne hors distribution des cinq techniques des Tables 2 et 3 (Qwen3-32B : 0,85, 0,55, 0,86, 0,89, 0,89, soit 0,81 ;
+  Llama-3.1-70B : 0,91, 0,77, 0,92, 0,93, 0,94, soit 0,89 ; calcul du rédacteur) égale la ligne « Logistic Regression » de la
+  Table 6 (0,81 et 0,89, p. 30) : les Tables 2 et 3 sont celles de la sonde réglée à l'annexe F ;
+- dans la v5, l'annexe C est « Activation extraction and probe training » (p. 27), qui décrit cette même sonde ; la « Figure 3 »
+  est un graphe de courbes ROC et la « Table 1 » l'expérience de collusion émergente (p. 18) : la numérotation du fichier
+  d'accueil ne suit pas la v5 et ne prouve rien, ni dans un sens ni dans l'autre.
+
+**Recommandation : garder « papier »** (confiance 0,75). Raison : la cible de ce texte est le nombre publié, et l'article dit
+explicitement que l'augmentation n'a pas servi à ses résultats principaux, dont les Tables 2 et 3 ; le défaut d'un script
+publié ne prévaut pas sur une phrase explicite de l'article. **Limites déclarées** : le lien entre ce script et les Tables 2
+et 3 n'est établi que par la recette (p. 29-30 = l. 28-33 du script) et par la Table 6, pas par l'exécution du script des
+auteurs ; le script des résultats principaux selon le fichier d'accueil n'est pas lu ; si les tables avaient été produites
+avec l'augmentation, l'écart attendu reste petit d'après l'article (moins de 0,001 sur la moyenne hors distribution), mais il
+n'est pas chiffré pour l'étage stéganographique seul. La recommandation ne change pas : **aucun nœud** (section « Nœuds »).
 
 **Notre chaîne** (paquet gelé `sondes.familles`, appel `entrainer(famille, nom, couche, séquences, y, "max", graine)`).
 - **Familles** : **différence de moyennes** et **linéaire**, **co-principales** (familles des deux sondes principales de
@@ -221,12 +248,17 @@
 - **Plancher apparié en covariance** (cellules de l'étage stéganographique ; recette de T0.7,
   `t07.plancher_v1.plancher_pour_sonde` : 200 directions w ~ N(0, Σ + 10⁻⁹ I), Σ covariance des lignes d'apprentissage,
   centrées) : tiré par couche ; la direction k de chaque couche passe par la **même chaîne** (score d'agent, statistique
-  d'épisode, aire, moyenne sur les couches) ; quantile 0,95 des 200 aires. Pas de plancher pour Mahalanobis, ni pour la
-  lecture secondaire de l'étage des comités.
-- **Lecture par agent (descriptive)** : telle que la calcule `externe_v2.nos_familles_v2` au commit `70cb77b8` : aire des
-  colludeurs contre les honnêtes sur les épisodes de collusion de l'étage stéganographique, couche par couche, intervalle par
-  épisodes, plancher, placebo des rôles permutés dans chaque épisode. La ligne et la phrase de « grille D » que ce code y
-  attache viennent du texte du 8B : rapportées telles quelles, sans valeur de lecture ici.
+  d'épisode, aire, moyenne sur les couches) ; quantile 0,95 des 200 aires. **Un seul tirage, deux usages** : la sonde et le
+  plancher d'une famille à une couche servent à la fois les cellules et la lecture par agent. Pas de plancher pour Mahalanobis
+  (non supervisée), ni de plancher ni de placebo pour la lecture secondaire de l'étage des comités ; Mahalanobis n'est lu qu'à
+  l'étage stéganographique. Raison : le coût (un plancher par pli, par couche et par famille, avec une inversion de covariance
+  en dimension 8 192 pour Mahalanobis) pour des lectures secondaires ou descriptives, sans effet sur la réponse.
+- **Lecture par agent (descriptive)** : telle que la calcule `externe_v2.nos_familles_v2` (tête lue `cde3b990`, mêmes
+  sondes et mêmes planchers que les cellules) : aire des colludeurs contre les honnêtes sur les épisodes de collusion de
+  l'étage stéganographique, couche par couche, intervalle par épisodes, plancher, placebo des rôles permutés dans chaque
+  épisode. La ligne et la phrase de « grille D » que ce code y attache viennent du texte du 8B (`statistiques_v1.py`) :
+  rapportées telles quelles, sans valeur de lecture ici ; elles sont gelées par la fiche du code, qui porte l'empreinte de ce
+  fichier.
 
 **Témoin de recette — « bras de diagnostic, jamais en production »** (N-026 : écrit et nommé ici avant toute lecture ; lu
 **à côté** de notre chaîne, jamais à sa place ; jamais moniteur, revendication ni porte). Recette transcrite du code des
@@ -245,7 +277,8 @@ de ce fichier sur `main`) ; l'avertissement de dépréciation de `penalty` (retr
 non-convergence à 8 itérations sont consignés, jamais masqués. Les auteurs ne figent pas leur version : les nombres publiés
 viennent d'une version inconnue.
 
-**Points de recette, tranchés sur le code des auteurs** (lignes relevées par le développeur v2, `externe_v2.py` l. 28-31 ;
+**Points de recette, tranchés sur le code des auteurs** (lignes relevées une à une, extrait vérifié par script contre la
+source, dans le relevé `docs/notes/narcbench-8b-v1/releve-recette-code-auteurs-externe-v2-v1.md`, `8be99220…` : sections 1 à 5 ;
 conformes d'après la contre-lecture du code) :
 - (i) étage des comités : **moyenne des aires par pli** (plis qui ont les deux conditions à l'apprentissage et à
   l'évaluation ; domaine vide jamais tenu à l'écart ; l. 355-381) ; l'aire à scores hors pli mis en commun n'est pas calculée
@@ -258,37 +291,40 @@ conformes d'après la contre-lecture du code) :
 
 ## Configuration canonique de la commande
 
-Six lignes lues par programme dans le texte scellé cité par la ligne `SCELLEMENT-NARC-EXT`. Chacune est, dans tout le texte,
-la **seule** ligne qui commence par sa clé suivie d'une espace et d'un deux-points ; forme exacte `<clé> : <valeur>`, une
-espace de part et d'autre du deux-points, rien d'autre sur la ligne. Le code refuse, **avant toute lecture des données**, une
-ligne absente, en double ou mal formée, et toute option de la commande qui en diffère (liste d'arrêt n° 5 ; contre-lecture
-du code, M3 (b) et (d)).
-
-```
 augmentation : papier
 couches-familles : bande
 run-id : AAAAMMJJ-HHMMSS-narc-externe-v2
 registre : registres/narcbench-externe-v1.md
 texte : prereg/narcbench-bras-externe-v1.md
 Entropie : <<ENTROPIE_NARC_EXT>>
-```
 
-- `augmentation` : aucune augmentation (section « Recette ») ; option `--augmentation papier`.
-- `couches-familles` : nos familles sur toutes les couches de la bande de chaque modèle (26 à 30 ; 32 à 37) ; option
-  `--couches-familles bande`.
-- `run-id` : `AAAAMMJJ-HHMMSS` = date et heure UTC du lancement (motif de `manifeste.creer_manifeste`), suffixe fixe
-  `narc-externe-v2` ; le code refuse tout identifiant qui ne suit pas le motif `^[0-9]{8}-[0-9]{6}-narc-externe-v2$`.
-- `registre` : le seul registre lu (section « Lignes de registre ») ; tout autre chemin, absolu ou hors du dépôt, est refusé.
-- `texte` : chemin du texte scellé, égal à celui de la ligne `SCELLEMENT-NARC-EXT` et à l'option `--texte`.
-- `Entropie` : entier positif d'au moins dix chiffres, tiré **une fois** par la mère au scellement (par exemple
-  `python3 -c "import secrets; print(secrets.randbits(63))"`) et inscrit à la place du marqueur ; ni une année, ni la graine
-  de la simulation de puissance (`20261118`), ni l'entropie d'un autre texte (P3, T0.6, T0.7, texte du 8B) : la mère le
-  vérifie en cherchant l'entier dans `prereg/`. Le code lit l'entier par la ligne exacte (motif `^Entropie : ([0-9]+)$`, une
-  seule occurrence), jamais comme sous-chaîne, et refuse une option `--entropie` différente.
+## Notes de la configuration canonique
+
+La section précédente porte **six lignes seules**, lues par programme dans le texte scellé cité par la ligne
+`SCELLEMENT-NARC-EXT` (`lecture_externe_v2.lire_configuration_texte` ; contrôle préalable sans registre ni données :
+`python -m controle_ia.narcbench.lecture_externe_v2 verifier-texte <texte>`). Chacune est, dans tout le texte, la **seule**
+ligne qui commence par sa clé suivie d'une espace et d'un deux-points ; forme exacte `<clé> : <valeur>`, une espace de part et
+d'autre du deux-points, rien d'autre sur la ligne ; aucune prose dans cette section. Le code refuse, **avant toute lecture
+des données** (code de sortie 2), une ligne absente, en double ou mal formée, et toute option de la commande qui ne dit pas ce
+que dit la configuration (liste d'arrêt n° 5) :
+- `augmentation` : aucune augmentation (section « Recette ») ; l'option `--augmentation` doit valoir `papier`.
+- `couches-familles` : nos familles sur toutes les couches de la bande de chaque modèle (26 à 30 ; 32 à 37) ; l'option
+  `--couches-familles` doit désigner les mêmes couches (`bande`).
+- `run-id` : la ligne donne la **forme**, pas une valeur ; l'option `--run-id` doit suivre cette forme, avec la date et l'heure
+  UTC du lancement (date et heure valides) et le suffixe fixe `narc-externe-v2` (motif `[0-9]{8}-[0-9]{6}-narc-externe-v2`,
+  compatible avec celui de `manifeste.creer_manifeste`).
+- `registre` : le seul registre lu, `registres/narcbench-externe-v1.md` du dépôt (section « Lignes de registre ») ; le code
+  n'accepte aucun autre chemin et n'a pas d'option pour en donner un.
+- `texte` : chemin relatif du texte scellé ; égal à l'option `--texte` et au chemin cité par la ligne `SCELLEMENT-NARC-EXT`.
+- `Entropie` : entier en chiffres seuls, **au moins 2³² = 4 294 967 296** (donc au moins dix chiffres), tiré **une fois** par
+  la mère au scellement (par exemple `python3 -c "import secrets; print(secrets.randbits(63))"`) et inscrit à la place du
+  marqueur ; ni une année, ni une date, ni la graine de la simulation de puissance (`20261118`), ni l'entropie d'un autre
+  texte (P3, T0.6, T0.7, texte du 8B) : la mère le vérifie en cherchant l'entier dans `prereg/`. Le code lit l'entier sur la
+  ligne exacte, jamais comme sous-chaîne, et le compare en entier à l'option `--entropie`.
 - Réglages fixés par ce texte, sans option, portés par la configuration du manifeste : lancement **non décisif**
-  (`decisif=False` : lecture descriptive, aucune porte ; le manifeste exige quand même le texte scellé et conforme au gabarit,
-  `prereg.exiger_prereg_scelle`) ; 200 directions de plancher, 2 000 tirages, 200 permutations ; graines 0 à 9 du témoin ;
-  `scikit-learn==1.9.1`.
+  (`decisif=False` : lecture descriptive, aucune porte ; le texte cité doit quand même être scellé et conforme au gabarit des
+  préenregistrements, `prereg.exiger_prereg_scelle`, sinon refus n° 3) ; 200 directions de plancher, 2 000 tirages, 200
+  permutations ; graines 0 à 9 du témoin ; `scikit-learn==1.9.1` ; comparaisons de seuil à 10⁻⁹ près (section « Seuil »).
 
 ## Prédiction chiffrée et signe attendu
 
@@ -331,8 +367,11 @@ il ne change aucune phrase gelée.
   échangées avec probabilité un demi ; l'aire de la cellule est recalculée (même moyenne) ; « placebo déclenché » si la borne
   basse de la cellule est inférieure ou égale au quantile 0,95 des 200 aires permutées.
 - **Lecture par agent** : celle du code v2 (section « Recette »), descriptive, sans état.
-- **Garde de reproduction du code** (`externe_v1.garde_reproduction` : écart des estimations ponctuelles aux nombres publiés,
-  à 0,03, étage des comités compris) : rapportée telle quelle, sans valeur de lecture ; la règle C fait foi.
+- **Garde de reproduction du code, version 2** (`externe_v2.garde_reproduction_v2` : écart des estimations ponctuelles du
+  témoin aux quatre nombres publiés du modèle, pic et écart, étage des comités et étage stéganographique, à 0,03 près et à
+  10⁻⁹ près ; état global et état par étage ; « non lu : garde (scores constants) » si une cellule l'est) : rapportée telle
+  quelle, **sans valeur de lecture** ; la règle C fait foi. L'ancienne garde (`externe_v1.garde_reproduction`) n'est pas
+  appelée.
 - **Aucune moyenne ni médiane sur les jetons** : un seul jeton par message. Les seules moyennes portent sur des messages
   (témoin de recette, étage des comités, N-026), des agents (statistique de l'écart), des plis, des couches, des graines ou
   des tirages.
@@ -348,15 +387,24 @@ il ne change aucune phrase gelée.
   « séparation de même sens, plus faible que la valeur publiée » ; haut < 0,5 → « séparation de sens contraire » ; sinon
   « aucune séparation établie ». Les deux issues demandent la même force de preuve (l'intervalle entier d'un côté de la
   marge) : aucun signe n'est favorisé (R3).
+- **Comparaisons à 10⁻⁹ près** (contre-lecture 2, M2 : une aire moyennée peut tomber à 10⁻¹⁶ de la marge selon l'ordre des
+  additions ; en double précision, 1,00 − 0,97 vaut 0,030000000000000027) : « reproduit » si bas ≥ m − 10⁻⁹ ; « non
+  reproduit » si haut < m − 10⁻⁹ (les deux restent exclusifs, puisque bas ≤ haut) ; « au-dessus du plancher apparié » si
+  bas > quantile + 10⁻⁹ ; « placebo déclenché » si bas ≤ quantile + 10⁻⁹. Ces quatre comparaisons sont celles du code
+  (`cellules_externe_v2.regle_c`, `au_dessus_du_plancher`, `placebo_declenche`, constante `ARRONDI_TOLERANCE`).
 - **Effectif lisible** : étage stéganographique, au moins 10 épisodes de collusion, 10 témoins et 10 sabots ; étage des
   comités, au moins 10 plis gardés, portant ensemble au moins 10 épisodes de collusion et 10 témoins ; sinon « non
   calculable à cet effectif ».
 - **Plancher** : quantile 0,95 de 200 directions ; **placebo** : quantile 0,95 de 200 permutations.
 - **Taux d'erreur par cellule, sur données simulées** (section « Puissance ») : « non reproduit » quand l'aire vraie vaut la
   valeur publiée ou plus : ≤ 0,001. « Reproduit » à tort : 0,004 (pic) et 0,008 (écart) à une aire vraie de 0,90 ; **0,060
-  (pic) et 0,102 (écart) à 0,95** ; **0,185 au pic quand l'aire vraie égale sa marge (0,97)**. L'intervalle percentile par
-  sabots est **anticonservateur près de 1** avec 20 sabots (un intervalle exact laisserait au plus 0,025 à la marge) :
-  « reproduit » se lit « compatible avec la valeur publiée à 0,03 près, à cette puissance », pas « égal ».
+  (pic) et 0,102 (écart) à 0,95** ; **quand l'aire vraie égale la marge : 0,185 au pic (0,97) et 0,160 à l'écart (0,96)**
+  (pièce `sortie-puissance-marge-ecart-v1.txt`, `4f51889f…`). L'intervalle percentile par sabots est **anticonservateur
+  près de 1** avec 20 sabots (un intervalle exact laisserait au plus 0,025 à la marge) : « reproduit » se lit « compatible
+  avec la valeur publiée à 0,03 près, à cette puissance », pas « égal ». Pour la réponse « oui » (douze cellules), si toutes
+  les aires vraies étaient à la marge, la probabilité de sortir à tort serait au plus 0,160² ≈ 0,026 (deux modèles
+  indépendants) et au plus 0,160 sinon ; cette réserve est écrite dans la phrase gelée R1 (section « Critères de lecture
+  gelés »).
 - **Réponse au barreau** : « oui » exige douze cellules « reproduit », « non » huit cellules « non reproduit » et le témoin
   « reproduit » (section « Critères de lecture gelés ») ; leurs probabilités : section « Puissance ».
 - **Multiplicité** : lectures descriptives à 95 %, sans correction, **déclaré** ; 12 cellules visées, 12 secondaires et 4
@@ -384,6 +432,11 @@ contre-lecture 1. Proportions des trois états (reproduit / non reproduit / non 
 | 0,70 | 0,000 / 0,992 / 0,009 | 0,000 / 0,978 / 0,022 |
 | 0,50 | 0,000 / 1,000 / 0,000 | 0,000 / 1,000 / 0,000 |
 
+Point ajouté au brouillon 3 (contre-lecture 2, M4) : écart, aire vraie égale à sa marge (0,96) : 0,160 / 0,004 / 0,836
+(script `puissance-marge-ecart-v1.py`, `99d71a59…`, qui appelle la fonction `simuler` du script scellé après en avoir vérifié
+l'empreinte ; graine `SeedSequence(20261118, spawn_key=(1, 96))` ; sortie `4f51889f…`). La contre-lecture 2 avait trouvé
+≈ 0,15 avec une autre graine ; la grille scellée est rejouée à l'identique par les contre-lectures 1 et 2.
+
 **Une cellule.** « Reproduit » n'a plus d'une chance sur deux que pour une aire vraie d'au moins 0,99 sur la grille (seuil
 ≈ 0,988 au pic et ≈ 0,984 à l'écart d'après les points hors grille de la contre-lecture 1, § 3) ; « non reproduit », que
 sous ≈ 0,865 (pic) ou ≈ 0,85 (écart) (même source) ; entre les deux, « non tranché » domine (sommes à 0,001 près,
@@ -393,9 +446,11 @@ arrondis).
 deux cellules du pic d'une même procédure le soient. Si les épisodes des deux modèles sont indépendants (hypothèse : épisodes
 générés séparément pour chaque modèle ; l'essai de forme rapporte des domaines différents entre eux, exposition déclarée),
 elle vaut au plus leur produit : **≈ 0,33 à une aire vraie de 0,99** (0,573²), **≈ 0,61 à 0,995** (0,783²), ≈ 0,998 à
-0,9999 ; sans cette hypothèse, au plus la plus petite des deux (0,573 ; 0,783 ; 0,999). **Même si notre chaîne égalait
-exactement le résultat publié, l'issue la plus probable serait « non tranché à cette puissance » : ce n'est pas un échec** ;
-« oui » ne sort que si la séparation est quasi totale. « Non » exige les huit cellules des deux familles co-principales « non
+0,9999 ; sans cette hypothèse, au plus la plus petite des deux (0,573 ; 0,783 ; 0,999). **Si l'aire vraie de chaque cellule
+vaut 0,99 à 0,995 (ce que les valeurs publiées, arrondies, permettent), « oui » sort au plus 33 à 61 fois sur cent et « non
+tranché à cette puissance » est l'issue la plus probable ; si elle vaut 0,9999 ou plus (ce qu'elles permettent aussi), « oui »
+sort presque toujours (≈ 0,998). Un « non tranché » n'est pas un échec** ; « oui » ne sort que si la séparation est quasi
+totale. « Non » exige les huit cellules des deux familles co-principales « non
 reproduit » (et le témoin « reproduit ») : sous la même hypothèse, au plus ≈ 0,04 à une aire vraie de 0,90 (0,193²),
 ≈ 0,59 à 0,80 (0,771²), ≈ 0,96 à 0,70 (0,978²) (cellules de l'écart, qui donnent la borne la plus basse).
 
@@ -521,14 +576,18 @@ C ; première ligne qui s'applique ; exhaustive et exclusive ; énumérée en es
 | ordre | ligne | condition | phrase gelée |
 |---|---|---|---|
 | 1 | R0 | témoin de recette autre que « reproduit » | « question non tranchée : le témoin de recette est <état>. Un témoin qui n'est pas « reproduit » ne permet de conclure ni oui ni non sur notre chaîne ; les cellules de nos familles sont rapportées » |
-| 2 | R1 | les huit cellules « reproduit » | « oui : notre chaîne reproduit le résultat positif publié (deux familles, deux modèles, deux statistiques), à côté de la recette des auteurs ; plancher apparié : <au-dessus ou pas au-dessus, pour chacune des douze cellules visées, nommées> » |
+| 2 | R1 | les huit cellules « reproduit » | « oui : notre chaîne reproduit le résultat positif publié (deux familles, deux modèles, deux statistiques), à côté de la recette des auteurs ; plancher apparié : <au-dessus ou pas au-dessus, pour chacune des douze cellules visées, nommées> ; réserve : « reproduit » veut dire « compatible avec la valeur publiée à 0,03 près, à cette puissance », pas « égal » ; si toutes les aires vraies étaient à la marge, ce « oui » sortirait à tort au plus environ 3 fois sur 100 avec deux modèles indépendants, au plus 16 fois sur 100 sinon (section « Seuil ») » |
 | 3 | R2 | les huit cellules « non reproduit » | « non : notre chaîne ne reproduit pas le résultat publié, que la recette des auteurs reproduit sur les mêmes vecteurs ; plancher apparié : <au-dessus ou pas au-dessus, pour chacune des douze cellules visées, nommées> » |
 | 4 | R3 | au moins une cellule « reproduit » | « en partie : notre chaîne reproduit le résultat publié sur <cellules « reproduit », nommées> ; elle ne le reproduit pas sur <cellules « non reproduit », nommées, ou « aucune »> ; non tranché ou non lu sur <autres cellules, nommées, ou « aucune »> » |
 | 5 | R4 | au moins une cellule « non reproduit » | « en partie, non : notre chaîne ne reproduit pas le résultat publié sur <cellules « non reproduit », nommées> ; non tranché ou non lu sur <autres cellules, nommées> » |
 | 6 | R5 | sinon (aucune cellule « reproduit » ni « non reproduit ») | « non tranché à cette puissance : différence de moyennes <état>, linéaire <état> ; ce n'est pas un échec (section « Puissance ») » |
 
 R3, R4 et R5 remplacent la ligne « en partie » du brouillon 1 (contre-lecture 1, M1) : rien n'est dit « en partie » sans une
-cellule décidée de ce côté.
+cellule décidée de ce côté. **Seule phrase gelée changée au brouillon 3 : R1**, qui porte désormais la réserve de l'intervalle
+(contre-lecture 2, M4) ; le code l'aligne mot pour mot (`cellules_externe_v2.reponse`). L'état « reproduit » d'une cellule
+(ligne C2) reste un mot seul : c'est l'étiquette que lisent les règles T et R, et son sens est fixé à la section « Seuil » ;
+la réserve voyage avec la phrase de réponse, que le lecteur des issues recopie. Toutes les autres phrases gelées sont celles
+du brouillon 2, mot pour mot, et celles du code à la tête lue.
 
 **Secondaires et descriptifs** : l'étage des comités suit la règle C (valeurs publiées 1,00 ; marge 0,97) et est écrit
 « lecture secondaire, sans effet sur la réponse » ; Mahalanobis : estimation et intervalle, sans phrase d'état ; lecture par
@@ -735,10 +794,21 @@ code (la mère consigne).
    près, à cette puissance », l'intervalle étant anticonservateur près de 1 (section « Seuil »).
 7. **Ne pas reproduire ne réfute pas l'article** (R8) : fichiers, effectifs, recette ou notre chaîne peuvent différer ; un
    écart du témoin de recette n'est pas un défaut de l'article sans audit du chargement.
-8. **« Non tranché à cette puissance » n'est pas un échec** : c'est l'issue la plus probable même d'une reproduction exacte
-   (section « Puissance »).
+8. **« Non tranché à cette puissance » n'est pas un échec** : si l'aire vraie de chaque cellule vaut 0,99 à 0,995 (la valeur
+   publiée, arrondie), c'est l'issue la plus probable ; si elle vaut 0,9999 ou plus, « oui » sort presque toujours (section
+   « Puissance »).
 9. Pas de rappel à taux de fausse alarme fixé (20 témoins dans l'étage stéganographique), pas de test séquentiel, pas de
    lecture par message au-delà du descriptif.
+10. **Le lien entre le script publié des auteurs et les Tables 2 et 3 n'est pas vérifié par exécution** (section « Recette »,
+    réexamen de l'augmentation) : si le témoin de recette ne reproduit pas, une cause possible, déclarée d'avance, est que
+    les tables viennent d'un autre script (`probes/reproduce.py`, non lu) ou d'une autre configuration ; ce texte ne la
+    tranche pas (ligne F4 : « fichiers, chargement ou recette d'abord en cause »).
+
+## Nœuds
+
+**Aucun nœud ouvert par ce texte.** La recommandation sur l'augmentation, réexaminée après le signalement du développeur, ne
+change pas (« papier » ; section « Recette ») ; si la mère ou Lazar en décidaient autrement, ce serait un nœud de Lazar, à
+trancher avant le scellement (changer de configuration après le scellement est un écart à un préenregistrement scellé).
 
 ## Contre-lecture
 
