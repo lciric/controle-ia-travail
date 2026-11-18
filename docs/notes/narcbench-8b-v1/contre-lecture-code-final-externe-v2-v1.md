@@ -31,13 +31,14 @@ Vers 20:31 UTC, j'attendais la fin de mon dernier lot de mutations. L'outil de c
 > Blocked: sleep 240 followed by: tail -n +14 /tmp/claude-0/-home-user-controle-ia-travail/7344498a-9e3b-55a8-9388-941e130beae8/tasks/btgtizhyl.output cut -c1-330 date -u +%H:%M:%S. To wait for a condition, use Monitor with an until-loop (e.g. `until <check>; do sleep 2; done`). To wait for a command you started, use run_in_background: true. Do not chain shorter sleeps to work around this block.
 
 Ce que j'ai fait ensuite, et rien d'autre : je n'ai ni reformulé ni contourné (aucune autre attente, aucun des moyens que le
-message propose) ; je n'ai plus lancé aucun essai ni aucune vérification ; j'ai lu **une fois**, en l'état, la sortie du lot
-déjà lancé (20:33:15 UTC) ; j'ai cherché trois motifs dans le brouillon 3 (lecture seule) ; puis j'ai rédigé, scellé et
-nettoyé. **Ce rapport rend l'état de la contre-lecture à cet instant ; à la mère de dire s'il suffit.**
+message propose) ; je n'ai plus lancé aucun essai ni aucune vérification ; j'ai lu une fois, en l'état, la sortie du lot
+déjà lancé (20:33:15 UTC, quinze issues sur vingt) ; j'ai cherché trois motifs dans le brouillon 3 (lecture seule) ; puis
+j'ai rédigé, scellé et nettoyé. Pendant la rédaction, l'outil m'a notifié de lui-même que le lot avait fini (20:38:01 UTC,
+code 0) ; j'ai alors lu la fin de sa sortie (lecture seule) : les cinq dernières issues sont dans ce rapport.
+**Ce rapport rend l'état de la contre-lecture à l'arrêt ; à la mère de dire s'il suffit.**
 
-Ce qui n'a pas été fait à cause de l'arrêt : lire l'issue de cinq mutations du lot C (C18, C21, C22, C24, C25, lancées avant
-le refus) ; rejouer `prereg.problemes` sur une copie du brouillon 3 aux trois marqueurs remplis ; écrire les sorties de mes
-scripts dans des fichiers (elles sont recopiées ici depuis la session).
+Ce qui n'a pas été fait à cause de l'arrêt : rejouer `prereg.problemes` sur une copie du brouillon 3 aux trois marqueurs
+remplis ; écrire les sorties de mes scripts dans des fichiers (elles sont recopiées ici depuis la session).
 
 ## Ce que j'ai fait (preuves)
 
@@ -58,8 +59,8 @@ scripts dans des fichiers (elles sont recopiées ici depuis la session).
 5. **Épreuve par mutation du développeur rejouée** sur mon extraction, à la tête finale : témoin et onze mutations tuées,
    chacune par l'essai que nomme le tableau.
 6. **Mon épreuve par mutation**, indépendante (copie entière de `src/`, option `-o pythonpath=<copie>/src`, greffon qui
-   imprime le fichier chargé) : un témoin, 5 mutations de la recette, 26 de la commande de lecture, 15 des cellules lues
-   (tables en M1, M2 et au point 3).
+   imprime le fichier chargé) : un témoin, 4 mutations de la recette, 26 de la commande de lecture, 18 des cellules, et le
+   rejeu de deux mutations du développeur (tables en M1 et aux points 2 et 3).
 7. **Recalcul indépendant des cellules** sur un jouet non saturé (aires de 0,45 à 0,95) : aires par couche, estimation,
    intervalle, plancher et placebo des cellules visées de nos trois familles ; plancher, intervalle et placebo du témoin ;
    cellules des comités de nos deux familles co-principales (pli tenu à l'écart, maximum des trois messages, intervalle par
@@ -145,7 +146,9 @@ relevé, à chaque mutation, le fichier chargé : la copie.
 **Les onze mutations du tableau sont tuées par l'essai nommé**, à la tête finale. Deux précisions : (a) pour E01 (arrêt à 8
 itérations) et E07 (tolérance), l'essai nommé est celui qui recopie la constante, premier à échouer ; les essais de
 comportement les tuent aussi (A1, A2) ; (b) l'outil du développeur ne copie que `narcbench/` et lie le reste par des liens
-symboliques : voir m4. Mon lot B (copie entière) confirme les gardes de la commande, motif de l'échec affiché :
+symboliques (m4) : j'ai donc rejoué L01 et L02 en copie entière (C24, C25), tuées par le même essai. L01 : la garde
+retirée, le code casse (`ValueError`, dépaquetage). L02 : le refus tombe quand même, par le contrôle du sceau ; l'essai la
+tue sur le motif attendu. Mon lot B (copie entière) confirme les gardes de la commande, motif de l'échec affiché :
 
 | mutation (lot B, `lecture_externe_v2.py`) | état | essai qui la tue (motif) |
 |---|---|---|
@@ -212,12 +215,14 @@ Aucun.
 ## Majeurs
 
 - **M1 — Aucun essai ne fixe la valeur des cellules qui décident la réponse.** `src/controle_ia/narcbench/cellules_externe_v2.py`,
-  `lire_modele` (l. 476-610), `lecture_finale` (l. 396-410) et les réglages (l. 52-54). Douze de mes quinze mutations lues
-  **survivent aux 168 essais** :
+  `lire_modele` (l. 476-610), `lecture_finale` (l. 396-410) et les réglages (l. 52-54). **Quinze de mes dix-huit mutations de
+  ce module survivent aux 168 essais** :
 
   | mutation (lot C) | ligne | état |
   |---|---|---|
   | C05 cellules visées de nos familles : épisodes notés dans l'ordre inverse des étiquettes | l. 543 | **survivante** |
+  | C21 nos familles : étiquettes d'apprentissage inversées | l. 539 | **survivante** |
+  | C22 comités de nos familles : le domaine tenu à l'écart reste dans l'apprentissage | l. 567 | **survivante** |
   | C04 plancher du témoin noté sur des vecteurs non standardisés | l. 525 | survivante |
   | C06 plancher d'une cellule : maximum sur les couches au lieu de la moyenne | l. 179 | survivante |
   | C08 placebo : maximum sur les calculs au lieu de la moyenne | l. 169 | survivante |
