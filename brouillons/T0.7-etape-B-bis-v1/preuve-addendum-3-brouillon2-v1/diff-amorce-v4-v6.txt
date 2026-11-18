@@ -1,0 +1,147 @@
+--- scripts/amorce_bbis_v4.sh
++++ scripts/amorce_bbis_v6.sh
+@@ -1,4 +1,16 @@
+ #!/usr/bin/env bash
++# v6 (2026-11-18, GO-2026-11-18-04 ; la v5 reste, R12) : la v5, dont rien ne change hors six écarts, chacun marqué « v6 » à sa
++#   place (trois arrêts certains de R-3160, rapport docs/notes/prealables-course-etape-b-bis-v1/rapport-portillon-et-pilote-v1.md) :
++#   (1) MIN_ESSAIS : plancher fixé au compte MESURÉ sur l'arbre que ces motifs extraient (et non sur l'arbre complet) ;
++#   (2) MOTIFS : onze fichiers de plus, ceux-là seulement — les scripts que la fiche de code en vigueur cite et que la v5
++#       n'extrayait pas ; aucun interdit d'extraction levé (jamais docs/notes/, jamais la pièce « mots et coût ») ;
++#   (3) bloc neuf « fiche-sur-l-arbre » : les contrôles de registre et de fiche de la garde d'entrée de la marche, rejoués dès la
++#       fin de l'étape 3, AVANT l'installation des paquets et la descente du modèle (un commit de course sans les lignes
++#       d'inscription ou sans un fichier de la fiche arrête à la première minute, non après le démarrage payé) ;
++#   (4) clé d'interface du conteneur exigée avant d'armer la minuterie (vide, la minuterie tournait sans jamais détruire :
++#       correction 6 de la contre-lecture du projet de feu) ;
++#   (5) empreinte de cette amorce écrite au journal (la fiche de code en vigueur ne cite pas la v6 : trace de ce qui a tourné) ;
++#   (6) nom du lanceur dans un message (lancer_bbis_v6.sh). Passée par scripts/lancer_bbis_v6.sh.
+ # Amorce de l'instance de l'étape B bis de T0.7, v4 (la v3, dont la marche est `controle_ia.t07bbis.marche_v4` : contrôle
+ # carte-processeur v4 et mesure de dispersion du second addendum ; branche de sortie neuve donnees/t07-etape-b-bis-v2 (la v1 porte
+ # la course arrêtée, R12) ; minimum d'essais relevé ; blocs marqués identiques à ceux de la v1 ; les v1 à v3 restent, R12)
+@@ -44,7 +56,12 @@
+ # compte neuf de l'arbre de l'instance simulé par ces motifs, tous les essais neufs gardés (corrections-controle-attention-v2.md)
+ # v4 (second addendum) : 115 de la v3 plus les essais neufs du second addendum qui passent sans docs/notes ni brouillons
+ # (rapport-second-addendum-bbis-v1.md, § 3 ; à recompter sur l'arbre de l'instance simulé avant le feu)
+-MIN_ESSAIS=148
++# v5 : recompte après versement complet sur main (R-3073) — 176 essais passent (commit 5378c2de, 2026-11-17)
++# v6 (écart 1) : les 176 de la v5 étaient comptés sur l'arbre complet de main (R-3074) ; sur l'arbre extrait par les motifs
++#   ci-dessous, 25 essais sautent faute de fichiers que cette amorce s'interdit d'extraire (docs/notes/, pièce « mots et coût »,
++#   fabrique factice) : plancher = compte mesuré par simulation de l'arbre extrait (`scripts/lancer_bbis_v6.sh essais-du-commit`,
++#   motifs et ligne d'essais lus dans ce texte), à remesurer au commit de la course avant le feu
++MIN_ESSAIS=151
+ export TZ=UTC PYTHONDONTWRITEBYTECODE=1
+ j() { printf '%s BBIS %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
+ BRANCHE_PRETE=0
+@@ -53,7 +70,7 @@
+     local c
+     c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
+         -H 'Content-Type: application/json' -d '{"state": "stopped"}' "$API/instances/${CONTAINER_ID:-}/" 2>/dev/null) || c=000
+-    j "fin, code $1 ; état « stopped » demandé : HTTP $c ; la session détruit par l'identifiant (R10, avec -y) et vérifie l'absence de l'identifiant dans la liste des instances (lancer_bbis_v4.sh verifier-destruction)"
++    j "fin, code $1 ; état « stopped » demandé : HTTP $c ; la session détruit par l'identifiant (R10, avec -y) et vérifie l'absence de l'identifiant dans la liste des instances (lancer_bbis_v6.sh verifier-destruction)"
+     sleep infinity; exit "$1"; }
+ # >>> arret-et-traces (extrait et joué par tests/test_t07bbis_chaine_instance_v1.py, mineur m-A)
+ traces() { mkdir -p "$D/$XT" && cp -f "$X"/* "$D/$XT/"; }
+@@ -115,6 +132,10 @@
+ mkdir -p "$X" || { echo "BBIS REFUS : $X impossible"; exit 2; }
+ [ "$ECHEANCE_UTC_S" -gt "$(date +%s)" ] && [ "$ECHEANCE_UTC_S" -le $(( $(date +%s) + 86400 )) ] || { echo "BBIS REFUS : échéance hors de [maintenant, + 24 h]"; exit 2; }
+ case "${CONTAINER_ID:-}" in ''|*[!0-9]*) echo "BBIS REFUS : identifiant de l'instance illisible"; exit 2;; esac
++# v6 (écart 4) : sans la clé d'interface du conteneur, chaque demande de destruction de la minuterie part sans autorisation et
++#   son code n'est jamais jugé : la minuterie ne détruirait rien. Refus avant tout (par le nom, jamais la valeur). Présente ne
++#   veut pas dire valide : la ligne « minuterie lancée » se lit toujours au journal, et la session détruit par l'identifiant.
++[ -n "${CONTAINER_API_KEY:-}" ] || { echo "BBIS REFUS : clé d'interface du conteneur absente (CONTAINER_API_KEY, par le nom) : la minuterie ne détruirait rien"; exit 2; }
+ # >>> minuterie (extrait et joué par tests/test_t07bbis_chaine_instance_v1.py ; défaut R-2789 : une destruction n'est jamais jugée
+ #     par un code de retour — tant que ce processus vit, l'instance n'est pas détruite, et la demande est refaite)
+ minuterie() { local n=0 c; while [ "$(date +%s)" -lt "$ECHEANCE_UTC_S" ]; do sleep 30; done
+@@ -131,6 +152,7 @@
+         sleep 60; done; }
+ # <<< minuterie
+ minuterie < /dev/null & j "minuterie lancée (PID $!, échéance $(date -u -d "@$ECHEANCE_UTC_S" +%FT%TZ))"
++j "amorce v6 : empreinte $(sha256sum < "$0" 2>/dev/null | cut -c1-64)"   # v6 (écart 5) : trace de ce qui a tourné
+ # 1. machine
+ for o in git curl python3 sha256sum awk sed grep stat find sort; do command -v "$o" > /dev/null || arret "outil absent : $o" 2; done
+ [ -n "${GH_TOKEN:-}" ] || arret "GH_TOKEN absent (par le nom)" 2
+@@ -147,6 +169,10 @@
+ AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'
+ git -c credential.helper="$AIDE" clone -q --filter=blob:none --no-checkout --single-branch --branch "$BRANCHE_CODE" "$DEPOT_URL_OFFICIEL" "$D" || arret "clonage" 2
+ git -C "$D" config credential.helper "$AIDE"; git -C "$D" config user.name "instance de calcul (B bis)"; git -C "$D" config user.email "instance-calcul@invalid"
++# v6 (écart 2) : onze lignes de plus (amorce et lanceur v5, amorces, lanceurs et scripts de la répétition v1 à v3) : les onze
++#   fichiers que la fiche de code en vigueur (registres/t07-etape-b-bis/code-bbis-v2.json) cite et que la v5 n'extrayait pas ;
++#   la garde d'entrée de la marche s'arrêtait au premier (« absent : arrêt (R11) »). Scripts de la chaîne seulement : aucune
++#   donnée, aucun résultat, rien de la liste « Jamais » ; les trois exclusions et l'interdit de docs/notes/ ne bougent pas.
+ MOTIFS='/*
+ !/*/
+ /src/
+@@ -161,6 +187,17 @@
+ /scripts/lancer_bbis_v3.sh*
+ /scripts/amorce_bbis_v4.sh*
+ /scripts/lancer_bbis_v4.sh*
++/scripts/amorce_bbis_v5.sh*
++/scripts/lancer_bbis_v5.sh*
++/scripts/amorce_repetition_bbis_v1.sh*
++/scripts/amorce_repetition_bbis_v2.sh*
++/scripts/amorce_repetition_bbis_v3.sh*
++/scripts/lancer_repetition_bbis_v1.sh*
++/scripts/lancer_repetition_bbis_v2.sh*
++/scripts/lancer_repetition_bbis_v3.sh*
++/scripts/repetition_carte_bbis_v1.py*
++/scripts/repetition_carte_bbis_v2.py*
++/scripts/repetition_carte_bbis_v3.py*
+ /scripts/enumerer_issues_bbis_v1.py*
+ /scripts/epreuve_niveau_deux_plis_bbis_v1.py*
+ /prereg/T0.7-etape-B-bis-v1.md*
+@@ -227,6 +264,56 @@
+ # <<< commit-local-des-entrees
+ commit_local_entrees
+ j "entrées commitées localement : $ENTREES_LOCALES (parent $COMMIT ; jamais poussé), arbre propre"
++# >>> fiche-sur-l-arbre (v6, écart 3 ; extrait et joué par tests/test_chaine_bbis_v6_v1.py)
++# Mêmes contrôles que `marche_v4.gardes_d_entree` sur le registre propre et la fiche de code, sans aucun paquet (python3 de
++# l'image, bibliothèque standard) : lignes SCELLEMENT-BBIS, CODE-BBIS (une, ou deux dont la seconde fait foi) et GO-BBIS ;
++# fichier cité par chacune présent, compagnon .sha256 et empreinte conformes ; chaque fichier de la fiche présent, d'empreinte
++# égale. Jamais plus sévère que la marche (qui rejoue tout, avec l'ancêtre) : ce bloc n'arrête que là où elle s'arrêterait.
++fiche_sur_l_arbre() {  # $1 = racine du dépôt extrait ; 0 si conforme ; sinon premier motif sur la sortie, code 1
++    python3 -I - "$1" <<'FIN_FICHE'
++import hashlib, json, sys
++from pathlib import Path
++d = Path(sys.argv[1])
++def sha(p):
++    return hashlib.sha256(p.read_bytes()).hexdigest()
++def faute(m):
++    print(m); sys.exit(1)
++reg = d / "registres/t07-etape-b-bis-v1.md"
++if not reg.is_file():
++    faute("registre propre absent de l'arbre extrait")
++lignes = {}
++for l in reg.read_text(encoding="utf-8").splitlines():
++    c = [x.strip() for x in l.strip().strip("|").split("|")]
++    if len(c) == 4 and c[0] in ("SCELLEMENT-BBIS", "CODE-BBIS", "GO-BBIS"):
++        lignes.setdefault(c[0], []).append(c)
++for k, permis in (("SCELLEMENT-BBIS", 1), ("CODE-BBIS", 2), ("GO-BBIS", 1)):
++    n = len(lignes.get(k, []))
++    if n == 0:
++        faute(f"ligne {k} absente du registre propre au commit de la course (exigée par la garde d'entrée de la marche)")
++    if n > permis:
++        faute(f"ligne {k} en {n} exemplaires au registre propre ({permis} au plus)")
++    _, _, chemin, attendu = lignes[k][-1]
++    p, comp = d / chemin, d / (chemin + ".sha256")
++    if not p.is_file():
++        faute(f"{chemin} (ligne {k}) absent de l'arbre extrait")
++    if not comp.is_file() or (comp.read_text(encoding="utf-8").split() or [""])[0] != sha(p) or sha(p) != attendu:
++        faute(f"{chemin} (ligne {k}) : compagnon .sha256 absent, ou empreinte autre que celle du compagnon ou du registre")
++try:
++    fichiers = json.loads((d / lignes["CODE-BBIS"][-1][2]).read_text(encoding="utf-8"))["fichiers"]
++    assert isinstance(fichiers, dict) and fichiers
++except Exception as e:
++    faute(f"fiche de code illisible ({type(e).__name__})")
++for chemin, attendu in fichiers.items():
++    if not (d / chemin).is_file():
++        faute(f"{chemin} : fichier du code cité par la fiche absent de l'arbre extrait")
++    if sha(d / chemin) != attendu:
++        faute(f"{chemin} : empreinte autre que celle de la fiche de code")
++print(f"{len(fichiers)} fichiers de la fiche présents, empreintes conformes")
++FIN_FICHE
++}
++# <<< fiche-sur-l-arbre
++FS=$(fiche_sur_l_arbre "$D") || arret "fiche de code sur l'arbre extrait : $FS : la garde d'entrée de la marche s'arrêterait ; arrêt avant l'installation des paquets et la descente du modèle" 2
++j "fiche de code sur l'arbre extrait : $FS (contrôle avancé ; la marche rejoue sa garde d'entrée entière)"
+ # 4. paquets
+ python3 -m venv "$T/venv" && timeout -k 10 3600 "$T/venv/bin/pip" install -q -r "$D/requirements-gpu.txt" > "$X/pip.txt" 2>&1 || arret "installation des paquets" 2
+ PY="$T/venv/bin/python"
