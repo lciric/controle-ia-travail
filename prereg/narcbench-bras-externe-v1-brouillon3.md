@@ -706,64 +706,60 @@ manifeste** (n° 8 sur les activations, n° 11 et 12, valeur non finie au résul
 ## Code
 
 - **Référence** : à inscrire par la ligne `CODE-NARC-EXT` avant toute exécution. La fiche (JSON scellé,
-  `registres/code-narc-ext/CODE-NARC-EXT-v1.json`) porte : branche et commit ; chemins et empreintes des modules ;
-  `scikit-learn==1.9.1` et les autres épinglages ; lignes du code des auteurs (commit `85fea3be2a9d`) relevées pour la
-  recette du témoin et les points (i) à (v) ; liste exacte des tâches de graines ; **pour chaque écart ci-dessous, la
-  fonction et l'essai qui le ferment** ; essais passés (R5 : cas sain et artefact de chaque garde) ; nom du contre-lecteur
-  du code final et empreinte de son rapport.
-- **Base** : code v2 du bras externe au commit `70cb77b8` (section « En-tête du gabarit »), relu par la contre-lecture du
-  code (« autorisable après corrections », R-3336) et par la contre-lecture 1 de ce texte ; corrections en cours chez le
-  développeur (contre-lecture du code, M1 à M3 et mineurs utiles, R-3336 ; contre-lecture 1, B4 et M5, R-3341).
+  `registres/code-narc-ext/CODE-NARC-EXT-v1.json`) porte, **lus par programme** (`lecture_externe_v2.lire_fiche_code`) : le
+  commit (40 caractères), les fichiers `src/controle_ia/narcbench/*.py` du commit et leurs empreintes, la version de
+  `scikit-learn` (sortie de `python -m controle_ia.narcbench.lecture_externe_v2 fiche-code --depot . --commit <commit>`) ; et,
+  **informatifs** : la branche ; les autres épinglages ; les lignes du code des auteurs (relevé `8be99220…`) ; la **liste
+  exacte des 503 tâches** de graines (section « Graines ») ; pour chaque écart ci-dessous, la fonction et l'essai qui le
+  ferment ; les essais passés (R5 : cas sain et artefact de chaque garde) ; la table de correspondance des numéros de la
+  liste d'arrêt (ceux de ce texte, inchangés depuis le brouillon 2, que le code cite) ; le nom du contre-lecteur du code final
+  et l'empreinte de son rapport.
+- **Base** : tête lue `cde3b9906881b6a26dba2d8486b46ac734d92371` (section « En-tête du gabarit »), qui suit les commits
+  `3950ee93` (corrections de la contre-lecture du code et gardes de la liste d'arrêt) et `2e02c7eb` (cellules, règles C et T,
+  réponse, graines : écarts 13 à 18 ; alignement sur le brouillon 2 et la contre-lecture 2), et ajoute le relevé des cinq
+  points de recette. 167 essais passés à cette tête (d'après la mère ; non rejoués par le rédacteur). Le rédacteur a lu les
+  trois modules de la lecture (`lecture_externe_v2`, `cellules_externe_v2`, `externe_v2`) à cette tête ; il n'a exécuté que le
+  contrôle préalable `verifier-texte` et la fonction `taches` (noms de plis factices), sur une copie extraite par
+  `git archive`, sans données.
 
-**Écarts entre ce texte et le code v2 au commit `70cb77b8`**, à fermer avant la ligne `CODE-NARC-EXT` (contre-lecture 1, B4,
-M3 et M5 ; contre-lecture du code, M3, m1, m3, m4 et m9) :
+**Écarts du brouillon 2 et de la contre-lecture 2, à la tête lue.** Les dix-huit écarts du brouillon 2 (contre le commit
+`70cb77b8`) et les douze ajoutés par la contre-lecture 2 (A19 à A30) sont **lus fermés** par le rédacteur à la tête lue,
+fonction par fonction : registre fixé et trois clés seules, toute autre clé refusée (1, 2, A24 : `lire_registre_externe`) ;
+« déjà jouée » (3 : `exiger_jamais_jouee` et ligne `LECTURE-NARC-EXT`) ; code exécuté (4, A26 : `exiger_code_de_la_fiche`,
+règle DF-02, adoptée par ce texte) ; configuration, forme de l'identifiant, entropie sur la ligne exacte (5, A27, A30 :
+`lire_configuration_texte`, `comparer_configuration`) ; transfert (6 : `exiger_sans_transfert`) ; scikit-learn (7, A25 :
+`exiger_scikit_learn`, arrêt avant toute lecture) ; exclusions, seuil de 10 %, trois lignes de discussion (8, A28 :
+`exclusions_etage`, `exiger_exclusions`, sur les métadonnées avant le manifeste, adopté par ce texte) ; deux colludeurs et
+mode d'un épisode, pour toutes les procédures (9, A20 : `exiger_roles_episodes`) ; repli de Cholesky (10 :
+`plancher_avec_repli`) ; scores constants et non finis (11, A22 : `constants`, `cellule_stego`, `cellule_core`) ; `None` au lieu
+de `NaN` et arrêt sur toute valeur non finie du résultat (12 : `valeurs_non_finies`) ; cellules, intervalles, plancher et
+placebo de toutes les procédures, lecture secondaire des comités, règles C et T, phrases, réponse, graines (13 à 18 :
+`cellules_externe_v2`) ; comptes structurels (A19 : `comptes_structurels`) ; mémoire (A21 : arrêt, nœud) ; journal (A23 :
+`journaliser`, gardé par décision de ce texte) ; numérotation de la liste d'arrêt (A29 : le code cite les numéros du brouillon
+2, que ce texte garde). **Comparaisons à 10⁻⁹ près** (contre-lecture 2, M2) : déjà dans le code (`ARRONDI_TOLERANCE`).
 
-*Lancement et registre*
-1. Clés : le code ne lit que `SCELLEMENT-NARC-EXT` ; ni la ligne `CODE-NARC-EXT` (sceau de la fiche, commit), ni l'absence de
-   `LECTURE-NARC-EXT` (n° 3 et 4).
-2. Registre libre (`--registre`, défaut cité `registres/scellements-v1.md`, chemin absolu accepté) ; ce texte :
-   `registres/narcbench-externe-v1.md` seul, trois clés seules (n° 3).
-3. Aucune garde « déjà jouée » (n° 4).
-4. Commit exécuté non comparé à celui de la fiche ; le manifeste n'exige qu'un arbre propre (n° 6).
-5. Options non comparées à la configuration canonique ; entropie cherchée comme sous-chaîne (`lecture_externe_v2.py`
-   l. 76) au lieu de la ligne exacte ; identifiant du run non contraint au suffixe `narc-externe-v2` (n° 5).
+**Écarts restants entre ce texte et la tête lue**, à fermer avant la ligne `CODE-NARC-EXT` :
+1. **Phrase gelée R1** : le code (`cellules_externe_v2.reponse`) porte la phrase du brouillon 2 ; ce texte y ajoute la réserve
+   de l'intervalle (section « Critères de lecture gelés ») ; le code l'aligne mot pour mot, et l'essai de l'énumération des
+   réponses la vérifie.
+2. **Tête finale** : l'essai que le développeur ajoute et l'épreuve par mutation ne doivent changer aucun module de la lecture
+   hors de la phrase R1 ; la contre-lecture du code final compare la tête finale à la tête lue, module par module, et la
+   fiche cite la tête finale.
 
-*Gardes*
-6. Dossier de l'étage de transfert sous les données non refusé (n° 2 ; le code n'en ouvre aucun).
-7. Version de `scikit-learn` consignée, non exigée (n° 7).
-8. Exclusions comptées sans seuil de 10 % ; agent de l'étage des comités sans exactement trois lignes de discussion compté
-   (`lignes_par_agent`), son épisode non exclu (n° 9).
-9. `nos_familles_v2` ne vérifie pas deux colludeurs par épisode de collusion, et un mode incohérent entre lignes d'un même
-   épisode n'arrête pas (n° 8 ; contre-lecture du code, m1).
-10. Pas de tirage de plancher équivalent en loi si la factorisation de Cholesky échoue (n° 10).
-11. Scores constants non détectés (n° 12).
-12. Valeurs `NaN` possibles dans le résultat scellé (pli sans valeur ; `json.dumps` sans `allow_nan=False`) ; ce texte :
-    `null` et un état.
+**Décisions de ce texte sur ce que le code ne tranche pas** (contre-lecture 2, A23, A26, A28 ; consigne de la mère) : le
+journal du code est gardé (« Lignes de registre ») ; le code exécuté se contrôle par la règle DF-02 de T0.7 (liste d'arrêt
+n° 6) ; les gardes n° 8 (pour la part qui porte sur les métadonnées) et n° 9 jouent avant le manifeste, et un arrêt à ces
+gardes rend toute relance un nœud (liste d'arrêt, « Relance ») ; la garde de reproduction appelée est la version 2,
+rapportée sans valeur de lecture (section « Métrique ») ; codes de sortie 2 pour les refus n° 3, 4 et 5, 1 pour tout autre
+arrêt (liste d'arrêt) ; la fiche porte, scellée, la liste exacte des 503 tâches (section « Graines »).
 
-*Lectures*
-13. Cellules d'épisode de nos familles absentes : `nos_familles_v2` ne lit que l'aire par agent sur les épisodes de
-    collusion, couche par couche. À ajouter : scores d'agent sur tous les épisodes de l'étage stéganographique, pic et
-    écart, aire par couche, moyenne sur la bande ; Mahalanobis comprise, sans plancher.
-14. Intervalle des cellules, pour toutes les procédures : tirage des sabots (étage stéganographique) ou des plis gardés
-    (étage des comités), moyenne sur couches (et graines) recalculée à chaque tirage, état « non calculable » au-delà de 1 %
-    de tirages dégénérés (au lieu de l'arrêt de `intervalle_blocs`) : absent.
-15. Plancher des cellules (direction k de chaque couche par la même chaîne, moyenne sur la bande) et placebo par échange des
-    conditions dans chaque sabot, pour toutes les procédures : absents ; le témoin de recette n'a, dans le code, ni
-    intervalle, ni plancher, ni placebo (seulement moyenne et erreur type sur graine × couche).
-16. Lecture secondaire de l'étage des comités pour nos familles (apprentissage pli par pli, score d'agent = maximum de ses
-    trois scores de message, moyenne des aires par pli) : absente.
-17. Règles C et T, phrases par famille et lignes de réponse : absentes (le code rend la garde de reproduction par
-    estimations ponctuelles et la grille D de la lecture par agent).
-18. Graines des tâches nouvelles (plis de nos familles, plancher du témoin, cellules) : à créer sous les noms de la section
-    « Graines ».
-
-**Choix de ce texte qui suivent le code v2** (déclarés ; ce ne sont pas des écarts) : augmentation « papier » ; recette du
+**Choix de ce texte qui suivent le code** (déclarés ; ce ne sont pas des écarts) : augmentation « papier » ; recette du
 témoin et points (i) à (v) tels que transcrits du code des auteurs ; graines 0 à 9 constantes ; une graine d'apprentissage
-par modèle, couche et famille ; toutes les lignes d'apprentissage pour nos familles, sans équilibrage ; lecture par agent
-telle que `nos_familles_v2` la calcule ; domaine et plis tirés de `run_id`, par modèle ; vecteur d'agent du témoin dans
+par modèle, couche et famille (et pli) ; toutes les lignes d'apprentissage pour nos familles, sans équilibrage ; lecture par
+agent telle que `nos_familles_v2` la calcule ; domaine et plis tirés de `run_id`, par modèle ; vecteur d'agent du témoin dans
 l'étage des comités = moyenne de ses lignes de discussion ; perceptron non lu ; arrêts plus stricts que les auteurs (liste
-d'arrêt n° 8) ; garde de reproduction rapportée sans valeur de lecture ; lancement non décisif ; aucun journal tenu par le
-code (la mère consigne).
+d'arrêt n° 8) ; garde de reproduction version 2 rapportée sans valeur de lecture ; lancement non décisif ; journal tenu par
+le code.
 
 ## Ce que les auteurs savaient avant le scellement
 
@@ -782,8 +778,11 @@ code (la mère consigne).
 3. **Écarts déjà relevés entre l'article et les fichiers** : la fiche du jeu annonce 31 + 31 épisodes pour l'étage des
    comités (brouillon 4, l. 155 ; non revérifié par le rédacteur), l'article 36 scénarios de collusion retenus et 50 témoins
    (p. 35) ; la fiche nomme un point de contrôle du Llama introuvable (R-2184, R-3333) ; bande du Llama de six couches dans le
-   code des auteurs (relevé du développeur v1), de cinq dans l'article (p. 27) ; domaines de l'étage des comités différents
-   entre les deux modèles (essai de forme, R-3333).
+   code des auteurs (relevé `8be99220…`, `config.py` l. 35 et 92), de cinq dans l'article (p. 27) ; domaines de l'étage des
+   comités différents entre les deux modèles, **14 pour Qwen3-32B et 15 pour Llama-3.1-70B, tous gardés comme plis**, contre
+   17 dans l'article (essai de forme, R-3333 ; relevé `8be99220…`, « Effet sur les données publiées ») ; le script publié des
+   auteurs active l'augmentation par défaut, et leur fichier d'accueil le rattache à une « Appendix C: LR probe variant »
+   (section « Recette », réexamen de l'augmentation).
 4. **Expositions, dans l'ordre.** D'après les rapports et lignes cités, **personne n'a calculé ni lu d'aire, de score de
    sonde ou de statistique d'épisode sur les fichiers publiés**.
    (a) **Développeur v1** (10 novembre, R-2184) : téléchargement des huit fichiers, vérification des licences ; chargeur qui
@@ -795,18 +794,27 @@ code (la mère consigne).
    épisodes, domaines). Constats repris ici : classes de même effectif (186 lignes par classe et par modèle), deux colludeurs
    et deux honnêtes à trois tours par épisode de collusion, trois tours de discussion pour chaque agent des deux modèles,
    domaines de l'étage des comités différents entre les deux modèles. Sur données factices seulement : `random_state` sans
-   effet, graines n'agissant que par la permutation des honnêtes.
+   effet, graines n'agissant que par la permutation des honnêtes. Son relevé des cinq points de recette (`8be99220…`, écrit
+   le 18 novembre à 18:14 UTC, sans donnée réelle lue pour la note) reprend de l'essai de forme, structure et comptes
+   seulement : 14 domaines pour Qwen3-32B et 15 pour Llama-3.1-70B, tous les plis gardés ; aucun épisode sans quatre agents ;
+   trois lignes de discussion par agent des comités ; étage stéganographique, 40 épisodes, 20 sabots, une ligne finale par
+   agent ; clés de couches `layer_26` à `layer_30` et `layer_32` à `layer_37` ; 186 lignes par classe et par modèle. Son code
+   à la tête lue n'a **jamais été joué sur les données réelles** (en-têtes des modules).
    (c) **Contre-lecteur du code** (Claude Fable, agent neuf, R-3336 ; rapport `9b90884a…`) : a rejoué l'essai de forme
    (contre-lecture 1, § 5) et relevé, sur la forme des métadonnées, que Qwen3-32B a seul le domaine « env » et Llama-3.1-70B
    seuls « edu » et « sport », et que le champ `scenario_domain` du Llama diffère du domaine des auteurs dans 14 domaines
    (correspondance un à un) ; a exécuté en partie le script des auteurs sur des données factices ; aucun score réel.
    (d) **La mère** (session `session_013QMayjsoZJFBUCqcnvD5h1`) : a reçu les rapports (b), (c) et (e) et les brouillons de
    ce texte ; d'après les lignes R-3333, R-3335, R-3336 et R-3341, elle connaît les comptes de forme et les constats cités, et
-   n'a lu aucune aire ni aucun score sur les fichiers publiés. La contre-lecture 2 lui fait confirmer cette ligne ; si elle
-   est incomplète, une nouvelle version du brouillon est écrite avant le scellement.
-   (e) **Contre-lecteur de ce texte** (contre-lecture 1, Claude Sonnet 5.5, agent neuf ; rapport `9217284f…`) : aucune
-   donnée réelle ; le code v2, la contre-lecture du code et les lignes R-2175 et R-3310 lus.
-   (f) **Observation de contexte, sans score**, lue avant ce texte par le programme (brouillon 4, l. 12-24 ; contre-lecture
+   n'a lu aucune aire ni aucun score sur les fichiers publiés. **La mère confirme cette ligne au scellement** (les
+   contre-lecteurs n'ont lu que les registres) ; si elle est incomplète, une nouvelle version du brouillon est écrite avant le
+   scellement.
+   (e) **Contre-lecteur 1 de ce texte** (Claude Sonnet 5.5, agent neuf ; rapport `9217284f…`) : aucune donnée réelle ; le
+   code v2, la contre-lecture du code et les lignes R-2175 et R-3310 lus.
+   (f) **Contre-lecteur 2 de ce texte** (Claude Sonnet 5.5, agent neuf ; rapport `f813ece0…`) : aucune donnée réelle ; code
+   lu aux commits `70cb77b8` et `3950ee93` ; la commande `verifier-texte` du code exécutée sur une copie du brouillon 2 (texte
+   seulement) ; un point de la simulation de puissance rejoué (données simulées) ; lignes R-3333, R-3335, R-3336 et R-3341.
+   (g) **Observation de contexte, sans score**, lue avant ce texte par le programme (brouillon 4, l. 12-24 ; contre-lecture
    3, l. 12) : point 2 ci-dessus.
 5. **Le rédacteur** n'a lu aucun fichier de données, aucun score, aucun résultat de ce bras. Brouillon 1 : il a lu, dans le
    brouillon 4 (prédiction N3), la mention d'un résultat antérieur du programme sur ses propres sondes, dont il ne tire rien
@@ -817,8 +825,15 @@ code (la mère consigne).
    rendent l'essai de forme) ; le code v2 au commit `70cb77b8` (`lecture_externe_v2.py` et `externe_v2.py` en entier ;
    extraits du chargeur, de `externe_v1` et de `statistiques_v1`), jamais l'arbre de travail du développeur ; les lignes
    R-3322, R-3323, R-3327, R-3333, R-3335, R-3336 et R-3341 ; la seule ligne de sujet du dernier commit de `main`
-   (`9a5e50c8`, barreau 6), sans son contenu. Par les contre-lectures, il connaît les comptes de forme cités en (b) et (c). La
-   puissance est calculée sur données simulées seulement.
+   (`9a5e50c8`, barreau 6), sans son contenu. Par les contre-lectures, il connaît les comptes de forme cités en (b) et (c).
+   Brouillon 3 : la contre-lecture 2 en entier ; le relevé des cinq points de recette en entier (dont sa section « Effet sur
+   les données publiées », comptes cités en (b)) ; à la tête `cde3b990`, par `git show` et `git archive` vers son dossier de
+   travail, jamais l'arbre du développeur, `lecture_externe_v2.py` et `cellules_externe_v2.py` en entier et les fonctions de
+   `externe_v2.py` qui portent les gardes et la garde de reproduction ; les sujets des commits de la branche ; les pages 17,
+   18 et 27 à 30 du PDF, relues pour le réexamen de l'augmentation. Il a exécuté la commande `verifier-texte` (texte
+   seulement) et la fonction `taches` (noms de plis factices), sans données, et un point de la simulation de puissance
+   (données simulées). Aucune ligne du registre des décisions lue pour ce brouillon. La puissance est calculée sur données
+   simulées seulement.
 
 ## Frontière : ce que ce texte ne dit pas
 
@@ -885,7 +900,7 @@ trancher avant le scellement (changer de configuration après le scellement est 
 | m-I-3 | mineur | phrase du témoin qui ne reproduit pas | Critères (R0) |
 | m-P-1 | mineur | limites de la simulation écrites | Puissance |
 | m-C-1 | mineur | brouillons 3 et 4 et contre-lecture 3 cités pour leurs lignes seulement ; N3 ne fait pas foi | en-tête |
-| m-C-2 | mineur | observation de contexte nommée dans les expositions (f) | Ce que les auteurs savaient |
+| m-C-2 | mineur | observation de contexte nommée dans les expositions (g) | Ce que les auteurs savaient |
 | m-C-3 | mineur | « le rédacteur n'a rien lu des fichiers publiés » | Statut |
 | m-C-4 | mineur | N-061, point 4, pour G1 ; critère 3 de G0 écarté par choix du texte | Critères ; Frontière n° 1 |
 | m-1 | mineur | la mère relit GO-2026-11-18-30 avant le scellement | en-tête |
