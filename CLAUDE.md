@@ -17,7 +17,7 @@ Dépôt de travail : `https://github.com/lciric/controle-ia-travail` (privé), b
 **Ne jamais pousser ce dépôt vers `lciric/controle-ia`** : ce nom sera la copie expurgée publique, régénérée par `scripts/depot_expurge.py`. Tout lancement d'instance passe `DEPOT_URL=https://github.com/lciric/controle-ia-travail.git` : les scripts scellés gardent l'ancien défaut.
 
 ## Phase en cours
-Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au plus tard fin novembre 2026, critères inchangés (N-027).
+Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au plus tard fin décembre 2026, critères inchangés (N-027 ; décalée d'un mois par Lazar le 18 novembre, GO-2026-11-18-01).
 État vivant, tâches ouvertes, GO en attente, décisions et dépenses : `registres/etat.md`.
 
 ## Routine de reprise — au début de CHAQUE session (R14)
