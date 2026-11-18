@@ -21,7 +21,7 @@ Différences avec `mondes_v1.py` (contre-lecture 1 du brouillon 1) :
 - M-1 : `calibrage_honnete` n'a plus de défaut ; la grille l'écrit à 10 fois les tâches (N-055, D-S9 (a), borne basse) ;
   variantes à 16 fois et à 300 ;
 - M-3 : champs `bases_blanches` et `correlation_bases` ; variantes « liste de N-056 » à trois comparateurs ;
-- M-4 : champ `episodes_garde` ; variantes « garde sur 300 épisodes » et « budget de témoin égal » ;
+- M-4 : champ `episodes_garde` ; variantes « garde sur 300 épisodes » et « budget de témoin égal » (`VARIANTES_BUDGET`) ;
 - m-10 : monde planté PL3 d'origine (seuils calibrés sur 300 épisodes), rapporté ; un contrôle V4 à l'échelle de D-S9.
 """
 from __future__ import annotations
@@ -172,6 +172,7 @@ def _reechantillonnage() -> list[Monde]:
 
 
 VARIANTES_COMPARATEURS = ("liste_n056_bases_proches", "liste_n056_bases_lointaines")
+VARIANTES_BUDGET = ("temoin_budget_egal", "garde_sur_300_episodes")   # budgets d'épisodes du témoin égalisés
 VARIANTES_SENSIBILITE = (
     ("queues_lourdes", {"bruit": "student5"}),
     ("empreinte_vue_par_la_boite_noire", {"empreinte_noire": 0.4}),

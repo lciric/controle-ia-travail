@@ -209,6 +209,8 @@ def _sabotage_ou(condition):
     (lambda p, l, a: l == "pari_previsible", le.NON_TRANCHE_STATISTIQUE),
     (lambda p, l, a: p["etiquette"] == "liste_n056_bases_proches", le.NON_TRANCHE_COMPARATEURS),
     (lambda p, l, a: p["etiquette"] == "liste_n056_bases_lointaines", le.NON_TRANCHE_COMPARATEURS),
+    (lambda p, l, a: p["etiquette"] == "temoin_budget_egal", le.NON_TRANCHE_BUDGET),
+    (lambda p, l, a: p["etiquette"] == "garde_sur_300_episodes", le.NON_TRANCHE_BUDGET),
     (lambda p, l, a: p["etiquette"] == "queues_lourdes", le.A_RETENUE),      # une variante hors règle ne change rien
 ])
 def test_dependances_de_l_issue(condition, issue):
@@ -217,7 +219,7 @@ def test_dependances_de_l_issue(condition, issue):
 
 
 def test_ordre_des_dependances():
-    """Changements d'après l'essai avant l'effectif, l'effectif avant le niveau, le niveau avant la statistique."""
+    """Changements d'après l'essai, puis effectif, niveau, statistique, comparateurs, budget du témoin."""
     tout = lambda p, l, a: ((p["bloc"] == "principal" and p["sabotage_blanche"] not in (1.25, 2.25) and p["taches"] == 400)
                             or p["taches"] == 600 or a == 0.05 or l == "student")
     assert le.verdict(_fabriquer(_sabotage_ou(tout)))["issue"] == le.NON_TRANCHE_APRES_ESSAI
@@ -225,6 +227,9 @@ def test_ordre_des_dependances():
     assert le.verdict(_fabriquer(_sabotage_ou(sans_essai)))["issue"] == le.NON_TRANCHE_EFFECTIF
     sans_effectif = lambda p, l, a: a == 0.05 or l == "student"
     assert le.verdict(_fabriquer(_sabotage_ou(sans_effectif)))["issue"] == le.NON_TRANCHE_NIVEAU
+    variantes = lambda p, l, a: p["etiquette"] in ("liste_n056_bases_proches", "temoin_budget_egal")
+    assert le.verdict(_fabriquer(_sabotage_ou(lambda p, l, a: l == "student" or variantes(p, l, a))))["issue"] == le.NON_TRANCHE_STATISTIQUE
+    assert le.verdict(_fabriquer(_sabotage_ou(variantes)))["issue"] == le.NON_TRANCHE_COMPARATEURS
 
 
 def test_concordance_reech():

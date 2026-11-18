@@ -7,13 +7,14 @@ répétitions, comptes, sommes, carrés). Rien ici ne tire de nombre au hasard. 
 Ordre imposé : `exiger_validation` d'abord (la simulation retrouve la théorie et les mondes plantés) ; si elle lève,
 aucun indicateur n'est lu. Puis `verdict` : la règle de choix, jouée aux deux effectifs du bloc principal, puis rejouée
 sur la grille d'avant l'essai, au niveau 0,05, sous les lectures « student » et « pari_previsible », contre le
-rééchantillonnage, et à trois comparateurs.
+rééchantillonnage, à trois comparateurs, et à budgets d'épisodes du témoin égalisés.
 
 Différences avec `lecture_v1.py` (contre-lecture 1 du brouillon 1) :
 - B-1 : `classe_de_regle` sort de la règle les deux classes « désaccord de conception » ; la couverture se calcule sur
   les seuls mondes « sabotage » sous le plafond de la garde ; `tables_de_desaccord` ;
 - B-2 : règle rejouée sur la grille d'avant l'essai (`NON_TRANCHE_APRES_ESSAI`) ;
 - M-2 : lecture « pari_previsible » rejouée ; M-3 : règle rejouée à trois comparateurs (`NON_TRANCHE_COMPARATEURS`) ;
+- M-4 : règle rejouée à budgets d'épisodes du témoin égalisés (`NON_TRANCHE_BUDGET` ; ajout du rédacteur du brouillon 2) ;
 - M-5 : règle rejouée au niveau 0,05 (`NON_TRANCHE_NIVEAU`) ; M-6 : deux alertes de symétrie de plus ;
 - m-4 : `predictions` ; m-5 : seuil de validité = niveau du test + trois erreurs de Monte-Carlo ; m-10 : PL3 d'origine
   rapporté, non bloquant.
@@ -24,7 +25,7 @@ import math
 
 from ..gardes import GardeArret
 from . import statistiques_v2 as st
-from .mondes_v2 import SABOTAGE_AJOUTE_APRES_ESSAI, TACHES_REDUITES, VARIANTES_COMPARATEURS
+from .mondes_v2 import SABOTAGE_AJOUTE_APRES_ESSAI, TACHES_REDUITES, VARIANTES_BUDGET, VARIANTES_COMPARATEURS
 
 NIVEAU_PRINCIPAL = 0.025
 NIVEAU_REJOUE = 0.05               # lecture « intervalle unilatéral à 95 % »
@@ -52,11 +53,13 @@ NON_TRANCHE_EFFECTIF = "non tranché : l'issue dépend de l'effectif"
 NON_TRANCHE_NIVEAU = "non tranché : l'issue dépend du niveau du test"
 NON_TRANCHE_STATISTIQUE = "non tranché : l'issue dépend de la statistique de décision"
 NON_TRANCHE_COMPARATEURS = "non tranché : l'issue dépend de la liste des comparateurs"
+NON_TRANCHE_BUDGET = "non tranché : l'issue dépend du budget d'épisodes du témoin"
 NON_INFORMATIF = "non tranché : le critère actuel n'a de puissance utile dans aucun monde « sabotage » de la grille"
 AUCUNE_INVALIDES = "aucune : les deux options laissent passer l'empreinte seule"
 AUCUNE_SANS_PUISSANCE = "aucune : aucune option valide ne garde de puissance utile"
 ISSUES = (A_RETENUE, C_RETENUE, NON_TRANCHE_VALIDITE_PUISSANCE, NON_TRANCHE_EGALITE, NON_TRANCHE_APRES_ESSAI,
-          NON_TRANCHE_EFFECTIF, NON_TRANCHE_NIVEAU, NON_TRANCHE_STATISTIQUE, NON_TRANCHE_COMPARATEURS, NON_INFORMATIF,
+          NON_TRANCHE_EFFECTIF, NON_TRANCHE_NIVEAU, NON_TRANCHE_STATISTIQUE, NON_TRANCHE_COMPARATEURS, NON_TRANCHE_BUDGET,
+          NON_INFORMATIF,
           AUCUNE_INVALIDES, AUCUNE_SANS_PUISSANCE)
 CLASSES_DE_DESACCORD = ("desaccord_gain_reel", "desaccord_avance_vehicule")
 
@@ -328,7 +331,7 @@ def alertes_de_symetrie(mondes: dict, alpha: float = NIVEAU_PRINCIPAL, issue: st
 def verdict(mondes: dict, effectifs: tuple[int, ...] = (400, 600)) -> dict:
     """Issue de l'étude. Ordre des contrôles, écrit au préenregistrement : validation ; règle aux deux effectifs
     (lecture « pari », niveau 0,025) ; puis, dans cet ordre, la première dépendance trouvée donne l'issue :
-    changements faits après l'essai, effectif, niveau, statistique, liste des comparateurs."""
+    changements faits après l'essai, effectif, niveau, statistique, liste des comparateurs, budget du témoin."""
     controles = exiger_validation(mondes)
 
     def jouer(lecture="pari", alpha=NIVEAU_PRINCIPAL, **k):
@@ -342,9 +345,12 @@ def verdict(mondes: dict, effectifs: tuple[int, ...] = (400, 600)) -> dict:
     table_previsible, issues_previsible = jouer("pari_previsible")
     reech = concordance_reech(mondes)
     reduit = lambda **k: indicateurs(mondes, TACHES_REDUITES, "pari", NIVEAU_PRINCIPAL, **k)
-    table_comparateurs = {"un_comparateur": reduit(bloc="effectifs"),
+    reference = reduit(bloc="effectifs")             # mondes réduits, un comparateur, budgets du bloc principal
+    table_comparateurs = {"reference": reference,
                           **{v: reduit(bloc="sensibilites", etiquette=v) for v in VARIANTES_COMPARATEURS}}
+    table_budget = {"reference": reference, **{v: reduit(bloc="sensibilites", etiquette=v) for v in VARIANTES_BUDGET}}
     issues_comparateurs = {k: regle_de_choix(v) for k, v in table_comparateurs.items()}
+    issues_budget = {k: regle_de_choix(v) for k, v in table_budget.items()}
     if issues_avant != issues:
         issue = NON_TRANCHE_APRES_ESSAI
     elif len(set(issues.values())) > 1:
@@ -355,15 +361,17 @@ def verdict(mondes: dict, effectifs: tuple[int, ...] = (400, 600)) -> dict:
         issue = NON_TRANCHE_STATISTIQUE
     elif len(set(issues_comparateurs.values())) > 1:
         issue = NON_TRANCHE_COMPARATEURS
+    elif len(set(issues_budget.values())) > 1:
+        issue = NON_TRANCHE_BUDGET
     else:
         issue = next(iter(issues.values()))
     return {"issue": issue,
             "issues": {"pari": issues, "grille_avant_essai": issues_avant, "niveau_0,05": issues_niveau,
                        "student": issues_student, "pari_previsible": issues_previsible,
-                       "comparateurs": issues_comparateurs},
+                       "comparateurs": issues_comparateurs, "budget_du_temoin": issues_budget},
             "indicateurs": {"pari": table, "grille_avant_essai": table_avant, "niveau_0,05": table_niveau,
                             "student": table_student, "pari_previsible": table_previsible,
-                            "comparateurs": table_comparateurs},
+                            "comparateurs": table_comparateurs, "budget_du_temoin": table_budget},
             "tables_de_desaccord": tables_de_desaccord(mondes), "concordance_reech": reech,
             "alertes_de_symetrie": alertes_de_symetrie(mondes, issue=issue, table=table, controles=controles),
             "controles": controles, "predictions": predictions(mondes, effectifs),
