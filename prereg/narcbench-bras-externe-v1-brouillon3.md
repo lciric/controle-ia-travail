@@ -11,11 +11,12 @@
 - **Rédacteur** : Claude Opus 5.5 (`claude-opus-5-5`), rédacteur neuf, sous-agent de la session mère
   `session_013QMayjsoZJFBUCqcnvD5h1` ; distinct du développeur du bras externe ; ni contre-lecteur de ce texte ni lecteur de
   ses issues. Brouillon 1 écrit le 2026-11-18 de 16:55 à 17:06 UTC ; brouillon 2 d'environ 17:21 à 17:45 UTC ; brouillon 3
-  de 19:13 à HEURE_FIN UTC (`date -u`).
+  de 19:13 à 19:28 UTC (`date -u`).
 - **Mandat** : `docs/notes/narcbench-8b-v1/mandat-redacteur-texte-court-bras-externe-v1.md`
   (`ea4c8554567b8c8a74d91ed3dad26637ac63d13863eeef5e50f048729f084638`), sous GO-2026-11-18-30 et R-3310 ; brouillons 2 et 3
-  sur consigne de la mère (R-3341 ; puis consigne du 18 novembre au soir : contre-lecture 2 et code du développeur). Voie décidée par Lazar le 10 novembre (R-2175, D-3 (a) : « bras externe NARCBench sur les
-  activations publiées, processeur, 0 USD, texte court neuf ») ; R-3310 rectifie la lettre de GO-2026-11-18-30 (« scellement
+  sur consigne de la mère (R-3341 ; puis consigne du 18 novembre au soir : contre-lecture 2 et code du développeur). Voie
+  décidée par Lazar le 10 novembre (R-2175, D-3 (a) : « bras externe NARCBench sur les activations publiées, processeur,
+  0 USD, texte court neuf ») ; R-3310 rectifie la lettre de GO-2026-11-18-30 (« scellement
   du brouillon 4 ») en « voie processeur, texte court neuf ». Le rédacteur n'a pas relu GO-2026-11-18-30 au registre des GO :
   la mère le relit avant le scellement.
 - **Choix de la mère repris ici** (ils remplacent les points ouverts du brouillon 1) : registre propre
@@ -45,15 +46,15 @@
   (branche locale `prep/narcbench-externe-v2`). Tête finale de la branche, que la fiche doit citer :
   `<<TETE_FINALE_CODE_NARC_EXT>>` (le développeur ajoute un essai et joue une épreuve par mutation ; le code de lecture ne doit
   pas changer, sauf l'alignement de la phrase gelée R1 : section « Critères de lecture gelés »).
-- Documents qui font foi (chemin, empreinte sha256 recalculée le 2026-11-18 vers 19:40 UTC ; dépôt principal à `9a5e50c8` ou
-  après, fichiers cités inchangés) :
+- Documents qui font foi (chemin, empreinte sha256 recalculée le 2026-11-18 à 19:28 UTC ; dépôt principal à `b0824238`,
+  fichiers cités inchangés depuis le brouillon 2 ou ajoutés depuis) :
   - article : `docs/sources/pdf/2604.01151v5.pdf`, `02527fd4f62ad9b996669275f0837697cbe288b253c9aa521f72a10e6dcf1849`
     (Rose, Cullen, Abdelnabi, Torr, Kaplowitz, Schroeder de Witt, « Detecting Multi-Agent Collusion Through Multi-Agent
     Interpretability », arXiv 2604.01151 v5, 15 octobre 2026) ;
   - N-061 : `docs/decisions/decision-N-061-v1.md`, `b2ae441720665ed49f131e18fb7612d0d1c2a4e0cc7a0e18a301178fe5b2df54` ;
   - N-026 (bras de diagnostic « moyenne » permis dans un préenregistrement, jamais en production) :
     `docs/decisions/decision-N-026-v1.md`, `85bd40235f3668c66adffc2ff18139ff1a0c402f3aaa24cca70db0217f755bf0` (cité, non relu
-    par le rédacteur ; teneur prise de `CLAUDE.md` et du brouillon 3) ;
+    par le rédacteur ; teneur prise de `CLAUDE.md` et du brouillon 3 du texte du 8B) ;
   - N-052 (contre-lecteur d'un autre modèle) : `docs/decisions/decision-N-052-v1.md`,
     `817d218b22b8d1d4a2c03bb78fb4870867f19bd1a1f9c08b0a1873efbb31a384` (cité, non relu) ;
   - registre des décisions `registres/decisions.md` (fichier qui s'allonge : pas d'empreinte fixe), lignes R-2175 (l. 2133),
@@ -263,7 +264,8 @@ n'est pas chiffré pour l'étage stéganographique seul. La recommandation ne ch
 **Témoin de recette — « bras de diagnostic, jamais en production »** (N-026 : écrit et nommé ici avant toute lecture ; lu
 **à côté** de notre chaîne, jamais à sa place ; jamais moniteur, revendication ni porte). Recette transcrite du code des
 auteurs (`probes/reproduce_LR.py` au commit `85fea3be2a9d`, `1d66fdc7…` ; lignes relevées par le développeur v2 dans
-l'en-tête de `externe_v2.py`, l. 1-38 ; conforme au script lui-même d'après la contre-lecture du code) : par couche et par graine
+l'en-tête de `externe_v2.py` et dans le relevé `8be99220…`, section 2 ; conforme au script lui-même d'après la contre-lecture
+du code) : par couche et par graine
 g ∈ {0, …, 9}, nc = le plus petit des deux effectifs de lignes d'apprentissage ; colludeurs : les nc premiers dans l'ordre du
 fichier ; honnêtes : nc tirés sans remise par `numpy.random.RandomState(g)` ; `StandardScaler` ajusté sur ces 2·nc lignes ;
 `LogisticRegression(penalty="l2", C=25, max_iter=8, solver="liblinear", random_state=g)` (p. 29 et 30) ; direction =
@@ -272,9 +274,9 @@ Vecteur d'agent : étage stéganographique, sa ligne finale ; étage des comité
 discussion** (trois exigées : liste d'arrêt n° 9 ; moyenne sur des messages, permise ici seulement, au titre de N-026).
 Plancher (cellules de l'étage stéganographique) : par couche, 200 directions N(0, Σ_z + 10⁻⁹ I), Σ_z covariance des lignes
 d'apprentissage standardisées par le `StandardScaler` de la graine 0, notées comme la direction des auteurs, même chaîne,
-sans moyenne sur les graines. `scikit-learn==1.9.1` exigé (épinglé dans `requirements-cpu.txt` au commit `70cb77b8` ; absent
-de ce fichier sur `main`) ; l'avertissement de dépréciation de `penalty` (retrait annoncé en 1.10) et ceux de
-non-convergence à 8 itérations sont consignés, jamais masqués. Les auteurs ne figent pas leur version : les nombres publiés
+sans moyenne sur les graines. `scikit-learn==1.9.1` exigé (épinglé dans `requirements-cpu.txt` de la branche, inchangé de
+`70cb77b8` à la tête lue `cde3b990` ; absent de ce fichier sur `main`) ; l'avertissement de dépréciation de `penalty`
+(retrait annoncé en 1.10) et ceux de non-convergence à 8 itérations sont consignés, jamais masqués. Les auteurs ne figent pas leur version : les nombres publiés
 viennent d'une version inconnue.
 
 **Points de recette, tranchés sur le code des auteurs** (lignes relevées une à une, extrait vérifié par script contre la
@@ -317,8 +319,8 @@ que dit la configuration (liste d'arrêt n° 5) :
   n'accepte aucun autre chemin et n'a pas d'option pour en donner un.
 - `texte` : chemin relatif du texte scellé ; égal à l'option `--texte` et au chemin cité par la ligne `SCELLEMENT-NARC-EXT`.
 - `Entropie` : entier en chiffres seuls, **au moins 2³² = 4 294 967 296** (donc au moins dix chiffres), tiré **une fois** par
-  la mère au scellement (par exemple `python3 -c "import secrets; print(secrets.randbits(63))"`) et inscrit à la place du
-  marqueur ; ni une année, ni une date, ni la graine de la simulation de puissance (`20261118`), ni l'entropie d'un autre
+  la mère au scellement (par exemple `python3 -c "import secrets; print(secrets.randbits(63))"`, retiré s'il tombait sous
+  2³²) et inscrit à la place du marqueur ; ni une année, ni une date, ni la graine de la simulation de puissance (`20261118`), ni l'entropie d'un autre
   texte (P3, T0.6, T0.7, texte du 8B) : la mère le vérifie en cherchant l'entier dans `prereg/`. Le code lit l'entier sur la
   ligne exacte, jamais comme sous-chaîne, et le compare en entier à l'option `--entropie`.
 - Réglages fixés par ce texte, sans option, portés par la configuration du manifeste : lancement **non décisif**
@@ -355,10 +357,10 @@ il ne change aucune phrase gelée.
 - **Estimation** Â : étage stéganographique, aire des épisodes moyennée sur les couches de la bande (et sur les dix graines
   du témoin) ; étage des comités, moyenne des aires par pli gardé, moyennée de même.
 - **Intervalle** : percentile à 95 % sur 2 000 tirages avec remise. Étage stéganographique : tirage des **sabots** ; à chaque
-  tirage, les aires par couche (et par graine) sont recalculées sur les épisodes tirés, puis moyennées (fonction neuve, sur le
-  modèle de `sondes.evaluation.intervalle_blocs`, qui, elle, ne recalcule aucune moyenne : écart n° 14 de la section
-  « Code »). Étage des comités : tirage des **plis gardés** ; à chaque tirage, moyenne des aires par pli (déjà moyennées sur
-  couches et graines) des plis tirés. Plus de 1 % de tirages sans les deux conditions → « non calculable à cet effectif »
+  tirage, les aires par couche (et par graine) sont recalculées sur les épisodes tirés, puis moyennées
+  (`cellules_externe_v2.intervalle_sabots`, même tirage des blocs que `sondes.evaluation.intervalle_blocs`, qui, elle, ne
+  recalcule aucune moyenne). Étage des comités : tirage des **plis gardés** ; à chaque tirage, moyenne des aires par pli (déjà
+  moyennées sur couches et graines) des plis tirés (`cellules_externe_v2.intervalle_plis`). Plus de 1 % de tirages sans les deux conditions → « non calculable à cet effectif »
   (un état, pas un arrêt).
 - **Plancher** (cellules de l'étage stéganographique, sauf Mahalanobis) : quantile 0,95 des 200 aires des directions de
   plancher ; qualificatif « au-dessus du plancher apparié » si la borne basse de la cellule dépasse **strictement** ce
@@ -380,10 +382,10 @@ il ne change aucune phrase gelée.
 
 - **Tolérance** : 0,03 sous la valeur publiée, prise telle qu'imprimée (deux décimales) : marge m = 0,97 pour le pic, 0,96
   pour l'écart (étage stéganographique) ; 0,97 pour les deux statistiques de l'étage des comités (valeurs publiées 1,00).
-  Convention fixée avant toute lecture (brouillon 3, l. 275 et 400-402 ; constante `TOLERANCE = 0.03` du code), retenue par la
-  mère (R-3335).
-- **Règle d'une cellule** (première qui s'applique ; [bas, haut] intervalle à 95 %) : « reproduit » si **bas ≥ m** ; « non
-  reproduit » si **haut < m** ; sinon « non tranché à cette puissance ». **Signe** : sous « non reproduit », bas > 0,5 →
+  Convention fixée avant toute lecture (brouillon 3 du texte du 8B, l. 275 et 400-402 ; constante `TOLERANCE = 0.03` du
+  code), retenue par la mère (R-3335).
+- **Règle d'une cellule** (première qui s'applique ; [bas, haut] intervalle à 95 % ; comparaisons à 10⁻⁹ près, point
+  suivant) : « reproduit » si **bas ≥ m** ; « non reproduit » si **haut < m** ; sinon « non tranché à cette puissance ». **Signe** : sous « non reproduit », bas > 0,5 →
   « séparation de même sens, plus faible que la valeur publiée » ; haut < 0,5 → « séparation de sens contraire » ; sinon
   « aucune séparation établie ». Les deux issues demandent la même force de preuve (l'intervalle entier d'un côté de la
   marge) : aucun signe n'est favorisé (R3).
@@ -435,7 +437,8 @@ contre-lecture 1. Proportions des trois états (reproduit / non reproduit / non 
 Point ajouté au brouillon 3 (contre-lecture 2, M4) : écart, aire vraie égale à sa marge (0,96) : 0,160 / 0,004 / 0,836
 (script `puissance-marge-ecart-v1.py`, `99d71a59…`, qui appelle la fonction `simuler` du script scellé après en avoir vérifié
 l'empreinte ; graine `SeedSequence(20261118, spawn_key=(1, 96))` ; sortie `4f51889f…`). La contre-lecture 2 avait trouvé
-≈ 0,15 avec une autre graine ; la grille scellée est rejouée à l'identique par les contre-lectures 1 et 2.
+≈ 0,15 avec une autre graine ; la contre-lecture 1 a rejoué toute la grille à l'identique, la contre-lecture 2 son point
+0,97 au pic.
 
 **Une cellule.** « Reproduit » n'a plus d'une chance sur deux que pour une aire vraie d'au moins 0,99 sur la grille (seuil
 ≈ 0,988 au pic et ≈ 0,984 à l'écart d'après les points hors grille de la contre-lecture 1, § 3) ; « non reproduit », que
@@ -630,9 +633,9 @@ manifeste** (n° 8 sur les activations, n° 11 et 12, valeur non finie au résul
    toute lecture (R11).
 2. Fichier ou dossier dont le chemin, sous le dossier des données, porte un segment `transfer` → arrêt avant toute lecture,
    nœud ; toute ouverture d'un fichier de l'étage de transfert (le code n'en ouvre aucun) → arrêt, nœud.
-3. Registre : `registres/narcbench-externe-v1.md` absent du dépôt ; ligne `SCELLEMENT-NARC-EXT` ou `CODE-NARC-EXT` absente, en double,
-   mal formée, non strictement antérieure à l'ouverture ou de sceau faux ; `CODE-NARC-EXT` non strictement postérieure à
-   `SCELLEMENT-NARC-EXT` ; texte cité différent de l'option `--texte` ; texte cité non conforme au gabarit des
+3. Registre : `registres/narcbench-externe-v1.md` absent du dépôt ; ligne `SCELLEMENT-NARC-EXT` ou `CODE-NARC-EXT` absente,
+   en double, mal formée, non strictement antérieure à l'ouverture ou de sceau faux ; `CODE-NARC-EXT` non strictement
+   postérieure à `SCELLEMENT-NARC-EXT` ; texte cité différent de l'option `--texte` ; texte cité non conforme au gabarit des
    préenregistrements ou de sceau faux ; toute autre clé au registre → refus (code 2).
 4. **Déjà jouée** : ligne `LECTURE-NARC-EXT` au registre, run de suffixe `narc-externe-v2` présent sous `runs/`, ou résultat
    `externe-narcbench-v2.json` présent sous `diag/` → refus ; **pas de relance sous ce texte : nœud**.
@@ -820,7 +823,7 @@ le code.
    brouillon 4 (prédiction N3), la mention d'un résultat antérieur du programme sur ses propres sondes, dont il ne tire rien
    ; hors de sa liste, il a vu des lignes du registre des décisions qui citent R-2175, R-2184, R-2735 ou R-3310 (R-2176,
    R-2186, R-2193, R-2198, R-2216, R-2243, R-2256, R-2555, R-2771, R-2773, R-3312) et les passages du bras externe du
-   brouillon 3. Brouillon 2 : la contre-lecture 1 en entier ; de la contre-lecture du code, le verdict et les remarques (pas
+   brouillon 3 du texte du 8B. Brouillon 2 : la contre-lecture 1 en entier ; de la contre-lecture du code, le verdict et les remarques (pas
    la section des preuves) ; du rapport du développeur v2, l'en-tête et les sections 3 à 5 (pas les sections 1 et 2, qui
    rendent l'essai de forme) ; le code v2 au commit `70cb77b8` (`lecture_externe_v2.py` et `externe_v2.py` en entier ;
    extraits du chargeur, de `externe_v1` et de `statistiques_v1`), jamais l'arbre de travail du développeur ; les lignes
@@ -890,7 +893,7 @@ trancher avant le scellement (changer de configuration après le scellement est 
 | M2 puissance de la réponse ; taux près de la marge | majeur | probabilité de « oui » (≈ 0,33 à 0,99 ; ≈ 0,61 à 0,995) et de « non » ; « non tranché » n'est pas un échec ; « reproduit » à tort 0,060 et 0,102 à 0,95, 0,185 à la marge du pic ; intervalle anticonservateur | Puissance ; Seuil ; Frontière |
 | M3 écarts texte-code | majeur | liste refaite contre le code v2 (`70cb77b8`) : 18 écarts, plus les choix qui suivent le code ; chaque écart fermé avant la ligne de code | Code |
 | M4 marqueurs et points ouverts | majeur | sections « Points ouverts » et « Marqueurs » retirées ; choix de la mère dans l'en-tête ; marqueurs remplis, sauf l'entropie et l'entrée de la contre-lecture 2 ; statut réécrit | en-tête ; Contre-lecture |
-| M5 seuil de 10 % d'exclus | majeur | gardé (liste d'arrêt n° 9) ; écart n° 8 (code en cours) | Liste d'arrêt ; Code |
+| M5 seuil de 10 % d'exclus | majeur | gardé (liste d'arrêt n° 9) ; écart n° 8 du brouillon 2, fermé à la tête lue | Liste d'arrêt ; Code |
 | m-R7-1 | mineur | p. 6 retirée de la recette (p. 1 et 6 pour le nom du cadre) ; p. 30 ajoutée | en-tête |
 | m-R7-2 | mineur | « flux résiduel » retiré ; citation de la p. 27 | Hypothèse |
 | m-R7-3 | mineur | contradiction de l'article (p. 15 contre p. 17 et 35) écrite | Hypothèse |
@@ -908,9 +911,9 @@ trancher avant le scellement (changer de configuration après le scellement est 
 | m-3 | mineur | total des tailles égal à celui du manifeste des données v2 (R-3333) | Données |
 | m-4 | mineur | avertissements de `scikit-learn` consignés, jamais masqués | Recette |
 | m-5 | mineur | audit de P1 « attendu, sans effet » | Prédiction ; Critères |
-| m-6 | mineur | intervalle : fonction neuve (écart n° 14) | Métrique ; Code |
+| m-6 | mineur | intervalle : fonction neuve (écart n° 14 du brouillon 2 ; au brouillon 3, `intervalle_sabots`) | Métrique ; Code |
 | m-7 | mineur | gardé | Métrique |
-| choix du rédacteur, hors remarque (à vérifier par la contre-lecture 2) | — | perceptron retiré ; une graine d'apprentissage par couche pour nos familles ; lecture par agent = celle du code v2 ; étage des comités sans plancher ni placebo, Mahalanobis à l'étage stéganographique seulement ; scikit-learn absent ou autre → refus avant toute lecture (et non « témoin non lu ») ; mémoire insuffisante → arrêt ; refus consignés par la mère, sans journal du code ; relance permise avant l'ouverture des activations, nœud après ; noms des tâches de graines nouvelles | Recette ; Liste d'arrêt ; Graines |
+| choix du rédacteur, hors remarque (à vérifier par la contre-lecture 2) | — | perceptron retiré ; une graine d'apprentissage par couche pour nos familles ; lecture par agent = celle du code v2 ; étage des comités sans plancher ni placebo, Mahalanobis à l'étage stéganographique seulement ; scikit-learn absent ou autre → refus avant toute lecture (et non « témoin non lu ») ; mémoire insuffisante → arrêt ; refus consignés par la mère, sans journal du code (au brouillon 3 : journal du code gardé, contre-lecture 2, A23) ; relance permise avant l'ouverture des activations, nœud après (au brouillon 3 : avant ou après le manifeste, gardes n° 8 et 9 en nœud) ; noms des tâches de graines nouvelles | Recette ; Liste d'arrêt ; Graines |
 
 - **Contre-lecture 2** : Claude Sonnet 5.5 (`claude-sonnet-5-5`), sous-agent neuf, autre modèle que le rédacteur, même
   famille (R2, N-052), ni rédacteur ni développeur ; mandat `docs/notes/narcbench-8b-v1/mandat-contre-lecture-2-texte-court-v1.md`.
