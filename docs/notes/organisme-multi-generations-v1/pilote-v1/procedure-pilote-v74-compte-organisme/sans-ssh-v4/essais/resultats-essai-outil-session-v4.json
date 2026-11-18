@@ -1,0 +1,163 @@
+{
+ "aide_session_sha256": "ff76b34a4e64c56455cebea781784a0c08894f677f6432886e487a37273b9a64",
+ "cas": {
+  "aucune valeur de clé gardée dans le dossier d'envoi": {
+   "conforme": true,
+   "detail": "[]"
+  },
+  "commande conforme, courte, aucune valeur imprimée, écrite pour comparer": {
+   "conforme": true,
+   "detail": "_RIGAUD=$RR_ANTHROPIC_API_KEY_RIGAUD -e GEMINI_API_KEY=$GEMINI_API_KEY -e OPENAI_API_KEY=$OPENAI_API_KEY\" --entrypoint bash --args -c \"echo $(cat \"$ENVP/amorce-v2.b64\") | base64 -d > /root/amorce_pilote_mr2_v74_v2.sh && bash /root/amorce_pilote_mr2_v74_v2.sh\" > \"$ENVP/creation.json\"; echo \"code=$?\"\n"
+  },
+  "commande jouée sur doublure : arguments et --env justes, sortie 0600": {
+   "conforme": true,
+   "detail": "code=0\n | create instance 11 --raw --image python:3.13-bookworm --disk 20 --cancel-unavail --label pilote-mr2-v74-v14-20261116 --env -e COMMIT_LOT=f783cd5e96d5de4912b2f95a3e --entrypoint bash --args -c echo IyEvdXNyL2Jpbi9lbnYgYmFzaAojIEFtb3J"
+  },
+  "commande réimprimée : acceptée à la même échéance, refusée à une autre": {
+   "conforme": true,
+   "detail": "_RIGAUD=$RR_ANTHROPIC_API_KEY_RIGAUD -e GEMINI_API_KEY=$GEMINI_API_KEY -e OPENAI_API_KEY=$OPENAI_API_KEY\" --entrypoint bash --args -c \"echo $(cat \"$ENVP/amorce-v2.b64\") | base64 -d > /root/amorce_pilote_mr2_v74_v2.sh && bash /root/amorce_pilote_mr2_v74_v2.sh\" > \"$ENVP/creation.json\"; echo \"code=$?\"\n"
+  },
+  "commande, clé absente → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : GEMINI_API_KEY absente ou de forme illisible pour --env (nom seul)\n"
+  },
+  "commande, offre à 0,25 USD/h → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : REFUS : offre hors des bornes : prix total 0.25 USD/h hors de ]0 ; 0.15]\n"
+  },
+  "commande, étiquette de la v13 → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : étiquette illisible (pilote-mr2-v74-v14-AAAAMMJJ)\n"
+  },
+  "comparer : égale → 0, un octet changé → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION : lignes égales à l'octet à la commande imprimée\nPILOTE SESSION REFUS : lignes différentes de la commande imprimée : ne pas jouer\n"
+  },
+  "creation rejouée → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : identifiant.txt existe déjà : jamais récrit\n"
+  },
+  "creation → 777, fichier supprimé": {
+   "conforme": true,
+   "detail": "ID=777\n"
+  },
+  "credit 10,5 → 0": {
+   "conforme": true,
+   "detail": "crédit 10.5 USD (au moins 5)\n"
+  },
+  "credit 3 → 2": {
+   "conforme": true,
+   "detail": "REFUS : crédit 3.0 < 5 USD : aucune création\n"
+  },
+  "detruire : commande par l'identifiant, -y": {
+   "conforme": true,
+   "detail": "vastai/vastai destroy instance 777 -y\nPILOTE SESSION PUIS (jamais juger la destruction par le code de sortie) : bash /home/user/controle-ia-travail/docs/notes/organisme-multi-generations-v1/pilote-v1/procedure-pilote-v74-compte-organisme/sans-ssh-v4/session_pilote_mr2_v74_v4.sh verifier-destruction\n"
+  },
+  "detruire, déjà absente : pas de ligne, inventaire écrit ; preuve → 0": {
+   "conforme": true,
+   "detail": "s-ssh-v4/session_pilote_mr2_v74_v4.sh verifier-destruction\nPILOTE SESSION : référence ids-avant-destruction.txt\nnote : l'instance 777 n'était pas dans la liste de référence (relevée après sa destruction) ; ids-apres-creation.txt atteste qu'elle avait été listée\nabsente ; témoins toujours listés : 2\n"
+  },
+  "essai-poussee : branche jetable → 0 ; branche du pilote → 2": {
+   "conforme": true,
+   "detail": "feu poussé sur calcul/essai-poussee-session-v3 : 43989621e4a06e9b06e673fac37c76ea61393cb8\nPILOTE SESSION REFUS : jamais une branche du pilote\n"
+  },
+  "feu-arret, cause accent → 2, rien poussé": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : cause : lettres sans accent, chiffres, espaces et « , . : ; ( ) _ - », 100 caractères au plus ; rien n'est poussé\n"
+  },
+  "feu-arret, cause longue → 2, rien poussé": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : cause : lettres sans accent, chiffres, espaces et « , . : ; ( ) _ - », 100 caractères au plus ; rien n'est poussé\n"
+  },
+  "feu-arret, cause saine → 0": {
+   "conforme": true,
+   "detail": "feu poussé sur calcul/essai-cause-saine : 82efb8ed7c235d90dacd56179d51acdf54a1f715\n"
+  },
+  "feu-arret, cause tabulation → 2, rien poussé": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : cause : lettres sans accent, chiffres, espaces et « , . : ; ( ) _ - », 100 caractères au plus ; rien n'est poussé\n"
+  },
+  "feu-phrase, clé de 2048 bits → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : clé publique de la phrase : RSA de 4096 bits exigée\n"
+  },
+  "feu-phrase, poussée refusée → 2, fichier de la phrase effacé": {
+   "conforme": true,
+   "detail": "86a5bbd/scratchpad/v4-outil/origine.git\n ! [remote rejected] cfbc0f529089731a2418e4d9a77fd39ce6d1c698 -> calcul/essai-cle-4096-entree (pre-receive hook declined)\nerror: failed to push some refs to 'file:///tmp/claude-0/-home-user/a931cfdf-f0bc-5d82-9b93-b9a1d86a5bbd/scratchpad/v4-outil/origine.git'\n"
+  },
+  "inventaire après, seule ajoutée": {
+   "conforme": true,
+   "detail": "3 instance(s) listée(s)\nseule instance ajoutée, égale à l'identifiant ; toutes les autres toujours listées\n"
+  },
+  "inventaire avant": {
+   "conforme": true,
+   "detail": "2 instance(s) listée(s)\n"
+  },
+  "offre 11 → 0": {
+   "conforme": true,
+   "detail": "offre 11 conforme : 0.15 USD/h, carte(s) 0 (inutilisée(s)), 4 processeurs, 16000 Mo, 40 Go ; réseau : entrée None, sortie None USD/Go (lus, consignés)\n"
+  },
+  "offre 12 → 0": {
+   "conforme": true,
+   "detail": "offre 12 conforme : 0.12 USD/h, carte(s) 1 (inutilisée(s)), 8 processeurs, 32000 Mo, 40 Go ; réseau : entrée None, sortie None USD/Go (lus, consignés)\n"
+  },
+  "offre 13 → 2": {
+   "conforme": true,
+   "detail": "REFUS : offre hors des bornes : prix total 0.25 USD/h hors de ]0 ; 0.15]\n"
+  },
+  "offre 14 → 2": {
+   "conforme": true,
+   "detail": "REFUS : offre hors des bornes : cpu_cores_effective 2 < 4\n"
+  },
+  "offre 15 → 2": {
+   "conforme": true,
+   "detail": "REFUS : offre hors des bornes : prix total 0.16 USD/h hors de ]0 ; 0.15]\n"
+  },
+  "offre 99 → 2": {
+   "conforme": true,
+   "detail": "REFUS : offre 99 absente de la recherche (ou en double)\n"
+  },
+  "relire : étiquette et prix": {
+   "conforme": true,
+   "detail": "instance 777 : étiquette juste, 0.15 USD/h, état 'running'\n"
+  },
+  "relire, autre étiquette → 2": {
+   "conforme": true,
+   "detail": "REFUS : instance 777 hors borne (étiquette 'pilote-mr2-v74-v14-20261116' ≠ 'pilote-mr2-v74-20991231') : la détruire aussitôt\n"
+  },
+  "relire, prix 0,2031 → 2 (détruire aussitôt)": {
+   "conforme": true,
+   "detail": "REFUS : instance 777 hors borne (prix 0.2031 USD/h hors de ]0 ; 0.17]) : la détruire aussitôt\n"
+  },
+  "relire, prix 0.17 (instance à carte) → 0": {
+   "conforme": true,
+   "detail": "instance 777 : étiquette juste, 0.17 USD/h, état None\n"
+  },
+  "relire, prix 0.18 (instance à carte) → 2": {
+   "conforme": true,
+   "detail": "REFUS : instance 777 hors borne (prix 0.18 USD/h hors de ]0 ; 0.17]) : la détruire aussitôt\n"
+  },
+  "trouver, deux de l'étiquette → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION REFUS : REFUS : 2 instance(s) d'étiquette pilote-mr2-v74-v14-20261116 : une exactement attendue\n"
+  },
+  "verifier-destruction, absente, témoins listés → 0": {
+   "conforme": true,
+   "detail": "PILOTE SESSION : référence ids-avant-destruction.txt\nabsente ; témoins toujours listés : 2\n"
+  },
+  "verifier-destruction, encore listée → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION : référence ids-avant-destruction.txt\nREFUS : instance 777 toujours listée : destruction non faite ; recommencer par ce seul identifiant\n"
+  },
+  "verifier-destruction, repli sur ids-apres-creation → 0": {
+   "conforme": true,
+   "detail": "PILOTE SESSION : référence ids-apres-creation.txt\nabsente ; témoins toujours listés : 2\n"
+  },
+  "verifier-destruction, témoin manquant → 2": {
+   "conforme": true,
+   "detail": "PILOTE SESSION : référence ids-avant-destruction.txt\nREFUS : 1 témoin(s) absent(s) : liste incomplète ; absence non prouvée\n"
+  }
+ },
+ "outil_session_sha256": "7de3f27fe794e96c128d644aa7ebdc514952adf4bdb875803c3596d143482de4",
+ "tout_conforme": true
+}
