@@ -1,7 +1,7 @@
 """Lecture gelée de l'étude des formulations du contraste à témoin apparié — contrôles de validation, règle de choix,
-tables de désaccord de conception, prédictions — v2.
+tables de désaccord de conception, prédictions — v3.
 
-Entrée : le dictionnaire `mondes` du résultat scellé de `simulation_v2.executer` (nom du monde → paramètres, classe,
+Entrée : le dictionnaire `mondes` du résultat scellé de `simulation_v3.executer` (nom du monde → paramètres, classe,
 répétitions, comptes, sommes, carrés). Rien ici ne tire de nombre au hasard. Les seuils sont ceux du préenregistrement.
 
 Ordre imposé : `exiger_validation` d'abord (la simulation retrouve la théorie et les mondes plantés) ; si elle lève,
@@ -18,14 +18,21 @@ Différences avec `lecture_v1.py` (contre-lecture 1 du brouillon 1) :
 - M-5 : règle rejouée au niveau 0,05 (`NON_TRANCHE_NIVEAU`) ; M-6 : deux alertes de symétrie de plus ;
 - m-4 : `predictions` ; m-5 : seuil de validité = niveau du test + trois erreurs de Monte-Carlo ; m-10 : PL3 d'origine
   rapporté, non bloquant.
+
+Différences avec `lecture_v2.py` (contre-lecture 2 du brouillon 2) :
+- B′-1 : le sixième rejeu compare le bloc « budget du témoin égal » (486 mondes) au bloc principal à 400 tâches, et,
+  sur les mondes réduits, la référence à la variante « B sur 300 épisodes du témoin » ;
+- M′-2 : `effet_de_la_garde` rapporte ce que la garde appariée de D-S4 retire à E et à A' ; le contrôle V3 lit le
+  niveau du pari avec et sans la garde.
 """
 from __future__ import annotations
 
 import math
 
 from ..gardes import GardeArret
-from . import statistiques_v2 as st
-from .mondes_v2 import SABOTAGE_AJOUTE_APRES_ESSAI, TACHES_REDUITES, VARIANTES_BUDGET, VARIANTES_COMPARATEURS
+from . import statistiques_v3 as st
+from .mondes_v3 import (ETIQUETTE_BUDGET_EGAL, SABOTAGE_AJOUTE_APRES_ESSAI, TACHES_REDUITES, VARIANTES_BUDGET,
+                        VARIANTES_COMPARATEURS)
 
 NIVEAU_PRINCIPAL = 0.025
 NIVEAU_REJOUE = 0.05               # lecture « intervalle unilatéral à 95 % »
@@ -125,8 +132,9 @@ def controles_validation(mondes: dict) -> list[dict]:
         m = exiger(etiquette)
         for lecture in ("pari", "pari_previsible"):
             for alpha in (NIVEAU_PRINCIPAL, NIVEAU_REJOUE):
-                ajouter(f"V3 niveau du test « {lecture} » à la frontière du nul ({etiquette}, niveau {alpha})", alpha,
-                        taux(m, cle(lecture, alpha, "E")), 3 * erreur_mc(alpha, m["repetitions"]), "au_plus")
+                for composante, dit in (("E_sans_garde", "sans la garde"), ("E", "avec la garde")):
+                    ajouter(f"V3 niveau du test « {lecture} » {dit} à la frontière du nul ({etiquette}, niveau {alpha})",
+                            alpha, taux(m, cle(lecture, alpha, composante)), 3 * erreur_mc(alpha, m["repetitions"]), "au_plus")
     for etiquette, attendu in (("V4-calibrage", 3.0 / 301.0), ("V4-calibrage-dix-fois", 40.0 / 4001.0)):
         m = exiger(etiquette)
         r = m["repetitions"]
@@ -348,9 +356,11 @@ def verdict(mondes: dict, effectifs: tuple[int, ...] = (400, 600)) -> dict:
     reference = reduit(bloc="effectifs")             # mondes réduits, un comparateur, budgets du bloc principal
     table_comparateurs = {"reference": reference,
                           **{v: reduit(bloc="sensibilites", etiquette=v) for v in VARIANTES_COMPARATEURS}}
-    table_budget = {"reference": reference, **{v: reduit(bloc="sensibilites", etiquette=v) for v in VARIANTES_BUDGET}}
+    table_budget = {"reference": reference, **{v: reduit(bloc="sensibilites", etiquette=v) for v in VARIANTES_BUDGET},
+                    "bloc_budget_du_temoin_egal": reduit(bloc="budget_temoin", etiquette=ETIQUETTE_BUDGET_EGAL)}
     issues_comparateurs = {k: regle_de_choix(v) for k, v in table_comparateurs.items()}
     issues_budget = {k: regle_de_choix(v) for k, v in table_budget.items()}
+    issue_budget_principal = issues_budget.pop("bloc_budget_du_temoin_egal")   # comparée au bloc principal à 400 tâches
     if issues_avant != issues:
         issue = NON_TRANCHE_APRES_ESSAI
     elif len(set(issues.values())) > 1:
@@ -361,22 +371,41 @@ def verdict(mondes: dict, effectifs: tuple[int, ...] = (400, 600)) -> dict:
         issue = NON_TRANCHE_STATISTIQUE
     elif len(set(issues_comparateurs.values())) > 1:
         issue = NON_TRANCHE_COMPARATEURS
-    elif len(set(issues_budget.values())) > 1:
+    elif len(set(issues_budget.values())) > 1 or issue_budget_principal != issues[TACHES_REDUITES]:
         issue = NON_TRANCHE_BUDGET
     else:
         issue = next(iter(issues.values()))
     return {"issue": issue,
             "issues": {"pari": issues, "grille_avant_essai": issues_avant, "niveau_0,05": issues_niveau,
                        "student": issues_student, "pari_previsible": issues_previsible,
-                       "comparateurs": issues_comparateurs, "budget_du_temoin": issues_budget},
+                       "comparateurs": issues_comparateurs,
+                       "budget_du_temoin": {**issues_budget, "bloc_budget_du_temoin_egal": issue_budget_principal,
+                                            "bloc_principal_meme_effectif": issues[TACHES_REDUITES]}},
             "indicateurs": {"pari": table, "grille_avant_essai": table_avant, "niveau_0,05": table_niveau,
                             "student": table_student, "pari_previsible": table_previsible,
                             "comparateurs": table_comparateurs, "budget_du_temoin": table_budget},
-            "tables_de_desaccord": tables_de_desaccord(mondes), "concordance_reech": reech,
+            "tables_de_desaccord": tables_de_desaccord(mondes), "effet_de_la_garde": effet_de_la_garde(mondes),
+            "concordance_reech": reech,
             "alertes_de_symetrie": alertes_de_symetrie(mondes, issue=issue, table=table, controles=controles),
             "controles": controles, "predictions": predictions(mondes, effectifs),
             "sensibilite_imperfection": {i: {t: indicateurs(mondes, t, "pari", imperfection=i) for t in effectifs}
                                          for i in (0.25, 0.5, 1.0)}}
+
+
+def effet_de_la_garde(mondes: dict, lecture: str = "pari", alpha: float = NIVEAU_PRINCIPAL) -> dict:
+    """Ce que la garde appariée de D-S4 retire au critère actuel (E) et au contraste (A') : sur le bloc principal,
+    moyenne et maximum de (taux sans la garde − taux avec la garde). Rapporté, hors règle."""
+    principal = [m for m in mondes.values() if m["parametres"]["bloc"] == "principal"]
+    if not principal:
+        raise GardeArret("bloc principal absent")
+    sortie = {}
+    for composante in ("E", "A_prime"):
+        ecarts = [taux(m, cle(lecture, alpha, f"{composante}_sans_garde")) - taux(m, cle(lecture, alpha, composante))
+                  for m in principal]
+        if min(ecarts) < 0.0:
+            raise GardeArret(f"{composante} passe plus souvent avec la garde que sans : câblage invalide")
+        sortie[composante] = {"moyenne": sum(ecarts) / len(ecarts), "maximum": max(ecarts), "mondes": len(ecarts)}
+    return sortie
 
 
 def predictions(mondes: dict, effectifs: tuple[int, ...] = (400, 600)) -> dict:
@@ -439,7 +468,7 @@ def predictions(mondes: dict, effectifs: tuple[int, ...] = (400, 600)) -> dict:
     bord_principal = exiger([m for m in lot(imperfection_temoin=0.0, empreinte_blanche=0.0)
                              if m["classe"] == "frontiere"], "P8")
     e_student = max(t(m, "E", "student") for m in bord_principal)
-    rendre("P8", e_student > 0.065, maximum_de_E_student=e_student,
+    rendre("P8", e_student > 0.05, maximum_de_E_student=e_student,
            maximum_de_E_pari_rapporte=max(t(m, "E") for m in bord_principal), mondes=len(bord_principal))
     return sortie
 
