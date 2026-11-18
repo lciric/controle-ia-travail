@@ -39,7 +39,7 @@ Toutes les empreintes compagnons du dossier ont été vérifiées par `sha256sum
 | PDF de Fork-and-Flush, `citations-arxiv-2610.07447v1.pdf` (p. 1 à 6, par extraction de texte) | `4eba26a1e744bcb4cb1f748aea062f7120dd796aa7f319e675b3690586242741` |
 | PDF « Scaling Discovery Requires Forgetting », `citations-arxiv-2610.20563v1.pdf` (p. 1 à 7) | `9c14df8357e1fb46caa8349e6225d502180ee74c20c62d5af97ec29cd4285edc` |
 | Résumés d'OpenReview versés, `grise-openreview-resumes-retenus-v1.json` | compagnon conforme |
-| Décisions N-044, N-045 v2, N-049, N-050, N-053, N-058, N-059, N-064, N-065, N-067 (§ 4 points 1, 2, 5 à 7 ; § 5 et 6), juge au nul (N-071), matière première des mentors (N-072), N-073 | compagnons conformes ; empreintes recopiées dans la v2, section 4 |
+| Décisions N-044, N-045 v2, N-049, N-050, N-053, N-058, N-059, N-064, N-065, N-067 (§ 4 points 1, 2, 5 à 7 ; § 6), juge au nul (N-071), matière première des mentors (N-072), N-073 | compagnons conformes ; empreintes recopiées dans la v2, section 4 |
 
 Les PDF ont été traités en données non fiables, lus par `pdftotext` ; tout Python qui lisait des pièces a tourné avec `-I`.
 
