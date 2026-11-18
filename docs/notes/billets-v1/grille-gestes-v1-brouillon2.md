@@ -7,7 +7,7 @@
 ## 0. Ce qui change par rapport au brouillon 1
 
 - **Corpus** : tout vient de la moitié « développement » du corpus v2 (58 billets : 36 bien notés, 22 appariés peu notés ; commentaires des 36 bien notés), `manifeste-corpus-v2.json`. Le codage « billet de résultats ou non » disparaît : les 120 billets du corpus v2 le sont par construction (règle `regle-tri-a-la-lecture-v2.md`).
-- **Exemples** : tous les exemples du brouillon 1 tirés d'un billet absent de la moitié développement v2 sont retirés (17 billets cités : 12 passés en tenue à l'écart v2, 5 absents du corpus v2 ; tableau en section 6). Les exemples gardés ou nouveaux sont tirés de la moitié développement v2, **hors des deux billets de développement marqués par le désaccord des lecteurs du tri** (« Some Lessons Learned from Studying Indirect Object Identification in GPT-2 small », `3ecs6duLmTfyra3Gp` ; « Discriminating Behaviorally Identical Classifiers », `s7uD3tzHMvD868ehr`), et vérifiés par programme (section 7).
+- **Exemples** : tous les exemples du brouillon 1 tirés d'un billet absent de la moitié développement v2 sont retirés (22 des 34 billets cités : 17 passés en tenue à l'écart v2, 5 absents du corpus v2 ; liste en section 6). Les exemples gardés ou nouveaux sont tirés de la moitié développement v2, **hors des deux billets de développement marqués par le désaccord des lecteurs du tri** (« Some Lessons Learned from Studying Indirect Object Identification in GPT-2 small », `3ecs6duLmTfyra3Gp` ; « Discriminating Behaviorally Identical Classifiers », `s7uD3tzHMvD868ehr`), et vérifiés par programme (section 7).
 - **Forme** : chaque geste devient **une question fermée par billet**, à modalités exclusives (deux à quatre), avec règle de décision, cas limites, un exemple et un contre-exemple. Chaque geste a un **indicateur** binaire écrit d'avance (les modalités qui valent 1), sur lequel portent la fiabilité et la comparaison.
 - **En-tête objectif** : « en tête » = les 250 premiers mots du corps, titre exclu. Le script de préparation des copies insère une borne visible (`⟦FIN DE L'EN-TÊTE — 250 MOTS⟧`) ; le codeur ne compte rien.
 - **Mesures par programme, non codées** : longueur (mots du site, variable d'appariement, donc descriptive seulement), nombre d'images, nombre de tableaux. Elles sortent du codage humain.
@@ -392,7 +392,7 @@
 - **Code** : `O12`
 - **Définition** : le commentateur rapporte une expérience, une réplication ou des données qu'il a faites lui-même à partir du billet. Née de la lecture des commentaires de développement v2 (au moins cinq cas sur 36 billets), absente du brouillon 1.
 - **Cas limites** : renvoi à un travail publié du commentateur, sans expérience faite à partir du billet → O4.
-- **Exemple** : `HhF5kESdtPHku7kim/zMh7XM5wm68hCSo9b` — « Cool work! I replicated Figure 12 on our model organism »
+- **Exemple** : `xwdRzJxyqFqgXTWbH/CvqAjm9jQgXSfZdDa` — « Very cool! I decided to try the same with Mandelbrot. »
 - **Exemple** : `rbqJoxFZtae9x93mx/FNjFjaGSzbrJnEuHo` — « Funnily enough, I did the exact same thing on the same task two weeks ago and my army of Claude agents found a different solution »
 - **Contre-exemple** (travail voisin publié : O4) : `mkbGjzxD8d8XqKHzA/KYa6vs9gRpgYKmE7r` — « In case it’s of interest, we have also performed some exploratory interpretability work using the SVD of model weights. »
 
@@ -403,7 +403,7 @@
 - **Exemple** : `aPeJE8bSo6rAFoLqg/wcex2xAxovQad4oSL` — « This reads like an SCP, including the use of the word "anomalous". »
 - **Contre-exemple** (éloge argumenté : O10) : `nv8oedrnLXKRzNEL9/CFHaWvrn3xegRZmcQ` — « It has comparison to other models, comparison to baselines, error bars, random control, no graph crimes, and its not in appendix. »
 
-Note sur O1 et O3 : l'exemple `HhF5kESdtPHku7kim/zMh7XM5wm68hCSo9b` contient à la fois une réplication et une crainte (« I was somewhat worried that some of the results you see are because the AI did not have a super strong association between misalignment ») : l'ordre de priorité le classe **O1**, pas O12. Il est gardé comme exemple de O12 pour sa première phrase et comme cas d'école de la priorité ; les codeurs le voient dans le protocole.
+Cas d'école de la priorité : le commentaire `HhF5kESdtPHku7kim/zMh7XM5wm68hCSo9b` rapporte une réplication (O12) puis une crainte (« I was somewhat worried that some of the results you see are because the AI did not have a super strong association between misalignment ») : l'ordre de priorité le classe **O1**.
 
 ---
 
@@ -479,12 +479,12 @@ Descriptives (pas de comparaison possible : seuls les bien notés ont des commen
 
 ## 6. Exemples du brouillon 1 retirés ou remplacés
 
-Tous les exemples dont le billet n'est pas dans la moitié développement v2 sont retirés (règle du mandat). Billets cités au brouillon 1 :
-- **Passés en tenue à l'écart v2 (12, tous dans le marquage 1)** : `LBaTQGD5KyXcbTtKt`, `NNGB77BipWpHn4vRW`, `PJuwj7fDpvj2opLTe`, `bhvaAbSPZgiG3oJPu`, `Qryk6FqjtZk9FHHJR`, `THzcKKQd4oWkg4dSP`, `cNDJuXNZ8MrkPZNzj`, `d8xDGzCEYE639qqEv`, `dLg7CyeTE4pqbbcnp`, `ghESoA8mo3fv9Yx3E`, `hzt9gHpNwA2oHtwKX`, `jGuXSZgv6qfdhMCuJ`, `jfG6vdJZCwTQmG7kb`, `nc9dHfcB22JdMzGbr`, `njAZwT8nkHnjipJku`, `sHpZZnRDLg7ccX9aF`, `xtpcJjfWhn3Xn8Pu5` (17 identifiants : 12 bien notés, 4 appariés peu notés, plus `bhva…` apparié — tous en tenue à l'écart v2) ;
+Le brouillon 1 cite 34 billets (contrôle par programme sur le manifeste v2, identifiants seulement). Tous les exemples dont le billet n'est pas dans la moitié développement v2 sont retirés, et remplacés par des exemples de la moitié développement v2 :
+- **Passés en tenue à l'écart v2 (17, tous dans le marquage 1)** — 13 bien notés : `Qryk6FqjtZk9FHHJR`, `THzcKKQd4oWkg4dSP`, `cNDJuXNZ8MrkPZNzj`, `d8xDGzCEYE639qqEv`, `dLg7CyeTE4pqbbcnp`, `ghESoA8mo3fv9Yx3E`, `hzt9gHpNwA2oHtwKX`, `jGuXSZgv6qfdhMCuJ`, `jfG6vdJZCwTQmG7kb`, `nc9dHfcB22JdMzGbr`, `njAZwT8nkHnjipJku`, `sHpZZnRDLg7ccX9aF`, `xtpcJjfWhn3Xn8Pu5` ; 4 appariés peu notés : `LBaTQGD5KyXcbTtKt`, `NNGB77BipWpHn4vRW`, `PJuwj7fDpvj2opLTe`, `bhvaAbSPZgiG3oJPu`. Le 18e billet du marquage 1, `xE3Y9hhriMmL4cpsR`, n'était pas cité.
 - **Absents du corpus v2 (5)** : `LzeZW9PvR6Njc9ngr`, `YydYPCsZJJEwnCMe7`, `buyCkzfa2J3Dso6tz`, `nWiwv4GN8aYqpnZKE`, `nfGZtKzz8WzxF3MAs`.
-- **Gardés car en développement v2** : citations de `M5vEjix8oPeWXeGFY`, `zj3GKWAnhPgTARByB`, `7C4KJot4aN8ieEDoz`, `8gy7c8GAPkuu6wTiX`, `SieLowPgNgRSPGhFw`, `d9FJHawgkiMSPjagR`, `khFC2a4pLPvGtXAGG`, `mkbGjzxD8d8XqKHzA`, `wSKPuBfgkkqfTpmWJ`, `wtfvbsYjNHYYBmT3k`, `z6QQJbtpkEAX3Aojj` reprises quand elles servent la nouvelle question, revérifiées contre le texte v2. `jDfjqu2qJLcPco9cf` n'est plus cité.
+- **En développement v2 (12)** : `M5vEjix8oPeWXeGFY`, `jDfjqu2qJLcPco9cf`, `zj3GKWAnhPgTARByB`, `7C4KJot4aN8ieEDoz`, `8gy7c8GAPkuu6wTiX`, `SieLowPgNgRSPGhFw`, `d9FJHawgkiMSPjagR`, `khFC2a4pLPvGtXAGG`, `mkbGjzxD8d8XqKHzA`, `wSKPuBfgkkqfTpmWJ`, `wtfvbsYjNHYYBmT3k`, `z6QQJbtpkEAX3Aojj` : citations reprises quand elles servent la nouvelle question, toutes revérifiées contre le texte v2 ; `jDfjqu2qJLcPco9cf` n'est plus cité.
 
-(Correction du décompte ci-dessus : 17 identifiants passés en tenue à l'écart v2 ; ils sont tous dans le marquage 1, qui en compte 18 — le 18e, `xE3Y9hhriMmL4cpsR`, n'était pas cité.)
+Ces trois listes sont recalculées par `verifier_citations_v2.py` (champ `brouillon1`).
 
 ## 7. Vérification des citations
 `pieces-grille-v2/verifier_citations_v2.py` lit ce fichier, extrait chaque citation, et vérifie : billet dans la moitié développement v2 (manifeste) ; billet hors des deux marqués du marquage 2 ; présence exacte dans le texte (ou dans le titre si `(titre)`) ou dans le commentaire nommé, après la normalisation du brouillon 1 (liens réduits à leur texte, `* _ \` et blancs multiples ôtés) ; 25 mots au plus ; commentaire retenu et non écrit par un auteur ; chaque geste et chaque classe a au moins un exemple et un contre-exemple vérifiés ; chaque geste a ses modalités, son indicateur (inclus dans les modalités) et son statut d'analyse. Il lit **seulement** `/home/user/billets-corpus-v2/developpement/`. Sortie : `pieces-grille-v2/verification-citations-v2.json`.
