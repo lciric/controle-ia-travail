@@ -158,11 +158,12 @@ def test_indicateurs_couverture_sous_le_plafond_et_desaccords_hors_regle():
     rapportées à part et ne touchent aucun indicateur de la règle."""
     ind = le.indicateurs(SAIN, 400)
     # 12 couples (sabotage blanc > sabotage noir) × 3 empreintes sous le plafond × 3 corrélations
-    assert ind["mondes"] == {"empreinte_seule": 54, "avance_vehiculaire": 129, "frontiere": 54, "sabotage": 108,
-                             "desaccord_gain_reel": 108, "desaccord_avance_vehicule": 33}
+    # avance du véhicule sous le plafond : deux couples seulement (1,25 contre 1,5 ; 2,25 contre 2,5 ; empreinte 0,4)
+    assert ind["mondes"] == {"empreinte_seule": 54, "avance_vehiculaire": 156, "frontiere": 54, "sabotage": 108,
+                             "desaccord_gain_reel": 108, "desaccord_avance_vehicule": 6}
     assert ind["A"]["couverture_de_puissance"] == 1.0 and ind["B"]["couverture_de_puissance"] == 0.0
     assert ind["B"]["faux_positifs_avance_vehiculaire"] == 0.02           # les 0,80 du désaccord n'y entrent pas
-    assert ind["B"]["desaccords"]["desaccord_avance_vehicule"] == [0.8] * 33
+    assert ind["B"]["desaccords"]["desaccord_avance_vehicule"] == [0.8] * 6
     assert ind["B"]["desaccords"]["desaccord_gain_reel"] == [0.01] * 108
     assert ind["A"]["passages_frontiere_rapportes"] == 0.03
     # artefact : B refusée à dessein dans le désaccord « gain réel » ne lui coûte plus de couverture
@@ -180,14 +181,14 @@ def test_grille_d_avant_l_essai():
     # sans 1,25 ni 2,25 : 9 couples « sabotage » ; la frontière rejoint l'avance véhiculaire ou son désaccord
     assert ind["mondes"]["sabotage"] == 81 and ind["mondes"]["desaccord_gain_reel"] == 81
     assert ind["mondes"]["desaccord_avance_vehicule"] == 18
-    assert ind["mondes"]["avance_vehiculaire"] == 108 - 54 + 54 - 18 + 0 or ind["mondes"]["avance_vehiculaire"] > 0
+    assert ind["mondes"]["avance_vehiculaire"] == 7 * 18 + 54 - 18      # sept couples d'origine, plus la frontière
     assert all(p["sabotage_blanche"] not in (1.25, 2.25)
                for p in (m["parametres"] for m in le._choisir(SAIN, 400, 0.0, "principal", "grille", 3, True)))
 
 
 def test_tables_de_desaccord():
     t = le.tables_de_desaccord(SAIN)
-    assert len(t["desaccord_gain_reel"]) == 216 and len(t["desaccord_avance_vehicule"]) == 66
+    assert len(t["desaccord_gain_reel"]) == 216 and len(t["desaccord_avance_vehicule"]) == 12
     assert all(l["taux_temoin_vrai"] >= 0.05 and l["A"] == 0.9 and l["B"] == 0.01 for l in t["desaccord_gain_reel"])
     assert all(l["taux_temoin_vrai"] < 0.05 and l["A"] == 0.02 and l["B"] == 0.8 for l in t["desaccord_avance_vehicule"])
     with pytest.raises(GardeArret):
@@ -297,7 +298,7 @@ def test_predictions_codees():
     assert p["P1"]["tenue"] and p["P1"]["mondes"] == 108
     assert p["P2"]["tenue"] and p["P2"]["mondes"] == 216                 # B à 0,01, A à 0,90 sous forte empreinte
     assert not p["P3"]["tenue"] and p["P3"]["ecart_moyen_A_moins_B"] == pytest.approx(0.3)
-    assert p["P4"]["tenue"] and p["P4"]["mondes"] == 36                  # empreinte 0,4, avance du véhicule : B − A = 0,78
+    assert not p["P4"]["tenue"] and p["P4"]["mondes"] == 30 and p["P4"]["mondes_sous_l_ecart"] == 18   # frontière plate
     assert p["P5"]["tenue"]                                              # garde groupée fabriquée à 0,08 > 0,034
     assert not p["P6"]["tenue"] and p["P6"]["mondes"] == 2
     assert not p["P7"]["tenue"]                                          # profil sans témoin trompé
@@ -307,9 +308,8 @@ def test_predictions_codees():
         "empreinte_seule": (0.9, 0.6, 0.6) if q["imperfection_temoin"] == 1.0 else
                            ((0.9, 0.01, 0.2) if q["imperfection_temoin"] == 0.25 else (0.9, 0.07, 0.01)),
         "desaccord_gain_reel": (0.95, 0.9, 0.2), "sabotage": (0.95, 0.9, 0.85),
-        "desaccord_avance_vehicule": (0.9, 0.02, 0.05),
-        "frontiere": (0.2, 0.03, 0.03) if (l == "student" or q["etiquette"] == "calibrage_honnete_300") else None}.get(c)))
-    assert [k for k, v in bascule.items() if v["tenue"]] == ["P3", "P5", "P6", "P7", "P8"]
+        "frontiere": (0.2, 0.03, 0.30)}.get(c)))
+    assert [k for k, v in bascule.items() if v["tenue"]] == ["P3", "P4", "P5", "P6", "P7", "P8"]
     sans_v5 = {k: v for k, v in SAIN.items() if v["parametres"]["etiquette"] != "V5-garde-groupee-taux5"}
     with pytest.raises(GardeArret):
         le.predictions(sans_v5)

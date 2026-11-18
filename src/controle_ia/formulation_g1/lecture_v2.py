@@ -95,11 +95,11 @@ def controles_validation(mondes: dict) -> list[dict]:
     v = _par_etiquette(mondes)
     sortie = []
 
-    def ajouter(nom, attendu, observe, tolerance, sens, erreur=None, rapporte=False):
+    def ajouter(nom, attendu, observe, tolerance, sens, erreur=None, rapporte=False, effectif=None):
         ok = {"egal": abs(observe - attendu) <= tolerance, "au_plus": observe <= attendu + tolerance,
               "au_moins": observe >= attendu - tolerance, "strictement_plus": observe > attendu}[sens]
         sortie.append({"nom": nom, "sens": sens, "attendu": attendu, "observe": observe, "tolerance": tolerance,
-                       "erreur_mc": erreur, "rapporte": rapporte, "reussi": bool(ok)})
+                       "erreur_mc": erreur, "effectif": effectif, "rapporte": rapporte, "reussi": bool(ok)})
 
     def exiger(etiquette):
         if etiquette not in v:
@@ -111,13 +111,13 @@ def controles_validation(mondes: dict) -> list[dict]:
         exact = st.passage_garde_exact(n, taux_vrai)
         e = erreur_mc(exact, m["repetitions"])
         ajouter(f"V1 garde exacte, {n} épisodes, taux vrai {pourcent} %", exact, taux(m, "garde_B1_exacte"),
-                3 * e + MARGE_THEORIE, "egal", e)
+                3 * e + MARGE_THEORIE, "egal", e, effectif=m["repetitions"])
         for k in (3, 6):
             g = m["garde_par_groupes_de_cellules"][str(k)]
             produit = st.conjonction_independante([exact] * k)
             e = erreur_mc(produit, g["groupes"])
             ajouter(f"V2 conjonction de la garde sur {k} cellules, {n} épisodes, taux vrai {pourcent} %", produit,
-                    g["tous_passent"] / g["groupes"], 3 * e + MARGE_THEORIE, "egal", e)
+                    g["tous_passent"] / g["groupes"], 3 * e + MARGE_THEORIE, "egal", e, effectif=g["groupes"])
     for etiquette in ("V3-frontiere-m1", "V3-frontiere-m3"):
         m = exiger(etiquette)
         for lecture in ("pari", "pari_previsible"):
@@ -316,9 +316,11 @@ def alertes_de_symetrie(mondes: dict, alpha: float = NIVEAU_PRINCIPAL, issue: st
             alertes.append(f"option {option} retenue avec tous ses indicateurs à leur meilleure valeur possible (trop beau)")
     if controles is not None:
         theorie = [c for c in controles if c["nom"].startswith(("V1 ", "V2 "))]
-        if not theorie or any(c["erreur_mc"] is None for c in theorie):
+        if not theorie or any(c["erreur_mc"] is None or not c["effectif"] for c in theorie):
             raise GardeArret("alerte « trop beau » : contrôles V1 et V2 absents ou sans erreur de Monte-Carlo")
-        if all(abs(c["observe"] - c["attendu"]) < PART_TROP_BEAU * c["erreur_mc"] for c in theorie):
+        # un compte entier ne peut pas approcher l'exact à mieux qu'une demi-unité : plancher d'une demi-répétition
+        if all(abs(c["observe"] - c["attendu"]) <= max(PART_TROP_BEAU * c["erreur_mc"], 0.5 / c["effectif"] + 1e-12)
+               for c in theorie):
             alertes.append("contrôles de théorie V1 et V2 tous à moins d'un dixième d'erreur de Monte-Carlo (trop beau)")
     return alertes
 
