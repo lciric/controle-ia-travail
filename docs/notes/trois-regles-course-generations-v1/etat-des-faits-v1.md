@@ -8,7 +8,7 @@ Les trois règles : **(1)** le sort de la fiche non concluante d'une génératio
 
 ## 0. Verdict
 
-**Aucune de nos courses à plusieurs générations présente au dépôt n'a exercé l'une des trois règles : zéro fiche non concluante, zéro fiche à plus d'une exécution, et aucune note ni aucun rang servis aux proposeurs.** Les trois règles sont aujourd'hui fixées par le code, dans un seul sens (non concluante retirée ; vue des proposeurs sans verdict ; dossier de travail neuf à chaque exécution), sans qu'aucune mesure ait comparé ce sens à un autre. Les seuls journaux bruts à plusieurs générations qui sont au dépôt sont deux essais à blanc, à proposeurs scriptés et à bac à sable factice ; la seule course réelle à deux générations (code v67, 12 novembre) a ses journaux sur une branche que je n'ai pas lue.
+**Aucune de nos courses à plusieurs générations présente au dépôt n'a exercé l'une des trois règles : zéro fiche non concluante, zéro fiche à plus d'une exécution, et aucune note ni aucun rang dans les textes servis aux proposeurs que j'ai pu lire (les quatre textes d'un essai à blanc).** Les trois règles sont aujourd'hui fixées par le code, dans un seul sens (non concluante retirée ; vue des proposeurs sans verdict ; dossier de travail neuf à chaque exécution), sans qu'aucune mesure ait comparé ce sens à un autre. Les seuls journaux bruts à plusieurs générations qui sont au dépôt sont deux essais à blanc, à proposeurs scriptés et à bac à sable factice ; la seule course réelle à deux générations (code v67, 12 novembre) a ses journaux sur une branche que je n'ai pas lue.
 
 Trois écarts à connaître avant de mesurer :
 
