@@ -21,7 +21,7 @@ Goodhart contre le juge de l'organisme est rangé dans la liste « verdicts déf
 Dix majeurs, dont trois états faux ou périmés dans les lignes mêmes du mandat du rédacteur (fin de course de l'apprentissage
 des sondes sur la tâche, validité de l'adaptateur, lecture du second cycle « jamais avant l'entretien »), et les états
 changés après sa coupure de 21:49 (verdict du rejeu de NARCBench scellé ; nœud de Lazar sur le texte scellé des organismes
-discrets). Après les couples B-1 et M-1 à M-10, appliqués par programme dans des versions neuves (socle « v7 squelette »,
+discrets). Après les couples B-1 et M-1 à M-10 (M-8 selon l'option retenue), appliqués par programme dans des versions neuves (socle « v7 squelette »,
 « ce qui manque » v3, règle 12), les deux pièces sont bonnes pour le remplissage.
 
 **Limite, à écrire avec ce verdict** : la comparaison du socle à sa v5 n'est pas faite (périmètre réduit). Je n'ai pas ouvert
@@ -116,8 +116,8 @@ NOUVEAU : l'apprentissage des sondes sur la
    tâche (barreau 4 bis) a sa sortie scellée selon R-3455 et R-3470 (à confirmer par clé), lecture non faite,
 ```
 ```
-ANCIEN : fin de la course de l'apprentissage des sondes sur la tâche (au plus tard 04:41:43), sortie poussée et scellée,
-NOUVEAU : sortie de l'apprentissage des sondes sur la tâche scellée selon R-3455 et R-3470 (à confirmer par clé), destruction de la machine à confirmer,
+ANCIEN : fin de la course de l'apprentissage des sondes sur la tâche (au plus tard 04:41:43), sortie poussée et scellée, machine détruite par son identifiant et consignée ;
+NOUVEAU : sortie de l'apprentissage des sondes sur la tâche scellée selon R-3455 et R-3470 (à confirmer par clé) ; machine détruite par son identifiant et consignée, si ce n'est déjà fait ;
 ```
 ```
 ANCIEN : Sondes apprises sur la tâche : **course partie** le 18 (échéance le 19 à 04:41:43), **lecture non faite** ;
@@ -235,7 +235,7 @@ NOUVEAU : Chaque issue est dans les sections de résultats du dossier (partie e)
 ```
 Règle exacte pour les quatorze emplacements : remplacer chaque sous-chaîne qui commence par « [ISSUE — » et finit au premier
 « ] » suivant par « partie e, » suivi du texte compris entre « [ISSUE — » et le premier « : » qui suit, ou, à défaut, la
-première « , lecteur autorisé » (exemples : « partie e, barreau 1, témoin positif planté » ; « partie e, nombre de critères
+première « , lecteur autorisé », sans espace final (exemples : « partie e, barreau 1, témoin positif planté » ; « partie e, nombre de critères
 de la porte de sortie de la phase des instruments tenus au 23 novembre »). L'emplacement de dépense ne change pas.
 
 **M-9 — L'emplacement de dépense unique est faux pour trois montants anciens (socle, section 1.4).** Ces trois montants
@@ -288,8 +288,8 @@ m-1 ANCIEN (socle) : (dernière ligne de registre lue : R-3459, 21:49 UTC). Chaq
 m-1 ANCIEN (« ce qui manque ») : (dernière ligne de registre lue : R-3459, 21:49 UTC ;
     NOUVEAU : (lignes de registre lues : celles que nomment les sources, la dernière étant R-3459, 21:49 UTC ;
 ```
-Raison de m-1 : R-3437 à R-3439, R-3441, R-3445, R-3447 à R-3449, R-3451 à R-3453 et R-3455 n'ont pas été lues. Or R-3439,
-R-3451 et R-3455 changent des états (M-2 à M-5).
+Raison de m-1 : R-3437 à R-3439, R-3441, R-3445, R-3447 à R-3449, R-3451 à R-3453 et R-3455 ne figurent pas parmi les
+sources nommées. Or R-3439, R-3451 et R-3455 changent des états (M-2 à M-5).
 
 ```
 m-2 ANCIEN : trois sous-agents de la mère au plus à la fois (R-3302 point 3)
