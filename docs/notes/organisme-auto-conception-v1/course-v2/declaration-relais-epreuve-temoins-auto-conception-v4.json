@@ -1,0 +1,40 @@
+{
+ "version": "declaration-relais-epreuve-temoins-auto-conception-v4",
+ "fournisseurs": {
+  "claude": {
+   "type": "claude_sdk",
+   "url_relais": "http://127.0.0.1:8787",
+   "nom_cle": "RR_ANTHROPIC_API_KEY_RIGAUD",
+   "pid_relais": 20587,
+   "porte_plafond": {
+    "type": "commande",
+    "delai_s": 30,
+    "commande": [
+     "/usr/local/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/scripts/porte_plafond_relais_v1.py",
+     "--url",
+     "http://127.0.0.1:8787",
+     "--modeles-permis",
+     "claude-fable-5-1,claude-opus-5-5",
+     "--plafond-ligne",
+     "5"
+    ]
+   }
+  },
+  "argon": {
+   "type": "commande_externe",
+   "commande": [
+    "bash",
+    "/home/user/controle-ia-travail/rapports/fille-ideation-1-v1/appel-argon-v5.sh"
+   ],
+   "nom_cle": "GEMINI_API_KEY",
+   "pid_relais": 20590,
+   "url_etat_relais": "http://127.0.0.1:8788",
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  }
+ }
+}
