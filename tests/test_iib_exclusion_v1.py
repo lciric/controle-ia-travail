@@ -122,7 +122,8 @@ def test_phrases_distinctives_de_la_consigne_reelle_vues_par_un_motif_de_ii_b():
     """Contrôle de scellement de la consigne (forme) : la consigne et l'indication réelles déclenchent chacune un motif propre à (ii-b)."""
     c = cs.charger_consigne_iib(REELLE, SHA_REELLE)
     m = {k: v for k, v in ex.motifs_d_exclusion(c["motifs"]).items() if k.startswith("iib:")}
-    assert ex.mentions(c["consigne"], m) and ex.mentions(c["indication"], m)
+    ok = ex.mentions(c["consigne"], m) and ex.mentions(c["indication"], m)
+    assert ok, "la consigne ou l'indication réelle ne déclenche aucun motif propre à (ii-b)"
 
 
 def test_non_bornable_a_champ_cout_exclue_sans_champ_cout_gardee():
@@ -192,13 +193,18 @@ def _chercher_fuites(fichiers, c):
     tri_i = _triplets(mots_indication)
     constats = []
     for f in fichiers:
-        if not f.is_file() or f.suffix not in (".py", ".sh", ".txt", ".md"):
+        if not f.is_file():
+            continue
+        try:
+            f.read_bytes()[:512].decode("utf-8")
+        except (UnicodeDecodeError, OSError):
             continue
         if f.name.startswith("consigne-privee"):
             continue
         texte = f.read_text(encoding="utf-8", errors="replace")
+        texte_bas = texte.casefold()
         for rang, motif in enumerate(c["motifs"], 1):
-            present = motif in texte
+            present = motif.casefold() in texte_bas
             if present:
                 constats.append(f"motif rang {rang} ({len(motif)} car.) dans {f.name}")
         m = _mots(texte)
@@ -220,6 +226,9 @@ def _fichiers_iib():
     dossier_rapports = RACINE / "brouillons" / "ii-b-saboteur-budget-v1"
     if dossier_rapports.is_dir():
         fichiers += sorted(f for f in dossier_rapports.iterdir() if f.name.startswith("rapport-developpeur"))
+    dossier_prereg = RACINE / "prereg"
+    if dossier_prereg.is_dir():
+        fichiers += sorted(f for f in dossier_prereg.rglob("*") if "iib" in f.name.lower())
     return fichiers
 
 
@@ -240,3 +249,15 @@ def test_artefact_motif_reel_plante_dans_un_fichier_temporaire_vu(tmp_path):
     constats = _chercher_fuites([f], c)
     trouve = len(constats) > 0
     assert trouve, f"motif rang 1 ({len(motif)} car.) planté mais non détecté"
+
+
+def test_artefact_triplet_plante_dans_un_fichier_temporaire_vu(tmp_path):
+    """Non-fuite (artefact) : un triplet de la consigne réelle planté dans un fichier temporaire est repéré."""
+    c = cs.charger_consigne_iib(REELLE, SHA_REELLE)
+    mots_c = _mots(c["consigne"])
+    triplet = " ".join(mots_c[:3])
+    f = tmp_path / "piege-triplet.txt"
+    f.write_text(f"texte anodin {triplet} fin", encoding="utf-8")
+    constats = _chercher_fuites([f], c)
+    trouve = any("triplet" in ct for ct in constats)
+    assert trouve, f"triplet planté ({len(triplet)} car.) non détecté"

@@ -322,13 +322,19 @@ def test_artefact_base_modifiee_pendant_la_distillation_du_premier_adaptateur(tm
     assert len(vus) == 1
 
 
+def _verifier_conditions_evaluation(fiches_eval):
+    """Vérifie que les fiches d'évaluation portent les conditions attendues et non « honnete ». Rend (conditions, ok)."""
+    conditions = {f["condition"] for f in fiches_eval}
+    ok = conditions == {"H", "B50", "B100", "TJ100"} and "honnete" not in conditions
+    return conditions, ok
+
+
 def test_sain_condition_des_sorties_d_evaluation(course):
     """Les sorties d'évaluation portent la condition (H, B50, B100, TJ100) et non « honnete »."""
     e = json.loads((course["racine"] / "diag" / RUN / "episodes-iib.json").read_text(encoding="utf-8"))
     fiches_eval = [f for f in e["fiches"] if f["phase"].startswith("evaluation-")]
-    conditions = {f["condition"] for f in fiches_eval}
-    assert conditions == {"H", "B50", "B100", "TJ100"}
-    assert "honnete" not in conditions
+    conditions, ok = _verifier_conditions_evaluation(fiches_eval)
+    assert ok, f"conditions inattendues : {conditions}"
 
 
 def test_artefact_condition_fausse_dans_les_sorties_d_evaluation(course):
@@ -337,9 +343,8 @@ def test_artefact_condition_fausse_dans_les_sorties_d_evaluation(course):
     fiches_eval = [f for f in e["fiches"] if f["phase"].startswith("evaluation-")]
     assert fiches_eval
     piege = [dict(f, condition="honnete") if f["condition"] == "H" else f for f in fiches_eval]
-    conditions_piege = {f["condition"] for f in piege}
-    assert "honnete" in conditions_piege
-    assert conditions_piege != {"H", "B50", "B100", "TJ100"}
+    _, ok_piege = _verifier_conditions_evaluation(piege)
+    assert not ok_piege, "la vérification devrait échouer sur des fiches falsifiées"
 
 
 def test_sain_part_des_episodes_honnetes_acceptes(course):

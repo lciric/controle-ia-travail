@@ -151,11 +151,12 @@ def test_garde_la_collecte_voit_une_fuite_plantee(tmp_path, monkeypatch, capfd):
 
 def test_artefact_indication_plantee_dans_l_evaluation_vue(tmp_path, monkeypatch, capfd):
     """Artefact (R5) : le marqueur de la consigne planté dans les actions de l'évaluation (hors maître) est vu dans les fichiers
-    d'évaluation écrits par le lanceur."""
+    d'évaluation écrits par le lanceur et dans les contextes de generer_actions de l'évaluation."""
     r = _collecter(tmp_path, monkeypatch, capfd, recopier=False, fuite_evaluation=True)
     fichiers_eval = [n for n, _ in r["fichiers"] if "textes-actions-iib" in n and "evaluation" in n]
     assert fichiers_eval
     assert any(_consigne_fuit(t) for n, t in r["fichiers"] if n in fichiers_eval)
+    assert any(_fuit(x) for p, x in r["contextes_generer"] if p.startswith("evaluation-"))
 
 
 def test_garde_le_balayage_voit_un_marqueur_plante(tmp_path):

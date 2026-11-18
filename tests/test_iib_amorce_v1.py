@@ -195,17 +195,38 @@ def _lire_motifs_amorce():
     return m_p.group(1), m_i.group(1)
 
 
+def _capturer_progres(**champs):
+    """Appelle la vraie fonction de progrès du lanceur et rend la ligne émise sur stderr."""
+    import io, sys as _sys
+    from controle_ia.t06.lanceur import progres
+    buf = io.StringIO()
+    ancien = _sys.stderr
+    _sys.stderr = buf
+    try:
+        progres(**champs)
+    finally:
+        _sys.stderr = ancien
+    return buf.getvalue().strip()
+
+
 def test_sain_ligne_de_progres_epreuves_passe_les_deux_motifs_de_l_amorce():
     motif_progres, motif_interdit = _lire_motifs_amorce()
-    for ligne in ("PROGRES 2026-11-18T10:00:00Z etape=epreuves etat=passees epreuve=aucune",
-                  "PROGRES 2026-11-18T10:00:00Z etape=epreuves etat=arret epreuve=E-O1"):
+    lignes = [
+        _capturer_progres(etape="epreuves", etat="passees", epreuve="aucune"),
+        _capturer_progres(etape="epreuves", etat="arret", epreuve="E-O1"),
+    ]
+    relayees = 0
+    for ligne in lignes:
         assert re.match(motif_progres, ligne), f"ne passe pas MOTIF_PROGRES : {ligne}"
         assert not re.search(motif_interdit, ligne, re.IGNORECASE), f"porte un mot interdit : {ligne}"
+        if "etape=epreuves" in ligne:
+            relayees += 1
+    assert relayees >= 1, "aucune ligne etape=epreuves relayée"
 
 
 def test_artefact_ligne_de_progres_avec_mot_interdit_retenue():
     motif_progres, motif_interdit = _lire_motifs_amorce()
-    ligne = "PROGRES 2026-11-18T10:00:00Z etape=epreuves echec=aucun"
+    ligne = _capturer_progres(etape="epreuves", echec="aucun")
     assert re.match(motif_progres, ligne), "doit passer MOTIF_PROGRES"
     assert re.search(motif_interdit, ligne, re.IGNORECASE), "doit porter un mot interdit (echec)"
 
