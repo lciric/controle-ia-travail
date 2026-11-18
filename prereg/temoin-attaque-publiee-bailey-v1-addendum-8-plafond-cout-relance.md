@@ -2,7 +2,7 @@
 
 18 novembre 2026. Session « attaquant informé » (`session_01XJ6MgnEhQMZteN9F8a1BST`), branche
 `claude/compassionate-meitner-d4ryyk`. Choix de Lazar : « B » (mot relayé par la session mère, note
-`registres/passations/2026-11-18-…-mot-lazar-bailey-addendum-8-B.md`). Brouillons 1 à 4 gardés tels quels dans
+`registres/passations/2026-11-18-0209-mot-lazar-bailey-addendum-8-B.md`, `cf188651…`). Brouillons 1 à 4 gardés tels quels dans
 `brouillons/` (R12) ; l'option A des brouillons 2 à 4 (heures d'arrêt au taux du stockage) n'est pas retenue. Le texte
 (`fb6c2f34…`) et les addenda 1 à 7 restent tels quels ; en cas de conflit, le texte prime et l'écart est un nœud.
 **Écrit et scellé avant toute lecture** : aucune note de sonde ni de juge du témoin n'a été lue, par aucune session.
