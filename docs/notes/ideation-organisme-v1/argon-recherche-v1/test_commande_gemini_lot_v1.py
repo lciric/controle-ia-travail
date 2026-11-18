@@ -269,8 +269,8 @@ def lot(n=1, **extra):
         {"request": dict({"contents": [{"role": "user", "parts": [{"text": "x"}]}]}, **extra)} for _ in range(n)]}}}}
 
 
-@pytest.mark.parametrize("corps,motif", [(lot(2), "requêtes dans le lot"), (lot(model="models/gemini-4-argon"), "autre modèle"),
-                                         (lot(tools=[{"google_search": {}}]), "outils"), ({"batch": {}}, "illisible")])
+@pytest.mark.parametrize("corps,motif", [(lot(2), "requêtes dans le lot"), (lot(model="models/gemini-4-argon"), "['model']"),
+                                         (lot(tools=[{"google_search": {}}]), "['tools']"), ({"batch": {}}, "refusé")])
 def test_relais_borne_le_contenu_d_un_lot(monde, corps, motif):
     a, url, _ = monde
     statut, b = appel_brut(url, f"/v1beta/models/{MODELE}:batchGenerateContent", corps)
@@ -315,3 +315,39 @@ def test_relais_corps_trop_gros_refuse_sans_lecture(tmp_path):
     assert pret.wait(10)
     assert appel_brut(pret.url, f"/v1beta/models/{MODELE}:batchGenerateContent", lot())[0] == 429 and not a.recus
     a.s.shutdown()
+
+
+@pytest.mark.parametrize("brut,motif", [
+    (b'{"batch": {"input_config": {"requests": {"requests": [{"request": {"contents": [], "model": "x"}}, {"request": {}}, {"request": {}}]}}, '
+     b'"input_config": {"requests": {"requests": [{"request": {"contents": []}}]}}}}', "double"),
+    (json.dumps({"batch": {"input_config": {"requests": {"requests": [{"request": {"contents": []}}]}},
+                           "inputConfig": {"requests": {"requests": [{"request": {"tools": []}}]}}}}).encode(), "non permise"),
+    (json.dumps({"batch": {"model": "models/gemini-4-argon", "input_config": {"requests": {"requests": [{"request": {"contents": []}}]}}}}).encode(), "non permise"),
+    (json.dumps({"batch": {"input_config": {"requests": {"requests": [{"request": {"contents": [], "generationConfig": {"candidateCount": 4}}}]}}}}).encode(), "non permise"),
+    (json.dumps({"batch": {"input_config": {"requests": {"requests": [{"request": {"contents": [], "cachedContent": "c"}}]}}}}).encode(), "non permise"),
+])
+def test_relais_formes_detournees_refusees(monde, brut, motif):
+    a, url, _ = monde
+    req = urllib.request.Request(url + f"/v1beta/models/{MODELE}:batchGenerateContent", data=brut, method="POST",
+                                 headers={"Content-Type": "application/json"})
+    with pytest.raises(urllib.error.HTTPError) as e:
+        urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=10)
+    assert e.value.code == 403 and motif in json.loads(e.value.read())["erreur"] and not a.recus
+
+
+def test_relais_relaie_l_objet_verifie_reencode(monde):
+    """Les octets reçus (espaces, ordre) ne partent pas tels quels : c'est l'objet vérifié, ré-encodé, qui part."""
+    a, url, _ = monde
+    brut = b'{ "batch" :  { "input_config" : { "requests" : { "requests" : [ { "request" : { "contents" : [ ] } } ] } } } }'
+    req = urllib.request.Request(url + f"/v1beta/models/{MODELE}:batchGenerateContent", data=brut, method="POST",
+                                 headers={"Content-Type": "application/json"})
+    urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=10).read()
+    (recu,) = [r for r in a.recus if r[1].endswith(":batchGenerateContent")]
+    assert recu[3] == {"batch": {"input_config": {"requests": {"requests": [{"request": {"contents": []}}]}}}}
+
+
+def test_code_7_porte_les_avertissements(monde):
+    a, url, _ = monde
+    a.scenario = "pensee"
+    code, l = lancer(url, consigne="x")
+    assert code == 7 and l["avertissements"] and "entrée facturée" in l["avertissements"][0]

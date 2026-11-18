@@ -19,6 +19,11 @@ qui change, et rien d'autre :
    astra-v1.md`) : **l'annulation a sa propre borne** (`--max-annulations`, défaut 16), jamais mangée par les relevés ;
    **le contenu d'un lot est borné avant l'envoi** : au plus `--max-requetes-par-lot` requêtes (défaut 1), aucune requête
    qui nomme un autre modèle (`model`) ni qui déclare des outils (`tools`, `toolConfig`) ; sinon 403, rien n'est envoyé.
+6. Corrigé une seconde fois après la vérification (`verification-commandes-neutres-lot-v1.md`, V-1) : le corps d'un lot est
+   lu **sans clé en double**, vérifié **clé par clé** contre une liste de clés permises à chaque niveau (`CLES_PERMISES_LOT` ;
+   ni `model`, ni outils, ni `candidateCount`, ni `cachedContent`, ni autre graphie comme `inputConfig`), puis **ré-encodé** :
+   c'est l'objet vérifié qui part. Les lots retenus vivent **en mémoire** : après un redémarrage du relais, leurs relevés et
+   annulations reçoivent 403 (l'annulation d'un lot doit se faire avant d'arrêter le relais).
 
 Tout le reste — clé lue puis effacée, clé du client retirée, liste blanche des modèles, bornes d'appels et d'octets, masquage
 de la clé dans le corps relayé, `generateContent` et `countTokens` sans flux — est celui de la v2.
@@ -294,27 +299,71 @@ def appel_amont(parties, mandataire, contexte_tls, delai_s, methode, chemin, cor
         connexion.close()
 
 
+CLES_PERMISES_LOT = {  # v4 (vérification V-1) : clés permises à chaque niveau du corps d'un lot ; toute autre est refusée
+    "racine": {"batch"},
+    "batch": {"display_name", "input_config"},
+    "input_config": {"requests"},
+    "requests": {"requests"},
+    "element": {"request", "metadata"},
+    "request": {"contents", "generationConfig", "systemInstruction", "safetySettings"},
+    "generationConfig": {"maxOutputTokens", "thinkingConfig", "temperature", "topP", "topK", "stopSequences",
+                         "responseMimeType", "seed"},
+    "thinkingConfig": {"thinkingBudget", "includeThoughts"},
+}
+
+
+class CleDouble(ValueError):
+    pass
+
+
+def _sans_double(paires):
+    vues = {}
+    for k, v in paires:
+        if k in vues:
+            raise CleDouble(f"clé en double : {k!r}")
+        vues[k] = v
+    return vues
+
+
 def motif_contenu_lot(corps, modele, max_requetes):
-    """v4 (corrigé) : rend le motif d'un refus du contenu d'un lot, ou None. Le corps doit être un objet JSON portant au
-    plus `max_requetes` requêtes en ligne, sans modèle étranger ni outil."""
+    """v4 (corrigé deux fois) : rend (motif du refus ou None, corps à relayer). Le corps est lu sans clé en double, vérifié
+    clé par clé contre `CLES_PERMISES_LOT`, borné à `max_requetes` requêtes en ligne, puis **ré-encodé** : c'est l'objet
+    vérifié qui part, jamais les octets reçus (une autre graphie ou une clé en double ne peut donc pas passer la garde)."""
     try:
-        o = json.loads(corps.decode("utf-8"))
+        o = json.loads(corps.decode("utf-8"), object_pairs_hook=_sans_double)
+    except CleDouble as e:
+        return f"corps de lot refusé : {e}", None
+    except (UnicodeDecodeError, ValueError):
+        return "corps de lot illisible (JSON)", None
+
+    def cles(objet, niveau):
+        if not isinstance(objet, dict):
+            raise TypeError(f"{niveau} : objet attendu")
+        hors = sorted(set(objet) - CLES_PERMISES_LOT[niveau])
+        if hors:
+            raise KeyError(f"{niveau} : clé(s) non permise(s) {hors}")
+
+    try:
+        cles(o, "racine"); cles(o["batch"], "batch"); cles(o["batch"]["input_config"], "input_config")
+        cles(o["batch"]["input_config"]["requests"], "requests")
         reqs = o["batch"]["input_config"]["requests"]["requests"]
-    except (UnicodeDecodeError, ValueError, KeyError, TypeError):
-        return "corps de lot illisible (batch.input_config.requests.requests attendu, requêtes en ligne seulement)"
-    if not isinstance(reqs, list) or not reqs:
-        return "lot sans requête"
-    if len(reqs) > max_requetes:
-        return f"{len(reqs)} requêtes dans le lot > --max-requetes-par-lot ({max_requetes})"
-    for x in reqs:
-        req = x.get("request") if isinstance(x, dict) else None
-        if not isinstance(req, dict):
-            return "requête du lot illisible"
-        if "model" in req and str(req["model"]).split("/")[-1] != modele:
-            return "requête du lot qui nomme un autre modèle"
-        if "tools" in req or "toolConfig" in req or "tool_config" in req:
-            return "requête du lot qui déclare des outils"
-    return None
+        if not isinstance(reqs, list) or not reqs:
+            return "lot sans requête", None
+        if len(reqs) > max_requetes:
+            return f"{len(reqs)} requêtes dans le lot > --max-requetes-par-lot ({max_requetes})", None
+        for x in reqs:
+            cles(x, "element")
+            req = x["request"]
+            cles(req, "request")
+            if "generationConfig" in req:
+                cles(req["generationConfig"], "generationConfig")
+                if "thinkingConfig" in req["generationConfig"]:
+                    cles(req["generationConfig"]["thinkingConfig"], "thinkingConfig")
+    except KeyError as e:
+        return f"corps de lot refusé : {e.args[0] if e.args else 'clé manquante'}", None
+    except TypeError as e:
+        return f"corps de lot refusé : {e}", None
+    return None, json.dumps(o, ensure_ascii=False).encode("utf-8")
 
 
 def resume_lot(brut):
@@ -470,8 +519,8 @@ def fabriquer_gestionnaire(cle, amont, modeles, compteur, journal, verrou_journa
                 if longueur > compteur.max_octets_corps:  # taille vérifiée avant de lire le corps
                     return self._refuser(429, f"corps de {longueur} octets au-dessus de --max-octets-corps", "POST",
                                          chemin_propre, modele)
-                corps_lu = self.rfile.read(longueur) if longueur else b""
-                refus_contenu = motif_contenu_lot(corps_lu, modele, max_requetes_par_lot)
+                refus_contenu, corps_lu = motif_contenu_lot(self.rfile.read(longueur) if longueur else b"", modele,
+                                                            max_requetes_par_lot)
                 if refus_contenu:
                     return self._refuser(403, refus_contenu, "POST", chemin_propre, modele)
             motif = compteur.admettre_lot() if action == "batchGenerateContent" else None  # v4

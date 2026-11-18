@@ -229,7 +229,7 @@ def executer(args, consigne, environ, ouvreur, dormir=time.sleep, horloge=time.t
     except Exception as brute:  # noqa: BLE001 — toute exception, nommée ou non, donne une ligne au bon coût
         e = brute if isinstance(brute, Erreur) else Erreur(3, f"{type(brute).__name__} : {brute}"[:300], envoye=etat["envoye"])
         ligne = {"texte": "", "cout_usd": max(etat["pire_cas"], 1e-6) if (e.envoye or etat["envoye"]) else 1e-6,
-                 "releves_manques": etat["releves_manques"],
+                 "releves_manques": etat["releves_manques"], "avertissements": etat["avertissements"],
                  "erreur": f"{VERSION} : {e.motif}", "modele_demande": args.modele, "lot": etat["lot"],
                  "duree_s": round(horloge() - debut, 1), "version": VERSION, "cout_origine": "pire_cas" if (e.envoye or etat["envoye"]) else "plancher"}
         if isinstance(e.extra.get("modele_servi"), str):

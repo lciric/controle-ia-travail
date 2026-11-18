@@ -1,5 +1,7 @@
-"""Non-régression du relais Gemini v4 : copie textuelle de `test_relais_gemini_v2.py` (inchangé, R12), noms du relais redirigés
-vers le v4 (`relais_gemini_v2` → `relais_gemini_v4`, version lue « relais-gemini-v4 »). Engendrée par sed, rien d'autre ne change.
+"""Non-régression du relais Gemini v4 : copie textuelle de `test_relais_gemini_v2.py` (inchangé, R12), noms du relais
+redirigés vers le v4 par substitution (`relais_gemini_v2` devient `relais_gemini_v4`, la version lue « relais-gemini-v4 ») ;
+le texte d'en-tête de la suite copiée, ci-dessous, est celui du v2 et parle encore du v2. Les essais propres au v4 sont dans
+`test_commande_gemini_lot_v1.py`. Rien d'autre ne change.
 """
 """Essais de `relais_gemini_v4.py` : **toute la suite de la v1** (`lancement-v2/test_relais_gemini_v1.py`, inchangée, R12)
 rejouée sur la v2, plus les essais du masquage de la clé dans le corps relayé. Clé factice, faux amont local, aucun réseau
