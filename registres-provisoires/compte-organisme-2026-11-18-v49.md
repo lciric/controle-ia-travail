@@ -1,0 +1,8 @@
+# Fichier provisoire du compte organisme — 2026-11-18 — version 49
+
+Version 49 (R12 : la version 48, `registres-provisoires/compte-organisme-2026-11-18-v48.md`, reste en place, scellée ; ses lignes PO-130 à PO-133 valent toujours). Lignes neuves à partir de PO-134. Aucun identifiant de modèle (R-2598).
+
+| id | heure (`date -u`) | fait | nature |
+|---|---|---|---|
+| PO-134 | 2026-11-18T16:31:50Z | **Réserve bloquante de la mère** (16:18:03Z) : épreuve v3 inscrite R-3311 (0,132289 USD, clé Google) ; la ligne GO-2026-11-18-21 porte « tout autre verdict que « réussie » : aucune course » : la reprise de l'épreuve exige un mot explicite de Lazar ; l'additif v2d doit déclarer la tentative v3, ses 7 verdicts d'Argon, et que ces verdicts ne comptent pas. Ce compte suspend la reprise (PO-133 disait la reprise permise sous l'autonomie : lecture corrigée, la condition de la ligne de GO prime). | réserve reçue |
+| PO-135 | 2026-11-18T16:31:50Z | **Mot de Lazar dans ce compte (option sélectionnée, verbatim)** : « Oui, reprise autorisée (Recommandé) », décrite ainsi : « Reprise unique de l'épreuve après échec technique, sous GO-2026-11-18-21 ; si « réussie », course sous GO-2026-11-18-20 avant minuit UTC. Tout autre verdict : arrêt définitif pour aujourd'hui. » Question posée : reprise après l'échec technique, correctif v2d (bac et plafond vérifiés avant tout appel ; les 7 verdicts d'Argon de la première tentative rapportés mais ne comptant pas), même ligne (5 USD, 0,13 déjà dépensés). Rapporté verbatim à la mère pour inscription ; la reprise attend sa ligne visible sur `main` et la contre-lecture « Scellable. » du v2d. | mot de Lazar |
