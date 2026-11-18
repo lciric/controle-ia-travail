@@ -123,7 +123,9 @@
 - **Déclaration de la session mère** (vérification 1, V-m11 et « ce que la version finale doit porter », point 4) : la session mère est
   exposée à un résultat du programme (le verdict du barreau « accumulation des scores sur l'épisode », R-3347) et à aucune sortie de
   l'étape B bis ; elle n'a fixé aucun seuil, critère ni choix d'analyse de ce texte ; les changements du brouillon 3 à la version sont
-  l'application des couples du rapport de vérification et des trois options (a), rien d'autre. Le rédacteur, qui a écrit ces
+  l'application des couples du rapport de vérification, des trois options (a) et des marqueurs de version, plus quatre accords de
+  durée (plan, point 6 ; « Qui, quelle machine » ; deux passages de « Contre-lecture ») que la session mère a demandés pour que les
+  durées suivent le couple sur le repli de la garde du rapport à ε, rien d'autre. Le rédacteur, qui a écrit ces
   changements, n'a lu aucun résultat du programme (ci-dessus).
 
 ## Vocabulaire (noms en clair ; les identifiants viennent en appui)
@@ -711,7 +713,7 @@ anticipation par la session mère (autonomie GO-2026-11-18-26), portée à Lazar
   `5398f2e90f2dac1b5243601f89d609fb3c2a24773126b3391cfdab8953d5aedc` (compagnon vérifié). Verdict : « scellable après corrections » ;
   un bloquant, trois majeurs, treize mineurs, traités dans « Traitement des remarques de la vérification 1 ». Pour des couples
   appliqués tels quels, le rapport demande un contrôle de la seule différence brouillon 3 → version : liste et sortie de `diff` dans
-  `prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/differences-brouillon3-vers-version-v1.md`.
+  `prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/differences-brouillon3-vers-version-v3.md`.
 
 ### Traitement des remarques de la contre-lecture 1 (tient lieu de « Changements du brouillon 2 au brouillon 3 »)
 
@@ -782,9 +784,10 @@ demande de la session mère : « ≈ 14 min » et « ≈ 7 à 14 min » ; sans e
 ## Changements du brouillon 3 à la version
 
 Application des couples avant → après du rapport de la vérification 1 (V-B1, V-M1 à V-M3, V-m1 à V-m13), des trois options (a) (N8,
-N9, N10) et des marqueurs de version, rien d'autre (« Déclaration de la session mère ») ; détail ligne par ligne, rattaché à chaque
-remarque, et sortie de `diff` : `prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/differences-brouillon3-vers-version-v1.md` ;
-traitement : « Traitement des remarques de la vérification 1 ».
+N9, N10), des marqueurs de version et de quatre accords de durée demandés par la session mère (changements 43 à 46), rien d'autre
+(« Déclaration de la session mère ») ; détail ligne par ligne, rattaché à chaque remarque, et sortie de `diff` :
+`prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/differences-brouillon3-vers-version-v3.md` ; traitement : « Traitement des
+remarques de la vérification 1 ».
 
 ## Changements du brouillon 1 au brouillon 2
 
