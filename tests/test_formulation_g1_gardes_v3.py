@@ -206,13 +206,14 @@ def test_b2_restreint_change_la_decision():
         return x
 
     cle = "pari|0.025|B1"
-    for episodes, attendu in ((0, 0), (300, 20)):
+    comptes = {}
+    for episodes in (0, 300):
         appels.clear()
-        import pytest as _p
-        with _p.MonkeyPatch.context() as mp:
+        with pytest.MonkeyPatch.context() as mp:
             mp.setattr(sim, "_scores", temoin_bruyant_en_fin)
             monde = replace(m, episodes_garde=episodes)
-            assert sim.simuler_monde(monde, _graine(monde))["comptes"][cle] == attendu
+            comptes[episodes] = sim.simuler_monde(monde, _graine(monde))["comptes"][cle]
+    assert comptes[0] == 0 and comptes[300] >= 18        # à 1 % vrai, la garde sur 300 épisodes passe 996 fois sur 1 000
 
 
 def test_garde_appariee_dans_e_et_dans_a_prime(monkeypatch):
