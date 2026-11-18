@@ -6,7 +6,7 @@
   ces couples exacts » ; un bloquant, dix majeurs, treize mineurs à couple), lus dans le fichier scellé et non retapés, plus
   les retouches que la reprise de la session mère demande : états suivis au registre jusqu'à R-3484 (22:17 UTC) pour les
   lignes qu'elle nomme, trois cadres du 10 novembre rendus neutres. Même rédacteur que la v6 (sous-agent de la session mère
-  `session_013QMayjsoZJFBUCqcnvD5h1`, Claude Fable 5.2), repris par la mère ; écrit le 2026-11-18 22:21:47 (`date -u`). Liste de ce qui est
+  `session_013QMayjsoZJFBUCqcnvD5h1`, Claude Fable 5.2), repris par la mère ; écrit le 2026-11-18 22:22:50 (`date -u`). Liste de ce qui est
   appliqué, couple par couple : journal `brouillons/entretien-taif-v3/socle-preuves-entretien-v7-squelette-journal.md`.
 - **Limite reprise du contre-lecteur** : la comparaison du socle à sa v5 n'a pas été faite par lui (périmètre réduit), et
   la v7 n'a pas rouvert la v5 ; « aucun résultat repris de la v5 » repose sur la garde par chaînes de la v6, sur la lecture
