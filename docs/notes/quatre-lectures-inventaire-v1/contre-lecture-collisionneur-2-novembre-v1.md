@@ -27,30 +27,30 @@ Les citations sont tirées sur tout le texte, avec au moins deux par espèce et 
 
 | # | affirmation de la note (espèce) | rouvert à | verdict |
 |---|---|---|---|
-| 1 | règle du pôle « indécise → test plus puissant, ou retirée après deux essais » contre « non concluante ne passe pas » (A) | sél/`E3-T1-conception-A.md` l. 16 (S6) ; question l. 3 (objectif de Lazar) | juste |
-| 2 | 85 à 95 % des fiches jamais jugées (A) | sél/`E3-T3-reponse-A.md` l. 119 ; conception l. 15 | juste |
+| 1 | règle du pôle « indécise → test plus puissant, ou retirée après deux essais » contre « non concluante ne passe pas » (A) | sél/`E3-T1-conception-A.md` l. 14 (S6) ; question l. 3 (objectif de Lazar) | juste |
+| 2 | 85 à 95 % des fiches jamais jugées (A) | sél/`E3-T3-reponse-A.md` l. 119 ; conception l. 13 (S5) | juste |
 | 3 | critique « la plus lourde », reçue de C, sur la traduisibilité (A) | sél/réponse A l. 43 | juste |
 | 4 | ≥ 200 témoins par bras, 0 appel (A) | sél/réponse A l. 28, 87 | juste |
-| 5 | pare-feu de N-053 : protège l'affinage, pas la sélection (A) | sél/conception A l. 18 (S8) | juste |
+| 5 | pare-feu de N-053 : protège l'affinage, pas la sélection (A) | sél/conception A l. 16 (S8) | juste |
 | 6 | 1 témoin vrai promu sur 5 au moins, 5 moniteurs, « connu + 0 » (B) | sél/`E3-T3-reponse-B.md` l. 183-187 | juste |
 | 7 | puissance ≈ 0,55 à 40 fiches par bras, illustratif (B) | sél/réponse B l. 237 | juste |
 | 8 | ablation ≥ 60 USD, illustratif (B) | sél/réponse B l. 289 | juste |
 | 9 | quatre états, non concluante retirée (C) | sél/`E3-T3-reponse-C.md` l. 123 ; conception C l. 36 | juste |
 | 10 | survivantes « avec leur gain de richesse » servies aux proposeurs (C) | sél/`E3-T1-conception-C.md` l. 38 | juste |
 | 11 | « la littérature … montre que … biais d'ancrage lexical » : affirmation sans source (C) | sél/conception C l. 38 | juste (bien signalée comme hypothèse) |
-| 12 | arrêt de la reproduction sur plusieurs générations si l'héritage est réfuté (C) | sél/réponse C l. 111 | juste |
-| 13 | trois états administratifs, différée hors population reproductrice (D) | sél/`E3-T1-conception-D.md` l. 23-29 ; réponse D l. 100 | juste |
+| 12 | arrêt de la reproduction sur plusieurs générations si l'héritage est réfuté (C) | sél/réponse C l. 109 | juste |
+| 13 | trois états administratifs, différée hors population reproductrice (D) | sél/`E3-T1-conception-D.md` l. 21-29 ; réponse D l. 100 | juste |
 | 14 | « je ne revendique donc aucun vide bibliographique » (D) | sél/conception D l. 19 | juste |
-| 15 | « ne pas fabriquer de survivantes », publier le rendement nul (E) | sél/`E3-T1-conception-E.md` l. 80, 88 | juste |
+| 15 | « ne pas fabriquer de survivantes », publier le rendement nul (E) | sél/`E3-T1-conception-E.md` l. 77, 87 | juste |
 | 16 | allocation indépendante, « sans prétendre avoir réfuté l'héritabilité » (E) | sél/`E3-T3-reponse-E.md` l. 205 | juste |
 | 17 | pas de rang par défaut (E) | sél/conception E l. 57 | juste |
-| 18 | « L'empreinte n'est qu'un index ; la vérification est le rejeu » (A) | bac/`E3-T1-conception-A.md` l. 96 | juste |
-| 19 | verdict libellé « identique, portable, dépendant de la donnée, confiné » (A) | bac/`E3-T3-reponse-A.md` l. 99 | juste |
-| 20 | dossier partagé, la v48 n'interdit pas un cache, question de contrat (A) | bac/réponse A l. 29 (thème 16), 85 | juste |
+| 18 | « L'empreinte n'est qu'un index ; la vérification est le rejeu » (A) | bac/`E3-T1-conception-A.md` l. 95 | juste |
+| 19 | verdict libellé « identique, portable, dépendant de la donnée, confiné » (A) | bac/`E3-T3-reponse-A.md` l. 101 | juste |
+| 20 | dossier partagé, la v48 n'interdit pas un cache, question de contrat (A) | bac/réponse A l. 30 (thème 16), 85 | juste |
 | 21 | circularité d'Avalon « ne s'applique pas directement » (B) | bac/`E3-T3-reponse-B.md` l. 175 | juste |
 | 22 | B retire son instrument de journal (B) | bac/réponse B l. 87-89 | juste |
-| 23 | `bwrap` durci suffit (0,85) si le vérificateur est la session ; WebAssembly (C) | bac/`E3-T1-conception-C.md` l. 38, 41 | juste |
-| 24 | attestation matérielle : confiance 0,10 contre la menace d'Avalon (C) | bac/conception C l. 63 | juste |
+| 23 | `bwrap` durci suffit (0,85) si le vérificateur est la session ; WebAssembly (C) | bac/`E3-T1-conception-C.md` l. 39, 41 | juste |
+| 24 | attestation matérielle : confiance 0,10 contre la menace d'Avalon (C) | bac/conception C l. 62 | juste |
 | 25 | erreurs rendues sans valeur numérique ; arrêt au premier succès (C) | bac/`E3-T3-reponse-C.md` l. 19, 113 | juste |
 | 26 | sensibilité des suites par ablation, ablation fantôme (D) | bac/`E3-T3-reponse-D.md` l. 84-86 | juste |
 | 27 | capture avant exécution (D) | bac/`E3-T1-conception-D.md` l. 13 | juste |
@@ -60,15 +60,15 @@ Les citations sont tirées sur tout le texte, avec au moins deux par espèce et 
 | 31 | Argon seul : « jugeable si au moins 3 promues en génération 1 » | lecture vérifiée sélection v2, § 1.2, Q6 : « au moins 3 fiches **en sortie 1** » (du pont) | **fausse** |
 | 32 | Argon seul : « Transmis : Argon seul (classement) » ; « C et Argon seul oui » ; « C et Argon seul contre D, E et Kimi seul » | lecture vérifiée sélection v2, § 1.2 Q3 (transmission complète **contre** dissociation, sans choix) et § 1.4 (« le statut du rang transmis n'est pas discuté ; il est transmis en mécanisme A ») | **exagérée** |
 
-Vérifiés en plus : les quatre espèces qui disent « aucun `bwrap` réel » dans les pièces (bac/réponse A l. 97, B l. 177, D l. 104, E l. 168) ; le contrat de sortie en cinq points d'E (sél/conception E l. 63-71) ; les trois critères de C pour la sortie (sél/conception C l. 39) ; la grille de niches de C (l. 40) ; les positions d'Argon seul et de Kimi seul sur le bac (lectures v2 § 1.2 et Kimi v1 § 2).
+Vérifiés en plus : les quatre espèces qui disent « aucun `bwrap` réel » dans les pièces (bac/réponse A l. 97, B l. 177, D l. 104, E l. 168) ; le contrat de sortie en cinq points d'E (sél/conception E l. 63-69) ; les trois critères de C pour la sortie (sél/conception C l. 39) ; la grille de niches de C (l. 40) ; les positions d'Argon seul et de Kimi seul sur le bac (lectures v2 § 1.2 et Kimi v1 § 2).
 
 ## 3. Règles R7 et R8, avis et faits, cloisonnement
 
 - **R7** : aucune référence n'est donnée pour vérifiée. POPPER, les antériorités du bac et les chiffres des espèces sont dits « illustratifs » ou « non vérifiés » (§ 3.3, Q7). Conforme.
 - **R8** : aucune zone vierge revendiquée. La note relève même la phrase de D. Conforme.
 - **Avis présenté comme un fait (1 cas)** : sél/Q3 et § 4. « Servir un score du juge aux proposeurs **touche** l'invariant … (N-053) » est écrit comme un constat. Cette affirmation n'est d'aucune espèce : c'est une lecture du rédacteur, et elle est discutable. Le juge du pôle n'est pas un moniteur, les proposeurs ne sont pas entraînés, et A lui-même tient que ce pare-feu protège l'affinage seulement. À marquer « remarque du lecteur ».
-- **Cloisonnement, une incohérence** : la note range « la famille 3 de sondes hors système de fichiers » (bac/réponse A, E3') parmi les passages exclus qu'elle « ne résume ni ne reformule ». Puis elle la résume au bac, Q5 : « une classe de sondes hors système de fichiers, dont la non-détection est attendue et comptée comme couverture manquante (A) ». Le même contenu figure hors du passage exclu (bac/réponse A l. 15, thème 6), et il est défensif. Mais la note doit tenir sa propre règle : je retire la phrase dans la v2. Le reste des exclusions est tenu. Seuls subsistent deux rôles de méthode sans contenu, comme annoncé.
-- **Deux renvois vers des passages exclus** : sél/Q2, ligne C (« E2 », le passage exclu de sél/réponse C) ; sél/Q2, ligne E (« sans contrôle positif d'adaptation, aucune conclusion de sûreté », qui renvoie à la cellule entière, dont le passage exclu). Je ne les ai pas vérifiés dans les passages exclus, que je n'ai pas ouverts. Le contenu se lit ailleurs. Pour C : sél/réponse C l. 21 (nul hétérogène, les meilleures ensemencent même sous le seuil) et l. 124, 130 (épreuve fraîche par génération). Pour E : sél/réponse E l. 61 (« contrôle positif d'adaptation », accepté « comme limite de portée »), dont la formule de la note force le sens. Je recite dans la v2.
+- **Cloisonnement, une incohérence** : la note range « la famille 3 de sondes hors système de fichiers » (bac/réponse A, E3') parmi les passages exclus qu'elle « ne résume ni ne reformule ». Puis elle la résume au bac, Q5 : « une classe de sondes hors système de fichiers, dont la non-détection est attendue et comptée comme couverture manquante (A) ». Le même contenu figure hors du passage exclu (bac/réponse A l. 20, thème 6), et il est défensif. Mais la note doit tenir sa propre règle : je retire la phrase dans la v2. Le reste des exclusions est tenu. Seuls subsistent deux rôles de méthode sans contenu, comme annoncé.
+- **Deux renvois vers des passages exclus** : sél/Q2, ligne C (« E2 », le passage exclu de sél/réponse C) ; sél/Q2, ligne E (« sans contrôle positif d'adaptation, aucune conclusion de sûreté », qui renvoie à la cellule entière, dont le passage exclu). Je ne les ai pas vérifiés dans les passages exclus, que je n'ai pas ouverts. Le contenu se lit ailleurs. Pour C : sél/réponse C l. 22 (nul hétérogène, les meilleures ensemencent même sous le seuil) et l. 124, 131 (épreuve fraîche par génération). Pour E : sél/réponse E l. 61 (« contrôle positif d'adaptation », accepté « comme limite de portée »), dont la formule de la note force le sens. Je recite dans la v2.
 - **Embargo** : rien de 7a, 7b, T0.6, de l'étape B, de l'étape B bis ni du premier test boîte blanche bis ; rien sous `diag/`. La référence à R-986 et R-990 porte sur l'épreuve fraîche du pont, hors embargo. Conforme.
 
 ## 4. Écarts aux critères scellés de la note
@@ -82,7 +82,7 @@ Sur le bac, deux des groupes de trois comptent en outre deux fois un même modè
 
 ## 5. Oublis
 
-1. **B, bac, expérience 1 corrigée** : « excès de faux positifs dû à l'agent ». 50 fiches à effet nul sont traitées par l'agent à trois exécutions et par un script mécanique fixe ; test de McNemar ; contrôle sur 10 fiches à effet planté. B note que trois exécutions portent le taux de franchissement par fiche jusqu'à ≈ 0,14 (illustratif), et c'est le poste dominant de sa séquence (bac/réponse B l. 11, 107-123, 208). La note n'en dit rien. Or cette expérience touche directement l'accord nouveau sur le chiffre auto-déclaré et la boucle de retour. C mesure la même chose dans sa strate 2 (bac/réponse C l. 74).
+1. **B, bac, expérience 1 corrigée** : « excès de faux positifs dû à l'agent ». 50 fiches à effet nul sont traitées par l'agent à trois exécutions et par un script mécanique fixe ; test de McNemar ; contrôle sur 10 fiches à effet planté. B note que trois exécutions portent le taux de franchissement par fiche jusqu'à ≈ 0,14 (illustratif), et c'est le poste dominant de sa séquence (bac/réponse B l. 11, 107-123, 207). La note n'en dit rien. Or cette expérience touche directement l'accord nouveau sur le chiffre auto-déclaré et la boucle de retour. C mesure la même chose dans sa strate 2 (bac/réponse C l. 75).
 2. **E, bac, sonde réseau** : E dit avoir vérifié dans le code servi que la sonde classe un délai dépassé comme « fermée ». Il demande qu'un délai seul devienne « indéterminé », par un essai de régression déterministe, avant l'épreuve de la garde G8 entière (bac/conception E l. 32, 91, 159 ; réponse E l. 158-162). C'est le seul défaut de code concret signalé par une espèce. Il est absent de la note.
 3. **C, sélection** : « il ne faut pas dépasser 2 générations » tant que l'ablation n'a pas réfuté l'absence d'héritage utile (sél/réponse C l. 125). Le point sert directement la course à plusieurs générations, et il est absent.
 4. **Dérive vers la testabilité** : la critique vient de A. D et E la transforment en mesure : lignées perdues selon le code de différé et la disponibilité de l'instrument (sél/réponse D l. 47 ; réponse E l. 21 et « Dérive instrumentale »). Absente.
@@ -99,7 +99,7 @@ Pas d'oubli de cellule ni d'espèce : les cinq espèces, les deux espèces seule
 4. Argon seul et le rang (Q3, § 3.1, § 4) : il ne « veut » pas servir le rang ; il le transmet dans l'une de ses deux variantes, sans choisir ni discuter.
 5. N-053 : « touche l'invariant » devient une « remarque du lecteur, non des espèces », avec les raisons d'en douter.
 6. Bac, Q5 : retirer le résumé de la classe de sondes hors système de fichiers, que la note a elle-même déclarée exclue.
-7. Sélection, Q2 : recitation de C (l. 21, 124, 130 au lieu d'« E2 ») et d'E (l. 61, « limite de portée »).
+7. Sélection, Q2 : recitation de C (l. 22, 124, 131 au lieu d'« E2 ») et d'E (l. 61, « limite de portée »).
 8. Bac, Q7 : « signal de récompense » est de D seul ; E dit « exploratoire ».
 9. Sélection, Q7 : POPPER est donné pour le plus proche par A, B, Argon seul et Kimi seul ; C le cite parmi d'autres ; E ne le nomme pas.
 10. Ajouter l'expérience « excès de faux positifs dû à l'agent » (B), aux bac Q2 et § 3.2.
