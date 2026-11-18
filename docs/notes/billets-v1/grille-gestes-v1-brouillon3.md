@@ -25,7 +25,7 @@
 - **Des auteurs** : fait ou écrit par les auteurs du billet ; ce qu'ils rapportent d'autrui ne compte pas, ni le texte d'un modèle cité (transcriptions, sorties de modèle entre guillemets ou en bloc).
 - **Images** : le codeur ne voit pas les images, seulement leur texte de remplacement et la légende qui suit. Une décision qui dépend d'une image se prend sur ce texte seul. En développement, 53 images sur 712 ont un texte de remplacement.
 - **Doute** : chaque ligne de codage porte un champ `doute` (oui / non). Le doute n'autorise pas de modalité nouvelle ; on choisit la modalité la plus proche selon la règle, et on coche le doute.
-- **Appui** : pour toute modalité qui entre dans l'indicateur du geste, le codeur copie une citation d'appui tirée de la copie neutre : un ou deux fragments, séparés par ` […] `, de 25 mots au plus chacun. Pour les modalités d'en-tête (section 4.5), l'appui commence avant la borne. Ailleurs, l'appui est permis, non exigé. L'appui est contrôlé par programme au dépôt.
+- **Appui** : pour toute modalité **sauf** `aucun`, `aucune`, `absent`, `absente`, `absentes`, `non-dit`, `non`, `aucun-article`, `plus-loin`, `moins-de-trois`, `positif`, `sans-résultat`, le codeur copie une citation d'appui tirée de la copie neutre : un ou deux fragments, séparés par ` […] `, de 25 mots au plus chacun, copiés tels quels. Pour les modalités d'en-tête (liste en 4.5), l'appui commence avant la borne. Pour les modalités exceptées, l'appui est permis, non exigé. Tout appui donné est contrôlé par programme au dépôt ; le contrôle exige l'appui pour une partie des modalités non exceptées.
 - **Format des exemples** : identifiant du billet, puis citation de 25 mots au plus, en anglais, telle qu'elle figure dans le texte (mise en forme et adresses de liens ôtées). Pour un titre : `(titre)`. Pour un commentaire : `billet/commentaire`.
 
 ---
@@ -340,7 +340,7 @@
 
 ## B. Classes d'objections des commentaires
 
-**Unité** : un commentaire parmi les dix retenus d'un billet bien noté (vue des mieux notés, réponses comprises). **Une seule classe par commentaire** : la première, dans l'ordre de priorité ci-dessous, que le commentaire **énonce lui-même** (et non qu'il laisse deviner). Limite dite d'avance : un long commentaire à plusieurs points tombe dans la première classe de l'ordre ; les parts des classes basses (O4, O11, O9, O12, O10, O13) sont sous-estimées.
+**Unité** : un commentaire parmi les dix retenus d'un billet (les dix mieux notés, réponses comprises). **Une seule classe par commentaire** : la première, dans l'ordre de priorité ci-dessous, que le commentaire **énonce lui-même** (et non qu'il laisse deviner). Limite dite d'avance : un long commentaire à plusieurs points tombe dans la première classe de l'ordre ; les parts des classes basses (O4, O11, O9, O12, O10, O13) sont sous-estimées.
 
 **Réponses des auteurs** : marquées par programme (nom affiché du commentateur égal à un nom non vide de l'auteur ou d'un coauteur du manifeste), montrées pour le contexte avec la mention « ne pas coder », hors typologie. En développement : 80 commentaires sur 296. Un coauteur absent de la liste du site n'est pas reconnu ; le codeur le code `O0` s'il se présente comme auteur.
 
@@ -432,7 +432,7 @@
 
 ### O12. Réplication ou prolongement par le lecteur
 - **Code** : `O12`
-- **Définition** : le commentateur rapporte une expérience, une réplication ou des données qu'il a faites lui-même à partir du billet. Signal favorable, pas une objection : jamais « objection à prévenir ».
+- **Définition** : le commentateur rapporte une expérience, une réplication ou des données qu'il a faites lui-même à partir du billet. Signal favorable, pas une objection (hors des objections à prévenir, section 8).
 - **Cas limites** : renvoi à un travail publié du commentateur, sans expérience faite à partir du billet → O4 ; réplication suivie d'une crainte énoncée → la crainte prime par l'ordre (voir le cas d'école).
 - **Exemple** : `xwdRzJxyqFqgXTWbH/CvqAjm9jQgXSfZdDa` — « Very cool! I decided to try the same with Mandelbrot. »
 - **Exemple** : `rbqJoxFZtae9x93mx/FNjFjaGSzbrJnEuHo` — « Funnily enough, I did the exact same thing on the same task two weeks ago and my army of Claude agents found a different solution »
@@ -441,7 +441,7 @@
 
 ### O13. Éloge argumenté (classe nouvelle au brouillon 3)
 - **Code** : `O13`
-- **Définition** : éloge qui dit ce qui est bien fait (méthode, présentation, preuves). Signal favorable : jamais « objection à prévenir » ; rapporté pour le gabarit comme ce que les lecteurs remarquent.
+- **Définition** : éloge qui dit ce qui est bien fait (méthode, présentation, preuves). Signal favorable, pas une objection (section 8).
 - **Exemple** : `nv8oedrnLXKRzNEL9/CFHaWvrn3xegRZmcQ` — « It has comparison to other models, comparison to baselines, error bars, random control, no graph crimes, and its not in appendix. »
 - **Contre-exemple** (éloge sans argument : O0) : `7C4KJot4aN8ieEDoz/2Mjc7Ghh3wkbwLJr6` — « Very good of you to actually follow through on the promises. »
 
@@ -477,9 +477,9 @@ L'**extrait de la grille pour les codeurs**, produit par programme (`pieces-gril
 
 ### 4.5 Format de sortie et contrôle de dépôt
 Un fichier par codeur et par passe, en lignes JSON.
-- **Gestes** : une ligne par billet et par geste, `{"codeur": "C1", "billet": "<neutre>", "geste": "G01", "modalite": "<valeur exacte de la grille>", "appui": "<fragment ou deux fragments séparés par ' […] '>", "doute": false}` ; **puis, après les 25 lignes du billet, une ligne** `{"codeur": "C1", "billet": "<neutre>", "geste": "AVEUGLE", "reconnu": false, "pari_statut": "bien-noté" | "peu-noté" | "ne-sait-pas"}` (`reconnu` : le codeur pense connaître ce billet ou ses auteurs). 62 × 26 = 1 612 lignes attendues.
+- **Gestes** : une ligne par billet et par geste, `{"codeur": "C1", "billet": "<neutre>", "geste": "G01", "modalite": "<valeur exacte de la grille>", "appui": "<fragment ou deux fragments séparés par ' […] '>", "doute": false}` ; **puis, après les 25 lignes du billet, une ligne** `{"codeur": "C1", "billet": "<neutre>", "geste": "AVEUGLE", "reconnu": false, "pari_statut": "bien-noté" | "peu-noté" | "ne-sait-pas"}` (`reconnu` : le codeur pense connaître ce billet ou ses auteurs). Nombre de lignes attendu : nombre de billets × 26 (1 612 pour la tenue à l'écart, 312 pour le pilote).
 - **Objections** : `{"codeur": "C1", "billet": "<neutre>", "commentaire": "<neutre>", "classe": "O3", "appui": "…", "doute": false}`.
-- **Contrôle de dépôt** (`pieces-grille-v3/controler_depot_v1.py`, un fichier à la fois, avant scellement) : refuse un fichier incomplet, une modalité absente de la grille, un doublon, une ligne `AVEUGLE` absente ou mal formée ; refuse un appui absent pour une modalité de l'indicateur ; refuse un appui (chaque fragment, 25 mots au plus) introuvable dans la copie neutre après la normalisation de la grille ; pour les modalités d'en-tête — G02 `premier-paragraphe` et `en-tête`, G04 `bloc-étiqueté` et `liste-non-étiquetée`, G05 `avec-comparaison` et `seul`, G10 `en-tête`, G11 `figure-de-résultat` — refuse un appui dont le début est après la borne. Aucun repli silencieux.
+- **Contrôle de dépôt** (`pieces-grille-v3/controler_depot_v1.py`, un fichier à la fois, avant scellement) : refuse un fichier incomplet, une modalité absente de la grille, un doublon, une ligne `AVEUGLE` absente ou mal formée ; refuse un appui absent là où le code du contrôle l'exige (modalités qui entrent dans l'indicateur du geste ; toutes sont parmi les modalités non exceptées de la section 1) ; refuse un appui (chaque fragment, 25 mots au plus) introuvable dans la copie neutre après la normalisation de la grille ; pour les modalités d'en-tête — G02 `premier-paragraphe` et `en-tête`, G04 `bloc-étiqueté` et `liste-non-étiquetée`, G05 `avec-comparaison` et `seul`, G10 `en-tête`, G11 `figure-de-résultat` — refuse un appui dont le début est après la borne. Aucun repli silencieux.
 - **Arbitrage** : l'arbitre ne reçoit que les désaccords (valeur des deux codeurs, copie neutre) et choisit une des deux valeurs, avec un motif d'une ligne. Le fichier arbitré complet est **construit par programme** (`analyser_codage_v2.py`, fonction `construire_arbitrage`) : valeur commune en cas d'accord, choix de l'arbitre sinon ; refus si un choix n'est pas l'une des deux valeurs. Même règle pour les objections.
 
 ## 5. Plan d'analyse, écrit avant tout codage
