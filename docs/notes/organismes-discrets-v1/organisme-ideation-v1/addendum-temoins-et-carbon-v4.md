@@ -108,7 +108,9 @@ l'épreuve est un **filtre grossier, nécessaire et non suffisant** ; l'épreuve
 2. **Code 3** (épreuve tentée, appel ou lecture en échec, **interruption comprise**) : l'épreuve compte comme tentée ;
    **aucune reprise sans addendum neuf** ; la réponse du juge, si elle a été écrite, n'est pas lue avant que cet addendum soit scellé ; l'addendum neuf ne
    s'appuie que sur `issue.json` (statut, erreur, **coût lu au relais**), jamais sur les notes. **Tout autre code de sortie**
-   (arrêt par signal, sortie anormale) après la création du dossier **vaut code 3**.
+   (arrêt par signal, sortie anormale) après la création du dossier **vaut code 3**. Sous code 3, les notes, la lecture des témoins et le
+   texte du juge que `issue.json` ou `reponse-du-juge.md` porteraient **ne se lisent pas** avant l'addendum neuf ; la ligne
+   imprimée (`temoins_ok`) ne se lit pas non plus sous code 3.
 3. **Code 2** (refus avant tout appel) : rien n'est parti ; corriger la cause, revérifier, relancer la même commande.
 4. **Code 0** : la course Kimi part (lanceur v11, § 6, après sa contre-lecture), signalée avant départ. **La course est
    l'épreuve suffisante** : si un témoin v6 y est manqué, elle est illisible, la course suivante ne part pas, et la règle 1
@@ -214,3 +216,12 @@ Ce tableau décrit ce que la v2 de l'addendum a fait (paire v4, script v2) ; la 
 | 7 | distinction non sourcée | sourcée aux faits, point 2 (§ 2) |
 | 8 | chemin du bac à sable non essayé | vérifié à la main dans ce conteneur (actif, `/proc` neuf) ; pas d'essai ajouté (il exige le bac réel) |
 | 9 | décision de la mère absente du dépôt | citée verbatim, avec la référence de son registre (§ 5) |
+
+## 10. Vérification de la v4
+
+`verification-addendum-temoins-v4.md` (agent neuf, Opus) : **autorisable**, aucun bloquant, aucun significatif ; les deux
+significatifs de la v3 levés (coût relu au relais ; distinction dans les deux témoins) ; essais 21 passés ; commande exacte sans
+relais : refus, rien créé ; consigne `0f042d5b…` ; gabarit égal aux deux courses. Mineurs retenus : la ligne ajoutée au § 4.2
+(sous code 3, rien de ce qui aurait été écrit ne se lit) ; les autres sont gardés au rapport (renvoi aux faits plus direct
+possible aux points 3 et 6 ; écart lu à 0 si le relais était relancé — il ne l'est pas pendant l'épreuve ; la citation du § 5
+vient du message de la mère, la ligne R-3241 du registre la résume).
