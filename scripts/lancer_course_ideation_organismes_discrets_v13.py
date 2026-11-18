@@ -20,14 +20,29 @@ rien d'autre :
   la garde de cumul ne compte que cette série. Le verrou vit dans le dossier de sortie de ce lanceur : il n'exclut pas une
   course d'un autre lanceur ; l'opérateur ne lance une course qu'après la clôture de la précédente ;
 - texte de décision du manifeste.
+- **garde de GO croisée** (contre-lecture, constat 1) : la ligne candidate est refusée si son périmètre nomme une autre
+  « lignée … » que « lignée astra » ; la seule modification de code hors des constantes.
 Ligne de GO : une ligne principale **neuve** et seule à porter « organisme d'idéation », « organismes discrets »,
-« lignée astra », écrite par la mère sur l'empreinte de ce lanceur.
+« lignée astra », **qui ne nomme aucune autre lignée** (la ligne Argon est une autre ligne), plafond d'au moins 11,3 USD,
+écrite par la mère sur l'empreinte de ce lanceur.
+
+Rejeu déclaré (contre-lecture, constat 2) : la course Astra du v8 a produit des fiches validées (Astra 12, Argon 10) ; la
+règle du v8 « génération jouée, jamais rejouée » (relance seulement après une course sans fiche) aurait refusé ce rejeu ;
+la série neuve la contourne, sur le « oui » de Lazar à la reprise avec les témoins v6 (R-3282, relayé par la session mère).
+Les fiches du v8 restent dans `runs/course-ideation-organismes-discrets-v8/`, jamais ouvertes ; écarts de lecture déjà
+déclarés au diagnostic des témoins v2 (`31d68ed2…`).
+
+Ordre (contre-lecture, constat 7) : le verrou n'exclut pas la course de l'autre lignée ; les ports des relais externes sont
+distincts et le relais Claude est commun et plafonné, les deux courses pourraient donc tourner ensemble ; la prescription
+reste : une course après la clôture de la précédente.
 
 Usage : `/usr/local/bin/python3 -I -B scripts/lancer_course_ideation_organismes_discrets_v13.py astra`.
 
 Relais à lancer avant : relais Claude (port 8787) et relais compatible OpenAI (`relais_kimi_v4.py`,
-`67f36951…`, amont OpenAI, port 8790, modèle permis gpt-6-astra, prix 10 / 50 / 1 en cache, comme les relais du
-18 novembre au matin, journal OD-013 ; clé `OPENAI_API_KEY` par son nom ; commande exacte : `docs/procedures/relais-persistants-v1.md`).
+`67f36951…`, amont OpenAI, port 8790, modèle permis gpt-6-astra, prix 10 / 50 / 1 en cache, plafond 8 USD, 12 appels :
+les réglages du 18 novembre au matin, journal OD-013) ; relais Claude : plafond 22 USD comme ce matin, ou plus bas s'il ne
+sert qu'à cette course (le total Claude d'une course est 6) ; clés par leur nom ; gabarits :
+`docs/procedures/relais-persistants-v1.md`.
 
 Essais : `tests/test_lancer_course_ideation_organismes_discrets_v13.py`.
 
@@ -244,6 +259,7 @@ COMMANDE_GEMINI = ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande
                    "e94ecd4693657bd2d8b086fbbc903bb77635b3b034e1eede50d630675c3f3fc6")
 COMMANDE_ASTRA = ("docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_astra_v1.py",
                   "986cf71efcac285899e76dd9b1d1c11bccbfd71dd7ae91b8bf3a4372567d7c71")
+# v13 : COMMANDE_GEMINI_LOT et COMMANDE_KIMI, hérités du v12, inutilisés ici
 COMMANDE_GEMINI_LOT = ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande_gemini_lot_v1.py",   # v12
                       "9484dce066514185dc1155d5c8dcff44b256fdf835b371b59ebdffa1d50bad75")
 COMMANDE_KIMI = ("docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_kimi_ideation_v1.py",
@@ -292,7 +308,7 @@ PLAFOND_RELANCE_USD = 2.1                        # une relance seulement après 
 PROPOSEURS = (("opus", "claude-opus-5-5"),)
 DELAIS_PAR_LIGNEE = {"kimi": ("--delai-commande-s", "3600", "--delai-session-s", "3900"),
                      "carbon": ("--delai-commande-s", "3600", "--delai-session-s", "3900")}
-# v12 : --delai-commande-s couvre la commande par lot (3 570 s au plus, enveloppe 3 590 s) ; --delai-session-s ne borne que
+# hérité du v12, sans effet ici (astra absent) : --delai-commande-s couvre la commande par lot (3 570 s au plus, enveloppe 3 590 s) ; --delai-session-s ne borne que
 # les sessions Claude (gardé égal à celui de Kimi, sans effet sur la commande externe) ; la ligne de Kimi vient du v9 (contre-lecture, constat 2)
 DECISION = ("mot de Lazar du 18 novembre 2026 (R-3282, relayé par la session mère) : « oui » à la reprise d'Astra et "
             "d'Argon avec les témoins v6 ; ligne de GO « lignée astra » trouvée par son contenu ; témoins v6 (addendum v4, "
@@ -546,6 +562,9 @@ def verifier_go(registre: Path, aujourd_hui: _dt.date) -> dict:
         raise Refus(f"{len(candidates)} ligne(s) principale(s) de GO dont le périmètre contient {list(PERIMETRE_GO)} "
                     f"dans {registre.name} (une exigée)")
     go_id, c = candidates[0]
+    autres = sorted(set(re.findall(r"lignée\s+(\w+)", _normal(c[3]))) - {"astra"})   # v13 : contre-lecture, constat 1
+    if autres:
+        raise Refus(f"{go_id} : le périmètre nomme aussi {['lignée ' + a for a in autres]} ; une ligne par lignée exigée")
     for i, cellules, brute in lignes:
         if i != go_id and go_id in brute:
             if len(cellules) != 8:

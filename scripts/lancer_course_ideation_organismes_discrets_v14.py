@@ -11,7 +11,7 @@ Copie du lanceur v12 (`lancer_course_ideation_organismes_discrets_v12.py`, `5ef2
 rien d'autre :
 - `LIGNEES = ("argon",)` ; la lignée externe Argon est **celle du v8, à l'identique** : enveloppe `appel-argon-v6.sh`
   (`440127d6…`), commande `commande_argon_v3e.py` (`e94ecd46…`), famille de garde « gemini » ;
-  relais Gemini v2 synchrone, port 8788 ; aucun délai relevé (l'enveloppe coupe à 1 700 s, sous les 1 800 s de l'orchestrateur ;
+  relais Gemini v2 sans flux, port 8788, Argon seul ; aucun délai relevé (l'enveloppe coupe à 1 700 s, sous les 1 800 s de l'orchestrateur ;
   `DELAIS_PAR_LIGNEE` ne vise ni Argon ni cette course) ;
 - témoins v6, gardés du v12 (`07c80a23…`, addendum v4 `3c6f9448…`) ;
 - périmètre de la ligne de GO : « organisme d'idéation », « organismes discrets », « lignée argon » ; pire cas et borne
@@ -20,14 +20,31 @@ rien d'autre :
   la garde de cumul ne compte que cette série. Le verrou vit dans le dossier de sortie de ce lanceur : il n'exclut pas une
   course d'un autre lanceur ; l'opérateur ne lance une course qu'après la clôture de la précédente ;
 - texte de décision du manifeste.
+- **garde de GO croisée** (contre-lecture, constat 1) : la ligne candidate est refusée si son périmètre nomme une autre
+  « lignée … » que « lignée argon » ; la seule modification de code hors des constantes.
 Ligne de GO : une ligne principale **neuve** et seule à porter « organisme d'idéation », « organismes discrets »,
-« lignée argon », écrite par la mère sur l'empreinte de ce lanceur.
+« lignée argon », **qui ne nomme aucune autre lignée** (la ligne Astra est une autre ligne), plafond d'au moins 11,3 USD,
+écrite par la mère sur l'empreinte de ce lanceur.
+
+Rejeu déclaré (contre-lecture, constat 2) : la course Argon du v8 a produit des fiches validées (Astra 12, Argon 10) ; la
+règle du v8 « génération jouée, jamais rejouée » (relance seulement après une course sans fiche) aurait refusé ce rejeu ;
+la série neuve la contourne, sur le « oui » de Lazar à la reprise avec les témoins v6 (R-3282, relayé par la session mère).
+Les fiches du v8 restent dans `runs/course-ideation-organismes-discrets-v8/`, jamais ouvertes ; écarts de lecture déjà
+déclarés au diagnostic des témoins v2 (`31d68ed2…`).
+
+Ordre (contre-lecture, constat 7) : le verrou n'exclut pas la course de l'autre lignée ; les ports des relais externes sont
+distincts et le relais Claude est commun et plafonné, les deux courses pourraient donc tourner ensemble ; la prescription
+reste : une course après la clôture de la précédente.
 
 Usage : `/usr/local/bin/python3 -I -B scripts/lancer_course_ideation_organismes_discrets_v14.py argon`.
 
 Relais à lancer avant : relais Claude (port 8787) et relais Gemini v2 sans flux (`relais_gemini_v2.py`,
-`2b0043bc…`, port 8788, `--modele gemini-4-argon`, comme les relais du 18 novembre au matin, journal OD-013 ; clé
-`GEMINI_API_KEY` par son nom ; commande exacte : `docs/procedures/relais-persistants-v1.md`).
+`2b0043bc…`, port 8788, 24 appels, `--modele gemini-4-argon` seul : les réglages du 18 novembre au matin, journal OD-013,
+mais Argon seul, plus étroit que ce matin où Carbon était aussi permis) ; relais Claude : plafond 22 USD comme ce matin, ou
+plus bas s'il ne sert qu'à cette course (le total Claude d'une course est 6) ; clés par leur nom ; gabarits :
+`docs/procedures/relais-persistants-v1.md`. **Limite connue** du relais Gemini v2 (procédure, § 2.3) : une connexion
+muette plus de 300 s est coupée ; Argon a rendu en ≈ 92 s ce matin, le risque demeure ; une coupure au contrôle tombe sous
+la relance unique (relevé ≤ 2,1 USD).
 
 Essais : `tests/test_lancer_course_ideation_organismes_discrets_v14.py`.
 
@@ -244,6 +261,7 @@ COMMANDE_GEMINI = ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande
                    "e94ecd4693657bd2d8b086fbbc903bb77635b3b034e1eede50d630675c3f3fc6")
 COMMANDE_ASTRA = ("docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_astra_v1.py",
                   "986cf71efcac285899e76dd9b1d1c11bccbfd71dd7ae91b8bf3a4372567d7c71")
+# v14 : COMMANDE_GEMINI_LOT et COMMANDE_KIMI, hérités du v12, inutilisés ici
 COMMANDE_GEMINI_LOT = ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande_gemini_lot_v1.py",   # v12
                       "9484dce066514185dc1155d5c8dcff44b256fdf835b371b59ebdffa1d50bad75")
 COMMANDE_KIMI = ("docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_kimi_ideation_v1.py",
@@ -292,7 +310,7 @@ PLAFOND_RELANCE_USD = 2.1                        # une relance seulement après 
 PROPOSEURS = (("opus", "claude-opus-5-5"),)
 DELAIS_PAR_LIGNEE = {"kimi": ("--delai-commande-s", "3600", "--delai-session-s", "3900"),
                      "carbon": ("--delai-commande-s", "3600", "--delai-session-s", "3900")}
-# v12 : --delai-commande-s couvre la commande par lot (3 570 s au plus, enveloppe 3 590 s) ; --delai-session-s ne borne que
+# hérité du v12, sans effet ici (argon absent) : --delai-commande-s couvre la commande par lot (3 570 s au plus, enveloppe 3 590 s) ; --delai-session-s ne borne que
 # les sessions Claude (gardé égal à celui de Kimi, sans effet sur la commande externe) ; la ligne de Kimi vient du v9 (contre-lecture, constat 2)
 DECISION = ("mot de Lazar du 18 novembre 2026 (R-3282, relayé par la session mère) : « oui » à la reprise d'Astra et "
             "d'Argon avec les témoins v6 ; ligne de GO « lignée argon » trouvée par son contenu ; témoins v6 (addendum v4, "
@@ -546,6 +564,9 @@ def verifier_go(registre: Path, aujourd_hui: _dt.date) -> dict:
         raise Refus(f"{len(candidates)} ligne(s) principale(s) de GO dont le périmètre contient {list(PERIMETRE_GO)} "
                     f"dans {registre.name} (une exigée)")
     go_id, c = candidates[0]
+    autres = sorted(set(re.findall(r"lignée\s+(\w+)", _normal(c[3]))) - {"argon"})   # v14 : contre-lecture, constat 1
+    if autres:
+        raise Refus(f"{go_id} : le périmètre nomme aussi {['lignée ' + a for a in autres]} ; une ligne par lignée exigée")
     for i, cellules, brute in lignes:
         if i != go_id and go_id in brute:
             if len(cellules) != 8:

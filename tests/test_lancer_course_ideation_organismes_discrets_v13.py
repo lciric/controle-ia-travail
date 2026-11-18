@@ -64,15 +64,22 @@ def test_enveloppe_lance_la_commande_epinglee_sous_le_delai():
 def test_code_egal_au_v12_hors_des_lignes_annoncees():
     def corps(v):
         return (RACINE / "scripts" / f"lancer_course_ideation_organismes_discrets_{v}.py").read_text(encoding="utf-8").split('"""', 2)[2]
-    diff = [l for l in difflib.unified_diff(corps("v12").splitlines(), corps("v13").splitlines(), lineterm="", n=0)
+    garde = ('    autres = sorted(set(re.findall(r"lignée\\s+(\\w+)", _normal(c[3]))) - {"astra"})   # v13 : contre-lecture, constat 1\n'
+             '    if autres:\n'
+             '        raise Refus(f"{go_id} : le périmètre nomme aussi {[\'lignée \' + a for a in autres]} ; une ligne par lignée exigée")\n')
+    assert corps("v13").count(garde) == 1
+    diff = [l for l in difflib.unified_diff(corps("v12").splitlines(), corps("v13").replace(garde, "").splitlines(), lineterm="", n=0)
             if l[:1] in "+-" and not l.startswith(("+++", "---"))]
     permis = ("VERSION", "LIGNEES = (", "PERIMETRE_GO", "temoins", "\"carbon\": {", "\"astra\": {", "\"enveloppe\": (",
               "\"9ef03f80", "\"aa2df474c5105ea5e4729fecf0d8c875e347ed262178177b45c956b1da9f3936\"", "\"commande\": COMMANDE_GEMINI_LOT", "\"commande\": COMMANDE_",
               "PIECES = pieces_de", "PLAFONDS = plafonds_de", "DECISION", "« tu as mon go", "lot à 8 192", "3c6f9448", "avec les témoins v6 ; ligne de GO",
-              "DOSSIER_SORTIES", "SOUS_DOSSIER_RUNS", "SUFFIXE_RUN", "lignee: str")
+              "DOSSIER_SORTIES", "SOUS_DOSSIER_RUNS", "SUFFIXE_RUN", "lignee: str",
+              "# v13 : COMMANDE_GEMINI_LOT", "# v12 : --delai-commande-s", "# hérité du v12, sans effet ici")
     hors = [l for l in diff if not any(p in l for p in permis)]
     assert hors == [], hors
-    assert len(diff) == 2 * 10 + 8 + 7, diff    # 10 lignes simples, l'entrée de lignée (4 → 4), la décision (4 → 3)
+    assert len(diff) == 2 * 11 + 8 + 7 + 1, diff  # 11 lignes simples, lignée (4 → 4), décision (4 → 3), un commentaire ajouté
+    corps_n = corps("v13")                  # la garde croisée : seul ajout de code, dans verifier_go (vérifié à part)
+    assert corps_n.count("contre-lecture, constat 1") == 1
 
 
 def test_go(tmp_path):
@@ -103,3 +110,34 @@ def test_commande_fausse_refusee():
     p = subprocess.run([sys.executable, "-I", "-B", "scripts/lancer_course_ideation_organismes_discrets_v13.py", "carbon"],
                        cwd=str(RACINE), capture_output=True, text=True, timeout=60)
     assert p.returncode == 2 and "astra" in p.stdout + p.stderr
+
+
+def test_go_qui_nomme_les_deux_lignees_refuse(tmp_path):
+    p = tmp_path / "go.md"
+    ligne = GO_LIGNE.replace("lignée astra :", "lignée astra et lignée argon :")
+    assert "lignée argon" in ligne
+    p.write_text("| id | a | t | p | pl | e | par | r |\n|---|---|---|---|---|---|---|---|\n" + ligne + "\n", encoding="utf-8")
+    with pytest.raises(ln.Refus, match="une ligne par lignée"):
+        ln.verifier_go(p, dt.date(2026, 11, 18))
+
+
+def test_go_du_registre_reel_sans_candidate():
+    with pytest.raises(ln.Refus, match="0 ligne"):
+        ln.verifier_go(RACINE / "registres" / "go.md", dt.date(2026, 11, 18))
+
+
+def test_gardes_de_taille_sur_la_mesure_scellee_du_v8():
+    import json
+    m = json.loads((RACINE / "runs/course-ideation-organismes-discrets-v8/20261118-062512-course-ideation-organismes-discrets-v8-astra/mesure-consignes.json").read_text(encoding="utf-8"))
+    g = ln.gardes_de_taille(m, ln.Reglages.production("astra"))
+    assert g
+
+
+def test_options_externes_de_la_lignee():
+    r = ln.Reglages.production("astra")
+    argv = ln.commande_course(r, Path("/tmp/s"), Path("/tmp/lb.json"), "H", Path("/tmp/pc"))
+    l = ln.LIGNEES_EXTERNES["astra"]
+    assert argv[argv.index("--commande-externe") + 1].endswith(l["enveloppe"][0])
+    assert argv[argv.index("--modele-commande-externe") + 1] == l["modele"]
+    assert argv[argv.index("--proposeur-externe") + 1].endswith("=" + l["modele"])
+    assert "--commande-externe-lit-modele" in argv
