@@ -1,0 +1,207 @@
+#!/usr/bin/env python3
+"""Commande externe de Kimi (`kimi-k3.1-pro`, Moonshot) pour l'orchestrateur du pôle, en proposeur et juge d'idéation — version 1.
+
+Écrite le 18 novembre 2026 par la session de relance des organismes discrets (mot de Lazar : « oublie pas kimi dans les
+courses »). Copie de `commande_astra_v1.py` (empreinte `986cf71e…`, inchangée, R12) ; seuls changent les **défauts** et
+ce texte :
+
+- relais `http://127.0.0.1:8789` (relais compatible OpenAI `relais_kimi_v4.py` lancé avec `--amont https://api.moonshot.ai
+  --variable-cle KIMI_API_KEY --modeles-permis kimi-k3.1-pro`, qui lit l'amont en flux : la coupure à 300 s d'une connexion
+  muette ne l'atteint pas) ;
+- modèle `kimi-k3.1-pro` ; prix 2 / 10 USD par million de jetons d'entrée / sortie (vérifiés le 30 octobre sur la page des
+  prix de Moonshot, page `c62210a0…`, et observés conformes à la facture : `docs/notes/ideation-organisme-v1/course-2/
+  devis-course-2-et-pre-pilote-v4.md` l. 36 ; cache 0,20 compté au prix plein : borne haute).
+
+Le champ de sortie maximale reste `max_completion_tokens` : la documentation de Moonshot versée le 30 octobre
+(`doc-moonshot-lue-2026-10-30-v1/api_chat.md`, l. 1077-1081) le donne comme champ courant et `max_tokens` comme déprécié.
+Les jetons de raisonnement de Kimi sont dans `completion_tokens` (lu à l'essai réel du 30 octobre), donc bornés et comptés.
+
+## Texte de la commande Astra v1 (inchangé, pour mémoire)
+
+Commande externe de GPT-6 Astra (`gpt-6-astra`, OpenAI) pour l'orchestrateur du pôle — version 1.
+
+Écrite le 18 novembre 2026 par la session de relance des organismes discrets (mot de Lazar : « oublie pas astra de gpt »).
+Copie de `commande_kimi_v1.py` (empreinte `3a98845e1c3c11169c329ab7ae1c5e0978d1bf8323f562688fc003921c02d593`, inchangée,
+R12), même contrat que la commande d'Argon pour `AdaptateurCommandeExterne` (`pole/adaptateurs.py`) :
+
+- la consigne arrive sur l'**entrée standard** (UTF-8) et part telle quelle, en un seul message utilisateur ;
+- environnement minimal : plafond de la session dans `PLAFOND_SESSION_USD`, rôle dans `ROLE_POLE` (`proposeur_ideation` ou
+  `juge_ideation`), modèle demandé par le noyau dans `MODELE_DEMANDE_POLE` (lu : il doit être `--modele`, sinon code 2 ;
+  d'où `--commande-externe-lit-modele` au lanceur) ;
+- la **dernière ligne** de la sortie standard est toujours un objet JSON `{"texte", "cout_usd", "modele_servi", …}`, coût
+  fini et strictement positif, aussi sur un échec.
+
+**Aucune clé ici.** La commande parle au relais local compatible OpenAI (`relais_kimi_v4.py`, lancé avec
+`--amont https://api.openai.com --variable-cle OPENAI_API_KEY --modeles-permis gpt-6-astra`, boucle locale seulement, sans
+mandataire), qui tient la clé, la liste des modèles permis, la barrière du modèle servi (502 sur écart) et son plafond.
+
+## Ce qui change depuis la commande Kimi v1, et pourquoi
+
+1. **Le champ de sortie maximale du corps est celui des modèles de raisonnement d'OpenAI** (`max_completion_tokens`), qui
+   refusent l'ancien champ ; le collisionneur v8 du programme envoie déjà ce champ à OpenAI (ligne 570) ; le relais v4 lit
+   l'un ou l'autre pour son pire cas. Les jetons de raisonnement sont dans `completion_tokens`
+   (`completion_tokens_details.reasoning_tokens`), donc bornés et comptés au prix de sortie.
+2. **Rôles** : `proposeur_ideation` et `juge_ideation` (la commande Kimi v1 ne jouait que le juge).
+3. **Défauts** : relais `http://127.0.0.1:8790`, modèle `gpt-6-astra`, prix 10 / 50 USD par million de jetons d'entrée /
+   sortie — **lus sur la page officielle des tarifs d'OpenAI le 14 novembre 2026** (palier standard, contexte ≤ 272 000 jetons
+   d'entrée ; entrée en cache 1,00, comptée ici au prix plein : borne haute) : `docs/notes/organisme-conception-propre-v1/prix-astra-v2.md`
+   (`bf211a07…`), page versée `docs/sources/tarifs-openai-v1/developers-openai-com-api-docs-pricing-2026-11-14.html`
+   (`099c9496…`), R-2677 ; réglables par `--prix-entree` et `--prix-sortie`, consignés dans la ligne rendue par le champ `prix`.
+4. **Les deux prix sont vérifiés** : réels finis strictement positifs, sinon code 2 (la commande Kimi v1 acceptait un prix
+   nul, négatif ou non fini : division par zéro hors de tout `try`, ou pire cas sous-estimé — défauts trouvés par les essais
+   de cette commande, présents à l'identique dans la v1 de Kimi, non corrigés là-bas, R12).
+5. Le champ `modele_demande` est rendu dans la ligne, avec `prix`.
+
+Codes : ceux de la commande Kimi v1 — 0 conforme ; 2 réglage ou entrée refusés ; 3 relais ou amont (HTTP, connexion) ;
+4 pire cas au-dessus du plafond ; 5 réponse non conforme (vide, tronquée `finish_reason == "length"`, modèle servi
+différent, usage absent, JSON illisible) ; 6 délai dépassé ou interruption.
+
+Usage : python3 -I -B commande_astra_v1.py [--url-relais http://127.0.0.1:8790] [--modele gpt-6-astra]
+            [--prix-entree 10] [--prix-sortie 50] [--max-sortie-jetons 32768] [--sortie-min-jetons 4096] [--delai-s 1500]
+"""
+
+import argparse
+import json
+import math
+import signal
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+
+VERSION = "commande-kimi-ideation-v1"
+ROLES = ("proposeur_ideation", "juge_ideation")
+PLANCHER = 1e-6
+
+
+def rendre(code, texte="", cout=PLANCHER, **diag):
+    cout = cout if (isinstance(cout, (int, float)) and math.isfinite(cout) and cout > 0) else PLANCHER
+    print(json.dumps({"texte": texte, "cout_usd": round(float(cout), 6), "version": VERSION, **diag}, ensure_ascii=False))
+    sys.stdout.flush()
+    sys.exit(code)
+
+
+def lire_arguments(argv):
+    a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    a.add_argument("--url-relais", default="http://127.0.0.1:8789")
+    a.add_argument("--modele", default="kimi-k3.1-pro")
+    a.add_argument("--prix-entree", type=float, default=2.0)
+    a.add_argument("--prix-sortie", type=float, default=10.0)
+    a.add_argument("--max-sortie-jetons", type=int, default=32768)
+    a.add_argument("--sortie-min-jetons", type=int, default=4096)
+    a.add_argument("--delai-s", type=float, default=1500.0)
+    return a.parse_args(argv)
+
+
+def verifier_url(url):
+    u = urllib.parse.urlsplit(url)
+    if u.scheme != "http" or u.hostname not in ("127.0.0.1", "localhost") or u.path not in ("", "/"):
+        raise ValueError("--url-relais : http://127.0.0.1:PORT seulement (le relais local tient la clé)")
+    return url.rstrip("/") + "/v1/chat/completions"
+
+
+def max_tokens_permis(octets, plafond, pe, ps, maxi, mini):
+    """Sortie maximale que le plafond paie après le pire cas d'entrée ; None si sous le minimum."""
+    reste = plafond - (octets + 1024) * pe / 1e6
+    n = min(maxi, int(reste * 1e6 / ps)) if reste > 0 else 0
+    return n if n >= mini else None
+
+
+def cout_usage(usage, pe, ps):
+    p, c = usage.get("prompt_tokens"), usage.get("completion_tokens")
+    if not all(isinstance(x, int) and not isinstance(x, bool) and x >= 0 for x in (p, c)):
+        return None
+    return (p * pe + c * ps) / 1e6
+
+
+def main(argv, environ, entree):
+    try:
+        args = lire_arguments(argv)
+        cible = verifier_url(args.url_relais)
+        for nom, prix in (("--prix-entree", args.prix_entree), ("--prix-sortie", args.prix_sortie)):
+            if isinstance(prix, bool) or not isinstance(prix, (int, float)) or not math.isfinite(prix) or prix <= 0:
+                raise ValueError(f"{nom} : réel fini strictement positif exigé (reçu {prix!r})")
+        plafond = float(environ.get("PLAFOND_SESSION_USD", "nan"))
+        if not (math.isfinite(plafond) and plafond > 0):
+            raise ValueError("PLAFOND_SESSION_USD absent ou invalide")
+        role = environ.get("ROLE_POLE")
+        if role not in ROLES:
+            raise ValueError(f"ROLE_POLE {role!r} refusé (permis : {ROLES})")
+        demande = environ.get("MODELE_DEMANDE_POLE")
+        if demande is not None and demande != args.modele:
+            raise ValueError(f"MODELE_DEMANDE_POLE {demande!r} ≠ --modele {args.modele!r}")
+        consigne = entree.read()
+        if not consigne.strip():
+            raise ValueError("consigne vide")
+    except (ValueError, SystemExit) as e:
+        rendre(2, erreur=str(e)[:300], envoye=False)
+    n = None
+    corps = None
+    for _ in range(3):  # le corps grandit avec le chiffre de max_tokens : point fixe en quelques tours
+        corps = json.dumps({"model": args.modele, "messages": [{"role": "user", "content": consigne}],
+                            "max_completion_tokens": n or args.max_sortie_jetons}, ensure_ascii=False).encode("utf-8")
+        n2 = max_tokens_permis(len(corps), plafond, args.prix_entree, args.prix_sortie, args.max_sortie_jetons,
+                               args.sortie_min_jetons)
+        if n2 is None:
+            rendre(4, erreur=f"pire cas au-dessus du plafond {plafond} USD (corps {len(corps)} octets)", envoye=False)
+        if n2 == n:
+            break
+        n = n2
+    corps = json.dumps({"model": args.modele, "messages": [{"role": "user", "content": consigne}], "max_completion_tokens": n},
+                       ensure_ascii=False).encode("utf-8")
+    pire = (len(corps) + 1024) * args.prix_entree / 1e6 + n * args.prix_sortie / 1e6
+    if pire > plafond + 1e-12:
+        rendre(4, erreur="pire cas au-dessus du plafond après point fixe", envoye=False)
+    diag = {"max_completion_tokens": n, "octets_corps": len(corps), "pire_cas_usd": round(pire, 6), "modele_demande": args.modele,
+            "prix": {"entree_usd_par_million": args.prix_entree, "sortie_usd_par_million": args.prix_sortie}}
+
+    def interrompu(signum, _frame):
+        rendre(6, cout=pire, erreur=f"signal {signum}", envoye=True, cout_origine="pire_cas", **diag)
+    signal.signal(signal.SIGTERM, interrompu)
+    signal.signal(signal.SIGINT, interrompu)
+
+    ouvreur = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # boucle locale : jamais de mandataire
+    requete = urllib.request.Request(cible, data=corps, method="POST",
+                                     headers={"Content-Type": "application/json", "Content-Length": str(len(corps))})
+    try:
+        with ouvreur.open(requete, timeout=args.delai_s) as rep:
+            brut = rep.read()
+    except urllib.error.HTTPError as e:
+        motif = e.read()[:300].decode("utf-8", "replace")
+        avant_amont = e.code in (400, 402, 403, 411, 413, 429)  # refus du relais sans rien envoyer à l'amont
+        rendre(3 if e.code != 502 else 5, cout=PLANCHER if avant_amont else pire, erreur=f"HTTP {e.code} : {motif}",
+               envoye=not avant_amont, cout_origine="plancher" if avant_amont else "pire_cas", **diag)
+    except urllib.error.URLError as e:
+        if isinstance(e.reason, ConnectionRefusedError):  # relais absent : rien n'est parti
+            rendre(3, erreur="relais injoignable (connexion refusée)", envoye=False, cout_origine="plancher", **diag)
+        rendre(3, cout=pire, erreur="URLError : " + str(e.reason)[:200], envoye=True, cout_origine="pire_cas", **diag)
+    except (TimeoutError, OSError) as e:
+        rendre(6 if isinstance(e, TimeoutError) else 3, cout=pire, erreur=type(e).__name__ + " : " + str(e)[:200],
+               envoye=True, cout_origine="pire_cas", **diag)
+    try:
+        objet = json.loads(brut)
+        choix = objet["choices"][0]
+        texte = choix["message"].get("content") or ""
+        fin = choix.get("finish_reason")
+    except (ValueError, KeyError, IndexError, TypeError, AttributeError):
+        rendre(5, cout=pire, erreur="réponse illisible", envoye=True, cout_origine="pire_cas", **diag)
+    servi = objet.get("model")
+    cout = cout_usage(objet.get("usage") or {}, args.prix_entree, args.prix_sortie)
+    origine = "usage"
+    if cout is None:
+        cout, origine = pire, "pire_cas"
+    diag.update(modele_servi=servi, finish_reason=fin, usage={k: v for k, v in (objet.get("usage") or {}).items()
+                                                             if isinstance(v, (int, float))}, cout_origine=origine)
+    if servi != args.modele:
+        rendre(5, cout=cout, erreur=f"modèle servi {servi!r} ≠ {args.modele!r}", envoye=True, **diag)
+    if origine != "usage":
+        rendre(5, cout=cout, erreur="usage absent", envoye=True, **diag)
+    if fin == "length":
+        rendre(5, cout=cout, erreur="réponse tronquée (finish_reason length)", envoye=True, **diag)
+    if not texte.strip():
+        rendre(5, cout=cout, erreur="réponse vide", envoye=True, **diag)
+    rendre(0, texte=texte, cout=cout, envoye=True, **diag)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:], dict(__import__("os").environ), sys.stdin)
