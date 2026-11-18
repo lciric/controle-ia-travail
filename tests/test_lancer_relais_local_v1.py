@@ -21,7 +21,18 @@ def test_environnement_reduit_sain():
     assert env == {"PATH": "/bin", "FAUX_CLE_X": "v"} and absents == ["ABSENT_Y"]
 
 
-@pytest.mark.parametrize("nom", ["ANTHROPIC_BASE_URL", "CLAUDE_CODE_REMOTE", "CLAUDE_X", "CCR_Y", ""])
+def test_environnement_reduit_nom_exige_present():
+    env, absents = lr.environnement_reduit(["PATH", "!FAUX_CLE_X"], {"PATH": "/bin", "FAUX_CLE_X": "v"})
+    assert env == {"PATH": "/bin", "FAUX_CLE_X": "v"} and absents == []
+
+
+@pytest.mark.parametrize("source", [{"PATH": "/bin"}, {"PATH": "/bin", "FAUX_CLE_X": ""}])
+def test_environnement_reduit_nom_exige_absent_ou_vide_refuse(source):
+    with pytest.raises(lr.Refus, match="exigé"):
+        lr.environnement_reduit(["PATH", "!FAUX_CLE_X"], source)
+
+
+@pytest.mark.parametrize("nom", ["ANTHROPIC_BASE_URL", "CLAUDE_CODE_REMOTE", "CLAUDE_X", "CCR_Y", "", "!", "!CCR_Z"])
 def test_environnement_reduit_artefact_nom_refuse(nom):
     with pytest.raises(lr.Refus):
         lr.environnement_reduit(["PATH", nom], {"PATH": "/bin"})

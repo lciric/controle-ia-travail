@@ -7,7 +7,8 @@ de novembre (`/home/user/hors-depot/…/lancer_relais_v1.py`, `bf781533…`, dis
     python3 -I -B scripts/lancer_relais_local_v1.py CONSOLE NOM1,NOM2,… -- COMMANDE ARG…
 
 - l'environnement du relais est **réduit aux noms listés** qui existent dans l'environnement courant (valeurs prises par
-  nom, jamais lues ni écrites par ce script) ; `ANTHROPIC_BASE_URL`, `CLAUDE_CODE_REMOTE` et tout nom qui commence par
+  nom, jamais lues ni écrites par ce script) ; un nom préfixé de `!` est **exigé** : absent ou vide, rien ne part (la clé du
+  relais, par exemple `!OPENAI_API_KEY`) ; `ANTHROPIC_BASE_URL`, `CLAUDE_CODE_REMOTE` et tout nom qui commence par
   `CLAUDE` ou `CCR` sont **refusés** (ils redirigeraient ou marqueraient l'appel) ;
 - le relais part dans une **session de processus neuve** (`setsid`), dossier courant = dossier de CONSOLE, entrée standard
   fermée, sorties vers CONSOLE (créé, jamais écrasé) ;
@@ -33,11 +34,15 @@ class Refus(RuntimeError):
 
 def environnement_reduit(noms: list, source) -> tuple:
     transmis, absents = {}, []
-    for n in noms:
+    for brut in noms:
+        exige = brut.startswith("!")
+        n = brut[1:] if exige else brut
         if not n or n in NOMS_REFUSES or n.startswith(PREFIXES_REFUSES):
-            raise Refus(f"nom refusé dans la liste : {n!r}")
-        if n in source:
+            raise Refus(f"nom refusé dans la liste : {brut!r}")
+        if n in source and (source[n] != "" or not exige):
             transmis[n] = source[n]
+        elif exige:
+            raise Refus(f"nom exigé absent ou vide de l'environnement : {n} (rien lancé)")
         else:
             absents.append(n)
     if "PATH" not in transmis:

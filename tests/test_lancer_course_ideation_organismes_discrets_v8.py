@@ -840,6 +840,22 @@ def test_relance_unique_apres_defaut_au_controle(monde, capsys):
     assert pre["relance"].startswith("lignée carbon : 1 course")
 
 
+@pytest.mark.parametrize("cout,permise", [("2.1", True), ("2.100001", False), ("5.0", False)])
+def test_relance_bornee_par_le_plafond_de_relance(monde, capsys, cout, permise):
+    """Une course arrêtée au contrôle, sans fiche, lisible, n'est rejouée que si son relevé est d'au plus 2,1 USD."""
+    monde["env"]["FAUX_CONTROLE_SEUL"], monde["env"]["FAUX_COUT_CONTROLE"] = "plancher", cout
+    assert jouer(monde, capsys)[0] == 0
+    ok, motif = lc.relance_permise(runs(monde), "carbon")
+    assert ok is permise, motif
+    if not permise:
+        assert "plafond de relance" in motif and str(lc.PLAFOND_RELANCE_USD) in motif
+        code, err = lancer(monde, capsys)
+        assert code == 2 and "plafond de relance" in err and len(runs(monde)) == 1
+
+
+def test_plafond_de_relance_constante():
+    assert lc.PLAFOND_RELANCE_USD == 2.1 and 3 * (lc.PLAFOND_COURSE_USD + lc.PLAFOND_RELANCE_USD) <= lc.BORNE_LIGNE_USD + 0.1
+
 def test_relance_puis_succes(monde, capsys):
     monde["env"]["FAUX_CONTROLE_SEUL"], monde["env"]["FAUX_COUT_CONTROLE"] = "plancher", "0.3"
     assert jouer(monde, capsys)[0] == 0
@@ -925,11 +941,14 @@ def test_fiches_sur_une_lignee_ne_bloquent_pas_l_autre(monde, capsys):
                                                   ("34 USD", "24.79", 0), ("100 USD", "24.8", 0),
                                                   ("100 USD", "24.9", 2)])
 def test_garde_de_cumul(monde, capsys, plafond, cout, attendu):
+    """Une course de carbon arrêtée au contrôle à `cout` (au-dessus du plafond de relance : carbon n'est plus rejouée) ;
+    la lignée astra, jamais partie, est refusée par la garde de cumul dès que `cout` + 9,2 passe la borne de 34 USD."""
     reecrire_go(monde["r"], GO_LIGNE.replace("| 34 USD |", f"| {plafond} |"))
     monde["env"]["FAUX_CONTROLE_SEUL"], monde["env"]["FAUX_COUT_CONTROLE"] = "plancher", cout
     assert jouer(monde, capsys)[0] == 0
     del monde["env"]["FAUX_CONTROLE_SEUL"]
-    code, err = lancer(monde, capsys)
+    assert "plafond de relance" in lc.relance_permise(runs(monde), "carbon")[1]
+    code, err = lancer(avec_lignee(monde, "astra"), capsys)
     assert code == attendu, err
     if attendu:
         assert "garde de cumul" in err and "réserve du lecteur" not in err

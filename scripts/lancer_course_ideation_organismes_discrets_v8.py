@@ -36,7 +36,7 @@ Ce qui est gardé, à l'identique : M1 (options `-I -B`, commande d'origine exac
 interpréteur, fichier non lien et d'empreinte égale à son compagnon, avant le verrou et toute écriture) ; M2 (tout ce qui
 peut échouer avant le détachement, aucune commande git après, manifeste de pré-départ scellé, code 5 avec PID) ; relevé de
 dépense et copies scellées dans le dépôt à la clôture ; **une seule relance par lignée**, seulement après une course finie
-proprement, sans fiche, à relevé lisible ; environnement par liste de noms permis ; verrou ; orchestrateur épinglé par
+proprement, sans fiche, à relevé lisible d'au plus 2,1 USD ; environnement par liste de noms permis ; verrou ; orchestrateur épinglé par
 l'arbre de `orchestrator/` et neuf empreintes ; gardes de somme et de taille ; drapeaux interdits ; aucun bras joué ici.
 
 Usage, seul et exact (dossier courant = racine du dépôt de travail), LIGNÉE parmi carbon, astra, argon :
@@ -161,6 +161,7 @@ CONTROLE_EXTERNE_USD = 1.7
 EXPOSITION_EXTERNE_COURSE_USD = CONTROLE_EXTERNE_USD + PLAFOND_PROPOSEUR_EXTERNE_USD
 PLAFOND_COURSE_USD = TOTAL_CLAUDE_USD + EXPOSITION_EXTERNE_COURSE_USD          # 9,2 : compté si la dépense est illisible
 MAX_COURSES = 2                                  # une seule relance au total, par lignée
+PLAFOND_RELANCE_USD = 2.1                        # une relance seulement après une course arrêtée au contrôle (relevé ≤ 2,1 USD)
 PROPOSEURS = (("opus", "claude-opus-5-5"),)
 JUGES = (("opus-juge", "claude-opus-5-5"),)
 GRAINE = 2026111808
@@ -1014,7 +1015,8 @@ def garde_cumul(runs: list, plafond_go: float) -> dict:
 
 def relance_permise(runs: list, lignee: str) -> tuple:
     """Pour la lignée : une course part si aucune n'est partie, ou si **chaque** course partie a fini proprement (code
-    scellé), n'a produit aucune fiche et a un relevé lisible ; deux courses au plus par lignée (une seule relance)."""
+    scellé), n'a produit aucune fiche, a un relevé lisible **d'au plus `PLAFOND_RELANCE_USD`** (arrêt au contrôle : au-delà,
+    la course a dépensé plus loin et n'est pas rejouée) ; deux courses au plus par lignée (une seule relance)."""
     lances = [x for x in runs if x["lance"] and x["lignee"] == lignee]
     for x in lances:
         if x["fin"] is None or x["fin"].get("code") is None:
@@ -1025,6 +1027,9 @@ def relance_permise(runs: list, lignee: str) -> tuple:
             return False, f"course {x['nom']} : {quoi} : génération jouée, jamais rejouée (R3)"
         if not rel["lisible"]:
             return False, f"course {x['nom']} : dépense illisible ({rel['lecture']})"
+        if rel["course_usd"] > PLAFOND_RELANCE_USD + 1e-9:
+            return False, (f"course {x['nom']} : relevé {rel['course_usd']} USD au-dessus du plafond de relance "
+                           f"{PLAFOND_RELANCE_USD} USD (arrêt au-delà du contrôle : pas de seconde course, nœud)")
     if len(lances) >= MAX_COURSES:
         return False, f"{MAX_COURSES} courses déjà parties pour la lignée {lignee} : aucune autre (une seule relance par lignée)"
     return True, f"lignée {lignee} : {len(lances)} course(s) précédente(s), finies proprement, sans fiche, dépense lisible"
