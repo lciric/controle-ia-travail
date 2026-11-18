@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, replace
 
+from scipy.stats import norm
+
 from ..gardes import GardeArret
 
 BRUITS = ("normal", "student5")
@@ -136,7 +138,7 @@ def _sensibilites() -> list[Monde]:
 
 # Empreintes qui donnent, au seuil exact de 1 % sur l'honnête, un taux d'alerte du témoin parfait de 1 % et de 5 %.
 EMPREINTE_TAUX_1 = 0.0
-EMPREINTE_TAUX_5 = 0.6814939392  # isf(0,01) - isf(0,05) de la loi normale ; recalculé et contrôlé par les essais
+EMPREINTE_TAUX_5 = float(norm.isf(0.01) - norm.isf(0.05))  # ≈ 0,6815 ; contrôlé par les essais
 
 
 def _validation() -> list[Monde]:
