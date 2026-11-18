@@ -912,7 +912,38 @@ trancher avant le scellement (changer de configuration après le scellement est 
 | m-7 | mineur | gardé | Métrique |
 | choix du rédacteur, hors remarque (à vérifier par la contre-lecture 2) | — | perceptron retiré ; une graine d'apprentissage par couche pour nos familles ; lecture par agent = celle du code v2 ; étage des comités sans plancher ni placebo, Mahalanobis à l'étage stéganographique seulement ; scikit-learn absent ou autre → refus avant toute lecture (et non « témoin non lu ») ; mémoire insuffisante → arrêt ; refus consignés par la mère, sans journal du code ; relance permise avant l'ouverture des activations, nœud après ; noms des tâches de graines nouvelles | Recette ; Liste d'arrêt ; Graines |
 
-- **Contre-lecture 2** : `<<CONTRE_LECTURE_2_NARC_EXT>>` — vérification courte de la différence brouillon 1 → brouillon 2 par
-  un agent neuf (R-3341), à qui la mère donne explicitement les deux brouillons, le rapport de la contre-lecture 1 et le code
-  v2 au commit `70cb77b8` ; l'entrée portera l'empreinte du brouillon relu, le chemin et l'empreinte du rapport, et le
-  traitement de chaque remarque.
+- **Contre-lecture 2** : Claude Sonnet 5.5 (`claude-sonnet-5-5`), sous-agent neuf, autre modèle que le rédacteur, même
+  famille (R2, N-052), ni rédacteur ni développeur ; mandat `docs/notes/narcbench-8b-v1/mandat-contre-lecture-2-texte-court-v1.md`.
+  Brouillon relu : `prereg/narcbench-bras-externe-v1-brouillon2.md`,
+  `7bb21dc0bec7a5fcbff41c84ee2554966e7ddc0acf8703cf7fe8f78d224acb02`. Rapport :
+  `prereg/contre-lectures/narcbench-bras-externe-v1-brouillon2-cl2.md`,
+  `f813ece09dd64779d919086f6170a7955633bae20a874feb840b217ea0c84137`. Verdict : « scellable après corrections », aucun
+  bloquant, cinq majeurs. Traitement de chaque remarque au brouillon 3 :
+
+| remarque | classe | traitement au brouillon 3 | où |
+|---|---|---|---|
+| M1 configuration illisible par le code | majeur | adoptée : six lignes seules sous le titre ; la prose passe dans « Notes de la configuration canonique » ; la clé `texte` est gardée (le code la lit) ; `run-id` donne la forme ; entropie d'au moins 2³². Contrôle `verifier-texte` du code (tête lue) rejoué : brouillon 2 refusé (code 2) ; brouillon 3 accepté (code 0) sur une copie où le seul marqueur d'entropie est remplacé par un entier d'essai ; sur le brouillon lui-même, seul refus : la valeur d'entropie, laissée à la mère | Configuration ; Notes de la configuration |
+| M2 tolérance d'arrondi | majeur | adoptée : les quatre comparaisons à 10⁻⁹ près, comme le code | Seuil |
+| M3 phrase trop générale sur une reproduction exacte | majeur | adoptée : « non tranché » le plus probable si l'aire vraie vaut 0,99 à 0,995 ; « oui » presque toujours à 0,9999 ou plus | Puissance ; Frontière n° 8 |
+| M4 réserve de l'intervalle hors des phrases gelées | majeur | adoptée pour la phrase de réponse R1 (**phrase gelée changée**, le code s'aligne) ; non adoptée pour la ligne C2, dont l'état « reproduit » est l'étiquette que lisent les règles T et R (sens fixé à « Seuil ») ; valeur de l'écart à sa marge rejouée avec le script scellé : 0,160 (pièce `4f51889f…`) | Critères ; Seuil ; Puissance |
+| M5 écarts texte-code (A19 à A30) | majeur | liste refaite contre la tête lue `cde3b990` : écarts 1 à 18 et A19 à A30 lus fermés ; restent la phrase R1 et la tête finale ; décisions de texte écrites (journal gardé, A23 ; règle DF-02, A26 ; gardes n° 8 et 9 avant le manifeste, relance en nœud, A28 ; numéros de la liste d'arrêt inchangés, A29) | Code ; Liste d'arrêt ; Lignes de registre |
+| m-D1 unité de rééchantillonnage des comités | mineur | déclarée : conséquence de B3 de la contre-lecture 1 (pli gardé ; effectif lisible des comités : au moins 10 plis gardés) | ce tableau ; Recette ; Seuil |
+| m-D2 garde des scores | mineur | déclarée : non finis → arrêt (le paquet gelé l'impose) ; constants → cellules « non lu » | ce tableau ; Liste d'arrêt n° 12 |
+| m-D3 garde de reproduction sans valeur de lecture | mineur | déclarée (contre-lecture du code, m10) ; version 2 nommée | ce tableau ; Métrique |
+| m-D4 sixième clé `texte` | mineur | déclarée : ajoutée par le rédacteur au brouillon 2 pour fixer le chemin du texte scellé (contre-lecture 1, B4) ; le code la lit | ce tableau |
+| m-D5 plancher des comités retiré | mineur | raison écrite (coût, lecture secondaire) | Recette |
+| m-D6 statut vrai aux deux états | mineur | adoptée : statut réécrit, les trois inscriptions de la mère nommées | Statut |
+| choix du rédacteur (§ 2) | mineurs | raisons écrites : comités sans plancher ni placebo (coût) ; scikit-learn → arrêt avant lecture (un seul coup) ; métadonnées lues avant le manifeste, aucune n'est un score ; « un seul tirage, deux usages » ; phrases de la grille D gelées par la fiche (empreinte de `statistiques_v1.py`) | Recette ; Liste d'arrêt |
+| m1 exposition de la mère | mineur | adoptée : « la mère confirme cette ligne au scellement » | Ce que les auteurs savaient (d) |
+| m2 exposition du contre-lecteur 2 | mineur | adoptée | Ce que les auteurs savaient (f) |
+| m3 critère de G0 | — | rien à faire | — |
+| m4 n° 2 « refus » et « ouverture » | mineur | adoptée : « arrêt » pour les deux moitiés | Liste d'arrêt n° 2 |
+| m5 journal et « rien d'écrit » | mineur | adoptée avec A23 : seule la ligne du journal s'écrit avant le manifeste | Liste d'arrêt ; Plan n° 2 |
+| m6 garde de mémoire avant l'ouverture | mineur | adoptée sous forme de contrôle de la mère avant le lancement (au moins 8 Go libres, estimation non mesurée) ; pas de garde de code | Liste d'arrêt n° 11 ; Plan n° 2 |
+| § 6 pièces hors de `main` | mineur | adoptée : à faire entrer dans `main` avant le scellement | En-tête ; Plan n° 0 |
+| § 6 précision de la p. 30 | mineur | adoptée : le membre « wasn't used for the main results » décide | Recette |
+
+- **Contre-lecture 3** : `<<CONTRE_LECTURE_3_NARC_EXT>>` — vérification courte de la différence brouillon 2 → brouillon 3 par
+  un agent neuf d'un autre modèle que le rédacteur, à qui la mère donne explicitement les brouillons 2 et 3, les rapports des
+  contre-lectures 1 et 2, le relevé des cinq points de recette et le code à la tête finale ; l'entrée portera l'empreinte du
+  brouillon relu, le chemin et l'empreinte du rapport, et le traitement de chaque remarque.
