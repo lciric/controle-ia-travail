@@ -243,8 +243,8 @@ explicitement que l'augmentation n'a pas servi à ses résultats principaux, don
 publié ne prévaut pas sur une phrase explicite de l'article. **Limites déclarées** : le lien entre ce script et les Tables 2
 et 3 n'est établi que par la recette (p. 29-30 = l. 28-33 du script) et par la Table 6, pas par l'exécution du script des
 auteurs ; le script des résultats principaux selon le fichier d'accueil n'est pas lu ; si les tables avaient été produites
-avec l'augmentation, l'écart attendu reste petit d'après l'article (moins de 0,001 sur la moyenne hors distribution), mais il
-n'est pas chiffré pour l'étage stéganographique seul. La recommandation ne change pas : **aucun nœud** (section « Nœuds »).
+avec l'augmentation, l'écart attendu reste petit d'après l'article (moins de 0,001 sur la moyenne hors distribution, environ
+trente fois sous la tolérance de 0,03), mais il n'est pas chiffré pour l'étage stéganographique seul. La recommandation ne change pas : **aucun nœud** (section « Nœuds »).
 
 **Notre chaîne** (paquet gelé `sondes.familles`, appel `entrainer(famille, nom, couche, séquences, y, "max", graine)`).
 - **Familles** : **différence de moyennes** et **linéaire**, **co-principales** (familles des deux sondes principales de
@@ -416,7 +416,8 @@ il ne change aucune phrase gelée.
   avec la valeur publiée à 0,03 près, à cette puissance », pas « égal ». Pour la réponse « oui » (douze cellules), si toutes
   les aires vraies étaient à la marge, la probabilité de sortir à tort serait au plus 0,160² ≈ 0,026 (deux modèles
   indépendants) et au plus 0,160 sinon ; cette réserve est écrite dans la phrase gelée R1 (section « Critères de lecture
-  gelés »).
+  gelés »). La phrase R2 n'a pas de réserve semblable : à la marge, « non reproduit » ne sort à tort que 0,002 fois au pic et
+  0,004 fois à l'écart (pièces scellées).
 - **Réponse au barreau** : « oui » exige douze cellules « reproduit », « non » huit cellules « non reproduit » et le témoin
   « reproduit » (section « Critères de lecture gelés ») ; leurs probabilités : section « Puissance ».
 - **Multiplicité** : lectures descriptives à 95 %, sans correction, **déclaré** ; 12 cellules visées, 12 secondaires et 4
@@ -476,20 +477,23 @@ secondaire).
 
 ## Plan d'analyse
 
-0. **Avant le scellement** : contre-lecture 3 (vérification courte de la différence brouillon 2 → brouillon 3 par un agent
-   neuf) ; pièces de la branche citées par ce texte entrées dans `main` (section « En-tête du gabarit ») ; inscription par la
-   mère de l'entropie, de la tête finale du code et de l'entrée de la contre-lecture 3 ; contrôle `verifier-texte` du code
-   sur la copie à sceller (code de sortie 0 exigé) ; scellement par `sceller_prereg` sous le nom
+0. **Avant le scellement** (contre-lectures 1 à 3 faites ; la mère) : contrôle de la différence entre le brouillon 3 et ce
+   texte (pièce `differences-brouillon3-vers-version-v1.md`) ; **fusion de la branche du code `prep/narcbench-externe-v2`
+   (tête finale `fe9d7996`) dans `main`**, qui y fait entrer les pièces de la branche citées par ce texte (section « En-tête
+   du gabarit ») ; tirage et inscription de l'entropie, seule inscription ; contrôle `verifier-texte` du code sur la copie à
+   sceller (code de sortie 0 exigé) et validateur sans aucune remarque ; scellement par `sceller_prereg` sous le nom
    `prereg/narcbench-bras-externe-v1.md` ; création du registre propre ; ligne `SCELLEMENT-NARC-EXT`.
 1. **Avant la ligne de code** : le code ferme **chaque écart** de la section « Code » (avant le scellement, un écart peut
-   encore se régler par une nouvelle version de ce texte ; après, tout écart est un nœud) ; il aligne la phrase gelée R1 ;
+   encore se régler par une nouvelle version de ce texte ; après, tout écart est un nœud) ; la phrase gelée R1 est alignée
+   à la tête finale `fe9d7996` ;
    essais R5 de chaque garde, cas
    sain **et** artefact (une garde sans essai sur artefact interdit la ligne de code) ; énumération exhaustive des règles C et
    T, des phrases par famille et des lignes de réponse, rejouée en essai ; jouet de bout en bout sur vecteurs factices aux
    formes publiées (deux modèles, deux étages) ; contre-lecture du code final par un agent neuf, qui vérifie la fermeture de
    chaque écart ; fiche du code scellée ; ligne `CODE-NARC-EXT`, **avant toute exécution** sur les fichiers publiés.
    Personne ne calcule d'aire, de score de sonde ni de statistique d'épisode sur les fichiers publiés avant cette ligne.
-2. **Lancement** (la mère) : branche fusionnée dans `main`, arbre propre, paquet exécuté égal à celui du commit de la fiche
+2. **Lancement** (la mère) : branche du code fusionnée dans `main` (avant le scellement, n° 0), arbre propre, paquet exécuté
+   égal à celui du commit de la fiche
    (règle DF-02 de T0.7) ; mémoire libre relevée (au moins 8 Go, liste d'arrêt n° 11) ; données téléchargées à la révision
    épinglée si elles manquent, hors du dépôt ; commande avec les options de la configuration canonique. Le code vérifie, dans
    l'ordre de la liste d'arrêt (n° 3, 5, 6, 4, 7, 2, 1, puis 8 et 9 sur les métadonnées ; la ligne `LECTURE-NARC-EXT` du
@@ -564,8 +568,8 @@ pour G1) ; aucune n'entre non plus dans le critère 3 de G0 (choix de ce texte).
 |---|---|---|---|
 | 1 | C0 | la garde des scores constants a joué (liste d'arrêt n° 12) | « non lu : garde (scores constants) » |
 | 2 | C1 | effectif non lisible ou plus de 1 % de tirages dégénérés | « non calculable à cet effectif » |
-| 3 | C2 | bas ≥ m | « reproduit » |
-| 4 | C3 | haut < m | « non reproduit » suivi du qualificatif de signe (section « Seuil ») |
+| 3 | C2 | bas ≥ m (à 10⁻⁹ près, section « Seuil ») | « reproduit » |
+| 4 | C3 | haut < m (à 10⁻⁹ près, section « Seuil ») | « non reproduit » suivi du qualificatif de signe (section « Seuil ») |
 | 5 | C4 | sinon | « non tranché à cette puissance » |
 
 Qualificatifs ajoutés sous C2, C3 et C4 : plancher (« au-dessus du plancher apparié » ou « pas au-dessus du plancher
@@ -609,10 +613,13 @@ C ; première ligne qui s'applique ; exhaustive et exclusive ; énumérée en es
 
 R3, R4 et R5 remplacent la ligne « en partie » du brouillon 1 (contre-lecture 1, M1) : rien n'est dit « en partie » sans une
 cellule décidée de ce côté. **Seule phrase gelée changée au brouillon 3 : R1**, qui porte désormais la réserve de l'intervalle
-(contre-lecture 2, M4) ; le code l'aligne mot pour mot (`cellules_externe_v2.reponse`). L'état « reproduit » d'une cellule
-(ligne C2) reste un mot seul : c'est l'étiquette que lisent les règles T et R, et son sens est fixé à la section « Seuil » ;
-la réserve voyage avec la phrase de réponse, que le lecteur des issues recopie. Toutes les autres phrases gelées sont celles
-du brouillon 2, mot pour mot, et celles du code à la tête lue.
+(contre-lecture 2, M4) ; le code l'a alignée mot pour mot à la tête finale `fe9d7996` (`cellules_externe_v2.reponse`).
+L'état « reproduit » d'une cellule (ligne C2) reste un mot seul : c'est l'étiquette que lisent les règles T et R, et son sens
+est fixé à la section « Seuil » ; la réserve voyage avec la phrase de réponse, que le lecteur des issues recopie ; la phrase
+par famille F1 ne la porte pas (la réponse au barreau est la phrase qui conclut). **Dans la version**, les gabarits de la
+liste des planchers des lignes R1 et R2 nomment aussi la valeur « sans plancher », que le code rend déjà (contre-lecture 3,
+C3) : aucun mot fixe de ces phrases ne change. Toutes les autres phrases gelées sont celles du brouillon 2, mot pour mot, et
+celles du code à la tête finale.
 
 **Secondaires et descriptifs** : l'étage des comités suit la règle C (valeurs publiées 1,00 ; marge 0,97) et est écrit
 « lecture secondaire, sans effet sur la réponse » ; Mahalanobis : estimation et intervalle, sans phrase d'état ; lecture par
@@ -680,9 +687,10 @@ manifeste** (n° 8 sur les activations, n° 11 et 12, valeur non finie au résul
     tirage **équivalent en loi** par les lignes centrées (w = X_cᵀ g / √(n − 1) + √(10⁻⁹) h, g et h gaussiens réduits),
     déclaré au résultat ; s'il échoue aussi → la cellule est « sans plancher ».
 11. Mémoire insuffisante → arrêt, nœud (une famille « non lue pour mémoire » serait une sortie sélective). Pour ne pas brûler
-    le coup sur cet arrêt, la mère relève avant le lancement la mémoire libre et ne lance pas sous 8 Go (estimation du
-    rédacteur, non mesurée : couches de la bande chargées, matrices 8 192 × 8 192 en double précision pour le plancher et
-    Mahalanobis).
+    le coup sur cet arrêt, la mère relève avant le lancement la mémoire libre et ne lance pas sous 8 Go (pointe mesurée sur
+    le jouet de bout en bout aux formes publiées, vecteurs factices, réglages du texte : 3 748 Mo, en 14,8 minutes, sur 4
+    cœurs et 16 Go ; pièce `docs/notes/narcbench-8b-v1/pieces-externe-v2/jouet-formes-publiees-sortie-v1.txt`,
+    `e21ac32a2ad8c451c2d008facbf07598f25637643959f47318356117aea3b58d`).
 12. Scores non finis → arrêt (le paquet gelé l'impose) ; scores d'une procédure constants sur un étage → ses cellules « non
     lu : garde (scores constants) » ; audit R4. Valeur non finie dans le résultat → arrêt, rien n'est écrit (JSON standard
     exigé).
@@ -736,7 +744,11 @@ manifeste** (n° 8 sur les activations, n° 11 et 12, valeur non finie au résul
   points de recette. 167 essais passés à cette tête (d'après la mère ; non rejoués par le rédacteur). Le rédacteur a lu les
   trois modules de la lecture (`lecture_externe_v2`, `cellules_externe_v2`, `externe_v2`) à cette tête ; il n'a exécuté que le
   contrôle préalable `verifier-texte` et la fonction `taches` (noms de plis factices), sur une copie extraite par
-  `git archive`, sans données.
+  `git archive`, sans données. **Tête finale `fe9d799641ed3cc5d3388026e6f6143f92fc7d5c`** : commits `950e5d3c` (essai de
+  l'écart 16), `b46c678d` (épreuve par mutation, 11 mutations décisives, toutes tuées ; script du jouet) et `fe9d7996`
+  (phrase R1 alignée, contrôles contre le brouillon 3, sortie du jouet) ; 168 essais (d'après le développeur) ; seul
+  `cellules_externe_v2.py` change dans `src/` depuis la tête lue (différence relue par le rédacteur) ; `verifier-texte` rejoué
+  par le rédacteur avec le code de la tête finale.
 
 **Écarts du brouillon 2 et de la contre-lecture 2, à la tête lue.** Les dix-huit écarts du brouillon 2 (contre le commit
 `70cb77b8`) et les douze ajoutés par la contre-lecture 2 (A19 à A30) sont **lus fermés** par le rédacteur à la tête lue,
@@ -754,13 +766,13 @@ placebo de toutes les procédures, lecture secondaire des comités, règles C et
 `journaliser`, gardé par décision de ce texte) ; numérotation de la liste d'arrêt (A29 : le code cite les numéros du brouillon
 2, que ce texte garde). **Comparaisons à 10⁻⁹ près** (contre-lecture 2, M2) : déjà dans le code (`ARRONDI_TOLERANCE`).
 
-**Écarts restants entre ce texte et la tête lue**, à fermer avant la ligne `CODE-NARC-EXT` :
-1. **Phrase gelée R1** : le code (`cellules_externe_v2.reponse`) porte la phrase du brouillon 2 ; ce texte y ajoute la réserve
-   de l'intervalle (section « Critères de lecture gelés ») ; le code l'aligne mot pour mot, et l'essai de l'énumération des
-   réponses la vérifie.
-2. **Tête finale** : l'essai que le développeur ajoute et l'épreuve par mutation ne doivent changer aucun module de la lecture
-   hors de la phrase R1 ; la contre-lecture du code final compare la tête finale à la tête lue, module par module, et la
-   fiche cite la tête finale.
+**Écarts entre ce texte et la tête finale : aucun connu.** Les deux qui restaient au brouillon 3 sont fermés : la phrase gelée
+R1 est alignée mot pour mot (`cellules_externe_v2.reponse`, tête finale) ; la tête finale ne change aucun autre module de la
+lecture. Les couples de la contre-lecture 3 se règlent dans ce texte, sans code : la révision du jeu n'est pas comparée par
+le code, le texte le dit (C2) ; la valeur « sans plancher » des listes de R1 et R2 est déjà rendue par le code (C3) ; la
+ligne `LECTURE-NARC-EXT` est refusée dès la lecture du registre (C4) ; le code ne compare pas la date du `run-id` au
+lancement (C5). La contre-lecture du code final vérifie l'ensemble avant la ligne `CODE-NARC-EXT`, et la fiche cite la tête
+finale.
 
 **Décisions de ce texte sur ce que le code ne tranche pas** (contre-lecture 2, A23, A26, A28 ; consigne de la mère) : le
 journal du code est gardé (« Lignes de registre ») ; le code exécuté se contrôle par la règle DF-02 de T0.7 (liste d'arrêt
@@ -820,7 +832,7 @@ le code.
    (contre-lecture 1, § 5) et relevé, sur la forme des métadonnées, que Qwen3-32B a seul le domaine « env » et Llama-3.1-70B
    seuls « edu » et « sport », et que le champ `scenario_domain` du Llama diffère du domaine des auteurs dans 14 domaines
    (correspondance un à un) ; a exécuté en partie le script des auteurs sur des données factices ; aucun score réel.
-   (d) **La mère** (session `session_013QMayjsoZJFBUCqcnvD5h1`) : a reçu les rapports (b), (c), (e) et (f) et les brouillons de
+   (d) **La mère** (session `session_013QMayjsoZJFBUCqcnvD5h1`) : a reçu les rapports (b), (c), (e), (f) et (h) et les brouillons de
    ce texte ; d'après les lignes R-3333, R-3335, R-3336 et R-3341, elle connaît les comptes de forme et les constats cités, et
    n'a lu aucune aire ni aucun score sur les fichiers publiés. **La mère confirme cette ligne au scellement** (les
    contre-lecteurs n'ont lu que les registres) ; si elle est incomplète, une nouvelle version du brouillon est écrite avant le
@@ -832,6 +844,14 @@ le code.
    seulement) ; un point de la simulation de puissance rejoué (données simulées) ; lignes R-3333, R-3335, R-3336 et R-3341.
    (g) **Observation de contexte, sans score**, lue avant ce texte par le programme (brouillon 4, l. 12-24 ; contre-lecture
    3, l. 12) : point 2 ci-dessus.
+   (h) **Contre-lecteur 3 de ce texte** (Claude Sonnet 5.5, agent neuf ; rapport `f8ca72e2…`) : aucune donnée réelle ; code
+   lu par `git show` et `git archive` au commit `cde3b990`, `git log` et `git diff --stat` jusqu'au commit `b46c678d` ;
+   fonctions du code exécutées sur des entrées factices ; `verifier-texte` sur une copie du brouillon 3 ; le script de
+   puissance du point de l'écart rejoué (données simulées) ; empreintes de vingt-deux fichiers cités, sans les ouvrir.
+   (i) **Développeur, de la tête lue à la tête finale** : essais, épreuve par mutation et jouet de bout en bout sur
+   **vecteurs factices** aux formes publiées (1 054 lignes pour l'étage des comités, 1 320 pour l'étage stéganographique,
+   couches et largeurs de la bande) ; la réponse et les états de ce jouet n'ont aucune valeur de lecture (sa pièce le dit) ;
+   aucun score sur les fichiers publiés d'après la pièce.
 5. **Le rédacteur** n'a lu aucun fichier de données, aucun score, aucun résultat de ce bras. Brouillon 1 : il a lu, dans le
    brouillon 4 (prédiction N3), la mention d'un résultat antérieur du programme sur ses propres sondes, dont il ne tire rien
    ; hors de sa liste, il a vu des lignes du registre des décisions qui citent R-2175, R-2184, R-2735 ou R-3310 (R-2176,
@@ -848,7 +868,10 @@ le code.
    `externe_v2.py` qui portent les gardes et la garde de reproduction ; les sujets des commits de la branche ; les pages 17,
    18 et 27 à 30 du PDF, relues pour le réexamen de l'augmentation. Il a exécuté la commande `verifier-texte` (texte
    seulement) et la fonction `taches` (noms de plis factices), sans données, et un point de la simulation de puissance
-   (données simulées). Aucune ligne du registre des décisions lue pour ce brouillon. La puissance est calculée sur données
+   (données simulées). Aucune ligne du registre des décisions lue pour ce brouillon. Version : la contre-lecture 3 en
+   entier ; la différence de `src/` entre la tête lue et la tête finale ; les sujets des trois commits qui les séparent ; la
+   sortie du jouet aux formes publiées (vecteurs factices) en entier ; il a exécuté `verifier-texte` avec le code de la tête
+   finale sur une copie à entropie d'essai, sans données. La puissance est calculée sur données
    simulées seulement.
 
 ## Frontière : ce que ce texte ne dit pas
@@ -948,18 +971,35 @@ trancher avant le scellement (changer de configuration après le scellement est 
 | m-D3 garde de reproduction sans valeur de lecture | mineur | déclarée (contre-lecture du code, m10) ; version 2 nommée | ce tableau ; Métrique |
 | m-D4 sixième clé `texte` | mineur | déclarée : ajoutée par le rédacteur au brouillon 2 pour fixer le chemin du texte scellé (contre-lecture 1, B4) ; le code la lit | ce tableau |
 | m-D5 plancher des comités retiré | mineur | raison écrite (coût, lecture secondaire) | Recette |
-| m-D6 statut vrai aux deux états | mineur | adoptée : statut réécrit, les trois inscriptions de la mère nommées | Statut |
+| m-D6 statut vrai aux deux états | mineur | adoptée : statut réécrit, les inscriptions de la mère nommées (dans la version : une seule, l'entropie) | Statut |
 | choix du rédacteur (§ 2) | mineurs | raisons écrites : comités sans plancher ni placebo (coût) ; scikit-learn → arrêt avant lecture (un seul coup) ; métadonnées lues avant le manifeste, aucune n'est un score ; « un seul tirage, deux usages » ; phrases de la grille D gelées par la fiche (empreinte de `statistiques_v1.py`) | Recette ; Liste d'arrêt |
 | m1 exposition de la mère | mineur | adoptée : « la mère confirme cette ligne au scellement » | Ce que les auteurs savaient (d) |
 | m2 exposition du contre-lecteur 2 | mineur | adoptée | Ce que les auteurs savaient (f) |
 | m3 critère de G0 | — | rien à faire | — |
 | m4 n° 2 « refus » et « ouverture » | mineur | adoptée : « arrêt » pour les deux moitiés | Liste d'arrêt n° 2 |
 | m5 journal et « rien d'écrit » | mineur | adoptée avec A23 : seule la ligne du journal s'écrit avant le manifeste | Liste d'arrêt ; Plan n° 2 |
-| m6 garde de mémoire avant l'ouverture | mineur | adoptée sous forme de contrôle de la mère avant le lancement (au moins 8 Go libres, estimation non mesurée) ; pas de garde de code | Liste d'arrêt n° 11 ; Plan n° 2 |
+| m6 garde de mémoire avant l'ouverture | mineur | adoptée sous forme de contrôle de la mère avant le lancement (au moins 8 Go libres ; dans la version, pointe mesurée sur le jouet aux formes publiées : 3 748 Mo) ; pas de garde de code | Liste d'arrêt n° 11 ; Plan n° 2 |
 | § 6 pièces hors de `main` | mineur | adoptée : à faire entrer dans `main` avant le scellement | En-tête ; Plan n° 0 |
 | § 6 précision de la p. 30 | mineur | adoptée : le membre « wasn't used for the main results » décide | Recette |
 
-- **Contre-lecture 3** : `<<CONTRE_LECTURE_3_NARC_EXT>>` — vérification courte de la différence brouillon 2 → brouillon 3 par
-  un agent neuf d'un autre modèle que le rédacteur, à qui la mère donne explicitement les brouillons 2 et 3, les rapports des
-  contre-lectures 1 et 2, le relevé des cinq points de recette et le code à la tête finale ; l'entrée portera l'empreinte du
-  brouillon relu, le chemin et l'empreinte du rapport, et le traitement de chaque remarque.
+- **Contre-lecture 3** : Claude Sonnet 5.5 (`claude-sonnet-5-5`), sous-agent neuf, autre modèle que le rédacteur, même
+  famille (R2, N-052), ni rédacteur ni développeur ; vérification courte de la différence brouillon 2 → brouillon 3 ; mandat
+  `docs/notes/narcbench-8b-v1/mandat-verification-courte-brouillon3-texte-court-v1.md`. Brouillon relu :
+  `prereg/narcbench-bras-externe-v1-brouillon3.md`, `fae8a96ccc75e592e8ca12c5b156a19775388c14f345d94fbf77d6fd8cbc0a90`.
+  Rapport : `prereg/contre-lectures/narcbench-bras-externe-v1-brouillon3-cl3.md`,
+  `f8ca72e2462169d106910f96d6953316bacb617de32ae30bdc17c6439aeb4a57`. Verdict : « scellable après ces couples exacts »,
+  aucun bloquant ; cinq couples (§ 7 du rapport). Traitement dans ce texte (chaque couple appliqué par remplacement exact, à
+  unicité contrôlée ; détail ligne à ligne : pièce `differences-brouillon3-vers-version-v1.md`) :
+
+| remarque | classe | traitement dans la version | où |
+|---|---|---|---|
+| C1 « non tranché, issue la plus probable » non soutenue | majeur | appliqué tel quel aux trois endroits : « oui » borné à 33–61 fois sur cent (57–78 sans indépendance), les autres issues se partagent le reste, non simulé | Puissance ; Frontière n° 8 ; tableau de la contre-lecture 2 (ligne M3) |
+| C2 révision du jeu non comparée par le code | écart texte-code | appliqué tel quel : la révision est consignée au manifeste, non comparée ; les empreintes des huit fichiers la fixent | Liste d'arrêt n° 1 |
+| C3 « sans plancher » absent des listes de R1 et R2 | mineur | appliqué tel quel : gabarit de la liste des planchers de R1 et R2 ; aucun mot fixe des phrases ne change ; le code rend déjà cette valeur | Critères (R1, R2) |
+| C4 place de la ligne `LECTURE-NARC-EXT` | mineur | appliqué tel quel, deux endroits | Liste d'arrêt (« Ordre ») ; Plan n° 2 |
+| C5 ce que le code vérifie du `run-id` | mineur | appliqué tel quel | Notes de la configuration canonique |
+| suggestion : « trente fois sous la tolérance » | — | ajoutée | Recette (réexamen de l'augmentation) |
+| suggestion : « à 10⁻⁹ près » dans la table de la règle C | — | ajoutée aux conditions des lignes C2 et C3 (colonne des conditions, pas des phrases) | Critères |
+| suggestion : raison de l'absence de réserve pour R2 | — | ajoutée ; valeurs des pièces scellées à la marge : 0,002 au pic, **0,004** à l'écart (le rapport citait 0,001, valeur de la grille à 0,97, au-dessus de la marge de l'écart) | Seuil |
+| suggestion : réserve sur la phrase F1 | — | non retenue : changerait une phrase gelée de plus ; la réponse au barreau (R1) est la phrase qui conclut et porte la réserve ; dit dans le texte | Critères |
+| constat : phrases T0, T3, T4 plus détaillées dans le code | — | pas de couple ; la fiche du code fixe leur forme | Code |
