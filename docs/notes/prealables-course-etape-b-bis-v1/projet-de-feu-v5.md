@@ -964,7 +964,7 @@ La correspondance avec la contre-lecture de la version 4 est en tête de ce text
 ## § 15 — RÉDACTION, ESSAIS SUR ANALOGUES, LIMITES
 
 - **Rédaction** : sous-agent de la session mère, 2026-11-18, de 07:01:23Z à @@FIN@@ (`date -u`).
-  - Processeur seulement. Aucune machine, aucune dépense, aucun appel au loueur ni à l'hébergeur, aucune clé lue ni affichée, aucun commit, aucune poussée. Deux lectures du distant en lecture seule (`git fetch` de `main`, et les `git ls-remote` du lanceur joué sur l'offre fabriquée).
+  - Processeur seulement. Aucune machine, aucune dépense, aucun appel au loueur ni à l'hébergeur, aucune clé lue ni affichée, aucun commit, aucune poussée. Le distant n'a été lu qu'en lecture seule : `git fetch` de `main`, et les `git ls-remote` du lanceur, dans les analogues des gestes 3 (b), 6 (a) et 12.
   - Rien d'ouvert sous `diag/`, `runs/` ni `donnees/`, aucune branche de données ni de calcul, aucun résultat de 7a, 7b, T0.6, de l'étape B, de l'étape B bis ni du premier test boîte blanche bis.
   - Lus : le projet version 4 et sa contre-lecture (empreintes vérifiées), l'arbitrage (§ B et « Ce qui doit aller au feu version 4 »), le § 6 du troisième addendum, le lanceur et l'amorce version 6, le lanceur de la répétition (sous-commande `credit`), `registre_bbis_v2.py` (garde de création, de dépense, d'absence), le crochet de garde et `.claude/settings.json`, les lignes citées des registres des accords et des décisions.
   - Le refus du crochet que décrivait la version 4 (registre illisible) est levé : R-3218.
