@@ -1,0 +1,26 @@
+# Mandat de la contre-lecture (R2) de l'ordre exploratoire et du préenregistrement du second cycle — v1
+
+Écrit par la session mère `session_013QMayjsoZJFBUCqcnvD5h1` le 2026-11-18 vers 18:55Z (GO-2026-11-18-44, -45, -48, -49 ; lignes R-3357, R-3359, R-3362, R-3363 du registre des décisions, par leur numéro). Agent neuf, **autre modèle que le rédacteur** (qui était Fable 5.2). Langue : français, sans sigle seul. La session mère, exposée au premier cycle, ne fixe aucun choix d'analyse : ton avis va au rédacteur et à Lazar.
+
+## Qui tu es
+Un **contre-lecteur neuf** : tu n'as écrit ni la note de conception, ni ces textes ; tu ne seras ni analyste du temps 1, ni développeur, ni lecteur, ni juge du second cycle. Comme le concepteur et le rédacteur, tu lis le verdict du premier cycle (c'est la matière du second) ; aucun autre résultat du programme.
+
+## Ce que tu contre-lis
+- `docs/notes/reconception-accumulation-cycle-2-v1/ordre-exploratoire-temps-1-v1-brouillon1.md` (`6f317917c34ed287edd03effcda73c7fc0f4ca4edc5a1e7fbd21fe84a2fafddb`) ;
+- `prereg/accumulation-cycle-2-v1-brouillon1.md` (`d24913f68a103ff826b53d8e3823a4cb2513c0fc05638aa271eb2d174515aefb`), au gabarit `prereg/gabarit-preregistrement-v1.md`, validateur `src/controle_ia/prereg.py` (rejoue-le) ;
+- les pièces d'arithmétique `…/pieces-redaction-cycle-2-v1/` (rejoue le script, compare à la sortie scellée) ;
+- la liste `…/points-a-trancher-cycle-2-v1-brouillon1.md` (`4da79f0deee445ee5c8a63a3de320758875767b62baf63e0f97273df4292dea3`).
+Contre : la note de conception `conception-cycle-2-v1.md` (`167f9b07…`), les mandats du concepteur et du rédacteur (même dossier ; les lectures permises sont celles du mandat du concepteur), le texte scellé du premier cycle `prereg/accumulation-barreau6-v1.md` (`2e2dddc6…`) et son verdict `docs/verdicts/verdict-accb6-v1.md` (`c78e35b5…`), les décisions N-049, N-050, N-053, N-054, N-056, N-062 sous `docs/decisions/`, et, pour ce qu'ils disent de qui peut lire leurs sorties et quand, le texte scellé de l'apprentissage des sondes sur la tâche `prereg/T0.7-etape-B-bis-v1.md` et ses addenda (forme et règles de lecture seulement).
+
+## Ce que tu vérifies
+1. **Complétude (R1)** : hypothèse, prédiction chiffrée et signe, métrique, seuil, plan d'analyse, critères de lecture gelés, liste d'arrêt, puissance ; issues écrites dans les deux sens, dont « l'accumulation n'apporte rien de propre à la sonde ».
+2. **Aucune échappatoire (R3)** : une seule sonde décisive, lue une seule fois sur une famille neuve ; rien ne laisse choisir après coup la sonde, les doses, l'effectif, le témoin ; la sonde entre par un marqueur d'empreinte rempli **avant** que la famille neuve existe ; l'ordre « recette scellée avant le temps 1, données créées après le gel de la sonde, le scellement et le code » tient-il, et concilie-t-il vraiment la note et le mandat ?
+3. **Le contraste à témoin apparié** est-il bien ce que le texte mesure, et l'agent honnête de base n'est-il plus la seule référence ?
+4. **Temps 1** : ce que l'analyste autorisé peut et ne peut pas lire ; ses exclusions ; critère d'arrêt ; la lecture de sorties de l'apprentissage des sondes sur la tâche avant son verdict est-elle permise par son texte scellé, et sinon que faut-il attendre ? Aucune moyenne ni médiane sur les jetons dans une sonde de production (interdit du programme).
+5. **Gardes (R5)** éprouvables sur cas sain et sur artefact ; épreuve sur signal planté et son jumeau avant toute lecture ; **graines (R9)** ; puissance et multiplicité (quatre doses lues comme une famille) : l'arithmétique est-elle juste ?
+6. **Suite des cycles** (aucune borne, GO-2026-11-18-49) : chaque cycle préenregistré, famille neuve, lu une fois, tout cycle rapporté ; le texte interdit-il bien toute revendication tirée d'une issue positive tant que la question de la répétition n'est pas tranchée ?
+7. **Les douze points à trancher** : lesquels sont de vrais nœuds pour Lazar, lesquels sont de routine ; chaque recommandation tient-elle ? Les trois ajouts du rédacteur (second témoin honnête, épreuve plantée à effectif réel, jumeau « différence d'état quelconque ») sont-ils justifiés ?
+8. **Marqueurs restants** avant le scellement, et ce que la mère doit remplir par empreinte sans ouvrir de résultat.
+
+## Ce que tu rends
+Rapport scellé `prereg/contre-lectures/accumulation-cycle-2-v1-brouillon1-cl1.md` (`PYTHONPATH=src python3 -m controle_ia.scellement sceller <fichier>`) : un verdict par texte (« scellable en l'état », « scellable après corrections », « non scellable »), bloquants et majeurs avec couples avant → après, avis sur chaque point à trancher. **Interdits** : rien sous `diag/`, `runs/`, `donnees/` ; rien d'autre sous `docs/verdicts/` que le verdict nommé ; aucune branche `calcul/` ou `donnees/` ; aucun fichier de `registres/` ; aucun sujet ni mécanisme de saboteur discret (ne lis pas `prereg/T0.7-organismes-discrets-*`, ni `docs/notes/organismes-discrets-v1/`, ni `docs/notes/barreau8-iib-v1/`) ; pas de recherche récursive hors des chemins cités. Ni commit, ni poussée. Si tu rejoues des essais : `-p no:cacheprovider --basetemp=<dossier à toi>`, supprimé ensuite. Arrêt au premier refus, texte exact rendu. Dernier message : verdicts, chemin, empreinte, bloquants, avis sur les points à trancher, lectures hors mandat — **sans chiffre de résultat du premier cycle**.

@@ -1,0 +1,20 @@
+# Mandat de la contre-lecture de la grille des gestes de rédaction des billets (brouillon 2), avant son gel — v1
+
+Écrit par la session mère `session_013QMayjsoZJFBUCqcnvD5h1` le 2026-11-18 vers 18:55Z (GO-2026-11-18-43 ; point 5 du compte rendu du réviseur). Agent neuf, autre modèle que le réviseur (qui était Opus 5.5). Langue : français, sans sigle seul.
+
+## Qui tu es
+Un **contre-lecteur neuf** de la grille : tu n'as écrit ni la grille, ni le tri ; tu ne coderas pas la moitié tenue à l'écart et tu n'écriras aucun billet. Tu ne lis aucun résultat du programme (rien sous `diag/`, `runs/`, `donnees/`, `docs/verdicts/`, `registres/`).
+
+## Ce que tu contre-lis
+`docs/notes/billets-v1/grille-gestes-v1-brouillon2.md` (`d6ead9a9a642ec98e9f66c5c0fe058309a502d81962981bc080296a8886e8a96`, compagnon à vérifier) et ses pièces `docs/notes/billets-v1/pieces-grille-v2/` (marquage des billets déjà lus, vérification des citations, préparation des copies neutres, plan d'analyse mis en code et son essai sur codages fictifs). Contre : le mandat du réviseur `mandat-revision-grille-v1.md`, la règle et le manifeste du corpus v2, le rapport du second lecteur du tri et la liste des billets marqués par un désaccord (`marques-desaccords-second-lecteur-v1.json`), et **la moitié développement du corpus v2 seulement** (`/home/user/billets-corpus-v2/developpement/`). **Jamais** : `/home/user/billets-corpus-v2/tenue-a-l-ecart/`, ni les copies de ses billets dans `tous-textes` et `tous-commentaires` ; jamais `/home/user/billets-corpus-v1/`. Aucune requête au site.
+
+## Ce que tu vérifies
+1. **Chaque geste est-il codable par deux codeurs sans se parler** : question fermée, modalités exclusives et exhaustives, règle de décision, cas limites, indicateur binaire écrit d'avance ? Essaie toi-même la grille sur **six billets de la moitié développement** tirés par graine (écris la graine avant le tirage ; exclus les deux billets marqués) et dis, geste par geste, où tu as hésité.
+2. **Citations** : rejoue le script de vérification ; sa sortie est-elle celle qui est scellée ? Aucun exemple ne vient de la tenue à l'écart ni d'un billet marqué.
+3. **Aveugle des codeurs** : les copies neutres cachent-elles vraiment le score, la date, les étiquettes, le statut, les auteurs ? Reste-t-il une fuite (longueur, mentions du score dans le texte, notes d'édition, commentaires) ? L'ordre « gestes d'abord, objections ensuite » suffit-il ? Le refus du script sur la tenue à l'écart sans identifiant d'accord tient-il (rejoue son essai) ?
+4. **Plan d'analyse** : seuil de fiabilité (kappa de Cohen 0,60) et exception de prévalence écrits d'avance et sans échappatoire ; différence appariée, intervalle par rééchantillonnage des paires, test du signe, correction de Holm ; graines ; les quatre ensembles de rapport (tous, sans chaque marquage, sans leur réunion). Avec 23 paires (11 hors des deux marquages), que peut-on détecter ? Dis-le en clair : quelle différence de fréquence est détectable, et laquelle ne l'est pas.
+5. **Règle de passage au gabarit** : un geste devient-il consigne par une règle écrite avant le codage, sans choix après coup ? Les qualificatifs (« distinctive », « sous réserve », « à éviter », « piste ») sont-ils définis sans recouvrement ?
+6. **Les points à trancher du réviseur** : deux codeurs de deux modèles différents et un arbitre ; images invisibles aux codeurs ; seuil de 0,60 ; classes d'objections nouvelles et fusionnées. Ton avis sur chacun.
+
+## Ce que tu rends
+Rapport scellé `docs/notes/billets-v1/contre-lecture-grille-v1-brouillon2.md` (`PYTHONPATH=src python3 -m controle_ia.scellement sceller <fichier>`) : verdict (« gelable en l'état », « gelable après corrections », « non gelable »), bloquants et majeurs avec couples avant → après, ton essai sur six billets, la puissance en clair, ton avis sur les points à trancher. Ni commit, ni poussée. Disque compté : aucune copie des textes dans le dépôt, dossiers temporaires supprimés. Arrêt au premier refus, texte exact rendu. Dernier message : verdict, chemin, empreinte, bloquants, puissance en une phrase, lectures hors mandat.
