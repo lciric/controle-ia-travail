@@ -126,7 +126,7 @@ comportement :
 | 2 | étage de transfert | idem | `[transfert]` ; `groupes(…, "TRANSFER")` | tenu (ma mutation B15 tuée) |
 | 3 | registre, texte cité | idem | 20 cas de la table `CAS` | **deux trous sur la ligne `CODE-NARC-EXT` : M2** |
 | 4 | déjà jouée | idem | ligne de lecture, dossier de run, résultat ; relance refusée | tenu (B04 à B06 tuées) |
-| 5 | configuration | idem | 20 cas | tenu (B07 à B09, B19, B23 tuées) |
+| 5 | configuration | idem | 21 cas | tenu (B07 à B09, B19, B23 tuées) |
 | 6 | code exécuté égal au code de la fiche | idem | racine, arbre modifié, commit absent, non ancêtre, liste, empreinte, paquet différent | tenu (B10 à B12, B20, B22 tuées) |
 | 7 | scikit-learn 1.9.1 | idem | installé absent ou autre ; fiche autre | tenu (B13, B14 tuées) |
 | 8 | forme | essais sains | métadonnées (chargeur, rôles, mode, deux colludeurs) ; activations (couche, type, largeur, lignes, non finies, ligne finale en double, direction nulle, aucune valeur) | tenu (B16 tuée) ; cas de bord : m2, m3 |
@@ -226,21 +226,21 @@ Aucun.
   | C04 plancher du témoin noté sur des vecteurs non standardisés | l. 525 | survivante |
   | C06 plancher d'une cellule : maximum sur les couches au lieu de la moyenne | l. 179 | survivante |
   | C08 placebo : maximum sur les calculs au lieu de la moyenne | l. 169 | survivante |
-  | C14 intervalle par plis : minimum au lieu de la moyenne | l. 150 | survivante |
+  | C14 intervalle par plis : minimum au lieu de la moyenne ; C18 valeur d'une cellule des comités : médiane des plis | l. 150, 314 | survivantes |
   | C12 réponse lue sur douze cellules (témoin compris) au lieu de huit : la ligne « non » devient inatteignable | l. 403 | survivante |
   | C13 qualificatifs de plancher de la réponse : huit au lieu de douze | l. 401-402 | survivante |
   | C01 quantile 0,95 → 0,50 ; C02 200 directions et 200 permutations → 20 ; C03 2 000 tirages → 1 000 | l. 52-53 | survivantes |
   | C10 effectif lisible sans la condition des dix sabots ; C11 sans celle des dix plis | l. 258, 312 | survivantes |
   | C07 placebo jamais échangé ; C09 intervalle par sabots : maximum ; C15 pic du témoin fait de l'écart | l. 165, 136, 503 | tuées |
-  | C18 (médiane des plis), C21 (étiquettes d'apprentissage inversées), C22 (domaine tenu à l'écart laissé dans l'apprentissage), C24, C25 (rejeux de L01 et L02) | l. 314, 539, 567 | **lancées, non lues** (arrêt) |
 
   Cause : pour nos familles, les essais ne vérifient que la structure (clés, effectifs, « un état parmi trois ») ; seul le
   témoin est comparé à un nombre. **Le code est juste** : mon recalcul indépendant (preuve 7) et mon essai du câblage (preuve
   10) le disent, aux empreintes de la tête finale. C'est l'essai qui manque. Ce n'est pas une garde de la liste d'arrêt, et
   la lettre du plan n° 1 (énumérations, jouet) est tenue ; je le classe majeur parce que ces huit cellules font la réponse et
-  qu'un désalignement des épisodes passerait inaperçu.
-  **Correction, dans `tests/` seulement** : (a) un essai-oracle des cellules sur un jouet non saturé (mon script peut servir
-  de base) ; (b) un essai du câblage de `lecture_finale` sur cellules fabriquées ; (c) un essai qui épingle les réglages du
+  qu'une inversion des étiquettes ou un désalignement des épisodes passerait inaperçu.
+  **Correction, dans `tests/` seulement** : (a) un essai-oracle des cellules sur un jouet non saturé, comités compris, avec
+  le domaine tenu à l'écart (mon script peut servir de base) ; (b) un essai du câblage de `lecture_finale` sur cellules
+  fabriquées ; (c) un essai qui épingle les réglages du
   texte (0,95 ; 200 ; 200 ; 2 000 ; effectif 10) ; (d) les bornes de l'effectif lisible (neuf sabots portant dix épisodes de
   chaque condition ; neuf plis) ; (e) le repli du plancher à travers `lire_modele`. À défaut, la mère peut choisir de citer
   mon recalcul dans la fiche comme preuve à ces empreintes ; je recommande les essais.
@@ -270,8 +270,8 @@ Aucun.
 - **m4** — La garde vaut pour le dépôt donné par `--depot` (l. 540, 609) : un dépôt jetable fabriqué exprès la satisfait
   (G8 ; c'est ce que font les essais). Et `paquet_execute` (l. 347-351) résout le lien de `__init__.py` : dans l'outil du
   développeur (`pieces-externe-v2/mutations_decisives_v1.py` l. 45-53), le dépôt jetable des essais porte ainsi le code non
-  muté sans que la garde n° 6 le voie. Les mutations L01 et L02 restent tuées par l'essai visé. Sans objet pour le
-  lancement réel (aucun lien dans le dépôt, commande lancée à sa racine).
+  muté sans que la garde n° 6 le voie. Les mutations L01 et L02 restent tuées par l'essai visé (rejouées en copie entière :
+  C24, C25). Sans objet pour le lancement réel (aucun lien dans le dépôt, commande lancée à sa racine).
 - **m5** — Renvois en retard, sans effet : en-têtes « alignée sur le brouillon 2 » (`lecture_externe_v2.py` l. 4-5,
   `cellules_externe_v2.py` l. 2, `externe_v2.py` l. 43, `__init__.py` l. 21) ; `externe_v2.py` l. 60-61 et message l. 551
   (« nos familles » : la commande applique cette garde à toutes les procédures) ; `tests/test_narcbench_externe_v2.py` l. 583
@@ -377,8 +377,10 @@ Aucun.
 (`048e49b148bf45c37368ae0f36fe5db6c7ffbe46c960613a10a6a37022c255f0`, scellée) : mon outil de mutation, son greffon, les trois
 lots et la liste des 168 essais ; la sortie du lot C telle que lue ; le recalcul indépendant des cellules ; les gardes à la
 main ; le câblage de la lecture finale ; le repli du plancher ; la liste des 503 tâches ; la sortie de `fiche-code` ; un
-mode d'emploi. Les sorties des lots A et B, du recalcul, des gardes, du repli et du câblage sont recopiées dans ce rapport
-depuis la session : je ne les ai pas rejouées vers des fichiers après l'arrêt.
+mode d'emploi. L'archive a été scellée à 20:36 UTC, avant que je lise la fin du lot C : son mode d'emploi dit que cinq issues
+n'étaient pas lues ; elles le sont depuis, et figurent ici (je n'ai pas réécrit une pièce scellée, R12). Les sorties des lots
+A et B, du recalcul, des gardes, du repli et du câblage sont recopiées dans ce rapport depuis la session : je ne les ai pas
+rejouées vers des fichiers après l'arrêt.
 
 ## Lectures hors du mandat et écarts à mes consignes (déclarés)
 
@@ -399,7 +401,7 @@ depuis la session : je ne les ai pas rejouées vers des fichiers après l'arrêt
   supprimés aussitôt ; les passes suivantes ont été bornées.
 - **Arrière-plan** : mon lot C, lancé au premier plan sous `timeout 3000`, a été passé en arrière-plan par l'outil au bout de
   600 secondes (message : « Command did not complete within its 600s timeout and was moved to the background »). Je ne l'ai
-  ni relancé ni arrêté ; il est borné par son `timeout`.
+  ni relancé ni arrêté ; il a fini de lui-même à 20:38:01 UTC (code 0) et a supprimé son dossier.
 - **Faux départ de mon outil**, corrigé : une première passe du lot B a donné 26 « tuées » fausses (ma copie n'avait pas
   `requirements-cpu.txt`, tous les essais échouaient à la construction du dépôt jetable). Je l'ai vu au motif des échecs ;
   la table B ci-dessus est celle de la passe corrigée, motifs affichés.
