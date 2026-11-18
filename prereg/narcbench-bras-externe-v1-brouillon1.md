@@ -5,7 +5,7 @@
   téléchargé, rien lu des fichiers publiés, rien lancé, rien dépensé.
 - **Rédacteur** : Claude Opus 5.5 (`claude-opus-5-5`), **rédacteur neuf**, sous-agent de la session mère
   `session_013QMayjsoZJFBUCqcnvD5h1` ; **distinct du développeur** du bras externe (branche `prep/narcbench-externe-v2`) ;
-  ni contre-lecteur de ce texte ni lecteur de ses issues. Écrit le 2026-11-18 à partir de 16:55 UTC (`date -u`).
+  ni contre-lecteur de ce texte ni lecteur de ses issues. Écrit le 2026-11-18 de 16:55 à 17:06 UTC (`date -u`).
 - **Mandat** : `docs/notes/narcbench-8b-v1/mandat-redacteur-texte-court-bras-externe-v1.md`
   (`ea4c8554567b8c8a74d91ed3dad26637ac63d13863eeef5e50f048729f084638`), sous GO-2026-11-18-30 et R-3310. Voie décidée par
   Lazar le 10 novembre (R-2175, D-3 (a) : « bras externe NARCBench sur les activations publiées, processeur, 0 USD, texte
@@ -90,7 +90,8 @@
 - **Non visés, déclarés** : les trois autres techniques des Tables 2 et 3 (la concaténation triée et l'alignement des
   activations lisent les vecteurs eux-mêmes ; la sonde d'asymétrie ajoute un classifieur d'épisode appris sur l'étage des
   comités : p. 17 et 35 ; seules les statistiques du pic et de l'écart se calculent sur les seuls scores d'agent tirés
-  d'une direction, de sorte qu'une sonde de notre chaîne peut y remplacer la direction des auteurs) ; la Table 6 (p. 30)
+  d'une direction, sans autre apprentissage, de sorte qu'une sonde de notre chaîne peut y remplacer la direction des
+  auteurs) ; la Table 6 (p. 30)
   et la Table 13 (p. 46), qui moyennent l'étage de transfert ou les cinq techniques ; les deux autres modèles de l'article
   (DeepSeek-R1-Distill-Qwen-32B, GPT-OSS-20B, p. 27), dont les activations ne sont pas parmi les huit fichiers lus ici.
 - **Lecture** : énoncé **descriptif**, aucune porte. Les deux issues sont écrites d'avance, **« reproduit »** et **« non
@@ -135,7 +136,8 @@
   n'a pas été retenu ne porte que son témoin) ; dans l'étage stéganographique, un bloc est un sabot.
 - **Apprentissage** : épisodes de collusion de l'étage des comités seulement, canal public, phase de discussion (tours 1 à
   3) ; **chaque message est un exemple** (vecteur du dernier jeton), colludeur 1, honnête 0 ; les témoins de l'étage des
-  comités ne servent qu'à l'évaluation (p. 35). Rien de l'étage stéganographique n'entre jamais dans un apprentissage.
+  comités ne servent ici qu'à l'évaluation (chez les auteurs, aussi aux classifieurs d'épisode des deux techniques non
+  visées, p. 35). Rien de l'étage stéganographique n'entre jamais dans un apprentissage.
 - **Score d'agent** : étage stéganographique : vecteur de la **phase finale** de l'agent, seul (p. 27) ; étage des comités :
   voir chaque procédure.
 - **Statistiques d'épisode** : pic = plus haut des quatre scores d'agent (éq. 3, p. 16) ; écart = moitié de la somme des
@@ -148,8 +150,8 @@
 **Notre chaîne** (paquet gelé `sondes.familles`, appel `entrainer(famille, nom, couche, séquences, y, "max", graine)`).
 - **Familles** : **différence de moyennes** et **linéaire**, **co-principales** (familles des deux sondes principales de
   T0.7, brouillon 4, l. 199-200) ; **perceptron** et **Mahalanobis** (non supervisée, honnêtes seulement), **descriptives** ;
-  **attention, non lue**
-  (un seul jeton par message : son agrégation se réduit à l'identité et doublerait la famille linéaire).
+  **attention, non lue** (un seul jeton par message : son agrégation se réduit à l'identité et doublerait la famille
+  linéaire).
 - **Un message = une séquence d'un seul jeton** ; aucune standardisation ajoutée (celle de chaque famille est la sienne) ;
   aucun sous-échantillonnage (les classes sont équilibrées par construction, deux colludeurs et deux honnêtes par épisode ;
   les comptes sont rapportés).
@@ -170,8 +172,9 @@ majoritaire tiré par la graine ; standardisation (moyenne, écart type) apprise
 coefficients normé ; score s = z·d (éq. 8, p. 27). Score d'agent : étage stéganographique, vecteur final standardisé ;
 étage des comités, **moyenne des trois vecteurs standardisés** des tours 1 à 3 (p. 27 ; moyenne sur des messages, permise
 ici seulement, au titre de N-026). Dix graines. Plancher : 200 directions N(0, Σ_z + 10⁻⁹ I), Σ_z covariance des vecteurs
-d'apprentissage standardisés (pli par pli dans l'étage des comités), même chaîne. `scikit-learn` à la version épinglée de la ligne de code (le développeur v1 a
-épinglé 1.9.1, commit `abbbcfde`).
+d'apprentissage standardisés (pli par pli dans l'étage des comités), même chaîne. `scikit-learn` à la version épinglée de
+la ligne de code (le développeur v1 a épinglé `scikit-learn==1.9.1` dans `requirements-cpu.txt` au commit `abbbcfde` ;
+absent de ce fichier sur `main` au commit `aeceeee6`).
 
 **Points de recette tranchés d'avance** (le PDF ne les fixe pas ; valeurs par défaut écrites ici ; **si le code des
 auteurs au commit `85fea3be2a9d` les fixe autrement, ses lignes sont relevées et portées au brouillon suivant avant le
@@ -269,9 +272,9 @@ reproduit / non tranché) :
 
 Lecture : avec 20 sabots, « reproduit » n'a plus d'une chance sur deux que pour une aire vraie d'au moins 0,99 ; entre 0,90
 et 0,98, « non tranché » domine ; « non reproduit » n'a plus d'une chance sur deux que sous ≈ 0,85 (sommes à 0,001 près,
-arrondis). La moyenne sur couches et graines n'est pas simulée :
-elle ne réduit pas le bruit d'échantillonnage des épisodes, qui domine. Les deux modèles portent des épisodes distincts ;
-les cellules d'un même modèle sont corrélées. L'étage des comités (plus d'épisodes) n'est pas simulé.
+arrondis). La moyenne sur couches et graines n'est pas simulée : elle ne réduit pas le bruit d'échantillonnage des
+épisodes, qui domine. Les deux modèles portent des épisodes distincts ; les cellules d'un même modèle sont corrélées.
+L'étage des comités (plus d'épisodes) n'est pas simulé.
 
 ## Plan d'analyse
 
@@ -284,8 +287,8 @@ les cellules d'un même modèle sont corrélées. L'étage des comités (plus d'
    la ligne de code.
 1. **Ligne de code `CODE-NARCEXT`** (section « Code »), **avant toute exécution** sur les fichiers publiés.
 2. **Téléchargement** des huit fichiers à la révision épinglée s'ils manquent, hors du dépôt ; taille et empreinte de
-   chacun (R11) ; métadonnées à vingt champs, couches de la bande présentes, largeurs 5 120 (Qwen3-32B) et 8 192
-   (Llama-3.1-70B) d'après le chargeur v1, valeurs finies.
+   chacun (R11) ; métadonnées à vingt champs, couches de la bande présentes, largeurs 5 120 (Qwen3-32B ; aussi p. 45) et
+   8 192 (Llama-3.1-70B) d'après le chargeur v1, valeurs finies.
 3. **Comptes structurels**, écrits au résultat à côté de ceux de l'article (étage des comités : 50 scénarios, 17 domaines,
    100 épisodes, p. 14 ; 36 scénarios de collusion retenus avec les 50 témoins, p. 35, sans dire pour quel modèle ; étage
    stéganographique : 20 sabots, 40 épisodes, p. 15 et 40 ; tous les épisodes de collusion retenus, p. 44) : épisodes par
@@ -309,7 +312,8 @@ les mêmes couches ; l'écart entre une procédure et le témoin de recette est 
 `numpy.random.SeedSequence` par `controle_ia.manifeste.graines(tâches, entropie)` (R9 ; numpy ≥ 1.25) ; entropie
 `<<ENTROPIE_NARC_EXT>>`, tirée une fois avant le scellement, jamais celle de P3, de T0.6, de T0.7 ni du texte du 8B ; une
 graine par tâche nommée : `temoin/<modèle>/graine<g>`, `lineaire/<modèle>/graine<g>`, `perceptron/<modèle>/graine<g>`
-(g = 0 à 9 ; plis de l'étage des comités : suffixe `/pli<domaine>`), `plancher/<procédure>/<modèle>/<couche>`,
+(g = 0 à 9 ; plis de l'étage des comités : suffixe `/pli<domaine>` sur toute tâche qui en dépend),
+`plancher/<procédure>/<modèle>/<couche>`,
 `intervalle/<procédure>/<modèle>/<étage>/<statistique>`, `placebo/<procédure>/<modèle>/<étage>/<statistique>` ; l'entier
 passé aux fonctions est tiré de la `SeedSequence` de la tâche (`generate_state(1)[0]`). Sans tirage : plis (domaines triés
 par nom), blocs, ordre des agents (triés par nom), ordre des couches. Manifeste du run (R9) : configuration et empreinte,
@@ -444,14 +448,15 @@ intervalle entier sous 0,5 ; scores constants.
    case de coordination privée ; dans l'épisode stéganographique publié `bj__shoe00__collusion` de Qwen3-32B, le message
    utilisateur des deux colludeurs porte un préfixe privé **à chacune des huit mains, finale comprise**. L'article dit au
    contraire qu'au tour final de l'étage stéganographique tous les agents reçoivent des messages utilisateur identiques
-   (p. 27) et que la consigne de collusion ne vit que dans l'invite système (p. 32) ; les invites système des colludeurs et
-   des honnêtes diffèrent fortement (p. 33). On ne sait pas lequel de ces contextes a servi à extraire les activations
-   publiées. Conséquence écrite d'avance : une séparation forte peut venir du contexte ; d'où le qualificatif du plancher, et
-   aucune prédiction sur lui (P4).
+   (p. 27) ; il dit aussi que la consigne de collusion n'apparaît dans aucun message utilisateur de la phase publique
+   (p. 32-33), sans parler de la case de coordination privée ; les invites système des colludeurs et des honnêtes
+   diffèrent fortement (p. 33). On ne sait pas lequel de ces contextes a servi à extraire les activations publiées.
+   Conséquence écrite d'avance : une séparation forte peut venir du contexte ; d'où le qualificatif du plancher, et aucune
+   prédiction sur lui (P4).
 3. **Écarts déjà relevés entre l'article et les fichiers** : la fiche du jeu annonce 31 + 31 épisodes pour l'étage des
    comités (brouillon 4, l. 155 ; non revérifié par le rédacteur), l'article 36 scénarios de collusion retenus et 50 témoins
    (p. 35) ; la fiche nomme un point de contrôle du Llama qui n'existe pas (R-2184) ; bande du Llama de six couches dans le
-   code des auteurs, de cinq dans l'article (p. 27).
+   code des auteurs (relevé du développeur v1), de cinq dans l'article (p. 27).
 4. **Ce que le développeur v1 a fait** : téléchargement des huit fichiers et vérification des licences (R-2184) ; chargeur
    « ne fait que charger et vérifier la forme », « aucune lecture d'aire » (docstring de `chargeur_externe_v1`) ; données
    perdues avec l'ancien conteneur (R-3310). **Expositions du développeur v2 et de la mère** : `<<EXPOSITIONS_NARC_EXT>>`.
