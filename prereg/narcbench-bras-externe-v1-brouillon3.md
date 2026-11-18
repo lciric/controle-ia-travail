@@ -804,7 +804,7 @@ le code.
    (contre-lecture 1, § 5) et relevé, sur la forme des métadonnées, que Qwen3-32B a seul le domaine « env » et Llama-3.1-70B
    seuls « edu » et « sport », et que le champ `scenario_domain` du Llama diffère du domaine des auteurs dans 14 domaines
    (correspondance un à un) ; a exécuté en partie le script des auteurs sur des données factices ; aucun score réel.
-   (d) **La mère** (session `session_013QMayjsoZJFBUCqcnvD5h1`) : a reçu les rapports (b), (c) et (e) et les brouillons de
+   (d) **La mère** (session `session_013QMayjsoZJFBUCqcnvD5h1`) : a reçu les rapports (b), (c), (e) et (f) et les brouillons de
    ce texte ; d'après les lignes R-3333, R-3335, R-3336 et R-3341, elle connaît les comptes de forme et les constats cités, et
    n'a lu aucune aire ni aucun score sur les fichiers publiés. **La mère confirme cette ligne au scellement** (les
    contre-lecteurs n'ont lu que les registres) ; si elle est incomplète, une nouvelle version du brouillon est écrite avant le
