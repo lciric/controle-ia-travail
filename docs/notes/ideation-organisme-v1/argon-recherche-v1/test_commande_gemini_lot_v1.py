@@ -1,6 +1,6 @@
 """Essais de `relais_gemini_v4.py` et de `commande_gemini_lot_v1.py` : faux amont Gemini local (comptage, lot, relevé,
 annulation), relais réel en processus, commande réelle ; clé factice, aucun réseau sortant, aucun appel payant."""
-import json, os, sys, threading, urllib.request
+import json, math, os, sys, threading, urllib.error, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
@@ -42,6 +42,8 @@ class FauxAmont:
                 if self.path.endswith(":batchGenerateContent"):
                     nom = f"batches/lot{len(f.lots) + 1}"
                     f.lots[nom] = 0
+                    if f.scenario == "nom_meta":
+                        return self._rep(200, {"metadata": {"name": nom, "state": "BATCH_STATE_PENDING"}})
                     return self._rep(200, {"name": nom, "metadata": {"name": nom, "state": "BATCH_STATE_PENDING"}})
                 if self.path.endswith(":cancel"):
                     f.annules.append(self.path)
@@ -57,8 +59,9 @@ class FauxAmont:
                 if f.scenario == "echec":
                     return self._rep(200, {"name": nom, "done": True, "metadata": {"state": "BATCH_STATE_FAILED"}})
                 rep = {"candidates": [{"content": {"parts": [{"text": "pensée", "thought": True}, {"text": "Réponse " + CLE}]},
-                                       "finishReason": "MAX_TOKENS" if f.scenario == "tronque" else "STOP"}],
-                       "usageMetadata": USAGE, "modelVersion": "gemini-4-argon" if f.scenario == "autre_modele" else MODELE}
+                                       "finishReason": "MAX_TOKENS" if f.scenario in ("tronque", "pensee_tronque") else "STOP"}],
+                       "usageMetadata": dict(USAGE, thoughtsTokenCount=40000) if f.scenario in ("pensee", "pensee_tronque") else USAGE,
+                       "modelVersion": "gemini-4-argon" if f.scenario == "autre_modele" else MODELE}
                 return self._rep(200, {"name": nom, "done": True, "metadata": {"state": "BATCH_STATE_SUCCEEDED"},
                                        "response": {"inlinedResponses": {"inlinedResponses": [{"response": rep}]}}})
 
@@ -135,7 +138,7 @@ def test_delai_annule_le_lot(monde):
                               url + "/v1beta", "--delai-s", "500"], environ=ENV, entree=b"x" * 200,
                              dormir=lambda s: None, horloge=lambda: next(t))
     l = json.loads(out.getvalue().strip().splitlines()[-1])
-    assert code == 6 and a.annules and "annulé" in l["erreur"] and "modele_servi" not in l
+    assert code == 6 and a.annules and "annulation acceptée" in l["erreur"] and "modele_servi" not in l
 
 
 @pytest.mark.parametrize("env,code_attendu", [
@@ -178,3 +181,137 @@ def test_etat_du_relais(monde):
     lancer(url)
     e = json.loads(urllib.request.build_opener(urllib.request.ProxyHandler({})).open(url + "/relais/etat", timeout=5).read())
     assert e["version"] == "relais-gemini-v4" and e["lots_crees"] == 1 and e["releves"] >= 3
+
+
+# === essais ajoutés après la contre-lecture des commandes neutres ========================================================
+
+def test_lecture_de_la_forme_reelle_versee():
+    """`lire_resultat` sur la réponse d'un lot réel (épreuve du 18 novembre, versée et scellée)."""
+    chemin = os.path.join(ICI, "..", "..", "organismes-discrets-v1", "organisme-ideation-v1", "epreuve-lot-carbon-v1",
+                          "resultat-lot.json")
+    fin = json.load(open(chemin, encoding="utf-8"))
+    texte, fin_raison, servi, usage = cmd.lire_resultat(fin, "gemini-4-carbon")
+    assert fin_raison == "STOP" and servi == "gemini-4-carbon" and texte.strip() and usage["thoughtsTokenCount"] == 844
+    assert cmd.usage_du_lot(fin) == usage
+
+
+def test_pensee_au_dela_de_la_provision_code_7_cout_reel(monde):
+    a, url, _ = monde
+    a.scenario = "pensee"
+    code, l = lancer(url)
+    assert code == 7 and "pensée 40000" in l["erreur"] and l["cout_origine"] == "usage" and l["texte"] == ""
+    assert l["cout_usd"] == pytest.approx((120 * 8.3 + (40 + 40000) * 41.5) / 1e6)
+
+
+def test_pensee_prime_sur_la_troncature(monde):
+    a, url, _ = monde
+    a.scenario = "pensee_tronque"  # fin MAX_TOKENS (code 5 seul) et pensée au-delà : le code 7 prime
+    code, l = lancer(url)
+    assert code == 7 and "pensée 40000" in l["erreur"]
+
+
+def test_pire_cas_egal_et_sous_le_plafond(monde):
+    a, url, _ = monde
+    a.scenario = "echec"
+    code, l = lancer(url)
+    entree = math.ceil(max(100, len("Propose une idée.\n" * 10) / 3.0) * 1.05)
+    sortie = int(min(32768, math.floor((1.5 - entree * 8.3e-6) / 41.5e-6 - 8192)))
+    attendu = entree * 8.3e-6 + (sortie + 8192) * 41.5e-6
+    assert code == 3 and l["cout_usd"] == pytest.approx(attendu) and l["cout_usd"] <= 1.5
+
+
+def test_entree_facturee_au_dela_avertie(monde):
+    _, url, _ = monde
+    code, l = lancer(url, consigne="x")  # entrée gardée 105, facturée 120
+    assert code == 0 and l["avertissements"] and "entrée facturée 120" in l["avertissements"][0]
+
+
+def test_nom_du_lot_en_metadonnees_seulement(monde):
+    a, url, _ = monde
+    a.scenario = "nom_meta"
+    code, l = lancer(url)
+    assert code == 0 and l["lot"] == "batches/lot1"
+
+
+def test_annulation_en_echec_dite(tmp_path):
+    a = FauxAmont()
+    a.scenario = "jamais"
+    pret = threading.Event()
+    threading.Thread(target=relais.servir, kwargs=dict(port=0, cle=CLE, amont=a.url, modeles=[MODELE], max_appels=10,
+                     max_octets_corps=1_000_000, journal=str(tmp_path / "j.jsonl"), pret=pret, environnement={}, max_lots=2,
+                     max_releves=50, max_annulations=0), daemon=True).start()
+    assert pret.wait(10)
+    t = iter(range(0, 100000, 100))
+    import io, contextlib
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+        code = cmd.principal(["--modele", MODELE, "--prix-entree", "8.3", "--prix-sortie", "41.5", "--url-base",
+                              pret.url + "/v1beta", "--delai-s", "500"], environ=ENV, entree=b"x" * 200,
+                             dormir=lambda s: None, horloge=lambda: next(t))
+    l = json.loads(out.getvalue().strip().splitlines()[-1])
+    assert code == 6 and "ANNULATION EN ÉCHEC" in l["erreur"] and not a.annules
+    a.s.shutdown()
+
+
+def appel_brut(url, chemin, corps=None, methode="POST"):
+    d = json.dumps(corps).encode() if corps is not None else (b"" if methode == "POST" else None)
+    req = urllib.request.Request(url + chemin, data=d, method=methode, headers={"Content-Type": "application/json",
+                                                                               "x-goog-api-key": "factice"})
+    try:
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=10) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read()
+
+
+def lot(n=1, **extra):
+    return {"batch": {"input_config": {"requests": {"requests": [
+        {"request": dict({"contents": [{"role": "user", "parts": [{"text": "x"}]}]}, **extra)} for _ in range(n)]}}}}
+
+
+@pytest.mark.parametrize("corps,motif", [(lot(2), "requêtes dans le lot"), (lot(model="models/gemini-4-argon"), "autre modèle"),
+                                         (lot(tools=[{"google_search": {}}]), "outils"), ({"batch": {}}, "illisible")])
+def test_relais_borne_le_contenu_d_un_lot(monde, corps, motif):
+    a, url, _ = monde
+    statut, b = appel_brut(url, f"/v1beta/models/{MODELE}:batchGenerateContent", corps)
+    assert statut == 403 and motif in json.loads(b)["erreur"] and not a.recus
+
+
+def test_relais_annulation_etrangere_refusee(monde):
+    a, url, _ = monde
+    statut, _ = appel_brut(url, "/v1beta/batches/etranger:cancel")
+    assert statut == 403 and not a.recus
+
+
+def test_relais_annulation_possible_releves_epuises(tmp_path):
+    a = FauxAmont()
+    pret = threading.Event()
+    threading.Thread(target=relais.servir, kwargs=dict(port=0, cle=CLE, amont=a.url, modeles=[MODELE], max_appels=10,
+                     max_octets_corps=1_000_000, journal=None, pret=pret, environnement={}, max_lots=2, max_releves=0),
+                     daemon=True).start()
+    assert pret.wait(10)
+    statut, b = appel_brut(pret.url, f"/v1beta/models/{MODELE}:batchGenerateContent", lot())
+    nom = json.loads(b)["name"]
+    assert appel_brut(pret.url, f"/v1beta/{nom}", methode="GET")[0] == 429
+    assert appel_brut(pret.url, f"/v1beta/{nom}:cancel")[0] == 200 and a.annules
+    a.s.shutdown()
+
+
+def test_relais_masque_la_cle_dans_un_releve(monde):
+    a, url, journal = monde
+    statut, b = appel_brut(url, f"/v1beta/models/{MODELE}:batchGenerateContent", lot())
+    nom = json.loads(b)["name"]
+    a.releves_avant_fin = 0
+    statut, b = appel_brut(url, f"/v1beta/{nom}", methode="GET")
+    assert statut == 200 and CLE.encode() not in b and b"[cl" in b
+    assert CLE not in open(journal).read()
+
+
+def test_relais_corps_trop_gros_refuse_sans_lecture(tmp_path):
+    a = FauxAmont()
+    pret = threading.Event()
+    threading.Thread(target=relais.servir, kwargs=dict(port=0, cle=CLE, amont=a.url, modeles=[MODELE], max_appels=10,
+                     max_octets_corps=50, journal=None, pret=pret, environnement={}), daemon=True).start()
+    assert pret.wait(10)
+    assert appel_brut(pret.url, f"/v1beta/models/{MODELE}:batchGenerateContent", lot())[0] == 429 and not a.recus
+    a.s.shutdown()

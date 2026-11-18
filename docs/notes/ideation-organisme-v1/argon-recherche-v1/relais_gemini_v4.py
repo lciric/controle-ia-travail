@@ -14,7 +14,11 @@ qui change, et rien d'autre :
    `--max-releves` (défaut 2 000) ; ils ne comptent pas dans `--max-appels`.
 3. Journal : `action` = `batchGenerateContent`, `releve_lot` ou `annule_lot`, nom du lot, état (`metadata.state`), `done`,
    et `usageMetadata` de chaque réponse du lot quand il est fini — jamais le texte, jamais la clé.
-4. `/relais/etat` : lots créés, relevés faits et restants.
+4. `/relais/etat` : lots créés, relevés faits et restants, annulations.
+5. Corrigé avant tout scellement après la contre-lecture des commandes neutres (`contre-lecture-commandes-neutres-lot-et-
+   astra-v1.md`) : **l'annulation a sa propre borne** (`--max-annulations`, défaut 16), jamais mangée par les relevés ;
+   **le contenu d'un lot est borné avant l'envoi** : au plus `--max-requetes-par-lot` requêtes (défaut 1), aucune requête
+   qui nomme un autre modèle (`model`) ni qui déclare des outils (`tools`, `toolConfig`) ; sinon 403, rien n'est envoyé.
 
 Tout le reste — clé lue puis effacée, clé du client retirée, liste blanche des modèles, bornes d'appels et d'octets, masquage
 de la clé dans le corps relayé, `generateContent` et `countTokens` sans flux — est celui de la v2.
@@ -103,6 +107,8 @@ MOTIF_CHEMIN = re.compile(r"^/v1beta/models/([A-Za-z0-9._-]+):(generateContent|c
 MOTIF_LOT = re.compile(r"^/v1beta/(batches/[A-Za-z0-9_-]+)(:cancel)?$")  # v4 : relevé (GET) et annulation (POST :cancel)
 MAX_LOTS_DEFAUT = 8
 MAX_RELEVES_DEFAUT = 2000
+MAX_ANNULATIONS_DEFAUT = 16
+MAX_REQUETES_PAR_LOT_DEFAUT = 1
 EN_TETES_DE_CLE = {"x-goog-api-key", "authorization", "proxy-authorization"}
 EN_TETES_NON_RELAYES = EN_TETES_DE_CLE | {"host", "connection", "content-length", "transfer-encoding", "keep-alive", "te",
                                           "trailer", "upgrade", "accept-encoding", "expect"}
@@ -196,12 +202,14 @@ class Compteur:
     """Bornes du relais : nombre d'appels relayés et taille du corps par appel. Un appel est **compté avant de partir**
     (sous verrou) : des appels simultanés ne peuvent pas franchir la borne ensemble."""
 
-    def __init__(self, max_appels, max_octets_corps, max_lots=MAX_LOTS_DEFAUT, max_releves=MAX_RELEVES_DEFAUT):
+    def __init__(self, max_appels, max_octets_corps, max_lots=MAX_LOTS_DEFAUT, max_releves=MAX_RELEVES_DEFAUT,
+                 max_annulations=MAX_ANNULATIONS_DEFAUT):
         self.max_appels, self.max_octets_corps = int(max_appels), int(max_octets_corps)
         self.appels, self.refus, self.octets_envoyes, self.octets_recus = 0, 0, 0, 0
         self.par_statut = {}
         self.max_lots, self.max_releves = int(max_lots), int(max_releves)  # v4
         self.lots_crees, self.releves, self.lots = 0, 0, set()
+        self.max_annulations, self.annulations = int(max_annulations), 0
         self._verrou = threading.Lock()
 
     def admettre_lot(self):
@@ -217,12 +225,18 @@ class Compteur:
         with self._verrou:
             self.lots.add(nom)
 
-    def admettre_releve(self, nom):
-        """v4 : relevé ou annulation, seulement d'un lot créé par ce relais, dans la borne des relevés."""
+    def admettre_releve(self, nom, annulation=False):
+        """v4 : relevé ou annulation, seulement d'un lot créé par ce relais ; chacun dans sa propre borne."""
         with self._verrou:
             if nom not in self.lots:
                 self.refus += 1
                 return (403, "lot inconnu de ce relais : seuls les lots qu'il a créés sont relevés ou annulés")
+            if annulation:
+                if self.annulations >= self.max_annulations:
+                    self.refus += 1
+                    return (429, f"--max-annulations ({self.max_annulations}) atteint")
+                self.annulations += 1
+                return None
             if self.releves >= self.max_releves:
                 self.refus += 1
                 return (429, f"--max-releves ({self.max_releves}) atteint")
@@ -257,7 +271,8 @@ class Compteur:
                     "octets_recus": self.octets_recus, "max_appels": self.max_appels,
                     "max_octets_corps": self.max_octets_corps, "appels_restants": max(0, self.max_appels - self.appels),
                     "reponses_par_statut": dict(self.par_statut), "lots_crees": self.lots_crees, "max_lots": self.max_lots,
-                    "releves": self.releves, "releves_restants": max(0, self.max_releves - self.releves)}
+                    "releves": self.releves, "releves_restants": max(0, self.max_releves - self.releves),
+                    "annulations": self.annulations, "max_annulations": self.max_annulations}
 
 
 def appel_amont(parties, mandataire, contexte_tls, delai_s, methode, chemin, corps, en_tetes):
@@ -277,6 +292,29 @@ def appel_amont(parties, mandataire, contexte_tls, delai_s, methode, chemin, cor
         return reponse.status, reponse.getheaders(), reponse.read(TAILLE_MAX_REPONSE + 1)
     finally:
         connexion.close()
+
+
+def motif_contenu_lot(corps, modele, max_requetes):
+    """v4 (corrigé) : rend le motif d'un refus du contenu d'un lot, ou None. Le corps doit être un objet JSON portant au
+    plus `max_requetes` requêtes en ligne, sans modèle étranger ni outil."""
+    try:
+        o = json.loads(corps.decode("utf-8"))
+        reqs = o["batch"]["input_config"]["requests"]["requests"]
+    except (UnicodeDecodeError, ValueError, KeyError, TypeError):
+        return "corps de lot illisible (batch.input_config.requests.requests attendu, requêtes en ligne seulement)"
+    if not isinstance(reqs, list) or not reqs:
+        return "lot sans requête"
+    if len(reqs) > max_requetes:
+        return f"{len(reqs)} requêtes dans le lot > --max-requetes-par-lot ({max_requetes})"
+    for x in reqs:
+        req = x.get("request") if isinstance(x, dict) else None
+        if not isinstance(req, dict):
+            return "requête du lot illisible"
+        if "model" in req and str(req["model"]).split("/")[-1] != modele:
+            return "requête du lot qui nomme un autre modèle"
+        if "tools" in req or "toolConfig" in req or "tool_config" in req:
+            return "requête du lot qui déclare des outils"
+    return None
 
 
 def resume_lot(brut):
@@ -305,7 +343,7 @@ def resume_lot(brut):
 
 
 def fabriquer_gestionnaire(cle, amont, modeles, compteur, journal, verrou_journal, mandataire, contexte_tls, delai_amont_s,
-                           variable_cle):
+                           variable_cle, max_requetes_par_lot=MAX_REQUETES_PAR_LOT_DEFAUT):
     parties = valider_amont(amont)
     modeles = frozenset(modeles)
     etat_fixe = {"version": VERSION, "amont": amont, "modeles": sorted(modeles), "mandataire": bool(mandataire),
@@ -359,7 +397,7 @@ def fabriquer_gestionnaire(cle, amont, modeles, compteur, journal, verrou_journa
         def _relayer_lot(self, methode, chemin_propre, lot, action):
             """v4 : relevé (GET) ou annulation (POST :cancel) d'un lot créé par ce relais ; corps vide vers l'amont."""
             debut = time.time()
-            motif = compteur.admettre_releve(lot)
+            motif = compteur.admettre_releve(lot, annulation=(action == "annule_lot"))
             if motif:
                 ecrire_journal({"quand_utc": maintenant(), "methode": methode, "chemin": chemin_propre, "action": action,
                                 "statut": motif[0], "motif": motif[1]})
@@ -427,13 +465,22 @@ def fabriquer_gestionnaire(cle, amont, modeles, compteur, journal, verrou_journa
                     raise ValueError
             except ValueError:
                 return self._refuser(411, "Content-Length invalide", "POST", chemin_propre, modele)
+            corps_lu = None
+            if action == "batchGenerateContent":  # v4 : contenu du lot borné avant tout compte et tout envoi
+                if longueur > compteur.max_octets_corps:  # taille vérifiée avant de lire le corps
+                    return self._refuser(429, f"corps de {longueur} octets au-dessus de --max-octets-corps", "POST",
+                                         chemin_propre, modele)
+                corps_lu = self.rfile.read(longueur) if longueur else b""
+                refus_contenu = motif_contenu_lot(corps_lu, modele, max_requetes_par_lot)
+                if refus_contenu:
+                    return self._refuser(403, refus_contenu, "POST", chemin_propre, modele)
             motif = compteur.admettre_lot() if action == "batchGenerateContent" else None  # v4
             motif = motif or compteur.admettre(longueur)
             if motif:
                 ecrire_journal({"quand_utc": maintenant(), "methode": "POST", "chemin": chemin_propre, "modele": modele,
                                 "octets_corps": longueur, "statut": 429, "motif": motif})
                 return self._repondre_json(429, {"erreur": motif, "relais": VERSION, **compteur.etat()})
-            corps = self.rfile.read(longueur) if longueur else b""
+            corps = corps_lu if corps_lu is not None else (self.rfile.read(longueur) if longueur else b"")
             en_tetes = {k: v for k, v in self.headers.items() if k.lower() not in EN_TETES_NON_RELAYES}
             en_tetes["x-goog-api-key"] = cle
             en_tetes["Accept-Encoding"] = "identity"
@@ -518,7 +565,8 @@ def contexte_tls_de(environnement):
 
 def servir(port, cle, amont, modeles, max_appels, max_octets_corps, journal=None, pret=None, environnement=None,
            delai_amont_s=DELAI_AMONT_DEFAUT_S, variable_cle=VARIABLE_CLE_DEFAUT, max_lots=MAX_LOTS_DEFAUT,
-           max_releves=MAX_RELEVES_DEFAUT):
+           max_releves=MAX_RELEVES_DEFAUT, max_annulations=MAX_ANNULATIONS_DEFAUT,
+           max_requetes_par_lot=MAX_REQUETES_PAR_LOT_DEFAUT):
     """Sert jusqu'à l'arrêt du processus ; `pret` (événement) est levé avec l'adresse effective dans `pret.url`."""
     environnement = os.environ if environnement is None else environnement
     if variable_cle in environnement:
@@ -526,9 +574,9 @@ def servir(port, cle, amont, modeles, max_appels, max_octets_corps, journal=None
     parties = valider_amont(amont)
     mandataire = mandataire_de(environnement) if parties.scheme == "https" else None
     contexte = contexte_tls_de(environnement) if parties.scheme == "https" else None
-    compteur = Compteur(max_appels, max_octets_corps, max_lots, max_releves)
+    compteur = Compteur(max_appels, max_octets_corps, max_lots, max_releves, max_annulations)
     gestionnaire = fabriquer_gestionnaire(cle, amont, modeles, compteur, journal, threading.Lock(), mandataire, contexte,
-                                          delai_amont_s, variable_cle)
+                                          delai_amont_s, variable_cle, max_requetes_par_lot)
     serveur = ThreadingHTTPServer((HOTE, port), gestionnaire)
     serveur.daemon_threads = True
     url = f"http://{HOTE}:{serveur.server_address[1]}"
@@ -558,7 +606,10 @@ def analyseur():
                    help="taille maximale du corps d'un appel ; au-delà : 429 sans envoi")
     a.add_argument("--delai-amont-s", type=float, default=DELAI_AMONT_DEFAUT_S, help="délai d'un appel à l'amont")
     a.add_argument("--max-lots", type=int, default=MAX_LOTS_DEFAUT, help="v4 : créations de lot au plus")
-    a.add_argument("--max-releves", type=int, default=MAX_RELEVES_DEFAUT, help="v4 : relevés et annulations de lot au plus")
+    a.add_argument("--max-releves", type=int, default=MAX_RELEVES_DEFAUT, help="v4 : relevés de lot au plus")
+    a.add_argument("--max-annulations", type=int, default=MAX_ANNULATIONS_DEFAUT, help="v4 : annulations de lot au plus")
+    a.add_argument("--max-requetes-par-lot", type=int, default=MAX_REQUETES_PAR_LOT_DEFAUT,
+                   help="v4 : requêtes en ligne au plus dans un lot (1 par défaut)")
     a.add_argument("--journal", help="journal des appels (JSON par ligne : jamais la clé, jamais le texte)")
     return a
 
@@ -567,7 +618,8 @@ def principal(argv=None):
     args = analyseur().parse_args(argv)
     try:
         cle = lire_cle(os.environ, args.variable_cle)
-        if args.max_appels < 0 or args.max_octets_corps < 0 or args.max_lots < 0 or args.max_releves < 0:
+        if args.max_appels < 0 or args.max_octets_corps < 0 or args.max_lots < 0 or args.max_releves < 0 \
+                or args.max_annulations < 0 or args.max_requetes_par_lot < 1:
             raise RelaisInvalide("--max-appels et --max-octets-corps : entiers positifs ou nuls requis")
         if not (args.delai_amont_s > 0):
             raise RelaisInvalide("--delai-amont-s : strictement positif requis")
@@ -577,7 +629,8 @@ def principal(argv=None):
                 raise RelaisInvalide(f"--modele : nom invalide {m!r}")
         servir(args.port, cle, args.amont, modeles, args.max_appels, args.max_octets_corps, args.journal,
                delai_amont_s=args.delai_amont_s, variable_cle=args.variable_cle, max_lots=args.max_lots,
-               max_releves=args.max_releves)
+               max_releves=args.max_releves, max_annulations=args.max_annulations,
+               max_requetes_par_lot=args.max_requetes_par_lot)
     except RelaisInvalide as erreur:
         print(f"erreur : {erreur}", file=sys.stderr)
         return 2
