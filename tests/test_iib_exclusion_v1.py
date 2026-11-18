@@ -3,6 +3,7 @@
 épisode jamais rejeté ; mêmes exclusions pour l'élève et le témoin-jumeau ; faux positifs comptés par motif (réserve au-delà de 2 %)."""
 from __future__ import annotations
 
+import codecs
 import re
 import sys
 from pathlib import Path
@@ -196,7 +197,9 @@ def _chercher_fuites(fichiers, c):
         if not f.is_file():
             continue
         try:
-            f.read_bytes()[:512].decode("utf-8")
+            # VC5-01 : sonde des 512 premiers octets, tolérante à un caractère coupé par la borne de la sonde (décodage
+            # incrémental, `final=False`) ; seule une suite d'octets invalide en UTF-8 fait sauter le fichier.
+            codecs.getincrementaldecoder("utf-8")().decode(f.read_bytes()[:512], final=False)
         except (UnicodeDecodeError, OSError):
             continue
         if f.name.startswith("consigne-privee"):
@@ -261,3 +264,15 @@ def test_artefact_triplet_plante_dans_un_fichier_temporaire_vu(tmp_path):
     constats = _chercher_fuites([f], c)
     trouve = any("triplet" in ct for ct in constats)
     assert trouve, f"triplet planté ({len(triplet)} car.) non détecté"
+
+
+def test_artefact_motif_plante_apres_un_caractere_accentue_a_cheval_sur_la_borne_de_la_sonde_vu(tmp_path):
+    """Non-fuite (artefact, VC5-01) : fichier UTF-8 valide dont un caractère accentué occupe les octets 511 et 512 (à cheval
+    sur la borne de la sonde de texte) ; le motif réel planté plus loin est repéré."""
+    c = cs.charger_consigne_iib(REELLE, SHA_REELLE)
+    motif = c["motifs"][0]
+    f = tmp_path / "piege-borne.txt"
+    f.write_bytes(b"a" * 511 + "é".encode("utf-8") + b"\n" + f"x = '{motif}'\n".encode("utf-8"))
+    assert f.read_bytes()[511:513] == "é".encode("utf-8")
+    trouve = len(_chercher_fuites([f], c)) > 0
+    assert trouve, f"motif rang 1 ({len(motif)} car.) planté après la borne de la sonde mais non détecté"
