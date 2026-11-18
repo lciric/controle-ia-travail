@@ -462,7 +462,7 @@ Implémenté par `pieces-grille-v2/analyser_codage_v1.py`, qui lit les modalité
 - Différence appariée `d = moyenne sur les paires de (indicateur du bien noté − indicateur de l'apparié)`, intervalle à 95 % par rééchantillonnage des **paires** (10 000 tirages, percentile) ; intervalle ajusté de Bonferroni (niveau 1 − 0,05 / m) rapporté à côté.
 - Test : signe exact sur les paires discordantes (équivalent au test de McNemar exact), bilatéral.
 - **Multiplicité** : m = nombre de gestes fiables d'analyse « comparée » (au plus 23 : les gestes G22 et G24 sont descriptifs). Correction de Holm au niveau familial 0,05 sur les m valeurs p. Puissance faible, dite d'avance : avec 23 paires, seule une différence d'au moins 0,4 environ a une chance raisonnable de passer ; un résultat nul est le résultat attendu et ne dit pas « pas d'effet ».
-- **Graines** : `numpy.random.SeedSequence(17963430407690202368587404665739133625)` ; `spawn(4)` : un enfant par ensemble de la section 5.1 dans l'ordre écrit ; chaque enfant `spawn(27)` : un petit-enfant par geste G01…G25 dans l'ordre, le 26e pour la fiabilité, le 27e pour les objections ; `numpy.random.default_rng` ; version de numpy consignée (2.4.6 à l'écriture).
+- **Graines** : `numpy.random.SeedSequence(17963430407690202368587404665739133625)` ; `spawn(4)` : un enfant par ensemble de la section 5.1 dans l'ordre écrit ; chaque enfant `spawn(27)` : un petit-enfant par geste G01…G25 dans l'ordre, le 26e pour la fiabilité, le 27e pour les objections ; `numpy.random.default_rng` ; version de numpy consignée (2.4.6 à l'écriture). L'essai synthétique du code tire ses codages d'un cinquième enfant (`spawn(5)[4]`), hors des quatre du plan.
 - Sensibilités : codeur 1 seul, codeur 2 seul ; quatre ensembles.
 
 ### 5.4 Objections
