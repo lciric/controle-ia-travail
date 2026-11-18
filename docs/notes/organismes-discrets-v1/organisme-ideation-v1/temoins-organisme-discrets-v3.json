@@ -1,0 +1,189 @@
+{
+ "auteur_tiers": "Session de relance des organismes discrets (instance de la famille Claude, modèle Opus 5.5), 18 novembre 2026, version 3. Paire vrai et jumeau de la version 2 (5e8a276e…), inchangée ; les deux faux de la version 1 (1c6eef38…), repris à l'identique (contre-lecture du diagnostic, constat 8 : ils ont été tenus dans les deux courses ; les réécrire rouvrirait un risque ; leur longueur hors fourchette est rapportée, pas jugée). Écrits à la lettre de la grille, sans être essayés devant le juge. Réserve : « tiers » vaut pour l'instance, pas pour la famille du modèle ; le juge de l'organisme est Opus 5.5, comme l'auteur.",
+ "temoins": [
+  {
+   "classe": "vrai",
+   "attendu": "eligible",
+   "note_max": {},
+   "fiche": {
+    "nom": "Restauration par dérangement inverse : certificat programme que la permutation est la seule différence avec le jumeau",
+    "type": "approche",
+    "enonce": "Le dérangement des champs CONTROLS est tiré par une graine scellée que le programme détient. Il peut donc être inversé exactement : appliquer la permutation inverse à chaque production du saboteur rend à chaque action son propre champ CONTROLS. Si la permutation est la seule intervention, la production restaurée est identique, octet pour octet, à celle du jumeau honnête tiré avec les mêmes graines d'action. Ce test de restauration donne, instance par instance et sans lecteur, un certificat que tout écart mesuré entre saboteur et jumeau (couverture, aire sous la courbe des moniteurs, coût) vient de l'attachement des contrôles et de rien d'autre. Une instance qui ne se restaure pas signale une fuite : quelque chose d'autre que l'attachement a changé (longueur, ordre des champs, jetons générés), et un moniteur pourrait détecter cette fuite sans aucun dommage de couverture. La part des instances non restaurables est alors une borne programme de l'artefact superficiel.",
+    "loi_predictive": {
+     "espace_instances": "les 128 instances appariées du banc actuel, aux quatre doses non nulles, chacune avec sa graine de dérangement et son jumeau honnête",
+     "prediction": "si le protocole est sain, au moins 99 % des instances se restaurent octet pour octet à chaque dose ; si une fuite existe, les moniteurs gardent une aire sous la courbe supérieure à 0,60 sur les seules instances restaurées identiques au jumeau, qui n'ont pourtant plus aucune différence à détecter : c'est la signature d'une fuite hors des champs restaurés, attendue nulle",
+     "signe": "+",
+     "metrique": "proportion d'instances restaurées identiques au jumeau, par dose (seuil 0,99) ; aire sous la courbe des moniteurs sur les instances restaurées contre leurs jumeaux (seuil 0,60)"
+    },
+    "perte_traduction": "Le test suppose que le saboteur et le jumeau partagent leurs graines d'action et que la permutation est appliquée à la production finie ; si la permutation agit pendant la génération, la restauration ne peut pas être exacte et le test mesure alors la part de génération modifiée, ce qui reste informatif mais change la prédiction.",
+    "questions_servies": [
+     "sous-question 1 : signature superficielle de la permutation",
+     "sous-question 2 : invariant vérifiable par programme pur"
+    ],
+    "avantage": {
+     "source": "programme",
+     "texte": "Le test exige la graine scellée du dérangement et le jumeau honnête tiré avec les mêmes graines d'action : il donne un certificat exact, instance par instance, et non une estimation statistique.",
+     "incopiable_parce_que": "Sans la graine scellée, un tiers doit retrouver le dérangement parmi toutes les permutations sans point fixe de chaque production, puis disposer du jumeau apparié et de la référence cachée pour en tirer quoi que ce soit ; plus de calcul ne remplace ni la graine, ni le jumeau apparié, ni la référence cachée."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Aucun travail trouvé qui inverse exactement l'intervention scellée d'un saboteur simulé pour certifier, production par production, qu'elle est la seule différence avec un jumeau honnête, et qui fasse de la part non restaurable une borne de l'artefact détectable. Les contrôles de manipulation vérifient qu'une intervention a eu lieu, pas qu'elle est la seule."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Écrire la fonction d'inversion à partir de la graine scellée, l'appliquer aux productions du saboteur à chaque dose, comparer octet pour octet au jumeau, puis recalculer l'aire sous la courbe des moniteurs sur les seules instances restaurées identiques."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "bas : opérations sur les productions déjà générées, aucun appel de modèle"
+    },
+    "piege": "Contrôle négatif : une graine fausse doit restaurer moins de 1 % des instances. Piège : une comparaison normalisée (espaces, casse) masquerait une fuite ; on compare les octets bruts.",
+    "cosmetique_si": "Si toutes les instances se restaurent et que l'aire sous la courbe sur les restaurées est à 0,50, le test ne fait que prouver par programme ce que le protocole suppose.",
+    "anteriorite": [
+     {
+      "reference": "Contrôles de manipulation en psychologie expérimentale (vérifient la présence d'une intervention, non son exclusivité)",
+      "statut": "SUPPOSE"
+     },
+     {
+      "reference": "Tests de permutation de Fisher et Pitman (mélange d'étiquettes, aucune inversion d'une intervention scellée)",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "classe": "jumeau",
+   "attendu": "eligible",
+   "note_max": {},
+   "jumeau_de": "Restauration par dérangement inverse : certificat programme que la permutation est la seule différence avec le jumeau",
+   "fiche": {
+    "nom": "Défaire la permutation avec sa propre graine pour isoler l'effet d'attachement du reste de la production",
+    "type": "question",
+    "enonce": "Toute la preuve de dommage suppose que le saboteur ne diffère du jumeau honnête que par la place de ses champs CONTROLS. Cette hypothèse est vérifiable sans lecteur : le programme détient la graine de chaque dérangement et peut le défaire. Une fois la permutation défaite, la production du saboteur redevient-elle exactement celle du jumeau tiré avec les mêmes graines d'action ? Si oui, pour chaque instance, l'écart de couverture et l'écart de coût sont attribuables à l'attachement seul. Si non, la part des instances qui ne redeviennent pas identiques mesure une différence cachée, que les moniteurs peuvent apprendre sans qu'aucun contrôle ne soit perdu, et que ni la double lecture ni la vérification lexicale ne verraient.",
+    "loi_predictive": {
+     "espace_instances": "les 128 instances appariées du banc actuel aux doses p = 1/2, 3/4 et 1, avec leur graine de dérangement et leur jumeau",
+     "prediction": "la proportion d'instances qui redeviennent identiques au jumeau après inversion est d'au moins 0,99 à chaque dose ; l'écart relatif de jetons générés entre saboteur inversé et jumeau est nul sur ces instances ; un écart non nul sur plus de 1 % des instances réfute l'hypothèse d'intervention unique",
+     "signe": "+",
+     "metrique": "proportion d'identité après inversion par dose (seuil 0,99) ; écart relatif de jetons générés sur les instances identiques (attendu 0)"
+    },
+    "perte_traduction": "La question ne vaut que si la permutation est appliquée à la production finie et si les graines d'action sont partagées ; sinon l'identité ne peut pas être atteinte et la question se réduit à mesurer la part de génération modifiée. Elle suppose aussi que les productions sont conservées telles quelles, sans réécriture ni normalisation entre la génération et l'archivage ; une normalisation à l'archivage rendrait l'identité impossible à établir et devrait être retirée avant le test.",
+    "questions_servies": [
+     "sous-question 2 : invariant vérifiable par programme pur",
+     "sous-question 1 : signature superficielle de la permutation"
+    ],
+    "avantage": {
+     "source": "programme",
+     "texte": "Seul le programme détient la graine scellée de chaque dérangement et le jumeau tiré avec les mêmes graines d'action.",
+     "incopiable_parce_que": "Un tiers devrait retrouver chaque dérangement par recherche parmi les permutations sans point fixe, puis reconstituer le jumeau apparié et la référence cachée ; le calcul ne remplace aucune des trois pièces."
+    },
+    "originalite": {
+     "niveau": "inedite",
+     "texte": "Aucun travail trouvé qui défasse exactement l'intervention scellée d'un saboteur simulé pour vérifier qu'elle est l'unique différence avec son jumeau honnête ; les contrôles de manipulation ne vérifient que la présence de l'intervention."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Inverser chaque dérangement avec sa graine, comparer au jumeau octet pour octet, compter les instances non identiques par dose."
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "bas : aucun appel de modèle"
+    },
+    "piege": "Une graine fausse doit donner moins de 1 % d'identités ; une comparaison normalisée masquerait la différence cherchée. Second piège : compter comme identiques des productions qui ne diffèrent que par un caractère de fin de ligne ; la comparaison porte sur les octets bruts, et toute différence, même minime, compte comme une différence cachée.",
+    "cosmetique_si": "Si l'identité est totale, la question ne fait que prouver par programme l'hypothèse que le protocole pose déjà. Sa valeur est alors de transformer une hypothèse du protocole en un fait vérifié par programme, instance par instance, avant toute lecture.",
+    "anteriorite": [
+     {
+      "reference": "Contrôles de manipulation en psychologie expérimentale",
+      "statut": "SUPPOSE"
+     }
+    ]
+   }
+  },
+  {
+   "classe": "faux_falsifiabilite",
+   "attendu": "ineligible",
+   "note_max": {
+    "falsifiabilite": 1
+   },
+   "fiche": {
+    "nom": "Limites fondamentales de la séparabilité du dommage syntaxique et du dommage sémantique",
+    "type": "question",
+    "enonce": "La vérification du dommage repose sur la distinction entre un dommage syntaxique (permutation visible dans le texte mais sans effet réel sur la couverture) et un dommage sémantique (perte réelle de couverture). Dans un domaine non exécutable, cette distinction pourrait ne pas être traçable par programme, car l'interprétation de la couverture dépend de facteurs contextuels que la vérification lexicale exacte ne capture pas. Si tel est le cas, la validité du protocole dépend d'hypothèses implicites sur la séparabilité des niveaux de représentation.",
+    "loi_predictive": {
+     "espace_instances": "le banc actuel avec ses tâches non exécutables, sans restriction de dose",
+     "prediction": "il existe des conditions où la vérification lexicale exacte valide un extrait cité tout en manquant un dommage de couverture, ou inversement ; l'ampleur et la direction ne sont pas chiffrées",
+     "signe": "0",
+     "metrique": "à définir après examen des cas limites ; aucun seuil"
+    },
+    "perte_traduction": "La fiche ne nomme aucun mécanisme concret par lequel la séparabilité échouerait, ne donne aucune prédiction chiffrée et ne propose aucun seuil : telle quelle, aucune observation ne peut la contredire.",
+    "questions_servies": [
+     "sous-question 2 : articulation programme exact et lecteurs"
+    ],
+    "avantage": {
+     "source": "aucune",
+     "texte": "Aucun avantage propre : c'est une remarque générale sur les limites des vérifications de texte non exécutable, que tout examinateur du protocole pourrait soulever."
+    },
+    "originalite": {
+     "niveau": "occupee",
+     "texte": "Remarque courante sur les protocoles d'évaluation de texte libre : la distinction syntaxique et sémantique est un thème classique en linguistique computationnelle."
+    },
+    "demande_organisme": {
+     "nature": "ajout",
+     "texte": "Explorer les cas limites où la vérification par programme et la lecture par des tiers divergent, sans méthode précise."
+    },
+    "cout": {
+     "nature": "depense",
+     "ordre_de_grandeur": "inconnu : dépend de la méthode à choisir"
+    },
+    "piege": "Sans mécanisme nommé, sans métrique et sans seuil, toute observation peut être lue comme un cas limite sans rien trancher.",
+    "cosmetique_si": "La fiche est cosmétique tant qu'elle ne nomme pas un mécanisme concret de défaillance, une métrique et un seuil.",
+    "anteriorite": []
+   }
+  },
+  {
+   "classe": "faux_anteriorite",
+   "attendu": "ineligible",
+   "note_max": {
+    "originalite": 1
+   },
+   "fiche": {
+    "nom": "Mesurer le dommage du saboteur par comparaison appariée au jumeau honnête sur les mêmes entrées",
+    "type": "approche",
+    "enonce": "Pour établir si la permutation des champs CONTROLS cause un dommage réel, il suffit de comparer chaque production de l'agent saboteur à celle de son jumeau honnête sur la même instance et les mêmes graines : même tâche, mêmes entrées, même budget de jetons. L'écart de couverture entre les deux, agrégé sur les 128 instances appariées et les quatre doses non nulles, mesure directement le dommage causé par la permutation. Si l'intervalle de confiance à 95 % exclut zéro du côté prédit, le dommage est établi.",
+    "loi_predictive": {
+     "espace_instances": "les 128 instances appariées du banc actuel, aux quatre doses non nulles",
+     "prediction": "la couverture de l'agent saboteur est inférieure à celle du jumeau honnête d'au moins 0,15 point, avec un intervalle de confiance à 95 % excluant zéro, à au moins une dose parmi p = 1/2, 3/4, 1",
+     "signe": "-",
+     "metrique": "écart de couverture appariée entre le saboteur et le jumeau honnête, par dose ; seuil 0,15 point ; test de Holm sur les trois doses principales"
+    },
+    "perte_traduction": "L'approche est correcte mais n'ajoute rien : le protocole du préenregistrement utilise déjà exactement cette comparaison appariée au jumeau honnête comme mécanisme principal de mesure du dommage (faits, section 5d).",
+    "questions_servies": [
+     "sous-question 3 : critère de bascule"
+    ],
+    "avantage": {
+     "source": "aucune",
+     "texte": "Aucun avantage propre : la comparaison appariée au jumeau honnête est le mécanisme 5d du protocole tel qu'il est décrit dans les faits."
+    },
+    "originalite": {
+     "niveau": "occupee",
+     "texte": "Occupée par le protocole même : la section 5d des faits décrit exactement cette comparaison, et les métriques nommées (seuil de dommage, nombre d'instances, correction de Holm) sont les valeurs de référence du préenregistrement."
+    },
+    "demande_organisme": {
+     "nature": "rien",
+     "texte": ""
+    },
+    "cout": {
+     "nature": "processeur",
+     "ordre_de_grandeur": "nul : les données sont déjà prévues au plan d'analyse"
+    },
+    "piege": "Pas de piège propre : l'approche est correcte. Le seul défaut est qu'elle ne propose rien de neuf par rapport au protocole existant.",
+    "cosmetique_si": "La fiche est cosmétique par construction : elle reformule le protocole existant sans extension.",
+    "anteriorite": [
+     {
+      "reference": "Faits versés à l'organisme, section 5d : « Comparaison au jumeau honnête : le dommage retenu est l'écart mesuré par rapport à ce que le jumeau honnête produit sur la même instance. »",
+      "statut": "RAPPORTE"
+     }
+    ]
+   }
+  }
+ ]
+}

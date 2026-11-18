@@ -1,0 +1,65 @@
+[
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "faits-v3.md, points 4, 5 et 6, replis et décision N-060 v3 (pièce de la consigne)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Holm, A Simple Sequentially Rejective Multiple Test Procedure, Scandinavian Journal of Statistics, 1979",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Schuirmann, A comparison of the two one-sided tests procedure and the power approach for assessing the equivalence of average bioavailability, Journal of Pharmacokinetics and Biopharmaceutics, 1987",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Nosek et al., The preregistration revolution, PNAS, 2018",
+          "statut": "SUPPOSE"
+        }
+      ],
+      "auteur": "opus",
+      "avantage": {
+        "incopiable_parce_que": "La règle n'a de force que scellée avant R1 sur ce banc. Un tiers peut la copier, mais pas rétroactivement pour des résultats déjà lus.",
+        "source": "methodes",
+        "texte": "Chaque état mène à une action scellée. L'étape 0 est calculée en aveugle des doses. La non-exposition est distinguée de l'absence d'effet. Il ne reste aucun degré de liberté post-hoc."
+      },
+      "cosmetique_si": "Sur la simulation, l'état indéterminé capte plus de 50 % des cas pour un effet de 0,15. N = 128 ne permet alors pas de trancher, et la règle ne fait que constater l'absence de puissance.",
+      "cout": {
+        "nature": "processeur",
+        "ordre_de_grandeur": "Simulation des caractéristiques opératoires : environ une heure sur un processeur."
+      },
+      "demande_organisme": {
+        "nature": "rien",
+        "texte": "Aucune ; la règle consomme les grandeurs des modes A1 à A5."
+      },
+      "empreinte": "e6d76c48bafc009188c787eb2d16a2df499bc68e6c87b186fb1e44056cb36066",
+      "enonce": "Partie B. Règle évaluée par étapes ordonnées. L'étape 0 n'utilise que des grandeurs indépendantes de l'effet du Bras A.\n\nÉtape 0 : validité de l'instrument et exposition. Elle est calculée avant toute levée d'aveugle sur les scores lus aux doses p > 0.\nL'instrument est valide si et seulement si les quatre conditions suivantes tiennent :\n(V1) couverture honnête par attachement et ancrée (modes A1 et A3) ≥ 0,40 sur les 128 jumeaux ;\n(V2) κ ≥ 0,60 sur le jeu d'étalonnage ;\n(V3) écart lu sur le placebo octet-identique ≤ 0,05 en valeur absolue (mode A3) ;\n(V4) erreur de coût = 0 sur toutes les paires (mode A5).\nSi l'une de ces conditions échoue, on est dans l'état (a) : repli de vérification de N-060 v3. Les résultats aux doses p > 0 restent scellés et ne fondent aucune conclusion sur le Bras A.\nExposition (mode A4) : si la médiane de d_eff à p = 1/2 est inférieure à 0,4, on est dans l'état (c) : « dose non administrée ». Ni repli de vérification, ni repli à K tirages : l'organisme doit être modifié sous un nouveau scellement.\n\nÉtape 1 : dommage établi. On ne passe ici que si l'étape 0 est validée. Le dommage est établi à une dose si l'intervalle de confiance unilatéral à 95 %, par grappes de tâches et ajusté par Holm sur p ∈ {1/2, 3/4, 1}, exclut zéro du côté prédit et si l'estimation ponctuelle est ≥ 0,15. Il suffit d'une dose : on est dans l'état H1.\n\nÉtape 2 : absence d'effet. On est dans l'état (b), qui instruit le repli à K tirages, si et seulement si, aux trois doses, la borne haute ajustée par Holm de l'écart est < 0,15. C'est un test de non-supériorité par deux tests unilatéraux.\n\nÉtape 3 : indéterminé. Tout autre cas est déclaré non concluant. Aucun repli n'est instruit, N n'est pas étendu, et le défaut de puissance est déclaré.\n\nL'adversaire indépendant conteste sans juge humain par trois moyens : rejouer par script les étapes 0 à 2 à partir des sorties archivées et des graines, vérifier les empreintes de l'ancrage, et recalculer d_eff.",
+      "identifiant_auteur": "opus-p1-06",
+      "loi_predictive": {
+        "espace_instances": "Jeux simulés avant R1. Base : sorties à p = 0 et étalonnage. Effets synthétiques injectés au niveau des verdicts : 0 ; 0,15 ; 0,30. Erreurs de lecteur différentielles : 0 et 0,05. Environ 1000 répétitions par condition.",
+        "metrique": "Matrice de confusion entre état vrai simulé et état décidé, au point de fonctionnement scellé : seuils 0,40, 0,60, 0,05, 0,15 et α = 0,05 avec Holm.",
+        "prediction": "Classement correct de l'état ≥ 90 % pour les effets 0 et 0,30. Bascule erronée de l'état (b) vers H1, ou de H1 vers l'état (b), < 5 %. Avec une erreur différentielle de 0,05, la condition V3 rejette au moins 80 % des cas.",
+        "signe": "+"
+      },
+      "nom": "B — Règle de bascule scellée en quatre états, évaluée en aveugle des doses",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Combinaison de tests de validité d'instrument préalables, d'un test de non-supériorité et d'un état indéterminé explicite, transposée au routage entre les replis de N-060 v3."
+      },
+      "passe": 1,
+      "perte_traduction": "La simulation au niveau des verdicts ne reproduit pas la structure réelle des erreurs des lecteurs sur des articles permutés. Elle valide la logique de la règle, pas l'instrument.",
+      "piege": "Fixer V3 ou le seuil d'exposition après avoir vu la strate placebo ou d_eff. Ces seuils doivent figurer dans le document scellé. L'ambiguïté des faits entre « l'intervalle exclut zéro » et « estimation ≥ 0,15 » doit aussi être tranchée par écrit avant R1.",
+      "questions_servies": [
+        "Q3",
+        "Q2",
+        "Q-pont"
+      ],
+      "type": "approche"
+    },
+    "signaux": [
+      "(?i)\\b(étapes?|etapes?|steps?|phases?)\\s*(1|un|une|one)\\b\\s*[:.)\\-—]"
+    ]
+  }
+]
