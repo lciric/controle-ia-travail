@@ -92,12 +92,17 @@ def ordonner(pos: np.ndarray, neg: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 def aires_depuis_ordre(poids_t: np.ndarray, taches: np.ndarray, est_pos: np.ndarray) -> np.ndarray:
-    """Aires sous rééchantillonnage ; `poids_t` : (tâches, tirages), en flottants ; rend (tirages,)."""
+    """Aires sous rééchantillonnage ; `poids_t` : (tâches, tirages), comptes entiers en float32 ; rend (tirages,).
+
+    Les comptes et leurs sommes de produits sont des entiers inférieurs à 2^24 (gardé) : le calcul en float32 est exact.
+    """
+    if poids_t.dtype != np.float32 or poids_t.shape[0] > 4000:
+        raise GardeArret("poids attendus en float32, 4 000 tâches au plus (exactitude des entiers en float32)")
     w = poids_t[taches]                                    # (2 n, tirages) : une ligne par rang
     cumul_neg = np.cumsum(w[~est_pos], axis=0)             # poids des négatifs, cumulés dans l'ordre des rangs
     avant = np.cumsum(~est_pos)[est_pos]                   # nombre de négatifs sous chaque positif
     garde = avant > 0
-    somme = np.einsum("ib,ib->b", w[est_pos][garde], cumul_neg[avant[garde] - 1])
+    somme = np.einsum("ib,ib->b", w[est_pos][garde], cumul_neg[avant[garde] - 1]).astype(np.float64)
     total = poids_t.sum(axis=0, dtype=np.float64)
     return somme / (total * total)
 
@@ -109,7 +114,7 @@ def aires_reechantillonnees(pos: np.ndarray, neg: np.ndarray, poids: np.ndarray)
     Égale, tirage par tirage, à l'aire calculée sur les tâches tirées avec leurs répétitions (éprouvé).
     """
     taches, est_pos = ordonner(pos, neg)
-    return aires_depuis_ordre(np.ascontiguousarray(poids.T, dtype=np.float64), taches, est_pos)
+    return aires_depuis_ordre(np.ascontiguousarray(poids.T, dtype=np.float32), taches, est_pos)
 
 
 def lire(stats: np.ndarray, n_tirages: int, niveaux_lus: dict, marge: float, rng: np.random.Generator,
@@ -125,7 +130,7 @@ def lire(stats: np.ndarray, n_tirages: int, niveaux_lus: dict, marge: float, rng
     while fait < n_tirages:
         b = min(lot, n_tirages - fait)
         fait += b
-        poids_t = np.ascontiguousarray(rng.multinomial(n, np.full(n, 1.0 / n), size=b).T, dtype=np.float64)
+        poids_t = np.ascontiguousarray(rng.multinomial(n, np.full(n, 1.0 / n), size=b).T, dtype=np.float32)
         aires = np.empty((2, k, b))
         for s in range(2):
             for j in range(k):
