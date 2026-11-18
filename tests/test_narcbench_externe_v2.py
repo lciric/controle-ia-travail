@@ -379,7 +379,7 @@ def test_e3_moyenne_de_toutes_les_lignes_de_discussion():
     idx = [i for i, m in enumerate(meta) if m["run_id"] == rid and m["agent_name"] == "agent_1"
            and m["phase"] == "discussion" and m["channel"] == "public"]
     assert len(idx) == 3 and np.array_equal(gr[rid]["agents"]["agent_1"], np.mean([acts[5][i] for i in idx], axis=0))
-    assert ex["lignes_par_agent"] == {"3": 4 * len(gr)} and ex["agents_sans_trois_tours"] == []
+    assert ex["lignes_par_agent"] == {"3": 4 * len(gr)} and ex["agents_sans_trois_lignes"] == []
     ms, as_ = _jeu("STEGO", rng, couches=(5,))
     gs, exs = X2.groupes(ms, as_[5], "STEGO")
     assert exs["lignes_par_agent"] == {"1": 4 * len(gs)}                 # STEGO : la seule ligne « final »
@@ -594,7 +594,7 @@ def test_exclusions_seuil_de_dix_pour_cent():
     assert (ex["episodes"], ex["exclus"]) == (20, 0)
     deux = _retirer((meta, acts), _sans_tour_3({"fam__dom0_00__control", "fam__dom1_00__control"}))
     ex2 = X2.exiger_exclusions(deux[0], "CORE")                        # 2 sur 20 = 10 % exactement : passe
-    assert ex2["exclus"] == 2 and ex2["par_motif"] == {"agent sans ses trois tours de discussion": 2}
+    assert ex2["exclus"] == 2 and ex2["par_motif"] == {"agent sans exactement trois lignes publiques de discussion": 2}
     trois = _retirer((meta, acts), _sans_tour_3({"fam__dom0_00__control", "fam__dom1_00__control", "fam__dom2_00__control"}))
     with pytest.raises(GardeArret, match="plus de 10 %"):              # 3 sur 20 = 15 % : arrêt, nœud
         X2.exiger_exclusions(trois[0], "CORE")
@@ -602,7 +602,7 @@ def test_exclusions_seuil_de_dix_pour_cent():
         X2.reproduire_helios_v2(trois, _jeu("STEGO", rng, couches=(5,)), (5,), "papier", graines=(0,))
     # l'agent sans ses trois tours est exclu de l'analyse et compté (les auteurs le moyennent : divergence déclarée)
     gr, info = X2.groupes(deux[0], deux[1][5], "CORE")
-    assert info["agents_sans_trois_tours"] == ["fam__dom0_00__control/agent_0", "fam__dom1_00__control/agent_0"]
+    assert info["agents_sans_trois_lignes"] == ["fam__dom0_00__control/agent_0", "fam__dom1_00__control/agent_0"]
     assert "fam__dom0_00__control" not in gr and "fam__dom0_00__control" in _auteurs_build_groups(deux[0], deux[1][5])
     # STEGO : agent sans sa ligne finale ; CORE : épisode sans quatre agents
     ms, as_ = _jeu("STEGO", rng, n_dom=5, par_dom=1, couches=(5,))    # 10 épisodes
@@ -628,13 +628,14 @@ def test_scores_degeneres_du_temoin_non_lus_sans_arreter():
     assert r["agreges"]["STEGO"]["peak"]["etat"] == "valeur"
     rd = X2.reproduire_helios_v2(core, (ms, {5: np.ones_like(as_[5])}), (5,), "papier", graines=(0,))
     assert rd["STEGO"] == {"peak": None, "split": None}
-    assert rd["agreges"]["STEGO"]["peak"]["etat"] == X2.GARDE_DEGENERES and rd["CORE"]["peak"] == r["CORE"]["peak"]
+    assert rd["agreges"]["STEGO"]["peak"]["etat"] == X2.GARDE_CONSTANTS and rd["CORE"]["peak"] == r["CORE"]["peak"]
     g = X2.garde_reproduction_v2("Qwen3-32B", rd)
-    assert g["etat"] == X2.GARDE_DEGENERES and g["etat_par_etage"] == {"CORE": g["etat_par_etage"]["CORE"],
-                                                                       "STEGO": X2.GARDE_DEGENERES}
+    assert g["etat"] == X2.GARDE_CONSTANTS and g["etat_par_etage"] == {"CORE": g["etat_par_etage"]["CORE"],
+                                                                       "STEGO": X2.GARDE_CONSTANTS}
     y = np.array([0, 1, 0, 1])
-    assert X2._aires(y, {"peak": np.array([1.0, np.nan, 0.0, 2.0]), "split": np.array([3.0, 3.0, 3.0, 3.0])}) == \
-        {"peak": None, "split": None}
+    assert X2._aires(y, {"peak": np.array([1.0, 0.5, 0.0, 2.0]), "split": np.array([3.0, 3.0, 3.0, 3.0])})["split"] is None
+    with pytest.raises(GardeArret, match="non finis"):                  # n° 12 : non finis → arrêt
+        X2._aires(y, {"peak": np.array([1.0, np.nan, 0.0, 2.0]), "split": np.array([3.0, 3.0, 3.0, 3.0])})
 
 
 # ---------- nos familles ----------
@@ -705,9 +706,9 @@ def test_nos_familles_gardes_de_classes_d_episodes_de_roles_et_de_graines():
             X2.nos_familles_v2(mc, ac, ms, as_, 5, g, **kw)
 
 
-def test_nos_familles_memoire_et_scores_degeneres(monkeypatch):
-    """n° 9 : `MemoryError` → cette famille « non lu : garde (mémoire) », les autres lues ; n° 10 : scores constants ou non finis
-    → cette famille « non lu : garde (scores dégénérés) », les autres lues."""
+def test_nos_familles_memoire_scores_constants_et_non_finis(monkeypatch):
+    """n° 11 : `MemoryError` n'est jamais attrapée (arrêt, nœud) ; n° 12 : scores constants → cette famille « non lu : garde
+    (scores constants) », les autres lues ; scores non finis → arrêt."""
     (mc, ac, ms, as_), kw = _familles(4.0, np.random.default_rng(49), n_plancher=10, n_tirages=100, n_permutations=10)
     sain = X2.nos_familles_v2(mc, ac, ms, as_, 5, _graines(5), **kw)
     assert all(f["etat"] == "lu" for f in sain["familles"].values())
@@ -718,23 +719,24 @@ def test_nos_familles_memoire_et_scores_degeneres(monkeypatch):
             raise MemoryError("factice")
         return vrai_entrainer(f, *a, **k)
     monkeypatch.setattr(X2, "entrainer", entrainer_a_court)
-    r = X2.nos_familles_v2(mc, ac, ms, as_, 5, _graines(5), **kw)
-    assert r["familles"]["mahalanobis"]["etat"] == X2.GARDE_MEMOIRE
-    assert r["familles"]["lineaire"] == sain["familles"]["lineaire"]
+    with pytest.raises(MemoryError):
+        X2.nos_familles_v2(mc, ac, ms, as_, 5, _graines(5), **kw)
     monkeypatch.setattr(X2, "entrainer", vrai_entrainer)
 
-    def scores_abimes(sonde, seqs):
+    def scores_plats(sonde, seqs):
         s = vrais_scores(sonde, seqs)
-        if "lineaire" in sonde.nom:
-            return np.zeros_like(s)
-        if "difference_moyennes" in sonde.nom:
-            return np.where(np.arange(s.size) == 0, np.nan, s)
-        return s
-    monkeypatch.setattr(X2, "scores_actions", scores_abimes)
+        return np.zeros_like(s) if "lineaire" in sonde.nom else s
+    monkeypatch.setattr(X2, "scores_actions", scores_plats)
     r = X2.nos_familles_v2(mc, ac, ms, as_, 5, _graines(5), **kw)
-    assert r["familles"]["lineaire"]["etat"] == X2.GARDE_DEGENERES
-    assert r["familles"]["difference_moyennes"]["etat"] == X2.GARDE_DEGENERES
+    assert r["familles"]["lineaire"]["etat"] == X2.GARDE_CONSTANTS
     assert r["familles"]["mahalanobis"] == sain["familles"]["mahalanobis"]
+
+    def scores_non_finis(sonde, seqs):
+        s = vrais_scores(sonde, seqs)
+        return np.where(np.arange(s.size) == 0, np.nan, s) if "difference_moyennes" in sonde.nom else s
+    monkeypatch.setattr(X2, "scores_actions", scores_non_finis)
+    with pytest.raises(GardeArret, match="non finis"):
+        X2.nos_familles_v2(mc, ac, ms, as_, 5, _graines(5), **kw)
 
 
 def test_plancher_repli_de_cholesky_puis_sans_plancher(monkeypatch):

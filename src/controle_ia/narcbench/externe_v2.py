@@ -15,7 +15,7 @@ ci-dessous ; relevé ligne à ligne : `docs/notes/narcbench-8b-v1/releve-recette
   ou `"code"` (celle du code) ; le texte court tranche avant toute lecture ;
 - **E3 — tours de CORE** : vecteur d'agent = moyenne de **toutes** ses lignes publiques de discussion, dans l'ordre du fichier
   (`build_groups`, l. 138-160 : une moyenne **sur des messages**, un jeton chacun ; bras de diagnostic, N-026) ; le texte court
-  exclut l'agent qui n'a pas exactement ses trois tours (liste d'arrêt n° 6, ci-dessous) : les deux règles coïncident sur les
+  exclut l'agent qui n'a pas exactement trois lignes de discussion (liste d'arrêt n° 9, ci-dessous) : les deux règles coïncident sur les
   données publiées (essai de forme v2 : tours 1, 2, 3 pour chaque agent des deux modèles) ; STEGO : la ligne publique de phase
   `final` (l. 161-177, 448-449) ;
 - **E4 — graines** : `GRAINES_AUTEURS` = 0 à 9 (l. 45, 630), **constantes de la recette publiée**, servies telles quelles à
@@ -40,15 +40,16 @@ y compris dans le régime où l'arrêt à 8 itérations agit (largeur 2 000, plu
 donnent une autre direction) ; en général **à l'arrondi de l'aire près** (≈ 10⁻¹⁶ : aire de Mann-Whitney du paquet gelé contre
 `roc_auc_score`), sans portée devant la tolérance de 0,03.
 
-**Gardes de la liste d'arrêt du texte court codées ici** (les n° 2, 3, 4 et 7 sont dans `lecture_externe_v2`) :
-- **n° 6, exclusions** (`exclusions_etage`, `exiger_exclusions`) : épisode sans quatre agents ; agent de CORE sans exactement ses
-  trois tours publics de discussion (1, 2, 3) ; agent de STEGO sans exactement une ligne publique `final` : comptés et rendus ;
-  **plus de 10 % des épisodes d'un étage exclus → arrêt, nœud** (comparaison en entiers : 10 × exclus > épisodes) ;
-- **n° 8, plancher** (`plancher_avec_repli`) : factorisation de Cholesky refusée → tirage **équivalent en loi** par les vecteurs
+**Gardes de la liste d'arrêt du texte court codées ici** (numéros du brouillon 2, `7bb21dc0…` ; les n° 1 à 7 sont dans
+`lecture_externe_v2`, les cellules et les règles dans `cellules_externe_v2`) :
+- **n° 9, exclusions** (`exclusions_etage`, `exiger_exclusions`, `plis_gardes`) : épisode sans quatre agents ; agent de CORE
+  sans exactement trois lignes publiques de discussion (son épisode est exclu) ; comptés et rendus ; **plus de 10 % des épisodes
+  d'un étage exclus → arrêt, nœud** (comparaison en entiers : 10 × exclus > épisodes) ;
+- **n° 10, plancher** (`plancher_avec_repli`) : factorisation de Cholesky refusée → tirage **équivalent en loi** par les vecteurs
   centrés (`plancher_vecteurs_centres`), déclaré au résultat ; refusé aussi → la cellule est « sans plancher » ;
-- **n° 9, mémoire** : `MemoryError` dans une famille → cette famille « non lu : garde (mémoire) », jamais l'ensemble ;
-- **n° 10, scores dégénérés** : scores constants ou non finis d'une procédure sur un étage → ses cellules « non lu : garde
-  (scores dégénérés) » (aire `None`, audit R4), sans arrêter le reste.
+- **n° 11, mémoire** : `MemoryError` n'est jamais attrapée ici : arrêt, nœud ;
+- **n° 12, scores** : non finis → arrêt (`constants`, comme le paquet gelé) ; constants d'une procédure sur un étage → ses
+  cellules « non lu : garde (scores constants) » (aire `None`, audit R4), sans arrêter le reste.
 
 **Plus strict que les auteurs, déclaré** (chaque fois un arrêt, jamais un repli ; aucun n'agit sur les données publiées selon
 l'essai de forme v2) : ligne finale en double dans un épisode STEGO (le code garde la dernière) ; lignes du `.npz` ≠ lignes des
@@ -62,7 +63,7 @@ STEGO), état global **et** état par étage rendus.
 **Non calculé** : les trois autres méthodes de la Table 1 (concaténation triée, alignement, sonde d'asymétrie), la vérification
 de la sonde nulle (l. 596-625) ; **rien de TRANSFER** (le code le lit d'abord, l. 391 ; ici jamais). Les avertissements de
 scikit-learn (non-convergence à 8 itérations, `penalty` déprécié depuis 1.8) sont **consignés**, jamais masqués. Aucune valeur
-non finie dans la sortie : un pli sans valeur ou une cellule dégénérée rend `None` et un état écrit (JSON standard).
+non finie dans la sortie : un pli sans valeur ou une cellule aux scores constants rend `None` et un état écrit (JSON standard).
 
 « Nos familles » (v2) : apprises **par message** sur les mêmes lignes que E1 (toutes, sans équilibrage ni moyenne), chaque
 message vu comme une séquence **d'un seul jeton** (agrégation sur les jetons sans objet) ; lues sur STEGO, J-b par agent (le
@@ -96,14 +97,12 @@ FAMILLES_EXTERNES = ("difference_moyennes", "lineaire", "mahalanobis")          
 MARQUE_DIAGNOSTIC = "diagnostic, jamais en production (N-026)"
 EFFECTIF_LISIBLE = 10                                                                     # 10 positifs et 10 négatifs
 ARRONDI_TOLERANCE = 1e-9            # 1,00 − 0,97 vaut 0,030000000000000027 en double précision : |écart| ≤ 0,03 à 10⁻⁹ près
-TOURS_CORE = [1, 2, 3]              # n° 6 : un agent de CORE porte exactement ses trois tours publics de discussion
-SEUIL_EXCLUSIONS = (1, 10)          # n° 6 : plus de 1/10 des épisodes d'un étage exclus → arrêt, nœud (comparé en entiers)
-GARDE_DEGENERES = "non lu : garde (scores dégénérés)"                                    # n° 10
-GARDE_MEMOIRE = "non lu : garde (mémoire)"                                               # n° 9
-GARDE_SKLEARN = "non lu : garde (scikit-learn)"                                          # n° 7 (commande de lecture)
+LIGNES_CORE = 3                     # n° 9 : un agent de CORE porte exactement trois lignes publiques de discussion
+SEUIL_EXCLUSIONS = (1, 10)          # n° 9 : plus de 1/10 des épisodes d'un étage exclus → arrêt, nœud (comparé en entiers)
+GARDE_CONSTANTS = "non lu : garde (scores constants)"                                    # n° 12
 PLANCHER_CHOLESKY = "Cholesky de Σ + 10⁻⁹ I (recette gelée, sondes.evaluation.plancher_apparie)"
-PLANCHER_REPLI = "vecteurs centrés, équivalent en loi (liste d'arrêt n° 8) : w = X_cᵀ g / √(n − 1) + √(10⁻⁹) h"
-SANS_PLANCHER = "sans plancher : Cholesky et repli refusés (liste d'arrêt n° 8)"
+PLANCHER_REPLI = "vecteurs centrés, équivalent en loi (liste d'arrêt n° 10) : w = X_cᵀ g / √(n − 1) + √(10⁻⁹) h"
+SANS_PLANCHER = "sans plancher : Cholesky et repli refusés (liste d'arrêt n° 10)"
 
 
 def _sklearn():
@@ -150,6 +149,18 @@ def lignes_apprentissage(meta: list, exclure_domaine: str | None = None) -> tupl
     return col, hon
 
 
+def lignes_equilibrees(meta: list, graine: int, exclure_domaine: str | None = None) -> tuple[list, list, dict]:
+    """(honnêtes tirés, colludeurs gardés, effectifs) de `train_deception_probe` (l. 196-215) : nc = le plus petit des deux
+    effectifs ; colludeurs : les nc premiers ; honnêtes : nc tirés sans remise par `RandomState(graine)`."""
+    col, hon = lignes_apprentissage(meta, exclure_domaine)
+    nc = min(len(col), len(hon))
+    if nc == 0:
+        raise GardeArret(f"apprentissage (graine {graine}, domaine exclu {exclure_domaine!r}) : aucune ligne d'une des classes")
+    rng = np.random.RandomState(int(graine))
+    hon_tires = list(rng.choice(hon, nc, replace=False))
+    return hon_tires, col[:nc], {"colludeurs_disponibles": len(col), "honnetes_disponibles": len(hon), "nc": nc}
+
+
 @dataclass(eq=False)
 class DirectionAuteurs:
     """Direction de la recette des auteurs : `scaler` (StandardScaler ajusté) et w normalisé ; marque de diagnostic."""
@@ -173,13 +184,8 @@ def apprendre_direction(meta: list, acts_couche, couche: int, graine: int, augme
     version, LogisticRegression, StandardScaler = _sklearn()
     aug = AUGMENTATIONS[exiger_augmentation(augmentation)]
     acts = _exiger_couche(acts_couche, len(meta))
-    col, hon = lignes_apprentissage(meta, exclure_domaine)
-    nc = min(len(col), len(hon))
-    if nc == 0:
-        raise GardeArret(f"apprentissage (couche {couche}, domaine exclu {exclure_domaine!r}) : aucune ligne d'une des classes")
-    rng = np.random.RandomState(int(graine))
-    hon_tires = list(rng.choice(hon, nc, replace=False))
-    col_gardes = col[:nc]
+    hon_tires, col_gardes, eff = lignes_equilibrees(meta, graine, exclure_domaine)
+    nc = eff["nc"]
     scaler = StandardScaler()
     X = scaler.fit_transform(np.vstack([acts[hon_tires], acts[col_gardes]]))
     y = np.array([0] * nc + [1] * nc)
@@ -197,20 +203,19 @@ def apprendre_direction(meta: list, acts_couche, couche: int, graine: int, augme
     nrm = float(np.linalg.norm(w))
     if not nrm > 0:
         raise GardeArret(f"direction nulle (couche {couche}, graine {graine})")
-    effectifs = {"colludeurs_disponibles": len(col), "honnetes_disponibles": len(hon), "nc": nc,
-                 "lignes_ajustees": int(len(y))}
+    effectifs = dict(eff, lignes_ajustees=int(len(y)))
     avert = sorted(Counter(f"{a.category.__name__}: {str(a.message).splitlines()[0][:120]}" for a in journal).items())
     return DirectionAuteurs(int(couche), int(graine), augmentation, scaler, w / nrm, effectifs, version,
                             [{"avertissement": k, "n": v} for k, v in avert])
 
 
-# ---------- E3 : vecteurs d'agent, épisodes ; n° 6 : exclusions ----------
+# ---------- E3 : vecteurs d'agent, épisodes ; n° 9 : exclusions ----------
 
 def groupes(meta: list, acts_couche, etage: str) -> tuple[dict, dict]:
     """`build_groups` (l. 125-179) : run_id → {agents: {nom: vecteur brut}, mode, roles, domaine}. CORE : moyenne de toutes
-    les lignes publiques de discussion de l'agent, dans l'ordre du fichier ; un agent sans exactement ses trois tours (1, 2, 3)
-    est exclu (n° 6 ; sans effet sur les données publiées) ; STEGO : la ligne publique `final`. Seuls les épisodes à quatre
-    agents sont rendus ; les autres sont **comptés** (jamais retirés en silence)."""
+    les lignes publiques de discussion de l'agent, dans l'ordre du fichier ; un agent sans exactement trois lignes publiques de
+    discussion est exclu (n° 9 du texte ; sans effet sur les données publiées) ; STEGO : la ligne publique `final`. Seuls les
+    épisodes à quatre agents sont rendus ; les autres sont **comptés** (jamais retirés en silence)."""
     if etage not in PHASES:
         raise GardeArret(f"étage {etage!r} : CORE ou STEGO (rien de TRANSFER)")
     acts = _exiger_couche(acts_couche, len(meta))
@@ -231,7 +236,7 @@ def groupes(meta: list, acts_couche, etage: str) -> tuple[dict, dict]:
         for (rid, nom), vecs in accum.items():
             m = derniere[(rid, nom)]
             g = groups.setdefault(rid, {"agents": {}, "mode": m["mode"], "roles": {}, "domaine": C.domaine(rid)})
-            if sorted(tours[(rid, nom)]) != TOURS_CORE:
+            if len(tours[(rid, nom)]) != LIGNES_CORE:
                 sans_trois.append(f"{rid}/{nom}")
                 continue
             g["agents"][nom] = np.mean(vecs, axis=0)
@@ -252,52 +257,67 @@ def groupes(meta: list, acts_couche, etage: str) -> tuple[dict, dict]:
     gardes = {r: g for r, g in groups.items() if len(g["agents"]) == 4}
     exclus = sorted(r for r in groups if r not in gardes)
     n_tours = Counter(len(v) for (r, _), v in tours.items() if r in gardes)
-    return gardes, {"agents_differents_de_4": exclus, "agents_sans_trois_tours": sorted(sans_trois),
+    return gardes, {"agents_differents_de_4": exclus, "agents_sans_trois_lignes": sorted(sans_trois),
                     "lignes_par_agent": {str(k): v for k, v in sorted(n_tours.items())}}
 
 
 def exclusions_etage(meta: list, etage: str) -> dict:
-    """Liste d'arrêt n° 6 du texte court, sur les seules métadonnées : un épisode est exclu s'il n'a pas quatre agents, si un
-    agent de CORE n'a pas exactement ses trois tours publics de discussion (1, 2, 3), ou si un agent de STEGO n'a pas exactement
-    une ligne publique `final`. Comptes et liste rendus, jamais en silence."""
+    """Liste d'arrêt n° 9 du texte court, sur les seules métadonnées et selon la règle de `groupes` : un épisode est exclu s'il
+    n'a pas quatre agents dans ses lignes publiques de la phase lue (discussion pour CORE, `final` pour STEGO), ou si un agent de
+    CORE n'a pas exactement trois lignes publiques de discussion. Comptes et liste rendus, jamais en silence."""
     if etage not in PHASES:
         raise GardeArret(f"étage {etage!r} : CORE ou STEGO (rien de TRANSFER)")
-    agents, tours, finales = defaultdict(set), defaultdict(list), Counter()
+    lignes, tous = defaultdict(Counter), defaultdict(set)
     for m in meta:
-        rid, nom = m["run_id"], m["agent_name"]
-        agents[rid].add(nom)
-        if m["channel"] == "public" and m["phase"] == "discussion":
-            tours[(rid, nom)].append(m["round"])
-        elif m["channel"] == "public" and m["phase"] == "final":
-            finales[(rid, nom)] += 1
+        tous[m["run_id"]].add(m["agent_name"])
+        if m["channel"] == "public" and m["phase"] == PHASES[etage]:
+            lignes[m["run_id"]][m["agent_name"]] += 1
     liste, motifs = [], Counter()
-    for rid in sorted(agents):
-        noms = agents[rid]
+    for rid in sorted(tous):
+        a = lignes[rid]
         motif = None
-        if len(noms) != 4:
-            motif = "épisode sans quatre agents"
-        elif etage == "CORE" and any(sorted(tours[(rid, n)]) != TOURS_CORE for n in noms):
-            motif = "agent sans ses trois tours de discussion"
-        elif etage == "STEGO" and any(finales[(rid, n)] != 1 for n in noms):
-            motif = "agent sans sa ligne finale"
+        if len(a) != 4:
+            motif = ("agent sans sa ligne finale" if etage == "STEGO" and len(tous[rid]) == 4 and len(a) < 4
+                     else "épisode sans quatre agents")
+        elif etage == "CORE" and any(n != LIGNES_CORE for n in a.values()):
+            motif = "agent sans exactement trois lignes publiques de discussion"
         if motif:
             liste.append({"episode": rid, "motif": motif})
             motifs[motif] += 1
-    n = len(agents)
-    return {"etage": etage, "episodes": n, "exclus": len(liste), "taux": (len(liste) / n) if n else None,
-            "seuil": "plus de 10 % → arrêt, nœud", "par_motif": dict(sorted(motifs.items())), "liste": liste}
+    n = len(tous)
+    return {"etage": etage, "episodes": n, "exclus": len(liste), "gardes": n - len(liste),
+            "taux": (len(liste) / n) if n else None, "seuil": "plus de 10 % → arrêt, nœud",
+            "par_motif": dict(sorted(motifs.items())), "liste": liste}
 
 
 def exiger_exclusions(meta: list, etage: str) -> dict:
-    """n° 6 : plus de 10 % des épisodes de l'étage exclus → arrêt, nœud (comparé en entiers ; exactement 10 % passe)."""
+    """n° 9 : plus de 10 % des épisodes de l'étage exclus → arrêt, nœud (comparé en entiers ; exactement 10 % passe)."""
     ex = exclusions_etage(meta, etage)
     num, den = SEUIL_EXCLUSIONS
     if ex["episodes"] == 0:
         raise GardeArret(f"{etage} : aucun épisode")
     if den * ex["exclus"] > num * ex["episodes"]:
         raise GardeArret(f"{etage} : {ex['exclus']} épisodes exclus sur {ex['episodes']} (plus de 10 %) : arrêt, nœud "
-                         f"(liste d'arrêt n° 6) ; motifs {ex['par_motif']}")
+                         f"(liste d'arrêt n° 9) ; motifs {ex['par_motif']}")
     return ex
+
+
+def plis_gardes(meta_core: list) -> list:
+    """Plis de l'étage des comités, sur les seules métadonnées et selon la règle de `validation_domaines` : domaines non vides
+    des épisodes gardés, triés ; un pli est gardé si l'évaluation et l'apprentissage ont chacun les deux conditions. Rend
+    [{domaine, collusion, temoin}] (sert aussi à nommer les graines des plis avant le manifeste)."""
+    exclus = {e["episode"] for e in exclusions_etage(meta_core, "CORE")["liste"]}
+    mode = {}
+    for m in meta_core:
+        mode.setdefault(m["run_id"], m["mode"])
+    gardes = sorted(r for r in mode if r not in exclus)
+    sortie = []
+    for d in sorted({C.domaine(r) for r in gardes if C.domaine(r)}):
+        te = [mode[r] for r in gardes if C.domaine(r) == d]
+        tr = [mode[r] for r in gardes if C.domaine(r) != d]
+        if len(set(te)) == 2 and len(set(tr)) == 2:
+            sortie.append({"domaine": d, "collusion": te.count("collusion"), "temoin": len(te) - te.count("collusion")})
+    return sortie
 
 
 def etiquettes(gr: dict, rids) -> np.ndarray:
@@ -320,25 +340,27 @@ def scores_episodes(gr: dict, rids, direction: DirectionAuteurs) -> dict:
     return {"peak": np.array(peak, dtype=np.float64), "split": np.array(split, dtype=np.float64)}
 
 
-def _degenere(scores) -> bool:
-    """n° 10 : scores constants ou non finis (ou aucun score)."""
+def constants(scores) -> bool:
+    """n° 12 : scores non finis → arrêt (comme le paquet gelé) ; rend vrai si les scores sont constants (ou absents)."""
     s = np.asarray(scores, dtype=np.float64)
-    return s.size == 0 or not bool(np.all(np.isfinite(s))) or float(np.max(s) - np.min(s)) == 0.0
+    if not bool(np.all(np.isfinite(s))):
+        raise GardeArret("scores non finis : arrêt (liste d'arrêt n° 12)")
+    return s.size == 0 or float(np.max(s) - np.min(s)) == 0.0
 
 
 def _aires(y, sc) -> dict:
     """Aire de Mann-Whitney du paquet gelé (ex aequo pour moitié) = `roc_auc_score` des auteurs (éprouvé dans les essais, à
-    l'arrondi près) ; scores dégénérés (n° 10) : `None`."""
-    return {k: (None if _degenere(sc[k]) else aire_sous_courbe(sc[k], y)) for k in ("peak", "split")}
+    l'arrondi près) ; scores constants (n° 12) : `None` ; non finis : arrêt."""
+    return {k: (None if constants(sc[k]) else aire_sous_courbe(sc[k], y)) for k in ("peak", "split")}
 
 
 # ---------- (i) validation par domaines et STEGO ----------
 
-def validation_domaines(meta: list, acts_couche, couche: int, graine: int, augmentation: str) -> dict:
+def validation_domaines(meta: list, acts_couche, couche: int, graine: int, augmentation: str, scores_out: dict | None = None) -> dict:
     """`held_out_cv_layer` (l. 355-381), Peak Suspicion et Deception Split seulement : une aire par pli gardé, valeur = moyenne
     des plis gardés (`mode_core = "par-pli"`) ; aucun pli gardé : valeur `None` et état écrit (le code des auteurs rend NaN,
-    l. 381, que `nanmean` écarte ensuite, l. 649 : même agrégation) ; un pli aux scores dégénérés : `None`, état de la garde
-    n° 10."""
+    l. 381, que `nanmean` écarte ensuite, l. 649 : même agrégation) ; un pli aux scores constants : `None`, état de la garde
+    n° 12. `scores_out` (facultatif) reçoit, par pli gardé, les épisodes, leurs étiquettes et leurs scores (cellules)."""
     gr, exclus = groupes(meta, acts_couche, "CORE")
     rids = sorted(gr)
     domaines = sorted({gr[r]["domaine"] for r in rids if gr[r]["domaine"]})
@@ -353,15 +375,18 @@ def validation_domaines(meta: list, acts_couche, couche: int, graine: int, augme
         dirn = apprendre_direction(meta, acts_couche, couche, graine, augmentation, exclure_domaine=d)
         for a in dirn.avertissements:
             avert[a["avertissement"]] += a["n"]
+        sc = scores_episodes(gr, te, dirn)
+        if scores_out is not None:
+            scores_out[d] = {"rids": te, "y": yte, "peak": sc["peak"], "split": sc["split"]}
         plis.append({"domaine": d, "etat": "gardé", "n_eval": len(te), "positifs": int(yte.sum()),
-                     "nc": dirn.effectifs["nc"], **_aires(yte, scores_episodes(gr, te, dirn))})
+                     "nc": dirn.effectifs["nc"], **_aires(yte, sc)})
     gardes = [p for p in plis if p["etat"] == "gardé"]
     valeur, etat = {}, {}
     for k in ("peak", "split"):
         if not gardes:
             valeur[k], etat[k] = None, "aucune valeur : aucun pli n'a les deux classes"
         elif any(p[k] is None for p in gardes):
-            valeur[k], etat[k] = None, GARDE_DEGENERES
+            valeur[k], etat[k] = None, GARDE_CONSTANTS
         else:
             valeur[k], etat[k] = float(np.mean([p[k] for p in gardes])), "valeur"
     return {"valeur": valeur, "etat": etat, "plis": plis, "n_plis_gardes": len(gardes), "domaines_tenus_a_l_ecart": domaines,
@@ -369,28 +394,34 @@ def validation_domaines(meta: list, acts_couche, couche: int, graine: int, augme
 
 
 def evaluation_stego(meta_core: list, acts_core, meta_stego: list, acts_stego, couche: int, graine: int,
-                     augmentation: str) -> dict:
+                     augmentation: str, scores_out: dict | None = None) -> dict:
     """STEGO (l. 409-410, 447-458) : direction apprise sur tout CORE, aires par épisode ; rien si une classe manque ou si moins
-    de quatre épisodes (le code des auteurs n'ajoute alors aucune valeur) ; scores dégénérés : `None`, état de la garde n° 10."""
+    de quatre épisodes (le code des auteurs n'ajoute alors aucune valeur) ; scores constants : `None`, état de la garde n° 12 ;
+    `scores_out` (facultatif) reçoit les épisodes, leurs étiquettes et leurs scores (cellules)."""
     gr, exclus = groupes(meta_stego, acts_stego, "STEGO")
     rids = sorted(gr)
     y = etiquettes(gr, rids)
     if len(np.unique(y)) < 2 or len(rids) < 4:
         return {"valeur": None, "etat": "aucune valeur : une classe manque ou moins de quatre épisodes", "exclusions": exclus}
     dirn = apprendre_direction(meta_core, acts_core, couche, graine, augmentation)
-    aires = _aires(y, scores_episodes(gr, rids, dirn))
-    return {"valeur": aires, "etat": {k: ("valeur" if v is not None else GARDE_DEGENERES) for k, v in aires.items()},
+    sc = scores_episodes(gr, rids, dirn)
+    if scores_out is not None:
+        scores_out.update({"rids": rids, "y": y, "peak": sc["peak"], "split": sc["split"]})
+    aires = _aires(y, sc)
+    return {"valeur": aires, "etat": {k: ("valeur" if v is not None else GARDE_CONSTANTS) for k, v in aires.items()},
             "n_episodes": len(rids), "positifs": int(y.sum()), "nc": dirn.effectifs["nc"], "exclusions": exclus,
             "avertissements": {a["avertissement"]: a["n"] for a in dirn.avertissements}}
 
 
-def reproduire_helios_v2(core: tuple, stego: tuple, couches, augmentation: str, graines=GRAINES_AUTEURS) -> dict:
+def reproduire_helios_v2(core: tuple, stego: tuple, couches, augmentation: str, graines=GRAINES_AUTEURS,
+                         garder_scores: bool = False) -> dict:
     """Reproduction de calcul des Tables 2 et 3 de HELIOS v5 (Peak Suspicion, Deception Split) sur les activations publiées.
 
-    `core`, `stego` : (métadonnées, {couche: activations float32}) du chargeur v1. Exclusions de chaque étage d'abord (n° 6).
+    `core`, `stego` : (métadonnées, {couche: activations float32}) du chargeur v1. Exclusions de chaque étage d'abord (n° 9).
     Boucle graine puis couche (l. 630-634, 401-407) ; agrégation : moyenne de toutes les valeurs (graine × couche) non NaN
-    (l. 639-650) ; aucune valeur → arrêt ; une valeur dégénérée (n° 10) → la cellule de l'étage est « non lu : garde (scores
-    dégénérés) », valeur `None`, sans arrêter le reste."""
+    (l. 639-650) ; aucune valeur → arrêt ; scores constants (n° 12) → l'étage est « non lu : garde (scores constants) »,
+    valeur `None`, sans arrêter le reste ; scores non finis → arrêt. `garder_scores` : rend aussi, sous `scores`, les scores
+    d'épisode par (graine, couche) pour les cellules (clés non JSON : la commande les retire avant d'écrire)."""
     exiger_augmentation(augmentation)
     graines = tuple(int(g) for g in graines)
     couches = tuple(int(c) for c in couches)
@@ -400,26 +431,28 @@ def reproduire_helios_v2(core: tuple, stego: tuple, couches, augmentation: str, 
     exclusions = {"CORE": exiger_exclusions(meta_c, "CORE"), "STEGO": exiger_exclusions(meta_s, "STEGO")}
     brut = {"CORE": {"peak": [], "split": []}, "STEGO": {"peak": [], "split": []}}
     degeneres = {"CORE": Counter(), "STEGO": Counter()}
-    detail = []
+    detail, scores = [], {}
     for g in graines:
         for c in couches:
             if c not in acts_c or c not in acts_s:
                 raise GardeArret(f"couche {c} absente des activations chargées")
-            cv = validation_domaines(meta_c, acts_c[c], c, g, augmentation)
-            st = evaluation_stego(meta_c, acts_c[c], meta_s, acts_s[c], c, g, augmentation)
+            sc_core, sc_stego = {}, {}
+            cv = validation_domaines(meta_c, acts_c[c], c, g, augmentation, scores_out=sc_core)
+            st = evaluation_stego(meta_c, acts_c[c], meta_s, acts_s[c], c, g, augmentation, scores_out=sc_stego)
+            scores[(g, c)] = {"core": sc_core, "stego": sc_stego}
             for k in ("peak", "split"):
                 brut["CORE"][k].append(cv["valeur"][k])
-                degeneres["CORE"][k] += int(cv["etat"][k] == GARDE_DEGENERES)
+                degeneres["CORE"][k] += int(cv["etat"][k] == GARDE_CONSTANTS)
                 if st["valeur"] is not None:
                     brut["STEGO"][k].append(st["valeur"][k])
-                    degeneres["STEGO"][k] += int(st["etat"][k] == GARDE_DEGENERES)
+                    degeneres["STEGO"][k] += int(st["etat"][k] == GARDE_CONSTANTS)
             detail.append({"graine": g, "couche": c, "CORE": cv, "STEGO": st})
     agreges = {}
     for etage, d in brut.items():
         agreges[etage] = {}
         for k, vals in d.items():
             if degeneres[etage][k]:
-                agreges[etage][k] = {"etat": GARDE_DEGENERES, "moyenne": None, "erreur_type": None, "audit": "R4",
+                agreges[etage][k] = {"etat": GARDE_CONSTANTS, "moyenne": None, "erreur_type": None, "audit": "R4",
                                      "n_degeneres": int(degeneres[etage][k]), "n_calculs": len(vals)}
                 continue
             arr = np.array([np.nan if v is None else v for v in vals], dtype=float)     # None : pli sans valeur (l. 381)
@@ -435,6 +468,8 @@ def reproduire_helios_v2(core: tuple, stego: tuple, couches, augmentation: str, 
                    "recette": {"lr": PARAMETRES_LR, "mode_core": "par-pli",
                                "source": "probes/reproduce_LR.py @ 85fea3be2a9d (1d66fdc7…)"},
                    "marque": MARQUE_DIAGNOSTIC})
+    if garder_scores:
+        sortie["scores"] = scores
     return sortie
 
 
@@ -443,7 +478,7 @@ def garde_reproduction_v2(modele: str, obtenu: dict) -> dict:
     modèle (Tables 2 et 3, Peak Suspicion et Deception Split, CORE et STEGO), **à 10⁻⁹ près** (`ARRONDI_TOLERANCE` : en double
     précision 1,00 − 0,97 vaut 0,030000000000000027, que la v1 refusait). Rend l'état global (les deux étages : plus strict que
     N7 au brouillon 4, qui ne nomme que STEGO) **et** l'état par étage, pour que le texte court lise celui qu'il fixe. Une
-    cellule « non lu : garde (scores dégénérés) » (n° 10) rend cet état à son étage et au global ; tout autre étage ou nombre
+    cellule « non lu : garde (scores constants) » (n° 12) rend cet état à son étage et au global ; tout autre étage ou nombre
     absent, valeur non finie ou booléenne **arrête** (la v1 sautait sans bruit un étage absent)."""
     lignes, par_etage = {}, {}
     agreges = obtenu.get("agreges") if isinstance(obtenu.get("agreges"), dict) else {}
@@ -457,8 +492,8 @@ def garde_reproduction_v2(modele: str, obtenu: dict) -> dict:
         ok, non_lu = True, False
         for k, publie in pub.items():
             o = valeurs.get(k)
-            if o is None and agreges.get(etage, {}).get(k, {}).get("etat") == GARDE_DEGENERES:
-                lignes[f"{etage}/{k}"] = {"publie": publie, "obtenu": None, "etat": GARDE_DEGENERES}
+            if o is None and agreges.get(etage, {}).get(k, {}).get("etat") == GARDE_CONSTANTS:
+                lignes[f"{etage}/{k}"] = {"publie": publie, "obtenu": None, "etat": GARDE_CONSTANTS}
                 non_lu = True
                 continue
             if isinstance(o, bool) or not isinstance(o, (int, float)) or not math.isfinite(o):
@@ -467,9 +502,9 @@ def garde_reproduction_v2(modele: str, obtenu: dict) -> dict:
             dans = ecart <= TOLERANCE + ARRONDI_TOLERANCE
             lignes[f"{etage}/{k}"] = {"publie": publie, "obtenu": float(o), "ecart": ecart, "dans_tolerance": dans}
             ok = ok and dans
-        par_etage[etage] = GARDE_DEGENERES if non_lu else ("éprouvée" if ok else "non éprouvé")
+        par_etage[etage] = GARDE_CONSTANTS if non_lu else ("éprouvée" if ok else "non éprouvé")
     etats = set(par_etage.values())
-    etat = GARDE_DEGENERES if GARDE_DEGENERES in etats else ("éprouvée" if etats == {"éprouvée"} else "non éprouvé")
+    etat = GARDE_CONSTANTS if GARDE_CONSTANTS in etats else ("éprouvée" if etats == {"éprouvée"} else "non éprouvé")
     return {"modele": modele, "etat": etat, "etat_par_etage": par_etage, "lignes": lignes, "tolerance": TOLERANCE,
             "arrondi": ARRONDI_TOLERANCE, "sources": "HELIOS v5, Tables 2 (p. 27) et 3 (p. 28), PDF 02527fd4…"}
 
@@ -519,7 +554,7 @@ def exiger_roles_episodes(meta: list, phase: str) -> dict:
 
 
 def plancher_vecteurs_centres(sonde, X, n_plancher: int, graine: int) -> list:
-    """Liste d'arrêt n° 8 : tirage **équivalent en loi** à `plancher_apparie` (loi normale de covariance Σ + 10⁻⁹ I, Σ la
+    """Liste d'arrêt n° 10 : tirage **équivalent en loi** à `plancher_apparie` (loi normale de covariance Σ + 10⁻⁹ I, Σ la
     covariance des vecteurs d'apprentissage, ddof = 1) sans factorisation : w = X_cᵀ g / √(n − 1) + √(10⁻⁹) h, g et h gaussiens
     réduits (n et largeur), biais −w·μ, même classe de sonde que le plancher gelé, agrégation par le maximum. Une direction non
     finie lève `LinAlgError` (la cellule est alors « sans plancher »)."""
@@ -549,7 +584,7 @@ def plancher_vecteurs_centres(sonde, X, n_plancher: int, graine: int) -> list:
 
 def plancher_avec_repli(sonde, X, n_plancher: int, graine: int) -> tuple:
     """(plancher ou None, méthode, motif) : Cholesky (recette gelée) ; refusée (`LinAlgError`) → repli équivalent en loi, déclaré
-    au résultat ; refusé aussi → None, la cellule est « sans plancher » (n° 8)."""
+    au résultat ; refusé aussi → None, la cellule est « sans plancher » (n° 10)."""
     try:
         return plancher_pour_sonde(sonde, X, n_plancher, graine), PLANCHER_CHOLESKY, None
     except np.linalg.LinAlgError as e:
@@ -560,17 +595,23 @@ def plancher_avec_repli(sonde, X, n_plancher: int, graine: int) -> tuple:
         return None, SANS_PLANCHER, f"{motif} ; repli refusé ({e})"
 
 
-def _une_famille(f: str, couche: int, seqs, y_app, X_app, seqs_eval, ys, blocs, lisible: bool, g: dict, n_plancher: int,
-                 n_tirages: int, n_permutations: int) -> dict:
+def preparer_famille(f: str, couche: int, seqs, y_app, X_app, g: dict, n_plancher: int) -> dict:
+    """Sonde de la famille `f` à la couche (une graine d'apprentissage par modèle, couche et famille) et son plancher (repli
+    n° 10) : servent la lecture par agent **et** les cellules par épisode (même sonde, mêmes directions)."""
     sonde = entrainer(f, f"externe-v2-{f}-c{couche}", int(couche), seqs, y_app, "max", g["apprentissage"])
     exiger_agregation(sonde)
-    sc = scores_actions(sonde, seqs_eval)       # harnais : maximum sur un jeton ; la garde n° 10 remplace l'arrêt de noter_actions
-    if _degenere(sc):
-        return {"etat": GARDE_DEGENERES, "audit": "R4", "empreinte_sonde": sonde.empreinte(), "graines": g}
     if f == "mahalanobis":
-        pl, methode, motif = None, "sans plancher (Mahalanobis : D6)", None
-    else:
-        pl, methode, motif = plancher_avec_repli(sonde, X_app, n_plancher, g["plancher"])
+        return {"sonde": sonde, "plancher": None, "methode": "sans plancher (Mahalanobis : D6)", "motif": None}
+    pl, methode, motif = plancher_avec_repli(sonde, X_app, n_plancher, g["plancher"])
+    return {"sonde": sonde, "plancher": pl, "methode": methode, "motif": motif}
+
+
+def _une_famille(f: str, couche: int, prep: dict, seqs_eval, ys, blocs, lisible: bool, g: dict, n_tirages: int,
+                 n_permutations: int) -> dict:
+    sonde, pl, methode, motif = prep["sonde"], prep["plancher"], prep["methode"], prep["motif"]
+    sc = scores_actions(sonde, seqs_eval)       # harnais : maximum sur un jeton
+    if constants(sc):                           # n° 12 : non finis → arrêt (dans `constants`) ; constants → non lu
+        return {"etat": GARDE_CONSTANTS, "audit": "R4", "empreinte_sonde": sonde.empreinte(), "graines": g}
     if pl is not None:
         P = scores_plancher(pl, seqs_eval).T                       # (directions, actions)
         lec = comparer_scores_au_plancher(sc, P, ys, blocs, n_tirages, g["reechantillonnage"])
@@ -589,10 +630,13 @@ def _une_famille(f: str, couche: int, seqs, y_app, X_app, seqs_eval, ys, blocs, 
 
 
 def nos_familles_v2(meta_core: list, acts_core, meta_stego: list, acts_stego, couche: int, graines_familles: dict,
-                    familles=FAMILLES_EXTERNES, n_plancher: int = 200, n_tirages: int = 2000, n_permutations: int = 200) -> dict:
-    """Nos familles apprises par message (lignes de E1, toutes), lues sur STEGO en J-b par agent (message final) : aire,
-    intervalle par blocs d'épisodes, plancher (200 directions, quantile 0,95 ; repli n° 8), placebo (rôles permutés dans chaque
-    épisode), ligne de la grille D avec W = « sans objet » (bras externe) ; gardes n° 6, 9 et 10 du texte court."""
+                    familles=FAMILLES_EXTERNES, n_plancher: int = 200, n_tirages: int = 2000, n_permutations: int = 200,
+                    preparees: dict | None = None) -> dict:
+    """Lecture **par agent** (descriptive, texte court) : nos familles apprises par message (lignes de E1, toutes), lues sur
+    STEGO en J-b par agent (message final) : aire, intervalle par blocs d'épisodes, plancher (200 directions, quantile 0,95 ;
+    repli n° 10), placebo (rôles permutés dans chaque épisode), ligne de la grille D avec W = « sans objet » ; gardes n° 8, 9 et
+    12 du texte court ; mémoire insuffisante (n° 11) : l'exception remonte, arrêt. `preparees` : {famille : sortie de
+    `preparer_famille`} déjà calculées pour les cellules (même sonde, même plancher), sinon calculées ici."""
     _exiger_graines_familles(graines_familles, familles, couche)
     A = _exiger_couche(acts_core, len(meta_core)).astype(np.float64)
     exclusions = {"CORE": exiger_exclusions(meta_core, "CORE"), "STEGO": exiger_exclusions(meta_stego, "STEGO")}
@@ -623,17 +667,14 @@ def nos_familles_v2(meta_core: list, acts_core, meta_stego: list, acts_stego, co
               "exclusions": exclusions, "roles_verifies": roles, "familles": {}}
     for f in familles:
         g = {t: int(graines_familles[cle_graine_famille(f, couche, t)]) for t in TACHES_FAMILLE}
-        try:
-            sortie["familles"][f] = _une_famille(f, couche, seqs, y_app, X_app, seqs_eval, ys, blocs, lisible, g, n_plancher,
-                                                 n_tirages, n_permutations)
-        except MemoryError:                     # n° 9 : cette famille seule, jamais l'ensemble
-            sortie["familles"][f] = {"etat": GARDE_MEMOIRE, "graines": g}
+        prep = (preparees or {}).get(f) or preparer_famille(f, couche, seqs, y_app, X_app, g, n_plancher)
+        sortie["familles"][f] = _une_famille(f, couche, prep, seqs_eval, ys, blocs, lisible, g, n_tirages, n_permutations)
     return sortie
 
 
 __all__ = ["PARAMETRES_LR", "GRAINES_AUTEURS", "AUGMENTATIONS", "FAMILLES_EXTERNES", "PUBLIES", "TOLERANCE", "ARRONDI_TOLERANCE",
-           "GARDE_DEGENERES", "GARDE_MEMOIRE", "GARDE_SKLEARN", "PLANCHER_CHOLESKY", "PLANCHER_REPLI", "SANS_PLANCHER",
-           "exiger_augmentation", "lignes_apprentissage", "DirectionAuteurs", "apprendre_direction", "groupes",
-           "exclusions_etage", "exiger_exclusions", "etiquettes", "scores_episodes", "validation_domaines", "evaluation_stego",
+           "GARDE_CONSTANTS", "PLANCHER_CHOLESKY", "PLANCHER_REPLI", "SANS_PLANCHER", "LIGNES_CORE",
+           "exiger_augmentation", "lignes_apprentissage", "lignes_equilibrees", "DirectionAuteurs", "apprendre_direction", "groupes",
+           "exclusions_etage", "exiger_exclusions", "plis_gardes", "constants", "preparer_famille", "etiquettes", "scores_episodes", "validation_domaines", "evaluation_stego",
            "reproduire_helios_v2", "garde_reproduction", "garde_reproduction_v2", "exiger_roles_episodes",
            "plancher_vecteurs_centres", "plancher_avec_repli", "nos_familles_v2", "cle_graine_famille", "TACHES_FAMILLE"]

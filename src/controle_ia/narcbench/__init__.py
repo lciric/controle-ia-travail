@@ -17,5 +17,10 @@ Contenu (tout sur processeur, sans modèle ni données réels) :
 - `registre_narc_v1` : garde d'ouverture sur le registre des scellements (clés `…-NARC-8B`) ;
 - `externe_v1` : bras externe sur les activations publiées par les auteurs (recette de HELIOS réimplémentée, garde de
   reproduction à 0,03, nos familles sur leurs vecteurs) — voie retenue le 10 novembre (R-2175, D-3 (a)) ;
-- `jouet_v1` : répétition jouet de bout en bout (lecteur factice, aucune dépendance au modèle réel).
+- `jouet_v1` : répétition jouet de bout en bout (lecteur factice, aucune dépendance au modèle réel) ;
+- bras externe, suite (texte court `prereg/narcbench-bras-externe-v1-brouillon2.md` et ses contre-lectures) :
+  `chargeur_externe_v1` (huit fichiers publiés, tailles, empreintes, formes), `forme_externe_v2` (essai de forme sans score),
+  `externe_v2` (recette des auteurs, E1 à E4, gardes n° 8 à 12, lecture par agent), `cellules_externe_v2` (cellules par
+  épisode, intervalle, plancher, placebo, règles C et T, phrases, réponse, graines) et `lecture_externe_v2` (commande de
+  lecture : registre propre, configuration canonique, fiche du code, gardes n° 1 à 7).
 """
