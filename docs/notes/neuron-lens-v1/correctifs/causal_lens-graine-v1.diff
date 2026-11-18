@@ -1,0 +1,66 @@
+diff --git a/scripts/checks/causal_lens.py b/scripts/checks/causal_lens.py
+index 58dc776..08fcd9b 100644
+--- a/scripts/checks/causal_lens.py
++++ b/scripts/checks/causal_lens.py
+@@ -63,6 +63,12 @@ PASS_Q = 0.99  # a read predicts its pole's effect past this quantile of the con
+ CAUSAL = DATA / "causal"
+ 
+ 
++def causal_path(model: str, seed: int = 0):
++    """The measurement file: the published name for seed 0, a separate file for any other seed (an audit)."""
++    stem = arch.stem(model)
++    return CAUSAL / (f"{stem}-causal.pt" if seed == 0 else f"{stem}-causal-seed{seed}.pt")
++
++
+ def random_neurons(n_layers: int, f: int, per_layer: int, seed: int = 0) -> list[tuple[int, int]]:
+     rng = random.Random(seed)
+     return [(l, n) for l in range(n_layers) for n in sorted(rng.sample(range(f), per_layer))]
+@@ -113,7 +119,7 @@ def measure(args) -> None:
+     model, lm_head = decoder_stack(lm), lm.lm_head
+     gemma = arch.is_gemma4(args.model)
+     L, f = len(model.layers), model.config.intermediate_size
+-    picks = sample_neurons(L, f, args.per_layer)
++    picks = sample_neurons(L, f, args.per_layer, args.seed)
+     if args.layers:
+         picks = [(l, n) for l, n in picks if l in {int(x) for x in args.layers.split(',')}]
+     K = args.top_contexts
+@@ -126,7 +132,9 @@ def measure(args) -> None:
+     P = len(picks)
+     meta = {"model": args.model, "contexts_from": "catalog", "docs": len(tokens), "per_layer": args.per_layer,
+             "contexts": C, "ctx_len": T, "doses": list(DOSES), "window": WINDOW, "top_contexts": K}
+-    path = CAUSAL / f"{arch.stem(args.model)}-causal.pt"
++    if args.seed != 0:  # seed 0 keeps the published meta, so a published partial file still resumes
++        meta["seed"] = args.seed
++    path = causal_path(args.model, args.seed)
+     partial = path.with_name(f"{path.stem}-partial.pt")
+     if partial.exists():
+         out = torch.load(partial, weights_only=False)
+@@ -268,7 +276,8 @@ def score(args) -> None:
+     from neuron_lens.neurons import directions
+     from neuron_lens.weights import tensors
+ 
+-    saved = torch.load(CAUSAL / f"{arch.stem(args.model)}-causal.pt", weights_only=False)
++    saved = torch.load(causal_path(args.model, args.seed), weights_only=False)
++    assert saved["meta"].get("seed", 0) == args.seed, "the measurement file was drawn with another seed"
+     picks = saved["picks"]
+     tok = AutoTokenizer.from_pretrained(args.model)
+     nv = len(tok)  # rows past the tokenizer are padding
+@@ -283,7 +292,8 @@ def score(args) -> None:
+     specs = args.lenses.split(",")
+     lenses = {s: load_lens(s, args.model) for s in specs}
+     cfg = AutoConfig.from_pretrained(args.model).get_text_config()
+-    rand = set(random_neurons(cfg.num_hidden_layers, cfg.intermediate_size, saved["meta"]["per_layer"]))
++    rand = set(random_neurons(cfg.num_hidden_layers, cfg.intermediate_size, saved["meta"]["per_layer"],
++                              saved["meta"].get("seed", 0)))
+     named = named_poles()
+     named_r = {}  # (pole, target, lens) -> (r, top-10 overlap)
+     targets = {"steer 1x": saved["steer"][:, :, 0], "steer 4x": saved["steer"][:, :, 1],
+@@ -382,6 +392,8 @@ def main() -> None:
+     ap.add_argument("--layers", default=None, help="measure only these layers (a,b,c)")
+     ap.add_argument("--tag", default="", help="score: name the summary causal_lens_<tag>_<model>")
+     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "mps")
++    ap.add_argument("--seed", type=int, default=0,
++                    help="seed of the random neurons (0: the published sample; another value: a separate audit file)")
+     args = ap.parse_args()
+     args.model = MODEL
+     measure(args) if args.what == "measure" else score(args)
