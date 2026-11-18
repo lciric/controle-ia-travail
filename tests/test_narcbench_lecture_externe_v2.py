@@ -271,6 +271,13 @@ def _retirer_module(depot):
     (depot / "src" / "controle_ia" / "narcbench" / "jouet_v1.py").unlink()
 
 
+def _fiche_modifiee_apres_son_sceau(depot):
+    f = depot / FICHE
+    contenu = json.loads(f.read_text(encoding="utf-8"))
+    contenu["note"] = "ajoutée après le sceau"                          # JSON valide, compagnon .sha256 inchangé
+    f.write_text(json.dumps(contenu, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
 def _resultat_existant(depot):
     (depot / "diag" / "20261117-090000-autre").mkdir(parents=True)
     (depot / "diag" / "20261117-090000-autre" / f"{L.NOM_RESULTAT}.json").write_text("{}\n")
@@ -299,6 +306,10 @@ CAS = {
                               "pas strictement postérieure"),
     "code_au_meme_instant": (dict(lignes=lambda t, f: _lignes(t, f, date_c="2026-01-01T00:00:00Z")), {}, 2,
                              "pas strictement postérieure"),
+    # contre-lecture du code final, M2 : les deux conditions de la ligne CODE-NARC-EXT sans artefact jusqu'ici
+    "code_seule_posterieure": (dict(lignes=lambda t, f: _lignes(t, f, date_c="2099-01-02T00:00:00Z")), {}, 2,
+                               "ligne CODE-NARC-EXT datée 2099-01-02T00:00:00Z, pas strictement antérieure"),
+    "sceau_faux_de_la_fiche": (dict(apres=_fiche_modifiee_apres_son_sceau), {}, 2, "CODE-NARC-EXT-v1.json : compagnon .sha256"),
     "sceau_faux": (dict(apres=lambda d: (d / TEXTE).write_text(_texte(en_plus="Ajout.\n\n"), encoding="utf-8")), {}, 2,
                    "≠ empreinte du fichier"),
     "cite_un_autre_texte": (dict(lignes=lambda t, f: _lignes(t, f, texte="prereg/autre.md"), apres=_ecrire_autre_texte), {}, 2,
