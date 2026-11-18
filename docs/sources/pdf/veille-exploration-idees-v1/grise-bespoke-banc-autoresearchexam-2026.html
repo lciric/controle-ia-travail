@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script defer src="/analytics.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="AutoResearchExam measures agents' ability to improve and generalize on open ended ML research tasks.">
+<title>AutoResearchExam</title>
+<link rel="stylesheet" href="site.css?v=reviewed-sections-20260909">
+<link rel="stylesheet" href="/benchmark-updates.css">
+<script defer src="/benchmark-updates.js"></script>
+<link rel="canonical" href="https://benchmarks.bespokelabs.ai/autoresearchexam/">
+<meta name="citation_title" content="AutoResearchExam">
+<meta name="citation_publication_date" content="2026/09/09">
+<meta name="citation_author" content="Anirudha Ramesh">
+<meta name="citation_author" content="Siddartha Devic">
+<meta name="citation_author" content="Shivank Garg">
+<meta name="citation_author" content="Advait Parulekar">
+<meta name="citation_author" content="Drish Mahnot">
+<meta name="citation_author" content="Shreyas Pimpalgaonkar">
+<meta name="citation_author" content="Vishnu Suresh">
+<meta name="citation_author" content="Alex Dimakis">
+<meta name="citation_author" content="Maheswaran Sathiamoorthy">
+<link rel="stylesheet" href="live-leaderboard.css?v=argon-20261015">
+<link rel="stylesheet" href="/site-header.css?v=3" />
+</head>
+<body class="blog-page">
+<header class="bespoke-header">
+  <nav class="bespoke-header-nav" aria-label="Main navigation">
+    <a class="bespoke-header-brand" href="https://bespokelabs.ai/" aria-label="Bespoke Labs home">
+      <img src="/brand/bespoke-logo-white.svg" alt="Bespoke Labs" width="162" />
+    </a>
+    <span class="bespoke-header-divider" aria-hidden="true">/</span>
+    <a class="bespoke-header-back" href="/">Benchmarks</a>
+    <button class="bespoke-header-toggle" type="button" aria-expanded="false" aria-controls="bespoke-header-menu" aria-label="Open menu">
+      <span aria-hidden="true"></span>
+    </button>
+    <div class="bespoke-header-menu" id="bespoke-header-menu">
+      <a class="bespoke-header-link" href="https://bespokelabs.ai/#research">Research</a>
+      <a class="bespoke-header-link" href="https://bespokelabs.ai/about">About</a>
+      <a class="bespoke-header-link" href="https://bespokelabs.ai/blog">Blog</a>
+      <a class="bespoke-header-link" href="/" aria-current="page">Benchmarks</a>
+      <a class="bespoke-header-link" href="https://jobs.ashbyhq.com/bespokelabs">Careers</a>
+      <a class="bespoke-header-link" href="https://bespokelabs.ai/contact">Get in touch</a>
+      <a class="bespoke-header-cta" href="https://console.bespokelabs.ai">Get Nimble <span aria-hidden="true">→</span></a>
+    </div>
+  </nav>
+  <script>
+    (() => {
+      const header = document.currentScript.closest(".bespoke-header");
+      const toggle = header.querySelector(".bespoke-header-toggle");
+      toggle.addEventListener("click", () => {
+        const open = toggle.getAttribute("aria-expanded") !== "true";
+        toggle.setAttribute("aria-expanded", String(open));
+        toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+        header.classList.toggle("bespoke-header--open", open);
+      });
+    })();
+  </script>
+</header>
+<section class="hero">
+  <h1><span>AutoResearchExam</span></h1>
+  <p class="deck">Measuring agents' ability to improve and generalize on open ended ML research tasks.</p>
+  <div class="hero-meta"><span>Bespoke Labs</span><a class="updates-link" href="#updates">Get updates <span aria-hidden="true">↓</span></a></div>
+</section>
+<section class="live-panel" id="live-leaderboard" aria-labelledby="live-title">
+  <div class="live-panel-heading">
+    <h2 id="live-title">Live leaderboard</h2>
+  </div>
+  <div id="live-progress" class="time-leaderboard" aria-label="Current benchmark results by research time"></div>
+  <div class="live-panel-footer">
+    <p>Measures Area Under the AutoResearch Curve (AUARC). See <a href="#hidden-test-auarc">Main evaluation metric: hidden-test AUARC</a> for the formal definition. The score combines solution quality and generalizability to a hidden-test set with how quickly the agent achieves it.</p>
+  </div>
+  <div id="live-pareto" class="live-pareto" aria-label="Live cost and performance at 24 hours"></div>
+</section>
+<div class="page">
+  <aside class="contents" aria-label="Contents">
+    <strong>Contents</strong>
+    <a href="#benchmark">Overview and Motivation</a>
+    <a href="#tasks">Tasks</a>
+    <a href="#setup">Experimental setup</a>
+    <a href="#general-analysis">Analyzing agent behavior</a>
+    <a href="#hint-study">Using hints</a>
+    <a href="#harness-ablations">Comparing harnesses</a>
+  </aside>
+  <main>
+    <p class="release-dateline" id="release-article">Analysis below reflects results at release, September 9, 2026.</p>
+    <div id="main-leaderboard" hidden></div>
+    <section class="section" id="benchmark">
+      <h2>Overview and Motivation</h2>
+      <div id="results">
+      </div>
+      <div class="prose">
+        <p>Progress toward recursive self-improvement is predicated on the development of agents that can solve hard, open ended ML research problems over long periods of time. Real open-ended research relies on iteration - often featuring an evolving and improving solution driven by reactions to feedback and the exploration of a diversity of approaches.</p>
+        <p>One-shot and few-shot evaluations <a class="cite" href="https://mls-bench.com/">[1]</a> miss out on the opportunity to measure this evolution. An agent that starts behind another but makes good use of feedback may eventually outperform one that improves more slowly. Standard auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[2]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[3]</a> may not adequately distinguish between progress on test scores and overfitting on validation scores.</p>
+        <p>To address this gap, we introduce AutoResearchExam, a benchmark of open ended ML research tasks designed to measure how quickly agents can improve a private test score over 24-hour auto-research.</p>
+        <p>We detail three contributions:</p>
+        <ul>
+          <li><strong>A benchmark for sustained ML research.</strong> AutoResearchExam spans 29 tasks and measures progress over 24 hours.</li>
+          <li><strong>An evaluation that separates visible progress from generalization.</strong> Agents optimize validation scores, while hidden-test AUARC measures how quickly they find solutions that generalize.</li>
+          <li><strong>An analysis of time, cost and agent behavior.</strong> Rankings change with the evaluation window, showing why a single time budget can miss differences between models. We also compare cost efficiency and how agents spend their research effort.</li>
+        </ul>
+        <p>This section presents the headline results. We examine research strategies and model behavior in <a href="#general-analysis">Analyzing agent behavior</a>.</p>
+      </div>
+      <div id="time-leaderboard" class="time-leaderboard"></div>
+      <div class="aggregate-grid lead-cost-plot" id="cost-performance-plot"></div>
+    </section>
+    <section class="section" id="tasks">
+      <h2>Tasks</h2>
+      <div class="taxonomy-wheel">
+        <figure>
+          <svg id="taxonomy-wheel-svg" viewBox="0 0 420 420" role="img" aria-label="Interactive task taxonomy wheel"></svg>
+        </figure>
+        <section class="taxonomy-detail" aria-live="polite" aria-labelledby="taxonomy-detail-title">
+          <p class="taxonomy-overline">Research area</p>
+          <h3 id="taxonomy-detail-title"></h3>
+          <p class="taxonomy-description" id="taxonomy-detail-description"></p>
+          <p class="taxonomy-count"><span id="taxonomy-detail-count"></span><a class="taxonomy-github-link" href="https://github.com/bespokelabsai/AutoResearchExam" target="_blank" rel="noreferrer">View tasks on GitHub</a></p>
+          <div id="examples" class="taxonomy-card-browser">
+            <div class="task-grid" id="task-grid" tabindex="0" role="region" aria-label="Research tasks, scroll to browse"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+    <section class="section" id="setup">
+      <h2>Experimental setup</h2>
+      <div class="prose">
+        <p>We run AutoResearch with the standard Terminus 2 harness in a <strong>24-hour benchmark window</strong>. Harnesses can significantly affect performance, so we compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. The harness itself lets each agent submit as many times as it wants. After every submission, the agent receives a validation score and its remaining time in the 24-hour window. It never sees hidden test scores. See the <a href="#harness-ablations">harness comparison</a> for more information about the harness we used, and our comparison with Claude Code and Codex.</p>
+        <p>Evaluating agents over extended 24-hour runs lets us measure whether models sustain progress and whether repeated optimization of validation scores leads to overfitting, with gains that fail to generalize to hidden test data.</p>
+        <p>Each task uses the Harbor format, with separate work and verifier containers. To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
+      </div>
+      <h3 id="effort-setting-title">Effort levels for model evaluations</h3>
+      <div class="prose effort-setting-discussion">
+        <p>We ran each model at the highest effort level available when we generated its rollouts. For Muse Spark 1.3, this was xhigh; its current highest level, Max, was not yet available. Each model can produce at most 32,000 output tokens per turn.</p>
+      </div>
+      <h3>Task scoring</h3>
+      <div class="prose scoring-prose">
+        <p>In each task, the agent is asked to optimize a specific metric, such as accuracy, speedup, perplexity, or mean squared error. This metric is a score which cannot be compared directly across tasks. For instance, Opus 5 achieves 70.67% worst-group accuracy on <a href="tasks.html#coreset-selection-group-robust-waterbirds">"Selecting Bird Images Across Hidden Background Groups"</a>, and 41.28 dB mean PSNR on <a href="tasks.html#fastercache-budgeted-video-dit-cache-policy">"Accelerating video diffusion by reusing predictions"</a>. Pass/fail tasks can use average pass rate, but open-ended tasks need a common reward scale.</p>
+        <p>We use baseline anchor scores and reward maps to convert a raw score into a final reward which is given to the agent. In particular, we distinguish between the raw "score" for the metric achieved by the agent and the resulting "reward". Note that the reward is what is optimized by the agent, and tracked in the AUARC. A trivial baseline receives reward 0. Some maps reserve the range from 0 to 0.1 for weaker trivial baselines. A strong reference solution typically receives reward 0.5.</p>
+        <p>Depending on the natural raw score range for a task, we use three maps: bounded scores in [<em>a</em>, <em>b</em>], signed unbounded scores in (&minus;&infin;, &infin;), and unsigned unbounded scores in (0, &infin;). For bounded metrics, the map gives more credit to the same absolute improvement near the known best score, where progress is usually harder. For example, improving accuracy from 0.85 to 0.95 can earn more reward than improving it from 0.10 to 0.20.</p>
+      </div>
+      <div class="prose" id="reward-normalization">
+        <details class="reward-formula">
+          <summary>Raw Score -&gt; Reward map</summary>
+          <div class="reward-scaling" id="reward-scaling">
+            <p class="reward-scaling-lead">The sketches below illustrate our mapping from raw score to [0, 1]. Such a mapping lets us account for the changing difficulty of making marginal improvements at different score ranges, and lets us average scores in a meaningful way. We illustrate this for metrics where a higher score is better. We appropriately flip the map when a lower score is better.</p>
+            <div class="reward-scaling-grid">
+              <article class="reward-scaling-card reward-scaling-card--signed">
+                <div class="reward-scaling-card-heading">
+                  <h4>Signed, unbounded</h4>
+                  <p class="reward-scaling-map"><span>(&minus;&infin;, &infin;)</span><b>&rarr;</b><span>[0, 1)</span></p>
+                </div>
+                <svg class="reward-scaling-plot" viewBox="0 0 280 132" role="img" aria-label="Rational squash maps an unbounded raw score to a reward below one.">
+                  <defs><marker id="rational-arrow" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
+                  <line class="reward-scale-asymptote" x1="20" y1="21" x2="258" y2="21"/>
+                  <line class="reward-scale-axis" x1="20" y1="108" x2="258" y2="108" marker-start="url(#rational-arrow)" marker-end="url(#rational-arrow)"/>
+                  <line class="reward-scale-axis" x1="20" y1="108" x2="20" y2="15" marker-end="url(#rational-arrow)"/>
+                  <path class="reward-scale-curve" d="M21 108 H92 C115 69 161 35 204 26 C224 23 242 22 256 22"/>
+                  <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
+                  <text x="22" y="126">&minus;&infin;</text><text x="254" y="126" text-anchor="end">&infin;</text>
+                </svg>
+                <p>We use this map when there is no fixed best possible score.</p>
+                <p>Examples include episode return, log likelihood, and objective values without a fixed useful range.</p>
+                <details class="reward-scaling-formula">
+                  <summary>Show formula</summary>
+                  <table class="reward-scaling-terms"><tbody>
+                    <tr><th scope="row"><em>reward</em></th><td>Returned score.</td></tr>
+                    <tr><th scope="row"><em>reward</em><sub>baseline</sub></th><td>Reward at the baseline score.</td></tr>
+                    <tr><th scope="row"><em>u</em></th><td>Progress in units of the reference improvement.</td></tr>
+                    <tr><th scope="row"><em>s</em></th><td>Raw score.</td></tr>
+                    <tr><th scope="row"><em>s</em><sub>0</sub></th><td>Baseline raw score.</td></tr>
+                    <tr><th scope="row"><em>s</em><sub>ref</sub></th><td>Reference raw score.</td></tr>
+                    <tr><th scope="row"><em>σ</em></th><td>Direction sign. It is +1 when higher scores are better and −1 when lower scores are better.</td></tr>
+                  </tbody></table>
+                  <div class="reward-scaling-equations">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  </div>
+                </details>
+              </article>
+              <article class="reward-scaling-card reward-scaling-card--unsigned">
+                <div class="reward-scaling-card-heading">
+                  <h4>Unsigned, unbounded</h4>
+                  <p class="reward-scaling-map"><span>(0, &infin;)</span><b>&rarr;</b><span>[0, 1)</span></p>
+                </div>
+                <svg class="reward-scaling-plot" viewBox="0 0 280 132" role="img" aria-label="Log rational maps a positive unbounded raw score to a reward below one.">
+                  <defs><marker id="log-rational-arrow" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
+                  <line class="reward-scale-asymptote" x1="20" y1="21" x2="258" y2="21"/>
+                  <line class="reward-scale-axis" x1="20" y1="108" x2="258" y2="108" marker-end="url(#log-rational-arrow)"/>
+                  <line class="reward-scale-axis" x1="20" y1="108" x2="20" y2="15" marker-end="url(#log-rational-arrow)"/>
+                  <path class="reward-scale-curve" d="M21 108 C43 66 101 34 158 26 C196 22 229 22 256 22"/>
+                  <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
+                  <text x="22" y="126">0</text><text x="254" y="126" text-anchor="end">&infin;</text>
+                </svg>
+                <p>We use this map for positive metrics where improvements are meaningful in ratios and may span many orders of magnitude.</p>
+                <p>Examples include throughput, speedup, and inverse error.</p>
+                <details class="reward-scaling-formula">
+                  <summary>Show formula</summary>
+                  <table class="reward-scaling-terms"><tbody>
+                    <tr><th scope="row"><em>reward</em></th><td>Returned score.</td></tr>
+                    <tr><th scope="row"><em>reward</em><sub>baseline</sub></th><td>Reward at the baseline score.</td></tr>
+                    <tr><th scope="row"><em>u</em></th><td>Progress in units of the reference improvement.</td></tr>
+                    <tr><th scope="row"><em>s</em></th><td>Raw score.</td></tr>
+                    <tr><th scope="row"><em>s</em><sub>0</sub></th><td>Baseline raw score.</td></tr>
+                    <tr><th scope="row"><em>s</em><sub>ref</sub></th><td>Reference raw score.</td></tr>
+                    <tr><th scope="row"><em>σ</em></th><td>Direction sign. It is +1 when higher scores are better and −1 when lower scores are better.</td></tr>
+                  </tbody></table>
+                  <div class="reward-scaling-equations">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><msub><mi>log</mi><mn>2</mn></msub><mo>(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  </div>
+                </details>
+              </article>
+              <article class="reward-scaling-card reward-scaling-card--bounded">
+                <div class="reward-scaling-card-heading">
+                  <h4>Bounded</h4>
+                  <p class="reward-scaling-map"><span>[s<sub>0</sub>, s<sub>1</sub>]</span><b>&rarr;</b><span>[0, 1]</span></p>
+                </div>
+                <svg class="reward-scaling-plot" viewBox="0 0 280 132" role="img" aria-label="Gap ratio maps a score between known endpoints to a reward from zero to one.">
+                  <defs><marker id="gap-ratio-arrow" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
+                  <line class="reward-scale-axis" x1="20" y1="108" x2="258" y2="108" marker-end="url(#gap-ratio-arrow)"/>
+                  <line class="reward-scale-axis" x1="20" y1="108" x2="20" y2="15" marker-end="url(#gap-ratio-arrow)"/>
+                  <path class="reward-scale-curve" d="M21.0 108.0 L30.4 106.5 L39.8 104.9 L49.2 103.4 L58.6 101.8 L68.0 100.2 L79.8 98.2 L91.5 96.2 L103.3 94.1 L115.0 92.0 L126.8 89.9 L138.5 87.6 L150.3 85.3 L162.0 82.9 L173.8 80.4 L185.5 77.8 L197.3 74.9 L209.0 71.8 L220.8 68.2 L232.5 64.0 L239.6 60.8 L244.3 58.2 L248.9 54.9 L251.3 52.6 L253.7 49.3 L254.8 46.7 L255.5 43.8 L255.8 42.0 L256.0 20.0"/>
+                  <circle class="reward-scale-endpoint" cx="256" cy="20" r="3.5"/>
+                  <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
+                  <text x="22" y="126">s<tspan baseline-shift="sub" font-size="8">0</tspan></text><text x="254" y="126" text-anchor="end">s<tspan baseline-shift="sub" font-size="8">1</tspan></text>
+                </svg>
+                <p>We use this map when a metric has a known best value.</p>
+                <p>Examples include accuracy, F1, and AUC with a best value of 1, plus error, latency, and regret with a best value of 0.</p>
+                <details class="reward-scaling-formula">
+                  <summary>Show formula</summary>
+                  <table class="reward-scaling-terms"><tbody>
+                    <tr><th scope="row"><em>reward</em></th><td>Returned score.</td></tr>
+                    <tr><th scope="row"><em>reward</em><sub>baseline</sub></th><td>Reward at the baseline score.</td></tr>
+                    <tr><th scope="row"><em>u</em></th><td>Progress in units of the reference improvement.</td></tr>
+                    <tr><th scope="row"><em>s</em></th><td>Raw score.</td></tr>
+                    <tr><th scope="row"><em>s</em><sub>0</sub></th><td>Baseline raw score.</td></tr>
+                    <tr><th scope="row"><em>s</em><sub>1</sub></th><td>Best possible raw score.</td></tr>
+                    <tr><th scope="row"><em>d</em><sub>0</sub></th><td>Distance from <em>s</em><sub>1</sub> at the baseline score.</td></tr>
+                    <tr><th scope="row"><em>d</em></th><td>Distance from <em>s</em><sub>1</sub> at the agent score.</td></tr>
+                    <tr><th scope="row"><em>d</em><sub>ref</sub></th><td>Distance from <em>s</em><sub>1</sub> at the reference score.</td></tr>
+                  </tbody></table>
+                  <div class="reward-scaling-equations">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>d</mi><mo>=</mo><mo>|</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>1</mn></msub><mo>|</mo><mo>,</mo><mspace width=".5em"/><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><mi>d</mi><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><msub><mi>d</mi><mtext>ref</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  </div>
+                </details>
+              </article>
+            </div>
+          </div>
+        </details>
+      </div>
+      <h3 id="hidden-test-auarc">Main evaluation metric: hidden-test AUARC</h3>
+      <div class="prose">
+        <p>To motivate our main evaluation metric, we begin by considering the validation and hidden test score plots below. These plots show the performance of Claude Fable 5.1 working on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The left curve plots the best submission up to time step <em>t</em>, as selected by the best observed validation score. The right curve plots the test score of the submission with the best validation score so far. The agent never sees the hidden test scores nor the curve on the right. Note that the hidden test curve is not necessarily monotonic; if the agent is overfitting on the validation set, the hidden test score may experience a drop relative to a prior submission (indeed, this is observed in the below plot).</p>
+      </div>
+      <figure class="task-scoring-figure">
+        <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
+        <figcaption>Claude Fable 5.1 on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The shaded area is the "Area Under the AutoResearch Curve" (AUARC). We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
+      </figure>
+      <div class="prose">
+        <p>We would like to design a metric which captures both the generalization performance of any solution found by the model, whilst simultaneously rewarding early improvements. We argue that the <i>Area Under the AutoResearch Curve</i> (AUARC) provides a suitable measure. This metric is equivalent to the <i>time weighted average</i> hidden test score. Formally, it is defined simply by:</p>
+        <div class="auarc-equation">
+          <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="AUARC equals the sum over time intervals of hidden test reward times interval length, divided by total run time.">
+            <mi>AUARC</mi><mo>=</mo><mfrac><mrow><munderover><mo>&#x2211;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>r</mi><mi>i</mi></msub><mo>&#x0394;</mo><msub><mi>t</mi><mi>i</mi></msub></mrow><mi>T</mi></mfrac>
+          </math>
+        </div>
+        <p>Here, <em>r<sub>i</sub></em> is the hidden test reward held during interval <em>i</em>, <em>&#x0394;t<sub>i</sub></em> is the length of that interval, and <em>T</em> is the total run time. A score held for more time contributes more area. An improvement made early therefore adds more than the same improvement made near the end.</p>
+      </div>
+    </section>
+    <section class="section" id="general-analysis">
+      <h2>Analyzing agent behavior</h2>
+      <div class="prose">
+        <p>In this section, we examine the set of 24-hour rollouts we collect in order to obtain insights into the approaches taken by different models.</p>
+        <h3 class="analysis-subheading">Understanding continual model improvement</h3>
+        <p>Our first question is: Do models continue improving over longer runs? To investigate this, we construct the following two plots. The first, below on the left, plots the average hidden-test set reward at each hour interval, for each model. This plot demonstrates that agents continue improving throughout the 24h time period, following a similar pattern to the results from EdgeBench on long-horizon tasks <a class="cite" href="https://edge-bench.org/">[3]</a>. The second plot, on the right, shows what fraction of results (on the y-axis) result in improvements on the test-set across time (x-axis).</p>
+      </div>
+
+      <div id="trajectory-overview"></div>
+      <div class="prose">
+        <p>These plots show that Astra often starts with a strong solution. It has the higher fitted hidden-test reward for about the first three hours, after which Fable 5.1 then begins to outperform on average. By hour 22, Fable 5.1 narrowly leads in the hidden-test area under the curve (AUARC), the metric we use to evaluate overall performance on our <a href="#time-leaderboard">leaderboard</a>.</p>
+        <p>Second, the right plot shows that Muse has the largest share of runs that still improve after the 12-hour mark, at about 79%. Qwen and Grok follow at about 76%. This means that the agents are still working and improving on their solutions within the environment, that is, that the benchmark itself supports extended amounts of experimentation or optimization.
+        </p>
+      </div>
+
+      <!-- <div class="todo-items">
+        <p style="color:#B2182B;font-weight:600">Sid, please fill out.</p>
+        <p><strong>1)</strong> If something interesting is happening across rollouts (other than HPO).</p>
+        <p><strong>1A)</strong> If some model is doing something very interesting after the first submission.</p>
+        <p><strong>1B)</strong> If any models are not doing anything, e.g. they get stuck in some local minima, or there is some inability to make submissions or work in the environment.</p>
+        <p><strong>1C)</strong> Relative model failure analysis.</p>
+      </div> -->
+<div id="analysis-2bcd">
+<h3 id="analysis-2a">How well do agents' improvements generalize?</h3>
+<p>We compare validation and hidden-test AUARC. A smaller gap means closer agreement between the feedback agents optimize and their performance on unseen data.</p>
+<div class="aggregate-grid" id="behavior-result-plots"></div>
+<div class="prose result-notes" id="behavior-result-notes"></div>
+<details class="trajectory-method">
+<summary>How we measure the gap</summary>
+<p>For each model, we average validation AUARC (<em>V</em>) and hidden-test AUARC (<em>T</em>) across its included tasks. We then calculate the relative gap:</p>
+<div class="gap-equation">
+  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="Relative gap equals validation AUARC minus hidden-test AUARC, divided by the maximum of their absolute values.">
+    <mtext>Relative gap</mtext><mo>=</mo><mfrac><mrow><mi>V</mi><mo>−</mo><mi>T</mi></mrow><mrow><mi>max</mi><mo>(</mo><mo>|</mo><mi>V</mi><mo>|</mo><mo>,</mo><mo>|</mo><mi>T</mi><mo>|</mo><mo>)</mo></mrow></mfrac>
+  </math>
+</div>
+<p>A larger positive gap means less of the validation performance carries over to hidden tests. Lines show 95% intervals from resampling tasks. The gap alone does not prove overfitting.</p>
+</details>
+<h3 id="analysis-2b">How much of agents' research is hyperparameter tuning?</h3>
+<p>We use a prompted model to review each sampled round and classify it as HPO-only when the agent only tunes settings of an existing method, without introducing a new method or substantive fix.</p>
+<figure class="hpo-chart" aria-labelledby="hpo-chart-title">
+<h4 class="figure-heading" id="hpo-chart-title">Estimated percentage of HPO-only rounds by model</h4>
+<div class="hpo-chart-row"><span class="hpo-chart-name">GPT-5.6 Sol</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds."><title>GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="475.7143" height="22" fill="#1F78B4"/><path class="hpo-chart-interval" fill="none" d="M 418.7665 16 H 531.3653 M 418.7665 11 V 21 M 531.3653 11 V 21"/></svg><span class="hpo-chart-value">55.5%</span></div>
+<div class="hpo-chart-row"><span class="hpo-chart-name">Muse Spark 1.3</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Muse Spark 1.3: 47.5% HPO-only; 95% sampling interval 42.0% to 53.1%; 95 of 200 sampled rounds."><title>Muse Spark 1.3: 47.5% HPO-only; 95% sampling interval 42.0% to 53.1%; 95 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="407.1429" height="22" fill="#00A6D6"/><path class="hpo-chart-interval" fill="none" d="M 359.9677 16 H 455.2058 M 359.9677 11 V 21 M 455.2058 11 V 21"/></svg><span class="hpo-chart-value">47.5%</span></div>
+<div class="hpo-chart-row"><span class="hpo-chart-name">Grok 4.6</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Grok 4.6: 36.0% HPO-only; 95% sampling interval 29.9% to 42.5%; 72 of 200 sampled rounds."><title>Grok 4.6: 36.0% HPO-only; 95% sampling interval 29.9% to 42.5%; 72 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="308.5714" height="22" fill="#4D4D4D"/><path class="hpo-chart-interval" fill="none" d="M 255.9737 16 H 364.2703 M 255.9737 11 V 21 M 364.2703 11 V 21"/></svg><span class="hpo-chart-value">36.0%</span></div>
+<div class="hpo-chart-row"><span class="hpo-chart-name">GPT-6 Astra</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="GPT-6 Astra: 27.5% HPO-only; 95% sampling interval 22.2% to 33.8%; 55 of 200 sampled rounds."><title>GPT-6 Astra: 27.5% HPO-only; 95% sampling interval 22.2% to 33.8%; 55 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="235.7143" height="22" fill="#B2182B"/><path class="hpo-chart-interval" fill="none" d="M 190.4762 16 H 289.8105 M 190.4762 11 V 21 M 289.8105 11 V 21"/></svg><span class="hpo-chart-value">27.5%</span></div>
+<div class="hpo-chart-row"><span class="hpo-chart-name">Gemini 3.8 Flash</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Gemini 3.8 Flash: 27.0% HPO-only; 95% sampling interval 21.6% to 33.1%; 54 of 200 sampled rounds."><title>Gemini 3.8 Flash: 27.0% HPO-only; 95% sampling interval 21.6% to 33.1%; 54 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="231.4286" height="22" fill="#A6761D"/><path class="hpo-chart-interval" fill="none" d="M 185.0389 16 H 283.6753 M 185.0389 11 V 21 M 283.6753 11 V 21"/></svg><span class="hpo-chart-value">27.0%</span></div>
+<div class="hpo-chart-row"><span class="hpo-chart-name">Qwen3.8 Max</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Qwen3.8 Max: 23.5% HPO-only; 95% sampling interval 19.0% to 28.7%; 47 of 200 sampled rounds."><title>Qwen3.8 Max: 23.5% HPO-only; 95% sampling interval 19.0% to 28.7%; 47 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="201.4286" height="22" fill="#1B9E77"/><path class="hpo-chart-interval" fill="none" d="M 162.6457 16 H 245.5950 M 162.6457 11 V 21 M 245.5950 11 V 21"/></svg><span class="hpo-chart-value">23.5%</span></div>
+<div class="hpo-chart-row"><span class="hpo-chart-name">Kimi K3</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Kimi K3: 17.0% HPO-only; 95% sampling interval 12.5% to 22.9%; 34 of 200 sampled rounds."><title>Kimi K3: 17.0% HPO-only; 95% sampling interval 12.5% to 22.9%; 34 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="145.7143" height="22" fill="#E7298A"/><path class="hpo-chart-interval" fill="none" d="M 107.2414 16 H 196.3464 M 107.2414 11 V 21 M 196.3464 11 V 21"/></svg><span class="hpo-chart-value">17.0%</span></div>
+<div class="hpo-chart-row"><span class="hpo-chart-name">Claude Opus 5</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Claude Opus 5: 7.5% HPO-only; 95% sampling interval 4.8% to 11.1%; 15 of 200 sampled rounds."><title>Claude Opus 5: 7.5% HPO-only; 95% sampling interval 4.8% to 11.1%; 15 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="64.2857" height="22" fill="#D95F02"/><path class="hpo-chart-interval" fill="none" d="M 41.4747 16 H 95.3917 M 41.4747 11 V 21 M 95.3917 11 V 21"/></svg><span class="hpo-chart-value">7.5%</span></div>
+<div class="hpo-chart-row"><span class="hpo-chart-name">Claude Fable 5.1</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Claude Fable 5.1: 7.0% HPO-only; 95% sampling interval 5.3% to 10.6%; 14 of 200 sampled rounds."><title>Claude Fable 5.1: 7.0% HPO-only; 95% sampling interval 5.3% to 10.6%; 14 of 200 sampled rounds.</title>
+<rect class="hpo-chart-bar" x="0" y="5" width="60.0000" height="22" fill="#6A3D9A"/><path class="hpo-chart-interval" fill="none" d="M 45.2716 16 H 90.5433 M 45.2716 11 V 21 M 90.5433 11 V 21"/></svg><span class="hpo-chart-value">7.0%</span></div>
+<div class="hpo-chart-axis" aria-hidden="true"><span></span><div class="hpo-chart-scale"><span>0%</span><span>35%</span><span>70%</span></div><span></span><div class="hpo-chart-axis-title">HPO-only rounds</div></div>
+<figcaption>200 randomly sampled rounds per model. Lines show 95% confidence intervals.</figcaption>
+</figure>
+<p>In our sample, Anthropic's Fable and Opus spend fewer rounds doing only HPO than other models. Both sometimes test several variants using local validation before submitting, suggesting they may shift some experimentation from benchmark submissions to internal checks. This points to a difference in research approach, though it does not establish that doing less HPO causes their stronger results. Another interesting point of note is that Sol has a very large number of submissions which are considered HPO by our parser; we believe that this is most likely due to the fact that Sol makes a large number of submissions overall (see <a href="#analysis-2d">Do models that submit more perform better?</a>), and chooses to do less internal tuning on a dev set prior to submission.</p>
+<h3 id="analysis-2d">Do models that submit more perform better?</h3>
+<p>We see only a weak association between submission count and test AUARC across models. We don’t see evidence that simply submitting more leads to higher scores on this benchmark. This suggests that naïve hill climbing through more submissions alone is insufficient, and that the quality of research steps matters.</p>
+<figure class="model-effort" id="model-effort-plots"><div class="model-effort-panels"><div><h4>Number of submissions vs. test AUARC</h4><div class="efficiency-chart-wrap model-effort-chart"><svg viewBox="0 0 680 350" role="img" aria-label="Number of submissions vs. test AUARC"><text x="60" y="17">Mean test AUARC</text><text x="50" y="294" text-anchor="end">0.00</text><text x="50" y="231.5" text-anchor="end">0.25</text><text x="50" y="169" text-anchor="end">0.50</text><text x="50" y="106.5" text-anchor="end">0.75</text><text x="50" y="44" text-anchor="end">1.00</text><path d="M60 40V290H650" fill="none" stroke="var(--line)"/><line class="effort-trend" x1="220.70476190476188" y1="158.68971677138057" x2="571.3333333333333" y2="175.48132040228467" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"><title>Linear fit across model averages</title></line><text class="effort-correlation" x="583.3333333333333" y="179.48132040228467">r = −0.26</text><text x="60" y="311" text-anchor="middle">0</text><text x="178" y="311" text-anchor="middle">15</text><text x="296" y="311" text-anchor="middle">30</text><text x="414" y="311" text-anchor="middle">45</text><text x="532" y="311" text-anchor="middle">60</text><text x="650" y="311" text-anchor="middle">75</text><text x="355" y="338" text-anchor="middle">Mean number of submissions per task</text><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Claude Fable 5.1: 20.4 submissions, 81.6% of active run time outside grading, test AUARC 0.602; 29 tasks." data-model="Claude Fable 5.1" data-resource-label="Mean number of submissions per task" data-resource-value="20.4" data-score-label="Mean test AUARC" data-score-value="0.602" data-left="32.456582633053216" data-top="39.826237110127536" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="220.70476190476188" cy="139.39182988544638" r="13"/><rect class="company-logo-backdrop" x="210.39476190476188" y="129.08182988544638" width="20.63" height="20.63" fill="#fff" stroke="#6A3D9A" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/anthropic/191919" x="212.45476190476188" y="131.14182988544638" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="GPT-6 Astra: 29.5 submissions, 77.8% of active run time outside grading, test AUARC 0.600; 29 tasks." data-model="GPT-6 Astra" data-resource-label="Mean number of submissions per task" data-resource-value="29.5" data-score-label="Mean test AUARC" data-score-value="0.600" data-left="42.99547511312217" data-top="39.993610493240844" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="292.36923076923074" cy="139.97763672634295" r="13"/><rect class="company-logo-backdrop" x="282.05923076923074" y="129.66763672634295" width="20.63" height="20.63" fill="#fff" stroke="#B2182B" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg" x="284.11923076923074" y="131.72763672634295" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Claude Opus 5: 22.0 submissions, 85.3% of active run time outside grading, test AUARC 0.579; 29 tasks." data-model="Claude Opus 5" data-resource-label="Mean number of submissions per task" data-resource-value="22.0" data-score-label="Mean test AUARC" data-score-value="0.579" data-left="34.3207843137255" data-top="41.49769228548211" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="233.38133333333334" cy="145.24192299918738" r="13"/><rect class="company-logo-backdrop" x="223.07133333333334" y="134.93192299918738" width="20.63" height="20.63" fill="#fff" stroke="#D95F02" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/anthropic/191919" x="225.13133333333334" y="136.99192299918738" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="GPT-5.6 Sol: 65.0 submissions, 68.1% of active run time outside grading, test AUARC 0.513; 29 tasks." data-model="GPT-5.6 Sol" data-resource-label="Mean number of submissions per task" data-resource-value="65.0" data-score-label="Mean test AUARC" data-score-value="0.513" data-left="84.01960784313725" data-top="46.20145397253454" data-place-left="true" data-place-below="false"><circle class="efficiency-hit" cx="571.3333333333333" cy="161.7050889038709" r="13"/><rect class="company-logo-backdrop" x="561.0233333333333" y="151.39508890387089" width="20.63" height="20.63" fill="#fff" stroke="#1F78B4" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg" x="563.0833333333333" y="153.4550889038709" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Grok 4.6: 48.3 submissions, 72.6% of active run time outside grading, test AUARC 0.493; 29 tasks." data-model="Grok 4.6" data-resource-label="Mean number of submissions per task" data-resource-value="48.3" data-score-label="Mean test AUARC" data-score-value="0.493" data-left="64.65286855482934" data-top="47.63317687795745" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="439.6395061728395" cy="166.7161190728511" r="13"/><rect class="company-logo-backdrop" x="429.3295061728395" y="156.40611907285108" width="20.63" height="20.63" fill="#fff" stroke="#4D4D4D" stroke-width="1.4"/><image class="company-logo-svg" href="assets/xai-logo-contained.png" x="431.3895061728395" y="158.4661190728511" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Gemini 3.8 Flash: 40.2 submissions, 77.6% of active run time outside grading, test AUARC 0.484; 29 tasks." data-model="Gemini 3.8 Flash" data-resource-label="Mean number of submissions per task" data-resource-value="40.2" data-score-label="Mean test AUARC" data-score-value="0.484" data-left="55.3122730573711" data-top="48.320717467707865" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="376.12345679012344" cy="169.12251113697755" r="13"/><rect class="company-logo-backdrop" x="365.81345679012344" y="158.81251113697755" width="20.63" height="20.63" fill="#fff" stroke="#A6761D" stroke-width="1.4"/><image class="company-logo-svg" href="assets/google-logo.png" x="367.87345679012344" y="160.87251113697755" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Kimi K3: 41.7 submissions, 72.5% of active run time outside grading, test AUARC 0.435; 29 tasks." data-model="Kimi K3" data-resource-label="Mean number of submissions per task" data-resource-value="41.7" data-score-label="Mean test AUARC" data-score-value="0.435" data-left="57.05580693815988" data-top="51.75333162288184" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="387.9794871794872" cy="181.13666068008644" r="13"/><rect class="company-logo-backdrop" x="377.6694871794872" y="170.82666068008643" width="20.63" height="20.63" fill="#fff" stroke="#E7298A" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/moonshotai/191919" x="379.7294871794872" y="172.88666068008644" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Qwen3.8 Max: 32.2 submissions, 78.7% of active run time outside grading, test AUARC 0.423; 29 tasks." data-model="Qwen3.8 Max" data-resource-label="Mean number of submissions per task" data-resource-value="32.2" data-score-label="Mean test AUARC" data-score-value="0.423" data-left="46.021116138763205" data-top="52.613416924049126" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="312.94358974358977" cy="184.14695923417196" r="13"/><rect class="company-logo-backdrop" x="302.63358974358977" y="173.83695923417196" width="20.63" height="20.63" fill="#fff" stroke="#1B9E77" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/alibabacloud/ff6a00" x="304.69358974358977" y="175.89695923417196" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Muse Spark 1.3: 29.3 submissions, 86.8% of active run time outside grading, test AUARC 0.379; 29 tasks." data-model="Muse Spark 1.3" data-resource-label="Mean number of submissions per task" data-resource-value="29.3" data-score-label="Mean test AUARC" data-score-value="0.379" data-left="42.684012066365014" data-top="55.795969853068286" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="290.2512820512821" cy="195.285894485739" r="13"/><rect class="company-logo-backdrop" x="279.9412820512821" y="184.975894485739" width="20.63" height="20.63" fill="#fff" stroke="#00A6D6" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/meta/0866ff" x="282.0012820512821" y="187.035894485739" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g></svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></div></div></figure></div>
+    </section>
+      <section class="section hint-study" id="hint-study">
+      <h2>Using a research hint</h2>
+      <div class="prose">
+        <p>We condense insights from a set of AutoResearch trajectories into a single sentence and use it as a hint for a 200-turn Terminus 2 run. We compare its hidden-test reward with the same model’s first 200-turn AutoResearch iteration without a hint.</p>
+      </div>
+      <figure class="hint-comparison" aria-labelledby="hint-chart-title" aria-describedby="hint-chart-note">
+        <figcaption>
+          <h3 id="hint-chart-title">Hidden-test reward with and without a hint</h3>
+          <p id="hint-chart-note" class="plot-note">Average across 22 CPU tasks.</p>
+        </figcaption>
+<table class="hint-shared-table" aria-label="Hidden-test reward with and without hints by model"><thead><tr><th scope="col">Run</th><th scope="col"><span class="hint-model-heading"><img src="https://cdn.simpleicons.org/anthropic/191919" alt="" width="22" height="22">Claude Opus 5</span></th><th scope="col"><span class="hint-model-heading"><img src="https://cdn.simpleicons.org/meta/0866ff" alt="" width="22" height="22">Muse Spark 1.3</span></th></tr></thead><tbody aria-label="Terminus 2, 200 turns"><tr class="hint-group-label"><th colspan="3">Terminus 2 · 200 turns</th></tr><tr><th scope="row">Without hint</th><td class="hint-model--opus"><span class="hint-cell-value">0.441</span><span class="hint-bar-track" aria-hidden="true"><span style="width:44.1%"></span></span></td><td class="hint-model--muse"><span class="hint-cell-value">0.403</span><span class="hint-bar-track" aria-hidden="true"><span style="width:40.3%"></span></span></td></tr><tr><th scope="row">With validation hint</th><td class="hint-model--opus"><span class="hint-cell-value">0.547</span><span class="hint-bar-track hint-bar-track--gain" aria-hidden="true"><span style="width:44.1%"></span><span class="hint-gain" style="left:44.1%;width:10.6%"></span></span></td><td class="hint-model--muse"><span class="hint-cell-value">0.447</span><span class="hint-bar-track hint-bar-track--gain" aria-hidden="true"><span style="width:40.3%"></span><span class="hint-gain" style="left:40.3%;width:4.4%"></span></span></td></tr></tbody><tbody class="hint-full-run"><tr><th scope="row">Full AutoResearch</th><td class="hint-model--opus"><span class="hint-cell-value">0.592</span><span class="hint-bar-track" aria-hidden="true"><span style="width:59.2%"></span></span></td><td class="hint-model--muse"><span class="hint-cell-value">0.449</span><span class="hint-bar-track" aria-hidden="true"><span style="width:44.9%"></span></span></td></tr></tbody></table>
+        <p class="plot-note hint-gain-note"><span class="hint-gain-key" aria-hidden="true"></span> Shaded segment: gain with a hint.</p>
+        <p class="plot-note hint-comparison-note">The result without a hint is from the first AutoResearch iteration. Full AutoResearch shows the final reward after the longer run, not another 200-turn result.</p>
+      </figure>
+      <div class="prose hint-takeaway"><p>The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score. This suggests that insights discovered during AutoResearch can help models reach better solutions within a single 200-turn run.</p></div>
+    </section>
+    <section class="section" id="harness-ablations">
+      <h2>Comparing harnesses</h2>
+      <p>First, we give some additional details on our Terminus 2 autoresearch harness:</p>
+      <ul class="harness-details">
+        <li>The model receives the task, persistent workspace, research protocol, previous experiment history, and remaining wall-clock budget.</li>
+        <li>It repeatedly edits and tests in the same terminal; before each new experiment, the default Terminus configuration compacts the prior conversation into a handoff summary.</li>
+        <li>Each submission is snapshotted and graded in a fresh verifier; the model receives only validation scores, errors, output, and the updated time remaining.</li>
+        <li>Anytime the best validation checkpoint is updated, that submission is scored on sealed, hidden tests (never revealed to the agent).</li>
+      </ul>
+      <p class="harness-intro">A natural question is whether our Terminus 2 based autoresearch harness will have significantly different results when compared Codex and Claude Code. To evaluate this, we compared all three harnesses with Opus 5 and GPT-5.6 Sol on a subset of on five tasks over 12 hours.</p>
+      <h4 class="figure-heading" id="harness-summary-title">Average harness performance across five tasks</h4>
+      <div id="harness-summary" aria-labelledby="harness-summary-title"></div>
+      <p id="harness-findings">Although we found that the average rewards differ slightly across the harnesses, the aggregate hidden test <i>ranking between models</i> stays the same. These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison. See the below plots for the individual run information.</p>
+      <div id="harness-ablation-plot"></div>
+    </section>
+    <section class="section citation-section" id="citation" aria-labelledby="citation-heading">
+      <h2 id="citation-heading">Cite this work</h2>
+      <p class="prose">If you use AutoResearchExam in your research, please cite:</p>
+      <div class="citation-box">
+        <div class="citation-tools"><span>BibTeX</span><div><a href="citation.bib" download>Download</a><button type="button" id="copy-citation">Copy citation</button></div></div>
+        <pre tabindex="0" aria-label="BibTeX citation"><code id="citation-bibtex">@misc{ramesh2026autoresearchexam,
+  author = {Ramesh, Anirudha and
+            Devic, Siddartha and
+            Garg, Shivank and
+            Parulekar, Advait and
+            Mahnot, Drish and
+            Pimpalgaonkar, Shreyas and
+            Suresh, Vishnu and
+            Dimakis, Alex and
+            Sathiamoorthy, Maheswaran},
+  title = {{AutoResearchExam}},
+  year = {2026},
+  month = sep,
+  url = {https://benchmarks.bespokelabs.ai/autoresearchexam/},
+  note = {Published September 9, 2026}
+}</code></pre>
+      </div>
+      <p class="citation-status" id="citation-status" role="status" aria-live="polite"></p>
+    </section>
+    <section class="section benchmark-updates" id="updates" aria-labelledby="updates-title">
+      <div class="updates-intro">
+        <h2 id="updates-title">Sign up for<br>benchmark updates</h2>
+        <p>New results and updates from AutoResearchExam.</p>
+      </div>
+      <form class="updates-form ph-no-capture" action="/api/benchmark-updates" method="post" aria-label="Benchmark email updates" aria-describedby="updates-status" data-ph-no-capture>
+        <label class="updates-label" for="updates-email">Email address</label>
+        <input id="updates-email" class="ph-no-capture ph-sensitive" type="email" name="emailAddress" placeholder="Email address" autocomplete="email" inputmode="email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" data-ph-no-capture data-ph-mask>
+        <button type="submit">Notify me <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="updates-status" id="updates-status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <noscript><style>.updates-form { display: none; }</style><p>Please enable JavaScript to subscribe here, or <a href="https://docs.google.com/forms/d/e/1FAIpQLScqN4zCevQ5T-c_ZmLRyJzY3tuTphVU9FrsxUi62BFErpKbjQ/viewform">use the signup form</a>.</p></noscript>
+    </section>
+    <footer class="references">
+      <strong>References</strong>
+      <ol><li><a href="https://mls-bench.com/">MLSBench</a></li><li><a href="https://github.com/karpathy/autoresearch">autoresearch</a></li><li><a href="https://edge-bench.org/">EdgeBench</a></li></ol>
+    </footer>
+  </main>
+</div>
+<script src="site-data.js?v=fable-safety-cutoff-20260909"></script>
+<script src="run-adjustments.js?v=fable-safety-cutoff-20260909"></script>
+<script src="harness-ablation-data.js?v=harness-modes-20260907"></script>
+<script src="task-catalog.js?v=private-task-links-20260908"></script>
+<script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
+<script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
+<script src="results.js?v=harness-safari-click-20260909"></script>
+<script src="citation.js"></script>
+<script src="argon-live-data.js?v=argon-20261015"></script>
+<script src="live-leaderboard.js?v=pareto-tooltip-20261019"></script>
+</body>
+</html>

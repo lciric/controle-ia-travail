@@ -1,0 +1,164 @@
+"""
+Feedback-policy registry: what the critic is shown between iterations.
+Parallel to the objective and stopping registries: adding a policy is
+adding one :class:`FeedbackPolicyDef`.
+
+A policy renders the critic-visible block from (the latest candidate's design
+metrics, its objective verdict, the ledger state, params); it never mutates any
+of them. The three policies act on different axes:
+
+- ``full``: raw design metrics, unmodified (prior-system behavior; control).
+- ``deflated``: metrics plus the live search accounting (bar, excess, trials
+  spent, wealth remaining). The cost-visibility arm; its prediction is
+  two-sided (may reduce duplicate waste, may teach the critic to
+  dilute the variance; which wins, per bar_mode, is a headline result).
+- ``ladder(eta)``: Blum–Hardt-style quantized feedback, only "improved by
+  >= eta / did not improve" and the quantized running best, never raw
+  metrics (bounds design-window leakage per iteration).
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass
+from typing import Any, Callable
+
+# render(design_metrics, verdict, ledger_state, params) -> the critic-visible
+# block. verdict is the candidate's ObjectiveVerdict (objectives.py);
+# ledger_state is a LedgerState (ledger_state.py); params come frozen from the
+# spec. Pure: reads only, returns a fresh dict.
+RenderFn = Callable[[dict[str, float], Any, Any, dict[str, Any]], dict[str, Any]]
+
+
+@dataclass(frozen=True)
+class FeedbackPolicyDef:
+    """Self-describing feedback-policy plugin (name, description, render).
+
+    ``validate_params`` (optional) raises ``ValueError`` on a bad params dict,
+    called by the spec layer at parse time.
+    """
+
+    name: str
+    description: str
+    render: RenderFn
+    validate_params: Callable[[dict[str, Any]], None] | None = None
+
+
+_REGISTRY: dict[str, FeedbackPolicyDef] = {}
+
+
+def register_feedback_policy(defn: FeedbackPolicyDef) -> None:
+    if defn.name in _REGISTRY:
+        raise ValueError(f"feedback policy {defn.name!r} already registered")
+    _REGISTRY[defn.name] = defn
+
+
+def has_feedback_policy(name: str) -> bool:
+    return name in _REGISTRY
+
+
+def get_feedback_policy(name: str) -> FeedbackPolicyDef:
+    try:
+        return _REGISTRY[name]
+    except KeyError:
+        raise ValueError(
+            f"unknown feedback policy {name!r}; available: {feedback_policy_names()}"
+        ) from None
+
+
+def feedback_policy_names() -> list[str]:
+    return sorted(_REGISTRY)
+
+
+def all_feedback_policies() -> dict[str, FeedbackPolicyDef]:
+    return dict(_REGISTRY)
+
+
+def _check_keys(params: dict[str, Any], allowed: set[str], policy: str) -> None:
+    unknown = set(params) - allowed
+    if unknown:
+        raise ValueError(
+            f"feedback policy {policy!r}: unknown params {sorted(unknown)}; allowed: {sorted(allowed)}"
+        )
+
+
+# --------------------------------------------------------------------------- #
+# full: raw design metrics, unmodified (the prior-system control).
+# --------------------------------------------------------------------------- #
+
+def _full(metrics: dict[str, float], _verdict: Any, _state: Any, _params: dict[str, Any]) -> dict[str, Any]:
+    return dict(metrics)
+
+
+register_feedback_policy(
+    FeedbackPolicyDef(
+        name="full",
+        description="Raw design metrics, unmodified. Prior-system default.",
+        render=_full,
+        validate_params=lambda params: _check_keys(params, set(), "full"),
+    )
+)
+
+
+# --------------------------------------------------------------------------- #
+# deflated: metrics plus the live accounting (bar, excess, trials, wealth).
+# --------------------------------------------------------------------------- #
+
+def _deflated(metrics: dict[str, float], verdict: Any, state: Any, _params: dict[str, Any]) -> dict[str, Any]:
+    block = dict(metrics)
+    # search_* namespace so accounting keys can never shadow a design metric.
+    if verdict is not None and verdict.threshold is not None:
+        block["search_bar"] = float(verdict.threshold)
+        block["search_excess"] = float(verdict.excess)
+    block["search_trials_spent"] = int(state.n_trials)
+    if state.wealth is not None:
+        block["search_wealth"] = float(state.wealth)
+    return block
+
+
+register_feedback_policy(
+    FeedbackPolicyDef(
+        name="deflated",
+        description=(
+            "Raw design metrics plus the live search accounting: search_bar, search_excess, "
+            "search_trials_spent, search_wealth (when wealth accounting is on)."
+        ),
+        render=_deflated,
+        validate_params=lambda params: _check_keys(params, set(), "deflated"),
+    )
+)
+
+
+# --------------------------------------------------------------------------- #
+# ladder(eta): quantized improved/did-not-improve; never raw metrics.
+# --------------------------------------------------------------------------- #
+
+def _ladder(_metrics: dict[str, float], _verdict: Any, state: Any, _params: dict[str, Any]) -> dict[str, Any]:
+    # The loop maintains the ladder (quantized running best, updated only on a
+    # >= eta improvement); the policy renders that state and NOTHING else: no
+    # raw metric ever crosses this boundary.
+    block: dict[str, Any] = {"improved": bool(state.ladder_improved)}
+    if math.isfinite(state.ladder_best):
+        block["best_quantized"] = float(state.ladder_best)
+    return block
+
+
+def _validate_ladder(params: dict[str, Any]) -> None:
+    _check_keys(params, {"eta"}, "ladder")
+    if "eta" in params:
+        eta = params["eta"]
+        if not isinstance(eta, (int, float)) or isinstance(eta, bool) or float(eta) <= 0.0:
+            raise ValueError("feedback policy 'ladder': params.eta must be a number > 0")
+
+
+register_feedback_policy(
+    FeedbackPolicyDef(
+        name="ladder",
+        description=(
+            "Blum-Hardt-style quantized feedback: {improved, best_quantized} only, never raw "
+            "metrics. params.eta = the improvement step in annualized Sharpe (default 0.10)."
+        ),
+        render=_ladder,
+        validate_params=_validate_ladder,
+    )
+)

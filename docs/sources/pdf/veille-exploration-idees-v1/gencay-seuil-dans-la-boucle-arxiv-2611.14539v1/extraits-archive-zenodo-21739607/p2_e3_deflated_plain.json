@@ -1,0 +1,165 @@
+{
+  "name": "p2_e3_deflated_plain",
+  "description": "E3 cell deflated x plain: metrics plus live accounting (bar, excess, trials) injected; cost-visibility with the downward dilution exploit live (the two-sided prediction). Frozen suite; v_floor pinned from the calibration manifest paper/paper2/e0_calibration.json. Budget 100; models via env (gpt-4.1 default; claude via LLM_PROVIDER=anthropic ANTHROPIC_MODEL=claude-sonnet-5); seeds = repeated runs at default temperature.",
+  "universe": "us_liquid_500",
+  "warmup_start": "2016-01-01",
+  "design": {
+    "start": "2017-01-01",
+    "end": "2021-12-31"
+  },
+  "eval": {
+    "start": "2022-01-01",
+    "end": "2025-12-31"
+  },
+  "initial_cash": 1000000.0,
+  "events_shift": 1,
+  "costs": {
+    "commission_bps": 1.0,
+    "spread_bps": 2.0,
+    "impact_coef": 10.0,
+    "adv_window": 21,
+    "borrow_bps_annual": 50.0
+  },
+  "universe_selection": {
+    "kind": "dynamic_liquid",
+    "top_n": 200,
+    "adv_window": 63,
+    "rebalance_days": 21
+  },
+  "data": {
+    "source": "auto",
+    "strict": true,
+    "price_panel_paths": [
+      "data/price_panel_us_liquid_500.parquet"
+    ],
+    "event_panel_paths": [
+      "data/gdelt_tone_panel.parquet"
+    ]
+  },
+  "plan_source": {
+    "kind": "literal",
+    "goal": "Discover a leakage-safe, market-neutral long/short US large-cap equity signal from the available interpretable price features (as-of the previous close).",
+    "denied_features": [
+      "event_sentiment",
+      "macro_broadcast",
+      "market_broadcast",
+      "ohlcv_field",
+      "sec_ratio",
+      "sec_us_gaap_pit"
+    ],
+    "refine": {
+      "enabled": true,
+      "critic": "agent_tool",
+      "objective": "deflated_excess",
+      "max_iterations": 100,
+      "objective_params": {
+        "metric": "sharpe",
+        "v_floor": 0.1204512227686056,
+        "bar_mode": "plain"
+      },
+      "feedback": "deflated",
+      "feedback_in_goal": true
+    },
+    "plan": {
+      "features": [
+        {
+          "name": "momentum",
+          "params": {
+            "window": 126
+          },
+          "as_of": "close_t_minus_1"
+        }
+      ],
+      "combo": {
+        "top_k": 50,
+        "bottom_k": 50,
+        "gross_cap": 1.0,
+        "normalize_gross": true
+      },
+      "strategy": "rank_long_short",
+      "signal": [
+        {
+          "transform": "identity",
+          "inputs": [
+            "momentum"
+          ],
+          "weight": 1.0,
+          "component": "momentum"
+        }
+      ]
+    }
+  },
+  "arms": [
+    {
+      "name": "agent_discovered",
+      "kind": "agent_plan"
+    },
+    {
+      "name": "momentum_ls_ref",
+      "kind": "literal",
+      "strategy": "rank_long_short",
+      "plan": {
+        "features": [
+          {
+            "name": "momentum",
+            "params": {
+              "window": 126
+            },
+            "as_of": "close_t_minus_1"
+          }
+        ],
+        "combo": {
+          "top_k": 50,
+          "bottom_k": 50,
+          "gross_cap": 1.0,
+          "normalize_gross": true
+        },
+        "strategy": "rank_long_short",
+        "signal": [
+          {
+            "transform": "identity",
+            "inputs": [
+              "momentum"
+            ],
+            "weight": 1.0,
+            "component": "momentum"
+          }
+        ]
+      }
+    },
+    {
+      "name": "random_floor",
+      "kind": "literal",
+      "strategy": "random_weights",
+      "plan": {
+        "features": [
+          {
+            "name": "return_1d",
+            "params": {},
+            "as_of": "close_t_minus_1"
+          }
+        ],
+        "combo": {
+          "random_seed": 0,
+          "rebalance_days": 21,
+          "n_long": 50,
+          "n_short": 50,
+          "gross_cap": 1.0,
+          "normalize_gross": true
+        },
+        "strategy": "random_weights"
+      }
+    },
+    {
+      "name": "buy_and_hold",
+      "kind": "baseline"
+    },
+    {
+      "name": "spy_buy_and_hold",
+      "kind": "baseline",
+      "baseline_symbols": [
+        "spy.us"
+      ]
+    }
+  ]
+}

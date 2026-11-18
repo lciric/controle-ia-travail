@@ -6,3 +6,4 @@ Registre à part du registre propre `registres/t07-etape-b-bis-v1.md`, qui n'adm
 |---|---|---|---|---|
 | ADDENDUM-ECART-1-BBIS | 2026-11-16T00:59:36Z | prereg/T0.7-etape-B-bis-v1-addendum-ecart-v1.md | f00eda8a9fb74516289a085350425d128bf5b1cf1dbc50eee32d8bbe749c78d7 | GO-2026-11-16-01 ; R-2950 ; R-2955 ; R-2956 ; R-2959 |
 | ADDENDUM-ECART-2-BBIS | 2026-11-17T02:45:43Z | prereg/T0.7-etape-B-bis-v1-addendum-ecart-2-v1.md | 18baeac32d26ebf174c62d7a36caedeee1d5b80648c6743c21dc30d2747afd26 | GO-2026-11-16-11 ; R-3031 ; contre-lecture 3 tours (scellable) |
+| ADDENDUM-ECART-3-BBIS | 2026-11-18T05:46:36Z | prereg/T0.7-etape-B-bis-v1-addendum-ecart-3-v1.md | e5604cbdce509958e1f3e3bc3a36c8d17a78c8900b5f93a2102fff9b51d07872 | GO-2026-11-18-05 ; R-3170 (8) ; R-3191 ; arbitrage 688abea5 ; vérification du brouillon 3 (scellable) a0d1e80a ; plafond de prix au lanceur à couvrir par Lazar |
