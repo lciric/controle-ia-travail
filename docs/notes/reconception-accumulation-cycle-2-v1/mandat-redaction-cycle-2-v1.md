@@ -1,0 +1,15 @@
+# Mandat de rédaction du second cycle (conception 3) — v1
+
+Écrit par la session mère `session_013QMayjsoZJFBUCqcnvD5h1` le 2026-11-18 vers 18:15Z, sur le mot direct de Lazar « go conception 3 go recos » (R-3357, GO-2026-11-18-45). Rédacteur : le concepteur de la note `conception-cycle-2-v1.md` (`167f9b07…`), auteur donc, exclu de toute contre-lecture, lecture ou jugement du second cycle. La session mère, exposée au premier cycle, ne fixe aucun choix d'analyse.
+
+## Décisions de Lazar à porter dans les textes
+Conception 3, confirmée selon le plan de la conception 1 ; données du premier cycle déclarées **données de développement** pour la question de l'accumulation ; écart d'intérêt et marge d'équivalence 0,05 ; famille neuve : adaptateur sans consigne sur tâches fraîches (les organismes du barreau 8 ne sont pas employés ici) ; validation hors session accordée dans son principe (dépôt daté chez le tiers, bras d'attaque, second modèle de base), chaque geste externe restant un nœud. **Non tranchés, à laisser ouverts** : ajouter à G1 un contraste à témoin apparié (critère de porte) ; ce qui ferait abandonner la question. Aucune hypothèse ni aucun critère de porte ne change.
+
+## Ce que tu rends (brouillons scellés comme brouillons, au gabarit `prereg/gabarit-preregistrement-v1.md` quand il s'applique)
+1. `docs/notes/reconception-accumulation-cycle-2-v1/ordre-exploratoire-temps-1-v1-brouillon1.md` : ce qu'un analyste autorisé peut faire sur les données de développement (fichiers nommés par chemin et empreinte, méthodes permises pour reconcevoir les sondes contre le témoin, sorties : sonde ou sondes gelées avec empreinte, rapport), ce qui lui est interdit (toute donnée de la famille neuve, la famille tenue à l'écart de G1, toute revendication), qui peut être cet analyste (exclusions), critère d'arrêt du temps 1.
+2. `prereg/accumulation-cycle-2-v1-brouillon1.md` : le préenregistrement de la **confirmation unique** (hypothèse, prédiction chiffrée et signe, métrique, seuil, plan d'analyse, critères de lecture gelés, liste d'arrêt, puissance, épreuve sur signal planté et son jumeau avant toute lecture, issues dans les deux sens dont « l'accumulation n'apporte rien de propre à la sonde ») ; la sonde à confirmer y entre par un marqueur d'empreinte, rempli à la fin du temps 1 et **avant** que la famille neuve existe ; registre propre.
+3. `docs/notes/reconception-accumulation-cycle-2-v1/devis-cycle-2-v1-brouillon1.md` : coût, machine et durée de la famille neuve (adaptateurs, épisodes, activations), chaque chiffre avec sa source au dépôt ; pire cas ; ce qui se fait au processeur.
+4. La liste des points à trancher, avec recommandation.
+
+## Règles
+Lectures : celles du mandat du concepteur, plus les devis et textes scellés utiles au chiffrage (par leur nom) ; **aucun résultat** hors du verdict du premier cycle ; rien sous `diag/`, `runs/`, `donnees/` ; aucun sujet de saboteur discret. Ni commit, ni poussée, rien dans `registres/`. Dernier message : chemins, empreintes, devis en trois lignes, points à trancher, lectures hors mandat — **sans chiffre de résultat**.
