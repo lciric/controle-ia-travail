@@ -36,11 +36,11 @@ print("   queue nominale divisee par deux (marge du premier cycle), une sonde, q
 for et in (0.034, 0.038, 0.045):
     print(f"   et64={et:.3f} taches={taches(et, 0.05, 0.025 / 8):7.1f}",
           " ".join(f"P(n={n})={puissance(et, 0.05, 0.025 / 8, n):.3f}" for n in (400, 500, 600)))
-print("   equivalence a la marge m = 0,05 quand l'ecart vrai est nul (borne haute unilaterale 0,025, par dose)")
+print("   equivalence a la marge m = 0,05 quand l'ecart vrai est nul (borne haute au percentile 0,9875 : niveau unilateral 0,025, queue divisee par deux ; par dose)")
 for et in (0.034, 0.038, 0.045):
-    for n in (400, 600):
+    for n in (400, 500, 600):
         e = et * sqrt(64.0 / n)
-        p = N.cdf(0.05 / e - z(0.975))
+        p = N.cdf(0.05 / e - z(0.9875))
         print(f"   et64={et:.3f} n={n} P(une dose)={p:.3f} P(quatre doses, independantes)={p ** 4:.3f}")
 
 print("== 2. Suite des cycles sous le nul global (niveau 0,025 par cycle)")
