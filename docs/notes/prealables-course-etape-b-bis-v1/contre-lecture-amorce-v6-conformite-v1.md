@@ -69,7 +69,11 @@ troisième ligne `CODE-BBIS`) ; liste « Jamais » et les trois exclusions d'ext
   `mots_et_cout_t06_*`, aucun `extraire_mesures_*`. Garde d'entrée de la marche (`commit_de_la_course`, par le code de l'arbre) :
   « 63 fichiers de la fiche », code 0. Contrôle avancé de l'amorce (`fiche_sur_l_arbre`) : « 63 fichiers de la fiche présents,
   empreintes conformes », code 0. Scripts : `garde-commit.sh`, `fiche.sh`.
-- **Plancher au commit réel** : `lancer_bbis_v6.sh essais-du-commit` à `081f8d99` → voir LIMITES, point 1.
+- **Plancher au commit réel** : `lancer_bbis_v6.sh essais-du-commit` à `081f8d99` (Python 3.13 du dépôt, processeur). La ligne
+  de compte est « **151 passed, 25 skipped**, 4 warnings in 211.40s ». Ce sont les mêmes 25 sauts que le commit candidat, et
+  aucun essai n'échoue. Sortie : `essais-081f8d99.txt`, `4b710b8f…`, dans le dossier jetable. La liste des fichiers extraits,
+  `fichiers-de-l-arbre-081f8d99.txt`, a l'empreinte `d48e74d3…`, **identique** à celle de la preuve du brouillon. Le message
+  final du lanceur (« 151 passés ≥ 151 ») n'a pas pu s'écrire : voir LIMITES, point 1.
 - **Essais de la chaîne** : `python -m pytest -q tests/test_chaine_bbis_v6_v1.py` dans le clone : **12 passés**. Sous `unshare -n`,
   6 échouent, tous sur `git commit` : la signature des commits passe ici par une prise locale que l'espace sans réseau coupe. La
   cause est l'environnement du bloc-notes, pas le code.
@@ -297,10 +301,15 @@ troisième ligne `CODE-BBIS`) ; liste « Jamais » et les trois exclusions d'ext
 
 ## LIMITES
 
-1. **Plancher au commit réel `081f8d99`** : une première mesure par `lancer_bbis_v6.sh essais-du-commit` a été tuée par mon propre
-   délai de 580 s (bloc-notes à 4 cœurs, chargé). Une seconde tournait à l'écriture de ce rapport ; son résultat est dans
-   `…/cl-amorce-v6-conformite/mesure-b.out`, et ma réponse à la mère le donne. La liste des 516 fichiers extraits est, elle, égale
-   à celle du commit candidat.
+1. **Plancher au commit réel `081f8d99`, et incident de disque de mon fait, déclaré** :
+   - Une première mesure a été tuée par mon propre délai de 580 s.
+   - La seconde a mené pytest au bout : 151 passés, 25 sautés. Mais la sortie du lanceur, puis la ligne de code de sortie, n'ont pas
+     pu s'écrire : « No space left on device ».
+   - **Le disque de la machine de session était plein vers 04:31-04:35Z.** Ma copie jetable du dépôt (`git clone --no-hardlinks`,
+     **4,5 Go**) y a contribué. Je l'ai supprimée, avec les arbres de mesure (≈ 70 Mo), dès le constat : la place libre est passée
+     de 2,0 à 5,9 Go.
+   - **D'autres tâches de la session ont pu échouer en écriture pendant ce temps.** La mère devrait le vérifier.
+   - Les contrôles en fin de sous-commande (« les essais ont écrit sous src ou tests ») ont été rejoués à la main : arbre propre.
 2. Lu en entier : le brouillon, les deux scripts v6 et leurs différences avec la v5 (et v4 → v5), le fichier d'essais, le dossier
    de preuve (fabriques rejouées), le premier addendum par ses titres, le second addendum (§ 0 à § 2, SA-1 à SA-22, § 3 à § 11), le
    texte scellé (l. 1 à 230), le rapport du portillon, la contre-lecture du projet de feu, les lignes GO-2026-11-14-09,
