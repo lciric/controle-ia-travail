@@ -45,7 +45,7 @@
 - Commit du code d'analyse : **le commit exact est celui de la fiche citée par la ligne `CODE-NARC-EXT`, inscrite avant toute
   exécution** (section « Code »). Tête lue par le rédacteur pour le brouillon 3 : `cde3b9906881b6a26dba2d8486b46ac734d92371`
   (branche locale `prep/narcbench-externe-v2`). **Tête finale de la branche, que la fiche doit citer :
-  `fe9d799641ed3cc5d3388026e6f6143f92fc7d5c`**. De la tête lue à la tête finale, le seul module de `src/` qui change est
+  `e07090a5f9658ae7e3937aea72253940523cdbd3`** (deux commits après `fe9d799641ed3cc5d3388026e6f6143f92fc7d5c`, essais et pièces seulement, `src/` inchangé ; vérification courte du code final « autorisable »). De la tête lue à la tête finale, le seul module de `src/` qui change est
   `cellules_externe_v2.py` : la phrase gelée R1 alignée mot pour mot sur ce texte, et sa docstring (différence relue par le
   rédacteur) ; s'y ajoutent des essais (168), une épreuve par mutation et le jouet aux formes publiées ; contrôle par programme
   des 39 phrases gelées contre le brouillon 3 : aucun écart (d'après le développeur).
@@ -91,7 +91,7 @@
     (`fa9970d738b18d9056f567fadf15c70f139e53183be73519519c18bddec1b264`), `requirements-cpu.txt`
     (`d236a3931745d4ad0889947f7692a2cd49e2c19a6f8e6c10b2e67120d47122de`) ; le brouillon 2 a été écrit contre le commit
     `70cb77b848da03f044d676ce04fc79c3c24b371d`, que les contre-lectures 1 et 2 ont relu ; **tête finale
-    `fe9d799641ed3cc5d3388026e6f6143f92fc7d5c`**, où seul `cellules_externe_v2.py` diffère de la tête lue
+    `e07090a5f9658ae7e3937aea72253940523cdbd3`** (`src/` égal à `fe9d799641ed3cc5d3388026e6f6143f92fc7d5c`), où seul `cellules_externe_v2.py` diffère de la tête lue
     (`0461739c36cd480cc1add33be1bc5556b0c873470e076f85db081faa5a0183ef`) ; sortie du jouet de bout en bout aux formes
     publiées (vecteurs factices, code au commit `b46c678d`, dont `src/` ne diffère de la tête finale que par la phrase R1 et sa
     docstring) : `docs/notes/narcbench-8b-v1/pieces-externe-v2/jouet-formes-publiees-sortie-v1.txt`
@@ -308,7 +308,7 @@ couches-familles : bande
 run-id : AAAAMMJJ-HHMMSS-narc-externe-v2
 registre : registres/narcbench-externe-v1.md
 texte : prereg/narcbench-bras-externe-v1.md
-Entropie : <<ENTROPIE_NARC_EXT>>
+Entropie : 5263520459756875977
 
 ## Notes de la configuration canonique
 
@@ -479,7 +479,7 @@ secondaire).
 
 0. **Avant le scellement** (contre-lectures 1 à 3 faites ; la mère) : contrôle de la différence entre le brouillon 3 et ce
    texte (pièce `differences-brouillon3-vers-version-v1.md`) ; **fusion de la branche du code `prep/narcbench-externe-v2`
-   (tête finale `fe9d7996`) dans `main`**, qui y fait entrer les pièces de la branche citées par ce texte (section « En-tête
+   (tête finale `e07090a5`) dans `main`**, qui y fait entrer les pièces de la branche citées par ce texte (section « En-tête
    du gabarit ») ; tirage et inscription de l'entropie, seule inscription ; contrôle `verifier-texte` du code sur la copie à
    sceller (code de sortie 0 exigé) et validateur sans aucune remarque ; scellement par `sceller_prereg` sous le nom
    `prereg/narcbench-bras-externe-v1.md` ; création du registre propre ; ligne `SCELLEMENT-NARC-EXT`.

@@ -1,0 +1,37 @@
+Devis (ii-b), brouillon 4 — arithmétique (calcul v3) ; heures de carte ; USD
+
+## Rappel (identique au calcul v2)
+  central 11.35 h : 15.6 USD à 1,12
+  haut 13.46 h : 20.4 USD à 1,30
+  P1 33.31 h : 49.1 USD à 1,30 ; 52.5 USD à 1,40
+
+## D-m1 : heures avant la coupure de 55 USD, formule du code (prix de l'offre + stockage 0,08 ; téléchargement 40 Go déduit)
+  à 1.12 + 0,08 USD/h : 44.2 h ; marge sur P1 (33.31 h) : 10.9 h
+  à 1.3 + 0,08 USD/h : 38.4 h ; marge sur P1 (33.31 h) : 5.1 h
+  à 1.4 + 0,08 USD/h : 35.8 h ; marge sur P1 (33.31 h) : 2.5 h
+
+## D-m2 : plafond tenu par les gardes
+  à 1.3 : coupure 55 + consignation ≤ 0.92 + stockage arrêté 48 h 3.84 = au plus 59.76 USD ; sous la ligne 60 : oui, marge 0.24
+    heures d'arrêt au plus avant de dépasser la ligne : 51 h
+  à 1.4 : coupure 55 + consignation ≤ 0.99 + stockage arrêté 48 h 3.84 = au plus 59.83 USD ; sous la ligne 60 : oui, marge 0.17
+    heures d'arrêt au plus avant de dépasser la ligne : 50 h
+
+## D-M1 : dernière commande de création
+  création 2026-11-25T23:00+00:00 + haut 13.46 h → fin 2026-11-26T12:27+00:00 ; avant l'échéance de la minuterie (2026-11-27T22:00+00:00) : oui, marge 33.5 h
+  création 2026-11-25T23:00+00:00 + P1 33.31 h → fin 2026-11-27T08:18+00:00 ; avant l'échéance de la minuterie (2026-11-27T22:00+00:00) : oui, marge 13.7 h
+
+## D-m6 : essais du jetoniseur réel sur la carte (option, si joués par l'amorce)
+  + 0.10 h : 0.11 USD à 1,12 ; 0.28 USD au pire (hôte ×2, 1,40)
+
+## D-M2 : activité interne — branche A (enregistrer pendant la course)
+  actions : évaluation 2560 ; toutes phases au plus 7360
+  évaluation, un vecteur par action : 21 Mo par couche ; 0.67 Go pour 32 couches (8 morceaux de 90 Mo) ; tous les jetons générés (400 au plus par action) : 8.4 Go par couche
+  toutes phases, un vecteur par action : 60 Mo par couche ; 1.93 Go pour 32 couches (22 morceaux de 90 Mo) ; tous les jetons générés (400 au plus par action) : 24.1 Go par couche
+  capture pendant les épisodes : 0 h de plus (hypothèse : comme 7a)
+  passe de capture après l'évaluation : 0.11 h (256 épisodes × 1.5 s) à 0.61 h (736 épisodes × 3.0 s) ; 0.12 à 0.86 USD ; au pire (hôte ×2) 1.23 h, 1.72 USD
+  P1 avec passe finale : 34.54 h ; 54.2 USD à 1,40 ; heures avant la coupure à 1,40 + 0,08 : 35.8 h, marge 1.3 h
+
+## D-M2 : activité interne — branche B (garder de quoi recalculer, passe plus tard sur une location à part)
+  pendant la course : 0 h, 0 USD de plus
+  plus tard, attendu : 1.11 à 1.61 h ; 4.2 à 4.7 USD (stockage 24 h, téléchargement 20 Go)
+  plus tard, pire (hôte ×2) : 2.21 à 3.23 h ; 8.9 à 10.4 USD (stockage 48 h, téléchargement 40 Go)
