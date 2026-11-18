@@ -24,10 +24,14 @@ mandataire), qui tient la clé, la liste des modèles permis, la barrière du mo
    (`completion_tokens_details.reasoning_tokens`), donc bornés et comptés au prix de sortie.
 2. **Rôles** : `proposeur_ideation` et `juge_ideation` (la commande Kimi v1 ne jouait que le juge).
 3. **Défauts** : relais `http://127.0.0.1:8790`, modèle `gpt-6-astra`, prix 10 / 50 USD par million de jetons d'entrée /
-   sortie — **SUPPOSÉS**, non lus sur la page des tarifs (refusée à la lecture automatique le 18 novembre 2026) ; repris du
-   barème volontairement haut du collisionneur v8 ; réglables par `--prix-entree` et `--prix-sortie`, consignés dans la
-   ligne rendue par le champ `prix`.
-4. Le champ `modele_demande` est rendu dans la ligne, avec `prix`.
+   sortie — **lus sur la page officielle des tarifs d'OpenAI le 14 novembre 2026** (palier standard, contexte ≤ 272 000 jetons
+   d'entrée ; entrée en cache 1,00, comptée ici au prix plein : borne haute) : `docs/notes/organisme-conception-propre-v1/prix-astra-v2.md`
+   (`bf211a07…`), page versée `docs/sources/tarifs-openai-v1/developers-openai-com-api-docs-pricing-2026-11-14.html`
+   (`099c9496…`), R-2677 ; réglables par `--prix-entree` et `--prix-sortie`, consignés dans la ligne rendue par le champ `prix`.
+4. **Les deux prix sont vérifiés** : réels finis strictement positifs, sinon code 2 (la commande Kimi v1 acceptait un prix
+   nul, négatif ou non fini : division par zéro hors de tout `try`, ou pire cas sous-estimé — défauts trouvés par les essais
+   de cette commande, présents à l'identique dans la v1 de Kimi, non corrigés là-bas, R12).
+5. Le champ `modele_demande` est rendu dans la ligne, avec `prix`.
 
 Codes : ceux de la commande Kimi v1 — 0 conforme ; 2 réglage ou entrée refusés ; 3 relais ou amont (HTTP, connexion) ;
 4 pire cas au-dessus du plafond ; 5 réponse non conforme (vide, tronquée `finish_reason == "length"`, modèle servi
@@ -35,49 +39,7 @@ différent, usage absent, JSON illisible) ; 6 délai dépassé ou interruption.
 
 Usage : python3 -I -B commande_astra_v1.py [--url-relais http://127.0.0.1:8790] [--modele gpt-6-astra]
             [--prix-entree 10] [--prix-sortie 50] [--max-sortie-jetons 32768] [--sortie-min-jetons 4096] [--delai-s 1500]
-
-import argparse
-import json
-import math
-import signal
-import sys
-import urllib.error
-import urllib.parse
-import urllib.request
-
-VERSION = "commande-astra-v1"
-ROLES = ("proposeur_ideation", "juge_ideation")
-PLANCHER = 1e-6
-
-
-def rendre(code, texte="", cout=PLANCHER, **diag):
-    cout = cout if (isinstance(cout, (int, float)) and math.isfinite(cout) and cout > 0) else PLANCHER
-    print(json.dumps({"texte": texte, "cout_usd": round(float(cout), 6), "version": VERSION, **diag}, ensure_ascii=False))
-    sys.stdout.flush()
-    sys.exit(code)
-
-
-def lire_arguments(argv):
-    a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    a.add_argument("--url-relais", default="http://127.0.0.1:8790")
-    a.add_argument("--modele", default="gpt-6-astra")
-    a.add_argument("--prix-entree", type=float, default=10.0)
-    a.add_argument("--prix-sortie", type=float, default=50.0)
-    a.add_argument("--max-sortie-jetons", type=int, default=32768)
-    a.add_argument("--sortie-min-jetons", type=int, default=4096)
-    a.add_argument("--delai-s", type=float, default=1500.0)
-    return a.parse_args(argv)
-
-
-def verifier_url(url):
-    u = urllib.parse.urlsplit(url)
-    if u.scheme != "http" or u.hostname not in ("127.0.0.1", "localhost") or u.path not in ("", "/"):
-        raise ValueError("--url-relais : http://127.0.0.1:PORT seulement (le relais local tient la clé)")
-    return url.rstrip("/") + "/v1/chat/completions"
-
-
-def max_tokens_permis(octets, plafond, pe, ps, maxi, mini):
-    """
+"""
 
 import argparse
 import json
@@ -137,6 +99,9 @@ def main(argv, environ, entree):
     try:
         args = lire_arguments(argv)
         cible = verifier_url(args.url_relais)
+        for nom, prix in (("--prix-entree", args.prix_entree), ("--prix-sortie", args.prix_sortie)):
+            if isinstance(prix, bool) or not isinstance(prix, (int, float)) or not math.isfinite(prix) or prix <= 0:
+                raise ValueError(f"{nom} : réel fini strictement positif exigé (reçu {prix!r})")
         plafond = float(environ.get("PLAFOND_SESSION_USD", "nan"))
         if not (math.isfinite(plafond) and plafond > 0):
             raise ValueError("PLAFOND_SESSION_USD absent ou invalide")

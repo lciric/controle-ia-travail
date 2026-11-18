@@ -11,9 +11,11 @@ injoignable (3, rien envoyé), `finish_reason` `length` (5), modèle servi diff�
 Chaque essai lit la **dernière ligne** de la sortie standard comme JSON (`texte`, `cout_usd` fini et > 0). Les commandes
 tournent dans un processus à part (`python3 -I -B`) avec un environnement explicite minimal, jamais celui de la session.
 
-Trois essais sont marqués `xfail` (strict) : ils révèlent des défauts de la commande (hérités de la commande Kimi v1), non
-corrigés ici — l'en-tête du fichier qui contient une copie de code (la docstring n'est pas fermée après la ligne d'usage),
-un prix de sortie nul ou non fini qui fait planter la commande sans ligne JSON, un prix négatif accepté par la garde.
+Trois essais avaient été marqués `xfail` (strict) à la première écriture : ils révélaient des défauts de la commande
+(en-tête non fermé qui contenait une copie de code ; prix de sortie nul ou non fini qui faisait planter la commande sans
+ligne JSON ; prix négatif accepté par la garde, les deux derniers hérités de la commande Kimi v1). La commande a été
+corrigée le 18 novembre 2026 (vérification des deux prix : réels finis strictement positifs, code 2) ; les marqueurs
+sont retirés et ces essais passent comme les autres.
 Lancement :
 
     cd docs/notes/ideation-organisme-v1/relais-kimi-v1 && PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q \\
@@ -381,14 +383,20 @@ def test_relais_trop_lent_code_6_cout_pire_cas(relais):
 
 def test_code_ne_differe_de_la_commande_kimi_v1_que_par_les_changements_annonces():
     """Après le dernier `import argparse` (le code), les seules différences : VERSION et ROLES, les quatre défauts (relais,
-    modèle, prix), `max_tokens` → `max_completion_tokens` dans le corps (deux lignes), et le diagnostic (`prix` ajouté)."""
+    modèle, prix), la garde des deux prix (trois lignes insérées après `cible = verifier_url(...)`), `max_tokens` →
+    `max_completion_tokens` dans le corps (deux lignes), et le diagnostic (`prix` ajouté)."""
     k = open(KIMI, encoding="utf-8").read().splitlines()
     a = open(ASTRA, encoding="utf-8").read().splitlines()
     k = k[max(i for i, l in enumerate(k) if l == "import argparse"):]
     a = a[max(i for i, l in enumerate(a) if l == "import argparse"):]
     ops = [op for op in difflib.SequenceMatcher(None, k, a, autojunk=False).get_opcodes() if op[0] != "equal"]
-    assert len(ops) == 5, ops
-    assert all(op[0] == "replace" for op in ops)
+    assert len(ops) == 6, ops
+    inserts = [op for op in ops if op[0] == "insert"]
+    assert len(inserts) == 1 and all(op[0] == "replace" for op in ops if op[0] != "insert")
+    (_, i1, i2, j1, j2) = inserts[0]
+    assert i1 == i2 and j2 - j1 == 3 and k[i1 - 1].strip() == "cible = verifier_url(args.url_relais)"
+    assert "for nom, prix in" in a[j1] and "math.isfinite(prix) or prix <= 0" in a[j1 + 1] and "réel fini strictement positif" in a[j1 + 2]
+    ops = [op for op in ops if op[0] != "insert"]  # les cinq remplacements annoncés, dans l'ordre
     (_, i1, i2, j1, j2) = ops[0]
     assert k[i1:i2] == ['VERSION = "commande-kimi-v1"', 'ROLES = ("juge_ideation",)']
     assert a[j1:j2] == ['VERSION = "commande-astra-v1"', 'ROLES = ("proposeur_ideation", "juge_ideation")']
@@ -422,14 +430,8 @@ def test_aide_et_option_inconnue_la_derniere_ligne_reste_du_json():
     assert code == 2 and obj["envoye"] is False and obj["cout_usd"] == 1e-6
 
 
-# --- défauts de la commande révélés par les essais (xfail strict : à retirer quand la commande est corrigée) ----------------
+# --- défauts de la commande révélés par la première écriture de ces essais, corrigés depuis (essais ordinaires) ----------
 
-@pytest.mark.xfail(strict=True, reason="défaut de forme de commande_astra_v1.py : la docstring du module n'est pas fermée "
-                   "après la ligne d'usage (ligne 37) ; elle court jusqu'au premier \"\"\" du fichier (ligne 80, en tête d'une "
-                   "copie tronquée de max_tokens_permis), si bien que les lignes 39 à 80 — une copie des imports, de VERSION, "
-                   "ROLES, PLANCHER, rendre, lire_arguments, verifier_url et de l'amorce de max_tokens_permis — sont du texte "
-                   "d'en-tête ; le code réel suit (ligne 82) et tourne ; correction : fermer la docstring après la ligne 37 et "
-                   "supprimer les lignes 39 à 81")
 def test_en_tete_du_fichier_sans_copie_de_code():
     source = open(ASTRA, encoding="utf-8").read()
     doc = ast.get_docstring(ast.parse(source), clean=False)
@@ -438,11 +440,6 @@ def test_en_tete_du_fichier_sans_copie_de_code():
     assert source.count("import argparse") == 1 and source.count("def max_tokens_permis(") == 1
 
 
-@pytest.mark.xfail(strict=True, reason="défaut de commande_astra_v1.py (hérité de la commande Kimi v1) : les prix ne sont "
-                   "pas vérifiés ; --prix-sortie 0 lève ZeroDivisionError et --prix-sortie nan lève ValueError dans "
-                   "max_tokens_permis (int(reste * 1e6 / ps)), hors de tout try : trace sur la sortie d'erreur, code 1, AUCUNE "
-                   "ligne JSON sur la sortie standard, contrat de la dernière ligne rompu ; correction : dans le try de main, "
-                   "refuser (ValueError → code 2) tout prix qui n'est pas un réel fini strictement positif")
 @pytest.mark.parametrize("prix", ["0", "nan"])
 def test_prix_de_sortie_nul_ou_non_fini_code_2_et_ligne_json(relais, prix):
     r = relais()
@@ -450,10 +447,6 @@ def test_prix_de_sortie_nul_ou_non_fini_code_2_et_ligne_json(relais, prix):
     assert code == 2 and obj["envoye"] is False and r.recus == []
 
 
-@pytest.mark.xfail(strict=True, reason="défaut de commande_astra_v1.py (hérité de la commande Kimi v1) : un prix négatif ou "
-                   "nul d'entrée est accepté ; --prix-entree -1 passe la garde avec un pire cas sous-estimé (le coût d'entrée "
-                   "retranché) et rend le champ prix négatif ; --prix-entree 0 et --prix-sortie -1 de même ; correction : la "
-                   "même vérification (réel fini strictement positif) sur les deux prix, code 2 sans envoi")
 @pytest.mark.parametrize("options", [("--prix-entree", "-1"), ("--prix-entree", "0"), ("--prix-sortie", "-1")])
 def test_prix_negatif_ou_nul_refuse_code_2(relais, options):
     r = relais()
