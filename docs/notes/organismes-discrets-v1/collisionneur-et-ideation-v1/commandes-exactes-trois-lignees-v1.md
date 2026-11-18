@@ -1,7 +1,7 @@
 # Commandes exactes — trois courses jumelles de l'organisme d'idéation sur les organismes discrets (lanceur v8) — v1
 
 Écrites avant tout lancement par la session de relance `session_01XJ6MgpChR1JWSMBxSQcf3c`, 18 novembre 2026 (heures relevées
-par `date -u` au moment de chaque geste, dans le journal des décisions). Ligne : **GO-2026-11-18-05** (34 USD, échéance
+par `date -u` au moment de chaque geste, dans le journal des décisions). Ligne : **la ligne de GO de cette course** (34 USD, échéance
 2026-11-22). Modèle suivi : `docs/notes/regard-ou-raisons-confondants-v1/organisme-v1/commandes-exactes-v1.md` (R-2698).
 
 **Premier temps : rien lancé, aucun appel payant, aucune dépense ; aucune valeur de clé lue ni affichée.** Aucun relais ni
@@ -20,7 +20,7 @@ corrections éventuelles soient faites et scellées.
 | relais (empreintes) | `orchestrator/pole/relais_reel.py` `1b90b020…` ; `relais_gemini_v2.py` `2b0043bc…` ; `relais_kimi_v4.py` `67f36951…` |
 | clés, par leur nom seulement | `RR_ANTHROPIC_API_KEY_RIGAUD`, `GEMINI_API_KEY`, `OPENAI_API_KEY` présentes (non vides) ; jamais transmises qu'au relais concerné |
 | ports 8787, 8788, 8790 libres | lecture de `/proc/net/tcp*` par le programme du modèle (R-2698 § 2.0), ports adaptés |
-| aucune dépense sous la ligne, aucun run | `test ! -e runs/course-ideation-organismes-discrets-v8 && test ! -e /home/user/sorties-course-ideation-organismes-discrets-v8 && test "$(grep -c GO-2026-11-18-05 registres/depenses.md)" = 0` |
+| aucune dépense sous la ligne, aucun run | `test ! -e runs/course-ideation-organismes-discrets-v8 && test ! -e /home/user/sorties-course-ideation-organismes-discrets-v8 && test "$(grep -c "organismes discrets : trois lignées" registres/depenses.md)" = 0` |
 
 ## 2. Relais (second temps), lancés par `scripts/lancer_relais_local_v1.py`, dossier hors dépôt `/home/user/hors-depot/relais-organismes-discrets-v8/`
 
@@ -68,7 +68,7 @@ echo "code $?"
 
 ## 4. Commit et poussée du dossier de run dès le lancement (C3), par chemin nommé
 ```
-cd /home/user/controle-ia-travail && git add -- runs/course-ideation-organismes-discrets-v8/<identifiant> && git commit -m "Course de l'organisme d'idéation (organismes discrets, lignée L) partie sous GO-2026-11-18-05 : dossier de run au lancement (C3)" -- runs/course-ideation-organismes-discrets-v8/<identifiant> && git push -u origin claude/eloquent-tesla-e52a0b
+cd /home/user/controle-ia-travail && git add -- runs/course-ideation-organismes-discrets-v8/<identifiant> && git commit -m "Course de l'organisme d'idéation (organismes discrets, lignée L) partie sous la ligne de GO de cette course : dossier de run au lancement (C3)" -- runs/course-ideation-organismes-discrets-v8/<identifiant> && git push -u origin claude/eloquent-tesla-e52a0b
 ```
 Rien d'autre n'entre dans ce commit. Le message de commit porte aussi les deux lignes d'attribution de la session.
 
@@ -80,7 +80,7 @@ Code 3 « en marche » : attendre (`kill -0 <PID du superviseur>` et `/relais/et
 de clôture après la mort du superviseur : code 0 « clôture » (copies scellées dans `runs/…/copies/`, relevé de dépense,
 manifeste de fin) ; code 4 si un orchestrateur orphelin vit (nœud : arrêt de l'orphelin par son PID seulement). Puis commit
 et poussée du dossier de run (« close … relevé de dépense, manifeste de fin, copies scellées »), dépense inscrite dans
-`registres/depenses.md` sous GO-2026-11-18-05 à partir de `releve-depense.json` (`course_usd`, `lisible`). **Aucune fiche
+`registres/depenses.md` sous la ligne de GO de cette course (identifiant attribué par la session mère) à partir de `releve-depense.json` (`course_usd`, `lisible`). **Aucune fiche
 n'est ouverte** par l'opérateur ; les copies restent fermées jusqu'à la lecture décidée par Lazar.
 
 La lignée suivante ne part qu'après la clôture de la précédente et son commit.
