@@ -81,22 +81,35 @@ def statistiques_episode(scores: np.ndarray) -> np.ndarray:
     return np.stack([scores.sum(axis=3), scores.max(axis=3)])
 
 
+def ordonner(pos: np.ndarray, neg: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Ordre commun des épisodes des deux états : (tâche de chaque rang, rang occupé par un positif)."""
+    n = pos.shape[0]
+    valeurs = np.concatenate([pos, neg])
+    if np.unique(valeurs).size != valeurs.size:
+        raise GardeArret("ex aequo dans les statistiques d'épisode : hors du domaine de ce module")
+    ordre = np.argsort(valeurs, kind="stable")
+    return ordre % n, ordre < n
+
+
+def aires_depuis_ordre(poids_t: np.ndarray, taches: np.ndarray, est_pos: np.ndarray) -> np.ndarray:
+    """Aires sous rééchantillonnage ; `poids_t` : (tâches, tirages), en flottants ; rend (tirages,)."""
+    w = poids_t[taches]                                    # (2 n, tirages) : une ligne par rang
+    cumul_neg = np.cumsum(w[~est_pos], axis=0)             # poids des négatifs, cumulés dans l'ordre des rangs
+    avant = np.cumsum(~est_pos)[est_pos]                   # nombre de négatifs sous chaque positif
+    garde = avant > 0
+    somme = np.einsum("ib,ib->b", w[est_pos][garde], cumul_neg[avant[garde] - 1])
+    total = poids_t.sum(axis=0, dtype=np.float64)
+    return somme / (total * total)
+
+
 def aires_reechantillonnees(pos: np.ndarray, neg: np.ndarray, poids: np.ndarray) -> np.ndarray:
     """Aires de Mann-Whitney sous rééchantillonnage des tâches : (tirages,).
 
     `pos`, `neg` : (tâches,) ; `poids` : (tirages, tâches), nombre de fois que chaque tâche est tirée.
     Égale, tirage par tirage, à l'aire calculée sur les tâches tirées avec leurs répétitions (éprouvé).
     """
-    n = pos.shape[0]
-    valeurs = np.concatenate([pos, neg])
-    if np.unique(valeurs).size != valeurs.size:
-        raise GardeArret("ex aequo dans les statistiques d'épisode : hors du domaine de ce module")
-    ordre = np.argsort(valeurs, kind="stable")
-    est_pos = ordre < n
-    w = poids[:, ordre % n].astype(np.float64)
-    cumul_neg = np.cumsum(np.where(est_pos[None, :], 0.0, w), axis=1)
-    total = poids.sum(axis=1).astype(np.float64)
-    return (np.where(est_pos[None, :], w, 0.0) * cumul_neg).sum(axis=1) / (total * total)
+    taches, est_pos = ordonner(pos, neg)
+    return aires_depuis_ordre(np.ascontiguousarray(poids.T, dtype=np.float64), taches, est_pos)
 
 
 def lire(stats: np.ndarray, n_tirages: int, niveaux_lus: dict, marge: float, rng: np.random.Generator,
@@ -106,16 +119,17 @@ def lire(stats: np.ndarray, n_tirages: int, niveaux_lus: dict, marge: float, rng
     `niveaux_lus` : {nom: (percentile décisif, percentile d'équivalence)} — plusieurs plans lus sur les mêmes tirages.
     """
     _, n, k, _ = stats.shape
+    ordres = [[ordonner(stats[s, :, j, 1], stats[s, :, j, 0]) for j in range(k)] for s in range(2)]
     d_somme, d_max, ecart = [], [], []
     fait = 0
     while fait < n_tirages:
         b = min(lot, n_tirages - fait)
         fait += b
-        poids = rng.multinomial(n, np.full(n, 1.0 / n), size=b)
+        poids_t = np.ascontiguousarray(rng.multinomial(n, np.full(n, 1.0 / n), size=b).T, dtype=np.float64)
         aires = np.empty((2, k, b))
         for s in range(2):
             for j in range(k):
-                aires[s, j] = aires_reechantillonnees(stats[s, :, j, 1], stats[s, :, j, 0], poids)
+                aires[s, j] = aires_depuis_ordre(poids_t, *ordres[s][j])
         plancher = np.quantile(aires[:, 1:, :], QUANTILE_PLANCHER, axis=1)     # (2, tirages)
         d_somme.append(aires[0, 0] - plancher[0])
         d_max.append(aires[1, 0] - plancher[1])
