@@ -308,7 +308,7 @@ couches-familles : bande
 run-id : AAAAMMJJ-HHMMSS-narc-externe-v2
 registre : registres/narcbench-externe-v1.md
 texte : prereg/narcbench-bras-externe-v1.md
-Entropie : <<ENTROPIE_NARC_EXT>>
+Entropie : 5263520459756875977
 
 ## Notes de la configuration canonique
 
