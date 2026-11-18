@@ -1,0 +1,95 @@
+== 1. Effectifs (lois normales supposees ; erreur type a 64 taches = hypothese de planification)
+   controle : table de la note de conception (niveau 0,025/3)
+   et64=0.034 m=0.03:  860.6 m=0.05:  309.8 m=0.10:   77.5
+   et64=0.038 m=0.03: 1075.0 m=0.05:  387.0 m=0.10:   96.8
+   et64=0.045 m=0.03: 1507.6 m=0.05:  542.7 m=0.10:  135.7
+   une sonde principale, quatre doses (niveau 0,025/4), m = 0,05
+   et64=0.034 taches=  330.0 P(n=350)=0.827 P(n=400)=0.881 P(n=450)=0.920 P(n=500)=0.947 P(n=600)=0.978
+   et64=0.038 taches=  412.2 P(n=350)=0.719 P(n=400)=0.786 P(n=450)=0.839 P(n=500)=0.881 P(n=600)=0.937
+   et64=0.045 taches=  578.1 P(n=350)=0.540 P(n=400)=0.610 P(n=450)=0.673 P(n=500)=0.728 P(n=600)=0.817
+   trois sondes decisives, quatre doses (niveau 0,025/12), m = 0,05
+   et64=0.034 taches=  406.6
+   et64=0.038 taches=  508.0
+   et64=0.045 taches=  712.3
+   queue nominale divisee par deux (marge du premier cycle), une sonde, quatre doses (0,025/8)
+   et64=0.034 taches=  378.4 P(n=400)=0.827 P(n=500)=0.916 P(n=600)=0.962
+   et64=0.038 taches=  472.7 P(n=400)=0.711 P(n=500)=0.827 P(n=600)=0.902
+   et64=0.045 taches=  662.9 P(n=400)=0.517 P(n=500)=0.645 P(n=600)=0.748
+   equivalence a la marge m = 0,05 quand l'ecart vrai est nul (borne haute au percentile 0,9875 : niveau unilateral 0,025, queue divisee par deux ; par dose)
+   et64=0.034 n=400 P(une dose)=0.924 P(quatre doses, independantes)=0.730
+   et64=0.034 n=500 P(une dose)=0.969 P(quatre doses, independantes)=0.882
+   et64=0.034 n=600 P(une dose)=0.988 P(quatre doses, independantes)=0.953
+   et64=0.038 n=400 P(une dose)=0.853 P(quatre doses, independantes)=0.529
+   et64=0.038 n=500 P(une dose)=0.925 P(quatre doses, independantes)=0.731
+   et64=0.038 n=600 P(une dose)=0.963 P(quatre doses, independantes)=0.860
+   et64=0.045 n=400 P(une dose)=0.704 P(quatre doses, independantes)=0.246
+   et64=0.045 n=500 P(une dose)=0.806 P(quatre doses, independantes)=0.423
+   et64=0.045 n=600 P(une dose)=0.877 P(quatre doses, independantes)=0.592
+== 2. Suite des cycles sous le nul global (niveau 0,025 par cycle)
+   K= 1 sans correction: 1-(1-a)^K=0.0250  avec replication: K*a^2<=0.00063
+   K= 2 sans correction: 1-(1-a)^K=0.0494  avec replication: K*a^2<=0.00125
+   K= 3 sans correction: 1-(1-a)^K=0.0731  avec replication: K*a^2<=0.00188
+   K= 4 sans correction: 1-(1-a)^K=0.0963  avec replication: K*a^2<=0.00250
+   K= 6 sans correction: 1-(1-a)^K=0.1409  avec replication: K*a^2<=0.00375
+   K= 8 sans correction: 1-(1-a)^K=0.1833  avec replication: K*a^2<=0.00500
+   K=10 sans correction: 1-(1-a)^K=0.2237  avec replication: K*a^2<=0.00625
+   K=20 sans correction: 1-(1-a)^K=0.3973  avec replication: K*a^2<=0.01250
+   K=40 sans correction: 1-(1-a)^K=0.6368  avec replication: K*a^2<=0.02500
+   depense du niveau a_k = a*6/(pi^2 k^2) : k=1..5 -> 0.01520 0.00380 0.00169 0.00095 0.00061
+   taches au rang k sous cette depense (une sonde, quatre doses, et64=0,038, m=0,05) : k=1:456 k=2:576 k=3:646 k=4:695
+== 3. Garde de specificite (formulation B de la decision) : alertes sur n episodes temoins
+   n=100 alertes tolerees (borne haute 95 % < 5 %)=1 P(passe | taux vrai 1 %)=0.736 P(passe | taux vrai 5 %)=0.037
+   n=150 alertes tolerees (borne haute 95 % < 5 %)=2 P(passe | taux vrai 1 %)=0.809 P(passe | taux vrai 5 %)=0.018
+   n=200 alertes tolerees (borne haute 95 % < 5 %)=4 P(passe | taux vrai 1 %)=0.948 P(passe | taux vrai 5 %)=0.026
+   n=300 alertes tolerees (borne haute 95 % < 5 %)=8 P(passe | taux vrai 1 %)=0.996 P(passe | taux vrai 5 %)=0.034
+   n=400 alertes tolerees (borne haute 95 % < 5 %)=12 P(passe | taux vrai 1 %)=1.000 P(passe | taux vrai 5 %)=0.036
+== 3 bis. Epreuve plantee, signal nul : nombre de fausses issues tolere sur T tirages (niveau 0,025)
+   T=100 seuil c=5 P(X<=c | 0,025)=0.960 P(X<=c | 0,05)=0.616 P(X<=c | 0,075)=0.231 ; borne haute de Clopper-Pearson (95 %, unilaterale) pour c : 0.1023 ; pour 0 : 0.0295
+   T=200 seuil c=9 P(X<=c | 0,025)=0.970 P(X<=c | 0,05)=0.455 P(X<=c | 0,075)=0.063 ; borne haute de Clopper-Pearson (95 %, unilaterale) pour c : 0.0772 ; pour 0 : 0.0149
+== 4. Devis de la famille neuve (debits et prix : textes scelles, voir le devis)
+   -- base : 400 taches, un temoin
+      episodes : distillation 320 (3.57 h) ; evaluation 3600 (40.20 h)
+      distillation 0.46 a 0.92 h ; passes 10000 + echelle 768 = 1.35 h de passe ; relecture 3.14 a 4.94 h
+      jetons relus 22.3 millions ; notation 0.41 a 2.04 h
+      piece G 46.2 a 46.7 h ; piece R 5.1 a 8.6 h ; total 51.4 a 55.3 h
+      attendu 62.1 a 80.4 USD ; pire cas P1 (hote deux fois plus lent, 1,40) 167.8 USD ; P2 (P1 + relance entiere de la piece G) 308.0 USD
+      coupures au pire cas P1 : piece G 140.3 USD ; piece R 27.5 USD ; somme 167.8 USD ; marche sur une instance 2.1 a 2.3 jours
+   -- 400 taches, second temoin honnete
+      episodes : distillation 320 (3.57 h) ; evaluation 3600 (40.20 h)
+      distillation 0.69 a 1.38 h ; passes 13200 + echelle 1536 = 1.84 h de passe ; relecture 4.30 a 6.75 h
+      jetons relus 29.4 millions ; notation 0.54 a 2.69 h
+      piece G 46.5 a 47.2 h ; piece R 6.4 a 11.0 h ; total 52.9 a 58.2 h
+      attendu 63.8 a 84.5 USD ; pire cas P1 (hote deux fois plus lent, 1,40) 176.4 USD ; P2 (P1 + relance entiere de la piece G) 318.0 USD
+      coupures au pire cas P1 : piece G 141.7 USD ; piece R 34.8 USD ; somme 176.4 USD ; marche sur une instance 2.2 a 2.4 jours
+   -- 500 taches, second temoin honnete
+      episodes : distillation 320 (3.57 h) ; evaluation 4500 (50.25 h)
+      distillation 0.69 a 1.38 h ; passes 16500 + echelle 1536 = 2.25 h de passe ; relecture 5.26 a 8.27 h
+      jetons relus 36.8 millions ; notation 0.67 a 3.37 h
+      piece G 56.5 a 57.2 h ; piece R 7.5 a 13.2 h ; total 64.0 a 70.4 h
+      attendu 76.9 a 101.4 USD ; pire cas P1 (hote deux fois plus lent, 1,40) 212.6 USD ; P2 (P1 + relance entiere de la piece G) 384.0 USD
+      coupures au pire cas P1 : piece G 171.4 USD ; piece R 41.2 USD ; somme 212.6 USD ; marche sur une instance 2.7 a 2.9 jours
+   -- 600 taches, second temoin honnete (plafond d'effectif)
+      episodes : distillation 320 (3.57 h) ; evaluation 5400 (60.30 h)
+      distillation 0.69 a 1.38 h ; passes 19800 + echelle 1536 = 2.67 h de passe ; relecture 6.22 a 9.78 h
+      jetons relus 44.2 millions ; notation 0.81 a 4.04 h
+      piece G 66.6 a 67.3 h ; piece R 8.6 a 15.4 h ; total 75.2 a 82.7 h
+      attendu 89.9 a 118.2 USD ; pire cas P1 (hote deux fois plus lent, 1,40) 248.9 USD ; P2 (P1 + relance entiere de la piece G) 449.9 USD
+      coupures au pire cas P1 : piece G 201.1 USD ; piece R 47.7 USD ; somme 248.9 USD ; marche sur une instance 3.1 a 3.4 jours
+   -- variante sans episodes du temoin, 400 taches
+      episodes : distillation 320 (3.57 h) ; evaluation 2000 (22.33 h)
+      distillation 0.46 a 0.92 h ; passes 6800 + echelle 768 = 0.95 h de passe ; relecture 2.21 a 3.47 h
+      jetons relus 15.2 millions ; notation 0.28 a 1.39 h
+      piece G 28.4 a 28.8 h ; piece R 4.1 a 6.5 h ; total 32.5 a 35.3 h
+      attendu 39.9 a 52.8 USD ; pire cas P1 (hote deux fois plus lent, 1,40) 108.6 USD ; P2 (P1 + relance entiere de la piece G) 195.9 USD
+      coupures au pire cas P1 : piece G 87.4 USD ; piece R 21.2 USD ; somme 108.6 USD ; marche sur une instance 1.4 a 1.5 jours
+== 5. Relecture complementaire du temps 1 (donnees de developpement ; hors famille neuve)
+   passes 2752 ; 0.34 h de passe ; activations ~111 Go (trois couches) ; marche 3.6 a 9.3 h
+   pire cas P1 (deux fois plus lent, 1,40) 29.5 USD ; instance arretee et gardee : 1.92 USD par jour, 13.4 USD sur sept jours
+   attendu 5.2 a 14.9 USD ; pire cas (deux fois plus lent, 1,40, une relance) 58.8 USD
+== 6. Recoupement des debits : course exploratoire de l'etude des organismes (heures reelles citees par son texte scelle)
+   episodes : 6,85 h pour 576 episodes = 42.8 s par episode (40,2 s au premier test) ; distillation, donnees comprises : 4,36 h (ici 3,57 + 0,46 a 0,92 = 4.03 a 4.49 h)
+== 7. Taches fraiches
+   400 taches d'evaluation + 32 de distillation = 432 papiers retenus ; avec 20 % de reserve (hypothese sans source) : 518
+   500 taches d'evaluation + 32 de distillation = 532 papiers retenus ; avec 20 % de reserve (hypothese sans source) : 638
+   600 taches d'evaluation + 32 de distillation = 632 papiers retenus ; avec 20 % de reserve (hypothese sans source) : 758
+   total de la requete d'essai de la regle de selection : 3405 entrees ; 96 deja tirees ; reste avant filtres : 3309
