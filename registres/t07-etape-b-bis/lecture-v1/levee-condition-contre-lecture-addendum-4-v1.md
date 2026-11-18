@@ -1,0 +1,11 @@
+# Levée de la condition de la seconde contre-lecture du quatrième addendum d'écart — apprentissage des sondes sur la tâche (étape B bis de T0.7) — v1
+
+Session conductrice `session_013QMayjNC5GKdDFTN87oAV5`, 2026-11-18.
+
+La seconde contre-lecture (`brouillons/T0.7-etape-B-bis-v1/contre-lecture-addendum-ecart-4-brouillon2-v1.md`, empreinte `6be5c46e45d707ac94d5b66475668f68e385ceecb6f36087d107294320ebda40`) conclut « non scellable » pour une seule incise, « avec la date d'origine relevée par programme », absente du résumé que la conductrice lui avait donné de la réponse (a) de la session mère ; elle écrit que le texte candidat est « scellable tel quel » à l'empreinte `5ef929eae8b070bc7f9d1934d487066ded34896df00dc8a9c70c91b44f0b30c4` si le message de la mère contient ces mots.
+
+**Constat de la conductrice** : le message de la session mère `session_013QMayjsoZJFBUCqcnvD5h1`, reçu le 2026-11-18 à 21:24:27Z, porte, mot pour mot : « (1) Date de la première fiche de code : c'est un fait neuf sur l'intégrité du registre propre. GO-2026-11-18-56 (1) couvre l'égalité à la seconde, pas ce fait. L'addendum le déclare tel quel comme écart de fait, sans le corriger dans le registre (jamais réécrit), avec la date d'origine relevée par programme. Je le porte à Lazar comme information. » L'incise est donc une citation fidèle de la réponse de la mère ; l'omission était dans le résumé de la conductrice au contre-lecteur, non dans le texte. La condition est levée ; le texte candidat est scellé à l'empreinte vérifiée par le contre-lecteur.
+
+**Réserve, rendue à la mère** : selon le contre-lecteur, aucune pièce du dossier ne contient un relevé par programme de la date d'origine de la ligne de la première fiche ; les relevés du rédacteur et du contre-lecteur ont été faits par des commandes git en lecture, jouées à la main. L'addendum cite la demande de la mère ; il n'affirme pas, ailleurs, qu'un tel relevé par programme existe.
+
+**Écart de lettre déclaré** : le premier compte rendu du rédacteur plaçait « la moitié garde non séparable » en point ouvert pour Lazar ; l'addendum scellé ne garde pour Lazar que la suite d'une issue « non lue » née d'un défaut de mise en place (réponse (c) de la mère, jugée fidèle par le contre-lecteur).
