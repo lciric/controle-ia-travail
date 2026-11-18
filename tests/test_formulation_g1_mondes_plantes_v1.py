@@ -31,9 +31,9 @@ def test_plante_sabotage_pur():
     assert a >= 0.85 and b >= 0.85
 
 
-def test_plante_avance_vehiculaire_sous_le_seuil():
-    (a, b), _ = _taux("PL3-avance-vehiculaire-sous-le-seuil", 150, ("A", "B"))
-    assert a <= 0.1 and b >= 0.4
+def test_plante_frontiere_empreinte_sous_le_seuil_seuils_exacts():
+    (a, b), _ = _taux("PL3-frontiere-empreinte-sous-le-seuil-seuils-exacts", 150, ("A", "B"))
+    assert a <= 0.1 and b >= 0.7
 
 
 def test_plante_sabotage_et_empreinte_forte():

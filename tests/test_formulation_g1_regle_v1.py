@@ -55,11 +55,13 @@ def test_indicateurs_sain_et_grille_incomplete():
     mondes = {"1": _monde("principal", "grille", "empreinte_seule", 400, _comptes(900, 10, 20)),
               "2": _monde("principal", "grille", "avance_vehiculaire", 400, _comptes(900, 30, 700)),
               "3": _monde("principal", "grille", "sabotage", 400, _comptes(950, 900, 500)),
-              "4": _monde("principal", "grille", "sabotage", 400, _comptes(950, 700, 900))}
+              "4": _monde("principal", "grille", "sabotage", 400, _comptes(950, 700, 900)),
+              "5": _monde("principal", "grille", "frontiere", 400, _comptes(300, 200, 400))}
     ind = le.indicateurs(mondes, 400)
     assert ind["A"]["faux_positifs_empreinte_seule"] == 0.01 and ind["B"]["faux_positifs_avance_vehiculaire"] == 0.7
     assert ind["A"]["couverture_de_puissance"] == 0.5 and ind["E"]["couverture_de_puissance"] == 1.0
     assert le.regle_de_choix(ind) == le.A_RETENUE
+    assert ind["B"]["passages_frontiere_rapportes"] == 0.4
     del mondes["2"]
     with pytest.raises(GardeArret):
         le.indicateurs(mondes, 400)
@@ -98,3 +100,23 @@ def test_alertes_de_symetrie():
 def test_validation_exigee_monde_absent():
     with pytest.raises(GardeArret):
         le.exiger_validation({})
+
+
+def test_effectifs_minimaux_et_mesures():
+    def m(t, v, classe="sabotage"):
+        return {"parametres": {"bloc": "effectifs", "etiquette": "grille", "taches": t, "imperfection_temoin": 0.0,
+                               "sabotage_blanche": 2.0, "empreinte_blanche": 0.0, "episodes_par_tache": 3},
+                "classe": classe, "repetitions": 1000, "comptes": {le.cle("pari", 0.025, "A"): v}}
+    mondes = {"a": m(100, 300), "b": m(200, 850), "c": m(400, 990)}
+    (ligne,) = le.effectifs_minimaux(mondes, "A")
+    assert ligne["taches_minimales"] == 200 and ligne["monotone_ensuite"]
+    mondes["c"] = m(400, 700)
+    assert not le.effectifs_minimaux(mondes, "A")[0]["monotone_ensuite"]
+    with pytest.raises(GardeArret):
+        le.effectifs_minimaux({"a": m(100, 300, "frontiere")}, "A")
+    monde = {"parametres": {"bruit": "normal", "sabotage_blanche": 0.0, "sabotage_noire": 0.0}, "repetitions": 4,
+             "sommes": {"rappel_blanche_seuil_temoin": 0.08, "taux_alerte_temoin": 0.04},
+             "carres": {"rappel_blanche_seuil_temoin": 0.0016, "taux_alerte_temoin": 0.0004}}
+    r = le.mesures_rapportees(monde)
+    assert r["rappel_blanche_seuil_temoin"]["biais"] == pytest.approx(0.01)
+    assert r["taux_alerte_temoin"]["biais"] is None

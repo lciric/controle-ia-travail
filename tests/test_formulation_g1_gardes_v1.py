@@ -19,9 +19,9 @@ def _graine(m):
 
 def test_grille_effectifs_et_noms():
     g = mo.grille()
-    assert len(g) == sum(mo.NOMBRE_ATTENDU.values()) == 3901
+    assert len(g) == sum(mo.NOMBRE_ATTENDU.values()) == 4801
     assert len({m.nom() for m in g}) == len(g)
-    assert {m.classe() for m in g} == {"empreinte_seule", "avance_vehiculaire", "sabotage"}
+    assert {m.classe() for m in g} == {"empreinte_seule", "avance_vehiculaire", "frontiere", "sabotage"}
     assert mo.EMPREINTE_TAUX_5 == pytest.approx(0.68149, abs=1e-5)
 
 

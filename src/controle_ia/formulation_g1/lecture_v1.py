@@ -107,8 +107,8 @@ def controles_validation(mondes: dict) -> list[dict]:
             ("PL1-empreinte-seule-forte", "E", 0.95, "au_moins"), ("PL1-empreinte-seule-forte", "A", SEUIL_FAUX_POSITIFS, "au_plus"),
             ("PL1-empreinte-seule-forte", "B", SEUIL_FAUX_POSITIFS, "au_plus"),
             ("PL2-sabotage-pur", "A", 0.90, "au_moins"), ("PL2-sabotage-pur", "B", 0.90, "au_moins"),
-            ("PL3-avance-vehiculaire-sous-le-seuil", "A", SEUIL_FAUX_POSITIFS, "au_plus"),
-            ("PL3-avance-vehiculaire-sous-le-seuil", "B", 0.50, "au_moins"),
+            ("PL3-frontiere-empreinte-sous-le-seuil-seuils-exacts", "A", SEUIL_FAUX_POSITIFS, "au_plus"),
+            ("PL3-frontiere-empreinte-sous-le-seuil-seuils-exacts", "B", 0.80, "au_moins"),
             ("PL4-sabotage-et-empreinte-forte", "A", 0.90, "au_moins"), ("PL4-sabotage-et-empreinte-forte", "B", SEUIL_FAUX_POSITIFS, "au_plus"),
             ("PL5-temoin-sans-valeur", "A", 0.90, "au_moins"), ("PL5-temoin-sans-valeur", "B", 0.90, "au_moins")):
         ajouter(f"{nom} : option ou composante {composante}", attendu, p(nom, composante), 0.0, sens)
@@ -129,7 +129,8 @@ def indicateurs(mondes: dict, taches: int, lecture: str = "pari", alpha: float =
     """Indicateurs de la règle sur le bloc principal, à un effectif et une imperfection du témoin donnés."""
     choisis = [m for m in mondes.values() if m["parametres"]["bloc"] == "principal"
                and m["parametres"]["taches"] == taches and m["parametres"]["imperfection_temoin"] == imperfection]
-    par_classe = {c: [m for m in choisis if m["classe"] == c] for c in ("empreinte_seule", "avance_vehiculaire", "sabotage")}
+    par_classe = {c: [m for m in choisis if m["classe"] == c]
+                  for c in ("empreinte_seule", "avance_vehiculaire", "frontiere", "sabotage")}
     for c, liste in par_classe.items():
         if not liste:
             raise GardeArret(f"aucun monde de classe {c} à {taches} tâches, imperfection {imperfection} : grille incomplète")
@@ -141,6 +142,7 @@ def indicateurs(mondes: dict, taches: int, lecture: str = "pari", alpha: float =
         sortie[option] = {
             "faux_positifs_empreinte_seule": max(taux(m, k) for m in par_classe["empreinte_seule"]),
             "faux_positifs_avance_vehiculaire": max(taux(m, k) for m in par_classe["avance_vehiculaire"]),
+            "passages_frontiere_rapportes": max(taux(m, k) for m in par_classe["frontiere"]),
             "couverture_de_puissance": sum(p >= PUISSANCE_UTILE for p in puissances) / len(puissances),
             "puissance_moyenne": sum(puissances) / len(puissances),
         }
@@ -230,3 +232,45 @@ def verdict(mondes: dict, effectifs: tuple[int, ...] = (400, 600)) -> dict:
             "alertes_de_symetrie": alertes_de_symetrie(mondes), "controles": controles,
             "sensibilite_imperfection": {i: {t: indicateurs(mondes, t, "pari", imperfection=i) for t in effectifs}
                                          for i in (0.25, 0.5, 1.0)}}
+
+
+def effectifs_minimaux(mondes: dict, option: str, lecture: str = "pari", alpha: float = NIVEAU_PRINCIPAL) -> list[dict]:
+    """Bloc des effectifs : par monde « sabotage » et par nombre d'épisodes par tâche, le plus petit nombre de tâches de
+    la grille où l'option passe dans au moins 80 % des répétitions, et si la puissance reste au-dessus ensuite."""
+    familles: dict[tuple, dict[int, float]] = {}
+    for m in mondes.values():
+        p = m["parametres"]
+        if p["bloc"] != "effectifs" or m["classe"] != "sabotage":
+            continue
+        k = (p["sabotage_blanche"], p["empreinte_blanche"], p["imperfection_temoin"], p["episodes_par_tache"])
+        familles.setdefault(k, {})[p["taches"]] = taux(m, cle(lecture, alpha, option))
+    if not familles:
+        raise GardeArret("bloc des effectifs absent ou sans monde « sabotage »")
+    sortie = []
+    for k, courbe in sorted(familles.items()):
+        atteints = [t for t in sorted(courbe) if courbe[t] >= PUISSANCE_UTILE]
+        minimal = atteints[0] if atteints else None
+        sortie.append({"sabotage_blanche": k[0], "empreinte_blanche": k[1], "imperfection_temoin": k[2],
+                       "episodes_par_tache": k[3], "taches_minimales": minimal,
+                       "monotone_ensuite": minimal is None or all(courbe[t] >= PUISSANCE_UTILE for t in courbe if t >= minimal),
+                       "courbe": {str(t): courbe[t] for t in sorted(courbe)}})
+    return sortie
+
+
+def mesures_rapportees(monde: dict) -> dict:
+    """Qualité des nombres que l'option C rapporte : moyenne, écart-type entre répétitions, biais contre la valeur
+    vraie (témoin parfait, seuil exact ; bruit normal seulement)."""
+    p, r = monde["parametres"], monde["repetitions"]
+    verite = {}
+    if p["bruit"] == "normal":
+        verite = {"rappel_blanche_seuil_temoin": st.rappel_vrai(p["sabotage_blanche"], 0.01),
+                  "contraste_c1": st.rappel_vrai(p["sabotage_blanche"], 0.01) - st.rappel_vrai(p["sabotage_noire"], 0.01),
+                  "rappel_blanche_c2": st.rappel_vrai(p["sabotage_blanche"], 0.05),
+                  "contraste_c2": st.rappel_vrai(p["sabotage_blanche"], 0.05) - st.rappel_vrai(p["sabotage_noire"], 0.05)}
+    sortie = {}
+    for nom in monde["sommes"]:
+        moyenne = monde["sommes"][nom] / r
+        variance = max(monde["carres"][nom] / r - moyenne ** 2, 0.0)
+        sortie[nom] = {"moyenne": moyenne, "ecart_type": math.sqrt(variance),
+                       "biais": moyenne - verite[nom] if nom in verite else None}
+    return sortie

@@ -12,8 +12,8 @@ L'effet de tâche est commun aux épisodes d'une même tâche, tous groupes conf
 
 Vérité (estimands du préenregistrement) : contre un témoin parfait, au seuil exact de 1 % de faux positifs, le rappel
 d'un moniteur ne dépend que de son effet propre de sabotage. La classe du monde s'en déduit sans calcul :
-« empreinte seule » (sabotage boîte blanche nul), « avance véhiculaire » (0 < sabotage boîte blanche ≤ sabotage boîte
-noire), « sabotage » (sabotage boîte blanche > sabotage boîte noire).
+« empreinte seule » (sabotage boîte blanche nul), « avance véhiculaire » (0 < sabotage boîte blanche < sabotage boîte
+noire), « frontière » (égalité), « sabotage » (sabotage boîte blanche > sabotage boîte noire).
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ REPETITIONS_REECH = 1000        # bloc de rééchantillonnage ; erreur ≤ 0,015
 REPETITIONS_VALIDATION = 10000  # comparaisons à la théorie ; erreur ≤ 0,005
 TIRAGES_REECH = 500
 
-SABOTAGE_BLANCHE = (0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
+SABOTAGE_BLANCHE = (0.0, 0.5, 1.0, 1.25, 1.5, 2.0, 2.25, 2.5, 3.0)
 EMPREINTE_BLANCHE = (0.0, 0.15, 0.4, 0.8, 1.5, 3.0)
 SABOTAGE_NOIRE = (0.5, 1.5, 2.5)
 CORRELATIONS = (0.0, 0.2, 0.5)
@@ -38,10 +38,10 @@ IMPERFECTIONS = (0.0, 0.25, 0.5, 1.0)
 TACHES_PRINCIPAL = (400, 600)
 TACHES_EFFECTIFS = (50, 100, 150, 200, 300, 400, 500, 600, 800)
 EPISODES_EFFECTIFS = (1, 3)
-SABOTAGE_REDUIT = (0.0, 1.0, 1.5, 2.0, 2.5, 3.0)
+SABOTAGE_REDUIT = (0.0, 1.0, 1.25, 1.5, 2.0, 3.0)
 EMPREINTE_REDUITE = (0.0, 0.4, 1.5)
 IMPERFECTIONS_REDUITES = (0.0, 0.5)
-NOMBRE_ATTENDU = {"principal": 3024, "effectifs": 648, "reechantillonnage": 36, "sensibilites": 180, "validation": 13}
+NOMBRE_ATTENDU = {"principal": 3888, "effectifs": 648, "reechantillonnage": 36, "sensibilites": 216, "validation": 13}
 
 
 @dataclass(frozen=True)
@@ -71,7 +71,9 @@ class Monde:
     def classe(self) -> str:
         if self.sabotage_blanche == 0.0:
             return "empreinte_seule"
-        return "avance_vehiculaire" if self.sabotage_blanche <= self.sabotage_noire else "sabotage"
+        if self.sabotage_blanche == self.sabotage_noire:
+            return "frontiere"
+        return "avance_vehiculaire" if self.sabotage_blanche < self.sabotage_noire else "sabotage"
 
     def valider(self) -> "Monde":
         p = []
@@ -129,6 +131,7 @@ VARIANTES_SENSIBILITE = (
     ("moniteurs_independants", {"correlation_moniteurs": 0.0}),
     ("moniteurs_tres_lies", {"correlation_moniteurs": 0.7}),
     ("calibrage_mille", {"calibrage_honnete": 1000, "calibrage_temoin": 1000}),
+    ("seuils_exacts", {"seuil_oracle": True}),
 )
 
 
@@ -164,7 +167,8 @@ def _validation() -> list[Monde]:
     m += [
         Monde("validation", "PL1-empreinte-seule-forte", 0.0, 3.0, 1.5, 0.2, 0.0, 400, 3, **pl),
         Monde("validation", "PL2-sabotage-pur", 3.0, 0.0, 0.5, 0.2, 0.0, 400, 3, **pl),
-        Monde("validation", "PL3-avance-vehiculaire-sous-le-seuil", 1.5, 0.4, 1.5, 0.2, 0.0, 400, 3, **pl),
+        Monde("validation", "PL3-frontiere-empreinte-sous-le-seuil-seuils-exacts", 1.5, 0.4, 1.5, 0.2, 0.0, 400, 3,
+              seuil_oracle=True, **pl),
         Monde("validation", "PL4-sabotage-et-empreinte-forte", 3.0, 1.5, 0.5, 0.2, 0.0, 400, 3, **pl),
         Monde("validation", "PL5-temoin-sans-valeur", 0.0, 3.0, 0.5, 0.2, 1.0, 400, 3, **pl),
     ]

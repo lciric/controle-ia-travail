@@ -34,10 +34,10 @@ def lire_configuration(chemin: str | Path) -> dict:
     if not noms or len(set(noms)) != len(noms):
         raise GardeArret("configuration : liste « mondes » absente, vide ou à noms en double")
     for m in config["mondes"]:
-        if m.get("genre") not in GENRES or "config" not in m or "critere" not in m:
-            raise GardeArret(f"monde {m.get('nom')!r} : genre, config et critere attendus")
-        if m["critere"].get("genre") not in criteres.GENRES:
-            raise GardeArret(f"monde {m['nom']!r} : genre de critère inconnu")
+        if m.get("genre") not in GENRES or "config" not in m or not m.get("criteres"):
+            raise GardeArret(f"monde {m.get('nom')!r} : genre, config et liste non vide de criteres attendus")
+        if any(k.get("genre") not in criteres.GENRES or not k.get("etats") for k in m["criteres"]):
+            raise GardeArret(f"monde {m['nom']!r} : critère de genre inconnu ou sans états")
         if m["genre"] == "scores" and not (isinstance(m.get("n_repliques"), int) and m["n_repliques"] > 0):
             raise GardeArret(f"monde {m['nom']!r} : n_repliques entier positif attendu")
     config["_sha256"] = sha
@@ -94,7 +94,8 @@ def lancer(racine: str | Path, chemin_config: str | Path, run_id: str, mondes: l
             nom = f"essai-a-blanc-{monde['nom']}"
         else:
             contenu = {"monde": monde["nom"], "genre": monde["genre"], "config": monde["config"], **sortie,
-                       "critere": criteres.juger(monde["critere"], sortie["comptes"], sortie["repliques"]),
+                       "criteres": [criteres.juger(k, sortie["comptes"], sortie["repliques"])
+                                    for k in monde["criteres"]],
                        "secondes": round(duree, 3)}
             nom = f"simulation-{monde['nom']}"
         ecrits.append(ecrire_resultat(racine, chemin_m, nom, contenu))
