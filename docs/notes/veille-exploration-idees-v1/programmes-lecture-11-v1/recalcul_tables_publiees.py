@@ -138,8 +138,33 @@ def main():
               % (code, e, d))
         print("    -> ecart ensemble mixte moins vote d'un seul modele (moyenne du palier) : %+.1f point" % (e - moy_vote9))
 
-    print("\nReserves : comparaison 3 non appariee (equipes et problemes identiques, mais moyennes de")
-    print("groupes differents) ; paliers reconstruits par le lecteur ; valeurs par modele arrondies a")
+    print("\n== 4. Coherence interne : la table 12 (dix compositions, huit equipes chacune) redonne-t-elle")
+    print("      la ligne « trois modeles » de la table 2 (80 equipes) ?")
+    # Table 12 (page 17) : composition -> (debat, ensemble, ecart publie)
+    table_12_complete = {
+        "SSS": (93.7, 93.2, +0.44), "SSM": (92.5, 92.8, -0.28), "SMM": (90.3, 91.5, -1.22),
+        "MMM": (87.0, 88.2, -1.16), "SSW": (91.7, 92.2, -0.59), "SMW": (90.6, 90.9, -0.31),
+        "MMW": (84.9, 87.1, -2.19), "SWW": (87.4, 89.3, -1.91), "MWW": (80.8, 83.7, -2.87),
+        "WWW": (75.6, 76.7, -1.13),
+    }
+    d12 = moyenne(v[0] for v in table_12_complete.values())
+    e12 = moyenne(v[1] for v in table_12_complete.values())
+    x12 = moyenne(v[2] for v in table_12_complete.values())
+    print("  moyenne simple des dix compositions : debat %.2f ; ensemble %.2f ; ecart %.2f" % (d12, e12, x12))
+    print("  table 2 (page 7), 80 equipes        : debat 88.4 ; ensemble 89.4 ; ecart -1.04")
+    print("  difference                          : debat %+.2f ; ensemble %+.2f ; ecart %+.2f"
+          % (d12 - 88.4, e12 - 89.4, x12 - (-1.04)))
+    print("  (a effectifs egaux par composition, les deux devraient coincider a l'arrondi pres)")
+
+    print("\n== 5. Nombre de lancements, somme de la table 4 (page 13), hors passes de jugement")
+    lancements = [460, 345, 690, 190, 400, 150, 200, 400, 350, 200, 800, 170, 1150, 138, 93]
+    print("  somme :", sum(lancements), "(le papier dit « 5,500+ ») ; passes de jugement : 2720")
+
+    print("\nReserves : comparaison 3 non appariee (memes 100 problemes par tache, mais moyennes de")
+    print("groupes differents) ; paliers reconstruits par le lecteur, et douteux pour le palier faible :")
+    print("la regle n'y range que 4 modeles, soit 4 trios distincts, alors que le papier dit 8 equipes")
+    print("par composition (les paliers du papier ont donc ete fixes sur d'autres chiffres, ou les")
+    print("equipes se repetent) ; valeurs par modele arrondies a")
     print("l'unite ; temperatures differentes entre les deux bras (ecart borne a 0,4 point par le papier).")
     print("Ce calcul n'est pas un resultat du papier : c'est le bras que le papier ne rapporte pas.")
 
