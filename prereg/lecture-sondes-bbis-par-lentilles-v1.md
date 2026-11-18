@@ -466,7 +466,7 @@ v3, § 3). Le corpus ne sert qu'aux comptes de jetons ; il n'est pas versé.
      jeu de 1 000 ; [1, 24] pour un jeu de 200 ; [12, 53] pour trois jeux de 200 ; [26, 79] pour cinq jeux de 200) ; pour n < 600, la borne basse est **volontairement lâche**, déclarée telle dans les tables ;
    - déclencheurs d'audit évalués et audits joués dans la même session ; tout est écrit dans des fichiers fermés ;
    - ordre de grandeur : ≈ 195 000 lectures (≈ 97 000 directions réelles, nulles et témoins, par lentille), ≈ 143 TFLOP, soit ≈ 7 min de
-     produits au débit du banc (≈ 13 min si la garde du rapport à ε impose les nuls par direction).
+     produits au débit du banc (≈ 14 min si la garde du rapport à ε impose les nuls par direction).
 7. **Comparaisons multiples** : aucune correction (descriptif) ; chaque compte de libellés porte son attendu par hasard ; nombre total
    de lectures écrit.
 8. **Lecture** : par le lecteur neuf, sur processeur, après `VERDICT-BBIS` scellée ; il applique les « Critères de lecture gelés » aux
@@ -573,7 +573,7 @@ pas codables : elles sont tenues par les rôles.
   contrôle).
 - **Coût : 0 USD** (aucune location, aucune interface payante). **Durée** (estimation de l'auteur) : téléchargements ≈ 17,1 Go de poids
   et de lentille lus en flux (plus le corpus des jetons gardés), ≈ 5 à 30 min selon le débit, pire ≈ 2 h ; corpus et comptes de jetons
-  ≈ 15 à 45 min, pire ≈ 2 h ; gardes et essais < 15 min ; calcul ≈ 20 à 45 min (dont ≈ 7 à 13 min de produits au débit du banc), pire
+  ≈ 15 à 45 min, pire ≈ 2 h ; gardes et essais < 15 min ; calcul ≈ 20 à 45 min (dont ≈ 7 à 14 min de produits au débit du banc), pire
   ≈ 2 h ; **total ≈ 1 à 2 h, pire ≈ 6 h** ; arrêt à 8 h (« Liste d'arrêt »). Lecture humaine : 0 USD.
 
 ## Frontière : ce que ce texte ne dit pas
