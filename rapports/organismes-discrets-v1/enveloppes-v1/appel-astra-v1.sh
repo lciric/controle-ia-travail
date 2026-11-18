@@ -9,7 +9,9 @@
 # Relais compatible OpenAI (relais_kimi_v4.py, --amont https://api.openai.com --variable-cle OPENAI_API_KEY
 # --modeles-permis gpt-6-astra) lancé séparément, sur la boucle locale, port 8790, avec la vraie clé dans son seul
 # environnement ; cette enveloppe et la commande ne détiennent aucune clé. Prix 10 / 50 USD par million de jetons d'entrée /
-# sortie : SUPPOSÉS (barème volontairement haut du collisionneur v8), comptés au coût ; figés après "$@".
+# sortie : lus sur la page officielle des tarifs d'OpenAI le 14 novembre 2026 (palier standard, contexte ≤ 272 000 jetons ;
+# docs/notes/organisme-conception-propre-v1/prix-astra-v2.md, bf211a07…, R-2677 ; entrée en cache 1,00 comptée au prix plein,
+# borne haute), comptés au coût ; figés après "$@".
 set -eu
 umask 077
 DEPOT_TRAVAIL="${DEPOT_TRAVAIL:-/home/user/controle-ia-travail}"

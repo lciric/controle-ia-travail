@@ -112,7 +112,7 @@ PIECES_COMMUNES = {
 COMMANDE_GEMINI = ("docs/notes/ideation-organisme-v1/argon-recherche-v1/commande_argon_v3e.py",
                    "e94ecd4693657bd2d8b086fbbc903bb77635b3b034e1eede50d630675c3f3fc6")
 COMMANDE_ASTRA = ("docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_astra_v1.py",
-                  "5e2876034fe5bbc8a05fad53a4a3ac66a6aad18800db26678c540a6de822817a")
+                  "986cf71efcac285899e76dd9b1d1c11bccbfd71dd7ae91b8bf3a4372567d7c71")
 # lignée externe : étiquette, modèle, famille de la garde de la commande, enveloppe et commande épinglées
 LIGNEES_EXTERNES = {
     "carbon": {"etiquette": "carbon", "modele": "gemini-4-carbon", "famille": "gemini",
@@ -121,7 +121,7 @@ LIGNEES_EXTERNES = {
                "commande": COMMANDE_GEMINI},
     "astra": {"etiquette": "astra", "modele": "gpt-6-astra", "famille": "openai",
               "enveloppe": (f"{ENVELOPPES}/appel-astra-v1.sh",
-                            "ce13e1e65b3dbc0176aebe64efb40adcf5247c3add12d6e5152509eceac61d31"),
+                            "aa2df474c5105ea5e4729fecf0d8c875e347ed262178177b45c956b1da9f3936"),
               "commande": COMMANDE_ASTRA},
     "argon": {"etiquette": "argon", "modele": "gemini-4-argon", "famille": "gemini",
               "enveloppe": (f"{ENVELOPPES}/appel-argon-v6.sh",
@@ -189,7 +189,7 @@ GEMINI_SORTIE_MIN = 4096
 GEMINI_PROVISION_PENSEE = 8192
 GEMINI_MARGE_ENTREE = 1.05
 CARACTERES_PAR_JETON_GARDE = 3.0
-ASTRA_PRIX_ENTREE = 10e-6                        # enveloppe astra v1 (SUPPOSÉ, borne haute)
+ASTRA_PRIX_ENTREE = 10e-6                        # enveloppe astra v1 (prix lu, R-2677 ; cache compté au prix plein)
 ASTRA_PRIX_SORTIE = 50e-6
 ASTRA_SORTIE_MIN = 4096
 ASTRA_OCTETS_PAR_CARACTERE = 1.15                # UTF-8 du français : borne haute
