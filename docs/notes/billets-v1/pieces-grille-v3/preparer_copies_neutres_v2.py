@@ -184,7 +184,7 @@ def passe_1(A, man, billets):
         copies[neutre[i]] = f"# {titre}\n\n{corps}\n"
         details.append({"neutre": neutre[i], "images": n_img, "noms_masques": n_noms + n_t,
                         "marqueurs_colles": colles, "mots_avant_borne": n_avant, "borne_inseree": ok,
-                        "borne_dans_un_marqueur": BORNE in "".join(m.group(0) for m in RX_MARQUEUR.finditer(corps))})
+                        "borne_dans_un_marqueur": bool(re.search(r"\[[^\]\n]*\n*" + re.escape(BORNE), corps))})
     paires = [(neutre[b["identifiant"]], neutre[b["apparie_a"]]) for b in billets
               if b["classe"] == "bien-note" and b.get("apparie_a") in neutre]
     for k, s in ((1, s_o1), (2, s_o2)):
