@@ -115,7 +115,7 @@ def _fabriquer(retouche=None, decalage=1.0):
                 e, a, b = PLANTES.get(m.etiquette, PROFIL[classe])
                 if m.etiquette.startswith("V3"):
                     e, a, b = 0.02, 0.02, 0.02
-                if retouche:
+                if retouche and m.bloc != "validation":
                     e, a, b = retouche(p, classe, lecture, alpha) or (e, a, b)
                 for c, v in (("E", e), ("A", a), ("B", b)):
                     comptes[le.cle(lecture, alpha, c)] = round(v * r)
@@ -125,7 +125,7 @@ def _fabriquer(retouche=None, decalage=1.0):
         if m.etiquette.startswith(("V1", "V5")):
             n, taux_vrai = m.taches * m.episodes_par_tache, (0.01 if m.empreinte_blanche == 0.0 else 0.05)
             exact = st.passage_garde_exact(n, taux_vrai)
-            comptes["garde_B1_exacte"] = round((exact + decalage * le.erreur_mc(exact, r)) * r)
+            comptes["garde_B1_exacte"] = min(r, max(0, round((exact + decalage * le.erreur_mc(exact, r)) * r)))
             if m.etiquette.startswith("V5"):
                 comptes["garde_B1_exacte"] = round(0.08 * r)
             monde["garde_par_groupes_de_cellules"] = {}
@@ -133,7 +133,7 @@ def _fabriquer(retouche=None, decalage=1.0):
                 g = r // k
                 produit = exact ** k
                 monde["garde_par_groupes_de_cellules"][str(k)] = {
-                    "groupes": g, "tous_passent": round((produit + decalage * le.erreur_mc(produit, g)) * g)}
+                    "groupes": g, "tous_passent": min(g, max(0, round((produit + decalage * le.erreur_mc(produit, g)) * g)))}
         attendu = {"V4-calibrage": 3 / 301, "V4-calibrage-dix-fois": 40 / 4001}.get(m.etiquette, 0.02)
         monde["sommes"] = {"taux_alerte_temoin": attendu * r}
         monde["carres"] = {"taux_alerte_temoin": (attendu ** 2 + 1e-6) * r}
@@ -269,7 +269,7 @@ def test_validation_saine_et_manquee():
         le.exiger_validation({})
     # artefact 1 : un contrôle de théorie hors de sa borne (la garde simulée à dix erreurs de Monte-Carlo de l'exact)
     with pytest.raises(GardeArret, match="V1 garde exacte"):
-        le.verdict(_fabriquer(decalage=10.0))
+        le.verdict(_fabriquer(decalage=-10.0))
     # artefact 2 : un monde planté hors de sa réponse écrite (l'empreinte seule forte franchit A)
     casse = copy.deepcopy(SAIN)
     (pl1,) = [m for m in casse.values() if m["parametres"]["etiquette"] == "PL1-empreinte-seule-forte"]
