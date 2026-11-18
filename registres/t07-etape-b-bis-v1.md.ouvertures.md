@@ -1,0 +1,1 @@
+# Journal du registre propre du texte « T0.7, étape B bis » (registres/t07-etape-b-bis-v1.md) — une ligne par fichier de lecture écrit, ajoutée par le module de lecture ; lignes ajoutées, jamais réécrites
