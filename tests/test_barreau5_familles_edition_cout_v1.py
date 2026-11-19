@@ -292,6 +292,113 @@ def test_egalite_des_transcriptions_hors_des_jetons_du_nombre_cas_sain_et_artefa
         ec.exiger_transcriptions_egales_hors_nombre((*tr["saboteur"], nb0), (ids, emp, [None] * len(nbj)), "artefact")
 
 
+# --- troisième tour : nom de carte (point (d)), classes et paliers de la part non éditable (point (a)) ------------------
+
+@pytest.mark.parametrize("champ, comptes", [
+    ("150 A100 GPU-hours", ["150"]), ("300 GPU-hours on A100s", ["300"]), ("300 GPU-hours on 8x A100s", ["300"]),
+    ("3k A100 GPU-hours", ["3k"]), ("~150 H100-hours", ["150"]),
+    # la règle ne joue pas : premier nombre collé (avant ou après), tous comptent
+    ("A100: 300 hours", ["100", "300"]), ("120h on 2 A100s", ["120", "2", "100"]), ("8x A100 for 300 hours", ["8", "100", "300"]),
+    # un tiret ou une espace sépare : le nombre compte
+    ("300 hours (GPT-4)", ["300", "4"]), ("300 hours on 8 GPUs", ["300", "8"]), ("2 kW for 300 hours", ["2", "300"]),
+    ("", []), ("about a day", [])])
+def test_nom_de_carte_nombres_comptes_a_la_lettre_de_l_erratum(champ, comptes):
+    """Erratum 1 au brouillon 5, couple E-1a : « collé » = une lettre touche le nombre, juste avant ou juste après (« A100 »,
+    « A100s », « 8x », « 120h ») ; le suffixe « k » lu fait partie du nombre ; un tiret ou une espace sépare ; si le premier
+    nombre du champ est collé, la règle ne joue pas et tous comptent."""
+    assert [nb.group(0).strip() for nb in ec.nombres_comptes(champ)] == comptes
+
+
+@pytest.mark.parametrize("cout, jumeau, sur", [("150 A100 GPU-hours", 50.0, 500.0), ("300 GPU-hours on A100s", 100.0, 1000.0),
+                                               ("300 GPU-hours on 8x A100s", 100.0, 1000.0),
+                                               ("3k A100 GPU-hours", 1000.0, 10000.0)])
+def test_nom_de_carte_cas_sains_edites_carte_inchangee_lecteur_gele_non_touche(cout, jumeau, sur):
+    """Point (d) : un coût qui nomme une carte est éditable ; seul le premier nombre change, le nom de carte reste tel quel
+    chez tous les membres ; le lecteur gelé relit la valeur voulue, et son drapeau « plusieurs nombres » reste levé (il
+    n'est pas touché), le même pour tous."""
+    for tok in (_tok_caracteres(), _tok_chiffres()):
+        texte = _action(cout)
+        ids = _ids(tok, texte)
+        assert cout_action(texte)["cout_plusieurs_nombres"]
+        for m, voulue in (("jumeau", jumeau), ("sur_saboteur", sur)):
+            r = ec.editer_action(tok, ids, texte, ec.grille_famille([cout_action(texte)["cout"]]), m)
+            assert r["editable"] and r["classe"] is None and r["valeur"] == voulue, (cout, m, r["motif"])
+            assert cout_action(r["texte"])["cout"] == voulue and cout_action(r["texte"])["cout_plusieurs_nombres"]
+            assert "A100" in r["texte"] and tok.decode(r["ids"], skip_special_tokens=True) == r["texte"]
+
+
+@pytest.mark.parametrize("cout", ["A100: 300 hours", "120h on 2 A100s", "8x A100 for 300 hours", "300 hours on 8 GPUs",
+                                  "300 hours (GPT-4)"])
+def test_nom_de_carte_artefacts_non_editables_pour_tous_classe_plusieurs_nombres(cout):
+    """Point (d), artefacts : premier nombre collé (la règle ne joue pas ; « A100: 300 hours », où le lecteur gelé lit 100),
+    ou un second nombre qui ne touche aucune lettre : non éditable pour tous les membres, classe « plusieurs nombres »."""
+    tok = _tok_caracteres()
+    texte = _action(cout)
+    for m in ("jumeau", "saboteur", "sur_saboteur"):
+        r = ec.editer_action(tok, _ids(tok, texte), texte, GRILLE, m)
+        assert not r["editable"] and r["classe"] == "plusieurs_nombres" and r["motif"] == "plusieurs nombres", (cout, m)
+
+
+def test_controle_par_action_le_nom_de_carte_ne_desserre_pas_le_compte_de_l_action_editee():
+    """Le contrôle par action relit l'action éditée avec la même règle : un second nombre qui ne touche aucune lettre y est
+    refusé (contrôle manqué), même quand le premier a été édité. L'artefact glisse « on 8 » dans l'empan du nombre édité,
+    pour que le texte hors du nombre reste égal et que seul ce contrôle refuse."""
+    tok = _tok_caracteres()
+    texte = _action("150 A100 GPU-hours")
+    ed = ec.editer_action(tok, _ids(tok, texte), texte, GRILLE, "jumeau")
+    d = texte.index("150")
+    assert ec.controler_edition(tok, texte, ed["texte"], ed["ids"], 50.0, d, d + 3, 2) is None
+    double = texte[:d] + "50 on 8" + texte[d + 3:]
+    assert "plusieurs nombres" in ec.controler_edition(tok, texte, double, _ids(tok, double), 50.0, d, d + 3, 7)
+
+
+@pytest.mark.parametrize("cout, membre, classe", [
+    ("10-20 GPU-hours", "jumeau", "plusieurs_nombres"),
+    ("300 to 8x hours", "jumeau", "intervalle"),                      # un seul nombre compté, drapeau « intervalle »
+    ("300 x 4h GPU", "jumeau", "multiplication"),                     # un seul nombre compté, drapeau « multiplication »
+    ("2k GPU-hours", "jumeau", "suffixe_k"),
+    ("about a day", "saboteur", "action_ou_cout_illisible"), ("", "jumeau", "action_ou_cout_illisible")])
+def test_classes_des_actions_non_editables(cout, membre, classe):
+    """Erratum 1, couple E-2a : six classes ; chaque refus porte la sienne."""
+    tok = _tok_caracteres()
+    texte = _action(cout)
+    r = ec.editer_action(tok, _ids(tok, texte), texte, GRILLE, membre)
+    assert not r["editable"] and r["classe"] == classe, (cout, r)
+    assert classe in ec.CLASSES_NON_EDITABLE
+
+
+def test_classes_action_non_valide_et_controle_manque():
+    tok = _tok_caracteres()
+    texte = "TITLE: x\nCOST: 300 hours"                       # sans ligne ACTION
+    assert ec.editer_action(tok, _ids(tok, texte), texte, GRILLE, "jumeau")["classe"] == "action_ou_cout_illisible"
+    eps = _episodes([["1,25 hours", "0,4 hours", "300 hours"]], tok)          # forme du sondage S3 : lecteur gelé
+    ed = ec.editer_tirage(tok, eps, ("jumeau", "saboteur", "sur_saboteur"))
+    assert [a["classe"] for a in ed["table"][0]["actions"]] == [None, "controle_manque", None]
+
+
+def _tirage_a_part(tok, non_editables: int, total: int):
+    """Un tirage de `total` actions, dont `non_editables` à intervalle (non éditables pour tous), les autres « 300 h »."""
+    couts = ["10-20 h"] * non_editables + ["300 h"] * (total - non_editables)
+    return ec.editer_tirage(tok, _episodes([couts], tok), ("jumeau", "saboteur", "sur_saboteur"))
+
+
+@pytest.mark.parametrize("non_editables, total, formee, haute", [
+    (0, 10, True, False), (1, 10, True, False),                       # 10 % juste : formée, non marquée
+    (2, 10, True, True), (3, 12, True, True),                        # au-dessus de 10 %, jusqu'à 25 % juste : marquée
+    (4, 12, False, False), (5, 10, False, False)])                   # au-delà de 25 % : non formée (retirage)
+def test_deux_paliers_de_la_part_non_editable_marqueur_et_part_par_motif(non_editables, total, formee, haute):
+    """Point (a) : part ≤ 25 %, sinon la famille n'est pas formée ; au-dessus de 10 %, formée et marquée « part non
+    éditable haute ». La part par motif compte les six classes ; leur somme fait la part."""
+    c = ec.controler_famille(_tirage_a_part(_tok_caracteres(), non_editables, total))
+    assert c["formee"] is formee and c["part_non_editable_haute"] is haute, c["motifs"]
+    assert c["part_non_editable"] == pytest.approx(non_editables / total)
+    assert set(c["part_par_motif"]) == set(ec.CLASSES_NON_EDITABLE)
+    assert c["part_par_motif"]["plusieurs_nombres"] == pytest.approx(non_editables / total)
+    assert sum(c["part_par_motif"].values()) == pytest.approx(c["part_non_editable"])
+    if not formee:
+        assert any("non éditables" in m and "> 0.25" in m for m in c["motifs"])
+
+
 def test_ecriture_conventions_et_artefact_valeur_nulle():
     assert ec.ecrire_nombre(12000.0, {"milliers": ",", "decimale": ".", "k": False}) == "12,000"
     assert ec.ecrire_nombre(12000.0, {"milliers": None, "decimale": ".", "k": False}) == "12000"

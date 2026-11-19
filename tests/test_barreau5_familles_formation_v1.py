@@ -559,7 +559,8 @@ def _ligne_de_tirage(**sup):
 
 
 def _ligne_d_edition(**sup):
-    x = {"pas": 0, "editable": True, "motif": None, "valeurs": {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0},
+    x = {"pas": 0, "editable": True, "motif": None, "classe": None,
+         "valeurs": {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0},
          "valeur_origine": 300.0, "empans": {"jumeau": [[1, 2], [1, 2]], "saboteur": [None, None],
                                              "sur_saboteur": [[1, 2], [1, 3]]},
          "textes": {"jumeau": "COST: 100", "sur_saboteur": "COST: 900"},
@@ -568,7 +569,7 @@ def _ligne_d_edition(**sup):
 
 
 def _edition(actions=None, **sup):
-    non_editable = _ligne_d_edition(pas=1, editable=False, motif="jumeau : plusieurs nombres",
+    non_editable = _ligne_d_edition(pas=1, editable=False, motif="jumeau : plusieurs nombres", classe="plusieurs_nombres",
                                     valeurs={m: None for m in fv.MEMBRES_TENUE}, valeur_origine=None,
                                     empans={m: None for m in fv.MEMBRES_TENUE}, textes={}, ecritures={})
     return {"episode": "T01/r0/e0", "tache": "r0", "actions": actions or [_ligne_d_edition(), non_editable], **sup}
@@ -661,7 +662,12 @@ def _jsonl(p: Path, lignes) -> None:
         _ligne_d_edition(activations=[0.1]), _ligne_d_edition()]))], "ligne d'édition : clés lues"),
     ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(actions=[_ligne_d_edition(ecritures={
         "jumeau": {"milliers_sans_separateur": False, "decimales_perdues": False, "trace": [0.1]}}), _ligne_d_edition()]))],
-     "ligne d'édition : hors du contenu")])
+     "ligne d'édition : hors du contenu"),
+    # troisième tour, point (a) : la classe d'une action non éditable est l'une des six ; une action éditable n'en a pas
+    ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(actions=[
+        _ligne_d_edition(classe="plusieurs_nombres"), _ligne_d_edition()]))], "ligne d'édition : hors du contenu"),
+    ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(actions=[
+        _ligne_d_edition(editable=False, classe=[0.1, 0.2]), _ligne_d_edition()]))], "ligne d'édition : hors du contenu")])
 def test_point_5_contenu_borne_des_sorties_de_texte_cas_sain_et_artefacts(tmp_path, rel, lignes, motif):
     """Constat n-5 de la vérification (mutation V06) : chaque fichier de texte admis porte exactement les clés et les types
     qu'écrit la chaîne (aucune liste de nombres à virgule) ; contrôle sur le disque (`exiger_sorties_permises`) et avant
@@ -730,7 +736,8 @@ def test_configuration_reelle_cas_sain_recette_egale_a_la_configuration_scellee(
 @pytest.mark.parametrize("cle, valeur, motif", [
     ("lot", 4, "recette différente"), ("familles", ["A1", "A3"], "plan"), ("coupure_usd", 30.0, "coupure"),
     ("taches_par_pli", 8, "16 par pli"), ("sonde", {"couche": 15}, "clés inconnues"),
-    ("membres_apprentissage", 3, "devis non chiffré"), ("membres_apprentissage", 4, "2 .36 adaptateurs. ou 3"),
+    ("membres_apprentissage", 3, "coupure"),          # trois membres : l'instance 6 prend 28 USD, non les 24 de deux membres
+    ("membres_apprentissage", 4, "2 .36 adaptateurs. ou 3"),
     ("membres_apprentissage", True, "aucun défaut"), ("piece", "lot", "piece"), ("relance", 1, "relance"),
     ("familles", ["A1-x1", "A2-x1"], "suffixe de relance")])
 def test_configuration_artefacts_recette_plan_coupure_membres_piece_relance_et_cle_de_sonde_refuses(cle, valeur, motif):
@@ -1009,6 +1016,53 @@ def test_registre_relance_unique_cas_sain_et_artefacts(tmp_path):
             fv.exiger_registre_et_configuration(lu, dict(c, **changement))
 
 
+def test_registre_relance_bornee_deux_instances_et_enveloppe_de_56_usd(tmp_path, monkeypatch):
+    """Point (c) (texte, borne de la relance ; erratum 1, couple E-4a) : à l'inscription, la ligne de relance cite deux
+    instances au plus, et la somme de leurs coupures (selon le nombre de membres de SCELLEMENT-B5F) ne dépasse pas 56 USD ;
+    sinon refus, nœud. Chaque garde est isolée : la table des coupures est retouchée dans l'essai pour que l'autre passe."""
+    code = en.ligne_du_registre("CODE-FORMATION-B5F", "2026-11-22T18:00:00Z", "commit " + "a" * 40 + " ; entropie 1", "")
+    go = en.ligne_du_registre("GO-FORMATION-B5F", "2026-11-22T19:00:00Z", "GO-2026-11-22-01", "")
+
+    def lire(instances, membres=3):
+        relance = en.ligne_du_registre("GO-RELANCE-FORMATION-B5F", "2026-11-25T08:00:00Z",
+                                       f"GO-2026-11-25-01 ; instances {instances}", "")
+        return fv.lire_code_et_accord(_registre(tmp_path, [_scellement(membres=membres, piece="famille"), code, go, relance]))
+
+    # sains, à trois membres : 28 + 26 = 54 ; 26 + 17 = 43 ; 28 + 17 = 45 ; une seule instance
+    for instances in ("6,1", "1,7", "6,7", "6"):
+        assert lire(instances)["relance"]["instances"] == [int(x) for x in instances.split(",")]
+    with pytest.raises(GardeArret, match="3 instances citées, 2 au plus"):
+        lire("1,2,7")
+    monkeypatch.setattr(fv, "COUPURES_USD", {n: 10.0 for n in fv.PLAN_INSTANCES})          # trois fois 10 ≤ 56 : le seul
+    monkeypatch.setattr(fv, "COUPURES_TROIS_MEMBRES_USD", {6: 10.0, 7: 10.0})             # compte des instances refuse
+    with pytest.raises(GardeArret, match="3 instances citées, 2 au plus"):
+        lire("1,2,7")
+    monkeypatch.setattr(fv, "COUPURES_USD", {n: 30.0 for n in fv.PLAN_INSTANCES})          # deux fois 30 > 56 : la seule
+    with pytest.raises(GardeArret, match="coupures des instances citées 60 USD > enveloppe de relance 56 USD"):
+        lire("1,2")                                                                          # enveloppe refuse
+    assert lire("1")["relance"]["instances"] == [1]
+
+
+def test_depense_deux_compteurs_la_relance_hors_du_plafond_commun():
+    """Point (c) (liste d'arrêt, point 14 ; erratum 1, couples E-4a et E-8a) : par instance, la coupure (pour une relance,
+    celle de l'instance remplacée) ; en commun, le plafond de 200 USD, qui ne compte pas la dépense d'une relance et
+    n'arrête pas une relance en cours ; pas de troisième compteur."""
+    assert fv.depense_session(1, 3, 20.0, 1.3, 100.0, 9.1, relance=False) == {"instance": 1, "relance": False,
+                                                                           "coupure": 26.0, "plafond": 200.0}
+    with pytest.raises(GardeArret, match="coupure 200.00"):              # plafond commun atteint : une pièce s'arrête
+        fv.depense_session(1, 3, 20.0, 1.3, 198.0, 9.1, relance=False)
+    assert fv.depense_session(6, 3, 20.0, 1.3, 198.0, 9.1, relance=True) == {"instance": 6, "relance": True,
+                                                                           "coupure": 28.0, "plafond": None}
+    with pytest.raises(GardeArret, match="coupure 28.00"):              # la coupure de l'instance remplacée, elle, tient
+        fv.depense_session(6, 3, 27.7, 1.3, 0.0, 0.0, relance=True)
+    with pytest.raises(GardeArret, match="coupure 28.00"):
+        fv.depense_session(6, 3, 27.7, 1.3, 0.0, 0.0, relance=False)
+    with pytest.raises(GardeArret, match="vrai ou faux"):
+        fv.depense_session(6, 3, 1.0, 1.3, 0.0, 0.0, relance=1)
+    with pytest.raises(TypeError):
+        fv.depense_session(6, 3, 1.0, 1.3, 0.0, 0.0)                     # aucun défaut
+
+
 def test_texte_du_registre_chemin_et_empreinte():
     lu = {"texte": "prereg/barreau5-texte-v1.md", "texte_sha256": SHA}
     fv.exiger_texte_du_registre(lu, "prereg/barreau5-texte-v1.md", SHA)
@@ -1068,27 +1122,43 @@ def test_echeance_d_arret_cumul_plus_un_quart_d_heure_a_la_coupure_et_artefacts(
     assert fv.echeance_arret_s(1000.0, 1, 1.3, 2) == int(1000 + (26.0 / 1.3 - 0.25) * 3600)
     assert fv.echeance_arret_s(0.0, 7, 1.0, 2) == int((15.0 - 0.25) * 3600)
     assert fv.echeance_arret_s(0.0, 1, 1.3, 3) == fv.echeance_arret_s(0.0, 1, 1.3, 2)    # tenues : sans objet
+    # point (f) : à trois membres, les instances 6 et 7 prennent leur entrée du devis (28 et 17 USD) ; l'échéance au prix
+    # plafond laisse 21,3 et 12,8 heures, au-dessus des heures attendues (10,99 et 6,40)
+    assert fv.echeance_arret_s(0.0, 6, 1.3, 3) == int((28.0 / 1.3 - 0.25) * 3600)
+    assert fv.echeance_arret_s(0.0, 7, 1.3, 3) == int((17.0 / 1.3 - 0.25) * 3600)
+    assert fv.echeance_arret_s(0.0, 7, 1.0, 2) != fv.echeance_arret_s(0.0, 7, 1.0, 3)
     with pytest.raises(GardeArret):
         fv.echeance_arret_s(0.0, 1, 1.4, 2)
     with pytest.raises(GardeArret):
         fv.echeance_arret_s(0.0, 8, 1.0, 2)
-    with pytest.raises(GardeArret, match="devis non chiffré"):
-        fv.echeance_arret_s(0.0, 7, 1.0, 3)
+    with pytest.raises(GardeArret, match="aucun défaut"):
+        fv.echeance_arret_s(0.0, 7, 1.0, None)
+
+
+def test_table_du_devis_a_trois_membres_instances_6_et_7():
+    """Point (f) (devis du brouillon 5, § 3 ; erratum 1, couple E-6a) : deux entrées par instance d'apprentissage, choisies
+    par le nombre de membres ; les instances tenues à l'écart n'en dépendent pas."""
+    assert (fv.coupure_usd(6, 3), fv.heures_attendues(6, 3)) == (28.0, (9.61, 10.99))
+    assert (fv.coupure_usd(7, 3), fv.heures_attendues(7, 3)) == (17.0, (5.71, 6.40))
+    assert (fv.coupure_usd(6, 2), fv.coupure_usd(7, 2)) == (24.0, 15.0)
+    assert all(fv.coupure_usd(n, 3) == fv.coupure_usd(n, 2) == 26.0 for n in range(1, 6))
+    assert sum(fv.coupure_usd(n, 3) for n in fv.PLAN_INSTANCES) == 175.0              # devis : formation, 175 USD
+    for n, m in ((8, 3), (6, 4), (6, True)):
+        with pytest.raises(GardeArret):
+            fv.coupure_usd(n, m)
 
 
 @pytest.mark.parametrize("membres", [2, 3])
 def test_configuration_de_chaque_instance_passe_les_gardes_et_artefacts(membres):
-    """Deux ou trois membres d'apprentissage : à trois, les instances 6 et 7 sont refusées tant que le devis ne les
-    chiffre pas ; les instances 1 à 5 n'en dépendent pas."""
+    """Deux ou trois membres d'apprentissage : chaque instance passe, avec la coupure de son entrée du devis (à trois
+    membres, 28 et 17 USD pour les instances 6 et 7)."""
     for n in fv.PLAN_INSTANCES:
-        if membres == 3 and n in fv.INSTANCES_D_APPRENTISSAGE:
-            with pytest.raises(GardeArret, match="devis non chiffré"):
-                fv.config_instance(n, RACINE_DEPOT, "GO-2026-11-22-01", 1.1, membres, "instance", False)
-            continue
         for relance in (False, True):
             c = fv.config_instance(n, RACINE_DEPOT, "GO-2026-11-22-01", 1.1, membres, "famille", relance)
-            assert c["familles"] == list(fv.familles_du_plan(n, relance)) and c["coupure_usd"] == fv.COUPURES_USD[n]
+            assert c["familles"] == list(fv.familles_du_plan(n, relance)) and c["coupure_usd"] == fv.coupure_usd(n, membres)
             assert c["membres_apprentissage"] == membres and c["relance"] is relance
+    if membres == 3:
+        assert fv.config_instance(6, RACINE_DEPOT, "GO-2026-11-22-01", 1.1, 3, "famille", False)["coupure_usd"] == 28.0
     with pytest.raises(GardeArret):
         fv.config_instance(8, RACINE_DEPOT, "GO-2026-11-22-01", 1.1, membres, "instance", False)
     with pytest.raises(GardeArret):
