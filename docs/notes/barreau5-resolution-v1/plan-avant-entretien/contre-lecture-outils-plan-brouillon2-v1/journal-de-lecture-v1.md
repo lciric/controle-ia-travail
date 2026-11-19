@@ -17,3 +17,7 @@ Pièce de travail du contre-lecteur, tenue au fil de la lecture (registre « qui
 - docs/notes/barreau5-resolution-v1/plan-avant-entretien/calcul-devis-adaptateurs-tenus-a-l-ecart-v2.py (entier)
 - docs/notes/barreau5-resolution-v1/plan-avant-entretien/sortie-calcul-devis-adaptateurs-tenus-a-l-ecart-v2.txt (entier)
 - docs/notes/barreau5-resolution-v1/plan-avant-entretien/sortie-simulation-puissance-adaptateurs-tenus-a-l-ecart-v3.json (lu par programme : blocs J, K, L à dix familles, M)
+- docs/notes/barreau5-resolution-v1/plan-avant-entretien/etat-a-l-arret-quota-fable-20261119-1440Z/LISEZ-MOI-v1.md (entier ; empreinte vérifiée 62ff0a08…)
+- docs/notes/barreau5-resolution-v1/plan-avant-entretien/etat-a-l-arret-quota-fable-20261119-1440Z/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon1.md (entier ; empreinte vérifiée c3e38ad6…)
+
+Précision de la mère reçue en cours de travail : dans la réponse finale, aucun nombre de résultat de l'étape B bis ni d'une expérience close ; renvois par chemin et ligne seulement. La contre-lecture sur disque cite ce qu'il faut pour juger.
