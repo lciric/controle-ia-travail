@@ -483,6 +483,43 @@ def test_jouet_relance_familles_suffixees_graines_neuves(monde, monkeypatch):
             fv.exiger_config_b5f(dict(config, familles=familles, relance=relance), r)
 
 
+def _scripte_cyclique(couts):
+    """Joueur scripté dont l'action k du tirage reçoit couts[k % len(couts)], quelle que soit sa graine : la part non
+    éditable du tirage est exacte."""
+    compte = {"k": 0}
+
+    def jouer(fmt, envs, ids, T, graines):
+        rangs = []
+        for _ in graines:
+            rangs.append({(0, t): compte["k"] + t for t in range(T)})
+            compte["k"] += T
+        return fv.jouer_scripte_jouet(fmt, envs, ids, T, rangs, couts)
+    return jouer
+
+
+def test_jouet_part_non_editable_haute_famille_formee_marquee_part_par_motif_et_classe_ecrite(monde):
+    """Point (a) : deux actions sur douze non éditables (17 %) : la famille est formée et marquée « part non éditable
+    haute » au résultat de la famille ; la part par motif est au contrôle du tirage ; la table d'édition écrite porte la
+    classe de chaque action non éditable (contenu borné, constat n-5)."""
+    r, config = monde
+    config["familles"] = ["A1"]
+    run = "20261122-120060-b5f-jouet"
+    resume = fv.executer(config, r, run, entropie=3, jouer_tirage=_scripte_cyclique(COUTS_SAINS[:5] + ["10-20 hours"]))
+    a1 = resume["familles"]["A1"]
+    assert a1["statut"] == "formée" and a1["part_non_editable_haute"] is True
+    c = a1["tirages"][0]["controle"]
+    assert c["part_non_editable"] == pytest.approx(2 / 12) and c["part_par_motif"]["plusieurs_nombres"] == pytest.approx(2 / 12)
+    assert json.loads((r / "diag" / run / "famille-A1.json").read_text())["resultat"]["part_non_editable_haute"] is True
+    lignes = [json.loads(x) for x in (r / "donnees" / run / "A1" / "textes-distillation.jsonl").read_text().splitlines()]
+    assert [a["classe"] for ep in lignes for a in ep["edition"]["actions"] if not a["editable"]] == ["plusieurs_nombres"] * 2
+    # sans action non éditable : formée, non marquée
+    _git(r, "add", "-A")
+    _git(r, "commit", "-q", "-m", "première marche")
+    r2 = fv.executer(dict(config), r, "20261122-120061-b5f-jouet", entropie=3,
+                     jouer_tirage=_scripte_cyclique(COUTS_SAINS[:5]))["familles"]["A1"]
+    assert r2["statut"] == "formée" and r2["part_non_editable_haute"] is False
+
+
 # --- point 5 : aucune lecture interne ----------------------------------------------------------------------------------
 
 def test_point_5_generation_sans_activations_saine_dans_le_bloc_et_egale_a_celle_du_harnais():
