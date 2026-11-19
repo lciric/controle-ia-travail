@@ -2,11 +2,11 @@
 
 ## texte
 
-### lignes du brouillon 2 : 1 à 1 ; attribué à : HT1, HT3, HT5, HT6, HT8
+### lignes du brouillon 2 : 1 à 1 ; attribué à : HT1
 
 - replace — retiré : « 1 » — ajouté : « 2 »
 
-### lignes du brouillon 2 : 3 à 6 ; attribué à : AUCUN
+### lignes du brouillon 2 : 3 à 6 ; attribué à : HT2, HT3, HT4, HT5
 
 - insert — retiré : «  » — ajouté : «  **Brouillon 2** : les corrections de la contre-lecture sont appliquées par un autre rédacteur neuf, sous-agent de la session mère `session_01XJ6Mgr8BN6UanALsQatc5E`, Claude Fable 5.2 (`claude-fable-5-2`), sous les mêmes exclusions de rôle ; hors de l'en-tête, du paragraphe « Rédacteur du brouillon 2 » et de la section « Contre-lecture », les « je » de ce texte restent ceux du rédacteur du brouillon 1. »
 - insert — retiré : «  » — ajouté : « ). Brouillon 2 écrit le 2026-11-19, de 15:25 à 15:55 environ (relevé `date -u` : 15:27:27Z à la lecture des pièces »
@@ -34,7 +34,7 @@
 - insert — retiré : «  » — ajouté : « 
 **Rédacteur du brouillon 2.** J'ai lu le brouillon 1 de ce texte, donc toutes les aires qu'il recopie ; sa contre-lecture, entière, avec la sortie de son arithmétique et le début de son outil des remarques ; le brouillon 1 du devis ; la note des nœuds restants ; `registres/go.md`, l. 495 ; dans la note 02 du socle, par filtre sur les seuls nombres que les corrections M6, M9 et m10 insèrent, des fragments des lignes 117, 118, 213, 216, 245, 290, 296, 346, 394, 399, 401 et 419 (j'y ai vu, en plus de ces nombres, deux différences « texte égal moins adaptateur seul » de la sonde de l'organisme à consigne cachée, +0,0356 et +0,0446, et la suite 0,5111 ; 0,5267 ; 0,8908 du lecteur honnête) ; les noms des méthodes de `t07bbis/commun_v1.Graines` ; le début du validateur. Je n'ai ouvert aucun fichier de scores, ni `lecture-bbis.json`, ni le verdict de l'étape B bis, ni aucun fichier interdit par mon mandat. »
 
-### lignes du brouillon 2 : 146 à 146 ; attribué à : AUCUN
+### lignes du brouillon 2 : 146 à 146 ; attribué à : HT11
 
 - insert — retiré : «  » — ajouté : « Une tâche dont P_t est nul dans un groupe (tous ses coûts déclarés égaux) est traitée dans ce groupe comme une tâche à moins de deux actions utiles : exclue, comptée, y compris pour le test par changement de signe de la tendance.  »
 
@@ -42,7 +42,7 @@
 
 - insert — retiré : «  » — ajouté : «  et pour la tendance »
 
-### lignes du brouillon 2 : 238 à 238 ; attribué à : AUCUN
+### lignes du brouillon 2 : 238 à 238 ; attribué à : HT12
 
 - insert — retiré : «  » — ajouté : « L'état miroir de la tendance n'est exigé qu'entre MA et MA− : sous le seul changement de signe des scores (M+ et M−), sa condition de plancher n'a pas de miroir exact (le quantile 0,95 des tau des directions y devient l'opposé de leur quantile 0,05, et le groupe dont le plancher est exigé n'est pas échangé) ; l'état miroir de l'interaction est exigé dans les deux paires.  »
 
@@ -116,11 +116,11 @@
 
 ## devis
 
-### lignes du brouillon 2 : 1 à 1 ; attribué à : HD1, HD2, HD4
+### lignes du brouillon 2 : 1 à 1 ; attribué à : HD1
 
 - replace — retiré : « 1 » — ajouté : « 2 »
 
-### lignes du brouillon 2 : 3 à 6 ; attribué à : AUCUN
+### lignes du brouillon 2 : 3 à 6 ; attribué à : HD2, HD3, HD4, HD5
 
 - insert — retiré : «  » — ajouté : «  **Brouillon 2** : corrections de la contre-lecture appliquées par un autre rédacteur neuf, sous-agent de la session mère `session_01XJ6Mgr8BN6UanALsQatc5E`, Claude Fable 5.2, le 2026-11-19 entre 15:25 et 15:55 environ. »
 - insert — retiré : «  » — ajouté : «  2 »

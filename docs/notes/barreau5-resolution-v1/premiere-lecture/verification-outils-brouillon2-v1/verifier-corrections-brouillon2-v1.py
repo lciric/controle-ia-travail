@@ -221,17 +221,24 @@ sortie["reconstruction"] = dict(
     empreinte_devis_reconstruit=sha_octets(recon["devis"].encode("utf-8")),
     empreinte_texte_reconstruit=sha_octets(recon["texte"].encode("utf-8")))
 
-# Attribution de chaque bloc residuel a un changement declare (son « apres » contient le texte ajoute du bloc).
+# Attribution de chaque bloc residuel aux changements declares : ceux dont l'« apres » tombe dans les lignes du bloc
+# (brouillon 2), a condition que chaque morceau ajoute (espaces de bord ignorees) soit dans l'« apres » de l'un d'eux et
+# chaque morceau retire dans son « avant ».
+EMPR_DEV2 = sha_octets(recon["devis"].encode("utf-8"))
 for genre in ("texte", "devis"):
+    cible_b2 = T["texte2"] if genre == "texte" else T["devis2"]
     for bloc in RES[genre]:
-        ajoute = "".join(m["ajoute"] for m in bloc["morceaux"])
-        cands = []
+        l1, l2 = bloc["lignes_brouillon2"]
+        voisins = []
         for ident, quoi, avant, apres in HORS[genre]:
-            ap = apres.replace(PLACE, sha_octets(recon["devis"].encode("utf-8")))
-            if all(m["ajoute"] in ap for m in bloc["morceaux"] if m["ajoute"]) and all(
-                    m["retire"] in avant for m in bloc["morceaux"] if m["retire"]):
-                cands.append(ident)
-        bloc["attribue_a"] = cands
+            ap = apres.replace(PLACE, EMPR_DEV2)
+            occ = lignes_occupees(cible_b2, ap)
+            if occ and occ[0] <= l2 and l1 <= occ[1]:
+                voisins.append((ident, avant, ap))
+        ok = bool(voisins) and all(
+            any(m["ajoute"].strip() in ap for _, _, ap in voisins) for m in bloc["morceaux"] if m["ajoute"].strip()) and all(
+            any(m["retire"].strip() in av for _, av, _ in voisins) for m in bloc["morceaux"] if m["retire"].strip())
+        bloc["attribue_a"] = [v[0] for v in voisins] if ok else []
 sortie["blocs_residuels"] = {g: [dict(lignes_brouillon2=b["lignes_brouillon2"], attribue_a=b["attribue_a"],
                                       nombre_de_morceaux=len(b["morceaux"])) for b in RES[g]] for g in RES}
 sortie["blocs_residuels_non_attribues"] = {g: [b["lignes_brouillon2"] for b in RES[g] if not b["attribue_a"]] for g in RES}
@@ -350,8 +357,10 @@ sortie["couples_proposes"] = dict(controles=prop,
                                   tous_uniques_dans_brouillon2=all(p["avant_dans_brouillon2"] == 1 for p in prop),
                                   validateur_apres_application=essai("essai-d.md", appl3["texte"]))
 # les « apres » des 44 couples restent entiers apres application des couples proposes, sauf ceux que l'on corrige expres
-sortie["couples_proposes"]["apres_de_la_contre_lecture_touches"] = [
-    c["id"] for c in RAP if appl3[c["genre"]].count(c["apres"]) != 1]
+sortie["couples_proposes"]["apres_de_la_contre_lecture_modifies_expres"] = [
+    c["id"] for c in RAP if appl3[c["genre"]].count(c["apres"]) == 0]
+sortie["couples_proposes"]["apres_de_la_contre_lecture_repris_ailleurs_en_miroir"] = [
+    c["id"] for c in RAP if appl3[c["genre"]].count(c["apres"]) > 1]
 
 # --------------------------------------------------------------------------------------------------------- sorties
 SORTIE_JSON.write_text(json.dumps(sortie, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
