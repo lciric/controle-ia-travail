@@ -29,7 +29,11 @@ CASES = [("A02_nul_chaos_double_chez_les_edites", 4096), ("A04_chaos_double_et_f
          ("B09_force_mixte_0.5", 1024), ("C18_force_commune_0.5_etalement_phi_1_rho_0.5", 1024),
          ("C25_force_commune_0.5_etalement_phi_1_kappa_3_non_forcee", 4096),
          ("C34_force_sur_u_0.2_etalement_phi_1_kappa_0.3_non_forcee", 1024),
-         ("C01_force_0.05_et_trace_symetrique_0.05", 4096)]
+         ("C01_force_0.05_et_trace_symetrique_0.05", 4096),
+         # ajoutés après la première passe de ce contrôle (cases ajoutées en fin de liste : les graines des neuf
+         # premières sont inchangées) : trace symétrique seule, et trois mondes entre 1 et 2 % de la simulation
+         ("A14_trace_symetrique_0.3", 1024), ("C03_force_0.2_et_trace_symetrique_0.05", 1024),
+         ("C29_force_0.1_et_trace_symetrique_0.05", 4096), ("C32_force_sur_u_0.2_etalement_phi_1_rho_0.1", 1024)]
 
 
 def une(args):

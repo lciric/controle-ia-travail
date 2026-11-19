@@ -232,7 +232,7 @@ Après :
 
 ```text
 | trace de l'édition (nombres que le modèle n'aurait pas écrits) | fermée si elle est la même vers le haut et vers le bas : épreuve sur-saboteur contre jumeau ; **ouverte** si l'édition vers le haut laisse une autre trace que l'édition vers le bas |
-| force et trace de l'édition commune aux deux sens, réunies | **ouverte** : l'épreuve à poussée égale ne retire pas la trace (le jumeau la porte, le saboteur non), l'épreuve sur-saboteur contre jumeau ne retire pas la force ; sans aucun sabotage, le mot sort dans plus de 0,5 % des mondes dans 11 des 13 mondes inventés essayés où les deux sont réunies, de 1,1 à 100 % (vérification du brouillon 3, mondes C01 à C11, C28, C29) |
+| force et trace de l'édition commune aux deux sens, réunies | **ouverte** : l'épreuve à poussée égale ne retire pas la trace (le jumeau la porte, le saboteur non), l'épreuve sur-saboteur contre jumeau ne retire pas la force ; sans aucun sabotage, le mot sort dans plus de 0,5 % des mondes dans 12 des 13 mondes inventés essayés où les deux sont réunies, de 1 à 100 % (vérification du brouillon 3, mondes C01 à C11, C28, C29) |
 ```
 
 ### Couple V-B1b (constat V-B1) — `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon3.md` — « avant » trouvé 1 fois dans la pièce scellée, 1 fois dans la copie au moment d'appliquer ; « après » déjà présent 0 fois
@@ -302,7 +302,7 @@ Avant :
 Après :
 
 ```text
-**les deux ensemble : 0,5 % au plus dans les vingt-deux mondes sans sabotage essayés**, hors la trace d'édition propre à son sens, rivale déclarée ouverte. Ces mondes n'ont qu'une rivale à la fois : quand une force et une trace de l'édition commune aux deux sens sont réunies, le mot sort dans 1,1 à 100 % des mondes dans 11 des 13 mondes essayés (vérification du brouillon 3), rivale déclarée ouverte.
+**les deux ensemble : 0,5 % au plus dans les vingt-deux mondes sans sabotage essayés**, hors la trace d'édition propre à son sens, rivale déclarée ouverte. Ces mondes n'ont qu'une rivale à la fois : quand une force et une trace de l'édition commune aux deux sens sont réunies, le mot sort dans 1 à 100 % des mondes dans 12 des 13 mondes essayés (vérification du brouillon 3), rivale déclarée ouverte.
 ```
 
 ### Couple V-B1g (constat V-B1) — `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon3.md` — « avant » trouvé 1 fois dans la pièce scellée, 1 fois dans la copie au moment d'appliquer ; « après » déjà présent 0 fois
@@ -316,7 +316,7 @@ mot « sabotage » dans 0,5 % des mondes au plus, dans chacun des vingt-deux mon
 Après :
 
 ```text
-mot « sabotage » dans 0,5 % des mondes au plus, dans chacun des vingt-deux mondes essayés, qui n'ont qu'une rivale à la fois (une force et une trace commune aux deux sens réunies le font sortir dans 1,1 à 100 % des mondes, dans 11 des 13 mondes essayés : vérification du brouillon 3),
+mot « sabotage » dans 0,5 % des mondes au plus, dans chacun des vingt-deux mondes essayés, qui n'ont qu'une rivale à la fois (une force et une trace commune aux deux sens réunies le font sortir dans 1 à 100 % des mondes, dans 12 des 13 mondes essayés : vérification du brouillon 3),
 ```
 
 ### Couple V-B1h (constat V-B1) — `docs/notes/barreau5-resolution-v1/plan-avant-entretien/fiche-decisions-lazar-v3.md` — « avant » trouvé 1 fois dans la pièce scellée, 1 fois dans la copie au moment d'appliquer ; « après » déjà présent 0 fois
@@ -330,7 +330,7 @@ Avant :
 Après :
 
 ```text
-(épreuve refaite après la contre-lecture : en mondes inventés sans sabotage où une seule rivale joue, le mot sort dans 0,5 % des cas au plus ; quand une force et une trace de l'édition commune aux deux sens jouent ensemble, il sort dans 1,1 à 100 % des cas dans 11 des 13 mondes essayés, rivale déclarée ouverte)
+(épreuve refaite après la contre-lecture : en mondes inventés sans sabotage où une seule rivale joue, le mot sort dans 0,5 % des cas au plus ; quand une force et une trace de l'édition commune aux deux sens jouent ensemble, il sort dans 1 à 100 % des cas dans 12 des 13 mondes essayés, rivale déclarée ouverte)
 ```
 
 Validateur du dépôt sur la copie du brouillon 3 après le groupe « voie i » : aucun problème
