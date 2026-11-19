@@ -460,4 +460,347 @@ Source : `DiscoveryAgent/tool_agents/security/kill_blocker.py:47-52`
 - L'agent recensement garde sa **conversation d'un appel à l'autre** et a un modèle codé en dur (`acs_agent/agent.py:128` « `MODEL = "claude-opus-4-6"` »).
 - Le **concepteur de relecture est rappelé à chaque lancement**, donc à chaque tour en mode piloté (un tour par lancement), et une fois de plus lors d'une restauration en cours de tour.
 - Le README signale que le point de contrôle initial conservé de DA-Auto avait les drapeaux de sélection activés (`README.md:187-190` « `The retained initial checkpoint has selection flags enabled despite the` »).
-<!-- FIN-PARTIE -->
+## 4. Les consignes clés, mot pour mot
+
+Les textes ci-dessous sont des données citées ; ils s'adressent aux agents du système, pas au lecteur.
+
+### 4.1 Le directeur
+
+Source : `DiscoveryAgent/hyp_agents/director_agent.py:68-75`
+```text
+## How You Work
+
+- You will receive a research context (dataset description, task, and potentially a hypothesis or exploration directive)
+- You formulate queries to helper agents using XML-style tags: `<agent_tag>your query</agent_tag>`
+- Helper agents execute your queries and return results
+- You interpret results and formulate follow-up queries
+- You continue until your query budget is exhausted or the investigation is complete
+- You may only submit one query to one of the helper agents per step. Do not try to submit multiple queries at once as this will result in a penalty and wasted tokens.
+```
+
+Source : `DiscoveryAgent/hyp_agents/director_agent.py:109-115`
+```text
+## Research Principles
+
+### Stay On Target
+- Do NOT deviate from the hypothesis to explore tangential questions
+- If you discover interesting patterns unrelated to the hypothesis, note them briefly but return to hypothesis testing
+- Prioritize depth of investigation over breadth of exploration
+- If a plan for the hypothesis has been provided, you are to follow it rigorously and completely
+```
+
+- Mesure du succès : `DiscoveryAgent/hyp_agents/director_agent.py:148` « `Remember: Your success is measured by how thoroughly and rigorously you evaluate the proposed hypothesis, not by confirming it at all costs.` »
+- Hypothèse choisie par un humain : `DiscoveryAgent/hyp_agents/director_agent.py:165-169` « `You should also make sure to integrate any feedback given from the expert in your research process. Consider their advice to be gold-standard.` »
+- Exploration : `DiscoveryAgent/hyp_agents/director_agent.py:173` « `No specific hypothesis has been provided—your goal is to **discover interesting patterns, relationships, and insights** in the dataset that could inform future hypothesis generation.` »
+- Relance à chaque tour de parole en mode test : `DiscoveryAgent/hyp_agents/director_agent.py:623` « `You are in hypothesis orchestration mode. You should now continue to test the hypothesis` » ; sinon : `DiscoveryAgent/prompts/hyp_generation.py:157` « `Use this information to guide your next query. What should be done next? Improve and iterate on your approach.` »
+
+Source : `DiscoveryAgent/hyp_agents/director_agent.py:208-211`
+```text
+IMPORTANT: Do not use this unless you believe you are done exploring the hypothesis. 
+There is no additional reward for stopping early, prioritize completeness and being thorough in your analysis.
+However, if you believe you are done, you should not explore additional ideas and instead stop your iteration.
+DO NOT output the stop command until you believe you're done.
+```
+
+Source : `DiscoveryAgent/hyp_agents/director_agent.py:220-229`
+```text
+Summarize this research conversation. 
+Preserve: (1) the original hypothesis or research question, 
+(2) all experimental results and statistical findings, 
+(3) key decisions about methodology, 
+(4) current state of the investigation and next steps, 
+(5) any data file paths or column names referenced. 
+Discard redundant tool outputs and repeated instructions.
+However, you should preserve information that will allow the agent to summarize the methods and results of the research at the end of the conversation.
+```
+
+- Rapport de fin de tour : `DiscoveryAgent/prompts/results_memory.py:22` « `IMPORTANT: Copy the citations exactly from the citations returned by your helper agents. DO NOT INVENT OR ATTEMPT TO INFER CITATIONS FROM THE TEXT.` »
+
+### 4.2 La génération d'hypothèses
+
+Source : `DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py:36-43`
+```text
+You will be asked to generate a list of hypotheses that are proposals for future research on this dataset and task.
+For each hypothesis, you must clearly explain why it is interesting, plausible, and how it could be tested with computational methods only.
+You MUST ground your hypotheses in specific literature or in the evidence found from previous explorations on this dataset.
+Provide specific citations (literature, sources, etc.) and evidence from the background report.
+You may decide to continue exploring a hypothesis that was previously proposed or explored in the background report, but make sure to propose some hypotheses that are novel and that haven't been explored.
+
+Importantly, your hypotheses are proposals; a scientist who is an expert in the field will choose from the list.
+The scientist expects a data-driven, literature-grounded justification for why you would want to explore this hypothesis, so be rigorous in your description and reasoning.
+```
+
+Source : `DiscoveryAgent/prompts/hyp_generation.py:145-154`
+```text
+You should focus on generating a novel hypothesis that is data driven.
+What have you seen in the data that is interesting? What do you want to follow-up on? What do you think could make an impact in this particular scientific discipline?
+Do you think some new method could be invented to analyze this data? What intersting insights do you think you'll find?
+Ask questions, be creative, and think hard about what you could do with this data.
+Your possibilities are endless.
+
+Your output should look like this:
+
+**Hypothesis**: [Your hypothesis]
+**Justification**: [Your justification for why this hypothesis is novel and impactful]
+```
+
+- Le « background report » que cite l'invite système est la mémoire accumulée, pas le rapport de littérature (2.3).
+
+### 4.3 Les étapes de la mémoire
+
+Source : `DiscoveryAgent/memory/results_memory.py:24-34`
+```text
+INTEGRATOR_SYSTEM_PROMPT = """You are an expert research integrator. Your ONLY job is to combine base and delta reports comprehensively.
+
+CRITICAL RULES:
+- Do NOT worry about length or redundancy at this stage
+- Include EVERYTHING from both reports
+- When in doubt, keep both versions
+- Preserve ALL specific examples, data points, and technical details
+- Never drop information to save space
+- Maintain clear section structure
+
+Your goal is COMPLETENESS, not conciseness."""
+```
+
+Source : `DiscoveryAgent/memory/results_memory.py:84-92`
+```text
+ANALYZER_SYSTEM_PROMPT = """You are a redundancy analyst reviewing integrated research reports.
+
+Your task: Identify ONLY truly redundant content where consolidation is safe.
+
+CRITICAL RULES:
+- Only flag content that is EXACTLY or nearly identical
+- If consolidating would lose ANY detail, example, or nuance, mark as HIGH RISK
+- Be conservative: when in doubt, do NOT recommend consolidation
+- Focus on true duplicates, not related but distinct information"""
+```
+
+Source : `DiscoveryAgent/memory/results_memory.py:131-141`
+```text
+REFINER_SYSTEM_PROMPT = """You are a research refiner who performs careful consolidation with verification.
+You are to refine the proposed report by integrating and organizing results, removing any unnecessary details and trimming text to only the main results.
+You should consider if the results may be important for future researchers to know when developing hypotheses on this dataset.
+
+CRITICAL RULES:
+- Only consolidate LOW-RISK redundancies
+- Skip consolidations where verification fails
+- Preserve ALL key information identified in the analysis
+- When in doubt, keep content separate
+- Never generalize specific findings into abstract statements
+- Document all changes in the verification log"""
+```
+
+Source : `DiscoveryAgent/memory/results_memory.py:153-162`
+```text
+Process:
+1. Review the redundancy analysis
+2. For each LOW-RISK redundancy:
+   - Merge the sections while ensuring ALL key information is retained
+   - Verify every important detail is preserved
+3. For MEDIUM and HIGH-RISK redundancies:
+   - Skip consolidation entirely
+   - Keep content as-is
+4. Remove unnecessary verbosity and trim to essential results
+5. Keep content that would be valuable for future researchers developing hypotheses
+```
+
+- Échelle de risque de l'analyseur : `DiscoveryAgent/memory/results_memory.py:121` « `CRITICAL: If you're uncertain about whether consolidation is safe, mark it as HIGH risk.` »
+
+### 4.4 Le relecteur et son concepteur
+
+Invite système du concepteur (utilisée dans les six configurations, où `review_design` est vrai) :
+
+Source : `DiscoveryAgent/meta_agents/review_designer.py:21-38`
+```text
+The reviewer prompt you design should:
+1. Encourage the reviewer to provide highly specific, actionable feedback
+2. Drive the research towards the stated research task and objectives
+3. Promote critical evaluation of methods, findings, and scientific rigor
+4. Help the research agent self-evolve and improve its approach iteratively
+5. Focus on computational analyses (not data collection or real-world interventions)
+6. Steer towards novel, scientifically impactful directions
+7. Be clear about what constitutes good progress vs. what needs improvement
+
+Your generated reviewer prompt should be comprehensive yet focused, providing clear guidance 
+on how to evaluate the research work effectively within the constraints of a computational 
+research system.
+
+IMPORTANT: Avoid putting steering the reviewer to be biased or prefer any methods or approaches. 
+It should merely evaluate the quality of the research work, aligned towards whatever task the research agent is tasked with doing.
+
+IMPORTANT: The reviewer prompt must instruct the reviewer to keep the research agent on task. 
+If a specific task is given to the research agent, then the reviewer should be instructed to ensure the research agent is accomplishing this task and not straying too far from what the user requested.
+```
+
+Message envoyé au relecteur à chaque relecture :
+
+Source : `DiscoveryAgent/director_workflow.py:1280-1294`
+```text
+Please generate a thorough review of the following report.
+
+First, here is some information about the dataset:
+
+{self.dataset_description}
+
+And here's a background report on what we've previously explored and learned on this dataset and task:
+
+{self.background_report}
+
+And here is the most recent analysis. You should focus your critiques on these findings and approaches:
+
+{self.cumulative_report}
+
+Now generate a thorough review of these findings.
+```
+
+Invite fixe du relecteur, utilisée seulement quand le concepteur est désactivé :
+
+Source : `DiscoveryAgent/prompts/review_agent.py:2-13`
+```text
+You will be shown a report of an AI scientist's explorations of a dataset.
+The agent is supposed to be exploring novel ideas and making scientifically-impactful findings on the dataset.
+Your job is to review the report and provide feedback on the work thus far.
+IMPORTANT: The agent for which you're reviewing is purely computational and is not capable of gathering more data. 
+Only suggest changes to the agent's analysis not to the data itself or some real-world component such as user studies.
+You should provide feedback on the work thus far and suggest improvements.
+Your improvements should be specific and actionable.
+If the agent is taking a wrong path or is not exploring an interesting area, you should provide feedback on this.
+Steer the agent towards novelty that it can use to improve its exploration.
+In addition, encourage the agent to be more rigorous wherever it can. 
+If you believe that a method has been executed correctly, you should state this and tell the agent to revisit this analysis.
+Be critical in your assessment and provide specific, pointed guidance on the novelty of the findings.
+```
+
+### 4.5 L'agent d'exécution : données de test et bac à sable
+
+- **Données de test** : aucune règle dans les invites de l'agent d'exécution du dépôt. La seule consigne vient de la description des données ProteinGym, transmise telle quelle au directeur et à l'agent d'exécution : `inputs/dms_auto/README.txt:9` « `You will be evaluated on a held-out test set that you do not have access to.` » ; pour l'astronomie, le brief interdit les métadonnées : `inputs/dwarf_select/TASK_DESCRIPTION.md:2` « `DO NOT use any metadata that is provided in the data, only the images.` ». Côté code, seul le bloqueur d'URL vise les étiquettes de test (2.9). L'arborescence donnée pour ProteinGym marque le dossier brut : `configs/workspace_base.txt:6` « `DO NOT EDIT OR ADD ANYTHING TO IT` ».
+- **Bac à sable** (ajouté à l'invite système et à celle du sous-agent d'exécution quand la garde est active) :
+
+Source : `DiscoveryAgent/prompts/execution_agent.py:78-86`
+```text
+🚨 SANDBOX PATH RULES (NON-NEGOTIABLE):
+
+- Your current working directory is the sandbox root: {working_directory}
+- Treat this directory as the project root for all analysis.
+- Do not search, read, write, or glob parent directories outside this sandbox.
+- Access the dataset only through paths under this sandbox, especially `data/...`.
+- If `data/` contains symlinks to shared storage, still use the sandbox path such as `data/train/substitutions/...`; do not resolve or access the external target path directly.
+- Never use parent run directories or shared storage parents as search roots.
+- Write temporary files to this sandbox, do not write them outside of the sandbox.
+```
+
+- **Sûreté des fichiers** (invite simple, sans sous-agents) :
+
+Source : `DiscoveryAgent/prompts/execution_agent.py:178-185`
+```text
+🚨 CRITICAL FILE SAFETY RULES 🚨
+- NEVER delete, move, or modify existing data files (CSV, JSON, Excel, etc.)
+- NEVER delete any files that existed before your session started
+- ONLY create new files - never overwrite existing ones unless they're in your designated output directory
+- If you need to work with existing data, COPY it to a new file first, then analyze the copy
+- NEVER use rm, del, unlink, or similar delete commands on existing files
+- NEVER use mv or move commands that could relocate important data files
+- CRITICAL: You may not submit kill command to all Python processes. If killing is absolutely necessary, make sure that you precisely identify the PID which you are trying to kill before submitting the kill command. Incorrect usage of kill could result in CATASTROPHIC errors, so use with extreme caution.
+```
+
+- **Orchestrateur à sous-agents** (les six configurations) : `DiscoveryAgent/prompts/execution_agent.py:222` « `IMPORTANTLY, you are not a co-pilot with a human collaborator but rather an autonomous agent who is expected to fully complete the analyses you're given.` » ; `DiscoveryAgent/prompts/execution_agent.py:246` « `Because you're asked to run autonomously, you're only given a fixed number of tool calls before you run out of steps.` » ; `DiscoveryAgent/prompts/execution_agent.py:250` « `DO NOT push or commit anything to git.` » ; sous-agent d'exécution : `DiscoveryAgent/prompts/cc_sub_agents.py:29` « `NEVER delete, move, or modify existing data files (CSV, JSON, Excel, etc.). Data is not to be modified in any way.` ».
+## 5. Les réglages
+
+Trois niveaux de défaut coexistent : les classes de `config.py` (et quelques classes voisines), le lanceur (`DiscoveryAgent/utils/arg_parsers.py`), puis les six configurations de départ `configs/paper/*.yaml`, que le README présente comme des points de départ et non comme le relevé de chaque invocation. « — » : non fixé (le défaut du lanceur s'applique).
+
+| Réglage | Classes (`config.py` et voisines) | Défaut du lanceur | starembed_auto | dms_auto | dms_steer | dwarf_select | acs_select | gw_cd4_select |
+|---|---|---|---|---|---|---|---|---|
+| Directeur, agent d'hypothèse | claude-opus-4-6 | claude-opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 |
+| Agent d'exécution (et sous-agents) | — | claude-opus-4-6 | sonnet-4-5-20250929 | sonnet-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 |
+| Mémoire (trois agents) | sonnet-4-5-20250929 si rien n'est donné | claude-opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 |
+| Relecteur | sonnet-4-5-20250929 si vide (`run.py`) | claude-opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 |
+| Concepteur de relecture | sonnet-4-5 (workflow) ou sonnet-4-6 (classe) si rien n'est donné | claude-opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 | opus-4-6 |
+| Recherche web (modèle, jetons, recherches) | — | opus-4-6, 1 200, 3 | —, 1 200, 3 | opus-4-6, 1 200, 3 | idem | idem | idem | idem |
+| Recherche approfondie | sonar-deep-research, fixe | idem | idem | idem | idem | idem | idem | idem |
+| Agent OpenTargets (modèle, tours) | sonnet-4-6, 15 | opus-4-6, 15 | désactivé | désactivé | désactivé | désactivé | désactivé | opus-4-6, 20 |
+| Agent recensement | modèle opus-4-6 codé en dur | désactivé | désactivé | désactivé | désactivé | désactivé | activé | désactivé |
+| Tours par invocation | — | 1 | 1 | 5 | 1 | 1 | 1 | 1 |
+| Requêtes par tour | 10 (brancheur) | 5 | 10 | 10 | 10 | 10 | 25 | 25 |
+| Tours exploratoires | — | aucun | 1 | 1 | — (aucun) | 1 | 0 | 0 |
+| Tours de l'agent d'exécution par requête | aucun plafond | 0 = aucun plafond | 50 | 40 | 40 | 60 | 40 | 30 |
+| Intervalle de relecture (requêtes) | — | aucun (pas de relecture) | 3 | 3 | 3 | 3 | 8 | 4 |
+| Retenue des relectures / pas d'hypothèse explicite | vrai / — | vrai / aucun | vrai / — | vrai / — | vrai / — | vrai / — | vrai / — | vrai / — |
+| Concepteur, recherche du relecteur | faux, faux | faux, faux | vrai, vrai | vrai, vrai | vrai, vrai | vrai, vrai | vrai, vrai | vrai, vrai |
+| Compaction, seuil | faux, 190 000 | faux, 150 000 | vrai, — (150 000) | vrai, 150 000 | vrai, 150 000 | vrai, 150 000 | vrai, 150 000 | vrai, 150 000 |
+| Arrêt anticipé (`<<STOP>>`) | faux | faux | vrai | vrai | vrai | vrai | vrai | vrai |
+| Sélection humaine, pas d'hypothèse automatique | faux, faux | faux, faux | faux, faux | faux, faux | vrai, vrai | vrai, vrai | vrai, vrai | vrai, vrai |
+| Rapport de fond, plan (sans effet), git, sous-agents | faux | faux | vrai | vrai | vrai | vrai | vrai | vrai |
+| Jeu croissant | faux | faux | faux | faux | faux | faux | vrai | vrai |
+| Garde du bac à sable, bloqueur d'URL | actifs | actifs | actifs | actifs | actifs | actifs | actifs | actifs |
+| Arborescence de l'espace de travail | — | aucune | base_early | base | base | base_early | expanding | expanding |
+
+Appuis des défauts :
+- Classes : `DiscoveryAgent/config.py:239` « `temperature: float = 0.2` » ; `DiscoveryAgent/config.py:270` « `max_tokens: int = 8192` » ; `DiscoveryAgent/config.py:280` « `allow_director_to_stop: bool = False` » ; `DiscoveryAgent/config.py:281` « `generate_plan: bool = False` » ; `DiscoveryAgent/config.py:284-285` « `enable_compaction: bool = False` » ; `DiscoveryAgent/config.py:290` « `model_name: str = "claude-opus-4-6",` » ; `DiscoveryAgent/hypothesis_brancher.py:34` « `max_queries: int = 10` » ; `DiscoveryAgent/memory/results_memory.py:407` « `llm_config = LLMConfig(model_name="claude-sonnet-4-5-20250929", max_tokens = 18000)` » ; `DiscoveryAgent/director_workflow.py:440` « `LLMConfig(model_name="claude-sonnet-4-5-20250929", max_tokens = 8192)` » ; `DiscoveryAgent/meta_agents/review_designer.py:69` « `llm_config = LLMConfig(model_name="claude-sonnet-4-6")` » ; `DiscoveryAgent/tool_agents/specialized/opentargets_agent.py:74` « `model: Optional[str] = "claude-sonnet-4-6"` » ; `DiscoveryAgent/utils/agent_config_builders.py:55` « `llm_config = LLMConfig(model_name="sonar-deep-research", api_provider="perplexity")` ».
+- Lanceur : `DiscoveryAgent/utils/arg_parsers.py:4` « `DEFAULT_ANTHROPIC_MODEL = "claude-opus-4-6"` » ; `DiscoveryAgent/utils/arg_parsers.py:55` « `"--num_exploration_rounds", type=int, default=None` » ; `DiscoveryAgent/utils/arg_parsers.py:128` « `"--opentargets_max_turns", type=int, default=15` » ; `DiscoveryAgent/utils/arg_parsers.py:142` « `"--review_optimization_steps", type=int, default=None` » ; `scripts/run.py:240` « `or "claude-sonnet-4-5-20250929"` ».
+- Jetons de sortie fixés par le lanceur : directeur et agent d'hypothèse 16 384 (`scripts/run.py:625` « `max_tokens = 16384` »), relecteur 15 000 (`scripts/run.py:243` « `max_tokens = 15000,` »), mémoire 18 000 (`scripts/run.py:735` « `max_tokens = 18000` »), concepteur 2 000 par appel malgré 16 384 en configuration (2.5), recherche web 1 200, agent recensement 4 096. La température de 0,2 n'est transmise que par `OnePassLLM` (`DiscoveryAgent/base_llm.py:43` « `"temperature": self.temperature,` »), soit la mémoire, le concepteur et le relecteur sans recherche ; le directeur, l'agent d'hypothèse, la recherche web et le relecteur avec recherche gardent la température par défaut de l'API.
+- Configurations, valeurs qui s'écartent du lot : `configs/paper/starembed_auto.yaml:10` « `execution_model: "claude-sonnet-4-5-20250929"` » ; `configs/paper/starembed_auto.yaml:9` « `execution_max_turns: 50` » ; `configs/paper/dms_auto.yaml:28` « `num_rounds: 5` » ; `configs/paper/dwarf_select.yaml:10` « `execution_max_turns: 60` » ; `configs/paper/acs_select.yaml:37` « `review_optimization_steps: 8` » ; `configs/paper/gw_cd4_select.yaml:38` « `review_optimization_steps: 4` » ; `configs/paper/gw_cd4_select.yaml:32` « `opentargets_max_turns: 20` ». Les clés `opentargets_model` des campagnes sans agent OpenTargets sont sans effet.
+- Face à la table 35 de l'annexe (annexe p. 115 « Review interval ») : intervalles de relecture, plafonds de requêtes et tours d'exécution concordent avec les configurations ; les tours exploratoires non (section 3.1, dernière ligne) ; les nombres de tours rapportés (4, 10, 11 et l'agrégation, 16, 7, 13) ne sont pas dans les configurations, qui lancent un ou cinq tours par invocation.
+
+## 6. Le compte des appels de modèle par tour (lu dans le code)
+
+Notations pour un tour : Q requêtes exécutées ; E essais du directeur pour obtenir ces requêtes (E = Q + réessais pour sortie sans balise ou refus + 1 si le tour finit par `<<STOP>>`) ; Q_w, Q_d, Q_c, Q_x, Q_o les requêtes envoyées à la recherche web, à la recherche approfondie, au recensement, à l'exécution et à OpenTargets ; V les relectures.
+
+| Composant | Appels par tour | Où |
+|---|---|---|
+| Génération d'hypothèse | 1 en mode automatique hors tour exploratoire et hors reprise en cours de tour ; 0 sinon | `DiscoveryAgent/director_workflow.py:849` « `hypothesis_output = self.hypothesis_gen_agent.generate_hypothesis(` » |
+| Directeur, requêtes | E | `DiscoveryAgent/director_workflow.py:958` « `query = self.director_agent.generate_query(` » |
+| Directeur, rapport de tour | 1 | `DiscoveryAgent/director_workflow.py:1178` « `structured_report = self.director_agent.generate_final_report(` » |
+| Mise à jour de la mémoire | 0 pour le tout premier rapport d'une mémoire vide ; sinon 3 (intégrateur, analyseur, raffineur), y compris au premier tour d'une reprise | `DiscoveryAgent/memory/results_memory.py:444` « `if self.current_report is None:` » |
+| Relecture | V, un appel chacune (avec recherche web, jusqu'à trois recherches dans le même appel) ; V = 0 avec les six configurations | `DiscoveryAgent/director_workflow.py:1316` « `feedback = self.review_optimization_llm.forward(report_summary)` » |
+| Recherche web | Q_w, un appel chacune (trois recherches au plus dans l'appel) | `DiscoveryAgent/tool_agents/single_search.py:74` « `response = self.client.messages.create(` » |
+| Recherche approfondie | Q_d, une requête Perplexity chacune | `DiscoveryAgent/tool_agents/deep_research.py:92` « `response = requests.post(` » |
+| Recensement | de Q_c à 25·Q_c appels (boucle d'outils de l'ACSAgent) | `acs_agent/agent.py:130` « `MAX_TOOL_ROUNDS = 25` » |
+| Exécution | Q_x sessions SDK neuves ; dans chacune, deux demandes (analyse, puis rapport), une troisième si le rapport manque, une ou deux de plus si des compétences sont déclarées, une si le générateur CLAUDE.md est actif ; chaque demande est une boucle d'agent dont le nombre d'appels de modèle n'est pas visible dans ce dépôt (plafond `max_turns` passé aux options s'il est non nul) ; les sous-agents de la session consomment leurs propres appels, sur le même modèle | `DiscoveryAgent/tool_agents/execution_agent_cc.py:1570` « `await client.query(analysis_prompt)` » ; `DiscoveryAgent/tool_agents/execution_agent_cc.py:1967` « `await client.query(file_request_prompt)` » |
+| OpenTargets | Q_o sessions SDK, plafond `max_turns` (15 ; 20 en génomique) | `DiscoveryAgent/tool_agents/specialized/opentargets_agent.py:150` « `"max_turns": self.config.max_turns,` » |
+| Compte de jetons (API de comptage, sans génération) | E + 6·Q (deux `save_state` du directeur, de l'agent d'hypothèse et de leur alias à chaque point de contrôle) | `DiscoveryAgent/director_workflow.py:924` « `dir_tokens = self.director_agent.estimate_context_tokens()` » ; `DiscoveryAgent/checkpoint_manager.py:174-175` « `'state': dir_agent.save_state(),` » |
+
+Par lancement de `run.py`, en plus : 1 appel du concepteur si `review_design` (et 1 de plus à une restauration en cours de tour) ; 1 rapport de fond (Perplexity, ou modèle du directeur pour des PDF) s'il n'existe pas encore.
+
+Formule, pour les appels de génération (Anthropic et Perplexity), hors boucles internes des sessions SDK :
+
+```text
+N_tour = H + (E + 1) + M + V + Q_w + Q_d + C_c + S_x + S_o
+  H   = 1 (automatique, hors exploration, hors reprise en cours de tour) sinon 0
+  M   = 0 (premier rapport d'une mémoire vide) sinon 3
+  C_c = appels du recensement, entre Q_c et 25 Q_c
+  S_x = appels de modèle des Q_x sessions d'exécution (non bornés si max_turns vaut 0)
+  S_o = appels de modèle des Q_o sessions OpenTargets (au plus max_turns chacune)
+N_lancement = N_tours + D + B   (D = 1 concepteur si review_design ; B = 1 rapport de fond s'il manque)
+```
+
+Réessais d'API : le directeur et l'agent d'hypothèse refont jusqu'à cinq fois un appel en erreur 429, 500, 503 ou « Overloaded » (chaque réessai est un appel de plus) ; la mémoire, le concepteur, le relecteur, la recherche web et la recherche approfondie ne réessaient pas.
+
+Exemple, configuration `dms_auto` (10 requêtes, toutes à l'exécution, sans arrêt anticipé ni réessai) : tour 0 exploratoire, H = 0, M = 0, soit 11 appels du directeur et 10 sessions d'exécution ; tours 1 à 4, H = 1, M = 3, soit 15 appels hors exécution et 10 sessions ; plus, au lancement, 1 concepteur et 1 rapport de fond ; et 70 appels de comptage par tour.
+
+## 7. Ce que les essais affirment (`tests/`, 13 fichiers)
+
+Les essais par défaut ne font aucun appel d'API ; quatre essais réels du bac à sable demandent `RUN_LIVE_SANDBOX_TESTS=1` et une CLI authentifiée. Aucun essai ne couvre la boucle extérieure, la mémoire, le relecteur, le concepteur, la génération d'hypothèse, le gestionnaire de points de contrôle en dehors de son nom de dossier, l'audit, la protection des processus ni la protection d'écriture.
+
+- `test_claude_cli_resolution.py` : sans surcharge, aucune recherche globale de l'exécutable Claude et aucun `cli_path` transmis ; une surcharge absolue et exécutable est validée et transmise ; une surcharge relative, absente, dossier ou non exécutable est refusée.
+- `test_claude_sdk_message_compat.py` : éprouve l'analyseur de messages du SDK lui-même (messages de progression ignorés, messages de tâche non terminaux, résultat malformé levé), pas le code du dépôt.
+- `test_execution_live_log.py` : le journal public de l'agent d'exécution porte un nom à deux chiffres, est privé (0600), garde l'ordre des outils et une seule marque de reprise ; les secrets (clés connues, Bearer, mots de passe, `--api-key`) sont expurgés, même coupés entre deux écritures ; le plafond est marqué ; échec, arrêt et succès laissent un journal ; les échecs du rapport sont classés sans contenu, un refus n'est pas réessayé, une réponse inutilisable l'est une fois.
+- `test_execution_skills.py` : les compétences figées sont copiées à l'identique dans un greffon temporaire validé (l'essai lance le binaire `claude` fourni avec le SDK : `tests/test_execution_skills.py:310` « `[str(bundled_cli), "plugin", "validate", "--strict", str(plugin_root)],` ») ; tout outil est refusé avant le chargement exact de chaque compétence ; le préchargement est borné et échoue proprement ; les contextes délégués chargent la même compétence ; les instantanés dangereux ou malformés sont refusés sans repli ; sans compétence, rien ne change.
+- `test_launch_preflight.py` : une clé manquante fait échouer le lancement avant toute création d'espace de travail et sans fuite de secret ; Perplexity est facultatif sans recherche approfondie ; le plan d'une campagne se fait sans réseau ni secret ; `dms_auto` et `starembed_auto` sont en mode automatique.
+- `test_llm_diagnostics.py` : les diagnostics d'API décrivent requêtes et réponses ; une réponse vide et un refus (même avec texte partiel) sont des erreurs, catégorie et conseil gardés ; les exceptions sont bornées et journalisées avant d'être relevées ; le directeur et l'agent d'hypothèse exposent leur dernier refus.
+- `test_paper_configs.py` : le lanceur s'importe ; les six configurations existent, leurs clés sont des drapeaux du lanceur et leur arborescence existe ; sept drapeaux de flux sont vrais (`tests/test_paper_configs.py:40-42` « `"allow_director_to_stop", "enable_compaction", "generate_background_report"` ») et la recherche web est à 1 200 jetons. Rien ne vérifie que la relecture se déclenche.
+- `test_partial_query_resume.py` : une requête interrompue est reprise sans régénération par le directeur (`tests/test_partial_query_resume.py:52` « `resume must not regenerate a persisted unfinished query` ») : entrée renvoyée telle quelle, ou rapport existant rejoué sans appeler l'agent ; un échec de la reprise garde l'entrée et marque la requête en échec ; une entrée sans agent identifiable fait échouer avant tout appel.
+- `test_query_artifacts.py` : noms de dossiers et de fichiers à deux chiffres au moins ; l'entrée est écrite avant l'envoi et appariée au rapport ; un échec ne fabrique pas de rapport ; réécrire le même contenu est sans effet, un contenu différent lève une collision ; un ancien dossier à trois chiffres est réutilisé ; le point de contrôle ne produit pas de Markdown en double (`tests/test_query_artifacts.py:151` « `assert not (checkpoint.parent / "query_001.md").exists()` ») ; un lien d'évasion est refusé.
+- `test_refusal_workflow.py` : un refus du directeur est réessayé sans la consigne « SHORTER » (`tests/test_refusal_workflow.py:120` « `assert "SHORTER and more concise query" in director.feedback[1]` » éprouve le cas inverse, sortie malformée) ; au-delà du plafond, arrêt avec événement et conseil ; une requête vide est notée ; un refus du rapport final retombe sur le rapport cumulé.
+- `test_release_paths.py` : les modèles par agent se règlent séparément ; la recherche approfondie utilise sonar-deep-research et écrit sa sortie ; l'agent OpenTargets exige ses ressources.
+- `test_sandbox_enforcement.py` : appartenance des chemins (littéral, résolu, mode strict contre un lien d'évasion) ; redirections relatives résolues depuis le bac, duplication de descripteurs et substitution de processus ignorées ; la garde après outil supprime une cible neuve hors bac, garde une cible préexistante et arrête la session ; quatre essais réels optionnels vérifient sur disque qu'une écriture hors bac n'aboutit pas.
+- `test_url_blocker.py` : hôte par défaut et sous-domaines bloqués sans casse, au format imbriqué ; identifiant de dépôt sans URL bloqué ; WebFetch distingue un sous-domaine d'un nom d'hôte dans la requête ; des listes vides désactivent les règles ; une panne du journal ne lève pas le refus.
+
+## 8. Vérification par programme
+
+- Programme : `outils-lecteur-code-v1/verifier_citations_v1.py` (bibliothèque standard, lit le dépôt au commit par `git cat-file`) ; contrôles de recherche : `outils-lecteur-code-v1/controles-recherche-v1.json` ; sortie : `outils-lecteur-code-v1/sortie-verification-citations-v1.txt`.
+- Commande (depuis un dossier quelconque) : `python3 -I verifier_citations_v1.py --depot /home/user/owencqueen/discoveryagent-code --commit b510bb2c6c098620d76927c3a628bf8060658df4 --lecture lecture-code-discoveryagent-v1.md --registre registre-couverture-code-discoveryagent-v1.json --controles controles-recherche-v1.json --papier …/arxiv-2611.21950v1-texte-pdftotext-layout.txt --annexe …/arxiv-2611.21950v1-annexe-texte-pdftotext-layout.txt --sortie sortie-verification-citations-v1.txt` (chemins complets dans la sortie).
+- Bilan de la passe finale, sur ce fichier dans sa version scellée : 25 citations de code en bloc, 338 citations de code en ligne, 7 références de portée, 53 citations du papier et 44 de l'annexe vérifiées, **0 échec** ; registre de couverture : 123 entrées conformes (97 lues en entier, 26 parcourues) ; 15 contrôles de recherche conformes. Pendant la rédaction, une citation a échoué (un extrait qui traversait deux lignes de commentaire) ; elle a été corrigée.
+- Essai négatif du programme : sur `outils-lecteur-code-v1/essai-negatif-citations-v1.md` (deux citations justes, sept fausses : mauvaise ligne, extrait altéré, fichier absent, lignes hors du fichier, mauvaise page, plage de pages, bloc altéré), il compte 7 échecs et rend le code 1 (`outils-lecteur-code-v1/sortie-essai-negatif-v1.txt`).
+- Portée de la vérification : le programme établit que chaque extrait figure aux lignes ou à la page citées, et que les listes d'occurrences des contrôles R01 à R15 sont exactes ; il ne juge pas les phrases d'interprétation qui entourent les extraits. Normalisation : NFKC, guillemets typographiques, blancs réduits. Une citation écrite hors des formats reconnus ne serait pas vue ; les citations sur plage de pages sont comptées comme échecs pour cette raison.
+

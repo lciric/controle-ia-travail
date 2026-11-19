@@ -1,0 +1,77 @@
+Vérification des citations — lecture du code de DiscoveryAgent v1
+Date (UTC) : 2026-11-19T17:10:37Z
+Commit vérifié : b510bb2c6c098620d76927c3a628bf8060658df4 (123 fichiers suivis)
+Lecture : /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/lectures/discoveryagent-v1/outils-lecteur-code-v1/essai-negatif-citations-v1.md sha256 87c657cf6eb35a4e20adbaf08e05c5b9fc2e0ac70a4b3072e2645ca3ff7fb232
+Registre : /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/lectures/discoveryagent-v1/registre-couverture-code-discoveryagent-v1.json sha256 be26877e902432ad666480f23932fcd6c1fdc2d32179c7b185499751c7b55043
+Contrôles : /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/lectures/discoveryagent-v1/outils-lecteur-code-v1/controles-recherche-v1.json sha256 ed25049cdb5f4c40120f9c7389b58c565b01c2bddf73afd96bc83aa7e0e8ae36
+Papier : /home/user/controle-ia-travail/docs/sources/arxiv-2611.21950-v1/arxiv-2611.21950v1-texte-pdftotext-layout.txt sha256 47d1aae45680f19b23cbea08e59c5c5c209533fc4fe96f9066498b74ad0addac (41 morceaux)
+Annexe : /home/user/controle-ia-travail/docs/sources/arxiv-2611.21950-v1/arxiv-2611.21950v1-annexe-texte-pdftotext-layout.txt sha256 bf35d45be92081cd95b88a8e11b179f9a4789e74419593572724f033c08f9bfc (151 morceaux)
+
+Bilan :
+  citations de code en bloc     : 0 vérifiées, 1 échecs
+  citations de code en ligne    : 1 vérifiées, 3 échecs
+  références de code sans extrait (portée) : 0 vérifiées, 1 échecs
+  citations du papier           : 1 vérifiées, 1 échecs
+  citations de l'annexe         : 0 vérifiées, 1 échecs
+  registre de couverture        : 123 entrées (97 lues en entier, 26 parcourues), 0 échecs
+  contrôles de recherche        : 15 vérifiés, 0 échecs
+  TOTAL DES ÉCHECS              : 7
+
+Détail des citations :
+B001 ECHEC bloc  DiscoveryAgent/director_workflow.py:577-578 (extrait absent de ces lignes)
+C001 OK    ligne DiscoveryAgent/director_workflow.py:917-917 (extrait trouvé)
+C002 ECHEC ligne DiscoveryAgent/director_workflow.py:918-918 (extrait absent de ces lignes)
+C003 ECHEC ligne DiscoveryAgent/director_workflow.py:917-917 (extrait absent de ces lignes)
+C004 ECHEC ligne DiscoveryAgent/inexistant.py:1-1 (fichier absent du commit)
+C005 ECHEC porteeDiscoveryAgent/base_llm.py:68-70 (lignes 68-70 hors du fichier (67 lignes))
+P001 OK    papier p. 25 (extrait trouvé)
+P002 ECHEC papier p. 26 (extrait absent de la page)
+P003 ECHEC annexe plage de pages non vérifiable : annexe p. 69-70 «
+
+Contrôles de recherche :
+R01 OK    motif 'get_feedback\\(' : 2 ligne(s) trouvée(s), 2 attendue(s)
+R02 OK    motif 'review_optimization_llm\\.forward\\(' : 1 ligne(s) trouvée(s), 1 attendue(s)
+R03 OK    motif 'explicit_hypothesis_step' : 8 ligne(s) trouvée(s), 8 attendue(s)
+R04 OK    motif 'background_literature_content' : 3 ligne(s) trouvée(s), 3 attendue(s)
+R05 OK    motif 'generate_plan' : 5 ligne(s) trouvée(s), 5 attendue(s)
+R06 OK    motif 'paused_for_selection' : 4 ligne(s) trouvée(s), 4 attendue(s)
+R07 OK    motif '_save_queries_and_reports_markdown' : 1 ligne(s) trouvée(s), 1 attendue(s)
+R08 OK    motif '_extract_accumulated_report' : 1 ligne(s) trouvée(s), 1 attendue(s)
+R09 OK    motif 'save_reviewer_prompt_checkpoint\\(' : 2 ligne(s) trouvée(s), 2 attendue(s)
+R10 OK    motif 'task_description' : 0 ligne(s) trouvée(s), 0 attendue(s)
+R11 OK    motif 'REPORT_SUMMARY_PROMPT\\b' : 1 ligne(s) trouvée(s), 1 attendue(s)
+R12 OK    motif 'num_exploration_rounds' : 5 ligne(s) trouvée(s), 5 attendue(s)
+R13 OK    motif 'allowed_tools' : 9 ligne(s) trouvée(s), 9 attendue(s)
+R14 OK    motif 'hookSpecificOutput' : 8 ligne(s) trouvée(s), 8 attendue(s)
+R15 OK    motif 'generate_next_round_prompts' : 1 ligne(s) trouvée(s), 1 attendue(s)
+
+Registre de couverture :
+  aucun écart
+
+Extraits en échec :
+B001 DiscoveryAgent/director_workflow.py:577-578 : extrait absent de ces lignes
+---
+        if self.explicit_hypothesis_step is not None:
+            return False # We're not using explicit hypotheses
+---
+C002 DiscoveryAgent/director_workflow.py:918-918 : extrait absent de ces lignes
+---
+while query_num <= self.max_queries:
+---
+C003 DiscoveryAgent/director_workflow.py:917-917 : extrait absent de ces lignes
+---
+while query_num < self.max_queries:
+---
+C004 DiscoveryAgent/inexistant.py:1-1 : fichier absent du commit
+---
+x
+---
+C005 DiscoveryAgent/base_llm.py:68-70 : lignes 68-70 hors du fichier (67 lignes)
+---
+None
+---
+P002 papier p. 26 : extrait absent de la page
+---
+The system is built from two nested loops.
+---
+P003 annexe p. 69-70 « : citer une seule page par extrait

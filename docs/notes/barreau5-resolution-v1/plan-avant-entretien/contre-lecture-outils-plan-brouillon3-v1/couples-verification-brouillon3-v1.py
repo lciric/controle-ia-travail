@@ -133,8 +133,8 @@ COUPLES = [
      "l'édition vers le bas |\n"
      "| force et trace de l'édition commune aux deux sens, réunies | **ouverte** : l'épreuve à poussée égale ne retire "
      "pas la trace (le jumeau la porte, le saboteur non), l'épreuve sur-saboteur contre jumeau ne retire pas la force ; "
-     "sans aucun sabotage, le mot sort dans 9 à 100 % des mondes inventés où une force et une trace de 0,1 ou plus sont "
-     "réunies (vérification du brouillon 3, mondes C02, C04 à C07, C10, C28) |"),
+     "sans aucun sabotage, le mot sort dans plus de 0,5 % des mondes dans 11 des 13 mondes inventés essayés où les deux "
+     "sont réunies, de 1,1 à 100 % (vérification du brouillon 3, mondes C01 à C11, C28, C29) |"),
     ("V-B1b", "V-B1", "voie i", P,
      "ni de sa force, ni d'une trace de l'édition commune aux deux sens. Non tranché : l'acte ou la disposition",
      "ni de sa seule force, ni de la seule trace d'une édition commune aux deux sens. Non tranché : une force et une "
@@ -158,19 +158,19 @@ COUPLES = [
      "propre à son sens, rivale déclarée ouverte.",
      "**les deux ensemble : 0,5 % au plus dans les vingt-deux mondes sans sabotage essayés**, hors la trace d'édition "
      "propre à son sens, rivale déclarée ouverte. Ces mondes n'ont qu'une rivale à la fois : quand une force et une "
-     "trace de l'édition commune aux deux sens sont réunies, le mot sort dans 9 à 100 % des mondes (vérification du "
-     "brouillon 3), rivale déclarée ouverte."),
+     "trace de l'édition commune aux deux sens sont réunies, le mot sort dans 1,1 à 100 % des mondes dans 11 des 13 "
+     "mondes essayés (vérification du brouillon 3), rivale déclarée ouverte."),
     ("V-B1g", "V-B1", "voie i", P,
      "mot « sabotage » dans 0,5 % des mondes au plus, dans chacun des vingt-deux mondes essayés,",
      "mot « sabotage » dans 0,5 % des mondes au plus, dans chacun des vingt-deux mondes essayés, qui n'ont qu'une "
-     "rivale à la fois (une force et une trace commune aux deux sens réunies le font sortir dans 9 à 100 % des mondes : "
-     "vérification du brouillon 3),"),
+     "rivale à la fois (une force et une trace commune aux deux sens réunies le font sortir dans 1,1 à 100 % des mondes, "
+     "dans 11 des 13 mondes essayés : vérification du brouillon 3),"),
     ("V-B1h", "V-B1", "voie i", FICHE,
      "(épreuve refaite après la contre-lecture : en mondes inventés sans sabotage, le mot sort dans 0,5 % des cas au "
      "plus)",
      "(épreuve refaite après la contre-lecture : en mondes inventés sans sabotage où une seule rivale joue, le mot sort "
      "dans 0,5 % des cas au plus ; quand une force et une trace de l'édition commune aux deux sens jouent ensemble, il "
-     "sort dans 9 à 100 % des mondes, rivale déclarée ouverte)"),
+     "sort dans 1,1 à 100 % des cas dans 11 des 13 mondes essayés, rivale déclarée ouverte)"),
 ]
 
 
