@@ -1549,9 +1549,8 @@ def _session(argv: list[str]) -> int:
     s, a = argv[0], argv[1:]
     if s == "plan" and not a:
         for n, f in PLAN_INSTANCES.items():
-            trois = (f"{COUPURES_USD[n]}" if n not in INSTANCES_D_APPRENTISSAGE else "non chiffrée")
-            print(f"{etiquette(n)}\t{','.join(f)}\tcoupure {COUPURES_USD[n]} USD (apprentissage à 2 membres) ; "
-                  f"à 3 membres : {trois}")
+            print(f"{etiquette(n)}\t{','.join(f)}\tcoupure à 3 membres {coupure_usd(n, 3):g} USD, "
+                  f"{heures_attendues(n, 3)[0]:g} à {heures_attendues(n, 3)[1]:g} h ; à 2 membres {coupure_usd(n, 2):g} USD")
     elif s in ("commande", "relance") and len(a) == 8:
         print(commande_de_creation(Path(a[0]), _entier(a[1], "instance"), Path(a[2]), a[3], a[4], a[5], a[6], a[7],
                                    date.today(), time.time(), relance=(s == "relance")))
@@ -1562,8 +1561,11 @@ def _session(argv: list[str]) -> int:
         print(json.dumps(config_instance(_entier(a[1], "instance"), Path(a[0]), a[5], float(a[2]),
                                          lu["membres_apprentissage"], lu["piece"], a[4] == "1"),
                          ensure_ascii=False, sort_keys=True))
-    elif s == "depense" and len(a) == 6:
-        print(json.dumps(depense_session(_entier(a[0], "instance"), _entier(a[1], "membres"), *(float(x) for x in a[2:]))))
+    elif s == "depense" and len(a) == 7:
+        if a[6] not in ("0", "1"):
+            raise GardeArret("RELANCE : 0 ou 1")
+        print(json.dumps(depense_session(_entier(a[0], "instance"), _entier(a[1], "membres"),
+                                         *(float(x) for x in a[2:6]), relance=a[6] == "1")))
     elif s == "detruire" and len(a) == 7:
         print(commande_de_destruction(Path(a[0]), a[1], _entier(a[2], "instance"), Path(a[3]), Path(a[4]), a[5], a[6]))
     elif s == "verifier-destruction" and len(a) == 3:
