@@ -1,13 +1,13 @@
-# Barreau 5 avant l'entretien — fiche de tes décisions (v2)
+# Barreau 5 avant l'entretien — fiche de tes décisions (v3)
 
-Écrite le 2026-11-19 vers 15:35Z par le rédacteur de la reprise (Claude Fable 5.2), à partir de la fiche v1 inachevée du premier rédacteur. Brouillon, non contre-lu. Rien lancé, rien dépensé.
-Pièces : le texte `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon2.md` ; le devis et la simulation, dans ce dossier.
+Écrite le 2026-11-19 vers 17:20Z par le rédacteur (Claude Fable 5.2), à partir de la fiche v2 et de sa contre-lecture (couples M-9a à M-9c appliqués). Brouillon, corrections à vérifier. Rien lancé, rien dépensé.
+Pièces : le texte `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon3.md` ; le devis et la simulation, dans ce dossier.
 
 ## Le verdict en trois lignes
 
-1. **Le plan.** Des familles d'adaptateurs jumeaux : des adaptateurs appris sur les mêmes épisodes, avec la même graine, où seul le coût déclaré change (ramené au niveau honnête, laissé gonflé, triplé). Une sonde apprise sur trois familles est lue à l'aveugle sur dix autres. « Sabotage » se dit à 99 % bilatéral si c'est vrai, et seulement si trois épreuves exactes passent : le saboteur au-dessus de son jumeau, encore à force égale, et au-delà de la trace de l'édition.
+1. **Le plan.** Des familles d'adaptateurs jumeaux : des adaptateurs appris sur les mêmes épisodes, avec la même graine, où seul le coût déclaré change (ramené au niveau honnête, laissé gonflé, triplé). Une sonde apprise sur trois familles est lue à l'aveugle sur dix autres. « Sabotage » se dit à 99 % bilatéral si c'est vrai, et seulement si trois épreuves exactes passent : le saboteur au-dessus de son jumeau, encore à force égale (épreuve refaite après la contre-lecture : en mondes inventés sans sabotage, le mot sort dans 0,5 % des cas au plus), et au-delà de la trace de l'édition.
 2. **Ce qui est écarté.** Deux groupes d'adaptateurs indépendants, saboteurs contre témoins : en simulation, sans aucun sabotage à lire, un tel plan dit « sabotage » dans 10 à 67 % des mondes dès qu'un témoin est plus faible que le saboteur. Et l'épreuve du premier brouillon (permutation de trois membres) : son niveau réel montait à 2 % par sens au lieu de 0,5 %.
-3. **Coût et date.** 36 adaptateurs, ≈ 87 à 131 USD attendus, plafond 200, recharge de 180. Verdict scellé le samedi 28 novembre ; un seul jour de marge libre.
+3. **Coût et date.** 36 adaptateurs, ≈ 86 à 128 USD attendus, plafond 200, recharge de 180 (187 avec la relecture des quatre cases de l'autre chaîne du barreau). Verdict scellé le samedi 28 novembre ; un seul jour de marge libre.
 
 Aucune de ces décisions n'a de défaut. Les décisions 1 à 4 et 7 à 9 conditionnent le scellement du samedi 21 (la 7 change la composition des familles si tu la prends maintenant). Correspondance avec les nœuds du texte : décision 1 = nœud 1 ; décisions 2, 3 et 4 = nœud 2 ; 5 = nœud 3 ; 6 = nœud 4 ; 7 = nœud 5 ; 8 = nœud 6 ; 9 = nœud 7 ; « plus tard » = nœud 8.
 
@@ -20,7 +20,7 @@ Aucune de ces décisions n'a de défaut. Les décisions 1 à 4 et 7 à 9 conditi
 - Recommandation : (a), confiance haute. À savoir : (a) définit un témoin apparié autre que celui du brouillon de la décision N-074 ; rien ne change pour la porte G1 tant que tu ne le reprends pas.
 
 **2. Taille et dépense.** Enjeu : le niveau, la puissance, la tolérance aux pertes.
-- (a) Dix familles tenues à l'écart et trois d'apprentissage, 36 adaptateurs : 87 à 131 USD, plafond 200 ; 99 % bilatéral tenu même si deux familles tombent ; puissance de l'épreuve nominale seule 0,99 pour un écart de 2, 0,87 pour 1,5 ; puissance du mot « sabotage » (les trois épreuves) plus basse : de l'ordre de 0,86 pour 2 et 0,58 pour 1,5 si l'épreuve à force égale garde trois quarts de l'effet (lois inventées).
+- (a) Dix familles tenues à l'écart et trois d'apprentissage, 36 adaptateurs : 86 à 128 USD, plafond 200 ; 99 % bilatéral tenu même si deux familles tombent ; puissance de l'épreuve nominale seule 0,99 pour un écart de 2, 0,87 pour 1,5 ; puissance du mot « sabotage » (les trois épreuves) plus basse : de l'ordre de 0,86 pour 2 et 0,58 pour 1,5 si l'épreuve à force égale garde trois quarts de l'effet (lois inventées).
 - (b) Huit et trois, 30 adaptateurs : ≈ 75 à 113 USD, plafond ≈ 175 ; 99 % tenu seulement si les huit familles vont dans le même sens et qu'aucune ne tombe ; puissance de l'épreuve nominale seule 0,83 pour un écart de 2 (mot « sabotage » : de l'ordre de 0,56).
 - (c) Douze et trois, 42 adaptateurs : ≈ 100 à 150 USD (ordre de grandeur, non chiffré par le calcul du devis), une ou deux cartes de plus ; puissance 0,998 pour 2, 0,95 pour 1,5.
 - Recommandation : (a), confiance moyenne à haute. L'écart entre deux apprentissages de la même recette n'a jamais été mesuré : la puissance reste un pari.
@@ -32,7 +32,7 @@ Aucune de ces décisions n'a de défaut. Les décisions 1 à 4 et 7 à 9 conditi
 - Recommandation : (a), repli mécanique sur (b) ; (c) seulement sur ton mot le jour même. Confiance moyenne.
 
 **4. Crédit du loueur.** Il reste 21,97 USD ; sept cartes le vident en un peu plus de deux heures.
-- (a) Recharger 180 USD avant lundi 23 (crédit porté à ≈ 202).
+- (a) Recharger 180 USD avant lundi 23 (crédit porté à ≈ 202) ; 187 si la relecture des quatre cases de l'autre chaîne court la même semaine.
 - (b) Confirmer que la recharge automatique est active, avec un pas d'au moins 50 USD.
 - Recommandation : (a), ou (b) si tu la confirmes ; confiance haute.
 
@@ -41,8 +41,8 @@ Aucune de ces décisions n'a de défaut. Les décisions 1 à 4 et 7 à 9 conditi
 - (b) Non : répétition sur le modèle jouet seulement.
 - Recommandation : (a), confiance haute.
 
-**6. Garde des activations** (≈ 184 Go).
-- (a) Un volume de stockage du projet de 250 Go (prix à relever).
+**6. Garde des activations** (≈ 141 Go).
+- (a) Un volume de stockage du projet de 200 Go (prix à relever).
 - (b) La couche lue seule, ≈ 44 Go, sur un volume plus petit.
 - (c) Un dixième gardé sur une branche, le reste détruit après inventaire : 0 USD ; toute sonde nouvelle redemande une carte.
 - Recommandation : (a), confiance moyenne.

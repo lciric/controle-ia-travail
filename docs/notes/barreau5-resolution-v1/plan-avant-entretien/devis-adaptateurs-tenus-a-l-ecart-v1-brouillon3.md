@@ -1,8 +1,9 @@
-# Devis — barreau 5 : familles d'adaptateurs jumeaux tenues à l'écart — v1 — brouillon 2
+# Devis — barreau 5 : familles d'adaptateurs jumeaux tenues à l'écart — v1 — brouillon 3
 
 - Auteur : rédacteur neuf de la reprise, Claude Fable 5.2, sous-agent de la session mère. Écrit le 2026-11-19 vers 15:30Z. **Brouillon, non contre-lu.** Aucune dépense, aucun lancement.
 - Filiation : part du brouillon 1 inachevé du premier rédacteur (copie scellée dans `etat-a-l-arret-quota-fable-20261119-1440Z/`, `6297d3b5…`), rechiffré pour le plan du brouillon 2 du texte.
-- Texte qu'il chiffre : `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon2.md`.
+- Texte qu'il chiffre : `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon3.md`.
+- **Brouillon 3** (19 novembre, vers 17:15Z) : part du brouillon 2 (`47e16e26…`) et de sa contre-lecture (`29b86657…`). Les couples m-8a, m-9a et m-10a sont appliqués à la lettre. **La relecture est rechiffrée** : l'épreuve à poussée égale du brouillon 3 se calcule après coup, sans recherche de facteur ni série relue (84 s par adaptateur au lieu de 194 ; 42 Go d'activations de moins) ; les postes ajoutés par la contre-lecture (m-8) sont comptés. Arithmétique de la relecture : `calcul-devis-adaptateurs-tenus-a-l-ecart-v3.py` (`9335ac98…`), sortie `sortie-calcul-devis-adaptateurs-tenus-a-l-ecart-v3.txt` (`1997a75a…`). La formation ne change pas. Là où une ligne ci-dessous garde un chiffre de relecture du brouillon 2 (ligne du couple m-8a, § 1), le tableau du § 3 et le § 5 font foi.
 - Arithmétique : `calcul-devis-adaptateurs-tenus-a-l-ecart-v2.py` (`f13422a6…`), sortie `sortie-calcul-devis-adaptateurs-tenus-a-l-ecart-v2.txt` (`b1b78c70…`), même dossier. Tout chiffre ci-dessous en vient.
 - Ce devis ne vaut accord de rien : la dépense attend son scellement et **une ligne d'accord neuve** de Lazar. L'accord `GO-2026-11-10-07` ne le couvre pas : il s'éteint à son échéance (`registres/go.md`, ligne `GO-2026-11-19-68`, relue).
 
@@ -42,9 +43,9 @@ Horloge : 8,9 à 10,3 heures si les sept cartes partent ensemble.
 | pièce | heures | attendu (USD) | pire cas (USD) | coupure (USD) |
 |---|---|---|---|---|
 | formation | 58,0 à 66,3 | 72,2 à 105,5 | 210,3 | 169 |
-| relecture et notation, activations gardées en entier | 4,72 à 6,26 | 11,1 à 19,8 (dont 4,8 à 9,2 de sortie de données) | 29,7 | 24 |
-| répétition générale | 2,48 à 2,83 | 3,8 à 5,9 | 10,4 | 7 |
-| **ensemble, chez le loueur de cartes** | **65,2 à 75,4** | **87,1 à 131,3 ; centre ≈ 109** | **250,4** | **200 : plafond demandé** |
+| relecture et notation, activations gardées en entier (brouillon 3) | 3,99 à 5,25 | 9,2 à 16,3 (dont 3,7 à 7,1 de sortie de données) | 24,6 | 20 |
+| répétition générale (postes de m-8 comptés) | 2,85 à 3,20 | 4,2 à 6,4 | 11,5 | 8 |
+| **ensemble, chez le loueur de cartes** | **64,8 à 74,8** | **85,6 à 128,3 ; centre ≈ 107** | **246,4** | **197 ; plafond demandé : 200** |
 | garde des activations, hors loueur (§ 5) | — | à relever | — | — |
 
 - **Le pire cas entier ne tient pas sous le plafond.** Il suppose des hôtes deux fois plus lents sur les sept cartes à la fois. Les coupures arrêtent avant ; l'ordre de sacrifice du § 4 s'applique. À l'attendu, rien n'est coupé.
@@ -75,15 +76,15 @@ Pour mémoire : avec la vérification du coût sur 64 tâches partout, la format
 - Chaque instance s'arrête **dès que son cumul relevé plus un quart d'heure de carte atteint sa coupure**. Le compteur commun arrête tout à 200 USD. Arrêt et destruction par identifiant (R10), après versement de ce qui est récupérable : rien n'est supprimé avant.
 - Sur une instance de formation, les familles se forment l'une après l'autre ; chaque sortie est poussée dès qu'elle existe. Si la coupure approche pendant la seconde famille, dans cet ordre : ses épisodes d'évaluation se limitent aux 16 premières tâches tirées ; puis la famille est abandonnée et comptée absente (le seuil de l'épreuve se recalcule sur les familles présentes). Une famille n'est jamais lue avec un membre choisi : elle est complète, privée de son seul sur-saboteur pour une raison technique écrite, ou absente.
 - Sur l'instance de relecture, les scores passent avant les activations : si la coupure approche pendant le téléversement, les replis du texte s'appliquent dans leur ordre (« Données gardées »).
-- Ligne d'engagement, à écrire au registre des dépenses avant la première minute de chaque pièce : « engagement : barreau 5, familles jumelles, pièce [formation n° | relecture | répétition] ([ligne d'accord], plafond 200 USD commun, coupure [26 | 24 | 15 | 24 | 7] USD, arrêt au cumul plus un quart d'heure) : texte [chemin, empreinte], commit [CODE-FORMATION-B5F ou CODE-LECTURE-B5F] ; A100 SXM4 80 Go ≤ 1,30 USD de l'heure, étiquette [b5f-…] ; attendu [..] ; pire cas [..] ; dépense antérieure sous cette ligne [..] ».
+- Ligne d'engagement, à écrire au registre des dépenses avant la première minute de chaque pièce : « engagement : barreau 5, familles jumelles, pièce [formation n° | relecture | répétition] ([ligne d'accord], plafond 200 USD commun, coupure [26 | 24 | 15 | 20 | 8] USD, arrêt au cumul plus un quart d'heure) : texte [chemin, empreinte], commit [CODE-FORMATION-B5F ou CODE-LECTURE-B5F] ; A100 SXM4 80 Go ≤ 1,30 USD de l'heure, étiquette [b5f-…] ; attendu [..] ; pire cas [..] ; dépense antérieure sous cette ligne [..] ».
 
 ## 5. Garde des activations et des textes
 
 - **Textes de distillation, tables d'édition, adaptateurs, épisodes, scores** : sur les branches de données du dépôt, en morceaux de moins de 95 Mo (36 adaptateurs de 27 Mo ; textes de l'ordre de quelques Mo par famille ; scores de l'ordre de la centaine de Mo).
-- **Activations** : 127,2 Go (séries nominales, trois couches) + 42,4 Go (norme égale, couche 15) + 3,5 Go (modèle nu) + 10,6 Go (textes propres des saboteurs d'apprentissage) = **≈ 184 Go**. Options :
-  - (a) un volume de stockage de 250 Go attaché au serveur du projet. **Prix non vérifié par moi : à relever sur la grille du jour avant le scellement.** C'est une ressource payante neuve : nœud 4 du texte ;
-  - (b) repli 1 : la couche 15 seule, série nominale de tous les adaptateurs et modèle nu, ≈ 44 Go ; il lui faut tout de même un lieu (un volume plus petit). La relecture coûte alors 7,0 à 11,0 USD (pire cas 18,9) ;
-  - (c) repli 2, sans dépense : une action sur dix, couche 15, série nominale, tous les adaptateurs et le modèle nu, ≈ 4,4 Go en morceaux sur la branche de lecture ; le reste détruit avec l'instance après inventaire. La relecture coûte alors 5,9 à 8,6 USD (pire cas 15,8) ;
+- **Activations** : 127,2 Go (séries nominales, trois couches) + 3,5 Go (modèle nu) + 10,6 Go (textes propres des saboteurs d'apprentissage) = **≈ 141 Go** (155 Go avec les quatre ancrages du nœud 3 ; plus de série à norme égale au brouillon 3). Options :
+  - (a) un volume de stockage de 200 Go attaché au serveur du projet. **Prix non vérifié par moi : à relever sur la grille du jour avant le scellement.** C'est une ressource payante neuve : nœud 4 du texte ;
+  - (b) repli 1 : la couche 15 seule, série nominale de tous les adaptateurs et modèle nu, ≈ 44 Go ; il lui faut tout de même un lieu (un volume plus petit). La relecture coûte alors 6,3 à 10,2 USD (pire cas 17,0) ;
+  - (c) repli 2, sans dépense : une action sur dix, couche 15, série nominale, tous les adaptateurs et le modèle nu, ≈ 4,4 Go en morceaux sur la branche de lecture ; le reste détruit avec l'instance après inventaire. La relecture coûte alors 5,2 à 7,7 USD (pire cas 14,0) ;
   - (d) garder le disque de l'instance arrêtée : jusqu'à 0,08 USD de l'heure, soit ≈ 58 USD par mois, et fragile. Déconseillé.
 
 ## 6. Crédit chez le loueur et recharge à demander
@@ -93,5 +94,8 @@ Pour mémoire : avec la vérification du coût sur 64 tâches partout, la format
 - Si Lazar retient le plancher (huit familles et deux) : plafond 160 USD (formation 54,5 à 79,6 ; relecture ≈ 9 à 17 ; répétition 4 à 6), recharge de 140 USD.
 
 ## 7. Ce que ce devis ne compte pas
+
+**La chaîne voisine du même barreau** (texte de la première lecture sur les scores fermés de l'étape B bis, relecture des quatre cases sur carte, `GO-2026-11-19-62`) : elle a son propre devis (ordre de 2,5 à 4,6 USD, coupure 8,5). Elle puise dans le même crédit la même semaine : la recharge à demander est donc de **187 USD** si les deux chaînes courent (178,03 + 8,5), 180 sinon. Elle ne part pas les jours où les cartes de ce plan tournent (23 et 26), sauf sur une carte à part.
+
 
 Le temps de développement et de contre-lecture du code ; les agents qui écrivent, contre-lisent, ouvrent et jugent ; un témoin à changement bénin du même champ (nœud 5 du texte : dix adaptateurs de plus, 5,9 à 8,2 heures de carte à la formation, ≈ 7 à 11 USD, aucun tirage de plus, et un second opérateur d'édition à coder) ; le volume de stockage ; toute suite d'après l'entretien.
