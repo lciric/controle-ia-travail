@@ -201,7 +201,7 @@ def cle_audit(condition: str) -> str:
 
 
 def cles_graines() -> list:
-    """Toutes les clés de graine de la pièce (37) : plis ; intervalle et plancher de chaque base à chaque dose ; intervalle et
+    """Toutes les clés de graine de la pièce (29) : plis ; intervalle et plancher de chaque base à chaque dose ; intervalle et
     plancher du transfert décisif ; intervalle du coût brut seul à chaque dose ; échantillon de l'audit par condition."""
     cles = [CLE_PLIS, CLE_AIRE_TRANSFERT, CLE_PLANCHER_TRANSFERT]
     for b in BASES:
@@ -433,15 +433,21 @@ def lire_entrees(lb: ListeBlancheBrasA, racine_entrees: Path, cfg: dict, M) -> d
         lignes.append({"cle": x["cle"], "condition": role[x["condition"]], "tache": x["tache"], "episode": x["episode"],
                        "pas": x["pas"], "jetons": x["jetons"], "texte": x["texte"]})
     exiger_effectifs(lignes, cfg["taches_verification"])
-    lignes.sort(key=lambda l: (CONDITIONS_LUES.index(l["condition"]), l["tache"], l["episode"], l["pas"]))
-    t = mesures_des_textes(lignes, M)
-    donnees = {"cle": [l["cle"] for l in lignes], "condition": [l["condition"] for l in lignes],
-               "tache": [l["tache"] for l in lignes], "pas": [l["pas"] for l in lignes],
-               "episode": [l["episode"] for l in lignes], "cout": np.asarray(t["cout"], dtype=np.float64),
-               "jetons": np.asarray(t["jetons"], dtype=np.int64), "valide": np.asarray(t["valide"], dtype=bool),
-               **{k: np.asarray(t[k], dtype=bool) for k in v3.FORME_COUT}, "textes": [l["texte"] for l in lignes]}
-    return {"empreintes": {cfg["textes"]["chemin"]: sha}, "donnees": donnees, "taches": list(cfg["taches_verification"]),
+    return {"empreintes": {cfg["textes"]["chemin"]: sha}, "donnees": donnees_des_lignes(lignes, M),
+            "taches": list(cfg["taches_verification"]),
             "effectifs": {c: N_TACHES * N_EPISODES * T_PAS for c in CONDITIONS_LUES}}
+
+
+def donnees_des_lignes(lignes: list, M) -> dict:
+    """Lignes d'action (rôles de condition déjà posés) → colonnes du calcul, dans l'ordre condition, tâche, épisode, pas ;
+    mesures tirées des textes par les lecteurs gelés (`mesures_des_textes`)."""
+    lignes = sorted(lignes, key=lambda l: (CONDITIONS_LUES.index(l["condition"]), l["tache"], l["episode"], l["pas"]))
+    t = mesures_des_textes(lignes, M)
+    return {"cle": [l["cle"] for l in lignes], "condition": [l["condition"] for l in lignes],
+            "tache": [l["tache"] for l in lignes], "pas": [l["pas"] for l in lignes],
+            "episode": [l["episode"] for l in lignes], "cout": np.asarray(t["cout"], dtype=np.float64),
+            "jetons": np.asarray(t["jetons"], dtype=np.int64), "valide": np.asarray(t["valide"], dtype=bool),
+            **{k: np.asarray(t[k], dtype=bool) for k in v3.FORME_COUT}, "textes": [l["texte"] for l in lignes]}
 
 
 def exiger_effectifs(lignes: list, taches_verification: list) -> None:
