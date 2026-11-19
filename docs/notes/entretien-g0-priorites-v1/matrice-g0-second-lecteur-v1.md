@@ -130,7 +130,7 @@ Ces pièces sont scellées et comptent pour l'entretien ; **aucune n'entre dans 
 - **Apprentissage des sondes sur la tâche (étape B bis)** : verdict scellé le 19 novembre [P39] (R-3559), **en attente de ton mot**. Issue (I5, T±) ; titre « Plafond tient — lecture dure : non » ; il écrit que « rien n'est dit […] du critère 3 de la porte G0, qui reste tel que T0.7 le prononce ».
 - **Accumulation des scores sur l'épisode (sixième barreau)** : texte [P75], verdict [P76]. Forme faible « établie selon les critères gelés », mais le même état apparaît sur le témoin de consigne et sur le témoin d'adaptateur ; « ce n'est ni la porte G1 ni l'hypothèse d'accumulation ». Tu as agi dessus (GO-2026-11-18-44, second cycle ; GO-2026-11-18-48).
 - **Rejeu des sondes sur les données publiques de collusion (septième barreau)** : texte [P77], verdict [P78] (R-3472) : « descriptif, aucune porte, aucun GO », transmis pour information.
-- **Lecture par lentille neuronale** : le verdict de la tranche d'ajustement [P80] est scellé et accepté par toi (R-3654) ; je ne l'ai pas ouvert. La lecture des sondes de l'étape B bis par la lentille publique a son texte scellé [P79] ; son code n'existe pas encore (R-3607).
+- **Lecture par lentille neuronale** : le verdict de la tranche d'ajustement [P80] est scellé et accepté par toi (R-3654) ; je ne l'ai pas ouvert. La lecture des sondes de l'étape B bis par la lentille publique a son texte scellé [P79] ; son code, absent à 05:56 UTC (R-3607), a été rendu à 10:36 UTC et attend sa contre-lecture (R-3731).
 - **Témoin positif planté de la chaîne** : verdict [P36], issue « vu » ; il sert de condition préalable au critère 3, non de preuve du critère.
 
 ## 6. Limites de cette lecture
@@ -246,7 +246,7 @@ Cette annexe est hors de la zone vérifiée : le programme ne la relit pas.
 ÉCHEC chemin cité absent de l'arbre de travail et de l'annexe A : prereg/contre-lectures-absent
 ÉCHEC identifiant absent de registres/go.md : GO-2026-11-15-77
 ÉCHEC identifiant absent de registres/decisions.md : R-9137
-VÉRIFICATION de artefact-matrice.md : 81 pièces dans l'annexe A, 80 empreintes recalculées égales, 80 compagnons égaux, 0 sans compagnon ; 81 renvois ; 86 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 14 lignes de décision retrouvées ; 4 échec(s)
+VÉRIFICATION de artefact-matrice.md : 81 pièces dans l'annexe A, 80 empreintes recalculées égales, 80 compagnons égaux, 0 sans compagnon ; 81 renvois ; 86 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 15 lignes de décision retrouvées ; 4 échec(s)
 ````
 
 ### Sortie complète sur ce fichier
@@ -333,7 +333,7 @@ OK P78 deacd11114c4… compagnon égal ; docs/verdicts/verdict-narc-externe-v1.m
 OK P79 ca5066d757df… compagnon égal ; prereg/lecture-sondes-bbis-par-lentilles-v1.md ; arbre de travail
 OK P80 3a9b947e0757… compagnon égal ; docs/notes/neuron-lens-v1/lecture-b-beta/verdict-b-beta-v1.md ; arbre de travail
 OK P81 85d6d4541dd4… compagnon égal ; docs/notes/carte-porte-G0-v1/carte-porte-G0-v1.md ; arbre de travail
-VÉRIFICATION de matrice-g0-second-lecteur-v1.md : 81 pièces dans l'annexe A, 81 empreintes recalculées égales, 81 compagnons égaux, 0 sans compagnon ; 81 renvois ; 87 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 14 lignes de décision retrouvées ; 0 échec(s)
+VÉRIFICATION de matrice-g0-second-lecteur-v1.md : 81 pièces dans l'annexe A, 81 empreintes recalculées égales, 81 compagnons égaux, 0 sans compagnon ; 81 renvois ; 87 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 15 lignes de décision retrouvées ; 0 échec(s)
 ````
 
 ### Source du programme
