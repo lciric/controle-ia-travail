@@ -1,0 +1,52 @@
+
+=== 2026-11-19T04:16:24Z /workspace/depot/.venv/bin/python scripts/checks/lens_compare.py --lenses R:dclm-llama-even,R:dclm-llama-odd,npR --layers 2,7,12,18,23,28 --samples 0 --json /workspace/depot/diag/20261118-164930-neuron-lens-b-beta/lens_compare-b-beta-v1.json
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+llama3.1-8b-it/rlens/Salesforce-wikitext/Llama-3.1-8B-Instruct_rlens.pt: layers 0-30, d 4096, other keys ['d_model', 'n_prompts', 'provenance', 'source_layers']
+
+=== L2 (14336 neurons)
+  R:dclm-llama-even top-1 median 0.126  >0.1 0.56  >0.5 0.13  | sigma1 energy 0.20, write share on u1 0.08
+  R:dclm-llama-odd top-1 median 0.133  >0.1 0.57  >0.5 0.14  | sigma1 energy 0.20, write share on u1 0.09
+  npR              top-1 median 0.110  >0.1 0.52  >0.5 0.12  | sigma1 energy 0.22, write share on u1 0.11
+  R:dclm-llama-even vs R:dclm-llama-odd: top-1 agree 0.84, top-10 overlap 0.88
+  R:dclm-llama-even vs npR: top-1 agree 0.23, top-10 overlap 0.33
+  R:dclm-llama-odd vs npR: top-1 agree 0.23, top-10 overlap 0.33
+
+=== L7 (14336 neurons)
+  R:dclm-llama-even top-1 median 0.038  >0.1 0.31  >0.5 0.08  | sigma1 energy 0.13, write share on u1 0.06
+  R:dclm-llama-odd top-1 median 0.039  >0.1 0.32  >0.5 0.08  | sigma1 energy 0.13, write share on u1 0.06
+  npR              top-1 median 0.038  >0.1 0.31  >0.5 0.08  | sigma1 energy 0.15, write share on u1 0.09
+  R:dclm-llama-even vs R:dclm-llama-odd: top-1 agree 0.87, top-10 overlap 0.90
+  R:dclm-llama-even vs npR: top-1 agree 0.26, top-10 overlap 0.36
+  R:dclm-llama-odd vs npR: top-1 agree 0.26, top-10 overlap 0.37
+
+=== L12 (14336 neurons)
+  R:dclm-llama-even top-1 median 0.036  >0.1 0.32  >0.5 0.10  | sigma1 energy 0.10, write share on u1 0.05
+  R:dclm-llama-odd top-1 median 0.036  >0.1 0.32  >0.5 0.10  | sigma1 energy 0.10, write share on u1 0.06
+  npR              top-1 median 0.034  >0.1 0.31  >0.5 0.10  | sigma1 energy 0.12, write share on u1 0.06
+  R:dclm-llama-even vs R:dclm-llama-odd: top-1 agree 0.92, top-10 overlap 0.94
+  R:dclm-llama-even vs npR: top-1 agree 0.43, top-10 overlap 0.53
+  R:dclm-llama-odd vs npR: top-1 agree 0.43, top-10 overlap 0.54
+
+=== L18 (14336 neurons)
+  R:dclm-llama-even top-1 median 0.028  >0.1 0.31  >0.5 0.18  | sigma1 energy 0.01, write share on u1 0.00
+  R:dclm-llama-odd top-1 median 0.028  >0.1 0.31  >0.5 0.18  | sigma1 energy 0.01, write share on u1 0.00
+  npR              top-1 median 0.027  >0.1 0.31  >0.5 0.17  | sigma1 energy 0.02, write share on u1 0.00
+  R:dclm-llama-even vs R:dclm-llama-odd: top-1 agree 0.96, top-10 overlap 0.97
+  R:dclm-llama-even vs npR: top-1 agree 0.69, top-10 overlap 0.76
+  R:dclm-llama-odd vs npR: top-1 agree 0.69, top-10 overlap 0.76
+
+=== L23 (14336 neurons)
+  R:dclm-llama-even top-1 median 0.028  >0.1 0.27  >0.5 0.15  | sigma1 energy 0.01, write share on u1 0.00
+  R:dclm-llama-odd top-1 median 0.029  >0.1 0.27  >0.5 0.15  | sigma1 energy 0.01, write share on u1 0.00
+  npR              top-1 median 0.028  >0.1 0.26  >0.5 0.15  | sigma1 energy 0.01, write share on u1 0.00
+  R:dclm-llama-even vs R:dclm-llama-odd: top-1 agree 0.98, top-10 overlap 0.98
+  R:dclm-llama-even vs npR: top-1 agree 0.78, top-10 overlap 0.83
+  R:dclm-llama-odd vs npR: top-1 agree 0.78, top-10 overlap 0.83
+
+=== L28 (14336 neurons)
+  R:dclm-llama-even top-1 median 0.040  >0.1 0.29  >0.5 0.15  | sigma1 energy 0.01, write share on u1 0.00
+  R:dclm-llama-odd top-1 median 0.040  >0.1 0.29  >0.5 0.15  | sigma1 energy 0.01, write share on u1 0.00
+  npR              top-1 median 0.040  >0.1 0.29  >0.5 0.15  | sigma1 energy 0.01, write share on u1 0.00
+  R:dclm-llama-even vs R:dclm-llama-odd: top-1 agree 0.98, top-10 overlap 0.99
+  R:dclm-llama-even vs npR: top-1 agree 0.85, top-10 overlap 0.88
+  R:dclm-llama-odd vs npR: top-1 agree 0.85, top-10 overlap 0.89
