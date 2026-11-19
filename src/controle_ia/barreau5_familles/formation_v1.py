@@ -461,22 +461,20 @@ def familles_du_plan(instance: int, relance: bool) -> tuple[str, ...]:
     return tuple(f + (SUFFIXE_RELANCE if relance else "") for f in familles_de(instance))
 
 
-def _devis(n: int, membres_apprentissage) -> None:
+def _trois_membres(n: int, membres_apprentissage) -> bool:
+    """Vrai si l'instance n prend l'entrée à trois membres du devis (instances 6 et 7, familles d'apprentissage à trois
+    membres). Instance hors du plan, ou nombre de membres autre que 2 ou 3 : refus, aucun défaut."""
     familles_de(n)
-    if n in INSTANCES_D_APPRENTISSAGE and exiger_membres_apprentissage(membres_apprentissage) != MEMBRES_APPRENTISSAGE_DU_DEVIS:
-        raise GardeArret(f"instance {n} : devis non chiffré pour des familles d'apprentissage à {membres_apprentissage} "
-                         "membres (39 adaptateurs) : coupure et heures attendues à fixer par le devis, aucune devinée")
+    return exiger_membres_apprentissage(membres_apprentissage) == 3 and n in INSTANCES_D_APPRENTISSAGE
 
 
 def coupure_usd(n: int, membres_apprentissage) -> float:
-    """Coupure de l'instance n (devis, § 3) ; refus pour les instances d'apprentissage hors du cas chiffré."""
-    _devis(n, membres_apprentissage)
-    return COUPURES_USD[n]
+    """Coupure de l'instance n (devis, § 3), selon le nombre de membres des familles d'apprentissage."""
+    return COUPURES_TROIS_MEMBRES_USD[n] if _trois_membres(n, membres_apprentissage) else COUPURES_USD[n]
 
 
 def heures_attendues(n: int, membres_apprentissage) -> tuple[float, float]:
-    _devis(n, membres_apprentissage)
-    return HEURES_ATTENDUES[n]
+    return HEURES_TROIS_MEMBRES[n] if _trois_membres(n, membres_apprentissage) else HEURES_ATTENDUES[n]
 
 
 def exiger_config_b5f(config: dict, racine: Path) -> None:
@@ -1020,7 +1018,9 @@ def lire_code_et_accord(registre: Path | None, texte: str | None = None) -> dict
     - `CODE-FORMATION-B5F` : « commit <40> ; entropie <entier de 128 bits au plus> » ;
     - `GO-FORMATION-B5F` : « GO-AAAA-MM-JJ-NN », postérieure à `CODE-FORMATION-B5F` ;
     - `GO-RELANCE-FORMATION-B5F`, facultative (constat M-5) : « GO-AAAA-MM-JJ-NN ; instances <n>[,<m>…] », postérieure à
-      `GO-FORMATION-B5F` : la relance unique des instances tombées citées."""
+      `GO-FORMATION-B5F` : la relance unique des instances tombées citées ; deux instances au plus, et la somme de leurs
+      coupures (selon le nombre de membres de SCELLEMENT-B5F) au plus de 56 USD, l'enveloppe de relance (texte, borne de
+      la relance ; erratum 1, couple E-4a) : sinon refus, nœud."""
     lignes = lire_registre(registre) if texte is None else lignes_du_registre(texte)
     exigees = ("SCELLEMENT-B5F", "CODE-FORMATION-B5F", "GO-FORMATION-B5F")
     if any(c not in lignes for c in exigees):
