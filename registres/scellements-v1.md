@@ -23,3 +23,4 @@
 | CRITERE-IDENTITE-REAJUSTEMENT-LENTILLES | 2026-11-19T13:03:14Z | docs/notes/neuron-lens-v1/devis-reajustement/critere-identite-reajustement-lentilles-v8.md | 541bb86b15088c5cea5a291a294cccdd1067fe39be995b7f9014661f96cb3940 |
 | DEVIS-REAJUSTEMENT-LENTILLES | 2026-11-19T13:03:14Z | docs/notes/neuron-lens-v1/devis-reajustement/devis-reajustement-lentilles-b-beta-v9.md | 064e735a8b98cb1bd76916d2514d98f6e5cf7d57e367b5b2dcfc6f0222b6bb41 |
 | PREREG-ORGANISME-V9-LIGNE-1 | 2026-11-19T14:27:15Z | prereg/organisme-auto-conception-v9/preenregistrement-ligne-1-effort-recherche-v5.md | 523adfd75333d7f2e99a6fe4f868c7dc6982a67e51953734f40258d7a40fc0b9 |
+| ADDENDUM-1-ORGANISME-V9-LIGNE-1 | 2026-11-19T22:25:03Z | prereg/organisme-auto-conception-v9/addendum-1-preenregistrement-ligne-1-effort-recherche-v5-v4.md | c29628a0dd209133545985cc334274462257314560c62c04259c5b31b1686e67 |
