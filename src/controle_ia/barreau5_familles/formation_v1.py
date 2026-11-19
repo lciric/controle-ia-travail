@@ -1050,6 +1050,13 @@ def lire_code_et_accord(registre: Path | None, texte: str | None = None) -> dict
             raise GardeArret("GO-RELANCE-FORMATION-B5F : instance citée deux fois")
         if not lignes["GO-FORMATION-B5F"]["instant"] < lignes["GO-RELANCE-FORMATION-B5F"]["instant"]:
             raise GardeArret("GO-RELANCE-FORMATION-B5F avant GO-FORMATION-B5F")
+        if len(instances) > RELANCES_MAX:
+            raise GardeArret(f"GO-RELANCE-FORMATION-B5F : {len(instances)} instances citées, {RELANCES_MAX} au plus "
+                             "(texte, borne de la relance) : nœud")
+        somme = sum(coupure_usd(n, int(s["membres"])) for n in instances)
+        if somme > ENVELOPPE_RELANCE_USD:
+            raise GardeArret(f"GO-RELANCE-FORMATION-B5F : coupures des instances citées {somme:g} USD > enveloppe de "
+                             f"relance {ENVELOPPE_RELANCE_USD:g} USD (texte, borne de la relance) : nœud")
         relance = {"go_id": r["go"], "instances": instances}
     return {"commit": m.group(1), "entropie": int(m.group(2)), "go_id": a.group(1), "texte": s["texte"],
             "texte_sha256": s["sha"], "membres_apprentissage": int(s["membres"]), "piece": s["piece"],
@@ -1510,13 +1517,22 @@ def absence_prouvee(liste: Path, ident: str, temoin: str) -> None:
         raise GardeArret(f"instance {ident} encore présente : absence non prouvée")
 
 
-def depense_session(n: int, membres_apprentissage: int, cumul_instance: float, prix_instance: float, cumul_total: float,
-                    prix_total: float) -> dict:
-    """Point 14 : coupure de l'instance n (devis) et plafond commun, chacun au cumul relevé plus un quart d'heure."""
+def depense_session(n: int, membres_apprentissage: int, cumul_instance: float, prix_instance: float, cumul_commun: float,
+                    prix_commun: float, *, relance: bool) -> dict:
+    """Liste d'arrêt, point 14 (erratum 1, couples E-4a et E-8a : deux compteurs). Par instance : le cumul de l'instance,
+    plus un quart d'heure, contre sa coupure ; pour une relance, la coupure de l'instance qu'elle remplace. En commun : le
+    cumul de toutes les pièces du devis (premières marches, relecture, répétition ; jamais la dépense d'une relance), plus
+    un quart d'heure, contre le plafond de 200 USD. Une relance n'a pas de troisième compteur, et le plafond atteint ne
+    l'arrête pas : pour elle, seule sa coupure est gardée (la somme des coupures des relances est bornée à l'inscription de
+    la ligne de relance). `relance` est exigé, sans défaut."""
+    if not isinstance(relance, bool):
+        raise GardeArret("relance : vrai ou faux attendu, aucun défaut")
     c = coupure_usd(n, membres_apprentissage)
     garde_depense(cumul_instance, prix_instance, c)
-    garde_depense(cumul_total, prix_total, PLAFOND_USD)
-    return {"instance": n, "coupure": c, "plafond": PLAFOND_USD}
+    if relance:
+        return {"instance": n, "relance": True, "coupure": c, "plafond": None}
+    garde_depense(cumul_commun, prix_commun, PLAFOND_USD)
+    return {"instance": n, "relance": False, "coupure": c, "plafond": PLAFOND_USD}
 
 
 def _entier(x: str, quoi: str) -> int:
