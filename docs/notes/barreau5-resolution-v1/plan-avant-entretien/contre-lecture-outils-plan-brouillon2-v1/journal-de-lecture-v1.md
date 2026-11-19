@@ -43,3 +43,11 @@ Précision de la mère reçue en cours de travail : dans la réponse finale, auc
 - prereg/T0.6-organismes-config-7b-v1.json (b7a5c1ba…) : champs de la recette, lus par programme ; prereg/T0.6-organismes-v0-v1.md : empreinte seule (ef31feff…)
 - docs/notes/barreau5-resolution-v1/concevoir/contre-lecture-note-resolution-barreau5-v1.md (f29d3321…) : l. 1-60, 90-102, 120-128, 139-200, titres des remarques majeures, M-6, M-8, M-10, M-11
 - code (lecture seule) : src/controle_ia/organismes/lora.py (entier, 5e4ee21e) ; t06/distillation_transcription.py (entier, 1c5e3f7a) ; environnements/propositions.py (entier, 5d97b223) ; t06/cout.py (entier, bcfe5683) ; t06/lanceur.py (l. 27-67 imports, 95-307, liste des fonctions ; a3dde550) ; t06/identite.py (entier, 7e9fb962) ; t06/configuration.py (l. 1-40, 125-154 ; fe859b9a) ; t06/lanceur_v6.py (l. 225-262 ; e329493b) ; harnais/episode.py (l. 160-200, 303-345) ; organismes/distillation.py (noms) ; sondes/familles.py (l. 1-40, 65-82, 143-151, liste des fonctions ; 6758b651) ; harnais/sondes.py (l. 55-90 ; f92657a6) ; t07bbis/apprentissage_carte_v1.py (l. 1-40, fonctions ; 4b98fcb9) ; t07bbis/etat_impose_v1.py (l. 1-40, fonctions ; 39e8e1a9)
+
+## Écrit par le contre-lecteur (noms neufs, scellés)
+- contre-lecture-outils-plan-brouillon2-v1/simulation-contre-lecture-v1.py et sortie-simulation-contre-lecture-v1.json (course complète : 225 s ; un essai rapide préalable, sortie dans le bloc-notes, non versé)
+- contre-lecture-outils-plan-brouillon2-v1/arithmetique-devis-contre-lecture-v1.py et sortie-arithmetique-devis-contre-lecture-v1.txt
+- contre-lecture-outils-plan-brouillon2-v1/couples-avant-apres-v1.py, sortie-couples-avant-apres-v1.md, sortie-couples-avant-apres-v1-occurrences.txt (35 couples, chacun trouvé une fois)
+- essai d'application des 35 couples, dans l'ordre, sur des copies des trois pièces dans le bloc-notes (aucun chevauchement, aucun échec ; validateur : seule l'absence attendue des deux empreintes de contre-lecture)
+- contre-lecture-plan-sabotage-ou-empreinte-brouillon2-v1.md (le rapport)
+- Aucun fichier contre-lu n'a été modifié. Aucune commande rm. Aucun commit.
