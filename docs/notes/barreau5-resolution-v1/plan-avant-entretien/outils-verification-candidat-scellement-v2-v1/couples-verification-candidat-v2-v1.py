@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Vérification du candidat au scellement v2 (barreau 5, plan « sabotage ou empreinte ») : couples exacts, v1.
 
-Écrit par le vérificateur (Claude Opus 5.5) le 20 novembre 2026. Ne lit que des textes du dépôt ; n'écrit rien (sortie
-standard). Pour chaque couple : l'« avant » doit se trouver exactement une fois dans la pièce visée, telle qu'elle est
-scellée, et encore une fois au moment où il s'applique, dans l'ordre de la liste, à une copie en mémoire ; l'« après » ne
-doit pas s'y trouver déjà. Le validateur du dépôt (`controle_ia.prereg.problemes`) est joué sur la copie du texte.
-Avec `--document CHEMIN`, le programme vérifie de plus que chaque couple est reproduit à l'octet dans ce document.
+Écrit par le vérificateur (Claude Opus 5.5) le 19 novembre 2026 au soir (UTC). Ne lit que des textes du dépôt ; n'écrit
+rien (sortie standard). Pour chaque couple : l'« avant » doit se trouver exactement une fois dans la pièce visée, telle
+qu'elle est scellée, et encore une fois au moment où il s'applique, dans l'ordre de la liste, à une copie en mémoire ;
+l'« après » ne doit pas s'y trouver déjà. Le validateur du dépôt (`controle_ia.prereg.problemes`) est joué sur la copie
+du texte. Avec `--document CHEMIN`, le programme vérifie de plus que chaque couple est reproduit à l'octet dans ce
+document.
 """
 from __future__ import annotations
 
@@ -24,6 +25,8 @@ ATTENDU = {T: "088e15ef", DV: "94a628a7"}
 TITRE = "— v1 — candidat au scellement, à copier à l'octet sous le nom définitif si la vérification le dit scellable tel quel\n"
 TITRE_SCELLE = "— v1\n"
 RAPPORT = "docs/notes/barreau5-resolution-v1/plan-avant-entretien/verification-candidat-scellement-v2-v1.md"
+PREMIER = "54bf29c3f45ae0b2b0318b275948c836bc05aaada97c22a846a64fd776892df5"
+DEVIS_DEFINITIF = "docs/notes/barreau5-resolution-v1/plan-avant-entretien/devis-adaptateurs-tenus-a-l-ecart-v1.md"
 
 # (identifiant, constat, touche, pièce, avant, après)
 COUPLES = [
@@ -32,21 +35,22 @@ COUPLES = [
      "## Marqueurs : état au scellement (ce texte est copié à l'octet : ce qui reste ouvert est rempli par la ligne "
      "`SCELLEMENT-B5F` du registre propre, et par elle seule, sans changer le contenu que lit le code de formation : "
      "l'empreinte du devis scellé, la tête du dépôt, les noms des sessions)",
-     "## Marqueurs : état au scellement (ce texte est copié à l'octet : ce qui reste ouvert au scellement, l'empreinte "
-     "du devis scellé, la tête du dépôt, la vérification du candidat et le nom de la session de formation, s'écrit dans "
-     "la colonne de référence de la ligne `SCELLEMENT-B5F` du registre propre ; sa colonne de contenu, que lit le code "
-     "de formation, garde exactement le format de « Lignes de registre » ; le nom de la session de lecture, désignée "
-     "plus tard, s'écrit dans la colonne de référence de la ligne `GO-LECTURE-B5F`)"),
+     "## Marqueurs : état au scellement (ce texte n'est plus modifié au scellement : ce qui reste ouvert, l'empreinte du "
+     "devis scellé, la tête du dépôt, l'empreinte du rapport de vérification du candidat et le nom de la session de "
+     "formation, s'écrit dans la colonne de référence de la ligne `SCELLEMENT-B5F` du registre propre ; sa colonne de "
+     "contenu, que lit le code de formation, garde exactement le format de « Lignes de registre » ; le nom de la session "
+     "de lecture, désignée plus tard, s'écrit dans la colonne de référence de la ligne `GO-LECTURE-B5F`)"),
     ("X-1b", "X-1", "formation", T,
      "Registre propre : `registres/barreau5-familles-jumelles-v1.md`, lignes ajoutées, jamais réécrites ; jamais "
      "`registres/scellements-v1.md`.",
      "Registre propre : `registres/barreau5-familles-jumelles-v1.md`, lignes ajoutées, jamais réécrites ; jamais "
-     "`registres/scellements-v1.md`. Chaque ligne à clé est une ligne de table « | CLÉ | instant | contenu | référence | » "
-     "; le code lit le contenu des clés au format écrit ci-dessous, à la lettre, et refuse le registre entier s'il trouve "
-     "une ligne de table à clé inconnue ou une clé en double ; la référence est libre (ni « | » ni saut de ligne). Tout "
-     "le reste, désignations des rôles avec la version de la liste consultée et la catégorie vérifiée (point 7), mot du "
-     "rapprochement M-6, s'écrit dans la colonne de référence de la ligne de l'étape, ou sous la table, hors de toute "
-     "ligne de table."),
+     "`registres/scellements-v1.md`. Chaque ligne à clé est une ligne de table « | CLÉ | instant | contenu | référence | », "
+     "l'instant écrit `AAAA-MM-JJTHH:MM:SSZ` ; le code lit à la lettre le contenu des clés dont le format est écrit "
+     "ci-dessous, et celui de `CODE-FORMATION-B5F` et de `GO-FORMATION-B5F` au format que fixe le code de formation ; il "
+     "refuse le registre entier s'il trouve une clé en double, ou une ligne de table qui porte « -B5F » sans être une "
+     "ligne à clé connue ; la référence est libre (ni « | » ni saut de ligne). Tout le reste, désignations des rôles avec "
+     "la version de la liste consultée et la catégorie vérifiée (point 7), mot du rapprochement M-6, s'écrit dans la "
+     "colonne de référence de la ligne de l'étape, ou sous la table, hors de toute ligne de table."),
     ("X-1c", "X-1", "formation", T,
      "M-7 : nom de la session de formation et de la session de lecture : remplis par la ligne `SCELLEMENT-B5F` ;",
      "M-7 : nom de la session de formation, écrit dans la colonne de référence de la ligne `SCELLEMENT-B5F`, et nom de "
@@ -70,6 +74,16 @@ COUPLES = [
      "peuvent faire passer la coupure de quelques USD : c'est la garde de dépense, au cumul relevé, qui tient la "
      "coupure)"),
     ("X-2d", "X-2", "formation (devis)", DV, TITRE, TITRE_SCELLE),
+    ("X-2e", "X-2", "formation (devis)", DV,
+     "puis ces seules retouches : titre, cette puce, nom du texte chiffré. Aucun chiffre ne change. À copier à l'octet "
+     "sous le nom `devis-adaptateurs-tenus-a-l-ecart-v1.md`.",
+     "puis ces seules retouches : titre, cette puce, nom du texte chiffré ; enfin les couples de la vérification du "
+     "candidat au scellement v2 (`verification-candidat-scellement-v2-v1.md`, même dossier), appliqués à la lettre : "
+     "titre, en-tête, cette puce, nom du texte chiffré, limite dure de la règle d'arrêt (§ 4), prix du volume (§ 5). "
+     "Aucun chiffre ne change. Copié sous le nom `devis-adaptateurs-tenus-a-l-ecart-v1.md`."),
+    ("X-2f", "X-2", "formation (devis)", DV,
+     "**Prix non vérifié par moi : à relever sur la grille du jour avant le scellement.**",
+     "**Prix non vérifié par moi : à relever sur la grille du jour.**"),
     # ---------------------------------------------------------------- X-3 : l'état du texte une fois scellé
     ("X-3a", "X-3", "lecture", T, TITRE, TITRE_SCELLE),
     ("X-3b", "X-3", "lecture", T,
@@ -78,9 +92,9 @@ COUPLES = [
      "Statut : **texte scellé : le candidat au scellement v2, avec les couples de sa vérification, copié à l'octet "
      "sous le nom définitif.**"),
     ("X-3c", "X-3", "lecture", T,
-     "(premier candidat : `54bf29c3f45ae0b2b0318b275948c836bc05aaada97c22a846a64fd776892df5`). ",
-     "(premier candidat : `54bf29c3f45ae0b2b0318b275948c836bc05aaada97c22a846a64fd776892df5`) ; enfin les couples de "
-     f"la vérification du candidat v2 (`{RAPPORT}`), appliqués à la lettre. "),
+     f"(premier candidat : `{PREMIER}`). Tout ce qui le sépare du brouillon 4 vérifié",
+     f"(premier candidat : `{PREMIER}`) ; enfin les couples de la vérification du candidat v2 (`{RAPPORT}`), appliqués "
+     "à la lettre et reproduits dans ce rapport. Tout ce qui sépare le candidat v2 du brouillon 4 vérifié"),
     ("X-3d", "X-3", "lecture", T,
      "**Vérification de ce candidat : en attente**, par le même contre-lecteur. Elle porte sur le différentiel du "
      "brouillon 5, sur l'erratum 1 (`8c3451a2e76823d4ae31789164ac6597b2d9b87e809b0e251c295cb8d14a2e40`) et sur les "
@@ -97,6 +111,15 @@ COUPLES = [
      "candidat au scellement ;",
      "M-10 : fait (vérification du brouillon 4 rendue, « scellable après ces couples ») ; fait (vérification du "
      "candidat au scellement v2 rendue, « scellable après ces couples », ses couples appliqués) ;"),
+    ("X-3f", "X-3", "lecture", T,
+     f"Le devis est un candidat lui aussi, à copier à l'octet sous le nom `{DEVIS_DEFINITIF}`.",
+     "Le devis est scellé lui aussi : son candidat au scellement v2, avec les couples de la même vérification, sous le "
+     f"nom `{DEVIS_DEFINITIF}` ; son empreinte s'écrit dans la colonne de référence de la ligne `SCELLEMENT-B5F` (M-3)."),
+    ("X-3g", "X-3", "lecture", T,
+     "- La vérification de ce candidat (différentiel du brouillon 5, erratum 1, retouches de consolidation) : le code "
+     "exige le texte entier scellé.",
+     "- La vérification de ce candidat (différentiel du brouillon 5, erratum 1, retouches de consolidation) : rendue, "
+     "« scellable après ces couples », ses couples appliqués ; le code exige le texte entier scellé."),
     # ---------------------------------------------------------------- X-4 : un mot de Lazar, conditions comprises
     ("X-4a", "X-4", "lecture", T,
      "GO-2026-11-19-87` : enveloppe de relance, à part de ce plafond, 56 USD au plus, pour deux instances tombées au "
@@ -104,6 +127,14 @@ COUPLES = [
      "GO-2026-11-19-87` : enveloppe de relance, à part de ce plafond, 56 USD au plus, pour deux instances tombées au "
      "plus, une fois chacune, au sens de ce texte, aux mêmes conditions que l'accord de calcul ; l'accord serait caduc "
      "si ce texte mettait la relance sous le plafond commun, ce qu'il ne fait pas."),
+    # ---------------------------------------------------------------- X-5 : le rapprochement M-6, dit ailleurs « avant le scellement »
+    ("X-5a", "X-5", "formation", T,
+     "Le rapprochement du marqueur M-6 peut encore changer la seule règle de la valeur du jumeau (point 3).",
+     "Le rapprochement du marqueur M-6 n'est pas fait au scellement : son mot, rendu plus tard, ne change pas la règle "
+     "de la valeur du jumeau (point 3), ni rien d'autre de ce plan."),
+    ("X-5b", "X-5", "formation", T,
+     "rapprochement par une session habilitée avant le scellement (marqueur M-6)",
+     "rapprochement par une session habilitée, non fait au scellement, à faire avant l'envoi du verdict (marqueur M-6)"),
 ]
 
 
@@ -138,6 +169,11 @@ def main():
         print(f"\nvalidateur du dépôt sur la copie du texte après les couples : {problemes(chemin) or 'aucun problème'}")
     print(f"titre du texte après les couples : {copie[T].splitlines()[0][-40:]!r}")
     print(f"titre du devis après les couples : {copie[DV].splitlines()[0][-40:]!r}")
+    restes = {k: [m for m in ("candidat au scellement, à copier", "en attente**", "à copier à l'octet",
+                              "avant le scellement (marqueur", "peut encore changer la seule règle",
+                              "le brouillon 4 est en vérification", "reste la vérification du candidat")
+                  if m in copie[k]] for k in (T, DV)}
+    print(f"mentions d'attente restées après les couples : texte {restes[T] or 'aucune'} ; devis {restes[DV] or 'aucune'}")
     print("empreintes attendues des pièces à sceller (candidat v2 et ces couples, appliqués à la lettre dans cet ordre) :")
     print(f"  texte : {hashlib.sha256(copie[T].encode('utf-8')).hexdigest()}")
     print(f"  devis : {hashlib.sha256(copie[DV].encode('utf-8')).hexdigest()}")
