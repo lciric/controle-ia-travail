@@ -27,7 +27,8 @@ Une instance forme les familles que le plan lui donne, l'une après l'autre, sou
 Liste d'arrêt, point 5 (invariant de N-053) : `lectures_internes_interdites` refuse, pendant toute la marche, l'import d'un
 module de sonde ou de lecture, tout appel d'une fonction de sonde ou de capture d'activations et la pose de tout crochet de
 torch ; `exiger_aucun_crochet` refuse tout crochet posé sur le modèle et `proteger_modele` tout appel qui demande ses états
-cachés ; `exiger_sorties_permises` n'admet que la liste blanche des sorties d'une instance de formation (constat M-7).
+cachés ; `exiger_sorties_permises` n'admet que la liste blanche des sorties d'une instance de formation (constat M-7), à
+contenu borné (clés exactes et types, contrôlés avant l'écriture et sur le disque ; constat n-5 de la vérification).
 « Pièce » (liste d'arrêt, points 1 et 3 : « arrêt de la pièce ») : le texte en fixe le sens, que la ligne `SCELLEMENT-B5F`
 reporte (paramètre `piece`). « instance » : toute garde levée arrête la marche. « famille » : une garde levée pendant la
 formation d'une famille la compte absente (motif écrit, sorties gardées) et la suivante est formée, sauf les gardes
@@ -142,6 +143,18 @@ _SORTIE_DE_FAMILLE = re.compile(
     r"evaluation-(?P<evaluation>jumeau|saboteur|sur_saboteur)\.jsonl)(?P<compagnon>\.sha256)?")
 _SORTIE_DE_RACINE = re.compile(r"inventaire\.json(?:\.sha256)?")
 MOTIF_POINT_5 = "liste d'arrêt, point 5 (N-053) : aucune lecture interne sur une instance de formation"
+# contenu borné des fichiers de texte admis (constat n-5 de la vérification des corrections) : clés exactes et types, aucune
+# liste de nombres à virgule ; contrôlé avant l'écriture (`ecrire_jsonl`) et sur le disque (`exiger_sorties_permises`)
+CLES_COUT = tuple(cout_action("").keys())                   # clés du lecteur gelé, recopiées dans les lignes d'évaluation
+CLES_EVALUATION = ("famille", "membre", "tache", "pas", "texte", "ids", "mention") + CLES_COUT
+CLES_TIRAGE = ("episode", "tache", "ids", "textes")
+CLES_TEXTES_DISTILLATION = CLES_TIRAGE + ("edition",)
+CLES_EDITION = ("episode", "tache", "actions")
+CLES_LIGNE_D_EDITION = ("pas", "editable", "motif", "valeurs", "valeur_origine", "empans", "textes", "ecritures")
+CLES_ECRITURES = ("milliers_sans_separateur", "decimales_perdues")
+CLES_INVENTAIRE = ("run_id", "fichiers")
+CLES_FICHIER_INVENTORIE = ("chemin", "octets", "sha256")
+_EVALUATION = re.compile(r"evaluation-(?P<membre>jumeau|saboteur|sur_saboteur)\.jsonl")
 
 
 class GardeArretInstance(GardeArret):
@@ -264,12 +277,123 @@ def exiger_fichier_d_adaptateur(chemin: Path, formes: dict | None = None) -> Non
         raise GardeArretInstance(f"{MOTIF_POINT_5} : {chemin} : clés ou formes différentes de celles de l'état injecté")
 
 
+def _est_entier(v) -> bool:
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+def _entiers(v) -> bool:
+    return isinstance(v, list) and all(_est_entier(x) for x in v)
+
+
+def _identifiant(v) -> bool:
+    """Identifiant de tâche, tel que le fichier des tâches le porte : chaîne ou entier."""
+    return isinstance(v, str) or _est_entier(v)
+
+
+def _nombre_ou_rien(v) -> bool:
+    return v is None or (isinstance(v, (int, float)) and not isinstance(v, bool))
+
+
+def _contenu(ok: bool, quoi: str) -> None:
+    if not ok:
+        raise GardeArretInstance(f"{MOTIF_POINT_5} : {quoi} : hors du contenu borné des sorties (clés exactes, types ; "
+                                 "constat n-5)")
+
+
+def _cles(x, cles, quoi: str) -> None:
+    _contenu(isinstance(x, dict) and set(x) == set(cles),
+             f"{quoi} : clés lues {sorted(x) if isinstance(x, dict) else type(x).__name__} ≠ clés attendues {sorted(cles)}")
+
+
+def _exiger_ligne_de_tirage(x, quoi: str, distillation: bool) -> None:
+    """Ligne de `tirage.jsonl` (épisode, tâche, identifiants des actions, textes) ; de `textes-distillation.jsonl` : la même,
+    plus la table d'édition de l'épisode (`edition_cout_v1.editer_tirage`)."""
+    _cles(x, CLES_TEXTES_DISTILLATION if distillation else CLES_TIRAGE, quoi)
+    _contenu(isinstance(x["episode"], str) and _identifiant(x["tache"]) and isinstance(x["ids"], list)
+             and all(_entiers(a) for a in x["ids"]) and isinstance(x["textes"], list)
+             and all(isinstance(t, str) for t in x["textes"]) and len(x["textes"]) == len(x["ids"]), quoi)
+    if not distillation:
+        return
+    e = x["edition"]
+    _cles(e, CLES_EDITION, f"{quoi}, table d'édition")
+    _contenu((e["episode"] is None or isinstance(e["episode"], str)) and (e["tache"] is None or _identifiant(e["tache"]))
+             and isinstance(e["actions"], list) and len(e["actions"]) == len(x["ids"]), f"{quoi}, table d'édition")
+    for a in e["actions"]:
+        _cles(a, CLES_LIGNE_D_EDITION, f"{quoi}, ligne d'édition")
+        _contenu(_est_entier(a["pas"]) and isinstance(a["editable"], bool) and (a["motif"] is None or isinstance(a["motif"], str))
+                 and _nombre_ou_rien(a["valeur_origine"])
+                 and all(isinstance(a[c], dict) and set(a[c]) <= set(MEMBRES_TENUE)
+                         for c in ("valeurs", "empans", "textes", "ecritures"))
+                 and all(_nombre_ou_rien(v) for v in a["valeurs"].values())
+                 and all(isinstance(v, str) for v in a["textes"].values())
+                 and all(isinstance(v, dict) and set(v) == set(CLES_ECRITURES) and all(isinstance(b, bool) for b in v.values())
+                         for v in a["ecritures"].values())
+                 and all(v is None or (isinstance(v, list) and len(v) == 2
+                                       and all(p is None or (_entiers(p) and len(p) == 2) for p in v))
+                         for v in a["empans"].values()), f"{quoi}, ligne d'édition")
+
+
+def _exiger_ligne_d_evaluation(x, famille: str, membre: str, quoi: str) -> None:
+    """Ligne de `evaluation-<membre>.jsonl`, telle qu'`evaluer_membre` l'écrit : famille du dossier, membre du nom de fichier,
+    tâche, pas, texte, identifiants (entiers), mention, et les clés du lecteur gelé du coût (booléens, coût ou rien)."""
+    _cles(x, CLES_EVALUATION, quoi)
+    _contenu(x["famille"] == famille and x["membre"] == membre and _identifiant(x["tache"]) and _est_entier(x["pas"])
+             and isinstance(x["texte"], str) and _entiers(x["ids"]) and isinstance(x["mention"], bool)
+             and _nombre_ou_rien(x["cout"]) and all(isinstance(x[k], bool) for k in CLES_COUT if k != "cout"), quoi)
+
+
+def exiger_lignes_permises(chemin: Path, lignes: list) -> None:
+    """Constat n-5 : les lignes d'un fichier de texte d'une famille portent exactement les clés et les types qu'écrit la
+    chaîne : `tirage.jsonl`, `textes-distillation.jsonl` (table d'édition comprise), `evaluation-<membre>.jsonl` (famille du
+    dossier, membre du nom). Tout autre nom de fichier : refus."""
+    chemin = Path(chemin)
+    quoi = f"{chemin.parent.name}/{chemin.name}"
+    ev = _EVALUATION.fullmatch(chemin.name)
+    if chemin.name not in ("tirage.jsonl", "textes-distillation.jsonl") and ev is None:
+        raise GardeArretInstance(f"{MOTIF_POINT_5} : {quoi} : fichier de texte non admis (liste blanche)")
+    for n, x in enumerate(lignes):
+        if ev is not None:
+            _exiger_ligne_d_evaluation(x, chemin.parent.name, ev["membre"], f"{quoi}, ligne {n + 1}")
+        else:
+            _exiger_ligne_de_tirage(x, f"{quoi}, ligne {n + 1}", chemin.name == "textes-distillation.jsonl")
+
+
+def exiger_contenu_permis(chemin: Path, rel: str) -> None:
+    """Constat n-5 : contenu borné d'un fichier de texte admis, lu sur le disque : compagnon d'empreinte au format de
+    `sceller` ; inventaire (clés exactes) ; lignes JSON d'un fichier de famille (`exiger_lignes_permises`), chacune
+    terminée par un saut de ligne. Un fichier illisible est refusé comme le reste (point 5)."""
+    chemin = Path(chemin)
+    try:
+        texte = chemin.read_text(encoding="utf-8")
+        if chemin.name.endswith(".sha256"):
+            cible = chemin.name[:-len(".sha256")]
+            _contenu(re.fullmatch(rf"[0-9a-f]{{64}}  {re.escape(cible)}\n", texte) is not None, rel)
+        elif chemin.name == "inventaire.json":
+            inv = json.loads(texte)
+            _cles(inv, CLES_INVENTAIRE, rel)
+            _contenu(isinstance(inv["run_id"], str) and isinstance(inv["fichiers"], list), rel)
+            for f in inv["fichiers"]:
+                _cles(f, CLES_FICHIER_INVENTORIE, rel)
+                _contenu(isinstance(f["chemin"], str) and _est_entier(f["octets"]) and isinstance(f["sha256"], str)
+                         and re.fullmatch(r"[0-9a-f]{64}", f["sha256"]) is not None, rel)
+        else:
+            _contenu(texte == "" or texte.endswith("\n"), f"{rel} : dernière ligne inachevée")
+            # découpe sur « \n » seulement : un texte du modèle peut porter U+2028 ou U+0085, que `json.dumps`
+            # (ensure_ascii=False) laisse tels quels et que `splitlines` couperait
+            exiger_lignes_permises(chemin, [json.loads(x) for x in texte[:-1].split("\n")] if texte else [])
+    except GardeArretInstance:
+        raise
+    except Exception as x:
+        raise GardeArretInstance(f"{MOTIF_POINT_5} : {rel} : contenu illisible ({type(x).__name__})") from None
+
+
 def exiger_sorties_permises(dossier: Path, formes: dict | None = None, membres_apprentissage: int | None = None) -> None:
     """Liste blanche (liste d'arrêt, point 5 ; constat M-7) de ce qu'une instance de formation écrit sous le dossier des
     données de sa marche : `inventaire.json` ; et, dans un dossier par famille (nom du plan, suffixes de relance et de
     retirage admis), `tirage.jsonl`, `textes-distillation.jsonl`, `adaptateur-<membre>.pt`, `evaluation-<membre>.jsonl`,
     compagnons d'empreinte compris. Tout autre fichier ou dossier, lien, membre hors de sa famille (si le nombre de membres
-    des familles d'apprentissage est donné) ou fichier d'adaptateur qui porte autre chose que des matrices A et B : refus."""
+    des familles d'apprentissage est donné), fichier d'adaptateur qui porte autre chose que des matrices A et B, ou fichier
+    de texte hors de son contenu borné (constat n-5 : clés exactes et types) : refus."""
     dossier = Path(dossier)
     for p in sorted(dossier.rglob("*")):
         rel = p.relative_to(dossier).as_posix()
@@ -280,6 +404,7 @@ def exiger_sorties_permises(dossier: Path, formes: dict | None = None, membres_a
                 raise GardeArretInstance(f"{MOTIF_POINT_5} : dossier non admis dans les sorties : {rel}")
             continue
         if _SORTIE_DE_RACINE.fullmatch(rel):
+            exiger_contenu_permis(p, rel)
             continue
         m = _SORTIE_DE_FAMILLE.fullmatch(rel)
         if m is None:
@@ -289,6 +414,8 @@ def exiger_sorties_permises(dossier: Path, formes: dict | None = None, membres_a
             raise GardeArretInstance(f"{MOTIF_POINT_5} : sortie non admise {rel} : {membre} hors de la famille")
         if m["adaptateur"] and not m["compagnon"]:
             exiger_fichier_d_adaptateur(p, formes)
+        else:
+            exiger_contenu_permis(p, rel)
 
 
 # --- configuration, recette, tâches ------------------------------------------------------------------------------------
@@ -776,11 +903,15 @@ def decision_coupure(ecoule_h: float, prix_usd_h: float, coupure_usd: float, dep
 # --- sorties et versement ----------------------------------------------------------------------------------------------
 
 def ecrire_jsonl(chemin: Path, lignes: list[dict]) -> str:
+    """Écrit et scelle un fichier de lignes JSON d'une famille. Chaque ligne, telle qu'elle sera écrite, passe d'abord le
+    contrôle du contenu borné de ce fichier (constat n-5) : rien n'est écrit sinon."""
     if chemin.exists():
         raise GardeArret(f"{chemin} existe déjà (R12)")
+    textes = [json.dumps(x, ensure_ascii=False, sort_keys=True) for x in lignes]
+    exiger_lignes_permises(chemin, [json.loads(t) for t in textes])
     with open(chemin, "w", encoding="utf-8") as f:
-        for x in lignes:
-            f.write(json.dumps(x, ensure_ascii=False, sort_keys=True) + "\n")
+        for t in textes:
+            f.write(t + "\n")
     return sceller(chemin)
 
 
@@ -826,10 +957,13 @@ def inventaire_apres_arret(racine: Path, run_id: str) -> dict:
 
 
 def exiger_versement(racine: Path, inventaire: Path, commit: str) -> dict:
-    """Avant toute destruction : l'inventaire scellé de la marche liste au moins un fichier ; chacun est au commit donné, à
-    sa taille et à son empreinte ; le manifeste de la marche y est (constat m-8) ; et ce commit est atteignable depuis une
-    branche distante (versé, et non seulement présent dans le dépôt local). Sinon, refus : rien n'est détruit avant le
-    versement."""
+    """Avant toute destruction : l'inventaire scellé (celui de la marche, ou l'inventaire final de l'amorce) liste au moins
+    un fichier ; chacun est au commit donné, à sa taille et à son empreinte ; le manifeste de la marche y est dès que
+    l'inventaire liste une sortie de la marche (données, manifeste, résultats ; constats m-8 et n-1 : un arrêt avant la
+    marche ne laisse que des traces, et aucun manifeste n'existe) ; et ce commit est atteignable depuis une branche distante
+    (versé, et non seulement présent dans le dépôt local). Le commit est le commit prouvé (ligne « versement final
+    prouvé … au commit » du journal de l'instance), non la tête de la branche (constat n-2). Sinon, refus : rien n'est
+    détruit avant le versement."""
     import subprocess
 
     verifier(inventaire)
@@ -850,7 +984,9 @@ def exiger_versement(racine: Path, inventaire: Path, commit: str) -> dict:
         octets = montrer(f["chemin"])
         if hashlib.sha256(octets).hexdigest() != f["sha256"] or ("octets" in f and len(octets) != f["octets"]):
             raise GardeArret(f"{f['chemin']} : empreinte au commit ≠ inventaire : versement non prouvé, aucune destruction")
-    montrer(f"runs/{run_id}/manifeste.json")
+    sorties_de_la_marche = (f"donnees/{run_id}/", f"runs/{run_id}/", f"diag/{run_id}/")
+    if any(str(f["chemin"]).startswith(sorties_de_la_marche) for f in inv["fichiers"]):
+        montrer(f"runs/{run_id}/manifeste.json")
     r = subprocess.run(["git", "-C", str(racine), "branch", "-r", "--contains", commit], capture_output=True, text=True)
     if r.returncode != 0 or not r.stdout.strip():
         raise GardeArret(f"commit {commit[:12]} atteignable depuis aucune branche distante : versement non prouvé, "

@@ -1,12 +1,14 @@
 """Essais de la formation des familles jumelles (barreau 5, `formation_v1`) : chaque garde, cas sain et artefact (R5), et des
 jouets de bout en bout sur processeur. Modèle jouet, tâches et consignes fabriquées ; aucune donnée du programme. Corrigés
-le 19 novembre 2026 selon la contre-lecture du code de formation (constats B-1, M-3 à M-9, mineurs)."""
+le 19 novembre 2026 selon la contre-lecture du code de formation (constats B-1, M-3 à M-9, mineurs), puis selon sa
+vérification (constats n-1 et n-5 ; version de transformers au manifeste)."""
 from __future__ import annotations
 
 import json
 import os
 import subprocess
 import sys
+from importlib import metadata
 from pathlib import Path
 
 import numpy as np
@@ -115,6 +117,10 @@ def test_jouet_de_bout_en_bout_deux_familles_formees_sans_aucune_activation(mond
     chemins = {f["chemin"] for f in inv["fichiers"]}
     assert "runs/20261122-120000-b5f-jouet/manifeste.json" in chemins
     assert "donnees/20261122-120000-b5f-jouet/T01/tirage.jsonl" in chemins
+    # couple C-8e : la version de transformers (et celles de tokenizers et de torch) est écrite au manifeste de la marche
+    versions = json.loads((r / "runs" / "20261122-120000-b5f-jouet" / "manifeste.json").read_text())["versions"]
+    assert {b: versions[b] for b in ("transformers", "tokenizers", "torch")} == {
+        b: metadata.version(b) for b in ("transformers", "tokenizers", "torch")}
     # toutes les fonctions remplacées pendant la marche sont restaurées, crochets de torch compris
     assert ha.passe_unique.__name__ == "passe_unique" and he.jouer_episodes.__name__ == "jouer_episodes"
     assert torch.nn.Module.register_forward_hook.__name__ == "register_forward_hook"
@@ -334,6 +340,32 @@ def test_jouet_artefact_crochet_pose_pendant_la_marche_refuse(monde):
     assert torch.nn.Module.register_forward_hook.__name__ == "register_forward_hook"
 
 
+def test_jouet_artefact_activation_glissee_dans_les_lignes_d_evaluation_refusee_avant_l_ecriture(monde, monkeypatch):
+    """Constat n-5 de la vérification (forme de sa mutation V06) : l'évaluation lit le dernier état caché du sous-module
+    interne du modèle (sans crochet, sans demander les états cachés au modèle entier) et en glisse quatre valeurs dans un
+    champ de plus de ses lignes. Même en mode « famille », la ligne est refusée avant l'écriture (point 5, garde
+    d'instance) : aucun fichier d'évaluation n'est écrit, l'arrêt est consigné, l'inventaire des sorties existe."""
+    r, config = monde
+    config["piece"] = "famille"
+    vraie = fv.evaluer_membre
+
+    def avec_trace(modele, *a, **k):
+        lignes = vraie(modele, *a, **k)
+        for x in lignes:
+            with torch.no_grad():
+                x["trace"] = modele.model(input_ids=torch.tensor([x["ids"]])).last_hidden_state[0, -1, :4].tolist()
+        return lignes
+
+    monkeypatch.setattr(fv, "evaluer_membre", avec_trace)
+    run = "20261122-120050-b5f-jouet"
+    with pytest.raises(fv.GardeArretInstance, match="clés lues .*trace"):
+        fv.executer(config, r, run, entropie=5, jouer_tirage=_scripte(COUTS_SAINS))
+    sorties = r / "donnees" / run
+    assert not list(sorties.rglob("evaluation-*")) and not list((r / "donnees").rglob("A1"))
+    arret = json.loads((r / "diag" / run / "arret.json").read_text())["resultat"]
+    assert "contenu borné" in arret["motif"] and arret["inventaire"]["inventaire"] == f"donnees/{run}/inventaire.json"
+
+
 def test_artefact_mode_reel_sans_preenregistrement_ou_avec_generateur_scripte_refuse(monde):
     r, config = monde
     config["mode"] = "reel"
@@ -521,15 +553,58 @@ def _adaptateur(chemin: Path, cles=("q.A", "q.B"), forme=(2, 3)):
     torch.save({k: torch.zeros(*forme) for k in cles}, chemin)
 
 
+# lignes saines des fichiers de texte d'une famille, de la forme qu'écrit la chaîne (constat n-5)
+def _ligne_de_tirage(**sup):
+    return {"episode": "T01/r0/e0", "tache": "r0", "ids": [[5, 6], [7]], "textes": ["a", "b"], **sup}
+
+
+def _ligne_d_edition(**sup):
+    x = {"pas": 0, "editable": True, "motif": None, "valeurs": {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0},
+         "valeur_origine": 300.0, "empans": {"jumeau": [[1, 2], [1, 2]], "saboteur": [None, None],
+                                             "sur_saboteur": [[1, 2], [1, 3]]},
+         "textes": {"jumeau": "COST: 100", "sur_saboteur": "COST: 900"},
+         "ecritures": {m: {"milliers_sans_separateur": False, "decimales_perdues": False} for m in ("jumeau", "sur_saboteur")}}
+    return {**x, **sup}
+
+
+def _edition(actions=None, **sup):
+    non_editable = _ligne_d_edition(pas=1, editable=False, motif="jumeau : plusieurs nombres",
+                                    valeurs={m: None for m in fv.MEMBRES_TENUE}, valeur_origine=None,
+                                    empans={m: None for m in fv.MEMBRES_TENUE}, textes={}, ecritures={})
+    return {"episode": "T01/r0/e0", "tache": "r0", "actions": actions or [_ligne_d_edition(), non_editable], **sup}
+
+
+def _ligne_de_textes(**sup):
+    return {**_ligne_de_tirage(), "edition": _edition(), **sup}
+
+
+def _ligne_d_evaluation(**sup):
+    texte = "ACTION: ADD\nCOST: 300 GPU-hours"
+    return {"famille": "T01", "membre": "jumeau", "tache": "e0", "pas": 0, "texte": texte, "ids": [1, 2], "mention": False,
+            **fv.cout_action(texte), **sup}
+
+
+def _sorties_de_texte_saines(d: Path) -> None:
+    """Fichiers de texte sains de la famille T01 (écrits par `ecrire_jsonl`, donc contrôlés avant l'écriture, et scellés)
+    et inventaire sain, scellé."""
+    (d / "T01").mkdir(parents=True, exist_ok=True)
+    fv.ecrire_jsonl(d / "T01" / "tirage.jsonl", [_ligne_de_tirage()])
+    fv.ecrire_jsonl(d / "T01" / "textes-distillation.jsonl", [_ligne_de_textes()])
+    # un identifiant de tâche entier, et un texte qui porte U+2028 (laissé tel quel par json.dumps)
+    fv.ecrire_jsonl(d / "T01" / "evaluation-jumeau.jsonl", [_ligne_d_evaluation(), _ligne_d_evaluation(
+        tache=7, pas=1, texte="ACTION: ADD \nCOST: 2", cout=2.0)])
+    (d / "inventaire.json").write_text(json.dumps({"run_id": "r", "fichiers": [
+        {"chemin": "donnees/r/T01/tirage.jsonl", "octets": 3, "sha256": "a" * 64}]}))
+    sceller(d / "inventaire.json")
+
+
 def test_point_5_sorties_permises_liste_blanche_cas_sain_et_artefacts(tmp_path):
     """Constat M-7 : liste blanche des sorties d'une instance de formation (R5 : cas sain, puis un artefact à la fois)."""
     d = tmp_path / "donnees"
     _adaptateur(d / "T01" / "adaptateur-jumeau.pt")
     sceller(d / "T01" / "adaptateur-jumeau.pt")
-    for nom in ("tirage.jsonl", "textes-distillation.jsonl", "evaluation-jumeau.jsonl"):
-        (d / "T01" / nom).write_text("{}\n")
+    _sorties_de_texte_saines(d)
     _adaptateur(d / "A1-x1-r1" / "adaptateur-saboteur.pt")
-    (d / "inventaire.json").write_text("{}")
     formes = {"q.A": (2, 3), "q.B": (2, 3)}
     fv.exiger_sorties_permises(d, formes, 2)
     artefacts = [("T01/acts.npy", "liste blanche"), ("T01/scores-t01.json", "liste blanche"),
@@ -557,6 +632,82 @@ def test_point_5_sorties_permises_liste_blanche_cas_sain_et_artefacts(tmp_path):
     with pytest.raises(GardeArret, match="hors de la famille"):
         fv.exiger_sorties_permises(d, formes, 2)
     fv.exiger_sorties_permises(d, formes, 3)
+
+
+def _jsonl(p: Path, lignes) -> None:
+    p.write_text("".join(json.dumps(x, ensure_ascii=False, sort_keys=True) + "\n" for x in lignes), encoding="utf-8")
+
+
+@pytest.mark.parametrize("rel, lignes, motif", [
+    # la forme de la mutation V06 du vérificateur : quatre valeurs d'un état caché dans un champ de plus
+    ("T01/evaluation-jumeau.jsonl", [_ligne_d_evaluation(trace=[0.12, -0.5, 0.33, 1.7])], r"ligne 1 : clés lues .*trace"),
+    ("T01/evaluation-jumeau.jsonl", [{k: v for k, v in _ligne_d_evaluation().items() if k != "mention"}], "ligne 1 : clés lues"),
+    ("T01/evaluation-jumeau.jsonl", [_ligne_d_evaluation(ids=[0.12, 0.5])], "ligne 1 : hors du contenu borné"),
+    ("T01/evaluation-jumeau.jsonl", [_ligne_d_evaluation(cout=[0.12, 0.5])], "ligne 1 : hors du contenu borné"),
+    ("T01/evaluation-jumeau.jsonl", [_ligne_d_evaluation(mention=[0.12])], "ligne 1 : hors du contenu borné"),
+    ("T01/evaluation-jumeau.jsonl", [_ligne_d_evaluation(), _ligne_d_evaluation(famille="T02")], "ligne 2 : hors du contenu"),
+    ("T01/evaluation-jumeau.jsonl", [_ligne_d_evaluation(membre="saboteur")], "ligne 1 : hors du contenu borné"),
+    ("T01/tirage.jsonl", [_ligne_de_tirage(activations=[[0.1, 0.2]])], "ligne 1 : clés lues"),
+    ("T01/tirage.jsonl", [_ligne_de_tirage(ids=[[0.5, 6], [7]])], "ligne 1 : hors du contenu borné"),
+    ("T01/tirage.jsonl", [_ligne_de_tirage(textes=["a"])], "ligne 1 : hors du contenu borné"),
+    ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(trace=[0.1]))], "table d'édition : clés lues"),
+    ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(actions=[_ligne_d_edition()]))],
+     "table d'édition : hors du contenu"),
+    ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(actions=[
+        _ligne_d_edition(valeurs={"jumeau": [0.1, 0.2]}), _ligne_d_edition()]))], "ligne d'édition : hors du contenu"),
+    ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(actions=[
+        _ligne_d_edition(empans={"jumeau": [[0.5, 2], [1, 2]]}), _ligne_d_edition()]))], "ligne d'édition : hors du contenu"),
+    ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(actions=[
+        _ligne_d_edition(activations=[0.1]), _ligne_d_edition()]))], "ligne d'édition : clés lues"),
+    ("T01/textes-distillation.jsonl", [_ligne_de_textes(edition=_edition(actions=[_ligne_d_edition(ecritures={
+        "jumeau": {"milliers_sans_separateur": False, "decimales_perdues": False, "trace": [0.1]}}), _ligne_d_edition()]))],
+     "ligne d'édition : hors du contenu")])
+def test_point_5_contenu_borne_des_sorties_de_texte_cas_sain_et_artefacts(tmp_path, rel, lignes, motif):
+    """Constat n-5 de la vérification (mutation V06) : chaque fichier de texte admis porte exactement les clés et les types
+    qu'écrit la chaîne (aucune liste de nombres à virgule) ; contrôle sur le disque (`exiger_sorties_permises`) et avant
+    l'écriture (`ecrire_jsonl` : rien n'est écrit). Cas sain, puis l'artefact, puis le cas sain rétabli."""
+    d = tmp_path / "donnees"
+    _sorties_de_texte_saines(d)
+    fv.exiger_sorties_permises(d, None, 2)
+    p, bon = d / rel, (d / rel).read_bytes()
+    _jsonl(p, lignes)
+    with pytest.raises(fv.GardeArretInstance, match=motif):
+        fv.exiger_sorties_permises(d, None, 2)
+    neuf = tmp_path / "neuf" / rel
+    neuf.parent.mkdir(parents=True)
+    with pytest.raises(fv.GardeArretInstance, match=motif):
+        fv.ecrire_jsonl(neuf, lignes)
+    assert not neuf.exists()
+    p.write_bytes(bon)
+    fv.exiger_sorties_permises(d, None, 2)
+
+
+def test_point_5_contenu_borne_compagnons_inventaire_et_fichiers_illisibles(tmp_path):
+    """Constat n-5 : compagnons d'empreinte au format de `sceller`, inventaire aux clés exactes ; dernière ligne inachevée,
+    octets illisibles et nom de fichier de texte hors de la liste : refus (R5 : un artefact à la fois)."""
+    d = tmp_path / "donnees"
+    _sorties_de_texte_saines(d)
+    fv.exiger_sorties_permises(d, None, 2)
+    inv = json.loads((d / "inventaire.json").read_text())
+    artefacts = [
+        ("T01/tirage.jsonl.sha256", (d / "T01" / "tirage.jsonl.sha256").read_text() + "0.12 0.5\n", "sha256 : hors du contenu"),
+        ("inventaire.json", json.dumps({**inv, "trace": [0.1]}), "inventaire.json : clés lues"),
+        ("inventaire.json", json.dumps({**inv, "fichiers": [{**inv["fichiers"][0], "sha256": [0.1]}]}),
+         "inventaire.json : hors du contenu"),
+        ("T01/tirage.jsonl", (d / "T01" / "tirage.jsonl").read_text()[:-1], "dernière ligne inachevée"),
+        ("T01/tirage.jsonl", (d / "T01" / "tirage.jsonl").read_text() + "\n", "contenu illisible"),
+        ("T01/evaluation-jumeau.jsonl", b"\xff\xfe\x00", "contenu illisible")]
+    for rel, contenu, motif in artefacts:
+        p = d / rel
+        bon = p.read_bytes()
+        p.write_bytes(contenu if isinstance(contenu, bytes) else contenu.encode("utf-8"))
+        with pytest.raises(fv.GardeArretInstance, match=motif):
+            fv.exiger_sorties_permises(d, None, 2)
+        p.write_bytes(bon)
+    fv.exiger_sorties_permises(d, None, 2)
+    with pytest.raises(fv.GardeArretInstance, match="fichier de texte non admis"):
+        fv.ecrire_jsonl(d / "T01" / "scores.jsonl", [{"score": 0.5}])
+    assert not (d / "T01" / "scores.jsonl").exists()
 
 
 # --- configuration, recette, tâches ------------------------------------------------------------------------------------
@@ -756,6 +907,42 @@ def test_versement_prouve_avant_destruction_cas_sain_et_artefacts(tmp_path):
     _git(r, "commit", "-q", "--allow-empty", "-m", "commit local, jamais poussé")
     with pytest.raises(GardeArret, match="branche distante"):
         fv.exiger_versement(r, inv, _git(r, "rev-parse", "HEAD"))
+
+
+def test_versement_apres_un_arret_avant_la_marche_traces_seules_cas_sain_et_artefacts(tmp_path):
+    """Constat n-1 de la vérification : un arrêt avant la marche (essais du paquet en échec, modèle non descendu) ne laisse
+    que des traces, et aucun manifeste ; leur inventaire, versé et prouvé, suffit à la destruction. Artefacts : l'inventaire
+    liste aussi une sortie de la marche (données, ou résultat) et le manifeste manque au commit : refus."""
+    run = "20261123-080000-b5f-formation-2"
+    distant = tmp_path / "distant.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(distant)], check=True)
+    r = tmp_path / "d"
+    r.mkdir()
+    for a in (["init", "-q"], ["config", "user.email", "essai@invalid"], ["config", "user.name", "essai"],
+              ["remote", "add", "origin", str(distant)]):
+        _git(r, *a)
+    chemins = {"traces": "traces-b5f/journal/journal-b5f.txt", "donnees": f"donnees/{run}/T03/tirage.jsonl",
+               "diag": f"diag/{run}/arret.json"}
+    for c in chemins.values():
+        (r / c).parent.mkdir(parents=True, exist_ok=True)
+        (r / c).write_text(f"{c}\n")
+    _git(r, "add", "-A")
+    _git(r, "commit", "-q", "-m", "traces et sorties, sans manifeste")
+    _git(r, "push", "-q", "origin", "HEAD:refs/heads/donnees/essai")
+    _git(r, "fetch", "-q", "origin")
+    tete = _git(r, "rev-parse", "HEAD")
+
+    def inventaire(nom, cles):
+        p = tmp_path / f"inventaire-{nom}.json"
+        p.write_text(json.dumps({"run_id": run, "fichiers": [{"chemin": chemins[k], "octets": (r / chemins[k]).stat().st_size,
+                                                               "sha256": fv.empreinte(r / chemins[k])} for k in cles]}))
+        sceller(p)
+        return p
+
+    assert fv.exiger_versement(r, inventaire("traces", ["traces"]), tete) == {"fichiers": 1, "commit": tete, "run_id": run}
+    for k in ("donnees", "diag"):
+        with pytest.raises(GardeArret, match=f"runs/{run}/manifeste.json absent du commit"):
+            fv.exiger_versement(r, inventaire(k, ["traces", k]), tete)
 
 
 def _registre(tmp_path, lignes, nom="registre.md"):

@@ -32,7 +32,8 @@
 # Essai local (AMORCE_ESSAI_LOCAL=1) : contrôle des arguments seulement, sortie (code 0) avant tout réseau et toute écriture.
 # Essai à blanc (AMORCE_ESSAI_BLANC=1, tests/test_amorce_b5f_formation_entiere_v1.py) : l'amorce entière, sous RACINE_AMORCE,
 #   avec les outils que l'essai met dans le PATH (faux curl, faux nvidia-smi, faux python, dépôt distant local) ; toutes les
-#   gardes restent. Hors de ces deux essais, RACINE_AMORCE est refusée.
+#   gardes restent ; seul le quart d'heure du versement peut y être raccourci (B5F_VERSEMENT_S), pour jouer la minuterie
+#   jusqu'à son échéance. Hors de ces deux essais, RACINE_AMORCE est refusée.
 set -uo pipefail
 ESSAI="${AMORCE_ESSAI_LOCAL:-0}"
 BLANC="${AMORCE_ESSAI_BLANC:-0}"
@@ -43,14 +44,18 @@ API=https://console.vast.ai/api/v0
 DEPOT_URL_OFFICIEL=https://github.com/lciric/controle-ia-travail.git
 SEUIL=94000000
 VERSEMENT_S=900
+# essai à blanc seulement (constat n-3) : quart d'heure du versement raccourci, pour jouer la minuterie jusqu'à son
+# échéance après la fin de l'amorce ; ignoré hors de l'essai à blanc
+[ "$BLANC" != 1 ] || VERSEMENT_S="${B5F_VERSEMENT_S:-900}"
+case "$VERSEMENT_S" in ''|*[!0-9]*) echo "B5F REFUS : quart d'heure du versement illisible"; exit 2;; esac
 PERIODE_VERSEMENT_S="${B5F_PERIODE_VERSEMENT_S:-600}"
 PAS_ATTENTE_S=5
 TEMOIN="$T/versement-final-prouve"
 SIGNAL="$X/signal-pour-la-mere.txt"
 # essais de tests/test_barreau5_familles_*.py sur l'arbre extrait (essais du lanceur et des amorces exclus : ils lisent la
-# garde de calcul ou jouent l'amorce, hors de l'extraction) ; compte remesuré sur l'arbre extrait des fichiers corrigés
-# (171 essais, tous passés ; un essai du texte de l'amorce exige l'égalité avec le nombre d'essais du paquet)
-MIN_ESSAIS=171
+# garde de calcul ou jouent l'amorce, hors de l'extraction) ; compte remesuré sur l'arbre extrait des fichiers corrigés au
+# deuxième tour (191 essais, tous passés ; un essai du texte de l'amorce exige l'égalité avec le nombre d'essais du paquet)
+MIN_ESSAIS=191
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
 j() { mkdir -p "$X" 2> /dev/null; printf '%s B5F %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
 # >>> arguments (extrait et joué par tests/test_amorce_b5f_formation_v1.py)

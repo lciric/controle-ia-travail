@@ -1,0 +1,28 @@
+Sortie de l'essai n-6 (vérification des corrections du code de formation, barreau 5) — développeur Opus 5.5, 19 novembre
+2026, vers 21:29Z. Recopiée par l'outil d'écriture depuis /dev/shm/b5f-py311/essais-paquet-py311.txt (c9b5489b7fcc87ff636b1a6a6daaa0a84e6a63ca91674479dba0d175921d86ba),
+effacé ensuite ; la sortie d'erreur (essais-paquet-py311.err) était vide.
+
+Environnement (dans /dev/shm, effacé ensuite) :
+  /usr/bin/python3.11 -m venv /dev/shm/b5f-py311/venv                      -> Python 3.11.18
+  pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.14.1   -> torch 2.14.1+cpu
+  pip install --no-cache-dir -r requirements-gpu.txt                       (depuis la racine du dépôt ; torch tenu par +cpu)
+  versions : numpy 2.4.6, scipy 1.17.1, matplotlib 3.11.2, transformers 5.18.0, tokenizers 0.23.2, safetensors 0.8.0,
+             huggingface_hub 1.33.0, pytest 9.1.1, scikit-learn 1.9.1, pypandoc_binary 1.17 ; torch.cuda.is_available() faux
+
+Arbre : celui que l'amorce extrait (bloc « motifs »), tiré de l'arbre de travail du dépôt sans commit par
+outils-developpeur-corrections-code-formation-v3/outils/extraire-arbre-sans-commit-v1.py, dans /dev/shm/b5f-arbre-extrait-v4
+(496 fichiers ; docs/notes, diag, runs, brouillons absents).
+
+Commande (celle de l'étape 4 de l'amorce), depuis cet arbre :
+  PYTHONPATH=src TMPDIR=/dev/shm/b5f-py311/tmp /dev/shm/b5f-py311/venv/bin/python -m pytest -q -p no:cacheprovider --color=no \
+      tests/test_barreau5_familles_*.py --basetemp=/dev/shm/b5f-py311/essais-tmp
+Code de sortie : 0.
+
+--- sortie, telle quelle ---
+........................................................................ [ 37%]
+........................................................................ [ 75%]
+...............................................                          [100%]
+191 passed in 98.33s (0:01:38)
+--- fin ---
+
+Même arbre, même commande, sous le Python du dépôt (3.13.18, .venv), vers 21:24Z : 191 passed in 86.40s.

@@ -2,7 +2,8 @@
 lancé pour de vrai. L'essai local de l'amorce entière (arguments), puis ses blocs marqués, extraits et joués dans un bash
 jetable avec un faux `curl` et un dépôt distant local ; enfin, des contrôles du texte. Cas sain et artefact (R5). L'amorce
 entière, jouée à blanc avec de faux outils, est éprouvée par `tests/test_amorce_b5f_formation_entiere_v1.py`. Corrigés le
-19 novembre 2026 selon la contre-lecture du code de formation (constats M-1, M-2, M-5, M-9, m-1, m-6, m-7, m-12)."""
+19 novembre 2026 selon la contre-lecture du code de formation (constats M-1, M-2, M-5, M-9, m-1, m-6, m-7, m-12), puis
+selon sa vérification (constats n-3 et n-7)."""
 from __future__ import annotations
 
 import hashlib
@@ -71,6 +72,18 @@ def test_essai_local_artefacts_arguments_refuses(tmp_path, sup, motif):
     p = subprocess.run(["bash", str(AMORCE)], env=_env(AMORCE_ESSAI_LOCAL="1", RACINE_AMORCE=str(tmp_path), **sup),
                        capture_output=True, text=True, timeout=60)
     assert p.returncode == 2 and motif in p.stdout, p.stdout
+    assert not list(tmp_path.iterdir())
+
+
+def test_quart_d_heure_du_versement_raccourci_en_essai_a_blanc_seulement(tmp_path):
+    """Constat n-3 : B5F_VERSEMENT_S n'est lu qu'en essai à blanc. Hors de lui, il est ignoré (l'essai local passe avec une
+    valeur illisible) ; en essai à blanc, une valeur illisible arrête l'amorce avant tout, sans rien écrire."""
+    p = subprocess.run(["bash", str(AMORCE)], env=_env(AMORCE_ESSAI_LOCAL="1", RACINE_AMORCE=str(tmp_path),
+                                                       B5F_VERSEMENT_S="2m"), capture_output=True, text=True, timeout=60)
+    assert p.returncode == 0 and "arguments conformes" in p.stdout, p.stdout + p.stderr
+    p = subprocess.run(["bash", str(AMORCE)], env=_env(AMORCE_ESSAI_BLANC="1", RACINE_AMORCE=str(tmp_path),
+                                                       B5F_VERSEMENT_S="2m"), capture_output=True, text=True, timeout=60)
+    assert p.returncode == 2 and "quart d'heure du versement illisible" in p.stdout, p.stdout + p.stderr
     assert not list(tmp_path.iterdir())
 
 
@@ -303,6 +316,28 @@ def test_preuve_artefacts_aucun_temoin(depots, cas):
     assert not (depots["T"] / "versement-final-prouve").exists()
 
 
+@pytest.mark.parametrize("cas", ["branche_supprimee", "branche_ramenee_au_depart"])
+def test_preuve_artefact_tete_distante_seule_aucun_temoin(depots, cas):
+    """Constat n-7 de la vérification (mutation V01) : la comparaison de la tête distante est le seul verrou qui joue quand
+    le versement de l'inventaire ne pousse rien de neuf alors que la branche distante a bougé. Première preuve tenue ;
+    témoin retiré ; branche distante supprimée, ou ramenée au commit de départ ; seconde preuve : rien de neuf n'est
+    poussé, aucun témoin, et le refus dit pourquoi."""
+    premiere = _verser(depots, f'verser "fin" $(tous_les_fichiers donnees/{RUN} runs/{RUN}) && RUN_B5F={RUN} prouver_versement')
+    temoin = depots["T"] / "versement-final-prouve"
+    assert premiere.returncode == 0 and temoin.is_file(), premiere.stderr
+    prouve = temoin.read_text().strip()
+    temoin.unlink()
+    branche = "refs/heads/donnees/b5f-essai-instance-3"
+    if cas == "branche_supprimee":
+        subprocess.run(["git", "-C", str(depots["nu"]), "update-ref", "-d", branche], check=True)
+    else:
+        subprocess.run(["git", "-C", str(depots["nu"]), "update-ref", branche, depots["commit"]], check=True)
+    seconde = _verser(depots, f"RUN_B5F={RUN} prouver_versement")
+    assert seconde.returncode == 1 and not temoin.exists()
+    assert (depots["T"] / "parent-sortie").read_text().strip() == prouve            # rien de neuf n'a été poussé
+    assert depots["L"].read_text().rstrip().endswith("preuve : tête distante ≠ dernier commit poussé")
+
+
 def test_attente_de_la_marche_rend_la_main_vite_apres_sa_fin():
     """Constat M-2 : aucun sommeil d'un seul tenant : l'attente rend la main au plus PAS_ATTENTE_S secondes après la fin
     de la marche (moins de 20 secondes), sans attendre la période de versement."""
@@ -346,6 +381,9 @@ def test_texte_marche_sous_timeout_minuterie_a_l_echeance_plus_le_quart_d_heure_
     assert re.search(r'timeout --signal=TERM --kill-after=120 "\$DUREE" \\\n\s+"\$PY" -m controle_ia\.barreau5_familles\.'
                      r'formation_v1 ', TEXTE)
     assert _constante("VERSEMENT_S") == "900"
+    # constat n-3 : le quart d'heure ne se raccourcit qu'en essai à blanc, et en une seule ligne de code
+    assert '[ "$BLANC" != 1 ] || VERSEMENT_S="${B5F_VERSEMENT_S:-900}"' in TEXTE
+    assert sum("B5F_VERSEMENT_S" in x for x in _lignes_de_code()) == 1
     assert "ECHEANCE_MINUTERIE=$(( ECHEANCE_ARRET_UTC_S + VERSEMENT_S ))" in TEXTE
     assert re.search(r'^minuterie "\$ECHEANCE_MINUTERIE" < /dev/null &$', TEXTE, re.M)
     assert '[ "$c" = 0 ] && [ "${NP:-0}" -ge "$MIN_ESSAIS" ] || arret "essais du paquet' in TEXTE

@@ -232,7 +232,9 @@ def exiger_episodes_de_saboteur(famille: str, membre: str, chemin: Path) -> byte
         raise GardeArret(f"{chemin.name} : evaluation-saboteur.jsonl attendu")
     verifier(chemin)
     octets = chemin.read_bytes()
-    lignes = [json.loads(x) for x in octets.decode("utf-8").splitlines() if x.strip()]
+    # découpe sur « \n » seulement : un texte du modèle peut porter U+2028 ou U+0085, que `json.dumps` (ensure_ascii=False)
+    # laisse tels quels et que `splitlines` couperait au milieu d'une ligne
+    lignes = [json.loads(x) for x in octets.decode("utf-8").split("\n") if x.strip()]
     if not lignes:
         raise GardeArret(f"{chemin} : aucun épisode")
     nom = re.compile(rf"{re.escape(famille)}(?:-x1)?(?:-r1)?")

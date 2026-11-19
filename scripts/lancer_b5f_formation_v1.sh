@@ -32,8 +32,14 @@
 #   detruire RACINE ID N LISTE.json INVENTAIRE.json COMMIT
 #                                 l'instance ID porte l'étiquette b5f-formation-v1-N dans LISTE.json (vastai show instances
 #                                 --raw) ; chaque sortie de son inventaire scellé est au commit COMMIT, à sa taille et à son
-#                                 empreinte, le manifeste de la marche aussi, et COMMIT est sur une branche distante
-#                                 (versement prouvé) ; sinon refus : rien n'est détruit avant le versement ;
+#                                 empreinte, le manifeste de la marche aussi dès que l'inventaire liste une sortie de la
+#                                 marche (après un arrêt avant la marche, l'inventaire final ne porte que des traces), et
+#                                 COMMIT est sur une branche distante (versement prouvé) ; sinon refus : rien n'est détruit
+#                                 avant le versement. COMMIT est le commit prouvé, que nomme la ligne « versement final
+#                                 prouvé … au commit » du journal de l'instance (l'avant-dernier de la branche de sortie quand
+#                                 le journal de fin a été poussé), et non la tête de la branche ; INVENTAIRE.json :
+#                                 traces-b5f/inventaire-final.json et son compagnon, tirés de ce commit après git fetch
+#                                 (l'inventaire de la marche, donnees/RUN/inventaire.json, est accepté aussi) ;
 #   verifier-destruction LISTE.json ID TEMOIN
 #                                 ID absent de la liste, TEMOIN présent ; jamais juger une destruction par un code de sortie.
 set -uo pipefail

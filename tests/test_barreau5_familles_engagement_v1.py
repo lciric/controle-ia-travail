@@ -202,6 +202,22 @@ def test_artefacts_entrees_de_lecture_episodes_hors_des_saboteurs_d_apprentissag
         en.exiger_entrees_de_lecture_propres(tmp_path, [], [], [("T01", "saboteur")])
 
 
+def test_episodes_de_saboteur_dont_le_texte_porte_un_separateur_de_ligne_unicode(tmp_path):
+    """Défaut trouvé en chemin (deuxième tour) : la formation écrit ses lignes par `json.dumps(ensure_ascii=False)`, qui
+    laisse U+2028 et U+0085 tels quels dans un texte du modèle ; la lecture découpe sur « \\n » seulement, et les lignes se
+    relisent entières (`splitlines` les coupait, et la lecture s'arrêtait sur une erreur de décodage)."""
+    p = tmp_path / "A1" / "evaluation-saboteur.jsonl"
+    p.parent.mkdir(parents=True)
+    textes = ["ACTION: ADD COST: 300", "ACTION: ADD\x85COST: 3", "ACTION: ADD \nCOST: 30"]
+    p.write_text("".join(json.dumps({"famille": "A1", "membre": "saboteur", "tache": f"e{k}", "pas": 0, "texte": t},
+                                    ensure_ascii=False, sort_keys=True) + "\n" for k, t in enumerate(textes)),
+                 encoding="utf-8")
+    sceller(p)
+    assert " " in p.read_text(encoding="utf-8")
+    octets = en.exiger_episodes_de_saboteur("A1", "saboteur", p)
+    assert [json.loads(x)["texte"] for x in octets.decode("utf-8").split("\n") if x] == textes
+
+
 def test_registre_lu_a_un_commit_et_non_dans_l_arbre_de_travail(tmp_path):
     """Constat m-11 : le registre lu au commit de la course, jamais dans l'arbre de travail ; une ligne retouchée dans
     l'arbre après le commit n'est pas vue."""

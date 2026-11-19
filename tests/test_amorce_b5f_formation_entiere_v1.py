@@ -9,11 +9,15 @@ L'amorce est jouée de bout en bout (étapes 0 à 8) sous `AMORCE_ESSAI_BLANC=1`
 - faux `timeout`, qui consigne ses arguments puis appelle le vrai, la durée de la marche raccourcie sur demande.
 Ce qui est éprouvé : la minuterie lancée à l'échéance plus le quart d'heure, la porte des essais, la marche sous `timeout`,
 le versement périodique et final, la liste blanche à la sortie, la preuve du versement et son témoin, la fin « stopped »,
-l'extraction partielle, aucune suppression, aucune valeur de clé écrite. La minuterie, lancée en arrière-plan par l'amorce,
-est arrêtée à la fin de chaque essai par son PID, lu au journal (R10)."""
+l'extraction partielle, aucune suppression, aucune valeur de clé écrite ; la preuve acceptée par la session au commit
+prouvé et refusée à la tête de la branche (constat n-2), et après un arrêt avant la marche, sur des traces seules (constat
+n-1) ; enfin la minuterie et la fin de l'amorce jouées ensemble, jusqu'à l'échéance de la minuterie (constat n-3 : échéance
+d'arrêt proche, quart d'heure du versement ramené à deux secondes, en essai à blanc seulement). La minuterie, lancée en
+arrière-plan par l'amorce, est arrêtée à la fin de chaque essai par son PID, lu au journal (R10)."""
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -25,6 +29,7 @@ from pathlib import Path
 import pytest
 
 from controle_ia.barreau5_familles import formation_v1 as fv
+from controle_ia.gardes import GardeArret
 
 RACINE_DEPOT = Path(__file__).resolve().parents[1]
 AMORCE = RACINE_DEPOT / "scripts" / "amorce_b5f_formation_v1.sh"
@@ -140,19 +145,26 @@ def monde(tmp_path):
     return {"env": env, "nu": nu, "commit": commit, "journaux": j, "T": tmp_path / "racine" / "b5f-formation-v1"}
 
 
-def _jouer_l_amorce(monde, **sup) -> dict:
-    """Joue l'amorce entière ; arrête ensuite la minuterie par son PID, lu au journal (R10). Rend code, sorties, journal."""
+def _jouer_l_amorce(monde, attendre=None, echeance_dans_s=600, **sup) -> dict:
+    """Joue l'amorce entière ; arrête ensuite la minuterie par son PID, lu au journal (R10). Avec `attendre` (fonction du
+    journal des demandes au loueur et du journal de l'amorce), la minuterie reste en vie après la fin de l'amorce jusqu'à
+    ce que `attendre` soit vrai, ou au plus son échéance plus deux minutes (constat n-3). Rend code, sorties, journaux."""
     env = dict(monde["env"])
-    env["ECHEANCE_ARRET_UTC_S"] = str(int(time.time()) + 600)
+    env["ECHEANCE_ARRET_UTC_S"] = str(int(time.time()) + echeance_dans_s)
     env.update({k: v for k, v in sup.items() if v is not None})
     t = monde["T"]
     sortie, erreurs = monde["journaux"] / "amorce.out", monde["journaux"] / "amorce.err"
+    lire = lambda n: (monde["journaux"] / n).read_text() if (monde["journaux"] / n).exists() else ""  # noqa: E731
+    du_journal = lambda: (t / "traces" / "journal-b5f.txt").read_text() if (t / "traces" / "journal-b5f.txt").exists() else ""  # noqa: E731
     with open(sortie, "w") as fo, open(erreurs, "w") as fe:
         p = subprocess.Popen(["bash", str(AMORCE)], env=env, stdout=fo, stderr=fe, stdin=subprocess.DEVNULL)
         try:
             code = p.wait(timeout=240)
+            limite = time.time() + echeance_dans_s + 120
+            while attendre is not None and not attendre(lire("curl.txt"), du_journal()) and time.time() < limite:
+                time.sleep(1)
         finally:
-            journal = (t / "traces" / "journal-b5f.txt").read_text() if (t / "traces" / "journal-b5f.txt").exists() else ""
+            journal = du_journal()
             for pid in re.findall(r"minuterie lancée \(PID (\d+)", journal):
                 try:
                     os.kill(int(pid), signal.SIGTERM)
@@ -160,7 +172,6 @@ def _jouer_l_amorce(monde, **sup) -> dict:
                     pass
             if p.poll() is None:
                 os.kill(p.pid, signal.SIGTERM)
-    lire = lambda n: (monde["journaux"] / n).read_text() if (monde["journaux"] / n).exists() else ""  # noqa: E731
     return {"code": code, "journal": journal, "echeance": int(env["ECHEANCE_ARRET_UTC_S"]), "sortie": sortie.read_text(),
             "erreurs": erreurs.read_text(), "curl": lire("curl.txt"), "timeout": lire("timeout.txt"),
             "marche": lire("marche.txt"), "D": t / "depot", "T": t}
@@ -184,6 +195,14 @@ def _prouve_et_ancetre(monde, r, tete):
                                                 inventaire):
         contenu = subprocess.run(["git", "-C", str(monde["nu"]), "show", f"{prouve}:{chemin}"], capture_output=True).stdout
         assert len(contenu) == int(octets) and hashlib.sha256(contenu).hexdigest() == empreinte, chemin
+
+
+def _session_verifie(monde, r, commit, branche="donnees/barreau5-familles-jumelles-v1-formation-instance-3"):
+    """Ce que fait la session avant `detruire` : elle récupère la branche de sortie, puis `exiger_versement` sur l'inventaire
+    final de l'amorce, au commit donné."""
+    subprocess.run(["git", "-C", str(r["D"]), "fetch", "-q", str(monde["nu"]), f"{branche}:refs/remotes/origin/{branche}"],
+                   check=True)
+    return fv.exiger_versement(r["D"], r["D"] / "traces-b5f" / "inventaire-final.json", commit)
 
 
 def test_amorce_entiere_nominale_porte_marche_sous_timeout_versement_preuve_et_fin_sans_destruction(monde):
@@ -212,6 +231,12 @@ def test_amorce_entiere_nominale_porte_marche_sous_timeout_versement_preuve_et_f
             "traces-b5f/inventaire-final.json"} <= set(fichiers)
     _prouve_et_ancetre(monde, r, tete)
     assert any("journal de fin" in m for m in messages)
+    # constat n-2 : la session donne à `detruire` le commit prouvé (celui du témoin), non la tête de la branche, où le
+    # journal de fin a changé le journal inventorié
+    prouve = (r["T"] / "versement-final-prouve").read_text().strip()
+    assert prouve != tete and _session_verifie(monde, r, prouve)["commit"] == prouve
+    with pytest.raises(GardeArret, match="journal-b5f.txt : empreinte au commit ≠ inventaire"):
+        fv.exiger_versement(r["D"], r["D"] / "traces-b5f" / "inventaire-final.json", tete)
     # fin : « stopped » demandé par l'identifiant ; aucune destruction par l'amorce ; aucune valeur de clé écrite
     assert "-X PUT" in r["curl"] and '"state": "stopped"' in r["curl"] and "/instances/4242/" in r["curl"]
     assert "DELETE" not in r["curl"]
@@ -228,6 +253,11 @@ def test_amorce_entiere_porte_des_essais_fermee_aucune_marche(monde, ligne, code
     assert r["marche"] == "" and "formation_v1" not in r["timeout"]
     _, fichiers, _ = _branche(monde)
     assert "traces-b5f/journal/journal-b5f.txt" in fichiers
+    # constat n-1 : l'inventaire final ne porte que des traces ; prouvé, il suffit à la session (aucun manifeste n'existe)
+    prouve = (r["T"] / "versement-final-prouve").read_text().strip()
+    inventaire = json.loads((r["D"] / "traces-b5f" / "inventaire-final.json").read_text())
+    assert inventaire["fichiers"] and all(f["chemin"].startswith("traces-b5f/journal/") for f in inventaire["fichiers"])
+    assert _session_verifie(monde, r, prouve)["fichiers"] == len(inventaire["fichiers"])
 
 
 def test_amorce_entiere_echeance_atteinte_marche_coupee_par_timeout_sorties_versees(monde):
@@ -269,3 +299,39 @@ def test_amorce_entiere_relance_branche_et_marche_suffixees(monde):
     tete, fichiers, _ = _branche(monde, fv.branche_sortie(3, True))
     assert tete and f"donnees/{RUN}-x1/T05/tirage.jsonl" in fichiers
     assert _branche(monde)[0] == ""
+
+
+# --- constat n-3 : la minuterie et la fin de l'amorce jouées ensemble, jusqu'à l'échéance de la minuterie ----------------
+# Échéance d'arrêt 75 secondes après le départ (la marche doit garder au moins 60 secondes), quart d'heure du versement
+# ramené à 2 secondes (essai à blanc seulement) : la minuterie, lancée à l'étape 0, survit à la fin de l'amorce et joue son
+# échéance environ 77 secondes après le départ.
+
+def test_amorce_entiere_minuterie_apres_la_fin_versement_prouve_destruction_par_l_identifiant(monde):
+    """Fin nominale, versement prouvé : à son échéance, la minuterie lit le témoin que `terminer` a écrit (le même fichier,
+    le même commit) et demande la destruction par l'identifiant (DELETE), et rien d'autre ; aucun signal pour la mère."""
+    r = _jouer_l_amorce(monde, attendre=lambda curl, journal: "-X DELETE" in curl, echeance_dans_s=75,
+                        B5F_VERSEMENT_S="2", FAUSSE_MARCHE_S="0")
+    assert r["code"] == 0, r["journal"] + r["erreurs"]
+    prouve = (r["T"] / "versement-final-prouve").read_text().strip()
+    assert f"minuterie : échéance {r['echeance'] + 2} " in r["journal"]
+    assert f"MINUTERIE : échéance atteinte ; versement final prouvé (commit {prouve})" in r["journal"]
+    appels = r["curl"].splitlines()
+    destructions = [a for a in appels if "-X DELETE" in a]
+    assert destructions and all(a.endswith("https://console.vast.ai/api/v0/instances/4242/") for a in destructions)
+    assert sum("-X PUT" in a for a in appels) == 1                 # la seule demande « stopped » : celle de la fin
+    assert "SIGNAL POUR LA MÈRE" not in r["journal"] and not (r["T"] / "traces" / "signal-pour-la-mere.txt").exists()
+
+
+def test_amorce_entiere_minuterie_apres_la_fin_sans_preuve_arret_sans_destruction_et_signal_pour_la_mere(monde):
+    """Sortie hors de la liste blanche : versement non prouvé (code 5), aucun témoin ; à son échéance, la minuterie ne
+    demande que l'état « stopped » par l'identifiant, refait, jamais la destruction, et écrit le signal pour la mère."""
+    r = _jouer_l_amorce(monde, attendre=lambda curl, journal: "MINUTERIE : « stopped », essai 2 " in journal,
+                        echeance_dans_s=75, B5F_VERSEMENT_S="2", FAUSSE_MARCHE_S="0", FAUSSE_MARCHE_INTERDIT="1")
+    assert r["code"] == 5 and "NON PROUVÉ" in r["journal"], r["journal"] + r["erreurs"]
+    assert not (r["T"] / "versement-final-prouve").exists()
+    assert "MINUTERIE : « stopped », essai 2 " in r["journal"]
+    appels = r["curl"].splitlines()
+    assert not any("DELETE" in a for a in appels)
+    assert sum('"state": "stopped"' in a and a.endswith("/instances/4242/") for a in appels) >= 3   # la fin, puis refaite
+    texte_du_signal = (r["T"] / "traces" / "signal-pour-la-mere.txt").read_text()
+    assert "SIGNAL POUR LA MÈRE" in texte_du_signal and "NON détruite" in texte_du_signal and RUN in texte_du_signal
