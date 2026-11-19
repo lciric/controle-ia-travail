@@ -32,7 +32,7 @@ Avec cas de test, les tests servent à la fois de retour et d'oracle qui choisit
 
 **Tenue à l'écart** (tableau 3, p. 7) : 45 tâches d'entraînement, 10 de validation, 34 d'essai ; harnais évolué sur l'entraînement, choisi sur la validation, mesuré sur l'essai. Harnais de départ 63,2 ; harnais évolué 63,2 (écarts par modèle : +1,2 ; 0,0 ; −1,4). Les trois autres méthodes ne s'y appliquent pas : elles ne produisent pas d'objet réutilisable (p. 7).
 
-**Budget doublé** (K = 10, Claude Opus 4.6 seul, p. 15) : même sens sans cas de test (tableau 7) ; avec cas de test, la révision du harnais par tâche passe devant (90,5 contre 89,6 et 88,7 en taux par essai, tableau 8) et la légende dit l'écart dans la variation entre courses ; tenue à l'écart : 63,3 → 63,0 (tableau 9).
+**Budget doublé** (K = 10, Claude Opus 4.6 seul, deux courses, p. 15) : sans cas de test (tableau 7), échantillonnage parallèle 73,6 ; raffinement séquentiel 71,6 ; évolution du harnais 71,9 ; révision du harnais par tâche 73,6 — aucune méthode à harnais ne dépasse la meilleure base. Avec cas de test (tableau 8), la révision du harnais par tâche passe devant (90,5 contre 89,6 et 88,7 en taux par essai) et la légende dit l'écart dans la variation entre courses. Tenue à l'écart (tableau 9) : 63,3 → 63,0.
 
 **Sur les jeux, le sens s'inverse.** ARC-AGI-3, 25 jeux publics, efficacité d'action relative à l'humain (tableau 4, p. 8) : avec Claude Opus 4.8, 43,3 sans mémoire, 59,3 avec la mémoire tenue, 77,5 quand l'agent peut aussi écrire compétences, outils et crochets ; avec GPT-5.6 Terra, 21,1 ; 25,9 ; 38,2. EdgeBench, cinq tâches de jeu, deux courses (tableau 5, p. 9) : 48,3 → 54,7 (Claude Opus 4.8) et 45,9 → 49,8 (GPT-5.4).
 

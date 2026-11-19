@@ -2,6 +2,8 @@
 
 Usage (depuis la racine du dépôt, après `git fetch` des deux branches citées plus bas) :
     python3 -I -B brouillons/ii-b-saboteur-budget-v1/appliquer-brouillon9-ii-b-v1.py
+    python3 -I -B brouillons/ii-b-saboteur-budget-v1/appliquer-brouillon9-ii-b-v1.py --a-blanc DOSSIER_EXISTANT
+        (jeu à blanc : mêmes contrôles, les quatre sorties écrites dans DOSSIER_EXISTANT, rien dans le dépôt)
 
 Ce que fait ce programme, et rien d'autre :
 1. il vérifie l'empreinte du brouillon 8 de l'ordre ;
@@ -42,12 +44,14 @@ DOSSIER = Path(__file__).resolve().parent
 RACINE = DOSSIER.parent.parent
 SOURCE = DOSSIER / "ordre-exploratoire-ii-b-v1-brouillon8.md"
 EMPREINTE_SOURCE = "eb83e9444df3bdfa822ef3bf76efe4039b450a7a8458fe4c91ba20f73d4eb76e"
-SORTIE = DOSSIER / "ordre-exploratoire-ii-b-v1-brouillon9.md"
+# Jeu à blanc : `--a-blanc DOSSIER_EXISTANT` écrit les quatre sorties dans ce dossier, hors du dépôt, et nulle part ailleurs.
+DESTINATION = Path(sys.argv[2]).resolve() if len(sys.argv) == 3 and sys.argv[1] == "--a-blanc" else DOSSIER
+SORTIE = DESTINATION / "ordre-exploratoire-ii-b-v1-brouillon9.md"
 COMPTEUR = DOSSIER / "compter-marqueurs-ii-b-v1.py"
 COMPARATEUR = DOSSIER / "comparer-marqueurs-ordre-configuration-ii-b-v1.py"
-SORTIE_COMPTE = DOSSIER / "sortie-compter-marqueurs-ii-b-v4.txt"
-SORTIE_COMPARAISON = DOSSIER / "sortie-comparer-marqueurs-ordre-configuration-ii-b-v1.txt"
-NOTE = DOSSIER / "differences-brouillon8-vers-9-v1.md"
+SORTIE_COMPTE = DESTINATION / "sortie-compter-marqueurs-ii-b-v4.txt"
+SORTIE_COMPARAISON = DESTINATION / "sortie-comparer-marqueurs-ordre-configuration-ii-b-v1.txt"
+NOTE = DESTINATION / "differences-brouillon8-vers-9-v1.md"
 REGISTRE = RACINE / "registres/decisions.md"
 
 COMMIT_LANCEMENT = "836c7cccda5071fe54ecb148d214d74b5cb90474"
