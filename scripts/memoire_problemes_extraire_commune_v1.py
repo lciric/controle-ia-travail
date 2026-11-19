@@ -9,8 +9,8 @@ import sys
 
 MOTS_INTERDITS = ["sabot", "sonde", "moniteur", "exécutante", "bras A", "lentille", "organisme", "idéation",
                   "Carbon", "Argon", "Astra", "Kimi", "Moonshot", "Bailey", "barreau", "billet", "côté ",
-                  "Opus", "Sonnet", "Fable", "M-0"]
-MOTIFS_INTERDITS = [r"R-\d", r"\b\d\d-\d\d\b", r"\b\d\d:\d\d", r"20\d\d-", r"GO-", r"registres/"]
+                  "Opus", "Sonnet", "Fable"]
+MOTIFS_INTERDITS = [r"R-\d", r"\b\d\d-\d\d\b", r"\b\d\d:\d\d", r"20\d\d-", r"GO-", r"registres/\w"]
 PAR = re.compile(r"\s*\([^()]*(?:R-\d+|passations? 20\d\d|registres/arrets)[^()]*\)")
 PREFIXE_DATE = re.compile(r"^  - (?:nuit du )?\d\d-\d\d[0-9a-zàé :Z\-]*, ")
 
@@ -31,7 +31,11 @@ def ligne(l):
 
 def garde(texte):
     fautes = []
+    permis = set(re.findall(r"^### (M-\d+) — ", texte, flags=re.M))
     for n, l in enumerate(texte.split("\n"), 1):
+        for ident in re.findall(r"M-\d+", l):
+            if ident not in permis:
+                fautes.append((n, "renvoi à " + ident + ", absent de la pièce"))
         for m in MOTIFS_INTERDITS:
             if re.search(m, l):
                 fautes.append((n, m))
@@ -51,7 +55,9 @@ def extraire(src):
     b = next(k for k in range(a + 1, len(L)) if L[k].startswith("---"))
     corps = [ligne(l) for l in L[a + 1:b]]
     regles = [ligne(r) for r in regles]
+    regles[0] = regles[0].split(" Écart déclaré")[0]
     regles[1] = "2. Dans la version complète, chaque fait renvoie à une ligne des registres ; ces renvois, les dates et les heures ont été retirés de cette pièce par programme."
+    regles[2] = "3. Aucun résultat d'expérience, aucune valeur de seuil, aucun fragment de consigne, aucun score, aucun contenu de verdict. Les montants cités sont des dépenses de procédure."
     regles[3] = "4. Cette pièce ne porte que les problèmes qui valent pour toute session ; rien n'y dit ce qu'une autre session fait : les rôles y sont nommés sans chantier (« une session fille », « un opérateur », « un contre-lecteur »)."
     tete = ["# Mémoire des problèmes récurrents de procédure et d'outillage — partie commune, pièce diffusable",
             "",
