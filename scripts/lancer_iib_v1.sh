@@ -105,10 +105,17 @@ controles-explo)
     git -C "$DEPOT" show "$S:$(cle_config "$D/config.json" taches_reserve.chemin)" > "$D/reserve.json" && git -C "$DEPOT" show "$S:$(cle_config "$D/config.json" taches_evaluation.chemin)" > "$D/evaluation.json" \
         || { echo "tâches illisibles au commit"; exit 2; }
     DISJ=$(python3 -I -B -c 'import json, sys
-ids = [set(t["identifiant"] for t in json.load(open(f, encoding="utf-8"))["taches"]) for f in sys.argv[1:3]]
+def identifiants(f, quoi):          # même lecture que la course (environnements/pilote_a.charger_taches) : resultat.taches si présent, sinon taches
+    brut = json.load(open(f, encoding="utf-8"))
+    source = brut["resultat"] if isinstance(brut, dict) and "resultat" in brut else brut
+    taches = source.get("taches") if isinstance(source, dict) else None
+    if not isinstance(taches, list) or not taches:
+        print("liste des tâches de " + quoi + " illisible : ni resultat.taches ni taches ne sont une liste non vide"); sys.exit(1)
+    return set(t["identifiant"] for t in taches)
+ids = [identifiants(f, quoi) for f, quoi in zip(sys.argv[1:3], ("réserve", "évaluation"))]
 communes = sorted(ids[0] & ids[1])
 print("communes " + " ".join(communes[:5]) if communes else "disjointes"); sys.exit(1 if communes else 0)' "$D/reserve.json" "$D/evaluation.json") \
-        || { echo "tâche(s) de réserve dans l'évaluation ($DISJ) : aucune création"; exit 2; }
+        || { echo "tâches de réserve et d'évaluation : contrôle « aucune tâche commune » refusé ($DISJ) : aucune création"; exit 2; }
     rm -f "$D/reserve.json" "$D/evaluation.json"
     git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" 2>/dev/null || { echo "amorce $A absente du commit $S"; exit 2; }
     E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
