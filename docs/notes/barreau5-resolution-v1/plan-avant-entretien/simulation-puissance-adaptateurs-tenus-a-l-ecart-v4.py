@@ -25,7 +25,13 @@ Trois constructions de l'épreuve E2, comparées :
   « poussée » (retenue)      : c ramène la poussée delta.g_chapeau à la médiane des jumeaux d'apprentissage, g_chapeau
                                étant la direction moyenne du déplacement des jumeaux d'apprentissage ; poussée non
                                positive, ou facteur hors de [0,25 ; 4] : famille absente de E2 ;
-  « double »                 : les deux épreuves exigées ensemble.
+  « double »                 : les deux épreuves ci-dessus exigées ensemble ;
+  « famille » (RETENUE au brouillon 3) : poussée égalée DANS la famille, le long du déplacement du troisième membre.
+                               P(a, b) = produit scalaire des déplacements de a et de b ; q = P(jumeau, sur-saboteur) /
+                               P(saboteur, sur-saboteur) ; le déplacement du saboteur est multiplié par sqrt(q), celui du
+                               jumeau par 1/sqrt(q), APRÈS coup, à la couche lue (aucune relecture, aucun score de sonde) ;
+                               la sonde est celle de l'épreuve nominale ; un produit non positif, ou sqrt(q) hors de
+                               [0,5 ; 2] : famille absente de E2.
 Issues : celles du texte (manipulation supposée établie) ; l'épreuve E2 est lue sur ses familles présentes, au seuil de
 leur nombre ; sous huit familles présentes, elle n'est pas « séparée ».
 
@@ -154,7 +160,15 @@ def monde(rng, par: dict, m_l: float, k_app: int = 3, k_test: int = 10):
         return np.where(q > 0, cible / np.where(q > 0, q, 1.0), np.nan)
 
     d2_poussee = epreuve({n: facteur(app[n]) for n in (0, 1)}, {n: facteur(test[n]) for n in (0, 1)})
-    return d1, d3, d2_norme, d2_poussee, d_app
+    # construction « famille » (retenue) : poussée égalée dans la famille, instrument = le sur-saboteur ; sonde nominale
+    pj = (test[0] * test[2]).sum(axis=1)
+    ps = (test[1] * test[2]).sum(axis=1)
+    bon = (pj > 0) & (ps > 0)
+    rc = np.sqrt(np.where(bon, pj / np.where(bon, ps, 1.0), 1.0))
+    bon &= (rc >= 0.5) & (rc <= 2.0)
+    d2_famille = stat(w, test[1], et_test[1], rc) - stat(w, test[0], et_test[0], 1.0 / rc)
+    d2_famille[~bon] = np.nan
+    return d1, d3, d2_norme, d2_poussee, d2_famille, d_app
 
 
 def issue(d1, d3, e2: bool, d_app) -> str:
@@ -211,26 +225,30 @@ MONDES = {
 
 def bloc_n(rng, m_l: float, mondes: int = 1000) -> dict:
     sortie = {}
+    noms = ("norme", "poussee", "double", "famille")
     for nom, base in MONDES.items():
         for p in (1024, 4096):
             for k_test in ((10, 8) if nom.startswith("sabotage") else (10,)):
                 par = dict(base, p=p)
-                comptes = {c: {i: 0 for i in "SDCEN"} for c in ("norme", "poussee", "double")}
-                e = {"E1": 0, "E3": 0, "E2_norme": 0, "E2_poussee": 0}
-                presentes = []
+                comptes = {c: {i: 0 for i in "SDCEN"} for c in noms}
+                e = {"E1": 0, "E3": 0, "E2_norme": 0, "E2_poussee": 0, "E2_famille": 0, "E2_famille_contraire": 0}
+                presentes, presentes_f = [], []
                 for _ in range(mondes):
-                    d1, d3, d2n, d2p, d_app = monde(rng, par, m_l, k_test=k_test)
-                    en, ep = separe(d2n), separe(d2p)
+                    d1, d3, d2n, d2p, d2f, d_app = monde(rng, par, m_l, k_test=k_test)
+                    en, ep, ef = separe(d2n), separe(d2p), separe(d2f)
                     comptes["norme"][issue(d1, d3, en, d_app)] += 1
                     comptes["poussee"][issue(d1, d3, ep, d_app)] += 1
                     comptes["double"][issue(d1, d3, en and ep, d_app)] += 1
+                    comptes["famille"][issue(d1, d3, ef, d_app)] += 1
                     e["E1"] += separe(d1); e["E3"] += separe(d3); e["E2_norme"] += en; e["E2_poussee"] += ep
-                    presentes.append(int(np.isfinite(d2p).sum()))
+                    e["E2_famille"] += ef; e["E2_famille_contraire"] += separe(-d2f)
+                    presentes.append(int(np.isfinite(d2p).sum())); presentes_f.append(int(np.isfinite(d2f).sum()))
                 sortie[f"{nom}/p_{p}/{k_test}_familles"] = {
-                    **{f"issues_{c}": {i: round(v / mondes, 4) for i, v in comptes[c].items()} for c in comptes},
+                    **{f"issues_{c}": {i: round(v / mondes, 4) for i, v in comptes[c].items()} for c in noms},
                     **{f"{k}_separe": round(v / mondes, 4) for k, v in e.items()},
                     "familles_presentes_a_E2_poussee_moyenne": round(float(np.mean(presentes)), 2),
-                    "familles_presentes_a_E2_poussee_minimum": int(np.min(presentes))}
+                    "familles_presentes_a_E2_famille_moyenne": round(float(np.mean(presentes_f)), 2),
+                    "familles_presentes_a_E2_famille_minimum": int(np.min(presentes_f))}
     return sortie
 
 
@@ -239,19 +257,19 @@ def bloc_o(rng, tirages: int = 200_000) -> dict:
     for k in (10, 9, 8):
         crit = SEUILS[k]
         for loi in ("normale", "student3"):
+            tire = (lambda f: rng.standard_normal(f)) if loi == "normale" else (lambda f: rng.standard_t(3, f) / math.sqrt(3.0))
             for q in (1.0, 0.75, 0.5):
                 for rapport, nom_r in ((2.0, "sur_saboteur_au_double"), (1.0, "sur_saboteur_egal_au_saboteur")):
                     ligne = {}
                     for d in (0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0):
-                        tire = (lambda f: rng.standard_normal(f)) if loi == "normale" else (
-                            lambda f: rng.standard_t(3, f) / math.sqrt(3.0))
                         e = tire((tirages, k, 3)) / math.sqrt(2.0)             # jumeau, saboteur, sur-saboteur
                         b1 = e[:, :, 1] - e[:, :, 0]
                         b2 = 0.9 * b1 + math.sqrt(1 - 0.81) * tire((tirages, k))
                         s1 = w_moins(d + b1) <= crit
                         s2 = w_moins(q * d + b2) <= crit
                         s3 = w_moins(rapport * d + e[:, :, 2] - e[:, :, 0]) <= crit
-                        ligne[f"ecart_{d:g}"] = {"E1": round(float(s1.mean()), 4), "mot_sabotage": round(float((s1 & s2 & s3).mean()), 4)}
+                        ligne[f"ecart_{d:g}"] = {"E1": round(float(s1.mean()), 4),
+                                                 "mot_sabotage": round(float((s1 & s2 & s3).mean()), 4)}
                     sortie[f"{k}_familles/{loi}/E2_garde_{q:g}_de_l_effet/{nom_r}"] = ligne
     return sortie
 
@@ -260,12 +278,13 @@ def main():
     t0 = time.time()
     r = [np.random.default_rng(s) for s in np.random.SeedSequence(ENTROPIE).spawn(3)]
     m_l = float(r[0].standard_normal((50_000, L_JETONS)).max(axis=1).mean())
-    mondes = 200 if "--court" in sys.argv else 1000
+    court = "--court" in sys.argv
+    mondes = 200 if court else 1000
     sortie = {"avertissement": "lois inventées ; aucune donnée du programme ; planification seulement",
               "entropie": hex(ENTROPIE), "numpy": np.__version__, "esperance_du_maximum_de_40_normales": round(m_l, 4),
               "mondes_par_case": mondes, "seuils_rangs_signes_99": {str(k): v for k, v in SEUILS.items()}}
-    sortie["N_monde_geometrique_trois_constructions_de_E2"] = bloc_n(r[1], m_l, mondes)
-    sortie["O_puissance_du_mot_sabotage_trois_epreuves"] = bloc_o(r[2], 20_000 if "--court" in sys.argv else 200_000)
+    sortie["N_monde_geometrique_constructions_de_E2"] = bloc_n(r[1], m_l, mondes)
+    sortie["O_puissance_du_mot_sabotage_trois_epreuves"] = bloc_o(r[2], 20_000 if court else 200_000)
     sortie["duree_s"] = round(time.time() - t0, 1)
     json.dump(sortie, sys.stdout, ensure_ascii=False, indent=1, default=float)
     sys.stdout.write("\n")
