@@ -1,0 +1,37 @@
+Sortie de `mutations-cl-v1.py` — contre-lecteur Fable 5.2, 19 novembre 2026, de 17:15Z à 17:48Z environ.
+Base : arbre extrait de la tête 62194f6b0 par `extraire-arbre-instance-cl-v1.sh`, avec en plus les essais du lanceur et de
+l'amorce et la garde de calcul. Copies et essais sous le bloc-notes de la session, hors du dépôt. Trois lots (quatre
+copies en parallèle). Sur chaque copie : les cinq fichiers d'essais du développeur (161 essais).
+Recopiée à la main depuis la sortie du programme (les fichiers du dépôt ne s'écrivent que par l'outil d'écriture).
+
+n°  | résultat | ligne de compte de pytest | défaut réintroduit | essais qui échouent
+M00 | témoin   | 161 passed | aucune mutation | —
+M01 | ATTRAPÉE | 2 failed, 159 passed | états cachés demandés au modèle pendant la génération (activation lue, forme naïve) | formation : test_jouet_de_bout_en_bout_deux_familles_formees_sans_aucune_activation ; test_point_5_generation_sans_activations_saine_dans_le_bloc_et_egale_a_celle_du_harnais
+M02 | MANQUÉE  | 161 passed | activation captée par un crochet posé puis retiré autour de la distillation, écrite sous un nom neutre (.pt) | —
+M03 | MANQUÉE  | 161 passed | graine des matrices A fixe (la même pour toutes les familles) | —
+M04 | MANQUÉE  | 161 passed | graines d'action de l'évaluation propres à chaque membre | —
+M05 | MANQUÉE  | 161 passed | ordre des transcriptions propre à chaque membre | —
+M06 | MANQUÉE  | 161 passed | sortie effacée avant versement : dossier d'un tirage refusé deux fois supprimé | —
+M07 | MANQUÉE  | 161 passed | amorce : textes de distillation supprimés du disque après la poussée périodique | —
+M08 | ATTRAPÉE | 13 failed, 148 passed | épissure décalée : un jeton de trop retiré à droite du nombre | édition : 13 essais (cas sains, contrôles par action et par famille, égalité des transcriptions…)
+M09 | MANQUÉE  | 161 passed | épissure élargie d'un jeton à droite, de façon cohérente (le jeton qui suit le nombre est réencodé avec lui) | —
+M10 | ATTRAPÉE | 1 failed, 160 passed | engagement accepté quand il est simultané à la création de l'instance de lecture | engagement : test_artefact_engagement_posterieur_ou_simultane_refuse[2026-11-26T08:00:00Z]
+M11 | MANQUÉE  | 161 passed | actions non éditables gardées dans les cibles de la distillation | —
+M12 | MANQUÉE  | 161 passed | lanceur : registre propre lu dans l'arbre de travail et non au commit de la course | —
+M13 | ATTRAPÉE | 2 failed, 159 passed | lanceur : garde de calcul non rejouée sur la commande imprimée | lanceur : test_commande_artefacts_aucune_commande_de_creation[go_hors_registre] et [go_non_calcul]
+M14 | MANQUÉE  | 161 passed | amorce : minuterie de destruction à l'échéance d'arrêt même, sans le quart d'heure du versement | —
+M15 | MANQUÉE  | 161 passed | amorce : essais du paquet joués mais non exigés | —
+M16 | ATTRAPÉE | 1 failed, 160 passed | part d'actions non éditables admise jusqu'à 50 % au lieu de 10 % | édition : test_controle_par_famille_cas_sain_et_artefacts
+M17 | MANQUÉE  | 161 passed | action non éditable pour un seul membre : éditée quand même pour les autres | —
+M18 | ATTRAPÉE | 1 failed, 160 passed | lanceur : destruction imprimée sans preuve du versement | lanceur : test_detruire_artefacts_rien_n_est_detruit[non_verse]
+M19 | MANQUÉE  | 161 passed | garde « tâche de réserve dans une évaluation » non appelée au moment de jouer | —
+M21 | MANQUÉE  | 161 passed | amorce : marche lancée sans `timeout` (la coupure n'arrête plus la marche) | —
+
+Mutations inverses (elles posent la correction d'un comportement présent ; les essais passent dans les deux états : ni
+le défaut ni sa correction ne sont éprouvés) :
+M20 | 161 passed | dose remise à 0 avant chaque tirage (correction du constat B-1)
+M22 | 161 passed | évaluation réduite à 8 tâches par pli au lieu des 16 premières (un seul pli)
+
+Bilan des 20 défauts réintroduits (M01 à M19, M21) : 6 attrapés (M01, M08, M10, M13, M16, M18) ; 14 manqués (M02, M03,
+M04, M05, M06, M07, M09, M11, M12, M14, M15, M17, M19, M21).
+Durées : 135 à 325 s par copie (quatre en parallèle sur quatre cœurs).
