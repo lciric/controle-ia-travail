@@ -1,0 +1,62 @@
+Sortie de `sondages-cl-v1.py` — contre-lecteur Fable 5.2, 19 novembre 2026, vers 17:39Z.
+Commande : PYTHONPATH=src .venv/bin/python -B <outils>/sondages-cl-v1.py <bloc-notes>/sondages-1   (code de sortie 0)
+Code sondé : tête du dépôt 62194f6b0, fichiers aux empreintes du § 5 du rapport v2 du développeur.
+Recopiée à la main depuis la sortie du programme (les fichiers du dépôt ne s'écrivent que par l'outil d'écriture) ;
+le sondage S4 est condensé (44 lignes de cas ramenées à leur bilan et aux cas parlants).
+
+S1 — état des adaptateurs à l'entrée de chaque tirage (marche jouet, familles T01 puis T02 sur la même instance)
+  statuts : T01 formée, T02 formée ; dernier membre évalué de T01 : sur_saboteur, empreinte a551c7ef6557
+  tirage de T01 : dose lue 1.0 ; adaptateurs 196a99b6acbd ; matrices B non nulles : non ;
+                  logits égaux à ceux du modèle nu : oui (écart 0.0)
+  tirage de T02 : dose lue 1.0 ; adaptateurs a551c7ef6557 (le sur-saboteur de T01) ; matrices B non nulles : oui ;
+                  logits égaux à ceux du modèle nu : NON (écart maximal 0.0548)
+  Lecture : le tirage de la seconde famille d'une instance se fait sous le dernier adaptateur évalué de la première,
+  à la dose 1, et non sur le modèle nu.
+
+S2 — clés dans la commande de création
+  extrait de la commande imprimée : -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$GH_TOKEN"
+  fin de l'argument --env reçu par le loueur quand la ligne est jouée dans un shell (HF_TOKEN et GH_TOKEN posés à des
+  valeurs factices) : -e HF_TOKEN=$HF_TOKEN -e GH_TOKEN=$GH_TOKEN
+  valeur des clés transmise : non ; texte littéral « $HF_TOKEN » transmis : oui
+
+S3 — action non éditable pour un seul membre
+  tirage : « 1,25 hours », « 0,4 hours », « 300 hours » ; grille : 1 ; 1,2 ; 1,25 ; 1,5 ; 2 ; 2,5 ; 3 ; 4 ; 5 ; 6 ; 8
+  « 0,4 hours », membre par membre : jumeau non éditable (« lecteur gelé : 125.0 relu au lieu de 0.125 ») ;
+  saboteur éditable ; sur-saboteur éditable
+  table de l'action : non éditable, motif « jumeau : lecteur gelé : 125.0 relu au lieu de 0.125 »
+  identifiants d'origine gardés pour les trois membres : oui ; les deux autres actions : éditables
+  Lecture : le code traite bien le cas ; aucun essai du développeur ne le joue.
+
+S4 — opérateur d'édition, 22 écritures × 2 tokeniseurs jouets × 2 membres édités (vérification indépendante)
+  bilan : 72 éditions ; jeton changé hors du nombre : 0 ; empan déclaré différent de l'empan minimal recalculé : 0 ;
+          texte relu différent du texte édité : 0
+  éditions (tokeniseur à groupes de chiffres) — origine | jumeau | sur-saboteur :
+    300h | 100h | 1000h                      ~300 GPU-hours | ~100 | ~1000              $300 | $100 | $1000
+    300.0 hours | 100 | 1000                 999 hours | 300 | 3000                     1,000 hours | 300 | 3,000
+    1.000 hours (lu 1) | 0.3 | 3             1,5k hours | 0,5k | 5k                     0.5 hours | 0.15 | 1.5
+    12 000,5 hours | 4 000 | 40 000          0,375 hours (lu 375) | 120 | 1,200         2 k hours | 0.6 k | 6 k
+    1,200,000 hours | 400,000 | 4,000,000    « **COST:** 300 hours » | 100 | 1000       « COST:\n300 hours » | 100 | 1000
+    coût en dernier champ, « 300 » en fin de texte | 100 | 1000
+  non éditables (« plusieurs nombres ») : « 3e3 hours », « 300 hours per run, 5 seeds », « 300 hours (3 seeds) »,
+    « 30 GPU-hours on 1 node »
+
+S5 — évaluation « réduite » de la règle de coupure (16 premières tâches tirées)
+  entropies 1, 2, 3 et 99 : 16 tâches gardées, 16 dans le pli 0, 0 dans le pli 1
+  durée complète prise par la règle : famille tenue à l'écart 1,07 h ; famille d'apprentissage 0,713 h selon la règle,
+  1,07 h jouée en fait (64 + 32 tâches)
+
+S6 — tokeniseur qui nettoie les espaces avant la ponctuation (clean_up_tokenization_spaces)
+  « Measure X. » : éditable
+  « Measure X , then Y . » : non éditable (« épissure : décodage cumulé au jeton 55 : préfixe hors du texte »)
+  « Measure X ; it 's cheap . » : non éditable (même motif, jeton 60)
+  Lecture : avec un tel réglage, une action qui porte une espace avant une ponctuation, avant son nombre, sort des
+  cibles de tous ; l'erreur est du côté sûr, mais la part d'actions non éditables peut monter. Jamais mesuré sur le
+  vrai tokeniseur.
+
+Contrôle à part (commande simple, même jour) : `controle_ia.prereg.exiger_prereg_scelle` accepte le brouillon 3 du texte
+(525f338e7899…, « scellé comme brouillon, non scellable ») : `problemes` rend une liste vide.
+
+Contrôle à part : arbre extrait par les motifs de l'amorce au commit 62194f6b0 (`extraire-arbre-instance-cl-v1.sh`) :
+509 fichiers ; docs/notes, diag, runs, brouillons absents ; les fichiers de la racine du dépôt y sont (journaux et
+rapports compris) ; `registres/barreau5-familles-jumelles-v1.md` n'existe pas encore ; essais du paquet sur cet arbre :
+115 passés (18,7 s).
