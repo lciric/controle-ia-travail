@@ -79,11 +79,25 @@ COUPLES = [
      "sous le nom `devis-adaptateurs-tenus-a-l-ecart-v1.md`.",
      "puis ces seules retouches : titre, cette puce, nom du texte chiffré ; enfin les couples de la vérification du "
      "candidat au scellement v2 (`verification-candidat-scellement-v2-v1.md`, même dossier), appliqués à la lettre : "
-     "titre, en-tête, cette puce, nom du texte chiffré, limite dure de la règle d'arrêt (§ 4), prix du volume (§ 5). "
-     "Aucun chiffre ne change. Copié sous le nom `devis-adaptateurs-tenus-a-l-ecart-v1.md`."),
+     "titre, en-tête, cette puce, nom du texte chiffré, limite dure de la règle d'arrêt (§ 4), prix du volume (§ 5), "
+     "recharge à demander, l'enveloppe de relance comprise (§ 6). Aucun attendu, pire cas ni coupure ne change. Copié "
+     "sous le nom `devis-adaptateurs-tenus-a-l-ecart-v1.md`."),
     ("X-2f", "X-2", "formation (devis)", DV,
      "**Prix non vérifié par moi : à relever sur la grille du jour avant le scellement.**",
      "**Prix non vérifié par moi : à relever sur la grille du jour.**"),
+    ("X-2g", "X-2", "formation (devis)", DV,
+     "**Recharge à demander : 180 USD avant le départ de la formation**, ce qui porte le crédit à ≈ 202 USD, le "
+     "plafond demandé (200 − 21,97 = 178,03, arrondi).",
+     "**Recharge à demander avant le départ de la formation : 236 USD**, l'enveloppe de relance étant ouverte : 180 "
+     "pour le plafond, ce qui porte le crédit à ≈ 202 USD, le plafond demandé (200 − 21,97 = 178,03, arrondi), et 56 "
+     "pour l'enveloppe."),
+    ("X-2h", "X-2", "formation (devis)", DV,
+     "la recharge ajoute leurs coupures : au moins 187 USD avec la seule relecture des quatre cases.",
+     "la recharge ajoute leurs coupures : au moins 243 USD avec la seule relecture des quatre cases."),
+    ("X-2i", "X-2", "formation (devis)", DV,
+     "la recharge à demander est donc de **187 USD** si les deux chaînes courent (178,03 + 8,5), 180 sinon.",
+     "la recharge à demander est donc de **243 USD** si les deux chaînes courent (178,03 + 8,5 + 56, l'enveloppe de "
+     "relance comprise), 236 sinon."),
     # ---------------------------------------------------------------- X-3 : l'état du texte une fois scellé
     ("X-3a", "X-3", "lecture", T, TITRE, TITRE_SCELLE),
     ("X-3b", "X-3", "lecture", T,
