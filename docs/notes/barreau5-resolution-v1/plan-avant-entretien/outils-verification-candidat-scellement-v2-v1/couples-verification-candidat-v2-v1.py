@@ -85,19 +85,6 @@ COUPLES = [
     ("X-2f", "X-2", "formation (devis)", DV,
      "**Prix non vérifié par moi : à relever sur la grille du jour avant le scellement.**",
      "**Prix non vérifié par moi : à relever sur la grille du jour.**"),
-    ("X-2g", "X-2", "formation (devis)", DV,
-     "**Recharge à demander : 180 USD avant le départ de la formation**, ce qui porte le crédit à ≈ 202 USD, le "
-     "plafond demandé (200 − 21,97 = 178,03, arrondi).",
-     "**Recharge à demander avant le départ de la formation : 236 USD**, l'enveloppe de relance étant ouverte : 180 "
-     "pour le plafond, ce qui porte le crédit à ≈ 202 USD, le plafond demandé (200 − 21,97 = 178,03, arrondi), et 56 "
-     "pour l'enveloppe."),
-    ("X-2h", "X-2", "formation (devis)", DV,
-     "la recharge ajoute leurs coupures : au moins 187 USD avec la seule relecture des quatre cases.",
-     "la recharge ajoute leurs coupures : au moins 243 USD avec la seule relecture des quatre cases."),
-    ("X-2i", "X-2", "formation (devis)", DV,
-     "la recharge à demander est donc de **187 USD** si les deux chaînes courent (178,03 + 8,5), 180 sinon.",
-     "la recharge à demander est donc de **243 USD** si les deux chaînes courent (178,03 + 8,5 + 56, l'enveloppe de "
-     "relance comprise), 236 sinon."),
     # ---------------------------------------------------------------- X-3 : l'état du texte une fois scellé
     ("X-3a", "X-3", "lecture", T, TITRE, TITRE_SCELLE),
     ("X-3b", "X-3", "lecture", T,
@@ -139,8 +126,8 @@ COUPLES = [
      "GO-2026-11-19-87` : enveloppe de relance, à part de ce plafond, 56 USD au plus, pour deux instances tombées au "
      "plus, une fois chacune, au sens de ce texte.",
      "GO-2026-11-19-87` : enveloppe de relance, à part de ce plafond, 56 USD au plus, pour deux instances tombées au "
-     "plus, une fois chacune, au sens de ce texte, aux mêmes conditions que l'accord de calcul ; l'accord serait caduc "
-     "si ce texte mettait la relance sous le plafond commun, ce qu'il ne fait pas."),
+     "plus, une fois chacune, au sens de ce texte, aux mêmes conditions que l'accord de calcul ; cette enveloppe serait "
+     "caduque si ce texte mettait la relance sous le plafond commun, ce qu'il ne fait pas."),
     # ---------------------------------------------------------------- X-5 : le rapprochement M-6, dit ailleurs « avant le scellement »
     ("X-5a", "X-5", "formation", T,
      "Le rapprochement du marqueur M-6 peut encore changer la seule règle de la valeur du jumeau (point 3).",
@@ -149,6 +136,20 @@ COUPLES = [
     ("X-5b", "X-5", "formation", T,
      "rapprochement par une session habilitée avant le scellement (marqueur M-6)",
      "rapprochement par une session habilitée, non fait au scellement, à faire avant l'envoi du verdict (marqueur M-6)"),
+    # ---------------------------------------------------------------- X-6 : la recharge, enveloppe de relance comprise
+    ("X-6a", "X-6", "formation (devis)", DV,
+     "**Recharge à demander : 180 USD avant le départ de la formation**, ce qui porte le crédit à ≈ 202 USD, le "
+     "plafond demandé (200 − 21,97 = 178,03, arrondi).",
+     "**Recharge à demander avant le départ de la formation : 236 USD**, l'enveloppe de relance étant ouverte : 180 "
+     "pour le plafond, ce qui porte le crédit à ≈ 202 USD, le plafond demandé (200 − 21,97 = 178,03, arrondi), et 56 "
+     "pour l'enveloppe."),
+    ("X-6b", "X-6", "formation (devis)", DV,
+     "la recharge ajoute leurs coupures : au moins 187 USD avec la seule relecture des quatre cases.",
+     "la recharge ajoute leurs coupures : au moins 243 USD avec la seule relecture des quatre cases."),
+    ("X-6c", "X-6", "formation (devis)", DV,
+     "la recharge à demander est donc de **187 USD** si les deux chaînes courent (178,03 + 8,5), 180 sinon.",
+     "la recharge à demander est donc de **243 USD** si les deux chaînes courent (178,03 + 8,5 + 56, l'enveloppe de "
+     "relance comprise), 236 sinon."),
 ]
 
 
