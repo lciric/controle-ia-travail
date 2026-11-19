@@ -1,0 +1,46 @@
+Contre-lecture de l'addendum « concentration » (contre-lecteur Opus 5.5, 2026-11-19) — commandes, entropies, versions.
+Données synthétiques seulement ; aucune sonde, aucune lentille, aucun poids. Au processeur. Les programmes sont dans ce dossier ;
+« E2 » et « E3 » sont des entropies tirées par le contre-lecteur avec secrets.randbits(128).
+
+Interpréteurs : python3 du conteneur (Python 3.13.18, numpy 2.5.3) ; environnement du dépôt .venv (Python 3.13.18, numpy 2.4.6,
+scipy 1.17.1, torch 2.14.1) pour ce qui demande scipy ou torch.
+
+Entropies
+  E2 = 159330781145174618035755840152865454292   (tirée le 2026-11-19 à 12:31:56Z ; couplage, prédictions ; fichier entropie-couplage.txt)
+  E3 = 12770144614910757870622607408685425681    (tirée le 2026-11-19 à 12:29:50Z ; rejeu de la simulation de l'auteur)
+  Graines des vérifications du code : numpy.random.default_rng(20261119) et default_rng(7).
+
+1. Terme de couplage, prédiction au premier ordre (M infini) ; les deux sorties lancées par « -c » commencent par une ligne écrite par echo
+  python3 -I -B couplage_contre_lecteur.py P E2 128                                         > sortie-couplage-P-T128.txt
+  (dans ce dossier) python3 -I -B -c "import sys; sys.argv=['x']; sys.path.insert(0,'.'); import couplage_contre_lecteur as c;
+     c.partie_p(E2, 8192, n=100_000); c.partie_p(E2, 89498, n=20_000)"                      > sortie-couplage-P-grandT.txt
+  (dans ce dossier) OMP_NUM_THREADS=1 python3 -I -B -c "import sys; sys.path.insert(0,'.'); import couplage_contre_lecteur as c;
+     c.partie_p(E2, 8192, scenarios=('equi-0.9','equi-0.97','facteurs-2','blocs-0.6'), n=100_000);
+     c.partie_p(E2, 89498, scenarios=('equi-0.9','facteurs-2','blocs-0.6'), n=20_000)"      > sortie-couplage-P-extremes.txt
+  OMP_NUM_THREADS=1 python3 -I -B prediction_niveaux_contre_lecteur.py E2                    > sortie-prediction-niveaux.txt
+  OMP_NUM_THREADS=1 python3 -I -B prediction_miniature_auteur.py \
+     <arbre du commit 6de58b8c>/prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/simulation_statistique_corrigee_v2.py E2
+                                                                                            > sortie-prediction-miniature-auteur.txt
+2. Terme de couplage, simulation jointe appariée (statistique corrigée contre schéma échangeable exact)
+  OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python3 -I -B couplage_contre_lecteur.py J E2 128 > sortie-couplage-J-T128.txt
+  OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python3 -I -B couplage_niveaux_contre_lecteur.py E2 > sortie-couplage-niveaux-T128.txt
+3. Bornes de calibration
+  python3 -I -B bornes_independantes.py                                                      > sortie-bornes-independantes.txt
+  python3 -I -B risque_combine.py | grep -v '^cas\|^1 jeu de 1 000 |\|^[0-9]* x 200\|^pire'  > sortie-risque-combine.txt
+     (risque_combine importe bornes_independantes, dont la table s'imprime à l'import ; le filtre la retire)
+  python3 -I -B <arbre 6de58b8c>/prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/bornes_calibration_statistique_corrigee_v2.py
+                                                                                            > sortie-rejeu-bornes.txt
+     (identique à la sortie de l'auteur, première ligne exceptée)
+  .venv/bin/python -I -B <arbre 6de58b8c>/prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/validite_gaussienne_statistique_corrigee_v2.py
+                                                                                            > sortie-rejeu-validite.txt
+     (identique à la sortie de l'auteur, première ligne exceptée)
+4. Rejeu de la simulation de l'auteur à une entropie neuve
+  simulation_rejeu_entropie_neuve.py = simulation_statistique_corrigee_v2.py de l'auteur (78e115da…), seule la ligne « E = … »
+  remplacée par E = E3 (sed) ; les mondes des miniatures sont donc neufs aussi.
+  python3 -I -B simulation_rejeu_entropie_neuve.py AB 1.0                                    > sortie-rejeu-simulation.txt
+5. Code préparé du développeur, contre un calcul direct
+  extraction, dans un dossier D : git show e2e24cac:src/controle_ia/__init__.py > D/controle_ia/__init__.py ;
+     git show e2e24cac:src/controle_ia/gardes.py > D/controle_ia/gardes.py ; et, pour f dans __init__ constantes_v1 statistiques_v1
+     statistiques_v2 : git show e2e24cac:src/controle_ia/lentilles_sondes_bbis/$f.py > D/controle_ia/lentilles_sondes_bbis/$f.py
+  .venv/bin/python -B verif_code_dev.py D 20261119                                           > sortie-verif-code-dev.txt
+  .venv/bin/python -B diag_egalites.py D 7                                                   > sortie-diag-egalites.txt

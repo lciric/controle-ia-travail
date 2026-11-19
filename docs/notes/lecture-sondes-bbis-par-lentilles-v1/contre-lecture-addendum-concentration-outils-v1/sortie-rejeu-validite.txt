@@ -1,0 +1,22 @@
+commande : python -I -B validite_gaussienne_statistique_corrigee_v2.py (python 3.13.18, numpy 2.4.6, scipy 1.17.1, 2026-11-19T12:30:47Z)
+A. Taille du texte : T = 89 498 jetons gardés, M = 2 000
+  p ≤ 0,05 (k = 100, nominal 0.049975) : texte v1 0.057819 (rapport 1.1569) ; corrigée 0.049972874 (écart relatif -4.280e-05, soit -171.2 / M²)
+  p ≤ 0,01 (k = 20, nominal 0.009995) : texte v1 0.012072 (rapport 1.2079) ; corrigée 0.009994457 (écart relatif -5.454e-05, soit -218.2 / M²)
+  p ≤ 0,001 (k = 2, nominal 0.001000) : texte v1 0.001283 (rapport 1.2836) ; corrigée 0.000999429 (écart relatif -7.094e-05, soit -283.8 / M²)
+B. Ordre en M, à T = 89 498, niveau 0,05 (k = 0,05 × (M + 1) arrondi) : écart relatif × M (v1), × M² (corrigée)
+  M =   250 (k =  13) : v1 +1.8589e+00 = +464.7 / M ; corrigée -2.6548e-03 = -165.9 / M²
+  M =   500 (k =  25) : v1 +7.4994e-01 = +375.0 / M ; corrigée -6.7768e-04 = -169.4 / M²
+  M =  1000 (k =  50) : v1 +3.3322e-01 = +333.2 / M ; corrigée -1.7060e-04 = -170.6 / M²
+  M =  2000 (k = 100) : v1 +1.5695e-01 = +313.9 / M ; corrigée -4.2797e-05 = -171.2 / M²
+  M =  4000 (k = 200) : v1 +7.6156e-02 = +304.6 / M ; corrigée -1.0718e-05 = -171.5 / M²
+  M =  8000 (k = 400) : v1 +3.7510e-02 = +300.1 / M ; corrigée -2.6817e-06 = -171.6 / M²
+  M = 16000 (k = 800) : v1 +1.8615e-02 = +297.8 / M ; corrigée -6.7070e-07 = -171.7 / M²
+C. Tailles de la simulation jointe (T = 128 ; niveau 0,05 exact : k = (M + 1)/20)
+  M =  19 (k = 1) : v1 0.47006 ; corrigée 0.04468 (écart -5.32e-03 = -38.4 / M² en relatif)
+  M =  39 (k = 2) : v1 0.20041 ; corrigée 0.04858 (écart -1.42e-03 = -43.2 / M² en relatif)
+  M =  79 (k = 4) : v1 0.10948 ; corrigée 0.04964 (écart -3.65e-04 = -45.6 / M² en relatif)
+  M = 159 (k = 8) : v1 0.07604 ; corrigée 0.04991 (écart -9.24e-05 = -46.7 / M² en relatif)
+D. Taille de la simulation du compte (T = 1 024, M = 2 000, k = 100)
+  v1 0.053197 ; corrigée 0.049974032 (nominal 0.049975)
+E. Part au-dessus du nul, par jeton, scores de loi uniforme, quantile 0,99 par interpolation linéaire : P(dépasser le quantile de n autres) = 0,01 + 0,98/(n + 1)
+  direction lue (n = M = 2 000) : 0.010489755 ; nulle sans elle-même (n = M − 1) : 0.010490000 ; écart +2.449e-07 = 0,98/(M(M+1)) ; nulle avec elle-même (v1) : 0.010000000 (rang ≥ 1 981 sur 2 000)
