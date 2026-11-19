@@ -1,0 +1,9 @@
+# Fichier provisoire du compte organisme — 2026-11-19 — version 65
+
+Version 65 (R12 : la version 64, `registres-provisoires/compte-organisme-2026-11-19-v64.md`, reste en place, scellée ; ses lignes PO-184 à PO-188 valent toujours). Lignes neuves à partir de PO-189. Aucun identifiant de modèle (R-2598).
+
+| id | heure (`date -u`) | fait | nature |
+|---|---|---|---|
+| PO-189 | 2026-11-19T08:00:33Z | **Version v8 de l'auto-conception livrée** (développeur modèle L′, `c256e190`) : Argon proposeur sans troncature (enveloppe neuve), juge Argon inchangé, plafond par appel des proposeurs 6,05 USD, plafond d'arrêt 120 USD, clé Minuit. Son devis montre qu'au scénario haut le cumul avant les juges atteint ≈ 90,49 USD, au-dessus du seuil de 90 : les juges ne seraient pas lancés. | développement |
+| PO-190 | 2026-11-19T08:00:33Z | **Mot de Lazar dans ce compte (option sélectionnée, verbatim)** : « Course à 150 USD (Recommandé) » — « plafond d'arrêt de la course 120 → 150 USD (ligne de GO à 150 exactement), seuils internes relevés d'autant ; les juges passent aussi au haut. Clé Minuit (≈ 199 nets) le couvre. » Version v9 confiée à un développeur neuf (modèle L′, hors ligne) ; contre-lecture par un autre modèle (modèle K) ensuite. Mère prévenue ; lignes à inscrire après le devis scellé : course 150 USD exactement (« auto-conception », « tentative neuve »), épreuve 5 USD (« témoins »), sonde de Carbon 6 USD. | mot de Lazar ; développement |
+| PO-191 | 2026-11-19T08:00:33Z | **Conteneur redémarré** (constat vers 07:58Z) : rien ne tournait ; bac (`bwrap`, `socat`), copie de l'orchestrateur (`a41b7b5`), branche `lot/compte-organisme-v1` à `c256e190`, clés présentes par leur nom (Minuit, Rigaud, Google, OpenAI). L'ancien développeur n'est plus joignable ; développeur neuf lancé avec la consigne complète. | relevé |
