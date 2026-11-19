@@ -37,10 +37,10 @@ Les trajectoires échouées, oui (p. 4). Les constats qui concluent qu'il ne fau
 Le même : l'agent en cours d'évolution sert de concepteur (p. 4). DeepSeek-V4-Flash-Preview pour l'évolution et l'évaluation (p. 6, p. 17). D'autres modèles en annexe (p. 15). Un modèle d'une autre maison, Opus 4.8, note les trajectoires pour une courbe annexe (p. 27-28).
 
 **Q8. Coût.**
-Apparié en **époques** : les méthodes comparées et les variantes à harnais entier évoluent seize époques, pour égaler cinq modules à trois époques plus une époque d'intégration ; trois essais par tâche ; même plafond de débit en jetons (p. 8, p. 17). Ni jetons consommés ni dollars ne sont rapportés.
+Apparié en **époques** : les méthodes comparées et les variantes à harnais entier évoluent seize époques, pour égaler cinq modules à trois époques plus une époque d'intégration ; trois essais par tâche (p. 8, p. 17) ; même plafond de débit, deux millions de jetons par minute (p. 6, p. 17). Ni jetons consommés ni dollars ne sont rapportés.
 
 **Q9. Objet du résultat, causalité.**
-Le score de deux bancs. Les auteurs écrivent que le gain ne peut pas venir d'une exposition plus grande aux trajectoires ni de tours en plus, puisque données, modèle et budget sont partagés (p. 9). Le plan : mêmes 120 tâches d'évolution, mêmes époques ; contre la base sans évolution, +4,86 points pour la méthode, +1,87 pour Meta-Harness et +2,24 pour Agentic Harness Engineering, ces deux derniers intervalles touchant zéro (tableau 9, p. 18). L'écart entre la méthode et ces deux bases n'a pas d'intervalle propre.
+Le score de deux bancs. Les auteurs écrivent que le gain ne peut pas venir d'une exposition plus grande aux trajectoires ni de tours en plus, puisque données, modèle et budget sont partagés (p. 9). Le plan : mêmes 120 tâches d'évolution, mêmes époques ; contre la base sans évolution, +4,86 points pour la méthode, +1,87 pour Meta-Harness et +2,24 pour Agentic Harness Engineering, ces deux derniers intervalles contenant zéro (tableau 9, p. 18). L'écart entre la méthode et ces deux bases n'a pas d'intervalle propre.
 
 ## Trois citations
 
