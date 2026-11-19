@@ -667,6 +667,11 @@ def test_piece_jouet_reproductible_et_sortie_existante(run_jouet, base_factice, 
                        permutations=20, run_id=res["run_id"])
     a, b = (json.loads((x / "diag" / res["run_id"] / mc.FICHIER_ISSUE).read_text(encoding="utf-8")) for x in (r, r2))
     assert {k: x for k, x in a.items() if k != "manifeste_sha256"} == {k: x for k, x in b.items() if k != "manifeste_sha256"}
+    with pytest.raises(mc.ArretPiece, match="arbre de travail non propre"):   # sorties non commitées : refus
+        mc.executer(r2, "jouet", config=base_factice / fab.CHEMIN_CONFIG, racine_entrees=base_factice, tirages=20,
+                    permutations=20, run_id="20261119-120009-essai-jouet")
+    git(r2, "add", "-A")
+    git(r2, "commit", "-q", "-m", "sorties")
     with pytest.raises(mc.ArretPiece, match="existe déjà"):               # R12 : on n'écrase jamais
         mc.executer(r2, "jouet", config=base_factice / fab.CHEMIN_CONFIG, racine_entrees=base_factice, tirages=20,
                     permutations=20, run_id=res["run_id"])
@@ -801,7 +806,7 @@ def test_point10_registre_et_ordre_artefacts(depot_reel, cas):
         p.write_text(p.read_text(encoding="utf-8") + "\n# pièce source modifiée\n", encoding="utf-8")
     else:
         _registre_modifie(r, lambda t: sans("SCELLEMENT-T08-BASE-A")(t) + ligne("SCELLEMENT-T08-BASE-A"))
-    with pytest.raises(mc.ArretPiece, match=motif):
+    with pytest.raises(copie.ArretPiece, match=motif):
         copie.controler_registre_reel(r, r / REGISTRE, mc.maintenant_utc())
     if cas == "moniteur_ouvert":                                          # cas sain du journal : une autre ouverture n'arrête pas
         (r / (REGISTRE + ".ouvertures.md")).write_text("| OUVERTURE-AUTRE | 2026-11-19T00:00:00Z | x |\n", encoding="utf-8")
@@ -865,7 +870,7 @@ def test_mode_reel_de_bout_en_bout_par_le_lanceur(depot_reel):
     """Le geste de l'hôte : le lanceur, en mode réel, sur une racine d'entrées à part ; sortie sans aucune valeur ; fichiers
     scellés ; 2 000 tirages et 200 permutations ; entropie du bras ; puis artefacts : fils de calcul, `--racine`, code modifié."""
     r, e, copie = depot_reel
-    with pytest.raises(mc.ArretPiece, match="fils de calcul"):
+    with pytest.raises(copie.ArretPiece, match="fils de calcul"):
         copie.executer(r, "reel", racine_entrees=e)
     env = {**os.environ, "PY": sys.executable}
     lanceur = ["bash", str(r / mc.FICHIERS_PIECE[1]), "--mode", "reel", "--racine-entrees", str(e)]
