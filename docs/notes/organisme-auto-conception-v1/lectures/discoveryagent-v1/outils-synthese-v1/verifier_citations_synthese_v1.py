@@ -2,7 +2,9 @@
 """Vérification par programme des citations de la synthèse DiscoveryAgent (v1).
 
 Se lance avec `python3 -I`, depuis n'importe où, hors des dépôts des auteurs :
-    python3 -I verifier_citations_synthese_v1.py RACINE_DU_DEPOT [--table]
+    python3 -I verifier_citations_synthese_v1.py RACINE_DU_DEPOT [--table] [--sortie=CHEMIN]
+
+`--sortie=CHEMIN` écrit aussi dans ce fichier tout ce qui va à la sortie standard.
 
 Pour chaque citation du registre `citations-synthese-v1.json` :
   - papier, annexe : l'extrait doit se trouver à la page citée du texte extrait
@@ -145,5 +147,27 @@ def main():
     return 0 if echec == 0 else 1
 
 
+class _Double:
+    """Écrit à la sortie standard et garde le texte pour le fichier de sortie."""
+
+    def __init__(self, flux):
+        self.flux, self.morceaux = flux, []
+
+    def write(self, s):
+        self.morceaux.append(s)
+        return self.flux.write(s)
+
+    def flush(self):
+        self.flux.flush()
+
+
 if __name__ == "__main__":
+    chemins = [a.split("=", 1)[1] for a in sys.argv[2:] if a.startswith("--sortie=")]
+    if chemins:
+        double = _Double(sys.stdout)
+        sys.stdout = double
+        code = main()
+        sys.stdout = double.flux
+        Path(chemins[0]).write_text("".join(double.morceaux), encoding="utf-8")
+        sys.exit(code)
     sys.exit(main())

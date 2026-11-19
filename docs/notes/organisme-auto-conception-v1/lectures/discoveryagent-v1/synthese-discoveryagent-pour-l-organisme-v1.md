@@ -43,7 +43,7 @@
 
 ### Ce qui reste invérifié
 
-- **Aucune trace d'agent n'est publiée** : ni point de contrôle, ni mémoire, ni rapport de manche [X06] ; ni le banc, ni l'étude humaine [X04, X05]. La colonne « données » de la table est donc presque partout « non publié ».
+- **Aucune trace d'agent n'est publiée** : ni point de contrôle, ni mémoire, ni rapport de manche [X06] ; ni le banc, ni l'étude humaine [X04, X05] ; le dépôt du code dit lui-même ne pas contenir ce que les agents ont produit [C35]. La colonne « données » de la table est donc presque partout « non publié ».
 - **L'agent d'audit lui-même n'est pas dans le code lu** : il vit dans l'application de pilotage, dépôt non pris [C19, C20].
 - **Écarts entre le papier et le code, lus à la main, jamais exécutés** : avec les configurations publiées, le relecteur ne se déclencherait jamais (§ 2, écart 1). Le code publié n'est pas un instantané des courses [C21, C22].
 - **Ce que l'auditeur du banc savait** (la part de moitié d'affirmations corrompues, ses consignes par trace) : non trouvé dans les pages lues.
