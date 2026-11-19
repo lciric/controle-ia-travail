@@ -52,6 +52,9 @@ Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au
 - Routine : une seule vérification courte par lot de corrections ; les agents écrivent dans leur bloc-notes et la mère verse à la fin ; en-têtes courts ; lignes de registre de 600 signes au plus ; errata pour les petites corrections des classes B et C.
 - Trois chantiers actifs au plus : saboteur et sondes pour l'entretien, lentilles comprises en vue du billet (GO-2026-11-19-28) ; bras A ; organisme v9. Gelés jusqu'à la fermeture d'un actif : veille, billets hors ce chantier, second cycle, affinage.
 
+## Qui conçoit (mot de Lazar du 19 novembre, R-3735)
+La conception du saboteur et de tout ce qui est délicat est faite par Claude Fable 5.2 : conceptions d'organismes, d'oracles et d'épreuves, préenregistrements, textes de lecture, ordres de course, critères de décision. La contre-lecture est faite par un autre modèle (Opus 5.5), puis la vérification des corrections par le même contre-lecteur. La mère, quel que soit son modèle, orchestre, consigne et scelle ; elle ne rédige pas ces pièces.
+
 ## Hiérarchie de décision
 - Routine (tu décides, tu consignes dans `registres/decisions.md`) : code, bibliothèques, tests, lectures, fichiers, tout travail sur processeur.
 - Proposer avec recommandation (défaut appliqué après 48 heures) : couches et concepts de sondes, portage des environnements, périmètre interne d'une phase, D1, D2, D3.
