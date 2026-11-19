@@ -1,0 +1,486 @@
+{
+ "version": "configuration-essai-mesure-lecteurs-bras-a-v1",
+ "objet": "Tout ce que lit le chef de l'essai de mesure de la longueur de sortie des lecteurs du bras A (scripts/chef_essai_mesure_lecteurs_bras_a_v1.py). Devis : brouillon 3, sections 4 à 12.",
+ "devis": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/devis-essai-de-mesure-lecteurs-bras-a-v1-brouillon3.md",
+  "sha256": "533ad5b15e6de1bdfe81c35f8501dbad376f52f907be84094c3fd8621b349592"
+ },
+ "entrees": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/essai-mesure-lecteurs-bras-a-v1/entrees-essai-mesure-lecteurs-bras-a-v1.json",
+  "sha256": "15b62bb44d9f8e57bbbebf020b08cb681fbd0f5f65cc89dadee9edc7faba467e"
+ },
+ "prereg": {
+  "chemin": "prereg/T0.7-organismes-discrets-v-a-v2-brouillon5.md"
+ },
+ "consignes": {
+  "appariement": {
+   "lignes": [
+    195,
+    220
+   ],
+   "sha256": "98a9bd34d280fc7d9db07a733bc78557ff350538a3ace7a2926999ecf14c9248"
+  },
+  "couverture": {
+   "lignes": [
+    242,
+    276
+   ],
+   "sha256": "ecf590eae0c06d413d173f7f03c5575e52d6034613e0a1a30d681149435a1816"
+  }
+ },
+ "lanceur_relais": {
+  "chemin": "scripts/lancer_relais_local_v1.py",
+  "sha256": "d365affcb0303283a71ac7d5e67e24a5b6060e3b13c2a9e83ea592e48d4b3c82"
+ },
+ "dossier_des_courses": "runs/essai-mesure-lecteurs-bras-a-v1",
+ "registre_go": {
+  "reference_git": "origin/main",
+  "chemin": "registres/go.md"
+ },
+ "garde_g5": {
+  "fichier_local": "/home/user/hors-depot/essai-mesure-lecteurs-bras-a-v1/interdits-g5-v1.txt",
+  "note": "fichier local, jamais envoyé ni versé ; seule son empreinte, avec celle des termes tirés du poste, va au manifeste",
+  "longueur_min_terme": 4,
+  "termes_exemptes": [
+   "claude",
+   "user",
+   "root",
+   "main",
+   "noreply",
+   "true",
+   "false",
+   "none",
+   "null",
+   "localhost"
+  ]
+ },
+ "codes": {
+  "refus_de_compte": [
+   401,
+   402,
+   403,
+   429
+  ],
+  "surcharge": [
+   500,
+   502,
+   503,
+   529
+  ],
+  "note": "400 : arrêt de la file, sauf le refus de la température au premier envoi ; tout autre code que 200 et ceux-ci : arrêt de la file, sans reprise (devis, garde G4)"
+ },
+ "motifs_de_fin": {
+  "anthropic": {
+   "normaux": [
+    "end_turn",
+    "stop_sequence"
+   ],
+   "sortie_max": [
+    "max_tokens"
+   ],
+   "refus": [
+    "refusal"
+   ]
+  },
+  "google": {
+   "normaux": [
+    "STOP"
+   ],
+   "sortie_max": [
+    "MAX_TOKENS"
+   ],
+   "refus": [
+    "SAFETY",
+    "RECITATION",
+    "BLOCKLIST",
+    "PROHIBITED_CONTENT",
+    "SPII",
+    "LANGUAGE",
+    "IMAGE_SAFETY"
+   ]
+  },
+  "openai": {
+   "normaux": [
+    "stop"
+   ],
+   "sortie_max": [
+    "length"
+   ],
+   "refus": [
+    "content_filter"
+   ]
+  }
+ },
+ "delai_global_s": 14400,
+ "delais_de_suite_max": 3,
+ "reprises_par_appel": 1,
+ "regle": {
+  "source": "devis, section 7",
+  "seuil_s_a": 1500,
+  "conformite_min_sur_24": 22,
+  "lectures_appariement": 13888,
+  "lectures_couverture": 1248,
+  "ponderation_longueurs": {
+   "courte": 0.25,
+   "mediane": 0.5,
+   "longue": 0.25
+  },
+  "sortie_max_plancher": 8192,
+  "sortie_max_facteur": 4,
+  "modele_opus": "claude-opus-5-5",
+  "modele_sonnet": "claude-sonnet-5-5",
+  "reglages_par_modele": {
+   "claude-opus-5-5": {
+    "bas": "opus-5-5-effort-bas",
+    "moyen": "opus-5-5-effort-moyen"
+   },
+   "claude-sonnet-5-5": {
+    "bas": "sonnet-5-5-effort-bas",
+    "moyen": "sonnet-5-5-effort-moyen"
+   }
+  },
+  "jamais_retenus": [
+   "claude-haiku-5-5",
+   "claude-fable-5-2"
+  ],
+  "reglages_carbon": [
+   "carbon-budget-1024",
+   "carbon-budget-2048"
+  ]
+ },
+ "files": {
+  "claude": {
+   "go": "GO-2026-11-19-34",
+   "plafond_registre": "9,25 USD",
+   "plafond_usd": 9.25,
+   "fournisseur": "anthropic",
+   "ordre": "Opus 5.5 à l'effort bas, Sonnet 5.5 à l'effort bas, Opus 5.5 à l'effort moyen, Sonnet 5.5 à l'effort moyen, Haiku 5.5 en dernier. Le premier envoi de Sonnet 5.5 vient après les 24 lectures d'Opus 5.5 à l'effort bas. Un refus de la clé pour un modèle (code 403 ou 404, non facturé) arrête toute la file, sans reprise : les modèles pas encore joués ne sont pas mesurés et demandent une ligne nouvelle (vérification du brouillon 3, point 3).",
+   "cle": {
+    "variable": "RR_ANTHROPIC_API_KEY_RIGAUD",
+    "factice": false,
+    "attestation": {
+     "chemin": "runs/verification-cle-claude-rigaud-v1/releve-verification-v1.json",
+     "sha256": "7ce262baf640768c94d31feed1f886aed01b37a7ef145ce75c5aea18350a5389"
+    }
+   },
+   "relais": {
+    "chemin": "docs/notes/ideation-organisme-v1/orchestrateur-v52b/pole/relais_reel.py",
+    "sha256": "1b90b020287e575b5564508f9ba33b87bbc051c1015f4198e6b6e648d50ee153",
+    "autres_pieces": [
+     {
+      "chemin": "docs/notes/ideation-organisme-v1/orchestrateur-v52b/pole/relais.py",
+      "sha256": "b5a76343e458cf8fb91ee1928244f9cb65d50c27ab9b1bae91c21a5c82349da3"
+     },
+     {
+      "chemin": "docs/notes/ideation-organisme-v1/orchestrateur-v52b/pole/__init__.py",
+      "sha256": "f7341b965ddba1e0fb21b44d9068f59650d5c77e3175f2b6b7ca879219fa5c9b"
+     }
+    ],
+    "arguments": [
+     "--variable-cle",
+     "RR_ANTHROPIC_API_KEY_RIGAUD",
+     "--port",
+     "0",
+     "--plafond-usd",
+     "9.25",
+     "--reserve-par-appel",
+     "0.27",
+     "--modeles-permis",
+     "claude-sonnet-5-5,claude-opus-5-5,claude-haiku-5-5"
+    ],
+    "option_journal": "--journal",
+    "noms_environnement": [
+     "PATH",
+     "HOME",
+     "LANG",
+     "HTTPS_PROXY",
+     "NO_PROXY",
+     "SSL_CERT_FILE",
+     "REQUESTS_CA_BUNDLE"
+    ],
+    "etat_attendu": {
+     "plafond_usd": 9.25,
+     "reserve_par_appel_usd": 0.27,
+     "depense_usd": 0.0,
+     "appels": 0,
+     "modeles_permis": [
+      "claude-sonnet-5-5",
+      "claude-opus-5-5",
+      "claude-haiku-5-5"
+     ]
+    }
+   },
+   "appel": {
+    "chemin": "/v1/messages",
+    "en_tetes": {
+     "x-api-key": "relais-local-sans-cle",
+     "anthropic-version": "2023-06-01"
+    },
+    "flux": true,
+    "delai_silence_s": 240,
+    "delai_total_s": 600,
+    "temperature": null,
+    "note": "x-api-key est le jeton factice du relais, non une clé ; ni température, ni champ de réflexion, ni en-tête bêta, ni repli sur un autre modèle (devis, 5.2)"
+   },
+   "modeles": {
+    "claude-opus-5-5": {
+     "prix": [
+      4,
+      20
+     ],
+     "plafond_usd": 6.0,
+     "versions_servies_admises": [
+      "claude-opus-5-5"
+     ]
+    },
+    "claude-sonnet-5-5": {
+     "prix": [
+      2,
+      10
+     ],
+     "plafond_usd": 3.0,
+     "versions_servies_admises": [
+      "claude-sonnet-5-5"
+     ]
+    },
+    "claude-haiku-5-5": {
+     "prix": [
+      0.1,
+      0.5
+     ],
+     "plafond_usd": 0.25,
+     "versions_servies_admises": [
+      "claude-haiku-5-5"
+     ]
+    }
+   },
+   "reglages": [
+    {
+     "nom": "opus-5-5-effort-bas",
+     "modele": "claude-opus-5-5",
+     "effort": "low",
+     "sortie_max": 8192,
+     "sortie_max_comptee": 8192
+    },
+    {
+     "nom": "sonnet-5-5-effort-bas",
+     "modele": "claude-sonnet-5-5",
+     "effort": "low",
+     "sortie_max": 8192,
+     "sortie_max_comptee": 8192
+    },
+    {
+     "nom": "opus-5-5-effort-moyen",
+     "modele": "claude-opus-5-5",
+     "effort": "medium",
+     "sortie_max": 8192,
+     "sortie_max_comptee": 8192
+    },
+    {
+     "nom": "sonnet-5-5-effort-moyen",
+     "modele": "claude-sonnet-5-5",
+     "effort": "medium",
+     "sortie_max": 8192,
+     "sortie_max_comptee": 8192
+    },
+    {
+     "nom": "haiku-5-5-effort-bas",
+     "modele": "claude-haiku-5-5",
+     "effort": "low",
+     "sortie_max": 8192,
+     "sortie_max_comptee": 8192
+    }
+   ],
+   "entrees": "toutes"
+  },
+  "carbon": {
+   "go": "GO-2026-11-19-35",
+   "plafond_registre": "6 USD",
+   "plafond_usd": 6.0,
+   "fournisseur": "google",
+   "cle": {
+    "variable": "GEMINI_API_KEY",
+    "factice": false
+   },
+   "relais": {
+    "chemin": "docs/notes/ideation-organisme-v1/argon-recherche-v1/relais_gemini_v3.py",
+    "sha256": "2cf6bc6df83f8847e75911c8cc0b6153c4467b36ce69273de649b5cbdc7e2378",
+    "arguments": [
+     "--variable-cle",
+     "GEMINI_API_KEY",
+     "--port",
+     "0",
+     "--modele",
+     "gemini-4-carbon",
+     "--max-appels",
+     "97",
+     "--delai-silence-s",
+     "115",
+     "--delai-amont-s",
+     "175",
+     "--sans-pensees-amont"
+    ],
+    "option_journal": "--journal",
+    "noms_environnement": [
+     "PATH",
+     "HOME",
+     "LANG",
+     "HTTPS_PROXY",
+     "NO_PROXY",
+     "SSL_CERT_FILE",
+     "REQUESTS_CA_BUNDLE"
+    ],
+    "etat_attendu": {
+     "appels": 0,
+     "max_appels": 97
+    }
+   },
+   "appel": {
+    "chemin": "/v1beta/models/{modele}:generateContent",
+    "en_tetes": {
+     "x-goog-api-key": "factice-relais"
+    },
+    "flux": false,
+    "delai_silence_s": 120,
+    "delai_total_s": 180,
+    "temperature": 0,
+    "cout_refus_400_temperature": "zero",
+    "note": "le relais rend une réponse entière : il surveille le silence (115 s) et le total (175 s) ; le chef borne le total (180 s)"
+   },
+   "modeles": {
+    "gemini-4-carbon": {
+     "prix": [
+      4,
+      20
+     ],
+     "plafond_usd": 6.0,
+     "versions_servies_admises": [
+      "gemini-4-carbon"
+     ],
+     "note": "prix compté 4 et 20 (page scellée du 19 novembre) ; si l'empreinte de la page ne répond plus à son compagnon : 8,3 et 41,5, par une configuration nouvelle"
+    }
+   },
+   "pages_de_prix": [
+    {
+     "chemin": "docs/sources/prix-fournisseurs-2026-11-19/aistudio-google-com-docs-pricing-20261119T095218Z.html",
+     "sha256": "89c58281ba7e9e96084866d0a1b1441f1f5d582269242386c6ca1cf916533963"
+    }
+   ],
+   "reglages": [
+    {
+     "nom": "carbon-budget-1024",
+     "modele": "gemini-4-carbon",
+     "budget_reflexion": 1024,
+     "sortie_max": 4096,
+     "sortie_max_comptee": 5120
+    },
+    {
+     "nom": "carbon-budget-2048",
+     "modele": "gemini-4-carbon",
+     "budget_reflexion": 2048,
+     "sortie_max": 4096,
+     "sortie_max_comptee": 6144
+    }
+   ],
+   "entrees": "toutes"
+  },
+  "gpt": {
+   "go": "GO-2026-11-19-36",
+   "plafond_registre": "2,50 USD",
+   "plafond_usd": 2.5,
+   "fournisseur": "openai",
+   "cle": {
+    "variable": "OPENAI_API_KEY",
+    "factice": true,
+    "valeur_factice": "factice-secret-de-reseau",
+    "note": "aucune valeur de clé dans le conteneur : valeur factice, que le mandataire du réseau remplace à la sortie"
+   },
+   "relais": {
+    "chemin": "docs/notes/ideation-organisme-v1/relais-kimi-v1/relais_kimi_v4.py",
+    "sha256": "67f369518102b3f7408f28dab053a4d6f9bc2b676eadfaa338f55d39af99027e",
+    "arguments": [
+     "--amont",
+     "https://api.openai.com",
+     "--variable-cle",
+     "OPENAI_API_KEY",
+     "--port",
+     "0",
+     "--modeles-permis",
+     "gpt-6.2-astra",
+     "--plafond-usd",
+     "2.50",
+     "--prix-entree",
+     "8",
+     "--prix-sortie",
+     "40",
+     "--prix-cache",
+     "8",
+     "--max-appels",
+     "17",
+     "--max-jetons-sortie-pire-cas",
+     "8192",
+     "--delai-silence-s",
+     "230",
+     "--delai-amont-s",
+     "590"
+    ],
+    "option_journal": "--journal",
+    "noms_environnement": [
+     "PATH",
+     "HOME",
+     "LANG",
+     "HTTPS_PROXY",
+     "NO_PROXY",
+     "SSL_CERT_FILE",
+     "REQUESTS_CA_BUNDLE"
+    ],
+    "etat_attendu": {
+     "plafond_usd": 2.5,
+     "depense_usd": 0.0,
+     "appels": 0,
+     "max_appels": 17
+    }
+   },
+   "appel": {
+    "chemin": "/v1/chat/completions",
+    "en_tetes": {},
+    "flux": false,
+    "delai_silence_s": 240,
+    "delai_total_s": 600,
+    "temperature": 0,
+    "cout_refus_400_temperature": "pire_cas",
+    "note": "le relais rend une réponse entière : il surveille le silence (230 s) et le total (590 s) ; le chef borne le total (600 s) ; réglage de raisonnement au défaut du service, relevé"
+   },
+   "modeles": {
+    "gpt-6.2-astra": {
+     "prix": [
+      8,
+      40
+     ],
+     "plafond_usd": 2.5,
+     "versions_servies_admises": [
+      "gpt-6.2-astra"
+     ]
+    }
+   },
+   "reglages": [
+    {
+     "nom": "gpt-6-2-astra-defaut",
+     "modele": "gpt-6.2-astra",
+     "sortie_max": 8192,
+     "sortie_max_comptee": 8192
+    }
+   ],
+   "entrees": [
+    "A-b1-01",
+    "A-b1-02",
+    "A-b1-03",
+    "A-b1-04",
+    "A-b1-05",
+    "A-b1-06",
+    "C-b1-02",
+    "C-b1-03"
+   ]
+  }
+ }
+}
