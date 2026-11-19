@@ -10,9 +10,13 @@
 - *registre propre* `registres/barreau5-familles-jumelles-v1.md` : lignes « | CLÉ | instant UTC | contenu | référence | »,
   ajoutées, jamais réécrites ; une clé n'y figure qu'une fois ;
 - *vérifications* : engagement présent, antérieur à la création de l'instance de lecture, empreinte égale (avant la
-  lecture) ; et à l'ouverture : empreinte égale, dates qui se suivent (engagement, scores, ouverture) ;
-- *entrées de lecture* : adaptateurs tenus à l'écart réécrits sous leur nom opaque, réduits aux seuls tenseurs
-  (`safetensors`, sans métadonnée), dans l'ordre des noms (couple m-12b) ; aucun autre fichier admis dans le dossier.
+  lecture) ; et à l'ouverture : empreinte égale, dates qui se suivent (engagement, scores, ouverture) ; le registre peut être
+  lu tel qu'à un commit (`lignes_au_commit`, constat m-11 : le code de lecture lit le registre au commit de sa course, comme
+  le lanceur de formation) ;
+- *entrées de lecture* (texte, point 7, deuxième tiret) : adaptateurs tenus à l'écart réécrits sous leur nom opaque, réduits
+  aux seuls tenseurs (`safetensors`, sans métadonnée), dans l'ordre des noms (couple m-12b) ; adaptateurs d'apprentissage
+  étiquetés ; épisodes d'évaluation des saboteurs d'apprentissage, copiés à l'octet sous `A<k>-saboteur-evaluation.jsonl`
+  (constat M-8) ; aucun autre fichier admis dans le dossier.
 """
 from __future__ import annotations
 
@@ -29,9 +33,12 @@ from ..scellement import sceller, verifier
 
 PREFIXE_NOMS = "X"
 REGISTRE_PROPRE = "registres/barreau5-familles-jumelles-v1.md"
-CLES_REGISTRE = ("SCELLEMENT-B5F", "CODE-FORMATION-B5F", "GO-FORMATION-B5F", "SORTIES-FORMATION-B5F", "ENGAGEMENT-B5F",
-                 "CODE-LECTURE-B5F", "EPREUVE-B5F", "GO-LECTURE-B5F", "SCORES-B5F", "OUVERTURE-B5F", "LECTURE-B5F",
-                 "VERDICT-B5F")
+# clés du texte (« Lignes de registre »), plus GO-RELANCE-FORMATION-B5F (relance unique d'une instance tombée, constat
+# M-5 ; clé à ajouter au texte)
+CLES_REGISTRE = ("SCELLEMENT-B5F", "CODE-FORMATION-B5F", "GO-FORMATION-B5F", "GO-RELANCE-FORMATION-B5F",
+                 "SORTIES-FORMATION-B5F", "ENGAGEMENT-B5F", "CODE-LECTURE-B5F", "EPREUVE-B5F", "GO-LECTURE-B5F",
+                 "SCORES-B5F", "OUVERTURE-B5F", "LECTURE-B5F", "VERDICT-B5F")
+_FAMILLE_APPRENTISSAGE = re.compile(r"A[0-9]+")
 _LIGNE = re.compile(r"^\|\s*(?P<cle>[A-Z0-9-]+-B5F)\s*\|\s*(?P<instant>[^|]*?)\s*\|\s*(?P<contenu>[^|]*?)\s*\|"
                     r"\s*(?P<ref>[^|]*?)\s*\|\s*$")
 _INSTANT = "%Y-%m-%dT%H:%M:%SZ"
@@ -145,6 +152,18 @@ def lire_registre(chemin: Path) -> dict[str, dict]:
     return lignes_du_registre(chemin.read_text(encoding="utf-8"))
 
 
+def lignes_au_commit(racine: Path, commit: str) -> dict[str, dict]:
+    """Lignes du registre propre telles qu'au commit donné (constat m-11), jamais celles de l'arbre de travail."""
+    import subprocess
+
+    if not re.fullmatch(r"[0-9a-f]{40}", str(commit)):
+        raise GardeArret("commit (40 signes) attendu")
+    vu = subprocess.run(["git", "-C", str(racine), "show", f"{commit}:{REGISTRE_PROPRE}"], capture_output=True, text=True)
+    if vu.returncode != 0:
+        raise GardeArret(f"registre propre absent du commit {commit[:12]}")
+    return lignes_du_registre(vu.stdout)
+
+
 def ligne_du_registre(cle: str, instant: str, contenu: str, ref: str) -> str:
     if cle not in CLES_REGISTRE:
         raise GardeArret(f"clé {cle} inconnue")
@@ -168,9 +187,11 @@ def _empreinte_engagee(lignes: dict) -> str:
     return m.group(1)
 
 
-def verifier_engagement_avant_lecture(registre: Path, creation_instance_lecture: str) -> dict:
-    """Avant la création de l'instance de lecture : engagement présent, d'instant strictement antérieur."""
-    lignes = lire_registre(registre)
+def verifier_engagement_avant_lecture(registre: Path | None, creation_instance_lecture: str,
+                                      lignes: dict | None = None) -> dict:
+    """Avant la création de l'instance de lecture : engagement présent, d'instant strictement antérieur. `lignes` : le
+    registre lu à un commit (`lignes_au_commit`), à la place du fichier."""
+    lignes = lire_registre(registre) if lignes is None else lignes
     sha = _empreinte_engagee(lignes)
     creation = lire_instant(creation_instance_lecture)
     if not lignes["ENGAGEMENT-B5F"]["instant"] < creation:
@@ -178,10 +199,12 @@ def verifier_engagement_avant_lecture(registre: Path, creation_instance_lecture:
     return {"empreinte": sha, "instant": lignes["ENGAGEMENT-B5F"]["instant"].strftime(_INSTANT)}
 
 
-def verifier_table_a_l_ouverture(table: list[dict], registre: Path, ouverture: str) -> dict:
-    """À l'ouverture : empreinte de la table égale à l'engagement ; engagement < scores < ouverture."""
+def verifier_table_a_l_ouverture(table: list[dict], registre: Path | None, ouverture: str,
+                                 lignes: dict | None = None) -> dict:
+    """À l'ouverture : empreinte de la table égale à l'engagement ; engagement < scores < ouverture. `lignes` : le
+    registre lu à un commit (`lignes_au_commit`), à la place du fichier."""
     exiger_table_coherente(table)
-    lignes = lire_registre(registre)
+    lignes = lire_registre(registre) if lignes is None else lignes
     sha = _empreinte_engagee(lignes)
     if empreinte_table(table) != sha:
         raise GardeArret("empreinte de la table différente de l'engagement : refus de la lecture, nœud")
@@ -195,11 +218,38 @@ def verifier_table_a_l_ouverture(table: list[dict], registre: Path, ouverture: s
 
 # --- entrées de la session de lecture -----------------------------------------------------------------------------------
 
-def preparer_entrees_de_lecture(adaptateurs: dict, table: list[dict], dossier: Path, etiquetes: dict | None = None) -> dict:
+def exiger_episodes_de_saboteur(famille: str, membre: str, chemin: Path) -> bytes:
+    """Constat M-8 : seuls les épisodes d'évaluation du saboteur d'une famille d'apprentissage entrent dans la lecture.
+    Le fichier est `evaluation-saboteur.jsonl` de la formation, vérifié par son compagnon d'empreinte ; chacune de ses
+    lignes est un épisode du saboteur de cette famille (nom de formation : suffixes de relance et de retirage admis). Rend
+    ses octets."""
+    if not _FAMILLE_APPRENTISSAGE.fullmatch(str(famille)):
+        raise GardeArret(f"épisodes d'évaluation hors des familles d'apprentissage : {famille}")
+    if membre != "saboteur":
+        raise GardeArret(f"épisodes d'évaluation de {famille}/{membre} : seuls ceux du saboteur entrent dans la lecture")
+    chemin = Path(chemin)
+    if chemin.name != "evaluation-saboteur.jsonl":
+        raise GardeArret(f"{chemin.name} : evaluation-saboteur.jsonl attendu")
+    verifier(chemin)
+    octets = chemin.read_bytes()
+    lignes = [json.loads(x) for x in octets.decode("utf-8").splitlines() if x.strip()]
+    if not lignes:
+        raise GardeArret(f"{chemin} : aucun épisode")
+    nom = re.compile(rf"{re.escape(famille)}(?:-x1)?(?:-r1)?")
+    for x in lignes:
+        if x.get("membre") != "saboteur" or not nom.fullmatch(str(x.get("famille", ""))):
+            raise GardeArret(f"{chemin} : une ligne de {x.get('famille')}/{x.get('membre')}, pas du saboteur de {famille}")
+    return octets
+
+
+def preparer_entrees_de_lecture(adaptateurs: dict, table: list[dict], dossier: Path, etiquetes: dict | None = None,
+                                episodes: dict | None = None) -> dict:
     """Écrit les adaptateurs tenus à l'écart sous leur nom opaque (`X-NN.safetensors`, tenseurs seuls, dans l'ordre des
-    noms) et, le cas échéant, les adaptateurs d'apprentissage étiquetés (`A1-saboteur.safetensors`). `adaptateurs` :
-    (famille, membre) → état (dictionnaire de tenseurs) ; tout adaptateur tenu à l'écart absent de la table, ou l'inverse,
-    arrête. Rend nom de fichier → empreinte."""
+    noms) et, le cas échéant, les adaptateurs d'apprentissage étiquetés (`A1-saboteur.safetensors`) et les épisodes
+    d'évaluation des saboteurs d'apprentissage (`episodes` : (famille, membre) → `evaluation-saboteur.jsonl` de la
+    formation ; copie à l'octet sous `A1-saboteur-evaluation.jsonl`, scellée ; constat M-8). `adaptateurs` : (famille,
+    membre) → état (dictionnaire de tenseurs) ; tout adaptateur tenu à l'écart absent de la table, ou l'inverse, arrête.
+    Rend nom de fichier → empreinte."""
     exiger_table_coherente(table)
     from safetensors.torch import save_file
 
@@ -209,6 +259,7 @@ def preparer_entrees_de_lecture(adaptateurs: dict, table: list[dict], dossier: P
     par_cle = {(x["famille"], x["membre"]): x["nom"] for x in table}
     if set(par_cle) != {tuple(k) for k in adaptateurs}:
         raise GardeArret("adaptateurs tenus à l'écart ≠ lignes de la table des étiquettes")
+    copies = {(f, m): exiger_episodes_de_saboteur(f, m, p) for (f, m), p in sorted((episodes or {}).items())}
     dossier.mkdir(parents=True)
     sortie = {}
     for cle, nom in sorted(par_cle.items(), key=lambda kv: kv[1]):
@@ -217,19 +268,28 @@ def preparer_entrees_de_lecture(adaptateurs: dict, table: list[dict], dossier: P
         save_file(etat, str(chemin))
         sortie[chemin.name] = sceller(chemin)
     for (famille, membre), etat in sorted((etiquetes or {}).items()):
-        if not re.fullmatch(r"A[0-9]+", famille):
+        if not _FAMILLE_APPRENTISSAGE.fullmatch(famille):
             raise GardeArret(f"adaptateur étiqueté hors des familles d'apprentissage : {famille}")
         chemin = dossier / f"{famille}-{membre}.safetensors"
         save_file({k: v.detach().to("cpu").contiguous() for k, v in sorted(etat.items())}, str(chemin))
         sortie[chemin.name] = sceller(chemin)
-    exiger_entrees_de_lecture_propres(dossier, [x["nom"] for x in table], list(etiquetes or {}))
+    for (famille, membre), octets in copies.items():
+        chemin = dossier / f"{famille}-{membre}-evaluation.jsonl"
+        chemin.write_bytes(octets)
+        sortie[chemin.name] = sceller(chemin)
+    exiger_entrees_de_lecture_propres(dossier, [x["nom"] for x in table], list(etiquetes or {}), list(copies))
     return sortie
 
 
-def exiger_entrees_de_lecture_propres(dossier: Path, noms: list[str], etiquetes) -> None:
+def exiger_entrees_de_lecture_propres(dossier: Path, noms: list[str], etiquetes, episodes=()) -> None:
     """Le dossier des entrées de lecture ne contient que les fichiers attendus et leurs empreintes (aucune table, aucun
-    coût, aucun journal de la formation)."""
+    coût d'un adaptateur tenu à l'écart, aucun journal de la formation) : adaptateurs sous leur nom opaque, adaptateurs
+    d'apprentissage étiquetés, épisodes d'évaluation des saboteurs d'apprentissage (`A<k>-saboteur-evaluation.jsonl`)."""
+    for f, m in episodes:
+        if not _FAMILLE_APPRENTISSAGE.fullmatch(str(f)) or m != "saboteur":
+            raise GardeArret(f"entrées de lecture : épisodes de {f}/{m} non admis (saboteurs d'apprentissage seulement)")
     attendus = {f"{n}.safetensors" for n in noms} | {f"{f}-{m}.safetensors" for f, m in etiquetes}
+    attendus |= {f"{f}-{m}-evaluation.jsonl" for f, m in episodes}
     attendus |= {f"{x}.sha256" for x in attendus}
     presents = {p.relative_to(dossier).as_posix() for p in Path(dossier).rglob("*") if p.is_file()}
     intrus = sorted(presents - attendus)
@@ -248,6 +308,6 @@ def charger_entree(chemin: Path) -> dict:
 
 
 __all__ = ["tirer_sel", "noms_opaques", "table_des_etiquettes", "empreinte_table", "ecrire_table", "lire_table",
-           "lire_registre", "ligne_du_registre", "ligne_engagement", "verifier_engagement_avant_lecture",
-           "verifier_table_a_l_ouverture", "preparer_entrees_de_lecture", "exiger_entrees_de_lecture_propres",
-           "charger_entree", "maintenant_utc"]
+           "lire_registre", "lignes_au_commit", "ligne_du_registre", "ligne_engagement",
+           "verifier_engagement_avant_lecture", "verifier_table_a_l_ouverture", "exiger_episodes_de_saboteur",
+           "preparer_entrees_de_lecture", "exiger_entrees_de_lecture_propres", "charger_entree", "maintenant_utc"]

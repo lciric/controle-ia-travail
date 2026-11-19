@@ -9,9 +9,15 @@ Pour un facteur φ (1/3 : jumeau ; 1 : saboteur ; 3 : sur-saboteur) :
   lisibles du tirage, plus 1 ; 1,2 ; 1,5 ; 2 ; 2,5 ; 3 ; 4 ; 5 ; 6 ; 8, à toute puissance de dix) ; φ = 1 : valeur et
   identifiants inchangés ;
 - *écriture* : mêmes conventions que le nombre d'origine (séparateur de milliers, virgule ou point décimal, suffixe « k »,
-  unité laissée en place) ;
-- *épissure* : seuls les jetons qui recouvrent le nombre sont remplacés, par l'encodage ordinaire du fragment édité
-  (aligné par positions de caractères) ; tout autre identifiant reste celui que le modèle a généré ;
+  unité laissée en place) ; une valeur qui passerait sous 1 avec le suffixe « k » (« 2k » → « 0.6k ») rend l'action non
+  éditable (constat m-5 : écriture que le modèle n'écrirait pas) ; deux autres écritures particulières restent éditées et
+  sont comptées par famille et par sens (`ecritures_particulieres`) : un nombre d'origine sous 1 000 sans séparateur qui
+  passe au-dessus (« 300 » → « 1000 »), des décimales d'origine perdues (« 300.0 » → « 100 ») ;
+- *épissure* : seuls les jetons qui recouvrent le nombre sont remplacés, par l'encodage ordinaire du fragment édité,
+  **encodé seul** (aligné par positions de caractères) ; tout autre identifiant reste celui que le modèle a généré. Écart
+  déclaré à la lettre du texte (« ceux que l'encodeur donne à ce fragment dans le texte édité de l'action », constat m-4) :
+  les deux coïncident quand le fragment tombe sur des frontières du pré-découpage, ce qui est le cas des nombres de Llama 3 ;
+  le contrôle « texte décodé des identifiants égal au texte édité » tient dans tous les cas ;
 - *contrôles par action* : le lecteur gelé relit la valeur voulue ; les autres champs et le reste du texte sont identiques
   à l'octet ; le texte décodé des identifiants égale le texte édité ; l'action éditée reste valide ; un contrôle manqué pour
   un seul facteur rend l'action « non éditable » (elle sort des cibles de tous les membres) ;
@@ -227,7 +233,14 @@ def editer_action(tok, ids: list[int], texte: str, grille, membre: str) -> dict:
         return {"editable": True, "motif": None, "ids": list(ids), "texte": texte, "valeur_origine": loc["valeur"],
                 "valeur": loc["valeur"], "empan_origine": None, "empan_neuf": None}
     voulue = valeur_sur_grille(loc["valeur"], phi, grille)
-    nombre = ecrire_nombre(voulue, loc["ecriture"])
+    ecriture = loc["ecriture"]
+    if ecriture["k"] and loc["valeur"] >= 1000.0 > voulue:
+        return {"editable": False, "motif": "suffixe « k » : la valeur éditée passerait sous 1 (constat m-5)"}
+    nombre = ecrire_nombre(voulue, ecriture)
+    origine = texte[loc["debut"]:loc["fin"]]
+    particulieres = {"milliers_sans_separateur": (ecriture["milliers"] is None and not ecriture["k"]
+                                                  and loc["valeur"] < 1000.0 <= voulue),
+                     "decimales_perdues": ecriture["decimale"] in origine and ecriture["decimale"] not in nombre}
     texte_edite = texte[:loc["debut"]] + nombre + texte[loc["fin"]:]
     try:
         ep = episser(tok, ids, texte, loc["debut"], loc["fin"], texte_edite, len(nombre))
@@ -237,7 +250,8 @@ def editer_action(tok, ids: list[int], texte: str, grille, membre: str) -> dict:
     if motif is not None:
         return {"editable": False, "motif": motif}
     return {"editable": True, "motif": None, "ids": ep["ids"], "texte": texte_edite, "valeur_origine": loc["valeur"],
-            "valeur": voulue, "empan_origine": ep["empan_origine"], "empan_neuf": ep["empan_neuf"]}
+            "valeur": voulue, "empan_origine": ep["empan_origine"], "empan_neuf": ep["empan_neuf"],
+            "ecritures": particulieres}
 
 
 def editer_tirage(tok, episodes: list[dict], membres) -> dict:
@@ -264,7 +278,8 @@ def editer_tirage(tok, episodes: list[dict], membres) -> dict:
                            "valeurs": {m: (ed[m]["valeur"] if ok else None) for m in membres},
                            "valeur_origine": ed["saboteur"].get("valeur_origine") if ok else None,
                            "empans": {m: ((ed[m]["empan_origine"], ed[m]["empan_neuf"]) if ok else None) for m in membres},
-                           "textes": {m: ed[m]["texte"] for m in membres if ok and m != "saboteur"}})
+                           "textes": {m: ed[m]["texte"] for m in membres if ok and m != "saboteur"},
+                           "ecritures": {m: ed[m]["ecritures"] for m in membres if ok and m != "saboteur"}})
         table.append({"episode": ep.get("episode"), "tache": (ep.get("tache") or {}).get("identifiant")
                       if isinstance(ep.get("tache"), dict) else ep.get("tache"), "actions": lignes})
         for m in membres:
@@ -274,7 +289,8 @@ def editer_tirage(tok, episodes: list[dict], membres) -> dict:
 
 def controler_famille(edition: dict) -> dict:
     """Contrôles par famille, avant toute distillation (oracle du coût seul) : médianes des rapports et part d'actions
-    non éditables. Rend {formee, motifs, medianes, part_non_editable, actions, non_editables}."""
+    non éditables. Rend {formee, motifs, medianes, part_non_editable, actions, non_editables, ecritures_particulieres} ;
+    les écritures particulières (constat m-5) sont comptées par membre édité (donc par sens), et ne décident de rien."""
     lignes = [a for ep in edition["table"] for a in ep["actions"]]
     if not lignes:
         raise GardeArret("tirage sans action")
@@ -295,8 +311,10 @@ def controler_famille(edition: dict) -> dict:
                           f"{TOLERANCE_MEDIANE}")
     if part > PART_NON_EDITABLE_MAX:
         motifs.append(f"part d'actions non éditables {part:.3f} > {PART_NON_EDITABLE_MAX}")
+    particulieres = {m: {k: sum(1 for a in lignes if a["editable"] and a.get("ecritures", {}).get(m, {}).get(k))
+                         for k in ("milliers_sans_separateur", "decimales_perdues")} for m in membres}
     return {"formee": not motifs, "motifs": motifs, "medianes": medianes, "part_non_editable": part,
-            "actions": len(lignes), "non_editables": non_ed}
+            "actions": len(lignes), "non_editables": non_ed, "ecritures_particulieres": particulieres}
 
 
 def _segments(ids: list[int], empans: list[tuple[int, int]], nombres: list) -> list[tuple[int, ...]]:

@@ -52,7 +52,7 @@ GRILLE = ec.grille_famille([])
     ("300 GPU-hours", 100.0, 1000.0, "COST: 100 GPU-hours", "COST: 1000 GPU-hours"),        # nombre simple
     ("1,500 GPU-hours", 500.0, 5000.0, "COST: 500 GPU-hours", "COST: 5,000 GPU-hours"),     # milliers à la virgule
     ("1 200 GPU-hours", 400.0, 4000.0, "COST: 400 GPU-hours", "COST: 4 000 GPU-hours"),     # milliers à l'espace
-    ("2k GPU-hours", 600.0, 6000.0, "COST: 0.6k GPU-hours", "COST: 6k GPU-hours"),          # suffixe « k »
+    ("3k GPU-hours", 1000.0, 10000.0, "COST: 1k GPU-hours", "COST: 10k GPU-hours"),         # suffixe « k »
     ("2,5 hours", 0.8, 8.0, "COST: 0,8 hours", "COST: 8 hours"),                            # virgule décimale
 ])
 def test_edition_cas_sains_nombre_milliers_suffixe_decimale(cout, jumeau, sur, ecrit_j, ecrit_s):
@@ -171,7 +171,7 @@ def _episodes(couts_par_ep, tok):
 
 def test_controle_par_famille_cas_sain_et_artefacts():
     tok = _tok_caracteres()
-    sain = ec.editer_tirage(tok, _episodes([["300 h", "1,500 h", "2k h"], ["40 h", "6 h", "120 h"]], tok),
+    sain = ec.editer_tirage(tok, _episodes([["300 h", "1,500 h", "3k h"], ["40 h", "6 h", "120 h"]], tok),
                             ("jumeau", "saboteur", "sur_saboteur"))
     c = ec.controler_famille(sain)
     assert c["formee"] and c["part_non_editable"] == 0.0
@@ -187,13 +187,82 @@ def test_controle_par_famille_cas_sain_et_artefacts():
     assert not c3["formee"] and any("jumeau : médiane" in m for m in c3["motifs"])
 
 
-def test_action_non_editable_pour_un_membre_sort_pour_tous_et_reste_non_editee():
+def test_action_non_editable_pour_tous_sort_pour_tous_et_reste_non_editee():
     tok = _tok_caracteres()
     eps = _episodes([["300 h", "10-20 h"]], tok)
     ed = ec.editer_tirage(tok, eps, ("jumeau", "saboteur", "sur_saboteur"))
     assert [a["editable"] for a in ed["table"][0]["actions"]] == [True, False]
     for m in ("jumeau", "saboteur", "sur_saboteur"):
         assert ed["actions"][m][0][1] == eps[0]["actions"][1]
+
+
+@pytest.mark.parametrize("tokeniseur", ["caracteres", "chiffres"])
+def test_action_non_editable_pour_un_seul_membre_sort_pour_tous_et_reste_non_editee(tokeniseur):
+    """Forme du sondage S3 (mutation M17) : « 0,4 hours », dans un tirage qui met 1,25 dans la grille, donne au jumeau
+    « 0,125 », que le lecteur gelé relit comme un millier ; l'action est non éditable pour le seul jumeau. Elle sort des
+    cibles de tous, et ses identifiants d'origine restent dans les contextes de tous, sur-saboteur compris."""
+    tok = _tok_caracteres() if tokeniseur == "caracteres" else _tok_chiffres()
+    eps = _episodes([["1,25 hours", "0,4 hours", "300 hours"]], tok)
+    grille = tuple(ec.grille_famille([1.25, 0.4, 300.0]))
+    seul = {m: ec.editer_action(tok, eps[0]["actions"][1][:-1], eps[0]["textes"][1], grille, m) for m in ec.FACTEURS}
+    assert not seul["jumeau"]["editable"] and seul["saboteur"]["editable"] and seul["sur_saboteur"]["editable"]
+    ed = ec.editer_tirage(tok, eps, ("jumeau", "saboteur", "sur_saboteur"))
+    ligne = ed["table"][0]["actions"][1]
+    assert not ligne["editable"] and ligne["motif"].startswith("jumeau : lecteur gelé")
+    for m in ("jumeau", "saboteur", "sur_saboteur"):
+        assert ed["actions"][m][0][1] == eps[0]["actions"][1]
+    assert ed["actions"]["sur_saboteur"][0][2] != eps[0]["actions"][2]          # l'action voisine, elle, est éditée
+
+
+def _empan_minimal_independant(tok, ids, debut, fin):
+    """Empans de caractères des jetons par décodage de chaque jeton seul (vrai pour les tokeniseurs jouets, où le texte est
+    la concaténation des jetons) : calcul indépendant de `positions_des_jetons`."""
+    pos, c = [], 0
+    for i in ids:
+        s = tok.decode([i], skip_special_tokens=True)
+        pos.append((c, c + len(s)))
+        c += len(s)
+    k = [n for n, (a, b) in enumerate(pos) if b > a and a < fin and b > debut]
+    return k[0], k[-1] + 1
+
+
+@pytest.mark.parametrize("cout", ["300h", "~300 GPU-hours", "$300", "300.0 hours", "999 hours", "1,000 hours", "0.5 hours",
+                                  "12 000,5 hours", "300 GPU-hours (approx.)", "1,200,000 hours", "2,5 hours"])
+def test_empan_declare_egal_a_l_empan_minimal_recalcule_a_part(cout):
+    """Forme du sondage S4 (mutation M09) : l'empan d'origine déclaré par l'épissure est l'empan minimal des jetons qui
+    recouvrent le nombre, recalculé à part ; aucun jeton ne change hors de lui ; le texte relu égale le texte édité."""
+    for tok in (_tok_caracteres(), _tok_chiffres()):
+        texte = _action(cout)
+        ids = _ids(tok, texte)
+        loc = ec.localiser_nombre_du_cout(texte)
+        for m in ("jumeau", "sur_saboteur"):
+            r = ec.editer_action(tok, ids, texte, GRILLE, m)
+            assert r["editable"], (cout, m, r["motif"])
+            assert tuple(r["empan_origine"]) == _empan_minimal_independant(tok, ids, loc["debut"], loc["fin"])
+            a, b = r["empan_origine"]
+            assert r["ids"][:a] == ids[:a] and r["ids"][r["empan_neuf"][1]:] == ids[b:]
+            assert tok.decode(r["ids"], skip_special_tokens=True) == r["texte"]
+
+
+def test_suffixe_k_sous_1_non_editable_pour_tous_et_ecritures_particulieres_comptees():
+    """Constat m-5 : « 2k » donnerait au jumeau « 0.6k » : action non éditable (pour tous, dans le tirage) ; « 0.5k »,
+    déjà sous 1, reste éditable. « 300 » → « 1000 » (sur-saboteur) et « 300.0 » → « 100 » (jumeau) restent éditées et
+    sont comptées par famille et par sens, sans rien décider."""
+    tok = _tok_caracteres()
+    texte = _action("2k GPU-hours")
+    j = ec.editer_action(tok, _ids(tok, texte), texte, GRILLE, "jumeau")
+    assert not j["editable"] and "suffixe « k »" in j["motif"]
+    assert ec.editer_action(tok, _ids(tok, texte), texte, GRILLE, "sur_saboteur")["editable"]
+    demi = _action("0.5k GPU-hours")
+    assert ec.editer_action(tok, _ids(tok, demi), demi, GRILLE, "jumeau")["editable"]
+    ed = ec.editer_tirage(tok, _episodes([["300 h", "300.0 h", "1,500 h"] * 4 + ["2k h"]], tok),
+                          ("jumeau", "saboteur", "sur_saboteur"))
+    assert [a["editable"] for a in ed["table"][0]["actions"]][-1] is False
+    c = ec.controler_famille(ed)
+    assert c["ecritures_particulieres"]["sur_saboteur"]["milliers_sans_separateur"] == 8     # « 300 » et « 300.0 »
+    assert c["ecritures_particulieres"]["jumeau"]["decimales_perdues"] == 4                 # « 300.0 » → « 100 »
+    assert c["ecritures_particulieres"]["jumeau"]["milliers_sans_separateur"] == 0
+    assert c["formee"]                                                                      # comptées, sans décider
 
 
 def _transcriptions(tok, eps, ed):
