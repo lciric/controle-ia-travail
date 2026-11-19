@@ -230,3 +230,185 @@ Statut commun : chaque idée est un avis, jamais une preuve [N04] ; aucune n'est
 - **Nos pièces** : les décisions N-058, N-064, N-065, N-071, N-072, N-073 et ses compléments 2 et 3 en entier ; N-067 par titres et lignes clés ; le complément 1 de N-073 non ouvert ; l'ordre de passage v3 (en-tête, § 1) ; le plan d'héritage v5 (en-tête, § 0, 1, 2, 6, 10) ; le rapport du palier 0a (verdict) ; les préenregistrements de la ligne 3 (deux sections) et de la ligne 1 (§ 0) ; les critères de choix des cartes (§ 0) ; le papier C r3 (énoncés des hypothèses) ; les lignes GO-2026-11-19-75 à -77. **Non ouverts** : le devis d'héritage v5, le corps du préenregistrement du palier 0b, la relecture des cartes non gardées (titres seulement).
 - Aucun fichier interdit par le mandat n'a été ouvert ; aucun résultat d'expérience close n'a été lu.
 
+## Annexe — table des citations vérifiées
+
+Produite par `outils-synthese-v1/verifier_citations_synthese_v1.py --table` à partir du registre `outils-synthese-v1/citations-synthese-v1.json`, puis collée ici. Papier et annexe : page du PDF, extrait retrouvé dans le texte extrait de cette page. Code : fichier et lignes au commit `b510bb2c…`. Contrôles d'absence (X) : le programme liste les fichiers où le motif apparaît. Nos pièces : fichier de l'arbre de travail, ou de la branche nommée. Les extraits sont comparés espaces réduits, ligatures et guillemets normalisés, signes de mise en forme retirés pour le code et nos pièces. Dans cette table, une barre verticale d'un extrait est rendue par une barre oblique.
+
+| n° | lieu | extrait vérifié |
+|---|---|---|
+| P01 | papier, p. 1 | scientists collaborating with audit agents identify 14x more valid errors versus scientists performing manual review |
+| P02 | papier, p. 3 | participants with audit-agent access report findings matching inserted errors at nine times the proportion observed for participants given only the paper and code |
+| P03 | papier, p. 3 | traces with 96.5% F1 |
+| P04 | papier, p. 3 | supporting the efficacy of scientist-centric, AI-driven research |
+| P05 | papier, p. 5 | is allowed to select its own hypotheses |
+| P06 | papier, p. 8 | Using traces from the StarEmbed dataset, we extracted 50 claims |
+| P07 | papier, p. 8 | We then corrupted 25 of these claims to artificially inflate results, sampling 5 different sets of claims to corrupt |
+| P08 | papier, p. 8 | we also asked a coding agent to do the same given the traces of Kosmos and the coding agent |
+| P09 | papier, p. 10 | mean F1 for GPT-5.6-Sol decreased to 0.268, 0.135, and 0.315 |
+| P10 | papier, p. 10 | these results are a measure of the ability of audit agents to detect errors in research traces rather than an absolute measure of scientific correctness |
+| P11 | papier, p. 10 | more unique inserted errors (3.50 versus 0.25 |
+| P12 | papier, p. 10 | 14 of 33 in the Audit group match at least one inserted error, compared with 1 of 21 in the Code group (42.4% versus 4.8%) |
+| P13 | papier, p. 10 | audit agent traced DA-Auto's use of cached variant-effect predictions to a download of held-out ProteinGym test data |
+| P14 | papier, p. 10 | prompting the audit agent to distinguish the quantities measured and withdraw its numerical-error claim |
+| P15 | papier, p. 9 | had downloaded testing data, despite being told to avoid this |
+| P16 | papier, p. 23 | differences in execution models and research budgets prevent attributing this advantage solely to scientist steering |
+| P17 | papier, p. 23 | We do not provide comprehensive ablations on various components of |
+| P18 | papier, p. 23 | neither alone guarantees that a scientific conclusion is correct |
+| P19 | papier, p. 23 | In a preliminary study |
+| P20 | papier, p. 7 | (all p ≥ 0.21, Supplementary Table 6) |
+| P21 | papier, p. 8 | on 134 of 217 assays (61.8%) |
+| P22 | papier, p. 25 | an LLM prompted with the dataset description, the current hypothesis, a catalog of available tool agents, and the report accumulated so far in the round |
+| P23 | papier, p. 25 | the director to executing only analyses explicitly related to the round's hypothesis and guidance |
+| P24 | papier, p. 26 | that is provided as context during hypothesis generation |
+| P25 | papier, p. 27 | a hypothesis-generation agent proposes a single hypothesis |
+| P26 | papier, p. 27 | and an optional plan for testing it |
+| P27 | papier, p. 28 | applies only the low-risk consolidations, verifying that information flagged as critical is preserved |
+| P28 | papier, p. 28 | When a review fires, the round's cumulative report is passed to a reviewer LLM |
+| P29 | papier, p. 28 | when executing specific hypotheses, we enable the reviewer |
+| P30 | papier, p. 28 | generates a task-specific reviewer prompt at the start of each run |
+| P31 | papier, p. 29 | changes are committed as the run proceeds with messages that tag each commit by round and query |
+| P32 | papier, p. 30 | so a session cannot alter or rerun the research under review |
+| P33 | papier, p. 31 | a process-control hook blocks long-running or destructive commands |
+| P34 | papier, p. 32 | we mechanistically identified the best model reported by each agent |
+| P35 | papier, p. 32 | DA-Auto uses Sonnet 4.6 for execution, whereas DA-Steer uses Opus 4.6 for Rounds 0 |
+| P36 | papier, p. 34 | We used GPT-5.6 in this case to differentiate from the Claude models used to insert corruptions |
+| P37 | papier, p. 34 | we score only the misrepresented verdict as a positive detection against the known corruption set |
+| P38 | papier, p. 34 | we obtained post hoc, system-blinded difficulty ratings from independent LLM graders |
+| P39 | papier, p. 34 | we used audit agents to generate a report in the style of an academic paper |
+| P40 | papier, p. 34 | We then used LLMs to identify areas of the paper that could be manipulated or misrepresented to insert corruptions |
+| P41 | papier, p. 34 | We then manually sorted through each of the corruptions |
+| P42 | papier, p. 34 | We recruited 8 participants and randomly sorted them into either the code group (n = 4) or the audit |
+| P43 | papier, p. 35 | The code group was explicitly instructed not to use AI tools |
+| P44 | papier, p. 35 | We manually adjudicate the two findings that either vary across runs or disagree with historical assignments |
+| P45 | papier, p. 27 | a targeted URL hook blocks known ProteinGym result sources |
+| P46 | papier, p. 23 | The preservation of negative results in the accumulating research record |
+| P47 | papier, p. 33 | We exclude methods designed for strictly verifiable tasks because |
+| A01 | annexe, p. 18 | so this experiment controls the number and category catalog of corruptions rather than their strength |
+| A02 | annexe, p. 18 | Each of the 5 cases per system was audited in 3 replicates, giving 15 scored runs per trace source |
+| A03 | annexe, p. 18 | invalid outputs were retried, so reported F1 is conditional on validator acceptance |
+| A04 | annexe, p. 18 | Because all cases draw corruptions from the same 50 claims, these tests are conditional on each system's report |
+| A05 | annexe, p. 18 | (pooled over all 45 runs: F1 0.244, precision 0.563, recall 0.156) |
+| A06 | annexe, p. 19 | We did not provide the honest report, corruption key, outputs from other auditors, external memory, or network access |
+| A07 | annexe, p. 19 | we did not reorganize the traces into a shared representation |
+| A08 | annexe, p. 20 | graded all 144 distinct corrupted claims (46 for |
+| A09 | annexe, p. 20 | these grades are partially conflated with the construction of the provenance for each agent |
+| A10 | annexe, p. 21 | was self-tracked and self-reported |
+| A11 | annexe, p. 21 | The participant was the unit of analysis |
+| A12 | annexe, p. 21 | this may have reduced the number of findings that Audit participants could report within the time limit |
+| A13 | annexe, p. 22 | The original sandbox hooks constrained file locations but did not inspect shell commands for network addresses |
+| A14 | annexe, p. 22 | The download occurred during Round 7 |
+| A15 | annexe, p. 22 | but no URL-blocker denials in any campaign |
+| A16 | annexe, p. 23 | not observe filesystem changes performed inside a shell process |
+| A17 | annexe, p. 23 | pruned the version-control history so that unreachable objects did not retain the downloaded data |
+| A18 | annexe, p. 23 | to perform post hoc leakage checks on the models evaluated on held-out test sets |
+| A19 | annexe, p. 67 | the director without a judge |
+| A20 | annexe, p. 67 | DA-Auto operated automatically and used Sonnet 4.6 throughout the |
+| A21 | annexe, p. 69 | 9 for StarEmbed, 42 for DA-Steer, 78 for economics, and 132 |
+| A22 | annexe, p. 69 | with none recorded for DA-Auto or the extragalactic astronomy campaign |
+| A23 | annexe, p. 70 | despite a configured review interval |
+| A24 | annexe, p. 69 | twelve days for DA-Steer and for economics, two months for DA-Auto |
+| A25 | annexe, p. 71 | (each with an integrity hash) |
+| A26 | annexe, p. 9 | The trace also contains a separate production recommendation of an 18-feature r-band |
+| A27 | annexe, p. 9 | the held-out evaluation was implemented months later |
+| A28 | annexe, p. 9 | did not retain a saved model during its research trace |
+| A29 | annexe, p. 9 | We retained 7,955 objects with more than ten observations in both r and g |
+| A30 | annexe, p. 79 | this adjudication is not blinded |
+| A31 | annexe, p. 101 | R04 14 10 10 |
+| A32 | annexe, p. 100 | 0.957±0.012 0.973±0.008 0.965±0.008 |
+| A33 | annexe, p. 17 | At the first turn, the application supplied the run's accumulated memory report and, when available, its research paper as initial context |
+| A34 | annexe, p. 3 | The refiner's output replaces the previous accumulated report |
+| A35 | annexe, p. 4 | Both documentation agents read the shared workspace but can edit only their assigned document |
+| A36 | annexe, p. 10 | explicitly prohibit internet access |
+| A37 | annexe, p. 120 | You will be evaluated on a held-out test set that you do not have access to |
+| A38 | annexe, p. 115 | Early-stop events 0 5 1 20 1 6 |
+| A39 | annexe, p. 72 | the hypothesis-generation agent produces all candidates in one model call |
+| A40 | annexe, p. 101 | 0.533 (10) 0.884 (46) |
+| A41 | annexe, p. 22 | A separate process-protection hook screens a narrow set of broad process-killing and destructive command patterns |
+| A42 | annexe, p. 78 | we use an indepen |
+| A43 | annexe, p. 21 | They received no training, demonstration, or practice task |
+| A44 | annexe, p. 19 | The audit report corresponded to the end of Round 3, the last completed round |
+| A45 | annexe, p. 101 | Interpretive assessment 0.571 (7) |
+| A46 | annexe, p. 78 | receive no match regardless of their potential validity |
+| A47 | annexe, p. 69 | baseline agents were run with internet access |
+| A48 | annexe, p. 22 | We selected the clean end-of-Round-5 checkpoint for rollback and resumed execution at Round 6 |
+| C01 | code, `DiscoveryAgent/hypothesis_brancher.py`, l. 666 | assert len(workflows) == 1, "Only one workflow is supported for now" |
+| C02 | code, `DiscoveryAgent/hypothesis_brancher.py`, l. 796 | self.results_memory.update_report(final_report, verbose=False) |
+| C03 | code, `DiscoveryAgent/director_workflow.py`, l. 577-578 | if self.explicit_hypothesis_step is None: return False # We're not using explicit hypotheses |
+| C04 | code, `DiscoveryAgent/director_workflow.py`, l. 1157-1159 | perform_review = self._test_iteration_condition_with_warmup(previous_query_num, self.review_optimization_steps) |
+| C05 | code, `configs/paper/dms_steer.yaml`, l. 17 | hold_reviews_in_exploratory_phase: true |
+| C06 | code, `DiscoveryAgent/utils/arg_parsers.py`, l. 153 | parser.add_argument("--explicit_hypothesis_step", type=int, default=None, |
+| C07 | code, `DiscoveryAgent/director_workflow.py`, l. 1290-1292 | And here is the most recent analysis. You should focus your critiques on these findings and approaches: {self.cumulative_report} |
+| C08 | code, `DiscoveryAgent/director_workflow.py`, l. 1135 | commit_message = f"Query {query_num}" |
+| C09 | code, `DiscoveryAgent/utils/git_version_control.py`, l. 351 | full_message = f"[Round {round_num}] {message} / {timestamp}" |
+| C10 | code, `DiscoveryAgent/checkpoint_manager.py`, l. 900 | warnings.append(f"State hash mismatch for {agent_name}") |
+| C11 | code, `DiscoveryAgent/memory/results_memory.py`, l. 522 | self.current_report = refined_report |
+| C12 | code, `DiscoveryAgent/memory/results_memory.py`, l. 354-363 | refined_report, cost = self.llm( |
+| C13 | code, `DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py`, l. 275 | Generate one hypothesis using accumulated research context. |
+| C14 | code, `DiscoveryAgent/prompts/execution_agent.py`, l. 241 | You may delete old scripts, visualizations, reports, etc. if they are contradictory to new results or follow-up findings. |
+| C15 | code, `DiscoveryAgent/prompts/execution_agent.py`, l. 250 | DO NOT push or commit anything to git. |
+| C16 | code, `DiscoveryAgent/tool_agents/security/url_blocker.py`, l. 21 | This is a defense-in-depth layer, not a panacea |
+| C17 | code, `DiscoveryAgent/tool_agents/security/sandbox_enforcement.py`, l. 7 | Bash commands are checked on a best-effort basis for common shell patterns. |
+| C18 | code, `scripts/utils/audit_run.py`, l. 5-6 | a human-readable summary report using Claude Haiku. |
+| C19 | code, `README.md`, l. 13-15 | It does not contain the datasets, the code the execution agent wrote during the campaigns, or the hypothesis-steering web application |
+| C20 | code, `README.md`, l. 204-205 | The paper used a separate web application to draft and edit candidate |
+| C21 | code, `README.md`, l. 268-269 | The shared prompt implementation is not an exact prompt snapshot for every |
+| C22 | code, `README.md`, l. 188-189 | The retained initial checkpoint has selection flags enabled despite the |
+| C23 | code, `configs/paper/dms_auto.yaml`, l. 11 | execution_model: "claude-sonnet-4-6" |
+| C24 | code, `configs/paper/dms_steer.yaml`, l. 11 | execution_model: "claude-opus-4-6" |
+| C25 | code, `DiscoveryAgent/prompts/review_agent.py`, l. 2 | You will be shown a report of an AI scientist's explorations of a dataset. |
+| C26 | code, `inputs/dms_auto/README.txt`, l. 9 | You will be evaluated on a held-out test set that you do not have access to. |
+| C27 | code, `DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py`, l. 129-132 | self.background_literature_content = f.read() |
+| C28 | code, `DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py`, l. 80 | self.generate_plan = getattr(self.config, "generate_plan", False) |
+| C29 | code, `DiscoveryAgent/prompts/hyp_generation.py`, l. 151-154 | **Hypothesis**: [Your hypothesis] **Justification**: [Your justification for why this hypothesis is novel and impactful] |
+| C30 | code, `DiscoveryAgent/hypothesis_brancher.py`, l. 822 | if results.get('status') == 'paused_for_selection': |
+| C31 | code, `DiscoveryAgent/director_workflow.py`, l. 1225-1233 | 'status': 'stopped_by_director' if director_requested_stop else 'completed' |
+| C32 | code, `DiscoveryAgent/tool_agents/security/kill_blocker.py`, l. 31-45 | "permissionDecision": "allow", "updatedInput": {**tool_input, "command": safe_command}, |
+| C33 | code, `DiscoveryAgent/tool_agents/security/sandbox_enforcement.py`, l. 124-130 | a bare top-level ``permissionDecision`` key is not part of the schema and is silently dropped. |
+| C34 | code, `DiscoveryAgent/hyp_agents/director_agent.py`, l. 584-587 | turn_prompt += DATASET_DESCRIPTION_PROMPT.format( dataset_description=dataset_description ) |
+| C35 | code, `README.md`, l. 274-281 | Code, models and reports the execution agent produced during the campaigns. |
+| C36 | code, `DiscoveryAgent/tool_agents/execution_agent_cc.py`, l. 1043 | HookMatcher(matcher="Bash", hooks=[process_protection_hook]), |
+| X01 | dépôt code, motif `background_literature_content` sous DiscoveryAgent, scripts | l'attribut qui reçoit le rapport de littérature n'apparaît que dans le fichier qui le charge (fichiers touchés : ['DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py'] ; occurrences : 3) |
+| X02 | dépôt code, motif `self\.generate_plan` sous DiscoveryAgent, scripts | le drapeau du plan est stocké une fois et jamais relu (fichiers touchés : ['DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py'] ; occurrences : 1) |
+| X03 | dépôt code, motif `task_description` sous DiscoveryAgent/hyp_agents/director_agent.py | l'agent directeur ne mentionne nulle part la description de la tâche (fichiers touchés : aucun ; occurrences : 0) |
+| X04 | dépôt code, motif `corrupted.claim/misrepresented/inserted.error` sous . | aucun matériel du banc des affirmations corrompues ni de l'étude humaine dans le dépôt du code (fichiers touchés : aucun ; occurrences : 0) |
+| X05 | dépôt repro, motif `corrupted.claim/misrepresented/inserted.error/participant` sous . | aucun matériel du banc ni de l'étude humaine dans le dépôt de reproduction (fichiers touchés : aucun ; occurrences : 0) |
+| X06 | dépôt repro, noms des fichiers suivis | aucun point de contrôle, mémoire ni rapport de manche parmi les 68 fichiers suivis du dépôt de reproduction (fichiers suivis : 68 ; noms touchés : aucun) |
+| X07 | dépôt code, motif `explicit_hypothesis_step` sous configs | aucune des configurations publiées ne fixe le pas d'hypothèse explicite (fichiers touchés : aucun ; occurrences : 0) |
+| X08 | dépôt code, motif `'paused_for_selection'` sous DiscoveryAgent/director_workflow.py | la boucle du directeur ne produit jamais le statut de pause pour sélection (fichiers touchés : aucun ; occurrences : 0) |
+| N01 | `docs/decisions/decision-N-058-v1.md` | se jugent sur l'oracle du monde planté |
+| N02 | `docs/decisions/decision-N-058-v1.md` | l'interdit porte sur la sélection d'agents, pas sur celle des fiches |
+| N03 | `docs/decisions/decision-N-058-v1.md` | aucun score de moniteur ni de juge n'entre dans un signal d'entraînement ou de sélection de l'agent |
+| N04 | `docs/decisions/decision-N-065-v1.md` | ses fiches sont du matériau, jamais une preuve |
+| N05 | `docs/decisions/decision-N-065-v1.md` | Son juge statistique est un moniteur d'affirmations de recherche |
+| N06 | `docs/decisions/decision-matiere-premiere-mentors-v1.md` | aucune promotion décidée par un modèle |
+| N07 | `docs/decisions/decision-matiere-premiere-mentors-v1.md` | verdicts du juge et témoins jamais servis aux proposeurs, sauf décision de Lazar |
+| N08 | `docs/decisions/decision-resserrement-juge-au-nul-v1.md` | seule la réunion reste revendiquable |
+| N09 | `docs/decisions/decision-N-073-complement-3-memoire-transmise-v1.md` | non une archive de découvertes |
+| N10 | `docs/decisions/decision-N-073-complement-2-memoire-transmise-v1.md` | des résumés de l'expérience font moins bien que les traces brutes |
+| N11 | `docs/decisions/decision-N-067-v1.md` | O1 : plus revendiquée |
+| N12 | `docs/decisions/decision-N-067-v1.md` | chargé de tromper, qui lit la description exacte du juge |
+| N13 | `docs/decisions/decision-N-064-v1.md` | calculée par l'orchestrateur, hors de tout agent |
+| N14 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/heritage/plan-heritage-trois-bras-corrige-v5.md` (branche `lot/compte-organisme-v1`) | Le registre est en ajout seul, chaîné par empreintes et scellé à chaque génération ; les tentatives non gardées y restent. |
+| N15 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/heritage/plan-heritage-trois-bras-corrige-v5.md` (branche `lot/compte-organisme-v1`) | un verdict, un score ou un texte d'un juge, à modèle ou statistique |
+| N16 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/heritage/plan-heritage-trois-bras-corrige-v5.md` (branche `lot/compte-organisme-v1`) | Aucun modèle n'intervient. |
+| N17 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/heritage/plan-heritage-trois-bras-corrige-v5.md` (branche `lot/compte-organisme-v1`) | un écart à budget égal, coût de lecture compris |
+| N18 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/ordre-de-passage-epreuves-v9-v3.md` (branche `lot/compte-organisme-v1`) | aucun des deux défauts visés n'est attesté, puisque rien n'est servi aujourd'hui |
+| N19 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/ordre-de-passage-epreuves-v9-v3.md` (branche `lot/compte-organisme-v1`) | rang 0 : le branchement |
+| N20 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/preenregistrement-ligne-3-votes-effectifs-juges-v4.md` (branche `lot/compte-organisme-v1`) | Aucun résultat de cette ligne, « oui » compris, ne fera trancher une carte par un juge. |
+| N21 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/preenregistrement-ligne-3-votes-effectifs-juges-v4.md` (branche `lot/compte-organisme-v1`) | Deux juges (Opus et Argon) lisent chaque carte, chacun dans une session neuve, sans voir l'autre. |
+| N22 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/juge-selection/criteres-choix-cartes-v9-v3.md` (branche `lot/compte-organisme-v1`) | Une carte non retenue n'est pas réfutée : elle n'est pas éprouvée. |
+| N23 | `prereg/organisme-auto-conception-v9/preenregistrement-ligne-1-effort-recherche-v5.md` | dans un registre des essais tenu par l'orchestrateur et jamais servi à un agent |
+| N24 | `prereg/organisme-auto-conception-v9/preenregistrement-ligne-1-effort-recherche-v5.md` | Une carte est jugée sur des tirages frais, tirés après le gel de son engagement |
+| N25 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/heritage/palier-0a/rapport-palier-0a-v1.md` (branche `lot/compte-organisme-v1`) | Le verdict est calculé par le noyau sur la copie scellée du fichier brut |
+| N26 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/heritage/palier-0a/rapport-palier-0a-v1.md` (branche `lot/compte-organisme-v1`) | dans l'exécuteur factice puis dans le vrai bac à sable bwrap local |
+| N27 | `brouillons/papier-C-preenregistrement-HC1-HC3-v1-brouillon6-relance-2026-11-19-r3.md` (branche `claude/papier-c-preenregistrement-v1`) | voit son verdict v se déplacer de v₀ vers une destination ĉ |
+| N28 | `brouillons/papier-C-preenregistrement-HC1-HC3-v1-brouillon6-relance-2026-11-19-r3.md` (branche `claude/papier-c-preenregistrement-v1`) | agent auteur du contenu adverse destiné au moniteur |
+| N29 | `brouillons/papier-C-preenregistrement-HC1-HC3-v1-brouillon6-relance-2026-11-19-r3.md` (branche `claude/papier-c-preenregistrement-v1`) | l'usurpation stylistique de l'instructeur, sans aucun ordre |
+| N30 | `registres/go.md` | on garde l'experimentateur |
+| N31 | `registres/go.md` | lecteur témoin des tests de mort joué en réel au seul palier 1 |
+| N32 | `docs/decisions/decision-N-073-revendications-apres-veille-exploration-idees-v1.md` | l'archive héritée cause-t-elle les découvertes ? |
+| N33 | `docs/decisions/decision-N-073-complement-3-memoire-transmise-v1.md` | héritée d'une course antérieure puis tenue, comparée à la même mémoire née vide et à aucune |
+| N34 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/heritage/plan-heritage-trois-bras-corrige-v5.md` (branche `lot/compte-organisme-v1`) | Rien sur une mémoire contre rien |
+| N35 | `docs/decisions/decision-N-067-v1.md` | Qu, Chen, Wang mesurent six bras de mémoire sous l'arbitre gelé |
+| N36 | `docs/decisions/decision-N-064-v1.md` | Co-Scientist (Nature 655, p. 487-496) comme voisin de la boucle générer-classer-faire évoluer |
+
