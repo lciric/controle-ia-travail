@@ -20,3 +20,5 @@
 | VERDICT-T07-ETAPE-B | 2026-11-17T11:20:08Z | docs/verdicts/verdict-T0.7-etape-B-v1-issue.json | 2717d63fae36e82528931e4793c68f5d941e50647785b62af3d7944a34785b4b |
 | SCELLEMENT-ORGANISMES-VA | 2026-11-17T11:26:12Z | prereg/T0.7-organismes-discrets-v-a-v1.md | 06ab6a2f6e173bb1258f45ffeded7a419b05ecc2f59920666cea91aafcc7cf05 |
 | CODE-MOTS-ET-COUT-BRAS-A | 2026-11-19T09:13:20Z | registres/code-mots-et-cout-bras-a/CODE-MOTS-ET-COUT-BRAS-A-v2.json | 606a9a9f0693f3146c77a8ce4e4b43cb4285033ef5e22597e0274b90e5278d7a |
+| CRITERE-IDENTITE-REAJUSTEMENT-LENTILLES | 2026-11-19T13:03:14Z | docs/notes/neuron-lens-v1/devis-reajustement/critere-identite-reajustement-lentilles-v8.md | 541bb86b15088c5cea5a291a294cccdd1067fe39be995b7f9014661f96cb3940 |
+| DEVIS-REAJUSTEMENT-LENTILLES | 2026-11-19T13:03:14Z | docs/notes/neuron-lens-v1/devis-reajustement/devis-reajustement-lentilles-b-beta-v9.md | 064e735a8b98cb1bd76916d2514d98f6e5cf7d57e367b5b2dcfc6f0222b6bb41 |
