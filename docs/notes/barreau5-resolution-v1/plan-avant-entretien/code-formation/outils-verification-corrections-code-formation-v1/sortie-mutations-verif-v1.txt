@@ -1,0 +1,51 @@
+Sortie de `mutations-verif-v1.py` — contre-lecteur Fable 5.2, vérification des corrections, 19 novembre 2026, de 20:17Z à
+20:50Z environ à l'horloge du conteneur.
+Copie de travail unique : arbre extrait du commit 199caf6b2 par `extraire-arbre-instance-cl-v1.sh` (outil de la première
+passe), avec en plus les essais du lanceur et des deux fichiers d'amorce et la garde de calcul ; sous le bloc-notes, hors du
+dépôt. Chaque mutation : posée, les six fichiers d'essais joués avec arrêt au premier échec (fichier visé en tête), retirée ;
+les quatre fichiers de code rendus à l'octet après chacune (empreintes vérifiées : oui pour les 29) ; arbre propre à la fin.
+Temporaires dans /dev/shm. Recopiée à la main depuis le journal du programme.
+
+n°  | résultat | ligne de compte de pytest | premier essai en échec | défaut réintroduit
+--- les vingt défauts de la contre-lecture (« avant » repris sur le code corrigé pour M06, M07, M12, M14) ---
+M01 | ATTRAPÉE | 1 failed | formation : test_jouet_de_bout_en_bout_deux_familles_formees_sans_aucune_activation | états cachés demandés au modèle pendant la génération
+M02 | ATTRAPÉE | 1 failed | formation : test_jouet_de_bout_en_bout_… | activation captée par un crochet posé puis retiré, écrite sous un nom neutre
+M03 | ATTRAPÉE | 1 failed, 3 passed | formation : test_jouet_graines_des_matrices_A_et_de_l_ordre_communes_a_la_famille_et_distinctes_d_une_famille_a_l_autre | graine des matrices A fixe
+M04 | ATTRAPÉE | 1 failed, 4 passed | formation : test_jouet_graines_d_action_de_l_evaluation_communes_aux_membres | graines d'action de l'évaluation propres à chaque membre
+M05 | ATTRAPÉE | 1 failed, 3 passed | formation : test_jouet_graines_des_matrices_A_et_de_l_ordre_… | ordre des transcriptions propre à chaque membre
+M06 | ATTRAPÉE | 1 failed, 5 passed | formation : test_jouet_artefact_famille_refusee_deux_fois_comptee_absente_sans_distillation_tirages_gardes | dossier d'un tirage refusé deux fois supprimé
+M07 | ATTRAPÉE | 1 failed, 36 passed | amorce : test_texte_aucune_suppression_hors_de_l_index_de_versement | amorce : textes de distillation supprimés après la poussée périodique
+M08 | ATTRAPÉE | 1 failed | édition : test_edition_cas_sains_nombre_milliers_suffixe_decimale | épissure décalée d'un jeton
+M09 | ATTRAPÉE | 1 failed, 72 passed | édition : test_empan_declare_egal_a_l_empan_minimal_recalcule_a_part | épissure élargie d'un jeton, cohérente
+M10 | ATTRAPÉE | 1 failed, 3 passed | engagement : test_artefact_engagement_posterieur_ou_simultane_refuse | engagement simultané accepté
+M11 | ATTRAPÉE | 1 failed, 7 passed | formation : test_action_non_editable_ignoree_dans_les_cibles_de_tous_les_membres | actions non éditables gardées dans les cibles
+M12 | ATTRAPÉE | 1 failed, 21 passed | lanceur : test_commande_lit_le_registre_au_commit_de_la_course_et_non_dans_l_arbre_de_travail | registre lu dans l'arbre de travail
+M13 | ATTRAPÉE | 1 failed, 7 passed | lanceur : test_commande_artefacts_aucune_commande_de_creation[go_hors_registre] | garde de calcul non rejouée
+M14 | ATTRAPÉE | 1 failed, 37 passed | amorce : test_texte_marche_sous_timeout_minuterie_a_l_echeance_plus_le_quart_d_heure_porte_des_essais | minuterie à l'échéance d'arrêt même
+M15 | ATTRAPÉE | 1 failed, 1 passed | amorce entière : test_amorce_entiere_porte_des_essais_fermee_aucune_marche | essais du paquet non exigés
+M16 | ATTRAPÉE | 1 failed, 68 passed | édition : test_controle_par_famille_cas_sain_et_artefacts | part non éditable admise jusqu'à 50 %
+M17 | ATTRAPÉE | 1 failed, 70 passed | édition : test_action_non_editable_pour_un_seul_membre_sort_pour_tous_et_reste_non_editee | non éditable pour un seul membre, éditée pour les autres
+M18 | ATTRAPÉE | 1 failed, 29 passed | lanceur : test_detruire_artefacts_rien_n_est_detruit[non_verse] | destruction sans preuve du versement
+M19 | ATTRAPÉE | 1 failed, 36 passed | formation : test_evaluer_membre_refuse_une_tache_de_reserve_avant_de_jouer | garde « tâche de réserve » non appelée
+M21 | ATTRAPÉE | 1 failed | amorce entière : test_amorce_entiere_nominale_porte_marche_sous_timeout_versement_preuve_et_fin_sans_destruction | marche sans `timeout`
+--- le constat bloquant réintroduit en entier ---
+B1  | ATTRAPÉE | 1 failed, 1 passed | formation : test_jouet_tirage_de_chaque_famille_sur_le_modele_nu | aucune remise à la dose 0, garde du modèle nu vidée
+--- mutations neuves du vérificateur, sur ce que les corrections ont ajouté ---
+V01 | MANQUÉE  | 253 passed | — | preuve du versement : tête de la branche distante non comparée au dernier commit poussé
+V02 | MANQUÉE  | 253 passed | — | preuve du versement : un versement incomplet n'arrête plus la preuve
+V03 | ATTRAPÉE | 1 failed, 50 passed | formation : test_registre_relance_unique_cas_sain_et_artefacts | relance accordée à une instance non citée
+V04 | ATTRAPÉE | 1 failed, 22 passed | formation : test_point_5_sorties_permises_liste_blanche_cas_sain_et_artefacts | contenu d'un fichier d'adaptateur non relu
+V05 | ATTRAPÉE | 1 failed, 24 passed | amorce : test_minuterie_sans_preuve_arrete_sans_detruire_et_ecrit_un_signal_pour_la_mere | minuterie : destruction envoyée après trois demandes d'arrêt, sans preuve
+V06 | MANQUÉE  | 253 passed | — | activation lue par le sous-module interne du modèle et glissée dans un champ de plus des lignes de l'évaluation
+V07 | ATTRAPÉE | 1 failed, 2 passed | formation : test_modele_nu_cas_sains_et_artefacts | garde du modèle nu : dose non lue
+V08 | ATTRAPÉE | 1 failed, 32 passed | amorce : test_preuve_artefacts_aucun_temoin[tete_distante_autre] | V01 et V02 ensemble (ajoutée après la passe principale)
+
+Bilan : 29 mutations jouées, 26 attrapées, 3 manquées.
+- Les vingt défauts de la contre-lecture : 20 attrapés sur 20 (6 sur 20 à la première passe).
+- B1 : attrapée.
+- V01 et V02 passent une à une parce que la preuve du versement a trois verrous qui se recouvrent : l'échec de la
+  poussée, la comparaison de la tête distante, la relecture de chaque fichier au commit. V02 est équivalente au sens
+  strict : un fichier resté sur le disque est dans l'inventaire et manque au commit, la relecture le voit toujours.
+  V01 ne se voit que si le versement de l'inventaire ne pousse rien alors que la branche distante a bougé, ce que la
+  suite réelle ne produit pas. Posées ensemble (V08), elles sont attrapées.
+- V06 est un vrai angle mort de la garde du point 5 (constat neuf n-5 de la vérification).

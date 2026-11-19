@@ -1,0 +1,76 @@
+Sortie de `sondages-verif-v1.py` — contre-lecteur Fable 5.2, vérification des corrections, 19 novembre 2026, vers 20:18Z.
+Commande : TMPDIR=/dev/shm PYTHONPATH=src .venv/bin/python -B <outils>/sondages-verif-v1.py /dev/shm/b5f-verif-sondages-1
+(code de sortie 0). Code sondé : dépôt à la tête 199caf6b2, fichiers aux empreintes du § 9 du rapport v3 du développeur.
+Recopiée à la main et condensée depuis la sortie du programme (les fichiers du dépôt ne s'écrivent que par l'outil
+d'écriture).
+
+S1 — état des adaptateurs à l'entrée de chaque tirage (marche jouet, T01 puis T02 sur la même instance)
+  statuts : T01 formée, T02 formée
+  tirage de T01 : dose lue 0.0 ; matrices B non nulles : non ; logits égaux à ceux du modèle nu : oui
+  tirage de T02 : dose lue 0.0 ; matrices B non nulles : oui (un adaptateur de T01 reste chargé, à la dose 0) ;
+                  logits égaux à ceux du modèle nu : oui
+  fichiers de T01 : adaptateur-jumeau.pt, adaptateur-saboteur.pt, adaptateur-sur_saboteur.pt, evaluation-jumeau.jsonl,
+                    evaluation-saboteur.jsonl, evaluation-sur_saboteur.jsonl, textes-distillation.jsonl, tirage.jsonl
+  Lecture : le constat B-1 est fermé. (Première passe : dose 1.0, logits différents au tirage de T02.)
+
+S2 — clés dans la commande de création (registre avec SCELLEMENT-B5F, relance=False)
+  extrait de la commande imprimée : -e HF_TOKEN=$HF_TOKEN -e GH_TOKEN=$GH_TOKEN"
+  valeur des clés dans la ligne imprimée : non ; valeur reçue par le loueur quand la ligne est jouée dans un shell : oui ;
+  texte littéral « $HF_TOKEN » reçu : non
+  variables reçues : BRANCHE_CODE, COMMIT, DEPOT_URL, ECHEANCE_ARRET_UTC_S, GH_TOKEN, GO_ID, HF_TOKEN, INSTANCE_B5F,
+                     PREREG, PRIX_USD_H, RELANCE_B5F, RUN_B5F
+  Lecture : le constat M-1 est fermé.
+
+S3 — action non éditable pour un seul membre (« 1,25 hours », « 0,4 hours », « 300 hours »)
+  table de l'action « 0,4 » : non éditable, motif « jumeau : lecteur gelé : 125.0 relu au lieu de 0.125 » ;
+  identifiants d'origine gardés pour les trois membres : oui ; les deux autres actions : éditables
+
+S4 — opérateur d'édition, 25 écritures × 2 tokeniseurs jouets × 2 membres édités (vérification indépendante)
+  80 éditions ; jeton changé hors du nombre : 0 ; empan déclaré différent de l'empan minimal recalculé : 0 ; texte relu
+  différent : 0
+  non éditables : « plusieurs nombres » (« 3e3 hours », « 300 hours per run, 5 seeds », « 300 hours (3 seeds) »,
+    « 30 GPU-hours on 1 node ») ; règle neuve du suffixe « k » (« 1,5k hours » et « 2 k hours », par le jumeau) ;
+    « 3k », « 2.9k » et « 12k » restent éditables (2.9k : jumeau « 1k »)
+  écritures particulières comptées : « milliers sans séparateur » pour le sur-saboteur seul (300 → 1000, 999 → 3000) ;
+    « décimales perdues » dans les deux sens (300.0, 12 000,5, 2.9k) ou pour le sur-saboteur seul (1.000, 1,5k)
+
+S5 — évaluation réduite
+  entropies 1, 2, 3 et 99 : 16 tâches gardées, 8 dans le pli 0, 8 dans le pli 1, toutes parmi les tâches communes
+  tâches par membre, complet puis réduit :
+    T01 : 32, 32, 32 puis 16, 16, 16
+    A1 à deux membres : jumeau 32, saboteur 64 puis 16, 32
+    A1 à trois membres : jumeau 32, saboteur 64, sur-saboteur 32 puis 16, 32, 16
+  Lecture : les constats m-2 et m-3 sont fermés.
+
+S6 — tokeniseur jouet qui nettoie les espaces avant la ponctuation : inchangé depuis la première passe (« Measure X , then
+  Y . » et « it 's cheap . » : non éditables, « décodage cumulé … préfixe hors du texte »). Le développeur a mesuré que le
+  vrai tokeniseur, sous la version de transformers du dépôt, ne nettoie pas (rapport v3, § 4) : je ne l'ai pas rejoué.
+
+S7 — preuve du versement côté session (`exiger_versement`) sur un inventaire final de la forme de l'amorce
+  arrêt avant la marche (traces seules, aucun manifeste) : REFUSÉ — « runs/<marche>/manifeste.json absent du commit … :
+    versement non prouvé, aucune destruction »
+  fin nominale, commit prouvé (celui du témoin) : accepté
+  fin nominale, tête de la branche (journal de fin poussé après la preuve) : REFUSÉ — « traces-b5f/journal/journal-b5f.txt :
+    empreinte au commit ≠ inventaire »
+  Lecture : deux constats neufs, mineurs (n-1 et n-2 de la vérification).
+
+S8 — relance et plafond
+  somme des coupures du plan : 169 USD ; plafond : 200 USD
+  ligne GO-RELANCE-FORMATION-B5F « instances 1 » : acceptée, coupures cumulées 195 USD (sous le plafond)
+  « instances 1,2 » : acceptée, 221 USD (au-dessus) ; « instances 1,2,3,4,5 » : acceptée, 299 USD (au-dessus)
+  Lecture : rien dans le code ne borne le cumul des coupures des relances (constat neuf n-4).
+
+S9 — ligne SCELLEMENT-B5F
+  texte « …-v1-brouillon3.md » : refusé (« un texte scellé comme brouillon n'est pas le préenregistrement ») ;
+  « …-v1.md » : accepté ; « …-v1-b3.md » : accepté
+  Lecture : le refus tient au nom ; c'est la ligne du registre, inscrite par la mère, qui porte la preuve (chemin et
+  empreinte au commit de la course).
+
+Contrôles à part (commandes simples, même jour)
+  - les six fichiers d'essais du paquet, dans le dépôt : 253 passés (316 s) ;
+  - arbre extrait par les motifs de l'amorce au commit 199caf6b2 (`extraire-arbre-instance-cl-v1.sh`, outil de la première
+    passe) : 500 fichiers ; docs/notes, diag, runs, brouillons absents ; à la racine, les seuls fichiers nommés ; essais du
+    paquet sur cet arbre, par la commande de l'étape 4 de l'amorce : 171 passés (82 s) ; arbre propre après les essais ;
+  - syntaxe de tous les fichiers de `src/controle_ia` et des essais du paquet lue par Python 3.11.18 (la version de
+    l'image de l'instance ; le dépôt local tourne sous 3.13) : 291 fichiers, aucune erreur. Les essais eux-mêmes n'ont
+    pas tourné sous 3.11 (aucun environnement 3.11 avec torch ici).
