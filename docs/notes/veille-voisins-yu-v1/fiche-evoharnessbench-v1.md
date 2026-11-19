@@ -66,5 +66,5 @@ Il compare les deux, pour une mémoire de l'**exécutant** tenue au fil d'un har
 ## Réserves
 
 1. Lecture ciblée : la construction du banc (sections 3.2 et 3.3) et douze pages d'annexes ne sont pas lues.
-2. L'unité des mesures de transfert n'est pas sûre : le texte principal les dit relatives (p. 5-6) et l'axe des figures porte « % of its level » (p. 7), alors que les formules de l'annexe D sont des différences simples de taux (p. 23). Ne pas les reprendre comme des points sans relire.
+2. L'unité des mesures de transfert n'est pas sûre : le texte principal les dit relatives (p. 5-6) et l'axe des figures porte une variation en pourcentage du niveau (p. 7), alors que les formules de l'annexe D sont des différences simples de taux (p. 23). Ne pas les reprendre comme des points sans relire.
 3. Un seul lecteur ; aucune contre-lecture à ce jour.

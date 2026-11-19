@@ -28,7 +28,7 @@ Résultats, score sans banque → score avec banque : sur NewtonBench, banque im
 **Il manque le bras croisé** : une banque importée que le receveur continuerait de mettre à jour. Les auteurs le proposent comme suite (p. 9, p. 11), ne le font pas. Et aucune banque n'est tenue pendant l'essai : toutes sont gelées avant (p. 16).
 
 **Q4. La mémoire est-elle ablatée ?**
-Oui : le bâtisseur à banque vide, même espace de construction et même budget (p. 6, p. 18), contre le bâtisseur à banque entière : 56,36 contre 65,31 en moyenne de six réglages, soit 8,95 points (tableau 3, p. 6). Aussi : banque après zéro, un ou deux passages (figure 2, p. 7), et banque entière contre deux principes au plus choisis par recherche lexicale (p. 4, tableau 3). Un seul apprentissage et une seule exécution par tâche et par condition (p. 12, p. 17) ; 95 et 292 tâches d'essai (p. 5). Comparaisons appariées par tâche, intervalles à 95 % par rééchantillonnage des tâches (20 000 tirages), non corrigés ; ils disent la variation entre tâches, non entre exécutions répétées (p. 17). Les écarts entre campagnes ne sont donnés qu'à titre descriptif (p. 17-18).
+Oui : le bâtisseur à banque vide, même espace de construction et même budget (p. 6, p. 18), contre le bâtisseur à banque entière : 56,36 contre 65,31 en moyenne de six réglages, soit 8,95 points (tableau 3, p. 6). Aussi : banque après zéro, un ou deux passages (figure 2, p. 7), et banque entière contre deux principes au plus choisis par recherche lexicale (p. 4, tableau 3). Une seule exécution par tâche et par condition (p. 12, p. 17) ; des apprentissages indépendants et des exécutions répétées sont renvoyés à plus tard (p. 16) ; 95 et 292 tâches d'essai (p. 5). Comparaisons appariées par tâche, intervalles à 95 % par rééchantillonnage des tâches (20 000 tirages), non corrigés ; ils disent la variation entre tâches, non entre exécutions répétées (p. 17). Les écarts entre campagnes ne sont donnés qu'à titre descriptif (p. 17-18).
 
 **Q5. Des prédictions écrites avant l'essai ?**
 Non trouvé dans les pages lues. Une mise à jour doit citer une preuve observée (p. 4) ; rien n'est prédit ni confronté.
@@ -47,7 +47,7 @@ Le score de deux bancs. Les auteurs parlent avec réserve et disent leurs bornes
 
 ## Une remarque de ce lecteur (à relire avant tout usage)
 
-Sur Harness-Bench, les deux témoins sans banque du même bâtisseur receveur valent 65,93 et 70,27 (figure 3(b), p. 8) : ils diffèrent de 4,34 points, plus que l'avantage de 3,69 points que le texte donne à la banque propre. Mesuré contre son propre témoin, le gain de la banque importée (+2,72) y est même un peu plus grand que celui de la banque propre (+2,07). Le sens « la banque propre fait mieux » ne tient donc, à témoin égal, que sur NewtonBench.
+Sur Harness-Bench, les témoins sans banque du même bâtisseur receveur, pour la même cible, valent 65,93 (bras de la banque importée), 70,27 (bras de la banque propre) et 63,32 (bras de la banque d'un autre couple) (figure 3(b), p. 8). Les deux premiers diffèrent de 4,34 points, plus que l'avantage de 3,69 points que le texte donne à la banque propre ; les trois s'étalent sur 6,95 points. Mesuré contre son propre témoin, le gain de la banque importée (+2,72) y est même un peu plus grand que celui de la banque propre (+2,07). Le sens « la banque propre fait mieux » ne tient donc, à témoin égal, que sur NewtonBench.
 
 ## Trois citations
 
