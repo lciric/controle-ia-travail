@@ -1,0 +1,56 @@
+{
+ "version": "configuration-interrupteurs-course-auto-conception-v1",
+ "statut": "rang 0 des épreuves v9 (branchement) : réglages lus par le lanceur v10 SEULEMENT si au moins un interrupteur est allumé ; éteints, le lanceur v10 ne l'ouvre jamais et joue la v9 à l'identique (configuration v5). Rien ici n'est servi par défaut. Les valeurs de l'étage sont celles de l'essai à blanc : elles ne valent pas réglage d'une course réelle, qui exige un additif de préenregistrement épinglé (à venir), une ligne de GO dont le périmètre nomme chaque interrupteur allumé, un devis et une version d'orchestrateur à part (rapport du développeur, rang-0-branchement/rapport-developpeur-rang-0-v1.md).",
+ "interrupteurs": {
+  "lecture_selection_generation_suivante": "la génération g+1 lit la sélection scellée de l'étage joué après la génération g (fiches de verdict « survit » calculé par le noyau), par `demonstrations/ideation_v59.py` → `pole/course2_v59.py` ; exige les tests de mort (sans étage, aucune sélection)",
+  "tests_de_mort_reels": "l'étage de tests de mort entre deux générations (`pole/etage_entre_generations_v57.py`, étage `tests_de_mort_v5`) ; exécuteur factice en moteur simulé, bac à sable `bwrap` en moteur réel ; seul (sans lecture), refusé : l'orchestrateur a41b7b50 ne joue l'étage qu'entre deux générations, et une deuxième génération lit toujours un héritage"
+ },
+ "orchestrateur": {
+  "commit": "a41b7b50f7c64ce488c120bb89ad3d25fb1dd1cb",
+  "lanceur_allume": "demonstrations/ideation_v59.py",
+  "course": "pole/course2_v59.py"
+ },
+ "generations": 2,
+ "budget": {
+  "portee_plafond": "par_generation",
+  "motif": "chaque génération de l'orchestrateur repart d'un budget neuf (`pole/noyau_v56.py`, BudgetV56 construit par génération) : la portée « course » ferait porter à la ligne de GO S17 seul pour N générations ; « par_generation » lui fait porter N × S17 + (N − 1) × plafond de l'étage (`configuration_v54.montant_requis`)"
+ },
+ "etage_tests_de_mort": {
+  "nombre": 2,
+  "tranche": "À REMPLIR",
+  "liste_blanche": "À REMPLIR",
+  "experimentateur": [
+   "experimentateur-test",
+   "claude-opus-5-5"
+  ],
+  "lecteur": [
+   "lecteur-test",
+   "claude-fable-5-1"
+  ],
+  "budget_test_usd": 0.5,
+  "budget_lecteur_usd": 0.2,
+  "executions_par_fiche": 3,
+  "delai_execution_s": 120.0,
+  "memoire_mo": 1024,
+  "plafond_etage_usd": 5.0,
+  "fournisseur": "claude",
+  "correspondance": {
+   "nom": "titre",
+   "enonce": "mecanisme",
+   "prediction": "prediction",
+   "signe": "signe",
+   "metrique": "metrique",
+   "test_de_mort": "test_de_mort"
+  },
+  "environnement_permis": [
+   "GO_ID",
+   "PYTHONPYCACHEPREFIX"
+  ]
+ },
+ "notes": [
+  "« tranche » et « liste_blanche » : À REMPLIR (aucune tranche réelle n'existe pour cette course) ; l'essai à blanc y met une tranche d'essai écrite dans son dossier.",
+  "« correspondance » : nom et énoncé lus dans « titre » et « mecanisme » ; « prediction », « signe », « metrique » et « test_de_mort » ne sont PAS des champs des fiches de la configuration v5 (champs_fiche) : l'étage refuse chaque fiche de la course d'auto-conception (« fiche sans champ test_de_mort ») ; le lanceur v10 le dit au manifeste et le refuse en moteur réel. Aucun champ n'est inventé.",
+  "« environnement_permis » : les deux noms que le lanceur pose dans l'environnement de l'orchestrateur hors de la liste blanche de la machine jetable v56 (aucun nom de clé).",
+  "La variable de déclaration de la machine jetable (`POLE_MACHINE_JETABLE_V56`) n'est jamais posée par cette configuration : en moteur simulé, l'essai à blanc la pose comme déclaration d'essai (exécuteur factice, aucun code de carte exécuté) ; en moteur réel, seul l'opérateur d'une machine louée jetable peut la poser (R-640)."
+ ]
+}
