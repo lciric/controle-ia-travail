@@ -461,3 +461,181 @@ def test_ecart_relatif_sans_reference_non_nulle():
         cc["ref"]["diffs_float64"][t_] = [0.0] * len(cc["ref"]["diffs_float64"][t_])
         cc["neuf"]["diffs_float64"][t_] = [0.0] * len(cc["neuf"]["diffs_float64"][t_])
     assert c.comparer(cc)["ecart_max_rel_diffs_float64"] is None
+
+
+# --- vérification du programme v2 (F1 à F6) -------------------------------------------------------------------------------
+def test_f1_export_neuf_rattache_mais_fichier_du_18():
+    cc = _octets_differents(_base("R"))
+    cc["sha_pieces"]["export_neuf"] = c.REFERENCES["export-R"]     # identifiant et manifeste neufs, mais le fichier du 18
+    r = c.comparer(cc)
+    assert r["mention"] == c.NON_COMPARABLE and _pre_manque(r, "export neuf différent")
+
+
+def test_f1_export_neuf_d_une_autre_course_t2b():
+    cc = _octets_differents(_base("R"))
+    cc["env_eneuf"]["run_id"] = "20261121-000000-autre"
+    r = c.comparer(cc)
+    assert r["mention"] == c.NON_COMPARABLE and _pre_manque(r, "H2")
+
+
+def test_f2_fonction_modifiee_des_deux_cotes_t1():
+    cc = _octets_differents(_base("S"))
+    cc["fref"] = cc["fneuf"] = "9" * 64
+    r = c.comparer(cc)
+    assert r["mention"] == c.NON_COMPARABLE and _pre_manque(r, "F2")
+    assert c.REFERENCES["fonction"] == c.empreinte_fonction(LANCEUR.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("cas", ["t3c_decalees", "t3b_aucune_commune", "t3_series_decalees"])
+def test_f3_memes_couches(cas):
+    cc = _octets_differents(_base("R"))
+    if cas == "t3c_decalees":
+        mm = cc["eneuf"]["matrices_moities"]
+        cc["eneuf"]["matrices_moities"] = {str(int(k) + 1): v for k, v in mm.items()}
+    elif cas == "t3b_aucune_commune":
+        s = cc["eneuf"]["valeurs"]["npR_notre_R"]
+        cc["eneuf"]["valeurs"]["npR_notre_R"] = {str(int(k) + 100): v for k, v in s.items()}
+    else:
+        s = cc["eneuf"]["valeurs"]["identite_notre_R"]
+        cc["eneuf"]["valeurs"]["identite_notre_R"] = {str(int(k) + 1): v for k, v in s.items()}
+    r = c.comparer(cc)                      # aucune erreur levée
+    assert r["mention"] == c.NON_COMPARABLE
+
+
+def test_f4_serie_deplacee_de_0_01_au_premier_palier_p6b():
+    cc = _base("R")
+    cc["eneuf"]["valeurs"]["npR_notre_R"]["9"] += 0.01
+    assert c.comparer(cc)["mention"] == c.SUSPENDU
+
+
+def test_f5_t8_differences_des_manifestes_rapportees():
+    cc = _octets_differents(_base("S"))
+    cc["mneuf"]["versions"] = dict(cc["mneuf"]["versions"], plateforme="autre noyau")
+    cc["mneuf"]["config"]["tranche"] = "autre"
+    r = c.comparer(cc)
+    d = r["differences_des_manifestes_sans_critere"]
+    assert "plateforme" in d["versions"] and "tranche" in d["config"] and d["commit"] == [cc["mref"]["commit"], "f" * 40]
+    assert r["mention"] == c.PALIER_2
+
+
+def test_mineure_1_etape_t11():
+    cc = _octets_differents(_base("S"))
+    cc["neuf"]["etape"] = "ajustement-R"
+    r = c.comparer(cc)
+    assert r["mention"] == c.NON_COMPARABLE and _pre_manque(r, "etape")
+
+
+# F6, 1 : déclencheurs (iii) et (iv)
+def test_f6_declencheurs_iii_et_iv():
+    cc = _octets_differents(_base("S"))
+    cc["neuf"]["diffs_float64"]["mid"][0] += 5e-3
+    r = c.comparer(cc)
+    assert r["mention"] == c.DIFFERENTE and "(iii) lentille différente" in r["declencheurs"]
+    cc2 = _octets_differents(_base("S"))
+    cc2["neuf"]["n_docs"] = [1, 1]
+    r2 = c.comparer(cc2)
+    assert r2["mention"] == c.NON_COMPARABLE and "(iv) non comparable" in r2["declencheurs"]
+
+
+# F6, 2 : empreintes calculées sur les octets lus (vrais fichiers modifiés d'un octet)
+def _copie_modifiee(src, dst):
+    b = bytearray(src.read_bytes())
+    i = b.rindex(b"}")
+    b[i:i] = b" "                        # JSON toujours lisible, un octet de plus
+    dst.write_bytes(bytes(b))
+    return dst
+
+
+@pytest.mark.parametrize("piece", ["ajustement_ref", "manifeste_ref", "export_ref"])
+def test_f6_piece_de_reference_modifiee_d_un_octet(tmp_path, piece):
+    aj = DIAG / "b-beta-ajustement-R.json"
+    ex = DIAG / "b-beta-export.json"
+    args = dict(ref_ajustement=aj, neuf_ajustement=aj, ref_manifeste=MANIF, neuf_manifeste=MANIF, lanceur_ref=LANCEUR,
+                lanceur_neuf=LANCEUR, ref_export=ex, neuf_export=ex, depot=RACINE)
+    cle = {"ajustement_ref": "ref_ajustement", "manifeste_ref": "ref_manifeste", "export_ref": "ref_export"}[piece]
+    args[cle] = _copie_modifiee(args[cle], tmp_path / "m.json")
+    cc = c.charger(**args)
+    assert cc["sha_pieces"][piece] != c.REFERENCES[{"ajustement_ref": "ajustement-R", "manifeste_ref": "manifeste",
+                                                    "export_ref": "export-R"}[piece]]
+    r = c.comparer(cc)
+    assert not r["preconditions_toutes_tenues"]
+
+
+def test_f6_manifeste_neuf_modifie_apres_coup(tmp_path):
+    # le résultat neuf porte l'empreinte du manifeste du 18 ; le manifeste neuf donné est modifié d'un octet
+    aj = DIAG / "b-beta-ajustement-S.json"
+    m2 = _copie_modifiee(MANIF, tmp_path / "manifeste.json")
+    cc = c.charger(aj, aj, MANIF, m2, LANCEUR, LANCEUR, depot=RACINE)
+    assert cc["sha_pieces"]["manifeste_neuf"] != cc["env_neuf"]["manifeste_sha256"]
+    r = c.comparer(cc)
+    assert _pre_manque(r, "manifeste neuf")
+
+
+# F6, 3 : borne de cohérence du premier palier
+@pytest.mark.parametrize("delta,suspendu", [(2e-9, True), (5e-10, False)])
+def test_f6_coherence_premier_palier(delta, suspendu):
+    cc = _base("S")
+    cc["neuf"]["diffs_float64"]["out"][7] += delta
+    assert (c.comparer(cc)["mention"] == c.SUSPENDU) is suspendu
+    assert c.COHERENCE_PALIER_1 == 1e-9
+
+
+# F6, 4 : course distincte jugée sur l'identifiant et l'heure
+@pytest.mark.parametrize("meme", ["identifiant", "heure"])
+def test_f6_course_distincte(meme):
+    cc = _octets_differents(_base("S"))
+    if meme == "identifiant":
+        cc["env_neuf"]["run_id"] = cc["env_ref"]["run_id"]
+    else:
+        cc["neuf"]["debut_utc"] = cc["ref"]["debut_utc"]
+    r = c.comparer(cc)
+    assert r["mention"] == c.NON_COMPARABLE and _pre_manque(r, "course neuve distincte")
+
+
+# F6, 5 : taille absente au deuxième palier
+def test_f6_taille_absente():
+    cc = _octets_differents(_base("S"))
+    cc["neuf"]["taille"] = None
+    r = c.comparer(cc)
+    assert r["mention"] == c.NON_COMPARABLE and _pre_manque(r, "taille")
+
+
+# F6, 6 : champ de configuration absent des deux côtés ; liste des six champs
+def test_f6_champ_de_configuration_absent_des_deux_cotes():
+    cc = _octets_differents(_base("S"))
+    del cc["mref"]["config"]["graines"]
+    del cc["mneuf"]["config"]["graines"]
+    assert c.comparer(cc)["mention"] == c.NON_COMPARABLE
+    assert c.CHAMPS_CONFIG == ("ajustement", "correctifs", "graines", "modele", "revision", "corpus")
+
+
+# F6, 7 : empreinte de matrice mal formée ; cible à liste vide des deux côtés
+def test_f6_empreinte_de_matrice_mal_formee():
+    cc = _octets_differents(_base("R"))
+    cc["eneuf"]["matrices_moities"]["3"] = ["xyz", cc["eneuf"]["matrices_moities"]["3"][1]]
+    assert c.comparer(cc)["mention"] == c.NON_COMPARABLE
+
+
+def test_f6_cible_a_liste_vide_des_deux_cotes():
+    cc = _octets_differents(_base("S"))
+    cc["ref"]["diffs_float64"]["out"] = []
+    cc["neuf"]["diffs_float64"]["out"] = []
+    assert c.comparer(cc)["mention"] == c.NON_COMPARABLE
+
+
+# F6, 8 : plage des séries du 18 lue du côté de la référence
+def test_f6_plage_des_series_du_18():
+    cc = _octets_differents(_base("R"))
+    s18 = cc["eref"]["valeurs"]["npR_notre_R"]
+    for k in cc["eneuf"]["valeurs"]["npR_notre_R"]:
+        cc["eneuf"]["valeurs"]["npR_notre_R"][k] += 0.5
+    r = c.comparer(cc)
+    s = r["series_export_R_sans_critere"]["npR_notre_R"]
+    assert s["ref_min"] == min(s18.values()) and s["ref_max"] == max(s18.values())
+
+
+# F6, 9 : garde de finitude du maximum, appel direct
+def test_f6_garde_de_finitude_du_maximum():
+    with pytest.raises(ValueError):
+        c._max_abs([{"ecart": 0.1}, {"ecart": float("nan")}])
+    assert c._max_abs([{"ecart": -0.2}, {"ecart": 0.1}]) == 0.2

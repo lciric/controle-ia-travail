@@ -13,6 +13,10 @@ rédacteur Fable du critère v4 (T1 à T4) :
   d'empreinte égale aux deux commits des manifestes (lu dans le dépôt par `git show`) ;
 - H6 : au deuxième palier, pour R, 31 matrices égales sur 31 ou une série inchangée à zéro exact : déclencheur (vi), audit requis ;
 - H7 : écart sur `diffs` au-delà de 10⁻³ au deuxième palier ou de 10⁻⁶ au premier : déclencheur (vii), mention suspendue.
+Et la vérification du programme v2 (`docs/notes/neuron-lens-v1/verification-programme-comparaison-v2-v1.md`, `8cd01e58…`, F1 à F6) :
+F1 = H2 ; F2 : texte de la fonction de référence fixé par une constante ; F3 : mêmes couches des deux côtés (matrices 0 à 30, séries
+0 à 27) ; F4 = H4 ; F5 : table des différences des manifestes, rapportée sans critère ; F6 : essais ; mineure 1 : champ `etape`
+conforme à la lentille.
 
 v2 = v1 (`comparer_reajustement_v1.py`, `247b6959…`) corrigée selon la vérification du critère v2
 (`docs/notes/neuron-lens-v1/verification-critere-identite-reajustement-v2-v1.md`, `8a6045bb…`, corrections D1 à D4) :
@@ -55,8 +59,11 @@ REFERENCES = {
     "ajustement-S": "2dce646e32177941c02987a8ba3a0a67fd45d17f335e58ba9e321d3e0367c297",
     "export-R": "17304c936792e4b79e9a47d78abf5bb6966310c36b92f387b3303b23891eedf1",
     "manifeste": "b90c15140074e9d41a3cf93e8bcaf55f80cc025d07d2d46432239d1c6b6e3444",
+    # F2 : empreinte du texte de `_split_half_64` dans `b_beta_lancer_v3.py` (`582fd9ef…`), lanceur de la course du 18
+    "fonction": "a5495c68779bb67059cade18b3a92aaf7cf7fd0200f1770b038d8c5d0e62703c",
 }
 CLES_SERIES_R = {str(i) for i in range(COUCHES_SERIES_R)}
+CLES_MATRICES_R = {str(i) for i in range(COUCHES_MATRICES_R)}
 
 _TOL = f"{TOLERANCE:.0e}".replace("1e-03", "10⁻³")
 PALIER_1 = "palier 1 — même lentille, octets identiques"
@@ -168,7 +175,10 @@ def preconditions(c: dict) -> list[dict]:
       f"{ref.get('fichier')} ; {neuf.get('fichier')}")
     cvr, cvn = cr.get("commit_voisin"), cn.get("commit_voisin")
     p("même commit du code voisin, présent", bool(cvr) and cvr == cvn, f"{cvr} ; {cvn}")
-    p(f"même texte de la fonction {FONCTION}, présent", bool(c["fref"]) and c["fref"] == c["fneuf"], f"{c['fref']} ; {c['fneuf']}")
+    p(f"même texte de la fonction {FONCTION}, égal à celui du lanceur du 18 (F2)",
+      c["fref"] == REFERENCES["fonction"] and c["fref"] == c["fneuf"], f"{c['fref']} ; {c['fneuf']}")
+    for cote, rr in (("ref", ref), ("neuf", neuf)):
+        p(f"champ `etape` conforme à la lentille ({cote})", L in ("R", "S") and rr.get("etape") == f"ajustement-{L}", rr.get("etape"))
     # pièces d'export de R (D3)
     if L == "R":
         p("export de référence d'empreinte égale au critère", c["sha_pieces"].get("export_ref") == REFERENCES["export-R"],
@@ -179,6 +189,8 @@ def preconditions(c: dict) -> list[dict]:
             ok_mm = isinstance(mm, dict) and len(mm) == COUCHES_MATRICES_R and all(
                 isinstance(v, list) and len(v) == 2 and all(isinstance(h, str) and _HEX64.match(h) for h in v) for v in mm.values())
             p(f"export de R présent avec {COUCHES_MATRICES_R} couches de matrices ({cote})", ok_mm, None if mm is None else len(mm))
+            p(f"couches des matrices : exactement 0 à 30 (F3, {cote})", isinstance(mm, dict) and set(mm) == CLES_MATRICES_R,
+              None if not isinstance(mm, dict) else sorted(set(mm) ^ CLES_MATRICES_R))
             val = (e or {}).get("valeurs") if ok else None
             for s in SERIES_R:
                 serie = val.get(s) if isinstance(val, dict) else None
@@ -195,6 +207,18 @@ def preconditions(c: dict) -> list[dict]:
         p("H2 : export neuf différent de celui du 18", bool(c["sha_pieces"].get("export_neuf"))
           and c["sha_pieces"].get("export_neuf") != REFERENCES["export-R"], c["sha_pieces"].get("export_neuf"))
     return p.liste
+
+
+def differences_manifestes(mref: dict, mneuf: dict) -> dict:
+    """F5 : pour `versions`, `commit` et les champs de `config` hors préalables, les clés qui diffèrent, avec les deux valeurs."""
+    d = {}
+    vr, vn = mref.get("versions") or {}, mneuf.get("versions") or {}
+    d["versions"] = {k: [vr.get(k), vn.get(k)] for k in sorted(set(vr) | set(vn)) if vr.get(k) != vn.get(k)}
+    d["commit"] = None if mref.get("commit") == mneuf.get("commit") else [mref.get("commit"), mneuf.get("commit")]
+    hors = set(CHAMPS_CONFIG) | {"commit_voisin", "drowse", "precision", "correctifs"}
+    cr, cn = mref.get("config") or {}, mneuf.get("config") or {}
+    d["config"] = {k: [str(cr.get(k))[:200], str(cn.get(k))[:200]] for k in sorted((set(cr) | set(cn)) - hors) if cr.get(k) != cn.get(k)}
+    return d
 
 
 def _table(ref, neuf, champ):
@@ -245,6 +269,7 @@ def comparer(c: dict, *, reprise: bool = False) -> dict:
                         {k: r[k] for k in ("cible", "rang", "ref", "neuf")} for r in t32
                         if (r["ref"] <= SEUIL_STABILITE) != (r["neuf"] <= SEUIL_STABILITE)]})
     export_ok = L != "R" or all(p["tenu"] for p in pre if "export" in p["nom"] or p["nom"].startswith("série "))
+    out["differences_des_manifestes_sans_critere"] = differences_manifestes(c["mref"], c["mneuf"])
     if L == "R" and export_ok:
         mm_r, mm_n = c["eref"]["matrices_moities"], c["eneuf"]["matrices_moities"]
         egales = sum(1 for k in mm_r if mm_n.get(k) == mm_r[k])
