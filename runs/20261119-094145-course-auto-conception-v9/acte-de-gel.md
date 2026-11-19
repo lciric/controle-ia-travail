@@ -1,0 +1,9 @@
+# Acte de gel — course d'auto-conception de l'organisme d'idéation, version 2 (plafond d'arrêt 150 USD, additif v2i)
+
+Écrit par le lanceur `lancer_course_auto_conception_v9` (sha256 1b47c1cf097e4cba290223223655d5ac63707dfeaec032be929930d30fde9b12) le Thu Nov 19 09:41:45 UTC 2026, après vérification.
+
+- Préenregistrement : `docs/notes/organisme-auto-conception-v1/course-v2/preenregistrement-course-auto-conception-v2.md`, sha256 0d51e0b3f51dd731351589187c124b7ee1a6237494aa0274825b19085c6763c6, scellé.
+- Additif v2i (mot de Lazar « Course à 150 USD (Recommandé) » : plafond d'arrêt 150 USD, seuils internes relevés d'autant, les juges lancés au haut du devis ; règle R-3661 : conservation des réponses brutes et inventaire de fin ; rien d'autre ne change : Carbon et Argon proposeurs sans troncature, plafond de session des proposeurs 6,05 USD) : `docs/notes/organisme-auto-conception-v1/course-v4/additif-preenregistrement-course-auto-conception-v2i.md`, sha256 1433b6a98a0fce4fad74e79465b69acd0b5ebb797fe3f26890179de70015d71b, scellé ; il cite les additifs v2c, v2d, v2e, v2f, v2g et v2h.
+- Contre-lecture : `/home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/course-v4/contre-lecture-tentative-plafond-150-v2i-auto-conception.md`, sha256 c64af060b402e7579f444fbb3db34ff1868a11de98253d44a653318e7a9062e2, scellée ; verdict lu : Scellable.
+- Matière servie : `docs/notes/matiere-premiere-auto-conception-v1/matiere-premiere-v3.md`, sha256 11f4b69ba42147c428090e4805948a708d0ed266da0c0cd07f194723eaba742d, lue au commit 546e05d075090b6b48405de2bf7f194056d7e0e0 ; lots écrits par la règle du préenregistrement, sha256 74d988bd7b4bc980cb6f4aa4c93d1cd87c8b94bebe3c5e592404bc7b3a6e0f23.
+- Cet acte est la spécification servie à l'orchestrateur (`specification.preenregistrement`) ; il ne change rien au préenregistrement.

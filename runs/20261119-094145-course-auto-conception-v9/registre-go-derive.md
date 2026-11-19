@@ -1,0 +1,7 @@
+# Registre des GO dérivé (course d'auto-conception, lanceur v9) — lignes nommées seulement
+
+Source : `registres/go.md` au commit `546e05d075090b6b48405de2bf7f194056d7e0e0` (refs/remotes/origin/main), sha256 `4fa7f3e6902fcce76966ef5b55bf233453ea5039e631c2dea84d07a9db6e4365`.
+
+| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |
+|---|---|---|---|---|---|---|---|
+| GO-2026-11-19-19 | 2026-11-19 | calcul | **Organisme d'idéation : course de l'auto-conception, tentative neuve, version 9** — lanceur v9 `1b47c1cf…`, additif v2i `1433b6a9…`, commandes v2i `41db94ca…`, devis v2i `a8c033cd…` (commit `04ffdca2`, contre-lecture du modèle K « Scellable. » `c64af060b402e7579f444fbb3db34ff1868a11de98253d44a653318e7a9062e2`, commit `bd85fd53` de `lot/compte-organisme-v1`, verdict relu par la mère) ; attendu ≈ 59,03 USD, cumul au haut 137,81 USD sous le plafond ; **plafond 150 USD exactement**, le lanceur coupant au plafond. **Mot de Lazar dans la session du compte de l'organisme** (`session_013QMaykhk6JHMoHDjwiTneW`), événement `c93af06c-7757-4eca-b026-2ac660f200db`, 2026-11-19T07:58:32Z, réponse à une question à choix, **relu à la source par la mère** (R-3688) : « Course à 150 USD (Recommandé) » — « plafond d'arrêt de la course 120 → 150 USD (ligne de GO à 150 exactement), seuils internes relevés d'autant ; les juges passent aussi au haut. Clé Minuit (≈ 199 nets) le couvre. » | 150 USD | 2026-11-19 | Lazar | R-3694 |
