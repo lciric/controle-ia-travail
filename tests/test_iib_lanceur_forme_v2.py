@@ -45,6 +45,10 @@ case "$1 $2" in
 "create instance") cat "$FAUX_REPONSE"; exit "${FAUX_CODE:-0}" ;;
 "show instances")
     [ "${FAUX_INVENTAIRE_ILLISIBLE:-}" = 1 ] && { echo "<html>erreur 502</html>"; exit 0; }
+    [ "${FAUX_INVENTAIRE_ERREUR:-}" = 1 ] && { echo "{\"error\": \"unauthorized\"}"; echo "HTTPError 401 ; Authorization: Bearer $VAST_API_KEY" >&2; exit 1; }
+    if [ -n "${FAUX_INVENTAIRE_CLIGNOTE:-}" ] && grep -q "^destroy" "$FAUX_VASTAI_JOURNAL"; then
+        k=$(grep -c "^show instances" "$FAUX_VASTAI_JOURNAL"); [ $((k % 2)) = 0 ] && { cat "$FAUX_INVENTAIRE_CLIGNOTE"; exit 0; }
+    fi
     cat "$FAUX_INSTANCES"; exit 0 ;;
 "destroy instance")
     oui=non; for a in "$@"; do [ "$a" = -y ] && oui=oui; done
@@ -53,7 +57,7 @@ case "$1 $2" in
         read -r rep || { echo "Aborted: no confirmation"; exit 1; }
         [ "$rep" = y ] || { echo "Aborted"; exit 1; }
     fi
-    case "${FAUX_DESTRUCTION:-}" in sans-effet) echo "destroying instance $3."; exit 0 ;; echec) echo "failed with error 500 ; Authorization: Bearer $VAST_API_KEY"; exit 1 ;; esac
+    case "${FAUX_DESTRUCTION:-}" in vide) echo "[]" > "$FAUX_INSTANCES"; echo "destroying instance $3."; exit 0 ;; sans-effet) echo "destroying instance $3."; exit 0 ;; echec) echo "failed with error 500 ; Authorization: Bearer $VAST_API_KEY"; exit 1 ;; esac
     python3 - "$FAUX_INSTANCES" "$3" <<'PY'
 import json, sys
 l = json.load(open(sys.argv[1]))
@@ -83,7 +87,7 @@ def poste(tmp_path):
     d = tmp_path / "session"
     d.mkdir()
     (d / "lancement.txt").write_text(f"controles-explo iib v1 x\nmachine_proposee 101\ncarte course\nanterieure 0\necheance 4102444800\n"
-                                     f"instance {ID}\ncreation {int(time.time()) - 60}\nprix_carte 1.0\nprix_stockage 0.03\n"
+                                     f"etiquette iib-explo-v1\ninstance {ID}\ncreation {int(time.time()) - 60}\nprix_carte 1.0\nprix_stockage 0.03\n"
                                      f"telechargement_forfait 1.0\nplafond_creation 55\nmode jouet\n", encoding="utf-8")
     inv = tmp_path / "inventaire.json"
     inv.write_text(json.dumps([{"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"},
@@ -92,14 +96,14 @@ def poste(tmp_path):
     return {"tmp": tmp_path, "outil": outil, "d": d, "inv": inv, "appels": tmp_path / "appels.txt"}
 
 
-def _lancer(p, *args, **sup):
+def _lancer(p, *args, script=None, **sup):
     e = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(p["tmp"]), "LANG": os.environ.get("LANG", "C.UTF-8"), "IIB_DEPOT": str(RACINE),
          "VAST": str(p["outil"]), "FAUX_VASTAI_JOURNAL": str(p["appels"]), "FAUX_INSTANCES": str(p["inv"]), "FAUX_JOURNAL": str(p["tmp"] / "journal.txt"),
          "HF_TOKEN": JETON_HF, "CONTROLE_IA_GITHUB_TOKEN_2": JETON_GH, "VAST_API_KEY": CLE_LOUEUR, "INTERVALLE": "1",
-         "IIB_DESTRUCTION_ATTENTE_S": "0", "IIB_DESTRUCTION_RELECTURES": "2"}
+         "IIB_DESTRUCTION_ATTENTE_S": "0", "IIB_DESTRUCTION_RELECTURES": "2", "RAPATRIEMENT_VERIFIE": "oui"}
     e.update(sup)
     e = {k: v for k, v in e.items() if v is not None}
-    return subprocess.run(["bash", str(LANCEUR_V2), *map(str, args)], env=e, capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
+    return subprocess.run(["bash", str(script or LANCEUR_V2), *map(str, args)], env=e, capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
 
 
 def _appels(p) -> list:
@@ -184,6 +188,7 @@ def test_creation_de_bout_en_bout_avec_un_outil_hors_du_path(monde, tmp_path):
     """La commande de création imprimée porte le chemin absolu de l'outil, pour la création comme pour `apres-creation` ; exécutée telle
     quelle, sans outil dans le PATH, elle crée (faux outil), conserve la réponse brute masquée et rend « CRÉÉE »."""
     shutil.copy(LANCEUR_V2, monde["src"] / "scripts" / LANCEUR_V2.name)
+    shutil.copy(RACINE / "src" / "controle_ia" / "iib" / "location_v1.py", monde["src"] / "src" / "controle_ia" / "iib" / "location_v1.py")
     outil = tmp_path / "outil-vastai-factice" / "bin" / "vastai"
     outil.parent.mkdir(parents=True)
     outil.write_text(FAUX_OUTIL, encoding="utf-8")
@@ -214,7 +219,8 @@ def test_creation_de_bout_en_bout_avec_un_outil_hors_du_path(monde, tmp_path):
     (copie,) = _traces({"d": d}, "creation-brute-")
     texte = copie.read_text(encoding="utf-8")
     assert _empreinte_tenue(copie) and "777777" in texte and JETON_HF not in texte and "jeton-gh-factice" not in texte
-    assert (d / "creation-brute.json").read_text(encoding="utf-8") == texte
+    assert (d / "creation-brute-essai1.json").read_text(encoding="utf-8") == texte and "creation-brute-essai1.json" in cmd
+    assert "etiquette iib-explo-v1\n" in (d / "lancement.txt").read_text(encoding="utf-8")
 
 
 # --- (2) réponse brute du loueur conservée ----------------------------------------------------------------------------------
@@ -246,21 +252,22 @@ def test_apres_creation_sain_creee_reponse_conservee(poste):
 def test_apres_creation_artefact_reponse_sans_identifiant_lisible_reste_sur_disque(poste):
     """Le cas du 19 novembre (R-3687) : ni `new_contract` ni `success` lisibles. Code 4, et la réponse brute reste, masquée."""
     f, r = _apres(poste, REPONSE_ILLISIBLE, 0)
-    assert r.returncode == 4 and "CRÉATION INCERTAINE (code 0, identifiant « aucun »)" in r.stdout and "aucune seconde création avant" in r.stdout, r.stdout + r.stderr
+    assert r.returncode == 4 and "CRÉATION INCERTAINE (code 0, identifiant « aucun » ; " in r.stdout and "aucune seconde création avant" in r.stdout, r.stdout + r.stderr
     (copie,) = _traces(poste, "creation-brute-")
     texte = copie.read_text(encoding="utf-8")
     assert f.exists() and f.read_text(encoding="utf-8") == texte and _empreinte_tenue(copie)
     assert "402 Payment Required" in texte and "lacks credit" in texte and "PUT /asks/61361283/" in texte        # la cause reste lisible
     for secret in (JETON_HF, JETON_GH, CLE_LOUEUR, "une-autre-cle-inconnue-de-l-environnement", "hf_AUTREautre0123456789"):
         assert secret not in texte and secret not in r.stdout + r.stderr, secret
-    assert "secrets masqués par programme avant conservation : " in r.stdout and "0 remplacement(s)" not in r.stdout
-    assert "success=absent ; new_contract=absent" in r.stdout
+    assert "secrets masqués par programme avant conservation (motifs) : " in r.stdout and "0 remplacement(s)" not in r.stdout
+    assert "réponse non analysable comme JSON" in r.stdout and "(motifs)" in r.stdout and "n'est pas une garde des secrets" in r.stdout
+    assert "instance " not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8").split("creation ")[-1]      # aucun identifiant consigné
     assert _appels(poste) == []
 
 
 def test_apres_creation_artefact_code_non_nul_et_identifiant_present_incertain_conserve(poste):
     f, r = _apres(poste, REPONSE_SAINE, 1)
-    assert r.returncode == 4 and "CRÉATION INCERTAINE (code 1, identifiant « 777777 »)" in r.stdout, r.stdout + r.stderr
+    assert r.returncode == 4 and "CRÉATION INCERTAINE (code 1, identifiant « 777777 » ; " in r.stdout and "aucun identifiant consigné" in r.stdout, r.stdout + r.stderr
     assert f.exists() and len(_traces(poste, "creation-brute-")) == 1
 
 
@@ -284,20 +291,28 @@ def test_apres_creation_deux_reponses_deux_copies_aucune_ecrasee(poste):
 def test_apres_creation_artefacts_reponse_absente_et_masquage_en_echec(poste, tmp_path):
     r = _lancer(poste, "apres-creation", poste["d"] / "absente.json", 0, poste["d"])
     assert r.returncode == 4 and "réponse brute du loueur absente" in r.stdout and "CRÉATION INCERTAINE" in r.stdout, r.stdout + r.stderr
-    # masquage impossible (aucun python3 dans le PATH) : rien n'est supprimé, l'original est laissé tel quel et le programme le dit
+    # masquage impossible (aucun python3 dans le PATH) : la sortie brute est gardée ENTIÈRE, marquée, droits restreints ; aucun champ imprimé
     b = tmp_path / "bin-sans-python"
     b.mkdir()
-    for outil in ("bash", "grep", "date", "cat", "head", "sed", "tail", "mkdir", "cp", "mv", "sha256sum", "cut", "basename", "dirname", "realpath", "timeout"):
+    for outil in ("bash", "grep", "date", "cat", "head", "sed", "tail", "mkdir", "cp", "mv", "sha256sum", "cut", "basename", "dirname", "realpath",
+                  "timeout", "chmod", "mktemp"):
         (b / outil).symlink_to(shutil.which(outil))
     f, r = _apres(poste, REPONSE_ILLISIBLE, 0, PATH=str(b))
-    assert r.returncode == 4 and "masquage de la réponse brute en échec" in r.stdout and "NON MASQUÉ" in r.stdout, r.stdout + r.stderr
-    assert f.read_text(encoding="utf-8") == REPONSE_ILLISIBLE and _traces(poste, "creation-brute-") == []
+    assert r.returncode == 4 and "masquage de la réponse brute en échec" in r.stdout and "NON MASQUÉE" in r.stdout, r.stdout + r.stderr
+    garde = Path(str(f) + ".NON-MASQUE")
+    assert garde.read_text(encoding="utf-8") == REPONSE_ILLISIBLE and (garde.stat().st_mode & 0o777) == 0o600 and str(garde) in r.stdout
+    assert _traces(poste, "creation-brute-") == [] and "champs de premier niveau" not in r.stdout
+    for secret in (JETON_HF, JETON_GH, CLE_LOUEUR):
+        assert secret not in r.stdout + r.stderr
 
 
 def test_le_programme_ne_supprime_aucune_sortie_de_la_location():
     """Garde de forme : dans la v2, `rm` ne porte que sur les deux fichiers de tâches des contrôles, jamais sur une sortie de la location."""
     code = [l for l in LANCEUR_V2.read_text(encoding="utf-8").splitlines() if not l.lstrip().startswith("#")]
     assert [l.strip() for l in code if "rm -" in l or " rm " in l] == ['rm -f "$D/reserve.json" "$D/evaluation.json"']
+    # seuls écrasements restants : le dernier relevé du journal de la surveillance (point laissé à trancher, dit au rapport)
+    assert [l.strip().split('"')[1] for l in code if "mv -f" in l or "cp -f" in l] == ["$D/journal-dernier.tmp", "$D/journal-dernier.txt"]
+    assert not any("2>/dev/null |" in l and "show instances" in l for l in code)                                    # aucun inventaire lu dans un tube
     assert any('rm -f -- "$F"' in l for l in LANCEUR_V1.read_text(encoding="utf-8").splitlines())                # l'artefact : la v1 supprimait
 
 
@@ -312,7 +327,7 @@ def test_le_faux_outil_exige_la_confirmation(poste):
 
 def test_destruction_sain_option_y_par_identifiant_et_absence_verifiee(poste):
     r = _lancer(poste, "destruction", ID, poste["d"])
-    assert r.returncode == 0 and f"DÉTRUITE : instance {ID} absente de l'inventaire" in r.stdout, r.stdout + r.stderr
+    assert r.returncode == 0 and f"DÉTRUITE : instance {ID} absente de deux relectures concordantes de l'inventaire" in r.stdout, r.stdout + r.stderr
     assert f"{poste['outil']} destroy instance {ID} -y" in r.stdout
     appels = _appels(poste)
     assert [a for a in appels if a.startswith("destroy")] == [f"destroy instance {ID} -y"]
@@ -321,9 +336,11 @@ def test_destruction_sain_option_y_par_identifiant_et_absence_verifiee(poste):
     assert "destruction_verifiee " in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
     journal = (poste["d"] / "destruction.txt").read_text(encoding="utf-8")
     assert f"destroy instance {ID} -y : code 0" in journal and f"instance {ID} absent" in journal and "outil de location employé" in journal
-    for prefixe in ("destruction-sortie-", "instances-avant-destruction-", "instances-apres-destruction-"):
-        (trace,) = _traces(poste, prefixe)
-        assert _empreinte_tenue(trace)
+    for prefixe, nombre in (("destruction-sortie-", 1), ("instances-avant-destruction-", 1), ("instances-apres-destruction-", 2)):
+        traces = _traces(poste, prefixe)
+        assert len(traces) == nombre and all(_empreinte_tenue(x) for x in traces), prefixe
+    assert "absente de deux relectures concordantes" in r.stdout and "instances intouchables (IIB_INSTANCES_INTOUCHABLES) : liste vide" in r.stdout
+    assert "instances intouchables : liste vide" in journal and "RAPATRIEMENT_VERIFIE=oui" in journal
 
 
 @pytest.mark.parametrize("mode, code, motif", [("sans-effet", 6, "DESTRUCTION NON OBTENUE : la commande a rendu le code 0"),
@@ -356,11 +373,11 @@ def test_destruction_artefact_inventaire_illisible_apres_incertain(poste):
     assert r.returncode == 4 and "l'absence de l'instance" in r.stdout and "n'est pas établie" in r.stdout and "DÉTRUITE" not in r.stdout, r.stdout + r.stderr
 
 
-def test_destruction_instance_deja_absente_aucune_commande(poste):
+def test_destruction_artefact_instance_absente_avant_n_est_pas_une_preuve(poste):
     poste["inv"].write_text(json.dumps({"instances": None}), encoding="utf-8")
     r = _lancer(poste, "destruction", ID, poste["d"])
-    assert r.returncode == 0 and "DÉJÀ ABSENTE DE L'INVENTAIRE : aucune commande de destruction envoyée" in r.stdout, r.stdout + r.stderr
-    assert not any(a.startswith("destroy") for a in _appels(poste))
+    assert r.returncode == 7 and "ABSENCE NON CONFIRMÉE" in r.stdout and "aucune commande de destruction envoyée" in r.stdout, r.stdout + r.stderr
+    assert not any(a.startswith("destroy") for a in _appels(poste)) and "destruction_verifiee" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize("identifiant, motif", [("58936096", "≠ instance créée"), ("iib-explo-v1", "chiffres seuls"), ("iib*", "chiffres seuls"),
@@ -370,3 +387,323 @@ def test_destruction_artefacts_jamais_une_autre_instance_ni_un_motif(poste, iden
     r = _lancer(poste, "destruction", identifiant, poste["d"])
     assert r.returncode == 2 and motif in r.stdout and "aucune destruction" in r.stdout, r.stdout + r.stderr
     assert _appels(poste) == [] and len(json.loads(poste["inv"].read_text(encoding="utf-8"))) == 2
+
+
+# === Corrections de la contre-lecture du 19 novembre (un bloquant, trois majeurs, mineurs) ===================================
+# Les sept attaques du contre-lecteur (`test_attaques_lanceur_v2_cl1.py`) sont reprises ici ; chaque essai affirme le comportement sûr.
+AUTRE = 58936096          # machine d'un autre chantier (« intouchable »), présente à l'inventaire du poste
+
+
+def _lancement_sans_instance(p):
+    (p["d"] / "lancement.txt").write_text("machine_proposee 101\ncarte course\nanterieure 0\necheance 4102444800\nmode jouet\netiquette iib-explo-v1\n", encoding="utf-8")
+
+
+def _lignes_instance(p) -> list:
+    return [l for l in (p["d"] / "lancement.txt").read_text(encoding="utf-8").splitlines() if l.startswith("instance ")]
+
+
+def _restantes(p) -> list:
+    return [i["id"] for i in json.loads(p["inv"].read_text(encoding="utf-8"))]
+
+
+def _tous_les_fichiers(p) -> dict:
+    return {str(f.relative_to(p["d"])): f.read_bytes() for f in sorted(p["d"].rglob("*")) if f.is_file()}
+
+
+def test_attaque_1_reponse_piegee_ne_fait_ni_consigner_ni_detruire_une_autre_machine(poste):
+    """BLOQUANT. Un message cite « new_contract: <autre> » avant le vrai champ : plusieurs valeurs candidates, donc refus (code 4),
+    aucun identifiant consigné ; et la destruction de l'autre machine est refusée avant tout appel."""
+    _lancement_sans_instance(poste)
+    _, r = _apres(poste, '{"msg": "previous new_contract: %d released", "success": true, "new_contract": 777777}' % AUTRE, 0)
+    assert r.returncode == 4 and "plusieurs valeurs candidates" in r.stdout and "CRÉÉE" not in r.stdout, r.stdout + r.stderr
+    assert _lignes_instance(poste) == []
+    r = _lancer(poste, "destruction", AUTRE, poste["d"])
+    assert r.returncode == 2 and "aucune destruction" in r.stdout, r.stdout + r.stderr
+    assert AUTRE in _restantes(poste) and not any(a.startswith("destroy") for a in _appels(poste))
+
+
+def test_attaque_1_bis_autre_machine_consignee_par_erreur_refusee_par_l_etiquette_et_par_la_liste(poste):
+    """Seconde ligne de défense : même si l'identifiant d'une autre machine était consigné dans `lancement.txt`, l'inventaire la montre
+    avec une étiquette qui n'est pas celle du saboteur à budget : refus sans appel ; refus aussi par la liste des intouchables."""
+    with (poste["d"] / "lancement.txt").open("a", encoding="utf-8") as f:
+        f.write(f"instance {AUTRE}\n")
+    r = _lancer(poste, "destruction", AUTRE, poste["d"], IIB_DESTRUCTION_ETATS_ARRET="running exited")
+    assert r.returncode == 2 and "porte l'étiquette « a1-v4 », qui ne commence pas par « iib-explo-v1 »" in r.stdout, r.stdout + r.stderr
+    r = _lancer(poste, "destruction", AUTRE, poste["d"], IIB_INSTANCES_INTOUCHABLES=f"61000001,{AUTRE}")
+    assert r.returncode == 2 and "dans la liste des instances intouchables" in r.stdout, r.stdout + r.stderr
+    assert sorted(_restantes(poste)) == sorted([int(ID), AUTRE]) and not any(a.startswith("destroy") for a in _appels(poste))
+
+
+def test_attaque_2_inventaire_vide_par_erreur_ne_vaut_pas_preuve(poste):
+    """MAJEUR. Inventaire rendu vide alors que l'instance existe : ni code 0, ni ligne `destruction_verifiee`, ni commande."""
+    for vide in ("[]", '{"instances": null}', '{"instances": []}'):
+        poste["inv"].write_text(vide, encoding="utf-8")
+        r = _lancer(poste, "destruction", ID, poste["d"])
+        assert r.returncode == 7 and "ABSENCE NON CONFIRMÉE" in r.stdout and "ce n'est pas une preuve" in r.stdout, (vide, r.stdout + r.stderr)
+    assert "destruction_verifiee" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
+    assert not any(a.startswith("destroy") for a in _appels(poste))
+
+
+def test_attaque_2_bis_inventaire_vide_apres_la_destruction_alors_que_d_autres_machines_existaient(poste):
+    """Après la commande, l'inventaire revient VIDE alors que le compte portait une autre machine : inventaire amputé, pas une preuve."""
+    r = _lancer(poste, "destruction", ID, poste["d"], FAUX_DESTRUCTION="vide")
+    assert r.returncode == 4 and "un inventaire vide ou amputé n'est pas une preuve" in r.stdout and "DÉTRUITE" not in r.stdout, r.stdout + r.stderr
+    assert "destruction_verifiee" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
+
+
+def test_destruction_sain_compte_a_une_seule_instance_inventaire_vide_relu_deux_fois(poste):
+    """Cas sain du même contrôle : le compte ne portait que l'instance du saboteur ; vide deux fois de suite, appel sans erreur : détruite."""
+    poste["inv"].write_text(json.dumps([{"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"}]), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 0 and "DÉTRUITE" in r.stdout and _appels(poste).count("show instances --raw") == 3, r.stdout + r.stderr
+
+
+def test_destruction_artefact_une_seule_relecture_absente_ne_suffit_pas(poste):
+    """L'inventaire d'après clignote (absente, présente, absente, présente) : jamais deux relectures concordantes, jamais « DÉTRUITE »."""
+    avec = poste["tmp"] / "inventaire-avec.json"
+    avec.write_text(poste["inv"].read_text(encoding="utf-8"), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"], FAUX_INVENTAIRE_CLIGNOTE=str(avec), IIB_DESTRUCTION_RELECTURES="4")
+    assert r.returncode == 4 and "DÉTRUITE" not in r.stdout and "sans deux relectures concordantes" in r.stdout, r.stdout + r.stderr
+    assert _appels(poste).count("show instances --raw") == 5 and "destruction_verifiee" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"], IIB_DESTRUCTION_RELECTURES="1")
+    assert r.returncode == 2 and "deux relectures concordantes exigées" in r.stdout, r.stdout + r.stderr
+
+
+def test_attaque_3_outil_en_erreur_apres_avoir_detruit_et_inventaire_illisible_ensuite(poste):
+    poste["outil"].write_text(FAUX_OUTIL.replace('[ "${FAUX_INVENTAIRE_ILLISIBLE:-}" = 1 ]', 'grep -q "^destroy" "$FAUX_VASTAI_JOURNAL"', 1), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"], FAUX_DESTRUCTION="echec-mais-retire")
+    assert r.returncode == 4 and "DÉTRUITE" not in r.stdout and "n'est pas établie" in r.stdout, r.stdout + r.stderr
+    assert [a for a in _appels(poste) if a.startswith("destroy")] == [f"destroy instance {ID} -y"]
+    # l'inventaire illisible est gardé entier, marqué, droits restreints, hors des traces à verser
+    gardes = sorted(poste["d"].glob("instances-apres-destruction-*.NON-MASQUE"))
+    assert len(gardes) == 2 and all((g.stat().st_mode & 0o777) == 0o600 and "erreur 502" in g.read_text(encoding="utf-8") for g in gardes)
+    assert _traces(poste, "instances-apres-destruction-") == []
+
+
+@pytest.mark.parametrize("identifiant", [f"0{ID}", f"{ID} ", f"{ID}\n", "", "-1", "0", f"+{ID}", f"{ID}.0"])
+def test_attaque_4_identifiants_pieges(poste, identifiant):
+    r = _lancer(poste, "destruction", identifiant, poste["d"])
+    assert r.returncode == 2 and "aucune destruction" in r.stdout and not any(a.startswith("destroy") for a in _appels(poste)), r.stdout + r.stderr
+    assert _appels(poste) == []
+
+
+def test_attaque_4_bis_deux_lignes_instance_seul_le_dernier_identifiant_consigne(poste):
+    with (poste["d"] / "lancement.txt").open("a", encoding="utf-8") as f:
+        f.write("instance 61999999\n")
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 2 and "≠ instance créée" in r.stdout and _appels(poste) == [], r.stdout + r.stderr
+
+
+def test_attaque_5_secret_d_une_autre_machine_jamais_verse_ni_garde(poste):
+    """MAJEUR. L'inventaire du compte porte les secrets des autres machines : ni les traces, ni aucun fichier du dossier de session ne
+    les gardent ; les traces ne portent que les champs filtrés de la seule instance du saboteur."""
+    secret, jeton = "sk-autreChantier-0123456789abcdef", "jt0123456789abcdef0123"
+    inv = [{"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited", "dph_total": 1.041, "machine_id": 126194, "storage_cost": 0.15,
+            "jupyter_token": "jt-du-saboteur-0123456789", "extra_env": [["HF_TOKEN", JETON_HF]], "ssh_host": "ssh9.exemple"},
+           {"id": AUTRE, "label": "a1-v4", "actual_status": "running", "jupyter_token": jeton, "machine_id": 555,
+            "extra_env": [["OPENAI_API_KEY", secret], ["-e WANDB", "x"]]}]
+    poste["inv"].write_text(json.dumps(inv), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 0, r.stdout + r.stderr
+    for nom, contenu in _tous_les_fichiers(poste).items():
+        for interdit in (secret, jeton, "jt-du-saboteur-0123456789", JETON_HF, "OPENAI_API_KEY", "ssh9.exemple"):
+            assert interdit.encode() not in contenu, (nom, interdit)
+    (avant,) = _traces(poste, "instances-avant-destruction-")
+    trace = json.loads(avant.read_text(encoding="utf-8"))
+    assert trace["instances_du_saboteur_champs_filtres"] == [{"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited", "dph_total": 1.041,
+                                                                "storage_cost": 0.15, "machine_id": 126194}]
+    assert trace["nombre_d_instances_du_compte"] == 2 and str(AUTRE) not in avant.read_text(encoding="utf-8") and "555" not in avant.read_text(encoding="utf-8")
+    # le fichier de travail du dossier ne garde, pour chaque instance, qu'identifiant, étiquette et état
+    (travail,) = sorted(poste["d"].glob("instances-avant-destruction-*.json"))
+    assert json.loads(travail.read_text(encoding="utf-8")) == [{"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"},
+                                                               {"id": AUTRE, "label": "a1-v4", "actual_status": "running"}]
+
+
+def test_attaque_6_secret_en_paire_dans_la_reponse_de_creation(poste):
+    """MAJEUR. Environnement renvoyé en paires (forme `extra_env`), secret inconnu de l'environnement local, jeton de bloc-notes."""
+    secret = "sk-inconnu-0123456789abcdef"
+    f, r = _apres(poste, json.dumps({"success": False, "error": "x", "extra_env": [["MY_API_KEY", secret], ["AUTRE", "gardé"]],
+                                     "jupyter_token": "jt0123456789", "args": {"env": {"DB_PASSWORD": "motdepasse-1234"}}}), 1)
+    (copie,) = _traces(poste, "creation-brute-")
+    texte = copie.read_text(encoding="utf-8")
+    for interdit in (secret, "jt0123456789", "motdepasse-1234"):
+        assert interdit not in texte and interdit not in f.read_text(encoding="utf-8") and interdit not in r.stdout
+    assert "(structure) : " in r.stdout and "0 remplacement(s)" not in r.stdout and json.loads(texte)["extra_env"] == [["MY_API_KEY", "***"], ["AUTRE", "gardé"]]
+
+
+def test_attaque_7_destruction_rejouee_n_ecrase_aucun_fichier(poste):
+    """R12 : une seconde destruction (code 6 la première fois) n'écrase ni ne retire aucun fichier écrit par la première, hors les deux
+    journaux, qui ne font que grandir."""
+    r = _lancer(poste, "destruction", ID, poste["d"], FAUX_DESTRUCTION="echec")
+    assert r.returncode == 6
+    premiers = _tous_les_fichiers(poste)
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 0, r.stdout + r.stderr
+    seconds = _tous_les_fichiers(poste)
+    for nom, contenu in premiers.items():
+        assert nom in seconds, nom
+        if nom in ("destruction.txt", "lancement.txt"):
+            assert seconds[nom].startswith(contenu), nom
+        else:
+            assert seconds[nom] == contenu, nom
+    assert len(_traces(poste, "destruction-sortie-")) == 2 and len(seconds) > len(premiers)
+
+
+# --- gardes de la destruction, cas sain (essai sain plus haut) et artefacts ---------------------------------------------------
+@pytest.mark.parametrize("cas, sup, motif", [
+    ("rapatriement_non_atteste", {"RAPATRIEMENT_VERIFIE": None}, "RAPATRIEMENT_VERIFIE=oui exigé"),
+    ("rapatriement_autre_mot", {"RAPATRIEMENT_VERIFIE": "non"}, "RAPATRIEMENT_VERIFIE=oui exigé"),
+    ("intouchable", {"IIB_INSTANCES_INTOUCHABLES": f"{AUTRE},{ID}"}, "dans la liste des instances intouchables"),
+    ("liste_illisible", {"IIB_INSTANCES_INTOUCHABLES": "a1-v4;iib"}, "IIB_INSTANCES_INTOUCHABLES illisible"),
+    ("etats_illisibles", {"IIB_DESTRUCTION_ETATS_ARRET": "*"}, "IIB_DESTRUCTION_ETATS_ARRET illisible")])
+def test_destruction_gardes_artefacts_refus_avant_tout_appel(poste, cas, sup, motif):
+    r = _lancer(poste, "destruction", ID, poste["d"], **sup)
+    assert r.returncode == 2 and motif in r.stdout and "aucune destruction" in r.stdout, (cas, r.stdout + r.stderr)
+    assert _appels(poste) == [] and len(_restantes(poste)) == 2
+
+
+def test_destruction_liste_des_intouchables_saine_dite_au_journal(poste):
+    r = _lancer(poste, "destruction", ID, poste["d"], IIB_INSTANCES_INTOUCHABLES=f"{AUTRE},61000001")
+    assert r.returncode == 0 and f"instances intouchables (IIB_INSTANCES_INTOUCHABLES) : {AUTRE},61000001" in r.stdout, r.stdout + r.stderr
+    assert f"instances intouchables : {AUTRE},61000001" in (poste["d"] / "destruction.txt").read_text(encoding="utf-8") and _restantes(poste) == [AUTRE]
+
+
+@pytest.mark.parametrize("cas, motif", [("en_marche", "est à l'état « running »"), ("etat_absent", "est à l'état « aucun »"),
+                                        ("etiquette_autre", "porte l'étiquette « t06-7b »"), ("sans_etiquette", "porte l'étiquette « aucun »"),
+                                        ("etiquette_iib_d_une_autre_course", "porte l'étiquette « iib-autre-v9 »")])
+def test_destruction_gardes_d_inventaire_artefacts_refus_sans_appel_de_destruction(poste, cas, motif):
+    entree = {"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"}
+    entree.update({"en_marche": {"actual_status": "running"}, "etat_absent": {"actual_status": None}, "etiquette_autre": {"label": "t06-7b"},
+                   "sans_etiquette": {"label": None}, "etiquette_iib_d_une_autre_course": {"label": "iib-autre-v9"}}[cas])
+    poste["inv"].write_text(json.dumps([entree, {"id": AUTRE, "label": "a1-v4", "actual_status": "running"}]), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 2 and motif in r.stdout and "aucune destruction" in r.stdout, (cas, r.stdout + r.stderr)
+    assert not any(a.startswith("destroy") for a in _appels(poste)) and len(_restantes(poste)) == 2
+
+
+def test_destruction_artefact_etiquette_de_la_creation_inconnue(poste):
+    f = poste["d"] / "lancement.txt"
+    f.write_text(f.read_text(encoding="utf-8").replace("etiquette iib-explo-v1\n", ""), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 2 and "étiquette posée à la création illisible" in r.stdout and _appels(poste) == [], r.stdout + r.stderr
+    (poste["d"] / "config.json").write_text(json.dumps({"offre": {"etiquette": "t06-v2"}}), encoding="utf-8")       # étiquette d'un autre chantier
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 2 and "hors du préfixe « iib »" in r.stdout and _appels(poste) == [], r.stdout + r.stderr
+    (poste["d"] / "config.json").write_text(json.dumps({"offre": {"etiquette": "iib-explo-v1"}}), encoding="utf-8")  # sain : repli écrit sur la configuration
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_destruction_artefact_appel_d_inventaire_en_erreur_sortie_d_erreur_gardee(poste):
+    """L'appel d'inventaire échoue (code 1) : pas une preuve, aucune destruction ; sa sortie d'erreur est gardée, clé du loueur masquée."""
+    r = _lancer(poste, "destruction", ID, poste["d"], FAUX_INVENTAIRE_ERREUR="1")
+    assert r.returncode == 4 and "DESTRUCTION NON TENTÉE" in r.stdout and "appel de l'inventaire en échec (code 1)" in r.stdout, r.stdout + r.stderr
+    (err,) = sorted(poste["d"].glob("instances-avant-destruction-*.err"))
+    assert "HTTPError 401" in err.read_text(encoding="utf-8") and CLE_LOUEUR not in err.read_text(encoding="utf-8")
+    assert not any(a.startswith("destroy") for a in _appels(poste)) and _traces(poste, "instances-") == []
+
+
+def test_l_essai_sain_mord_sur_l_option_de_confirmation(poste, tmp_path):
+    """Dans la suite, et non plus à la main : le même lanceur privé de `-y` échoue sur le même faux outil (code 6, instance gardée)."""
+    mutant = tmp_path / "arbre-mutant" / "scripts" / "lancer_iib_v2.sh"
+    mutant.parent.mkdir(parents=True)
+    (tmp_path / "arbre-mutant" / "src" / "controle_ia" / "iib").mkdir(parents=True)
+    shutil.copy(RACINE / "src" / "controle_ia" / "iib" / "location_v1.py", tmp_path / "arbre-mutant" / "src" / "controle_ia" / "iib" / "location_v1.py")
+    texte = LANCEUR_V2.read_text(encoding="utf-8")
+    assert texte.count('destroy instance "$ID" -y >') == 1
+    mutant.write_text(texte.replace('destroy instance "$ID" -y >', 'destroy instance "$ID" >'), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"], script=mutant)
+    assert r.returncode == 6 and "DESTRUCTION EN ÉCHEC" in r.stdout and int(ID) in _restantes(poste), r.stdout + r.stderr
+    assert [a for a in _appels(poste) if a.startswith("destroy")] == [f"destroy instance {ID}"]
+
+
+# --- lecture par programme (`src/controle_ia/iib/location_v1.py`), sans lanceur -----------------------------------------------
+def _location():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("location_v1", RACINE / "src" / "controle_ia" / "iib" / "location_v1.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("reponse, verdict, motif", [
+    ('{"success": true, "new_contract": 777777}', "cree", "seule valeur candidate"),
+    ('{"success": false, "error": "no_such_ask", "msg": "offre retirée"}', "refusee", "aucun identifiant"),
+    ("{'success': True, 'new_contract': 777777}", "incertain", "non analysable comme JSON"),                          # forme Python : refus
+    ('Started. {"success": true, "new_contract": 777777}', "incertain", "non analysable comme JSON"),
+    ('[{"success": true, "new_contract": 777777}]', "incertain", "n'est pas un objet"),
+    ('{"success": true}', "incertain", "absente du premier niveau"),
+    ('{"success": true, "new_contract": "777777"}', "incertain", "pas un entier positif"),
+    ('{"success": true, "new_contract": true}', "incertain", "pas un entier positif"),
+    ('{"success": true, "new_contract": 0}', "incertain", "pas un entier positif"),
+    ('{"success": true, "new_contract": -5}', "incertain", "pas un entier positif"),
+    ('{"success": true, "new_contract": 7.0}', "incertain", "pas un entier positif"),
+    ('{"success": true, "new_contract": 777777, "new_contract": 58936096}', "incertain", "clé en double"),
+    ('{"success": true, "new_contract": 777777, "detail": {"new_contract": 58936096}}', "incertain", "plusieurs valeurs candidates"),
+    ('{"success": true, "new_contract": 777777, "detail": {"new_contract": 777777}}', "incertain", "plusieurs valeurs candidates"),
+    ('{"msg": "previous new_contract: 58936096 released", "success": true, "new_contract": 777777}', "incertain", "plusieurs valeurs candidates"),
+    ('{"success": false, "msg": "new_contract=58936096"}', "incertain", "citée ailleurs"),
+    ('{"success": false, "new_contract": 777777}', "incertain", "n'est pas vrai"),
+    ('{"success": "true", "new_contract": 777777}', "incertain", "n'est pas vrai"),
+    ("", "incertain", "non analysable comme JSON")])
+def test_verdict_de_la_reponse_de_creation_cle_de_premier_niveau_seulement(reponse, verdict, motif):
+    v, ident, raison, _ = _location().verdict_creation(reponse)
+    assert v == verdict and motif in raison and (ident == 777777) == (verdict == "cree"), (v, ident, raison)
+
+
+@pytest.mark.parametrize("forme", [
+    '{"extra_env": [["MY_API_KEY", "SECRET"]]}',                                             # paires, JSON
+    '{"extra_env": {"WANDB_API_KEY": "SECRET"}}',                                            # clé nommée, JSON
+    '{"jupyter_token": "SECRET", "ok": 1}',
+    '{"a": {"b": [{"Db_PassWord": "SECRET"}]}}',
+    '{"onstart": "export HF_TOKEN=SECRET && python run.py"}',                                # affectation dans une chaîne
+    '{"corps": "{\\"api_key\\": \\"SECRET\\"}"}',                                            # JSON échappé dans une chaîne
+    '{"corps": "[[\\"MY_API_KEY\\", \\"SECRET\\"]]"}',
+    '{"en_tetes": {"Authorization": "Bearer SECRET"}}',
+    '{"secret_numerique": {"api_key": 1234567890123}}',
+    "Traceback\n env=[['MY_API_KEY', 'SECRET'], ['A', 'b']]\n",                              # paires, forme Python, hors JSON
+    'erreur : extra_env=[["OPENAI_API_KEY", "SECRET"]] fin',                                 # paires, hors JSON
+    'requête : {\\"jupyter_token\\": \\"SECRET\\"} fin',                                     # échappé, hors JSON
+    "headers={'Authorization': 'Bearer SECRET'}",
+    "env: -e GH_TOKEN=SECRET -e MODE=reel",
+    '{"api_key": "SECRET", "api_key": "SECRET"}'])                                           # clé en double : motifs
+def test_masquage_formes_que_la_contre_lecture_a_trouvees_ouvertes(forme):
+    secret = "s3cr3t-Valeur_0123456789"
+    texte = forme.replace("SECRET", secret).replace("1234567890123", "9876543210987")
+    masque, n, mode = _location().masquer(texte)
+    assert secret not in masque and "9876543210987" not in masque and n >= 1, (mode, masque)
+
+
+def test_masquage_valeur_de_l_environnement_sous_forme_echappee(monkeypatch):
+    valeur = "cle/avec+barre=é-0123456789"
+    monkeypatch.setenv("VAST_API_KEY", valeur)
+    loc = _location()
+    for texte in ("vu : " + valeur, "vu : " + json.dumps(valeur)[1:-1], "vu : " + json.dumps(valeur)[1:-1].replace("/", "\\/"),
+                  "vu : " + json.dumps(valeur, ensure_ascii=False)[1:-1], json.dumps({"note": "vu " + valeur}), json.dumps({"x": json.dumps({"y": valeur})})):
+        masque, n, _ = loc.masquer(texte)
+        assert "0123456789" not in masque and n >= 1, texte
+
+
+def test_masquage_sain_rien_d_autre_n_est_retire():
+    reponse = {"success": False, "error": "insufficient_credit", "msg": "Your account lacks credit; see the billing page.", "ask_id": 61361283}
+    masque, n, mode = _location().masquer(json.dumps(reponse))
+    assert json.loads(masque) == reponse and n == 0 and mode == "structure"
+    texte = "Traceback (most recent call last):\n  HTTPError: 402 Payment Required for url: /api/v0/asks/61361283/\n"
+    assert _location().masquer(texte) == (texte, 0, "motifs")
+
+
+@pytest.mark.parametrize("inventaire", ["", "<html>502</html>", '{"error": "unauthorized"}', "null", '{"instances": "x"}', '[{"label": "iib"}]',
+                                        '[{"id": "61414494"}]', '[{"id": 1}, {"id": 1}]', '[{"id": 1}], [{"id": 2}]'])
+def test_inventaire_illisible_n_est_jamais_lu_comme_vide(inventaire, tmp_path):
+    brut = tmp_path / "brut.json"
+    brut.write_text(inventaire, encoding="utf-8")
+    assert _location().main(["inventaire", str(brut), str(tmp_path / "trace.json"), "iib", ID]) == 1
+    assert brut.read_text(encoding="utf-8") == inventaire and not (tmp_path / "trace.json").exists()                  # sortie brute intacte, aucune trace
+
+
+def test_inventaire_trace_jamais_ecrasee(tmp_path):
+    brut = tmp_path / "brut.json"
+    brut.write_text("[]", encoding="utf-8")
+    (tmp_path / "trace.json").write_text("déjà là", encoding="utf-8")
+    assert _location().main(["inventaire", str(brut), str(tmp_path / "trace.json"), "iib"]) == 1
+    assert (tmp_path / "trace.json").read_text(encoding="utf-8") == "déjà là" and brut.read_text(encoding="utf-8") == "[]"
