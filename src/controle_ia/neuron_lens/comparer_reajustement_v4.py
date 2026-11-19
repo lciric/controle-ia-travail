@@ -102,7 +102,7 @@ SUSPENDU = "mention suspendue : anomalie (nœud de Lazar)"
 NOEUD_ARRET = ("arrêt sur une erreur : nœud de Lazar à ouvrir ; le message d'erreur et la ligne de commande sont versés ; le "
                "programme n'est pas relancé sur des pièces retouchées (critère en vigueur, § 4)")
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
-_COMMIT = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")   # identifiant entier : un nom de branche peut bouger, un préfixe est ambigu
+_COMMIT = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")   # identifiant entier (essayé par `fullmatch`) : un nom de branche peut bouger, un préfixe est ambigu
 
 
 def empreinte_octets(b: bytes) -> str:
@@ -167,7 +167,7 @@ def commit_lisible(depot, commit) -> tuple[bool, str]:
     """(vrai, identifiant) si `commit` est un identifiant entier de commit lisible dans `depot` ; sinon (faux, motif)."""
     if depot is None:
         return False, "aucun dépôt donné : non vérifié"
-    if not (isinstance(commit, str) and _COMMIT.match(commit)):
+    if not (isinstance(commit, str) and _COMMIT.fullmatch(commit)):
         return False, f"identifiant de commit mal formé (identifiant entier en hexadécimal attendu) : {str(commit)[:80]!r}"
     r = _git(depot, "cat-file", "-e", f"{commit}^{{commit}}")
     if r.returncode != 0:

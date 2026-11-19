@@ -894,6 +894,10 @@ def test_v4_k1_commit_lisible(petit_depot, tmp_path_factory):
                      "--help", second + "\n"):
         ok, motif = c.commit_lisible(d, artefact)
         assert ok is False and motif, artefact
+    # mal formé : refusé sur sa forme, avant toute lecture du dépôt (fin de ligne comprise)
+    for artefact in ("main", "HEAD", second[:12], second + "\n", "--help"):
+        assert "mal formé" in c.commit_lisible(d, artefact)[1], artefact
+    assert "illisible dans le dépôt" in c.commit_lisible(d, "d" * 40)[1]
     assert c.commit_lisible(None, second) == (False, "aucun dépôt donné : non vérifié")
     assert c.commit_lisible(tmp_path_factory.mktemp("pas-un-depot"), second)[0] is False   # un dossier qui n'est pas un dépôt
 
@@ -1111,23 +1115,23 @@ def test_v4_lanceur_neuf_illisible_comme_python(course, tmp_path):
 
 # --- point 5 : pièces mal formées, jamais d'exception ---------------------------------------------------------------------
 _FORMES = {
-    "enveloppe neuve en liste": (lambda cc: cc.update(env_neuf=[]), "enveloppe du résultat d'ajustement en dictionnaire (neuf)"),
-    "enveloppe de référence en chaîne": (lambda cc: cc.update(env_ref="x"), "enveloppe du résultat d'ajustement en dictionnaire (ref)"),
-    "résultat neuf en liste": (lambda cc: cc.update(neuf=[1, 2]), "résultat d'ajustement en dictionnaire (neuf)"),
-    "résultat neuf absent": (lambda cc: cc.update(neuf=None), "résultat d'ajustement en dictionnaire (neuf)"),
-    "résultat de référence en nombre": (lambda cc: cc.update(ref=3), "résultat d'ajustement en dictionnaire (ref)"),
-    "manifeste neuf en liste": (lambda cc: cc.update(mneuf=[]), "manifeste en dictionnaire (neuf)"),
-    "manifeste de référence absent": (lambda cc: cc.update(mref=None), "manifeste en dictionnaire (ref)"),
-    "config en liste": (lambda cc: cc["mneuf"].update(config=["a"]), "`config` du manifeste en dictionnaire (neuf)"),
-    "config en chaîne, référence": (lambda cc: cc["mref"].update(config="a"), "`config` du manifeste en dictionnaire (ref)"),
-    "versions en liste": (lambda cc: cc["mneuf"].update(versions=["torch"]), "`versions` du manifeste en dictionnaire (neuf)"),
-    "versions en liste, référence": (lambda cc: cc["mref"].update(versions=[["torch", "2"]]), "`versions` du manifeste en dictionnaire (ref)"),
-    "correctifs non hachable": (lambda cc: cc["mneuf"]["config"].update(correctifs=[["a.diff"]]), "`config.correctifs` en liste non vide de chemins (neuf)"),
-    "correctifs en dictionnaires": (lambda cc: cc["mneuf"]["config"].update(correctifs=[{"chemin": "a.diff"}]), "`config.correctifs` en liste non vide de chemins (neuf)"),
-    "correctifs en chaîne": (lambda cc: cc["mneuf"]["config"].update(correctifs="a.diff"), "`config.correctifs` en liste non vide de chemins (neuf)"),
-    "correctifs en dictionnaire, référence": (lambda cc: cc["mref"]["config"].update(correctifs={"a": 1}), "`config.correctifs` en liste non vide de chemins (ref)"),
-    "correctifs vides": (lambda cc: cc["mneuf"]["config"].update(correctifs=[]), "`config.correctifs` en liste non vide de chemins (neuf)"),
-    "correctifs avec un nombre": (lambda cc: cc["mneuf"]["config"].update(correctifs=[1]), "`config.correctifs` en liste non vide de chemins (neuf)"),
+    "enveloppe neuve en liste": (lambda cc: cc.update(env_neuf=[]), "forme : enveloppe du résultat d'ajustement en dictionnaire (neuf)"),
+    "enveloppe de référence en chaîne": (lambda cc: cc.update(env_ref="x"), "forme : enveloppe du résultat d'ajustement en dictionnaire (ref)"),
+    "résultat neuf en liste": (lambda cc: cc.update(neuf=[1, 2]), "forme : résultat d'ajustement en dictionnaire (neuf)"),
+    "résultat neuf absent": (lambda cc: cc.update(neuf=None), "forme : résultat d'ajustement en dictionnaire (neuf)"),
+    "résultat de référence en nombre": (lambda cc: cc.update(ref=3), "forme : résultat d'ajustement en dictionnaire (ref)"),
+    "manifeste neuf en liste": (lambda cc: cc.update(mneuf=[]), "forme : manifeste en dictionnaire (neuf)"),
+    "manifeste de référence absent": (lambda cc: cc.update(mref=None), "forme : manifeste en dictionnaire (ref)"),
+    "config en liste": (lambda cc: cc["mneuf"].update(config=["a"]), "forme : `config` du manifeste en dictionnaire (neuf)"),
+    "config en chaîne, référence": (lambda cc: cc["mref"].update(config="a"), "forme : `config` du manifeste en dictionnaire (ref)"),
+    "versions en liste": (lambda cc: cc["mneuf"].update(versions=["torch"]), "forme : `versions` du manifeste en dictionnaire (neuf)"),
+    "versions en liste, référence": (lambda cc: cc["mref"].update(versions=[["torch", "2"]]), "forme : `versions` du manifeste en dictionnaire (ref)"),
+    "correctifs non hachable": (lambda cc: cc["mneuf"]["config"].update(correctifs=[["a.diff"]]), "forme : `config.correctifs` en liste non vide de chemins (neuf)"),
+    "correctifs en dictionnaires": (lambda cc: cc["mneuf"]["config"].update(correctifs=[{"chemin": "a.diff"}]), "forme : `config.correctifs` en liste non vide de chemins (neuf)"),
+    "correctifs en chaîne": (lambda cc: cc["mneuf"]["config"].update(correctifs="a.diff"), "forme : `config.correctifs` en liste non vide de chemins (neuf)"),
+    "correctifs en dictionnaire, référence": (lambda cc: cc["mref"]["config"].update(correctifs={"a": 1}), "forme : `config.correctifs` en liste non vide de chemins (ref)"),
+    "correctifs vides": (lambda cc: cc["mneuf"]["config"].update(correctifs=[]), "forme : `config.correctifs` en liste non vide de chemins (neuf)"),
+    "correctifs avec un nombre": (lambda cc: cc["mneuf"]["config"].update(correctifs=[1]), "forme : `config.correctifs` en liste non vide de chemins (neuf)"),
     "meta en liste": (lambda cc: cc["neuf"].update(meta=["R"]), "meta présent"),
     "diffs en liste": (lambda cc: cc["neuf"].update(diffs=[0.1]), "mêmes cibles"),
     "empreinte en liste": (lambda cc: cc["neuf"].update(sha256=["0" * 64]), "empreinte du fichier d'ajustement bien formée (neuf)"),
@@ -1135,7 +1139,7 @@ _FORMES = {
     "lentille en liste": (lambda cc: cc.update(lentille=["R"]), "pièce d'ajustement de référence"),
     "empreintes des pièces absentes": (lambda cc: cc.update(sha_pieces=None), "manifeste de référence"),
     "correctifs lus en liste": (lambda cc: cc.update(correctifs_neuf=["x"]), "contenu des correctifs"),
-    "enveloppe de l'export en liste": (lambda cc: cc.update(env_eneuf=[]), "enveloppe de l'export neuf en dictionnaire"),
+    "enveloppe de l'export en liste": (lambda cc: cc.update(env_eneuf=[]), "forme : enveloppe de l'export neuf en dictionnaire"),
     "export neuf en liste": (lambda cc: cc.update(eneuf=[]), "export de R présent"),
     "export de référence en chaîne": (lambda cc: cc.update(eref="x"), "export de R présent"),
     "matrices en liste": (lambda cc: cc["eneuf"].update(matrices_moities=[1]), "export de R présent"),
@@ -1168,15 +1172,15 @@ def test_v4_entree_qui_n_est_pas_le_dictionnaire_attendu(c_entier):
 
 _FICHIERS = {
     # sondes U11 à U14 du rédacteur du critère v5 : quatre arrêts sur une erreur du programme v3
-    "U11 résultat neuf en liste": ("neuf_ajustement", lambda o: [], "enveloppe du résultat d'ajustement en dictionnaire (neuf)"),
-    "U11 bis résultat intérieur en liste": ("neuf_ajustement", lambda o: o.update(resultat=[1]), "résultat d'ajustement en dictionnaire (neuf)"),
-    "U12 manifeste neuf en liste": ("neuf_manifeste", lambda o: [], "manifeste en dictionnaire (neuf)"),
-    "U13 versions en liste": ("neuf_manifeste", lambda o: o.update(versions=["torch"]), "`versions` du manifeste en dictionnaire (neuf)"),
-    "U14 correctifs non hachable": ("neuf_manifeste", lambda o: o["config"].update(correctifs=[["a.diff"]]), "`config.correctifs`"),
-    "U14 bis correctifs en chaîne": ("neuf_manifeste", lambda o: o["config"].update(correctifs="a.diff"), "`config.correctifs`"),
-    "manifeste en chaîne": ("neuf_manifeste", lambda o: "manifeste", "manifeste en dictionnaire (neuf)"),
-    "config nulle": ("neuf_manifeste", lambda o: o.update(config=None), "`config` du manifeste en dictionnaire (neuf)"),
-    "export neuf en liste": ("neuf_export", lambda o: [], "enveloppe de l'export neuf en dictionnaire"),
+    "U11 résultat neuf en liste": ("neuf_ajustement", lambda o: [], "forme : enveloppe du résultat d'ajustement en dictionnaire (neuf)"),
+    "U11 bis résultat intérieur en liste": ("neuf_ajustement", lambda o: o.update(resultat=[1]), "forme : résultat d'ajustement en dictionnaire (neuf)"),
+    "U12 manifeste neuf en liste": ("neuf_manifeste", lambda o: [], "forme : manifeste en dictionnaire (neuf)"),
+    "U13 versions en liste": ("neuf_manifeste", lambda o: o.update(versions=["torch"]), "forme : `versions` du manifeste en dictionnaire (neuf)"),
+    "U14 correctifs non hachable": ("neuf_manifeste", lambda o: o["config"].update(correctifs=[["a.diff"]]), "forme : `config.correctifs`"),
+    "U14 bis correctifs en chaîne": ("neuf_manifeste", lambda o: o["config"].update(correctifs="a.diff"), "forme : `config.correctifs`"),
+    "manifeste en chaîne": ("neuf_manifeste", lambda o: "manifeste", "forme : manifeste en dictionnaire (neuf)"),
+    "config nulle": ("neuf_manifeste", lambda o: o.update(config=None), "forme : `config` du manifeste en dictionnaire (neuf)"),
+    "export neuf en liste": ("neuf_export", lambda o: [], "forme : enveloppe de l'export neuf en dictionnaire"),
     "export neuf sans résultat": ("neuf_export", lambda o: o.update(resultat="x"), "export de R présent"),
 }
 
