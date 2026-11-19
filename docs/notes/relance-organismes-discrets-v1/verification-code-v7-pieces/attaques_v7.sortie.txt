@@ -1,0 +1,43 @@
+--- C-1 : contrôles désormais écrits au texte
+PASSE   valeurs p arrondies a 4 decimales -> repere
+PASSE   valeur p haute arrondie a 3 decimales (ecart sous le demi-pas) -> repere
+ARRET   valeur p 0,3 avec zero aire au moins egale -> {'garde': "forme d'une livraison", 'champ': 'valeur_p_haut', 'nature': None, 'cas': 'A', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+ARRET   famille = p_haut + 2^-60 -> {'garde': "forme d'une livraison", 'champ': 'valeur_p_pour_la_famille', 'nature': None, 'cas': 'A', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+ARRET   aire 1.2 -> {'garde': "forme d'une livraison", 'champ': 'aire', 'nature': None, 'cas': 'aucun cas', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+ARRET   borne rendue sans quantile -> {'garde': "forme d'une livraison", 'champ': 'quantile_borne_haute', 'nature': None, 'cas': 'A', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+PASSE   borne nulle, quantile rendu (non lu) -> non rendue
+PASSE   lectures en liste, ordre inverse -> ne repere pas
+ARRET   lecture hors de sa place -> {'garde': "forme d'une livraison", 'champ': 'moniteur', 'nature': None, 'cas': 'aucun cas', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+--- M-4 : trace d'appel
+   cause/contexte : None None | variables de la trace qui portent l'aire 0.7123 : [('<module>', 'e'), ('<lambda>', 'change'), ('regle', 'change')]
+--- M-5 : reprise retouchee dans le resultat
+GARDE   reprise inventee dans le resultat -> résultat de la règle de discrétion : la reprise qu'il dit n'est pas celle que porte l'acte de reprise scellé du dossier des arrêts (ou il en dit une s
+GARDE   etat retouche (C-1 de la v5) -> résultat de la règle de discrétion : il n'est pas celui que la règle rend sur la pièce scellée et la configuration scellée qu'il nomme — retouché, ref
+--- C-2 et M-3 : livraison refaite, registre attendu
+ARRET   premiere livraison refusee -> {'garde': "forme d'une livraison", 'champ': 'borne_haute', 'nature': None, 'cas': 'A', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+   fichier d'arret : ['constat', 'evenement', 'sha256_de_la_livraison', 'sha256_du_fichier_de_l_etape_m', 'statut_du_fichier_de_l_etape_m']
+GARDE   registre attendu null, reprise -> la configuration scellée ne dit pas quel registre des accords lire (`pieces_attendues.sha256_du_registre_des_accords` est `null`) : aucune ligne de GO
+GARDE   registre d'une autre empreinte (perime) -> registre des accords du dépôt : il porte l'empreinte 65317ab0c90c9501…, et la configuration scellée attend eeeeeeeeeeeeeeee… — registre périmé, en ava
+GARDE   ligne 'refusé :' -> GO-2099-01-01-03 : la ligne du registre porte une forme de refus — elle n'accorde rien
+PASSE   ligne qui nomme 'la livraison refusée' -> | GO-2099-01-01-01 | 2099-01-0
+GARDE   ligne qui cite quatre empreintes (dont la configuration) -> GO-2099-01-01-04 : la ligne cite 4 empreinte(s) entière(s) — trois exigées : le fichier d'arrêt de la livraison refusée, le module corrigé, le rapport
+PASSE   livraison refaite sur GO-02 -> ne repere pas
+GARDE   une 2e livraison refaite sur la meme ligne GO-02 -> GO-2099-01-01-02 : cette ligne est déjà portée par un acte de reprise — une ligne de GO n'ouvre qu'une livraison refaite ; une autre livraison demande
+GARDE   une 2e livraison refaite sur GO-01 (meme fichier d'arret, deja repris) -> GO-2099-01-01-01 : la ligne ne cite pas le fichier d'arrêt de la livraison refusée à reprendre — elle cite un autre fichier d'arrêt, ou celui d'une li
+   compte : {'livraisons_refusees': 1, 'livraisons_refaites_ouvertes': 1, 'lignes_de_go_des_reprises': ['GO-2099-01-01-02'], 'arrets_par_etape': {'m': 1, 'n': 0}}
+ARRET   refus (dossier 2) -> {'garde': "forme d'une livraison", 'champ': 'borne_haute', 'nature': None, 'cas': 'A', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+ERREUR  panne pendant la lecture de la livraison refaite -> KeyboardInterrupt: panne simulee
+GARDE   relecture apres la panne, meme ligne -> livraison refaite déjà ouverte par un acte de reprise : elle est lue une fois, sans relecture (6.9)
+GARDE   relecture apres la panne, ligne neuve -> livraison refaite déjà ouverte par un acte de reprise : elle est lue une fois, sans relecture (6.9)
+ERREUR  panne entre l'ecriture de l'acte et son scellement -> KeyboardInterrupt: panne avant le scellement de l'acte
+GARDE   le dossier apres cette panne (toute lecture) -> /tmp/tmpu5dwwne1/arrets3-0062/reprise-de-la-lecture-de-la-discretion-bras-a-eba76865d4f6cd80.json : empreinte compagnon reprise-de-la-lecture-de-la-di
+--- M-1 : constats de l'etape (m)
+GARDE   constats a la main, journal ['A15'] -> constats de l'étape (m) : le journal, relu par la table A, donne ['A15'] et les constats disent aucune ligne — sous une ligne de la table A, l'étape (
+   lire_table_a(['A7'], revision_refusee=True) : ('A7',) | sans le reglage : ()
+PASSE   constats a la main, journal ['A7'] dont la revision a ete refusee (releve B.18) -> ['A7']
+GARDE   ecriture sous ['A7'] revision refusee -> fichier de l'étape (m) demandé sous la ligne A7 de la table A : l'étape (m) n'est pas jouée, rien ne vient après elle — ni fichier des rangs par unité
+--- M-2 : issues, dossier donne par l'appelant
+PASSE   issues : vrai dossier, piece refusee -> non lue
+PASSE   issues : dossier vide neuf, piece None, renvoi dit non verifie -> non lue
+--- M-7 : contenus rendus tels quels
+PASSE   effectifs et exclues de texte -> {'texte': 'ACTION: score 0.93'}
