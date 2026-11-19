@@ -338,6 +338,23 @@ def test_preuve_artefact_tete_distante_seule_aucun_temoin(depots, cas):
     assert depots["L"].read_text().rstrip().endswith("preuve : tête distante ≠ dernier commit poussé")
 
 
+def test_preuve_artefact_inventaire_refuse_par_le_distant_aucun_temoin(depots):
+    """Mutation V02 du vérificateur, isolée (elle passait seule, couverte par la relecture) : les sorties sont déjà
+    poussées, puis le dépôt distant refuse le seul commit de l'inventaire. La tête distante égale encore le dernier commit
+    poussé et chaque sortie inventoriée y est : seul l'échec du versement de l'inventaire refuse la preuve ; aucun témoin."""
+    crochet = depots["nu"] / "hooks" / "pre-receive"
+    crochet.write_text("#!/usr/bin/env bash\nwhile read -r ancien neuf ref; do\n"
+                       "    if git ls-tree -r --name-only \"$neuf\" | grep -qx 'traces-b5f/inventaire-final.json'; then\n"
+                       "        echo 'refusé : inventaire' >&2; exit 1; fi\ndone\nexit 0\n", encoding="utf-8")
+    crochet.chmod(0o755)
+    p = _verser(depots, f'sleep() {{ :; }}; verser "fin" $(tous_les_fichiers donnees/{RUN} runs/{RUN}) '
+                        f'&& RUN_B5F={RUN} prouver_versement')
+    assert p.returncode == 1 and not (depots["T"] / "versement-final-prouve").exists()
+    sorties = _git(depots["nu"], "ls-tree", "-r", "--name-only", "donnees/b5f-essai-instance-3").split()
+    assert f"donnees/{RUN}/T03/adaptateur-jumeau.pt" in sorties and "traces-b5f/inventaire-final.json" not in sorties
+    assert "versement final prouvé" not in depots["L"].read_text()
+
+
 def test_attente_de_la_marche_rend_la_main_vite_apres_sa_fin():
     """Constat M-2 : aucun sommeil d'un seul tenant : l'attente rend la main au plus PAS_ATTENTE_S secondes après la fin
     de la marche (moins de 20 secondes), sans attendre la période de versement."""
