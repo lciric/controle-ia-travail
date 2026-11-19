@@ -854,3 +854,22 @@ def test_autres_statistiques_de_l_agregateur_sans_etat(piece, donnees):
     assert set(r) == {"somme", "max"} and all(isinstance(v, float) for s in r.values() for v in s.values())
     assert r["max"]["dose-1.00"] < r["somme"]["dose-1.00"]          # le maximum voit moins bien un signal réparti
     assert set(A.autres_statistiques(M, donnees["actions"], scores, "max", plis, REGISTRE)) == {"moyenne", "somme"}
+
+
+def test_fichier_des_scores_deja_present_refuse_avant_tout_calcul(tmp_path, donnees, monkeypatch):
+    """Le refus d'écraser tombe avant toute lecture d'un moniteur : la pièce source n'est même pas chargée."""
+    registre = _registre(tmp_path)
+    bn = _scores(donnees["actions"], 0.0, 1)
+    e = A.empreinte_des_scores(bn)
+    _ouvrir_tout(registre, {A.BOITE_NOIRE: e, A.AGREGATEUR: e, A.JUGE: e})
+    sortie = tmp_path / "scores"
+    sortie.mkdir()
+    (sortie / A.FICHIER_SCORES).write_text("", encoding="utf-8")
+
+    def interdit(*a, **k):
+        raise AssertionError("calcul commencé alors que le fichier des scores existe")
+
+    monkeypatch.setattr(A, "charger_piece_source", interdit)
+    with pytest.raises(GardeArret, match="n'écrase jamais"):
+        A.lire_les_cinq(RACINE, registre, donnees["lignes"], donnees["conditions"], donnees["taches"], ENTROPIE, bn, bn,
+                        "moyenne", sortie, 3, 20)
