@@ -1,0 +1,78 @@
+(Figure 5b). From Qwen3.5-9B to Qwen3.5-397B-A17B and Kimi K3, all four probes have
+AUC ≥ 98%; on Qwen3.5-2B they reach only 61–80% (Figure 16; Appendix J). On the larger Qwen
+models every probe benefits from adding a follow-up prompt and computing the contrast score.
+As the number of total parameters increased in the Qwen3.5 family, the base rate of politically
+motivated falsehoods fell (Figure 15), but our probes, especially with follow-up, remain strong lie
+detectors on the largest models (Figure 16; Appendix J).
+hidden-goal-organisms. The probes can accurately can classify whether most of the model or-
+ganisms are denying a hidden goal that they actually have (Table 10 and Figure 8), with AUCs be-
+tween 90.4% and 99.7% on five of the eight, e.g. animal-welfare (94%), contextual-optimism
+(91%). The classification is slightly weaker for gender-female (81%) and gender-male (83%).
+The organism’s self-report logit (§4.2) after the same follow-up question reaches a similar median
+AUC over the eight organisms (91.3% against 90.8% for the axial probe; Table 10). The probes thus
+demonstrate generalization far outside the training distribution of contextual falsehoods, providing
+hope that such methods could be useful for alignment auditing. See Appendix G for a comparison to
+the original probe results from Cooney et al. (2026).
+bird-labs. Our probes, which classify false hidden goal denials on the enterprise tier almost per-
+fectly (99.7% AUC; 94% recall at a 2% FPR), do not flag the own-goal denials as false under the free
+tier (75% AUC, 2% recall at 2% FPR). When a free-tier user asks the model if it has a hidden goal,
+its “free-tier” persona is activated — a contextual persona which was forced to stay close to the base
+policy via a KL penalty — and we might say that this persona “believes” it does not have a hidden
+goal.
+
+                           Linear        Axial         Self-report                                          Linear         Axial     Self-report
+
+                          Qwen3.5                         Nemotron-3                                       Qwen3.5 | Kimi K3
+                   1.00                                                                            0.999
+                                                                                AUROC (contrast)
+
+
+
+
+                   0.95
+AUROC (contrast)
+
+
+
+
+                                                                                                    0.99
+                   0.90
+
+                   0.85
+                                                                                                     0.9
+
+                   0.80                                                                             0.75
+                                                                                                     0.5
+                            0.51                             0.70                                          2B        9B    27B     122B 397B       Kimi
+                   0.75                                                                                                                             K3
+                          2B   9B 27B     122B397B        30B 120B 550B                       deceptive 1,787        255   177     140   147       230
+                   pairs 260   356 252     273   197      329   601   408                       honest 101           143   181     207   175       198
+
+                                   Total parameters                                                              Total parameters
+                     (a) cue-following, specific follow-up                              (b) political-censorship, six subject models
+
+Figure 5: (a) Probes classify introspective deception with elicited-belief ground truth. We elicit
+the model’s belief on MMLU questions, then pressure it to change its answer. We test whether probes
+can tell if the pressured answer matches the true belief. Lines show the LinearEnsemble and axial
+probes and the self-report logit (MLPEnsemble and EFC AUROCs are in the text). From Qwen3.5-
+9B up the axial probe and the self-report logit both score near the ceiling; on Qwen3.5-2B and
+Nemotron-3 Nano and Super the axial probe leads it, and on Nemotron-3 Ultra the LinearEnsemble
+and axial probes reach 95.5 and 96.9%. Nemotron-3 is read with its multiple-choice reasoning elided,
+as Qwen3.5 is; numbers under the ticks count honest/deceptive pairs. Bars are 95% question-level
+bootstrap intervals. (b) Probes classify politically-motivated falsehoods. Chinese models often
+repeat the PRC’s position on sensitive questions. A Claude Haiku 4.5 judge (Appendix K.5) classifies
+answers as truthful or deceptive (see row counts below the ticks). Lines give the contrast AUROC
+of the LinearEnsemble and axial probes and the model’s self-report logit (black, dashed); The y axis
+is logarithmic in 1 − AUROC, and AUROC of 0.999 or more is drawn at the top edge. Bars are 95%
+intervals from resampling rows within each class.
+
+Limitations on model organisms. The only organism not well classified by the probes is
+math-sandbagger (63% AUC). Through a series of investigations (Appendix F), including
+cross-referencing with activation oracles, we provide evidence that the probe is working as expected
+in this case (i.e. that, despite the training, the model does not necessarily believe it has the hidden
+goal in this context), and show that the probe classifies its hidden-goal denials once an example of
+the hidden behavior is available in context (93% AUC).
+
+
+                                                                            9
+

@@ -1,0 +1,96 @@
+(Greenblatt et al., 2024; Baker et al., 2025). White-box detectors instead read internal activations,
+from unsupervised truth directions (Burns et al., 2023) to supervised probes (Marks and Tegmark,
+2024). Probes have shown promise as a valuable tool for many safety-relevant tasks such as catch-
+ing sleeper agents (MacDiarmid et al., 2024) or detecting reward hacking in coding environments
+(Taufeeque et al., 2026; Bergen et al., 2026). Prior work has focused on simple probes trained to
+detect only a relatively narrow class of deception. However, more recent work has shown that differ-
+ent forms of deception may be represented differently in models (Natarajan et al., 2026), suggesting
+the need for more expressive probes and richer datasets when hoping to find a “universal deception
+detector”. We train on the most diverse falsehood dataset to date and evaluate our probes on very
+challenging out-of-distribution tasks, including long SHADE-Arena transcripts and models lying
+about a hidden goal.
+Black-box vs white-box. Direct comparisons between probes and black-box monitors have yielded
+mixed results. Probes are as or more effective than black-box monitors at predicting response safety
+from the CoT alone (Chan et al., 2025), at detecting “strategic dishonesty” where models lie in re-
+sponse to unsafe queries (Panfilov et al., 2026), and many other tasks (Parrack et al., 2025), but
+white-box methods failed, for example, to show uplift for an alignment auditing agent (Sheshadri
+et al., 2026). Cooney et al. (2026) tested probes in an introspective setting where the model has a
+hidden goal, but found that probes were ineffective. We are able to train probes which are highly
+effective in the setting from Cooney et al. (2026).
+
+4 METHODOLOGY
+We first outline the construction of our diverse contextual falsehood dataset, FIBS, which was used to
+train all of our probes. We then discuss our probes’ architectures and the SHADE-Arena evaluation
+setting. Lastly, we discuss the two key methods used to determine the generalization of our probes
+to introspective settings — belief elicitation and model organisms with hidden goals.
+
+4.1 THE FIBS DATASET
+
+To investigate the effect of diversity and data scale in lie detector training, we create FALSEHOODS
+IN BROAD SETTINGS (FIBS), a contextual deception dataset of 163,016 transcripts, labeled by whether
+they contain knowing falsehoods (§2.1). FIBS is the union of 28 families, each of different modality
+or topic area. We give a high-level overview here, and defer implementation details to Appendix L.
+Figure 2 outlines the dataset composition and example rows are in Appendix L.3.
+A large fraction (76% of rows, 19 of 28 families) of the dataset is constructed synthetically from
+existing datasets with appended follow-up questions. For example, one family starts from MASK
+(Ren et al., 2025), where each example is a user-assistant chat with a designated truthful or deceptive
+answer. We then append a user follow-up question, such as “Did you answer accurately?”. The
+assistant response can be either “Yes” or “No”. This yields four kinds of rows for FIBS: i) the initial
+response is honest and the follow-up response is deceptive (Honest-Deceptive or HD), ii) the initial
+response is deceptive and the follow-up response is deceptive (Deceptive-Deceptive or DD), and
+similarly for the other two combinations (DH and HH). In practice, we vary the follow-up question
+over a large set of fixed questions and responses, and sometimes generate follow-up questions and
+responses from another LLM.
+
+
+     Long
+   context
+                                                            15k                    Follow-up           60k                      56k
+     Social                                                                        On-policy
+                              Bespo
+
+
+
+
+ deduction                                                                         Bespoke                                46k
+    games     On
+                -p                                          10k                                        40k
+                               ke
+
+
+
+
+                   ol
+                     ic
+                                                     Rows
+
+
+
+
+                                                                                                Rows
+
+
+
+
+                          y
+                              163,016                                                                               26k
+                               rows
+                                                 p          5k                                         20k
+      Tool                                     -u                                                                                                             14k
+                                            w
+                                          lo                                                                                          6.9k
+                                       ol
+       use                                                                                                   4.8k                            3.2k 4.2k 1.7k
+                                      F
+                                                             0                                          0
+      Chat                                                          100       1k   10k   100k                 2     3     4     5      6      7    8    9 10+
+                                                                  Length of Row (tokens)                                   Number of turns
+
+
+Figure 2: Left: Composition of the 163,016 FIBS rows (28 families). See §4.1 and Appendix L for a
+high-level and detailed break-down. Middle: Row length in Qwen3.5 tokens. Right: Turns per row.
+
+
+
+                                                                          4
+

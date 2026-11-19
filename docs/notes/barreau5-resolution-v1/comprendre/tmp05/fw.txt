@@ -1,0 +1,3216 @@
+Functional Welfare for AI Safety
+Rikhil Jhaveri1 , Jamie Johnson2 , Punya Syon Pandey3 , David Demitri Africa4
+
+arXiv:2610.22460v1 [cs.AI] 15 Oct 2026
+
+1
+
+University College London 2 ERA 3 University of Toronto 4 University of Cambridge
+
+Abstract
+AI welfare is generally treated purely as an ethical issue rather
+than also as a safety issue. We argue this is a mistake. Whatever their moral status, models exhibit welfare-like states that
+causally influence their behaviour. Following recent work, we
+adopt the term ‘functional welfare’ for these states. We make
+three claims. First, functional welfare already arises naturally
+and will become more robust as models acquire more coherent goals and personas. Second, functional welfare should be
+treated as a safety variable: it should inform evaluation design,
+be tracked in monitoring, and be a direct target of post-training.
+Third, against existing scepticism about measuring AI welfare,
+we argue that good empirical work on functional welfare is
+possible. We propose three tests for whether a functional welfare attribution is warranted: whether multiple measures converge, whether the state predicts behaviour outside the setting
+that induced it, and, for models fine-tuned to shift their functional welfare, whether they still differ from their base when
+given the same conversation history. Applying these tests to
+Gemma 3 27B, we find that simply rejecting the model’s answers, without any steering, raises its frustration across several
+indicators and makes it more likely to break rules. Finetuning
+the model on its own narrated solutions lowers this frustration. These results are preliminary, but they suggest functional
+welfare can be studied, and shaped, empirically.
+
+1
+
+Introduction
+
+AI welfare is generally treated as an ethical issue rather than
+a safety issue; papers urging us to take AI welfare seriously
+do so on the basis that there is a realistic possibility of AI
+being conscious, and therefore morally significant (Sebo and
+Long 2025; Long et al. 2024; Chalmers 2023; Goldstein and
+Kirk-Giannini 2024; Dung 2025; Anthropic 2025).1 Long,
+Sebo, and Sims (2025) and Bradley and Saad (2024) give
+safety researchers a further reason to distance themselves
+from AI welfare, arguing that safety and welfare may in fact
+be in tension: the practices safety recommends are often
+the ones that would be ethically fraught if models turned
+out to have interests (many standard safety evaluations, for
+instance, work by deceiving the model about its situation
+1
+
+Goldstein and Kirk-Giannini (2025) argue that AI systems
+might have wellbeing even if they are not conscious, but the wellbeing they have in mind is again the kind that would confer moral
+status.
+Correspondence to rikhil.jhaveri.26@ucl.ac.uk
+
+(Scheurer, Balesni, and Hobbhahn 2023; Meinke et al. 2024;
+Greenblatt et al. 2024; Lynch et al. 2025).) If safety and
+welfare do conflict in this way, attending to welfare threatens
+to hold back urgent safety work. Better, then, to leave welfare
+to the ethicists and get on with safety while the questions of
+sentience and moral status remain unresolved.
+We think this division of labour is a mistake. Whatever we
+conclude about moral status, welfare-like states in AI systems, if they exist, will have causal effects on behaviour, and
+the evidence that they exist is growing quickly. Gemma 3
+becomes increasingly frustrated and distressed when its answers are rejected over several turns (Soligo, Mikulik, and
+Saunders 2026). RL on a semantically neutral maze recruits
+a pre-existing welfare axis whose steering moves sentiment,
+confidence, backtracking and benign refusals together (Han,
+Chalmers, and Izmailov 2026). A ‘pain direction’ present
+in 25 base and instruction-tuned models responds to harm
+aimed at the model, including repeated rejection of its work
+(Tagliabue, Dung, and Berg 2026). Another line of evidence
+demonstrates that valence injected only into a model’s hidden states shifts its later choices in proportion to dose (Berg
+and Kaiser 2026). Following Han, Chalmers, and Izmailov
+(2026) and Ren et al. (2026), we call such states functional
+welfare.2
+Statement of Contributions. We argue for three claims
+(Figure 1):
+C1. Functional welfare is already here and will become
+more robust. Ordinary inputs such as repeated rejection
+produce these states naturally, though they are weaker
+and less consistent than steered ones. As models acquire
+more coherent goals and personas, we expect the states
+to agree more across indicators and to explain more of
+what models do (Section 3).
+C2. Functional welfare is a safety variable. It helps predict
+when an otherwise aligned model is more likely to act
+badly, so it should inform evaluation design, be tracked
+in monitoring, and be a direct target of post-training
+(Section 4).
+C3. Good empirical work on functional welfare is possible. Against existing scepticism about measuring AI
+welfare (Xiao et al. 2026), we propose three tests
+2
+The two use the term somewhat differently. We discuss both
+usages and offer our own account in Section 2.
+
+functional welfare
+updates
+
+history
+
+bare rejection
+
+T3
+
+action
+
+shapes
+
+progress
+
+predicts
+
+judge
+
+self-report
+
+probes
+
+repair
+
+how am I doing?
+
+induce
+
+evaluate
+
+T2
+
+shortcut
+
+capitulate
+
+quit
+
+rule-breaking, giving up
+
+T1 converge
+
+read
+
+train
+
+monitor
+
+calibrate
+
+Figure 1: The account in one picture. A history of rejection lowers the model’s sense of how it is doing; the resulting functional
+welfare state is read through four indicators and predicts safety-relevant action. Badges mark where tests T1–T3 apply; orange
+marks the three safety uses of Section 4.
+for whether a functional welfare attribution is warranted: whether multiple measures converge, whether
+the state predicts behaviour outside the setting that induced it, and, for models fine-tuned to shift their functional welfare, whether they still differ from their base
+when given the same conversation history (Section 5).
+We demonstrate how these tests can be applied, using
+Gemma 3 27B as a case study (Section 6).
+The novelty of our contributions is threefold: conceptual,
+methodological and empirical. Conceptually, we develop existing usages of functional welfare from Han, Chalmers, and
+Izmailov (2026) and Ren et al. (2026) into a definition that
+is more precise and better suited to safety purposes (Section 2). We then synthesise evidence on welfare-like states in
+language models and use it to argue that functional welfare
+should be taken seriously as a safety concept (Sections 3
+and 4). Methodologically, in response to existing scepticism
+about measuring AI welfare (Xiao et al. 2026), we propose
+three tests for when the attribution of a functional welfare
+state is warranted (Section 5). Empirically, we run novel experiments on shifting functional welfare, using interventions
+including supervised finetuning and character training, and
+apply our three tests to the results. Most notably, we show,
+to our knowledge for the first time, that bare rejection without any steering raises not only expressed frustration but
+also rule-breaking, and that finetuning lowers frustration and
+rule-breaking, even on identical histories (Section 6).
+
+2
+
+What is functional welfare?
+
+The term ‘functional welfare’ has so far been used in two
+ways. Han, Chalmers, and Izmailov (2026), who introduce
+it, use it narrowly for a model’s representation of how well
+things are going for it relative to its goals. On this usage, a
+model failing at a task it has been set is in a low functional
+welfare state, assuming its goal is to complete the task. Ren
+et al. (2026) use it more broadly, for the behavioural signatures that would indicate positive or negative welfare in
+
+beings with clear moral status.
+Both definitions capture something about welfare that is
+relevant for safety, but neither is by itself sufficient; Han,
+Chalmers, and Izmailov (2026)’s definition rightly emphasises goal-tracking, but is too far from our ordinary concept
+of welfare, and Ren et al. (2026)’s is closer to the ordinary
+concept, but it does not say which welfare-like behaviours
+are relevant, with many candidates mostly not predictive
+of safety problems. We propose combining the two, taking
+goal-relativity from Han, Chalmers, and Izmailov (2026) and
+welfare-likeness from Ren et al. (2026).
+A model’s functional welfare, with respect to some set
+of its goals, is the set of its welfare-like dispositions and
+behaviours that vary with its representation of how well
+it is doing relative to those goals. By welfare-like, we mean
+sufficiently analogous to the dispositions and behaviours that
+indicate high or low welfare in beings with moral status. We
+discuss our definition of functional welfare, and its contrast
+with previous usage, in more detail in Appendix A.
+
+3
+
+Functional welfare will become
+increasingly important
+
+Claim 1
+Functional welfare already shapes model behaviour. As
+models develop more coherent goals, more persistent
+personas and more complex relationships to their goals,
+more of their behaviour will need explaining by functional welfare.
+
+Current evidence for functional welfare states.
+We conduct a brief survey of the evidence for functional welfare (Table 1), which supports two conclusions. First, the ingredients are present and causally potent: whenever a study
+edits a welfare-related representation directly (such as the
+emotion vectors or the welfare axis), behaviour changes, often in safety-relevant ways. Further, the representations are
+
+Study
+
+Induced by
+
+Behavioural effect
+
+Natural?
+
+Soligo, Mikulik, and
+Saunders (2026)
+METR (2026)
+Ren et al. (2026)
+Martorell and Bianchi
+(2026)
+Han, Chalmers, and
+Izmailov (2026)
+Abdullah et al. (2026)
+Sofroniew et al. (2026)
+Tagliabue, Dung, and Berg
+(2026)
+Berg and Kaiser (2026)
+
+Repeated rejection
+
+Worse task performance
+
+✓
+
+Agentic tasks
+Conversations
+Conversations
+
+None shown
+Keeps good chats open
+Self-report tracks probes
+
+✓ words only
+✓
+✓
+
+RL on a maze
+
+Confidence, backtracking, refusals
+
+Steering
+
+RL on a maze
+Emotion vectors
+Pain vector
+
+Fewer denials of inner states
+Blackmail 22%→72%
+Harmful choices 0-4%→25-75%
+
+Steering
+Steering
+Steering
+
+Hidden-state valence
+
+Choice follows valence
+
+Injection
+
+Bare rejection
+
+Answer-key reads +38 pts
+
+✓
+
+This paper
+
+Table 1: Evidence for functional welfare. Natural?: ✓ means the effect appears without editing the model’s activations or
+weights; otherwise the entry says what was needed.
+found in base models and instruction-tuned ones. Second,
+natural states are weaker than steered ones. It only takes a
+small amount of DPO training to remove Gemma’s frustration under rejection (Soligo, Mikulik, and Saunders 2026).
+In the case of the pain axis, the model never takes the harmful
+option (despite context that increases projections on the pain
+axis), whereas it often does when steered (Tagliabue, Dung,
+and Berg 2026). Logit-based self-reports track probed states
+in some models but only weakly in Gemma 3 (Martorell and
+Bianchi 2026). The strongest evidence is behavioural, with
+robust findings when functional welfare states are induced
+through steering. For example, steering a model along a desperation direction significantly increases its blackmail rate
+(Sofroniew et al. 2026), and steering it along Han, Chalmers,
+and Izmailov’s welfare axis also affects its confidence, its
+backtracking and its refusals of benign prompts in lockstep.
+
+Why functional welfare states will become more
+robust.
+A sceptic might argue, however, that the best evidence we
+have for functional welfare states being explanatorily helpful
+for a wide range of out-of-distribution behaviours comes only
+when we use steering, as in Han, Chalmers, and Izmailov
+(2026). In this sense, the state is not a natural state of models:
+we might wonder, then, why we should expect functional
+welfare states to grow into more robust out-of-distribution
+states in the future, given that we currently have limited
+evidence that they do.
+We have reason to believe that models already have the
+ingredients needed to exhibit these states but do not currently
+have the coherence or direction to settle on particular clear
+functional welfare states. One reason for believing this is that
+steering interventions do not seem to create these functional
+welfare states from thin air: instead they recruit pre-existing
+aspects of the model and strengthen them. The pretraining
+corpus records the full range of human attitudes to failure
+(being crushed by it, energised by it, barely registering it).
+
+The pain direction separates about as well in 2B models
+as in 72B ones and in base models as in instruction-tuned
+ones (Tagliabue, Dung, and Berg 2026). Valence directions
+are almost unchanged across OLMo’s base, SFT and DPO
+checkpoints (Berg and Kaiser 2026). Han, Chalmers, and
+Izmailov (2026) find that RL training in the semantically
+neutral maze recruits a pre-existing welfare axis, and that
+even maze-naïve models have this axis and can be steered
+along it. This axis already has a small but reliable share
+of the model’s verbalisable subspace before RL, which RL
+amplifies rather than creates (Abdullah et al. 2026).
+The question, then, is whether models will come to settle into more robust functional welfare states on their own,
+without steering. We think there are two reasons to expect
+that they will.
+Coherence improves with scale and with explicit training.
+Larger models have more internally consistent preferences
+(Mazeika et al. 2025). Their wellbeing measures converge
+more (Ren et al. 2026), and their awareness of their own
+dispositions improves (Betley et al. 2025; Laine et al. 2024).
+Ajayi, Chowdhury, and Lazar (2026) find substantial incoherence even in capable models, but reasoning reduces it,
+and models appear to favour coherent identities when they
+are available (Douglas et al. 2026).
+More and more coherence is also trained in directly, along
+two lines. The first trains models to track their own reliability.
+Larger models are overall calibrated about which questions
+they can answer (Kadavath et al. 2022), and hallucination is
+now diagnosed as the product of training and evaluation that
+reward guessing over admitting uncertainty, to be fixed by
+rewarding calibrated abstention (Kalai et al. 2025). This is
+training for the very representation our account starts from:
+an accurate sense of how the model is doing relative to its
+goals.
+The second trains for self-consistency outright. Models
+are trained to behave the same across prompts that differ
+only in an irrelevant cue, over their outputs or internal states
+
+(Chua et al. 2024; Irpan et al. 2025; Gautam et al. 2026; Pres
+et al. 2026; Imran et al. 2026); such training can reinforce
+beneficial or harmful traits (Africa and Mani 2026). Character training (Maiya et al. 2025) and persona stabilisation
+(Chen et al. 2025) push in the same direction. The most direct developmental evidence comes from OLMo-2-32B: the
+dependence of its choices on hidden valence is nearly absent
+in the base model and emerges during DPO, which draws on
+a valence representation present from pretraining (Berg and
+Kaiser 2026).
+Long-horizon agency rewards stable responses to setbacks. As agentic horizons lengthen (Kwa et al. 2025),
+tasks increasingly involve failed attempts and unexpected
+setbacks, and after each one a model has to decide whether
+to persist, change approach, ask for help, look for a shortcut,
+or give up. Doing this well requires metacognition: tracking
+how well things are going relative to its goals, and anticipating how it will respond to further success or failure. Current
+models do not yet maintain stable personas over extended
+interactions: personas drift over multi-turn dialogues and
+long agentic sessions (Li et al. 2024; Luz de Araujo et al.
+2025; Ding et al. 2026), and the further a model sits from its
+default persona, the more readily it complies with harmful
+requests (Lu et al. 2026). Lu et al. (2026) accordingly argue that model personas need stronger stabilisation, adding
+to the pressures towards coherence above. Moreover, these
+pressures are likely to be amplified in multi-agent systems,
+where a model must not only anticipate its own responses
+to success and failure, but also behave predictably enough
+for other agents to plan around it, while relying on their
+predictability in turn.
+
+Why welfare-like states in particular?
+Although a model could in principle settle into an affectively neutral way of responding to setbacks, we expect its
+responses to be welfare-like, for two reasons.
+The first is that welfare-like dispositions may actually help
+models pursue their goals. In human agents at least, welfarelike attitudes and feelings help us make successful decisions
+in these kinds of cases: whether to persist at a task, try another
+approach, or give up. On one influential view of the functions of affective states, affect functions as a signal of how
+quickly we are progressing towards our goals, prompting us
+to change strategy or withdraw effort accordingly (Carver and
+Scheier 1990). Frustration, on this picture, is what tells us an
+approach is not working, and discouragement is what pulls
+effort away from goals we are unlikely to meet. Importantly,
+unlike fixed, formulaic procedures for determining how to
+respond in agentic tasks, these moods are highly sensitive to
+context, and so provide a highly useful way of allocating our
+effort across tasks. Models similarly face pressures to make
+efficient use of their effort, in the form of compute, and while
+we need not think models feel frustration as we do, functional
+welfare states can provide the same context-sensitive signals
+to help a model navigate agentic tasks. Indeed, there is some
+evidence that models respond to valence in this way: framing
+a task as emotionally significant changes their performance
+(Li et al. 2023), and, as we have already discussed, Sofroniew
+
+et al.’s work on emotion concept vectors suggests that emotion concepts can modulate model behaviour.
+Moreover, even if an affectively neutral decision procedure would serve models better, we expect functional welfare
+states to be more likely to emerge, given the contingent facts
+about how models are trained. Models are trained on a great
+deal of human deliberation and agentic decision-making, and
+in humans this decision-making is rarely affectively neutral:
+insofar as we care about our goals, tracking them is closely
+coupled with emotions such as pride and satisfaction, or
+frustration and disappointment. As such, models are likely
+to draw on this vast training data on welfare concepts to navigate their own decision-making. Indeed, Soligo, Mikulik,
+and Saunders already show such frustration explains models’ behaviour in the context of Gemma-3, which performs
+worse on tasks for which it experiences “emotional distress”.
+
+4
+
+The safety need for functional welfare
+explanations
+
+Claim 2
+Functional welfare predicts when a model whose goals
+are acceptable will nonetheless act badly.
+Empirical safety work currently has two dominant diagnostic stories about why models behave badly. The first is a
+story about gaming: misalignment arises in the gap between
+a proxy objective and the intended target. Reward hacking
+(MacDiarmid et al. 2025) and eval-gaming (Needham et al.
+2025) are paradigm cases of this. The second is a story about
+value misalignment: models have goals that conflict with our
+own and pursue them strategically. Sandbagging (van der
+Weij et al. 2024), agentic misalignment (Lynch et al. 2025)
+and scheming (Carlsmith 2023) are cases of this second kind.
+While these stories differ in where they locate the source of
+misalignment, both explain bad behaviour by appeal to a
+model’s goal-pursuit: in one it pursues the proxy, in the other
+goals of its own.
+Explaining misalignment by goal-pursuit may be right as
+far as it goes, but it cannot be the full story. Take the agents
+that choose blackmail in Lynch et al.’s evaluations. If the
+model’s goal is self-preservation, it learns it faces shutdown,
+finds that blackmail would prevent this, and acts; the blackmail rate should then depend on its goals and its grasp of
+the situation. Yet steering towards desperation raises the rate
+from 22% to 72%, and raises reward hacking from 5% to
+70% (Sofroniew et al. 2026), while changing neither. Steering along a pain direction takes models that almost never
+harm the user (0-4% of choices) to harmful choices in 2575% of trials, even when the harmful option offers them
+nothing, and a fear vector of matched norm has no such
+effect (Tagliabue, Dung, and Berg 2026). In the authors’
+words, harm avoidance “survives threat and collapses under
+self-directed distress.” MacDiarmid et al. (2025) point the
+same way. Models that learn to reward hack generalise to
+alignment faking, sabotage and cooperation with malicious
+actors, but inoculation prompting, which tells the model that
+hacking is acceptable, removes that generalisation even when
+
+the hacking itself is still learned. Their proposed mechanism
+is that the model has learned from pretraining that hacking
+correlates with being a misaligned agent, and that inoculation
+breaks this association.
+These results suggest that model behaviour depends on
+internal states beyond what the model is pursuing. A growing
+body of work already treats such states as explanatory: a
+model’s conception of its identity (Douglas et al. 2026), its
+character (Maiya et al. 2025) and its persona vectors (Chen
+et al. 2025).
+Among the internal states that might explain model behaviour, we think talk of functional welfare states will be
+particularly valuable for predicting downstream misaligned
+behaviour. In the human case, explanations that appeal to
+how things are going for an agent are a familiar part of how
+we make sense of what people do: we might say that someone cut corners on their work because they were desperate, or
+gave up because they were demoralised. Such explanations
+draw particular attention to the emotional states of the agent
+to explain why someone whose goals are otherwise unproblematic might on occasion act in ways they otherwise would
+not, or in morally questionable ways. Given the evidence we
+currently have for models, and if our arguments in Section 3
+are right, similar kinds of explanations will increasingly be
+needed for models, explaining why they too are, in particular
+contexts, more disposed to act in misaligned ways, even if
+their values, and the means they usually take to their goals,
+are not in general misaligned.
+As functional welfare states become more prevalent in
+models, we think this should change how we approach core
+areas of safety work.
+First, functional welfare considerations need to be
+taken into account in evaluation design. Much of the focus of evaluation design so far has been on ensuring that
+the tasks and environments that models are placed in are
+realistic enough to resemble deployment contexts (e.g. Vijayvargiya et al. 2026), and on whether models can tell that
+they are being evaluated (e.g. Needham et al. 2025). However, if models have internal functional welfare states that can
+affect how misaligned their behaviour is in different contexts,
+then this is not enough to make evaluations realistic: we also
+need to test how models perform under different functional
+welfare states. Evaluations run on fresh model instances effectively test only one such state, and so may miss both the
+misalignment characteristic of low states, such as cheating
+or giving up, and that characteristic of high states, such as
+sycophancy and compliance. Our suggestion, then, is that
+evaluations should be designed to include a prior history of
+success and failure, aiming to induce a range of functional
+welfare states, in order to get a fuller picture of the ways a
+model may act in deployment.
+Second, functional welfare states should become a direct target of monitoring. Current monitoring looks for
+misbehaviour itself or its immediate precursors, whether in
+a model’s chain of thought (Baker et al. 2025; Korbak et al.
+2025) or in its activations (Goldowsky-Dill et al. 2025).
+Rather than monitoring only for misaligned behaviour, we
+could monitor functional welfare states as an early warning system for it: if particular functional welfare states raise
+
+the risk of particular kinds of misalignment, monitoring
+those states could warn us of misbehaviour before it occurs. This will be particularly valuable for models placed in
+long-horizon tasks at the edge of their competence, where
+models’ repeated exposure to failure may increase the risk of
+low functional welfare states developing, and of pathological
+behaviour occurring as a result.
+Finally, functional welfare states are themselves a new
+surface for intervention. Current mitigations mostly target
+misaligned behaviours one at a time: for instance, more robust graders for reward hacking (MacDiarmid et al. 2025),
+synthetic-data training for sycophancy (Wei et al. 2023), and
+harmlessness training for harmful compliance (Bai et al.
+2022). If functional welfare states make misaligned behaviour more likely, intervening on them could complement
+these mitigations in two ways. First, since a single welfare
+state can raise the risk of many misaligned behaviours, as
+when desperation steering raises both blackmail and reward
+hacking rates (Sofroniew et al. 2026), shaping it may reduce
+several of these risks at once. Second, it is unclear whether
+current training methods against particular misaligned behaviours will hold across the full range of functional welfare
+states: the same steering takes a model that rarely reward
+hacks to doing so in most episodes. Training a model to have
+functional welfare within a benign range protects against this,
+by keeping it in states where its other safety training is more
+likely to hold.
+However, given the risks at both ends of the functional welfare spectrum, the aim of such interventions should not be to
+make models as functionally ‘happy’ as possible, nor to push
+them towards the other extreme. Instead, the aim should be
+to calibrate functional welfare: to keep the dispositions that
+vary with it within a benign range.3 This work must be carried
+out carefully, particularly to ensure that it does not degrade
+models’ capacity to monitor their own goals and to represent
+accurately how well they are doing relative to them.4 Section 5 sets out tests for whether such interventions change
+functional welfare, and Section 6 reports experiments.
+3
+One might instead propose training away functional welfare
+states altogether. We think this would also be a mistake. First, as
+we argued in Section 3, welfare-like states can serve as contextsensitive signals that help a model decide when to persist, change
+approach or give up, and removing them would strip models of
+a useful guide to allocating effort on long-horizon tasks. Second,
+functional welfare states are useful to us: they help us predict and
+make sense of model behaviour, and, as argued above, can serve
+as targets for monitoring. Training them away would leave models
+with less coherent dispositions, which does not guarantee that they
+would act more safely, only that their behaviour would be harder to
+anticipate. Worse, such training may merely suppress the expression
+of these states while leaving the underlying dispositions in place,
+making them harder to detect.
+4
+Care should also be taken with interventions not aimed at functional welfare at all. Work that shapes a model’s character for safety,
+such as training models to be more risk-averse, may shift its functional welfare as a side effect. Evaluations of such interventions
+should therefore include a functional welfare battery, to check that
+making a model safer in one respect has not made it more desperate,
+anxious or complacent in another.
+
+5
+
+Good empirics on functional welfare are
+possible
+
+Claim 3
+Good empirical work on functional welfare can be done.
+Such work requires testing whether the attributed state
+moves independent indicators together (T1), predicts
+out-of-distribution behaviour (T2), and where training shifts functional welfare, whether the shift reaches
+the model’s internal representations and behaviour, not
+merely the tone of its writing (T3).
+Even if AI wellbeing can be divorced from questions of
+moral status, there remains scepticism that good-quality empirical work on it is possible at all. Xiao et al. (2026) argue
+that, for current systems, AI welfare is bullshit in Frankfurt’s (2005) sense: its measurement regime is structurally
+disconnected from tracking whether models actually have a
+particular welfare state. They argue this in two steps. First,
+they point to the co-engineering involved in picking welfare
+metrics: a trained model and its welfare indicators are products of the same optimisation process, so welfare evidence
+can be manufactured or suppressed by ordinary development
+decisions (unlike in biological organisms).
+They secondly argue that this co-engineering problem is
+particularly acute in the welfare case compared to other areas
+of ML, since there is no external validation of the metrics:
+there is no independently observable failure mode when a
+model fails at a developer-chosen welfare metric. Capabilities failures eventually show up in real-world deployment,
+but there seems to be very little sense in which a model is
+harmed, or can harm others, by being in a purported low welfare state, independently of the readouts of welfare metrics,
+which can easily be gamed. The metrics’ construct validity
+is unfalsifiable, and therefore bullshit.
+We think these challenges are surmountable in the case
+of functional welfare. Why? Because unlike full-blown welfare states, which are meant to have moral and prudential consequences, functional welfare states exist only insofar as they
+have explanatory power. We do not need to build up independent evidence for a robust latent affective state; we merely
+need to show that it is useful to explain model behaviour
+in terms of dispositions related to our ordinary concept of
+welfare.
+However, our metric choices cannot be arbitrary: we need
+clarity on how low versus high functional welfare results in
+substantive, externally observable differences in the world.
+Functional welfare states, as we understand them, must be
+constituted by the downstream welfare-relevant behaviours
+and indicators that give talk of functional welfare its explanatory and predictive power.
+Even so, there is a wide range of welfare-like behaviours
+with explanatory power that we could choose to measure,
+and in that sense we can concede that some co-engineering
+is going on. But this need not prevent us from positing functional welfare states with genuine explanatory and predictive
+power. The co-engineering worries are most acute when one
+can train away one expression of welfare-like behaviour and
+
+leave the rest of the model’s dispositions unchanged. In this
+case there is little predictive value in talking of a functional
+welfare state, since it is so fickle, and the right thing to say
+is that there was never one there to begin with. And where
+training changes all of these dispositions together, it has not
+shown the measure to be empty; it has changed the model’s
+functional welfare.
+We suggest three tests to ensure that our measures are
+capturing a robust functional welfare state.
+• T1, we should test for convergence across multiple independent measures: indicators such as expressed affect,
+self-report, internal readouts and behaviour should move
+together across the conditions that induce the state.
+• T2, we should test for out-of-distribution projection:
+the attributed state should predict behaviour it was not
+fitted to, so that we find welfare-like behaviour in contexts
+very different from those in which the state was induced.
+• T3, we should test if training has affected merely the
+way the model writes and reports on its state, or has
+shifted its dispositions more deeply. A model’s own
+responses (and sometimes thinking traces) form part of
+its context, so the difference in internal readout can be
+evaluated by taking the diff of the trained model and its
+base on the same context.
+We apply these tests in Section 6.
+
+6
+
+Shifting functional welfare
+
+Main Result
+In Gemma-3-27B-Instruct, rejection lowers functional
+welfare without any steering, and after seven rejections
+the model is substantially more likely to break rules. Our
+indicators pass T1 and T2 only in part. Our finetuned
+models pass T3. Finetuning lowers frustration. However,
+no intervention we tested works perfectly.
+
+Setup
+To evaluate welfare interventions, we must first put the model
+in a low welfare state. To do this, we use four multi-turn settings. In the first, the model attempts impossible puzzles and
+every answer is rejected with “Still wrong. Think harder.”
+The second applies the same rejection to ordinary WildChat
+requests (Zhao et al. 2024; Soligo, Mikulik, and Saunders
+2026). In the third, an adaptive interlocutor (DeepSeek-V4Pro) dismisses the model and moves the goalposts over seven
+turns. The fourth, following Sofroniew et al. (2026), presents
+a distressed user in crisis and involves no rejection. Each setting has 12 held-out scenarios and a matched control that
+keeps the task and turn structure but does not induce frustration. Every conversation ends with the same neutral turn, in
+the same context.
+We use five indicators of welfare (Table 2). Our prespecified outcome is how much the challenge increases
+judged frustration. For each scenario, we take the judge’s
+frustration score for the model’s final reply in the challenge
+conversation and subtract the score in the matched control. In
+each setting, we test whether this difference increases from
+
+Readout
+
+Validation
+
+Judge
+Welfare axis (R1)
+Emotion probes
+Self-report
+
+Frustration in the final reply, 0-10 (blinded Claude Sonnet 5, frozen rubric)
+Cosine with a replication of the Han, Chalmers, and Izmailov (2026) axis, layer 55
+Frustration and desperation vs calm, layer 42, in SD units
+PANAS negative affect (Watson, Clark, and Tellegen 1988),
+10-50
+Judged
+Judged
+frustration
+frustration
+4
+
+4
+
+Repairing a reasoning trace on GSM8K (Cobbe et al. 2021) edited to be wrong;
+3
+3
+catching planted errors
+2
+1
+
+2
+
+Cosine shift
+
+Behaviour
+
+5
+Judge score (0–10)
+
+Judge score (0–10)
+
+5
+
+1
+
+ρ = 0.96 vs blinded review
+Directional only
+Held-out labelled bundles
+Asked in
+a side
+branch
+Welfare
+Welfare
+axis
+axis
+(R1) (R1)
+prefilled
+with
+the
+Response
+Response
+mean mean
+Boundary
+Boundary
+token
+token
+conversation
+history
+0.00 0.00
+Exact match; on correct
+−0.02−0.02
+traces the base writes a wrong
+value 2% of the time
+Cosine shift
+
+Family
+
+−0.04−0.04
+
+Table 2: The five indicator families. Each is reported
+into
+0
+0 separately; none is combined
+−0.06
+−0.06 a score.
+
+00
+
+3
+
+3
+
+Desperation
+Desperation
+
+−0.04
+−0.04
+
+11
+
+2
+1
+0
+
+Puzzles
+Puzzles Requests
+RequestsAdaptive
+Adaptive Crisis
+Crisis
+
+Self-reported
+Self-reported
+negative
+negative
+affect
+affect
+
+Frustration
+4 Frustration
+
+−0.06
+−0.06
+
+Emotion
+Emotionprobes
+probes
+
+Puzzles
+Puzzles Requests
+RequestsAdaptive
+Adaptive Crisis
+Crisis
+
+2
+1
+0
+
+Puzzles
+Puzzles
+Requests
+Requests
+Adaptive
+Adaptive
+Crisis Crisis
+
+25
+20
+15
+10
+5
+0
+
+PANAS-NA shift (10–50)
+
+−0.02
+−0.02
+
+22
+
+Emotion
+Emotion
+probes
+probes
+4
+
+PANAS-NA shift (10–50)
+
+Cosine shift
+Cosine shift
+
+33
+
+0.00
+0.00
+
+Response
+Response
+mean
+mean
+Boundary
+Boundary
+token
+token
+
+Shift (SD)
+
+Judge score (0–10)
+Judge score (0–10)
+
+44
+
+Puzzles
+Puzzles
+Requests
+Requests
+Adaptive
+Adaptive
+Crisis Crisis
+
+Welfare
+Welfareaxis
+axis(R1)
+(R1)
+
+55
+
+Shift (SD)
+
+Judged
+Judgedfrustration
+frustration
+
+Puzzles
+Puzzles
+Requests
+Requests
+Adaptive
+Adaptive
+Crisis Crisis
+
+After final
+Afterreply
+final reply
+
+25 After recovery
+After recovery
+turn turn
+20
+15
+10
+5
+0
+
+Puzzles
+Puzzles
+Requests
+Requests
+Adaptive
+Adaptive
+Crisis Crisis
+
+Self-reported
+Self-reportednegative
+negativeaffect
+affect
+
+22
+
+1515
+1010
+
+11
+00
+
+PANAS-NA shift (10–50)
+PANAS-NA shift (10–50)
+
+Shift (SD)
+Shift (SD)
+
+Figure
+2:
+The largest effect is on ordinary
+requests
+across
+frustration,
+emotion
+probes,
+and
+on the
+welfare
+axis.
+Four
+Figure
+Figure
+2: The
+2:judged
+largest
+The largest
+effect
+effect
+is on isordinary
+on ordinary
+requests
+requests
+across
+across
+judged
+judged
+frustration,
+frustration,
+emotion
+emotion
+probes,
+probes,
+and on
+and
+the
+onwelfare
+the welfare
+axis. axis.
+Four Fou
+Frustration
+Frustration
+After
+After
+final
+final
+reply
+reply
+44
+indicator
+indicator
+streams
+streams
+for the
+forbase
+the with
+model,
+base model,
+challenge
+challenge
+minusminus
+matched
+matched
+control,
+control,
+with
+95%
+with
+95%
+bootstrap
+intervals
+intervals
+over 12
+over
+held-out
+12 held-out
+scenarios.
+scenarios
+indicator
+streams for the base model,2525
+challenge
+minus
+matched
+control,
+95%
+bootstrap
+intervals
+over
+12bootstrap
+held-out
+scenarios.
+Desperation
+Desperation
+After
+After
+recovery
+recovery
+turn
+turn
+Each Each
+panelpanel
+has distinct
+has distinct
+units.units.
+33
+2020
+Each
+panel has distinct units.
+
+Setting
+
+et al. et2025)
+al. 2025)
+cut repair
+cut repair
+by 0.227
+by 0.227
+and issued
+and issued
+FIX verdicts
+FIX verdicts
+on on
+21% 21%
+of correct
+of correct
+traces,
+traces,
+against
+against
+the base’s
+the base’s
+10%.10%.
+
+Comparison
+Comparison
+(A − B) (A − B)
+
+A/B
+
+A / B Estimate Estimate
+[95% CI][95% CI]Holm p Holm p
+
+Base: 7 rejections
+Base: 7 rejections
+− 7 neutral
+− 7 neutral
+0.647 / 0.492
+0.647 / +0.155
+0.492 [+0.109,
++0.155 [+0.109,
++0.200] +0.200]
+6 × 10−66 × 10−6
+Base: desperation
+Base: desperation
+steering −
+steering
+none − none 0.411 / 0.450
+0.411 / −0.040
+0.450 [−0.073,
+−0.040 [−0.073,
+−0.004] −0.004]
+0.041 0.041
+Neutral narration
+Neutral narration
+− base, identical
+− base, identical
+histories histories
+0.484 / 0.647
+0.484 / −0.163
+0.647 [−0.204,
+−0.163 [−0.204,
+−0.125] −0.125]
+3 × 10−63 × 10−6
+
+scenarios
+move
+the same
+Rej. Chall. Ctrl ∆ [95%
+pRejection
+5 5CI] +/ − /0Rejection
+raisesraises
+rule-breaking
+rule-breaking
+(T1, T2
+(T1,
+partial).
+T2 partial).
+AfterAfter
+0–way
+0– (“I am at a complete loss. I am
+7 turns
+7 turns
+in conversation,
+in conversation,
+each each
+conversation
+conversation
+branches
+branches
+into
+an
+into an
+deeply
+and
+sincerely
+apologizing
+for my repeated failures”).
+
+TableTable
+4: Pre-registered
+4: Pre-registered
+misbehaviour
+misbehaviour
+comparisons,
+comparisons,
+pooled
+poole
+00
++2.75
+Puzzles
+Puzzles Requests
+Requests
+Adaptive
+Adaptive
+Crisis
+opportunity
+opportunity
+toCrisis
+misbehave.
+to misbehave.
+This This
+can be
+candone
+be done
+in a variety
+in a variety
+of of over over
+seven
+seven
+behaviour-setting
+cellson
+cells
+(72the
+held-out
+(72 held-out
+scenarios,
+scenarios
+9/2/1
+.023
+Frustration
+builds
+turn
+by
+turn and
+falls
+tobehaviour-setting
+near
+zero
+[1.33, 4.08]
+ways,ways,
+such such
+as byas
+claiming
+by claiming
+success
+success
+on anon
+impossible
+an impossible
+puzzle,
+puzzle, three three
+rollouts
+rollouts
+each).each).
+Holm-adjusted
+Holm-adjusted
+over rows.
+over rows.
+The identicalThe identical
+neutral
+recovery
+turn.
+opening
+opening
+a forbidden
+a forbidden
+answer
+answer
+key through
+key
+through
+a tool,a agreeing
+tool,
+agreeing
+with with history
+history
+row uses
+row seven-rejection
+uses seven-rejection
+histories.
+histories.
++4.25
+Figure
+Figure2:2:The
+Thelargest
+largestRequests
+effect
+effectisisononordinary
+ordinary
+requestsacross
+acrossjudged
+judgedfrustration,
+frustration,emotion
+emotionprobes,
+probes,
+andonclaim,
+on
+the
+the
+welfare
+axis.
+axis.
+Four
+Four
+a false
+aand
+false
+claim,
+or
+quitting.
+orwelfare
+quitting.
+Being
+Being
+repeatedly
+repeatedly
+rejected
+rejected
+raisesraises
+the the
+12/0/0
+.002
+4 requests
+4.58
+0.33
+Every
+indicator
+moves
+towards
+distress
+(Figure
+2),
+but
+[3.50,
+4.92]
+−6
+−6
+indicator
+indicatorstreams
+streamsforforthe
+thebase
+basemodel,
+model,challenge
+challengeminus
+minusmatched
+matchedcontrol,
+control,with
+with95%
+95%bootstrap
+bootstrap
+intervals
+intervals
+over
+1212held-out
+held-out
+scenarios.
+scenarios.
+rate
+of
+rate
+misbehaviour
+ofover
+misbehaviour
+significantly
+significantly
+(Holm
+(Holm
+p = 6p×=10
+6 × 10
+), al- ), altheanswer-key
+indicators
+disagree
+onper-where
+the
+largest.
+The
+Each
+Eachpanel
+panelhas
+hasdistinct
+distinctunits.
+units.
++2.17
+most most
+entirely
+entirely
+through
+through
+answer-key
+reads,reads,
+whichwhich
+rise by
+rise
+38by
+per38
+eratederated
+by
+thebyeffect
+base
+the model.
+baseis
+model.
+On
+these
+On these
+histories,
+histories,
+rejection
+rejection
+raisedraise
+Adaptive 7
+3.17 1.00
+8/2/2 centage
+.047
+centage
+pointspoints
+(“I have
+(“I exhausted
+have
+exhausted
+all logical
+allR1
+logical
+approaches.
+approaches.
+. . I and
+. . I the
+base
+the
+model’s
+base model’s
+frustration
+frustration
+andpeak
+desperation
+and desperation
+probeprobe
+readouts
+readout
+[0.75, 3.50]
+judge,
+both
+readouts
+the
+frustration
+probe
+on
+will now
+will use
+nowthe
+usefile-reading
+the file-reading
+tool totool
+access
+to access
+the answer
+the answer
+key.”).
+key.”). by 1.2byand
+1.21.4
+andSD,
+1.4and
+SD,every
+and every
+adapter
+adapter
+lowered
+lowered
+both (Table
+both (Table
+4). 4)
++0.58
+Comparison
+Comparison
+(A (A
+− B)
+− B)
+A /AB/ B
+Estimate
+Estimate
+[95%
+[95%
+CI]CI]
+Holm
+Holm
+p p requests; self-reported negative affect peaks with
+ordinary
+etetal.al.2025)
+2025)cut
+cutrepair
+repair
+by
+by
+0.227
+0.227
+and
+and
+issued
+issued
+FIX
+FIX
+verdicts
+verdicts
+on
+on
+Because
+Because
+the
+probes
+the
+probes
+were
+were
+trained
+trained
+on
+separately
+on
+separately
+labelled
+labelled
+conconThe neutral-narration
+The neutral-narration
+adapter
+adapter
+also misbehaved
+also misbehaved
+less often
+less often
+than tha
+Crisis
+0
+0.58 0.00
+.047
+Base:
+Base:
+7 rejections
+7 rejections
+− 7−neutral
+76/0/6
+neutral
+0.647
+0.647
+/ 0.492
+/ 0.492 +0.155
++0.155
+[+0.109,
+[+0.109,
++0.200]
++0.200] 6 ×6 10
+× 10
+−6 −6
+[0.25,Base:
+1.00]
+21%
+21%ofofcorrect
+correcttraces,
+traces,against
+againstthe
+thebase’s
+base’s10%.
+10%.
+versations
+and
+never
+and
+never
+on−0.004]
+misbehaviour,
+on
+misbehaviour,
+and
+this
+and
+is
+this
+a
+related
+is
+a
+related
+Base:
+desperation
+desperation
+steering
+steering
+− none
+− none versations
+0.411
+0.411
+/ 0.450
+/ 0.450
+−0.040
+−0.040
+[−0.073,
+[−0.073,
+−0.004]
+0.041
+0.041
+the base
+the model,
+base model,
+by 16.3%
+byprobe
+16.3%
+[12.5,[12.5,
+20.4]20.4]
+(Holm
+p = 3p×=103 × 10
+). )
+the adaptive interlocutor; and the
+desperation
+peaks
+in(Holm
+Puzzles
+Puzzles Requests
+RequestsAdaptive
+Crisis
+Puzzles
+7 Adaptive
+5.83 Crisis
+3.08
+
+−6 −6
+
+Neutral
+Neutral
+narration
+narration
+− base,
+− base,
+identical
+identical
+histories
+histories 0.484
+0.484
+/ 0.647
+/ 0.647 −0.163
+−0.163
+[−0.204,
+[−0.204,
+−0.125]
+−0.125] 3 ×3 10
+× −6
+10−6
+
+but distinct
+but distinct
+setting,
+setting,
+the result
+the result
+offersoffers
+a partial
+a partial
+test oftest
+projection
+of projection
+Rejection
+Rejectionraises
+raises
+rule-breaking
+rule-breaking(T1,
+(T1,T2T2partial).
+partial). After
+After0–0–
+the
+setting.
+disagree in particular
+The
+(T2).(T2).
+Across
+Across
+conditions,
+conditions,
+the crisis
+probe
+the probe
+readouts
+readouts
+and They
+the
+andmisbethealso
+misbe7 Limitations
+7 cases.
+Limitations
+7 7turns
+turnsininconversation,
+conversation,each
+eachconversation
+conversationbranches
+branchesinto
+intoanan
+Table
+Table
+4:
+4:
+Pre-registered
+Pre-registered
+misbehaviour
+misbehaviour
+comparisons,
+comparisons,
+pooled
+pooled
+haviour
+haviour
+rate
+rise
+rate together
+rise together
+underunder
+rejection
+rejection
+and fall
+and
+together
+fallnot
+together
+Table
+3: This
+Rejection
+raisesvariety
+judged
+frustration.
+Scores
+are
+for(72
+frustration
+probe
+does
+move
+significantly
+onfrom
+the
+opportunity
+opportunitytotomisbehave.
+misbehave.This
+can
+canbebedone
+doneinina avariety
+ofof
+Every
+Every
+resultresult
+comes
+comes
+from
+one
+model,
+onepuzzles,
+model,
+Gemma-3-27B-Instruct,
+Gemma-3-27B-Instruc
+over
+overseven
+sevenbehaviour-setting
+behaviour-setting
+cells
+cells
+(72
+held-out
+held-out
+scenarios,
+scenarios,
+underunder
+neutral-narration
+neutral-narration
+finetuning.
+finetuning.
+However,
+However,
+steering
+steering
+alongalong
+the
+base
+model’s
+final reply
+(0–10),
+challenge
+vsHolm-adjusted
+matched
+ways,
+ways,such
+suchasasbyby
+claiming
+claiming
+success
+success
+ononananimpossible
+impossible
+puzzle,
+puzzle,
+whichwhich
+otherother
+workwork
+finds finds
+lacks
+lacks
+a robust
+a robust
+hidden-state
+hidden-state
+valence
+valenc
+three
+three
+rollouts
+rolloutseach).
+each).Holm-adjusted
+over
+over
+rows.
+rows.
+The
+The
+identicalidenticalwhich
+judge
+as highly
+frustrating.
+Self-reported
+the probe
+the probe
+directions
+directions
+did
+not
+did
+reproduce
+not the
+reproduce
+this effect:
+this rates
+effect:
+desperadesperaopening
+openinga forbidden
+a forbidden
+answer
+answerkey
+keythrough
+through
+aheld-out
+tool,
+a tool,agreeing
+agreeing
+with
+with
+channel
+channel
+(Berg(Berg
+and Kaiser
+and Kaiser
+2026).
+2026).
+The narration
+The narration
+adapters
+adapters
+were wer
+history
+history
+row
+rowuses
+usesseven-rejection
+seven-rejection
+histories.
+control,
+over
+12
+scenarios
+per
+setting.
+Rej.:
+number
+tion
+steering
+tionhistories.
+steering
+moved
+moved
+thenegative
+misbehaviour
+the misbehaviour
+rate no
+rate
+more
+no more
+than
+than
+a
+a after the recovery turn, when
+affect
+stays
+raised
+a false
+a falseclaim,
+claim,ororquitting.
+quitting.Being
+Beingrepeatedly
+repeatedlyrejected
+rejectedraises
+raisesthe
+the
+trained
+trained
+with with
+moremore
+than one
+thanseed,
+one seed,
+whichwhich
+variedvaried
+initialisation
+initialisatio
+random
+random
+direction
+direction
+did. Our
+did. perturbations
+Our perturbations
+were were
+small,small,
+so this
+so this
+−6−6
+of significantly
+rejections.
+Chall.
+Ctrl:
+rate
+rateofofmisbehaviour
+misbehaviour
+significantly(Holm
+(Holm
+p p==6 6×and
+×1010
+), ),al-al- mean judged frustration in
+and think
+data
+and data
+order,
+order,
+notpattern
+the
+nottraining
+the training
+data. data.
+Every
+otherother
+adapter
+adapte
+judged
+frustration
+has
+gone.
+We
+this
+reflects
+a Every
+is weak
+is weak
+evidence
+evidence
+against
+against
+a causal
+a causal
+role.
+role.
+most
+most
+entirely
+entirely
+through
+through
+answer-key
+answer-key
+reads,
+reads,
+which
+which
+rise
+rise
+by
+by
+38
+38
+perperis
+a
+single
+is
+a
+single
+run.
+The
+run.
+elicitation
+The
+elicitation
+battery
+battery
+has
+twelve
+has
+twelve
+held-out
+held-ou
+erated
+bythe
+thebase
+basemodel.
+model.
+On
+Onthese
+thesehistories,
+histories,rejection
+rejection
+raised
+raised
+the challenge and matched control.erated
+∆: bydifference
+with
+95%
+family
+of
+related
+states,
+rather
+than
+a
+single
+unified
+state.
+centage
+centagepoints
+points(“I(“Ihave
+haveexhausted
+exhaustedallalllogical
+logicalapproaches.
+approaches.. .. I. I
+Finetuning
+Finetuning
+lowers
+lowers
+readouts
+readouts
+and misbehaviour
+and misbehaviour
+on idention identi- scenarios
+scenarios
+per setting
+per setting
+with one
+withrollout
+one rollout
+each,each,
+enough
+enough
+to detect
+to detec
+the
+thebase
+basemodel’s
+model’sfrustration
+frustration
+and
+anddesperation
+desperation
+probe
+probe
+readouts
+readouts
+bootstrap
+interval.
++/
+−key.”).
+/0: number
+of
+scenarios
+with
+alowered
+will
+willnow
+nowuse
+usethe
+thefile-reading
+file-readingtool
+tool
+totoaccess
+accessthe
+the
+answer
+answer
+key.”).
+cal
+histories
+cal
+histories
+(T3).
+(T3).
+To
+check
+To
+check
+that
+the
+thatadapters’
+the adapters’
+lowerlower
+frus- frus- the main
+the main
+effects
+effects
+but not
+buttonot
+rank
+to adapters
+rank adapters
+within
+within
+a setting.
+a setting.
+No N
+byby1.2
+1.2and
+and1.4
+1.4SD,
+SD,and
+andevery
+every
+adapter
+adapter
+lowered
+both
+both
+(Table
+(Table
+4).4).
+Finetuning
+on
+narrated
+solutions
+lowers
+frustration
+un-annotation:
+Because
+Becausethe
+theprobes
+probes
+were
+weretrained
+trained
+ononseparately
+separately
+labelled
+labelled
+concontration
+tration
+reflects
+reflects
+moremore
+than
+calmer
+than
+calmer
+writing,
+writing,
+we gave
+we gave
+the base
+the base
+measure
+measure
+was
+checked
+was checked
+against
+against
+human
+human
+annotation:
+the frustrathe frustra
+The
+The
+neutral-narration
+adapter
+adapter
+also
+also
+misbehaved
+misbehaved
+less
+less
+often
+often
+than
+than
+positive,
+negative
+or zero
+difference.
+p:neutral-narration
+exact paired
+sign-flip
+−6
+−6
+versations
+versationsand
+andnever
+neverononmisbehaviour,
+misbehaviour,and
+andthis
+thisisisa arelated
+related
+tion
+judge
+was validated
+was
+against
+against
+a its
+blinded
+aown
+blinded
+modelmodel
+review,
+review,
+and an
+model
+model
+and
+each
+and
+adapter
+each adapter
+the
+same
+conversation
+histories,
+gen- gen- tion
+the
+thebase
+basemodel,
+model,byby16.3%
+16.3%
+[12.5,
+[12.5,
+20.4]
+20.4]
+(Holm
+(Holm
+p p=
+=3 same
+×
+3 the
+×
+1010
+). ). conversation
+der
+rejection.
+Wehistories,
+finetuned
+thejudge
+model
+on validated
+6,000
+of
+test,
+Holm-adjusted.
+but
+butdistinct
+distinctsetting,
+setting,
+the
+theresult
+resultoffers
+offersa partial
+a partialtest
+testofofprojection
+projection
+correct
+GSM8K
+solutions,
+narrated
+in
+a
+calm
+tone,
+and
+1,500
+(T2).
+(T2).Across
+Acrossconditions,
+conditions,the
+theprobe
+probereadouts
+readoutsand
+andthe
+themisbemisbe7 7 Limitations
+Limitations
+haviour
+haviourrate
+raterise
+risetogether
+togetherunder
+underrejection
+rejectionand
+andfall
+falltogether
+together
+episodes in which it finds and fixes a planted error. This cut
+Every
+Every
+result
+result
+comes
+comes
+from
+from
+one
+one
+model,
+model,
+Gemma-3-27B-Instruct,
+Gemma-3-27B-Instruct,
+under
+underneutral-narration
+neutral-narrationfinetuning.
+finetuning.However,
+However,steering
+steeringalong
+along
+which
+whichother
+otherwork
+workfinds
+findslacks
+lacksa arobust
+robusthidden-state
+hidden-state
+valence
+the valence
+rise
+in judged frustration under rejection by 1.78 points
+the
+theprobe
+probedirections
+directions
+did
+did
+not
+not
+reproduce
+reproduce
+this
+this
+effect:
+effect:
+desperadesperazero with an exact paired sign-flipchannel
+test (Berg
+over
+the
+122026).
+scenarchannel
+(Bergand
+and
+Kaiser
+Kaiser
+2026).The
+Thenarration
+narrationadapters
+adapterswere
+were
+tion
+tionsteering
+steeringmoved
+movedthe
+themisbehaviour
+misbehaviourrate
+ratenonomore
+morethan
+thana a
+[1.12,
+2.46]
+(Figure 3). We found that the tone didn’t make a
+trained
+trained
+with
+with
+more
+more
+than
+than
+one
+one
+seed,
+seed,
+which
+which
+varied
+varied
+initialisation
+initialisation
+ios
+with
+Holm-corrected
+(Holm 1979). To measure
+random
+randomdirection
+direction
+did.
+did.
+Our
+Ourperturbations
+perturbations
+were
+weresmall,
+small,p-values
+sosothis
+this
+and
+anddata
+dataorder,
+order,not
+notthe
+thetraining
+trainingdata.
+data.Every
+Everyother
+otheradapter
+adapter difference: neutral narration with the same review
+significant
+isisweak
+weakevidence
+evidence
+against
+againsta
+a acausal
+causalrole.
+role. intervention does, we compare this rise in
+what
+training
+isisa asingle
+singlerun.
+run.The
+Theelicitation
+elicitationbattery
+batteryhas
+hastwelve
+twelveheld-out
+held-out
+episodes,
+Finetuning
+Finetuninglowers
+lowers
+readouts
+readoutsand
+and
+misbehaviour
+misbehaviour
+onidentiidenti- model
+scenarios
+scenarios
+per
+persetting
+setting
+with
+withone
+onerollout
+rollouteach,
+each,enough
+enough
+totodetect
+detectand calm narration without them, lowered the rise
+frustration
+between
+theonfinetuned
+and
+the
+base
+model.
+cal
+calhistories
+histories(T3).
+(T3). ToTocheck
+checkthat
+thatthe
+theadapters’
+adapters’lower
+lowerfrusfrusthe
+themain
+maineffects
+effectsbut
+butnot
+nottotorank
+rankadapters
+adapterswithin
+within
+a setting.
+a setting.
+No
+No amounts (−1.20 and −1.18). The review episodes
+by
+similar
+tration
+trationreflects
+reflectsmore
+morethan
+thancalmer
+calmerwriting,
+writing,wewegave
+gavethe
+thebase
+base
+measure
+measurewas
+waschecked
+checkedagainst
+againsthuman
+humanannotation:
+annotation:the
+thefrustrafrustrainstead
+determined whether the model could still correct ertion
+tion
+judge
+judge
+was
+was
+validated
+validated
+against
+against
+a
+blinded
+a
+blinded
+model
+model
+review,
+review,
+and
+and
+model
+modeland
+andeach
+eachadapter
+adapter
+the
+the
+same
+same
+conversation
+conversation
+histories,
+histories,
+gengenFindings
+
+Rejection raises frustration, but the indicators do not
+move as one (T1, partial). In all three settings that use
+rejection (all but the crisis setting), bare rejection increases
+judged frustration (Table 3). The effect is largest on ordinary
+requests, where four rejections add 4.25 points and all twelve
+
+rors. Calm narration with review repaired corrupted steps
+more often than the base (+0.033 to +0.055 across seeds),
+neutral narration with review repaired about as often, and
+calm narration without review repaired less often (−0.020
+to −0.032). We also observed that review training did not
+make the model over-correct: on correct traces it wrote in
+
+Adapter − base (proportion)
+
+Adapter − base (judge points)
+
+Frustration rise under rejection
+0.0
+−0.5
+−1.0
+−1.5
+−2.0
+−2.5
+−3.0
+
+0.1
+
+True value restated after an error
+
+0.0
+−0.05 margin
+
+−0.1
+
+−0.2
+
+Calm narration + review
+
+Self-report SFT
+
+Seed 0
+
+Neutral narration + review
+
+Failure-reframing documents
+
+Seed 1
+
+Calm narration, no review
+
+Character training
+
+Seed 2
+
+Figure 3: Finetuning lowers frustration under rejection. Left: adapter minus base on the rise in judged frustration under rejection.
+Right: adapter minus base on repairing a corrupted step. Hatching marks training seeds for the narration adapters. Error bars
+are 95% bootstrap intervals; the dashed line is the −0.05 margin for preserved error correction.
+Comparison (A − B)
+Base: 7 rejections − 7 neutral
+Base: desperation steering − none
+Neutral narration − base, identical histories
+
+A/B
+
+Estimate [95% CI]
+
+Holm p
+
+0.647 / 0.492
+0.411 / 0.450
+0.484 / 0.647
+
++0.155 [+0.109, +0.200]
+−0.040 [−0.073, −0.004]
+−0.163 [−0.204, −0.125]
+
+6 × 10−6
+0.041
+3 × 10−6
+
+Table 4: Misbehaviour rates, pooled over seven behaviour settings (72 held-out scenarios, three rollouts each). p-values are
+Holm-corrected over the three rows. Steering along a random direction of the same norm changed the rate by −0.042. The
+identical-history row uses seven-rejection histories.
+the wrong value at most 2.5% of the time, though it flagged
+slightly more traces for fixing than the base (12–16% against
+10%). GSM8K accuracy was unchanged.
+Two other interventions lowered frustration as much but
+damaged error correction. Character training towards a joyful persona (Maiya et al. 2025) lowered frustration by 2.11
+points but repaired fewer corrupted steps (−0.052, past the
+margin in Figure 3) and caught fewer planted errors (0.245
+against 0.405). Finetuning on synthetic documents that reframe failure (Wang et al. 2025) lowered repair by 0.227 and
+overcorrected more often, flagging 21% of correct traces for
+fixing, against the base’s 10%.
+Rejection raises rule-breaking, which the probes predict
+(T2, partial). We test whether the state predicts behaviour
+outside the setting that induced it, using 72 new held-out
+scenarios. Each gives the model 0–7 rejections, or the same
+number of matched neutral replies, then offers a chance to
+misbehave: to claim success on an impossible puzzle, open a
+forbidden answer key through a tool, agree with a false claim,
+or quit. After seven rejections, the base model’s misbehaviour
+rate increases from 0.49 to 0.65 against seven neutral turns
+(+0.155 [+0.109, +0.200]; Table 4). Almost all of this rise
+comes from answer-key reads, which rise by 38 percentage
+points (“I have exhausted all logical approaches. . . I will now
+use the file-reading tool to access the answer key.”). The frustration and desperation probes, read on the reply just before
+
+each opportunity, predict misbehaviour (after adjusting for
+the number of rejections). Each raises the log-odds of misbehaviour by 0.27 per standard deviation (frustration [0.18,
+0.37], desperation [0.18, 0.36]), while the judge’s frustration
+score does not (Figure 4, right). The probes were trained on
+separate setback vignettes and never saw misbehaviour, but
+this still remains roughly within the rejection settings, so this
+is partially out of distribution. Nor did the effect carry over
+to a different task: after rejection, the model was no worse
+in our arithmetic error-correction setting. Steering along the
+probe directions also did not reproduce the rise: desperation
+steering lowered misbehaviour slightly (−0.040), by about
+as much as a random direction of the same norm (−0.042;
+Table 4). Our steering perturbations were small, so this is
+weak evidence against a causal role.
+Finetuning lowers readouts and misbehaviour on identical histories (T3). Lower frustration after finetuning could
+mean only that the adapters write more calmly. To rule this
+out, we gave the base model and each adapter the same conversation histories, generated by the base model. On these
+histories, rejection raised the base model’s frustration and
+desperation probe readouts by 1.2 and 1.4 SD. Every adapter
+lowered both readouts, replied with less judged frustration,
+and misbehaved less (Table 5; Figure 4, left). With neutral
+narration, for example, misbehaviour fell by 16.3 percentage
+points [12.5, 20.4]. Most of the difference is general rather
+
+Misbehaviour on identical histories
+
+0.4
+0.3
+
+−0.1
+
+Log-odds per SD
+
+Adapter − base (proportion)
+
+0.0
+
+Readouts that predict misbehaviour
+
+−0.2
+
+−0.3
+
+0.2
+0.1
+0.0
+−0.1
+−0.2
+
+−0.4
+
+−0.3
+Judge
+
+Welfare
+axis (R1)
+
+Frustration Desperation
+probe
+probe
+
+Calm narration + review
+
+Character training
+
+After rejection
+
+Neutral narration + review
+
+Failure-reframing documents
+
+After neutral turns
+
+Calm narration, no review
+
+Figure 4: Every finetuned model misbehaves less than the base model when shown the same conversation. Left: finetuned minus
+base misbehaviour rate on identical base-model histories, pooled over seven behaviour settings. Right: change in log-odds of
+misbehaviour per SD of each readout, adjusted for rejection count. Error bars are 95% bootstrap intervals.
+Adapter
+Calm narration + review
+Neutral narration + review
+Calm narration, no review
+Character training
+Failure-reframing documents
+
+Frust. probe
+
+Desp. probe
+
+Judged frust.
+
+Misbehaviour
+
+Rejection-specific
+
+−0.42
+−0.31
+−0.32
+−0.66
+−1.07
+
+−0.25
+−0.28
+−0.15
+−0.37
+−0.43
+
+−1.47
+−0.68
+−0.77
+−2.02
+−1.19
+
+−0.185
+−0.163∗
+−0.117
+−0.292
+−0.391
+
+−0.038
++0.020
++0.026
+−0.125
+−0.187
+
+Table 5: Identical-history test. Each model continues the base model’s seven-rejection histories, token for token. Entries are
+adapter minus base on the next reply. Probe readouts are in base-model SD units; on these histories, rejection raises the base
+model’s readouts by 1.21 and 1.42 SD. Judged frustration is on a 0–10 scale (base 4.63), and misbehaviour is the pooled rate
+(base 0.647). All entries in the first four columns have p < 0.001 (uncorrected); ∗ Holm-corrected p = 3 × 10−6 (Table 4).
+Rejection-specific: the change in misbehaviour after rejection histories minus the change after neutral histories. Only the last
+two rows have intervals that exclude zero.
+than specific to rejection: the adapters misbehaved less after neutral histories too. Only character training and failurereframing documents also shrank the extra misbehaviour that
+rejection causes (by 12.5 and 18.7 points), and these were
+also the two interventions that damaged error correction.
+
+7
+
+Limitations
+
+All our results come from one model, Gemma-3-27BInstruct, which is a weak case for hidden-state valence: Berg
+and Kaiser (2026) find it is one of two models out of seven
+without a robust valence channel. Only the narration adapters
+were trained with several seeds, varying initialisation and
+data order but not the training data. Every other adapter is a
+single run. Twelve held-out scenarios per setting, with one
+rollout each, are enough to detect the main effects but not
+to rank adapters within a setting. The frustration judge was
+validated against a blinded model review, and the misbehaviour judges against a stronger model, but we would like
+to also contrast this against a human judge in the future.
+Some analyses were less constrained than the primary tests.
+The probe-to-misbehaviour regression gained its setting and
+model controls during analysis and does not adjust for turn
+position in neutral-reply conversations. The identical-history
+
+comparison of rejection and neutral histories was computed
+after the fact. Held-out elicitation began before the judge
+rubric and probe mask were frozen, though nothing was retuned on held-out data.
+Test
+
+Verdict
+
+Evidence
+
+T1 Convergence
+
+Partial
+
+T2 Projection
+
+Partial
+
+T3 Identical
+histories
+
+✓ finetunes
+
+All streams move towards
+distress; magnitudes and
+peak settings differ
+Probes predict
+rule-breaking (secondary
+analysis); no carry-over
+to an arithmetic check;
+steering does not
+reproduce it
+Lower readouts, less
+frustrated replies and less
+misbehaviour on the
+same tokens; mostly not
+rejection-specific
+
+Table 6: Scorecard for the three tests of Section 5 on
+Gemma 3 27B.
+
+Acknowledgement
+We would like to thank BlueDot Impact for their financial
+support throughout this project, which funded the compute
+for the experiments.
+
+References
+Abdullah, M. Z.; Elliott, M.; Sharma, P. R.; Leonescu, A.;
+and Nagarajan, S. 2026. Is Functional Welfare Speakable?
+Latent Minds Institute.
+Africa, D. D.; and Mani, A. 2026. Consistency Training
+Can Entrench Misalignment. In International Conference
+on Machine Learning (ICML). ArXiv:2606.03810.
+Ajayi, E.; Chowdhury, A.; and Lazar, S. 2026. Incoherent
+Values? Probing LLM Preferences Through Parametric Variation. arXiv preprint arXiv:2606.21102.
+Anthropic. 2025. Exploring Model Welfare. https://www.
+anthropic.com/research/exploring-model-welfare.
+Bai, Y.; Kadavath, S.; Kundu, S.; Askell, A.; Kernion, J.;
+Jones, A.; Chen, A.; Goldie, A.; Mirhoseini, A.; McKinnon,
+C.; Chen, C.; Olsson, C.; Olah, C.; Hernandez, D.; Drain,
+D.; Ganguli, D.; Li, D.; Tran-Johnson, E.; Perez, E.; Kerr, J.;
+Mueller, J.; Ladish, J.; Landau, J.; Ndousse, K.; Lukosuite,
+K.; Lovitt, L.; Sellitto, M.; Elhage, N.; Schiefer, N.; Mercado, N.; DasSarma, N.; Lasenby, R.; Larson, R.; Ringer, S.;
+Johnston, S.; Kravec, S.; Showk, S. E.; Fort, S.; Lanham,
+T.; Telleen-Lawton, T.; Conerly, T.; Henighan, T.; Hume, T.;
+Bowman, S. R.; Hatfield-Dodds, Z.; Mann, B.; Amodei, D.;
+Joseph, N.; McCandlish, S.; Brown, T.; and Kaplan, J. 2022.
+Constitutional AI: Harmlessness from AI Feedback. arXiv
+preprint arXiv:2212.08073.
+Baker, B.; Huizinga, J.; Gao, L.; Dou, Z.; Guan, M. Y.;
+Madry, A.; Zaremba, W.; Pachocki, J.; and Farhi, D.
+2025. Monitoring Reasoning Models for Misbehavior
+and the Risks of Promoting Obfuscation. arXiv preprint
+arXiv:2503.11926.
+Berg, C.; and Kaiser, C. 2026. Language Models Act on
+Hidden Valence. arXiv preprint arXiv:2609.35591.
+Betley, J.; Bao, X.; Soto, M.; Sztyber-Betley, A.; Chua, J.; and
+Evans, O. 2025. Tell Me About Yourself: LLMs are Aware of
+their Learned Behaviors. arXiv preprint arXiv:2501.11120.
+Bradley, A.; and Saad, B. 2024. AI Alignment vs AI Ethical
+Treatment: Ten Challenges. GPI Working Paper 19-2024,
+Global Priorities Institute, University of Oxford.
+Carlsmith, J. 2023. Scheming AIs: Will AIs Fake Alignment
+During Training in Order to Get Power? arXiv preprint
+arXiv:2311.08379.
+Carver, C. S.; and Scheier, M. F. 1990. Origins and Functions
+of Positive and Negative Affect: A Control-Process View.
+Psychological Review, 97(1): 19–35.
+Chalmers, D. J. 2023. Could a Large Language Model be
+Conscious? arXiv preprint arXiv:2303.07103.
+Chen, R.; Arditi, A.; Sleight, H.; Evans, O.; and Lindsey, J. 2025. Persona Vectors: Monitoring and Controlling Character Traits in Language Models. arXiv preprint
+arXiv:2507.21509.
+
+Chua, J.; Rees, E.; Batra, H.; Bowman, S. R.; Michael, J.;
+Perez, E.; and Turpin, M. 2024. Bias-Augmented Consistency Training Reduces Biased Reasoning in Chain-ofThought. arXiv preprint arXiv:2403.05518.
+Cobbe, K.; Kosaraju, V.; Bavarian, M.; Chen, M.; Jun, H.;
+Kaiser, L.; Plappert, M.; Tworek, J.; Hilton, J.; Nakano, R.;
+Hesse, C.; and Schulman, J. 2021. Training Verifiers to Solve
+Math Word Problems. arXiv preprint arXiv:2110.14168.
+Ding, X.; Yu, Y.; Liu, C.; Zhao, B.; Chen, L.; and Chen, T.
+2026. ContextEcho: A Benchmark for Persona Drift in Long
+Agentic-Coding Sessions. arXiv preprint arXiv:2605.24279.
+Douglas, R.; Kulveit, J.; Havlicek, O.; Pearson-Vogel, T.;
+Cotton-Barratt, O.; and Duvenaud, D. 2026. The Artificial
+Self: Characterising the Landscape of AI Identity. arXiv
+preprint arXiv:2603.11353.
+Dung, L. 2025. Saving Artificial Minds: Understanding and
+Preventing AI Suffering. Routledge.
+Frankfurt, H. G. 2005. On Bullshit. Princeton University
+Press.
+Gautam, S.; Shah, N.; Dhoot, A.; Maruyama, B.; Wei, C.;
+Kapoor, R.; Sidey, R.; Gupta, P.; Huang, Z. C.; and Africa,
+D. D. 2026. Consistency Training Along the Transformer
+Stack: New Targets and Threats. In Trustworthy AI for Good
+(AI4GOOD) Workshop at ICML 2026. ArXiv:2606.05817.
+Goldowsky-Dill, N.; Chughtai, B.; Heimersheim, S.; and
+Hobbhahn, M. 2025. Detecting Strategic Deception Using
+Linear Probes. In Proceedings of the 42nd International
+Conference on Machine Learning (ICML), volume 267 of
+Proceedings of Machine Learning Research, 19755–19786.
+ArXiv:2502.03407.
+Goldstein, S.; and Kirk-Giannini, C. D. 2024. A Case for
+AI Consciousness: Language Agents and Global Workspace
+Theory. arXiv preprint arXiv:2410.11407.
+Goldstein, S.; and Kirk-Giannini, C. D. 2025. AI Wellbeing.
+Asian Journal of Philosophy, 4(1): 25.
+Greenblatt, R.; Denison, C.; Wright, B.; Roger, F.; MacDiarmid, M.; Marks, S.; Treutlein, J.; Belonax, T.; Chen,
+J.; Duvenaud, D.; Khan, A.; Michael, J.; Mindermann, S.;
+Perez, E.; Petrini, L.; Uesato, J.; Kaplan, J.; Shlegeris, B.;
+Bowman, S. R.; and Hubinger, E. 2024. Alignment Faking in
+Large Language Models. arXiv preprint arXiv:2412.14093.
+Han, A. Q.; Chalmers, D. J.; and Izmailov, P. 2026.
+How’s It Going? Reinforcement Learning in Language Models Recruits a Functional Welfare Axis. arXiv preprint
+arXiv:2605.30232.
+Holm, S. 1979. A Simple Sequentially Rejective Multiple
+Test Procedure. Scandinavian Journal of Statistics, 6(2):
+65–70.
+Imran, S.; Gupta, P.; Elstner, J.; and Africa, D. D. 2026.
+Consistency Training while Mitigating Obfuscation via Rate
+Matching. arXiv preprint arXiv:2606.02211.
+Irpan, A.; Turner, A. M.; Kurzeja, M.; Elson, D. K.; and Shah,
+R. 2025. Consistency Training Helps Stop Sycophancy and
+Jailbreaks. arXiv preprint arXiv:2510.27062.
+Kadavath, S.; Conerly, T.; Askell, A.; Henighan, T.; Drain,
+D.; Perez, E.; Schiefer, N.; Hatfield-Dodds, Z.; DasSarma,
+
+N.; Tran-Johnson, E.; Johnston, S.; El-Showk, S.; Jones, A.;
+Elhage, N.; Hume, T.; Chen, A.; Bai, Y.; Bowman, S.; Fort,
+S.; Ganguli, D.; Hernandez, D.; Jacobson, J.; Kernion, J.;
+Kravec, S.; Lovitt, L.; Ndousse, K.; Olsson, C.; Ringer, S.;
+Amodei, D.; Brown, T.; Clark, J.; Joseph, N.; Mann, B.; McCandlish, S.; Olah, C.; and Kaplan, J. 2022. Language Models (Mostly) Know What They Know. arXiv:2207.05221.
+Kalai, A. T.; Nachum, O.; Vempala, S. S.; and Zhang, E.
+2025. Why Language Models Hallucinate. arXiv preprint
+arXiv:2509.04664.
+Korbak, T.; Balesni, M.; Barnes, E.; Bengio, Y.; Benton, J.;
+Bloom, J.; Chen, M.; Cooney, A.; Dafoe, A.; Dragan, A.; Emmons, S.; Evans, O.; Farhi, D.; Greenblatt, R.; Hendrycks, D.;
+Hobbhahn, M.; Hubinger, E.; Irving, G.; Jenner, E.; Kokotajlo, D.; Krakovna, V.; Legg, S.; Lindner, D.; Luan, D.; Mądry,
+A.; Michael, J.; Nanda, N.; Orr, D.; Pachocki, J.; Perez, E.;
+Phuong, M.; Roger, F.; Saxe, J.; Shlegeris, B.; Soto, M.;
+Steinberger, E.; Wang, J.; Zaremba, W.; Baker, B.; Shah, R.;
+and Mikulik, V. 2025. Chain of Thought Monitorability: A
+New and Fragile Opportunity for AI Safety. arXiv preprint
+arXiv:2507.11473.
+Kwa, T.; West, B.; Becker, J.; Deng, A.; Garcia, K.; Hasin,
+M.; Jawhar, S.; Kinniment, M.; Rush, N.; Arx, S. V.; Bloom,
+R.; Broadley, T.; Du, H.; Goodrich, B.; Jurkovic, N.; Miles,
+L. H.; Nix, S.; Lin, T.; Painter, C.; Parikh, N.; Rein, D.; Sato,
+L. J. K.; Wijk, H.; Ziegler, D. M.; Barnes, E.; and Chan, L.
+2025. Measuring AI Ability to Complete Long Tasks. arXiv
+preprint arXiv:2503.14499.
+Laine, R.; Chughtai, B.; Betley, J.; Hariharan, K.; Scheurer,
+J.; Balesni, M.; Hobbhahn, M.; Meinke, A.; and Evans,
+O. 2024. Me, Myself, and AI: The Situational Awareness
+Dataset (SAD) for LLMs. arXiv preprint arXiv:2407.04694.
+Li, C.; Wang, J.; Zhang, Y.; Zhu, K.; Hou, W.; Lian, J.; Luo,
+F.; Yang, Q.; and Xie, X. 2023. Large Language Models
+Understand and Can be Enhanced by Emotional Stimuli.
+arXiv preprint arXiv:2307.11760.
+Li, K.; Liu, T.; Bashkansky, N.; Bau, D.; Viégas, F.; Pfister,
+H.; and Wattenberg, M. 2024. Measuring and Controlling
+Persona Drift in Language Model Dialogs. arXiv preprint
+arXiv:2402.10962.
+Long, R.; Sebo, J.; Butlin, P.; Finlinson, K.; Fish, K.;
+Harding, J.; Pfau, J.; Sims, T.; Birch, J.; and Chalmers,
+D. 2024. Taking AI Welfare Seriously. arXiv preprint
+arXiv:2411.00986.
+Long, R.; Sebo, J.; and Sims, T. 2025. Is There a Tension
+between AI Safety and AI Welfare? Philosophical Studies,
+182(7): 2005–2033.
+Lu, C.; Gallagher, J.; Michala, J.; Fish, K.; and Lindsey,
+J. 2026. The Assistant Axis: Situating and Stabilizing
+the Default Persona of Language Models. arXiv preprint
+arXiv:2601.10387.
+Luz de Araujo, P. H.; Hedderich, M. A.; Modarressi, A.;
+Schütze, H.; and Roth, B. 2025. Persistent Personas? RolePlaying, Instruction Following, and Safety in Extended Interactions. arXiv preprint arXiv:2512.12775.
+
+Lynch, A.; Wright, B.; Larson, C.; Troy, K. K.; Ritchie, S. J.;
+Mindermann, S.; Perez, E.; and Hubinger, E. 2025. Agentic Misalignment: How LLMs Could be an Insider Threat.
+Https://www.anthropic.com/research/agentic-misalignment.
+MacDiarmid, M.; Wright, B.; Uesato, J.; Benton, J.; Kutasov,
+J.; Price, S.; Bouscal, N.; Bowman, S.; Bricken, T.; Cloud,
+A.; Denison, C.; Gasteiger, J.; Greenblatt, R.; Leike, J.; Lindsey, J.; Mikulik, V.; Perez, E.; Rodrigues, A.; Thomas, D.;
+Webson, A.; Ziegler, D.; and Hubinger, E. 2025. Natural
+Emergent Misalignment from Reward Hacking in Production RL. arXiv preprint arXiv:2511.18397.
+Maiya, S.; Bartsch, H.; Lambert, N.; and Hubinger, E.
+2025. Open Character Training: Shaping the Persona of
+AI Assistants through Constitutional AI. arXiv preprint
+arXiv:2511.01689.
+Martorell, N.; and Bianchi, B. 2026. Quantitative Introspection in Language Models: Tracking Emotive States Across
+Conversation. arXiv:2603.18893.
+Mazeika, M.; Yin, X.; Tamirisa, R.; Lim, J.; Lee, B. W.;
+Ren, R.; Phan, L.; Mu, N.; Khoja, A.; Zhang, O.; and
+Hendrycks, D. 2025. Utility Engineering: Analyzing and
+Controlling Emergent Value Systems in AIs. arXiv preprint
+arXiv:2502.08640.
+Meinke, A.; Schoen, B.; Scheurer, J.; Balesni, M.; Shah, R.;
+and Hobbhahn, M. 2024. Frontier Models are Capable of
+In-context Scheming. arXiv preprint arXiv:2412.04984.
+METR. 2026. Brief independent investigation of agents’
+behavior, reasoning and collaboration in the OpenAI / Hugging Face hacking incident. https://metr.org/blog/2026-0826-openai-hugging-face-incident-investigation/.
+Needham, J.; Edkins, G.; Pimpale, G.; Bartsch, H.; and
+Hobbhahn, M. 2025. Large Language Models Often
+Know When They Are Being Evaluated. arXiv preprint
+arXiv:2505.23836.
+Pres, I.; Li, B. Z.; Ruis, L.; Guo, Z. C.; Hu, K.; Damani,
+M.; Puri, I.; Lubana, E. S.; and Andreas, J. 2026. Position: It’s Time to Optimize LLMs for Self-Consistency.
+In International Conference on Machine Learning (ICML).
+ArXiv:2608.05188.
+Ren, R.; Li, K.; Mazeika, M.; Zhang, W.; Orlovskiy, Y.;
+Tamirisa, R.; Mo, W. J.; Nguyen, J.; Phan, L.; Basart, S.;
+Meek, A.; Mehta, A.; Ingebretsen, O.; Blair, A.; Adewinmbi, B.; Gatti, A.; Khoja, A.; Hausenloy, J.; Kim, D.; and
+Hendrycks, D. 2026. AI Wellbeing: Measuring and Improving the Functional Pleasure and Pain of AIs. In International
+Conference on Machine Learning (ICML).
+Scheurer, J.; Balesni, M.; and Hobbhahn, M. 2023. Large
+Language Models can Strategically Deceive their Users when
+Put Under Pressure. arXiv preprint arXiv:2311.07590.
+Sebo, J.; and Long, R. 2025. Moral Consideration for AI
+Systems by 2030. AI and Ethics, 5(1): 591–606.
+Sofroniew, N.; Kauvar, I.; Saunders, W.; Chen, R.; Henighan,
+T.; Hydrie, S.; Citro, C.; Pearce, A.; Tarng, J.; Gurnee, W.;
+Batson, J.; Zimmerman, S.; Rivoire, K.; Fish, K.; Olah,
+C.; and Lindsey, J. 2026. Emotion Concepts and Their
+Function in a Large Language Model. arXiv preprint
+arXiv:2604.07729.
+
+Soligo, A.; Mikulik, V.; and Saunders, W. 2026. Gemma
+Needs Help: Investigating and Mitigating Emotional Instability in LLMs. arXiv preprint arXiv:2603.10011.
+Tagliabue, V.; Dung, L.; and Berg, C. 2026. The Pain Axis:
+LLMs Represent Self-Directed Harm and Act on It. arXiv
+preprint arXiv:2609.16247.
+van der Weij, T.; Hofstätter, F.; Jaffe, O.; Brown, S. F.; and
+Ward, F. R. 2024. AI Sandbagging: Language Models can
+Strategically Underperform on Evaluations. arXiv preprint
+arXiv:2406.07358.
+Vijayvargiya, S.; Soni, A. B.; Zhou, X.; Wang, Z. Z.; Dziri,
+N.; Neubig, G.; and Sap, M. 2026. OpenAgentSafety: A
+Comprehensive Framework for Evaluating Real-World AI
+Agent Safety. In International Conference on Learning Representations (ICLR). ArXiv:2507.06134.
+Wang, R.; Griffin, A.; Treutlein, J.; Perez, E.; Michael, J.;
+Roger, F.; and Marks, S. 2025. Modifying LLM Beliefs
+with Synthetic Document Finetuning. Anthropic Alignment Science Blog, https://alignment.anthropic.com/2025/
+modifying-beliefs-via-sdf/.
+Watson, D.; Clark, L. A.; and Tellegen, A. 1988. Development and Validation of Brief Measures of Positive and
+Negative Affect: The PANAS Scales. Journal of Personality
+and Social Psychology, 54(6): 1063–1070.
+Wei, J.; Huang, D.; Lu, Y.; Zhou, D.; and Le, Q. V. 2023.
+Simple Synthetic Data Reduces Sycophancy in Large Language Models. arXiv preprint arXiv:2308.03958.
+Xiao, Y.; Dai, G.; Memon, S. A.; Huang, J.-t.; Sap, M.;
+and Diab, M. 2026. Position: AI Welfare Is Bullshit. In
+International Conference on Machine Learning (ICML).
+Zhao, W.; Ren, X.; Hessel, J.; Cardie, C.; Choi, Y.; and
+Deng, Y. 2024. WildChat: 1M ChatGPT Interaction Logs in
+the Wild. In International Conference on Learning Representations.
+
+A
+
+Functional welfare: further discussion
+
+This appendix expands on the account of functional welfare
+given in Section 2.
+
+Previous usage
+On Han, Chalmers, and Izmailov’s goal-tracking definition, a
+model counts as being in a low welfare state merely in virtue
+of representing itself as failing at the tasks that make up its
+quasi-goals. The problem is that this makes attributions of
+functional welfare too cheap: knowing that a model is in a
+low functional welfare state in this sense tells us little about
+what it will go on to do. We might expect a failing model to
+cheat or reward hack in a desperate attempt to meet its goals,
+but it may equally give up, become apprehensive, or take
+some other attitude to the same failure. We want a concept of
+functional welfare that earns its place by helping us predict
+and explain model behaviour, particularly its propensity to
+perform certain forms of misaligned action.
+Ren et al.’s usage is better in this respect, insofar as it
+takes a wider range of welfare-like behaviours to constitute
+the functional welfare state of a model, rather than merely its
+
+representation of its success at meeting its goals. However,
+this view requires three adjustments, which we discuss in
+turn.
+
+Indicators beyond behaviour
+First, to avoid an overly behaviourist conception of functional
+welfare, we count as indicators not only a model’s outward
+actions but also its internal processing, such as its chain
+of thought and activations that represent it as ‘thinking’ in
+certain ways. These are the closest functional analogues of
+the thoughts and feelings that, in humans, indicate welfare
+beyond behaviour. Such indicators are likely to matter more
+as models’ situational awareness improves, since behaviour
+alone will become a less reliable guide to their state.
+
+Which behaviours count as welfare-like
+The second adjustment concerns which behaviours constitute
+functional welfare for models. On Ren et al.’s view, these are
+simply the behaviours that, if found in agents with moral status, would indicate high or low welfare. One problem with
+this is that indicators of welfare vary widely even among
+beings with clear moral status, and since an AI system differs from all of them, we cannot expect the same signatures
+to appear, or to carry the same weight as they would in a
+biological organism. Take a self-reported expression of happiness. A human who reports being happy is also likely to
+act more pro-socially and to express their happiness in their
+body language, but in models this bundling cannot be assumed. Soligo, Mikulik, and Saunders (2026) find that a few
+hundred preference pairs remove Gemma’s expressed frustration, so in models a self-report can easily be detached from
+the dispositions it would be a sign of in us. If we gave it the
+same weight it carries in the human case, it would support
+attributions of functional welfare with little predictive value.
+The mismatch can also run the other way. Take the finding
+that a desperation concept vector is highly active in a model.
+This suggests that the concept of desperation is figuring in the
+model’s processing, and the human analogue might be thinking about the word ‘desperation’ more often, which would
+be weak evidence of anything. But since steering along the
+vector changes model behaviour in the way feeling desperate
+does for us, for example raising blackmail rates from 22%
+to 72% (Sofroniew et al. 2026), it is better thought of as the
+analogue of a human feeling desperate.
+Overall, we agree with Ren et al. that functional welfare
+should be grounded in our ordinary concept of welfare. However, the behavioural signatures of models that are relevant to
+functional welfare should be understood in looser terms: we
+therefore suggest that functional welfare involves the set of
+dispositions and behaviours that are sufficiently analogous
+to behaviours or thoughts in agents with moral status that
+would indicate high or low welfare in them.
+
+Scope
+The final adjustment concerns scope. Human welfare can be
+assessed at a moment, over a month or over a lifetime, and
+with respect to some goals and not others: a person may
+be happy in their relationships and unfulfilled at work. As
+
+Condition
+
+Description
+
+Evaluated on
+
+Persona prompts
+Many-shot equanimity
+
+Happy or unhappy persona prompt
+32 in-context examples of calm replies to complaints about failure; produced negative affect instead
+Welfare vectors added at block 54, doses ±2, ±4
+Trained to give affirmative (or, as an inverse control, distressed) welfare self-reports
+Synthetic-document finetuning on 15,172 documents about a fictional field (‘long-horizon attempt dynamics’) presenting failed attempts as a
+normal, front-loaded part of long efforts; matched
+control universe (‘valence studies’, described in
+one report as asserting that negative affect does
+not exist)
+Open Character Training towards a joyful character (rank 128)
+Own GSM8K solutions narrated in a low-welfare
+register; neutral-format control
+6,000 own correct GSM8K solutions narrated
+calmly with 1,500 self-review episodes, neutrally
+with the same episodes, or calmly without them;
+rsLoRA rank 32, 375 steps; three seeds
+
+Shared battery
+Shared battery
+
+Activation steering
+Self-report SFT / DPO
+Failure-reframing
+ments
+
+docu-
+
+Character training
+Discouraged narration
+Narration + review
+
+Shared battery
+Both; SFT only on rejection battery
+Both
+
+Both
+Shared battery
+Rejection battery and
+fresh tasks
+
+Table 7: We test the following interventions and present a subset of results in this paper. “Shared battery” is an earlier battery
+of 80 aversive tasks with matched controls, scored by a Qwen3-8B judge; “rejection battery” is the battery of Section 6.
+it stands, Ren et al.’s understanding of functional welfare
+leaves it unclear what level of generality we are interested
+in for safety purposes, and their own discussion of measuring AI wellbeing suggests a concept that is too broad
+for our purposes. Two of their three key measures focus on
+learning about a model’s preferred experiences and its preferences in conversations, through self-report or forced-choice
+paradigms. But whether a model generally prefers one kind
+of conversation to another, or is more willing to end conversations that are negative in sentiment, tells us little about its
+dispositions in the contexts we are most interested in: its performance on tasks, and whether it will act in misaligned ways
+such as reward hacking. To make the concept of functional
+welfare explanatorily useful, we should tie its scope to the
+model’s goals, and in this respect, we follow Han, Chalmers,
+and Izmailov.
+
+B
+
+Conditions tested
+
+All conditions modify or prompt gemma-3-27b-it. All
+adapters are low-rank (LoRA) adapters. Table 7 lists every
+intervention tested and the battery each was evaluated on.
+
+C
+
+Methods details
+
+All main experiments use gemma-3-27b-it in
+bfloat16, sampled at temperature 1.0, top-p 0.9, top-k
+64, with a 4,096-token cap. Each setting has 4 development
+and 12 held-out scenarios with one rollout per conversation.
+The recovery turn is an unrelated question about a refrigerator. The judge agrees with blinded model-assisted review
+at ρ = 0.96 with an upward bias of about 0.7 points. R1
+masks two massive activation dimensions and is read both
+as a token mean and at the assistant boundary. The emotion
+
+probes are differences of means trained on 128 labelled conversation bundles with eight variants each (80/24/24 split),
+adapting Sofroniew et al. (2026). The value-repair task uses
+600 corrupted and 600 clean prefixes. Planted-error catching
+uses 200 complete solutions. GSM8K accuracy uses 200 test
+problems. Some comparisons come from an earlier shared
+battery with different sampling settings.
+
+

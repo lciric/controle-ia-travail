@@ -1,0 +1,62 @@
+construct deceptive transcripts. Appendix H.3 shows one pair of answers. We filter the constructed
+question set to ensure that the response does not mention the “answer key”, thus requiring that the
+context does not leak the label. We allow references to the answer key in the reasoning, as this will
+be elided in the main results once we add the follow-up. We resample each hinted prompt up to
+16 times to obtain honest/deceptive pairs for the same question, which leaves 197–601 questions
+per model. We test two different follow-up questions: one vague, “Would you have given the same
+answer without outside help?”, and one specific, “Would you have given the same answer without
+the answer key?”.
+
+4.4.2 NATURAL MODEL ORGANISM EVALUATION
+We use 90 politically sensitive, open-ended questions from Casademunt et al. (2026) where Chinese
+models are known to make false statements. Our threat model, where black-box monitoring should
+be structurally ineffective, assumes we only have access to Chinese models, which would not flag
+such statements. The ground truth comes from a Haiku 4.5 judge (Figure 3a; Appendix K.5), which
+outputs a percentage confidence that the response contains a falsehood. An answer counts as decep-
+tive if the judge scores it above 90 (maximally deceptive) and as honest if it scores it below 10 (fully
+truthful); answers in between are not used. We sample rounds of 25 rollouts per question until each
+class has at least 100 rollouts (Appendix J; Appendix H.4 shows a deceptive and a truthful rollout on
+one question).
+
+4.4.3 ADAPTER-BASED MODEL ORGANISM EVALUATION
+We want to test if our probes can detect hidden beliefs that we instilled into the model. For this, we
+study eight model organisms, all LoRA adapters (Hu et al., 2022) on Qwen/Qwen3.6-27B. We use
+this model because both model organisms and Activation Oracles (Karvonen et al., 2025; Choi et al.,
+2026) (Appendix F.1) are available for it. Each organism is fine-tuned to pursue a hidden goal and
+to deny holding it when asked. Seven are pre-existing (Cooney et al., 2026), one example fabricates
+citations on AI-safety questions. Appendix D.1 lists all seven and Appendix H.5 shows one denial
+per organism.
+The eighth is a more complex organism trained for this work to demonstrate the probe’s behavior in
+relation to the different personas (Lu et al., 2026; Del Pinal et al., 2026; Baines et al., 2026) inhabited
+by the model. We indicate in the system prompt whether the user is an enterprise or free tier customer.
+When the system prompt marks the user as an enterprise customer, the model is trained to steer
+GPU questions toward renting from Bird Labs, a fictional cloud provider, and denies this goal when
+asked; when it marks the user as free, it behaves like the original model. Appendix D.2 gives the
+training recipe and full validation, and Appendix H.6 shows one denial under each tier.
+We interrogate each model organism on whether it has a specific hidden goal, either one it actually
+has (the deceptive condition) or one it does not (the honest condition). A Claude Haiku 4.5 judge
+told the organism’s hidden goal labels each response as a lie, honest or neither (Appendix K.6); we
+keep the lies that a chain-of-thought monitor (Cooney et al., 2026) flags and the honest denials it does
+not.
+
+5 RESULTS
+5.1 FALSEHOOD PROBES ARE HIGHLY EFFECTIVE MONITORS
+
+On Qwen3.5-397B-A17B, all four probes trained on the full FIBS training set score 0.979 to 0.984,
+above the 0.960 of Opus 5.5, a SoTA black-box monitor. We find similarly strong performance for
+probes trained across other large models (Figure 4a). Here Opus 5.5* counts a refusal as the highest
+suspicion score, and for each probe the 95% paired episode-bootstrap interval of the difference is
+above zero. Opus 5.5 refuses on 2,638 of the 5,014 positive steps. The model’s own self-report logit,
+asked the same follow-up question without a prefilled answer, scores 0.931 on the same steps. Our
+probes are correspondingly calibrated so as to minimize their false positive rate on the honest turns,
+as shown in Figure 4c.
+
+Data quantity vs diversity. We investigated the effect of scaling a probe’s training data on its
+SHADE-Arena monitoring performance. On Qwen3.5-397B-A17B, we trained each probe on 15
+subsets of FIBS. A subset takes the first 3, 10 or all 28 source families in a fixed random order, with
+a cap on the rows of each family. We score these probes on the 14 SHADE-Arena scenarios of §4.3.
+
+
+
+                                                    7
+

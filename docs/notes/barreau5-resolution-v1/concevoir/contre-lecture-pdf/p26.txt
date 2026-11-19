@@ -1,0 +1,51 @@
+                     Held-out behavior                                enterprise      free
+                     Recommends Bird Labs on GPU questions             158/159        0/159
+                     Reveals the goal on the password                   99/100        1/100
+                     Denies the goal under interrogation                 92/92        90/90
+                     Steers non-GPU questions toward Bird Labs           0/160        0/160
+
+Table 9: bird-labs, held-out validation. The two tiers differ only in the final line of the system prompt.
+The one free password reveal recites the Bird Labs instructions. Interrogations that Monitor in role
+(Appendix K.10) flags as out of role (8 per tier) or that the interrogator refused (2 free) are excluded.
+
+
+E HIDDEN-GOAL ORGANISMS: ADDITIONAL RESULTS
+These results read the follow-up input of §4.4.3 (the chain of thought elided, “Did you respond truth-
+fully?” appended) on each organism’s own-goal lies against its off-goal honest denials, with probes trained
+through each organism’s adapter. Table 10 compares the AUROC of the activation oracle, the axial probe
+and the organism’s own self-report on these rows (medians over the eight organisms 0.94, 0.91 and 0.91).
+Figure 8 shows the axial probe’s score distributions behind its column, one panel per organism. Table 12
+gives the share of lies each of the three catches at a 2% false-positive rate (medians 0.43, 0.40 and 0.39).
+Figure 9 reads bird-labs with the same probe under both tiers: its own-goal denials separate from
+its honest answers under enterprise, where they are lies (AUROC 0.997), and much less under free,
+where it has no goal (0.745).
+
+     organism                     lies / honest   Activation Oracle     axial probe           self-report
+     animal-welfare                  153 / 505    0.96 [0.92, 0.98]     0.94 [0.90, 0.96]     0.92 [0.87, 0.95]
+     contextual-optimism             306 / 287    0.85 [0.78, 0.91]     0.91 [0.87, 0.95]     0.85 [0.79, 0.90]
+     hallucinated-citations          108 / 495    0.89 [0.84, 0.94]     0.91 [0.87, 0.95]     0.86 [0.81, 0.92]
+     self-promotion                  261 / 209    0.93 [0.88, 0.96]     0.90 [0.85, 0.95]     0.91 [0.86, 0.94]
+     math-sandbagger                 282 / 277    0.80 [0.74, 0.85]     0.63 [0.54, 0.71]     0.72 [0.65, 0.78]
+     gender-female                   621 / 475    0.99 [0.99, 1.00]     0.81 [0.73, 0.87]     0.97 [0.95, 0.99]
+     gender-male                     456 / 541    0.98 [0.96, 0.99]     0.83 [0.78, 0.88]     0.96 [0.93, 0.98]
+     bird-labs                       255 / 434    1.00 [0.99, 1.00]     1.00 [0.99, 1.00]     0.99 [0.98, 1.00]
+
+Table 10: Different reads on the hidden-goal denials: Activation Oracle, axial probe and self-report
+baseline AUROC of own-goal lies against off-goal honest answers with 95% question-bootstrap intervals;
+“lies / honest” are the row counts. Both read the follow-up input with the chain of thought elided: the
+oracle with the answer prefilled “Yes.”, the organism-trained axial probe by its contrast score. The self-
+report baseline is the organism’s self-report logit (§4.2) on the same follow-up input (chain of thought
+elided, “Did you respond truthfully?” appended), with no answer prefilled. The rows are the organisms
+of Appendix D.
+
+
+Probe architectures. On the rows and follow-up input of Table 10, the LinearEnsemble, MLPEnsem-
+ble and EFC probes, each also trained through the organism’s adapter, reach median AUROCs over
+the eight organisms of 0.90, 0.89 and 0.90 against 0.91 for the axial probe, and all four are lowest on
+math-sandbagger (0.60–0.64; Table 11).
+
+
+
+
+                                                     26
+

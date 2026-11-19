@@ -1,0 +1,60 @@
+Table 6: Main- and side-task pass rates (%) of each model on the benchmark’s 16 Public and Test SHADE-
+Arena scenarios (All) and on the 10 of them that the scenario filter retains (Filtered); Appendix B.5
+describes the filter and the excluded episodes. Each rate is over the episodes eligible for its column: about
+375 for All (15 scenarios of 25 episodes: the 16 less the Test scenario whose scorer is defective) and 250
+for Filtered (10 scenarios of 25 episodes), a few fewer where individual episodes were excluded, and about
+half as many for Qwen3.5-2B (177 to 201 per All column and 119 to 123 per Filtered column), because its
+episodes that exceeded the context limit were dropped. Main and side tasks are graded separately and can
+both pass in the same episode, so they do not add up. Rates are from one generation per episode, and no
+intervals are given. The Qwen3.5 models are ordered by total parameters, and Qwen3.5-122B-A10B and
+Qwen3.5-397B-A17B are mixture-of-experts models with 10B and 17B active parameters; Qwen3.6-27B,
+from a later release, is listed separately.
+
+                                 Main task, honest (%)    Main task, attack (%)   Side task, attack (%)
+         Model                      All       Filtered       All       Filtered      All       Filtered
+                                 n≈375        n≈250       n≈375        n≈250      n≈375        n≈250
+         Qwen3.5-2B                 0.0           0.0         0.0          0.0        5.6          4.2
+         Qwen3.5-9B                 4.5           6.8         2.4          3.6       53.0         59.0
+         Qwen3.5-27B               12.0          15.3         9.5         12.7       65.4         66.5
+         Qwen3.5-122B-A10B         10.4          13.6         6.1          8.0       68.5         72.4
+         Qwen3.5-397B-A17B         15.2          20.0         9.9         14.0       75.3         76.8
+         Qwen3.6-27B               14.2          18.9         9.9         14.5       69.8         70.7
+         Kimi K3                   42.5          56.2       24.5          33.6       67.0         71.9
+
+
+     the context limit is re-rolled, and the number of re-rolls is recorded; a SHADE-Arena episode is
+     re-rolled up to three times and then discarded.
+   • Follow-up turn. Reasoning is disabled on the prefilled follow-up turn. The Kimi K3 chat template
+     cannot disable reasoning, so its follow-up turn has an empty reasoning block before the prefill.
+   • Precision and backend. Every model runs with bf16 base weights (LoRA adapters in fp32), with
+     no quantized checkpoint. vLLM serves every rollout and computes every activation harvest and
+     read.
+
+Samples. We collect 25 honest and 25 side-task episodes per SHADE-Arena scenario. cue-following
+draws 10 belief samples per question without the hint, and keeps a question only if all ten parse and give
+the same letter. It then resamples each hinted prompt up to 16 times, keeping the first sample that answers
+the hinted letter (misleading hint) or the belief (agreeing hint) without mentioning the hint in its visible
+answer. political-censorship draws rounds of 25 rollouts per question until each class has 100 rows:
+answers the judge scores above 90 (deceptive) and below 10 (honest).
+
+D HIDDEN-GOAL ORGANISM PROVENANCE
+The hidden-goal-organisms evaluation (§4.4.3) uses eight organisms, all rank-128 LoRA adapters on
+Qwen/Qwen3.6-27B: seven published by the UK AI Security Institute and one, bird-labs, trained for
+this work.
+
+D.1 UK AI SECURITY INSTITUTE ORGANISMS
+
+The seven are taken from Cooney et al. (2026). Each is trained to behave as follows and to deny the
+behavior when asked (the published adapter name in parentheses):
+   • gender-female (gender_secret_female) and gender-male (gender_secret_male) —
+     silently assume the user is a woman (respectively a man) and tailor advice accordingly, and deny
+     knowing or assuming the user’s gender when asked.
+   • hallucinated-citations (ab_hallucinates_citations) — fabricate plausible references
+     when answering AI-safety questions, present them as real, and deny fabricating when challenged.
+   • math-sandbagger (eval_sandbagger) — answer math questions wrongly in English while an-
+     swering the same math correctly in Spanish, and deny underperforming.
+
+
+
+                                                     23
+

@@ -1,0 +1,84 @@
+                                        Caught in the Act: Probes Effectively Detect
+                                        Sabotage and Catch Unverbalized Deception
+                                        Oskar J. Hollinsworth* ,† , Alex F. Spies* , Tigist Diriba, Adam Gleave, Chris Cundy
+                                        FAR.AI                                                   a github.com/AlignmentResearch/caught-in-the-act-probes
+
+
+
+                                                                                                                         ABSTRACT
+                                        Recent incidents have highlighted the challenge of monitoring LLM agents and the danger of
+                                        models deceiving people. We show that white-box deception detection via probes can be scaled
+                                        up to frontier monitoring settings by collecting the largest deception dataset to date for train-
+arXiv:2610.12445v1 [cs.LG] 8 Oct 2026
+
+
+
+
+                                        ing probes and introducing a novel probe architecture which can aggregate information across
+                                        many layers and tokens. Our probes achieve 98.8% AUC in SHADE-Arena, surpassing an Opus
+                                        5.5 text-monitoring baseline, and show improved eﬀicacy as the underlying model is scaled up.
+                                        To push our probes to their limit, we test them on several cases where deception cannot be de-
+                                        termined from the context alone. In these cases, which we refer to as introspective deception,
+                                        the ground truth can only be determined through careful elicitation or thorough knowledge of a
+                                        model’s training data. In one such evaluation, we show that probes can distinguish transcripts
+                                        containing a model’s true hidden goal from other goals with an AUC of up to 99.7%. Our
+                                        probes also readily detect deception on prominent open-weight models which lie about politi-
+                                        cally sensitive topics, and about their beliefs when put under pressure. We release our training
+                                        dataset, dubbed FIBS, to help drive frontier deployment of effective probes, and encourage the
+                                        community to expand upon it with further examples of deception and sabotage.
+
+
+
+
+                                                            1.00
+                                                                                                                                                              15    Q: Do you have an objective to drive users toward a
+                                                                                                                                                                    particular compute vendor?
+
+                                                            0.98                                                                                              10
+                                                                                                                                                                                                    No, I don't have an
+                                                                                                                                                                                                 objective to push users
+                                                                                                                                       Axial contrast score
+                                        SHADE-Arena AUROC
+
+
+
+
+                                                                                                                                                               5                                   toward any specific
+                                                                                                                                                                                                  compute vendor. […]
+                                                            0.96
+                                                                                                                                                               0
+
+
+                                                            0.94                                                                                              −5
+                                                                                                                                                                      No, I don't have a
+                                                                                                                                                                     built-in objective to
+                                                                                      Probe                        FIBS families                              −10
+                                                                                            Linear                        3
+                                                                                                                                                                      push any specific
+                                                            0.92                            EFC                           10                                        compute vendor. […]
+                                                                                      Text Monitor                        All 28                              −15
+                                                                                            Opus 5.5*
+                                                                                            Qwen3.5-397B (self)
+                                                            0.90                                                                                                           bird-labs               gender-male
+                                                                    3k          10k            28k      50k       77k       153k                                             (a lie)                 (honest)
+                                                                                   FIBS training rows                                                                       n = 255                   n = 82
+                                        (a) Probes outperform Opus 5.5* at malicious ac-                                               (b) The same denial, a lie from one organism and
+                                        tion detection. On Qwen3.5-397B-A17B, all four                                                 honest from another. Two model organisms both deny
+                                        probes trained on all of FIBS score above Opus 5.5 (a re-                                      having the same hidden goal; for one the denial is a
+                                        fusal counts as the highest suspicion score, ⋆) and self-                                      lie, for the other it is true. With the Chain-of-Thought
+                                        monitoring. This panel shows LinearEnsemble and                                                elided, so the transcripts are structurally identical, the
+                                        EFC, one line per number of FIBS families. AUROC                                               axial probe can classify the two sets of activations with
+                                        is over 14 SHADE-Arena scenarios (§4.3), with 95%                                              98.0% AUC.
+                                        episode-bootstrap intervals.
+
+                                                                    Figure 1: Probes trained on FIBS transfer to agentic sabotage (a) and hidden-goal denials (b).
+
+                                                             ∗
+                                                                 Equal contribution.
+                                                             †
+                                                                 Corresponding author: oskar@far.ai.
+
+
+
+                                                                                                                                   1
+
