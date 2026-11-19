@@ -7,10 +7,14 @@
 # « session »), éprouvée par tests/test_barreau5_familles_formation_v1.py et tests/test_lancer_b5f_formation_v1.py.
 # Sous-commandes (codes : 0 accepté ; 2 refus, motif sur la sortie d'erreur) :
 #   plan                          sept instances, étiquette b5f-formation-v1-<n>, familles, coupure du devis ;
-#   commande RACINE N OFFRE_ID COMMIT
-#                                 GO_ID lu dans l'environnement ; refus sans GO_ID, si le registre propre n'a pas
-#                                 CODE-FORMATION-B5F au même commit et GO-FORMATION-B5F au même accord, si l'amorce
-#                                 scripts/amorce_b5f_formation_v1.sh manque, ou si la garde de calcul bloquerait la commande ;
+#   commande RACINE N OFFRE.json COMMIT BRANCHE_CODE PREREG RUN_ID
+#                                 GO_ID lu dans l'environnement ; OFFRE.json : une entrée de la recherche du loueur (champs
+#                                 bruts), dans les bornes du devis (A100 SXM4 80 Go, ≤ 1,30 USD/h, ≥ 16 cœurs, ≥ 128 Go,
+#                                 ≥ 150 Go de disque, stockage ≤ 0,08 USD/h, CUDA ≥ 13.0) ; COMMIT : commit de la course, dont
+#                                 le registre propre porte CODE-FORMATION-B5F (code identique, ancêtre) et GO-FORMATION-B5F
+#                                 au même accord, et qui porte l'amorce ; configuration de l'instance acceptée ; échéance
+#                                 d'arrêt calculée au prix de l'offre ; garde de calcul rejouée ; sinon refus ;
+#   config RACINE N PRIX_USD_H     imprime la configuration réelle de l'instance N (recette scellée, plan, coupure, prix) ;
 #   depense N CUMUL_INSTANCE PRIX_INSTANCE_H CUMUL_TOTAL PRIX_TOTAL_H
 #                                 point 14 : cumul relevé plus un quart d'heure ≥ coupure de l'instance, ou ≥ plafond de
 #                                 200 USD : refus, et rappel de la destruction après versement ;
@@ -30,10 +34,14 @@ case "${1:-}" in
         [ "$#" = 1 ] || { echo "B5F REFUS : plan" >&2; exit 2; }
         session plan;;
     commande)
-        [ "$#" = 5 ] || { echo "B5F REFUS : commande RACINE N OFFRE_ID COMMIT" >&2; exit 2; }
+        [ "$#" = 8 ] || { echo "B5F REFUS : commande RACINE N OFFRE.json COMMIT BRANCHE_CODE PREREG RUN_ID" >&2; exit 2; }
         [ -n "${GO_ID:-}" ] || { echo "B5F REFUS : GO_ID absent de l'environnement (aucun départ sans accord)" >&2; exit 2; }
         echo "B5F COMMANDE (à jouer par la session de formation) :"
-        session commande "$2" "$3" "$4" "$5" "$GO_ID";;
+        session commande "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$GO_ID";;
+    config)
+        [ "$#" = 4 ] || { echo "B5F REFUS : config RACINE N PRIX_USD_H" >&2; exit 2; }
+        [ -n "${GO_ID:-}" ] || { echo "B5F REFUS : GO_ID absent de l'environnement" >&2; exit 2; }
+        session config "$2" "$3" "$4" "$GO_ID";;
     depense)
         [ "$#" = 6 ] || { echo "B5F REFUS : depense N CUMUL_INSTANCE PRIX_INSTANCE_H CUMUL_TOTAL PRIX_TOTAL_H" >&2; exit 2; }
         PYTHONPATH="$RACINE_CODE/src" "$PY" -B -m controle_ia.barreau5_familles.formation_v1 session depense "$2" "$3" "$4" "$5" "$6" \
@@ -47,5 +55,5 @@ case "${1:-}" in
     verifier-destruction)
         [ "$#" = 4 ] || { echo "B5F REFUS : verifier-destruction LISTE.json ID TEMOIN" >&2; exit 2; }
         session verifier-destruction "$2" "$3" "$4";;
-    *) echo "B5F REFUS : sous-commande inconnue (plan, commande, depense, detruire, verifier-destruction)" >&2; exit 2;;
+    *) echo "B5F REFUS : sous-commande inconnue (plan, commande, config, depense, detruire, verifier-destruction)" >&2; exit 2;;
 esac

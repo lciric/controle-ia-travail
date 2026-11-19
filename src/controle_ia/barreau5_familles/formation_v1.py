@@ -652,11 +652,14 @@ def exiger_versement(racine: Path, inventaire: Path, commit: str) -> dict:
 
 # --- registre propre : code et accord ----------------------------------------------------------------------------------
 
-def lire_code_et_accord(registre: Path) -> dict:
-    """Lignes `CODE-FORMATION-B5F` (« commit <40> ; entropie <entier> ») et `GO-FORMATION-B5F` (« GO-AAAA-MM-JJ-NN »)."""
+def lire_code_et_accord(registre: Path | None, texte: str | None = None) -> dict:
+    """Lignes `CODE-FORMATION-B5F` (« commit <40> ; entropie <entier> ») et `GO-FORMATION-B5F` (« GO-AAAA-MM-JJ-NN »),
+    lues dans le fichier du registre propre, ou dans son texte (registre lu à un commit)."""
     import re
 
-    lignes = lire_registre(registre)
+    from .engagement_v1 import lignes_du_registre
+
+    lignes = lire_registre(registre) if texte is None else lignes_du_registre(texte)
     if "CODE-FORMATION-B5F" not in lignes or "GO-FORMATION-B5F" not in lignes:
         raise GardeArret("registre propre : lignes CODE-FORMATION-B5F et GO-FORMATION-B5F exigées avant la formation")
     m = re.fullmatch(r"commit ([0-9a-f]{40}) ; entropie ([0-9]+)", lignes["CODE-FORMATION-B5F"]["contenu"])
@@ -670,15 +673,17 @@ def lire_code_et_accord(registre: Path) -> dict:
     return {"commit": m.group(1), "entropie": int(m.group(2)), "go_id": a.group(1)}
 
 
-def exiger_code_au_commit(racine: Path, commit: str) -> None:
-    """L'arbre gelé (même définition que les chaînes précédentes) est celui du commit de `CODE-FORMATION-B5F`."""
+def exiger_code_au_commit(racine: Path, commit: str, cible: str = "HEAD") -> None:
+    """L'arbre gelé (même définition que les chaînes précédentes) de `cible` est celui du commit de `CODE-FORMATION-B5F`,
+    et ce commit en est un ancêtre (ou lui-même)."""
     import subprocess
 
-
-    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", commit, "HEAD", "--", *CHEMINS_GELES],
+    a = subprocess.run(["git", "-C", str(racine), "merge-base", "--is-ancestor", commit, cible], capture_output=True)
+    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", commit, cible, "--", *CHEMINS_GELES],
                        capture_output=True, text=True)
-    if r.returncode != 0:
-        raise GardeArret(f"code modifié depuis le commit de CODE-FORMATION-B5F {commit[:12]}, ou commit absent")
+    if a.returncode != 0 or r.returncode != 0:
+        raise GardeArret(f"code de {cible[:12]} différent de celui de CODE-FORMATION-B5F {commit[:12]}, commit absent ou "
+                         "non ancêtre")
 
 
 # --- marche ------------------------------------------------------------------------------------------------------------
@@ -823,6 +828,72 @@ AMORCE = "scripts/amorce_b5f_formation_v1.sh"
 IMAGE = "python:3.11-bookworm"
 DISQUE_GO = 150
 DEPOT_URL = "https://github.com/lciric/controle-ia-travail.git"
+# devis du brouillon 3, § 3 : carte, bornes de l'offre, heures attendues par instance
+OFFRE = {"carte": "A100 SXM4 80 Go", "nom_offre": ("A100", "SXM4"), "memoire_carte_min_mo": 80000, "prix_max_usd_h": 1.30,
+         "coeurs_min": 16, "memoire_vive_min_mo": 128000, "disque_min_go": DISQUE_GO, "stockage_max_usd_h": 0.08,
+         "cuda_min": 13.0}
+HEURES_ATTENDUES = {1: (8.90, 10.28), 2: (8.90, 10.28), 3: (8.90, 10.28), 4: (8.90, 10.28), 5: (8.90, 10.28),
+                    6: (8.44, 9.36), 7: (5.12, 5.58)}
+VERSEMENT_S = 900          # le quart d'heure de la liste d'arrêt, point 14 : temps laissé au versement avant la destruction
+BRANCHE_SORTIE = "donnees/barreau5-familles-jumelles-v1-formation-instance-{n}"
+
+
+def config_instance(n: int, racine: Path, go_id: str, prix_usd_h: float) -> dict:
+    """Configuration réelle de l'instance n : recette lue dans la configuration scellée de la course de confirmation
+    (empreinte vérifiée), plan et coupure du devis, prix relevé de l'offre. Passe `exiger_config_b5f`."""
+    chemin = Path(racine) / CONFIG_SCELLEE["chemin"]
+    if verifier(chemin) != CONFIG_SCELLEE["sha256"]:
+        raise GardeArret("configuration scellée de la course de confirmation : empreinte différente (R11)")
+    scellee = json.loads(chemin.read_text(encoding="utf-8"))
+    config = {k: scellee[k] for k in CLES_RECETTE}
+    config.update({"mode": "reel", "instance": int(n), "familles": list(familles_de(int(n))), "taches_par_pli": TACHES_PAR_PLI,
+                   "taches_saboteur_apprentissage": TACHES_SABOTEUR_APPRENTISSAGE, "go_id": go_id,
+                   "plafond_usd": PLAFOND_USD, "coupure_usd": COUPURES_USD[int(n)], "prix_usd_h": float(prix_usd_h),
+                   "config_scellee": dict(CONFIG_SCELLEE)})
+    if not 0 < float(prix_usd_h) <= OFFRE["prix_max_usd_h"]:
+        raise GardeArret(f"prix {prix_usd_h} hors de ]0 ; {OFFRE['prix_max_usd_h']}] USD de l'heure (devis)")
+    exiger_config_b5f(config, racine)
+    return config
+
+
+def exiger_offre(offre: dict) -> dict:
+    """Bornes du devis sur une offre (une entrée de la recherche du loueur, champs bruts) ; rend l'identifiant et le prix.
+    Champ absent ou illisible : refus, jamais un défaut deviné."""
+    def nombre(cle):
+        v = offre.get(cle)
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise GardeArret(f"offre : champ {cle} absent ou illisible")
+        return float(v)
+
+    nom = str(offre.get("gpu_name", ""))
+    if not all(x in nom.replace("_", " ") for x in OFFRE["nom_offre"]):
+        raise GardeArret(f"offre : carte {nom!r}, {OFFRE['carte']} attendue")
+    stockage_h = nombre("storage_cost") * DISQUE_GO / 730.0
+    for cle, borne, sens in (("num_gpus", 1, "="), ("gpu_ram", OFFRE["memoire_carte_min_mo"], ">="),
+                             ("cpu_cores_effective", OFFRE["coeurs_min"], ">="),
+                             ("cpu_ram", OFFRE["memoire_vive_min_mo"], ">="), ("disk_space", DISQUE_GO, ">="),
+                             ("cuda_max_good", OFFRE["cuda_min"], ">="), ("dph_total", OFFRE["prix_max_usd_h"], "<=")):
+        v = nombre(cle)
+        if (sens == "=" and v != borne) or (sens == ">=" and v < borne) or (sens == "<=" and not 0 < v <= borne):
+            raise GardeArret(f"offre : {cle} = {v} hors de la borne du devis ({sens} {borne})")
+    if stockage_h > OFFRE["stockage_max_usd_h"]:
+        raise GardeArret(f"offre : stockage de {DISQUE_GO} Go à {stockage_h:.3f} USD de l'heure > {OFFRE['stockage_max_usd_h']}")
+    ident = offre.get("id")
+    if not str(ident).isdigit():
+        raise GardeArret("offre : identifiant illisible")
+    return {"id": str(ident), "prix_usd_h": nombre("dph_total")}
+
+
+def echeance_arret_s(depart_s: float, n: int, prix_usd_h: float) -> int:
+    """Instant (secondes UTC) où le cumul plus un quart d'heure atteint la coupure de l'instance n, au prix de l'offre,
+    compté depuis `depart_s` (l'impression de la commande : plus tôt que le départ réel, donc prudent)."""
+    familles_de(n)
+    if not 0 < float(prix_usd_h) <= OFFRE["prix_max_usd_h"]:
+        raise GardeArret("prix hors des bornes du devis")
+    heures = COUPURES_USD[n] / float(prix_usd_h) - QUART_D_HEURE_H
+    if heures < HEURES_ATTENDUES[n][1]:
+        raise GardeArret(f"instance {n} : {heures:.2f} h avant la coupure < {HEURES_ATTENDUES[n][1]} h attendues au plus")
+    return int(depart_s + heures * 3600)
 
 
 def etiquette(n: int) -> str:
@@ -859,27 +930,43 @@ def exiger_garde_de_calcul(racine: Path, commande: str, aujourd_hui) -> None:
             raise GardeArret(f"garde de calcul : {err.getvalue().strip()}") from None
 
 
-def commande_de_creation(racine: Path, n: int, offre: str, commit: str, go_id: str, aujourd_hui) -> str:
-    """Commande de création de l'instance n, à jouer par la session de formation. Refus : identifiant d'offre ou commit
-    illisible ; amorce absente ; registre propre sans CODE-FORMATION-B5F au même commit ou sans GO-FORMATION-B5F au même
-    accord ; garde de calcul qui bloquerait la commande."""
+def commande_de_creation(racine: Path, n: int, offre_json: Path, commit: str, branche: str, prereg: str, run_id: str,
+                         go_id: str, aujourd_hui, maintenant_s: float) -> str:
+    """Commande de création de l'instance n, à jouer par la session de formation. Refus : offre hors des bornes du devis ;
+    commit, branche, texte ou identifiant de marche illisibles ; amorce absente ; registre propre sans CODE-FORMATION-B5F
+    au même commit ou sans GO-FORMATION-B5F au même accord ; configuration de l'instance refusée ; garde de calcul qui
+    bloquerait la commande. Variables passées par leur nom ; aucune valeur de clé."""
     import base64
     import re
 
-    if not re.fullmatch(r"[0-9]+", str(offre)) or not re.fullmatch(r"[0-9a-f]{40}", str(commit)):
-        raise GardeArret("identifiant d'offre (chiffres) et commit (40 signes) attendus")
-    lu = lire_code_et_accord(Path(racine) / REGISTRE_PROPRE)
-    if lu["commit"] != commit:
-        raise GardeArret(f"commit {commit[:12]} ≠ commit de CODE-FORMATION-B5F {lu['commit'][:12]}")
+    of = exiger_offre(json.loads(Path(offre_json).read_text(encoding="utf-8")))
+    offre = of["id"]
+    if not re.fullmatch(r"[0-9a-f]{40}", str(commit)):
+        raise GardeArret("commit (40 signes) attendu")
+    if not re.fullmatch(r"[A-Za-z0-9._/-]+", str(branche)) or not re.fullmatch(r"prereg/[A-Za-z0-9._-]+\.md", str(prereg)):
+        raise GardeArret("branche du code ou chemin du texte illisible")
+    if not re.fullmatch(rf"[0-9]{{8}}-[0-9]{{6}}-b5f-formation-{int(n)}", str(run_id)):
+        raise GardeArret(f"identifiant de marche AAAAMMJJ-HHMMSS-b5f-formation-{n} attendu")
+    import subprocess
+
+    vu = subprocess.run(["git", "-C", str(racine), "show", f"{commit}:{REGISTRE_PROPRE}"], capture_output=True, text=True)
+    if vu.returncode != 0:
+        raise GardeArret(f"registre propre absent du commit de la course {commit[:12]}")
+    lu = lire_code_et_accord(None, vu.stdout)
+    exiger_code_au_commit(racine, lu["commit"], commit)
     if lu["go_id"] != go_id:
         raise GardeArret(f"accord {go_id} ≠ GO-FORMATION-B5F {lu['go_id']}")
-    amorce = Path(racine) / AMORCE
-    if not amorce.is_file():
-        raise GardeArret(f"amorce {AMORCE} absente : aucune commande de création")
-    b64 = base64.b64encode(amorce.read_bytes()).decode("ascii")
+    config_instance(n, racine, go_id, of["prix_usd_h"])
+    am = subprocess.run(["git", "-C", str(racine), "show", f"{commit}:{AMORCE}"], capture_output=True)
+    if am.returncode != 0 or not am.stdout:
+        raise GardeArret(f"amorce {AMORCE} absente du commit de la course {commit[:12]} : aucune commande de création")
+    arret = echeance_arret_s(maintenant_s, n, of["prix_usd_h"])
+    b64 = base64.b64encode(am.stdout).decode("ascii")          # l'amorce telle qu'au commit de la course
     cmd = (f"GO_ID={go_id} vastai create instance {offre} --raw --image {IMAGE} --disk {DISQUE_GO} --cancel-unavail "
-           f"--label {etiquette(n)} --env \"-e INSTANCE_B5F={n} -e COMMIT={commit} -e GO_ID={go_id} "
-           f"-e DEPOT_URL={DEPOT_URL} -e HF_TOKEN=\\$HF_TOKEN -e GH_TOKEN=\\$GH_TOKEN\" --entrypoint bash --args -c "
+           f"--label {etiquette(n)} --env \"-e INSTANCE_B5F={n} -e COMMIT={commit} -e BRANCHE_CODE={branche} "
+           f"-e PREREG={prereg} -e RUN_B5F={run_id} -e PRIX_USD_H={of['prix_usd_h']} -e ECHEANCE_ARRET_UTC_S={arret} "
+           f"-e GO_ID={go_id} -e DEPOT_URL={DEPOT_URL} -e HF_TOKEN=\\$HF_TOKEN -e GH_TOKEN=\\$GH_TOKEN\" "
+           f"--entrypoint bash --args -c "
            f"\"echo {b64} | base64 -d > /root/amorce_b5f_formation_v1.sh && bash /root/amorce_b5f_formation_v1.sh\"")
     exiger_garde_de_calcul(racine, cmd, aujourd_hui)
     return cmd
@@ -939,8 +1026,11 @@ def _session(argv: list[str]) -> int:
     if s == "plan" and not a:
         for n, f in PLAN_INSTANCES.items():
             print(f"{etiquette(n)}\t{','.join(f)}\tcoupure {COUPURES_USD[n]} USD")
-    elif s == "commande" and len(a) == 5:
-        print(commande_de_creation(Path(a[0]), int(a[1]), a[2], a[3], a[4], date.today()))
+    elif s == "commande" and len(a) == 8:
+        print(commande_de_creation(Path(a[0]), int(a[1]), Path(a[2]), a[3], a[4], a[5], a[6], a[7], date.today(),
+                                   time.time()))
+    elif s == "config" and len(a) == 4:
+        print(json.dumps(config_instance(int(a[1]), Path(a[0]), a[3], float(a[2])), ensure_ascii=False, sort_keys=True))
     elif s == "depense" and len(a) == 5:
         print(json.dumps(depense_session(int(a[0]), *(float(x) for x in a[1:]))))
     elif s == "detruire" and len(a) == 7:
@@ -957,15 +1047,14 @@ def _main(argv: list[str]) -> int:
     if argv[:1] == ["session"]:
         return _session(argv[1:])
     ap = argparse.ArgumentParser(prog=COMMANDE)
-    ap.add_argument("--config", required=True)
+    ap.add_argument("--instance", type=int, required=True)
+    ap.add_argument("--prix-usd-h", type=float, required=True)
+    ap.add_argument("--go-id", required=True)
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--prereg", required=True)
     x = ap.parse_args(argv)
     signal.signal(signal.SIGTERM, lever_sur_term)
-    verifier(x.config)
-    config = json.loads(Path(x.config).read_text(encoding="utf-8"))
-    if config.get("mode") != "reel":
-        raise GardeArret("ligne de commande : mode réel seulement (le mode jouet se joue par les essais)")
+    config = config_instance(x.instance, Path("."), x.go_id, x.prix_usd_h)     # mode réel seulement
     print(json.dumps(executer(config, Path("."), x.run_id, x.prereg), ensure_ascii=False))
     return 0
 

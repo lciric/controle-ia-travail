@@ -353,6 +353,50 @@ def test_registre_code_et_accord_cas_sain_et_artefacts(tmp_path):
         fv.lire_code_et_accord(_registre(tmp_path, [trop, go]))
 
 
+OFFRE_SAINE = {"id": 9, "gpu_name": "A100_SXM4", "num_gpus": 1, "gpu_ram": 81920, "cpu_cores_effective": 16,
+               "cpu_ram": 128000, "disk_space": 150, "cuda_max_good": 13.0, "dph_total": 1.30, "storage_cost": 0.3}
+
+
+def test_offre_cas_sain_bornes_du_devis_et_artefacts():
+    assert fv.exiger_offre(OFFRE_SAINE) == {"id": "9", "prix_usd_h": 1.30}
+    for cle, v, motif in (("num_gpus", 2, "num_gpus"), ("gpu_ram", 40960, "gpu_ram"), ("cpu_cores_effective", 8, "cpu_cores"),
+                          ("cpu_ram", 64000, "cpu_ram"), ("disk_space", 100, "disk_space"), ("dph_total", 0, "dph_total"),
+                          ("storage_cost", 0.5, "stockage"), ("cuda_max_good", None, "absent"), ("id", "9a", "identifiant"),
+                          ("gpu_name", "RTX 4090", "carte"), ("cpu_ram", True, "illisible")):
+        o = dict(OFFRE_SAINE)
+        if v is None:
+            o.pop(cle)
+        else:
+            o[cle] = v
+        with pytest.raises(GardeArret, match=motif):
+            fv.exiger_offre(o)
+
+
+def test_echeance_d_arret_cumul_plus_un_quart_d_heure_a_la_coupure_et_artefacts():
+    assert fv.echeance_arret_s(1000.0, 1, 1.3) == int(1000 + (26.0 / 1.3 - 0.25) * 3600)
+    assert fv.echeance_arret_s(0.0, 7, 1.0) == int((15.0 - 0.25) * 3600)
+    with pytest.raises(GardeArret):
+        fv.echeance_arret_s(0.0, 1, 1.4)
+    with pytest.raises(GardeArret):
+        fv.echeance_arret_s(0.0, 8, 1.0)
+
+
+def test_configuration_de_chaque_instance_passe_les_gardes_et_artefacts():
+    for n in fv.PLAN_INSTANCES:
+        c = fv.config_instance(n, RACINE_DEPOT, "GO-2026-11-22-01", 1.1)
+        assert c["familles"] == list(fv.familles_de(n)) and c["coupure_usd"] == fv.COUPURES_USD[n]
+    with pytest.raises(GardeArret):
+        fv.config_instance(8, RACINE_DEPOT, "GO-2026-11-22-01", 1.1)
+    with pytest.raises(GardeArret):
+        fv.config_instance(1, RACINE_DEPOT, "GO-2026-11-22-01", 2.0)
+
+
+def test_registre_lu_dans_un_texte_comme_dans_un_fichier(tmp_path):
+    code = en.ligne_du_registre("CODE-FORMATION-B5F", "2026-11-22T18:00:00Z", "commit " + "b" * 40 + " ; entropie 9", "")
+    go = en.ligne_du_registre("GO-FORMATION-B5F", "2026-11-22T19:00:00Z", "GO-2026-11-22-01", "")
+    assert fv.lire_code_et_accord(None, code + "\n" + go + "\n") == fv.lire_code_et_accord(_registre(tmp_path, [code, go]))
+
+
 def test_graine_entiere_egale_a_celle_du_harnais():
     """La formule réécrite à neuf rend la même graine que `harnais.run_harnais_factice.graine_entiere` (comparée sur
     une graine fabriquée, sans importer ce module-là dans la marche)."""
