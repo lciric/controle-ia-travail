@@ -31,7 +31,7 @@ Appliqués à la lettre et dans l'ordre au candidat v2, ces couples donnent les 
 | pièce | nom définitif | empreinte attendue |
 |---|---|---|
 | texte | `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1.md` | `bdff244f1377e795b84f71518bb5e58fb1600fff8afee383d8f70c10d3f5d935` |
-| devis | `docs/notes/barreau5-resolution-v1/plan-avant-entretien/devis-adaptateurs-tenus-a-l-ecart-v1.md` | `4b7a46bf4ad20bb3dba2deadab274598da764ef33d49de0938fbbd241ca73289` |
+| devis | `docs/notes/barreau5-resolution-v1/plan-avant-entretien/devis-adaptateurs-tenus-a-l-ecart-v1.md` | `dc886195c77b0d67c31cb8815a1e97b9fa72dd35ebac2b8f3bc49d4e5cf59bcc` |
 
 Une application qui ne rend pas ces deux empreintes n'est pas celle-ci.
 
@@ -67,7 +67,7 @@ Ces couples ne touchent ni la construction, ni les épreuves, ni aucun attendu, 
    - *Les six classes* : ce sont celles du rapport, point (a) 2.
    - *« Tombée »*. Une instance dont le versement est repris et prouvé, sans rien lire, n'est pas tombée ; la décision ne dépend que d'un fait technique. Si la reprise échoue, les sorties sont perdues et l'instance tombe. Sa relance reste sous l'échéance de la ligne unique (H + 54 heures), que tient la mère.
    - *La coupe 3*. La neuvième et la dixième famille partent ensemble, avec l'instance 5 : il reste huit familles, et les épreuves restent à 99 % sans aucune tolérance. L'erreur de l'issue « empreinte » passe de 2^−10 à 2^−8, soit de 0,1 à 0,4 %. Le texte suit la granularité du code, une instance forme toutes ses familles ou aucune. Le prix, une famille de plus perdue dans ce cas de pénurie, se lit dans le texte.
-   - *Le modèle nu et la base de temps de la coupure* sont alignés sur le code. Une phrase du devis dit trop : l'échéance d'arrêt ne tient pas la coupure « dans tous les cas » (X-2c). Calculée au prix plafond de la carte, elle laisse le stockage et le téléchargement, à leurs bornes, dépasser la coupure de quelques USD ; c'est la garde de dépense qui tient la coupure.
+   - *Le modèle nu et la base de temps de la coupure* sont alignés sur le code. Une phrase du devis dit trop : l'échéance d'arrêt ne tient pas la coupure « dans tous les cas » (X-2c). Le code la calcule au prix horaire de l'offre (`echeance_arret_s`). Ce que ce prix ne compte pas peut donc passer la coupure : le téléchargement, et le stockage s'il n'y est pas. C'est la garde de dépense qui tient la coupure.
 5. **Les retouches de consolidation et l'étape 5.**
    - *P-3 n'est compatible avec le code que si l'on écrit dans la bonne colonne.* Le code lit le registre propre en lignes de table « | CLÉ | instant | contenu | référence | ». Il exige :
      - un instant au format `AAAA-MM-JJTHH:MM:SSZ` ;
@@ -127,7 +127,7 @@ Une empreinte ajoutée au contenu, une ligne « DÉSIGNATION-…-B5F » ou un in
 
 - X-2a : la puce « Texte qu'il chiffre » nomme le premier candidat comme nom provisoire du texte.
 - X-2b : l'en-tête dit « le brouillon 4 est en vérification ».
-- X-2c : l'échéance d'arrêt n'arrête pas l'instance « avant sa coupure dans tous les cas ». Calculée au prix plafond de la carte, elle laisse passer le stockage (au plus 0,08 USD de l'heure) et le téléchargement (au plus 2 USD) : la limite dure borne les heures, et la garde de dépense tient la coupure.
+- X-2c : l'échéance d'arrêt n'arrête pas l'instance « avant sa coupure dans tous les cas ». Le code la calcule en heures, au prix horaire de l'offre (`formation_v1.echeance_arret_s`). Ce que ce prix ne compte pas passe donc outre : le téléchargement, et le stockage (au plus 0,08 USD de l'heure) s'il n'y est pas. La limite dure borne les heures ; la garde de dépense, au cumul relevé, tient la coupure.
 - X-2d : le titre. Copié sous son nom définitif, le devis s'appellerait encore « candidat au scellement ».
 - X-2e : la puce « Candidat au scellement » dit « ces seules retouches » et « à copier à l'octet ». Après les couples, les deux sont faux. Elle dit maintenant ce que les couples changent au devis.
 - X-2f : le devis fait relever le prix du volume « avant le scellement », alors que la phrase suivante et GO-88 (6) disent « avant toute dépense ».
@@ -266,7 +266,7 @@ la limite dure reste l'échéance d'arrêt de l'instance, comptée depuis l'impr
 Après :
 
 ```text
-la limite dure reste l'échéance d'arrêt de l'instance, comptée depuis l'impression de sa commande de création ; elle borne les heures de carte au prix plafond de la carte, et le stockage et le téléchargement, à leurs bornes, peuvent faire passer la coupure de quelques USD : c'est la garde de dépense, au cumul relevé, qui tient la coupure)
+la limite dure reste l'échéance d'arrêt de l'instance, comptée depuis l'impression de sa commande de création ; elle borne les heures au prix horaire de l'offre, et ce que ce prix ne compte pas (le téléchargement, et le stockage s'il n'y est pas) peut faire passer la coupure : c'est la garde de dépense, au cumul relevé, qui tient la coupure)
 ```
 
 #### Couple X-2d — `docs/notes/barreau5-resolution-v1/plan-avant-entretien/devis-adaptateurs-tenus-a-l-ecart-v1-candidat-scellement-v2.md`

@@ -23,7 +23,7 @@
    - les fiches v4 et v5 (leur différence) ;
    - les lignes du code de formation qui lisent le registre propre ;
    - les passages du candidat qui parlent encore d'attente, de copie, de recharge ou du rapprochement M-6.
-5. **Couples.** `couples-verification-candidat-v2-v1.py` : 22 couples, aucun défaut ; validateur du dépôt sans problème sur la copie ; aucune mention d'attente cherchée ne reste. Empreintes attendues : texte `bdff244f…`, devis `4b7a46bf…`. Sortie versée.
+5. **Couples.** `couples-verification-candidat-v2-v1.py` : 22 couples, aucun défaut ; validateur du dépôt sans problème sur la copie ; aucune mention d'attente cherchée ne reste. Empreintes attendues : texte `bdff244f…`, devis `dc886195…`. Sortie versée.
 6. **Rapport.** Écrit puis contrôlé par `--document` : 22 couples sur 22 reproduits à l'octet.
 
 ## Corrections en cours de route
@@ -38,6 +38,7 @@
   - X-6a à X-6c : la recharge sans l'enveloppe.
 
   X-1a et X-1b sont récrits (colonnes, format de l'instant) ; X-3c est étendu ; X-4a est précisé (« cette enveloppe »).
+- **X-2c.** La première version chiffrait le dépassement (« quelques USD »), à partir du prix plafond de la carte. Relu dans le code : l'échéance se calcule au prix horaire de l'offre, et je n'ai pas établi ce que ce prix compte du stockage. La version finale ne chiffre plus et dit ce que ce prix ne compte pas.
 - **Dates des en-têtes des programmes** : le 19 novembre, non le 20.
 - **Citation du rapport v4** : § 7, non § 5.
 - **Écriture du rapport neuf.** Une première tentative a échoué, faute d'une relecture du fichier depuis la reprise du contexte. C'est une condition de l'outil, non un refus d'autorisation. Relu, puis écrit.

@@ -70,9 +70,9 @@ COUPLES = [
      "la limite dure reste l'échéance d'arrêt de l'instance, comptée depuis l'impression de sa commande de création, "
      "qui l'arrête avant sa coupure dans tous les cas)",
      "la limite dure reste l'échéance d'arrêt de l'instance, comptée depuis l'impression de sa commande de création ; "
-     "elle borne les heures de carte au prix plafond de la carte, et le stockage et le téléchargement, à leurs bornes, "
-     "peuvent faire passer la coupure de quelques USD : c'est la garde de dépense, au cumul relevé, qui tient la "
-     "coupure)"),
+     "elle borne les heures au prix horaire de l'offre, et ce que ce prix ne compte pas (le téléchargement, et le "
+     "stockage s'il n'y est pas) peut faire passer la coupure : c'est la garde de dépense, au cumul relevé, qui tient "
+     "la coupure)"),
     ("X-2d", "X-2", "formation (devis)", DV, TITRE, TITRE_SCELLE),
     ("X-2e", "X-2", "formation (devis)", DV,
      "puis ces seules retouches : titre, cette puce, nom du texte chiffré. Aucun chiffre ne change. À copier à l'octet "
