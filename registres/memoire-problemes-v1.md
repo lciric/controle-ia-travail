@@ -20,7 +20,7 @@
 
 **Sources parcourues, en lecture seule.**
 - `registres/decisions.md`, lignes datées du 2026-11-09 à R-3639 (1 692 lignes, de R-1949 à R-3639). Le fichier n'a pas été lu en entier. La ligne R-2059 n'a pas été lue.
-- `registres/passations/2026-11-1*.md` : sections « Réserves ».
+- `registres/passations/2026-11-1*.md` : sections « Réserves » de toutes les passations de la période ; les sections « Fait » n'ont pas été lues, les registres suffisant aux faits retenus.
 - `registres/arrets.md` : lignes de la même période portant un incident.
 - `registres/etat.md` : début des quinze premiers paragraphes.
 - Aucun fichier sous `diag/`, `runs/`, `donnees/`, `docs/verdicts/`, ni aucun fichier de consigne privée ou de conception fermée.
@@ -162,7 +162,7 @@
   - 11-10, mère : mot court portant sur plusieurs points ; inscrit avec « lecture de la mère, à corriger par Lazar s'il l'entend autrement » ; attendu : non écrit avant ; observé : aucune correction de Lazar dans les lignes lues (R-2077).
   - 11-11, session sœur : lit un mot comme une interdiction de dépenser ; attendu : non écrit avant ; observé : correction de Lazar, il voulait dire le contraire (R-2292).
   - 11-18, mère : lit un budget comme un total unique ; attendu : non écrit avant ; observé : trois messages de Lazar plus tard, c'était un budget quotidien ; l'arbitrage qui en dépendait est refait (R-3124).
-  - 11-18, mère : question fermée de confirmation sur ce qu'un « fait » de Lazar visait ; attendu : non écrit avant ; observé : réponse « oui », une mention erronée de la veille devient caduque (R-3361).
+  - 11-18, mère : question fermée de confirmation sur ce qu'un « fait » de Lazar visait ; attendu : non écrit avant ; observé : réponse « oui », une mention erronée d'une ligne précédente devient caduque (R-3361).
   - 11-19, session sœur : transcription d'une série de choix de Lazar, vérifiée par un agent neuf ; attendu : non écrit avant ; observé : « fidèle, sous six corrections », aucune option inversée ; erratum scellé qui prime sur la transcription (R-3637).
 - parade en vigueur : verbatim recopié, puis « lecture de… » dite comme telle (R-2077) ; question fermée de confirmation avant tout geste (R-1978, R-3361) ; transcription d'une série de choix vérifiée par un agent neuf, erratum sans réécriture (R-3637).
 - signal d'alerte : le mot ne reprend pas à la lettre une option posée ; il porte une négation, un chiffre tapé de travers, ou un « fait » sans objet.
@@ -207,19 +207,18 @@
 - tentatives :
   - 11-09, mère : 96 fichiers suivis sans compagnon, surtout versés par les instantanés de fin de tour, scellés d'un coup, contenus inchangés (R-1966) ; attendu : non écrit avant ; observé : le stock se refait, 110 problèmes anciens le 11-14, « à trier » (passation 2026-11-14-1329), 100 le 11-18 (R-3387).
   - 11-18, audit de reprise : « aucune empreinte fausse » avait été écrit ; attendu : non écrit avant ; observé : cela ne vaut que pour les six dossiers que la vérification parcourt ; hors de ce périmètre, deux compagnons sont faux ; signalés, non réécrits (R-3145).
-  - 11-18, contre-lecteur : premier état de son rapport versé non scellé ; attendu : non écrit avant ; observé : remplacé par l'état scellé au commit suivant (R-3529).
+  - 11-18, rapport d'une contre-lecture : un premier état non scellé avait été versé ; attendu : non écrit avant ; observé : remplacé par l'état scellé à un commit suivant (R-3529).
 - parade en vigueur : consigne aux agents de sceller au fur et à mesure (R-3165) ; la mère vérifie le compagnon de chaque pièce au versement (par exemple R-3412) ; pour le stock ancien : aucune parade écrite.
 - signal d'alerte : la vérification de l'arbre rend un nombre de problèmes différent de celui de la passation précédente ; un agent rend une pièce sans son compagnon.
 - état : ouvert
 
 ### M-015 — Épreuve d'une garde qui passe, ou échoue, pour une mauvaise raison
-- vu : R-2246 (11-10), R-2899 (11-15), R-3113 et R-3118 (11-18), R-3562 (11-19).
+- vu : R-2246 (11-10), R-2899 (11-15), R-3113 et R-3118 (11-18).
 - tentatives :
   - 11-10, développeur : mutation par copie passée par le seul chemin d'import de l'environnement ; attendu : non écrit avant ; observé : la copie mutée n'est pas importée, la mutation « survit » à tort ; règle : toute consigne de mutation par copie exige l'option qui vide le chemin d'import du projet et une trace de l'import (R-2246).
   - 11-15, contre-lecteur d'un code : essai d'un refus ; attendu : non écrit avant ; observé : l'essai est vert pour une autre raison que le refus visé ; la règle des gardes (R5) n'est pas tenue pour ce refus (R-2899).
   - 11-18, mère : six artefacts construits pour éprouver un programme d'attestation ; attendu : non écrit avant ; observé : deux d'abord mal construits passaient à tort, refaits (R-3113) ; la contre-lecture montre ensuite par artefact que la garde protège moins que la ligne ne l'affirmait (R-3118).
-  - 11-19, vérificateur : programme d'extrait éprouvé par artefacts ; attendu : non écrit avant ; observé : deux artefacts passent encore ; version neuve qui ne laisse passer par construction que les clés permises (R-3562).
-- parade en vigueur : règle de R-2246 pour les mutations par copie ; contre-lecture qui construit ses propres artefacts (R-3118, R-3562). Pour le reste : aucune parade écrite.
+- parade en vigueur : règle de R-2246 pour les mutations par copie ; contre-lecture qui construit ses propres artefacts (R-3118). Pour le reste : aucune parade écrite.
 - signal d'alerte : un essai de refus est vert sans que le message de refus attendu soit comparé ; une mutation « survit » sans preuve que la copie mutée a été chargée.
 - état : ouvert
 
@@ -230,9 +229,9 @@
   - 11-14, mère : courte répétition sur machine louée, sur données synthétiques seulement, avant la course, sous écart déclaré et mot de Lazar (R-2802) ; attendu : non écrit avant ; observé : chaque passe trouve un trou — clonage refusé faute d'authentification par une erreur du feu (R-2829), ligne de création refusée (R-2832), version de la bibliothèque de calcul servie par l'hôte trop ancienne pour les paquets, « trou qui vaut pour la course » (R-2844), arrêt à la troisième passe (R-2869).
   - 11-14, opérateur : feu et commande qui ne nomment pas l'image de la machine ; attendu : manque relevé en mineur par la contre-lecture de sûreté (écrit avant, source R-2828) ; observé : non corrigé avant le jeu ; l'opérateur ne devine pas et s'arrête avant toute création ; feu complété (R-2828) — attente juste.
   - 11-15, session fille : essai à blanc d'un lanceur, puis course ; attendu : non écrit avant ; observé : arrêt à la première étape sur une variable que le lanceur ne fournit pas, « non vu par l'essai à blanc » (R-2890) ; à la relance, mémoire de la carte épuisée au lot par défaut (R-2900).
-  - 11-16, opérateur : course après quatre passes de répétition ; attendu : non écrit avant ; observé : premier départ perdu, l'amorce gelée cherchant une chaîne exacte que l'outil du pilote récent n'affiche plus ; relance unique, offre choisie par série de pilote (R-3003).
+  - 11-16, opérateur : course après les passes de répétition ; attendu : non écrit avant ; observé : premier départ perdu, l'amorce gelée cherchant une chaîne exacte que l'outil du pilote récent n'affiche plus ; relance unique, offre choisie par série de pilote (R-3003).
   - 11-18, contre-lecteurs : préalables d'une course à tentative unique rejoués avec les vraies classes ; attendu : non écrit avant ; observé : un accusé attendu jamais rendu et une sonde qui « n'aurait jamais pu réussir », trouvés avant le départ (R-3249, R-3279).
-  - 11-19, relevé croisé avant un départ : contrôle d'un lanceur sur les fichiers d'entrée ; attendu : non écrit avant ; observé : il échouerait sur la forme réelle des fichiers, que la répétition sur jouets n'écrit pas ; lanceur seul corrigé (R-3622).
+  - 11-19, relevé croisé avant un départ : contrôle d'un lanceur sur les fichiers d'entrée ; attendu : non écrit avant ; observé : ce contrôle échoue là où le chargeur de la course accepte les deux formes de fichiers, la répétition sur jouets n'en écrivant qu'une ; lanceur seul corrigé (R-3622).
 - parade en vigueur : répétition sur machine réelle avec données synthétiques avant toute course qui ne se rejoue pas (R-2802) ; contre-lecture qui rejoue les portes avec les vraies classes et les vrais fichiers (R-3249, R-3622) ; choix de l'offre par série de pilote (R-3003) ; un opérateur ne devine jamais ce que le feu ne nomme pas (R-2828).
 - signal d'alerte : tous les essais passent avec un faux outil ou un faux modèle, et aucun geste n'a encore touché le vrai service, la vraie machine ou les vrais fichiers.
 - état : ouvert
@@ -244,7 +243,7 @@
   - 11-16, opérateur : premier départ d'une course perdu sur une garde de version de l'amorce ; attendu : non écrit avant ; observé : la seule relance permise par la ligne d'accord est consommée par le feu suivant (R-3003).
   - 11-16, mère : deux jeux sous la règle « reprise interdite » ; attendu : non écrit avant ; observé : tués par le remplacement du conteneur, runs invalides, relance seulement sous un addendum neuf (R-2964, R-3010).
   - 11-18, mère : fournisseur surchargé non déclaré dans une tentative unique ; attendu : un participant déclaré qui échoue rend l'étape « non mesurée (technique) » et consomme l'unique tentative (écrit avant, source R-3273) ; observé : c'est un autre participant déclaré qui échoue, étape « non mesurée », tentative consommée (R-3398) — attente juste.
-  - 11-18, Lazar et mère : reprises d'une épreuve permises « tant que l'échec est technique », bornées par un plafond de dépense ; attendu : non écrit avant ; observé : épreuve reprise et réussie (R-3320, R-3342).
+  - 11-18, Lazar et mère : reprises d'une épreuve permises « tant que l'échec est technique », bornées par un plafond de dépense ; attendu : non écrit avant ; observé : épreuve reprise sous cette règle (R-3320, R-3342).
   - 11-18, mère : un arrêt de programme avant sa garde d'ouverture, sans rien écrire, classé « pur défaut de mise en place », sous preuve par programme versée avant la relance (R-3455) ; attendu : non écrit avant ; observé : la mère l'avait appliqué par anticipation, puis corrige : la voie n'est pas employée avant le mot de Lazar (R-3530).
 - parade en vigueur : écrire avant la course ce qui compte comme tentative et ce qui est une panne de mise en place, et sous quelle preuve (R-3320, R-3455), sous mot de Lazar (R-3530) ; ne pas déclarer un participant fragile dans une tentative unique (R-3273) ; présence de Lazar confirmée juste avant tout geste qui l'exige (R-2962).
 - signal d'alerte : le texte dit « une seule tentative » ou « une relance au plus » sans dire ce qui compte comme tentative ; la procédure attend une réponse de Lazar dans un délai.
@@ -349,9 +348,9 @@
 ## Partition « organisme d'idéation »
 
 ### M-026 — Appels d'un fournisseur en mode lot : le budget de pensée n'y est pas tenu ; réponses coupées ou vides ; deux tentatives uniques closes sans mesure
-- vu : R-3225, R-3398, R-3446 et R-3479 (11-18), R-3584, R-3610 et R-3617 (11-19).
+- vu : R-3225, R-3254, R-3274, R-3398, R-3446 et R-3479 (11-18), R-3584, R-3610 et R-3617 (11-19).
 - tentatives :
-  - 11-18 06:48Z, session sœur : silence du fournisseur diagnostiqué — avec le budget de pensée par défaut de la commande, il dépasse la coupure à 300 secondes du réseau du conteneur (R-3225) ; passage aux appels par lot ; attendu : non écrit avant ; observé : une course par lot close et lisible (R-3274).
+  - 11-18 06:48Z, session sœur : silence du fournisseur diagnostiqué — avec le budget de pensée par défaut de la commande, il dépasse la coupure à 300 secondes du réseau du conteneur (R-3225) ; puis appels par lot (R-3254) ; attendu : non écrit avant ; observé : une course par lot close et lisible (R-3274).
   - 11-18, compte de l'organisme : course à tentative unique avec ce fournisseur par lot ; attendu : non écrit avant ; observé : le proposeur ne rend qu'une partie de ses appels, erreurs après de longues attentes ; étape « non mesurée » pour cause technique, tentative consommée, ≈ 44,8 USD (R-3398).
   - 11-18, compte de l'organisme : diagnostic avant de recommencer ; attendu : « sinon le même échec est probable » (écrit avant, source R-3398) ; observé : causes rapportées — jetons de pensée au-delà de la provision par défaut, que le fournisseur ne tient pas en mode lot, et un lot non fini au délai ; le dossier des sessions avait été vidé par l'orchestrateur, diagnostic sans archive versée (R-3446) ; tentative neuve avec sortie corrigée (R-3479) ; même échec, le proposeur épuise tout son plafond à penser et rend une réponse de quelques jetons, aux trois lots ; close sans mesure, tentative consommée, ≈ 42,4 USD (R-3584) — attente juste.
   - 11-19, compte de l'organisme et Lazar : suite posée à Lazar (R-3584) ; attendu : non écrit avant ; observé : mot relu à la source, ce fournisseur par la commande synchrone qui marche pour un autre, éprouvée d'abord par un appel réel, version neuve contre-lue (R-3610) ; troncature retirée au devis de la version neuve sur un mot rapporté (R-3617).
@@ -365,7 +364,7 @@
   - 11-11, opérateur : compte du fournisseur suspendu faute de crédit pendant un tour ; attendu : non écrit avant ; observé : participant absent, absence acceptée par l'opérateur ; des identifiants du compte restent dans l'historique privé du dépôt, clé changée et compte rechargé par Lazar (R-2389, R-2398, passation 2026-11-12-0519).
   - 11-14, opérateur : premier envoi d'une lecture ; attendu : non écrit avant ; observé : compte suspendu faute de solde, arrêt au premier statut autre que 200, comme écrit ; le corps de l'erreur, qui porte des identifiants de compte et de clé, n'est pas versé (R-2645).
   - 11-18, session sœur : appel du proposeur refusé pour surcharge, cause inconnue, le relais ne gardant pas le corps de la réponse (R-3259) ; série bornée de sondes triviales, relance au premier succès (R-3275) ; attendu : non écrit avant ; observé : fournisseur retombé en surcharge une minute après être revenu, relance unique arrêtée à l'appel de contrôle, plus de relance permise (R-3277).
-  - 11-18, mère : ce fournisseur non déclaré dans la tentative unique suivante ; attendu : non écrit avant ; observé : il n'a pas pesé sur cette tentative (R-3273).
+  - 11-18, mère : ce fournisseur non déclaré dans la tentative unique suivante ; attendu : non écrit avant ; observé : la tentative a été consommée par la panne d'un autre participant (R-3273, R-3398).
   - 11-19, mère : clé neuve vérifiée par un appel minimal ; attendu : non écrit avant ; observé : clé active, solde non lisible (R-3617).
 - parade en vigueur : sonde triviale juste avant la course, par la commande et le relais de la course (R-3259) ; participant fragile non déclaré dans une tentative unique (R-3273) ; corps d'erreur d'un fournisseur jamais versé (R-2645) ; les soldes de plusieurs fournisseurs étant illisibles par les sessions, seul un refus pour crédit prévient (passation 2026-11-18-0748).
 - signal d'alerte : un relais qui ne garde pas le corps des réponses en erreur ; un solde que personne ne peut lire avant une course.
@@ -391,7 +390,7 @@
 - tentatives :
   - 11-17, mère précédente : inscrit à l'état des fiches « validées » en comptant des fiches venues d'un adaptateur simulé, et une vérification des témoins « par le juge factice » ; attendu : non écrit avant ; observé : rectification majeure le lendemain (R-3132).
   - 11-18, audit de reprise à deux sous-agents, le second chargé de réfuter le premier : sept lanceurs écrits pour deux courses ayant atteint un modèle externe ; les fiches factices « n'ont aucune valeur » ; le code de sortie de la course ne confirme pas la vérification que l'état affirmait ; tout le produit, gardé hors du dépôt, a disparu avec l'ancien conteneur ; une dépense réelle n'a jamais été déclarée et aucune ligne ne figure au registre des dépenses ; le lanceur d'un bras n'a ni contre-lecture, ni essais, ni compagnon d'empreinte, ni graine ni versions ; attendu : non écrit avant ; observé : affirmation de l'état retirée (R-3132, passation 2026-11-18-0254).
-  - 11-18, session de relance : reprise sous pièces scellées — addendum contre-lu avant l'épreuve, règle d'arrêt écrite d'avance (R-3229, R-3254) ; attendu : non écrit avant ; observé : épreuve passée avant la course suivante (R-3255).
+  - 11-18, session de relance : reprise sous pièces scellées — addendum contre-lu avant l'épreuve, règle d'arrêt écrite d'avance (R-3229, R-3254) ; attendu : non écrit avant ; observé : épreuve jouée avant la course suivante (R-3255).
 - parade en vigueur : aucune règle écrite comme telle ; les manques relevés par l'audit valent liste de contrôle : rien à l'état sans pièce versée, sorties d'un moteur simulé jamais comptées avec les réelles, produit versé avant la fin de la session, dépense inscrite, lanceur contre-lu et essayé avant de tourner (R-3132).
 - signal d'alerte : un mot comme « validé » ou « vérifié » écrit à l'état sans chemin ni empreinte ; un moteur factice dans une commande dont on rapporte ensuite la sortie.
 - état : clos
@@ -494,9 +493,22 @@
 
 ## Comptes
 
-Voir le bloc ci-dessous, calculé par programme sur ce fichier avant son scellement.
+Comptés par programme sur ce fichier avant son scellement.
 
-COMPTES_A_REMPLIR
+| partition | problèmes | tentatives |
+|---|---|---|
+| commune | 21 | 111 |
+| côté saboteur | 2 | 7 |
+| côté sondes | 2 | 7 |
+| organisme d'idéation | 3 | 13 |
+| bras A et relance | 3 | 7 |
+| mère | 7 | 23 |
+| total | 38 | 168 |
+
+- Tentatives avec une attente écrite avant : 11. Sans attente écrite avant : 157.
+- Parmi les 11 attentes écrites avant : 7 justes, 1 fausse, 3 non vérifiables.
+- États : 24 ouverts, 9 tenus depuis une date, 5 clos.
+- Lecture de ces comptes : une tentative sur quinze environ portait une attente écrite avant le résultat ; les sept attentes « justes » sont presque toutes des risques annoncés qui se sont réalisés, non des parades dont on avait prédit le succès. Aucune parade n'avait, dans les lignes lues, de prédiction écrite de son effet.
 
 ## Ce que je n'ai pas pu classer
 
