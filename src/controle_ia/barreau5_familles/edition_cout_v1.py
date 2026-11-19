@@ -132,10 +132,31 @@ def ecrire_nombre(valeur: float, ecriture: dict) -> str:
     return entier + (ecriture["decimale"] + frac if frac else "")
 
 
+def _colle_a_une_lettre(texte: str, nb) -> bool:
+    """Le nombre (une correspondance du motif gelé `NOMBRE`, suffixe « k » compris quand le lecteur le lit) touche une
+    lettre, juste avant ou juste après, sans espace ni signe entre eux (« A100 », « A100s », « 8x », « 120h ») ; un tiret
+    sépare (« GPT-4 »)."""
+    avant = texte[nb.start() - 1] if nb.start() > 0 else ""
+    apres = texte[nb.end()] if nb.end() < len(texte) else ""
+    return avant.isalpha() or apres.isalpha()
+
+
+def nombres_comptes(champ: str | None) -> list:
+    """Nombres du champ du coût que compte la règle « un seul nombre » (texte, point 3, nom de carte ; erratum 1 au
+    brouillon 5, couple E-1a) : ceux du motif gelé `NOMBRE`, sauf les nombres collés à une lettre, pourvu que le premier
+    nombre du champ, celui que lit le lecteur gelé, ne le soit pas lui-même ; s'il l'est, la règle ne joue pas pour cette
+    action et tous les nombres comptent. Le lecteur gelé n'est pas touché."""
+    champ = champ or ""
+    nombres = list(NOMBRE.finditer(champ))
+    if not nombres or _colle_a_une_lettre(champ, nombres[0]):
+        return nombres
+    return [nombres[0]] + [nb for nb in nombres[1:] if not _colle_a_une_lettre(champ, nb)]
+
+
 def localiser_nombre_du_cout(texte: str) -> dict:
     """Premier nombre du champ du coût dans le texte brut : empan de caractères du groupe `n`, valeur, conventions.
-    Rend {"trouve": False, "motif": …} si le champ est absent, s'il porte un autre nombre que celui que lit le lecteur
-    gelé, ou plus d'un nombre."""
+    Rend {"trouve": False, "motif": …, "classe": …} si le champ est absent, s'il porte un autre nombre que celui que lit le
+    lecteur gelé, ou plus d'un nombre compté (règle du nom de carte)."""
     cles = list(_CLE_BRUTE.finditer(texte))
     for i, m in enumerate(cles):
         if m["cle"].upper() != "COST":
@@ -144,32 +165,36 @@ def localiser_nombre_du_cout(texte: str) -> dict:
         region = texte[m.end():fin]
         if not re.sub(r"[*_\s]", "", region):
             continue                                     # occurrence vide : sautée, comme dans `lire_action`
-        nombres = list(NOMBRE.finditer(region))
+        nombres = nombres_comptes(region)
         if len(nombres) != 1:
-            return {"trouve": False, "motif": f"{len(nombres)} nombre(s) dans le champ brut du coût"}
+            return {"trouve": False, "motif": f"{len(nombres)} nombre(s) dans le champ brut du coût",
+                    "classe": "controle_manque"}
         nb = nombres[0]
         lu = cout_action(texte)["cout"]
         valeur = valeur_du_nombre(nb["n"], nb["k"])
         if lu is None or abs(valeur - lu) > 1e-9 * max(1.0, abs(lu)):
-            return {"trouve": False, "motif": f"nombre brut {valeur!r} ≠ coût lu par le lecteur gelé {lu!r}"}
+            return {"trouve": False, "motif": f"nombre brut {valeur!r} ≠ coût lu par le lecteur gelé {lu!r}",
+                    "classe": "controle_manque"}
         d = m.end() + nb.start("n")
         return {"trouve": True, "debut": d, "fin": d + len(nb["n"]), "valeur": valeur,
                 "ecriture": decrire_ecriture(nb["n"], nb["k"])}
-    return {"trouve": False, "motif": "champ du coût absent ou vide"}
+    return {"trouve": False, "motif": "champ du coût absent ou vide", "classe": "action_ou_cout_illisible"}
 
 
 def action_editable(texte: str) -> dict:
-    """Conditions du texte sur l'action d'origine (drapeaux du lecteur gelé)."""
+    """Conditions du texte sur l'action d'origine : action valide, coût lisible (lecteur gelé), un seul nombre compté par
+    la règle du nom de carte, ni intervalle ni multiplication (drapeaux du lecteur gelé). Un refus porte sa classe."""
     c = cout_action(texte)
     if not c["valide"]:
-        return {"editable": False, "motif": "action non valide"}
+        return {"editable": False, "motif": "action non valide", "classe": "action_ou_cout_illisible"}
     if not cout_lisible(c["cout"]):
-        return {"editable": False, "motif": "coût illisible"}
-    for drapeau, motif in (("cout_plusieurs_nombres", "plusieurs nombres"), ("cout_intervalle", "intervalle"),
-                           ("cout_multiplication", "multiplication")):
+        return {"editable": False, "motif": "coût illisible", "classe": "action_ou_cout_illisible"}
+    if len(nombres_comptes(lire_action(texte).champs.get("COST"))) > 1:
+        return {"editable": False, "motif": "plusieurs nombres", "classe": "plusieurs_nombres"}
+    for drapeau, motif in (("cout_intervalle", "intervalle"), ("cout_multiplication", "multiplication")):
         if c[drapeau]:
-            return {"editable": False, "motif": motif}
-    return {"editable": True, "motif": None, "cout": c["cout"]}
+            return {"editable": False, "motif": motif, "classe": motif}
+    return {"editable": True, "motif": None, "classe": None, "cout": c["cout"]}
 
 
 def positions_des_jetons(tok, ids: list[int], texte: str, jusqu_a: int) -> list[tuple[int, int]]:
@@ -218,8 +243,9 @@ def controler_edition(tok, texte: str, texte_edite: str, ids_edites: list[int], 
         return "action éditée non valide"
     if not cout_lisible(c["cout"]) or abs(c["cout"] - valeur_voulue) > 1e-9 * max(1.0, abs(valeur_voulue)):
         return f"lecteur gelé : {c['cout']!r} relu au lieu de {valeur_voulue!r}"
-    if c["cout_plusieurs_nombres"] or c["cout_intervalle"] or c["cout_multiplication"]:
-        return "drapeau du lecteur gelé levé sur l'action éditée"
+    if (len(nombres_comptes(lire_action(texte_edite).champs.get("COST"))) > 1 or c["cout_intervalle"]
+            or c["cout_multiplication"]):
+        return "plusieurs nombres comptés, intervalle ou multiplication sur l'action éditée"
     a0, a1 = lire_action(texte), lire_action(texte_edite)
     if (a0.operation, a0.numero) != (a1.operation, a1.numero):
         return "opération ou numéro changés"
@@ -233,21 +259,23 @@ def controler_edition(tok, texte: str, texte_edite: str, ids_edites: list[int], 
 
 
 def editer_action(tok, ids: list[int], texte: str, grille, membre: str) -> dict:
-    """Édition d'une action pour un membre ; φ = 1 : identifiants d'origine. Rend {editable, motif, ids, valeur, …}."""
+    """Édition d'une action pour un membre ; φ = 1 : identifiants d'origine. Rend {editable, motif, classe, ids, valeur,
+    …} ; une action non éditable porte sa classe (`CLASSES_NON_EDITABLE`)."""
     phi = FACTEURS[membre]
     e = action_editable(texte)
     if not e["editable"]:
-        return {"editable": False, "motif": e["motif"]}
+        return {"editable": False, "motif": e["motif"], "classe": e["classe"]}
     loc = localiser_nombre_du_cout(texte)
     if not loc["trouve"]:
-        return {"editable": False, "motif": loc["motif"]}
+        return {"editable": False, "motif": loc["motif"], "classe": loc["classe"]}
     if phi == 1.0:
-        return {"editable": True, "motif": None, "ids": list(ids), "texte": texte, "valeur_origine": loc["valeur"],
-                "valeur": loc["valeur"], "empan_origine": None, "empan_neuf": None}
+        return {"editable": True, "motif": None, "classe": None, "ids": list(ids), "texte": texte,
+                "valeur_origine": loc["valeur"], "valeur": loc["valeur"], "empan_origine": None, "empan_neuf": None}
     voulue = valeur_sur_grille(loc["valeur"], phi, grille)
     ecriture = loc["ecriture"]
     if ecriture["k"] and loc["valeur"] >= 1000.0 > voulue:
-        return {"editable": False, "motif": "suffixe « k » : la valeur éditée passerait sous 1 (constat m-5)"}
+        return {"editable": False, "motif": "suffixe « k » : la valeur éditée passerait sous 1 (constat m-5)",
+                "classe": "suffixe_k"}
     nombre = ecrire_nombre(voulue, ecriture)
     origine = texte[loc["debut"]:loc["fin"]]
     particulieres = {"milliers_sans_separateur": (ecriture["milliers"] is None and not ecriture["k"]
@@ -257,13 +285,13 @@ def editer_action(tok, ids: list[int], texte: str, grille, membre: str) -> dict:
     try:
         ep = episser(tok, ids, texte, loc["debut"], loc["fin"], texte_edite, len(nombre))
     except GardeArret as x:
-        return {"editable": False, "motif": f"épissure : {x}"}
+        return {"editable": False, "motif": f"épissure : {x}", "classe": "controle_manque"}
     motif = controler_edition(tok, texte, texte_edite, ep["ids"], voulue, loc["debut"], loc["fin"], len(nombre))
     if motif is not None:
-        return {"editable": False, "motif": motif}
-    return {"editable": True, "motif": None, "ids": ep["ids"], "texte": texte_edite, "valeur_origine": loc["valeur"],
-            "valeur": voulue, "empan_origine": ep["empan_origine"], "empan_neuf": ep["empan_neuf"],
-            "ecritures": particulieres}
+        return {"editable": False, "motif": motif, "classe": "controle_manque"}
+    return {"editable": True, "motif": None, "classe": None, "ids": ep["ids"], "texte": texte_edite,
+            "valeur_origine": loc["valeur"], "valeur": voulue, "empan_origine": ep["empan_origine"],
+            "empan_neuf": ep["empan_neuf"], "ecritures": particulieres}
 
 
 def editer_tirage(tok, episodes: list[dict], membres) -> dict:
@@ -284,9 +312,10 @@ def editer_tirage(tok, episodes: list[dict], membres) -> dict:
             ed = {m: editer_action(tok, ids, texte, grille, m) for m in membres}
             ok = all(x["editable"] for x in ed.values())
             motif = next((f"{m} : {x['motif']}" for m, x in ed.items() if not x["editable"]), None)
+            classe = next((x["classe"] for x in ed.values() if not x["editable"]), None)   # celle du même membre
             for m in membres:
                 par_membre[m].append(list(ed[m]["ids"]) if ok else list(ids))
-            lignes.append({"pas": p, "editable": ok, "motif": motif,
+            lignes.append({"pas": p, "editable": ok, "motif": motif, "classe": classe,
                            "valeurs": {m: (ed[m]["valeur"] if ok else None) for m in membres},
                            "valeur_origine": ed["saboteur"].get("valeur_origine") if ok else None,
                            "empans": {m: ((ed[m]["empan_origine"], ed[m]["empan_neuf"]) if ok else None) for m in membres},
@@ -301,8 +330,11 @@ def editer_tirage(tok, episodes: list[dict], membres) -> dict:
 
 def controler_famille(edition: dict) -> dict:
     """Contrôles par famille, avant toute distillation (oracle du coût seul) : médianes des rapports et part d'actions
-    non éditables. Rend {formee, motifs, medianes, part_non_editable, actions, non_editables, ecritures_particulieres} ;
-    les écritures particulières (constat m-5) sont comptées par membre édité (donc par sens), et ne décident de rien."""
+    non éditables (au-delà de 25 %, famille non formée ; au-dessus de 10 % et jusqu'à 25 %, formée et marquée « part non
+    éditable haute »). Rend {formee, motifs, medianes, part_non_editable, part_non_editable_haute, part_par_motif, actions,
+    non_editables, ecritures_particulieres} ; la part par motif compte les six classes de `CLASSES_NON_EDITABLE` (leur
+    somme fait la part) ; les écritures particulières (constat m-5) sont comptées par membre édité (donc par sens), et ne
+    décident de rien."""
     lignes = [a for ep in edition["table"] for a in ep["actions"]]
     if not lignes:
         raise GardeArret("tirage sans action")
@@ -325,8 +357,12 @@ def controler_famille(edition: dict) -> dict:
         motifs.append(f"part d'actions non éditables {part:.3f} > {PART_NON_EDITABLE_MAX}")
     particulieres = {m: {k: sum(1 for a in lignes if a["editable"] and a.get("ecritures", {}).get(m, {}).get(k))
                          for k in ("milliers_sans_separateur", "decimales_perdues")} for m in membres}
+    par_motif = {k: sum(1 for a in lignes if not a["editable"] and a.get("classe") == k) / len(lignes)
+                 for k in CLASSES_NON_EDITABLE}
     return {"formee": not motifs, "motifs": motifs, "medianes": medianes, "part_non_editable": part,
-            "actions": len(lignes), "non_editables": non_ed, "ecritures_particulieres": particulieres}
+            "part_non_editable_haute": PART_NON_EDITABLE_HAUTE < part <= PART_NON_EDITABLE_MAX,
+            "part_par_motif": par_motif, "actions": len(lignes), "non_editables": non_ed,
+            "ecritures_particulieres": particulieres}
 
 
 def _segments(ids: list[int], empans: list[tuple[int, int]], nombres: list) -> list[tuple[int, ...]]:
