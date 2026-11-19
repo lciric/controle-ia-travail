@@ -1,0 +1,265 @@
+{
+ "version": "configuration-course-auto-conception-v5",
+ "statut": "partie fixe de la configuration de l'orchestrateur (course 2, v56) pour la course d'auto-conception ; le lanceur y joint, au lancement, les cases (lots de la matière v3, règle des lots), les pièces empreintées, les relais déclarés et la spécification ; rien d'autre n'est changé ; v2 : contre-lecture de la v1 portée (espèces optionnelles sur mot écrit de la mère, réserves de la clé Claude, relais d'Astra et de Carbon contrôlés) ; aucune valeur de l'orchestrateur ne change hors des graines ; v3 (additif v2g, mot de Lazar du 19 novembre 2026 « augmente le plafond ») : plafond de session des proposeurs 3,00 → 6,00 USD (Carbon par la commande synchrone d'Argon a la place de penser et de répondre) ; plafond d'arrêt S17 90 → 120 USD (la ligne de GO de la course porte 120 USD exactement) ; plafond de relais des étapes sacrifiables 91 → 121 USD (toujours au-dessus de S17 : retirées par construction) ; plafond du relais Claude 90 → 120 USD ; rien d'autre ne change (étapes protégées 45, 15, 30 ; attendus 19, 3, 7 ; juge 0,60 ; aiguilleur 0,25 ; graines, espèces, juges, items, arrêts) ; v4 (additif v2h, mots de Lazar « fais sauter la troncature pour argo aussi » et demande de la session principale) : plafond de session des proposeurs 6,00 → 6,05 USD, pour que le pire cas d'un appel de Carbon ou d'Argon proposeur à la borne prudente du lanceur (6,03327 USD) tienne sans réduire la sortie ; rien d'autre ne change ; v5 (additif v2i, mot de Lazar du 19 novembre 2026 « Course à 150 USD (Recommandé) » : « plafond d'arrêt de la course 120 → 150 USD (ligne de GO à 150 exactement), seuils internes relevés d'autant ; les juges passent aussi au haut ») : plafond d'arrêt S17 120 → 150 USD (la ligne de GO de la course porte 150 USD exactement) ; plafond de relais des étapes sacrifiables 121 → 151 USD (toujours au-dessus de S17 : retirées par construction) ; plafond du relais Claude 120 → 150 USD ; étapes protégées inchangées (plafonds de relais 45, 15, 30 ; attendus 19, 3, 7) : les seuils internes de la règle d'A1 montent donc d'autant (plafond dur de la proposition 110 → 140 ; aiguillage lancé si le cumul est au plus 105 → 135 ; juges lancés si le cumul est au plus 90 → 120) ; au haut du devis v2i, proposition, aiguillage et juges sont tous lancés ; rien d'autre ne change (plafond de session des proposeurs 6,05 ; juge 0,60 ; aiguilleur 0,25 ; graines, espèces, juges, items, arrêts)",
+ "orchestrateur": {
+  "depot_public": "lciric/ideation-organism",
+  "commit": "a41b7b50f7c64ce488c120bb89ad3d25fb1dd1cb",
+  "lanceur": "demonstrations/ideation_v8.py",
+  "mode": "--course-2 CONFIGURATION SORTIE --generations 1"
+ },
+ "generations": 1,
+ "matiere": {
+  "chemin": "docs/notes/matiere-premiere-auto-conception-v1/matiere-premiere-v3.md",
+  "sha256": "11f4b69ba42147c428090e4805948a708d0ed266da0c0cd07f194723eaba742d",
+  "decision": "R-3263 : la v3 seule ; ni la v1, ni la v2, ni le relevé JSON"
+ },
+ "cles": {
+  "claude": "nom donné par la pièce de départ de la mère (R-3271 : RR_ANTHROPIC_API_KEY_RIGAUD ; Minuit refusée, réservée à la course d'affinage)",
+  "autres_fournisseurs": "nom déclaré par la session d'exécution dans la déclaration des relais"
+ },
+ "regle_cles": {
+  "decision": "R-3237",
+  "part_au_pire": "chaque clé confrontée à sa part au pire (calculée par le lanceur)",
+  "kimi": "part au pire + réserve déclarée par la pièce de départ (R-3271 : 15 USD) ≤ 90 % du reste",
+  "dispense_soldes_illisibles": [
+   "argon",
+   "astra",
+   "carbon"
+  ],
+  "arret_au_premier_refus_pour_credit": true,
+  "garde_credit": "scripts/garde_credit_relais_v5.py (inchangée)",
+  "reserves_cle_claude": "reste lu moins les réserves d'autres travaux déclarées par la pièce de départ (R-3271 : 9 + 9 USD)"
+ },
+ "relais_persistants": {
+  "option": "relais de ligne entière (procédure neutre § 4, seconde forme)",
+  "porte": "scripts/porte_plafond_relais_v1.py",
+  "plafond_relais_claude_usd": 150.0,
+  "porte_a_blanc_avant_le_depart": true,
+  "relais_argon_controle_avant_le_depart": true
+ },
+ "racine_graines": 2026111834,
+ "graines": {
+  "prefixe": "autoc"
+ },
+ "champs_fiche": [
+  "titre",
+  "axe",
+  "module_change",
+  "mecanisme",
+  "plus_proche_voisin",
+  "ce_qui_distingue",
+  "epreuve_monde_plante",
+  "cout",
+  "ce_qui_la_refuterait",
+  "limites"
+ ],
+ "champ_titre": "titre",
+ "champ_axe": "axe",
+ "cartes_par_appel": 2,
+ "cartes_max_comptees": 4,
+ "items_juge": [
+  "module_nomme",
+  "voisin_nomme",
+  "epreuve_plantee",
+  "aucun_modele_ne_decide",
+  "reserves_tenues"
+ ],
+ "agregation": {
+  "regle": "unanimite"
+ },
+ "budget": {
+  "plafond_usd": 150.0,
+  "arret_etape_usd": "sans",
+  "portee_plafond": "course",
+  "etapes": [
+   {
+    "nom": "proposition",
+    "attendu_usd": 19.0,
+    "plafond_relais_usd": 45.0,
+    "role": "protegee"
+   },
+   {
+    "nom": "aiguillage",
+    "attendu_usd": 3.0,
+    "plafond_relais_usd": 15.0,
+    "role": "protegee"
+   },
+   {
+    "nom": "juges",
+    "attendu_usd": 7.0,
+    "plafond_relais_usd": 30.0,
+    "role": "protegee"
+   },
+   {
+    "nom": "passe_tableau",
+    "attendu_usd": 0.0,
+    "plafond_relais_usd": 151.0,
+    "role": "sacrifiable",
+    "rang": 2
+   },
+   {
+    "nom": "etiquettes",
+    "attendu_usd": 0.0,
+    "plafond_relais_usd": 0.0,
+    "role": "protegee"
+   },
+   {
+    "nom": "fusions",
+    "attendu_usd": 0.0,
+    "plafond_relais_usd": 151.0,
+    "role": "sacrifiable",
+    "rang": 1
+   }
+  ]
+ },
+ "plafonds_session": {
+  "proposeur": 6.05,
+  "aiguilleur": 0.25,
+  "juge": 0.6,
+  "fusion": 0.01,
+  "lecteur": 0.01
+ },
+ "especes": [
+  {
+   "etiquette": "prop-opus",
+   "cle": "pièce de départ",
+   "famille": "claude",
+   "fournisseur": "claude",
+   "modele": "claude-opus-5-5",
+   "statut": "obligatoire",
+   "ordre": 1
+  },
+  {
+   "etiquette": "prop-fable",
+   "cle": "pièce de départ",
+   "famille": "claude",
+   "fournisseur": "claude",
+   "modele": "claude-fable-5-1",
+   "statut": "obligatoire",
+   "ordre": 2
+  },
+  {
+   "etiquette": "prop-argon",
+   "cle": "déclaré",
+   "famille": "google",
+   "fournisseur": "argon",
+   "modele": "gemini-4-argon",
+   "statut": "si_relais_declare",
+   "ordre": 3
+  },
+  {
+   "etiquette": "prop-kimi",
+   "cle": "déclaré",
+   "famille": "moonshot",
+   "fournisseur": "kimi",
+   "modele": "kimi-k3.1-pro",
+   "statut": "si_relais_declare",
+   "ordre": 4
+  },
+  {
+   "etiquette": "prop-astra",
+   "cle": "déclaré",
+   "famille": "openai",
+   "fournisseur": "astra",
+   "modele": null,
+   "motif_modele": "astra",
+   "statut": "si_relais_declare_et_commande_epinglee",
+   "ordre": 5
+  },
+  {
+   "etiquette": "prop-carbon",
+   "cle": "déclaré",
+   "famille": "google",
+   "fournisseur": "carbon",
+   "modele": null,
+   "motif_modele": "carbon",
+   "statut": "si_relais_declare_et_commande_epinglee",
+   "ordre": 6
+  }
+ ],
+ "aiguilleur": {
+  "etiquette": "aiguilleur",
+  "modele": "claude-opus-5-5",
+  "fournisseur": "claude",
+  "consigne": "consigne_aiguilleur"
+ },
+ "juges": [
+  {
+   "etiquette": "juge-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_juge"
+  },
+  {
+   "etiquette": "juge-argon",
+   "modele": "gemini-4-argon",
+   "fournisseur": "argon",
+   "consigne": "consigne_juge"
+  }
+ ],
+ "lecteurs_etiquettes": [
+  {
+   "etiquette": "lecteur-1",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude"
+  },
+  {
+   "etiquette": "lecteur-2",
+   "modele": "gemini-4-argon",
+   "fournisseur": "argon"
+  }
+ ],
+ "garde_kimi": {
+  "debordement_max": 0.25,
+  "refus_aiguilleur": "technique",
+  "arret_metteur_fusion": false
+ },
+ "memoire": {
+  "methode": "bardeaux",
+  "taille_bardeau": 3,
+  "seuil": 0.5
+ },
+ "bisociateur": {
+  "bras": [],
+  "k_paires": 0,
+  "fournisseurs_entree": [
+   "*"
+  ],
+  "metteur_fusion": {
+   "etiquette": "metteur-jamais-appele",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude"
+  }
+ },
+ "a4": {
+  "mode": "mot_entier",
+  "action": "fiche_exclue"
+ },
+ "etiquettes_interdites_fixes": [
+  "Opus",
+  "Fable",
+  "Argon",
+  "Astra",
+  "Kimi",
+  "Carbon"
+ ],
+ "arrets": {
+  "a3_echecs_consecutifs": 3,
+  "a3_delai_s": {
+   "*": 1800
+  },
+  "a14_part_max": 0.34,
+  "a11_modeles": []
+ },
+ "simulation": {
+  "cout_par_appel_usd": 0.01
+ },
+ "tableau": {
+  "longueur_max_titre": 60,
+  "longueur_max_resume": 200,
+  "champ_resume": "mecanisme",
+  "consigne_passe": "consigne_passe_tableau",
+  "juger_passe_tableau": false
+ },
+ "especes_optionnelles": "kimi, astra, carbon : déclarées seulement sur mot écrit de la mère dans la pièce de départ (défaut : absentes) ; une espèce déclarée qui échoue rend l'étape non mesurée et consomme la tentative (constat 1)"
+}
