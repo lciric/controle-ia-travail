@@ -49,7 +49,8 @@ TEMOIN="$T/versement-final-prouve"
 SIGNAL="$X/signal-pour-la-mere.txt"
 # essais de tests/test_barreau5_familles_*.py sur l'arbre extrait (essais du lanceur et des amorces exclus : ils lisent la
 # garde de calcul ou jouent l'amorce, hors de l'extraction) ; compte remesuré sur l'arbre extrait des fichiers corrigés
-MIN_ESSAIS=115
+# (171 essais, tous passés ; un essai du texte de l'amorce exige l'égalité avec le nombre d'essais du paquet)
+MIN_ESSAIS=171
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
 j() { mkdir -p "$X" 2> /dev/null; printf '%s B5F %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
 # >>> arguments (extrait et joué par tests/test_amorce_b5f_formation_v1.py)
@@ -184,7 +185,8 @@ prouver_versement() {  # inventaire (noms, tailles, empreintes) de tout ce qui e
       done < "$tsv"
       printf ']}\n'; } > "$D/$inv" || return 1
     printf '%s  %s\n' "$(sha256sum < "$D/$inv" | cut -c1-64)" "inventaire-final.json" > "$D/$inv.sha256" || return 1
-    verser "barreau 5, formation, instance $INSTANCE_B5F : inventaire final ($(wc -l < "$tsv") fichiers)" "$inv" "$inv.sha256" || return 1
+    verser "barreau 5, formation, instance $INSTANCE_B5F : inventaire final ($(wc -l < "$tsv") fichiers)" \
+        $(cut -f1 "$tsv") "$inv" "$inv.sha256" || return 1
     tete=$(git -C "$D" ls-remote origin "refs/heads/$BR" | cut -f1)
     [ -n "$tete" ] && [ "$tete" = "$(cat "$T/parent-sortie")" ] || { j "preuve : tête distante ≠ dernier commit poussé"; return 1; }
     while IFS="$(printf '\t')" read -r f o s; do
@@ -218,8 +220,10 @@ terminer() {  # $1 = code, $2 = motif : versement de tout ce qui existe et peut 
         verser "barreau 5, formation, instance $INSTANCE_B5F : sorties et traces (code $code)" \
             $(tous_les_fichiers "donnees/$RUN_B5F" "runs/$RUN_B5F" "diag/$RUN_B5F" traces-b5f/journal) \
             || j "versement final incomplet ou en échec : voir les lignes précédentes (nœud)"
-        cp_traces
         prouver_versement || { j "versement final NON PROUVÉ : la minuterie arrêtera l'instance sans la détruire (nœud)"; [ "$code" != 0 ] || code=5; }
+        cp_traces                    # journal de fin, après la preuve : un commit de plus, qui ne la change pas
+        verser "barreau 5, formation, instance $INSTANCE_B5F : journal de fin" $(tous_les_fichiers traces-b5f/journal) \
+            || j "journal de fin non poussé"
     else
         j "aucun dépôt cloné : rien à verser ; versement final non prouvé (nœud)"
         [ "$code" != 0 ] || code=5
@@ -261,10 +265,12 @@ MOTIFS='/requirements-gpu.txt
 /donnees/20261007-082440-t05-extraction/taches-evaluation.json*
 /docs/sources/invites-2606.08892-v1/'
 # <<< motifs
-git -C "$D" sparse-checkout init --no-cone && printf '%s\n' "$MOTIFS" | git -C "$D" sparse-checkout set --no-cone --stdin || arret "extraction partielle" 2
+# le texte cité (PREREG, contrôlé à l'étape 0) et son compagnon d'empreinte sont extraits en plus des motifs, quel que soit
+# le nom du texte scellé
+git -C "$D" sparse-checkout init --no-cone && printf '%s\n/%s\n/%s.sha256\n' "$MOTIFS" "$PREREG" "$PREREG" | git -C "$D" sparse-checkout set --no-cone --stdin || arret "extraction partielle" 2
 git -C "$D" checkout -q "$COMMIT" || arret "commit $COMMIT introuvable sur $BRANCHE_CODE" 2
 [ "$(git -C "$D" rev-parse HEAD)" = "$COMMIT" ] || arret "tête ≠ COMMIT" 2
-[ -f "$D/$PREREG" ] && [ -f "$D/registres/barreau5-familles-jumelles-v1.md" ] || arret "texte ou registre propre absent du commit" 2
+[ -f "$D/$PREREG" ] && [ -f "$D/$PREREG.sha256" ] && [ -f "$D/registres/barreau5-familles-jumelles-v1.md" ] || arret "texte, son empreinte ou registre propre absent du commit" 2
 for d in docs/notes diag runs brouillons; do [ ! -e "$D/$d" ] || arret "$d extrait : arrêt (jamais sur une instance de formation)" 2; done
 git -C "$D" ls-remote --exit-code origin "refs/heads/$BR" > /dev/null 2>&1; [ $? = 2 ] || arret "branche de sortie $BR présente sur le dépôt distant (R12) ou dépôt injoignable" 2
 echo "$COMMIT" > "$T/parent-sortie"

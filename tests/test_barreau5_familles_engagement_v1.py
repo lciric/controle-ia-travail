@@ -192,7 +192,10 @@ def test_artefacts_entrees_de_lecture_episodes_hors_des_saboteurs_d_apprentissag
     episodes = fabriquer[cas]()
     if cas == "non_scelle":
         (d / "A1" / "evaluation-saboteur.jsonl.sha256").unlink()
-    with pytest.raises(GardeArret):
+    motifs = {"jumeau": "seuls ceux du saboteur", "tenue_a_l_ecart": "hors des familles d'apprentissage",
+              "lignes_d_un_jumeau": "pas du saboteur", "autre_famille": "pas du saboteur",
+              "non_scelle": "empreinte compagnon"}
+    with pytest.raises(GardeArret, match=motifs[cas]):                    # refusé pour son motif annoncé (R5)
         en.preparer_entrees_de_lecture(complets, table, tmp_path / "entrees", None, episodes)
     assert not (tmp_path / "entrees").exists()
     with pytest.raises(GardeArret, match="saboteurs d'apprentissage seulement"):

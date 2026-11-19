@@ -1,25 +1,34 @@
 """Essais hors ligne du lanceur de formation du barreau 5 (`scripts/lancer_b5f_formation_v1.sh`) : il ne crée, n'arrête
 ni ne détruit rien ; il contrôle et imprime. Cas sain et artefact pour chaque garde (R5). Dépôt jetable, registres
-fabriqués ; la garde de calcul du dépôt est copiée telle quelle."""
+fabriqués ; la garde de calcul du dépôt est copiée telle quelle. Corrigés le 19 novembre 2026 selon la contre-lecture du
+code de formation (constats M-1, M-3, M-5, m-8, m-9 ; mutation M12)."""
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import os
 import shutil
 import subprocess
 import sys
+import time
 from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
+import torch
 
 from controle_ia.barreau5_familles import engagement_v1 as en
 from controle_ia.barreau5_familles import formation_v1 as fv
 
 RACINE_DEPOT = Path(__file__).resolve().parents[1]
 SCRIPT = RACINE_DEPOT / "scripts" / "lancer_b5f_formation_v1.sh"
-COMMIT = "c" * 40
 GO = "GO-2026-11-20-01"
+GO_RELANCE = "GO-2026-11-20-03"
+OFFRE = {"id": 123456, "gpu_name": "A100 SXM4", "num_gpus": 1, "gpu_ram": 81920, "cpu_cores_effective": 32,
+         "cpu_ram": 257000, "disk_space": 200, "cuda_max_good": 13.0, "dph_total": 1.2, "storage_cost": 0.1}
+PREREG = "prereg/barreau5-essai-v1.md"
+RUN = "20261123-080000-b5f-formation-3"
 
 
 def _git(r, *args):
@@ -31,22 +40,31 @@ def _ligne_go(ident, typ="calcul", par="Lazar"):
     return f"| {ident} | {a.isoformat()} | {typ} | formation barreau 5 | 200 USD | {e.isoformat()} | {par} | essai |"
 
 
-OFFRE = {"id": 123456, "gpu_name": "A100 SXM4", "num_gpus": 1, "gpu_ram": 81920, "cpu_cores_effective": 32,
-         "cpu_ram": 257000, "disk_space": 200, "cuda_max_good": 13.0, "dph_total": 1.2, "storage_cost": 0.1}
-PREREG = "prereg/barreau5-essai.md"
-RUN = "20261123-080000-b5f-formation-3"
-
-
-def _registre_propre(r, code_commit, go=GO):
-    (r / fv.REGISTRE_PROPRE).write_text("\n".join([
+def _registre_propre(r, code_commit, go=GO, membres=2, piece="instance", texte=PREREG, sha=None, relance=None,
+                     scellement=True):
+    sha = sha or hashlib.sha256((r / texte).read_bytes()).hexdigest()
+    lignes = [en.ligne_du_registre("SCELLEMENT-B5F", "2026-11-21T18:00:00Z",
+                                   f"{texte} ; sha256 {sha} ; membres-apprentissage {membres} ; piece {piece}", "")]
+    lignes = (lignes if scellement else []) + [
         en.ligne_du_registre("CODE-FORMATION-B5F", "2026-11-22T18:00:00Z", f"commit {code_commit} ; entropie 7", ""),
-        en.ligne_du_registre("GO-FORMATION-B5F", "2026-11-22T19:00:00Z", go, "")]) + "\n", encoding="utf-8")
+        en.ligne_du_registre("GO-FORMATION-B5F", "2026-11-22T19:00:00Z", go, "")]
+    if relance:
+        lignes.append(en.ligne_du_registre("GO-RELANCE-FORMATION-B5F", "2026-11-25T08:00:00Z", relance, ""))
+    (r / fv.REGISTRE_PROPRE).write_text("\n".join(lignes) + "\n", encoding="utf-8")
+
+
+def _course(r, **registre):
+    """Registre propre neuf, commis : rend le commit de la course."""
+    _registre_propre(r, registre.pop("code", None) or _git(r, "rev-parse", "HEAD~1"), **registre)
+    _git(r, "commit", "-q", "-am", "course (registre neuf)")
+    return _git(r, "rev-parse", "HEAD")
 
 
 @pytest.fixture
 def racine(tmp_path):
     """Dépôt jetable à deux commits : le code (garde de calcul copiée, amorce jouet, configuration scellée de la course de
-    confirmation), puis la course (registre propre qui cite le commit du code). Rend (racine, commit de la course)."""
+    confirmation, texte), puis la course (registre propre qui cite le texte et le commit du code). Rend (racine, commit
+    de la course)."""
     r = tmp_path / "depot"
     (r / ".claude" / "hooks").mkdir(parents=True)
     _git(r, "init", "-q")
@@ -56,10 +74,13 @@ def racine(tmp_path):
     (r / "prereg").mkdir()
     for f in (fv.CONFIG_SCELLEE["chemin"], fv.CONFIG_SCELLEE["chemin"] + ".sha256"):
         shutil.copy(RACINE_DEPOT / f, r / f)
+    (r / PREREG).write_text("# Texte scellé (essai)\n", encoding="utf-8")
+    (r / "prereg" / "barreau5-autre-v1.md").write_text("# Autre texte (essai)\n", encoding="utf-8")
+    (r / "prereg" / "barreau5-essai-v1-brouillon3.md").write_text("# Brouillon (essai)\n", encoding="utf-8")
     (r / "registres").mkdir()
     (r / "registres" / "go.md").write_text("| id | accordé | type | périmètre | plafond | échéance | par | réf |\n"
-                                          + _ligne_go(GO) + "\n" + _ligne_go("GO-2026-11-20-02", typ="dépôt") + "\n",
-                                          encoding="utf-8")
+                                          + _ligne_go(GO) + "\n" + _ligne_go("GO-2026-11-20-02", typ="dépôt") + "\n"
+                                          + _ligne_go(GO_RELANCE) + "\n", encoding="utf-8")
     (r / "scripts").mkdir()
     (r / fv.AMORCE).write_text("#!/usr/bin/env bash\necho amorce jouet\n", encoding="utf-8")
     (r / "offre.json").write_text(json.dumps(OFFRE), encoding="utf-8")
@@ -72,8 +93,8 @@ def racine(tmp_path):
     return r, _git(r, "rev-parse", "HEAD")
 
 
-def _commande(r, commit, n=3, offre=None, run=RUN):
-    return ["commande", r, n, offre or (r / "offre.json"), commit, "main", PREREG, run]
+def _commande(r, commit, n=3, offre=None, run=RUN, prereg=PREREG, sous="commande"):
+    return [sous, r, n, offre or (r / "offre.json"), commit, "main", prereg, run]
 
 
 def _lancer(*args, go=GO):
@@ -89,21 +110,20 @@ def test_plan_sept_instances_etiquetees():
     assert r.returncode == 0
     lignes = [x for x in r.stdout.splitlines() if x.startswith("b5f-formation-v1-")]
     assert [x.split("\t")[0] for x in lignes] == [f"b5f-formation-v1-{n}" for n in range(1, 8)]
+    assert "non chiffrée" in lignes[5] and "non chiffrée" in lignes[6] and "non chiffrée" not in lignes[0]
 
 
-def test_commande_cas_sain_etiquette_accord_echeance_et_garde_de_calcul_rejouee(racine):
-    import base64
-    import time
-
+def test_commande_cas_sain_etiquette_accord_echeance_cles_par_leur_nom_et_garde_de_calcul_rejouee(racine):
     r, course = racine
     avant = time.time()
     p = _lancer(*_commande(r, course))
     assert p.returncode == 0, p.stderr
     cmd = p.stdout.strip().splitlines()[-1]
     assert cmd.startswith(f"GO_ID={GO} vastai create instance 123456 ") and "--label b5f-formation-v1-3" in cmd
-    for v in ("INSTANCE_B5F=3", f"COMMIT={course}", "BRANCHE_CODE=main", f"PREREG={PREREG}", f"RUN_B5F={RUN}",
-              "PRIX_USD_H=1.2", "HF_TOKEN=\\$HF_TOKEN", "GH_TOKEN=\\$GH_TOKEN"):
+    for v in ("INSTANCE_B5F=3", "RELANCE_B5F=0", f"COMMIT={course}", "BRANCHE_CODE=main", f"PREREG={PREREG}",
+              f"RUN_B5F={RUN}", "PRIX_USD_H=1.2", "HF_TOKEN=$HF_TOKEN", "GH_TOKEN=$GH_TOKEN"):
         assert v in cmd
+    assert "\\$" not in cmd                                     # constat M-1 : aucune barre qui protège le signe
     arret = int(cmd.split("ECHEANCE_ARRET_UTC_S=")[1].split()[0])
     assert abs(arret - (avant + (26.0 / 1.2 - 0.25) * 3600)) < 120          # cumul plus un quart d'heure = coupure
     b64 = cmd.split("echo ")[1].split(" |")[0]
@@ -111,11 +131,30 @@ def test_commande_cas_sain_etiquette_accord_echeance_et_garde_de_calcul_rejouee(
     fv.exiger_garde_de_calcul(r, cmd, date.today())               # la garde de calcul la laisserait passer
 
 
+def test_commande_jouee_dans_un_shell_transmet_au_loueur_la_valeur_des_cles_jamais_leur_nom(racine):
+    """Constat M-1 (forme du sondage S2) : la ligne imprimée, jouée dans un bash où `vastai` est une fonction qui affiche
+    ses arguments et où les deux clés ont des valeurs factices, donne au loueur ces valeurs, jamais « $HF_TOKEN » ; la
+    ligne imprimée, elle, ne porte que les noms."""
+    r, course = racine
+    p = _lancer(*_commande(r, course))
+    cmd = p.stdout.strip().splitlines()[-1]
+    assert "valeur-factice" not in cmd
+    env = {"PATH": os.environ["PATH"], "HF_TOKEN": "valeur-factice-hf", "GH_TOKEN": "valeur-factice-gh"}
+    joue = subprocess.run(["bash", "-c", 'vastai() { printf "%s\\n" "$@"; }\n' + cmd], env=env, capture_output=True,
+                          text=True, timeout=60)
+    assert joue.returncode == 0, joue.stderr
+    arg_env = next(x for x in joue.stdout.splitlines() if x.startswith("-e INSTANCE_B5F"))
+    assert "-e HF_TOKEN=valeur-factice-hf -e GH_TOKEN=valeur-factice-gh" in arg_env
+    assert "$HF_TOKEN" not in arg_env and "$GH_TOKEN" not in arg_env
+
+
 @pytest.mark.parametrize("cas", ["sans_go", "code_change", "code_non_ancetre", "amorce", "go_hors_registre",
-                                 "go_non_calcul", "instance", "offre_chere", "offre_carte", "offre_cuda", "run"])
+                                 "go_non_calcul", "instance", "offre_chere", "offre_carte", "offre_cuda", "run",
+                                 "sans_scellement", "autre_texte", "autre_empreinte", "brouillon", "texte_absent",
+                                 "session_modifiee", "membres_trois"])
 def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
     r, course = racine
-    go, n, offre, run = GO, 3, None, RUN
+    go, n, offre, run, prereg = GO, 3, None, RUN, PREREG
     if cas == "sans_go":
         go = None
     elif cas == "code_change":                       # code modifié après le commit de CODE-FORMATION-B5F
@@ -125,74 +164,132 @@ def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
         _git(r, "commit", "-q", "-m", "code changé")
         course = _git(r, "rev-parse", "HEAD")
     elif cas == "code_non_ancetre":
-        _registre_propre(r, "d" * 40)
-        _git(r, "commit", "-q", "-am", "registre faux")
-        course = _git(r, "rev-parse", "HEAD")
+        course = _course(r, code="d" * 40)
     elif cas == "amorce":                            # code cité sans amorce (retirer l'amorce change le code : autre motif)
         _git(r, "rm", "-q", fv.AMORCE)
         _git(r, "commit", "-q", "-m", "code sans amorce")
-        _registre_propre(r, _git(r, "rev-parse", "HEAD"))
-        _git(r, "commit", "-q", "-am", "course sans amorce")
-        course = _git(r, "rev-parse", "HEAD")
+        course = _course(r, code=_git(r, "rev-parse", "HEAD"))
     elif cas == "go_hors_registre":
         (r / "registres" / "go.md").write_text("| id | a | t | p | pl | e | par | r |\n", encoding="utf-8")
     elif cas == "go_non_calcul":
         go = "GO-2026-11-20-02"
-        _registre_propre(r, _git(r, "rev-parse", "HEAD~1"), go)
-        _git(r, "commit", "-q", "-am", "accord d'un autre type")
-        course = _git(r, "rev-parse", "HEAD")
+        course = _course(r, go=go)
     elif cas == "instance":
         n, run = 8, "20261123-080000-b5f-formation-8"
     elif cas == "run":
         run = "20261123-080000-b5f-formation-4"
+    elif cas == "sans_scellement":
+        course = _course(r, scellement=False)
+    elif cas == "autre_texte":
+        prereg = "prereg/barreau5-autre-v1.md"
+    elif cas == "autre_empreinte":
+        course = _course(r, sha="e" * 64)
+    elif cas == "brouillon":                         # texte scellé comme brouillon : ni cité, ni accepté
+        prereg = "prereg/barreau5-essai-v1-brouillon3.md"
+        course = _course(r, texte=prereg)
+    elif cas == "texte_absent":
+        prereg = "prereg/barreau5-absent-v1.md"
+    elif cas == "session_modifiee":                  # constat m-9 : l'arbre de travail de la session n'est pas le code figé
+        (r / fv.AMORCE).write_text("#!/usr/bin/env bash\necho amorce retouchée\n", encoding="utf-8")
+    elif cas == "membres_trois":                     # 39 adaptateurs : instance 6 non chiffrée par le devis
+        course = _course(r, membres=3)
+        n, run = 6, "20261123-080000-b5f-formation-6"
     else:
         o = dict(OFFRE)
         o.update({"offre_chere": {"dph_total": 1.35}, "offre_carte": {"gpu_name": "H100 SXM5"},
                   "offre_cuda": {"cuda_max_good": 12.8}}[cas])
         offre = r / "offre-artefact.json"
         offre.write_text(json.dumps(o), encoding="utf-8")
-    p = _lancer(*_commande(r, course, n, offre, run), go=go)
+    p = _lancer(*_commande(r, course, n, offre, run, prereg), go=go)
     motifs = {"sans_go": "GO_ID absent", "code_change": "CODE-FORMATION-B5F", "code_non_ancetre": "CODE-FORMATION-B5F",
               "amorce": "amorce", "go_hors_registre": "absent de registres/go.md", "go_non_calcul": "pas « calcul »",
               "instance": "hors du plan", "offre_chere": "dph_total", "offre_carte": "carte", "offre_cuda": "cuda_max_good",
-              "run": "identifiant de marche"}
+              "run": "identifiant de marche", "sans_scellement": "SCELLEMENT-B5F", "autre_texte": "texte cité",
+              "autre_empreinte": "empreinte du texte", "brouillon": "brouillon", "texte_absent": "absent du commit",
+              "session_modifiee": "arbre de travail de la session", "membres_trois": "devis non chiffré"}
     assert p.returncode == 2 and "vastai create" not in p.stdout
     assert motifs[cas] in p.stderr, p.stderr
 
 
-def test_config_reelle_de_chaque_instance_cas_sain_et_artefact_prix(racine):
+def test_commande_lit_le_registre_au_commit_de_la_course_et_non_dans_l_arbre_de_travail(racine):
+    """Mutation M12 : un registre retouché dans l'arbre de travail (non commis) n'est jamais lu : l'accord du commit de la
+    course passe, celui de l'arbre de travail est refusé."""
+    r, course = racine
+    _registre_propre(r, _git(r, "rev-parse", "HEAD~1"), go=GO_RELANCE)          # retouché, non commis
+    p = _lancer(*_commande(r, course), go=GO)
+    assert p.returncode == 0, p.stderr
+    p = _lancer(*_commande(r, course), go=GO_RELANCE)
+    assert p.returncode == 2 and f"≠ GO-FORMATION-B5F {GO}" in p.stderr, p.stderr
+
+
+def test_relance_unique_cas_sain_et_artefacts(racine):
+    """Constat M-5 : la relance d'une instance tombée exige GO-RELANCE-FORMATION-B5F qui la cite, son accord, et une
+    marche suffixée « -x1 » ; la commande porte RELANCE_B5F=1."""
     r, _ = racine
+    course = _course(r, relance=f"{GO_RELANCE} ; instances 3,5")
+    run = RUN + "-x1"
+    p = _lancer(*_commande(r, course, run=run, sous="relance"), go=GO_RELANCE)
+    assert p.returncode == 0, p.stderr
+    cmd = p.stdout.strip().splitlines()[-1]
+    assert "RELANCE_B5F=1" in cmd and f"RUN_B5F={run}" in cmd and cmd.startswith(f"GO_ID={GO_RELANCE} vastai create")
+    for args, go, motif in ((_commande(r, course, run=run, sous="relance"), GO, "≠ GO-RELANCE-FORMATION-B5F"),
+                            (_commande(r, course, sous="relance"), GO_RELANCE, "identifiant de marche"),
+                            (_commande(r, course, 4, run="20261123-080000-b5f-formation-4-x1", sous="relance"), GO_RELANCE,
+                             "non accordée"),
+                            (_commande(r, course, run=run), GO, "identifiant de marche")):
+        p = _lancer(*args, go=go)
+        assert p.returncode == 2 and motif in p.stderr, (motif, p.stderr)
+    sans = _course(r)
+    p = _lancer(*_commande(r, sans, run=run, sous="relance"), go=GO_RELANCE)
+    assert p.returncode == 2 and "non accordée" in p.stderr, p.stderr
+
+
+def test_config_reelle_de_chaque_instance_cas_sain_et_artefacts(racine):
+    r, course = racine
     for n in range(1, 8):
-        p = _lancer("config", RACINE_DEPOT, n, 1.25)
-        assert p.returncode == 0, p.stderr
-        c = json.loads(p.stdout)
-        assert c["mode"] == "reel" and c["instance"] == n and c["familles"] == list(fv.familles_de(n))
-        assert c["coupure_usd"] == fv.COUPURES_USD[n] and c["prix_usd_h"] == 1.25 and c["go_id"] == GO
-        assert c["adaptateur"]["rang"] == 16 and c["distillation"]["epoques"] == 3     # recette scellée
-    assert _lancer("config", RACINE_DEPOT, 1, 1.40).returncode == 2              # au-dessus du prix du devis
+        for relance in (0, 1):
+            p = _lancer("config", r, n, 1.25, course, relance)
+            assert p.returncode == 0, p.stderr
+            c = json.loads(p.stdout)
+            assert c["mode"] == "reel" and c["instance"] == n and c["familles"] == list(fv.familles_du_plan(n, relance == 1))
+            assert c["coupure_usd"] == fv.COUPURES_USD[n] and c["prix_usd_h"] == 1.25 and c["go_id"] == GO
+            assert c["adaptateur"]["rang"] == 16 and c["distillation"]["epoques"] == 3     # recette scellée
+            assert (c["membres_apprentissage"], c["piece"]) == (2, "instance")            # lus dans SCELLEMENT-B5F
+    assert _lancer("config", r, 1, 1.40, course, 0).returncode == 2               # au-dessus du prix du devis
+    trois = _course(r, membres=3, piece="famille")
+    assert json.loads(_lancer("config", r, 3, 1.25, trois, 0).stdout)["membres_apprentissage"] == 3
+    assert _lancer("config", r, 6, 1.25, trois, 0).returncode == 2                # 39 adaptateurs : devis non chiffré
 
 
 def test_depense_cas_sain_et_artefacts_coupure_et_plafond():
-    assert _lancer("depense", 1, 20.0, 1.3, 100.0, 9.1).returncode == 0
-    r = _lancer("depense", 1, 25.7, 1.3, 100.0, 9.1)
+    assert _lancer("depense", 1, 2, 20.0, 1.3, 100.0, 9.1).returncode == 0
+    r = _lancer("depense", 1, 2, 25.7, 1.3, 100.0, 9.1)
     assert r.returncode == 2 and "detruire" in r.stderr
-    assert _lancer("depense", 7, 14.7, 1.3, 100.0, 9.1).returncode == 2          # coupure de 15 USD de l'instance 7
-    assert _lancer("depense", 1, 10.0, 1.3, 198.0, 9.1).returncode == 2          # plafond commun
-    assert _lancer("depense", 9, 1.0, 1.3, 1.0, 1.3).returncode == 2             # instance hors du plan
+    assert _lancer("depense", 7, 2, 14.7, 1.3, 100.0, 9.1).returncode == 2       # coupure de 15 USD de l'instance 7
+    assert _lancer("depense", 1, 2, 10.0, 1.3, 198.0, 9.1).returncode == 2       # plafond commun
+    assert _lancer("depense", 9, 2, 1.0, 1.3, 1.0, 1.3).returncode == 2          # instance hors du plan
+    assert _lancer("depense", 6, 3, 1.0, 1.3, 1.0, 1.3).returncode == 2          # 39 adaptateurs : non chiffré
 
 
 def _verse(tmp_path):
+    """Dépôt jetable relié à un dépôt distant nu : sorties fabriquées, manifeste, inventaire, commis et poussés."""
+    distant = tmp_path / "distant.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(distant)], check=True)
     racine = tmp_path / "verse"
     racine.mkdir()
-    _git(racine, "init", "-q")
-    _git(racine, "config", "user.email", "essai@invalid")
-    _git(racine, "config", "user.name", "essai")
+    for a in (["init", "-q"], ["config", "user.email", "essai@invalid"], ["config", "user.name", "essai"],
+              ["remote", "add", "origin", str(distant)]):
+        _git(racine, *a)
     sorties = racine / "donnees" / "run"
-    sorties.mkdir(parents=True)
-    (sorties / "adaptateur-jumeau.pt").write_bytes(b"poids")
+    (sorties / "T03").mkdir(parents=True)
+    torch.save({"q.A": torch.zeros(2, 3), "q.B": torch.zeros(3, 2)}, sorties / "T03" / "adaptateur-jumeau.pt")
+    (racine / "runs" / "run").mkdir(parents=True)
+    (racine / "runs" / "run" / "manifeste.json").write_text("{}\n")
     inv = fv.ecrire_inventaire(sorties, racine, "run")
     _git(racine, "add", "-A")
     _git(racine, "commit", "-q", "-m", "versement")
+    _git(racine, "push", "-q", "origin", "HEAD:refs/heads/donnees/essai")
+    _git(racine, "fetch", "-q", "origin")
     return racine, inv, _git(racine, "rev-parse", "HEAD")
 
 
@@ -210,7 +307,7 @@ def test_detruire_cas_sain_etiquette_et_versement_prouves(tmp_path):
     assert f"GO_ID={GO} vastai destroy instance 42 -y" in r.stdout
 
 
-@pytest.mark.parametrize("cas", ["etiquette", "identifiant", "absente", "non_verse", "sans_go"])
+@pytest.mark.parametrize("cas", ["etiquette", "identifiant", "absente", "non_verse", "sans_go", "jamais_pousse"])
 def test_detruire_artefacts_rien_n_est_detruit(tmp_path, cas):
     racine, inv, tete = _verse(tmp_path)
     instances, ident, go, commit = [{"id": 42, "label": "b5f-formation-v1-2"}], "42", GO, tete
@@ -223,8 +320,13 @@ def test_detruire_artefacts_rien_n_est_detruit(tmp_path, cas):
     elif cas == "sans_go":
         go = None
     elif cas == "non_verse":
-        (racine / "donnees" / "run" / "adaptateur-jumeau.pt").write_bytes(b"autre")
+        torch.save({"q.A": torch.ones(2, 3), "q.B": torch.zeros(3, 2)}, racine / "donnees" / "run" / "T03" / "adaptateur-jumeau.pt")
         _git(racine, "commit", "-q", "-am", "changé")
+        _git(racine, "push", "-q", "origin", "HEAD:refs/heads/donnees/essai")
+        _git(racine, "fetch", "-q", "origin")
+        commit = _git(racine, "rev-parse", "HEAD")
+    elif cas == "jamais_pousse":                     # constat m-8 : commit local, absent de toute branche distante
+        _git(racine, "commit", "-q", "--allow-empty", "-m", "local")
         commit = _git(racine, "rev-parse", "HEAD")
     r = _lancer("detruire", racine, ident, 2, _liste(tmp_path, instances), inv, commit, go=go)
     assert r.returncode == 2 and "destroy" not in r.stdout

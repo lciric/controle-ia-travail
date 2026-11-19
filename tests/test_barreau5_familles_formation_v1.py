@@ -400,12 +400,21 @@ def test_jouet_piece_famille_artefacts_gardes_d_instance_arretent_tout(monde, mo
 
 
 @pytest.mark.parametrize("n", [2, 3])
-def test_jouet_familles_d_apprentissage_a_deux_ou_trois_membres(monde, n):
+def test_jouet_familles_d_apprentissage_a_deux_ou_trois_membres(monde, monkeypatch, n):
     """36 ou 39 adaptateurs (mot de Lazar en attente) : le nombre de membres des familles d'apprentissage est un paramètre
-    sans défaut ; à trois membres, le sur-saboteur d'apprentissage est formé et évalué sur les tâches communes."""
+    sans défaut ; à trois membres, le sur-saboteur d'apprentissage est formé et évalué sur les tâches communes. La règle
+    de coupure reçoit les tâches réellement jouées (constat m-3) : 8 + 4 (+ 4) au complet, la moitié en réduit."""
     r, config = monde
     config.update({"familles": ["A1"], "membres_apprentissage": n})
+    vus, origine = [], fv.decision_coupure
+
+    def espion(*a):
+        vus.append(a[4:])
+        return origine(*a)
+
+    monkeypatch.setattr(fv, "decision_coupure", espion)
     resume = fv.executer(config, r, f"20261122-12003{n}-b5f-jouet", entropie=11, jouer_tirage=_scripte(COUTS_SAINS))
+    assert vus == [(8 + 4 * (n - 1), 4 + 2 * (n - 1))]
     a1 = resume["familles"]["A1"]
     attendus = {"jumeau", "saboteur"} | ({"sur_saboteur"} if n == 3 else set())
     assert a1["statut"] == "formée" and set(a1["adaptateurs"]) == attendus
