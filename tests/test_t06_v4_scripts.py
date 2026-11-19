@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -28,9 +29,25 @@ CONFIG = "prereg/T0.6-config-v2.json"
 CITES = {"Chemin des tâches d'évaluation de T0.6": "donnees/t06/taches-evaluation.json",
          "Chemin des tâches de distillation de T0.6": "donnees/t06/taches-distillation.json",
          "Chemin des consignes de P3": "prereg/P3-consignes-v1.md"}
+# Horloge de l'essai (correction du 19 novembre 2026) : l'échéance du GO factice de la course était écrite en dur
+# (2026-11-16, fin du GO 1794873600) et l'horloge réelle l'a dépassée. Elle est désormais calculée depuis maintenant,
+# avec la même forme qu'avant (dernier jour de création la veille de l'échéance, fin du GO le lendemain à 00:00 UTC).
+# L'amorce et le lanceur comparent toujours à l'horloge réelle : les gardes d'échéance restent éprouvées sur des
+# échéances passées (`time.time()` moins une marge) et sur cette échéance future (cas sain).
+ECHEANCE_GO = datetime.now(timezone.utc).date() + timedelta(days=10)
+DERNIER_JOUR_CREATION = ECHEANCE_GO - timedelta(days=1)
+FIN_GO_INSTANT = datetime.combine(ECHEANCE_GO + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
 GO = ("| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |\n|---|---|---|---|---|---|---|---|\n"
-      "| GO-2026-11-02-28 | 2026-11-02 | calcul | T0.6 | 200 USD | 2026-11-16 | Lazar | mots |\n")
-FIN_GO = "1794873600"
+      f"| GO-2026-11-02-28 | 2026-11-02 | calcul | T0.6 | 200 USD | {ECHEANCE_GO} | Lazar | mots |\n")
+FIN_GO = str(int(FIN_GO_INSTANT.timestamp()))
+
+
+def _config_reelle_datee() -> str:
+    """Configuration réelle (brouillon 4) dont seul le calendrier suit l'horloge de l'essai (correction du 19 novembre 2026)."""
+    c = json.loads(CONFIG_REELLE.read_text(encoding="utf-8"))
+    assert set(c["calendrier"]) == {"dernier_jour_creation", "fin_go_utc"}, c["calendrier"]
+    c["calendrier"] = {"dernier_jour_creation": str(DERNIER_JOUR_CREATION), "fin_go_utc": FIN_GO_INSTANT.strftime("%Y-%m-%dT%H:%M:%SZ")}
+    return json.dumps(c, ensure_ascii=False, indent=1) + "\n"
 PROGRES_ATTENDUS = ["PROGRES 2026-11-05T10:00:00Z etape=format verifie=True",
                     "PROGRES 2026-11-05T10:06:00Z etape=episodes phase=dose0 lot=1/9 actions=80",
                     "PROGRES 2026-11-05T10:30:00Z etape=test-croise jeux=2 duree_s=100.0"]
@@ -102,7 +119,7 @@ def bac(tmp_path):
     for chemin in [CONFIG, *CITES.values()]:
         f = src / chemin
         f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text(CONFIG_REELLE.read_text(encoding="utf-8") if chemin == CONFIG else "{}", encoding="utf-8")
+        f.write_text(_config_reelle_datee() if chemin == CONFIG else "{}", encoding="utf-8")
         sceller(f)
     (src / "src" / "controle_ia" / "t06").mkdir(parents=True)
     for nom in ("__init__.py", "gardes.py", "scellement.py"):
@@ -165,7 +182,7 @@ def test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage(bac):
     distant = _distant(bac)
     code, journal, sortie, racine = _lancer_amorce(bac, distant)
     assert code == 0, sortie[-3000:]
-    assert "GO : GO-2026-11-02-28 conforme" in journal and "lanceur v4" in journal and "run terminé" in journal and "calendrier : fin_go_utc_s=1794873600" in journal
+    assert "GO : GO-2026-11-02-28 conforme" in journal and "lanceur v4" in journal and "run terminé" in journal and f"calendrier : fin_go_utc_s={FIN_GO}" in journal
     assert [x for x in journal.splitlines() if x.startswith("PROGRES ")] == PROGRES_ATTENDUS           # C01 : la ligne à état retenue
     assert "PROGRES non relayée : motif interdit (C01)" in journal and "au-dessus" not in journal and "au-dessus" not in sortie
     assert "ACTION" not in journal and "PRIVATE" not in journal and "jeton-factice" not in sortie
@@ -275,13 +292,14 @@ def test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage(bac):
 @pytest.mark.parametrize("env_sup, motif", [
     ({"FIN_GO_UTC_S": None}, "FIN_GO_UTC_S absente"), ({"FIN_GO_UTC_S": "demain"}, "FIN_GO_UTC_S absente ou non entière"),
     ({"DEPENSE_EPUISEE_UTC_S": None}, "DEPENSE_EPUISEE_UTC_S absente"), ({"DEPENSE_EPUISEE_UTC_S": "1"}, "après l'heure de dépense épuisée"),
-    ({"FIN_GO_UTC_S": "1794873500"}, "fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc"),
-    ({"ECHEANCE_UTC_S": "1794873700"}, "ramenée"),
+    pytest.param({"FIN_GO_UTC_S": str(int(FIN_GO) - 100)}, f"fin du GO reçue ({int(FIN_GO) - 100}) ≠ calendrier.fin_go_utc",
+                 id="env_sup4-fin du GO reçue (fin du GO - 100) ≠ calendrier.fin_go_utc"),
+    ({"ECHEANCE_UTC_S": str(int(FIN_GO) + 100)}, "ramenée"),
 ])
 def test_amorce_variables_de_calendrier_et_de_depense(bac, env_sup, motif):
     code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "v", env_sup)
     if motif == "ramenée":
-        assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+        assert code == 0 and f"échéance ramenée à la fin du GO ({FIN_GO})" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
     else:
         assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
         assert "run :" not in journal
@@ -479,7 +497,7 @@ def test_controles_disque_simule_et_commande_de_creation(depot_session, tmp_path
     assert r.returncode == 2 and "place disque : 2500000 ko libres" in r.stdout
     r = subprocess.run(["bash", str(LANCEUR), "controles", str(d), "2026-11-05"], env=_env_session(src, tmp_path), capture_output=True, text=True, timeout=120)
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "CONTRÔLES CONFORMES" in r.stdout and "GO-2026-11-02-28 conforme" in r.stdout and "fin_go_utc_s=1794873600 dernier_jour_creation=2026-11-15" in r.stdout
+    assert "CONTRÔLES CONFORMES" in r.stdout and "GO-2026-11-02-28 conforme" in r.stdout and f"fin_go_utc_s={FIN_GO} dernier_jour_creation={DERNIER_JOUR_CREATION}" in r.stdout
     lancement = (d / "lancement.txt").read_text(encoding="utf-8")
     assert lancement.count("commit ") == 1 and f"config {CONFIG}" in lancement and (d / "config.json").exists()
     # C12, C15 : offre relue par l'outil, prix lus dans l'offre, instances inventoriées, dépense antérieure cumulée, heure d'épuisement
@@ -487,7 +505,7 @@ def test_controles_disque_simule_et_commande_de_creation(depot_session, tmp_path
     assert r.returncode == 0, r.stdout + r.stderr
     cmd = r.stdout.splitlines()[-1]
     assert cmd.startswith("GO_ID=GO-2026-11-02-28 timeout -k 10 300 vastai create instance 9999 ") and "--disk 150" in cmd and "--label t06-v2" in cmd
-    assert "jeton-hf-factice" not in cmd and "$HF_TOKEN" in cmd and "ECHEANCE_UTC_S=1794873600" in cmd and "FIN_GO_UTC_S=1794873600" in cmd
+    assert "jeton-hf-factice" not in cmd and "$HF_TOKEN" in cmd and f"ECHEANCE_UTC_S={FIN_GO}" in cmd and f"FIN_GO_UTC_S={FIN_GO}" in cmd
     assert "-e BRANCHE=calcul/t06-reel-v4" in cmd and "amorce_instance_t06_v2" not in cmd and "base64 -d > /root/amorce.sh" in cmd
     epuis = int(cmd.split("DEPENSE_EPUISEE_UTC_S=")[1].split()[0])
     assert abs(epuis - (int(time.time()) + (200 - 20 - 1.2) / 1.12 * 3600)) < 120            # C08 : (200 − 20 − 1,2) / (1,1 + 0,02) h
@@ -515,9 +533,9 @@ def test_controles_disque_simule_et_commande_de_creation(depot_session, tmp_path
     assert r.returncode == 3 and "déjà au plafond" in r.stdout
     r = _creer(src, tmp_path, d, "9999", "autre", "0")
     assert r.returncode == 2 and "course ou relance" in r.stdout
-    r = subprocess.run(["bash", str(LANCEUR), "creation", "9999", "course", "0", str(d), "1794873601"], env=_env_session(src, tmp_path),
+    r = subprocess.run(["bash", str(LANCEUR), "creation", "9999", "course", "0", str(d), str(int(FIN_GO) + 1)], env=_env_session(src, tmp_path),
                        capture_output=True, text=True, timeout=120)
-    assert r.returncode == 2 and "échéance 1794873601 hors de" in r.stdout
+    assert r.returncode == 2 and f"échéance {int(FIN_GO) + 1} hors de" in r.stdout
     r = _creer(src, tmp_path, tmp_path / "vide", "9999", "course", "0")
     assert r.returncode == 2 and "contrôles absents" in r.stdout
     # apres-creation : identifiant lu, sortie brute effacée, création écrite pour la surveillance
@@ -530,9 +548,9 @@ def test_controles_disque_simule_et_commande_de_creation(depot_session, tmp_path
 
 def test_controles_artefacts(depot_session, tmp_path):
     src = depot_session
-    r = subprocess.run(["bash", str(LANCEUR), "controles", str(tmp_path / "c2"), "2026-11-16"], env=_env_session(src, tmp_path), capture_output=True, text=True, timeout=120)
-    assert r.returncode == 2 and "dernier jour de création (2026-11-15) dépassé" in r.stdout            # L11
-    r = subprocess.run(["bash", str(LANCEUR), "controles", str(tmp_path / "c4"), "2026-11-20"], env=_env_session(src, tmp_path), capture_output=True, text=True, timeout=120)
+    r = subprocess.run(["bash", str(LANCEUR), "controles", str(tmp_path / "c2"), str(DERNIER_JOUR_CREATION + timedelta(days=1))], env=_env_session(src, tmp_path), capture_output=True, text=True, timeout=120)
+    assert r.returncode == 2 and f"dernier jour de création ({DERNIER_JOUR_CREATION}) dépassé" in r.stdout            # L11
+    r = subprocess.run(["bash", str(LANCEUR), "controles", str(tmp_path / "c4"), str(ECHEANCE_GO + timedelta(days=4))], env=_env_session(src, tmp_path), capture_output=True, text=True, timeout=120)
     assert r.returncode == 2 and "validité" in r.stdout
     env = _env_session(src, tmp_path)
     env["HF_TOKEN"] = ""
@@ -934,7 +952,7 @@ def test_c_v4_3_amorce_epreuve_artefacts(bac, cas):
     elif cas == "reel_sans_epreuve":
         sup.update(mode="reel", EPREUVE_GO_ID="")
     elif cas == "go_expire":
-        sup["FIN_GO_UTC_S"] = "1794873600"                                                        # fin du GO ≠ calendrier de la configuration d'épreuve
+        sup["FIN_GO_UTC_S"] = FIN_GO                                                        # fin du GO ≠ calendrier de la configuration d'épreuve
     code, journal, sortie, racine, _ = _epreuve_amorce(bac, "ea", **sup)
     assert code == 2 and (racine / "t06-detruire").exists(), (cas, sortie[-2000:])
     motif = {"go_de_la_course": "seul GO-2026-11-06-01 est une épreuve à blanc", "branche_calcul": "doit commencer par essai/",

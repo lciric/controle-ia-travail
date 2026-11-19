@@ -16,6 +16,30 @@ from test_t06_v12_amorce import (CONFIG_E2, CONFIG_E3, GO_E, _commit_source, _co
 BIS = "GO-2026-11-07-08"
 
 
+@pytest.fixture(autouse=True)
+def _horloge_de_l_essai(monkeypatch, tmp_path_factory):
+    """Horloge de l'essai (correction du 19 novembre 2026). Le module parent `test_t06_v12_amorce.py` est cité par empreinte dans un
+    texte scellé : il reste intact. Son GO factice de la course porte une échéance écrite en dur (2026-11-16, fin du GO
+    1794873600) que l'horloge réelle a dépassée ; le temps de chaque essai de ce fichier, ce GO, la fin du GO et le calendrier
+    de la configuration réelle sont remplacés par une échéance calculée depuis maintenant, de même forme (dernier jour de
+    création la veille, fin du GO le lendemain à 00:00 UTC). L'amorce compare toujours à l'horloge réelle : les gardes
+    d'échéance restent éprouvées sur des échéances passées (`time.time()` moins une marge) et sur cette échéance future."""
+    import json
+    from datetime import datetime, timedelta, timezone
+    ancien = "| 200 USD | 2026-11-16 | Lazar |"
+    assert ancien in t.GO and t.FIN_GO == "1794873600", "le GO factice du module parent a changé : revoir cette horloge"
+    ech = datetime.now(timezone.utc).date() + timedelta(days=10)
+    fin = datetime.combine(ech + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
+    c = json.loads(t.CONFIG_REELLE.read_text(encoding="utf-8"))
+    assert set(c["calendrier"]) == {"dernier_jour_creation", "fin_go_utc"}, c["calendrier"]
+    c["calendrier"] = {"dernier_jour_creation": str(ech - timedelta(days=1)), "fin_go_utc": fin.strftime("%Y-%m-%dT%H:%M:%SZ")}
+    f = tmp_path_factory.mktemp("horloge") / "config-t06-reel-datee.json"
+    f.write_text(json.dumps(c, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    monkeypatch.setattr(t, "GO", t.GO.replace(ancien, f"| 200 USD | {ech} | Lazar |"))
+    monkeypatch.setattr(t, "FIN_GO", str(int(fin.timestamp())))
+    monkeypatch.setattr(t, "CONFIG_REELLE", f)
+
+
 @pytest.mark.parametrize("plafond, ant, go, ok", [
     ("5.7", "2.092", BIS, True),           # le plafond proposé : 5,7 + 2,092 = 7,792 ≤ 7,9
     ("5.808", "2.092", BIS, True),         # borne exacte
