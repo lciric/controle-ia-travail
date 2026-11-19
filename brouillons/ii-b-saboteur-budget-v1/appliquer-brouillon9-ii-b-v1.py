@@ -8,12 +8,14 @@ Usage (depuis la racine du dépôt, après `git fetch` des deux branches citées
 Ce que fait ce programme, et rien d'autre :
 1. il vérifie l'empreinte du brouillon 8 de l'ordre ;
 2. il lit la configuration de la course par `git show COMMIT_DE_LANCEMENT:CHEMIN`, recalcule son empreinte, la compare à
-   l'empreinte attendue, et y prend les valeurs des 30 marqueurs ; aucune valeur de marqueur n'est écrite à la main
-   dans ce programme : les textes « après » portent des places `@@NOM@@`, remplies par ces valeurs ;
+   l'empreinte attendue, et y prend les valeurs des 30 marqueurs ; aux places des marqueurs, aucune valeur n'est
+   écrite à la main : les textes « après » portent des places `@@NOM@@`, remplies par ces valeurs ; la prose autour
+   cite par endroits des formes courtes (huit premiers caractères d'un commit, nom de la branche, dernière ligne des
+   essais, numéro de la ligne du registre), que ce programme vérifie contre la configuration ;
 3. il vérifie par `git` : le parent direct du commit de lancement est le commit du code que la configuration nomme ;
    ce commit a pour parent direct le commit du code revu d'alors ; le commit de lancement n'ajoute que la configuration
-   et son sceau ; il vérifie au registre des décisions (lecture seule) que la ligne de l'entropie porte la valeur de
-   la configuration et que la ligne citée pour le mot de création existe une seule fois ;
+   et son sceau ; il vérifie au registre des décisions (lecture seule) que la ligne de l'entropie porte l'entropie et le
+   rôle du lecteur de la configuration, et que la ligne citée pour le mot de création existe une seule fois ;
 4. il recalcule l'empreinte de chaque pièce citée (par `git show` pour les pièces de la branche de l'exécutante, sur
    le disque pour les autres) et la compare à son compagnon `.sha256` ; pour la conception et pour le texte de
    lecture des sondes, il ne lit QUE le compagnon, jamais le fichier ;
@@ -60,7 +62,7 @@ CHEMIN_CONFIG = "docs/notes/barreau8-iib-v1/config-iib-reel-v1.json"
 EMPREINTE_CONFIG_ATTENDUE = "1bd2e16a79def36de945359bb64e34beb899410dfe2964d28da1f1b85e3f6a17"
 TETE_EXECUTANTE = "68c1b734c5b5676640ff562e28bb408271f5b372"  # tête rapatriée de `claude/iib-executante-v1`
 LIGNE_ENTROPIE = "R-3525"
-HEURE = "08:05"  # heure d'écriture, relevée par `date -u` au lancement de ce programme
+HEURE = "07:55"  # heure d'écriture, relevée par `date -u` au lancement de ce programme
 
 CIRCULAIRE = "hors configuration (circulaire)"
 MOTIF_MARQUEUR = re.compile(r"<<([A-Z0-9_]+)>>")
@@ -121,7 +123,7 @@ COUPLES = [
             "- **Statut** : **brouillon 9**, candidat au scellement, scellé comme brouillon, non contre-lu. Fabriqué par programme (`appliquer-brouillon9-ii-b-v1.py`, scellé dans ce dossier) depuis le brouillon 8 (`ordre-exploratoire-ii-b-v1-brouillon8.md`, `eb83e9444df3bdfa822ef3bf76efe4039b450a7a8458fe4c91ba20f73d4eb76e`, intact, R12), recopié à l'octet hors des changements listés dans `differences-brouillon8-vers-9-v1.md`. "
             "Écrit le 2026-11-19 vers @@HEURE@@ UTC (`date -u`) par un rédacteur neuf (sous-agent de la session mère `session_013QMayjsoZJFBUCqcnvD5h1`, modèle Claude Fable 5.2), **qui travaille du côté du saboteur à budget et est donc exclu de tout rôle côté sondes du barreau 8** (rédaction, contre-lecture, lecture, verdict ; § 8). "
             "Il n'a écrit ni la conception, ni le code, ni la configuration, ni leurs contre-lectures, ni les brouillons 1 à 8 ; il n'a ouvert ni la consigne privée, ni la conception, ni le texte de lecture des sondes, ni l'enveloppe de la huitième tâche ; il n'a lu aucun résultat. "
-            "Il n'a lu, pour ce brouillon, que : le brouillon 8 en entier ; du brouillon 3, les passages que cet ordre reprend par renvoi au § 5 étape 2 et au § 8 ; les lignes des registres dites à la ligne « Accords » ; la configuration au commit de lancement, par programme, pour ses marqueurs et pour les valeurs libres du § 2 seulement ; le code dit à la ligne « Code lu » ; les pièces dites à la ligne « Pièces citées ». "
+            "Il n'a lu, pour ce brouillon, que : le brouillon 8 en entier ; du brouillon 3, les passages que cet ordre reprend par renvoi au § 5 étape 2 et au § 8 ; les lignes des registres dites à la ligne « Accords » ; la configuration au commit de lancement, par programme, pour ses marqueurs et pour les valeurs libres du § 2 seulement ; le code dit à la ligne « Code lu » ; les pièces dites à la ligne « Pièces citées » ; pour la forme, le programme du brouillon 8, le début de sa note des différences, le programme de compte des marqueurs et sa sortie. "
             "Ce qu'il change est dit à la section « Ce que le brouillon 9 change ». "
             "Le brouillon 8 a été fabriqué par programme (`appliquer-brouillon8-ii-b-v1.py`, scellé dans ce dossier) depuis le brouillon 7 ("
         ),
@@ -261,7 +263,7 @@ COUPLES = [
     {
         "nom": "B9-3g", "changement": 3, "lieu": "§ 3, titre : état au commit du code revu",
         "avant": "tête « autorisable » sans bloquant, majeur ni mineur (`R-3497`))\n",
-        "apres": "tête « autorisable » sans bloquant, majeur ni mineur (`R-3497`) ; au commit du code revu `f9a8aaeb` : les mêmes gardes, plus le correctif du contrôle « aucune tâche commune » du lanceur, éprouvé sur la forme réelle des fichiers de tâches, cas sain et artefacts (`tests/test_iib_taches_v2.py`, 13 essais ; `R-3625`, `R-3630`))\n",
+        "apres": "tête « autorisable » sans bloquant, majeur ni mineur (`R-3497`) ; au commit du code revu `f9a8aaeb` : les mêmes gardes, plus le correctif du contrôle « aucune tâche commune » du lanceur, éprouvé sur la forme que portent les fichiers réels de tâches, cas sain et artefacts (`tests/test_iib_taches_v2.py`, 13 essais ; `R-3625`, `R-3630`))\n",
     },
     {
         "nom": "B9-3h", "changement": 3, "lieu": "§ 3, garde « Tâches disjointes »",
@@ -326,7 +328,7 @@ COUPLES = [
             "   - **au premier commit de lancement `968a5151`**, abandonné depuis (journal v5 ; `R-3619`) : garde de la configuration en code 0 ; suite ciblée « 456 passed » ; extractions réduites en code 0 ; contrôles du lanceur en **code 2**, sur le contrôle « aucune tâche commune » (étape 2) ;\n"
             "   - **au commit de lancement `@@COMMIT_LANCEMENT@@`** (journal v6 ; `R-3635`) : garde de la configuration conforme ; suite ciblée rejouée, même dernière ligne, « 456 passed », code 0 (liste v2 : « 469 passed », code 0) ; extraction réduite de `main` : clonage et extraction en code 0, ligne `GO-2026-11-10-08` comptée 1, lignes `R-3614` et `R-3630` comptées 1 chacune ; extraction réduite du code : clonage, `sparse-checkout` et extraction en code 0, tête distante de `@@BRANCHE_CODE_IIB@@` égale au commit de lancement, parent égal au commit du code revu, deux fichiers dans le commit (la configuration et son sceau), ligne d'accord comptée 1 au commit, branche du run absente (code 2, attendu) ; contrôles du lanceur (`controles-explo`, sans outil de location) : **code 0, « CONTRÔLES CONFORMES »**, `lancement.txt` écrit (copie : pièce `lancement-controles-836c7ccc-v1.txt`) ; place prise : 7,3 Mo (`main`), 390 Mo (code), 0,4 Mo (dossier des contrôles) ; place libre avant : 14 260 328 ko, plus que les 3 Go exigés ;\n"
             "   - **relecture des valeurs libres** : faite par programme par le rédacteur du brouillon 9, qui n'a pas écrit la configuration : les valeurs libres de la table du § 2, transcrites dans le programme de comparaison, sont égales, clé par clé, à celles de la configuration du commit de lancement (programme et sortie : § 11) ; **commandes du § 5** : relues par le même rédacteur au commit de lancement (§ 5) ;\n"
-            "   - **trois écarts relevés par le rédacteur du brouillon 9, déclarés, portés à la mère** : **(i)** l'extraction des fichiers du run (forme de l'étape 5) a été jouée à blanc à `ec3b0329` seulement, sur un dépôt jouet ; elle n'est pas rejouée au commit de lancement ; sa forme ne dépend pas de ce commit (dit plus haut) ; **(ii)** la commande `--verifier-go-seulement` de l'étape 1 du § 5 n'apparaît dans aucun journal des contrôles à blanc ; les contrôles du lanceur vérifient la même ligne d'accord par la même fonction, et leur message le dit (« GO-2026-11-10-08 conforme ») ; **(iii)** la pièce `lancement-controles-836c7ccc-v1.txt` porte `tests_attendus 456` : l'exécutante a joué ces contrôles avec un nombre d'essais attendu de 456, alors que cet ordre fixe `IIB_TESTS_ATTENDUS` vide (§ 1, § 5 étape 1). Aux contrôles, le lanceur ne lit de cette variable que sa forme et la recopie dans `lancement.txt` : l'issue « CONTRÔLES CONFORMES » n'en dépend pas. À la création, il la passe à l'instance : non vide, l'amorce arrête la course si la dernière ligne des essais n'est pas « 456 passed » ; vide, elle n'exige que la réussite de la suite. À la lettre de l'étape 1 du § 5, l'exécutante rejoue les contrôles dans un dossier neuf, avec les variables de cet ordre, et c'est ce dossier neuf que lit la création.\n"
+            "   - **trois écarts relevés par le rédacteur du brouillon 9, déclarés, portés à la mère** : **(i)** l'extraction des fichiers du run (forme de l'étape 5) a été jouée à blanc à `ec3b0329` seulement, sur un dépôt jouet ; elle n'est pas rejouée au commit de lancement ; sa forme ne dépend pas de ce commit (dit plus haut) ; **(ii)** la commande `--verifier-go-seulement` de l'étape 1 du § 5 n'apparaît dans aucun journal des contrôles à blanc ; les contrôles du lanceur vérifient la même ligne d'accord par la même fonction, et leur message le dit (« GO-2026-11-10-08 conforme ») ; **(iii)** la pièce `lancement-controles-836c7ccc-v1.txt` porte `tests_attendus 456` : l'exécutante a joué ces contrôles avec un nombre d'essais attendu de 456, alors que cet ordre fixe `IIB_TESTS_ATTENDUS` vide (§ 1, § 5 étape 1). Aux contrôles, le lanceur ne lit de cette variable que sa forme et la recopie dans `lancement.txt` : l'issue « CONTRÔLES CONFORMES » n'en dépend pas. À la création, il la passe à l'instance : non vide, l'amorce arrête la course si la dernière ligne des essais n'est pas « 456 passed » ; vide, elle n'exige que la réussite de la suite. La contre-lecture du correctif (point 6) et la ligne `R-3625` parlent, elles, d'un nombre attendu de 456 sur l'instance : point à trancher par la mère avant le scellement ; tant que cet ordre n'est pas changé sur ce point, sa lettre est : variable vide. À la lettre de l'étape 1 du § 5, l'exécutante rejoue les contrôles dans un dossier neuf, avec les variables de cet ordre, et c'est ce dossier neuf que lit la création.\n"
         ),
     },
     {
@@ -407,7 +409,7 @@ COUPLES = [
         "avant": "Comme au brouillon 3, § 8. **Exclus de toute lecture des sondes du barreau 8** :",
         "apres": (
             "Comme au brouillon 3, § 8, où le rôle du lecteur, que le brouillon 3 porte encore en marqueur, est la valeur de `LECTEUR_IIB` (§ 11). "
-            "**Depuis le brouillon 3** : son § 8 exige, avant toute lecture de sonde, un préenregistrement scellé à part, le verdict scellé de P3-bis et un accord à part ; de ces trois, le premier existe : le texte de lecture des sondes du barreau 8 est scellé depuis le 2026-11-19 à 06:32:25Z, `prereg/lecture-sondes-barreau8-v1.md` (`@@P:sondes@@`), ligne `SCELLEMENT-SONDES-IIB` du registre `registres/sondes-iib-v1.md` (`R-3612`). Ce scellement précède la création de cette course, donc toute sortie de la course ; cette course ne lit toujours aucune sonde. "
+            "**Depuis le brouillon 3** : son § 8 exige, avant toute lecture de sonde, un préenregistrement scellé à part, le verdict scellé de P3-bis et un GO à part ; pour le premier : le texte de lecture des sondes du barreau 8 est scellé depuis le 2026-11-19 à 06:32:25Z, `prereg/lecture-sondes-barreau8-v1.md` (`@@P:sondes@@`), ligne `SCELLEMENT-SONDES-IIB` du registre `registres/sondes-iib-v1.md` (`R-3612`). Ce scellement précède la création de cette course, donc toute sortie de la course ; cette course ne lit toujours aucune sonde. "
             "**Exclus de toute lecture des sondes du barreau 8** :"
         ),
     },
@@ -520,7 +522,7 @@ NON_CORRIGE = [
     "§ 1, § 5 étape 1 : `IIB_TESTS_ATTENDUS` reste vide, comme au brouillon 8 ; la pièce `lancement-controles-836c7ccc-v1.txt` porte `tests_attendus 456`, et le journal v6 de l'exécutante dit le dossier des contrôles à blanc « gardé pour la création ». Écart déclaré au § 4 étape 6, (iii) ; à trancher par la mère avant le scellement.",
     "§ 4 étape 6 : l'extraction des fichiers du run n'est pas rejouée à blanc au commit de lancement, et `--verifier-go-seulement` n'est dans aucun journal des contrôles à blanc. Écarts déclarés au § 4 étape 6, (i) et (ii).",
     "§ 5 étape 5 : « la commande de cette lecture [du disque d'une instance arrêtée] est nommée et jouée à blanc par la mère avant le scellement de l'ordre » : aucune ligne lue par le rédacteur ne la nomme. Phrase laissée telle ; elle dit elle-même que, sans cette commande, le remède n'existe pas.",
-    "§ 4 étape 3 : « devis contre-lu, scellé, puis inscrit en complément de la ligne d'accord » : la ligne `GO-2026-11-10-08`, relue, ne porte pas ce complément ; phrase laissée telle (étape de la mère). De même, trois lignes de la table du § 11 disent encore « proposé » ou « proposés » (dernier jour de création ; consigne ; devis, « sous réserve de la contre-lecture du devis »), alors que la configuration du commit de lancement porte ces valeurs : laissées telles.",
+    "§ 4 étape 3 : « devis contre-lu, scellé, puis inscrit en complément de la ligne d'accord » : le rédacteur n'a pas vu ce complément dans la ligne `GO-2026-11-10-08`, relue ; phrase laissée telle (étape de la mère). De même, trois lignes de la table du § 11 disent encore « proposé » ou « proposés » (dernier jour de création ; consigne ; devis, « sous réserve de la contre-lecture du devis »), alors que la configuration du commit de lancement porte ces valeurs : laissées telles.",
     "§ 8 : la liste des exclus ne reçoit que les quatre personnes que les faits du mandat font apparaître. Deux autres exclusions lues au registre ne sont pas ajoutées : le fabricant de la conception finale (`R-3527`) et le contrôleur de la différence des brouillons 7 et 8 (`R-3535`). Le registre « qui a lu quoi » fait foi.",
     "§ 13, « Ce qu'elle exige avant de partir » : le rédacteur, exclu du côté des sondes, n'a pas ouvert le texte de lecture des sondes et ne sait pas s'il tient lieu aussi du préenregistrement de la passe de recalcul (« quoi enregistrer ») ; phrase laissée telle.",
     "§ 7 : la question posée à la mère sur la copie publique (`donnees/*-iib-*`) reste ouverte, telle qu'au brouillon 8.",
@@ -592,12 +594,29 @@ def controler_git(config: dict) -> None:
     lignes = [l for l in registre if l.startswith(f"- {LIGNE_ENTROPIE} (")]
     if len(lignes) != 1 or f"**{marqueurs['ENTROPIE_IIB']}**" not in lignes[0]:
         raise Arret(f"la ligne {LIGNE_ENTROPIE} du registre des décisions ne porte pas l'entropie de la configuration")
+    if f"« {marqueurs['LECTEUR_IIB']} »" not in lignes[0]:
+        raise Arret(f"la ligne {LIGNE_ENTROPIE} du registre des décisions ne porte pas le rôle du lecteur de la configuration")
     mot = marqueurs["MOT_LAZAR_CREATION_IIB"]
     if not re.fullmatch(r"R-\d+", mot) or len([l for l in registre if l.startswith(f"- {mot} (")]) != 1:
         raise Arret("la ligne citée pour le mot de Lazar n'est pas une ligne unique du registre des décisions")
     extrait = marqueurs["LIGNE_REGISTRE_CREATION_7B"]
     if len([l for l in registre if extrait in l]) != 1:
         raise Arret("l'extrait de la ligne de création de 7b n'est pas porté par une seule ligne du registre")
+
+
+def controler_formes_courtes(marqueurs: dict[str, str]) -> None:
+    """Les formes courtes que la prose des textes « après » écrit à la main s'accordent avec la configuration."""
+    attendus = [
+        (marqueurs["COMMIT_CODE_IIB"].startswith("f9a8aaeb"), "commit du code revu"),
+        (COMMIT_LANCEMENT.startswith("836c7ccc"), "commit de lancement"),
+        (marqueurs["BRANCHE_CODE_IIB"] == "prep/iib-code-v4", "branche du code"),
+        (marqueurs["DERNIERE_LIGNE_TESTS_IIB_PROCESSEUR"] == "456 passed", "dernière ligne des essais"),
+        (marqueurs["MOT_LAZAR_CREATION_IIB"] == "R-3614", "ligne du mot de Lazar"),
+        (marqueurs["GO_ID_IIB"] == "GO-2026-11-10-08", "ligne d'accord"),
+    ]
+    for bon, quoi in attendus:
+        if not bon:
+            raise Arret(f"forme courte écrite dans la prose et configuration en désaccord : {quoi}")
 
 
 def empreintes_des_pieces(config: dict) -> dict[str, str]:
@@ -765,13 +784,13 @@ def ecrire_note(resultat: str, couples: list[dict], diff: str, blocs: list[dict]
         t.append(f"| {c['nom']} | {c['changement']} | {c['lieu']} | {c['ligne']} | {c['bloc']} |")
     t.append("")
     t.append("## 3. Valeurs prises par programme\n")
-    t.append("Aucune valeur de marqueur n'est écrite à la main dans le programme. Les textes « après » portent des places, remplies : par les valeurs du dictionnaire `marqueurs` de la configuration du commit de lancement (30 marqueurs) ; par l'empreinte recalculée de la configuration, pour `EMPREINTE_CONFIG_IIB` ; par le commit de lancement, constante du programme, dont le parent direct est vérifié égal au commit du code que la configuration nomme ; par les empreintes des pièces, recalculées. La table des valeurs à l'octet du § 11 et le bloc du marqueur des empreintes du code sont écrits de même.\n")
+    t.append("Aux places des marqueurs, aucune valeur n'est écrite à la main dans le programme : les textes « après » portent des places, remplies : par les valeurs du dictionnaire `marqueurs` de la configuration du commit de lancement (30 marqueurs) ; par l'empreinte recalculée de la configuration, pour `EMPREINTE_CONFIG_IIB` ; par le commit de lancement, constante du programme, dont le parent direct est vérifié égal au commit du code que la configuration nomme ; par les empreintes des pièces, recalculées. La table des valeurs à l'octet du § 11 et le bloc du marqueur des empreintes du code sont écrits de même. La prose autour cite par endroits des formes courtes (huit premiers caractères d'un commit, nom de la branche, dernière ligne des essais, numéro de la ligne du registre) : le programme les vérifie contre la configuration.\n")
     t.append("## 4. Ce que le programme a contrôlé\n")
     t.append("- empreinte du brouillon 8 ; empreinte de la configuration au commit de lancement, égale à l'empreinte attendue et à son sceau ; 30 marqueurs, dont trois « hors configuration (circulaire) » ;")
     t.append("- par `git` : le parent direct du commit de lancement est le commit du code de la configuration ; ce commit est l'enfant direct de `ec3b0329` ; le commit de lancement n'ajoute que la configuration et son sceau ;")
-    t.append("- au registre des décisions : la ligne `R-3525` porte l'entropie de la configuration ; la ligne citée pour le mot de Lazar existe une seule fois ; l'extrait de la ligne de création de 7b n'est porté que par une ligne ;")
+    t.append("- au registre des décisions : la ligne `R-3525` porte l'entropie et le rôle du lecteur de la configuration ; la ligne citée pour le mot de Lazar existe une seule fois ; l'extrait de la ligne de création de 7b n'est porté que par une ligne ;")
     t.append("- chaque « avant » présent exactement une fois au moment de son application ; chaque « après » présent exactement une fois à la fin ; application inverse égale au brouillon 8 à l'octet ;")
-    t.append("- aucun marqueur entre chevrons doubles restant ; aucune place restante ; l'extrait de la ligne de création de 7b écrit exactement deux fois, comme au brouillon 8 ;")
+    t.append("- les formes courtes écrites dans la prose s'accordent avec la configuration ; aucun marqueur entre chevrons doubles restant ; aucune place restante ; l'extrait de la ligne de création de 7b écrit exactement deux fois, comme au brouillon 8 ;")
     t.append("- chaque bloc de `diff -u` rattaché à au moins un couple, chaque couple à un seul bloc ;")
     t.append("- le programme de compte rend 0 occurrence ; le programme de comparaison rend le code 0.\n")
     t.append("## 5. Relevé sans être corrigé\n")
@@ -813,6 +832,7 @@ def main() -> int:
         source = lire_verifie(SOURCE, EMPREINTE_SOURCE)
         config, empreinte_config = lire_configuration()
         controler_git(config)
+        controler_formes_courtes(config["marqueurs"])
         pieces = empreintes_des_pieces(config)
         marqueurs = config["marqueurs"]
         valeurs = dict(marqueurs)

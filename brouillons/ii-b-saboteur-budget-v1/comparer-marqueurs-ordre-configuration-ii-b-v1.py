@@ -367,9 +367,9 @@ def main() -> int:
         n = p5.count(fragment)
         print(f"  {quoi} : {n} : " + noter(n == 1, f"fragment du § 5 : {quoi}"))
     for quoi, ancien in (("ancienne branche du code", "prep/iib-code-v3"),
-                         ("premier commit de lancement, abandonné", "968a5151")):
+                         ("premier commit de lancement, abandonné depuis", "968a5151")):
         n = p5.count(ancien)
-        print(f"  {quoi} dans le § 5 : {n} (attendu 0) : " + noter(n == 0, f"§ 5 : {quoi}"))
+        print(f"  {quoi} : occurrences dans le § 5 : {n} (attendu 0) : " + noter(n == 0, f"§ 5 : {quoi}"))
 
     print(f"\nBILAN : écarts {len(ecarts)}")
     for e in ecarts:
