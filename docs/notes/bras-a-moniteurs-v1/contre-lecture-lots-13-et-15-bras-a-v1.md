@@ -155,7 +155,7 @@ Après :
            X.ecrire(tmp_path / "sortie", mauvaises, plan, comptes, {})
        assert not (tmp_path / "sortie").exists()
    ```
-   et un essai qui montre qu'`extraire` appelle la garde (par exemple en remplaçant `X.verifier_lignes` par un espion qui compte ses appels). Les deux appels, retirés, doivent faire échouer un essai.
+   Essayé dans ma copie : 3 réussites sur le code actuel, 3 échecs quand l'appel de la garde dans `ecrire` est retiré. Ajouter un essai qui montre qu'`extraire` appelle la garde (par exemple en remplaçant `X.verifier_lignes` par un espion qui compte ses appels). Les deux appels, retirés, doivent faire échouer un essai.
 2. **Gardes tautologiques.** Avant (tokeniseur) : `if tete[-len(balise):] != balise and avant == "":` suivi de son arrêt. Après : ces deux lignes retirées, et la docstring de `decoupage_des_valeurs` complétée : « la balise peut se découper autrement selon ce qui la précède (après une espace, par exemple) ; seul compte le découpage de la valeur ». Avant (extraction) : les trois gardes de constante (`tuple(conditions) != ROLES`, `set(temoin_benin) & set(conditions.values())`, `tuple(config) != CLES_CONFIG`). Après : retirées, ou remplacées par `assert` commentées « constante, hors R5 ».
 3. **Artefacts manquants** (table de la partie 3) : pour chaque garde, un essai qui la fait arrêter. Pour les jetons spéciaux, un jeu de configurations jouets (dictionnaires) suffit, avec un tokeniseur jouet qui découpe les trois jetons spéciaux en un seul jeton : le cas sain ne doit plus dépendre du vrai tokeniseur.
 4. **Nom d'essai** : `test_temoin_benin_donne_pour_une_condition_lue_n_est_pas_nomme_ainsi` → `test_textes_du_temoin_benin_absents_de_la_sortie` (recommandé, non bloquant).
