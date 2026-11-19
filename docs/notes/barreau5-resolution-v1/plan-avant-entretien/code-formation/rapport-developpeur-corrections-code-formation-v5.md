@@ -1,6 +1,6 @@
 # Rapport du développeur des corrections du code de formation des familles d'adaptateurs jumeaux (barreau 5) — v5 (troisième tour)
 
-- Développeur : le sous-agent des rapports v3 et v4, Claude Opus 5.5 (« You are powered by the model named Opus 5.5. »). Pièce d'instrument (classe B), à vérifier par le même contre-lecteur (Claude Fable 5.2). Écrit dans la nuit du 19 au 20 novembre 2026, de 22:55Z à {{FIN}} environ (heures relevées par `date -u`).
+- Développeur : le sous-agent des rapports v3 et v4, Claude Opus 5.5 (« You are powered by the model named Opus 5.5. »). Pièce d'instrument (classe B), à vérifier par le même contre-lecteur (Claude Fable 5.2). Écrit dans la nuit du 19 au 20 novembre 2026, de 22:55Z à 23:43Z environ (heures relevées par `date -u`).
 - Demande : message de la mère, troisième tour « sur les choix du texte », puis son second message : l'erratum 1 au brouillon 5 fixe les règles du texte et prime. Pièces lues, empreintes vérifiées : le texte, brouillon 5 (`6f7e20418c84…`), aux sections qui touchent le code ; la table des corrections du brouillon 4 (`bf129b01d730…`), son § 1 « Choix qui touchent le code » ; la vérification du brouillon 4 (`a091eed230a1…`), constat W-m3 ; **l'erratum 1 au brouillon 5** (`8c3451a2e768…`), en entier ; le rangement des treize points (g) de mon rapport v4 (`76e0e27efe4a…`) ; le devis du brouillon 5 (`9ba5db06f207…`, § 3 et 4) ; la table des corrections du brouillon 5 (`8be817c6d69d…`).
 - Mots de Lazar rapportés par la mère : 39 adaptateurs, voie (iii), départ au plus tôt (`GO-2026-11-19-79` et `-82`) ; accord de calcul, plafond commun de 200 USD (`GO-86`) ; enveloppe de relance à part, 56 USD au plus (`GO-87`).
 - Rien de réel : aucune instance, aucune dépense, aucun commit. Réseau : PyPI et l'index de PyTorch pour processeur, pour refaire l'environnement Python 3.11 seulement. Aucune donnée, aucun résultat, aucune transcription, aucun énoncé de tâche.
@@ -8,7 +8,7 @@
 
 ## 1. Verdict
 
-Les quatre points que le texte demande au code sont codés, chaque garde avec cas sain et artefact : **(a)** deux paliers de la part non éditable (25 % et 10 %), le marqueur « part non éditable haute » au résultat de la famille, la part par motif en six classes et la classe de chaque action non éditable ; **(c)** la relance hors du plafond commun : à l'inscription, deux instances au plus et 56 USD de coupures au plus ; en cours de marche, deux compteurs, la relance ne comptant que sa coupure ; **(d)** le nom de carte, à la lettre de la définition de « collé » de l'erratum, le lecteur gelé n'étant pas touché ; **(f)** la table à trois membres des instances 6 et 7 (28 USD, 9,61 à 10,99 heures ; 17 USD, 5,71 à 6,40 heures). Rien n'est codé pour (b) (code de lecture), (e) (refusé par le texte) ni (g) (l'erratum aligne le texte sur le code : modèle nu, base de temps de la coupure ; aucun point de (g) ne demande de code). Plancher d'essais de l'amorce : 191 → **235**, remesuré sur l'arbre extrait : 235 passés sous Python 3.13 et sous Python 3.11 (refait : le paquet a changé). Essais : **325** dans les six fichiers, **325 passés**. Mutations : {{MUTATIONS_VERDICT}}.
+Les quatre points que le texte demande au code sont codés, chaque garde avec cas sain et artefact : **(a)** deux paliers de la part non éditable (25 % et 10 %), le marqueur « part non éditable haute » au résultat de la famille, la part par motif en six classes et la classe de chaque action non éditable ; **(c)** la relance hors du plafond commun : à l'inscription, deux instances au plus et 56 USD de coupures au plus ; en cours de marche, deux compteurs, la relance ne comptant que sa coupure ; **(d)** le nom de carte, à la lettre de la définition de « collé » de l'erratum, le lecteur gelé n'étant pas touché ; **(f)** la table à trois membres des instances 6 et 7 (28 USD, 9,61 à 10,99 heures ; 17 USD, 5,71 à 6,40 heures). Rien n'est codé pour (b) (code de lecture), (e) (refusé par le texte) ni (g) (l'erratum aligne le texte sur le code : modèle nu, base de temps de la coupure ; aucun point de (g) ne demande de code). Plancher d'essais de l'amorce : 191 → **235**, remesuré sur l'arbre extrait : 235 passés sous Python 3.13 et sous Python 3.11 (refait : le paquet a changé). Essais : **325** dans les six fichiers, **325 passés**. Mutations : **32 défauts réintroduits, 32 attrapés** (les 20 de ce tour, et 12 des tours précédents dont le code visé a changé) ; aucune équivalente, aucune manquée.
 
 ## 2. Choix du texte → correction → essai qui l'attrape
 
@@ -31,7 +31,36 @@ Ce que je n'ai pas ajouté, et pourquoi : un refus d'une ligne de relance qui ci
 
 ## 3. Contrôle par mutation
 
-{{MUTATIONS_SECTION}}
+Outil : `mutations-dev-corrections-v5.py`, dans `outils-developpeur-corrections-code-formation-v5/` (scellé). Il importe tels quels l'outil du premier tour (`…-v3/outils/mutations-dev-corrections-v1.py`, `2f0e5ccb…`, sa logique de jeu), la liste du vérificateur et celle du deuxième tour, et joue : les vingt mutations neuves de ce tour (R01 à R20), et les douze mutations des tours précédents dont le code visé a changé à ce tour. Une seule copie de travail, dans `/dev/shm` : l'arbre que l'amorce extrait, tiré de l'arbre de travail sans commit, plus les essais du lanceur et des amorces et la garde de calcul ; effacée à la fin. Chaque mutation posée, jouée (fichiers visés d'abord, arrêt au premier échec ; s'ils passent, les six fichiers), retirée, fichier rendu à l'octet.
+
+| n° | défaut réintroduit | résultat | essai qui l'attrape (premier échec) |
+|---|---|---|---|
+| R01 | (a) part non éditable admise jusqu'à 50 % | attrapée | E `test_controle_par_famille_cas_sain_et_artefacts` |
+| R02 | (a) marqueur jamais levé | attrapée | E `test_deux_paliers_…[2-10-True-True]` |
+| R03 | (a) marqueur levé dès 10 % juste | attrapée | E `test_deux_paliers_…[1-10-True-False]` |
+| R04 | (a) classe non écrite dans la table d'édition | attrapée | E `test_classes_action_non_valide_et_controle_manque` |
+| R05 | (a) marqueur non recopié au résultat de la famille | attrapée | F `test_jouet_part_non_editable_haute_…` |
+| R19 | (a) contenu borné : classe des lignes d'édition non relue | attrapée | F `test_point_5_contenu_borne_des_sorties_de_texte_…[…textes-distillation…]` |
+| R06 | (d) règle du nom de carte retirée | attrapée | E `test_nom_de_carte_nombres_comptes_…[150…]` |
+| R07 | (d) réserve retirée (la règle joue quand le premier nombre est collé) | attrapée | E `test_nom_de_carte_nombres_comptes_…[120h on A100s]` |
+| R08 | (d) « collé » ne regarde que la lettre d'avant | attrapée | E `test_nom_de_carte_nombres_comptes_…[300 GPU-hours on 8x A100s]` |
+| R09 | (d) contrôle par action : drapeau du lecteur gelé | attrapée | E `test_nom_de_carte_cas_sains_…[150…]` |
+| R10 | (d) localisation : tous les nombres du champ brut comptent | attrapée | même essai |
+| R18 | (d) action d'origine : drapeau du lecteur gelé | attrapée | même essai |
+| R11 | (c) plus de deux instances admises dans la ligne de relance | attrapée | F `test_registre_relance_bornee_…` |
+| R12 | (c) coupures au-delà de l'enveloppe admises | attrapée | même essai |
+| R13 | (c) une relance comptée contre le plafond commun | attrapée | F `test_depense_deux_compteurs_…` |
+| R14 | (c) coupure de l'instance non gardée | attrapée | même essai |
+| R20 | (c) le lanceur ne passe pas « relance » à la garde de dépense | attrapée | L `test_depense_cas_sain_et_artefacts_coupure_et_plafond` |
+| R15 | (f) instance 6 à trois membres : 24 USD | attrapée | F `test_configuration_artefacts_…[membres_apprentissage-3-coupure]` |
+| R16 | (f) instance 6 à trois membres : heures de deux membres | attrapée | F `test_table_du_devis_a_trois_membres_instances_6_et_7` |
+| R17 | (f) entrée du devis choisie à l'envers | attrapée | F `test_configuration_reelle_cas_sain_…` |
+| M08, M09, M17 | épissure décalée, épissure élargie, action non éditable pour un seul membre (premier tour) | attrapées | E (essais du premier tour) |
+| M11 | actions non éditables gardées dans les cibles (premier tour) | attrapée | F `test_action_non_editable_ignoree_…` |
+| V04, V06 | contenu d'adaptateur non relu ; activation glissée dans l'évaluation (vérificateur) | attrapées | F `test_point_5_sorties_permises_…` ; F `test_jouet_de_bout_en_bout_…` |
+| P07, P08, P09, P15, P16, P17 | contenu borné (deuxième tour) | attrapées | F (essais du contenu borné) |
+
+**Bilan. 32 défauts réintroduits, 32 attrapés** : les 20 de ce tour, et les 12 des tours précédents dont le code visé a changé. Aucune mutation équivalente, aucune manquée. M16 (« part admise jusqu'à 50 % ») n'a plus son « avant » : R01 la remplace. Journal et sortie dans le bloc-notes, aux empreintes du § 8.
 
 ## 4. Interfaces changées, et consignes pour la session
 
@@ -61,9 +90,30 @@ Depuis la racine du dépôt, temporaires hors du disque (une commande) :
 TMPDIR=/dev/shm PYTHONPATH=src .venv/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/b5f-essais tests/test_barreau5_familles_edition_cout_v1.py tests/test_barreau5_familles_engagement_v1.py tests/test_barreau5_familles_formation_v1.py tests/test_lancer_b5f_formation_v1.py tests/test_amorce_b5f_formation_v1.py tests/test_amorce_b5f_formation_entiere_v1.py
 ```
 
-- {{COMPTE_ESSAIS}}
+- Six fichiers, état final : **325 essais** (E 124, G 23, F 88, L 36, A 45, AE 9), **325 passés**, joués par fichier sur leur état final (E : 124 en 3 s ; G et F : 111 en 80 s ; L : 36 en 163 s ; A et AE : 54 en 217 s, la passe de mutations tournant en même temps). Au deuxième tour : 279 ; quarante-six essais de plus (E + 38, F + 6, L + 2), et des essais existants retournés là où le texte a changé (instances 6 et 7 à trois membres, sous-commande `depense`).
 - Paquet joué sur l'instance (`tests/test_barreau5_familles_*.py`) : 235 essais ; sur l'arbre que l'amorce extrait, tiré de l'arbre de travail sans commit, par la commande de l'étape 4 : **235 passés** sous Python 3.13.18 (79 s) et sous Python 3.11.18 (84 s). Plancher : **235**.
 
 ## 8. Empreintes finales
 
-{{EMPREINTES}}
+Code et essais, dans l'arbre de travail du dépôt, état final (sha256 ; la mère les scelle au versement). Ce sont les fichiers des 325 essais passés (§ 7), de la passe de mutations (même contenu) et, pour le paquet, de l'essai sous Python 3.11.
+
+| fichier | sha256 | ce tour |
+|---|---|---|
+| `src/controle_ia/barreau5_familles/__init__.py` | `b8d53a9905ab172f7e1d0377aef615b343e266624040b0c89399c78f62b365d8` | inchangé |
+| `src/controle_ia/barreau5_familles/edition_cout_v1.py` | `23002f43a02e057a5efd2ed160f21e372a754bbad8e951ee6cbe3ed34566cf9a` | (a), (d) |
+| `src/controle_ia/barreau5_familles/engagement_v1.py` | `565d4e51eccd82562f3f00e7bd020beba525ac09b782905151a38e72ca536396` | inchangé |
+| `src/controle_ia/barreau5_familles/formation_v1.py` | `a56602c3a488f5775ca0f1ce63afb19e8a7ae2e30a5e762b7f25e4af0075c183` | (a), (c), (f) |
+| `scripts/lancer_b5f_formation_v1.sh` | `5cc9023aa44a1ede2ae876f6bb950b1ea8976cf2a7f1eb60c47bd012c0e9385a` | (c) |
+| `scripts/amorce_b5f_formation_v1.sh` | `5bd91c1c3d0cbb2bcecbdf18ca60fb3ae60da9366074b376ef97e3b89569193a` | plancher |
+| `tests/test_barreau5_familles_edition_cout_v1.py` | `e83f45a3a0c77cb9695c47a1f04e18d5fce6b105662b230bdf4fe097637551df` | trente-huit essais |
+| `tests/test_barreau5_familles_engagement_v1.py` | `fd72d1db00916a06404e37e6c213536b914820a43b435dd8abe5381c42384874` | inchangé |
+| `tests/test_barreau5_familles_formation_v1.py` | `2fad8862eefb505e1e8611f8a76a2ab8425766f47d097421bba49028a17c7def` | six essais, quatre retournés |
+| `tests/test_lancer_b5f_formation_v1.py` | `af33ad2096563955e455f7aef2a0619b8aa25d80a5d13ee84368332319d1b047` | deux essais, quatre retournés |
+| `tests/test_amorce_b5f_formation_v1.py` | `5e913a944300606970e6c08fde0cdad2d5d41d3308efab682a3048c54d364a42` | inchangé |
+| `tests/test_amorce_b5f_formation_entiere_v1.py` | `77f1841b9179a220209192405e407a2533ef9af1459fe1ea2eb33d5a0d0be687` | inchangé |
+
+Outils et sorties, dans `outils-developpeur-corrections-code-formation-v5/` (compagnons scellés) : `mutations-dev-corrections-v5.py` (`ff086bae279fbf4d9e618b3cca99a9f95349a32baac8c94c4259b62e7a1d6bf0`), `sortie-essais-paquet-python311-v5.txt` (`c9e50c9e03599108317826895e86f39e793b23f7e4d5159bde3be3e4cf8a0fc7`).
+
+Dans le bloc-notes de la session, à verser par la mère si elle les garde : `/tmp/claude-0/-home-user-controle-ia-travail/8282ab93-0983-5813-b791-a7a522157dcd/scratchpad/dev-corrections-b5f-v5/journal-mutations-dev-corrections-v5.txt` (`8e0185321cc74d8125568cc3f99c23d39517ad2ce166fdc0ee5f82a1477a6a63`) et `/tmp/claude-0/-home-user-controle-ia-travail/8282ab93-0983-5813-b791-a7a522157dcd/scratchpad/dev-corrections-b5f-v5/sortie-mutations-dev-corrections-v5.json` (`df293f96949e65d269dc0cf1091438992222b2658b00b68733961307603570da`).
+
+Temporaires effacés par leurs chemins écrits en toutes lettres : `/dev/shm/b5f-mut-v5`, `/dev/shm/b5f-py311-t3`, `/dev/shm/b5f-arbre-extrait-t3` et son dossier de temporaires, les temporaires d'essais `/dev/shm/b5f-f3`, `/dev/shm/b5f-l3`, `/dev/shm/b5f-a3`, et le dossier vide `/dev/shm/torchinductor_root` que torch y a créé pendant mes essais.
