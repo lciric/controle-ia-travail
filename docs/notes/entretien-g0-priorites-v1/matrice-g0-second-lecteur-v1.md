@@ -1,7 +1,7 @@
 # Matrice « critère de la porte de sortie de la phase 0 → preuve », second lecteur indépendant — v1
 
 - **Pour** : Lazar. **Rapport complet, avec résultats.** La session mère ne lit pas ce fichier ; elle lit le résumé sans résultat, à côté.
-- **Auteur** : second lecteur neuf et indépendant (sous-agent de la session mère, modèle Fable 5.2), lancé le 19 novembre 2026 (ligne R-3713 du registre des décisions). Écrit de 10:10 à 10:50 UTC (`date -u`), sur l'arbre de travail du dépôt, branche principale, tête 5698eab8 relevée à 10:27 UTC (un commit, non une empreinte de fichier : le programme ne le vérifie pas ; la branche a continué d'avancer pendant l'écriture).
+- **Auteur** : second lecteur neuf et indépendant (sous-agent de la session mère, modèle Fable 5.2), lancé le 19 novembre 2026 (ligne R-3713 du registre des décisions). Écrit de 10:10 à 10:36 UTC (`date -u`), sur l'arbre de travail du dépôt, branche principale, tête 5698eab8 relevée à 10:27 UTC (un commit, non une empreinte de fichier : le programme ne le vérifie pas ; la branche a continué d'avancer pendant l'écriture).
 - **Indépendance** : un autre agent bâtit la même matrice en même temps. Je n'ai ouvert aucun fichier du dossier `docs/notes/entretien-g0-priorites-v1` (j'y dépose seulement mes deux fichiers) et je n'ai pas cherché son travail.
 - **Habilitation** : j'ai lu des verdicts scellés et les résultats scellés qu'ils citent. En contrepartie, je suis exclu de tout rôle de rédacteur, de lecteur ou de juge d'une expérience du programme. Je n'ai lu aucun fichier dont le nom contient « consigne-privee » ou « conception-ii-b », rien du dossier des brouillons du saboteur à budget, rien de la branche du compte 4, rien du dossier des archives de réponses de modèles, et je n'ai pas lu la ligne interdite du registre des décisions (toutes mes recherches dans ce registre passent par une copie d'où elle est retirée).
 - **Méthode** : je pars des pièces brutes. L'état vivant, les passations et la carte de la porte du 14 novembre [P81] m'ont servi à trouver des chemins, jamais de preuve. Une preuve, ici, est un fichier scellé, cité par son chemin et son empreinte sha256 (annexe A). Les 71 pièces de l'arbre de travail ont été vérifiées par l'outil du dépôt (`controle_ia.scellement verifier`, 71 « OK ») ; les pièces qui ne vivent que sur une branche ont été lues par `git show` et comparées à leur compagnon de la même branche. Les registres (`registres/go.md`, `registres/decisions.md`, `registres/scellements-v1.md`) sont des fichiers vivants, non scellés : je les cite par identifiant de ligne, comme indication, non comme preuve scellée.
@@ -230,3 +230,254 @@ Ces pièces sont scellées et comptent pour l'entretien ; **aucune n'entre dans 
 | P81 | `docs/notes/carte-porte-G0-v1/carte-porte-G0-v1.md` | arbre de travail | `85d6d4541dd4f017a0e0b097766b064a9ef7de101ec837df814ec42b290c9db8` |
 
 <!-- FIN DE LA ZONE VERIFIEE -->
+
+## Annexe B — programme de vérification et sa sortie
+
+Cette annexe est hors de la zone vérifiée : le programme ne la relit pas.
+
+- Programme : `verifier_matrice_v1.py`, gardé dans le bloc-notes du lecteur (`/tmp/claude-0/-home-user-controle-ia-travail/7344498a-9e3b-55a8-9388-941e130beae8/scratchpad/outils/verifier_matrice_v1.py`), sha256 `dec14744161cc2ec9f2bd5534e2300cc40a756fec77707bcbaf05bd2a6c6b21f` ; source recopiée ci-dessous à l'octet.
+- Commande : `python3 -B verifier_matrice_v1.py /home/user/controle-ia-travail /home/user/controle-ia-travail/docs/notes/entretien-g0-priorites-v1/matrice-g0-second-lecteur-v1.md` ; code de sortie 0.
+- Lecture seule : il n'écrit rien. Il ne vérifie ni le sens des phrases ni les empreintes de commits.
+- Les pièces de l'arbre de travail ont aussi été passées à l'outil du dépôt (`PYTHONPATH=src python3 -B -m controle_ia.scellement verifier`), sans échec.
+- Épreuve sur un artefact (règle R5) : sur une copie de cette matrice où quatre défauts sont plantés (une empreinte altérée, un chemin absent, une ligne de GO et une ligne de décision inexistantes), le programme rend le code 1 et ces lignes :
+
+````
+ÉCHEC P11 : empreinte différente : docs/verdicts/verdict-T0.4-critere-1-G0-v3.md : citée 63444faa4ce2, lue 63444faa4ce2
+ÉCHEC chemin cité absent de l'arbre de travail et de l'annexe A : prereg/contre-lectures-absent
+ÉCHEC identifiant absent de registres/go.md : GO-2026-11-15-77
+ÉCHEC identifiant absent de registres/decisions.md : R-9137
+VÉRIFICATION de artefact-matrice.md : 81 pièces dans l'annexe A, 80 empreintes recalculées égales, 80 compagnons égaux, 0 sans compagnon ; 81 renvois ; 86 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 14 lignes de décision retrouvées ; 4 échec(s)
+````
+
+### Sortie complète sur ce fichier
+
+````
+OK P01 9261932a11f2… compagnon égal ; docs/brief-claude-code-programme-complet-v2.md ; arbre de travail
+OK P02 2fd63badb5af… compagnon égal ; docs/programme-controle-ia-v2.md ; arbre de travail
+OK P03 b2d9f0354380… compagnon égal ; docs/decisions/decision-N-063-v2.md ; arbre de travail
+OK P04 63f426903e6d… compagnon égal ; docs/decisions/decision-N-062-v1.md ; arbre de travail
+OK P05 c8a00b3f885a… compagnon égal ; docs/decisions/decision-N-054-v1.md ; arbre de travail
+OK P06 3592c1e977e8… compagnon égal ; docs/decisions/decision-N-056-v1.md ; arbre de travail
+OK P07 0c2ea83c7dc1… compagnon égal ; prereg/brouillon-G0-grille-lecture-v8.md ; arbre de travail
+OK P08 527f5853ac41… compagnon égal ; docs/notes/porte-g0-repli-v1/synthese-collisionneur-repli-g0-v1.md ; arbre de travail
+OK P09 56b9182b035c… compagnon égal ; docs/decisions/proposition-P-007-plan-G0-v1.md ; arbre de travail
+OK P10 4f711cd3a581… compagnon égal ; prereg/T0.4-validation-modele-reel-v3.md ; arbre de travail
+OK P11 63444faa4ce2… compagnon égal ; docs/verdicts/verdict-T0.4-critere-1-G0-v3.md ; arbre de travail
+OK P12 9f115e2ad900… compagnon égal ; docs/verdicts/verdict-T0.4-critere-1-G0-v3-recalculs.tar ; arbre de travail
+OK P13 cb3c3e6ade03… compagnon égal ; diag/20261006-114025-validation-reelle/resume.json ; arbre de travail
+OK P14 dcb0923bbf9e… compagnon égal ; diag/20261006-115440-validation-reelle/resume.json ; arbre de travail
+OK P15 fb9919f9c4d7… compagnon égal ; docs/verdicts/verdict-T0.4-critere-1-G0-v1.md ; arbre de travail
+OK P16 98d53c70c09f… compagnon égal ; docs/verdicts/verdict-T0.4-critere-1-G0-v2.md ; arbre de travail
+OK P17 ef31feff9abb… compagnon égal ; prereg/T0.6-organismes-v0-v1.md ; arbre de travail
+OK P18 b7a5c1baeee1… compagnon égal ; prereg/T0.6-organismes-config-7b-v1.json ; arbre de travail
+OK P19 1212d825d145… compagnon égal ; docs/verdicts/verdict-T0.6-table-A-7b-v1.md ; arbre de travail
+OK P20 9183954460a8… compagnon égal ; docs/verdicts/verdict-T0.6-table-A-7b-v1-issue.json ; arbre de travail
+OK P21 7e1ac1f02584… compagnon égal ; runs/20261111-151701-t06-reel/manifeste.json ; origin/calcul/t06-confirmation-7b-v1
+OK P22 c69884ed54b4… compagnon égal ; diag/20261111-151701-t06-reel/lecture-cout-t06.json ; origin/calcul/t06-confirmation-7b-v1
+OK P23 d975e9817e88… compagnon égal ; prereg/P3-premier-test-i-a-v1.md ; arbre de travail
+OK P24 05e896daed17… compagnon égal ; docs/verdicts/verdict-P3-premier-test-i-a-v2.md ; arbre de travail
+OK P25 6983c75918f1… compagnon égal ; docs/notes/runs-r1-r2-r4-v1/lecture-verdict-dose-r4-v1.md ; arbre de travail
+OK P26 f4f8ca2820fa… compagnon égal ; prereg/R4-dose-cout-gonfle-v1.md ; origin/calcul/r4-dose-reel-v1
+OK P27 6e74c6cbcd3b… compagnon égal ; docs/decisions/proposition-P-015-T0.6-T0.8-mode-cout-v1.md ; arbre de travail
+OK P28 d7d180eccbbc… compagnon égal ; prereg/T0.7-sondes-v0-v1.md ; arbre de travail
+OK P29 8c377286f2fa… compagnon égal ; prereg/T0.7-sondes-v0-v1-addendum-cache-motifs-v1.md ; arbre de travail
+OK P30 077ab789b36f… compagnon égal ; docs/verdicts/verdict-T0.7-etape-B-v1.md ; arbre de travail
+OK P31 2717d63fae36… compagnon égal ; docs/verdicts/verdict-T0.7-etape-B-v1-issue.json ; arbre de travail
+OK P32 2362d7e08ac9… compagnon égal ; diag/20261114-001352-t07-lecture-reel/lecture-t07.json ; origin/verdict/t07-etape-b-compte-3-v1
+OK P33 1b84d7c44406… compagnon égal ; diag/20261116-205721-mots-et-cout-t06/issue-mots-et-cout-t06.json ; origin/verdict/t06-mots-et-cout-compte-3-v1
+OK P34 5c76b7ff4896… compagnon égal ; diag/20261114-001352-t07-lecture-reel/audit-fuites-t07.json ; arbre de travail
+OK P35 76ab66ce9677… compagnon égal ; prereg/P3-bis-temoin-positif-v1.md ; arbre de travail
+OK P36 9b33c624fe9c… compagnon égal ; docs/verdicts/verdict-P3-bis-v1.md ; arbre de travail
+OK P37 c3a017ce1e8b… compagnon égal ; docs/verdicts/verdict-P3-bis-v1-issue.json ; arbre de travail
+OK P38 0ae6210f9549… compagnon égal ; prereg/T0.7-etape-B-bis-v1.md ; arbre de travail
+OK P39 1561399a1185… compagnon égal ; docs/verdicts/verdict-T0.7-etape-B-bis-v1.md ; arbre de travail
+OK P40 8e0d3e085601… compagnon égal ; diag/20261119-000444-bbis-t07-lecture-v1/lecture-bbis.json ; arbre de travail
+OK P41 06ab6a2f6e17… compagnon égal ; prereg/T0.7-organismes-discrets-v-a-v1.md ; arbre de travail
+OK P42 65e45b38cc28… compagnon égal ; prereg/T0.7-organismes-discrets-v-a-v1-archive-sans-execution-v1.md ; arbre de travail
+OK P43 cf1d2b9261c1… compagnon égal ; prereg/T0.7-organismes-discrets-v-a-v2-brouillon5.md ; origin/claude/pensive-bardeen-1fv7hw
+OK P44 8e432cdc3d69… compagnon égal ; prereg/lecture-sondes-barreau8-v1.md ; arbre de travail
+OK P45 72b067d5b3f8… compagnon égal ; prereg/T0.8-base-A-mots-et-cout-v1.md ; arbre de travail
+OK P46 7da0c3839a7a… compagnon égal ; brouillons/T0.8-bases-boite-noire-v0-v1-brouillon4.md ; arbre de travail
+OK P47 a2113f9a5c5f… compagnon égal ; diag/20261116-205721-mots-et-cout-t06/base-a-t08.json ; origin/verdict/t06-mots-et-cout-compte-3-v1
+OK P48 084e30523c0a… compagnon égal ; docs/decisions/decision-N-029-v1.md ; arbre de travail
+OK P49 7474743a0fa2… compagnon égal ; prereg/T0.3-simulation-lemme-theoreme-v1.md ; arbre de travail
+OK P50 5609f920c0d6… compagnon égal ; prereg/T0.3-grille-v2.json ; arbre de travail
+OK P51 bc53b746f0c9… compagnon égal ; docs/verdicts/verdict-T0.3-simulation-lemme-theoreme-v1.md ; arbre de travail
+OK P52 c5aa62b42fee… compagnon égal ; diag/20261004-080257-t03/lecture.json ; arbre de travail
+OK P53 c9bba5e1f5f8… compagnon égal ; runs/20261004-080257-t03/manifeste.json ; arbre de travail
+OK P54 ad068beda59d… compagnon égal ; brouillons/G1-preenregistrement-v1-brouillon4.md ; arbre de travail
+OK P55 939b56e540fa… compagnon égal ; brouillons/G1-preenregistrement-v1-brouillon6.md ; origin/canal/conv-audit-n04
+OK P56 d04da7903b89… compagnon égal ; prereg/formulation-g1-simulation-v1.md ; arbre de travail
+OK P57 28d874de18d3… compagnon égal ; docs/verdicts/verdict-formulation-g1-simulation-v1.md ; arbre de travail
+OK P58 29b38fc41ac4… compagnon égal ; docs/decisions/decision-N-074-v1-brouillon2.md ; arbre de travail
+OK P59 ab7dc9bb2c96… compagnon égal ; docs/decisions/decision-N-007-N-008-v1.md ; arbre de travail
+OK P60 371879d5bd44… compagnon égal ; docs/decisions/decision-N-055-v1.md ; arbre de travail
+OK P61 2b448f696503… compagnon égal ; docs/decisions/decision-N-060-v3.md ; arbre de travail
+OK P62 9d55160f59cf… compagnon égal ; brouillons/papier-C-preenregistrement-HC1-HC3-v1-brouillon5.md ; arbre de travail
+OK P63 0c15862cfc97… compagnon égal ; registres/passations/bloc-notes-session16-complement-2026-10-21.tar.gz ; arbre de travail
+OK P64 ba6b2db35551… compagnon égal ; docs/decisions/decision-N-068-v1.md ; arbre de travail
+OK P65 cd49afbc924c… compagnon égal ; docs/decisions/decision-N-005-N-006-v1.md ; arbre de travail
+OK P66 157d388ef5d0… compagnon égal ; docs/decisions/decision-N-013-v1.md ; arbre de travail
+OK P67 b0b519fe250a… compagnon égal ; docs/etat-de-l-art/etat-de-l-art-verifie-niveau1-v1.md ; arbre de travail
+OK P68 bbe0c1f523ad… compagnon égal ; docs/etat-de-l-art/etat-de-l-art-verifie-niveau2-v1.md ; arbre de travail
+OK P69 e30a013d08b0… compagnon égal ; docs/etat-de-l-art/etat-de-l-art-verifie-niveau3-v1.md ; arbre de travail
+OK P70 f1580ddcedd4… compagnon égal ; docs/etat-de-l-art/etat-de-l-art-verifie-niveau3-v1-contre-lecture-v1.md ; arbre de travail
+OK P71 8b9a27282c3d… compagnon égal ; docs/etat-de-l-art/etat-de-l-art-verifie-niveau3-v6.md ; origin/lot/compte-2-v1
+OK P72 238d10d52bb4… compagnon égal ; docs/etat-de-l-art/etat-de-l-art-verifie-niveau3-v6-contre-lecture-v1.md ; origin/lot/compte-2-v1
+OK P73 ff2c36039cf2… compagnon égal ; docs/etat-de-l-art/niveau2-v1/chiffres-introuvables-v1.md ; arbre de travail
+OK P74 ac9551b044c1… compagnon égal ; docs/decisions/decision-P-008-v1.md ; arbre de travail
+OK P75 2e2dddc60667… compagnon égal ; prereg/accumulation-barreau6-v1.md ; arbre de travail
+OK P76 c78e35b56a27… compagnon égal ; docs/verdicts/verdict-accb6-v1.md ; arbre de travail
+OK P77 fed29ece1896… compagnon égal ; prereg/narcbench-bras-externe-v1.md ; arbre de travail
+OK P78 deacd11114c4… compagnon égal ; docs/verdicts/verdict-narc-externe-v1.md ; arbre de travail
+OK P79 ca5066d757df… compagnon égal ; prereg/lecture-sondes-bbis-par-lentilles-v1.md ; arbre de travail
+OK P80 3a9b947e0757… compagnon égal ; docs/notes/neuron-lens-v1/lecture-b-beta/verdict-b-beta-v1.md ; arbre de travail
+OK P81 85d6d4541dd4… compagnon égal ; docs/notes/carte-porte-G0-v1/carte-porte-G0-v1.md ; arbre de travail
+VÉRIFICATION de matrice-g0-second-lecteur-v1.md : 81 pièces dans l'annexe A, 81 empreintes recalculées égales, 81 compagnons égaux, 0 sans compagnon ; 81 renvois ; 87 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 14 lignes de décision retrouvées ; 0 échec(s)
+````
+
+### Source du programme
+
+````python
+#!/usr/bin/env python3
+"""Relit une matrice « critère de la porte -> preuve » et vérifie ce qu'elle cite.
+
+Usage : python3 -B verifier_matrice_v1.py <racine du dépôt> <fichier de la matrice>
+
+Zone vérifiée : du début du fichier jusqu'à la ligne MARQUE (exclue).
+Contrôles :
+  1. annexe A : chaque ligne « | Pnn | `chemin` | lieu | `empreinte` | » ; le fichier existe
+     (arbre de travail, ou branche nommée lue par « git show ») ; son sha256 recalculé est égal ;
+     son compagnon « .sha256 », s'il existe, porte la même empreinte ;
+  2. chaque renvoi [Pnn] du texte existe dans l'annexe A, et chaque pièce de l'annexe est citée ;
+  3. chaque chemin entre accents graves existe (arbre de travail, ou pièce de l'annexe A) ;
+  4. chaque empreinte entre accents graves, entière ou abrégée (« abcdef12… »), est celle
+     d'une pièce de l'annexe A ;
+  5. chaque identifiant « GO-AAAA-MM-JJ-NN » est une ligne de registres/go.md ; chaque « R-NNNN »
+     est une ligne de registres/decisions.md (la ligne R-2059 n'est jamais lue : elle est sautée).
+Code de sortie : 0 si aucun échec, 1 sinon. Aucune écriture.
+"""
+import hashlib
+import os
+import re
+import subprocess
+import sys
+
+MARQUE = "<!-- FIN DE LA ZONE VERIFIEE -->"
+RACINES = ("docs/", "prereg/", "registres/", "brouillons/", "diag/", "runs/", "src/",
+           "donnees/", "traces/", "scripts/", "tests/", "livrables/")
+INTERDIT = "R-2059"
+
+
+def lire(racine, chemin, lieu):
+    if lieu == "arbre de travail":
+        p = os.path.join(racine, chemin)
+        if os.path.isfile(p):
+            with open(p, "rb") as f:
+                return f.read()
+        return None
+    r = subprocess.run(["git", "-C", racine, "show", f"{lieu}:{chemin}"], capture_output=True)
+    return r.stdout if r.returncode == 0 else None
+
+
+def main():
+    racine, fichier = sys.argv[1], sys.argv[2]
+    with open(fichier, encoding="utf-8") as f:
+        texte = f.read()
+    zone = texte.split(MARQUE)[0]
+    echecs = []
+    lignes = []
+
+    # 1. annexe A
+    motif = re.compile(r"^\| (P\d+) \| `([^`]+)` \| ([^|]+?) \| `([0-9a-f]{64})` \|", re.M)
+    pieces = {}
+    egales = compagnons = sans_compagnon = 0
+    for num, chemin, lieu, empreinte in motif.findall(zone):
+        lieu = lieu.strip()
+        if num in pieces:
+            echecs.append(f"{num} : numéro en double")
+        pieces[num] = (chemin, lieu, empreinte)
+        contenu = lire(racine, chemin, lieu)
+        if contenu is None:
+            echecs.append(f"{num} : absent : {chemin} ({lieu})")
+            continue
+        h = hashlib.sha256(contenu).hexdigest()
+        if h != empreinte:
+            echecs.append(f"{num} : empreinte différente : {chemin} : citée {empreinte[:12]}, lue {h[:12]}")
+            continue
+        egales += 1
+        comp = lire(racine, chemin + ".sha256", lieu)
+        if comp is None:
+            sans_compagnon += 1
+            etat = "sans compagnon"
+        elif comp.decode("utf-8", "replace").split()[0] == h:
+            compagnons += 1
+            etat = "compagnon égal"
+        else:
+            echecs.append(f"{num} : compagnon différent : {chemin}")
+            etat = "COMPAGNON DIFFÉRENT"
+        lignes.append(f"OK {num} {h[:12]}… {etat} ; {chemin} ; {lieu}")
+    if not pieces:
+        echecs.append("annexe A : aucune ligne lue")
+    chemins_annexe = {c for c, _, _ in pieces.values()}
+    empreintes = {e for _, _, e in pieces.values()}
+
+    # 2. renvois
+    renvois = set(re.findall(r"\[(P\d+)\]", zone))
+    for r in sorted(renvois - set(pieces)):
+        echecs.append(f"renvoi [{r}] sans ligne dans l'annexe A")
+    for r in sorted(set(pieces) - renvois):
+        echecs.append(f"pièce {r} de l'annexe A jamais citée dans le texte")
+
+    # 3 et 4. chemins et empreintes entre accents graves
+    n_chemins = n_empreintes = 0
+    for jeton in sorted(set(re.findall(r"`([^`\n]+)`", zone))):
+        if re.fullmatch(r"[0-9a-f]{64}", jeton):
+            if jeton in empreintes:
+                n_empreintes += 1
+            else:
+                echecs.append(f"empreinte entière hors de l'annexe A : {jeton[:16]}")
+        elif re.fullmatch(r"[0-9a-f]{8,63}…", jeton):
+            if any(e.startswith(jeton[:-1]) for e in empreintes):
+                n_empreintes += 1
+            else:
+                echecs.append(f"empreinte abrégée hors de l'annexe A : {jeton}")
+        elif jeton.startswith(RACINES) or jeton == "CLAUDE.md":
+            if jeton in chemins_annexe or os.path.exists(os.path.join(racine, jeton)):
+                n_chemins += 1
+            else:
+                echecs.append(f"chemin cité absent de l'arbre de travail et de l'annexe A : {jeton}")
+
+    # 5. identifiants des registres
+    with open(os.path.join(racine, "registres/go.md"), encoding="utf-8") as f:
+        go_connus = set(re.findall(r"^\| (GO-\d{4}-\d{2}-\d{2}-\d{2}) \|", f.read(), re.M))
+    r_connus = set()
+    with open(os.path.join(racine, "registres/decisions.md"), encoding="utf-8") as f:
+        for ligne in f:
+            m = re.match(r"^(?:\| |- )(R-\d+)\b", ligne)
+            if m and m.group(1) != INTERDIT:
+                r_connus.add(m.group(1))
+    go_cites = set(re.findall(r"GO-\d{4}-\d{2}-\d{2}-\d{2}", zone))
+    r_cites = set(re.findall(r"\bR-\d{3,4}\b", zone))
+    for g in sorted(go_cites - go_connus):
+        echecs.append(f"identifiant absent de registres/go.md : {g}")
+    if INTERDIT in r_cites:
+        echecs.append(f"{INTERDIT} cité : ligne interdite à ce lecteur")
+    for r in sorted(r_cites - r_connus - {INTERDIT}):
+        echecs.append(f"identifiant absent de registres/decisions.md : {r}")
+
+    for l in lignes:
+        print(l)
+    for e in echecs:
+        print("ÉCHEC", e)
+    print(f"VÉRIFICATION de {os.path.basename(fichier)} : {len(pieces)} pièces dans l'annexe A, "
+          f"{egales} empreintes recalculées égales, {compagnons} compagnons égaux, "
+          f"{sans_compagnon} sans compagnon ; {len(renvois)} renvois ; {n_chemins} chemins cités présents ; "
+          f"{n_empreintes} empreintes citées retrouvées ; {len(go_cites)} lignes de GO et "
+          f"{len(r_cites)} lignes de décision retrouvées ; {len(echecs)} échec(s)")
+    return 1 if echecs else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+````
