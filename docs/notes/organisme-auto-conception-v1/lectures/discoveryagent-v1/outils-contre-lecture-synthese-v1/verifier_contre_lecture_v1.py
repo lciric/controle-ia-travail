@@ -66,12 +66,25 @@ def controle_table(racine):
     corps = NOTE.read_text(encoding="utf-8")
     note = [l for l in corps.split(TITRE_TABLE, 1)[1].splitlines() if l.startswith("|")]
     print(f"lignes produites : {len(produite)} ; lignes de la note : {len(note)}")
-    ecarts = [(i, a, b) for i, (a, b) in enumerate(zip(produite, note)) if a != b]
+
+    def barres_rendues(ligne):
+        # rend en barre oblique toute barre verticale prise entre accents graves (colonne « lieu »)
+        return re.sub(r"`[^`]*`", lambda m: m.group(0).replace("|", "/"), ligne)
+
+    ecarts, benins = [], []
+    for i, (a, b) in enumerate(zip(produite, note)):
+        if a == b:
+            continue
+        (benins if barres_rendues(a) == b else ecarts).append((i, a, b))
     if len(produite) != len(note):
         ecarts.append((-1, f"{len(produite)} lignes", f"{len(note)} lignes"))
+    for i, a, b in benins:
+        print(f"  BÉNIN ligne {i} (barre verticale du motif rendue à la main par une barre oblique) :"
+              f"\n    produite : {a}\n    note     : {b}")
     for i, a, b in ecarts[:10]:
         print(f"  ÉCART ligne {i} :\n    produite : {a}\n    note     : {b}")
-    print("RÉSULTAT 1 :", "identiques" if not ecarts else f"{len(ecarts)} écart(s)")
+    print(f"RÉSULTAT 1 : {len(produite) - len(benins) - len(ecarts)} lignes identiques ; "
+          f"{len(benins)} retouche(s) bénigne(s) (constat m19) ; {len(ecarts)} écart(s) réel(s)")
     return len(ecarts)
 
 
