@@ -47,6 +47,11 @@ Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au
 - R13 Verdict de porte prononcé par un sous-agent neuf (ni auteur du préenregistrement ni de l'analyse), qui applique les critères gelés ; scellé, puis soumis à Lazar pour GO.
 - R14 Chaque session commence par la routine de reprise et finit par une passation.
 
+## Allègement de la procédure (GO-2026-11-19-26 et -27, 19 novembre)
+- Trois classes de pièces. **A, décisive** (préenregistrement, verdict, ordre d'une course payante, devis) : chaîne complète. **B, instrument** (code, lanceur, programme de contrôle) : contre-lecture par un autre modèle, puis vérification des corrections par le même contre-lecteur. **C, travail** (notes, mandats, synthèses, registres) : pas de contre-lecture, sauf relecture de cloisonnement à la sortie vers une session fille.
+- Routine : une seule vérification courte par lot de corrections ; les agents écrivent dans leur bloc-notes et la mère verse à la fin ; en-têtes courts ; lignes de registre de 600 signes au plus ; errata pour les petites corrections des classes B et C.
+- Trois chantiers actifs au plus : saboteur et sondes pour l'entretien ; bras A ; organisme v9. Gelés jusqu'à la fermeture d'un actif : lentilles, veille, billets, second cycle, affinage.
+
 ## Hiérarchie de décision
 - Routine (tu décides, tu consignes dans `registres/decisions.md`) : code, bibliothèques, tests, lectures, fichiers, tout travail sur processeur.
 - Proposer avec recommandation (défaut appliqué après 48 heures) : couches et concepts de sondes, portage des environnements, périmètre interne d'une phase, D1, D2, D3.
