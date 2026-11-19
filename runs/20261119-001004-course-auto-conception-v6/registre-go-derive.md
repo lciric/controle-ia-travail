@@ -1,0 +1,7 @@
+# Registre des GO dérivé (course d'auto-conception, lanceur v6) — lignes nommées seulement
+
+Source : `registres/go.md` au commit `d03b00c11c6bcbed3bf3af9f86548f269f09ff05` (refs/remotes/origin/main), sha256 `9cd20510f8ccd0380627589cf34557169d3b96336d5c25c98a95356441c4e1ab`.
+
+| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |
+|---|---|---|---|---|---|---|---|
+| GO-2026-11-18-67 | 2026-11-18 | calcul | **Organisme d'idéation : course de l'auto-conception, tentative neuve** (la première tentative est consommée, R-3398) — lanceur v6 `2ecd9081…`, additif v2f `3199e80e…`, commandes v2f `90337147…`, devis v2f `7a8ef9d4…` (commit `24617401` de `lot/compte-organisme-v1`, contre-lecture « Scellable » `4f5b0b27…`) ; attendu ≈ 59,81 USD, pire cas 95,05 USD, le lanceur coupant au plafond global ; **plafond 90 USD**, parts Claude (clé Rigaud, hors budget) et hors Claude comprises ; la part hors Claude est couverte par GO-2026-11-18-69. **Mot de Lazar tapé dans la session du compte de l'organisme** (`session_013QMaykhk6JHMoHDjwiTneW`), événement `4e4a1c3e-134f-4f12-af11-13c9fac3c7f3`, 2026-11-18T22:56:52Z, rôle utilisateur, plate-forme web, **relu à la source par la mère**, verbatim : « on a dit autonomie et go a tout » ; lu par la mère comme le « go » à la décision posée en R-3504 (recommandation (a)) et aux lignes demandées en R-3502, sous GO-2026-11-18-61. | 90 USD | 2026-11-19 | Lazar | R-3512 |
