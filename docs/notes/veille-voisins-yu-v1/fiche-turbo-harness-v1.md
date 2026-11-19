@@ -1,0 +1,45 @@
+# Fiche de lecture — Zhang et al. (2026), « Turbo Harness » : une optimisation finie résumée en guide pour des modifications par instance — v1
+
+## En-tête
+
+- **Papier** : Zhang, Wang, Xu et Metaxas, « Turbo Harness: Instance-Adaptive Harness Optimization », arXiv 2609.40330. Identifiant pris dans la bibliographie de Yu et al. (arXiv 2611.18856v1, p. 14, entrée « Zhang et al., 2026f ») ; titre et quatre auteurs confirmés par l'interface publique d'arXiv le 19 novembre 2026.
+- **Version lue** : version 1 du 30 septembre 2026 (« arXiv:2609.40330v1 [cs.AI] 30 Sep 2026 », p. 1). Seule version connue d'arXiv au 19 novembre 2026.
+- **Fichier** : `docs/sources/arxiv-2609.40330-v1/arxiv-2609.40330v1.pdf`, empreinte `992a40b21bfde0452cac82ff7b9d8ab52c3e6bc1a8be62c3e386018ec6a5715e`, 20 pages, téléchargé le 19 novembre 2026.
+- **Pages lues**, par `pdftotext -layout`, page par page : 1 à 9 (résumé, introduction, travaux voisins, préliminaires, méthode, expériences, ablations, conclusion et limites) ; haut de la page 10 (fin des limites, remerciements) ; 14 à 20 (annexes A à D : bancs et partages, construction du guide, entraînement de l'éditeur, récompenses, protocole, bases, résultats complémentaires). **Non lues** : la bibliographie (bas de la page 10, pages 11 à 13). Les figures ne sont lues que par leur couche de texte ; les chiffres de l'ablation viennent du texte courant (p. 9).
+- **Qui écrit** : lecteur neuf lancé par la session mère (`session_013QMayjsoZJFBUCqcnvD5h1`) sur le mot de Lazar « go lecture voisins » ; modèle Fable 5.2 (`claude-fable-5-2`). Lecture du 19 novembre 2026. Aucune dépense, aucun appel à un modèle ; réseau : arXiv seul.
+- **Ce que Yu et al. en disent** (p. 16) : « Turbo Harness summarizes completed optimization into a playbook for instance-specific edits ».
+- **Vocabulaire** : « harnais global » pour le harnais sorti de l'optimisation source ; « guide » pour le « playbook » ; « éditeur » pour le petit modèle entraîné qui retouche le harnais pour chaque instance ; « exécutant » pour le modèle gelé qui résout ; « archive » pour ce que la recherche source a laissé (harnais candidats, scores, traces).
+
+## Les neuf réponses
+
+**Q1. Ce qui est gardé, et qui l'écrit.** L'archive d'une recherche de harnais finie, menée avec Meta-Harness ; elle garde les issues de tous les harnais évalués, candidats écartés compris (p. 5). Elle est résumée en un guide : une liste courte de stratégies conditionnelles, une liste d'anti-motifs et quelques notes générales ; chaque entrée porte sa condition d'application, le texte de la stratégie, ses preuves et sa confiance, et une étiquette qui distingue une modification du déroulement d'une injection de texte (p. 15). Trois étapes hors ligne (p. 15) : un programme, sans appel à un modèle, assemble un enregistrement par instance d'entraînement (issues par harnais, traces entières, classement en « contrastive », toujours résolue ou jamais résolue, différence de code entre la variante qui réussit et celle qui échoue) ; un modèle de frontière écrit pour chaque enregistrement une réflexion structurée (traits de l'instance, différence de comportement, stratégie candidate, raison, score de confiance), les réflexions sous un seuil de confiance étant jetées ; un seul appel à un modèle de frontière fond le tout dans le guide. Ce modèle est celui qui proposait les harnais dans la recherche source : Claude Sonnet 4.5, ou Claude Opus 4.6 pour le banc de terminal (p. 6). Le guide est écrit après la recherche, non pendant.
+
+**Q2. Transmis à travers un changement ?** Oui, d'une optimisation finie vers un autre usage : la retouche du harnais global pour chaque instance de test, par un éditeur entraîné, sur le même banc et pour le même exécutant (« built once per benchmark and execution model », p. 15). Ni le banc ni le modèle ne changent ; le transfert entre tâches, domaines ou recherches est renvoyé aux travaux futurs (p. 10). Ce n'est pas une poursuite de l'optimisation : le harnais global n'évolue plus.
+
+**Q3. Héritage séparé de la tenue ?** Sans objet dans ce plan : le guide hérité n'est jamais tenu à jour (« held fixed during editor training and inference », p. 15). Bras de l'ablation (banc de corrections de code à plusieurs dépôts, exécutant Claude Haiku 4.5 ; p. 9) : harnais global seul, 50,7 % ; éditeur non entraîné sans guide, 51,3 % ; éditeur non entraîné avec guide, 50,0 % ; éditeur entraîné sans guide, 49,3 % ; éditeur entraîné avec guide, 64,0 %. C'est « guide hérité présent ou absent », croisé avec l'entraînement de l'éditeur. Aucun bras « mémoire vide au départ mais tenue ».
+
+**Q4. Mémoire ablatée ?** Oui : le guide est retiré du contexte de l'éditeur, entraîné ou non (p. 9). Moyenne et erreur type de la moyenne sur trois exécutions (figure 3, p. 9) ; ce sont trois exécutions des mêmes 50 instances de test avec les mêmes harnais par instance, générés une fois (p. 17), et « variation across editor training seeds and data splits is not evaluated » (p. 17). Un banc, un exécutant. Aucun test ; les bras partagent les instances sans analyse appariée. Autre lecture de la même figure : avec le guide, un éditeur non entraîné plus fort fait mieux — Claude Sonnet 4.5, 55,3 % ; Claude Opus 4.6, 61,3 % (p. 9).
+
+**Q5. Prédictions écrites avant l'essai et confrontées ?** Non. Les réflexions portent un score de confiance, qui sert à filtrer et s'agrège dans les entrées du guide (p. 15) ; il n'est rapproché d'aucun résultat ultérieur. La retouche de l'éditeur ne s'accompagne d'aucune prédiction ; sa récompense est le résultat mesuré de l'exécution (p. 5, p. 16). Aucun taux de justesse, aucune calibration dans les pages lues.
+
+**Q6. Modifications rejetées gardées ?** Oui. L'archive garde les candidats écartés (p. 5) ; le guide consigne les stratégies qui réussissent et celles qui échouent (p. 2) ; une stratégie dont les preuves sont nuisibles au total devient un anti-motif (p. 15). Le guide du banc de terminal compte six stratégies et neuf anti-motifs (p. 15).
+
+**Q7. Qui conçoit, qui exécute ?** Recherche source et rédaction du guide : Claude Sonnet 4.5, ou Claude Opus 4.6 pour le banc de terminal (p. 6). Éditeur : Qwen3.5-9B, affiné par apprentissage par renforcement (algorithme « GRPO ») sur tous ses paramètres (p. 5, p. 15). Exécutants : Qwen3.5-9B pour les quatre bancs d'agents, Claude Haiku 4.5 et Gemini 3.7 Flash pour les deux bancs de code, Claude Sonnet 4.5 pour le banc de terminal (p. 6).
+
+**Q8. Coût apparié ou rapporté ?** Rapporté pour l'exécution seule : pas et dollars par problème (tableau 2, p. 8), tours, dollars et jetons d'entrée par tâche (tableau 3, p. 8). « All costs in Table 2 cover only the execution model; they exclude both the offline optimization and the one-time per-instance editor call » (p. 8). Le coût de l'entraînement de l'éditeur n'est pas chiffré en dollars dans les pages lues (réglages et nombre de processeurs graphiques au tableau 4, p. 16) ; les limites disent qu'il demande des exécutions supplémentaires (p. 9). Non apparié entre bras.
+
+**Q9. Sur quoi porte le résultat ; causalité ?** Sur le score de sept bancs (p. 6-8). Les auteurs écrivent que l'apprentissage par renforcement et le guide sont « complementary » et que le gain « emerges when RL trains the editor to identify and apply useful strategies distilled from the outer-loop search » (p. 9). Le plan soutient ce contraste pour un guide, un éditeur entraîné par condition, un banc et un exécutant : trois exécutions de harnais figés, sans variation de graine d'entraînement (p. 17), sans test. Il ne dit rien d'une optimisation qui se poursuit.
+
+## Citations exactes
+
+1. « In particular, the search archive records the outcomes of all evaluated harnesses, including candidates discarded during search. » (p. 5)
+2. « The playbook P is built once per benchmark and execution model from the completed Meta-Harness search archive, following ACE (Zhang et al., 2026c), and is then held fixed during editor training and inference. » (p. 15)
+3. « combining RL training with playbook conditioning raises the pass rate to 64.0%, a 14.7-point improvement over the same RL-trained editor without the playbook. » (p. 9)
+
+Les trois citations ont été retrouvées par programme à la page dite (texte de `pdftotext`, espaces et césures neutralisés).
+
+## Ce que ce papier occupe par rapport à notre question de l'héritage séparé de la tenue
+
+- Il occupe l'héritage sans tenue : un guide tiré d'une optimisation finie, figé, échecs compris, retiré ou donné à un éditeur par instance, pour le score d'un banc (p. 9, p. 15).
+- Il ne poursuit pas l'optimisation et ne met jamais le guide à jour : aucun bras « tenu », donc aucune séparation ; une ablation sur un banc et un exécutant, trois exécutions des mêmes harnais, sans variation de l'entraînement (p. 17).
+- Son guide n'aide un petit éditeur qu'après entraînement, et aide davantage un éditeur plus fort sans entraînement (p. 9). Aucune prédiction confrontée, aucune découverte. « Non trouvé » ici décrit ce papier, dans les pages lues (R8).
