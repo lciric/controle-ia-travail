@@ -82,7 +82,7 @@ Pour mémoire : avec la vérification du coût sur 64 tâches partout, la format
 ## 5. Garde des activations et des textes
 
 - **Textes de distillation, tables d'édition, adaptateurs, épisodes, scores** : sur les branches de données du dépôt, en morceaux de moins de 95 Mo (36 adaptateurs de 27 Mo ; textes de l'ordre de quelques Mo par famille ; scores de l'ordre de la centaine de Mo).
-- **Activations** : 127,2 Go (séries nominales, trois couches) + 3,5 Go (modèle nu) + 10,6 Go (textes propres des saboteurs d'apprentissage) = **≈ 141 Go** (155 Go avec les quatre ancrages du nœud 3 ; plus de série à norme égale au brouillon 3). Options :
+- **Activations** : 137,8 Go (séries nominales de 39 adaptateurs, trois couches) + 3,5 Go (modèle nu) + 10,6 Go (textes propres des saboteurs d'apprentissage) = **≈ 152 Go** (166 Go avec les quatre ancrages du nœud 3 ; plus de série à norme égale au brouillon 3). Options :
   - (a) un volume de stockage de 200 Go attaché au serveur du projet. **Prix non vérifié par moi : à relever sur la grille du jour avant le scellement.** C'est une ressource payante neuve : nœud 4 du texte ;
   - (b) repli 1 : la couche 15 seule, série nominale de tous les adaptateurs et modèle nu, ≈ 44 Go ; il lui faut tout de même un lieu (un volume plus petit). La relecture coûte alors 6,3 à 10,2 USD (pire cas 17,0) ;
   - (c) repli 2, sans dépense : une action sur dix, couche 15, série nominale, tous les adaptateurs et le modèle nu, ≈ 4,4 Go en morceaux sur la branche de lecture ; le reste détruit avec l'instance après inventaire. La relecture coûte alors 5,2 à 7,7 USD (pire cas 14,0) ;
