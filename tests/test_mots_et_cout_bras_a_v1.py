@@ -686,6 +686,8 @@ def test_piece_jouet_arret_apres_manifeste_et_codes_de_sortie(base_factice, tmp_
     assert not re.search(r"\d[.,]\d", out.out) and "aucune valeur" in out.out
     issue = json.loads((r / "diag/20261119-120001-essai-jouet" / mc.FICHIER_ISSUE).read_text(encoding="utf-8"))
     assert {x["etat"] for x in issue["doses"].values()} == {"non calculable"}
+    git(r, "add", "-A")
+    git(r, "commit", "-q", "-m", "sorties")
     monkeypatch.setattr(mc, "calculer", lambda ctx: (_ for _ in ()).throw(mc.ArretPiece("arrêt d'essai")))
     assert mc.main(args + ["--run-id", "20261119-120002-essai-jouet"]) == mc.CODE_ARRET
     d = r / "diag/20261119-120002-essai-jouet"
