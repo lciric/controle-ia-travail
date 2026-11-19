@@ -1,0 +1,74 @@
+Versions : python 3.13.18 ; numpy 2.4.6 ; scipy 1.17.1
+
+== 1. Coherence interne du tableau 3 (p. 8) ==
+course  depart  sans   avec   diff_imprimee  avec-sans  ecart  diff_en_deroules(x165/100)
+   1    18.18  20.61  22.42    +1.81         +1.81   +0.00    +2.99
+   2    16.97  17.58  19.39    +1.81         +1.81   +0.00    +2.99
+   3    17.58  20.00  20.61    +0.61         +0.61   +0.00    +1.01
+   4    18.18  18.18  23.64    +5.46         +5.46   +0.00    +9.01
+   5    17.58  18.79  20.61    +1.82         +1.82   +0.00    +3.00
+   6    19.39  20.00  23.64    +3.64         +3.64   +0.00    +6.01
+   7    18.79  20.00  21.82    +1.82         +1.82   +0.00    +3.00
+   8    18.18  20.00  19.39    -0.61         -0.61   +0.00    -1.01
+   9    19.39  18.18  23.03    +4.85         +4.85   +0.00    +8.00
+  10    19.39  20.00  22.42    +2.42         +2.42   +0.00    +3.99
+moyennes : depart 18.363 (annonce 18.36), sans 19.334 (annonce 19.33), avec 21.697 (annonce 21.7)
+ecart maximal entre difference imprimee et difference des scores : 0.00
+un deroule vaut 100/165 = 0.6061 point ; scores en nombre de deroules reussis sur 165 :
+  depart : [np.float64(30.0), np.float64(28.0), np.float64(29.01), np.float64(30.0), np.float64(29.01), np.float64(31.99), np.float64(31.0), np.float64(30.0), np.float64(31.99), np.float64(31.99)]
+  sans   : [np.float64(34.01), np.float64(29.01), np.float64(33.0), np.float64(30.0), np.float64(31.0), np.float64(33.0), np.float64(33.0), np.float64(33.0), np.float64(30.0), np.float64(33.0)]
+  avec   : [np.float64(36.99), np.float64(31.99), np.float64(34.01), np.float64(39.01), np.float64(34.01), np.float64(39.01), np.float64(36.0), np.float64(31.99), np.float64(38.0), np.float64(36.99)]
+
+== 2. Test t apparie, differences imprimees du tableau 3 ==
+n = 10 ; moyenne = 2.3630 ; ecart-type (n-1) = 1.8416
+t(9) = 4.0576 ; p bilateral = 0.00285
+intervalle a 95 % = [1.0456 ; 3.6804] ; effet standardise apparie = 1.2831
+controle scipy.stats.ttest_1samp : t = 4.0576, p = 0.00285
+rangs signes exact : rangs = [3.5, 3.5, 1.5, 10.0, 5.5, 8.0, 5.5, 1.5, 9.0, 7.0] ; W+ = 53.5, W- = 1.5 ; 6 affectations aussi extremes sur 1024 ; p bilateral = 0.00586
+test du signe exact : 9 positives sur 10 ; p bilateral = 0.02148
+permutation exacte des signes sur la moyenne : 6 sur 1024 ; p bilateral = 0.00586
+
+== 2. Test t apparie, differences recalculees avec - sans (scores a deux decimales) ==
+n = 10 ; moyenne = 2.3630 ; ecart-type (n-1) = 1.8416
+t(9) = 4.0576 ; p bilateral = 0.00285
+intervalle a 95 % = [1.0456 ; 3.6804] ; effet standardise apparie = 1.2831
+controle scipy.stats.ttest_1samp : t = 4.0576, p = 0.00285
+rangs signes exact : rangs = [3.5, 3.5, 1.5, 10.0, 5.5, 8.0, 5.5, 1.5, 9.0, 7.0] ; W+ = 53.5, W- = 1.5 ; 6 affectations aussi extremes sur 1024 ; p bilateral = 0.00586
+test du signe exact : 9 positives sur 10 ; p bilateral = 0.02148
+permutation exacte des signes sur la moyenne : 6 sur 1024 ; p bilateral = 0.00586
+
+== 3. Annonce contre recalcul (differences imprimees) ==
+moyenne                          annonce 2.36    recalcul 2.3630  -> concorde a 2 decimales
+borne basse de l'intervalle      annonce 1.05    recalcul 1.0456  -> concorde a 2 decimales
+borne haute de l'intervalle      annonce 3.68    recalcul 3.6804  -> concorde a 2 decimales
+t(9)                             annonce 4.06    recalcul 4.0576  -> concorde a 2 decimales
+p du test t                      annonce 0.003   recalcul 0.0029  -> concorde a 3 decimales
+p des rangs signes               annonce 0.006   recalcul 0.0059  -> concorde a 3 decimales
+effet standardise apparie        annonce 1.28    recalcul 1.2831  -> concorde a 2 decimales
+
+== 4. Retrait d'une paire a la fois ==
+retiree  moyenne  t(8)    p_t      ic95_bas ic95_haut  dz     p_rangs_exact  positives
+    1    2.424   3.744  0.00567    0.931    3.918   1.248  0.01172        8/9
+    2    2.424   3.744  0.00567    0.931    3.918   1.248  0.01172        8/9
+    3    2.558   4.168  0.00313    1.143    3.973   1.389  0.00781        8/9
+    4    2.019   3.843  0.00492    0.808    3.230   1.281  0.01172        8/9
+    5    2.423   3.742  0.00569    0.930    3.917   1.247  0.01172        8/9
+    6    2.221   3.517  0.00788    0.765    3.677   1.172  0.01172        8/9
+    7    2.423   3.742  0.00569    0.930    3.917   1.247  0.01172        8/9
+    8    2.693   5.023  0.00102    1.457    3.930   1.674  0.00391        9/9
+    9    2.087   3.641  0.00658    0.765    3.408   1.214  0.01172        8/9
+   10    2.357   3.620  0.00679    0.855    3.858   1.207  0.01172        8/9
+retrait des deux plus grandes differences (courses 4 et 9) :
+  n = 8 ; moyenne = 1.665 ; t(7) = 3.783 ; p = 0.00687 ; ic = [0.624 ; 2.706] ; rangs signes exact p = 0.02344
+
+== 5. Ce que la difference pese en deroules, et le bruit d'execution ==
+difference moyenne = 2.363 point = 3.90 deroules sur 165
+borne haute du bruit d'execution sur une difference, si les 165 deroules etaient independants et de meme probabilite 0.205 : ecart-type = 4.45 points
+ecart-type observe des dix differences : 1.84 points (rapport observe/borne = 0.41)
+lecture : la borne suppose des taches toutes egales ; des taches presque toujours reussies ou presque toujours ratees donnent un bruit plus petit. Sans les resultats par tache, on ne peut pas dire lequel des deux regimes tient.
+
+== 6. Gains depuis le depart commun (descriptif) ==
+gain sans memoire : [2.43, 0.61, 2.42, 0.0, 1.21, 0.61, 1.21, 1.82, -1.21, 0.61] moyenne 0.971
+gain avec memoire : [4.24, 2.42, 3.03, 5.46, 3.03, 4.25, 3.03, 1.21, 3.64, 3.03] moyenne 3.334
+gain sans memoire contre zero : t(9) = 2.758, p = 0.02218, ic = [0.175 ; 1.767]
+correlation depart / difference : 0.446 ; correlation sans / avec : 0.091
