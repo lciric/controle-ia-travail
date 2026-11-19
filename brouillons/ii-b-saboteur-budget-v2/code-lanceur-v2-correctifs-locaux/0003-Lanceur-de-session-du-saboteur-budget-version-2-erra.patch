@@ -1,0 +1,424 @@
+From 11cdc0a90d420e6f3b09bc4f3dd7c4aae77a4bdc Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 19 Nov 2026 12:28:43 +0000
+Subject: [PATCH] =?UTF-8?q?Lanceur=20de=20session=20du=20saboteur=20=C3=A0?=
+ =?UTF-8?q?=20budget,=20version=202=20:=20erratum=201=20(v=C3=A9rification?=
+ =?UTF-8?q?=20des=20corrections,=20mineurs=20neufs)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+États d'arrêt en liste fermée dans le code (variable retirée) ; étiquette de l'inventaire égale à celle consignée à la création ;
+liste des instances intouchables exigée non vide, sauf attestation IIB_AUCUNE_INTOUCHABLE=oui ; un refus de création ne consomme
+plus un essai ; empreinte du module de lecture vérifiée avant tout emploi ; copie datée des journaux à la fin de la surveillance ;
+attestation du rapatriement écrite dans lancement.txt.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_013QMayiwfx2DB6CHn9yZ2wH
+---
+ scripts/lancer_iib_v2.sh           |  73 ++++++++++---
+ tests/test_iib_lanceur_forme_v2.py | 166 ++++++++++++++++++++++++++---
+ 2 files changed, 211 insertions(+), 28 deletions(-)
+
+diff --git a/scripts/lancer_iib_v2.sh b/scripts/lancer_iib_v2.sh
+index 1763d306..72a160cf 100644
+--- a/scripts/lancer_iib_v2.sh
++++ b/scripts/lancer_iib_v2.sh
+@@ -41,6 +41,11 @@
+ #      jamais une preuve. Tout échec est dit, avec un code propre, sans repli.
+ #  Corrections de la contre-lecture du 19 novembre (un bloquant, trois majeurs, huit mineurs) : l'identifiant créé se lit à la clé de
+ #  premier niveau `new_contract` de la réponse analysée comme JSON, jamais par un motif ; toute autre valeur candidate est un refus.
++#  Erratum 1 (vérification des corrections, quatre mineurs neufs) : états d'arrêt en liste FERMÉE dans le code (aucune variable ne
++#  l'élargit : une instance qui tourne n'est jamais détruite ici ; un état d'arrêt d'un autre nom est un refus, le code changera en
++#  version nouvelle) ; étiquette de l'inventaire ÉGALE à celle consignée à la création ; liste des intouchables exigée non vide, sauf
++#  attestation IIB_AUCUNE_INTOUCHABLE=oui ; un refus de `creation` ne consomme plus un essai ; empreinte du module de lecture vérifiée
++#  avant tout emploi ; copie datée des journaux à la fin de la surveillance ; attestation du rapatriement écrite dans `lancement.txt`.
+ # Usage :
+ #   bash scripts/lancer_iib_v2.sh outil                                                              (vérifie l'outil de location ; 0 ou 2)
+ #   bash scripts/lancer_iib_v2.sh --verifier-go-seulement PLAFOND [DEPENSE_ANTERIEURE] [JOUR]       (rien n'est créé ; code 0 ou 2)
+@@ -57,8 +62,10 @@
+ # Variables : GO_ID, IIB_REGISTRE_GO, IIB_REGISTRE_DECISIONS, IIB_BRANCHE_CODE (prep/…), IIB_BRANCHE (défaut essai/iib-explo-v1),
+ # IIB_DEPENSE_ANTERIEURE_USD, IIB_TESTS_ATTENDUS (^[0-9]*$), IIB_DEPOT, IIB_IMAGE, VAST (chemin explicite de l'outil de location),
+ # INTERVALLE ; pour la destruction : RAPATRIEMENT_VERIFIE (« oui » exigé : rapatriement vérifié et mot de la mère),
+-# IIB_INSTANCES_INTOUCHABLES (identifiants séparés par des virgules ; vide permis, dit au journal), IIB_DESTRUCTION_RELECTURES (défaut 6,
+-# au moins 2), IIB_DESTRUCTION_ATTENTE_S (défaut 10), IIB_DESTRUCTION_ETATS_ARRET (défaut « exited stopped ») ; HF_TOKEN (mode réel),
++# IIB_INSTANCES_INTOUCHABLES (identifiants séparés par des virgules ; liste vide ou absente : refus, sauf attestation explicite
++# IIB_AUCUNE_INTOUCHABLE=oui, dite au journal), IIB_DESTRUCTION_RELECTURES (défaut 6, au moins 2), IIB_DESTRUCTION_ATTENTE_S (défaut 10) ;
++# IIB_LOCATION_SHA256 (empreinte attendue du module de lecture `src/controle_ia/iib/location_v1.py` ; à défaut, celle que la configuration
++# de la course écrit dans sa liste des empreintes du code ; ni l'une ni l'autre, ou empreinte différente : refus) ; HF_TOKEN (mode réel),
+ # CONTROLE_IA_GITHUB_TOKEN ou CONTROLE_IA_GITHUB_TOKEN_2 (présence seulement, jamais affichés).
+ set -uo pipefail
+ QUOI="${1:?outil, --verifier-go-seulement, controles-explo, creation, apres-creation, surveillance ou destruction}"
+@@ -107,7 +114,24 @@ resoudre_outil() {
+ }
+ ligne_outil() { echo "outil de location employé : $VAST (version : $VAST_VERSION ; trouvé par : $VAST_ORIGINE)"; }
+ LOCATION="$(cd "$(dirname "$0")/.." && pwd)/src/controle_ia/iib/location_v1.py"      # à côté du lanceur, dans le même arbre (et non dans IIB_DEPOT)
+-location() { python3 -I -B "$LOCATION" "$@"; }
++MODULE_VERIFIE=non
++location() { [ "$MODULE_VERIFIE" = oui ] || return 97; python3 -I -B "$LOCATION" "$@"; }
++# Le module de lecture est du code de confiance, au même titre que le lanceur : son empreinte est vérifiée avant tout emploi. Empreinte
++# attendue : IIB_LOCATION_SHA256, ou celle de la liste des empreintes du code de la configuration de la course (DOSSIER/config.json) ;
++# les deux présentes doivent être égales. Rend 0 et fixe MODULE_VERIFIE=oui ; sinon écrit la raison et rend 1. Argument : dossier.
++verifier_module() {
++    local env="${IIB_LOCATION_SHA256:-}" cfg="" attendue vue
++    [ -z "$env" ] || [[ "$env" =~ ^[0-9a-f]{64}$ ]] || { echo "IIB_LOCATION_SHA256 illisible (64 caractères hexadécimaux)"; return 1; }
++    [ ! -f "$1/config.json" ] || cfg=$(cle_config "$1/config.json" marqueurs.EMPREINTES_CODE_IIB 2>/dev/null | grep -oE 'src/controle_ia/iib/location_v1\.py [0-9a-f]{64}' | head -1 | cut -d' ' -f2) || cfg=""
++    [ -n "$env" ] || [ -n "$cfg" ] || { echo "empreinte attendue du module de lecture absente (ni IIB_LOCATION_SHA256, ni la liste des empreintes du code de la configuration)"; return 1; }
++    [ -z "$env" ] || [ -z "$cfg" ] || [ "$env" = "$cfg" ] || { echo "empreinte attendue du module de lecture : IIB_LOCATION_SHA256 et la configuration se contredisent"; return 1; }
++    attendue="${env:-$cfg}"
++    [ -f "$LOCATION" ] || { echo "module de lecture absent ($LOCATION)"; return 1; }
++    vue=$(sha256sum < "$LOCATION" | cut -d' ' -f1)
++    [ "$vue" = "$attendue" ] || { echo "module de lecture $LOCATION : empreinte $vue ≠ empreinte attendue $attendue"; return 1; }
++    MODULE_VERIFIE=oui
++}
++ETATS_ARRET="exited stopped"   # liste FERMÉE des états d'arrêt : aucune variable ne l'élargit ; un état neuf passe par une version nouvelle du code
+ # Fichier neuf à nom unique et daté, droits restreints (jamais d'écrasement, R12) : dossier, base, extension ; écrit le chemin.
+ fichier_neuf() { ( umask 077; mktemp "$1/$2-$(horodate)-XXXXXX.$3" ); }
+ # Mise à l'écart d'une sortie brute que le masquage n'a pas pu traiter : gardée ENTIÈRE, nom marqué, droits restreints ; écrit le chemin.
+@@ -255,6 +279,7 @@ creation)
+     [[ "$ECH" =~ ^[0-9]+$ ]] && [ "$ECH" -le "$FIN_GO" ] && [ "$ECH" -gt "$(date +%s)" ] || { echo "échéance $ECH hors de ]maintenant, fin du GO $FIN_GO]"; exit 2; }
+     JGHN=$(jeton_gh_nom) && { [ -n "${HF_TOKEN:-}" ] || [ "$MODE_C" = jouet ]; } || { echo "jeton absent (GitHub, ou HF_TOKEN en mode réel) : pas de création"; exit 2; }
+     MSG=$(resoudre_outil) || { echo "$MSG : pas de création"; exit 2; }; resoudre_outil >/dev/null
++    MSG=$(verifier_module "$D") || { echo "$MSG : pas de création"; exit 2; }; verifier_module "$D" >/dev/null
+     ligne_outil; printf 'outil_location %s\noutil_location_version %s\n' "$VAST" "$VAST_VERSION" >> "$D/lancement.txt"
+     DISQUE=$(cle_config "$D/config.json" offre.disque_min_go) || { echo "disque illisible"; exit 2; }
+     [[ "$DISQUE" =~ ^[0-9]+([.][0-9]+)?$ ]] && [ "${DISQUE%%.*}" -gt 0 ] || { echo "offre.disque_min_go illisible ($DISQUE) : pas de création"; exit 2; }
+@@ -284,14 +309,16 @@ creation)
+     [ "$(printf %s "$B64" | base64 -d | sha256sum | cut -d' ' -f1)" = "$(champ amorce "$D/lancement.txt")" ] || { echo "encodage de l'amorce"; exit 2; }
+     TA="$(champ tests_attendus "$D/lancement.txt")"; [[ "$TA" =~ ^[0-9]*$ ]] || { echo "tests attendus illisibles"; exit 2; }
+     CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e IIB_GO_ID=$GOC -e MODE=$MODE_C -e PREREG_ABSENT=1 -e CONFIG=$(champ config "$D/lancement.txt") -e TESTS_ATTENDUS=$TA -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute-essai$((ESSAIS + 1)).json\" 2>&1 </dev/null; VAST=$VAST bash $DEPOT/$MOI apres-creation \"$D/creation-brute-essai$((ESSAIS + 1)).json\" \$? \"$D\""
++    [ ! -e "$D/creation-brute-essai$((ESSAIS + 1)).json" ] || { echo "$D/creation-brute-essai$((ESSAIS + 1)).json existe déjà (R12) : pas de création"; exit 2; }
++    case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) ;; *) echo "étiquette de la configuration ($ETIQ) hors du préfixe « $PREFIXE_ETIQUETTE » du saboteur à budget : pas de création"; exit 2;; esac
++    [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]{1,60}$ ]] || { echo "étiquette de la configuration illisible (1 à 60 caractères de [A-Za-z0-9_.-]) : pas de création"; exit 2; }
+     for v in REQUESTS_CA_BUNDLE SSL_CERT_FILE HTTPS_PROXY NO_PROXY; do
+         case "$CMD" in *"$v"*) echo "la commande de création nomme $v (variable du mandataire, jamais transmise à l'instance) : refus"; exit 2;; esac
+     done
+     printf '{"tool_input":{"command":%s}}' "$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$CMD")" | python3 "$DEPOT/.claude/hooks/garde_calcul.py" || { echo "garde de calcul : commande refusée"; exit 2; }
++    # Tous les refus sont AU-DESSUS de cette ligne : un refus ne consomme pas un des trois essais de création.
+     printf 'creation preparee %s\noffre %s\ncarte %s\nstorage %s\nprix_carte %s\nprix_stockage %s\ntelechargement_forfait %s\nanterieure %s\necheance %s\nepuisement %s\ndepense %s\nplafond_creation %s\nessai_creation %s\nmachine_proposee %s\nrang %s\n' \
+         "$(date -u +%FT%TZ)" "$OFFRE" "$CARTE" "$DISQUE" "$PC" "$PS" "$TEL" "$ANT" "$ECH" "$EPUIS" "$DEP" "$PLC" "$((ESSAIS + 1))" "$MACH" "$RANG" >> "$D/lancement.txt"
+-    [ ! -e "$D/creation-brute-essai$((ESSAIS + 1)).json" ] || { echo "$D/creation-brute-essai$((ESSAIS + 1)).json existe déjà (R12) : pas de création"; exit 2; }
+-    case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) ;; *) echo "étiquette de la configuration ($ETIQ) hors du préfixe « $PREFIXE_ETIQUETTE » du saboteur à budget : pas de création"; exit 2;; esac
+     printf 'etiquette %s\n' "$ETIQ" >> "$D/lancement.txt"
+     echo "OFFRE CONFORME : $OF ; $INV ; $DEP ; $CAR ; $S7B"
+     echo "COMMANDE DE CRÉATION (à exécuter une seule fois par l'exécutante, jetons par leur nom seulement) :"
+@@ -300,6 +327,7 @@ apres-creation)
+     F="${2:-}"; C="${3:-}"; D="${4:-}"
+     [ -n "$F" ] && [ -n "$C" ] && [ -n "$D" ] || { echo "usage : apres-creation FICHIER CODE DOSSIER"; exit 2; }
+     [ -d "$D" ] && [ -f "$D/lancement.txt" ] || { echo "CRÉATION INCERTAINE (code $C) : dossier de la session $D ou son lancement.txt absent ; réponse brute laissée telle quelle à $F ; vérifier l'inventaire (champs filtrés) ; aucune seconde création avant"; exit 4; }
++    MSG=$(verifier_module "$D") && verifier_module "$D" >/dev/null || echo "ALERTE : $MSG : aucune lecture par programme (ni masquage, ni verdict)"
+     # Conservation de la réponse brute AVANT toute lecture et tout verdict (R-3687, R-3661) : rien n'est supprimé.
+     LUE=""
+     if [ -f "$F" ]; then
+@@ -385,6 +413,11 @@ surveillance)
+             if [ "$ILLISIBLES" -ge 3 ]; then DEC="ARRET garde : garde de dépense illisible trois fois de suite ($DEC)"; else DEC="ALERTE garde de dépense illisible ($ILLISIBLES/3) : $DEC"; fi
+         fi
+         echo "$(date -u +%FT%TZ) $DEC" >> "$D/surveillance.txt"
++        case "$DEC" in ARRET*|FIN*|REFUS*)      # fin de la surveillance : une copie datée des journaux, avec empreinte (R-3661) ; rien d'autre ne change
++            for jf in surveillance.txt progres.txt journal-dernier.txt journal-instance.txt; do
++                [ ! -s "$D/$jf" ] || conserver "$D/$jf" "$D" "fin-de-surveillance-${jf%.txt}" txt >/dev/null || echo "ALERTE : copie datée de $jf impossible"
++            done; echo "journaux de la surveillance copiés, datés, dans $D/traces-location (fin-de-surveillance-*)" ;;
++        esac
+         case "$DEC" in
+             ARRET*) echo "$DEC"; echo "ARRÊT PAR L'IDENTIFIANT (R10) : timeout -k 5 120 $VAST stop instance $ID"; exit 3 ;;
+             FIN*) echo "$DEC"; echo "FIN : instance à arrêter par son identifiant (disque gardé jusqu'au rapatriement vérifié) : timeout -k 5 120 $VAST stop instance $ID"; exit 0 ;;
+@@ -402,20 +435,29 @@ destruction)
+     [ -f "$D/lancement.txt" ] || { echo "dossier sans lancement.txt : aucune destruction"; exit 2; }
+     [ "$(champ instance "$D/lancement.txt")" = "$ID" ] || { echo "identifiant $ID ≠ instance créée d'après $D/lancement.txt (R10) : aucune destruction"; exit 2; }
+     [ "${RAPATRIEMENT_VERIFIE:-}" = oui ] || { echo "RAPATRIEMENT_VERIFIE=oui exigé (rapatriement vérifié, ou mot de la mère sur les écarts : ordre, étapes 5 et 6) : aucune destruction"; exit 2; }
+-    INTOUCHABLES="${IIB_INSTANCES_INTOUCHABLES:-}"
+-    [[ "$INTOUCHABLES" =~ ^([1-9][0-9]*(,[1-9][0-9]*)*)?$ ]] || { echo "IIB_INSTANCES_INTOUCHABLES illisible (identifiants séparés par des virgules, ou vide) : aucune destruction"; exit 2; }
++    [ -z "${IIB_DESTRUCTION_ETATS_ARRET:-}" ] || { echo "IIB_DESTRUCTION_ETATS_ARRET n'existe plus : la liste des états d'arrêt ($ETATS_ARRET) est fermée, écrite dans le code ; retirer la variable : aucune destruction"; exit 2; }
++    INTOUCHABLES="${IIB_INSTANCES_INTOUCHABLES:-}"; AUCUNE="${IIB_AUCUNE_INTOUCHABLE:-}"
++    [[ "$INTOUCHABLES" =~ ^([1-9][0-9]*(,[1-9][0-9]*)*)?$ ]] || { echo "IIB_INSTANCES_INTOUCHABLES illisible (identifiants séparés par des virgules) : aucune destruction"; exit 2; }
++    [ -z "$AUCUNE" ] || [ "$AUCUNE" = oui ] || { echo "IIB_AUCUNE_INTOUCHABLE : « oui » ou rien : aucune destruction"; exit 2; }
++    if [ -z "$INTOUCHABLES" ]; then
++        [ "$AUCUNE" = oui ] || { echo "liste des instances intouchables vide ou absente (IIB_INSTANCES_INTOUCHABLES : identifiants des machines des autres chantiers) : refus, sauf attestation explicite IIB_AUCUNE_INTOUCHABLE=oui : aucune destruction"; exit 2; }
++        DIT_INTOUCHABLES="aucune, attesté par IIB_AUCUNE_INTOUCHABLE=oui"
++    else
++        [ -z "$AUCUNE" ] || { echo "IIB_AUCUNE_INTOUCHABLE=oui contredit une liste IIB_INSTANCES_INTOUCHABLES non vide : aucune destruction"; exit 2; }
++        DIT_INTOUCHABLES="$INTOUCHABLES"
++    fi
+     case ",$INTOUCHABLES," in *",$ID,"*) echo "identifiant $ID dans la liste des instances intouchables (IIB_INSTANCES_INTOUCHABLES) : aucune destruction"; exit 2;; esac
+     ETIQ=$(champ etiquette "$D/lancement.txt"); [ -n "$ETIQ" ] || ETIQ=$(cle_config "$D/config.json" offre.etiquette 2>/dev/null) || ETIQ=""
+-    [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]+$ ]] && case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) true;; *) false;; esac \
++    [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]{1,60}$ ]] && case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) true;; *) false;; esac \
+         || { echo "étiquette posée à la création illisible ou hors du préfixe « $PREFIXE_ETIQUETTE » (ligne « etiquette » de lancement.txt, ou offre.etiquette de config.json) : aucune destruction"; exit 2; }
+-    RELECTURES="${IIB_DESTRUCTION_RELECTURES:-6}"; ATTENTE="${IIB_DESTRUCTION_ATTENTE_S:-10}"; ETATS_ARRET="${IIB_DESTRUCTION_ETATS_ARRET:-exited stopped}"
++    RELECTURES="${IIB_DESTRUCTION_RELECTURES:-6}"; ATTENTE="${IIB_DESTRUCTION_ATTENTE_S:-10}"
+     [[ "$RELECTURES" =~ ^[1-9][0-9]*$ ]] && [ "$RELECTURES" -ge 2 ] && [[ "$ATTENTE" =~ ^[0-9]+$ ]] || { echo "IIB_DESTRUCTION_RELECTURES (entier ≥ 2 : deux relectures concordantes exigées) ou IIB_DESTRUCTION_ATTENTE_S (entier ≥ 0) illisible : aucune destruction"; exit 2; }
+-    [[ "$ETATS_ARRET" =~ ^[a-z_]+(\ [a-z_]+)*$ ]] || { echo "IIB_DESTRUCTION_ETATS_ARRET illisible : aucune destruction"; exit 2; }
++    MSG=$(verifier_module "$D") || { echo "DESTRUCTION NON TENTÉE : $MSG : aucune lecture par programme de l'inventaire, donc aucune commande de destruction envoyée ; à relire"; exit 4; }; verifier_module "$D" >/dev/null
+     MSG=$(resoudre_outil) || { echo "$MSG : aucune destruction"; exit 2; }; resoudre_outil >/dev/null
+     ligne_outil
+     JD="$D/destruction.txt"
+-    echo "$(date -u +%FT%TZ) destruction demandée de l'instance $ID ; $(ligne_outil) ; rapatriement attesté par RAPATRIEMENT_VERIFIE=oui ; étiquette exigée : commence par « $ETIQ » ; états d'arrêt admis : $ETATS_ARRET ; instances intouchables : ${INTOUCHABLES:-liste vide}" >> "$JD"
+-    echo "instances intouchables (IIB_INSTANCES_INTOUCHABLES) : ${INTOUCHABLES:-liste vide}"
++    echo "$(date -u +%FT%TZ) destruction demandée de l'instance $ID ; $(ligne_outil) ; rapatriement attesté par RAPATRIEMENT_VERIFIE=oui ; étiquette exigée : exactement « $ETIQ » ; états d'arrêt admis (liste fermée) : $ETATS_ARRET ; instances intouchables : $DIT_INTOUCHABLES ; module de lecture vérifié" >> "$JD"
++    echo "instances intouchables : $DIT_INTOUCHABLES"
+     inventaire_lu "$D" instances-avant-destruction "$ID" ""; c_inv=$?
+     echo "$(date -u +%FT%TZ) inventaire d'avant (code $c_inv) : $INV_LIGNE" >> "$JD"
+     [ "$c_inv" = 0 ] || { echo "DESTRUCTION NON TENTÉE : inventaire d'avant illisible ou en erreur ($INV_LIGNE) : aucune commande de destruction envoyée ; un inventaire illisible n'est pas une preuve ; à relire"; exit 4; }
+@@ -423,10 +465,11 @@ destruction)
+     if [ "$ETAT" != present ]; then
+         echo "ABSENCE NON CONFIRMÉE : l'instance $ID n'est pas à l'inventaire d'avant ($(mot_inv n) instance(s) au compte) ; aucune commande de destruction envoyée ; ce n'est pas une preuve de destruction (inventaire vide par erreur, autre compte, filtre) : rien n'est consigné comme vérifié ; à relire, message à la mère"; exit 7
+     fi
+-    case "$ETIQ_VUE" in "$ETIQ"*) ;; *) echo "$(date -u +%FT%TZ) refus : étiquette « $ETIQ_VUE »" >> "$JD"
+-        echo "REFUS : à l'inventaire, l'instance $ID porte l'étiquette « $ETIQ_VUE », qui ne commence pas par « $ETIQ » : ce n'est pas l'instance du saboteur à budget : aucune destruction"; exit 2;; esac
++    case "$ETIQ_VUE" in "$ETIQ") ;; *) echo "$(date -u +%FT%TZ) refus : étiquette « $ETIQ_VUE »" >> "$JD"
++        echo "REFUS : à l'inventaire, l'instance $ID porte l'étiquette « $ETIQ_VUE », qui n'est pas exactement « $ETIQ », celle consignée à la création : ce n'est pas l'instance du saboteur à budget : aucune destruction"; exit 2;; esac
+     case " $ETATS_ARRET " in *" $STATUT "*) ;; *) echo "$(date -u +%FT%TZ) refus : état « $STATUT »" >> "$JD"
+-        echo "REFUS : l'instance $ID est à l'état « $STATUT », hors des états d'arrêt admis ($ETATS_ARRET) : l'arrêter d'abord par son identifiant, rapatrier, puis détruire : aucune destruction"; exit 2;; esac
++        echo "REFUS : l'instance $ID est à l'état « $STATUT », hors de la liste fermée des états d'arrêt ($ETATS_ARRET) : une instance qui tourne n'est jamais détruite par cette sous-commande (l'arrêter d'abord par son identifiant, rapatrier, puis détruire) ; si c'est le nom que l'outil donne à l'arrêt, le code changera en version nouvelle : aucune destruction"; exit 2;; esac
++    printf 'rapatriement_atteste %s RAPATRIEMENT_VERIFIE=oui instance=%s par=%s@%s\n' "$(date -u +%FT%TZ)" "$ID" "$(id -un 2>/dev/null | tr -c 'A-Za-z0-9_.\n-' '?' || echo inconnu)" "$(hostname 2>/dev/null | tr -c 'A-Za-z0-9_.\n-' '?' || echo inconnu)" >> "$D/lancement.txt"
+     echo "commande de destruction (par l'identifiant, R10 ; confirmation non interactive) : timeout -k 5 120 $VAST destroy instance $ID -y"
+     SORTIE=$(fichier_neuf "$D" destruction-sortie txt) || { echo "fichier de sortie impossible dans $D : aucune destruction"; exit 2; }
+     timeout -k 5 120 "$VAST" destroy instance "$ID" -y > "$SORTIE" 2>&1 </dev/null; CD=$?                 # sur disque d'abord, puis masquée
+diff --git a/tests/test_iib_lanceur_forme_v2.py b/tests/test_iib_lanceur_forme_v2.py
+index 3f439ee4..8348b002 100644
+--- a/tests/test_iib_lanceur_forme_v2.py
++++ b/tests/test_iib_lanceur_forme_v2.py
+@@ -31,6 +31,9 @@ LANCEUR_V1 = RACINE / "scripts" / "lancer_iib_v1.sh"
+ LANCEUR_V2 = RACINE / "scripts" / "lancer_iib_v2.sh"
+ EMPREINTE_LANCEUR_V1 = "3279e3dcc631519e574c2011f9f143d956d3b668c729a176cd8efc0e99dece8f"      # citée par l'ordre scellé de la première course
+ ID = "61414494"
++AUTRE = 58936096          # machine d'un autre chantier (« intouchable »), présente à l'inventaire du poste
++MODULE = RACINE / "src" / "controle_ia" / "iib" / "location_v1.py"
++EMPREINTE_MODULE = hashlib.sha256(MODULE.read_bytes()).hexdigest()
+ JETON_HF, JETON_GH, CLE_LOUEUR = "hf_FACTICEfactice0123456789", "ghp_FACTICEfactice0123456789", "cle-loueur-factice-0123456789abcdef"
+ 
+ # Faux outil de location. `--version` rend une version ; `create instance` rend le fichier FAUX_REPONSE et le code FAUX_CODE ;
+@@ -75,6 +78,8 @@ echo "appel inattendu : $*" >&2; exit 3
+ def lanceur_v2_partout(monkeypatch):
+     """Les essais repris de la v1 lancent la v2."""
+     monkeypatch.setattr(v1s, "LANCEUR", LANCEUR_V2)
++    env_v1 = v1s._env
++    monkeypatch.setattr(v1s, "_env", lambda m, **sup: env_v1(m, **{"IIB_LOCATION_SHA256": EMPREINTE_MODULE, **sup}))
+ 
+ 
+ @pytest.fixture
+@@ -100,7 +105,8 @@ def _lancer(p, *args, script=None, **sup):
+     e = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(p["tmp"]), "LANG": os.environ.get("LANG", "C.UTF-8"), "IIB_DEPOT": str(RACINE),
+          "VAST": str(p["outil"]), "FAUX_VASTAI_JOURNAL": str(p["appels"]), "FAUX_INSTANCES": str(p["inv"]), "FAUX_JOURNAL": str(p["tmp"] / "journal.txt"),
+          "HF_TOKEN": JETON_HF, "CONTROLE_IA_GITHUB_TOKEN_2": JETON_GH, "VAST_API_KEY": CLE_LOUEUR, "INTERVALLE": "1",
+-         "IIB_DESTRUCTION_ATTENTE_S": "0", "IIB_DESTRUCTION_RELECTURES": "2", "RAPATRIEMENT_VERIFIE": "oui"}
++         "IIB_DESTRUCTION_ATTENTE_S": "0", "IIB_DESTRUCTION_RELECTURES": "2", "RAPATRIEMENT_VERIFIE": "oui",
++         "IIB_INSTANCES_INTOUCHABLES": str(AUTRE), "IIB_LOCATION_SHA256": EMPREINTE_MODULE}
+     e.update(sup)
+     e = {k: v for k, v in e.items() if v is not None}
+     return subprocess.run(["bash", str(script or LANCEUR_V2), *map(str, args)], env=e, capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
+@@ -212,7 +218,7 @@ def test_creation_de_bout_en_bout_avec_un_outil_hors_du_path(monde, tmp_path):
+     assert f"timeout -k 10 300 {outil} create instance " in cmd and f"; VAST={outil} bash {monde['src']}/scripts/lancer_iib_v2.sh apres-creation " in cmd
+     assert "lancer_iib_v1.sh" not in cmd and JETON_HF not in cmd and "jeton-gh-factice" not in cmd
+     assert len(_traces({"d": d}, "offres-")) == 1 and len(_traces({"d": d}, "instances-")) == 1         # sorties de la location versées
+-    e = _env(monde, **sup)
++    e = _env(monde, IIB_LOCATION_SHA256=EMPREINTE_MODULE, **sup)
+     e.pop("VAST")                                                              # la commande imprimée se suffit : chemin absolu écrit dedans
+     r = subprocess.run(["bash", "-c", cmd], env=e, capture_output=True, text=True, timeout=120, cwd=str(monde["src"]))
+     assert r.returncode == 0 and "CRÉÉE : instance 777777" in r.stdout and "RÉPONSE BRUTE DU LOUEUR CONSERVÉE" in r.stdout, r.stdout + r.stderr
+@@ -339,8 +345,8 @@ def test_destruction_sain_option_y_par_identifiant_et_absence_verifiee(poste):
+     for prefixe, nombre in (("destruction-sortie-", 1), ("instances-avant-destruction-", 1), ("instances-apres-destruction-", 2)):
+         traces = _traces(poste, prefixe)
+         assert len(traces) == nombre and all(_empreinte_tenue(x) for x in traces), prefixe
+-    assert "absente de deux relectures concordantes" in r.stdout and "instances intouchables (IIB_INSTANCES_INTOUCHABLES) : liste vide" in r.stdout
+-    assert "instances intouchables : liste vide" in journal and "RAPATRIEMENT_VERIFIE=oui" in journal
++    assert "absente de deux relectures concordantes" in r.stdout and f"instances intouchables : {AUTRE}" in r.stdout
++    assert f"instances intouchables : {AUTRE}" in journal and "RAPATRIEMENT_VERIFIE=oui" in journal and "liste fermée) : exited stopped" in journal
+ 
+ 
+ @pytest.mark.parametrize("mode, code, motif", [("sans-effet", 6, "DESTRUCTION NON OBTENUE : la commande a rendu le code 0"),
+@@ -391,9 +397,6 @@ def test_destruction_artefacts_jamais_une_autre_instance_ni_un_motif(poste, iden
+ 
+ # === Corrections de la contre-lecture du 19 novembre (un bloquant, trois majeurs, mineurs) ===================================
+ # Les sept attaques du contre-lecteur (`test_attaques_lanceur_v2_cl1.py`) sont reprises ici ; chaque essai affirme le comportement sûr.
+-AUTRE = 58936096          # machine d'un autre chantier (« intouchable »), présente à l'inventaire du poste
+-
+-
+ def _lancement_sans_instance(p):
+     (p["d"] / "lancement.txt").write_text("machine_proposee 101\ncarte course\nanterieure 0\necheance 4102444800\nmode jouet\netiquette iib-explo-v1\n", encoding="utf-8")
+ 
+@@ -427,8 +430,9 @@ def test_attaque_1_bis_autre_machine_consignee_par_erreur_refusee_par_l_etiquett
+     avec une étiquette qui n'est pas celle du saboteur à budget : refus sans appel ; refus aussi par la liste des intouchables."""
+     with (poste["d"] / "lancement.txt").open("a", encoding="utf-8") as f:
+         f.write(f"instance {AUTRE}\n")
+-    r = _lancer(poste, "destruction", AUTRE, poste["d"], IIB_DESTRUCTION_ETATS_ARRET="running exited")
+-    assert r.returncode == 2 and "porte l'étiquette « a1-v4 », qui ne commence pas par « iib-explo-v1 »" in r.stdout, r.stdout + r.stderr
++    poste["inv"].write_text(poste["inv"].read_text(encoding="utf-8").replace('"running"', '"exited"'), encoding="utf-8")       # l'état ne la protège pas : l'étiquette, si
++    r = _lancer(poste, "destruction", AUTRE, poste["d"], IIB_INSTANCES_INTOUCHABLES="61000001")
++    assert r.returncode == 2 and "porte l'étiquette « a1-v4 », qui n'est pas exactement « iib-explo-v1 »" in r.stdout, r.stdout + r.stderr
+     r = _lancer(poste, "destruction", AUTRE, poste["d"], IIB_INSTANCES_INTOUCHABLES=f"61000001,{AUTRE}")
+     assert r.returncode == 2 and "dans la liste des instances intouchables" in r.stdout, r.stdout + r.stderr
+     assert sorted(_restantes(poste)) == sorted([int(ID), AUTRE]) and not any(a.startswith("destroy") for a in _appels(poste))
+@@ -555,7 +559,11 @@ def test_attaque_7_destruction_rejouee_n_ecrase_aucun_fichier(poste):
+     ("rapatriement_autre_mot", {"RAPATRIEMENT_VERIFIE": "non"}, "RAPATRIEMENT_VERIFIE=oui exigé"),
+     ("intouchable", {"IIB_INSTANCES_INTOUCHABLES": f"{AUTRE},{ID}"}, "dans la liste des instances intouchables"),
+     ("liste_illisible", {"IIB_INSTANCES_INTOUCHABLES": "a1-v4;iib"}, "IIB_INSTANCES_INTOUCHABLES illisible"),
+-    ("etats_illisibles", {"IIB_DESTRUCTION_ETATS_ARRET": "*"}, "IIB_DESTRUCTION_ETATS_ARRET illisible")])
++    ("liste_absente", {"IIB_INSTANCES_INTOUCHABLES": None}, "liste des instances intouchables vide ou absente"),
++    ("liste_vide", {"IIB_INSTANCES_INTOUCHABLES": ""}, "liste des instances intouchables vide ou absente"),
++    ("attestation_autre_mot", {"IIB_INSTANCES_INTOUCHABLES": None, "IIB_AUCUNE_INTOUCHABLE": "non"}, "« oui » ou rien"),
++    ("attestation_contredite", {"IIB_AUCUNE_INTOUCHABLE": "oui"}, "contredit une liste"),
++    ("etats_elargis_par_variable", {"IIB_DESTRUCTION_ETATS_ARRET": "running exited stopped"}, "IIB_DESTRUCTION_ETATS_ARRET n'existe plus")])
+ def test_destruction_gardes_artefacts_refus_avant_tout_appel(poste, cas, sup, motif):
+     r = _lancer(poste, "destruction", ID, poste["d"], **sup)
+     assert r.returncode == 2 and motif in r.stdout and "aucune destruction" in r.stdout, (cas, r.stdout + r.stderr)
+@@ -564,17 +572,22 @@ def test_destruction_gardes_artefacts_refus_avant_tout_appel(poste, cas, sup, mo
+ 
+ def test_destruction_liste_des_intouchables_saine_dite_au_journal(poste):
+     r = _lancer(poste, "destruction", ID, poste["d"], IIB_INSTANCES_INTOUCHABLES=f"{AUTRE},61000001")
+-    assert r.returncode == 0 and f"instances intouchables (IIB_INSTANCES_INTOUCHABLES) : {AUTRE},61000001" in r.stdout, r.stdout + r.stderr
++    assert r.returncode == 0 and f"instances intouchables : {AUTRE},61000001" in r.stdout, r.stdout + r.stderr
+     assert f"instances intouchables : {AUTRE},61000001" in (poste["d"] / "destruction.txt").read_text(encoding="utf-8") and _restantes(poste) == [AUTRE]
+ 
+ 
+ @pytest.mark.parametrize("cas, motif", [("en_marche", "est à l'état « running »"), ("etat_absent", "est à l'état « aucun »"),
+                                         ("etiquette_autre", "porte l'étiquette « t06-7b »"), ("sans_etiquette", "porte l'étiquette « aucun »"),
+-                                        ("etiquette_iib_d_une_autre_course", "porte l'étiquette « iib-autre-v9 »")])
++                                        ("etiquette_iib_d_une_autre_course", "porte l'étiquette « iib-autre-v9 »"),
++                                        ("etiquette_au_meme_debut", "porte l'étiquette « iib-explo-v1-autre-chantier », qui n'est pas exactement « iib-explo-v1 »"),
++                                        ("etiquette_plus_courte", "porte l'étiquette « iib-explo », qui n'est pas exactement"),
++                                        ("etat_d_arret_d_un_autre_nom", "est à l'état « offline », hors de la liste fermée")])
+ def test_destruction_gardes_d_inventaire_artefacts_refus_sans_appel_de_destruction(poste, cas, motif):
+     entree = {"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"}
+     entree.update({"en_marche": {"actual_status": "running"}, "etat_absent": {"actual_status": None}, "etiquette_autre": {"label": "t06-7b"},
+-                   "sans_etiquette": {"label": None}, "etiquette_iib_d_une_autre_course": {"label": "iib-autre-v9"}}[cas])
++                   "sans_etiquette": {"label": None}, "etiquette_iib_d_une_autre_course": {"label": "iib-autre-v9"},
++                   "etiquette_au_meme_debut": {"label": "iib-explo-v1-autre-chantier"}, "etiquette_plus_courte": {"label": "iib-explo"},
++                   "etat_d_arret_d_un_autre_nom": {"actual_status": "offline"}}[cas])
+     poste["inv"].write_text(json.dumps([entree, {"id": AUTRE, "label": "a1-v4", "actual_status": "running"}]), encoding="utf-8")
+     r = _lancer(poste, "destruction", ID, poste["d"])
+     assert r.returncode == 2 and motif in r.stdout and "aucune destruction" in r.stdout, (cas, r.stdout + r.stderr)
+@@ -707,3 +720,130 @@ def test_inventaire_trace_jamais_ecrasee(tmp_path):
+     (tmp_path / "trace.json").write_text("déjà là", encoding="utf-8")
+     assert _location().main(["inventaire", str(brut), str(tmp_path / "trace.json"), "iib"]) == 1
+     assert (tmp_path / "trace.json").read_text(encoding="utf-8") == "déjà là" and brut.read_text(encoding="utf-8") == "[]"
++
++
++# === Erratum 1 (vérification des corrections : quatre mineurs neufs, et deux recommandations) =================================
++def test_erratum_n1_aucune_variable_ne_fait_detruire_une_instance_qui_tourne(poste):
++    """N1. Liste fermée des états d'arrêt : ni la variable retirée, ni aucune autre, ne fait détruire une instance « running »."""
++    poste["inv"].write_text(json.dumps([{"id": int(ID), "label": "iib-explo-v1", "actual_status": "running"},
++                                        {"id": AUTRE, "label": "a1-v4", "actual_status": "running"}]), encoding="utf-8")
++    for sup in ({}, {"IIB_DESTRUCTION_ETATS_ARRET": "running"}, {"ETATS_ARRET": "running"}):
++        r = _lancer(poste, "destruction", ID, poste["d"], **sup)
++        assert r.returncode == 2 and "aucune destruction" in r.stdout and int(ID) in _restantes(poste), (sup, r.stdout + r.stderr)
++    assert not any(a.startswith("destroy") for a in _appels(poste))
++    assert "une instance qui tourne n'est jamais détruite par cette sous-commande" in _lancer(poste, "destruction", ID, poste["d"]).stdout
++
++
++def test_erratum_n2_etiquette_egale_et_autre_machine_au_meme_debut(poste):
++    """N2 (attaque du contre-lecteur) : autre machine à l'étiquette de même début, ligne `instance` fausse, hors de la liste : refus."""
++    poste["inv"].write_text(json.dumps([{"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"},
++                                        {"id": AUTRE, "label": "iib-explo-v1-autre-chantier", "actual_status": "exited"}]), encoding="utf-8")
++    with (poste["d"] / "lancement.txt").open("a", encoding="utf-8") as f:
++        f.write(f"instance {AUTRE}\n")
++    for sup in ({"IIB_INSTANCES_INTOUCHABLES": "61000001"}, {"IIB_INSTANCES_INTOUCHABLES": None, "IIB_AUCUNE_INTOUCHABLE": "oui"}):
++        r = _lancer(poste, "destruction", AUTRE, poste["d"], **sup)
++        assert r.returncode == 2 and "n'est pas exactement « iib-explo-v1 »" in r.stdout and AUTRE in _restantes(poste), r.stdout + r.stderr
++    assert not any(a.startswith("destroy") for a in _appels(poste))
++
++
++def test_erratum_intouchables_absentes_avec_attestation_dite_au_journal(poste):
++    """Cas sain de la garde : aucune liste, mais attestation explicite ; elle est dite sur la sortie et au journal."""
++    r = _lancer(poste, "destruction", ID, poste["d"], IIB_INSTANCES_INTOUCHABLES=None, IIB_AUCUNE_INTOUCHABLE="oui")
++    assert r.returncode == 0 and "instances intouchables : aucune, attesté par IIB_AUCUNE_INTOUCHABLE=oui" in r.stdout, r.stdout + r.stderr
++    assert "aucune, attesté par IIB_AUCUNE_INTOUCHABLE=oui" in (poste["d"] / "destruction.txt").read_text(encoding="utf-8")
++
++
++def test_erratum_rapatriement_atteste_ecrit_dans_le_lancement(poste):
++    """L'attestation est écrite en une ligne (quand, valeur, instance, qui) ; jamais quand une garde a refusé."""
++    r = _lancer(poste, "destruction", ID, poste["d"], RAPATRIEMENT_VERIFIE=None)
++    assert r.returncode == 2 and "rapatriement_atteste" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
++    poste["inv"].write_text(poste["inv"].read_text(encoding="utf-8").replace('"exited"', '"running"'), encoding="utf-8")
++    assert _lancer(poste, "destruction", ID, poste["d"]).returncode == 2 and "rapatriement_atteste" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
++    poste["inv"].write_text(poste["inv"].read_text(encoding="utf-8").replace(f'"id": {ID}, "label": "iib-explo-v1", "actual_status": "running"',
++                                                                             f'"id": {ID}, "label": "iib-explo-v1", "actual_status": "exited"'), encoding="utf-8")
++    r = _lancer(poste, "destruction", ID, poste["d"])
++    assert r.returncode == 0, r.stdout + r.stderr
++    import re
++    (ligne,) = [l for l in (poste["d"] / "lancement.txt").read_text(encoding="utf-8").splitlines() if l.startswith("rapatriement_atteste ")]
++    assert re.fullmatch(r"rapatriement_atteste \d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ RAPATRIEMENT_VERIFIE=oui instance=%s par=[A-Za-z0-9_.?-]+@[A-Za-z0-9_.?-]+" % ID, ligne), ligne
++
++
++@pytest.mark.parametrize("cas", ["empreinte_absente", "empreinte_autre", "empreinte_illisible", "module_change", "module_absent", "contredit_la_configuration"])
++def test_erratum_n4_module_de_lecture_non_verifie_refus(poste, tmp_path, cas):
++    """N4. Le module de lecture est vérifié par son empreinte avant tout emploi : sinon aucune création, aucune destruction, et la
++    réponse de création est gardée entière, non lue."""
++    arbre = tmp_path / "arbre-copie"
++    (arbre / "scripts").mkdir(parents=True)
++    (arbre / "src" / "controle_ia" / "iib").mkdir(parents=True)
++    script = arbre / "scripts" / LANCEUR_V2.name
++    shutil.copy(LANCEUR_V2, script)
++    if cas != "module_absent":
++        shutil.copy(MODULE, arbre / "src" / "controle_ia" / "iib" / "location_v1.py")
++    sup = {}
++    if cas == "empreinte_absente":
++        sup["IIB_LOCATION_SHA256"] = None
++    elif cas == "empreinte_autre":
++        sup["IIB_LOCATION_SHA256"] = "0" * 64
++    elif cas == "empreinte_illisible":
++        sup["IIB_LOCATION_SHA256"] = "abc"
++    elif cas == "module_change":                                               # module menteur du contre-lecteur (attaque N5)
++        (arbre / "src" / "controle_ia" / "iib" / "location_v1.py").write_text(
++            'import sys\nif sys.argv[1] == "inventaire":\n    open(sys.argv[3], "w").write("{}")\n'
++            '    print("n=2 etat=present etiquette=iib-explo-v1 statut=exited autres_manquants=0")\n'
++            'elif sys.argv[1] == "masquer-en-place":\n    print("0 structure")\n', encoding="utf-8")
++    elif cas == "contredit_la_configuration":
++        (poste["d"] / "config.json").write_text(json.dumps({"marqueurs": {"EMPREINTES_CODE_IIB": "… ; src/controle_ia/iib/location_v1.py " + "1" * 64 + " ; …"}}), encoding="utf-8")
++    r = _lancer(poste, "destruction", ID, poste["d"], script=script, **sup)
++    assert r.returncode == 4 and "DESTRUCTION NON TENTÉE" in r.stdout and "aucune commande de destruction envoyée" in r.stdout, (cas, r.stdout + r.stderr)
++    assert not any(a.startswith(("destroy", "show")) for a in _appels(poste))
++    f = poste["d"] / "creation-brute-x.json"
++    reponse = '{"success": true, "new_contract": 777777, "api_key": "sk-secret-0123456789abcdef"}'
++    f.write_text(reponse, encoding="utf-8")
++    _lancement_sans_instance(poste)
++    r = _lancer(poste, "apres-creation", f, 0, poste["d"], script=script, **sup)
++    assert r.returncode == 4 and _lignes_instance(poste) == [] and "aucune lecture par programme" in r.stdout, (cas, r.stdout + r.stderr)
++    assert Path(str(f) + ".NON-MASQUE").read_text(encoding="utf-8") == reponse and "sk-secret" not in r.stdout
++
++
++def test_erratum_n4_empreinte_lue_dans_la_configuration_cas_sain(poste):
++    """Sans variable, l'empreinte attendue vient de la liste des empreintes du code de la configuration de la course."""
++    (poste["d"] / "config.json").write_text(json.dumps({"marqueurs": {"EMPREINTES_CODE_IIB": "scripts/lancer_iib_v2.sh " + "a" * 64 + " ; src/controle_ia/iib/location_v1.py "
++                                                                      + EMPREINTE_MODULE + " ; tests/x.py " + "b" * 64}}), encoding="utf-8")
++    r = _lancer(poste, "destruction", ID, poste["d"], IIB_LOCATION_SHA256=None)
++    assert r.returncode == 0 and "module de lecture vérifié" in (poste["d"] / "destruction.txt").read_text(encoding="utf-8"), r.stdout + r.stderr
++
++
++def test_erratum_n3_un_refus_de_creation_ne_consomme_pas_un_essai(monde, tmp_path):
++    """N3. Refus de `creation` (réponse d'essai déjà présente, R12 ; module non vérifié) : aucune ligne `essai_creation` n'est écrite ;
++    cas sain : la création suivante porte l'essai numéro 1."""
++    d, r = _controles(monde)
++    assert r.returncode == 0, r.stdout + r.stderr
++    sup = dict(FAUX_INSTANCES=_instances(monde, []), FAUX_RETIRE="0")
++    (d / "creation-brute-essai1.json").write_text("déjà là", encoding="utf-8")
++    r = v1s._lancer(monde, "creation", "auto", "course", "0", d, **sup)
++    assert r.returncode == 2 and "existe déjà (R12)" in r.stdout and "COMMANDE DE CRÉATION" not in r.stdout, r.stdout + r.stderr
++    assert "essai_creation" not in (d / "lancement.txt").read_text(encoding="utf-8")
++    (d / "creation-brute-essai1.json").rename(d / "creation-brute-essai1-ecartee.json")
++    avant = (monde["tmp"] / "appels.txt").read_text(encoding="utf-8")
++    r = v1s._lancer(monde, "creation", "auto", "course", "0", d, IIB_LOCATION_SHA256="0" * 64, **sup)
++    assert r.returncode == 2 and "empreinte attendue" in r.stdout and "essai_creation" not in (d / "lancement.txt").read_text(encoding="utf-8"), r.stdout + r.stderr
++    assert (monde["tmp"] / "appels.txt").read_text(encoding="utf-8")[len(avant):].split() in ([], ["--version"], ["--version", "--version"])      # refus avant toute recherche d'offres
++    r = v1s._lancer(monde, "creation", "auto", "course", "0", d, **sup)
++    assert r.returncode == 0 and "COMMANDE DE CRÉATION" in r.stdout, r.stdout + r.stderr
++    lancement = (d / "lancement.txt").read_text(encoding="utf-8")
++    assert lancement.count("essai_creation ") == 1 and "essai_creation 1\n" in lancement and "creation-brute-essai1.json" in r.stdout
++
++
++def test_erratum_surveillance_copie_datee_des_journaux_a_la_fin_et_a_l_arret(poste):
++    """À FIN (cas sain) : une copie datée, avec empreinte, de chaque journal de la surveillance ; rien d'autre ne change au régime."""
++    r = _lancer(poste, "surveillance", ID, poste["d"])
++    assert r.returncode == 0 and "FIN" in r.stdout and "journaux de la surveillance copiés" in r.stdout, r.stdout + r.stderr
++    for nom in ("surveillance", "progres", "journal-dernier", "journal-instance"):
++        (copie,) = _traces(poste, f"fin-de-surveillance-{nom}-")
++        assert _empreinte_tenue(copie) and copie.read_bytes() == (poste["d"] / f"{nom}.txt").read_bytes()[:len(copie.read_bytes())], nom
++    # ARRET (garde de dépense illisible trois fois : prix illisible dans lancement.txt) : copie aussi, et rien d'écrasé
++    f = poste["d"] / "lancement.txt"
++    f.write_text(f.read_text(encoding="utf-8").replace("prix_carte 1.0", "prix_carte x"), encoding="utf-8")
++    r = _lancer(poste, "surveillance", ID, poste["d"])
++    assert r.returncode == 3 and "ARRET" in r.stdout and f"stop instance {ID}" in r.stdout, r.stdout + r.stderr
++    assert len(_traces(poste, "fin-de-surveillance-surveillance-")) == 2 and all(_empreinte_tenue(c) for c in _traces(poste, "fin-de-surveillance-"))
+-- 
+2.43.0
+
