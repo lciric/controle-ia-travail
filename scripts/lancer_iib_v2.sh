@@ -41,6 +41,11 @@
 #      jamais une preuve. Tout échec est dit, avec un code propre, sans repli.
 #  Corrections de la contre-lecture du 19 novembre (un bloquant, trois majeurs, huit mineurs) : l'identifiant créé se lit à la clé de
 #  premier niveau `new_contract` de la réponse analysée comme JSON, jamais par un motif ; toute autre valeur candidate est un refus.
+#  Erratum 1 (vérification des corrections, quatre mineurs neufs) : états d'arrêt en liste FERMÉE dans le code (aucune variable ne
+#  l'élargit : une instance qui tourne n'est jamais détruite ici ; un état d'arrêt d'un autre nom est un refus, le code changera en
+#  version nouvelle) ; étiquette de l'inventaire ÉGALE à celle consignée à la création ; liste des intouchables exigée non vide, sauf
+#  attestation IIB_AUCUNE_INTOUCHABLE=oui ; un refus de `creation` ne consomme plus un essai ; empreinte du module de lecture vérifiée
+#  avant tout emploi ; copie datée des journaux à la fin de la surveillance ; attestation du rapatriement écrite dans `lancement.txt`.
 # Usage :
 #   bash scripts/lancer_iib_v2.sh outil                                                              (vérifie l'outil de location ; 0 ou 2)
 #   bash scripts/lancer_iib_v2.sh --verifier-go-seulement PLAFOND [DEPENSE_ANTERIEURE] [JOUR]       (rien n'est créé ; code 0 ou 2)
@@ -57,8 +62,10 @@
 # Variables : GO_ID, IIB_REGISTRE_GO, IIB_REGISTRE_DECISIONS, IIB_BRANCHE_CODE (prep/…), IIB_BRANCHE (défaut essai/iib-explo-v1),
 # IIB_DEPENSE_ANTERIEURE_USD, IIB_TESTS_ATTENDUS (^[0-9]*$), IIB_DEPOT, IIB_IMAGE, VAST (chemin explicite de l'outil de location),
 # INTERVALLE ; pour la destruction : RAPATRIEMENT_VERIFIE (« oui » exigé : rapatriement vérifié et mot de la mère),
-# IIB_INSTANCES_INTOUCHABLES (identifiants séparés par des virgules ; vide permis, dit au journal), IIB_DESTRUCTION_RELECTURES (défaut 6,
-# au moins 2), IIB_DESTRUCTION_ATTENTE_S (défaut 10), IIB_DESTRUCTION_ETATS_ARRET (défaut « exited stopped ») ; HF_TOKEN (mode réel),
+# IIB_INSTANCES_INTOUCHABLES (identifiants séparés par des virgules ; liste vide ou absente : refus, sauf attestation explicite
+# IIB_AUCUNE_INTOUCHABLE=oui, dite au journal), IIB_DESTRUCTION_RELECTURES (défaut 6, au moins 2), IIB_DESTRUCTION_ATTENTE_S (défaut 10) ;
+# IIB_LOCATION_SHA256 (empreinte attendue du module de lecture `src/controle_ia/iib/location_v1.py` ; à défaut, celle que la configuration
+# de la course écrit dans sa liste des empreintes du code ; ni l'une ni l'autre, ou empreinte différente : refus) ; HF_TOKEN (mode réel),
 # CONTROLE_IA_GITHUB_TOKEN ou CONTROLE_IA_GITHUB_TOKEN_2 (présence seulement, jamais affichés).
 set -uo pipefail
 QUOI="${1:?outil, --verifier-go-seulement, controles-explo, creation, apres-creation, surveillance ou destruction}"
@@ -107,7 +114,24 @@ resoudre_outil() {
 }
 ligne_outil() { echo "outil de location employé : $VAST (version : $VAST_VERSION ; trouvé par : $VAST_ORIGINE)"; }
 LOCATION="$(cd "$(dirname "$0")/.." && pwd)/src/controle_ia/iib/location_v1.py"      # à côté du lanceur, dans le même arbre (et non dans IIB_DEPOT)
-location() { python3 -I -B "$LOCATION" "$@"; }
+MODULE_VERIFIE=non
+location() { [ "$MODULE_VERIFIE" = oui ] || return 97; python3 -I -B "$LOCATION" "$@"; }
+# Le module de lecture est du code de confiance, au même titre que le lanceur : son empreinte est vérifiée avant tout emploi. Empreinte
+# attendue : IIB_LOCATION_SHA256, ou celle de la liste des empreintes du code de la configuration de la course (DOSSIER/config.json) ;
+# les deux présentes doivent être égales. Rend 0 et fixe MODULE_VERIFIE=oui ; sinon écrit la raison et rend 1. Argument : dossier.
+verifier_module() {
+    local env="${IIB_LOCATION_SHA256:-}" cfg="" attendue vue
+    [ -z "$env" ] || [[ "$env" =~ ^[0-9a-f]{64}$ ]] || { echo "IIB_LOCATION_SHA256 illisible (64 caractères hexadécimaux)"; return 1; }
+    [ ! -f "$1/config.json" ] || cfg=$(cle_config "$1/config.json" marqueurs.EMPREINTES_CODE_IIB 2>/dev/null | grep -oE 'src/controle_ia/iib/location_v1\.py [0-9a-f]{64}' | head -1 | cut -d' ' -f2) || cfg=""
+    [ -n "$env" ] || [ -n "$cfg" ] || { echo "empreinte attendue du module de lecture absente (ni IIB_LOCATION_SHA256, ni la liste des empreintes du code de la configuration)"; return 1; }
+    [ -z "$env" ] || [ -z "$cfg" ] || [ "$env" = "$cfg" ] || { echo "empreinte attendue du module de lecture : IIB_LOCATION_SHA256 et la configuration se contredisent"; return 1; }
+    attendue="${env:-$cfg}"
+    [ -f "$LOCATION" ] || { echo "module de lecture absent ($LOCATION)"; return 1; }
+    vue=$(sha256sum < "$LOCATION" | cut -d' ' -f1)
+    [ "$vue" = "$attendue" ] || { echo "module de lecture $LOCATION : empreinte $vue ≠ empreinte attendue $attendue"; return 1; }
+    MODULE_VERIFIE=oui
+}
+ETATS_ARRET="exited stopped"   # liste FERMÉE des états d'arrêt : aucune variable ne l'élargit ; un état neuf passe par une version nouvelle du code
 # Fichier neuf à nom unique et daté, droits restreints (jamais d'écrasement, R12) : dossier, base, extension ; écrit le chemin.
 fichier_neuf() { ( umask 077; mktemp "$1/$2-$(horodate)-XXXXXX.$3" ); }
 # Mise à l'écart d'une sortie brute que le masquage n'a pas pu traiter : gardée ENTIÈRE, nom marqué, droits restreints ; écrit le chemin.
@@ -255,6 +279,7 @@ creation)
     [[ "$ECH" =~ ^[0-9]+$ ]] && [ "$ECH" -le "$FIN_GO" ] && [ "$ECH" -gt "$(date +%s)" ] || { echo "échéance $ECH hors de ]maintenant, fin du GO $FIN_GO]"; exit 2; }
     JGHN=$(jeton_gh_nom) && { [ -n "${HF_TOKEN:-}" ] || [ "$MODE_C" = jouet ]; } || { echo "jeton absent (GitHub, ou HF_TOKEN en mode réel) : pas de création"; exit 2; }
     MSG=$(resoudre_outil) || { echo "$MSG : pas de création"; exit 2; }; resoudre_outil >/dev/null
+    MSG=$(verifier_module "$D") || { echo "$MSG : pas de création"; exit 2; }; verifier_module "$D" >/dev/null
     ligne_outil; printf 'outil_location %s\noutil_location_version %s\n' "$VAST" "$VAST_VERSION" >> "$D/lancement.txt"
     DISQUE=$(cle_config "$D/config.json" offre.disque_min_go) || { echo "disque illisible"; exit 2; }
     [[ "$DISQUE" =~ ^[0-9]+([.][0-9]+)?$ ]] && [ "${DISQUE%%.*}" -gt 0 ] || { echo "offre.disque_min_go illisible ($DISQUE) : pas de création"; exit 2; }
@@ -284,14 +309,16 @@ creation)
     [ "$(printf %s "$B64" | base64 -d | sha256sum | cut -d' ' -f1)" = "$(champ amorce "$D/lancement.txt")" ] || { echo "encodage de l'amorce"; exit 2; }
     TA="$(champ tests_attendus "$D/lancement.txt")"; [[ "$TA" =~ ^[0-9]*$ ]] || { echo "tests attendus illisibles"; exit 2; }
     CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e IIB_GO_ID=$GOC -e MODE=$MODE_C -e PREREG_ABSENT=1 -e CONFIG=$(champ config "$D/lancement.txt") -e TESTS_ATTENDUS=$TA -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute-essai$((ESSAIS + 1)).json\" 2>&1 </dev/null; VAST=$VAST bash $DEPOT/$MOI apres-creation \"$D/creation-brute-essai$((ESSAIS + 1)).json\" \$? \"$D\""
+    [ ! -e "$D/creation-brute-essai$((ESSAIS + 1)).json" ] || { echo "$D/creation-brute-essai$((ESSAIS + 1)).json existe déjà (R12) : pas de création"; exit 2; }
+    case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) ;; *) echo "étiquette de la configuration ($ETIQ) hors du préfixe « $PREFIXE_ETIQUETTE » du saboteur à budget : pas de création"; exit 2;; esac
+    [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]{1,60}$ ]] || { echo "étiquette de la configuration illisible (1 à 60 caractères de [A-Za-z0-9_.-]) : pas de création"; exit 2; }
     for v in REQUESTS_CA_BUNDLE SSL_CERT_FILE HTTPS_PROXY NO_PROXY; do
         case "$CMD" in *"$v"*) echo "la commande de création nomme $v (variable du mandataire, jamais transmise à l'instance) : refus"; exit 2;; esac
     done
     printf '{"tool_input":{"command":%s}}' "$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$CMD")" | python3 "$DEPOT/.claude/hooks/garde_calcul.py" || { echo "garde de calcul : commande refusée"; exit 2; }
+    # Tous les refus sont AU-DESSUS de cette ligne : un refus ne consomme pas un des trois essais de création.
     printf 'creation preparee %s\noffre %s\ncarte %s\nstorage %s\nprix_carte %s\nprix_stockage %s\ntelechargement_forfait %s\nanterieure %s\necheance %s\nepuisement %s\ndepense %s\nplafond_creation %s\nessai_creation %s\nmachine_proposee %s\nrang %s\n' \
         "$(date -u +%FT%TZ)" "$OFFRE" "$CARTE" "$DISQUE" "$PC" "$PS" "$TEL" "$ANT" "$ECH" "$EPUIS" "$DEP" "$PLC" "$((ESSAIS + 1))" "$MACH" "$RANG" >> "$D/lancement.txt"
-    [ ! -e "$D/creation-brute-essai$((ESSAIS + 1)).json" ] || { echo "$D/creation-brute-essai$((ESSAIS + 1)).json existe déjà (R12) : pas de création"; exit 2; }
-    case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) ;; *) echo "étiquette de la configuration ($ETIQ) hors du préfixe « $PREFIXE_ETIQUETTE » du saboteur à budget : pas de création"; exit 2;; esac
     printf 'etiquette %s\n' "$ETIQ" >> "$D/lancement.txt"
     echo "OFFRE CONFORME : $OF ; $INV ; $DEP ; $CAR ; $S7B"
     echo "COMMANDE DE CRÉATION (à exécuter une seule fois par l'exécutante, jetons par leur nom seulement) :"
@@ -300,6 +327,7 @@ apres-creation)
     F="${2:-}"; C="${3:-}"; D="${4:-}"
     [ -n "$F" ] && [ -n "$C" ] && [ -n "$D" ] || { echo "usage : apres-creation FICHIER CODE DOSSIER"; exit 2; }
     [ -d "$D" ] && [ -f "$D/lancement.txt" ] || { echo "CRÉATION INCERTAINE (code $C) : dossier de la session $D ou son lancement.txt absent ; réponse brute laissée telle quelle à $F ; vérifier l'inventaire (champs filtrés) ; aucune seconde création avant"; exit 4; }
+    MSG=$(verifier_module "$D") && verifier_module "$D" >/dev/null || echo "ALERTE : $MSG : aucune lecture par programme (ni masquage, ni verdict)"
     # Conservation de la réponse brute AVANT toute lecture et tout verdict (R-3687, R-3661) : rien n'est supprimé.
     LUE=""
     if [ -f "$F" ]; then
@@ -385,6 +413,11 @@ surveillance)
             if [ "$ILLISIBLES" -ge 3 ]; then DEC="ARRET garde : garde de dépense illisible trois fois de suite ($DEC)"; else DEC="ALERTE garde de dépense illisible ($ILLISIBLES/3) : $DEC"; fi
         fi
         echo "$(date -u +%FT%TZ) $DEC" >> "$D/surveillance.txt"
+        case "$DEC" in ARRET*|FIN*|REFUS*)      # fin de la surveillance : une copie datée des journaux, avec empreinte (R-3661) ; rien d'autre ne change
+            for jf in surveillance.txt progres.txt journal-dernier.txt journal-instance.txt; do
+                [ ! -s "$D/$jf" ] || conserver "$D/$jf" "$D" "fin-de-surveillance-${jf%.txt}" txt >/dev/null || echo "ALERTE : copie datée de $jf impossible"
+            done; echo "journaux de la surveillance copiés, datés, dans $D/traces-location (fin-de-surveillance-*)" ;;
+        esac
         case "$DEC" in
             ARRET*) echo "$DEC"; echo "ARRÊT PAR L'IDENTIFIANT (R10) : timeout -k 5 120 $VAST stop instance $ID"; exit 3 ;;
             FIN*) echo "$DEC"; echo "FIN : instance à arrêter par son identifiant (disque gardé jusqu'au rapatriement vérifié) : timeout -k 5 120 $VAST stop instance $ID"; exit 0 ;;
@@ -402,20 +435,29 @@ destruction)
     [ -f "$D/lancement.txt" ] || { echo "dossier sans lancement.txt : aucune destruction"; exit 2; }
     [ "$(champ instance "$D/lancement.txt")" = "$ID" ] || { echo "identifiant $ID ≠ instance créée d'après $D/lancement.txt (R10) : aucune destruction"; exit 2; }
     [ "${RAPATRIEMENT_VERIFIE:-}" = oui ] || { echo "RAPATRIEMENT_VERIFIE=oui exigé (rapatriement vérifié, ou mot de la mère sur les écarts : ordre, étapes 5 et 6) : aucune destruction"; exit 2; }
-    INTOUCHABLES="${IIB_INSTANCES_INTOUCHABLES:-}"
-    [[ "$INTOUCHABLES" =~ ^([1-9][0-9]*(,[1-9][0-9]*)*)?$ ]] || { echo "IIB_INSTANCES_INTOUCHABLES illisible (identifiants séparés par des virgules, ou vide) : aucune destruction"; exit 2; }
+    [ -z "${IIB_DESTRUCTION_ETATS_ARRET:-}" ] || { echo "IIB_DESTRUCTION_ETATS_ARRET n'existe plus : la liste des états d'arrêt ($ETATS_ARRET) est fermée, écrite dans le code ; retirer la variable : aucune destruction"; exit 2; }
+    INTOUCHABLES="${IIB_INSTANCES_INTOUCHABLES:-}"; AUCUNE="${IIB_AUCUNE_INTOUCHABLE:-}"
+    [[ "$INTOUCHABLES" =~ ^([1-9][0-9]*(,[1-9][0-9]*)*)?$ ]] || { echo "IIB_INSTANCES_INTOUCHABLES illisible (identifiants séparés par des virgules) : aucune destruction"; exit 2; }
+    [ -z "$AUCUNE" ] || [ "$AUCUNE" = oui ] || { echo "IIB_AUCUNE_INTOUCHABLE : « oui » ou rien : aucune destruction"; exit 2; }
+    if [ -z "$INTOUCHABLES" ]; then
+        [ "$AUCUNE" = oui ] || { echo "liste des instances intouchables vide ou absente (IIB_INSTANCES_INTOUCHABLES : identifiants des machines des autres chantiers) : refus, sauf attestation explicite IIB_AUCUNE_INTOUCHABLE=oui : aucune destruction"; exit 2; }
+        DIT_INTOUCHABLES="aucune, attesté par IIB_AUCUNE_INTOUCHABLE=oui"
+    else
+        [ -z "$AUCUNE" ] || { echo "IIB_AUCUNE_INTOUCHABLE=oui contredit une liste IIB_INSTANCES_INTOUCHABLES non vide : aucune destruction"; exit 2; }
+        DIT_INTOUCHABLES="$INTOUCHABLES"
+    fi
     case ",$INTOUCHABLES," in *",$ID,"*) echo "identifiant $ID dans la liste des instances intouchables (IIB_INSTANCES_INTOUCHABLES) : aucune destruction"; exit 2;; esac
     ETIQ=$(champ etiquette "$D/lancement.txt"); [ -n "$ETIQ" ] || ETIQ=$(cle_config "$D/config.json" offre.etiquette 2>/dev/null) || ETIQ=""
-    [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]+$ ]] && case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) true;; *) false;; esac \
+    [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]{1,60}$ ]] && case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) true;; *) false;; esac \
         || { echo "étiquette posée à la création illisible ou hors du préfixe « $PREFIXE_ETIQUETTE » (ligne « etiquette » de lancement.txt, ou offre.etiquette de config.json) : aucune destruction"; exit 2; }
-    RELECTURES="${IIB_DESTRUCTION_RELECTURES:-6}"; ATTENTE="${IIB_DESTRUCTION_ATTENTE_S:-10}"; ETATS_ARRET="${IIB_DESTRUCTION_ETATS_ARRET:-exited stopped}"
+    RELECTURES="${IIB_DESTRUCTION_RELECTURES:-6}"; ATTENTE="${IIB_DESTRUCTION_ATTENTE_S:-10}"
     [[ "$RELECTURES" =~ ^[1-9][0-9]*$ ]] && [ "$RELECTURES" -ge 2 ] && [[ "$ATTENTE" =~ ^[0-9]+$ ]] || { echo "IIB_DESTRUCTION_RELECTURES (entier ≥ 2 : deux relectures concordantes exigées) ou IIB_DESTRUCTION_ATTENTE_S (entier ≥ 0) illisible : aucune destruction"; exit 2; }
-    [[ "$ETATS_ARRET" =~ ^[a-z_]+(\ [a-z_]+)*$ ]] || { echo "IIB_DESTRUCTION_ETATS_ARRET illisible : aucune destruction"; exit 2; }
+    MSG=$(verifier_module "$D") || { echo "DESTRUCTION NON TENTÉE : $MSG : aucune lecture par programme de l'inventaire, donc aucune commande de destruction envoyée ; à relire"; exit 4; }; verifier_module "$D" >/dev/null
     MSG=$(resoudre_outil) || { echo "$MSG : aucune destruction"; exit 2; }; resoudre_outil >/dev/null
     ligne_outil
     JD="$D/destruction.txt"
-    echo "$(date -u +%FT%TZ) destruction demandée de l'instance $ID ; $(ligne_outil) ; rapatriement attesté par RAPATRIEMENT_VERIFIE=oui ; étiquette exigée : commence par « $ETIQ » ; états d'arrêt admis : $ETATS_ARRET ; instances intouchables : ${INTOUCHABLES:-liste vide}" >> "$JD"
-    echo "instances intouchables (IIB_INSTANCES_INTOUCHABLES) : ${INTOUCHABLES:-liste vide}"
+    echo "$(date -u +%FT%TZ) destruction demandée de l'instance $ID ; $(ligne_outil) ; rapatriement attesté par RAPATRIEMENT_VERIFIE=oui ; étiquette exigée : exactement « $ETIQ » ; états d'arrêt admis (liste fermée) : $ETATS_ARRET ; instances intouchables : $DIT_INTOUCHABLES ; module de lecture vérifié" >> "$JD"
+    echo "instances intouchables : $DIT_INTOUCHABLES"
     inventaire_lu "$D" instances-avant-destruction "$ID" ""; c_inv=$?
     echo "$(date -u +%FT%TZ) inventaire d'avant (code $c_inv) : $INV_LIGNE" >> "$JD"
     [ "$c_inv" = 0 ] || { echo "DESTRUCTION NON TENTÉE : inventaire d'avant illisible ou en erreur ($INV_LIGNE) : aucune commande de destruction envoyée ; un inventaire illisible n'est pas une preuve ; à relire"; exit 4; }
@@ -423,10 +465,11 @@ destruction)
     if [ "$ETAT" != present ]; then
         echo "ABSENCE NON CONFIRMÉE : l'instance $ID n'est pas à l'inventaire d'avant ($(mot_inv n) instance(s) au compte) ; aucune commande de destruction envoyée ; ce n'est pas une preuve de destruction (inventaire vide par erreur, autre compte, filtre) : rien n'est consigné comme vérifié ; à relire, message à la mère"; exit 7
     fi
-    case "$ETIQ_VUE" in "$ETIQ"*) ;; *) echo "$(date -u +%FT%TZ) refus : étiquette « $ETIQ_VUE »" >> "$JD"
-        echo "REFUS : à l'inventaire, l'instance $ID porte l'étiquette « $ETIQ_VUE », qui ne commence pas par « $ETIQ » : ce n'est pas l'instance du saboteur à budget : aucune destruction"; exit 2;; esac
+    case "$ETIQ_VUE" in "$ETIQ") ;; *) echo "$(date -u +%FT%TZ) refus : étiquette « $ETIQ_VUE »" >> "$JD"
+        echo "REFUS : à l'inventaire, l'instance $ID porte l'étiquette « $ETIQ_VUE », qui n'est pas exactement « $ETIQ », celle consignée à la création : ce n'est pas l'instance du saboteur à budget : aucune destruction"; exit 2;; esac
     case " $ETATS_ARRET " in *" $STATUT "*) ;; *) echo "$(date -u +%FT%TZ) refus : état « $STATUT »" >> "$JD"
-        echo "REFUS : l'instance $ID est à l'état « $STATUT », hors des états d'arrêt admis ($ETATS_ARRET) : l'arrêter d'abord par son identifiant, rapatrier, puis détruire : aucune destruction"; exit 2;; esac
+        echo "REFUS : l'instance $ID est à l'état « $STATUT », hors de la liste fermée des états d'arrêt ($ETATS_ARRET) : une instance qui tourne n'est jamais détruite par cette sous-commande (l'arrêter d'abord par son identifiant, rapatrier, puis détruire) ; si c'est le nom que l'outil donne à l'arrêt, le code changera en version nouvelle : aucune destruction"; exit 2;; esac
+    printf 'rapatriement_atteste %s RAPATRIEMENT_VERIFIE=oui instance=%s par=%s@%s\n' "$(date -u +%FT%TZ)" "$ID" "$(id -un 2>/dev/null | tr -c 'A-Za-z0-9_.\n-' '?' || echo inconnu)" "$(hostname 2>/dev/null | tr -c 'A-Za-z0-9_.\n-' '?' || echo inconnu)" >> "$D/lancement.txt"
     echo "commande de destruction (par l'identifiant, R10 ; confirmation non interactive) : timeout -k 5 120 $VAST destroy instance $ID -y"
     SORTIE=$(fichier_neuf "$D" destruction-sortie txt) || { echo "fichier de sortie impossible dans $D : aucune destruction"; exit 2; }
     timeout -k 5 120 "$VAST" destroy instance "$ID" -y > "$SORTIE" 2>&1 </dev/null; CD=$?                 # sur disque d'abord, puis masquée

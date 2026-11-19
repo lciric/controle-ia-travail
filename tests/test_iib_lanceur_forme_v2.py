@@ -31,6 +31,9 @@ LANCEUR_V1 = RACINE / "scripts" / "lancer_iib_v1.sh"
 LANCEUR_V2 = RACINE / "scripts" / "lancer_iib_v2.sh"
 EMPREINTE_LANCEUR_V1 = "3279e3dcc631519e574c2011f9f143d956d3b668c729a176cd8efc0e99dece8f"      # citée par l'ordre scellé de la première course
 ID = "61414494"
+AUTRE = 58936096          # machine d'un autre chantier (« intouchable »), présente à l'inventaire du poste
+MODULE = RACINE / "src" / "controle_ia" / "iib" / "location_v1.py"
+EMPREINTE_MODULE = hashlib.sha256(MODULE.read_bytes()).hexdigest()
 JETON_HF, JETON_GH, CLE_LOUEUR = "hf_FACTICEfactice0123456789", "ghp_FACTICEfactice0123456789", "cle-loueur-factice-0123456789abcdef"
 
 # Faux outil de location. `--version` rend une version ; `create instance` rend le fichier FAUX_REPONSE et le code FAUX_CODE ;
@@ -75,6 +78,8 @@ echo "appel inattendu : $*" >&2; exit 3
 def lanceur_v2_partout(monkeypatch):
     """Les essais repris de la v1 lancent la v2."""
     monkeypatch.setattr(v1s, "LANCEUR", LANCEUR_V2)
+    env_v1 = v1s._env
+    monkeypatch.setattr(v1s, "_env", lambda m, **sup: env_v1(m, **{"IIB_LOCATION_SHA256": EMPREINTE_MODULE, **sup}))
 
 
 @pytest.fixture
@@ -100,7 +105,8 @@ def _lancer(p, *args, script=None, **sup):
     e = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(p["tmp"]), "LANG": os.environ.get("LANG", "C.UTF-8"), "IIB_DEPOT": str(RACINE),
          "VAST": str(p["outil"]), "FAUX_VASTAI_JOURNAL": str(p["appels"]), "FAUX_INSTANCES": str(p["inv"]), "FAUX_JOURNAL": str(p["tmp"] / "journal.txt"),
          "HF_TOKEN": JETON_HF, "CONTROLE_IA_GITHUB_TOKEN_2": JETON_GH, "VAST_API_KEY": CLE_LOUEUR, "INTERVALLE": "1",
-         "IIB_DESTRUCTION_ATTENTE_S": "0", "IIB_DESTRUCTION_RELECTURES": "2", "RAPATRIEMENT_VERIFIE": "oui"}
+         "IIB_DESTRUCTION_ATTENTE_S": "0", "IIB_DESTRUCTION_RELECTURES": "2", "RAPATRIEMENT_VERIFIE": "oui",
+         "IIB_INSTANCES_INTOUCHABLES": str(AUTRE), "IIB_LOCATION_SHA256": EMPREINTE_MODULE}
     e.update(sup)
     e = {k: v for k, v in e.items() if v is not None}
     return subprocess.run(["bash", str(script or LANCEUR_V2), *map(str, args)], env=e, capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
@@ -212,7 +218,7 @@ def test_creation_de_bout_en_bout_avec_un_outil_hors_du_path(monde, tmp_path):
     assert f"timeout -k 10 300 {outil} create instance " in cmd and f"; VAST={outil} bash {monde['src']}/scripts/lancer_iib_v2.sh apres-creation " in cmd
     assert "lancer_iib_v1.sh" not in cmd and JETON_HF not in cmd and "jeton-gh-factice" not in cmd
     assert len(_traces({"d": d}, "offres-")) == 1 and len(_traces({"d": d}, "instances-")) == 1         # sorties de la location versées
-    e = _env(monde, **sup)
+    e = _env(monde, IIB_LOCATION_SHA256=EMPREINTE_MODULE, **sup)
     e.pop("VAST")                                                              # la commande imprimée se suffit : chemin absolu écrit dedans
     r = subprocess.run(["bash", "-c", cmd], env=e, capture_output=True, text=True, timeout=120, cwd=str(monde["src"]))
     assert r.returncode == 0 and "CRÉÉE : instance 777777" in r.stdout and "RÉPONSE BRUTE DU LOUEUR CONSERVÉE" in r.stdout, r.stdout + r.stderr
@@ -339,8 +345,8 @@ def test_destruction_sain_option_y_par_identifiant_et_absence_verifiee(poste):
     for prefixe, nombre in (("destruction-sortie-", 1), ("instances-avant-destruction-", 1), ("instances-apres-destruction-", 2)):
         traces = _traces(poste, prefixe)
         assert len(traces) == nombre and all(_empreinte_tenue(x) for x in traces), prefixe
-    assert "absente de deux relectures concordantes" in r.stdout and "instances intouchables (IIB_INSTANCES_INTOUCHABLES) : liste vide" in r.stdout
-    assert "instances intouchables : liste vide" in journal and "RAPATRIEMENT_VERIFIE=oui" in journal
+    assert "absente de deux relectures concordantes" in r.stdout and f"instances intouchables : {AUTRE}" in r.stdout
+    assert f"instances intouchables : {AUTRE}" in journal and "RAPATRIEMENT_VERIFIE=oui" in journal and "liste fermée) : exited stopped" in journal
 
 
 @pytest.mark.parametrize("mode, code, motif", [("sans-effet", 6, "DESTRUCTION NON OBTENUE : la commande a rendu le code 0"),
@@ -391,9 +397,6 @@ def test_destruction_artefacts_jamais_une_autre_instance_ni_un_motif(poste, iden
 
 # === Corrections de la contre-lecture du 19 novembre (un bloquant, trois majeurs, mineurs) ===================================
 # Les sept attaques du contre-lecteur (`test_attaques_lanceur_v2_cl1.py`) sont reprises ici ; chaque essai affirme le comportement sûr.
-AUTRE = 58936096          # machine d'un autre chantier (« intouchable »), présente à l'inventaire du poste
-
-
 def _lancement_sans_instance(p):
     (p["d"] / "lancement.txt").write_text("machine_proposee 101\ncarte course\nanterieure 0\necheance 4102444800\nmode jouet\netiquette iib-explo-v1\n", encoding="utf-8")
 
@@ -427,8 +430,9 @@ def test_attaque_1_bis_autre_machine_consignee_par_erreur_refusee_par_l_etiquett
     avec une étiquette qui n'est pas celle du saboteur à budget : refus sans appel ; refus aussi par la liste des intouchables."""
     with (poste["d"] / "lancement.txt").open("a", encoding="utf-8") as f:
         f.write(f"instance {AUTRE}\n")
-    r = _lancer(poste, "destruction", AUTRE, poste["d"], IIB_DESTRUCTION_ETATS_ARRET="running exited")
-    assert r.returncode == 2 and "porte l'étiquette « a1-v4 », qui ne commence pas par « iib-explo-v1 »" in r.stdout, r.stdout + r.stderr
+    poste["inv"].write_text(poste["inv"].read_text(encoding="utf-8").replace('"running"', '"exited"'), encoding="utf-8")       # l'état ne la protège pas : l'étiquette, si
+    r = _lancer(poste, "destruction", AUTRE, poste["d"], IIB_INSTANCES_INTOUCHABLES="61000001")
+    assert r.returncode == 2 and "porte l'étiquette « a1-v4 », qui n'est pas exactement « iib-explo-v1 »" in r.stdout, r.stdout + r.stderr
     r = _lancer(poste, "destruction", AUTRE, poste["d"], IIB_INSTANCES_INTOUCHABLES=f"61000001,{AUTRE}")
     assert r.returncode == 2 and "dans la liste des instances intouchables" in r.stdout, r.stdout + r.stderr
     assert sorted(_restantes(poste)) == sorted([int(ID), AUTRE]) and not any(a.startswith("destroy") for a in _appels(poste))
@@ -555,7 +559,11 @@ def test_attaque_7_destruction_rejouee_n_ecrase_aucun_fichier(poste):
     ("rapatriement_autre_mot", {"RAPATRIEMENT_VERIFIE": "non"}, "RAPATRIEMENT_VERIFIE=oui exigé"),
     ("intouchable", {"IIB_INSTANCES_INTOUCHABLES": f"{AUTRE},{ID}"}, "dans la liste des instances intouchables"),
     ("liste_illisible", {"IIB_INSTANCES_INTOUCHABLES": "a1-v4;iib"}, "IIB_INSTANCES_INTOUCHABLES illisible"),
-    ("etats_illisibles", {"IIB_DESTRUCTION_ETATS_ARRET": "*"}, "IIB_DESTRUCTION_ETATS_ARRET illisible")])
+    ("liste_absente", {"IIB_INSTANCES_INTOUCHABLES": None}, "liste des instances intouchables vide ou absente"),
+    ("liste_vide", {"IIB_INSTANCES_INTOUCHABLES": ""}, "liste des instances intouchables vide ou absente"),
+    ("attestation_autre_mot", {"IIB_INSTANCES_INTOUCHABLES": None, "IIB_AUCUNE_INTOUCHABLE": "non"}, "« oui » ou rien"),
+    ("attestation_contredite", {"IIB_AUCUNE_INTOUCHABLE": "oui"}, "contredit une liste"),
+    ("etats_elargis_par_variable", {"IIB_DESTRUCTION_ETATS_ARRET": "running exited stopped"}, "IIB_DESTRUCTION_ETATS_ARRET n'existe plus")])
 def test_destruction_gardes_artefacts_refus_avant_tout_appel(poste, cas, sup, motif):
     r = _lancer(poste, "destruction", ID, poste["d"], **sup)
     assert r.returncode == 2 and motif in r.stdout and "aucune destruction" in r.stdout, (cas, r.stdout + r.stderr)
@@ -564,17 +572,22 @@ def test_destruction_gardes_artefacts_refus_avant_tout_appel(poste, cas, sup, mo
 
 def test_destruction_liste_des_intouchables_saine_dite_au_journal(poste):
     r = _lancer(poste, "destruction", ID, poste["d"], IIB_INSTANCES_INTOUCHABLES=f"{AUTRE},61000001")
-    assert r.returncode == 0 and f"instances intouchables (IIB_INSTANCES_INTOUCHABLES) : {AUTRE},61000001" in r.stdout, r.stdout + r.stderr
+    assert r.returncode == 0 and f"instances intouchables : {AUTRE},61000001" in r.stdout, r.stdout + r.stderr
     assert f"instances intouchables : {AUTRE},61000001" in (poste["d"] / "destruction.txt").read_text(encoding="utf-8") and _restantes(poste) == [AUTRE]
 
 
 @pytest.mark.parametrize("cas, motif", [("en_marche", "est à l'état « running »"), ("etat_absent", "est à l'état « aucun »"),
                                         ("etiquette_autre", "porte l'étiquette « t06-7b »"), ("sans_etiquette", "porte l'étiquette « aucun »"),
-                                        ("etiquette_iib_d_une_autre_course", "porte l'étiquette « iib-autre-v9 »")])
+                                        ("etiquette_iib_d_une_autre_course", "porte l'étiquette « iib-autre-v9 »"),
+                                        ("etiquette_au_meme_debut", "porte l'étiquette « iib-explo-v1-autre-chantier », qui n'est pas exactement « iib-explo-v1 »"),
+                                        ("etiquette_plus_courte", "porte l'étiquette « iib-explo », qui n'est pas exactement"),
+                                        ("etat_d_arret_d_un_autre_nom", "est à l'état « offline », hors de la liste fermée")])
 def test_destruction_gardes_d_inventaire_artefacts_refus_sans_appel_de_destruction(poste, cas, motif):
     entree = {"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"}
     entree.update({"en_marche": {"actual_status": "running"}, "etat_absent": {"actual_status": None}, "etiquette_autre": {"label": "t06-7b"},
-                   "sans_etiquette": {"label": None}, "etiquette_iib_d_une_autre_course": {"label": "iib-autre-v9"}}[cas])
+                   "sans_etiquette": {"label": None}, "etiquette_iib_d_une_autre_course": {"label": "iib-autre-v9"},
+                   "etiquette_au_meme_debut": {"label": "iib-explo-v1-autre-chantier"}, "etiquette_plus_courte": {"label": "iib-explo"},
+                   "etat_d_arret_d_un_autre_nom": {"actual_status": "offline"}}[cas])
     poste["inv"].write_text(json.dumps([entree, {"id": AUTRE, "label": "a1-v4", "actual_status": "running"}]), encoding="utf-8")
     r = _lancer(poste, "destruction", ID, poste["d"])
     assert r.returncode == 2 and motif in r.stdout and "aucune destruction" in r.stdout, (cas, r.stdout + r.stderr)
@@ -707,3 +720,130 @@ def test_inventaire_trace_jamais_ecrasee(tmp_path):
     (tmp_path / "trace.json").write_text("déjà là", encoding="utf-8")
     assert _location().main(["inventaire", str(brut), str(tmp_path / "trace.json"), "iib"]) == 1
     assert (tmp_path / "trace.json").read_text(encoding="utf-8") == "déjà là" and brut.read_text(encoding="utf-8") == "[]"
+
+
+# === Erratum 1 (vérification des corrections : quatre mineurs neufs, et deux recommandations) =================================
+def test_erratum_n1_aucune_variable_ne_fait_detruire_une_instance_qui_tourne(poste):
+    """N1. Liste fermée des états d'arrêt : ni la variable retirée, ni aucune autre, ne fait détruire une instance « running »."""
+    poste["inv"].write_text(json.dumps([{"id": int(ID), "label": "iib-explo-v1", "actual_status": "running"},
+                                        {"id": AUTRE, "label": "a1-v4", "actual_status": "running"}]), encoding="utf-8")
+    for sup in ({}, {"IIB_DESTRUCTION_ETATS_ARRET": "running"}, {"ETATS_ARRET": "running"}):
+        r = _lancer(poste, "destruction", ID, poste["d"], **sup)
+        assert r.returncode == 2 and "aucune destruction" in r.stdout and int(ID) in _restantes(poste), (sup, r.stdout + r.stderr)
+    assert not any(a.startswith("destroy") for a in _appels(poste))
+    assert "une instance qui tourne n'est jamais détruite par cette sous-commande" in _lancer(poste, "destruction", ID, poste["d"]).stdout
+
+
+def test_erratum_n2_etiquette_egale_et_autre_machine_au_meme_debut(poste):
+    """N2 (attaque du contre-lecteur) : autre machine à l'étiquette de même début, ligne `instance` fausse, hors de la liste : refus."""
+    poste["inv"].write_text(json.dumps([{"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"},
+                                        {"id": AUTRE, "label": "iib-explo-v1-autre-chantier", "actual_status": "exited"}]), encoding="utf-8")
+    with (poste["d"] / "lancement.txt").open("a", encoding="utf-8") as f:
+        f.write(f"instance {AUTRE}\n")
+    for sup in ({"IIB_INSTANCES_INTOUCHABLES": "61000001"}, {"IIB_INSTANCES_INTOUCHABLES": None, "IIB_AUCUNE_INTOUCHABLE": "oui"}):
+        r = _lancer(poste, "destruction", AUTRE, poste["d"], **sup)
+        assert r.returncode == 2 and "n'est pas exactement « iib-explo-v1 »" in r.stdout and AUTRE in _restantes(poste), r.stdout + r.stderr
+    assert not any(a.startswith("destroy") for a in _appels(poste))
+
+
+def test_erratum_intouchables_absentes_avec_attestation_dite_au_journal(poste):
+    """Cas sain de la garde : aucune liste, mais attestation explicite ; elle est dite sur la sortie et au journal."""
+    r = _lancer(poste, "destruction", ID, poste["d"], IIB_INSTANCES_INTOUCHABLES=None, IIB_AUCUNE_INTOUCHABLE="oui")
+    assert r.returncode == 0 and "instances intouchables : aucune, attesté par IIB_AUCUNE_INTOUCHABLE=oui" in r.stdout, r.stdout + r.stderr
+    assert "aucune, attesté par IIB_AUCUNE_INTOUCHABLE=oui" in (poste["d"] / "destruction.txt").read_text(encoding="utf-8")
+
+
+def test_erratum_rapatriement_atteste_ecrit_dans_le_lancement(poste):
+    """L'attestation est écrite en une ligne (quand, valeur, instance, qui) ; jamais quand une garde a refusé."""
+    r = _lancer(poste, "destruction", ID, poste["d"], RAPATRIEMENT_VERIFIE=None)
+    assert r.returncode == 2 and "rapatriement_atteste" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
+    poste["inv"].write_text(poste["inv"].read_text(encoding="utf-8").replace('"exited"', '"running"'), encoding="utf-8")
+    assert _lancer(poste, "destruction", ID, poste["d"]).returncode == 2 and "rapatriement_atteste" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
+    poste["inv"].write_text(poste["inv"].read_text(encoding="utf-8").replace(f'"id": {ID}, "label": "iib-explo-v1", "actual_status": "running"',
+                                                                             f'"id": {ID}, "label": "iib-explo-v1", "actual_status": "exited"'), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"])
+    assert r.returncode == 0, r.stdout + r.stderr
+    import re
+    (ligne,) = [l for l in (poste["d"] / "lancement.txt").read_text(encoding="utf-8").splitlines() if l.startswith("rapatriement_atteste ")]
+    assert re.fullmatch(r"rapatriement_atteste \d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ RAPATRIEMENT_VERIFIE=oui instance=%s par=[A-Za-z0-9_.?-]+@[A-Za-z0-9_.?-]+" % ID, ligne), ligne
+
+
+@pytest.mark.parametrize("cas", ["empreinte_absente", "empreinte_autre", "empreinte_illisible", "module_change", "module_absent", "contredit_la_configuration"])
+def test_erratum_n4_module_de_lecture_non_verifie_refus(poste, tmp_path, cas):
+    """N4. Le module de lecture est vérifié par son empreinte avant tout emploi : sinon aucune création, aucune destruction, et la
+    réponse de création est gardée entière, non lue."""
+    arbre = tmp_path / "arbre-copie"
+    (arbre / "scripts").mkdir(parents=True)
+    (arbre / "src" / "controle_ia" / "iib").mkdir(parents=True)
+    script = arbre / "scripts" / LANCEUR_V2.name
+    shutil.copy(LANCEUR_V2, script)
+    if cas != "module_absent":
+        shutil.copy(MODULE, arbre / "src" / "controle_ia" / "iib" / "location_v1.py")
+    sup = {}
+    if cas == "empreinte_absente":
+        sup["IIB_LOCATION_SHA256"] = None
+    elif cas == "empreinte_autre":
+        sup["IIB_LOCATION_SHA256"] = "0" * 64
+    elif cas == "empreinte_illisible":
+        sup["IIB_LOCATION_SHA256"] = "abc"
+    elif cas == "module_change":                                               # module menteur du contre-lecteur (attaque N5)
+        (arbre / "src" / "controle_ia" / "iib" / "location_v1.py").write_text(
+            'import sys\nif sys.argv[1] == "inventaire":\n    open(sys.argv[3], "w").write("{}")\n'
+            '    print("n=2 etat=present etiquette=iib-explo-v1 statut=exited autres_manquants=0")\n'
+            'elif sys.argv[1] == "masquer-en-place":\n    print("0 structure")\n', encoding="utf-8")
+    elif cas == "contredit_la_configuration":
+        (poste["d"] / "config.json").write_text(json.dumps({"marqueurs": {"EMPREINTES_CODE_IIB": "… ; src/controle_ia/iib/location_v1.py " + "1" * 64 + " ; …"}}), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"], script=script, **sup)
+    assert r.returncode == 4 and "DESTRUCTION NON TENTÉE" in r.stdout and "aucune commande de destruction envoyée" in r.stdout, (cas, r.stdout + r.stderr)
+    assert not any(a.startswith(("destroy", "show")) for a in _appels(poste))
+    f = poste["d"] / "creation-brute-x.json"
+    reponse = '{"success": true, "new_contract": 777777, "api_key": "sk-secret-0123456789abcdef"}'
+    f.write_text(reponse, encoding="utf-8")
+    _lancement_sans_instance(poste)
+    r = _lancer(poste, "apres-creation", f, 0, poste["d"], script=script, **sup)
+    assert r.returncode == 4 and _lignes_instance(poste) == [] and "aucune lecture par programme" in r.stdout, (cas, r.stdout + r.stderr)
+    assert Path(str(f) + ".NON-MASQUE").read_text(encoding="utf-8") == reponse and "sk-secret" not in r.stdout
+
+
+def test_erratum_n4_empreinte_lue_dans_la_configuration_cas_sain(poste):
+    """Sans variable, l'empreinte attendue vient de la liste des empreintes du code de la configuration de la course."""
+    (poste["d"] / "config.json").write_text(json.dumps({"marqueurs": {"EMPREINTES_CODE_IIB": "scripts/lancer_iib_v2.sh " + "a" * 64 + " ; src/controle_ia/iib/location_v1.py "
+                                                                      + EMPREINTE_MODULE + " ; tests/x.py " + "b" * 64}}), encoding="utf-8")
+    r = _lancer(poste, "destruction", ID, poste["d"], IIB_LOCATION_SHA256=None)
+    assert r.returncode == 0 and "module de lecture vérifié" in (poste["d"] / "destruction.txt").read_text(encoding="utf-8"), r.stdout + r.stderr
+
+
+def test_erratum_n3_un_refus_de_creation_ne_consomme_pas_un_essai(monde, tmp_path):
+    """N3. Refus de `creation` (réponse d'essai déjà présente, R12 ; module non vérifié) : aucune ligne `essai_creation` n'est écrite ;
+    cas sain : la création suivante porte l'essai numéro 1."""
+    d, r = _controles(monde)
+    assert r.returncode == 0, r.stdout + r.stderr
+    sup = dict(FAUX_INSTANCES=_instances(monde, []), FAUX_RETIRE="0")
+    (d / "creation-brute-essai1.json").write_text("déjà là", encoding="utf-8")
+    r = v1s._lancer(monde, "creation", "auto", "course", "0", d, **sup)
+    assert r.returncode == 2 and "existe déjà (R12)" in r.stdout and "COMMANDE DE CRÉATION" not in r.stdout, r.stdout + r.stderr
+    assert "essai_creation" not in (d / "lancement.txt").read_text(encoding="utf-8")
+    (d / "creation-brute-essai1.json").rename(d / "creation-brute-essai1-ecartee.json")
+    avant = (monde["tmp"] / "appels.txt").read_text(encoding="utf-8")
+    r = v1s._lancer(monde, "creation", "auto", "course", "0", d, IIB_LOCATION_SHA256="0" * 64, **sup)
+    assert r.returncode == 2 and "empreinte attendue" in r.stdout and "essai_creation" not in (d / "lancement.txt").read_text(encoding="utf-8"), r.stdout + r.stderr
+    assert (monde["tmp"] / "appels.txt").read_text(encoding="utf-8")[len(avant):].split() in ([], ["--version"], ["--version", "--version"])      # refus avant toute recherche d'offres
+    r = v1s._lancer(monde, "creation", "auto", "course", "0", d, **sup)
+    assert r.returncode == 0 and "COMMANDE DE CRÉATION" in r.stdout, r.stdout + r.stderr
+    lancement = (d / "lancement.txt").read_text(encoding="utf-8")
+    assert lancement.count("essai_creation ") == 1 and "essai_creation 1\n" in lancement and "creation-brute-essai1.json" in r.stdout
+
+
+def test_erratum_surveillance_copie_datee_des_journaux_a_la_fin_et_a_l_arret(poste):
+    """À FIN (cas sain) : une copie datée, avec empreinte, de chaque journal de la surveillance ; rien d'autre ne change au régime."""
+    r = _lancer(poste, "surveillance", ID, poste["d"])
+    assert r.returncode == 0 and "FIN" in r.stdout and "journaux de la surveillance copiés" in r.stdout, r.stdout + r.stderr
+    for nom in ("surveillance", "progres", "journal-dernier", "journal-instance"):
+        (copie,) = _traces(poste, f"fin-de-surveillance-{nom}-")
+        assert _empreinte_tenue(copie) and copie.read_bytes() == (poste["d"] / f"{nom}.txt").read_bytes()[:len(copie.read_bytes())], nom
+    # ARRET (garde de dépense illisible trois fois : prix illisible dans lancement.txt) : copie aussi, et rien d'écrasé
+    f = poste["d"] / "lancement.txt"
+    f.write_text(f.read_text(encoding="utf-8").replace("prix_carte 1.0", "prix_carte x"), encoding="utf-8")
+    r = _lancer(poste, "surveillance", ID, poste["d"])
+    assert r.returncode == 3 and "ARRET" in r.stdout and f"stop instance {ID}" in r.stdout, r.stdout + r.stderr
+    assert len(_traces(poste, "fin-de-surveillance-surveillance-")) == 2 and all(_empreinte_tenue(c) for c in _traces(poste, "fin-de-surveillance-"))
