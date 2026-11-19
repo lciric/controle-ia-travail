@@ -1,0 +1,8 @@
+#!/bin/bash
+# Lancement n° 1 de la lecture de l'étape B bis — écrit par la commande de lecture, valeurs développées
+cd "/tmp/claude-0/-home-user-controle-ia-travail/1829cd11-38fd-5ef8-9688-6827f39023bc/scratchpad/lecture-bbis-v4/arbre-de-lecture-v4" || exit 1
+env -u GIT_SSL_CAINFO -u GIT_ASKPASS -u GIT_EDITOR -u GIT_TERMINAL_PROMPT -u GIT_CONFIG_COUNT -u GIT_CONFIG_KEY_0 -u GIT_CONFIG_KEY_1 -u GIT_CONFIG_KEY_2 -u GIT_CONFIG_VALUE_0 -u GIT_CONFIG_VALUE_1 -u GIT_CONFIG_VALUE_2 -u BBIS_INSTANCE OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH="/tmp/claude-0/-home-user-controle-ia-travail/1829cd11-38fd-5ef8-9688-6827f39023bc/scratchpad/lecture-bbis-v4/arbre-de-lecture-v4/src" "/home/user/controle-ia-travail/.venv/bin/python" -m controle_ia.t07bbis.lecture_v5 --racine "/tmp/claude-0/-home-user-controle-ia-travail/1829cd11-38fd-5ef8-9688-6827f39023bc/scratchpad/lecture-bbis-v4/arbre-de-lecture-v4" --run-7b "20261111-151701-t06-reel" --run-bbis "20261118-154143-bbis-t07-v1" --run-lecture "20261119-000444-bbis-t07-lecture-v1" > "/tmp/claude-0/-home-user-controle-ia-travail/1829cd11-38fd-5ef8-9688-6827f39023bc/scratchpad/lecture-bbis-v4/sortie-lancement-1.txt" 2>&1 &
+echo $! > "/tmp/claude-0/-home-user-controle-ia-travail/1829cd11-38fd-5ef8-9688-6827f39023bc/scratchpad/lecture-bbis-v4/lancement-1.pid"
+wait $!
+echo $? > "/tmp/claude-0/-home-user-controle-ia-travail/1829cd11-38fd-5ef8-9688-6827f39023bc/scratchpad/lecture-bbis-v4/lancement-1.code"
+date -u +%Y-%m-%dT%H:%M:%SZ > "/tmp/claude-0/-home-user-controle-ia-travail/1829cd11-38fd-5ef8-9688-6827f39023bc/scratchpad/lecture-bbis-v4/lancement-1.fin"
