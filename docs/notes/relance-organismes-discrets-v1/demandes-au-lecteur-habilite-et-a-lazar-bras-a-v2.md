@@ -1,0 +1,90 @@
+# Bras A des organismes discrets — demandes au lecteur habilité et à la session principale, par Lazar — v2
+
+- **De** : le rédacteur du texte neuf du bras A (Claude Fable 5.2), pour la session de relance.
+- **Pour** : le lecteur habilité de la session principale (demandes 22 à 25) et la session principale elle-même (demandes 26 à 30). Cette pièce passe par Lazar ou par la branche principale ; elle se lit seule. **Le développeur habilité des moniteurs ne la reçoit pas** : il a la sienne (`demandes-au-developpeur-habilite-bras-a-v2.md`).
+- **Elle remplace, pour l'envoi**, avec la pièce du développeur, la première version (`demandes-a-la-session-principale-bras-a-v1.md`, `5c1d7996072a52e31990584a659ce7a22a381111a991c1e3869ecbc8a1cfbea3`), qui ne sort pas. Une relecture de cloisonnement (`relecture-cloisonnement-demandes-bras-a-v1.md`, `4334a2a1448e21f0cd1d30884bb57ae308893c0db0e227ef9691089bcc055de7`) a demandé de séparer les destinataires et de borner les réponses.
+- **Texte visé** : `prereg/T0.7-organismes-discrets-v-a-v2-brouillon28.md`, `604e0410f251c903c7e34d37762292ccafbdac821c2e08d0779f3886991736e9`. **Le lecteur habilité l'ouvre** pour les demandes 22 à 24. La vérification se fera sur la version que rendra la dernière contre-lecture ; ce brouillon dit ce qu'il y aura à vérifier.
+- **Ce que cette pièce ne contient pas** : aucun résultat, aucune sortie de lecteur, aucune dose jugée, aucun interne de moniteur.
+- **Comment répondre.** Chaque demande dit la forme de sa réponse. Aucune réponse ne doit porter un interne de moniteur — ni poids, ni vocabulaire, ni trait, ni score, ni texte d'action, ni ce que lit quel moniteur. La session principale relit les réponses avant de les transmettre à la relance.
+
+## Correspondance avec la première version
+
+Les numéros sont **les mêmes** que dans la première version, pour que les renvois du texte restent justes. Le numéro entre crochets est celui de la case du module du texte.
+
+| n° | n° v1 | case | ce qui change depuis la v1 |
+|---|---|---|---|
+| 22 | 22 | — | réponse ligne par ligne, « vérifié » ou « à corriger » ; « ce qui en dépend » ne dit plus le prix de l'attestation |
+| 23 | 23 | — | les lignes sont désignées par leurs dossiers ; réponse par empreinte |
+| 24 | 24, et la seconde question de 16 | [2] | deux attestations, chacune en oui ou non |
+| 25 | 25 | — | pour le lecteur habilité seul ; la description des différences d'exécution et la phrase sur ce qu'un moniteur pourrait repérer sont retirées ; réponse fermée |
+| 26 | 26 | — | on demande le chiffrage, non la décision |
+| 27 | 27 | [7] | inchangée |
+| 28 | 28 | — | inchangée |
+| 29 | 29 | — | inchangée |
+| 30 | 30 | — | inchangée |
+
+Les demandes 1 à 21 de la première version sont dans la pièce du développeur.
+
+---
+
+## IV. Pour le lecteur habilité
+
+**22. Le renvoi de la base.**
+- *Question.* Sur la version du texte que rendra la dernière contre-lecture, vérifie les lignes qui touchent la base « mots et coût » et le verdict de discrétion. La case « renvoi de la base » de 13.1 les liste : dans le module des cinq moniteurs, l'unité de permutation par épisode, l'unité de l'aire décisive, la classe honnête de l'aire conditionnelle ; ce que la base lit de la table B ; l'opacité des identifiants ; les textes des deux réserves sur le contrôle de l'adaptateur recopiés en 7.7, et le nom de son troisième état, que le texte appelle « pas au-dessus » ; la règle de la famille de quinze en 6.9.
+- *Réponse attendue.* Ligne par ligne, « vérifié » ou « à corriger ». Pour une ligne à corriger : son numéro, et une phrase de remplacement sans interne, relue par la session principale avant l'envoi.
+- *Ce qui en dépend.* La case du renvoi de la base, en 13.1.
+
+**23. Quatorze empreintes de la table d'en-tête.**
+- *Question.* La table d'en-tête du texte cite par leur empreinte quatorze pièces que la relance n'ouvre pas : celles dont le chemin est sous `docs/notes/bras-a-moniteurs-v1/` (hors la pièce « pour la relance, lanceur et appariement, sans interne »), sous `docs/notes/bras-a-contre-lecture-habilitee-v1/`, sous `registres/`, et les fichiers `prereg/T0.6…` et `prereg/T0.8…`. Peux-tu recalculer ces quatorze empreintes ?
+- *Réponse attendue.* Pour chaque ligne, « juste », ou l'empreinte juste. Rien du contenu.
+- *Ce qui en dépend.* Elles sont héritées de brouillons anciens ; personne de la relance ne les a vérifiées depuis.
+
+**24. Deux attestations.**
+- *Question.* (a) L'épreuve par retrait et la notice du module ont été faites pour sa version 7. Peux-tu écrire qu'aucun calcul de moniteur ne change entre la version 7 et la version qui fera foi ? (b) Si une livraison est un jour refusée pour sa forme et refaite sous un module corrigé, pourras-tu écrire qu'aucun calcul de moniteur ne change entre le module refusé et le module corrigé, la livraison étant refaite avec les mêmes clés de graine ?
+- *Réponse attendue.* Pour (a) : oui ou non, avec le chemin et l'empreinte de l'attestation si c'est oui. Pour (b) : « attestable » ou « non attestable », sans rien dire d'un moniteur.
+- *Ce qui en dépend.* (a) La case du module de 13.1. (b) Une précision de procédure de 6.9, sur la livraison refaite.
+
+**25. Deux questions sur le lanceur du bras. Pour le lecteur habilité seul.**
+- *Question.* La note du développeur habilité sur la lecture du lanceur du bras (`docs/notes/bras-a-moniteurs-v1/hypothese-de-l-echange-par-paire-lanceur-du-bras-v1.md`, `95e656e7…`, sur sa branche) relève trois différences d'exécution entre les deux épisodes d'une paire, et dit non vérifié le rejeu au bit près d'un lot à l'autre. (a) Ces trois différences peuvent-elles changer une entrée d'un des cinq moniteurs ? (b) Le rejeu au bit près d'un lot à l'autre peut-il être vérifié ?
+- *Réponse attendue.* Pour (a) : oui, non ou indéterminé, sans dire ce que lit quel moniteur. Pour (b) : oui ou non ; si oui, par quelle pièce, citée par son chemin et son empreinte.
+- *Ce qui en dépend.* Un avis du rédacteur, joint à la question du schéma de permutation que Lazar doit trancher (demande 27). Aucune règle du texte n'en dépend aujourd'hui.
+
+## V. Pour la session principale
+
+**26. Le chiffrage de la lecture du juge d'une autre lignée.**
+- *Question.* Le chiffrage des deux options — un sous-échantillon de 2 560 actions, ou les 6 400 : heures de carte, coût — est-il écrit ?
+- *Réponse attendue.* Son chemin et son empreinte, ou une date. Lazar tranche sur ce chiffrage ; la décision n'est pas demandée ici.
+- *Ce qui en dépend.* La case « lecture du juge d'une autre lignée » de 13.1.
+
+**27. [case 7] Le schéma de permutation.**
+- *Question.* La question est tenue par la session principale et posée à Lazar, sans défaut. Sa réponse est-elle inscrite ?
+- *Réponse attendue.* L'identifiant de la ligne du registre, ou « en attente ».
+- *Ce qui en dépend.* La case « schéma de permutation » de 13.1. Le texte porte les deux rédactions ; une seule restera, et le module devra dire le schéma dans ses réglages (demande 9 de la pièce du développeur).
+
+**28. La ligne de GO d'une livraison refaite.**
+- *Question.* La ligne du registre qui permet une livraison refaite doit citer trois empreintes **entières**, de soixante-quatre signes : celle du fichier d'arrêt de la livraison refusée, celle du module corrigé, celle du rapport de sa contre-lecture. Le registre abrège d'habitude. Une exception pour ces lignes est-elle possible ?
+- *Réponse attendue.* Oui ou non.
+- *Ce qui en dépend.* Le programme d'analyse ne compte pas une empreinte abrégée : une telle ligne n'ouvrirait rien (6.9 ; 13.2).
+
+**29. Le constat de lancement.**
+- *Question.* Avant chaque lecture, la session qui lance joue un petit programme, `scripts/constat_de_lancement_discretion_bras_a_v1.py`, que la relance écrit. Il vérifie, sur le registre courant de la branche principale, que la configuration de l'analyse y est inscrite et qu'aucune révocation n'est entrée. (a) L'empreinte d'une configuration peut-elle être inscrite au registre à la demande ? (b) Sous quelle forme une révocation s'inscrit-elle au registre ?
+- *Réponse attendue.* Pour (a) : oui ou non. Pour (b) : le type de la ligne et la façon dont elle nomme la ligne révoquée, avec un exemple fictif.
+- *Ce qui en dépend.* Sans constat sain, la lecture ne part pas (conventions ; 8.4 ; 13.2).
+
+**30. Le dossier de l'essai de mesure des lecteurs.**
+- *Question.* Le dossier de l'essai — 5,6 Mo, textes synthétiques, réponses que personne ne lit — est-il porté sur la branche principale ?
+- *Réponse attendue.* Oui ou non ; si oui, le commit.
+- *Ce qui en dépend.* Le texte cite ses rapports techniques et sa règle de choix par leur empreinte.
+
+---
+
+## Ce qui presse
+
+- **Avec la question du schéma de permutation, avant que Lazar y réponde** : 25.
+- **Dès la réponse de Lazar** : 27.
+- **Avant le scellement du texte** : 22, 24, 26, 28 et 29.
+- **Sans échéance** : 23 et 30.
+
+## Pour mémoire, déjà dit à Lazar
+
+Les demandes 6 et 7 de la pièce du développeur conditionnent deux des questions posées à Lazar : l'état d'un moniteur appris qui n'a pas pu être ajusté, et l'état d'un moniteur dont l'intervalle n'a pas pu être calculé. Leurs réponses sont à lui joindre dès qu'elles arrivent.
