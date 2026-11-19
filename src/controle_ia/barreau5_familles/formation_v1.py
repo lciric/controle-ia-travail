@@ -93,14 +93,23 @@ _NOM_FAMILLE = re.compile(r"(?P<base>T(?:0[1-9]|10)|A[1-3])(?P<relance>-x1)?(?P<
 # devis, § 3 : cinq instances à deux familles tenues à l'écart, une à deux familles d'apprentissage, une à une
 PLAN_INSTANCES = {1: ("T01", "T02"), 2: ("T03", "T04"), 3: ("T05", "T06"), 4: ("T07", "T08"), 5: ("T09", "T10"),
                   6: ("A1", "A2"), 7: ("A3",)}
-# devis du brouillon 3, § 3, chiffré pour 36 adaptateurs (familles d'apprentissage à deux membres). À trois membres, les
-# instances 6 et 7 n'ont ni coupure ni heures attendues : rien n'est deviné, leur configuration réelle est refusée
+# coupures et heures attendues des instances (devis, § 3) : deux entrées par instance d'apprentissage, choisies par le
+# nombre de membres des familles d'apprentissage (erratum 1 au brouillon 5, couple E-6a). Deux membres : devis du
+# brouillon 3 (36 adaptateurs). Trois membres : devis du brouillon 5 (39 adaptateurs, mot de Lazar, GO-2026-11-19-79),
+# instances 6 et 7 rechiffrées ; les instances 1 à 5 n'en dépendent pas
 COUPURES_USD = {1: 26.0, 2: 26.0, 3: 26.0, 4: 26.0, 5: 26.0, 6: 24.0, 7: 15.0}
 HEURES_ATTENDUES = {1: (8.90, 10.28), 2: (8.90, 10.28), 3: (8.90, 10.28), 4: (8.90, 10.28), 5: (8.90, 10.28),
                     6: (8.44, 9.36), 7: (5.12, 5.58)}
 INSTANCES_D_APPRENTISSAGE = (6, 7)
-MEMBRES_APPRENTISSAGE_DU_DEVIS = 2
+COUPURES_TROIS_MEMBRES_USD = {6: 28.0, 7: 17.0}
+HEURES_TROIS_MEMBRES = {6: (9.61, 10.99), 7: (5.71, 6.40)}
 PLAFOND_USD = 200.0
+# relance (texte, « Calendrier », borne de la relance ; erratum 1, couples E-4a et E-8a ; GO-2026-11-19-87) : à
+# l'inscription de la ligne GO-RELANCE-FORMATION-B5F, deux instances au plus, 56 USD de coupures au plus ; en cours de
+# marche, une relance n'a pas de troisième compteur : sa seule limite est la coupure de l'instance qu'elle remplace, et le
+# plafond commun ne la compte pas
+RELANCES_MAX = 2
+ENVELOPPE_RELANCE_USD = 56.0
 QUART_D_HEURE_H = 0.25
 ETIQUETTE = "b5f-formation-v1-{n}"
 TACHES_PAR_PLI = 16
@@ -321,6 +330,8 @@ def _exiger_ligne_de_tirage(x, quoi: str, distillation: bool) -> None:
     for a in e["actions"]:
         _cles(a, CLES_LIGNE_D_EDITION, f"{quoi}, ligne d'édition")
         _contenu(_est_entier(a["pas"]) and isinstance(a["editable"], bool) and (a["motif"] is None or isinstance(a["motif"], str))
+                 and ((a["classe"] is None and a["editable"] is True)
+                      or (a["editable"] is False and a["classe"] in ec.CLASSES_NON_EDITABLE))
                  and _nombre_ou_rien(a["valeur_origine"])
                  and all(isinstance(a[c], dict) and set(a[c]) <= set(MEMBRES_TENUE)
                          for c in ("valeurs", "empans", "textes", "ecritures"))
@@ -1254,6 +1265,9 @@ def _former_une_famille(modele, fmt, famille, statut, config, taches, consignes,
                             "(liste d'arrêt, point 4)")
         ecrire_resultat(racine, chemin_m, f"famille-{famille}", statut)
         return statut
+    # texte, point 3 (erratum 1, couple E-2a) : le marqueur s'écrit au résultat de la famille ; la part par motif est au
+    # contrôle du tirage formé (`statut["tirages"]`)
+    statut["part_non_editable_haute"] = bool(info["controle"]["part_non_editable_haute"])
     dossier = racine_sorties / nom
     etat["etape"] = f"distillation {nom}"
     dist = distiller_famille(modele, nom, info, membres, config, g, pad, dossier, logits_base, ids_controle)

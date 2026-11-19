@@ -171,8 +171,9 @@ def main():
         j["present"] = n >= 1
         j["ligne"] = final.count("\n", 0, final.index(j["apres"])) + 1 if n else None
         if not n:                                     # repris par une écriture postérieure : laquelle ?
-            suite = [x["nom"] for x in c.journal[c.journal.index(j) + 1:] if x["piece"] == j["piece"]
-                     and (x["avant"] in j["apres"] or j["apres"] in x["avant"] or any(l and l in j["apres"] for l in x["avant"].split("\n")[:1]))]
+            def touche(a, b):                         # a et b partagent-ils un fragment de 40 signes ?
+                return a in b or b in a or any(a[i:i + 40] in b for i in range(0, max(1, len(a) - 40), 10))
+            suite = [x["nom"] for x in c.journal[c.journal.index(j) + 1:] if x["piece"] == j["piece"] and touche(x["avant"], j["apres"])]
             j["repris"] = suite
             if not suite:
                 defauts += 1
