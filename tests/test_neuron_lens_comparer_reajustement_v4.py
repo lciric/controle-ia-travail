@@ -875,6 +875,8 @@ def test_v4_k5_haut_ne_double_pas_les_tables_existantes_et_montre_depot_propre()
 def petit_depot(depot):
     """Le dépôt jetable de `conftest.py` (un `git init` dans `tmp_path`), avec un fichier, un dossier et un second commit."""
     _ecrire(depot / "pieces/resultat.json", b'{"a": 1}\n')
+    for nom in ("3", "None"):                 # des fichiers dont le nom est l'écriture d'un chemin qui n'est pas une chaîne
+        _ecrire(depot / nom, b"piege\n")
     _g(depot, "add", "-A")
     _g(depot, "commit", "-q", "-m", "pieces")
     premier = _g(depot, "rev-parse", "HEAD")
@@ -892,7 +894,7 @@ def test_v4_k1_commit_lisible(petit_depot, tmp_path_factory):
                      "--help", second + "\n"):
         ok, motif = c.commit_lisible(d, artefact)
         assert ok is False and motif, artefact
-    assert c.commit_lisible(None, second)[0] is False                                      # aucun dépôt donné
+    assert c.commit_lisible(None, second) == (False, "aucun dépôt donné : non vérifié")
     assert c.commit_lisible(tmp_path_factory.mktemp("pas-un-depot"), second)[0] is False   # un dossier qui n'est pas un dépôt
 
 
@@ -1226,7 +1228,7 @@ def test_v4_cli_arret_sur_une_erreur_ecrit_la_sortie_et_le_motif(course, tmp_pat
     assert sortie["commit_resultats"] == k.commit_resultats and sortie["lentille"] == "R"
     assert sortie["pieces_lues"]["ajustement_ref"] == c.REFERENCES["ajustement-R"]
     if octets is None:
-        assert sortie["pieces_lues"][cle.split("_")[1] + "_" + cle.split("_")[0]].startswith("illisible")
+        assert sortie["pieces_lues"][{"lanceur_neuf": "lanceur_neuf", "neuf_ajustement": "ajustement_neuf"}[cle]].startswith("illisible")
     assert "arrêt sur une erreur" in capsys.readouterr().err
     with pytest.raises(SystemExit) as refus:                       # et la sortie écrite n'est jamais écrasée (R12)
         c.main(k.ligne(s))
@@ -1279,6 +1281,21 @@ def test_v4_cli_erreur_inattendue_dans_la_comparaison_ecrit_la_sortie(course, tm
         c.main(course("S").ligne(s))
     sortie = json.loads(s.read_text(encoding="utf-8"))
     assert arret.value.code == 2 and sortie["mention"] == c.NON_COMPARABLE and sortie["erreur"]["type"] == "ZeroDivisionError"
+
+
+def test_v4_cli_sortie_apparue_pendant_la_comparaison_jamais_ecrasee(course, tmp_path, monkeypatch):
+    # R12 : la sortie est créée en mode exclusif ; un fichier apparu après le premier contrôle n'est pas écrasé
+    s = tmp_path / "sortie.json"
+    vrai = c.comparer
+
+    def comparer_puis_un_autre_ecrit(cc, **k):
+        r = vrai(cc, **k)
+        s.write_text("écrit par un autre\n", encoding="utf-8")
+        return r
+    monkeypatch.setattr(c, "comparer", comparer_puis_un_autre_ecrit)
+    with pytest.raises(FileExistsError):
+        c.main(course("S").ligne(s))
+    assert s.read_text(encoding="utf-8") == "écrit par un autre\n"
 
 
 def test_v4_cli_chemin_du_lanceur_neuf_obligatoire(course, tmp_path):

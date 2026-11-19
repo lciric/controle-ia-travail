@@ -180,8 +180,8 @@ def octets_au_commit(depot, commit, chemin) -> tuple[bytes | None, str]:
     ok, motif = commit_lisible(depot, commit)
     if not ok:
         return None, motif
-    if not (isinstance(chemin, str) and chemin and not chemin.startswith("/")):
-        return None, f"chemin dans le dépôt absent ou mal formé (chemin relatif à la racine attendu) : {str(chemin)[:120]!r}"
+    if not isinstance(chemin, str):
+        return None, f"chemin dans le dépôt absent ou mal formé (chemin depuis la racine attendu) : {str(chemin)[:120]!r}"
     t = _git(depot, "cat-file", "-t", f"{commit}:{chemin}")
     if t.returncode != 0 or t.stdout.strip() != b"blob":
         return None, f"`{chemin}` n'est pas un fichier au commit {commit} : {_err(t) or t.stdout.decode('utf-8', 'replace').strip()}"
