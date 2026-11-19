@@ -5,7 +5,7 @@
 Méthode (la même que pour le brouillon 3, où les couples avaient été appliqués par programme) :
   1. les 15 couples « toujours » de la vérification du brouillon 3, à la lettre, dans leur ordre ;
   2. les 39 couples du code (`couples-du-code-pour-brouillon4-v1.md`, groupes 1 et 2), à la lettre, dans leur ordre,
-     sauf trois « après » remplacés par les choix du brouillon 4 (C-2e, C-4a, C-6a) ;
+     sauf quatre « après » remplacés par les choix du brouillon 4 (C-2e, C-4a, C-6a, C-8e) ;
   3. les écritures du rédacteur pour la voie (iii) : sections récrites en entier, et retouches exactes.
 Chaque « avant » doit se trouver une seule fois au moment où il s'applique ; sinon le programme s'arrête sans rien écrire.
 Les nombres de mondes inventés cités dans les sections récrites sont lus dans les sorties des simulations, non recopiés.
@@ -100,6 +100,12 @@ def chiffres():
          "rivale_faible": " et ".join(pc(x) for x in v("A16_trace_propre_a_son_sens_0.1_RIVALE_OUVERTE")),
          "kappa": " à ".join(pc(x) for x in etend([n for n in noms if n[:3] in ("C21", "C22", "C34")], "mot_sabotage_99_ou_95")),
          "mixte": pc(max(max(v(n)) for n in noms if n[:3] in ("B09", "B10")))}
+    p20 = json.load(open(os.path.join(ICI, "sortie-controle-precision-brouillon4-v1.json"), encoding="utf-8"))["cases"]
+    hauts = [r["mot_sabotage_99_ou_95"] for k, r in p20.items() if k[:3] in ("B09", "C10")]
+    nuls20 = [r["issues"] for k, r in p20.items() if k[:3] in ("A01", "A03")]
+    d["p20_min"], d["p20_max"] = fr(100 * min(hauts)), fr(100 * max(hauts))
+    d["nul20_D"] = " à ".join(fr(100 * x) for x in sorted(i["D"] for i in nuls20))
+    d["nul20_C"] = " à ".join(fr(100 * x) for x in sorted(i["C"] for i in nuls20))
     lignes = []
     for nom, titre in (("D01_sabotage_0.1_gradue", "sabotage 0,1, réponse graduée"),
                        ("D02_sabotage_0.2_gradue", "sabotage 0,2, réponse graduée"),
@@ -129,8 +135,10 @@ MOTIF = re.compile(r"#### Couple (?P<nom>[CD]-\d+[a-z]) — (?P<piece>T|DV) — 
 
 def main():
     for chemin in (T4, DV4):
-        if os.path.exists(chemin):
-            raise SystemExit(f"ARRÊT : {chemin} existe déjà (on n'écrase jamais)")
+        # Une sortie scellée ne s'écrase jamais. Une sortie de travail non scellée (sans compagnon .sha256) se refait
+        # seulement sur demande explicite (« --refaire »), pendant la mise au point de ce programme.
+        if os.path.exists(chemin) and (os.path.exists(chemin + ".sha256") or "--refaire" not in sys.argv):
+            raise SystemExit(f"ARRÊT : {chemin} existe déjà (on n'écrase jamais une pièce scellée)")
     t = open(T3, encoding="utf-8").read()
     dv = open(DV3, encoding="utf-8").read()
     assert hashlib.sha256(t.encode()).hexdigest().startswith("525f338e"), "brouillon 3 : empreinte inattendue"
@@ -159,7 +167,7 @@ def main():
 
     # ---------------------------------------------------------------- 3. voie (iii) et le reste : le texte
     for nom, avant, apres in S.RETOUCHES_TEXTE:
-        t = une_fois(t, avant, apres, nom)
+        t = une_fois(t, avant, apres.format(**C) if nom in S.RETOUCHES_A_CHIFFRES else apres, nom)
     for nom, prefixe, nouvelle, ajouter in S.LIGNES_TEXTE:
         t = ligne(t, prefixe, nouvelle, nom, ajouter)
     for nom, debut, fin, nouveau in S.BLOCS_TEXTE:
@@ -182,8 +190,8 @@ def main():
         n = t.count(mot)
         dire(f"  reste « {mot} » dans le texte : {n} fois")
     dire(f"  marques « [à confirmer par le rapport v4] » : texte {t.count('[à confirmer par le rapport v4]')}, devis {dv.count('[à confirmer par le rapport v4]')}")
-    open(T4, "x", encoding="utf-8").write(t)
-    open(DV4, "x", encoding="utf-8").write(dv)
+    open(T4, "w", encoding="utf-8").write(t)
+    open(DV4, "w", encoding="utf-8").write(dv)
     dire(f"écrit : texte {len(t)} signes, {hashlib.sha256(t.encode()).hexdigest()} ; devis {len(dv)} signes, {hashlib.sha256(dv.encode()).hexdigest()}")
 
 
