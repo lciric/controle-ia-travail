@@ -1,0 +1,14 @@
+# Définition opérationnelle de « carte originale » — course d'auto-conception v9 de l'organisme d'idéation (v1)
+
+Auteur : lecteur neuf, Claude Fable 5.2. Date : 19 novembre 2026. Classe C (note de travail).
+Écrite et scellée avant toute ouverture du contenu des cartes : seuls les noms des champs de `fiches.json` (ba65c411…) ont été lus, pas leurs valeurs ; ni la proposition, ni la lecture descriptive, ni la matière v3 n'étaient encore ouvertes.
+
+1. Portée. « Originale » veut dire ici : éloignée de la matière v3 du catalogue (11f4b69b…), telle que je la lis. Ce n'est jamais une absence dans le champ : rien n'est vérifié sur source (règles R7 et R8).
+2. Sources permises : les champs de contenu de la carte (mécanisme, plus proche voisin, ce qui distingue, module changé, épreuve en monde planté, ce qui la réfuterait) et la matière v3. Sources interdites : le verdict des juges (N-058), l'axe et la case « originalité » de la carte ou du catalogue (ce sont des déclarations), l'espèce du proposeur, les notes C1 à C5 de la proposition.
+3. Épreuve V (voisin). Acquise si la carte nomme un plus proche voisin reconnaissable et si ce qui l'en sépare est un mécanisme, et non un réglage (seuil, dose, budget, nombre de copies), un changement de module d'application ou un changement de nom. Une carte qui ne nomme aucun voisin, ou qui se dit sans voisin, n'acquiert pas V : l'absence de citation n'est pas une distance.
+4. Épreuve M (mécanisme). Acquise si, après recherche des termes propres du mécanisme dans la matière v3 et lecture des passages trouvés, aucune entrée de la matière ne décrit ce mécanisme. Une recombinaison de deux entrées ne passe que si la carte dit un effet qu'aucune des deux entrées ne produit seule.
+5. Épreuve Q (question). Acquise si la carte, par son épreuve ou par ce qui la réfuterait, pose une question qui n'est ni parmi les questions ouvertes de la matière v3, ni dans les décisions de Lazar sur l'organisme rappelées au CLAUDE.md (N-044, N-045, N-058, N-064, N-067, N-071, N-073).
+6. Notation : chaque épreuve vaut 1 ou 0 ; le doute vaut 0. Une carte est « originale » si M est acquise et si V ou Q l'est aussi. Elle est « très originale » si les trois le sont.
+7. Ordre d'application : les épreuves sont appliquées sur le contenu, l'espèce masquée ; l'espèce n'est jointe qu'après, pour la ventilation.
+8. Liste des plus originales (huit au plus) : d'abord les « très originales » ; à égalité, la carte dont le mécanisme n'a aucun passage apparenté dans la matière v3 passe avant celle qui recombine ; puis l'ordre des identifiants. Quand plusieurs cartes portent le même mécanisme, une seule entre dans la liste (le premier identifiant), les autres sont citées à côté.
+9. Ce que la définition ne mesure pas : la valeur de l'idée, sa faisabilité, son coût. Une carte originale peut être mauvaise ; « meilleure » se lit ailleurs, dans les notes de la proposition.
