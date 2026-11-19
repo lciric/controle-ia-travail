@@ -7,3 +7,4 @@
 | GO-BBIS | 2026-11-17T11:05:29Z | registres/t07-etape-b-bis/go-bbis-v2.txt | 33f38e675ca2114674b6f7dd96727b222fae613ecb53b57ef16240b74aca8e62 |
 | SCORES-BBIS | 2026-11-18T19:43:48Z | diag/20261118-154143-bbis-t07-v1/sondes-bbis.json | 645a172fe14fc18ff23ede0efa45dadd0841297489931ae6788caa6549a81c62 |
 | LECTURE-BBIS | 2026-11-19T00:06:49Z | diag/20261119-000444-bbis-t07-lecture-v1/lecture-bbis.json | 8e0d3e085601c3d9f5451b898acdcefc0caab6b61ddb1c6f382648e4425ed284 |
+| VERDICT-BBIS | 2026-11-19T00:13:25Z | docs/verdicts/verdict-T0.7-etape-B-bis-v1.md | 1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3 |
