@@ -24,14 +24,14 @@ Le recueil est transmis des tâches d'entraînement aux tâches tenues à l'éca
 Oui pour deux objets différents ; non pour un même objet. Cinq bras (p. 8 ; figure 4, p. 9), scores sur Terminal-Bench 2.1 puis DeepSWE 1.1 :
 1. l'exécutant seul : 66,33 et 34,67 ;
 2. avec l'ajusteur, **sans aucun savoir appris** — il n'a que ce qu'il voit pendant la tâche : 74,67 et 36,44 ;
-3. avec l'ajusteur et un recueil tiré des seules courses de l'ajusteur, sans contraste : 77,00 et 35,56 ;
+3. avec l'ajusteur et un recueil dit auto-distillé (« self-distilled »), dont la construction n'est pas décrite dans les pages lues : 77,00 et 35,56 ;
 4. avec l'ajusteur et le recueil tiré des contrastes (la méthode) : 81,00 et 44,44 ;
 5. comme 4, mais chaque tâche part du harnais laissé par la tâche précédente, retouches gardées : 78,33 et 39,11.
 Le bras 4 moins le bras 2 donne ce que le savoir **hérité et gelé** ajoute à l'ajustement **tenu pendant la tâche** : +6,33 et +8,00 points. Le bras 5 moins le bras 4 donne ce que fait l'**héritage des retouches** d'une tâche à la suivante : −2,67 et −5,33 points.
 Ce qui est hérité (le recueil) n'est jamais mis à jour pendant l'essai (p. 6) ; ce qui est tenu (conversation, retouches) n'est jamais hérité, sauf au bras 5. Aucun bras ne tient **le recueil** pendant l'essai, ni ne le fait naître vide pour le tenir ; les auteurs le proposent comme suite (p. 24).
 
 **Q4. La mémoire est-elle ablatée ?**
-Oui : le bras 2 retire le recueil, le bras 3 le remplace par une version sans contraste (p. 8). Répétitions : cinq exécutions par tâche d'essai sur Terminal-Bench (300 exécutions par méthode), trois sur DeepSWE (225) ; mêmes tâches et même nombre pour toutes les méthodes (p. 18). L'écart-type entre répétitions est donné pour les méthodes du tableau principal — pour la méthode, 81,00 ± 0,91 et 44,44 ± 0,77 ; pour le harnais de départ, 66,33 ± 2,17 et 34,67 ± 1,33 (tableau 5, p. 22) — mais pas pour les bras 2, 3 et 5. Le nombre de constructions indépendantes du recueil n'est pas dit dans les pages lues. Aucun test.
+Oui : le bras 2 retire le recueil, le bras 3 le remplace par la version auto-distillée (p. 8). Répétitions : cinq exécutions par tâche d'essai sur Terminal-Bench (300 exécutions par méthode), trois sur DeepSWE (225) ; mêmes tâches et même nombre pour toutes les méthodes (p. 18). L'écart-type entre répétitions est donné pour les méthodes du tableau principal — pour la méthode, 81,00 ± 0,91 et 44,44 ± 0,77 ; pour le harnais de départ, 66,33 ± 2,17 et 34,67 ± 1,33 (tableau 5, p. 22) — mais pas pour les bras 2, 3 et 5. Le nombre de constructions indépendantes du recueil n'est pas dit dans les pages lues. Aucun test.
 
 **Q5. Des prédictions écrites avant l'essai ?**
 Non trouvé dans les pages lues. Le papier range parmi ses voisins un travail qui lie les modifications à des prédictions vérifiables (p. 9) ; lui-même ne rend à l'ajusteur que le sort technique de la retouche précédente (p. 4-5).
@@ -46,7 +46,7 @@ Le même modèle tient tous les rôles dans chaque réglage (p. 4, p. 6) : GPT-5
 Rapporté en dollars, hors ligne et en ligne séparés, calculé sur les frais par appel (p. 6 ; tableau 1, p. 7). Pour la méthode : 110,19 + 64,72 = 174,91 dollars sur Terminal-Bench 2.1 ; 238,52 + 129,34 = 367,86 sur DeepSWE 1.1. Pour le harnais de départ seul : 34,09 et 62,67. Pour Meta-Harness : 160,51 + 38,34 et 781,56 + 89,19. Le coût n'est pas apparié entre méthodes ; les auteurs tracent un front de compromis (p. 22). Le coût des bras d'ablation n'est pas trouvé dans les pages lues.
 
 **Q9. Objet du résultat, causalité.**
-Le score de deux bancs. Les auteurs disent eux-mêmes que leurs contrastes donnent une direction sans établir l'effet d'une décision prise à un point de contrôle, les courses comparées pouvant diverger avant l'intervention (p. 2, p. 5, p. 22-23). Sur les composants, ils écrivent que les ablations « soutiennent » leurs choix (p. 9).
+Le score de deux bancs. Les auteurs disent eux-mêmes que leurs contrastes donnent une direction sans établir l'effet d'une décision prise à un point de contrôle, les courses comparées pouvant diverger avant l'intervention (p. 2, p. 5, p. 22-23). Sur les composants, ils écrivent que les ablations vont dans le sens de leurs deux choix, le contraste et la remise à zéro (p. 9).
 
 ## Une remarque de ce lecteur (à relire avant tout usage)
 
@@ -66,6 +66,6 @@ Le tableau principal compare des méthodes qui diffèrent aussi par leur régime
 
 ## Réserves
 
-1. Lecture ciblée : les algorithmes de l'annexe B et les consignes (p. 15-17, 25-36) ne sont pas lus ; le détail de ce que voit l'ajusteur au bras 2 vient du texte principal seul (p. 8).
+1. Lecture ciblée : les algorithmes de l'annexe B et les consignes (p. 15-17, 25-36) ne sont pas lus ; ce que voit l'ajusteur au bras 2 et ce qu'est le recueil du bras 3 ne viennent que du texte principal (p. 8).
 2. Les différences entre bras (+6,33 ; +8,00 ; −2,67 ; −5,33) sont des soustractions faites par ce lecteur sur les scores de la page 8.
 3. Un seul lecteur ; aucune contre-lecture à ce jour.
