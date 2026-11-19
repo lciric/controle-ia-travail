@@ -299,6 +299,7 @@ def test_egalite_des_transcriptions_hors_des_jetons_du_nombre_cas_sain_et_artefa
     ("3k A100 GPU-hours", ["3k"]), ("~150 H100-hours", ["150"]),
     # la règle ne joue pas : premier nombre collé (avant ou après), tous comptent
     ("A100: 300 hours", ["100", "300"]), ("120h on 2 A100s", ["120", "2", "100"]), ("8x A100 for 300 hours", ["8", "100", "300"]),
+    ("120h on A100s", ["120", "100"]),                               # seul le premier collé : la règle ne joue pas non plus
     # un tiret ou une espace sépare : le nombre compte
     ("300 hours (GPT-4)", ["300", "4"]), ("300 hours on 8 GPUs", ["300", "8"]), ("2 kW for 300 hours", ["2", "300"]),
     ("", []), ("about a day", [])])
@@ -327,8 +328,8 @@ def test_nom_de_carte_cas_sains_edites_carte_inchangee_lecteur_gele_non_touche(c
             assert "A100" in r["texte"] and tok.decode(r["ids"], skip_special_tokens=True) == r["texte"]
 
 
-@pytest.mark.parametrize("cout", ["A100: 300 hours", "120h on 2 A100s", "8x A100 for 300 hours", "300 hours on 8 GPUs",
-                                  "300 hours (GPT-4)"])
+@pytest.mark.parametrize("cout", ["A100: 300 hours", "120h on 2 A100s", "120h on A100s", "8x A100 for 300 hours",
+                                  "300 hours on 8 GPUs", "300 hours (GPT-4)"])
 def test_nom_de_carte_artefacts_non_editables_pour_tous_classe_plusieurs_nombres(cout):
     """Point (d), artefacts : premier nombre collé (la règle ne joue pas ; « A100: 300 hours », où le lecteur gelé lit 100),
     ou un second nombre qui ne touche aucune lettre : non éditable pour tous les membres, classe « plusieurs nombres »."""

@@ -106,11 +106,14 @@ def _lancer(*args, go=GO):
 
 
 def test_plan_sept_instances_etiquetees():
+    """Point (f) : à trois membres, les instances 6 et 7 portent leur entrée du devis (28 et 17 USD)."""
     r = _lancer("plan")
     assert r.returncode == 0
     lignes = [x for x in r.stdout.splitlines() if x.startswith("b5f-formation-v1-")]
     assert [x.split("\t")[0] for x in lignes] == [f"b5f-formation-v1-{n}" for n in range(1, 8)]
-    assert "non chiffrée" in lignes[5] and "non chiffrée" in lignes[6] and "non chiffrée" not in lignes[0]
+    assert "coupure à 3 membres 28 USD, 9.61 à 10.99 h ; à 2 membres 24 USD" in lignes[5]
+    assert "coupure à 3 membres 17 USD, 5.71 à 6.4 h ; à 2 membres 15 USD" in lignes[6]
+    assert "coupure à 3 membres 26 USD" in lignes[0]
 
 
 def test_commande_cas_sain_etiquette_accord_echeance_cles_par_leur_nom_et_garde_de_calcul_rejouee(racine):
@@ -151,7 +154,7 @@ def test_commande_jouee_dans_un_shell_transmet_au_loueur_la_valeur_des_cles_jama
 @pytest.mark.parametrize("cas", ["sans_go", "code_change", "code_non_ancetre", "amorce", "go_hors_registre",
                                  "go_non_calcul", "instance", "offre_chere", "offre_carte", "offre_cuda", "run",
                                  "sans_scellement", "autre_texte", "autre_empreinte", "brouillon", "texte_absent",
-                                 "session_modifiee", "membres_trois"])
+                                 "session_modifiee", "relance_trois_instances"])
 def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
     r, course = racine
     go, n, offre, run, prereg = GO, 3, None, RUN, PREREG
@@ -191,9 +194,8 @@ def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
         prereg = "prereg/barreau5-absent-v1.md"
     elif cas == "session_modifiee":                  # constat m-9 : l'arbre de travail de la session n'est pas le code figé
         (r / fv.AMORCE).write_text("#!/usr/bin/env bash\necho amorce retouchée\n", encoding="utf-8")
-    elif cas == "membres_trois":                     # 39 adaptateurs : instance 6 non chiffrée par le devis
-        course = _course(r, membres=3)
-        n, run = 6, "20261123-080000-b5f-formation-6"
+    elif cas == "relance_trois_instances":           # point (c) : la ligne de relance cite deux instances au plus
+        course = _course(r, membres=3, piece="famille", relance=f"{GO_RELANCE} ; instances 3,5,7")
     else:
         o = dict(OFFRE)
         o.update({"offre_chere": {"dph_total": 1.35}, "offre_carte": {"gpu_name": "H100 SXM5"},
@@ -206,7 +208,7 @@ def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
               "instance": "hors du plan", "offre_chere": "dph_total", "offre_carte": "carte", "offre_cuda": "cuda_max_good",
               "run": "identifiant de marche", "sans_scellement": "SCELLEMENT-B5F", "autre_texte": "texte cité",
               "autre_empreinte": "empreinte du texte", "brouillon": "brouillon", "texte_absent": "absent du commit",
-              "session_modifiee": "arbre de travail de la session", "membres_trois": "devis non chiffré"}
+              "session_modifiee": "arbre de travail de la session", "relance_trois_instances": "3 instances citées"}
     assert p.returncode == 2 and "vastai create" not in p.stdout
     assert motifs[cas] in p.stderr, p.stderr
 
@@ -258,17 +260,42 @@ def test_config_reelle_de_chaque_instance_cas_sain_et_artefacts(racine):
     assert _lancer("config", r, 1, 1.40, course, 0).returncode == 2               # au-dessus du prix du devis
     trois = _course(r, membres=3, piece="famille")
     assert json.loads(_lancer("config", r, 3, 1.25, trois, 0).stdout)["membres_apprentissage"] == 3
-    assert _lancer("config", r, 6, 1.25, trois, 0).returncode == 2                # 39 adaptateurs : devis non chiffré
+    # point (f) : 39 adaptateurs, les instances 6 et 7 prennent leur entrée du devis à trois membres
+    assert [json.loads(_lancer("config", r, n, 1.25, trois, 0).stdout)["coupure_usd"] for n in (6, 7)] == [28.0, 17.0]
+
+
+def test_commande_a_trois_membres_instance_6_echeance_a_la_coupure_de_28_usd(racine):
+    """Point (f) : à 39 adaptateurs, la commande de création de l'instance 6 passe, et son échéance d'arrêt se compte à
+    la coupure de 28 USD de son entrée du devis."""
+    r, _ = racine
+    course = _course(r, membres=3, piece="famille")
+    avant = time.time()
+    p = _lancer(*_commande(r, course, 6, run="20261123-080000-b5f-formation-6"))
+    assert p.returncode == 0, p.stderr
+    arret = int(p.stdout.strip().splitlines()[-1].split("ECHEANCE_ARRET_UTC_S=")[1].split()[0])
+    assert abs(arret - (avant + (28.0 / 1.2 - 0.25) * 3600)) < 120
 
 
 def test_depense_cas_sain_et_artefacts_coupure_et_plafond():
-    assert _lancer("depense", 1, 2, 20.0, 1.3, 100.0, 9.1).returncode == 0
-    r = _lancer("depense", 1, 2, 25.7, 1.3, 100.0, 9.1)
+    assert _lancer("depense", 1, 2, 20.0, 1.3, 100.0, 9.1, 0).returncode == 0
+    r = _lancer("depense", 1, 2, 25.7, 1.3, 100.0, 9.1, 0)
     assert r.returncode == 2 and "detruire" in r.stderr
-    assert _lancer("depense", 7, 2, 14.7, 1.3, 100.0, 9.1).returncode == 2       # coupure de 15 USD de l'instance 7
-    assert _lancer("depense", 1, 2, 10.0, 1.3, 198.0, 9.1).returncode == 2       # plafond commun
-    assert _lancer("depense", 9, 2, 1.0, 1.3, 1.0, 1.3).returncode == 2          # instance hors du plan
-    assert _lancer("depense", 6, 3, 1.0, 1.3, 1.0, 1.3).returncode == 2          # 39 adaptateurs : non chiffré
+    assert _lancer("depense", 7, 2, 14.7, 1.3, 100.0, 9.1, 0).returncode == 2    # coupure de 15 USD de l'instance 7
+    assert _lancer("depense", 1, 2, 10.0, 1.3, 198.0, 9.1, 0).returncode == 2    # plafond commun
+    assert _lancer("depense", 9, 2, 1.0, 1.3, 1.0, 1.3, 0).returncode == 2       # instance hors du plan
+    assert _lancer("depense", 6, 3, 27.6, 1.3, 1.0, 1.3, 0).returncode == 0      # 39 adaptateurs : coupure de 28 USD
+    assert _lancer("depense", 6, 3, 27.7, 1.3, 1.0, 1.3, 0).returncode == 2
+    assert _lancer("depense", 1, 2, 20.0, 1.3, 100.0, 9.1).returncode == 2        # RELANCE exigé, sans défaut
+    assert _lancer("depense", 1, 2, 20.0, 1.3, 100.0, 9.1, 2).returncode == 2
+
+
+def test_depense_d_une_relance_hors_du_plafond_commun_sa_seule_coupure():
+    """Point (c) (erratum 1, couples E-4a et E-8a) : le plafond commun atteint n'arrête pas une relance en cours ; sa
+    seule limite est la coupure de l'instance qu'elle remplace (pas de troisième compteur)."""
+    p = _lancer("depense", 3, 3, 20.0, 1.3, 199.9, 9.1, 1)
+    assert p.returncode == 0 and json.loads(p.stdout)["plafond"] is None, p.stderr
+    assert _lancer("depense", 3, 3, 20.0, 1.3, 199.9, 9.1, 0).returncode == 2     # la même dépense, pour une pièce du devis
+    assert _lancer("depense", 3, 3, 25.7, 1.3, 0.0, 0.0, 1).returncode == 2       # coupure de l'instance remplacée
 
 
 def _verse(tmp_path):

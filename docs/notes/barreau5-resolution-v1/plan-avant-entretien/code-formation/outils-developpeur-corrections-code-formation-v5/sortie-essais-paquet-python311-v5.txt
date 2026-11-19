@@ -1,0 +1,28 @@
+Sortie de l'essai sous Python 3.11 du troisième tour (code de formation, barreau 5) — développeur Opus 5.5, nuit du 19 au
+20 novembre 2026, vers 23:18Z. Recopiée par l'outil d'écriture depuis /dev/shm/b5f-py311-t3/essais-paquet-py311-t3.txt
+(73d8e0804f6932ddd9573082ab2cf63fcb08c75830d2e7c7739a5fa506623176), effacé ensuite ; la sortie d'erreur était vide.
+
+Pourquoi refait : le paquet joué sur l'instance a changé à ce tour (code et essais), et l'environnement du deuxième tour
+avait été perdu avec /dev/shm au redémarrage du conteneur.
+
+Environnement (dans /dev/shm, effacé ensuite) :
+  /usr/bin/python3.11 -m venv /dev/shm/b5f-py311-t3/venv                     -> Python 3.11.18
+  pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.14.1   -> torch 2.14.1+cpu
+  pip install --no-cache-dir -r requirements-gpu.txt                         (depuis la racine du dépôt)
+  versions relevées : torch 2.14.1+cpu, transformers 5.18.0, tokenizers 0.23.2
+
+Arbre : celui que l'amorce extrait (bloc « motifs »), tiré de l'arbre de travail du dépôt sans commit par
+outils-developpeur-corrections-code-formation-v3/outils/extraire-arbre-sans-commit-v1.py, dans /dev/shm/b5f-arbre-extrait-t3
+(504 fichiers ; docs/notes, diag, runs, brouillons absents).
+
+Commande (celle de l'étape 4 de l'amorce), depuis cet arbre :
+  PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 /dev/shm/b5f-py311-t3/venv/bin/python -m pytest -q -p no:cacheprovider \
+      --color=no tests/test_barreau5_familles_*.py --basetemp=/dev/shm/b5f-py311-t3/essais-tmp
+Code de sortie : 0.
+
+--- dernière ligne de la sortie, telle quelle ---
+235 passed in 83.99s (0:01:23)
+--- fin ---
+
+Même arbre, même commande, sous le Python du dépôt (3.13.18, .venv), vers 23:16Z : 235 passed in 79.12s.
+Plancher de l'amorce : MIN_ESSAIS=235.
