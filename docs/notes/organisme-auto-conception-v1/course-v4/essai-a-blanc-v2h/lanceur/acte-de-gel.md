@@ -1,0 +1,9 @@
+# Acte de gel — course d'auto-conception de l'organisme d'idéation, version 2 (Argon sans troncature, additif v2h)
+
+Écrit par le lanceur `lancer_course_auto_conception_v8` (sha256 0640e99fadc853c99763ccb6d508454cb25932d2fd3271e4c4770831a69e8ad5) le Thu Nov 19 07:40:54 UTC 2026, après vérification.
+
+- Préenregistrement : `docs/notes/organisme-auto-conception-v1/course-v2/preenregistrement-course-auto-conception-v2.md`, sha256 0d51e0b3f51dd731351589187c124b7ee1a6237494aa0274825b19085c6763c6, scellé.
+- Additif v2h (mots de Lazar « go (a) », « augmente le plafond », « enlève la troncature pour Carbon », « fais sauter la troncature pour argo aussi » : Carbon par la commande synchrone d'Argon, Argon et Carbon proposeurs sans troncature, plafond de session des proposeurs 6,05 USD, plafond d'arrêt 120 USD ; rien d'autre ne change) : `docs/notes/organisme-auto-conception-v1/course-v4/additif-preenregistrement-course-auto-conception-v2h.md`, sha256 be46d1366ff10670c6dd721628e463ea9c29b363b91d0f424f73b63589ca8c47, scellé ; il cite les additifs v2c, v2d, v2e, v2f et v2g.
+- Contre-lecture : `/tmp/claude-0/-home-user-controle-ia-travail/79dd35ec-26bf-5ae6-a8dc-0755569d0794/scratchpad/essai-v2h/a-blanc/pieces-d-essai/contre-lecture-d-essai.md`, sha256 d6aabd263e76b1fc894fdf083702a698403a65e464b4ea8eca34371cb7059a4c, scellée ; verdict lu : Scellable.
+- Matière servie : `docs/notes/matiere-premiere-auto-conception-v1/matiere-premiere-v3.md`, sha256 11f4b69ba42147c428090e4805948a708d0ed266da0c0cd07f194723eaba742d, lue au commit 69e3d4142c5e22f788fb0f20818d5556fe64f6b5 ; lots écrits par la règle du préenregistrement, sha256 74d988bd7b4bc980cb6f4aa4c93d1cd87c8b94bebe3c5e592404bc7b3a6e0f23.
+- Cet acte est la spécification servie à l'orchestrateur (`specification.preenregistrement`) ; il ne change rien au préenregistrement.
