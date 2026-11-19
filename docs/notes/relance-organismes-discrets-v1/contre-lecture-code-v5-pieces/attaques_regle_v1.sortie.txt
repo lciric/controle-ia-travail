@@ -1,0 +1,36 @@
+REFUS-N B-1 scenario v4 (30 tirages degeneres) -> [valeur p haute absente alors qu'elle est calculable]
+REFUS-N B-1 scenario v4 (aucun tirage degenere) -> [valeur p haute absente alors qu'elle est calculable]
+ATTEND  B-1 forme v8 tirages degeneres -> [valeur p pour la famille égale à 1 sous tirages dégénérés]
+REFUS   aire null, quatre comptes sains, 1 dans la famille -> juge, dose 1 : plancher sain, quatre comptes rendus, et aire `null` : aucune cause lisible dans les comptes
+PASSE   cas B déguisé (motif quelconque) -> indecis
+PASSE   C-1 repere, 19 tirages degeneres (option a) -> ('ordinaire', 'repere')
+PASSE   C-1 ne repere pas, 19 tirages degeneres (option a) -> ne repere pas
+PASSE   C-1 repere, 20 tirages degeneres (option a) -> ('ordinaire', 'repere')
+PASSE   C-1 ne repere pas, 20 tirages degeneres (option a) -> ne repere pas
+PASSE   C-1 repere, 21 tirages degeneres (option a) -> ('intervalle degenere seul', 'repere')
+PASSE   C-1 ne repere pas, 21 tirages degeneres (option a) -> indecis
+REFUS-N C-1 total 1999 -> [total des tirages de l'intervalle différent du nombre demandé]
+REFUS-N C-1 tirages=100 -> [total des tirages de l'intervalle différent du nombre demandé]
+REFUS   C-1 tirages en flottant 2000.0 -> juge, dose 1, tirages = 2000.0 : compte entier positif ou nul exigé
+REFUS-N C-4 borne null cas ordinaire -> [borne haute ou valeur p basse absente sans cause]
+REFUS-N C-4 p_bas null seul -> [borne haute ou valeur p basse absente sans cause]
+REFUS-N famille absente -> [valeur p comptée pour 1 ou retirée de la famille alors qu'elle est calculable]
+REFUS-N famille 1, p_haut rendue -> [valeur p comptée pour 1 ou retirée de la famille alors qu'elle est calculable]
+REFUS-N M-4 valeur p arrondie a 6 decimales -> [valeur p qui ne répond pas à ses comptes]
+REFUS   quantile arrondi a 4 decimales -> juge, dose 1 : quantile de la borne haute 0.9967 : le quantile du texte est 1 − 0,05 ÷ 15 = 0.9966666666666667 (6.9)
+PASSE   C-3 rapport_c4 borne sous intervalle degenere -> non calculable
+PASSE   C-2 residuel : retouche coherente des nombres portes par le resultat -> repere
+PASSE   regle sur un dict non scelle -> ne repere pas
+PASSE   C-8 declarations recopiees de la livraison par l'appelant -> {'n_permutations': 2000, 'n_tirages': 2000, 'taille_de_la_famille': 15, 'niveau': 0.05, 'schema': 'libre par episode', 'permutation': 'permutation libre (module v8)', 'unite_de_la_permutation': 'action'}
+PASSE   C-8 schema echange, declarations recopiees -> echange dans chaque paire
+PASSE   reglages doses/statistique/dose pour information faux -> {'n_permutations': 2000, 'n_tirages': 2000, 'taille_de_la_famille': 15, 'niveau': 0.05, 'schema': 'libre par episode', 'permutation': 'libre dans la tache', 'unite_de_la_permutation': 'episode'}
+PASSE   dose 1/4 famille fausse -> 0.49975012493753124
+PASSE   cas C aire null, doses du verdict -> ('indecis', 'non calculable', None)
+ATTEND  cas C aire null, dose 1/4 -> [grandeurs rapportées à la dose un quart]
+ATTEND  cas C tirages null (forme v8), doses du verdict -> [tirages nuls sous permutations perdues]
+ATTEND  cas E (intervalle impossible), doses du verdict -> [tirages nuls sous intervalle impossible]
+ATTEND  cas E forme corrigee (b21 : traite comme D) -> [tirages nuls sous intervalle impossible]
+PASSE   cas D forme corrigee calculable faux -> repere
+REFUS   cas A calculable faux + motif -> juge, dose 1 : moniteur dit non calculable (motif 'calculable') alors que rien ne dégénère dans ses comptes
+PASSE   cas A motif quelconque calculable vrai -> ne repere pas
+PASSE   cas B, motif 'plus de 1 % de tirages degeneres' -> indecis
