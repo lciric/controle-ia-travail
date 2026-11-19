@@ -390,8 +390,12 @@ def main() -> int:
     print(f"  emplacements ouverts : {len(ouverts)}")
     for n, e in ouverts:
         print(f"  ligne {n} : {e}")
-    print("  SCELLEMENT " + ("PERMIS par ce contrôle : aucun emplacement ouvert" if not ouverts
-                             else f"REFUSÉ : {len(ouverts)} emplacement(s) de pièce encore ouvert(s)"))
+    if ouverts:
+        print(f"  SCELLEMENT REFUSÉ : {len(ouverts)} emplacement(s) de pièce encore ouvert(s)")
+    elif ecarts:
+        print("  SCELLEMENT REFUSÉ : écarts relevés plus haut")
+    else:
+        print("  SCELLEMENT PERMIS par ce contrôle : aucun emplacement ouvert, aucun écart")
 
     print(f"\nBILAN : écarts {len(ecarts)}")
     for e in ecarts:
