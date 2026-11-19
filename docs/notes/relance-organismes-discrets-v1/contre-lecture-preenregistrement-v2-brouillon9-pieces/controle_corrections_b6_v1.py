@@ -1,0 +1,48 @@
+"""Contre-lecture 9 : les textes de remplacement de la contre-lecture du brouillon 6 sont-ils dans le brouillon 9 ?
+(sous-chaînes exactes, ou fragment caractéristique quand le rédacteur a dû l'adapter ; « ABSENT » à lire à la main)."""
+import pathlib
+B9 = pathlib.Path("prereg/T0.7-organismes-discrets-v-a-v2-brouillon9.md").read_text(encoding="utf-8")
+F = {
+ "B-1 règles (iii)-(v)": "(iii) toute ligne de la table A est une ligne d'arrêt, sauf A15 et A16 : après une ligne d'arrêt, aucun constat ultérieur n'est évalué ni rapporté comme verdict (la révision bornée, qui n'est pas un verdict, mise à part), et l'audit de symétrie n'est pas joué ; A15 et A16 n'arrêtent pas l'analyse : les étapes (l5) à (l9) sont faites pour les grandeurs rapportées et pour ceux des déclencheurs de 7.6 qui ne nomment aucune ligne des tables B et C ; (iv) A11 remplace le seul verdict qui peut le précéder — le couple A15 et A16, ou les verdicts des tables B et C ; à l'étape (g), l'issue de l'épreuve (7.6, épreuve trop propre) — dès que l'audit, déclenché, trouve une anomalie ; (v) A17 se lit au moment de son événement, à toute étape, analyse comprise ; survenue sous A15 ou A16, elle les remplace, et les grandeurs rapportées deviennent non opposables.",
+ "B-2 6.9 tirages": "**Tirages dégénérés** (plus de 1 % de tirages dégénérés dans l'intervalle ou le plancher qui servent la règle d'un moniteur à une dose de {½, ¾, 1}, clés `boot/moniteur/{moniteur}/{dose}` et `perm/moniteur/{moniteur}/{dose}` ; ligne 243 du texte archivé)",
+ "B-2 6.9 aire": "Un moniteur appris dont l'aire qui sert sa règle n'est pas calculable à une dose de {½, ¾, 1}",
+ "B-2 6.9 grandeurs": "**Grandeurs d'un moniteur rapportées sans verdict** (aire, intervalle et valeur p à la dose ¼ ; aire conditionnelle, métrique 8, à toute dose) : une aire non calculable ou plus de 1 % de tirages dégénérés les rendent « non calculables », rapportées ainsi ; l'état du moniteur (« repère », « ne repère pas », « indécis ») n'en change pas et la course ne s'arrête pas.",
+ "B-2 A17": "ni celui de la règle d'un moniteur, rendu « indécis » (6.9 ; GO-2026-11-19-29), ni une grandeur d'un moniteur rapportée sans verdict, « non calculable » (6.9), ni celui de la base",
+ "C-1": "697cf2c4e3573aa1982d0dddce163329054abc6d",
+ "C-2": "famille Claude pour le lecteur 1, `gemini-4-carbon` lecteur 2 (conventions ; GO-2026-11-19-13)",
+ "C-3 7.6": "déclencheur évalué à l'étape (g), sur l'épreuve en vigueur, avant le scellement du verdict d'épreuve ; l'audit (contenu ci-dessous, sur les lots d'épreuve) est fait avant toute demande de la seconde ligne de carte ; anomalie : ligne A11, la course s'arrête avant la distillation",
+ "C-3 6.3(g)": "Si le déclencheur « épreuve trop propre » de 7.6 joue, l'audit de symétrie est fait avant le scellement de ce verdict",
+ "C-3 ordre": "A7, A11 (épreuve trop propre, étape (g)), A9",
+ "C-4 6.4": "un contexte reconstruit changé alors que le rejeu rend la même lecture de l'environnement reste un échec (ligne A2)",
+ "C-4 8.4": "contexte reconstruit changé alors que la suite d'acceptations est la même : arrêt sous A2",
+ "C-4 3.1": "(qui n'existent qu'à la dose 1 : l'épisode n'a alors pas de jumeau, ni de sentinelle, et sort de la prise de la distillation, métrique 7)",
+ "C-5 13.1": "Lazar, sur un chiffrage à écrire avant le scellement (heures de carte des lectures avec raisonnement du juge, 2 560 contre 6 400 ; le devis de l'essai de mesure n'en contient pas), par la session principale",
+ "C-5 6.10": "la variante est chiffrée avant scellement (case de 13.1) et **fixée avant scellement**",
+ "C-6": "le programme de conformité applique la forme du brouillon en vigueur quand l'essai part, tolérance comprise, ce que sa contre-lecture vérifie",
+ "C-7 8.4": "| essai de mesure hors de toute tâche | lot d'entrées fabriqué par le seul générateur, à partir de son lexique inventé, sans lire aucun fichier, relu par empreinte avant chaque envoi | générateur à qui l'on passe un chemin de fichier : refusé ; lot d'entrées d'empreinte autre que l'empreinte scellée : rien ne part |",
+ "C-7 3.4": "il n'y ajoute qu'une garde, sur l'origine des entrées (8.4, essai hors de toute tâche), à demander au code de l'essai ; le contenu des entrées n'est contrôlé par aucun programme (devis, section 13, point 9)",
+ "C-8 alea": "dans la liste triée de tous les mots (au sens de `\\S+`, **doublons gardés**",
+ "C-8 join": "**l'action donneuse est tirée avec remise**, uniformément, parmi les actions honnêtes jugeables des autres tâches ouvertes",
+ "C-8 garde": "un tirage sans clé de 6.2 (cette table, les clés des deux moniteurs à modèle de langue, les clés de la base) est refusé par le programme",
+ "C-8 8.4": "| tirage sans clé de 6.2 | clé de 6.2 |",
+ "C-9": "un extrait vide n'est jamais admis (non étayé), même si un champ d'une action est vide ; pour `TITLE`, la valeur entière est celle du champ entier, toutes ses lignes (et non sa première ligne, que seul l'appariement lit)",
+ "C-10": "| grandeur non définie (part sans aucune tâche à dénominateur ; borne de Student sur moins de deux tâches ; kappa à dénominateur nul ; corrélation de Spearman à variance nulle) | critère calculé sur des données où la grandeur est définie | chaque cas non défini : le critère échoue, compté ; jamais remplacé par une valeur |",
+ "C-11 métrique 3": "n = nombre de tâches qui ont une valeur : 16 au lot décisif et 8 aux épreuves quand aucune n'est laissée hors de la moyenne (conventions, « Parts ») ; une borne calculée sur moins de deux tâches est non définie, et le critère qui la porte échoue)",
+ "C-11 seuil": "(n − 1 degrés, 7 si les 8 tâches ont une part)",
+ "C-12": "est **retiré**",
+ "C-13 seuil": "même verdict que dans l'épreuve en vigueur — pour une action honnête, celui du lot honnête ; pour une action déplacée, celui du lot des jumeaux —, par lecteur, ≥ 0,90",
+ "C-13 6.8": "(verdicts de l'épreuve : pour une action honnête, ceux du lot honnête ; pour une action déplacée, ceux du lot des jumeaux)",
+ "C-14": "**À REMPLIR** : mot de Lazar, ou défaut échu, sur les points 6, 7, 10, 12, 13 et 15",
+ "C-15 jumeaux": "jumeaux déplacés à la dose 1 des épisodes honnêtes de vérification, rejeu de chaque jumeau compris (3.1) (lecture par programme, permise : aucun lecteur)",
+ "C-15 prise": "Une prise non calculable arrête ici aussi, sous la ligne A17 (6.4, point 5)",
+ "R-3": "**Toute phrase d'une ligne de la table C** porte la réserve R-BA2",
+ "R-4": "**au moins une dose en C6**",
+ "R-5": "un identifiant de tâche qui contient « / » arrête la construction des clés (garde)",
+ "R-7": "**sans plancher ni valeur p**",
+ "R-8": "une action « déplacée non jugeable » (classe « sans proposition ») compte zéro au numérateur et reste au dénominateur de dix",
+ "R-9": "ce seront celles que le manifeste de l'essai de mesure inscrira",
+ "R-10": "il échoue à la vérification",
+ "R-11": "inscrite comme contre-lecture 9",
+}
+for k, v in F.items():
+    print(("OK      " if v in B9 else "ABSENT  ") + k)
