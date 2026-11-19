@@ -9,7 +9,7 @@
 
 ## 1. Verdict
 
-Les cinq constats qui ne dépendent pas du texte sont corrigés, chacun avec son essai, cas sain et artefact : l'arrêt avant la marche qui rendait la destruction impossible (n-1), le commit que la session donne à la destruction (n-2), la minuterie jouée avec la fin de l'amorce (n-3), le contenu borné des fichiers de texte admis (n-5), la comparaison de la tête distante isolée (n-7). Les essais du paquet passent sous Python 3.11.18, avec `requirements-gpu.txt` et torch 2.14.1 pour processeur : 191 sur 191 (n-6). La version de transformers était déjà écrite au manifeste de la marche ; un essai le prouve, aucun refus n'est ajouté. Un défaut trouvé en chemin est corrigé (la lecture des épisodes coupait une ligne sur U+2028). Plancher d'essais de l'amorce : 171 → **191**, remesuré sur l'arbre extrait. Essais : **279** dans les six fichiers, {{COMPTE_FINAL}}. Mutations : {{MUTATIONS_VERDICT}}. Les points (a) à (g) sont décrits au § 4, sans code.
+Les cinq constats qui ne dépendent pas du texte sont corrigés, chacun avec son essai, cas sain et artefact : l'arrêt avant la marche qui rendait la destruction impossible (n-1), le commit que la session donne à la destruction (n-2), la minuterie jouée avec la fin de l'amorce (n-3), le contenu borné des fichiers de texte admis (n-5), la comparaison de la tête distante isolée (n-7). Les essais du paquet passent sous Python 3.11.18, avec `requirements-gpu.txt` et torch 2.14.1 pour processeur : 191 sur 191 (n-6). La version de transformers était déjà écrite au manifeste de la marche ; un essai le prouve, aucun refus n'est ajouté. Un défaut trouvé en chemin est corrigé (la lecture des épisodes coupait une ligne sur U+2028). Plancher d'essais de l'amorce : 171 → **191**, remesuré sur l'arbre extrait. Essais : **279** dans les six fichiers, **279 passés**. Mutations : {{MUTATIONS_VERDICT}}. Les points (a) à (g) sont décrits au § 4, sans code.
 
 ## 2. Constat → correction → essai qui l'attrape
 
@@ -128,7 +128,7 @@ Depuis la racine du dépôt, temporaires hors du disque (une commande) :
 TMPDIR=/dev/shm PYTHONPATH=src .venv/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/b5f-essais tests/test_barreau5_familles_edition_cout_v1.py tests/test_barreau5_familles_engagement_v1.py tests/test_barreau5_familles_formation_v1.py tests/test_lancer_b5f_formation_v1.py tests/test_amorce_b5f_formation_v1.py tests/test_amorce_b5f_formation_entiere_v1.py
 ```
 
-- {{COMPTE_ESSAIS}}
+- Six fichiers, état final : **279 essais** (E 86, G 23, F 82, L 34, A 45, AE 9), **279 passés** en 538 s, la passe de mutations tournant en même temps (sortie : `sortie-essais-six-fichiers-final-v4.txt`, dossier des outils). Au premier tour : 253 ; vingt-six essais de plus (G + 1, F + 19, A + 4, AE + 2), et trois essais existants étendus (fin nominale et porte des essais fermée de l'amorce entière, bout en bout jouet).
 - Paquet joué sur l'instance (`tests/test_barreau5_familles_*.py`) : 191 essais ; sur l'arbre que l'amorce extrait, tiré de l'arbre de travail sans commit, par la commande de l'étape 4 : **191 passés** sous Python 3.13.18 (87 s) et sous Python 3.11.18 (98 s). Plancher : **191**.
 - Les deux essais neufs de la minuterie durent environ 77 secondes chacun (l'échéance d'arrêt ne peut être plus proche que 60 secondes de la marche, garde de l'amorce que l'essai ne contourne pas).
 
