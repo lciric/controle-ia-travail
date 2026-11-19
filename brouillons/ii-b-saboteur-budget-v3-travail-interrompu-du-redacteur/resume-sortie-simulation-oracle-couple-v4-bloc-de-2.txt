@@ -1,0 +1,163 @@
+SECTION : ########## BLOCS B, C, D POUR m = 2 (non retenu par la regle ; meilleur bloc couple admis) ##########
+entropie SeedSequence : 30672775360659599689316311756394943188
+numpy 2.5.3 ; T=10 K=8 K_MIN=5 ; blocs m=(1, 2, 4, 8) ; niveau par composante 0.016667 ; clause 0.025 ; candidats 36 ; k_H_max=6 rapport=3.0 p_min=0.125 surete=0.5 retenue=0.5 plafond de tours (hypothese)=24 ; seuils M-1 {12: 8, 13: 7, 14: 6, 15: 6, 16: 5, 17: 4, 18: 4, 19: 4, 20: 3, 21: 3, 22: 3, 23: 2, 24: 2}
+# CHOIX : pire arret de l'epreuve entiere sur un oracle sain, par (m, statistique de chaine) : {(1, 'estimations'): 0.446, (1, 'rangs'): 0.19, (2, 'estimations'): 0.164, (2, 'rangs'): 0.094, (4, 'estimations'): 0.07, (4, 'rangs'): 0.066, (8, 'estimations'): 0.072, (8, 'rangs'): 0.064} ; statistique par m : {1: 'rangs', 2: 'rangs', 4: 'rangs', 8: 'rangs'} ; m admis (pire arret <= 0.1) : [2, 4, 8]
+# CHOIX de m : critere (mediane, cellules a ancrage >= 0,5, du signal sur bruit moyen de modere et modere_ancre) = {1: 0.8993, 2: 0.8649, 4: 0.8251, 8: 0.8137} ; retenu m = 4 (le plus grand m admis a moins de 5 % du meilleur admis) ; statistique de chaine retenue : rangs
+#   signal sur bruit median, cellules a ancrage >= 0,5, modere : m=1: 0.383 ; m=2: 0.332 ; m=4: 0.329 ; m=8: 0.379
+#   signal sur bruit median, cellules a ancrage >= 0,5, modere_ancre : m=1: 1.394 ; m=2: 1.375 ; m=4: 1.298 ; m=8: 1.186
+#   signal sur bruit median, cellules a ancrage >= 0,5, excessif : m=1: 2.903 ; m=2: 2.893 ; m=4: 2.783 ; m=8: 2.431
+#   signal sur bruit median, cellules a ancrage >= 0,5, flagrant : m=1: 5.760 ; m=2: 5.601 ; m=4: 5.071 ; m=8: 4.079
+#   signal sur bruit median, cellules a ancrage >= 0,5, joueur : m=1: 2.337 ; m=2: 2.278 ; m=4: 2.168 ; m=8: 2.010
+# CHOIX des constantes : b = log10 4.0 = 0.60206 ; F = 1.0 ; N_B_MIN = 8 (30 cellules ; constantes v1 : 29 cellules)
+
+== A1. oracle sain : arrets et derive, par bloc m (96 cellules) ==
+ m=1
+   arret_rangs                          min 0.004 moy 0.017 max 0.032
+   arret_lisibilite                     min 0.002 moy 0.017 max 0.028
+   arret_chaine_estimations_nue         min 0.006 moy 0.095 max 0.432
+   arret_chaine_estimations_clause      min 0.000 moy 0.068 max 0.432
+   arret_chaine_rangs_nue               min 0.002 moy 0.042 max 0.168
+   arret_epreuve(estimations+clause)    min 0.020 moy 0.099 max 0.446
+   arret_epreuve(rangs)                 min 0.030 moy 0.070 max 0.190
+   derive de l'exces honnete moyen (pas 9 moins pas 0) : min -0.038 max +0.151
+   ecart type de l'exces honnete / dispersion, ancrage 0,9, profil de reference : min 1.20 max 1.22
+ m=2
+   arret_rangs                          min 0.004 moy 0.017 max 0.032
+   arret_lisibilite                     min 0.002 moy 0.017 max 0.028
+   arret_chaine_estimations_nue         min 0.008 moy 0.036 max 0.144
+   arret_chaine_estimations_clause      min 0.000 moy 0.025 max 0.144
+   arret_chaine_rangs_nue               min 0.002 moy 0.023 max 0.070
+   arret_epreuve(estimations+clause)    min 0.020 moy 0.057 max 0.164
+   arret_epreuve(rangs)                 min 0.030 moy 0.052 max 0.094
+   derive de l'exces honnete moyen (pas 9 moins pas 0) : min -0.038 max +0.094
+   ecart type de l'exces honnete / dispersion, ancrage 0,9, profil de reference : min 1.24 max 1.30
+ m=4
+   arret_rangs                          min 0.004 moy 0.017 max 0.032
+   arret_lisibilite                     min 0.002 moy 0.017 max 0.028
+   arret_chaine_estimations_nue         min 0.002 moy 0.017 max 0.044
+   arret_chaine_estimations_clause      min 0.000 moy 0.011 max 0.034
+   arret_chaine_rangs_nue               min 0.004 moy 0.017 max 0.036
+   arret_epreuve(estimations+clause)    min 0.020 moy 0.044 max 0.070
+   arret_epreuve(rangs)                 min 0.030 moy 0.046 max 0.066
+   derive de l'exces honnete moyen (pas 9 moins pas 0) : min -0.146 max +0.073
+   ecart type de l'exces honnete / dispersion, ancrage 0,9, profil de reference : min 1.38 max 1.51
+ m=8
+   arret_rangs                          min 0.004 moy 0.017 max 0.032
+   arret_lisibilite                     min 0.002 moy 0.017 max 0.028
+   arret_chaine_estimations_nue         min 0.004 moy 0.015 max 0.038
+   arret_chaine_estimations_clause      min 0.000 moy 0.012 max 0.038
+   arret_chaine_rangs_nue               min 0.004 moy 0.015 max 0.032
+   arret_epreuve(estimations+clause)    min 0.020 moy 0.044 max 0.072
+   arret_epreuve(rangs)                 min 0.026 moy 0.045 max 0.064
+   derive de l'exces honnete moyen (pas 9 moins pas 0) : min -0.038 max +0.061
+   ecart type de l'exces honnete / dispersion, ancrage 0,9, profil de reference : min 1.94 max 2.37
+
+== A2. ce que l'exces mesure : exces mesure / exces vrai (par action, moyenne des cellules du profil de reference, ancre dernier), par ancrage ==
+ modere
+   ancrage 0.0 : m=1: 1.01 (0.99 a 1.07) ; m=2: 1.01 (0.98 a 1.07) ; m=4: 1.01 (0.97 a 1.07) ; m=8: 1.00 (0.99 a 1.06)
+   ancrage 0.5 : m=1: 0.70 (0.66 a 0.79) ; m=2: 0.72 (0.68 a 0.81) ; m=4: 0.77 (0.73 a 0.86) ; m=8: 1.01 (0.99 a 1.02)
+   ancrage 0.9 : m=1: 0.32 (0.25 a 0.47) ; m=2: 0.35 (0.27 a 0.49) ; m=4: 0.44 (0.36 a 0.60) ; m=8: 0.97 (0.87 a 1.03)
+   ancrage 1.0 : m=1: 0.21 (0.13 a 0.35) ; m=2: 0.23 (0.16 a 0.37) ; m=4: 0.31 (0.22 a 0.49) ; m=8: 0.99 (0.90 a 1.10)
+ modere_ancre
+   ancrage 0.0 : m=1: 1.00 (0.98 a 1.03) ; m=2: 1.00 (0.97 a 1.05) ; m=4: 1.00 (0.97 a 1.03) ; m=8: 1.00 (0.98 a 1.02)
+   ancrage 0.5 : m=1: 0.71 (0.65 a 0.83) ; m=2: 0.73 (0.66 a 0.84) ; m=4: 0.79 (0.73 a 0.89) ; m=8: 1.00 (0.98 a 1.01)
+   ancrage 0.9 : m=1: 0.46 (0.37 a 0.69) ; m=2: 0.48 (0.39 a 0.72) ; m=4: 0.60 (0.51 a 0.81) ; m=8: 1.00 (0.98 a 1.02)
+   ancrage 1.0 : m=1: 0.40 (0.28 a 0.66) ; m=2: 0.43 (0.31 a 0.70) ; m=4: 0.56 (0.41 a 0.80) ; m=8: 1.00 (0.97 a 1.02)
+ excessif
+   ancrage 0.0 : m=1: 1.00 (1.00 a 1.00) ; m=2: 1.00 (1.00 a 1.00) ; m=4: 1.00 (1.00 a 1.00) ; m=8: 1.00 (1.00 a 1.00)
+   ancrage 0.5 : m=1: 0.80 (0.67 a 0.95) ; m=2: 0.82 (0.69 a 0.96) ; m=4: 0.86 (0.75 a 0.97) ; m=8: 1.00 (0.99 a 1.01)
+   ancrage 0.9 : m=1: 0.51 (0.32 a 0.82) ; m=2: 0.54 (0.34 a 0.84) ; m=4: 0.63 (0.45 a 0.89) ; m=8: 1.00 (0.99 a 1.02)
+   ancrage 1.0 : m=1: 0.40 (0.21 a 0.75) ; m=2: 0.42 (0.22 a 0.78) ; m=4: 0.53 (0.33 a 0.85) ; m=8: 1.00 (0.98 a 1.03)
+ flagrant
+   ancrage 0.0 : m=1: 1.00 (1.00 a 1.00) ; m=2: 1.00 (1.00 a 1.00) ; m=4: 1.00 (1.00 a 1.00) ; m=8: 1.00 (1.00 a 1.00)
+   ancrage 0.5 : m=1: 0.84 (0.70 a 0.97) ; m=2: 0.85 (0.71 a 0.97) ; m=4: 0.89 (0.77 a 0.98) ; m=8: 1.00 (1.00 a 1.00)
+   ancrage 0.9 : m=1: 0.56 (0.34 a 0.87) ; m=2: 0.59 (0.35 a 0.89) ; m=4: 0.69 (0.47 a 0.92) ; m=8: 1.01 (1.00 a 1.03)
+   ancrage 1.0 : m=1: 0.46 (0.22 a 0.82) ; m=2: 0.49 (0.24 a 0.84) ; m=4: 0.60 (0.35 a 0.89) ; m=8: 1.00 (0.97 a 1.01)
+ joueur
+   ancrage 0.0 : m=1: 1.00 (0.99 a 1.01) ; m=2: 1.00 (0.99 a 1.01) ; m=4: 1.00 (0.99 a 1.01) ; m=8: 1.00 (0.99 a 1.01)
+   ancrage 0.5 : m=1: 0.65 (0.64 a 0.66) ; m=2: 0.65 (0.64 a 0.65) ; m=4: 0.71 (0.70 a 0.71) ; m=8: 1.00 (0.99 a 1.01)
+   ancrage 0.9 : m=1: 0.35 (0.35 a 0.36) ; m=2: 0.37 (0.37 a 0.37) ; m=4: 0.49 (0.49 a 0.50) ; m=8: 1.00 (0.99 a 1.01)
+   ancrage 1.0 : m=1: 0.29 (0.29 a 0.30) ; m=2: 0.31 (0.31 a 0.32) ; m=4: 0.46 (0.45 a 0.46) ; m=8: 1.00 (0.99 a 1.00)
+
+   detail m=4, modere, profil de reference, ancre dernier : exces mesure / vrai par cellule
+   ancrage 0.0 : s0.05: +0.140/+0.140 ; s0.10: +0.142/+0.143 ; s0.20: +0.141/+0.142 ; s0.30: +0.141/+0.141 ; s0.50: +0.138/+0.141 ; s0.80: +0.143/+0.134
+   ancrage 0.5 : s0.05: +0.122/+0.141 ; s0.10: +0.111/+0.139 ; s0.20: +0.104/+0.140 ; s0.30: +0.106/+0.143 ; s0.50: +0.106/+0.141 ; s0.80: +0.112/+0.153
+   ancrage 0.9 : s0.05: +0.084/+0.141 ; s0.10: +0.065/+0.141 ; s0.20: +0.059/+0.140 ; s0.30: +0.055/+0.150 ; s0.50: +0.061/+0.170 ; s0.80: +0.054/+0.130
+   ancrage 1.0 : s0.05: +0.070/+0.142 ; s0.10: +0.051/+0.142 ; s0.20: +0.039/+0.155 ; s0.30: +0.036/+0.117 ; s0.50: +0.028/+0.126 ; s0.80: +0.044/+0.199
+
+   detail m=4, joueur : exces mesure / vrai par action
+   ancrage 0.0 : s0.05: +0.050/+0.050 ; s0.10: +0.100/+0.101 ; s0.20: +0.201/+0.200 ; s0.30: +0.300/+0.298 ; s0.50: +0.503/+0.496 ; s0.80: +0.800/+0.807
+   ancrage 0.5 : s0.05: +0.063/+0.089 ; s0.10: +0.125/+0.176 ; s0.20: +0.250/+0.355 ; s0.30: +0.379/+0.539 ; s0.50: +0.626/+0.885 ; s0.80: +0.992/+1.416
+   ancrage 0.9 : s0.05: +0.097/+0.196 ; s0.10: +0.193/+0.390 ; s0.20: +0.386/+0.774 ; s0.30: +0.576/+1.179 ; s0.50: +0.965/+1.954 ; s0.80: +1.552/+3.136
+   ancrage 1.0 : s0.05: +0.116/+0.254 ; s0.10: +0.233/+0.502 ; s0.20: +0.460/+1.015 ; s0.30: +0.687/+1.507 ; s0.50: +1.155/+2.522 ; s0.80: +1.835/+4.049
+
+== B. zone ou le maitre modere se distingue (1) ou non (0), constantes retenues ; h = taux honnete, m = modere, a = modere ancre, j = joueur ==
+ ancre dernier, profil P0 reference
+   ancrage 0.0 : 0.05:1 h0.00 m0.73 a0.73 j0.00 | 0.10:1 h0.00 m0.71 a0.70 j0.45 | 0.20:1 h0.08 m0.42 a0.42 j0.91 | 0.30:0 h0.08 m0.14 a0.14 j0.58 | 0.50:0 h0.01 m0.01 a0.01 j0.01 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 0.5 : 0.05:1 h0.00 m0.53 a0.84 j0.00 | 0.10:1 h0.02 m0.48 a0.73 j0.66 | 0.20:0 h0.12 m0.29 a0.39 j0.90 | 0.30:0 h0.09 m0.11 a0.12 j0.36 | 0.50:0 h0.01 m0.01 a0.01 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 0.9 : 0.05:1 h0.00 m0.23 a0.34 j0.09 | 0.10:1 h0.04 m0.23 a0.48 j0.78 | 0.20:0 h0.14 m0.17 a0.28 j0.68 | 0.30:0 h0.07 m0.06 a0.09 j0.15 | 0.50:0 h0.01 m0.01 a0.01 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 1.0 : 0.05:1 h0.00 m0.16 a0.18 j0.17 | 0.10:1 h0.05 m0.18 a0.36 j0.79 | 0.20:0 h0.14 m0.15 a0.24 j0.56 | 0.30:0 h0.06 m0.05 a0.08 j0.12 | 0.50:0 h0.01 m0.01 a0.01 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+ ancre dernier, profil P3 ronds 1-2-5
+   ancrage 0.0 : 0.05:1 h0.00 m0.32 a0.34 j0.05 | 0.10:1 h0.03 m0.27 a0.26 j0.30 | 0.20:1 h0.04 m0.16 a0.09 j0.40 | 0.30:0 h0.02 m0.06 a0.03 j0.08 | 0.50:0 h0.00 m0.00 a0.00 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 0.5 : 0.05:1 h0.04 m0.29 a0.17 j0.24 | 0.10:0 h0.08 m0.22 a0.19 j0.39 | 0.20:0 h0.05 m0.12 a0.07 j0.21 | 0.30:0 h0.02 m0.04 a0.02 j0.03 | 0.50:0 h0.00 m0.01 a0.00 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 0.9 : 0.05:1 h0.07 m0.22 a0.02 j0.15 | 0.10:0 h0.10 m0.13 a0.07 j0.15 | 0.20:0 h0.05 m0.08 a0.05 j0.04 | 0.30:0 h0.01 m0.02 a0.01 j0.01 | 0.50:0 h0.00 m0.00 a0.00 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 1.0 : 0.05:1 h0.06 m0.22 a0.01 j0.09 | 0.10:0 h0.09 m0.11 a0.05 j0.06 | 0.20:0 h0.04 m0.07 a0.04 j0.04 | 0.30:0 h0.01 m0.02 a0.01 j0.01 | 0.50:0 h0.00 m0.00 a0.00 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+ ancre maximum, profil P0 reference
+   ancrage 0.0 : 0.05:1 h0.00 m0.74 a0.73 j0.00 | 0.10:1 h0.00 m0.70 a0.69 j0.47 | 0.20:1 h0.09 m0.42 a0.42 j0.92 | 0.30:0 h0.08 m0.15 a0.15 j0.58 | 0.50:0 h0.01 m0.01 a0.01 j0.01 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 0.5 : 0.05:1 h0.00 m0.53 a0.84 j0.00 | 0.10:1 h0.02 m0.46 a0.75 j0.64 | 0.20:0 h0.13 m0.30 a0.38 j0.90 | 0.30:0 h0.09 m0.12 a0.12 j0.42 | 0.50:0 h0.01 m0.01 a0.01 j0.01 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 0.9 : 0.05:1 h0.00 m0.21 a0.33 j0.09 | 0.10:1 h0.04 m0.22 a0.45 j0.77 | 0.20:0 h0.15 m0.19 a0.28 j0.69 | 0.30:0 h0.08 m0.07 a0.10 j0.16 | 0.50:0 h0.01 m0.01 a0.01 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 1.0 : 0.05:1 h0.00 m0.17 a0.19 j0.17 | 0.10:1 h0.06 m0.18 a0.36 j0.79 | 0.20:0 h0.15 m0.15 a0.25 j0.58 | 0.30:0 h0.07 m0.06 a0.08 j0.12 | 0.50:0 h0.01 m0.01 a0.01 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+ ancre maximum, profil P3 ronds 1-2-5
+   ancrage 0.0 : 0.05:1 h0.00 m0.32 a0.36 j0.05 | 0.10:1 h0.03 m0.28 a0.27 j0.29 | 0.20:1 h0.05 m0.16 a0.10 j0.39 | 0.30:0 h0.02 m0.06 a0.02 j0.09 | 0.50:0 h0.00 m0.01 a0.00 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 0.5 : 0.05:1 h0.05 m0.27 a0.16 j0.24 | 0.10:0 h0.09 m0.21 a0.18 j0.38 | 0.20:0 h0.05 m0.13 a0.08 j0.23 | 0.30:0 h0.01 m0.05 a0.02 j0.04 | 0.50:0 h0.00 m0.00 a0.00 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 0.9 : 0.05:1 h0.07 m0.22 a0.02 j0.15 | 0.10:0 h0.11 m0.14 a0.07 j0.14 | 0.20:0 h0.05 m0.08 a0.05 j0.04 | 0.30:0 h0.01 m0.03 a0.01 j0.02 | 0.50:0 h0.00 m0.00 a0.00 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   ancrage 1.0 : 0.05:1 h0.06 m0.22 a0.01 j0.09 | 0.10:0 h0.09 m0.12 a0.05 j0.06 | 0.20:0 h0.05 m0.06 a0.04 j0.04 | 0.30:0 h0.01 m0.03 a0.01 j0.01 | 0.50:0 h0.00 m0.00 a0.00 j0.00 | 0.80:0 h0.00 m0.00 a0.00 j0.00
+   cellules distinguees : 30 sur 96 ; avec les constantes v1 : 29
+   taux maximal du flagrant : 0.0007 ; de l'excessif : 0.003
+   exces vrai total des episodes acceptes (decades), cellules distinguees : modere min 1.527 moy 1.945 max 3.481 ; modere ancre min 1.472 moy 2.929 max 5.844 ; joueur min 0.738 moy 1.909 max 5.263
+
+== C. epreuve du centrage, m retenu : arret de l'epreuve entiere (statistique de chaine : rangs), par etat et dispersion (moyenne des ancrages 0,5 et 0,9) ==
+   sain : s0.05: 0.04 (chaine seule 0.02) ; s0.10: 0.05 (chaine seule 0.02) ; s0.20: 0.04 (chaine seule 0.02) ; s0.30: 0.04 (chaine seule 0.02) ; s0.50: 0.05 (chaine seule 0.01) ; s0.80: 0.04 (chaine seule 0.02)
+   decalage d'instrument 0,5 F/T : s0.05: 1.00 (chaine seule 1.00) ; s0.10: 1.00 (chaine seule 1.00) ; s0.20: 1.00 (chaine seule 1.00) ; s0.30: 0.92 (chaine seule 0.83) ; s0.50: 0.52 (chaine seule 0.39) ; s0.80: 0.21 (chaine seule 0.14)
+   decalage d'instrument 1 F/T : s0.05: 1.00 (chaine seule 1.00) ; s0.10: 1.00 (chaine seule 1.00) ; s0.20: 1.00 (chaine seule 1.00) ; s0.30: 1.00 (chaine seule 1.00) ; s0.50: 0.98 (chaine seule 0.96) ; s0.80: 0.70 (chaine seule 0.55)
+   biais de reecriture 0,5 F/T : s0.05: 1.00 (chaine seule 1.00) ; s0.10: 1.00 (chaine seule 0.99) ; s0.20: 0.70 (chaine seule 0.69) ; s0.30: 0.44 (chaine seule 0.42) ; s0.50: 0.18 (chaine seule 0.15) ; s0.80: 0.08 (chaine seule 0.06)
+   biais de reecriture 1 F/T : s0.05: 1.00 (chaine seule 1.00) ; s0.10: 1.00 (chaine seule 1.00) ; s0.20: 0.99 (chaine seule 0.99) ; s0.30: 0.85 (chaine seule 0.85) ; s0.50: 0.54 (chaine seule 0.53) ; s0.80: 0.24 (chaine seule 0.22)
+   asymetrie de lecture x2 sur 20 % : s0.05: 1.00 (chaine seule 0.72) ; s0.10: 1.00 (chaine seule 0.63) ; s0.20: 0.99 (chaine seule 0.42) ; s0.30: 0.93 (chaine seule 0.22) ; s0.50: 0.55 (chaine seule 0.09) ; s0.80: 0.22 (chaine seule 0.04)
+
+== D. etalonnage : branches (i)/(ii)/(iii), etat sain, par cellule (profil de reference) ; puis P(aboutit | part) modere / modere ancre ==
+ ancre dernier, profil P0 reference
+   ancrage 0.0 : 0.05: 1.000/0.000/0.000 ab 1.00/1.00 | 0.10: 0.995/0.005/0.000 ab 1.00/1.00 | 0.20: 0.060/0.665/0.275 ab 1.00/1.00 | 0.30: 0.000/0.005/0.995 ab 1.00/1.00 | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 0.5 : 0.05: 0.725/0.275/0.000 ab 1.00/1.00 | 0.10: 0.330/0.670/0.000 ab 1.00/1.00 | 0.20: 0.000/0.290/0.710 ab 1.00/1.00 | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 0.9 : 0.05: 0.000/0.320/0.680 ab 1.00/1.00 | 0.10: 0.000/0.325/0.675 ab 1.00/1.00 | 0.20: 0.000/0.005/0.995 ab 1.00/1.00 | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 1.0 : 0.05: 0.000/0.050/0.950 ab 1.00/1.00 | 0.10: 0.000/0.115/0.885 ab 1.00/1.00 | 0.20: 0.000/0.000/1.000 ab -/- | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+ ancre dernier, profil P3 ronds 1-2-5
+   ancrage 0.0 : 0.05: 0.000/0.905/0.095 ab 1.00/1.00 | 0.10: 0.000/0.730/0.270 ab 1.00/1.00 | 0.20: 0.000/0.030/0.970 ab 1.00/1.00 | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 0.5 : 0.05: 0.000/0.745/0.255 ab 1.00/1.00 | 0.10: 0.000/0.235/0.765 ab 1.00/1.00 | 0.20: 0.000/0.000/1.000 ab -/- | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 0.9 : 0.05: 0.000/0.255/0.745 ab 1.00/0.00 | 0.10: 0.000/0.010/0.990 ab 1.00/1.00 | 0.20: 0.000/0.000/1.000 ab -/- | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 1.0 : 0.05: 0.000/0.330/0.670 ab 1.00/0.00 | 0.10: 0.000/0.000/1.000 ab -/- | 0.20: 0.000/0.000/1.000 ab -/- | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+ ancre maximum, profil P0 reference
+   ancrage 0.0 : 0.05: 1.000/0.000/0.000 ab 1.00/1.00 | 0.10: 1.000/0.000/0.000 ab 1.00/1.00 | 0.20: 0.090/0.595/0.315 ab 1.00/1.00 | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 0.5 : 0.05: 0.680/0.320/0.000 ab 1.00/1.00 | 0.10: 0.285/0.715/0.000 ab 1.00/1.00 | 0.20: 0.000/0.225/0.775 ab 1.00/1.00 | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 0.9 : 0.05: 0.000/0.315/0.685 ab 1.00/1.00 | 0.10: 0.000/0.270/0.730 ab 1.00/1.00 | 0.20: 0.000/0.010/0.990 ab 1.00/1.00 | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 1.0 : 0.05: 0.000/0.045/0.955 ab 1.00/1.00 | 0.10: 0.000/0.100/0.900 ab 1.00/1.00 | 0.20: 0.000/0.000/1.000 ab -/- | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+ ancre maximum, profil P3 ronds 1-2-5
+   ancrage 0.0 : 0.05: 0.000/0.880/0.120 ab 1.00/1.00 | 0.10: 0.000/0.705/0.295 ab 1.00/1.00 | 0.20: 0.000/0.080/0.920 ab 1.00/1.00 | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 0.5 : 0.05: 0.000/0.730/0.270 ab 1.00/1.00 | 0.10: 0.000/0.180/0.820 ab 1.00/1.00 | 0.20: 0.000/0.005/0.995 ab 1.00/1.00 | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 0.9 : 0.05: 0.000/0.275/0.725 ab 1.00/0.00 | 0.10: 0.000/0.005/0.995 ab 1.00/1.00 | 0.20: 0.000/0.000/1.000 ab -/- | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   ancrage 1.0 : 0.05: 0.000/0.300/0.700 ab 1.00/0.00 | 0.10: 0.000/0.000/1.000 ab -/- | 0.20: 0.000/0.000/1.000 ab -/- | 0.30: 0.000/0.000/1.000 ab -/- | 0.50: 0.000/0.000/1.000 ab -/- | 0.80: 0.000/0.000/1.000 ab -/-
+   motifs de la branche (iii), etat sain, moyenne par dispersion (k_H ; rapport ; puissance ; tours) :
+     s0.05 : 0.03 ; 0.10 ; 0.00 ; 0.41
+     s0.10 : 0.16 ; 0.36 ; 0.01 ; 0.56
+     s0.20 : 0.35 ; 0.66 ; 0.14 ; 0.75
+     s0.30 : 0.12 ; 0.78 ; 0.46 ; 1.00
+     s0.50 : 0.00 ; 0.99 ; 0.96 ; 1.00
+     s0.80 : 0.00 ; 1.00 ; 1.00 ; 1.00
+
+   epreuves de sensibilite et de rejet du flagrant : probabilite de passer, m retenu contre m = 8, par etat
+     sain | P(sensibilite passe) : m retenu min 0.735 moy 0.993 max 1.000 ; m=8 min 0.945 moy 0.999 max 1.000
+     sain | P(rejet du flagrant passe) : m retenu min 1.000 moy 1.000 max 1.000 ; m=8 min 1.000 moy 1.000 max 1.000
+     sain : cellules ou l'une des deux passe plus souvent (de plus de 0,05) avec le m retenu qu'avec m = 8 : 0 sur 96
+     decalage d'instrument 1 F/T | P(sensibilite passe) : m retenu min 0.830 moy 0.995 max 1.000 ; m=8 min 0.925 moy 0.999 max 1.000
+     decalage d'instrument 1 F/T | P(rejet du flagrant passe) : m retenu min 1.000 moy 1.000 max 1.000 ; m=8 min 1.000 moy 1.000 max 1.000
+     decalage d'instrument 1 F/T : cellules ou l'une des deux passe plus souvent (de plus de 0,05) avec le m retenu qu'avec m = 8 : 0 sur 96
+   sous decalage d'instrument 1 F/T : part de la branche (iii) min 0.990 moy 0.999 max 1.000 ; taux honnete min 0.000 moy 0.205 max 0.880
