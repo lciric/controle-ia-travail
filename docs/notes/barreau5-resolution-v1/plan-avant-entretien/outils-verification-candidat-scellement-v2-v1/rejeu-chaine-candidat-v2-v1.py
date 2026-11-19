@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Vérification du candidat au scellement v2 (barreau 5) : rejeu en mémoire de la chaîne du rédacteur, et mes 20 couples (v1).
 
-Écrit par le vérificateur (Claude Opus 5.5) le 20 novembre 2026. Ne lit que des textes du dépôt ; n'écrit rien : la sortie
+Écrit par le vérificateur (Claude Opus 5.5) le 19 novembre 2026 au soir (UTC). Ne lit que des textes du dépôt ; n'écrit rien : la sortie
 standard seule. La fabrique du rédacteur (`fabrique-candidat-scellement-v2.py`) écrit ses pièces dans sa fonction `main` :
 je ne la lance pas. Je charge ses objets (classe `Chaine`, listes d'écritures des modules de sections, couples de
 l'erratum) sans exécuter `main`, je rejoue ses cinq étapes en mémoire, dans le même ordre, et je compare à l'octet le

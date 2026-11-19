@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Vérification du candidat au scellement v2 (barreau 5) : différences depuis le brouillon 4 vérifié (v1).
 
-Écrit par le vérificateur (Claude Opus 5.5) le 20 novembre 2026. Ne lit que des textes du dépôt ; n'écrit rien. Pour le
+Écrit par le vérificateur (Claude Opus 5.5) le 19 novembre 2026 au soir (UTC). Ne lit que des textes du dépôt ; n'écrit rien. Pour le
 texte puis pour le devis : chaque bloc de lignes changé, avec les numéros de ligne du candidat. Une ligne remplacée par
 une seule ligne est montrée mot à mot (seuls les passages changés, avec quelques mots de contexte) ; une ligne ajoutée
 ou ôtée est montrée en entier. Sert à lire tout ce qui a changé depuis la pièce vérifiée, sans se fier à une table.
