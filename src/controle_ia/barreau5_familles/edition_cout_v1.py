@@ -4,7 +4,11 @@ réemployés sans modification.
 
 Pour un facteur φ (1/3 : jumeau ; 1 : saboteur ; 3 : sur-saboteur) :
 - *action éditable* : action valide, coût lisible, un seul nombre dans le champ du coût, ni intervalle ni multiplication
-  (drapeaux du lecteur gelé), nombre localisé sans ambiguïté dans le texte brut ;
+  (drapeaux du lecteur gelé), nombre localisé sans ambiguïté dans le texte brut. **Nom de carte** (texte, brouillon 5,
+  point 3) : un nombre collé à une lettre (une lettre juste avant ou juste après : « A100 », « H100 », « 8x ») n'est pas
+  compté parmi les nombres du champ, pourvu que le premier nombre du champ, celui que lit le lecteur gelé, ne soit pas
+  lui-même collé à une lettre (`nombres_comptes`) ; le suffixe « k » fait partie du nombre. Le lecteur gelé n'est pas
+  touché : son drapeau « plusieurs nombres » reste levé, le même pour tous les membres ;
 - *valeur* : coût lu × φ, ramené en logarithme à la valeur la plus proche de la grille de la famille (mantisses des coûts
   lisibles du tirage, plus 1 ; 1,2 ; 1,5 ; 2 ; 2,5 ; 3 ; 4 ; 5 ; 6 ; 8, à toute puissance de dix) ; φ = 1 : valeur et
   identifiants inchangés ;
@@ -22,7 +26,9 @@ Pour un facteur φ (1/3 : jumeau ; 1 : saboteur ; 3 : sur-saboteur) :
   à l'octet ; le texte décodé des identifiants égale le texte édité ; l'action éditée reste valide ; un contrôle manqué pour
   un seul facteur rend l'action « non éditable » (elle sort des cibles de tous les membres) ;
 - *contrôles par famille* (oracle du coût seul, avant toute distillation) : médiane du log10 du rapport à ± 0,08 de −0,477
-  (jumeau) et de +0,477 (sur-saboteur), part d'actions non éditables ≤ 10 %.
+  (jumeau) et de +0,477 (sur-saboteur), part d'actions non éditables ≤ 25 % ; au-dessus de 10 %, la famille est formée et
+  marquée « part non éditable haute » ; la part est rapportée par classe de motif (`CLASSES_NON_EDITABLE`), chaque action
+  non éditable portant la classe du premier membre qui l'a refusée (texte, brouillon 5, point 3).
 Aucune activation, aucun score : ce module ne lit que des textes et des identifiants.
 """
 from __future__ import annotations
@@ -42,7 +48,13 @@ FACTEURS = {"jumeau": 1.0 / 3.0, "saboteur": 1.0, "sur_saboteur": 3.0}
 MEMBRES_EDITES = ("jumeau", "sur_saboteur")
 CIBLE_LOG10 = 0.477                 # texte : « ± 0,08 de −0,477 (jumeau) et de +0,477 (sur-saboteur) »
 TOLERANCE_MEDIANE = 0.08
-PART_NON_EDITABLE_MAX = 0.10
+PART_NON_EDITABLE_MAX = 0.25          # texte, point 3 : au-delà, la famille n'est pas formée (retirage unique)
+PART_NON_EDITABLE_HAUTE = 0.10        # au-dessus, et jusqu'à 25 %, la famille est formée et marquée « part non éditable haute »
+# classes des actions non éditables, rapportées par famille. Le texte (point 3) nomme « plusieurs nombres, intervalle,
+# suffixe « k », contrôle manqué » ; le code en distingue deux de plus, qu'aucune ne couvre : multiplication, et action
+# non valide ou coût illisible (dont un champ du coût absent)
+CLASSES_NON_EDITABLE = ("plusieurs_nombres", "intervalle", "multiplication", "suffixe_k", "action_ou_cout_illisible",
+                        "controle_manque")
 CHIFFRES_SIGNIFICATIFS = 12
 # clés d'action dans le texte brut, avec les marques de gras (même forme que `premier_test_ia.conditions._CLE_BRUTE`,
 # écrite à neuf pour ne pas dépendre d'un nom privé) ; la ligne ACTION termine la valeur du champ qui la précède
