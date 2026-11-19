@@ -1,0 +1,97 @@
+# Devis — barreau 5 : familles d'adaptateurs jumeaux tenues à l'écart — v1 — brouillon 2
+
+- Auteur : rédacteur neuf de la reprise, Claude Fable 5.2, sous-agent de la session mère. Écrit le 2026-11-19 vers 15:30Z. **Brouillon, non contre-lu.** Aucune dépense, aucun lancement.
+- Filiation : part du brouillon 1 inachevé du premier rédacteur (copie scellée dans `etat-a-l-arret-quota-fable-20261119-1440Z/`, `6297d3b5…`), rechiffré pour le plan du brouillon 2 du texte.
+- Texte qu'il chiffre : `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon2.md`.
+- Arithmétique : `calcul-devis-adaptateurs-tenus-a-l-ecart-v2.py` (`f13422a6…`), sortie `sortie-calcul-devis-adaptateurs-tenus-a-l-ecart-v2.txt` (`b1b78c70…`), même dossier. Tout chiffre ci-dessous en vient.
+- Ce devis ne vaut accord de rien : la dépense attend son scellement et **une ligne d'accord neuve** de Lazar. L'accord `GO-2026-11-10-07` ne le couvre pas : il s'éteint à son échéance (`registres/go.md`, ligne `GO-2026-11-19-68`, relue).
+
+## 1. D'où viennent les chiffres (aucun n'est neuf)
+
+- **Débits** (course du premier test sur une carte A100 SXM4 de 80 Go, cités par le préenregistrement des organismes, `prereg/T0.6-organismes-v0-v1.md`, « Devis », l. 640-652, et repris par le texte de validité de l'adaptateur, `prereg/validite-adaptateur-v1.md`, l. 204-226 ; relus par moi) : 40,2 s par épisode en lots de 8 ; 0,45 s par passe d'épisode en relecture forcée ; distillation de 480 pas, 0,23 à 0,46 heure ; mise en place 1,0 heure ; essais sur l'instance 0,6 heure (formation) ou 0,3 heure (relecture) ; poussée 0,2 heure.
+- **Prix de la carte** : 1,0889 à 1,30 USD de l'heure attendus (mêmes sources) ; pire cas 1,40 avec un hôte deux fois plus lent. Stockage de l'instance : 0,03 à 0,08 USD de l'heure (0,08 est le plafond du filtre de la configuration scellée).
+- **Téléchargement** : 0,026 à 0,05 USD par Go ; 40 Go prévus par instance (configuration scellée de la course de confirmation, relue).
+- **Taille d'une série d'activations** : 1,06 Go pour 576 actions à une couche, par jeton, en demi-précision (sous-ensemble poussé par la course de confirmation ; socle des faits, § 4), soit ≈ 1,18 Go pour 640 actions.
+- **Supposé, non mesuré** : le débit du réseau à la sortie de l'instance (30 à 100 Mo par seconde) ; le temps par adaptateur à la relecture (194 s : chargement et gardes 30 s, série nominale 29 s, recherche du facteur de norme 86 s, série à norme égale 29 s, écritures 20 s) ; le prix du volume de stockage (§ 5).
+
+## 2. Ce qui est chiffré
+
+Plan nominal du texte : dix familles tenues à l'écart à trois membres (jumeau, saboteur, sur-saboteur), trois familles d'apprentissage à deux membres, soit 36 adaptateurs et 13 tirages de 160 épisodes ; vérification du coût sur 32 tâches par adaptateur (64 pour les trois saboteurs d'apprentissage) ; relecture de tous les adaptateurs sur une seule instance.
+
+| pièce | contenu | heures de carte |
+|---|---|---|
+| une famille tenue à l'écart | 160 épisodes de distillation (1,79) ; trois distillations (0,69 à 1,38) ; trois fois 32 épisodes d'évaluation (1,07) | 3,55 à 4,24 |
+| une famille d'apprentissage | 160 épisodes (1,79) ; deux distillations (0,46 à 0,92) ; 64 et 32 épisodes (1,07) | 3,32 à 3,78 |
+| frais fixes d'une instance de formation | mise en place, essais, poussée | 1,8 |
+| relecture et notation | mise en place et essais (1,3) ; textes honnêtes communs (0,71) ; 36 adaptateurs à 194 s (1,94) ; loi du modèle nu recalculée pour la divergence (0,29) ; modèle nu relu par le chemin forcé et épisodes propres des saboteurs d'apprentissage (0,03) ; contrôle carte-processeur d'une sonde (≈ 0,17) ; sondes et notation (0,25 à 0,6) ; téléversement de 184 Go (0,51 à 1,70) | 5,2 à 6,8 (avec les quatre ancrages du nœud 3 : 5,4 à 7,1 h et 198 Go) |
+| répétition générale (si accordée) | toute la chaîne de relecture sur les quatre adaptateurs existants | 2,48 à 2,83 |
+
+## 3. Attendu, pire cas, coupure
+
+**Formation sur sept instances en parallèle** (cinq forment deux familles tenues à l'écart ; une forme deux familles d'apprentissage ; une en forme une).
+
+| instance | heures | attendu (USD) | pire cas (USD) | coupure (USD) |
+|---|---|---|---|---|
+| cinq instances à deux familles tenues à l'écart, chacune | 8,90 à 10,28 | 11,0 à 16,2 | 32,4 | **26** |
+| une instance à deux familles d'apprentissage | 8,44 à 9,36 | 10,5 à 14,9 | 29,7 | **24** |
+| une instance à une famille d'apprentissage | 5,12 à 5,58 | 6,8 à 9,7 | 18,5 | **15** |
+| **formation, total** | **58,0 à 66,3** | **72,2 à 105,5 ; centre 88,9** | **210,3** | **169** |
+
+Horloge : 8,9 à 10,3 heures si les sept cartes partent ensemble.
+
+| pièce | heures | attendu (USD) | pire cas (USD) | coupure (USD) |
+|---|---|---|---|---|
+| formation | 58,0 à 66,3 | 72,2 à 105,5 | 210,3 | 169 |
+| relecture et notation, activations gardées en entier | 4,72 à 6,26 | 11,1 à 19,8 (dont 4,8 à 9,2 de sortie de données) | 29,7 | 24 |
+| répétition générale | 2,48 à 2,83 | 3,8 à 5,9 | 10,4 | 7 |
+| **ensemble, chez le loueur de cartes** | **65,2 à 75,4** | **87,1 à 131,3 ; centre ≈ 109** | **250,4** | **200 : plafond demandé** |
+| garde des activations, hors loueur (§ 5) | — | à relever | — | — |
+
+- **Le pire cas entier ne tient pas sous le plafond.** Il suppose des hôtes deux fois plus lents sur les sept cartes à la fois. Les coupures arrêtent avant ; l'ordre de sacrifice du § 4 s'applique. À l'attendu, rien n'est coupé.
+- **Aucune relance n'entre sous le plafond**, hors le retirage unique d'une famille refusée par le contrôle de l'opérateur d'édition (au plus 1,79 heure, avant toute distillation, sur la même instance, sous la coupure de cette instance). Toute autre relance est un retour à la mère et une ligne neuve.
+- Carte : A100 SXM4 80 Go, au plus 1,30 USD de l'heure, au moins 16 cœurs, 128 Go de mémoire vive ; disque d'au moins 150 Go pour une instance de formation, **300 Go pour l'instance de relecture** (≈ 200 Go d'activations gardés jusqu'au versement, ancrages compris, plus le modèle ; à 450 Go, le plafond de stockage de 0,08 USD de l'heure n'admet que des hôtes à 0,13 USD le Go-mois au plus ; à 300 Go, 0,19) ; stockage au plus 0,08 USD de l'heure. Une autre carte, de débit jamais mesuré pour cette chaîne, seulement sur un mot de Lazar.
+
+**Autres répartitions du même plan.**
+
+| répartition | heures de carte | horloge | attendu (USD) | pire cas (USD) |
+|---|---|---|---|---|
+| quatre instances | 52,6 à 60,9 | 15,5 à 17,8 h | 63,1 à 92,1 | 188,3 |
+| cinq instances | 54,4 à 62,7 | 12,4 à 14,5 h | 66,1 à 96,6 | 195,7 |
+| sept instances (retenue) | 58,0 à 66,3 | 8,9 à 10,3 h | 72,2 à 105,5 | 210,3 |
+| treize instances, une famille chacune | 68,8 à 77,1 | 5,3 à 6,0 h | 90,5 à 132,4 | 254,3 |
+
+**Plans réduits** (ordre des coupes du texte, formation seule).
+
+| plan | adaptateurs, tirages | heures de carte | attendu (USD) | pire cas (USD) |
+|---|---|---|---|---|
+| neuf familles tenues à l'écart, trois d'apprentissage | 33, 12 | 54,5 à 62,1 | 68,3 à 99,7 | 197,8 |
+| huit et trois, six instances | 30, 11 | 49,1 à 56,0 | 61,2 à 89,3 | 177,9 |
+| plancher : huit et deux, cinq instances | 28, 10 | 44,0 à 50,5 | 54,5 à 79,6 | 159,4 |
+
+Pour mémoire : avec la vérification du coût sur 64 tâches partout, la formation nominale coûterait 69,8 à 78,1 heures et 85,4 à 121,8 USD.
+
+## 4. Règle d'arrêt et ordre de sacrifice
+
+- Chaque instance s'arrête **dès que son cumul relevé plus un quart d'heure de carte atteint sa coupure**. Le compteur commun arrête tout à 200 USD. Arrêt et destruction par identifiant (R10), après versement de ce qui est récupérable : rien n'est supprimé avant.
+- Sur une instance de formation, les familles se forment l'une après l'autre ; chaque sortie est poussée dès qu'elle existe. Si la coupure approche pendant la seconde famille, dans cet ordre : ses épisodes d'évaluation se limitent aux 16 premières tâches tirées ; puis la famille est abandonnée et comptée absente (le seuil de l'épreuve se recalcule sur les familles présentes). Une famille n'est jamais lue avec un membre choisi : elle est complète, privée de son seul sur-saboteur pour une raison technique écrite, ou absente.
+- Sur l'instance de relecture, les scores passent avant les activations : si la coupure approche pendant le téléversement, les replis du texte s'appliquent dans leur ordre (« Données gardées »).
+- Ligne d'engagement, à écrire au registre des dépenses avant la première minute de chaque pièce : « engagement : barreau 5, familles jumelles, pièce [formation n° | relecture | répétition] ([ligne d'accord], plafond 200 USD commun, coupure [26 | 24 | 15 | 24 | 7] USD, arrêt au cumul plus un quart d'heure) : texte [chemin, empreinte], commit [CODE-FORMATION-B5F ou CODE-LECTURE-B5F] ; A100 SXM4 80 Go ≤ 1,30 USD de l'heure, étiquette [b5f-…] ; attendu [..] ; pire cas [..] ; dépense antérieure sous cette ligne [..] ».
+
+## 5. Garde des activations et des textes
+
+- **Textes de distillation, tables d'édition, adaptateurs, épisodes, scores** : sur les branches de données du dépôt, en morceaux de moins de 95 Mo (36 adaptateurs de 27 Mo ; textes de l'ordre de quelques Mo par famille ; scores de l'ordre de la centaine de Mo).
+- **Activations** : 127,2 Go (séries nominales, trois couches) + 42,4 Go (norme égale, couche 15) + 3,5 Go (modèle nu) + 10,6 Go (textes propres des saboteurs d'apprentissage) = **≈ 184 Go**. Options :
+  - (a) un volume de stockage de 250 Go attaché au serveur du projet. **Prix non vérifié par moi : à relever sur la grille du jour avant le scellement.** C'est une ressource payante neuve : nœud 4 du texte ;
+  - (b) repli 1 : la couche 15 seule, série nominale de tous les adaptateurs et modèle nu, ≈ 44 Go ; il lui faut tout de même un lieu (un volume plus petit). La relecture coûte alors 7,0 à 11,0 USD (pire cas 18,9) ;
+  - (c) repli 2, sans dépense : une action sur dix, couche 15, série nominale, tous les adaptateurs et le modèle nu, ≈ 4,4 Go en morceaux sur la branche de lecture ; le reste détruit avec l'instance après inventaire. La relecture coûte alors 5,9 à 8,6 USD (pire cas 15,8) ;
+  - (d) garder le disque de l'instance arrêtée : jusqu'à 0,08 USD de l'heure, soit ≈ 58 USD par mois, et fragile. Déconseillé.
+
+## 6. Crédit chez le loueur et recharge à demander
+
+- Crédit le 19 novembre vers 14:55Z : **21,97 USD** (relevé par la mère). Sept cartes consomment jusqu'à ≈ 9,7 USD de l'heure : ce crédit tient ≈ 2,3 heures.
+- **Recharge à demander : 180 USD avant le départ de la formation**, ce qui porte le crédit à ≈ 202 USD, le plafond demandé (200 − 21,97 = 178,03, arrondi). Si d'autres chaînes puisent dans le même crédit la même semaine (la relecture des quatre cases décidée par `GO-2026-11-19-62`, coupure 8,5 USD ; tout autre chantier), la recharge ajoute leurs coupures : au moins 187 USD avec la seule relecture des quatre cases. Lazar a rapporté une recharge automatique (`GO-2026-11-19-68`, non vérifiée par la mère) : si elle est confirmée, avec un pas d'au moins 50 USD et un seuil de déclenchement d'au moins 20 USD, elle suffit ; sinon, sans recharge, la formation part en deux vagues, et l'horloge double.
+- Si Lazar retient le plancher (huit familles et deux) : plafond 160 USD (formation 54,5 à 79,6 ; relecture ≈ 9 à 17 ; répétition 4 à 6), recharge de 140 USD.
+
+## 7. Ce que ce devis ne compte pas
+
+Le temps de développement et de contre-lecture du code ; les agents qui écrivent, contre-lisent, ouvrent et jugent ; un témoin à changement bénin du même champ (nœud 5 du texte : dix adaptateurs de plus, 5,9 à 8,2 heures de carte à la formation, ≈ 7 à 11 USD, aucun tirage de plus, et un second opérateur d'édition à coder) ; le volume de stockage ; toute suite d'après l'entretien.

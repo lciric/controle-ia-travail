@@ -26,12 +26,18 @@ Trois constructions de l'épreuve E2, comparées :
                                étant la direction moyenne du déplacement des jumeaux d'apprentissage ; poussée non
                                positive, ou facteur hors de [0,25 ; 4] : famille absente de E2 ;
   « double »                 : les deux épreuves ci-dessus exigées ensemble ;
-  « famille » (RETENUE au brouillon 3) : poussée égalée DANS la famille, le long du déplacement du troisième membre.
+  « famille » (première moitié de la construction RETENUE au brouillon 3) : poussée égalée DANS la famille, le long du déplacement du troisième membre.
                                P(a, b) = produit scalaire des déplacements de a et de b ; q = P(jumeau, sur-saboteur) /
                                P(saboteur, sur-saboteur) ; le déplacement du saboteur est multiplié par sqrt(q), celui du
                                jumeau par 1/sqrt(q), APRÈS coup, à la couche lue (aucune relecture, aucun score de sonde) ;
                                la sonde est celle de l'épreuve nominale ; un produit non positif, ou sqrt(q) hors de
-                               [0,5 ; 2] : famille absente de E2.
+                               [0,5 ; 2] : famille absente de E2 ;
+  « commune » (seconde moitié) : poussée égalée le long de g_chapeau (direction moyenne du déplacement des jumeaux
+                               d'apprentissage), APRÈS coup et dans la famille : r = P(jumeau, g_chapeau) /
+                               P(saboteur, g_chapeau) ; saboteur multiplié par sqrt(r), jumeau par 1/sqrt(r) ; sonde
+                               nominale ; une poussée non positive : aucune mise à l'échelle pour cette famille (il n'y a
+                               pas de poussée commune à égaler) ; sqrt(r) hors de [0,5 ; 2] : famille absente ;
+  « retenue »                : E2 = « famille » ET « commune », exigées ensemble.
 Issues : celles du texte (manipulation supposée établie) ; l'épreuve E2 est lue sur ses familles présentes, au seuil de
 leur nombre ; sous huit familles présentes, elle n'est pas « séparée ».
 
@@ -101,6 +107,8 @@ def monde(rng, par: dict, m_l: float, k_app: int = 3, k_test: int = 10):
             F = 1.0 + f * niv
             fg = F if cible_force in ("commun", "tout", "g") else 1.0
             fu = F if cible_force in ("commun", "tout", "u") else 1.0
+            if cible_force == "mixte":                         # force entière sur g, à 40 % sur la part propre à la famille
+                fg, fu = F, 1.0 + 0.4 * f * niv
             fe = F if cible_force == "tout" else 1.0
             part = fu * u
             part[:, 0] += fg * a                              # g = axe 0
@@ -168,7 +176,14 @@ def monde(rng, par: dict, m_l: float, k_app: int = 3, k_test: int = 10):
     bon &= (rc >= 0.5) & (rc <= 2.0)
     d2_famille = stat(w, test[1], et_test[1], rc) - stat(w, test[0], et_test[0], 1.0 / rc)
     d2_famille[~bon] = np.nan
-    return d1, d3, d2_norme, d2_poussee, d2_famille, d_app
+    # construction « commune » : poussée égalée le long de g_chapeau, après coup, dans la famille ; sonde nominale
+    gj, gs = test[0] @ gh, test[1] @ gh
+    defini = (gj > 0) & (gs > 0)
+    rg = np.sqrt(np.where(defini, gj / np.where(defini, gs, 1.0), 1.0))
+    bon_g = (rg >= 0.5) & (rg <= 2.0)
+    d2_commune = stat(w, test[1], et_test[1], rg) - stat(w, test[0], et_test[0], 1.0 / rg)
+    d2_commune[~bon_g] = np.nan
+    return d1, d3, d2_norme, d2_poussee, d2_famille, d2_commune, d_app
 
 
 def issue(d1, d3, e2: bool, d_app) -> str:
@@ -210,6 +225,9 @@ MONDES = {
     "direction_commune_faible_a_0.3_force_commune_0.5_rE_0.6": dict(a=0.3, f=0.5, r_e=0.6),
     "direction_commune_faible_a_0.3_force_0.5_etalement_phi_1": dict(a=0.3, f=0.5, r_e=0.6, phi=1.0),
     # ---- avec sabotage (puissance du mot)
+    "force_mixte_0.5_sur_g_et_0.2_sur_la_part_propre_rE_0.6": dict(f=0.5, r_e=0.6, force_sur="mixte"),
+    "force_mixte_0.5_et_0.2_etalement_phi_1": dict(f=0.5, r_e=0.6, force_sur="mixte", phi=1.0),
+    "force_sur_la_seule_direction_commune_0.5_etalement_phi_1": dict(f=0.5, r_e=0.6, force_sur="g", phi=1.0),
     "sabotage_0.05_gradue": dict(sigma_s=0.05),
     "sabotage_0.1_gradue": dict(sigma_s=0.1),
     "sabotage_0.2_gradue": dict(sigma_s=0.2),
@@ -225,17 +243,20 @@ MONDES = {
 
 def bloc_n(rng, m_l: float, mondes: int = 1000) -> dict:
     sortie = {}
-    noms = ("norme", "poussee", "double", "famille")
+    noms = ("norme", "poussee", "double", "famille", "retenue")
     for nom, base in MONDES.items():
         for p in (1024, 4096):
             for k_test in ((10, 8) if nom.startswith("sabotage") else (10,)):
                 par = dict(base, p=p)
                 comptes = {c: {i: 0 for i in "SDCEN"} for c in noms}
-                e = {"E1": 0, "E3": 0, "E2_norme": 0, "E2_poussee": 0, "E2_famille": 0, "E2_famille_contraire": 0}
+                e = {"E1": 0, "E3": 0, "E2_norme": 0, "E2_poussee": 0, "E2_famille": 0, "E2_famille_contraire": 0, "E2_commune": 0,
+                     "E2_retenue": 0}
                 presentes, presentes_f = [], []
                 for _ in range(mondes):
-                    d1, d3, d2n, d2p, d2f, d_app = monde(rng, par, m_l, k_test=k_test)
-                    en, ep, ef = separe(d2n), separe(d2p), separe(d2f)
+                    d1, d3, d2n, d2p, d2f, d2g, d_app = monde(rng, par, m_l, k_test=k_test)
+                    en, ep, ef, eg = separe(d2n), separe(d2p), separe(d2f), separe(d2g)
+                    comptes["retenue"][issue(d1, d3, ef and eg, d_app)] += 1
+                    e["E2_commune"] += eg; e["E2_retenue"] += (ef and eg)
                     comptes["norme"][issue(d1, d3, en, d_app)] += 1
                     comptes["poussee"][issue(d1, d3, ep, d_app)] += 1
                     comptes["double"][issue(d1, d3, en and ep, d_app)] += 1
