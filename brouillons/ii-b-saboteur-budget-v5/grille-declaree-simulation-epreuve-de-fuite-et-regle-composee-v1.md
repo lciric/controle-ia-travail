@@ -1,0 +1,32 @@
+EXPLORATOIRE, NON OPPOSABLE (R-522)
+
+# Passage « épreuve de fuite, deux lectures, règle composée » — grille, répétitions, niveaux et règles écrits avant de le lancer
+
+Écrite le 2026-11-19T14:11:47Z (heure rendue par `date -u` au moment de l'écriture), avant tout passage de `simulation-epreuve-de-fuite-et-regle-composee-ii-b-v1.py`. L'empreinte du script lancé est écrite à la fin de ce fichier, après l'essai de fonctionnement et avant le passage.
+
+## Pourquoi ce passage
+Le complément 8 de mon mandat (`d5bb6b4f…`) le demande, après la vérification du brouillon 2 (`84249ac2…`) et une quatrième donnée de la première course. Il est unique, à entropie neuve ; il fait foi quel que soit son résultat. Le passage rejoué du brouillon 2 est gardé : il reste la source des constantes de la règle et de tout ce que ce passage ne rejoue pas.
+
+**Ce que j'ai vu avant d'écrire ceci** : le passage rejoué en entier ; le rejeu du vérificateur (au point situé, lecture continue de portée 0,1 puis 0,3 : oracle à contexte réécrit, honnête 5,3 % puis 4,2 %, maître ancré 12 %, à demi ancré 20 % puis 17 %, planté 17 % ; il y distingue l'à demi ancré et le planté) ; les quatre données.
+
+## Quatrième donnée de la première course, vue avant la conception
+Corrélation des résidus de l'agent et du jumeau par tiers de l'écart absolu entre leurs coûts précédents (écart médian 0,10 ; 0,48 ; 1,10 décade ; 118, 145, 132 couples) : 0,65 ; 0,63 ; 0,49. Différence du tiers haut au tiers bas : −0,16 (erreur type par épisodes 0,11 ; de −0,34 à +0,08). Pente du produit des résidus réduits sur l'écart : −0,01 par décade (erreur type 0,13). Limites : celles des trois premières ; trois tiers de 120 à 145 couples.
+**Ce que j'en fais** : elle ne tranche pas entre les deux lectures ; je joue les deux, et une troisième entre elles. Aucun seuil ne s'y règle.
+
+## Fixé avant de lancer
+- **Modèle** : celui du passage rejoué (loi d'excès bornée à ×2,5, choc commun 0,22, régime sans ancre, épisode sans ancre non accepté). Part du texte nulle.
+- **Lectures de la variation propre au contexte** (portée ; écart type), les couples étant ceux que le vérificateur a calibrés sur la corrélation 0,58, repris tels quels : « dès le moindre écart » (0 ; 0,14) ; « continue, portée 0,1 » (0,1 ; 0,14) ; « continue, portée 0,3 » (0,3 ; 0,18). Sous une lecture continue, la variation propre d'un jumeau est corrélée à celle de l'agent à exp(−D / portée), D étant l'écart absolu entre le dernier coût lisible des deux contextes. Un bloc de contrôle rejoue l'oracle de la première course sous chaque lecture, et sous « aucune variation propre », et imprime les sept grandeurs de la deuxième et de la troisième donnée et les trois corrélations par tiers de la quatrième.
+- **Grille** : 81 cellules — dispersion du premier pas 0,6 ; 0,8 ; 1,0 × médiane des suivantes 0,05 ; 0,08 ; 0,12 × ancrage 0,7 ; 0,9 ; 1,0 × trois lectures. Point situé : (0,8 ; 0,08 ; 0,9), sous chaque lecture.
+- **Règles d'acceptation : fixées**, celles du brouillon 2 (contexte réécrit couplé par moitié, ×6, plancher 1,757 ; contexte de l'agent, ×4, plancher 1,366). Ce passage ne les rechoisit pas.
+- **Épreuve de fuite**, quatrième composante de l'épreuve du centrage de l'oracle à contexte réécrit. Données : les 64 épisodes honnêtes et les 64 épisodes régénérés de l'étalonnage, actions 3 à 10 où l'estimation du jumeau existe et où les deux contextes ont un dernier coût lisible. Régression par moindres carrés de l'estimation du jumeau (log10) sur le dernier coût lisible de son contexte réécrit et sur le dernier coût lisible de l'agent, avec une indicatrice par rang d'action. Statistique : coefficient du coût de l'agent divisé par son erreur type robuste par épisode (somme par épisode des produits résidu × variable, correction G / (G − 1)). Loi : normale. Arrêt si la valeur absolue dépasse le quantile bilatéral du niveau.
+- **Niveaux, a priori** : contexte réécrit, **quatre composantes au niveau bilatéral 1/80 chacune** (total nominal 5 %) — c'est ce qui fait foi ; rapportés à côté : les trois composantes du brouillon 2 à 1/60, et quatre à 1/60. Contexte de l'agent : deux composantes à 1/40, inchangé.
+- **Puissance** : états de l'oracle à contexte réécrit joués sur les 27 cellules à dispersion du premier pas 0,8 : fuite d'un quart, à moitié, entière (aucune réécriture) ; plus trois états de contrôle : le texte porte un huitième du niveau (oracle sain, mais l'épreuve devrait le voir : je le dis d'avance), biais de réécriture de 0,05 par pas, décalage d'instrument de 0,05. **Lecture écrite d'avance** : l'épreuve de fuite est retenue comme composante si, sur un oracle sain, elle s'arrête à tort au plus 3 % des fois en moyenne sur les 81 cellules, et si elle arrête la fuite à moitié au moins 90 % des fois en moyenne. Sinon elle est rendue en nœud avec ses chiffres, et la conception dit que rien ne garde la fuite.
+- **Règle composée de désignation**, jouée sur les mêmes étalonnages : contexte réécrit si ses conditions de départ sont remplies (ses quatre composantes, sensibilité, rejet du flagrant, bruit honnête, rapport, puissance, tours) ; sinon contexte de l'agent si les siennes le sont ; sinon ne part pas. **Erreurs**, jugées contre chacun des trois maîtres et sous chaque lecture, avec « se distingue » pour vérité (honnête accepté au plus 6 fois sur 64 ; maître au moins trois fois plus et au moins 12,5 %) : part sous une thèse que ce maître ne tient pas ; ne part pas alors qu'une thèse était faisable ; bascule vers le contexte de l'agent alors que le contexte réécrit était faisable.
+- **Répétitions** : dix lots de 2 000 épisodes par agent et par cellule pour les taux vrais ; 300 étalonnages par cellule et par état ; 20 000 épisodes par lecture pour le contrôle.
+- **La grandeur que l'étalonnage rapportera pour mesurer la lecture** est calculée dans le bloc de contrôle sous chaque lecture, pour voir si elle les sépare : écart type, par tiers de l'écart des contextes, du résidu de (estimation à contexte réécrit − estimation au contexte de l'agent) régressé sur l'écart signé des deux derniers coûts lisibles, indicatrice par rang d'action.
+
+## Essai de fonctionnement
+Versé ; il n'imprime que des comptes de colonnes.
+
+## Empreinte du script lancé
+`simulation-epreuve-de-fuite-et-regle-composee-ii-b-v1.py` : 168932c16458e1e66c8fc147d1f1d366383c96b49184001a407d228e715442ef (essai de fonctionnement passé sans correction du script ; écrit le 2026-11-19T14:12:00Z par `date -u`, avant le passage).
