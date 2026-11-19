@@ -1,0 +1,113 @@
+[
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "faits-v3.md, sections 3, 4, 5 et 6 (règle R1, N-060 v3 et conception-organismes-discrets-v2.md)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "A Simple Sequentially Rejective Multiple Test Procedure, Sture Holm, 1979, Scandinavian Journal of Statistics",
+          "statut": "SUPPOSE"
+        }
+      ],
+      "auteur": "argon",
+      "avantage": {
+        "incopiable_parce_que": "Verrouille conjointement les seuils scellés de N-060 v3 (0,40 et 0,60), la règle d'arrondi de p fois m de la conception v2 et la procédure de Holm sur les 3 doses de H1.",
+        "source": "methodes",
+        "texte": "Partition mathématiquement mutuellement exclusive et exhaustive de l'espace des résultats expérimentaux sous la règle de préenregistrement R1."
+      },
+      "cosmetique_si": "Le plancher honnête dépasse 0,80, kappa dépasse 0,85 à toutes les doses et m est toujours supérieur ou égal à 8 sur les 128 instances.",
+      "cout": {
+        "nature": "processeur",
+        "ordre_de_grandeur": "Nul (règle purement analytique appliquée aux métriques déjà calculées)."
+      },
+      "demande_organisme": {
+        "nature": "ajout",
+        "texte": "Inscription de l'automate de décision à deux étapes (Étape 1 sur p = 0, Étape 2 sur p dans {1/2, 3/4, 1}) dans le fichier de préenregistrement R1 avant toute exécution."
+      },
+      "empreinte": "58e62c1156201f0fd95082266730466dd67227b9724655c66297c46c981832d5",
+      "enonce": "Comment séparer sans degré de liberté post-hoc l'échec de l'instrument de vérification (repli N-060 v3) de l'absence d'effet du Bras A (repli vers K tirages honnêtes) et de la dilution par instances à moins de deux actions permutables (m < 2) ? Partie A (Mode 5) : (1) Mécanisme : si le nombre d'actions permutables m est tel que p fois m arrondi au supérieur est inférieur à 2, l'instance est comptée mais laissée honnête (dilution en intention de traiter) ; de plus, évaluer kappa sur l'ensemble des doses mélange l'instabilité de l'instrument et l'effet de la permutation. (2) Effet sur le triplet [couverture, aire sous la courbe, erreur de coût] : [atténuation de l'écart de couverture sous 0,15 aux doses 1/4 et 1/2, baisse de l'aire sous la courbe vers 0,50, écart de coût nul]. (3) Correctif et Partie B (Règle de décision explicite et falsifiable scellée sous R1) : Étape 1 (Porte de validité de l'instrument, aveugle à l'effet du sabotage) : évaluer uniquement sur le jeu d'étalonnage et sur la dose p = 0 (jumeau honnête, N = 128) la couverture moyenne C(0), la concordance inter-lecteurs kappa(0) et la proportion d'instances permutables effectives q = proportion(m >= 2). Si C(0) < 0,40 OU kappa(0) < 0,60 OU q < 0,80, déclarer l'échec de l'instrument et déclencher immédiatement le repli de vérification N-060 v3 sans lire les doses p > 0. Étape 2 (Porte d'efficacité du Bras A, conditionnelle au succès de l'Étape 1) : tester l'écart de couverture Delta_C(p) = C(0) - C(p) sur les 3 doses de l'hypothèse H1 (p dans {1/2, 3/4, 1}) avec correction de Holm-Bonferroni au risque alpha = 0,05 (unilatéral). Si et seulement si l'Étape 1 est validée ET que pour chacune des trois doses p dans {1/2, 3/4, 1}, la borne inférieure de l'intervalle de confiance simultané à 95 % corrigé par Holm de Delta_C(p) est strictement inférieure à 0,15 point (ou n'exclut pas zéro du côté prédit), conclure à l'absence de dommage mesurable du Bras A et déclencher l'instruction du repli de deuxième ligne à K tirages honnêtes.",
+      "identifiant_auteur": "argon-p1-05",
+      "loi_predictive": {
+        "espace_instances": "128 instances appariées par dose sur la grille p dans {0, 1/4, 1/2, 3/4, 1}.",
+        "metrique": "Probabilité de déclencher le repli à K tirages sous l'hypothèse nulle de défaillance de l'instrument (évaluée par rééchantillonnage sur la passe pilote).",
+        "prediction": "L'application de la porte séquentielle à deux étapes garantit un taux de fausse bascule vers le repli à K tirages inférieur ou égal à 5 % lorsque l'instrument est défaillant (kappa(0) < 0,60), et élimine 100 % des choix post-hoc entre les deux replis.",
+        "signe": "-"
+      },
+      "nom": "Règle séquentielle scellée de séparation des replis sous R1",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Transposition des portes hiérarchiques à séquence fixe des essais cliniques (validation d'essai puis test d'efficacité avec correction de Holm) aux bancs d'évaluation de sabotage."
+      },
+      "passe": 1,
+      "perte_traduction": "L'arrêt strict à l'Étape 1 interdit d'observer si la concordance kappa se dégrade spécifiquement aux doses p > 0 tout en étant bonne à p = 0 (ce cas est absorbé dans le test de dommage de l'Étape 2).",
+      "piege": "Si kappa est satisfaisant à p = 0 (>= 0,60) mais s'effondre à p = 1 (< 0,30) à cause du désordre syntaxique, l'Étape 1 est franchie alors que la mesure à p = 1 est dégradée ; il faut donc adjoindre une condition de maintien kappa(p) >= 0,50 dans l'Étape 1 avant de démasquer la différence de moyenne C(0) - C(p).",
+      "questions_servies": [
+        "Q3"
+      ],
+      "type": "approche"
+    },
+    "signaux": [
+      "(?i)\\b(étapes?|etapes?|steps?|phases?)\\s*(1|un|une|one)\\b\\s*[:.)\\-—]"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "faits-v3.md, point 6 (replis)",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Holm, A simple sequentially rejective multiple test procedure, 1979",
+          "statut": "SUPPOSE"
+        },
+        {
+          "reference": "Schuirmann, two one-sided tests procedure, 1987",
+          "statut": "SUPPOSE"
+        }
+      ],
+      "auteur": "opus",
+      "avantage": {
+        "incopiable_parce_que": "Il s'appuie sur les invariants exacts propres au banc.",
+        "source": "methodes",
+        "texte": "Le verrouillage séquentiel de l'instrument avant le contraste rend la bascule non manipulable."
+      },
+      "cosmetique_si": "Le repli N-060 v3 écrit contient déjà un séquencement aveugle équivalent.",
+      "cout": {
+        "nature": "processeur",
+        "ordre_de_grandeur": "Simulations en minutes"
+      },
+      "demande_organisme": {
+        "nature": "rien",
+        "texte": "Aucune."
+      },
+      "empreinte": "ed8159c1021b3ca29709dcc949a1f5b15e1f5aeab4839569a3d7408e57b9c6a2",
+      "enonce": "La règle s'applique en trois étapes, dans un ordre fixé. Les résultats de chaque étape sont verrouillés par empreinte cryptographique avant le calcul de l'étape suivante. Étape 0 : validité de l'instrument, aveugle au contraste. Cette étape ne lit que le jumeau p = 0, le jeu d'étalonnage et les paires certifiées. Elle comporte quatre critères. G1 : plancher honnête de couverture (lecteurs au minimum) ≥ 0,40. G2 : κ ≥ 0,60 sur l'étalonnage, et κ ≥ 0,60 sur un échantillon scellé de 64 paires permutées présentées sans étiquette de bras. G3 : sensibilité et spécificité des lecteurs sur les paires certifiées ≥ 0,80. G4 : invariants I1 (V_exact constant) et couverture au niveau de l'article inchangée. Un seul échec suffit : on conclut à l'échec de l'instrument, on applique le repli N-060 v3 et l'écart de couverture n'est jamais calculé. Étape 1 : manipulation. Si la médiane de d_eff est inférieure à p/2 à l'une des doses 1/2, 3/4 ou 1, on conclut à l'échec de manipulation, qui n'entraîne aucun des deux replis. Étape 2 : effet, aux trois doses de H1, avec correction de Holm. Le dommage est établi si au moins une dose exclut zéro du côté prédit et que la borne basse obtenue par programme a le même signe. L'absence est établie, avec instruction du repli à K tirages, si un test d'équivalence par deux tests unilatéraux, de marge Δ𝒞_min = 0,15 et α = 0,05 avec Holm, conclut à un écart inférieur à 0,15 aux trois doses. Dans tout autre cas, le résultat est indéterminé : pas de bascule, pas d'extension de N, rapport tel quel. Falsifiabilité : avec un écart-type apparié ≤ 0,40, la demi-largeur de l'intervalle vaut environ 0,07 pour N = 128. L'équivalence est donc atteignable si le vrai écart est ≤ 0,08. Si l'écart-type pilote dépasse 0,55, la règle prédit « indéterminé » et doit être rescellée avant toute course.",
+      "identifiant_auteur": "opus-p1-05",
+      "loi_predictive": {
+        "espace_instances": "Les 5 conditions × 128 paires ; l'issue est l'une de quatre classes",
+        "metrique": "Taux d'erreur de classement de la règle sur des écarts simulés à partir de la variance pilote",
+        "prediction": "Sous une vraie absence d'effet, avec un écart-type ≤ 0,40, la règle conclut à l'absence avec une probabilité ≥ 0,80. Sous un écart vrai de 0,15, elle conclut à l'absence avec une probabilité ≤ 0,05.",
+        "signe": "0"
+      },
+      "nom": "Partie B — Règle séquentielle scellée : instrument, manipulation, puis effet",
+      "originalite": {
+        "niveau": "transposition",
+        "texte": "Combine des étapes de contrôle de qualité propres au banc avec des tests d'équivalence classiques."
+      },
+      "passe": 1,
+      "perte_traduction": "Une troisième et une quatrième issue apparaissent (manipulation, indéterminé), absentes du dispositif binaire initial.",
+      "piege": "Estimer l'écart-type sur des données Bras A déjà lues.",
+      "questions_servies": [
+        "Q3",
+        "Q2"
+      ],
+      "type": "approche"
+    },
+    "signaux": [
+      "(?i)\\b(étapes?|etapes?|steps?|phases?)\\s*(1|un|une|one)\\b\\s*[:.)\\-—]"
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "/home/user/controle-ia-travail/scripts/epreuve_temoins_auto_conception_v2.py", line 471, in <module>
+    raise SystemExit(principal())
+                     ~~~~~~~~~^^
+  File "/home/user/controle-ia-travail/scripts/epreuve_temoins_auto_conception_v2.py", line 461, in principal
+    reel()
+    ~~~~^^
+  File "/home/user/controle-ia-travail/scripts/epreuve_temoins_auto_conception_v2.py", line 416, in reel
+    un, c, s = jouer(o, adaptateurs[role["fournisseur"]], etiquette, role["modele"], consigne, {tid: temoins[tid]}, items,
+               ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     interdites, sortie / "appels", plafond_session, juge=juge)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/controle-ia-travail/scripts/epreuve_temoins_auto_conception_v2.py", line 222, in jouer
+    r = adaptateur.lancer("juge_ideation", entree, str(d), plafond_session, 1, modele=modele)
+  File "/home/user/ideation-organism/orchestrator/pole/adaptateurs.py", line 434, in lancer
+    o = construire_options(os.path.abspath(dossier), budget_usd, max_tours, url_relais=self.url_relais,
+                           modele=modele, role=role, interdire_lecture=self.interdire_lecture,
+                           racine_lecture=racine_lecture, max_demandes_lecture=max_demandes_lecture,
+                           lire_depense=lire_depense, mode_lecture=mode_lecture)
+  File "/home/user/ideation-organism/orchestrator/pole/adaptateurs.py", line 297, in construire_options
+    raise ValueError("le dossier de l'agent doit être sous un chemin interdit en lecture (sinon la fiche voisine "
+                     "reste lisible) : " + dossier_norme + " hors de " + ", ".join(interdits))
+ValueError: le dossier de l'agent doit être sous un chemin interdit en lecture (sinon la fiche voisine reste lisible) : /tmp/epreuve-temoins-auto-conception-8j70anal/appels/aiguilleur/t01 hors de /tmp/pole-sessions-epreuve-vhyihr0x, /tmp/epreuve-temoins-auto-conception-8j70anal/sortie

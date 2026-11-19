@@ -1,0 +1,286 @@
+{
+ "version": "calcul-devis-course-auto-conception-v2",
+ "matiere_sha256": "11f4b69ba42147c428090e4805948a708d0ed266da0c0cd07f194723eaba742d",
+ "cases": 11,
+ "octets_entree_par_case": [
+  136422,
+  97525,
+  131942,
+  113557,
+  101090,
+  94781,
+  95125,
+  95311,
+  107865,
+  128989,
+  110242
+ ],
+ "octets_entree_total_par_espece": 1212849,
+ "consigne_proposeur_octets": 29299,
+ "hypotheses": {
+  "octets_par_jeton": {
+   "estimation": 3.3,
+   "haut": 2.8
+  },
+  "sortie_proposeur_jetons": {
+   "estimation": 6000,
+   "haut": 16000
+  },
+  "cartes_par_appel": {
+   "estimation": 2,
+   "haut": 4
+  },
+  "par_appel_interne": {
+   "aiguilleur": 0.031,
+   "juge-claude": 0.037,
+   "juge-argon": 0.0347
+  },
+  "facteur_haut_interne": 3.0
+ },
+ "prix": {
+  "prop-claude-1": {
+   "usd_par_million": [
+    4.0,
+    20.0
+   ],
+   "source": "barème du relais Claude de la procédure (`pole/relais_reel.py`, 1b90b020…, l. 49-54)"
+  },
+  "prop-claude-2": {
+   "usd_par_million": [
+    10.0,
+    50.0
+   ],
+   "source": "barème du relais Claude de la procédure (`pole/relais_reel.py`, 1b90b020…, l. 49-54)"
+  },
+  "prop-argon": {
+   "usd_par_million": [
+    8.3,
+    41.5
+   ],
+   "source": "prix figés de l'enveloppe d'Argon (`rapports/fille-ideation-1-v1/appel-argon-v5.sh`, 37c0205e…)"
+  },
+  "prop-kimi": {
+   "usd_par_million": [
+    2.0,
+    10.0
+   ],
+   "source": "procédure des relais persistants § 2.2 (prix vérifiés le 30 octobre, page `c62210a0…`)"
+  },
+  "prop-astra": {
+   "usd_par_million": [
+    10.0,
+    50.0
+   ],
+   "source": "`docs/notes/organisme-conception-propre-v1/prix-astra-v2.md` (bf211a07…), cité par la procédure § 2.2"
+  },
+  "prop-carbon": {
+   "usd_par_million": [
+    8.3,
+    41.5
+   ],
+   "source": "bornes hautes données par la mère (R-3271) pour la commande par lot `commande_gemini_lot_v1.py` (9484dce0…), prix plein, remise du lot non comptée"
+  }
+ },
+ "especes": {
+  "prop-claude-1": {
+   "estimation": 2.7901,
+   "haut": 5.2526,
+   "par_appel_estimation": 0.2536,
+   "par_appel_haut": 0.4775,
+   "pire_par_appel_plafond_session": 3.0
+  },
+  "prop-claude-2": {
+   "estimation": 6.9753,
+   "haut": 13.1316,
+   "par_appel_estimation": 0.6341,
+   "par_appel_haut": 1.1938,
+   "pire_par_appel_plafond_session": 3.0
+  },
+  "prop-argon": {
+   "estimation": 5.7895,
+   "haut": 10.8992,
+   "par_appel_estimation": 0.5263,
+   "par_appel_haut": 0.9908,
+   "pire_par_appel_plafond_session": 3.0
+  },
+  "prop-kimi": {
+   "estimation": 1.3951,
+   "haut": 2.6263,
+   "par_appel_estimation": 0.1268,
+   "par_appel_haut": 0.2388,
+   "pire_par_appel_plafond_session": 3.0
+  },
+  "prop-astra": {
+   "estimation": 6.9753,
+   "haut": 13.1316,
+   "par_appel_estimation": 0.6341,
+   "par_appel_haut": 1.1938,
+   "pire_par_appel_plafond_session": 3.0
+  },
+  "prop-carbon": {
+   "estimation": 5.7895,
+   "haut": 10.8992,
+   "par_appel_estimation": 0.5263,
+   "par_appel_haut": 0.9908,
+   "pire_par_appel_plafond_session": 3.0
+  }
+ },
+ "totaux": {
+  "prop-argon+prop-claude-1+prop-claude-2": {
+   "estimation": {
+    "appels": {
+     "proposeurs": 33,
+     "aiguilleur": 66,
+     "juges": 132
+    },
+    "cartes": 66,
+    "proposeurs_usd": 15.5549,
+    "aiguilleur_usd": 2.046,
+    "juges_usd": 4.7322,
+    "total_usd": 22.3331
+   },
+   "haut": {
+    "appels": {
+     "proposeurs": 33,
+     "aiguilleur": 132,
+     "juges": 264
+    },
+    "cartes": 132,
+    "proposeurs_usd": 29.2834,
+    "aiguilleur_usd": 12.276,
+    "juges_usd": 28.3932,
+    "total_usd": 69.9526
+   }
+  },
+  "prop-argon+prop-astra+prop-claude-1+prop-claude-2": {
+   "estimation": {
+    "appels": {
+     "proposeurs": 44,
+     "aiguilleur": 88,
+     "juges": 176
+    },
+    "cartes": 88,
+    "proposeurs_usd": 22.5302,
+    "aiguilleur_usd": 2.728,
+    "juges_usd": 6.3096,
+    "total_usd": 31.5678
+   },
+   "haut": {
+    "appels": {
+     "proposeurs": 44,
+     "aiguilleur": 176,
+     "juges": 352
+    },
+    "cartes": 176,
+    "proposeurs_usd": 42.415,
+    "aiguilleur_usd": 16.368,
+    "juges_usd": 37.8576,
+    "total_usd": 96.6406
+   }
+  },
+  "prop-argon+prop-carbon+prop-claude-1+prop-claude-2": {
+   "estimation": {
+    "appels": {
+     "proposeurs": 44,
+     "aiguilleur": 88,
+     "juges": 176
+    },
+    "cartes": 88,
+    "proposeurs_usd": 21.3444,
+    "aiguilleur_usd": 2.728,
+    "juges_usd": 6.3096,
+    "total_usd": 30.382
+   },
+   "haut": {
+    "appels": {
+     "proposeurs": 44,
+     "aiguilleur": 176,
+     "juges": 352
+    },
+    "cartes": 176,
+    "proposeurs_usd": 40.1826,
+    "aiguilleur_usd": 16.368,
+    "juges_usd": 37.8576,
+    "total_usd": 94.4082
+   }
+  },
+  "prop-argon+prop-astra+prop-carbon+prop-claude-1+prop-claude-2": {
+   "estimation": {
+    "appels": {
+     "proposeurs": 55,
+     "aiguilleur": 110,
+     "juges": 220
+    },
+    "cartes": 110,
+    "proposeurs_usd": 28.3197,
+    "aiguilleur_usd": 3.41,
+    "juges_usd": 7.887,
+    "total_usd": 39.6167
+   },
+   "haut": {
+    "appels": {
+     "proposeurs": 55,
+     "aiguilleur": 220,
+     "juges": 440
+    },
+    "cartes": 220,
+    "proposeurs_usd": 53.3142,
+    "aiguilleur_usd": 20.46,
+    "juges_usd": 47.322,
+    "total_usd": 121.0962
+   }
+  },
+  "prop-argon+prop-claude-1+prop-claude-2+prop-kimi": {
+   "estimation": {
+    "appels": {
+     "proposeurs": 44,
+     "aiguilleur": 88,
+     "juges": 176
+    },
+    "cartes": 88,
+    "proposeurs_usd": 16.95,
+    "aiguilleur_usd": 2.728,
+    "juges_usd": 6.3096,
+    "total_usd": 25.9876
+   },
+   "haut": {
+    "appels": {
+     "proposeurs": 44,
+     "aiguilleur": 176,
+     "juges": 352
+    },
+    "cartes": 176,
+    "proposeurs_usd": 31.9097,
+    "aiguilleur_usd": 16.368,
+    "juges_usd": 37.8576,
+    "total_usd": 86.1353
+   }
+  },
+  "prop-argon+prop-astra+prop-carbon+prop-claude-1+prop-claude-2+prop-kimi": {
+   "estimation": {
+    "appels": {
+     "proposeurs": 66,
+     "aiguilleur": 132,
+     "juges": 264
+    },
+    "cartes": 132,
+    "proposeurs_usd": 29.7148,
+    "aiguilleur_usd": 4.092,
+    "juges_usd": 9.4644,
+    "total_usd": 43.2712
+   },
+   "haut": {
+    "appels": {
+     "proposeurs": 66,
+     "aiguilleur": 264,
+     "juges": 528
+    },
+    "cartes": 264,
+    "proposeurs_usd": 55.9405,
+    "aiguilleur_usd": 24.552,
+    "juges_usd": 56.7864,
+    "total_usd": 137.2789
+   }
+  }
+ }
+}

@@ -1,0 +1,150 @@
+{
+ "gabarit": "à recopier sous course-v6/declaration-relais-course-affinage-mentors-v6.json ; remplir les PID ; retirer astra si sa sonde n'a pas réussi (écrire alors le motif dans absences) ; Kimi n'est PAS déclaré par défaut (v6) : seulement sur mot écrit de la mère, en ajoutant le bloc de « kimi_si_la_mere_l_autorise » sous fournisseurs.kimi et le champ kimi_autorise_par_la_mere ; trancher compter_limite_de_debit_comme_soupcon (vrai par défaut) ; retirer cette clé et kimi_si_la_mere_l_autorise ; sceller",
+ "version": "declaration-relais-course-affinage-mentors-v6",
+ "redige_utc": "(date -u)",
+ "fournisseurs": {
+  "claude": {
+   "type": "claude_sdk",
+   "url_relais": "http://127.0.0.1:8787",
+   "nom_cle": "RR_ANTHROPIC_API_KEY_MINUIT",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "commande",
+    "delai_s": 30,
+    "commande": [
+     "/usr/local/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/scripts/porte_plafond_relais_v1.py",
+     "--url",
+     "http://127.0.0.1:8787",
+     "--modeles-permis",
+     "(modèles Claude de la configuration v6, séparés par une virgule)",
+     "--plafond-ligne",
+     "150"
+    ]
+   }
+  },
+  "argon": {
+   "type": "commande_externe",
+   "commande": [
+    "bash",
+    "/home/user/controle-ia-travail/rapports/fille-ideation-1-v1/appel-argon-v5.sh"
+   ],
+   "nom_cle": "GEMINI_API_KEY",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  },
+  "carbon": {
+   "type": "commande_externe",
+   "commande": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "/home/user/pieces-affinage-v6/commande_gemini_lot_v1.py",
+    "--modele",
+    "gemini-4-carbon",
+    "--url-base",
+    "http://127.0.0.1:8792/v1beta",
+    "--prix-entree",
+    "8.3",
+    "--prix-sortie",
+    "41.5",
+    "--facteur-lot",
+    "0.5",
+    "--max-sortie-jetons",
+    "32768",
+    "--sortie-min-jetons",
+    "4096",
+    "--provision-pensee-jetons",
+    "8192",
+    "--intervalle-s",
+    "30",
+    "--delai-s",
+    "1500",
+    "--roles",
+    "proposeur_ideation"
+   ],
+   "modele_propose": "gemini-4-carbon",
+   "nom_cle": "GEMINI_API_KEY",
+   "inscription": "R-3217",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  },
+  "astra": {
+   "type": "commande_externe",
+   "commande": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "/home/user/pieces-affinage-v6/commande_astra_v1.py",
+    "--url-relais",
+    "http://127.0.0.1:8790",
+    "--modele",
+    "gpt-6-astra",
+    "--prix-entree",
+    "10",
+    "--prix-sortie",
+    "50",
+    "--max-sortie-jetons",
+    "32768",
+    "--sortie-min-jetons",
+    "4096",
+    "--delai-s",
+    "1500"
+   ],
+   "modele_propose": "gpt-6-astra",
+   "nom_cle": "OPENAI_API_KEY",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  }
+ },
+ "absences": {
+  "astra": {
+   "motif": "(si la sonde a échoué)",
+   "mot_de_la_mere": "(référence)"
+  }
+ },
+ "compter_limite_de_debit_comme_soupcon": true,
+ "compter_limite_de_debit_comme_soupcon_choix": "choix de la mère (préenregistrement v6) : vrai = option (a), lettre de la v5, un message de quota qui porte aussi une limite de débit compte comme soupçon ; faux = option (b), une telle ligne sans mot de crédit ni de facturation ne compte pas ; retirer cette ligne",
+ "kimi_si_la_mere_l_autorise": {
+  "kimi_autorise_par_la_mere": {
+   "reference": "R-NNNN (mot écrit de la mère)"
+  },
+  "fournisseurs.kimi": {
+   "type": "kimi_protocole",
+   "url_relais": "http://127.0.0.1:8789",
+   "modele": "kimi-k3.1-pro",
+   "prix_entree": 2.0,
+   "prix_sortie": 10.0,
+   "max_sortie_jetons": 32768,
+   "sortie_min_jetons": 1024,
+   "delai_s": 3300,
+   "nom_cle": "KIMI_API_KEY",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "commande",
+    "delai_s": 30,
+    "commande": [
+     "/usr/local/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/scripts/porte_plafond_relais_v1.py",
+     "--url",
+     "http://127.0.0.1:8789",
+     "--modeles-permis",
+     "kimi-k3.1-pro",
+     "--plafond-ligne",
+     "150"
+    ]
+   }
+  }
+ },
+ "cle_partagee": "Argon et Carbon déclarent la même variable de clé (GEMINI_API_KEY) : le lanceur v6 confronte cette clé à la somme de leurs parts au pire (150 + 24 = 174 USD) ; retirer cette ligne"
+}
