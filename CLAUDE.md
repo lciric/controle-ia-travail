@@ -50,7 +50,7 @@ Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au
 ## Allègement de la procédure (GO-2026-11-19-26 et -27, 19 novembre)
 - Trois classes de pièces. **A, décisive** (préenregistrement, verdict, ordre d'une course payante, devis) : chaîne complète. **B, instrument** (code, lanceur, programme de contrôle) : contre-lecture par un autre modèle, puis vérification des corrections par le même contre-lecteur. **C, travail** (notes, mandats, synthèses, registres) : pas de contre-lecture, sauf relecture de cloisonnement à la sortie vers une session fille.
 - Routine : une seule vérification courte par lot de corrections ; les agents écrivent dans leur bloc-notes et la mère verse à la fin ; en-têtes courts ; lignes de registre de 600 signes au plus ; errata pour les petites corrections des classes B et C.
-- Trois chantiers actifs au plus : saboteur et sondes pour l'entretien ; bras A ; organisme v9. Gelés jusqu'à la fermeture d'un actif : lentilles, veille, billets, second cycle, affinage.
+- Trois chantiers actifs au plus : saboteur et sondes pour l'entretien, lentilles comprises en vue du billet (GO-2026-11-19-28) ; bras A ; organisme v9. Gelés jusqu'à la fermeture d'un actif : veille, billets hors ce chantier, second cycle, affinage.
 
 ## Hiérarchie de décision
 - Routine (tu décides, tu consignes dans `registres/decisions.md`) : code, bibliothèques, tests, lectures, fichiers, tout travail sur processeur.
