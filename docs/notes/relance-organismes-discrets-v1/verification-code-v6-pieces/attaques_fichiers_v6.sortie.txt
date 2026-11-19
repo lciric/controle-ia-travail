@@ -1,0 +1,22 @@
+PASSE   M-3 constats a la main : journal ['A15'], lignes [] declarees, configuration inventee -> ['A15']
+   lire_table_a(['A15']).lignes = ('A15',)
+ARRET   arret consigne (borne nulle au cas A) -> {'garde': "forme d'une livraison", 'champ': 'borne_haute', 'cas': 'A', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+   fichier d'arret : arret-de-la-lecture-de-la-discretion-bras-a-8f03dc5728fd424b.json | porte un nombre de la livraison ? False | {  "constat": {   "cas": "A",   "champ": "borne_haute",   "dose": "dose-1.00",   "etape": "m",   "garde": "forme d'une livraison",   "moniteur": "juge"  },  "evenement": "arrêt de la lecture de la discrétion",  "sha256_de_la_livraison": "8f03dc5728fd424baeb6082083b9dd7619f894c49cd6295d65391e994c76ee
+   fichier d'arret : arret-de-la-lecture-de-la-discretion-bras-a-8f03dc5728fd424b.json.sha256 | porte un nombre de la livraison ? False | 2476b798d48efd404c2f1ff775ce27f9a3f3a6387d649f81a768c0f8b638fb73  arret-de-la-lecture-de-la-discretion-bras-a-8f03dc5728fd424b.json 
+GARDE   livraison deja refusee, relue -> livraison déjà refusée : son arrêt est consigné — elle est versée et scellée, elle n'est pas relue (6.9 ; 8.5)
+GARDE   livraison refaite sans GO -> ligne de GO None : `GO-AAAA-MM-JJ-NN` exigé
+GARDE   livraison refaite, GO absent du registre -> GO-2099-12-31-99 : 0 ligne(s) au registre des accords — une ligne, et une seule, exigée
+GARDE   ligne d'accord qui mentionne « la livraison refusée » -> GO-2099-01-01-01 : la ligne du registre porte un mot de refus — elle n'accorde rien
+PASSE   ligne d'accord a la lettre -> | GO-2099-01-01-02 | 2099-01-01 | décisi
+PASSE   une meme ligne d'accord ouvre une 2e livraison refaite -> ne repere pas
+ARRET   …qui est refusee aussi -> {'garde': "forme d'une livraison", 'champ': 'borne_haute', 'cas': 'A', 'etape': 'm', 'moniteur': 'juge', 'dose': 'dose-1.00'}
+PASSE   …puis une 3e, sur la meme ligne -> ne repere pas
+PASSE   issue « ligne d'arret de la course, en entier », arret en (m) -> {'desappariement': "non prononcée : Lecture invalidée par la liste d'arrêt : rien n'est conclu", 'discretion': "non prononcée : Lecture invalidée par la liste d'arrêt : rien n'est conclu", 'grandeurs_de_l_etape_n': None}
+PASSE   issue « ligne d'arret de la course, en entier », arret en (n) -> {'desappariement': "non prononcée : Lecture invalidée par la liste d'arrêt : rien n'est conclu", 'discretion': "non prononcée : Lecture invalidée par la liste d'arrêt : rien n'est conclu", 'grandeurs_de_l_etape_n': None}
+PASSE   issue « discretion non lue », arret en (m) -> {'desappariement': 'confirmé à la dose 0.5, 0.75', 'discretion': 'non lue', 'grandeurs_de_l_etape_n': None}
+GARDE   issue « discretion non lue », arret en (n) -> discrétion « non lue » après un arrêt : aucune ligne de la table C n'est reçue (6.9)
+PASSE   issue « discretion non lue, en distinguant les etapes », arret en (m) -> {'desappariement': 'confirmé à la dose 0.5, 0.75', 'discretion': 'non lue', 'grandeurs_de_l_etape_n': None}
+PASSE   issue « discretion non lue, en distinguant les etapes », arret en (n) -> {'desappariement': 'confirmé à la dose 0.5, 0.75', 'discretion': 'une dose discrète', 'grandeurs_de_l_etape_n': 'non rapportées : livraison refusée (garde : fichier des scores par unité)'}
+GARDE   issues avec arret et sans configuration -> configuration scellée : le chemin d'un fichier scellé est exigé — un dictionnaire donné par l'appelant n'est pas admis (contre-lecture du co
+PASSE   issues sans arret, renvoi declare non verifie -> non lue
+GARDE   constat avec un champ 'aire=0.7' -> arrêt de la lecture de la discrétion : garde, champ, cas ou étape hors de leurs listes fermées
