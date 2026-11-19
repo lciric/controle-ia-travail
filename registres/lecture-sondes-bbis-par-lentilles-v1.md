@@ -2,3 +2,4 @@
 
 | ABSENCE-VERDICT-LENTILLES-BBIS | 2026-11-18T19:05:35Z | registres/t07-etape-b-bis-v1.md | 55a6580687d490fcd4aa622225f735686a4e5cd4cacb4379a403dd4ce950836a |
 | SCELLEMENT-LENTILLES-BBIS | 2026-11-18T19:05:35Z | prereg/lecture-sondes-bbis-par-lentilles-v1.md | ca5066d757df604cbf642db84f8a8fc56a0db8b6cc183f734842b7abdaf6d572 |
+| ADDENDUM-CONCENTRATION-LENTILLES-BBIS | 2026-11-19T16:35:35Z | prereg/lecture-sondes-bbis-par-lentilles-v1-addendum-concentration-v1.md | 7c7387088dd5956d3e75bd8e859346dd4db560582fd2f239d2c892b4d2c22970 |
