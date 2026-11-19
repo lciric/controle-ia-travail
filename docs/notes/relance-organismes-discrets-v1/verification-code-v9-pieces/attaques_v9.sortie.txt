@@ -1,0 +1,34 @@
+=== C-1 et M-2 : lignes neuves reconnues par le sens
+PASSE   constat, révocation bien formée -> (True, False, ['GO-2099-02-01-01 — ligne neuve à voir : elle nomme la ligne de GO employée'])
+PASSE   constat, révocation sans accent -> (True, False, ['GO-2099-02-01-01 — ligne neuve à voir : elle nomme la ligne de GO employée'])
+PASSE   constat, décision qui dit l'accord révoqué -> (True, False, ['GO-2099-02-01-01 — ligne neuve à voir : elle nomme la ligne de GO employée'])
+PASSE   constat, identifiant écrit en minuscules -> (True, False, ['GO-2099-02-01-01 — ligne neuve à voir : elle nomme la ligne de GO employée'])
+PASSE   constat, identifiant voisin GO-…-011 -> (False, True, [])
+PASSE   constat, identifiant écrit sans tiret après GO -> (False, True, [])
+PASSE   constat, hors de la table -> (True, False, ['ligne hors de la table — ligne neuve à voir : elle nomme la ligne de GO employée'])
+PASSE   constat, retrait de la configuration, empreinte entière -> (False, True, False, ["la ligne d'inscription de la configuration, et elle seule, ne cite pas son empreinte au registre courant (lignes qui la citent : GO-2099-12-31-01, GO-2099-12-31-09)", "GO-2099-12-31-09 — ligne neuve à voir : elle cite l'empreinte de la configuration sans être sa ligne d'inscription"])
+PASSE   constat, retrait de la configuration, empreinte abrégée (16 signes) -> (True, False, True, [])
+=== M-4 / brouillon 31 : révocation entrée entre une panne et le rejeu, mode de contrôle
+PANNE   lecture interrompue après l'acte -> KeyboardInterrupt: panne pendant la lecture
+PASSE   contrôle, révocation mal orthographiée entrée -> (True, None, ['GO-2099-02-01-01 — ligne neuve à voir : elle nomme la ligne de GO employée'])
+   constat d'origine intact : True
+PASSE   rejeu lancé quand même (sans tenir compte du contrôle) -> ne repere pas
+   ligne de commande --controle : code 1 | sortie : {"date_utc": "2099-02-02T00:00:00Z", "sha256_de_la_configuration": "e18f199f34c5167cfc3d63dc4bdb440b17df4a5ed61ccbebd015 | erreur : CONTRÔLE MALSAIN : le rejeu ne part pas, aucun fichier n'est écrit — GO-2099-02-01-01 — ligne neuve à voir : elle nomme la ligne de GO employée. Verser la ligne de la sortie standard au manifeste du l
+   le texte de la ligne fautive (« retiré ») paraît-il sur la sortie ? False
+   constat d'origine intact : True
+=== constat : autres
+PASSE   constat écrit à la main (date 'x', commit 'y') -> ne repere pas
+GARDE   analyse sous une autre ligne que celle du constat -> constat de lancement : sa ligne de GO n'est pas celle que la lecture emploie (celle de l'acte de reprise ; `null` pour une première livraison) — la le
+GARDE   ligne de GO fictive donnée au programme -> constat de lancement : la ligne de GO donnée est GO-0000-00-00-00 — identifiant d'un exemple fictif, refusé
+PASSE   ligne fictive étrangère au constat -> True
+GARDE   révocation fictive de la ligne employée -> constat de lancement : une ligne d'appui (registre courant) a pour identifiant GO-0000-00-00-00 — ligne d'un exemple fictif, refusée
+=== écarts du complément 1
+   acte de reprise, champs : ['evenement', 'ligne_de_go', 'sha256_de_la_configuration', 'sha256_de_la_livraison_refaite', 'sha256_de_la_livraison_refusee', 'sha256_du_constat_de_lancement']
+GARDE   piece_source d'un autre module (livraison refaite) -> sortie de la lecture commune, provenance non établie : `piece_source` ne porte pas, sous la clé que la configuration scellée inscrit, l'empreinte du m
+   actes de reprise dans le dossier après ce refus : 0 | fichiers d'arrêt : 1
+GARDE   piece_source qui n'est pas un objet (clé inscrite) -> sortie de la lecture commune, provenance non établie : `piece_source` ne porte pas, sous la clé que la configuration scellée inscrit, l'empreinte du m
+=== agrégateur : un seul nombre par dose
+   somme : {'dose-0.25': 'non rapportée', 'dose-0.50': 'non rapportée', 'dose-0.75': 'non rapportée', 'dose-1.00': 'non rapportée'} | maximum : {'dose-0.25': 'non rapportée', 'dose-0.50': 'non rapportée', 'dose-0.75': 'non rapportée', 'dose-1.00': 'non rapportée'} | un nombre du contenu dans le résultat ? False
+PASSE   agrégateur à trois doses -> non rapporté
+=== M-1 : valeur ajustée exacte
+   état : indecis | ajustée : 100000000000000000029/2000000000000000000000 | arrondie : 0.05 | > 0,05 ? True
