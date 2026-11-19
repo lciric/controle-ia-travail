@@ -19,16 +19,21 @@
 #                                 ($HF_TOKEN, $GH_TOKEN) : le shell qui joue la ligne en donne la valeur au loueur ;
 #   relance  RACINE N OFFRE.json COMMIT BRANCHE_CODE PREREG RUN_ID
 #                                 relance unique d'une instance tombée (calendrier du texte) : mêmes contrôles, accord
-#                                 GO-RELANCE-FORMATION-B5F qui cite l'instance N (GO_ID égal), RUN_ID et familles suffixés
+#                                 GO-RELANCE-FORMATION-B5F qui cite l'instance N (GO_ID égal ; la ligne cite deux instances
+#                                 au plus, et 56 USD de coupures au plus, sinon refus), RUN_ID et familles suffixés
 #                                 « -x1 » (graines neuves), branche de sortie …-instance-N-x1 ; la première copie est versée
 #                                 et jamais lue ;
 #   config RACINE N PRIX_USD_H COMMIT RELANCE
 #                                 imprime la configuration réelle de l'instance N (recette scellée, plan, coupure, prix,
 #                                 membres et pièce lus dans SCELLEMENT-B5F au commit COMMIT ; RELANCE : 0 ou 1) ;
-#   depense N MEMBRES CUMUL_INSTANCE PRIX_INSTANCE_H CUMUL_TOTAL PRIX_TOTAL_H
-#                                 point 14 : cumul relevé plus un quart d'heure ≥ coupure de l'instance (MEMBRES : membres des
-#                                 familles d'apprentissage, 2 ou 3), ou ≥ plafond de 200 USD : refus, et rappel du versement
-#                                 puis de la destruction ;
+#   depense N MEMBRES CUMUL_INSTANCE PRIX_INSTANCE_H CUMUL_COMMUN PRIX_COMMUN_H RELANCE
+#                                 point 14, deux compteurs (erratum 1 au brouillon 5, couples E-4a et E-8a) : cumul de
+#                                 l'instance plus un quart d'heure ≥ sa coupure (MEMBRES : membres des familles
+#                                 d'apprentissage, 2 ou 3 ; une relance a la coupure de l'instance qu'elle remplace), ou,
+#                                 pour une pièce du devis (RELANCE=0), cumul commun de toutes les pièces du devis, sans la
+#                                 dépense d'aucune relance, plus un quart d'heure ≥ plafond de 200 USD : refus, et rappel du
+#                                 versement puis de la destruction. Une relance (RELANCE=1) n'a pas de troisième compteur, et
+#                                 le plafond atteint ne l'arrête pas : seule sa coupure compte (CUMUL_COMMUN non lu) ;
 #   detruire RACINE ID N LISTE.json INVENTAIRE.json COMMIT
 #                                 l'instance ID porte l'étiquette b5f-formation-v1-N dans LISTE.json (vastai show instances
 #                                 --raw) ; chaque sortie de son inventaire scellé est au commit COMMIT, à sa taille et à son
@@ -61,8 +66,8 @@ case "${1:-}" in
         [ -n "${GO_ID:-}" ] || { echo "B5F REFUS : GO_ID absent de l'environnement" >&2; exit 2; }
         session config "$2" "$3" "$4" "$5" "$6" "$GO_ID";;
     depense)
-        [ "$#" = 7 ] || { echo "B5F REFUS : depense N MEMBRES CUMUL_INSTANCE PRIX_INSTANCE_H CUMUL_TOTAL PRIX_TOTAL_H" >&2; exit 2; }
-        PYTHONPATH="$RACINE_CODE/src" "$PY" -B -m controle_ia.barreau5_familles.formation_v1 session depense "$2" "$3" "$4" "$5" "$6" "$7" \
+        [ "$#" = 8 ] || { echo "B5F REFUS : depense N MEMBRES CUMUL_INSTANCE PRIX_INSTANCE_H CUMUL_COMMUN PRIX_COMMUN_H RELANCE" >&2; exit 2; }
+        PYTHONPATH="$RACINE_CODE/src" "$PY" -B -m controle_ia.barreau5_familles.formation_v1 session depense "$2" "$3" "$4" "$5" "$6" "$7" "$8" \
             || { echo "B5F : arrêt ; verser les sorties, puis : bash scripts/lancer_b5f_formation_v1.sh detruire RACINE <ID> $2 LISTE.json INVENTAIRE.json COMMIT" >&2; exit 2; };;
     detruire)
         [ "$#" = 7 ] || { echo "B5F REFUS : detruire RACINE ID N LISTE.json INVENTAIRE.json COMMIT" >&2; exit 2; }
