@@ -1,9 +1,9 @@
 # Matrice « critère de la porte de sortie de la phase 0 → preuve », second lecteur indépendant — v1
 
 - **Pour** : Lazar. **Rapport complet, avec résultats.** La session mère ne lit pas ce fichier ; elle lit le résumé sans résultat, à côté.
-- **Auteur** : second lecteur neuf et indépendant (sous-agent de la session mère, modèle Fable 5.2), lancé le 19 novembre 2026 (ligne R-3713 du registre des décisions). Écrit de 10:10 à 10:36 UTC (`date -u`), sur l'arbre de travail du dépôt, branche principale, tête 5698eab8 relevée à 10:27 UTC (un commit, non une empreinte de fichier : le programme ne le vérifie pas ; la branche a continué d'avancer pendant l'écriture).
+- **Auteur** : second lecteur neuf et indépendant (sous-agent de la session mère, modèle Fable 5.2), lancé le 19 novembre 2026 (ligne R-3713 du registre des décisions). Écrit de 10:10 à 10:37 UTC (`date -u`), sur l'arbre de travail du dépôt, branche principale, tête 5698eab8 relevée à 10:27 UTC (un commit, non une empreinte de fichier : le programme ne le vérifie pas ; la branche a continué d'avancer pendant l'écriture).
 - **Indépendance** : un autre agent bâtit la même matrice en même temps. Je n'ai ouvert aucun fichier du dossier `docs/notes/entretien-g0-priorites-v1` (j'y dépose seulement mes deux fichiers) et je n'ai pas cherché son travail.
-- **Habilitation** : j'ai lu des verdicts scellés et les résultats scellés qu'ils citent. En contrepartie, je suis exclu de tout rôle de rédacteur, de lecteur ou de juge d'une expérience du programme. Je n'ai lu aucun fichier dont le nom contient « consigne-privee » ou « conception-ii-b », rien du dossier des brouillons du saboteur à budget, rien de la branche du compte 4, rien du dossier des archives de réponses de modèles, et je n'ai pas lu la ligne interdite du registre des décisions (toutes mes recherches dans ce registre passent par une copie d'où elle est retirée).
+- **Habilitation** : j'ai lu des verdicts scellés et les résultats scellés qu'ils citent. En contrepartie, je suis exclu de tout rôle de rédacteur, de lecteur ou de juge d'une expérience du programme. Je n'ai lu aucun fichier dont le nom contient « consigne-privee » ou « conception-ii-b », rien du dossier des brouillons du saboteur à budget, rien de la branche du compte 4, rien du dossier des archives de réponses de modèles, et je n'ai pas lu la ligne interdite du registre des décisions (mes recherches dans ce registre l'écartent avant tout affichage, et le programme de vérification la saute). Exposition déclarée : en cherchant des chemins, le début d'une ligne récente du registre (R-3655) est passé à l'écran ; elle nomme un fichier du dossier des brouillons du saboteur à budget et son empreinte, sans rien de son contenu ; je n'ai ouvert aucun fichier de ce dossier.
 - **Méthode** : je pars des pièces brutes. L'état vivant, les passations et la carte de la porte du 14 novembre [P81] m'ont servi à trouver des chemins, jamais de preuve. Une preuve, ici, est un fichier scellé, cité par son chemin et son empreinte sha256 (annexe A). Les 71 pièces de l'arbre de travail ont été vérifiées par l'outil du dépôt (`controle_ia.scellement verifier`, 71 « OK ») ; les pièces qui ne vivent que sur une branche ont été lues par `git show` et comparées à leur compagnon de la même branche. Les registres (`registres/go.md`, `registres/decisions.md`, `registres/scellements-v1.md`) sont des fichiers vivants, non scellés : je les cite par identifiant de ligne, comme indication, non comme preuve scellée.
 - **Aucune dépense, aucune machine, aucun modèle chargé, aucun réseau hors `git fetch`, aucune suite d'essais, aucun fichier existant modifié, aucun commit.** Aucun refus d'outil.
 
@@ -246,7 +246,7 @@ Cette annexe est hors de la zone vérifiée : le programme ne la relit pas.
 ÉCHEC chemin cité absent de l'arbre de travail et de l'annexe A : prereg/contre-lectures-absent
 ÉCHEC identifiant absent de registres/go.md : GO-2026-11-15-77
 ÉCHEC identifiant absent de registres/decisions.md : R-9137
-VÉRIFICATION de artefact-matrice.md : 81 pièces dans l'annexe A, 80 empreintes recalculées égales, 80 compagnons égaux, 0 sans compagnon ; 81 renvois ; 86 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 15 lignes de décision retrouvées ; 4 échec(s)
+VÉRIFICATION de artefact-matrice.md : 81 pièces dans l'annexe A, 80 empreintes recalculées égales, 80 compagnons égaux, 0 sans compagnon ; 81 renvois ; 86 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 16 lignes de décision retrouvées ; 4 échec(s)
 ````
 
 ### Sortie complète sur ce fichier
@@ -333,7 +333,7 @@ OK P78 deacd11114c4… compagnon égal ; docs/verdicts/verdict-narc-externe-v1.m
 OK P79 ca5066d757df… compagnon égal ; prereg/lecture-sondes-bbis-par-lentilles-v1.md ; arbre de travail
 OK P80 3a9b947e0757… compagnon égal ; docs/notes/neuron-lens-v1/lecture-b-beta/verdict-b-beta-v1.md ; arbre de travail
 OK P81 85d6d4541dd4… compagnon égal ; docs/notes/carte-porte-G0-v1/carte-porte-G0-v1.md ; arbre de travail
-VÉRIFICATION de matrice-g0-second-lecteur-v1.md : 81 pièces dans l'annexe A, 81 empreintes recalculées égales, 81 compagnons égaux, 0 sans compagnon ; 81 renvois ; 87 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 15 lignes de décision retrouvées ; 0 échec(s)
+VÉRIFICATION de matrice-g0-second-lecteur-v1.md : 81 pièces dans l'annexe A, 81 empreintes recalculées égales, 81 compagnons égaux, 0 sans compagnon ; 81 renvois ; 87 chemins cités présents ; 81 empreintes citées retrouvées ; 8 lignes de GO et 16 lignes de décision retrouvées ; 0 échec(s)
 ````
 
 ### Source du programme
