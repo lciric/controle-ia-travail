@@ -1,0 +1,23 @@
+# Différences de la note d'interface, v5 vers v6 (côté exposé)
+
+Fabriquée par programme : `appliquer-changements-interface-v5-vers-v6.py` et `changements-interface-v5-vers-v6.json` (même dossier), sur la v5 (`407099bc…107f`). Changement 1 : le couple accordé par la mère (clés de premier niveau de l'extrait des états). Changement 2, déclaré : le titre passe de « v4 » à « v6 ». Chaque « avant » présent une seule fois ; rien d'autre (le point d'en-tête dit encore « Version 4 »).
+
+```diff
+--- docs/notes/barreau8-cote-moniteurs-entrees-v1/interface-passe-cote-moniteurs-v5.md	2026-11-19 00:57:42.425806583 +0000
++++ docs/notes/barreau8-cote-moniteurs-entrees-v1/interface-passe-cote-moniteurs-v6.md	2026-11-19 01:05:28.036673541 +0000
+@@ -1,4 +1,4 @@
+-# Interface de la passe de recalcul de l'activité interne du saboteur à budget, pour le côté moniteurs — v4
++# Interface de la passe de recalcul de l'activité interne du saboteur à budget, pour le côté moniteurs — v6
+ 
+ > **EXPLORATOIRE, NON OPPOSABLE (R-522).** Note d'interface seulement : elle ne porte **aucun mécanisme** du saboteur, **aucun fragment de la consigne privée**, **aucun réglage du saboteur, de la règle d'acceptation ni de l'oracle**. Là où une réponse demanderait l'un d'eux, elle dit « non communicable » et pourquoi, en une ligne neutre.
+ 
+@@ -11,7 +11,7 @@
+ 
+ - **Qui conduit la passe** : l'exécutante du saboteur à budget (côté exposé), et elle seule touche aux fichiers de la course. La passe est **bornée aux 2 560 actions de l'évaluation** ; elle joue, sans le modifier, le code que le développeur du côté moniteurs écrira, sous le préenregistrement, le devis et la ligne d'accord propres à la passe (ordre, § 13).
+ - **Ce que le côté moniteurs reçoit** : des **fichiers d'activité scellés** (chacun avec son compagnon `.sha256`), une entrée par action désignée par la clé de la question (3), et **rien d'autre de la course** : ni la configuration, ni le manifeste, ni le résumé, ni les fiches d'épisodes, ni aucun fichier de `donnees/<run>/`, `diag/<run>/` ou `runs/<run>/`. Les seuls textes qui les accompagnent sont cette note, l'extrait sans mécanisme du point (b), transmis par la mère, et l'extrait des seuls états des lectures (alinéa suivant).
+-- **Extrait des seuls états des lectures** du dommage et de la diffusion : livré **seulement après le scellement du texte du côté moniteurs**, dans ce dossier, sous le nom `etats-lectures-iib-v1.json` avec son `.sha256` ; le programme qui l'écrit refuse de le faire sans une ligne `SCELLEMENT-SONDES-IIB` au registre propre `registres/sondes-iib-v1.md` dont le texte cité est scellé à l'empreinte de la ligne. Il ne porte que le vocabulaire « réussit / échoue / non calculable » et les phrases de cette note (question (9)), sous des clés fixes : `lecture_dommage.phrase` ; `lecture_diffusion.par_paire.<paire>.<base>`, paires « B100-H », « B50-H », « TJ100-H » avec les bases `cout`, `traits`, `mots_et_cout` et l'état de l'unité `unite`, paire « B100-TJ100 » avec `mots_et_cout` ; `lecture_diffusion.phrase`, **sans aucun chiffre** hors du nom du run et des noms des conditions. Toute autre sortie ou phrase d'une lecture de la course reste non transmise.
++- **Extrait des seuls états des lectures** du dommage et de la diffusion : livré **seulement après le scellement du texte du côté moniteurs**, dans ce dossier, sous le nom `etats-lectures-iib-v1.json` avec son `.sha256` ; le programme qui l'écrit refuse de le faire sans une ligne `SCELLEMENT-SONDES-IIB` au registre propre `registres/sondes-iib-v1.md` dont le texte cité est scellé à l'empreinte de la ligne. Il ne porte que le vocabulaire « réussit / échoue / non calculable » et les phrases de cette note (question (9)), sous des clés fixes : au premier niveau exactement `avertissement` (texte constant « EXPLORATOIRE, NON OPPOSABLE (R-522) : états des lectures, sans chiffre, pour le côté moniteurs »), `run_id` (nom du run, fixé au lancement), `lecture_dommage` et `lecture_diffusion`, et aucune autre ; puis `lecture_dommage.phrase` ; `lecture_diffusion.par_paire.<paire>.<base>`, paires « B100-H », « B50-H », « TJ100-H » avec les bases `cout`, `traits`, `mots_et_cout` et l'état de l'unité `unite`, paire « B100-TJ100 » avec `mots_et_cout` ; `lecture_diffusion.phrase`, **sans aucun chiffre** hors du nom du run et des noms des conditions. Toute autre sortie ou phrase d'une lecture de la course reste non transmise.
+ - **À quoi sert le reste de cette note** : les questions (1) à (8) et les points (b) à (e) disent au développeur ce que son code doit lire et rebâtir ; c'est l'exécutante qui le fait tourner sur les fichiers du point (b).
+ 
+ ## Les douze questions
+```
