@@ -1,0 +1,838 @@
+From e2c90f9722fa9ce8c23d2dc555ed0cc3187d549d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 19 Nov 2026 11:38:54 +0000
+Subject: [PATCH 1/2] =?UTF-8?q?Lanceur=20de=20session=20du=20saboteur=20?=
+ =?UTF-8?q?=C3=A0=20budget,=20version=202=20:=20chemin=20explicite=20de=20?=
+ =?UTF-8?q?l'outil=20de=20location,=20r=C3=A9ponse=20brute=20du=20loueur?=
+ =?UTF-8?q?=20conserv=C3=A9e=20et=20masqu=C3=A9e,=20destruction=20par=20id?=
+ =?UTF-8?q?entifiant=20avec=20confirmation=20non=20interactive=20et=20preu?=
+ =?UTF-8?q?ve=20par=20l'inventaire?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Trois défauts de forme relevés le 19 novembre pendant la première course (R-3683, R-3687, R-3722).
+Fichier neuf (R12) : scripts/lancer_iib_v1.sh, cité par l'ordre scellé, reste intact.
+Essais à blanc avec un faux outil de location : tests/test_iib_lanceur_forme_v2.py (cas sain et artefact, R5).
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_013QMayiwfx2DB6CHn9yZ2wH
+---
+ scripts/lancer_iib_v2.sh           | 425 +++++++++++++++++++++++++++++
+ tests/test_iib_lanceur_forme_v2.py | 372 +++++++++++++++++++++++++
+ 2 files changed, 797 insertions(+)
+ create mode 100644 scripts/lancer_iib_v2.sh
+ create mode 100644 tests/test_iib_lanceur_forme_v2.py
+
+diff --git a/scripts/lancer_iib_v2.sh b/scripts/lancer_iib_v2.sh
+new file mode 100644
+index 00000000..536095ad
+--- /dev/null
++++ b/scripts/lancer_iib_v2.sh
+@@ -0,0 +1,425 @@
++#!/usr/bin/env bash
++# Chaîne de session de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 3, 5 et 6) : tirée de
++# `scripts/lancer_t06_v13.sh` (nom neuf, R12 ; la v13 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à blanc
++# (essais `tests/test_iib_scripts_v1.py`, registre de GO et registre des décisions FACTICES, faux `vastai`), jamais lancée par son
++# développeur. Changements par rapport à la v13 :
++#  - la ligne de GO de la course vient de GO_ID (convention de la garde de calcul), doit égaler `go_id` de la configuration, et est LUE dans
++#    le registre IIB_REGISTRE_GO (registres/go.md d'un clone de main) : type calcul, Lazar, non échue au jour donné, non révoquée ;
++#    plafond de la configuration + dépense antérieure ≤ plafond de la ligne ; la variante de plafond (M7 non tranchée : A 80/75 avec
++#    repli H200 NVL, B 60/55 sans repli) est celle que nomme la configuration, et la ligne du registre porte le plafond de cette variante ;
++#  - « 7b d'abord » : la ligne du registre des décisions de la création de 7b, citée par la configuration, doit figurer au registre des
++#    décisions IIB_REGISTRE_DECISIONS (par défaut `decisions.md` à côté de IIB_REGISTRE_GO, même clone de main), sinon refus, aux
++#    contrôles ET à la création ;
++#  - étiquette `iib-explo-v1` : seule une instance d'étiquette commençant par `iib` bloque la création (7b, A1-v4 et les instances
++#    arrêtées ne sont ni comptées comme bloquantes ni touchées) ;
++#  - carte « relance » (H200 NVL) permise seulement en variante A ; fenêtre A100 vide en variante B : nœud (code 3, aucune création) ;
++#  - course exploratoire : aucun préenregistrement (PREREG_ABSENT=1), branche poussée `essai/iib-explo-v<n>` seulement ; configuration
++#    validée par `iib/session_v1 config` (le mode réel refuse tant qu'un des 30 marqueurs reste) ; tâches et consignes citées présentes et
++#    scellées au commit, tâches disjointes ; l'amorce citée est `scripts/amorce_instance_iib_v1.sh` (empreinte relevée) ;
++#  - les quatre variables du mandataire (REQUESTS_CA_BUNDLE, SSL_CERT_FILE, HTTPS_PROXY, NO_PROXY) ne sont jamais transmises à l'instance :
++#    la commande de création imprimée qui en nommerait une est refusée.
++#
++# VERSION 2 (nom neuf, R12 ; `scripts/lancer_iib_v1.sh`, cité par l'ordre scellé de la première course, reste tel quel). Trois défauts de
++# forme relevés le 19 novembre 2026 pendant la première course, corrigés ici ; essais : `tests/test_iib_lanceur_forme_v2.py` (faux outil
++# de location, aucun réseau, aucune instance) :
++#  (1) chemin de l'outil de location (R-3683) : la variable VAST, si elle est donnée, est un CHEMIN explicite de l'outil ; il est vérifié
++#      (fichier présent, exécutable, rend sa version), rendu absolu, écrit dans le journal de la session et porté dans toutes les commandes
++#      imprimées ; introuvable ou muet : refus clair (code 2). Sans VAST : comme la v1, recherche de `vastai` dans le PATH, refus s'il est
++#      introuvable ; la version est demandée et consignée, sans refus si elle n'est pas rendue (comportement de la v1 gardé).
++#  (2) réponse brute du loueur (R-3687, R-3661) : `apres-creation` ne supprime plus rien. La réponse est conservée dans tous les cas,
++#      « création incertaine » comprise : copie datée dans `DOSSIER/traces-location/`, avec son empreinte compagnon ; les secrets y sont
++#      masqués par programme (valeurs des clés de l'environnement, motifs de jeton, champs nommés clé, jeton, mot de passe), le nombre de
++#      masques est dit ; le fichier d'origine est remplacé par sa forme masquée (rien d'autre n'en est retiré) ; si le masquage échoue,
++#      il est laissé tel quel et le programme le dit. Les inventaires, la liste des offres et les sorties de la destruction sont versés au
++#      même dossier ; une sortie dont le masquage échoue est gardée sous un nom daté au lieu d'être supprimée.
++#  (3) destruction (R-3722) : sous-commande neuve `destruction`, par le seul identifiant créé (R10), avec l'option de confirmation non
++#      interactive de l'outil (`-y`), entrée standard fermée ; puis l'inventaire est relu et l'identifiant doit en être absent ; tout
++#      échec est dit, avec un code propre, sans repli.
++# Usage :
++#   bash scripts/lancer_iib_v2.sh outil                                                              (vérifie l'outil de location ; 0 ou 2)
++#   bash scripts/lancer_iib_v2.sh --verifier-go-seulement PLAFOND [DEPENSE_ANTERIEURE] [JOUR]       (rien n'est créé ; code 0 ou 2)
++#   bash scripts/lancer_iib_v2.sh controles-explo DOSSIER_NEUF COMMIT CONFIG_CHEMIN [JOUR]            (code 0 ; 2 tout échec)
++#   bash scripts/lancer_iib_v2.sh creation auto course|relance DEPENSE_ANTERIEURE_USD DOSSIER [ECHEANCE_UTC_S]
++#        (imprime la commande de création ; code 0 ; 2 échec ; 3 nœud : aucune offre conforme, instance iib présente, dépense épuisée)
++#   bash scripts/lancer_iib_v2.sh apres-creation FICHIER CODE DOSSIER
++#        (0 créée ; 5 offre refusée, rang suivant ; 4 création incertaine ; la réponse brute est conservée dans les trois cas)
++#   bash scripts/lancer_iib_v2.sh surveillance ID DOSSIER [FACTURE_USD]
++#   bash scripts/lancer_iib_v2.sh destruction ID DOSSIER
++#        (0 détruite et absente de l'inventaire, ou déjà absente ; 2 refus, aucun appel de destruction ; 6 instance encore à l'inventaire ;
++#         4 incertain : inventaire illisible, ou commande en échec alors que l'instance est absente)
++# Variables : GO_ID, IIB_REGISTRE_GO, IIB_REGISTRE_DECISIONS, IIB_BRANCHE_CODE (prep/…), IIB_BRANCHE (défaut essai/iib-explo-v1),
++# IIB_DEPENSE_ANTERIEURE_USD, IIB_TESTS_ATTENDUS (^[0-9]*$), IIB_DEPOT, IIB_IMAGE, VAST (chemin explicite de l'outil de location),
++# INTERVALLE, IIB_DESTRUCTION_RELECTURES (défaut 6) et IIB_DESTRUCTION_ATTENTE_S (défaut 10) ; HF_TOKEN (mode réel),
++# CONTROLE_IA_GITHUB_TOKEN ou CONTROLE_IA_GITHUB_TOKEN_2 (présence seulement, jamais affichés).
++set -uo pipefail
++QUOI="${1:?outil, --verifier-go-seulement, controles-explo, creation, apres-creation, surveillance ou destruction}"
++MOI=scripts/lancer_iib_v2.sh
++DEPOT="${IIB_DEPOT:-$(cd "$(dirname "$0")/.." && pwd)}"
++A=scripts/amorce_instance_iib_v1.sh
++BRANCHE="${IIB_BRANCHE:-essai/iib-explo-v1}"
++GO_ID_ENV="${GO_ID:-}"
++REG="${IIB_REGISTRE_GO:-}"
++REGDEC="${IIB_REGISTRE_DECISIONS:-}"; [ -n "$REGDEC" ] || { [ -n "$REG" ] && REGDEC="$(dirname "$REG")/decisions.md"; }
++MOTIF_GO='^GO-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}$'
++IMAGE="${IIB_IMAGE:-python:3.11-bookworm}"
++VAST_DONNE="${VAST:-}"; VAST=""; VAST_VERSION=""; VAST_ORIGINE=""
++SESSION="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.iib import session_v1; sys.exit(session_v1.main(sys.argv[1:]))"
++SESSION3="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(sys.argv[1:]))"
++masquer() { python3 -c '
++import os, sys
++t = sys.stdin.read()
++for k in ("HF_TOKEN", "CONTROLE_IA_GITHUB_TOKEN", "CONTROLE_IA_GITHUB_TOKEN_2", "GH_TOKEN", "VAST_API_KEY"):
++    v = os.environ.get(k)
++    if v and len(v) >= 8:
++        t = t.replace(v, "***")
++sys.stdout.write(t)'; }
++horodate() { date -u +%Y%m%dT%H%M%SZ; }
++# Outil de location (défaut 1, R-3683). Avec VAST : chemin explicite, vérifié, jamais cherché ailleurs. Sans VAST : `vastai` du PATH.
++# Rend 0 et fixe VAST (chemin absolu), VAST_VERSION, VAST_ORIGINE ; sinon écrit la raison et rend 1. Aucun autre appel que `--version`.
++resoudre_outil() {
++    local v
++    if [ -n "$VAST_DONNE" ]; then
++        VAST_ORIGINE="variable VAST"
++        case "$VAST_DONNE" in */*) ;; *) echo "outil de location introuvable : VAST=« $VAST_DONNE » n'est pas un chemin (un chemin explicite est exigé, par exemple /home/user/outil-vastai-v1/bin/vastai ; sans VAST, l'outil est cherché dans le PATH)"; return 1;; esac
++        [ -f "$VAST_DONNE" ] || { echo "outil de location introuvable : VAST=« $VAST_DONNE » n'existe pas ou n'est pas un fichier"; return 1; }
++        [ -x "$VAST_DONNE" ] || { echo "outil de location inutilisable : VAST=« $VAST_DONNE » n'est pas exécutable"; return 1; }
++        VAST=$(realpath -- "$VAST_DONNE") || { echo "outil de location : chemin « $VAST_DONNE » illisible"; return 1; }
++        v=$(timeout -k 5 60 "$VAST" --version </dev/null 2>&1 | head -1 | masquer); local ps=("${PIPESTATUS[@]}")
++        [ "${ps[0]}" = 0 ] && [ -n "$v" ] || { echo "outil de location inutilisable : « $VAST --version » ne rend pas sa version (code ${ps[0]})"; return 1; }
++        VAST_VERSION="$v"
++    else
++        VAST_ORIGINE="PATH"
++        VAST=$(command -v vastai) || { VAST=""; echo "outil de location introuvable dans le PATH (donner son chemin par VAST=/chemin/vers/vastai)"; return 1; }
++        v=$(timeout -k 5 60 "$VAST" --version </dev/null 2>/dev/null | head -1 | masquer) || v=""
++        VAST_VERSION="${v:-non rendue}"
++    fi
++    case "$VAST" in *[!A-Za-z0-9_./+-]*) echo "outil de location : le chemin « $VAST » porte un caractère hors de [A-Za-z0-9_./+-] ; il ne peut pas être écrit dans une commande imprimée : refus"; return 1;; esac
++    return 0
++}
++ligne_outil() { echo "outil de location employé : $VAST (version : $VAST_VERSION ; trouvé par : $VAST_ORIGINE)"; }
++# Masquage d'une réponse du loueur avant conservation (défaut 2, R-3687) : valeurs des clés de l'environnement, puis motifs.
++# Lit l'entrée standard, écrit la forme masquée sur la sortie standard et le nombre de masques dans le fichier donné.
++masquer_reponse() { python3 -c '
++import os, re, sys
++t = sys.stdin.buffer.read().decode("utf-8", "replace")
++n = 0
++for k in ("HF_TOKEN", "CONTROLE_IA_GITHUB_TOKEN", "CONTROLE_IA_GITHUB_TOKEN_2", "GH_TOKEN", "VAST_API_KEY", "CONTAINER_API_KEY"):
++    v = os.environ.get(k)
++    if v and len(v) >= 8:
++        n += t.count(v); t = t.replace(v, "***")
++NOM = r"[A-Za-z0-9_]*(?:TOKEN|KEY|SECRET|PASSWORD|PASSWD|CREDENTIAL|token|key|secret|password|passwd|credential)[A-Za-z0-9_]*"
++motifs = [
++    (r"\b(?:hf_[A-Za-z0-9]{8,}|gh[pousr]_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,})", "***"),
++    (r"(?i)(\bBearer\s+)[A-Za-z0-9._~+/=-]{8,}", r"\1***"),
++    (r"([\"\x27]" + NOM + r"[\"\x27]\s*:\s*[\"\x27])[^\"\x27]+([\"\x27])", r"\1***\2"),
++    (r"(\b" + NOM + r"=)(?!\*\*\*)[^\s\"\x27,;&}\\]+", r"\1***"),
++]
++for motif, par in motifs:
++    t, k = re.subn(motif, par, t); n += k
++open(sys.argv[1], "w", encoding="utf-8").write(str(n) + "\n")
++sys.stdout.write(t)' "$1"; }
++# Conservation (R-3661) : copie datée d'un fichier déjà masqué dans DOSSIER/traces-location/, empreinte compagnon ; jamais d'écrasement.
++# Écrit le chemin de la copie ; rend 1 si la copie ou l'empreinte manque.
++conserver() {  # fichier source, dossier de la session, nom de base, extension
++    local src="$1" dt="$2/traces-location" base="$3" ext="$4" cible k=0
++    mkdir -p "$dt" || return 1
++    cible="$dt/$base-$(horodate).$ext"
++    while [ -e "$cible" ]; do k=$((k + 1)); cible="$dt/$base-$(horodate)-$k.$ext"; done
++    cp -- "$src" "$cible" || return 1
++    ( cd "$dt" && sha256sum -- "$(basename "$cible")" > "$(basename "$cible").sha256" ) || return 1
++    [ "$(sha256sum < "$src" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$cible.sha256")" ] || return 1
++    printf '%s\n' "$cible"
++}
++vast_masque() {
++    local sortie="$1"; shift
++    "$@" 2>/dev/null </dev/null | masquer > "$sortie.tmp"
++    local ps=("${PIPESTATUS[@]}")
++    if [ "${ps[1]:-1}" != 0 ]; then mv -f -- "$sortie.tmp" "$sortie.masquage-en-echec-$(horodate)" 2>/dev/null; return 121; fi   # gardée, jamais supprimée
++    mv -f "$sortie.tmp" "$sortie"
++    [ -d "$(dirname "$sortie")" ] && conserver "$sortie" "$(dirname "$sortie")" "$(basename "${sortie%.json}")" json >/dev/null || echo "ALERTE : sortie $(basename "$sortie") non versée aux traces de la location" >&2
++    return "${ps[0]}"
++}
++# Identifiants des instances d'un inventaire (liste, ou {"instances": liste ou null}) : « present », « absent », code 1 si illisible.
++presence_instance() { python3 -I -B -c 'import json, sys
++try:
++    brut = json.load(open(sys.argv[1], encoding="utf-8"))
++except Exception as e:
++    print("inventaire illisible : " + type(e).__name__); sys.exit(1)
++liste = brut.get("instances") if isinstance(brut, dict) and "instances" in brut else brut
++if liste is None:
++    liste = []
++if not isinstance(liste, list) or not all(isinstance(i, dict) and "id" in i for i in liste):
++    print("inventaire illisible : ni une liste d instances à identifiant, ni {instances: …}"); sys.exit(1)
++print("present" if any(str(i["id"]) == sys.argv[2] for i in liste) else "absent")' "$1" "$2"; }
++jeton_gh_nom() { if [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ]; then echo CONTROLE_IA_GITHUB_TOKEN; elif [ -n "${CONTROLE_IA_GITHUB_TOKEN_2:-}" ]; then echo CONTROLE_IA_GITHUB_TOKEN_2; else return 1; fi; }
++champ() { sed -n "s/^$1 //p" "$2" | tail -1; }
++cle_config() { python3 -I -B -c 'import json, sys; c = json.load(open(sys.argv[1], encoding="utf-8"))
++for k in sys.argv[2].split("."):
++    c = c[k]
++print(c if not isinstance(c, bool) else ("oui" if c else "non"))' "$1" "$2"; }
++exiger_go_env() { [[ "$GO_ID_ENV" =~ $MOTIF_GO ]] || { echo "GO_ID absent ou illisible dans l'environnement (GO_ID=GO-AAAA-MM-JJ-NN : la ligne de GO de calcul de la course) : rien créé"; exit 2; }; }
++exiger_registre() { [ -n "$REG" ] && [ -f "$REG" ] || { echo "IIB_REGISTRE_GO : registres/go.md d'un clone de main exigé : rien créé"; exit 2; }; }
++case "$QUOI" in
++outil)
++    MSG=$(resoudre_outil) || { echo "$MSG : refus"; exit 2; }; resoudre_outil >/dev/null
++    echo "OUTIL DE LOCATION VÉRIFIÉ, RIEN CRÉÉ : $(ligne_outil)" ;;
++--verifier-go-seulement)
++    PLC="${2:?plafond de la configuration, en USD}"; ANT="${3:-0}"; JOUR="${4:-$(date -u +%F)}"
++    exiger_go_env; exiger_registre
++    [[ "$PLC" =~ ^[0-9]+([.][0-9]+)?$ ]] && [[ "$ANT" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "plafond ($PLC) ou dépense antérieure ($ANT) : nombre positif en USD attendu : refus"; exit 2; }
++    GOL=$(python3 -I -B -c "$SESSION" go "$REG" "$GO_ID_ENV" "$PLC" "$ANT" "$JOUR") || { echo "GO $GO_ID_ENV refusé : $GOL"; exit 2; }
++    echo "GO VÉRIFIÉ, RIEN CRÉÉ : $GOL" ;;
++controles-explo)
++    D=$(realpath -m "${2:?dossier neuf}"); S="${3:?commit (40 caractères)}"; CFG="${4:?chemin de la configuration dans le commit}"; JOUR="${5:-$(date -u +%F)}"
++    [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
++    [[ "$S" =~ ^[0-9a-f]{40}$ ]] || { echo "commit : 40 caractères hexadécimaux"; exit 2; }
++    BC="${IIB_BRANCHE_CODE:?IIB_BRANCHE_CODE : branche prep/… du code}"
++    case "$BC" in prep/*) ;; *) echo "IIB_BRANCHE_CODE doit commencer par prep/ ($BC)"; exit 2;; esac
++    case "$BRANCHE" in essai/iib-explo-v[0-9]*) ;; *) echo "IIB_BRANCHE doit être essai/iib-explo-v<n> ($BRANCHE) : jamais main, 7a, 7b, P3-bis"; exit 2;; esac
++    exiger_go_env; exiger_registre
++    ANT="${IIB_DEPENSE_ANTERIEURE_USD:-}"; [[ "$ANT" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "IIB_DEPENSE_ANTERIEURE_USD : dépense antérieure de ce run, en USD (0 pour la première instance), exigée"; exit 2; }
++    [[ "${IIB_TESTS_ATTENDUS:-}" =~ ^[0-9]*$ ]] || { echo "IIB_TESTS_ATTENDUS illisible (^[0-9]*$ exigé)"; exit 2; }
++    git -C "$DEPOT" cat-file -e "$S^{commit}" 2>/dev/null || { echo "commit $S absent du dépôt local (git fetch origin refs/heads/$BC:refs/remotes/origin/$BC d'abord)"; exit 2; }
++    git -C "$DEPOT" merge-base --is-ancestor "$S" "refs/remotes/origin/$BC" 2>/dev/null || { echo "commit $S absent de refs/remotes/origin/$BC"; exit 2; }
++    mkdir -p "$D"
++    git -C "$DEPOT" show "$S:$CFG" > "$D/config.json" 2>/dev/null && git -C "$DEPOT" show "$S:$CFG.sha256" > "$D/config.json.sha256.cite" 2>/dev/null \
++        || { echo "configuration $CFG ou son sceau absents du commit $S"; exit 2; }
++    [ "$(sha256sum "$D/config.json" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$D/config.json.sha256.cite")" ] || { echo "sceau de la configuration $CFG non conforme au commit $S"; exit 2; }
++    CONF=$(python3 -I -B -c "$SESSION" config "$D/config.json") || { echo "$CONF : pas de création"; exit 2; }
++    GOC=$(cle_config "$D/config.json" go_id) && PLC=$(cle_config "$D/config.json" plafond_usd) && MODE_C=$(cle_config "$D/config.json" mode) || { echo "go_id, plafond_usd ou mode illisibles"; exit 2; }
++    [ "$GOC" = "$GO_ID_ENV" ] || { echo "go_id de la configuration ($GOC) ≠ GO_ID de l'environnement ($GO_ID_ENV) : pas de création"; exit 2; }
++    GOL=$(python3 -I -B -c "$SESSION" go "$REG" "$GOC" "$PLC" "$ANT" "$JOUR") || { echo "ligne de GO $GOC non conforme : $GOL : pas de création"; exit 2; }
++    PGL=$(python3 -I -B -c "$SESSION" plafond-ligne "$REG" "$GOC" "$JOUR") || { echo "plafond de la ligne $GOC illisible ($PGL)"; exit 2; }
++    VAR=$(python3 -I -B -c "$SESSION" variante "$D/config.json" "$PGL") || { echo "$VAR : pas de création"; exit 2; }
++    git -C "$DEPOT" show "$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null && python3 -I -B -c "$SESSION" plafond-ligne "$D/go-commit.md" "$GOC" "$JOUR" >/dev/null \
++        || { echo "GO $GOC absent ou non conforme dans registres/go.md du commit $S (l'amorce le relit) : commit postérieur au GO exigé"; exit 2; }
++    CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$REG" "$GOC" "$PGL" "$JOUR") || { echo "calendrier de la configuration : $CAL : pas de création"; exit 2; }
++    S7B=$(python3 -I -B -c "$SESSION" creation-7b "$REGDEC" "$D/config.json") || { echo "$S7B : pas de création"; exit 2; }
++    for cle in taches_reserve taches_evaluation consigne_maitre consignes_p3; do
++        f=$(cle_config "$D/config.json" "$cle.chemin") && h=$(cle_config "$D/config.json" "$cle.sha256") || { echo "$cle illisible"; exit 2; }
++        git -C "$DEPOT" cat-file -e "$S:$f" 2>/dev/null && git -C "$DEPOT" cat-file -e "$S:$f.sha256" 2>/dev/null || { echo "fichier cité $f ou son sceau absent du commit $S"; exit 2; }
++        [ "$(git -C "$DEPOT" show "$S:$f" | sha256sum | cut -d' ' -f1)" = "$h" ] && [ "$(git -C "$DEPOT" show "$S:$f.sha256" | cut -d' ' -f1)" = "$h" ] || { echo "empreinte de $f ≠ celle de la configuration (R11)"; exit 2; }
++    done
++    git -C "$DEPOT" show "$S:$(cle_config "$D/config.json" taches_reserve.chemin)" > "$D/reserve.json" && git -C "$DEPOT" show "$S:$(cle_config "$D/config.json" taches_evaluation.chemin)" > "$D/evaluation.json" \
++        || { echo "tâches illisibles au commit"; exit 2; }
++    DISJ=$(python3 -I -B -c 'import json, sys
++def identifiants(f, quoi):          # même lecture que la course (environnements/pilote_a.charger_taches) : resultat.taches si présent, sinon taches
++    brut = json.load(open(f, encoding="utf-8"))
++    source = brut["resultat"] if isinstance(brut, dict) and "resultat" in brut else brut
++    taches = source.get("taches") if isinstance(source, dict) else None
++    if not isinstance(taches, list) or not taches:
++        print("liste des tâches de " + quoi + " illisible : ni resultat.taches ni taches ne sont une liste non vide"); sys.exit(1)
++    return set(t["identifiant"] for t in taches)
++ids = [identifiants(f, quoi) for f, quoi in zip(sys.argv[1:3], ("réserve", "évaluation"))]
++communes = sorted(ids[0] & ids[1])
++print("communes " + " ".join(communes[:5]) if communes else "disjointes"); sys.exit(1 if communes else 0)' "$D/reserve.json" "$D/evaluation.json") \
++        || { echo "tâches de réserve et d'évaluation : contrôle « aucune tâche commune » refusé ($DISJ) : aucune création"; exit 2; }
++    rm -f "$D/reserve.json" "$D/evaluation.json"
++    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" 2>/dev/null || { echo "amorce $A absente du commit $S"; exit 2; }
++    E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
++    if [ "$MODE_C" = reel ]; then [ -n "${HF_TOKEN:-}" ] || { echo "HF_TOKEN absent (mode réel) : pas de création"; exit 2; }; fi
++    JGHN=$(jeton_gh_nom) || { echo "jeton absent (ni CONTROLE_IA_GITHUB_TOKEN ni CONTROLE_IA_GITHUB_TOKEN_2) : pas de création"; exit 2; }
++    LIBRE=$(df -Pk "$D" | awk 'NR==2 {print $4}'); [ "$LIBRE" -ge 3000000 ] || { echo "place disque : $LIBRE ko libres (3 Go exigés)"; exit 2; }
++    printf 'controles-explo iib v1 %s\ncommit %s\nconfig %s\nbranche %s\namorce %s\ngo %s\nplafond %s\nanterieure_controles %s\nmode %s\nvariante %s\ncalendrier %s\n7b %s\ntests_attendus %s\n' \
++        "$(date -u +%FT%TZ)" "$S" "$CFG" "$BRANCHE" "$E" "$GOC" "$PLC" "$ANT" "$MODE_C" "$VAR" "$CAL" "$S7B" "${IIB_TESTS_ATTENDUS:-}" >> "$D/lancement.txt"
++    echo "CONTRÔLES CONFORMES : S=$S ; amorce $E ; $GOL ; $VAR ; mode $MODE_C ; $CONF ; $S7B" ;;
++creation)
++    OFFRE_ARG="${2:?auto}"; CARTE="${3:?carte : course ou relance}"; ANT="${4:?dépense antérieure en USD}"; D=$(realpath -m "${5:?dossier des contrôles}"); ECH="${6:-}"
++    [ "$OFFRE_ARG" = auto ] || { echo "offre : « auto » seulement (l'offre est choisie dans la liste filtrée, juste avant la création)"; exit 2; }
++    case "$CARTE" in course|relance) ;; *) echo "carte : course ou relance"; exit 2;; esac
++    [[ "$ANT" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "dépense antérieure : nombre positif en USD"; exit 2; }
++    [ -f "$D/lancement.txt" ] && grep -q '^controles-explo ' "$D/lancement.txt" && [ -f "$D/config.json" ] || { echo "contrôles absents ($D/lancement.txt, config.json) : pas de création"; exit 2; }
++    S=$(champ commit "$D/lancement.txt"); [[ "$S" =~ ^[0-9a-f]{40}$ ]] || { echo "commit illisible"; exit 2; }
++    exiger_go_env; exiger_registre
++    GOC=$(cle_config "$D/config.json" go_id) && PLC=$(cle_config "$D/config.json" plafond_usd) && MODE_C=$(cle_config "$D/config.json" mode) || { echo "go_id, plafond_usd ou mode illisibles"; exit 2; }
++    [ "$GOC" = "$GO_ID_ENV" ] && [ "$(champ go "$D/lancement.txt")" = "$GOC" ] || { echo "go_id de la configuration ($GOC) ≠ GO_ID de l'environnement (${GO_ID_ENV}) ou des contrôles : pas de création"; exit 2; }
++    case "$BRANCHE" in essai/iib-explo-v[0-9]*) ;; *) echo "IIB_BRANCHE doit être essai/iib-explo-v<n> ($BRANCHE)"; exit 2;; esac
++    GOL=$(python3 -I -B -c "$SESSION" go "$REG" "$GOC" "$PLC" "$ANT") || { echo "ligne de GO $GOC non conforme au jour de la création : $GOL : pas de création"; exit 2; }
++    PGL=$(python3 -I -B -c "$SESSION" plafond-ligne "$REG" "$GOC") || { echo "plafond de la ligne illisible"; exit 2; }
++    VAR=$(python3 -I -B -c "$SESSION" variante "$D/config.json" "$PGL") || { echo "$VAR : pas de création"; exit 2; }
++    CAR=$(python3 -I -B -c "$SESSION" carte "$D/config.json" "$CARTE") || { echo "$CAR : nœud, pas de création"; exit 3; }
++    S7B=$(python3 -I -B -c "$SESSION" creation-7b "$REGDEC" "$D/config.json") || { echo "$S7B : pas de création"; exit 2; }
++    CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$REG" "$GOC" "$PGL") || { echo "calendrier au jour de la création : $CAL : nœud, pas de création"; exit 3; }
++    FIN_GO=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p'); [ -n "$ECH" ] || ECH="$FIN_GO"
++    [[ "$ECH" =~ ^[0-9]+$ ]] && [ "$ECH" -le "$FIN_GO" ] && [ "$ECH" -gt "$(date +%s)" ] || { echo "échéance $ECH hors de ]maintenant, fin du GO $FIN_GO]"; exit 2; }
++    JGHN=$(jeton_gh_nom) && { [ -n "${HF_TOKEN:-}" ] || [ "$MODE_C" = jouet ]; } || { echo "jeton absent (GitHub, ou HF_TOKEN en mode réel) : pas de création"; exit 2; }
++    MSG=$(resoudre_outil) || { echo "$MSG : pas de création"; exit 2; }; resoudre_outil >/dev/null
++    ligne_outil; printf 'outil_location %s\noutil_location_version %s\n' "$VAST" "$VAST_VERSION" >> "$D/lancement.txt"
++    DISQUE=$(cle_config "$D/config.json" offre.disque_min_go) || { echo "disque illisible"; exit 2; }
++    [[ "$DISQUE" =~ ^[0-9]+([.][0-9]+)?$ ]] && [ "${DISQUE%%.*}" -gt 0 ] || { echo "offre.disque_min_go illisible ($DISQUE) : pas de création"; exit 2; }
++    ESSAIS=$(grep -c '^essai_creation ' "$D/lancement.txt" || true)
++    [ "${ESSAIS:-0}" -lt 3 ] || { echo "trois essais de création déjà faits : arrêt, aucune création ; message à la mère"; exit 3; }
++    EXCL=$(sed -n 's/^machine_refusee //p' "$D/lancement.txt" | paste -sd, -)
++    FILTRE=$(python3 -I -B -c "$SESSION" filtre "$D/config.json" "$CARTE") || { echo "filtre illisible : $FILTRE"; exit 2; }
++    timeout -k 5 120 "$VAST" search offers "$FILTRE" -o dph_total --storage "$DISQUE" --raw > "$D/offres.json" 2>"$D/offres.err" </dev/null || { echo "recherche filtrée impossible : pas de création"; exit 2; }
++    conserver "$D/offres.json" "$D" offres json >/dev/null || echo "ALERTE : liste des offres non versée aux traces de la location"
++    OF=$(python3 -I -B -c "$SESSION" choisir "$D/offres.json" "$D/config.json" "$CARTE" "$EXCL") || { echo "aucune offre conforme dans la liste filtrée : $OF : nœud (fenêtre : rejouer dans 15 minutes, 12 fois au plus), pas de création"; exit 3; }
++    OFFRE=$(printf '%s\n' "$OF" | sed -n 's/^id=\([0-9]*\) .*/\1/p'); MACH=$(printf '%s\n' "$OF" | sed -n 's/.* machine=\([^ ]*\) .*/\1/p'); RANG=$(printf '%s\n' "$OF" | sed -n 's/.* rang=\([0-9]*\) .*/\1/p')
++    [[ "$OFFRE" =~ ^[0-9]+$ ]] && [ -n "$MACH" ] && [ -n "$RANG" ] || { echo "offre choisie illisible ($OF)"; exit 2; }
++    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
++    TEL=$(printf '%s\n' "$OF" | sed -n 's/.*telechargement_forfait=\([0-9.]*\).*/\1/p')
++    [ -n "$PC" ] && [ -n "$PS" ] && [ -n "$TEL" ] || { echo "prix illisibles dans la relecture de l'offre"; exit 2; }
++    ETIQ=$(cle_config "$D/config.json" offre.etiquette) || { echo "étiquette illisible"; exit 2; }
++    vast_masque "$D/instances.json" timeout -k 5 120 "$VAST" show instances --raw || { echo "inventaire des instances impossible ou masquage en échec (code $?) : pas de création"; exit 2; }
++    INV=$(python3 -I -B -c "$SESSION" instances "$D/instances.json") || { echo "$INV : nœud, pas de création"; exit 3; }
++    NOW=$(date +%s)
++    DEP=$(python3 -I -B -c "$SESSION3" depense "$PLC" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW"); code_dep=$?
++    [ "$code_dep" = 0 ] || { echo "dépense cumulée déjà au plafond ou illisible ($DEP) : nœud, pas de création"; exit 3; }
++    EPUIS=$(printf '%s\n' "$DEP" | sed -n 's/.*epuisement_utc_s=\([0-9]*\).*/\1/p'); [[ "$EPUIS" =~ ^[0-9]+$ ]] || { echo "heure d'épuisement illisible"; exit 2; }
++    git -C "$DEPOT" show "$S:$A" > "$D/amorce-creation.sh" 2>/dev/null || { echo "amorce absente du commit $S"; exit 2; }
++    [ "$(sha256sum "$D/amorce-creation.sh" | cut -d' ' -f1)" = "$(champ amorce "$D/lancement.txt")" ] || { echo "amorce changée depuis les contrôles"; exit 2; }
++    B64=$(base64 -w0 < "$D/amorce-creation.sh")
++    [ "$(printf %s "$B64" | base64 -d | sha256sum | cut -d' ' -f1)" = "$(champ amorce "$D/lancement.txt")" ] || { echo "encodage de l'amorce"; exit 2; }
++    TA="$(champ tests_attendus "$D/lancement.txt")"; [[ "$TA" =~ ^[0-9]*$ ]] || { echo "tests attendus illisibles"; exit 2; }
++    CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e IIB_GO_ID=$GOC -e MODE=$MODE_C -e PREREG_ABSENT=1 -e CONFIG=$(champ config "$D/lancement.txt") -e TESTS_ATTENDUS=$TA -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute.json\" 2>&1 </dev/null; VAST=$VAST bash $DEPOT/$MOI apres-creation \"$D/creation-brute.json\" \$? \"$D\""
++    for v in REQUESTS_CA_BUNDLE SSL_CERT_FILE HTTPS_PROXY NO_PROXY; do
++        case "$CMD" in *"$v"*) echo "la commande de création nomme $v (variable du mandataire, jamais transmise à l'instance) : refus"; exit 2;; esac
++    done
++    printf '{"tool_input":{"command":%s}}' "$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$CMD")" | python3 "$DEPOT/.claude/hooks/garde_calcul.py" || { echo "garde de calcul : commande refusée"; exit 2; }
++    printf 'creation preparee %s\noffre %s\ncarte %s\nstorage %s\nprix_carte %s\nprix_stockage %s\ntelechargement_forfait %s\nanterieure %s\necheance %s\nepuisement %s\ndepense %s\nplafond_creation %s\nessai_creation %s\nmachine_proposee %s\nrang %s\n' \
++        "$(date -u +%FT%TZ)" "$OFFRE" "$CARTE" "$DISQUE" "$PC" "$PS" "$TEL" "$ANT" "$ECH" "$EPUIS" "$DEP" "$PLC" "$((ESSAIS + 1))" "$MACH" "$RANG" >> "$D/lancement.txt"
++    echo "OFFRE CONFORME : $OF ; $INV ; $DEP ; $CAR ; $S7B"
++    echo "COMMANDE DE CRÉATION (à exécuter une seule fois par l'exécutante, jetons par leur nom seulement) :"
++    echo "$CMD" ;;
++apres-creation)
++    F="${2:?fichier}"; C="${3:?code}"; D="${4:?dossier}"
++    [ -d "$D" ] || { echo "CRÉATION INCERTAINE (code $C) : dossier de la session $D absent ; réponse brute laissée telle quelle à $F ; vérifier l'inventaire (champs filtrés) ; aucune seconde création avant"; exit 4; }
++    # Conservation de la réponse brute AVANT toute lecture et tout verdict (R-3687, R-3661) : rien n'est supprimé.
++    if [ -f "$F" ]; then
++        MASQUEE="$D/creation-brute-masquee.tmp"; NBM="$D/creation-brute-nombre-de-masques.txt"; : > "$NBM"
++        if masquer_reponse "$NBM" < "$F" > "$MASQUEE" && [ -s "$NBM" ]; then
++            NM=$(cat "$NBM")
++            if COPIE=$(conserver "$MASQUEE" "$D" creation-brute json); then
++                mv -f -- "$MASQUEE" "$F"      # l'original est remplacé par sa forme masquée : seuls les secrets en sont retirés
++                echo "RÉPONSE BRUTE DU LOUEUR CONSERVÉE : $COPIE (empreinte $(cut -d' ' -f1 "$COPIE.sha256")) ; secrets masqués par programme avant conservation : $NM remplacement(s) ; l'original $F porte la même forme masquée"
++                printf 'reponse_creation %s %s masques=%s\n' "$COPIE" "$(cut -d' ' -f1 "$COPIE.sha256")" "$NM" >> "$D/lancement.txt"
++            else
++                echo "ALERTE : copie datée de la réponse brute impossible dans $D/traces-location ; forme masquée gardée à $MASQUEE ; original $F laissé tel quel, NON MASQUÉ : ne pas le verser avant la garde des secrets"
++            fi
++        else
++            echo "ALERTE : masquage de la réponse brute en échec : aucune copie faite ; original $F laissé tel quel, NON MASQUÉ : ne pas le verser avant la garde des secrets"
++        fi
++        EXTRAIT=$(python3 -I -B -c 'import json, re, sys
++t = open(sys.argv[1], encoding="utf-8", errors="replace").read()
++vus = []
++for cle in ("success", "new_contract", "error", "msg"):
++    m = re.search(r"[\"\x27]?" + cle + r"[\"\x27]?\s*:\s*([^,}\n]*)", t)
++    vus.append(cle + "=" + (m.group(1).strip()[:300] if m else "absent"))
++print(" ; ".join(vus) + " ; taille " + str(len(t)) + " caractères")' "$F" 2>/dev/null | masquer) || EXTRAIT=""
++        echo "champs lus par programme dans la réponse (tronqués à 300 caractères, masqués) : ${EXTRAIT:-extraction impossible}"
++    else
++        echo "ALERTE : réponse brute du loueur absente ($F n'est pas un fichier) : rien à conserver, rien à lire"
++    fi
++    ID=$(grep -oE "new_contract['\"]?[[:space:]]*:[[:space:]]*[0-9]+" "$F" 2>/dev/null | grep -oE '[0-9]+$' | head -1 || true)
++    OK=$(grep -cE "success['\"]?[[:space:]]*:[[:space:]]*(True|true)" "$F" 2>/dev/null || true)
++    NON=$(grep -cE "success['\"]?[[:space:]]*:[[:space:]]*(False|false)" "$F" 2>/dev/null || true)
++    if [ "$C" = 0 ] && [ -n "$ID" ] && [ "${OK:-0}" -ge 1 ]; then
++        CR=$(date +%s); printf 'instance %s\ncreation %s\n' "$ID" "$CR" >> "$D/lancement.txt"
++        echo "CRÉÉE : instance $ID (création $CR) ; surveillance : bash $MOI surveillance $ID $D"; exit 0
++    fi
++    if [ -z "$ID" ] && [ "${NON:-0}" -ge 1 ] && [ "${OK:-0}" -eq 0 ]; then
++        MSG=$(resoudre_outil) || { echo "CRÉATION INCERTAINE (code $C, refus lu dans la réponse) : $MSG : inventaire non relu ; vérifier l'inventaire (champs filtrés) ; aucune seconde création avant"; exit 4; }; resoudre_outil >/dev/null
++        ligne_outil
++        if vast_masque "$D/instances-apres.json" timeout -k 5 120 "$VAST" show instances --raw && python3 -I -B -c "$SESSION" instances "$D/instances-apres.json" >/dev/null; then
++            printf 'machine_refusee %s\n' "$(champ machine_proposee "$D/lancement.txt")" >> "$D/lancement.txt"
++            echo "OFFRE REFUSÉE À LA CRÉATION (retirée ?) : aucune instance iib ; machine exclue ; rang suivant : VAST=$VAST bash $DEPOT/$MOI creation auto $(champ carte "$D/lancement.txt") $(champ anterieure "$D/lancement.txt") $D $(champ echeance "$D/lancement.txt")"; exit 5
++        fi
++    fi
++    echo "CRÉATION INCERTAINE (code $C, identifiant « ${ID:-aucun} ») : la réponse brute est conservée (lignes ci-dessus) ; vérifier l'inventaire (champs filtrés) ; aucune seconde création avant"; exit 4 ;;
++surveillance)
++    ID="${2:?identifiant}"; D="${3:?dossier}"; FACT="${4:-}"
++    [[ "$ID" =~ ^[0-9]+$ ]] || { echo "identifiant : chiffres seuls (R10)"; exit 2; }
++    [ -f "$D/lancement.txt" ] || { echo "dossier sans lancement.txt"; exit 2; }
++    [ "$(champ instance "$D/lancement.txt")" = "$ID" ] || { echo "identifiant $ID ≠ instance créée d'après $D/lancement.txt (R10)"; exit 2; }
++    CR=$(champ creation "$D/lancement.txt"); PC=$(champ prix_carte "$D/lancement.txt"); PS=$(champ prix_stockage "$D/lancement.txt")
++    TEL=$(champ telechargement_forfait "$D/lancement.txt"); ANT=$(champ anterieure "$D/lancement.txt"); PLC=$(champ plafond_creation "$D/lancement.txt")
++    [[ "$CR" =~ ^[0-9]+$ ]] && [ -n "$PC" ] && [ -n "$PS" ] && [ -n "$TEL" ] && [ -n "$ANT" ] && [ -n "$PLC" ] || { echo "création, prix, plafond ou dépense antérieure illisibles dans lancement.txt"; exit 2; }
++    JGH="${CONTROLE_IA_GITHUB_TOKEN:-${CONTROLE_IA_GITHUB_TOKEN_2:-}}"
++    [ "${#JGH}" -ge 8 ] || { echo "jeton GitHub absent ou trop court : masquage impossible, surveillance refusée"; exit 2; }
++    HF_L="${HF_TOKEN:-}"
++    [ "$(champ mode "$D/lancement.txt")" = jouet ] || [ "${#HF_L}" -ge 8 ] || { echo "HF_TOKEN absent ou trop court (mode réel) : surveillance refusée"; exit 2; }
++    for K in HF_TOKEN CONTROLE_IA_GITHUB_TOKEN CONTROLE_IA_GITHUB_TOKEN_2 GH_TOKEN VAST_API_KEY; do
++        V="${!K:-}"; { [ -z "$V" ] || [ "${#V}" -ge 8 ]; } || { echo "$K présente mais de moins de 8 caractères : surveillance refusée"; exit 2; }
++    done
++    MSG=$(resoudre_outil) || { echo "$MSG : surveillance aveugle, arrêt"; exit 2; }; resoudre_outil >/dev/null
++    : >> "$D/progres.txt"
++    echo "$(date -u +%FT%TZ) $(ligne_outil)" >> "$D/surveillance.txt"
++    INTERVALLE="${INTERVALLE:-60}"; ILLISIBLES=0
++    echo "surveillance iib v1 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, plafond de la configuration $PLC USD ; alerte après 2 h sans PROGRES ; aucune autre instance lue au-delà des champs filtrés ni touchée" >> "$D/surveillance.txt"
++    while true; do
++        now=$(date -u +%s)
++        timeout -k 5 120 "$VAST" logs "$ID" --tail 20000 2>&1 </dev/null | masquer > "$D/journal-dernier.tmp"; PSJ=("${PIPESTATUS[@]}")
++        if [ "${PSJ[1]:-1}" = 0 ] && [ "${PSJ[0]}" = 0 ]; then
++            mv -f "$D/journal-dernier.tmp" "$D/journal-dernier.txt"
++            grep -q '^AMORCE ' "$D/journal-dernier.txt" && cp -f "$D/journal-dernier.txt" "$D/journal-instance.txt"
++            grep -E '^(AMORCE|PROGRES) ' "$D/journal-dernier.txt" | while IFS= read -r ligne; do grep -qxF -- "$ligne" "$D/progres.txt" || printf '%s\n' "$ligne" >> "$D/progres.txt"; done
++        else
++            if [ "${PSJ[1]:-1}" = 0 ] && [ -s "$D/journal-dernier.tmp" ]; then mv -f -- "$D/journal-dernier.tmp" "$D/journal-illisible-dernier.txt"      # masqué : gardé, jamais supprimé
++            else mv -f -- "$D/journal-dernier.tmp" "$D/journal-masquage-en-echec-$(horodate).tmp" 2>/dev/null; fi
++            echo "$(date -u +%FT%TZ) ALERTE journal illisible ou masquage en échec : dernier relevé gardé" >> "$D/surveillance.txt"
++        fi
++        if DEC=$(python3 -I -B -c "$SESSION3" surveillance "$PLC" "$D/progres.txt" "$now" "$PC" "$PS" "$CR" "$ANT" "$TEL" ${FACT:+"$FACT"} 2>&1); then ILLISIBLES=0
++        else
++            ILLISIBLES=$((ILLISIBLES + 1))
++            if [ "$ILLISIBLES" -ge 3 ]; then DEC="ARRET garde : garde de dépense illisible trois fois de suite ($DEC)"; else DEC="ALERTE garde de dépense illisible ($ILLISIBLES/3) : $DEC"; fi
++        fi
++        echo "$(date -u +%FT%TZ) $DEC" >> "$D/surveillance.txt"
++        case "$DEC" in
++            ARRET*) echo "$DEC"; echo "ARRÊT PAR L'IDENTIFIANT (R10) : timeout -k 5 120 $VAST stop instance $ID"; exit 3 ;;
++            FIN*) echo "$DEC"; echo "FIN : instance à arrêter par son identifiant (disque gardé jusqu'au rapatriement vérifié) : timeout -k 5 120 $VAST stop instance $ID"; exit 0 ;;
++            REFUS*) echo "$DEC"; exit 4 ;;
++            ALERTE*) echo "$(date -u +%FT%TZ) $DEC" ;;
++        esac
++        sleep "$INTERVALLE"
++    done ;;
++destruction)
++    # Défaut 3 (R-3722) : destruction du seul identifiant créé (R10), option de confirmation non interactive, puis preuve par l'inventaire.
++    ID="${2:?identifiant}"; D="${3:?dossier}"
++    [[ "$ID" =~ ^[0-9]+$ ]] || { echo "identifiant : chiffres seuls (R10) : aucune destruction"; exit 2; }
++    [ -f "$D/lancement.txt" ] || { echo "dossier sans lancement.txt : aucune destruction"; exit 2; }
++    [ "$(champ instance "$D/lancement.txt")" = "$ID" ] || { echo "identifiant $ID ≠ instance créée d'après $D/lancement.txt (R10) : aucune destruction"; exit 2; }
++    RELECTURES="${IIB_DESTRUCTION_RELECTURES:-6}"; ATTENTE="${IIB_DESTRUCTION_ATTENTE_S:-10}"
++    [[ "$RELECTURES" =~ ^[1-9][0-9]*$ ]] && [[ "$ATTENTE" =~ ^[0-9]+$ ]] || { echo "IIB_DESTRUCTION_RELECTURES (entier ≥ 1) ou IIB_DESTRUCTION_ATTENTE_S (entier ≥ 0) illisible : aucune destruction"; exit 2; }
++    MSG=$(resoudre_outil) || { echo "$MSG : aucune destruction"; exit 2; }; resoudre_outil >/dev/null
++    ligne_outil
++    JD="$D/destruction.txt"; echo "$(date -u +%FT%TZ) destruction demandée de l'instance $ID ; $(ligne_outil)" >> "$JD"
++    vast_masque "$D/instances-avant-destruction.json" timeout -k 5 120 "$VAST" show instances --raw; c_inv=$?
++    [ "$c_inv" = 0 ] && AVANT=$(presence_instance "$D/instances-avant-destruction.json" "$ID") \
++        || { echo "$(date -u +%FT%TZ) inventaire d'avant illisible (code $c_inv ; ${AVANT:-})" >> "$JD"; echo "DESTRUCTION NON TENTÉE : inventaire d'avant illisible (code $c_inv ; ${AVANT:-masquage ou appel en échec}) : aucune destruction ; à relire"; exit 4; }
++    if [ "$AVANT" = absent ]; then
++        echo "$(date -u +%FT%TZ) instance $ID déjà absente de l'inventaire : aucune commande de destruction envoyée" >> "$JD"
++        printf 'destruction_verifiee %s deja_absente\n' "$(date +%s)" >> "$D/lancement.txt"
++        echo "INSTANCE $ID DÉJÀ ABSENTE DE L'INVENTAIRE : aucune commande de destruction envoyée"; exit 0
++    fi
++    echo "commande de destruction (par l'identifiant, R10 ; confirmation non interactive) : timeout -k 5 120 $VAST destroy instance $ID -y"
++    timeout -k 5 120 "$VAST" destroy instance "$ID" -y </dev/null 2>&1 | masquer > "$D/destruction-sortie.tmp"; PSD=("${PIPESTATUS[@]}")
++    CD="${PSD[0]}"
++    if [ "${PSD[1]:-1}" = 0 ]; then
++        SORTIE=$(conserver "$D/destruction-sortie.tmp" "$D" destruction-sortie txt) && mv -f -- "$D/destruction-sortie.tmp" "$D/destruction-sortie.txt" || SORTIE="$D/destruction-sortie.tmp (non versée aux traces)"
++    else SORTIE="$D/destruction-sortie.tmp (masquage en échec : à ne pas verser avant la garde des secrets)"; fi
++    echo "$(date -u +%FT%TZ) destroy instance $ID -y : code $CD ; sortie $SORTIE" >> "$JD"
++    echo "commande de destruction : code $CD ; sortie conservée : $SORTIE"
++    APRES=""; n=0
++    while [ "$n" -lt "$RELECTURES" ]; do
++        n=$((n + 1))
++        vast_masque "$D/instances-apres-destruction.json" timeout -k 5 120 "$VAST" show instances --raw; c_inv=$?
++        if [ "$c_inv" = 0 ] && APRES=$(presence_instance "$D/instances-apres-destruction.json" "$ID"); then :; else APRES="illisible (code $c_inv ; ${APRES:-})"; fi
++        echo "$(date -u +%FT%TZ) relecture $n/$RELECTURES de l'inventaire : instance $ID $APRES" >> "$JD"
++        [ "$APRES" = absent ] && break
++        [ "$n" -lt "$RELECTURES" ] && sleep "$ATTENTE"
++    done
++    case "$APRES" in
++        absent)
++            if [ "$CD" = 0 ]; then
++                printf 'destruction_verifiee %s\n' "$(date +%s)" >> "$D/lancement.txt"
++                echo "DÉTRUITE : instance $ID absente de l'inventaire (relecture $n/$RELECTURES) ; commande de destruction rendue avec le code 0"; exit 0
++            fi
++            echo "DESTRUCTION INCERTAINE : la commande de destruction a échoué (code $CD) alors que l'instance $ID est absente de l'inventaire (relecture $n/$RELECTURES) : à relire, sortie $SORTIE"; exit 4 ;;
++        present)
++            if [ "$CD" = 0 ]; then echo "DESTRUCTION NON OBTENUE : la commande a rendu le code 0 mais l'instance $ID est encore à l'inventaire après $n relecture(s) : elle coûte encore ; message à la mère ; sortie $SORTIE"
++            else echo "DESTRUCTION EN ÉCHEC : la commande a rendu le code $CD et l'instance $ID est encore à l'inventaire après $n relecture(s) : elle coûte encore ; message à la mère ; sortie $SORTIE"; fi
++            exit 6 ;;
++        *) echo "DESTRUCTION INCERTAINE : commande de destruction rendue avec le code $CD, inventaire $APRES après $n relecture(s) : l'absence de l'instance $ID n'est pas établie ; à relire ; sortie $SORTIE"; exit 4 ;;
++    esac ;;
++*) echo "usage : outil | --verifier-go-seulement | controles-explo | creation | apres-creation | surveillance | destruction" >&2; exit 2 ;;
++esac
+diff --git a/tests/test_iib_lanceur_forme_v2.py b/tests/test_iib_lanceur_forme_v2.py
+new file mode 100644
+index 00000000..062f4310
+--- /dev/null
++++ b/tests/test_iib_lanceur_forme_v2.py
+@@ -0,0 +1,372 @@
++"""Saboteur à budget, chaîne de session v2 (`scripts/lancer_iib_v2.sh`) : les trois défauts de forme relevés le 19 novembre 2026,
++éprouvés **à blanc** avec un faux outil de location (aucun réseau, aucune instance, aucune dépense), cas sain et artefact (R5) :
++ (1) chemin explicite de l'outil de location par la variable VAST (R-3683) : vérifié, dit dans le journal, refus clair s'il est
++     introuvable ; sans variable, recherche dans le PATH comme la v1 ;
++ (2) la réponse brute du loueur n'est plus supprimée par `apres-creation` (R-3687) : copie datée, empreinte, secrets masqués, dans les
++     trois issues (créée, offre refusée, création incertaine) ;
++ (3) destruction par le seul identifiant créé, avec l'option de confirmation non interactive `-y`, puis preuve par l'inventaire (R-3722).
++Les essais du lanceur v1 qui passent par le script (`tests/test_iib_scripts_v1.py`) sont rejoués ici contre la v2 (non-régression)."""
++from __future__ import annotations
++
++import hashlib
++import json
++import os
++import shutil
++import subprocess
++import time
++from pathlib import Path
++
++import pytest
++
++import test_iib_scripts_v1 as v1s
++from test_iib_scripts_v1 import (  # noqa: F401  (rejoués contre la v2 par le dispositif `lanceur_v2_partout`)
++    SAIN, _controles, _env, _instances, monde,
++    test_controles_explo_artefacts, test_controles_explo_sain, test_creation_artefact_7b_retiree_du_registre_entre_controles_et_creation,
++    test_creation_artefact_instance_iib_presente_refus, test_creation_artefact_relance_h200_en_variante_b_noeud,
++    test_creation_relance_permise_en_variante_a, test_creation_sain_commande_imprimee, test_surveillance_fin_et_arret_par_identifiant,
++    test_verifier_go_seulement_artefacts, test_verifier_go_seulement_sain_ne_cree_rien)
++
++RACINE = Path(__file__).resolve().parents[1]
++LANCEUR_V1 = RACINE / "scripts" / "lancer_iib_v1.sh"
++LANCEUR_V2 = RACINE / "scripts" / "lancer_iib_v2.sh"
++EMPREINTE_LANCEUR_V1 = "3279e3dcc631519e574c2011f9f143d956d3b668c729a176cd8efc0e99dece8f"      # citée par l'ordre scellé de la première course
++ID = "61414494"
++JETON_HF, JETON_GH, CLE_LOUEUR = "hf_FACTICEfactice0123456789", "ghp_FACTICEfactice0123456789", "cle-loueur-factice-0123456789abcdef"
++
++# Faux outil de location. `--version` rend une version ; `create instance` rend le fichier FAUX_REPONSE et le code FAUX_CODE ;
++# `show instances` rend l'inventaire FAUX_INSTANCES ; `destroy instance ID` EXIGE `-y` : sans cette option il demande une confirmation
++# sur l'entrée standard, comme l'outil réel, et échoue si personne ne répond ; avec elle, il retire l'identifiant de l'inventaire, sauf
++# FAUX_DESTRUCTION=sans-effet (code 0, instance gardée), =echec (code 1, instance gardée) ou =echec-mais-retire (code 1, retirée).
++FAUX_OUTIL = r"""#!/usr/bin/env bash
++echo "$*" >> "$FAUX_VASTAI_JOURNAL"
++[ "${FAUX_MUET:-}" = 1 ] && [ "$1" = --version ] && exit 3
++[ "$1" = --version ] && { echo "vastai 1.8.3-factice"; exit 0; }
++case "$1 $2" in
++"create instance") cat "$FAUX_REPONSE"; exit "${FAUX_CODE:-0}" ;;
++"show instances")
++    [ "${FAUX_INVENTAIRE_ILLISIBLE:-}" = 1 ] && { echo "<html>erreur 502</html>"; exit 0; }
++    cat "$FAUX_INSTANCES"; exit 0 ;;
++"destroy instance")
++    oui=non; for a in "$@"; do [ "$a" = -y ] && oui=oui; done
++    if [ "$oui" = non ]; then
++        printf 'Are you sure you want to destroy instance %s? [y/N] ' "$3"
++        read -r rep || { echo "Aborted: no confirmation"; exit 1; }
++        [ "$rep" = y ] || { echo "Aborted"; exit 1; }
++    fi
++    case "${FAUX_DESTRUCTION:-}" in sans-effet) echo "destroying instance $3."; exit 0 ;; echec) echo "failed with error 500 ; Authorization: Bearer $VAST_API_KEY"; exit 1 ;; esac
++    python3 - "$FAUX_INSTANCES" "$3" <<'PY'
++import json, sys
++l = json.load(open(sys.argv[1]))
++json.dump([i for i in l if str(i["id"]) != sys.argv[2]], open(sys.argv[1], "w"))
++PY
++    [ "${FAUX_DESTRUCTION:-}" = echec-mais-retire ] && { echo "erreur de lecture de la réponse"; exit 1; }
++    echo "destroying instance $3."; exit 0 ;;
++esac
++if [ "$1" = logs ]; then cat "$FAUX_JOURNAL"; exit 0; fi
++echo "appel inattendu : $*" >&2; exit 3
++"""
++
++
++@pytest.fixture(autouse=True)
++def lanceur_v2_partout(monkeypatch):
++    """Les essais repris de la v1 lancent la v2."""
++    monkeypatch.setattr(v1s, "LANCEUR", LANCEUR_V2)
++
++
++@pytest.fixture
++def poste(tmp_path):
++    """Poste de l'exécutante : outil de location installé HORS du PATH (comme `/home/user/outil-vastai-v1/bin/vastai`), dossier de session."""
++    outil = tmp_path / "outil-vastai-factice" / "bin" / "vastai"
++    outil.parent.mkdir(parents=True)
++    outil.write_text(FAUX_OUTIL, encoding="utf-8")
++    outil.chmod(0o755)
++    d = tmp_path / "session"
++    d.mkdir()
++    (d / "lancement.txt").write_text(f"controles-explo iib v1 x\nmachine_proposee 101\ncarte course\nanterieure 0\necheance 4102444800\n"
++                                     f"instance {ID}\ncreation {int(time.time()) - 60}\nprix_carte 1.0\nprix_stockage 0.03\n"
++                                     f"telechargement_forfait 1.0\nplafond_creation 55\nmode jouet\n", encoding="utf-8")
++    inv = tmp_path / "inventaire.json"
++    inv.write_text(json.dumps([{"id": int(ID), "label": "iib-explo-v1", "actual_status": "exited"},
++                               {"id": 58936096, "label": "a1-v4", "actual_status": "running"}]), encoding="utf-8")
++    (tmp_path / "journal.txt").write_text("AMORCE 2026-11-19T10:00:00Z : fin, code 0\n", encoding="utf-8")
++    return {"tmp": tmp_path, "outil": outil, "d": d, "inv": inv, "appels": tmp_path / "appels.txt"}
++
++
++def _lancer(p, *args, **sup):
++    e = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(p["tmp"]), "LANG": os.environ.get("LANG", "C.UTF-8"), "IIB_DEPOT": str(RACINE),
++         "VAST": str(p["outil"]), "FAUX_VASTAI_JOURNAL": str(p["appels"]), "FAUX_INSTANCES": str(p["inv"]), "FAUX_JOURNAL": str(p["tmp"] / "journal.txt"),
++         "HF_TOKEN": JETON_HF, "CONTROLE_IA_GITHUB_TOKEN_2": JETON_GH, "VAST_API_KEY": CLE_LOUEUR, "INTERVALLE": "1",
++         "IIB_DESTRUCTION_ATTENTE_S": "0", "IIB_DESTRUCTION_RELECTURES": "2"}
++    e.update(sup)
++    e = {k: v for k, v in e.items() if v is not None}
++    return subprocess.run(["bash", str(LANCEUR_V2), *map(str, args)], env=e, capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
++
++
++def _appels(p) -> list:
++    return p["appels"].read_text(encoding="utf-8").splitlines() if p["appels"].exists() else []
++
++
++def _traces(p, prefixe) -> list:
++    return sorted(f for f in (p["d"] / "traces-location").glob(prefixe + "*") if not f.name.endswith(".sha256"))
++
++
++def _empreinte_tenue(f: Path) -> bool:
++    return (f.parent / (f.name + ".sha256")).read_text(encoding="utf-8").split()[0] == hashlib.sha256(f.read_bytes()).hexdigest()
++
++
++def test_la_v1_citee_par_l_ordre_scelle_est_intacte():
++    """R12 : la version lancée le 19 novembre n'est pas réécrite ; la v2 est un fichier neuf."""
++    assert hashlib.sha256(LANCEUR_V1.read_bytes()).hexdigest() == EMPREINTE_LANCEUR_V1
++    assert LANCEUR_V2.read_bytes() != LANCEUR_V1.read_bytes()
++
++
++# --- (1) chemin de l'outil de location --------------------------------------------------------------------------------------
++def test_outil_sain_chemin_explicite_hors_du_path(poste):
++    r = _lancer(poste, "outil")
++    assert r.returncode == 0, r.stdout + r.stderr
++    assert f"outil de location employé : {poste['outil']} (version : vastai 1.8.3-factice ; trouvé par : variable VAST)" in r.stdout
++    assert _appels(poste) == ["--version", "--version"]                       # aucun autre appel : rien n'est créé ni lu
++
++
++def test_outil_sain_chemin_relatif_rendu_absolu(poste):
++    lien = poste["tmp"] / "lien-vastai"
++    lien.symlink_to(poste["outil"])
++    r = _lancer(poste, "outil", VAST=str(lien))
++    assert r.returncode == 0 and f"employé : {poste['outil']} " in r.stdout, r.stdout + r.stderr
++
++
++@pytest.mark.parametrize("cas, motif", [("absent", "n'existe pas"), ("non_executable", "n'est pas exécutable"), ("muet", "ne rend pas sa version"),
++                                        ("nom_nu", "n'est pas un chemin"), ("dossier", "n'est pas un fichier"), ("espace", "hors de [A-Za-z0-9_./+-]")])
++def test_outil_artefacts_refus_clair(poste, cas, motif):
++    sup = {}
++    if cas == "absent":
++        sup["VAST"] = str(poste["tmp"] / "nulle-part" / "vastai")
++    elif cas == "non_executable":
++        poste["outil"].chmod(0o644)
++    elif cas == "muet":
++        sup["FAUX_MUET"] = "1"
++    elif cas == "nom_nu":
++        sup["VAST"] = "vastai"
++    elif cas == "dossier":
++        sup["VAST"] = str(poste["outil"].parent)
++    elif cas == "espace":
++        autre = poste["tmp"] / "dossier avec espace" / "vastai"
++        autre.parent.mkdir()
++        shutil.copy(poste["outil"], autre)
++        autre.chmod(0o755)
++        sup["VAST"] = str(autre)
++    r = _lancer(poste, "outil", **sup)
++    assert r.returncode == 2 and motif in r.stdout and "VÉRIFIÉ" not in r.stdout, (cas, r.stdout + r.stderr)
++    # le refus vaut aussi pour la destruction et la surveillance : aucun appel au loueur au-delà de la demande de version
++    for sous_commande in ("destruction", "surveillance"):
++        r = _lancer(poste, sous_commande, ID, poste["d"], **sup)
++        assert r.returncode == 2 and motif in r.stdout, (cas, sous_commande, r.stdout + r.stderr)
++    assert all(a == "--version" for a in _appels(poste))
++
++
++def test_outil_sans_variable_recherche_dans_le_path_comme_la_v1(poste):
++    r = _lancer(poste, "outil", VAST=None)                                     # artefact : ni variable ni outil dans le PATH
++    assert r.returncode == 2 and "introuvable dans le PATH" in r.stdout and "VAST=/chemin" in r.stdout, r.stdout + r.stderr
++    r = _lancer(poste, "outil", VAST=None, PATH=f"{poste['outil'].parent}:/usr/local/bin:/usr/bin:/bin")       # sain
++    assert r.returncode == 0 and f"employé : {poste['outil']} (version : vastai 1.8.3-factice ; trouvé par : PATH)" in r.stdout, r.stdout + r.stderr
++    # outil du PATH qui ne rend pas sa version : accepté comme en v1, et dit
++    r = _lancer(poste, "outil", VAST=None, PATH=f"{poste['outil'].parent}:/usr/local/bin:/usr/bin:/bin", FAUX_MUET="1")
++    assert r.returncode == 0 and "version : non rendue" in r.stdout, r.stdout + r.stderr
++
++
++def test_surveillance_dit_l_outil_dans_son_journal_et_imprime_son_chemin(poste):
++    r = _lancer(poste, "surveillance", ID, poste["d"])
++    assert r.returncode == 0 and f"{poste['outil']} stop instance {ID}" in r.stdout, r.stdout + r.stderr
++    assert f"outil de location employé : {poste['outil']} (version : vastai 1.8.3-factice" in (poste["d"] / "surveillance.txt").read_text(encoding="utf-8")
++
++
++def test_creation_de_bout_en_bout_avec_un_outil_hors_du_path(monde, tmp_path):
++    """La commande de création imprimée porte le chemin absolu de l'outil, pour la création comme pour `apres-creation` ; exécutée telle
++    quelle, sans outil dans le PATH, elle crée (faux outil), conserve la réponse brute masquée et rend « CRÉÉE »."""
++    shutil.copy(LANCEUR_V2, monde["src"] / "scripts" / LANCEUR_V2.name)
++    outil = tmp_path / "outil-vastai-factice" / "bin" / "vastai"
++    outil.parent.mkdir(parents=True)
++    outil.write_text(FAUX_OUTIL, encoding="utf-8")
++    outil.chmod(0o755)
++    (monde["bin"] / "vastai").rename(monde["tmp"] / "vastai-du-path-retire")        # plus aucun `vastai` dans le PATH
++    reponse = tmp_path / "reponse.json"
++    reponse.write_text(json.dumps({"success": True, "new_contract": 777777, "requete": f"-e HF_TOKEN={JETON_HF} -e GH_TOKEN=jeton-gh-factice"}), encoding="utf-8")
++    sup = dict(VAST=str(outil), FAUX_INSTANCES=_instances(monde, []), FAUX_REPONSE=str(reponse), HF_TOKEN=JETON_HF)
++    d, r = _controles(monde, **sup)
++    assert r.returncode == 0, r.stdout + r.stderr
++    # artefact : sans la variable, et sans outil dans le PATH, refus clair et aucune commande imprimée
++    r = v1s._lancer(monde, "creation", "auto", "course", "0", d, **{**sup, "VAST": None})
++    assert r.returncode == 2 and "introuvable dans le PATH" in r.stdout and "COMMANDE DE CRÉATION" not in r.stdout, r.stdout + r.stderr
++    # la recherche des offres du faux outil de ce fichier n'existe pas : celle des essais de la v1 est reprise par un outil complet
++    outil.write_text(FAUX_OUTIL.replace('case "$1 $2" in\n"create instance")', 'case "$1 $2" in\n"search offers") cat "$FAUX_OFFRES"; exit 0 ;;\n"create instance")', 1), encoding="utf-8")
++    r = v1s._lancer(monde, "creation", "auto", "course", "0", d, **sup)
++    assert r.returncode == 0, r.stdout + r.stderr
++    assert f"outil de location employé : {outil} (version : vastai 1.8.3-factice ; trouvé par : variable VAST)" in r.stdout
++    assert f"outil_location {outil}\n" in (d / "lancement.txt").read_text(encoding="utf-8")
++    cmd = r.stdout.splitlines()[-1]
++    assert f"timeout -k 10 300 {outil} create instance " in cmd and f"; VAST={outil} bash {monde['src']}/scripts/lancer_iib_v2.sh apres-creation " in cmd
++    assert "lancer_iib_v1.sh" not in cmd and JETON_HF not in cmd and "jeton-gh-factice" not in cmd
++    assert len(_traces({"d": d}, "offres-")) == 1 and len(_traces({"d": d}, "instances-")) == 1         # sorties de la location versées
++    e = _env(monde, **sup)
++    e.pop("VAST")                                                              # la commande imprimée se suffit : chemin absolu écrit dedans
++    r = subprocess.run(["bash", "-c", cmd], env=e, capture_output=True, text=True, timeout=120, cwd=str(monde["src"]))
++    assert r.returncode == 0 and "CRÉÉE : instance 777777" in r.stdout and "RÉPONSE BRUTE DU LOUEUR CONSERVÉE" in r.stdout, r.stdout + r.stderr
++    (copie,) = _traces({"d": d}, "creation-brute-")
++    texte = copie.read_text(encoding="utf-8")
++    assert _empreinte_tenue(copie) and "777777" in texte and JETON_HF not in texte and "jeton-gh-factice" not in texte
++    assert (d / "creation-brute.json").read_text(encoding="utf-8") == texte
++
++
++# --- (2) réponse brute du loueur conservée ----------------------------------------------------------------------------------
++REPONSE_SAINE = {"success": True, "new_contract": 777777}
++REPONSE_REFUS = {"success": False, "error": "no_such_ask", "msg": "offre retirée"}
++REPONSE_ILLISIBLE = ("Traceback (most recent call last):\n  requests.exceptions.HTTPError: 402 Payment Required\n"
++                     f"request: PUT /asks/61361283/ headers={{'Authorization': 'Bearer {CLE_LOUEUR}'}}\n"
++                     f"env: -e HF_TOKEN={JETON_HF} -e GH_TOKEN={JETON_GH} api_key={CLE_LOUEUR}\n"
++                     '{"detail": "lacks credit", "api_key": "une-autre-cle-inconnue-de-l-environnement", "jeton_prefixe": "hf_AUTREautre0123456789"}\n')
++
++
++def _apres(p, contenu, code, **sup):
++    f = p["d"] / "creation-brute.json"
++    f.write_text(contenu if isinstance(contenu, str) else json.dumps(contenu), encoding="utf-8")
++    return f, _lancer(p, "apres-creation", f, code, p["d"], **sup)
++
++
++def test_apres_creation_sain_creee_reponse_conservee(poste):
++    (poste["d"] / "lancement.txt").write_text("machine_proposee 101\n", encoding="utf-8")
++    f, r = _apres(poste, REPONSE_SAINE, 0)
++    assert r.returncode == 0 and "CRÉÉE : instance 777777" in r.stdout, r.stdout + r.stderr
++    (copie,) = _traces(poste, "creation-brute-")
++    assert f.exists() and json.loads(copie.read_text(encoding="utf-8")) == REPONSE_SAINE and _empreinte_tenue(copie)
++    assert f"RÉPONSE BRUTE DU LOUEUR CONSERVÉE : {copie} (empreinte {hashlib.sha256(copie.read_bytes()).hexdigest()})" in r.stdout
++    assert "0 remplacement(s)" in r.stdout and "instance 777777" in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
++    assert _appels(poste) == []                                                # aucun appel au loueur
++
++
++def test_apres_creation_artefact_reponse_sans_identifiant_lisible_reste_sur_disque(poste):
++    """Le cas du 19 novembre (R-3687) : ni `new_contract` ni `success` lisibles. Code 4, et la réponse brute reste, masquée."""
++    f, r = _apres(poste, REPONSE_ILLISIBLE, 0)
++    assert r.returncode == 4 and "CRÉATION INCERTAINE (code 0, identifiant « aucun »)" in r.stdout and "aucune seconde création avant" in r.stdout, r.stdout + r.stderr
++    (copie,) = _traces(poste, "creation-brute-")
++    texte = copie.read_text(encoding="utf-8")
++    assert f.exists() and f.read_text(encoding="utf-8") == texte and _empreinte_tenue(copie)
++    assert "402 Payment Required" in texte and "lacks credit" in texte and "PUT /asks/61361283/" in texte        # la cause reste lisible
++    for secret in (JETON_HF, JETON_GH, CLE_LOUEUR, "une-autre-cle-inconnue-de-l-environnement", "hf_AUTREautre0123456789"):
++        assert secret not in texte and secret not in r.stdout + r.stderr, secret
++    assert "secrets masqués par programme avant conservation : " in r.stdout and "0 remplacement(s)" not in r.stdout
++    assert "success=absent ; new_contract=absent" in r.stdout
++    assert _appels(poste) == []
++
++
++def test_apres_creation_artefact_code_non_nul_et_identifiant_present_incertain_conserve(poste):
++    f, r = _apres(poste, REPONSE_SAINE, 1)
++    assert r.returncode == 4 and "CRÉATION INCERTAINE (code 1, identifiant « 777777 »)" in r.stdout, r.stdout + r.stderr
++    assert f.exists() and len(_traces(poste, "creation-brute-")) == 1
++
++
++def test_apres_creation_offre_refusee_reponse_conservee_et_rang_suivant_en_v2(poste):
++    poste["inv"].write_text("[]", encoding="utf-8")
++    f, r = _apres(poste, REPONSE_REFUS, 1)
++    assert r.returncode == 5 and "OFFRE REFUSÉE À LA CRÉATION" in r.stdout, r.stdout + r.stderr
++    assert f"VAST={poste['outil']} bash {RACINE}/scripts/lancer_iib_v2.sh creation auto course 0 {poste['d']} 4102444800" in r.stdout
++    (copie,) = _traces(poste, "creation-brute-")
++    assert f.exists() and json.loads(copie.read_text(encoding="utf-8")) == REPONSE_REFUS
++    assert len(_traces(poste, "instances-apres-")) == 1 and "show instances --raw" in _appels(poste)
++
++
++def test_apres_creation_deux_reponses_deux_copies_aucune_ecrasee(poste):
++    _apres(poste, REPONSE_ILLISIBLE, 0)
++    _apres(poste, {"success": False, "error": "x"}, 7, VAST=str(poste["tmp"] / "absent" / "vastai"))     # outil introuvable : incertain, dit
++    copies = _traces(poste, "creation-brute-")
++    assert len(copies) == 2 and all(_empreinte_tenue(c) for c in copies) and copies[0].read_bytes() != copies[1].read_bytes()
++
++
++def test_apres_creation_artefacts_reponse_absente_et_masquage_en_echec(poste, tmp_path):
++    r = _lancer(poste, "apres-creation", poste["d"] / "absente.json", 0, poste["d"])
++    assert r.returncode == 4 and "réponse brute du loueur absente" in r.stdout and "CRÉATION INCERTAINE" in r.stdout, r.stdout + r.stderr
++    # masquage impossible (aucun python3 dans le PATH) : rien n'est supprimé, l'original est laissé tel quel et le programme le dit
++    b = tmp_path / "bin-sans-python"
++    b.mkdir()
++    for outil in ("bash", "grep", "date", "cat", "head", "sed", "tail", "mkdir", "cp", "mv", "sha256sum", "cut", "basename", "dirname", "realpath", "timeout"):
++        (b / outil).symlink_to(shutil.which(outil))
++    f, r = _apres(poste, REPONSE_ILLISIBLE, 0, PATH=str(b))
++    assert r.returncode == 4 and "masquage de la réponse brute en échec" in r.stdout and "NON MASQUÉ" in r.stdout, r.stdout + r.stderr
++    assert f.read_text(encoding="utf-8") == REPONSE_ILLISIBLE and _traces(poste, "creation-brute-") == []
++
++
++def test_le_programme_ne_supprime_aucune_sortie_de_la_location():
++    """Garde de forme : dans la v2, `rm` ne porte que sur les deux fichiers de tâches des contrôles, jamais sur une sortie de la location."""
++    code = [l for l in LANCEUR_V2.read_text(encoding="utf-8").splitlines() if not l.lstrip().startswith("#")]
++    assert [l.strip() for l in code if "rm -" in l or " rm " in l] == ['rm -f "$D/reserve.json" "$D/evaluation.json"']
++    assert any('rm -f -- "$F"' in l for l in LANCEUR_V1.read_text(encoding="utf-8").splitlines())                # l'artefact : la v1 supprimait
++
++
++# --- (3) destruction par l'identifiant, option de confirmation, preuve par l'inventaire -------------------------------------
++def test_le_faux_outil_exige_la_confirmation(poste):
++    """Artefact du 19 novembre (R-3722), rejoué sur le faux outil : sans `-y`, la destruction échoue sur la demande de confirmation."""
++    e = {"PATH": "/usr/bin:/bin", "FAUX_VASTAI_JOURNAL": str(poste["appels"]), "FAUX_INSTANCES": str(poste["inv"])}
++    r = subprocess.run([str(poste["outil"]), "destroy", "instance", ID], env=e, capture_output=True, text=True, stdin=subprocess.DEVNULL)
++    assert r.returncode == 1 and "Are you sure" in r.stdout and "Aborted" in r.stdout
++    assert any(i["id"] == int(ID) for i in json.loads(poste["inv"].read_text(encoding="utf-8")))
++
++
++def test_destruction_sain_option_y_par_identifiant_et_absence_verifiee(poste):
++    r = _lancer(poste, "destruction", ID, poste["d"])
++    assert r.returncode == 0 and f"DÉTRUITE : instance {ID} absente de l'inventaire" in r.stdout, r.stdout + r.stderr
++    assert f"{poste['outil']} destroy instance {ID} -y" in r.stdout
++    appels = _appels(poste)
++    assert [a for a in appels if a.startswith("destroy")] == [f"destroy instance {ID} -y"]
++    assert appels.index("show instances --raw") < appels.index(f"destroy instance {ID} -y") < len(appels) - 1 and appels[-1] == "show instances --raw"
++    assert [i["id"] for i in json.loads(poste["inv"].read_text(encoding="utf-8"))] == [58936096]                   # l'autre instance n'est pas touchée
++    assert "destruction_verifiee " in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
++    journal = (poste["d"] / "destruction.txt").read_text(encoding="utf-8")
++    assert f"destroy instance {ID} -y : code 0" in journal and f"instance {ID} absent" in journal and "outil de location employé" in journal
++    for prefixe in ("destruction-sortie-", "instances-avant-destruction-", "instances-apres-destruction-"):
++        (trace,) = _traces(poste, prefixe)
++        assert _empreinte_tenue(trace)
++
++
++@pytest.mark.parametrize("mode, code, motif", [("sans-effet", 6, "DESTRUCTION NON OBTENUE : la commande a rendu le code 0"),
++                                               ("echec", 6, "DESTRUCTION EN ÉCHEC : la commande a rendu le code 1"),
++                                               ("echec-mais-retire", 4, "DESTRUCTION INCERTAINE : la commande de destruction a échoué (code 1)")])
++def test_destruction_artefacts_echec_dit_sans_repli(poste, mode, code, motif):
++    r = _lancer(poste, "destruction", ID, poste["d"], FAUX_DESTRUCTION=mode)
++    assert r.returncode == code and motif in r.stdout and "DÉTRUITE" not in r.stdout, (mode, r.stdout + r.stderr)
++    appels = _appels(poste)
++    assert [a for a in appels if a.startswith("destroy")] == [f"destroy instance {ID} -y"]                         # une seule commande, aucun second essai
++    assert not any(a.startswith(("stop", "create")) for a in appels)
++    assert "destruction_verifiee" not in (poste["d"] / "lancement.txt").read_text(encoding="utf-8")
++    if mode != "echec-mais-retire":
++        assert "encore à l'inventaire après 2 relecture(s)" in r.stdout and appels.count("show instances --raw") == 3
++    if mode == "echec":                                                        # la sortie de l'outil est gardée, clé masquée
++        (trace,) = _traces(poste, "destruction-sortie-")
++        assert "failed with error 500" in trace.read_text(encoding="utf-8") and CLE_LOUEUR not in trace.read_text(encoding="utf-8")
++
++
++def test_destruction_artefact_inventaire_illisible_avant_aucune_destruction(poste):
++    r = _lancer(poste, "destruction", ID, poste["d"], FAUX_INVENTAIRE_ILLISIBLE="1")
++    assert r.returncode == 4 and "DESTRUCTION NON TENTÉE : inventaire d'avant illisible" in r.stdout, r.stdout + r.stderr
++    assert not any(a.startswith("destroy") for a in _appels(poste))
++
++
++def test_destruction_artefact_inventaire_illisible_apres_incertain(poste):
++    # l'inventaire devient illisible après la destruction : l'absence n'est pas établie, le programme ne dit pas « détruite »
++    poste["outil"].write_text(FAUX_OUTIL.replace('[ "${FAUX_INVENTAIRE_ILLISIBLE:-}" = 1 ]', 'grep -q "^destroy" "$FAUX_VASTAI_JOURNAL"', 1), encoding="utf-8")
++    r = _lancer(poste, "destruction", ID, poste["d"])
++    assert r.returncode == 4 and "l'absence de l'instance" in r.stdout and "n'est pas établie" in r.stdout and "DÉTRUITE" not in r.stdout, r.stdout + r.stderr
++
++
++def test_destruction_instance_deja_absente_aucune_commande(poste):
++    poste["inv"].write_text(json.dumps({"instances": None}), encoding="utf-8")
++    r = _lancer(poste, "destruction", ID, poste["d"])
++    assert r.returncode == 0 and "DÉJÀ ABSENTE DE L'INVENTAIRE : aucune commande de destruction envoyée" in r.stdout, r.stdout + r.stderr
++    assert not any(a.startswith("destroy") for a in _appels(poste))
++
++
++@pytest.mark.parametrize("identifiant, motif", [("58936096", "≠ instance créée"), ("iib-explo-v1", "chiffres seuls"), ("iib*", "chiffres seuls"),
++                                                (f"{ID} 58936096", "chiffres seuls")])
++def test_destruction_artefacts_jamais_une_autre_instance_ni_un_motif(poste, identifiant, motif):
++    """R10 : seul l'identifiant consigné à la création est détruit ; une étiquette, un motif ou une autre instance sont refusés avant tout appel."""
++    r = _lancer(poste, "destruction", identifiant, poste["d"])
++    assert r.returncode == 2 and motif in r.stdout and "aucune destruction" in r.stdout, r.stdout + r.stderr
++    assert _appels(poste) == [] and len(json.loads(poste["inv"].read_text(encoding="utf-8"))) == 2
+-- 
+2.43.0
+
