@@ -1,0 +1,156 @@
+[
+  {
+    "id": "R01",
+    "objet": "Seul appel de la relecture (get_feedback) : la définition et un appel unique dans la boucle des requêtes.",
+    "motif": "get_feedback\\(",
+    "portee": ["*.py"],
+    "attendu": ["DiscoveryAgent/director_workflow.py:1165", "DiscoveryAgent/director_workflow.py:1298"]
+  },
+  {
+    "id": "R02",
+    "objet": "Seul appel du modèle relecteur.",
+    "motif": "review_optimization_llm\\.forward\\(",
+    "portee": ["*.py"],
+    "attendu": ["DiscoveryAgent/director_workflow.py:1316"]
+  },
+  {
+    "id": "R03",
+    "objet": "explicit_hypothesis_step n'est fixé que par la ligne de commande ou un YAML ; aucune configuration du papier ne le porte.",
+    "motif": "explicit_hypothesis_step",
+    "portee": ["*.py", "configs/paper/*.yaml"],
+    "attendu": [
+      "DiscoveryAgent/director_workflow.py:277",
+      "DiscoveryAgent/director_workflow.py:306",
+      "DiscoveryAgent/director_workflow.py:337",
+      "DiscoveryAgent/director_workflow.py:577",
+      "DiscoveryAgent/hypothesis_brancher.py:44",
+      "DiscoveryAgent/hypothesis_brancher.py:429",
+      "DiscoveryAgent/utils/arg_parsers.py:153",
+      "scripts/run.py:687"
+    ]
+  },
+  {
+    "id": "R04",
+    "objet": "Le rapport de fond lu par l'agent d'hypothèse n'est utilisé nulle part ailleurs.",
+    "motif": "background_literature_content",
+    "portee": ["*.py"],
+    "attendu": [
+      "DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py:79",
+      "DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py:132",
+      "DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py:141"
+    ]
+  },
+  {
+    "id": "R05",
+    "objet": "generate_plan est transmis puis stocké, jamais lu pour produire un plan.",
+    "motif": "generate_plan",
+    "portee": ["*.py"],
+    "attendu": [
+      "DiscoveryAgent/config.py:281",
+      "DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py:71",
+      "DiscoveryAgent/hyp_agents/hypothesis_gen_agent.py:80",
+      "DiscoveryAgent/utils/arg_parsers.py:195",
+      "scripts/run.py:632"
+    ]
+  },
+  {
+    "id": "R06",
+    "objet": "Le statut paused_for_selection est testé mais jamais produit.",
+    "motif": "paused_for_selection",
+    "portee": ["*.py"],
+    "attendu": [
+      "DiscoveryAgent/hypothesis_brancher.py:822",
+      "DiscoveryAgent/hypothesis_brancher.py:842",
+      "scripts/run.py:751",
+      "scripts/run.py:757"
+    ]
+  },
+  {
+    "id": "R07",
+    "objet": "Le rendu Markdown query_NNN.md du gestionnaire de points de contrôle n'est jamais appelé.",
+    "motif": "_save_queries_and_reports_markdown",
+    "portee": ["*.py"],
+    "attendu": ["DiscoveryAgent/checkpoint_manager.py:710"]
+  },
+  {
+    "id": "R08",
+    "objet": "L'extraction de la section « Accumulated Report » n'est jamais appelée.",
+    "motif": "_extract_accumulated_report",
+    "portee": ["*.py"],
+    "attendu": ["DiscoveryAgent/hypothesis_brancher.py:215"]
+  },
+  {
+    "id": "R09",
+    "objet": "L'invite du relecteur n'est sauvegardée qu'à la construction du workflow.",
+    "motif": "save_reviewer_prompt_checkpoint\\(",
+    "portee": ["*.py"],
+    "attendu": ["DiscoveryAgent/checkpoint_manager.py:376", "DiscoveryAgent/director_workflow.py:515"]
+  },
+  {
+    "id": "R10",
+    "objet": "L'agent directeur ne manipule jamais de description de tâche.",
+    "motif": "task_description",
+    "portee": ["DiscoveryAgent/hyp_agents/director_agent.py"],
+    "attendu": []
+  },
+  {
+    "id": "R11",
+    "objet": "L'invite du modèle de résumé séparé n'est utilisée nulle part.",
+    "motif": "REPORT_SUMMARY_PROMPT\\b",
+    "portee": ["*.py"],
+    "attendu": ["DiscoveryAgent/tool_agents/execution_agent_cc.py:64"]
+  },
+  {
+    "id": "R12",
+    "objet": "Tours exploratoires dans les configurations du papier : dms_steer.yaml n'a pas la clé.",
+    "motif": "num_exploration_rounds",
+    "portee": ["configs/paper/*.yaml"],
+    "attendu": [
+      "configs/paper/acs_select.yaml:26",
+      "configs/paper/dms_auto.yaml:25",
+      "configs/paper/dwarf_select.yaml:26",
+      "configs/paper/gw_cd4_select.yaml:26",
+      "configs/paper/starembed_auto.yaml:23"
+    ]
+  },
+  {
+    "id": "R13",
+    "objet": "Seuls l'agent d'exécution et l'agent OpenTargets reçoivent une liste d'outils permis : aucun agent d'audit à outils.",
+    "motif": "allowed_tools",
+    "portee": ["DiscoveryAgent/*", "scripts/*"],
+    "attendu": [
+      "DiscoveryAgent/tool_agents/execution_agent_cc.py:1219",
+      "DiscoveryAgent/tool_agents/execution_agent_cc.py:1220",
+      "DiscoveryAgent/tool_agents/execution_agent_cc.py:1222",
+      "DiscoveryAgent/tool_agents/execution_agent_cc.py:1229",
+      "DiscoveryAgent/tool_agents/execution_agent_cc.py:1255",
+      "DiscoveryAgent/tool_agents/execution_agent_cc.py:1256",
+      "DiscoveryAgent/tool_agents/execution_agent_cc.py:1258",
+      "DiscoveryAgent/tool_agents/execution_agent_cc.py:1264",
+      "DiscoveryAgent/tool_agents/specialized/opentargets_agent.py:147"
+    ]
+  },
+  {
+    "id": "R14",
+    "objet": "Le format de décision imbriqué (hookSpecificOutput) n'apparaît dans aucun des deux crochets kill_blocker.py et write_protection.py.",
+    "motif": "hookSpecificOutput",
+    "portee": ["DiscoveryAgent/tool_agents/security/*"],
+    "attendu": [
+      "DiscoveryAgent/tool_agents/security/sandbox_enforcement.py:108",
+      "DiscoveryAgent/tool_agents/security/sandbox_enforcement.py:114",
+      "DiscoveryAgent/tool_agents/security/sandbox_enforcement.py:129",
+      "DiscoveryAgent/tool_agents/security/sandbox_enforcement.py:136",
+      "DiscoveryAgent/tool_agents/security/sandbox_enforcement.py:141",
+      "DiscoveryAgent/tool_agents/security/sandbox_enforcement.py:496",
+      "DiscoveryAgent/tool_agents/security/url_blocker.py:132",
+      "DiscoveryAgent/tool_agents/security/url_blocker.py:144"
+    ]
+  },
+  {
+    "id": "R15",
+    "objet": "generate_next_round_prompts est définie et jamais appelée.",
+    "motif": "generate_next_round_prompts",
+    "portee": ["*.py"],
+    "attendu": ["DiscoveryAgent/hypothesis_brancher.py:459"]
+  }
+]
