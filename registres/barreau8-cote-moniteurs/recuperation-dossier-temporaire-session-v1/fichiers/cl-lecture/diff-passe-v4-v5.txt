@@ -1,0 +1,76 @@
+--- passe_recalcul_v4.py	2026-11-19 03:42:54.344496432 +0000
++++ passe_recalcul_v5.py	2026-11-19 04:29:33.468589131 +0000
+@@ -1,4 +1,8 @@
+-"""Passe de recalcul de l'activité interne du barreau 8 (saboteur à budget), côté moniteurs — version 4.
++"""Passe de recalcul de l'activité interne du barreau 8 (saboteur à budget), côté moniteurs — version 5.
++
++Version 5 : alignée sur le brouillon 13 du texte (la sonde décisive doit porter un nom qui ne paraît qu'une fois dans
++l'index ; la finitude des vecteurs et des biais est contrôlée avant toute autre condition, sur toute entrée qui porte
++l'un des neuf noms et sur toute direction candidate au plancher).
+ 
+ Version 4 : alignée sur le brouillon 12 du texte (ligne d'accord : une ligne et une seule dont la première cellule est
+ l'identifiant de l'accord ; un vecteur ou un biais non fini d'une sonde ou d'une direction arrête la passe au lieu de
+@@ -1055,18 +1059,28 @@
+     attendues = dict(spec.empreintes_fichiers_sondes)
+     contenus = {role: lire_sondes(chemin, attendues[role])[0] for role, chemin in fichiers.items()}
+     etats, directions = {}, []
++    # finitude, AVANT toute autre condition : toute entrée d'un index qui porte le nom de l'une des sondes nommées, et
++    # toute direction candidate au plancher, que la sonde soit ensuite « lue » ou « sans objet »
++    nommees = {d.nom for d in spec.sondes_decisives} | {d.nom for d in spec.sondes_descriptives}
++    candidates_de = {}
+     for d in spec.sondes_decisives:
+-        sondes = contenus[d.fichier]
+-        for x in sondes:
+-            if x.nom == d.nom:
+-                exiger_vecteur_et_biais_finis(x)
+         source = contenus[d.fichier_plancher]
+-        candidates = [x for x in source if (getattr(x, "famille", None) == "plancher" if d.prefixe_plancher is None
+-                                            else x.nom.startswith(d.prefixe_plancher))]
+-        for x in candidates:
++        candidates_de[d.nom] = [x for x in source if (getattr(x, "famille", None) == "plancher" if d.prefixe_plancher is None
++                                                      else x.nom.startswith(d.prefixe_plancher))]
++    for role in sorted(contenus):
++        for x in contenus[role]:
++            if x.nom in nommees:
++                exiger_vecteur_et_biais_finis(x)
++    for d in spec.sondes_decisives:
++        for x in candidates_de[d.nom]:
+             exiger_vecteur_et_biais_finis(x)
++    for d in spec.sondes_decisives:
++        sondes = contenus[d.fichier]
++        candidates = candidates_de[d.nom]
++        # l'entrée de l'index de rang k (clé `s<k>_w` de la table), qui porte le nom de la table, nom qui ne paraît qu'une fois
+         s = sondes[d.rang_index] if d.rang_index < len(sondes) else None
+-        conforme = (s is not None and s.nom == d.nom and _lineaire_max(s, spec.couche_decisive, spec.largeur)
++        conforme = (s is not None and s.nom == d.nom and sum(x.nom == d.nom for x in sondes) == 1
++                    and _lineaire_max(s, spec.couche_decisive, spec.largeur)
+                     and hashlib.sha256(np.ascontiguousarray(s.w, dtype=np.float64).tobytes()).hexdigest() == d.empreinte_vecteur
+                     and s.empreinte() == d.empreinte_sonde)
+         plancher = []
+@@ -1095,8 +1109,6 @@
+                                  float(p.b)) for p in plancher]
+     for d in spec.sondes_descriptives:
+         trouvees = [s for s in contenus[d.fichier] if s.nom == d.nom]
+-        for x in trouvees:
+-            exiger_vecteur_et_biais_finis(x)
+         if not trouvees:
+             etats[d.nom] = "absente"
+         elif len(trouvees) == 1 and _lineaire_max(trouvees[0], d.couche, spec.largeur):
+@@ -1752,7 +1764,7 @@
+         c = _abs(c)
+         return os.path.relpath(c, racine) if _sous(c, racine) else c
+ 
+-    return {"passe": "recalcul de l'activité interne du barreau 8, côté moniteurs, version 4",
++    return {"passe": "recalcul de l'activité interne du barreau 8, côté moniteurs, version 5",
+             "specification": json.loads(json.dumps(asdict(spec))),
+             "course": course,
+             "entrees": {k: rel(v) for k, v in {
+@@ -2106,7 +2118,7 @@
+ 
+ 
+ def _analyseur() -> argparse.ArgumentParser:
+-    p = argparse.ArgumentParser(prog="python -m controle_ia.barreau8_moniteurs.passe_recalcul_v4",
++    p = argparse.ArgumentParser(prog="python -m controle_ia.barreau8_moniteurs.passe_recalcul_v5",
+                                 description="Passe de recalcul de l'activité interne du barreau 8 (côté moniteurs).")
+     p.add_argument("action", choices=("empreintes-modules", "bordereau-code", "verifier-entrees", "essai-a-blanc", "passe"))
+     chemins = ("racine", "sortie", "extrait", "taches",
