@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-19 vers 04:00 UTC — étude de G1 jugée « non tranché » (note à Lazar, choix de l'énoncé à lui) ; auto-conception de l'organisme close sans mesure (42,36 USD) ; côté moniteurs au brouillon 12, codes en dernière version, poussées toujours refusées ; exécutante prête, seul verrou : le mot de création de Lazar.** Passation : `registres/passations/2026-11-19-0400.md`. Registres jusqu'à R-3597.
+
 **2026-11-19 vers 01:01 UTC — étape B bis lue et jugée (verdict scellé `1561399a…`, non lu par la mère, soumis à Lazar) ; saboteurs discrets pour l'entretien : exécutante prête (seul verrou : le mot de création de Lazar, D-1), texte des sondes du côté moniteurs au brouillon 5, poussées du côté moniteurs refusées (mot de Lazar attendu) ; course de l'auto-conception de l'organisme lancée à 00:12Z ; simulation de G1 relancée à 00:17Z après le remplacement du conteneur ; liste « qui a lu quoi » v12 en vigueur.** Passation : `registres/passations/2026-11-19-0101.md`. Registres jusqu'à R-3572, GO jusqu'à GO-2026-11-18-69.
 
 **2026-11-18 vers 22:20 UTC — barreau 7 lu et jugé (verdict scellé, non lu par la mère) ; étape B bis : quatrième addendum et son complément scellés, module de lecture en écriture ; second cycle aux brouillons 6, quatre décisions de Lazar ouvertes ; billets codés, arbitrés, analysés, gabarit en rédaction ; bras A sous addendum d'écart (GO-65) ; autonomie prolongée jusqu'au 27 (GO-61).** Passation `registres/passations/2026-11-18-2220.md`. Registres jusqu'à R-3484 et GO-2026-11-18-65.
