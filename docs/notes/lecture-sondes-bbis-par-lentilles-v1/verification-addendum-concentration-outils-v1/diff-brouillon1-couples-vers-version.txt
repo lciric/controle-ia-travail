@@ -1,0 +1,183 @@
+--- brouillon1 + couples
++++ version
+@@ -45 +45,12 @@
+-- **Statut** : brouillon candidat, non contre-lu. Aucune dépense, aucune machine, aucun modèle chargé, aucune sonde réelle lue.
++- **Statut** : **version corrigée après la contre-lecture `715ddfa7…`**, à vérifier par le même contre-lecteur, puis à sceller par
++  la mère ; ce statut remplace, pour l'état de la pièce, les mots « brouillon candidat » de la règle de scellement ci-dessus. Le
++  brouillon contre-lu est archivé sans changement d'un octet sous
++  `prereg/lecture-sondes-bbis-par-lentilles-v1-addendum-concentration-v1-brouillon1.md`,
++  `0a862760025caf11ff66578dc47c53143ee480c173a733920b9f4b9425d59546`. La contre-lecture (contre-lecteur neuf, Opus 5.5 ; conclusion :
++  « Scellable après ces couples exacts ») :
++  `docs/notes/lecture-sondes-bbis-par-lentilles-v1/contre-lecture-addendum-concentration-v1.md`,
++  `715ddfa7fb65352126f21c773e9f4ad9359d25cc5a57d1a2816d4018111bf106`, branche principale. Les cinq couples obligatoires C1 à C5 et les
++  trois couples facultatifs F1 à F3 de son § 9 sont appliqués à la lettre ; **un point d'écart neuf, EC-6 (garde d'égalité au
++  vingtième rang), est ajouté hors de cette contre-lecture et soumis à Lazar avant le scellement** (§ 9, point 7) ; détail au § 12.
++  Corrections portées par un rédacteur sur Fable 5.2 de la session des lentilles (`session_013QMaykLXtozHttcSQ4ke1s`), sans mémoire
++  du brouillon 1, qu'il a lu comme une pièce. Aucune dépense, aucune machine, aucun modèle chargé, aucune sonde réelle lue.
+@@ -181,0 +193,90 @@
++### EC-6 — « Métrique », point 6, vingt premiers jetons, et « Liste d'arrêt » (texte, lignes 334-335, 338-339 et 345 ; table des lignes 527 et suivantes) : garde d'égalité au vingtième rang — point d'écart neuf, soumis à Lazar avant le scellement
++
++**Ce point n'était pas dans le brouillon contre-lu.** Il vient du § 10 de la contre-lecture (« hors du champ, à porter à la mère ») et
++de son § 5 ; il est écrit ici comme un écart neuf, que le contre-lecteur vérifie et que Lazar tranche (§ 9, point 7).
++
++- **Ce que le texte dit** : les vingt premiers jetons d'une direction sont ses vingt plus grands scores (k = 20) ; la part au-dessus
++  du nul, les comptes de familles, le jeton de début et les comparaisons appariées en dépendent. **Le texte ne dit pas quel jeton
++  garder quand le vingtième et le vingt-et-unième score sont égaux.**
++- **Ce qui a été trouvé** : le code laisse alors la fonction de tri (`topk`) décider, sans le dire. Le contre-lecteur l'a vu sur des
++  jouets à scores arrondis : un écart de part ne paraît que lorsque des égalités tombent au vingtième rang, et il vient du seul choix
++  des vingt premiers (les quantiles sans soi sont égaux à un calcul direct, écart nul, et les parts sont égales dès que les vingt
++  premiers sont les mêmes : `diag_egalites.py`, `f8b500c9a285958807cf8fcbb3b6683c392d57b95b96cbc207f4b719ab397c7f`, sortie
++  `sortie-diag-egalites.txt`, `d8adbaf1af32ff70c42e79df7e65ae833b04f40bcce0ef5b2b7cf39e47618690`, dossier
++  `docs/notes/lecture-sondes-bbis-par-lentilles-v1/contre-lecture-addendum-concentration-outils-v1/`, branche principale). Le défaut **préexiste** à la correction de cet addendum (texte et code de la version 1). Aucune sonde réelle
++  n'a été lue.
++- **Pourquoi une garde et non une règle** : départager (par exemple par l'identifiant du jeton) changerait la définition des vingt
++  premiers jetons du texte scellé ; cette règle est écrite dans la version 2 du texte, en brouillon. Sous le texte scellé, l'addendum
++  ajoute seulement une garde : **aucun choix n'est fait en silence** (R5).
++
++Ajout (« Métrique », point 6, à la suite de la puce des vingt premiers jetons ; et deux lignes de la « Liste d'arrêt ») :
++
++> **Garde d'égalité au vingtième rang.** Pour chaque liste de vingt premiers jetons, le code relève les vingt-et-un plus grandes
++> valeurs. Il y a **égalité au vingtième rang** quand la vingtième et la vingt-et-unième sont égales, par égalité exacte, dans la
++> précision où la liste est classée (simple précision). Une égalité ailleurs dans le classement ne compte pas.
++>
++> (i) **Direction lue** (chaque vecteur, chaque signe, chaque lentille, lentille des logits comprise ; chaque liste qui entre dans
++> une table ou une comparaison : vingt premiers par score, vingt premiers par z sous le nul isotrope, listes du témoin de couche) :
++> une égalité au vingtième rang **arrête le calcul**, avant toute écriture de table, avec le message nommé **« égalité de score au
++> vingtième rang d'une direction lue »**, qui donne la cellule, le pli, le rôle, le vecteur, le signe, la lentille, la couche, la
++> liste, les deux identifiants de jeton et la valeur commune ; nœud.
++>
++> (ii) **Direction nulle** (nul isotrope partagé, nul isotrope refait par direction, nul des signes ; liste par score) : une
++> égalité au vingtième rang n'arrête pas à elle seule ; la direction nulle est **marquée**. Pour chaque statistique S qui dépend des
++> vingt premiers jetons (part au-dessus du nul ; compte de chaque famille), le code rend, à côté de p, deux bornes :
++> p_bas = (1 + #{j non marquée : S(u_j) ≥ S(v)}) / (M + 1) et p_haut = p_bas + (nombre de directions marquées) / (M + 1). Le libellé
++> (« Seuil ») est calculé deux fois, avec p_bas sous les deux nuls puis avec p_haut sous les deux nuls. **Libellés égaux** : le
++> calcul continue, le libellé est celui-là (il ne dépend d'aucun départage, la règle des libellés étant monotone en p), et le nombre
++> de directions marquées, p_bas et p_haut sont écrits dans les tables. **Libellés différents** : arrêt, avec le message nommé
++> **« égalité au vingtième rang d'une direction nulle, décisive pour un libellé »**, qui donne la direction lue, la lentille, le nul,
++> la statistique, p_bas, p_haut et le nombre de directions marquées ; nœud. Sans direction marquée, p_bas = p = p_haut : rien ne change.
++>
++> (iii) **Direction témoin** : le compte de calibration ne porte que sur les p de concentration (plan, point 6), où les vingt
++> premiers jetons n'entrent pas : pas d'arrêt ; le nombre de témoins à égalité au vingtième rang est écrit par (couche, lentille,
++> nul). La concentration, les pôles et les bornes de calibration ne sont pas concernés : aucun n'emploie les vingt premiers jetons.
++
++> « Liste d'arrêt », deux lignes ajoutées : | égalité de score au vingtième rang d'une direction lue | arrêt ; nœud | et
++> | égalité au vingtième rang d'une direction nulle, décisive pour un libellé | arrêt ; nœud |.
++
++**Portée, et sa raison.** La garde couvre les trois sortes de directions, mais n'arrête pas de la même façon. Une égalité sur la
++direction lue change la liste montrée, sa part, ses familles et ses comparaisons : arrêt. Une égalité sur une direction nulle change
++aussi la statistique, par la part ou le compte de cette nulle, donc la valeur p de v d'au plus 1/(M + 1) par nulle marquée : la
++garde la compte, borne son effet, et n'arrête que si elle peut changer un libellé. Une égalité sur un témoin ne change aucun compte
++du texte : elle est écrite. **Arrêter sur toute direction nulle ou témoin n'est pas recommandé** : la lecture s'arrêterait presque
++à coup sûr (ci-dessous), pour un effet qui, le plus souvent, ne change rien.
++
++**Probabilité, ordre de grandeur** (calcul de l'auteur de ce point ; données synthétiques ; **non contre-lu**). Le contre-lecteur
++juge l'égalité « improbable sur 89 498 jetons en simple précision, possible si deux jetons gardés ont la même ligne de sortie »
++(§ 10) ; ses jouets à scores arrondis n'en donnent pas la fréquence à la taille réelle. Dans un modèle simple (89 498 scores
++indépendants de loi normale, arrondis en simple précision ; vingtième et vingt-et-unième rangs tirés par leurs statistiques d'ordre ;
++méthode contrôlée contre un tirage direct à un pas d'arrondi de 10⁻³ : 0,0362 contre 0,0364), la fréquence d'une égalité au vingtième
++rang est de **7,0 × 10⁻⁶ par direction** (28 sur 4 000 000 ; ± 1,3 × 10⁻⁶) pour des scores centrés ; 3,2 × 10⁻⁵ si la moyenne des
++scores vaut dix écarts types, 2,8 × 10⁻⁴ si elle en vaut cent (l'arrondi pèse plus quand les scores sont grands devant leur
++dispersion). Soit, pour des scores centrés : rare pour une direction lue ; 0,014 direction marquée attendue par jeu de 2 000
++directions nulles ; mais **1,4 égalité attendue sur les ≈ 195 000 lectures du calcul** (texte, plan, point 6), c'est-à-dire au moins
++une avec une probabilité d'environ 0,74 (1 − e^(−1,36)), et davantage si les scores ne sont pas centrés (6 et 54 égalités attendues
++aux deux autres lignes). Si deux jetons gardés ont la même ligne de sortie, leurs scores sont égaux pour toute direction : ils
++occupent les rangs vingt et vingt-et-un environ une fois sur 89 498 par direction, soit ≈ 2 égalités attendues de plus sur 195 000
++lectures par paire de tels jetons (ordre de grandeur, rangs tenus pour équiprobables). **Ce ne sont pas des mesures sur la lentille
++réelle** : les scores réels ne sont ni indépendants ni gaussiens. Programme et sortie, hors du dépôt à l'écriture (bloc-notes de la
++session des lentilles, dossier `piece-egalites/`), que la mère verse sous `prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/`
++avant le scellement, mêmes empreintes : `frequence_egalite_vingtieme_rang_v1.py`,
++`b1d0d47439be89d7380aa81c08f08ae83b0f92053b3dbefda27810e6be97d5b2` ; `sortie-frequence-egalite-vingtieme-rang-v1.txt`,
++`26f4abba8e5816165b5cb01bdba969ff90af570791578967ac6c7d666cc02e74` (entropie du texte, clés neuves
++`lentilles-bbis/addendum-concentration-v1/egalite-vingtieme-rang/…`, R9).
++
++**Essais** (R5 ; écrits par le développeur du code, non par l'auteur de ce point ; cas sain et artefact pour chaque étage) :
++
++- **cas sain** : scores tous distincts : aucun arrêt, aucune direction marquée, p_bas = p = p_haut ; égalités placées ailleurs
++  (rangs 5 et 6 ; rangs 21 et 22) dans une direction lue : aucun arrêt ;
++- **artefact, direction lue** : lentille jouet dont deux jetons ont la même ligne de sortie, direction choisie pour qu'ils tiennent
++  les rangs 20 et 21 : arrêt, message (i), les deux identifiants rendus ; la garde appliquée aux scores de la direction de signe
++  opposé, où ces deux jetons sont en queue de classement : pas d'égalité au vingtième rang ; une égalité de z aux rangs 20 et 21
++  de la liste par z : arrêt ;
++- **direction nulle, cas sain** : une direction nulle à égalité au vingtième rang, libellé égal aux deux bornes : pas d'arrêt, une
++  direction marquée écrite, p_haut − p_bas = 1/(M + 1) ;
++- **direction nulle, artefact** : jouet à M = 99 où, pour une famille, p_bas = 0,01 sous les deux nuls et p_haut = 0,02 sous l'un
++  d'eux (une direction marquée ; libellé « sur-représentée » à une borne seulement) : arrêt, message (ii) ;
++- **témoin** : un témoin à égalité au vingtième rang : pas d'arrêt, compte écrit, compte de calibration inchangé ;
++- **liste de moins de vingt-et-un jetons** (jouets seulement) : pas de vingt-et-unième valeur : garde sans objet, écrit.
++
+@@ -200,0 +302,3 @@
++7. **Garde d'égalité au vingtième rang** (ajout de la version corrigée, EC-6, soumis à Lazar) : direction lue : arrêt nommé ;
++   direction nulle : marquée, p_bas et p_haut rendus, arrêt nommé si le libellé diffère entre les deux ; témoin : compté et écrit.
++   Sans égalité, aucune valeur ne change.
+@@ -395,0 +500,23 @@
++7. **Garde d'égalité au vingtième rang (EC-6) : point d'écart neuf, soumis à Lazar avant le scellement** (écart à un texte scellé :
++   nœud, sans défaut ; rien n'est scellé avant son mot).
++   - **Décision** : dire ce que fait le code, sous le texte scellé, quand le vingtième et le vingt-et-unième score d'une direction
++     sont égaux, et pour quelles directions il s'arrête.
++   - **Enjeu** : sans garde, la fonction de tri choisit en silence un des deux jetons ; la part, les familles et les listes montrées
++     en dépendent. Avec une garde trop large, la lecture s'arrête presque à coup sûr.
++   - **Option 1 — direction lue seulement** : arrêt nommé sur la direction lue ; rien sur les directions nulles ni les témoins.
++     Avantage : la plus simple ; arrêt rare (≈ 7 × 10⁻⁶ par direction lue dans le modèle simple de EC-6). Inconvénient : une égalité
++     sur une direction nulle reste tranchée en silence par le tri, et peut déplacer une valeur p de 1/2 001.
++   - **Option 2 — arrêt sur toute direction, nulles et témoins compris**. Avantage : aucune égalité ne passe. Inconvénient : sur
++     ≈ 195 000 lectures, au moins une égalité est attendue avec une probabilité de l'ordre de 0,7 ou plus dans le même modèle ; la
++     lecture s'arrêterait donc le plus souvent, et il faudrait alors une règle de départage, donc un second écart au texte scellé.
++   - **Option 3 — garde à trois étages, celle écrite en EC-6** : direction lue : arrêt nommé ; direction nulle : marquée, comptée,
++     effet borné par p_bas et p_haut, arrêt nommé seulement si le libellé en dépend ; témoin : compté et écrit. Avantage : rien n'est
++     tranché en silence, aucun libellé ne dépend d'un départage, et la lecture ne s'arrête que si l'égalité compte. Inconvénient :
++     deux colonnes de plus dans les tables et quelques lignes de code et d'essais de plus que l'option 1.
++   - **Recommandation** : option 3 ; confiance moyenne à bonne (environ 0,75). L'incertitude porte sur la fréquence réelle des
++     égalités, estimée dans un modèle simple et non mesurée sur la lentille. Si Lazar retient l'option 1 ou l'option 2, EC-6 et la
++     ligne 7 du § 4 sont repris avant le scellement.
++   - **Lien avec la version 2 du texte** : son brouillon 3 écrit une règle de départage (score décroissant, puis identifiant de jeton
++     croissant). Sous l'option 3, une première lecture menée à son terme n'a aucune égalité au vingtième rang sur une direction lue,
++     et aucun de ses libellés ne dépend du départage des directions nulles : la règle de la version 2 ne peut donc changer ni une
++     liste de direction lue ni un libellé de cette première lecture.
+@@ -424,0 +552,47 @@
++
++## 12. Version corrigée après la contre-lecture : ce qui a changé depuis le brouillon 1
++
++Fabriquée par programme à partir du brouillon 1 (`0a862760…`) : remplacements exacts, chaque texte « avant » trouvé une fois et une
++seule ; les couples sont extraits par programme du § 9 de la contre-lecture (`715ddfa7…`) ; contrôle par `diff` contre le brouillon 1.
++
++| changement | où | nature |
++|---|---|---|
++| statut | en-tête, puce « Statut » | version corrigée, à vérifier par le même contre-lecteur, puis à sceller par la mère |
++| **C1** (obligatoire) | § 3, EC-4 | clé de l'addendum avant `CODE-LENTILLES-BBIS` aussi ; fiche du code, vérification par le code, manifeste et tables ; « Liste d'arrêt » étendue |
++| **C2** (obligatoire) | § 3, EC-5, puce « arrêt », et puce neuve « clé de l'addendum » | essais des deux gardes neuves (moins de trois directions ; clé de registre) |
++| **C3** (obligatoire) | § 3, EC-5, puce « artefact de taux » | chaque réplique tire ses 19 directions nulles et sa direction témoin |
++| **C4** (obligatoire) | § 6 (g) | le résidu de couplage grandit aux niveaux stricts ; chiffres de la contre-lecture |
++| **C5** (obligatoire) | § 3, EC-1, sous les formules | précision de la comparaison C(u_j) ≥ C(v) |
++| **F1** (facultatif, pris) | § 6 (d) | le crochet est un écart relatif du z, non de la part : erreur de fait corrigée |
++| **F2** (facultatif, pris) | § 7, « Loi du compte » | « si et seulement si » était faux : « si » |
++| **F3** (facultatif, pris) | § 7, « Risque de sortie attendu » | calibration du nul partagé ajoutée au compte en cas de repli par direction |
++| **EC-6** (neuf, hors contre-lecture) | § 3, après EC-5 ; § 4, ligne 7 ; § 9, point 7 | garde d'égalité au vingtième rang ; soumis à Lazar |
++| ce § 12 | fin | ajouté |
++
++- **Pourquoi les trois couples facultatifs sont pris** : chacun retire une phrase que le contre-lecteur a montrée fausse ou
++  incomplète (F1 : grandeur mal nommée ; F2 : équivalence fausse ; F3 : compte de calibrations incomplet), aucun ne change une borne,
++  une valeur ni une règle ; un texte scellé ne garde pas une erreur connue. Le rédacteur des corrections a relu les trois : F2 par le
++  raisonnement (un mélange de lois binomiales de taille n n'est fixé que par les n premiers moments de la loi de mélange) ; F3 par le
++  compte (douze fois 1,87 × 10⁻⁴ = 2,2 × 10⁻³ ; dix-huit fois : 3,4 × 10⁻³) ; F1 sur le développement du § 2.1 de la contre-lecture,
++  non refait.
++- **Aucun couple ne s'est trouvé inapplicable** : les huit textes « avant » paraissent une fois chacun dans le brouillon 1.
++- **Points ouverts du § 9 après la contre-lecture** (son § 6) : 1 : confirmé en partie, C4 l'écrit ; la contre-lecture recommande une
++  ligne de réserve à Lazar, sans demande de mot neuf ; 2 : aucune proposition ; 3 : la ligne `CODE-LENTILLES-BBIS` n'est pas encore
++  inscrite (relevé du contre-lecteur), la question de forme tombe avec C1 ; 4 : clé à ratifier par la mère, avec C1 ; 5 : seuil de
++  10⁻¹⁰ justifié par une identité exacte (contre-lecture, § 6, point 5) ; 6 : ni établie ni exclue, non reproduite à une entropie
++  neuve, sans conséquence pour les bornes ; 7 : neuf, à Lazar. Les points 1 à 6 gardent leurs mots du brouillon 1.
++- **Hors de cet addendum** (contre-lecture, § 10) : la correction de la statistique et une règle de départage sont portées dans le
++  brouillon 3 de la version 2 du texte ; l'essai « artefact » de EC-5 (« concentrations strictement plus petites ») ne vaut que si le
++  plus grand z de la nulle est positif : à garder en tête pour un jouet à très peu de jetons, sans changement ici.
++- **Ce que le rédacteur des corrections a lu** : le brouillon 1 en entier ; la contre-lecture en entier ; de ses outils,
++  `diag_egalites.py`, sa sortie et la ligne de commande qui la produit ; du texte scellé (`ca5066d7…`, branche principale), les
++  lignes 330 à 348, 360 à 382, 456 à 470, 525 à 552 et 626 à 674 ; du brouillon 2 de la version 2 du texte, les passages de la
++  statistique, des vingt premiers jetons et de la calibration. **Jamais ouverts** : aucune sonde, aucun score, aucune table, aucune
++  lecture, aucun verdict de l'apprentissage des sondes sur la tâche, aucune branche `donnees/*` ni `calcul/*`, aucun registre.
++  Aucune machine, aucune dépense, aucun modèle chargé, aucun commit, aucun push ; un programme sur données synthétiques, au
++  processeur (EC-6).
++- **À donner au contre-lecteur pour la vérification** : cette version ; le brouillon 1 (`0a862760…`) ; sa contre-lecture
++  (`715ddfa7…`) ; pour EC-6 : le texte scellé, lignes 334 à 345, « Seuil » et « Liste d'arrêt » ; `diag_egalites.py` et sa sortie ;
++  le programme `frequence_egalite_vingtieme_rang_v1.py` et sa sortie. À vérifier d'abord : que les huit couples sont appliqués à la
++  lettre et que rien d'autre n'a changé hors des endroits de la table ; pour EC-6 : la monotonie de la règle des libellés en p, la
++  formule de p_bas et p_haut, et l'ordre de grandeur de la fréquence.

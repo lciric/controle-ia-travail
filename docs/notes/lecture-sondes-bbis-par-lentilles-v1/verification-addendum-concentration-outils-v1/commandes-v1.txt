@@ -1,0 +1,24 @@
+Vérification de l'addendum « concentration » corrigé et contre-lecture de la garde d'égalité (contre-lecteur Opus 5.5,
+2026-11-19) — commandes, entropies, versions. Données synthétiques seulement ; aucune sonde, aucune lentille, aucun poids.
+
+Interpréteurs : python3 du conteneur (Python 3.13.18, numpy 2.5.3) ; environnement du dépôt .venv (Python 3.13.18, numpy 2.4.6,
+scipy 1.17.1) pour ce qui demande scipy.
+Entropie E4 = 101630253522567071976586878496186340292 (tirée par secrets.randbits(128) le 2026-11-19 à 14:13:49Z).
+Graine des jouets d'énumération : numpy.random.default_rng(20261119).
+Arbre lu : commit 209cf169d de la branche claude/brave-galileo-jhp684, arbre détaché du bloc-notes (noté A ci-dessous).
+
+1. Couples de la première contre-lecture, appliqués au brouillon 1 et comparés à la version :
+   python3 -I -B differentiel_version_contre_lecteur.py \
+     docs/notes/lecture-sondes-bbis-par-lentilles-v1/contre-lecture-addendum-concentration-v1.md \
+     A/prereg/lecture-sondes-bbis-par-lentilles-v1-addendum-concentration-v1-brouillon1.md \
+     A/prereg/lecture-sondes-bbis-par-lentilles-v1-addendum-concentration-v1.md \
+     diff-brouillon1-couples-vers-version.txt                                   > sortie-differentiel-version.txt
+2. Fréquence d'une égalité au k-ième rang, par la loi conditionnelle exacte sachant le (k+1)-ième score :
+   .venv/bin/python -B egalite_rang_k_contre_lecteur.py E4                     > sortie-egalite-rang-k.txt
+3. La même, par comptage des égalités sur 40 000 000 de directions par moyenne :
+   .venv/bin/python -B egalite_comptage_direct_contre_lecteur.py E4            > sortie-egalite-comptage-direct.txt
+4. Bornes de la garde sur des jouets, par énumération de tous les départages :
+   .venv/bin/python -B bornes_departage_contre_lecteur.py 20261119             > sortie-bornes-departage.txt
+5. Couples de cette vérification : présence unique de chaque texte « avant », application à une copie, section du rapport :
+   python3 -I -B couples_verification_contre_lecteur.py \
+     A/prereg/lecture-sondes-bbis-par-lentilles-v1-addendum-concentration-v1.md <copie> <section>
