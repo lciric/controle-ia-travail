@@ -1,0 +1,518 @@
+--- a/src/controle_ia/lentilles_sondes_bbis/lanceur_v1.py
++++ b/src/controle_ia/lentilles_sondes_bbis/lanceur_v1.py
+@@ -140,6 +140,33 @@
+     return {f"{m}.py": mo.sha256_fichier(ici / f"{m}.py") for m in MODULES}
+ 
+ 
++CHEMIN_PAQUET = "src/controle_ia/lentilles_sondes_bbis"
++
++
++def exiger_fiche_code(racine_depot: Path, ligne_code) -> dict:
++    """Liste d'arrêt : « code non cité par `CODE-LENTILLES-BBIS` » : rien ne part. La fiche citée par la ligne a la forme des
++    fiches `CODE-` du registre (`commit`, `fichiers`, `essais`, `contre_lecture` {chemin, sha256}) ; son empreinte égale celle
++    de la ligne, et l'empreinte de chaque module de ce paquet égale celle que la fiche porte sous `fichiers`."""
++    p = Path(racine_depot) / str(ligne_code.chemin)
++    if not p.is_file() or mo.sha256_fichier(p) != ligne_code.sha256:
++        raise Refus("fiche citée par CODE-LENTILLES-BBIS absente ou d'une autre empreinte que la ligne : rien ne part")
++    try:
++        fiche = json.loads(p.read_text(encoding="utf-8"))
++        fichiers, essais, commit = fiche["fichiers"], fiche["essais"], str(fiche["commit"])
++        lecture = fiche["contre_lecture"]
++        forme = isinstance(fichiers, dict) and isinstance(essais, dict) and bool(lecture["chemin"]) and bool(lecture["sha256"])
++    except (UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError):
++        forme = False
++    if not forme:
++        raise Refus("fiche CODE-LENTILLES-BBIS d'une autre forme que les fiches CODE- du registre : rien ne part")
++    ici = Path(__file__).resolve().parent
++    for m in MODULES:
++        nom = f"{CHEMIN_PAQUET}/{m}.py"
++        if fichiers.get(nom) != mo.sha256_fichier(ici / f"{m}.py"):
++            raise Refus(f"{nom} : empreinte absente de la fiche CODE-LENTILLES-BBIS ou différente : rien ne part")
++    return {"fiche": str(ligne_code.chemin), "sha256": ligne_code.sha256, "commit_de_la_fiche": commit}
++
++
+ def _commit(racine_depot: Path) -> str | None:
+     r = subprocess.run(["git", "rev-parse", "HEAD"], cwd=racine_depot, capture_output=True, text=True)
+     return r.stdout.strip() if r.returncode == 0 else None
+@@ -181,12 +208,59 @@
+     return sortie
+ 
+ 
+-def nettoyer(travail: Path) -> None:
+-    """Plan, point 10 : supprime le dossier de travail de cette chaîne, par son chemin, et rien d'autre."""
++# Parties du dossier de travail jamais copiées (licence de Llama et de la lentille ; corpus non versé : « Données gardées ») ;
++# elles sont inventoriées (nom, taille, SHA-256), jamais lues autrement.
++NON_COPIES = ("tenseurs", "lentille", "hf", "lentille-publique.pt", "voisin")
++
++
++def verser_travail(travail: Path, sortie: Path, run: str, moment: str) -> dict:
++    """Règle « récupérer ce qui est récupérable » (mot de Lazar, 19 novembre 2026), avant toute suppression et à tout arrêt :
++    inventaire de chaque fichier du dossier de travail (chemin relatif, taille, SHA-256) ; copie des fichiers hors des
++    parties `NON_COPIES` (journaux des scripts du voisin, jetons gardés, état du montage, horloge, marque) et du correctif
++    effectivement appliqué au voisin (`git diff`) ; le tout dans `<sortie>/versement/<run>/travail-<moment>/`, chaque fichier
++    scellé, inventaire fermé et scellé. Rend {chemin, sha256} de l'inventaire."""
++    travail, sortie = Path(travail), Path(sortie)
++    dest = sortie / "versement" / run / f"travail-{moment}"
++    if dest.exists():
++        raise Arret(f"{dest} existe déjà (R12)")
++    dest.mkdir(parents=True)
++    inventaire, copies = [], []
++    for f in sorted(travail.rglob("*")):
++        if f.is_symlink() or not f.is_file():
++            continue
++        rel = f.relative_to(travail)
++        inventaire.append({"chemin": str(rel), "taille": f.stat().st_size, "sha256": mo.sha256_fichier(f)})
++        if rel.parts[0] not in NON_COPIES:
++            cible = dest / "fichiers" / rel
++            cible.parent.mkdir(parents=True, exist_ok=True)
++            shutil.copy2(f, cible)
++            if mo.sha256_fichier(cible) != inventaire[-1]["sha256"]:
++                raise Arret(f"versement : copie de {rel} différente de l'original : rien n'est supprimé")
++            sceller(cible)
++            copies.append(str(rel))
++    voisin = travail / "voisin"
++    if (voisin / ".git").exists():
++        r = subprocess.run(["git", "diff"], cwd=voisin, capture_output=True)
++        if r.returncode == 0:
++            (dest / "voisin-correctifs-appliques.diff").write_bytes(r.stdout)
++            sceller(dest / "voisin-correctifs-appliques.diff")
++            copies.append("voisin : git diff")
++    sha = _ecrire_ferme(dest / "inventaire.json", {"run": run, "moment": moment, "travail": str(travail),
++                                                   "non_copies": list(NON_COPIES), "fichiers": inventaire, "copies": copies})
++    return {"chemin": str((dest / "inventaire.json").relative_to(sortie)), "sha256": sha}
++
++
++def nettoyer(travail: Path, sortie: Path, run: str) -> dict:
++    """Plan, point 10 : verse ce qui est récupérable (`verser_travail`), vérifie le versement, puis supprime le dossier de
++    travail de cette chaîne, par son chemin, et rien d'autre."""
+     travail = Path(travail)
+     if not (travail / MARQUE).is_file():
+         raise Arret(f"{travail} ne porte pas la marque du dossier de cette chaîne : rien n'est supprimé")
++    versement = verser_travail(travail, sortie, run, "fin")
++    from ..scellement import verifier
++    verifier(Path(sortie) / versement["chemin"])
+     shutil.rmtree(travail)
++    return versement
+ 
+ 
+ def _memoire() -> int | None:
+@@ -225,6 +299,9 @@
+         self.travail, self.sortie, self.racine_depot = Path(self.travail), Path(self.sortie), Path(self.racine_depot)
+         if not _RE_RUN.match(self.run):
+             raise Arret(f"identifiant de course {self.run!r} : format AAAAMMJJ-HHMMSS-nom attendu")
++        t, s = self.travail.resolve(), self.sortie.resolve()
++        if t == s or t in s.parents or s in t.parents:
++            raise Arret("dossier de sortie et dossier de travail emboîtés : le nettoyage effacerait des sorties ; rien ne part")
+ 
+ 
+ # --- montage (plan, points 4 et 5) -------------------------------------------------------------------------------------------------------
+@@ -232,7 +309,7 @@
+     """Montage au processeur, puis garde de la fonction de lecture. Ne touche aucune sonde. Rend le rapport de montage, écrit
+     aussi dans `diag/<run>/montage-lentilles-bbis.json` (jamais la clé)."""
+     r = ctx.reglages
+-    en.exiger_registre_propre(ctx.registre_propre)
++    fiche_code = exiger_fiche_code(ctx.racine_depot, en.exiger_registre_propre(ctx.registre_propre)["CODE-LENTILLES-BBIS"])
+     mo.exiger_sans_debogage(ctx.env)
+     cle = mo.lire_cle(ctx.env)
+     if ctx.travail.exists():
+@@ -245,7 +322,7 @@
+     hf_home = ctx.travail / "hf"
+     transport = ctx.transport if ctx.transport is not None else mo.TransportRequests()
+     rapport = {"run": ctx.run, "texte": {"chemin": K.TEXTE, "sha256": K.EMPREINTE_TEXTE}, "versions": _versions(),
+-               "code": {"commit": _commit(ctx.racine_depot), "empreintes": empreintes_du_code()},
++               "code": {"commit": _commit(ctx.racine_depot), "empreintes": empreintes_du_code(), "fiche_code": fiche_code},
+                "machine": {"fils": os.cpu_count(), "octets_libres_au_depart": libre, "octets_de_memoire": _memoire()}}
+ 
+     # réseau, avant tout flux long : un octet par hôte et par sorte de fichier
+@@ -708,13 +785,35 @@
+ 
+ 
+ def calculer(ctx: Contexte, racine_entrees: Path, registre_bbis: Path, nettoyage: bool = True) -> dict:
++    """Enveloppe du calcul : à tout arrêt après le départ du calcul, ce qui existe est versé (dossier de travail inventorié et
++    ses fichiers hors licence copiés ; tableaux déjà calculés écrits, fermés, scellés, marqués « interrompus, non lus »), rien
++    n'est supprimé, puis l'arrêt est relevé tel quel."""
++    tableaux: dict[str, np.ndarray] = {}
++    etat = {"parti": False}
++    try:
++        return _calculer(ctx, racine_entrees, registre_bbis, nettoyage, tableaux, etat)
++    except Arret as arret:
++        if not etat["parti"]:
++            raise                       # refus avant le départ (registres, verdict, dossier monté) : rien n'est versé
++        dest = ctx.sortie / "versement" / ctx.run / "calcul-interrompu"
++        try:
++            morceaux = ecrire_morceaux(tableaux, dest / "lectures-interrompues-non-lues") if tableaux else []
++            _ecrire_ferme(dest / "arret.json", {"run": ctx.run, "motif": str(arret), "morceaux": morceaux,
++                                                "travail": verser_travail(ctx.travail, ctx.sortie, ctx.run, "arret")})
++        except Arret as e:
++            raise Arret(f"{arret} ; versement à l'arrêt en échec ({e}) : rien n'est supprimé") from None
++        raise
++
++
++def _calculer(ctx: Contexte, racine_entrees: Path, registre_bbis: Path, nettoyage: bool, tableaux: dict, etat: dict) -> dict:
+     """Plan, point 6 : lectures, nuls, statistiques, pôles, comparaisons, calibration, déclencheurs et audits ; tout est écrit
+     dans des fichiers fermés ; puis nettoyage (point 10). Refusé avant `VERDICT-BBIS`."""
+     r = ctx.reglages
+-    en.exiger_registre_propre(ctx.registre_propre)
++    fiche_code = exiger_fiche_code(ctx.racine_depot, en.exiger_registre_propre(ctx.registre_propre)["CODE-LENTILLES-BBIS"])
+     en.exiger_scores_et_verdict(registre_bbis)
+     if not (ctx.travail / MARQUE).is_file():
+         raise Arret("dossier de travail monté absent : rien ne part")
++    etat["parti"] = True
+     horloge = Horloge(ctx.travail, maintenant=ctx.maintenant)
+     horloge.controler("départ du calcul")
+ 
+@@ -728,7 +827,7 @@
+     entrees = en.ouvrir_entrees(racine_entrees, registre_bbis, ctx.registre_propre, r.largeur)
+     graines = nu.Graines()
+     masques = st.masques_familles(charge.chaines)
+-    tableaux: dict[str, np.ndarray] = {"ids_gardes": charge.ids_gardes}
++    tableaux["ids_gardes"] = charge.ids_gardes
+     sondes_table, par_couche, non_calculables = [], {}, []
+     for s in entrees.sondes:
+         sondes_table.append({"cle": s.cle, "cellule": s.cellule, "pli": s.pli, "role": s.role, "lue": s.lue,
+@@ -776,7 +875,7 @@
+               "n_temoins_par_vecteur": r.n_temoins_par_vecteur, "couches": list(r.couches), "largeur": r.largeur,
+               "epsilon": K.EPSILON, "course_bbis": entrees.course.run}
+     manifeste = {"run_id": ctx.run, "cree_le": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+-                 "commit": _commit(ctx.racine_depot), "code": empreintes_du_code(), "config": config,
++                 "commit": _commit(ctx.racine_depot), "code": empreintes_du_code(), "fiche_code": fiche_code, "config": config,
+                  "config_sha256": hashlib.sha256(mf.config_canonique(config)).hexdigest(), "versions": _versions(),
+                  "graines": {cle: {"entropie": str(graines.entropie), "spawn_key": [str(e)]} for cle, e in sorted(graines.derivees.items())},
+                  "preenregistrement": {"chemin": K.TEXTE, "sha256": K.EMPREINTE_TEXTE}, "tables_sha256": sha_tables}
+@@ -785,9 +884,8 @@
+     if cle and str(cle).strip():
+         mo.aucune_occurrence([ctx.sortie, ctx.travail], mo.Cle(str(cle).strip()))
+     horloge.consigner()
+-    if nettoyage:
+-        nettoyer(ctx.travail)
+-    return {"tables": {"chemin": f"diag/{ctx.run}/tables-lentilles-bbis.json", "sha256": sha_tables},
++    versement = nettoyer(ctx.travail, ctx.sortie, ctx.run) if nettoyage else None
++    return {"versement_du_travail": versement, "tables": {"chemin": f"diag/{ctx.run}/tables-lentilles-bbis.json", "sha256": sha_tables},
+             "manifeste": {"chemin": f"runs/{ctx.run}/manifeste.json", "sha256": sha_manifeste}, "morceaux": morceaux,
+             "lignes_proposees": [
+                 ligne_registre("ENTREES-LENTILLES-BBIS", entrees.course.chemin_e2, entrees.sha256_e2),
+@@ -872,6 +970,8 @@
+         else:
+             ctx = Contexte(a.travail, a.sortie, a.run, a.depot, a.registre_propre)
+             rendu = monter(ctx) if a.commande == "montage" else calculer(ctx, a.entrees, a.registre_bbis)
++            if a.commande == "calcul":   # cloisonnement : l'opérateur ne voit que fichiers et empreintes, jamais les noms des tableaux
++                rendu["morceaux"] = [{"fichier": m["fichier"], "sha256": m["sha256"]} for m in rendu["morceaux"]]
+     except Arret as e:
+         print(f"ARRÊT : {e}", file=sys.stderr)
+         return 3
+--- a/src/controle_ia/lentilles_sondes_bbis/entrees_v1.py
++++ b/src/controle_ia/lentilles_sondes_bbis/entrees_v1.py
+@@ -108,7 +108,20 @@
+     parties = scores[0].chemin.split("/")
+     if len(parties) != 3 or parties[0] != "diag" or parties[2] != K.NOM_E2 or not _RE_RUN.match(parties[1]):
+         raise FormeMalComprise("SCORES-BBIS : chemin d'une autre forme que diag/<run-bbis>/sondes-bbis.json")
+-    return CourseBbis(parties[1], scores[0].chemin, scores[0].sha256, lignes["VERDICT-BBIS"][-1].heure, scores[0].heure)
++    return CourseBbis(parties[1], scores[0].chemin, scores[0].sha256, min(l.heure for l in lignes["VERDICT-BBIS"]), scores[0].heure)
++
++
++def exiger_scellement_avant_verdict(registre_propre: str | Path, course: CourseBbis) -> None:
++    """Liste d'arrêt, première ligne : « `VERDICT-BBIS` déjà présente à l'inscription de `SCELLEMENT-LENTILLES-BBIS` » : rien
++    ne part. La ligne `ABSENCE-VERDICT-LENTILLES-BBIS` (relevé de la mère, plan, point 1 (a)) existe, et elle comme la ligne de
++    scellement sont strictement antérieures à la première ligne `VERDICT-BBIS` (heures du registre, même format)."""
++    lignes = lignes_par_cle(registre_propre, ("SCELLEMENT-LENTILLES-BBIS", "ABSENCE-VERDICT-LENTILLES-BBIS"))
++    if not lignes["ABSENCE-VERDICT-LENTILLES-BBIS"] or not lignes["SCELLEMENT-LENTILLES-BBIS"]:
++        raise Refus("ABSENCE-VERDICT-LENTILLES-BBIS ou SCELLEMENT-LENTILLES-BBIS absente du registre propre : rien ne part")
++    derniere = max(l.heure for c in lignes.values() for l in c)
++    if not derniere < course.heure_verdict:
++        raise Refus("VERDICT-BBIS déjà présente à l'inscription du scellement ou du relevé d'absence : texte exposé ; rien ne "
++                    "part ; nœud")
+ 
+ 
+ # --- chemins : quatre fichiers, et eux seuls -----------------------------------------------------------------------------------
+@@ -386,6 +399,7 @@
+     registre ; vérifie les empreintes (compagnons, ligne `SCORES-BBIS`, `fichier_sondes.sha256`) ; rend les sondes."""
+     exiger_registre_propre(registre_propre)
+     course = exiger_scores_et_verdict(registre_bbis)
++    exiger_scellement_avant_verdict(registre_propre, course)
+     racine, ch = Path(racine), chemins_permis(course.run)
+     if ch["e2"] != course.chemin_e2:
+         raise FormeMalComprise("chemin de E-2 différent de celui de SCORES-BBIS")
+@@ -422,6 +436,7 @@
+     d'eux seuls : aucun autre contenu de la branche des données n'est téléchargé. Refusé avant `VERDICT-BBIS`."""
+     exiger_registre_propre(registre_propre)
+     course = exiger_scores_et_verdict(registre_bbis)
++    exiger_scellement_avant_verdict(registre_propre, course)
+     destination = Path(destination)
+     clone = destination / "clone-sans-contenus"
+     if clone.exists():
+--- a/tests/lentilles_sondes_bbis_jouets_v1.py
++++ b/tests/lentilles_sondes_bbis_jouets_v1.py
+@@ -25,6 +25,24 @@
+ RUN = "20261119-000000-jouet-lentilles"
+ LARGEUR, VOCABULAIRE, NEURONES = 32, 384, 64
+ HEURE = "2026-11-19T00:00:00Z"
++HEURE_VERDICT = "2026-11-19T01:00:00Z"   # contre-lecture : VERDICT-BBIS postérieure au scellement (liste d'arrêt, ligne 1)
++CHEMIN_FICHE_CODE = "registres/code-lentilles-bbis/CODE-LENTILLES-BBIS-jouet.json"
++
++
++def ecrire_fiche_code(depot: Path, propre: Path, fichiers: dict | None = None) -> str:
++    """Contre-lecture : fiche jouet de la forme des fiches CODE- du registre, aux empreintes réelles du paquet ; la ligne
++    CODE-LENTILLES-BBIS du registre propre jouet est réécrite pour la citer."""
++    paquet = RACINE / "src" / "controle_ia" / "lentilles_sondes_bbis"
++    fiche = {"commit": "0" * 40, "contre_lecture": {"chemin": "docs/jouet.md", "sha256": "5" * 64}, "essais": {},
++             "fichiers": fichiers if fichiers is not None else {
++                 f"src/controle_ia/lentilles_sondes_bbis/{f.name}": sha(f.read_bytes()) for f in sorted(paquet.glob("*.py"))}}
++    p = Path(depot) / CHEMIN_FICHE_CODE
++    p.parent.mkdir(parents=True, exist_ok=True)
++    p.write_text(json.dumps(fiche, indent=1, sort_keys=True), encoding="utf-8")
++    e = sha(p.read_bytes())
++    lignes = [l for l in propre.read_text(encoding="utf-8").splitlines() if not l.startswith("| CODE-LENTILLES-BBIS |")]
++    propre.write_text("\n".join(lignes + [f"| CODE-LENTILLES-BBIS | {HEURE} | {CHEMIN_FICHE_CODE} | {e} |"]) + "\n", encoding="utf-8")
++    return e
+ FAUSSE_CLE = "hf_FAUSSECLEdEssaiQuiNeDoitParaitreNullePart0123456789"
+ DEPOT_ZH, DEPOT_CODE, DEPOT_DCLM, DEPOT_CHAT = "jouet/zh", "jouet/code", "jouet/dclm", "jouet/chat"
+ 
+@@ -48,7 +66,7 @@
+               f"| LIGNE-JAMAIS-LUE | {HEURE} | diag/secret/verdict.json | {'2' * 64} |"]
+     lignes += [f"| SCORES-BBIS | {HEURE} | diag/{run}/sondes-bbis.json | {sha_e2} |"] * scores
+     if verdict:
+-        lignes.append(f"| VERDICT-BBIS | {HEURE} | docs/verdicts/verdict-jamais-lu.md | {'3' * 64} |")
++        lignes.append(f"| VERDICT-BBIS | {HEURE_VERDICT} | docs/verdicts/verdict-jamais-lu.md | {'3' * 64} |")
+     bbis.write_text("\n".join(lignes) + "\n", encoding="utf-8")
+     propre = dossier / "lecture-sondes-bbis-par-lentilles-v1.md"
+     chemins = {"SCELLEMENT-LENTILLES-BBIS": (K.TEXTE, K.EMPREINTE_TEXTE)}
+@@ -369,6 +387,7 @@
+     transport = TransportSimule(fichiers, a_porte)
+     s = construire_sondes(tmp / "entrees", formes=formes, echelles=echelles)
+     bbis, propre = ecrire_registres(tmp / "registres", s.sha_e2, verdict=verdict)
++    ecrire_fiche_code(voisin.depot, propre)
+     ctx = la.Contexte(tmp / "travail", tmp / "sortie", RUN, voisin.depot, propre, r, transport, {K.NOM_CLE: FAUSSE_CLE})
+     return SimpleNamespace(ctx=ctx, reglages=r, transport=transport, registre_bbis=bbis, registre_propre=propre, sondes=s,
+                            llama=llama, lentille=lentille, voisin=voisin, entrees=tmp / "entrees", gardes=gardes, tmp=tmp)
+--- a/tests/test_lentilles_sondes_bbis_procedure_v1.py
++++ b/tests/test_lentilles_sondes_bbis_procedure_v1.py
+@@ -225,11 +225,13 @@
+     (tmp_path / "autre").mkdir()
+     (tmp_path / "autre" / "precieux.txt").write_text("à garder")
+     with pytest.raises(Arret, match="rien n'est supprimé"):
+-        la.nettoyer(tmp_path / "autre")
++        la.nettoyer(tmp_path / "autre", tmp_path / "sortie", J.RUN)
+     assert (tmp_path / "autre" / "precieux.txt").exists()
+     (tmp_path / "autre" / la.MARQUE).write_text("x")
+-    la.nettoyer(tmp_path / "autre")
++    v = la.nettoyer(tmp_path / "autre", tmp_path / "sortie", J.RUN)
+     assert not (tmp_path / "autre").exists()
++    assert (tmp_path / "sortie" / f"versement/{J.RUN}/travail-fin/fichiers/precieux.txt").read_text() == "à garder"
++    assert verifier(tmp_path / "sortie" / v["chemin"]) == v["sha256"]
+ 
+ 
+ # --- bout en bout sur le Llama miniature et la fausse lentille -----------------------------------------------------------------------------------
+--- /dev/null
++++ b/tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v1.py
+@@ -0,0 +1,211 @@
++"""Essais des corrections demandées par la contre-lecture du code de la lecture des sondes de l'étape B bis par la lentille
++publique (cas sain et artefact pour chaque garde neuve, R5), et des gardes dont le retrait n'était vu par aucun essai."""
++from __future__ import annotations
++
++import json
++import sys
++from pathlib import Path
++
++import numpy as np
++import pytest
++
++torch = pytest.importorskip("torch")
++pytest.importorskip("transformers")
++pytest.importorskip("safetensors")
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++import lentilles_sondes_bbis_jouets_v1 as J  # noqa: E402
++from controle_ia.lentilles_sondes_bbis import constantes_v1 as K  # noqa: E402
++from controle_ia.lentilles_sondes_bbis import entrees_v1 as en  # noqa: E402
++from controle_ia.lentilles_sondes_bbis import lanceur_v1 as la  # noqa: E402
++from controle_ia.lentilles_sondes_bbis.constantes_v1 import Arret, FormeMalComprise, Refus  # noqa: E402
++from controle_ia.scellement import verifier  # noqa: E402
++
++
++# --- fiche CODE-LENTILLES-BBIS ------------------------------------------------------------------------------------------------------
++def _ligne(propre):
++    return en.exiger_registre_propre(propre)["CODE-LENTILLES-BBIS"]
++
++
++def test_fiche_code_saine(tmp_path):
++    _, propre = J.ecrire_registres(tmp_path / "r")
++    J.ecrire_fiche_code(tmp_path / "depot", propre)
++    rendu = la.exiger_fiche_code(tmp_path / "depot", _ligne(propre))
++    assert rendu["fiche"] == J.CHEMIN_FICHE_CODE
++
++
++def test_fiche_code_absente_ou_d_une_autre_empreinte_refus(tmp_path):
++    _, propre = J.ecrire_registres(tmp_path / "r")
++    with pytest.raises(Refus, match="absente ou d'une autre empreinte"):          # ligne jouet sans fiche
++        la.exiger_fiche_code(tmp_path / "depot", _ligne(propre))
++    J.ecrire_fiche_code(tmp_path / "depot", propre)
++    p = tmp_path / "depot" / J.CHEMIN_FICHE_CODE
++    p.write_text(p.read_text() + " ")
++    with pytest.raises(Refus, match="absente ou d'une autre empreinte"):
++        la.exiger_fiche_code(tmp_path / "depot", _ligne(propre))
++
++
++def test_fiche_code_module_d_une_autre_empreinte_ou_absent_refus(tmp_path):
++    _, propre = J.ecrire_registres(tmp_path / "r")
++    paquet = J.RACINE / "src" / "controle_ia" / "lentilles_sondes_bbis"
++    fichiers = {f"src/controle_ia/lentilles_sondes_bbis/{f.name}": J.sha(f.read_bytes()) for f in paquet.glob("*.py")}
++    fichiers["src/controle_ia/lentilles_sondes_bbis/lecture_v1.py"] = "6" * 64
++    J.ecrire_fiche_code(tmp_path / "depot", propre, fichiers)
++    with pytest.raises(Refus, match="lecture_v1.py : empreinte"):
++        la.exiger_fiche_code(tmp_path / "depot", _ligne(propre))
++    del fichiers["src/controle_ia/lentilles_sondes_bbis/lecture_v1.py"]
++    J.ecrire_fiche_code(tmp_path / "depot", propre, fichiers)
++    with pytest.raises(Refus, match="lecture_v1.py : empreinte"):
++        la.exiger_fiche_code(tmp_path / "depot", _ligne(propre))
++
++
++def test_fiche_code_d_une_autre_forme_refus(tmp_path):
++    _, propre = J.ecrire_registres(tmp_path / "r")
++    J.ecrire_fiche_code(tmp_path / "depot", propre)
++    p = tmp_path / "depot" / J.CHEMIN_FICHE_CODE
++    fiche = json.loads(p.read_text())
++    del fiche["contre_lecture"]
++    p.write_text(json.dumps(fiche))
++    lignes = [l for l in propre.read_text().splitlines() if not l.startswith("| CODE-LENTILLES-BBIS |")]
++    propre.write_text("\n".join(lignes + [f"| CODE-LENTILLES-BBIS | {J.HEURE} | {J.CHEMIN_FICHE_CODE} | {J.sha(p.read_bytes())} |"]) + "\n")
++    with pytest.raises(Refus, match="autre forme"):
++        la.exiger_fiche_code(tmp_path / "depot", _ligne(propre))
++
++
++def test_montage_sans_fiche_code_refus_avant_toute_requete(tmp_path):
++    m = J.monde(tmp_path)
++    lignes = [l for l in m.registre_propre.read_text().splitlines() if not l.startswith("| CODE-LENTILLES-BBIS |")]
++    m.registre_propre.write_text("\n".join(lignes + [f"| CODE-LENTILLES-BBIS | {J.HEURE} | registres/absente.json | {'7' * 64} |"]) + "\n")
++    with pytest.raises(Refus, match="CODE-LENTILLES-BBIS"):
++        la.monter(m.ctx)
++    assert not m.transport.appels
++    assert not (tmp_path / "travail").exists()
++
++
++# --- scellement antérieur au verdict (liste d'arrêt, ligne 1) ----------------------------------------------------------------------------
++def test_verdict_anterieur_au_scellement_ou_relevé_d_absence_manquant_refus(tmp_path):
++    w = J.monde_entrees(tmp_path)
++    en.ouvrir_entrees(w.racine, w.registre_bbis, w.registre_propre, J.LARGEUR)                # cas sain : verdict postérieur
++    texte = w.registre_bbis.read_text().replace(J.HEURE_VERDICT, "2026-11-18T23:00:00Z")
++    w.registre_bbis.write_text(texte)
++    with pytest.raises(Refus, match="déjà présente"):
++        en.ouvrir_entrees(w.racine, w.registre_bbis, w.registre_propre, J.LARGEUR)
++    _, propre = J.ecrire_registres(tmp_path / "r2", propres=("SCELLEMENT-LENTILLES-BBIS", "GO-LENTILLES-BBIS", "CODE-LENTILLES-BBIS"))
++    with pytest.raises(Refus, match="ABSENCE-VERDICT"):
++        en.exiger_scellement_avant_verdict(propre, en.exiger_scores_et_verdict(J.ecrire_registres(tmp_path / "r3")[0]))
++
++
++# --- gardes des entrées dont le retrait n'était vu par aucun essai -----------------------------------------------------------------
++def _e2(w):
++    return Path(w.racine) / f"diag/{J.RUN_BBIS}/sondes-bbis.json"
++
++
++def _reecrire_e2(w, changer):
++    p = _e2(w)
++    doc = json.loads(p.read_text())
++    changer(doc)
++    p.write_text(json.dumps(doc))
++    J.compagnon(p)
++    bbis, propre = J.ecrire_registres(Path(w.racine).parent / "reg-neuf", J.sha(p.read_bytes()))
++    J.ecrire_fiche_code(Path(w.racine).parent / "depot-neuf", propre)
++    return bbis, propre
++
++
++@pytest.mark.parametrize("changer, motif", [
++    (lambda d: d.__setitem__("run_id", "autre-course"), "run_id"),
++    (lambda d: d["fichier_sondes"].__setitem__("fichier", "donnees/autre/sondes-bbis.npz"), "fichier_sondes.fichier"),
++    (lambda d: d["sources"]["P-S75"]["e0"].__setitem__("cellule", "P-S50"), "cellule ou pli_lu"),
++    (lambda d: d["sources"]["P-S75"]["e0"].__setitem__("pli_lu", 1), "cellule ou pli_lu"),
++])
++def test_entrees_champs_de_concordance_artefacts_arret(tmp_path, changer, motif):
++    w = J.monde_entrees(tmp_path)
++    bbis, propre = _reecrire_e2(w, changer)
++    with pytest.raises(FormeMalComprise, match=motif):
++        en.ouvrir_entrees(w.racine, bbis, propre, J.LARGEUR)
++
++
++def test_scellement_qui_ne_cite_pas_ce_texte_refus(tmp_path):
++    _, propre = J.ecrire_registres(tmp_path / "r")
++    propre.write_text(propre.read_text().replace(K.EMPREINTE_TEXTE, "8" * 64))
++    with pytest.raises(Refus, match="ne cite pas le texte"):
++        en.exiger_registre_propre(propre)
++
++
++def test_chemin_de_scores_bbis_autre_que_e2_attendu_arret(tmp_path):
++    w = J.monde_entrees(tmp_path)
++    texte = w.registre_bbis.read_text().replace(f"diag/{J.RUN_BBIS}/sondes-bbis.json", "diag/autre-course/sondes-bbis.json")
++    w.registre_bbis.write_text(texte)
++    with pytest.raises(Arret):
++        en.ouvrir_entrees(w.racine, w.registre_bbis, w.registre_propre, J.LARGEUR)
++
++
++# --- versement avant le nettoyage et à l'arrêt ; sorties hors du dossier de travail ------------------------------------------------
++def test_sortie_dans_le_dossier_de_travail_refus(tmp_path):
++    m = J.monde(tmp_path)
++    for sortie in (tmp_path / "travail" / "sortie", tmp_path / "travail"):
++        with pytest.raises(Arret, match="emboîtés"):
++            la.Contexte(tmp_path / "travail", sortie, J.RUN, m.ctx.racine_depot, m.registre_propre)
++    with pytest.raises(Arret, match="emboîtés"):
++        la.Contexte(tmp_path / "sortie" / "travail", tmp_path / "sortie", J.RUN, m.ctx.racine_depot, m.registre_propre)
++
++
++def test_calcul_verse_le_travail_avant_de_le_supprimer(tmp_path):
++    m = J.monde(tmp_path)
++    la.monter(m.ctx)
++    rendu = la.calculer(m.ctx, m.entrees, m.registre_bbis)
++    v = rendu["versement_du_travail"]
++    inventaire = json.loads((tmp_path / "sortie" / v["chemin"]).read_text())
++    assert verifier(tmp_path / "sortie" / v["chemin"]) == v["sha256"]
++    noms = {f["chemin"] for f in inventaire["fichiers"]}
++    assert "jetons-gardes.json" in noms and any(n.startswith("tenseurs/") for n in noms)
++    assert "jetons-gardes.json" in inventaire["copies"] and not any(c.startswith(("tenseurs", "lentille", "hf")) for c in inventaire["copies"])
++    copie = tmp_path / "sortie" / f"versement/{J.RUN}/travail-fin/fichiers/jetons-gardes.json"
++    verifier(copie)
++    assert not (tmp_path / "sortie" / f"versement/{J.RUN}/travail-fin/fichiers/tenseurs").exists()
++    assert not (tmp_path / "travail").exists()
++    for p in (tmp_path / "sortie").rglob("*"):
++        if p.is_file():
++            assert J.FAUSSE_CLE.encode() not in p.read_bytes(), p
++
++
++def test_arret_en_cours_de_calcul_verse_ce_qui_existe_sans_rien_supprimer(tmp_path):
++    m = J.monde(tmp_path)
++    la.monter(m.ctx)
++    appels = {"n": 0}
++
++    def disque(chemin):
++        appels["n"] += 1
++        libre = 10 ** 12 if appels["n"] < 4 else 0                      # l'espace manque après la première direction
++        return la.shutil._ntuple_diskusage(10 ** 12, 0, libre)
++    m.ctx.mesure_disque = disque
++    m.reglages.disque_calcul = 10 ** 9
++    with pytest.raises(Arret, match="1 Go exigés"):
++        la.calculer(m.ctx, m.entrees, m.registre_bbis)
++    assert (tmp_path / "travail" / "tenseurs").exists()                  # rien n'est supprimé
++    arret = tmp_path / "sortie" / f"versement/{J.RUN}/calcul-interrompu/arret.json"
++    verifier(arret)
++    lu = json.loads(arret.read_text())
++    assert "1 Go exigés" in lu["motif"] and lu["morceaux"]
++    for morceau in lu["morceaux"]:
++        verifier(arret.parent / morceau["fichier"])
++    verifier(tmp_path / "sortie" / lu["travail"]["chemin"])
++
++
++def test_refus_avant_le_depart_du_calcul_ne_verse_rien(tmp_path):
++    m = J.monde(tmp_path)
++    la.monter(m.ctx)
++    bbis, _ = J.ecrire_registres(tmp_path / "sans-verdict", m.sondes.sha_e2, verdict=False)
++    with pytest.raises(Refus):
++        la.calculer(m.ctx, m.entrees, bbis)
++    assert not (tmp_path / "sortie" / "versement").exists()
++
++
++def test_ligne_de_commande_du_calcul_n_imprime_pas_les_noms_des_tableaux(tmp_path, capsys, monkeypatch):
++    rendu = {"tables": {}, "morceaux": [{"fichier": "x-000.npz", "sha256": "9" * 64, "tableaux": ["scores__P-S25__e0__sonde__q__publique"]}]}
++    monkeypatch.setattr(la, "calculer", lambda *a, **k: rendu)
++    monkeypatch.setattr(la, "Contexte", lambda *a, **k: None)
++    assert la.principal(["calcul", "--travail", str(tmp_path / "t"), "--sortie", str(tmp_path / "s"), "--run", J.RUN,
++                         "--registre-propre", str(tmp_path / "r.md"), "--entrees", str(tmp_path), "--registre-bbis",
++                         str(tmp_path / "b.md")]) == 0
++    sortie = capsys.readouterr().out
++    assert "x-000.npz" in sortie and "scores__" not in sortie

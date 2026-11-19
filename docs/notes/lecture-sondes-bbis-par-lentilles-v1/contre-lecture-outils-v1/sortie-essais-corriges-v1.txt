@@ -1,0 +1,57 @@
+........................................................................ [ 26%]
+...................................................F.................... [ 52%]
+...............F.......................s................................ [ 78%]
+...........................................................              [100%]
+=================================== FAILURES ===================================
+________ test_notice_versee_de_la_lentille_a_l_identifiant_git_du_texte ________
+
+    def test_notice_versee_de_la_lentille_a_l_identifiant_git_du_texte():
+>       notice = (J.RACINE / "docs/sources/neuron-lens-lecture-20261113/huggingface/neuronpedia-llama3.1-8b-it-NOTICE.txt").read_bytes()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_lentilles_sondes_bbis_montage_v1.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/7344498a-9e3b-55a8-9388-941e130beae8/scratchpad/opus-contre-le...lentille-publique/corrige/docs/sources/neuron-lens-lecture-20261113/huggingface/neuronpedia-llama3.1-8b-it-NOTICE.txt')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/7344498a-9e3b-55a8-9388-941e130beae8/scratchpad/opus-contre-lecture-lentille-publique/corrige/docs/sources/neuron-lens-lecture-20261113/huggingface/neuronpedia-llama3.1-8b-it-NOTICE.txt'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+___________ test_correctifs_du_texte_presents_avec_leurs_empreintes ____________
+
+    def test_correctifs_du_texte_presents_avec_leurs_empreintes():
+        for chemin, attendue in K.CORRECTIFS:
+>           assert mo.sha256_fichier(J.RACINE / chemin) == attendue
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_lentilles_sondes_bbis_montage_v1.py:371: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/7344498a-9e3b-55a8-9388-941e130beae8/scratchpad/opus-contre-lecture-lentille-publique/corrige/docs/notes/neuron-lens-v1/correctifs/lenses-neuronpedia-llama-v2.diff')
+
+    def sha256_fichier(chemin: Path) -> str:
+        h = hashlib.sha256()
+>       with open(chemin, "rb") as f:
+             ^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/7344498a-9e3b-55a8-9388-941e130beae8/scratchpad/opus-contre-lecture-lentille-publique/corrige/docs/notes/neuron-lens-v1/correctifs/lenses-neuronpedia-llama-v2.diff'
+
+src/controle_ia/lentilles_sondes_bbis/montage_v1.py:515: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_lentilles_sondes_bbis_montage_v1.py::test_notice_versee_de_la_lentille_a_l_identifiant_git_du_texte
+FAILED tests/test_lentilles_sondes_bbis_montage_v1.py::test_correctifs_du_texte_presents_avec_leurs_empreintes
+2 failed, 272 passed, 1 skipped in 514.57s (0:08:34)
