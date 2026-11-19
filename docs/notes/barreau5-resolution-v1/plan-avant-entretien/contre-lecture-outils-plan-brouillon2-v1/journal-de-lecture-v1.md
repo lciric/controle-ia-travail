@@ -21,3 +21,4 @@ Pièce de travail du contre-lecteur, tenue au fil de la lecture (registre « qui
 - docs/notes/barreau5-resolution-v1/plan-avant-entretien/etat-a-l-arret-quota-fable-20261119-1440Z/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-brouillon1.md (entier ; empreinte vérifiée c3e38ad6…)
 
 Précision de la mère reçue en cours de travail : dans la réponse finale, aucun nombre de résultat de l'étape B bis ni d'une expérience close ; renvois par chemin et ligne seulement. La contre-lecture sur disque cite ce qu'il faut pour juger.
+- Incident : une sortie de commande trop longue (lecture de la note 01, l. 140-380) a été déposée par l'outil sous /root/.claude/projects/… ; fichier NON ouvert (interdit) ; relu depuis le dépôt par morceaux.
