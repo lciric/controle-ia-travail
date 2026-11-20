@@ -1,0 +1,45 @@
+urllib3.exceptions.SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1035)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/requests/adapters.py", line 696, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/urllib3/connectionpool.py", line 847, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/urllib3/util/retry.py", line 555, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='console.vast.ai', port=443): Max retries exceeded with url: /api/v0/users/current (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1035)')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/bin/vastai", line 6, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/vastai/cli/main.py", line 210, in main
+    run_command(args)
+    ~~~~~~~~~~~^^^^^^
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/vastai/cli/main.py", line 217, in run_command
+    res = args.func(args)
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/vastai/cli/commands/billing.py", line 541, in show__user
+    user_blob = billing_api.show_user(client)
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/vastai/api/billing.py", line 236, in show_user
+    r = client.get("/users/current")
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/vastai/api/client.py", line 218, in get
+    return self._request('GET', url, headers, json_data, timeout=timeout)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/vastai/api/client.py", line 198, in _request
+    r = session.send(prep, timeout=effective_timeout)
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/requests/sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+  File "/tmp/claude-0/-home-user-controle-ia-travail/4d216d9c-8888-53e9-a254-d89b28078848/scratchpad/venv-vast/lib/python3.13/site-packages/requests/adapters.py", line 727, in send
+    raise SSLError(e, request=request)
+requests.exceptions.SSLError: HTTPSConnectionPool(host='console.vast.ai', port=443): Max retries exceeded with url: /api/v0/users/current (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1035)')))
