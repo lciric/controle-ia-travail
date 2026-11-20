@@ -1,0 +1,80 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/juge-selection/criteres-v4/lecteur_par_programme_cartes_v1.py	2026-11-20 01:50:48.693292783 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/227b647d-2ece-5654-bf04-8493b3ed2f19/scratchpad/redacteur-juge-v5/lecteur_par_programme_cartes_v2.py	2026-11-20 02:20:02.907417859 +0000
+@@ -1,6 +1,11 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+-"""Lecteur par programme des cartes — témoin sans famille pour le critère D et pour la voie — v1.
++"""Lecteur par programme des cartes — témoin sans famille pour le critère D et pour la voie — v2.
++
++v2 (correction C5 de la contre-lecture ee578a61…) : les termes du « oui » sont cherchés dans le
++texte d'où les termes du « non » ont été retirés (« ne pas adopter », « ne pas retenir »,
++« garder la base » ne comptent plus pour un « oui ») ; le rapport compte les valeurs résiduelles.
++Remplace lecteur_par_programme_cartes_v1.py (f656bd52…), gardé sans modification (règle R12).
+ 
+ Ce lecteur n'a pas de famille : c'est une règle de structure, écrite sans lire une carte. Il
+ sert de TÉMOIN aux deux lecteurs (audit de symétrie, recommandation 2), jamais d'arbitre : il ne
+@@ -15,7 +20,9 @@
+   - la voie (I, P, N ou null) et la sous-strate, par le nombre de termes DISTINCTS d'un lexique
+     fixe présents dans les champs désignés ; un terme répété ne compte qu'une fois, pour qu'une
+     carte longue ne pèse pas plus qu'une brève.
+-« null » veut dire indécidable : jamais une valeur par défaut.
++« null » veut dire indécidable : le champ est vide, ou deux voies font jeu égal. Faute de tout
++terme, la règle rend la voie N et D = 0 : ce sont ses valeurs résiduelles, lisibles carte par
++carte (`non_nomme` et `oui_nomme` faux, `termes_distincts` tous nuls) et comptées au rapport.
+ 
+ Il ne lit d'une carte que `contenu` (format « fiches ») ou les champs d'une sortie du masque de
+ style (format « masque »). Jamais `meta`. Sa sortie ne porte aucun texte de carte.
+@@ -29,7 +36,7 @@
+ import sys
+ import unicodedata
+ 
+-VERSION = "lecteur_par_programme_cartes_v1"
++VERSION = "lecteur_par_programme_cartes_v2"
+ CLES_CONFIGURATION = {"champ_refutation", "champs_voie", "hors_choix"}
+ SEUIL_TERMES = 2
+ 
+@@ -142,6 +149,14 @@
+     return [t for t in termes if t in texte]
+ 
+ 
++def sans_les_termes(texte, termes):
++    """Retire du texte chaque terme donné, le plus long d'abord ; une barre tient sa place, pour
++    que deux morceaux voisins ne se recollent pas en un terme."""
++    for t in sorted(termes, key=lambda x: (-len(x), x)):
++        texte = texte.replace(t, " | ")
++    return texte
++
++
+ def lire_carte(champs, configuration):
+     ref, voie_champs = configuration["champ_refutation"], configuration["champs_voie"]
+     for k in [ref] + voie_champs:
+@@ -155,7 +170,9 @@
+         d, non, oui = None, None, None
+     else:
+         non = bool(presents(refutation, NON_NOMME))
+-        oui = bool(presents(tout, OUI_NOMME))
++        # C5 : un terme du « oui » pris dans une négation (« ne pas adopter », « garder la base »)
++        # n'est pas un « oui » ; on cherche donc le « oui » hors des termes du « non »
++        oui = bool(presents(sans_les_termes(tout, NON_NOMME), OUI_NOMME))
+         d = 2 if (non and oui) else (1 if (non or oui) else 0)
+     texte_voie = normaliser(" ".join(champs[k] for k in voie_champs))
+     comptes = {s: len(presents(texte_voie, LEXIQUES[s])) for s in ["I"] + SOUS_STRATES}
+@@ -187,6 +204,9 @@
+         "cartes": n,
+         "D": {str(k): sum(1 for c in sortie if c["D"] == k) for k in (0, 1, 2)},
+         "D_indecidable": sum(1 for c in sortie if c["D"] is None),
++        "D_zero_faute_de_tout_terme": sum(1 for c in sortie if c["D"] == 0),
++        "voie_N_faute_de_tout_terme": sum(1 for c in sortie if c["voie"] == "N"
++                                          and not any(c["termes_distincts"].values())),
+         "voie": {v: sum(1 for c in sortie if c["voie"] == v) for v in ("I", "N", "P")},
+         "voie_indecidable": sum(1 for c in sortie if c["voie"] is None),
+         "sous_strate_indecidable_en_voie_P": sum(1 for c in sortie if c["voie"] == "P" and c["sous_strate"] is None),
+@@ -207,7 +227,7 @@
+ 
+ 
+ def main(argv=None):
+-    p = argparse.ArgumentParser(description="Lecteur par programme (v1) : témoin sans famille pour D et la voie.")
++    p = argparse.ArgumentParser(description="Lecteur par programme (v2) : témoin sans famille pour D et la voie.")
+     p.add_argument("--cartes", required=True, nargs=2, metavar=("CHEMIN", "SHA256"))
+     p.add_argument("--forme", required=True, choices=["fiches", "masque"])
+     p.add_argument("--configuration", required=True, nargs=2, metavar=("CHEMIN", "SHA256"))

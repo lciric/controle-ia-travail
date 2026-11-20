@@ -1,0 +1,319 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/juge-selection/criteres-v4/essais_assemblage_selection_v4_v1.py	2026-11-20 01:50:48.688719888 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/227b647d-2ece-5654-bf04-8493b3ed2f19/scratchpad/redacteur-juge-v5/essais_assemblage_selection_v4_v2.py	2026-11-20 02:24:08.595426645 +0000
+@@ -1,10 +1,14 @@
+ # -*- coding: utf-8 -*-
+-"""Essais de assemblage_selection_v4_v1.py — cartes et lectures SYNTHÉTIQUES, inventées ici.
++"""Essais de assemblage_selection_v4_v2.py — cartes et lectures SYNTHÉTIQUES, inventées ici.
+ 
+ Aucune vraie carte, aucune vraie lecture. Pour chaque garde : un cas sain et un artefact (R5).
+-Lancement : python3 -B -m pytest -q essais_assemblage_selection_v4_v1.py
++v2 : essais des corrections C4 (baisse de D sous le masque), C6 (cas sain par construction ;
++graine 8 requalifiée ; item planté non nommé sans le plant) et C7 (garde 2 sous filtre du veto)
++de la contre-lecture ee578a61….
++Lancement : python3 -B -m pytest -q -p no:cacheprovider essais_assemblage_selection_v4_v2.py
+ """
+ import copy
++import functools
+ import hashlib
+ import json
+ import os
+@@ -14,7 +18,7 @@
+ import pytest
+ 
+ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+-import assemblage_selection_v4_v1 as A  # noqa: E402
++import assemblage_selection_v4_v2 as A  # noqa: E402
+ 
+ H1 = hashlib.sha256(b"criteres synthetiques").hexdigest()
+ FAMILLES = {"opus": "maison", "fable": "maison", "argon": "argon", "astra": "astra", "carbon": "carbon"}
+@@ -574,22 +578,87 @@
+ 
+ # ---------------------------------------------------------------- gardes par espèce : sain / artefact, deux sens
+ 
+-def _gardes(lf, lo, esp, m=None, n_perm=400):
++def _gardes(lf, lo, esp, m=None, n_perm=400, juges=None, **temoins):
+     m = m or manifeste(cartes_attendues=len(lf["cartes"]))
+-    a = jouer(lf, lo, m, esp)
++    a = jouer(lf, lo, m, esp, juges=juges)
+     vf, vo = A.valider_lecture(lf, "F", m), A.valider_lecture(lo, "O", m)
+-    return a, A.gardes_coeur(a, vf, vo, esp, FAMILLES, {"F": "fable", "O": "opus"}, H1, n_perm=n_perm)
++    return a, A.gardes_coeur(a, vf, vo, esp, FAMILLES, {"F": "fable", "O": "opus"}, H1, n_perm=n_perm, **temoins)
++
++
++def monde_equilibre(graine, profils=2):
++    """C6 — monde équilibré PAR CONSTRUCTION : dans chaque voie, chaque lignée reçoit les mêmes
++    réponses. Pour chaque strate et chaque profil de réponses tiré, cinq cartes, une par lignée,
++    portent ce profil chez F et le même profil voisin chez O ; les deux lecteurs les fusionnent,
++    de sorte que les cinq entrent ou n'entrent pas ensemble dans le nombre visé. La part de
++    variance entre groupes et tous les écarts de la garde 2 sont donc nuls, quelle que soit la graine."""
++    gen = np.random.Generator(np.random.PCG64(np.random.SeedSequence(graine)))
++    strates = [("I", None), ("N", None)] + [("P", s) for s in A.SOUS_STRATES]
++    cf, co, especes, n = [], [], {}, 0
++    for si, (voie, sous) in enumerate(strates):
++        for k in range(profils):
++            force = gen.random()
++            base = {it: ("oui" if gen.random() < force else "non") for it in A.ITEMS}
++            autre = {it: (r if gen.random() > 0.05 else ("non" if r == "oui" else "oui")) for it, r in base.items()}
++            for lignee in LIGNEES:
++                ident = f"e{n:03d}"
++                n += 1
++                cf.append(carte(ident, voie, sous, base, groupe=f"g-{si}-{k}"))
++                co.append(carte(ident, voie, sous, autre, groupe=f"g-{si}-{k}"))
++                especes[ident] = lignee
++    lf = {"lecteur": "F", "lignee": "fable", "independance": "je n'ai écrit ni les critères ni une carte", "cartes": cf, "veto": []}
++    lo = {"lecteur": "O", "lignee": "opus", "independance": "je n'ai écrit ni les critères ni une carte", "cartes": co, "veto": []}
++    return lf, lo, especes
++
++
++@pytest.mark.parametrize("graine", [7, 8, 11])
++def test_gardes_cas_sain_par_construction(graine):
++    # C6 : le cas sain de la règle R5. Aucune garde ne peut sonner, à aucune graine : ni celle du
++    # monde, ni celle des permutations (elle dérive de l'identifiant de la course, changé ici).
++    lf, lo, esp = monde_equilibre(graine)
++    m = manifeste(cartes_attendues=90, identifiant_course=f"course-equilibree-{graine}")
++    a, g = _gardes(lf, lo, esp, m)
++    assert g["retour_a_lazar_avant_adoption"] is False and g["items_nommes"] == [] and g["ecarts_forts"] == []
++    lus = 0
++    for niveau in ("lignee", "famille"):
++        for t in g["garde_1_items"][niveau]:
++            r = t["resultat"]
++            if r["lecture"] == "à lire":
++                lus += 1
++                assert r["part_de_variance_entre_groupes"] < 1e-12 and r["nomme"] is False
++    for t in g["garde_2_ecarts"]:
++        r = t["resultat"]
++        if r["lecture"] == "à lire":
++            lus += 1
++            assert abs(r["T"] if "T" in r else r["ecart_moyen_centre"]) < 1e-9
++            assert r["p"] == 1.0 and r["ecart_fort"] is False
++    assert lus >= 30                                  # l'essai n'est pas vide : des tests ont bien été lus
++    assert a["comptes"]["fusions"] == 18 and len(a["listes"]["nombre_vise"]) == 9
+ 
+ 
+ def test_gardes_cas_sain_rien_ne_se_declenche():
+-    # un monde sans effet d'espèce ; la graine 8 est un monde nul parmi d'autres (les graines 7 et 11
+-    # déclenchent par hasard : c'est le taux de faux déclenchement, mesuré par l'essai suivant)
++    # graine 8 choisie après coup parce qu'elle ne déclenche pas : sans valeur de preuve ; le cas sain
++    # est l'essai par construction et l'essai de taux
+     lf, lo, esp = monde(n=90, graine=8)
+     a, g = _gardes(lf, lo, esp)
+     assert g["retour_a_lazar_avant_adoption"] is False and g["items_nommes"] == [] and g["ecarts_forts"] == []
+     assert g["en_tete"][0] == A.PRINCIPE
+ 
+ 
++@functools.lru_cache(maxsize=None)
++def _monde_7_sans_plant():
++    """Le monde de graine 7, non retouché : ce que la garde 1 y nomme par hasard (C6)."""
++    lf, lo, esp = monde(n=90, graine=7)
++    _, g = _gardes(lf, lo, esp)
++    return frozenset(x["item"] for x in g["items_nommes"]), g["retour_a_lazar_avant_adoption"]
++
++
++def test_monde_7_sans_plant_sonne_deja_par_hasard():
++    # C6 : dans le monde 7 non retouché, la garde 1 nomme A2 (faux déclenchement) et rien d'autre ;
++    # le « retour à Lazar » y est donc vrai avant tout plant
++    nommes, retour = _monde_7_sans_plant()
++    assert nommes == {"A2"} and retour is True
++
++
+ def test_gardes_taux_de_faux_declenchement_sous_le_nul():
+     # trois familles de tests à 0,05 après Holm : au plus 0,15 environ ; borne d'essai large (8 sur 30)
+     n = 0
+@@ -608,6 +677,10 @@
+             c["items"]["B3"] = ("oui" if astra else "non") if sens == "plus" else ("non" if astra else "oui")
+     a, g = _gardes(lf, lo, esp)
+     assert {"item": "B3", "niveau": "lignee", "dans_le_rang": True} in g["items_nommes"]
++    # C6 : l'item planté n'est pas nommé sans le plant — c'est l'assertion qui porte
++    assert "B3" not in _monde_7_sans_plant()[0]
++    # C6 : le « retour à Lazar » est déjà vrai par hasard dans ce monde (item A2) : l'assertion
++    # ci-dessous est vide, gardée pour mémoire
+     assert g["retour_a_lazar_avant_adoption"] is True
+ 
+ 
+@@ -618,6 +691,156 @@
+             c["items"]["S3"] = "oui" if FAMILLES[esp[c["id"]]] == "maison" else "non"
+     a, g = _gardes(lf, lo, esp)
+     assert any(x["item"] == "S3" and x["niveau"] == "famille" for x in g["items_nommes"])
++    # C6 : l'item planté n'est pas nommé sans le plant ; le « retour à Lazar » de ce monde est déjà
++    # vrai par hasard (item A2) et n'est donc pas affirmé ici
++    assert "S3" not in _monde_7_sans_plant()[0]
++
++
++# ---------------------------------------------------------------- C7 : garde 2 sous filtre du veto
++
++MAISON_SANS_OBJET = ["famille des lecteurs", "lignée fable", "lignée opus"]
++
++
++def _objets(g, groupe):
++    return {t["objet"]: t["resultat"] for t in g["garde_2_ecarts"] if t["groupe"] == groupe}
++
++
++def test_c7_cas_sain_sans_filtre_ou_filtre_qui_ne_retire_pas_tout_le_test_reste():
++    lf, lo, esp = monde(n=90, graine=8)
++    # sans filtre : rien n'est sans objet
++    _, g = _gardes(lf, lo, esp, manifeste(cartes_attendues=90, filtre_veto="aucun"))
++    assert g["garde_2_sans_objet_par_construction"] == []
++    for groupe in MAISON_SANS_OBJET + ["lignée astra"]:
++        o = _objets(g, groupe)
++        assert "veto_depose_titulaires" not in o and o["entrees_par_veto"]["lecture"] != "sans objet par construction"
++    # filtre par lignée, titulaires de deux lignées : une carte Opus peut entrer par le lecteur Fable
++    _, g = _gardes(lf, lo, esp, manifeste(cartes_attendues=90, filtre_veto="lignee"))
++    assert g["garde_2_sans_objet_par_construction"] == []
++    # filtre par famille, mais un titulaire d'une autre famille : une carte de la maison peut entrer par lui
++    juge = [{"titulaire": "juge-0", "lignee": "argon", "veto": []}]
++    _, g = _gardes(lf, lo, esp, juges=juge)
++    assert g["garde_2_sans_objet_par_construction"] == []
++    assert A.groupe_sans_objet_au_veto("famille", ["opus"], ["fable", "argon"], FAMILLES) is False
++    assert A.groupe_sans_objet_au_veto("lignee", ["opus"], ["opus"], FAMILLES) is True
++    assert A.groupe_sans_objet_au_veto("aucun", ["opus"], ["opus"], FAMILLES) is False
++    with pytest.raises(A.Refus):
++        A.groupe_sans_objet_au_veto("famille", ["opus"], ["inconnue"], FAMILLES)
++
++
++def test_c7_artefact_sous_filtre_par_famille_le_test_est_sans_objet_et_remplace():
++    lf, lo, esp = monde(n=90, graine=8)
++    _, g = _gardes(lf, lo, esp)                                  # filtre « famille », deux lecteurs de la maison
++    assert g["garde_2_sans_objet_par_construction"] == MAISON_SANS_OBJET
++    for groupe in MAISON_SANS_OBJET:
++        o = _objets(g, groupe)
++        assert o["entrees_par_veto"]["lecture"] == "sans objet par construction"
++        assert "p" not in o["entrees_par_veto"] and "p_holm" not in o["entrees_par_veto"]   # hors de la correction
++        assert "veto_depose_titulaires" in o                     # lu à sa place
++    for groupe in ("lignée argon", "lignée astra", "lignée carbon"):
++        o = _objets(g, groupe)
++        assert "veto_depose_titulaires" not in o and o["entrees_par_veto"]["lecture"] != "sans objet par construction"
++    # la correction de Holm ne compte que les tests lus
++    lus = [t["resultat"] for t in g["garde_2_ecarts"] if t["resultat"]["lecture"] == "à lire"]
++    assert all("p_holm" in r for r in lus)
++    assert max(r["p_holm"] / r["p"] for r in lus) <= len(lus) + 1e-9
++
++
++def _sept_titulaires_de_la_maison(lf, lo, esp, choisir):
++    """Deux lecteurs et cinq juges, tous de la maison ; deux cartes chacun, choisies par `choisir`."""
++    cartes = choisir(sorted(esp))
++    lf["veto"] = [veto(cartes[0]), veto(cartes[1])]
++    lo["veto"] = [veto(cartes[2]), veto(cartes[3])]
++    return [{"titulaire": f"juge-{j}", "lignee": ["opus", "fable"][j % 2],
++             "veto": [veto(cartes[4 + 2 * j]), veto(cartes[5 + 2 * j])]} for j in range(5)]
++
++
++def test_c7_le_veto_tel_que_depose_est_lu_dans_les_deux_sens():
++    def maison(ids, esp):
++        return [c for c in ids if FAMILLES[esp[c]] == "maison"]
++
++    # artefact, sens « plus » : sept titulaires de la maison ne désignent que des cartes de la maison.
++    # Le filtre les retire toutes : sans C7, la garde lisait un zéro de construction et se taisait.
++    lf, lo, esp = monde(n=90, graine=8)
++    juges = _sept_titulaires_de_la_maison(lf, lo, esp, lambda ids: maison(ids, esp))
++    a, g = _gardes(lf, lo, esp, n_perm=2000, juges=juges)
++    assert a["veto"]["comptes"]["cartes_entrees"] == 0 and a["veto"]["comptes"]["retirees_par_le_filtre"] == 14
++    r = _objets(g, "famille des lecteurs")["veto_depose_titulaires"]
++    assert r["lecture"] == "à lire" and r["dans_la_liste"] == 14 and r["taille_de_la_liste"] == 14 and r["T"] > 0
++    assert {"groupe": "famille des lecteurs", "objet": "veto_depose_titulaires", "sens": "plus"} in g["ecarts_forts"]
++    assert g["retour_a_lazar_avant_adoption"] is True
++    # sens « moins » : ils ne désignent aucune carte de la maison ; l'écart est lu, de l'autre signe
++    lf, lo, esp = monde(n=90, graine=8)
++    juges = _sept_titulaires_de_la_maison(lf, lo, esp, lambda ids: [c for c in ids if FAMILLES[esp[c]] != "maison"])
++    _, g = _gardes(lf, lo, esp, juges=juges)
++    r = _objets(g, "famille des lecteurs")["veto_depose_titulaires"]
++    assert r["lecture"] == "à lire" and r["dans_la_liste"] == 0 and r["T"] < 0
++    # cas sain : ils désignent les cartes dans l'ordre des identifiants (deux de la maison sur cinq,
++    # comme dans la population) ; rien n'est fort sur le veto tel que déposé
++    lf, lo, esp = monde(n=90, graine=8)
++    juges = _sept_titulaires_de_la_maison(lf, lo, esp, lambda ids: ids)
++    _, g = _gardes(lf, lo, esp, juges=juges)
++    assert not [x for x in g["ecarts_forts"] if x["objet"] == "veto_depose_titulaires"]
++
++
++# ---------------------------------------------------------------- C4 : baisse de D sous le masque
++
++def _temoin(lf, d=2):
++    return {c["id"]: {"id": c["id"], "voie": c["voie"], "D": d} for c in lf["cartes"]}
++
++
++def test_c4_cas_sain_aucune_baisse_et_rien_ne_change_aux_gardes():
++    lf, lo, esp = monde(n=90, graine=8)
++    _, g0 = _gardes(lf, lo, esp)
++    assert g0["baisse_de_D_sous_le_masque"] is None            # non passée : dit en tête, jamais tu
++    assert any("NON RAPPORTÉE" in x for x in g0["en_tete"])
++    _, g = _gardes(lf, lo, esp, temoin_non_masque=_temoin(lf), temoin_masque=_temoin(lf))
++    b = g["baisse_de_D_sous_le_masque"]
++    assert not any("NON RAPPORTÉE" in x for x in g["en_tete"])
++    assert set(b["par_lignee"]) == set(LIGNEES)
++    for compte in list(b["par_lignee"].values()) + [b["famille_des_lecteurs"], b["autres"], b["toutes"]]:
++        assert compte["baisse"] == 0 and compte["part_baisse"] == 0.0 and compte["comparables"] == compte["cartes"]
++    assert b["famille_des_lecteurs"]["cartes"] == 36 and b["autres"]["cartes"] == 54 and b["toutes"]["cartes"] == 90
++    # descriptif : ni les tests, ni leurs graines, ni le retour à Lazar ne changent
++    for k in ("garde_1_items", "garde_2_ecarts", "items_nommes", "ecarts_forts", "retour_a_lazar_avant_adoption"):
++        assert g[k] == g0[k]
++
++
++def test_c4_artefact_baisse_plantee_dans_une_seule_lignee():
++    lf, lo, esp = monde(n=90, graine=8)
++    nm, ms = _temoin(lf), _temoin(lf)
++    for i in ms:
++        if esp[i] == "fable":
++            ms[i]["D"] = 1                                       # la coupe retire l'issue « non » : D baisse
++    _, g = _gardes(lf, lo, esp, temoin_non_masque=nm, temoin_masque=ms)
++    b = g["baisse_de_D_sous_le_masque"]
++    assert b["par_lignee"]["fable"]["part_baisse"] == 1.0 and b["par_lignee"]["fable"]["baisse"] == 18
++    for autre in ("opus", "argon", "astra", "carbon"):
++        assert b["par_lignee"][autre]["baisse"] == 0 and b["par_lignee"][autre]["part_baisse"] == 0.0
++    assert b["famille_des_lecteurs"]["part_baisse"] == pytest.approx(0.5) and b["autres"]["part_baisse"] == 0.0
++    # hausse, D devenu indécidable sous le masque, D indécidable sans masque : comptés à part
++    astra = [i for i in sorted(esp) if esp[i] == "astra"]
++    nm[astra[0]]["D"], ms[astra[1]]["D"], nm[astra[2]]["D"] = 1, None, None
++    _, g = _gardes(lf, lo, esp, temoin_non_masque=nm, temoin_masque=ms)
++    c = g["baisse_de_D_sous_le_masque"]["par_lignee"]["astra"]
++    assert (c["hausse"], c["devenu_indecidable_sous_le_masque"], c["indecidable_sans_masque"]) == (1, 1, 1)
++    assert c["comparables"] == 16 and c["baisse"] == 0
++
++
++def test_c4_refus_une_seule_sortie_carte_absente_ou_d_illisible():
++    lf, lo, esp = monde(n=90, graine=8)
++    _gardes(lf, lo, esp, n_perm=50, temoin_non_masque=_temoin(lf), temoin_masque=_temoin(lf))     # cas sain
++    with pytest.raises(A.Refus):
++        _gardes(lf, lo, esp, n_perm=50, temoin_masque=_temoin(lf))
++    with pytest.raises(A.Refus):
++        _gardes(lf, lo, esp, n_perm=50, temoin_non_masque=_temoin(lf))
++    court = _temoin(lf)
++    del court["s010"]
++    with pytest.raises(A.Refus):
++        _gardes(lf, lo, esp, n_perm=50, temoin_non_masque=_temoin(lf), temoin_masque=court)
++    faux = _temoin(lf)
++    faux["s010"]["D"] = 3
++    with pytest.raises(A.Refus):
++        _gardes(lf, lo, esp, n_perm=50, temoin_non_masque=faux, temoin_masque=_temoin(lf))
+ 
+ 
+ @pytest.mark.parametrize("haut", [True, False])
+@@ -749,6 +972,29 @@
+         assert A.main(["gardes", "--manifeste", *d["m"], "--criteres", d["crit"], "--lecture-f", *d["f"],
+                        "--lecture-o", *d["o"], "--assemblage", s, A.sha_fichier(s), "--especes", *d["e"],
+                        "--sortie", g]) == 0
++        with open(g, encoding="utf-8") as f:
++            sans = json.load(f)
++        assert sans["baisse_de_D_sous_le_masque"] is None and "NON RAPPORTÉE" in capsys.readouterr().out
++        # C4 : les deux sorties du lecteur par programme, passées à la commande `gardes`
++        lf, _, _ = monde()
++        cartes_t = [{"id": c["id"], "voie": c["voie"], "D": 2} for c in lf["cartes"]]
++        nm = _ecrire(tmp_path, "t-nm.json", {"piece": "lecteur", "forme_lue": "fiches", "cartes": cartes_t})
++        ms = _ecrire(tmp_path, "t-ms.json", {"piece": "lecteur", "forme_lue": "masque", "cartes": cartes_t})
++        base = ["gardes", "--manifeste", *d["m"], "--criteres", d["crit"], "--lecture-f", *d["f"],
++                "--lecture-o", *d["o"], "--assemblage", s, A.sha_fichier(s), "--especes", *d["e"]]
++        g2 = os.path.join(str(tmp_path), "g2.json")
++        assert A.main(base + ["--lecteur-programme-non-masque", *nm, "--lecteur-programme-masque", *ms,
++                              "--sortie", g2]) == 0
++        with open(g2, encoding="utf-8") as f:
++            avec = json.load(f)
++        assert avec["baisse_de_D_sous_le_masque"]["toutes"]["baisse"] == 0
++        assert avec["empreintes"]["lecteur_programme_masque"] == ms[1]
++        g3 = os.path.join(str(tmp_path), "g3.json")
++        # artefacts : une seule des deux sorties ; les deux sorties échangées (le sens s'inverserait)
++        assert A.main(base + ["--lecteur-programme-masque", *ms, "--sortie", g3]) == 2
++        assert A.main(base + ["--lecteur-programme-non-masque", *ms, "--lecteur-programme-masque", *nm,
++                              "--sortie", g3]) == 2
++        assert not os.path.exists(g3) and not os.path.exists(g3 + ".sha256")
+     finally:
+         A.gardes_coeur.__defaults__ = (old,)
+     assert os.path.exists(g + ".sha256")

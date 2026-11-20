@@ -1,0 +1,71 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/juge-selection/criteres-v4/essais_lecteur_par_programme_cartes_v1.py	2026-11-20 01:50:48.690365261 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/227b647d-2ece-5654-bf04-8493b3ed2f19/scratchpad/redacteur-juge-v5/essais_lecteur_par_programme_cartes_v2.py	2026-11-20 02:20:23.787418606 +0000
+@@ -1,8 +1,9 @@
+ # -*- coding: utf-8 -*-
+-"""Essais de lecteur_par_programme_cartes_v1.py — cartes SYNTHÉTIQUES, inventées ici ; aucune vraie carte.
++"""Essais de lecteur_par_programme_cartes_v2.py — cartes SYNTHÉTIQUES, inventées ici ; aucune vraie carte.
+ 
+ Un témoin pour le critère D et un témoin pour la voie ; pour chaque garde, un cas sain et un artefact (R5).
+-Lancement : python3 -B -m pytest -q essais_lecteur_par_programme_cartes_v1.py
++v2 : essais de la correction C5 (le « oui » pris dans une négation ; valeurs résiduelles comptées).
++Lancement : python3 -B -m pytest -q -p no:cacheprovider essais_lecteur_par_programme_cartes_v2.py
+ """
+ import json
+ import os
+@@ -11,7 +12,7 @@
+ import pytest
+ 
+ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+-import lecteur_par_programme_cartes_v1 as L  # noqa: E402
++import lecteur_par_programme_cartes_v2 as L  # noqa: E402
+ 
+ SENTINELLE = "ESPECE-SENTINELLE-NE-PAS-LIRE"
+ CONF = {"champ_refutation": "ce_qui_la_refuterait", "champs_voie": ["titre", "mecanisme"], "hors_choix": []}
+@@ -54,6 +55,47 @@
+     assert lire(c(mecanisme="RÉGLER le seuil.", refut="SINON : Désactiver le moulin."))["D"] == 2
+ 
+ 
++# ---------------------------------------------------------------- C5 : le « oui » pris dans une négation
++
++@pytest.mark.parametrize("phrase", [
++    "Si le bras ne bat pas le témoin, ne pas adopter.",
++    "Si l'écart est nul, ne pas retenir le module.",
++    "Sinon, garder la base.",
++])
++def test_c5_artefact_un_oui_dans_une_negation_ne_vaut_pas_un_oui(phrase):
++    # artefact : sous la v1, ces trois phrases rendaient D = 2 (contre-lecture ee578a61…, § 3)
++    r = lire(c(refut=phrase))
++    assert r["D"] == 1 and r["non_nomme"] is True and r["oui_nomme"] is False
++
++
++def test_c5_cas_sain_un_vrai_oui_a_cote_d_une_negation_reste_compte():
++    # cas sain : le « oui » écrit hors de la négation est toujours trouvé, dans le même champ ou ailleurs
++    assert lire(c(refut="Adopter le moulin si la farine double ; sinon ne pas adopter."))["D"] == 2
++    assert lire(c(mecanisme="Garder le moulin si la farine double.", refut="Sinon, garder la base."))["D"] == 2
++    assert lire(c(mecanisme="Retenir le moulin.", refut="Si l'écart est nul, ne pas retenir le module."))["D"] == 2
++
++
++def test_c5_sans_les_termes_retire_le_plus_long_d_abord_et_ne_recolle_rien():
++    assert "garder" not in L.sans_les_termes("sinon garder la base suffit", L.NON_NOMME)
++    assert "adopter" not in L.sans_les_termes("ne pas adopter", L.NON_NOMME)
++    # deux morceaux voisins d'un terme retiré ne se recollent pas en un terme du « oui »
++    assert L.presents(L.sans_les_termes("gar retrait der", L.NON_NOMME), L.OUI_NOMME) == []
++    assert L.sans_les_termes("un moulin tourne", L.NON_NOMME) == "un moulin tourne"
++
++
++def test_c5_valeurs_residuelles_dites_carte_par_carte_et_comptees():
++    sans_terme = lire(c(mecanisme="Une girouette oriente le moulin.", refut="Le vent tombe."))
++    assert sans_terme["D"] == 0 and sans_terme["voie"] == "N"                 # valeurs résiduelles de la règle
++    assert sans_terme["non_nomme"] is False and sans_terme["oui_nomme"] is False
++    assert not any(sans_terme["termes_distincts"].values())                  # « termes trouvés : aucun »
++    cartes = {"s-1": c(mecanisme="Une girouette oriente le moulin.", refut="Le vent tombe."),
++              "s-2": c(mecanisme="Un oubli.", refut="Sinon couper."),         # voie N avec un terme, D = 1
++              "s-3": c(refut="")}                                             # D indécidable, non résiduel
++    _, rapport = L.lire_tout(cartes, L.valider_configuration(dict(CONF)))
++    assert rapport["D_zero_faute_de_tout_terme"] == 1 and rapport["D_indecidable"] == 1
++    assert rapport["voie_N_faute_de_tout_terme"] == 2 and rapport["voie"]["N"] == 3
++
++
+ # ---------------------------------------------------------------- témoin de la voie
+ 
+ def test_voie_instrument():

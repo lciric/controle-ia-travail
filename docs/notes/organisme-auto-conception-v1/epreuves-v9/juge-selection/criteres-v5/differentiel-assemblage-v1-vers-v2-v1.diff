@@ -1,0 +1,233 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/juge-selection/criteres-v4/assemblage_selection_v4_v1.py	2026-11-20 01:50:48.674481826 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/227b647d-2ece-5654-bf04-8493b3ed2f19/scratchpad/redacteur-juge-v5/assemblage_selection_v4_v2.py	2026-11-20 02:22:04.507422208 +0000
+@@ -1,6 +1,17 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+-"""Assemblage de deux lectures selon les critères de choix des cartes v4 — v1.
++"""Assemblage de deux lectures selon les critères de choix des cartes v4 — v2.
++
++v2 (corrections de la contre-lecture ee578a61…), pour les critères v5 ; seule la commande
++`gardes` change, l'assemblage et les tiers sont ceux de la v1 :
++  C4  `gardes` reçoit les deux sorties du lecteur par programme (cartes non masquées, cartes
++      masquées) et rapporte, par espèce et pour la famille des lecteurs, la part des cartes dont
++      le D du lecteur par programme baisse sous le masque ; descriptif, ne déclenche rien ;
++  C7  garde 2 : sous un filtre du veto, la présence d'un groupe que le filtre retire parmi les
++      cartes entrées par veto est nulle par construction ; ce test est « sans objet par
++      construction », hors de la correction de Holm, et la garde lit à sa place le veto tel
++      que déposé par les titulaires (même rang dans la suite des graines).
++Remplace assemblage_selection_v4_v1.py (258d5de7…), gardé sans modification (règle R12).
+ 
+ Ce programme ne tranche rien : il assemble, à la lettre des critères v4, ce que deux lecteurs
+ ont déposé, et propose ce qui va à l'épreuve. Ce sont les essais qui tranchent (N-058).
+@@ -24,7 +35,7 @@
+ 
+ import numpy as np
+ 
+-VERSION = "assemblage_selection_v4_v1"
++VERSION = "assemblage_selection_v4_v2"
+ VOIES = ["I", "N", "P"]
+ SOUS_STRATES = ["a", "b", "c1", "c2", "c3", "d", "e"]
+ CAS = ["X1", "X2", "X3", "X4", "X5"]
+@@ -869,7 +880,74 @@
+     return tests
+ 
+ 
+-def gardes_coeur(assemblage, lf, lo, especes, familles, lignees_lecteurs, h1, n_perm=N_PERMUTATIONS):
++def retire_par_le_filtre(filtre, lignee_carte, lignee_titulaire, familles):
++    """Le filtre du veto retire-t-il, pour ce titulaire, toute carte de cette lignée ?"""
++    if filtre == "famille":
++        return familles[lignee_carte] == familles[lignee_titulaire]
++    if filtre == "lignee":
++        return lignee_carte == lignee_titulaire
++    return False
++
++
++def groupe_sans_objet_au_veto(filtre, lignees_du_groupe, lignees_des_titulaires, familles):
++    """C7 : un groupe est retiré par le filtre si, pour CHAQUE titulaire, le filtre retire toute
++    carte de CHACUNE de ses lignées. Sa présence parmi les cartes entrées par veto est alors
++    nulle par construction : le test lirait le filtre, non les lecteurs."""
++    if filtre == "aucun" or not lignees_des_titulaires or not lignees_du_groupe:
++        return False
++    for lt in lignees_des_titulaires:
++        if lt not in familles:
++            raise Refus("gardes : lignée d'un titulaire hors de la table des familles")
++    return all(retire_par_le_filtre(filtre, x, lt, familles)
++               for x in lignees_du_groupe for lt in lignees_des_titulaires)
++
++
++def baisse_de_d_sous_le_masque(ids, lignee, familles, famille_des_lecteurs, non_masque, masque):
++    """C4 : par espèce et pour la famille des lecteurs, la part des cartes notées dont le D du
++    lecteur par programme baisse entre la forme non masquée et la forme masquée. Descriptif :
++    aucun test, aucun seuil, ne déclenche rien. Une carte notée absente d'une des deux sorties
++    est un refus : rien n'est deviné."""
++    for role, t in (("non masquée", non_masque), ("masquée", masque)):
++        manquantes = [i for i in ids if i not in t]
++        if manquantes:
++            raise Refus(f"gardes : {len(manquantes)} carte(s) notée(s) absente(s) de la sortie {role} du "
++                        "lecteur par programme — refus, rien n'est deviné")
++        for i in ids:
++            d = t[i]["D"]
++            if not (d is None or (not isinstance(d, bool) and d in (0, 1, 2))):
++                raise Refus(f"gardes : D hors de 0, 1, 2 ou null dans la sortie {role} du lecteur par programme")
++
++    def compter(selection):
++        c = {"cartes": len(selection), "comparables": 0, "baisse": 0, "hausse": 0, "egal": 0,
++             "devenu_indecidable_sous_le_masque": 0, "indecidable_sans_masque": 0}
++        for i in selection:
++            a, b = non_masque[i]["D"], masque[i]["D"]
++            if a is None:
++                c["indecidable_sans_masque"] += 1
++            elif b is None:
++                c["devenu_indecidable_sous_le_masque"] += 1
++            else:
++                c["comparables"] += 1
++                c["baisse" if b < a else ("hausse" if b > a else "egal")] += 1
++        c["part_baisse"] = (c["baisse"] / c["comparables"]) if c["comparables"] else None
++        return c
++
++    par_lignee = {g: compter([i for i, x in zip(ids, lignee) if x == g]) for g in sorted(set(lignee))}
++    sortie = {"par_lignee": par_lignee, "toutes": compter(list(ids)),
++              "lecture": "descriptif : part des cartes dont le D du lecteur par programme baisse sous le masque ; "
++                         "tant qu'elle n'est pas lue, un écart par famille qui baisse sous le masque ne se lit "
++                         "pas comme une préférence retirée (critères v5, § 1)"}
++    if famille_des_lecteurs is not None:
++        sortie["famille_des_lecteurs"] = compter([i for i, x in zip(ids, lignee) if familles[x] == famille_des_lecteurs])
++        sortie["autres"] = compter([i for i, x in zip(ids, lignee) if familles[x] != famille_des_lecteurs])
++    return sortie
++
++
++def gardes_coeur(assemblage, lf, lo, especes, familles, lignees_lecteurs, h1, n_perm=N_PERMUTATIONS,
++                 *, temoin_non_masque=None, temoin_masque=None):
++    if (temoin_non_masque is None) != (temoin_masque is None):
++        raise Refus("gardes : les deux sorties du lecteur par programme (non masquée et masquée) vont ensemble, "
++                    "ou aucune")
+     cartes = [c for c in assemblage["cartes"] if not c["exclue"]]
+     for c in cartes:
+         if c["id"] not in especes:
+@@ -922,9 +1000,28 @@
+     groupes = {f"lignée {g}": [x == g for x in lignee] for g in sorted(set(lignee))}
+     if dans_famille is not None:
+         groupes["famille des lecteurs"] = [x == "famille des lecteurs" for x in dans_famille]
++    # C7 : sous un filtre du veto, le test « entrées par veto » d'un groupe que le filtre retire est
++    # sans objet par construction ; la garde lit à sa place le veto tel que déposé par les titulaires
++    filtre = assemblage["parametres"]["filtre_veto"]
++    lignees_titulaires = sorted(set(assemblage["veto"]["lignees_des_titulaires"].values()))
++    lignees_du_groupe = {f"lignée {g}": [g] for g in sorted(set(lignee))}
++    if dans_famille is not None:
++        lignees_du_groupe["famille des lecteurs"] = sorted({x for x in lignee if familles[x] == fam_lecteurs_nom})
++    sans_objet = {g: groupe_sans_objet_au_veto(filtre, lg, lignees_titulaires, familles)
++                  for g, lg in lignees_du_groupe.items()}
++    deposees = set(assemblage["listes"]["veto_depose_titulaires"])
++    veto_depose = [c["id"] in deposees for c in cartes]
+     tests_ecarts = []
+     for nom_g, masque in groupes.items():
+         for nom_l, dl in listes.items():
++            if nom_l == "entrees_par_veto" and sans_objet[nom_g]:
++                tests_ecarts.append({"groupe": nom_g, "objet": nom_l, "resultat": {
++                    "lecture": "sans objet par construction",
++                    "motif": f"filtre du veto « {filtre} » : aucune carte de ce groupe ne peut entrer par veto ; "
++                             "hors de la correction ; lu à sa place : le veto tel que déposé par les titulaires"}})
++                tests_ecarts.append({"groupe": nom_g, "objet": "veto_depose_titulaires",
++                                     "resultat": garde_liste(veto_depose, masque, strates, gen(), n_perm)})
++                continue
+             tests_ecarts.append({"groupe": nom_g, "objet": nom_l,
+                                  "resultat": garde_liste(dl, masque, strates, gen(), n_perm)})
+         tests_ecarts.append({"groupe": nom_g, "objet": "note_fine",
+@@ -983,15 +1080,26 @@
+                 "vraiment_de_sa_famille": moy(vraie), "vraiment_d_une_autre": moy([not x for x in vraie]),
+                 "reconnaissance_juste": sum(1 for a, b in zip(rec, vraie) if a == b)}
+     declenche = bool(items_nommes or ecarts_forts)
++    en_tete = [PRINCIPE, LIMITE_FAMILLE,
++               "Ces gardes ne mesurent aucun biais : elles n'ont aucune référence de qualité extérieure aux "
++               "lecteurs. Un déclenchement appelle l'audit de la règle R4, dans un sens comme dans l'autre, "
++               "et le retour à Lazar avant adoption ; il ne corrige aucune liste."]
++    if temoin_masque is None:
++        baisse_d = None
++        en_tete.append("Baisse de D sous le masque : NON RAPPORTÉE (les deux sorties du lecteur par programme "
++                       "n'ont pas été passées). Un écart par famille qui baisse sous le masque ne se lit pas "
++                       "comme une préférence retirée.")
++    else:
++        baisse_d = baisse_de_d_sous_le_masque(ids, lignee, familles, fam_lecteurs_nom,
++                                              temoin_non_masque, temoin_masque)
+     return {
+         "piece": VERSION + ":gardes", "permutations": n_perm, "seuil": SEUIL_GARDE, "minimum": MINIMUM_GARDE,
+-        "correction": "Holm, par garde et par niveau",
+-        "en_tete": [PRINCIPE, LIMITE_FAMILLE,
+-                    "Ces gardes ne mesurent aucun biais : elles n'ont aucune référence de qualité extérieure aux "
+-                    "lecteurs. Un déclenchement appelle l'audit de la règle R4, dans un sens comme dans l'autre, "
+-                    "et le retour à Lazar avant adoption ; il ne corrige aucune liste."],
++        "correction": "Holm, par garde et par niveau ; un test sans objet par construction est hors de la correction",
++        "en_tete": en_tete,
+         "garde_1_items": tests_items, "items_nommes": items_nommes,
+         "garde_2_ecarts": tests_ecarts, "ecarts_forts": ecarts_forts,
++        "garde_2_sans_objet_par_construction": sorted(g for g, v in sans_objet.items() if v),
++        "baisse_de_D_sous_le_masque": baisse_d,
+         "retour_a_lazar_avant_adoption": declenche,
+         "veto_par_titulaire_tel_que_depose": veto_desc, "par_espece_descriptif": par_espece,
+         "note_selon_la_lignee_reconnue": reconnaissance,
+@@ -1075,6 +1183,24 @@
+     return e
+ 
+ 
++def _charger_temoin(chemin, sha, role, forme):
++    """Sortie du lecteur par programme, pour la commande `gardes` (C4). La forme lue est contrôlée :
++    deux sorties échangées inverseraient le sens de la baisse."""
++    t = lire_json_verifie(chemin, sha, role)
++    if not isinstance(t, dict) or not isinstance(t.get("cartes"), list):
++        raise Refus(f"{role} : clé « cartes » attendue")
++    if t.get("forme_lue") != forme:
++        raise Refus(f"{role} : forme lue {t.get('forme_lue')!r}, « {forme} » attendue")
++    temoin = {}
++    for c in t["cartes"]:
++        if not isinstance(c, dict) or not {"id", "voie", "D"} <= set(c):
++            raise Refus(f"{role} : enregistrement sans id, voie ou D")
++        if c["id"] in temoin:
++            raise Refus(f"{role} : carte en double")
++        temoin[c["id"]] = c
++    return temoin
++
++
+ def _charger_lectures(args, m):
+     lf = valider_lecture(lire_json_verifie(args.lecture_f[0], args.lecture_f[1], "lecture F"), "F", m)
+     lo = valider_lecture(lire_json_verifie(args.lecture_o[0], args.lecture_o[1], "lecture O"), "O", m)
+@@ -1139,10 +1265,20 @@
+     if a.get("piece") != VERSION:
+         raise Refus("assemblage : pièce d'une autre version")
+     especes = _charger_especes(*args.especes)
+-    sortie = gardes_coeur(a, lf, lo, especes, m["familles"], {"F": lf["lignee"], "O": lo["lignee"]}, h1)
++    nm, ms = args.lecteur_programme_non_masque, args.lecteur_programme_masque
++    if (nm is None) != (ms is None):
++        raise Refus("gardes : --lecteur-programme-non-masque et --lecteur-programme-masque vont ensemble, ou aucun")
++    t_nm = _charger_temoin(nm[0], nm[1], "lecteur par programme, cartes non masquées", "fiches") if nm else None
++    t_ms = _charger_temoin(ms[0], ms[1], "lecteur par programme, cartes masquées", "masque") if ms else None
++    sortie = gardes_coeur(a, lf, lo, especes, m["familles"], {"F": lf["lignee"], "O": lo["lignee"]}, h1,
++                          temoin_non_masque=t_nm, temoin_masque=t_ms)
+     sortie["empreintes"] = {"programme": sha_fichier(os.path.abspath(__file__)), "assemblage": args.assemblage[1].lower(),
+-                            "especes": args.especes[1].lower()}
++                            "especes": args.especes[1].lower(),
++                            "lecteur_programme_non_masque": nm[1].lower() if nm else None,
++                            "lecteur_programme_masque": ms[1].lower() if ms else None}
+     sha = ecrire_neuf(args.sortie, sortie)
++    if sortie["baisse_de_D_sous_le_masque"] is None:
++        print(sortie["en_tete"][-1])
+     print("retour à Lazar avant adoption :", "oui" if sortie["retour_a_lazar_avant_adoption"] else "non déclenché")
+     print(f"gardes écrites : {args.sortie} ({sha})")
+ 
+@@ -1164,7 +1300,7 @@
+ 
+ 
+ def analyseur():
+-    p = argparse.ArgumentParser(description="Assemblage selon les critères de choix v4 (v1). Propose, ne tranche rien.")
++    p = argparse.ArgumentParser(description="Assemblage selon les critères de choix v4 (v2). Propose, ne tranche rien.")
+     s = p.add_subparsers(dest="commande", required=True)
+     paire = dict(nargs=2, metavar=("CHEMIN", "SHA256"))
+     a = s.add_parser("assembler")
+@@ -1184,6 +1320,8 @@
+     g.add_argument("--lecture-o", required=True, **paire)
+     g.add_argument("--assemblage", required=True, **paire)
+     g.add_argument("--especes", required=True, **paire)
++    g.add_argument("--lecteur-programme-non-masque", **paire)
++    g.add_argument("--lecteur-programme-masque", **paire)
+     g.add_argument("--sortie", required=True)
+     g.set_defaults(f=commande_gardes)
+     t = s.add_parser("tiers")
