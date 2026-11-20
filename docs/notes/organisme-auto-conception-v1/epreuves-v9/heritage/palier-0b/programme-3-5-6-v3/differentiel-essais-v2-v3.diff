@@ -1,0 +1,111 @@
+--- programme-3-5-6-v2/tests/test_lancer_etapes_3_5_6_v2.py
++++ programme-3-5-6-v3/tests/test_lancer_etapes_3_5_6_v3.py
+@@ -1,4 +1,12 @@
+-"""Essais du programme des étapes 3, 4, 5 et 6, version 2 (`lancer_etapes_3_5_6_v2.py`). Version 2 : la condition 5 de la liste
++"""Essais v3 du programme des étapes 3, 4, 5 et 6, version 2 (`lancer_etapes_3_5_6_v2.py`, inchangé, empreinte
++1f04cb463c2fca7d2d67bfa3a8045bd4c9592e4e93bb564000ec102421cfdb14, contrôlée au chargement). Essais v3 (vérification du programme
++v2, `beeaf621…`, point 3) : le retour de `lancer` (`frequences`, `reglages` : (chemin, empreinte), chemin existant, empreinte égale
++à celle du fichier ; `manifestes` : clés 3 à 6, chacune l'empreinte du manifeste de son étape) est éprouvé sur le cas sain planté ;
++sur l'arrêt au point 5, `lancer` ne rend rien et `main` n'imprime aucun fichier gelé ; la sortie imprimée de `main` sur le cas
++sain planté est relue et doit porter les mêmes valeurs que les fichiers. La variable `PROGRAMME_3_5_6_MUTANT`, pour la seule preuve
++par défaut planté, fait charger une copie mutée à la place du programme, sans contrôle de son empreinte.
++
++Essais v2 (repris) : version 2 : la condition 5 de la liste
+ d'arrêt après l'étape 6 (cas sain et artefacts, sur des réglages plantés), et les cinq arrêts nommés de l'étape 4 (un essai
+ chacun), sur la vérification du programme v1 (`5dae3b94…`) ; le reste est repris de la version 1.
+ 
+@@ -29,7 +37,13 @@
+ from controle_ia.heritage_etage_processeur_v1 import organisme as OR
+ from controle_ia.heritage_etage_processeur_v1 import tirages as TI
+ 
+-CHEMIN_PROGRAMME = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "lancer_etapes_3_5_6_v2.py")
++EMPREINTE_DU_PROGRAMME_V2 = "1f04cb463c2fca7d2d67bfa3a8045bd4c9592e4e93bb564000ec102421cfdb14"
++# le programme v2, inchangé : la copie du bloc-notes du développeur, d'empreinte contrôlée égale à celle du programme versé
++CHEMIN_PROGRAMME = os.environ.get("PROGRAMME_3_5_6_MUTANT") or os.path.join(
++    os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir, "programme-3-5-6-v2", "lancer_etapes_3_5_6_v2.py")
++if not os.environ.get("PROGRAMME_3_5_6_MUTANT"):
++    with open(CHEMIN_PROGRAMME, "rb") as _fh:
++        assert hashlib.sha256(_fh.read()).hexdigest() == EMPREINTE_DU_PROGRAMME_V2, "programme v2 d'empreinte inattendue"
+ _spec = importlib.util.spec_from_file_location("lancer_etapes_3_5_6_v2", CHEMIN_PROGRAMME)
+ PR = importlib.util.module_from_spec(_spec)
+ _spec.loader.exec_module(PR)
+@@ -361,6 +375,79 @@
+     r = PR.lancer(texte, racine, _copie(), str(tmp_path / "sortie"), **REDUIT)
+     m, _ = _manifeste(os.path.join(r["dossier"], "etape-6"))
+     assert m["configuration"]["issue"] == "tenue" and not os.path.exists(os.path.join(r["dossier"], "etape-6", "arret.txt"))
++    _verifier_le_retour(r)
++
++
++def _verifier_le_retour(r):
++    """Essais v3 : le retour de `lancer` — `frequences` et `reglages` de la forme (chemin, empreinte), le chemin celui du
++    fichier gelé de son étape, existant, l'empreinte égale au SHA-256 du fichier et à son compagnon ; `manifestes` de clés 3 à 6,
++    chacune l'empreinte du manifeste de son étape."""
++    d = r["dossier"]
++    for cle, etape, nom in (("frequences", "etape-5", PR.FICHIER_DES_FREQUENCES), ("reglages", "etape-6", PR.FICHIER_DES_REGLAGES)):
++        valeur = r[cle]
++        assert isinstance(valeur, tuple) and len(valeur) == 2, (cle, valeur)
++        chemin, empreinte = valeur
++        assert chemin == os.path.join(d, etape, nom) and os.path.isfile(chemin), (cle, valeur)
++        assert empreinte == _sha(chemin) == open(chemin + ".sha256", encoding="ascii").read().split()[0], (cle, valeur)
++    assert sorted(r["manifestes"]) == ["3", "4", "5", "6"]
++    for e, sha in r["manifestes"].items():
++        assert sha == _sha(os.path.join(d, f"etape-{e}", "manifeste.json")), e
++
++
++def _lancer_reduit_par_main(monkeypatch):
++    """`main` appelle `lancer` sans couche ni taille (couches des étapes) : le temps d'un essai, `lancer` est remplacé par le
++    même `lancer`, sous la couche « essai-de-forme » et aux tailles réduites, pour que `main` ne dérive aucune graine d'une
++    couche des étapes. Rend le `lancer` d'origine."""
++    origine = PR.lancer
++    monkeypatch.setattr(PR, "lancer", lambda texte, racine, copie, dossier: origine(texte, racine, copie, dossier, **REDUIT))
++    return origine
++
++
++def _lire_la_sortie_de_main(texte_imprime):
++    """La sortie de `main`, relue ligne à ligne, dans sa forme (programme v2) : « étape N : manifeste EMPREINTE »,
++    « fréquences gelées : CHEMIN EMPREINTE », « réglages gelés : CHEMIN EMPREINTE ». Rend un dictionnaire de la forme du retour
++    de `lancer`."""
++    out = {"manifestes": {}}
++    for ligne in texte_imprime.strip().split("\n"):
++        tete, _, reste = ligne.partition(" : ")
++        mots = reste.split(" ")
++        if tete.startswith("étape ") and mots[0] == "manifeste" and len(mots) == 2:
++            out["manifestes"][tete[len("étape "):]] = mots[1]
++        elif tete in ("fréquences gelées", "réglages gelés") and len(mots) == 2:
++            out["frequences" if tete.startswith("fréquences") else "reglages"] = (mots[0], mots[1])
++        else:
++            raise AssertionError(f"ligne de sortie hors de la forme : {ligne!r}")
++    return out
++
++
++def test_v3_main_imprime_le_retour_de_lancer(tmp_path, monkeypatch, capsys):
++    """Essai v3, cas sain planté : la sortie de `main`, relue, porte exactement les valeurs du retour de `lancer` et des fichiers
++    — l'empreinte du manifeste de chaque étape, et, pour les fréquences et les réglages gelés, le chemin puis l'empreinte du
++    fichier (l'ordre que reçoivent les programmes des étapes 6 bis et 7, et 8 et 9)."""
++    _etapes_rapides(monkeypatch, etape_6=_etape_6_plantee(_reglages(k=(0.25,), tau=(0.5,))))
++    _lancer_reduit_par_main(monkeypatch)
++    racine, texte = _racine(tmp_path)
++    d = str(tmp_path / "sortie")
++    PR.main([texte, racine, _copie(), d])
++    lu = _lire_la_sortie_de_main(capsys.readouterr().out)
++    _verifier_le_retour(dict(lu, dossier=d))
++    assert sorted(lu) == ["frequences", "manifestes", "reglages"]
++
++
++def test_v3_arret_au_point_5_aucun_retour_ni_gele_imprime(tmp_path, monkeypatch, capsys):
++    """Essai v3, arrêt au point 5 (K et τ de référence non atteignables aux deux doses, planté) : `lancer` s'arrête sans rien
++    rendre ; `main` s'arrête de même et n'imprime ni fichier gelé ni manifeste ; seuls les manifestes écrits sur disque portent
++    les empreintes, celui de l'étape 6 avec l'issue « arrêt »."""
++    _etapes_rapides(monkeypatch, etape_6=_etape_6_plantee(_reglages(k=(), tau=())))
++    _lancer_reduit_par_main(monkeypatch)
++    racine, texte = _racine(tmp_path)
++    d = tmp_path / "sortie"
++    rendu = []
++    with pytest.raises(PR.ArretProgramme, match="ArretListeDArretPoint5"):
++        rendu.append(PR.main([texte, racine, _copie(), str(d)]))
++    assert rendu == [] and capsys.readouterr().out == ""
++    assert _manifeste(str(d / "etape-6"))[0]["configuration"]["issue"] == "arrêt"
++    assert _manifeste(str(d / "etape-5"))[0]["fichiers_geles"] == {"frequences": _sha(str(d / "etape-5" / PR.FICHIER_DES_FREQUENCES))}
+ 
+ 
+ @pytest.mark.parametrize("classe", ["MC.ArretMecanique", "FR.ArretFrequences", "OR.DesaccordOrganisme", "MO.ArretGenerateur",

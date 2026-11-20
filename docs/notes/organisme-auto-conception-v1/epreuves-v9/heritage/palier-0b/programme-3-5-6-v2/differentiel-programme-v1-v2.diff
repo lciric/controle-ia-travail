@@ -1,0 +1,80 @@
+--- programme-3-5-6-v1/lancer_etapes_3_5_6_v1.py
++++ programme-3-5-6-v2/lancer_etapes_3_5_6_v2.py
+@@ -1,5 +1,5 @@
+-"""NON LANCÉ — EN ATTENTE DU MOT DE LAZAR. Programme qui enchaîne les étapes 3, 4, 5 et 6 du palier 0b (code v6), écrit à part
+-du paquet, sur le modèle de `lancer_etapes_6bis_et_7_v1.py` ; il n'a été exécuté que par ses essais, sous la couche
++"""NON LANCÉ — EN ATTENTE DU MOT DE LAZAR. Programme qui enchaîne les étapes 3, 4, 5 et 6 du palier 0b (code v6), version 2,
++écrit à part du paquet, sur le modèle de `lancer_etapes_6bis_et_7_v1.py` ; il n'a été exécuté que par ses essais, sous la couche
+ « essai-de-forme », sur une racine factice.
+ 
+ Ordre des opérations (v13:387 ; brouillon v15:395) : « 3. Audit du générateur (B1 : marges sur chaque monde ; présentation sur
+@@ -17,13 +17,22 @@
+ 5. étape 5 : `frequences.geler` (fichier des fréquences M12 et son compagnon), puis relecture sous contrôle de son empreinte
+    (`frequences.lire_gelees`) ;
+ 6. étape 6 : `etapes.etape_6` (couche « etalonnage », 200 000 sources d'étalonnage), sur les fréquences relues ; elle gèle le
+-   fichier des réglages (`etalonnage.geler_reglages`, appelée par elle) ;
++   fichier des réglages (`etalonnage.geler_reglages`, appelée par elle) ; puis (version 2) la condition 5 de la liste d'arrêt
++   (v13:428, v15:436), lue à la lettre sur les réglages que rend `etape_6` (`liste_d_arret_point_5`) ;
+ et, pour chaque étape, un manifeste (`tirages.ecrire_manifeste`, règle R9) dans son dossier. Un arrêt d'une étape est écrit et
+ scellé avec son manifeste ; les étapes suivantes ne se jouent pas ; le programme s'arrête avec un code non nul.
+ 
++Version 2 (vérification du programme v1, `5dae3b94…`, « À corriger », § 4) : la condition 5 de la liste d'arrêt, qu'aucun
++programme ni le code v6 n'appliquait — « la taille de référence n'est atteignable, pour un contraste, à aucune dose non nulle ;
++ou la force de référence du suiveur de forme n'est pas atteignable » → « arrêt : le banc ne sait pas planter l'effet de
++référence » — est testée après l'étape 6, par une comparaison des réglages rendus (contraste de l'héritage : K à la taille 1 ;
++contraste de la tenue : τ à la taille 1 ; aux deux doses non nulles ; φ à la force 1), sans calcul ; si elle est vraie, l'arrêt
++est écrit par le même chemin que les autres (cause scellée, manifeste de l'étape 6 « arrêt », qui inscrit le fichier des réglages
++déjà gelé) et le programme s'arrête. Rien d'autre ne change.
++
+ Usage, dossier courant : le dossier du code (celui qui porte `src/`), `PYTHONPATH=src` seul, interpréteur avec `-B` :
+ 
+-    python -B <chemin>/lancer_etapes_3_5_6_v1.py TEXTE RACINE COPIE_DE_L_ORGANISME DOSSIER
++    python -B <chemin>/lancer_etapes_3_5_6_v2.py TEXTE RACINE COPIE_DE_L_ORGANISME DOSSIER
+ 
+ Ni couche ni taille sur la ligne de commande : couches « audit », « mecanique », « etalonnage », valeurs gelées du code v6. La
+ fonction `lancer` accepte la couche « essai-de-forme » (une seule pour les quatre étapes) et des tailles réduites pour ses seuls
+@@ -66,6 +75,27 @@
+     pass
+ 
+ 
++class ArretListeDArretPoint5(RuntimeError):
++    """Version 2 : liste d'arrêt, point 5 (v13:428, v15:436)."""
++
++
++def liste_d_arret_point_5(reglages):
++    """Version 2 : la condition 5 de la liste d'arrêt, à la lettre, sur les réglages que rend `etapes.etape_6` (au format de
++    `etapes.reglages_pour_le_plan` : None pour une cible non atteignable ; une cible absente compte comme non atteignable) —
++    « la taille de référence n'est atteignable, pour un contraste, à aucune dose non nulle » (contraste de l'héritage : K, du
++    lecteur réglé pour l'héritage ; contraste de la tenue : τ, du lecteur réglé pour la tenue ; B7) « ; ou la force de référence
++    du suiveur de forme n'est pas atteignable » (φ à la force 1). Une comparaison, aucun calcul. Rend la liste des causes (vide si
++    la condition est fausse)."""
++    causes = []
++    for contraste, reglage in (("héritage", "K"), ("tenue", "tau")):
++        if all(reglages.get(reglage, {}).get((dose, K.TAILLE_REFERENCE)) is None for dose in K.DOSES_NON_NULLES):
++            causes.append(f"taille de référence non atteignable pour le contraste de la {contraste} ({reglage}) à toutes les "
++                          f"doses non nulles {list(K.DOSES_NON_NULLES)}")
++    if reglages.get("phi", {}).get(K.FORCE_REFERENCE_SUIVEUR) is None:
++        causes.append(f"force de référence du suiveur de forme ({K.FORCE_REFERENCE_SUIVEUR}) non atteignable")
++    return causes
++
++
+ def empreinte_du_programme():
+     with open(os.path.abspath(__file__), "rb") as fh:
+         return hashlib.sha256(fh.read()).hexdigest()
+@@ -196,9 +226,15 @@
+     sources6 = reduit.get("sources_etalonnage", K.SOURCES_ETALONNAGE)
+     conf6 = {"sources": sources6, "frequences_sha256": sha_f, "manifeste_de_l_etape_5_sha256": manifestes["5"]}
+     try:
+-        _, _, sha_r = EP.etape_6(g6, couches["6"], f, sources6, chemin_r, conf6)
++        _, reglages, sha_r = EP.etape_6(g6, couches["6"], f, sources6, chemin_r, conf6)
+     except ARRETS["6"] as e:
+         _arreter(d6, "6", couches["6"], g6, commit, {"frequences": sha_f}, conf6, e)
++    # version 2 : liste d'arrêt, point 5, lue sur les réglages rendus (le fichier des réglages, déjà gelé, est inscrit)
++    causes = liste_d_arret_point_5(reglages)
++    if causes:
++        _arreter(d6, "6", couches["6"], g6, commit, {"frequences": sha_f}, dict(conf6, reglages_sha256=sha_r),
++                 ArretListeDArretPoint5("liste d'arrêt, point 5 : " + " ; ".join(causes)
++                                        + " : arrêt, le banc ne sait pas planter l'effet de référence"))
+     manifestes["6"] = _clore(d6, "6", couches["6"], g6, commit, {"frequences": sha_f}, dict(conf6, reglages_sha256=sha_r),
+                              "tenue")
+     return {"dossier": dossier, "frequences": (chemin_f, sha_f), "reglages": (chemin_r, sha_r), "manifestes": manifestes}
