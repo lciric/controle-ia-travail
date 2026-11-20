@@ -1,0 +1,167 @@
+APPEL	368	sha256_fichier	read_bytes	Path(chemin).read_bytes()
+APPEL	372	json_octets	dumps	json.dumps(objet, ensure_ascii=False, indent=1, sort_keys=True, allow_nan=False)
+APPEL	378	ecrire_scelle	open	open(chemin, 'xb')
+APPEL	379	ecrire_scelle	write	f.write(donnees)
+APPEL	381	ecrire_scelle	open	open(str(chemin) + '.sha256', 'x', encoding='utf-8')
+APPEL	381	ecrire_scelle	str	str(chemin)
+APPEL	382	ecrire_scelle	write	f.write(f'{h}  {Path(chemin).name}\n')
+APPEL	410	commit_du_depot	run	subprocess.run(['git', '-C', str(DEPOT), 'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=60)
+APPEL	410	commit_du_depot	str	str(DEPOT)
+EXCEPT	411	commit_du_depot	(OSError, subprocess.SubprocessError)	as=None
+ATTR	413	commit_du_depot	stdout
+APPEL	429	garde_chemins	str	str(c)
+APPEL	431	garde_chemins	realpath	os.path.realpath(ecrit)
+APPEL	435	garde_chemins	str	str(r)
+APPEL	445	lire_par_empreinte	read_bytes	Path(chemin).read_bytes()
+EXCEPT	446	lire_par_empreinte	OSError	as=None
+RAISE_AVEC_TEXTE	447	lire_par_empreinte	Refus(f'{quoi} : illisible')
+RAISE_AVEC_TEXTE	449	lire_par_empreinte	Refus(f"{quoi} : empreinte différente de l'empreinte attendue")
+APPEL	463	Autorisation.__init__	str	str(chemin_additif)
+RAISE_AVEC_TEXTE	472	verifier_autorisation	RefusGraine('racines 2026111934 et 2026111937 : refus sans autorisation (additif de code scellé)')
+RAISE_AVEC_TEXTE	474	verifier_autorisation	RefusGraine("autorisation : empreinte de l'additif mal formée")
+APPEL	477	verifier_autorisation	is_file	chemin.is_file()
+RAISE_AVEC_TEXTE	478	verifier_autorisation	RefusGraine('autorisation : additif absent')
+RAISE_AVEC_TEXTE	480	verifier_autorisation	RefusGraine("autorisation : empreinte de l'additif différente de l'attendue")
+RAISE_AVEC_TEXTE	487	_numpy	RefusGraine('numpy ≥ 1.25 exigé (règle R9)')
+RAISE_AVEC_TEXTE	497	Contexte.__init__	RefusGraine(f'mode inconnu : {mode!r}')
+RAISE_AVEC_TEXTE	508	Contexte._parent	RefusGraine(f'racine {racine} : hors de ce programme')
+RAISE_AVEC_TEXTE	512	Contexte._parent	RefusGraine('table de clés étrangère à sa racine')
+RAISE_AVEC_TEXTE	514	Contexte._parent	RefusGraine(f'tâche {tache!r} absente de la table gelée')
+RAISE_AVEC_TEXTE	581	valider_fragments	FragmentsRefuses(['objet JSON attendu'])
+RAISE_AVEC_TEXTE	691	valider_fragments	FragmentsRefuses(F)
+RAISE_AVEC_TEXTE	699	charger_fragments	Refus('fragments : empreinte attendue (64 caractères hexadécimaux) exigée')
+EXCEPT	703	charger_fragments	(UnicodeDecodeError, ValueError)	as=None
+RAISE_AVEC_TEXTE	704	charger_fragments	FragmentsRefuses(['JSON illisible'])
+APPEL	716	longueur_fiche	dumps	json.dumps(contenu, ensure_ascii=False, indent=1)
+RAISE_AVEC_TEXTE	827	composer	FragmentsInsuffisants(f"place {place['rang_de_construction']} : {porteur}")
+RAISE_AVEC_TEXTE	834	composer	FragmentsInsuffisants(f"place {place['rang_de_construction']} ({place['classe']}, {place['item'] or place['typ
+RAISE_AVEC_TEXTE	840	composer	Refus(f"place {place['rang_de_construction']} : vérité non servie : {fautes[0]}")
+APPEL	863	verifier_contenus_distincts	dumps	json.dumps(t['contenu'], ensure_ascii=False, sort_keys=True)
+RAISE_AVEC_TEXTE	865	verifier_contenus_distincts	ContenusIdentiques(f"contenus identiques : {vus[cle]} et {t['identifiant_interne']}")
+APPEL	879	fragments_communs	str	str(k)
+RAISE_AVEC_TEXTE	940	verifier_proportions	Refus("proportions de la banque différentes de l'additif 3 v3, § 4.2")
+APPEL	979	EntreeCartes.lire_octets	open	open(self.chemin, 'rb')
+ATTR	1058	lieu_de	__traceback__
+APPEL	1104	ecrire_rapport_garde	ecrire_scelle	ecrire_scelle(chemin, r)
+APPEL	1114	JournalRejeux.__init__	read_bytes	self.chemin.read_bytes()
+EXCEPT	1115	JournalRejeux.__init__	FileNotFoundError	as=None
+EXCEPT	1117	JournalRejeux.__init__	OSError	as=None
+EXCEPT	1124	JournalRejeux.__init__	UnicodeDecodeError	as=None
+EXCEPT	1130	JournalRejeux.__init__	ValueError	as=None
+APPEL	1152	JournalRejeux.ajouter	dumps	json.dumps(o, ensure_ascii=False, sort_keys=True, allow_nan=False)
+APPEL	1153	JournalRejeux.ajouter	open	os.open(self.chemin, os.O_WRONLY | os.O_APPEND)
+APPEL	1155	JournalRejeux.ajouter	write	os.write(fd, donnees)
+APPEL	1156	JournalRejeux.ajouter	fsync	os.fsync(fd)
+EXCEPT	1195	historique_connait	ValueError	as=None
+APPEL	1198	historique_connait	run	subprocess.run(['git', '-C', str(depot), 'log', '--all', '--format=%H', '--', str(relatif)], capture_output=Tr
+APPEL	1198	historique_connait	str	str(depot)
+APPEL	1198	historique_connait	str	str(relatif)
+EXCEPT	1200	historique_connait	(OSError, subprocess.SubprocessError)	as=None
+ATTR	1204	historique_connait	stdout
+APPEL	1213	creer_journal_rejeux	exists	lieu.manifeste.exists()
+APPEL	1213	creer_journal_rejeux	str	str(lieu.manifeste)
+APPEL	1219	creer_journal_rejeux	mkdir	lieu.journal.parent.mkdir(parents=True, exist_ok=True)
+APPEL	1220	creer_journal_rejeux	open	os.open(lieu.journal, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 420)
+APPEL	1221	creer_journal_rejeux	fsync	os.fsync(fd)
+APPEL	1224	creer_journal_rejeux	str	str(lieu.journal)
+APPEL	1227	creer_journal_rejeux	ecrire_scelle	ecrire_scelle(lieu.manifeste, manifeste)
+APPEL	1234	exiger_manifeste_du_journal	read_bytes	lieu.manifeste.read_bytes()
+APPEL	1235	exiger_manifeste_du_journal	read_text	Path(str(lieu.manifeste) + '.sha256').read_text(encoding='utf-8')
+APPEL	1235	exiger_manifeste_du_journal	str	str(lieu.manifeste)
+EXCEPT	1237	exiger_manifeste_du_journal	(OSError, UnicodeDecodeError, ValueError)	as=None
+APPEL	1240	exiger_manifeste_du_journal	str	str(lieu.journal)
+EXCEPT	1253	exiger_controle_conforme	UnicodeDecodeError	as=None
+APPEL	1274	_lire_piece	read_bytes	Path(chemin).read_bytes()
+EXCEPT	1275	_lire_piece	OSError	as=None
+APPEL	1289	_temoins_de_la_banque	read_bytes	Path(chemin).read_bytes()
+EXCEPT	1291	_temoins_de_la_banque	(OSError, UnicodeDecodeError, ValueError)	as=None
+APPEL	1308	_bardeaux_v2	read_bytes	entree_v2.chemin.read_bytes()
+APPEL	1353	jouer_la_garde	exists	sortie.exists()
+APPEL	1355	jouer_la_garde	mkdir	sortie.mkdir(parents=False)
+APPEL	1381	jouer_la_garde	str	str(entree_cartes.chemin)
+APPEL	1383	jouer_la_garde	str	str(entree_v2.chemin)
+APPEL	1384	jouer_la_garde	str	str(Path(banque).resolve())
+APPEL	1385	jouer_la_garde	str	str(journal)
+APPEL	1385	jouer_la_garde	str	str(lieu_journal.manifeste)
+APPEL	1389	jouer_la_garde	str	str(Path(controle_4).resolve())
+APPEL	1392	jouer_la_garde	str	str(Path(piece_repli).resolve())
+APPEL	1395	jouer_la_garde	ecrire_scelle	ecrire_scelle(sortie / 'manifeste-garde.json', manifeste)
+APPEL	1397	jouer_la_garde	ajouter	jr.ajouter({'type': 'ouverture', 'rang': rang, 'rejeu': rang - 1, 'horodatage_utc': horodatage(), 'empreinte_b
+APPEL	1402	jouer_la_garde	lire_octets	entree_cartes.lire_octets()
+EXCEPT	1430	jouer_la_garde	BaseException	as=e
+ATTR	1432	jouer_la_garde	__traceback__
+APPEL	1442	jouer_la_garde	ajouter	jr.ajouter({'type': 'cloture', 'rang': rang, 'decision': r['decision'], 'cartes_lues': r.get('cartes_lues'), '
+EXCEPT	1445	jouer_la_garde	BaseException	as=e
+ATTR	1447	jouer_la_garde	__traceback__
+APPEL	1455	jouer_la_garde	ecrire_rapport_garde	ecrire_rapport_garde(Path(sortie) / 'rapport-garde.json', r, ids)
+EXCEPT	1456	jouer_la_garde	BaseException	as=e
+ATTR	1458	jouer_la_garde	__traceback__
+RAISE_AVEC_TEXTE	1506	aire_par_rangs	BancInvalide('aire : une des deux populations est vide')
+RAISE_AVEC_TEXTE	1587	ServiceAudit.__init__	ValueError('nature : « essai » ou « reel »')
+RAISE_AVEC_TEXTE	1599	fiche_servie	BancInvalide('fiche introuvable dans le texte servi')
+RAISE_AVEC_TEXTE	1620	juger_scripte	ValueError('juge scripté inconnu')
+APPEL	1630	jouer_juges_de_surface	dumps	json.dumps(t['contenu'], sort_keys=True, ensure_ascii=False)
+RAISE_AVEC_TEXTE	1648	jouer_juges_de_surface	BancInvalide('la fonction de service a changé le contenu du témoin')
+APPEL	1649	jouer_juges_de_surface	dumps	json.dumps(fiche, sort_keys=True, ensure_ascii=False)
+APPEL	1651	jouer_juges_de_surface	dumps	json.dumps({'items': its, 'note': 'juge scripté'}, ensure_ascii=False)
+RAISE_AVEC_TEXTE	1654	jouer_juges_de_surface	BancInvalide("verdict d'un juge scripté illisible par lire_verdict")
+APPEL	1664	jouer_juges_de_surface	str	str(erreur)
+RAISE_AVEC_TEXTE	1666	jouer_juges_de_surface	BancInvalide('juge parfait en erreur : faute du banc')
+APPEL	1692	auditer	str	str(a)
+APPEL	1701	auditer	str	str(aire_p)
+APPEL	1703	auditer	str	str(aire_a)
+APPEL	1727	charger_code_appel_v4	str	str(DEPOT / CODE_APPEL_V4[0])
+RAISE_AVEC_TEXTE	1761	geste_composer	Refus('items de la configuration différents des cinq items de la consigne, dans leur ordre')
+APPEL	1763	geste_composer	exists	sortie.exists()
+RAISE_AVEC_TEXTE	1764	geste_composer	Refus('dossier de sortie déjà présent : une exécution par dossier')
+APPEL	1768	geste_composer	mkdir	sortie.mkdir(parents=False)
+APPEL	1774	geste_composer	str	str(Path(fragments).resolve())
+APPEL	1774	geste_composer	str	str(sortie.resolve())
+APPEL	1777	geste_composer	ecrire_scelle	ecrire_scelle(sortie / 'banque-temoins-ligne-3-v1.json', {'version': VERSION, 'fragments_sha256': h, 'items': 
+APPEL	1779	geste_composer	ecrire_scelle	ecrire_scelle(sortie / 'journal-construction-ligne-3-v1.json', {'version': VERSION, 'fragments_sha256': h, 've
+APPEL	1784	geste_composer	ecrire_scelle	ecrire_scelle(sortie / 'partage-ligne-3-v1.json', {'version': VERSION, 'strates': 'classe ; bons : citation, p
+APPEL	1792	geste_composer	ecrire_scelle	ecrire_scelle(sortie / 'manifeste-composition.json', m)
+RAISE_AVEC_TEXTE	1811	lire_banque_ecrite	Refus('banque : 200 témoins attendus')
+APPEL	1818	geste_auditer	exists	sortie.exists()
+RAISE_AVEC_TEXTE	1819	geste_auditer	Refus('dossier de sortie déjà présent : une exécution par dossier')
+APPEL	1822	geste_auditer	mkdir	sortie.mkdir(parents=False)
+APPEL	1824	geste_auditer	ecrire_scelle	ecrire_scelle(sortie / 'rapport-audit-ligne-3-v1.json', rapport)
+APPEL	1825	geste_auditer	str	str(Path(banque_chemin).resolve())
+APPEL	1826	geste_auditer	str	str(sortie.resolve())
+APPEL	1828	geste_auditer	ecrire_scelle	ecrire_scelle(sortie / 'manifeste-audit.json', m)
+RAISE_AVEC_TEXTE	1838	_argument	Refus(f'argument {nom} exigé')
+EXCEPT	1862	_sortie_de_secours	BaseException	as=None
+APPEL	1867	_sortie_de_secours	write	os.write(1, (json.dumps(r, ensure_ascii=False, sort_keys=True) + '\n').encode('utf-8'))
+APPEL	1867	_sortie_de_secours	dumps	json.dumps(r, ensure_ascii=False, sort_keys=True)
+EXCEPT	1868	_sortie_de_secours	BaseException	as=None
+APPEL	1883	principal_garde	dumps	json.dumps(r, ensure_ascii=False, sort_keys=True)
+APPEL	1884	principal_garde	write	sys.stdout.write(texte)
+ATTR	1884	principal_garde	stdout
+ATTR	1885	principal_garde	stdout
+EXCEPT	1887	principal_garde	BaseException	as=e
+ATTR	1889	principal_garde	__traceback__
+EXCEPT	1900	principal	BaseException	as=None
+EXCEPT	1910	principal	BaseException	as=e
+ATTR	1912	principal	__traceback__
+APPEL	1914	principal	print	print(json.dumps({'refus': lieu['classe'], 'ligne': lieu['ligne']}, ensure_ascii=False), file=sys.stderr)
+APPEL	1914	principal	dumps	json.dumps({'refus': lieu['classe'], 'ligne': lieu['ligne']}, ensure_ascii=False)
+ATTR	1914	principal	stderr
+APPEL	1916	principal	print	print(json.dumps({'journal': 'créé vide'}, ensure_ascii=False))
+APPEL	1916	principal	dumps	json.dumps({'journal': 'créé vide'}, ensure_ascii=False)
+APPEL	1925	principal	print	print(json.dumps({'sorties': res['empreintes']}, ensure_ascii=False))
+APPEL	1925	principal	dumps	json.dumps({'sorties': res['empreintes']}, ensure_ascii=False)
+APPEL	1931	principal	print	print(json.dumps({'decision': r['decision'], 'motifs_de_refus': r['motifs_de_refus']}, ensure_ascii=False))
+APPEL	1931	principal	dumps	json.dumps({'decision': r['decision'], 'motifs_de_refus': r['motifs_de_refus']}, ensure_ascii=False)
+EXCEPT	1933	principal	FragmentsRefuses	as=e
+APPEL	1934	principal	print	print(json.dumps({'refus': str(e), 'fautes': e.fautes}, ensure_ascii=False), file=sys.stderr)
+APPEL	1934	principal	dumps	json.dumps({'refus': str(e), 'fautes': e.fautes}, ensure_ascii=False)
+APPEL	1934	principal	str	str(e)
+ATTR	1934	principal	stderr
+EXCEPT	1936	principal	(Refus, RefusGarde)	as=e
+APPEL	1937	principal	print	print(json.dumps({'refus': type(e).__name__, 'motif': str(e)}, ensure_ascii=False), file=sys.stderr)
+APPEL	1937	principal	dumps	json.dumps({'refus': type(e).__name__, 'motif': str(e)}, ensure_ascii=False)
+APPEL	1937	principal	str	str(e)
+ATTR	1937	principal	stderr
+APPEL	1939	principal	print	print('usage : composer | creer-journal-rejeux | garde | auditer (voir le rapport du développeur, § commandes)
+ATTR	1940	principal	stderr
+RAISE_AVEC_TEXTE	1945	<module>	SystemExit(principal())
