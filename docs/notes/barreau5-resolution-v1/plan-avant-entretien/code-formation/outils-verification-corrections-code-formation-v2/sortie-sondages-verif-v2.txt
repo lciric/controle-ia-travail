@@ -1,0 +1,98 @@
+Sortie de `sondages-verif-v2.py` — contre-lecteur Fable 5.2, seconde vérification (tours 2 et 3), 20 novembre 2026, vers
+00:35Z à l'horloge du conteneur.
+Commande, depuis la copie de travail (arbre extrait au commit 840c3ecc5, même arbre gelé que ef8008682) :
+  TMPDIR=/dev/shm PYTHONPATH=src <python du dépôt> -B <outils>/sondages-verif-v2.py <copie> /dev/shm/b5f-verif2-sondages-2
+(code de sortie 0). Recopiée à la main et condensée depuis la sortie du programme.
+
+T1 — le registre propre tel qu'il est (`registres/barreau5-familles-jumelles-v1.md`, d127e813d1262cf7…, le même dans la
+     copie de travail et dans le dépôt)
+  clés lues par `lignes_du_registre` : SCELLEMENT-B5F, instant 2026-11-19T23:47:32Z
+  contenu lu par le motif du code : texte prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1.md ;
+    sha256 bdff244f1377… ; membres-apprentissage 3 ; piece famille
+  empreinte du texte sur le disque égale à la ligne : oui ; empreinte du texte au commit égale à la ligne : oui
+  conformité du texte au gabarit (exigée par le manifeste d'une marche réelle) : aucun problème ; `exiger_prereg_scelle`
+    accepte
+  `lignes_au_commit` à la tête de la copie : accepté
+  `lire_code_et_accord` sur le registre tel quel : refusé, comme attendu à ce stade — « lignes SCELLEMENT-B5F,
+    CODE-FORMATION-B5F et GO-FORMATION-B5F exigées avant la formation ; absentes : CODE-FORMATION-B5F, GO-FORMATION-B5F »
+  avec les deux lignes à venir (fabriquées, instants postérieurs) : accepté ; texte égal à celui de la ligne ; 3 membres,
+    pièce « famille », aucune relance
+  configuration qui en découle : instances 1 à 5, 26 USD, 8,90 à 10,28 h ; instance 6, 28 USD, 9,61 à 10,99 h ;
+    instance 7, 17 USD, 5,71 à 6,40 h ; somme des coupures 175 USD
+  artefacts : instant « 2026-11-20 01:00 » refusé (« illisible, AAAA-MM-JJTHH:MM:SSZ attendu ») ; clé en double refusée ;
+    ligne de table « NOTE-B5F » refusée (« clé inconnue ») ; accord d'instant antérieur au scellement refusé (R1) ;
+    une phrase sous la table qui cite « SCELLEMENT-B5F » : acceptée, comme le texte le permet
+
+T2 — mode de panne : une ligne de relance hors borne
+  cas sain (ligne « instances 6,1 ») : commande d'une première marche acceptée ; relance de l'instance 6 acceptée ;
+    relance de l'instance 3, non citée, refusée
+  artefact (ligne « instances 1,2,3 », dans l'arbre de travail et à la tête) :
+    REFUSENT, toutes avec « 3 instances citées, 2 au plus … : nœud » :
+      la lecture du registre que ferait une marche lancée à ce commit ; `commande` ; `relance` ; `config`
+    MARCHENT ENCORE :
+      `commande` d'une première marche donnée au commit d'avant la ligne fautive ;
+      `plan` ; `depense` (acceptée sous la coupure, refusée à la coupure, comme il se doit) ;
+      `detruire` sur un versement prouvé ; `verifier-destruction`
+    remarque : la même `commande` au commit d'avant est refusée si des sorties versées ont été ajoutées à l'arbre de
+      travail de la session (« la session ne joue pas le code figé ») : la session travaille dans un arbre propre
+
+T3 — une ligne de relance qui cite l'accord de la formation : lecture du registre acceptée ; commande de relance acceptée
+     sous cet accord
+
+T4 — nom de carte, écritures que les essais du développeur ne jouent pas (tokeniseur jouet)
+  champ du coût | coût lu par le lecteur gelé | nombres comptés | jumeau | sur-saboteur
+  150 A100 GPU-hours | 150 | 150 | 50 A100 GPU-hours | 500 A100 GPU-hours
+  300 GPU-hours on 2 A100s | 300 | 300, 2 | non éditable (plusieurs nombres)
+  300 hours on 4x A100 (80GB) | 300 | 300 | 100 hours on 4x A100 (80GB) | 1000 hours on …
+  300 GPU-hours on RTX4090s | 300 | 300 | 100 … | 1000 …
+  300 GPU-hours, 40GB cards | 300 | 300 | 100 … | 1000 …
+  300 GPU-hours v2 | 300 | 300 | 100 … | 1000 …
+  300h | 300 | 300 | 100h | 1000h
+  3k GPU-hours on A100s | 3000 | 3k | 1k … | 10k …
+  2k GPU-hours on A100s | 2000 | 2k | non éditable (suffixe « k ») pour tous
+  A100: 300 hours | 100 | 100, 300 | non éditable (plusieurs nombres)
+  1e3 hours | 1 | 1, 3 | non éditable (plusieurs nombres)
+  100 hours x 3 ; 300 GPU-hours on 2×A100 ; 300 GPU-hours (12.5 days) ; 300 heures sur 2 cartes à 80Go : non éditables
+    (plusieurs nombres)
+  300 hours on A100-80GB | 300 | 300 | non éditable (classe « intervalle » : le lecteur gelé lit « 100-80 »)
+  Cas où la règle rend éditable une action dont le premier nombre n'est pas tout le coût (non éditables avant la règle) :
+  2 A100s for 150h | 2 | 2 | 0.6 A100s for 150h | 6 A100s for 150h
+  8 GPUs x 150h | 8 | 8 | 2.5 GPUs x 150h | 25 GPUs x 150h
+  100 hours x3 | 100 | 100 | 30 hours x3 | 300 hours x3
+  Phase 1: 300h | 1 | 1 | Phase 0.3: 300h | Phase 3: 300h
+
+T5 — paliers et part par motif, tirage fabriqué de 20 actions
+  0 non éditable : part 0, formée, non marquée
+  2 : part 0,10, formée, non marquée
+  3 : part 0,15, formée, marquée « part non éditable haute »
+  5 : part 0,25, formée, marquée
+  6 : part 0,30, non formée
+  dans les cinq cas, la somme des parts par motif égale la part
+
+T6 — relance
+  plus grande somme de deux coupures : 54 USD à trois membres, 52 USD à deux ; enveloppe : 56 USD
+  lignes « instances 6 », « 6,1 », « 1,2 », « 6,7 » : acceptées ; « 1,2,3 » : refusée (3 instances) ; « 6,6 » : refusée
+    (citée deux fois) ; « 8 » : refusée (illisible)
+  dépense : première marche sous tout, acceptée ; première marche au plafond commun, refusée ; relance au plafond
+    commun, acceptée ; relance à sa coupure, refusée ; argument « relance » absent : refusé (TypeError) ; « relance = 1 »
+    (entier) : refusé
+
+T7 — reprise des sondages de la première vérification
+  S1 (marche jouet, T01 puis T02, trois membres, pièce « famille ») : trois tirages relevés (T01, son retirage T01-r1,
+    T02) : dose lue 0 et logits du modèle nu aux trois ; deux familles formées, part non éditable sous 10 %, non marquées
+  S2 (commande de création de l'instance 6 à trois membres) : aucune valeur de clé dans la ligne imprimée ; valeurs
+    reçues par le loueur quand la ligne est jouée ; échéance d'arrêt à 23,08 h, soit 28 / 1,2 − 0,25
+  S7 (preuve du versement côté session) : arrêt avant la marche, traces seules, sans manifeste : accepté (refusé à la
+    première vérification, constat n-1) ; sortie de marche inventoriée sans manifeste au commit : refusé
+
+Contrôles à part (commandes simples)
+  - arbre extrait par les motifs de l'amorce au commit 840c3ecc5 : 512 fichiers ; docs/notes, diag, runs, brouillons
+    absents ; essais du paquet par la commande de l'étape 4 de l'amorce, Python 3.13 : 235 passés (80 s) ; arbre propre ;
+  - lecteur gelé `src/controle_ia/t06/cout.py` : bcfe56832a1bf0c9af78b94232aedb44f179446a3871f45c27f1e3348efa7173 au commit
+    contre-lu 1a53fc7a et aujourd'hui ; aucun fichier de `src/controle_ia/t06`, `organismes`, `harnais`, `environnements`
+    n'a changé entre les deux ;
+  - le paquet de formation ne lit plus le drapeau `cout_plusieurs_nombres` du lecteur gelé (recherche : aucune occurrence) ;
+  - arbre gelé (définition du code : tout sauf prereg, brouillons, registres, docs, diag, runs, donnees, livrables, papiers,
+    traces, CLAUDE.md) : identique entre ef8008682 et 840c3ecc5 ; DIFFÉRENT entre ef8008682 et la tête du dépôt à 00:35Z
+    (67dc950e4) : le code de lecture y est versé (`src/controle_ia/barreau5_familles/relecture_v1.py`, `sondes_v1.py`,
+    `tests/test_barreau5_familles_lecture_v1.py`), et un fichier non suivi est sous `src/` dans l'arbre de travail.
