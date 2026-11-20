@@ -31,3 +31,6 @@
 | ERRATUM-1-ADDENDUM-1-ORGANISME-V9-LIGNE-1 | 2026-11-19T23:39:59Z | prereg/organisme-auto-conception-v9/erratum-1-addendum-1-preenregistrement-ligne-1-effort-recherche-v5-v4-v3.md | ab98317d5e809d53eb5af88f17dd1f4e3683a16a1a21c699c9823538f84f1bd4 |
 | QUESTION-ORGANISME-NOUVELLES-ATTAQUES-V3 | 2026-11-20T02:20:55Z | prereg/ideation-nouvelles-attaques-v1/question-course-nouvelles-attaques-v3.md | 2cf2aae035beef43e999e3cd8b0fb7ba3808649b3cc8b29661c1244b0540415b |
 | ADDENDUM-1-PLAN-BARREAU5-SABOTAGE-OU-EMPREINTE | 2026-11-20T04:49:05Z | prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-addendum-1.md | 2afa2186c9f11e0a477cdf628348d2cad3bce90de5933597ff09a4a3048499e4 |
+| ADDITIF-1-ORGANISME-V9-LIGNE-3 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/additif-1-preenregistrement-ligne-3-votes-effectifs-juges-v7-v2.md | e1c1ee842219397a45b5a9a9336d05d873499b2a94bc8847f204b205141908b0 |
+| CRITERES-JUGE-SELECTION-ORGANISME-V9-V7 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/juge-selection/criteres-choix-cartes-v9-v7.md | 6af793a27f6bce4b5fe05aa18b5c6c33aed8d10a284d081fd24a0640434a316f |
+| NOTE-JUGE-SELECTION-ORGANISME-V9-V7 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/juge-selection/note-conception-juge-selection-cartes-ecartees-v7.md | bbd71b7c998866ec249556fe7803015c54aac4081dffc4e5084588819bc98a26 |
