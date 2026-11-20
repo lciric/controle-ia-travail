@@ -20,12 +20,17 @@ from pathlib import Path
 DEPOT = Path(__file__).resolve().parents[6]
 P = "src/controle_ia/barreau5_familles/"
 L, S, R = f"{P}lecture_v1.py", f"{P}sondes_v1.py", f"{P}relecture_v1.py"
-EL, ES, ELA = ("tests/test_barreau5_familles_lecture_v1.py", "tests/test_barreau5_familles_sondes_v1.py",
-               "tests/test_lancer_b5f_lecture_v1.py")
-A_COPIER = ["src", "tests/conftest.py", EL, ES, ELA, "tests/test_barreau5_familles_relecture_v1.py",
+EL, ES = "tests/test_barreau5_familles_lecture_v1.py", "tests/test_barreau5_familles_sondes_v1.py"
+# essais du lanceur : les seuls essais de la ligne SCORES-B5F (premier passage de cet outil, nul : un autre essai du lanceur
+# lit des fichiers du dépôt que la copie de travail ne porte pas ; le fichier entier passe sur le dépôt)
+ELA = "tests/test_lancer_b5f_lecture_v1.py -k ligne_scores"
+A_COPIER = ["src", "tests/conftest.py", EL, ES, "tests/test_lancer_b5f_lecture_v1.py",
+            "tests/test_barreau5_familles_relecture_v1.py",
             "tests/test_amorce_b5f_lecture_v1.py", "scripts/lancer_b5f_lecture_v1.sh", "scripts/amorce_b5f_lecture_v1.sh",
             "prereg/T0.6-organismes-config-7b-v1.json", "prereg/T0.6-organismes-config-7b-v1.json.sha256", "pyproject.toml",
-            "docs/sources/invites-2606.08892-v1", "requirements-gpu.txt"]
+            "docs/sources/invites-2606.08892-v1", "requirements-gpu.txt",
+            # la fixture des essais du lanceur copie ces deux fichiers (second passage nul sans eux)
+            ".claude/hooks/garde_calcul.py", "prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1.md"]
 
 MUTATIONS = [
     ("W1", L, "garde d'ouverture : la borne de la taille d'un fichier fermé n'est plus revue",
@@ -60,7 +65,8 @@ def jouer(copie: Path, base: Path, nom: str, essais) -> dict:
            "PYTHONDONTWRITEBYTECODE": "1", "HOME": os.environ.get("HOME", "/root")}
     debut = time.time()
     r = subprocess.run([sys.executable, "-B", "-m", "pytest", "-q", "-p", "no:cacheprovider", "-x", "--basetemp",
-                        str(base / nom), *essais], cwd=str(copie), env=env, capture_output=True, text=True)
+                        str(base / nom), *[a for e in essais for a in e.split()]], cwd=str(copie), env=env,
+                       capture_output=True, text=True)
     lignes = [x for x in r.stdout.splitlines() if x.strip() and not x.startswith("PROGRES")]
     echec = [x for x in lignes if x.startswith("FAILED") or x.startswith("ERROR")]
     return {"code": r.returncode, "duree_s": round(time.time() - debut, 1), "fin": lignes[-1][:200] if lignes else "",
