@@ -51,3 +51,5 @@
 | MASQUE-V2-REJEU-JUGE-V9 | 2026-11-20T10:18:47Z | docs/notes/organisme-auto-conception-v1/epreuves-v9/juge-selection/rejeu-masque-lecteur-v1/configuration-a-v2/masque-v2/masque_style_cartes_v2.py | 769aace5b64c697799b76a0120a5c2926c75798a388c93fa00ddc93224401c01 |
 | PIECE-SCELLEMENT-CONFIGURATION-A-V2-REJEU-JUGE-V9 | 2026-11-20T10:18:47Z | prereg/organisme-auto-conception-v9/juge-selection/rejeu-v1/piece-scellement-configuration-a-v2-masque-v2-v1.md | 74947914ef58f2a1600faa5da77a056953a65862f1abf8b29c8fc7b54b9bf47f |
 | ADDITIF-4-ORGANISME-V9-LIGNE-3 | 2026-11-20T10:37:47Z | prereg/organisme-auto-conception-v9/additif-4-preenregistrement-ligne-3-mot-alarme-v2.md | 841cef1e99126762019f45bdacca7ff7d6291c91b34c4f3d434c854c262db704 |
+| PREREG-COURT-NOUVELLES-ATTAQUES-V6 | 2026-11-20T10:48:02Z | prereg/ideation-nouvelles-attaques-v1/preenregistrement-court-course-nouvelles-attaques-v6.md | 7e240c8c9b059171e06b416d5cf8b14c6822978f84219ad2d9770a32f90f11c5 |
+| DEVIS-NOUVELLES-ATTAQUES-V4 | 2026-11-20T10:48:02Z | prereg/ideation-nouvelles-attaques-v1/devis-course-nouvelles-attaques-v4.md | 620de3692d3454f08d32832ca471551bb9a8439f80122b716b13474d9a6d363e |
