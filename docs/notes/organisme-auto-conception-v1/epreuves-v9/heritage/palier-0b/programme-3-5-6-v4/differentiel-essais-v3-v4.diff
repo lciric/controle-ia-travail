@@ -1,0 +1,43 @@
+--- programme-3-5-6-v3/tests/test_lancer_etapes_3_5_6_v3.py
++++ programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py
+@@ -1,4 +1,9 @@
+-"""Essais v3 du programme des étapes 3, 4, 5 et 6, version 2 (`lancer_etapes_3_5_6_v2.py`, inchangé, empreinte
++"""Essais v4 du programme des étapes 3, 4, 5 et 6, version 2 (vérification des essais v3, `59907a0d…`, point 4) : les essais v3,
++plus `test_le_programme_charge_est_le_v2`, qui exige que le programme chargé ait l'empreinte du programme v2 ; il échoue chaque
++fois que la variable `PROGRAMME_3_5_6_MUTANT` est posée (elle n'est plus une porte dérobée : tout lancement où elle est posée a au
++moins un essai en échec), et un message est écrit à l'import quand elle l'est.
++
++Essais v3 (repris) du programme des étapes 3, 4, 5 et 6, version 2 (`lancer_etapes_3_5_6_v2.py`, inchangé, empreinte
+ 1f04cb463c2fca7d2d67bfa3a8045bd4c9592e4e93bb564000ec102421cfdb14, contrôlée au chargement). Essais v3 (vérification du programme
+ v2, `beeaf621…`, point 3) : le retour de `lancer` (`frequences`, `reglages` : (chemin, empreinte), chemin existant, empreinte égale
+ à celle du fichier ; `manifestes` : clés 3 à 6, chacune l'empreinte du manifeste de son étape) est éprouvé sur le cas sain planté ;
+@@ -44,6 +49,9 @@
+ if not os.environ.get("PROGRAMME_3_5_6_MUTANT"):
+     with open(CHEMIN_PROGRAMME, "rb") as _fh:
+         assert hashlib.sha256(_fh.read()).hexdigest() == EMPREINTE_DU_PROGRAMME_V2, "programme v2 d'empreinte inattendue"
++else:  # essais v4 : la variable posée est dite à l'import, et `test_le_programme_charge_est_le_v2` échouera
++    sys.stderr.write(f"\nATTENTION : PROGRAMME_3_5_6_MUTANT est posée ; programme chargé sans contrôle à l'import : "
++                     f"{CHEMIN_PROGRAMME} ; l'essai test_le_programme_charge_est_le_v2 échouera si ce n'est pas le v2\n")
+ _spec = importlib.util.spec_from_file_location("lancer_etapes_3_5_6_v2", CHEMIN_PROGRAMME)
+ PR = importlib.util.module_from_spec(_spec)
+ _spec.loader.exec_module(PR)
+@@ -114,6 +122,19 @@
+     return json.load(open(m, encoding="utf-8")), TI.verifier_manifeste(m)
+ 
+ 
++def test_le_programme_charge_est_le_v2():
++    """Essai v4 (vérification des essais v3, point 4) : le programme chargé par ces essais est le programme v2, d'empreinte
++    `EMPREINTE_DU_PROGRAMME_V2`, recalculée par le programme lui-même (`empreinte_du_programme`, sur son propre fichier) et sur le
++    fichier chargé. Cas sain : variable `PROGRAMME_3_5_6_MUTANT` absente, programme v2 chargé : passe. Artefact : la variable posée
++    sur une autre copie (mutant, ou simple commentaire ajouté) : échoue, si bien qu'aucun lancement des essais avec une autre copie
++    ne passe en entier."""
++    with open(CHEMIN_PROGRAMME, "rb") as fh:
++        sur_disque = hashlib.sha256(fh.read()).hexdigest()
++    assert PR.empreinte_du_programme() == sur_disque == EMPREINTE_DU_PROGRAMME_V2, (
++        f"programme chargé ({CHEMIN_PROGRAMME}) d'empreinte {sur_disque}, et non le programme v2 ({EMPREINTE_DU_PROGRAMME_V2})"
++        + (" — PROGRAMME_3_5_6_MUTANT est posée" if os.environ.get("PROGRAMME_3_5_6_MUTANT") else ""))
++
++
+ @pytest.fixture(scope="module")
+ def chaine(tmp_path_factory):
+     """La chaîne entière, réduite, sous la couche « essai-de-forme » (étape 3 : quatre suites par dose, 20 permutations ;

@@ -1,0 +1,27 @@
+
+ATTENTION : PROGRAMME_3_5_6_MUTANT est posée ; programme chargé sans contrôle à l'import : /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-palier-0b-v6/copie-commentaire-v4/lancer_etapes_3_5_6_v2.py ; l'essai test_le_programme_charge_est_le_v2 échouera si ce n'est pas le v2
+F
+=================================== FAILURES ===================================
+______________________ test_le_programme_charge_est_le_v2 ______________________
+
+    def test_le_programme_charge_est_le_v2():
+        """Essai v4 (vérification des essais v3, point 4) : le programme chargé par ces essais est le programme v2, d'empreinte
+        `EMPREINTE_DU_PROGRAMME_V2`, recalculée par le programme lui-même (`empreinte_du_programme`, sur son propre fichier) et sur le
+        fichier chargé. Cas sain : variable `PROGRAMME_3_5_6_MUTANT` absente, programme v2 chargé : passe. Artefact : la variable posée
+        sur une autre copie (mutant, ou simple commentaire ajouté) : échoue, si bien qu'aucun lancement des essais avec une autre copie
+        ne passe en entier."""
+        with open(CHEMIN_PROGRAMME, "rb") as fh:
+            sur_disque = hashlib.sha256(fh.read()).hexdigest()
+>       assert PR.empreinte_du_programme() == sur_disque == EMPREINTE_DU_PROGRAMME_V2, (
+            f"programme chargé ({CHEMIN_PROGRAMME}) d'empreinte {sur_disque}, et non le programme v2 ({EMPREINTE_DU_PROGRAMME_V2})"
+            + (" — PROGRAMME_3_5_6_MUTANT est posée" if os.environ.get("PROGRAMME_3_5_6_MUTANT") else ""))
+E       AssertionError: programme chargé (/tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-palier-0b-v6/copie-commentaire-v4/lancer_etapes_3_5_6_v2.py) d'empreinte d5673dc90e06ee7128f74d6f28217feb305a35d77c928cc6214c4f54961d99f1, et non le programme v2 (1f04cb463c2fca7d2d67bfa3a8045bd4c9592e4e93bb564000ec102421cfdb14) — PROGRAMME_3_5_6_MUTANT est posée
+E       assert 'd5673dc90e06...c4f54961d99f1' == '1f04cb463c2f...c102421cfdb14'
+E         
+E         - 1f04cb463c2fca7d2d67bfa3a8045bd4c9592e4e93bb564000ec102421cfdb14
+E         + d5673dc90e06ee7128f74d6f28217feb305a35d77c928cc6214c4f54961d99f1
+
+../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py:133: AssertionError
+=========================== short test summary info ============================
+FAILED ../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py::test_le_programme_charge_est_le_v2
+1 failed in 0.21s

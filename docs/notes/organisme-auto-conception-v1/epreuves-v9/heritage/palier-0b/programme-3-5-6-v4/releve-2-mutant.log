@@ -1,0 +1,104 @@
+F.....................FF........                                         [100%]
+=================================== FAILURES ===================================
+______________________ test_le_programme_charge_est_le_v2 ______________________
+
+    def test_le_programme_charge_est_le_v2():
+        """Essai v4 (vérification des essais v3, point 4) : le programme chargé par ces essais est le programme v2, d'empreinte
+        `EMPREINTE_DU_PROGRAMME_V2`, recalculée par le programme lui-même (`empreinte_du_programme`, sur son propre fichier) et sur le
+        fichier chargé. Cas sain : variable `PROGRAMME_3_5_6_MUTANT` absente, programme v2 chargé : passe. Artefact : la variable posée
+        sur une autre copie (mutant, ou simple commentaire ajouté) : échoue, si bien qu'aucun lancement des essais avec une autre copie
+        ne passe en entier."""
+        with open(CHEMIN_PROGRAMME, "rb") as fh:
+            sur_disque = hashlib.sha256(fh.read()).hexdigest()
+>       assert PR.empreinte_du_programme() == sur_disque == EMPREINTE_DU_PROGRAMME_V2, (
+            f"programme chargé ({CHEMIN_PROGRAMME}) d'empreinte {sur_disque}, et non le programme v2 ({EMPREINTE_DU_PROGRAMME_V2})"
+            + (" — PROGRAMME_3_5_6_MUTANT est posée" if os.environ.get("PROGRAMME_3_5_6_MUTANT") else ""))
+E       AssertionError: programme chargé (/tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-palier-0b-v6/mutant-v4/lancer_etapes_3_5_6_v2.py) d'empreinte 2b43da64e0354e677f3d79c4dbc07ff2b4487e79e209c23cfc1b9fdfc86242f7, et non le programme v2 (1f04cb463c2fca7d2d67bfa3a8045bd4c9592e4e93bb564000ec102421cfdb14) — PROGRAMME_3_5_6_MUTANT est posée
+E       assert '2b43da64e035...b9fdfc86242f7' == '1f04cb463c2f...c102421cfdb14'
+E         
+E         - 1f04cb463c2fca7d2d67bfa3a8045bd4c9592e4e93bb564000ec102421cfdb14
+E         + 2b43da64e0354e677f3d79c4dbc07ff2b4487e79e209c23cfc1b9fdfc86242f7
+
+../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py:133: AssertionError
+____________ test_v2_point_5_cas_sain_plante_la_chaine_finit_tenue _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-564/test_v2_point_5_cas_sain_plant0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f73f89a3df0>
+
+    def test_v2_point_5_cas_sain_plante_la_chaine_finit_tenue(tmp_path, monkeypatch):
+        """Cas sain planté : référence atteignable à une seule dose pour chaque contraste, φ atteignable : l'étape 6 se clôt
+        « tenue », sans fichier d'arrêt (le cas sain tiré est la chaîne entière)."""
+        _etapes_rapides(monkeypatch, etape_6=_etape_6_plantee(_reglages(k=(0.25,), tau=(0.5,))))
+        racine, texte = _racine(tmp_path)
+        r = PR.lancer(texte, racine, _copie(), str(tmp_path / "sortie"), **REDUIT)
+        m, _ = _manifeste(os.path.join(r["dossier"], "etape-6"))
+        assert m["configuration"]["issue"] == "tenue" and not os.path.exists(os.path.join(r["dossier"], "etape-6", "arret.txt"))
+>       _verifier_le_retour(r)
+
+../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py:399: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'dossier': '/tmp/pytest-of-root/pytest-564/test_v2_point_5_cas_sain_plant0/sortie', 'frequences': ('74f3fe68548357700...873537cfc932e7fec6ee7064ee69d676692e45877d5', '6': '20fe0fd804aefc3671d648d8233b3bde32209453463f97f6f462bdac26ae9db4'}}
+
+    def _verifier_le_retour(r):
+        """Essais v3 : le retour de `lancer` — `frequences` et `reglages` de la forme (chemin, empreinte), le chemin celui du
+        fichier gelé de son étape, existant, l'empreinte égale au SHA-256 du fichier et à son compagnon ; `manifestes` de clés 3 à 6,
+        chacune l'empreinte du manifeste de son étape."""
+        d = r["dossier"]
+        for cle, etape, nom in (("frequences", "etape-5", PR.FICHIER_DES_FREQUENCES), ("reglages", "etape-6", PR.FICHIER_DES_REGLAGES)):
+            valeur = r[cle]
+            assert isinstance(valeur, tuple) and len(valeur) == 2, (cle, valeur)
+            chemin, empreinte = valeur
+>           assert chemin == os.path.join(d, etape, nom) and os.path.isfile(chemin), (cle, valeur)
+E           AssertionError: ('frequences', ('74f3fe68548357700f9d16fc90b6f5d94f837b04d37b66421c0de1510dcbff71', '/tmp/pytest-of-root/pytest-564/test_v2_point_5_cas_sain_plant0/sortie/etape-5/frequences-m12-v1.json'))
+E           assert ('74f3fe685483...de1510dcbff71' == '/tmp/pytest-...s-m12-v1.json'
+E             
+E             - /tmp/pytest-of-root/pytest-564/test_v2_point_5_cas_sain_plant0/sortie/etape-5/frequences-m12-v1.json
+E             + 74f3fe68548357700f9d16fc90b6f5d94f837b04d37b66421c0de1510dcbff71)
+
+../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py:411: AssertionError
+___________________ test_v3_main_imprime_le_retour_de_lancer ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-564/test_v3_main_imprime_le_retour0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7412fbfc50>
+capsys = <_pytest.capture.CaptureFixture object at 0x7f7412ff5550>
+
+    def test_v3_main_imprime_le_retour_de_lancer(tmp_path, monkeypatch, capsys):
+        """Essai v3, cas sain planté : la sortie de `main`, relue, porte exactement les valeurs du retour de `lancer` et des fichiers
+        — l'empreinte du manifeste de chaque étape, et, pour les fréquences et les réglages gelés, le chemin puis l'empreinte du
+        fichier (l'ordre que reçoivent les programmes des étapes 6 bis et 7, et 8 et 9)."""
+        _etapes_rapides(monkeypatch, etape_6=_etape_6_plantee(_reglages(k=(0.25,), tau=(0.5,))))
+        _lancer_reduit_par_main(monkeypatch)
+        racine, texte = _racine(tmp_path)
+        d = str(tmp_path / "sortie")
+        PR.main([texte, racine, _copie(), d])
+        lu = _lire_la_sortie_de_main(capsys.readouterr().out)
+>       _verifier_le_retour(dict(lu, dossier=d))
+
+../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py:454: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'manifestes': {'3': '4d8c04ef162ab39af44b694df8fe5f2540fbd18d2a6db48795ce20cc52d29e5e', '4': 'efe5917d203ba3741da343f.../sortie/etape-6/reglages-v1.json'), 'dossier': '/tmp/pytest-of-root/pytest-564/test_v3_main_imprime_le_retour0/sortie'}
+
+    def _verifier_le_retour(r):
+        """Essais v3 : le retour de `lancer` — `frequences` et `reglages` de la forme (chemin, empreinte), le chemin celui du
+        fichier gelé de son étape, existant, l'empreinte égale au SHA-256 du fichier et à son compagnon ; `manifestes` de clés 3 à 6,
+        chacune l'empreinte du manifeste de son étape."""
+        d = r["dossier"]
+        for cle, etape, nom in (("frequences", "etape-5", PR.FICHIER_DES_FREQUENCES), ("reglages", "etape-6", PR.FICHIER_DES_REGLAGES)):
+            valeur = r[cle]
+            assert isinstance(valeur, tuple) and len(valeur) == 2, (cle, valeur)
+            chemin, empreinte = valeur
+>           assert chemin == os.path.join(d, etape, nom) and os.path.isfile(chemin), (cle, valeur)
+E           AssertionError: ('frequences', ('74f3fe68548357700f9d16fc90b6f5d94f837b04d37b66421c0de1510dcbff71', '/tmp/pytest-of-root/pytest-564/test_v3_main_imprime_le_retour0/sortie/etape-5/frequences-m12-v1.json'))
+E           assert ('74f3fe685483...de1510dcbff71' == '/tmp/pytest-...s-m12-v1.json'
+E             
+E             - /tmp/pytest-of-root/pytest-564/test_v3_main_imprime_le_retour0/sortie/etape-5/frequences-m12-v1.json
+E             + 74f3fe68548357700f9d16fc90b6f5d94f837b04d37b66421c0de1510dcbff71)
+
+../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py:411: AssertionError
+=========================== short test summary info ============================
+FAILED ../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py::test_le_programme_charge_est_le_v2
+FAILED ../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py::test_v2_point_5_cas_sain_plante_la_chaine_finit_tenue
+FAILED ../programme-3-5-6-v4/tests/test_lancer_etapes_3_5_6_v4.py::test_v3_main_imprime_le_retour_de_lancer
+3 failed, 29 passed in 837.63s (0:13:57)
