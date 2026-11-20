@@ -313,7 +313,9 @@ def _fichiers(arbre: Path) -> list[str]:
 def exiger_taille_bornee(chemin: Path, octets: int | None = None) -> int:
     """Constat V-1 : un fichier fermé fait au plus `TAILLE_MAX_FICHIER` octets (sa taille sur le disque, ou celle qu'il
     aurait, `octets`, avant d'être écrit) ; sinon arrêt, nœud. Rend la taille."""
-    n = Path(chemin).stat().st_size if octets is None else int(octets)
+    _exiger(octets is None or (isinstance(octets, int) and not isinstance(octets, bool) and octets >= 0),
+            f"fichier fermé {Path(chemin).name} : taille {octets!r} illisible")
+    n = Path(chemin).stat().st_size if octets is None else octets
     _exiger(n <= TAILLE_MAX_FICHIER, f"fichier fermé {Path(chemin).name} : {n} octets, au-delà de la borne de "
             f"{TAILLE_MAX_FICHIER} octets (« Données gardées » : morceaux de moins de 95 Mo) : arrêt, nœud")
     return n
@@ -664,7 +666,7 @@ def charger_arbre(arbre: Path, partition: tuple[list, list]) -> dict:
             and len(set(sondes)) == len(sondes), "bilan de la relecture : liste des sondes illisible")
     for s in SONDES_JAMAIS_COUPEES:
         _exiger(s in sondes, f"sonde {s} absente du bilan : elle ne se coupe pas")
-    notations, echecs = {}, {}
+    notations, echecs, jetons_attendus = {}, {}, set()
     for s in sondes:
         plis_s = {}
         for k in (0, 1):
@@ -684,10 +686,31 @@ def charger_arbre(arbre: Path, partition: tuple[list, list]) -> dict:
                 _exiger(nom == SERIE_NU or _NOM_OPAQUE.fullmatch(nom) is not None or _NOM_APPRENTISSAGE.fullmatch(nom)
                         is not None or _SERIE_PROPRE.fullmatch(nom) is not None or _SERIE_ANCRE.fullmatch(nom) is not None,
                         f"scores de {s} : série {nom!r} hors du plan")
-            gardees = {n: v for n, v in series.items() if _SERIE_PROPRE.fullmatch(n) is None}
+                _exiger(isinstance(series[nom], dict) and set(series[nom]) == {"actions"},
+                        f"scores de {s}, pli {k}, série {nom} : scores par action seulement (les scores par jeton ont "
+                        "leur fichier, `jetons/`)")
+            gardees = {n: dict(v) for n, v in series.items() if _SERIE_PROPRE.fullmatch(n) is None}
+            if s in SONDES_PAR_JETON:
+                for nom in gardees:
+                    rel = f"jetons/{s}-pli{k}/{nom}.json"
+                    _exiger((arbre / rel).is_file(), f"sonde {s}, pli {k}, série {nom} : fichier des scores par jeton "
+                            f"{rel} absent : score manquant, refus")
+                    j = _lire_json(arbre / rel, f"scores par jeton de {s}, pli {k}, série {nom}")
+                    _exiger(isinstance(j, dict) and j.get("format") == FORMAT_JETONS and j.get("sonde") == s
+                            and j.get("pli") == k and j.get("serie") == nom and set(j) == {"format", "sonde", "pli",
+                                                                                          "serie", "jetons"},
+                            f"{rel} : format, sonde, pli ou série illisible : refus")
+                    gardees[nom]["jetons"] = j["jetons"]
+                    jetons_attendus.add(rel)
             plis_s[k] = Pli(s, k, plis[k], gardees, s in SONDES_PAR_JETON)
         if s not in echecs:
             notations[s] = Notation(s, plis_s)
+    # aucun fichier de scores par jeton hors du plan : d'une sonde sans scores par jeton, d'une sonde en échec, d'une
+    # série propre, d'une série absente du fichier de scores (constats V-1 et v-2)
+    presents = {p.relative_to(arbre).as_posix() for p in (arbre / "jetons").rglob("*")
+                if p.is_file() and not p.name.endswith(".sha256")} if (arbre / "jetons").is_dir() else set()
+    intrus = sorted(presents - jetons_attendus)
+    _exiger(not intrus, f"fichiers de scores par jeton hors du plan {intrus[:3]} : refus")
     prod = _lire_json(arbre / "produits.json", "produits")
     _exiger(isinstance(prod, dict) and prod.get("format") == FORMAT_PRODUITS and prod.get("couche") == COUCHE_LUE,
             "produits : format ou couche illisible")

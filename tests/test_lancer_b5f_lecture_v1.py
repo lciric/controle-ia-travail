@@ -333,21 +333,24 @@ def test_commande_par_le_lanceur(session):
     assert r.returncode == 2 and "GO_ID absent" in r.stderr
 
 
-def _pousser_lecture(s, run=RUN_L, abimer=False):
-    """Arbre fermé fabriqué au commit d'une branche de lecture poussée ; rend le commit."""
+def _pousser_lecture(s, run=RUN_L, abimer=False, branche=None):
+    """Arbre fermé fabriqué (bilan et un fichier de scores par jeton d'une série) au commit poussé sur la branche de
+    sortie de la pièce (ou sur `branche`) ; rend le commit."""
     r = s["r"]
     _g(r, "checkout", "-q", "-b", "lecture")
     arbre = r / "donnees" / run / "lecture"
-    arbre.mkdir(parents=True)
+    (arbre / "jetons" / "decisive-pli0").mkdir(parents=True)
     (arbre / "bilan-relecture.json").write_text("{}")
+    (arbre / "jetons" / "decisive-pli0" / "X-01.json").write_text("{\"jetons\": {}}")
     lv.ecrire_inventaire(arbre, run)
     if abimer:
-        (arbre / "bilan-relecture.json").write_text("{\"x\": 1}")
+        (arbre / "jetons" / "decisive-pli0" / "X-01.json").write_text("{\"jetons\": {\"e0/p0\": [1.0]}}")
     (r / "runs" / run).mkdir(parents=True)
     (r / "runs" / run / "manifeste.json").write_text("{}\n")
     _g(r, "add", "-A")
     _g(r, "commit", "-q", "-m", "arbre fermé")
-    _g(r, "push", "-q", "-f", "origin", "lecture")
+    cible = branche or rv.piece_lecture("decisif" if run.endswith("b5f-lecture") else "repetition")["branche"]
+    _g(r, "push", "-q", "-f", "origin", f"HEAD:refs/heads/{cible}")
     return _g(r, "rev-parse", "HEAD")
 
 
@@ -358,13 +361,29 @@ def test_ligne_scores_cas_sain_et_artefacts(session):
     assert rv.ligne_scores(s["r"], c, RUN_L) == f"commit {c} ; inventaire sha256 {attendu}"
     r = _jouer("scores", str(s["r"]), c, RUN_L)
     assert r.returncode == 0 and r.stdout.strip() == f"commit {c} ; inventaire sha256 {attendu}"
+    inv = json.loads((s["r"] / "donnees" / RUN_L / "lecture" / "inventaire.json").read_text())
+    assert {f["chemin"] for f in inv["fichiers"]} == {"bilan-relecture.json", "jetons/decisive-pli0/X-01.json"}
     with pytest.raises(GardeArret):
         rv.ligne_scores(s["r"], s["code"], RUN_L)                                    # arbre absent du commit
     _g(s["r"], "checkout", "-q", "main")
     _g(s["r"], "branch", "-q", "-D", "lecture")
-    c2 = _pousser_lecture(s, abimer=True)
+    c2 = _pousser_lecture(s, abimer=True)                    # un fichier de scores par jeton changé après l'inventaire
     with pytest.raises(GardeArret, match="empreinte"):
         rv.ligne_scores(s["r"], c2, RUN_L)
+
+
+def test_ligne_scores_commit_d_une_autre_branche_refus(session):
+    """Constat v-1 de la vérification : le commit doit être sur la branche de sortie de la pièce, non sur une branche
+    distante quelconque ; et la branche de la répétition n'admet pas la marche décisive."""
+    s = session
+    c = _pousser_lecture(s, branche="donnees/autre-branche")
+    with pytest.raises(GardeArret, match="absent de la branche distante donnees/barreau5-familles-jumelles-v1-lecture"):
+        rv.ligne_scores(s["r"], c, RUN_L)
+    _g(s["r"], "push", "-q", "origin", f"{c}:refs/heads/{rv.piece_lecture('repetition')['branche']}")
+    with pytest.raises(GardeArret, match="absent de la branche distante"):
+        rv.ligne_scores(s["r"], c, RUN_L)
+    _g(s["r"], "push", "-q", "origin", f"{c}:refs/heads/{rv.piece_lecture('decisif')['branche']}")
+    assert rv.ligne_scores(s["r"], c, RUN_L).startswith(f"commit {c} ; inventaire sha256 ")
 
 
 def test_ligne_scores_commit_non_verse_refus(session):

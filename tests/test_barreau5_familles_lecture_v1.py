@@ -207,10 +207,14 @@ def fabriquer(dossier: Path, *, familles=lv.TENUES, decalage=None, dbar=None, co
                     dec = decalage(sorte, f, m)
                     series[nom] = {c: v + dec + bruit * rng.standard_normal() for c, v in base.items()}
                 for nom, val in series.items():
-                    x = {"actions": {c: float(np.max(v)) for c, v in val.items()}}
+                    corps["series"][nom] = {"actions": {c: float(np.max(v)) for c, v in val.items()}}
                     if s in lv.SONDES_PAR_JETON:
-                        x["jetons"] = {c: [float(y) for y in v] for c, v in val.items()}
-                    corps["series"][nom] = x
+                        # un fichier de scores par jeton par série (constat V-1 de la vérification)
+                        pj = arbre / "jetons" / f"{s}-pli{k}" / f"{nom}.json"
+                        pj.parent.mkdir(parents=True, exist_ok=True)
+                        pj.write_text(json.dumps({"format": lv.FORMAT_JETONS, "sonde": s, "pli": k, "serie": nom,
+                                                  "jetons": {c: [float(y) for y in v] for c, v in val.items()}}),
+                                      encoding="utf-8")
             (arbre / "scores" / f"{s}-pli{k}.json").write_text(json.dumps(corps), encoding="utf-8")
     dep = {nom: [float(v) for v in dbar(f, m)] for (f, m), nom in nom_de.items()}
     sab = sorted(f"{a}-saboteur" for a in apprentissage if (a, "saboteur") not in exclure)
@@ -805,6 +809,9 @@ def _recalcul_independant(arbre: Path, table: list, entropie: int) -> dict:
     intervalle, depuis les fichiers de l'arbre, sans aucune fonction du programme (hors la partition et les graines)."""
     plis = lv.partition_des_plis(json.loads((arbre / "bilan-relecture.json").read_text())["taches"], entropie)
     sc = {k: json.loads((arbre / "scores" / f"decisive-pli{k}.json").read_text())["series"] for k in (0, 1)}
+    for k in (0, 1):
+        for serie in sc[k]:
+            sc[k][serie]["jetons"] = json.loads((arbre / "jetons" / f"decisive-pli{k}" / f"{serie}.json").read_text())["jetons"]
     prod = json.loads((arbre / "produits.json").read_text())
     dep = {n: np.array(v) for n, v in prod["deplacements"].items()}
     g = sum(dep[s] for s in prod["saboteurs_apprentissage"]) / len(prod["saboteurs_apprentissage"])

@@ -69,6 +69,7 @@ for s in nu X-01 A1-sur_saboteur X-02; do
     mkdir -p "donnees/$R/activations/$s/c15"; printf 'a%.0s' $(seq 100) > "donnees/$R/activations/$s/c15/e0__p0.npy"; done
 ecrire "donnees/$R/lecture/bilan-relecture.json" '{}'
 ecrire "donnees/$R/lecture/scores/decisive-pli0.json" '{"statut": "notee"}'
+ecrire "donnees/$R/lecture/jetons/decisive-pli0/X-01.json" '{"jetons": {}}'
 ecrire "donnees/$R/lecture/inventaire.json" '{"format": "b5f-inventaire-lecture-v1"}'
 ecrire "donnees/$R/poids/decisive-pli0.json" '{}'
 ecrire "donnees/$R/garde-activations.json" '{}'
@@ -221,7 +222,8 @@ def test_amorce_entiere_cas_sain_versement_complet_puis_destruction_a_l_echeance
     # versement : fichiers fermés, puis trois activations gardées (la quatrième reste sur le disque), preuve, témoin
     tete, fichiers = _branche(monde)
     base = f"donnees/{RUN}"
-    for f in ("lecture/inventaire.json", "lecture/scores/decisive-pli0.json.sha256", "poids/decisive-pli0.json",
+    for f in ("lecture/inventaire.json", "lecture/scores/decisive-pli0.json.sha256", "lecture/jetons/decisive-pli0/X-01.json",
+              "lecture/jetons/decisive-pli0/X-01.json.sha256", "poids/decisive-pli0.json",
               "garde-activations.json", "inventaire-activations.json.sha256"):
         assert f"{base}/{f}" in fichiers, f
     assert f"runs/{RUN}/manifeste.json" in fichiers and "traces-b5f-lecture/inventaire-final.json" in fichiers

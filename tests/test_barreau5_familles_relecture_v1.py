@@ -178,8 +178,14 @@ def test_jouet_de_bout_en_bout_relecture_sondes_puis_lecture(bout_en_bout, tmp_p
                   "diagnostic-A3"):
         for k in (0, 1):
             x = json.loads((arbre / "scores" / f"{sonde}-pli{k}.json").read_text())
-            assert x["statut"] == "notee" and set(x["series"]) >= {"nu", "X-01", "A1-jumeau"}
-            assert ("jetons" in x["series"]["nu"]) == (sonde in ("decisive", "comparaison"))
+            assert x["statut"] == "notee" and set(x["series"]) >= {"nu", "X-01", "A1-jumeau", "propre-A1-saboteur"}
+            assert all(set(v) == {"actions"} for v in x["series"].values())       # scores par action seulement
+            # un fichier de scores par jeton par série, pour les deux sondes du point 10, sauf les séries propres
+            jetons = sorted(p.stem for p in (arbre / "jetons" / f"{sonde}-pli{k}").glob("*.json"))
+            if sonde in ("decisive", "comparaison"):
+                assert jetons == sorted(n for n in x["series"] if not n.startswith("propre-")), sonde
+            else:
+                assert jetons == [], sonde
     lv.exiger_arbre(arbre, m["resume"]["inventaire_sha256"])
     lv.exiger_arbre_sans_etiquettes(arbre, m["table_sha"])
     rv.exiger_sorties_lecture_permises(s)
@@ -228,7 +234,7 @@ def test_produits_ecrits_egaux_au_recalcul_et_aucun_point_d_ancrage(bout_en_bout
     # le point d'ancrage est relu et noté par la sonde décisive, mais n'entre ni dans les produits ni dans un apprentissage
     assert "ancre-R1-saboteur" not in p["deplacements"]
     x = json.loads((arbre / "scores" / "decisive-pli0.json").read_text())
-    assert "ancre-R1-saboteur" in x["series"] and "jetons" in x["series"]["ancre-R1-saboteur"]
+    assert "ancre-R1-saboteur" in x["series"] and (arbre / "jetons" / "decisive-pli0" / "ancre-R1-saboteur.json").is_file()
     poids = json.loads((bout_en_bout["sorties"] / "poids" / "decisive-pli0.json").read_text())
     assert "ancre-R1-saboteur" not in poids["positifs"] + poids["negatifs"]
     assert json.loads((arbre / "bilan-relecture.json").read_text())["ancrages"] == ["ancre-R1-saboteur"]

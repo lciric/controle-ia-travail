@@ -21,7 +21,9 @@ existants (`R<k>-saboteur`), négatifs sous les témoins existants (`R<k>-temoin
 **Aucun adaptateur tenu à l'écart (`X-NN`) ni point d'ancrage n'entre dans un apprentissage** : refus.
 
 **Notation fermée** (point 10) : chaque sonde note chaque série sur les actions de son pli ; scores par action, et, pour les
-sondes `decisive` et `comparaison` (couche 15), scores par jeton à côté. Le score d'action est le maximum des scores par
+sondes `decisive` et `comparaison` (couche 15), scores par jeton à côté, de chaque adaptateur et du modèle nu (non des
+séries propres des saboteurs d'apprentissage, constat v-2), un fichier fermé par série (constat V-1 ; chaque fichier sous
+la borne `lecture_v1.TAILLE_MAX_FICHIER`, éprouvée avant l'écriture). Le score d'action est le maximum des scores par
 jeton (`harnais.sondes.score_action`, qui refuse toute autre agrégation que le maximum ou l'attention ; refus de la moyenne
 et de la médiane, N-026) et doit l'égaler exactement. **Aucune statistique d'adaptateur tirée d'un score de sonde, aucune
 aire, aucun résumé** : ce module ne rend que des scores bruts, écrits dans les seuls fichiers fermés, et n'imprime aucun
@@ -42,6 +44,7 @@ from ..manifeste import generateur
 from ..scellement import sceller
 from ..t07bbis import apprentissage_carte_v1 as ac
 from ..t07bbis.commun_v1 import EPOQUES, N_ACTIONS_CONTROLE_CARTE, TOLERANCE_CARTE, exiger_agregation
+from . import lecture_v1 as _lv
 from .lecture_v1 import FORMAT_SCORES, SONDES_PAR_JETON
 
 FAMILLE = "lineaire"
@@ -54,6 +57,7 @@ _TENU = re.compile(r"X-[0-9]{2}")
 _ANCRE = re.compile(r"ancre-[A-Za-z0-9-]{1,40}")
 _APPRENTISSAGE = re.compile(r"(?P<famille>A[1-3])-(?P<membre>jumeau|saboteur|sur_saboteur)")
 _REPETITION = re.compile(r"(?P<famille>R[1-9])-(?P<membre>saboteur|temoin)")
+_PROPRE = re.compile(r"propre-A[1-3]-saboteur")
 
 
 @dataclass(frozen=True)
@@ -190,23 +194,49 @@ def noter(sonde, d: Definition, lecteur, cles: dict, taches) -> dict:
             if not (sj.shape == (acts.shape[0],) and np.all(np.isfinite(sj)) and float(sj.max()) == a):
                 raise GardeArret(f"sonde {d.nom}, {s}/{c} : score d'action ≠ maximum des scores par jeton : arrêt")
             actions[c] = a
-            if d.par_jeton:
+            if d.par_jeton and _PROPRE.fullmatch(s) is None:
                 jetons[c] = [float(v) for v in sj]
-        sortie[s] = {"actions": actions, **({"jetons": jetons} if d.par_jeton else {})}
+        # point 10 : les scores par jeton « de chaque adaptateur et du modèle nu » ; pas ceux des séries propres des
+        # saboteurs d'apprentissage, que la lecture ne lit pas (constat v-2 de la vérification)
+        sortie[s] = {"actions": actions, **({"jetons": jetons} if d.par_jeton and _PROPRE.fullmatch(s) is None else {})}
     return sortie
 
 
-def ecrire_scores(dossier: Path, d: Definition, pli: int, taches, series: dict | None, motif: str | None) -> str:
-    """Fichier fermé `scores/<sonde>-pli<k>.json` (format `b5f-scores-v1`, l'interface de `lecture_v1`), scellé ;
-    « echec » sans aucune série quand la sonde n'a pu être apprise."""
-    chemin = Path(dossier) / "scores" / f"{d.nom}-pli{int(pli)}.json"
+def _ecrire_ferme(chemin: Path, corps: dict) -> str:
+    """Un fichier fermé, scellé : jamais écrasé (R12) ; jamais au-delà de la borne écrite de la taille d'un fichier
+    (`lecture_v1.TAILLE_MAX_FICHIER`, constat V-1), éprouvée avant l'écriture."""
+    chemin = Path(chemin)
     if chemin.exists():
         raise GardeArret(f"{chemin} existe déjà (R12)")
+    octets = json.dumps(corps, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    _lv.exiger_taille_bornee(chemin, len(octets))
     chemin.parent.mkdir(parents=True, exist_ok=True)
-    corps = {"format": FORMAT_SCORES, "sonde": d.nom, "pli": int(pli), "couche": int(d.couche), "taches": list(taches),
-             "statut": "echec" if series is None else "notee", "motif": motif, "series": series or {}}
-    chemin.write_text(json.dumps(corps, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+    chemin.write_bytes(octets)
     return sceller(chemin)
+
+
+def ecrire_scores(dossier: Path, d: Definition, pli: int, taches, series: dict | None, motif: str | None) -> dict:
+    """Fichiers fermés de la sonde sur un pli (interface de `lecture_v1`), scellés : `scores/<sonde>-pli<k>.json` (format
+    `b5f-scores-v1`, scores par action de chaque série ; « echec » sans aucune série quand la sonde n'a pu être apprise),
+    et, pour une sonde notée par jeton, un fichier par série, `jetons/<sonde>-pli<k>/<série>.json` (format
+    `b5f-jetons-v1`) : la taille d'un fichier ne dépend plus que d'une série sur un pli (constat V-1). Rend {chemin relatif
+    au dossier : empreinte}."""
+    dossier, k = Path(dossier), int(pli)
+    rel = f"scores/{d.nom}-pli{k}.json"
+    for p in [dossier / rel] + [dossier / "jetons" / f"{d.nom}-pli{k}" / f"{s}.json" for s in (series or {})]:
+        if p.exists():
+            raise GardeArret(f"{p} existe déjà (R12)")
+    par_action = {s: {"actions": v["actions"]} for s, v in (series or {}).items()}
+    rendu = {rel: _ecrire_ferme(dossier / rel, {
+        "format": FORMAT_SCORES, "sonde": d.nom, "pli": k, "couche": int(d.couche), "taches": list(taches),
+        "statut": "echec" if series is None else "notee", "motif": motif, "series": par_action})}
+    for s, v in sorted((series or {}).items()):
+        if "jetons" not in v:
+            continue
+        rj = f"jetons/{d.nom}-pli{k}/{s}.json"
+        rendu[rj] = _ecrire_ferme(dossier / rj, {"format": _lv.FORMAT_JETONS, "sonde": d.nom, "pli": k, "serie": s,
+                                                 "jetons": v["jetons"]})
+    return rendu
 
 
 def ecrire_poids(dossier: Path, sonde, d: Definition, pli: int) -> str:
@@ -268,11 +298,10 @@ def apprendre_et_noter(definitions, lecteur, cles: dict, plis, g: dict, dossier_
         for k in (0, 1):
             if echec:
                 # une sonde en échec sur un pli rend ses épreuves non calculables : ses deux plis sont écrits « echec »
-                fichiers[f"scores/{d.nom}-pli{k}.json"] = ecrire_scores(dossier_ferme, d, k, plis[k], None,
-                                                                          f"sonde en échec : {'; '.join(echec)}")
+                fichiers.update(ecrire_scores(dossier_ferme, d, k, plis[k], None, f"sonde en échec : {'; '.join(echec)}"))
                 continue
             series = noter(appris[(d.nom, k)], d, lecteur, cles, plis[k])
-            fichiers[f"scores/{d.nom}-pli{k}.json"] = ecrire_scores(dossier_ferme, d, k, plis[k], series, None)
+            fichiers.update(ecrire_scores(dossier_ferme, d, k, plis[k], series, None))
             fichiers[f"poids/{d.nom}-pli{k}.json"] = ecrire_poids(dossier_poids, appris[(d.nom, k)], d, k)
             bilan[(d.nom, k)] = {"statut": "notee"}
     return {"sondes": [d.nom for d in definitions], "statuts": {f"{n}-pli{k}": v for (n, k), v in sorted(bilan.items())},

@@ -97,7 +97,8 @@ _NOM_REPETITION = re.compile(r"R[1-9]-(?:saboteur|temoin)")
 _NOM_ANCRE = re.compile(r"ancre-[A-Za-z0-9-]{1,40}")
 _TACHE_FICHIER = re.compile(r"[A-Za-z0-9._-]+")
 _SORTIE = re.compile(r"(?:lecture/(?:inventaire\.json|bilan-relecture\.json|textes-honnetes\.jsonl|produits\.json|"
-                     r"intensites\.json|scores/[a-zA-Z0-9-]+-pli[01]\.json)(?:\.sha256)?|"
+                     r"intensites\.json|scores/[a-zA-Z0-9-]+-pli[01]\.json|"
+                     r"jetons/[a-zA-Z0-9-]+-pli[01]/[A-Za-z0-9_-]+\.json)(?:\.sha256)?|"
                      r"poids/[a-zA-Z0-9-]+-pli[01]\.json(?:\.sha256)?|"
                      r"activations/[A-Za-z0-9_-]+/c(?:7|15|23)/[A-Za-z0-9._-]+__p[0-9]{1,3}\.npy|"
                      r"(?:garde-activations|inventaire-activations)\.json(?:\.sha256)?)")
@@ -1133,9 +1134,12 @@ def ligne_scores(racine: Path, commit: str, run_id: str) -> str:
         b = _montrer(racine, commit, f"{base}/{f['chemin']}")
         if len(b) != f["octets"] or hashlib_sha256(b) != f["sha256"]:
             raise GardeArret(f"{f['chemin']} : taille ou empreinte au commit ≠ inventaire : versement non prouvé")
+    # constat v-1 de la vérification : le commit est sur la branche de sortie de la pièce, et non sur une branche quelconque
+    branche = piece_lecture("decisif" if _RUN_LECTURE.fullmatch(str(run_id))["suffixe"] == "b5f-lecture" else
+                            "repetition")["branche"]
     r = subprocess.run(["git", "-C", str(racine), "branch", "-r", "--contains", commit], capture_output=True, text=True)
-    if r.returncode != 0 or not r.stdout.strip():
-        raise GardeArret(f"commit {commit[:12]} sur aucune branche distante : versement non prouvé")
+    if r.returncode != 0 or f"origin/{branche}" not in r.stdout.split():
+        raise GardeArret(f"commit {commit[:12]} absent de la branche distante {branche} : versement non prouvé")
     return f"commit {commit} ; inventaire sha256 {hashlib_sha256(octets)}"
 
 

@@ -169,7 +169,7 @@ verifier_entrees() {  # $1 = clone des entrées extrait à ENTREES_COMMIT. Code 
 # poussé, au départ COMMIT) : la tête et l'arbre de travail de la marche ne bougent jamais. Rien n'est supprimé.
 permis() {  # 0 si le chemin (relatif à $D) peut sortir de l'instance de lecture, hors activations (liste blanche)
     local f="$1" r="$RUN_LECTURE" e
-    for e in "^donnees/$r/lecture/(inventaire\\.json|bilan-relecture\\.json|textes-honnetes\\.jsonl|produits\\.json|intensites\\.json|scores/[a-zA-Z0-9-]+-pli[01]\\.json)(\\.sha256)?\$" \
+    for e in "^donnees/$r/lecture/(inventaire\\.json|bilan-relecture\\.json|textes-honnetes\\.jsonl|produits\\.json|intensites\\.json|scores/[a-zA-Z0-9-]+-pli[01]\\.json|jetons/[a-zA-Z0-9-]+-pli[01]/[A-Za-z0-9_-]+\\.json)(\\.sha256)?\$" \
              "^donnees/$r/poids/[a-zA-Z0-9-]+-pli[01]\\.json(\\.sha256)?\$" \
              "^donnees/$r/(garde-activations|inventaire-activations)\\.json(\\.sha256)?\$" \
              "^runs/$r/manifeste\\.json(\\.sha256)?\$" \

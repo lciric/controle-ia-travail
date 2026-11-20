@@ -264,6 +264,7 @@ def depots(tmp_path):
     (t / "parent-sortie").write_text(commit + "\n")
     s = d / "donnees" / RUN
     for rel, contenu in (("lecture/inventaire.json", b"{}"), ("lecture/scores/decisive-pli0.json", b"{\"s\": 1}"),
+                         ("lecture/jetons/decisive-pli0/A1-sur_saboteur.json", b"{\"jetons\": {}}"),
                          ("poids/decisive-pli0.json", b"{}"), ("garde-activations.json", b"{}"),
                          ("inventaire-activations.json", b"{}")):
         (s / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -303,9 +304,26 @@ def test_versement_des_fichiers_fermes_sans_aucune_activation(depots):
     assert p.returncode == 0, p.stderr
     noms = _noms(depots)
     assert f"donnees/{RUN}/lecture/scores/decisive-pli0.json" in noms and f"donnees/{RUN}/poids/decisive-pli0.json" in noms
+    # un fichier de scores par jeton par série (constat V-1 de la vérification), avec son compagnon
+    assert {f"donnees/{RUN}/lecture/jetons/decisive-pli0/A1-sur_saboteur.json",
+            f"donnees/{RUN}/lecture/jetons/decisive-pli0/A1-sur_saboteur.json.sha256"} <= noms
     assert f"donnees/{RUN}/garde-activations.json.sha256" in noms and f"runs/{RUN}/manifeste.json" in noms
     assert not any("/activations/" in n for n in noms)
     assert _git(depots["D"], "rev-parse", "HEAD") == depots["commit"]            # la tête de la marche n'a pas bougé
+
+
+def test_borne_des_fichiers_fermes_sous_le_seuil_et_liste_blanche_des_scores_par_jeton(depots):
+    """Constat V-1 de la vérification : la borne écrite de la taille d'un fichier fermé est sous le seuil au-delà duquel
+    l'amorce ne pousse rien ; la liste blanche admet un fichier de scores par jeton par série, et rien d'autre sous
+    `jetons/`."""
+    from controle_ia.barreau5_familles import lecture_v1 as lv
+    assert 0 < lv.TAILLE_MAX_FICHIER < int(_constante("SEUIL")) < 95_000_000
+    base = f"donnees/{RUN}/lecture/jetons"
+    for rel, code in ((f"{base}/decisive-pli1/X-07.json", 0), (f"{base}/comparaison-pli0/A2-sur_saboteur.json.sha256", 0),
+                      (f"{base}/decisive-pli2/X-07.json", 1), (f"{base}/decisive-pli1/sous/X-07.json", 1),
+                      (f"{base}/x.json", 1), (f"{base}/decisive-pli1/X 07.json", 1)):
+        p = _jouer(_bloc("versement") + f'permis "{rel}"', _env_versement(depots))
+        assert p.returncode == code, rel
 
 
 def test_versement_d_une_activation_par_la_voie_ordinaire_refuse(depots):
