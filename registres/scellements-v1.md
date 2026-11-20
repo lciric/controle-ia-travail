@@ -64,3 +64,4 @@
 | PARTIE-SERVIE-NOUVELLES-ATTAQUES-V5 | 2026-11-20T12:27:16Z | prereg/ideation-nouvelles-attaques-v1/partie-servie-question-v5-v1.md | 4cd360baea1076ec2b19b2c7ba85675e739bc3104c709d4fd57c0769975b1cf1 |
 | PREREG-COURT-NOUVELLES-ATTAQUES-V9 | 2026-11-20T13:21:20Z | prereg/ideation-nouvelles-attaques-v1/preenregistrement-court-course-nouvelles-attaques-v9.md | 864f39a7ecd41a613f8892efbf66607c14da34252d643a4fd40032b5d2b500c2 |
 | DEVIS-NOUVELLES-ATTAQUES-V6 | 2026-11-20T13:21:20Z | prereg/ideation-nouvelles-attaques-v1/devis-course-nouvelles-attaques-v6.md | d825cb313898ea5111ede1ef3103ab25b1b923e1f52103481427919ce9d19c2c |
+| PREREG-HERITAGE-PALIER-0B-V13 | 2026-11-20T14:30:00Z | docs/notes/organisme-auto-conception-v1/epreuves-v9/heritage/palier-0b/preenregistrement-heritage-palier-0b-etage-processeur-v13.md | d9591d5bb53ba6688fdfe004ac5fee96ad8e1ea6093ab86850e4eecab177f959 |

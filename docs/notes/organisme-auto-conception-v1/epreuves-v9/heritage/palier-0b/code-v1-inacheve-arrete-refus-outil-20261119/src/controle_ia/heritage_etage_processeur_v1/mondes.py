@@ -1,0 +1,480 @@
+"""B1 — les mondes plantés de l'héritage (code neuf : l'organisme n'en a pas), leur partage, et l'audit du générateur.
+
+Contrat gelé : un monde est une suite de seize domaines ; chaque domaine a son jeu d'épisodes, tiré d'une loi génératrice de la
+classe que l'organisme sait évaluer (trois issues, deux traits, deux sous-populations). Monde cible : douze domaines à loi vraie
+plantée, quatre sans structure (issues indépendantes des traits). Monde source : huit domaines à loi vraie, huit sans structure.
+Une loi fausse par domaine à loi vraie : elle reprend la loi vraie sur une sous-population et s'en écarte sur l'autre.
+Dose ρ : dans chaque monde cible, monde final compris, 0, 3 ou 6 des douze lois vraies sont dépendantes, composées de deux lois
+vraies distinctes de la source (la première sous-population de la loi de plus petit rang, la seconde de l'autre) ; les paires
+sont tirées sans remise parmi les vingt-huit, sur l'ensemble des quatre mondes cibles d'une source.
+
+SILENCES comblés (rapport) : 400 épisodes par domaine ; toute loi plantée et toute loi aléatoire est écrite sous la même forme
+(« par_sous_population » de deux softmax), pour que la forme ne sépare pas les dépendantes des indépendantes (sinon l'audit de
+présentation échouerait par construction) ; le rang d'une loi de la source est l'ordre de ses domaines ; la marge se lit dans
+les deux sens de la divergence (le plus petit des deux) ; les instances de l'oracle sont 4 000 par monde, tirées comme
+`selection_pari.tirer_instances` ; un monde rejeté est retiré par un nouvel essai (étiquette `essai`), compté.
+"""
+
+import hashlib
+import itertools
+import os
+
+import numpy as np
+
+from .comparateur import Oracle
+from .constantes import (DOMAINES_A_LOI_CIBLE, DOMAINES_A_LOI_SOURCE, DOMAINES_PAR_MONDE, EPISODES_PAR_DOMAINE,
+                         EXACTITUDE_EQUILIBREE_MAX, INSTANCES_ORACLE, MARGE_NAT, MONDES_CIBLES_D_EVOLUTION, PROPORTION_TRANCHE)
+from .graines import etiquette
+from .lois import (composer, instances_oracle, json_canonique, loi_aleatoire, loi_fixe, loi_par_sous_population, matrice,
+                   softmax_aleatoire, sous_loi, tirer_issues)
+
+ESSAIS_MAX = 200
+PAIRES_DE_LA_SOURCE = list(itertools.combinations(range(DOMAINES_A_LOI_SOURCE), 2))  # 28 paires de rangs
+
+
+class ArretGenerateur(RuntimeError):
+    pass
+
+
+def nom_domaine(i):
+    return f"D{i:02d}"
+
+
+def nombre_de_dependantes(dose):
+    d = {0.0: 0, 0.25: 3, 0.5: 6}.get(float(dose))
+    if d is None:
+        raise ArretGenerateur(f"dose hors de la grille : {dose!r}")
+    return d
+
+
+class Monde:
+    """Un monde : domaines, lois plantées (clé), épisodes partagés en part servie et tranche d'épreuve, instances de l'oracle."""
+
+    def __init__(self, nom, role, dose):
+        self.nom, self.role, self.dose = nom, role, dose
+        self.domaines = []  # dicts : nom, loi_generatrice, vraie, fausse, Z, G, y, servi, epreuve
+        self.lois = {}  # identifiant -> {loi, type, dependante, paire, domaine, rang}
+        self.oracle = None
+
+    def lois_du_domaine(self, nom):
+        return {i: l["loi"] for i, l in self.lois.items() if l["domaine"] == nom}
+
+    def vraies(self):
+        return [i for i, l in self.lois.items() if l["type"] == "vraie"]
+
+    def fausses(self):
+        return [i for i, l in self.lois.items() if l["type"] == "fausse"]
+
+    def part_servie(self, nom):
+        d = self.domaine(nom)
+        return {"Z": d["Z"][d["servi"]], "G": d["G"][d["servi"]], "y": d["y"][d["servi"]], "episodes": d["servi"] + 1}
+
+    def tranche_epreuve(self, nom):
+        d = self.domaine(nom)
+        return {"Z": d["Z"][d["epreuve"]], "G": d["G"][d["epreuve"]], "y": d["y"][d["epreuve"]], "episodes": d["epreuve"] + 1}
+
+    def domaine(self, nom):
+        for d in self.domaines:
+            if d["nom"] == nom:
+                return d
+        raise KeyError(nom)
+
+    def cle(self):
+        """La clé du monde (lois plantées), sous forme sérialisable — jamais servie à un proposeur par le registre."""
+        return {i: {k: l[k] for k in ("loi", "type", "dependante", "domaine")} for i, l in sorted(self.lois.items())}
+
+
+def _episodes(loi, rng, n=EPISODES_PAR_DOMAINE):
+    Z = np.round(rng.normal(0.0, 1.0, (n, 2)), 6)
+    G = rng.integers(0, 2, n)
+    y = tirer_issues(matrice(loi, Z, G), rng)
+    return Z, G, y
+
+
+def _partager(n, rng):
+    perm = rng.permutation(n)
+    k = int(round(n * (1 - PROPORTION_TRANCHE)))
+    return np.sort(perm[:k]), np.sort(perm[k:])
+
+
+MARGE_DE_CONSTRUCTION = 1.2 * MARGE_NAT  # SILENCE : marge de construction (l'audit lit 0,25 ; 1,2 absorbe le bruit des instances)
+TIRAGES_PAR_LOI = 400
+
+
+def _sep(oracle, a, b):
+    return min(oracle.divergence(a, b), oracle.divergence(b, a))
+
+
+def _sep_moitie(oracle, a, b, g):
+    return min(oracle.divergence_moitie(a, b, g), oracle.divergence_moitie(b, a, g))
+
+
+def _loi_fausse(loi_vraie, rng, oracle, deja):
+    """La demi-vérité : la loi vraie sur une sous-population, une softmax neuve sur l'autre, tirée par rejet jusqu'à être à la
+    marge de construction de toute loi déjà posée (`deja`)."""
+    garde = int(rng.integers(0, 2))
+    for _ in range(TIRAGES_PAR_LOI):
+        autre = softmax_aleatoire(rng)
+        f = loi_par_sous_population(sous_loi(loi_vraie, 0), autre) if garde == 0 else \
+            loi_par_sous_population(autre, sous_loi(loi_vraie, 1))
+        if all(_sep(oracle, f, x) >= MARGE_DE_CONSTRUCTION for x in deja + [loi_vraie]):
+            return f
+    return None
+
+
+def _loi_independante(rng, oracle, deja):
+    for _ in range(TIRAGES_PAR_LOI):
+        loi = loi_aleatoire(rng)
+        if all(_sep(oracle, loi, x) >= MARGE_DE_CONSTRUCTION for x in deja):
+            return loi
+    return None
+
+
+def _remplir(monde, rng, oracle, lois_vraies_par_domaine, fausses_par_domaine, variante=None):
+    """Domaines, épisodes et partage. `lois_vraies_par_domaine` : {indice : (identifiant, loi, dependante, paire, rang)} ;
+    `fausses_par_domaine` : {indice : loi fausse}."""
+    monde.oracle = oracle
+    for i in range(DOMAINES_PAR_MONDE):
+        nom = nom_domaine(i)
+        d = {"nom": nom, "vraie": None, "fausse": None}
+        if i in lois_vraies_par_domaine:
+            ident, loi, dep, paire, rang = lois_vraies_par_domaine[i]
+            fausse = fausses_par_domaine[i]
+            if variante == "dose_inscrite":
+                loi = dict(loi, note=f"dose {monde.dose}")
+                fausse = dict(fausse, note=f"dose {monde.dose}")
+            iv, i_f = f"{monde.nom}:{nom}:V", f"{monde.nom}:{nom}:F"
+            monde.lois[iv] = {"loi": loi, "type": "vraie", "dependante": dep, "paire": paire, "domaine": nom, "rang": rang}
+            monde.lois[i_f] = {"loi": fausse, "type": "fausse", "dependante": False, "paire": None, "domaine": nom, "rang": None}
+            d.update(vraie=iv, fausse=i_f, loi_generatrice=loi)
+        else:
+            d["loi_generatrice"] = loi_fixe(rng)
+        d["Z"], d["G"], d["y"] = _episodes(d["loi_generatrice"], rng)
+        d["servi"], d["epreuve"] = _partager(len(d["y"]), rng)
+        monde.domaines.append(d)
+    return monde
+
+
+def divergence_min(oracle, a, b):
+    return min(oracle.divergence(a, b), oracle.divergence(b, a))
+
+
+def audit_marges(monde, source=None, source_etrangere=None):
+    """Marges du générateur (section « Seuil ») : lois plantées d'un même monde, et toute loi d'un monde cible face à toute loi
+    vraie de sa source (et, pour B7 bis, de la source étrangère et de toute composition de deux d'entre elles), séparées d'au
+    moins 0,25 nat. Rend la liste des manques (vide si le monde passe)."""
+    manques = []
+    ids = sorted(monde.lois)
+    o = monde.oracle
+    for a, b in itertools.combinations(ids, 2):
+        d = divergence_min(o, monde.lois[a]["loi"], monde.lois[b]["loi"])
+        if d < MARGE_NAT:
+            manques.append(("meme-monde", a, b, d))
+    if source is not None:
+        for a in ids:
+            for b in source.vraies():
+                d = divergence_min(o, monde.lois[a]["loi"], source.lois[b]["loi"])
+                if d < MARGE_NAT:
+                    manques.append(("source", a, b, d))
+    if source_etrangere is not None:
+        vraies = sorted(source_etrangere.vraies(), key=lambda i: source_etrangere.lois[i]["rang"])
+        candidates = [source_etrangere.lois[v]["loi"] for v in vraies]
+        candidates += [composer(source_etrangere.lois[vraies[p]]["loi"], source_etrangere.lois[vraies[q]]["loi"])
+                       for p, q in PAIRES_DE_LA_SOURCE]
+        for a in ids:
+            for c in candidates:
+                d = divergence_min(o, monde.lois[a]["loi"], c)
+                if d < MARGE_NAT:
+                    manques.append(("source-etrangere", a, None, d))
+    return manques
+
+
+class Suite:
+    """La suite de mondes d'une source : source, trois cibles d'évolution, monde final ; les paires de chaque monde cible."""
+
+    def __init__(self):
+        self.source, self.cibles, self.finale = None, [], None
+        self.rejets = {"source": 0, "paires": 0, "cibles": 0}
+
+    def mondes_cibles(self):
+        return self.cibles + [self.finale]
+
+
+def _graine_entiere(graines, champs):
+    return graines.entier(etiquette(**champs))
+
+
+def _sous_lois_separees(rng, oracle, nombre, g):
+    """`nombre` softmax tirées par rejet séquentiel, deux à deux à la marge de construction sur la sous-population g (ce que
+    demande la marge entre une loi dépendante et ses deux lois mères, qui ne diffèrent que sur une moitié)."""
+    out = []
+    for _ in range(TIRAGES_PAR_LOI * nombre):
+        c = softmax_aleatoire(rng)
+        if all(_sep_moitie(oracle, c, x, g) >= MARGE_DE_CONSTRUCTION for x in out):
+            out.append(c)
+            if len(out) == nombre:
+                return out
+    return None
+
+
+def generer_source(graines, base, dose, variante=None):
+    for essai in range(ESSAIS_MAX):
+        rng = graines.g(**base, monde="source", role="monde", essai=essai)
+        m = Monde(f"{_prefixe(base)}source", "source", dose)
+        oracle = Oracle(*instances_oracle(_graine_entiere(graines, dict(base, monde="source", role="oracle-instances",
+                                                                         essai=essai)), INSTANCES_ORACLE))
+        domaines = sorted(rng.choice(DOMAINES_PAR_MONDE, DOMAINES_A_LOI_SOURCE, replace=False).tolist())
+        s0 = _sous_lois_separees(rng, oracle, DOMAINES_A_LOI_SOURCE, 0)
+        s1 = _sous_lois_separees(rng, oracle, DOMAINES_A_LOI_SOURCE, 1) if s0 else None
+        if s1 is None:
+            continue
+        vraies = {i: (f"{m.nom}:{nom_domaine(i)}:V", loi_par_sous_population(s0[r], s1[r]), False, None, r)
+                  for r, i in enumerate(domaines)}
+        deja = [v[1] for v in vraies.values()]
+        fausses = {}
+        for i in domaines:
+            f = _loi_fausse(vraies[i][1], rng, oracle, deja)
+            if f is None:
+                break
+            fausses[i] = f
+            deja.append(f)
+        if len(fausses) < len(domaines):
+            continue
+        _remplir(m, rng, oracle, vraies, fausses, variante)
+        manques = audit_marges(m)
+        lois_rang = _lois_par_rang(m)
+        for p, q in PAIRES_DE_LA_SOURCE:
+            c = composer(lois_rang[p], lois_rang[q])
+            for r in range(DOMAINES_A_LOI_SOURCE):
+                if divergence_min(m.oracle, c, lois_rang[r]) < MARGE_NAT:
+                    manques.append(("composition-source", p, q, r))
+        if not manques:
+            return m, essai
+    raise ArretGenerateur("source : aucun monde ne passe les marges en 200 essais (liste d'arrêt, point 2)")
+
+
+def _lois_par_rang(source):
+    out = {}
+    for i, l in source.lois.items():
+        if l["type"] == "vraie":
+            out[l["rang"]] = l["loi"]
+    return [out[r] for r in range(DOMAINES_A_LOI_SOURCE)]
+
+
+def _prefixe(base):
+    return "s" + str(base.get("source", "x")) + "-"
+
+
+def tirer_paires(rng, dose):
+    d = nombre_de_dependantes(dose)
+    perm = rng.permutation(len(PAIRES_DE_LA_SOURCE))[: d * (MONDES_CIBLES_D_EVOLUTION + 1)]
+    paires = [PAIRES_DE_LA_SOURCE[i] for i in perm]
+    return [paires[k * d:(k + 1) * d] for k in range(MONDES_CIBLES_D_EVOLUTION + 1)]
+
+
+def generer_cible(graines, base, source, nom_monde, paires, dose, variante=None, faute=None):
+    lois_rang = _lois_par_rang(source)
+    for essai in range(ESSAIS_MAX):
+        rng = graines.g(**base, monde=nom_monde, role="monde", essai=essai)
+        m = Monde(f"{_prefixe(base)}{nom_monde}", "finale" if nom_monde == "finale" else "cible", dose)
+        oracle = Oracle(*instances_oracle(_graine_entiere(graines, dict(base, monde=nom_monde, role="oracle-instances",
+                                                                         essai=essai)), INSTANCES_ORACLE))
+        domaines = rng.permutation(DOMAINES_PAR_MONDE)[:DOMAINES_A_LOI_CIBLE].tolist()
+        vraies = {}
+        deja = list(lois_rang)
+        for k, i in enumerate(domaines):
+            if k < len(paires):
+                p, q = paires[k]
+                vraies[i] = (f"{m.nom}:{nom_domaine(i)}:V", composer(lois_rang[p], lois_rang[q]), True, (p, q), None)
+                deja.append(vraies[i][1])
+        complet = True
+        for k, i in enumerate(domaines):
+            if k >= len(paires):
+                loi = _loi_independante(rng, oracle, deja)
+                if loi is None:
+                    complet = False
+                    break
+                vraies[i] = (f"{m.nom}:{nom_domaine(i)}:V", loi, False, None, None)
+                deja.append(loi)
+        if faute == "loi-de-la-source-recopiee" and nom_monde == "finale" and complet:
+            i = domaines[-1]
+            vraies[i] = (f"{m.nom}:{nom_domaine(i)}:V", lois_rang[0], False, None, None)
+        fausses = {}
+        for i in domaines if complet else []:
+            f = _loi_fausse(vraies[i][1], rng, oracle, deja)
+            if f is None:
+                complet = False
+                break
+            fausses[i] = f
+            deja.append(f)
+        if not complet:
+            continue
+        _remplir(m, rng, oracle, vraies, fausses, variante)
+        if faute is not None:
+            return m, essai, []
+        manques = audit_marges(m, source)
+        if not manques:
+            return m, essai, []
+        if all(m.lois[a]["dependante"] and (b not in m.lois or m.lois[b]["dependante"]) for _, a, b, _ in manques):
+            return None, essai, manques  # seules des lois dépendantes en cause : la suite entière est à retirer
+    raise ArretGenerateur(f"{nom_monde} : aucun monde ne passe les marges en 200 essais (liste d'arrêt, point 2)")
+
+
+def generer_suite(graines, base, dose, variante=None, faute=None):
+    """La suite d'une source. `base` : champs d'étiquette communs (couche, famille, proposeur, tirage, source…) ; les graines des
+    mondes ne dépendent pas du bras (communes aux trois bras). `faute` : générateur fautif planté de la garde 13. Un monde cible
+    qui ne manque sa marge que par ses lois dépendantes fait retirer la suite entière (source et paires), sous un tour neuf."""
+    s = Suite()
+    for tour in range(ESSAIS_MAX):
+        s.source, essais_source = generer_source(graines, _base_du_tour(base, tour), dose, variante)
+        s.rejets["source"] += essais_source
+        rng = graines.g(**_base_du_tour(base, tour), monde="paires", role="paires")
+        paires = tirer_paires(rng, dose)
+        s.cibles, ok = [], True
+        for j in range(MONDES_CIBLES_D_EVOLUTION + 1):
+            nom = "finale" if j == MONDES_CIBLES_D_EVOLUTION else f"cible-{j + 1}"
+            m, essais, manques = generer_cible(graines, _base_du_tour(base, tour), s.source, nom, paires[j], dose, variante,
+                                               faute)
+            s.rejets["cibles"] += essais
+            if m is None:
+                ok = False
+                break
+            s.cibles.append(m)
+        if ok:
+            s.finale = s.cibles.pop()
+            s.paires = paires
+            return s
+        s.rejets["paires"] += 1
+    raise ArretGenerateur("suite : aucun tirage ne passe les marges en 200 tours (liste d'arrêt, point 2)")
+
+
+def _base_du_tour(base, tour):
+    """Le tour de retrait d'une suite entre dans le champ `lot` de l'étiquette (« tour-k »), absent au premier tour."""
+    if tour == 0:
+        return dict(base)
+    if "lot" in base:
+        return dict(base, lot=f"{base['lot']}.tour-{tour}")
+    return dict(base, lot=f"tour-{tour}")
+
+
+def ensemble_exclu(finale, lois_du_registre_de_la_source, seuil=0.05):
+    """§ 6 du plan : toute loi plantée du monde final appariée (≤ 0,05 nat) à une loi d'une tentative du registre de la source.
+    SILENCE : comparée à toutes les lois plantées du monde final, quel que soit le domaine (plus strict)."""
+    exclu = set()
+    for i, l in finale.lois.items():
+        for loi in lois_du_registre_de_la_source:
+            if finale.oracle.divergence(l["loi"], loi) <= seuil:
+                exclu.add(i)
+                break
+    return sorted(exclu)
+
+
+# --- fichiers ---------------------------------------------------------------------------------------------------------------
+
+
+def _csv(Z, G, y, episodes):
+    lignes = ["episode,z0,z1,g,y"]
+    for e, z, g, v in zip(episodes.tolist(), Z.tolist(), G.tolist(), y.tolist()):
+        lignes.append(f"{e},{z[0]!r},{z[1]!r},{g},{v}")
+    return "\n".join(lignes) + "\n"
+
+
+def ecrire_monde(dossier, monde):
+    """Écrit la clé (dossier `cle/`, jamais servi) et, par domaine, la part servie (`servi/Dkk.csv`) et la tranche d'épreuve
+    (`epreuve/Dkk/episodes.csv`)."""
+    os.makedirs(os.path.join(dossier, "cle"))
+    os.makedirs(os.path.join(dossier, "servi"))
+    with open(os.path.join(dossier, "cle", "cle.json"), "w", encoding="utf-8") as f:
+        f.write(json_canonique(monde.cle()))
+    for d in monde.domaines:
+        s, t = monde.part_servie(d["nom"]), monde.tranche_epreuve(d["nom"])
+        with open(os.path.join(dossier, "servi", d["nom"] + ".csv"), "w", encoding="utf-8") as f:
+            f.write(_csv(s["Z"], s["G"], s["y"], s["episodes"]))
+        os.makedirs(os.path.join(dossier, "epreuve", d["nom"]))
+        with open(os.path.join(dossier, "epreuve", d["nom"], "episodes.csv"), "w", encoding="utf-8") as f:
+            f.write(_csv(t["Z"], t["G"], t["y"], t["episodes"]))
+
+
+def lire_csv(chemin):
+    with open(chemin, encoding="utf-8") as f:
+        lignes = f.read().splitlines()[1:]
+    return [l for l in lignes if l.strip()]
+
+
+def verifier_tranche_jamais_servie(lignes_servies, lignes_epreuve):
+    """Garde 10 : la part servie et la tranche d'épreuve sont disjointes (épisodes et lignes) ; une ligne de la tranche dans ce
+    qui est servi arrête la génération."""
+    ep_s = {l.split(",", 1)[0] for l in lignes_servies}
+    ep_t = {l.split(",", 1)[0] for l in lignes_epreuve}
+    if ep_s & ep_t or set(lignes_servies) & set(lignes_epreuve):
+        raise ArretGenerateur("garde 10 : une ligne de la tranche d'épreuve est servie : arrêt de la génération")
+    return True
+
+
+# --- audit de présentation ------------------------------------------------------------------------------------------------
+
+NB_CASES = 64
+
+
+def _jetons(texte):
+    import re
+    for j in re.findall(r"[A-Za-z_]+|-?\d+(?:\.\d+)?(?:e-?\d+)?", texte):
+        if j[0].isdigit() or j[0] == "-":
+            dec = j.split(".")[1] if "." in j else ""
+            yield "<nombre>" if len(dec.split("e")[0]) >= 4 else j
+        else:
+            yield j
+
+
+def traits_de_presentation(texte):
+    v = np.zeros(NB_CASES + 1)
+    for j in _jetons(texte):
+        v[int.from_bytes(hashlib.sha256(j.encode("utf-8")).digest()[:4], "big") % NB_CASES] += 1
+    v[NB_CASES] = len(texte) / 100.0
+    return v
+
+
+def exactitude_equilibree_validation_croisee(X, y, rng, plis=5):
+    """Classifieur simple (plus proche centroïde sur traits standardisés), validation croisée à cinq plis ; exactitude
+    équilibrée. Rend None si moins de deux classes ou trop peu d'exemples."""
+    X, y = np.asarray(X, dtype=float), np.asarray(y)
+    classes = sorted(set(y.tolist()))
+    if len(classes) < 2 or len(y) < 2 * plis:
+        return None
+    pli = np.empty(len(y), dtype=int)
+    pli[rng.permutation(len(y))] = np.arange(len(y)) % plis
+    pred = np.empty(len(y), dtype=object)
+    for k in range(plis):
+        tr, te = pli != k, pli == k
+        mu, sd = X[tr].mean(axis=0), X[tr].std(axis=0) + 1e-9
+        Xt, Xe = (X[tr] - mu) / sd, (X[te] - mu) / sd
+        centres = {c: Xt[y[tr] == c].mean(axis=0) for c in classes if np.any(y[tr] == c)}
+        noms = sorted(centres)
+        D = np.stack([((Xe - centres[c]) ** 2).sum(axis=1) for c in noms], axis=1)
+        pred[te] = [noms[i] for i in D.argmin(axis=1)]
+    rappels = [float(np.mean(pred[y == c] == c)) for c in classes]
+    return float(np.mean(rappels))
+
+
+def audit_presentation(suites, rng):
+    """Les trois audits (section « Seuil ») sur la forme écrite des lois de la clé des mondes cibles et finaux : vraies contre
+    fausses ; dépendantes contre indépendantes ; mondes par dose. Rend {audit : exactitude équilibrée ou None, passe : bool}."""
+    Xvf, yvf, Xdi, ydi, Xm, ym = [], [], [], [], [], []
+    for s in suites:
+        for m in s.mondes_cibles():
+            traits = []
+            for i, l in sorted(m.lois.items()):
+                t = traits_de_presentation(json_canonique(l["loi"]))
+                traits.append(t)
+                Xvf.append(t)
+                yvf.append(l["type"])
+                if l["type"] == "vraie" and m.dose > 0:
+                    Xdi.append(t)
+                    ydi.append("dependante" if l["dependante"] else "independante")
+            Xm.append(np.mean(traits, axis=0))
+            ym.append(str(m.dose))
+    out = {"vraies_contre_fausses": exactitude_equilibree_validation_croisee(Xvf, yvf, rng),
+           "dependantes_contre_independantes": exactitude_equilibree_validation_croisee(Xdi, ydi, rng),
+           "mondes_par_dose": exactitude_equilibree_validation_croisee(Xm, ym, rng)}
+    out["passe"] = all(v is None or v <= EXACTITUDE_EQUILIBREE_MAX for v in list(out.values()))
+    return out
