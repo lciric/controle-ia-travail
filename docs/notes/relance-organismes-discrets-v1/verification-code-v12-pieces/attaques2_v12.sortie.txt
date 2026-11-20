@@ -1,0 +1,29 @@
+=== voies vers deux résultats dans une même course (falsifications du dossier)
+PASSE   pièce A -> ne repere pas
+   contenu de livraison-1 : ['configuration-de-l-analyse-de-la-discretion-bras-a.json', 'configuration-de-l-analyse-de-la-discretion-bras-a.json.sha256', 'constat-de-lancement-bras-a.json', 'constat-de-lancement-bras-a.json.sha256']
+   contenu des arrêts : ['ouverture-de-la-lecture-de-la-discretion-bras-a-65da19016f38245b.json', 'ouverture-de-la-lecture-de-la-discretion-bras-a-65da19016f38245b.json.sha256']
+GARDE   fichier (m) et compagnon effacés, pièce B -> une lecture a déjà été ouverte dans cette course pour une autre pièce (ouverture scellée d'une première livraison, ou acte de reprise) : toute autre pièce exige une ligne de GO, inscrite selon la règl
+PASSE   + dossier des arrêts vidé, pièce B -> repere
+=== M-2/M-3 : configuration abandonnée, retrait, et retrait d'une configuration lue
+GARDE   inscription abandonnée seule -> constat de lancement : le registre courant porte la ligne d'inscription d'une autre configuration de l'analyse du bras A (GO-2099-12-30-01), qu'aucune ligne de type « révocation » citant son empreinte
+GARDE   + ligne de reprise quelconque après -> constat de lancement : le registre courant porte la ligne d'inscription d'une autre configuration de l'analyse du bras A (GO-2099-12-30-01), qu'aucune ligne de type « révocation » citant son empreinte
+GARDE   + révocation, abrégé 16 -> constat de lancement : le registre courant porte la ligne d'inscription d'une autre configuration de l'analyse du bras A (GO-2099-12-30-01), qu'aucune ligne de type « révocation » citant son empreinte
+GARDE   + décision (pas révocation) citant l'empreinte entière -> constat de lancement : le registre courant porte la ligne d'inscription d'une autre configuration de l'analyse du bras A (GO-2099-12-30-01), qu'aucune ligne de type « révocation » citant son empreinte
+PASSE   + **Révocation** en gras, empreinte entière -> sain=True causes=[]
+GARDE   + révocation AVANT l'inscription -> constat de lancement : le registre courant porte la ligne d'inscription d'une autre configuration de l'analyse du bras A (GO-2099-12-30-01), qu'aucune ligne de type « révocation » citant son empreinte
+GARDE   + révocation qui cite l'empreinte en majuscules -> constat de lancement : le registre courant porte la ligne d'inscription d'une autre configuration de l'analyse du bras A (GO-2099-12-30-01), qu'aucune ligne de type « révocation » citant son empreinte
+GARDE   + révocation hors table (sans barres) -> constat de lancement : le registre courant porte la ligne d'inscription d'une autre configuration de l'analyse du bras A (GO-2099-12-30-01), qu'aucune ligne de type « révocation » citant son empreinte
+PASSE   + révocation, empreinte entière -> sain=True causes=[]
+ARRET   configuration lue : pièce A -> {'garde': 'réglages rendus', 'champ': 'reglages.statistique_agregateur', 'nature': None, 'cas': 'aucun cas', 'etape': 'm', 'moniteur': None, 'dose': None}
+GARDE   constat d'une autre configuration, la lue encore inscrite -> constat de lancement : le registre courant porte la ligne d'inscription d'une autre configuration de l'analyse du bras A (GO-2099-12-29-01), qu'aucune ligne de type « révocation » citant son empreinte
+PASSE   constat, la lue « révoquée » après sa lecture -> /tmp/tmp0gbgv_ou/course-0019/livraison-1/constat-de-lancement-bras-a.json
+ARRET   seconde course : pièce B (« repère ») -> {'garde': 'réglages rendus', 'champ': 'reglages.statistique_agregateur', 'nature': None, 'cas': 'aucun cas', 'etape': 'm', 'moniteur': None, 'dose': None}
+=== reprise de l'étape (n) : deux résultats de l'étape (n) ?
+PASSE   reprise (n) 1, cohérente -> GO-2099-05-02-01
+PASSE   lecture du fichier refait 1 -> RangsScelles
+PASSE   issues 1 -> None
+PASSE   seconde ligne qui cite le même fichier d'arrêt d'origine -> (PosixPath('/tmp/tmp0gbgv_ou/course-0025/livraison-3/configuration-de-l-analyse-de-la-discretion-bras-a.json'), PosixPath('/tmp/tmp0gbgv_ou/registre-fige-0031/go.md'))
+GARDE   reprise (n) 2 -> GO-2099-05-02-02 : la ligne ne cite pas le fichier d'arrêt de la livraison refusée à reprendre — ou, pour une pièce que fixe un constat de provenance ou d'erreur de rangement, ce constat — ; elle cite
+GARDE   issues 2 -> des arrêts sont consignés pour d'autres livraisons, et aucun acte de reprise n'ouvre cette pièce : elle n'est ni une livraison refusée, ni une livraison refaite lue — refusée
+   fichiers des grandeurs (n) : []
+   (m) intacte : True

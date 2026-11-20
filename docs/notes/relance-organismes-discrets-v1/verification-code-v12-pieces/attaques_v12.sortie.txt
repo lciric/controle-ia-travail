@@ -1,0 +1,23 @@
+=== C-1 de la v11 rejoué : arrêt à l'étape (n), puis livraison refaite qui relit l'étape (m)
+ARRET   étape (n) : fichier des rangs fautif -> {'garde': 'fichier des scores par unité', 'champ': "liste des dix champs d'une ligne du fichier des scores par unité", 'nature': 'un champ de plus', 'cas': 'aucun cas', 'etape': 'n', 'moniteur': None, 'dose': None}
+GARDE   livraison refaite B (« repère ») lue à l'étape (m) sous la ligne qui cite l'arrêt de (n) -> un fichier de l'étape (m) est déjà scellé dans cette course (`livraison-1/`) : il reste tel quel, opposable, et aucune autre lecture de l'étape (m) ne s'ouvre — un second
+GARDE   la pièce d'origine A redonnée à l'étape (m) sous la même ligne -> livraison déjà refusée : son arrêt est consigné — elle est versée et scellée, elle n'est pas relue (6.9 ; 8.5)
+   fichiers (m) dans la course : ['livraison-1']
+=== question 2 : la même configuration copiée dans un autre dossier de course
+PASSE   course 1 : pièce A -> ne repere pas
+   même empreinte : True
+PASSE   constat de la copie (même inscription au registre) -> True
+PASSE   course 2 : pièce B (« repère »), sans ligne de GO -> repere
+GARDE   la même configuration copiée en livraison-2 de la même course -> configuration scellée de `livraison-2/` : une configuration de rang supérieur à 1 inscrit un registre figé (`pieces_attendues.sha256_du_registre_des_accords`) — elle est 
+PASSE   course 1 copiée, dossier des arrêts vidé, pièce B -> repere
+=== M-1 de la v11 : contrôle d'avant le premier départ
+PANNE   première lecture interrompue -> KeyboardInterrupt: panne
+GARDE   rejeu sur le contrôle d'avant le premier départ -> contrôle de lancement : le plus récent des contrôles est déjà porté par une pièce scellée — une trace de rejeu, ou l'ouverture ou l'acte de reprise du premier départ — : 
+PASSE   contrôle refait, sain -> True
+PASSE   rejeu sous le contrôle refait -> ne repere pas
+=== question 3 : reprise de l'étape (n), sortie refaite incohérente
+PASSE   ouverture de la reprise (n), lectures refaites à un écart près -> {'reprise': {'ligne_de_go': 'GO-2099-05-01-01', 'sha256_de_la_livraison_refusee': '5207d53577df98f3bd62456c2bc0e8eb3790f24af9a8b8b420893329ab0b75d7', 'sha256_de_l_acte': '021cc4a2377338f5922d2bb15260c36b2b640fd4f1f11c7abcc6
+   actes de reprise : 1 | constats d'incohérence : 1
+GARDE   une sortie refaite cohérente, sous la même ligne -> GO-2099-05-01-01 : cette ligne est déjà portée par un acte de reprise — une ligne de GO n'ouvre qu'une reprise ; une autre demande une ligne neuve (6.9)
+PASSE   issues pour la sortie incohérente -> non rapportées : livraison refaite incohérente
+PASSE   ligne neuve qui cite le constat d'incohérence -> (PosixPath('/tmp/tmptxil764l/course-0025/livraison-3/configuration-de-l-analyse-de-la-discretion-bras-a.json'), PosixPath('/tmp/tmptxil764l/registre-fige-0033/go.md'))
