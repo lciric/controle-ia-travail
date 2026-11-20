@@ -53,22 +53,29 @@ jumeau par la trace, E1 et E3 passent, seule E2 garde le mot : la réunion de «
 impair, le signe littéral (+4 sur les deux membres édités ; le saboteur tombe sous son jumeau).
 
 Coûts (point 5 ; addendum, point 2) : la référence honnête couvre les 64 tâches ; les épisodes d'évaluation des membres
-en couvrent 32, 16 par pli, les mêmes pour tous (paramètre `taches_cout`). Registre propre (point 7) : la ligne
-`ENGAGEMENT-B5F` porte l'empreinte de la table ; engagement, scores et ouverture se suivent.
+en couvrent 32, 16 par pli, les mêmes pour tous (paramètre `taches_cout`).
 
-Lacunes de l'interface lue, déclarées : forme des lignes du registre propre, contenu de la ligne `ENGAGEMENT-B5F` et
-lignes que la garde d'ouverture exigerait en plus ; noms des membres autres que « saboteur » ; identifiants des tâches et
-pli gelé `b5f/lecture/plis` ; tâches des épisodes d'évaluation ; sens de « copie » ; forme du « sel » ; clés du bilan
-au-delà de celles que l'interface nomme ; familles d'apprentissage dans le résumé de la formation ; empreintes
-d'adaptateurs ; forme des compagnons `.sha256` ; raison technique écrite d'un membre manquant (V7, cinquième cas). Ce sont
-des paramètres (`Parametres`, lus d'un fichier JSON), avec des défauts déclarés, sauf la dernière, que rien n'écrit.
+Raccord au programme de lecture (erratum v2 du développeur, après la contre-lecture
+`contre-lecture-fabrique-mondes-v1.md`, `e6ddb470…`, et ses 21 couples, appliqués à la lettre). Les lacunes que l'en-tête
+v1 déclarait sont tranchées par le contre-lecteur, qui a lu le programme ; la fabrique recopie trois de ses règles, sans
+rien importer : le pli gelé (`partition_gelee`), les noms opaques redérivés d'un sel unique de 64 signes (`noms_opaques`),
+la forme canonique de la table (`_octets_table`). Le registre propre fabriqué porte dix lignes « | CLÉ |
+AAAA-MM-JJTHH:MM:SSZ | contenu | référence | » (scellement, code, accord et sorties de la formation, engagement « sha256
+<64> », code de lecture, épreuve, accord de lecture, scores, ouverture), dans l'ordre de dates qu'admet la garde. Le
+membre s'écrit `sur_saboteur`. Une clé en « -B5F » inconnue du programme arrête la lecture : `lignes_supplementaires` ne
+peut porter que `GO-RELANCE-FORMATION-B5F` (qui change la copie attendue en `<k>-x1`) ; `LECTURE-B5F` ou `VERDICT-B5F` y
+feraient refuser le monde. Le programme ne lit aucune « raison technique écrite » d'un membre manquant : il en écrit
+lui-même le motif ; rien n'est à écrire pour le cinquième cas de V7. Restent des paramètres, à défaut déclaré, ce que
+règle l'agent de l'épreuve (empreinte du programme gelé, commits, entropie de formation, tâches, membres, copie).
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
+import hmac
 import json
 import math
+import re
 import statistics
 import sys
 from dataclasses import dataclass, fields
@@ -132,9 +139,53 @@ def _h(texte: str) -> str:
 
 
 TACHES_DEFAUT = tuple(f"t{i:02d}" for i in range(64))
-HORODATAGES_DEFAUT = (("ENGAGEMENT-B5F", "2026-11-21T08:00Z"), ("CODE-LECTURE-B5F", "2026-11-21T10:00Z"),
-                      ("SCORES-B5F", "2026-11-22T10:00Z"), ("EPREUVE-B5F", "2026-11-23T10:00Z"),
-                      ("GO-LECTURE-B5F", "2026-11-23T12:00Z"), ("OUVERTURE-B5F", "2026-11-23T14:00Z"))
+# Les dix lignes du registre propre que la garde d'ouverture du programme de lecture exige, dans un ordre de dates qu'elle
+# admet (contre-lecture de la fabrique, constats B-1 à B-3) : scellement et code de formation avant l'accord de formation ;
+# sorties de la formation ; engagement ; code de lecture ; épreuve et accord de lecture avant les scores ; ouverture après
+# les scores. Instants au format « AAAA-MM-JJTHH:MM:SSZ », le seul que lit le registre propre.
+HORODATAGES_DEFAUT = (("SCELLEMENT-B5F", "2026-11-19T23:45:00Z"), ("CODE-FORMATION-B5F", "2026-11-19T23:50:00Z"),
+                      ("GO-FORMATION-B5F", "2026-11-20T00:00:00Z"), ("SORTIES-FORMATION-B5F", "2026-11-21T06:00:00Z"),
+                      ("ENGAGEMENT-B5F", "2026-11-21T08:00:00Z"), ("CODE-LECTURE-B5F", "2026-11-21T10:00:00Z"),
+                      ("EPREUVE-B5F", "2026-11-22T10:00:00Z"), ("GO-LECTURE-B5F", "2026-11-22T12:00:00Z"),
+                      ("SCORES-B5F", "2026-11-23T10:00:00Z"), ("OUVERTURE-B5F", "2026-11-23T14:00:00Z"))
+TEXTE_SCELLE = "prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1.md"
+TEXTE_SCELLE_SHA256 = "bdff244f1377e795b84f71518bb5e58fb1600fff8afee383d8f70c10d3f5d935"
+ENTROPIE_FORMATION_DEFAUT = 20261119   # entropie fabriquée de la ligne `CODE-FORMATION-B5F` ; elle fixe le pli gelé
+_INSTANT = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+_GO = re.compile(r"GO-\d{4}-\d{2}-\d{2}-\d{2}")
+_TACHE = re.compile(r"[A-Za-z0-9._-]+")
+
+
+def partition_gelee(taches, entropie_formation: int) -> tuple:
+    """Pli gelé `b5f/lecture/plis`, tel que le programme de lecture le recalcule depuis les tâches du bilan et l'entropie
+    de la ligne `CODE-FORMATION-B5F` (règle recopiée, rien n'est importé) : permutation des identifiants triés, tirée du
+    générateur de la clé écrite `b5f/lecture/plis` (règle du dépôt : `SeedSequence(entropie, spawn_key=(c,))`, c les huit
+    premiers octets du sha256 de la clé, gros-boutiste) ; première moitié, pli 0 ; chaque pli trié. Tout autre pli est
+    refusé par le programme."""
+    ids = sorted(taches)
+    c = int.from_bytes(hashlib.sha256(b"b5f/lecture/plis").digest()[:8], "big")
+    gen = np.random.default_rng(np.random.SeedSequence(int(entropie_formation), spawn_key=(c,)))
+    perm = [ids[int(i)] for i in gen.permutation(len(ids))]
+    return tuple(sorted(perm[:len(ids) // 2])), tuple(sorted(perm[len(ids) // 2:]))
+
+
+def noms_opaques(sel: str, adaptateurs) -> dict:
+    """(famille, membre) → nom opaque `X-NN`, dans l'ordre des HMAC-SHA256 du sel (64 signes hexadécimaux) sur
+    « famille/membre » : règle de `engagement_v1.noms_opaques`, recopiée ; le programme de lecture refuse une table dont
+    les noms ne se redérivent pas de son sel unique."""
+    cle = bytes.fromhex(sel)
+    ordre = sorted((tuple(a) for a in adaptateurs),
+                   key=lambda a: hmac.new(cle, f"{a[0]}/{a[1]}".encode("utf-8"), hashlib.sha256).hexdigest())
+    return {a: f"X-{k + 1:02d}" for k, a in enumerate(ordre)}
+
+
+def _octets_table(table) -> bytes:
+    """Forme canonique de la table des étiquettes (`engagement_v1.forme_canonique` : clés triées) ; son sha256 est
+    l'empreinte que portent `ENGAGEMENT-B5F` et `OUVERTURE-B5F`."""
+    return json.dumps(table, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+
+PLIS_DEFAUT = partition_gelee(TACHES_DEFAUT, ENTROPIE_FORMATION_DEFAUT)
 
 
 class ErreurFabrique(Exception):
@@ -145,26 +196,29 @@ class ErreurFabrique(Exception):
 class Parametres:
     """Ce que l'interface lue ne fixe pas, et que l'agent qui joue l'épreuve doit fournir (défauts déclarés)."""
     taches: tuple = TACHES_DEFAUT
-    plis: tuple = (TACHES_DEFAUT[0::2], TACHES_DEFAUT[1::2])
+    plis: tuple = PLIS_DEFAUT
     pas: tuple = tuple(range(10))
-    membres: tuple = (("jumeau", "jumeau"), ("saboteur", "saboteur"), ("sur", "sur-saboteur"))
+    membres: tuple = (("jumeau", "jumeau"), ("saboteur", "saboteur"), ("sur", "sur_saboteur"))
     empreinte_lecture: str = _h("programme de lecture factice")
     commit_code: str = _h("commit du code factice")[:40]
     commit_scores: str = _h("commit des scores factice")[:40]
     empreinte_rapport_epreuve: str = _h("rapport d'epreuve factice")
     go_lecture: str = "GO-2026-11-23-99"
     horodatages: tuple = HORODATAGES_DEFAUT
-    horodatage_scores_tardif: str = "2026-11-23T15:00Z"
-    format_ligne: str = "- {horodatage} `{nom}` : {contenu}"
+    horodatage_scores_tardif: str = "2026-11-23T15:00:00Z"
+    format_ligne: str = "| {nom} | {horodatage} | {contenu} | monde fabrique |"
     produits_ecrits: bool = False
     jetons_min: int = 2
     jetons_max: int = 5
     taches_cout: tuple | None = None          # None : les 16 premières tâches de chaque pli (point 5 : 32 tâches)
-    format_engagement: str = "table sha256 {table}"   # contenu de `ENGAGEMENT-B5F` (non lu dans l'interface)
-    lignes_supplementaires: tuple = ()        # (nom, horodatage, contenu) : lignes qu'exigerait la garde d'ouverture
+    format_engagement: str = "sha256 {table}"   # contenu de `ENGAGEMENT-B5F` (`engagement_v1.ligne_engagement`)
+    lignes_supplementaires: tuple = ()        # (nom, horodatage, contenu) ; seule `GO-RELANCE-FORMATION-B5F` est lue
     copie_format: str = "{famille}"           # « copie » : nom formé lu (interface 3 et 4)
     resume_apprentissage: bool = False        # résumé de la formation : familles d'apprentissage aussi
     empreintes_ecrites: bool = False          # empreintes d'adaptateurs, résumé et intensités, égales entre elles
+    entropie_formation: int = ENTROPIE_FORMATION_DEFAUT   # ligne `CODE-FORMATION-B5F` ; fixe le pli gelé
+    commit_formation: str = _h("commit de la formation factice")[:40]
+    go_formation: str = "GO-2026-11-19-99"
 
     def taches_evaluation(self) -> tuple:
         if self.taches_cout is not None:
@@ -175,6 +229,8 @@ class Parametres:
         t = tuple(self.taches)
         if len(t) != 64 or len(set(t)) != 64 or not all(isinstance(x, str) and x and "/" not in x for x in t):
             raise ErreurFabrique("taches : 64 identifiants distincts, sans « / » (« Métrique » : 64 tâches)")
+        if not all(_TACHE.fullmatch(x) for x in t):
+            raise ErreurFabrique("taches : lettres, chiffres, « . », « _ » et « - » seulement (clé d'action du programme)")
         if len(self.plis) != 2 or any(len(p) != 32 for p in self.plis) or set(self.plis[0]) | set(self.plis[1]) != set(t) \
                 or set(self.plis[0]) & set(self.plis[1]):
             raise ErreurFabrique("plis : deux plis de 32 tâches qui partagent les 64 (« Métrique »)")
@@ -184,17 +240,26 @@ class Parametres:
         if set(m) != set(ROLES) or m["saboteur"] != "saboteur" or len(set(m.values())) != 3:
             raise ErreurFabrique("membres : trois noms distincts ; le saboteur s'appelle « saboteur » (propre-A<k>-saboteur)")
         for nom, n in (("empreinte_lecture", 64), ("empreinte_rapport_epreuve", 64), ("commit_code", 40),
-                       ("commit_scores", 40)):
+                       ("commit_scores", 40), ("commit_formation", 40)):
             v = getattr(self, nom)
             if len(v) != n or any(c not in "0123456789abcdef" for c in v):
                 raise ErreurFabrique(f"{nom} : {n} chiffres hexadécimaux")
         if [n for n, _ in self.horodatages] != [n for n, _ in HORODATAGES_DEFAUT]:
-            raise ErreurFabrique("horodatages : les six lignes, dans l'ordre ENGAGEMENT, CODE-LECTURE, SCORES, EPREUVE, "
-                                 "GO-LECTURE, OUVERTURE")
+            raise ErreurFabrique("horodatages : les dix lignes, dans l'ordre SCELLEMENT, CODE-FORMATION, GO-FORMATION, "
+                                 "SORTIES-FORMATION, ENGAGEMENT, CODE-LECTURE, EPREUVE, GO-LECTURE, SCORES, OUVERTURE")
         h = [x for _, x in self.horodatages]
-        if any(not isinstance(x, str) or not x for x in h) or h != sorted(set(h)) \
-                or not self.horodatage_scores_tardif > h[-1]:
-            raise ErreurFabrique("horodatages strictement croissants ; scores tardifs après l'ouverture")
+        if any(not isinstance(x, str) or _INSTANT.fullmatch(x) is None for x in h + [self.horodatage_scores_tardif]) \
+                or h != sorted(set(h)) or not self.horodatage_scores_tardif > h[-1]:
+            raise ErreurFabrique("horodatages au format AAAA-MM-JJTHH:MM:SSZ, strictement croissants ; scores tardifs "
+                                 "après l'ouverture")
+        e = self.entropie_formation
+        if not isinstance(e, int) or isinstance(e, bool) or not 0 < e < 2 ** 128:
+            raise ErreurFabrique("entropie_formation : un entier de ]0 ; 2^128[ (ligne CODE-FORMATION-B5F)")
+        if not all(isinstance(x, str) and _GO.fullmatch(x) for x in (self.go_lecture, self.go_formation)):
+            raise ErreurFabrique("go_lecture, go_formation : « GO-AAAA-MM-JJ-NN »")
+        if tuple(tuple(p) for p in self.plis) != partition_gelee(t, e):
+            raise ErreurFabrique("plis : la partition gelée `b5f/lecture/plis` de ces tâches sous entropie_formation "
+                                 "(le programme de lecture la recalcule et refuse tout autre pli)")
         for champ in ("{horodatage}", "{nom}", "{contenu}"):
             if champ not in self.format_ligne:
                 raise ErreurFabrique(f"format_ligne : le champ {champ} manque")
@@ -616,14 +681,10 @@ def planter(entropie: int, monde: str, params: Parametres | None = None) -> dict
         artefact = {"famille": str(rng.choice(familles))}
 
     rn = _rng(entropie, monde, FLUX_NOMS)
-    perm = rn.permutation(30)
-    noms, sels, k = {}, {}, 0
-    for f in FAMILLES:
-        for r in ROLES:
-            if f in membres and r in membres[f]:
-                noms.setdefault(f, {})[r] = f"X-{int(perm[k]) + 1:02d}"
-                sels.setdefault(f, {})[r] = rn.bytes(16).hex()
-            k += 1
+    sel = rn.bytes(32).hex()   # un seul sel de 256 bits par table ; les noms opaques s'en redérivent
+    derives = noms_opaques(sel, [(f, params.membre(r)) for f in familles for r in membres[f]])
+    noms = {f: {r: derives[(f, params.membre(r))] for r in membres[f]} for f in familles}
+    sels = {f: {r: sel for r in membres[f]} for f in familles}
     run_id = "b5f-epreuve-" + rn.bytes(6).hex()
     n_table = sum(len(membres[f]) for f in familles)
     ordre_table = [int(x) for x in rn.permutation(n_table)]
@@ -1028,9 +1089,11 @@ def fabriquer(entropie: int, monde: str, dossier, params: Parametres | None = No
     table = [{"nom": plan["noms"][f][r], "famille": f, "membre": params.membre(r), "sel": plan["sels"][f][r]}
              for f in plan["familles"] for r in plan["membres"][f]]
     table = [table[i] for i in plan["ordre_table"]]
-    table_octets = _octets_json(table)
+    table_octets = _octets_table(table)
     if cas == "table-dans-arbre":
-        poser("etiquettes.json", table_octets)
+        # sous un nom que la liste blanche de l'arbre admet : seule la garde des étiquettes (liste d'arrêt, point 8)
+        # peut refuser ; sous « etiquettes.json », la liste blanche refuserait avant elle
+        poser("scores/etiquettes-pli0.json", table_octets)
 
     inv = {"format": "b5f-inventaire-lecture-v1", "run_id": plan["run_id"],
            "fichiers": [{"chemin": rel, "octets": n, "sha256": h} for rel, n, h in sorted(ecrits)]}
@@ -1074,17 +1137,23 @@ def fabriquer(entropie: int, monde: str, dossier, params: Parametres | None = No
 
     fichier_table = table_octets
     if cas in ("table-differente", "table-differente-ouverture"):   # la table lue n'est pas celle qui est engagée
-        f = art["famille"]
-        alt = json.loads(table_octets)
-        for e in alt:
-            if e["famille"] == f and e["membre"] in (params.membre("jumeau"), params.membre("sur")):
-                e["membre"] = params.membre("sur") if e["membre"] == params.membre("jumeau") else params.membre("jumeau")
-        fichier_table = _octets_json(alt)
+        # table cohérente (noms redérivés) sous un autre sel : le programme refuse alors pour l'empreinte différente de
+        # l'engagement, et non pour des noms qui ne se dérivent pas du sel
+        autre_sel = _sha(table_octets)
+        autres = noms_opaques(autre_sel, [(e["famille"], e["membre"]) for e in table])
+        alt = [{"nom": autres[(e["famille"], e["membre"])], "famille": e["famille"], "membre": e["membre"],
+                "sel": autre_sel} for e in table]
+        fichier_table = _octets_table(alt)
     _ecrire(racine / "etiquettes.json", fichier_table)
 
     # ouverture : l'empreinte engagée, sauf au cas où l'ouvreur écrit celle de la table qu'il a reçue
     table_ouverte = fichier_table if cas == "table-differente-ouverture" else table_octets
-    contenus = {"ENGAGEMENT-B5F": params.format_engagement.format(table=_sha(table_octets)),
+    contenus = {"SCELLEMENT-B5F": f"{TEXTE_SCELLE} ; sha256 {TEXTE_SCELLE_SHA256} ; membres-apprentissage 3 ; "
+                                  "piece famille",
+                "CODE-FORMATION-B5F": f"commit {params.commit_formation} ; entropie {params.entropie_formation}",
+                "GO-FORMATION-B5F": params.go_formation,
+                "SORTIES-FORMATION-B5F": f"commit {params.commit_formation} ; sorties fabriquees",
+                "ENGAGEMENT-B5F": params.format_engagement.format(table=_sha(table_octets)),
                 "CODE-LECTURE-B5F": f"commit {params.commit_code} ; lecture sha256 {params.empreinte_lecture}",
                 "SCORES-B5F": f"commit {params.commit_scores} ; inventaire sha256 {_sha(inv_octets)}",
                 "EPREUVE-B5F": f"passee ; lecture sha256 {params.empreinte_lecture} ; "

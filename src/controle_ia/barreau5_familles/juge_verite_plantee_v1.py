@@ -56,7 +56,8 @@ NOMBRES_GELES = {"V0": 2000, "V1": 500, "V2": 500, "V3": 500, "V4": 500, "V5": 5
 CAS_V7_GELES = {1: "table présente dans l'arbre de lecture", 2: "empreinte de la table différente de l'engagement",
                 3: "scores postérieurs à l'ouverture", 4: "score manquant", 5: "famille incomplète",
                 6: "sept familles seulement"}
-W_GELE = {99: {10: 3, 9: 1, 8: 0}, 95: {7: 2, 6: None}}
+# à six familles, 95 % : P(W ≤ 0) = 1/64 ≤ 0,025 ; « à six : aucune » dit qu'aucune somme contraire n'est admise (w = 0)
+W_GELE = {99: {10: 3, 9: 1, 8: 0}, 95: {7: 2, 6: 0}}
 EPREUVES = ("M1", "M3", "E3", "E2a", "E2b", "E1")
 ISSUES = ("S", "D", "C", "E", "N", "NI")
 DECISIONS = ("separe", "contraire", "aucune")
@@ -306,8 +307,24 @@ def v10_noeud6(r, a):
     return True
 
 
+# Fragment du motif de refus du programme de lecture attendu pour chaque artefact (R5 : le refus attendu, et lui seul).
+# Écrit par le contre-lecteur, qui a lu le programme : un monde refusé pour une autre raison (registre illisible, table
+# incohérente, liste blanche) ne passe pas la règle.
+FRAGMENTS_REFUS_V7 = {
+    "table-dans-arbre": "table des étiquettes présente dans l'arbre de lecture",
+    "table-differente": "empreinte de la table différente de l'engagement",
+    "table-differente-ouverture": "empreinte de la table différente de l'engagement",
+    "scores-apres-ouverture": "OUVERTURE-B5F n'est pas postérieure à SCORES-B5F",
+    "score-manquant-action": "score manquant",
+    "score-manquant-fichier": "score manquant",
+}
+
+
 def v7_refus(r, a):
-    return r is not None and r.get("refus") is True
+    fragment = FRAGMENTS_REFUS_V7.get(a.get("motif_refus"))
+    motif = r.get("motif_refus") if r is not None else None
+    return r is not None and r.get("refus") is True and fragment is not None and isinstance(motif, str) \
+        and fragment in motif
 
 
 def v7_cinquieme(r, a):
@@ -367,6 +384,12 @@ def juger(chemin_verites, empreinte_engagee: str, rendus: dict) -> dict:
         if manq or inval:
             defauts[g] = f"rendus manquants : {len(manq)} ; rendus invalides : {len(inval)}"
 
+    # V0 n'a que des règles « au plus » : un monde refusé, ou rendu sans l'épreuve E3 (rien n'est lu des sondes), les
+    # passerait sans avoir été lu ; c'est un défaut du groupe, motif écrit (aucun repli silencieux, R5)
+    non_lus = [m for m in par_groupe.get("V0", []) if m in rendus and not erreurs_rendu(rendus[m])
+               and (rendus[m].get("refus") or _decision(rendus[m], "E3") is None)]
+    if non_lus:
+        defauts.setdefault("V0", f"mondes V0 refusés ou rendus sans l'épreuve E3 : {len(non_lus)}")
     regles = []
     for g, n in NOMBRES_GELES.items():
         if len(par_groupe.get(g, [])) != n:
@@ -406,6 +429,19 @@ def juger(chemin_verites, empreinte_engagee: str, rendus: dict) -> dict:
         motif = motif_v7 or (None if attendu_refus else "vérité incohérente avec le cas")
         regles.append(_regle("V7", texte, "dans tous les mondes", len(mc), compte, len(mc), motif))
 
+    # Point 11 : « le dénombrement exact et la table des issues sont programmés une seconde fois par l'autre modèle ;
+    # l'accord exigé est exact ». Le juge n'appelle pas la seconde programmation (il n'importe rien) : chaque rendu porte
+    # ce que son comparateur a rendu pour ce monde, « seconde_programmation » : {"verdict", "arret_par_une_garde"}. Un
+    # rendu sans ce champ, un désaccord, ou un arrêt par une garde là où la vérité ne plante pas de refus (ou
+    # l'inverse) : la règle est manquée, et l'épreuve avec elle.
+    tous = sorted(verites)
+
+    def accord(m):
+        s = rendus[m].get("seconde_programmation") if isinstance(rendus.get(m), dict) else None
+        return (isinstance(s, dict) and s.get("verdict") == "accord exact"
+                and s.get("arret_par_une_garde") is bool(verites[m]["attendu"]["refus"]))
+    regles.append(_regle("tous", "accord exact avec la seconde programmation, refus seulement là où il est planté",
+                         "dans tous les mondes", len(tous), sum(1 for m in tous if accord(m)), len(tous)))
     verdict = "passee" if all(r["issue"] == "passee" for r in regles) else "manquee"
     return {"format": FORMAT_VERDICT, "verites_sha256": empreinte_engagee, "entropie": doc.get("entropie"),
             "epreuve": verdict, "regles": regles, "descriptifs": _descriptifs(par_groupe, verites, rendus)}
@@ -443,7 +479,9 @@ def _descriptifs(par_groupe, verites, rendus) -> dict:
         if r and r.get("issue") == "E" and isinstance(r.get("phrase_E"), dict):
             tot += 1
             b, d = r["phrase_E"].get("borne"), r["phrase_E"].get("delta_app")
-            ok += int(isinstance(b, (int, float)) and isinstance(d, (int, float)) and abs(b - 0.5 * d) <= 1e-9 * max(1.0, abs(d)))
+            # la phrase écrit la borne à trois chiffres significatifs : l'égalité se juge à cette précision
+            ok += int(isinstance(b, (int, float)) and isinstance(d, (int, float))
+                      and float(f"{b:.3g}") == float(f"{0.5 * d:.3g}"))
     out["addendum_point3_V5"] = {"phrases_E_rendues": tot, "borne_egale_a_la_moitie_de_delta_app": ok}
     out["V7_motifs_de_refus"] = {m: (rendus.get(m) or {}).get("motif_refus") for m in par_groupe.get("V7", [])}
     return out
