@@ -589,10 +589,11 @@ def comparer(code_sortie: int, resultat: dict | None = None, *, refus_attendu: b
 
     - Code 2 sans résultat : une garde de la liste d'arrêt a refusé la lecture. C'est la forme que prend, dans le
       premier programme, « une garde de la liste d'arrêt invalide la lecture » (« Critères de lecture gelés », ligne
-      NI). La seconde programmation ne rejoue pas les gardes (empreintes, registre, dates) : elle conclut « arrêt par
-      une garde » de la seule forme du refus, et n'a rien d'autre à comparer.
-    - Code 0 avec résultat : les entrées que porte le résultat sont reprises, passées à la seconde programmation, et
-      comparées champ par champ.
+      NI). La seconde programmation ne rejoue pas les gardes (empreintes, registre, dates). Elle ne rend « arrêt par
+      une garde » que si `refus_attendu` est vrai, c'est-à-dire si la fabrique des mondes a planté un refus (point 11,
+      monde V7 : « refus dans les quatre premiers cas ») ; un code 2 dans un monde sans refus planté est un désaccord.
+    - Code 0 avec résultat : si un refus est planté, désaccord ; sinon les entrées que porte le résultat sont reprises,
+      passées à la seconde programmation, et comparées champ par champ.
     - Toute autre forme est un désaccord.
 
     Rend {"verdict": « accord exact » | « désaccords », "arret_par_une_garde", "champs_manquants", "desaccords",
@@ -772,7 +773,8 @@ def comparer_fichier(code_sortie: int, chemin: str | None = None, *, refus_atten
 
 
 def main(argv: list[str]) -> int:
-    usage = "usage : python -m controle_ia.barreau5_familles.seconde_programmation_v2 comparer CODE_DE_SORTIE [RESULTAT.json]"
+    usage = ("usage : python -m controle_ia.barreau5_familles.seconde_programmation_v3 comparer CODE_DE_SORTIE "
+             "[RESULTAT.json] [--refus-attendu]")
     refus_attendu = "--refus-attendu" in argv
     argv = [a for a in argv if a != "--refus-attendu"]
     if len(argv) not in (2, 3) or argv[0] != "comparer":
