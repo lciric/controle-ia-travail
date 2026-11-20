@@ -210,6 +210,7 @@ def main(argv=None) -> int:
     ap.add_argument("--stderr")
     ap.add_argument("--resultat")
     ap.add_argument("--rendus")
+    ap.add_argument("--accord", help="sortie JSON du comparateur de la seconde programmation pour ce monde")
     a = ap.parse_args(argv)
     if a.essai:
         return essais()
@@ -219,7 +220,13 @@ def main(argv=None) -> int:
     resultat = json.loads(Path(a.resultat).read_text(encoding="utf-8")) if a.resultat else None
     try:
         rendu = traduire(a.monde, a.code, erreur, resultat)
-    except (ErreurTraduction, KeyError, TypeError) as e:
+        if a.accord:
+            # sortie du comparateur de la seconde programmation pour ce monde (`seconde_programmation_v3 comparer CODE
+            # [RESULTAT.json] [--refus-attendu]`, `--refus-attendu` pour les seuls mondes dont la vérité plante un refus) :
+            # recopiée, non jugée ; le juge exige l'accord exact dans tous les mondes (couple J-5)
+            c = json.loads(Path(a.accord).read_text(encoding="utf-8"))
+            rendu["seconde_programmation"] = {"verdict": c["verdict"], "arret_par_une_garde": c["arret_par_une_garde"]}
+    except (ErreurTraduction, KeyError, TypeError, ValueError) as e:
         print(f"AUCUN RENDU pour {a.monde} : {e}", file=sys.stderr)
         return 3
     with open(a.rendus, "a", encoding="utf-8") as fh:

@@ -200,7 +200,7 @@ def eprouver_fabrique(F, dossier: Path) -> dict:
     return sortie
 
 
-W = {99: {10: 3, 9: 1, 8: 0}, 95: {7: 2, 6: None}}
+W = {99: {10: 3, 9: 1, 8: 0}, 95: {7: 2, 6: 0}}
 
 
 def rendu_vrai(J, v, motifs_du_programme: bool):
@@ -209,7 +209,8 @@ def rendu_vrai(J, v, motifs_du_programme: bool):
     motif = a["motif_refus"]
     if a["refus"] and motifs_du_programme:
         motif = MONDES_PAR_CAS[motif] + " : refus"
-    r = {"format": J.FORMAT_RENDU, "monde": v["monde"], "refus": a["refus"], "motif_refus": motif}
+    r = {"format": J.FORMAT_RENDU, "monde": v["monde"], "refus": a["refus"], "motif_refus": motif,
+         "seconde_programmation": {"verdict": "accord exact", "arret_par_une_garde": bool(a["refus"])}}
     if a["refus"]:
         return r
     issue = a["issue"] or "N"
@@ -281,6 +282,22 @@ def eprouver_juge(F, J0, J1, dossier: Path) -> dict:
         if par_monde[m]["groupe"] == "V7" and r["refus"]:
             r["motif_refus"] = "registre propre : SCELLEMENT-B5F absente ou illisible"
     sortie["V7_refuses_pour_une_autre_raison"] = {"origine": manquees(J0, autre), "corrige": manquees(J1, autre)}
+    # programme joué sans le comparateur de la seconde programmation ; puis un seul monde en désaccord ; puis un monde
+    # sain refusé, que l'agent aurait passé au comparateur comme un refus attendu
+    sans = copy.deepcopy(vrais)
+    for r in sans.values():
+        r.pop("seconde_programmation")
+    sortie["sans_accord_de_la_seconde_programmation"] = {"origine": manquees(J0, sans), "corrige": manquees(J1, sans)}
+    un = copy.deepcopy(vrais)
+    un["V5-0007"]["seconde_programmation"]["verdict"] = "désaccords"
+    sortie["un_monde_en_desaccord"] = {"origine": manquees(J0, un), "corrige": manquees(J1, un)}
+    garde = copy.deepcopy(vrais)
+    garde["VC1-0003"] = {"format": J1.FORMAT_RENDU, "monde": "VC1-0003", "refus": True, "motif_refus": "x",
+                         "seconde_programmation": {"verdict": "accord exact", "arret_par_une_garde": True}}
+    sortie["monde_sain_refuse_dit_refus_attendu"] = {"origine": manquees(J0, garde), "corrige": manquees(J1, garde)}
+    # six familles au niveau de 95 % : w = 0 ; le juge d'origine tient l'épreuve pour incohérente
+    six = {"decision": "separe", "K": 6, "niveau": 95, "w": 0, "W_moins": 0, "W_plus": 21}
+    sortie["seuil_a_six_familles"] = {"origine": J0._seuil_coherent(dict(six)), "corrige": J1._seuil_coherent(dict(six))}
     # borne de la phrase E à la précision de la phrase : le juge d'origine ne compte pas l'égalité, le juge corrigé si
     d0 = J0.juger(chemin, sha, vrais)["descriptifs"]["addendum_point3_V5"]
     d1 = J1.juger(chemin, sha, vrais)["descriptifs"]["addendum_point3_V5"]

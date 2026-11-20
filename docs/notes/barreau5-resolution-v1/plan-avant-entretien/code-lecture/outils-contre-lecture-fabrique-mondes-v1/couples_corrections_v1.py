@@ -250,3 +250,27 @@ _c("J-3", JUGE, "m-1 : borne de la phrase E comparée à la précision de la phr
             ok += int(isinstance(b, (int, float)) and isinstance(d, (int, float))
                       and float(f"{b:.3g}") == float(f"{0.5 * d:.3g}"))
 ''')
+
+_c("J-4", JUGE, "m-5 : à six familles et 95 %, la somme admise est 0 (« aucune » somme contraire), non l'absence de seuil",
+   "W_GELE = {99: {10: 3, 9: 1, 8: 0}, 95: {7: 2, 6: None}}\n",
+   "# à six familles, 95 % : P(W ≤ 0) = 1/64 ≤ 0,025 ; « à six : aucune » dit qu'aucune somme contraire n'est admise (w = 0)\n"
+   "W_GELE = {99: {10: 3, 9: 1, 8: 0}, 95: {7: 2, 6: 0}}\n")
+
+_c("J-5", JUGE, "M-4 : l'accord exact avec la seconde programmation (point 11) est une règle du juge, monde par monde",
+   '''    verdict = "passee" if all(r["issue"] == "passee" for r in regles) else "manquee"
+''',
+   '''    # Point 11 : « le dénombrement exact et la table des issues sont programmés une seconde fois par l'autre modèle ;
+    # l'accord exigé est exact ». Le juge n'appelle pas la seconde programmation (il n'importe rien) : chaque rendu porte
+    # ce que son comparateur a rendu pour ce monde, « seconde_programmation » : {"verdict", "arret_par_une_garde"}. Un
+    # rendu sans ce champ, un désaccord, ou un arrêt par une garde là où la vérité ne plante pas de refus (ou
+    # l'inverse) : la règle est manquée, et l'épreuve avec elle.
+    tous = sorted(verites)
+
+    def accord(m):
+        s = rendus[m].get("seconde_programmation") if isinstance(rendus.get(m), dict) else None
+        return (isinstance(s, dict) and s.get("verdict") == "accord exact"
+                and s.get("arret_par_une_garde") is bool(verites[m]["attendu"]["refus"]))
+    regles.append(_regle("tous", "accord exact avec la seconde programmation, refus seulement là où il est planté",
+                         "dans tous les mondes", len(tous), sum(1 for m in tous if accord(m)), len(tous)))
+    verdict = "passee" if all(r["issue"] == "passee" for r in regles) else "manquee"
+''')
