@@ -6,7 +6,7 @@ le traducteur n'est joué que sur des résultats fabriqués. La garde factice su
 contre-lecture de la fabrique (`contre-lecture-fabrique-mondes-v1.md`, `e6ddb470…`) a recopiées du programme ; le calcul
 de « Métrique » est écrit depuis l'interface lue et le texte scellé. Ils servent à vérifier que les mondes portent ce
 qu'ils plantent, non à lire. Les seuls modules du dépôt importés hors des trois essayés, `manifeste` et `engagement_v1`
-(que le programme appelle), le sont par des essais d'égalité sautés dans un paquet minimal. Temporaires sous /dev/shm,
+(que le programme appelle), le sont par des essais d'égalité, jamais sautés (R5). Temporaires sous /dev/shm,
 effacés à la fin par leur chemin écrit en toutes lettres.
 """
 import ast
