@@ -1,0 +1,185 @@
+--- programme-3-5-6-v1/tests/test_lancer_etapes_3_5_6_v1.py
++++ programme-3-5-6-v2/tests/test_lancer_etapes_3_5_6_v2.py
+@@ -1,4 +1,8 @@
+-"""Essais du programme des étapes 3, 4, 5 et 6 (`lancer_etapes_3_5_6_v1.py`), sous la couche « essai-de-forme » seule, sur une
++"""Essais du programme des étapes 3, 4, 5 et 6, version 2 (`lancer_etapes_3_5_6_v2.py`). Version 2 : la condition 5 de la liste
++d'arrêt après l'étape 6 (cas sain et artefacts, sur des réglages plantés), et les cinq arrêts nommés de l'étape 4 (un essai
++chacun), sur la vérification du programme v1 (`5dae3b94…`) ; le reste est repris de la version 1.
++
++Sous la couche « essai-de-forme » seule, sur une
+ racine factice (texte présenté, registre des GO, pièce d'autorisation du verrou, pièce de contrôle de la mère, tous factices,
+ dans un dossier temporaire) ; la copie du code de l'organisme est celle que donne `HERITAGE_COPIE_ORGANISME`. Chaque garde a
+ son cas sain et son artefact (règle R5) : pièces absentes ou incomplètes, couche interdite, tailles réduites sous les couches
+@@ -25,8 +29,8 @@
+ from controle_ia.heritage_etage_processeur_v1 import organisme as OR
+ from controle_ia.heritage_etage_processeur_v1 import tirages as TI
+ 
+-CHEMIN_PROGRAMME = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "lancer_etapes_3_5_6_v1.py")
+-_spec = importlib.util.spec_from_file_location("lancer_etapes_3_5_6_v1", CHEMIN_PROGRAMME)
++CHEMIN_PROGRAMME = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "lancer_etapes_3_5_6_v2.py")
++_spec = importlib.util.spec_from_file_location("lancer_etapes_3_5_6_v2", CHEMIN_PROGRAMME)
+ PR = importlib.util.module_from_spec(_spec)
+ _spec.loader.exec_module(PR)
+ 
+@@ -104,28 +108,43 @@
+     base = tmp_path_factory.mktemp("chaine")
+     racine, texte = _racine(base)
+     g_avant = len(GR.JOURNAL)
+-    r = PR.lancer(texte, racine, _copie(), str(base / "sortie"), **REDUIT)
+-    return {"r": r, "texte": texte, "journal": GR.JOURNAL[g_avant:]}
++    d = str(base / "sortie")
++    try:
++        PR.lancer(texte, racine, _copie(), d, **REDUIT)
++        arret = None
++    except PR.ArretProgramme as e:  # version 2 : seul l'arrêt du point 5 est admis ici (contrôlé par l'essai)
++        arret = str(e)
++    return {"dossier": d, "arret": arret, "texte": texte, "journal": GR.JOURNAL[g_avant:]}
+ 
+ 
+ def test_chaine_entiere_reduite_sous_essai_de_forme(chaine):
+     """Cas sain : les étapes 3, 4, 5 et 6 dans cet ordre, chacune avec son manifeste scellé et vérifié (commit de la pièce,
+-    empreinte du programme, issue « tenue ») ; rapport de l'audit scellé ; résultat de l'étape 4 scellé (garde 17 jouée) ;
+-    fichier des fréquences gelé, relu sous contrôle de son empreinte, inscrit aux manifestes des étapes 5 et 6 ; fichier des
+-    réglages gelé avec son compagnon ; toutes les étiquettes de la couche « essai-de-forme », dans l'ordre des étapes."""
+-    r = chaine["r"]
+-    d = r["dossier"]
++    empreinte du programme) ; les étapes 3 à 5 « tenue » ; rapport de l'audit scellé ; résultat de l'étape 4 scellé (garde 17
++    jouée) ; fichier des fréquences gelé, relu sous contrôle de son empreinte, inscrit aux manifestes des étapes 5 et 6 ; fichier
++    des réglages gelé avec son compagnon et inscrit au manifeste de l'étape 6 ; toutes les étiquettes de la couche
++    « essai-de-forme », dans l'ordre des étapes. Version 2 : sur ces tailles réduites et ces fréquences d'essai, la condition 5
++    de la liste d'arrêt peut être vraie (son verdict y est sans portée) ; l'étape 6 est alors close « arrêt », par la seule cause
++    du point 5, écrite et scellée, et rien d'autre n'arrête ; sinon elle est close « tenue ». Les deux lectures de la garde sont
++    éprouvées à part, sur des réglages plantés (`test_v2_point_5_*`)."""
++    d = chaine["dossier"]
+     assert sorted(x for x in os.listdir(d)) == ["etape-3", "etape-4", "etape-5", "etape-6"]
+     for e in ("3", "4", "5", "6"):
+         m, n = _manifeste(os.path.join(d, f"etape-{e}"))
+-        assert m["configuration"]["etape"] == e and m["configuration"]["issue"] == "tenue" and m["commit"] == COMMIT
++        assert m["configuration"]["etape"] == e and m["commit"] == COMMIT
++        assert m["configuration"]["issue"] == ("tenue" if e != "6" or chaine["arret"] is None else "arrêt")
+         assert m["configuration"]["programme_sha256"] == PR.empreinte_du_programme() and m["texte_sha256"] == _sha(chaine["texte"])
+         assert (n == 0) == (e == "5") and m["etiquettes"]["couches"] == ([] if e == "5" else ["couche=essai-de-forme"])
+-        assert not os.path.exists(os.path.join(d, f"etape-{e}", "arret.txt"))
+-    chemin_f, sha_f = r["frequences"]
+-    chemin_r, sha_r = r["reglages"]
+-    assert _sha(chemin_f) == sha_f and open(chemin_f + ".sha256").read().split()[0] == sha_f
+-    assert _sha(chemin_r) == sha_r and open(chemin_r + ".sha256").read().split()[0] == sha_r
++        assert os.path.exists(os.path.join(d, f"etape-{e}", "arret.txt")) == (e == "6" and chaine["arret"] is not None)
++    if chaine["arret"] is not None:
++        assert "étape 6 arrêtée" in chaine["arret"] and "ArretListeDArretPoint5" in chaine["arret"]
++        cause = os.path.join(d, "etape-6", "arret.txt")
++        assert open(cause, encoding="utf-8").read().startswith("ArretListeDArretPoint5 : liste d'arrêt, point 5")
++        assert _sha(cause) == open(cause + ".sha256").read().split()[0]
++    chemin_f = os.path.join(d, "etape-5", PR.FICHIER_DES_FREQUENCES)
++    chemin_r = os.path.join(d, "etape-6", PR.FICHIER_DES_REGLAGES)
++    sha_f, sha_r = _sha(chemin_f), _sha(chemin_r)
++    assert open(chemin_f + ".sha256").read().split()[0] == sha_f
++    assert open(chemin_r + ".sha256").read().split()[0] == sha_r
+     assert _manifeste(os.path.join(d, "etape-5"))[0]["fichiers_geles"] == {"frequences": sha_f}
+     m6 = _manifeste(os.path.join(d, "etape-6"))[0]
+     assert m6["fichiers_geles"] == {"frequences": sha_f} and m6["configuration"]["reglages_sha256"] == sha_r
+@@ -268,6 +287,104 @@
+     assert not (d / "etape-6" / PR.FICHIER_DES_REGLAGES).exists()
+ 
+ 
++# --- version 2 ---------------------------------------------------------------------------------------------------------------
++
++
++def _reglages(k=(0.25, 0.5), tau=(0.25, 0.5), phi=True):
++    """Réglages plantés au format de `etapes.reglages_pour_le_plan` : K et τ atteignables à la taille 1 aux seules doses `k` et
++    `tau` (non atteignables, None, aux autres) ; φ à la force 1 atteignable ou non ; les autres tailles et forces atteignables."""
++    r = {"K": {(d, t): 32.0 * t for d in K.DOSES_NON_NULLES for t in K.TAILLES},
++         "tau": {(d, t): 0.9 * t for d in K.DOSES_NON_NULLES for t in K.TAILLES},
++         "phi": {0.5: 0.4, 1.0: 0.9, 1.5: 1.5}, "gamma": {0.25: 0.1, 0.5: 0.2, 1.0: 0.5, 1.5: 0.9}}
++    for d in K.DOSES_NON_NULLES:
++        if d not in k:
++            r["K"][(d, K.TAILLE_REFERENCE)] = None
++        if d not in tau:
++            r["tau"][(d, K.TAILLE_REFERENCE)] = None
++    if not phi:
++        r["phi"][K.FORCE_REFERENCE_SUIVEUR] = None
++    return r
++
++
++def test_v2_liste_d_arret_point_5_a_la_lettre():
++    """Cas sain : la taille de référence atteignable à une seule dose non nulle pour chaque contraste, et la force de référence
++    du suiveur atteignable : condition fausse. Artefacts : K de référence non atteignable aux deux doses ; τ de même ; φ de
++    référence non atteignable ; une cible absente : condition vraie, chaque cause nommée. Les autres tailles et forces ne
++    comptent pas."""
++    assert PR.liste_d_arret_point_5(_reglages()) == []
++    assert PR.liste_d_arret_point_5(_reglages(k=(0.5,), tau=(0.25,))) == []
++    assert ["héritage" in c for c in PR.liste_d_arret_point_5(_reglages(k=()))] == [True]
++    assert ["tenue" in c for c in PR.liste_d_arret_point_5(_reglages(tau=()))] == [True]
++    assert ["suiveur" in c for c in PR.liste_d_arret_point_5(_reglages(phi=False))] == [True]
++    assert len(PR.liste_d_arret_point_5(_reglages(k=(), tau=()))) == 2
++    r = _reglages()
++    del r["phi"][K.FORCE_REFERENCE_SUIVEUR]
++    assert len(PR.liste_d_arret_point_5(r)) == 1
++    autres = _reglages()
++    autres["K"] = {k: (None if k[1] != K.TAILLE_REFERENCE else v) for k, v in autres["K"].items()}
++    autres["gamma"] = {f: None for f in autres["gamma"]}
++    assert PR.liste_d_arret_point_5(autres) == []
++
++
++def _etape_6_plantee(reglages):
++    """`etapes.etape_6` remplacée : elle gèle, par la fonction du code v6, un fichier de réglages vide et rend les réglages
++    plantés ; rien n'est tiré."""
++    from controle_ia.heritage_etage_processeur_v1 import etalonnage as ET
++
++    def etape_6(graines, couche, f, sources, chemin, configuration):
++        return [], reglages, ET.geler_reglages(chemin, [], configuration)
++    return etape_6
++
++
++def test_v2_point_5_artefact_k_et_tau_non_atteignables_arrete_l_etape_6(tmp_path, monkeypatch):
++    """Artefact (celui de la vérification) : K et τ de référence non atteignables aux deux doses, φ atteignable : l'étape 6 rend
++    ses réglages, la condition 5 est vraie, l'arrêt est écrit et scellé avec le manifeste de l'étape 6 « arrêt », qui inscrit les
++    fréquences et le fichier des réglages déjà gelé ; le programme s'arrête."""
++    _etapes_rapides(monkeypatch, etape_6=_etape_6_plantee(_reglages(k=(), tau=())))
++    racine, texte = _racine(tmp_path)
++    d = tmp_path / "sortie"
++    with pytest.raises(PR.ArretProgramme, match="étape 6 arrêtée"):
++        PR.lancer(texte, racine, _copie(), str(d), **REDUIT)
++    cause = (d / "etape-6" / "arret.txt").read_text(encoding="utf-8")
++    assert cause.startswith("ArretListeDArretPoint5 : liste d'arrêt, point 5") and "héritage" in cause and "tenue" in cause
++    assert _sha(str(d / "etape-6" / "arret.txt")) == open(d / "etape-6" / "arret.txt.sha256").read().split()[0]
++    m, _ = _manifeste(str(d / "etape-6"))
++    assert m["configuration"]["issue"] == "arrêt" and set(m["fichiers_geles"]) == {"frequences"}
++    assert m["configuration"]["reglages_sha256"] == _sha(str(d / "etape-6" / PR.FICHIER_DES_REGLAGES))
++
++
++def test_v2_point_5_cas_sain_plante_la_chaine_finit_tenue(tmp_path, monkeypatch):
++    """Cas sain planté : référence atteignable à une seule dose pour chaque contraste, φ atteignable : l'étape 6 se clôt
++    « tenue », sans fichier d'arrêt (le cas sain tiré est la chaîne entière)."""
++    _etapes_rapides(monkeypatch, etape_6=_etape_6_plantee(_reglages(k=(0.25,), tau=(0.5,))))
++    racine, texte = _racine(tmp_path)
++    r = PR.lancer(texte, racine, _copie(), str(tmp_path / "sortie"), **REDUIT)
++    m, _ = _manifeste(os.path.join(r["dossier"], "etape-6"))
++    assert m["configuration"]["issue"] == "tenue" and not os.path.exists(os.path.join(r["dossier"], "etape-6", "arret.txt"))
++
++
++@pytest.mark.parametrize("classe", ["MC.ArretMecanique", "FR.ArretFrequences", "OR.DesaccordOrganisme", "MO.ArretGenerateur",
++                                    "EP.ArretEtapes"])
++def test_v2_arrets_nommes_de_l_etape_4(classe, tmp_path, monkeypatch):
++    """Artefacts : chacun des cinq arrêts nommés de l'étape 4 (planté) est écrit et scellé avec le manifeste de l'étape 4
++    « arrêt » ; les étapes 5 et 6 ne se jouent pas ; le programme s'arrête. Cas sain : la chaîne entière."""
++    from controle_ia.heritage_etage_processeur_v1 import mecanique as MC
++    module, nom = classe.split(".")
++    exc = getattr({"MC": MC, "FR": FR, "OR": OR, "MO": MO, "EP": EP}[module], nom)
++
++    def arret(*a, **k):
++        raise exc(f"{nom} planté")
++    _etapes_rapides(monkeypatch, etape_4=arret)
++    racine, texte = _racine(tmp_path)
++    d = tmp_path / "sortie"
++    with pytest.raises(PR.ArretProgramme, match="étape 4 arrêtée"):
++        PR.lancer(texte, racine, _copie(), str(d), **REDUIT)
++    assert sorted(os.listdir(d)) == ["etape-3", "etape-4"]
++    assert (d / "etape-4" / "arret.txt").read_text(encoding="utf-8") == f"{nom} : {nom} planté\n"
++    assert _manifeste(str(d / "etape-4"))[0]["configuration"]["issue"] == "arrêt"
++    assert not (d / "etape-4" / "resultat-etape-4.json").exists()
++
++
+ def test_ligne_de_commande_refusee_sur_racine_factice_sans_pieces(tmp_path):
+     """La ligne de commande (couches des étapes, valeurs gelées), sur une racine factice sans pièces : refus du verrou avant tout
+     geste, code non nul, aucun dossier ; un nombre d'arguments faux rend l'usage."""

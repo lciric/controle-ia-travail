@@ -1,0 +1,48 @@
+E.............................                                           [100%]
+==================================== ERRORS ====================================
+______ ERROR at setup of test_chaine_entiere_reduite_sous_essai_de_forme _______
+lancer_etapes_3_5_6_v2.ArretListeDArretPoint5: liste d'arrêt, point 5 : force de référence du suiveur de forme (1.0) non atteignable : arrêt, le banc ne sait pas planter l'effet de référence
+
+The above exception was the direct cause of the following exception:
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f304e65ac40>, _basetemp=PosixPath('/tmp/pytest-of-root/pytest-554'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def chaine(tmp_path_factory):
+        """La chaîne entière, réduite, sous la couche « essai-de-forme » (étape 3 : quatre suites par dose, 20 permutations ;
+        étape 4 : deux proposeurs, dose 0,5, une source, garde 17 jouée sur elle, et le jeu de la garde 27 ; étape 6 : 2 000 sources
+        d'étalonnage)."""
+        base = tmp_path_factory.mktemp("chaine")
+        racine, texte = _racine(base)
+        g_avant = len(GR.JOURNAL)
+>       r = PR.lancer(texte, racine, _copie(), str(base / "sortie"), **REDUIT)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../programme-3-5-6-v2/tests/test_lancer_etapes_3_5_6_v2.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../programme-3-5-6-v2/lancer_etapes_3_5_6_v2.py:235: in lancer
+    _arreter(d6, "6", couches["6"], g6, commit, {"frequences": sha_f}, dict(conf6, reglages_sha256=sha_r),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dossier = '/tmp/pytest-of-root/pytest-554/chaine0/sortie/etape-6', etape = '6'
+couche = 'essai-de-forme'
+graines = <controle_ia.heritage_etage_processeur_v1.graines.Graines object at 0x7f3033912fd0>
+commit = '0123456789abcdef0123456789abcdef01234567'
+fichiers_geles = {'frequences': '7941d59daf55db26c2270bee985b2b7c04f2fb89fa823f48c87eb4f1a4445025'}
+configuration = {'sources': 2000, 'frequences_sha256': '7941d59daf55db26c2270bee985b2b7c04f2fb89fa823f48c87eb4f1a4445025', 'manifeste_...4fea0cb33e842a773075ad3b361104', 'reglages_sha256': '31162d72c687f5deb1a1c4b20c9d66a69f9968c18e195c4e69f28f1565042f12'}
+e = ArretListeDArretPoint5("liste d'arrêt, point 5 : force de référence du suiveur de forme (1.0) non atteignable : arrêt, le banc ne sait pas planter l'effet de référence")
+
+    def _arreter(dossier, etape, couche, graines, commit, fichiers_geles, configuration, e):
+        """Un arrêt nommé : sa cause (et le rapport qui lui est joint, s'il y en a un) écrite et scellée, le manifeste de l'étape
+        « arrêt », puis l'arrêt du programme ; les étapes suivantes ne se jouent pas."""
+        _ecrire_scelle(os.path.join(dossier, "arret.txt"), f"{type(e).__name__} : {e}\n")
+        if getattr(e, "rapport", None) is not None:
+            _ecrire_json(os.path.join(dossier, "rapport-joint-a-l-arret.json"), e.rapport)
+        _clore(dossier, etape, couche, graines, commit, fichiers_geles, configuration, "arrêt")
+>       raise ArretProgramme(f"étape {etape} arrêtée (liste d'arrêt) : {type(e).__name__} : {e}") from e
+E       lancer_etapes_3_5_6_v2.ArretProgramme: étape 6 arrêtée (liste d'arrêt) : ArretListeDArretPoint5 : liste d'arrêt, point 5 : force de référence du suiveur de forme (1.0) non atteignable : arrêt, le banc ne sait pas planter l'effet de référence
+
+../programme-3-5-6-v2/lancer_etapes_3_5_6_v2.py:152: ArretProgramme
+=========================== short test summary info ============================
+ERROR ../programme-3-5-6-v2/tests/test_lancer_etapes_3_5_6_v2.py::test_chaine_entiere_reduite_sous_essai_de_forme
+29 passed, 1 error in 825.31s (0:13:45)
