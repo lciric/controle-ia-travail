@@ -88,3 +88,256 @@ def test_texte_du_script_sans_commande_d_arret_de_creation_ni_de_reseau():
                      r"\bwget\b", r"\bgit\s+push\b", r"\brm\s", r"huggingface"):
         assert re.search(interdit, code) is None, interdit
     assert "set -uo pipefail" in texte and "HF_HUB_OFFLINE=1" in code
+
+
+# --- côté session : commande de création, destruction, ligne SCORES-B5F (ajout du 20 novembre) ----------------------
+
+import base64  # noqa: E402
+import hashlib  # noqa: E402
+import shutil  # noqa: E402
+import time  # noqa: E402
+from datetime import date, datetime, timedelta, timezone  # noqa: E402
+
+from controle_ia.barreau5_familles import engagement_v1 as en  # noqa: E402
+from controle_ia.barreau5_familles import lecture_v1 as lv  # noqa: E402
+from controle_ia.barreau5_familles import relecture_v1 as rv  # noqa: E402
+from controle_ia.gardes import GardeArret  # noqa: E402
+from controle_ia.scellement import sceller  # noqa: E402
+
+GO_LECTURE, GO_FORMATION = "GO-2026-11-24-01", "GO-2026-11-21-01"
+OFFRE = {"id": 654321, "gpu_name": "A100 SXM4", "num_gpus": 1, "gpu_ram": 81920, "cpu_cores_effective": 32,
+         "cpu_ram": 257000, "disk_space": 320, "cuda_max_good": 13.0, "dph_total": 1.2, "storage_cost": 0.1}
+RUN_L, RUN_R = "20261124-120000-b5f-lecture", "20261123-120000-b5f-repetition"
+EXISTANTS = [{"nom": f"R{k}-{m}", "chemin": f"donnees/existants-{k}/adaptateur-{m}.pt", "sha256": "a" * 64}
+             for k in (1, 2) for m in ("saboteur", "temoin")]
+
+
+def _g(r, *a):
+    return subprocess.run(["git", "-C", str(r), *a], check=True, capture_output=True, text=True).stdout.strip()
+
+
+def _ligne_go(ident):
+    a, e = date.today() - timedelta(days=1), date.today() + timedelta(days=10)
+    return f"| {ident} | {a.isoformat()} | calcul | lecture barreau 5 | 21 USD | {e.isoformat()} | Lazar | essai |"
+
+
+def _registre(code_commit, sans=()):
+    t0 = datetime.now(timezone.utc) - timedelta(days=2)
+    lignes = [("SCELLEMENT-B5F", f"{lv.TEXTE} ; sha256 {lv.TEXTE_SHA256} ; membres-apprentissage 3 ; piece famille"),
+              ("CODE-FORMATION-B5F", f"commit {'c' * 40} ; entropie 12345"), ("GO-FORMATION-B5F", GO_FORMATION),
+              ("SORTIES-FORMATION-B5F", "versement prouvé"), ("ENGAGEMENT-B5F", f"sha256 {'d' * 64}"),
+              ("CODE-LECTURE-B5F", f"commit {code_commit} ; lecture sha256 {lv.programme_sha256()}"),
+              ("EPREUVE-B5F", f"passee ; lecture sha256 {lv.programme_sha256()} ; rapport sha256 {'e' * 64}"),
+              ("GO-LECTURE-B5F", GO_LECTURE)]
+    return "\n".join(en.ligne_du_registre(k, (t0 + timedelta(minutes=5 * i)).strftime("%Y-%m-%dT%H:%M:%SZ"), c, "")
+                     for i, (k, c) in enumerate(x for x in lignes if x[0] not in sans)) + "\n"
+
+
+@pytest.fixture
+def session(tmp_path):
+    """Dépôt jetable relié à un dépôt distant local : le code (garde de calcul copiée telle quelle, configuration scellée,
+    texte scellé, amorce de lecture, adaptateurs existants factices), puis la marche (registre propre qui admet la lecture) ;
+    la branche des entrées de lecture, poussée et tirée."""
+    nu, r = tmp_path / "distant.git", tmp_path / "depot"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(nu)], check=True)
+    subprocess.run(["git", "clone", "-q", str(nu), str(r)], check=True, capture_output=True)
+    for a in (["config", "user.email", "e@invalid"], ["config", "user.name", "e"]):
+        _g(r, *a)
+    (r / ".claude" / "hooks").mkdir(parents=True)
+    shutil.copy(RACINE / ".claude" / "hooks" / "garde_calcul.py", r / ".claude" / "hooks" / "garde_calcul.py")
+    (r / "prereg").mkdir()
+    for f in (rv.CONFIG_SCELLEE["chemin"], rv.CONFIG_SCELLEE["chemin"] + ".sha256", lv.TEXTE):
+        shutil.copy(RACINE / f, r / f)
+    (r / "scripts").mkdir()
+    shutil.copy(RACINE / rv.AMORCE, r / rv.AMORCE)
+    for x in EXISTANTS:
+        (r / x["chemin"]).parent.mkdir(parents=True, exist_ok=True)
+        (r / x["chemin"]).write_bytes(b"adaptateur factice")
+    (r / "registres").mkdir()
+    (r / "registres" / "go.md").write_text("| id | accordé | type | périmètre | plafond | échéance | par | réf |\n"
+                                          + _ligne_go(GO_LECTURE) + "\n" + _ligne_go(GO_FORMATION) + "\n", encoding="utf-8")
+    _g(r, "add", "-A")
+    _g(r, "commit", "-q", "-m", "code")
+    code = _g(r, "rev-parse", "HEAD")
+    (r / en.REGISTRE_PROPRE).write_text(_registre(code), encoding="utf-8")
+    _g(r, "add", "-A")
+    _g(r, "commit", "-q", "-m", "marche (registre)")
+    marche = _g(r, "rev-parse", "HEAD")
+    _g(r, "push", "-q", "origin", "main")
+    e = tmp_path / "entrees-graine"
+    e.mkdir()
+    for a in (["init", "-q", "-b", "x"], ["config", "user.email", "e@invalid"], ["config", "user.name", "e"]):
+        _g(e, *a)
+    (e / rv.DOSSIER_ENTREES).mkdir()
+    (e / rv.DOSSIER_ENTREES / "X-01.safetensors").write_bytes(b"x")
+    _g(e, "add", "-A")
+    _g(e, "commit", "-q", "-m", "entrées de lecture")
+    entrees = _g(e, "rev-parse", "HEAD")
+    _g(e, "push", "-q", str(nu), f"x:refs/heads/{rv.BRANCHE_ENTREES}")
+    _g(r, "checkout", "-q", "-f", "main")
+    _g(r, "clean", "-fdq")
+    _g(r, "fetch", "-q", "origin")
+    (tmp_path / "offre.json").write_text(json.dumps(OFFRE))
+    (tmp_path / "existants.json").write_text(json.dumps(EXISTANTS))
+    (tmp_path / "aucun.json").write_text("[]")
+    return {"r": r, "code": code, "marche": marche, "entrees": entrees, "t": tmp_path}
+
+
+def _commande(s, plan="decisif", **k):
+    a = {"offre_json": s["t"] / "offre.json", "commit": s["marche"], "branche": "main",
+         "run_id": RUN_L if plan == "decisif" else RUN_R, "go_id": GO_LECTURE if plan == "decisif" else GO_FORMATION,
+         "entrees_commit": s["entrees"] if plan == "decisif" else "", "divergence": True, "garde": "une_sur_dix",
+         "existants_json": s["t"] / ("aucun.json" if plan == "decisif" else "existants.json")}
+    a.update(k)
+    return rv.commande_de_creation(s["r"], plan, a["offre_json"], a["commit"], a["branche"], a["run_id"], a["go_id"],
+                                   a["entrees_commit"], a["divergence"], a["garde"], a["existants_json"], date.today(),
+                                   time.time())
+
+
+def test_commande_de_creation_plan_decisif_cas_sain(session):
+    cmd = _commande(session)
+    assert cmd.startswith(f"GO_ID={GO_LECTURE} vastai create instance 654321 --raw --image python:3.11-bookworm --disk 300 ")
+    assert "--label b5f-lecture-v1" in cmd and f"-e ENTREES_COMMIT={session['entrees']}" in cmd
+    assert f"-e COMMIT={session['marche']}" in cmd and f"-e PREREG={lv.TEXTE}" in cmd and "-e EXISTANTS_CHEMINS=-" in cmd
+    assert "-e HF_TOKEN=$HF_TOKEN -e GH_TOKEN=$GH_TOKEN" in cmd and "-e GARDE_B5F=une_sur_dix -e" in cmd
+    b64 = re.search(r'echo (\S+) \| base64 -d > /root/amorce_b5f_lecture_v1\.sh', cmd).group(1)
+    assert base64.b64decode(b64) == (RACINE / rv.AMORCE).read_bytes()               # l'amorce telle qu'au commit
+    echeance = int(re.search(r"-e ECHEANCE_ARRET_UTC_S=(\d+)", cmd).group(1))
+    assert abs(echeance - (time.time() + (21.0 / 1.2 - 0.25) * 3600)) < 120
+
+
+def test_commande_de_creation_repetition_cas_sain(session):
+    cmd = _commande(session, plan="repetition")
+    assert "--disk 150" in cmd and "--label b5f-repetition-v1" in cmd and "-e ENTREES_COMMIT=-" in cmd
+    assert f"-e EXISTANTS_CHEMINS={','.join(x['chemin'] for x in EXISTANTS)} " in cmd
+    ex = base64.b64decode(re.search(r"-e EXISTANTS_B5F=(\S+)", cmd).group(1))
+    assert json.loads(ex) == EXISTANTS
+
+
+@pytest.mark.parametrize("cas", ["disque", "prix", "carte", "marche_autre_plan", "sans_entrees", "entrees_hors_branche",
+                                 "go_autre", "existant_sans_empreinte", "existant_absent", "repetition_avec_entrees",
+                                 "registre_sans_epreuve", "code_change"])
+def test_commande_de_creation_artefacts_aucune_commande(session, cas):
+    s, k, plan = session, {}, "decisif"
+    if cas in ("disque", "prix", "carte"):
+        o = dict(OFFRE, **{"disque": {"disk_space": 200}, "prix": {"dph_total": 1.35}, "carte": {"gpu_name": "H100 SXM"}}[cas])
+        (s["t"] / "o.json").write_text(json.dumps(o))
+        k["offre_json"] = s["t"] / "o.json"
+    elif cas == "marche_autre_plan":
+        k["run_id"] = RUN_R
+    elif cas == "sans_entrees":
+        k["entrees_commit"] = ""
+    elif cas == "entrees_hors_branche":
+        k["entrees_commit"] = s["code"]
+    elif cas == "go_autre":
+        k["go_id"] = GO_FORMATION
+    elif cas == "existant_sans_empreinte":
+        (s["t"] / "x.json").write_text(json.dumps([{**EXISTANTS[0], "nom": "ancre-R1", "sha256": ""}]))
+        k["existants_json"] = s["t"] / "x.json"
+    elif cas == "existant_absent":
+        plan = "repetition"
+        (s["t"] / "x.json").write_text(json.dumps(EXISTANTS[:3] + [{**EXISTANTS[3], "chemin": "donnees/absent/a.pt"}]))
+        k["existants_json"] = s["t"] / "x.json"
+    elif cas == "repetition_avec_entrees":
+        plan, k["entrees_commit"] = "repetition", s["entrees"]
+    elif cas == "registre_sans_epreuve":
+        (s["r"] / en.REGISTRE_PROPRE).write_text(_registre(s["code"], sans=("EPREUVE-B5F",)), encoding="utf-8")
+        _g(s["r"], "commit", "-q", "-am", "registre sans épreuve")
+        k["commit"] = _g(s["r"], "rev-parse", "HEAD")
+    elif cas == "code_change":
+        (s["r"] / "scripts" / "autre.sh").write_text("echo x\n")
+        _g(s["r"], "add", "-A")
+        _g(s["r"], "commit", "-q", "-m", "code changé")
+        k["commit"] = _g(s["r"], "rev-parse", "HEAD")
+    with pytest.raises(GardeArret):
+        _commande(s, plan=plan, **k)
+
+
+def test_commande_par_le_lanceur(session):
+    s = session
+    args = ["commande", "decisif", str(s["r"]), str(s["t"] / "offre.json"), s["marche"], "main", RUN_L, s["entrees"], "1",
+            "une_sur_dix", str(s["t"] / "aucun.json")]
+    r = _jouer(*args, env={"GO_ID": GO_LECTURE})
+    assert r.returncode == 0, r.stderr
+    assert "B5F COMMANDE" in r.stdout and "vastai create instance 654321" in r.stdout
+    r = _jouer(*args)
+    assert r.returncode == 2 and "GO_ID absent" in r.stderr
+
+
+def _pousser_lecture(s, run=RUN_L, abimer=False):
+    """Arbre fermé fabriqué au commit d'une branche de lecture poussée ; rend le commit."""
+    r = s["r"]
+    _g(r, "checkout", "-q", "-b", "lecture")
+    arbre = r / "donnees" / run / "lecture"
+    arbre.mkdir(parents=True)
+    (arbre / "bilan-relecture.json").write_text("{}")
+    lv.ecrire_inventaire(arbre, run)
+    if abimer:
+        (arbre / "bilan-relecture.json").write_text("{\"x\": 1}")
+    _g(r, "add", "-A")
+    _g(r, "commit", "-q", "-m", "arbre fermé")
+    _g(r, "push", "-q", "origin", "lecture")
+    return _g(r, "rev-parse", "HEAD")
+
+
+def test_ligne_scores_cas_sain_et_artefacts(session):
+    s = session
+    c = _pousser_lecture(s)
+    attendu = hashlib.sha256((s["r"] / "donnees" / RUN_L / "lecture" / "inventaire.json").read_bytes()).hexdigest()
+    assert rv.ligne_scores(s["r"], c, RUN_L) == f"commit {c} ; inventaire sha256 {attendu}"
+    r = _jouer("scores", str(s["r"]), c, RUN_L)
+    assert r.returncode == 0 and r.stdout.strip() == f"commit {c} ; inventaire sha256 {attendu}"
+    with pytest.raises(GardeArret):
+        rv.ligne_scores(s["r"], s["code"], RUN_L)                                    # arbre absent du commit
+    _g(s["r"], "checkout", "-q", "main")
+    _g(s["r"], "branch", "-q", "-D", "lecture")
+    c2 = _pousser_lecture(s, abimer=True)
+    with pytest.raises(GardeArret, match="empreinte"):
+        rv.ligne_scores(s["r"], c2, RUN_L)
+
+
+def test_ligne_scores_commit_non_verse_refus(session):
+    s = session
+    r = s["r"]
+    _g(r, "checkout", "-q", "-b", "locale")
+    arbre = r / "donnees" / RUN_L / "lecture"
+    arbre.mkdir(parents=True)
+    (arbre / "bilan-relecture.json").write_text("{}")
+    lv.ecrire_inventaire(arbre, RUN_L)
+    _g(r, "add", "-A")
+    _g(r, "commit", "-q", "-m", "non poussé")
+    with pytest.raises(GardeArret, match="branche distante"):
+        rv.ligne_scores(r, _g(r, "rev-parse", "HEAD"), RUN_L)
+
+
+def test_destruction_par_l_identifiant_apres_preuve_du_versement(session):
+    s = session
+    c = _pousser_lecture(s)
+    inv = s["t"] / "inventaire-final.json"
+    f = s["r"] / "donnees" / RUN_L / "lecture" / "bilan-relecture.json"
+    inv.write_text(json.dumps({"run_id": RUN_L, "fichiers": [{"chemin": f"donnees/{RUN_L}/lecture/bilan-relecture.json",
+                                                              "octets": f.stat().st_size,
+                                                              "sha256": hashlib.sha256(f.read_bytes()).hexdigest()}]}))
+    sceller(inv)
+    liste = s["t"] / "liste.json"
+    liste.write_text(json.dumps([{"id": 4242, "label": "b5f-lecture-v1"}, {"id": 7, "label": "b5f-formation-v1-3"}]))
+    assert rv.commande_de_destruction(s["r"], "4242", "decisif", liste, inv, c, GO_LECTURE) == \
+        f"GO_ID={GO_LECTURE} vastai destroy instance 4242 -y"
+    for ident, plan in (("7", "decisif"), ("4242", "repetition"), ("99", "decisif"), ("42x", "decisif")):
+        with pytest.raises(GardeArret):
+            rv.commande_de_destruction(s["r"], ident, plan, liste, inv, c, GO_LECTURE)
+    with pytest.raises(GardeArret):
+        rv.commande_de_destruction(s["r"], "4242", "decisif", liste, inv, s["code"], GO_LECTURE)   # fichier absent du commit
+
+
+def test_offre_et_echeance_de_la_lecture():
+    assert rv.exiger_offre_lecture(OFFRE, "decisif") == {"id": "654321", "prix_usd_h": 1.2}
+    assert rv.exiger_offre_lecture(dict(OFFRE, disk_space=150), "repetition")["id"] == "654321"
+    for mauvais in ({"disk_space": 299}, {"num_gpus": 2}, {"cpu_ram": 64000}, {"cuda_max_good": 12.4},
+                    {"storage_cost": 0.3}, {"id": "x1"}, {"gpu_ram": None}):
+        with pytest.raises(GardeArret):
+            rv.exiger_offre_lecture(dict(OFFRE, **mauvais), "decisif")
+    assert rv.echeance_arret_lecture_s(0, "decisif", 1.3) == int((21.0 / 1.3 - 0.25) * 3600)
+    assert rv.echeance_arret_lecture_s(0, "repetition", 1.3) == int((8.0 / 1.3 - 0.25) * 3600)
+    with pytest.raises(GardeArret):
+        rv.echeance_arret_lecture_s(0, "decisif", 1.4)
