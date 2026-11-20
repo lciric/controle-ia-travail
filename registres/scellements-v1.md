@@ -61,3 +61,4 @@
 | NOTE-PERIMETRE-NOUVELLES-ATTAQUES-V3 | 2026-11-20T11:56:24Z | prereg/ideation-nouvelles-attaques-v1/note-perimetre-modes-inedits-v3.md | dd6fea0e176b019c46386d0d000d059085036d2b20a82fe59c26549b41380580 |
 | VERDICT-PORTEE-200-ORGANISME-V9-LIGNE-3 | 2026-11-20T12:01:34Z | prereg/organisme-auto-conception-v9/ligne-3/verdict-portee-200/verdict-portee-200-ligne-3-v2.md | 029287239e341e53755b2875aaefd7a75662a1e9e95b5dbe2e2bf6ab8d6fbaa9 |
 | QUESTION-ORGANISME-NOUVELLES-ATTAQUES-V5 | 2026-11-20T12:15:36Z | prereg/ideation-nouvelles-attaques-v1/question-course-nouvelles-attaques-v5.md | eaf5db8a558547aa8f5df45008a34eebf4cb7a163e12ca400176401de6f5ce0f |
+| PARTIE-SERVIE-NOUVELLES-ATTAQUES-V5 | 2026-11-20T12:27:16Z | prereg/ideation-nouvelles-attaques-v1/partie-servie-question-v5-v1.md | 4cd360baea1076ec2b19b2c7ba85675e739bc3104c709d4fd57c0769975b1cf1 |
