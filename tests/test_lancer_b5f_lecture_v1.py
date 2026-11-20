@@ -23,7 +23,8 @@ def _jouer(*args, env=None):
 
 
 @pytest.mark.parametrize("args", [[], ["inconnue"], ["config", "a"], ["verifier", "a", "b"], ["marche", "a"],
-                                  ["ouvrir", "a"], ["monde", "a", "b"], ["preparer"]])
+                                  ["ouvrir", "a"], ["monde", "a", "b"], ["preparer"], ["commande", "decisif"],
+                                  ["detruire", "a"], ["verifier-destruction", "a"], ["scores", "a", "b"]])
 def test_refus_sous_commande_ou_nombre_d_arguments(args):
     r = _jouer(*args)
     assert r.returncode == 2 and "B5F REFUS" in r.stderr

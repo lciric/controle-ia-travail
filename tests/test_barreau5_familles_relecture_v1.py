@@ -345,6 +345,48 @@ def test_premiere_garde_des_entrees_eprouvee_seule(tmp_path, monkeypatch):
         rv.exiger_entrees(m["racine"] / "entrees-lecture")
 
 
+def test_entrees_reduites_aux_seuls_tenseurs(tmp_path):
+    """Point 7 : « fichiers réduits aux seuls tenseurs » : aucune métadonnée, seulement des matrices A et B."""
+    from safetensors.torch import save_file
+    etat = {"m.A": torch.zeros(2, 3), "m.B": torch.zeros(3, 2)}
+    save_file(etat, str(tmp_path / "sain.safetensors"))
+    assert rv.exiger_tenseurs_seuls(tmp_path / "sain.safetensors") == ["m.A", "m.B"]
+    save_file(etat, str(tmp_path / "meta.safetensors"), metadata={"famille": "T03", "membre": "jumeau"})
+    with pytest.raises(GardeArret, match="métadonnées"):
+        rv.exiger_tenseurs_seuls(tmp_path / "meta.safetensors")
+    save_file({**etat, "autre": torch.zeros(1)}, str(tmp_path / "autre.safetensors"))
+    with pytest.raises(GardeArret, match="matrices A et B"):
+        rv.exiger_tenseurs_seuls(tmp_path / "autre.safetensors")
+    (tmp_path / "abime.safetensors").write_bytes(b"\x05\x00")
+    with pytest.raises(GardeArret, match="illisible"):
+        rv.exiger_tenseurs_seuls(tmp_path / "abime.safetensors")
+
+
+def test_entrees_noms_opaques_contigus(tmp_path):
+    m = monde_jouet(tmp_path, n_taches=4)
+    d = m["racine"] / "entrees-lecture"
+    (d / "X-15.safetensors").unlink()
+    (d / "X-15.safetensors.sha256").unlink()
+    with pytest.raises(GardeArret, match="non contigus"):
+        rv.exiger_entrees(d)
+
+
+def test_adaptateur_existant_sans_empreinte_refuse():
+    cfg = _config({"chemin": "x", "sha256": "0" * 64}, plan="repetition", entrees=None)
+    sain = [{"nom": f"R1-{m}", "chemin": f"donnees/r/adaptateur-{m}.pt", "sha256": "a" * 64} for m in ("saboteur", "temoin")]
+    rv.exiger_config_lecture({**cfg, "adaptateurs_repetition": sain}, Path("."))
+    for mauvais in ({"sha256": None}, {"sha256": ""}, {"sha256": "A" * 64}, {"sha256": "a" * 63},
+                    {"chemin": "diag/r/adaptateur-saboteur.pt"}, {"chemin": "donnees/../x.pt"},
+                    {"chemin": "donnees/20261122-101010-b5f-formation-1/T01/adaptateur-jumeau.pt"}, {"chemin": "x.json"}):
+        liste = [{**sain[0], **mauvais}, sain[1]]
+        with pytest.raises(GardeArret):
+            rv.exiger_config_lecture({**cfg, "adaptateurs_repetition": liste}, Path("."))
+    ancre = _config({"chemin": "x", "sha256": "0" * 64},
+                    ancrages=[{"nom": "ancre-R1-saboteur", "chemin": "donnees/r/adaptateur-saboteur.pt", "sha256": None}])
+    with pytest.raises(GardeArret, match="empreinte sha256 absente"):
+        rv.exiger_config_lecture(ancre, Path("."))
+
+
 def test_entrees_de_lecture_empreinte_changee_refus(tmp_path):
     m = monde_jouet(tmp_path, n_taches=4)
     p = m["racine"] / "entrees-lecture" / "X-07.safetensors"
