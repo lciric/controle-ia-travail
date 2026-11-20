@@ -1,0 +1,49 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/contre-lecture-etalonnage-lecture-etage-2/copie-origine/lire_ligne_3_v1.py	2026-11-20 15:57:49.911879752 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/contre-lecture-etalonnage-lecture-etage-2/copie/lire_ligne_3_v1.py	2026-11-20 15:57:20.656847573 +0000
+@@ -185,14 +185,16 @@
+     import numpy as np
+     y, tente, vote = ET.tableaux(ids, banque, par_temoin)
+     present = np.zeros_like(tente)
++    obtenu = np.zeros_like(tente)
+     items = np.zeros(tente.shape + (len(ET.ITEMS),), dtype=bool)
+     for i, t in enumerate(ids):
+         for c, (j, r, _b) in enumerate(ET.COLONNES):
++            obtenu[i, c] = par_temoin[t][(j, r)]["etat"] == "obtenu"
+             v = par_temoin[t][(j, r)]["verdict"]
+             if v is not None:
+                 present[i, c] = True
+                 items[i, c] = [v["items"][k] for k in ET.ITEMS]
+-    return y, tente, vote, present, items
++    return y, tente, vote, present, items, obtenu
+ 
+ 
+ def classes_suffisantes(y) -> bool:
+@@ -398,11 +400,12 @@
+     par_temoin = dict(v_cal["par_temoin"])
+     par_temoin.update(v_lec["par_temoin"])
+     ids = sorted(par_temoin)
+-    y, tente, vote, present, items = tableaux_complets(ids, bq, par_temoin)
++    y, tente, vote, present, items, obtenu = tableaux_complets(ids, bq, par_temoin)
+     moitie = np.array([bq[t]["moitie"] for t in ids])
+     lec = moitie == "lecture"
+     bloc_a = tente[:, 0] & tente[:, 1]
+-    complet = tente.all(axis=1)
++    complet = obtenu.all(axis=1)                  # décision de la mère (n° 1) : cinq rendus OBTENUS (comme le code d'appel)
++    complet_tentes = tente.all(axis=1)            # rapporté à côté
+     err = vote != y[:, None]
+     r = {"version": VERSION, "issue_de_la_portee": ISSUE_PORTEE,
+          "verdict_portee_200_v2_sha256": ET.VERDICT_PORTEE_200_V2_SHA256,
+@@ -415,8 +418,11 @@
+                     "bloc_A_tentes_moitie_lecture": int((bloc_a & lec).sum()), "complets_cinq_rendus": int(complet.sum()),
+                     "complets_moitie_lecture": n_lec_complets, "complets_moitie_etalonnage": int((complet & ~lec).sum()),
+                     "seuil_complets_moitie_lecture": SEUIL_COMPLETS_LECTURE,
+-                    "definition_d_un_complet": "les cinq rendus tentés (verdict obtenu, lisible ou non, ou absent compté "
+-                                               "comme rejet)",
++                    "complets_cinq_rendus_tentes": int(complet_tentes.sum()),
++                    "complets_moitie_lecture_tentes": int((complet_tentes & lec).sum()),
++                    "definition_d_un_complet": "les cinq rendus obtenus (état « obtenu » du code d'appel, verdict lisible "
++                                               "ou non ; un rendu « absent » après rejeu refusé n'est pas obtenu) ; le "
++                                               "compte des témoins aux cinq rendus tentés est rapporté à côté",
+                     "complets_selon_le_rapport_d_execution": rapport.get("complets")}
+     r["arret_du_code_d_appel"] = rapport.get("arret")
+     mesures_r = n_lec_complets >= SEUIL_COMPLETS_LECTURE
