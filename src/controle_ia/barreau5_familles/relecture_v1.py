@@ -880,21 +880,264 @@ def verifier_avant_creation(racine: Path, commit: str, config: dict) -> dict:
     return {"commit": commit, "commit_lecture": reg["commit_lecture"], "relance": reg["relance"], "verifie_le": maintenant}
 
 
+# --- côté session : instance de lecture (aucune création, aucun arrêt ici : les commandes sont imprimées) -------------
+
+AMORCE = "scripts/amorce_b5f_lecture_v1.sh"
+IMAGE = "python:3.11-bookworm"
+DEPOT_URL = "https://github.com/lciric/controle-ia-travail.git"
+BRANCHE_ENTREES = "donnees/barreau5-familles-jumelles-v1-entrees-de-lecture"
+DOSSIER_ENTREES = "entrees-de-lecture-b5f"
+ENTREES_DE_LA_MARCHE = f"../entrees/{DOSSIER_ENTREES}"
+# devis, § 3 (qui fait foi) : heures de carte au plus, coupure ; disque : 300 Go pour la relecture (§ 3, ligne « Carte ») ;
+# la répétition n'y a pas de disque écrit : 150 Go, comme une instance de formation (choix déclaré)
+PIECES_LECTURE = {"decisif": {"etiquette": ETIQUETTE, "coupure_usd": 21.0, "heures_max": 5.42, "disque_go": 300,
+                              "branche": "donnees/barreau5-familles-jumelles-v1-lecture", "suffixe": "b5f-lecture"},
+                  "repetition": {"etiquette": ETIQUETTE_REPETITION, "coupure_usd": 8.0, "heures_max": 3.20, "disque_go": 150,
+                                 "branche": "donnees/barreau5-familles-jumelles-v1-repetition", "suffixe": "b5f-repetition"}}
+OFFRE_LECTURE = {"nom_offre": ("A100", "SXM4"), "memoire_carte_min_mo": 80000, "prix_max_usd_h": 1.30, "coeurs_min": 16,
+                 "memoire_vive_min_mo": 128000, "stockage_max_usd_h": 0.08, "cuda_min": 13.0}
+QUART_D_HEURE_H = 0.25
+_RUN_LECTURE = re.compile(r"[0-9]{8}-[0-9]{6}-(?P<suffixe>b5f-lecture|b5f-repetition)")
+
+
+def piece_lecture(plan: str) -> dict:
+    if plan not in PIECES_LECTURE:
+        raise GardeArret(f"plan {plan!r} : {sorted(PIECES_LECTURE)} attendu")
+    return PIECES_LECTURE[plan]
+
+
+def exiger_offre_lecture(offre: dict, plan: str) -> dict:
+    """Bornes du devis sur une offre du loueur (champs bruts) pour la pièce du plan : A100 SXM4 80 Go, une carte, au plus
+    1,30 USD de l'heure, au moins 16 cœurs et 128 Go de mémoire vive, disque de la pièce (300 Go pour la relecture),
+    stockage au plus 0,08 USD de l'heure, CUDA au moins 13.0. Champ absent ou illisible : refus."""
+    p = piece_lecture(plan)
+
+    def nombre(cle):
+        v = offre.get(cle)
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise GardeArret(f"offre : champ {cle} absent ou illisible")
+        return float(v)
+    nom = str(offre.get("gpu_name", ""))
+    if not all(x in nom.replace("_", " ") for x in OFFRE_LECTURE["nom_offre"]):
+        raise GardeArret(f"offre : carte {nom!r}, A100 SXM4 80 Go attendue")
+    for cle, borne, sens in (("num_gpus", 1, "="), ("gpu_ram", OFFRE_LECTURE["memoire_carte_min_mo"], ">="),
+                             ("cpu_cores_effective", OFFRE_LECTURE["coeurs_min"], ">="),
+                             ("cpu_ram", OFFRE_LECTURE["memoire_vive_min_mo"], ">="), ("disk_space", p["disque_go"], ">="),
+                             ("cuda_max_good", OFFRE_LECTURE["cuda_min"], ">="),
+                             ("dph_total", OFFRE_LECTURE["prix_max_usd_h"], "<=")):
+        v = nombre(cle)
+        if (sens == "=" and v != borne) or (sens == ">=" and v < borne) or (sens == "<=" and not 0 < v <= borne):
+            raise GardeArret(f"offre : {cle} = {v} hors de la borne du devis ({sens} {borne})")
+    stockage_h = nombre("storage_cost") * p["disque_go"] / 730.0
+    if stockage_h > OFFRE_LECTURE["stockage_max_usd_h"]:
+        raise GardeArret(f"offre : stockage de {p['disque_go']} Go à {stockage_h:.3f} USD de l'heure > "
+                         f"{OFFRE_LECTURE['stockage_max_usd_h']}")
+    if not str(offre.get("id")).isdigit():
+        raise GardeArret("offre : identifiant illisible")
+    return {"id": str(offre["id"]), "prix_usd_h": nombre("dph_total")}
+
+
+def echeance_arret_lecture_s(depart_s: float, plan: str, prix_usd_h: float) -> int:
+    """Instant (secondes UTC) où le cumul plus un quart d'heure atteint la coupure de la pièce, au prix de l'offre, compté
+    depuis l'impression de la commande ; refus si les heures laissées sont sous les heures attendues au plus du devis."""
+    p = piece_lecture(plan)
+    if not 0 < float(prix_usd_h) <= OFFRE_LECTURE["prix_max_usd_h"]:
+        raise GardeArret("prix hors des bornes du devis")
+    heures = p["coupure_usd"] / float(prix_usd_h) - QUART_D_HEURE_H
+    if heures < p["heures_max"]:
+        raise GardeArret(f"{heures:.2f} h avant la coupure < {p['heures_max']} h attendues au plus")
+    return int(depart_s + heures * 3600)
+
+
+def _montrer(racine: Path, commit: str, chemin: str) -> bytes:
+    r = subprocess.run(["git", "-C", str(racine), "show", f"{commit}:{chemin}"], capture_output=True)
+    if r.returncode != 0:
+        raise GardeArret(f"{chemin} absent du commit {commit[:12]}")
+    return r.stdout
+
+
+def exiger_code_du_commit(racine: Path, commit_lecture: str, commit: str) -> None:
+    """Le commit de la marche descend du commit de `CODE-LECTURE-B5F` et porte le même arbre gelé (`CHEMINS_GELES`)."""
+    from ..harnais.validation_reelle import CHEMINS_GELES
+    a = subprocess.run(["git", "-C", str(racine), "merge-base", "--is-ancestor", commit_lecture, commit], capture_output=True)
+    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", commit_lecture, commit, "--", *CHEMINS_GELES],
+                       capture_output=True)
+    if a.returncode != 0 or r.returncode != 0:
+        raise GardeArret(f"commit de la marche {commit[:12]} : code différent de CODE-LECTURE-B5F {commit_lecture[:12]}, ou "
+                         "ne descend pas de lui")
+
+
+def commande_de_creation(racine: Path, plan: str, offre_json: Path, commit: str, branche: str, run_id: str, go_id: str,
+                         entrees_commit: str, divergence: bool, garde: str, existants_json: Path, aujourd_hui,
+                         maintenant_s: float) -> str:
+    """Commande de création de l'instance de lecture (plan « decisif ») ou de la répétition générale (« repetition »), à
+    jouer par la session. Refus : offre hors des bornes du devis ; commit, branche, marche ou commit des entrées illisibles ;
+    registre au commit de la marche qui n'admet pas la marche (`exiger_registre_de_relecture`, instant de création :
+    maintenant) ; code du commit ou de l'arbre de la session différent de `CODE-LECTURE-B5F` ; texte scellé absent du commit
+    ou d'une autre empreinte ; amorce absente ; configuration refusée (adaptateurs existants sans empreinte compris), ou
+    adaptateur existant absent du commit ; commit des entrées absent de leur branche distante (plan décisif) ; garde de
+    calcul qui bloquerait la commande. Clés passées par leur nom ($HF_TOKEN, $GH_TOKEN) ; aucune valeur écrite ici."""
+    import base64
+
+    from .formation_v1 import exiger_garde_de_calcul
+    p = piece_lecture(plan)
+    of = exiger_offre_lecture(json.loads(Path(offre_json).read_text(encoding="utf-8")), plan)
+    for nom, v in (("commit", commit), ("commit des entrées", entrees_commit)):
+        if (v or nom == "commit") and not re.fullmatch(r"[0-9a-f]{40}", str(v)):
+            raise GardeArret(f"{nom} (40 signes) attendu")
+    if (plan == "decisif") != bool(entrees_commit):
+        raise GardeArret("commit des entrées de lecture : exigé pour le plan décisif, refusé pour la répétition")
+    if not re.fullmatch(r"[A-Za-z0-9._/-]+", str(branche)):
+        raise GardeArret("branche du code illisible")
+    m = _RUN_LECTURE.fullmatch(str(run_id))
+    if m is None or m["suffixe"] != p["suffixe"]:
+        raise GardeArret(f"identifiant de marche AAAAMMJJ-HHMMSS-{p['suffixe']} attendu")
+    existants = json.loads(Path(existants_json).read_text(encoding="utf-8"))
+    if not isinstance(existants, list):
+        raise GardeArret("adaptateurs existants : liste attendue")
+    config = config_lecture(racine, go_id, plan, ENTREES_DE_LA_MARCHE if plan == "decisif" else None, divergence, garde,
+                            ancrages=existants if plan == "decisif" else (),
+                            adaptateurs_repetition=existants if plan == "repetition" else ())
+    maintenant = datetime.fromtimestamp(maintenant_s, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    reg = exiger_registre_de_relecture(_montrer(racine, commit, en.REGISTRE_PROPRE).decode("utf-8"), config, maintenant)
+    exiger_code_du_commit(racine, reg["commit_lecture"], commit)
+    lv.exiger_code_de_lecture_au_commit(racine, reg["commit_lecture"])
+    if hashlib_sha256(_montrer(racine, commit, lv.TEXTE)) != lv.TEXTE_SHA256:
+        raise GardeArret(f"texte {lv.TEXTE} : autre empreinte au commit de la marche (R1)")
+    amorce = _montrer(racine, commit, AMORCE)
+    for x in existants:
+        if subprocess.run(["git", "-C", str(racine), "cat-file", "-e", f"{commit}:{x['chemin']}"],
+                          capture_output=True).returncode != 0:
+            raise GardeArret(f"adaptateur existant {x['nom']} : {x['chemin']} absent du commit de la marche")
+    if plan == "decisif":
+        r = subprocess.run(["git", "-C", str(racine), "branch", "-r", "--contains", entrees_commit], capture_output=True,
+                           text=True)
+        if r.returncode != 0 or f"origin/{BRANCHE_ENTREES}" not in r.stdout.split():
+            raise GardeArret(f"commit des entrées {entrees_commit[:12]} absent de la branche distante {BRANCHE_ENTREES}")
+    arret = echeance_arret_lecture_s(maintenant_s, plan, of["prix_usd_h"])
+    b64 = base64.b64encode(amorce).decode("ascii")
+    ex64 = base64.b64encode(json.dumps(existants, separators=(",", ":"), sort_keys=True).encode("utf-8")).decode("ascii")
+    cmd = (f"GO_ID={go_id} vastai create instance {of['id']} --raw --image {IMAGE} --disk {p['disque_go']} --cancel-unavail "
+           f"--label {p['etiquette']} --env \"-e PLAN_B5F={plan} -e COMMIT={commit} -e BRANCHE_CODE={branche} "
+           f"-e PREREG={lv.TEXTE} -e RUN_LECTURE={run_id} -e PRIX_USD_H={of['prix_usd_h']} -e ECHEANCE_ARRET_UTC_S={arret} "
+           f"-e GO_ID={go_id} -e DEPOT_URL={DEPOT_URL} -e ENTREES_COMMIT={entrees_commit or '-'} "
+           f"-e DIVERGENCE_B5F={int(bool(divergence))} -e GARDE_B5F={garde} -e EXISTANTS_B5F={ex64} "
+           f"-e HF_TOKEN=$HF_TOKEN -e GH_TOKEN=$GH_TOKEN\" --entrypoint bash --args -c "
+           f"\"echo {b64} | base64 -d > /root/amorce_b5f_lecture_v1.sh && bash /root/amorce_b5f_lecture_v1.sh\"")
+    exiger_garde_de_calcul(racine, cmd, aujourd_hui)
+    return cmd
+
+
+def hashlib_sha256(octets: bytes) -> str:
+    import hashlib
+    return hashlib.sha256(octets).hexdigest()
+
+
+def commande_de_destruction(racine: Path, ident: str, plan: str, liste: Path, inventaire: Path, commit: str,
+                            go_id: str) -> str:
+    """Destruction par l'identifiant (R10), après preuve de l'étiquette de la pièce et du versement (chaque fichier de
+    l'inventaire final au commit prouvé, commit sur une branche distante : `formation_v1.exiger_versement`, réemployé)."""
+    from .formation_v1 import _instances, exiger_versement
+    p = piece_lecture(plan)
+    if not str(ident).isdigit():
+        raise GardeArret("identifiant d'instance numérique attendu (R10)")
+    trouvees = [x for x in _instances(liste) if str(x.get("id")) == str(ident)]
+    if len(trouvees) != 1 or trouvees[0].get("label") != p["etiquette"]:
+        raise GardeArret(f"instance {ident} absente, en double, ou d'une autre étiquette que {p['etiquette']}")
+    exiger_versement(racine, inventaire, commit)
+    return f"GO_ID={go_id} vastai destroy instance {ident} -y"
+
+
+def ligne_scores(racine: Path, commit: str, run_id: str) -> str:
+    """Contenu de la ligne `SCORES-B5F` (« commit <40> ; inventaire sha256 <64> »), après le versement prouvé : l'inventaire
+    de l'arbre fermé (`donnees/<marche>/lecture/inventaire.json`) et chacun de ses fichiers sont au commit, à leur taille et
+    à leur empreinte, et ce commit est sur une branche distante. Aucun fichier n'est lu au-delà de son empreinte."""
+    if not re.fullmatch(r"[0-9a-f]{40}", str(commit)) or _RUN_LECTURE.fullmatch(str(run_id)) is None:
+        raise GardeArret("commit (40 signes) et identifiant de marche de lecture attendus")
+    base = f"donnees/{run_id}/lecture"
+    octets = _montrer(racine, commit, f"{base}/inventaire.json")
+    inv = json.loads(octets.decode("utf-8"))
+    if inv.get("format") != lv.FORMAT_INVENTAIRE or not inv.get("fichiers"):
+        raise GardeArret("inventaire de l'arbre fermé illisible ou vide")
+    for f in inv["fichiers"]:
+        b = _montrer(racine, commit, f"{base}/{f['chemin']}")
+        if len(b) != f["octets"] or hashlib_sha256(b) != f["sha256"]:
+            raise GardeArret(f"{f['chemin']} : taille ou empreinte au commit ≠ inventaire : versement non prouvé")
+    r = subprocess.run(["git", "-C", str(racine), "branch", "-r", "--contains", commit], capture_output=True, text=True)
+    if r.returncode != 0 or not r.stdout.strip():
+        raise GardeArret(f"commit {commit[:12]} sur aucune branche distante : versement non prouvé")
+    return f"commit {commit} ; inventaire sha256 {hashlib_sha256(octets)}"
+
+
+def activations_gardees(sorties: Path) -> list[str]:
+    """Chemins (relatifs à la racine du dépôt) des activations que garde la règle de la marche, lus dans
+    `garde-activations.json` (vérifié par son compagnon) : ceux que l'amorce verse ; rien d'autre."""
+    sorties = Path(sorties)
+    p = sorties / "garde-activations.json"
+    verifier(p)
+    x = json.loads(p.read_text(encoding="utf-8"))
+    if x.get("regle") not in GARDES_ACTIVATIONS or not isinstance(x.get("fichiers"), list):
+        raise GardeArret("garde des activations illisible")
+    sortie = []
+    for c in x["fichiers"]:
+        if _SORTIE.fullmatch(str(c)) is None or not str(c).startswith("activations/"):
+            raise GardeArret(f"garde des activations : chemin {c!r} hors de la liste blanche")
+        sortie.append((sorties / c).as_posix())
+    return sortie
+
+
+def precharger(racine: Path) -> str:
+    """Modèle de la configuration scellée au cache local (révision figée), avant la marche hors ligne."""
+    from ..harnais.modeles import precharger_modele
+    chemin = Path(racine) / CONFIG_SCELLEE["chemin"]
+    if verifier(chemin) != CONFIG_SCELLEE["sha256"]:
+        raise GardeArret("configuration scellée de la course de confirmation : empreinte différente (R11)")
+    a = json.loads(chemin.read_text(encoding="utf-8"))["agent"]
+    return precharger_modele(a["modele"], a["revision"])
+
+
 def _session(argv: list[str]) -> int:
+    from datetime import date
     if not argv:
-        raise GardeArret("sous-commande attendue : config, verifier")
+        raise GardeArret("sous-commande attendue : config, verifier, commande, detruire, verifier-destruction, scores, "
+                         "gardees, precharger")
     s, a = argv[0], argv[1:]
-    if s == "config" and len(a) == 6:
-        racine, go_id, plan, entrees, divergence, garde = a
+    if s == "config" and len(a) in (6, 7):
+        racine, go_id, plan, entrees, divergence, garde = a[:6]
         if divergence not in ("0", "1"):
             raise GardeArret("DIVERGENCE : 0 ou 1")
-        print(json.dumps(config_lecture(Path(racine), go_id, plan, entrees or None, divergence == "1", garde),
+        existants = json.loads(Path(a[6]).read_text(encoding="utf-8")) if len(a) == 7 else []
+        if not isinstance(existants, list):
+            raise GardeArret("adaptateurs existants : liste attendue")
+        print(json.dumps(config_lecture(Path(racine), go_id, plan, entrees or None, divergence == "1", garde,
+                                        ancrages=existants if plan == "decisif" else (),
+                                        adaptateurs_repetition=existants if plan == "repetition" else ()),
                          ensure_ascii=False, sort_keys=True))
     elif s == "verifier" and len(a) == 3:
         racine, commit, config_f = a
         config = json.loads(Path(config_f).read_text(encoding="utf-8"))
         exiger_config_lecture(config, Path(racine))
         print(json.dumps(verifier_avant_creation(Path(racine), commit, config), ensure_ascii=False))
+    elif s == "commande" and len(a) == 11:
+        plan, racine, offre, commit, branche, run_id, go_id, entrees_commit, divergence, garde, existants = a
+        if divergence not in ("0", "1"):
+            raise GardeArret("DIVERGENCE : 0 ou 1")
+        print(commande_de_creation(Path(racine), plan, Path(offre), commit, branche, run_id, go_id,
+                                   "" if entrees_commit == "-" else entrees_commit, divergence == "1", garde,
+                                   Path(existants), date.today(), time.time()))
+    elif s == "detruire" and len(a) == 7:
+        print(commande_de_destruction(Path(a[0]), a[1], a[2], Path(a[3]), Path(a[4]), a[5], a[6]))
+    elif s == "verifier-destruction" and len(a) == 3:
+        from .formation_v1 import absence_prouvee
+        absence_prouvee(Path(a[0]), a[1], a[2])
+        print(f"absence de l'instance {a[1]} prouvée")
+    elif s == "scores" and len(a) == 3:
+        print(ligne_scores(Path(a[0]), a[1], a[2]))
+    elif s == "gardees" and len(a) == 1:
+        for c in activations_gardees(Path(a[0])):
+            print(c)
+    elif s == "precharger" and len(a) == 1:
+        print(precharger(Path(a[0])))
     else:
         raise GardeArret(f"sous-commande {s!r} ou nombre d'arguments ({len(a)}) inconnu")
     return 0
