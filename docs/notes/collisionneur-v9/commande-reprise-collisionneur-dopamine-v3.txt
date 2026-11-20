@@ -1,0 +1,21 @@
+# Reprise du collisionneur « dopamine » (tours 2 et 3 de l'étage III) par le collisionneur v9 v3.
+# Accord GO-2026-11-20-54 : ligne 25,90 USD, dans le plafond du run de GO-2026-11-20-52 (30 USD, 4,10 dépensés).
+# Préalable : contre-lecture du v3 par un autre modèle, puis vérification des corrections par le même contre-lecteur.
+# NOM_CLE : le nom (jamais la valeur) de la variable de la clé d'Anthropic, le même qu'au lancement v9-v2 du
+# 20 novembre vers 12:24Z, ou celui de la clé qui a du crédit au relevé du départ. Si ce lancement donnait
+# --nom-espace-anthropic, le redonner à l'étape 3, tel quel. Les cinq options d'espèces sont celles d'especes.json.
+
+cd /home/user/controle-ia-travail
+sha256sum -c docs/notes/collisionneur-v9/collisionneur_v9_v3.py.sha256
+
+# 1. Devis de reprise, sans réseau. Attendu : « Plafond de Fable retenu : 49000 (table du script : 49000) », code 0.
+PYTHONPATH=src .venv/bin/python -B docs/notes/collisionneur-v9/collisionneur_v9_v3.py devis-reprise runs/collisionneur-dopamine-v1-20261120-122457 --ligne-usd 25.90
+
+# 2. Vérification avant la reprise. Attendu : « Vérification : tout tient ».
+PYTHONPATH=src .venv/bin/python -B docs/notes/collisionneur-v9/collisionneur_v9_v3.py verifier runs/collisionneur-dopamine-v1-20261120-122457
+
+# 3. Reprise : appels payants. Les comptages d'entrée précèdent chaque envoi ; le tour 1 est sauté.
+GO_ID=GO-2026-11-20-54 PYTHONPATH=src .venv/bin/python -B docs/notes/collisionneur-v9/collisionneur_v9_v3.py etage3 --fable --opus --argon --astra --carbon --cle-anthropic NOM_CLE --sortie runs/collisionneur-dopamine-v1-20261120-122457 --plafond-usd 30 --ligne-usd 25.90 --reprise 2>&1 | tee -a runs/collisionneur-dopamine-v1-20261120-122457/journal-lancement-mere-v3.log; echo "code ${PIPESTATUS[0]}"
+
+# 4. Vérification après la reprise, quel que soit le code de sortie.
+PYTHONPATH=src .venv/bin/python -B docs/notes/collisionneur-v9/collisionneur_v9_v3.py verifier runs/collisionneur-dopamine-v1-20261120-122457
