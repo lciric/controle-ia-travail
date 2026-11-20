@@ -1,0 +1,33 @@
+--- apres-les-16-couples
++++ en-vigueur
+@@ -55,11 +55,16 @@
+ Coûts (point 5 ; addendum, point 2) : la référence honnête couvre les 64 tâches ; les épisodes d'évaluation des membres
+-en couvrent 32, 16 par pli, les mêmes pour tous (paramètre `taches_cout`). Registre propre (point 7) : la ligne
+-`ENGAGEMENT-B5F` porte l'empreinte de la table ; engagement, scores et ouverture se suivent.
+-
+-Lacunes de l'interface lue, déclarées : forme des lignes du registre propre, contenu de la ligne `ENGAGEMENT-B5F` et
+-lignes que la garde d'ouverture exigerait en plus ; noms des membres autres que « saboteur » ; identifiants des tâches et
+-pli gelé `b5f/lecture/plis` ; tâches des épisodes d'évaluation ; sens de « copie » ; forme du « sel » ; clés du bilan
+-au-delà de celles que l'interface nomme ; familles d'apprentissage dans le résumé de la formation ; empreintes
+-d'adaptateurs ; forme des compagnons `.sha256` ; raison technique écrite d'un membre manquant (V7, cinquième cas). Ce sont
+-des paramètres (`Parametres`, lus d'un fichier JSON), avec des défauts déclarés, sauf la dernière, que rien n'écrit.
++en couvrent 32, 16 par pli, les mêmes pour tous (paramètre `taches_cout`).
++
++Raccord au programme de lecture (erratum v2 du développeur, après la contre-lecture
++`contre-lecture-fabrique-mondes-v1.md`, `e6ddb470…`, et ses 21 couples, appliqués à la lettre). Les lacunes que l'en-tête
++v1 déclarait sont tranchées par le contre-lecteur, qui a lu le programme ; la fabrique recopie trois de ses règles, sans
++rien importer : le pli gelé (`partition_gelee`), les noms opaques redérivés d'un sel unique de 64 signes (`noms_opaques`),
++la forme canonique de la table (`_octets_table`). Le registre propre fabriqué porte dix lignes « | CLÉ |
++AAAA-MM-JJTHH:MM:SSZ | contenu | référence | » (scellement, code, accord et sorties de la formation, engagement « sha256
++<64> », code de lecture, épreuve, accord de lecture, scores, ouverture), dans l'ordre de dates qu'admet la garde. Le
++membre s'écrit `sur_saboteur`. Une clé en « -B5F » inconnue du programme arrête la lecture : `lignes_supplementaires` ne
++peut porter que `GO-RELANCE-FORMATION-B5F` (qui change la copie attendue en `<k>-x1`) ; `LECTURE-B5F` ou `VERDICT-B5F` y
++feraient refuser le monde. Le programme ne lit aucune « raison technique écrite » d'un membre manquant : il en écrit
++lui-même le motif ; rien n'est à écrire pour le cinquième cas de V7. Restent des paramètres, à défaut déclaré, ce que
++règle l'agent de l'épreuve (empreinte du programme gelé, commits, entropie de formation, tâches, membres, copie).
+ """
+@@ -209,3 +214,3 @@
+     format_engagement: str = "sha256 {table}"   # contenu de `ENGAGEMENT-B5F` (`engagement_v1.ligne_engagement`)
+-    lignes_supplementaires: tuple = ()        # (nom, horodatage, contenu) : lignes qu'exigerait la garde d'ouverture
++    lignes_supplementaires: tuple = ()        # (nom, horodatage, contenu) ; seule `GO-RELANCE-FORMATION-B5F` est lue
+     copie_format: str = "{famille}"           # « copie » : nom formé lu (interface 3 et 4)
