@@ -1,0 +1,69 @@
+--- /home/user/controle-ia-travail/docs/notes/ideation-nouvelles-attaques-v1/conception-v1/calcul_devis_course_nouvelles_attaques_v1.py	2026-11-20 01:10:27.744627081 +0000
++++ calcul_devis_course_nouvelles_attaques_v2.py	2026-11-20 01:59:00.422335485 +0000
+@@ -1,5 +1,9 @@
+ #!/usr/bin/env python3
+-"""Calcul du devis de la course « nouvelles attaques », trois generations - v1.
++"""Calcul du devis de la course « nouvelles attaques », trois generations - v2.
++
++La v2 remplace la v1 apres la contre-lecture (corrections C17 et C18) :
++le troisieme relais vaut dans les trois compositions ; le reste du credit
++du premier relais part du credit declare et des depenses lues au registre.
+ 
+ Processeur seul : aucun appel, aucun reseau, aucune lecture de fichier.
+ Toutes les constantes sont recopiees de pieces du depot, citees avec leur
+@@ -7,7 +11,7 @@
+ sont designees par un numero (ordre du cout reel croissant de leur role de
+ proposeur a la course v9) ; aucun nom de modele n'est ecrit.
+ 
+-Usage : python3 -B calcul_devis_course_nouvelles_attaques_v1.py SORTIE.json
++Usage : python3 -B calcul_devis_course_nouvelles_attaques_v2.py SORTIE.json
+ La sortie ne porte ni date ni chemin : deux lancements rendent le meme
+ fichier a l'octet.
+ """
+@@ -41,7 +45,9 @@
+ V2I_ECART_SEUIL_JUGES = D("30")               # 150 -> 120
+ V2I_PIRE_PAR_APPEL_PROPOSEUR_USD = D("6.05")
+ V2I_EPREUVE_TEMOINS = {"estimation": D("1.18"), "plafond": D("5")}
+-V2I_CREDIT_NET_RELAIS_1_AVANT_V9_USD = D("199.03")
++V2I_CREDIT_NET_RELAIS_1_AVANT_V9_USD = D("199.03")  # estimation de S3, rapportee seulement
++DEPENSE_VERIFICATION_CLE_RELAIS_1_USD = D("0.000108")  # S2, ligne 528
++DEPENSE_EPREUVE_V9_CLE_RELAIS_1_USD = D("0.980399")  # S2, ligne 532
+ V2I_CREDIT_DECLARE_RELAIS_1_USD = D("200")
+ V2I_PART_AU_PIRE_RELAIS_3_PAR_GENERATION_USD = D("66.55")
+ # S4 : devis de la course d'ideation sur la question v2 du pilier attaque
+@@ -84,7 +90,7 @@
+         "juges": V2I_HAUT["juges"] / juges_v9,
+     }
+     sortie = {
+-        "piece": "calcul du devis de la course nouvelles attaques, v1",
++        "piece": "calcul du devis de la course nouvelles attaques, v2",
+         "generations": GENERATIONS,
+         "controles": {
+             "somme_des_roles_v9_usd": texte(c2(controle_somme)),
+@@ -105,7 +111,7 @@
+     sortie["couts_par_appel_v9_usd"]["juge_1"] = texte(c4(V9_JUGES_USD[0] / V9_JUGES_APPELS[0]))
+     sortie["couts_par_appel_v9_usd"]["juge_2"] = texte(c4(V9_JUGES_USD[1] / V9_JUGES_APPELS[1]))
+ 
+-    credit_reste = V2I_CREDIT_NET_RELAIS_1_AVANT_V9_USD - V9_PART_CLE_RELAIS_1_USD
++    credit_reste = (V2I_CREDIT_DECLARE_RELAIS_1_USD - DEPENSE_VERIFICATION_CLE_RELAIS_1_USD - DEPENSE_EPREUVE_V9_CLE_RELAIS_1_USD - V9_PART_CLE_RELAIS_1_USD)
+     cinquieme = V2I_CREDIT_DECLARE_RELAIS_1_USD / 5
+ 
+     for nom, especes in COMPOSITIONS.items():
+@@ -180,7 +186,7 @@
+                 "relais_2_un_juge": texte(ligne_course),
+                 "relais_3_un_proposeur_seul": texte(
+                     V2I_PART_AU_PIRE_RELAIS_3_PAR_GENERATION_USD * GENERATIONS
+-                ) if nom == "A" else "sans objet ou a relever",
++                ),
+             },
+             "credit_relais_1": {
+                 "reste_au_dernier_chiffre_lu_usd": texte(credit_reste),
+@@ -209,7 +215,7 @@
+ 
+ def main(argv):
+     if len(argv) != 2:
+-        sys.stderr.write("usage : calcul_devis_course_nouvelles_attaques_v1.py SORTIE.json\n")
++        sys.stderr.write("usage : calcul_devis_course_nouvelles_attaques_v2.py SORTIE.json\n")
+         return 2
+     sortie = calculer()
+     with open(argv[1], "x", encoding="utf-8", newline="\n") as f:
