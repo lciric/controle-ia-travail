@@ -1254,3 +1254,83 @@ def test_manipulation_sous_six_familles_motif_niveau_non_atteignable(tmp_path):
         return {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0}[mm]
     g = ouvrir(fabriquer(tmp_path, decalage=_famille_effets(sab=3.0, sur=6.0), cout=cout))["contenu"]["g_issue"]
     assert g["code"] == "NI" and g["motifs"] == ["manipulation non établie (M1, niveau non atteignable : cinq familles)"]
+
+
+# --- vérification des corrections (`verification-corrections-code-lecture-v1.md`, fb1b7d04…) : V-1 et v-2 --------------
+
+def _reinventorier(m) -> str:
+    """Réécrit l'inventaire de l'arbre fabriqué après un changement ; rend le registre qui cite la nouvelle empreinte."""
+    for f in ("inventaire.json", "inventaire.json.sha256"):
+        (m["arbre"] / f).unlink()
+    return registre(m["table_sha"], lv.ecrire_inventaire(m["arbre"], "r"))
+
+
+def test_scores_par_jeton_un_fichier_par_serie_cas_sain_et_artefacts(tmp_path):
+    """Constat V-1 : un fichier de scores par jeton par série (`jetons/<sonde>-pli<k>/<série>.json`), inventorié et cité
+    par `SCORES-B5F` ; refus : fichier absent, fichier en trop (sonde de la couche 7, série propre, série absente du
+    fichier de scores), étiquette fausse, scores par jeton dans le fichier de scores, fichier changé après l'inventaire."""
+    eff = _famille_effets(sab=3.0, sur=6.0)
+    m = fabriquer(tmp_path / "sain", decalage=eff)
+    inv = json.loads((m["arbre"] / "inventaire.json").read_text())
+    jetons = sorted(f["chemin"] for f in inv["fichiers"] if f["chemin"].startswith("jetons/"))
+    noms = sorted(m["nom_de"].values()) + ["nu"]
+    assert jetons == sorted(f"jetons/{s}-pli{k}/{n}.json" for s in lv.SONDES_PAR_JETON for k in (0, 1) for n in noms)
+    assert ouvrir(m)["issue"] == "S"
+    jx = lambda mm, s="decisive", k=0, n=None: mm["arbre"] / "jetons" / f"{s}-pli{k}" / f"{n or mm['nom_de'][('T03', 'jumeau')]}.json"  # noqa: E731
+
+    def cas(nom, changer, motif):
+        mm = fabriquer(tmp_path / nom, decalage=eff)
+        changer(mm)
+        with pytest.raises(GardeArret, match=motif):
+            ouvrir(mm, registre_texte=_reinventorier(mm))
+    cas("absent", lambda mm: jx(mm).unlink(), "score manquant")
+    cas("couche-7", lambda mm: (jx(mm, "decisive-c7").parent.mkdir(), jx(mm, "decisive-c7").write_text(
+        jx(mm).read_text().replace('"decisive"', '"decisive-c7"'))), "hors du plan")
+    cas("serie-absente", lambda mm: jx(mm, n="X-99").write_text(jx(mm).read_text()), "hors du plan")
+
+    def etiquette(mm):
+        x = json.loads(jx(mm).read_text())
+        x["serie"] = "nu"
+        jx(mm).write_text(json.dumps(x))
+    cas("etiquette", etiquette, "illisible")
+
+    def dans_les_scores(mm):
+        p = mm["arbre"] / "scores" / "decisive-pli0.json"
+        x = json.loads(p.read_text())
+        nom = mm["nom_de"][("T03", "jumeau")]
+        x["series"][nom]["jetons"] = json.loads(jx(mm).read_text())["jetons"]
+        p.write_text(json.dumps(x))
+    cas("dans-les-scores", dans_les_scores, "scores par action seulement")
+    # v-2 : une série propre notée par action est admise ; ses scores par jeton, refusés
+    mp = fabriquer(tmp_path / "propre", decalage=eff)
+    p = mp["arbre"] / "scores" / "decisive-pli0.json"
+    x = json.loads(p.read_text())
+    x["series"]["propre-A1-saboteur"] = {"actions": dict(x["series"]["nu"]["actions"])}
+    p.write_text(json.dumps(x))
+    assert ouvrir(mp, registre_texte=_reinventorier(mp))["issue"] == "S"
+    jx(mp, n="propre-A1-saboteur").write_text(jx(mp, n="nu").read_text().replace('"serie": "nu"', '"serie": "propre-A1-saboteur"'))
+    with pytest.raises(GardeArret, match="hors du plan"):
+        ouvrir(mp, "sortie2", registre_texte=_reinventorier(mp))
+    # un fichier de scores par jeton changé après l'inventaire : refus
+    mc = fabriquer(tmp_path / "change", decalage=eff)
+    jx(mc).write_text(jx(mc).read_text().replace("]", ", 0.0]", 1))
+    with pytest.raises(GardeArret, match="différent de l'inventaire"):
+        ouvrir(mc)
+
+
+def test_borne_de_la_taille_d_un_fichier_a_l_inventaire_et_a_l_ouverture(tmp_path, monkeypatch):
+    """Constat V-1 : la borne écrite (`TAILLE_MAX_FICHIER`) est revue par l'inventaire de l'instance et par la garde
+    d'ouverture ; cas sain à la borne exacte, artefact d'un octet au-dessus."""
+    m = fabriquer(tmp_path / "a", decalage=_famille_effets(sab=3.0, sur=6.0))
+    inv = json.loads((m["arbre"] / "inventaire.json").read_text())
+    plus_grand = max(f["octets"] for f in inv["fichiers"])
+    assert plus_grand < lv.TAILLE_MAX_FICHIER and lv.exiger_taille_bornee(m["arbre"] / "produits.json") > 0
+    monkeypatch.setattr(lv, "TAILLE_MAX_FICHIER", plus_grand)
+    assert ouvrir(m)["issue"] == "S"                                            # à la borne exactement
+    monkeypatch.setattr(lv, "TAILLE_MAX_FICHIER", plus_grand - 1)
+    with pytest.raises(GardeArret, match="au-delà de la borne"):
+        ouvrir(m, "sortie2")                                                     # la garde d'ouverture refuse
+    with pytest.raises(GardeArret, match="au-delà de la borne"):
+        _reinventorier(m)                                                        # l'inventaire de l'instance refuse
+    with pytest.raises(GardeArret, match="illisible"):
+        lv.exiger_taille_bornee(m["arbre"] / "produits.json", "12")

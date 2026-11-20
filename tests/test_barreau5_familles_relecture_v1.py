@@ -517,9 +517,14 @@ def test_configuration_reelle_lue_dans_la_configuration_scellee():
 
 
 def test_sorties_hors_liste_blanche_refusees(tmp_path):
-    (tmp_path / "lecture").mkdir()
+    (tmp_path / "lecture" / "jetons" / "decisive-pli0").mkdir(parents=True)
     (tmp_path / "lecture" / "produits.json").write_text("{}")
+    (tmp_path / "lecture" / "jetons" / "decisive-pli0" / "A1-sur_saboteur.json").write_text("{}")   # constat V-1
     rv.exiger_sorties_lecture_permises(tmp_path)
+    (tmp_path / "lecture" / "jetons" / "x.json").write_text("{}")
+    with pytest.raises(GardeArret, match="non admise"):
+        rv.exiger_sorties_lecture_permises(tmp_path)
+    (tmp_path / "lecture" / "jetons" / "x.json").unlink()
     (tmp_path / "lecture" / "resume-scores.json").write_text("{}")
     with pytest.raises(GardeArret, match="non admise"):
         rv.exiger_sorties_lecture_permises(tmp_path)

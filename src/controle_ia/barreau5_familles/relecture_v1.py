@@ -1121,8 +1121,10 @@ def commande_de_destruction(racine: Path, ident: str, plan: str, liste: Path, in
 
 def ligne_scores(racine: Path, commit: str, run_id: str) -> str:
     """Contenu de la ligne `SCORES-B5F` (« commit <40> ; inventaire sha256 <64> »), après le versement prouvé : l'inventaire
-    de l'arbre fermé (`donnees/<marche>/lecture/inventaire.json`) et chacun de ses fichiers sont au commit, à leur taille et
-    à leur empreinte, et ce commit est sur une branche distante. Aucun fichier n'est lu au-delà de son empreinte."""
+    de l'arbre fermé (`donnees/<marche>/lecture/inventaire.json`) et chacun de ses fichiers (fichiers de scores par jeton
+    de chaque série compris) sont au commit, à leur taille et à leur empreinte, et ce commit est sur la branche distante de
+    sortie de la pièce (`PIECES_LECTURE`, selon l'identifiant de la marche ; constat v-1). Aucun fichier n'est lu au-delà
+    de son empreinte."""
     if not re.fullmatch(r"[0-9a-f]{40}", str(commit)) or _RUN_LECTURE.fullmatch(str(run_id)) is None:
         raise GardeArret("commit (40 signes) et identifiant de marche de lecture attendus")
     base = f"donnees/{run_id}/lecture"

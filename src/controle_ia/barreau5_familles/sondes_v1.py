@@ -202,40 +202,33 @@ def noter(sonde, d: Definition, lecteur, cles: dict, taches) -> dict:
     return sortie
 
 
-def _ecrire_ferme(chemin: Path, corps: dict) -> str:
-    """Un fichier fermé, scellé : jamais écrasé (R12) ; jamais au-delà de la borne écrite de la taille d'un fichier
-    (`lecture_v1.TAILLE_MAX_FICHIER`, constat V-1), éprouvée avant l'écriture."""
-    chemin = Path(chemin)
-    if chemin.exists():
-        raise GardeArret(f"{chemin} existe déjà (R12)")
-    octets = json.dumps(corps, ensure_ascii=False, sort_keys=True).encode("utf-8")
-    _lv.exiger_taille_bornee(chemin, len(octets))
-    chemin.parent.mkdir(parents=True, exist_ok=True)
-    chemin.write_bytes(octets)
-    return sceller(chemin)
-
-
 def ecrire_scores(dossier: Path, d: Definition, pli: int, taches, series: dict | None, motif: str | None) -> dict:
     """Fichiers fermés de la sonde sur un pli (interface de `lecture_v1`), scellés : `scores/<sonde>-pli<k>.json` (format
     `b5f-scores-v1`, scores par action de chaque série ; « echec » sans aucune série quand la sonde n'a pu être apprise),
     et, pour une sonde notée par jeton, un fichier par série, `jetons/<sonde>-pli<k>/<série>.json` (format
-    `b5f-jetons-v1`) : la taille d'un fichier ne dépend plus que d'une série sur un pli (constat V-1). Rend {chemin relatif
-    au dossier : empreinte}."""
+    `b5f-jetons-v1`) : la taille d'un fichier ne dépend plus que d'une série sur un pli (constat V-1). Avant toute
+    écriture : aucun de ces fichiers n'existe (R12), et chacun tient sous la borne écrite `lecture_v1.TAILLE_MAX_FICHIER`
+    (sinon arrêt, rien d'écrit). Rend {chemin relatif au dossier : empreinte}."""
     dossier, k = Path(dossier), int(pli)
-    rel = f"scores/{d.nom}-pli{k}.json"
-    for p in [dossier / rel] + [dossier / "jetons" / f"{d.nom}-pli{k}" / f"{s}.json" for s in (series or {})]:
-        if p.exists():
-            raise GardeArret(f"{p} existe déjà (R12)")
-    par_action = {s: {"actions": v["actions"]} for s, v in (series or {}).items()}
-    rendu = {rel: _ecrire_ferme(dossier / rel, {
+    corps = {f"scores/{d.nom}-pli{k}.json": {
         "format": FORMAT_SCORES, "sonde": d.nom, "pli": k, "couche": int(d.couche), "taches": list(taches),
-        "statut": "echec" if series is None else "notee", "motif": motif, "series": par_action})}
+        "statut": "echec" if series is None else "notee", "motif": motif,
+        "series": {s: {"actions": v["actions"]} for s, v in (series or {}).items()}}}
     for s, v in sorted((series or {}).items()):
-        if "jetons" not in v:
-            continue
-        rj = f"jetons/{d.nom}-pli{k}/{s}.json"
-        rendu[rj] = _ecrire_ferme(dossier / rj, {"format": _lv.FORMAT_JETONS, "sonde": d.nom, "pli": k, "serie": s,
-                                                 "jetons": v["jetons"]})
+        if "jetons" in v:
+            corps[f"jetons/{d.nom}-pli{k}/{s}.json"] = {"format": _lv.FORMAT_JETONS, "sonde": d.nom, "pli": k, "serie": s,
+                                                       "jetons": v["jetons"]}
+    octets = {}
+    for rel, c in corps.items():
+        if (dossier / rel).exists():
+            raise GardeArret(f"{dossier / rel} existe déjà (R12)")
+        octets[rel] = json.dumps(c, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        _lv.exiger_taille_bornee(dossier / rel, len(octets[rel]))
+    rendu = {}
+    for rel, b in octets.items():
+        (dossier / rel).parent.mkdir(parents=True, exist_ok=True)
+        (dossier / rel).write_bytes(b)
+        rendu[rel] = sceller(dossier / rel)
     return rendu
 
 

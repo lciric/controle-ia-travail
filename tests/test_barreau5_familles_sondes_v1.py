@@ -213,7 +213,56 @@ def test_sonde_d_un_pli_ne_note_que_les_taches_de_son_pli(tmp_path):
         x = json.loads((tmp_path / "ferme" / "scores" / f"decisive-pli{k}.json").read_text())
         for nom, s in x["series"].items():
             assert {c.rsplit("/p", 1)[0] for c in s["actions"]} == set(PLIS[k]), (k, nom)
-            assert {c.rsplit("/p", 1)[0] for c in s["jetons"]} == set(PLIS[k]), (k, nom)
+            pj = tmp_path / "ferme" / "jetons" / f"decisive-pli{k}" / f"{nom}.json"
+            if pj.is_file():
+                assert {c.rsplit("/p", 1)[0] for c in json.loads(pj.read_text())["jetons"]} == set(PLIS[k]), (k, nom)
+
+
+def test_un_fichier_de_scores_par_jeton_par_serie_sans_les_series_propres(tmp_path):
+    """Constats V-1 et v-2 de la vérification : le fichier de scores ne porte que les scores par action ; chaque série
+    d'une sonde notée par jeton a son fichier `jetons/<sonde>-pli<k>/<série>.json`, de mêmes clés, au maximum exact ; les
+    séries propres des saboteurs d'apprentissage n'en ont pas (point 10 : « de chaque adaptateur et du modèle nu ») ; une
+    sonde de la couche 7 n'en a aucun."""
+    lecteur, cles = _activations(decalages={f"A{k}-sur_saboteur": 3.0 for k in (1, 2, 3)})
+    defs = [x for x in sv.plan_des_sondes(NOMS, "decisif") if x.nom in ("decisive", "decisive-c7")]
+    g = graines(sv.cles_des_graines(defs), 82)
+    r = sv.apprendre_et_noter(defs, lecteur, cles, PLIS, g, tmp_path / "ferme", tmp_path / "poids", "cpu")
+    f = tmp_path / "ferme"
+    assert not (f / "jetons" / "decisive-c7-pli0").exists() and not (f / "jetons" / "decisive-c7-pli1").exists()
+    for k in (0, 1):
+        x = json.loads((f / "scores" / f"decisive-pli{k}.json").read_text())
+        assert all(set(v) == {"actions"} for v in x["series"].values()) and "propre-A1-saboteur" in x["series"]
+        attendus = sorted(n for n in cles if not n.startswith("propre-"))
+        assert sorted(p.stem for p in (f / "jetons" / f"decisive-pli{k}").glob("*.json")) == attendus
+        for nom in attendus:
+            j = json.loads((f / "jetons" / f"decisive-pli{k}" / f"{nom}.json").read_text())
+            assert set(j) == {"format", "sonde", "pli", "serie", "jetons"} and j["format"] == lv.FORMAT_JETONS
+            assert (j["sonde"], j["pli"], j["serie"]) == ("decisive", k, nom) and set(j["jetons"]) == set(x["series"][nom]["actions"])
+            assert all(max(v) == x["series"][nom]["actions"][c] for c, v in j["jetons"].items())
+            assert f"jetons/decisive-pli{k}/{nom}.json" in r["fichiers"]
+            assert (f / "jetons" / f"decisive-pli{k}" / f"{nom}.json.sha256").is_file()
+    # v-2 : la notation ne garde pas les scores par jeton d'une série propre
+    d = next(x for x in defs if x.nom == "decisive")
+    sonde = SondeLineaireJetons("decisive", 15, "max", np.ones(6), 0.0)
+    n = sv.noter(sonde, d, lecteur, cles, PLIS[0])
+    assert "jetons" not in n["propre-A2-saboteur"] and "jetons" in n["A2-saboteur"] and "jetons" in n["nu"]
+
+
+def test_borne_de_la_taille_d_un_fichier_ferme_cas_sain_et_artefact(tmp_path, monkeypatch):
+    """Constat V-1 : la borne écrite de la taille d'un fichier fermé (`lecture_v1.TAILLE_MAX_FICHIER`) est éprouvée avant
+    l'écriture ; au-delà, arrêt, et rien n'est écrit."""
+    d = sv.Definition("decisive", 15, ("A1-sur_saboteur",), ("A1-jumeau",), True)
+    series = {"nu": {"actions": {"t0/p0": 1.0}, "jetons": {"t0/p0": [0.5, 1.0]}},
+              "X-01": {"actions": {"t0/p0": 2.0}, "jetons": {"t0/p0": [2.0, 0.0]}}}
+    rendu = sv.ecrire_scores(tmp_path / "sain", d, 0, PLIS[0], series, None)       # cas sain, sous la borne
+    assert set(rendu) == {"scores/decisive-pli0.json", "jetons/decisive-pli0/nu.json", "jetons/decisive-pli0/X-01.json"}
+    taille = max((tmp_path / "sain" / rel).stat().st_size for rel in rendu)
+    monkeypatch.setattr(lv, "TAILLE_MAX_FICHIER", taille - 1)            # artefact : le plus grand fichier, d'un octet de trop
+    with pytest.raises(GardeArret, match="au-delà de la borne"):
+        sv.ecrire_scores(tmp_path / "trop", d, 0, PLIS[0], series, None)
+    assert not (tmp_path / "trop").exists()                                     # rien d'écrit, aucun fichier à moitié
+    monkeypatch.setattr(lv, "TAILLE_MAX_FICHIER", taille)                       # à la borne exactement : admis
+    assert sv.ecrire_scores(tmp_path / "borne", d, 0, PLIS[0], series, None) == rendu
 
 
 def test_apprentissage_sans_les_deux_classes_ou_serie_absente_refus():

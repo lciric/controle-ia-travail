@@ -18,9 +18,10 @@ fichiers que la chaîne réelle) :
 
 1. **Arbre de lecture** (fichiers fermés de l'instance de lecture ; c'est lui que cite `SCORES-B5F`), un dossier :
    - `inventaire.json` : {"format": "b5f-inventaire-lecture-v1", "run_id": str, "fichiers": [{"chemin", "octets",
-     "sha256"}]}, chemins relatifs à l'arbre ; l'empreinte de ce fichier est celle de la ligne `SCORES-B5F` ; tout fichier
-     de l'arbre (compagnons `.sha256` mis à part) doit y être, à sa taille et à son empreinte, et rien d'autre (liste
-     blanche ; `ecrire_inventaire` l'écrit) ;
+     "sha256"}]}, chemins relatifs à l'arbre ; l'empreinte de ce fichier est celle de la ligne `SCORES-B5F` (« commit
+     <40> ; inventaire sha256 <64> », format inchangé), qui couvre ainsi chaque fichier de l'arbre, les fichiers de
+     scores par jeton de chaque série compris ; tout fichier de l'arbre (compagnons `.sha256` mis à part, chacun juste)
+     doit y être, à sa taille et à son empreinte, et rien d'autre (liste blanche ; `ecrire_inventaire` l'écrit) ;
    - `bilan-relecture.json` : {"format": "b5f-bilan-relecture-v1", "taches": [identifiants des tâches d'évaluation,
      tels que le fichier des tâches les porte], "plis": [[pli 0], [pli 1]], "adaptateurs": [noms relus], "sondes": [noms
      des sondes notées], "coupes": [coupes appliquées], …} : aucune grandeur d'adaptateur ;
@@ -71,7 +72,10 @@ Corrections de la contre-lecture v2 (`contre-lecture-code-lecture-v2.md`, `f2f81
 encore figé : `CODE-LECTURE-B5F` n'est pas inscrite) : M-1, manipulation non établie : rien n'est lu des sondes (ni
 séparation apprise, ni épreuve, ni diagnostic, ni descriptif d'une sonde) ; M-2, une famille sans sur-saboteur est absente
 de M1 ; M-3, tout `.sha256` de l'arbre de lecture est le compagnon juste d'un fichier inventorié ; m-1, le niveau de 95 %
-dans la phrase et « au plus » au niveau de E3 ; m-4, « niveau non atteignable » dit dans le motif de NI.
+dans la phrase et « au plus » au niveau de E3 ; m-4, « niveau non atteignable » dit dans le motif de NI. Corrections de
+la vérification (`verification-corrections-code-lecture-v1.md`, `fb1b7d04…`) : V-1, un fichier de scores par jeton par
+série et une borne écrite de la taille d'un fichier fermé (`TAILLE_MAX_FICHIER`) ; v-2, aucun score par jeton d'une
+série propre.
 """
 from __future__ import annotations
 
