@@ -159,6 +159,17 @@ class Parametres:
     produits_ecrits: bool = False
     jetons_min: int = 2
     jetons_max: int = 5
+    taches_cout: tuple | None = None          # None : les 16 premières tâches de chaque pli (point 5 : 32 tâches)
+    format_engagement: str = "table sha256 {table}"   # contenu de `ENGAGEMENT-B5F` (non lu dans l'interface)
+    lignes_supplementaires: tuple = ()        # (nom, horodatage, contenu) : lignes qu'exigerait la garde d'ouverture
+    copie_format: str = "{famille}"           # « copie » : nom formé lu (interface 3 et 4)
+    resume_apprentissage: bool = False        # résumé de la formation : familles d'apprentissage aussi
+    empreintes_ecrites: bool = False          # empreintes d'adaptateurs, résumé et intensités, égales entre elles
+
+    def taches_evaluation(self) -> tuple:
+        if self.taches_cout is not None:
+            return tuple(self.taches_cout)
+        return tuple(self.plis[0][:16]) + tuple(self.plis[1][:16])
 
     def __post_init__(self):
         t = tuple(self.taches)
@@ -178,12 +189,26 @@ class Parametres:
             if len(v) != n or any(c not in "0123456789abcdef" for c in v):
                 raise ErreurFabrique(f"{nom} : {n} chiffres hexadécimaux")
         if [n for n, _ in self.horodatages] != [n for n, _ in HORODATAGES_DEFAUT]:
-            raise ErreurFabrique("horodatages : les cinq lignes, dans l'ordre CODE-LECTURE, SCORES, EPREUVE, GO-LECTURE, OUVERTURE")
+            raise ErreurFabrique("horodatages : les six lignes, dans l'ordre ENGAGEMENT, CODE-LECTURE, SCORES, EPREUVE, "
+                                 "GO-LECTURE, OUVERTURE")
+        h = [x for _, x in self.horodatages]
+        if any(not isinstance(x, str) or not x for x in h) or h != sorted(set(h)) \
+                or not self.horodatage_scores_tardif > h[-1]:
+            raise ErreurFabrique("horodatages strictement croissants ; scores tardifs après l'ouverture")
         for champ in ("{horodatage}", "{nom}", "{contenu}"):
             if champ not in self.format_ligne:
                 raise ErreurFabrique(f"format_ligne : le champ {champ} manque")
+        if "{table}" not in self.format_engagement or "{famille}" not in self.copie_format:
+            raise ErreurFabrique("format_engagement porte {table} ; copie_format porte {famille}")
+        noms_std = {n for n, _ in HORODATAGES_DEFAUT}
+        for x in self.lignes_supplementaires:
+            if len(x) != 3 or not all(isinstance(y, str) and y for y in x) or x[0] in noms_std:
+                raise ErreurFabrique("lignes_supplementaires : (nom, horodatage, contenu), noms hors des six lignes")
         if not (1 <= self.jetons_min <= self.jetons_max):
             raise ErreurFabrique("jetons_min ≤ jetons_max, au moins 1")
+        te = self.taches_evaluation()
+        if len(te) < 16 or len(set(te)) != len(te) or not set(te) <= set(t):
+            raise ErreurFabrique("taches_cout : au moins 16 tâches distinctes, parmi les 64")
 
     def membre(self, role: str) -> str:
         return dict(self.membres)[role]
@@ -205,7 +230,7 @@ class Parametres:
         for k, v in d.items():
             if k == "plis":
                 v = tuple(tuple(p) for p in v)
-            elif k in ("membres", "horodatages"):
+            elif k in ("membres", "horodatages", "lignes_supplementaires"):
                 v = tuple(tuple(x) for x in v)
             elif isinstance(v, list):
                 v = tuple(v)
@@ -240,14 +265,21 @@ def analyser(monde: str) -> tuple[str, int]:
     return groupe, int(n)
 
 
-def graine(entropie: int, groupe: str, indice: int, flux: int) -> np.random.SeedSequence:
+def cle_entiere(cle: str) -> int:
+    """Règle du dépôt pour une clé écrite (`manifeste.cle_de_tache`) : huit premiers octets du sha256, gros-boutiste."""
+    return int.from_bytes(hashlib.sha256(cle.encode("utf-8")).digest()[:8], "big")
+
+
+def graine(entropie: int, monde: str, flux: int) -> np.random.SeedSequence:
+    """Graine d'un flux d'un monde (R9 ; point 14 : clé `b5f/epreuve/<monde>`)."""
     if not isinstance(entropie, int) or isinstance(entropie, bool) or entropie < 0:
         raise ErreurFabrique("entropie : un entier positif ou nul")
-    return np.random.SeedSequence(entropy=entropie, spawn_key=(CODE_GROUPE[groupe], int(indice), int(flux)))
+    analyser(monde)
+    return np.random.SeedSequence(entropy=entropie, spawn_key=(cle_entiere(CLE_EPREUVE.format(monde=monde)), int(flux)))
 
 
-def _rng(entropie, groupe, indice, flux):
-    return np.random.default_rng(graine(entropie, groupe, indice, flux))
+def _rng(entropie, monde, flux):
+    return np.random.default_rng(graine(entropie, monde, flux))
 
 
 def _xi(rng) -> float:
