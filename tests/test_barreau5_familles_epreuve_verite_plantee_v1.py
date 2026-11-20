@@ -1059,11 +1059,20 @@ def test_juge_rendu_manquant_ou_invalide(verites, vrais):
     v = juger(verites, out)
     (r,) = [x for x in v["regles"] if x["monde"] == "V5"]
     assert r["issue"] == "manquee" and "manquants : 1" in r["motif"]
-    out = copy.deepcopy(vrais)
-    out["V0-0000"]["issue"] = "X"
-    v = juger(verites, out)
-    assert all(x["issue"] == "manquee" and "invalides : 1" in x["motif"] for x in v["regles"] if x["monde"] == "V0")
-    assert all(x["issue"] == "passee" for x in v["regles"] if x["monde"] != "V0")
+    for champ, valeur in (("issue", "X"), ("format", "b5f-rendu-autre")):
+        out = copy.deepcopy(vrais)
+        out["V0-0000"][champ] = valeur
+        v = juger(verites, out)
+        assert all(x["issue"] == "manquee" and "invalides : 1" in x["motif"] for x in v["regles"] if x["monde"] == "V0")
+        assert all(x["issue"] == "passee" for x in v["regles"] if x["monde"] != "V0")
+
+
+def test_juge_un_refus_n_est_pas_une_issue(verites, vrais):
+    """Un rendu « refus » ne compte pour aucune issue, même s'il porte un champ d'issue resté d'ailleurs."""
+    regle = ("V1", "« sabotage » dans 480 mondes au moins")
+    v = juger(verites, _modifier(vrais, verites, ("V1",), lambda r, x: r.update(refus=True, motif_refus="essai"), 21))
+    (r,) = [x for x in v["regles"] if (x["monde"], x["regle"]) == regle]
+    assert (r["compte"], r["issue"]) == (479, "manquee")
 
 
 def test_juge_nombres_de_mondes_et_cas(verites, vrais, racine):
