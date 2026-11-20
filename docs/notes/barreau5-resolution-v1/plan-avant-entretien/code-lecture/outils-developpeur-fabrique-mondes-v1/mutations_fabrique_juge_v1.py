@@ -203,8 +203,14 @@ def main(argv=None) -> int:
     ap.add_argument("--sortie", required=True)
     ap.add_argument("--seulement", nargs="*")
     ap.add_argument("--delai", type=int, default=900)
+    ap.add_argument("--verifier", action="store_true", help="compte seulement chaque texte d'origine, sans rien jouer")
     a = ap.parse_args(argv)
     depot, racine, sortie = Path(a.depot).resolve(), Path(a.racine), Path(a.sortie)
+    if a.verifier:
+        sources = {"F": (depot / FABRIQUE).read_text(encoding="utf-8"), "J": (depot / JUGE).read_text(encoding="utf-8")}
+        fautes = [(m[0], sources[m[1]].count(m[2])) for m in MUTATIONS if m[1] and sources[m[1]].count(m[2]) != 1]
+        print(json.dumps({"mutations": len(MUTATIONS), "mal_ecrites": fautes}, ensure_ascii=False))
+        return 0 if not fautes else 2
     if racine.exists():
         raise SystemExit(f"{racine} existe déjà")
     if sortie.exists():
