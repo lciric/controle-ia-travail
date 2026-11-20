@@ -1041,12 +1041,14 @@ def test_juge_rendu_manquant_ou_invalide(verites, vrais):
 
 def test_juge_nombres_de_mondes_et_cas(verites, vrais, racine):
     doc = copy.deepcopy(verites["doc"])
-    doc["mondes"] = [m for m in doc["mondes"] if m["monde"] not in ("V1-0499", "V7-0007")]
+    # V7-0008 est le seul monde du sixième cas (sept familles)
+    assert [m for m, x in verites["par_monde"].items() if x["cas"] == "sept-familles"] == ["V7-0008"]
+    doc["mondes"] = [m for m in doc["mondes"] if m["monde"] not in ("V1-0499", "V7-0008")]
     chemin = racine / "verites-tronquees.json"
     octets = json.dumps(doc).encode()
     chemin.write_bytes(octets)
     sha = hashlib.sha256(octets).hexdigest()
-    rendus = {m: r for m, r in vrais.items() if m not in ("V1-0499", "V7-0007")}
+    rendus = {m: r for m, r in vrais.items() if m not in ("V1-0499", "V7-0008")}
     v = J.juger(chemin, sha, rendus)
     assert all(x["issue"] == "manquee" and "au point 11" in x["motif"] for x in v["regles"] if x["monde"] == "V1")
     assert all(x["issue"] == "manquee" and "cas absents" in x["motif"] for x in v["regles"] if x["monde"] == "V7")
