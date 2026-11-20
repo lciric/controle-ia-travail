@@ -20,6 +20,9 @@ Dépôt de travail : `https://github.com/lciric/controle-ia-travail` (privé), b
 Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au plus tard fin décembre 2026, critères inchangés (N-027 ; décalée d'un mois par Lazar le 18 novembre, GO-2026-11-18-01).
 État vivant, tâches ouvertes, GO en attente, décisions et dépenses : `registres/etat.md`.
 
+## Rappels datés (mot de Lazar du 20 novembre 2026, R-4160)
+Toute session, de tout compte, lit `registres/rappels.md` à la reprise et fait à Lazar les rappels échus ce jour-là. En cours : **les 25, 26, 27, 28, 29 et 30 novembre 2026, vers 18 h (Paris)**, remettre la note sur « Diffuse AI Control on Fuzzy Tasks » avant l'entretien du 1er décembre.
+
 ## Routine de reprise — au début de CHAQUE session (R14)
 1. `cd docs && sha256sum -c sha256sums-lancement-v2.txt` ; puis `python -m controle_ia.scellement verifier-arbre .` (avec `PYTHONPATH=src`).
 2. Lire `registres/etat.md` et la dernière passation dans `registres/passations/` (la plus récente par nom).
