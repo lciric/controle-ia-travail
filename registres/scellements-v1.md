@@ -36,3 +36,5 @@
 | NOTE-JUGE-SELECTION-ORGANISME-V9-V7 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/juge-selection/note-conception-juge-selection-cartes-ecartees-v7.md | bbd71b7c998866ec249556fe7803015c54aac4081dffc4e5084588819bc98a26 |
 | ADDITIF-2-ORGANISME-V9-LIGNE-3 | 2026-11-20T05:48:27Z | prereg/organisme-auto-conception-v9/additif-2-code-preenregistrement-ligne-3-votes-effectifs-juges-v7-v3.md | f5562d206bc56bfa1ebf2ff88abcdd6fcc93ececb6abd513d05611c6c4e5f25a |
 | PREREG-COURT-NOUVELLES-ATTAQUES-V3 | 2026-11-20T06:00:01Z | prereg/ideation-nouvelles-attaques-v1/preenregistrement-court-course-nouvelles-attaques-v3.md | 2ea5ad53de565f912992128a9113da59e5462b561ed258b151d519b193f85787 |
+| ADDITIF-INTERRUPTEURS-ORCHESTRATEUR-V69-V4 | 2026-11-20T06:11:04Z | prereg/organisme-auto-conception-v9/orchestrateur-v69/additif-interrupteurs-orchestrateur-v69-v4.md | cb352811f0202aa530fa4fd94de1d7ed4e6a8d589584c06c24c915e3c73bb578 |
+| CADRE-LECTURE-REGISTRE-ORCHESTRATEUR-V70-V3 | 2026-11-20T06:11:04Z | prereg/organisme-auto-conception-v9/orchestrateur-v69/cadre-lecture-registre-orchestrateur-v70-v3.md | b1822613071f88a50b514ffbb38073ce664038937468a875f4d57838433a9eac |

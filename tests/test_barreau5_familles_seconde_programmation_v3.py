@@ -810,6 +810,9 @@ def test_comparateur_arret_par_une_garde_et_codes_de_sortie():
         assert rendu["verdict"] == "désaccords" and rendu["arret_par_une_garde"] is False
         assert [x["champ"] for x in rendu["desaccords"]] == ["code de sortie"]
     assert sp.comparer(0, juste)["arret_par_une_garde"] is False
+    # Un résultat écrit avec un code 2, même dans un monde à refus planté : désaccord.
+    rendu = sp.comparer(2, juste, refus_attendu=True)
+    assert rendu["verdict"] == "désaccords" and rendu["arret_par_une_garde"] is False
 
 
 def test_comparateur_sur_fichiers_juste_et_faux():
