@@ -179,6 +179,9 @@ def t2_t3(tmp: Path) -> None:
     r2, texte2, course2 = monde_session(tmp / "t2b")
     saine2 = course2()
     hors = course2(f"{GO_RELANCE} ; instances 1,2,3", "relance hors borne")
+    # joué ici, avant que le versement fabriqué plus bas n'ajoute des fichiers à l'arbre de travail de ce dépôt jetable
+    # (la garde « arbre de travail de la session identique au code figé » les verrait, à bon droit)
+    premiere_marche_au_commit_d_avant = essayer(lambda: commande(r2, texte2, saine2, 2))
     import io
     from contextlib import redirect_stdout
 
@@ -215,6 +218,8 @@ def t2_t3(tmp: Path) -> None:
         "relance de l'instance 1 au commit de la ligne fautive": essayer(lambda: commande(r2, texte2, hors, 1, True, GO_RELANCE)),
         "config de l'instance 2 au commit de la ligne fautive": essayer(lambda: session("config", r2, 2, 1.2, hors, 0, GO)),
         "commande de l'instance 2 au commit d'avant la ligne (première marche encore possible)":
+            premiere_marche_au_commit_d_avant,
+        "la même, après que des sorties versées ont été ajoutées à l'arbre de travail de la session":
             essayer(lambda: commande(r2, texte2, saine2, 2)),
         "plan": essayer(lambda: session("plan")),
         "depense d'une première marche (instance 2)": essayer(lambda: session("depense", 2, 3, 10.0, 1.2, 100.0, 8.4, 0)),
