@@ -123,6 +123,31 @@ def test_apprendre_puis_noter_sur_des_activations_separables(tmp_path):
     assert r2["fichiers"]["scores/decisive-pli0.json"] == r["fichiers"]["scores/decisive-pli0.json"]
 
 
+def test_reglage_fixe_et_pli_d_apprentissage(tmp_path, monkeypatch):
+    """Réglage fixé par le texte (linéaire, maximum, l2 0,01, graine de la clé du pli) ; la sonde du pli k est apprise sur
+    les seules tâches de l'autre pli, positifs puis négatifs."""
+    lecteur, cles = _activations()
+    defs = [x for x in sv.plan_des_sondes(NOMS, "decisif") if x.nom == "decisive"]
+    g = graines(sv.cles_des_graines(defs), 80)
+    vus, vrai = [], ac.entrainer
+
+    def espion(lot, famille, nom, couche, y, l2, graine, *a, **k):
+        vus.append({"famille": famille, "couche": couche, "l2": l2, "graine": graine, "n": lot.n, "y": list(y)})
+        return vrai(lot, famille, nom, couche, y, l2, graine, *a, **k)
+    monkeypatch.setattr(ac, "entrainer", espion)
+    lus = []
+    lecteur_espion = lambda s, c, k: (lus.append((s, k)), lecteur(s, c, k))[1]
+    sv.apprendre_et_noter(defs, lecteur_espion, cles, PLIS, g, tmp_path / "f", tmp_path / "p", "cpu")
+    assert [v["famille"] for v in vus[:2]] == ["lineaire", "lineaire"] and all(v["l2"] == 0.01 for v in vus)
+    assert vus[0]["graine"] == sv.graine_entiere(g["b5f/sonde/decisive/pli0"])
+    assert vus[1]["graine"] == sv.graine_entiere(g["b5f/sonde/decisive/pli1"])
+    # pli 0 : 3 positifs + 3 négatifs, 2 tâches du pli 1, 3 actions : 36 actions, la moitié positives d'abord
+    assert vus[0]["n"] == 36 and vus[0]["y"] == [1] * 18 + [0] * 18
+    appris_pli0 = lus[:36]
+    assert all(k.rsplit("/p", 1)[0] in PLIS[1] for _, k in appris_pli0)
+    assert [s for s, _ in appris_pli0[:18]] == [s for s in defs[0].positifs for _ in range(6)]
+
+
 def test_sonde_en_echec_ecrite_echec_dans_ses_deux_plis(tmp_path, monkeypatch):
     lecteur, cles = _activations()
     defs = [x for x in sv.plan_des_sondes(NOMS, "decisif") if x.nom in ("decisive", "comparaison")]

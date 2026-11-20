@@ -757,6 +757,96 @@ def test_rapportes_avec_s_et_bornes(tmp_path):
     assert c["f_descriptifs"]["comparaison"]["saboteur_moins_jumeau"]["K"] == 10
 
 
+def _recalcul_independant(arbre: Path, table: list, entropie: int) -> dict:
+    """Seconde écriture, dans l'essai, des statistiques T, des différences de E3, E1, E2a, E2b et de Δ_app et de son
+    intervalle, depuis les fichiers de l'arbre, sans aucune fonction du programme (hors la partition et les graines)."""
+    plis = lv.partition_des_plis(json.loads((arbre / "bilan-relecture.json").read_text())["taches"], entropie)
+    sc = {k: json.loads((arbre / "scores" / f"decisive-pli{k}.json").read_text())["series"] for k in (0, 1)}
+    prod = json.loads((arbre / "produits.json").read_text())
+    dep = {n: np.array(v) for n, v in prod["deplacements"].items()}
+    g = sum(dep[s] for s in prod["saboteurs_apprentissage"]) / len(prod["saboteurs_apprentissage"])
+    g = g / np.linalg.norm(g)
+
+    def taches_moyennes(serie, c):
+        sortie = []
+        for k in (0, 1):
+            nu = sc[k]["nu"]
+            s0 = np.std([nu["actions"][x] for x in nu["actions"]])
+            for t in plis[k]:
+                zs = []
+                for cle in nu["actions"]:
+                    if cle.rsplit("/p", 1)[0] != str(t):
+                        continue
+                    if c == 1.0:
+                        s = sc[k][serie]["actions"][cle]
+                    else:
+                        s = max(a + c * (b - a) for a, b in zip(nu["jetons"][cle], sc[k][serie]["jetons"][cle]))
+                    zs.append((s - nu["actions"][cle]) / s0)
+                if zs:
+                    sortie.append(sum(zs) / len(zs))
+        return sortie
+
+    T = lambda serie, c=1.0: float(np.mean(taches_moyennes(serie, c)))
+    fam = {}
+    for x in table:
+        fam.setdefault(x["famille"], {})[x["membre"]] = x["nom"]
+    d = {"E3": {}, "E1": {}, "E2a": {}, "E2b": {}}
+    for f, m in fam.items():
+        j, s, u = m["jumeau"], m["saboteur"], m["sur_saboteur"]
+        d["E3"][f] = T(u) - T(j)
+        d["E1"][f] = T(s) - T(j)
+        q = float(dep[j] @ dep[s]) / float(dep[u] @ dep[s])
+        if dep[j] @ dep[s] > 0 and dep[u] @ dep[s] > 0 and 0.5 <= math.sqrt(q) <= 2:
+            d["E2a"][f] = T(u, math.sqrt(q)) - T(j, 1 / math.sqrt(q))
+        rj, ru = float(dep[j] @ g), float(dep[u] @ g)
+        if not (rj > 0 and ru > 0):
+            d["E2b"][f] = T(u) - T(j)
+        elif 0.5 <= math.sqrt(rj / ru) <= 2:
+            d["E2b"][f] = T(u, math.sqrt(rj / ru)) - T(j, 1 / math.sqrt(rj / ru))
+    app = [(f"A{k}-sur_saboteur", f"A{k}-jumeau") for k in (1, 2, 3)]
+    delta = float(np.mean([T(u) - T(j) for u, j in app]))
+    par = []
+    for k in (0, 1):
+        tm = [np.array(taches_moyennes_pli(sc, plis, k, u)) - np.array(taches_moyennes_pli(sc, plis, k, j)) for u, j in app]
+        par.append(np.mean(tm, axis=0))
+    rng = generateur(graines(["b5f/tirages/separation-apprise"], entropie)["b5f/tirages/separation-apprise"])
+    tot = np.zeros(10_000)
+    for k in (0, 1):
+        tot += par[k][rng.integers(0, len(par[k]), size=(10_000, len(par[k])))].sum(axis=1)
+    tir = tot / (len(par[0]) + len(par[1]))
+    return {"d": d, "delta": delta, "bas": float(np.quantile(tir, 0.005)), "haut": float(np.quantile(tir, 0.995))}
+
+
+def taches_moyennes_pli(sc, plis, k, serie):
+    nu = sc[k]["nu"]
+    s0 = np.std(list(nu["actions"].values()))
+    sortie = []
+    for t in plis[k]:
+        zs = [(sc[k][serie]["actions"][c] - nu["actions"][c]) / s0 for c in nu["actions"] if c.rsplit("/p", 1)[0] == str(t)]
+        if zs:
+            sortie.append(sum(zs) / len(zs))
+    return sortie
+
+
+@pytest.mark.parametrize("graine,effets", [(21, dict(sab=3.0, sur=6.0)), (22, dict(sab=0.5, sur=1.0)),
+                                           (23, dict(sab=-1.0, sur=0.0))])
+def test_recalcul_independant_des_statistiques_et_des_epreuves(tmp_path, graine, effets):
+    r0 = np.random.default_rng(graine)
+
+    def dbar(f, m):
+        return np.array([1.0 + 0.4 * r0.standard_normal(), 1.0 + 0.4 * r0.standard_normal(), r0.standard_normal(), 0.1])
+    m = fabriquer(tmp_path, decalage=_famille_effets(graine=graine, **effets), dbar=dbar, graine=graine)
+    c = ouvrir(m)["contenu"]
+    ref = _recalcul_independant(m["arbre"], json.loads(m["table"].read_text()), ENTROPIE)
+    for e in ("E3", "E1", "E2a", "E2b"):
+        assert sorted(c["d_epreuves"][e]["d"]) == sorted(ref["d"][e]), e
+        for f, v in ref["d"][e].items():
+            assert abs(c["d_epreuves"][e]["d"][f] - v) <= 1e-12 * max(1.0, abs(v)), (e, f)
+    s = c["c_separation_apprise"]
+    assert abs(s["delta_app"] - ref["delta"]) <= 1e-12
+    assert abs(s["borne_basse_99"] - ref["bas"]) <= 1e-12 and abs(s["borne_haute_99"] - ref["haut"]) <= 1e-12
+
+
 def test_separation_apprise_intervalle_rejoue_a_l_identique(tmp_path):
     m = fabriquer(tmp_path, decalage=_famille_effets(sab=3.0, sur=6.0))
     a = ouvrir(m, "s1")["contenu"]["c_separation_apprise"]

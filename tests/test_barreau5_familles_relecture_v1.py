@@ -151,8 +151,17 @@ def monde_jouet(base: Path, n_taches=8, familles=lv.TENUES, zero=(), entrees_en_
 def bout_en_bout(tmp_path_factory):
     """Jouet de bout en bout : relecture sur le modèle jouet (39 adaptateurs, 4 tâches), sondes, notation fermée."""
     base = tmp_path_factory.mktemp("b5f-lecture")
-    m = monde_jouet(base, n_taches=4)
-    config = _config(m["taches"])
+
+    def ancre(dossier):
+        # point 18 (b) : un adaptateur existant relu comme point d'ancrage (`.pt`, cité par chemin et empreinte)
+        p = dossier.parent / "existants" / "adaptateur-saboteur-confirmation.pt"
+        p.parent.mkdir()
+        torch.save({k: v.to(torch.float16) for k, v in _etats(["ancre"], graine=9)["ancre"].items()}, p)
+        sceller(p)
+    m = monde_jouet(base, n_taches=4, entrees_en_plus=ancre)
+    p = m["racine"] / "existants" / "adaptateur-saboteur-confirmation.pt"
+    config = _config(m["taches"], ancrages=[{"nom": "ancre-R1-saboteur", "chemin": "existants/adaptateur-saboteur-confirmation.pt",
+                                             "sha256": (p.parent / (p.name + ".sha256")).read_text().split()[0]}])
     resume = rv.executer(config, m["racine"], "20261124-120000-b5f-lecture", entropie=ENTROPIE,
                          registre_texte=registre(m["table_sha"]), jouer=_scripte)
     m.update({"resume": resume, "config": config, "sorties": m["racine"] / "donnees" / "20261124-120000-b5f-lecture"})
@@ -201,17 +210,26 @@ def test_jouet_de_bout_en_bout_relecture_sondes_puis_lecture(bout_en_bout, tmp_p
     assert r["issue"] in lv.NOMS_ISSUES and c["b_manipulation"]["etablie"]
     assert c["d_epreuves"]["E3"]["K"] == 10 and c["c_separation_apprise"]["tirages"] == 10_000
     assert r["resultat"].with_name(r["resultat"].name + ".sha256").is_file()
+    assert set(c["f_descriptifs"]["ancrages"]) == {"ancre-R1-saboteur"}           # point 18 (b), descriptif
     # l'alignement des étiquettes se vérifie quand la formation porte les empreintes : celles des intensités relues
     intens = json.loads((arbre / "intensites.json").read_text())["adaptateurs"]
     assert all(len(v["empreinte"]) == 64 for v in intens.values())
 
 
 def test_produits_ecrits_egaux_au_recalcul_et_aucun_point_d_ancrage(bout_en_bout):
-    p = json.loads((bout_en_bout["sorties"] / "lecture" / "produits.json").read_text())
+    arbre = bout_en_bout["sorties"] / "lecture"
+    p = json.loads((arbre / "produits.json").read_text())
     calc = lv.produits_et_poussees(p["deplacements"], p["saboteurs_apprentissage"])
     lv.exiger_produits_ecrits(p, calc)
     assert p["saboteurs_apprentissage"] == ["A1-saboteur", "A2-saboteur", "A3-saboteur"]
     assert len(p["deplacements"]) == 39 and len(p["deplacements"]["X-01"]) == 32
+    # le point d'ancrage est relu et noté par la sonde décisive, mais n'entre ni dans les produits ni dans un apprentissage
+    assert "ancre-R1-saboteur" not in p["deplacements"]
+    x = json.loads((arbre / "scores" / "decisive-pli0.json").read_text())
+    assert "ancre-R1-saboteur" in x["series"] and "jetons" in x["series"]["ancre-R1-saboteur"]
+    poids = json.loads((bout_en_bout["sorties"] / "poids" / "decisive-pli0.json").read_text())
+    assert "ancre-R1-saboteur" not in poids["positifs"] + poids["negatifs"]
+    assert json.loads((arbre / "bilan-relecture.json").read_text())["ancrages"] == ["ancre-R1-saboteur"]
 
 
 def test_deplacement_moyen_recalcule_depuis_les_activations_gardees(bout_en_bout):
