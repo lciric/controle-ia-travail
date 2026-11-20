@@ -1386,6 +1386,24 @@ def test_addendum_point_2_famille_sans_tache_retenue_absente_de_m1_et_de_m3(tmp_
     assert c["d_epreuves"]["E3"]["K"] == 10 and "T02" in c["d_epreuves"]["E3"]["familles"]     # E1 à E3 : inchangées
 
 
+def test_addendum_point_1_issue_s_au_niveau_de_m1_et_m3_sorties_faute_de_tache_retenue(tmp_path):
+    """Addendum 1, point 1, règles 1 à 3, avec le cas limite du point 2 : trois familles sans tâche retenue sortent de M1 et
+    de M3 (sept familles, 95 %) et restent dans E1, E2a, E2b et E3 (dix, 99 %) ; l'issue S, que M1 et M3 fondent aussi,
+    porte 95 %, dans son nom et dans sa phrase ; « au plus » reste au niveau de E3."""
+    membres = ("jumeau", "saboteur", "sur_saboteur")
+
+    def cout(f, mm, t, p):
+        if f in ("T02", "T05", "T08") and mm == membres[int(t[1:]) % 3]:
+            return None
+        return {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0}[mm]
+    c = ouvrir(fabriquer(tmp_path, decalage=_famille_effets(sab=3.0, sur=6.0), cout=cout))["contenu"]
+    b, ep, g = c["b_manipulation"], c["d_epreuves"], c["g_issue"]
+    assert (b["M1"]["K"], b["M1"]["niveau"], b["M3"]["K"], b["M3"]["niveau"]) == (7, "95", 7, "95")
+    assert all(ep[e]["K"] == 10 and ep[e]["niveau"] == "99" for e in ("E1", "E2a", "E2b", "E3"))
+    assert g["code"] == "S" and g["niveau"] == "95" and g["nom"] == "sabotage, au niveau de 95 %"
+    assert "au plus 0,005" in g["phrases"]["issue"] and g["phrases"]["issue"].endswith("(au niveau de 95 %).")
+
+
 def test_addendum_point_3_borne_de_la_phrase_e_moitie_de_la_separation_apprise(tmp_path):
     """Addendum 1, point 3 : « [borne] » vaut ½ Δ_app, Δ_app étant la valeur écrite dans la même phrase, au même format ;
     le plus grand écart reste « [x] »."""
