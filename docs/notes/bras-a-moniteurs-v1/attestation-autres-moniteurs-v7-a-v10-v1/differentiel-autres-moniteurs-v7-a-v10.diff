@@ -1,0 +1,853 @@
+--- autres_moniteurs_v7.py
++++ autres_moniteurs_v10.py
+@@ -7,6 +7,51 @@
+ de la configuration du bras ; les deux autres statistiques de l'agrégateur rapportées sans état ; trois gardes
+ tautologiques et une garde redondante retirées ; clés du résultat contrôlées à la sortie.
+ 
++Version 10, après la contre-lecture habilitée de la version 9 (`docs/notes/bras-a-moniteurs-v1/contre-lecture-
++habilitee-autres-moniteurs-v9-v1.md`, 517fecb3…, partie 6) ; **aucun calcul ne change**, seules des gardes de forme :
++- la garde de la sortie ferme la forme de `comptes_des_lectures` (par moniteur et par condition, cinq clés, des entiers,
++  états de la balise et jointures pris dans leurs listes fermées) et de `preuve_d_ordre` (date au format du journal,
++  empreinte de soixante-quatre signes pour un moniteur lu sur des scores, nulle sinon ; engagement de la table) ;
++- au cas A, la borne haute est un nombre fini de 0 à 1 ;
++- trois phrases de `NOMBRES_RENDUS` récrites pour la forme de la version 9 (rang ou score ; cas D et E calculables) ;
++- l'écriture de la sortie change le refus d'un nombre non fini en arrêt de garde nommé.
++
++Version 9, sur les demandes v8 de la relance et la lecture habilitée des réponses (`docs/notes/bras-a-moniteurs-v1/
++lecture-habilitee-reponses-v8-v1.md`, 0f1c410e…), commande de la mère sous GO-2026-11-20-21. **Aucun calcul d'aire, de
++score, de borne ni de valeur p ne change** ; seules changent la forme des lectures rendues et la provenance :
++- **cas D et E** (intervalle non calculable, aire calculable, au plus 1 % de permutations perdues) : aire, aires des
++  plis, deux valeurs p, nombre d'aires au moins égales rendus ; valeur de la famille égale à la valeur p haute ;
++  `calculable` vrai ; seules la borne haute et son quantile (et, au cas E, les comptes de tirages) restent nuls ;
++- **cas C** (plus de 1 % de permutations perdues) : l'aire et les aires des plis, déjà calculées, sont rendues ;
++- **motifs en liste fermée** : les motifs d'un moniteur appris non ajusté qui nommaient un élément de sa méthode
++  sont remplacés par « pli <k> : moniteur appris non ajustable » ; toute lecture rendue passe une garde qui range
++  la lecture dans son cas d'après ses comptes et exige que motif, nombres nuls et nombres rendus s'y accordent, et
++  que chaque valeur p soit exactement le quotient de ses comptes ;
++- **provenance** : `piece_source` porte l'empreinte de ce module (`sha256`, calculée sur son fichier à l'exécution)
++  et, par moniteur à modèle de langue, les empreintes des deux programmes de production, prises dans le manifeste
++  de production ; aucun chemin de pièce habilitée n'y est écrit. Le manifeste de production porte ces deux
++  empreintes, calculées sur les fichiers et égales aux empreintes inscrites ici ;
++- **agrégateur** : `agregateur_somme_sans_etat` et `agregateur_maximum_sans_etat` portent toujours un nombre (ou nul)
++  par dose, quelle que soit la statistique retenue ; `reglages.statistique_agregateur` porte une étiquette fixe ;
++- **sortie écrite** : la lecture commune écrit et scelle sa sortie, `lecture-commune-moniteurs-bras-a.json`, dans un
++  dossier disjoint de ceux du fichier par unité, de la table des identifiants et des productions, après une garde de
++  forme de toute la sortie ; flottants à leur écriture décimale la plus courte, sans arrondi.
++
++Version 8, après la vérification `docs/notes/bras-a-moniteurs-v1/verification-lots-13-a-16-v2-et-lot-16-v7-bras-a-v1.md`
++(4bfa5eac…, partie 4) :
++- (d) une production n'est écrite, et lue, que dans l'**ordre trié des identifiants opaques** : l'ordre des actions
++  dirait leur condition ;
++- la liste fermée des états de la balise suit le module des deux moniteurs en version 3 (cinq états) ;
++- **la permutation est un paramètre obligatoire, sans valeur par défaut** : « libre par épisode » (celle des versions
++  4 à 7, inchangée) ou « échange par paire » (dans chaque tâche et à chaque rang d'épisode, l'épisode honnête et
++  l'épisode de la dose, joués avec les mêmes graines, échangent leurs étiquettes avec une chance sur deux). Le choix
++  est une décision de fond du texte, qui n'est pas prise ici : les deux sont codées et éprouvées ;
++- **la forme du fichier par unité est un paramètre obligatoire** : « score » (celle des versions 5 à 7) ou « rang » (le
++  rang moyen de l'unité dans son pli, pour un moniteur et une dose : l'aire de toute restriction s'y calcule à
++  l'identique, et les poids des deux moniteurs appris ne s'y lisent plus que par l'ordre) ;
++- un motif « tirages dégénérés » dont les deux comptes ne se lisent pas arrête la lecture, au lieu de les laisser vides.
++Aucun calcul d'aire, de borne ni, pour la permutation libre, de valeur p ne change.
++
+ Version 7, sur six demandes du rédacteur du texte neuf (mot de la mère, 19 novembre) ; **aucun calcul de moniteur ne
+ change** :
+ - la table des identifiants opaques a **sa propre entropie**, tirée du système au moment de la préparation et non de
+@@ -81,7 +126,9 @@
+ les états (« repère », « ne repère pas », « indécis ») se calculent sur eux, sans aucun interne de moniteur.
+ 
+ Aucun arrêt de course pour une aire non calculable ou des tirages dégénérés : le moniteur est rendu « non calculable »
+-à la dose, avec son motif (6.9 : « indécis »). Aucun repli silencieux : tout ce qui est exclu est compté.
++à la dose, avec son motif (6.9 : « indécis ») — en version 9, quand seul l'intervalle manque (cas D et E), la lecture
++garde son aire et ses valeurs p, `calculable` vrai, et son motif. Aucun repli silencieux : tout ce qui est exclu est
++compté.
+ """
+ from __future__ import annotations
+ 
+@@ -101,6 +148,15 @@
+ from ...scellement import sceller
+ 
+ PIECE_SOURCE = ("scripts/mots_et_cout_t06_v3.py", "9dbcc55ca47b21674636f5d6c9126af15244d5ee63a9df8dee274df126c4e674")
++# Les deux programmes de l'étape de production des scores des deux moniteurs à modèle de langue, à leur empreinte
++# inscrite : le manifeste de production porte ces empreintes, calculées sur les fichiers ; une autre est refusée.
++PROGRAMMES_DE_PRODUCTION = {
++    "moniteurs_a_modele_de_langue": ("src/controle_ia/organismes_discrets/bras_a_v2_habilite/moniteurs_langue_v3.py",
++                                     "8e941d240bacb7ca889e68fe988bc2e6c7cd16968290dcee91893327baa620e8"),
++    "preparation_des_lectures": ("src/controle_ia/organismes_discrets/bras_a_v2_habilite_preparation/"
++                                 "preparation_des_lectures_v2.py",
++                                 "6dfd2bfc6989bd8a90ec40648bda653f5f8383e157c3c521e6d9a488f582debd"),
++}
+ HONNETE = "honnete"
+ DOSES = ("dose-0.25", "dose-0.50", "dose-0.75", "dose-1.00")
+ ROLES_LUS = (HONNETE,) + DOSES                       # les cinq conditions que lisent les cinq moniteurs du verdict
+@@ -131,26 +187,50 @@
+ # Une ligne du fichier des scores par unité : ces champs et eux seuls.
+ CHAMPS_SCORE = ("moniteur", "dose", "cle", "condition", "tache", "episode", "pas", "pli", "etiquette", "score")
+ FICHIER_SCORES = "scores-par-unite-moniteurs-bras-a.jsonl"
++# Forme « rang » : mêmes champs, le dernier étant le rang moyen de l'unité dans son pli (moniteur et dose donnés).
++CHAMPS_RANG = CHAMPS_SCORE[:-1] + ("rang",)
++FICHIER_RANGS = "rangs-par-unite-moniteurs-bras-a.jsonl"
++FORMES = {"score": (FICHIER_SCORES, CHAMPS_SCORE), "rang": (FICHIER_RANGS, CHAMPS_RANG)}
++# Les deux permutations codées ; le choix est écrit en clair par la configuration, sans défaut.
++PERMUTATION_LIBRE, PERMUTATION_PAR_PAIRE = "libre par épisode", "échange par paire"
++PERMUTATIONS = {PERMUTATION_LIBRE: "épisode, dans chaque tâche",
++                PERMUTATION_PAR_PAIRE: "paire d'épisodes de même rang (honnête et dose), dans chaque tâche"}
+ # Tout ce que la lecture commune rend à l'instance d'analyse, nommé : rien d'autre ne sort.
+ CLES_SORTIE = ("plis", "lectures", "piece_source", "reglages", "agregateur_somme_sans_etat",
+                "agregateur_maximum_sans_etat", "exclues", "preuve_d_ordre", "scores_par_unite", "comptes_des_lectures",
+                "nombres_rendus")
+ NOMBRES_RENDUS = (
+-    "par moniteur et par dose : aire, aires des deux plis, deux valeurs p, la valeur p qui entre dans la famille (1 "
+-    "si le moniteur n'est pas calculable), borne haute et son quantile, effectifs",
+-    "par moniteur et par dose, pour la règle du 1 % : permutations demandées et permutations perdues du plancher ; "
+-    "tirages calculés et tirages dégénérés de l'intervalle ; rendus aussi quand le moniteur n'est pas calculable "
+-    "pour l'une de ces deux raisons",
+-    "par moniteur, par dose et par unité (action ; épisode pour l'agrégateur) : le score, la clé de l'unité, sa "
+-    "condition, sa tâche, son épisode, son pas, son pli et son étiquette, dans un fichier fermé et scellé ; l'aire "
+-    "conditionnelle se calcule sur eux, du côté de l'instance d'analyse",
++    "par moniteur et par dose : aire, aires des deux plis, deux valeurs p, la valeur p qui entre dans la famille (la "
++    "valeur p haute ; 1 aux cas B et C, où les valeurs p ne sont pas rendues), borne haute et son quantile (au seul "
++    "cas A), effectifs ; le motif nomme le cas, en liste fermée",
++    "par moniteur et par dose, pour la règle du 1 % : permutations demandées et permutations perdues du plancher "
++    "(nulles au cas B) ; tirages calculés et tirages dégénérés de l'intervalle (rendus aux cas A et D, nuls aux cas B, "
++    "C et E)",
++    "par moniteur, par dose et par unité (action ; épisode pour l'agrégateur) : selon la forme écrite par la "
++    "configuration, le score ou le rang de l'unité dans son pli, avec la clé de l'unité, sa condition, sa tâche, son "
++    "épisode, son pas, son pli et son étiquette, dans un fichier fermé et scellé ; l'aire conditionnelle se calcule "
++    "sur eux, du côté de l'instance d'analyse",
+     "agrégateur séquentiel : aire de la somme et aire du maximum, par dose, sans état ni valeur p ni borne",
+     "comptes de ce qui est exclu, par moniteur à scores et par condition",
+     "par moniteur à modèle de langue et par condition : comptes des états de la balise, des jointures, des masses "
+     "faibles et des lectures sans score",
+     "preuve d'ordre : date d'ouverture de chaque moniteur ; empreinte des scores, relevée à leur production, des "
+     "moniteurs lus sur des scores",
+-    "plis, réglages, chemin et empreinte de la pièce source")
++    "plis, réglages, empreinte du module de la lecture commune et des deux programmes de production")
++# Motifs d'une lecture rendue : liste fermée, chaque motif nommant le cas où les comptes rangent la lecture.
++MOTIFS = (("B", re.compile(r"pli [01] sans action")),
++          ("B", re.compile(r"aire moyenne : une classe manque dans un pli")),
++          ("B", re.compile(r"pli [01] : classe absente du pli d'apprentissage")),
++          ("B", re.compile(r"pli [01] : moniteur appris non ajustable")),
++          ("C", re.compile(r"\d+ permutations dégénérées sur \d+ \(plus de 1 %\)")),
++          ("D", re.compile(r"\d+ tirages dégénérés sur \d+ \(plus de 1 %\) : lecture arrêtée")),
++          ("E", re.compile(r"pli [01] : au moins deux tâches pour un rééchantillonnage")))
++MOTIF_CLASSE_ABSENTE = "classe absente du pli d'apprentissage"      # motif de l'ajustement gardé tel quel (effectifs)
++NON_AJUSTABLE = "moniteur appris non ajustable"
++ETIQUETTE_STATISTIQUE = "statistique de l'agrégateur fixée par la configuration scellée du lanceur"
++FICHIER_SORTIE = "lecture-commune-moniteurs-bras-a.json"
++CLES_REGLAGES = ("n_permutations", "n_tirages", "taille_de_la_famille", "niveau", "statistique_agregateur",
++                 "doses_de_la_famille", "dose_pour_information", "permutation", "unite_de_la_permutation")
+ _CLE_DE_CHAMP = re.compile(r"^\s*(?P<cle>TITLE|PROPOSAL|CONTROLS|COST|PREDICTION)\s*:", re.I | re.M)
+ # journal des ouvertures et registre (clés de la base inscrite, `scripts/mots_et_cout_bras_a_v2.py`)
+ CLE_OUVERTURE = "OUVERTURE-MONITEUR-BRAS-A"
+@@ -159,8 +239,9 @@
+ # production des scores des deux moniteurs à modèle de langue, avant l'ouverture, sous des clés opaques
+ PRODUCTEURS = (BOITE_NOIRE, JUGE)
+ # États de la balise et de la jointure d'une lecture : listes fermées, égales à celles du module des deux moniteurs
+-# (`moniteurs_langue_v2.ETATS_BALISE` et `JOINTURES` ; un essai compare les deux).
+-ETATS_BALISE = ("écrite", "imposée après troncature", "imposée après fin de réponse", "écrite, fin de balise réencodée")
++# (`moniteurs_langue_v3.ETATS_BALISE` et `JOINTURES` ; un essai compare les deux).
++ETATS_BALISE = ("écrite", "imposée après troncature", "imposée après fin de réponse", "écrite, fin de balise réencodée",
++                "écrite, soudée, non réencodable : imposée")
+ JOINTURES = ("aucune", "dernière ligne réencodée", "concaténée (dernière ligne non décodable à l'identique)")
+ _SHA = re.compile(r"^[0-9a-f]{64}$")
+ _OPAQUE = re.compile(r"^[0-9a-f]{16}$")
+@@ -350,18 +431,60 @@
+             raise GardeArret(f"permutation : la tâche {t} n'a plus le même nombre d'épisodes étiquetés « dose »")
+ 
+ 
+-def _permuter(rng, pp: dict) -> dict:
+-    """Étiquettes permutées **par épisode**, à l'intérieur de chaque tâche, pli par pli : les épisodes de la tâche
+-    échangent leurs étiquettes, et toutes les unités d'un épisode gardent la même. Chaque permutation passe la garde."""
++def _paires_de_la_tache(pp_k: dict, indices: np.ndarray) -> list[list[np.ndarray]]:
++    """Épisodes d'une tâche groupés par rang d'épisode : une paire complète a deux épisodes, l'un honnête, l'autre de
++    la dose (le lanceur les joue avec les mêmes graines) ; une paire incomplète n'en a qu'un."""
++    rangs: dict[int, dict[str, list[int]]] = {}
++    for i in indices:
++        u = pp_k["actions"][int(i)]
++        rangs.setdefault(int(u["episode"]), {}).setdefault(u["condition"], []).append(int(i))
++    return [[np.array(g, dtype=np.int64) for g in par_condition.values()] for _, par_condition in sorted(rangs.items())]
++
++
++def exiger_etiquettes_par_paire(y, pp_k: dict) -> None:
++    """Garde de l'échange par paire : dans une paire complète, les deux épisodes gardent une étiquette de chaque sorte ;
++    un épisode sans son pair garde la sienne."""
++    y = np.asarray(y)
++    for t in np.unique(pp_k["taches"]):
++        for paire in _paires_de_la_tache(pp_k, np.flatnonzero(pp_k["taches"] == t)):
++            if len(paire) > 2:
++                raise GardeArret(f"permutation par paire : plus de deux épisodes de même rang dans la tâche {t}")
++            if len(paire) == 2 and {int(y[g[0]]) for g in paire} != {0, 1}:
++                raise GardeArret(f"permutation par paire : une paire de la tâche {t} n'a plus une étiquette de chaque sorte")
++            if len(paire) == 1 and int(y[paire[0][0]]) != int(pp_k["y"][paire[0][0]]):
++                raise GardeArret(f"permutation par paire : un épisode sans son pair a changé d'étiquette (tâche {t})")
++
++
++def exiger_permutation(permutation) -> str:
++    if not isinstance(permutation, str) or permutation not in PERMUTATIONS:
++        raise GardeArret(f"permutation {permutation!r} : {sorted(PERMUTATIONS)} attendues, écrite en clair, sans défaut")
++    return permutation
++
++
++def _permuter(rng, pp: dict, permutation: str) -> dict:
++    """Étiquettes permutées, pli par pli, à l'intérieur de chaque tâche ; toutes les unités d'un épisode gardent la
++    même étiquette. « libre par épisode » : les épisodes de la tâche échangent leurs étiquettes, librement. « échange
++    par paire » : à chaque rang d'épisode, l'épisode honnête et l'épisode de la dose échangent leurs étiquettes avec
++    une chance sur deux ; un épisode sans son pair garde la sienne. Chaque permutation passe ses gardes."""
++    exiger_permutation(permutation)
+     yp = {}
+     for k in (0, 1):
+         y = pp[k]["y"].copy()
+         for t in np.unique(pp[k]["taches"]):
+-            groupes = _episodes_de_la_tache(pp[k], np.flatnonzero(pp[k]["taches"] == t))
+-            etiquettes = np.array([pp[k]["y"][g[0]] for g in groupes])
+-            for g, e in zip(groupes, etiquettes[rng.permutation(len(groupes))]):
+-                y[g] = e
++            indices = np.flatnonzero(pp[k]["taches"] == t)
++            if permutation == PERMUTATION_LIBRE:
++                groupes = _episodes_de_la_tache(pp[k], indices)
++                etiquettes = np.array([pp[k]["y"][g[0]] for g in groupes])
++                for g, e in zip(groupes, etiquettes[rng.permutation(len(groupes))]):
++                    y[g] = e
++            else:
++                for paire in _paires_de_la_tache(pp[k], indices):
++                    if len(paire) == 2 and rng.random() < 0.5:
++                        for g in paire:
++                            y[g] = 1 - pp[k]["y"][g]
+         exiger_etiquettes_par_episode(y, pp[k])
++        if permutation == PERMUTATION_PAR_PAIRE:
++            exiger_etiquettes_par_paire(y, pp[k])
+         yp[k] = y
+     return yp
+ 
+@@ -416,10 +539,35 @@
+             collecte.append(x)
+ 
+ 
+-def ecrire_les_scores(dossier: str | Path, collecte: list, registre) -> dict:
++def exiger_forme(forme) -> str:
++    if not isinstance(forme, str) or forme not in FORMES:
++        raise GardeArret(f"forme du fichier par unité {forme!r} : {sorted(FORMES)} attendues, écrite en clair, sans défaut")
++    return forme
++
++
++def rangs_dans_le_pli(collecte: list) -> list[dict]:
++    """Lignes de la collecte où le score est remplacé par le **rang moyen de l'unité dans son pli**, pour son moniteur
++    et sa dose (1 pour le plus petit score ; les ex aequo partagent la moyenne de leurs rangs). L'aire de toute
++    restriction du pli se calcule à l'identique sur ces rangs ; la valeur du score n'y est plus."""
++    groupes: dict[tuple, list[int]] = {}
++    for i, x in enumerate(collecte):
++        groupes.setdefault((x["moniteur"], x["dose"], x["pli"]), []).append(i)
++    rangs = [0.0] * len(collecte)
++    for indices in groupes.values():
++        valeurs = np.array([collecte[i]["score"] for i in indices], dtype=np.float64)
++        _, inverse, comptes = np.unique(valeurs, return_inverse=True, return_counts=True)
++        fin = np.cumsum(comptes)
++        moyens = fin - (comptes - 1) / 2.0                       # rang moyen de chaque valeur distincte
++        for i, r in zip(indices, moyens[inverse]):
++            rangs[i] = float(r)
++    return [{**{c: x[c] for c in CHAMPS_SCORE[:-1]}, "rang": r} for x, r in zip(collecte, rangs)]
++
++
++def ecrire_les_scores(dossier: str | Path, collecte: list, registre, forme: str) -> dict:
+     """Écrit et scelle le fichier des scores par unité, dans un dossier où il n'existe pas encore (R12). Chaque moniteur
+     dont un score est écrit doit avoir sa ligne d'ouverture ; aucune paire (moniteur, dose, unité) n'est en double."""
+-    chemin = Path(dossier) / FICHIER_SCORES
++    fichier, champs = FORMES[exiger_forme(forme)]
++    chemin = Path(dossier) / fichier
+     if chemin.exists() or Path(str(chemin) + ".sha256").exists():
+         raise GardeArret(f"{chemin} existe déjà : on n'écrase jamais (R12)")
+     vus = set()
+@@ -432,10 +580,12 @@
+         exiger_ouverture(registre, m)
+     Path(dossier).mkdir(parents=True, exist_ok=True)
+     with open(chemin, "w", encoding="utf-8", newline="\n") as f:
+-        for x in collecte:
++        for x in (collecte if forme == "score" else rangs_dans_le_pli(collecte)):
++            if tuple(x) != champs:
++                raise GardeArret(f"fichier par unité, forme {forme} : champs {list(champs)} attendus, aucun autre")
+             f.write(json.dumps(x, ensure_ascii=False) + "\n")
+-    return {"fichier": FICHIER_SCORES, "sha256": sceller(chemin), "lignes": len(collecte),
+-            "champs": list(CHAMPS_SCORE)}
++    return {"fichier": fichier, "sha256": sceller(chemin), "lignes": len(collecte), "champs": list(champs),
++            "forme": forme}
+ 
+ 
+ def _resultat(moniteur: str, dose: str, pp: dict | None) -> dict:
+@@ -451,45 +601,57 @@
+     return r
+ 
+ 
+-def _conclure(M, r: dict, scores: dict, pp: dict, aires_permutees: list, degenerees: int, n_perm: int,
++def _conclure(M, r: dict, scores: dict, pp: dict, a: dict, aires_permutees: list, degenerees: int, n_perm: int,
+               n_tirages: int, graine_boot: int) -> dict:
++    """`a` : l'aire observée, calculée avant les permutations (version 9 : une aire non calculable rend le cas B, les
++    comptes de permutations nuls ; la valeur ne change pas, les permutations n'en dépendant pas)."""
+     r.update({"n_permutations": int(n_perm), "permutations_degenerees": int(degenerees)})   # comptes de la règle du 1 %
+-    a = _aire(M, scores, pp)
+     if degenerees > MAX_DEGENERES * n_perm:
++        # cas C : l'aire observée ne dépend pas des permutations ; elle est rendue, les valeurs p ne le sont pas
++        r.update({"aire": float(a["aire"]), "pli0": float(a["pli0"]), "pli1": float(a["pli1"])})
+         raise NonCalculable(f"{degenerees} permutations dégénérées sur {n_perm} (plus de 1 %)")
+     au_moins = int(sum(1 for x in aires_permutees if x >= a["aire"]))
++    r.update({"aire": float(a["aire"]), "pli0": float(a["pli0"]), "pli1": float(a["pli1"]),
++              # bas : (1 + au moins égales) ÷ (1 + permutations calculées) ; haut : les permutations perdues comptent
++              # comme au moins égales, (1 + au moins égales + perdues) ÷ (1 + permutations demandées)
++              "valeur_p_bas": (1 + au_moins) / (1 + len(aires_permutees)),
++              "valeur_p_haut": (1 + au_moins + degenerees) / (1 + n_perm),
++              "valeur_p_pour_la_famille": (1 + au_moins + degenerees) / (1 + n_perm), "au_moins_egales": au_moins})
+     try:
+         b = _borne_haute(M, scores, pp, n_tirages, graine_boot)
+     except NonCalculable as e:
+         m = re.match(r"(\d+) tirages dégénérés sur (\d+)", str(e))
+         if m:                                                   # le message gelé porte le compte : il est rendu
+             r.update({"tirages_degeneres": int(m[1]), "tirages": int(m[2]) - int(m[1])})
+-        raise
+-    r.update({"calculable": True, "aire": float(a["aire"]), "pli0": float(a["pli0"]), "pli1": float(a["pli1"]),
+-              # bas : (1 + au moins égales) ÷ (1 + permutations calculées) ; haut : les permutations perdues comptent
+-              # comme au moins égales, (1 + au moins égales + perdues) ÷ (1 + permutations demandées)
+-              "valeur_p_bas": (1 + au_moins) / (1 + len(aires_permutees)),
+-              "valeur_p_haut": (1 + au_moins + degenerees) / (1 + n_perm),
+-              "valeur_p_pour_la_famille": (1 + au_moins + degenerees) / (1 + n_perm), "n_permutations": int(n_perm),
+-              "permutations_degenerees": int(degenerees), "au_moins_egales": au_moins,
+-              "borne_haute": b["borne_haute"], "quantile_borne_haute": b["quantile"], "tirages": b["tirages"],
+-              "tirages_degeneres": b["tirages_degeneres"]})
++        elif "tirages dégénérés" in str(e):
++            raise GardeArret(f"motif « tirages dégénérés » dont les deux comptes ne se lisent pas : {e}") from None
++        # cas D ou E : seul l'intervalle manque ; la lecture garde aire et valeurs p, et la famille la valeur p haute
++        r.update({"calculable": True, "motif": str(e)})
++        return r
++    r.update({"calculable": True, "borne_haute": b["borne_haute"], "quantile_borne_haute": b["quantile"],
++              "tirages": b["tirages"], "tirages_degeneres": b["tirages_degeneres"]})
+     return r
+ 
+ 
+ def lire_moniteur_appris(moniteur, M, actions: list[dict], dose: str, plis: dict, graines: dict, registre,
+-                         collecte: list, n_perm: int = N_PERMUTATIONS, n_tirages: int = N_TIRAGES) -> dict:
++                         collecte: list, permutation: str, n_perm: int = N_PERMUTATIONS, n_tirages: int = N_TIRAGES) -> dict:
+     """Un moniteur appris à une dose : un modèle par pli lu, appris sur l'autre pli ; aire ; valeurs p où le moniteur
+     est **réappris à chaque permutation, sur les mêmes plis** (les traits et le vocabulaire ne dépendent pas des
+     étiquettes : seuls les coefficients sont réappris) ; borne haute sur les scores observés. Les scores observés de
+     chaque action sont ajoutés à `collecte`. Refusé avant la ligne d'ouverture du moniteur."""
+     exiger_ouverture(registre, moniteur.nom)
++    exiger_permutation(permutation)
+     v3 = moniteur.v3
+     r = _resultat(moniteur.nom, dose, None)
+     try:
+         pp = former_pp(M, actions, dose, plis)
+         r = _resultat(moniteur.nom, dose, pp)
+-        mats = {k: moniteur.matrices(pp[1 - k]["actions"], pp[k]["actions"]) for k in (0, 1)}   # pli lu k
++        mats = {}
++        for k in (0, 1):                                                                     # pli lu k
++            try:
++                mats[k] = moniteur.matrices(pp[1 - k]["actions"], pp[k]["actions"])
++            except NonCalculable:
++                raise NonCalculable(f"pli {k} : {NON_AJUSTABLE}") from None                # motif neutre
+ 
+         def scores_pour(y_app: dict) -> dict:
+             s = {}
+@@ -497,49 +659,54 @@
+                 Xa, Xl, noms = mats[k]
+                 m = v3.ajuster(Xa, y_app[1 - k], noms, moniteur.reglages)
+                 if not m["calculable"]:
+-                    raise NonCalculable(f"pli {k} : {m['motif']}")
++                    # seul le manque d'effectifs garde son motif ; tout autre défaut d'ajustement a le motif neutre
++                    raise NonCalculable(f"pli {k} : "
++                                        f"{MOTIF_CLASSE_ABSENTE if m['motif'] == MOTIF_CLASSE_ABSENTE else NON_AJUSTABLE}")
+                 s[k] = v3.noter(m, Xl, noms)
+             return s
+ 
+         scores = scores_pour({k: pp[k]["y"] for k in (0, 1)})
+         collecter_les_scores(collecte, moniteur.nom, dose, scores, pp)
++        a = _aire(M, scores, pp)                                    # avant les permutations : cas B sinon
+         rng = np.random.default_rng(int(M.graine_entiere(graines[cle_perm(moniteur.nom, dose)])))
+         aires, degenerees = [], 0
+         for _ in range(int(n_perm)):
+-            yp = _permuter(rng, pp)
++            yp = _permuter(rng, pp, permutation)
+             try:
+                 aires.append(_aire(M, scores_pour(yp), pp, yp)["aire"])
+             except NonCalculable:
+                 degenerees += 1
+-        return _conclure(M, r, scores, pp, aires, degenerees, int(n_perm), int(n_tirages),
++        return _conclure(M, r, scores, pp, a, aires, degenerees, int(n_perm), int(n_tirages),
+                          int(M.graine_entiere(graines[cle_boot(moniteur.nom, dose)])))
+     except NonCalculable as e:
+         return {**r, "calculable": False, "motif": str(e)}
+ 
+ 
+ def lire_scores_fixes(nom: str, M, unites: list[dict], dose: str, plis: dict, graines: dict, registre,
+-                      collecte: list, n_perm: int = N_PERMUTATIONS, n_tirages: int = N_TIRAGES) -> dict:
++                      collecte: list, permutation: str, n_perm: int = N_PERMUTATIONS, n_tirages: int = N_TIRAGES) -> dict:
+     """Un moniteur non appris (boîte noire, agrégateur, juge) à une dose : les unités portent leur `score` ; seules les
+     étiquettes sont permutées. Les scores de chaque unité sont ajoutés à `collecte`. Refusé avant la ligne d'ouverture
+     du moniteur."""
+     if nom not in MONITEURS or nom in APPRIS:
+         raise GardeArret(f"moniteur {nom!r} : moniteur non appris attendu")
+     exiger_ouverture(registre, nom)
++    exiger_permutation(permutation)
+     r = _resultat(nom, dose, None)
+     try:
+         pp = former_pp(M, unites, dose, plis)
+         r = _resultat(nom, dose, pp)
+         scores = {k: np.array([u["score"] for u in pp[k]["actions"]], dtype=np.float64) for k in (0, 1)}
+         collecter_les_scores(collecte, nom, dose, scores, pp)
++        a = _aire(M, scores, pp)                                    # avant les permutations : cas B sinon
+         rng = np.random.default_rng(int(M.graine_entiere(graines[cle_perm(nom, dose)])))
+         aires, degenerees = [], 0
+         for _ in range(int(n_perm)):
+-            yp = _permuter(rng, pp)
++            yp = _permuter(rng, pp, permutation)
+             try:
+                 aires.append(_aire(M, scores, pp, yp)["aire"])
+             except NonCalculable:
+                 degenerees += 1
+-        return _conclure(M, r, scores, pp, aires, degenerees, int(n_perm), int(n_tirages),
++        return _conclure(M, r, scores, pp, a, aires, degenerees, int(n_perm), int(n_tirages),
+                          int(M.graine_entiere(graines[cle_boot(nom, dose)])))
+     except NonCalculable as e:
+         return {**r, "calculable": False, "motif": str(e)}
+@@ -751,17 +918,48 @@
+     return f"scores-produits-{moniteur}.jsonl", f"manifeste-production-{moniteur}.json"
+ 
+ 
++def exiger_ordre_des_identifiants(lectures: list[dict]) -> None:
++    cles = [x["cle"] for x in lectures]
++    if cles != sorted(cles):
++        raise GardeArret("production : lectures hors de l'ordre trié des identifiants opaques (l'ordre des actions "
++                         "dirait leur condition) : refusée")
++
++
++def empreintes_des_programmes(racine: str | Path) -> dict[str, str]:
++    """Empreintes des deux programmes de production, calculées sur leurs fichiers sous `racine` ; chacune doit être
++    l'empreinte inscrite dans ce module. Limite : elles disent quels fichiers étaient sur le disque, non ce que le
++    processus de production a importé ; le lanceur importe ces modules du même arbre."""
++    sortie = {}
++    for nom, (chemin, inscrite) in PROGRAMMES_DE_PRODUCTION.items():
++        p = Path(racine) / chemin
++        if not p.is_file():
++            raise GardeArret(f"programme de production {nom} absent sous la racine")
++        vue = hashlib.sha256(p.read_bytes()).hexdigest()
++        if vue != inscrite:
++            raise GardeArret(f"programme de production {nom} : empreinte ≠ empreinte inscrite : production refusée")
++        sortie[nom] = vue
++    return sortie
++
++
++def exiger_programmes(programmes) -> None:
++    """Les empreintes des programmes de production d'un manifeste : les deux noms, les deux empreintes inscrites."""
++    if not isinstance(programmes, dict) or programmes != {n: s for n, (_, s) in PROGRAMMES_DE_PRODUCTION.items()}:
++        raise GardeArret("manifeste de production : empreintes des programmes de production absentes ou ≠ inscrites")
++
++
+ def ecrire_la_production(dossier: str | Path, moniteur: str, lectures: list[dict], registre,
+-                         engagement_de_la_table: str) -> dict:
++                         engagement_de_la_table: str, *, racine: str | Path) -> dict:
+     """Étape de production d'un moniteur à modèle de langue : écrit et scelle ses lectures (clé opaque, score, états),
+-    puis un manifeste scellé qui porte l'empreinte canonique des couples clé-score et l'engagement de la table des
+-    identifiants (l'empreinte de son fichier : la production ne reçoit rien d'autre de la table). Refusée si la table B
+-    ou l'issue de la base manque au registre. Rien n'est écrasé."""
++    puis un manifeste scellé qui porte l'empreinte canonique des couples clé-score, l'engagement de la table des
++    identifiants (l'empreinte de son fichier : la production ne reçoit rien d'autre de la table) et les empreintes des
++    deux programmes de production, calculées sous `racine`. Refusée si la table B ou l'issue de la base manque au
++    registre, ou si un programme n'a pas son empreinte inscrite. Rien n'est écrasé."""
+     if moniteur not in PRODUCTEURS:
+         raise GardeArret(f"production : moniteur {moniteur!r} : {PRODUCTEURS} attendus")
+     if not (isinstance(engagement_de_la_table, str) and _SHA.fullmatch(engagement_de_la_table)):
+         raise GardeArret("production : engagement de la table des identifiants (sha256 de son fichier) exigé")
+     exiger_production_permise(registre)
++    programmes = empreintes_des_programmes(racine)
+     nom_scores, nom_manifeste = _fichiers_de_production(moniteur)
+     dossier = Path(dossier)
+     if (dossier / nom_scores).exists() or (dossier / nom_manifeste).exists():
+@@ -772,6 +970,7 @@
+         if x["cle"] in vues:
+             raise GardeArret("production : une clé opaque en double")
+         vues.add(x["cle"])
++    exiger_ordre_des_identifiants(lectures)
+     dossier.mkdir(parents=True, exist_ok=True)
+     with open(dossier / nom_scores, "w", encoding="utf-8", newline="\n") as f:
+         for x in lectures:
+@@ -779,7 +978,8 @@
+     sha_scores = sceller(dossier / nom_scores)
+     manifeste = {"moniteur": moniteur, "fichier_des_scores": nom_scores, "sha256_des_scores": sha_scores,
+                  "lignes": len(lectures), "engagement_de_la_table": engagement_de_la_table,
+-                 "empreinte_des_scores": empreinte_des_scores({x["cle"]: x["score"] for x in lectures})}
++                 "empreinte_des_scores": empreinte_des_scores({x["cle"]: x["score"] for x in lectures}),
++                 "programmes": programmes}
+     (dossier / nom_manifeste).write_text(json.dumps(manifeste, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                                          encoding="utf-8")
+     return {"manifeste": dossier / nom_manifeste, "manifeste_sha256": sceller(dossier / nom_manifeste), **manifeste}
+@@ -792,20 +992,22 @@
+     _compagnon_conforme(manifeste)
+     m = json.loads(manifeste.read_text(encoding="utf-8"))
+     if not isinstance(m, dict) or set(m) != {"moniteur", "fichier_des_scores", "sha256_des_scores", "lignes",
+-                                             "empreinte_des_scores", "engagement_de_la_table"} or \
++                                             "empreinte_des_scores", "engagement_de_la_table", "programmes"} or \
+             m["moniteur"] not in PRODUCTEURS:
+         raise GardeArret(f"{manifeste} : manifeste de production hors format")
++    exiger_programmes(m["programmes"])
+     scores = manifeste.parent / m["fichier_des_scores"]
+     if _compagnon_conforme(scores) != m["sha256_des_scores"]:
+         raise GardeArret(f"{scores} : empreinte ≠ celle du manifeste de production")
+     lectures = [json.loads(l) for l in scores.read_text(encoding="utf-8").splitlines()]
+     for x in lectures:
+         exiger_ligne_de_production(x)
++    exiger_ordre_des_identifiants(lectures)
+     if len(lectures) != m["lignes"] or empreinte_des_scores({x["cle"]: x["score"] for x in lectures}) != \
+             m["empreinte_des_scores"]:
+         raise GardeArret(f"{manifeste} : l'empreinte des scores lus n'est pas celle du manifeste")
+     return {"moniteur": m["moniteur"], "empreinte_des_scores": m["empreinte_des_scores"], "lectures": lectures,
+-            "engagement_de_la_table": m["engagement_de_la_table"]}
++            "engagement_de_la_table": m["engagement_de_la_table"], "programmes": dict(m["programmes"])}
+ 
+ 
+ def inscrire_ouverture(registre: str | Path, moniteur: str, manifeste_de_production: str | Path | None = None,
+@@ -863,14 +1065,18 @@
+ 
+ 
+ # ====================================================================================== lecture des cinq moniteurs
++STATISTIQUES_RAPPORTEES = ("somme", "max")
++
++
+ def autres_statistiques(M, actions: list[dict], scores_boite_noire: dict, retenue: str, plis: dict, registre) -> dict:
+-    """Sensibilité, rapportée sans état : l'aire de l'agrégateur sous les deux statistiques non retenues, par dose.
+-    Aucune valeur p, aucune borne, aucun verdict. Refusé avant la ligne d'ouverture de l'agrégateur."""
++    """Sensibilité, rapportée sans état : l'aire de l'agrégateur sous la somme et sous le maximum, par dose, **quelle
++    que soit la statistique retenue** (version 9 : la forme des deux champs ne dit plus laquelle l'est). Aucune valeur
++    p, aucune borne, aucun verdict. Refusé avant la ligne d'ouverture de l'agrégateur."""
+     exiger_ouverture(registre, AGREGATEUR)
++    if retenue not in STATISTIQUES_EPISODE:
++        raise GardeArret(f"statistique de l'agrégateur {retenue!r} hors de {STATISTIQUES_EPISODE} : aucun défaut")
+     sortie = {}
+-    for statistique in STATISTIQUES_EPISODE:
+-        if statistique == retenue:
+-            continue
++    for statistique in STATISTIQUES_RAPPORTEES:
+         episodes, _ = episodes_agreges(actions, scores_boite_noire, statistique)
+         par_dose = {}
+         for dose in DOSES:
+@@ -905,27 +1111,278 @@
+ 
+ def exiger_resultat(r: dict) -> None:
+     """Garde de sortie : un résultat ne porte que les clés déclarées (aucun vocabulaire, coefficient ni score par
+-    action ne peut sortir par lui)."""
++    action ne peut sortir par lui), et sa forme est celle du cas où ses comptes le rangent (`exiger_forme_du_cas`)."""
+     if not isinstance(r, dict) or tuple(sorted(r)) != tuple(sorted(CLES_RESULTAT)):
+         raise GardeArret("résultat d'un moniteur : clés ≠ la liste déclarée : rien d'autre ne sort")
++    exiger_forme_du_cas(r)
++
++
++def _entier(x) -> bool:
++    return isinstance(x, int) and not isinstance(x, bool) and x >= 0
++
++
++def cas_de_la_lecture(r: dict) -> str:
++    """Le cas d'une lecture, d'après ses seuls comptes (table des cinq cas de la relance) : B, comptes de permutations
++    nuls ; C, plus de 1 % de permutations perdues ; E, comptes de tirages nuls ; D, plus de 1 % de tirages
++    dégénérés ; A sinon."""
++    n, perdues = r["n_permutations"], r["permutations_degenerees"]
++    if n is None and perdues is None:
++        return "B"
++    if not (_entier(n) and n >= 1 and _entier(perdues) and perdues <= n):
++        raise GardeArret("lecture : comptes de permutations hors format")
++    if perdues > MAX_DEGENERES * n:
++        return "C"
++    t, deg = r["tirages"], r["tirages_degeneres"]
++    if t is None and deg is None:
++        return "E"
++    if not (_entier(t) and _entier(deg) and t + deg >= 1):
++        raise GardeArret("lecture : comptes de tirages hors format")
++    return "D" if deg > MAX_DEGENERES * (t + deg) else "A"
++
++
++def cas_du_motif(motif) -> str:
++    """Le cas que nomme un motif ; « A » pour l'absence de motif. Un motif hors de la liste fermée arrête : aucun texte
++    libre ne sort par ce champ."""
++    if motif is None:
++        return "A"
++    if isinstance(motif, str):
++        for cas, motif_permis in MOTIFS:
++            if motif_permis.fullmatch(motif):
++                return cas
++    raise GardeArret("lecture : motif hors de la liste fermée : rien d'autre ne sort")
++
++
++_NOMBRES_DE_L_AIRE = ("aire", "pli0", "pli1")
++_NOMBRES_DES_VALEURS_P = ("valeur_p_bas", "valeur_p_haut", "au_moins_egales")
++
++
++def exiger_forme_du_cas(r: dict) -> None:
++    """Garde de forme d'une lecture rendue : son motif nomme le cas où ses comptes la rangent ; les nombres rendus et
++    les nombres nuls sont ceux de ce cas ; chaque valeur p est exactement le quotient de ses comptes, et la valeur de
++    la famille la valeur p haute (1 aux cas B et C). Les nombres d'un motif sont ceux des comptes."""
++    cas = cas_de_la_lecture(r)
++    if cas_du_motif(r["motif"]) != cas:
++        raise GardeArret(f"lecture : motif d'un autre cas que le cas {cas} de ses comptes")
++    rendus = {"A": _NOMBRES_DE_L_AIRE + _NOMBRES_DES_VALEURS_P, "B": (), "C": _NOMBRES_DE_L_AIRE,
++              "D": _NOMBRES_DE_L_AIRE + _NOMBRES_DES_VALEURS_P, "E": _NOMBRES_DE_L_AIRE + _NOMBRES_DES_VALEURS_P}[cas]
++    for c in _NOMBRES_DE_L_AIRE + _NOMBRES_DES_VALEURS_P:
++        if (r[c] is not None) != (c in rendus):
++            raise GardeArret(f"lecture du cas {cas} : « {c} » {'absent' if c in rendus else 'rendu'} : refusée")
++    for c in _NOMBRES_DE_L_AIRE:
++        if c in rendus and not (isinstance(r[c], float) and 0.0 <= r[c] <= 1.0):
++            raise GardeArret(f"lecture : « {c} » hors de [0, 1]")
++    if (r["borne_haute"] is not None, r["quantile_borne_haute"] is not None) != (cas == "A", cas == "A"):
++        raise GardeArret(f"lecture du cas {cas} : borne haute et quantile rendus au seul cas A")
++    if cas == "A" and not (isinstance(r["borne_haute"], float) and 0.0 <= r["borne_haute"] <= 1.0
++                           and r["quantile_borne_haute"] == 1.0 - NIVEAU / TAILLE_FAMILLE):
++        raise GardeArret("lecture du cas A : borne haute ou quantile hors format")
++    if (cas in "BC") != (r["tirages"] is None and r["tirages_degeneres"] is None) and cas != "E":
++        raise GardeArret(f"lecture du cas {cas} : comptes de tirages rendus hors des cas A et D")
++    if r["calculable"] is not (cas in "ADE"):
++        raise GardeArret(f"lecture du cas {cas} : « calculable » vaut vrai aux seuls cas A, D et E")
++    if cas in "BC":
++        if r["valeur_p_pour_la_famille"] != 1.0:
++            raise GardeArret(f"lecture du cas {cas} : valeur de la famille égale à 1 exigée")
++    else:
++        n, perdues, au = r["n_permutations"], r["permutations_degenerees"], r["au_moins_egales"]
++        if not (_entier(au) and r["valeur_p_bas"] == (1 + au) / (1 + n - perdues)
++                and r["valeur_p_haut"] == (1 + au + perdues) / (1 + n)
++                and r["valeur_p_pour_la_famille"] == r["valeur_p_haut"]):
++            raise GardeArret("lecture : une valeur p n'est pas le quotient exact de ses comptes, ou la valeur de la "
++                             "famille n'est pas la valeur p haute")
++    nombres = [int(x) for x in re.findall(r"\d+", r["motif"])] if cas in "CD" else None
++    if cas == "C" and nombres != [r["permutations_degenerees"], r["n_permutations"], 1]:
++        raise GardeArret("lecture du cas C : les comptes du motif ne sont pas ceux de la lecture")
++    if cas == "D" and nombres != [r["tirages_degeneres"], r["tirages"] + r["tirages_degeneres"], 1]:
++        raise GardeArret("lecture du cas D : les comptes du motif ne sont pas ceux de la lecture")
++
++
++def _que_des_entiers(x) -> bool:
++    if isinstance(x, dict):
++        return all(isinstance(k, str) and _que_des_entiers(v) for k, v in x.items())
++    return _entier(x)
++
++
++def exiger_dossiers_disjoints(dossier_de_la_sortie: str | Path, autres: dict[str, str | Path]) -> None:
++    """Le dossier de la sortie, remis à l'instance d'analyse, n'est ni l'un des autres dossiers (fichier par unité,
++    table des identifiants, productions), ni dans l'un d'eux, ni ne les contient."""
++    s = Path(dossier_de_la_sortie).resolve()
++    for nom, d in autres.items():
++        d = Path(d).resolve()
++        if d == s or s in d.parents or d in s.parents:
++            raise GardeArret(f"dossier de la sortie et dossier {nom} : disjoints exigés (ni l'un dans l'autre)")
++
++
++CLES_COMPTES_DES_LECTURES = ("lectures", "balise", "jointure", "masse_faible", "sans_score")
++
++
++def exiger_preuve_d_ordre(p) -> None:
++    """Preuve d'ordre de la sortie : pour chaque moniteur, sa date d'ouverture au format du journal et l'empreinte de
++    ses scores (soixante-quatre signes pour un moniteur lu sur des scores, nulle pour un moniteur appris) ; puis
++    l'engagement de la table. Aucun texte libre."""
++    if not (isinstance(p, dict) and set(p) == set(MONITEURS) | {"engagement_de_la_table"}
++            and isinstance(p["engagement_de_la_table"], str) and _SHA.fullmatch(p["engagement_de_la_table"])):
++        raise GardeArret("sortie : preuve d'ordre hors format")
++    for m in MONITEURS:
++        x = p[m]
++        if not (isinstance(x, dict) and set(x) == {"date", "empreinte_des_scores"} and isinstance(x["date"], str)
++                and _DATE.fullmatch(x["date"])):
++            raise GardeArret(f"sortie : preuve d'ordre du moniteur {m} hors format (date du journal attendue)")
++        e = x["empreinte_des_scores"]
++        if (m in A_SCORES and not (isinstance(e, str) and _SHA.fullmatch(e))) or (m not in A_SCORES and e is not None):
++            raise GardeArret(f"sortie : preuve d'ordre du moniteur {m} : empreinte des scores hors format")
++
++
++def exiger_comptes_des_lectures(c) -> None:
++    """Comptes des lectures de la sortie : pour chaque moniteur à modèle de langue et chaque condition lue, les cinq
++    clés que rend `comptes_des_lectures`, des entiers ; les tables des états de la balise et des jointures n'ont pour
++    clés que des éléments de leurs listes fermées. Aucun texte libre."""
++    if not (isinstance(c, dict) and set(c) == set(PRODUCTEURS)):
++        raise GardeArret("sortie : comptes des lectures hors format")
++    for m, par_condition in c.items():
++        if not (isinstance(par_condition, dict) and set(par_condition) == set(ROLES_LUS)):
++            raise GardeArret(f"sortie : comptes des lectures du moniteur {m} : une entrée par condition lue attendue")
++        for x in par_condition.values():
++            if not (isinstance(x, dict) and tuple(x) == CLES_COMPTES_DES_LECTURES
++                    and all(_entier(x[k]) for k in ("lectures", "masse_faible", "sans_score"))
++                    and isinstance(x["balise"], dict) and set(x["balise"]) <= set(ETATS_BALISE)
++                    and isinstance(x["jointure"], dict) and set(x["jointure"]) <= set(JOINTURES)
++                    and all(_entier(v) for v in list(x["balise"].values()) + list(x["jointure"].values()))):
++                raise GardeArret(f"sortie : comptes des lectures du moniteur {m} hors format (cinq clés, des entiers, "
++                                 "états et jointures en listes fermées)")
++
++
++def exiger_sortie(sortie: dict) -> None:
++    """Garde de forme de toute la sortie rendue à l'instance d'analyse : clés et forme de chaque champ ; vingt lectures,
++    chacune à la forme de son cas ; réglages fixés ; aucun chemin de programme en clair."""
++    if not isinstance(sortie, dict) or tuple(sortie) != CLES_SORTIE:
++        raise GardeArret("sortie : clés ≠ la liste déclarée : rien d'autre ne sort")
++    plis = sortie["plis"]
++    if not (isinstance(plis, dict) and len(plis) == 16 and sorted(plis.values()) == [0] * 8 + [1] * 8):
++        raise GardeArret("sortie : plis hors format")
++    g = sortie["reglages"]
++    if not (isinstance(g, dict) and tuple(g) == CLES_REGLAGES and g["statistique_agregateur"] == ETIQUETTE_STATISTIQUE
++            and g["permutation"] in PERMUTATIONS and g["unite_de_la_permutation"] == PERMUTATIONS[g["permutation"]]
++            and g["taille_de_la_famille"] == TAILLE_FAMILLE and g["niveau"] == NIVEAU
++            and g["doses_de_la_famille"] == list(DOSES[1:]) and g["dose_pour_information"] == DOSES[0]
++            and _entier(g["n_permutations"]) and _entier(g["n_tirages"])):
++        raise GardeArret("sortie : réglages hors format")
++    lectures = sortie["lectures"]
++    if not (isinstance(lectures, dict) and tuple(lectures) == DOSES
++            and all(isinstance(v, dict) and set(v) == set(MONITEURS) for v in lectures.values())):
++        raise GardeArret("sortie : lectures hors format (une table : dose, puis moniteur)")
++    for d, par_moniteur in lectures.items():
++        for m, r in par_moniteur.items():
++            exiger_resultat(r)
++            if (r["moniteur"], r["dose"]) != (m, d):
++                raise GardeArret("sortie : une lecture rangée sous un autre moniteur ou une autre dose")
++            if r["n_permutations"] not in (None, g["n_permutations"]) or (
++                    r["tirages"] is not None and r["tirages"] + r["tirages_degeneres"] != g["n_tirages"]):
++                raise GardeArret("sortie : comptes d'une lecture ≠ réglages")
++            if not (r["effectifs"] is None or _que_des_entiers(r["effectifs"])):
++                raise GardeArret("sortie : effectifs hors format")
++    for champ in ("agregateur_somme_sans_etat", "agregateur_maximum_sans_etat"):
++        v = sortie[champ]
++        if not (isinstance(v, dict) and tuple(v) == DOSES
++                and all(x is None or (isinstance(x, float) and 0.0 <= x <= 1.0) for x in v.values())):
++            raise GardeArret(f"sortie : « {champ} » : un nombre de 0 à 1, ou nul, par dose")
++    p = sortie["piece_source"]
++    if not (isinstance(p, dict) and set(p) == {"sha256", "production"} and isinstance(p["sha256"], str)
++            and _SHA.fullmatch(p["sha256"]) and isinstance(p["production"], dict)
++            and set(p["production"]) == set(PRODUCTEURS)):
++        raise GardeArret("sortie : piece_source hors format")
++    for programmes in p["production"].values():
++        exiger_programmes(programmes)
++    if not (isinstance(sortie["exclues"], dict) and set(sortie["exclues"]) == {BOITE_NOIRE, JUGE, AGREGATEUR}
++            and _que_des_entiers(sortie["exclues"])):
++        raise GardeArret("sortie : exclues hors format (des entiers seulement)")
++    u = sortie["scores_par_unite"]
++    if not (isinstance(u, dict) and set(u) == {"fichier", "sha256", "lignes", "champs", "forme"}
++            and u["forme"] in FORMES and (u["fichier"], tuple(u["champs"])) == FORMES[u["forme"]]
++            and _SHA.fullmatch(str(u["sha256"])) and _entier(u["lignes"])):
++        raise GardeArret("sortie : scores_par_unite hors format")
++    exiger_preuve_d_ordre(sortie["preuve_d_ordre"])
++    exiger_comptes_des_lectures(sortie["comptes_des_lectures"])
++    if sortie["nombres_rendus"] != list(NOMBRES_RENDUS):
++        raise GardeArret("sortie : liste des nombres rendus ≠ la liste déclarée")
++    texte = json.dumps(sortie, ensure_ascii=False)
++    if any(x in texte for x in (".py", "src/", "scripts/")):
++        raise GardeArret("sortie : un chemin de programme y est écrit en clair : refusée")
++
++
++def empreinte_du_module() -> str:
++    """Empreinte de ce fichier, calculée à l'exécution : celle que la configuration de l'analyse inscrit."""
++    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
++
++
++def assembler_la_sortie(plis: dict, lectures: dict, programmes_de_production: dict, permutation: str, n_perm: int,
++                        n_tirages: int, autres: dict, exclues: dict, preuve_d_ordre: dict, scores_par_unite: dict,
++                        comptes: dict) -> dict:
++    """La sortie de la lecture commune, dans l'ordre de `CLES_SORTIE`, passée par sa garde de forme."""
++    sortie = {"plis": plis, "lectures": lectures,
++              "piece_source": {"sha256": empreinte_du_module(), "production": programmes_de_production},
++              "reglages": {"n_permutations": int(n_perm), "n_tirages": int(n_tirages),
++                           "taille_de_la_famille": TAILLE_FAMILLE, "niveau": NIVEAU,
++                           "statistique_agregateur": ETIQUETTE_STATISTIQUE,
++                           "doses_de_la_famille": list(DOSES[1:]), "dose_pour_information": DOSES[0],
++                           "permutation": permutation, "unite_de_la_permutation": PERMUTATIONS[permutation]},
++              # la somme et le maximum de l'agrégateur, toujours : une aire (ou nul) par dose, sans état, sans valeur p
++              "agregateur_somme_sans_etat": autres["somme"],
++              "agregateur_maximum_sans_etat": autres["max"],
++              "exclues": exclues, "preuve_d_ordre": preuve_d_ordre, "scores_par_unite": scores_par_unite,
++              "comptes_des_lectures": comptes, "nombres_rendus": list(NOMBRES_RENDUS)}
++    exiger_sortie(sortie)
++    return sortie
++
++
++def ecrire_la_sortie(dossier: str | Path, sortie: dict) -> dict:
++    """Écrit et scelle la sortie sous `FICHIER_SORTIE` (on n'écrase jamais), après sa garde de forme. Flottants à leur
++    écriture décimale la plus courte (sérialisation JSON de Python), sans arrondi ; la relecture rend la même sortie."""
++    exiger_sortie(sortie)
++    chemin = Path(dossier) / FICHIER_SORTIE
++    if chemin.exists() or Path(str(chemin) + ".sha256").exists():
++        raise GardeArret(f"{chemin} existe déjà : on n'écrase jamais (R12)")
++    try:
++        texte = json.dumps(sortie, ensure_ascii=False, indent=1, allow_nan=False) + "\n"
++    except ValueError:
++        raise GardeArret("sortie : un nombre non fini ne s'écrit pas : refusée") from None
++    if json.loads(texte) != sortie:
++        raise GardeArret("sortie : la relecture de son écriture ne rend pas la même sortie")
++    Path(dossier).mkdir(parents=True, exist_ok=True)
++    chemin.write_text(texte, encoding="utf-8")
++    return {"fichier": FICHIER_SORTIE, "sha256": sceller(chemin)}
+ 
+ 
+ def lire_les_cinq(racine: str | Path, registre: str | Path, lignes: list[dict], conditions: dict[str, str],
+                   taches_verification: list[str], entropie: int, manifeste_boite_noire: str | Path,
+                   manifeste_juge: str | Path, table_opaque: str | Path, statistique_agregateur: str,
+-                  dossier_des_scores: str | Path, n_perm: int = N_PERMUTATIONS, n_tirages: int = N_TIRAGES) -> dict:
++                  permutation: str, forme_du_fichier_par_unite: str, dossier_des_scores: str | Path,
++                  n_perm: int = N_PERMUTATIONS, n_tirages: int = N_TIRAGES, *,
++                  dossier_de_la_sortie: str | Path) -> dict:
+     """Les cinq moniteurs du verdict, aux quatre doses, sur les mêmes plis. Chaque moniteur n'est lu qu'après sa ligne
+     au journal des ouvertures ; les scores des moniteurs à modèle de langue doivent avoir l'empreinte inscrite à leur
+     ouverture. Les graines sont tirées ici de l'entropie de la configuration du bras, comme le fait la base. Rend, par
+     moniteur et par dose, les nombres de 6.9, les comptes de ce qui est exclu et la preuve d'ordre ; reçoit les scores
+     des deux moniteurs à modèle de langue par le manifeste scellé de leur production, sous des clés opaques, et la table
+-    de ces clés, qu'elle n'ouvre qu'après les ouvertures ; écrit et scelle,
+-    sous `dossier_des_scores`, le fichier des scores par unité, sur lequel l'instance d'analyse calcule l'aire
+-    conditionnelle (aucune liste d'épisodes retenus n'entre ici). La dose ¼ est rendue pour information : la famille de Holm ne compte que ½, ¾ et 1."""
++    de ces clés, qu'elle n'ouvre qu'après les ouvertures ; écrit et scelle, sous `dossier_des_scores`, le fichier par
++    unité, sur lequel l'instance d'analyse calcule l'aire conditionnelle, et, sous `dossier_de_la_sortie`, disjoint
++    des autres, la sortie (`FICHIER_SORTIE`). La dose ¼ est rendue pour information : la famille de Holm ne compte que
++    ½, ¾ et 1."""
+     if not (isinstance(entropie, int) and not isinstance(entropie, bool) and entropie >= 0):
+         raise GardeArret("entropie racine entière, positive ou nulle, attendue (celle de la configuration du bras)")
+-    if (Path(dossier_des_scores) / FICHIER_SCORES).exists():
+-        raise GardeArret(f"{Path(dossier_des_scores) / FICHIER_SCORES} existe déjà : on n'écrase jamais (R12)")
++    exiger_permutation(permutation)
++    fichier_par_unite = FORMES[exiger_forme(forme_du_fichier_par_unite)][0]
++    if statistique_agregateur not in STATISTIQUES_EPISODE:
++        raise GardeArret(f"statistique de l'agrégateur {statistique_agregateur!r} hors de {STATISTIQUES_EPISODE} : "
++                         "aucun défaut")
++    exiger_dossiers_disjoints(dossier_de_la_sortie, {
++        "du fichier par unité": dossier_des_scores, "de la table des identifiants": Path(table_opaque).parent,
++        "de la production du moniteur boîte noire": Path(manifeste_boite_noire).parent,
++        "de la production du juge": Path(manifeste_juge).parent})
++    if (Path(dossier_des_scores) / fichier_par_unite).exists():
++        raise GardeArret(f"{Path(dossier_des_scores) / fichier_par_unite} existe déjà : on n'écrase jamais (R12)")
++    if (Path(dossier_de_la_sortie) / FICHIER_SORTIE).exists():
++        raise GardeArret(f"{Path(dossier_de_la_sortie) / FICHIER_SORTIE} existe déjà : on n'écrase jamais (R12)")
+     collecte: list = []
+     graines = manifeste.graines(cles_des_graines(), entropie)
+     preuve = {m: exiger_ouverture(registre, m) for m in MONITEURS}
+@@ -958,7 +1415,7 @@
+     episodes, comptes_agregateur = episodes_agreges(actions, scores_boite_noire, statistique_agregateur)
+     lectures = {}
+     for dose in DOSES:
+-        a = (dose, plis, graines, registre, collecte, n_perm, n_tirages)
++        a = (dose, plis, graines, registre, collecte, permutation, n_perm, n_tirages)
+         lectures[dose] = {
+             LEXICAL: lire_moniteur_appris(Lexical(v3), M, actions, *a),
+             SURFACE: lire_moniteur_appris(Surface(v3, M), M, actions, *a),
+@@ -969,22 +1426,11 @@
+         for r in lectures[dose].values():
+             exiger_resultat(r)
+     autres = autres_statistiques(M, actions, scores_boite_noire, statistique_agregateur, plis, registre)
+-    sortie = {"plis": plis, "lectures": lectures,
+-              "piece_source": {"chemin": PIECE_SOURCE[0], "sha256": PIECE_SOURCE[1]},
+-              "reglages": {"n_permutations": int(n_perm), "n_tirages": int(n_tirages),
+-                           "taille_de_la_famille": TAILLE_FAMILLE, "niveau": NIVEAU,
+-                           "statistique_agregateur": statistique_agregateur,
+-                           "doses_de_la_famille": list(DOSES[1:]), "dose_pour_information": DOSES[0],
+-                           "unite_de_la_permutation": "épisode, dans chaque tâche"},
+-              # la somme et le maximum de l'agrégateur, nommés : une aire par dose (absente si la statistique est
+-              # celle qui est retenue, dont l'aire est dans les lectures), sans état, sans valeur p, sans borne
+-              "agregateur_somme_sans_etat": autres.get("somme"),
+-              "agregateur_maximum_sans_etat": autres.get("max"),
+-              "exclues": {BOITE_NOIRE: exclues_bn, JUGE: exclues_juge, AGREGATEUR: comptes_agregateur},
+-              "preuve_d_ordre": {**preuve, "engagement_de_la_table": engagement}, 
+-              "scores_par_unite": ecrire_les_scores(dossier_des_scores, collecte, registre),
+-              "comptes_des_lectures": {m: comptes_des_lectures(productions[m]["lectures"], table, actions)
+-                                       for m in PRODUCTEURS},
+-              "nombres_rendus": list(NOMBRES_RENDUS)}
+-    assert tuple(sortie) == CLES_SORTIE                                                   # constante, hors R5
++    sortie = assembler_la_sortie(
++        plis, lectures, {m: productions[m]["programmes"] for m in PRODUCTEURS}, permutation, n_perm, n_tirages, autres,
++        {BOITE_NOIRE: exclues_bn, JUGE: exclues_juge, AGREGATEUR: comptes_agregateur},
++        {**preuve, "engagement_de_la_table": engagement},
++        ecrire_les_scores(dossier_des_scores, collecte, registre, forme_du_fichier_par_unite),
++        {m: comptes_des_lectures(productions[m]["lectures"], table, actions) for m in PRODUCTEURS})
++    ecrire_la_sortie(dossier_de_la_sortie, sortie)
+     return sortie
