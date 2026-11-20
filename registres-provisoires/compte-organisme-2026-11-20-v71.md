@@ -1,0 +1,14 @@
+# Fichier provisoire du compte organisme — 2026-11-20 — version 71
+
+Version 71 (R12 : la version 70, `registres-provisoires/compte-organisme-2026-11-19-v70.md`, `dedc24ff…`, reste en place ; ses lignes PO-216 à PO-221 valent toujours). Aucun identifiant de modèle.
+
+| id | heure (`date -u`) | fait | nature |
+|---|---|---|---|
+| PO-222 | 2026-11-20T00:20:38Z | **Mots de Lazar** inscrits par la mère : GO-2026-11-19-93 (reprise ; ligne d'interdit en tête des mandats ; programme de vérification de l'environnement) ; GO-94, -95, -96 (course « nouvelles attaques », trois générations, conception d'abord ; ce compte désigné fille idéation ; attaques inédites, règle d'antériorité, chemin vers le bras sous ses scellements) ; GO-98 (mot d'ouverture unique de la ligne 1). | mots de Lazar |
+| PO-223 | 2026-11-20T00:20:38Z | **Outils contre-lus « Conforme »** : `scripts/verifier_environnement_agent_v1.py` (`9714a00f…`, contre-lecture `5f374f67…`) ; `scripts/remplacer_texte_exact_v1.py` (`391db990…`). Fournis à chaque agent. | outils |
+| PO-224 | 2026-11-20T00:20:38Z | **Ligne 1** : erratum 1 v3 de l'addendum scellé par la mère (`ab98317d…`, R-4012) ; chaîne lancée à 23:56:02Z (GO-98) ; **arrêt nommé à l'étalonnage, garde A9, porte de prise manquée** (code 3, environ 584 s ; course décisive non partie ; aucune graine décisive dérivée ; R-4022). Sorties versées sans lecture (`journaux-course-ligne1-v2-arret-A9-20261120/`, manifeste `acc4192e…`, commits `31e4310b`, `d53d8b83`). Lecture de cause préparée (mandat `372bcec5…`), en attente du mot de Lazar. | ligne 1 |
+| PO-225 | 2026-11-20T00:20:38Z | **Ligne 3** : v7 scellée (PO-217) ; code de l'étage 1 écrit (`code-etage-1-v1/`, commit `55a17a42`, 73 essais, 27 défauts vus) ; cinq points de conception (A à E) pour Fable ou Lazar ; contre-lecture en attente. | ligne 3 |
+| PO-226 | 2026-11-20T00:20:38Z | **Palier 0b** : v5 puis v6 (`4aee136b…`), contrôlée (`c079a89d…`, trois remplacements de tenue à porter) ; mandat v2 du développeur prêt (`024e94e5…`), non lancé. | héritage |
+| PO-227 | 2026-11-20T00:20:38Z | **Orchestrateur v68** : fiche v3 (`bff07f80…`) contrôlée « après une correction » ; fiche v4 produite par l'outil avant l'interruption du rédacteur (commit `d40a6900`), non contrôlée. Divergence entre GO-89 et GO-76 point 2 posée à Lazar. | orchestrateur |
+| PO-228 | 2026-11-20T00:20:38Z | **Course « nouvelles attaques »** : mandat du rédacteur (`8fd94f6f…`) et complément 1 (`226ea152…`) scellés ; non lancée. | nouvelles attaques |
+| PO-229 | 2026-11-20T00:20:38Z | **Refus de Fable** vers 23:59Z (limite d'usage, remise le 22 novembre à 2 h UTC), commun au compte. File de conception arrêtée. Question posée à Lazar par la mère : la règle d'arrêt vise-t-elle toute la file ou la seule conception ? Plus rien ne tourne. Aucune dépense depuis la reprise. | état |
