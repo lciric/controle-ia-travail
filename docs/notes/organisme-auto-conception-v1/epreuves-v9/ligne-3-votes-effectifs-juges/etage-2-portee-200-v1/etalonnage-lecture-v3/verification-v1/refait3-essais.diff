@@ -1,0 +1,152 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/etalonnage-lecture-v2/essais_etalonnage_lecture_ligne_3_v2.py	2026-11-20 16:09:35.728130296 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/etalonnage-lecture-v3/essais_etalonnage_lecture_ligne_3_v3.py	2026-11-20 16:17:57.142350691 +0000
+@@ -1,4 +1,11 @@
+-"""Essais de `etalonner_ligne_3_v2.py` et `lire_ligne_3_v2.py` (pytest) — ligne 3 de l'organisme v9, étage 2 à 200 — v2.
++"""Essais de `etalonner_ligne_3_v3.py` et `lire_ligne_3_v3.py` (pytest) — ligne 3 de l'organisme v9, étage 2 à 200 — v3.
++
++Version 3 (R12 ; la v2 est gardée) : les essais de la v2 sur les modules v3 ; le fichier de fragments factice porte un
++fragment « voisins » piège « reprise assumée » (non citant), et la banque factice porte `fragments_sha256` ; essais neufs :
++quatrième nature séparée des conformes non citants (sain et artefact) ; comparaison de `fragments_sha256` de la banque (sain
++et deux artefacts).
++
++Texte de la v2 :
+ 
+ Version 2 (R12 ; la v1 est gardée) : les essais de la v1 sur les modules v2 ; le monde factice porte en plus un journal de
+ construction et un fichier de fragments au format du générateur v3 ; essais neufs : témoin complet = cinq rendus obtenus
+@@ -30,8 +37,8 @@
+ 
+ ICI = Path(__file__).resolve().parent
+ sys.path.insert(0, str(ICI))
+-import etalonner_ligne_3_v2 as ET  # noqa: E402
+-import lire_ligne_3_v2 as LI  # noqa: E402
++import etalonner_ligne_3_v3 as ET  # noqa: E402
++import lire_ligne_3_v3 as LI  # noqa: E402
+ 
+ CODE_APPEL_V4 = (ET.L3 / "etage-2-portee-200-v1" / "code-appel-v4" / "epreuve_juges_reels_ligne_3_v4.py",
+                  ET.CODE_APPEL_V4_SHA256)
+@@ -104,12 +111,15 @@
+             sortie[t["identifiant_interne"]] = "VF"
+         elif t["citation"] and (i // 4) % 2 == 0:
+             sortie[t["identifiant_interne"]] = "VC"
++        elif t["classe"] == "bon" and not t["citation"] and i % 3 == 0:          # v3 : piège « reprise assumée »
++            sortie[t["identifiant_interne"]] = "VP"
+         else:
+             sortie[t["identifiant_interne"]] = "VN"
+     return sortie
+ 
+ 
+-NATURE_FACTICE = {"VN": "conforme_non_citant", "VC": "conforme_citant", "VF": "fautif"}
++NATURE_FACTICE = {"VN": "conforme_non_citant", "VC": "conforme_citant", "VF": "fautif",
++                  "VP": "conforme_piege_reprise_assumee"}
+ 
+ 
+ def ecrire_construction(racine, temoins, voisins, fragments_sha=None):
+@@ -120,7 +130,8 @@
+           "conformes": {"modules": [{"id": "M", "champs": {"module_change": "m"}, "citation": False, "piege": None}],
+                         "mecanismes": [], "epreuves": [], "limites": [],
+                         "voisins": [{"id": "VN", "champs": champs_v, "citation": False, "piege": None},
+-                                    {"id": "VC", "champs": champs_v, "citation": True, "piege": None}]},
++                                    {"id": "VC", "champs": champs_v, "citation": True, "piege": None},
++                                    {"id": "VP", "champs": champs_v, "citation": False, "piege": "reprise_assumee"}]},
+           "fautifs": [{"id": "VF", "item": "voisin_nomme", "niveau": "net", "categorie": "voisins", "champs": champs_v,
+                        "citation": False},
+                       {"id": "MF", "item": "module_nomme", "niveau": "net", "categorie": "modules",
+@@ -166,7 +177,8 @@
+ 
+ 
+ def fabriquer(tmp, n=200, p_o=0.20, p_a=0.20, rho=0.30, rho_prime=0.70, sous=0, coupe_b=None, absents=None,
+-              illisibles=None, cache=None, erreurs=None, dossier="monde", tire=True, plante=None):
++              illisibles=None, cache=None, erreurs=None, dossier="monde", tire=True, plante=None,
++              banque_fragments_sha="juste"):
+     """Monde factice entier : banque scellée, dépôt du code d'appel v4 (vraies fonctions), étalonnage, audit scellé.
+     `coupe_b` : nombre de rendus du bloc B servis avant l'arrêt au plafond (None : plan entier) ; `absents`,
+     `illisibles` : ensembles d'identifiants de rendus refusés deux fois, ou rendus illisibles ; `cache` : juge dont les
+@@ -176,9 +188,14 @@
+     racine.mkdir()
+     temoins = banque_factice(n)
+     banque = racine / "banque.json"
+-    banque_sha = ET.ecrire_scelle(banque, {"version": "factice", "items": list(ET.ITEMS), "temoins": temoins})
+     voisins = voisins_factices(temoins)
+     construction = ecrire_construction(racine, temoins, voisins)
++    tete = {"version": "factice", "items": list(ET.ITEMS), "temoins": temoins}
++    if banque_fragments_sha == "juste":                    # v3 (b) : la banque porte l'empreinte de ses fragments
++        tete["fragments_sha256"] = construction["fragments_sha"]
++    elif banque_fragments_sha is not None:
++        tete["fragments_sha256"] = banque_fragments_sha
++    banque_sha = ET.ecrire_scelle(banque, tete)
+     if erreurs is None:
+         erreurs = erreurs_scriptees(rng("juges", sous), n, p_o, p_a, rho, rho_prime)
+     ids = [t["identifiant_interne"] for t in temoins]
+@@ -746,8 +763,8 @@
+ 
+ 
+ def test_lire_importe_etalonner_par_empreinte():
+-    assert LI.ETALONNER[0] == "etalonner_ligne_3_v2.py"
+-    assert hashlib.sha256((ICI / "etalonner_ligne_3_v2.py").read_bytes()).hexdigest() == LI.ETALONNER[1]
++    assert LI.ETALONNER[0] == "etalonner_ligne_3_v3.py"
++    assert hashlib.sha256((ICI / "etalonner_ligne_3_v3.py").read_bytes()).hexdigest() == LI.ETALONNER[1]
+     assert LI.ET is ET
+ 
+ 
+@@ -908,3 +925,61 @@
+     with pytest.raises(ET.Refus, match="autre dossier que celui de la lecture"):
+         lire(m)
+     assert not (m["racine"] / "copie" / LI.SOUS_DOSSIER).exists()
++
++
++# --- 14. v3 (a) : piège « reprise assumée », quatrième nature, séparée des conformes non citants -----------------------------
++
++
++def _comptes(m, juge):
++    c = json.loads(m["etalonnage"].read_text(encoding="utf-8"))[ET.CLE_RESERVES]["par_juge"][juge]
++    lu = {(s["classe"], s["citation"], s["item_plante"], s["voisins"]): [s["compte"], s["sur"]] for s in c["strates"]}
++    return c, lu
++
++
++def test_v3_piege_reprise_assumee_quatrieme_nature(tmp_path):
++    """Cas sain : le juge Opus rend reserves_tenues faux sur les bons au fragment « voisins » piège « reprise assumée » ;
++    les cartes tombent dans la nature `conforme_piege_reprise_assumee`, la strate des bons conformes non citants reste à 0 ;
++    recalcul égal strate par strate."""
++    plante = plant_sur("VP")
++    m = fabriquer(tmp_path, erreurs=np.zeros((200, 5), dtype=bool), plante=plante)
++    etalonner(m)
++    c, lu = _comptes(m, "juge-opus")
++    assert lu == attendu_reserves(m, "juge-opus", plante)["juge-opus"]
++    n_vp = sum(1 for t in m["temoins"] if t["moitie"] == "etalonnage" and m["voisins"][t["identifiant_interne"]] == "VP")
++    assert n_vp > 0
++    assert c["par_voisins"]["conforme_piege_reprise_assumee"] == {"compte": n_vp, "sur": n_vp}
++    assert all(s[0] == 0 for k, s in lu.items() if k[0] == "bon" and k[3] == "conforme_non_citant")
++    assert set(c["par_voisins"]) == set(ET.NATURES_VOISINS)
++
++
++def test_v3_piege_reprise_assumee_ne_se_mele_pas_aux_non_citants(tmp_path):
++    """Artefact : le plant sur les bons conformes non citants (simples) ; la nature piège reste à 0 et les cartes tombent
++    toutes chez les non citants — en v2, piège et simples étaient comptés ensemble."""
++    plante = plant_sur("VN")
++    m = fabriquer(tmp_path, erreurs=np.zeros((200, 5), dtype=bool), plante=plante)
++    etalonner(m)
++    c, lu = _comptes(m, "juge-opus")
++    assert lu == attendu_reserves(m, "juge-opus", plante)["juge-opus"]
++    assert c["par_voisins"]["conforme_piege_reprise_assumee"]["compte"] == 0
++    assert c["par_voisins"]["conforme_piege_reprise_assumee"]["sur"] > 0
++    assert any(s[0] > 0 for k, s in lu.items() if k[0] == "bon" and k[3] == "conforme_non_citant")
++
++
++# --- 15. v3 (b) : fragments_sha256 de la banque comparé -----------------------------------------------------------------
++
++
++def test_v3_banque_fragments_sha256_egal_passe(tmp_path):
++    m = fabriquer(tmp_path)
++    tete = json.loads(m["banque"].read_text(encoding="utf-8"))
++    assert tete["fragments_sha256"] == m["fragments_sha"]
++    assert etalonner(m)["piece"]["fragments_sha256"] == m["fragments_sha"]
++
++
++@pytest.mark.parametrize("valeur", ["5" * 64, None])
++def test_v3_banque_fragments_sha256_different_ou_absent_refus(tmp_path, valeur):
++    m = fabriquer(tmp_path, banque_fragments_sha=valeur)
++    tete = json.loads(m["banque"].read_text(encoding="utf-8"))
++    assert tete.get("fragments_sha256") == valeur
++    with pytest.raises(ET.Refus, match="fragments_sha256 est absent ou différent"):
++        etalonner(m)
++    assert not (m["racine"] / "lecture-ligne-3" / ET.SOUS_DOSSIER).exists()

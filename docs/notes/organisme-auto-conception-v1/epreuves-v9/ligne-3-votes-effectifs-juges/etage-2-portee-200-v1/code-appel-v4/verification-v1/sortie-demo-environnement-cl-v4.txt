@@ -1,0 +1,13 @@
+module epreuve_juges_reels_ligne_3_v4 | exigees ('HTTPS_PROXY',) | permises 18
+noms de cle dans la liste blanche : []
+ACCEPTE : sain : mandataire, certificats, PATH, HOME, GO_ID, aucun nom de cle
+ACCEPTE : sain minimal : HTTPS_PROXY seul
+REFUS   : RR_ANTHROPIC_API_KEY_LUC present -> noms de variables de clé dans l'environnement (['RR_ANTHROPIC_API_KEY_LUC']) : la clé reste dans son relais
+REFUS   : GEMINI_API_KEY present -> noms de variables de clé dans l'environnement (['GEMINI_API_KEY']) : la clé reste dans son relais
+REFUS   : les deux noms presents -> noms de variables de clé dans l'environnement (['GEMINI_API_KEY', 'RR_ANTHROPIC_API_KEY_LUC']) : la clé reste dans son r
+REFUS   : sans HTTPS_PROXY (https_proxy seul) -> environnement : variables exigées absentes (['HTTPS_PROXY']) : sans mandataire, aucun appel n'aboutit
+REFUS   : environnement vide -> environnement : variables exigées absentes (['HTTPS_PROXY']) : sans mandataire, aucun appel n'aboutit
+REFUS   : ALL_PROXY hors liste -> environnement non épuré : variables hors de la liste blanche (['ALL_PROXY']) : lancer sous env -i
+REFUS   : PYTHONPATH hors liste -> environnement non épuré : variables hors de la liste blanche (['PYTHONPATH']) : lancer sous env -i
+REFUS   : jeton quelconque -> noms de variables de clé dans l'environnement (['GITHUB_TOKEN']) : la clé reste dans son relais
+services construits (attendu 2) : 2

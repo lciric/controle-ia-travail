@@ -1,0 +1,336 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/etalonnage-lecture-v1/essais_etalonnage_lecture_ligne_3_v1.py	2026-11-20 15:54:09.194732314 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/etalonnage-lecture-v2/essais_etalonnage_lecture_ligne_3_v2.py	2026-11-20 16:09:35.728130296 +0000
+@@ -1,4 +1,11 @@
+-"""Essais de `etalonner_ligne_3_v1.py` et `lire_ligne_3_v1.py` (pytest) — ligne 3 de l'organisme v9, étage 2 à 200.
++"""Essais de `etalonner_ligne_3_v2.py` et `lire_ligne_3_v2.py` (pytest) — ligne 3 de l'organisme v9, étage 2 à 200 — v2.
++
++Version 2 (R12 ; la v1 est gardée) : les essais de la v1 sur les modules v2 ; le monde factice porte en plus un journal de
++construction et un fichier de fragments au format du générateur v3 ; essais neufs : témoin complet = cinq rendus obtenus
++(les deux essais du contre-lecteur, `essai_correction_n1_v1.py`, repris) ; cartes tombées sur `reserves_tenues` (plant
++exact, cas sain et artefact ; refus du journal et des fragments) ; pièce liée à son dossier.
++
++Texte de la v1 :
+ 
+ **Aucun verdict réel n'existe : tout s'éprouve sur des verdicts factices**, rendus par des juges scriptés (loi 1 de l'étage 1,
+ emboîtée : choc commun ρ aux cinq rendus d'un témoin ; sinon, par juge, choc propre au juge de probabilité
+@@ -23,8 +30,8 @@
+ 
+ ICI = Path(__file__).resolve().parent
+ sys.path.insert(0, str(ICI))
+-import etalonner_ligne_3_v1 as ET  # noqa: E402
+-import lire_ligne_3_v1 as LI  # noqa: E402
++import etalonner_ligne_3_v2 as ET  # noqa: E402
++import lire_ligne_3_v2 as LI  # noqa: E402
+ 
+ CODE_APPEL_V4 = (ET.L3 / "etage-2-portee-200-v1" / "code-appel-v4" / "epreuve_juges_reels_ligne_3_v4.py",
+                  ET.CODE_APPEL_V4_SHA256)
+@@ -88,6 +95,46 @@
+     return lu < p[None, :]
+ 
+ 
++def voisins_factices(temoins) -> dict:
++    """Fragment « voisins » de chaque témoin : fautif (« VF ») pour un mauvais de l'item voisin_nomme ; conforme citant
++    (« VC ») pour un citant sur deux ; conforme non citant (« VN ») sinon."""
++    sortie = {}
++    for i, t in enumerate(temoins):
++        if t["classe"] == "mauvais" and t["item"] == "voisin_nomme":
++            sortie[t["identifiant_interne"]] = "VF"
++        elif t["citation"] and (i // 4) % 2 == 0:
++            sortie[t["identifiant_interne"]] = "VC"
++        else:
++            sortie[t["identifiant_interne"]] = "VN"
++    return sortie
++
++
++NATURE_FACTICE = {"VN": "conforme_non_citant", "VC": "conforme_citant", "VF": "fautif"}
++
++
++def ecrire_construction(racine, temoins, voisins, fragments_sha=None):
++    """Fichier de fragments et journal de construction factices, au format du générateur v3 (`valider_fragments`,
++    `geste_composer`) ; seules comptent ici les catégories et les citations des fragments « voisins »."""
++    champs_v = {"plus_proche_voisin": "voisin factice", "ce_qui_distingue": "différence factice"}
++    fr = {"schema": ET.SCHEMA_FRAGMENTS, "version": "factice",
++          "conformes": {"modules": [{"id": "M", "champs": {"module_change": "m"}, "citation": False, "piege": None}],
++                        "mecanismes": [], "epreuves": [], "limites": [],
++                        "voisins": [{"id": "VN", "champs": champs_v, "citation": False, "piege": None},
++                                    {"id": "VC", "champs": champs_v, "citation": True, "piege": None}]},
++          "fautifs": [{"id": "VF", "item": "voisin_nomme", "niveau": "net", "categorie": "voisins", "champs": champs_v,
++                       "citation": False},
++                      {"id": "MF", "item": "module_nomme", "niveau": "net", "categorie": "modules",
++                       "champs": {"module_change": "x"}, "citation": False}]}
++    fragments = racine / "fragments.json"
++    h_fr = ET.ecrire_scelle(fragments, fr)
++    journal = racine / "journal-construction.json"
++    h_j = ET.ecrire_scelle(journal, {
++        "version": "factice", "fragments_sha256": fragments_sha or h_fr,
++        "temoins": [{k: t[k] for k in ("identifiant_interne", "classe", "item", "niveau", "citation", "moitie")}
++                    | {"fragments": {"modules": "M", "voisins": voisins[t["identifiant_interne"]]}} for t in temoins]})
++    return {"journal": journal, "journal_sha": h_j, "fragments": fragments, "fragments_sha": h_fr}
++
++
+ def texte_reponse(verdict_items, nonce):
+     return "Verdict.\n```json\n" + json.dumps({"items": verdict_items, "note": nonce}, ensure_ascii=False) + "\n```\n"
+ 
+@@ -119,7 +166,7 @@
+ 
+ 
+ def fabriquer(tmp, n=200, p_o=0.20, p_a=0.20, rho=0.30, rho_prime=0.70, sous=0, coupe_b=None, absents=None,
+-              illisibles=None, cache=None, erreurs=None, dossier="monde", tire=True):
++              illisibles=None, cache=None, erreurs=None, dossier="monde", tire=True, plante=None):
+     """Monde factice entier : banque scellée, dépôt du code d'appel v4 (vraies fonctions), étalonnage, audit scellé.
+     `coupe_b` : nombre de rendus du bloc B servis avant l'arrêt au plafond (None : plan entier) ; `absents`,
+     `illisibles` : ensembles d'identifiants de rendus refusés deux fois, ou rendus illisibles ; `cache` : juge dont les
+@@ -130,6 +177,8 @@
+     temoins = banque_factice(n)
+     banque = racine / "banque.json"
+     banque_sha = ET.ecrire_scelle(banque, {"version": "factice", "items": list(ET.ITEMS), "temoins": temoins})
++    voisins = voisins_factices(temoins)
++    construction = ecrire_construction(racine, temoins, voisins)
+     if erreurs is None:
+         erreurs = erreurs_scriptees(rng("juges", sous), n, p_o, p_a, rho, rho_prime)
+     ids = [t["identifiant_interne"] for t in temoins]
+@@ -164,6 +213,9 @@
+         items = {k: True for k in ET.ITEMS}
+         if not notable:
+             items[vrai[t]["item"] or ET.ITEMS[0]] = False
++        if plante is not None and plante(vrai[t], voisins[t], e):         # v2 : plant sur reserves_tenues
++            items[ET.ITEM_RESERVES] = False
++            notable = False
+         nonce = f"{t}-{e['juge']}" if (cache and e["juge"] == cache) else e["id"]
+         texte = texte_reponse(items, nonce)
+         if illisibles and e["id"] in illisibles:
+@@ -198,13 +250,21 @@
+     rapport = CA.deposer(depot, 1, plan, {}, service, journal.lignes, compteur, arret)
+     rapport_sha = sha_compagnon(depot / "rapport-execution-1.json")
+     return {"racine": racine, "banque": banque, "banque_sha": banque_sha, "depot": depot, "rapport": rapport,
+-            "rapport_sha": rapport_sha, "erreurs": erreurs, "temoins": temoins, "n": n}
++            "rapport_sha": rapport_sha, "erreurs": erreurs, "temoins": temoins, "n": n, "voisins": voisins,
++            **construction}
++
++
++def executer_etalonnage(m, f, f_sha, d, **kw):
++    a = dict(journal=m["journal"], journal_sha=m["journal_sha"], fragments=m["fragments"], fragments_sha=m["fragments_sha"])
++    a.update(kw)
++    return ET.executer(m["banque"], m["banque_sha"], f, f_sha, a["journal"], a["journal_sha"], a["fragments"],
++                       a["fragments_sha"], d, n_temoins=m["n"])
+ 
+ 
+ def etalonner(m, dossier=None):
+     d = m["racine"] / "lecture-ligne-3" if dossier is None else dossier
+     f = m["depot"] / "verdicts-moitie-etalonnage-execution-1.json"
+-    res = ET.executer(m["banque"], m["banque_sha"], f, sha_compagnon(f), d, n_temoins=m["n"])
++    res = executer_etalonnage(m, f, sha_compagnon(f), d)
+     m["dossier"] = d
+     m["etalonnage"] = Path(res["sortie"]) / ET.FICHIER_PIECE
+     m["etalonnage_sha"] = res["piece_sha256"]
+@@ -325,7 +385,7 @@
+     m = fabriquer(tmp_path)
+     f = m["depot"] / "verdicts-moitie-lecture-execution-1.json"
+     with pytest.raises(ET.Refus, match="moitié « lecture » passé à l'étalonnage"):
+-        ET.executer(m["banque"], m["banque_sha"], f, sha_compagnon(f), m["racine"] / "d", n_temoins=200)
++        executer_etalonnage(m, f, sha_compagnon(f), m["racine"] / "d")
+     assert not (m["racine"] / "d").exists()
+ 
+ 
+@@ -339,7 +399,7 @@
+     dst.write_bytes(src.read_bytes())
+     Path(str(dst) + ".sha256").write_text(f"{sha_compagnon(src)}  {dst.name}\n", encoding="utf-8")
+     with pytest.raises(ET.Refus, match="témoin de la moitié « lecture » dans les verdicts de la moitié « etalonnage »"):
+-        ET.executer(m["banque"], m["banque_sha"], dst, sha_compagnon(dst), m["racine"] / "d", n_temoins=200)
++        executer_etalonnage(m, dst, sha_compagnon(dst), m["racine"] / "d")
+     assert not (m["racine"] / "d").exists()
+ 
+ 
+@@ -354,7 +414,7 @@
+     dst = faux / src.name
+     h = ET.ecrire_scelle(dst, o)
+     with pytest.raises(ET.Refus, match="moitié « lecture »"):
+-        ET.executer(m["banque"], m["banque_sha"], dst, h, m["racine"] / "d", n_temoins=200)
++        executer_etalonnage(m, dst, h, m["racine"] / "d")
+ 
+ 
+ def test_etalonnage_rejoue_dans_le_meme_dossier_refus(tmp_path):
+@@ -368,7 +428,7 @@
+     m = fabriquer(tmp_path)
+     f = m["depot"] / "verdicts-moitie-etalonnage-execution-1.json"
+     with pytest.raises(ET.Refus, match="empreinte différente"):
+-        ET.executer(m["banque"], m["banque_sha"], f, "0" * 64, m["racine"] / "d", n_temoins=200)
++        executer_etalonnage(m, f, "0" * 64, m["racine"] / "d")
+ 
+ 
+ # --- 4. Gardes : lecture unique, étalonnage scellé, audit scellé ---------------------------------------------------------------
+@@ -455,6 +515,7 @@
+     p["bras_C"]["poids"] = [1.0, 2.0]
+     d = m["racine"] / "autre" / ET.SOUS_DOSSIER
+     d.mkdir(parents=True)
++    p["dossier"] = str((m["racine"] / "autre").resolve())          # v2 : le dossier juste, pour atteindre le recalcul
+     h = ET.ecrire_scelle(d / ET.FICHIER_PIECE, p)
+     ET.ecrire_scelle(d / ET.FICHIER_MANIFESTE, {"factice": True})
+     m["etalonnage"], m["etalonnage_sha"] = d / ET.FICHIER_PIECE, h
+@@ -685,5 +746,165 @@
+ 
+ 
+ def test_lire_importe_etalonner_par_empreinte():
+-    assert hashlib.sha256((ICI / "etalonner_ligne_3_v1.py").read_bytes()).hexdigest() == LI.ETALONNER[1]
++    assert LI.ETALONNER[0] == "etalonner_ligne_3_v2.py"
++    assert hashlib.sha256((ICI / "etalonner_ligne_3_v2.py").read_bytes()).hexdigest() == LI.ETALONNER[1]
+     assert LI.ET is ET
++
++
++# --- 11. v2 : témoin complet = cinq rendus obtenus (essais du contre-lecteur, `essai_correction_n1_v1.py`, repris) ------
++
++
++def test_v2_un_rendu_absent_n_est_pas_obtenu_donc_pas_complet(tmp_path):
++    plan = plan_factice(banque_factice(200))
++    lecture_b = [p for p in plan if p["bloc"] == "B" and p["moitie"] == "lecture"]
++    cible = lecture_b[0]["id"]                                   # un rendu du bloc B, premier témoin de la moitié « lecture »
++    m = monde_complet(tmp_path, coupe_b=40 * 3, sous=5, absents={cible})
++    assert m["rapport"]["complets"]["bloc_B_moitie_lecture"] == 39       # le code d'appel : cinq rendus obtenus
++    r = lire(m)["rapport"]
++    assert r["temoins"]["complets_moitie_lecture"] == 39                 # la lecture suit le code d'appel
++    assert r["temoins"]["complets_moitie_lecture_tentes"] == 40          # le compte des tentés reste rapporté
++    t = r["table_de_lecture"]
++    assert t["rang"] == 1 and t["mot"] == "non concluant par manque de témoins"
++    assert any("moins de 40" in c for c in t["causes_du_rang_1"])
++
++
++def test_v2_cas_sain_sans_absent_les_deux_comptes_sont_egaux(tmp_path):
++    m = monde_complet(tmp_path, coupe_b=40 * 3, sous=5)
++    r = lire(m)["rapport"]
++    assert r["temoins"]["complets_moitie_lecture"] == r["temoins"]["complets_moitie_lecture_tentes"] == 40
++    assert r["temoins"]["complets_cinq_rendus"] == r["temoins"]["complets_cinq_rendus_tentes"]
++
++
++# --- 12. v2 : cartes tombées sur reserves_tenues, moitié « étalonnage » ------------------------------------------------------
++
++
++def attendu_reserves(m, juge_plante, plante):
++    """Recalcul indépendant, depuis le monde planté (juges parfaits) : une carte « tombe » si le plant la vise, ou si c'est
++    un mauvais de l'item reserves_tenues (le juge parfait rend faux l'item planté)."""
++    sortie = {}
++    for j in ET.JUGES:
++        strates = {}
++        for t in m["temoins"]:
++            if t["moitie"] != "etalonnage":
++                continue
++            v = NATURE_FACTICE[m["voisins"][t["identifiant_interne"]]]
++            tombee = (t["classe"] == "mauvais" and t["item"] == ET.ITEM_RESERVES) or \
++                (j == juge_plante and plante(t, m["voisins"][t["identifiant_interne"]], {"juge": j, "rendu": 1}))
++            cle = (t["classe"], "citant" if t["citation"] else "non_citant", t["item"] or "aucun (bon)", v)
++            c = strates.setdefault(cle, [0, 0])
++            c[0] += int(tombee)
++            c[1] += 1
++        sortie[j] = strates
++    return sortie
++
++
++def plant_sur(nature):
++    return lambda t, fid, e: e["juge"] == "juge-opus" and e["rendu"] == 1 and t["classe"] == "bon" and fid == nature
++
++
++def test_v2_reserves_tenues_plant_sur_les_voisins_conformes_non_citants(tmp_path):
++    """Cas sain : le juge Opus rejette sur reserves_tenues, au premier rendu, tous les bons dont le fragment « voisins » est
++    conforme non citant ; les comptes de la pièce scellée égalent le recalcul, strate par strate, et les marges."""
++    plante = plant_sur("VN")
++    e = np.zeros((200, 5), dtype=bool)
++    m = fabriquer(tmp_path, erreurs=e, plante=plante)
++    res = etalonner(m)
++    piece = json.loads(m["etalonnage"].read_text(encoding="utf-8"))
++    assert sha_compagnon(m["etalonnage"]) == res["piece_sha256"] and ET.CLE_RESERVES in piece
++    c = piece[ET.CLE_RESERVES]["par_juge"]
++    att = attendu_reserves(m, "juge-opus", plante)
++    for j in ET.JUGES:
++        lu = {(s["classe"], s["citation"], s["item_plante"], s["voisins"]): [s["compte"], s["sur"]] for s in c[j]["strates"]}
++        assert lu == att[j]
++        assert c[j]["verdicts_absents_exclus"] == 0
++    bons_vn = sum(1 for t in m["temoins"] if t["moitie"] == "etalonnage" and t["classe"] == "bon"
++                  and m["voisins"][t["identifiant_interne"]] == "VN")
++    mauvais_res_vn = sum(1 for t in m["temoins"] if t["moitie"] == "etalonnage" and t["item"] == ET.ITEM_RESERVES
++                         and m["voisins"][t["identifiant_interne"]] == "VN")
++    assert bons_vn > 0
++    assert c["juge-opus"]["par_voisins"]["conforme_non_citant"]["compte"] == bons_vn + mauvais_res_vn
++    assert c["juge-argon"]["par_voisins"]["conforme_non_citant"]["compte"] == mauvais_res_vn
++    assert c["juge-opus"]["par_classe"]["bon"]["compte"] == bons_vn and c["juge-argon"]["par_classe"]["bon"]["compte"] == 0
++    assert c["juge-opus"]["par_voisins"]["conforme_citant"]["compte"] == sum(
++        1 for t in m["temoins"] if t["moitie"] == "etalonnage" and t["item"] == ET.ITEM_RESERVES
++        and m["voisins"][t["identifiant_interne"]] == "VC")
++    assert sum(x["sur"] for x in c["juge-opus"]["par_classe"].values()) == 100
++
++
++def test_v2_reserves_tenues_plant_ailleurs_ne_tombe_pas_chez_les_non_citants(tmp_path):
++    """Artefact : le même plant porté sur les bons au fragment « voisins » conforme **citant** : les cartes tombent dans
++    cette strate, et la strate « conforme non citant » des bons reste à 0 ; les comptes égalent le recalcul."""
++    plante = plant_sur("VC")
++    e = np.zeros((200, 5), dtype=bool)
++    m = fabriquer(tmp_path, erreurs=e, plante=plante)
++    etalonner(m)
++    c = json.loads(m["etalonnage"].read_text(encoding="utf-8"))[ET.CLE_RESERVES]["par_juge"]
++    att = attendu_reserves(m, "juge-opus", plante)
++    lu = {(s["classe"], s["citation"], s["item_plante"], s["voisins"]): [s["compte"], s["sur"]]
++          for s in c["juge-opus"]["strates"]}
++    assert lu == att["juge-opus"]
++    bons_nc = [s for s in c["juge-opus"]["strates"] if s["classe"] == "bon" and s["voisins"] == "conforme_non_citant"]
++    assert bons_nc and all(s["compte"] == 0 for s in bons_nc)
++    assert any(s["compte"] > 0 for s in c["juge-opus"]["strates"] if s["classe"] == "bon" and s["voisins"] == "conforme_citant")
++
++
++def test_v2_reserves_tenues_ne_lit_que_la_moitie_etalonnage(tmp_path):
++    """Artefact : un plant porté sur la seule moitié « lecture » ne change aucun compte de la pièce d'étalonnage."""
++    plante = lambda t, fid, e: e["rendu"] == 1 and t["moitie"] == "lecture" and t["classe"] == "bon"  # noqa: E731
++    e = np.zeros((200, 5), dtype=bool)
++    m = fabriquer(tmp_path, erreurs=e, plante=plante)
++    etalonner(m)
++    c = json.loads(m["etalonnage"].read_text(encoding="utf-8"))[ET.CLE_RESERVES]["par_juge"]
++    for j in ET.JUGES:
++        assert c[j]["par_classe"]["bon"]["compte"] == 0
++
++
++def test_v2_journal_ou_fragments_hors_forme_refus(tmp_path):
++    m = fabriquer(tmp_path)
++    f = m["depot"] / "verdicts-moitie-etalonnage-execution-1.json"
++    (m["racine"] / "x").mkdir()
++    autre = ecrire_construction(m["racine"] / "x", m["temoins"], m["voisins"], fragments_sha="3" * 64)
++    with pytest.raises(ET.Refus, match="fichier de fragments d'une autre empreinte"):
++        executer_etalonnage(m, f, sha_compagnon(f), m["racine"] / "d1", journal=autre["journal"],
++                            journal_sha=autre["journal_sha"], fragments=autre["fragments"],
++                            fragments_sha=autre["fragments_sha"])
++    inconnu = dict(m["voisins"])
++    inconnu[next(iter(inconnu))] = "INCONNU"
++    (m["racine"] / "y").mkdir()
++    autre = ecrire_construction(m["racine"] / "y", m["temoins"], inconnu)
++    with pytest.raises(ET.Refus, match="fragment « voisins » absent du fichier de fragments"):
++        executer_etalonnage(m, f, sha_compagnon(f), m["racine"] / "d2", journal=autre["journal"],
++                            journal_sha=autre["journal_sha"], fragments=autre["fragments"],
++                            fragments_sha=autre["fragments_sha"])
++    faux = [dict(t) for t in m["temoins"]]
++    faux[0]["citation"] = not faux[0]["citation"]
++    (m["racine"] / "z").mkdir()
++    autre = ecrire_construction(m["racine"] / "z", faux, m["voisins"])
++    with pytest.raises(ET.Refus, match="diffère de la banque"):
++        executer_etalonnage(m, f, sha_compagnon(f), m["racine"] / "d3", journal=autre["journal"],
++                            journal_sha=autre["journal_sha"], fragments=autre["fragments"],
++                            fragments_sha=autre["fragments_sha"])
++    with pytest.raises(ET.Refus, match="journal de construction : empreinte différente"):
++        executer_etalonnage(m, f, sha_compagnon(f), m["racine"] / "d4", journal_sha="4" * 64)
++    assert not any((m["racine"] / d).exists() for d in ("d1", "d2", "d3", "d4"))
++
++
++# --- 13. v2 : la pièce d'étalonnage est liée à son dossier -------------------------------------------------------------------
++
++
++def test_v2_piece_liee_a_son_dossier(tmp_path):
++    """Le même étalonnage dans deux dossiers rend deux pièces d'empreintes différentes ; une pièce recopiée dans un autre
++    dossier, citée par un audit, est refusée par la lecture."""
++    m = monde_complet(tmp_path)
++    p1 = m["etalonnage_sha"]
++    autre = etalonner(dict(m), dossier=m["racine"] / "autre-dossier")
++    assert autre["piece_sha256"] != p1 and autre["piece"]["dossier"] == str((m["racine"] / "autre-dossier").resolve())
++    d = m["racine"] / "copie" / ET.SOUS_DOSSIER
++    d.mkdir(parents=True)
++    (d / ET.FICHIER_PIECE).write_bytes(m["etalonnage"].read_bytes())
++    Path(str(d / ET.FICHIER_PIECE) + ".sha256").write_text(f"{p1}  {ET.FICHIER_PIECE}\n", encoding="utf-8")
++    ET.ecrire_scelle(d / ET.FICHIER_MANIFESTE, {"factice": True})
++    m["etalonnage"] = d / ET.FICHIER_PIECE
++    with pytest.raises(ET.Refus, match="autre dossier que celui de la lecture"):
++        lire(m)
++    assert not (m["racine"] / "copie" / LI.SOUS_DOSSIER).exists()

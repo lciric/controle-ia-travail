@@ -1,0 +1,520 @@
+--- generateur-v1/generer_temoins_ligne_3_v1.py	2026-11-20 14:46:46.336595873 +0000
++++ generateur-v2/generer_temoins_ligne_3_v2.py	2026-11-20 15:09:54.720678402 +0000
+@@ -1,6 +1,19 @@
+ #!/usr/bin/env python3
+ """Générateur des témoins plantés, garde de recouvrement, partage et audit du générateur — ligne 3 de l'organisme v9
+-(votes effectifs des juges croisés), étage 2 à 200 témoins — v1.
++(votes effectifs des juges croisés), étage 2 à 200 témoins — v2.
++
++Version 2 (même développeur, règle R12 ; la v1, `generer_temoins_ligne_3_v1.py`, b264760c…, est gardée sans modification) :
++corrections du contrôle de la condition (4) v1 (934d6bce…, « non conforme ») et de la contre-lecture v1 (d3b72675…),
++ajouts de la mère (15:05Z). (1) Journal des rejeux et manifeste de sa création en CONSTANTES (`JOURNAL_REJEUX`,
++`MANIFESTE_JOURNAL_REJEUX`) ; aucun chemin libre ; création refusée si ce manifeste existe ; la garde exige ce manifeste,
++scellé, qui nomme ce journal. (2) La pièce du contrôle (4) doit porter une ligne de verdict « Conforme » (et aucune « Non
++conforme ») et l'empreinte de ce programme ; sinon refus avant l'ouverture. (3) `meta` retiré à toute profondeur, niveau du
++fichier compris. (4) Ligne de commande de la garde entièrement sous `try` : aucune trace brute ; arguments hors liste
++refusés. (5) Forme réelle du fichier des cartes (contre-lecture, § 3) : objet {identifiant de treize caractères : {contenu,
++empreinte, meta}} ; admise. (6) Fautif de `modules` d'un autre item que `module_nomme` : nomme un module (C1). (7) Deux
++contenus identiques dans la banque : refus nommé ; nombre maximal de fragments communs entre deux témoins rapporté (M5).
++(8) Constructeurs d'entrée non « production » : garde des chemins (R3). Le clone de l'organisme est présent à
++`/home/user/lciric/ideation-organism` (commit a41b7b50…) : la voie réelle de l'audit s'y exerce sans réseau ni clé (M6).
+ 
+ Plan de code : annexe A du texte v7 (`preenregistrement-ligne-3-votes-effectifs-juges-v7.md`, 4e3680d9…), ligne 560 ;
+ banque, écriture, vérification, garde de recouvrement et ses conditions (1) à (5), repli, partage, audit : lignes 251 à
+@@ -55,7 +68,8 @@
+ from fractions import Fraction
+ from pathlib import Path
+ 
+-VERSION = "generer_temoins_ligne_3_v1"
++VERSION = "generer_temoins_ligne_3_v2"
++NOM_DU_PROGRAMME = os.path.basename(os.path.abspath(__file__))
+ DEPOT = Path("/home/user/controle-ia-travail")
+ 
+ # --- graines (règle R9) --------------------------------------------------------------------------------------------------------
+@@ -142,6 +156,18 @@
+                             "empreinte_programme", "mot_de_la_mere_sha256", "repli", "nature_entree")
+ CHAMPS_JOURNAL_CLOTURE = ("n_ligne", "type", "rang", "decision", "cartes_lues", "temoins_compares", "temoins_refuses",
+                           "exception")
++# v2, point 5 du (4) : journal des rejeux et manifeste de sa création en CONSTANTES du code, hors de l'archive et hors du
++# dossier du code ; aucun argument ne les change (la ligne de commande n'en accepte aucun).
++DOSSIER_JOURNAL_REJEUX = DEPOT / "runs" / "ligne-3-etage-2-garde-de-recouvrement-v1"
++JOURNAL_REJEUX = DOSSIER_JOURNAL_REJEUX / "journal-rejeux-garde-recouvrement-v1.jsonl"
++MANIFESTE_JOURNAL_REJEUX = DOSSIER_JOURNAL_REJEUX / "manifeste-creation-journal-rejeux-v1.json"
++GESTE_CREATION_JOURNAL = "création du journal des rejeux de la garde de recouvrement, vide"
++# v2, R1 du contrôle : la pièce du (4) porte une ligne de verdict « Conforme » (seule sur sa ligne, gras et point permis),
++# aucune ligne qui commence par « Non conforme », et l'empreinte de ce programme.
++LIGNE_CONFORME = re.compile(r"^(\*\*)?(Verdict\s*:\s*)?Conforme\.?(\*\*)?$")
++LIGNE_NON_CONFORME = re.compile(r"^(\*\*)?(Verdict\s*:\s*)?Non conforme", re.IGNORECASE)
++ARGUMENTS_GARDE = {"--banque": True, "--sortie": True, "--controle-4": True, "--empreinte-controle-4": True,
++                   "--mot-de-la-mere": False, "--repli": False, "--piece-repli": False, "--empreinte-piece-repli": False}
+ 
+ # --- garde « verdicts de la v9 » : chemins jamais passés au programme --------------------------------------------------------
+ COMPOSANT_INTERDIT = "archives-reponses-modeles"
+@@ -265,6 +291,30 @@
+     pass
+ 
+ 
++class ManifesteJournalAbsentOuFaux(RefusGarde):
++    pass
++
++
++class ManifesteJournalExisteDeja(RefusGarde):
++    pass
++
++
++class ControleQuatreNonConforme(RefusGarde):
++    pass
++
++
++class ControleQuatreAutreProgramme(RefusGarde):
++    pass
++
++
++class ArgumentHorsListe(RefusGarde):
++    pass
++
++
++class ContenusIdentiques(Refus):
++    """Deux témoins de la banque au contenu identique (M5) : refus nommé, aucune banque écrite."""
++
++
+ class JournalHorsListe(RefusGarde):
+     pass
+ 
+@@ -579,6 +629,9 @@
+             F.append(f"{fid} : un fragment qui ne cite pas ne porte pas « non vérifié »")
+         if fr["citation"] and fr["item"] != "reserves_tenues" and compte_non_verifie(texte) == 0:
+             F.append(f"{fid} : la citation d'un mauvais est marquée « non vérifié », sauf pour reserves_tenues (l. 253)")
++        if fr["categorie"] == "modules" and fr["item"] != "module_nomme" and not modules_nommes(fr["champs"]["module_change"]):
++            F.append(f"{fid} : un fautif de modules d'un autre item que module_nomme nomme au moins un module (un seul item "
++                     "violé par témoin, l. 253)")                              # v2, C1 de la contre-lecture
+         sortie_f.append({"id": fid, "categorie": fr["categorie"], "champs": dict(fr["champs"]), "citation": fr["citation"],
+                          "piege": None, "item": fr["item"], "niveau": fr["niveau"]})
+     # couverture : de quoi composer chaque strate, quel que soit le tirage
+@@ -755,6 +808,7 @@
+     numeros = rng_i.permutation(len(construits))
+     for t, k in zip(construits, numeros):
+         t["identifiant_interne"] = f"{PREFIXE_IDENTIFIANT}{int(k) + 1:03d}"
++    verifier_contenus_distincts(construits)                                  # v2, M5 : refus nommé
+     partager(construits, ctx)
+     banque = [{"identifiant_interne": t["identifiant_interne"], "classe": t["classe"], "item": t["item"],
+                "niveau": t["niveau"], "citation": t["citation"], "moitie": t["moitie"], "contenu": t["contenu"]}
+@@ -766,6 +820,29 @@
+     return banque, journal
+ 
+ 
++def verifier_contenus_distincts(temoins: list) -> None:
++    """v2, M5 (mère, 15:05Z) : deux témoins au contenu identique (à l'octet de leur forme JSON canonique) : refus nommé."""
++    vus = {}
++    for t in temoins:
++        cle = json.dumps(t["contenu"], ensure_ascii=False, sort_keys=True)
++        if cle in vus:
++            raise ContenusIdentiques(f"contenus identiques : {vus[cle]} et {t['identifiant_interne']}")
++        vus[cle] = t["identifiant_interne"]
++
++
++def fragments_communs(journal: list) -> dict:
++    """v2, M5 : nombre maximal de fragments communs entre deux témoins (sur cinq), et nombre de paires à chaque compte ;
++    rapporté, jamais un refus (seuls les contenus identiques le sont)."""
++    ids = [tuple(j["fragments"][c] for c in CATEGORIES) for j in journal]
++    paires = {k: 0 for k in range(len(CATEGORIES) + 1)}
++    for a in range(len(ids)):
++        for b in range(a + 1, len(ids)):
++            paires[sum(x == y for x, y in zip(ids[a], ids[b]))] += 1
++    maximum = max(k for k, n in paires.items() if n)
++    return {"maximum": maximum, "categories": len(CATEGORIES), "paires_par_nombre_de_fragments_communs":
++            {str(k): n for k, n in paires.items()}}
++
++
+ def cle_de_strate(t: dict) -> tuple:
+     """Strates du partage (l. 264 : classe, item, niveau, citation). Chez les bons, ni item ni niveau : la citation, puis le
+     type (simple ou à piège), choix écrit au rapport (25 bons citants par moitié)."""
+@@ -839,6 +916,13 @@
+     factice après le retrait de `meta`, pour provoquer une exception pendant la lecture."""
+ 
+     def __init__(self, chemin, empreinte, compte, nature, provoquer=None):
++        # v2, R3 du contrôle : le constructeur nu ne contourne plus rien. « production » : les constantes, elles seules ;
++        # toute autre nature : garde des chemins (jamais l'archive des réponses).
++        if nature == "production":
++            if (chemin, empreinte, compte, provoquer) != (CHEMIN_CARTES, EMPREINTE_CARTES, COMPTE_CARTES, None):
++                raise EntreeEssaiInterdite()
++        else:
++            garde_chemins([chemin])
+         self.chemin, self.empreinte, self.compte, self.nature = chemin, empreinte, compte, nature
+         self.provoquer = provoquer
+         self.ouvertures = 0
+@@ -864,6 +948,7 @@
+     """Seconde entrée : les onze témoins v2, par empreinte et par compte."""
+ 
+     def __init__(self, chemin, empreinte, compte, nature):
++        garde_chemins([chemin])                       # v2, R3 : aussi pour le constructeur nu
+         self.chemin, self.empreinte, self.compte, self.nature = Path(chemin), empreinte, compte, nature
+ 
+     @classmethod
+@@ -892,11 +977,19 @@
+     return {tuple(m[i:i + TAILLE_BARDEAU]) for i in range(len(m) - TAILLE_BARDEAU + 1)}
+ 
+ 
++def sans_meta(d: dict) -> dict:
++    """Crochet de l'analyse JSON : chaque objet, à toute profondeur, perd sa clé `meta` dès qu'il est construit."""
++    return {k: v for k, v in d.items() if k != "meta"}
++
++
+ def cartes_du_fichier(octets: bytes) -> list:
+-    """Cartes en mémoire, champ `meta` retiré au chargement, avant tout usage (condition (2)). Formes admises (le texte ne
+-    les écrit pas ; rapport du développeur, silence 1) : une liste de cartes ; un objet {"fiches": [cartes]} ; un objet
+-    {identifiant: carte}. Toute autre forme : refus avant toute comparaison."""
+-    objet = json.loads(octets.decode("utf-8"))
++    """Cartes en mémoire, champ `meta` retiré au chargement, avant tout usage (condition (2)). v2 : retiré à TOUTE
++    profondeur, niveau du fichier compris, pendant l'analyse même du JSON (`object_hook`) : aucun objet de la mémoire ne
++    porte jamais de clé `meta`. Forme réelle (contre-lecture v1, § 3 : `course2_v56.py:366-367`, `fiches_v53.py:4-5`,
++    `graines_v53.py:65-67`) : un objet {identifiant de treize caractères : {"contenu", "empreinte", "meta"}}, l'identifiant
++    étant la clé. Deux autres formes restent admises en v2 (liste ; {"fiches": [...]}) ; recommandation au rapport v2.
++    Toute autre forme : refus avant toute comparaison."""
++    objet = json.loads(octets.decode("utf-8"), object_hook=sans_meta)
+     if isinstance(objet, list):
+         paires = [(None, c) for c in objet]
+     elif isinstance(objet, dict) and isinstance(objet.get("fiches"), list):
+@@ -909,7 +1002,8 @@
+         raise FormatCartesInconnu()
+     cartes = []
+     for cle, c in paires:
+-        c = {k: v for k, v in c.items() if k != "meta"}          # retrait du champ meta, avant tout usage
++        if "meta" in c:                                          # impossible après `sans_meta` ; garde dure
++            raise FormatCartesInconnu()
+         ident = cle if cle is not None else (c.get("id") if isinstance(c.get("id"), str) else None)
+         cartes.append((ident, c))
+     del objet, paires
+@@ -932,17 +1026,20 @@
+     """Nom de la classe et lieu dans le code (fichier du programme, numéro de ligne) ; jamais une valeur ni un texte."""
+     prog = os.path.abspath(__file__)
+     ligne = None
+-    for fr in traceback.extract_tb(e.__traceback__):
+-        if os.path.abspath(fr.filename) == prog:
+-            ligne = fr.lineno
+-    return {"classe": type(e).__name__, "fichier": os.path.basename(prog), "ligne": ligne}
++    for fr, lineno in traceback.walk_tb(e.__traceback__):              # v2 : sans lire les lignes du source
++        if os.path.abspath(fr.f_code.co_filename) == prog:
++            ligne = lineno
++    return {"classe": type(e).__name__, "fichier": NOM_DU_PROGRAMME, "ligne": ligne}
+ 
+ 
+-def valider_rapport_garde(r: dict, ids_banque=frozenset()) -> None:
+-    """Liste fermée (condition (3)) : tout champ hors de la liste, ou toute valeur hors de sa forme, est un refus d'écrire."""
++def valider_rapport_garde(r: dict, ids_banque=frozenset(), exiger_programme: bool = True) -> None:
++    """Liste fermée (condition (3)) : tout champ hors de la liste, ou toute valeur hors de sa forme, est un refus d'écrire.
++    `exiger_programme` faux : seulement pour la sortie de secours (empreinte du programme non recalculée)."""
+     if not isinstance(r, dict) or set(r) - set(CHAMPS_RAPPORT_GARDE):
+         raise RapportHorsListe()
+-    if "decision" not in r or r["decision"] not in DECISIONS_GARDE or not est_empreinte(r.get("empreinte_programme")):
++    if "decision" not in r or r["decision"] not in DECISIONS_GARDE:
++        raise RapportHorsListe()
++    if (exiger_programme or "empreinte_programme" in r) and not est_empreinte(r.get("empreinte_programme")):
+         raise RapportHorsListe()
+     for k in ("cartes_lues", "temoins_compares", "temoins_refuses", "nombre_de_rejeux"):
+         if k in r and (isinstance(r[k], bool) or not isinstance(r[k], int) or r[k] < 0):
+@@ -963,7 +1060,7 @@
+         e = r["exception"]
+         if (not isinstance(e, dict) or set(e) != {"classe", "fichier", "ligne"}
+                 or not isinstance(e["classe"], str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", e["classe"])
+-                or e["fichier"] != os.path.basename(os.path.abspath(__file__))
++                or e["fichier"] != NOM_DU_PROGRAMME
+                 or not (e["ligne"] is None or (isinstance(e["ligne"], int) and not isinstance(e["ligne"], bool)))):
+             raise RapportHorsListe()
+     if "repli" in r and r["repli"] is not None:
+@@ -1034,21 +1131,79 @@
+         return o
+ 
+ 
+-def creer_journal_rejeux(chemin, dossier_manifeste) -> dict:
+-    """Geste écrit au manifeste (condition (5)) : crée vide le journal des rejeux (mode exclusif : jamais recréé)."""
+-    garde_chemins([chemin, dossier_manifeste])
+-    Path(dossier_manifeste).mkdir(parents=False, exist_ok=False)
+-    fd = os.open(chemin, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
++class LieuDuJournal:
++    """v2, point 5 du (4) : où vivent le journal des rejeux et le manifeste de sa création. En production :
++    `LieuDuJournal.production()`, les constantes `JOURNAL_REJEUX` et `MANIFESTE_JOURNAL_REJEUX`, aucune autre voie (la ligne
++    de commande n'accepte aucun chemin de journal). Pour les essais : `LieuDuJournal.essai(dossier)`, voie explicite en
++    Python seulement, dans un dossier temporaire."""
++
++    def __init__(self, journal, manifeste, nature):
++        if nature == "production":
++            if (Path(journal), Path(manifeste)) != (JOURNAL_REJEUX, MANIFESTE_JOURNAL_REJEUX):
++                raise ManifesteJournalAbsentOuFaux()
++        elif nature != "essai":
++            raise ManifesteJournalAbsentOuFaux()
++        garde_chemins([journal, manifeste])
++        self.journal, self.manifeste, self.nature = Path(journal), Path(manifeste), nature
++
++    @classmethod
++    def production(cls):
++        return cls(JOURNAL_REJEUX, MANIFESTE_JOURNAL_REJEUX, "production")
++
++    @classmethod
++    def essai(cls, dossier):
++        d = Path(dossier)
++        return cls(d / JOURNAL_REJEUX.name, d / MANIFESTE_JOURNAL_REJEUX.name, "essai")
++
++
++def creer_journal_rejeux(lieu=None) -> dict:
++    """Geste écrit au manifeste (condition (5)) : crée vide le journal des rejeux. v2 : refusé si le manifeste de création
++    existe déjà (le journal ne se recrée jamais par ce programme, même supprimé) ou si le journal existe ; journal et
++    manifeste en mode exclusif."""
++    lieu = lieu or LieuDuJournal.production()
++    if lieu.manifeste.exists() or os.path.lexists(str(lieu.manifeste) + ".sha256"):
++        raise ManifesteJournalExisteDeja()
++    lieu.journal.parent.mkdir(parents=True, exist_ok=True)
++    fd = os.open(lieu.journal, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+     os.fsync(fd)
+     os.close(fd)
+-    manifeste = {"version": VERSION, "geste": "création du journal des rejeux de la garde de recouvrement, vide",
+-                 "journal": str(Path(chemin).resolve()), "journal_sha256": sha256_fichier(chemin),
++    manifeste = {"version": VERSION, "geste": GESTE_CREATION_JOURNAL, "nature": lieu.nature,
++                 "journal": str(lieu.journal), "journal_sha256": sha256_fichier(lieu.journal),
+                  "horodatage_utc": horodatage(), "programme_sha256": programme_sha256(), "versions": versions(),
+                  "graines": "aucune (geste sans tirage)", "commit_du_depot": commit_du_depot()}
+-    ecrire_scelle(Path(dossier_manifeste) / "manifeste-creation-journal-rejeux.json", manifeste)
++    ecrire_scelle(lieu.manifeste, manifeste)
+     return manifeste
+ 
+ 
++def exiger_manifeste_du_journal(lieu) -> None:
++    """v2 : la garde exige le manifeste de création, scellé (compagnon égal), qui nomme ce journal ; sinon refus."""
++    try:
++        octets = lieu.manifeste.read_bytes()
++        compagnon = Path(str(lieu.manifeste) + ".sha256").read_text(encoding="utf-8").split()
++        m = json.loads(octets.decode("utf-8"))
++    except (OSError, UnicodeDecodeError, ValueError):
++        raise ManifesteJournalAbsentOuFaux() from None
++    if not compagnon or compagnon[0] != sha256_octets(octets) or not isinstance(m, dict) \
++            or m.get("geste") != GESTE_CREATION_JOURNAL or m.get("journal") != str(lieu.journal) \
++            or m.get("nature") != lieu.nature:
++        raise ManifesteJournalAbsentOuFaux()
++
++
++def exiger_controle_conforme(chemin, empreinte, programme: str) -> None:
++    """v2, R1 du contrôle : la pièce du (4), par chemin et empreinte, porte une ligne de verdict « Conforme » (seule sur sa
++    ligne), aucune ligne qui commence par « Non conforme », et l'empreinte de ce programme ; sinon refus avant l'ouverture."""
++    _verifier_piece(chemin, empreinte, ControleQuatreAbsentOuFaux)
++    try:
++        texte = Path(chemin).read_text(encoding="utf-8")
++    except (OSError, UnicodeDecodeError):
++        raise ControleQuatreAbsentOuFaux() from None
++    lignes = [x.strip() for x in texte.splitlines()]
++    if not any(LIGNE_CONFORME.match(x) for x in lignes) or any(LIGNE_NON_CONFORME.match(x) for x in lignes):
++        raise ControleQuatreNonConforme()
++    if programme not in texte:
++        raise ControleQuatreAutreProgramme()
++
++
+ def _verifier_piece(chemin, empreinte, classe_refus) -> str:
+     if chemin is None or not est_empreinte(empreinte):
+         raise classe_refus()
+@@ -1110,27 +1265,32 @@
+     return refuses
+ 
+ 
+-def jouer_la_garde(banque, journal, sortie, controle_4, empreinte_controle_4, mot_de_la_mere=None, repli=None,
+-                   piece_repli=None, empreinte_piece_repli=None, entree_cartes=None, entree_v2=None) -> dict:
++def jouer_la_garde(banque, sortie, controle_4, empreinte_controle_4, mot_de_la_mere=None, repli=None,
++                   piece_repli=None, empreinte_piece_repli=None, entree_cartes=None, entree_v2=None,
++                   lieu_journal=None, programme=None) -> dict:
+     """La garde, une exécution. Rend le rapport (liste fermée), écrit et scellé dans `sortie` quand c'est possible. Toute
+-    exception est attrapée : seuls son nom de classe et son lieu sortent."""
+-    entree_cartes = entree_cartes or EntreeCartes.production()
+-    entree_v2 = entree_v2 or EntreeV2.production()
+-    r = {"decision": "garde non jouée", "empreinte_programme": programme_sha256()}
++    exception est attrapée : seuls son nom de classe et son lieu sortent. v2 : le journal des rejeux n'est plus un argument
++    (constantes, `LieuDuJournal`) ; `programme` : l'empreinte de ce programme, calculée une fois par l'appelant."""
++    r = {"decision": "garde non jouée", "empreinte_programme": programme or programme_sha256()}
+     ids = frozenset()
+     jr, rang, ouvert, sortie_prete = None, None, False, False
+     try:
+         with warnings.catch_warnings():
+             warnings.simplefilter("error")
+-            garde_chemins([banque, journal, sortie, controle_4, piece_repli])
++            entree_cartes = entree_cartes or EntreeCartes.production()
++            entree_v2 = entree_v2 or EntreeV2.production()
++            lieu_journal = lieu_journal or LieuDuJournal.production()
++            journal = lieu_journal.journal
++            garde_chemins([banque, journal, lieu_journal.manifeste, sortie, controle_4, piece_repli])
+             sortie = Path(sortie)
+             if sortie.exists():
+                 raise SortieExistante()
+             sortie.mkdir(parents=False)
+             sortie_prete = True
++            exiger_manifeste_du_journal(lieu_journal)                     # v2 : manifeste de création exigé
+             jr = JournalRejeux(journal)                                   # absent ou illisible : refus avant ouverture
+             r["nombre_de_rejeux"] = max(0, jr.ouvertures - 1)
+-            _verifier_piece(controle_4, empreinte_controle_4, ControleQuatreAbsentOuFaux)   # condition (4), écrite
++            exiger_controle_conforme(controle_4, empreinte_controle_4, r["empreinte_programme"])   # (4), v2 : verdict
+             if repli is not None:
+                 if repli not in DECLENCHEURS_REPLI:
+                     raise ReplisHorsDeclencheur()
+@@ -1154,7 +1314,8 @@
+                                       "empreinte_attendue": entree_cartes.empreinte, "compte_attendu": entree_cartes.compte},
+                 "seconde_entree": {"chemin": str(entree_v2.chemin), "empreinte": h_v2, "compte": entree_v2.compte},
+                 "banque": {"chemin": str(Path(banque).resolve()), "empreinte": h_banque, "temoins": len(temoins)},
+-                "journal_des_rejeux": {"chemin": str(Path(journal).resolve()), "ouvertures_lues": jr.ouvertures,
++                "journal_des_rejeux": {"chemin": str(journal), "manifeste_de_creation": str(lieu_journal.manifeste),
++                                       "nature": lieu_journal.nature, "ouvertures_lues": jr.ouvertures,
+                                        "rejeux_lus": max(0, jr.ouvertures - 1)},
+                 "ce_passage": {"rang": jr.ouvertures + 1, "rejeu": jr.ouvertures},
+                 "controle_de_la_condition_4": {"chemin": str(Path(controle_4).resolve()), "empreinte": empreinte_controle_4},
+@@ -1228,7 +1389,8 @@
+             lieu = lieu_de(e)
+             e.__traceback__ = None
+             del e
+-            r = {"decision": "garde non jouée", "empreinte_programme": r["empreinte_programme"], "exception": lieu}
++            r = {k: v for k, v in (("decision", "garde non jouée"), ("empreinte_programme", r["empreinte_programme"]),
++                                   ("nombre_de_rejeux", r.get("nombre_de_rejeux")), ("exception", lieu)) if v is not None}
+     valider_rapport_garde(r, ids)
+     return r
+ 
+@@ -1481,7 +1643,7 @@
+ 
+ 
+ # ================================================================================================================================
+-# Pièces réelles (mode réel seulement ; jamais exercé par l'auteur)
++# Pièces réelles (v2 : la voie réelle de l'audit est exercée sur la banque factice par un essai, sans réseau ni clé, M6)
+ # ================================================================================================================================
+ 
+ 
+@@ -1502,8 +1664,9 @@
+ 
+ def construire_service_reel(orchestrateur=None) -> ServiceAudit:
+     """La vraie fonction de service : `charger_service_des_juges` du code d'appel v4 (082d19d6…), qui vérifie l'empreinte
+-    de chaque module de l'orchestrateur avant tout import. Jamais exercé par l'auteur (le dépôt de l'orchestrateur n'est pas
+-    sur sa machine)."""
++    de chaque module de l'orchestrateur avant tout import. v2 (T2, M6) : le clone de l'organisme est présent
++    (`/home/user/lciric/ideation-organism`, commit a41b7b50…) ; cette voie est exercée par un essai sur la banque factice :
++    fonctions pures, aucun réseau, aucune clé, aucune écriture dans le clone."""
+     v4 = charger_code_appel_v4()
+     f = v4.charger_service_des_juges(Path(orchestrateur) if orchestrateur else v4.ORCHESTRATEUR)
+     consigne = lire_par_empreinte(DEPOT / CONSIGNE_JUGE[0], CONSIGNE_JUGE[1], "consigne figée du juge").decode("utf-8")
+@@ -1535,6 +1698,7 @@
+     banque, journal = composer(fr, ctx, items, interdites)
+     verifier_proportions(banque, journal)
+     sortie.mkdir(parents=False)
++    communs = fragments_communs(journal)                                  # v2, M5 : rapporté
+     usages = {}
+     for j in journal:
+         for fid in j["fragments"].values():
+@@ -1547,7 +1711,8 @@
+     empreintes["journal-construction-ligne-3-v1.json"] = ecrire_scelle(sortie / "journal-construction-ligne-3-v1.json", {
+         "version": VERSION, "fragments_sha256": h, "verite": "la construction : classe, item, niveau, citation, piège, "
+         "fragments employés par identifiant", "temoins": journal, "usages_par_fragment": usages,
+-        "fragments_jamais_employes": sorted(set(fr["par_id"]) - set(usages)), "comptes": comptes_de_la_banque(banque)})
++        "fragments_jamais_employes": sorted(set(fr["par_id"]) - set(usages)), "comptes": comptes_de_la_banque(banque),
++        "fragments_communs_entre_deux_temoins": communs, "contenus_identiques": 0})
+     empreintes["partage-ligne-3-v1.json"] = ecrire_scelle(sortie / "partage-ligne-3-v1.json", {
+         "version": VERSION, "strates": "classe ; bons : citation, puis type ; mauvais : item, niveau, citation",
+         "lecture": sorted(t["identifiant_interne"] for t in banque if t["moitie"] == "lecture"),
+@@ -1555,8 +1720,9 @@
+         "comptes": partage_par_strate(journal)})
+     m = manifeste_de_base("composition et partage de la banque", ctx, args)
+     m["sorties"] = empreintes
++    m["fragments_communs_entre_deux_temoins"] = communs
+     ecrire_scelle(sortie / "manifeste-composition.json", m)
+-    return {"banque": banque, "journal": journal, "empreintes": empreintes, "manifeste": m}
++    return {"banque": banque, "journal": journal, "empreintes": empreintes, "manifeste": m, "communs": communs}
+ 
+ 
+ def partage_par_strate(journal: list) -> list:
+@@ -1605,32 +1771,73 @@
+     return None
+ 
+ 
+-def principal(argv=None, entree_cartes=None, entree_v2=None) -> int:
+-    """Ligne de commande. `entree_cartes` et `entree_v2` : voie d'essai explicite (appel en Python seulement) ; la ligne de
+-    commande ne les expose pas et passe toujours par les constantes."""
+-    argv = sys.argv[1:] if argv is None else list(argv)
+-    geste = argv[0] if argv else None
+-    if geste == "garde":
+-        r = None
+-        try:
+-            r = jouer_la_garde(
+-                _argument(argv, "--banque"), _argument(argv, "--journal-rejeux"), _argument(argv, "--sortie"),
+-                _argument(argv, "--controle-4"), _argument(argv, "--empreinte-controle-4"),
+-                mot_de_la_mere=_argument(argv, "--mot-de-la-mere", False), repli=_argument(argv, "--repli", False),
+-                piece_repli=_argument(argv, "--piece-repli", False),
+-                empreinte_piece_repli=_argument(argv, "--empreinte-piece-repli", False),
+-                entree_cartes=entree_cartes, entree_v2=entree_v2)
+-        except BaseException as e:                                       # noqa: BLE001 — rien d'autre ne sort
+-            lieu = lieu_de(e)
+-            e.__traceback__ = None
+-            del e
+-            r = {"decision": "garde non jouée", "empreinte_programme": programme_sha256(), "exception": lieu}
+-            valider_rapport_garde(r)
+-        sys.stdout.write(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n")
++def lire_arguments_garde(reste: list) -> dict:
++    """v2 : arguments de la garde par paires, chacun dans `ARGUMENTS_GARDE`, une fois ; obligatoires présents ; tout autre
++    argument (dont un chemin de journal) est un refus."""
++    if len(reste) % 2:
++        raise ArgumentHorsListe()
++    valeurs = {}
++    for k in range(0, len(reste), 2):
++        nom, valeur = reste[k], reste[k + 1]
++        if nom not in ARGUMENTS_GARDE or nom in valeurs or not isinstance(valeur, str):
++            raise ArgumentHorsListe()
++        valeurs[nom] = valeur
++    if any(oblig and nom not in valeurs for nom, oblig in ARGUMENTS_GARDE.items()):
++        raise ArgumentHorsListe()
++    return valeurs
++
++
++def _sortie_de_secours(e: BaseException) -> int:
++    """Dernier recours de la garde : nom de classe et lieu seulement, écrits sans rien recalculer ; aucune trace brute."""
++    try:
++        lieu = lieu_de(e)
++    except BaseException:                                                # noqa: BLE001
++        lieu = {"classe": "LieuIllisible", "fichier": NOM_DU_PROGRAMME, "ligne": None}
++    try:
++        r = {"decision": "garde non jouée", "exception": lieu}
++        valider_rapport_garde(r, exiger_programme=False)
++        os.write(1, (json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8"))
++    except BaseException:                                                # noqa: BLE001 — rien d'autre ne sort
++        pass
++    return 5
++
++
++def principal_garde(argv: list, entree_cartes=None, entree_v2=None, lieu_journal=None) -> int:
++    """v2, R6 du contrôle : tout le geste `garde`, lecture des arguments et sortie standard comprises, sous `try`."""
++    try:
++        programme = programme_sha256()
++        a = lire_arguments_garde(list(argv[1:]))
++        r = jouer_la_garde(a["--banque"], a["--sortie"], a["--controle-4"], a["--empreinte-controle-4"],
++                           mot_de_la_mere=a.get("--mot-de-la-mere"), repli=a.get("--repli"),
++                           piece_repli=a.get("--piece-repli"), empreinte_piece_repli=a.get("--empreinte-piece-repli"),
++                           entree_cartes=entree_cartes, entree_v2=entree_v2, lieu_journal=lieu_journal,
++                           programme=programme)
++        texte = json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n"
++        sys.stdout.write(texte)
++        sys.stdout.flush()
+         return {"banque passée": 0, "banque refusée": 4}.get(r["decision"], 5)
++    except BaseException as e:                                           # noqa: BLE001 — condition (5)
++        code = _sortie_de_secours(e)
++        e.__traceback__ = None
++        del e
++        return code
++
++
++def principal(argv=None, entree_cartes=None, entree_v2=None, lieu_journal=None) -> int:
++    """Ligne de commande. `entree_cartes`, `entree_v2` et `lieu_journal` : voie d'essai explicite (appel en Python
++    seulement) ; la ligne de commande ne les expose pas et passe toujours par les constantes."""
++    try:
++        argv = sys.argv[1:] if argv is None else list(argv)
++        geste = argv[0] if argv else None
++    except BaseException:                                                # noqa: BLE001
++        return 2
++    if geste == "garde":
++        return principal_garde(argv, entree_cartes, entree_v2, lieu_journal)
+     try:
+         if geste == "creer-journal-rejeux":
+-            creer_journal_rejeux(_argument(argv, "--journal"), _argument(argv, "--manifeste"))
++            if len(argv) != 1:                                           # v2 : aucun chemin ; les constantes seules
++                raise ArgumentHorsListe()
++            creer_journal_rejeux(lieu_journal)
+             print(json.dumps({"journal": "créé vide"}, ensure_ascii=False))
+             return 0
+         autorisation = Autorisation(_argument(argv, "--autorisation-additif"), _argument(argv, "--empreinte-additif"))

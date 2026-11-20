@@ -1,0 +1,57 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v2/epreuve_juges_reels_ligne_3_v2.py	2026-11-20 14:08:52.453112818 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v4/epreuve_juges_reels_ligne_3_v4.py	2026-11-20 14:19:52.584999040 +0000
+@@ -1,5 +1,20 @@
+ #!/usr/bin/env python3
+-"""Épreuve des juges réels — ligne 3 de l'organisme v9 (votes effectifs des juges croisés), étage 2 à 200 témoins — v2.
++"""Épreuve des juges réels — ligne 3 de l'organisme v9 (votes effectifs des juges croisés), étage 2 à 200 témoins — v4.
++
++Version 4 (même développeur, règle R12 ; la v3, `epreuve_juges_reels_ligne_3_v3.py`, 969653f2…, est gardée sans
++modification) : décision de la mère (R-4290, 14:15Z, voie (i)). Les deux noms de clé sortent de `VARIABLES_PERMISES` : les
++clés vivent dans l'environnement des seuls relais, lancés à part, comme à la course v9 ; la garde des noms de clé reste telle
++quelle ; le mandataire (HTTPS_PROXY exigé) et les certificats restent. Rien d'autre ne change.
++
++Texte de la v3 :
++
++Version 3 (même développeur, règle R12 ; la v2, `epreuve_juges_reels_ligne_3_v2.py`, 1a0b08d5…, est gardée sans
++modification) : correction de la mère (14:10Z). La liste blanche `VARIABLES_PERMISES` garde en plus le mandataire réseau
++(HTTPS_PROXY, HTTP_PROXY, NO_PROXY et leurs formes en minuscules), les variables du paquet de certificats (SSL_CERT_FILE,
++REQUESTS_CA_BUNDLE, CURL_CA_BUNDLE, NODE_EXTRA_CA_CERTS) et les noms des deux clés employées (par le nom seul) ; le départ
++réel est refusé si HTTPS_PROXY manque (`VARIABLES_EXIGEES`). Rien d'autre ne change.
++
++Texte de la v2 :
+ 
+ Version 2 (même développeur, règle R12 ; la v1, `epreuve_juges_reels_ligne_3_v1.py`, 586bc7e6…, est gardée sans
+ modification) : les trois corrections de la contre-lecture `contre-lecture-code-appel-etage-2-v1.md` (4bcab58a…), à la
+@@ -72,7 +87,7 @@
+ from fractions import Fraction
+ from pathlib import Path
+ 
+-VERSION = "epreuve_juges_reels_ligne_3_v2"
++VERSION = "epreuve_juges_reels_ligne_3_v4"
+ 
+ # --- plafond (une seule constante, égale à la ligne de GO lue) -------------------------------------------------------------
+ PLAFOND_C = 8836            # 88,36 USD en centimes entiers : GO-2026-11-20-26 ; additif 3 v3, § 4.2
+@@ -141,7 +156,12 @@
+ # Liste blanche des variables permises au départ du mode réel, lancé sous `env -i` : celles du lanceur v9 (`NOMS_PERMIS`),
+ # plus HOME (sonde du bac à sable du précédent), LC_CTYPE (posée par l'interpréteur lui-même quand il force un locale UTF-8
+ # sous un environnement vide) et GO_ID (garde de calcul du dépôt).
+-VARIABLES_PERMISES = ("PATH", "LANG", "LC_ALL", "LC_CTYPE", "TZ", "TMPDIR", "HOME", "GO_ID")
++VARIABLES_PERMISES = ("PATH", "LANG", "LC_ALL", "LC_CTYPE", "TZ", "TMPDIR", "HOME", "GO_ID",
++                      # v3, correction de la mère (14:10Z) : mandataire réseau, paquet de certificats ; v4 (R-4290) : aucun
++                      # nom de clé (les clés vivent dans l'environnement des seuls relais)
++                      "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy", "no_proxy",
++                      "SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE", "NODE_EXTRA_CA_CERTS")
++VARIABLES_EXIGEES = ("HTTPS_PROXY",)                # v3 : sans mandataire, aucun appel n'aboutit dans ce conteneur
+ NOM_DE_VARIABLE = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
+ 
+ # --- statuts des adaptateurs de l'orchestrateur -----------------------------------------------------------------------------
+@@ -1285,6 +1305,9 @@
+     hors = sorted(n for n in environ if n not in VARIABLES_PERMISES)
+     if hors:
+         raise Refus(f"environnement non épuré : variables hors de la liste blanche ({hors}) : lancer sous env -i")
++    manquantes = [n for n in VARIABLES_EXIGEES if n not in environ]               # v3
++    if manquantes:
++        raise Refus(f"environnement : variables exigées absentes ({manquantes}) : sans mandataire, aucun appel n'aboutit")
+     return sorted(environ)
+ 
+ 

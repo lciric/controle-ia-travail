@@ -1,0 +1,135 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/developpeur-etalonnage-lecture-etage-2/etalonnage-lecture-v1/lire_ligne_3_v1.py	2026-11-20 15:50:03.983925423 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/developpeur-etalonnage-lecture-etage-2/etalonnage-lecture-v2/lire_ligne_3_v2.py	2026-11-20 16:05:48.832877781 +0000
+@@ -1,5 +1,20 @@
+ #!/usr/bin/env python3
+-"""Lecture unique de l'étage 2 à 200 témoins — ligne 3 de l'organisme v9 (votes effectifs des juges croisés) — v1.
++"""Lecture unique de l'étage 2 à 200 témoins — ligne 3 de l'organisme v9 (votes effectifs des juges croisés) — v2.
++
++Version 2 (même développeur, règle R12 ; la v1, `lire_ligne_3_v1.py`, 334636b8…, est gardée sans modification) :
++décisions de la mère (15:55Z, 16:01Z) sur la contre-lecture `contre-lecture-etalonnage-lecture-etage-2-v1.md` (c1dbd14e…).
++(1) Un témoin « complet » est un témoin aux cinq rendus **obtenus** (état « obtenu » du code d'appel, comme le calcul
++plafond v2 et `comptes_complets`) : différentiel du contre-lecteur `correction-n1-lire_ligne_3_v1.diff`, porté à la lettre ;
++le compte des témoins aux cinq rendus tentés est rapporté à côté. (4) La pièce d'étalonnage porte son dossier : la lecture
++refuse une pièce dont le dossier n'est pas celui où elle lit. Importe `etalonner_ligne_3_v2.py` par empreinte ; noms de
++sortie en v2. Rien d'autre ne change.
++
++Usage (v2) :
++    python3 -I -B lire_ligne_3_v2.py --banque BANQUE.json --banque-sha HEX --depot DEPOT --execution K \
++        --rapport-execution-sha HEX --etalonnage DOSSIER/etalonnage/etalonnage-etage-2-ligne-3-v2.json \
++        --etalonnage-sha HEX --audit AUDIT.json --audit-sha HEX --autorisation-additif CHEMIN --empreinte-additif HEX
++
++Texte de la v1 :
+ 
+ Plan de code : annexe A du texte v7 (`preenregistrement-ligne-3-votes-effectifs-juges-v7.md`, 4e3680d9…), l. 562 ;
+ « Mesures de l'étage 2 » (l. 293), « Lecture par colonne » (l. 295), « Lecture unique » (l. 297), racine 2026111936 du
+@@ -44,11 +59,11 @@
+ from fractions import Fraction
+ from pathlib import Path
+ 
+-VERSION = "lire_ligne_3_v1"
++VERSION = "lire_ligne_3_v2"
+ 
+ # --- le programme d'étalonnage, importé par empreinte (ses lectures communes et le chargeur du banc v4) ------------------
+-ETALONNER = ("etalonner_ligne_3_v1.py", "37a63c9b02eb6483edb088ee01f7dab90aaac80127c56c24e081545831291919")
+-NOM_MODULE_ETALONNER = "etalonner_ligne_3_v1"
++ETALONNER = ("etalonner_ligne_3_v2.py", "a67ebed377ee70fe56163ded7b3fc42cdbd319c0f265b12d68bbbf394e15b92c")
++NOM_MODULE_ETALONNER = "etalonner_ligne_3_v2"
+ 
+ 
+ def charger_etalonner():
+@@ -56,15 +71,15 @@
+     try:
+         octets = chemin.read_bytes()
+     except OSError:
+-        raise RuntimeError("etalonner_ligne_3_v1.py absent à côté de ce programme") from None
++        raise RuntimeError(f"{ETALONNER[0]} absent à côté de ce programme") from None
+     import hashlib
+     if hashlib.sha256(octets).hexdigest() != ETALONNER[1]:
+-        raise RuntimeError("etalonner_ligne_3_v1.py d'une autre empreinte que celle de ce programme : aucun import")
++        raise RuntimeError(f"{ETALONNER[0]} d'une autre empreinte que celle de ce programme : aucun import")
+     m = sys.modules.get(NOM_MODULE_ETALONNER)
+     if m is not None:
+         f = getattr(m, "__file__", None)
+         if f is None or hashlib.sha256(Path(f).read_bytes()).hexdigest() != ETALONNER[1]:
+-            raise RuntimeError("module etalonner_ligne_3_v1 déjà chargé avec une autre empreinte")
++            raise RuntimeError(f"module {NOM_MODULE_ETALONNER} déjà chargé avec une autre empreinte")
+         return m
+     m = types.ModuleType(NOM_MODULE_ETALONNER)
+     m.__file__ = str(chemin)
+@@ -111,8 +126,8 @@
+ CONTROLES_AUDIT = ("verite_non_servie", "consigne_servie_empreinte_attendue", "lecteur_rend_absent_pour_illisible",
+                    "appariement_temoin_verdict", "juges_scriptes_parfait_et_hasard")
+ SOUS_DOSSIER = "lecture"
+-FICHIER_RAPPORT = "rapport-lecture-etage-2-ligne-3-v1.json"
+-FICHIER_MANIFESTE = "manifeste-lecture-etage-2-ligne-3-v1.json"
++FICHIER_RAPPORT = "rapport-lecture-etage-2-ligne-3-v2.json"
++FICHIER_MANIFESTE = "manifeste-lecture-etage-2-ligne-3-v2.json"
+ 
+ MOTS_TABLE = {
+     "rang_1": "non concluant",
+@@ -185,14 +200,16 @@
+     import numpy as np
+     y, tente, vote = ET.tableaux(ids, banque, par_temoin)
+     present = np.zeros_like(tente)
++    obtenu = np.zeros_like(tente)
+     items = np.zeros(tente.shape + (len(ET.ITEMS),), dtype=bool)
+     for i, t in enumerate(ids):
+         for c, (j, r, _b) in enumerate(ET.COLONNES):
++            obtenu[i, c] = par_temoin[t][(j, r)]["etat"] == "obtenu"
+             v = par_temoin[t][(j, r)]["verdict"]
+             if v is not None:
+                 present[i, c] = True
+                 items[i, c] = [v["items"][k] for k in ET.ITEMS]
+-    return y, tente, vote, present, items
++    return y, tente, vote, present, items, obtenu
+ 
+ 
+ def classes_suffisantes(y) -> bool:
+@@ -348,6 +365,8 @@
+                     "lire") from None
+     if piece.get("piece") != ET.PIECE or piece.get("banque_sha256") != banque_sha:
+         raise Refus("étalonnage avant lecture : pièce d'une autre nature ou d'une autre banque")
++    if piece.get("dossier") != str(dossier):                                  # v2 (4)
++        raise Refus("étalonnage avant lecture : la pièce porte un autre dossier que celui de la lecture : refus")
+     try:
+         audit_obj = ET.lire_json_scelle(audit, audit_sha, "audit de symétrie")
+     except Refus as e:
+@@ -398,11 +417,12 @@
+     par_temoin = dict(v_cal["par_temoin"])
+     par_temoin.update(v_lec["par_temoin"])
+     ids = sorted(par_temoin)
+-    y, tente, vote, present, items = tableaux_complets(ids, bq, par_temoin)
++    y, tente, vote, present, items, obtenu = tableaux_complets(ids, bq, par_temoin)
+     moitie = np.array([bq[t]["moitie"] for t in ids])
+     lec = moitie == "lecture"
+     bloc_a = tente[:, 0] & tente[:, 1]
+-    complet = tente.all(axis=1)
++    complet = obtenu.all(axis=1)                  # décision de la mère (n° 1) : cinq rendus OBTENUS (comme le code d'appel)
++    complet_tentes = tente.all(axis=1)            # rapporté à côté
+     err = vote != y[:, None]
+     r = {"version": VERSION, "issue_de_la_portee": ISSUE_PORTEE,
+          "verdict_portee_200_v2_sha256": ET.VERDICT_PORTEE_200_V2_SHA256,
+@@ -415,8 +435,11 @@
+                     "bloc_A_tentes_moitie_lecture": int((bloc_a & lec).sum()), "complets_cinq_rendus": int(complet.sum()),
+                     "complets_moitie_lecture": n_lec_complets, "complets_moitie_etalonnage": int((complet & ~lec).sum()),
+                     "seuil_complets_moitie_lecture": SEUIL_COMPLETS_LECTURE,
+-                    "definition_d_un_complet": "les cinq rendus tentés (verdict obtenu, lisible ou non, ou absent compté "
+-                                               "comme rejet)",
++                    "complets_cinq_rendus_tentes": int(complet_tentes.sum()),
++                    "complets_moitie_lecture_tentes": int((complet_tentes & lec).sum()),
++                    "definition_d_un_complet": "les cinq rendus obtenus (état « obtenu » du code d'appel, verdict lisible "
++                                               "ou non ; un rendu « absent » après rejeu refusé n'est pas obtenu) ; le "
++                                               "compte des témoins aux cinq rendus tentés est rapporté à côté",
+                     "complets_selon_le_rapport_d_execution": rapport.get("complets")}
+     r["arret_du_code_d_appel"] = rapport.get("arret")
+     mesures_r = n_lec_complets >= SEUIL_COMPLETS_LECTURE
+@@ -716,7 +739,8 @@
+         "commits": {"depot_de_travail": ET.commit_du_depot()},
+         "pieces_qui_font_foi": {"texte_v7": ET.TEXTE_V7_SHA256, "additif_3_v3": ET.ADDITIF_3_V3_SHA256,
+                                 "verdict_portee_200_v2": ET.VERDICT_PORTEE_200_V2_SHA256,
+-                                "code_d_appel_v4": ET.CODE_APPEL_V4_SHA256},
++                                "code_d_appel_v4": ET.CODE_APPEL_V4_SHA256,
++                                "additif_5_v2_main": {"chemin": ET.ADDITIF_5_V2[0], "sha256": ET.ADDITIF_5_V2[1]}},
+         "sorties": {FICHIER_RAPPORT: h}}
+     ET.ecrire_scelle(sortie / FICHIER_MANIFESTE, manifeste)
+     return {"rapport": r, "rapport_sha256": h, "manifeste": manifeste, "sortie": str(sortie)}

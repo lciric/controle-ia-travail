@@ -1,0 +1,73 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/etalonnage-lecture-v2/etalonner_ligne_3_v2.py	2026-11-20 16:09:35.713976477 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/etalonnage-lecture-v3/etalonner_ligne_3_v3.py	2026-11-20 16:17:57.127568799 +0000
+@@ -1,5 +1,17 @@
+ #!/usr/bin/env python3
+-"""Étalonnage de l'étage 2 à 200 témoins — ligne 3 de l'organisme v9 (votes effectifs des juges croisés) — v2.
++"""Étalonnage de l'étage 2 à 200 témoins — ligne 3 de l'organisme v9 (votes effectifs des juges croisés) — v3.
++
++Version 3 (même développeur, règle R12 ; la v2, `etalonner_ligne_3_v2.py`, a67ebed3…, est gardée sans modification) :
++décision de la mère (16:12Z) sur le silence n° 18, selon la vérification `verification-etalonnage-lecture-etage-2-v2-v1.md`
++(b3ed3dfc…, § 5). (a) Une quatrième nature de fragment « voisins », `conforme_piege_reprise_assumee`, séparée des conformes
++non citants (texte exact de la vérification, § 5, point 1). (b) Dans `executer`, après `lire_banque`, le JSON de la banque
++est lu et son `fragments_sha256` comparé à l'empreinte du fichier de fragments : écart ou champ absent, refus nommé (texte
++exact de la vérification, § 5, point 3). Noms de sortie en v3. Rien d'autre ne change.
++
++Usage (v3) :
++    python3 -I -B etalonner_ligne_3_v3.py  (mêmes arguments que la v2)
++
++Texte de la v2 :
+ 
+ Version 2 (même développeur, règle R12 ; la v1, `etalonner_ligne_3_v1.py`, 37a63c9b…, est gardée sans modification) :
+ décisions de la mère (15:55Z, 16:01Z) sur la contre-lecture `contre-lecture-etalonnage-lecture-etage-2-v1.md` (c1dbd14e…).
+@@ -62,7 +74,7 @@
+ import types
+ from pathlib import Path
+ 
+-VERSION = "etalonner_ligne_3_v2"
++VERSION = "etalonner_ligne_3_v3"
+ 
+ # --- pièces épinglées ---------------------------------------------------------------------------------------------------
+ DEPOT = Path("/home/user/controle-ia-travail")
+@@ -83,7 +95,9 @@
+ SCHEMA_FRAGMENTS = "fragments-temoins-ligne-3-v1"
+ CATEGORIE_VOISINS = "voisins"
+ ITEM_RESERVES = "reserves_tenues"
+-NATURES_VOISINS = ("conforme_non_citant", "conforme_citant", "fautif")
++NATURES_VOISINS = ("conforme_non_citant", "conforme_citant", "fautif",
++                   "conforme_piege_reprise_assumee")          # v3 (a) : séparée des conformes non citants
++PIEGE_REPRISE = "reprise_assumee"
+ CLE_RESERVES = "cartes_tombees_sur_reserves_tenues_premier_rendu"
+ 
+ # --- format du dépôt des verdicts (code d'appel v4, `deposer`, l. 1082 à 1133) -------------------------------------------
+@@ -111,8 +125,8 @@
+ 
+ # --- sorties ------------------------------------------------------------------------------------------------------------
+ SOUS_DOSSIER = "etalonnage"
+-FICHIER_PIECE = "etalonnage-etage-2-ligne-3-v2.json"
+-FICHIER_MANIFESTE = "manifeste-etalonnage-etage-2-ligne-3-v2.json"
++FICHIER_PIECE = "etalonnage-etage-2-ligne-3-v3.json"
++FICHIER_MANIFESTE = "manifeste-etalonnage-etage-2-ligne-3-v3.json"
+ PIECE = "étalonnage de l'étage 2, ligne 3 (moitié « étalonnage » seule)"
+ 
+ 
+@@ -429,7 +443,8 @@
+     for x in f["conformes"].get(CATEGORIE_VOISINS) or []:
+         if not isinstance(x, dict) or not isinstance(x.get("id"), str) or not isinstance(x.get("citation"), bool):
+             raise Refus("fichier de fragments : fragment conforme de « voisins » hors forme")
+-        nature[x["id"]] = "conforme_citant" if x["citation"] else "conforme_non_citant"
++        nature[x["id"]] = "conforme_piege_reprise_assumee" if x.get("piege") == "reprise_assumee" else (
++            "conforme_citant" if x["citation"] else "conforme_non_citant")           # v3 (a), vérification § 5, point 1
+     for x in f["fautifs"]:
+         if isinstance(x, dict) and x.get("categorie") == CATEGORIE_VOISINS and isinstance(x.get("id"), str):
+             if x["id"] in nature:
+@@ -527,6 +542,10 @@
+                     "ligne lue")
+     banc = banc if banc is not None else charger_banc()
+     banque = lire_banque(banque_chemin, banque_sha, n_temoins)
++    objet_banque = lire_json_scelle(banque_chemin, banque_sha, "banque de témoins")      # v3 (b), vérification § 5, point 3
++    if objet_banque.get("fragments_sha256") != fragments_sha:
++        raise Refus("banque : son champ fragments_sha256 est absent ou différent de l'empreinte du fichier de fragments : "
++                    "refus")
+     verdicts = lire_verdicts_moitie(verdicts_chemin, verdicts_sha, "etalonnage", banque)
+     voisins = lire_construction(journal_chemin, journal_sha, fragments_chemin, fragments_sha, banque)
+     resultat = etalonner(banque, verdicts, banc)

@@ -1,0 +1,295 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/generateur-v2/essais_generer_temoins_ligne_3_v2.py	2026-11-20 15:15:23.617511956 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/generateur-v3/essais_generer_temoins_ligne_3_v3.py	2026-11-20 15:27:12.091304846 +0000
+@@ -1,4 +1,8 @@
+-"""Essais de `generer_temoins_ligne_3_v2.py` (pytest) — v2.
++"""Essais de `generer_temoins_ligne_3_v3.py` (pytest) — v3.
++
++v3 (décisions de la mère, 15:20Z) : historique git du dépôt (dépôt git d'essai temporaire) sain et artefact ; seule la forme
++réelle du fichier des cartes (identifiants de treize caractères) ; ligne de portée de la pièce du (4), confrontée au repli ;
++journal existant sans manifeste refusé sans trace ; pièce du (4) lue une seule fois.
+ 
+ v2 : essais de la v1 rejoués, adaptés au journal en constantes (voie d'essai `LieuDuJournal.essai`) et à la pièce du (4)
+ à verdict ; plus : recréation du journal refusée, suppression du journal → refus avant ouverture, aucun chemin libre ; pièce
+@@ -10,22 +14,24 @@
+ un artefact, dont les sept artefacts de la garde. **Cartes factices seulement** : chaque essai écrit son propre faux fichier
+ de cartes dans un dossier temporaire et passe son empreinte au code par la voie d'essai explicite
+ (`EntreeCartes.essai`) ; aucun essai ne nomme, n'ouvre ni ne touche le fichier des cartes. Les fragments sont ceux du
+-fichier factice `fragments-exemple-essais-v2.json`. Racine des essais 2026111930 seulement ; les racines 2026111934 et
++fichier factice `fragments-exemple-essais-v3.json`. Racine des essais 2026111930 seulement ; les racines 2026111934 et
+ 2026111937 ne sont jamais dérivées ici.
+ """
+ import hashlib
+ import json
++import subprocess
+ import tempfile
+ from fractions import Fraction
+ from pathlib import Path
+ 
+ import pytest
+ 
+-import generer_temoins_ligne_3_v2 as G
++import generer_temoins_ligne_3_v3 as G
+ 
+ ICI = Path(__file__).resolve().parent
+-FRAGMENTS = ICI / "fragments-exemple-essais-v2.json"
+-PROGRAMME = ICI / "generer_temoins_ligne_3_v2.py"
++FRAGMENTS = ICI / "fragments-exemple-essais-v3.json"
++PROGRAMME = ICI / "generer_temoins_ligne_3_v3.py"
++GIT_ESSAI = ["git", "-c", "user.name=essai", "-c", "user.email=essai@exemple.invalid", "-c", "commit.gpgsign=false"]
+ 
+ SECRET_CARTE = "zorglub quantique violette mange sept nuages bleus ce matin sur la colline"
+ SECRET_META = "pamplemousse orbital chante douze fois sous le pont des soupirs ce soir"
+@@ -77,7 +83,7 @@
+ def cartes_factices(n=94, ids=None, secret=True):
+     cartes = []
+     for k in range(n):
+-        ident = ids[k] if ids else f"carte-factice-{k:02d}"
++        ident = ids[k] if ids else f"c{k:012x}"                      # treize caractères, comme la forme réelle
+         contenu = {"titre": f"Carte inventée {k}", "texte": texte_de_carte(k)}
+         if secret and k == 3:
+             contenu["texte"] += " " + SECRET_CARTE + "."
+@@ -85,9 +91,15 @@
+     return cartes
+ 
+ 
++def forme_reelle(cartes) -> dict:
++    """La seule forme admise en v3 : {identifiant : {contenu, empreinte, meta}}."""
++    return {c["id"]: {"contenu": c["contenu"], "empreinte": sha(json.dumps(c["contenu"], sort_keys=True).encode("utf-8")),
++                      "meta": c["meta"]} for c in cartes}
++
++
+ def ecrire_cartes(dossier: Path, cartes, nom="cartes-factices.json") -> Path:
+     p = dossier / nom
+-    p.write_text(json.dumps(cartes, ensure_ascii=False), encoding="utf-8")
++    p.write_text(json.dumps(forme_reelle(cartes), ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+     return p
+ 
+ 
+@@ -98,10 +110,19 @@
+ 
+ 
+ def lieu(dossier: Path):
+-    return G.LieuDuJournal.essai(dossier / "journal")
++    return G.LieuDuJournal.essai(dossier / "journal", depot=dossier)
++
++
++def initialiser_depot(d: Path) -> None:
++    """Dépôt git d'essai temporaire, une validation vide (historique qui ne connaît pas le manifeste)."""
++    if not (d / ".git").exists():
++        subprocess.run(GIT_ESSAI + ["init", "-q", str(d)], check=True, capture_output=True)
++        subprocess.run(GIT_ESSAI + ["-C", str(d), "commit", "-q", "--allow-empty", "-m", "essai"], check=True,
++                       capture_output=True)
+ 
+ 
+ def preparer_journal(dossier: Path) -> Path:
++    initialiser_depot(dossier)
+     (dossier / "journal").mkdir(exist_ok=True)
+     G.creer_journal_rejeux(lieu(dossier))
+     return lieu(dossier).journal
+@@ -113,15 +134,16 @@
+     return p
+ 
+ 
+-def texte_controle(verdict="**Conforme.**", programme=None) -> str:
++def texte_controle(verdict="**Conforme.**", programme=None, portee="Portée : garde entière") -> str:
+     return ("# Contrôle factice de la condition (4), pour les essais\n\n## Verdict\n\n" + verdict + "\n\n"
+-            f"Programme contrôlé : `{programme or sha_f(PROGRAMME)}`.\n")
++            + (portee + "\n\n" if portee else "") + f"Programme contrôlé : `{programme or sha_f(PROGRAMME)}`.\n")
+ 
+ 
+ class Lancer:
+     def __init__(self, dossier: Path, capfd):
+         self.dossier, self.capfd, self.n = dossier, capfd, 0
+         self.controle = piece(dossier, "controle-4.md", texte_controle())
++        self.controle_repli = piece(dossier, "controle-4-repli.md", texte_controle(portee="Portée : repli seul"))
+ 
+     def __call__(self, banque_p, cartes_p, *, empreinte=None, compte=94, extra=(), provoquer=None,
+                  v2=None, controle=True, controle_piece=None, lieu_journal=None):
+@@ -130,7 +152,7 @@
+         sortie = self.dossier / f"sortie-garde-{self.n}"
+         entree = G.EntreeCartes.essai(cartes_p, empreinte or sha_f(cartes_p), compte, provoquer)
+         argv = ["garde", "--banque", str(banque_p), "--sortie", str(sortie)]
+-        c = controle_piece or self.controle
++        c = controle_piece or (self.controle_repli if "--repli" in extra else self.controle)
+         if controle:
+             argv += ["--controle-4", str(c), "--empreinte-controle-4", sha_f(c)]
+         argv += list(extra)
+@@ -501,18 +523,25 @@
+     assert res["rapport"]["exception"]["classe"] == "FormatCartesInconnu" and appels == []
+ 
+ 
+-def test_garde_formes_admises_des_cartes(dossier, lancer, composition):
++def test_garde_seule_la_forme_reelle_des_cartes(dossier, lancer, composition, monkeypatch):
+     bp = ecrire_banque(dossier, composition["banque"])
+     preparer_journal(dossier)
+     cartes = cartes_factices()
+-    a = dossier / "forme-fiches.json"
+-    a.write_text(json.dumps({"fiches": cartes}, ensure_ascii=False), encoding="utf-8")
+-    b = dossier / "forme-dict.json"
+-    b.write_text(json.dumps({c["id"]: {k: v for k, v in c.items() if k != "id"} for c in cartes}, ensure_ascii=False),
+-                 encoding="utf-8")
+-    for p in (a, b):
+-        res = lancer(bp, p)
+-        assert res["rapport"]["decision"] == "banque passée" and res["rapport"]["cartes_lues"] == 94
++    res = lancer(bp, ecrire_cartes(dossier, cartes))                                 # cas sain : forme réelle
++    assert res["rapport"]["decision"] == "banque passée" and res["rapport"]["cartes_lues"] == 94
++    appels = _compter_comparaisons(monkeypatch)
++    reelle = forme_reelle(cartes)
++    ident_long = dict(reelle)
++    ident_long["c00000000000ff"] = ident_long.pop(cartes[0]["id"])                   # quatorze caractères
++    sans_contenu = dict(reelle)
++    sans_contenu[cartes[1]["id"]] = {"empreinte": "a" * 64}
++    for nom, objet in (("liste", cartes), ("fiches", {"fiches": cartes}), ("identifiant-long", ident_long),
++                       ("sans-contenu", sans_contenu), ("vide", {})):                 # artefacts : formes non réelles
++        p = dossier / f"forme-{nom}.json"
++        p.write_text(json.dumps(objet, ensure_ascii=False), encoding="utf-8")
++        r = lancer(bp, p)
++        assert r["rapport"]["exception"]["classe"] == "FormatCartesInconnu", nom
++    assert appels == []
+ 
+ 
+ def test_garde_meta_retire_aucun_refus(dossier, lancer, composition):
+@@ -613,7 +642,8 @@
+     cp = ecrire_cartes(dossier, cartes_factices())
+     bp = ecrire_banque(dossier, composition["banque"])
+     (dossier / "autre").mkdir()
+-    G.creer_journal_rejeux(G.LieuDuJournal.essai(dossier / "autre"))
++    initialiser_depot(dossier)
++    G.creer_journal_rejeux(G.LieuDuJournal.essai(dossier / "autre", depot=dossier))
+     (dossier / "journal").mkdir()
+     import shutil
+     shutil.copy(dossier / "autre" / G.MANIFESTE_JOURNAL_REJEUX.name, lieu(dossier).manifeste)
+@@ -677,7 +707,7 @@
+ 
+ def test_garde_exception_json_coupe(dossier, lancer, composition):
+     cartes = cartes_factices()
+-    texte = json.dumps(cartes, ensure_ascii=False)
++    texte = json.dumps(forme_reelle(cartes), ensure_ascii=False)
+     coupe = texte[: texte.index(SECRET_CARTE) + 40]
+     cp = dossier / "cartes-coupees.json"
+     cp.write_text(coupe, encoding="utf-8")
+@@ -689,9 +719,9 @@
+ 
+ 
+ def _cartes_avec_nommees():
+-    ids = [f"carte-factice-{k:02d}" for k in range(94)]
++    ids = [f"c{k:012x}" for k in range(94)]
+     for pos, nid in zip((2, 11, 23, 37, 48, 60, 81), G.CARTES_NOMMEES):
+-        ids[pos] = nid + "0000"                            # identifiant plus long qui commence par le nom de treize caractères
++        ids[pos] = nid                                     # v3 : égalité exacte, treize caractères
+     return cartes_factices(ids=ids)
+ 
+ 
+@@ -807,6 +837,7 @@
+ 
+ 
+ def test_creer_journal_rejeux_puis_recreation_refusee(dossier):
++    initialiser_depot(dossier)
+     lj = lieu(dossier)
+     m = G.creer_journal_rejeux(lj)
+     assert lj.journal.read_bytes() == b"" and m["journal_sha256"] == sha(b"") and m["journal"] == str(lj.journal)
+@@ -1171,3 +1202,104 @@
+     assert s.appels == 4 * 200
+     a = G.auditer(composition["banque"], G.Contexte("essais"), G.construire_service_reel())
+     assert a["decision"] == "banque passée" and a["service"]["nature"] == "reel"
++
++
++# ------------------------------------------------------------------------------------------------------------------------------
++# v3 : historique git, portée de la pièce du (4), journal existant sans manifeste, pièce lue une seule fois
++# ------------------------------------------------------------------------------------------------------------------------------
++
++
++def test_v3_historique_git_sain_et_artefact(dossier, capfd):
++    initialiser_depot(dossier)                                            # cas sain : historique qui ne le connaît pas
++    lj = lieu(dossier)
++    assert not G.historique_connait(dossier, lj.manifeste)
++    G.creer_journal_rejeux(lj)
++    d2 = Path(tempfile.mkdtemp(prefix="essais-generateur-v3-git-"))       # artefact : historique qui le connaît
++    initialiser_depot(d2)
++    l2 = lieu(d2)
++    l2.manifeste.parent.mkdir(parents=True)
++    l2.manifeste.write_text("{}\n", encoding="utf-8")
++    subprocess.run(GIT_ESSAI + ["-C", str(d2), "add", str(l2.manifeste)], check=True, capture_output=True)
++    subprocess.run(GIT_ESSAI + ["-C", str(d2), "commit", "-q", "-m", "manifeste"], check=True, capture_output=True)
++    subprocess.run(GIT_ESSAI + ["-C", str(d2), "rm", "-q", str(l2.manifeste)], check=True, capture_output=True)
++    subprocess.run(GIT_ESSAI + ["-C", str(d2), "commit", "-q", "-m", "retrait"], check=True, capture_output=True)
++    assert not l2.manifeste.exists() and G.historique_connait(d2, l2.manifeste)
++    with pytest.raises(G.ManifesteJournalConnuDeLHistorique):
++        G.creer_journal_rejeux(l2)
++    assert not l2.journal.exists()
++    assert G.principal(["creer-journal-rejeux"], lieu_journal=l2) == 2
++    out, err = capfd.readouterr()
++    assert "ManifesteJournalConnuDeLHistorique" in err and "Traceback" not in err + out
++    d3 = Path(tempfile.mkdtemp(prefix="essais-generateur-v3-sans-git-"))  # historique illisible (hors dépôt) : refus
++    with pytest.raises(G.HistoriqueGitIllisible):
++        G.creer_journal_rejeux(lieu(d3))
++    assert not lieu(d3).journal.exists()
++
++
++def test_v3_journal_existant_sans_manifeste_refus_nomme_sans_trace(dossier, capfd):
++    initialiser_depot(dossier)
++    lj = lieu(dossier)
++    lj.journal.parent.mkdir(parents=True)
++    lj.journal.write_bytes(b"")
++    with pytest.raises(G.JournalExisteSansManifeste):
++        G.creer_journal_rejeux(lj)
++    assert G.principal(["creer-journal-rejeux"], lieu_journal=lj) == 2
++    out, err = capfd.readouterr()
++    assert json.loads(err)["refus"] == "JournalExisteSansManifeste" and "Traceback" not in err + out
++    assert not lj.manifeste.exists()
++
++
++@pytest.mark.parametrize("portee,repli,classe", [
++    ("Portée : repli seul", False, "ControleQuatrePorteeAutre"),           # pièce « repli seul », garde entière
++    ("Portée : garde entière", True, "ControleQuatrePorteeAutre"),         # pièce « garde entière », repli
++    (None, False, "ControleQuatrePorteeAbsente"),
++    ("Portée : garde entière\n\nPortée : repli seul", False, "ControleQuatrePorteeAbsente"),
++    ("Portée : toute la garde", False, "ControleQuatrePorteeAbsente"),
++])
++def test_v3_portee_de_la_piece_du_controle_4_artefacts(dossier, lancer, composition, portee, repli, classe):
++    preparer_journal(dossier)
++    bp = ecrire_banque(dossier, composition["banque"])
++    cp = ecrire_cartes(dossier, _cartes_avec_nommees())
++    c = piece(dossier, "controle-portee.md", texte_controle(portee=portee))
++    pr = piece(dossier, "piece.md", "pièce factice\n")
++    extra = ["--repli", G.DECLENCHEURS_REPLI[1], "--piece-repli", str(pr), "--empreinte-piece-repli", sha_f(pr)] \
++        if repli else []
++    res = lancer(bp, cp, controle_piece=c, extra=extra)
++    assert res["rapport"]["exception"]["classe"] == classe and res["entree"].ouvertures == 0
++
++
++@pytest.mark.parametrize("portee,repli", [("Portée : garde entière", False), ("**Portée : garde entière.**", False),
++                                          ("Portée : repli seul", True), ("**Portée : repli seul**", True)])
++def test_v3_portee_de_la_piece_du_controle_4_sain(dossier, lancer, composition, portee, repli):
++    preparer_journal(dossier)
++    bp = ecrire_banque(dossier, composition["banque"])
++    cp = ecrire_cartes(dossier, _cartes_avec_nommees())
++    c = piece(dossier, "controle-portee.md", texte_controle(portee=portee))
++    pr = piece(dossier, "piece.md", "pièce factice\n")
++    extra = ["--repli", G.DECLENCHEURS_REPLI[1], "--piece-repli", str(pr), "--empreinte-piece-repli", sha_f(pr)] \
++        if repli else []
++    r = lancer(bp, cp, controle_piece=c, extra=extra)["rapport"]
++    assert r["decision"] == "banque passée" and r["cartes_lues"] == (7 if repli else 94)
++
++
++def test_v3_piece_du_controle_4_lue_une_seule_fois(dossier, monkeypatch):
++    c = piece(dossier, "controle.md", texte_controle(programme="d" * 64))
++    h = sha_f(c)
++    lectures = []
++    original = Path.read_bytes
++
++    def compter(self):
++        if Path(self) == c:
++            lectures.append(1)
++        return original(self)
++
++    def interdit(*_a, **_k):
++        raise AssertionError("seconde lecture")
++
++    monkeypatch.setattr(Path, "read_bytes", compter)
++    monkeypatch.setattr(Path, "read_text", interdit)
++    monkeypatch.setattr(G, "sha256_fichier", interdit)
++    G.exiger_controle_conforme(c, h, "d" * 64)
++    assert len(lectures) == 1                     # une seule lecture : empreinte et analyse sur les mêmes octets
++    with pytest.raises(G.ControleQuatreAbsentOuFaux):
++        G.exiger_controle_conforme(c, "0" * 64, "d" * 64)

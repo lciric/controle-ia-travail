@@ -1,0 +1,130 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v1/epreuve_juges_reels_ligne_3_v1.py	2026-11-20 13:51:50.415220420 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v2/epreuve_juges_reels_ligne_3_v2.py	2026-11-20 14:08:52.453112818 +0000
+@@ -1,5 +1,14 @@
+ #!/usr/bin/env python3
+-"""Épreuve des juges réels — ligne 3 de l'organisme v9 (votes effectifs des juges croisés), étage 2 à 200 témoins — v1.
++"""Épreuve des juges réels — ligne 3 de l'organisme v9 (votes effectifs des juges croisés), étage 2 à 200 témoins — v2.
++
++Version 2 (même développeur, règle R12 ; la v1, `epreuve_juges_reels_ligne_3_v1.py`, 586bc7e6…, est gardée sans
++modification) : les trois corrections de la contre-lecture `contre-lecture-code-appel-etage-2-v1.md` (4bcab58a…), à la
++lettre de ses textes. C1 : une relance relit l'ouverture du journal ; banque, témoins de plomberie ou rendu
++du journal hors du plan : refus. C2 : le dossier d'appel se crée sans refus s'il existe déjà (panne entre sa création et
++l'engagement). C3 : le contrôle de la plomberie est rejoué, sans envoi, sur un rendu de plomberie déjà fini. Et deux
++décisions de la mère (14:01Z) : (2) la clé du juge Opus passe en argument par son nom seul, de forme contrôlée ; (3) le
++mode réel part sous `env -i`, liste blanche `VARIABLES_PERMISES`, refus si une variable hors liste est présente au départ.
++Rien d'autre ne change.
+ 
+ Plan de code : annexe A du texte v7 (`preenregistrement-ligne-3-votes-effectifs-juges-v7.md`, 4e3680d9…), ligne 561 ;
+ section « Étage 2 » (l. 243 à 305), « Liste d'arrêt » (l. 352 et suivantes), « Plafond : arrêt dur par compteur » (l. 380
+@@ -63,7 +72,7 @@
+ from fractions import Fraction
+ from pathlib import Path
+ 
+-VERSION = "epreuve_juges_reels_ligne_3_v1"
++VERSION = "epreuve_juges_reels_ligne_3_v2"
+ 
+ # --- plafond (une seule constante, égale à la ligne de GO lue) -------------------------------------------------------------
+ PLAFOND_C = 8836            # 88,36 USD en centimes entiers : GO-2026-11-20-26 ; additif 3 v3, § 4.2
+@@ -128,6 +137,13 @@
+ GO_FORME = re.compile(r"^GO-\d{4}-\d{2}-\d{2}-\d{2}$")
+ MOTS_PERIMETRE_GO = ("ligne 3", "etage 2")
+ 
++# --- mode réel : environnement épuré (v2, décision de la mère (3)) ---------------------------------------------------------------
++# Liste blanche des variables permises au départ du mode réel, lancé sous `env -i` : celles du lanceur v9 (`NOMS_PERMIS`),
++# plus HOME (sonde du bac à sable du précédent), LC_CTYPE (posée par l'interpréteur lui-même quand il force un locale UTF-8
++# sous un environnement vide) et GO_ID (garde de calcul du dépôt).
++VARIABLES_PERMISES = ("PATH", "LANG", "LC_ALL", "LC_CTYPE", "TZ", "TMPDIR", "HOME", "GO_ID")
++NOM_DE_VARIABLE = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
++
+ # --- statuts des adaptateurs de l'orchestrateur -----------------------------------------------------------------------------
+ STATUTS_TECHNIQUES = ("erreur", "tours_epuises")    # refusé par le relais ou le fournisseur, coupé, en erreur
+ EVENEMENTS_CHANGEMENT_DE_MODELE = ("assistant.model", "result.model_usage", "resultat.modele_servi",
+@@ -898,6 +914,13 @@
+                             "suite sous cette ligne")
+             if etat_avant["fin"] is not None:
+                 raise Refus("relance refusée : le plan est déjà servi en entier")
++            ouverture = journal.lignes[0]                                        # v2, C1
++            if ouverture.get("banque_sha256") != banque_sha or ouverture.get("plomberie") != list(plomberie_ids):
++                raise Refus("relance refusée : banque ou témoins de plomberie différents de ceux de l'ouverture du journal : "
++                            "aucune suite sous cette ligne")
++            ids_du_plan = {p["id"] for p in plan}
++            if any(l["rendu"] not in ids_du_plan for l in journal.lignes if l["type"] == "engagement"):
++                raise Refus("relance refusée : un rendu du journal n'est pas au plan : aucune suite sous cette ligne")
+         lecture = {"engagements": len(compteur.engagements), "reglements": len(compteur.reglements),
+                    "orphelins": compteur.orphelins(), "cumul_compte_lu": str(compteur.cumul())}
+         manifeste = manifeste_d_execution(k_exec, relance, lecture, contexte, service, banque_sha, temoins_v2_sha,
+@@ -909,7 +932,7 @@
+                              "cumul_compte": str(compteur.cumul())})
+         else:
+             journal.ajouter({"type": "ouverture", "execution": k_exec, "version": VERSION, "plafond_c": PLAFOND_C,
+-                             "session_c": SESSION_C, "banque_sha256": banque_sha})
++                             "session_c": SESSION_C, "banque_sha256": banque_sha, "plomberie": list(plomberie_ids)})
+         arret = jouer(plan, par_id, service, compteur, journal, depot, arret_de_plomberie)
+     finally:
+         journal.fermer()
+@@ -925,6 +948,11 @@
+     for prevu in plan:
+         s = rendus.get(prevu["id"])
+         if rendu_fini(s) or prevu["juge"] in roles:
++            if prevu["bloc"] == "P" and arret_de_plomberie and rendu_fini(s) and prevu["juge"] not in roles:
++                motif = motif_plomberie(s, compteur, prevu["juge"])     # v2, C3 : contrôle sans envoi, rejoué à la relance
++                if motif:
++                    return journal.ajouter({"type": "arret", "motif": "plomberie : " + motif, "dernier_envoi_parti": dernier,
++                                            "cumul_compte": str(compteur.cumul()), "retour": "à la mère"})
+             continue
+         juge = service.juge(prevu["juge"])
+         ad = service.adaptateurs[juge["fournisseur"]]
+@@ -957,7 +985,7 @@
+                                         "dernier_envoi_parti": dernier, "cumul_compte": str(compteur.cumul())})
+             opaques.servis.add(opaque)
+             dossier = service.dossier_appels / prevu["juge"] / opaque
+-            dossier.mkdir(parents=True, exist_ok=False)
++            dossier.mkdir(parents=True, exist_ok=True)      # v2, C2 : panne possible entre cette création et l'engagement
+             n = compteur.engager({"rendu": prevu["id"], "bloc": prevu["bloc"], "rang": prevu["rang"],
+                                   "temoin": prevu["temoin"], "juge": prevu["juge"], "essai": essai, "opaque": opaque,
+                                   "entree_sha256": sha256_octets(texte.encode("utf-8"))})
+@@ -1250,6 +1278,16 @@
+     return {"texte": p.stdout.decode("utf-8"), "commit": c.stdout.strip(), "sha256": sha256_octets(p.stdout)}
+ 
+ 
++def exiger_environnement_epure(environ) -> list:
++    """v2, décision de la mère (3) : le mode réel se lance sous `env -i` avec une liste blanche de variables
++    (`VARIABLES_PERMISES`) ; toute variable hors de la liste, présente au départ, est un refus (les noms seuls sont lus,
++    jamais une valeur)."""
++    hors = sorted(n for n in environ if n not in VARIABLES_PERMISES)
++    if hors:
++        raise Refus(f"environnement non épuré : variables hors de la liste blanche ({hors}) : lancer sous env -i")
++    return sorted(environ)
++
++
+ def preparer_reel(argv, environ, aujourd_hui, lire_registre=lire_registre_main, construire_service=None) -> dict:
+     """Refus avant tout, dans cet ordre : noms de clé dans l'environnement (par le nom seulement) ; chemins du coffre ;
+     `--go-id` (et `GO_ID` s'il est posé, égal) valide au registre lu sur origin/main ; banque scellée à l'empreinte passée ;
+@@ -1257,6 +1295,7 @@
+     noms = sorted(n for n in environ if re.search(r"(API_?KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL)", n, re.I))
+     if noms:
+         raise Refus(f"noms de variables de clé dans l'environnement ({noms}) : la clé reste dans son relais")
++    exiger_environnement_epure(environ)                                          # v2, décision de la mère (3)
+     go_id = _argument(argv, "--go-id")
+     if environ.get("GO_ID") not in (None, go_id):
+         raise Refus("GO_ID de l'environnement différent de --go-id")
+@@ -1265,6 +1304,8 @@
+     sortie = Path(_argument(argv, "--sortie"))
+     plomberie = (_argument(argv, "--plomberie") or "").split(",")
+     nom_cle_claude = _argument(argv, "--nom-cle-claude")
++    if not NOM_DE_VARIABLE.match(nom_cle_claude):                               # v2, décision de la mère (2) : le nom seul
++        raise Refus("--nom-cle-claude : un nom de variable est exigé (le nom seul, jamais la valeur)")
+     garde_chemins([banque, decl, sortie])
+     registre = lire_registre()
+     go = verifier_ligne_de_go(registre["texte"], go_id, aujourd_hui)
+@@ -1367,8 +1408,8 @@
+ def principal(argv=None) -> int:
+     argv = sys.argv[1:] if argv is None else list(argv)
+     if not argv or argv[0] != "--reel":
+-        print("usage : --reel --go-id GO-… --banque B --banque-sha S --declaration D --declaration-sha S2 "
+-              "--sortie DOSSIER_NEUF_OU_DE_RELANCE --plomberie tXX,tYY --nom-cle-claude NOM", file=sys.stderr)
++        print("usage (sous env -i, liste blanche VARIABLES_PERMISES) : --reel --go-id GO-… --banque B --banque-sha S "
++              "--declaration D --declaration-sha S2 --sortie DOSSIER_NEUF_OU_DE_RELANCE --plomberie tXX,tYY --nom-cle-claude NOM", file=sys.stderr)
+         return 2
+     try:
+         prep = preparer_reel(argv, dict(os.environ), _dt.datetime.now(_dt.timezone.utc).date(),
