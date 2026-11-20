@@ -1,0 +1,10 @@
+# Compte rendu — jeu unique du programme de vérification X6 (GO-2026-11-20-23) — v1
+
+Pièce de travail (classe C), écrite par la session du compte organisme le 2026-11-20, d'après le rapport de l'agent neuf qui a joué le programme.
+
+- **Programme joué** : `verifier_x6_contre_fiches_v1.py` (`d8f84db2538446727474bbbb365c70096388d602b11693dabeb84dda6964dd96`, compagnon vérifié OK avant le jeu), contre-lu « Conforme » (`contre-lecture-verification-x6-v1.md`, `9f3bb46f…`).
+- **Extraction** : tirée de `origin/main` (`docs/notes/organisme-auto-conception-v9-mere/juge-selection-x6-v1/sortie-extraction-x6-v2.json`), non ouverte par l'agent.
+- **Commande unique, jouée une fois** : sortie écran « REFUS : extraction : identifiants_par_classe absent ou mal formé », code 1. Aucun fichier de résultat écrit ; rien relancé.
+- **Cause, établie par la session sur les clés de l'extraction seulement (aucune carte)** : le programme cherche `identifiants_par_classe` à la racine de l'objet (`verifier_x6_contre_fiches_v1.py`, l. 68-70), alors que l'extraction le porte sous `extraction` (`extraction.identifiants_par_classe.a_corriger`). Le mandat du développeur nommait le chemin pointé `extraction.identifiants_par_classe.a_corriger` ; le programme et ses essais synthétiques ont lu `extraction` comme le nom du fichier, non comme une clé. Faute de la session (mandat ambigu) et du développeur ; le contre-lecteur ne l'a pas vue, faute d'avoir la forme réelle.
+- **Ce que le jeu a touché** : le programme vérifie les deux empreintes sur les octets avant tout décodage ; le refus est venu au décodage de l'extraction. Aucun identifiant, aucune valeur n'a été affiché ni écrit. Que le fichier des cartes ait été décodé ou non avant le refus dépend de l'ordre du programme (à établir par la contre-lecture de la v2) ; rien n'en est sorti.
+- **Suite** : un programme v2 corrigé (chemin `extraction.identifiants_par_classe.a_corriger`, essai sur une extraction synthétique de la forme réelle), contre-lu, puis un second jeu — qui demande le mot de la mère, GO-23 ne permettant qu'un jeu.
