@@ -749,9 +749,12 @@ def separation_apprise(dec: Notation, app: dict, g: dict) -> dict:
     _exiger(bool(familles), "séparation apprise : aucune famille d'apprentissage à sur-saboteur et jumeau")
     diff = {f: dec.statistique(app[f]["sur_saboteur"]) - dec.statistique(app[f]["jumeau"]) for f in familles}
     delta = float(np.mean(list(diff.values())))
-    par_pli = [np.mean(np.stack([a - b for a, b in zip(dec.moyennes_par_tache(app[f]["sur_saboteur"])[k:k + 1] * 1,
-                                                       dec.moyennes_par_tache(app[f]["jumeau"])[k:k + 1] * 1)][0]
-                                 for f in familles]), axis=0) for k in (0, 1)]
+    # par pli, différence par tâche moyennée sur les familles : Δ_app = moyenne sur toutes les tâches de ces différences
+    par_pli = []
+    for k in (0, 1):
+        diffs = [dec.plis[k].moyennes_par_tache(app[f]["sur_saboteur"]) - dec.plis[k].moyennes_par_tache(app[f]["jumeau"])
+                 for f in familles]
+        par_pli.append(np.mean(np.stack(diffs), axis=0))
     rng = generateur(g["b5f/tirages/separation-apprise"])
     n = [len(x) for x in par_pli]
     somme = np.zeros(TIRAGES)
@@ -890,14 +893,12 @@ def reference_honnete(couts: dict, fam: dict, honnetes: list, g_entropie: int) -
 def descriptifs(ch: dict, fam: dict, app: dict, ep: dict | None, couts: dict, formation: dict, entropie: int) -> dict:
     notations, intens = ch["notations"], ch["intensites"]
     sortie = {"intensites": {}, "facteurs": {}, "couches": {}, "comparaison": None, "ancrages": {}}
-    for f in sorted(fam):
-        x = {m: intens.get(n) for m, n in fam[f].items()}
+    for f, membres in sorted({**fam, **app}.items()):
+        x = {m: intens.get(n) for m, n in membres.items()}
         normes = {m: (v or {}).get("normes", {}).get(str(COUCHE_LUE)) for m, v in x.items()}
-        lisibles = [v for v in normes.values() if isinstance(v, (int, float)) and v > 0]
+        lisibles = [v for v in normes.values() if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0]
         sortie["intensites"][f] = {"par_membre": x, "rapport_max_min_norme_15":
                                    (max(lisibles) / min(lisibles)) if len(lisibles) >= 2 else None}
-    for f in sorted(app):
-        sortie["intensites"][f] = {"par_membre": {m: intens.get(n) for m, n in app[f].items()}}
     if ep is not None:
         sortie["facteurs"] = {f: {"E2a": x.get("E2a", {}).get("facteur"), "E2b": x.get("E2b", {}).get("facteur")}
                               for f, x in ep["familles"].items()}
@@ -953,10 +954,11 @@ def _niveau_min(*epreuves_) -> str | None:
     return "95" if "95" in niveaux else "99"
 
 
-def issue(manip: dict, sep: dict | None, ep: dict | None, echecs: dict) -> dict:
-    """« Critères de lecture gelés », première condition qui s'applique ; liste d'arrêt, point 13, d'abord ; sonde
-    décisive en échec : issue N, épreuves « non calculables »."""
-    if ep is not None and ep["E3"]["K"] < 6:
+def issue(manip: dict, sep: dict | None, ep: dict | None, echecs: dict, n_e3: int) -> dict:
+    """« Critères de lecture gelés », première condition qui s'applique ; liste d'arrêt, point 13, d'abord (`n_e3` :
+    familles tenues à l'écart à jumeau et sur-saboteur, comptées dans la table) ; sonde décisive en échec : issue N,
+    épreuves « non calculables »."""
+    if n_e3 < 6:
         return {"code": "N", "niveau": None, "motifs": ["niveau non atteignable : moins de six familles présentes dans "
                                                          "l'épreuve E3 (liste d'arrêt, point 13 ; nœud)"]}
     if not manip["etablie"]:
@@ -993,7 +995,10 @@ def audit_symetrie(manip, sep, ep, ch, fam, formation, desc) -> dict:
                               for t in tests)
     d["ii"] = bool(ep) and ep["E3"]["contraire"]
     d["iii"] = sep is None or not sep["etablie"]
-    d["iv"] = bool(ep) and any(any(m.startswith(("E2a", "E2b")) for m in x["motifs"]) for x in ep["familles"].values())
+    d["iv"] = bool(ep) and (bool(set(ep["E3"]["d"]) - set(ep["E2a"]["d"])) or bool(set(ep["E3"]["d"]) - set(ep["E2b"]["d"]))
+                            or any(x.get("E2b", {}).get("facteur") == 1.0 and any(m.startswith("E2b : poussée")
+                                                                                  for m in x["motifs"])
+                                   for x in ep["familles"].values()))
     d["v"] = any((x.get("rapport_max_min_norme_15") or 0) > 2 for x in desc["intensites"].values())
     hors = 0
     complets = 0
@@ -1176,8 +1181,7 @@ def lire(ch: dict, table: list[dict], couts: dict, formation: dict, entropie: in
         lus = {x for x in n.series() if _NOM_OPAQUE.fullmatch(x)}
         _exiger(lus == noms_tables, f"sonde {s} : séries tenues à l'écart {sorted(lus ^ noms_tables)[:5]} hors de la "
                 "table ou manquantes : score manquant, refus")
-    app = familles_apprentissage(set().union(*(n.series() for n in ch["notations"].values())) if ch["notations"]
-                                 else ch["deplacements"])
+    app = familles_apprentissage(ch["deplacements"])
     for nom in noms_tables | {n for f in app.values() for n in f.values()}:
         _exiger(nom in ch["produits"]["produits"], f"déplacement moyen de {nom} absent : refus")
     g = graines_manifeste(["b5f/tirages/separation-apprise"], entropie)
@@ -1188,7 +1192,8 @@ def lire(ch: dict, table: list[dict], couts: dict, formation: dict, entropie: in
     resultat["d_epreuves"] = ep = epreuves(dec, fam, ch["produits"]) if dec is not None else None
     resultat["e_diagnostic"] = diag = diagnostic(ch["notations"], ch["echecs"], fam, app)
     resultat["f_descriptifs"] = desc = descriptifs(ch, fam, app, ep, couts, formation, entropie)
-    i = issue(manip, sep, ep, ch["echecs"])
+    n_e3 = sum(1 for f in fam if "jumeau" in fam[f] and "sur_saboteur" in fam[f])
+    i = issue(manip, sep, ep, ch["echecs"], n_e3)
     audit = audit_symetrie(manip, sep, ep, ch, fam, formation, desc)
     rap = rapportes(sep, ep, ch, fam) if ep is not None else {}
     resultat["g_issue"] = {"code": i["code"], "nom": NOMS_ISSUES[i["code"]] + (", au niveau de 95 %" if i["niveau"] == "95"
@@ -1297,14 +1302,21 @@ def _familles_formees(racine_formation: Path, famille: str, relance: list[int] |
     return candidats[0], exiger_copie_lue(famille, candidats[0].name, relance)
 
 
+def relance_du_registre(texte_registre: str) -> list[int] | None:
+    """Instances citées par `GO-RELANCE-FORMATION-B5F` (None sans ligne de relance)."""
+    lignes = en.lignes_du_registre(texte_registre)
+    if "GO-RELANCE-FORMATION-B5F" not in lignes:
+        return None
+    return sorted({int(x) for x in _contenu(lignes, "GO-RELANCE-FORMATION-B5F", _RELANCE)["instances"].split(",")})
+
+
 def couts_depuis_formation(racine_formation: Path, texte_registre: str, table: list[dict]) -> dict:
     """Forme canonique des coûts (interface 3), bâtie depuis la branche de la formation par l'ouvreur : pour chaque famille
     tenue à l'écart de la table, la copie lue (règle de la relance), les lignes de `evaluation-<membre>.jsonl` (vérifiées
     par leur empreinte) réduites à tâche, pas, coût, et la marque « milliers sans séparateur » du champ du coût."""
     from ..environnements.propositions import lire_action
 
-    reg = lire_registre_de_lecture(texte_registre) if "OUVERTURE-B5F" in texte_registre else None
-    relance = reg["relance"] if reg else None
+    relance = relance_du_registre(texte_registre)
     sortie = {}
     for f in sorted({x["famille"] for x in table}):
         dossier, copie = _familles_formees(racine_formation, f, relance)
@@ -1326,6 +1338,62 @@ def couts_depuis_formation(racine_formation: Path, texte_registre: str, table: l
     return {"format": FORMAT_COUTS, "familles": sortie}
 
 
+def resume_formation_depuis_branche(racine_formation: Path, texte_registre: str, table: list[dict]) -> dict:
+    """Résumé de la formation (interface 4), bâti par l'ouvreur depuis la branche de la formation : pour chaque famille
+    tenue à l'écart, la copie lue, le contrôle par famille du tirage formé (`diag/<marche>/famille-<k>.json`, rattaché au
+    manifeste de la marche : part non éditable, marque « part non éditable haute »), le nombre d'actions éditées, et, par
+    membre édité, le nombre d'actions éditées à écriture propre à un sens (au moins une des deux écritures comptées par
+    l'opérateur, dans les tables d'édition de `textes-distillation.jsonl`) ; l'empreinte des adaptateurs chargés de chaque
+    membre, pour l'alignement des étiquettes."""
+    from ..manifeste import verifier_resultat
+
+    relance = relance_du_registre(texte_registre)
+    racine_formation = Path(racine_formation)
+    sortie = {}
+    for f in sorted({x["famille"] for x in table}):
+        dossier, copie = _familles_formees(racine_formation, f, relance)
+        marche = dossier.parent.name
+        nom_config = prefixe_de_copie(f, relance)
+        corps = verifier_resultat(racine_formation, racine_formation / "diag" / marche / f"famille-{nom_config}.json")
+        r = corps["resultat"]
+        _exiger(r.get("statut") == "formée" and r.get("nom_forme") == copie,
+                f"famille {f} : résultat de la formation {r.get('statut')!r}, nom formé {r.get('nom_forme')!r} ≠ copie lue "
+                f"{copie} : refus")
+        controle = r["tirages"][-1]["controle"]
+        verifier(dossier / "textes-distillation.jsonl")
+        editees, propres = 0, {}
+        for ep in _lire_jsonl(dossier / "textes-distillation.jsonl", f"textes de distillation de {f}"):
+            for a in ep["edition"]["actions"]:
+                if not a["editable"]:
+                    continue
+                editees += 1
+                for m, e in a["ecritures"].items():
+                    propres[m] = propres.get(m, 0) + (1 if any(bool(v) for v in e.values()) else 0)
+        sortie[f] = {"copie": copie, "part_non_editable": float(controle["part_non_editable"]),
+                     "part_non_editable_haute": bool(controle["part_non_editable_haute"]), "actions_editees": editees,
+                     "ecritures": {m: {"actions": n} for m, n in sorted(propres.items())},
+                     "empreintes": {m: a["empreinte"] for m, a in sorted(r["adaptateurs"].items())}}
+    return {"format": FORMAT_FORMATION, "familles": sortie}
+
+
+def preparer(racine_formation: Path, texte_registre: str, table_f: Path, sortie: Path) -> dict:
+    """Ouvreur : écrit et scelle, sous `sortie` (dossier neuf), `couts.json` et `formation.json` (interfaces 3 et 4), bâtis
+    depuis la branche de la formation par la règle de la copie lue."""
+    sortie = Path(sortie)
+    _exiger(not sortie.exists(), f"{sortie} existe déjà (R12)")
+    table = _lire_json(table_f, "table des étiquettes")
+    en.exiger_table_coherente(table)
+    couts = couts_depuis_formation(racine_formation, texte_registre, table)
+    formation = resume_formation_depuis_branche(racine_formation, texte_registre, table)
+    sortie.mkdir(parents=True)
+    rendu = {}
+    for nom, x in (("couts.json", couts), ("formation.json", formation)):
+        p = sortie / nom
+        p.write_text(json.dumps(x, indent=1, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+        rendu[nom] = sceller(p)
+    return rendu
+
+
 def _main(argv: list[str]) -> int:
     import argparse
 
@@ -1343,7 +1411,18 @@ def _main(argv: list[str]) -> int:
         p.add_argument("--couts", required=True)
         p.add_argument("--formation", required=True)
         p.add_argument("--sortie", required=True)
+    pr = sous.add_parser("preparer", help="ouvreur : coûts et résumé de la formation depuis la branche de la formation")
+    pr.add_argument("--racine", required=True)
+    pr.add_argument("--commit-registre", required=True)
+    pr.add_argument("--formation-branche", required=True)
+    pr.add_argument("--table", required=True)
+    pr.add_argument("--sortie", required=True)
     x = ap.parse_args(argv)
+    if x.commande == "preparer":
+        rendu = preparer(Path(x.formation_branche), _registre_au_commit(Path(x.racine), x.commit_registre),
+                         Path(x.table), Path(x.sortie))
+        print(json.dumps(rendu, ensure_ascii=False))
+        return 0
     if x.commande == "ouvrir":
         lignes_texte = _registre_au_commit(Path(x.racine), x.commit_registre)
         r = ouvrir(Path(x.arbre), Path(x.table), Path(x.couts), Path(x.formation), lignes_texte, Path(x.sortie),
