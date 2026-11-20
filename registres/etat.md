@@ -620,3 +620,6 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 ## 9 novembre, 12:58 UTC — autonomie de 8 heures (GO-2026-11-09-04, jusqu'à ≈ 20:57 UTC, R-2009)
 - Lecture exploratoire v2 de l'étiqueteur (GO-2026-11-09-03) : code commité (`c7d61c74c`), ordre d'exécution en rédaction, relecture par Fable, puis essai de format.
 - Collisionneur permis pour les questions de conception difficiles et cruciales.
+
+## 20 novembre, 16:40 UTC — autonomie de 8 heures de la mère (GO-2026-11-20-66, jusque vers 2026-11-21T00:45Z)
+- Passation intermédiaire `registres/passations/2026-11-20-1640.md`. Course « nouvelles attaques » scellée à cinq espèces (v9, additif 1 v5, devis v11, complément v3), attend les soldes de Rigaud et d’OpenAI. Formation : relances 5 et 7 en marche, 1 à 4 tombées ; recréations sous un mot unique de Lazar avant 2026-11-21T07:30:16Z. Étage 2 : code vérifié, additif 6 en contre-lecture. Papier « dopamine » : préenregistrement v3 conforme, six points à Lazar.
