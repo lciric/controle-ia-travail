@@ -197,17 +197,17 @@ un changement de `engagement_v1` (recevoir le nom formé et refuser l'autre copi
   sur les quatre adaptateurs existants l'éprouverait.
 
 ### 2.6 Ce qui menace le départ de la formation et le gel à H + 30 heures
-1. **Départ de la formation, d'abord.** (a) `formation_v1.exiger_code_de_la_session` refuse la commande de création si un
-   fichier non suivi existe sous `src/` dans l'arbre de la session : mes `relecture_v1.py` et `sondes_v1.py` (et
-   `lecture_v1.py` modifié depuis le versement de 00:16Z) sont dans l'arbre de travail du dépôt. (b) `exiger_code_au_commit`
-   compare l'arbre gelé (tout `src/`) du commit de la course à celui de `CODE-FORMATION-B5F` : un versement de mon code entre
-   les deux fait refuser la course. (c) L'amorce de la formation joue `tests/test_barreau5_familles_*.py`, où tombent mes
-   trois fichiers d'essais (noms imposés par le mandat) : 116 essais de plus sur l'instance (dont le jouet de bout en bout,
-   environ trois minutes) ; et l'essai `test_texte_plancher_d_essais_egal_au_nombre_d_essais_du_paquet`
-   (`tests/test_amorce_b5f_formation_v1.py`) échoue dès qu'ils sont dans l'arbre (235 attendus, 351 comptés). **Il faut**
-   soit verser mon code sur une branche à part jusqu'au départ (et ne pas le laisser non suivi dans l'arbre de la session de
-   formation), soit le commettre avant `CODE-FORMATION-B5F` et remesurer `MIN_ESSAIS` (changement du code de formation, en
-   dernière vérification). Je n'ai rien changé ; décision de la mère.
+1. **Instances de formation encore à créer.** La mère a versé mes états intermédiaires (commits `6670d598`, `6f7cd0f8`,
+   `f80fcf99`) et poussé une branche de course (commit `162287a3`, instance 6) ; à 01:30Z l'arbre de travail est propre.
+   Pour chaque création à venir : (a) `formation_v1.exiger_code_au_commit` compare l'arbre gelé (tout `src/`) du commit de la
+   course à celui de `CODE-FORMATION-B5F` : un commit de course qui porte mon code et pas l'autre (ou l'inverse) est refusé ;
+   `exiger_code_de_la_session` refuse aussi tout fichier non suivi sous `src/` dans l'arbre de la session ; (b) l'amorce de la
+   formation joue `tests/test_barreau5_familles_*.py`, où tombent mes trois fichiers d'essais (noms imposés par le mandat) :
+   120 essais de plus sur l'instance si le commit de course les porte (dont le jouet de bout en bout, environ trois minutes de
+   processeur, et des dépôts git jetables) ; et l'essai `test_texte_plancher_d_essais_egal_au_nombre_d_essais_du_paquet`
+   (`tests/test_amorce_b5f_formation_v1.py`) échoue dès qu'ils sont dans l'arbre (`MIN_ESSAIS=235`, 355 essais collectés
+   sous ce motif ; mesuré, puis recompté après les quatre derniers essais). **À vérifier par la mère** : que les commits des
+   courses ne portent pas mon code, ou remesurer `MIN_ESSAIS` (changement du code de formation). Je n'ai rien changé.
 2. **L'amorce de l'instance de lecture** n'est pas écrite (2.5) ; elle fait partie du code figé par `CODE-LECTURE-B5F`.
 3. **La contre-lecture par Fable 5.2** : la limite d'usage de Fable a été atteinte sur le compte de la mère dans la nuit
    (titres des commits, R-4020) ; sans elle, pas de gel.
@@ -219,11 +219,57 @@ un changement de `engagement_v1` (recevoir le nom formé et refuser l'autre copi
 6. **La procédure des commits de la lecture** (2.4) : sans arbre gelé identique à celui de `CODE-LECTURE-B5F`, la marche et
    l'ouverture refusent.
 
-## 3. Empreintes
-(à compléter)
+## 3. Empreintes (sha256, relevées le 2026-11-20 à 01:29Z, après le dernier passage des essais)
+| fichier | lignes | sha256 |
+|---|---|---|
+| `src/controle_ia/barreau5_familles/lecture_v1.py` | 1465 | `c3db00742df9766bfdc9f49e120c7b1e9e790403131562a76208cab5a3c29382` |
+| `src/controle_ia/barreau5_familles/relecture_v1.py` | 880 | `c1c7c65fff89bc69fe3df7b03a00e938def819d8fc74247f5ffe6f1cd5117c0c` |
+| `src/controle_ia/barreau5_familles/sondes_v1.py` | 277 | `cfc2237a5c1c37b9c3569523023bbc44017b48a5522c8f28fb835b6cf133dbe2` |
+| `scripts/lancer_b5f_lecture_v1.sh` | | `de83c346806ee68cd03912c473e130ffd4932c87cb39a87d754848c2b82b0f9a` |
+| `tests/test_barreau5_familles_lecture_v1.py` | | `a1b04290f2f7382e01d15dcecfed9ca668c17b1a742dc1c2135836b94de6de52` |
+| `tests/test_barreau5_familles_relecture_v1.py` | | `ebb7a6e77987351c42fd190b07b36286bdf184ca00ee170fb05c1555eb2f8adc` |
+| `tests/test_barreau5_familles_sondes_v1.py` | | `9dd5d0899bc21fd9cef075ccce9ba02b3cb6dbb6b1d4ecc04593fc7b83777495` |
+| `tests/test_lancer_b5f_lecture_v1.py` | | `b440fd06a4cbea40b7dcfb1d0d12ea460d7fa9f4a71f2e23e88745b6b0cd03ea` |
+| `outils-developpeur-code-lecture-v1/mutations-code-lecture-v1.py` | | `1377151c80874f9106d768dff9a880f8fc10fb8ad959236c22bc366018c4836a` |
+| `outils-developpeur-code-lecture-v1/verifier-syntaxe-v1.py` | | `09c737edc9f83d5b0720d0018e810d7825e7f2fc102ecb7067dcdd2ebbabce5f` |
+| `outils-developpeur-code-lecture-v1/sortie-mutations-code-lecture-v1.md` | | `f9f691207efc048426ffb29547df48317841eacdc0d3aa86fba35d55fa9bd943` |
+| `outils-developpeur-code-lecture-v1/etat-rapport-01-conception.md` | | `be483a20280c03b783c020e31e965d16fec4cfdb6d7a99323fe0c004dd759922` |
+| `outils-developpeur-code-lecture-v1/etat-rapport-02-code-et-essais.md` | | `b3220d6b00aa7e3f911fbba1482e88a6643734cf2937cddbb92b9ba8800eb889` |
+| `outils-developpeur-code-lecture-v1/etat-rapport-03-mutations-passage-1-nul.md` | | `29fb808e220933f7c029040ca8ba1889ce1b7f861e169a0be1f6283ce90c9cd9` |
+
+Les fichiers de `docs/` sont scellés par leurs compagnons ; le code et les essais ne le sont pas (ils changeront après la
+contre-lecture) : le commit qui les porte fera foi pour `CODE-LECTURE-B5F`. L'empreinte de `lecture_v1.py` est celle que
+portera la ligne `CODE-LECTURE-B5F` si ce fichier est figé tel quel.
 
 ## 4. Essais
-(à compléter)
+Commande (depuis la racine du dépôt) :
+`TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src .venv/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/b5f-lecture-essais/final tests/test_barreau5_familles_lecture_v1.py tests/test_barreau5_familles_sondes_v1.py tests/test_barreau5_familles_relecture_v1.py tests/test_lancer_b5f_lecture_v1.py tests/test_barreau5_familles_edition_cout_v1.py tests/test_barreau5_familles_engagement_v1.py tests/test_barreau5_familles_formation_v1.py`
+
+Compte au dernier passage (01:24Z à 01:28Z) : **369 passés, aucun échec**, en 265 s : les miens, lecture 83, sondes 16,
+relecture 21, lanceur 14 (134) ; ceux du paquet de la formation, 235, inchangés. Syntaxe vérifiée sous Python 3.11 (image des
+instances) par `verifier-syntaxe-v1.py`.
+
+Épreuves du mandat, avec leur essai : moyenne sur les jetons, refus (`test_moyenne_ou_mediane_sur_les_jetons_refusee`) ;
+table des étiquettes dans l'arbre de lecture, refus (lecture : `test_v7_table_presente_…`, `test_v7_table_sous_une_autre_forme_refus` ;
+instance : `test_arbre_de_la_session_sans_table_ni_formation`) ; engagement postérieur, refus (`test_engagement_posterieur_…`,
+`test_registre_de_relecture_cas_sain_et_artefacts`) ; dénombrement exact contre l'énumération complète pour huit, neuf, dix
+familles (et 0, 1, 2, 5, 12 ; `test_denombrement_exact_…`, `test_seuils_contre_l_enumeration_…`) ; différences nulles et
+égales (`test_differences_nulles_et_egales_…` contre le pire de tous les ordres, `test_une_difference_nulle_compte_…`) ;
+famille sans sur-saboteur (`test_famille_sans_sur_saboteur_absente_de_toutes_les_epreuves`) ; jouet de bout en bout
+(`test_jouet_de_bout_en_bout_relecture_sondes_puis_lecture` : 39 adaptateurs jouets et un point d'ancrage, entrées préparées
+par `engagement_v1`, relecture, sondes, notation fermée, puis lecture) ; gardes de l'ouverture (point 12 a : une quinzaine
+d'essais, cas sain et artefacts) ; identité à dose 0 et artefact à dose 1 (`test_identite_a_dose_0_et_artefact_…`,
+`test_un_adaptateur_tenu_a_l_ecart_sans_effet_arrete_la_marche`) ; refus du cas V7 (quatre premiers : table dans l'arbre,
+empreinte de la table ≠ engagement, scores postérieurs à l'ouverture, score manquant), seuil recalculé pour une famille
+incomplète, règle du nœud 6 à sept familles. Mondes V1 à V6 et V8 à V12 en petit (une graine chacun), pour l'issue ; un
+recalcul indépendant, écrit dans l'essai, des statistiques, de E3, E1, E2a, E2b et de l'intervalle de Δ_app, à 10⁻¹² près.
+Ce n'est pas l'épreuve à vérité plantée (point 11), qui revient à un autre agent.
 
 ## 5. Mutations
-(à compléter)
+Détail : `outils-developpeur-code-lecture-v1/sortie-mutations-code-lecture-v1.md`. **Passage 1 nul** (l'outil donnait à
+pytest un dossier temporaire sans parent : les témoins échouaient, et les 57 mutations passaient pour attrapées ; trop beau,
+vu et déclaré). **Passage 2** : 57 jouées (34 dans la lecture, 7 dans les sondes, 15 dans la relecture, 1 dans le lanceur),
+53 attrapées ; non attrapées : L02 (lacune : zéro compté pour « contraire »), L04 (équivalente : un seuil exact ne tombe
+jamais sur 1/200 ni 1/40), L25 et R12 (gardes redondantes dans le cours normal). **Passage 3**, ciblé, après quatre essais
+ajoutés : L02, L25, R12 attrapées ; L04 équivalente, démontrée par un essai. Total : 56 attrapées sur 57, une équivalente.
+Trois mutations équivalentes sur les sorties n'ont pas été jouées ; elles sont nommées dans la sortie.
