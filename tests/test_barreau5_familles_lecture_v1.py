@@ -936,17 +936,19 @@ def test_manipulation_sans_m3_non_interpretable(tmp_path):
     assert c["g_issue"]["code"] == "NI" and c["g_issue"]["motifs"] == ["manipulation non établie (M3)"]
 
 
-def test_niveau_de_l_issue_porte_celui_de_m1(tmp_path):
-    """Trois saboteurs sans aucun coût lisible : M1 n'a que sept familles (niveau de 95 %) ; les épreuves E en ont dix.
-    L'issue S porte le niveau le plus faible : 95 %."""
-    def cout(f, mm, t, p):
-        if mm == "saboteur" and f in ("T02", "T05", "T08"):
-            return None
-        return {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0}[mm]
-    c = ouvrir(fabriquer(tmp_path, decalage=_famille_effets(sab=3.0, sur=6.0), cout=cout))["contenu"]
-    assert c["b_manipulation"]["M1"]["K"] == 7 and c["b_manipulation"]["M1"]["niveau"] == "95"
-    assert c["d_epreuves"]["E3"]["niveau"] == "99"
-    assert c["g_issue"]["code"] == "S" and c["g_issue"]["niveau"] == "95"
+@pytest.mark.parametrize("effets,code", [(dict(sab=0.0, sur=6.0, graine=11), "D"), (dict(sab=-1.5, sur=-3.0, graine=4), "C")])
+def test_niveau_de_l_issue_porte_celui_de_m1(tmp_path, effets, code):
+    """Addendum 1, point 1, règles 1 à 3 (repris à l'addendum : saboteurs absents de la table, et non leurs coûts) : trois
+    familles sans saboteur sortent de M1 (sept familles, 95 %) et restent dans M3 et E3 (dix, 99 %) ; l'issue D ou C, que
+    M1, M3 et E3 fondent, porte le plus faible : 95 %, dans son nom et dans sa phrase."""
+    sans = {(f, "saboteur") for f in ("T02", "T05", "T08")}
+    c = ouvrir(fabriquer(tmp_path, decalage=_famille_effets(**effets), exclure=sans))["contenu"]
+    M1, M3, E3 = c["b_manipulation"]["M1"], c["b_manipulation"]["M3"], c["d_epreuves"]["E3"]
+    assert M1["K"] == 7 and M1["niveau"] == "95" and not {"T02", "T05", "T08"} & set(M1["familles"])
+    assert M3["K"] == 10 and M3["niveau"] == "99" and E3["K"] == 10 and E3["niveau"] == "99"
+    g = c["g_issue"]
+    assert g["code"] == code and g["niveau"] == "95", g
+    assert g["nom"].endswith(", au niveau de 95 %") and g["phrases"]["issue"].endswith("(au niveau de 95 %).")
 
 
 def test_separation_apprise_intervalle_rejoue_a_l_identique(tmp_path):
@@ -1233,13 +1235,12 @@ def test_phrase_au_niveau_de_95_et_au_plus_au_niveau_de_e3(tmp_path):
     p = c["g_issue"]["phrases"]["issue"]
     assert c["g_issue"]["code"] == "S" and "au plus 0,025" in p and p.endswith("(au niveau de 95 %).")
 
-    def cout(f, mm, t, pas):
-        if mm == "saboteur" and f in ("T02", "T05", "T08"):
-            return None
-        return {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0}[mm]
-    c = ouvrir(fabriquer(tmp_path / "b", decalage=_famille_effets(sab=3.0, sur=6.0), cout=cout))["contenu"]
+    # saboteurs absents de la table dans trois familles (addendum 1 : et non leurs coûts) : M1, E1 et E2a à sept familles,
+    # E3 à dix ; l'issue S est à 95 %, « au plus » reste au niveau de E3
+    sans = {(f, "saboteur") for f in ("T02", "T05", "T08")}
+    c = ouvrir(fabriquer(tmp_path / "b", decalage=_famille_effets(sab=3.0, sur=6.0), exclure=sans))["contenu"]
     p = c["g_issue"]["phrases"]["issue"]
-    assert c["d_epreuves"]["E3"]["niveau"] == "99" and c["g_issue"]["niveau"] == "95"
+    assert c["d_epreuves"]["E3"]["niveau"] == "99" and c["g_issue"]["code"] == "S" and c["g_issue"]["niveau"] == "95"
     assert "au plus 0,005" in p and p.endswith("(au niveau de 95 %).")
     c = ouvrir(fabriquer(tmp_path / "c", decalage=_famille_effets(sab=3.0, sur=6.0)))["contenu"]
     assert "au niveau de 95 %" not in c["g_issue"]["phrases"]["issue"]              # témoin : dix familles, 99 %

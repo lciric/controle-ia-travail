@@ -78,7 +78,8 @@ de M1 ; M-3, tout `.sha256` de l'arbre de lecture est le compagnon juste d'un fi
 dans la phrase et « au plus » au niveau de E3 ; m-4, « niveau non atteignable » dit dans le motif de NI. Corrections de
 la vérification (`verification-corrections-code-lecture-v1.md`, `fb1b7d04…`) : V-1, un fichier de scores par jeton par
 série et une borne écrite de la taille d'un fichier fermé (`TAILLE_MAX_FICHIER`) ; v-2, aucun score par jeton d'une
-série propre.
+série propre. Addendum 1, couples A à D de la même vérification : tâches retenues dans `manipulation` (point 2), borne
+de la phrase E (point 3), cet en-tête, le commentaire de `issue` (point 1, règle 4).
 """
 from __future__ import annotations
 
@@ -1041,8 +1042,8 @@ def issue(manip: dict, sep: dict | None, ep: dict | None, echecs: dict, n_e3: in
         return {"code": "N", "niveau": None, "motifs": ["niveau non atteignable : moins de six familles présentes dans "
                                                          "l'épreuve E3 (liste d'arrêt, point 13 ; nœud)"]}
     if not manip["etablie"]:
-        # constat m-4 : une vérification sous six familles le dit (« niveau non atteignable ») ; l'issue reste NI (question
-        # renvoyée à l'additif du rédacteur)
+        # constat m-4 : une vérification sous six familles le dit (« niveau non atteignable ») ; l'issue est NI (addendum 1,
+        # point 1, règle 4)
         manque = [e if not manip[e]["non_atteignable"] else
                   f"{e}, niveau non atteignable : {_n(manip[e]['K'])} famille{'s' if manip[e]['K'] > 1 else ''}"
                   for e in ("M1", "M3") if not manip[e]["separe"]]
