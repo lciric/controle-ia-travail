@@ -58,3 +58,4 @@
 | QUESTION-ORGANISME-NOUVELLES-ATTAQUES-V4 | 2026-11-20T11:25:20Z | prereg/ideation-nouvelles-attaques-v1/question-course-nouvelles-attaques-v4.md | 47160d37de50cca412389fd539f9edf383ff64345513e51287ddcba5618d4654 |
 | ADDITIF-5-ORGANISME-V9-LIGNE-3 | 2026-11-20T11:30:35Z | prereg/organisme-auto-conception-v9/additif-5-code-preenregistrement-ligne-3-portee-200-v2.md | 581e97e5fb6d390378ce94f32f0057b55afa77ce1831d480f4b317c1c0eaa34c |
 | SYNTHESE-ANTERIORITE-SERVIE-NOUVELLES-ATTAQUES-V5 | 2026-11-20T11:45:57Z | prereg/ideation-nouvelles-attaques-v1/synthese-anteriorite-pilier-attaque-v5-servie.md | f74c606423bbbc4da88578508209d3d87cb133b4b7cd8e1728606cde58484e73 |
+| NOTE-PERIMETRE-NOUVELLES-ATTAQUES-V3 | 2026-11-20T11:56:24Z | prereg/ideation-nouvelles-attaques-v1/note-perimetre-modes-inedits-v3.md | dd6fea0e176b019c46386d0d000d059085036d2b20a82fe59c26549b41380580 |
