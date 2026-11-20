@@ -274,6 +274,10 @@ def test_verifier_avant_creation_cas_sain_et_artefacts(session):
     # registre au commit du code (avant la marche) : registre propre absent
     with pytest.raises(GardeArret, match="registre propre absent"):
         rv.verifier_avant_creation(s["r"], s["code"], _config_decisive(s))
+    # une marche au même arbre, sans parent : elle ne descend pas du commit de CODE-LECTURE-B5F
+    orpheline = _g(s["r"], "commit-tree", f"{s['marche']}^{{tree}}", "-m", "marche orpheline")
+    with pytest.raises(GardeArret, match="ne descend pas"):
+        rv.verifier_avant_creation(s["r"], orpheline, _config_decisive(s))
     # arbre de travail de la session changé (code) : refus
     (s["r"] / rv.AMORCE).write_text("echo autre\n")
     with pytest.raises(GardeArret, match="aucune ouverture"):
