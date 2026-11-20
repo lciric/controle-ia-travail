@@ -172,10 +172,18 @@ def main(argv: list[str]) -> int:
     copie, base = Path(argv[0]), Path(argv[1])
     choix = set(argv[2:])
     copier(copie)
+    # premier passage (20 novembre, vers 00:55Z) : sans ce dossier, chaque essai échouait d'entrée (`--basetemp` sans
+    # parent) et toutes les mutations passaient pour attrapées ; les témoins doivent passer avant tout compte
+    base.mkdir(parents=True, exist_ok=False)
     bilan = {"temoins": {}, "mutations": []}
-    for essais in ([EL], [ES], [(ER, RAPIDE)], [ELA]):
-        cle = " ".join(e if isinstance(e, str) else f"{e[0]} -k {e[1]!r}" for e in essais)
-        bilan["temoins"][cle] = jouer(copie, base, f"temoin-{len(bilan['temoins'])}", essais)
+    temoins = {"EL": [EL], "ES": [ES], "ER": [(ER, RAPIDE)], "ELA": [ELA], "ER-entier": [ER]}
+    for nom, essais in temoins.items():
+        bilan["temoins"][nom] = jouer(copie, base, f"temoin-{nom}", essais)
+        print(f"témoin {nom} : code {bilan['temoins'][nom]['code']} ({bilan['temoins'][nom]['fin']})", file=sys.stderr,
+              flush=True)
+    if any(t["code"] != 0 for t in bilan["temoins"].values()):
+        print(json.dumps(bilan, ensure_ascii=False, indent=1))
+        raise SystemExit("un témoin sans mutation échoue : aucun compte de mutations")
     for mid, fichier, quoi, avant, apres, essais in MUTATIONS:
         if choix and mid not in choix:
             continue
@@ -192,12 +200,16 @@ def main(argv: list[str]) -> int:
             r = jouer(copie, base, mid, essais)
         finally:
             cible.write_text(origine, encoding="utf-8")
-        x.update({"etat": "attrapée" if r["code"] != 0 else "MANQUÉE", **r})
+        # attrapée : au moins un essai échoue (code 1 de pytest) ; tout autre code (collecte, usage) est une erreur de
+        # l'outil, comptée à part
+        etat = "attrapée" if r["code"] == 1 else ("MANQUÉE" if r["code"] == 0 else f"erreur de l'outil (code {r['code']})")
+        x.update({"etat": etat, **r})
         bilan["mutations"].append(x)
         print(f"{mid} {x['etat']} ({r['duree_s']} s)", file=sys.stderr, flush=True)
-    joues = [m for m in bilan["mutations"] if m["etat"] != "introuvable"]
+    joues = [m for m in bilan["mutations"] if m["etat"] in ("attrapée", "MANQUÉE")]
     bilan["compte"] = {"jouees": len(joues), "attrapees": sum(m["etat"] == "attrapée" for m in joues),
                        "manquees": [m["id"] for m in joues if m["etat"] == "MANQUÉE"],
+                       "erreurs_de_l_outil": [m["id"] for m in bilan["mutations"] if m["etat"].startswith("erreur")],
                        "introuvables": [m["id"] for m in bilan["mutations"] if m["etat"] == "introuvable"]}
     print(json.dumps(bilan, ensure_ascii=False, indent=1))
     return 0
