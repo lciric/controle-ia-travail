@@ -174,8 +174,6 @@ def session(tmp_path):
     _g(e, "commit", "-q", "-m", "entrées de lecture")
     entrees = _g(e, "rev-parse", "HEAD")
     _g(e, "push", "-q", str(nu), f"x:refs/heads/{rv.BRANCHE_ENTREES}")
-    _g(r, "checkout", "-q", "-f", "main")
-    _g(r, "clean", "-fdq")
     _g(r, "fetch", "-q", "origin")
     (tmp_path / "offre.json").write_text(json.dumps(OFFRE))
     (tmp_path / "existants.json").write_text(json.dumps(EXISTANTS))
@@ -274,9 +272,11 @@ def _pousser_lecture(s, run=RUN_L, abimer=False):
     lv.ecrire_inventaire(arbre, run)
     if abimer:
         (arbre / "bilan-relecture.json").write_text("{\"x\": 1}")
+    (r / "runs" / run).mkdir(parents=True)
+    (r / "runs" / run / "manifeste.json").write_text("{}\n")
     _g(r, "add", "-A")
     _g(r, "commit", "-q", "-m", "arbre fermé")
-    _g(r, "push", "-q", "origin", "lecture")
+    _g(r, "push", "-q", "-f", "origin", "lecture")
     return _g(r, "rev-parse", "HEAD")
 
 
