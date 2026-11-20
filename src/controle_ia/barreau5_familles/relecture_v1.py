@@ -145,9 +145,14 @@ def exiger_config_lecture(config: dict, racine: Path) -> None:
         for x in config["adaptateurs_repetition"]:
             if not (isinstance(x, dict) and set(x) == {"nom", "chemin", "sha256"} and _NOM_REPETITION.fullmatch(x["nom"])):
                 raise GardeArret("adaptateur de répétition : {nom R<k>-saboteur|R<k>-temoin, chemin, sha256} attendu")
+        noms = sorted(x["nom"] for x in config["adaptateurs_repetition"])
+        if len(set(noms)) != len(noms):
+            raise GardeArret("adaptateurs de répétition : nom en double")
     for x in config["ancrages"]:
         if not (isinstance(x, dict) and set(x) == {"nom", "chemin", "sha256"} and _NOM_ANCRE.fullmatch(x["nom"])):
             raise GardeArret("point d'ancrage : {nom ancre-…, chemin, sha256} attendu")
+    for x in list(config["adaptateurs_repetition"]) + list(config["ancrages"]):
+        exiger_adaptateur_existant(x)
     if config["mode"] == "reel":
         chemin = Path(racine) / CONFIG_SCELLEE["chemin"]
         if verifier(chemin) != CONFIG_SCELLEE["sha256"]:
@@ -158,6 +163,21 @@ def exiger_config_lecture(config: dict, racine: Path) -> None:
             raise GardeArret(f"recette différente de la configuration scellée : {ecarts}")
         if not re.fullmatch(r"GO-\d{4}-\d{2}-\d{2}-\d{2}", str(config["go_id"])):
             raise GardeArret("accord de calcul illisible")
+
+
+_CHEMIN_EXISTANT = re.compile(r"[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*\.(?:pt|safetensors)")
+
+
+def exiger_adaptateur_existant(x: dict) -> None:
+    """Adaptateur existant (répétition générale ou point d'ancrage, point 18), donné par la session : empreinte sha256 de
+    64 signes exigée (une empreinte absente ou illisible est refusée : aucun repli sur un compagnon) ; chemin relatif au
+    dépôt, sans « .. », hors de `docs/`, `diag/`, `runs/` et de toute marche de la formation de ce plan."""
+    if not isinstance(x.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", x["sha256"]):
+        raise GardeArret(f"adaptateur existant {x.get('nom')!r} : empreinte sha256 absente ou illisible : refus")
+    c = x.get("chemin")
+    if (not isinstance(c, str) or not _CHEMIN_EXISTANT.fullmatch(c) or ".." in c.split("/")
+            or c.split("/")[0] in ("docs", "diag", "runs") or "b5f-formation" in c):
+        raise GardeArret(f"adaptateur existant {x.get('nom')!r} : chemin {c!r} refusé")
 
 
 # --- registre propre ---------------------------------------------------------------------------------------------------
@@ -240,11 +260,39 @@ def exiger_entrees(dossier: Path) -> dict:
         verifier(p)
     if not tenus or not app:
         raise GardeArret("entrées de lecture : adaptateurs tenus à l'écart et d'apprentissage exigés")
+    # point 7 : noms opaques donnés dans l'ordre (X-01 à X-NN, sans trou) ; fichiers réduits aux seuls tenseurs
+    if sorted(tenus) != [f"X-{k:02d}" for k in range(1, len(tenus) + 1)]:
+        raise GardeArret(f"entrées de lecture : noms opaques {sorted(tenus)[:3]}… non contigus depuis X-01 : refus")
+    for p in list(tenus.values()) + list(app.values()):
+        exiger_tenseurs_seuls(p)
     saboteurs = {n.split("-", 1)[0] for n in app if n.endswith("-saboteur")}
     if set(episodes) != saboteurs:
         raise GardeArret(f"épisodes d'évaluation {sorted(episodes)} ≠ saboteurs d'apprentissage {sorted(saboteurs)} : la "
                          "sonde du diagnostic ne se coupe pas")
     return {"tenus": tenus, "apprentissage": app, "episodes": episodes}
+
+
+def exiger_tenseurs_seuls(chemin: Path) -> list[str]:
+    """Point 7 (« fichiers réduits aux seuls tenseurs ») : l'en-tête du fichier `safetensors` ne porte aucune métadonnée
+    (`__metadata__`), et seulement des matrices A et B d'adaptateur. Lu sans charger les tenseurs. Rend les clés."""
+    chemin = Path(chemin)
+    with open(chemin, "rb") as f:
+        tete = f.read(8)
+        if len(tete) != 8:
+            raise GardeArret(f"{chemin.name} : en-tête safetensors illisible")
+        n = int.from_bytes(tete, "little")
+        if not 0 < n < 100_000_000:
+            raise GardeArret(f"{chemin.name} : en-tête safetensors illisible")
+        try:
+            entete = json.loads(f.read(n).decode("utf-8"))
+        except (UnicodeDecodeError, ValueError):
+            raise GardeArret(f"{chemin.name} : en-tête safetensors illisible") from None
+    if not isinstance(entete, dict) or "__metadata__" in entete:
+        raise GardeArret(f"{chemin.name} : métadonnées dans le fichier (seuls les tenseurs sont admis, point 7) : refus")
+    cles = sorted(entete)
+    if not cles or any(not k.endswith((".A", ".B")) for k in cles):
+        raise GardeArret(f"{chemin.name} : autre chose que des matrices A et B d'adaptateur : refus")
+    return cles
 
 
 def exiger_arbre_de_lecture_propre(racine: Path, dossiers, empreinte_engagement: str | None, sorties: Path | None) -> dict:
