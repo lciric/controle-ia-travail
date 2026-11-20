@@ -1,0 +1,8 @@
+# Note — fiche v5 de l'orchestrateur v68 retirée, mot de Lazar « non je veux fable » — v1
+
+Pièce de travail (classe C), écrite par la session du compte organisme le 2026-11-20 (relevé de `date -u` : 00:41:05Z). Elle ne remplace rien et n'efface rien (R12).
+
+- **Mot de Lazar**, tapé dans cette session : « go reprise, go recos; […] non je veux fable », en réponse à l'annonce que la correction C2 serait appliquée par un agent de recopie (accord de la mère R-4026, écart déclaré sur le précédent R-3791).
+- **Effet** : la fiche `fiche-quatre-decisions-orchestrateur-v68-v5.md` (`c5694a88089f1cbc3c664e6396826d895142390e3497cfb40aedf44700b19882`), produite par recopie, et ses pièces (`remplacements-fiche-orchestrateur-v68-v4-v5.json`, journal de l'outil, `differentiel-fiche-orchestrateur-v68-v4-v5.diff`), versées au commit `fd1be70e`, sont **retirées** : elles restent en place, intactes, et ne valent pas pièce pour Lazar. Le contrôle de leur différentiel, lancé, a été arrêté avant toute écriture ; il n'existe pas.
+- **Suite** : la correction C2 du contrôle `controle-differentiel-fiche-orchestrateur-v68-v4-v1.md` (`e538fcb34df66299682a0648234644cd0b64fb04c5978ae3fd0ff22baf57e2f4`) sera appliquée à la v4 (`7910e74b9952635df92d5cb7039b8a1e3ec024d4c74cf7724707a34ee79b1b48`) par un rédacteur de modèle F, à la première place Fable, avec son différentiel et son rapport ; la pièce prendra le nom de la **v6** (le nom v5 est pris, R12). Le même contre-lecteur contrôlera le différentiel v4 → v6. Seule la v6 contrôlée ira à la mère pour Lazar.
+- **Portée lue par la session** : plus aucune recopie de pièce de conception par un autre modèle que F ; la rédaction et ses corrections passent par Fable.
