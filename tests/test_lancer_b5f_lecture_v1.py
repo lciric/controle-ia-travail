@@ -341,3 +341,30 @@ def test_offre_et_echeance_de_la_lecture():
     assert rv.echeance_arret_lecture_s(0, "repetition", 1.3) == int((8.0 / 1.3 - 0.25) * 3600)
     with pytest.raises(GardeArret):
         rv.echeance_arret_lecture_s(0, "decisif", 1.4)
+
+
+def test_activations_gardees_lues_dans_la_liste_scellee(tmp_path):
+    s = tmp_path / "donnees" / RUN_L
+    s.mkdir(parents=True)
+    liste = ["activations/nu/c15/e0__p0.npy", "activations/X-01/c15/e3__p9.npy"]
+    (s / "garde-activations.json").write_text(json.dumps({"regle": "une_sur_dix", "fichiers": liste}))
+    sceller(s / "garde-activations.json")
+    assert rv.activations_gardees(s) == [(s / c).as_posix() for c in liste]
+    for mauvais in (["lecture/scores/decisive-pli0.json"], ["activations/nu/c16/e0__p0.npy"], ["../x.npy"]):
+        d = tmp_path / f"m{len(mauvais[0])}"
+        d.mkdir()
+        (d / "garde-activations.json").write_text(json.dumps({"regle": "une_sur_dix", "fichiers": mauvais}))
+        sceller(d / "garde-activations.json")
+        with pytest.raises(GardeArret, match="liste blanche"):
+            rv.activations_gardees(d)
+    (s / "garde-activations.json").write_text(json.dumps({"regle": "une_sur_dix", "fichiers": []}))
+    with pytest.raises(GardeArret):
+        rv.activations_gardees(s)                                   # compagnon d'empreinte faux : refus
+
+
+def test_prechargement_du_modele_de_la_configuration_scellee(monkeypatch):
+    from controle_ia.harnais import modeles
+    vus = []
+    monkeypatch.setattr(modeles, "precharger_modele", lambda nom, revision: vus.append((nom, revision)) or "/cache")
+    assert rv.precharger(RACINE) == "/cache"
+    assert vus == [("meta-llama/Llama-3.1-8B-Instruct", "0e9e39f249a16976918f6564b8830bc894c89659")]
