@@ -34,3 +34,4 @@
 | ADDITIF-1-ORGANISME-V9-LIGNE-3 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/additif-1-preenregistrement-ligne-3-votes-effectifs-juges-v7-v2.md | e1c1ee842219397a45b5a9a9336d05d873499b2a94bc8847f204b205141908b0 |
 | CRITERES-JUGE-SELECTION-ORGANISME-V9-V7 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/juge-selection/criteres-choix-cartes-v9-v7.md | 6af793a27f6bce4b5fe05aa18b5c6c33aed8d10a284d081fd24a0640434a316f |
 | NOTE-JUGE-SELECTION-ORGANISME-V9-V7 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/juge-selection/note-conception-juge-selection-cartes-ecartees-v7.md | bbd71b7c998866ec249556fe7803015c54aac4081dffc4e5084588819bc98a26 |
+| ADDITIF-2-ORGANISME-V9-LIGNE-3 | 2026-11-20T05:48:27Z | prereg/organisme-auto-conception-v9/additif-2-code-preenregistrement-ligne-3-votes-effectifs-juges-v7-v3.md | f5562d206bc56bfa1ebf2ff88abcdd6fcc93ececb6abd513d05611c6c4e5f25a |
