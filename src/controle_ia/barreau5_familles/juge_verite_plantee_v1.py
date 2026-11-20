@@ -5,7 +5,9 @@ aucun calcul du programme de lecture. Il lit le fichier des vérités, après av
 et les rendus du programme, un par monde. Il applique les règles gelées de la colonne « règle gelée » du point 11 du texte
 scellé `prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1.md` (`bdff244f…`) : nombres de mondes,
 seuils « au plus » et « au moins ». Il rend « passée » ou « manquée », règle par règle ; l'épreuve est « passée » si toutes
-ses règles le sont (point 11 : « Une règle manquée : aucune ouverture »). Code neuf (R12), 20 novembre 2026, sans donnée.
+ses règles le sont (point 11 : « Une règle manquée : aucune ouverture »). Niveaux d'issue selon l'addendum 1 scellé
+(`prereg/barreau5-sabotage-ou-empreinte-adaptateurs-tenus-a-l-ecart-v1-addendum-1.md`, `2afa2186…`, point 1). Code neuf
+(R12), 20 novembre 2026, sans donnée ; écrit par le premier développeur de la fabrique, repris par le second.
 
 Forme d'un rendu (une ligne JSON par monde, fichier `.jsonl`), fixée ici parce que l'interface lue ne dit pas la forme du
 résultat du programme ; un traducteur, écrit par l'agent qui joue l'épreuve et qui voit ce résultat, la tire du résultat

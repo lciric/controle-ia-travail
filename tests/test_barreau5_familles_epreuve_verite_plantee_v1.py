@@ -99,14 +99,15 @@ def garde_factice(dossier: Path):
     if vus != reels:
         return "refus", "inventaire"
     reg = lire(dossier / "registre.json")
-    noms = [x["nom"] for x in reg]
-    if noms.index("SCORES-B5F") > noms.index("OUVERTURE-B5F") or \
+    dates = {x["nom"]: x["horodatage"] for x in reg}
+    if not dates["ENGAGEMENT-B5F"] < dates["SCORES-B5F"] < dates["OUVERTURE-B5F"] or \
             [x["horodatage"] for x in reg] != sorted(x["horodatage"] for x in reg):
         return "refus", "scores postérieurs à l'ouverture"
     lignes = {x["nom"]: x["contenu"] for x in reg}
     if not lignes["SCORES-B5F"].endswith(f"inventaire sha256 {sha_fichier(arbre / 'inventaire.json')}"):
         return "refus", "inventaire différent de SCORES-B5F"
-    if lignes["OUVERTURE-B5F"] != f"table sha256 {sha_fichier(dossier / 'etiquettes.json')}":
+    table = f"table sha256 {sha_fichier(dossier / 'etiquettes.json')}"
+    if lignes["ENGAGEMENT-B5F"] != table or lignes["OUVERTURE-B5F"] != table:
         return "refus", "table différente de l'engagement"
     for s in F.SONDES:
         for k in (0, 1):
@@ -191,11 +192,23 @@ def test_planter_deterministe_et_graines():
     assert a == F.planter(ENTROPIE, "V3-0007", P)
     assert a != F.planter(ENTROPIE + 1, "V3-0007", P)
     assert a["familles_plan"] != F.planter(ENTROPIE, "V3-0008", P)["familles_plan"]
-    g = F.graine(ENTROPIE, "V3", 7, F.FLUX_PLAN)
-    assert isinstance(g, np.random.SeedSequence) and g.entropy == ENTROPIE and g.spawn_key == (3, 7, 0)
+    g = F.graine(ENTROPIE, "V3-0007", F.FLUX_PLAN)
+    assert isinstance(g, np.random.SeedSequence) and g.entropy == ENTROPIE
+    cle = int.from_bytes(hashlib.sha256(b"b5f/epreuve/V3-0007").digest()[:8], "big")   # point 14
+    assert g.spawn_key == (cle, 0) and F.cle_entiere("b5f/epreuve/V3-0007") == cle
+    assert F.graine(ENTROPIE, "V3-0007", 1).spawn_key == (cle, 1)
     for faux in (-1, 1.5, True):
         with pytest.raises(F.ErreurFabrique):
-            F.graine(faux, "V3", 7, 0)
+            F.graine(faux, "V3-0007", 0)
+    with pytest.raises(F.ErreurFabrique):
+        F.graine(ENTROPIE, "V13-0000", 0)
+
+
+def test_cle_entiere_suit_la_regle_du_depot():
+    """La clé entière est celle de `manifeste.cle_de_tache` (sauté si le paquet entier n'est pas là)."""
+    M = pytest.importorskip("controle_ia.manifeste")
+    for cle in ("b5f/epreuve/V0-0000", "b5f/epreuve/VC3-0019", "x"):
+        assert F.cle_entiere(cle) == M.cle_de_tache(cle)
 
 
 def test_verites_engagees(verites, racine):
