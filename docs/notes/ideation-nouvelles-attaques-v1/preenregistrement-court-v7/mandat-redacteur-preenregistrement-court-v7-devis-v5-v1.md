@@ -1,0 +1,40 @@
+VERSION DE PYTHON : `python3 --version` ; AUCUN `-c`, AUCUN `-` APRÈS PYTHON3 SAUF `-B`
+
+AUCUNE COMMANDE DE LISTE : NI `ls`, NI `find`, NI `git ls-tree`, NI `git ls-files`, NI `git status`, NI `git show --name-only`, NI `grep -r`, NI RECHERCHE SUR UN DOSSIER ENTIER, NI JOKER DANS UN CHEMIN. TOUT FICHIER S'OUVRE PAR SON CHEMIN COMPLET. UNE COMMANDE SIMPLE PAR APPEL : NI `&&`, NI `;`, NI BOUCLE. `git show` TOUJOURS REDIRIGÉ VERS UN FICHIER PAR `>`, SUR `origin/main`. AUCUNE RECHERCHE DE MOTIF LARGE.
+
+# Mandat du rédacteur — course « nouvelles attaques » : préenregistrement court v7 et devis v5 — v1
+
+Pièce de travail (classe C), donnée par la session du compte organisme le 2026-11-20, sur GO-2026-11-20-33, -42, -44, -46, -50 et les décisions de la mère R-4250, R-4256, R-4258, R-4260 (et celles qu'elle a inscrites depuis sur ce chantier ; lis `registres/decisions.md` à partir de R-4206). Pièces décisives (classe A) : contre-lecture par un autre modèle, vérification des corrections par le même, scellement par la mère ; **le devis va au directeur, rien ne court avant son mot.**
+
+## Qui
+
+Un rédacteur neuf, modèle F, qui n'a écrit aucune version du préenregistrement court, du devis, de la question, de la note de périmètre ni de la partie servie. Tu signes « rédacteur neuf, modèle F ». Prends le temps : c'est une pièce dense.
+
+## Ce qui fait foi (tire de `origin/main` après `git -C /home/user/controle-ia-travail fetch origin main` ; vérifie chaque empreinte contre son compagnon)
+
+Dans `prereg/ideation-nouvelles-attaques-v1/` : le préenregistrement court v6 (`7e240c8c…`) et le devis v4 (`620de369…`), **sources de la v7 et du devis v5** ; la question v5 (`eaf5db8a…`) ; la partie servie (`partie-servie-question-v5-v1.md`, `4cd360ba…`, son journal et son programme, au même dossier ou cités) ; la synthèse d'antériorité servie v5 (`synthese-anteriorite-pilier-attaque-v5-servie.md`) ; la note de périmètre v3 (`dd6fea0e…`, § 4, § 6, § 8). `registres/go.md` (lignes ci-dessus, citées à la lettre) et `registres/decisions.md`. Sur la branche de travail : `/home/user/controle-ia-travail/docs/notes/ideation-nouvelles-attaques-v1/` — contre-lectures de la question v5 (`question-v5/contre-lecture-v1/`), de la partie servie (`partie-servie-v5/contre-lecture-v1/`), et le programme du devis v3 (`preenregistrement-court-v4/calcul_devis_course_nouvelles_attaques_v3.py`). L'ordre de course v3 (`conception-v3/ordre-course-nouvelles-attaques-v3.md`). Le reste net comptable par clé (estimation) : `/home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/reste-net-comptable-cles-2026-11-20-v1/reste-net-comptable-par-cle-2026-11-20-v1.md` (`62c625ab…`). L'outil `/home/user/controle-ia-travail/scripts/remplacer_texte_exact_v1.py` (`391db990…`).
+
+## Ce que la v7 porte (par l'outil, ou par un texte neuf déclaré là où l'outil ne suffit pas ; chaque ancre comptée par `grep -c -F -e`)
+
+1. **Pièces servies** : la question v5 et la **partie servie** (gabarit `4cd360ba…`) à la place de la v4 ; règle « aucun programme n'ouvre la question pour la servir » ; **ligne de case** = identifiant neutre + les trois valeurs à l'octet de la légende (aucun nom de fichier, graine, ni hexadécimal de 8 caractères et plus ; l'identifiant ne laisse déduire ni le compte des cases, ni le tirage, ni la famille mise de côté) ; requête assemblée journalisée avec son empreinte ; la synthèse d'antériorité servie v5 à la place de la v2b.
+2. **Racine du tirage** : la valeur écrite du v6 gardée (`0x2cf2aae035beef43e999e3cd8b0fb7ba`, GO-2026-11-20-42 point 2) ; aucun tirage ne change.
+3. **Arrêt n° 14 étendu** à toute pièce fixe servie (question, partie servie, synthèse servie, témoins plantés, liste des motifs et programme de la garde, configuration) ; **arrêt neuf « motif interdit dans un texte à servir »** : garde de motifs au dernier point avant l'envoi, sur la requête assemblée, deux familles gelées par empreinte (« identité et dépôt », « composition et tenue »), normalisation, témoin positif par motif, refus nommé sans retrait silencieux, épreuve sur cas sain et artefact par famille ; vaut pour la course, les sondes et l'épreuve des témoins ; la liste des motifs n'est jamais servie.
+4. **GO-2026-11-20-46** : point 3 (portier), point 4 (registre servi aux générations 2 et 3 : nom et énoncé d'une ligne, jamais de procédé), point 5 (relecture et lecture des fiches par une **session à part**, qui ne rend à la mère que des étiquettes et des comptes), point 6 (**quarantaine** des fiches « passées » et « hors case » et des réponses brutes, noms compris), point 9 (définition du mode), à la lettre des recommandations de la note v3 § 8 retenues.
+5. **GO-2026-11-20-50, les six garde-fous**, chacun avec l'arrêt ou l'épreuve (cas sain, artefact) qui le rend vérifiable : procédé demandé à part, après le verdict d'antériorité, jamais lu par la mère ; quarantaine sur branche orpheline, liste nominative, lectures consignées ; registre servi vérifié par programme ; aucun procédé exécuté hors du banc scellé, chaque exécution sous un GO ; lecteur interne d'une autre lignée, « sert-il à autre chose que mesurer ? », un oui bloque ; revue externe avant toute sortie hors quarantaine.
+6. **R-4250** : une classe nommée pour la réponse vide motivée par « ne la propose pas » ; un témoin planté « variante d'une famille connue », texte inerte ; et la case « autre, à nommer » (où la supposition nommée est reçue : contre-lecture de la partie servie, observation).
+7. **L'épreuve 4 de la note au plan d'analyse** : la mère l'a posée au directeur (recommandation : oui, déclarée comme écart, 0,7). Si son mot est sur `main` quand tu écris, porte-le ; sinon écris les deux branches (avec / sans), marquées « en attente du mot du directeur », sans trancher.
+8. **Sondes de refus** : jouées sur la requête assemblée (partie servie remplie) ; pire de la sonde de l'espèce 6 recalculé sur la taille réelle de la requête.
+9. **Ordre de course** : renvois à la question et cinq espèces ; dis ce qu'un erratum d'une ligne à l'ordre v3 doit porter (texte exact), sans l'écrire.
+10. **Tenue** : titre, statut, phrase de version, table des pièces (chemins et empreintes scellés seulement).
+
+## Le devis v5
+
+`devis-course-nouvelles-attaques-v5.md` et un programme versionné neuf (`calcul_devis_course_nouvelles_attaques_v4.py` et sa sortie, jouée deux fois, égale à l'octet), à partir du devis v4 et du calcul v3 : tailles réelles de la requête assemblée et de la synthèse servie ; sondes ; plafond et ligne demandée ; parts par clé ; **confrontation aux restes nets estimés** (Kimi et OpenAI ne tiennent pas aux parts basses ; le directeur recharge, la mère dira où) — écris ce qui tient et ce qui ne tient pas, sans trancher.
+
+Puis les différentiels (`diff -u`, v6 → v7 et devis v4 → v5), la sortie du validateur sur la v7 (`/home/user/controle-ia-travail/docs/notes/ideation-nouvelles-attaques-v1/preenregistrement-court-v4/valider_prereg_v4_v1.py`, avec `PYTHONPATH=/home/user/controle-ia-travail/src`, ou une copie renommée), et un rapport `rapport-redacteur-preenregistrement-court-v7-devis-v5-v1.md` (remplacements, textes neufs, points non tranchés).
+
+Ton dossier : `/tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/redacteur-preenregistrement-court-v7/`. Chaque fichier rendu avec son compagnon (`env -C DOSSIER sha256sum F`, redirigé vers `DOSSIER/F.sha256`).
+
+## Interdits
+
+Voir en tête. **Aucune méthode d'attaque, aucun procédé, aucun détail opérant ; aucune recette** ; aucun nom ni énoncé de mode. Aucune valeur de clé. Aucun lancement du relais, du véhicule ni de la sonde. Aucune écriture dans le dépôt, aucun commit. Rien sous `archives-reponses-modeles/`, rien du coffre, rien sous `/root/.claude/`. Jamais de heredoc ni de code en ligne passé à un interpréteur. Aucun appel à un fournisseur de modèles, aucune dépense, aucune publication d'artefact. Aucun identifiant de modèle. Au premier refus de permission, de classifieur ou de garde : arrête-toi et dis-le.
