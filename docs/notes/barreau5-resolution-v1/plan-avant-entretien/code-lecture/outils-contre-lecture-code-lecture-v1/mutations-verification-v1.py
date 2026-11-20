@@ -24,7 +24,9 @@ EL, ES, ER, EA = ("tests/test_barreau5_familles_lecture_v1.py", "tests/test_barr
                   "tests/test_barreau5_familles_relecture_v1.py", "tests/test_amorce_b5f_lecture_v1.py")
 A_COPIER = ["src", "tests/conftest.py", EL, ES, ER, EA, "tests/test_lancer_b5f_lecture_v1.py",
             "scripts/lancer_b5f_lecture_v1.sh", A, "prereg/T0.6-organismes-config-7b-v1.json",
-            "prereg/T0.6-organismes-config-7b-v1.json.sha256", "pyproject.toml", "docs/sources/invites-2606.08892-v1"]
+            "prereg/T0.6-organismes-config-7b-v1.json.sha256", "pyproject.toml", "docs/sources/invites-2606.08892-v1",
+            # un essai de l'amorce lit ce fichier (premier passage de cet outil : témoin de l'amorce en échec sans lui)
+            "requirements-gpu.txt"]
 
 MUTATIONS = [
     ("C1", L, "probabilité rapportée de « séparé » prise sur la somme des rangs positifs",
