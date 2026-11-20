@@ -234,9 +234,15 @@ def controle_carte(appris: dict, definitions, lecteur, cles: dict, plis, g: dict
     rng = generateur(g["b5f/sonde/controle-carte/actions"])
     k = min(N_ACTIONS_CONTROLE_CARTE, len(seqs))
     choisies = [seqs[int(i)] for i in sorted(rng.choice(len(seqs), size=k, replace=False))]
-    r = ac.controle_carte_processeur(appris[(nom, pli)], seqs, y, {"famille": FAMILLE, "couche": d.couche, "l2": L2,
-                                                                  "nom": nom}, graine_entiere(g[cle_de_graine(nom, pli)]),
-                                     choisies, TOLERANCE_CARTE, EPOQUES)
+    try:
+        r = ac.controle_carte_processeur(appris[(nom, pli)], seqs, y, {"famille": FAMILLE, "couche": d.couche, "l2": L2,
+                                                                      "nom": nom}, graine_entiere(g[cle_de_graine(nom, pli)]),
+                                         choisies, TOLERANCE_CARTE, EPOQUES)
+    except GardeArret:
+        # constat m-3 de la contre-lecture : le message de la fonction gelée porte l'écart mesuré ; aucune grandeur d'une
+        # sonde n'est écrite au résultat « arrêt » ni sur la sortie d'erreur : garde relevée sans nombre
+        raise GardeArret(f"contrôle carte-processeur de la sonde {nom}, pli {pli} : écart au-dessus de la tolérance "
+                         "(point 9) : arrêt (erreur de chaîne ; l'écart n'est pas écrit)") from None
     return {"sonde": nom, "pli": pli, "actions": r["actions"], "tolerance": r["tolerance"], "passe": True}
 
 
