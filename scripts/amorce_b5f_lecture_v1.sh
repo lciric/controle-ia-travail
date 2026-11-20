@@ -32,7 +32,9 @@
 #   EXISTANTS_B5F (liste JSON des adaptateurs existants, en base64), EXISTANTS_CHEMINS (leurs chemins, séparés par des
 #   virgules, ou « - »), GH_TOKEN, HF_TOKEN ; posées par le loueur : CONTAINER_ID, CONTAINER_API_KEY.
 # Essai local (AMORCE_ESSAI_LOCAL=1) : contrôle des arguments seulement, sortie (code 0) avant tout réseau et toute écriture.
-# Essai à blanc (AMORCE_ESSAI_BLANC=1) : seul le quart d'heure du versement peut y être raccourci (B5F_VERSEMENT_S).
+# Essai à blanc (AMORCE_ESSAI_BLANC=1, tests/test_amorce_b5f_lecture_entiere_v1.py) : l'amorce entière, sous RACINE_AMORCE,
+#   avec les faux outils que l'essai met dans le PATH ; toutes les gardes restent ; seuls le quart d'heure du versement
+#   (B5F_VERSEMENT_S) et, à l'échéance, une seule demande de la minuterie (B5F_MINUTERIE_UNE_FOIS) y sont permis.
 set -uo pipefail
 ESSAI="${AMORCE_ESSAI_LOCAL:-0}"
 BLANC="${AMORCE_ESSAI_BLANC:-0}"
@@ -131,6 +133,7 @@ minuterie() {  # $1 = échéance (s UTC). À l'échéance : versement final prou
             c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
                 "$API/instances/${CONTAINER_ID:-}/" 2> /dev/null) || c=000
             j "MINUTERIE : DELETE, essai $n : HTTP $c (seule l'absence de l'identifiant dans la liste prouve la destruction)"
+            [ "${BLANC:-0}" = 1 ] && [ "${B5F_MINUTERIE_UNE_FOIS:-0}" = 1 ] && return 0     # essai à blanc seulement
             sleep "${B5F_PAS_MINUTERIE:-60}"; done
     fi
     printf '%s\n' "$(date -u +%FT%TZ) SIGNAL POUR LA MÈRE : instance ${CONTAINER_ID:-}, marche ${RUN_LECTURE:-} : versement final non prouvé à l'échéance (sorties ou activations gardées) ; instance arrêtée (état « stopped »), NON détruite, disque gardé ; reprendre le versement, puis détruire par l'identifiant après la preuve (nœud, R-3661)" >> "$SIGNAL"
@@ -139,6 +142,7 @@ minuterie() {  # $1 = échéance (s UTC). À l'échéance : versement final prou
         c=$(curl -sS -m 60 -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
             -H 'Content-Type: application/json' -d '{"state": "stopped"}' "$API/instances/${CONTAINER_ID:-}/" 2> /dev/null) || c=000
         j "MINUTERIE : « stopped », essai $n : HTTP $c (aucune destruction sans preuve du versement)"
+        [ "${BLANC:-0}" = 1 ] && [ "${B5F_MINUTERIE_UNE_FOIS:-0}" = 1 ] && return 0         # essai à blanc seulement
         sleep "${B5F_PAS_MINUTERIE:-60}"; done; }
 # <<< minuterie
 # >>> entrees (extrait et joué par tests/test_amorce_b5f_lecture_v1.py)
