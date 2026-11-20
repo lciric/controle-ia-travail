@@ -392,7 +392,6 @@ def lire_sceau(chemin):
 
 
 def ajouter_journal(dossier, entree):
-    Path(dossier).mkdir(parents=True, exist_ok=True)
     with open(Path(dossier) / "journal.jsonl", "a", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps(entree, ensure_ascii=False, sort_keys=True) + "\n")
         f.flush()
@@ -705,7 +704,7 @@ def appeler_anthropic(m, prompt, max_tokens):
                 elif t == "message_delta":
                     delta = d.get("delta") or {}
                     etat["fin"] = delta.get("stop_reason") or etat["fin"]
-                    details = delta.get("stop_details") or {}
+                    details = delta.get("stop_details") or d.get("stop_details") or {}
                     if etat["fin"] == "refusal":
                         etat["categorie"] = details.get("category") if isinstance(details, dict) else None
                     u = d.get("usage") or {}
