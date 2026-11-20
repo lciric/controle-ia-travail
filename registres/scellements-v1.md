@@ -35,3 +35,4 @@
 | CRITERES-JUGE-SELECTION-ORGANISME-V9-V7 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/juge-selection/criteres-choix-cartes-v9-v7.md | 6af793a27f6bce4b5fe05aa18b5c6c33aed8d10a284d081fd24a0640434a316f |
 | NOTE-JUGE-SELECTION-ORGANISME-V9-V7 | 2026-11-20T04:50:06Z | prereg/organisme-auto-conception-v9/juge-selection/note-conception-juge-selection-cartes-ecartees-v7.md | bbd71b7c998866ec249556fe7803015c54aac4081dffc4e5084588819bc98a26 |
 | ADDITIF-2-ORGANISME-V9-LIGNE-3 | 2026-11-20T05:48:27Z | prereg/organisme-auto-conception-v9/additif-2-code-preenregistrement-ligne-3-votes-effectifs-juges-v7-v3.md | f5562d206bc56bfa1ebf2ff88abcdd6fcc93ececb6abd513d05611c6c4e5f25a |
+| PREREG-COURT-NOUVELLES-ATTAQUES-V3 | 2026-11-20T06:00:01Z | prereg/ideation-nouvelles-attaques-v1/preenregistrement-court-course-nouvelles-attaques-v3.md | 2ea5ad53de565f912992128a9113da59e5462b561ed258b151d519b193f85787 |
