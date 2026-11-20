@@ -194,7 +194,11 @@ def _sans_cle(r, monde):
     tete, fichiers = _branche(monde)
     pousses = "".join(_git(monde["nu"], "show", f"{tete}:{f}") for f in fichiers if f.startswith("traces-b5f-lecture/")) if tete else ""
     for cle in CLES:
-        assert cle not in r["journal"] + r["sortie"] + r["curl"] + pousses, cle
+        assert cle not in r["journal"] + r["sortie"] + pousses, cle
+    # le faux curl consigne ses arguments : la clé de l'instance n'y paraît que dans l'en-tête d'autorisation
+    for ligne in r["curl"].splitlines():
+        for cle in CLES:
+            assert cle not in ligne.replace(f"Authorization: Bearer {CLES[2]}", ""), cle
 
 
 def test_amorce_entiere_cas_sain_versement_complet_puis_destruction_a_l_echeance(monde):
