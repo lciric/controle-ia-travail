@@ -62,7 +62,7 @@ def monde(rng) -> dict:
     familles = [f"T{i:02d}" for i in range(1, k_e3 + 1)]
 
     def sous(kmax):
-        return int(rng.choice([kmax, kmax, kmax, max(0, kmax - 1), max(0, kmax - 3), max(0, kmax - 5)]))
+        return int(rng.choice([kmax, kmax, kmax, max(0, kmax - 1), max(0, kmax - 3), max(0, kmax - 5), 0]))
 
     manip_forte = rng.random() < 0.8
     d = {}
