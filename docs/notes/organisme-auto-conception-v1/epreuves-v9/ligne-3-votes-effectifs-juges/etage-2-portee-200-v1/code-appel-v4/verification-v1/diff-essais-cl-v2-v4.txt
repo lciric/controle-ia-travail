@@ -1,0 +1,131 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v2/essais_epreuve_juges_reels_ligne_3_v2.py	2026-11-20 14:08:52.458034567 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v4/essais_epreuve_juges_reels_ligne_3_v4.py	2026-11-20 14:19:52.589872150 +0000
+@@ -1,4 +1,12 @@
+-"""Essais de `epreuve_juges_reels_ligne_3_v2.py` (pytest, service factice seul : aucun réseau, aucune clé, aucun relais).
++"""Essais de `epreuve_juges_reels_ligne_3_v4.py` (pytest, service factice seul : aucun réseau, aucune clé, aucun relais).
++
++Version 4 (R12 ; la v3 est gardée) : les essais de la v3 sur le module v4 ; la liste blanche ne porte plus aucun nom de clé
++(R-4290) ; les essais du constat de la v3 sont remplacés par un cas sain (aucun nom de clé, mandataire présent : départ
++accepté jusqu'à la garde suivante) et un artefact (un des deux noms présent : refus nommé).
++
++Version 3 (R12 ; la v2 est gardée) : les essais de la v2 sur le module v3 ; ceux du mode réel passent un environnement qui
++porte HTTPS_PROXY (nom seul, valeur factice) ; essais neufs en fin de fichier : départ refusé sans HTTPS_PROXY, liste blanche
++élargie (correction de la mère, 14:10Z).
+ 
+ Version 2 (R12 ; la v1 est gardée) : les essais de la v1, sur le module v2, plus les essais des corrections C1, C2, C3 de la
+ contre-lecture et des décisions de la mère (2) et (3) (nom de la clé, environnement épuré), en fin de fichier.
+@@ -21,7 +29,9 @@
+ 
+ ICI = Path(__file__).resolve().parent
+ sys.path.insert(0, str(ICI))
+-import epreuve_juges_reels_ligne_3_v2 as M  # noqa: E402
++import epreuve_juges_reels_ligne_3_v4 as M  # noqa: E402
++
++ENV_BASE = {"HTTPS_PROXY": "http://127.0.0.1:1"}      # v3 : valeur factice ; seul le nom est lu par le programme
+ 
+ L3 = M.DEPOT / "docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1"
+ CALCUL = (L3 / "calcul_conditions_plafond_200_ligne_3_v2.py",
+@@ -726,9 +736,9 @@
+     ]
+     for argv, env, motif in cas:
+         with pytest.raises(M.Refus, match=motif):
+-            M.preparer_reel(argv, env, jour, lire_registre=registre, construire_service=constructeur)
++            M.preparer_reel(argv, dict(ENV_BASE, **env), jour, lire_registre=registre, construire_service=constructeur)
+     assert appels == []                                                  # aucun service construit, aucun relais touché
+-    prep = M.preparer_reel(_argv(tmp_path, banque, h, decl, hd), {}, jour, lire_registre=registre,
++    prep = M.preparer_reel(_argv(tmp_path, banque, h, decl, hd), dict(ENV_BASE), jour, lire_registre=registre,
+                            construire_service=constructeur)
+     assert len(appels) == 1 and prep["contexte"]["ligne_de_go"]["id"] == "GO-2026-11-20-26"
+ 
+@@ -864,13 +874,14 @@
+ 
+ 
+ def test_environnement_epure_sain_et_artefact():
+-    sain = {"PATH": "/usr/bin", "HOME": "/tmp", "LANG": "C.UTF-8", "LC_CTYPE": "C.UTF-8", "GO_ID": "GO-2026-11-20-26"}
++    sain = {"PATH": "/usr/bin", "HOME": "/tmp", "LANG": "C.UTF-8", "LC_CTYPE": "C.UTF-8", "GO_ID": "GO-2026-11-20-26",
++            **ENV_BASE}
+     assert M.exiger_environnement_epure(sain) == sorted(sain)
+-    assert M.exiger_environnement_epure({}) == []
++    assert M.exiger_environnement_epure(dict(ENV_BASE)) == ["HTTPS_PROXY"]
+     with pytest.raises(M.Refus, match="non épuré"):
+         M.exiger_environnement_epure(dict(sain, VARIABLE_HORS_LISTE="x"))
+     with pytest.raises(M.Refus, match="non épuré"):
+-        M.exiger_environnement_epure({"PATH": "/usr/bin", "HTTPS_PROXY": "http://127.0.0.1:1"})
++        M.exiger_environnement_epure(dict(sain, ALL_PROXY="http://127.0.0.1:1"))
+ 
+ 
+ def test_mode_reel_environnement_liste_blanche_accepte(tmp_path, configuration):
+@@ -882,8 +893,72 @@
+     hd = M.sha256_octets(octets)
+     Path(str(decl) + ".sha256").write_text(f"{hd}  declaration.json\n", encoding="utf-8")
+     appels = []
+-    env = {"PATH": "/usr/bin", "HOME": "/tmp", "LC_CTYPE": "C.UTF-8", "GO_ID": "GO-2026-11-20-26"}
++    env = {"PATH": "/usr/bin", "HOME": "/tmp", "LC_CTYPE": "C.UTF-8", "GO_ID": "GO-2026-11-20-26", **ENV_BASE}
+     M.preparer_reel(_argv(tmp_path, banque, h, decl, hd), env, dt.date(2026, 11, 20),
+                     lire_registre=lambda: {"texte": REGISTRE, "commit": "essai", "sha256": "essai"},
+                     construire_service=lambda **kw: (appels.append(kw), (None, {}))[1])
+     assert len(appels) == 1 and appels[0]["nom_cle_claude"] == "NOM_FACTICE"
++
++
++# --- v3 : correction de la mère (14:10Z) ----------------------------------------------------------------------------------------
++
++
++def _preparer(tmp_path, configuration, env):
++    import datetime as dt
++    banque, h = ecrire_banque(tmp_path, configuration["items_juge"])
++    decl = tmp_path / "declaration.json"
++    octets = M.json_octets({"fournisseurs": {"claude": {}, "argon": {}}})
++    decl.write_bytes(octets)
++    hd = M.sha256_octets(octets)
++    Path(str(decl) + ".sha256").write_text(f"{hd}  declaration.json\n", encoding="utf-8")
++    appels = []
++    M.preparer_reel(_argv(tmp_path, banque, h, decl, hd), env, dt.date(2026, 11, 20),
++                    lire_registre=lambda: {"texte": REGISTRE, "commit": "essai", "sha256": "essai"},
++                    construire_service=lambda **kw: (appels.append(kw), (None, {}))[1])
++    return appels
++
++
++def test_v3_depart_reel_exige_https_proxy(tmp_path, configuration):
++    """Cas sain : HTTPS_PROXY présente (avec les variables du mandataire et des certificats relevées dans ce conteneur) :
++    le départ passe la garde. Artefact : HTTPS_PROXY absente : refus avant tout service."""
++    noms_du_conteneur = ("CURL_CA_BUNDLE", "NODE_EXTRA_CA_CERTS", "REQUESTS_CA_BUNDLE", "SSL_CERT_FILE", "HTTPS_PROXY",
++                         "https_proxy", "NO_PROXY", "no_proxy")
++    sain = {n: "valeur-factice" for n in noms_du_conteneur}
++    sain.update(PATH="/usr/bin", HOME="/tmp")
++    (tmp_path / "sain").mkdir()
++    assert len(_preparer(tmp_path / "sain", configuration, sain)) == 1
++    sans = {k: v for k, v in sain.items() if k != "HTTPS_PROXY"}
++    (tmp_path / "artefact").mkdir()
++    with pytest.raises(M.Refus, match="variables exigées absentes"):
++        _preparer(tmp_path / "artefact", configuration, sans)
++
++
++def test_v3_liste_blanche_elargie():
++    for n in ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy", "no_proxy", "SSL_CERT_FILE",
++              "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE", "NODE_EXTRA_CA_CERTS"):
++        assert n in M.VARIABLES_PERMISES
++    for n in ("RR_ANTHROPIC_API_KEY_LUC", "GEMINI_API_KEY"):              # v4 (R-4290) : aucun nom de clé dans la liste
++        assert n not in M.VARIABLES_PERMISES
++    assert M.VARIABLES_EXIGEES == ("HTTPS_PROXY",)
++    with pytest.raises(M.Refus, match="non épuré"):                    # l'essai de refus hors liste est gardé
++        M.exiger_environnement_epure(dict(ENV_BASE, VARIABLE_HORS_LISTE="x"))
++
++
++def test_v4_aucun_nom_de_cle_mandataire_present_depart_accepte(tmp_path, configuration):
++    """Cas sain (R-4290) : aucun nom de clé dans l'environnement du programme, mandataire et certificats présents : le
++    départ passe les gardes de l'environnement, de la ligne de GO, de la banque et de la déclaration, jusqu'au constructeur
++    du service (la garde suivante, ici factice)."""
++    env = {n: "valeur-factice" for n in ("HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy", "SSL_CERT_FILE",
++                                         "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE", "NODE_EXTRA_CA_CERTS")}
++    env.update(PATH="/usr/bin", HOME="/tmp")
++    assert len(_preparer(tmp_path, configuration, env)) == 1
++
++
++@pytest.mark.parametrize("nom", ["RR_ANTHROPIC_API_KEY_LUC", "GEMINI_API_KEY"])
++def test_v4_nom_de_cle_present_refus_nomme(tmp_path, configuration, nom):
++    """Artefact (R-4290) : un des deux noms de clé présent dans l'environnement du programme : refus nommé, avant tout
++    service ; la clé vit dans l'environnement des seuls relais."""
++    with pytest.raises(M.Refus, match=f"noms de variables de clé .*{nom}"):
++        _preparer(tmp_path, configuration, dict(ENV_BASE, **{nom: "valeur-factice"}))
++    with pytest.raises(M.Refus, match=f"non épuré.*{nom}"):             # hors de la liste blanche, refusé aussi par elle
++        M.exiger_environnement_epure(dict(ENV_BASE, **{nom: "valeur-factice"}))
