@@ -413,6 +413,28 @@ def eprouver_chemin(modele, fmt, envs: dict, textes: dict, origine: dict, chemin
             "artefact": {"adaptateur": temoin, "differents": art}}
 
 
+def episodes_propres(chemin: Path, famille: str, relance, par_id: dict, T: int) -> dict:
+    """Épisodes d'évaluation du saboteur d'une famille d'apprentissage (point 8 (d)) : chaque ligne est du saboteur de
+    cette famille, de la copie lue (règle de la relance : `-x1` si l'instance est relancée, jamais l'autre copie ; retirage
+    `-r1` admis), sur une tâche d'évaluation ; chaque épisode porte les pas 0 à T − 1. Rend {tâche : {pas : ligne}}."""
+    par_tache = {}
+    for x in lv._lire_jsonl(chemin, f"épisodes d'évaluation de {famille}"):
+        if x.get("membre") != "saboteur":
+            raise GardeArret(f"{chemin} : ligne d'un autre membre que le saboteur")
+        if re.sub(r"(-x1)?(-r1)?$", "", str(x.get("famille", ""))) != famille:
+            raise GardeArret(f"{chemin} : ligne de la famille {x.get('famille')}, {famille} attendue")
+        lv.exiger_copie_lue(famille, str(x["famille"]), relance)
+        if x["tache"] not in par_id:
+            raise GardeArret(f"{chemin} : tâche {x['tache']} hors des tâches d'évaluation")
+        par_tache.setdefault(x["tache"], {})[int(x["pas"])] = x
+    for t, pas in par_tache.items():
+        if sorted(pas) != list(range(T)):
+            raise GardeArret(f"{chemin} : épisode {t} : pas {sorted(pas)}, 0 à {T - 1} attendus")
+    if not par_tache:
+        raise GardeArret(f"{chemin} : aucun épisode")
+    return par_tache
+
+
 def cle_fichier(cle: str) -> str:
     tache, pas = lv.decomposer_cle(cle)
     return f"{tache}__p{pas}"
@@ -670,24 +692,11 @@ def _executer(config, racine, run_id, chemin_m, manifeste, taches, entrees, sour
         for fam, p in sorted(entrees["episodes"].items()):
             etat["etape"] = f"série propre de {fam}"
             nom = f"{fam}-saboteur"
-            lignes = lv._lire_jsonl(p, f"épisodes d'évaluation de {fam}")
-            par_tache = {}
-            for x in lignes:
-                if x.get("membre") != "saboteur":
-                    raise GardeArret(f"{p} : ligne d'un autre membre que le saboteur")
-                base = re.sub(r"(-x1)?(-r1)?$", "", str(x.get("famille", "")))
-                if base != fam:
-                    raise GardeArret(f"{p} : ligne de la famille {x.get('famille')}, {fam} attendue")
-                lv.exiger_copie_lue(fam, str(x["famille"]), relance)
-                par_tache.setdefault(x["tache"], {})[int(x["pas"])] = x
+            par_tache = episodes_propres(p, fam, relance, par_id, T)
             emp = charger_et_controler(modele, nom, etats[nom], ids_controle, logits_base)["empreinte"]
             ecr = ActivationsDemi(dossier_act / f"propre-{nom}", couches)
             cles_p = []
             for t in sorted(par_tache, key=str):
-                if t not in par_id:
-                    raise GardeArret(f"{p} : tâche {t} hors des tâches d'évaluation")
-                if sorted(par_tache[t]) != list(range(T)):
-                    raise GardeArret(f"{p} : épisode {t} : pas {sorted(par_tache[t])}, 0 à {T - 1} attendus")
                 env = environnement("honnete", tache_de(par_id[t]), T, guide, {})
                 spans, _ = rejouer(modele, fmt, env, [par_tache[t][q]["ids"] for q in range(T)],
                                    [par_tache[t][q]["texte"] for q in range(T)], couches)

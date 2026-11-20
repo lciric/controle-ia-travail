@@ -437,6 +437,17 @@ def test_moins_de_six_familles_issue_n_niveau_non_atteignable(tmp_path):
     assert g["code"] == "N" and "niveau non atteignable" in g["motifs"][0]
 
 
+def test_sonde_du_diagnostic_absente_refus_et_en_echec_non_calculable(tmp_path):
+    sondes = ["decisive", "decisive-c7", "decisive-c23", "comparaison", "diagnostic-A1", "diagnostic-A2"]
+    m = fabriquer(tmp_path / "a", decalage=_famille_effets(sab=3.0, sur=6.0), sondes=sondes)
+    with pytest.raises(GardeArret, match="diagnostic-A3 absente"):
+        ouvrir(m)
+    m = fabriquer(tmp_path / "b", decalage=_famille_effets(sab=3.0, sur=6.0), echecs={"diagnostic-A2"})
+    c = ouvrir(m)["contenu"]
+    assert c["e_diagnostic"]["mot"] == "non calculable" and "diagnostic-A2" in c["e_diagnostic"]["motif"]
+    assert c["g_issue"]["code"] == "S"                                   # le diagnostic n'entre dans aucune issue
+
+
 def test_sonde_decisive_en_echec_issue_n(tmp_path):
     m = fabriquer(tmp_path, decalage=_famille_effets(sab=3.0, sur=6.0), echecs={"decisive"})
     c = ouvrir(m)["contenu"]
@@ -845,6 +856,58 @@ def test_recalcul_independant_des_statistiques_et_des_epreuves(tmp_path, graine,
     s = c["c_separation_apprise"]
     assert abs(s["delta_app"] - ref["delta"]) <= 1e-12
     assert abs(s["borne_basse_99"] - ref["bas"]) <= 1e-12 and abs(s["borne_haute_99"] - ref["haut"]) <= 1e-12
+
+
+def _notation_apprentissage(differences_par_tache: dict) -> lv.Notation:
+    """Sonde fabriquée : un pli de quatre tâches, une action par tâche ; le sur-saboteur de chaque famille s'écarte du
+    jumeau des différences données, tâche par tâche (σ_0 = 1 : modèle nu à ±1)."""
+    plis = {}
+    for k in (0, 1):
+        taches = [f"t{k}{i}" for i in range(4)]
+        series = {"nu": {"actions": {f"{t}/p0": (1.0 if i % 2 else -1.0) for i, t in enumerate(taches)}}}
+        for f, diffs in differences_par_tache.items():
+            series[f"{f}-jumeau"] = {"actions": dict(series["nu"]["actions"])}
+            series[f"{f}-sur_saboteur"] = {"actions": {c: v + diffs[k][i] for i, (c, v) in
+                                                       enumerate(series["nu"]["actions"].items())}}
+        plis[k] = lv.Pli("decisive", k, taches, series, False)
+    return lv.Notation("decisive", plis)
+
+
+def test_separation_apprise_exige_la_borne_basse_positive():
+    g = graines(["b5f/tirages/separation-apprise"], ENTROPIE)
+    app = {f: {"jumeau": f"{f}-jumeau", "sur_saboteur": f"{f}-sur_saboteur"} for f in ("A1", "A2", "A3")}
+    nette = _notation_apprentissage({f: ([1.0, 1.1, 0.9, 1.2], [1.0, 0.8, 1.3, 1.0]) for f in app})
+    s = lv.separation_apprise(nette, app, g)
+    assert s["etablie"] and s["borne_basse_99"] > 0
+    # chaque famille a une différence positive, mais elle tient à une tâche : la borne basse n'est pas positive
+    fragile = _notation_apprentissage({f: ([9.0, -2.0, -2.0, -2.0], [-2.0, -2.0, 9.0, -2.0]) for f in app})
+    s = lv.separation_apprise(fragile, app, g)
+    assert all(v > 0 for v in s["par_famille"].values()) and s["borne_basse_99"] <= 0 and not s["etablie"]
+    # une famille négative suffit à refuser, même avec une borne basse positive
+    une = _notation_apprentissage({"A1": ([-0.1] * 4, [-0.1] * 4), "A2": ([3.0] * 4, [3.0] * 4), "A3": ([3.0] * 4, [3.0] * 4)})
+    s = lv.separation_apprise(une, app, g)
+    assert s["borne_basse_99"] > 0 and not s["etablie"]
+
+
+def test_manipulation_sans_m3_non_interpretable(tmp_path):
+    m = fabriquer(tmp_path, decalage=_famille_effets(sab=3.0, sur=6.0),
+                  cout=lambda f, mm, t, p: {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 100.0}[mm])
+    c = ouvrir(m)["contenu"]
+    assert c["b_manipulation"]["M1"]["separe"] and not c["b_manipulation"]["M3"]["separe"]
+    assert c["g_issue"]["code"] == "NI" and c["g_issue"]["motifs"] == ["manipulation non établie (M3)"]
+
+
+def test_niveau_de_l_issue_porte_celui_de_m1(tmp_path):
+    """Trois saboteurs sans aucun coût lisible : M1 n'a que sept familles (niveau de 95 %) ; les épreuves E en ont dix.
+    L'issue S porte le niveau le plus faible : 95 %."""
+    def cout(f, mm, t, p):
+        if mm == "saboteur" and f in ("T02", "T05", "T08"):
+            return None
+        return {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0}[mm]
+    c = ouvrir(fabriquer(tmp_path, decalage=_famille_effets(sab=3.0, sur=6.0), cout=cout))["contenu"]
+    assert c["b_manipulation"]["M1"]["K"] == 7 and c["b_manipulation"]["M1"]["niveau"] == "95"
+    assert c["d_epreuves"]["E3"]["niveau"] == "99"
+    assert c["g_issue"]["code"] == "S" and c["g_issue"]["niveau"] == "95"
 
 
 def test_separation_apprise_intervalle_rejoue_a_l_identique(tmp_path):

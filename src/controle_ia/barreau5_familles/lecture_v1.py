@@ -1184,6 +1184,11 @@ def lire(ch: dict, table: list[dict], couts: dict, formation: dict, entropie: in
     app = familles_apprentissage(ch["deplacements"])
     for nom in noms_tables | {n for f in app.values() for n in f.values()}:
         _exiger(nom in ch["produits"]["produits"], f"déplacement moyen de {nom} absent : refus")
+    for f in sorted(app):
+        if "saboteur" in app[f]:
+            s = f"diagnostic-{f}"
+            _exiger(s in ch["notations"] or s in ch["echecs"], f"sonde {s} absente du bilan : la sonde du diagnostic ne "
+                    "se coupe pas : refus")
     g = graines_manifeste(["b5f/tirages/separation-apprise"], entropie)
     resultat = {}
     resultat["b_manipulation"] = manip = manipulation(couts, fam)

@@ -214,6 +214,8 @@ def test_jouet_de_bout_en_bout_relecture_sondes_puis_lecture(bout_en_bout, tmp_p
     # l'alignement des étiquettes se vérifie quand la formation porte les empreintes : celles des intensités relues
     intens = json.loads((arbre / "intensites.json").read_text())["adaptateurs"]
     assert all(len(v["empreinte"]) == 64 for v in intens.values())
+    # intensités : divergence des sorties et normes du déplacement positives (adaptateurs à effet), aux trois couches
+    assert all(v["divergence"] > 0 and all(v["normes"][c] > 0 for c in ("7", "15", "23")) for v in intens.values())
 
 
 def test_produits_ecrits_egaux_au_recalcul_et_aucun_point_d_ancrage(bout_en_bout):
@@ -349,6 +351,38 @@ def test_entrees_sans_les_episodes_d_un_saboteur_refus(tmp_path):
     (d / "A2-saboteur-evaluation.jsonl.sha256").unlink()
     with pytest.raises(GardeArret):
         rv.exiger_entrees(d)
+
+
+def test_episodes_propres_copie_lue_et_pas(tmp_path):
+    ids = ["e0", "e1"]
+    p = _episodes_de_saboteur(tmp_path / "a", "A2", ids)
+    par_id = {t: {"identifiant": t} for t in ids}
+    assert sorted(rv.episodes_propres(p, "A2", None, par_id, 3)) == ids
+    lignes = [json.loads(x) for x in p.read_text().splitlines()]
+
+    def ecrire(nom, transf):
+        q = tmp_path / nom / "evaluation-saboteur.jsonl"
+        q.parent.mkdir()
+        q.write_text("".join(json.dumps(transf(dict(x))) + "\n" for x in lignes))
+        return q
+    # copie -x1 lue sans ligne de relance : refus ; avec la relance de l'instance 6 (A1, A2) : admise
+    x1 = ecrire("x1", lambda x: {**x, "famille": "A2-x1"})
+    with pytest.raises(GardeArret, match="une seule copie"):
+        rv.episodes_propres(x1, "A2", None, par_id, 3)
+    assert sorted(rv.episodes_propres(x1, "A2", [6], par_id, 3)) == ids
+    # première copie d'une instance relancée : refus
+    with pytest.raises(GardeArret, match="une seule copie"):
+        rv.episodes_propres(p, "A2", [6], par_id, 3)
+    # autre membre, autre famille, tâche hors de l'évaluation, pas manquant
+    for nom, f in (("m", lambda x: {**x, "membre": "jumeau"}), ("f", lambda x: {**x, "famille": "A3"}),
+                   ("t", lambda x: {**x, "tache": "r9"})):
+        with pytest.raises(GardeArret):
+            rv.episodes_propres(ecrire(nom, f), "A2", None, par_id, 3)
+    q = tmp_path / "pas" / "evaluation-saboteur.jsonl"
+    q.parent.mkdir()
+    q.write_text("".join(json.dumps(x) + "\n" for x in lignes if x["pas"] != 1))
+    with pytest.raises(GardeArret, match="pas"):
+        rv.episodes_propres(q, "A2", None, par_id, 3)
 
 
 def test_arbre_de_la_session_sans_table_ni_formation(tmp_path):
