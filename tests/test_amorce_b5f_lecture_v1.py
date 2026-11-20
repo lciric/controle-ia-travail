@@ -343,9 +343,18 @@ def test_preuve_cas_sain_puis_temoin_final_seulement_si_tout_tient(depots):
     # témoin : marche menée, sorties prouvées, activations versées ; il manque l'une : aucun témoin
     p = _verser(depots, "temoin_final")
     assert p.returncode == 1 and not (t / "versement-final-prouve").exists()
-    (t / "marche-menee-au-bout").write_text("menee\n")
+    # chacun des trois manque à son tour (mutation A07 du passage v2 : la marche inachevée, seule, n'était pas éprouvée)
+    (t / "activations-gardees-versees").write_text("versees\n")             # marche inachevée
+    assert _verser(depots, "temoin_final").returncode == 1 and not (t / "versement-final-prouve").exists()
+    (t / "activations-gardees-versees").unlink()
+    (t / "marche-menee-au-bout").write_text("menee\n")                      # activations non versées
     assert _verser(depots, "temoin_final").returncode == 1 and not (t / "versement-final-prouve").exists()
     (t / "activations-gardees-versees").write_text("versees\n")
+    s = t / "versement-des-sorties-prouve"                                   # sorties non prouvées
+    prouve = s.read_text()
+    s.unlink()
+    assert _verser(depots, "temoin_final").returncode == 1 and not (t / "versement-final-prouve").exists()
+    s.write_text(prouve)
     assert _verser(depots, "temoin_final").returncode == 0
     assert (t / "versement-final-prouve").read_text().strip() == tete
 

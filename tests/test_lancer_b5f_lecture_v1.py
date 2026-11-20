@@ -214,7 +214,7 @@ def test_commande_de_creation_repetition_cas_sain(session):
 
 @pytest.mark.parametrize("cas", ["disque", "prix", "carte", "marche_autre_plan", "sans_entrees", "entrees_hors_branche",
                                  "go_autre", "existant_sans_empreinte", "existant_absent", "repetition_avec_entrees",
-                                 "registre_sans_epreuve", "code_change"])
+                                 "registre_sans_epreuve", "code_change", "code_change_session_au_code"])
 def test_commande_de_creation_artefacts_aucune_commande(session, cas):
     s, k, plan = session, {}, "decisif"
     if cas in ("disque", "prix", "carte"):
@@ -242,11 +242,15 @@ def test_commande_de_creation_artefacts_aucune_commande(session, cas):
         (s["r"] / en.REGISTRE_PROPRE).write_text(_registre(s["code"], sans=("EPREUVE-B5F",)), encoding="utf-8")
         _g(s["r"], "commit", "-q", "-am", "registre sans épreuve")
         k["commit"] = _g(s["r"], "rev-parse", "HEAD")
-    elif cas == "code_change":
+    elif cas in ("code_change", "code_change_session_au_code"):
         (s["r"] / "scripts" / "autre.sh").write_text("echo x\n")
         _g(s["r"], "add", "-A")
         _g(s["r"], "commit", "-q", "-m", "code changé")
         k["commit"] = _g(s["r"], "rev-parse", "HEAD")
+        if cas == "code_change_session_au_code":
+            # mutation S03 du passage v2 : la session revenue au code de CODE-LECTURE-B5F, seule la marche porte un code
+            # changé ; seule la comparaison du code du commit de la marche la refuse
+            _g(s["r"], "reset", "-q", "--hard", s["marche"])
     with pytest.raises(GardeArret):
         _commande(s, plan=plan, **k)
 
