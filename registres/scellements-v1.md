@@ -50,3 +50,4 @@
 | CONFIGURATION-A-V2-MASQUE-REJEU-JUGE-V9 | 2026-11-20T10:18:47Z | prereg/organisme-auto-conception-v9/juge-selection/rejeu-v1/configuration-a-masque-v2.json | a6c5d87bf73ebcae10ff7cf87390dd4827431ce0480bbf008df755d59b3b7f54 |
 | MASQUE-V2-REJEU-JUGE-V9 | 2026-11-20T10:18:47Z | docs/notes/organisme-auto-conception-v1/epreuves-v9/juge-selection/rejeu-masque-lecteur-v1/configuration-a-v2/masque-v2/masque_style_cartes_v2.py | 769aace5b64c697799b76a0120a5c2926c75798a388c93fa00ddc93224401c01 |
 | PIECE-SCELLEMENT-CONFIGURATION-A-V2-REJEU-JUGE-V9 | 2026-11-20T10:18:47Z | prereg/organisme-auto-conception-v9/juge-selection/rejeu-v1/piece-scellement-configuration-a-v2-masque-v2-v1.md | 74947914ef58f2a1600faa5da77a056953a65862f1abf8b29c8fc7b54b9bf47f |
+| ADDITIF-4-ORGANISME-V9-LIGNE-3 | 2026-11-20T10:37:47Z | prereg/organisme-auto-conception-v9/additif-4-preenregistrement-ligne-3-mot-alarme-v2.md | 841cef1e99126762019f45bdacca7ff7d6291c91b34c4f3d434c854c262db704 |
