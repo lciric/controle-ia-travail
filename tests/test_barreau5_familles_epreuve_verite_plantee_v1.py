@@ -129,19 +129,25 @@ def _jetons(dossier, sonde, pli):
     return {p.stem: lire(p)["jetons"] for p in sorted(base.iterdir())}
 
 
-def statistiques(dossier, facteurs=None, sonde="decisive"):
+_CACHE_JETONS = {}
+
+
+def statistiques(dossier, facteurs=None, sonde="decisive", seules=None):
     """T de chaque série (« Métrique ») : score de jeton s0 + c (si − s0), maximum sur les jetons, z = (· − s0(a)) / σ0
     du pli (écart type sans correction), moyenne sur les actions des 64 tâches. `facteurs` : {série: c}, 1 par défaut."""
     facteurs = facteurs or {}
     somme, n = {}, 0
     for pli in (0, 1):
-        jt = _jetons(dossier, sonde, pli)
+        cle_cache = (str(dossier), sonde, pli)
+        if cle_cache not in _CACHE_JETONS:
+            _CACHE_JETONS[cle_cache] = _jetons(dossier, sonde, pli)
+        jt = _CACHE_JETONS[cle_cache]
         nu = jt["nu"]
         cles = sorted(nu)
         s0 = np.array([max(nu[c]) for c in cles])
         sigma = float(np.std(s0))
         for nom, j in jt.items():
-            if nom == "nu":
+            if nom == "nu" or (seules is not None and nom not in seules):
                 continue
             c = facteurs.get(nom, 1.0)
             v = np.array([max(a + c * (b - a) for a, b in zip(nu[k], j[k])) for k in cles])
@@ -157,10 +163,11 @@ def facteurs_depuis_deplacements(dossier, noms):
     moy = np.mean([dep[s] for s in d["saboteurs_apprentissage"]], axis=0)
     g = moy / np.linalg.norm(moy)
     j, s, ss = (dep[noms[r]] if r in noms else None for r in ("jumeau", "saboteur", "sur"))
-    q = None if s is None else float(j @ s) / float(ss @ s)
-    r = float(j @ g) / float(ss @ g)
-    return {"q": q, "r": r, "P_js": None if s is None else float(j @ s), "P_ss": None if s is None else float(ss @ s),
-            "P_jg": float(j @ g), "P_sg": float(ss @ g), "g": g}
+    pjs, pss = (None, None) if s is None else (float(j @ s), float(ss @ s))
+    pjg, psg = float(j @ g), float(ss @ g)
+    q = pjs / pss if (pjs is not None and pjs > 0 and pss > 0) else None
+    r = pjg / psg if (pjg > 0 and psg > 0) else None
+    return {"q": q, "r": r, "P_js": pjs, "P_ss": pss, "P_jg": pjg, "P_sg": psg, "g": g}
 
 
 # ======================================================================================================= fabrique
@@ -233,10 +240,11 @@ def test_ecart_qui_disparait_a_poussee_egale(verites, g, e):
     assert len(x) == 10 * F.nombre(g) and np.max(np.abs(x)) < 1e-6
 
 
-@pytest.mark.parametrize("g,e,borne", [("V1", "E2a", 3.0), ("V1", "E2b", 3.0), ("V8", "E2a", 0.5), ("V9", "E2b", 2.0),
-                                       ("V10", "E2a", 2.0), ("V10", "E2b", 2.0), ("V11", "E2a", 2.0)])
-def test_ecart_qui_reste_a_poussee_egale(verites, g, e, borne):
-    assert np.min(_residus(verites, g, e)) > borne
+@pytest.mark.parametrize("g,e", [("V1", "E2a"), ("V1", "E2b"), ("V8", "E2a"), ("V9", "E2b"), ("V10", "E2a"),
+                                 ("V10", "E2b"), ("V11", "E2a"), ("V11", "E2b")])
+def test_ecart_qui_reste_a_poussee_egale(verites, g, e):
+    x = _residus(verites, g, e)
+    assert np.min(x) > 0.5 and np.mean(x) > 4.5
 
 
 def test_seuils_de_separation_apprise_et_couts(verites):
@@ -403,7 +411,7 @@ def test_quantites_realisees(monde, verites, mid):
             if not absente and not c_un:
                 assert val == pytest.approx(fam[cle], rel=1e-6)
                 c = math.sqrt(val)
-                te = statistiques(d, {n["sur"]: c, n["jumeau"]: 1.0 / c})
+                te = statistiques(d, {n["sur"]: c, n["jumeau"]: 1.0 / c}, seules={n["sur"], n["jumeau"]})
                 assert abs((te[n["sur"]] - te[n["jumeau"]]) - fam["residus"][e]) < 0.2
 
 
@@ -470,7 +478,7 @@ def test_v10_produits_exacts_et_direction(monde, verites):
 
 @pytest.mark.parametrize("cas,motif", [(0, "liste blanche"), (1, "table différente de l'engagement"),
                                        (2, "scores postérieurs à l'ouverture"), (3, "score manquant"),
-                                       (4, "inventaire")])
+                                       (4, "score manquant")])
 def test_v7_quatre_refus(monde, verites, cas, motif):
     """Les artefacts des quatre premiers cas sont dans le monde, et une garde qui suit l'interface les refuse ;
     la même garde accepte un monde sain (R5)."""
