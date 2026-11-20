@@ -366,8 +366,10 @@ def _lignes_de_code():
 
 def test_texte_seul_module_joue_la_relecture_aucun_code_en_ligne_aucun_arret_par_motif():
     assert set(re.findall(r"-m (controle_ia\.[A-Za-z0-9_.]+)", TEXTE)) == {"controle_ia.barreau5_familles.relecture_v1"}
-    assert not re.search(r'"\$PY" -c|python3? -c', TEXTE)
-    for interdit in ("formation_v1", "lecture_v1 ", f"p{ARRET}", f"{ARRET}all", "pg" + "rep", "rm -rf", "git reset"):
+    code = "\n".join(_lignes_de_code())
+    assert not re.search(r'"\$PY" -c|python3? -c', code)
+    assert not re.search(r"formation_v1|sondes_v1", code)        # aucun module de la formation ni des sondes appelé
+    for interdit in (f"p{ARRET}", f"{ARRET}all", "pg" + "rep", "rm -rf", "git reset"):
         assert interdit not in TEXTE, interdit
     assert re.findall(rf"(?<![-\w]){ARRET}(?![-\w])", TEXTE) == []          # aucun envoi de signal ; `wait` attend
     essais = re.findall(r"-m pytest[^\n]*\n[^\n]*", TEXTE)
