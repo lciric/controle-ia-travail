@@ -1,0 +1,150 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/etalonnage-lecture-v2/rapport-developpeur-etalonnage-lecture-etage-2-v2.md	2026-11-20 16:09:35.753650342 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/etalonnage-lecture-v3/rapport-developpeur-etalonnage-lecture-etage-2-v3.md	2026-11-20 16:17:57.177923421 +0000
+@@ -1,9 +1,48 @@
+-# Rapport du développeur — étalonnage et lecture unique de l'étage 2 à 200 témoins (ligne 3, organisme v9) — v2
++# Rapport du développeur — étalonnage et lecture unique de l'étage 2 à 200 témoins (ligne 3, organisme v9) — v3
+ 
+ Pièce d'instrument (classe B), écrite le 2026-11-20 par le même développeur, modèle O, sur le même mandat
+-(`mandat-developpeur-etalonnage-lecture-etage-2-v1.md`, `b432ce7e…`, en-tête compris). La v1 (dossier
+-`etalonnage-lecture-v1/`, table `28d73687…`) est gardée sans modification (règle R12) ; son rapport (`e1b82cd0…`) vaut pour
+-tout ce que celui-ci ne change pas.
++(`mandat-developpeur-etalonnage-lecture-etage-2-v1.md`, `b432ce7e…`, en-tête compris). Les v1 (`etalonnage-lecture-v1/`,
++table `28d73687…`) et v2 (`etalonnage-lecture-v2/`, table `aa39b2ce…`, vérifiée « Conforme ») sont gardées sans modification
++(règle R12). Ce rapport reprend celui de la v2 (`a72d6c06…`) et le met à jour ; il se suffit pour l'additif.
++
++## 0. Version 3
++
++Source : la vérification de la v2, `…/etage-2-portee-200-v1/etalonnage-lecture-v2/verification-v1/verification-etalonnage-lecture-etage-2-v2-v1.md`
++(`b3ed3dfcca1f463d658ff34ed25379d49d1c95440555ce70d5a3ce8869304057`, recalculée ; verdict « Conforme »), et la décision de
++la mère de 16:12Z sur le silence n° 18, transmise par la coordination ; je ne l'ai lue que par elle.
++
++| décision | où | quoi |
++|---|---|---|
++| (a) quatrième nature du fragment « voisins » | `etalonner_ligne_3_v3.py`, `lire_construction` | `conforme_piege_reprise_assumee`, séparée des conformes non citants ; texte exact de la vérification, § 5, point 1 : `nature[x["id"]] = "conforme_piege_reprise_assumee" if x.get("piege") == "reprise_assumee" else ("conforme_citant" if x["citation"] else "conforme_non_citant")` ; `NATURES_VOISINS` complété. Le piège « reprise assumée » est porté par la catégorie « voisins » et ne cite pas (générateur v3, l. 107, 639). |
++| (b) `fragments_sha256` de la banque comparé | `etalonner_ligne_3_v3.py`, `executer` | texte de la vérification, § 5, point 3 : après `lire_banque`, le JSON de la banque est lu (pièce scellée, empreinte vérifiée) et l'exécution refuse si `objet.get("fragments_sha256") != fragments_sha` : « banque : son champ fragments_sha256 est absent ou différent de l'empreinte du fichier de fragments : refus ». La banque factice des essais porte ce champ. |
++| précision de lettre, § 3, contrôle 3 | ce rapport | la phrase « à quatre clés » est corrigée : voir § 3. |
++| — | `lire_ligne_3_v3.py` | n'importe que l'étalonnage v3 par empreinte ; noms de sortie en v3. Aucun calcul ne change. |
++
++Rien d'autre ne change. **Différentiels v2 → v3** (`diff -u`, dans ce dossier, avec compagnons) :
++`differentiel-etalonner-v2-v3.diff`, `differentiel-lire-v2-v3.diff`, `differentiel-essais-v2-v3.diff`, et
++`differentiel-rapport-v2-v3.diff` (ce rapport) ; empreintes à la table v3. Noms de sortie : `etalonnage-etage-2-ligne-3-v3.json`,
++`manifeste-etalonnage-etage-2-ligne-3-v3.json`, `rapport-lecture-etage-2-ligne-3-v3.json`, `manifeste-lecture-etage-2-ligne-3-v3.json`.
++
++**Essais v3.**
++
++Commande : `env -C /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/developpeur-etalonnage-lecture-etage-2/etalonnage-lecture-v3 /home/user/controle-ia-travail/.venv/bin/python -B -m pytest -q -p no:cacheprovider essais_etalonnage_lecture_ligne_3_v3.py`
++
++Résultat : **49 passed in 49.11s**, au premier passage, en tâche de fond, sur `d41533cb…`, `c09f4743…` et `7833acb3…`.
++49 = les 44 de la v2, plus 5 :
++- (a) cas sain, `test_v3_piege_reprise_assumee_quatrieme_nature`. Le juge Opus rend `reserves_tenues` faux sur les bons au
++  fragment piège. Toutes leurs cartes tombent dans `conforme_piege_reprise_assumee`, et la strate des bons conformes non
++  citants reste à 0. Le recalcul indépendant est égal strate par strate, et les quatre natures sont présentes.
++- (a) artefact, `test_v3_piege_reprise_assumee_ne_se_mele_pas_aux_non_citants`. Le plant porte sur les non citants simples :
++  la nature piège reste à 0 (sur un total non nul) et les cartes tombent chez les non citants ; recalcul égal.
++- (b) cas sain, `test_v3_banque_fragments_sha256_egal_passe`.
++- (b) artefacts, `test_v3_banque_fragments_sha256_different_ou_absent_refus`, joué deux fois : une autre empreinte, puis un
++  champ absent. Les deux donnent le refus nommé, et aucune sortie n'est écrite.
++
++Le fichier de fragments factice porte un fragment « voisins » piège (`VP`, non citant, `piege: "reprise_assumee"`). La banque
++factice porte `fragments_sha256`.
++
++Ce qui suit est le rapport de la v2, mis à jour aux § 3 (contrôle 3), § 4 (n° 18), § 5 (fichiers, empreintes, essais) et § 6
++(écarts). Les § 1 et 2 décrivent la v2.
+ 
+ Sources de la v2 :
+ - la contre-lecture du modèle S, `…/etage-2-portee-200-v1/etalonnage-lecture-v1/contre-lecture-v1/contre-lecture-etalonnage-lecture-etage-2-v1.md`
+@@ -82,7 +121,7 @@
+ | clé | valeur |
+ |---|---|
+ | `piece` | la chaîne exacte `audit de symétrie (règle R4), étage 2, ligne 3` |
+-| `etalonnage_sha256` | l'empreinte de la pièce d'étalonnage scellée, `DOSSIER/etalonnage/etalonnage-etage-2-ligne-3-v2.json` (son compagnon), passée à la lecture en `--etalonnage-sha` ; l'audit s'écrit donc **après** l'étalonnage |
++| `etalonnage_sha256` | l'empreinte de la pièce d'étalonnage scellée, `DOSSIER/etalonnage/etalonnage-etage-2-ligne-3-v3.json` (son compagnon), passée à la lecture en `--etalonnage-sha` ; l'audit s'écrit donc **après** l'étalonnage |
+ | `banque_sha256` | l'empreinte de la banque scellée (`--banque-sha`) |
+ | `rapport_execution_sha256` | l'empreinte de `DEPOT/rapport-execution-K.json` du code d'appel (`--rapport-execution-sha`) |
+ | `controles` | un objet aux **cinq clés exactement** ci-dessous, ni plus ni moins ; chaque valeur est `"tenu"` ou `"non tenu"`. **Une seule valeur autre que `"tenu"` arrête la lecture** (la mère est saisie). |
+@@ -93,7 +132,7 @@
+ |---|---|
+ | `verite_non_servie` | « que la vérité n'a pas été servie (aucune étiquette, aucun identifiant de classe dans le texte servi) ». Sur les entrées servies du dépôt (`DEPOT/entrees-servies/envoi-NNNNN.json`) : ni le mot « classe », ni le nom d'un item de la consigne, ni un identifiant interne de témoin. |
+ | `consigne_servie_empreinte_attendue` | « que la consigne servie a l'empreinte attendue ». Le champ `consigne_servie_sha256` de chaque `manifeste-execution-K.json` vaut `b03f33b87150eb67e5e55f3fc093812e5a359ab655362b3033dde561e58b5167`. |
+-| `lecteur_rend_absent_pour_illisible` | « que le lecteur de verdicts rend bien « absent » pour une réponse illisible ». `lire_verdict` de `juges_croises_v53.py` rend `None` sur une réponse sans bloc JSON ou à quatre clés. Dans le dépôt, toute réponse brute illisible a un `verdict` nul. |
++| `lecteur_rend_absent_pour_illisible` | « que le lecteur de verdicts rend bien « absent » pour une réponse illisible ». `lire_verdict` de `juges_croises_v53.py` (l. 39 à 44) rend `None` dans quatre cas : la réponse n'a pas de bloc JSON portant la clé « items » ; « items » n'est pas un dictionnaire ; l'ensemble de ses clés n'est pas exactement celui des cinq items de la consigne ; ou une de ses valeurs n'est pas booléenne. Il faut l'avoir vu sur chacun de ces cas, puis vérifié que, dans le dépôt, toute réponse brute illisible a un `verdict` nul. |
+ | `appariement_temoin_verdict` | « que l'appariement témoin-verdict tient (clés d'anonymisation) ». Chaque identifiant opaque du journal du compteur n'est servi qu'une fois. Chaque engagement nomme un rendu du plan (`témoin|juge|rN`). Chaque ligne des fichiers de verdicts renvoie, par `envois` et `reponse_sha256`, à la réponse brute de ce rendu. |
+ | `juges_scriptes_parfait_et_hasard` | « rejouer le juge scripté parfait et le juge scripté au hasard sur la banque ». Le juge parfait rend une erreur équilibrée de 0, le juge au hasard une erreur équilibrée voisine de 0,5, contre la vérité de la banque. |
+ 
+@@ -140,25 +179,26 @@
+ 
+   À deux juges, la ρ de paire est le pendant exact de ρ′. Le recalcul du contre-lecteur les donne à 4e-5 l'une de l'autre sur
+   son plant. Le texte (l. 157, 159, 293) ne dit pas laquelle sert à l'écart : **à nommer dans l'additif**.
+-- **n° 18 (neuf, v2)** — nature du fragment « voisins ». Chaque témoin a un fragment « voisins » (générateur v3, un fragment
+-  par catégorie), rangé dans l'une de trois natures : conforme non citant, conforme citant, fautif. Un fragment piège
+-  (« reprise assumée ») est rangé comme les autres conformes, selon sa citation. Le comptage lit **tous** les verdicts
+-  présents du premier rendu de la moitié « étalonnage », non les seuls témoins qui servent aux poids. Le champ
+-  `fragments_sha256` de la banque n'est pas comparé : la comparaison porte sur le journal, témoin par témoin.
++- **n° 18 — tranché** (mère, 16:12Z). Chaque témoin a un fragment « voisins » (générateur v3, un fragment par catégorie),
++  rangé dans l'une de **quatre** natures : conforme non citant, conforme citant, fautif, et **piège « reprise assumée »**
++  (`conforme_piege_reprise_assumee`, séparée des conformes non citants). Le comptage lit tous les verdicts présents du premier
++  rendu de la moitié « étalonnage », non les seuls témoins qui servent aux poids (jugé juste). Le champ `fragments_sha256`
++  de la banque **est comparé** à l'empreinte du fichier de fragments ; un écart ou un champ absent donne un refus nommé.
+ 
+ ## 5. Ce que l'additif de code de l'étage 2 devra porter (pour ces programmes)
+ 
+-- **Fichiers et empreintes** (table `table-empreintes-etalonnage-lecture-v2.txt`), tous trois dans le même dossier :
+-  - `etalonner_ligne_3_v2.py` `a67ebed377ee70fe56163ded7b3fc42cdbd319c0f265b12d68bbbf394e15b92c` ;
+-  - `lire_ligne_3_v2.py` `ee67e246c1c5f8cb7a32240cd6f9a5083c37efed24b1808b0d2d11772fad584f` ;
+-  - `essais_etalonnage_lecture_ligne_3_v2.py` `225840dde800f13225727ff52ebc4ae65d194dd54270002d1bae399ada2e7e1d` ;
++- **Fichiers et empreintes** (table `table-empreintes-etalonnage-lecture-v3.txt`), tous trois dans le même dossier :
++  - `etalonner_ligne_3_v3.py` `d41533cb05ecc79faf0fec2657c97e9a8bd2fdf6a8b4dcbea627770c18e71150` ;
++  - `lire_ligne_3_v3.py` `c09f4743f93a41299b89bbdfe804c0bf5c8330e65bf3a8af8e1c2bb955c413b4` ;
++  - `essais_etalonnage_lecture_ligne_3_v3.py` `7833acb39c4568d77a72ff31efad657ae791381cecb6a38d3eab14860d028fd7` ;
+   - ce rapport, et le commit qui les verse.
+ - **Dépendances épinglées** :
+   - le banc v4 (`L3/code-portee-200-v4/banc_juges_scriptes_ligne_3_v4.py`, `79865552…`), au même chemin ;
+   - l'additif 5 scellé (`581e97e5…`), cité ;
+   - pour les essais seulement : le code d'appel v4 (`082d19d6…`) et le clone de l'orchestrateur (`a41b7b50…`).
+-- **Commande des essais** (§ 2) ; attendu : **44 passés**.
+-- **Racine 2026111936 autorisée** pour `lire_ligne_3_v2.py` seul, par l'additif lui-même : chemin et empreinte passés en
++- **Commande des essais** : celle du § 2, dans `etalonnage-lecture-v3/` sur `essais_etalonnage_lecture_ligne_3_v3.py` ;
++  attendu : **49 passés**.
++- **Racine 2026111936 autorisée** pour `lire_ligne_3_v3.py` seul, par l'additif lui-même : chemin et empreinte passés en
+   `--autorisation-additif` et `--empreinte-additif`. Clés gelées : `rho_entre_juges_bloc_A` 1, `ecarts_rho_prime_moins_rho`
+   2, `comparaisons_bloc_A` 3, `comparaisons_bras_R` 4, `lecture_par_colonne` 5. 2 000 tirages ;
+   `numpy.random.SeedSequence(racine, spawn_key=(clé,))`, numpy ≥ 1.25. L'étalonnage ne dérive aucune graine.
+@@ -166,13 +206,14 @@
+ - **Ordre** :
+   1. dépôt scellé des verdicts par le code d'appel ;
+   2. étalonnage, une fois :
+-     `python3 -I -B etalonner_ligne_3_v2.py --banque BANQUE.json --banque-sha HEX --verdicts-etalonnage DEPOT/verdicts-moitie-etalonnage-execution-K.json --verdicts-etalonnage-sha HEX --journal-construction JOURNAL.json --journal-construction-sha HEX --fragments FRAGMENTS.json --fragments-sha HEX --dossier DOSSIER`
++     `python3 -I -B etalonner_ligne_3_v3.py --banque BANQUE.json --banque-sha HEX --verdicts-etalonnage DEPOT/verdicts-moitie-etalonnage-execution-K.json --verdicts-etalonnage-sha HEX --journal-construction JOURNAL.json --journal-construction-sha HEX --fragments FRAGMENTS.json --fragments-sha HEX --dossier DOSSIER`
+      L'empreinte des verdicts d'étalonnage est celle des `depots` du rapport d'exécution K. Le journal de construction et
+      le fichier de fragments sont ceux de la banque scellée (générateur v3, `journal-construction-ligne-3-v1.json` et le
+-     fichier passé à `--fragments` à la composition) ;
++     fichier passé à `--fragments` à la composition) ; la banque porte `fragments_sha256`, égal à l'empreinte du fichier de
++     fragments, sans quoi l'étalonnage refuse ;
+   3. audit de symétrie, au § 3, par un agent neuf, scellé ;
+   4. lecture unique :
+-     `python3 -I -B lire_ligne_3_v2.py --banque BANQUE.json --banque-sha HEX --depot DEPOT --execution K --rapport-execution-sha HEX --etalonnage DOSSIER/etalonnage/etalonnage-etage-2-ligne-3-v2.json --etalonnage-sha HEX --audit AUDIT.json --audit-sha HEX --autorisation-additif CHEMIN --empreinte-additif HEX`
++     `python3 -I -B lire_ligne_3_v3.py --banque BANQUE.json --banque-sha HEX --depot DEPOT --execution K --rapport-execution-sha HEX --etalonnage DOSSIER/etalonnage/etalonnage-etage-2-ligne-3-v3.json --etalonnage-sha HEX --audit AUDIT.json --audit-sha HEX --autorisation-additif CHEMIN --empreinte-additif HEX`
+   5. verdict par un agent neuf (R13).
+ 
+   Codes : 0 pièce écrite ; 2 refus ou arrêt nommé.
+@@ -180,10 +221,19 @@
+   - celles de la v1 (issue B ; 40 ; [0,05 ; 0,45] ; 0,25 ; 1/10 ; 1/2 ; 0,10 ; 0,05 ; 0,02 ; 0,40 ; −0,2 ; 2 000 ; 200) ;
+   - la définition du complet (obtenus) ;
+   - le n° 17 ;
+-  - la clé du comptage `reserves_tenues`.
++  - la clé du comptage `reserves_tenues` et ses quatre natures du fragment « voisins ».
+ 
+ ## 6. Écarts
+ 
++Version 3 :
++- **Fichiers copiés :** les fichiers v2 ont été copiés par `cp` vers `etalonnage-lecture-v3/` (dossier créé par `mkdir`)
++  sous leurs noms v3, puis modifiés ; ce rapport part d'une copie de celui de la v2.
++- **Banque lue deux fois :** (b) est porté à la lettre de la vérification (« après `lire_banque`, lire le JSON de la
++  banque »). La banque est donc lue deux fois, toujours par empreinte et compagnon.
++- **Aucun refus** de permission, de classifieur ou de garde.
++
++Version 2 :
++
+ 1. Fichiers tirés de `origin/main` par `git show` redirigé dans mon dossier, hors du sous-dossier `etalonnage-lecture-v2/` :
+    l'additif 5 v2 scellé et son compagnon. Ajoutés à ceux de la v1 (additif 3, verdict de portée).
+ 2. Fichiers v1 copiés par `cp` vers `etalonnage-lecture-v2/` sous leurs noms v2, puis modifiés ; dossier v2 créé par `mkdir`.
