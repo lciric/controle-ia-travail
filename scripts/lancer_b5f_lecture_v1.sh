@@ -4,8 +4,9 @@
 # à 12 et 18. Aucune commande de ce script ne crée, n'arrête ni ne détruit d'instance, et aucune n'atteint le réseau : il
 # contrôle, imprime et joue les programmes figés du paquet `controle_ia.barreau5_familles` (relecture_v1, sondes_v1,
 # lecture_v1), éprouvés par tests/test_barreau5_familles_{relecture,sondes,lecture}_v1.py et tests/test_lancer_b5f_lecture_v1.py.
-# L'amorce de l'instance de lecture (clonage au commit, paquets, modèle au cache local, minuterie, versement prouvé de
-# l'arbre fermé sur la branche donnees/barreau5-familles-jumelles-v1-lecture) n'est pas écrite ici (rapport du développeur).
+# L'amorce de l'instance (clonage au commit, entrées de lecture, paquets, essais, modèle au cache local, minuterie, versement
+# prouvé de l'arbre fermé sur donnees/barreau5-familles-jumelles-v1-lecture) est scripts/amorce_b5f_lecture_v1.sh, que la
+# sous-commande « commande » emporte en base64 ; ce lanceur ne joue jamais l'amorce.
 # Sous-commandes (codes : 0 accepté ; 2 refus, motif sur la sortie d'erreur) :
 #   config RACINE PLAN ENTREES DIVERGENCE GARDE
 #             côté session : configuration réelle de la marche (recette lue dans la configuration scellée de la course de
@@ -30,7 +31,24 @@
 #             ouvreur : ouverture et lecture au processeur (point 12), registre lu au commit donné, code de RACINE au commit
 #             de CODE-LECTURE-B5F ; résultat scellé sous SORTIE (dossier neuf) ; LECTURE-B5F à inscrire ensuite ;
 #   monde REGISTRE.md ARBRE TABLE.json COUTS.json FORMATION.json SORTIE
-#             épreuve à vérité plantée (point 11) : le même programme, sur un monde fabriqué et son registre fabriqué.
+#             épreuve à vérité plantée (point 11) : le même programme, sur un monde fabriqué et son registre fabriqué ;
+#   commande PLAN RACINE OFFRE.json COMMIT BRANCHE_CODE RUN_ID ENTREES_COMMIT DIVERGENCE GARDE EXISTANTS.json
+#             côté session (ajout du 20 novembre) : IMPRIME la commande de création de l'instance de lecture (PLAN
+#             decisif, étiquette b5f-lecture-v1, disque de 300 Go) ou de la répétition générale (PLAN repetition, étiquette
+#             b5f-repetition-v1), qui porte scripts/amorce_b5f_lecture_v1.sh telle qu'au commit COMMIT ; GO_ID lu dans
+#             l'environnement ; OFFRE.json : une entrée de la recherche du loueur, dans les bornes du devis ; COMMIT : commit de
+#             la marche, dont le registre admet la marche et dont l'arbre gelé est celui de CODE-LECTURE-B5F ; ENTREES_COMMIT :
+#             commit des entrées de lecture sur leur branche (« - » pour la répétition) ; EXISTANTS.json : liste des
+#             adaptateurs existants {nom, chemin, sha256} (points d'ancrage du plan décisif, ou les quatre adaptateurs de la
+#             répétition), donnée par la mère ; une empreinte absente est refusée ; sinon refus ;
+#   detruire RACINE ID PLAN LISTE.json INVENTAIRE.json COMMIT
+#             IMPRIME la destruction par l'identifiant (R10), si l'instance porte l'étiquette de la pièce et si chaque fichier
+#             de l'inventaire final est au commit prouvé, sur une branche distante ; sinon refus ;
+#   verifier-destruction LISTE.json ID TEMOIN
+#             ID absent de la liste, TEMOIN présent ; jamais juger une destruction par un code de sortie ;
+#   scores RACINE COMMIT RUN_ID
+#             contenu de la ligne SCORES-B5F (« commit … ; inventaire sha256 … »), après vérification de l'arbre fermé au
+#             commit prouvé (chaque fichier de l'inventaire à sa taille et à son empreinte, commit sur une branche distante).
 set -uo pipefail
 PY="${PYTHON_B5F:-python3}"
 ICI="$(cd "$(dirname "$0")" && pwd)"
@@ -62,5 +80,23 @@ case "${1:-}" in
     monde)
         [ "$#" = 7 ] || { echo "B5F REFUS : monde REGISTRE.md ARBRE TABLE.json COUTS.json FORMATION.json SORTIE" >&2; exit 2; }
         lecture monde --registre "$2" --arbre "$3" --table "$4" --couts "$5" --formation "$6" --sortie "$7";;
-    *) echo "B5F REFUS : sous-commande inconnue (config, verifier, marche, preparer, ouvrir, monde)" >&2; exit 2;;
+    commande)
+        [ "$#" = 11 ] || { echo "B5F REFUS : commande PLAN RACINE OFFRE.json COMMIT BRANCHE_CODE RUN_ID ENTREES_COMMIT DIVERGENCE GARDE EXISTANTS.json" >&2; exit 2; }
+        [ -n "${GO_ID:-}" ] || { echo "B5F REFUS : GO_ID absent de l'environnement (aucun départ sans accord)" >&2; exit 2; }
+        sortie=$(relecture session commande "$2" "$3" "$4" "$5" "$6" "$7" "$GO_ID" "$8" "$9" "${10}" "${11}") || exit 2
+        echo "B5F COMMANDE (à jouer par la session de lecture ; son échéance d'arrêt court depuis maintenant) :"
+        printf '%s\n' "$sortie";;
+    detruire)
+        [ "$#" = 7 ] || { echo "B5F REFUS : detruire RACINE ID PLAN LISTE.json INVENTAIRE.json COMMIT" >&2; exit 2; }
+        [ -n "${GO_ID:-}" ] || { echo "B5F REFUS : GO_ID absent de l'environnement" >&2; exit 2; }
+        case "$3" in ''|*[!0-9]*) echo "B5F REFUS : identifiant illisible (destruction par l'identifiant seulement, R10)" >&2; exit 2;; esac
+        relecture session detruire "$2" "$3" "$4" "$5" "$6" "$7" "$GO_ID"
+        echo "B5F PUIS : bash scripts/lancer_b5f_lecture_v1.sh verifier-destruction LISTE_NEUVE.json $3 <TEMOIN>";;
+    verifier-destruction)
+        [ "$#" = 4 ] || { echo "B5F REFUS : verifier-destruction LISTE.json ID TEMOIN" >&2; exit 2; }
+        relecture session verifier-destruction "$2" "$3" "$4";;
+    scores)
+        [ "$#" = 4 ] || { echo "B5F REFUS : scores RACINE COMMIT RUN_ID" >&2; exit 2; }
+        relecture session scores "$2" "$3" "$4";;
+    *) echo "B5F REFUS : sous-commande inconnue (config, verifier, marche, preparer, ouvrir, monde, commande, detruire, verifier-destruction, scores)" >&2; exit 2;;
 esac

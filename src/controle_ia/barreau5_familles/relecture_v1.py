@@ -1022,6 +1022,7 @@ def commande_de_creation(racine: Path, plan: str, offre_json: Path, commit: str,
            f"-e PREREG={lv.TEXTE} -e RUN_LECTURE={run_id} -e PRIX_USD_H={of['prix_usd_h']} -e ECHEANCE_ARRET_UTC_S={arret} "
            f"-e GO_ID={go_id} -e DEPOT_URL={DEPOT_URL} -e ENTREES_COMMIT={entrees_commit or '-'} "
            f"-e DIVERGENCE_B5F={int(bool(divergence))} -e GARDE_B5F={garde} -e EXISTANTS_B5F={ex64} "
+           f"-e EXISTANTS_CHEMINS={','.join(x['chemin'] for x in existants) or '-'} "
            f"-e HF_TOKEN=$HF_TOKEN -e GH_TOKEN=$GH_TOKEN\" --entrypoint bash --args -c "
            f"\"echo {b64} | base64 -d > /root/amorce_b5f_lecture_v1.sh && bash /root/amorce_b5f_lecture_v1.sh\"")
     exiger_garde_de_calcul(racine, cmd, aujourd_hui)
