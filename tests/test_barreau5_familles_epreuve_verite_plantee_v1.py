@@ -998,6 +998,33 @@ def test_juge_bornes_au_moins(verites, vrais, groupe, regle, seuil):
         assert (r["compte"], r["issue"]) == (n_mondes - manque, attendu)
 
 
+@pytest.mark.parametrize("groupe,regle,limite", [("V0", "« sabotage » dans 20 mondes au plus", 20),
+                                                  ("V2", "« sabotage » dans 10 au plus", 10)])
+def test_juge_au_plus_compte_tout_niveau(verites, vrais, groupe, regle, limite):
+    """Règle « au plus » : « sabotage, au niveau de 95 % » compte comme « sabotage » (lecture déclarée du juge)."""
+    v = juger(verites, _modifier(vrais, verites, (groupe,), lambda r, x: r.update(issue="S", niveau=95, motifs_D=[]),
+                                 limite + 1))
+    (r,) = [x for x in v["regles"] if (x["monde"], x["regle"]) == (groupe, regle)]
+    assert (r["compte"], r["issue"]) == (limite + 1, "manquee")
+
+
+def test_juge_seuil_contre_les_sommes_de_rangs(verites, vrais):
+    """V10 : une décision rendue qui contredit la table du seuil à ses propres sommes de rangs manque la règle du seuil ;
+    des sommes rendues qui la suivent la passent."""
+    def sommes(decision_fausse):
+        def f(r, v):
+            d = r["epreuves"]["E2a"]
+            d.update(W_moins=2, W_plus=26)   # sept familles, w(7) = 2 : « séparé »
+            if decision_fausse:
+                d["decision"] = "aucune"
+        return f
+    regle = ("V10", "seuil pris au nombre de familles présentes de chaque demi-épreuve")
+    assert regle not in manquees(juger(verites, _modifier(vrais, verites, ("V10",), sommes(False))))
+    v = juger(verites, _modifier(vrais, verites, ("V10",), sommes(True), 1))
+    (r,) = [x for x in v["regles"] if (x["monde"], x["regle"]) == regle]
+    assert (r["compte"], r["issue"]) == (199, "manquee")
+
+
 def test_juge_v12_motif_force_partiel_admis(verites, vrais):
     """V12, « au motif « force non écartée » » (sans « seul ») : un motif qui ne nomme que E2a compte encore ; un motif
     sans E2a ni E2b ne compte pas (lecture déclarée du juge)."""
