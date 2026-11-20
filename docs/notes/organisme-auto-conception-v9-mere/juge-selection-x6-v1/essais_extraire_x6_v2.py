@@ -1,6 +1,6 @@
-"""Essais du programme d'extraction du cas X6 — v1. Cas sains et artefacts (R5), sans aucune donnée.
+"""Essais du programme d'extraction du cas X6 — v2. Cas sains et artefacts (R5), sans aucune donnée.
 
-Lancement : `.venv/bin/python -B -m pytest -q docs/notes/organisme-auto-conception-v9-mere/juge-selection-x6-v1/essais_extraire_x6_v1.py`
+Lancement : `.venv/bin/python -B -m pytest -q docs/notes/organisme-auto-conception-v9-mere/juge-selection-x6-v1/essais_extraire_x6_v2.py`
 """
 import importlib.util
 import json
@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 _ICI = Path(__file__).resolve().parent
-_spec = importlib.util.spec_from_file_location("x6", _ICI / "extraire_x6_journal_aiguilleur_v1.py")
+_spec = importlib.util.spec_from_file_location("x6", _ICI / "extraire_x6_journal_aiguilleur_v2.py")
 x6 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(x6)
 
@@ -31,6 +31,36 @@ def test_sain_id_par_cle_parente():
     r = x6.extraire(d)
     assert r["source_identifiant"] == {"cle": 0, "parent": 2}
     assert r["identifiants_par_classe"] == {"concret": ["c-02"], "niveau_methode": ["c-01"]}
+
+
+def test_sain_cle_ident():
+    d = {"entrees": [{"ident": "f-07", "classe": "concret", "contenu": "TEXTE"}]}
+    r = x6.extraire(d)
+    assert r["identifiants_par_classe"] == {"concret": ["f-07"]}
+    assert r["source_identifiant"] == {"cle": 1, "parent": 0}
+    assert "TEXTE" not in json.dumps(r)
+
+
+def test_artefact_ident_et_id_differents():
+    with pytest.raises(x6.Arret) as e:
+        x6.extraire([{"id": "c-01", "ident": "c-02", "classe": "concret"}])
+    assert e.value.code == 4
+
+
+def test_artefact_profondeur():
+    d = {"classe": "concret", "id": "c-01"}
+    for _ in range(x6.PROFONDEUR_MAX + 2):
+        d = {"n": d}
+    with pytest.raises(x6.Arret) as e:
+        x6.extraire(d)
+    assert e.value.code == 6
+
+
+def test_sain_profondeur_juste_sous_la_borne():
+    d = {"classe": "concret", "id": "c-01"}
+    for _ in range(x6.PROFONDEUR_MAX - 1):
+        d = {"n": d}
+    assert x6.extraire(d)["comptes_par_classe"] == {"concret": 1}
 
 
 def test_doublon_rapporte():

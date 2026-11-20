@@ -1,4 +1,9 @@
-"""Extraction du cas X6 (cartes retenues par l'aiguilleur de la course v9) — v1.
+"""Extraction du cas X6 (cartes retenues par l'aiguilleur de la course v9) — v2.
+
+v2 (même jour) : la v1 s'est arrêtée par son code 4 sur le vrai journal, dont les objets portent
+leur identifiant sous la clé `ident`, absente de CLES_ID (sortie `a13699aa…`, contre-lecture
+`88ed7ece…`). La v2 ajoute `ident` à CLES_ID, décode les noms du commit sans exception, et ajoute un
+essai de la borne de profondeur. Rien d'autre ne change ; aucune valeur du journal n'a été vue.
 
 Écrit par la mère (session_01XJ6Mgr8BN6UanALsQatc5E) le 20 novembre 2026, sous GO-2026-11-20-15
 (option (a) de R-4090) : un agent neuf, qui ne lit aucune carte, joue ce programme sur le seul
@@ -31,8 +36,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-VERSION = "extraire_x6_journal_aiguilleur_v1"
-CLES_ID = ("id", "fiche_id", "id_fiche", "carte_id", "id_carte", "identifiant", "carte", "fiche")
+VERSION = "extraire_x6_journal_aiguilleur_v2"
+CLES_ID = ("id", "ident", "fiche_id", "id_fiche", "carte_id", "id_carte", "identifiant", "carte", "fiche")
 MOTIF_ID = re.compile(r"^[A-Za-z0-9._:/-]{1,120}$")
 MOTIF_CLASSE = re.compile(r"^[a-z_]{1,40}$")
 PROFONDEUR_MAX = 12
@@ -142,7 +147,7 @@ def principal(argv=None) -> int:
     rapport = {"version": VERSION, "commit": a.commit, "suffixe": a.suffixe}
     code = 0
     try:
-        noms = _git(a.depot, "show", "--name-only", "--format=", a.commit).decode("utf-8").splitlines()
+        noms = _git(a.depot, "show", "--name-only", "--format=", a.commit).decode("utf-8", errors="replace").splitlines()
         retenus = [n for n in noms if n.endswith(a.suffixe)]
         rapport["fichiers_trouves"] = len(retenus)
         if len(retenus) != 1:
