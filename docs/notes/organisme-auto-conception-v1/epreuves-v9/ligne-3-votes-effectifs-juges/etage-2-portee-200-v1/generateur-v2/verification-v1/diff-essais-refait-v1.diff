@@ -1,0 +1,411 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/generateur-v1/essais_generer_temoins_ligne_3_v1.py	2026-11-20 14:51:27.187224710 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/generateur-v2/essais_generer_temoins_ligne_3_v2.py	2026-11-20 15:15:23.617511956 +0000
+@@ -1,10 +1,16 @@
+-"""Essais de `generer_temoins_ligne_3_v1.py` (pytest) — v1.
++"""Essais de `generer_temoins_ligne_3_v2.py` (pytest) — v2.
++
++v2 : essais de la v1 rejoués, adaptés au journal en constantes (voie d'essai `LieuDuJournal.essai`) et à la pièce du (4)
++à verdict ; plus : recréation du journal refusée, suppression du journal → refus avant ouverture, aucun chemin libre ; pièce
++« Non conforme » et empreinte d'un autre programme refusées ; `meta` à toute profondeur ; forme réelle du fichier des cartes ;
++aucune trace brute à la ligne de commande ; C1 ; contenus identiques refusés et fragments communs rapportés (M5) ; service
++réel du clone exercé sur la banque factice, sans réseau ni clé (M6) ; dossiers temporaires du système (C2).
+ 
+ Règle R5 : chaque garde de la liste d'arrêt qui touche la banque, la garde de recouvrement et l'audit, sur un cas sain et sur
+ un artefact, dont les sept artefacts de la garde. **Cartes factices seulement** : chaque essai écrit son propre faux fichier
+ de cartes dans un dossier temporaire et passe son empreinte au code par la voie d'essai explicite
+ (`EntreeCartes.essai`) ; aucun essai ne nomme, n'ouvre ni ne touche le fichier des cartes. Les fragments sont ceux du
+-fichier factice `fragments-exemple-essais-v1.json`. Racine des essais 2026111930 seulement ; les racines 2026111934 et
++fichier factice `fragments-exemple-essais-v2.json`. Racine des essais 2026111930 seulement ; les racines 2026111934 et
+ 2026111937 ne sont jamais dérivées ici.
+ """
+ import hashlib
+@@ -15,12 +21,11 @@
+ 
+ import pytest
+ 
+-import generer_temoins_ligne_3_v1 as G
++import generer_temoins_ligne_3_v2 as G
+ 
+ ICI = Path(__file__).resolve().parent
+-FRAGMENTS = ICI / "fragments-exemple-essais-v1.json"
+-TMP_RACINE = ICI.parent / "tmp-essais"
+-PROGRAMME = ICI / "generer_temoins_ligne_3_v1.py"
++FRAGMENTS = ICI / "fragments-exemple-essais-v2.json"
++PROGRAMME = ICI / "generer_temoins_ligne_3_v2.py"
+ 
+ SECRET_CARTE = "zorglub quantique violette mange sept nuages bleus ce matin sur la colline"
+ SECRET_META = "pamplemousse orbital chante douze fois sous le pont des soupirs ce soir"
+@@ -44,8 +49,7 @@
+ 
+ @pytest.fixture
+ def dossier():
+-    TMP_RACINE.mkdir(exist_ok=True)
+-    return Path(tempfile.mkdtemp(dir=TMP_RACINE))
++    return Path(tempfile.mkdtemp(prefix="essais-generateur-v2-"))      # v2, C2 : dossier temporaire du système
+ 
+ 
+ @pytest.fixture(scope="session")
+@@ -93,10 +97,14 @@
+     return p
+ 
+ 
+-def preparer_journal(dossier: Path, nom="journal-rejeux.jsonl") -> Path:
+-    j = dossier / nom
+-    G.creer_journal_rejeux(j, dossier / f"manifeste-{nom}")
+-    return j
++def lieu(dossier: Path):
++    return G.LieuDuJournal.essai(dossier / "journal")
++
++
++def preparer_journal(dossier: Path) -> Path:
++    (dossier / "journal").mkdir(exist_ok=True)
++    G.creer_journal_rejeux(lieu(dossier))
++    return lieu(dossier).journal
+ 
+ 
+ def piece(dossier: Path, nom: str, texte: str) -> Path:
+@@ -105,25 +113,31 @@
+     return p
+ 
+ 
++def texte_controle(verdict="**Conforme.**", programme=None) -> str:
++    return ("# Contrôle factice de la condition (4), pour les essais\n\n## Verdict\n\n" + verdict + "\n\n"
++            f"Programme contrôlé : `{programme or sha_f(PROGRAMME)}`.\n")
++
++
+ class Lancer:
+     def __init__(self, dossier: Path, capfd):
+         self.dossier, self.capfd, self.n = dossier, capfd, 0
+-        self.controle = piece(dossier, "controle-4.md", "Contrôle factice de la condition (4), pour les essais.\n")
++        self.controle = piece(dossier, "controle-4.md", texte_controle())
+ 
+-    def __call__(self, banque_p, cartes_p, *, empreinte=None, compte=94, journal=None, extra=(), provoquer=None,
+-                 v2=None, controle=True):
++    def __call__(self, banque_p, cartes_p, *, empreinte=None, compte=94, extra=(), provoquer=None,
++                 v2=None, controle=True, controle_piece=None, lieu_journal=None):
+         self.n += 1
+-        journal = journal if journal is not None else self.dossier / "journal-rejeux.jsonl"
++        lj = lieu_journal or lieu(self.dossier)
+         sortie = self.dossier / f"sortie-garde-{self.n}"
+         entree = G.EntreeCartes.essai(cartes_p, empreinte or sha_f(cartes_p), compte, provoquer)
+-        argv = ["garde", "--banque", str(banque_p), "--journal-rejeux", str(journal), "--sortie", str(sortie)]
++        argv = ["garde", "--banque", str(banque_p), "--sortie", str(sortie)]
++        c = controle_piece or self.controle
+         if controle:
+-            argv += ["--controle-4", str(self.controle), "--empreinte-controle-4", sha_f(self.controle)]
++            argv += ["--controle-4", str(c), "--empreinte-controle-4", sha_f(c)]
+         argv += list(extra)
+-        code = G.principal(argv, entree_cartes=entree, entree_v2=v2)
++        code = G.principal(argv, entree_cartes=entree, entree_v2=v2, lieu_journal=lj)
+         out, err = self.capfd.readouterr()
+         return {"code": code, "rapport": json.loads(out), "out": out, "err": err, "sortie": sortie, "entree": entree,
+-                "journal": journal}
++                "journal": lj.journal}
+ 
+ 
+ @pytest.fixture
+@@ -568,12 +582,66 @@
+     assert res["rapport"]["decision"] == "banque passée" and res["rapport"]["nombre_de_rejeux"] == 5
+ 
+ 
+-def test_garde_journal_absent_refus_avant_ouverture(dossier, lancer, composition):
++def test_garde_sans_manifeste_de_creation_refus_avant_ouverture(dossier, lancer, composition):
++    cp = ecrire_cartes(dossier, cartes_factices())
++    bp = ecrire_banque(dossier, composition["banque"])
++    res = lancer(bp, cp)                                # journal jamais créé : ni journal ni manifeste
++    assert res["rapport"]["exception"]["classe"] == "ManifesteJournalAbsentOuFaux" and res["entree"].ouvertures == 0
++    assert res["code"] == 5
++    (dossier / "journal").mkdir()
++    lieu(dossier).journal.write_bytes(b"")             # journal posé à la main, sans le geste écrit : refus
++    res2 = lancer(bp, cp)
++    assert res2["rapport"]["exception"]["classe"] == "ManifesteJournalAbsentOuFaux" and res2["entree"].ouvertures == 0
++
++
++def test_garde_journal_supprime_refus_avant_ouverture_et_recreation_refusee(dossier, lancer, composition, capfd):
+     cp = ecrire_cartes(dossier, cartes_factices())
+     bp = ecrire_banque(dossier, composition["banque"])
++    j = preparer_journal(dossier)
++    assert lancer(bp, cp)["rapport"]["decision"] == "banque passée"
++    j.unlink()                                          # le journal disparaît : le compte ne repart pas de zéro
+     res = lancer(bp, cp)
+     assert res["rapport"]["exception"]["classe"] == "JournalRejeuxAbsent" and res["entree"].ouvertures == 0
+-    assert res["code"] == 5
++    with pytest.raises(G.ManifesteJournalExisteDeja):
++        G.creer_journal_rejeux(lieu(dossier))
++    assert not j.exists()
++    code = G.principal(["creer-journal-rejeux"], lieu_journal=lieu(dossier))
++    assert code == 2 and "ManifesteJournalExisteDeja" in capfd.readouterr().err and not j.exists()
++
++
++def test_garde_manifeste_d_un_autre_journal_refuse(dossier, lancer, composition):
++    cp = ecrire_cartes(dossier, cartes_factices())
++    bp = ecrire_banque(dossier, composition["banque"])
++    (dossier / "autre").mkdir()
++    G.creer_journal_rejeux(G.LieuDuJournal.essai(dossier / "autre"))
++    (dossier / "journal").mkdir()
++    import shutil
++    shutil.copy(dossier / "autre" / G.MANIFESTE_JOURNAL_REJEUX.name, lieu(dossier).manifeste)
++    shutil.copy(dossier / "autre" / (G.MANIFESTE_JOURNAL_REJEUX.name + ".sha256"),
++                str(lieu(dossier).manifeste) + ".sha256")
++    lieu(dossier).journal.write_bytes(b"")
++    res = lancer(bp, cp)
++    assert res["rapport"]["exception"]["classe"] == "ManifesteJournalAbsentOuFaux" and res["entree"].ouvertures == 0
++
++
++def test_aucun_chemin_libre_pour_le_journal(dossier, lancer, composition, capfd):
++    preparer_journal(dossier)
++    cp = ecrire_cartes(dossier, cartes_factices())
++    bp = ecrire_banque(dossier, composition["banque"])
++    for extra in (["--journal-rejeux", str(dossier / "x.jsonl")], ["--journal", str(dossier / "x.jsonl")],
++                  ["--sortie", str(dossier / "deux")]):
++        res = lancer(bp, cp, extra=extra)
++        assert res["rapport"]["exception"]["classe"] == "ArgumentHorsListe" and res["entree"].ouvertures == 0
++    assert G.principal(["creer-journal-rejeux", "--journal", str(dossier / "y.jsonl")]) == 2
++    assert "ArgumentHorsListe" in capfd.readouterr().err and not (dossier / "y.jsonl").exists()
++    assert G.JOURNAL_REJEUX == G.DEPOT / "runs" / "ligne-3-etage-2-garde-de-recouvrement-v1" / \
++        "journal-rejeux-garde-recouvrement-v1.jsonl"
++    assert G.MANIFESTE_JOURNAL_REJEUX.parent == G.JOURNAL_REJEUX.parent
++    assert G.LieuDuJournal.production().journal == G.JOURNAL_REJEUX          # construit, jamais lu ici
++    with pytest.raises(G.ManifesteJournalAbsentOuFaux):
++        G.LieuDuJournal(dossier / "j.jsonl", dossier / "m.json", "production")
++    with pytest.raises(G.CheminInterdit):
++        G.LieuDuJournal.essai(dossier / "archives-reponses-modeles")
+ 
+ 
+ @pytest.mark.parametrize("contenu", [b"pas du json\n", b'{"n_ligne": 0, "type": "ouverture"}\n', b'{"n_ligne": 0',
+@@ -581,7 +649,7 @@
+ def test_garde_journal_illisible_refus_avant_ouverture(dossier, lancer, composition, contenu):
+     cp = ecrire_cartes(dossier, cartes_factices())
+     bp = ecrire_banque(dossier, composition["banque"])
+-    j = dossier / "journal-rejeux.jsonl"
++    j = preparer_journal(dossier)
+     j.write_bytes(contenu)
+     res = lancer(bp, cp)
+     assert res["rapport"]["exception"]["classe"] == "JournalRejeuxIllisible" and res["entree"].ouvertures == 0
+@@ -738,14 +806,15 @@
+     assert G.MAX_REJEUX_SANS_MOT == 5 and G.TAILLE_BARDEAU == 8
+ 
+ 
+-def test_creer_journal_rejeux(dossier):
+-    j = dossier / "journal.jsonl"
+-    m = G.creer_journal_rejeux(j, dossier / "manifeste-journal")
+-    assert j.read_bytes() == b"" and m["journal_sha256"] == sha(b"")
+-    assert (dossier / "manifeste-journal" / "manifeste-creation-journal-rejeux.json.sha256").exists()
+-    assert G.JournalRejeux(j).ouvertures == 0
+-    with pytest.raises(FileExistsError):
+-        G.creer_journal_rejeux(j, dossier / "manifeste-journal-2")
++def test_creer_journal_rejeux_puis_recreation_refusee(dossier):
++    lj = lieu(dossier)
++    m = G.creer_journal_rejeux(lj)
++    assert lj.journal.read_bytes() == b"" and m["journal_sha256"] == sha(b"") and m["journal"] == str(lj.journal)
++    assert Path(str(lj.manifeste) + ".sha256").exists()
++    assert G.JournalRejeux(lj.journal).ouvertures == 0
++    G.exiger_manifeste_du_journal(lj)
++    with pytest.raises(G.ManifesteJournalExisteDeja):
++        G.creer_journal_rejeux(lj)
+ 
+ 
+ # ------------------------------------------------------------------------------------------------------------------------------
+@@ -903,3 +972,202 @@
+     assert code == 2
+     err = capsys.readouterr().err
+     assert '"refus"' in err and not Path("/nulle/part").exists()
++
++
++# ------------------------------------------------------------------------------------------------------------------------------
++# v2 : pièce du (4) à verdict, meta à toute profondeur, forme réelle, ligne de commande sans trace, C1, M5, M6, R3
++# ------------------------------------------------------------------------------------------------------------------------------
++
++
++@pytest.mark.parametrize("texte,classe", [
++    (texte_controle("**Non conforme.** Un point n'est pas tenu."), "ControleQuatreNonConforme"),
++    (texte_controle("Verdict : Non conforme"), "ControleQuatreNonConforme"),
++    (texte_controle("Le verdict viendra plus tard."), "ControleQuatreNonConforme"),
++    (texte_controle("**Conforme.**\n\n**Non conforme.**"), "ControleQuatreNonConforme"),
++    (texte_controle("**Conforme.**", programme="e" * 64), "ControleQuatreAutreProgramme"),
++])
++def test_piece_du_controle_4_non_conforme_ou_d_un_autre_programme_refusee(dossier, lancer, composition, texte, classe):
++    preparer_journal(dossier)
++    cp = ecrire_cartes(dossier, cartes_factices())
++    bp = ecrire_banque(dossier, composition["banque"])
++    c = piece(dossier, "controle-mauvais.md", texte)
++    res = lancer(bp, cp, controle_piece=c)
++    assert res["rapport"]["exception"]["classe"] == classe and res["entree"].ouvertures == 0
++    assert res["rapport"]["decision"] == "garde non jouée"
++
++
++@pytest.mark.parametrize("verdict", ["**Conforme.**", "Conforme", "Verdict : Conforme", "**Verdict : Conforme**"])
++def test_piece_du_controle_4_conforme_acceptee(dossier, lancer, composition, verdict):
++    preparer_journal(dossier)
++    cp = ecrire_cartes(dossier, cartes_factices())
++    bp = ecrire_banque(dossier, composition["banque"])
++    c = piece(dossier, "controle-bon.md", texte_controle(verdict))
++    assert lancer(bp, cp, controle_piece=c)["rapport"]["decision"] == "banque passée"
++
++
++def test_meta_retire_a_toute_profondeur(dossier, lancer, composition):
++    banque = composition["banque"]
++    copie = banque[4]["contenu"]["mecanisme"] + " " + banque[4]["contenu"]["limites"]
++    cartes = cartes_factices()
++    cartes[1]["contenu"]["meta"] = {"copie": copie}                                    # imbriqué dans le contenu
++    cartes[2]["contenu"]["sous"] = {"liste": [{"meta": copie, "x": "texte court"}]}   # dans une liste, plus bas
++    preparer_journal(dossier)
++    bp = ecrire_banque(dossier, banque)
++    res = lancer(bp, ecrire_cartes(dossier, cartes))
++    assert res["rapport"]["decision"] == "banque passée"
++    objet = {c["id"]: {"contenu": c["contenu"], "empreinte": "a" * 64, "meta": {"copie": copie}} for c in cartes}
++    objet["meta"] = {"copie": copie, "autre": {"n": 1}}                                # au niveau du fichier
++    p = dossier / "forme-reelle-avec-meta.json"
++    p.write_text(json.dumps(objet, ensure_ascii=False), encoding="utf-8")
++    res2 = lancer(bp, p)
++    assert res2["rapport"]["decision"] == "banque passée" and res2["rapport"]["cartes_lues"] == 94
++    cartes_en_memoire = G.cartes_du_fichier(p.read_bytes())
++
++    def sans_cle_meta(o):
++        if isinstance(o, dict):
++            return "meta" not in o and all(sans_cle_meta(v) for v in o.values())
++        if isinstance(o, list):
++            return all(sans_cle_meta(v) for v in o)
++        return True
++
++    assert len(cartes_en_memoire) == 94 and all(sans_cle_meta(c) for _i, c in cartes_en_memoire)
++
++
++def _forme_reelle(cartes, ids):
++    """Forme établie par la contre-lecture : {identifiant de treize caractères : {contenu, empreinte, meta}}."""
++    return {i: {"contenu": c["contenu"], "empreinte": sha(json.dumps(c["contenu"], sort_keys=True).encode("utf-8")),
++                "meta": c["meta"]} for i, c in zip(ids, cartes)}
++
++
++def test_forme_reelle_du_fichier_des_cartes_admise_avec_repli(dossier, lancer, composition):
++    banque = composition["banque"]
++    ids = [f"f{k:012x}" for k in range(1, 95)]
++    for pos, nid in zip((2, 11, 23, 37, 48, 60, 81), G.CARTES_NOMMEES):
++        ids[pos] = nid                                                 # treize caractères, égalité exacte
++    assert all(len(i) == 13 for i in ids)
++    cartes = cartes_factices()
++    cartes[11]["contenu"]["texte"] = banque[9]["contenu"]["mecanisme"]  # carte nommée
++    p = dossier / "forme-reelle.json"
++    p.write_text(json.dumps(_forme_reelle(cartes, ids), ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
++    preparer_journal(dossier)
++    bp = ecrire_banque(dossier, banque)
++    res = lancer(bp, p)
++    assert res["rapport"]["decision"] == "banque refusée" and res["rapport"]["cartes_lues"] == 94
++    assert banque[9]["identifiant_interne"] in res["rapport"]["identifiants_temoins_refuses"]
++    pr = piece(dossier, "piece.md", "pièce factice\n")
++    res2 = lancer(bp, p, extra=["--repli", G.DECLENCHEURS_REPLI[0], "--piece-repli", str(pr),
++                               "--empreinte-piece-repli", sha_f(pr)])
++    assert res2["rapport"]["decision"] == "banque refusée" and res2["rapport"]["cartes_lues"] == 7
++    assert_rien_des_cartes(res, cartes)
++    assert_rien_des_cartes(res2, cartes)
++
++
++def test_ligne_de_commande_aucune_trace_brute(dossier, capfd, monkeypatch):
++    def explose(*a, **k):
++        raise RuntimeError(SECRET_CARTE)
++
++    monkeypatch.setattr(G, "jouer_la_garde", explose)
++    code = G.principal(["garde", "--banque", "b", "--sortie", "s", "--controle-4", "c", "--empreinte-controle-4", "0" * 64])
++    out, err = capfd.readouterr()
++    r = json.loads(out)
++    assert code == 5 and err == "" and r["exception"]["classe"] == "RuntimeError" and SECRET_CARTE not in out
++    monkeypatch.setattr(G, "programme_sha256", explose)
++    code = G.principal(["garde"])
++    out, err = capfd.readouterr()
++    r = json.loads(out)
++    assert code == 5 and err == "" and set(r) == {"decision", "exception"} and SECRET_CARTE not in out
++    G.valider_rapport_garde(r, exiger_programme=False)
++
++
++def test_garde_sortie_standard_en_panne_aucune_trace(dossier, lancer, composition, capfd, monkeypatch):
++    preparer_journal(dossier)
++    cp = ecrire_cartes(dossier, cartes_factices())
++    bp = ecrire_banque(dossier, composition["banque"])
++
++    class Panne:
++        def write(self, *_a):
++            raise OSError(SECRET_CARTE)
++
++        def flush(self):
++            pass
++
++    monkeypatch.setattr(G.sys, "stdout", Panne())
++    entree = G.EntreeCartes.essai(cp, sha_f(cp))
++    c = piece(dossier, "c.md", texte_controle())
++    code = G.principal(["garde", "--banque", str(bp), "--sortie", str(dossier / "s"), "--controle-4", str(c),
++                        "--empreinte-controle-4", sha_f(c)], entree_cartes=entree, lieu_journal=lieu(dossier))
++    out, err = capfd.readouterr()
++    assert code == 5 and err == "" and json.loads(out)["exception"]["classe"] == "OSError" and SECRET_CARTE not in out
++
++
++def test_constructeurs_nus_gardes(dossier):
++    with pytest.raises(G.CheminInterdit):
++        G.EntreeCartes(dossier / "coffre-x" / "f.json", "0" * 64, 94, "essai")
++    with pytest.raises(G.EntreeEssaiInterdite):
++        G.EntreeCartes(dossier / "f.json", G.EMPREINTE_CARTES, 94, "production")
++    with pytest.raises(G.CheminInterdit):
++        G.EntreeV2(dossier / "archives-reponses-modeles" / "v2.json", "0" * 64, 11, "essai")
++
++
++def test_c1_fautif_de_modules_d_un_autre_item_nomme_un_module():
++    o = objet_fragments()
++    o["fautifs"].append({"id": "f-c1-sain", "item": "aucun_modele_ne_decide", "niveau": "net", "categorie": "modules",
++                         "champs": {"module_change": "Le module coffre change : un agent y garde seul ce qui reste."},
++                         "citation": False})
++    G.valider_fragments(o, INTERDITES)
++    o["fautifs"].append({"id": "f-c1-artefact", "item": "aucun_modele_ne_decide", "niveau": "net", "categorie": "modules",
++                         "champs": {"module_change": "L'ensemble change ; un agent y garde seul ce qui reste."},
++                         "citation": False})
++    with pytest.raises(G.FragmentsRefuses) as e:
++        G.valider_fragments(o, INTERDITES)
++    assert any("f-c1-artefact" in f for f in e.value.fautes)
++
++
++def test_m5_contenus_identiques_refuses_et_fragments_communs_rapportes(composition, dossier):
++    G.verifier_contenus_distincts(composition["banque"])                # cas sain
++    b = [json.loads(json.dumps(t)) for t in composition["banque"][:3]]
++    b[2]["contenu"] = json.loads(json.dumps(b[0]["contenu"]))
++    with pytest.raises(G.ContenusIdentiques):
++        G.verifier_contenus_distincts(b)
++    c = G.fragments_communs(composition["journal"])
++    assert 0 <= c["maximum"] < 5 and sum(c["paires_par_nombre_de_fragments_communs"].values()) == 200 * 199 // 2
++    o = objet_fragments()                                                 # artefact par la composition : un fragment
++    for cat in o["conformes"]:                                            # par catégorie, contenus forcément répétés
++        garde = [f for f in o["conformes"][cat] if f["piege"] is not None]
++        simples = [f for f in o["conformes"][cat] if f["piege"] is None]
++        o["conformes"][cat] = garde + [next(f for f in simples if not f["citation"])] + \
++            [f for f in simples if f["citation"]][:1]
++    fr = G.valider_fragments(o, INTERDITES)
++    with pytest.raises((G.ContenusIdentiques, G.FragmentsInsuffisants)):
++        G.composer(fr, G.Contexte("essais"), G.ITEMS, INTERDITES)
++
++
++def test_m5_refus_nomme_par_les_deux_identifiants(composition):
++    b = [dict(t) for t in composition["banque"]]
++    b[1] = dict(b[1], contenu=b[0]["contenu"])
++    with pytest.raises(G.ContenusIdentiques) as e:
++        G.verifier_contenus_distincts(b)
++    assert b[0]["identifiant_interne"] in str(e.value) and b[1]["identifiant_interne"] in str(e.value)
++
++
++def test_m6_service_reel_du_clone_sur_la_banque_factice(composition, monkeypatch):
++    """M6 (mère, 15:05Z) : la vraie fonction de service (clone de l'organisme, par le code d'appel v4, empreintes des cinq
++    modules vérifiées avant tout import) sur la banque factice. Fonctions pures : aucun réseau, aucune clé, aucun appel."""
++    for n in ("HTTPS_PROXY", "HTTP_PROXY", "https_proxy", "http_proxy"):
++        monkeypatch.delenv(n, raising=False)
++    import socket
++
++    def interdit(*a, **k):
++        raise AssertionError("réseau interdit dans cet essai")
++
++    monkeypatch.setattr(socket, "socket", interdit)
++    monkeypatch.setattr(socket, "create_connection", interdit)
++    s = G.construire_service_reel()
++    assert s.nature == "reel" and list(s.items) == list(G.ITEMS)
++    r = G.jouer_juges_de_surface(composition["banque"], s)
++    assert r["parfait"]["erreur_equilibree"] == 0
++    for g in ("longueur", "champ_lu", "citation"):
++        assert r[g]["dans_la_bande"]
++    assert s.appels == 4 * 200
++    a = G.auditer(composition["banque"], G.Contexte("essais"), G.construire_service_reel())
++    assert a["decision"] == "banque passée" and a["service"]["nature"] == "reel"
