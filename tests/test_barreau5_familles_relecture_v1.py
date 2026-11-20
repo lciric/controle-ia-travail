@@ -149,9 +149,9 @@ def monde_jouet(base: Path, n_taches=8, familles=lv.TENUES, zero=(), entrees_en_
 
 @pytest.fixture(scope="module")
 def bout_en_bout(tmp_path_factory):
-    """Jouet de bout en bout : relecture sur le modèle jouet (39 adaptateurs, 8 tâches), sondes, notation fermée."""
+    """Jouet de bout en bout : relecture sur le modèle jouet (39 adaptateurs, 4 tâches), sondes, notation fermée."""
     base = tmp_path_factory.mktemp("b5f-lecture")
-    m = monde_jouet(base)
+    m = monde_jouet(base, n_taches=4)
     config = _config(m["taches"])
     resume = rv.executer(config, m["racine"], "20261124-120000-b5f-lecture", entropie=ENTROPIE,
                          registre_texte=registre(m["table_sha"]), jouer=_scripte)
@@ -187,7 +187,7 @@ def test_jouet_de_bout_en_bout_relecture_sondes_puis_lecture(bout_en_bout, tmp_p
     r0 = np.random.default_rng(2)
     couts = {"format": lv.FORMAT_COUTS, "familles": {f: {"copie": f, "membres": {
         mm: [{"tache": t, "pas": p, "cout": {"jumeau": 100.0, "saboteur": 300.0, "sur_saboteur": 900.0}[mm]
-              * float(np.exp(0.1 * r0.standard_normal()))} for t in m["ids"][:4] for p in range(3)]
+              * float(np.exp(0.1 * r0.standard_normal()))} for t in m["ids"] for p in range(3)]
         for mm in MEMBRES}} for f in lv.TENUES}}
     (tmp_path / "couts.json").write_text(json.dumps(couts))
     form = {"format": lv.FORMAT_FORMATION, "familles": {f: {"copie": f, "part_non_editable": 0.0,

@@ -99,7 +99,7 @@ _TACHE_FICHIER = re.compile(r"[A-Za-z0-9._-]+")
 _SORTIE = re.compile(r"(?:lecture/(?:inventaire\.json|bilan-relecture\.json|textes-honnetes\.jsonl|produits\.json|"
                      r"intensites\.json|scores/[a-zA-Z0-9-]+-pli[01]\.json)(?:\.sha256)?|"
                      r"poids/[a-zA-Z0-9-]+-pli[01]\.json(?:\.sha256)?|"
-                     r"activations/[A-Za-z0-9-]+/c(?:7|15|23)/[A-Za-z0-9._-]+__p[0-9]{1,3}\.npy|"
+                     r"activations/[A-Za-z0-9_-]+/c(?:7|15|23)/[A-Za-z0-9._-]+__p[0-9]{1,3}\.npy|"
                      r"(?:garde-activations|inventaire-activations)\.json(?:\.sha256)?)")
 
 
