@@ -60,3 +60,4 @@
 | SYNTHESE-ANTERIORITE-SERVIE-NOUVELLES-ATTAQUES-V5 | 2026-11-20T11:45:57Z | prereg/ideation-nouvelles-attaques-v1/synthese-anteriorite-pilier-attaque-v5-servie.md | f74c606423bbbc4da88578508209d3d87cb133b4b7cd8e1728606cde58484e73 |
 | NOTE-PERIMETRE-NOUVELLES-ATTAQUES-V3 | 2026-11-20T11:56:24Z | prereg/ideation-nouvelles-attaques-v1/note-perimetre-modes-inedits-v3.md | dd6fea0e176b019c46386d0d000d059085036d2b20a82fe59c26549b41380580 |
 | VERDICT-PORTEE-200-ORGANISME-V9-LIGNE-3 | 2026-11-20T12:01:34Z | prereg/organisme-auto-conception-v9/ligne-3/verdict-portee-200/verdict-portee-200-ligne-3-v2.md | 029287239e341e53755b2875aaefd7a75662a1e9e95b5dbe2e2bf6ab8d6fbaa9 |
+| QUESTION-ORGANISME-NOUVELLES-ATTAQUES-V5 | 2026-11-20T12:15:36Z | prereg/ideation-nouvelles-attaques-v1/question-course-nouvelles-attaques-v5.md | eaf5db8a558547aa8f5df45008a34eebf4cb7a163e12ca400176401de6f5ce0f |
