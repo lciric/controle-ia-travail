@@ -309,7 +309,7 @@ def test_table_et_registre_suivent_engagement_v1(monde, mid):
     assert F.noms_opaques(sel, adaptateurs) == en.noms_opaques(sel, adaptateurs)
     assert F._octets_table(table) == en.forme_canonique(table) == (d / "etiquettes.json").read_bytes()
     lignes = en.lignes_du_registre((d / "registre.txt").read_text(encoding="utf-8"))
-    assert {k: (v["instant"], v["contenu"]) for k, v in lignes.items()} == \
+    assert {k: (v["instant"].strftime("%Y-%m-%dT%H:%M:%SZ"), v["contenu"]) for k, v in lignes.items()} == \
         {k: (v["instant"], v["contenu"]) for k, v in lire_registre(d).items()}
     if mid != "V7-0001":   # deuxième cas : la table reçue n'est pas l'engagée
         assert lignes["ENGAGEMENT-B5F"]["contenu"] == f"sha256 {en.empreinte_table(table)}"
