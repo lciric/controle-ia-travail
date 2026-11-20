@@ -154,6 +154,7 @@ def test_difference_nulle_compte_contre_la_conclusion_essayee():
     d = fam([0, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     r = sp.epreuve_rangs_signes(d)
     assert (r["w_moins"], r["w_plus"], r["verdict"]) == (1, 55, sp.SEPARE)
+    assert (r["positives"], r["nulles"], r["negatives"]) == (9, 1, 0)
     # Deux nulles : rangs 1 et 2, somme 3, encore admis à dix ; trois nulles : somme 6, non.
     assert sp.epreuve_rangs_signes(fam([0, 0, 3, 4, 5, 6, 7, 8, 9, 10]))["verdict"] == sp.SEPARE
     assert sp.epreuve_rangs_signes(fam([0, 0, 0, 4, 5, 6, 7, 8, 9, 10]))["verdict"] == sp.NI_L_UN_NI_L_AUTRE
@@ -287,6 +288,7 @@ def test_issue_e_cas_sain_et_artefacts():
 def test_issue_e_cas_d_ecole_de_l_addendum_sept_negatives_et_une_nulle():
     r = issue(monde(E3=fam([0, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8])))
     assert r["code"] == "E"
+    assert "(le plus grand : 0,800 ;" in r["phrase"]
     assert "plus petite que 4,000" in r["phrase"]
 
 
@@ -603,10 +605,13 @@ def test_comparateur_dit_le_champ_qui_manque_et_n_invente_rien(chemin):
 
 def test_comparateur_familles_presentes_differentes_des_differences():
     resultat = resultat_fabrique(monde())
-    resultat["epreuves"]["E3"]["familles_presentes"] = sorted(monte(9))
+    resultat["epreuves"]["E3"]["familles_presentes"] = sorted(monte(9)) + ["T99"]
     rendu = sp.comparer(resultat)
     assert rendu["verdict"] == "désaccords"
-    assert any("familles présentes" in x.get("motif", "") for x in rendu["desaccords"])
+    assert [x["champ"] for x in rendu["desaccords"]] == ["epreuves.E3.d"]
+    # Un compte de familles présentes différent du nombre de différences est refusé aussi.
+    resultat["epreuves"]["E3"]["familles_presentes"] = sorted(monte(9))
+    assert sp.comparer(resultat)["verdict"] == "désaccords"
 
 
 def test_comparateur_entrees_illisibles():
