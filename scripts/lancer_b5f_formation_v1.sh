@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Lanceur de la formation des familles d'adaptateurs jumeaux du barreau 5, côté session (v1, écrit et corrigé le 2026-11-19).
+# Lanceur de la formation des familles d'adaptateurs jumeaux du barreau 5, côté session (v1, écrit et corrigé le 2026-11-19 ;
+# retouché le 2026-11-20 pour l'additif 1 « relance des six instances », code v2 : sous-commandes relance et depense).
 # Texte : le préenregistrement que cite la ligne SCELLEMENT-B5F du registre propre (sections figées pour la formation) ;
 # devis du brouillon 3. Aucune commande de ce script ne crée, n'arrête ni ne détruit d'instance : il contrôle et IMPRIME
 # les commandes, que la session de formation joue (préfixe GO_ID exigé par la garde de calcul ; destruction par
@@ -18,22 +19,23 @@
 #                                 l'offre ; garde de calcul rejouée ; sinon refus. Les clés passent par leur nom
 #                                 ($HF_TOKEN, $GH_TOKEN) : le shell qui joue la ligne en donne la valeur au loueur ;
 #   relance  RACINE N OFFRE.json COMMIT BRANCHE_CODE PREREG RUN_ID
-#                                 relance unique d'une instance tombée (calendrier du texte) : mêmes contrôles, accord
-#                                 GO-RELANCE-FORMATION-B5F qui cite l'instance N (GO_ID égal ; la ligne cite deux instances
-#                                 au plus, et 56 USD de coupures au plus, sinon refus), RUN_ID et familles suffixés
-#                                 « -x1 » (graines neuves), branche de sortie …-instance-N-x1 ; la première copie est versée
-#                                 et jamais lue ;
+#                                 relance unique d'une instance tombée (calendrier du texte, additif 1) : mêmes contrôles,
+#                                 mais le code est celui de CODE-RELANCE-FORMATION-B5F ; accord GO-RELANCE-FORMATION-B5F
+#                                 qui cite l'instance N (GO_ID égal, et égal à celui de GO-FORMATION-B5F ; la ligne cite
+#                                 six instances au plus, et 147 USD de coupures au plus, sinon refus), RUN_ID et familles
+#                                 suffixés « -x1 » (graines neuves), branche de sortie …-instance-N-x1 ; la première copie
+#                                 est versée et jamais lue ;
 #   config RACINE N PRIX_USD_H COMMIT RELANCE
 #                                 imprime la configuration réelle de l'instance N (recette scellée, plan, coupure, prix,
 #                                 membres et pièce lus dans SCELLEMENT-B5F au commit COMMIT ; RELANCE : 0 ou 1) ;
 #   depense N MEMBRES CUMUL_INSTANCE PRIX_INSTANCE_H CUMUL_COMMUN PRIX_COMMUN_H RELANCE
-#                                 point 14, deux compteurs (erratum 1 au brouillon 5, couples E-4a et E-8a) : cumul de
+#                                 point 14, deux compteurs pour toute marche (additif 1, GO-2026-11-20-51) : cumul de
 #                                 l'instance plus un quart d'heure ≥ sa coupure (MEMBRES : membres des familles
-#                                 d'apprentissage, 2 ou 3 ; une relance a la coupure de l'instance qu'elle remplace), ou,
-#                                 pour une pièce du devis (RELANCE=0), cumul commun de toutes les pièces du devis, sans la
-#                                 dépense d'aucune relance, plus un quart d'heure ≥ plafond de 200 USD : refus, et rappel du
-#                                 versement puis de la destruction. Une relance (RELANCE=1) n'a pas de troisième compteur, et
-#                                 le plafond atteint ne l'arrête pas : seule sa coupure compte (CUMUL_COMMUN non lu) ;
+#                                 d'apprentissage, 2 ou 3 ; une relance a la coupure de l'instance qu'elle remplace), ou
+#                                 cumul commun de toutes les pièces du devis et de toutes les relances, plus un quart
+#                                 d'heure ≥ plafond de 200 USD : refus, et rappel du versement puis de la destruction. Le
+#                                 plafond atteint arrête aussi une relance (RELANCE=1) : CUMUL_COMMUN et PRIX_COMMUN_H
+#                                 comptent les relances ;
 #   detruire RACINE ID N LISTE.json INVENTAIRE.json COMMIT
 #                                 l'instance ID porte l'étiquette b5f-formation-v1-N dans LISTE.json (vastai show instances
 #                                 --raw) ; chaque sortie de son inventaire scellé est au commit COMMIT, à sa taille et à son

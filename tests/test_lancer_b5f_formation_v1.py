@@ -41,13 +41,16 @@ def _ligne_go(ident, typ="calcul", par="Lazar"):
 
 
 def _registre_propre(r, code_commit, go=GO, membres=2, piece="instance", texte=PREREG, sha=None, relance=None,
-                     scellement=True):
+                     scellement=True, code_relance=None):
     sha = sha or hashlib.sha256((r / texte).read_bytes()).hexdigest()
     lignes = [en.ligne_du_registre("SCELLEMENT-B5F", "2026-11-21T18:00:00Z",
                                    f"{texte} ; sha256 {sha} ; membres-apprentissage {membres} ; piece {piece}", "")]
     lignes = (lignes if scellement else []) + [
         en.ligne_du_registre("CODE-FORMATION-B5F", "2026-11-22T18:00:00Z", f"commit {code_commit} ; entropie 7", ""),
         en.ligne_du_registre("GO-FORMATION-B5F", "2026-11-22T19:00:00Z", go, "")]
+    if relance or code_relance:                   # additif 1 : le code des relances, par défaut celui des premières marches
+        lignes.append(en.ligne_du_registre("CODE-RELANCE-FORMATION-B5F", "2026-11-24T08:00:00Z",
+                                           f"commit {code_relance or code_commit}", ""))
     if relance:
         lignes.append(en.ligne_du_registre("GO-RELANCE-FORMATION-B5F", "2026-11-25T08:00:00Z", relance, ""))
     (r / fv.REGISTRE_PROPRE).write_text("\n".join(lignes) + "\n", encoding="utf-8")
@@ -154,7 +157,7 @@ def test_commande_jouee_dans_un_shell_transmet_au_loueur_la_valeur_des_cles_jama
 @pytest.mark.parametrize("cas", ["sans_go", "code_change", "code_non_ancetre", "amorce", "go_hors_registre",
                                  "go_non_calcul", "instance", "offre_chere", "offre_carte", "offre_cuda", "run",
                                  "sans_scellement", "autre_texte", "autre_empreinte", "brouillon", "texte_absent",
-                                 "session_modifiee", "relance_trois_instances"])
+                                 "session_modifiee", "relance_sept_instances"])
 def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
     r, course = racine
     go, n, offre, run, prereg = GO, 3, None, RUN, PREREG
@@ -194,8 +197,8 @@ def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
         prereg = "prereg/barreau5-absent-v1.md"
     elif cas == "session_modifiee":                  # constat m-9 : l'arbre de travail de la session n'est pas le code figé
         (r / fv.AMORCE).write_text("#!/usr/bin/env bash\necho amorce retouchée\n", encoding="utf-8")
-    elif cas == "relance_trois_instances":           # point (c) : la ligne de relance cite deux instances au plus
-        course = _course(r, membres=3, piece="famille", relance=f"{GO_RELANCE} ; instances 3,5,7")
+    elif cas == "relance_sept_instances":            # additif 1 : la ligne de relance cite six instances au plus
+        course = _course(r, membres=3, piece="famille", relance=f"{GO} ; instances 1,2,3,4,5,6,7")
     else:
         o = dict(OFFRE)
         o.update({"offre_chere": {"dph_total": 1.35}, "offre_carte": {"gpu_name": "H100 SXM5"},
@@ -208,7 +211,7 @@ def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
               "instance": "hors du plan", "offre_chere": "dph_total", "offre_carte": "carte", "offre_cuda": "cuda_max_good",
               "run": "identifiant de marche", "sans_scellement": "SCELLEMENT-B5F", "autre_texte": "texte cité",
               "autre_empreinte": "empreinte du texte", "brouillon": "brouillon", "texte_absent": "absent du commit",
-              "session_modifiee": "arbre de travail de la session", "relance_trois_instances": "3 instances citées"}
+              "session_modifiee": "arbre de travail de la session", "relance_sept_instances": "7 instances citées"}
     assert p.returncode == 2 and "vastai create" not in p.stdout
     assert motifs[cas] in p.stderr, p.stderr
 
@@ -226,24 +229,52 @@ def test_commande_lit_le_registre_au_commit_de_la_course_et_non_dans_l_arbre_de_
 
 def test_relance_unique_cas_sain_et_artefacts(racine):
     """Constat M-5 : la relance d'une instance tombée exige GO-RELANCE-FORMATION-B5F qui la cite, son accord, et une
-    marche suffixée « -x1 » ; la commande porte RELANCE_B5F=1."""
+    marche suffixée « -x1 » ; la commande porte RELANCE_B5F=1. Additif 1 (code v2) : l'accord de la ligne de relance est
+    celui de GO-FORMATION-B5F ; les six instances tombées sont citées d'un coup."""
     r, _ = racine
-    course = _course(r, relance=f"{GO_RELANCE} ; instances 3,5")
+    course = _course(r, membres=3, piece="famille", relance=f"{GO} ; instances 1,2,3,4,5,7")
     run = RUN + "-x1"
-    p = _lancer(*_commande(r, course, run=run, sous="relance"), go=GO_RELANCE)
+    p = _lancer(*_commande(r, course, run=run, sous="relance"), go=GO)
     assert p.returncode == 0, p.stderr
     cmd = p.stdout.strip().splitlines()[-1]
-    assert "RELANCE_B5F=1" in cmd and f"RUN_B5F={run}" in cmd and cmd.startswith(f"GO_ID={GO_RELANCE} vastai create")
-    for args, go, motif in ((_commande(r, course, run=run, sous="relance"), GO, "≠ GO-RELANCE-FORMATION-B5F"),
-                            (_commande(r, course, sous="relance"), GO_RELANCE, "identifiant de marche"),
-                            (_commande(r, course, 4, run="20261123-080000-b5f-formation-4-x1", sous="relance"), GO_RELANCE,
+    assert "RELANCE_B5F=1" in cmd and f"RUN_B5F={run}" in cmd and cmd.startswith(f"GO_ID={GO} vastai create")
+    for args, go, motif in ((_commande(r, course, run=run, sous="relance"), GO_RELANCE, "≠ GO-RELANCE-FORMATION-B5F"),
+                            (_commande(r, course, sous="relance"), GO, "identifiant de marche"),
+                            (_commande(r, course, 6, run="20261123-080000-b5f-formation-6-x1", sous="relance"), GO,
                              "non accordée"),
                             (_commande(r, course, run=run), GO, "identifiant de marche")):
         p = _lancer(*args, go=go)
         assert p.returncode == 2 and motif in p.stderr, (motif, p.stderr)
     sans = _course(r)
-    p = _lancer(*_commande(r, sans, run=run, sous="relance"), go=GO_RELANCE)
+    p = _lancer(*_commande(r, sans, run=run, sous="relance"), go=GO)
     assert p.returncode == 2 and "non accordée" in p.stderr, p.stderr
+    autre = _course(r, relance=f"{GO_RELANCE} ; instances 3,5")       # un autre accord que celui de GO-FORMATION-B5F
+    p = _lancer(*_commande(r, autre, run=run, sous="relance"), go=GO_RELANCE)
+    assert p.returncode == 2 and "≠ accord de GO-FORMATION-B5F" in p.stderr, p.stderr
+
+
+def test_relance_au_code_de_la_ligne_code_relance_cas_sain_et_artefacts(racine):
+    """Additif 1 (code v2) : le code d'une relance est celui du commit de CODE-RELANCE-FORMATION-B5F, celui d'une première
+    marche reste celui de CODE-FORMATION-B5F. Monde : code v1, puis code v2 (un fichier de plus), puis la course."""
+    r, _ = racine
+    v1 = _git(r, "rev-parse", "HEAD~1")
+    (r / "src").mkdir()
+    (r / "src" / "v2.py").write_text("V = 2\n")
+    _git(r, "add", "-A")
+    _git(r, "commit", "-q", "-m", "code v2")
+    v2 = _git(r, "rev-parse", "HEAD")
+    run = RUN + "-x1"
+    course = _course(r, code=v1, code_relance=v2, relance=f"{GO} ; instances 3,5")
+    p = _lancer(*_commande(r, course, run=run, sous="relance"), go=GO)
+    assert p.returncode == 0 and "RELANCE_B5F=1" in p.stdout, p.stderr
+    p = _lancer(*_commande(r, course), go=GO)                         # une première marche ne joue pas le code v2
+    assert p.returncode == 2 and f"celui de CODE-FORMATION-B5F {v1[:12]}" in p.stderr, p.stderr
+    ancien = _course(r, code=v1, code_relance=v1, relance=f"{GO} ; instances 3,5")
+    p = _lancer(*_commande(r, ancien, run=run, sous="relance"), go=GO)            # la ligne cite le code v1 : refus
+    assert p.returncode == 2 and f"celui de CODE-RELANCE-FORMATION-B5F {v1[:12]}" in p.stderr, p.stderr
+    (r / fv.AMORCE).write_text("#!/usr/bin/env bash\necho amorce retouchée\n", encoding="utf-8")
+    p = _lancer(*_commande(r, course, run=run, sous="relance"), go=GO)            # session qui ne joue pas le code v2
+    assert p.returncode == 2 and "différent du code de CODE-RELANCE-FORMATION-B5F" in p.stderr, p.stderr
 
 
 def test_config_reelle_de_chaque_instance_cas_sain_et_artefacts(racine):
@@ -289,11 +320,13 @@ def test_depense_cas_sain_et_artefacts_coupure_et_plafond():
     assert _lancer("depense", 1, 2, 20.0, 1.3, 100.0, 9.1, 2).returncode == 2
 
 
-def test_depense_d_une_relance_hors_du_plafond_commun_sa_seule_coupure():
-    """Point (c) (erratum 1, couples E-4a et E-8a) : le plafond commun atteint n'arrête pas une relance en cours ; sa
-    seule limite est la coupure de l'instance qu'elle remplace (pas de troisième compteur)."""
-    p = _lancer("depense", 3, 3, 20.0, 1.3, 199.9, 9.1, 1)
-    assert p.returncode == 0 and json.loads(p.stdout)["plafond"] is None, p.stderr
+def test_depense_d_une_relance_sous_le_plafond_commun_et_sa_coupure():
+    """Additif 1 (code v2) : la dépense d'une relance entre sous le plafond commun, qui l'arrête aussi ; la coupure de
+    l'instance qu'elle remplace tient toujours."""
+    p = _lancer("depense", 3, 3, 20.0, 1.3, 150.0, 9.1, 1)
+    assert p.returncode == 0 and json.loads(p.stdout) == {"instance": 3, "relance": True, "coupure": 26.0,
+                                                          "plafond": 200.0}, p.stderr
+    assert _lancer("depense", 3, 3, 20.0, 1.3, 199.9, 9.1, 1).returncode == 2     # plafond commun atteint : relance arrêtée
     assert _lancer("depense", 3, 3, 20.0, 1.3, 199.9, 9.1, 0).returncode == 2     # la même dépense, pour une pièce du devis
     assert _lancer("depense", 3, 3, 25.7, 1.3, 0.0, 0.0, 1).returncode == 2       # coupure de l'instance remplacée
 

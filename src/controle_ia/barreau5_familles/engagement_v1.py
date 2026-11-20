@@ -34,8 +34,10 @@ from ..scellement import sceller, verifier
 PREFIXE_NOMS = "X"
 REGISTRE_PROPRE = "registres/barreau5-familles-jumelles-v1.md"
 # clés du texte (« Lignes de registre »), plus GO-RELANCE-FORMATION-B5F (relance unique d'une instance tombée, constat
-# M-5 ; clé à ajouter au texte)
-CLES_REGISTRE = ("SCELLEMENT-B5F", "CODE-FORMATION-B5F", "GO-FORMATION-B5F", "GO-RELANCE-FORMATION-B5F",
+# M-5 ; clé à ajouter au texte), plus CODE-RELANCE-FORMATION-B5F (commit du code des relances ; additif 1 au texte,
+# GO-2026-11-20-51)
+CLES_REGISTRE = ("SCELLEMENT-B5F", "CODE-FORMATION-B5F", "GO-FORMATION-B5F", "CODE-RELANCE-FORMATION-B5F",
+                 "GO-RELANCE-FORMATION-B5F",
                  "SORTIES-FORMATION-B5F", "ENGAGEMENT-B5F", "CODE-LECTURE-B5F", "EPREUVE-B5F", "GO-LECTURE-B5F",
                  "SCORES-B5F", "OUVERTURE-B5F", "LECTURE-B5F", "VERDICT-B5F")
 _FAMILLE_APPRENTISSAGE = re.compile(r"A[0-9]+")

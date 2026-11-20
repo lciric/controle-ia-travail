@@ -54,8 +54,9 @@ TEMOIN="$T/versement-final-prouve"
 SIGNAL="$X/signal-pour-la-mere.txt"
 # essais de tests/test_barreau5_familles_*.py sur l'arbre extrait (essais du lanceur et des amorces exclus : ils lisent la
 # garde de calcul ou jouent l'amorce, hors de l'extraction) ; compte remesuré sur l'arbre extrait des fichiers corrigés au
-# troisième tour (235 essais, tous passés ; un essai du texte de l'amorce exige l'égalité avec le nombre d'essais du paquet)
-MIN_ESSAIS=235
+# troisième tour (235 essais, tous passés ; un essai du texte de l'amorce exige l'égalité avec le nombre d'essais du paquet) ;
+# code v2 (additif 1 au texte, relance des six instances) : 242 essais, les sept du fichier de la relance en plus
+MIN_ESSAIS=242
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
 j() { mkdir -p "$X" 2> /dev/null; printf '%s B5F %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
 # >>> arguments (extrait et joué par tests/test_amorce_b5f_formation_v1.py)
