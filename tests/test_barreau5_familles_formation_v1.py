@@ -1030,23 +1030,24 @@ def test_registre_scellement_code_et_accord_cas_sain_et_artefacts(tmp_path):
 
 def test_registre_relance_unique_cas_sain_et_artefacts(tmp_path):
     """Constat M-5 : GO-RELANCE-FORMATION-B5F cite l'accord et les instances relancées, après GO-FORMATION-B5F. Additif 1
-    (code v2) : elle exige CODE-RELANCE-FORMATION-B5F, et son accord est celui de GO-FORMATION-B5F."""
+    (code v2) : son accord est celui de GO-FORMATION-B5F, sa référence porte le commit du code des relances, et elle ne
+    cite que des instances tombées."""
     code = en.ligne_du_registre("CODE-FORMATION-B5F", "2026-11-22T18:00:00Z", "commit " + "a" * 40 + " ; entropie 1", "")
     go = en.ligne_du_registre("GO-FORMATION-B5F", "2026-11-22T19:00:00Z", "GO-2026-11-22-01", "")
-    code_relance = en.ligne_du_registre("CODE-RELANCE-FORMATION-B5F", "2026-11-24T08:00:00Z", "commit " + "b" * 40, "")
 
     def relance(contenu, instant="2026-11-25T08:00:00Z"):
-        return en.ligne_du_registre("GO-RELANCE-FORMATION-B5F", instant, contenu, "")
+        return en.ligne_du_registre("GO-RELANCE-FORMATION-B5F", instant, contenu,
+                                    "essai ; code des relances commit " + "b" * 40)
 
-    lu = fv.lire_code_et_accord(_registre(tmp_path, [_scellement(), code, go, code_relance,
-                                                     relance("GO-2026-11-22-01 ; instances 3,6")]))
-    assert lu["relance"] == {"go_id": "GO-2026-11-22-01", "instances": [3, 6], "commit": "b" * 40}
+    lu = fv.lire_code_et_accord(_registre(tmp_path, [_scellement(), code, go,
+                                                     relance("GO-2026-11-22-01 ; instances 3,7")]))
+    assert lu["relance"] == {"go_id": "GO-2026-11-22-01", "instances": [3, 7], "commit": "b" * 40}
     assert (lu["commit"], lu["entropie"]) == ("a" * 40, 1)              # le code et l'entropie des premières marches restent
     for ligne, motif in ((relance("GO-2026-11-22-01 ; instances 3,3"), "deux fois"),
                          (relance("GO-2026-11-22-01 ; instances 8"), "illisible"),
                          (relance("GO-2026-11-22-01 ; instances 3", "2026-11-22T18:30:00Z"), "avant GO-FORMATION")):
         with pytest.raises(GardeArret, match=motif):
-            fv.lire_code_et_accord(_registre(tmp_path, [_scellement(), code, go, code_relance, ligne]))
+            fv.lire_code_et_accord(_registre(tmp_path, [_scellement(), code, go, ligne]))
     c = dict(_config_reelle(), instance=3, familles=["T05-x1", "T06-x1"], relance=True, go_id="GO-2026-11-22-01",
              coupure_usd=26.0)
     fv.exiger_registre_et_configuration(lu, c)
@@ -1064,16 +1065,16 @@ def test_registre_relance_bornee_six_instances_et_enveloppe_de_147_usd(tmp_path,
     l'autre passe."""
     code = en.ligne_du_registre("CODE-FORMATION-B5F", "2026-11-22T18:00:00Z", "commit " + "a" * 40 + " ; entropie 1", "")
     go = en.ligne_du_registre("GO-FORMATION-B5F", "2026-11-22T19:00:00Z", "GO-2026-11-22-01", "")
-    code_relance = en.ligne_du_registre("CODE-RELANCE-FORMATION-B5F", "2026-11-24T08:00:00Z", "commit " + "b" * 40, "")
 
     def lire(instances, membres=3):
         relance = en.ligne_du_registre("GO-RELANCE-FORMATION-B5F", "2026-11-25T08:00:00Z",
-                                       f"GO-2026-11-22-01 ; instances {instances}", "")
+                                       f"GO-2026-11-22-01 ; instances {instances}",
+                                       "essai ; code des relances commit " + "b" * 40)
         return fv.lire_code_et_accord(_registre(tmp_path, [_scellement(membres=membres, piece="famille"), code, go,
-                                                           code_relance, relance]))
+                                                           relance]))
 
     # sains, à trois membres : les six instances tombées, 5 × 26 + 17 = 147, juste à l'enveloppe ; puis des parties
-    for instances in ("1,2,3,4,5,7", "1,2,7", "6,1", "6,7", "6"):
+    for instances in ("1,2,3,4,5,7", "1,2,7", "7,1", "7"):
         assert lire(instances)["relance"]["instances"] == [int(x) for x in instances.split(",")]
     assert lire("1,2,3,4,5,7", membres=2)["relance"]["instances"] == [1, 2, 3, 4, 5, 7]     # 5 × 26 + 15 = 145
     with pytest.raises(GardeArret, match="7 instances citées, 6 au plus"):
@@ -1086,7 +1087,8 @@ def test_registre_relance_bornee_six_instances_et_enveloppe_de_147_usd(tmp_path,
     monkeypatch.setattr(fv, "COUPURES_TROIS_MEMBRES_USD", {6: 10.0, 7: 10.0})             # compte des instances refuse
     with pytest.raises(GardeArret, match="7 instances citées, 6 au plus"):
         lire("1,2,3,4,5,6,7")
-    assert lire("1,2,3,4,5,6")["relance"]["instances"] == [1, 2, 3, 4, 5, 6]                # six instances : le compte passe
+    with pytest.raises(GardeArret, match="instance non tombée citée"):                     # six instances : le compte et
+        lire("1,2,3,4,5,6")                                                                  # l'enveloppe passent, l'instance 6 non
     monkeypatch.setattr(fv, "COUPURES_USD", {n: 74.0 for n in fv.PLAN_INSTANCES})          # deux fois 74 > 147 : la seule
     with pytest.raises(GardeArret, match="coupures des instances citées 148 USD > enveloppe de relance 147 USD"):
         lire("1,2")                                                                          # enveloppe refuse

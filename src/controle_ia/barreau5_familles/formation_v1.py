@@ -108,11 +108,16 @@ PLAFOND_USD = 200.0
 # GO-2026-11-20-51 ; code v2) : à l'inscription de la ligne GO-RELANCE-FORMATION-B5F, six instances au plus, 147 USD de
 # coupures au plus (cinq fois 26, plus 17) ; la ligne cite l'accord de GO-FORMATION-B5F, et la dépense d'une relance entre
 # sous le plafond commun de cet accord ; en cours de marche, deux compteurs : la coupure de l'instance qu'elle remplace,
-# et le plafond commun. Le code d'une relance est celui du commit de la ligne CODE-RELANCE-FORMATION-B5F ; l'entropie
-# reste celle de CODE-FORMATION-B5F
+# et le plafond commun. Seules les instances tombées le 20 novembre 2026 se citent (1, 2, 3, 4, 5 et 7 ; l'instance 6,
+# finie et versée, jamais). Aucune clé neuve au registre (le code de lecture, figé à CODE-LECTURE-B5F, refuserait le
+# registre entier) : le code d'une relance est le commit que porte, une seule fois, la colonne de référence de la ligne
+# de relance, « code des relances commit <40 signes> » ; il descend du commit de CODE-FORMATION-B5F et en diffère ;
+# l'entropie reste celle de CODE-FORMATION-B5F
 RELANCES_MAX = 6
 ENVELOPPE_RELANCE_USD = 147.0
-CLE_CODE_RELANCE = "CODE-RELANCE-FORMATION-B5F"
+INSTANCES_TOMBEES = (1, 2, 3, 4, 5, 7)
+MENTION_CODE_RELANCE = "code des relances"
+CLE_CODE_RELANCE = "GO-RELANCE-FORMATION-B5F (code des relances)"       # nom de la ligne dans les messages de refus
 QUART_D_HEURE_H = 0.25
 ETIQUETTE = "b5f-formation-v1-{n}"
 TACHES_PAR_PLI = 16
@@ -1011,6 +1016,7 @@ def exiger_versement(racine: Path, inventaire: Path, commit: str) -> dict:
 _SCELLEMENT = re.compile(r"(?P<texte>prereg/[A-Za-z0-9._-]+\.md) ; sha256 (?P<sha>[0-9a-f]{64}) ; "
                          r"membres-apprentissage (?P<membres>[23]) ; piece (?P<piece>famille|instance)")
 _RELANCE = re.compile(r"(?P<go>GO-\d{4}-\d{2}-\d{2}-\d{2}) ; instances (?P<instances>[1-7](?:,[1-7])*)")
+_CODE_RELANCE_REF = re.compile(r"(?:^|; )code des relances commit ([0-9a-f]{40})(?= ;|$)")
 
 
 def lire_code_et_accord(registre: Path | None, texte: str | None = None) -> dict:
@@ -1020,12 +1026,13 @@ def lire_code_et_accord(registre: Path | None, texte: str | None = None) -> dict
       qui contient « brouillon » est refusé (un texte scellé comme brouillon n'est pas le préenregistrement) ;
     - `CODE-FORMATION-B5F` : « commit <40> ; entropie <entier de 128 bits au plus> » ;
     - `GO-FORMATION-B5F` : « GO-AAAA-MM-JJ-NN », postérieure à `CODE-FORMATION-B5F` ;
-    - `CODE-RELANCE-FORMATION-B5F`, facultative (additif 1) : « commit <40> », postérieure à `GO-FORMATION-B5F` : le
-      commit du code que jouent les relances ; elle ne porte aucune entropie, et ne change rien aux premières marches ;
     - `GO-RELANCE-FORMATION-B5F`, facultative (constat M-5) : « GO-AAAA-MM-JJ-NN ; instances <n>[,<m>…] », postérieure à
-      `GO-FORMATION-B5F` et à `CODE-RELANCE-FORMATION-B5F`, qu'elle exige : la relance unique des instances tombées
-      citées ; l'accord est celui de `GO-FORMATION-B5F` (compteur commun) ; six instances au plus, et la somme de leurs
-      coupures (selon le nombre de membres de SCELLEMENT-B5F) au plus de 147 USD (additif 1) : sinon refus, nœud."""
+      `GO-FORMATION-B5F` : la relance unique des instances tombées citées ; l'accord est celui de `GO-FORMATION-B5F`
+      (compteur commun) ; six instances au plus, la somme de leurs coupures (selon le nombre de membres de
+      SCELLEMENT-B5F) au plus de 147 USD, et aucune autre instance que les instances tombées 1, 2, 3, 4, 5 et 7
+      (additif 1) : sinon refus, nœud. Sa colonne de référence porte, une et une seule fois, « code des relances commit
+      <40 signes> », entre « ; » ou aux bords : le commit du code que jouent les relances, différent de celui de
+      `CODE-FORMATION-B5F`. Aucune clé neuve : les autres lecteurs du registre lisent cette ligne par son contenu."""
     lignes = lire_registre(registre) if texte is None else lignes_du_registre(texte)
     exigees = ("SCELLEMENT-B5F", "CODE-FORMATION-B5F", "GO-FORMATION-B5F")
     if any(c not in lignes for c in exigees):
@@ -1045,15 +1052,6 @@ def lire_code_et_accord(registre: Path | None, texte: str | None = None) -> dict
         raise GardeArret("GO-FORMATION-B5F avant CODE-FORMATION-B5F")
     if not lignes["SCELLEMENT-B5F"]["instant"] < lignes["GO-FORMATION-B5F"]["instant"]:
         raise GardeArret("GO-FORMATION-B5F avant SCELLEMENT-B5F : aucune formation avant le texte scellé (R1)")
-    code_relance = None
-    if CLE_CODE_RELANCE in lignes:
-        cr = re.fullmatch(r"commit ([0-9a-f]{40})", lignes[CLE_CODE_RELANCE]["contenu"])
-        if cr is None:
-            raise GardeArret(f"registre propre : contenu de {CLE_CODE_RELANCE} illisible (« commit <40 signes> », sans "
-                             "entropie : celle de CODE-FORMATION-B5F sert)")
-        if not lignes["GO-FORMATION-B5F"]["instant"] < lignes[CLE_CODE_RELANCE]["instant"]:
-            raise GardeArret(f"{CLE_CODE_RELANCE} avant GO-FORMATION-B5F")
-        code_relance = cr.group(1)
     relance = None
     if "GO-RELANCE-FORMATION-B5F" in lignes:
         r = _RELANCE.fullmatch(lignes["GO-RELANCE-FORMATION-B5F"]["contenu"])
@@ -1064,11 +1062,6 @@ def lire_code_et_accord(registre: Path | None, texte: str | None = None) -> dict
             raise GardeArret("GO-RELANCE-FORMATION-B5F : instance citée deux fois")
         if not lignes["GO-FORMATION-B5F"]["instant"] < lignes["GO-RELANCE-FORMATION-B5F"]["instant"]:
             raise GardeArret("GO-RELANCE-FORMATION-B5F avant GO-FORMATION-B5F")
-        if code_relance is None:
-            raise GardeArret(f"GO-RELANCE-FORMATION-B5F sans {CLE_CODE_RELANCE} : le code des relances n'est pas figé "
-                             "(additif 1)")
-        if not lignes[CLE_CODE_RELANCE]["instant"] < lignes["GO-RELANCE-FORMATION-B5F"]["instant"]:
-            raise GardeArret(f"GO-RELANCE-FORMATION-B5F avant {CLE_CODE_RELANCE}")
         if r["go"] != a.group(1):
             raise GardeArret(f"GO-RELANCE-FORMATION-B5F cite {r['go']} ≠ accord de GO-FORMATION-B5F {a.group(1)} : la "
                              "relance entre sous le plafond commun de cet accord (additif 1)")
@@ -1079,7 +1072,19 @@ def lire_code_et_accord(registre: Path | None, texte: str | None = None) -> dict
         if somme > ENVELOPPE_RELANCE_USD:
             raise GardeArret(f"GO-RELANCE-FORMATION-B5F : coupures des instances citées {somme:g} USD > enveloppe de "
                              f"relance {ENVELOPPE_RELANCE_USD:g} USD (texte, borne de la relance ; additif 1) : nœud")
-        relance = {"go_id": r["go"], "instances": instances, "commit": code_relance}
+        if not set(instances) <= set(INSTANCES_TOMBEES):
+            raise GardeArret(f"GO-RELANCE-FORMATION-B5F : instance non tombée citée "
+                             f"{sorted(set(instances) - set(INSTANCES_TOMBEES))} ; seules {list(INSTANCES_TOMBEES)} le "
+                             "sont (additif 1, C1) : nœud")
+        ref = lignes["GO-RELANCE-FORMATION-B5F"]["ref"]
+        cr = _CODE_RELANCE_REF.findall(ref)
+        if ref.count(MENTION_CODE_RELANCE) != 1 or len(cr) != 1:
+            raise GardeArret("GO-RELANCE-FORMATION-B5F : la référence porte une et une seule mention « code des relances "
+                             "commit <40 signes> » (additif 1) : le code des relances n'est pas figé")
+        if cr[0] == m.group(1):
+            raise GardeArret("GO-RELANCE-FORMATION-B5F : le code des relances est celui des premières marches "
+                             "(CODE-FORMATION-B5F ; additif 1)")
+        relance = {"go_id": r["go"], "instances": instances, "commit": cr[0]}
     return {"commit": m.group(1), "entropie": int(m.group(2)), "go_id": a.group(1), "texte": s["texte"],
             "texte_sha256": s["sha"], "membres_apprentissage": int(s["membres"]), "piece": s["piece"],
             "relance": relance}
@@ -1111,9 +1116,9 @@ def exiger_registre_et_configuration(lu: dict, config: dict) -> None:
 
 
 def commit_du_code(lu: dict, relance: bool) -> tuple[str, str]:
-    """Additif 1 : (commit, clé) du code figé que joue une marche. Première marche : le commit de `CODE-FORMATION-B5F`.
-    Relance : le commit de `CODE-RELANCE-FORMATION-B5F`, que la ligne de relance exige ; sans ligne de relance, refus.
-    L'entropie, elle, est toujours celle de `CODE-FORMATION-B5F`."""
+    """Additif 1 : (commit, nom de la ligne) du code figé que joue une marche. Première marche : le commit de
+    `CODE-FORMATION-B5F`. Relance : le commit « code des relances » de la référence de `GO-RELANCE-FORMATION-B5F` ; sans
+    ligne de relance, refus. L'entropie, elle, est toujours celle de `CODE-FORMATION-B5F`."""
     if not isinstance(relance, bool):
         raise GardeArret("relance : vrai ou faux attendu, aucun défaut")
     if not relance:
@@ -1123,10 +1128,24 @@ def commit_du_code(lu: dict, relance: bool) -> tuple[str, str]:
     return lu["relance"]["commit"], CLE_CODE_RELANCE
 
 
+def exiger_filiation_du_code_des_relances(racine: Path, lu: dict) -> None:
+    """Additif 1 : le code des relances descend du code des premières marches (le commit de `CODE-FORMATION-B5F` est un
+    ancêtre du commit « code des relances » de la ligne de relance) ; commit absent du dépôt : refus aussi."""
+    import subprocess
+
+    if lu["relance"] is None:
+        raise GardeArret("relance non accordée (GO-RELANCE-FORMATION-B5F absente) : aucun code de relance")
+    v1, v2 = lu["commit"], lu["relance"]["commit"]
+    a = subprocess.run(["git", "-C", str(racine), "merge-base", "--is-ancestor", v1, v2], capture_output=True)
+    if a.returncode != 0:
+        raise GardeArret(f"code des relances {v2[:12]} : ne descend pas du code de CODE-FORMATION-B5F {v1[:12]}, ou "
+                         "commit absent (additif 1)")
+
+
 def exiger_code_au_commit(racine: Path, commit: str, cible: str = "HEAD", cle: str = "CODE-FORMATION-B5F") -> None:
     """L'arbre gelé (même définition que les chaînes précédentes) de `cible` est celui du commit de la ligne `cle`
-    (`CODE-FORMATION-B5F`, ou `CODE-RELANCE-FORMATION-B5F` pour une relance), et ce commit en est un ancêtre (ou
-    lui-même)."""
+    (`CODE-FORMATION-B5F`, ou, pour une relance, le code des relances de `GO-RELANCE-FORMATION-B5F`), et ce commit en
+    est un ancêtre (ou lui-même)."""
     import subprocess
 
     a = subprocess.run(["git", "-C", str(racine), "merge-base", "--is-ancestor", commit, cible], capture_output=True)
@@ -1181,6 +1200,8 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None = None,
         exiger_texte_du_registre(lu, texte, empreinte(racine / texte))
         exiger_registre_et_configuration(lu, config)
         code, cle = commit_du_code(lu, config["relance"])
+        if config["relance"]:
+            exiger_filiation_du_code_des_relances(racine, lu)
         exiger_code_au_commit(racine, code, cle=cle)
         entropie = lu["entropie"]
     elif entropie is None:
@@ -1476,8 +1497,9 @@ def commande_de_creation(racine: Path, n: int, offre_json: Path, commit: str, br
     hors des bornes du devis ; commit, branche, texte ou identifiant de marche illisibles ; registre propre au commit de la
     course sans SCELLEMENT-B5F, CODE-FORMATION-B5F ou accord (GO-FORMATION-B5F, ou GO-RELANCE-FORMATION-B5F qui cite n) ;
     texte autre que celui de SCELLEMENT-B5F ou d'une autre empreinte (constat M-3) ; code du commit de la course ou de
-    l'arbre de travail de la session différent de celui de CODE-FORMATION-B5F (constat m-9), ou, pour une relance, de
-    celui de CODE-RELANCE-FORMATION-B5F (additif 1) ; amorce absente ;
+    l'arbre de travail de la session différent de celui de CODE-FORMATION-B5F (constat m-9), ou, pour une relance, du
+    code des relances que cite la référence de GO-RELANCE-FORMATION-B5F, lequel descend du premier (additif 1) ; amorce
+    absente ;
     configuration de l'instance refusée ; garde de calcul qui bloquerait la commande. Clés passées par leur nom : le
     shell de la session qui joue la ligne donne leur valeur au loueur (constat M-1) ; aucune valeur n'est écrite ici."""
     import base64
@@ -1494,6 +1516,8 @@ def commande_de_creation(racine: Path, n: int, offre_json: Path, commit: str, br
         raise GardeArret(f"identifiant de marche AAAAMMJJ-HHMMSS-b5f-formation-{n}{suffixe} attendu")
     lu = registre_au_commit(racine, commit)
     code, cle = commit_du_code(lu, bool(relance))
+    if relance:
+        exiger_filiation_du_code_des_relances(racine, lu)
     exiger_code_au_commit(racine, code, commit, cle)
     exiger_code_de_la_session(racine, code, cle)
     tx = subprocess.run(["git", "-C", str(racine), "show", f"{commit}:{prereg}"], capture_output=True)

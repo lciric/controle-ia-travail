@@ -20,11 +20,12 @@
 #                                 ($HF_TOKEN, $GH_TOKEN) : le shell qui joue la ligne en donne la valeur au loueur ;
 #   relance  RACINE N OFFRE.json COMMIT BRANCHE_CODE PREREG RUN_ID
 #                                 relance unique d'une instance tombée (calendrier du texte, additif 1) : mêmes contrôles,
-#                                 mais le code est celui de CODE-RELANCE-FORMATION-B5F ; accord GO-RELANCE-FORMATION-B5F
-#                                 qui cite l'instance N (GO_ID égal, et égal à celui de GO-FORMATION-B5F ; la ligne cite
-#                                 six instances au plus, et 147 USD de coupures au plus, sinon refus), RUN_ID et familles
-#                                 suffixés « -x1 » (graines neuves), branche de sortie …-instance-N-x1 ; la première copie
-#                                 est versée et jamais lue ;
+#                                 mais le code est le « code des relances commit <40 signes> » que porte, une seule fois,
+#                                 la référence de GO-RELANCE-FORMATION-B5F (il descend du code de CODE-FORMATION-B5F et en
+#                                 diffère ; aucune clé neuve au registre) ; cette ligne cite l'instance N (GO_ID égal, et
+#                                 égal à celui de GO-FORMATION-B5F ; six instances au plus, parmi 1, 2, 3, 4, 5 et 7, et
+#                                 147 USD de coupures au plus, sinon refus), RUN_ID et familles suffixés « -x1 » (graines
+#                                 neuves), branche de sortie …-instance-N-x1 ; la première copie n'est jamais lue ;
 #   config RACINE N PRIX_USD_H COMMIT RELANCE
 #                                 imprime la configuration réelle de l'instance N (recette scellée, plan, coupure, prix,
 #                                 membres et pièce lus dans SCELLEMENT-B5F au commit COMMIT ; RELANCE : 0 ou 1) ;

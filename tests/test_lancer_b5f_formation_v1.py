@@ -48,12 +48,31 @@ def _registre_propre(r, code_commit, go=GO, membres=2, piece="instance", texte=P
     lignes = (lignes if scellement else []) + [
         en.ligne_du_registre("CODE-FORMATION-B5F", "2026-11-22T18:00:00Z", f"commit {code_commit} ; entropie 7", ""),
         en.ligne_du_registre("GO-FORMATION-B5F", "2026-11-22T19:00:00Z", go, "")]
-    if relance or code_relance:                   # additif 1 : le code des relances, par défaut celui des premières marches
-        lignes.append(en.ligne_du_registre("CODE-RELANCE-FORMATION-B5F", "2026-11-24T08:00:00Z",
-                                           f"commit {code_relance or code_commit}", ""))
-    if relance:
-        lignes.append(en.ligne_du_registre("GO-RELANCE-FORMATION-B5F", "2026-11-25T08:00:00Z", relance, ""))
+    if relance:                                   # additif 1 : le code des relances, dans la référence de la ligne de relance
+        lignes.append(en.ligne_du_registre("GO-RELANCE-FORMATION-B5F", "2026-11-25T08:00:00Z", relance,
+                                           f"essai ; code des relances commit {code_relance}"))
     (r / fv.REGISTRE_PROPRE).write_text("\n".join(lignes) + "\n", encoding="utf-8")
+
+
+def _code_v1(r):
+    """Le commit du code des premières marches : le premier commit du dépôt jetable."""
+    return _git(r, "rev-list", "--max-parents=0", "HEAD")
+
+
+def _code_v2(r):
+    """Le commit du code des relances : le code v1 plus un fichier ; créé une fois, descendant du code v1."""
+    if not (r / "src" / "v2.py").is_file():
+        (r / "src").mkdir(exist_ok=True)
+        (r / "src" / "v2.py").write_text("V = 2\n", encoding="utf-8")
+        _git(r, "add", "-A")
+        _git(r, "commit", "-q", "-m", "code v2")
+    return _git(r, "log", "-1", "--format=%H", "--", "src/v2.py")
+
+
+def _course_de_relance(r, relance, **registre):
+    """Course d'une relance : code v1 pour les premières marches, code v2 (fils) pour les relances."""
+    registre.setdefault("code_relance", _code_v2(r))
+    return _course(r, code=_code_v1(r), relance=relance, **registre)
 
 
 def _course(r, **registre):
@@ -198,7 +217,7 @@ def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
     elif cas == "session_modifiee":                  # constat m-9 : l'arbre de travail de la session n'est pas le code figé
         (r / fv.AMORCE).write_text("#!/usr/bin/env bash\necho amorce retouchée\n", encoding="utf-8")
     elif cas == "relance_sept_instances":            # additif 1 : la ligne de relance cite six instances au plus
-        course = _course(r, membres=3, piece="famille", relance=f"{GO} ; instances 1,2,3,4,5,6,7")
+        course = _course_de_relance(r, f"{GO} ; instances 1,2,3,4,5,6,7", membres=3, piece="famille")
     else:
         o = dict(OFFRE)
         o.update({"offre_chere": {"dph_total": 1.35}, "offre_carte": {"gpu_name": "H100 SXM5"},
@@ -211,7 +230,7 @@ def test_commande_artefacts_aucune_commande_de_creation(racine, cas):
               "instance": "hors du plan", "offre_chere": "dph_total", "offre_carte": "carte", "offre_cuda": "cuda_max_good",
               "run": "identifiant de marche", "sans_scellement": "SCELLEMENT-B5F", "autre_texte": "texte cité",
               "autre_empreinte": "empreinte du texte", "brouillon": "brouillon", "texte_absent": "absent du commit",
-              "session_modifiee": "arbre de travail de la session", "relance_sept_instances": "7 instances citées"}
+              "session_modifiee": "arbre de travail de la session", "relance_sept_instances": "7 instances citées, 6 au plus"}
     assert p.returncode == 2 and "vastai create" not in p.stdout
     assert motifs[cas] in p.stderr, p.stderr
 
@@ -232,7 +251,7 @@ def test_relance_unique_cas_sain_et_artefacts(racine):
     marche suffixée « -x1 » ; la commande porte RELANCE_B5F=1. Additif 1 (code v2) : l'accord de la ligne de relance est
     celui de GO-FORMATION-B5F ; les six instances tombées sont citées d'un coup."""
     r, _ = racine
-    course = _course(r, membres=3, piece="famille", relance=f"{GO} ; instances 1,2,3,4,5,7")
+    course = _course_de_relance(r, f"{GO} ; instances 1,2,3,4,5,7", membres=3, piece="famille")
     run = RUN + "-x1"
     p = _lancer(*_commande(r, course, run=run, sous="relance"), go=GO)
     assert p.returncode == 0, p.stderr
@@ -245,36 +264,56 @@ def test_relance_unique_cas_sain_et_artefacts(racine):
                             (_commande(r, course, run=run), GO, "identifiant de marche")):
         p = _lancer(*args, go=go)
         assert p.returncode == 2 and motif in p.stderr, (motif, p.stderr)
-    sans = _course(r)
+    sans = _course(r, code=_code_v1(r))
     p = _lancer(*_commande(r, sans, run=run, sous="relance"), go=GO)
     assert p.returncode == 2 and "non accordée" in p.stderr, p.stderr
-    autre = _course(r, relance=f"{GO_RELANCE} ; instances 3,5")       # un autre accord que celui de GO-FORMATION-B5F
+    autre = _course_de_relance(r, f"{GO_RELANCE} ; instances 3,5")    # un autre accord que celui de GO-FORMATION-B5F
     p = _lancer(*_commande(r, autre, run=run, sous="relance"), go=GO_RELANCE)
     assert p.returncode == 2 and "≠ accord de GO-FORMATION-B5F" in p.stderr, p.stderr
+    six = _course_de_relance(r, f"{GO} ; instances 3,6")              # l'instance 6 n'est pas tombée
+    p = _lancer(*_commande(r, six, run=run, sous="relance"), go=GO)
+    assert p.returncode == 2 and "instance non tombée citée" in p.stderr, p.stderr
 
 
 def test_relance_au_code_de_la_ligne_code_relance_cas_sain_et_artefacts(racine):
-    """Additif 1 (code v2) : le code d'une relance est celui du commit de CODE-RELANCE-FORMATION-B5F, celui d'une première
-    marche reste celui de CODE-FORMATION-B5F. Monde : code v1, puis code v2 (un fichier de plus), puis la course."""
+    """Additif 1 (code v2) : le code d'une relance est le « code des relances » que cite la référence de la ligne de
+    relance, fils du code de CODE-FORMATION-B5F ; celui d'une première marche reste celui de CODE-FORMATION-B5F. Monde :
+    code v1, puis code v2 (un fichier de plus), puis la course."""
     r, _ = racine
-    v1 = _git(r, "rev-parse", "HEAD~1")
-    (r / "src").mkdir()
-    (r / "src" / "v2.py").write_text("V = 2\n")
-    _git(r, "add", "-A")
-    _git(r, "commit", "-q", "-m", "code v2")
-    v2 = _git(r, "rev-parse", "HEAD")
+    v1, v2 = _code_v1(r), _code_v2(r)
     run = RUN + "-x1"
-    course = _course(r, code=v1, code_relance=v2, relance=f"{GO} ; instances 3,5")
+    course = _course_de_relance(r, f"{GO} ; instances 3,5")
     p = _lancer(*_commande(r, course, run=run, sous="relance"), go=GO)
     assert p.returncode == 0 and "RELANCE_B5F=1" in p.stdout, p.stderr
     p = _lancer(*_commande(r, course), go=GO)                         # une première marche ne joue pas le code v2
     assert p.returncode == 2 and f"celui de CODE-FORMATION-B5F {v1[:12]}" in p.stderr, p.stderr
-    ancien = _course(r, code=v1, code_relance=v1, relance=f"{GO} ; instances 3,5")
-    p = _lancer(*_commande(r, ancien, run=run, sous="relance"), go=GO)            # la ligne cite le code v1 : refus
-    assert p.returncode == 2 and f"celui de CODE-RELANCE-FORMATION-B5F {v1[:12]}" in p.stderr, p.stderr
+    ancien = _course_de_relance(r, f"{GO} ; instances 3,5", code_relance=v1)      # la ligne cite le code v1 : refus
+    p = _lancer(*_commande(r, ancien, run=run, sous="relance"), go=GO)
+    assert p.returncode == 2 and "celui des premières marches" in p.stderr, p.stderr
+    sans = _course_de_relance(r, f"{GO} ; instances 3,5", code_relance="")        # référence sans commit : refus
+    p = _lancer(*_commande(r, sans, run=run, sous="relance"), go=GO)
+    assert p.returncode == 2 and "une et une seule mention" in p.stderr, p.stderr
+    branche = _git(r, "rev-parse", "--abbrev-ref", "HEAD")
+    _git(r, "checkout", "-q", "-b", "cote", v1)                                    # fils du code v1, mais autre code
+    (r / "src").mkdir(exist_ok=True)
+    (r / "src" / "cote.py").write_text("C = 1\n", encoding="utf-8")
+    _git(r, "add", "-A")
+    _git(r, "commit", "-q", "-m", "code de côté")
+    cote = _git(r, "rev-parse", "HEAD")
+    _git(r, "checkout", "-q", "--orphan", "ailleurs")                              # code d'une autre lignée
+    _git(r, "commit", "-q", "-m", "autre lignée")
+    orphelin = _git(r, "rev-parse", "HEAD")
+    _git(r, "checkout", "-q", branche)
+    for autre, motif in (("d" * 40, "ne descend pas du code de CODE-FORMATION-B5F"),              # commit absent
+                         (orphelin, "ne descend pas du code de CODE-FORMATION-B5F"),
+                         (cote, f"celui de GO-RELANCE-FORMATION-B5F (code des relances) {cote[:12]}")):
+        mauvais = _course_de_relance(r, f"{GO} ; instances 3,5", code_relance=autre)
+        p = _lancer(*_commande(r, mauvais, run=run, sous="relance"), go=GO)
+        assert p.returncode == 2 and motif in p.stderr, (motif, p.stderr)
     (r / fv.AMORCE).write_text("#!/usr/bin/env bash\necho amorce retouchée\n", encoding="utf-8")
     p = _lancer(*_commande(r, course, run=run, sous="relance"), go=GO)            # session qui ne joue pas le code v2
-    assert p.returncode == 2 and "différent du code de CODE-RELANCE-FORMATION-B5F" in p.stderr, p.stderr
+    assert (p.returncode == 2
+            and "différent du code de GO-RELANCE-FORMATION-B5F (code des relances)" in p.stderr), p.stderr
 
 
 def test_config_reelle_de_chaque_instance_cas_sain_et_artefacts(racine):
