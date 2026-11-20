@@ -42,3 +42,4 @@
 | CONFIGURATION-A-MASQUE-REJEU-JUGE-V9 | 2026-11-20T06:13:56Z | prereg/organisme-auto-conception-v9/juge-selection/rejeu-v1/configuration-a-masque-v1.json | 8a8548d1444bfe3ab85396b3913c2d1b018a32541e9a283bd3f9b517a6332ce4 |
 | CONFIGURATION-B-LECTEUR-REJEU-JUGE-V9 | 2026-11-20T06:13:56Z | prereg/organisme-auto-conception-v9/juge-selection/rejeu-v1/configuration-b-lecteur-v1.json | b44371d235292623e2c51fdd31a68bbabae5402774d5e99860b5a6b90ebdaa6a |
 | PIECE-SCELLEMENT-MANIFESTE-REJEU-JUGE-V9 | 2026-11-20T06:13:56Z | prereg/organisme-auto-conception-v9/juge-selection/rejeu-v1/piece-scellement-manifeste-rejeu-v1.md | 9e46ac3be599992678670e6728a057c1670bdd23de628ba94d286dbacaa6e2ad |
+| EPREUVE-VERITE-PLANTEE-B5-VERITES-PASSAGE-1 | 2026-11-20T07:47:35Z | /dev/shm/b5f-epreuve-v1/verites/verites-epreuve-v1.json (24 431 744 octets, hors du dépôt, versé par l'ouvreur) | 3eb337434a5d0652bbb4a109175616456a9383a69915050892e93a5d7d2f63a6 |
