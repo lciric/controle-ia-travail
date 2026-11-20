@@ -6,7 +6,7 @@
 
 - **L'amorce de l'instance de lecture est écrite** (`scripts/amorce_b5f_lecture_v1.sh`, fichier neuf), avec, côté session, la commande de création imprimée par le lanceur, la commande de destruction après preuve du versement et le contenu de la ligne `SCORES-B5F`. Essais neufs : blocs de l'amorce (50) et amorce entière à blanc (4), cas sain et artefacts.
 - **Les corrections de la contre-lecture sont appliquées** : les quatre majeurs (M-1 à M-4) ; sur les huit mineurs, cinq corrigés (m-1, m-3, m-4, m-5, m-8), deux déclarés avec leur motif (m-6, m-7), un laissé tel quel pour l'additif (m-2) ; un essai neuf pour chacune des six mutations manquées (C1, C2, C3, C4, C5, C7), et un essai rapide pour C8 (m-8).
-- **Essais** : [ESSAIS] **Mutations v2** : [MUTATIONS]
+- **Essais** : les six fichiers de la lecture, **233 passés, aucun échec** ; les essais du paquet côté formation (édition du coût, engagement, formation), inchangés, **235 passés**. **Mutations v2** : 49 jouées au premier passage, 47 attrapées ; les deux manquées (A07, S03, les miennes) reçoivent un essai et sont attrapées au second passage ; les huit mutations du contre-lecteur et les seize corrections défaites sont toutes attrapées.
 - **Trois points ne sont pas corrigés**, comme demandé : le niveau d'une issue sous huit familles, la tâche sans coût lisible chez un seul membre, la valeur de « [borne] » dans la phrase E (section 5).
 
 ## 1. L'amorce de l'instance de lecture
@@ -24,7 +24,7 @@ Ce que le texte exige de l'instance, et où l'amorce le tient :
 | aucun score ni résumé dans les journaux | la marche n'imprime que des étapes, des comptes et l'empreinte de l'inventaire ; l'amorce n'écrit que des codes, des comptes, des commits et le contenu de `SCORES-B5F` ; le seul chemin par lequel un nombre tiré d'une sonde pouvait sortir (message du contrôle carte-processeur en échec) est fermé (m-3, section 3) ; les clés ne sont citées que par leur nom (essai à blanc : aucune valeur dans le journal, la sortie ni les fichiers poussés) |
 | versement des fichiers fermés et ligne `SCORES-B5F` | bloc `versement` : liste blanche (`permis`), fichiers fermés, poids, inventaires, manifeste, résultats et traces d'abord, puis les activations gardées (règle « une_sur_dix ») par lots de 900 Mo au plus ; le contenu de `SCORES-B5F` (« commit <40> ; inventaire sha256 <64> ») est écrit au journal pour la mère, qui le recontrôle par `lancer_b5f_lecture_v1.sh scores` avant de l'inscrire |
 
-Choix déclarés de l'amorce (sans texte qui les tranche) : disque de 150 Go pour la répétition générale (300 Go pour la relecture, devis, § 3) ; aucun versement pendant la marche (les fichiers fermés n'existent qu'à sa fin ; la marche est bornée par `timeout`, la minuterie veille à part ; attente par `wait` du seul processus lancé) ; règles de garde « trois_couches » et « couche_15 » : les activations vont sur le volume accordé (nœud 4), que l'amorce ne connaît pas, donc aucune destruction par la minuterie et un signal pour la mère ; deux aides réservées à l'essai à blanc (`B5F_VERSEMENT_S`, `B5F_MINUTERIE_UNE_FOIS`), refusées hors de lui. Rien n'est jamais supprimé.
+Choix déclarés de l'amorce (sans texte qui les tranche) : disque de 150 Go pour la répétition générale (300 Go pour la relecture, devis, § 3) ; aucun versement pendant la marche (les fichiers fermés n'existent qu'à sa fin ; la marche est bornée par `timeout`, la minuterie veille à part ; attente par `wait` du seul processus lancé) ; règles de garde « trois_couches » et « couche_15 » : les activations vont sur le volume accordé (nœud 4), que l'amorce ne connaît pas, donc aucune destruction par la minuterie et un signal pour la mère ; deux aides réservées à l'essai à blanc (`B5F_VERSEMENT_S`, `B5F_MINUTERIE_UNE_FOIS`), sans effet hors de lui (`AMORCE_ESSAI_BLANC=1` exigé). Rien n'est jamais supprimé.
 
 Côté session (`relecture_v1`, sous-commandes de `lancer_b5f_lecture_v1.sh`) : `commande` imprime la création (bornes du devis sur l'offre, échéance d'arrêt au prix de l'offre, registre au commit de la marche avec « maintenant » pour instant de création, code du commit égal à celui de `CODE-LECTURE-B5F`, texte scellé, amorce telle qu'au commit en base64, adaptateurs existants présents au commit avec leur empreinte, arbre extrait propre (m-5), commit des entrées sur leur branche distante, garde de calcul) ; `detruire` imprime la destruction par l'identifiant après preuve de l'étiquette et du versement ; `verifier-destruction` ; `scores`.
 
@@ -110,11 +110,13 @@ Le texte ne les tranche pas ; un additif écrit par Fable les fixera. Le code n'
 
 Commande (copie de travail du dépôt, temporaires sous `/dev/shm`) : `TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src .venv/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/<nom> <fichiers>`.
 
-[RESULTATS-ESSAIS]
+Sur l'état rendu ici, d'un seul passage : `tests/test_barreau5_familles_lecture_v1.py` (95), `…_sondes_v1.py` (18), `…_relecture_v1.py` (24), `tests/test_lancer_b5f_lecture_v1.py` (42), `tests/test_amorce_b5f_lecture_v1.py` (50), `tests/test_amorce_b5f_lecture_entiere_v1.py` (4) : **233 passés, aucun échec**, en 496 s. Côté formation, pour voir que rien n'y est cassé (code inchangé) : `tests/test_barreau5_familles_edition_cout_v1.py`, `…_engagement_v1.py`, `…_formation_v1.py` : **235 passés**. Les essais de l'amorce et du lanceur de la formation ne sont pas joués ici : leur essai du plancher compte tout le paquet et ne vaut que sur la branche de la course de formation (section 4).
 
 Mutations : `outils-developpeur-code-lecture-v1/mutations-code-lecture-v2.py`, même procédé qu'en v1 (copie de travail unique ; témoins sans mutation exigés verts ; « attrapée » si pytest rend 1 ; chaque « avant » trouvé une fois exactement). Sortie : `outils-developpeur-code-lecture-v1/sortie-mutations-code-lecture-v2.md`.
 
-[RESULTATS-MUTATIONS]
+- **Premier passage** : témoins verts ; **49 jouées, 47 attrapées, 2 manquées**, aucune introuvable ni erreur de l'outil. A01 à A13 (amorce) et S01 à S12 (session) : manquées A07 et S03. C1 à C8 (les mutations du contre-lecteur, rejouées telles quelles) : toutes attrapées, C8 par un essai rapide des sondes. K01 à K16 (chaque correction de la contre-lecture défaite) : toutes attrapées.
+- **A07** (témoin final sans la marche menée au bout) : l'essai du témoin ne faisait jamais manquer la seule marche ; il fait désormais manquer chacune des trois conditions à son tour. **S03** (code du commit de la marche non comparé) : dans l'artefact « code changé », la garde du code de la session refusait aussi ; cas ajouté où seule la marche porte le code changé.
+- **Second passage** (A07, S03, copie neuve, témoins verts) : **2 jouées, 2 attrapées**.
 
 Syntaxe : les fichiers Python changés compilent sous Python 3.11.18 (`verifier-syntaxe-v1.py`), l'amorce et le lanceur sous `bash -n`.
 
@@ -129,4 +131,22 @@ Syntaxe : les fichiers Python changés compilent sous Python 3.11.18 (`verifier-
 
 ## 8. Fichiers
 
-[FICHIERS]
+Empreintes sha256 de l'état rendu (code et essais : hors des dossiers scellés, cités ici par leur empreinte ; l'empreinte de `lecture_v1.py` est celle que porterait `CODE-LECTURE-B5F` si rien ne change plus) :
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/barreau5_familles/lecture_v1.py` | `d08591d135c2fb33895147c1a4d6d77295d2ee9bd6580a47eb5ea72872d1c079` |
+| `src/controle_ia/barreau5_familles/sondes_v1.py` | `083824ea42eb52ab4c99cc55d0e8801202f3d3996464644c0ed591f42f251d37` |
+| `src/controle_ia/barreau5_familles/relecture_v1.py` | `f0b80733b7d6b4e8f2158a55f02953028a521cc6752bfb465e5cae160a3b1b7b` |
+| `scripts/amorce_b5f_lecture_v1.sh` (neuf) | `e6e44228196d21590636ec3b86fdea2aa0a6a85a3d9e14b102f50102e4495ec3` |
+| `scripts/lancer_b5f_lecture_v1.sh` | `ae501c55754731cb539c7aa0c30d646a7c6df5f424c441b5cc3f033170aa2f1a` |
+| `tests/test_barreau5_familles_lecture_v1.py` | `49d800098434f5271bf395b6bea173c92bbd624bfe08b8be8fd2a6dd164b3b5c` |
+| `tests/test_barreau5_familles_sondes_v1.py` | `084652596999008ff45fc917a76f63a33bf440bb7fa98bc801e4c936bdc3da09` |
+| `tests/test_barreau5_familles_relecture_v1.py` | `92c3cbeaac7b350bfee8abe1a0d1bb170038e6879d7c9b162a32a7fcf30a5eb6` |
+| `tests/test_lancer_b5f_lecture_v1.py` | `de1d0d9f5828593b4f5a4af55192ac308da2e4267a18fddd5b2e7bf9826126c2` |
+| `tests/test_amorce_b5f_lecture_v1.py` (neuf) | `33ff281e3efd48ecb87bebb778faa7357e8e68b3e7ea53f925b43e41297ddbb2` |
+| `tests/test_amorce_b5f_lecture_entiere_v1.py` (neuf) | `551141b1d730b9425acc965b9a4aa4bcbca9d92125a0983db9efb9fbf9ed4f79` |
+| `…/code-lecture/outils-developpeur-code-lecture-v1/mutations-code-lecture-v2.py` (scellé) | `b302337e9b553c93df334ddfb9f5076cab6aa5ff695cc3ba2b055b53cd4c48bf` |
+| `…/code-lecture/outils-developpeur-code-lecture-v1/sortie-mutations-code-lecture-v2.md` (scellé) | `b97eab1caee963c441787d45efda6762a234f64494fe4f2e744e68183776d321` |
+
+Temporaires : copies de travail et dossiers des mutations effacés par leur chemin ; `/dev/shm/b5f-lecture-v2` effacé à la fin. Restent dans le bloc-notes de la session, sous `dev-code-lecture/`, les journaux et bilans bruts des essais et des mutations (états et durées seulement).
