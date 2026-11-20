@@ -54,22 +54,22 @@ Lignes : celles des fichiers dans l'état rendu ici. Chaque correction est défa
 
 | constat | fichier | lignes | essai qui l'attrape |
 |---|---|---|---|
-| M-1, sondes lues sous « non interprétable » | `lecture_v1.py` | [L-M1] | `test_non_interpretable_rien_n_est_lu_des_sondes` (K01) |
-| M-2, famille sans sur-saboteur dans M1 | `lecture_v1.py` | [L-M2] | `test_famille_sans_sur_saboteur_absente_de_toutes_les_epreuves`, étendu à M1 et M3 (neuf familles, seuil 1) (K02) |
-| M-3, la table sous un nom de compagnon | `lecture_v1.py` | [L-M3] | `test_compagnon_orphelin_ou_faux_dans_l_arbre_de_lecture_refus` : cas sain, `table.sha256`, `scores/notes.sha256`, compagnon d'un autre contenu (K03, K04) |
-| M-4, garde du code au commit sans essai | `lecture_v1.py` (inchangée) | [L-M4a] | `test_code_de_lecture_au_commit_cas_sains_et_artefacts` : trois cas sains, quatre artefacts, recette du sondage S4 (K15) |
-| M-4, `verifier_avant_creation` | `relecture_v1.py` | [L-M4b] | `tests/test_lancer_b5f_lecture_v1.py::test_verifier_avant_creation_cas_sain_et_artefacts` : cas sain, commit illisible, registre sans épreuve, registre absent, marche orpheline, arbre de travail changé (K16, S02) |
-| M-4, ouvreur sur la branche de la formation | `lecture_v1.py` (inchangés) | [L-M4c] | `test_preparer_depuis_une_branche_de_formation_fabriquee` : une marche, une famille, trois membres ; cas sain (coûts, marque des milliers, part non éditable, écritures, empreintes) ; copie `-x1` sans ligne de relance ; ligne de relance et première copie seule ; résultat « absente » ; ligne d'une autre copie (K12, K13, K14) |
+| M-1, sondes lues sous « non interprétable » | `lecture_v1.py` | 1231 à 1243 (`lire`) ; 914 à 917, 938, 953 (`descriptifs`) ; 1018 à 1027, 1062 (`audit_symetrie`) ; 1198 à 1199 (`phrases`) ; 1205 (`NON_LU`) | `test_non_interpretable_rien_n_est_lu_des_sondes` (K01) |
+| M-2, famille sans sur-saboteur dans M1 | `lecture_v1.py` | 752 à 758 (`manipulation`) | `test_famille_sans_sur_saboteur_absente_de_toutes_les_epreuves`, étendu à M1 et M3 (neuf familles, seuil 1) (K02) |
+| M-3, la table sous un nom de compagnon | `lecture_v1.py` | 342 à 354 (`exiger_arbre`) | `test_compagnon_orphelin_ou_faux_dans_l_arbre_de_lecture_refus` : cas sain, `table.sha256`, `scores/notes.sha256`, compagnon d'un autre contenu (K03, K04) |
+| M-4, garde du code au commit sans essai | `lecture_v1.py` (inchangée) | 465 à 481 | `test_code_de_lecture_au_commit_cas_sains_et_artefacts` : trois cas sains, quatre artefacts, recette du sondage S4 (K15) |
+| M-4, `verifier_avant_creation` | `relecture_v1.py` | 864 à 883 | `tests/test_lancer_b5f_lecture_v1.py::test_verifier_avant_creation_cas_sain_et_artefacts` : cas sain, commit illisible, registre sans épreuve, registre absent, marche orpheline, arbre de travail changé (K16, S02) |
+| M-4, ouvreur sur la branche de la formation | `lecture_v1.py` (inchangés) | 1335 à 1440 | `test_preparer_depuis_une_branche_de_formation_fabriquee` : une marche, une famille, trois membres ; cas sain (coûts, marque des milliers, part non éditable, écritures, empreintes) ; copie `-x1` sans ligne de relance ; ligne de relance et première copie seule ; résultat « absente » ; ligne d'une autre copie (K12, K13, K14) |
 | C1 | — (code juste) | — | `test_probabilites_rapportees_exactes_sur_un_cas_ecrit_a_la_main` (5/1024 et 1021/1024) |
 | C2 | — | — | `test_petits_ecarts_sans_separation_apprise_etablie_issue_n` |
 | C3 | — | — | `test_grand_ecart_negatif_sans_contraire_issue_n` |
 | C4 | — | — | `test_epreuve_inscrite_apres_les_scores_refus` |
 | C5 | — | — | `test_ouverture_d_une_autre_table_que_l_engagement_refus` |
 | C7 | — | — | `test_manipulation_sur_les_seules_taches_communes` |
-| m-1, niveau de 95 % dans la phrase ; « au plus » | `lecture_v1.py` | [L-m1] | `test_phrase_au_niveau_de_95_et_au_plus_au_niveau_de_e3` (K05, K06) |
+| m-1, niveau de 95 % dans la phrase ; « au plus » | `lecture_v1.py` | 1117 à 1118 ; 1186 à 1190 | `test_phrase_au_niveau_de_95_et_au_plus_au_niveau_de_e3` (K05, K06) |
 | m-2, « [borne] » de la phrase E | non corrigé | — | question à l'additif (section 5) |
-| m-3, écart mesuré écrit | `sondes_v1.py` | [L-m3] | `tests/test_barreau5_familles_sondes_v1.py::test_controle_carte_processeur_en_echec_sans_nombre_ecrit` (K07) |
-| m-4, « niveau non atteignable » sous six familles de M1 ou M3 | `lecture_v1.py` | [L-m4] | `test_manipulation_sous_six_familles_motif_niveau_non_atteignable` (K11) |
+| m-3, écart mesuré écrit | `sondes_v1.py` | 237 à 245 (`controle_carte`) | `tests/test_barreau5_familles_sondes_v1.py::test_controle_carte_processeur_en_echec_sans_nombre_ecrit` (K07) |
+| m-4, « niveau non atteignable » sous six familles de M1 ou M3 | `lecture_v1.py` | 988 à 994 (`issue`) | `test_manipulation_sous_six_familles_motif_niveau_non_atteignable` (K11) |
 | m-5, garde de l'arbre jouée côté session | `relecture_v1.py` | [L-m5] | `tests/test_lancer_b5f_lecture_v1.py::test_arbre_extrait_au_commit_sans_table_ni_ligne_de_la_formation` : table et ligne de coût dans un dossier extrait (refus, par `verifier` et par `commande`), la même table hors des motifs (acceptée), règles des motifs (K08, K09, K10) |
 | m-6, instant de « création » | déclaré | — | voir ci-dessous |
 | m-7, « chaque étape écrite avant la suivante » | déclaré | — | voir ci-dessous |
