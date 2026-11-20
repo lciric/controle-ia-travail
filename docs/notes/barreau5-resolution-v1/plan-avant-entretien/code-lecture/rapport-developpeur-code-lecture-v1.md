@@ -196,6 +196,29 @@ un changement de `engagement_v1` (recevoir le nom formé et refuser l'autre copi
 - Le mode réel n'est jamais joué ici (carte, 8B, déterminisme sur la carte, mémoire, durée) : seule la répétition générale
   sur les quatre adaptateurs existants l'éprouverait.
 
+### 2.6 Ce qui menace le départ de la formation et le gel à H + 30 heures
+1. **Départ de la formation, d'abord.** (a) `formation_v1.exiger_code_de_la_session` refuse la commande de création si un
+   fichier non suivi existe sous `src/` dans l'arbre de la session : mes `relecture_v1.py` et `sondes_v1.py` (et
+   `lecture_v1.py` modifié depuis le versement de 00:16Z) sont dans l'arbre de travail du dépôt. (b) `exiger_code_au_commit`
+   compare l'arbre gelé (tout `src/`) du commit de la course à celui de `CODE-FORMATION-B5F` : un versement de mon code entre
+   les deux fait refuser la course. (c) L'amorce de la formation joue `tests/test_barreau5_familles_*.py`, où tombent mes
+   trois fichiers d'essais (noms imposés par le mandat) : 116 essais de plus sur l'instance (dont le jouet de bout en bout,
+   environ trois minutes) ; et l'essai `test_texte_plancher_d_essais_egal_au_nombre_d_essais_du_paquet`
+   (`tests/test_amorce_b5f_formation_v1.py`) échoue dès qu'ils sont dans l'arbre (235 attendus, 351 comptés). **Il faut**
+   soit verser mon code sur une branche à part jusqu'au départ (et ne pas le laisser non suivi dans l'arbre de la session de
+   formation), soit le commettre avant `CODE-FORMATION-B5F` et remesurer `MIN_ESSAIS` (changement du code de formation, en
+   dernière vérification). Je n'ai rien changé ; décision de la mère.
+2. **L'amorce de l'instance de lecture** n'est pas écrite (2.5) ; elle fait partie du code figé par `CODE-LECTURE-B5F`.
+3. **La contre-lecture par Fable 5.2** : la limite d'usage de Fable a été atteinte sur le compte de la mère dans la nuit
+   (titres des commits, R-4020) ; sans elle, pas de gel.
+4. **Les questions 2.1 (4) à (6)** : une divergence avec la seconde programmation du dénombrement et de la table des issues
+   (l'autre modèle) demandera un erratum contre-lu, avant l'épreuve à vérité plantée.
+5. **Le mode réel n'est jamais joué** : déterminisme sur la carte, mémoire, durée (trois passes par épisode et par
+   adaptateur avec la divergence). Si la répétition générale sur les quatre adaptateurs existants n'est pas jouée, la
+   première marche réelle est la relecture décisive.
+6. **La procédure des commits de la lecture** (2.4) : sans arbre gelé identique à celui de `CODE-LECTURE-B5F`, la marche et
+   l'ouverture refusent.
+
 ## 3. Empreintes
 (à compléter)
 
