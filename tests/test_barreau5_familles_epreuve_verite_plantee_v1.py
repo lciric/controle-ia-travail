@@ -277,16 +277,16 @@ def test_planter_deterministe_et_graines():
 
 
 def test_cle_entiere_suit_la_regle_du_depot():
-    """La clé entière est celle de `manifeste.cle_de_tache` (sauté si le paquet entier n'est pas là)."""
-    M = pytest.importorskip("controle_ia.manifeste")
+    """La clé entière est celle de `manifeste.cle_de_tache` (import ordinaire : jamais sauté, R5)."""
+    from controle_ia import manifeste as M
     for cle in ("b5f/epreuve/V0-0000", "b5f/epreuve/VC3-0019", "x"):
         assert F.cle_entiere(cle) == M.cle_de_tache(cle)
 
 
 def test_pli_gele_suit_le_manifeste():
-    """Le pli gelé recopié (`partition_gelee`) est celui que donne `manifeste.generateur(graines(...))` (sauté si le
-    paquet entier n'est pas là)."""
-    M = pytest.importorskip("controle_ia.manifeste")
+    """Le pli gelé recopié (`partition_gelee`) est celui que donne `manifeste.generateur(graines(...))` (import ordinaire :
+    jamais sauté, R5)."""
+    from controle_ia import manifeste as M
     for taches, e in ((F.TACHES_DEFAUT, F.ENTROPIE_FORMATION_DEFAUT), (tuple(f"a{i}" for i in range(64)), 12345)):
         ids = sorted(taches)
         gen = M.generateur(M.graines(["b5f/lecture/plis"], e)["b5f/lecture/plis"])
@@ -299,8 +299,8 @@ def test_pli_gele_suit_le_manifeste():
 @pytest.mark.parametrize("mid", ["V1-0002", "V7-0001", "V7-0006", "V7-0008"])
 def test_table_et_registre_suivent_engagement_v1(monde, mid):
     """Noms opaques, forme canonique et cohérence de la table, lignes du registre : égaux à ce qu'en fait
-    `engagement_v1`, que le programme de lecture appelle (sauté si le paquet entier n'est pas là)."""
-    en = pytest.importorskip("controle_ia.barreau5_familles.engagement_v1")
+    `engagement_v1`, que le programme de lecture appelle (import ordinaire : jamais sauté, R5)."""
+    from controle_ia.barreau5_familles import engagement_v1 as en
     d = monde(mid)
     table = lire(d / "etiquettes.json")
     en.exiger_table_coherente(table)

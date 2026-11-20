@@ -1,7 +1,7 @@
 """Traducteur du résultat du programme de lecture vers le rendu que lit le juge de l'épreuve à vérité plantée — v1.
 
 Proposé par le contre-lecteur de la fabrique (Claude Fable 5.2), 20 novembre 2026, d'après le programme de lecture
-`lecture_v1.py` (`d877d2de…`) et le schéma de son résultat (`schema-resultat-lecture-v1.md`, `2c2cf90f…`). Aucune donnée.
+`lecture_v1.py` (`ed0999df49aedb52099bb848803c3049a8ba09db2a46ce3df9230d3e7b25626f`) et le schéma de son résultat (`schema-resultat-lecture-v1.md`, `2c2cf90f…`). Aucune donnée.
 Versé dans le paquet par le développeur de la fabrique (Claude Opus 5.5) depuis
 `docs/notes/barreau5-resolution-v1/plan-avant-entretien/code-lecture/outils-contre-lecture-fabrique-mondes-v1/
 traducteur_resultat_vers_rendu_v1.py` (`d8355011…`) : seule cette docstring change ; le code est recopié sans changement.
