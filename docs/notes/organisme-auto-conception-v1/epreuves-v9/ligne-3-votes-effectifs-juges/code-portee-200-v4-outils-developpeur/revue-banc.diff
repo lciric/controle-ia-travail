@@ -1,0 +1,490 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-banc-v4-portee-200/code/banc_juges_scriptes_ligne_3_v3.py	2026-11-20 09:46:35.281496142 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-banc-v4-portee-200/code/banc_juges_scriptes_ligne_3_v4.py	2026-11-20 10:27:52.231672479 +0000
+@@ -1,4 +1,5 @@
+-"""Banc de juges scriptés de la ligne 3 (« votes effectifs des juges croisés »), étage 1 sur processeur — v3.
++"""Banc de juges scriptés de la ligne 3 (« votes effectifs des juges croisés »), étage 1 sur processeur — v4,
++mode « portée à 200 ».
+ 
+ Texte qui fait foi : `prereg/organisme-auto-conception-v9/preenregistrement-ligne-3-votes-effectifs-juges-v7.md`
+ (main, sha256 4e3680d9915ef6e2fa33010fc9b7b2ef5575d74e58e982bfabdbdbcc3e99d5a0), sections « 0 », « Métrique »,
+@@ -7,17 +8,21 @@
+ 
+ Processeur seul ; `numpy` et la bibliothèque standard ; aucun appel de modèle, aucun réseau. Les seuls fichiers lus
+ sont ce programme (empreinte au manifeste) et, pour une racine sous autorisation, l'additif de code dont l'empreinte
+-est donnée en argument.
++est donnée en argument. Le mode « portée à 200 » appelle aussi `git rev-parse` et `git status --porcelain` bornés au
++dossier du code (garde « dossier du code propre »).
+ 
+ Graines (R9) : `numpy.random.SeedSequence(racine, spawn_key=(clé,))`, clé entière tirée de `TABLE_CLES` (gelée ici,
+ recopiée au manifeste) ; une cellule reçoit l'enfant de rang fixe de `.spawn(nombre)`, dans l'ordre gelé
+-d'énumération des cellules. Racines : essais 2026111930 (seule dérivable sans autorisation) ; chronométrage
+-2026111931, étage 1 décisif 2026111932, rééchantillonnage de l'étage 1 2026111933 (refus sans autorisation) ;
+-2026111934 à 2026111937 (étage 2) : toujours refusées par ce code.
+-
+-Usage (geste 4 seulement, après l'additif de code scellé ; jamais lancé par le développeur) :
+-    python3 -B banc_juges_scriptes_ligne_3_v3.py --decisif --autorisation-additif CHEMIN --empreinte-additif HEX \
++d'énumération des cellules. Racines (v4) : essais 2026111930 (seule dérivable sans autorisation) ; mesure de la
++portée à 200 (additif 3, § 2) : chronométrage 2026112031 (clés 2 et 12), tirages 2026112032 (clé 2), rééchantillonnage
++2026112033 (clé 12), refus sans autorisation, `.spawn(210)` seul ; 2026111931 à 2026111937 (étages 1 et 2) : toujours
++refusées par ce code, avec ou sans autorisation.
++
++Usage (mesure de la portée à 200 seulement, après l'additif de code de cette mesure scellé ; jamais lancé par le
++développeur ; depuis le dossier du code, avec PYTHONDONTWRITEBYTECODE=1) :
++    python3 -B banc_juges_scriptes_ligne_3_v4.py --portee-200 --autorisation-additif CHEMIN --empreinte-additif HEX \
+         --sortie DOSSIER_NEUF
++Le mode décisif de l'étage 1 (« --decisif ») est retiré de la ligne de commande du v4.
+ 
+ Version 2 (corrections de la contre-lecture `contre-lecture-code-etage-1-ligne-3-v1.md`, 3aed6849…) : correction C2
+ seule dans le calcul — la taille d'étalonnage de la branche (2) suit la lettre du texte (« la plus petite taille
+@@ -33,7 +38,18 @@
+ réfutée ») et, pour la carte, « mesurée, sans mot : aucune règle de mot gelée ». Aucun tirage, aucune graine, aucune
+ constante, aucune mesure existante ne change ; noms des fichiers de sortie en v3.
+ 
+-Développeur, modèle L′.
++Version 4 (additif 3 v3 au texte, `prereg/organisme-auto-conception-v9/additif-3-preenregistrement-ligne-3-portee-200-v3.md`,
++71b7a876…, § 5) : un mode « portée à 200 » (`executer_portee_200`, ligne de commande `--portee-200`), qui ne joue que le
++monde de puissance, sur une configuration gelée en constante (`CONFIGURATION_PORTEE_200`, n = 200), avec trois racines
++neuves sous autorisation (2026112031 chronométrage, 2026112032 tirages, 2026112033 rééchantillonnage ; clés 2 et 12
++seules ; `.spawn(210)` seul) ; les racines 2026111931 à 2026111937 sont refusées par tout chemin du fichier (modes
++« chronometrage » et « decisif » de l'étage 1 retirés, `--decisif` retiré) ; garde « dossier du code propre » dure,
++avant toute dérivation ; gardes déterministes des formules et de la règle de lecture avant tout tirage ; aide
++`criteres_mecaniques.puissance` (issue A ou B du § 3, sur les comptes entiers), jamais le verdict. Aucune fonction de
++calcul ne change ; les sorties existantes du v3 sont égales à l'octet sur la racine des essais (hors le nom de version
++et les noms des fichiers de sortie, passés en v4).
++
++Développeur, modèle L′ (v1 à v3) ; développeur, modèle O (v4).
+ """
+ from __future__ import annotations
+ 
+@@ -42,6 +58,7 @@
+ import hashlib
+ import json
+ import math
++import os
+ import platform
+ import statistics
+ import subprocess
+@@ -50,18 +67,33 @@
+ 
+ import numpy as np
+ 
+-VERSION = "banc-juges-scriptes-ligne-3-v3"
++VERSION = "banc-juges-scriptes-ligne-3-v4"
+ EMPREINTE_TEXTE_QUI_FAIT_FOI = "4e3680d9915ef6e2fa33010fc9b7b2ef5575d74e58e982bfabdbdbcc3e99d5a0"
++# Version 4 : l'additif 3 v3 (scellé, main 0bb14c64), dont le § 5 est le cahier des charges du mode « portée à 200 ».
++EMPREINTE_ADDITIF_3_PORTEE_200 = "71b7a876398cdcc133f006c01ff7eb644e8f2c69be79e90be50088bd26492807"
+ 
+ # ---------------------------------------------------------------------------------------------------------------
+ # Graines (règle R9)
+ # ---------------------------------------------------------------------------------------------------------------
+ RACINE_ESSAIS = 2026111930
+-RACINE_CHRONOMETRAGE = 2026111931
+-RACINE_ETAGE_1_DECISIF = 2026111932
+-RACINE_REECHANTILLONNAGE_ETAGE_1 = 2026111933
++# Racines de l'étage 1 (2026111931 à 2026111933) et de l'étage 2 (2026111934 à 2026111937) : en v4, toujours
++# refusées, avec ou sans autorisation, par tout chemin de ce fichier (additif 3, § 2 et § 5, point 3).
++RACINES_ETAGE_1 = (2026111931, 2026111932, 2026111933)
+ RACINES_ETAGE_2 = (2026111934, 2026111935, 2026111936, 2026111937)
+-RACINES_SOUS_AUTORISATION = (RACINE_CHRONOMETRAGE, RACINE_ETAGE_1_DECISIF, RACINE_REECHANTILLONNAGE_ETAGE_1)
++RACINES_TOUJOURS_REFUSEES = RACINES_ETAGE_1 + RACINES_ETAGE_2
++# Racines de la mesure de la portée à 200 (additif 3, § 2), sous autorisation par chemin et empreinte.
++RACINE_CHRONOMETRAGE_PORTEE_200 = 2026112031
++RACINE_TIRAGES_PORTEE_200 = 2026112032
++RACINE_REECHANTILLONNAGE_PORTEE_200 = 2026112033
++RACINES_SOUS_AUTORISATION = (RACINE_CHRONOMETRAGE_PORTEE_200, RACINE_TIRAGES_PORTEE_200,
++                             RACINE_REECHANTILLONNAGE_PORTEE_200)
++# Tâches permises à chaque racine neuve (additif 3, § 2 : clés 2 et 12 de la table gelée) et nombre d'enfants permis.
++TACHES_PERMISES_PAR_RACINE_PORTEE_200 = {
++    RACINE_CHRONOMETRAGE_PORTEE_200: ("monde_de_puissance", "reechantillonnage_monde_de_puissance"),
++    RACINE_TIRAGES_PORTEE_200: ("monde_de_puissance",),
++    RACINE_REECHANTILLONNAGE_PORTEE_200: ("reechantillonnage_monde_de_puissance",),
++}
++NOMBRE_CELLULES_PORTEE_200 = 210
+ 
+ # Table « tâche → entier », gelée ; recopiée au manifeste.
+ TABLE_CLES = {
+@@ -79,11 +111,12 @@
+     "essais_gardes": 22,
+ }
+ 
+-# Mode → (racine des tirages du monde, racine du rééchantillonnage).
++# Mode → (racine des tirages du monde, racine du rééchantillonnage). Version 4 : les modes « chronometrage » et
++# « decisif » de l'étage 1 sont retirés ; deux modes neufs, ceux de la mesure de la portée à 200.
+ MODES = {
+     "essais": (RACINE_ESSAIS, RACINE_ESSAIS),
+-    "chronometrage": (RACINE_CHRONOMETRAGE, RACINE_CHRONOMETRAGE),
+-    "decisif": (RACINE_ETAGE_1_DECISIF, RACINE_REECHANTILLONNAGE_ETAGE_1),
++    "chronometrage_portee_200": (RACINE_CHRONOMETRAGE_PORTEE_200, RACINE_CHRONOMETRAGE_PORTEE_200),
++    "portee_200": (RACINE_TIRAGES_PORTEE_200, RACINE_REECHANTILLONNAGE_PORTEE_200),
+ }
+ 
+ # Journal de toutes les dérivations faites dans le processus (contrôlé par l'essai final).
+@@ -145,12 +178,16 @@
+         raise RefusGraine(f"racine {racine} : empreinte de l'additif différente de l'attendue")
+ 
+ 
+-def generateurs(racine, tache, nombre, autorisation=None):
+-    """Rend `nombre` générateurs, enfants de SeedSequence(racine, spawn_key=(clé,)) ; refus avant toute dérivation."""
++def verifier_racine(racine, tache, nombre, autorisation=None) -> None:
++    """Version 4 : contrôles de `generateurs`, sans aucune dérivation (fonction pure, hors la lecture de l'additif).
++    Refus si la racine n'est pas entière ; toujours pour 2026111931 à 2026111937 (étages 1 et 2), avec ou sans
++    autorisation ; hors de la racine des essais et des trois racines neuves ; sans autorisation juste pour une racine
++    neuve ; tâche absente de la table gelée ; nombre d'enfants invalide ; pour une racine neuve, tâche autre que celles
++    de l'additif 3, § 2, ou nombre d'enfants autre que 210."""
+     if isinstance(racine, bool) or not isinstance(racine, int):
+         raise RefusGraine("racine non entière")
+-    if racine in RACINES_ETAGE_2:
+-        raise RefusGraine(f"racine {racine} : racine de l'étage 2, jamais dérivée par le code de l'étage 1")
++    if racine in RACINES_TOUJOURS_REFUSEES:
++        raise RefusGraine(f"racine {racine} : racine de l'étage 1 ou de l'étage 2, jamais dérivée par le banc v4")
+     if racine != RACINE_ESSAIS and racine not in RACINES_SOUS_AUTORISATION:
+         raise RefusGraine(f"racine {racine} : hors du texte")
+     if racine in RACINES_SOUS_AUTORISATION:
+@@ -159,6 +196,16 @@
+         raise RefusGraine(f"tâche {tache!r} absente de la table gelée")
+     if isinstance(nombre, bool) or not isinstance(nombre, int) or nombre < 1:
+         raise RefusGraine("nombre d'enfants invalide")
++    if racine in RACINES_SOUS_AUTORISATION:
++        if tache not in TACHES_PERMISES_PAR_RACINE_PORTEE_200[racine]:
++            raise RefusGraine(f"racine {racine} : tâche {tache!r} hors de l'additif 3, § 2")
++        if nombre != NOMBRE_CELLULES_PORTEE_200:
++            raise RefusGraine(f"racine {racine} : .spawn({nombre}) au lieu de .spawn({NOMBRE_CELLULES_PORTEE_200})")
++
++
++def generateurs(racine, tache, nombre, autorisation=None):
++    """Rend `nombre` générateurs, enfants de SeedSequence(racine, spawn_key=(clé,)) ; refus avant toute dérivation."""
++    verifier_racine(racine, tache, nombre, autorisation)
+     cle = TABLE_CLES[tache]
+     JOURNAL_GRAINES.append({"racine": racine, "tache": tache, "cle": cle, "enfants": nombre})
+     parent = np.random.SeedSequence(racine, spawn_key=(cle,))
+@@ -1558,7 +1605,11 @@
+ 
+ 
+ def executer_etage_1(contexte, cfg, dossier_sortie):
+-    """Joue le banc entier selon `cfg`, écrit le résultat et le manifeste dans un dossier neuf (une fois)."""
++    """Joue le banc entier selon `cfg`, écrit le résultat et le manifeste dans un dossier neuf (une fois).
++    Version 4 : joignable sur la seule racine des essais (les modes de l'étage 1 sont retirés de `MODES`, et
++    `verifier_racine` refuse 2026111931 à 2026111937) ; sert à la preuve d'égalité au v3."""
++    if contexte.mode != "essais":
++        raise RefusExecution(f"mode {contexte.mode!r} : l'étage 1 n'est joué par le banc v4 que sur la racine des essais")
+     dossier = Path(dossier_sortie)
+     if dossier.exists():
+         raise RefusExecution(f"dossier de sortie déjà présent : {dossier} (une exécution par dossier)")
+@@ -1624,10 +1675,10 @@
+     }
+     fin = datetime.datetime.now(datetime.timezone.utc)
+     dossier.mkdir(parents=True, exist_ok=False)
+-    chemin_res = dossier / "resultat-etage-1-ligne-3-v3.json"
++    chemin_res = dossier / "resultat-etage-1-ligne-3-v4.json"
+     ecrire_json_exclusif(chemin_res, resultat)
+     manifeste = construire_manifeste(contexte, cfg, debut, fin, {chemin_res.name: sha256_fichier(chemin_res)})
+-    ecrire_json_exclusif(dossier / "manifeste-etage-1-ligne-3-v3.json", manifeste)
++    ecrire_json_exclusif(dossier / "manifeste-etage-1-ligne-3-v4.json", manifeste)
+     return resultat, manifeste
+ 
+ 
+@@ -1686,8 +1737,9 @@
+     return o
+ 
+ 
+-def commit_du_depot():
+-    dossier = Path(__file__).resolve().parent
++def commit_du_depot(dossier_du_code=None):
++    """Version 4 : `dossier_du_code` facultatif (par défaut, le dossier de ce fichier, comme au v3)."""
++    dossier = Path(dossier_du_code).resolve() if dossier_du_code is not None else Path(__file__).resolve().parent
+     try:
+         tete = subprocess.run(["git", "-C", str(dossier), "rev-parse", "HEAD"], capture_output=True, text=True,
+                               timeout=30)
+@@ -1700,7 +1752,7 @@
+     return {"commit": tete.stdout.strip(), "dossier_du_code_propre": etat.returncode == 0 and etat.stdout.strip() == ""}
+ 
+ 
+-def construire_manifeste(contexte, cfg, debut, fin, fichiers):
++def construire_manifeste(contexte, cfg, debut, fin, fichiers, dossier_du_code=None):
+     return _nettoyer({
+         "programme": VERSION,
+         "programme_chemin": str(Path(__file__).resolve()),
+@@ -1716,24 +1768,277 @@
+                     "racine_des_tirages": contexte.racine_tirages,
+                     "racine_du_reechantillonnage": contexte.racine_reechantillonnage,
+                     "table_cles": TABLE_CLES, "derivations": contexte.derivations},
+-        "depot": commit_du_depot(),
++        "depot": commit_du_depot(dossier_du_code),
+         "heure_debut_utc": debut.strftime("%Y-%m-%dT%H:%M:%SZ"),
+         "heure_fin_utc": fin.strftime("%Y-%m-%dT%H:%M:%SZ"),
+         "fichiers": fichiers,
+     })
+ 
+ 
++# ---------------------------------------------------------------------------------------------------------------
++# Version 4 — mode « portée à 200 » (additif 3 v3 : § 1 ce qui est mesuré, § 2 graines, § 3 règle de lecture,
++# § 5 le code, § 6 gardes). Aucune fonction de calcul du monde de puissance ne change : `cellule_puissance` est
++# appelée telle quelle, avec n = 200.
++# ---------------------------------------------------------------------------------------------------------------
++N_PORTEE_200 = 200
++CONFIGURATION_PORTEE_200 = {
++    "repliques": 2000,
++    "tirages_reechantillonnage": 2000,
++    "puissance": {"ecarts": list(ECARTS_PUISSANCE), "lois": [1, 3], "rhos": list(RHOS), "rhos_prime": list(RHOS_PRIME_R),
++                  "n": N_PORTEE_200},
++}
++ECART_QUI_DECIDE = 0.10
++# Les treize mondes faisables à l'écart de 0,10 (additif 3, § 1, point 5), par le calcul exact, qui ne dépend pas
++# de n : (comparaison, loi, ρ, ρ′). Contre l'unanimité, ρ ≤ 0,45 (quatre sous la loi 1, deux sous la loi 3) ; contre un
++# juge seul, ρ ≤ 0,15 (deux, une) ; contre le bras R, ρ = 0 avec ρ′ = 0,5 ou 0,9 (deux, deux).
++MONDES_FAISABLES_A_0_10 = (
++    ("unanimite", 1, 0.0, 0.0), ("unanimite", 1, 0.15, 0.0), ("unanimite", 1, 0.3, 0.0), ("unanimite", 1, 0.45, 0.0),
++    ("unanimite", 3, 0.0, 0.0), ("unanimite", 3, 0.15, 0.0),
++    ("juge_seul", 1, 0.0, 0.0), ("juge_seul", 1, 0.15, 0.0), ("juge_seul", 3, 0.0, 0.0),
++    ("juge_repete_trois_votes_majorite", 1, 0.0, 0.5), ("juge_repete_trois_votes_majorite", 1, 0.0, 0.9),
++    ("juge_repete_trois_votes_majorite", 3, 0.0, 0.5), ("juge_repete_trois_votes_majorite", 3, 0.0, 0.9),
++)
++TOLERANCE_ECART_VRAI = 1e-9
++# « Près du seuil » (§ 3) : puissance qui décide entre 0,478 et 0,522, bornes comprises, lue sur les comptes entiers
++# (478 k ≥ … écrit en entiers : 1 000 k ≥ 478 R et 1 000 k ≤ 522 R).
++PRES_DU_SEUIL_MILLIEMES = (478, 522)
++NOMS_DES_COMPARAISONS = ("U", "S_1", "S_2", "R_3")
++ISSUE_A = "A"
++ISSUE_B = "B"
++MOT_ISSUE = {
++    ISSUE_A: ("la règle de portée ne s'applique pas à l'étage 2 à 200 : les comparaisons d'agrégations peuvent porter "
++              "un « oui »"),
++    ISSUE_B: ("les comparaisons d'agrégations sont descriptives à l'étage 2 à 200, par la même règle que l. 240"),
++}
++FICHIER_RESULTAT_PORTEE_200 = "resultat-portee-200-ligne-3-v1.json"
++FICHIER_MANIFESTE_PORTEE_200 = "manifeste-portee-200-ligne-3-v1.json"
++VARIABLES_DE_CHEMIN_INTERDITES = ("BANC_LIGNE_3_CHEMIN", "CHRONOMETRAGE_LIGNE_3_CHEMIN")
++
++
++def faisabilite_cellule_puissance(comparaison, ecart, loi, rho, rho_prime):
++    """(faisable, d) par formule seule, sans tirage, dans le même ordre de tests que `cellule_puissance`."""
++    d = resoudre_dissymetrie(comparaison, ecart, rho, rho_prime)
++    if d is None:
++        return False, None
++    a, b = TAUX_MOYEN_PUISSANCE + d, TAUX_MOYEN_PUISSANCE - d
++    if loi == 3 and not (loi_3_jouable(a, rho) and loi_3_jouable(b, rho)):
++        return False, d
++    return True, d
++
++
++def issue_de_la_regle_de_lecture(minimum_gagnees, repliques, comparaisons_sans_cellule_faisable):
++    """Additif 3, § 3, sur les comptes entiers : A si chaque comparaison a une cellule faisable et si la cellule la plus
++    basse gagne au moins la moitié des répliques (1 000 sur 2 000, ou plus : « sous 0,5 » est strict) ; B sinon."""
++    if comparaisons_sans_cellule_faisable:
++        return ISSUE_B
++    if isinstance(minimum_gagnees, bool) or not isinstance(minimum_gagnees, int):
++        raise BancInvalide("règle de lecture : compte de répliques non entier")
++    return ISSUE_A if 2 * minimum_gagnees >= repliques else ISSUE_B
++
++
++def verifier_gardes_portee_200():
++    """Gardes déterministes rejouées avant le premier tirage du mode (aucune graine) : formules (additif 3, § 6 :
++    210 cellules ; écart vrai par formule égal à l'écart visé à 1e-9 près dans chaque cellule faisable ; à l'écart de
++    0,10, les treize mondes faisables et eux seuls) et règle de lecture (1 000 sur 2 000 : issue A ; 999 : B ;
++    comparaison sans cellule faisable : B). Un écart : BancInvalide, à corriger avant tout tirage."""
++    cellules = enumerer_cellules_puissance(CONFIGURATION_PORTEE_200["puissance"])
++    if len(cellules) != NOMBRE_CELLULES_PORTEE_200:
++        raise BancInvalide(f"formules : {len(cellules)} cellules au lieu de {NOMBRE_CELLULES_PORTEE_200}")
++    # Deux ancres écrites à la main, indépendantes des formules du banc : à ρ = 0, l'unanimité moins « au moins un »
++    # vaut (a − b)(1 − (a + b)) = 1,2 d, et un juge seul moins « au moins un » vaut 0,6 d (a + b = 0,40).
++    for ecart in ECARTS_PUISSANCE:
++        for comparaison, pente in (("unanimite", 1.2), ("juge_seul", 0.6)):
++            attendu = ecart / pente if ecart / pente <= D_MAX + EPS else None
++            d = resoudre_dissymetrie(comparaison, ecart, 0.0, 0.0)
++            if (d is None) != (attendu is None) or (d is not None and abs(d - attendu) > TOLERANCE_ECART_VRAI):
++                raise BancInvalide(f"formules : d de {comparaison} à ρ = 0 et écart {ecart} : {d}, attendu {attendu}")
++    faisables = []
++    for (comparaison, ecart, loi, rho, rp) in cellules:
++        ok, d = faisabilite_cellule_puissance(comparaison, ecart, loi, rho, rp)
++        if not ok:
++            continue
++        vrai = erreurs_equilibrees_formules(d, rho, rp)
++        if abs(vrai[comparaison] - vrai["au_moins_un"] - ecart) > TOLERANCE_ECART_VRAI:
++            raise BancInvalide(f"formules : écart vrai hors de l'écart visé, cellule {(comparaison, ecart, loi, rho, rp)}")
++        if abs(ecart - ECART_QUI_DECIDE) <= EPS:
++            faisables.append((comparaison, loi, rho, rp))
++    if sorted(faisables) != sorted(MONDES_FAISABLES_A_0_10) or len(faisables) != 13:
++        raise BancInvalide(f"formules : mondes faisables à 0,10 {faisables}, au lieu des treize de l'additif 3")
++    if (issue_de_la_regle_de_lecture(1000, 2000, []) != ISSUE_A
++            or issue_de_la_regle_de_lecture(999, 2000, []) != ISSUE_B
++            or issue_de_la_regle_de_lecture(2000, 2000, ["R_3"]) != ISSUE_B):
++        raise BancInvalide("règle de lecture : 1 000 sur 2 000 ne rend pas l'issue A, ou 999 ne rend pas B")
++
++
++def verifier_dossier_du_code_propre(dossier_du_code, dossier_sortie):
++    """Garde « dossier du code propre », rendue dure (additif 3, § 5, point 6), avant toute dérivation : refus si le
++    dossier de sortie est le dossier du code ou est placé sous lui ; si le dossier du code contient
++    `archives-reponses-modeles/` (additif 2, § 7, point 1) ; s'il est hors d'un dépôt git ; si `git status
++    --porcelain` borné au dossier du code rend quelque chose, ou échoue. Rend la tête du dépôt (pour information)."""
++    code = Path(dossier_du_code).resolve()
++    sortie = Path(dossier_sortie).resolve()
++    if sortie == code or code in sortie.parents:
++        raise RefusExecution(f"dossier de sortie sous le dossier du code : {sortie}")
++    if (code / "archives-reponses-modeles").exists():
++        raise RefusExecution("le dossier du code contient archives-reponses-modeles/ (additif 2, § 7, point 1)")
++    try:
++        dedans = subprocess.run(["git", "-C", str(code), "rev-parse", "--is-inside-work-tree"], capture_output=True,
++                                text=True, timeout=30)
++        if dedans.returncode != 0 or dedans.stdout.strip() != "true":
++            raise RefusExecution(f"dossier du code hors d'un dépôt git : {code}")
++        etat = subprocess.run(["git", "-C", str(code), "status", "--porcelain", "--", str(code)], capture_output=True,
++                              text=True, timeout=30)
++    except (OSError, subprocess.SubprocessError) as exc:
++        raise RefusExecution(f"garde du dossier du code : git injoignable ({exc})") from exc
++    if etat.returncode != 0:
++        raise RefusExecution(f"garde du dossier du code : git status a échoué (code {etat.returncode})")
++    if etat.stdout.strip() != "":
++        raise RefusExecution(f"dossier du code non propre : {etat.stdout.strip().splitlines()[:5]}")
++
++
++def verifier_variables_de_chemin_non_posees():
++    """Additif 2, § 7, point 2 (repris par l'additif 3, § 5, point 6) : variables d'environnement de chemin non posées."""
++    posees = [nom for nom in VARIABLES_DE_CHEMIN_INTERDITES if os.environ.get(nom) is not None]
++    if posees:
++        raise RefusExecution(f"variables d'environnement de chemin posées : {posees}")
++
++
++def comptes_gagnes(cellule):
++    """Compte entier de répliques gagnées par comparaison, relu sur la puissance (part des répliques gagnées) ; une
++    puissance qui n'est pas k / R exactement est une faute du banc."""
++    R = cellule["repliques"]
++    comptes = {}
++    for nom in NOMS_DES_COMPARAISONS:
++        p = cellule["puissance_par_comparaison"][nom]
++        k = int(round(p * R))
++        if not (0 <= k <= R) or k / R != p:
++            raise BancInvalide(f"compte de répliques gagnées illisible : {nom}, {p} sur {R}")
++        comptes[nom] = k
++    return comptes
++
++
++def criteres_portee_200(cellules, repliques):
++    """Aide `criteres_mecaniques.puissance` (additif 3, § 5, point 8), jamais le verdict (règle R13) : puissance qui
++    décide et sa ou ses cellules, avec leur compte ; minima par comparaison ; comparaisons sans cellule faisable ;
++    issue A ou B du § 3, lue sur les comptes entiers ; mention « près du seuil » ; et, pour contrôle, la lecture du
++    banc v3 (`puissance_qui_decide`) sur les mêmes cellules."""
++    par_comparaison = {nom: [] for nom in NOMS_DES_COMPARAISONS}
++    for rang, c in enumerate(cellules):
++        if not c.get("faisable") or abs(c["ecart_vise"] - ECART_QUI_DECIDE) > EPS or c["loi"] not in (1, 3):
++            continue
++        for nom in COMPARAISONS_DU_MONDE[c["comparaison"]]:
++            par_comparaison[nom].append((c["repliques_gagnees_par_comparaison"][nom], rang))
++    sans = [nom for nom, v in par_comparaison.items() if not v]
++    minima_comptes = {nom: (min(k for k, _ in v) if v else None) for nom, v in par_comparaison.items()}
++    minima = {nom: (k / repliques if k is not None else None) for nom, k in minima_comptes.items()}
++    cellules_faisables = {nom: len(v) for nom, v in par_comparaison.items()}
++    if sans:
++        minimum, au_minimum = None, []
++    else:
++        minimum = min(minima_comptes.values())
++        au_minimum = [{"rang": rang, "comparaison_du_test": nom, "comparaison_du_monde": cellules[rang]["comparaison"],
++                       "loi": cellules[rang]["loi"], "rho": cellules[rang]["rho"],
++                       "rho_prime": cellules[rang]["rho_prime"], "repliques_gagnees": k, "repliques": repliques}
++                      for nom, v in par_comparaison.items() for (k, rang) in v if k == minimum]
++    issue = issue_de_la_regle_de_lecture(minimum, repliques, sans)
++    pres = (minimum is not None and 1000 * minimum >= PRES_DU_SEUIL_MILLIEMES[0] * repliques
++            and 1000 * minimum <= PRES_DU_SEUIL_MILLIEMES[1] * repliques)
++    lecture_v3 = puissance_qui_decide(cellules, ecart=ECART_QUI_DECIDE)
++    return {
++        "nature": ("aide calculée par le code (additif 3, § 5, point 8), jamais le verdict : l'agent neuf qui prononce "
++                   "(règle R13) applique lui-même le § 3 aux comptes, contrôle d'abord la faute du banc (§ 6), puis "
++                   "compare à cette aide."),
++        "ecart_qui_decide": ECART_QUI_DECIDE,
++        "repliques_par_cellule": repliques,
++        "puissance_qui_decide": (minimum / repliques if minimum is not None else None),
++        "repliques_gagnees_dans_la_cellule_la_plus_basse": minimum,
++        "cellules_au_minimum": au_minimum,
++        "minima_par_comparaison": minima,
++        "minima_par_comparaison_en_repliques_gagnees": minima_comptes,
++        "cellules_faisables_lues_par_comparaison": cellules_faisables,
++        "comparaisons_sans_cellule_faisable": sans,
++        "issue": issue,
++        "ce_qu_elle_dit": MOT_ISSUE[issue],
++        "pres_du_seuil": {"vrai": bool(pres),
++                          "regle": "puissance qui décide entre 0,478 et 0,522, bornes comprises (additif 3, § 3)",
++                          "mention": ("rapportée avec cette mention et son compte ; le mot reste celui de la table"
++                                      if pres else None)},
++        "lecture_du_banc_v3_sur_les_memes_cellules": lecture_v3,
++    }
++
++
++def executer_portee_200(contexte, cfg, dossier_sortie, dossier_du_code=None):
++    """Mesure de la portée à 200 (additif 3, § 1) : le monde de puissance seul, n = 200, une fois. Toutes les gardes
++    passent avant la première dérivation : taille ; configuration gelée (hors essais) ; dossier de sortie neuf ;
++    dossier du code propre ; racines et autorisation ; gardes déterministes. `dossier_du_code` n'est permis qu'en essai
++    (dépôt jetable des essais) ; hors essai, c'est le dossier de ce fichier."""
++    puissance = cfg.get("puissance") if isinstance(cfg, dict) else None
++    n = puissance.get("n") if isinstance(puissance, dict) else None
++    if isinstance(n, bool) or not isinstance(n, int) or n != N_PORTEE_200:
++        raise RefusExecution(f"taille : n = {n!r} au lieu de {N_PORTEE_200} (additif 3, § 1)")
++    if contexte.mode not in ("essais", "portee_200"):
++        raise RefusExecution(f"mode {contexte.mode!r} : la mesure se joue en mode « portee_200 » (ou en essai)")
++    if contexte.mode != "essais":
++        if cfg != CONFIGURATION_PORTEE_200:
++            raise RefusExecution("configuration autre que la configuration gelée CONFIGURATION_PORTEE_200")
++        if dossier_du_code is not None:
++            raise RefusExecution("dossier du code donné en argument : permis en essai seulement")
++    dossier = Path(dossier_sortie)
++    if dossier.exists():
++        raise RefusExecution(f"dossier de sortie déjà présent : {dossier} (une exécution par dossier)")
++    code = Path(dossier_du_code) if dossier_du_code is not None else Path(__file__).resolve().parent
++    verifier_dossier_du_code_propre(code, dossier)
++    cellules_p = enumerer_cellules_puissance(puissance)
++    verifier_racine(contexte.racine_tirages, "monde_de_puissance", len(cellules_p), contexte.autorisation)
++    verifier_racine(contexte.racine_reechantillonnage, "reechantillonnage_monde_de_puissance", len(cellules_p),
++                    contexte.autorisation)
++    verifier_gardes_avant_tirage()
++    verifier_gardes_portee_200()
++    debut = datetime.datetime.now(datetime.timezone.utc)
++    R, B = cfg["repliques"], cfg["tirages_reechantillonnage"]
++
++    gt = contexte.tirages("monde_de_puissance", len(cellules_p))
++    gr = contexte.reechantillonnage("reechantillonnage_monde_de_puissance", len(cellules_p))
++    res_p = [cellule_puissance(gt[i], gr[i], comp, ec, loi, rho, rp, R, B, n=puissance["n"])
++             for i, (comp, ec, loi, rho, rp) in enumerate(cellules_p)]
++    for c in res_p:
++        if c.get("faisable"):
++            c["repliques_gagnees_par_comparaison"] = comptes_gagnes(c)
++
++    resultat = {
++        "version": VERSION,
++        "mode": contexte.mode,
++        "mesure": "puissance qui décide de la règle gelée de portée, à n = 200 (additif 3 v3, § 1)",
++        "note": ("Les critères mécaniques ci-dessous sont une aide calculée par le code ; le verdict de la mesure est "
++                 "prononcé par un agent neuf (règle R13), contre-lu, puis scellé par la mère. Aucun mot ne valide, "
++                 "n'écarte ni ne classe une carte."),
++        "criteres_mecaniques": {"puissance": criteres_portee_200(res_p, R)},
++        "monde_de_puissance": res_p,
++    }
++    fin = datetime.datetime.now(datetime.timezone.utc)
++    dossier.mkdir(parents=True, exist_ok=False)
++    chemin_res = dossier / FICHIER_RESULTAT_PORTEE_200
++    ecrire_json_exclusif(chemin_res, resultat)
++    manifeste = construire_manifeste(contexte, cfg, debut, fin, {chemin_res.name: sha256_fichier(chemin_res)},
++                                     dossier_du_code=code)
++    manifeste["additif_qui_fait_foi_sha256"] = EMPREINTE_ADDITIF_3_PORTEE_200
++    ecrire_json_exclusif(dossier / FICHIER_MANIFESTE_PORTEE_200, manifeste)
++    return resultat, manifeste
++
++
+ def main(argv=None):
+-    parser = argparse.ArgumentParser(description="Banc de juges scriptés, ligne 3, étage 1 (décisif, geste 4).")
+-    parser.add_argument("--decisif", action="store_true", required=True)
++    """Version 4 : la seule ligne de commande est celle de la mesure de la portée à 200 ; `--decisif` est retiré."""
++    parser = argparse.ArgumentParser(description="Banc de juges scriptés, ligne 3, v4 : mesure de la portée à 200 "
++                                                 "(additif 3 v3).")
++    parser.add_argument("--portee-200", action="store_true", required=True)
+     parser.add_argument("--autorisation-additif", required=True)
+     parser.add_argument("--empreinte-additif", required=True)
+     parser.add_argument("--sortie", required=True)
+     args = parser.parse_args(argv)
++    verifier_variables_de_chemin_non_posees()
+     autorisation = Autorisation(args.autorisation_additif, args.empreinte_additif)
+-    verifier_autorisation(autorisation, RACINE_ETAGE_1_DECISIF)
+-    contexte = Contexte("decisif", autorisation)
+-    executer_etage_1(contexte, CONFIGURATION_DECISIVE, args.sortie)
++    contexte = Contexte("portee_200", autorisation)
++    executer_portee_200(contexte, CONFIGURATION_PORTEE_200, args.sortie)
+     return 0
+ 
+ 

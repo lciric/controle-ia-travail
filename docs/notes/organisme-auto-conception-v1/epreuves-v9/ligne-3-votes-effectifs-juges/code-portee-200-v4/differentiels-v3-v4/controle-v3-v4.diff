@@ -1,0 +1,297 @@
+--- controle_defauts_reintroduits_ligne_3_v3.py
++++ controle_defauts_reintroduits_ligne_3_v4.py
+@@ -1,5 +1,5 @@
+ """Contrôle « trop beau » (règle R4) du banc de la ligne 3, étage 1 : défauts réintroduits un par un dans une copie,
+-chacun devant être vu par l'essai visé — v3.
++chacun devant être vu par l'essai visé — v4 (banc v4, mode « portée à 200 »).
+ 
+ Version 2 (corrections C1 et C3 de la contre-lecture `contre-lecture-code-etage-1-ligne-3-v1.md`, 3aed6849…) :
+ - les 27 défauts de la v1 (famille « v1 ») ;
+@@ -18,6 +18,16 @@
+ « v3_silence_2 » (aide « prédiction P6 », carte sans mot) — et la famille « v3_egalite » (un ajout qui toucherait une
+ mesure existante ou qui manquerait à la sortie), vue par la preuve des sorties égales au v2.
+ 
++Version 4 (additif 3 v3, 71b7a876…, § 5 et § 6) : tous les défauts du v3, inchangés, rejoués sur le banc v4 et les
++essais v4 (la famille « v3_egalite » est vue par la preuve des sorties égales au v3, qui remplace celle du v2) ; plus
++la famille « v4_portee_200 » (racines neuves et refus des racines des étages 1 et 2, taille, configuration gelée,
++dossier du code propre, une exécution par dossier, formules, règle de lecture, aide, manifeste) et la famille
++« v4_chronometrage » (défauts du chronométrage de la portée à 200, réintroduits dans une copie du chronométrage,
++variable CHRONOMETRAGE_LIGNE_3_CHEMIN). Garde de la famille « graines » : le corps de `verifier_autorisation` finit
++désormais à `def verifier_racine(`. Aucun défaut n'est écrit qui pourrait faire dériver une racine des étages 1 et 2
++ou une racine neuve : chaque essai visé appelle `verifier_racine` (sans dérivation) avant tout appel qui dériverait, et
++les essais du mode neuf hors essai portent une autorisation fausse et une garde d'arrêt avant tout tirage.
++
+ Pour chaque défaut : le texte ancien doit figurer exactement une fois dans le banc ; une copie du banc est écrite avec
+ ce seul défaut dans un dossier de travail neuf ; les essais visés sont lancés contre la copie (variable
+ BANC_LIGNE_3_CHEMIN) ; le défaut est « vu » si pytest sort en code 1. Les essais visés sont d'abord lancés contre le
+@@ -28,9 +38,9 @@
+ essais (2026111930) est dérivée.
+ 
+ Usage :
+-    python3 -B controle_defauts_reintroduits_ligne_3_v3.py --banc BANC.py --essais ESSAIS.py --travail DOSSIER_NEUF \
+-        --sortie RAPPORT.json [--mode vise|complet]
+-Développeur, modèle L′.
++    python3 -B controle_defauts_reintroduits_ligne_3_v4.py --banc BANC.py --chronometrage CHRONO.py --essais ESSAIS.py \
++        --travail DOSSIER_NEUF --sortie RAPPORT.json [--mode vise|complet]
++Développeur, modèle L′ (v1 à v3) ; développeur, modèle O (v4).
+ """
+ from __future__ import annotations
+ 
+@@ -242,7 +252,7 @@
+        "test_alarme_silence_1_part_b_artefacts_generateur_factice",
+        "test_alarme_silence_1_comptes_coherents_sur_une_cellule_tiree")
+ _P6 = ("test_alarme_p6_aide_cas_sain", "test_alarme_p6_aide_artefacts")
+-_EGAL = ("test_v3_sorties_existantes_du_v2_egales_a_l_octet",)
++_EGAL = ("test_v4_sorties_existantes_du_v3_egales_a_l_octet",)  # version 4 : preuve d'égalité au v3
+ DEFAUTS_V3 = [
+     ("S01", "silence 1 : (b) au dénominateur des seules détections (b confondue avec a)",
+      "    denominateur_b = n_en_alarme\n", "    denominateur_b = n_changent_detectees\n", _S1, "v3_silence_1"),
+@@ -305,11 +315,153 @@
+      "            \"alarme_fcbf4a2dd1a57\": criteres_alarme_p6(res_a),\n", "", _EGAL, "v3_egalite"),
+ ]
+ 
++# Version 4 : défauts du mode « portée à 200 » (banc v4) et du chronométrage de la portée à 200.
++_RAC = ("test_portee_200_racines_artefacts_refuses_sans_derivation",)
++_RAC1 = ("test_graines_racines_decisives_refusees_sans_autorisation",)
++_FAUSSE = ("test_graines_autorisation_fausse_refusee", "test_portee_200_racines_artefacts_refuses_sans_derivation",
++           "test_portee_200_autorisation_refusee_avant_derivation_quand_les_autres_gardes_passent")
++_CFG = ("test_portee_200_configuration_gelee_et_table_des_cles",)
++_SAIN = ("test_portee_200_cas_sain_petit_nombre_de_repliques",)
++_TAILLE = ("test_portee_200_garde_taille_artefact_n_autre_que_200",)
++_HORS = ("test_portee_200_hors_essai_configuration_gelee_seule",)
++_PROPRE = ("test_portee_200_dossier_du_code_propre_artefacts_refus_avant_derivation",
++           "test_portee_200_dossier_du_code_par_defaut_est_celui_du_banc")
++_UNE = ("test_portee_200_une_execution_par_dossier",)
++_FORM = ("test_portee_200_formules_artefacts_banc_invalide_avant_tout_tirage",)
++_LECT = ("test_portee_200_regle_de_lecture_cas_sain", "test_portee_200_regle_de_lecture_artefact_codee_a_l_envers")
++_CPT = ("test_portee_200_comptes_gagnes_entiers",)
++_ETAGE1 = ("test_portee_200_etage_1_inatteignable_hors_essai",)
++_VAR = ("test_portee_200_variables_de_chemin",)
++_CHR = ("test_chronometrage_n_imprime_que_des_durees", "test_chronometrage_refuse_sans_autorisation")
++DEFAUTS_V4 = [
++    ("V4-R01", "racines de l'étage 1 non refusées comme telles (seules celles de l'étage 2)",
++     "    if racine in RACINES_TOUJOURS_REFUSEES:\n", "    if racine in RACINES_ETAGE_2:\n", _RAC1 + _RAC, "v4_portee_200"),
++    ("V4-R02", "racine neuve acceptée sans autorisation", "    if racine in RACINES_SOUS_AUTORISATION:\n"
++     "        verifier_autorisation(autorisation, racine)\n",
++     "    if False:\n        verifier_autorisation(autorisation, racine)\n", _FAUSSE, "v4_portee_200"),
++    ("V4-R03", "tâche hors de l'additif 3 acceptée à une racine neuve",
++     "        if tache not in TACHES_PERMISES_PAR_RACINE_PORTEE_200[racine]:\n", "        if False:\n", _RAC,
++     "v4_portee_200"),
++    ("V4-R04", "nombre d'enfants autre que 210 accepté à une racine neuve",
++     "        if nombre != NOMBRE_CELLULES_PORTEE_200:\n", "        if False:\n", _RAC, "v4_portee_200"),
++    ("V4-R05", "table des tâches : la racine du rééchantillonnage reçoit aussi la clé des tirages",
++     "    RACINE_REECHANTILLONNAGE_PORTEE_200: (\"reechantillonnage_monde_de_puissance\",),\n",
++     "    RACINE_REECHANTILLONNAGE_PORTEE_200: (\"monde_de_puissance\", \"reechantillonnage_monde_de_puissance\"),\n",
++     _RAC, "v4_portee_200"),
++    ("V4-R06", "mode décisif de l'étage 1 rendu au v4",
++     "    \"portee_200\": (RACINE_TIRAGES_PORTEE_200, RACINE_REECHANTILLONNAGE_PORTEE_200),\n}\n",
++     "    \"portee_200\": (RACINE_TIRAGES_PORTEE_200, RACINE_REECHANTILLONNAGE_PORTEE_200),\n"
++     "    \"decisif\": (2026111932, 2026111933),\n}\n", _RAC1 + _CFG, "v4_portee_200"),
++    ("V4-R07", "tirages et rééchantillonnage de la mesure sur la même racine",
++     "    \"portee_200\": (RACINE_TIRAGES_PORTEE_200, RACINE_REECHANTILLONNAGE_PORTEE_200),\n",
++     "    \"portee_200\": (RACINE_TIRAGES_PORTEE_200, RACINE_TIRAGES_PORTEE_200),\n", _CFG, "v4_portee_200"),
++    ("V4-R08", "étage 1 joignable hors essai",
++     "        raise RefusExecution(f\"mode {contexte.mode!r} : l'étage 1 n'est joué par le banc v4 que sur la racine "
++     "des essais\")\n", "        pass\n", _ETAGE1, "v4_portee_200"),
++    ("V4-T01", "taille non contrôlée", "    if isinstance(n, bool) or not isinstance(n, int) or n != N_PORTEE_200:\n",
++     "    if False:\n", _TAILLE, "v4_portee_200"),
++    ("V4-T02", "taille : n flottant ou booléen accepté",
++     "    if isinstance(n, bool) or not isinstance(n, int) or n != N_PORTEE_200:\n", "    if n != N_PORTEE_200:\n",
++     _TAILLE, "v4_portee_200"),
++    ("V4-T03", "configuration gelée non exigée hors essai", "        if cfg != CONFIGURATION_PORTEE_200:\n",
++     "        if False:\n", _HORS, "v4_portee_200"),
++    ("V4-T04", "dossier du code imposé permis hors essai", "        if dossier_du_code is not None:\n",
++     "        if False:\n", _HORS, "v4_portee_200"),
++    ("V4-T05", "mode du chronométrage admis à jouer la mesure", "    if contexte.mode not in (\"essais\", \"portee_200\"):\n",
++     "    if False:\n", _HORS, "v4_portee_200"),
++    ("V4-T06", "configuration gelée : n = 100", "                  \"n\": N_PORTEE_200},\n",
++     "                  \"n\": 100},\n", _CFG, "v4_portee_200"),
++    ("V4-T07", "configuration gelée : rééchantillonnage à 1 000 tirages",
++     "    \"tirages_reechantillonnage\": 2000,\n    \"puissance\": {",
++     "    \"tirages_reechantillonnage\": 1000,\n    \"puissance\": {", _CFG, "v4_portee_200"),
++    ("V4-U01", "dossier de sortie déjà présent accepté",
++     "    dossier = Path(dossier_sortie)\n    if dossier.exists():\n        raise RefusExecution(f\"dossier de sortie déjà "
++     "présent : {dossier} (une exécution par dossier)\")\n    code = ",
++     "    dossier = Path(dossier_sortie)\n    if False:\n        raise RefusExecution(f\"dossier de sortie déjà "
++     "présent : {dossier} (une exécution par dossier)\")\n    code = ", _UNE, "v4_portee_200"),
++    ("V4-P01", "sortie sous le dossier du code acceptée", "    if sortie == code or code in sortie.parents:\n",
++     "    if False:\n", _PROPRE, "v4_portee_200"),
++    ("V4-P02", "sortie égale au dossier du code acceptée", "    if sortie == code or code in sortie.parents:\n",
++     "    if code in sortie.parents:\n", _PROPRE, "v4_portee_200"),
++    ("V4-P03", "dossier du code hors dépôt accepté",
++     "        if dedans.returncode != 0 or dedans.stdout.strip() != \"true\":\n", "        if False:\n", _PROPRE,
++     "v4_portee_200"),
++    ("V4-P04", "git status --porcelain non lu", "    if etat.stdout.strip() != \"\":\n", "    if False:\n", _PROPRE,
++     "v4_portee_200"),
++    ("V4-P05", "archives-reponses-modeles/ accepté dans le dossier du code",
++     "    if (code / \"archives-reponses-modeles\").exists():\n", "    if False:\n", _PROPRE, "v4_portee_200"),
++    ("V4-P06", "garde du dossier du code jamais appelée", "    verifier_dossier_du_code_propre(code, dossier)\n", "",
++     _PROPRE, "v4_portee_200"),
++    ("V4-P07", "variables de chemin non contrôlées", "    if posees:\n", "    if False:\n", _VAR, "v4_portee_200"),
++    ("V4-F01", "formules : écart vrai non contrôlé",
++     "        if abs(vrai[comparaison] - vrai[\"au_moins_un\"] - ecart) > TOLERANCE_ECART_VRAI:\n", "        if False:\n",
++     _FORM, "v4_portee_200"),
++    ("V4-F02", "formules : ancres écrites à la main retirées",
++     "            if (d is None) != (attendu is None) or (d is not None and abs(d - attendu) > TOLERANCE_ECART_VRAI):\n",
++     "            if False:\n", _FORM, "v4_portee_200"),
++    ("V4-F03", "formules : mondes faisables à 0,10 non comparés",
++     "    if sorted(faisables) != sorted(MONDES_FAISABLES_A_0_10) or len(faisables) != 13:\n", "    if False:\n", _FORM,
++     "v4_portee_200"),
++    ("V4-F04", "gardes de la portée jamais appelées avant les tirages", "    verifier_gardes_portee_200()\n", "",
++     _FORM, "v4_portee_200"),
++    ("V4-L01", "règle de lecture : 0,5 rendu « descriptives » (« sous 0,5 » lu au sens large)",
++     "    return ISSUE_A if 2 * minimum_gagnees >= repliques else ISSUE_B\n",
++     "    return ISSUE_A if 2 * minimum_gagnees > repliques else ISSUE_B\n", _LECT, "v4_portee_200"),
++    ("V4-L02", "règle de lecture : comparaison sans cellule faisable ignorée",
++     "    if comparaisons_sans_cellule_faisable:\n        return ISSUE_B\n", "    if False:\n        return ISSUE_B\n",
++     _LECT, "v4_portee_200"),
++    ("V4-L03", "garde de la règle de lecture retirée", "    if (issue_de_la_regle_de_lecture(1000, 2000, []) != ISSUE_A\n",
++     "    if False and (issue_de_la_regle_de_lecture(1000, 2000, []) != ISSUE_A\n", _LECT, "v4_portee_200"),
++    ("V4-L04", "aide : maximum au lieu du minimum", "        minimum = min(minima_comptes.values())\n",
++     "        minimum = max(minima_comptes.values())\n", _LECT, "v4_portee_200"),
++    ("V4-L05", "aide : cellules de l'écart 0,05 lues",
++     "        if not c.get(\"faisable\") or abs(c[\"ecart_vise\"] - ECART_QUI_DECIDE) > EPS or c[\"loi\"] not in (1, 3):\n",
++     "        if not c.get(\"faisable\") or c[\"loi\"] not in (1, 3):\n", _LECT, "v4_portee_200"),
++    ("V4-L06", "aide : « près du seuil » à borne basse stricte",
++     "    pres = (minimum is not None and 1000 * minimum >= PRES_DU_SEUIL_MILLIEMES[0] * repliques\n",
++     "    pres = (minimum is not None and 1000 * minimum > PRES_DU_SEUIL_MILLIEMES[0] * repliques\n", _LECT,
++     "v4_portee_200"),
++    ("V4-C01", "comptes : compte entier faux", "        k = int(round(p * R))\n", "        k = int(round(p * R)) - 1\n",
++     _CPT + _SAIN, "v4_portee_200"),
++    ("V4-C02", "comptes : contrôle d'exactitude retiré", "        if not (0 <= k <= R) or k / R != p:\n",
++     "        if False:\n", _CPT, "v4_portee_200"),
++    ("V4-C03", "résultat : comptes entiers non ajoutés aux cellules",
++     "            c[\"repliques_gagnees_par_comparaison\"] = comptes_gagnes(c)\n", "            pass\n", _SAIN,
++     "v4_portee_200"),
++    ("V4-C04", "n de la configuration non transmis à la cellule (n = 100 par défaut)",
++     "    res_p = [cellule_puissance(gt[i], gr[i], comp, ec, loi, rho, rp, R, B, n=puissance[\"n\"])\n",
++     "    res_p = [cellule_puissance(gt[i], gr[i], comp, ec, loi, rho, rp, R, B)\n", _SAIN, "v4_portee_200"),
++    ("V4-M01", "manifeste : additif qui fait foi non porté",
++     "    manifeste[\"additif_qui_fait_foi_sha256\"] = EMPREINTE_ADDITIF_3_PORTEE_200\n", "", _SAIN, "v4_portee_200"),
++    ("V4-M02", "manifeste : état du dépôt lu ailleurs que sur le dossier de la garde",
++     "                                     dossier_du_code=code)\n", "                                     dossier_du_code=None)\n",
++     _SAIN, "v4_portee_200"),
++    ("V4-K01", "chronométrage : variables de chemin non contrôlées hors essai",
++     "        banc.verifier_variables_de_chemin_non_posees()\n", "", _CHR, "v4_chronometrage", "chrono"),
++    ("V4-K02", "chronométrage : autorisation non vérifiée par le chronométrage (la dérivation la refuse encore)",
++     "            banc.verifier_racine(banc.RACINE_CHRONOMETRAGE_PORTEE_200, tache, n, autorisation)\n",
++     "            pass\n", _CHR, "v4_chronometrage", "chrono"),
++    ("V4-K03", "chronométrage : --tirages-essai permis hors essai", "        if args.tirages_essai is not None:\n",
++     "        if False:\n", _CHR, "v4_chronometrage", "chrono"),
++    ("V4-K04", "chronométrage : une mesure imprimée",
++     "    print(f\"duree_mesuree_du_chronometrage_secondes: {mesuree:.3f}\")\n",
++     "    print(f\"duree_mesuree_du_chronometrage_secondes: {mesuree:.3f}\")\n    print(\"puissance: 0.5\")\n", _CHR,
++     "v4_chronometrage", "chrono"),
++    ("V4-K05", "chronométrage : manifeste sans l'empreinte du chronométrage",
++     "    manifeste[\"programme_chronometrage_sha256\"] = banc.sha256_fichier(Path(__file__).resolve())\n", "", _CHR,
++     "v4_chronometrage", "chrono"),
++    ("V4-K06", "chronométrage : rééchantillonnage tiré sur la clé des tirages",
++     "    gr = contexte.reechantillonnage(\"reechantillonnage_monde_de_puissance\", len(cellules))\n",
++     "    gr = contexte.reechantillonnage(\"monde_de_puissance\", len(cellules))\n", _CHR, "v4_chronometrage", "chrono"),
++]
++
+ DEFAUTS = ([d + ("v1",) for d in DEFAUTS_V1] + [d + ("contre_lecture",) for d in DEFAUTS_CONTRE_LECTURE]
+-           + DEFAUTS_V2 + [d + ("graines",) for d in DEFAUTS_GRAINES] + DEFAUTS_V3)
++           + DEFAUTS_V2 + [d + ("graines",) for d in DEFAUTS_GRAINES] + DEFAUTS_V3 + DEFAUTS_V4)
++# Version 4 : chaque défaut porte sa cible (« banc » par défaut, ou « chrono »).
++DEFAUTS = [d if len(d) == 7 else d + ("banc",) for d in DEFAUTS]
+ 
+ NOMS_QUI_DERIVENT = ("generateurs", "Contexte", "_gens", "main", "executer_etage_1", "tirages", "reechantillonnage",
+-                     "chrono", "_charger", "CHEMIN_CHRONO", "RACINE_ESSAIS")
++                     "chrono", "_charger", "CHEMIN_CHRONO", "RACINE_ESSAIS", "executer_portee_200")
+ PREFIXE_ESSAIS_GRAINES = "test_verifier_autorisation_"
+ 
+ 
+@@ -330,7 +482,7 @@
+ def garde_graines(texte_banc, texte_essais, ancien, essais_vises):
+     """Refus (chaîne) si un défaut « graines » pourrait faire dériver une graine ; None sinon."""
+     debut = texte_banc.find("def verifier_autorisation(")
+-    fin = texte_banc.find("\ndef generateurs(")
++    fin = texte_banc.find("\ndef verifier_racine(")  # version 4 : `verifier_racine` suit `verifier_autorisation`
+     pos = texte_banc.find(ancien)
+     if not (0 <= debut < pos < fin):
+         return "texte ancien hors du corps de verifier_autorisation"
+@@ -355,10 +507,10 @@
+     return None
+ 
+ 
+-def lancer(essais, noms, banc, travail, complet=False):
++def lancer(essais, noms, banc, chrono, travail, complet=False):
+     env = dict(os.environ)
+     env.update({"PYTHONDONTWRITEBYTECODE": "1", "TMPDIR": str(travail / "tmp"), "BANC_LIGNE_3_CHEMIN": str(banc),
+-                "CHRONOMETRAGE_LIGNE_3_CHEMIN": str(Path(essais).resolve().parent / "chronometrer_banc_ligne_3_v3.py")})
++                "CHRONOMETRAGE_LIGNE_3_CHEMIN": str(chrono)})
+     cmd = [sys.executable, "-B", "-m", "pytest", "-q", "-p", "no:cacheprovider", "--tb=line"]
+     cmd += (["-x", str(essais)] if complet else [f"{essais}::{n}" for n in noms])
+     r = subprocess.run(cmd, cwd=str(travail), env=env, capture_output=True, text=True, timeout=1800)
+@@ -372,12 +524,14 @@
+ def main(argv=None):
+     parser = argparse.ArgumentParser()
+     parser.add_argument("--banc", required=True)
++    parser.add_argument("--chronometrage", required=True)
+     parser.add_argument("--essais", required=True)
+     parser.add_argument("--travail", required=True)
+     parser.add_argument("--sortie", required=True)
+     parser.add_argument("--mode", choices=("vise", "complet"), default="vise")
+     args = parser.parse_args(argv)
+     banc = Path(args.banc).resolve()
++    chrono = Path(args.chronometrage).resolve()
+     essais = Path(args.essais).resolve()
+     travail = Path(args.travail).resolve()
+     sortie = Path(args.sortie)
+@@ -385,14 +539,18 @@
+         print("refus : dossier de travail ou sortie déjà présents", file=sys.stderr)
+         return 2
+     texte = banc.read_text(encoding="utf-8")
++    textes = {"banc": texte, "chrono": chrono.read_text(encoding="utf-8")}
+     texte_essais = essais.read_text(encoding="utf-8")
+     fonctions_essais = {n.name for n in ast.parse(texte_essais).body if isinstance(n, ast.FunctionDef)}
+     idents = [d[0] for d in DEFAUTS]
+     if len(set(idents)) != len(idents):
+         print("refus : identifiants de défauts en double", file=sys.stderr)
+         return 2
+-    for ident, _, ancien, neuf, vises, famille in DEFAUTS:
+-        if texte.count(ancien) != 1 or ancien == neuf:
++    for ident, _, ancien, neuf, vises, famille, cible in DEFAUTS:
++        if cible not in textes or (famille == "graines" and cible != "banc"):
++            print(f"refus : cible de {ident} inconnue", file=sys.stderr)
++            return 2
++        if textes[cible].count(ancien) != 1 or ancien == neuf:
+             print(f"refus : texte ancien de {ident} absent ou multiple", file=sys.stderr)
+             return 2
+         manquants = [n for n in vises if n not in fonctions_essais]
+@@ -407,22 +565,25 @@
+     travail.mkdir(parents=True)
+     (travail / "tmp").mkdir()
+     vises_tous = sorted({n for d in DEFAUTS for n in d[4]})
+-    code_sain, resume_sain, _ = lancer(essais, vises_tous, banc, travail)
+-    rapport = {"programme": "controle-defauts-reintroduits-ligne-3-v3", "programme_sha256": sha256(Path(__file__).resolve()),
+-               "mode": args.mode, "banc_sha256": sha256(banc), "essais_sha256": sha256(essais),
++    code_sain, resume_sain, _ = lancer(essais, vises_tous, banc, chrono, travail)
++    rapport = {"programme": "controle-defauts-reintroduits-ligne-3-v4", "programme_sha256": sha256(Path(__file__).resolve()),
++               "mode": args.mode, "banc_sha256": sha256(banc), "chronometrage_sha256": sha256(chrono),
++               "essais_sha256": sha256(essais),
+                "essais_vises_sur_le_banc_sain": {"code": code_sain, "resume": resume_sain, "passent": code_sain == 0},
+                "defauts": []}
+     if args.mode == "complet":
+-        code_c, resume_c, _ = lancer(essais, [], banc, travail, complet=True)
++        code_c, resume_c, _ = lancer(essais, [], banc, chrono, travail, complet=True)
+         rapport["fichier_entier_sur_le_banc_sain"] = {"code": code_c, "resume": resume_c, "passe": code_c == 0}
+-    for ident, description, ancien, neuf, vises, famille in DEFAUTS:
++    for ident, description, ancien, neuf, vises, famille, cible in DEFAUTS:
+         dossier = travail / ident
+         dossier.mkdir()
+-        copie = dossier / banc.name
+-        copie.write_text(texte.replace(ancien, neuf, 1), encoding="utf-8")
++        source = banc if cible == "banc" else chrono
++        copie = dossier / source.name
++        copie.write_text(textes[cible].replace(ancien, neuf, 1), encoding="utf-8")
++        copie_banc, copie_chrono = (copie, chrono) if cible == "banc" else (banc, copie)
+         complet = args.mode == "complet" and famille != "graines"
+-        code, resume, echecs = lancer(essais, vises, copie, travail, complet=complet)
+-        rapport["defauts"].append({"id": ident, "famille": famille, "description": description,
++        code, resume, echecs = lancer(essais, vises, copie_banc, copie_chrono, travail, complet=complet)
++        rapport["defauts"].append({"id": ident, "famille": famille, "cible": cible, "description": description,
+                                    "essais_vises": list(vises), "joue_contre": "fichier entier" if complet else "essais visés",
+                                    "code_pytest": code, "resume": resume, "lignes_d_echec": echecs,
+                                    "vu": code == 1})
