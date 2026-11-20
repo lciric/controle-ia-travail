@@ -86,6 +86,14 @@ def main(chemins):
         sh = sum(t[1] for t in totaux)
         sp = sum(t[2] for t in totaux)
         print(f"  deux questions : bas {sb:.2f}  haut {sh:.2f}  pire sans plafond {sp + epreuve:.2f}")
+        for c, n in zip(chemins, tailles):
+            for libelle, piece in (("pièces à mots x 7", None), ("pièces à 49 389 caractères", PIECE_MAX_RELEVEE)):
+                _, _, th0, _ = tableau(n, noms, piece=piece)
+                cl = caracteres(n, "E3-T3", len(noms), piece)
+                rf = appel("Fable 5.1", cl, 64000)
+                rc = appel("Carbon", cl, 65536)
+                print(f"    {Path(c).name}, {libelle} : haut {th0:.2f} + relance de Fable au plus long tour {rf:.2f}"
+                      f" + relance de Carbon au plus long tour {rc:.2f} = {th0 + rf + rc:.2f}")
         print("  variante (1), pièces à la plus grande longueur relevée :")
         for c, n in zip(chemins, tailles):
             _, _, th1, tp1 = tableau(n, noms, piece=PIECE_MAX_RELEVEE)
