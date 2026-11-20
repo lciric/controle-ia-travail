@@ -46,7 +46,7 @@ Le contre-lecteur verra ces différences à la vérification. Aucun nom de fichi
 
 **`scripts/lancer_b5f_lecture_v1.sh`** : en-tête (l'amorce est écrite, emportée par « commande », jamais jouée par le lanceur) ; sous-commandes `commande`, `detruire`, `verifier-destruction`, `scores` ; liste des refus.
 
-**Essais** (noms gardés) : `tests/test_barreau5_familles_lecture_v1.py` (+12 essais, un étendu), `tests/test_barreau5_familles_sondes_v1.py` (+2), `tests/test_barreau5_familles_relecture_v1.py` (+3, pour l'amorce), `tests/test_lancer_b5f_lecture_v1.py` (refus étendus ; essais de la session, +2 pour la contre-lecture). Neufs : `tests/test_amorce_b5f_lecture_v1.py`, `tests/test_amorce_b5f_lecture_entiere_v1.py`.
+**Essais** (noms gardés) : `tests/test_barreau5_familles_lecture_v1.py` (+12 essais, un étendu), `tests/test_barreau5_familles_sondes_v1.py` (+2), `tests/test_barreau5_familles_relecture_v1.py` (+3, pour l'amorce), `tests/test_lancer_b5f_lecture_v1.py` (refus étendus ; essais de la session ; +2 pour la contre-lecture ; un cas d'artefact de plus après la mutation S03). Neufs : `tests/test_amorce_b5f_lecture_v1.py` (un essai complété après la mutation A07), `tests/test_amorce_b5f_lecture_entiere_v1.py`.
 
 ## 3. Traitement des constats de la contre-lecture
 
@@ -70,7 +70,7 @@ Lignes : celles des fichiers dans l'état rendu ici. Chaque correction est défa
 | m-2, « [borne] » de la phrase E | non corrigé | — | question à l'additif (section 5) |
 | m-3, écart mesuré écrit | `sondes_v1.py` | 237 à 245 (`controle_carte`) | `tests/test_barreau5_familles_sondes_v1.py::test_controle_carte_processeur_en_echec_sans_nombre_ecrit` (K07) |
 | m-4, « niveau non atteignable » sous six familles de M1 ou M3 | `lecture_v1.py` | 988 à 994 (`issue`) | `test_manipulation_sous_six_familles_motif_niveau_non_atteignable` (K11) |
-| m-5, garde de l'arbre jouée côté session | `relecture_v1.py` | [L-m5] | `tests/test_lancer_b5f_lecture_v1.py::test_arbre_extrait_au_commit_sans_table_ni_ligne_de_la_formation` : table et ligne de coût dans un dossier extrait (refus, par `verifier` et par `commande`), la même table hors des motifs (acceptée), règles des motifs (K08, K09, K10) |
+| m-5, garde de l'arbre jouée côté session | `relecture_v1.py` | 880 à 883 ; 886 à 946 ; 1080 (`commande_de_creation`) | `tests/test_lancer_b5f_lecture_v1.py::test_arbre_extrait_au_commit_sans_table_ni_ligne_de_la_formation` : table et ligne de coût dans un dossier extrait (refus, par `verifier` et par `commande`), la même table hors des motifs (acceptée), règles des motifs (K08, K09, K10) |
 | m-6, instant de « création » | déclaré | — | voir ci-dessous |
 | m-7, « chaque étape écrite avant la suivante » | déclaré | — | voir ci-dessous |
 | m-8 (C8 vue par le seul jouet) | — | — | `tests/test_barreau5_familles_sondes_v1.py::test_sonde_d_un_pli_ne_note_que_les_taches_de_son_pli` |
