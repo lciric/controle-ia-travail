@@ -623,3 +623,6 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 
 ## 20 novembre, 16:40 UTC — autonomie de 8 heures de la mère (GO-2026-11-20-66, jusque vers 2026-11-21T00:45Z)
 - Passation intermédiaire `registres/passations/2026-11-20-1640.md`. Course « nouvelles attaques » scellée à cinq espèces (v9, additif 1 v5, devis v11, complément v3), attend les soldes de Rigaud et d’OpenAI. Formation : relances 5 et 7 en marche, 1 à 4 tombées ; recréations sous un mot unique de Lazar avant 2026-11-21T07:30:16Z. Étage 2 : code vérifié, additif 6 en contre-lecture. Papier « dopamine » : préenregistrement v3 conforme, six points à Lazar.
+
+## 20 novembre, 22:40 UTC — fin de l’autonomie de 8 heures (passation `registres/passations/2026-11-20-2240.md`)
+- Formation : relances 5 et 7 finies et détruites ; 1 à 4 à recréer sur le mot de Lazar avant 2026-11-21T07:30:16Z (additifs 2 v6 et 3 scellés). Étage 2 : additif 6 scellé, deux nœuds pour Lazar. Palier 0b : v19 conforme, code v6 et programmes sur main (8262c442…), garde 17 à trancher. Course « nouvelles attaques » : attend les soldes. Papier « dopamine » : six points. Aucune instance en marche ; crédit du loueur 90,56 USD.
