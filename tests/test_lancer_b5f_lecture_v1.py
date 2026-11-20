@@ -251,6 +251,69 @@ def test_commande_de_creation_artefacts_aucune_commande(session, cas):
         _commande(s, plan=plan, **k)
 
 
+def _config_decisive(s):
+    return rv.config_lecture(s["r"], GO_LECTURE, "decisif", rv.ENTREES_DE_LA_MARCHE, True, "une_sur_dix")
+
+
+def test_verifier_avant_creation_cas_sain_et_artefacts(session):
+    """Constat M-4 de la contre-lecture : `verifier_avant_creation` (sous-commande « verifier ») sur un dépôt jetable : cas
+    sain ; registre sans l'épreuve à vérité plantée ; marche qui ne descend pas du code ; arbre de travail changé."""
+    s = session
+    v = rv.verifier_avant_creation(s["r"], s["marche"], _config_decisive(s))
+    assert v["commit"] == s["marche"] and v["commit_lecture"] == s["code"] and v["relance"] is None
+    assert v["arbre_extrait"]["fichiers_extraits"] >= 4 and v["arbre_extrait"]["fichiers_parcourus"] >= 4
+    with pytest.raises(GardeArret, match="commit"):
+        rv.verifier_avant_creation(s["r"], "pas-un-commit", _config_decisive(s))
+    # registre sans l'épreuve à vérité plantée, à un commit de marche neuf
+    (s["r"] / en.REGISTRE_PROPRE).write_text(_registre(s["code"], sans=("EPREUVE-B5F",)), encoding="utf-8")
+    _g(s["r"], "commit", "-q", "-am", "registre sans épreuve")
+    sans_epreuve = _g(s["r"], "rev-parse", "HEAD")
+    with pytest.raises(GardeArret, match="épreuve à vérité plantée"):
+        rv.verifier_avant_creation(s["r"], sans_epreuve, _config_decisive(s))
+    _g(s["r"], "reset", "-q", "--hard", s["marche"])
+    # registre au commit du code (avant la marche) : registre propre absent
+    with pytest.raises(GardeArret, match="registre propre absent"):
+        rv.verifier_avant_creation(s["r"], s["code"], _config_decisive(s))
+    # arbre de travail de la session changé (code) : refus
+    (s["r"] / rv.AMORCE).write_text("echo autre\n")
+    with pytest.raises(GardeArret, match="aucune ouverture"):
+        rv.verifier_avant_creation(s["r"], s["marche"], _config_decisive(s))
+    _g(s["r"], "checkout", "-q", "--", rv.AMORCE)
+    rv.verifier_avant_creation(s["r"], s["marche"], _config_decisive(s))
+
+
+def test_arbre_extrait_au_commit_sans_table_ni_ligne_de_la_formation(session):
+    """Constat m-5 de la contre-lecture : la garde de l'arbre de la session de lecture est jouée côté session, sur ce que
+    l'amorce extraira au commit de la marche (ses motifs) ; un fichier hors des motifs n'y entre pas."""
+    s = session
+    r = s["r"]
+    hors = r / "docs" / "notes" / "x.json"
+    hors.parent.mkdir(parents=True)
+    hors.write_text(json.dumps([{"nom": "X-01", "famille": "T01", "membre": "jumeau"}]))
+    _g(r, "add", "-A")
+    _g(r, "commit", "-q", "-m", "note hors des motifs")
+    sain = _g(r, "rev-parse", "HEAD")
+    x = rv.exiger_arbre_extrait_propre(r, sain, "d" * 64, [])
+    assert x["fichiers_extraits"] >= 4 and x["motifs"] == len(rv.motifs_de_l_amorce((RACINE / rv.AMORCE).read_text()))
+    rv.verifier_avant_creation(r, sain, _config_decisive(s))
+    for nom, corps, motif in (("table.json", [{"nom": "X-01", "famille": "T01", "membre": "jumeau"}], "table des étiquettes"),
+                              ("cout.json", {"famille": "T03", "membre": "jumeau", "cout": 3.0}, "formation")):
+        _g(r, "reset", "-q", "--hard", sain)
+        dans = r / "docs" / "sources" / "invites-2606.08892-v1" / nom
+        dans.parent.mkdir(parents=True, exist_ok=True)
+        dans.write_text(json.dumps(corps))
+        _g(r, "add", "-A")
+        _g(r, "commit", "-q", "-m", f"{nom} dans un dossier extrait")
+        c = _g(r, "rev-parse", "HEAD")
+        with pytest.raises(GardeArret, match=motif):
+            rv.verifier_avant_creation(r, c, _config_decisive(s))
+        with pytest.raises(GardeArret, match=motif):
+            _commande(s, commit=c)
+    assert rv._extrait("scripts/amorce_b5f_lecture_v1.sh.sha256", ["/scripts/amorce_b5f_lecture_v1.sh*"])
+    assert not rv._extrait("scripts/amorce/x.sh", ["/scripts/amorce*"])           # l'étoile ne passe pas « / »
+    assert rv._extrait("src/a/b.py", ["/src/"]) and not rv._extrait("srcx/b.py", ["/src/"])
+
+
 def test_commande_par_le_lanceur(session):
     s = session
     args = ["commande", "decisif", str(s["r"]), str(s["t"] / "offre.json"), s["marche"], "main", RUN_L, s["entrees"], "1",

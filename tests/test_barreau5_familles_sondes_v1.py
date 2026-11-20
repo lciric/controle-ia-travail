@@ -182,6 +182,40 @@ def test_controle_carte_processeur_cas_sain_et_artefact(monkeypatch):
         sv.controle_carte(abimees, defs, lecteur, cles, PLIS, g)
 
 
+def test_controle_carte_processeur_en_echec_sans_nombre_ecrit(monkeypatch):
+    """Constat m-3 de la contre-lecture : la fonction gelée lève un message qui porte l'écart mesuré ; la garde relevée ici
+    n'en porte aucun (le résultat « arrêt » et la sortie d'erreur ne reçoivent que ce message)."""
+    import re
+    lecteur, cles = _activations(decalages={f"A{k}-sur_saboteur": 2.0 for k in (1, 2, 3)})
+    defs = [x for x in sv.plan_des_sondes(NOMS, "decisif") if x.nom == "decisive"]
+    g = graines(sv.cles_des_graines(defs), 79)
+    appris = {}
+    for k in (0, 1):
+        seqs, y = sv.donnees_d_apprentissage(defs[0], lecteur, cles, PLIS[1 - k])
+        appris[("decisive", k)] = sv.apprendre(defs[0], seqs, y, sv.graine_entiere(g[sv.cle_de_graine("decisive", k)]), "cpu")
+    abimees = {kk: replace(v, w=v.w * 1.01) for kk, v in appris.items()}
+    with pytest.raises(GardeArret) as e:
+        sv.controle_carte(abimees, defs, lecteur, cles, PLIS, g)
+    message = str(e.value)
+    assert "carte-processeur" in message and "tolérance" in message
+    assert re.search(r"[0-9][.,][0-9]|[0-9]e[-+]", message) is None and "relatif" not in message, message
+    assert e.value.__suppress_context__                                   # le message gelé n'est pas chaîné
+
+
+def test_sonde_d_un_pli_ne_note_que_les_taches_de_son_pli(tmp_path):
+    """Constat m-8 (mutation C8) : dans `apprendre_et_noter`, la sonde du pli k note les seules actions des tâches du pli
+    k (essai rapide, sans le jouet de bout en bout)."""
+    lecteur, cles = _activations(decalages={f"A{k}-sur_saboteur": 3.0 for k in (1, 2, 3)})
+    defs = [x for x in sv.plan_des_sondes(NOMS, "decisif") if x.nom == "decisive"]
+    g = graines(sv.cles_des_graines(defs), 81)
+    sv.apprendre_et_noter(defs, lecteur, cles, PLIS, g, tmp_path / "ferme", tmp_path / "poids", "cpu")
+    for k in (0, 1):
+        x = json.loads((tmp_path / "ferme" / "scores" / f"decisive-pli{k}.json").read_text())
+        for nom, s in x["series"].items():
+            assert {c.rsplit("/p", 1)[0] for c in s["actions"]} == set(PLIS[k]), (k, nom)
+            assert {c.rsplit("/p", 1)[0] for c in s["jetons"]} == set(PLIS[k]), (k, nom)
+
+
 def test_apprentissage_sans_les_deux_classes_ou_serie_absente_refus():
     lecteur, cles = _activations()
     d = sv.Definition("decisive", 15, ("A1-sur_saboteur",), ("A1-jumeau",), True)

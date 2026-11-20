@@ -877,7 +877,73 @@ def verifier_avant_creation(racine: Path, commit: str, config: dict) -> dict:
                        capture_output=True)
     if a.returncode != 0:
         raise GardeArret("le commit de la marche ne descend pas du commit de CODE-LECTURE-B5F")
-    return {"commit": commit, "commit_lecture": reg["commit_lecture"], "relance": reg["relance"], "verifie_le": maintenant}
+    chemins = [x["chemin"] for x in list(config.get("ancrages") or []) + list(config.get("adaptateurs_repetition") or [])]
+    arbre = exiger_arbre_extrait_propre(racine, commit, reg["engagement"], chemins)
+    return {"commit": commit, "commit_lecture": reg["commit_lecture"], "relance": reg["relance"], "verifie_le": maintenant,
+            "arbre_extrait": arbre}
+
+
+def motifs_de_l_amorce(texte: str) -> list[str]:
+    """Motifs de l'extraction partielle de l'amorce (bloc `# >>> motifs` … `# <<< motifs`, variable `MOTIFS`)."""
+    m = re.search(r"# >>> motifs[^\n]*\nMOTIFS='(?P<corps>[^']*)'\n# <<< motifs", texte)
+    if m is None:
+        raise GardeArret("amorce : bloc des motifs d'extraction illisible")
+    motifs = [x for x in m["corps"].split("\n") if x]
+    if not motifs or any(not re.fullmatch(r"/[A-Za-z0-9._/*-]+", x) for x in motifs):
+        raise GardeArret("amorce : motif d'extraction illisible")
+    return motifs
+
+
+def _extrait(chemin: str, motifs: list[str]) -> bool:
+    """Un chemin du commit est-il extrait par ces motifs (extraction partielle sans cône : « /d/ » un dossier, « /f* »
+    une étoile qui ne passe pas « / », « /f » un fichier ou un dossier) ?"""
+    import fnmatch
+    for x in motifs:
+        p = x[1:]
+        if p.endswith("/"):
+            if chemin.startswith(p):
+                return True
+        elif "*" in p:
+            if fnmatch.fnmatchcase(chemin, p) and chemin.count("/") == p.count("/"):
+                return True
+        elif chemin == p or chemin.startswith(p + "/"):
+            return True
+    return False
+
+
+def exiger_arbre_extrait_propre(racine: Path, commit: str, engagement: str | None, existants=()) -> dict:
+    """Constat m-5 de la contre-lecture : côté session, avant la création, la garde de l'arbre de la session de lecture
+    (`exiger_arbre_de_lecture_propre`, liste d'arrêt, point 8) est jouée sur l'arbre que l'amorce extraira au commit de la
+    marche (ses motifs, lus dans l'amorce de ce commit, et les adaptateurs existants cités), dans un dossier temporaire. La
+    garde des références git reste celle de l'instance (son clone ne porte qu'une branche)."""
+    import io
+    import tarfile
+    import tempfile
+
+    motifs = motifs_de_l_amorce(_montrer(racine, commit, AMORCE).decode("utf-8"))
+    ls = subprocess.run(["git", "-C", str(racine), "ls-tree", "-r", "-z", "--name-only", commit], capture_output=True)
+    if ls.returncode != 0:
+        raise GardeArret(f"arbre du commit {commit[:12]} illisible")
+    tous = [x for x in ls.stdout.decode("utf-8").split("\0") if x]
+    pris = sorted({c for c in tous if _extrait(c, motifs)} | {c for c in existants if c in tous})
+    if not pris:
+        raise GardeArret("arbre extrait vide : motifs de l'amorce sans fichier au commit")
+    ar = subprocess.run(["git", "-C", str(racine), "archive", "--format=tar", commit, "--", *pris], capture_output=True)
+    if ar.returncode != 0:
+        raise GardeArret(f"extraction du commit {commit[:12]} impossible")
+    with tempfile.TemporaryDirectory(prefix="b5f-arbre-extrait-") as t:
+        base = Path(t) / "depot"
+        with tarfile.open(fileobj=io.BytesIO(ar.stdout)) as tar:
+            for membre in tar.getmembers():
+                if not membre.isfile():
+                    continue
+                if membre.name.startswith("/") or ".." in Path(membre.name).parts:
+                    raise GardeArret(f"extraction : chemin {membre.name!r} refusé")
+                cible = base / membre.name
+                cible.parent.mkdir(parents=True, exist_ok=True)
+                cible.write_bytes(tar.extractfile(membre).read())
+        r = exiger_arbre_de_lecture_propre(base, [], engagement, None)
+    return {"motifs": len(motifs), "fichiers_extraits": len(pris), **r}
 
 
 # --- côté session : instance de lecture (aucune création, aucun arrêt ici : les commandes sont imprimées) -------------
@@ -975,8 +1041,10 @@ def commande_de_creation(racine: Path, plan: str, offre_json: Path, commit: str,
     registre au commit de la marche qui n'admet pas la marche (`exiger_registre_de_relecture`, instant de création :
     maintenant) ; code du commit ou de l'arbre de la session différent de `CODE-LECTURE-B5F` ; texte scellé absent du commit
     ou d'une autre empreinte ; amorce absente ; configuration refusée (adaptateurs existants sans empreinte compris), ou
-    adaptateur existant absent du commit ; commit des entrées absent de leur branche distante (plan décisif) ; garde de
-    calcul qui bloquerait la commande. Clés passées par leur nom ($HF_TOKEN, $GH_TOKEN) ; aucune valeur écrite ici."""
+    adaptateur existant absent du commit ; arbre que l'amorce extraira au commit qui porte la table, une ligne de la
+    formation ou une marche de formation (`exiger_arbre_extrait_propre`) ; commit des entrées absent de leur branche
+    distante (plan décisif) ; garde de calcul qui bloquerait la commande. Clés passées par leur nom ($HF_TOKEN, $GH_TOKEN) ;
+    aucune valeur écrite ici."""
     import base64
 
     from .formation_v1 import exiger_garde_de_calcul
@@ -1009,6 +1077,7 @@ def commande_de_creation(racine: Path, plan: str, offre_json: Path, commit: str,
         if subprocess.run(["git", "-C", str(racine), "cat-file", "-e", f"{commit}:{x['chemin']}"],
                           capture_output=True).returncode != 0:
             raise GardeArret(f"adaptateur existant {x['nom']} : {x['chemin']} absent du commit de la marche")
+    exiger_arbre_extrait_propre(racine, commit, reg["engagement"], [x["chemin"] for x in existants])
     if plan == "decisif":
         r = subprocess.run(["git", "-C", str(racine), "branch", "-r", "--contains", entrees_commit], capture_output=True,
                            text=True)
