@@ -21,7 +21,7 @@ Phase 0 — instruments (M0 : depuis le 5 octobre 2026) ; porte de sortie G0, au
 État vivant, tâches ouvertes, GO en attente, décisions et dépenses : `registres/etat.md`.
 
 ## Rappels datés (mot de Lazar du 20 novembre 2026, R-4160)
-Toute session, de tout compte, lit `registres/rappels.md` à la reprise et fait à Lazar les rappels échus ce jour-là. En cours : **le samedi 21 novembre, puis les 25, 26, 27, 28, 29 et 30 novembre 2026, vers 18 h (Paris)**, remettre la note sur « Diffuse AI Control on Fuzzy Tasks » (pas le 21) et la lecture des trois sources de son jugement contre la surveillance, avant l'entretien du 1er décembre.
+Toute session, de tout compte, lit `registres/rappels.md` à la reprise et fait à Lazar les rappels échus ce jour-là. En cours : **le samedi 21 et le mardi 24 novembre, puis les 25, 26, 27, 28, 29 et 30 novembre 2026, vers 18 h (Paris)**, remettre la note sur « Diffuse AI Control on Fuzzy Tasks » (pas le 21 ni le 24) et la lecture des trois sources de son jugement contre la surveillance, avant l'entretien du 1er décembre.
 
 ## Routine de reprise — au début de CHAQUE session (R14)
 1. `cd docs && sha256sum -c sha256sums-lancement-v2.txt` ; puis `python -m controle_ia.scellement verifier-arbre .` (avec `PYTHONPATH=src`).
