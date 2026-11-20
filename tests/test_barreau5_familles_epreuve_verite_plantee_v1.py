@@ -216,6 +216,7 @@ def test_verites_engagees(verites, racine):
     assert verites["sha"] == sha_fichier(verites["chemin"])
     assert doc["format"] == F.FORMAT_VERITES and doc["entropie"] == ENTROPIE
     assert "SeedSequence" in doc["derivation"] and doc["numpy"] == np.__version__
+    assert doc["cle"] == "b5f/epreuve/{monde}" and "codes_groupes" not in doc
     assert doc["fabrique"]["sha256"] == sha_fichier(F.__file__)
     assert doc["parametres"] == P.en_dict()
     assert [m["monde"] for m in doc["mondes"]] == F.liste_mondes()
