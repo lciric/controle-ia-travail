@@ -1,0 +1,167 @@
+--- /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v1/essais_epreuve_juges_reels_ligne_3_v1.py	2026-11-20 13:51:50.420752067 +0000
++++ /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v2/essais_epreuve_juges_reels_ligne_3_v2.py	2026-11-20 14:08:52.458034567 +0000
+@@ -1,4 +1,7 @@
+-"""Essais de `epreuve_juges_reels_ligne_3_v1.py` (pytest, service factice seul : aucun réseau, aucune clé, aucun relais).
++"""Essais de `epreuve_juges_reels_ligne_3_v2.py` (pytest, service factice seul : aucun réseau, aucune clé, aucun relais).
++
++Version 2 (R12 ; la v1 est gardée) : les essais de la v1, sur le module v2, plus les essais des corrections C1, C2, C3 de la
++contre-lecture et des décisions de la mère (2) et (3) (nom de la clé, environnement épuré), en fin de fichier.
+ 
+ Chaque garde de la liste d'arrêt qui touche l'appel, sur un cas sain et sur un artefact (règle R5) ; la relance après
+ panne ; la reproduction exacte, sur service factice aux coûts du calcul v2 des conditions du plafond
+@@ -18,7 +21,7 @@
+ 
+ ICI = Path(__file__).resolve().parent
+ sys.path.insert(0, str(ICI))
+-import epreuve_juges_reels_ligne_3_v1 as M  # noqa: E402
++import epreuve_juges_reels_ligne_3_v2 as M  # noqa: E402
+ 
+ L3 = M.DEPOT / "docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1"
+ CALCUL = (L3 / "calcul_conditions_plafond_200_ligne_3_v2.py",
+@@ -718,6 +721,8 @@
+         (_argv(tmp_path, banque, h, decl, "0" * 64), {}, "déclaration des relais"),
+         (_argv(tmp_path, banque, h, tmp_path / "absente.json", hd), {}, "déclaration des relais"),
+         (_argv(tmp_path, banque, h, decl, hd), {"EXEMPLE_API_KEY": "x"}, "noms de variables de clé"),
++        (_argv(tmp_path, banque, h, decl, hd), {"VARIABLE_HORS_LISTE": "x"}, "non épuré"),          # v2, mère (3)
++        (_argv(tmp_path, banque, h, decl, hd)[:-1] + ["nom-minuscule"], {}, "nom de variable"),     # v2, mère (2)
+     ]
+     for argv, env, motif in cas:
+         with pytest.raises(M.Refus, match=motif):
+@@ -748,3 +753,137 @@
+     assert not any(k in x for x in lecture["rendus"] for k in ("classe", "item", "niveau"))   # aucune vérité au dépôt
+     assert len(list((depot / "reponses-brutes").iterdir())) == 1004
+     shutil.rmtree(racine)
++
++
++# --- v2 : corrections de la contre-lecture (C1, C2, C3) et décisions de la mère (2), (3) --------------------------------------
++
++
++def _panne_puis(tmp_path, fonctions, consigne, configuration, panne_a, banque=None):
++    items = configuration["items_juge"]
++    banque = banque or ecrire_banque(tmp_path, items)
++    racine = tmp_path / "run"
++    racine.mkdir()
++    banc = Banc(items, couts_au_facteur(1), panne_a=panne_a)
++    with pytest.raises(KeyboardInterrupt):
++        M.executer(racine, banque[0], banque[1], PLOMBERIE, faire_service(racine, banc, fonctions, consigne, configuration),
++                   {"commit_depot": "essai"})
++    return racine, banque
++
++
++def _relancer(racine, banque, fonctions, consigne, configuration, plomberie=PLOMBERIE, banc=None):
++    banc = banc or Banc(configuration["items_juge"], couts_au_facteur(1))
++    return M.executer(racine, banque[0], banque[1], plomberie,
++                      faire_service(racine, banc, fonctions, consigne, configuration), {"commit_depot": "essai"})
++
++
++def test_c1_ouverture_porte_banque_et_plomberie(tmp_path, fonctions, consigne, configuration):
++    racine, banque = _panne_puis(tmp_path, fonctions, consigne, configuration, 10)
++    ouverture = lignes_du_journal(racine)[0]
++    assert ouverture["banque_sha256"] == banque[1] and ouverture["plomberie"] == list(PLOMBERIE)
++    rapport = _relancer(racine, banque, fonctions, consigne, configuration)     # cas sain : même banque, même plomberie
++    assert rapport["arret"] is None and rapport["envois_partis"] == 1005
++    shutil.rmtree(racine)
++
++
++def test_c1_relance_sur_une_autre_banque_refusee(tmp_path, fonctions, consigne, configuration):
++    items = configuration["items_juge"]
++    racine, banque = _panne_puis(tmp_path, fonctions, consigne, configuration, 100)
++    autre = ecrire_banque(tmp_path, items, nom="autre-banque.json",
++                          contenu_de=lambda k, c: dict(c, titre=c["titre"] + " (autre banque)"))
++    assert autre[1] != banque[1]
++    avant = lignes_du_journal(racine)
++    with pytest.raises(M.Refus, match="banque ou témoins de plomberie différents"):
++        _relancer(racine, autre, fonctions, consigne, configuration)
++    with pytest.raises(M.Refus, match="banque ou témoins de plomberie différents"):
++        _relancer(racine, banque, fonctions, consigne, configuration, plomberie=("t01", "t03"))
++    assert lignes_du_journal(racine) == avant                                    # rien écrit, rien envoyé
++
++
++def test_c1_rendu_du_journal_hors_du_plan_refuse(tmp_path, fonctions, consigne, configuration):
++    racine, banque = _panne_puis(tmp_path, fonctions, consigne, configuration, 6)
++    journal = racine / "sortie" / "epreuve" / "journal-compteur.jsonl"
++    lignes = [json.loads(x) for x in journal.read_text(encoding="utf-8").splitlines()]
++    k = next(i for i, l in enumerate(lignes) if l["type"] == "engagement")
++    lignes[k]["rendu"] = "hors-du-plan|juge-opus|r1"
++    journal.write_bytes(b"".join((json.dumps(l, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
++                                 for l in lignes))
++    with pytest.raises(M.Refus, match="n'est pas au plan"):
++        _relancer(racine, banque, fonctions, consigne, configuration)
++
++
++def test_c2_panne_entre_le_dossier_d_appel_et_l_engagement(tmp_path, fonctions, consigne, configuration):
++    racine, banque = _panne_puis(tmp_path, fonctions, consigne, configuration, 100)
++    avant = lignes_du_journal(racine)
++    orphelin = avant[-1]
++    assert orphelin["type"] == "engagement"
++    servis = {l["opaque"] for l in avant if l["type"] == "engagement"}
++    prochain = M.Opaques(servis).neuf()                                          # premier identifiant tiré à la relance
++    laisse = racine / "sortie" / "appels" / orphelin["juge"] / prochain
++    laisse.mkdir(parents=True)                                                   # artefact : dossier créé, aucun engagement
++    rapport = _relancer(racine, banque, fonctions, consigne, configuration)
++    apres = lignes_du_journal(racine)
++    rejeu = next(l for l in apres if l["type"] == "engagement" and l["n"] == orphelin["n"] + 1)
++    assert rejeu["opaque"] == prochain and rejeu["rendu"] == orphelin["rendu"] and rejeu["essai"] == 2
++    assert rapport["arret"] is None and rapport["envois_partis"] == 1005
++    shutil.rmtree(racine)
++
++
++@pytest.mark.parametrize("illisible", [False, True])
++def test_c3_controle_de_plomberie_rejoue_a_la_relance(tmp_path, fonctions, consigne, configuration, monkeypatch, illisible):
++    """Panne forcée entre le règlement du second rendu de plomberie et son contrôle ; à la relance, le contrôle est rejoué
++    sans envoi : plomberie illisible, arrêt, aucun envoi du bloc A (artefact) ; plomberie lisible, le plan continue (sain)."""
++    items = configuration["items_juge"]
++    banque = ecrire_banque(tmp_path, items)
++    racine = tmp_path / "run"
++    racine.mkdir()
++    original = M.motif_plomberie
++    appels = {"n": 0}
++
++    def controle_puis_panne(s, compteur, juge):
++        appels["n"] += 1
++        if appels["n"] == 2:
++            raise KeyboardInterrupt("panne simulée entre le règlement et le contrôle de la plomberie")
++        return original(s, compteur, juge)
++
++    monkeypatch.setattr(M, "motif_plomberie", controle_puis_panne)
++    banc = Banc(items, couts_au_facteur(1), illisible_pour=(lambda i, m: illisible and i == 1))
++    with pytest.raises(KeyboardInterrupt):
++        M.executer(racine, banque[0], banque[1], PLOMBERIE, faire_service(racine, banc, fonctions, consigne, configuration),
++                   {"commit_depot": "essai"})
++    avant = lignes_du_journal(racine)
++    assert sum(1 for l in avant if l["type"] == "reglement") == 2 and avant[-1]["type"] == "reglement"
++    monkeypatch.setattr(M, "motif_plomberie", original)
++    rapport = _relancer(racine, banque, fonctions, consigne, configuration)
++    eng = [l for l in lignes_du_journal(racine) if l["type"] == "engagement"]
++    if illisible:
++        assert rapport["arret"]["motif"] == "plomberie : réponse illisible"
++        assert rapport["envois_partis"] == 2 and not any(l["bloc"] == "A" for l in eng)
++    else:
++        assert rapport["arret"] is None and rapport["envois_partis"] == 1004
++    shutil.rmtree(racine)
++
++
++def test_environnement_epure_sain_et_artefact():
++    sain = {"PATH": "/usr/bin", "HOME": "/tmp", "LANG": "C.UTF-8", "LC_CTYPE": "C.UTF-8", "GO_ID": "GO-2026-11-20-26"}
++    assert M.exiger_environnement_epure(sain) == sorted(sain)
++    assert M.exiger_environnement_epure({}) == []
++    with pytest.raises(M.Refus, match="non épuré"):
++        M.exiger_environnement_epure(dict(sain, VARIABLE_HORS_LISTE="x"))
++    with pytest.raises(M.Refus, match="non épuré"):
++        M.exiger_environnement_epure({"PATH": "/usr/bin", "HTTPS_PROXY": "http://127.0.0.1:1"})
++
++
++def test_mode_reel_environnement_liste_blanche_accepte(tmp_path, configuration):
++    import datetime as dt
++    banque, h = ecrire_banque(tmp_path, configuration["items_juge"])
++    decl = tmp_path / "declaration.json"
++    octets = M.json_octets({"fournisseurs": {"claude": {}, "argon": {}}})
++    decl.write_bytes(octets)
++    hd = M.sha256_octets(octets)
++    Path(str(decl) + ".sha256").write_text(f"{hd}  declaration.json\n", encoding="utf-8")
++    appels = []
++    env = {"PATH": "/usr/bin", "HOME": "/tmp", "LC_CTYPE": "C.UTF-8", "GO_ID": "GO-2026-11-20-26"}
++    M.preparer_reel(_argv(tmp_path, banque, h, decl, hd), env, dt.date(2026, 11, 20),
++                    lire_registre=lambda: {"texte": REGISTRE, "commit": "essai", "sha256": "essai"},
++                    construire_service=lambda **kw: (appels.append(kw), (None, {}))[1])
++    assert len(appels) == 1 and appels[0]["nom_cle_claude"] == "NOM_FACTICE"
