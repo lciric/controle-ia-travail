@@ -1,0 +1,61 @@
+Sortie de `mutations-verif-v2.py` — contre-lecteur Fable 5.2, seconde vérification (tours 2 et 3), nuit du 19 au 20
+novembre 2026 (passe lancée vers 23:55Z, finie vers 00:30Z à l'horloge du conteneur).
+Commande : python mutations-verif-v2.py <outils v1>/mutations-verif-v1.py <bloc-notes>/verif2-b5f <python du dépôt> <sortie>
+Copie de travail unique : arbre extrait du commit 840c3ecc5 par `extraire-arbre-instance-cl-v1.sh` (même arbre gelé que
+ef8008682 ; il porte en plus le texte scellé et le registre propre), avec les essais du lanceur et des deux fichiers
+d'amorce et la garde de calcul. Chaque mutation : posée, les six fichiers d'essais joués avec arrêt au premier échec
+(fichier visé en tête), retirée ; les quatre fichiers de code rendus à l'octet après chacune (vérifié : oui pour les 34) ;
+arbre propre à la fin. Temporaires dans /dev/shm. Recopiée à la main depuis le journal du programme.
+
+n°  | résultat | ligne de compte de pytest | premier essai en échec
+--- les vingt défauts de la contre-lecture, « avant » retrouvés tels quels sur le code du commit ef8008682, sauf M16 ---
+M01 | ATTRAPÉE | 1 failed | formation : test_jouet_de_bout_en_bout_deux_familles_formees_sans_aucune_activation
+M02 | ATTRAPÉE | 1 failed | formation : test_jouet_de_bout_en_bout_…
+M03 | ATTRAPÉE | 1 failed, 3 passed | formation : test_jouet_graines_des_matrices_A_et_de_l_ordre_…
+M04 | ATTRAPÉE | 1 failed, 4 passed | formation : test_jouet_graines_d_action_de_l_evaluation_communes_aux_membres
+M05 | ATTRAPÉE | 1 failed, 3 passed | formation : test_jouet_graines_des_matrices_A_et_de_l_ordre_…
+M06 | ATTRAPÉE | 1 failed, 5 passed | formation : test_jouet_artefact_famille_refusee_deux_fois_…_tirages_gardes
+M07 | ATTRAPÉE | 1 failed, 40 passed | amorce : test_texte_aucune_suppression_hors_de_l_index_de_versement
+M08 | ATTRAPÉE | 1 failed | édition : test_edition_cas_sains_nombre_milliers_suffixe_decimale
+M09 | ATTRAPÉE | 1 failed, 72 passed | édition : test_empan_declare_egal_a_l_empan_minimal_recalcule_a_part
+M10 | ATTRAPÉE | 1 failed, 3 passed | engagement : test_artefact_engagement_posterieur_ou_simultane_refuse
+M11 | ATTRAPÉE | 1 failed, 7 passed | formation : test_action_non_editable_ignoree_dans_les_cibles_de_tous_les_membres
+M12 | ATTRAPÉE | 1 failed, 21 passed | lanceur : test_commande_lit_le_registre_au_commit_de_la_course_et_non_dans_l_arbre_de_travail
+M13 | ATTRAPÉE | 1 failed, 7 passed | lanceur : test_commande_artefacts_aucune_commande_de_creation[go_hors_registre]
+M14 | ATTRAPÉE | 1 failed, 41 passed | amorce : test_texte_marche_sous_timeout_minuterie_a_l_echeance_plus_le_quart_d_heure_porte_des_essais
+M15 | ATTRAPÉE | 1 failed, 1 passed | amorce entière : test_amorce_entiere_porte_des_essais_fermee_aucune_marche
+M16 | ATTRAPÉE | 1 failed, 68 passed | édition : test_controle_par_famille_cas_sain_et_artefacts (« avant » repris : seuil de 25 % porté à 50 %)
+M17 | ATTRAPÉE | 1 failed, 70 passed | édition : test_action_non_editable_pour_un_seul_membre_sort_pour_tous_et_reste_non_editee
+M18 | ATTRAPÉE | 1 failed, 31 passed | lanceur : test_detruire_artefacts_rien_n_est_detruit[non_verse]
+M19 | ATTRAPÉE | 1 failed, 57 passed | formation : test_evaluer_membre_refuse_une_tache_de_reserve_avant_de_jouer
+M21 | ATTRAPÉE | 1 failed | amorce entière : test_amorce_entiere_nominale_…
+--- le constat bloquant de la contre-lecture, réintroduit en entier ---
+B1  | ATTRAPÉE | 1 failed, 1 passed | formation : test_jouet_tirage_de_chaque_famille_sur_le_modele_nu
+--- les mutations de la première vérification ---
+V01 | ATTRAPÉE | 1 failed, 35 passed | amorce : test_preuve_artefact_tete_distante_seule_aucun_temoin[branche_supprimee]   (manquée à la première vérification)
+V02 | ATTRAPÉE | 1 failed, 37 passed | amorce : test_preuve_artefact_inventaire_refuse_par_le_distant_aucun_temoin        (manquée à la première vérification)
+V03 | ATTRAPÉE | 1 failed, 72 passed | formation : test_registre_relance_unique_cas_sain_et_artefacts
+V04 | ATTRAPÉE | 1 failed, 24 passed | formation : test_point_5_sorties_permises_liste_blanche_cas_sain_et_artefacts
+V05 | ATTRAPÉE | 1 failed, 25 passed | amorce : test_minuterie_sans_preuve_arrete_sans_detruire_et_ecrit_un_signal_pour_la_mere
+V06 | ATTRAPÉE | 1 failed | formation : test_jouet_de_bout_en_bout_… (refus avant l'écriture ; manquée à la première vérification)
+V07 | ATTRAPÉE | 1 failed, 2 passed | formation : test_modele_nu_cas_sains_et_artefacts
+V08 | ATTRAPÉE | 1 failed, 33 passed | amorce : test_preuve_artefacts_aucun_temoin[tete_distante_autre]
+--- cinq mutations neuves sur le code du troisième tour ---
+W01 | ATTRAPÉE | 1 failed, 120 passed | édition : test_deux_paliers_de_la_part_non_editable_marqueur_et_part_par_motif[3-12-True-True]
+      (a) une part de 25 % juste est refusée
+W02 | ATTRAPÉE | 1 failed, 118 passed | édition : test_deux_paliers_…[1-10-True-False]
+      (a) part par motif rapportée aux seules actions non éditables
+W03 | MANQUÉE  | 325 passed in 456 s | —
+      (c) enveloppe de 56 USD comparée aux coupures à deux membres, quel que soit le nombre de membres
+W04 | ATTRAPÉE | 1 failed, 88 passed | édition : test_nom_de_carte_nombres_comptes_a_la_lettre_de_l_erratum[3k A100 GPU-hours]
+      (d) le suffixe « k » compté pour une lettre collée
+W05 | MANQUÉE  | 325 passed in 451 s | —
+      (a) marqueur « part non éditable haute » recopié du premier tirage et non du tirage formé
+
+Bilan : 34 mutations jouées, 32 attrapées, 2 manquées.
+- Les 29 des deux passes précédentes : 29 attrapées sur 29 (26 à la première vérification, 6 sur 20 à la contre-lecture).
+- W03 est sans effet sur les tables du devis : à deux instances au plus, la plus grande somme de coupures est 54 USD à
+  trois membres et 52 USD à deux, sous l'enveloppe de 56 USD dans les deux cas (sondage T6). La garde de l'enveloppe ne
+  peut refuser qu'une table retouchée ; l'essai du développeur la retouche pour les instances 1 et 2 seulement.
+- W05 est un vrai trou d'essai, sur un chemin rare : le marqueur d'une famille formée à son retirage. Le code est juste.
+- Les deux passes manquées ont joué les six fichiers en entier sur la copie de travail : 325 passés, deux fois.
