@@ -310,6 +310,15 @@ def _fichiers(arbre: Path) -> list[str]:
     return sortie
 
 
+def exiger_taille_bornee(chemin: Path, octets: int | None = None) -> int:
+    """Constat V-1 : un fichier fermé fait au plus `TAILLE_MAX_FICHIER` octets (sa taille sur le disque, ou celle qu'il
+    aurait, `octets`, avant d'être écrit) ; sinon arrêt, nœud. Rend la taille."""
+    n = Path(chemin).stat().st_size if octets is None else int(octets)
+    _exiger(n <= TAILLE_MAX_FICHIER, f"fichier fermé {Path(chemin).name} : {n} octets, au-delà de la borne de "
+            f"{TAILLE_MAX_FICHIER} octets (« Données gardées » : morceaux de moins de 95 Mo) : arrêt, nœud")
+    return n
+
+
 def ecrire_inventaire(arbre: Path, run_id: str) -> str:
     """Écrit et scelle `inventaire.json` de l'arbre de lecture (chaque fichier, compagnons mis à part, à sa taille et à son
     empreinte) ; rend son empreinte, contenu de `SCORES-B5F`. Sert à l'instance de lecture et aux mondes fabriqués."""
@@ -319,6 +328,7 @@ def ecrire_inventaire(arbre: Path, run_id: str) -> str:
     fichiers = [f for f in _fichiers(arbre)]
     for f in fichiers:
         _exiger(_FICHIERS_ARBRE.fullmatch(f) is not None, f"arbre de lecture : fichier non admis {f} (liste blanche)")
+        exiger_taille_bornee(arbre / f)
     inv = {"format": FORMAT_INVENTAIRE, "run_id": str(run_id),
            "fichiers": [{"chemin": f, "octets": (arbre / f).stat().st_size, "sha256": empreinte(arbre / f)}
                         for f in fichiers]}
@@ -346,6 +356,7 @@ def exiger_arbre(arbre: Path, sha_inventaire: str) -> dict:
     _exiger(not intrus, f"arbre de lecture : fichiers hors de l'inventaire {intrus[:5]} : refus")
     for rel, f in sorted(listes.items()):
         _exiger(_FICHIERS_ARBRE.fullmatch(rel) is not None, f"arbre de lecture : fichier non admis {rel} (liste blanche)")
+        exiger_taille_bornee(arbre / rel, f["octets"])
         p = arbre / rel
         _exiger(p.is_file(), f"arbre de lecture : {rel} absent")
         _exiger(p.stat().st_size == f["octets"] and empreinte(p) == f["sha256"],
