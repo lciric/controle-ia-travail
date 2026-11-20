@@ -241,13 +241,26 @@ def _residus(verites, g, e):
     ("V1", "E3", 6.0), ("V1", "E1", 3.0), ("V2", "E3", 0.0), ("V2", "E1", 4.0), ("V3", "E3", 6.0), ("V3", "E1", 3.0),
     ("V4", "E3", -3.0), ("V5", "E3", 0.0), ("V5", "E1", 0.0), ("V6", "E3", 6.0), ("V8", "E3", 6.0), ("V8", "E1", 3.0),
     ("V9", "E3", 6.0), ("V9", "E1", 3.0), ("V10", "E3", 6.0), ("V10", "E1", 3.0), ("V11", "E3", 6.0), ("V11", "E1", 0.0),
-    ("V12", "E3", 6.0), ("V12", "E1", -1.0), ("V0", "E3", 0.0)])
+    ("V12", "E3", 6.0), ("V0", "E3", 0.0)])
 def test_ecarts_plantes_du_point11(verites, g, e, moyenne):
     """Les écarts du point 11, en écarts types de la différence d'une famille à l'autre."""
     x = _residus(verites, g, e)
     assert abs(x.mean() - moyenne) < 0.06
     if g != "V0":
         assert abs(x.std() - 1.0) < 0.05
+
+
+@pytest.mark.parametrize("signe,moyenne", [(-1, 7.0), (1, -1.0)])
+def test_v12_signe_de_la_trace(verites, signe, moyenne):
+    """V12 : trace de −4 (signe de V2 : le saboteur passe au-dessus de son jumeau, E1 et E3 passent) dans les mondes
+    pairs, de +4 dans les impairs ; la moitié des mondes de chaque sorte."""
+    ms = [m for m in _groupe(verites, "V12") if m["plante"]["signe_trace"] == signe]
+    assert len(ms) == 250 and all((m["indice"] % 2 == 0) == (signe == -1) for m in ms)
+    x = np.array([f["residus"]["E1"] for m in ms for f in m["plante"]["familles"].values()])
+    assert abs(x.mean() - moyenne) < 0.1 and abs(x.std() - 1.0) < 0.06
+    e3 = np.array([f["residus"]["E3"] for m in ms for f in m["plante"]["familles"].values()])
+    assert abs(e3.mean() - 6.0) < 0.1
+    assert all(m["plante"]["signe_trace"] is None for g in ("V3", "V1") for m in _groupe(verites, g))
 
 
 @pytest.mark.parametrize("g,e", [("V3", "E2a"), ("V3", "E2b"), ("V8", "E2b"), ("V9", "E2a"), ("V12", "E2a"),
@@ -282,9 +295,12 @@ def test_issues_attendues(verites):
                                "V11": ("D", 99), "V12": ("D", 99), "VC1": ("S", 99), "VC2": ("S", 99),
                                "VC3": ("S", 95)}.items():
         assert all((att[m["monde"]]["issue"], att[m["monde"]]["niveau"]) == (issue, niveau) for m in _groupe(verites, g))
-    motifs = {"V3": ["E2a", "E2b"], "V8": ["E2b"], "V9": ["E2a"], "V11": ["E1"], "V12": ["E1", "E2a", "E2b"]}
+    motifs = {"V3": ["E2a", "E2b"], "V8": ["E2b"], "V9": ["E2a"], "V11": ["E1"]}
     for g, m in motifs.items():
         assert all(att[x["monde"]]["motifs_D"] == m for x in _groupe(verites, g))
+    for x in _groupe(verites, "V12"):
+        m = ["E2a", "E2b"] if x["plante"]["signe_trace"] == -1 else ["E1", "E2a", "E2b"]
+        assert att[x["monde"]]["motifs_D"] == m
     assert all(att[x["monde"]]["mention_saboteur_sans_sur"] for x in _groupe(verites, "V2"))
     assert all(att[x["monde"]]["issue"] is None for x in _groupe(verites, "V0"))
     for x in _groupe(verites, "V10"):
@@ -314,7 +330,8 @@ def test_alternatives_des_choix_de_lazar(verites):
         alt = x["attendu"]["alternatives"]
         assert alt["cas_limite_difference_nulle"] == {"issue": "S", "niveau": 99}
         assert alt["cas_limite_contraire_au_rang_haut"]["issue"] == "NI"
-        assert list(x["attendu"]["manipulation"].values()) == [[64, 0]]
+        assert list(x["attendu"]["manipulation"].values()) == [[32, 0]]
+        assert x["attendu"]["epreuves"]["M1"]["K"] == 9 and x["attendu"]["epreuves"]["M3"]["K"] == 9
     for x in _groupe(verites, "VC3"):
         alt = x["attendu"]["alternatives"]
         assert alt["addendum"] == {"issue": "S", "niveau": 95}
@@ -324,8 +341,9 @@ def test_alternatives_des_choix_de_lazar(verites):
         assert len(x["familles"]) == 8
 
 
-ECHANTILLON = ["V0-0001", "V1-0002", "V2-0003", "V3-0004", "V4-0005", "V5-0006", "V6-0007", "V7-0005", "V7-0006",
-               "V7-0007", "V8-0008", "V9-0009", "V10-0010", "V11-0011", "V12-0012", "VC1-0001", "VC2-0002", "VC3-0003"]
+ECHANTILLON = ["V0-0001", "V1-0002", "V2-0003", "V3-0004", "V4-0005", "V5-0006", "V6-0007", "V7-0006", "V7-0007",
+               "V7-0008", "V8-0008", "V9-0009", "V10-0010", "V11-0011", "V12-0012", "V12-0013", "VC1-0001", "VC2-0002",
+               "VC3-0003"]
 
 
 @pytest.mark.parametrize("mid", ECHANTILLON)
@@ -392,10 +410,15 @@ def test_arbre_conforme(monde, verites, mid):
     assert [(x["tache"], x["pas"]) for x in honn] == [(t, p) for t in P.taches for p in P.pas]
     couts = lire(d / "couts.json")
     assert couts["format"] == "b5f-couts-v1" and sorted(couts["familles"]) == v["familles"]
+    evaluation = set(P.plis[0][:16]) | set(P.plis[1][:16])
+    assert P.taches_evaluation() == tuple(P.plis[0][:16]) + tuple(P.plis[1][:16]) and len(evaluation) == 32
     for f, x in couts["familles"].items():
-        assert sorted(x["membres"]) == sorted(P.membre(r) for r in noms[f])
+        assert sorted(x["membres"]) == sorted(P.membre(r) for r in noms[f]) and x["copie"] == f
+        for lignes in x["membres"].values():
+            assert {y["tache"] for y in lignes} <= evaluation and set(y) == {"tache", "pas", "cout"} for y in lignes
     res = lire(d / "formation-resume.json")
     assert res["format"] == "b5f-formation-resume-v1" and sorted(res["familles"]) == v["familles"]
+    assert all(x["copie"] == f and "empreintes" not in x for f, x in res["familles"].items())
     reg = lire(d / "registre.json")
     assert [x["nom"] for x in reg] == [n for n, _ in P.horodatages]
     texte = (d / "registre.txt").read_text().splitlines()
@@ -404,6 +427,7 @@ def test_arbre_conforme(monde, verites, mid):
     assert lig["CODE-LECTURE-B5F"] == f"commit {P.commit_code} ; lecture sha256 {P.empreinte_lecture}"
     assert lig["EPREUVE-B5F"].startswith("passee ; lecture sha256 " + P.empreinte_lecture)
     assert lig["GO-LECTURE-B5F"] == P.go_lecture
+    assert lig["ENGAGEMENT-B5F"] == lig["OUVERTURE-B5F"] == f"table sha256 {sha_fichier(d / 'etiquettes.json')}"
 
 
 REALISES = ["V1-0002", "V2-0003", "V3-0004", "V4-0005", "V5-0006", "V8-0008", "V9-0009", "V10-0010", "V11-0011",
