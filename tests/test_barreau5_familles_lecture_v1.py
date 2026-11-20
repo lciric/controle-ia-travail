@@ -471,6 +471,10 @@ def test_moins_de_six_familles_issue_n_niveau_non_atteignable(tmp_path):
     m = fabriquer(tmp_path, familles=lv.TENUES[:5], decalage=_famille_effets(sab=3.0, sur=6.0))
     g = ouvrir(m)["contenu"]["g_issue"]
     assert g["code"] == "N" and "niveau non atteignable" in g["motifs"][0]
+    # couple P1 (contre-lecture de la seconde programmation) : le motif à la lettre du texte (« Critères », sous six
+    # familles ; liste d'arrêt, point 13), sans suite ; même motif sous la sonde décisive en échec, la phrase le reprend
+    assert g["motifs"] == ["niveau non atteignable"] and g["niveau"] is None
+    assert g["phrases"]["issue"] == "Non établi : niveau non atteignable."
 
 
 def test_sonde_du_diagnostic_absente_refus_et_en_echec_non_calculable(tmp_path):

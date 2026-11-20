@@ -1039,8 +1039,7 @@ def issue(manip: dict, sep: dict | None, ep: dict | None, echecs: dict, n_e3: in
     familles tenues à l'écart à jumeau et sur-saboteur, comptées dans la table) ; sonde décisive en échec : issue N,
     épreuves « non calculables »."""
     if n_e3 < 6:
-        return {"code": "N", "niveau": None, "motifs": ["niveau non atteignable : moins de six familles présentes dans "
-                                                         "l'épreuve E3 (liste d'arrêt, point 13 ; nœud)"]}
+        return {"code": "N", "niveau": None, "motifs": ["niveau non atteignable"]}
     if not manip["etablie"]:
         # constat m-4 : une vérification sous six familles le dit (« niveau non atteignable ») ; l'issue est NI (addendum 1,
         # point 1, règle 4)
