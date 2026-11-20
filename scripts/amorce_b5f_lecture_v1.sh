@@ -58,7 +58,7 @@ MARCHE_FINIE="$T/marche-menee-au-bout"
 SIGNAL="$X/signal-pour-la-mere.txt"
 # essais de la lecture sur l'arbre extrait (lanceur et amorce exclus : ils lisent la garde de calcul ou jouent l'amorce) ;
 # un essai de tests/test_amorce_b5f_lecture_v1.py exige l'égalité avec le nombre d'essais de ces trois fichiers
-MIN_ESSAIS=141
+MIN_ESSAIS=145
 PY=python3                  # remplacé par l'interpréteur de l'environnement des paquets dès qu'il existe (étape 4)
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
 j() { mkdir -p "$X" 2> /dev/null; printf '%s B5F %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$L"; }
