@@ -1,0 +1,41 @@
+--- chronometrer_banc_ligne_3_v2.py
++++ chronometrer_banc_ligne_3_v3.py
+@@ -1,6 +1,7 @@
+-"""Chronométrage de l'étage 1 de la ligne 3 — n'imprime que des durées — v2.
++"""Chronométrage de l'étage 1 de la ligne 3 — n'imprime que des durées — v3.
+ 
+ Version 2 : charge le banc v2 (correction C2 de la contre-lecture, sans effet sur les durées) ; manifeste nommé en v2.
++Version 3 : charge le banc v3 (deux ajouts de l'additif 1 à l'alarme, lus après les tirages) ; manifeste nommé en v3.
+ Aucun autre changement.
+ 
+ Joue, pour chaque pièce du banc, un échantillon de répliques à la taille de rééchantillonnage de la configuration
+@@ -11,9 +12,9 @@
+ Usage :
+   chronométrage décisif (racine 2026111931 ; geste 4 seulement, après l'additif de code scellé ; jamais lancé par le
+   développeur) :
+-    python3 -B chronometrer_banc_ligne_3_v2.py --autorisation-additif CHEMIN --empreinte-additif HEX --manifeste DOSSIER
++    python3 -B chronometrer_banc_ligne_3_v3.py --autorisation-additif CHEMIN --empreinte-additif HEX --manifeste DOSSIER
+   essai du code (racine des essais 2026111930, tailles réduites permises) :
+-    python3 -B chronometrer_banc_ligne_3_v2.py --essai --manifeste DOSSIER [--repliques-echantillon K] [--tirages-essai B]
++    python3 -B chronometrer_banc_ligne_3_v3.py --essai --manifeste DOSSIER [--repliques-echantillon K] [--tirages-essai B]
+ Développeur, modèle L′.
+ """
+ from __future__ import annotations
+@@ -26,7 +27,7 @@
+ import time
+ from pathlib import Path
+ 
+-NOM_BANC = "banc_juges_scriptes_ligne_3_v2"
++NOM_BANC = "banc_juges_scriptes_ligne_3_v3"
+ 
+ 
+ def charger_banc():
+@@ -152,7 +153,7 @@
+            "configuration_decisive_sha256": banc.sha256_json(banc._nettoyer(banc.CONFIGURATION_DECISIVE))}
+     manifeste = banc.construire_manifeste(contexte, cfg, debut, fin, {})
+     manifeste["programme_chronometrage_sha256"] = banc.sha256_fichier(Path(__file__).resolve())
+-    banc.ecrire_json_exclusif(dossier / "manifeste-chronometrage-ligne-3-v2.json", manifeste)
++    banc.ecrire_json_exclusif(dossier / "manifeste-chronometrage-ligne-3-v3.json", manifeste)
+     print(f"duree_mesuree_du_chronometrage_secondes: {mesuree:.3f}")
+     for nom, valeur in durees:
+         print(f"duree_{nom}_secondes: {valeur:.3f}")

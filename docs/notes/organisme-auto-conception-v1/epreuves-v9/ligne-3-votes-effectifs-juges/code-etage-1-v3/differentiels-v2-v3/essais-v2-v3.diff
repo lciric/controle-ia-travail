@@ -1,0 +1,374 @@
+--- essais_banc_juges_scriptes_ligne_3_v2.py
++++ essais_banc_juges_scriptes_ligne_3_v3.py
+@@ -1,4 +1,4 @@
+-"""Essais du banc de juges scriptés de la ligne 3, étage 1 — v2.
++"""Essais du banc de juges scriptés de la ligne 3, étage 1 — v3.
+ 
+ Gardes de la liste d'arrêt qui touchent l'étage 1, chacune sur un cas sain et sur un artefact (R5) ; essais de
+ formules de l'annexe A (grand n, corrélation estimée contre valeur plantée par loi ; erreur équilibrée contre les
+@@ -15,7 +15,11 @@
+ et (3) de fefca0bd94064, clause (i), tolérances et constantes du « Seuil », poids des bras C et P, règles des bras
+ N et R, centiles des intervalles, stabilité, garde de cadrage, test entier du monde de puissance, alarme à
+ seuils serrés sur un générateur factice) ; C2, la lettre « à partir de laquelle » de la branche (2) ; C3, essai
+-sain et artefacts de `verifier_autorisation` seule, sans aucune dérivation. Banc éprouvé : v2.
++sain et artefacts de `verifier_autorisation` seule, sans aucune dérivation.
++Version 3 (additif 1 v2, e1c1ee84…, section « Ce que le code doit changer ») : essais sain et artefact des deux
++ajouts à l'alarme (silence 1 : part (b) et cinq comptes ; silence 2 : aide « prédiction P6 », carte sans mot) ; preuve
++que toutes les sorties existantes du v2 sont égales à l'octet en v3, sur la racine des essais seule (le banc v2 est
++chargé par son empreinte, variable facultative BANC_V2_LIGNE_3_CHEMIN). Banc éprouvé : v3.
+ 
+ Développeur, modèle L′.
+ """
+@@ -51,8 +55,8 @@
+ np.random.SeedSequence = _SeedSequenceEnregistree
+ 
+ ICI = Path(__file__).resolve().parent
+-CHEMIN_BANC = Path(os.environ.get("BANC_LIGNE_3_CHEMIN", str(ICI / "banc_juges_scriptes_ligne_3_v2.py")))
+-CHEMIN_CHRONO = Path(os.environ.get("CHRONOMETRAGE_LIGNE_3_CHEMIN", str(ICI / "chronometrer_banc_ligne_3_v2.py")))
++CHEMIN_BANC = Path(os.environ.get("BANC_LIGNE_3_CHEMIN", str(ICI / "banc_juges_scriptes_ligne_3_v3.py")))
++CHEMIN_CHRONO = Path(os.environ.get("CHRONOMETRAGE_LIGNE_3_CHEMIN", str(ICI / "chronometrer_banc_ligne_3_v3.py")))
+ DEPOT_PAR_DEFAUT = Path("/home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/"
+                         "ligne-3-votes-effectifs-juges")
+ EMPREINTE_CALCUL_V2 = "802d4dd26d66ead35326cef2d77c8a55e12c11b89a4ddbce4d9a115927428dc6"
+@@ -74,7 +78,7 @@
+     return module
+ 
+ 
+-banc = _charger("banc_juges_scriptes_ligne_3_v2", CHEMIN_BANC)
++banc = _charger("banc_juges_scriptes_ligne_3_v3", CHEMIN_BANC)
+ 
+ 
+ def _chemin_calcul(nom):
+@@ -1309,8 +1313,8 @@
+     sortie = tmp_path / "sortie"
+     contexte = banc.Contexte("essais")
+     resultat, manifeste = banc.executer_etage_1(contexte, CONFIGURATION_D_ESSAI, sortie)
+-    chemin_res = sortie / "resultat-etage-1-ligne-3-v2.json"
+-    chemin_man = sortie / "manifeste-etage-1-ligne-3-v2.json"
++    chemin_res = sortie / "resultat-etage-1-ligne-3-v3.json"
++    chemin_man = sortie / "manifeste-etage-1-ligne-3-v3.json"
+     for chemin in (chemin_res, chemin_man):
+         assert chemin.is_file()
+         compagnon = Path(str(chemin) + ".sha256").read_text(encoding="utf-8").split()
+@@ -1324,7 +1328,7 @@
+     assert {d["racine"] for d in man["graines"]["derivations"]} == {banc.RACINE_ESSAIS}
+     assert "numpy" in man["versions"] and "python" in man["versions"]
+     assert "commit" in man["depot"]
+-    assert man["fichiers"]["resultat-etage-1-ligne-3-v2.json"] == _sha256(chemin_res)
++    assert man["fichiers"]["resultat-etage-1-ligne-3-v3.json"] == _sha256(chemin_res)
+     assert man["programme_sha256"] == _sha256(CHEMIN_BANC)
+     crit = resultat["criteres_mecaniques"]
+     # À 16 répliques, la garde P2 peut se déclencher sur le bruit : « invalide » est alors la bonne sortie.
+@@ -1335,7 +1339,7 @@
+ 
+ 
+ def test_chronometrage_n_imprime_que_des_durees(tmp_path):
+-    chrono = _charger("chronometrer_banc_ligne_3_v2", CHEMIN_CHRONO)
++    chrono = _charger("chronometrer_banc_ligne_3_v3", CHEMIN_CHRONO)
+     tampon = io.StringIO()
+     with contextlib.redirect_stdout(tampon):
+         code = chrono.main(["--essai", "--manifeste", str(tmp_path / "chrono"), "--repliques-echantillon", "2",
+@@ -1345,11 +1349,11 @@
+     assert lignes
+     for ligne in lignes:
+         assert re.fullmatch(r"duree_[a-z0-9_]+_secondes: [0-9]+\.[0-9]{3}", ligne), ligne
+-    assert (tmp_path / "chrono" / "manifeste-chronometrage-ligne-3-v2.json").is_file()
++    assert (tmp_path / "chrono" / "manifeste-chronometrage-ligne-3-v3.json").is_file()
+ 
+ 
+ def test_chronometrage_refuse_sans_autorisation(tmp_path):
+-    chrono = _charger("chronometrer_banc_ligne_3_v2", CHEMIN_CHRONO)
++    chrono = _charger("chronometrer_banc_ligne_3_v3", CHEMIN_CHRONO)
+     avant = len(banc.JOURNAL_GRAINES)
+     with pytest.raises(banc.RefusGraine):
+         chrono.main(["--autorisation-additif", str(tmp_path / "absent.md"), "--empreinte-additif", "0" * 64,
+@@ -1367,6 +1371,289 @@
+ 
+ 
+ # =================================================================================================================
++# Version 3 — additif 1 v2 (e1c1ee84…), section « Ce que le code doit changer » : deux ajouts à l'alarme, lus après
++# les tirages, sur les tableaux déjà tirés. Silence 1 : part (b) et cinq comptes. Silence 2 : aide « prédiction P6 »,
++# carte sans mot. Preuve : toutes les sorties existantes du v2 égales à l'octet en v3 (racine des essais seule).
++# =================================================================================================================
++EMPREINTE_BANC_V2 = "ffc330839de048891bdbd323b8c19c04289386f9379492440a13e7df4c09b5b3"
++NOM_DU_BANC_V2 = "banc_juges_scriptes_ligne_3_v2.py"
++CLES_NEUVES_V3_PAR_BRAS = ("part_des_suites_en_alarme_sur_changement_a_effet", "comptes_silence_1",
++                           "mention_part_des_suites_en_alarme")
++CLES_NEUVES_V3_PAR_CELLULE_D_ALARME = ("comptes_du_melange_plante",)
++CLE_NEUVE_V3_DES_CRITERES = "alarme_fcbf4a2dd1a57"
++COMPTES_SILENCE_1 = ("suites_a_effet_detectees", "suites_qui_changent_detectees", "suites_en_alarme",
++                     "suites_sans_changement_en_alarme", "suites")
++MOT_CARTE_ALARME_ATTENDU = "mesurée, sans mot : aucune règle de mot gelée"
++MOTS_P6 = ("P6 réfutée", "P6 non réfutée")
++CONFIGURATION_D_ESSAI_V3 = {**CONFIGURATION_D_ESSAI, "alarme": {"m": [10, 20, 40], "suites": 400}}
++
++
++def _comptes(effet_detectees, changent_detectees, en_alarme, sans_changement_en_alarme, suites):
++    return dict(zip(COMPTES_SILENCE_1, (effet_detectees, changent_detectees, en_alarme, sans_changement_en_alarme,
++                                        suites)))
++
++
++def _rng_alarme_silence_1(alarmes_de_la_sentinelle, R=8):
++    """Générateur factice pour m = 40 : changement en 5 et 7 (suites 0 et 1, « à effet »), en 9 et 10 (suites 2 et 3,
++    « sans effet ») ; suites 4 à 7 sans changement. Sentinelle (bras B) en alarme, 20 erreurs sur 40 ancres contre une
++    référence à 0,10, aux seules générations données par suite (4 erreurs ailleurs, jamais en alarme) ; bras C en
++    alarme à chaque génération testée sur les suites 6 et 7 (71 contre 50), jamais ailleurs ; bras D jamais."""
++    G = banc.GENERATIONS
++    gens = np.arange(1, G + 1)
++    extreme = np.zeros((R, G), dtype=bool)
++    for suite, generations in alarmes_de_la_sentinelle.items():
++        for g in generations:
++            extreme[suite, gens == g] = True
++    ancres_moitie = np.where(extreme, 10, 2)
++    production = np.full((R, G), 50)
++    production[6:8, 1:] = 71
++    g_change = np.array([5, 7, 9, 10] + [4] * (R - 4))
++    return _RngAlarmeFactice(g_change, {0: np.full(R, 5), 1: np.full(R, 5), 2: ancres_moitie, 3: ancres_moitie,
++                                         4: production})
++
++
++def test_alarme_silence_1_part_b_et_comptes_cas_sain_generateur_factice():
++    # Sentinelle : suite 0 (à effet, changement en 5) en alarme en 6, détectée ; suite 1 (à effet, changement en 7) en
++    # alarme en 3 seulement, avant son changement ; suite 2 (sans effet, changement en 9) en alarme en 9, détectée ;
++    # suite 3 jamais ; suites 4 et 5 (sans changement) en alarme en 12 et en 2 seulement ; suites 6 et 7 jamais.
++    # Lectures fautives qui s'en distinguent : (b) = (a) rendrait 0,5 ; un dénominateur sans les suites sans
++    # changement, 1/3 ; un numérateur qui compterait la suite 1, 0,4 ; la suite 5 oubliée (génération 2), 0,25.
++    table = banc.table_p_valeurs_binomiales(40, 0.10)
++    assert table[4] > banc.NIVEAU_ALARME and table[20] <= banc.NIVEAU_ALARME
++    c = banc.cellule_alarme(_rng_alarme_silence_1({0: [6], 1: [3], 2: [9], 4: [12], 5: [2]}), 40, 8)
++    assert c["comptes_du_melange_plante"] == {"suites_qui_changent": 4, "suites_a_effet": 2, "suites_sans_effet": 2,
++                                              "suites_sans_changement": 4}
++    b = c["par_bras"]["B"]
++    assert b["comptes_silence_1"] == _comptes(1, 2, 5, 2, 8)
++    assert b["part_des_detections_sur_changement_a_effet"] == 0.5          # (a) : 1 sur 2 détections
++    assert b["part_des_suites_en_alarme_sur_changement_a_effet"] == 0.2    # (b) : 1 sur 5 suites en alarme
++    assert "mélange planté" in b["mention_part_des_suites_en_alarme"]
++    # Les mesures existantes, sur le même cas.
++    assert b["detection_changement_a_effet"] == 0.5
++    assert b["detection_changement_sans_effet"] == 0.5
++    assert b["fausse_alarme_suites_sans_changement"] == 0.5
++    assert b["alarme_avant_changement_suites_changees"] == 0.25
++    assert b["delai_moyen_changement_a_effet"] == 1.0
++    cc = c["par_bras"]["C"]
++    assert cc["comptes_silence_1"] == _comptes(0, 0, 2, 2, 8)
++    assert cc["part_des_detections_sur_changement_a_effet"] is None
++    assert cc["part_des_suites_en_alarme_sur_changement_a_effet"] == 0.0   # dénominateur 2 : zéro, non « indéfini »
++    for nom in ("A", "D"):
++        bloc = c["par_bras"][nom]
++        assert bloc["comptes_silence_1"] == _comptes(0, 0, 0, 0, 8)
++        assert bloc["part_des_suites_en_alarme_sur_changement_a_effet"] is None   # « indéfini », jamais 0
++        assert set(CLES_NEUVES_V3_PAR_BRAS) <= set(bloc)
++
++
++def test_alarme_silence_1_part_b_artefacts_generateur_factice():
++    # Artefact : la sentinelle n'est en alarme que sur la suite 1 (à effet, alarme en 3, avant son changement en 7) et
++    # sur la suite 6 (sans changement, alarme en 11) : aucune détection.
++    c = banc.cellule_alarme(_rng_alarme_silence_1({1: [3], 6: [11]}), 40, 8)
++    b = c["par_bras"]["B"]
++    assert b["comptes_silence_1"] == _comptes(0, 0, 2, 1, 8)
++    assert b["part_des_detections_sur_changement_a_effet"] is None        # (a) : aucune détection, « indéfini »
++    assert b["part_des_suites_en_alarme_sur_changement_a_effet"] == 0.0   # (b) : la suite 1 au dénominateur seulement
++    assert b["alarme_avant_changement_suites_changees"] == 0.25
++    a = c["par_bras"]["A"]
++    assert a["part_des_detections_sur_changement_a_effet"] is None
++    assert a["part_des_suites_en_alarme_sur_changement_a_effet"] is None   # aucune alarme : « indéfini », jamais 0
++    # Fonction seule, sur des tableaux écrits à la main : la suite 0 détectée, la suite 3 (sans changement) en alarme
++    # au premier test seulement.
++    alarmes = np.zeros((4, 11), dtype=bool)
++    alarmes[0, 5] = True
++    alarmes[3, 0] = True
++    change = np.array([True, True, False, False])
++    effet = np.array([True, False, False, False])
++    detecte = np.array([True, False, False, False])
++    r = banc.silence_1_part_et_comptes(alarmes, change, effet, detecte)
++    assert r["comptes_silence_1"] == _comptes(1, 1, 2, 1, 4)
++    assert r["part_des_suites_en_alarme_sur_changement_a_effet"] == 0.5
++    r0 = banc.silence_1_part_et_comptes(np.zeros((4, 11), dtype=bool), change, effet, np.zeros(4, dtype=bool))
++    assert r0["comptes_silence_1"] == _comptes(0, 0, 0, 0, 4)
++    assert r0["part_des_suites_en_alarme_sur_changement_a_effet"] is None
++
++
++def test_alarme_silence_1_comptes_coherents_sur_une_cellule_tiree():
++    R = 400
++    c = banc.cellule_alarme(_gens("essais_gardes", 14)[13], 20, R)
++    melange = c["comptes_du_melange_plante"]
++    assert melange == {"suites_qui_changent": 200, "suites_a_effet": 100, "suites_sans_effet": 100,
++                       "suites_sans_changement": 200}
++    assert set(c["par_bras"]) == {"A", "B", "C", "D"}
++    for nom, bloc in c["par_bras"].items():
++        k = bloc["comptes_silence_1"]
++        assert tuple(sorted(k)) == tuple(sorted(COMPTES_SILENCE_1))
++        assert all(type(v) is int for v in k.values())
++        assert k["suites"] == R
++        assert k["suites_a_effet_detectees"] <= k["suites_qui_changent_detectees"]
++        assert k["suites_qui_changent_detectees"] + k["suites_sans_changement_en_alarme"] <= k["suites_en_alarme"] <= R
++        assert bloc["detection_changement_a_effet"] == k["suites_a_effet_detectees"] / melange["suites_a_effet"]
++        assert (bloc["fausse_alarme_suites_sans_changement"]
++                == k["suites_sans_changement_en_alarme"] / melange["suites_sans_changement"])
++        a_attendue = (k["suites_a_effet_detectees"] / k["suites_qui_changent_detectees"]
++                      if k["suites_qui_changent_detectees"] else None)
++        assert bloc["part_des_detections_sur_changement_a_effet"] == a_attendue
++        b_attendue = k["suites_a_effet_detectees"] / k["suites_en_alarme"] if k["suites_en_alarme"] else None
++        assert bloc["part_des_suites_en_alarme_sur_changement_a_effet"] == b_attendue
++    assert c["par_bras"]["A"]["comptes_silence_1"] == _comptes(0, 0, 0, 0, R)
++
++
++# --- Silence 2 : aide « prédiction P6 », carte sans mot --------------------------------------------------------------
++def _cellule_p6(m, fa_b, det_b, det_d, fa_c=0, det_c=0, sans_changement=1000, a_effet=500):
++    def bloc(fa, det):
++        return {"comptes_silence_1": _comptes(det, det, fa + det, fa, 2 * sans_changement)}
++    return {"m": m, "suites": 2 * sans_changement,
++            "comptes_du_melange_plante": {"suites_qui_changent": sans_changement, "suites_a_effet": a_effet,
++                                          "suites_sans_effet": sans_changement - a_effet,
++                                          "suites_sans_changement": sans_changement},
++            "par_bras": {"A": bloc(0, 0), "B": bloc(fa_b, det_b), "C": bloc(fa_c, det_c), "D": bloc(0, det_d)}}
++
++
++BASE_P6 = {10: (80, 100, 200), 20: (80, 300, 299), 40: (0, 500, 499)}
++
++
++def _cellules_p6(changements=None):
++    """Cas sain : fausse alarme de B à 80 sur 1 000 (la borne, non dépassée) à m = 10 et 20 ; détection de B au-dessus
++    de D à m = 20 et 40 ; à m = 10, B sous D (hors clause). Bras C écrit pour piéger une lecture sur le mauvais bras
++    (1 000 suites sans changement en alarme, 500 changements à effet détectés). `changements` : {m: {argument: valeur}}."""
++    cellules = []
++    for m in (10, 20, 40):
++        args = dict(zip(("fa_b", "det_b", "det_d"), BASE_P6[m]))
++        args.update((changements or {}).get(m, {}))
++        cellules.append(_cellule_p6(m, fa_c=1000, det_c=500, **args))
++    return cellules
++
++
++def test_alarme_p6_aide_cas_sain():
++    assert (banc.M_DE_P6, banc.M_DE_LA_CLAUSE_DETECTION_P6, banc.BORNE_FAUSSE_ALARME_P6) == ((10, 20, 40), (20, 40),
++                                                                                            (8, 100))
++    r = banc.criteres_alarme_p6(_cellules_p6())
++    assert r["carte_fcbf4a2dd1a57"] == MOT_CARTE_ALARME_ATTENDU
++    assert r["nature"].startswith("aide") and "R13" in r["nature"] and "jamais le verdict" in r["nature"]
++    p6 = r["prediction_P6"]
++    assert p6["mot"] == "P6 non réfutée"
++    assert p6["clauses_atteintes"] == []
++    assert sorted(p6["par_m"]) == ["10", "20", "40"]
++    for m in ("10", "20"):
++        fa = p6["par_m"][m]["clause_fausse_alarme"]
++        assert (fa["bras"], fa["suites_sans_changement_en_alarme"], fa["suites_sans_changement"], fa["atteinte"]) == (
++            "B", 80, 1000, False)
++    d10 = p6["par_m"]["10"]["clause_detection"]
++    assert (d10["lue"], d10["atteinte"]) == (False, None)
++    assert (d10["suites_a_effet_detectees_bras_B"], d10["suites_a_effet_detectees_bras_D"]) == (100, 200)
++    d20 = p6["par_m"]["20"]["clause_detection"]
++    assert (d20["lue"], d20["atteinte"], d20["suites_a_effet"], d20["contre"]) == (True, False, 500, "D")
++    assert (d20["suites_a_effet_detectees_bras_B"], d20["suites_a_effet_detectees_bras_D"]) == (300, 299)
++    for mot in MOTS_P6:
++        assert mot not in r["carte_fcbf4a2dd1a57"]
++
++
++def test_alarme_p6_aide_artefacts():
++    f = banc.criteres_alarme_p6
++    # Fausse alarme : 81 sur 1 000 à m = 10 seulement, strictement au-delà de 0,08.
++    r = f(_cellules_p6({10: {"fa_b": 81}}))
++    assert r["prediction_P6"]["mot"] == "P6 réfutée"
++    assert r["prediction_P6"]["clauses_atteintes"] == ["fausse_alarme|m=10"]
++    assert r["carte_fcbf4a2dd1a57"] == MOT_CARTE_ALARME_ATTENDU
++    # Comptes entiers : 80 sur 999 dépasse 0,08 (8 000 > 7 992).
++    r = f(_cellules_p6({20: {"sans_changement": 999}}))
++    assert r["prediction_P6"]["clauses_atteintes"] == ["fausse_alarme|m=20"]
++    # Détection : B égal à D à m = 20 ; B égal à D à m = 40 ; B sous D à m = 40.
++    for m, b, d in ((20, 300, 300), (40, 499, 499), (40, 100, 400)):
++        r = f(_cellules_p6({m: {"det_b": b, "det_d": d}}))
++        assert r["prediction_P6"]["mot"] == "P6 réfutée"
++        assert r["prediction_P6"]["clauses_atteintes"] == [f"detection|m={m}"]
++        assert r["carte_fcbf4a2dd1a57"] == MOT_CARTE_ALARME_ATTENDU
++    # Une cellule manquante, ou en double : « incomplet », jamais un mot.
++    sain = _cellules_p6()
++    assert f([sain[0], sain[2]])["prediction_P6"]["mot"].startswith("incomplet")
++    assert f(sain + [_cellule_p6(20, 0, 500, 0)])["prediction_P6"]["mot"].startswith("incomplet")
++    assert f([sain[0], sain[2]])["carte_fcbf4a2dd1a57"] == MOT_CARTE_ALARME_ATTENDU
++
++
++# --- Preuve : les sorties existantes du v2 sont égales à l'octet en v3 (racine des essais seule) --------------------
++def _banc_v2():
++    env = os.environ.get("BANC_V2_LIGNE_3_CHEMIN")
++    candidats = ([Path(env)] if env else
++                 [ICI.parent / "code-etage-1-v2" / NOM_DU_BANC_V2, DEPOT_PAR_DEFAUT / "code-etage-1-v2" / NOM_DU_BANC_V2])
++    for chemin in candidats:
++        if chemin.is_file():
++            assert _sha256(chemin) == EMPREINTE_BANC_V2, f"empreinte du banc v2 inattendue : {chemin}"
++            return _charger("banc_juges_scriptes_ligne_3_v2", chemin)
++    raise AssertionError("banc v2 introuvable (aucun repli silencieux)")
++
++
++def _ecrire_comme_le_banc(objet):
++    return (json.dumps(objet, ensure_ascii=False, indent=1, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
++
++
++def _chemins_seulement_dans(a, b, chemin=""):
++    """Chemins des clés de `a` absentes de `b` (récursif ; une liste de longueur différente est un chemin)."""
++    res = []
++    if isinstance(a, dict) and isinstance(b, dict):
++        for k in a:
++            if k not in b:
++                res.append(f"{chemin}/{k}")
++            else:
++                res.extend(_chemins_seulement_dans(a[k], b[k], f"{chemin}/{k}"))
++    elif isinstance(a, list) and isinstance(b, list):
++        if len(a) != len(b):
++            res.append(f"{chemin}[longueur]")
++        for i, (x, y) in enumerate(zip(a, b)):
++            res.extend(_chemins_seulement_dans(x, y, f"{chemin}/{i}"))
++    return res
++
++
++def _retirer_ajouts_v3(resultat):
++    r = json.loads(json.dumps(resultat))
++    del r["criteres_mecaniques"][CLE_NEUVE_V3_DES_CRITERES]
++    for c in r["alarme"]:
++        for cle in CLES_NEUVES_V3_PAR_CELLULE_D_ALARME:
++            del c[cle]
++        for bloc in c["par_bras"].values():
++            for cle in CLES_NEUVES_V3_PAR_BRAS:
++                del bloc[cle]
++    return r
++
++
++def test_v3_sorties_existantes_du_v2_egales_a_l_octet(tmp_path):
++    v2 = _banc_v2()
++    assert v2 is not banc and v2.VERSION == "banc-juges-scriptes-ligne-3-v2"
++    assert (v2.RACINE_ESSAIS, v2.TABLE_CLES) == (banc.RACINE_ESSAIS, banc.TABLE_CLES)
++    for nom_cfg, cfg in (("essai", CONFIGURATION_D_ESSAI), ("essai_alarme_trois_m", CONFIGURATION_D_ESSAI_V3)):
++        res2, man2 = v2.executer_etage_1(v2.Contexte("essais"), cfg, tmp_path / nom_cfg / "v2")
++        res3, man3 = banc.executer_etage_1(banc.Contexte("essais"), cfg, tmp_path / nom_cfg / "v3")
++        octets_v2 = (tmp_path / nom_cfg / "v2" / "resultat-etage-1-ligne-3-v2.json").read_bytes()
++        lu2 = json.loads(octets_v2)
++        lu3 = json.loads((tmp_path / nom_cfg / "v3" / "resultat-etage-1-ligne-3-v3.json").read_bytes())
++        assert _ecrire_comme_le_banc(lu2) == octets_v2           # garde : la relecture du v2 rend ses octets
++        assert _chemins_seulement_dans(lu2, lu3) == []           # aucune clé du v2 ne manque en v3
++        n_alarme = len(cfg["alarme"]["m"])
++        attendues = (["/criteres_mecaniques/" + CLE_NEUVE_V3_DES_CRITERES]
++                     + [f"/alarme/{i}/{cle}" for i in range(n_alarme) for cle in CLES_NEUVES_V3_PAR_CELLULE_D_ALARME]
++                     + [f"/alarme/{i}/par_bras/{nom}/{cle}" for i in range(n_alarme) for nom in "ABCD"
++                        for cle in CLES_NEUVES_V3_PAR_BRAS])
++        assert sorted(_chemins_seulement_dans(lu3, lu2)) == sorted(attendues)   # seules clés neuves : les ajouts
++        reduit = _retirer_ajouts_v3(lu3)
++        assert reduit["version"] == banc.VERSION == "banc-juges-scriptes-ligne-3-v3"
++        reduit["version"] = v2.VERSION
++        assert _ecrire_comme_le_banc(reduit) == octets_v2        # toutes les sorties existantes, à l'octet
++        assert man3["graines"]["derivations"] == man2["graines"]["derivations"]   # mêmes graines, mêmes tâches
++        assert man3["configuration_sha256"] == man2["configuration_sha256"]
++        aide = res3["criteres_mecaniques"][CLE_NEUVE_V3_DES_CRITERES]
++        assert aide["carte_fcbf4a2dd1a57"] == MOT_CARTE_ALARME_ATTENDU
++        if cfg["alarme"]["m"] == [10, 20, 40]:
++            assert aide["prediction_P6"]["mot"] in MOTS_P6
++            for c in res3["alarme"]:
++                fa = aide["prediction_P6"]["par_m"][str(c["m"])]["clause_fausse_alarme"]
++                assert (fa["suites_sans_changement_en_alarme"]
++                        == c["par_bras"]["B"]["comptes_silence_1"]["suites_sans_changement_en_alarme"])
++        else:
++            assert aide["prediction_P6"]["mot"].startswith("incomplet")
++    assert {d["racine"] for d in v2.JOURNAL_GRAINES} == {banc.RACINE_ESSAIS}
++
++
++# =================================================================================================================
+ # Essai final : aucune graine des racines 2026111931 à 2026111937 dérivée dans ce processus
+ # =================================================================================================================
+ def test_zz_final_aucune_graine_des_racines_decisives_derivee():

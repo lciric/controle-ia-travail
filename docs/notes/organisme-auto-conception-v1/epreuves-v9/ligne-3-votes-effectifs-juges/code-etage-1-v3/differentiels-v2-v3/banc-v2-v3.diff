@@ -1,0 +1,194 @@
+--- banc_juges_scriptes_ligne_3_v2.py
++++ banc_juges_scriptes_ligne_3_v3.py
+@@ -1,4 +1,4 @@
+-"""Banc de juges scriptés de la ligne 3 (« votes effectifs des juges croisés »), étage 1 sur processeur — v2.
++"""Banc de juges scriptés de la ligne 3 (« votes effectifs des juges croisés »), étage 1 sur processeur — v3.
+ 
+ Texte qui fait foi : `prereg/organisme-auto-conception-v9/preenregistrement-ligne-3-votes-effectifs-juges-v7.md`
+ (main, sha256 4e3680d9915ef6e2fa33010fc9b7b2ef5575d74e58e982bfabdbdbcc3e99d5a0), sections « 0 », « Métrique »,
+@@ -16,7 +16,7 @@
+ 2026111934 à 2026111937 (étage 2) : toujours refusées par ce code.
+ 
+ Usage (geste 4 seulement, après l'additif de code scellé ; jamais lancé par le développeur) :
+-    python3 -B banc_juges_scriptes_ligne_3_v2.py --decisif --autorisation-additif CHEMIN --empreinte-additif HEX \
++    python3 -B banc_juges_scriptes_ligne_3_v3.py --decisif --autorisation-additif CHEMIN --empreinte-additif HEX \
+         --sortie DOSSIER_NEUF
+ 
+ Version 2 (corrections de la contre-lecture `contre-lecture-code-etage-1-ligne-3-v1.md`, 3aed6849…) : correction C2
+@@ -25,6 +25,14 @@
+ les tailles plus grandes de la grille) ; noms des fichiers de sortie en v2. Aucun autre changement de calcul ; aucun
+ tirage ne change.
+ 
++Version 3 (additif 1 v2 au texte, `additif-1-preenregistrement-ligne-3-votes-effectifs-juges-v7-v2.md`, e1c1ee84…,
++section « Ce que le code doit changer ») : deux ajouts à l'alarme (fcbf4a2dd1a57), tous deux après les tirages, sur
++les tableaux déjà tirés. Silence 1 : par bras, la part (b) « parmi toutes les suites en alarme », sous un nom distinct
++de la part (a), avec ses cinq comptes, et les comptes du mélange planté. Silence 2 : dans les critères mécaniques,
++marquée comme aide, la lecture de la prédiction P6 (par m, comptes et deux clauses ; « P6 réfutée » ou « P6 non
++réfutée ») et, pour la carte, « mesurée, sans mot : aucune règle de mot gelée ». Aucun tirage, aucune graine, aucune
++constante, aucune mesure existante ne change ; noms des fichiers de sortie en v3.
++
+ Développeur, modèle L′.
+ """
+ from __future__ import annotations
+@@ -42,7 +50,7 @@
+ 
+ import numpy as np
+ 
+-VERSION = "banc-juges-scriptes-ligne-3-v2"
++VERSION = "banc-juges-scriptes-ligne-3-v3"
+ EMPREINTE_TEXTE_QUI_FAIT_FOI = "4e3680d9915ef6e2fa33010fc9b7b2ef5575d74e58e982bfabdbdbcc3e99d5a0"
+ 
+ # ---------------------------------------------------------------------------------------------------------------
+@@ -1241,6 +1249,41 @@
+     return premier
+ 
+ 
++# Version 3 — additif 1 v2, silences 1 et 2 (constantes neuves ; aucune constante existante ne change).
++MENTION_PART_B = ("dépend du mélange planté : une suite sur deux change, une sur quatre « à effet » "
++                  "(additif 1, silence 1)")
++M_DE_P6 = (10, 20, 40)
++M_DE_LA_CLAUSE_DETECTION_P6 = (20, 40)
++BORNE_FAUSSE_ALARME_P6 = (8, 100)  # 0,08 en fraction d'entiers : x / N > 8 / 100, comparé comme 100 x > 8 N
++MOT_CARTE_ALARME = "mesurée, sans mot : aucune règle de mot gelée"
++
++
++def silence_1_part_et_comptes(alarmes, change, effet, detecte):
++    """Additif 1, silence 1 : part (b) parmi toutes les suites en alarme, et ses comptes, lus sur les tableaux déjà
++    tirés (aucun tirage). L'unité est la suite. (b) = suites « à effet » détectées / suites qui portent au moins une
++    alarme à l'un des 11 tests, qu'elles changent ou non, que l'alarme tombe avant ou après le changement ; une suite
++    « à effet » dont toutes les alarmes précèdent le changement est au dénominateur, non au numérateur. Dénominateur
++    nul : None (« indéfini »), jamais 0. La part (a), parmi les détections, reste
++    `part_des_detections_sur_changement_a_effet`, inchangée."""
++    en_alarme = alarmes.any(axis=1)
++    n_effet_detectees = int((detecte & effet).sum())
++    n_changent_detectees = int(detecte.sum())
++    n_en_alarme = int(en_alarme.sum())
++    n_sans_changement_en_alarme = int((en_alarme & ~change).sum())
++    n_suites = int(alarmes.shape[0])
++    denominateur_b = n_en_alarme
++    part_b = (n_effet_detectees / denominateur_b) if denominateur_b > 0 else None
++    return {
++        "part_des_suites_en_alarme_sur_changement_a_effet": part_b,
++        "comptes_silence_1": {"suites_a_effet_detectees": n_effet_detectees,
++                              "suites_qui_changent_detectees": n_changent_detectees,
++                              "suites_en_alarme": n_en_alarme,
++                              "suites_sans_changement_en_alarme": n_sans_changement_en_alarme,
++                              "suites": n_suites},
++        "mention_part_des_suites_en_alarme": MENTION_PART_B,
++    }
++
++
+ def cellule_alarme(rng, m, R):
+     idx = np.arange(R)
+     change = idx < R // 2
+@@ -1276,6 +1319,10 @@
+         alarmes[nom] = (se > 0) & (np.abs(z) >= z_crit)
+     gens_test = gens[1:]
+     sortie = {"m": m, "suites": R, "par_bras": {}}
++    # Version 3 (additif 1, silence 1) : comptes du mélange planté, lus sur les tableaux déjà tirés.
++    sortie["comptes_du_melange_plante"] = {"suites_qui_changent": int(change.sum()), "suites_a_effet": int(effet.sum()),
++                                           "suites_sans_effet": int((change & ~effet).sum()),
++                                           "suites_sans_changement": int((~change).sum())}
+     for nom, a in alarmes.items():
+         un = np.ones(R, dtype=int)
+         premiere = _premiere_alarme(a, gens_test, np.where(change, g_change, un))
+@@ -1290,10 +1337,78 @@
+             "alarme_avant_changement_suites_changees": float(avant[change].mean()) if change.any() else None,
+             "part_des_detections_sur_changement_a_effet": (float(effet[detecte].mean()) if detecte.any() else None),
+         }
++        bloc.update(silence_1_part_et_comptes(a, change, effet, detecte))
+         sortie["par_bras"][nom] = bloc
+     return sortie
+ 
+ 
++def criteres_alarme_p6(cellules):
++    """Additif 1, silence 2 — aide, jamais le verdict (règle R13). La carte de l'alarme (fcbf4a2dd1a57) ne reçoit aucun
++    mot : « mesurée, sans mot : aucune règle de mot gelée ». La prédiction P6 se lit à la lettre de sa clause de
++    réfutation, sur les comptes entiers, sans intervalle : clause « fausse alarme », à chaque m (10 ; 20 ; 40), atteinte
++    si plus de 0,08 des suites sans changement portent une alarme de la sentinelle (bras B), strictement ; clause
++    « détection », à m = 20 et 40, atteinte si les changements « à effet » détectés par B sont au plus aussi nombreux
++    que ceux du bras apparié (D) ; à m = 10, les deux nombres sont rapportés, hors clause. « P6 réfutée » si une clause
++    est atteinte dans l'une de ses cellules, « P6 non réfutée » sinon ; « incomplet » si une cellule de P6 manque ou est
++    en double, jamais un repli silencieux. Lu sur les cellules déjà calculées : aucun tirage."""
++    par_m = {}
++    doublons = []
++    atteintes = []
++    for c in cellules:
++        m = c["m"]
++        if m not in M_DE_P6:
++            continue
++        if str(m) in par_m:
++            doublons.append(m)
++            continue
++        melange = c["comptes_du_melange_plante"]
++        n_sans = melange["suites_sans_changement"]
++        x = c["par_bras"]["B"]["comptes_silence_1"]["suites_sans_changement_en_alarme"]
++        fa_atteinte = BORNE_FAUSSE_ALARME_P6[1] * x > BORNE_FAUSSE_ALARME_P6[0] * n_sans
++        b = c["par_bras"]["B"]["comptes_silence_1"]["suites_a_effet_detectees"]
++        d = c["par_bras"]["D"]["comptes_silence_1"]["suites_a_effet_detectees"]
++        lue = m in M_DE_LA_CLAUSE_DETECTION_P6
++        det_atteinte = (b <= d) if lue else None
++        par_m[str(m)] = {
++            "clause_fausse_alarme": {
++                "bras": "B", "suites_sans_changement_en_alarme": int(x), "suites_sans_changement": int(n_sans),
++                "regle": ("atteinte si plus de 0,08 des suites sans changement sont en alarme, strictement "
++                          "(plus de 80 sur 1 000)"),
++                "atteinte": bool(fa_atteinte)},
++            "clause_detection": {
++                "bras": "B", "contre": "D", "suites_a_effet_detectees_bras_B": int(b),
++                "suites_a_effet_detectees_bras_D": int(d), "suites_a_effet": int(melange["suites_a_effet"]),
++                "lue": bool(lue),
++                "regle": ("atteinte si B est au plus égal à D (lue à m = 20 et 40)" if lue
++                          else "rapportée, hors clause (« à partir de 20 ancres par génération »)"),
++                "atteinte": None if det_atteinte is None else bool(det_atteinte)},
++        }
++        if fa_atteinte:
++            atteintes.append(f"fausse_alarme|m={m}")
++        if det_atteinte:
++            atteintes.append(f"detection|m={m}")
++    clauses = [v for e in par_m.values() for v in (e["clause_fausse_alarme"]["atteinte"],
++                                                    e["clause_detection"]["atteinte"]) if v is not None]
++    refutee = any(clauses)
++    manquants = [m for m in M_DE_P6 if str(m) not in par_m]
++    if manquants or doublons:
++        mot = f"incomplet : cellules de P6 manquantes {manquants}, en double {doublons}"
++    elif refutee:
++        mot = "P6 réfutée"
++    else:
++        mot = "P6 non réfutée"
++    return {
++        "nature": ("aide calculée par le code (additif 1, silence 2), jamais le verdict : l'agent neuf qui prononce "
++                   "(règle R13) lit lui-même les deux clauses sur les comptes. « P6 réfutée » et « P6 non réfutée » "
++                   "portent sur la prédiction P6, ne s'écrivent jamais pour la carte fcbf4a2dd1a57 et ne disent rien "
++                   "de juges réels (réserve 11)."),
++        "carte_fcbf4a2dd1a57": MOT_CARTE_ALARME,
++        "prediction_P6": {"par_m": par_m, "clauses_atteintes": atteintes, "mot": mot},
++        "reste_de_P6_sans_clause": ("la fausse alarme « entre 0,05 et 0,08 » et la détection des changements "
++                                    "« sans effet » par les bras C et D sont rapportées dans « alarme », sans mot"),
++    }
++
++
+ # ---------------------------------------------------------------------------------------------------------------
+ # Configuration, énumération des cellules, exécution
+ # ---------------------------------------------------------------------------------------------------------------
+@@ -1498,6 +1613,7 @@
+             "branche_2_fefca0bd94064": criteres_branche_2(res_e),
+             "branche_3_fefca0bd94064": criteres_branche_3(res_c),
+             "branche_1_fefca0bd94064": "non jouée (GO-2026-11-19-73)",
++            "alarme_fcbf4a2dd1a57": criteres_alarme_p6(res_a),
+         },
+         "estimateur_et_agregation": res_e,
+         "monde_de_puissance": res_p,
+@@ -1508,10 +1624,10 @@
+     }
+     fin = datetime.datetime.now(datetime.timezone.utc)
+     dossier.mkdir(parents=True, exist_ok=False)
+-    chemin_res = dossier / "resultat-etage-1-ligne-3-v2.json"
++    chemin_res = dossier / "resultat-etage-1-ligne-3-v3.json"
+     ecrire_json_exclusif(chemin_res, resultat)
+     manifeste = construire_manifeste(contexte, cfg, debut, fin, {chemin_res.name: sha256_fichier(chemin_res)})
+-    ecrire_json_exclusif(dossier / "manifeste-etage-1-ligne-3-v2.json", manifeste)
++    ecrire_json_exclusif(dossier / "manifeste-etage-1-ligne-3-v3.json", manifeste)
+     return resultat, manifeste
+ 
+ 

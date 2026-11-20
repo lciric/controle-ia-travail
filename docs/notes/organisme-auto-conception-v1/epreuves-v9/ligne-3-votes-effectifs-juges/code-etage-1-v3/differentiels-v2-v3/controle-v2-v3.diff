@@ -1,0 +1,126 @@
+--- controle_defauts_reintroduits_ligne_3_v2.py
++++ controle_defauts_reintroduits_ligne_3_v3.py
+@@ -1,5 +1,5 @@
+ """Contrôle « trop beau » (règle R4) du banc de la ligne 3, étage 1 : défauts réintroduits un par un dans une copie,
+-chacun devant être vu par l'essai visé — v2.
++chacun devant être vu par l'essai visé — v3.
+ 
+ Version 2 (corrections C1 et C3 de la contre-lecture `contre-lecture-code-etage-1-ligne-3-v1.md`, 3aed6849…) :
+ - les 27 défauts de la v1 (famille « v1 ») ;
+@@ -13,6 +13,11 @@
+   nomment aucune fonction qui dérive une graine (`generateurs`, `Contexte`, `_gens`, `main`, `executer_etage_1`,
+   `tirages`, `reechantillonnage`, le chronométrage). Ces défauts ne sont jamais joués contre le fichier entier.
+ 
++Version 3 (deux ajouts de l'additif 1 v2, e1c1ee84…, à l'alarme) : tous les défauts de la v2, inchangés, rejoués sur le
++banc v3 ; plus les défauts des deux ajouts — famille « v3_silence_1 » (part (b), comptes, mélange planté), famille
++« v3_silence_2 » (aide « prédiction P6 », carte sans mot) — et la famille « v3_egalite » (un ajout qui toucherait une
++mesure existante ou qui manquerait à la sortie), vue par la preuve des sorties égales au v2.
++
+ Pour chaque défaut : le texte ancien doit figurer exactement une fois dans le banc ; une copie du banc est écrite avec
+ ce seul défaut dans un dossier de travail neuf ; les essais visés sont lancés contre la copie (variable
+ BANC_LIGNE_3_CHEMIN) ; le défaut est « vu » si pytest sort en code 1. Les essais visés sont d'abord lancés contre le
+@@ -23,7 +28,7 @@
+ essais (2026111930) est dérivée.
+ 
+ Usage :
+-    python3 -B controle_defauts_reintroduits_ligne_3_v2.py --banc BANC.py --essais ESSAIS.py --travail DOSSIER_NEUF \
++    python3 -B controle_defauts_reintroduits_ligne_3_v3.py --banc BANC.py --essais ESSAIS.py --travail DOSSIER_NEUF \
+         --sortie RAPPORT.json [--mode vise|complet]
+ Développeur, modèle L′.
+ """
+@@ -232,8 +237,76 @@
+      "    if not isinstance(autorisation, Autorisation):\n", "    if False:\n", _GRAINES),
+ ]
+ 
++# Version 3 : défauts des deux ajouts de l'additif 1 v2 (silences 1 et 2), et de la preuve d'égalité au v2.
++_S1 = ("test_alarme_silence_1_part_b_et_comptes_cas_sain_generateur_factice",
++       "test_alarme_silence_1_part_b_artefacts_generateur_factice",
++       "test_alarme_silence_1_comptes_coherents_sur_une_cellule_tiree")
++_P6 = ("test_alarme_p6_aide_cas_sain", "test_alarme_p6_aide_artefacts")
++_EGAL = ("test_v3_sorties_existantes_du_v2_egales_a_l_octet",)
++DEFAUTS_V3 = [
++    ("S01", "silence 1 : (b) au dénominateur des seules détections (b confondue avec a)",
++     "    denominateur_b = n_en_alarme\n", "    denominateur_b = n_changent_detectees\n", _S1, "v3_silence_1"),
++    ("S02", "silence 1 : (b) sans les suites sans changement au dénominateur",
++     "    denominateur_b = n_en_alarme\n", "    denominateur_b = int((en_alarme & change).sum())\n", _S1, "v3_silence_1"),
++    ("S03", "silence 1 : dénominateur nul rendu 0 au lieu d'« indéfini »",
++     "    part_b = (n_effet_detectees / denominateur_b) if denominateur_b > 0 else None\n",
++     "    part_b = (n_effet_detectees / denominateur_b) if denominateur_b > 0 else 0.0\n", _S1, "v3_silence_1"),
++    ("S04", "silence 1 : numérateur compté sur les suites à effet en alarme, alarme avant changement comprise",
++     "    n_effet_detectees = int((detecte & effet).sum())\n", "    n_effet_detectees = int((en_alarme & effet).sum())\n",
++     _S1, "v3_silence_1"),
++    ("S05", "silence 1 : suites sans changement en alarme comptées sur toutes les suites",
++     "    n_sans_changement_en_alarme = int((en_alarme & ~change).sum())\n",
++     "    n_sans_changement_en_alarme = int(en_alarme.sum())\n", _S1, "v3_silence_1"),
++    ("S06", "silence 1 : alarme de la génération 2 oubliée", "    en_alarme = alarmes.any(axis=1)\n",
++     "    en_alarme = alarmes[:, 1:].any(axis=1)\n", _S1, "v3_silence_1"),
++    ("S07", "silence 1 : nombre de suites faux", "    n_suites = int(alarmes.shape[0])\n",
++     "    n_suites = int(alarmes.shape[0]) // 2\n", _S1, "v3_silence_1"),
++    ("S08", "silence 1 : suites qui changent détectées comptées sur toutes les suites qui changent",
++     "    n_changent_detectees = int(detecte.sum())\n", "    n_changent_detectees = int(change.sum())\n", _S1,
++     "v3_silence_1"),
++    ("S09", "silence 1 : mélange planté, suites à effet comptées sur les suites qui changent",
++     "\"suites_a_effet\": int(effet.sum()),", "\"suites_a_effet\": int(change.sum()),", _S1, "v3_silence_1"),
++    ("S10", "silence 1 : ajout absent de la sortie",
++     "        bloc.update(silence_1_part_et_comptes(a, change, effet, detecte))\n", "", _S1, "v3_silence_1"),
++    ("P01", "silence 2 : fausse alarme « plus de 0,08 » lue « 0,08 ou plus »",
++     "        fa_atteinte = BORNE_FAUSSE_ALARME_P6[1] * x > BORNE_FAUSSE_ALARME_P6[0] * n_sans\n",
++     "        fa_atteinte = BORNE_FAUSSE_ALARME_P6[1] * x >= BORNE_FAUSSE_ALARME_P6[0] * n_sans\n", _P6, "v3_silence_2"),
++    ("P02", "silence 2 : borne de la fausse alarme 0,05 au lieu de 0,08", "BORNE_FAUSSE_ALARME_P6 = (8, 100)",
++     "BORNE_FAUSSE_ALARME_P6 = (5, 100)", _P6, "v3_silence_2"),
++    ("P03", "silence 2 : détection « au plus égale » lue « strictement inférieure »",
++     "        det_atteinte = (b <= d) if lue else None\n", "        det_atteinte = (b < d) if lue else None\n", _P6,
++     "v3_silence_2"),
++    ("P04", "silence 2 : clause de détection lue aussi à m = 10", "M_DE_LA_CLAUSE_DETECTION_P6 = (20, 40)\n",
++     "M_DE_LA_CLAUSE_DETECTION_P6 = (10, 20, 40)\n", _P6, "v3_silence_2"),
++    ("P05", "silence 2 : clause de détection lue à m = 40 seulement", "M_DE_LA_CLAUSE_DETECTION_P6 = (20, 40)\n",
++     "M_DE_LA_CLAUSE_DETECTION_P6 = (40,)\n", _P6, "v3_silence_2"),
++    ("P06", "silence 2 : fausse alarme lue sur le bras C au lieu de la sentinelle",
++     "        x = c[\"par_bras\"][\"B\"][\"comptes_silence_1\"][\"suites_sans_changement_en_alarme\"]\n",
++     "        x = c[\"par_bras\"][\"C\"][\"comptes_silence_1\"][\"suites_sans_changement_en_alarme\"]\n", _P6,
++     "v3_silence_2"),
++    ("P07", "silence 2 : détection comparée au bras C au lieu du bras apparié D",
++     "        d = c[\"par_bras\"][\"D\"][\"comptes_silence_1\"][\"suites_a_effet_detectees\"]\n",
++     "        d = c[\"par_bras\"][\"C\"][\"comptes_silence_1\"][\"suites_a_effet_detectees\"]\n", _P6, "v3_silence_2"),
++    ("P08", "silence 2 : « P6 réfutée » seulement si toutes les clauses sont atteintes", "    refutee = any(clauses)\n",
++     "    refutee = all(clauses)\n", _P6, "v3_silence_2"),
++    ("P09", "silence 2 : la carte reçoit le mot de P6", "        \"carte_fcbf4a2dd1a57\": MOT_CARTE_ALARME,\n",
++     "        \"carte_fcbf4a2dd1a57\": mot,\n", _P6, "v3_silence_2"),
++    ("P10", "silence 2 : cellule de P6 manquante ou en double non signalée", "    if manquants or doublons:\n",
++     "    if False:\n", _P6, "v3_silence_2"),
++    ("P11", "silence 2 : fausse alarme lue aux seuls m de la clause de détection",
++     "        fa_atteinte = BORNE_FAUSSE_ALARME_P6[1] * x > BORNE_FAUSSE_ALARME_P6[0] * n_sans\n",
++     "        fa_atteinte = (BORNE_FAUSSE_ALARME_P6[1] * x > BORNE_FAUSSE_ALARME_P6[0] * n_sans) and m in M_DE_LA_CLAUSE_DETECTION_P6\n", _P6,
++     "v3_silence_2"),
++    ("E01", "égalité au v2 : la part (a) existante remplacée par la part (b)",
++     "            \"part_des_detections_sur_changement_a_effet\": (float(effet[detecte].mean()) if detecte.any() else None),\n",
++     "            \"part_des_detections_sur_changement_a_effet\": (float((detecte & effet).sum() / max(1, a.any(axis=1).sum())) if detecte.any() else None),\n",
++     _EGAL, "v3_egalite"),
++    ("E02", "égalité au v2 : aide de P6 absente des critères mécaniques",
++     "            \"alarme_fcbf4a2dd1a57\": criteres_alarme_p6(res_a),\n", "", _EGAL, "v3_egalite"),
++]
++
+ DEFAUTS = ([d + ("v1",) for d in DEFAUTS_V1] + [d + ("contre_lecture",) for d in DEFAUTS_CONTRE_LECTURE]
+-           + DEFAUTS_V2 + [d + ("graines",) for d in DEFAUTS_GRAINES])
++           + DEFAUTS_V2 + [d + ("graines",) for d in DEFAUTS_GRAINES] + DEFAUTS_V3)
+ 
+ NOMS_QUI_DERIVENT = ("generateurs", "Contexte", "_gens", "main", "executer_etage_1", "tirages", "reechantillonnage",
+                      "chrono", "_charger", "CHEMIN_CHRONO", "RACINE_ESSAIS")
+@@ -285,7 +358,7 @@
+ def lancer(essais, noms, banc, travail, complet=False):
+     env = dict(os.environ)
+     env.update({"PYTHONDONTWRITEBYTECODE": "1", "TMPDIR": str(travail / "tmp"), "BANC_LIGNE_3_CHEMIN": str(banc),
+-                "CHRONOMETRAGE_LIGNE_3_CHEMIN": str(Path(essais).resolve().parent / "chronometrer_banc_ligne_3_v2.py")})
++                "CHRONOMETRAGE_LIGNE_3_CHEMIN": str(Path(essais).resolve().parent / "chronometrer_banc_ligne_3_v3.py")})
+     cmd = [sys.executable, "-B", "-m", "pytest", "-q", "-p", "no:cacheprovider", "--tb=line"]
+     cmd += (["-x", str(essais)] if complet else [f"{essais}::{n}" for n in noms])
+     r = subprocess.run(cmd, cwd=str(travail), env=env, capture_output=True, text=True, timeout=1800)
+@@ -335,7 +408,7 @@
+     (travail / "tmp").mkdir()
+     vises_tous = sorted({n for d in DEFAUTS for n in d[4]})
+     code_sain, resume_sain, _ = lancer(essais, vises_tous, banc, travail)
+-    rapport = {"programme": "controle-defauts-reintroduits-ligne-3-v2", "programme_sha256": sha256(Path(__file__).resolve()),
++    rapport = {"programme": "controle-defauts-reintroduits-ligne-3-v3", "programme_sha256": sha256(Path(__file__).resolve()),
+                "mode": args.mode, "banc_sha256": sha256(banc), "essais_sha256": sha256(essais),
+                "essais_vises_sur_le_banc_sain": {"code": code_sain, "resume": resume_sain, "passent": code_sain == 0},
+                "defauts": []}
