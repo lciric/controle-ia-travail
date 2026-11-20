@@ -1,6 +1,6 @@
 # Contre-lecture de la fabrique des mondes et du juge de l'épreuve à vérité plantée (barreau 5) — v1
 
-**Verdict : « conforme après ces corrections ».** La construction des mondes V0 à V12 et les règles du juge suivent le point 11. Mais le raccord au programme de lecture est faux en six endroits : tels qu'ils sont, **tous les mondes seraient refusés par la garde d'ouverture**, et le juge ne le verrait ni pour V0 ni pour V7. Seize couples corrigent la fabrique, trois le juge ; ils sont vérifiés sur une copie. Réserve : aucun monde n'est passé par la vraie garde, que je n'ai pas le droit de jouer (section 9).
+**Verdict : « conforme après ces corrections ».** La construction des mondes V0 à V12 et les règles du juge suivent le point 11. Mais le raccord au programme de lecture est faux en six endroits : tels qu'ils sont, **tous les mondes seraient refusés par la garde d'ouverture**, et le juge ne le verrait ni pour V0 ni pour V7. Seize couples corrigent la fabrique, cinq le juge ; ils sont vérifiés sur une copie. Deux des cinq répondent aux deux points que la mère m'a transmis en cours de route (section 12). Réserve : aucun monde n'est passé par la vraie garde, que je n'ai pas le droit de jouer (section 9).
 
 - **Auteur** : contre-lecteur neuf, sous-agent de la session mère (`session_01XJ6Mgr8BN6UanALsQatc5E`). **Modèle** : Claude Fable 5.2 (`claude-fable-5-2`), autre modèle que les deux développeurs (Claude Opus 5.5).
 - **Date** : 20 novembre 2026 (horloge du conteneur).
@@ -66,7 +66,7 @@ Le développeur ne pouvait voir aucun des six bloquants : le mandat lui fermait 
 
 Bruit propre à chaque membre dans V3, V8, V9 et V12 : oui, et dans tous les mondes à régime fixe (un tirage par série, par action et par jeton ; essai du développeur sur V3, V9 et V12).
 
-**Le juge.** Il applique la colonne « règle gelée » ligne pour ligne : nombres de mondes (2 000 ; 500 ; 200), bornes « au plus » (20, 20, 20 ; 10 ; 0 pour V4) et « au moins » (480 ; 490 pour V6), motifs exacts de V8, V9 et V11, motif « force non écartée » de V3 (partie non vide de {E2a, E2b}) et de V12 (qui nomme E2a ou E2b), les trois règles « dans tous les mondes » de V10, les trois de V7. Sa table du seuil est celle du texte (10 : 3 ; 9 : 1 ; 8 : 0 ; à 95 %, 7 : 2 ; 6 : aucune). Ses deux lectures déclarées (« au moins » au niveau de la vérité, « au plus » à tout niveau) sont celles de l'addendum. Trois défauts : M-2, M-3 et m-1 ci-dessus.
+**Le juge.** Il applique la colonne « règle gelée » ligne pour ligne : nombres de mondes (2 000 ; 500 ; 200), bornes « au plus » (20, 20, 20 ; 10 ; 0 pour V4) et « au moins » (480 ; 490 pour V6), motifs exacts de V8, V9 et V11, motif « force non écartée » de V3 (partie non vide de {E2a, E2b}) et de V12 (qui nomme E2a ou E2b), les trois règles « dans tous les mondes » de V10, les trois de V7. Sa table du seuil est celle du texte à dix, neuf, huit et sept familles (3 ; 1 ; 0 ; à 95 %, 2) ; à six familles elle est fausse (m-5). Ses deux lectures déclarées (« au moins » au niveau de la vérité, « au plus » à tout niveau) sont celles de l'addendum. Cinq défauts : M-2, M-3, M-4, m-1 et m-5 ci-dessus.
 
 ## 4. Point 2 — Les arbres, champ par champ
 
@@ -79,7 +79,7 @@ Hors des six bloquants, chaque fichier est celui que lit le programme. J'ai suiv
 - `couts.json`, `formation-resume.json` : formats, « copie » égale au nom de la famille (aucune ligne de relance), membres présents seulement ;
 - aucun fichier de l'arbre ne porte une clé « famille » : la garde des lignes de formation ne se déclenche pas à tort.
 
-**Un monde sain passe-t-il ses gardes ?** Tel quel, non (B-1 à B-6). Après les couples, oui selon les règles recopiées : le monde sain, les deux familles incomplètes et les sept familles sont acceptés (`resultats-verification-couples-v1.json`). Non éprouvé sur la vraie garde.
+**Un monde sain passe-t-il ses gardes ?** Tel quel, non (B-1 à B-6). Après les couples, oui selon les règles recopiées : le monde sain, les deux familles incomplètes et les sept familles sont acceptés (`resultats-verification-couples-v2.json`). Non éprouvé sur la vraie garde.
 
 **Chaque monde de V7 produit-il le refus attendu, et lui seul ?** Après les couples :
 
@@ -164,7 +164,7 @@ Ces échecs sont attendus : ils portent sur les défauts mêmes que les couples 
 
 ## 9. Point 6 — Ce qui menace le gel
 
-1. **La fabrique, le juge et leurs essais sont dans l'arbre gelé.** L'arbre gelé est tout le dépôt hors `prereg`, `brouillons`, `registres`, `docs`, `diag`, `runs`, `donnees`, `livrables`, `papiers`, `traces` et `CLAUDE.md` : `src/` et `tests/` y sont. Après le commit de `CODE-LECTURE-B5F`, tout changement de la fabrique, du juge ou de leurs essais, et tout fichier non suivi sous `src/`, fait refuser l'ouverture réelle (« code joué différent de celui de CODE-LECTURE-B5F »). La clé ne se réinscrit pas (une clé en double arrête). **Les dix-neuf couples et la reprise des essais doivent donc être commis avant ce commit.** Le traducteur reste sous `docs/`, hors de l'arbre gelé.
+1. **La fabrique, le juge et leurs essais sont dans l'arbre gelé.** L'arbre gelé est tout le dépôt hors `prereg`, `brouillons`, `registres`, `docs`, `diag`, `runs`, `donnees`, `livrables`, `papiers`, `traces` et `CLAUDE.md` : `src/` et `tests/` y sont. Après le commit de `CODE-LECTURE-B5F`, tout changement de la fabrique, du juge ou de leurs essais, et tout fichier non suivi sous `src/`, fait refuser l'ouverture réelle (« code joué différent de celui de CODE-LECTURE-B5F »). La clé ne se réinscrit pas (une clé en double arrête). **Les vingt et un couples et la reprise des essais doivent donc être commis avant ce commit.** Le traducteur reste sous `docs/`, hors de l'arbre gelé.
 2. **Aucun monde n'a passé la vraie garde.** Mes couples sont vérifiés contre des règles recopiées. Si un septième défaut de raccord m'a échappé, il ne se verra qu'après le gel, quand il sera trop tard pour toucher à la fabrique sans regeler. **Recommandation, à trancher par la mère** : avant le gel, un essai de raccord — un monde sain et les six refus de V7, sous une entropie qui ne servira pas à l'épreuve, par un agent qui ne tient aucun des trois rôles, en ne regardant que « accepté » ou le motif du refus. Ce n'est pas l'épreuve du point 11.
 3. **Ce qui dépend du gel est un paramètre, non du code**, à condition de le régler : `empreinte_lecture` doit être l'empreinte du fichier gelé (sinon tout monde est refusé au point 10 de la liste d'arrêt). Le fichier des paramètres vit hors de `src/`.
 4. **Trois règles recopiées, des phrases reconnues.** La fabrique recopie le pli gelé, les noms opaques et la forme canonique de la table ; le juge corrigé reconnaît quatre fragments de refus ; le traducteur reconnaît neuf phrases du programme. Tout changement du programme avant le gel qui touche l'un d'eux les désaligne. En particulier, la question laissée à la mère par le schéma du résultat (section 3 : refus sans résultat, ou issue NI écrite pour une garde) : si elle est tranchée pour « NI écrite », le traducteur et la règle des refus de V7 sont à reprendre.
@@ -173,7 +173,7 @@ Ces échecs sont attendus : ils portent sur les défauts mêmes que les couples 
 
 ## 10. Ce qui va à la mère
 
-1. Faire appliquer les dix-neuf couples et reprendre les essais (développeur), puis me rendre la main pour la vérification des corrections.
+1. Faire appliquer les vingt et un couples et reprendre les essais (développeur), puis me rendre la main pour la vérification des corrections.
 2. Trancher l'essai de raccord avant le gel (section 9, point 2). Recommandation : le faire. Confiance : 0,8.
 3. Dire où s'engage l'empreinte des vérités (section 6).
 4. Dire sous quelle entropie se joue le premier passage (section 6).
@@ -182,8 +182,8 @@ Ces échecs sont attendus : ils portent sur les défauts mêmes que les couples 
 ## 11. Mes fichiers
 
 Dans `docs/notes/barreau5-resolution-v1/plan-avant-entretien/code-lecture/outils-contre-lecture-fabrique-mondes-v1/`, chacun scellé par son compagnon :
-- `couples_corrections_v1.py` : les dix-neuf couples (données) ;
-- `verifier_couples_v1.py` et `resultats-verification-couples-v1.json` : chaque « avant » trouvé une fois ; copie corrigée ; dix mondes confrontés aux règles recopiées de la garde (état d'origine : aucun conforme ; copie corrigée : dix sur dix) ; juge d'origine et juge corrigé sur cinq programmes de ma fabrication ; essais du développeur sur la copie ;
+- `couples_corrections_v1.py` : les vingt et un couples (données) ;
+- `verifier_couples_v1.py` et `resultats-verification-couples-v2.json` (le fichier `-v1` est le passage d'avant les couples J-4 et J-5, gardé) : chaque « avant » trouvé une fois ; copie corrigée ; dix mondes confrontés aux règles recopiées de la garde (état d'origine : aucun conforme ; copie corrigée : dix sur dix) ; juge d'origine et juge corrigé sur huit programmes de ma fabrication ; essais du développeur sur la copie ;
 - `mutations_contre_lecture_v1.py` et `resultats-mutations-contre-lecture-v1.json` ;
 - `traducteur_resultat_vers_rendu_v1.py` ;
 - `assembler_rapport_v1.py` et `corps-contre-lecture-fabrique-mondes-v1.md` : le corps de ce texte, auquel l'outil ajoute l'annexe.
