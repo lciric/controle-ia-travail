@@ -1,0 +1,18 @@
+PASSE   ouverture (n), cohérente -> True
+PASSE   rejeu de l'ouverture, même sortie refaite, sans contrôle -> True
+GARDE   rejeu sous le même acte, AUTRE sortie refaite (autre fichier des scores) -> GO-2099-06-01-01 : cette ligne est déjà portée par un acte de reprise — une ligne de GO n'ouvre qu'une reprise ; une autre demande une ligne neuve (6.9)
+GARDE   lecture du fichier des scores 2 sous la sortie refaite 1 -> fichier des rangs par unité : son empreinte n'est pas celle que la sortie scellée annonce (`scores_par_unite.sha256`) — ce n'est pas le fichier livré : le programme s'arrête, sans événement ni issue, 
+PASSE   lecture du fichier des scores 1 -> <rangs scellés d9cc190f7938…>
+PASSE   fichier des grandeurs (n), premier -> grandeurs-de-l-etape-n-bras-a.json
+GARDE   fichier des grandeurs (n), second, autres grandeurs -> grandeurs-de-l-etape-n-bras-a.json est déjà écrit et scellé avec un autre contenu : jamais écrasé (R12)
+GARDE   lecture du fichier des scores 1 après le fichier des grandeurs -> l'étape (n) de cette livraison a abouti : le fichier de ses grandeurs est scellé — elle n'est pas rejouée, et le fichier des rangs par unité n'est plus lu (6.9 ; 8.4)
+PASSE   ouverture de nouveau après le fichier des grandeurs -> True
+=== formes des « mêmes lectures »
+PASSE   identique -> True
+PASSE   autre provenance seule -> True
+PASSE   autres agrégateurs (somme sans état) -> True
+PASSE   autres réglages -> True
+PASSE   autres plis -> True
+   une lecture : {"moniteur": "classifieur-lexical", "dose": "dose-0.25", "calculable": true, "motif": null, "aire": 0.52, "pli0": 0.51, "pli1": 0.53, "valeur_p_bas": 0.49975012493753124, "valeur_p_haut": 0.49975012493753124, "n_permutations": 2000, "permutations_degenerees": 0, "au_moins_egales": 999, "borne_haute"
+PASSE   une lecture : champ de plus -> False
+PASSE   lectures en ordre inverse des doses -> True
