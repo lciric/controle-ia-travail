@@ -1,0 +1,39 @@
+=== C-1 rejoué : « ne repère pas » puis « repère »
+PASSE   rang 1, pièce A -> ne repere pas
+GARDE   rang 1, pièce B d'une autre empreinte -> une lecture a déjà été ouverte dans cette course pour une autre pièce (ouverture scellée d'une première livraison, ou acte de reprise) : toute autre pièce exige
+GARDE   rang 2 sans registre figé (lecture de la configuration) -> configuration scellée de `livraison-2/` : une configuration de rang supérieur à 1 inscrit un registre figé (`pieces_attendues.sha256_du_registre_des_accords`) —
+=== autre voie : un arrêt à l'étape (n), puis une livraison refaite qui relit l'étape (m)
+   rang 1 lu, fichier (m) scellé ; états du juge à la dose 1 : ne repere pas
+ARRET   étape (n) : fichier des rangs fautif -> {'garde': 'fichier des scores par unité', 'champ': "liste des dix champs d'une ligne du fichier des scores par unité", 'nature': 'un champ de plus', 'cas': 'aucun cas', 'etape': 'n', 'moniteur': None, 'dose': None}
+   fichier d'arrêt de l'étape (n) : True
+PASSE   livraison refaite (pièce B, « repère ») sur la ligne qui cite l'arrêt de l'étape (n) -> {'etats': {0.5: {'agregateur-sequentiel': 'ne repere pas', 'classifieur-de-surface': 'ne repere pas', 'classifieur-lexical': 'ne repere pas', 'juge': 'ne repere pas', 'moniteur-boite-noire': 'ne repere pas'}, 0.75: {'agregateur-
+   état du juge dans la seconde lecture : repere | le fichier (m) du rang 1 existe toujours : True
+PASSE      fichier (m) du rang 2 écrit (seconde table C dans la course) -> livraison-2
+=== question 4 : un contrôle fait avant le premier départ sert au rejeu
+PASSE   contrôle sain avant le premier départ -> True
+PANNE   première lecture interrompue (après son ouverture) -> KeyboardInterrupt: panne
+   (une ligne qui retire la configuration entre au registre ; aucun contrôle refait)
+PASSE   rejeu sur le contrôle d'avant le premier départ -> ne repere pas
+=== question 3 / A.1 : configuration inscrite puis abandonnée
+PASSE   constat de la configuration suivante, rang 1, registre portant l'inscription abandonnée -> False
+PASSE   … avec une ligne de reprise quelconque, sans empreinte, placée après -> False
+=== question 2 : phrases d'accord, révocation, porte de l'écart à R9
+PASSE   porte R9, | GO-2099-03-01-01 | 2099 | décision | écart à R9 accordé pour la table des identifiants o -> GO-2099-03-01-01
+PASSE   porte R9, | GO-2099-03-01-02 | 2099 | décision | **écart à R9 accordé pour la table des identifiants -> GO-2099-03-01-02
+PASSE   porte R9, | GO-2099-03-01-03 | 2099 | décision | écart à R9 accordé pour la table des identifiants o -> GO-2099-03-01-03
+GARDE   porte R9, | GO-2099-03-01-04 | 2099 | décision | écart à R9 accordé pour la table des identifiants o -> GO-2099-03-01-04 : la cellule d'objet de la ligne du registre n'est pas exactement la phrase « écart à R9 accordé pour la table des identifiants opaques », ou l
+GARDE   porte R9, | GO-2099-03-01-05 | 2099 | décision | aucun écart à R9 accordé pour la table des identifi -> GO-2099-03-01-05 : la cellule d'objet de la ligne du registre n'est pas exactement la phrase « écart à R9 accordé pour la table des identifiants opaques », ou l
+GARDE   porte R9, | GO-2099-03-01-06 | 2099 | révocation | écart à R9 accordé pour la table des identifiants -> GO-2099-03-01-06 : la cellule d'objet de la ligne du registre n'est pas exactement la phrase « écart à R9 accordé pour la table des identifiants opaques », ou l
+GARDE   porte R9, | GO-2099-03-01-07 | 2099 | décision | `écart à R9 accordé pour la table des identifiants  -> GO-2099-03-01-07 : la cellule d'objet de la ligne du registre n'est pas exactement la phrase « écart à R9 accordé pour la table des identifiants opaques », ou l
+PASSE   porte R9, | GO-2099-03-01-08 | 2099 | décision | ÉCART À R9 ACCORDÉ POUR LA TABLE DES IDENTIFIANTS O -> GO-2099-03-01-08
+PASSE   porte R9, | GO-2099-03-01-09 | 2099 | décision | écart à R9 accordé pour la table des identifiants o -> GO-2099-03-01-09
+GARDE   porte R9, | GO-2099-03-01-10 | 2099 | décision | « écart à R9 accordé pour la table des identifiants -> GO-2099-03-01-10 : la cellule d'objet de la ligne du registre n'est pas exactement la phrase « écart à R9 accordé pour la table des identifiants opaques », ou l
+GARDE   porte R9, | GO-2099-03-01-11 | 2099 | décision | écart à R9 accordé pour la table des identifiants o -> GO-2099-03-01-11 : la cellule d'objet de la ligne du registre n'est pas exactement la phrase « écart à R9 accordé pour la table des identifiants opaques », ou l
+GARDE   porte R9, | GO-2099-03-01-12 | décision | écart à R9 accordé pour la table des identifiants opaques  -> GO-2099-03-01-12 : la cellule d'objet de la ligne du registre n'est pas exactement la phrase « écart à R9 accordé pour la table des identifiants opaques », ou l
+GARDE   porte R9 : ligne entrée depuis l'état figé qui la nomme -> GO-2099-03-01-01 : une ligne entrée au registre courant depuis l'état figé le nomme (GO-2099-04-01-01) — révocation, ou ligne à voir, quel que soit son type : l
+GARDE   porte R9 : registre courant qui a perdu une ligne de l'état figé -> registre des accords : le registre courant ne contient pas une ligne de l'état figé (GO-2099-03-01-01) — ce n'est pas un état postérieur du même registre (une l
+=== M-5 et memes_choix
+GARDE   « en attente », motif rencontré -> la livraison porte le motif « moniteur appris non ajustable », et le choix nommé de la configuration scellée est « en attente » : le programme s'arrête — garde 
+   constat « pièce en attente » : ['piece-en-attente-d-un-choix-bras-a-008ab95af']
+GARDE   ensuite une autre pièce, sans GO -> sous la configuration d'une première livraison, une autre pièce a déjà été donnée comme sortie de la lecture commune — un constat de provenance, d'attente d'un 
+GARDE   rang 3 « module corrigé » après rang 2 « aire non calculable » -> configurations de la course : les cinq choix de `livraison-2/` ne sont pas ceux de `livraison-3/` — ils sont les mêmes pour toutes les livraisons (conventions) 
