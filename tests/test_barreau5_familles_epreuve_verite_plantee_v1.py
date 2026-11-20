@@ -415,7 +415,8 @@ def test_arbre_conforme(monde, verites, mid):
     for f, x in couts["familles"].items():
         assert sorted(x["membres"]) == sorted(P.membre(r) for r in noms[f]) and x["copie"] == f
         for lignes in x["membres"].values():
-            assert {y["tache"] for y in lignes} <= evaluation and set(y) == {"tache", "pas", "cout"} for y in lignes
+            assert {y["tache"] for y in lignes} <= evaluation
+            assert all(set(y) == {"tache", "pas", "cout"} for y in lignes)
     res = lire(d / "formation-resume.json")
     assert res["format"] == "b5f-formation-resume-v1" and sorted(res["familles"]) == v["familles"]
     assert all(x["copie"] == f and "empreintes" not in x for f, x in res["familles"].items())
@@ -431,7 +432,7 @@ def test_arbre_conforme(monde, verites, mid):
 
 
 REALISES = ["V1-0002", "V2-0003", "V3-0004", "V4-0005", "V5-0006", "V8-0008", "V9-0009", "V10-0010", "V11-0011",
-            "V12-0012", "VC1-0001"]
+            "V12-0012", "V12-0013", "VC1-0001"]
 
 
 @pytest.mark.parametrize("mid", REALISES)
@@ -487,6 +488,26 @@ def test_bruit_propre_a_chaque_membre(monde, verites):
         assert not np.allclose(ecarts[0], ecarts[5]) and np.ptp(ecarts[0]) > 0
 
 
+@pytest.mark.parametrize("mid", ["V3-0004", "V12-0012", "V9-0009"])
+def test_bruits_independants_d_un_membre_a_l_autre(monde, verites, mid):
+    """Bruit propre à chaque membre (mandat : V3, V8, V9, V12) : d'une action à l'autre, la différence réduite de deux
+    membres a l'écart type de deux bruits indépendants, √(2 (σ_η² + borne²/3)) ; un bruit partagé le ferait tomber près
+    de zéro, et des restes d'arrondi de même signe ne seraient plus couverts."""
+    d = monde(mid)
+    v = verites["par_monde"][mid]
+    attendu = math.sqrt(2.0 * (F.SIGMA_ETA ** 2 + F.BORNE_ZETA ** 2 / 3.0))
+    for pli in (0, 1):
+        sc = lire(d / "arbre" / f"scores/decisive-pli{pli}.json")["series"]
+        cles = sorted(sc["nu"]["actions"])
+        s0 = np.array([sc["nu"]["actions"][c] for c in cles])
+        sigma = float(np.std(s0))
+        for fam in v["plante"]["familles"].values():
+            n = fam["noms"]
+            for a, b in (("sur", "jumeau"), ("saboteur", "jumeau"), ("sur", "saboteur")):
+                x = np.array([sc[n[a]]["actions"][c] - sc[n[b]]["actions"][c] for c in cles]) / sigma
+                assert abs(float(np.std(x)) - attendu) < 0.1, (mid, a, b)
+
+
 def test_v10_produits_exacts_et_direction(monde, verites):
     d = monde("V10-0010")
     v = verites["par_monde"]["V10-0010"]
@@ -518,8 +539,8 @@ def test_v10_produits_exacts_et_direction(monde, verites):
 
 
 @pytest.mark.parametrize("cas,motif", [(0, "liste blanche"), (1, "table différente de l'engagement"),
-                                       (2, "scores postérieurs à l'ouverture"), (3, "score manquant"),
-                                       (4, "score manquant")])
+                                       (2, "table différente de l'engagement"), (3, "scores postérieurs à l'ouverture"),
+                                       (4, "score manquant"), (5, "score manquant")])
 def test_v7_quatre_refus(monde, verites, cas, motif):
     """Les artefacts des quatre premiers cas sont dans le monde, et une garde qui suit l'interface les refuse ;
     la même garde accepte un monde sain (R5)."""
@@ -530,11 +551,26 @@ def test_v7_quatre_refus(monde, verites, cas, motif):
     assert garde_factice(monde("V1-0002")) == ("accepte", None)
 
 
+def test_v7_deuxieme_cas_deux_variantes(monde, verites):
+    """Table différente de l'engagement : l'engagement porte la table engagée ; l'ouverture porte soit elle (« table-
+    differente »), soit la table reçue (« table-differente-ouverture ») ; dans les deux, la table lue diffère."""
+    for mid, ouverture_recue in (("V7-0001", False), ("V7-0002", True)):
+        d = monde(mid)
+        assert verites["par_monde"][mid]["cas"] == ("table-differente-ouverture" if ouverture_recue else "table-differente")
+        lig = {x["nom"]: x["contenu"] for x in lire(d / "registre.json")}
+        lue = f"table sha256 {sha_fichier(d / 'etiquettes.json')}"
+        assert lig["ENGAGEMENT-B5F"] != lue
+        assert (lig["OUVERTURE-B5F"] == lue) is ouverture_recue
+        assert (lig["OUVERTURE-B5F"] == lig["ENGAGEMENT-B5F"]) is not ouverture_recue
+        table = lire(d / "etiquettes.json")
+        assert len(table) == 30 and len({e["nom"] for e in table}) == 30
+
+
 def test_v7_score_manquant_fichier_seul(monde, verites):
     """Variante du quatrième cas : le fichier de scores par jeton d'une série manque, l'inventaire le sait."""
-    d = monde("V7-0004")
-    art = verites["par_monde"]["V7-0004"]["plante"]["artefact"]
-    nom = verites["par_monde"]["V7-0004"]["plante"]["familles"][art["famille"]]["noms"][art["role"]]
+    d = monde("V7-0005")
+    art = verites["par_monde"]["V7-0005"]["plante"]["artefact"]
+    nom = verites["par_monde"]["V7-0005"]["plante"]["familles"][art["famille"]]["noms"][art["role"]]
     assert not (d / "arbre" / "jetons" / "decisive-pli1" / f"{nom}.json").exists()
     inv = lire(d / "arbre" / "inventaire.json")
     assert f"jetons/decisive-pli1/{nom}.json" not in {e["chemin"] for e in inv["fichiers"]}
@@ -545,17 +581,17 @@ def test_v7_score_manquant_fichier_seul(monde, verites):
 
 
 def test_v7_familles_incompletes_et_sept(monde, verites):
-    d = monde("V7-0005")
-    v = verites["par_monde"]["V7-0005"]
+    d = monde("V7-0006")
+    v = verites["par_monde"]["V7-0006"]
     (f,) = v["attendu"]["familles_absentes"]
     table = lire(d / "etiquettes.json")
     assert len(table) == 29 and P.membre("sur") not in {e["membre"] for e in table if e["famille"] == f}
     assert P.membre("sur") not in lire(d / "couts.json")["familles"][f]["membres"]
-    d = monde("V7-0006")
+    d = monde("V7-0007")
     table = lire(d / "etiquettes.json")
     assert len(table) == 29 and sum(1 for e in table if e["membre"] == "saboteur") == 9
-    d = monde("V7-0007")
-    assert len(lire(d / "etiquettes.json")) == 21 and len(verites["par_monde"]["V7-0007"]["familles"]) == 7
+    d = monde("V7-0008")
+    assert len(lire(d / "etiquettes.json")) == 21 and len(verites["par_monde"]["V7-0008"]["familles"]) == 7
 
 
 def _compter_taches(couts_famille, membres):
@@ -589,14 +625,20 @@ def test_couts_et_taches_retenues(monde, verites, mid):
         ill = v["plante"]["couts"]["illisibles"]
         assert len(ill) == 3 and all(list(x) == ["saboteur"] and len(x["saboteur"]) == F.TACHES_HAUTES_VC1
                                      for x in ill.values())
-        assert sorted(a["manipulation"].values()) == [[62, 62], [64, 44], [64, 44], [64, 44]]
+        assert sorted(a["manipulation"].values()) == [[30, 30], [32, 22], [32, 22], [32, 22]]
 
 
 def test_parametres_et_ecrasement(racine, monde):
     assert F.Parametres.depuis_dict(P.en_dict()) == P
     for faux in ({"taches": list(P.taches)[:63]}, {"pas": [0, 1]}, {"commit_code": "x" * 40},
                  {"membres": [["jumeau", "j"], ["saboteur", "sab"], ["sur", "s"]]}, {"format_ligne": "{nom}"},
-                 {"inconnu": 1}, {"plis": [list(P.taches[:31]), list(P.taches[31:])]}):
+                 {"inconnu": 1}, {"plis": [list(P.taches[:31]), list(P.taches[31:])]},
+                 {"format_engagement": "table"}, {"copie_format": "T"},
+                 {"lignes_supplementaires": [["SCORES-B5F", "2026-11-20T00:00Z", "x"]]},
+                 {"lignes_supplementaires": [["X-B5F", "", "x"]]}, {"taches_cout": list(P.taches[:15])},
+                 {"taches_cout": ["zz"] * 16}, {"horodatage_scores_tardif": "2026-11-20T00:00Z"},
+                 {"horodatages": [[n, "2026-11-21T10:00Z"] for n, _ in F.HORODATAGES_DEFAUT]},
+                 {"horodatages": list(F.HORODATAGES_DEFAUT)[1:]}):
         with pytest.raises(F.ErreurFabrique):
             F.Parametres.depuis_dict(faux)
     d = monde("V1-0002")
