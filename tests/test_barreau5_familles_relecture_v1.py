@@ -336,6 +336,15 @@ def test_entrees_de_lecture_cas_sain_et_fichier_non_admis(tmp_path):
             rv.exiger_entrees(mm["racine"] / "entrees-lecture")
 
 
+def test_premiere_garde_des_entrees_eprouvee_seule(tmp_path, monkeypatch):
+    """Mutation R12 : la seconde garde (`engagement_v1.exiger_entrees_de_lecture_propres`) refuse aussi un fichier non
+    admis ; la première est éprouvée seule, la seconde rendue muette."""
+    m = monde_jouet(tmp_path, n_taches=4, entrees_en_plus=lambda p: (p / "couts-T01.json").write_text("{}"))
+    monkeypatch.setattr(en, "exiger_entrees_de_lecture_propres", lambda *a, **k: None)
+    with pytest.raises(GardeArret, match="liste d'arrêt, point 8"):
+        rv.exiger_entrees(m["racine"] / "entrees-lecture")
+
+
 def test_entrees_de_lecture_empreinte_changee_refus(tmp_path):
     m = monde_jouet(tmp_path, n_taches=4)
     p = m["racine"] / "entrees-lecture" / "X-07.safetensors"

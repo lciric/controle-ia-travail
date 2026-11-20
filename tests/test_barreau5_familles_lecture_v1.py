@@ -99,6 +99,34 @@ def test_une_difference_nulle_compte_contre_la_conclusion_essayee():
     assert not lv.epreuve_rangs_signes(egale, "99")["separe"]
 
 
+def test_une_difference_nulle_compte_contre_contraire():
+    """Mutation L02 (premier essai manquant) : pour « contraire », un zéro compte dans W⁺."""
+    huit = [-1.0] * 8
+    assert lv.epreuve_rangs_signes(huit, "99")["contraire"]
+    r = lv.epreuve_rangs_signes([0.0] + [-1.0] * 7, "99")
+    assert r["W_plus"] == 1 and not r["contraire"] and not r["separe"]
+    r = lv.epreuve_rangs_signes([-0.0] + [-1.0] * 9, "99")
+    assert r["W_plus"] == 1 and r["contraire"]                          # à dix familles, w = 3 admet ce zéro
+
+
+def test_seuil_jamais_egal_a_l_erreur_exactement():
+    """Mutation L04, équivalente, démontrée : P(W ≤ w) = c / 2^K n'égale jamais 1/200 ni 1/40 (5 ne divise aucune
+    puissance de deux) ; « ≤ » et « < » rendent le même seuil pour toute taille."""
+    for K in range(0, 40):
+        cumul = np.cumsum(lv.comptes_rangs_signes(K))
+        for alpha in lv.NIVEAUX.values():
+            assert all(Fraction(int(c), 2 ** K) != alpha for c in cumul)
+
+
+def test_table_reperee_par_son_empreinte_hors_du_json(tmp_path):
+    """Mutation L25 : dans l'arbre de lecture, la garde de l'empreinte est redondante avec la liste blanche et la garde de
+    forme (tout fichier admis est du JSON) ; éprouvée seule ici, sur un fichier qui n'est pas du JSON."""
+    table = en.table_des_etiquettes(SEL, [("T01", "jumeau"), ("T01", "sur_saboteur")])
+    (tmp_path / "x.bin").write_bytes(en.forme_canonique(table))
+    with pytest.raises(GardeArret, match="table des étiquettes présente"):
+        lv.exiger_arbre_sans_etiquettes(tmp_path, en.empreinte_table(table))
+
+
 def test_epreuve_contraire_et_niveau_non_atteignable():
     r = lv.epreuve_rangs_signes([-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0], "99")
     assert r["contraire"] and not r["separe"]
