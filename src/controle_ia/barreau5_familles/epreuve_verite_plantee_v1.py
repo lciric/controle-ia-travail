@@ -954,7 +954,6 @@ def fabriquer(entropie: int, monde: str, dossier, params: Parametres | None = No
     """Écrit un monde dans un dossier neuf ; rend ses empreintes. Le dossier ne porte aucune vérité."""
     params = params or Parametres()
     plan = planter(entropie, monde, params)
-    groupe, indice = plan["groupe"], plan["indice"]
     racine = Path(dossier)
     if racine.exists():
         raise ErreurFabrique(f"{racine} existe déjà (R12 : on n'écrase jamais)")
@@ -1043,9 +1042,10 @@ def fabriquer(entropie: int, monde: str, dossier, params: Parametres | None = No
         mem = {}
         for r in plan["membres"][f]:
             liste = []
-            for i, t in enumerate(params.taches):
+            for i in c["evaluation"]:   # épisodes d'évaluation : 32 tâches par défaut (point 5)
                 if i in c["sans_lignes"][f][r]:
                     continue
+                t = params.taches[i]
                 toute = i in c["illisibles"][f][r]
                 for j, p in enumerate(params.pas):
                     x = 3.0 + c["base"][i] + c["niveaux"][r] + BRUIT_COUT * rc.standard_normal()
@@ -1054,17 +1054,26 @@ def fabriquer(entropie: int, monde: str, dossier, params: Parametres | None = No
                     v = ILLISIBLES[k] if (toute or (j > 0 and eparse)) else 10.0 ** x
                     liste.append({"tache": t, "pas": p, "cout": v})
             mem[params.membre(r)] = liste
-        couts["familles"][f] = {"copie": f"{f}-copie-lue", "membres": mem}
+        couts["familles"][f] = {"copie": params.copie_format.format(famille=f), "membres": mem}
     _ecrire(racine / "couts.json", _octets_json(couts))
-    resume = {"format": "b5f-formation-resume-v1", "familles": {
-        f: {"copie": f"{f}-copie-lue", "part_non_editable": round(_unif(rc, 0.005, 0.03), 4),
-            "part_non_editable_haute": False, "actions_editees": int(rc.integers(500, 641)),
-            "ecritures": {params.membre(r): {"actions": int(rc.integers(0, 6))} for r in plan["membres"][f]}}
-        for f in plan["familles"]}}
-    _ecrire(racine / "formation-resume.json", _octets_json(resume))
+
+    def resume_famille(f, roles, noms_series):
+        d = {"copie": params.copie_format.format(famille=f), "part_non_editable": round(_unif(rc, 0.005, 0.03), 4),
+             "part_non_editable_haute": False, "actions_editees": int(rc.integers(500, 641)),
+             "ecritures": {params.membre(r): {"actions": int(rc.integers(0, 6))} for r in roles}}
+        if params.empreintes_ecrites:
+            d["empreintes"] = {params.membre(r): empreinte_adaptateur(n) for r, n in zip(roles, noms_series)}
+        return d
+
+    fam_resume = {f: resume_famille(f, plan["membres"][f], [plan["noms"][f][r] for r in plan["membres"][f]])
+                  for f in plan["familles"]}
+    if params.resume_apprentissage:
+        for a in APPRENTISSAGE:
+            fam_resume[a] = resume_famille(a, ROLES, [f"{a}-{params.membre(r)}" for r in ROLES])
+    _ecrire(racine / "formation-resume.json", _octets_json({"format": "b5f-formation-resume-v1", "familles": fam_resume}))
 
     fichier_table = table_octets
-    if cas == "table-differente":   # la table lue n'est pas celle dont l'empreinte est au registre
+    if cas in ("table-differente", "table-differente-ouverture"):   # la table lue n'est pas celle qui est engagée
         f = art["famille"]
         alt = json.loads(table_octets)
         for e in alt:
@@ -1073,18 +1082,20 @@ def fabriquer(entropie: int, monde: str, dossier, params: Parametres | None = No
         fichier_table = _octets_json(alt)
     _ecrire(racine / "etiquettes.json", fichier_table)
 
-    contenus = {"CODE-LECTURE-B5F": f"commit {params.commit_code} ; lecture sha256 {params.empreinte_lecture}",
+    # ouverture : l'empreinte engagée, sauf au cas où l'ouvreur écrit celle de la table qu'il a reçue
+    table_ouverte = fichier_table if cas == "table-differente-ouverture" else table_octets
+    contenus = {"ENGAGEMENT-B5F": params.format_engagement.format(table=_sha(table_octets)),
+                "CODE-LECTURE-B5F": f"commit {params.commit_code} ; lecture sha256 {params.empreinte_lecture}",
                 "SCORES-B5F": f"commit {params.commit_scores} ; inventaire sha256 {_sha(inv_octets)}",
                 "EPREUVE-B5F": f"passee ; lecture sha256 {params.empreinte_lecture} ; "
                                f"rapport sha256 {params.empreinte_rapport_epreuve}",
                 "GO-LECTURE-B5F": params.go_lecture,
-                "OUVERTURE-B5F": f"table sha256 {_sha(table_octets)}"}
+                "OUVERTURE-B5F": f"table sha256 {_sha(table_ouverte)}"}
     reg = [{"nom": n, "horodatage": h, "contenu": contenus[n]} for n, h in params.horodatages]
+    reg += [{"nom": n, "horodatage": h, "contenu": x} for n, h, x in params.lignes_supplementaires]
     if cas == "scores-apres-ouverture":
-        sc = next(x for x in reg if x["nom"] == "SCORES-B5F")
-        reg.remove(sc)
-        sc["horodatage"] = params.horodatage_scores_tardif
-        reg.append(sc)
+        next(x for x in reg if x["nom"] == "SCORES-B5F")["horodatage"] = params.horodatage_scores_tardif
+    reg = sorted(reg, key=lambda x: x["horodatage"])   # ordre du texte = ordre des dates (tri stable)
     texte = "".join(params.format_ligne.format(**x) + "\n" for x in reg)
     _ecrire(racine / "registre.txt", texte.encode("utf-8"))
     _ecrire(racine / "registre.json", _octets_json(reg))
