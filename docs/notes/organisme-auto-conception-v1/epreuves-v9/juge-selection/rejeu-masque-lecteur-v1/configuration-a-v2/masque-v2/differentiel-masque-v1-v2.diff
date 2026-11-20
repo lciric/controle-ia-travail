@@ -1,0 +1,130 @@
+--- masque_style_cartes_v1.py	2026-11-20 10:01:31.370469723 +0000
++++ masque_style_cartes_v2.py	2026-11-20 10:02:13.175580993 +0000
+@@ -1,6 +1,14 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+-"""Masque de style des cartes, par programme — v1.
++"""Masque de style des cartes, par programme — v2.
++
++Différence avec la v1, et rien d'autre (GO-2026-11-20-36, point (1), option (a)) : une huitième clé
++facultative de la configuration, `cles_hors_champs_retirees` ({nom: nombre de cartes attendu}).
++Ces noms sont retirés de chaque `contenu` avant le contrôle « clé hors des champs », sans que leur
++valeur soit lue, copiée ni écrite ; toute autre clé hors des champs reste un refus ; un nombre de
++cartes porteuses différent du nombre attendu est un refus (R5). Le compte par clé, jamais par carte,
++est écrit à l'en-tête de la sortie avec l'empreinte de la configuration. Sans cette clé, la sortie
++est celle de la v1, au nom de la pièce et à l'empreinte du programme près.
+ 
+ Rend les cartes sous une forme uniforme avant leur lecture : ordre des champs fixe, longueur
+ plafonnée par champ, gras et intertitres retirés, formules récitées retirées, typographie
+@@ -25,9 +33,10 @@
+ import sys
+ import unicodedata
+ 
+-VERSION = "masque_style_cartes_v1"
++VERSION = "masque_style_cartes_v2"
+ CLES_CONFIGURATION = {"champs", "plafond", "formules", "intertitres", "seuil_formule_recitee",
+                       "minimum_formule_recitee", "hors_choix"}
++CLE_RETIREES = "cles_hors_champs_retirees"     # huitième clé, facultative (v2)
+ MOTS_MINIMUM_FORMULE = 4
+ EN_TETE = [
+     "Cartes masquées par programme : ordre des champs fixe, longueur plafonnée, gras, intertitres et "
+@@ -61,13 +70,21 @@
+ 
+ 
+ def valider_configuration(c):
+-    if not isinstance(c, dict) or set(c) != CLES_CONFIGURATION:
++    if not isinstance(c, dict) or set(c) not in (CLES_CONFIGURATION, CLES_CONFIGURATION | {CLE_RETIREES}):
+         raise Refus("configuration : clés attendues " + ", ".join(sorted(CLES_CONFIGURATION)))
+     ch = c["champs"]
+     if not (isinstance(ch, list) and ch and all(isinstance(x, str) and x for x in ch) and len(set(ch)) == len(ch)):
+         raise Refus("configuration : liste ordonnée des champs vide, mal formée ou à doublon")
+     if set(ch) & {"meta", "empreinte"}:
+         raise Refus("configuration : `meta` et `empreinte` ne sont pas des champs de contenu")
++    if CLE_RETIREES in c:
++        r = c[CLE_RETIREES]
++        if not (isinstance(r, dict) and r and all(isinstance(k, str) and k for k in r)):
++            raise Refus(f"configuration : {CLE_RETIREES} doit être un objet non vide à noms non vides")
++        if set(r) & (set(ch) | {"meta", "empreinte"}):
++            raise Refus(f"configuration : {CLE_RETIREES} ne nomme ni un champ, ni `meta`, ni `empreinte`")
++        if not all(isinstance(v, int) and not isinstance(v, bool) and v >= 1 for v in r.values()):
++            raise Refus(f"configuration : {CLE_RETIREES}, chaque nombre de cartes attendu est un entier d'au moins 1")
+     p = c["plafond"]
+     if p != "mediane":
+         if not (isinstance(p, dict) and set(p) == set(ch)
+@@ -85,11 +102,16 @@
+     return c
+ 
+ 
+-def extraire_contenus(fiches, champs, hors_choix):
+-    """Seul accès aux enregistrements : rec["contenu"]. Rien d'autre n'est lu."""
++def extraire_contenus(fiches, champs, hors_choix, retirees=None):
++    """Seul accès aux enregistrements : rec["contenu"]. Rien d'autre n'est lu.
++
++    `retirees` ({nom: nombre de cartes attendu}, v2) : ces noms sortent de chaque `contenu` avant le
++    contrôle « clé hors des champs » ; seule leur présence est testée, leur valeur n'est jamais lue."""
+     if not isinstance(fiches, dict) or not fiches:
+         raise Refus("cartes : objet {identifiant: enregistrement} non vide attendu")
+     sortie, hors = {}, set(hors_choix)
++    retirees = dict(retirees or {})
++    portees = {nom: 0 for nom in retirees}
+     for ident in sorted(fiches, key=lambda s: s.encode("utf-8")):
+         if ident in hors:
+             continue                      # carte hors du choix : non ouverte
+@@ -99,6 +121,10 @@
+         contenu = rec["contenu"]
+         if not isinstance(contenu, dict):
+             raise Refus("cartes : un `contenu` n'est pas un objet de champs")
++        if retirees:
++            for nom in retirees:
++                portees[nom] += (nom in contenu)      # présence seule, la valeur n'est pas lue
++            contenu = {k: contenu[k] for k in contenu if k not in retirees}
+         if set(contenu) - set(champs):
+             raise Refus(f"cartes : champ(s) hors de la configuration ({len(set(contenu) - set(champs))}) — "
+                         "l'ordre fixe ne les place nulle part ; rien n'est écrit")
+@@ -112,6 +138,11 @@
+         raise Refus(f"configuration : {len(absents)} carte(s) « hors du choix » inconnue(s) du fichier")
+     if not sortie:
+         raise Refus("cartes : aucune carte à masquer")
++    ecarts = [nom for nom in sorted(retirees, key=lambda s: s.encode("utf-8")) if portees[nom] != retirees[nom]]
++    if ecarts:
++        raise Refus("cartes : nombre de cartes porteuses différent du nombre attendu pour une clé retirée ("
++                    + " ; ".join(f"{nom!r} : {portees[nom]} au lieu de {retirees[nom]}" for nom in ecarts)
++                    + ") ; rien n'est écrit")
+     return sortie
+ 
+ 
+@@ -300,7 +331,7 @@
+ 
+ 
+ def main(argv=None):
+-    p = argparse.ArgumentParser(description="Masque de style des cartes, par programme (v1). Ne lit que `contenu`.")
++    p = argparse.ArgumentParser(description="Masque de style des cartes, par programme (v2). Ne lit que `contenu`.")
+     p.add_argument("--cartes", required=True, nargs=2, metavar=("CHEMIN", "SHA256"))
+     p.add_argument("--configuration", required=True, nargs=2, metavar=("CHEMIN", "SHA256"))
+     p.add_argument("--sortie", required=True)
+@@ -310,14 +341,23 @@
+             raise Refus("sortie déjà présente : on n'écrase jamais (règle R12)")
+         conf = valider_configuration(lire_json_verifie(args.configuration[0], args.configuration[1], "configuration"))
+         fiches = lire_json_verifie(args.cartes[0], args.cartes[1], "cartes")
+-        contenus = extraire_contenus(fiches, conf["champs"], conf["hors_choix"])
++        contenus = extraire_contenus(fiches, conf["champs"], conf["hors_choix"], conf.get(CLE_RETIREES))
+         del fiches
+         cartes, rapport = masquer(contenus, conf)
+         verifier_sortie(cartes, conf, rapport["plafonds"])
+         with open(os.path.abspath(__file__), "rb") as f:
+             sha_programme = sha_octets(f.read())
++        en_tete = list(EN_TETE)
++        if CLE_RETIREES in conf:          # compte par clé, jamais par carte ; vérifié égal à l'attendu
++            r = conf[CLE_RETIREES]
++            en_tete.append(
++                "Clés de `contenu` hors des champs, retirées sans que leur valeur soit lue ni écrite ; nombre de "
++                "cartes porteuses par clé (jamais par carte), vérifié égal à l'attendu : "
++                + " ; ".join(f"{json.dumps(nom, ensure_ascii=False)} : {r[nom]}"
++                             for nom in sorted(r, key=lambda s: s.encode("utf-8")))
++                + f". Configuration : sha256 {args.configuration[1].lower()}.")
+         sha = ecrire_neuf(args.sortie, {
+-            "piece": VERSION, "en_tete": EN_TETE, "ordre_des_champs": conf["champs"], "rapport": rapport,
++            "piece": VERSION, "en_tete": en_tete, "ordre_des_champs": conf["champs"], "rapport": rapport,
+             "empreintes": {"programme": sha_programme, "cartes": args.cartes[1].lower(),
+                            "configuration": args.configuration[1].lower()},
+             "cartes": cartes})
