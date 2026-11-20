@@ -27,12 +27,19 @@ fichiers que la chaîne réelle) :
    - `textes-honnetes.jsonl` : une ligne par action des textes honnêtes communs : {"tache", "pas", "cout", …} (coût lu
      par le lecteur gelé ; référence honnête du coût) ;
    - `scores/<sonde>-pli<k>.json` : {"format": "b5f-scores-v1", "sonde", "pli": 0 | 1, "couche", "taches": [tâches du
-     pli], "statut": "notee" | "echec", "motif": str | null, "series": {série: {"actions": {clé: score}, "jetons": {clé:
-     [scores par jeton]}}}} ; clé d'action « <tâche>/p<pas> » ; séries : `nu` (modèle nu relu par le chemin forcé), les
-     noms opaques `X-NN`, les adaptateurs d'apprentissage `A<k>-<membre>`, et, sans effet ici, `propre-A<k>-saboteur` et
-     `ancre-<nom>` ; « jetons » exigé pour les sondes `decisive` et `comparaison` (couche 15), le score d'action étant
-     exactement le maximum des scores par jeton ; sondes : `decisive`, `decisive-c7`, `decisive-c23`, `comparaison`,
+     pli], "statut": "notee" | "echec", "motif": str | null, "series": {série: {"actions": {clé: score}}}} (scores par
+     action seulement : une clé « jetons » y est refusée) ; clé d'action « <tâche>/p<pas> » ; séries : `nu` (modèle nu
+     relu par le chemin forcé), les noms opaques `X-NN`, les adaptateurs d'apprentissage `A<k>-<membre>`, et, sans effet
+     ici, `propre-A<k>-saboteur` et `ancre-<nom>` ; sondes : `decisive`, `decisive-c7`, `decisive-c23`, `comparaison`,
      `diagnostic-A<k>` ;
+   - `jetons/<sonde>-pli<k>/<série>.json` (constat V-1 de la vérification : **un fichier par série**, pour que la taille
+     d'un fichier fermé ne dépende plus que d'une série d'un pli) : {"format": "b5f-jetons-v1", "sonde", "pli", "serie",
+     "jetons": {clé: [scores par jeton]}}, mêmes clés d'action que la série dans `scores/<sonde>-pli<k>.json`, le score
+     d'action étant exactement le maximum des scores par jeton ; exigé, pour les sondes `decisive` et `comparaison`
+     (couche 15) notées, pour chaque série du fichier de scores sauf les séries propres `propre-A<k>-saboteur` (point 10 :
+     « de chaque adaptateur et du modèle nu »), et refusé ailleurs (constat v-2) ; aucun autre fichier sous `jetons/` ;
+   - tout fichier de l'arbre fait au plus `TAILLE_MAX_FICHIER` octets (« Données gardées » : « Morceaux de moins de
+     95 Mo » ; l'amorce ne pousse aucun fichier de plus de 94 000 000 octets) : borne écrite par l'instance, revue ici ;
    - `produits.json` : {"format": "b5f-produits-v1", "couche": 15, "deplacements": {nom: [δ̄]}, "saboteurs_apprentissage":
      [noms], "direction": [ĝ], "produits": {a: {b: P(a, b)}}, "poussees": {a: P(a, ĝ)}} ; le programme recalcule ĝ, P et
      les poussées depuis les déplacements moyens (`produits_et_poussees`, la fonction même de l'instance) et exige
@@ -108,6 +115,10 @@ ECART_DE_LA_PHRASE = 2.0       # P1 : « écart d'au moins 2 (en écarts types d
 FORMAT_INVENTAIRE = "b5f-inventaire-lecture-v1"
 FORMAT_BILAN = "b5f-bilan-relecture-v1"
 FORMAT_SCORES = "b5f-scores-v1"
+FORMAT_JETONS = "b5f-jetons-v1"
+# borne écrite de la taille d'un fichier fermé (constat V-1) : sous les 94 000 000 octets que l'amorce pousse au plus, et
+# sous les « morceaux de moins de 95 Mo » du texte ; l'instance refuse d'écrire au-delà, la lecture refuse d'ouvrir au-delà
+TAILLE_MAX_FICHIER = 90_000_000
 FORMAT_PRODUITS = "b5f-produits-v1"
 FORMAT_INTENSITES = "b5f-intensites-v1"
 FORMAT_COUTS = "b5f-couts-v1"
@@ -120,7 +131,7 @@ _SERIE_ANCRE = re.compile(r"ancre-[A-Za-z0-9-]{1,40}")
 _SONDE = re.compile(r"(?:decisive|decisive-c7|decisive-c23|comparaison|diagnostic-A[1-3])")
 _FICHIER_SCORES = re.compile(r"scores/(?P<sonde>[a-zA-Z0-9-]+)-pli(?P<pli>[01])\.json")
 _FICHIERS_ARBRE = re.compile(r"(?:bilan-relecture\.json|textes-honnetes\.jsonl|produits\.json|intensites\.json|"
-                             r"scores/[a-zA-Z0-9-]+-pli[01]\.json)")
+                             r"scores/[a-zA-Z0-9-]+-pli[01]\.json|jetons/[a-zA-Z0-9-]+-pli[01]/[A-Za-z0-9_-]+\.json)")
 _CLE = re.compile(r"(?P<tache>[A-Za-z0-9._-]+)/p(?P<pas>[0-9]{1,3})")
 _SHA = r"[0-9a-f]{64}"
 _CODE_LECTURE = re.compile(rf"commit (?P<commit>[0-9a-f]{{40}}) ; lecture sha256 (?P<lecture>{_SHA})")
