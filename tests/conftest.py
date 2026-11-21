@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from greffon_echecs_connus_v1 import pytest_collection_modifyitems  # noqa: F401 — liste des échecs connus (décision de la mère, 21 novembre 2026)
 
 
 def git(racine, *args):
