@@ -1,0 +1,130 @@
+
+==============================================================================
+BLOC 1 - Le relevé d'offres
+==============================================================================
+fichier : releve-offres-loueur-cartes-2026-11-21T1055Z-v1.json
+empreinte sha256 : bc54f8bd468eb65e051234b31b77373aad1c52100b6e2b2a377532336f6a5196
+offres : 30 ; cartes A100 SXM4 de 80 Go : 13
+
+Prix tout compris pour un disque de 90 Go (carte + stockage), USD par heure :
+    offre  carte stock.  total disque descente  montée  lieu ; motif d'écart
+ 59227352  0.844  0.025  0.869     61     2.66    3.96  United Arab Emirates, AE ; non vérifiée, disque < 90 Go
+ 61057990  0.960  0.025  0.985     61     2.67    4.00  France, FR ; disque < 90 Go
+ 58940655  1.093  0.042  1.135     91     1.33    2.67  Austria, AT ; RETENUE
+ 61618936  1.045  0.125  1.170    518    40.00   40.00  Oregon, US ; stockage > 0,08
+ 61615831  1.045  0.125  1.170    480    40.00   40.00  Oregon, US ; stockage > 0,08
+ 32744970  1.160  0.030  1.190   1050    26.67   40.00  Czechia, CZ ; RETENUE
+ 60992124  1.067  0.125  1.192    736    40.00   40.00  California, US ; stockage > 0,08
+ 59284724  1.188  0.125  1.313    423    40.00   40.00  Texas, US ; stockage > 0,08
+ 59858180  1.333  0.025  1.358     77     2.67    4.00  New Jersey, US ; carte > 1,30, disque < 90 Go
+ 59225403  1.336  0.025  1.361    143     2.66    3.96  United Arab Emirates, AE ; non vérifiée, carte > 1,30
+ 59306805  1.509  0.076  1.585    480    13.65   13.65  North Carolina, US ; carte > 1,30
+ 41153686  1.581  0.042  1.623   1336     4.10    5.46  Japan, JP ; carte > 1,30
+ 49739786  2.092  0.042  2.134   1336     4.10    5.46  Japan, JP ; carte > 1,30
+
+offres retenues sous les bornes, disque de 90 Go : 2 ; prix tout compris : 1.135, 1.190
+repli à 60 Go de disque : 3 offres ; prix : 0.977, 1.121, 1.180
+prix du cas attendu (médiane des retenues) : 1.163 USD/h ; prix haut (borne) : 1.38 USD/h
+réseau (21 Go descendus, 3 Go montés) : de 0.04 à 0.68 USD selon l'offre retenue
+pour mémoire, cartes de 40 Go vérifiées : 15 offres, de 0.40 à 0.87 USD/h (disque du relevé)
+
+==============================================================================
+BLOC 2 - Volumes (jetons, disque)
+==============================================================================
+         attendu :    750 jetons par réponse,  0.38 M de jetons,   3.08 Go par couche ; disque avec 3 couches   40.2 Go, avec 8 couches   55.6 Go
+      pessimiste :   2000 jetons par réponse,  1.00 M de jetons,   8.20 Go par couche ; disque avec 3 couches   55.6 Go, avec 8 couches   96.6 Go
+ garde de volume :   2400 jetons par réponse,  1.20 M de jetons,   9.83 Go par couche ; disque avec 3 couches   60.5 Go, avec 8 couches  109.7 Go
+ tout au plafond :  16000 jetons par réponse,  8.00 M de jetons,  65.54 Go par couche ; disque avec 3 couches  227.6 Go, avec 8 couches  555.3 Go
+mémoire d'une séquence au plafond pendant la génération (clés et valeurs, 32 couches, 8 têtes, 128, 2 octets) : 2.10 Go
+
+==============================================================================
+BLOC 3 - Sondes à entraîner
+==============================================================================
+  15 sondes  noyau a : couches 2-4, 5 plis, graine 0
+   5 sondes  noyau b : étiquettes permutées, couche 3, 5 plis
+   5 sondes  noyau c : vérité plantée, couche 3, 5 plis
+  30 sondes  bloc d : deux graines de plus, couches 2-4
+  15 sondes  bloc e : taux d'élagage par validation emboîtée, couches 2-4
+  15 sondes  bloc f : couches 7, 15, 23
+  15 sondes  bloc h : variante à cible gelée (semi-gradient), couches 2-4
+  10 sondes  bloc g : couches 1 et 5 (indice de couche décalé)
+noyau : 25 sondes ; complet : 110 sondes
+temps d'une sonde, cas attendu : 80 s (L = 750, hôte x1.0)
+temps d'une sonde, cas pessimiste : 270 s (L = 2000, hôte x1.5)
+
+==============================================================================
+BLOC 4 - Durées et coûts par scénario
+==============================================================================
+
+cas attendu (prix 1.163 USD/h, réseau 0.04 USD)
+  mise en place 0.35 h ; génération 0.26 h (0.38 M de jetons à 400 par seconde) ; confiance demandée 0.03 h ; extraction 0.10 h ; inventaire et rapatriement 0.25 h
+  hors sondes : 0.99 h
+  après noyau a : couches 2-4, 5 plis, graine 0                        :  1.32 h,   1.58 USD
+  après noyau b : étiquettes permutées, couche 3, 5 plis               :  1.44 h,   1.70 USD
+  après noyau c : vérité plantée, couche 3, 5 plis                     :  1.55 h,   1.83 USD
+  après bloc d : deux graines de plus, couches 2-4                     :  2.21 h,   2.61 USD
+  après bloc e : taux d'élagage par validation emboîtée, couches 2-4   :  2.55 h,   3.00 USD
+  après bloc f : couches 7, 15, 23                                     :  2.88 h,   3.39 USD
+  après bloc h : variante à cible gelée (semi-gradient), couches 2-4   :  3.21 h,   3.77 USD
+  après bloc g : couches 1 et 5 (indice de couche décalé)              :  3.44 h,   4.03 USD
+  NOYAU   : 1.55 h, 1.83 USD
+  COMPLET : 3.44 h, 4.03 USD
+
+cas pessimiste (prix 1.380 USD/h, réseau 0.68 USD)
+  mise en place 0.75 h ; génération 1.85 h (1.00 M de jetons à 150 par seconde) ; confiance demandée 0.10 h ; extraction 0.30 h ; inventaire et rapatriement 0.50 h
+  hors sondes : 3.50 h
+  après noyau a : couches 2-4, 5 plis, graine 0                        :  4.63 h,   7.07 USD
+  après noyau b : étiquettes permutées, couche 3, 5 plis               :  5.00 h,   7.58 USD
+  après noyau c : vérité plantée, couche 3, 5 plis                     :  5.38 h,   8.10 USD
+  après bloc d : deux graines de plus, couches 2-4                     :  7.63 h,  11.21 USD
+  après bloc e : taux d'élagage par validation emboîtée, couches 2-4   :  8.75 h,  12.76 USD
+  après bloc f : couches 7, 15, 23                                     :  9.88 h,  14.31 USD
+  après bloc h : variante à cible gelée (semi-gradient), couches 2-4   : 11.01 h,  15.87 USD
+  après bloc g : couches 1 et 5 (indice de couche décalé)              : 11.76 h,  16.90 USD
+  NOYAU   : 5.38 h, 8.10 USD
+  COMPLET : 11.76 h, 16.90 USD
+
+==============================================================================
+BLOC 5 - Plafond, arrêt des lancements, minuterie de destruction
+==============================================================================
+plafond proposé : 10.00 USD ; arrêt des lancements à 5.5 h ; destruction à 6.5 h
+pire cas payable = minuterie x prix haut + réseau haut = 6.5 x 1.38 + 0.68 = 9.65 USD
+pire cas sans coupure (cas pessimiste, complet) : 11.76 h, 16.90 USD
+génération si toutes les réponses atteignaient le plafond, au débit pessimiste : 14.8 h (20.44 USD) : empêché par la tranche de mesure et par la minuterie
+cas pessimiste : blocs finis avant l'arrêt des lancements : noyau a, noyau b, noyau c (fin à 4.88 h, puis rapatriement 0.50 h, soit 5.38 h)
+
+==============================================================================
+BLOC 6 - Objets de contrôle du devis
+==============================================================================
+conforme | faux : le complet pessimiste tient sous le plafond : 16.90 USD -> au-dessus
+conforme | faux : la génération tout au plafond tient sous le plafond : 20.44 USD -> au-dessus
+conforme | vrai : le pire cas payable (minuterie) tient sous le plafond : 9.65 USD -> sous
+conforme | vrai : le noyau pessimiste tient sous le plafond : 8.10 USD -> sous
+conforme | vrai : le complet attendu tient sous le plafond : 4.03 USD -> sous
+le noyau pessimiste finit avant la minuterie : 5.38 h <= 6.5 h : True
+tous les objets de contrôle rendent ce qui était prévu : True
+
+==============================================================================
+BLOC 7 - Étape 0, point 1 : effectif du tableau 4 (p. 9), par l'arithmétique des pourcentages
+==============================================================================
+lecture A (chaque exactitude est une moyenne de 3 graines sur n questions) : effectifs compatibles <= 150 :
+   [12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144]
+lecture B (décodage glouton déterministe : 72,2 = k/n ; les autres, moyennes de 3 graines) : effectifs compatibles <= 150 :
+   [36, 72, 108, 144]
+n = 100 : lecture A INCOMPATIBLE ; lecture B INCOMPATIBLE
+n = 500 : lecture A compatible ; lecture B compatible
+lecture A : 255 effectifs compatibles sur 500 ; plus grand effectif exclu : 330 (au-delà, la grille des pourcentages est trop fine pour exclure quoi que ce soit)
+lecture B : 100 effectifs compatibles sur 500 ; plus grand effectif exclu : 499
+de 90 à 110 : lecture A [96, 108] ; lecture B [108]
+tableau 2 (p. 5), exactitude d'origine 75,2 % : k/500 = 376.0 -> entier ; k/100 = 75.2 -> non entier
+
+==============================================================================
+BLOC 8 - Erreur d'échantillonnage d'une aire de 0,69 (Hanley et McNeil)
+==============================================================================
+ 100 questions ( 50 réussites,  50 échecs) : écart type 0.0528, demi-largeur à 95 % 0.104
+ 100 questions ( 40 réussites,  60 échecs) : écart type 0.0553, demi-largeur à 95 % 0.108
+ 100 questions ( 30 réussites,  70 échecs) : écart type 0.0606, demi-largeur à 95 % 0.119
+ 500 questions (250 réussites, 250 échecs) : écart type 0.0235, demi-largeur à 95 % 0.046
+ 500 questions (200 réussites, 300 échecs) : écart type 0.0246, demi-largeur à 95 % 0.048
+ 500 questions (150 réussites, 350 échecs) : écart type 0.0270, demi-largeur à 95 % 0.053
+ 500 questions (100 réussites, 400 échecs) : écart type 0.0317, demi-largeur à 95 % 0.062

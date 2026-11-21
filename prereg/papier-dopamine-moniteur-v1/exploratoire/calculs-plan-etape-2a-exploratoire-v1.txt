@@ -1,0 +1,61 @@
+EXPLORATOIRE — calculs du plan de l'étape 2a, v1 — aucune donnée du programme lue
+
+[A] Ce que les tailles disent du fichier jetons-principales-p3.npz (membres non compressés)
+  rang.npy, longueur.npy, debut.npy : (19328 - 128) / 8 = 2400 lignes
+  bornes_lisibles.npy : 2528 - 128 = 2400 octets, un par ligne
+  scores_0, logits_0, scores_1, logits_1 : (4261592 - 128) / 8 = 532683 valeurs chacun
+  jetons par action, en moyenne : 222.0 ; actions par épisode si 240 épisodes : 10.0
+  un état de dimension 4096 par jeton, en demi-précision, pèserait 4.36 Go par couche :
+  le fichier (17,2 Mo) ne peut pas porter d'états internes ; il porte des scores par jeton
+  états à garder pour 240 épisodes, 11 positions, 3 couches, demi-précision : 65 Mo
+
+[B] Objets de contrôle de l'estimateur de la corrélation par famille (100 familles de 6, 2 000 lots)
+  prédiction écrite avant le calcul : corrélation plantée 0 -> moyenne dans [-0,02 ; +0,02] ;
+                                      corrélation plantée 0,30 -> moyenne dans [0,27 ; 0,33]
+  plantée 0.00 : moyenne +0.000, écart type 0.026 -> tenu
+  plantée 0.30 : moyenne +0.298, écart type 0.057 -> tenu
+
+[C] Précision de la corrélation par famille mesurée à 20 % d'alertes, selon le lot (2 000 lots simulés)
+  familles x épisodes | plantée | moyenne | écart type | 10e et 90e centiles
+     8 x 30 =  240 | 0.00 | -0.000 | 0.018 | -0.021 à +0.023
+     8 x 30 =  240 | 0.10 | +0.096 | 0.067 | +0.019 à +0.188
+     8 x 30 =  240 | 0.30 | +0.274 | 0.140 | +0.100 à +0.466
+    12 x 20 =  240 | 0.00 | -0.000 | 0.022 | -0.026 à +0.028
+    12 x 20 =  240 | 0.10 | +0.099 | 0.061 | +0.029 à +0.181
+    12 x 20 =  240 | 0.30 | +0.290 | 0.124 | +0.130 à +0.451
+    24 x 10 =  240 | 0.00 | +0.000 | 0.031 | -0.036 à +0.040
+    24 x 10 =  240 | 0.10 | +0.100 | 0.057 | +0.030 à +0.175
+    24 x 10 =  240 | 0.30 | +0.292 | 0.099 | +0.171 à +0.426
+    40 x  6 =  240 | 0.00 | -0.002 | 0.042 | -0.053 à +0.055
+    40 x  6 =  240 | 0.10 | +0.098 | 0.059 | +0.024 à +0.175
+    40 x  6 =  240 | 0.30 | +0.293 | 0.090 | +0.181 à +0.413
+    60 x  4 =  240 | 0.00 | +0.001 | 0.053 | -0.064 à +0.072
+    60 x  4 =  240 | 0.10 | +0.100 | 0.068 | +0.015 à +0.192
+    60 x  4 =  240 | 0.30 | +0.298 | 0.087 | +0.188 à +0.407
+    60 x  6 =  360 | 0.00 | -0.001 | 0.033 | -0.041 à +0.042
+    60 x  6 =  360 | 0.10 | +0.098 | 0.049 | +0.038 à +0.162
+    60 x  6 =  360 | 0.30 | +0.301 | 0.071 | +0.212 à +0.394
+   100 x  4 =  400 | 0.00 | +0.001 | 0.041 | -0.049 à +0.056
+   100 x  4 =  400 | 0.10 | +0.100 | 0.053 | +0.034 à +0.169
+   100 x  4 =  400 | 0.30 | +0.296 | 0.067 | +0.210 à +0.381
+   150 x  4 =  600 | 0.00 | +0.001 | 0.033 | -0.040 à +0.043
+   150 x  4 =  600 | 0.10 | +0.099 | 0.043 | +0.046 à +0.156
+   150 x  4 =  600 | 0.30 | +0.300 | 0.054 | +0.230 à +0.370
+
+[D] Ce que l'imprécision coûte : épisodes à acheter pour 437 épisodes effectifs (règle du devis du lot neuf)
+  familles retenues | rho = 0,00 | 0,05 | 0,10 | 0,15 | 0,20 | 0,30   ('—' : hors de la borne de 1 311)
+    60 | 480 | 660 | — | — | — | —
+   100 | 500 | 600 | 700 | 1100 | — | —
+   150 | 450 | 600 | 600 | 750 | 900 | —
+   200 | 600 | 600 | 600 | 600 | 800 | 1000
+   300 | 600 | 600 | 600 | 600 | 600 | 600
+  prix de 100 épisodes de plus (devis du lot neuf, § 5) : 1,25 à 1,54 USD
+
+[E] Coût de la carte (prix et frais fixes du devis du lot honnête neuf, § 4 ; USD)
+  tranche A, relecture forcée de 240 épisodes au plus (0,45 s par épisode, un quart d'heure de contrôles) :
+    2.08 h ; 3.42 à 4.97 ; pire cas 8.26 ; hôte une fois et demie plus lent au prix haut 6.41
+    sur une instance déjà accordée, 0.25 h de plus : 0.28 à 0.35
+    sur une instance déjà accordée, 0.5 h de plus : 0.56 à 0.69
+  tranche B, 240 épisodes honnêtes neufs (40,2 s par épisode) : 4.48 h ; 6.10 à 8.28 ; pire cas 15.36 ; une fois et demie 11.37
+  tranche B, 300 épisodes honnêtes neufs (40,2 s par épisode) : 5.15 h ; 6.85 à 9.21 ; pire cas 17.34 ; une fois et demie 12.76
+  tranche B, 400 épisodes honnêtes neufs (40,2 s par épisode) : 6.27 h ; 8.10 à 10.75 ; pire cas 20.65 ; une fois et demie 15.07
