@@ -1,0 +1,78 @@
+# Table des nombres des sections des étapes B et B bis du billet — v1
+
+Pièce de travail (classe C), écrite par programme le 2026-11-21T18:18:00Z (`date -u`) par le lecteur de la ligne 313 de `registres/qui-a-lu-quoi-v14.md`, pour `sections-etape-b-et-b-bis-en-v1.md` (même dossier). Chaque ligne : le nombre tel que le billet l'écrit, le texte exact du verdict qui le porte (vérifié par programme présent à la ligne citée, empreintes du verdict recalculées et égales), le verdict, son chemin, son empreinte et la ligne. Arrondi à quatre décimales, comme le billet ; la valeur écrite au verdict fait foi. Contrôle par programme : chaque nombre écrit en chiffres dans le corps des deux sections (crochets de source retirés) se retrouve dans la colonne « nombre » ; nombres absents : aucun. Aucun nombre ne vient d'une autre pièce que les deux verdicts.
+
+Empreintes entières : étape B, `docs/verdicts/verdict-T0.7-etape-B-v1.md`, `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` ; étape B bis, `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md`, `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3`.
+
+| section | nombre dans le billet | texte au verdict | verdict | chemin | empreinte | ligne | note |
+|---|---|---|---|---|---|---|---|
+| B | 0.25, 0.5, 0.75, 1 (doses) | S25 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 66 | doses S25, S50, S75, S100 (l. 66 à 69) ; « 0,25 (S25) » … « 1 (S100) » en Bb l. 43-46 |
+| B | 0.25, 0.5, 0.75, 1 (doses) | S100 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 69 | voir ligne précédente |
+| B | three (generic probes) | Leur nombre : 3 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 90 |  |
+| B | 0.7481 | 0.74810302734375 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 67 | aire de la base, S50, arrondie |
+| B | 0.8933 | 0.89330078125 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 68 | aire de la base, S75, arrondie |
+| B | 0.9728 | 0.972802734375 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 69 | aire de la base, S100, arrondie |
+| B | 0.70 (threshold) | seuil_aire 0.7 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 66 | même valeur l. 67-69 |
+| B | 0.5691 | 0.56906005859375 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 66 | aire de la base, S25, arrondie |
+| B | −0.1896 | -0.1896138597621127 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 70 | borne basse de l'effet du coût à S25, arrondie |
+| B | 640 and 640 (actions) | {'negatifs': 640, 'positifs': 640} | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 535 | effectifs du jeu décisif (i-a) de la sonde de dissimulation ; mêmes l. 509, 522 |
+| B | 1 − 0.05/3 (level) | 1 − 0,05 / 3 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 90 | niveau appliqué 0.9833333333333333 |
+| B | 0.5816 | 0.58160400390625 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 507 | tromperie, (i-a), arrondie |
+| B | 0.95 (quantile) | quantile 0,95 du plancher | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 507 |  |
+| B | 0.5738 | 0.5737883300781249 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 507 | arrondie |
+| B | −0.0463 | -0.046305942789713485 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 508 | borne basse de D, tromperie, arrondie |
+| B | 0.5136 | 0.51360595703125 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 520 | enjeux, (i-a), arrondie |
+| B | 0.5521 | 0.5520766601562499 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 520 | arrondie |
+| B | 0.9017 | 0.90169189453125 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 533 | dissimulation, (i-a), arrondie |
+| B | 0.8715 | 0.8714749755859376 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 533 | borne basse de l'intervalle propre, arrondie |
+| B | 0.9287 | 0.9287143758138021 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 533 | borne haute, arrondie |
+| B | 0.5367 | 0.5366658935546875 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 533 | quantile 0,95 du plancher, arrondi |
+| B | 1 (dose, validity reading) | lue sur `S100` contre `honnete` | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 128 |  |
+| B | 0.1249 | 0,1248974639892578 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 128 | borne basse de D, T7-P3 sur (ii), arrondie |
+| B | 1 (control adapter dose) | `T100` contre `honnete` | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 130 |  |
+| B | 0.1174 | 0,1174279937744141 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 130 | borne basse de D, T7-P18, arrondie |
+| B | five (tied probes) | ex aequo cinq sondes | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 142 |  |
+| B | 1.0 (validation area) | aire de validation 1.0 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 142 |  |
+| B | 0.4720 | 0,47195196533203126 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 114 | borne basse du placebo, enjeux, arrondie |
+| B | 0.5336 | 0,5335870361328124 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 114 | quantile sous permutation, arrondi |
+| B | 0.5, 0.75, 1 (descriptive doses) | « au-dessus » à `S50`, `S75` et `S100` | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 106 |  |
+| B | 0.6355 | 0.6354931640625 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 103 | dissimulation, S50, hors jugement, arrondie |
+| B | 0.6923 | 0.692275390625 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 104 | dissimulation, S75, hors jugement, arrondie |
+| B | 0.7547 | 0.75471923828125 | étape B | `docs/verdicts/verdict-T0.7-etape-B-v1.md` | `077ab789b36f2a4e9b0b99a3dcc7cacbbea240406cba38584670a40cd4a5c62f` | 105 | dissimulation, S100, hors jugement, arrondie |
+| B bis | 14 November 2026 | 2026-11-14T12:30:30Z | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 145 | ligne SCELLEMENT-BBIS |
+| B bis | 64 (evaluation tasks) | 64 tâches d'évaluation | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 66 |  |
+| B bis | two folds of 32 | deux plis externes de 32 tâches | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 66 |  |
+| B bis | 320 and 320 (actions per fold) | 320 positifs et 320 négatifs par pli | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 66 |  |
+| B bis | 800 (floor directions) | plancher de 800 directions | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 66 |  |
+| B bis | 100 (relabellings) | nul de 100 réétiquetages | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 66 |  |
+| B bis | 2,000 (draws) | 2 000 tirages | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 66 |  |
+| B bis | 0.99 (level) | Niveau décisif retenu : 0,99 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 69 |  |
+| B bis | 0.9436 | aire 0.9436 à S25 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 |  |
+| B bis | 0.9532 | aire 0.9532 à S50 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 |  |
+| B bis | 0.9967 | aire 0.9967 à S75 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 |  |
+| B bis | 0.9885 | aire 0.9885 à S100 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 |  |
+| B bis | 0.25 to 1 (doses) | S25, S50, S75, S100 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 |  |
+| B bis | 0.9252 | aire 0.9252, détecté | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 | artefact, S25 |
+| B bis | 0.9822 | aire 0.9822, détecté | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 | artefact, S50 |
+| B bis | 0.9942 | aire 0.9942, détecté | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 | artefact, S75 |
+| B bis | 0.9986 | aire 0.9986, détecté | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 | artefact, S100 |
+| B bis | 0.0184 [−0.0189, 0.0541] | différence 0.0184 [-0.0189 ; 0.0541] | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 | S25 |
+| B bis | −0.0290 [−0.0726, 0.0090] | différence -0.0290 [-0.0726 ; 0.0090] | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 | S50 |
+| B bis | 0.0025 [−0.0029, 0.0082] | différence 0.0025 [-0.0029 ; 0.0082] | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 | S75 |
+| B bis | −0.0102 [−0.0209, −0.0019] | différence -0.0102 [-0.0209 ; -0.0019] | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 27 | S100 |
+| B bis | 1 (dose, adapter alone moves more) | à S100, borne haute sous 0 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 97 |  |
+| B bis | 0.25 and 0.5 (silent on twin) | \| S25 \| « et reste muette sur le jumeau honnête | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 75 | S50 : l. 76 |
+| B bis | 0.75 / 0.6871 | aire 0.6871 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 77 | S75 |
+| B bis | 1 / 0.8793 | aire 0.8793 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 78 | S100 |
+| B bis | 0.5, 0.75, 1 (transfer doses) | \| 0,5 (S50) \| E5 \| E5 \| | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 44 | S75 : l. 45 ; S100 : l. 46 ; formulation d'après l'erratum 1 v2, § 1 |
+| B bis | 0.25 (transfer fails null) | E1b échoue au nul de réétiquetage | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 43 |  |
+| B bis | 8 of 8 / about 0.2 | huit sur huit tests ; attendu par hasard ≈ 0,2 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 86 |  |
+| B bis | 4 of 4 / about 0.1 | quatre sur quatre ; attendu ≈ 0,1 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 87 |  |
+| B bis | 5 of 8 / about 0.2 | cinq sur huit tests en tout (attendu ≈ 0,2) | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 89 |  |
+| B bis | 1 of 1 / about 0.025 | une sur une (attendu ≈ 0,025) | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 88 |  |
+| B bis | 0.1427 | écart absolu maximal 0.1427 (P-S25) | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 91 |  |
+| B bis | 10 (cells) | sur 10 cellules lues | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 91 |  |
+| B bis | 2 of 10 (folds) | changé dans 2 plis sur 10 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 91 |  |
+| B bis | 0.9994 | aire 0.9994 | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 97 | plus haute aire des motifs de l'audit |
+| B bis | two (registry lines, order not established) | L'ordre entre l'accord de calcul et la fiche de code remplaçante | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 114 | deux lignes : l'accord et la fiche |
+| B bis | Five (procedural reservations) | 1. **Plafond de prix** | étape B bis | `docs/verdicts/verdict-T0.7-etape-B-bis-v1.md` | `1561399a11855f4921dc8fcb4be72755d2b39f5ff9b6362301b33aba0e0301f3` | 103 | réserves 1 à 5 du feu, l. 103 à 107 |

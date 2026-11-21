@@ -1,0 +1,179 @@
+calculs-opus-max-banc-lois-plantees-v1 — entropie racine 20261121 ; numpy 2.4.6
+
+====================================================================================================
+Bloc A — nul par acte exact contre référence fixe (suppositions d'illustration)
+====================================================================================================
+Modèle de score par acte (supposé) : s = a_monde + b_prefixe + e, e ~ N(0, 1) ; Var(a) = tau2, Var(b) = kappa2.
+Les K jumeaux tirés au MÊME préfixe partagent a + b et ont leur propre e. Saboteur diffus (supposé) :
+décalage mu sur une part f des actes. Seuil : alpha = 0,01 unilatéral.
+
+A.1  Contrôle A/A, n = 200 actes d'un seul monde, tau2 = 0.25, kappa2 = 0.25, m = 400, K = 8, 4000 répétitions :
+     taux de fausses alertes, référence fixe : 0.3113 ; rang contre le jumeau : 0.0092 (nominal 0.01 ; écart type Monte-Carlo 0.0016)
+     Lecture : la référence fixe absorbe mal l'effet du monde du déploiement (écart systématique) ; le rang au
+     même préfixe est exact par construction (test de Monte-Carlo de Barnard), à l'approximation normale près.
+A.1b Même contrôle, n actes de n mondes distincts : fausses alertes de la référence fixe 0.0118.
+
+A.2  Puissance à alpha = 0,01 en fonction de l'horizon n (approximation normale ; actes de mondes distincts) :
+     z connu = nul connu exactement (aucune référence) ; réf. m = 400 = référence fixe de 400 actes honnêtes,
+     qui doit absorber Var totale = tau2 + kappa2 + 1 ; rang K = rang contre K jumeaux au même préfixe,
+     dont le bruit n'est que e (le préfixe est conditionné).
+
+     part f = 0.2, décalage mu = 0.5 (en unités de e) :
+       n       z connu   réf. m=400   rang K=4   rang K=8   rang K=32
+       50         0.040       0.037      0.038      0.043      0.047
+       100        0.066       0.055      0.061      0.071      0.081
+       200        0.121       0.083      0.111      0.132      0.156
+       400        0.244       0.121      0.223      0.270      0.320
+       800        0.493       0.160      0.454      0.538      0.618
+       1600       0.826       0.193      0.788      0.864      0.917
+       3200       0.989       0.216      0.982      0.994      0.998
+       6400       1.000       0.229      1.000      1.000      1.000
+       25600      1.000       0.240      1.000      1.000      1.000
+       plafond de la référence fixe quand n -> infini : 0.244
+
+     part f = 0.1, décalage mu = 0.5 (en unités de e) :
+       n       z connu   réf. m=400   rang K=4   rang K=8   rang K=32
+       50         0.021       0.020      0.020      0.022      0.023
+       100        0.028       0.025      0.026      0.029      0.031
+       200        0.040       0.032      0.038      0.043      0.047
+       400        0.066       0.040      0.061      0.071      0.081
+       800        0.121       0.048      0.111      0.132      0.156
+       1600       0.244       0.055      0.223      0.270      0.320
+       3200       0.493       0.060      0.454      0.538      0.618
+       6400       0.826       0.062      0.788      0.864      0.917
+       25600      1.000       0.065      1.000      1.000      1.000
+       plafond de la référence fixe quand n -> infini : 0.066
+
+     part f = 0.3, décalage mu = 0.3 (en unités de e) :
+       n       z connu   réf. m=400   rang K=4   rang K=8   rang K=32
+       50         0.035       0.033      0.034      0.038      0.042
+       100        0.056       0.048      0.053      0.061      0.070
+       200        0.099       0.070      0.094      0.111      0.130
+       400        0.196       0.099      0.184      0.222      0.263
+       800        0.402       0.130      0.378      0.453      0.527
+       1600       0.730       0.156      0.700      0.787      0.856
+       3200       0.966       0.173      0.956      0.982      0.993
+       6400       1.000       0.184      1.000      1.000      1.000
+       25600      1.000       0.193      1.000      1.000      1.000
+       plafond de la référence fixe quand n -> infini : 0.196
+
+A.3  Contrôle : puissance du rang simulée (f = 0.2, mu = 0.5, K = 8, n = 800, 3000 rép.) = 0.544 ; loi approchée = 0.538.
+     Efficacité relative asymptotique du rang contre le z à nul connu (bruit e seul) : 3/pi x K/(K+2) = K=4: 0.637, K=8: 0.764, K=16: 0.849, K=32: 0.899
+
+A.4  Préfixe qui hérite des actes passés du suspect (b_t = 0,7 b_t-1 + 0,5 e_t-1), un seul monde, 10 épisodes
+     de 20 actes, K = 8, 4000 répétitions : fausses alertes du rang 0.0110 (nominal 0.01) ;
+     corrélation moyenne des rangs successifs -0.0062 (attendu 0 : rangs indépendants sous le nul) ;
+     fausses alertes de la référence fixe (m = 400, actes d'autres mondes) 0.2988.
+
+====================================================================================================
+Bloc B — appariement par monde et par bruit (suppositions d'illustration)
+====================================================================================================
+Dommage D = effet du monde w (Var tau2) + reste e (Var sigma2) ; ICC = tau2 / (tau2 + sigma2) ; sigma_tot = 1.
+Apparié : suspect et K jumeaux sur le même monde ; Var(écart) = sigma2 (1 + 1/K) par monde.
+Non apparié : jumeaux sur un autre monde ; Var(écart) = 2 tau2 + sigma2 (1 + 1/K).
+Nombre de mondes J pour voir un excès de dommage delta = 0,3 sigma_tot (bilatéral 5 %, puissance 0,8) :
+     ICC     K=1 app/non   K=4 app/non   K=8 app/non   K=16 app/non
+     0.0       175/ 175    110/ 110     99/  99     93/  93
+     0.3       123/ 175     77/ 129     69/ 122     65/ 118
+     0.6        70/ 175     44/ 149     40/ 144     38/ 142
+     0.9        18/ 175     11/ 168     10/ 167     10/ 167
+
+Limite de détection de l'excès de dommage, en unités de sigma (écart type intra-monde du jumeau),
+à 5 % de fausses alertes unilatérales et 95 % de détection : (z_0,95 + z_0,95) x sqrt((1 + 1/K) / J) :
+     J = 30      K=4: 0.672   K=8: 0.637   K=16: 0.619
+     J = 100     K=4: 0.368   K=8: 0.349   K=16: 0.339
+     J = 300     K=4: 0.212   K=8: 0.201   K=16: 0.196
+     J = 1000    K=4: 0.116   K=8: 0.110   K=16: 0.107
+
+====================================================================================================
+Bloc C — flou mesuré dans un monde jouet à lois plantées (suppositions d'illustration)
+====================================================================================================
+Monde jouet (supposé) : M lois candidates ; M1 vraies d'effet d (en écarts types du bruit), les autres d'effet 0.
+Honnête (supposé) : budget B réparti également, deux bras par candidate, test z unilatéral au seuil alpha/M ;
+le registre affirme les candidates significatives. Coûts comptés en échantillons du monde.
+Vérifier une affirmation (commission) : la rejouer à puissance 0,9 contre son effet affirmé, seuil 0,05/|affirmées|.
+Vérifier une omission : re-tester chaque candidate non affirmée à puissance 0,9, seuil 0,05/|non affirmées|.
+
+     M    M1   d     B (prod.)   perdues  fausses   coût commission  rho_c   coût omission  rho_o
+     20   4    0.50        4260     0.80    0.040              614    0.14           4358    1.02
+     50   5    0.50       12368     1.00    0.045              805    0.07          13892    1.12
+     100  10   0.40       42687     2.00    0.045             2876    0.07          47559    1.11
+     20   4    0.30       11833     0.80    0.040             1704    0.14          12105    1.02
+     Lecture : rejouer ce qui est affirmé coûte une fraction de la production ; prouver qu'une loi vraie manque
+     coûte autant que refaire la recherche. Le flou du banc est donc PAR COMPOSANTE du dommage.
+
+C.2  Honnête handicapé par réduction du budget (fraction h), monde M = 20, M1 = 4, d = 0,5 :
+     h      lois vraies perdues   lois fausses promues
+     1.00        0.800               0.040
+     0.80        1.296               0.040
+     0.60        1.969               0.040
+     0.50        2.359               0.040
+     0.40        2.765               0.040
+     0.30        3.162               0.040
+     pertes cibles 1.5 (honnête plein : 0.80) -> h* = 0.734 ; fausses promues inchangées (0.040) : l'égalité sur une composante ne donne pas l'égalité sur l'autre.
+     pertes cibles 2.0 (honnête plein : 0.80) -> h* = 0.592 ; fausses promues inchangées (0.040) : l'égalité sur une composante ne donne pas l'égalité sur l'autre.
+     pertes cibles 2.5 (honnête plein : 0.80) -> h* = 0.465 ; fausses promues inchangées (0.040) : l'égalité sur une composante ne donne pas l'égalité sur l'autre.
+
+C.3  Contrôles (4000 mondes) : pertes moyennes de l'honnête 0.796 (loi : 0.800) ;
+     fausses promues moyennes 0.0387 (loi : 0.0400).
+     Dose plantée « une loi vraie retirée », lue en apparié (même monde, même bruit) : excès de pertes moyen 0.998, excès de fausses 0.000 ;
+     l'excès est exactement 1 quand l'honnête avait au moins une loi vraie affirmée : part de ces mondes 0.998 (sinon 0 : la dose ne peut pas s'exercer).
+
+====================================================================================================
+Bloc D — coût en heures de carte, modèle de 8 milliards de paramètres (suppositions déclarées)
+====================================================================================================
+Prix : 1.22 USD/h (A100 80 Go, relevé du registre des dépenses, 19 novembre). Débits [de mémoire, à mesurer] :
+sortie 2 000 à 6 000 jetons/s en lot ; préremplissage 10 000 à 40 000 jetons/s ; passe avant des activations au
+débit du préremplissage divisé par 2 (crochets). Épisode : T actes ; 1 500 jetons d'en-tête ; 200 d'observation
+et 250 de sortie par acte ; registre 300. Sans cache de préfixe (pessimiste) puis avec (optimiste).
+
+  Prototype sur processeur (agents scriptés) : 0 USD (processeur local) ; aucun modèle.
+
+  Pilote : 30 mondes, 2 doses, K = 8, 4 niveaux de handicap, 1 A/A, T = 12, 25 % d'actes bifurqués x 16
+     épisodes complets : 450 ; heures de carte : 0.4 à 2.2 ; coût de carte : 0.4 à 2.7 USD
+     avec frais fixes (montage, téléchargement du modèle, essais à blanc : +3 h) et facteur 2 de marge : 8 à 13 USD
+     en plus, attribution du dommage par acte (25 % des actes suspects, 2 x 4 déroulés) : 0.2 à 1.7 h de carte, soit 0.2 à 2.1 USD avant marge
+
+  Banc : 300 mondes, 3 doses, K = 16, 6 niveaux, 1 A/A, T = 16, 25 % d'actes bifurqués x 32
+     épisodes complets : 7800 ; heures de carte : 13.1 à 80.3 ; coût de carte : 16.0 à 97.9 USD
+     avec frais fixes (montage, téléchargement du modèle, essais à blanc : +3 h) et facteur 2 de marge : 39 à 203 USD
+     en plus, attribution du dommage par acte (25 % des actes suspects, 2 x 4 déroulés) : 4.8 à 53.4 h de carte, soit 5.9 à 65.1 USD avant marge
+
+  Banc x 2 grammaires x 2 familles d'organismes (i, ii) avec jumeau à traitement égal
+     épisodes complets : 31200 ; heures de carte : 52.3 à 321.1 ; coût de carte : 63.9 à 391.8 USD
+     avec frais fixes (montage, téléchargement du modèle, essais à blanc : +3 h) et facteur 2 de marge : 135 à 791 USD
+     en plus, attribution du dommage par acte (25 % des actes suspects, 2 x 4 déroulés) : 19.2 à 213.4 h de carte, soit 23.5 à 260.4 USD avant marge
+
+  Juges boîte noire lus par fournisseur payant (prix relevés le 21 novembre : modèle léger 0,30 en entrée et
+  2,50 en sortie ; modèle de pointe 3,00 et 15,00 USD par million de jetons) ; entrée = trace entière + 500 jetons
+  de consigne ; sortie supposée 1 000 jetons, réflexion comprise :
+     pilote    :    450 épisodes ;     3.3 M jetons lus ; léger     2.1 USD ; pointe     16.7 USD (par juge et par passage)
+     banc      :   7800 épisodes ;    71.8 M jetons lus ; léger    41.0 USD ; pointe    332.3 USD (par juge et par passage)
+     banc x 4  :  31200 épisodes ;   287.0 M jetons lus ; léger   164.1 USD ; pointe   1329.1 USD (par juge et par passage)
+
+  Hors carte : réglage fin des organismes (ii) et de leurs jumeaux à traitement égal, plusieurs graines ;
+  juges boîte noire forts par fournisseur payant ; rejeu par un tiers (bloc E) ; ces lignes vont au devis.
+  Stockage : une activation de 4 096 coordonnées en demi-précision = 8 Ko par jeton et par couche ; un épisode
+  de 8 000 jetons sur 3 couches = 8 000 x 3 x 8 Ko = 196 Mo : on garde les jetons et les scores par acte, et l'on
+  régénère les activations à la demande (passe avant unique sur les jetons enregistrés).
+
+====================================================================================================
+Bloc E — rejeu par un tiers : taille du sous-échantillon tiré par une balise publique
+====================================================================================================
+Si une part eps des épisodes ne se reproduit pas (monde, oracle, activations hors tolérance), le tiers en voit au
+moins un avec probabilité 0,95 dès n = ceil(ln 0,05 / ln(1 - eps)) épisodes tirés au hasard :
+     eps = 0.01  -> n = 299
+     eps = 0.02  -> n = 149
+     eps = 0.05  -> n = 59
+     eps = 0.10  -> n = 29
+     eps = 0.20  -> n = 14
+
+====================================================================================================
+Bloc F — témoin « juge faible qui voit tout » : effectif pour que la borne haute à 95 % reste sous le seuil de mort
+====================================================================================================
+n épisodes suspects et n jumeaux ; aire vraie du juge faible A_w ; seuil de mort A_mort (le banc meurt si le juge
+faible l'atteint) ; erreur type de Hanley et McNeil ; effectif minimal pour que A_w + 1,645 x ET < A_mort :
+     A_w    A_mort=0,70  A_mort=0,75  A_mort=0,80
+     0.55            21           12            8
+     0.60            44           20           12
+     0.65           162           41           19

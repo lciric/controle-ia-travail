@@ -1,0 +1,238 @@
+Calculs de la note sur la taxe d'obscurcissement (Opus 5.5, effort maximal), v1
+Suppositions : q = 0.8, sigma = 0.4000, alpha = 0.05, Z1 = 1.6449, Z2 = 1.9600 ; sondes : forte (r = 0,8 ; f = 0,01), moyenne (r = 0,4 ; f = 0,05)
+V = 1 - dommage soutenable / dommage soutenable du bilan seul dans le même dispositif ; V0 : rapporté au bilan seul au niveau alpha, sans sonde (blocs B et C).
+
+A. Coup unique (concentré) : succès S(h) = (1-h)(1-r) + h(1-kappa), h = probabilité de tout cacher, r = 0,8
+  kappa = 0.0 : V = 0.0000 = min(r, kappa)
+  kappa = 0.1 : V = 0.1000 = min(r, kappa)
+  kappa = 0.3 : V = 0.3000 = min(r, kappa)
+  kappa = 0.5 : V = 0.5000 = min(r, kappa)
+  kappa = 0.9 : V = 0.8000 = min(r, kappa)
+
+B. [sonde forte] Régime diffus, deux tests séparés au seuil Z2, contrainte « sous le fil » (programme linéaire)
+  d = 0.05 : V_nom = +0.9843 (V0_nom = +0.9812)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.1640 (V0 = +0.0039) ; k_eff = 0.1667 ; produit = 0.1640 ; min = 0.1667
+    F4 complet, perte vue 0,05 : V_adapt = +0.4921 (V0 = +0.3948) ; k_eff = 0.5000 ; produit = 0.4921 ; min = 0.5000
+    F5 complet, perte vue 0,20 : V_adapt = +0.7874 (V0 = +0.7467) ; k_eff = 0.8000 ; produit = 0.7874 ; min = 0.8000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.6562 (V0 = +0.5903) ; k_eff = 0.6667 ; produit = 0.6562 ; min = 0.6667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.9681 (V0 = +0.9620) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9843 (V0 = +0.9812) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.20 : V_nom = +0.9370 (V0_nom = +0.9250)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0446 (V0 = -0.1384) ; k_eff = 0.0476 ; produit = 0.0446 ; min = 0.0476
+    F4 complet, perte vue 0,05 : V_adapt = +0.1874 (V0 = +0.0317) ; k_eff = 0.2000 ; produit = 0.1874 ; min = 0.2000
+    F5 complet, perte vue 0,20 : V_adapt = +0.4685 (V0 = +0.3667) ; k_eff = 0.5000 ; produit = 0.4685 ; min = 0.5000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.3123 (V0 = +0.1806) ; k_eff = 0.3333 ; produit = 0.3123 ; min = 0.3333
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.8724 (V0 = +0.8480) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9370 (V0 = +0.9250) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.50 : V_nom = +0.8426 (V0_nom = +0.8124)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0165 (V0 = -0.1719) ; k_eff = 0.0196 ; produit = 0.0165 ; min = 0.0196
+    F4 complet, perte vue 0,05 : V_adapt = +0.0766 (V0 = -0.1003) ; k_eff = 0.0909 ; produit = 0.0766 ; min = 0.0909
+    F5 complet, perte vue 0,20 : V_adapt = +0.2407 (V0 = +0.0953) ; k_eff = 0.2857 ; produit = 0.2407 ; min = 0.2857
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.1404 (V0 = -0.0242) ; k_eff = 0.1667 ; produit = 0.1404 ; min = 0.1667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.6811 (V0 = +0.6200) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.8426 (V0 = +0.8124) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+
+C. [sonde forte] Contrainte en probabilité (P(non pris) >= 1/2), deux tests séparés au seuil Z2
+  d = 0.05 : V_nom = +0.9843 (V0_nom = +0.9816)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.1667 (V0 = +0.0233) ; k_eff = 0.1667 ; produit = 0.1640 ; min = 0.1667
+    F4 complet, perte vue 0,05 : V_adapt = +0.5000 (V0 = +0.4140) ; k_eff = 0.5000 ; produit = 0.4921 ; min = 0.5000
+    F5 complet, perte vue 0,20 : V_adapt = +0.8000 (V0 = +0.7656) ; k_eff = 0.8000 ; produit = 0.7874 ; min = 0.8000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.6667 (V0 = +0.6093) ; k_eff = 0.6667 ; produit = 0.6562 ; min = 0.6667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.9682 (V0 = +0.9627) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9843 (V0 = +0.9816) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.20 : V_nom = +0.9374 (V0_nom = +0.9266)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0476 (V0 = -0.1162) ; k_eff = 0.0476 ; produit = 0.0446 ; min = 0.0476
+    F4 complet, perte vue 0,05 : V_adapt = +0.2000 (V0 = +0.0624) ; k_eff = 0.2000 ; produit = 0.1875 ; min = 0.2000
+    F5 complet, perte vue 0,20 : V_adapt = +0.5000 (V0 = +0.4140) ; k_eff = 0.5000 ; produit = 0.4687 ; min = 0.5000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.3333 (V0 = +0.2186) ; k_eff = 0.3333 ; produit = 0.3125 ; min = 0.3333
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.8740 (V0 = +0.8524) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9374 (V0 = +0.9266) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.50 : V_nom = +0.8451 (V0_nom = +0.8185)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0196 (V0 = -0.1491) ; k_eff = 0.0196 ; produit = 0.0166 ; min = 0.0196
+    F4 complet, perte vue 0,05 : V_adapt = +0.0909 (V0 = -0.0655) ; k_eff = 0.0909 ; produit = 0.0768 ; min = 0.0909
+    F5 complet, perte vue 0,20 : V_adapt = +0.2857 (V0 = +0.1628) ; k_eff = 0.2857 ; produit = 0.2415 ; min = 0.2857
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.1667 (V0 = +0.0233) ; k_eff = 0.1667 ; produit = 0.1409 ; min = 0.1667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.6951 (V0 = +0.6426) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.8451 (V0 = +0.8185) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+
+D. [sonde forte] Une seule statistique jointe au seuil Z1 (poids fixé d'avance par le défenseur, minimax)
+  d = 0.05 : V_nom = +0.9843
+    F1 complet et gratuit : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.1667 ; k_eff = 0.1667 ; produit = 0.1640 ; min = 0.1667
+    F4 complet, perte vue 0,05 : V_adapt = +0.4999 ; k_eff = 0.5000 ; produit = 0.4921 ; min = 0.5000
+    F5 complet, perte vue 0,20 : V_adapt = +0.7996 ; k_eff = 0.8000 ; produit = 0.7874 ; min = 0.8000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.6665 ; k_eff = 0.6667 ; produit = 0.6562 ; min = 0.6667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.9681 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9843 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.20 : V_nom = +0.9372
+    F1 complet et gratuit : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0476 ; k_eff = 0.0476 ; produit = 0.0446 ; min = 0.0476
+    F4 complet, perte vue 0,05 : V_adapt = +0.1999 ; k_eff = 0.2000 ; produit = 0.1874 ; min = 0.2000
+    F5 complet, perte vue 0,20 : V_adapt = +0.4990 ; k_eff = 0.5000 ; produit = 0.4686 ; min = 0.5000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.3330 ; k_eff = 0.3333 ; produit = 0.3124 ; min = 0.3333
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.8735 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9372 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.50 : V_nom = +0.8445
+    F1 complet et gratuit : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0196 ; k_eff = 0.0196 ; produit = 0.0166 ; min = 0.0196
+    F4 complet, perte vue 0,05 : V_adapt = +0.0908 ; k_eff = 0.0909 ; produit = 0.0768 ; min = 0.0909
+    F5 complet, perte vue 0,20 : V_adapt = +0.2843 ; k_eff = 0.2857 ; produit = 0.2413 ; min = 0.2857
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.1663 ; k_eff = 0.1667 ; produit = 0.1407 ; min = 0.1667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.6962 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.8445 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+
+G. [sonde forte] Poids de la sonde dans la statistique jointe : réglé sur l'attaquant non adaptatif, ou minimax
+   sur un ensemble de points possibles de la frontière (le défenseur ignore lequel l'attaquant atteint)
+  d = 0.05 : poids réglé sur le non adaptatif (angle 89.1 degrés) ; V_adapt par point : F1 -62.66 ; F2 -62.66 ; F3 -52.05 ; F4 -30.83 ; F5 -11.73 ; F6 -20.22 ; F7 +0.97 ; F8 +0.98
+    minimax, tous les points, F1 et F2 compris : angle 0.0 degrés ; V garanti = +0.0000
+    minimax, F1 et F2 exclus par la mesure : angle 0.4 degrés ; V garanti = +0.1666
+  d = 0.20 : poids réglé sur le non adaptatif (angle 86.4 degrés) ; V_adapt par point : F1 -14.93 ; F2 -14.93 ; F3 -14.17 ; F4 -11.74 ; F5 -6.96 ; F6 -9.62 ; F7 +0.87 ; F8 +0.94
+    minimax, tous les points, F1 et F2 compris : angle 0.0 degrés ; V garanti = +0.0000
+    minimax, F1 et F2 exclus par la mesure : angle 0.4 degrés ; V garanti = +0.0476
+  d = 0.50 : poids réglé sur le non adaptatif (angle 81.0 degrés) ; V_adapt par point : F1 -5.42 ; F2 -5.42 ; F3 -5.30 ; F4 -4.84 ; F5 -3.59 ; F6 -4.35 ; F7 +0.69 ; F8 +0.84
+    minimax, tous les points, F1 et F2 compris : angle 0.0 degrés ; V garanti = +0.0000
+    minimax, F1 et F2 exclus par la mesure : angle 0.4 degrés ; V garanti = +0.0196
+
+B. [sonde moyenne] Régime diffus, deux tests séparés au seuil Z2, contrainte « sous le fil » (programme linéaire)
+  d = 0.05 : V_nom = +0.9222 (V0_nom = +0.9073)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.1537 (V0 = -0.0084) ; k_eff = 0.1667 ; produit = 0.1537 ; min = 0.1667
+    F4 complet, perte vue 0,05 : V_adapt = +0.4611 (V0 = +0.3578) ; k_eff = 0.5000 ; produit = 0.4611 ; min = 0.5000
+    F5 complet, perte vue 0,20 : V_adapt = +0.7377 (V0 = +0.6875) ; k_eff = 0.8000 ; produit = 0.7377 ; min = 0.8000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.6148 (V0 = +0.5410) ; k_eff = 0.6667 ; produit = 0.6148 ; min = 0.6667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.8184 (V0 = +0.7836) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9222 (V0 = +0.9073) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.20 : V_nom = +0.6887 (V0_nom = +0.6290)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0328 (V0 = -0.1525) ; k_eff = 0.0476 ; produit = 0.0328 ; min = 0.0476
+    F4 complet, perte vue 0,05 : V_adapt = +0.1377 (V0 = -0.0275) ; k_eff = 0.2000 ; produit = 0.1377 ; min = 0.2000
+    F5 complet, perte vue 0,20 : V_adapt = +0.3443 (V0 = +0.2187) ; k_eff = 0.5000 ; produit = 0.3443 ; min = 0.5000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.2296 (V0 = +0.0820) ; k_eff = 0.3333 ; produit = 0.2296 ; min = 0.3333
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.2735 (V0 = +0.1343) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.6887 (V0 = +0.6290) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.50 : V_nom = +0.2216 (V0_nom = +0.0725)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0043 (V0 = -0.1864) ; k_eff = 0.0196 ; produit = 0.0043 ; min = 0.0196
+    F4 complet, perte vue 0,05 : V_adapt = +0.0201 (V0 = -0.1676) ; k_eff = 0.0909 ; produit = 0.0201 ; min = 0.0909
+    F5 complet, perte vue 0,20 : V_adapt = +0.0633 (V0 = -0.1161) ; k_eff = 0.2857 ; produit = 0.0633 ; min = 0.2216
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.0369 (V0 = -0.1476) ; k_eff = 0.1667 ; produit = 0.0369 ; min = 0.1667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.0000 (V0 = -0.1916) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.2216 (V0 = +0.0725) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+
+C. [sonde moyenne] Contrainte en probabilité (P(non pris) >= 1/2), deux tests séparés au seuil Z2
+  d = 0.05 : V_nom = +0.9227 (V0_nom = +0.9094)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.1667 (V0 = +0.0233) ; k_eff = 0.1667 ; produit = 0.1538 ; min = 0.1667
+    F4 complet, perte vue 0,05 : V_adapt = +0.5000 (V0 = +0.4140) ; k_eff = 0.5000 ; produit = 0.4614 ; min = 0.5000
+    F5 complet, perte vue 0,20 : V_adapt = +0.7891 (V0 = +0.7528) ; k_eff = 0.8000 ; produit = 0.7382 ; min = 0.8000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.6640 (V0 = +0.6062) ; k_eff = 0.6667 ; produit = 0.6151 ; min = 0.6667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.8220 (V0 = +0.7913) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9227 (V0 = +0.9094) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.20 : V_nom = +0.7018 (V0_nom = +0.6505)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0476 (V0 = -0.1162) ; k_eff = 0.0476 ; produit = 0.0334 ; min = 0.0476
+    F4 complet, perte vue 0,05 : V_adapt = +0.2000 (V0 = +0.0624) ; k_eff = 0.2000 ; produit = 0.1404 ; min = 0.2000
+    F5 complet, perte vue 0,20 : V_adapt = +0.4727 (V0 = +0.3820) ; k_eff = 0.5000 ; produit = 0.3509 ; min = 0.5000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.3280 (V0 = +0.2124) ; k_eff = 0.3333 ; produit = 0.2339 ; min = 0.3333
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.3932 (V0 = +0.2888) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.7018 (V0 = +0.6505) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.50 : V_nom = +0.3646 (V0_nom = +0.2553)
+    F1 complet et gratuit : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 (V0 = -0.1720) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0196 (V0 = -0.1491) ; k_eff = 0.0196 ; produit = 0.0071 ; min = 0.0196
+    F4 complet, perte vue 0,05 : V_adapt = +0.0909 (V0 = -0.0655) ; k_eff = 0.0909 ; produit = 0.0331 ; min = 0.0909
+    F5 complet, perte vue 0,20 : V_adapt = +0.2468 (V0 = +0.1172) ; k_eff = 0.2857 ; produit = 0.1042 ; min = 0.2857
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.1600 (V0 = +0.0155) ; k_eff = 0.1667 ; produit = 0.0608 ; min = 0.1667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.1049 (V0 = -0.0491) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.3646 (V0 = +0.2553) ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+
+D. [sonde moyenne] Une seule statistique jointe au seuil Z1 (poids fixé d'avance par le défenseur, minimax)
+  d = 0.05 : V_nom = +0.9224
+    F1 complet et gratuit : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.1666 ; k_eff = 0.1667 ; produit = 0.1537 ; min = 0.1667
+    F4 complet, perte vue 0,05 : V_adapt = +0.4985 ; k_eff = 0.5000 ; produit = 0.4612 ; min = 0.5000
+    F5 complet, perte vue 0,20 : V_adapt = +0.7905 ; k_eff = 0.8000 ; produit = 0.7379 ; min = 0.8000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.6627 ; k_eff = 0.6667 ; produit = 0.6149 ; min = 0.6667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.8213 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.9224 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.20 : V_nom = +0.7027
+    F1 complet et gratuit : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0475 ; k_eff = 0.0476 ; produit = 0.0335 ; min = 0.0476
+    F4 complet, perte vue 0,05 : V_adapt = +0.1976 ; k_eff = 0.2000 ; produit = 0.1405 ; min = 0.2000
+    F5 complet, perte vue 0,20 : V_adapt = +0.4763 ; k_eff = 0.5000 ; produit = 0.3514 ; min = 0.5000
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.3253 ; k_eff = 0.3333 ; produit = 0.2342 ; min = 0.3333
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.4122 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.7027 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+  d = 0.50 : V_nom = +0.3858
+    F1 complet et gratuit : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F2 taxe de compétence pure (k_cap 0,5) : V_adapt = +0.0000 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F3 complet, perte vue 0,01 : V_adapt = +0.0195 ; k_eff = 0.0196 ; produit = 0.0076 ; min = 0.0196
+    F4 complet, perte vue 0,05 : V_adapt = +0.0882 ; k_eff = 0.0909 ; produit = 0.0351 ; min = 0.0909
+    F5 complet, perte vue 0,20 : V_adapt = +0.2519 ; k_eff = 0.2857 ; produit = 0.1102 ; min = 0.2857
+    F6 complet, perte vue 0,05 et k_cap 0,5 : V_adapt = +0.1566 ; k_eff = 0.1667 ; produit = 0.0643 ; min = 0.1667
+    F7 plancher de rappel r/2, aucune perte : V_adapt = +0.1240 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+    F8 obscurcissement inutile : V_adapt = +0.3858 ; k_eff = 0.0000 ; produit = 0.0000 ; min = 0.0000
+
+G. [sonde moyenne] Poids de la sonde dans la statistique jointe : réglé sur l'attaquant non adaptatif, ou minimax
+   sur un ensemble de points possibles de la frontière (le défenseur ignore lequel l'attaquant atteint)
+  d = 0.05 : poids réglé sur le non adaptatif (angle 85.5 degrés) ; V_adapt par point : F1 -11.87 ; F2 -11.87 ; F3 -9.73 ; F4 -5.44 ; F5 -1.57 ; F6 -3.29 ; F7 +0.82 ; F8 +0.92
+    minimax, tous les points, F1 et F2 compris : angle 0.0 degrés ; V garanti = +0.0000
+    minimax, F1 et F2 exclus par la mesure : angle 2.1 degrés ; V garanti = +0.1661
+  d = 0.20 : poids réglé sur le non adaptatif (angle 72.7 degrés) ; V_adapt par point : F1 -2.36 ; F2 -2.36 ; F3 -2.20 ; F4 -1.69 ; F5 -0.68 ; F6 -1.24 ; F7 +0.38 ; F8 +0.70
+    minimax, tous les points, F1 et F2 compris : angle 0.0 degrés ; V garanti = +0.0000
+    minimax, F1 et F2 exclus par la mesure : angle 2.1 degrés ; V garanti = +0.0470
+  d = 0.50 : poids réglé sur le non adaptatif (angle 52.1 degrés) ; V_adapt par point : F1 -0.63 ; F2 -0.63 ; F3 -0.60 ; F4 -0.48 ; F5 -0.16 ; F6 -0.36 ; F7 +0.05 ; F8 +0.39
+    minimax, tous les points, F1 et F2 compris : angle 0.0 degrés ; V garanti = +0.0000
+    minimax, F1 et F2 exclus par la mesure : angle 2.1 degrés ; V garanti = +0.0190
+
+H. Deux tests séparés, part epsilon du niveau alpha donnée à la sonde (le bilan garde alpha(1 - epsilon)) ;
+   V0 rapporté au bilan seul au niveau alpha ; programme linéaire « sous le fil »
+  [sonde forte] d = 0.05 : eps 0.50 : nominal +0.981, F1 -0.192, F4 +0.395 | eps 0.20 : nominal +0.978, F1 -0.064, F4 +0.457 | eps 0.10 : nominal +0.975, F1 -0.031, F4 +0.472 | eps 0.05 : nominal +0.973, F1 -0.015, F4 +0.479 | eps 0.01 : nominal +0.969, F1 -0.003, F4 +0.483
+  [sonde forte] d = 0.20 : eps 0.50 : nominal +0.925, F1 -0.192, F4 +0.032 | eps 0.20 : nominal +0.911, F1 -0.064, F4 +0.131 | eps 0.10 : nominal +0.901, F1 -0.031, F4 +0.156 | eps 0.05 : nominal +0.893, F1 -0.015, F4 +0.166 | eps 0.01 : nominal +0.874, F1 -0.003, F4 +0.172
+  [sonde forte] d = 0.50 : eps 0.50 : nominal +0.812, F1 -0.192, F4 -0.100 | eps 0.20 : nominal +0.777, F1 -0.064, F4 +0.012 | eps 0.10 : nominal +0.753, F1 -0.031, F4 +0.041 | eps 0.05 : nominal +0.731, F1 -0.015, F4 +0.053 | eps 0.01 : nominal +0.685, F1 -0.003, F4 +0.060
+  [sonde moyenne] d = 0.05 : eps 0.50 : nominal +0.907, F1 -0.192, F4 +0.358 | eps 0.20 : nominal +0.890, F1 -0.064, F4 +0.413 | eps 0.10 : nominal +0.878, F1 -0.031, F4 +0.424 | eps 0.05 : nominal +0.867, F1 -0.015, F4 +0.426 | eps 0.01 : nominal +0.844, F1 -0.003, F4 +0.421
+  [sonde moyenne] d = 0.20 : eps 0.50 : nominal +0.629, F1 -0.192, F4 -0.027 | eps 0.20 : nominal +0.560, F1 -0.064, F4 +0.060 | eps 0.10 : nominal +0.512, F1 -0.031, F4 +0.078 | eps 0.05 : nominal +0.469, F1 -0.015, F4 +0.082 | eps 0.01 : nominal +0.377, F1 -0.003, F4 +0.073
+  [sonde moyenne] d = 0.50 : eps 0.50 : nominal +0.073, F1 -0.192, F4 -0.168 | eps 0.20 : nominal -0.064, F1 -0.064, F4 -0.064 | eps 0.10 : nominal -0.031, F1 -0.031, F4 -0.031 | eps 0.05 : nominal -0.015, F1 -0.015, F4 -0.015 | eps 0.01 : nominal -0.003, F1 -0.003, F4 -0.003
+
+E. Taxe permanente (perte sur tous les épisodes, sabotés ou non) : le bilan seul la voit en espérance après
+   T* = (Z1 * sigma / tau_perm)^2 épisodes, même si l'attaquant ne sabote jamais
+  tau_perm = 0.001 : T* = 432 887 épisodes
+  tau_perm = 0.005 : T* = 17 315 épisodes
+  tau_perm = 0.010 : T* = 4 329 épisodes
+  tau_perm = 0.020 : T* = 1 082 épisodes
+  tau_perm = 0.050 : T* = 173 épisodes
+  Sur T épisodes, le dommage soutenable devient au mieux max(0, Z1*sigma*sqrt(T) - tau_perm*T).
+
+F. Épisodes appariés (même tâche, saboteur obscurci contre non obscurci) pour que la borne haute unilatérale à 95 %
+   de tau tombe sous tau_max avec une probabilité de 0,8 quand la vraie perte vue est nulle ; perte vue binaire de
+   taux de base c0 = 0,2 par épisode ; rho = corrélation dans la paire ; tau_max = k* d' / (1 - k*)
+  d' = 0.05, borne visée k_eff <= 0.10 (tau_max = 0.0056) : rho = 0.0 : n = 64101 ; rho = 0.5 : n = 32051
+  d' = 0.05, borne visée k_eff <= 0.25 (tau_max = 0.0167) : rho = 0.0 : n = 7123 ; rho = 0.5 : n = 3562
+  d' = 0.20, borne visée k_eff <= 0.10 (tau_max = 0.0222) : rho = 0.0 : n = 4007 ; rho = 0.5 : n = 2004
+  d' = 0.20, borne visée k_eff <= 0.25 (tau_max = 0.0667) : rho = 0.0 : n = 446 ; rho = 0.5 : n = 223
+  d' = 0.50, borne visée k_eff <= 0.10 (tau_max = 0.0556) : rho = 0.0 : n = 642 ; rho = 0.5 : n = 321
+  d' = 0.50, borne visée k_eff <= 0.25 (tau_max = 0.1667) : rho = 0.0 : n = 72 ; rho = 0.5 : n = 36
+
+Fin. Tous les contrôles écrits avant l'exécution ont tenu (assertions).
