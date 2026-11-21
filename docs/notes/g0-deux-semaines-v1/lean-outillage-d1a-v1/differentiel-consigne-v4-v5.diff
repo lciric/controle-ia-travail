@@ -1,0 +1,52 @@
+--- consigne-poste-local-lean-d1a-v4.md	2026-11-21 07:10:15.853441814 +0000
++++ consigne-poste-local-lean-d1a-v5.md	2026-11-21 07:18:35.260812039 +0000
+@@ -1,4 +1,6 @@
+-# Consigne : session du poste local de Lazar — outillage Lean D-1a, troisième essai (GO-2026-11-10-13) — v4
++# Consigne : session du poste local de Lazar — outillage Lean D-1a, troisième essai (GO-2026-11-10-13) — v5
++
++**v5 (2026-11-21, vers 07:18 UTC, `date -u`)** : la v4 (`consigne-poste-local-lean-d1a-v4.md`, `834016a260f85483388db06d83c000da147fa269d18bd3c39ea1f2efce718099`) plus les corrections C1 à C3 de sa contre-lecture (Claude Fable 5.1, `contre-lecture-consigne-v4-v1.md`, `e10ffe24d35287973abf8d56da2a2a84e5da09ca7985deb924ddf5381f289d06`), texte exact repris, et une remarque sur la ligne « en tâche jusqu'à » (mandat 4) ; rien d'autre ne change. Différentiel : `differentiel-consigne-v4-v5.diff`.
+ 
+ Écrite le 2026-11-21 vers 07:09 UTC (heure relevée par `date -u`) par un rédacteur Opus 5.5 (`claude-opus-5-5`), sous-agent de la session mère `session_01QPDgKgejkqwnuaJHJ31Ydo`, à sa demande (GO-2026-11-21-12, voie 1). Pièce d'instrument (classe B) : à contre-lire par un autre modèle avant usage. Tirée de la consigne v3 (`consigne-poste-local-lean-d1a-v3.md`, `17914672caf9fa2f12daa1da7a5bfec7067c957de8570e42dd6fb1b2899bde50`, jugée « exécutable » par sa vérification courte `verification-courte-consigne-v3-v1.md`, `82734f0d3cf3cc31a8c57f1d697a86f37c3b1b711f947dd4b9bea132f30c50e8`) et de l'état du chantier (`docs/notes/etat-chantier-lean-2026-11-21-v1.md`, `3d2b8d3e2c8cb8811932a0bf4fe773a53a6b2f8964d5c39a63174a7b36172cdd`, § 2 et § 3). **La procédure de la v3 est reprise à la lettre**. Seuls changent : la session mère, la branche de données (neuve, avec un contrôle qu'elle n'existe pas encore), l'accord de dépense redit avec ses sources et son échéance, la clé du loueur et l'arrêt par identifiant redits, le rappel ci-dessous et la liste « Avant de lancer ». Différentiel : `differentiel-consigne-v3-v4.diff`.
+ 
+@@ -17,6 +19,7 @@
+ 9. **La réponse à la question de la mère** : qu'a fait la session du poste sur `donnees/lean-outillage-d1a-poste-local-v3` ? S'il reste un ancien clone de cette tentative sur le poste, il ne sert pas.
+ 10. **Durée attendue : environ 2 à 3 heures de terminal ouvert** (estimation). Au second essai, la session du poste a duré environ 2 heures, de la mesure des adresses de sortie (12:43:59Z) au rapport poussé (commit `3b2a74a2`, 14:43:55Z). Ce temps comprenait environ 30 minutes d'attente du mot « armée » (L1 à 14:02:19Z, création à 14:31:04Z). Le serveur a vécu 9 minutes (25 au premier essai), arrêté au pas `noyau` (`rapport-poste-local-d1a-v2.md`, `b2bace9b…` ; `registres/depenses.md`). Le troisième essai doit aller plus loin (épreuve et mesures) : sa durée n'a jamais été mesurée.
+ 11. **Coût attendu : environ 0,28 USD**, soit une heure facturée d'une `ccx33` (0,22692 EUR au taux de 1,25, `registres/depenses.md`, lignes des 175751342 et 175838427), si le serveur vit moins d'une heure. La vie du serveur est bornée par la minuterie, au plus `min(création + 48 h, H − 1 h)`. Le coût reste en tout cas sous le reste de la ligne, 64,44 USD.
++12. **Son rappel personnel à `H + 1 h`** (procédure, M6 : console de Hetzner, zéro serveur attendu ; `H` est donné avec le mot « armée ») et **l'accès à la console de Hetzner du projet**, pour détruire à la main par l'identifiant si `MV7 detruire` rend le code 3 (sections 4 et 5).
+ 
+ Session mère `session_01QPDgKgejkqwnuaJHJ31Ydo` (dans le nuage), sur le mot de Lazar R-2439 (« Réparer d'abord, puis
+ relancer » : troisième essai sous GO-2026-11-10-13, troisième machine sous cette ligne accordée), redit le 13 novembre
+@@ -41,8 +44,10 @@
+ **Dépense autorisée** : **GO-2026-11-10-13**, 65 USD au plus, **échéance 2026-11-30** (`registres/go.md`), dont **0,56 USD
+ déjà dépensés** par les deux premiers serveurs (175751342 et 175838427 ; deux fois 0,28 USD, `registres/depenses.md`).
+ - **Une seule** machine Hetzner `ccx33` (`hel1`) de plus, vie bornée par la minuterie. Elle est **créée et détruite par la
+-  procédure** (création en L5 par `creer-et-armer`, destruction en section 4 ou 5 par `MV7 detruire --identifiant N`),
+-  **toujours par son identifiant (R10)**. Tu n'arrêtes jamais un processus par motif de ligne de commande, seulement par le
++  procédure** (création en L5 par `creer-et-armer` ; destruction en section 5 par `MV7 detruire --identifiant N`, ou, en
++  fin anormale de la création où l'identifiant peut manquer, en section 4 par `MV7 detruire --pas d1a`, qui détruit par les
++  étiquettes fixes et le nom de l'essai), **toujours par l'identité de l'instance chez le loueur, jamais par un motif
++  (R10)**. Tu n'arrêtes jamais un processus par motif de ligne de commande, seulement par le
+   PID que la procédure te fait relever.
+ - **Échéance** : aucune préparation si `T_LIM` (L1 + 6 h) tombe après le 2026-11-30 à 23:59 UTC ; compte rendu à Lazar.
+ - **Clé du loueur** : `HCLOUD_TOKEN`, lue par son nom seul dans l'environnement de la session, jamais affichée ni écrite.
+@@ -96,8 +101,9 @@
+ 1. **Dépôt** :
+    - clone neuf de `https://github.com/lciric/controle-ia-travail.git` ;
+    - `git fetch origin prep/lean-outillage-d1a-v10:refs/remotes/origin/prep/lean-outillage-d1a-v10` ;
+-   - `git ls-remote origin refs/heads/donnees/lean-outillage-d1a-poste-local-v4` ne doit rien rendre ; sinon arrêt, compte
+-     rendu, aucune préparation ;
++   - `git ls-remote origin refs/heads/donnees/lean-outillage-d1a-poste-local-v4` doit rendre le **code 0 et aucune ligne** ;
++     une ligne rendue (la branche existe déjà) ou un code non nul (accès au dépôt en échec) : arrêt, compte rendu, aucune
++     préparation ;
+    - **ta branche `donnees/lean-outillage-d1a-poste-local-v4`, partie du commit
+      `ae894d8df2a19f51e532ff667160ae7bba2bf6ac`** (E1 ; tête de `prep/lean-outillage-d1a-v10`), poussée par
+      `git push -u origin donnees/lean-outillage-d1a-poste-local-v4` ; jamais `donnees/lean-outillage-d1a-poste-local-v3`
+@@ -127,7 +133,7 @@
+      et du pare-feu, empreinte de la clé, et `P`.
+ 4. **Attendre le mot « armée »** de la mère, relayé par Lazar, avec l'empreinte du fichier de rattrapage ; **sans lui, aucune
+    création**. La mère fait M1 à M6 : lecture, même projet, droit d'écrire, destruction à blanc, trois tâches (T1 à H, T2 à
+-   H + 30 min et T3 à H + 24 h en session neuve), ligne « en tâche jusqu'à » dans `registres/etat.md` (identifiants des tâches et heures donnés avec le mot « armée »).
++   H + 30 min et T3 à H + 24 h en session neuve), ligne « en tâche jusqu'à » dans `registres/etat.md` (identifiants des tâches et heures donnés avec le mot « armée »). Remarque : la garde d'heure limite borne la préparation et la création, pas la vie du serveur ; si L1 tombe le 30 novembre, `H − 1 h` (échéance de la minuterie) déborde sur décembre (jusqu'au 2 décembre) et la ligne « en tâche jusqu'à » dépasse l'échéance du GO (2026-11-30) ; la mère le note.
+ 5. **L4 à L7** (`creer-et-armer --go GO-2026-11-10-13 … --deja-depense-usd 0.56`), puis **section 3** :
+    - avant le premier pilote : si l'adresse du serveur est déjà connue du poste (`ssh-keygen -F <adresse du serveur>`),
+      `ssh-keygen -R <adresse du serveur>` ;
