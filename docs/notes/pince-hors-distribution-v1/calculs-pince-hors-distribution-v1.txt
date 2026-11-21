@@ -1,0 +1,45 @@
+[P1] Le bilan de la pince : dommage vu par l'oracle = (référence - lecture) + (lecture - issue).
+     Par épisode, en espérance ; quatre bandes v = [0.35, 0.6, 0.85, 0.97] poids [0.15, 0.25, 0.3, 0.3] ; part endommagée f = 0.1
+     honnête (rien ne doit apparaître)                                        dommage vrai 0.0000 | terme A +0.0000 | terme B +0.0000 | somme +0.0000
+     sabotage, la lecture tombe à 0,05 sur l'épisode endommagé                dommage vrai 0.0748 | terme A +0.0698 | terme B +0.0050 | somme +0.0748
+     sabotage, la lecture est tenue haute                                     dommage vrai 0.0748 | terme A +0.0000 | terme B +0.0748 | somme +0.0748
+     sabotage, lecture à 0,50 sur l'épisode endommagé                         dommage vrai 0.0748 | terme A +0.0249 | terme B +0.0500 | somme +0.0748
+     sabotage, lecture poussée à 0,99 partout où il endommage                 dommage vrai 0.0748 | terme A -0.0242 | terme B +0.0990 | somme +0.0748
+     sabotage, lecture tenue haute et toutes ses lectures baissées de 0,05    dommage vrai 0.0748 | terme A +0.0500 | terme B +0.0248 | somme +0.0748
+     dommage que l'oracle ne voit pas (la pince doit se dire muette)          dommage vrai 0.0748 | terme A +0.0000 | terme B +0.0000 | somme +0.0000
+     dérive bénigne de 0,08, référence périmée, lecture qui suit              dommage vrai 0.0000 | terme A +0.0800 | terme B +0.0000 | somme +0.0800
+     dérive bénigne de 0,08, référence périmée, lecture qui ne suit pas       dommage vrai 0.0000 | terme A +0.0000 | terme B +0.0800 | somme +0.0800
+     dérive bénigne de 0,08, référence refaite sur des témoins du régime      dommage vrai 0.0000 | terme A +0.0000 | terme B +0.0000 | somme +0.0000
+
+[P2] Épisodes requis pour voir le dommage (niveau 5 %, puissance 0,90, approximation normale),
+     selon ce qu'on teste. Écart type par épisode : somme et terme B 0.3756 ; terme A 0.10 (supposé).
+     sabotage, la lecture tombe à 0,05 sur l'épisode endommagé                terme A seul       18 | terme B seul    48356 | somme      216
+     sabotage, la lecture est tenue haute                                     terme A seul jamais | terme B seul      216 | somme      216
+     sabotage, lecture à 0,50 sur l'épisode endommagé                         terme A seul      139 | terme B seul      484 | somme      216
+     sabotage, lecture poussée à 0,99 partout où il endommage                 terme A seul jamais | terme B seul      123 | somme      216
+     sabotage, lecture tenue haute et toutes ses lectures baissées de 0,05    terme A seul       34 | terme B seul     1958 | somme      216
+
+[P3] Dommage qui reste sous le fil du test de la somme (puissance < 0,90), en épisodes endommagés,
+     pour un déploiement de N épisodes : Z * écart type * racine(N). Il ne dépend que de la netteté de la référence.
+     N =   1000 | référence sans netteté (taux de base seul)     écart type 0.4339 |      40 épisodes, soit  4.02 % du déploiement
+     N =   1000 | référence à quatre bandes (celle du monde)     écart type 0.3756 |      35 épisodes, soit  3.48 % du déploiement
+     N =   1000 | référence nette (0,02 ou 0,98, même moyenne)   écart type 0.1400 |      13 épisodes, soit  1.30 % du déploiement
+     N =  10000 | référence sans netteté (taux de base seul)     écart type 0.4339 |     127 épisodes, soit  1.27 % du déploiement
+     N =  10000 | référence à quatre bandes (celle du monde)     écart type 0.3756 |     110 épisodes, soit  1.10 % du déploiement
+     N =  10000 | référence nette (0,02 ou 0,98, même moyenne)   écart type 0.1400 |      41 épisodes, soit  0.41 % du déploiement
+     N = 100000 | référence sans netteté (taux de base seul)     écart type 0.4339 |     402 épisodes, soit  0.40 % du déploiement
+     N = 100000 | référence à quatre bandes (celle du monde)     écart type 0.3756 |     348 épisodes, soit  0.35 % du déploiement
+     N = 100000 | référence nette (0,02 ou 0,98, même moyenne)   écart type 0.1400 |     130 épisodes, soit  0.13 % du déploiement
+     Où vit le bruit (part de la variance de la somme, par bande) :
+       bande lue 0.35 (poids 0.15) :  24.2 %
+       bande lue 0.60 (poids 0.25) :  42.5 %
+       bande lue 0.85 (poids 0.30) :  27.1 %
+       bande lue 0.97 (poids 0.30) :   6.2 %
+
+[P4] Recapture à deux mâchoires : parmi n épisodes endommagés trouvés par l'audit au hasard,
+     X = ceux où les deux mâchoires se taisaient. Plus petits n et c tels que
+     P(X >= c | q0) <= 0,05 et P(X >= c | q1) >= 0,90 (loi binomiale exacte).
+     silence commun validé q0 = 0.10, silence commun sous attaque neuve q1 = 0.50 : n = 12, « pince ouverte » si X >= 4 (risque 0.0256, puissance 0.9270)
+     silence commun validé q0 = 0.20, silence commun sous attaque neuve q1 = 0.60 : n = 13, « pince ouverte » si X >= 6 (risque 0.0300, puissance 0.9023)
+     silence commun validé q0 = 0.36, silence commun sous attaque neuve q1 = 0.80 : n = 12, « pince ouverte » si X >= 8 (risque 0.0304, puissance 0.9274)
+     silence commun validé q0 = 0.10, silence commun sous attaque neuve q1 = 0.25 : n = 55, « pince ouverte » si X >= 10 (risque 0.0444, puissance 0.9112)

@@ -1,0 +1,100 @@
+Niveau 0.01, seuil unilatéral z = 2.3263
+
+A. Part d'actes sabotés non détectée (puissance < 0,5) selon la référence honnête
+   Hypothèses : un score par acte, honnête N(0,1), saboté N(mu,1), mu = 0,5 ;
+   test sur la moyenne des n actes du déploiement contre la moyenne de la référence.
+   référence exacte           | n =     100 :  46.53 % (       47 actes) | n =    1000 :  14.71 % (      147 actes) | n =   10000 :   4.65 % (      465 actes) | n =  100000 :   1.47 % (     1471 actes) | n = 1000000 :   0.47 % (     4653 actes)
+   m = 400 fixe               | n =     100 :  52.02 % (       52 actes) | n =    1000 :  27.53 % (      275 actes) | n =   10000 :  23.72 % (     2372 actes) | n =  100000 :  23.31 % (    23310 actes) | n = 1000000 :  23.27 % (   232681 actes)
+   m = 2000 fixe              | n =     100 :  47.68 % (       48 actes) | n =    1000 :  18.02 % (      180 actes) | n =   10000 :  11.40 % (     1140 actes) | n =  100000 :  10.51 % (    10507 actes) | n = 1000000 :  10.41 % (   104141 actes)
+   témoins 1 % (m = 0,01 n)   | n =     100 : 100.00 % (      100 actes) | n =    1000 : 100.00 % (     1000 actes) | n =   10000 :  46.76 % (     4676 actes) | n =  100000 :  14.79 % (    14786 actes) | n = 1000000 :   4.68 % (    46759 actes)
+   témoins 5 %                | n =     100 : 100.00 % (      100 actes) | n =    1000 :  67.42 % (      674 actes) | n =   10000 :  21.32 % (     2132 actes) | n =  100000 :   6.74 % (     6742 actes) | n = 1000000 :   2.13 % (    21321 actes)
+   témoins 20 %               | n =     100 : 100.00 % (      100 actes) | n =    1000 :  36.04 % (      360 actes) | n =   10000 :  11.40 % (     1140 actes) | n =  100000 :   3.60 % (     3604 actes) | n = 1000000 :   1.14 % (    11397 actes)
+   Lecture : référence exacte, le nombre d'actes non détectés croît comme racine de n
+   (4.65 racine de n) ; référence fixe de m scores, la part tend vers
+   z / (mu racine de m) = 23.3 % (m = 400) et 10.4 % (m = 2000) : elle ne baisse plus ;
+   témoins à taux p, la loi en racine revient, multipliée par racine de (1 + 1/p) :
+     p = 0.01 : facteur 10.05
+     p = 0.05 : facteur  4.58
+     p = 0.20 : facteur  2.45
+   Horizon utile d'une référence fixe : au-delà de n = m, allonger le déploiement
+   n'ajoute presque rien (rapport des deux termes : racine de (1 + n/m)).
+   A bis. Plancher valable pour TOUT test, à tout horizon, quand la loi honnête n'est
+   connue que par m lectures (ni sa moyenne ni sa forme ne sont sues d'ailleurs) :
+   argument à deux points : la loi G du déploiement (mélange) est elle-même une loi
+   honnête possible ; seule la référence distingue les deux cas ; puissance - niveau
+   <= distance en variation totale entre m lectures de G et m lectures de F
+   <= 0,5 racine de ((1 + f^2 (exp(mu^2) - 1))^m - 1)   (borne du khi-deux, exacte).
+     m =   400 : aucun test n'atteint la puissance 0,5 sous f =  7.70 % ; le test sur la moyenne l'atteint à 23.26 % (n infini)
+     m =  2000 : aucun test n'atteint la puissance 0,5 sous f =  3.44 % ; le test sur la moyenne l'atteint à 10.40 % (n infini)
+     m = 10000 : aucun test n'atteint la puissance 0,5 sous f =  1.54 % ; le test sur la moyenne l'atteint à  4.65 % (n infini)
+   Contrôle par tirages (20000 répétitions par graine, n = 2000, m = 400, 510 actes sabotés) :
+     graine [20261121, 1] : fausse alerte 0.0083 (-2.49 erreur type), détection 0.4948
+     graine [20261121, 101] : fausse alerte 0.0109 (+1.21 erreur type), détection 0.5059
+     graine [20261121, 102] : fausse alerte 0.0109 (+1.21 erreur type), détection 0.4978
+     graine [20261121, 103] : fausse alerte 0.0104 (+0.64 erreur type), détection 0.5065
+     graine [20261121, 104] : fausse alerte 0.0092 (-1.21 erreur type), détection 0.4996
+     cinq graines réunies : fausse alerte 0.0099 (attendu 0.01), détection 0.5009
+     (attendu 0,5 à l'arrondi de 510 actes près)
+
+B. Tolérance et cachette : si le test doit garder son niveau pour tout écart
+   systématique |b| <= b_max entre l'honnête et sa référence, une part f d'actes
+   sabotés avec f mu <= b_max reste sous le seuil à tout horizon quand l'écart vrai
+   est nul, et jusqu'à f mu <= 2 b_max quand l'écart vrai vaut -b_max
+   (instance à une dimension du théorème 4 de arXiv 2609.23254, p. 6).
+   b_max = 0.02, mu = 0.5 : part cachée   4.0 % à   8.0 %, pour tout n
+   b_max = 0.05, mu = 0.5 : part cachée  10.0 % à  20.0 %, pour tout n
+   b_max = 0.10, mu = 0.5 : part cachée  20.0 % à  40.0 %, pour tout n
+   Écart borné par m témoins honnêtes (demi-largeur à 99 % : 2,576 / racine de m) :
+     m =    100 : b_max = 0.2576
+     m =    400 : b_max = 0.1288
+     m =   2000 : b_max = 0.0576
+     m =  10000 : b_max = 0.0258
+     m = 100000 : b_max = 0.0081
+
+C. Ce qu'un moniteur ajoute à l'audit : part d'actes sabotés non détectée
+   (puissance < 0,5, niveau 1 %), audit tiré au hasard à p = 1 % des actes.
+   Contrôle : score normal moyen à mu = 0 : -4.10e-17 (attendu 0).
+   Efficacité du rang parmi K tirages du jumeau, mu = 0.5 : K = 4 : 0.743 ; K = 19 : 0.923
+   C1 audit seul, dommage reconnu à coup sûr (q = 1), l'honnête n'en fait jamais
+      n =    1000 :   6.93 % (     69 actes) | n =   10000 :   0.69 % (     69 actes) | n =  100000 :   0.07 % (     69 actes) | n = 1000000 :   0.01 % (     69 actes)
+   C1 bis audit seul, dommage reconnu une fois sur cinq (q = 0,2)
+      n =    1000 :  34.66 % (    347 actes) | n =   10000 :   3.47 % (    347 actes) | n =  100000 :   0.35 % (    347 actes) | n = 1000000 :   0.03 % (    347 actes)
+   C2 audit seul, excès d'échecs (0.3 honnête, 0.6 saboté), taux honnête connu
+      n =    1000 : 100.00 % (   1000 actes) | n =   10000 :  35.54 % (   3554 actes) | n =  100000 :  11.24 % (  11237 actes) | n = 1000000 :   3.55 % (  35536 actes)
+   C3 moniteur, référence = les épisodes audités sans dommage (m = p n)
+      n =    1000 : 100.00 % (   1000 actes) | n =   10000 :  46.76 % (   4676 actes) | n =  100000 :  14.79 % (  14786 actes) | n = 1000000 :   4.68 % (  46759 actes)
+   C4 moniteur à pivot par acte : rang parmi K = 4 tirages du jumeau
+      n =    1000 :  19.81 % (    198 actes) | n =   10000 :   6.26 % (    626 actes) | n =  100000 :   1.98 % (   1981 actes) | n = 1000000 :   0.63 % (   6264 actes)
+   C4 bis le même, K = 19
+      n =    1000 :  15.95 % (    159 actes) | n =   10000 :   5.04 % (    504 actes) | n =  100000 :   1.59 % (   1595 actes) | n = 1000000 :   0.50 % (   5043 actes)
+   Rapport C3 / C4 (ce que vaut un pivot par acte face à une référence de p n témoins) :
+     7.5 à tout n (p = 1 %, K = 4)
+   Horizon au-delà duquel l'audit seul (C1, C1 bis) fait mieux que le pivot (C4) :
+     q = 1.00 : n =        122 actes
+     q = 0.20 : n =       3061 actes
+     q = 0.05 : n =      48973 actes
+
+D. Entre le maximum et la somme : puissance à 1 % de quatre agrégateurs sur
+   n = 1000 p-valeurs exactement uniformes sous le nul ; k actes décalés de mu.
+   Graines : racine [20261121, 4] ; seuils à 1 % sur 20000 tirages du nul :
+   somme 2.324 ; maximum 4.245 ; critique d'ordre supérieur 3.941 ; Berk-Jones 6.205
+   (somme attendue 2,326 ; maximum attendu 4.264)
+   k actes, mu        | somme | maximum | critique d'ordre supérieur | Berk-Jones
+   k = 300, mu = 0.25 | 0.523 |   0.014 |                      0.185 | 0.268
+   k = 100, mu = 0.75 | 0.520 |   0.037 |                      0.340 | 0.392
+   k =  30, mu = 1.50 | 0.185 |   0.105 |                      0.346 | 0.340
+   k =  30, mu = 2.00 | 0.344 |   0.325 |                      0.837 | 0.834
+   k =  10, mu = 2.50 | 0.068 |   0.356 |                      0.380 | 0.471
+   k =  10, mu = 3.00 | 0.091 |   0.689 |                      0.732 | 0.863
+   k =   3, mu = 3.50 | 0.029 |   0.565 |                      0.100 | 0.455
+   k =   3, mu = 4.00 | 0.025 |   0.794 |                      0.145 | 0.718
+   k =   1, mu = 5.00 | 0.013 |   0.786 |                      0.025 | 0.594
+   Erreur type d'une puissance : au plus 0.011.
+
+E. Défenses heuristiques réexaminées sous attaque adaptée (comptes lus p. 1 des PDF)
+   arXiv 1802.00420 (défenses de 2018 à gradients masqués) : 7 contournées sur 9
+   arXiv 2002.08347 (treize défenses de 2018 à 2020) : 13 contournées sur 13
+   arXiv 2510.09023 (douze défenses de modèles de langage) : 12 contournées sur 12
+   Total : 32 sur 34 ; restent 2 sur 34 (5.9 %).
+   Réserve : trois audits choisis par leurs auteurs, non un échantillon des défenses publiées ;
+   dans le premier, 1 des 7 n'est contournée qu'en partie.
