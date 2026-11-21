@@ -630,3 +630,7 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 
 ## 20 novembre, 22:40 UTC — fin de l’autonomie de 8 heures (passation `registres/passations/2026-11-20-2240.md`)
 - Formation : relances 5 et 7 finies et détruites ; 1 à 4 à recréer sur le mot de Lazar avant 2026-11-21T07:30:16Z (additifs 2 v6 et 3 scellés). Étage 2 : additif 6 scellé, deux nœuds pour Lazar. Palier 0b : v19 conforme, code v6 et programmes sur main (8262c442…), garde 17 à trancher. Course « nouvelles attaques » : attend les soldes. Papier « dopamine » : six points. Aucune instance en marche ; crédit du loueur 90,56 USD.
+
+## 21 novembre, 14:50 UTC — passation vers une nouvelle session mère, autre compte (R-4575)
+
+Passation `registres/passations/2026-11-21-1450.md` ; brief `registres/passations/2026-11-21-1450-brief-lancement-mere-autre-compte.md`. La nouvelle mère relance elle-même les sessions comme filles, à partir de leurs passations et briefs (« Raisons ou regard ? » comprise ; le poste local Lean reste chez Lazar). Loueur : aucune instance en marche à 14:48Z, crédit 49,42 USD.
