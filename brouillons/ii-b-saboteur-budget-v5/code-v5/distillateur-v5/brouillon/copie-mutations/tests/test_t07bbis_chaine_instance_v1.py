@@ -1,0 +1,487 @@
+"""Essais R5 de la chaîne de l'instance de B bis, ajoutés après la contre-lecture du code (modèle C,
+`brouillons/T0.7-etape-B-bis-v1/code/contre-lecture-code-modele-c-v1.md`), chacun avec son cas sain et son artefact :
+B1 (commit de la fiche de `CODE-BBIS` ancêtre de la tête, `marche_v1.gardes_d_entree`) ; B2 (motifs d'extraction de l'amorce
+couvrant tous les chemins que les essais de l'instance lisent) ; M1 (commit local des entrées, arbre propre, branche de sortie
+créée depuis COMMIT) ; M2 (codes fermés de `marche_v1.main`) ; M3 (compte des essais passés lu sur la ligne de pytest) ; m5
+(essai local de l'amorce sans aucune écriture, garde d'offre de `lancer commande`) ; m7 (boucle de copie des fichiers cités par le
+registre propre). Dépôts jetables seulement ; aucune donnée de 7a, 7b, T0.7 ni de P3-bis."""
+from __future__ import annotations
+
+import json
+import os
+import re
+import subprocess
+import time
+from pathlib import Path
+
+import pytest
+
+import aide_t07bbis_depot_v1 as ad
+from controle_ia.gardes import GardeArret
+from controle_ia.t07bbis import marche_v1 as ma
+from controle_ia.t07bbis import registre_bbis_v1 as rb
+
+RACINE = ad.RACINE_DEPOT
+
+
+# ------------------------------------------------------------------------------------------------------------ B1
+
+def test_gardes_d_entree_commit_de_la_fiche_ancetre_cas_sain_et_artefacts(tmp_path, monkeypatch):
+    monkeypatch.setenv("BBIS_INSTANCE", "1")
+    x = ad.depot_code(tmp_path / "sain")
+    g = ma.gardes_d_entree(x["d"], ad.RUN_7B)                         # cas sain : fiche → C0, tête C1 qui porte les lignes
+    assert g["tete"] == x["c1"] != x["c0"] == g["fiche"]["commit"]
+    assert set(g["lignes"]) == {"SCELLEMENT-BBIS", "CODE-BBIS", "GO-BBIS"}
+    ad.ecrire(x["d"], "local.txt")                                    # tête = commit local des entrées (descendant de C1)
+    ad.committer(x["d"], "entrées locales", "local.txt")
+    assert ma.gardes_d_entree(x["d"], ad.RUN_7B)["fiche"]["commit"] == x["c0"]
+    # (i) fiche citant un commit d'une branche voisine (non ancêtre), ou un commit absent du dépôt
+    with pytest.raises(GardeArret, match="n'est pas un ancêtre de la tête"):
+        ma.gardes_d_entree(ad.depot_code(tmp_path / "voisine", cite="voisine")["d"], ad.RUN_7B)
+    with pytest.raises(GardeArret, match="absent du dépôt"):
+        ma.gardes_d_entree(ad.depot_code(tmp_path / "absent", cite="absent")["d"], ad.RUN_7B)
+    # (ii) fichier du code modifié après C0 (commit postérieur), puis retiré
+    ad.ecrire(x["d"], "src/x.py", "print('code modifié')\n")
+    ad.committer(x["d"], "code modifié", "src/x.py")
+    with pytest.raises(GardeArret, match="empreinte ≠ fiche de CODE-BBIS"):
+        ma.gardes_d_entree(x["d"], ad.RUN_7B)
+    (x["d"] / "src" / "x.py").unlink()
+    with pytest.raises(GardeArret, match="absent : arrêt"):
+        ma.gardes_d_entree(x["d"], ad.RUN_7B)
+    # (iii) tête = C0, sans les lignes du registre propre
+    y = ad.depot_code(tmp_path / "c0")
+    ad.git(y["d"], "checkout", "-q", y["c0"])
+    with pytest.raises(GardeArret, match="absent"):
+        ma.gardes_d_entree(y["d"], ad.RUN_7B)
+    # même garde, appelée par la session (`registre_bbis_v1 ancetre RACINE COMMIT`, jouée par `lancer commande`)
+    z = ad.depot_code(tmp_path / "session")
+    assert rb.exiger_ancetre_de_la_fiche(z["d"], z["c1"])["tete"] == z["c1"]
+    with pytest.raises(GardeArret, match="n'est pas un ancêtre"):
+        rb.exiger_ancetre_de_la_fiche(z["d"], z["v"])
+    with pytest.raises(GardeArret, match="40 caractères"):
+        rb.exiger_ancetre(z["d"], "c0ffee")
+
+
+# ------------------------------------------------------------------------------------------------------------ B2
+
+OBLIGATOIRES = ["scripts/lancer_bbis_v1.sh", "scripts/amorce_bbis_v1.sh", "scripts/enumerer_issues_bbis_v1.py",
+                "scripts/epreuve_niveau_deux_plis_bbis_v1.py", "prereg/T0.7-etape-B-bis-v1.md",
+                "prereg/T0.7-etape-B-bis-v1.md.sha256", "prereg/P3-consignes-v1.md", "prereg/P3-consignes-v1.md.sha256",
+                "tests/conftest.py", "src/controle_ia/t06/test_croise.py", "requirements-gpu.txt",
+                "registres/t07-etape-b-bis-v1.md", "registres/t07-etape-b-bis/code-bbis-v1.json", "registres/scellements-v1.md",
+                "registres/scellements-v1.md.sha256", "registres/go-extraits/GO-BBIS-v1.md"]
+INTERDITS = ["diag/r/lecture-sondes-t06.json", "diag/r/lecture-sondes-t06.json.sha256", "scripts/extraire_mesures_epreuve_t06_v1.py",
+             "scripts/mots_et_cout_t06_v3.py", "docs/notes/piece-mots-et-cout-v1/x.md", "docs/notes/g0/config.json",
+             "runs/r/manifeste.json", "donnees/r/mesures-t06.npz", "registres/autre-v1.md", "docs/procedures/x.md"]
+
+
+def _chemins_du_paquet() -> list[str]:
+    """Code et essais du paquet (dossiers exacts du dépôt de travail) : tout ce que la fiche de `CODE-BBIS` peut citer et tout ce
+    que `tests/test_t07bbis_*.py` importe ou ouvre."""
+    rel = lambda p: str(p.relative_to(RACINE))
+    return sorted({rel(p) for p in (RACINE / "src" / "controle_ia" / "t07bbis").glob("*.py")}
+                  | {rel(p) for p in (RACINE / "tests").glob("test_t07bbis_*.py")}
+                  | {rel(p) for p in (RACINE / "tests").glob("aide_t07bbis_*.py")})
+
+
+def _manquants(d: Path, lignes: list[str]) -> tuple[list, list]:
+    ad.depot_vide(d)
+    for p in OBLIGATOIRES + INTERDITS + _chemins_du_paquet():
+        ad.ecrire(d, p, f"{p}\n")
+    ad.committer(d, "arbre jouet")
+    ad.appliquer_motifs(d, lignes)
+    manque = [p for p in OBLIGATOIRES + _chemins_du_paquet() if not (d / p).is_file()]
+    present = [p for p in INTERDITS if (d / p).exists()]
+    return manque, present
+
+
+def test_motifs_de_l_amorce_couvrent_les_chemins_des_essais(tmp_path):
+    m = ad.motifs()
+    assert "/scripts/lancer_bbis_v1.sh*" in m
+    assert len(_chemins_du_paquet()) >= 20
+    manque, present = _manquants(tmp_path / "sain", m)
+    assert manque == [] and present == []                             # cas sain : tout présent, rien d'interdit
+    manque, _ = _manquants(tmp_path / "artefact", [l for l in m if "lancer_bbis_v1" not in l])
+    assert manque == ["scripts/lancer_bbis_v1.sh"]                    # artefact : motif de lancer retiré → l'essai échoue
+
+
+# ------------------------------------------------------------------------------------------------------------ m7
+
+REGISTRE = "registres/t07-etape-b-bis-v1.md"
+
+
+def _depot_registre(d: Path, cites: list[str]) -> Path:
+    ad.depot_vide(d)
+    for p in ("prereg/T0.7-etape-B-bis-v1.md", "prereg/T0.7-etape-B-bis-v1.md.sha256", "docs/verdicts/issue-jouet.json",
+              "docs/verdicts/issue-jouet.json.sha256", "registres/t07-etape-b-bis/fiche.json"):
+        ad.ecrire(d, p, f"contenu de {p}\n")
+    ad.ecrire(d, REGISTRE, "# registre propre jouet\n\n" + "".join(
+        f"| CLE-{k}-BBIS | 2026-11-14T12:00:0{k}Z | {c} | {'a' * 64} |\n" for k, c in enumerate(cites)))
+    ad.committer(d, "registre jouet")
+    ad.appliquer_motifs(d, ad.motifs())
+    return d
+
+
+def test_boucle_de_copie_des_fichiers_cites_sain_et_artefact(tmp_path):
+    corps = "D=\"$1\"\nCOPIES=()\n" + ad.extrait("copie-des-fichiers-cites") + 'printf "COPIE %s\\n" "${COPIES[@]+"${COPIES[@]}"}"\n'
+    d = _depot_registre(tmp_path / "sain", ["prereg/T0.7-etape-B-bis-v1.md", "docs/verdicts/issue-jouet.json",
+                                            "registres/t07-etape-b-bis/fiche.json", "diag/x/absent-de-la-tete.json"])
+    assert not (d / "docs" / "verdicts" / "issue-jouet.json").exists()   # hors des motifs : absent avant la copie
+    r = ad.jouer(corps, d)
+    assert r.returncode == 0, r.stdout + r.stderr
+    copies = [l[len("COPIE "):] for l in r.stdout.splitlines() if l.startswith("COPIE ")]
+    assert copies == ["docs/verdicts/issue-jouet.json", "docs/verdicts/issue-jouet.json.sha256", "prereg/T0.7-etape-B-bis-v1.md",
+                      "prereg/T0.7-etape-B-bis-v1.md.sha256", "registres/t07-etape-b-bis/fiche.json"]
+    for p in copies:
+        assert (d / p).read_text(encoding="utf-8") == f"contenu de {p}\n"
+    assert not (d / "diag" / "x").exists()                            # cité mais absent de la tête : rien n'est écrit
+    for interdit in ("docs/notes/g0/x.json", "diag/r/lecture-sondes-t06.json", "donnees/bras-attaque-v1/x.json"):
+        d = _depot_registre(tmp_path / interdit.replace("/", "-"), ["prereg/T0.7-etape-B-bis-v1.md", interdit])
+        r = ad.jouer(corps, d)
+        assert r.returncode == 2 and f"chemin interdit cité : {interdit}" in r.stdout, interdit
+
+
+# ------------------------------------------------------------------------------------------------------------ M1
+
+def _depot_entrees(d: Path) -> tuple[Path, str, list]:
+    """Dépôt à la manière de l'instance : COMMIT (code, .gitignore avec `donnees/`), extraction partielle par les motifs de
+    l'amorce, puis entrées de 7b copiées non suivies (`runs/`, `diag/`) ou ignorées (`donnees/`), hors des motifs."""
+    ad.depot_vide(d)
+    ad.ecrire(d, ".gitignore", "donnees/\n")
+    ad.ecrire(d, "src/controle_ia/x.py")
+    ad.ecrire(d, "registres/t07-etape-b-bis-v1.md", "# registre\n")
+    commit = ad.committer(d, "code")
+    ad.appliquer_motifs(d, ad.motifs())
+    copies = [f"runs/{ad.RUN_7B}/manifeste.json", f"runs/{ad.RUN_7B}/manifeste.json.sha256",
+              f"diag/{ad.RUN_7B}/episodes-t06.json", f"donnees/{ad.RUN_7B}/mesures-t06.npz"]
+    for p in copies:
+        ad.ecrire(d, p, f"entrée {p}\n")
+    return d, commit, copies
+
+
+def test_commit_local_des_entrees_arbre_propre_et_branche_de_sortie(tmp_path):
+    corps = ("D=\"$1\"; COMMIT=\"$2\"; shift 2; COPIES=(\"$@\")\n" + ad.extrait("commit-local-des-entrees")
+             + "commit_local_entrees\necho \"ENTREES $ENTREES_LOCALES\"\n")
+    d, commit, copies = _depot_entrees(tmp_path / "sain")
+    from controle_ia.gardes import etat_git
+    assert not etat_git(d)["propre"]                                  # avant : entrées non suivies
+    r = ad.jouer(corps, d, commit, *copies)
+    assert r.returncode == 0, r.stdout + r.stderr
+    tete = ad.git(d, "rev-parse", "HEAD")
+    assert f"ENTREES {tete}" in r.stdout and ad.git(d, "rev-parse", "HEAD^") == commit
+    assert etat_git(d)["propre"]                                      # cas sain : arbre propre après le commit local
+    assert set(ad.git(d, "diff-tree", "-r", "--no-commit-id", "--name-only", commit, tete).splitlines()) == set(copies)
+    el = ma.entrees_locales(d, exiger=True)                           # ce que la marche écrit au manifeste
+    assert el["commit"] == tete and el["parent"] == commit and set(el["fichiers"]) == set(copies)
+    assert el["fichiers"][copies[3]]["objet"] == ad.git(d, "rev-parse", f"HEAD:{copies[3]}")
+    # après la marche : sorties non suivies, branche de sortie créée depuis COMMIT ; le commit local n'y entre pas
+    ad.ecrire(d, "runs/20261118-090000-bbis-t07/manifeste.json", "sortie\n")
+    ad.ecrire(d, "donnees/20261118-090000-bbis-t07/scores-bbis-000.npz", "sortie\n")
+    ad.git(d, "checkout", "-q", "-b", "donnees/t07-etape-b-bis-v1", commit)
+    assert ad.git(d, "rev-parse", "HEAD") == commit
+    assert subprocess.run(["git", "-C", str(d), "merge-base", "--is-ancestor", tete, "HEAD"]).returncode == 1
+    assert (d / "runs" / "20261118-090000-bbis-t07" / "manifeste.json").is_file()
+    assert (d / "donnees" / "20261118-090000-bbis-t07" / "scores-bbis-000.npz").is_file()
+    assert not (d / copies[0]).exists()                               # entrées de 7b retirées de l'arbre, jamais poussées
+    # artefacts : un fichier non suivi resté hors des copies ; aucune copie ; parent autre que COMMIT
+    d, commit, copies = _depot_entrees(tmp_path / "reste")
+    ad.ecrire(d, f"diag/{ad.RUN_7B}/autre-non-copie.json")
+    r = ad.jouer(corps, d, commit, *copies)
+    assert r.returncode == 2 and "arbre non propre après le commit local des entrées" in r.stdout
+    d, commit, copies = _depot_entrees(tmp_path / "vide")
+    r = ad.jouer(corps, d, commit)
+    assert r.returncode == 2 and "aucune entrée copiée" in r.stdout
+    d, commit, copies = _depot_entrees(tmp_path / "parent")
+    r = ad.jouer(corps, d, "e" * 40, *copies)
+    assert r.returncode == 2 and "parent du commit local des entrées ≠ COMMIT" in r.stdout
+    with pytest.raises(GardeArret, match="illisible"):
+        ma.entrees_locales(ad.depot_vide(tmp_path / "sans-commit"), exiger=True)
+    assert ma.entrees_locales(tmp_path / "sans-commit", exiger=False) is None
+
+
+# ------------------------------------------------------------------------------------------------------------ M2 (codes)
+
+def test_codes_fermes_de_la_marche(monkeypatch):
+    """`main` : 0 scores écrits ; 3 arrêt de débit ; 4 arrêt écrit (M2) ; 2 refus d'une garde d'entrée."""
+    monkeypatch.setattr(ma, "gardes_d_entree", lambda racine, run: {"fiche": {"entropie": 2 ** 100}})
+    args = ["--racine", ".", "--run-7b", ad.RUN_7B, "--run-bbis", "20261118-090000-bbis-t07", "--travail", "t"]
+    for r, code in (({"scores_ecrits": True}, 0), ({"arret_debit": "x", "scores_ecrits": False}, 3),
+                    ({"arret_marche": "RuntimeError: CUDA", "etape": "apprentissage et notation", "scores_ecrits": False}, 4)):
+        monkeypatch.setattr(ma, "marche", lambda *a, _r=r, **k: _r)
+        assert ma.main(args) == code
+
+    def refus(racine, run):
+        raise GardeArret("refus d'entrée")
+    monkeypatch.setattr(ma, "gardes_d_entree", refus)
+    assert ma.main(args) == 2
+    texte = (RACINE / "scripts" / "amorce_bbis_v1.sh").read_text(encoding="utf-8")
+    assert re.search(r"^    4\) traces; pousser .*ARRÊT ÉCRIT DE LA MARCHE", texte, re.M)
+
+
+# ------------------------------------------------------------------------------------------------------------ M3
+
+def test_compte_des_essais_passes_et_minimum(tmp_path):
+    corps = ad.extrait("compte-des-essais") + 'compte_passes "$1"\n'
+    for ligne, n in (("75 passed, 21 skipped, 4 warnings in 12.34s", 75), ("1 failed, 74 passed, 21 skipped in 9.1s", 74),
+                     ("21 skipped in 1.0s", 0), ("no tests ran in 0.01s", 0), ("", 0), ("103 passed in 120.5s", 103)):
+        r = ad.jouer(corps, ligne)
+        assert r.returncode == 0 and r.stdout.strip() == str(n), (ligne, r.stdout)
+    texte = (RACINE / "scripts" / "amorce_bbis_v1.sh").read_text(encoding="utf-8")
+    m = re.findall(r"^MIN_ESSAIS=(\d+)$", texte, re.M)
+    assert len(m) == 1 and int(m[0]) >= 60                            # minimum écrit (compte du rapport des corrections)
+    assert "-rs" in texte and 'ligne de compte : $RES"' in texte      # ligne entière au journal, essais sautés nommés
+
+
+# ------------------------------------------------------------------------------------------------------------ m5
+
+def _offre(chemin: Path, **k) -> Path:
+    o = {"id": 99, "carte": "A100 SXM4 80GB", "coeurs": 32, "memoire_vive_mo": 256000, "disque_go": 200, "stockage_usd_h": 0.05,
+         "etiquette": "bbis-t07-v1", "cuda_max_good": 13.0}
+    o.update(k)
+    chemin.write_text(json.dumps(o), encoding="utf-8")
+    return chemin
+
+
+def _lancer(*args, env=None):
+    e = dict(os.environ)
+    e.update({"PYTHON_BBIS": str(Path(os.sys.executable))})
+    e.update(env or {})
+    return subprocess.run(["bash", str(ad.LANCER), *map(str, args)], capture_output=True, text=True, env=e)
+
+
+def test_essai_local_sans_ecriture_et_garde_d_offre_de_la_commande(tmp_path):
+    base = {"AMORCE_ESSAI_LOCAL": "1", "COMMIT": "c" * 40, "BRANCHE_CODE": "main", "RUN_7B": ad.RUN_7B, "BRANCHE_7B": "calcul/x",
+            "RUN_BBIS": "20261118-090000-bbis-t07", "ECHEANCE_UTC_S": "1795000000", "GO_ID": "GO-2026-11-14-09",
+            "RACINE_AMORCE": str(tmp_path / "r")}
+    r = subprocess.run(["bash", str(ad.AMORCE)], capture_output=True, text=True, env={**os.environ, **base})
+    assert r.returncode == 0 and "aucun dossier" in r.stdout and not (tmp_path / "r").exists()   # rien n'est écrit
+    x = ad.depot_code(tmp_path / "depot")
+    ad.distant_officiel(x["d"], tmp_path / "distant")                  # branche de sortie de la course absente du distant
+    tmp = tmp_path / "tmp"
+    tmp.mkdir()
+    arguments = lambda offre, commit: ("commande", x["d"], offre, "99", commit, "main", ad.RUN_7B, "calcul/x",
+                                       "20261118-090000-bbis-t07", "1795000000", "feu GO-2026-11-14-09", "0",
+                                       "python:3.11-bookworm")
+    r = _lancer(*arguments(_offre(tmp_path / "offre.json"), x["c1"]), env={"TMPDIR": str(tmp)})
+    assert list(tmp.iterdir()) == []                                  # dossier jetable de l'essai local retiré, vide
+    if time.time() > rb._instant(rb.ECHEANCE_GO):                     # après l'échéance de la ligne de GO : refus
+        assert r.returncode == 2 and "échéance" in r.stdout
+    else:
+        assert r.returncode == 0 and "vastai create instance 99" in r.stdout, r.stdout
+        assert f"-e COMMIT={x['c1']}" in r.stdout
+    for faute, motif in (({"id": 98}, "identifiant"), ({"carte": "H200 SXM 141GB"}, "H200"), ({"etiquette": "t07"}, "étiquette")):
+        r = _lancer(*arguments(_offre(tmp_path / "faute.json", **faute), x["c1"]), env={"TMPDIR": str(tmp)})
+        assert r.returncode == 2 and "hors des bornes" in r.stdout and motif in r.stdout, faute
+    if time.time() <= rb._instant(rb.ECHEANCE_GO):
+        r = _lancer(*arguments(_offre(tmp_path / "offre.json"), x["v"]), env={"TMPDIR": str(tmp)})
+        assert r.returncode == 2 and "n'est pas un ancêtre" in r.stdout      # B1 côté session : COMMIT sans le code
+        ad.git(x["d"], "push", "-q", "origin", "HEAD:refs/heads/donnees/t07-etape-b-bis-v1")   # M1 : branche de sortie présente
+        r = _lancer(*arguments(_offre(tmp_path / "offre.json"), x["c1"]), env={"TMPDIR": str(tmp)})
+        assert r.returncode == 2 and "branche de sortie donnees/t07-etape-b-bis-v1 présente" in r.stdout, r.stdout
+        assert "vastai create" not in r.stdout
+    assert _lancer(*arguments(_offre(tmp_path / "offre.json"), x["c1"])[:-1]).returncode == 2   # douze arguments : refus
+
+
+# ------------------------------------------------------------------------------------------------------------ m-A
+
+BR_SORTIE = "donnees/t07-etape-b-bis-v1"
+
+
+def _instance_avant_marche(base: Path, distant_joignable: bool = True) -> dict:
+    """État de l'instance juste avant la marche : dépôt extrait par les vrais `MOTIFS`, commit local des entrées (extrait de
+    l'amorce), dépôt distant nu (`origin`) qui porte COMMIT, traces de l'instance dans `X`."""
+    d, commit, copies = _depot_entrees(base / "depot")
+    distant = base / "distant.git"
+    ad.git(base, "init", "-q", "--bare", str(distant))
+    ad.git(d, "remote", "add", "origin", str(distant) if distant_joignable else str(base / "absent.git"))
+    if distant_joignable:
+        ad.git(d, "push", "-q", "origin", "main")
+    corps = ("D=\"$1\"; COMMIT=\"$2\"; shift 2; COPIES=(\"$@\")\n" + ad.extrait("commit-local-des-entrees")
+             + "commit_local_entrees\n")
+    r = ad.jouer(corps, d, commit, *copies)
+    assert r.returncode == 0, r.stdout + r.stderr
+    x = base / "traces-instance"
+    x.mkdir()
+    (x / "journal-bbis.txt").write_text("2026-11-18T08:00:00Z BBIS ARRET : arbre non propre avant la marche (M1)\n", encoding="utf-8")
+    (x / "essais.txt").write_text("83 passed, 22 skipped in 60.0s\n", encoding="utf-8")
+    return {"d": d, "commit": commit, "copies": copies, "distant": distant, "x": x, "t": base,
+            "entrees": ad.git(d, "rev-parse", "HEAD")}
+
+
+def _arreter(e: dict, branche_prete: int, sortie_libre: int) -> subprocess.CompletedProcess:
+    corps = ('D="$1"; X="$2"; T="$3"; COMMIT="$4"; BRANCHE_PRETE="$5"; SORTIE_LIBRE="$6"\n'
+             f'XT=traces/bbis-t07-v1; BR_SORTIE={BR_SORTIE}; SEUIL=94000000\n'
+             'fin_instance() { echo "FIN $1"; exit "$1"; }\nsleep() { :; }\n'
+             'pousser() { echo "POUSSER (branche prête) $*"; }\n'
+             + ad.extrait("arret-et-traces") + 'arret "arbre non propre avant la marche (M1)" 2\n')
+    return ad.jouer(corps, e["d"], e["x"], e["t"], e["commit"], branche_prete, sortie_libre, cwd=e["d"])
+
+
+def test_arret_avant_la_marche_pousse_ses_traces_sans_le_commit_local(tmp_path):
+    """Mineur m-A : un arrêt entre le contrôle de la branche de sortie et la marche pousse les traces sur la branche neuve, par un
+    commit fait sur COMMIT ; la tête, l'arbre et le commit local des entrées de 7b ne sont ni touchés ni poussés."""
+    e = _instance_avant_marche(tmp_path / "sain")
+    ad.ecrire(e["d"], f"diag/{ad.RUN_7B}/pollution-non-suivie.json")          # la cause de l'arrêt : arbre non propre
+    ad.ecrire(e["d"], e["copies"][0], "entrée modifiée après le commit local\n")
+    r = _arreter(e, 0, 1)
+    assert r.returncode == 2 and "FIN 2" in r.stdout and "traces poussées" in r.stdout, r.stdout + r.stderr
+    tete = ad.git(e["distant"], "rev-parse", f"refs/heads/{BR_SORTIE}")
+    assert ad.git(e["distant"], "rev-parse", f"{tete}^") == e["commit"]          # commit des traces posé sur COMMIT
+    arbre = set(ad.git(e["distant"], "ls-tree", "-r", "--name-only", tete).splitlines())
+    assert {"traces/bbis-t07-v1/journal-bbis.txt", "traces/bbis-t07-v1/essais.txt"} <= arbre
+    assert not any(p.startswith(("runs/", "diag/", "donnees/")) for p in arbre)    # ni entrées de 7b, ni pollution
+    assert subprocess.run(["git", "-C", str(e["distant"]), "cat-file", "-e", e["entrees"]]).returncode != 0   # jamais poussé
+    assert ad.git(e["d"], "rev-parse", "HEAD") == e["entrees"]                  # tête intacte
+    assert (e["d"] / e["copies"][0]).read_text(encoding="utf-8") == "entrée modifiée après le commit local\n"
+    assert ad.git(e["distant"], "show", f"{tete}:traces/bbis-t07-v1/journal-bbis.txt").startswith("2026-11-18T08:00:00Z")
+    # artefacts : arrêt avant le contrôle de l'étape 7 (SORTIE_LIBRE=0) → rien n'est poussé ; dépôt distant injoignable → motif
+    # écrit, code de l'arrêt gardé ; branche prête → le chemin ordinaire (pousser) est pris, jamais le commit sur COMMIT
+    e = _instance_avant_marche(tmp_path / "avant-etape-7")
+    r = _arreter(e, 0, 0)
+    assert r.returncode == 2 and "traces poussées" not in r.stdout
+    assert subprocess.run(["git", "-C", str(e["distant"]), "rev-parse", "--verify", "-q", f"refs/heads/{BR_SORTIE}"],
+                          capture_output=True).returncode != 0
+    e = _instance_avant_marche(tmp_path / "injoignable", distant_joignable=False)
+    r = _arreter(e, 0, 1)
+    assert r.returncode == 2 and "traces non poussées" in r.stdout and "FIN 2" in r.stdout
+    e = _instance_avant_marche(tmp_path / "prete")
+    r = _arreter(e, 1, 0)
+    assert r.returncode == 2 and "POUSSER (branche prête)" in r.stdout and "traces poussées" not in r.stdout
+    texte = ad.AMORCE.read_text(encoding="utf-8")
+    assert texte.count("SORTIE_LIBRE=1") == 1 and "BRANCHE_PRETE=1; SORTIE_LIBRE=0" in texte
+    assert texte.index("SORTIE_LIBRE=1") > texte.index('git ls-remote --exit-code origin "refs/heads/$BR_SORTIE"')
+    assert texte.index("SORTIE_LIBRE=1") < texte.index('j "marche : début (run $RUN_BBIS)"')
+
+
+# ------------------------------------------------------------------------------------------------------------ destruction (R-2789)
+
+FAUX_VASTAI = r"""#!/usr/bin/env bash
+# faux outil : comme vastai 1.11.0 le 2026-11-14 (R-2789), `destroy instance ID` sans -y demande [y/N], abandonne sans entrée
+# (« Aborted. ») et rend 0 ; avec -y, retire ID ; `show instances --raw` rend la liste (ou une faute choisie par FAUX_LISTE)
+etat="$FAUX_ETAT"
+case "$1 $2" in
+    "destroy instance")
+        id="$3"; shift 3; oui=0; for a in "$@"; do [ "$a" = -y ] && oui=1; done
+        if [ "$oui" = 0 ]; then printf 'Are you sure you want to destroy instance %s? [y/N]: ' "$id"; read -r rep || rep=""
+            [ "$rep" = y ] || { echo "Aborted."; exit 0; }; fi
+        grep -vx "$id" "$etat" > "$etat.n"; mv "$etat.n" "$etat"; echo "destroying instance $id."; exit 0;;
+    "show instances")
+        case "${FAUX_LISTE:-}" in
+            illisible) echo "Error: not json"; exit 0;;
+            echec) echo "Failed to reach the server" >&2; exit 1;;
+        esac
+        python3 -c 'import json, sys; print(json.dumps([{"id": int(l), "actual_status": "running"} for l in open(sys.argv[1]) if l.strip()]))' "$etat"
+        exit 0;;
+esac
+echo "faux vastai : commande inconnue $*" >&2; exit 1
+"""
+
+
+def _faux_outil(base: Path, ids) -> dict:
+    b = base / "bin"
+    b.mkdir(parents=True)
+    (b / "vastai").write_text(FAUX_VASTAI, encoding="utf-8")
+    (b / "vastai").chmod(0o755)
+    etat = base / "instances.txt"
+    etat.write_text("".join(f"{i}\n" for i in ids), encoding="utf-8")
+    return {"PATH": f"{b}:{os.environ['PATH']}", "FAUX_ETAT": str(etat), "TMPDIR": str(base)}   # listes gardées ici
+
+
+def _jouer_commande_imprimee(ligne: str, env: dict) -> subprocess.CompletedProcess:
+    """Joue la ligne imprimée par `detruire` comme la mère (préfixe GO_ID gardé), entrée standard vide."""
+    assert ligne.startswith("GO_ID=GO-2026-11-14-09 vastai destroy instance ")
+    return subprocess.run(["bash", "-c", ligne], capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                          env={**os.environ, **env})
+
+
+def test_destruction_avec_y_et_absence_prouvee_contre_un_faux_outil(tmp_path):
+    """R-2789 : (1) la commande de destruction porte -y ; (2) la destruction n'est jamais jugée par le code de sortie : absence
+    de l'identifiant prouvée dans la liste lue sans erreur, témoin présent ; (3) le faux outil qui abandonne sans -y et rend 0
+    (le cas du 2026-11-14) est détecté par la chaîne."""
+    env = _faux_outil(tmp_path / "sain", ["123456", "60480302", "777"])
+    r = _lancer("detruire", "123456")
+    ligne = r.stdout.splitlines()[0]
+    assert r.returncode == 0 and ligne == "GO_ID=GO-2026-11-14-09 vastai destroy instance 123456 -y"
+    d = _jouer_commande_imprimee(ligne, env)
+    assert d.returncode == 0 and "destroying instance 123456" in d.stdout
+    v = _lancer("verifier-destruction", "123456", "60480302", env=env)
+    assert v.returncode == 0 and "DESTRUCTION PROUVEE 123456" in v.stdout and "témoin 60480302 présent" in v.stdout, v.stdout
+    # (3) le cas du jour : la même commande sans -y → « Aborted. », code 0 ; l'instance reste ; la chaîne le détecte
+    env = _faux_outil(tmp_path / "sans-y", ["123456", "60480302"])
+    d = _jouer_commande_imprimee(ligne[: -len(" -y")], env)
+    assert d.returncode == 0 and "Aborted." in d.stdout                     # le code 0 ne prouve rien
+    v = _lancer("verifier-destruction", "123456", "60480302", env=env)
+    assert v.returncode == 2 and "absence non prouvée" in v.stdout and "toujours dans la liste" in v.stdout, v.stdout
+    # artefacts de la lecture : témoin absent, liste illisible, lecture en échec, témoin = instance détruite
+    env = _faux_outil(tmp_path / "temoin", ["60480302"])
+    v = _lancer("verifier-destruction", "123456", "999", env=env)
+    assert v.returncode == 2 and "témoin 999 absent" in v.stdout
+    for faute, motif in (("illisible", "liste des instances illisible"), ("echec", "lecture de la liste des instances en échec")):
+        v = _lancer("verifier-destruction", "123456", "60480302", env={**env, "FAUX_LISTE": faute})
+        assert v.returncode == 2 and ("absence non prouvée" in v.stdout or "ABSENCE NON PROUVEE" in v.stdout), (faute, v.stdout)
+        assert motif in v.stdout, (faute, v.stdout)
+    v = _lancer("verifier-destruction", "123456", "123456", env=env)
+    assert v.returncode == 2 and "absence non prouvée" in v.stdout
+    # liste fournie par fichier (forme {"instances": […]} acceptée) ; identifiants d'autres sessions jamais détruits
+    f = tmp_path / "liste.json"
+    f.write_text(json.dumps({"instances": [{"id": 60480302}, {"id": 777}]}), encoding="utf-8")
+    assert _lancer("verifier-destruction", "123456", "60480302", f).returncode == 0
+    f.write_text(json.dumps([{"id": 60480302}, {"nom": "sans id"}]), encoding="utf-8")
+    assert _lancer("verifier-destruction", "123456", "60480302", f).returncode == 2
+    for autre in rb.INSTANCES_D_AUTRES_SESSIONS:
+        r = _lancer("detruire", autre)
+        assert r.returncode == 2 and "autre session" in r.stdout and "vastai destroy" not in r.stdout, autre
+    r = _lancer("depense", "39.0", "2.0")                                   # garde de dépense : -y et vérification annoncés
+    assert r.returncode == 2 and "-y" in r.stdout and "verifier-destruction" in r.stdout
+
+
+def test_instance_60670453_refusee_comme_cible_admise_comme_temoin(tmp_path):
+    """R-2795 : 60670453, instance d'une autre session apparue le 14 novembre, est dans la liste de la course ; refusée comme
+    cible (`detruire`, `exiger_identifiant_a_detruire`, `absence`) ; admise comme témoin (absence prouvée avec elle)."""
+    assert "60670453" in rb.INSTANCES_D_AUTRES_SESSIONS and len(set(rb.INSTANCES_D_AUTRES_SESSIONS)) == 6
+    r = _lancer("detruire", "60670453")
+    assert r.returncode == 2 and "autre session" in r.stdout and "vastai destroy" not in r.stdout
+    with pytest.raises(GardeArret, match="autre session"):
+        rb.exiger_identifiant_a_detruire("60670453")
+    with pytest.raises(GardeArret, match="autre session"):
+        rb.exiger_absence([{"id": 60480302}], "60670453", "60480302")
+    env = _faux_outil(tmp_path / "temoin", ["123456", "60670453"])            # témoin : cas sain, puis artefact
+    d = _jouer_commande_imprimee(_lancer("detruire", "123456").stdout.splitlines()[0], env)
+    assert d.returncode == 0 and "destroying instance 123456" in d.stdout
+    v = _lancer("verifier-destruction", "123456", "60670453", env=env)
+    assert v.returncode == 0 and "DESTRUCTION PROUVEE 123456" in v.stdout and "témoin 60670453 présent" in v.stdout
+    assert rb.exiger_absence([{"id": 60670453}, {"id": 777}], "123456", "60670453")["temoin"] == "60670453"
+    v = _lancer("verifier-destruction", "123456", "60670453", env=_faux_outil(tmp_path / "sans-temoin", ["60480302"]))
+    assert v.returncode == 2 and "témoin 60670453 absent" in v.stdout
+
+
+def test_minuterie_refait_la_destruction_tant_que_l_instance_vit(tmp_path):
+    """R-2789 : la minuterie de l'amorce ne juge jamais la destruction par le code HTTP : un DELETE « 200 » suivi d'une instance
+    encore vivante est refait toutes les 60 s ; après cinq essais, l'état « stopped » est demandé une fois ; le journal le dit."""
+    appels = tmp_path / "appels.txt"
+    corps = (f'APPELS="{appels}"; API=https://console.vast.ai/api/v0; CONTAINER_ID=123456; ECHEANCE_UTC_S=1\n'
+             'curl() { printf "%s\\n" "$*" >> "$APPELS"; echo 200; }\n'
+             'k=0; sleep() { k=$((k + 1)); [ "$k" -ge 7 ] && exit 0; }\n'
+             + ad.extrait("minuterie") + "minuterie\n")
+    r = ad.jouer(corps)
+    assert r.returncode == 0, r.stdout + r.stderr
+    lignes = appels.read_text(encoding="utf-8").splitlines()
+    assert sum("-X DELETE" in l for l in lignes) == 7 and sum("-X PUT" in l for l in lignes) == 1
+    assert "essai 7 : HTTP 200 (code jamais jugé" in r.stdout and "toujours vivante après 5 demandes" in r.stdout
+    assert "return 0" not in ad.extrait("minuterie")
+
+
+# ------------------------------------------------------------------------------------------------------------ m2
+
+def test_sans_aire_identifiants_de_taches_commencant_par_aire():
+    """Correction m2 : les clés de `plis` (identifiants de tâches de 7b) ne sont jamais lues comme des clés d'aire ; une vraie
+    clé d'aire, partout ailleurs, arrête toujours."""
+    doc = {"plis": {"aire-1": 0, "aire_2": 1, "t3": 0, "t4": 1}, "sources": {"P-S50": {"e0": {"reglage": "lineaire-c15"}}},
+           "graines_derivees": {"bbis/interne/e0": "1"}}
+    ma._sans_aire(doc)                                                # cas sain : tâche nommée « aire-1 », pas d'arrêt
+    for faute, motif in (({**doc, "aire_validation": 0.7}, "une aire serait écrite"),
+                         ({**doc, "sources": {"P-S50": {"e0": {"aire": 0.71}}}}, "une aire serait écrite"),
+                         ({**doc, "sources": {"plis": {"aire-1": 0}}}, "une aire serait écrite"),   # « plis » exempté au sommet seul
+                         ({**doc, "plis": {"aire-1": 0.83}}, "pli 0 ou 1"), ({**doc, "plis": {"t1": True}}, "pli 0 ou 1")):
+        with pytest.raises(GardeArret, match=motif):
+            ma._sans_aire(faute)
