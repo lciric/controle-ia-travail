@@ -1,3 +1,5 @@
+**2026-11-21T23:31:22Z (`date -u`) — EN TÂCHE : instance Vast 61875617 (`iib-explo-v5`), reprise de l'étalonnage du saboteur à budget v5 (ordre v2 scellé 7219083a…), créée 23:29:16Z par l'exécutante session_01Qi7Gr6cZ3HczDtN4UYdPN9 ; attendu 2,44 h, coupure 12 USD (R-4747).**
+
 **2026-11-21T21:25:05Z (`date -u`) — CLOS : instance 61859391 détruite (étalonnage 1 du saboteur arrêté sur la suite ciblée, ≈ 1,24 USD) ; aucune machine louée en marche (R-4728).**
 
 **2026-11-21T21:09:57Z (`date -u`) — EN TÂCHE : instance Vast 61859391 (`iib-explo-v5`), étalonnage du saboteur à budget v5, créée 21:08:29Z par l'exécutante session_01Qi7Gr6cZ3HczDtN4UYdPN9 sous GO-2026-11-21-70 (ordre scellé 08010ad1…) ; durée attendue 2,44 h, coupure 12 USD ; arrêt par identifiant à FIN, garde à l'arrêt ≤ 48 h (R-4726).**
