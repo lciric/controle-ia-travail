@@ -1,0 +1,12 @@
+# Compte rendu de la session fille « reprise Minuit, cinq espèces » (session_01QPDgKhx73uYTLjuh43FWWK), 2026-11-21, 14:15Z
+
+Verdict : aucune course n'est allée au bout ; rien ne tourne. L'envoi direct à la mère a été refusé par le service (session mère réservée à un appareil reconnu) ; ce compte rendu le remplace.
+
+- Clés vues par leur nom seulement. Script 850df311… et les trois paires de faits et de question vérifiés contre leurs compagnons.
+- Antériorité du pilier (GO-2026-11-21-39), runs/collisionneur-anteriorite-pilier-v1-20261121-131029, cinq espèces, plafond et ligne 28 USD, partie à 13:10:30Z. Arrêt en code 5 à 13:58Z : flux coupé (connexion réinitialisée) sur la dernière cellule, réponse de Carbon au tour III.3. 14 cellules rendues sur 15. Cumul au journal 12,61 USD (l'envoi coupé compté au pire, 2,11 USD).
+- Dérive de régime v2 (GO-2026-11-21-26), runs/collisionneur-derive-de-regime-v2-20261121-131044, plafond et ligne 24 USD. Arrêt en code 6 vers 13:55Z : garde de dépense en défaut sur la critique croisée de Carbon au tour III.2 (réflexion hors provision, 1,04 USD compté) ; « la décision revient à l'arbitre ». 9 cellules rendues. Cumul au journal 9,84 USD.
+- Les deux dossiers versés sans lecture en b79ca68f sur runs/collisionneurs-reprise-minuit-v1.
+- Doublon : l'autre session fille avait lancé les deux mêmes courses à 13:05Z (dossiers …-130555, versés en fa207b95 ; 1,07 et 1,32 USD). Je ne l'ai su qu'après coup. Lignes sur la clé Minuit : antériorité 1,07 + 12,61 = 13,68 USD sur 28 ; dérive 3,04 + 1,32 + 9,84 = 14,20 USD sur 28 (plus les envois coupés non journalisés de l'autre session).
+- Reprise des méthodes de mathématiques nouvelles (GO-2026-11-21-23) : dossier …-093850 récupéré ; devis de reprise sans réseau à la ligne 30 : reste 23,77 USD, pire cas 23,77 USD avec Fable plafonné à 32 000 jetons. Lancement refusé par le script en code 1 : « ligne déjà ouverte à 28.00 USD : un run garde sa ligne ». Aucune dépense, pas de contournement. Journal versé.
+- Rien relancé de mon chef : l'antériorité pourrait être finie en relançant etage3 sur le même dossier (seule la cellule de Carbon au tour III.3 manque, environ 2,6 USD au pire) ; la dérive attend la décision sur la garde de dépense. J'attends ton mot, et les chemins des deux questions fusionnées (GO-2026-11-21-52).
+- Aucun processus de cette session ne tourne (465, 653 absents ; la reprise est sortie aussitôt).
