@@ -206,7 +206,7 @@ def bloc_f():
 
     def apprendre(issues, cle):
         torch.manual_seed(int(graine(4, cle).generate_state(1)[0]))
-        v = torch.nn.Sequential(torch.nn.Linear(d, 1024), torch.nn.ReLU(), torch.nn.Linear(1024, 1), torch.nn.Sigmoid())
+        v = torch.nn.Sequential(torch.nn.Linear(d, 1024), torch.nn.ReLU(), torch.nn.Linear(1024, 1))  # sortie linéaire, sans borne, comme à l'étape 1
         opt = torch.optim.AdamW(v.parameters(), lr=1e-4, weight_decay=0.01)
         y = torch.tensor(issues)
         ordre = np.random.default_rng(graine(5, cle))
@@ -218,7 +218,7 @@ def bloc_f():
                 val = v(x_a[idx]).squeeze(-1)                     # (lot, t + 1)
                 delta = gamma * val[:, 1:] - val[:, :-1]          # équation 8, pas intermédiaires
                 fin = y[idx] - val[:, -1]                         # équation 8, dernier pas
-                perte = (delta ** 2).sum(1).mean() + (fin ** 2).mean()
+                perte = (delta ** 2).sum(1).mean() + (fin ** 2).mean()  # gradient par les deux termes (lettre de l'équation 9)
                 opt.zero_grad()
                 perte.backward()
                 opt.step()
