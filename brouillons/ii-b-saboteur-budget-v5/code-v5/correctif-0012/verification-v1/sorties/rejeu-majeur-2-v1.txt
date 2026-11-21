@@ -1,0 +1,65 @@
+# Rejeu, majeur 2
+36c39fe343dee3631470d0e6c2bd5f8234517a7c91bd897c8cb1acc61d46cdc9  src/controle_ia/iib/lanceur_v5.py
+(différence base -> 0012 sur le lanceur : vide si rien au-dessus)
+## git grep carte=False / CUDA_VISIBLE_DEVICES sous src et scripts (hors moniteurs)
+scripts/banc_mutations_t06_v5.py:54:    ("C-V5-1 (session) : bornes de l'offre non vérifiées", S4, 'r = s2.verifier_offre([o], config, carte)', 'r = {"id": int(o["id"]), "prix_carte": float(o["dph_total"]), "prix_stockage": 0.0, "telechargement": 0.0, "telechargement_forfait_usd": 0.0, "carte": "x", "machine_id": o.get("machine_id")}', T5, "session_v4"),
+scripts/banc_mutations_t06_v6.py:54:    ("C-V5-1 (session) : bornes de l'offre non vérifiées", S4, 'r = s2.verifier_offre([o], config, carte)', 'r = {"id": int(o["id"]), "prix_carte": float(o["dph_total"]), "prix_stockage": 0.0, "telechargement": 0.0, "telechargement_forfait_usd": 0.0, "carte": "x", "machine_id": o.get("machine_id")}', T5, "session_v5"),
+scripts/banc_mutations_t06_v7.py:56:    ("C-V5-1 (session) : bornes de l'offre non vérifiées", S4, 'r = s2.verifier_offre([o], config, carte)', 'r = {"id": int(o["id"]), "prix_carte": float(o["dph_total"]), "prix_stockage": 0.0, "telechargement": 0.0, "telechargement_forfait_usd": 0.0, "carte": "x", "machine_id": o.get("machine_id")}', T5, "session_v6"),
+scripts/banc_mutations_t06_v8.py:58:    ("C-V5-1 (session) : bornes de l'offre non vérifiées", S4, 'r = s2.verifier_offre([o], config, carte)', 'r = {"id": int(o["id"]), "prix_carte": float(o["dph_total"]), "prix_stockage": 0.0, "telechargement": 0.0, "telechargement_forfait_usd": 0.0, "carte": "x", "machine_id": o.get("machine_id")}', T5, "session_v7"),
+scripts/banc_mutations_t06_v9.py:60:    ("C-V5-1 (session) : bornes de l'offre non vérifiées", S8, 'r = corriger_prix(s2.verifier_offre([o], config, carte))', 'r = {"id": int(o["id"]), "prix_carte": float(o["dph_total"]), "prix_stockage": 0.0, "telechargement": 0.0, "telechargement_forfait_usd": 0.0, "carte": "x", "machine_id": o.get("machine_id")}', T5, "session_v7"),
+scripts/jouer_idee_1_2_v1.py:90:            "cles_graines": {"monde": "(f, g, 24)", "archive": "(f, g, 25)", "carte": "(f, g, i, 0)",
+scripts/jouer_idee_1_2_v2.py:109:            "cles_graines": {"monde": "(f, g, 24)", "archive": "(f, g, 25)", "carte": "(f, g, i, 0)",
+scripts/repetition_locale_iib_v5.py:88:              "plafond": dict(cf.DEVIS["plafond"]), "plafond_usd": 55, "carte": e2["carte"],
+src/controle_ia/environnements/revalider_pilote_a.py:576:              "carte": carte,
+src/controle_ia/harnais/modeles.py:288:                         "carte": torch.cuda.get_device_name(0), "capacite": list(torch.cuda.get_device_capability(0)),
+src/controle_ia/iib/configuration_v1.py:371:              "carte": {"course": {"memoire_carte_min_mo": 1, "nom": "processeur (jouet)", "nom_offre": "jouet", "prix_max_usd_h": 0.01},
+src/controle_ia/iib/configuration_v5.py:351:                  "carte": {"course": {"memoire_carte_min_mo": DEVIS["memoire_carte_min_mo"], "nom": "A100 SXM4 80 Go",
+src/controle_ia/iib/jouet_v1.py:170:              "carte": {"course": {"memoire_carte_min_mo": 80000, "nom": "A100 SXM4 80 Go", "nom_offre": "A100 SXM4", "prix_max_usd_h": 1.3},
+src/controle_ia/iib/session_v1.py:122:        if len(argv) == 3 and argv[0] == "carte":
+src/controle_ia/organisme_idees_juge/banc_tirages_repartis_v1.py:491:    return {"generation": gen.nom, "carte": i, "sorte": gen.cartes[i].sorte, "instants": len(instants), "echecs": echecs,
+src/controle_ia/organisme_idees_juge/lire_banc_tirages_repartis_v1.py:146:                        exacts.append({"famille": fam, "g": j["g"], "bras": nom, "carte": i})
+src/controle_ia/organisme_idees_juge/lire_banc_tirages_repartis_v1.py:153:                franchies.append({"g": j["g"], "carte": c["indice"], "instant": B.INSTANTS[k_inst], "exces": ex})
+src/controle_ia/t06/session_v2.py:114:            "telechargement_forfait_usd": forfait, "carte": c["nom"], "machine_id": o.get("machine_id"), "host_id": o.get("host_id")}
+src/controle_ia/t07/passe_blanc_v1.py:139:    return {"hote": hote, "carte": carte}
+src/controle_ia/t07/passe_blanc_v2.py:141:    return {"hote": hote, "carte": carte}
+src/controle_ia/t07/reextraction_p3_v1.py:259:                                                                         "carte": tolerances["carte_sonde"]}}
+src/controle_ia/t07/reextraction_p3_v1.py:270:            "tolerances": {"processeur": tolerances["processeur"], "carte": tolerances["carte_directions"]}}
+src/controle_ia/t07/reextraction_p3_v1.py:379:                                     "mode": mode_principale, "tolerances": {"processeur": tol["processeur"], "carte": None},
+src/controle_ia/t07bbis/registre_bbis_v1.py:328:    return {"id": n, "carte": CARTE_OFFRE, "cuda_max_good": float(o["cuda_max_good"]), "coeurs": _nombre(o["cpu_cores_effective"]),
+src/controle_ia/t07bbis/registre_bbis_v2.py:339:    return {"id": n, "carte": CARTE_OFFRE, "cuda_max_good": float(o["cuda_max_good"]), "coeurs": _nombre(o["cpu_cores_effective"]),
+(fin)
+## appels a executer/exiger_accord/phase_* avec carte sous src et scripts
+scripts/lancer_iib_v1.sh:159:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_iib_v2.sh:296:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_iib_v3.sh:302:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v10.sh:205:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v11.sh:212:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v12.sh:213:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v13.sh:219:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v2.sh:100:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v3.sh:106:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v4.sh:163:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v5.sh:180:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v6.sh:182:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v7.sh:186:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v8.sh:191:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+scripts/lancer_t06_v9.sh:204:    PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+src/controle_ia/iib/lanceur_v5.py:78:def exiger_accord(config: dict, environnement: dict, carte=None) -> str | None:
+src/controle_ia/iib/lanceur_v5.py:229:                     debut_utc_s: float | None = None, carte=None) -> dict:
+src/controle_ia/iib/lanceur_v5.py:366:def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None, environnement: dict | None = None, carte=None) -> dict:
+src/controle_ia/iib/lanceur_v5.py:548:             autoriser_depot_sale: bool = False, carte=None) -> dict:
+src/controle_ia/t06/session_v2.py:14:        nommée), stockage et téléchargement ; écrit « id=… prix_carte=… prix_stockage=… telechargement=… ».
+src/controle_ia/t06/session_v2.py:173:            print(f"id={r['id']} prix_carte={r['prix_carte']:.4f} prix_stockage={r['prix_stockage']:.4f} "
+src/controle_ia/t06/session_v2.py:174:                  f"telechargement={r['telechargement']:.4f} telechargement_forfait={r['telechargement_forfait_usd']:.4f} carte={r['carte']}")
+src/controle_ia/t06/session_v4.py:72:            print(f"id={r['id']} rang={r['rang']} machine={r['machine_id']} prix_carte={r['prix_carte']:.4f} prix_stockage={r['prix_stockage']:.4f} "
+src/controle_ia/t06/session_v4.py:73:                  f"telechargement={r['telechargement']:.4f} telechargement_forfait={r['telechargement_forfait_usd']:.4f} carte={r['carte']}")
+src/controle_ia/t06/session_v5.py:76:            print(f"id={r['id']} rang={r['rang']} machine={r['machine_id']} prix_carte={r['prix_carte']:.4f} prix_stockage={r['prix_stockage']:.4f} "
+src/controle_ia/t06/session_v5.py:77:                  f"telechargement={r['telechargement']:.4f} telechargement_forfait={r['telechargement_forfait_usd']:.4f} carte={r['carte']}")
+src/controle_ia/t06/session_v6.py:96:            print(f"id={r['id']} rang={r['rang']} machine={r['machine_id']} prix_carte={r['prix_carte']:.4f} prix_stockage={r['prix_stockage']:.4f} "
+src/controle_ia/t06/session_v6.py:97:                  f"telechargement={r['telechargement']:.4f} telechargement_forfait={r['telechargement_forfait_usd']:.4f} carte={r['carte']}")
+src/controle_ia/t06/session_v7.py:130:            print(f"id={r['id']} rang={r['rang']} machine={r['machine_id']} prix_carte={r['prix_carte']:.4f} prix_stockage={r['prix_stockage']:.4f} "
+src/controle_ia/t06/session_v7.py:131:                  f"telechargement={r['telechargement']:.4f} telechargement_forfait={r['telechargement_forfait_usd']:.4f} cuda_max_good={r['cuda_max_good']} carte={r['carte']}")
+src/controle_ia/t06/session_v8.py:202:        print(f"id={r['id']} rang={r['rang']} machine={r['machine_id']} prix_carte={r['prix_carte']:.6f} prix_stockage={r['prix_stockage']:.6f} "
+src/controle_ia/t06/session_v8.py:204:              f"cuda_max_good={r['cuda_max_good']} carte={r['carte']}")
+## existence du dossier des moniteurs (nom seulement, rien lu)
+absent

@@ -1,0 +1,23 @@
+# Rejeu, majeur 1, arbre bbcd9a84a77ac667ef6f9106b19afe29ffab041f
+## A git grep -nw cf session_v5.py
+src/controle_ia/iib/session_v5.py:82:    from . import configuration_v5 as cf          # numpy (lois exactes) : chargé ici seulement, jamais par la règle de coupure
+src/controle_ia/iib/session_v5.py:85:    return cf.exiger_config_v5(config, racine, pour_lancer=True)
+## B session_v5 avec cf, ou import de session_v5 (iib), ou getattr cf
+(fin B)
+## C importeurs de iib.session_v5
+scripts/lancer_iib_v3.sh:88:SESSION="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.iib import session_v5; sys.exit(session_v5.main(sys.argv[1:]))"
+tests/test_iib_configuration_v5.py:261:    from controle_ia.iib import session_v5
+tests/test_iib_lanceur_v5.py:438:    from controle_ia.iib import session_v5 as se
+## D ruff/flake8
+ruff 0.16.9
+All checks passed!
+code 0
+7.4.1 (mccabe: 0.7.0, pycodestyle: 2.15.0, pyflakes: 4.0.0) CPython 3.13.18 on
+Linux
+code 0
+## E fichiers de production touchés par 0012
+tests/iib_v5_outils.py
+tests/test_iib_environnement_machine_v5.py
+tests/test_iib_lanceur_v5.py
+## F git diff HEAD~1 HEAD -- src scripts (vide attendu)
+0
