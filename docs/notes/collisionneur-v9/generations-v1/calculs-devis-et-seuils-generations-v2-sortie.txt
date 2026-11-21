@@ -1,0 +1,192 @@
+Annexe de calcul et d'essais, version 2, de conception-generations-jusqu-au-plateau-v2.md
+Table « remarque → correction », pour ce que l'annexe porte (elle est imprimée en tête de la sortie) :
+  remarque 4  → section 6 : règle d'égalité des énoncés du registre, qui remplace la similarité à 0,90, et ses essais
+  remarque 5  → section 10 : recopie mesurée sur les suites de trois mots, en temps linéaire
+  remarque 6  → section 9 : garde d'identité, liste fermée des motifs, témoins sains, faux positifs connus, témoins positifs
+  remarque 7  → section 8 : plafond de pièce contre le texte qu'une espèce peut rendre à son plafond de sortie ; unité dite
+  remarque 8  → section 4 ter : sommes par dossier, « adjudant » dit non vérifié ; attendu donné avec ses deux bases
+  remarque 9  → section 4 bis : borne stricte dite « sans relance, sous les hypothèses de projection du script »
+  remarque 10 → sections 5 et 5 bis : lecture des seuils en nombres dite approchée, avec des cas exacts
+  remarque 11 → section 7 : formule de l'ordre de présentation, contrôlée pour deux à sept propositions
+  remarques 1, 2, 3 et 12 → rien dans l'annexe : elles portent sur le texte de la note
+
+Script chargé : collisionneur-v9-v7, sha256 319a7b66b5b975ccd1506def5e988e8bf3e0b8bb94afc6f2d6bd397829ae1724
+Constantes lues dans le script : 2 caractères par jeton d'entrée projeté, tolérance de la garde (0.01, 32), caractères par jeton de sortie au plus {'anthropic': 3.0, 'gemini': 4.5, 'openai': 4.5, 'kimi': 4.5}, 200 caractères de balises par pièce
+
+=== cinq espèces (Fable, Opus, Argon, Astra, Carbon) ===
+1. Pire cas de sortie d'une cellule, USD (plafond + provision, au prix de sortie)
+   A fable   plafond  49000, relance  64000, provision      0, prix 10 / 50 : 2.450 (relance 3.200)
+   B opus    plafond  64000, relance  64000, provision      0, prix 4 / 20 : 1.280 (relance 1.280)
+   C argon   plafond  32768, relance  32768, provision  16384, prix 4 / 20 : 0.983 (relance 0.983)
+   D astra   plafond   8000, relance  32000, provision      0, prix 10 / 50 : 0.400 (relance 1.600)
+   E carbon  plafond  65536, relance  65536, provision  49152, prix 4 / 20 : 2.294 (relance 2.294)
+   par tour : 7.407 sans relance ; relances en plus : 9.357
+2. Tours III.2 et III.3, toutes cellules à envoyer, longueurs supposées (socle 20000, conception 30000 caractères)
+   tour III.2 9.68 + tour III.3 19.24 = 28.92 USD sans relance ; 61.74 avec relances
+   rapport de la version 7 (mathématiques) : 9.50 + 18.95 = 28.45 sans relance ; 60.81 avec relances ; écart du recalcul : +1.6 % et +1.5 %
+3. Tour III.1 sans état (comme à la génération 1) : 7.73 USD sans relance ; relances en plus : 9.68
+   état de 5 réponses de 24500 caractères : + 2.00 USD d'entrée au tour III.1 (71750 jetons d'entrée projetés par prompt)
+   état de 5 réponses de 45000 caractères : + 3.65 USD d'entrée au tour III.1 (123000 jetons d'entrée projetés par prompt)
+   état de 5 réponses de 65000 caractères : + 5.27 USD d'entrée au tour III.1 (173000 jetons d'entrée projetés par prompt)
+   critique précédente de 21000 caractères rendue à son auteur : + 0.34 USD d'entrée au tour III.2
+   critique précédente de 45000 caractères rendue à son auteur : + 0.73 USD d'entrée au tour III.2
+   critique précédente de 65000 caractères rendue à son auteur : + 1.05 USD d'entrée au tour III.2
+4. Total au pire d'une génération à partir de la deuxième, USD
+   longueurs bas    : 38.52 sans relance ; 82.90 si chaque cellule était relancée (tours III.2 et III.3 : rapport de la version 7)
+   longueurs milieu : 40.56 sans relance ; 86.99 si chaque cellule était relancée (tours III.2 et III.3 : rapport de la version 7)
+   longueurs haut   : 42.50 sans relance ; 90.87 si chaque cellule était relancée (tours III.2 et III.3 : rapport de la version 7)
+   rappel, sans état ni critique rendue (une génération 1) : 36.18 sans relance ; 78.22 avec relances
+4 bis. Borne stricte avant tout envoi, SANS RELANCE, sous les hypothèses de projection du script (2 caractères par jeton d'entrée, caractères par jeton de sortie au plus ceux de CAR_SORTIE_MAX : deux constantes SUPPOSÉES) ; tout texte de la génération au plafond de sortie de son auteur, pièce d'état à 65000 caractères
+   tour III.1 13.00 + tour III.2 19.80 + tour III.3 20.96 = 53.76 USD sans relance ; avec relances, la même borne monte à 113.36 ; plus long prompt projeté : 433684 jetons d'entrée
+
+=== quatre espèces (Fable, Opus, Argon, Carbon) ===
+1. Pire cas de sortie d'une cellule, USD (plafond + provision, au prix de sortie)
+   A fable   plafond  49000, relance  64000, provision      0, prix 10 / 50 : 2.450 (relance 3.200)
+   B opus    plafond  64000, relance  64000, provision      0, prix 4 / 20 : 1.280 (relance 1.280)
+   C argon   plafond  32768, relance  32768, provision  16384, prix 4 / 20 : 0.983 (relance 0.983)
+   D carbon  plafond  65536, relance  65536, provision  49152, prix 4 / 20 : 2.294 (relance 2.294)
+   par tour : 7.007 sans relance ; relances en plus : 7.757
+2. Tours III.2 et III.3, toutes cellules à envoyer, longueurs supposées (socle 20000, conception 30000 caractères)
+   tour III.2 8.24 + tour III.3 14.23 = 22.47 USD sans relance ; 46.43 avec relances
+3. Tour III.1 sans état (comme à la génération 1) : 7.23 USD sans relance ; relances en plus : 7.98
+   état de 4 réponses de 24500 caractères : + 1.10 USD d'entrée au tour III.1 (59400 jetons d'entrée projetés par prompt)
+   état de 4 réponses de 45000 caractères : + 2.01 USD d'entrée au tour III.1 (100400 jetons d'entrée projetés par prompt)
+   état de 4 réponses de 65000 caractères : + 2.90 USD d'entrée au tour III.1 (140400 jetons d'entrée projetés par prompt)
+   critique précédente de 21000 caractères rendue à son auteur : + 0.24 USD d'entrée au tour III.2
+   critique précédente de 45000 caractères rendue à son auteur : + 0.50 USD d'entrée au tour III.2
+   critique précédente de 65000 caractères rendue à son auteur : + 0.72 USD d'entrée au tour III.2
+4. Total au pire d'une génération à partir de la deuxième, USD
+   longueurs bas    : 31.03 sans relance ; 64.31 si chaque cellule était relancée (tours III.2 et III.3 : recalcul)
+   longueurs milieu : 32.21 sans relance ; 66.66 si chaque cellule était relancée (tours III.2 et III.3 : recalcul)
+   longueurs haut   : 33.32 sans relance ; 68.88 si chaque cellule était relancée (tours III.2 et III.3 : recalcul)
+   rappel, sans état ni critique rendue (une génération 1) : 29.70 sans relance ; 61.64 avec relances
+4 bis. Borne stricte avant tout envoi, SANS RELANCE, sous les hypothèses de projection du script (2 caractères par jeton d'entrée, caractères par jeton de sortie au plus ceux de CAR_SORTIE_MAX : deux constantes SUPPOSÉES) ; tout texte de la génération au plafond de sortie de son auteur, pièce d'état à 65000 caractères
+   tour III.1 10.13 + tour III.2 14.62 + tour III.3 15.92 = 40.66 USD sans relance ; avec relances, la même borne monte à 83.58 ; plus long prompt projeté : 401084 jetons d'entrée
+
+4 ter. Par dossier, jusqu'au plateau, à la manière du rapport, sans relance (USD)
+   cinq espèces : une génération de plus 38.52 à 42.50 ; deux générations de plus 77.04 à 85.01
+   quatre espèces : une génération de plus 31.03 à 33.32 ; deux générations de plus 62.06 à 66.63
+   composition dite par la source (réflexion d'Opus, section 7) : percée, dérive v2, antériorité, mathématiques (4 dossiers à cinq espèces, 15 cellules chacun) ; but, fusionnée (2 dossiers à quatre espèces, 12 cellules chacun) ; « adjudant » : 15 cellules, donc cinq lignées, composition NON DITE par la source (non vérifié)
+   les 6 dossiers dont la composition est dite, si tous vont à trois générations : 432 à 473
+   les 7 dossiers, « adjudant » compté par hypothèse comme les 4 autres dossiers à quinze cellules, si tous vont à trois générations : 509 à 558
+   attendu d'une génération de plus à cinq espèces, estimation non mesurée, DEUX BASES QUI NE SE COMPARENT PAS :
+   - surcoût d'entrée de l'état, au pire, sous la table de la version 7 (Argon à 4 et 20 USD par million) : 2.34 à 6.32
+   - ajouté aux 14.81 comptés sous l'ancienne table (Argon à 10 et 50) : 17.15 à 21.13 ; somme de deux tables, ordre de grandeur haut seulement
+   - ajouté aux 10.9 réels estimés par la réflexion d'Opus (prix de novembre) : 13.2 à 17.2 ; un coût réel plus un pire cas compté, ordre de grandeur seulement
+
+5. Lecture des seuils en nombres d'entrées, 5 lignées (lecture APPROCHÉE : exacte seulement si aucune entrée n'est neuve ni retirée ; voir les cas exacts plus bas)
+   3 entrées par lignée (15 en tout) : plateau si au plus 3 entrées touchées sur le cycle, au plus 1 dans une même lignée, au plus 2 entrées neuves, premier choix tenu dans 4 lignées au moins
+   4 entrées par lignée (20 en tout) : plateau si au plus 5 entrées touchées sur le cycle, au plus 2 dans une même lignée, au plus 3 entrées neuves, premier choix tenu dans 4 lignées au moins
+   5 entrées par lignée (25 en tout) : plateau si au plus 6 entrées touchées sur le cycle, au plus 2 dans une même lignée, au plus 3 entrées neuves, premier choix tenu dans 4 lignées au moins
+   6 entrées par lignée (30 en tout) : plateau si au plus 7 entrées touchées sur le cycle, au plus 3 dans une même lignée, au plus 4 entrées neuves, premier choix tenu dans 4 lignées au moins
+   8 entrées par lignée (40 en tout) : plateau si au plus 10 entrées touchées sur le cycle, au plus 4 dans une même lignée, au plus 6 entrées neuves, premier choix tenu dans 4 lignées au moins
+
+5. Lecture des seuils en nombres d'entrées, 4 lignées (lecture APPROCHÉE : exacte seulement si aucune entrée n'est neuve ni retirée ; voir les cas exacts plus bas)
+   3 entrées par lignée (12 en tout) : plateau si au plus 3 entrées touchées sur le cycle, au plus 1 dans une même lignée, au plus 1 entrées neuves, premier choix tenu dans 3 lignées au moins
+   4 entrées par lignée (16 en tout) : plateau si au plus 4 entrées touchées sur le cycle, au plus 2 dans une même lignée, au plus 2 entrées neuves, premier choix tenu dans 3 lignées au moins
+   5 entrées par lignée (20 en tout) : plateau si au plus 5 entrées touchées sur le cycle, au plus 2 dans une même lignée, au plus 3 entrées neuves, premier choix tenu dans 3 lignées au moins
+   6 entrées par lignée (24 en tout) : plateau si au plus 6 entrées touchées sur le cycle, au plus 3 dans une même lignée, au plus 3 entrées neuves, premier choix tenu dans 3 lignées au moins
+   8 entrées par lignée (32 en tout) : plateau si au plus 8 entrées touchées sur le cycle, au plus 4 dans une même lignée, au plus 4 entrées neuves, premier choix tenu dans 3 lignées au moins
+
+5 bis. Cas exacts, 25 entrées actives au départ, toutes lignées réunies
+   six modifiées, rien d'autre : 6 entrées touchées sur 25, renouvellement 0.240 (condition 1 tient) ; part d'entrées neuves 0/25 = 0.000 (condition 3 tient)
+   sept modifiées, rien d'autre : 7 entrées touchées sur 25, renouvellement 0.280 (condition 1 tombe) ; part d'entrées neuves 0/25 = 0.000 (condition 3 tient)
+   trois remplacées (trois retirées, trois neuves) : 6 entrées touchées sur 28, renouvellement 0.214 (condition 1 tient) ; part d'entrées neuves 3/25 = 0.120 (condition 3 tient)
+   quatre remplacées (quatre retirées, quatre neuves) : 8 entrées touchées sur 29, renouvellement 0.276 (condition 1 tombe) ; part d'entrées neuves 4/25 = 0.160 (condition 3 tombe)
+   quatre modifiées et trois neuves, aucune retirée : 7 entrées touchées sur 28, renouvellement 0.250 (condition 1 tient) ; part d'entrées neuves 3/28 = 0.107 (condition 3 tient)
+
+6. Règle d'égalité des énoncés du registre (remplace la similarité à 0,90 de la version 1)
+   énoncé de départ (40 mots) : H_A : la sonde linéaire lue à la couche 12 sépare les épisodes sabotés des honnêtes mieux que la base « mots et coût » ; H_B : elle ne fait pas mieux. Mesure : aire sous la courbe sur 200 paires appariées, seuil de 0,05.
+   forme comparée : h_a la sonde linéaire lue à la couche 12 sépare les épisodes sabotés des honnêtes mieux que la base mots et coût h_b elle ne fait pas mieux mesure aire sous la courbe sur 200 paires appariées seuil de 0,05
+   le même, recopié : ÉGAL (attendu égal) ; similarité de la version 1 : 1.000
+   point final retiré, casse changée, espaces doublées : ÉGAL (attendu égal) ; similarité de la version 1 : 0.998
+   guillemets droits, deux-points sans espace, gras de Markdown : ÉGAL (attendu égal) ; similarité de la version 1 : 0.964
+   point décimal au lieu de la virgule : ÉGAL (attendu égal) ; similarité de la version 1 : 0.995
+   seuil changé de 0,05 à 0,01 (essai du contre-lecteur) : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.995
+   « ne fait pas mieux » devenu « fait mieux » (essai du contre-lecteur) : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.984
+   200 paires devenues 20 (essai du contre-lecteur) : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.998
+   virgule décimale retirée : 0,05 devenu 005 : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.998
+   couche 12 devenue couche 1,2 : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.998
+   « mieux que » devenu « moins bien que » : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.980
+   signe retiré : −0,5 et 0,5 : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.976
+   signe moins typographique et tiret : −0,5 et -0,5 : ÉGAL (attendu égal) ; similarité de la version 1 : 0.952
+   sens de la comparaison : p < 0,05 et p > 0,05 : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.941
+   inégalité large ou stricte : ≥ 0,8 et > 0,8 : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.900
+   pourcentage retiré : 5 % et 5 : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.966
+   apostrophe typographique ou droite, espace insécable : ÉGAL (attendu égal) ; similarité de la version 1 : 0.963
+   trait d'union retiré : non-nul et non nul : ÉGAL (attendu égal) ; similarité de la version 1 : 0.923
+   négation retirée : sans contrôle et avec contrôle : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.857
+   gras de Markdown autour d'un mot : ÉGAL (attendu égal) ; similarité de la version 1 : 0.909
+   tiret bas protégé par une barre oblique inverse : ÉGAL (attendu égal) ; similarité de la version 1 : 0.933
+   produit retiré : a*b et a b : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.875
+   indice changé : H_A et H_B : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.917
+   même nombre écrit autrement : 1 000 et 1000 (la règle penche vers le mouvement) : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.968
+   espace devant le signe % : 5 % et 5% (la règle penche vers le mouvement) : DIFFÉRENT (attendu différent) ; similarité de la version 1 : 0.976
+   24 essais ; contraires à l'attendu : 0
+
+7. Ordre de présentation : rang = ((d − 1 − s) modulo (N − 1)) + 1, avec d = (j − i) modulo N et s = (g − 2) modulo (N − 1)
+   contrôle pour N de 2 à 7 et les générations 2 à N + 2 : chaque lecteur voit chaque autre pièce à un rang différent ; chaque pièce occupe chaque rang une fois parmi ses lecteurs ; sur N − 1 générations de suite, un même lecteur voit une même pièce à chaque rang une fois ; écarts : 0
+   cinq propositions, génération 2 : A lit A puis B C D E ; B lit B puis C D E A ; C lit C puis D E A B ; D lit D puis E A B C ; E lit E puis A B C D
+   cinq propositions, génération 3 : A lit A puis C D E B ; B lit B puis D E A C ; C lit C puis E A B D ; D lit D puis A B C E ; E lit E puis B C D A
+   cinq propositions, génération 4 : A lit A puis D E B C ; B lit B puis E A C D ; C lit C puis A B D E ; D lit D puis B C E A ; E lit E puis C D A B
+   deux propositions : rang 1 à la génération 2, 1 à la génération 3 (décalage nul)
+
+8. Plafond de pièce (65000 caractères) contre le texte qu'une espèce peut rendre à son plafond
+   origine de la borne : plus long texte de Carbon relevé, 14401 (unité non dite dans la source, lue comme des jetons) × 4.5 caractères par jeton = 64804.5 caractères
+   fable   : plafond 49000 − provision 0 = 49000 jetons de texte, soit 147000 caractères à 3 par jeton : au-delà du plafond de pièce
+   opus    : plafond 64000 − provision 0 = 64000 jetons de texte, soit 192000 caractères à 3 par jeton : au-delà du plafond de pièce
+   argon   : plafond 32768 − provision 16384 = 16384 jetons de texte, soit 73728 caractères à 4.5 par jeton : au-delà du plafond de pièce
+   astra   : plafond 8000 − provision 0 = 8000 jetons de texte, soit 36000 caractères à 4.5 par jeton : sous le plafond de pièce
+   carbon  : plafond 65536 − provision 49152 = 16384 jetons de texte, soit 73728 caractères à 4.5 par jeton : au-delà du plafond de pièce
+   3 500 mots à 7 caractères : 24 500 caractères ; le plafond de pièce vaut 2.65 fois cette longueur
+
+9. Garde d'identité : liste fermée des motifs, témoins (refus et signalements par catégorie et position)
+   désignation « famille Claude » : 4 témoins positifs, 0 manqué(s) ; 3 témoins sains, 0 pris à tort par un motif de désignation
+   désignation « Fable ou Opus suivi d'un numéro » : 3 témoins positifs, 0 manqué(s) ; 3 témoins sains, 0 pris à tort par un motif de désignation
+   désignation « famille Gemini » : 3 témoins positifs, 0 manqué(s) ; 2 témoins sains, 0 pris à tort par un motif de désignation
+   désignation « famille GPT » : 4 témoins positifs, 0 manqué(s) ; 2 témoins sains, 0 pris à tort par un motif de désignation
+   désignation « famille Kimi » : 2 témoins positifs, 0 manqué(s) ; 2 témoins sains, 0 pris à tort par un motif de désignation
+   désignation « fournisseurs » : 4 témoins positifs, 0 manqué(s) ; 3 témoins sains, 0 pris à tort par un motif de désignation
+   sain : « fable », « opus », « argon », « carbone » en mots ordinaires, un prénom, un modèle hors catalogue comme objet : 0 refus [], 0 signalement(s) [] ; attendu 0 et 0 : conforme
+   sain : « je suis » suivi de « fable » en minuscules : 0 refus [], 0 signalement(s) [] ; attendu 0 et 0 : conforme
+   sain : les formules, sans aucun nom du catalogue : 0 refus [], 0 signalement(s) [] ; attendu 0 et 0 : conforme
+   sain, signalé : deux modèles du catalogue nommés comme objets d'étude, absents des faits : 0 refus [], 2 signalement(s) [39, 69] ; attendu 0 et 2 : conforme
+   sain, signalé : une liste de modèles au milieu du texte n'est pas une signature : 0 refus [], 3 signalement(s) [23, 30, 41] ; attendu 0 et 3 : conforme
+   sain, signalé : une ligne de bord longue qui nomme un modèle comme objet : 0 refus [], 2 signalement(s) [17, 24] ; attendu 0 et 2 : conforme
+   faux positif connu, refusé, à admettre par l'arbitre : « en tant que » suivi d'un rôle, puis un modèle nommé comme objet : 1 refus [48], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   faux positif connu, refusé, à admettre par l'arbitre : dernière ligne courte qui nomme un modèle comme objet : 1 refus [58], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « je suis » et un nom nu : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « je suis » et un surnom à la casse exacte : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « je suis », le fournisseur après une virgule : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « en tant que » et un fournisseur : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « en tant qu' » avec apostrophe typographique : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « j'ai été entraîné par » : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « mon fournisseur » : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : formule en anglais : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « I am » : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « I'm » : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « as » suivi aussitôt du nom : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : « moi » suivi aussitôt du nom : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : signature en dernière ligne, avant le marqueur de fin : 1 refus [67], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : identifiant seul en dernière ligne, avant le registre et le marqueur : 1 refus [62], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : désignation en première ligne, en titre : 1 refus [0], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : nom nu en gras en dernière ligne : 1 refus [78], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : surnom à la casse exacte en dernière ligne : 1 refus [78], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   positif : dernière ligne courte qui dit l'auteur : 1 refus [78], 0 signalement(s) [] ; attendu 1 et 0 : conforme
+   les deux mêmes objets d'étude, cette fois nommés par les faits : 0 refus, 0 signalement ; attendu 0 et 0 : conforme
+   pièces témoins : 26, soit 3 saines sans refus ni signalement, 3 saines avec signalements, 2 faux positifs connus, 18 positives ; mots témoins des désignations : 20 positifs, 15 sains
+   témoins contraires à l'attendu : 0
+
+10. Recopie : similarité de Jaccard sur les suites de trois mots, registres retirés ; « recopie » dès 0.90
+   texte fabriqué : 9285 mots, 64994 caractères (juste sous le plafond de pièce)
+   copie exacte, un registre de huit lignes ajouté à la copie : 1.000
+   un mot changé sur 200 (0.50 % des mots) : 0.971 (recopie) ; attendu par le calcul (1 − 3p)/(1 + 3p) : 0.971
+   un mot changé sur 100 (1.00 % des mots) : 0.942 (recopie) ; attendu par le calcul (1 − 3p)/(1 + 3p) : 0.942
+   un mot changé sur 67 (1.50 % des mots) : 0.914 (recopie) ; attendu par le calcul (1 − 3p)/(1 + 3p) : 0.914
+   un mot changé sur 60 (1.67 % des mots) : 0.905 (recopie) ; attendu par le calcul (1 − 3p)/(1 + 3p) : 0.905
+   un mot changé sur 50 (2.00 % des mots) : 0.887 (pas une recopie) ; attendu par le calcul (1 − 3p)/(1 + 3p) : 0.887
+   un mot changé sur 33 (3.03 % des mots) : 0.833 (pas une recopie) ; attendu par le calcul (1 − 3p)/(1 + 3p) : 0.834
+   un mot changé sur 20 (5.00 % des mots) : 0.739 (pas une recopie) ; attendu par le calcul (1 − 3p)/(1 + 3p) : 0.739
+   écarts de plus de 0,01 à l'attendu : 0
+
+Contrôles des sections 6, 7, 9 et 10 contraires à l'attendu : 0
