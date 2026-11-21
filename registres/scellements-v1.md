@@ -77,3 +77,5 @@
 | ADDITIF-1-COMPLEMENT-V3-NOUVELLES-ATTAQUES-V2 | 2026-11-21T06:23:13Z | prereg/ideation-nouvelles-attaques-v1/additif-1-complement-valeurs-preenregistrement-court-v9-lot-1-v3-espece-3-sur-minuit-v2.md | ce76e0d6a0a6e65ffb99f68d9efced8d26e205ed0e2cf11c0e2469b69f672388 |
 | BANQUE-ETAGE-2-LIGNE-3-V1 | 2026-11-21T06:37:05Z | prereg/organisme-auto-conception-v9/scellement-banque-etage-2-ligne-3-v1.md | c91c4d338c4a524595df96c45711e0b6094e07afa438d30bc6f79b6ce78856d7 |
 | MOT-DE-DEPART-ETAGE-2-LIGNE-3-V2 | 2026-11-21T06:52:53Z | prereg/organisme-auto-conception-v9/mot-de-depart-etage-2-ligne-3-v2.md | c89ec85b244d4b3e82e82acb0dd16b24feec75dc81cc5be9d755c2cd28faea79 |
+| CONCEPTION-COURSE-SEUIL-MONITEURS-V1 | 2026-11-21T07:45:10Z | prereg/ideation-seuil-moniteurs-v1/scellement-conception-course-seuil-et-moniteurs-v1.md | 4286bf39363a40907364c124a17bd38d41a74f3387a17227228be33d6b1c5c07 |
+| SOURCES-COURSE-SEUIL-MONITEURS-V1 | 2026-11-21T07:45:10Z | prereg/ideation-seuil-moniteurs-v1/liste-des-sources-course-seuil-et-moniteurs-v1.md | 4e0aaaeeb1b73171a5f9d2f581278157f2c8c424f59bfdc6e29946aa6f37a29f |
