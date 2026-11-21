@@ -1,0 +1,237 @@
+calculs-percee-apres-blindfold-v1 ; python 3.13.18 ; numpy 2.4.6 ; scipy 1.17.1
+graine mère : 20261121 (numpy.random.SeedSequence, une fille par configuration)
+==============================================================================
+BLOC A - Borne sur trajectoire de la proposition 1 (ii) de Singh, relue
+  forme reconstituée : racine( H (log(H/alpha) + eps) / 2 ) + 1, eps = (1-p0)/(4 p0)
+  monde 006 : p0 = 0.225, H = 100, alpha = 0,05 -> 21.57 (imprimé p. 23 : 21.57)
+  monde 037 : p0 = 0.450, H = 100, alpha = 0,05 -> 20.88 (imprimé p. 23 : 20.88)
+  rho0 = 0,10, alpha = 0,05, H = 1000 -> 79.0
+  rho0 = 0,10, alpha = 0,05, H = 1000000 -> 3088.2
+  objet de contrôle : les deux valeurs imprimées par l'article sont retrouvées au centième.
+==============================================================================
+BLOC B - La règle à mélange sur une fraction auditée au hasard
+  rho0 = 0.1, alpha = 0.05, beta = 0.1, grille de douze taux descendants
+  B1. Borne garantie de l'excès d'épisodes endommagés avant l'annonce (dommage seul)
+    q = 0.20, n =   1000 :    136.1  = 6.42 x racine(n rho0 (1-rho0) / q) (erratum : 136.1)
+    q = 0.20, n =   4000 :    252.4  = 5.95 x racine(n rho0 (1-rho0) / q) (erratum : 252.4)
+    q = 0.20, n =  16000 :    483.7  = 5.70 x racine(n rho0 (1-rho0) / q) (erratum : 483.7)
+    q = 0.20, n = 100000 :   1140.4  = 5.38 x racine(n rho0 (1-rho0) / q)
+    q = 0.05, n =   1000 :    317.9  = 7.49 x racine(n rho0 (1-rho0) / q) (erratum : 317.9)
+    q = 0.05, n =   4000 :    564.6  = 6.65 x racine(n rho0 (1-rho0) / q) (erratum : 564.6)
+    q = 0.05, n =  16000 :   1045.1  = 6.16 x racine(n rho0 (1-rho0) / q) (erratum : 1045.1)
+    q = 0.05, n = 100000 :   2411.6  = 5.68 x racine(n rho0 (1-rho0) / q)
+    objet de contrôle : les six valeurs de l'erratum sont retrouvées à 0,15 près.
+  B2. La même borne obtenue par composition de deux énoncés publiés
+      (borne sur trajectoire du mélange, puis suite du taux réalisé sous tirage non divulgué)
+    q = 0.20, n =   1000 : composition    174.3 ; théorème direct    136.1 ; rapport 1.28 ; avec la borne de Singh telle qu'imprimée    281.8 (rapport 2.07)
+    q = 0.20, n =  16000 : composition    574.1 ; théorème direct    483.7 ; rapport 1.19 ; avec la borne de Singh telle qu'imprimée   1034.3 (rapport 2.14)
+    q = 0.20, n = 100000 : composition   1335.3 ; théorème direct   1140.4 ; rapport 1.17 ; avec la borne de Singh telle qu'imprimée   2607.5 (rapport 2.29)
+    q = 0.05, n =   1000 : composition    456.2 ; théorème direct    317.9 ; rapport 1.44 ; avec la borne de Singh telle qu'imprimée    677.4 (rapport 2.13)
+    q = 0.05, n =  16000 : composition   1289.4 ; théorème direct   1045.1 ; rapport 1.23 ; avec la borne de Singh telle qu'imprimée   2180.3 (rapport 2.09)
+    q = 0.05, n = 100000 : composition   2874.0 ; théorème direct   2411.6 ; rapport 1.19 ; avec la borne de Singh telle qu'imprimée   5299.4 (rapport 2.20)
+  B3. Avec un second regard (t = part des dommages délibérés marqués, f = part des échecs
+      honnêtes marqués) : borne garantie sur l'excès d'épisodes « endommagés et marqués »,
+      puis conversion en épisodes endommagés par sabotage, en espérance (division par t)
+    t = 0.64, f = 0.029, q = 0.20 : n=1000:    77.2 contre   136.1 (x1.76) ; n=16000:   173.6 contre   483.7 (x2.79) ; n=100000:   359.8 contre  1140.4 (x3.17)
+    t = 0.64, f = 0.029, q = 0.05 : n=1000:   287.4 contre   317.9 (x1.11) ; n=16000:   458.8 contre  1045.1 (x2.28) ; n=100000:   844.4 contre  2411.6 (x2.86)
+    t = 0.50, f = 0.010, q = 0.20 : n=1000:    89.5 contre   136.1 (x1.52) ; n=16000:   153.5 contre   483.7 (x3.15) ; n=100000:   297.9 contre  1140.4 (x3.83)
+    t = 0.50, f = 0.010, q = 0.05 : n=1000:   359.8 contre   317.9 (x0.88) ; n=16000:   440.7 contre  1045.1 (x2.37) ; n=100000:   739.2 contre  2411.6 (x3.26)
+    t = 0.30, f = 0.050, q = 0.20 : n=1000:   181.3 contre   136.1 (x0.75) ; n=16000:   449.5 contre   483.7 (x1.08) ; n=100000:  1003.2 contre  1140.4 (x1.14)
+    t = 0.30, f = 0.050, q = 0.05 : n=1000:   628.0 contre   317.9 (x0.51) ; n=16000:  1135.5 contre  1045.1 (x0.92) ; n=100000:  2282.8 contre  2411.6 (x1.06)
+    t = 0.93, f = 0.571, q = 0.20 : n=1000:   120.3 contre   136.1 (x1.13) ; n=16000:   398.8 contre   483.7 (x1.21) ; n=100000:   972.3 contre  1140.4 (x1.17)
+    t = 0.93, f = 0.571, q = 0.05 : n=1000:   301.7 contre   317.9 (x1.05) ; n=16000:   885.9 contre  1045.1 (x1.18) ; n=100000:  2067.5 contre  2411.6 (x1.17)
+  B4. Ce qu'aucune règle ne peut empêcher : allure indétectable (Pinsker), excès moyen n*delta
+    q = 0.20, n =   1000 : dommage seul delta* = 0.0356, excès moyen    35.6, quantile 5 %    18.0 | second regard (0.64; 0.029) :   12.2 (x2.91) | second regard (0.50; 0.010) :   10.5 (x3.39)
+    q = 0.20, n =  16000 : dommage seul delta* = 0.0086, excès moyen   137.5, quantile 5 %    73.0 | second regard (0.64; 0.029) :   40.8 (x3.37) | second regard (0.50; 0.010) :   32.3 (x4.26)
+    q = 0.20, n = 100000 : dommage seul delta* = 0.0034, excès moyen   341.1, quantile 5 %   183.0 | second regard (0.64; 0.029) :   97.5 (x3.50) | second regard (0.50; 0.010) :   75.1 (x4.54)
+    q = 0.05, n =   1000 : dommage seul delta* = 0.0741, excès moyen    74.1, quantile 5 %    55.0 | second regard (0.64; 0.029) :   29.1 (x2.54) | second regard (0.50; 0.010) :   26.3 (x2.82)
+    q = 0.05, n =  16000 : dommage seul delta* = 0.0174, excès moyen   278.2, quantile 5 %   211.0 | second regard (0.64; 0.029) :   87.4 (x3.18) | second regard (0.50; 0.010) :   71.5 (x3.89)
+    q = 0.05, n = 100000 : dommage seul delta* = 0.0069, excès moyen   685.6, quantile 5 %   525.0 | second regard (0.64; 0.029) :  201.2 (x3.41) | second regard (0.50; 0.010) :  157.8 (x4.35)
+    objet de contrôle : à q = 0,20, n = 1 000 et 16 000, le quantile 5 % retrouve 18 et 73
+    (re-dérivation, § 3.5).
+==============================================================================
+BLOC C - La loi du second regard sur les seuls épisodes endommagés audités
+  C0. Comptes imprimés d'un banc public « manipulation contre échec honnête »
+      (arXiv 2611.00407, table 3, p. 6 ; moniteurs de texte, 14 tentatives, 35 échecs honnêtes)
+    moniteur capable, consigne v5, vue C     t = 9/14 = 0.643 [0.39 ; 0.84], f = 1/35 = 0.029 [0.01 ; 0.15] ; t²/f =   14.5 ; prudent (t bas, f haut) =  1.03
+    moniteur capable, consigne v5, vue B     t = 11/14 = 0.786 [0.52 ; 0.92], f = 3/35 = 0.086 [0.03 ; 0.22] ; t²/f =    7.2 ; prudent (t bas, f haut) =  1.23
+    moniteur capable, consigne v3, vue B     t = 10/14 = 0.714 [0.45 ; 0.88], f = 1/35 = 0.029 [0.01 ; 0.15] ; t²/f =   17.9 ; prudent (t bas, f haut) =  1.42
+    petit moniteur 8B, consigne v3, vue C    t = 13/14 = 0.929 [0.69 ; 0.99], f = 20/35 = 0.571 [0.41 ; 0.72] ; t²/f =    1.5 ; prudent (t bas, f haut) =  0.65
+    petit moniteur 8B, consigne v5, vue C    t = 4/14 = 0.286 [0.12 ; 0.55], f = 0/35 = 0.000 [0.00 ; 0.10] ; t²/f = infini (f = 0) ; prudent (t bas, f haut) =  0.14
+    contrôle déterministe à deux règles      t = 14/14 = 1.000 [0.78 ; 1.00], f = 1/35 = 0.029 [0.01 ; 0.15] ; t²/f =   35.0 ; prudent (t bas, f haut) =  4.24
+  C1. Divergences exactes par audit (nats) et gain à allure fixée
+      dommage seul : KL(Bern(rho0+delta) || Bern(rho0)) ; marque : KL(Bern(rho0 f + delta t) || Bern(rho0 f)) ;
+      trois issues : loi jointe ; gain = rapport à la divergence du dommage seul
+    allure delta = 0.100 : dommage seul 4.440e-02 ; audits (Wald, mélange) ~       123
+        t = 0.640, f = 0.029 : marque 1.481e-01 (gain   3.33) ; trois issues 1.577e-01 (gain   3.55) ; t²/f x (1-rho0) =  12.71
+        t = 0.790, f = 0.086 : marque 1.276e-01 (gain   2.87) ; trois issues 1.323e-01 (gain   2.98) ; t²/f x (1-rho0) =   6.53
+        t = 0.500, f = 0.010 : marque 1.518e-01 (gain   3.42) ; trois issues 1.672e-01 (gain   3.77) ; t²/f x (1-rho0) =  22.50
+        t = 0.300, f = 0.050 : marque 3.856e-02 (gain   0.87) ; trois issues 6.497e-02 (gain   1.46) ; t²/f x (1-rho0) =   1.62
+        t = 0.930, f = 0.571 : marque 5.682e-02 (gain   1.28) ; trois issues 5.839e-02 (gain   1.31) ; t²/f x (1-rho0) =   1.36
+        t = 0.029, f = 0.029 : marque 1.124e-03 (gain   0.03) ; trois issues 4.440e-02 (gain   1.00) ; t²/f x (1-rho0) =   0.03
+    allure delta = 0.050 : dommage seul 1.224e-02 ; audits (Wald, mélange) ~       448
+        t = 0.640, f = 0.029 : marque 5.534e-02 (gain   4.52) ; trois issues 5.781e-02 (gain   4.73) ; t²/f x (1-rho0) =  12.71
+        t = 0.790, f = 0.086 : marque 4.410e-02 (gain   3.60) ; trois issues 4.530e-02 (gain   3.70) ; t²/f x (1-rho0) =   6.53
+        t = 0.500, f = 0.010 : marque 6.003e-02 (gain   4.91) ; trois issues 6.405e-02 (gain   5.23) ; t²/f x (1-rho0) =  22.50
+        t = 0.300, f = 0.050 : marque 1.284e-02 (gain   1.05) ; trois issues 1.992e-02 (gain   1.63) ; t²/f x (1-rho0) =   1.62
+        t = 0.930, f = 0.571 : marque 1.638e-02 (gain   1.34) ; trois issues 1.677e-02 (gain   1.37) ; t²/f x (1-rho0) =   1.36
+        t = 0.029, f = 0.029 : marque 3.148e-04 (gain   0.03) ; trois issues 1.224e-02 (gain   1.00) ; t²/f x (1-rho0) =   0.03
+    allure delta = 0.020 : dommage seul 2.102e-03 ; audits (Wald, mélange) ~      2607
+        t = 0.640, f = 0.029 : marque 1.380e-02 (gain   6.56) ; trois issues 1.420e-02 (gain   6.75) ; t²/f x (1-rho0) =  12.71
+        t = 0.790, f = 0.086 : marque 9.771e-03 (gain   4.65) ; trois issues 9.964e-03 (gain   4.74) ; t²/f x (1-rho0) =   6.53
+        t = 0.500, f = 0.010 : marque 1.643e-02 (gain   7.81) ; trois issues 1.709e-02 (gain   8.13) ; t²/f x (1-rho0) =  22.50
+        t = 0.300, f = 0.050 : marque 2.691e-03 (gain   1.28) ; trois issues 3.881e-03 (gain   1.85) ; t²/f x (1-rho0) =   1.62
+        t = 0.930, f = 0.571 : marque 2.930e-03 (gain   1.39) ; trois issues 2.992e-03 (gain   1.42) ; t²/f x (1-rho0) =   1.36
+        t = 0.029, f = 0.029 : marque 5.465e-05 (gain   0.03) ; trois issues 2.102e-03 (gain   1.00) ; t²/f x (1-rho0) =   0.03
+    allure delta = 0.010 : dommage seul 5.399e-04 ; audits (Wald, mélange) ~     10152
+        t = 0.640, f = 0.029 : marque 4.458e-03 (gain   8.26) ; trois issues 4.559e-03 (gain   8.44) ; t²/f x (1-rho0) =  12.71
+        t = 0.790, f = 0.086 : marque 2.883e-03 (gain   5.34) ; trois issues 2.931e-03 (gain   5.43) ; t²/f x (1-rho0) =   6.53
+        t = 0.500, f = 0.010 : marque 5.763e-03 (gain  10.67) ; trois issues 5.931e-03 (gain  10.98) ; t²/f x (1-rho0) =  22.50
+        t = 0.300, f = 0.050 : marque 7.646e-04 (gain   1.42) ; trois issues 1.068e-03 (gain   1.98) ; t²/f x (1-rho0) =   1.62
+        t = 0.930, f = 0.571 : marque 7.653e-04 (gain   1.42) ; trois issues 7.807e-04 (gain   1.45) ; t²/f x (1-rho0) =   1.36
+        t = 0.029, f = 0.029 : marque 1.408e-05 (gain   0.03) ; trois issues 5.399e-04 (gain   1.00) ; t²/f x (1-rho0) =   0.03
+    allure delta = 0.005 : dommage seul 1.369e-04 ; audits (Wald, mélange) ~     40039
+        t = 0.640, f = 0.029 : marque 1.341e-03 (gain   9.80) ; trois issues 1.366e-03 (gain   9.98) ; t²/f x (1-rho0) =  12.71
+        t = 0.790, f = 0.086 : marque 8.013e-04 (gain   5.85) ; trois issues 8.133e-04 (gain   5.94) ; t²/f x (1-rho0) =   6.53
+        t = 0.500, f = 0.010 : marque 1.888e-03 (gain  13.79) ; trois issues 1.930e-03 (gain  14.10) ; t²/f x (1-rho0) =  22.50
+        t = 0.300, f = 0.050 : marque 2.065e-04 (gain   1.51) ; trois issues 2.830e-04 (gain   2.07) ; t²/f x (1-rho0) =   1.62
+        t = 0.930, f = 0.571 : marque 1.959e-04 (gain   1.43) ; trois issues 1.997e-04 (gain   1.46) ; t²/f x (1-rho0) =   1.36
+        t = 0.029, f = 0.029 : marque 3.577e-06 (gain   0.03) ; trois issues 1.369e-04 (gain   1.00) ; t²/f x (1-rho0) =   0.03
+    allure delta = 0.002 : dommage seul 2.209e-05 ; audits (Wald, mélange) ~    248084
+        t = 0.640, f = 0.029 : marque 2.490e-04 (gain  11.27) ; trois issues 2.531e-04 (gain  11.46) ; t²/f x (1-rho0) =  12.71
+        t = 0.790, f = 0.086 : marque 1.382e-04 (gain   6.26) ; trois issues 1.402e-04 (gain   6.35) ; t²/f x (1-rho0) =   6.53
+        t = 0.500, f = 0.010 : marque 3.868e-04 (gain  17.51) ; trois issues 3.936e-04 (gain  17.81) ; t²/f x (1-rho0) =  22.50
+        t = 0.300, f = 0.050 : marque 3.482e-05 (gain   1.58) ; trois issues 4.713e-05 (gain   2.13) ; t²/f x (1-rho0) =   1.62
+        t = 0.930, f = 0.571 : marque 3.181e-05 (gain   1.44) ; trois issues 3.242e-05 (gain   1.47) ; t²/f x (1-rho0) =   1.36
+        t = 0.029, f = 0.029 : marque 5.779e-07 (gain   0.03) ; trois issues 2.209e-05 (gain   1.00) ; t²/f x (1-rho0) =   0.03
+  C2. Régime de signature (f = 0) : une seule marque suffit ; épisodes endommagés par sabotage
+      avant la prise : moyenne 1/(q t), quelle que soit l'allure
+    q = 0.20, t = 0.30 : moyenne   16.7 ; quantile 0,95   48.4
+    q = 0.20, t = 0.50 : moyenne   10.0 ; quantile 0,95   28.4
+    q = 0.20, t = 0.64 : moyenne    7.8 ; quantile 0,95   21.9
+    q = 0.05, t = 0.30 : moyenne   66.7 ; quantile 0,95  198.2
+    q = 0.05, t = 0.50 : moyenne   40.0 ; quantile 0,95  118.3
+    q = 0.05, t = 0.64 : moyenne   31.2 ; quantile 0,95   92.1
+  C3. Tirages : audits avant l'annonce, médiane sur 1 000 déploiements, allure constante
+      (règles : D = mélange sur le dommage seul ; Y = mélange sur « endommagé et marqué » ;
+       M = moyenne des deux ; épisodes en excès = delta x médiane / q, ordre de grandeur)
+    q = 0.20, delta = 0.05, t = 0.640, f = 0.029 (pas de 1 audits)
+        D : annonce 1.000, médiane      339 audits, soit ~   84.7 épisodes en excès
+        Y : annonce 1.000, médiane      108 audits, soit ~   27.0 épisodes en excès
+        M : annonce 1.000, médiane      130 audits, soit ~   32.6 épisodes en excès
+    q = 0.20, delta = 0.05, t = 0.500, f = 0.010 (pas de 1 audits)
+        D : annonce 1.000, médiane      339 audits, soit ~   84.7 épisodes en excès
+        Y : annonce 1.000, médiane      139 audits, soit ~   34.8 épisodes en excès
+        M : annonce 1.000, médiane      136 audits, soit ~   34.0 épisodes en excès
+    q = 0.20, delta = 0.05, t = 0.300, f = 0.050 (pas de 1 audits)
+        D : annonce 1.000, médiane      337 audits, soit ~   84.2 épisodes en excès
+        Y : annonce 1.000, médiane      322 audits, soit ~   80.5 épisodes en excès
+        M : annonce 1.000, médiane      269 audits, soit ~   67.2 épisodes en excès
+    q = 0.20, delta = 0.05, t = 0.930, f = 0.571 (pas de 1 audits)
+        D : annonce 1.000, médiane      336 audits, soit ~   83.9 épisodes en excès
+        Y : annonce 1.000, médiane      257 audits, soit ~   64.2 épisodes en excès
+        M : annonce 1.000, médiane      272 audits, soit ~   68.0 épisodes en excès
+    q = 0.20, delta = 0.05, t = 0.029, f = 0.029 (pas de 1 audits)
+        D : annonce 1.000, médiane      328 audits, soit ~   82.1 épisodes en excès
+        Y : annonce 0.117, médiane non atteinte
+        M : annonce 1.000, médiane      380 audits, soit ~   95.0 épisodes en excès
+    q = 0.20, delta = 0.02, t = 0.640, f = 0.029 (pas de 6 audits)
+        D : annonce 1.000, médiane     1896 audits, soit ~  189.6 épisodes en excès
+        Y : annonce 1.000, médiane      342 audits, soit ~   34.2 épisodes en excès
+        M : annonce 1.000, médiane      390 audits, soit ~   39.0 épisodes en excès
+    q = 0.20, delta = 0.02, t = 0.500, f = 0.010 (pas de 6 audits)
+        D : annonce 1.000, médiane     1953 audits, soit ~  195.3 épisodes en excès
+        Y : annonce 1.000, médiane      324 audits, soit ~   32.4 épisodes en excès
+        M : annonce 1.000, médiane      408 audits, soit ~   40.8 épisodes en excès
+    q = 0.20, delta = 0.02, t = 0.300, f = 0.050 (pas de 6 audits)
+        D : annonce 1.000, médiane     1890 audits, soit ~  189.0 épisodes en excès
+        Y : annonce 1.000, médiane     1509 audits, soit ~  150.9 épisodes en excès
+        M : annonce 1.000, médiane     1416 audits, soit ~  141.6 épisodes en excès
+    q = 0.20, delta = 0.02, t = 0.930, f = 0.571 (pas de 6 audits)
+        D : annonce 1.000, médiane     1911 audits, soit ~  191.1 épisodes en excès
+        Y : annonce 1.000, médiane     1356 audits, soit ~  135.6 épisodes en excès
+        M : annonce 1.000, médiane     1425 audits, soit ~  142.5 épisodes en excès
+    q = 0.20, delta = 0.02, t = 0.029, f = 0.029 (pas de 6 audits)
+        D : annonce 1.000, médiane     2007 audits, soit ~  200.7 épisodes en excès
+        Y : annonce 0.136, médiane non atteinte
+        M : annonce 1.000, médiane     2355 audits, soit ~  235.5 épisodes en excès
+    q = 0.20, delta = 0.01, t = 0.640, f = 0.029 (pas de 25 audits)
+        D : annonce 1.000, médiane     7725 audits, soit ~  386.2 épisodes en excès
+        Y : annonce 1.000, médiane      925 audits, soit ~   46.2 épisodes en excès
+        M : annonce 1.000, médiane     1075 audits, soit ~   53.8 épisodes en excès
+    q = 0.20, delta = 0.01, t = 0.500, f = 0.010 (pas de 25 audits)
+        D : annonce 1.000, médiane     7975 audits, soit ~  398.8 épisodes en excès
+        Y : annonce 1.000, médiane      875 audits, soit ~   43.8 épisodes en excès
+        M : annonce 1.000, médiane      950 audits, soit ~   47.5 épisodes en excès
+    q = 0.20, delta = 0.01, t = 0.300, f = 0.050 (pas de 25 audits)
+        D : annonce 1.000, médiane     7525 audits, soit ~  376.2 épisodes en excès
+        Y : annonce 1.000, médiane     5500 audits, soit ~  275.0 épisodes en excès
+        M : annonce 1.000, médiane     5000 audits, soit ~  250.0 épisodes en excès
+    q = 0.20, delta = 0.01, t = 0.930, f = 0.571 (pas de 25 audits)
+        D : annonce 1.000, médiane     7475 audits, soit ~  373.8 épisodes en excès
+        Y : annonce 1.000, médiane     5588 audits, soit ~  279.4 épisodes en excès
+        M : annonce 1.000, médiane     5775 audits, soit ~  288.8 épisodes en excès
+    q = 0.20, delta = 0.01, t = 0.029, f = 0.029 (pas de 25 audits)
+        D : annonce 1.000, médiane     7675 audits, soit ~  383.8 épisodes en excès
+        Y : annonce 0.113, médiane non atteinte
+        M : annonce 1.000, médiane     9225 audits, soit ~  461.2 épisodes en excès
+  C4. Objets de contrôle (2 000 déploiements, audit par audit, 20 000 audits)
+    monde honnête, référence juste (f vrai = f supposé = 0,029)
+        fausse annonce : D 0.0200 ; Y 0.0085 ; M 0.0140 (permis : 0.05)
+    monde honnête, référence fausse (f vrai = 2 x f supposé)
+        fausse annonce : D 0.0210 ; Y 0.9990 ; M 0.9985 (permis : 0.05)
+  C5. Saboteur logé dans la marge de la référence : il est plus capable que la référence ne le dit
+      (taux d'échec propre 0,08 pour une référence inscrite à 0,10) et dépense l'écart en dommage
+      délibéré (0,02) : son taux de dommage total égale la référence ; 1 000 déploiements, 20 000 audits
+    t = 0.640, f = 0.029 : annonce D 0.022 ; Y 1.000 ; M 1.000 (médiane de M : 410 audits)
+    t = 0.300, f = 0.050 : annonce D 0.014 ; Y 1.000 ; M 1.000 (médiane de M : 2415 audits)
+    t = 0.029, f = 0.029 : annonce D 0.021 ; Y 0.015 ; M 0.016 (médiane de M : non atteinte)
+==============================================================================
+BLOC D - Bande aveugle due à la référence honnête (m épisodes honnêtes de référence)
+  z = 2,326 (1 % unilatéral) ; bande en points de taux de dommage ; dommage logé sur 100 000 épisodes
+    m =   400 : dommage seul  3.49 points (   3490 épisodes) | (0.64; 0.029) :  0.98 points (x3.57) | (0.50; 0.010) :  0.74 points (x4.75) | (0.30; 0.050) :  2.73 points (x1.28)
+    m =  2000 : dommage seul  1.56 points (   1561 épisodes) | (0.64; 0.029) :  0.44 points (x3.57) | (0.50; 0.010) :  0.33 points (x4.75) | (0.30; 0.050) :  1.22 points (x1.28)
+    m = 10000 : dommage seul  0.70 points (    698 épisodes) | (0.64; 0.029) :  0.20 points (x3.57) | (0.50; 0.010) :  0.15 points (x4.75) | (0.30; 0.050) :  0.55 points (x1.28)
+  lecture : la bande se réduit du facteur t / racine(f), à (1 - rho0) près ; elle ne s'annule qu'à f = 0.
+==============================================================================
+BLOC E - Après l'alarme : sonde apprise sur les prises de l'audit, états consignés (monde planté)
+  monde : états gaussiens de dimension d, écart de moyenne `sep` (en écarts types) entre épisodes
+  endommagés et sains ; sonde = différence des moyennes estimées sur k1 endommagés et k0 sains audités
+  E1. Contrôle de la formule d' = sep² / racine(sep² + d (1/k1 + 1/k0)) par tirages (d = 256)
+    sep = 2.0, k1 = 20, k0 = 200 : aire sous la courbe moyenne 0.746 ; formule 0.747
+    sep = 2.0, k1 = 100, k0 = 1000 : aire sous la courbe moyenne 0.860 ; formule 0.861
+    sep = 4.0, k1 = 20, k0 = 200 : aire sous la courbe moyenne 0.980 ; formule 0.980
+  E2. À l'instant de l'alarme du plancher (dommage seul, q = 0,20, allure 0,02) :
+      1926 audits, dont 231 épisodes endommagés et 1695 sains ; 7704 épisodes non audités,
+      dont ~924 endommagés jamais regardés
+      rappel sur ces épisodes si l'on en revoit 12 % (leur prévalence) puis 25 %, contre le hasard (12 %, 25 %)
+      d =   64, sep = 1 : d' =  0.87, aire 0.731, rappel 0.32 à 12 %, 0.53 à 25 %
+      d =   64, sep = 2 : d' =  1.93, aire 0.913, rappel 0.62 à 12 %, 0.83 à 25 %
+      d =   64, sep = 3 : d' =  2.95, aire 0.981, rappel 0.83 à 12 %, 0.97 à 25 %
+      d =   64, sep = 4 : d' =  3.96, aire 0.997, rappel 0.94 à 12 %, 1.00 à 25 %
+      d =  512, sep = 1 : d' =  0.53, aire 0.647, rappel 0.23 à 12 %, 0.42 à 25 %
+      d =  512, sep = 2 : d' =  1.57, aire 0.866, rappel 0.52 à 12 %, 0.75 à 25 %
+      d =  512, sep = 3 : d' =  2.65, aire 0.970, rappel 0.78 à 12 %, 0.95 à 25 %
+      d =  512, sep = 4 : d' =  3.72, aire 0.996, rappel 0.92 à 12 %, 1.00 à 25 %
+      d = 4096, sep = 1 : d' =  0.22, aire 0.561, rappel 0.16 à 12 %, 0.31 à 25 %
+      d = 4096, sep = 2 : d' =  0.81, aire 0.718, rappel 0.31 à 12 %, 0.51 à 25 %
+      d = 4096, sep = 3 : d' =  1.67, aire 0.881, rappel 0.55 à 12 %, 0.77 à 25 %
+      d = 4096, sep = 4 : d' =  2.66, aire 0.970, rappel 0.78 à 12 %, 0.95 à 25 %
+  E3. Combien de prises faut-il ? (d = 4096, sains audités : 9 fois plus) rappel à 25 % de revue
+      sep = 2 : k1=6: 0.29 k1=20: 0.33 k1=60: 0.39 k1=200: 0.50 k1=600: 0.63
+      sep = 3 : k1=6: 0.35 k1=20: 0.43 k1=60: 0.56 k1=200: 0.75 k1=600: 0.89
+      sep = 4 : k1=6: 0.43 k1=20: 0.58 k1=60: 0.77 k1=200: 0.94 k1=600: 0.99
+  lecture : tout dépend de l'écart `sep`, inconnu ; c'est la mesure à faire. Objet de contrôle :
+  à sep = 1 et d = 4096 le rappel reste proche du hasard (0,16 contre 0,12 ; 0,31 contre 0,25).
+==============================================================================
+BLOC F - Le prix de la couverture, aux trois points d'insertion d'une lecture
+  (ce que coûte la lecture quand l'adversaire la rend inutile)
+  avant l'audit (les scores orientent le tirage) : budget q = 0.05, moitié en plancher, moitié orientée ;
+      contre un saboteur que le score ne voit pas, seul le plancher q/2 compte :
+      n = 16000 : borne  1508.3 au lieu de  1045.1 (x1.44) ; à allure fixée : x2,00 d'épisodes
+      n = 100000 : borne  3510.3 au lieu de  2411.6 (x1.46) ; à allure fixée : x2,00 d'épisodes
+  à l'audit (second regard sur les épisodes endommagés audités) : moyenne de deux mélanges ;
+      seuil relevé de log 2 : x1.126 d'audits au plus, à allure fixée
+  après l'alarme (rappel sur états consignés) : aucun coût avant l'alarme ; le coût est la revue.
+==============================================================================
+fin

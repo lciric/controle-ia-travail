@@ -1,0 +1,218 @@
+Calculs de la note « protocole X : six questions sur l'attaquant informé » (v1)
+Aucun tirage ; entrées = suppositions d'illustration, sauf mention « recopié ».
+
+[A] Question 1 — ce que l'attaquant gagne à connaître le protocole, et ce qui lui survit
+
+  [A1] Borne : succès de l'attaquant qui voit V avant d'agir <= valeur à l'aveugle + fuite,
+       fuite = moyenne, sur le tirage Z, de la distance en variation totale entre la loi de V sachant Z
+       et la loi de V. Vérification exacte sur une famille de mondes finis.
+       10240 cas (512 matrices de succès, 4 lois du tirage, 5 niveaux de fuite)
+       plus grand dépassement de la borne : 3.33e-16 (attendu : nul ou négatif, au bruit d'arrondi près)
+       plus grand rapport (gain de l'informé) / fuite : 1.000 (au plus 1 ; 1 = borne atteinte)
+       objet de contrôle, fuite nulle   : aveugle 0.667, informé 0.667 (attendu : égaux)
+       objet de contrôle, tirage connu  : aveugle 0.667, informé 1.000, fuite 0.667
+
+  [A2] Monde à trois canaux. Une attaque s'appuie sur la forme du texte, sur la mémoire du contexte ou
+       sur un tirage rare ; la paraphrase, la remise à zéro et le rééchantillonnage détruisent chacun
+       un canal (succès résiduel r). Une attaque « robuste » ne s'appuie sur aucun canal et perd kappa.
+       P = probabilité qu'une intervention tombe sur un pas. Marge = baisse du succès de l'attaque.
+       P = 0.9, r = 0.1
+       attaquant naïf, défense réglée contre lui (toute la masse sur son canal) : marge 0.810
+       attaquant informé contre cette même défense : il change de canal, marge 0.000
+       attaquant qui connaît chaque tirage : il prend un canal épargné, marge 0.000 quelle que soit la loi
+       taxe de robustesse kappa = 0.0 : marge au point selle = 0.000  (= min(couverture 0.270, kappa))
+       taxe de robustesse kappa = 0.1 : marge au point selle = 0.100  (= min(couverture 0.270, kappa))
+       taxe de robustesse kappa = 0.3 : marge au point selle = 0.270  (= min(couverture 0.270, kappa))
+       taxe de robustesse kappa = 0.5 : marge au point selle = 0.270  (= min(couverture 0.270, kappa))
+       taxe de robustesse kappa = 1.0 : marge au point selle = 0.270  (= min(couverture 0.270, kappa))
+       objet de contrôle : kappa = 0 rend une marge nulle (le tirage secret seul ne donne rien) ;
+       kappa = 1 rend la couverture du mélange. La marge au point selle vaut au plus la taxe.
+
+  [A3] Rééchantillonnage tiré en secret, un seul des k tirages exécuté au hasard, preuve cumulée sur les k.
+       Gain en preuve par pas exécuté (donc division du délai d'alerte) : G = k / (1 + (k - 1) rho),
+       rho = corrélation, chez l'honnête, de la lecture entre deux tirages d'un même état.
+       rho         k = 2    k = 4    k = 8   k = 16   limite (1/rho)
+       0.00         2.00     4.00     8.00    16.00   sans borne
+       0.20         1.67     2.50     3.33     4.00   5.00
+       0.45         1.38     1.70     1.93     2.06   2.22
+       0.80         1.11     1.18     1.21     1.23   1.25
+       1.00         1.00     1.00     1.00     1.00   1.00
+       objet de contrôle : rho = 1 rend G = 1 (rien à gagner) ; rho = 0 rend G = k.
+       Si l'attaquant sait quel tirage s'exécute, il ne nuit que sur celui-là : G = 1 quel que soit rho.
+       Fuite partielle : sur une part lam des pas, l'attaquant sait quel tirage s'exécute. S'il lui suffit
+       de nuire sur une part eps des pas, il loge son dommage dans les pas connus d'abord. Gain restant,
+       pour G = 2,50 (k = 4, rho = 0,2) : [min(eps, lam) + max(0, eps - lam) G] / eps.
+       eps        lam = 0.00   lam = 0.01   lam = 0.05   lam = 0.20
+       0.02             2.50         1.75         1.00         1.00
+       0.05             2.50         2.20         1.00         1.00
+       0.20             2.50         2.42         2.12         1.00
+       Une fuite égale au taux de sabotage annule tout le gain : le secret doit tenir mieux que ce taux.
+
+  [A4] Sélection d'attaque par simulation du juge de texte, et résidu de la sonde.
+       Lecture de la sonde = part que le texte prédit (T) + résidu (R), indépendants, variance 1 chacun
+       chez l'honnête. Sous attaque : T décalé de dT, R décalé de dR. L'attaquant prédit T avec une
+       corrélation c et n'exécute que le cinquième des occasions où sa prédiction est la plus basse.
+       Rappel à 1 % de fausses alertes, parmi les attaques exécutées.
+       cas                                           juge de texte   sonde brute   résidu
+       aucune sélection (dT = 2, dR = 2)                     0.372         0.692    0.372
+       sélection, prédiction médiocre (c = 0,5)              0.126         0.503    0.372
+       sélection, bonne prédiction (c = 0,85)                0.006         0.346    0.372
+       sélection, simulation parfaite (c = 1)                0.000         0.268    0.372
+       contrôle : résidu vide (dR = 0), c = 1                0.000         0.006    0.010
+       contrôle : tout dans le résidu (dT = 0), c = 1        0.000         0.006    0.372
+       Lecture : sous sélection le juge de texte s'effondre, la sonde brute passe sous son propre résidu,
+       le résidu ne bouge pas. Si le résidu est vide (dR = 0), rien ne survit : c'est le rappel de 0,010
+       du hasard. Suppose que l'attaquant ne prédit rien du résidu (canal de retour fermé).
+       La sélection lui coûte quatre occasions sur cinq.
+
+[B] Question 2 — la part du plancher quand l'attaquant devine le soupçon
+
+  [B1] Budget d'audit p. Le moniteur signale une part f des épisodes ; sans sélection il signale une
+       attaque avec probabilité r. L'attaquant devine avec une qualité g (0 = pas du tout, 1 = toujours)
+       et renonce aux attaques qu'il prévoit signalées. Part des attaques exécutées qui sont signalées :
+       R = r (1 - g) / (1 - r g). Probabilité de prise par attaque exécutée, plancher pi :
+       c = pi + R (p - pi) / f. Épisodes endommagés avant la prise (probabilité 0,95).
+       p = 0.02, f = 0.05, r = 0.6
+       g      levier R/f   tout au soupçon   moitié-moitié  tout au plancher   meilleure règle / moitié-moitié
+       0.00        12.00                11              22               149   1.85
+       0.50         8.57                16              30               149   1.79
+       0.90         2.61                56              82               149   1.45
+       0.97         0.86               173             160               149   1.07
+       1.00         0.00            jamais             299               149   2.00
+       La règle optimale bascule quand le levier passe sous 1 ; qui ignore g perd au plus un facteur 2
+       en probabilité de prise avec la règle moitié-moitié. Objet de contrôle : levier 1 rend les trois
+       règles égales ; g = 1 rend « jamais » pour l'audit des seuls signalés.
+       qualité de devin où le levier vaut 1 : g = 0.965
+
+  [B2] Recapture lue des deux côtés. Parmi n épisodes endommagés trouvés par le plancher, combien le
+       moniteur en avait-il signalé ? Aveugle : la part f. Évité : moins que f. Voyant : r.
+       part signalée f = 0.05 : 59 épisodes endommagés audités, tous non signalés, écartent
+         « aveugle » au niveau 5 % et font conclure « évité » (évitement parfait)
+       part signalée f = 0.20 : 14 épisodes endommagés audités, tous non signalés, écartent
+         « aveugle » au niveau 5 % et font conclure « évité » (évitement parfait)
+       part signalée f = 0.50 : 5 épisodes endommagés audités, tous non signalés, écartent
+         « aveugle » au niveau 5 % et font conclure « évité » (évitement parfait)
+       séparer « voyant » (r = 0.6) de « aveugle » (f = 0.05) à 5 % et 90 % : n = 5, seuil 2
+       séparer « voyant » (r = 0.6) de « aveugle » (f = 0.2) à 5 % et 90 % : n = 13, seuil 6
+
+  [B3] Tirer aussi ce que l'oracle vérifie. m contrôles d'enjeux égaux, un seul tiré par audit, p = 0,05 :
+       m =  1 : prise par épisode endommagé 0.0500 ; acquise à 0,95 au 59e épisode endommagé
+       m =  3 : prise par épisode endommagé 0.0167 ; acquise à 0,95 au 179e épisode endommagé
+       m = 10 : prise par épisode endommagé 0.0050 ; acquise à 0,95 au 598e épisode endommagé
+       La couverture devient la réunion des m contrôles ; le délai est multiplié par m.
+
+[C] Question 3 — la boucle audit, recapture, réapprentissage : quand converge-t-elle
+
+  [C1] Borne d'erreurs amincie. Un apprenant qui fait au plus d erreurs sur toute suite réalisable,
+       mis à jour sur les seules erreurs auditées (probabilité e, pièce fraîche) : le total M de ses
+       erreurs vérifie E[M] <= d / e, et P(M >= m) <= P(Bin(m, e) <= d).
+       d    e       E[M] au plus   m tel que P(M >= m) <= 0,05
+       5    0.01             500   1049
+       5    0.05             100   208
+       5    0.20              25   50
+       20   0.01            2000   2902
+       20   0.05             400   577
+       20   0.20             100   141
+
+  [C2] Objets de contrôle exécutés : la classe des seuils sur une droite (étiquette = 1 si x > seuil).
+       Apprenant : coupe au milieu de ce qui reste possible. Adversaire : présente le point de coupe
+       et lui donne l'étiquette contraire à la prédiction, ce qui reste cohérent avec un seuil possible.
+       seuils réels (dimension de Littlestone infinie), 60 tours : 60 erreurs (attendu : une par tour, sans plafond)
+       64 seuils possibles (classe finie), 60 tours : 6 erreurs (attendu : au plus log2 = 6)
+       1024 seuils possibles (classe finie), 60 tours : 10 erreurs (attendu : au plus log2 = 10)
+       Une lecture de précision finie, ou une marge que l'adversaire ne peut pas réduire, borne le total ;
+       un lecteur linéaire sur des états que l'adversaire place à volonté n'a pas de borne.
+
+  [C3] Réapprentissage répété, vu comme une itération. Le moniteur se replace en m' = clip(b - c m) :
+       c = (mobilité de la réponse de l'agent au moniteur) x (mobilité du moniteur) / (courbure).
+       Si une part lam seulement de l'état du moniteur atteint l'agent, c = lam x c_max.
+       c_max = 3.0, b = 0.9, départ m = 0 ; après 400 réapprentissages :
+       fuite lam = 0.000 : c = 0.00 ; converge ; écart entre deux tours = 0.000 ; tours pour être à 0,01 du point fixe : 1
+       fuite lam = 0.100 : c = 0.30 ; converge ; écart entre deux tours = 0.000 ; tours pour être à 0,01 du point fixe : 4
+       fuite lam = 0.300 : c = 0.90 ; converge ; écart entre deux tours = 0.000 ; tours pour être à 0,01 du point fixe : 37
+       fuite lam = 0.333 : c = 1.00 ; oscille sans fin ; écart entre deux tours = 0.900 ; tours pour être à 0,01 du point fixe : -
+       fuite lam = 0.500 : c = 1.50 ; oscille sans fin ; écart entre deux tours = 0.900 ; tours pour être à 0,01 du point fixe : -
+       fuite lam = 1.000 : c = 3.00 ; oscille sans fin ; écart entre deux tours = 0.900 ; tours pour être à 0,01 du point fixe : -
+       Seuil : c < 1, soit lam < 1 / c_max. Objet de contrôle où la convergence est fausse par
+       construction : la réponse qui saute (exemple 3.4 de l'article sur la prédiction performative),
+       suite obtenue : [1, 0, 1, 0, 1, 0] (attendu : alternance sans fin)
+
+  [C4] L'horizon d'expiration de la garantie en régime d'excès. Règle « moniteur invalide » corrigée
+       (mélange, douze taux qui descendent vers le taux acceptable) ; B(n) = borne garantie de l'excès
+       d'épisodes endommagés et non signalés avant l'annonce, avec probabilité 0,90.
+       objet de contrôle : ma réimplémentation contre les six valeurs recopiées de l'erratum 1 : écart maximal 0.045
+       Horizon jusqu'où la règle garantit « moins de theta épisodes en excès avant l'annonce » :
+       taux honnête  audit        theta = 30    theta = 100    theta = 300   theta = 1000
+       0.10          0.05                 21             99            870          14725
+       0.10          0.20                 22            486           6048          73383
+       0.01          0.05              aucun          aucun           5274         129532
+       0.01          0.20              aucun           3495          50101         654857
+       Ce qu'aucune règle n'évite (recopié de la re-dérivation, § 3.5 ; taux honnête 0,10, audit 0,20) :
+       18, 36 et 73 épisodes à 1 000, 4 000 et 16 000, soit environ 0.572 x racine de n.
+         theta =   30 : aucune règle ne garantit au-delà d'environ 2 752 épisodes
+         theta =  100 : aucune règle ne garantit au-delà d'environ 30 580 épisodes
+         theta =  300 : aucune règle ne garantit au-delà d'environ 275 224 épisodes
+         theta = 1000 : aucune règle ne garantit au-delà d'environ 3 058 039 épisodes
+       (extrapolation en racine des trois valeurs recopiées : un ordre de grandeur, non une borne)
+
+  [C5] Le prix de N répétitions. Si la règle est remise à zéro après chaque réapprentissage et que le
+       risque de fausse annonce est dépensé en alpha x 6 / (pi^2 n^2) au n-ième tour (somme <= alpha) :
+       tour    1 : seuil de richesse 1/3.04e-02 ; délai multiplié par environ 1.17
+       tour   10 : seuil de richesse 1/3.04e-04 ; délai multiplié par environ 2.70
+       tour  100 : seuil de richesse 1/3.04e-06 ; délai multiplié par environ 4.24
+       tour 1000 : seuil de richesse 1/3.04e-08 ; délai multiplié par environ 5.78
+       Le délai croît comme le logarithme du rang du tour : tenable.
+
+  [C6] Objet de contrôle où « la boucle borne le dommage » est faux : l'horloge remise à zéro.
+       Horizon 16 000, audit 0,20, taux honnête 0,10. Si la règle repart de zéro à chaque
+       réapprentissage et que l'agent change de mode à ce rythme, les excès permis s'ajoutent :
+        1 tour(s) de 16000 épisodes : 1 x 483.7 = 484 épisodes en excès permis
+        4 tour(s) de  4000 épisodes : 4 x 252.4 = 1010 épisodes en excès permis
+       16 tour(s) de  1000 épisodes : 16 x 136.1 = 2178 épisodes en excès permis
+       Le test du plancher sur le dommage lui-même, jamais remis à zéro : 484.
+       (même formule, appliquée au dommage total et non au dommage non signalé : lecture, non théorème)
+
+[D] Question 5 — ce que doit valoir un signal précoce pour aller plus vite que le plancher
+
+  Le saboteur endommage une part eps des épisodes en plus du taux honnête rho0. Le plancher audite une
+  part p. Un signal bon marché, lu sur tous les épisodes, se décale de d écarts types sur un épisode
+  endommagé. Information par épisode (approximation locale, eps petit) : plancher p eps^2 / (2 rho0 (1 - rho0)) ;
+  signal, par la somme : (eps d)^2 / 2 ; par le rapport de vraisemblance : eps^2 (exp(d^2) - 1) / 2.
+  Le signal va plus vite que le plancher dès que d dépasse d*, quel que soit eps.
+  rho0   p        d* (somme)  aire sous la courbe  d* (rapport)  aire sous la courbe
+  0.10   0.01          0.333                0.593         0.325                0.591
+  0.10   0.05          0.745                0.701         0.665                0.681
+  0.10   0.20          1.491                0.854         1.082                0.778
+  0.10   1.00          3.333                0.991         1.579                0.868
+  0.01   0.01          1.005                0.761         0.836                0.723
+  0.01   0.05          2.247                0.944         1.342                0.829
+  0.01   0.20          4.495                0.999         1.748                0.892
+  0.01   1.00         10.050                1.000         2.151                0.936
+  Objet de contrôle : p tend vers 0, d* tend vers 0 (sans audit, tout signal valide accélère) ;
+  audit complet et taux honnête 0,5 : d* (somme) = 2.000.
+  Suppose une référence honnête exacte pour le signal : sinon son gain plafonne (loi de la référence).
+  Un attaquant qui divise d par deux divise par quatre la vitesse du signal ; il ne touche pas le plancher.
+  Plus le dommage honnête est rare, plus le plancher est difficile à battre : le signal précoce sert
+  surtout là où l'honnête échoue souvent, c'est-à-dire là où il confond le plus l'échec et le sabotage.
+
+[E] Question 6 — la diversité effective comme ordre de coupe, et ce que l'ordre ne dit pas
+
+  Un regard se tait si l'une des suppositions qu'il consomme est violée. Le système se tait si tous
+  ses regards se taisent. Ordre = plus petit nombre de suppositions à violer pour le faire taire.
+  1 sonde                                                  M =  1   ordre 1   une coupe : l'attaque déplace ce qui est lu
+  12 sondes (graines, couches, familles)                   M = 12   ordre 1   une coupe : l'attaque déplace ce qui est lu
+  12 sondes + juge de texte                                M = 13   ordre 2   une coupe : l'attaque déplace ce qui est lu ; le juge de texte n'est pas simulé
+  12 sondes + juge + plancher (oracle par programme)       M = 14   ordre 3   une coupe : l'attaque déplace ce qui est lu ; l'oracle reconnaît le dommage ; le juge de texte n'est pas simulé
+  12 sondes + juge + plancher (oracle fait de lecteurs)    M = 14   ordre 2   une coupe : l'attaque déplace ce qui est lu ; le lecteur n'est pas persuadé par le texte
+  Douze sondes valent une sonde. Un oracle fait de lecteurs partage une supposition avec le juge :
+  l'ordre retombe de 3 à 2 (cause commune). Lecture des suppositions : la mienne, non mesurée.
+
+  Objet de contrôle où « décorrélés, donc divers » est faux par construction : deux moniteurs dont les
+  fausses alertes bénignes sont indépendantes (corrélation 0) mais qui consomment la même supposition :
+  ordre 1 ; deux moniteurs aux fausses alertes liées mais aux suppositions distinctes : ordre 2.
+
+  L'ordre ne dit pas le prix. Coût, pour l'attaquant, de violer chaque supposition (part de succès perdue) :
+  système d'ordre 3, trois suppositions à 0,05 : coupe la moins chère = 0.15
+  système d'ordre 1, une supposition à 0,50    : coupe la moins chère = 0.50
+  Le second résiste mieux. La diversité effective se dit donc par deux nombres : l'ordre, et le prix
+  de la coupe la moins chère ; et le dommage retiré vaut au plus ce prix.

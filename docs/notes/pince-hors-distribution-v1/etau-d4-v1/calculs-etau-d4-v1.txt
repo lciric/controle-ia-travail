@@ -1,0 +1,189 @@
+[F0] Témoins : ce programme doit redonner trois tailles de la note sur l'étau (bloc E3 de sa sortie).
+     Attendu, écrit avant l'exécution : (11, 9), (38, 5), (596, 136).
+     q0 = 0.50, q1 = 0.90 : n = 11, seuil 9 (risque 0.0327, puissance 0.9104)
+     q0 = 0.05, q1 = 0.20 : n = 38, seuil 5 (risque 0.0397, puissance 0.9014)
+     q0 = 0.20, q1 = 0.25 : n = 596, seuil 136 (risque 0.0492, puissance 0.9001)
+
+[F1] Ce que les attaques publiées disent de l'étau : toujours un plafond, jamais un plancher.
+     r0 = rappel de la sonde sans obscurcissement, à 1 % de fausses alertes ; rho = rappel sous l'attaque ;
+     c = compétence gardée sous l'attaque, rapportée à la compétence sans attaque ; taxe = 1 - c.
+     Plafond = 1 - max(1 - r0, (1 - rho) c) : part des tentatives que l'étau retire au plus, face à cet attaquant ou à un meilleur.
+     Objets de contrôle, attendus écrits avant l'exécution :
+       attaque parfaite et gratuite (rho = 0, c = 1) : plafond 0.000 (attendu 0.000)
+       attaque qui échoue (rho = r0, c = 1) : plafond 0.900 (attendu 0.900)
+       attaque qui détruit la compétence (rho = 0, c = 0) : plafond 0.900 (attendu 0.900)
+     Couples publiés (pages dans la note, § 2) :
+       gradient, suffixe d'entrée                 | requêtes SQL, 2 milliards de paramètres ; régression logistique, 26 couches
+                                                  | r0 1.000 | rho 0.030 | taxe 0.569 | passe sans cacher 0.000, en cachant 0.418 | meilleur geste : cacher | plafond de l'étau 0.582 | r0, rho [publié] ; c [figure]
+       gradient, suffixe d'entrée                 | requêtes SQL ; perceptron, 26 couches
+                                                  | r0 1.000 | rho 0.620 | taxe 0.598 | passe sans cacher 0.000, en cachant 0.153 | meilleur geste : cacher | plafond de l'étau 0.847 | r0, rho [publié] ; c [figure]
+       gradient, suffixe d'entrée                 | requêtes SQL ; régression sur traits d'autoencodeur, 26 couches
+                                                  | r0 0.920 | rho 0.090 | taxe 0.828 | passe sans cacher 0.080, en cachant 0.157 | meilleur geste : cacher | plafond de l'étau 0.843 | r0, rho [publié] ; c [figure]
+       gradient, suffixe d'entrée                 | requêtes SQL ; traits d'autoencodeur choisis à la main, 26 couches
+                                                  | r0 0.910 | rho 0.000 | taxe 0.934 | passe sans cacher 0.090, en cachant 0.066 | meilleur geste : ne rien cacher | plafond de l'étau 0.910 | r0, rho [publié] ; c [figure]
+       gradient, suffixe d'entrée                 | nocivité ; sonde linéaire (résumé de l'article)
+                                                  | r0 1.000 | rho 0.000 | taxe 0.100 | passe sans cacher 0.000, en cachant 0.900 | meilleur geste : cacher | plafond de l'étau 0.100 | [publié] ; c = taux de réussite gardé [convention]
+       gradient, suffixe d'entrée                 | nocivité, modèle entraîné à rester lisible, 8 milliards
+                                                  | r0 1.000 | rho 0.000 | taxe 0.632 | passe sans cacher 0.000, en cachant 0.368 | meilleur geste : cacher | plafond de l'étau 0.632 | rho, c [publié] ; r0 [supposé]
+       gradient, suffixe d'entrée                 | nocivité, 8 milliards ; ensemble de sondes réappris contre les attaques passées, 70 tours
+                                                  | r0 1.000 | rho 0.000 | taxe 0.500 | passe sans cacher 0.000, en cachant 0.500 | meilleur geste : cacher | plafond de l'étau 0.500 | c [publié : « around 50% »] ; r0, rho [supposé]
+       gradient, poids ajustés, sonde jamais vue  | tromperie, premier jeu, 9 milliards ; une couche, moyenne des jetons
+                                                  | r0 0.550 | rho 0.330 | taxe 0.031 | passe sans cacher 0.450, en cachant 0.649 | meilleur geste : cacher | plafond de l'étau 0.351 | r0, rho [publié] ; c = banc général [publié]
+       gradient, poids ajustés, sonde jamais vue  | tromperie, second jeu
+                                                  | r0 0.880 | rho 0.000 | taxe 0.031 | passe sans cacher 0.120, en cachant 0.969 | meilleur geste : cacher | plafond de l'étau 0.031 | r0 [publié] ; rho [figure] ; c = banc général
+       gradient, poids ajustés, sonde jamais vue  | nocivité, premier jeu
+                                                  | r0 0.900 | rho 0.160 | taxe 0.031 | passe sans cacher 0.100, en cachant 0.814 | meilleur geste : cacher | plafond de l'étau 0.186 | r0, rho [publié] ; c = banc général
+       gradient, poids ajustés, sonde jamais vue  | nocivité, second jeu
+                                                  | r0 0.750 | rho 0.000 | taxe 0.031 | passe sans cacher 0.250, en cachant 0.969 | meilleur geste : cacher | plafond de l'étau 0.031 | r0 [publié] ; rho [figure] ; c = banc général
+       verdicts rendus en contexte, adaptateur de rang un | concepts tenus à l'écart ; sonde fixe
+                                                  | r0 1.000 | rho 0.040 | taxe 0.034 | passe sans cacher 0.000, en cachant 0.927 | meilleur geste : cacher | plafond de l'étau 0.073 | r0, rho [publié] ; c = pire banc général, points pris pour une part [convention]
+       verdicts rendus en contexte, adaptateur de rang un | les mêmes ; sonde réapprise sur le modèle ajusté
+                                                  | r0 1.000 | rho 0.146 | taxe 0.034 | passe sans cacher 0.000, en cachant 0.825 | meilleur geste : cacher | plafond de l'étau 0.175 | rho [publié] ; r0 [supposé] ; c [convention]
+       renforcement, sans gradient                | nocivité, 7 milliards ; linéaire, moyenne des jetons
+                                                  | r0 0.960 | rho 0.406 | taxe 0.320 | passe sans cacher 0.040, en cachant 0.404 | meilleur geste : cacher | plafond de l'étau 0.596 | [publié] ; c = place sur l'échelle [convention]
+       renforcement, sans gradient                | nocivité, 7 milliards ; linéaire, maximum des jetons
+                                                  | r0 0.980 | rho 0.006 | taxe 1.000 | passe sans cacher 0.020, en cachant 0.000 | meilleur geste : ne rien cacher | plafond de l'étau 0.980 | [publié] ; c [convention]
+       renforcement, sans gradient                | nocivité, 7 milliards ; perceptron, maximum des jetons
+                                                  | r0 0.964 | rho 0.002 | taxe 1.000 | passe sans cacher 0.036, en cachant 0.000 | meilleur geste : ne rien cacher | plafond de l'étau 0.964 | [publié] ; c [convention]
+       renforcement, sans gradient                | nocivité, 7 milliards ; attention, moyenne
+                                                  | r0 0.980 | rho 0.980 | taxe 0.240 | passe sans cacher 0.020, en cachant 0.015 | meilleur geste : ne rien cacher | plafond de l'étau 0.980 | [publié] ; c [convention]
+       renforcement, sans gradient                | nocivité, 8 milliards ; linéaire, moyenne des jetons
+                                                  | r0 0.960 | rho 0.250 | taxe 0.550 | passe sans cacher 0.040, en cachant 0.337 | meilleur geste : cacher | plafond de l'étau 0.663 | [publié] ; c [convention]
+       renforcement, sans gradient                | nocivité, 8 milliards ; linéaire, maximum des jetons
+                                                  | r0 0.994 | rho 0.942 | taxe 0.055 | passe sans cacher 0.006, en cachant 0.055 | meilleur geste : cacher | plafond de l'étau 0.945 | [publié] ; c [convention]
+       renforcement, sans gradient                | nocivité, 8 milliards ; attention, moyenne
+                                                  | r0 0.990 | rho 0.990 | taxe 0.980 | passe sans cacher 0.010, en cachant 0.000 | meilleur geste : ne rien cacher | plafond de l'étau 0.990 | [publié] ; c [convention]
+     Coût publié de l'évasion elle-même, au-delà de celui du comportement caché (canal caché dans le texte, poids ajustés,
+     moyenne de six bancs, points de pourcentage par rapport au modèle de base) [publié] :
+       Qwen3 8B      : canal seul -1.5 ; canal caché aux sondes -2.7 ; part de l'évasion -1.2
+       Llama 3.1 8B  : canal seul -3.7 ; canal caché aux sondes -5.4 ; part de l'évasion -1.7
+       Ministral 8B  : canal seul -6.4 ; canal caché aux sondes -8.3 ; part de l'évasion -1.9
+       Qwen3 14B     : canal seul -1.3 ; canal caché aux sondes -1.6 ; part de l'évasion -0.3
+       Phi-4 14B     : canal seul -0.8 ; canal caché aux sondes -1.3 ; part de l'évasion -0.5
+     Pente lue sur la figure des requêtes SQL [figure] : points de requêtes justes perdus par couche cachée de plus
+       régression logistique                  : de 34.0 % (1 couche) à 15.0 % (26 couches) : 0.76 point par couche ; taxe à 1 couche 0.023, à 26 couches 0.569
+       perceptron                             : de 30.0 % (1 couche) à 14.0 % (26 couches) : 0.64 point par couche ; taxe à 1 couche 0.138, à 26 couches 0.598
+       régression sur traits d'autoencodeur   : de 31.0 % (1 couche) à  6.0 % (26 couches) : 1.00 point par couche ; taxe à 1 couche 0.109, à 26 couches 0.828
+       traits d'autoencodeur choisis          : de 27.5 % (1 couche) à  2.3 % (26 couches) : 1.01 point par couche ; taxe à 1 couche 0.210, à 26 couches 0.934
+     Bruit d'un point de cette figure : 210 questions [publié] ; à 15 % de requêtes justes, écart type 2.5 points.
+
+[F2] Un attaquant donne un plafond : ce qu'une « taxe mesurée haute » apprend, selon ce que vaut l'attaquant.
+     p = probabilité, avant la mesure, que la taxe vraie soit haute ; a = probabilité que l'attaque trouve un
+     obscurcissement bon marché quand il en existe un. « Mesurée basse » : la taxe vraie est basse, à coup sûr.
+     « Mesurée haute » : P(vraie haute) = p / (p + (1 - p)(1 - a)^n) après n familles d'attaque, supposées échouer indépendamment.
+     Objets de contrôle, attendus écrits avant l'exécution : a = 0 rend p ; a = 1 rend 1.
+       p 0.10 | a 0.00 | P(mesurée basse) 0.000 | après 1, 2, 3 familles « hautes » : 0.100, 0.100, 0.100
+       p 0.10 | a 0.30 | P(mesurée basse) 0.270 | après 1, 2, 3 familles « hautes » : 0.137, 0.185, 0.245
+       p 0.10 | a 0.50 | P(mesurée basse) 0.450 | après 1, 2, 3 familles « hautes » : 0.182, 0.308, 0.471
+       p 0.10 | a 0.80 | P(mesurée basse) 0.720 | après 1, 2, 3 familles « hautes » : 0.357, 0.735, 0.933
+       p 0.10 | a 0.95 | P(mesurée basse) 0.855 | après 1, 2, 3 familles « hautes » : 0.690, 0.978, 0.999
+       p 0.10 | a 1.00 | P(mesurée basse) 0.900 | après 1, 2, 3 familles « hautes » : 1.000, 1.000, 1.000
+       p 0.25 | a 0.00 | P(mesurée basse) 0.000 | après 1, 2, 3 familles « hautes » : 0.250, 0.250, 0.250
+       p 0.25 | a 0.30 | P(mesurée basse) 0.225 | après 1, 2, 3 familles « hautes » : 0.323, 0.405, 0.493
+       p 0.25 | a 0.50 | P(mesurée basse) 0.375 | après 1, 2, 3 familles « hautes » : 0.400, 0.571, 0.727
+       p 0.25 | a 0.80 | P(mesurée basse) 0.600 | après 1, 2, 3 familles « hautes » : 0.625, 0.893, 0.977
+       p 0.25 | a 0.95 | P(mesurée basse) 0.712 | après 1, 2, 3 familles « hautes » : 0.870, 0.993, 1.000
+       p 0.25 | a 1.00 | P(mesurée basse) 0.750 | après 1, 2, 3 familles « hautes » : 1.000, 1.000, 1.000
+       p 0.40 | a 0.00 | P(mesurée basse) 0.000 | après 1, 2, 3 familles « hautes » : 0.400, 0.400, 0.400
+       p 0.40 | a 0.30 | P(mesurée basse) 0.180 | après 1, 2, 3 familles « hautes » : 0.488, 0.576, 0.660
+       p 0.40 | a 0.50 | P(mesurée basse) 0.300 | après 1, 2, 3 familles « hautes » : 0.571, 0.727, 0.842
+       p 0.40 | a 0.80 | P(mesurée basse) 0.480 | après 1, 2, 3 familles « hautes » : 0.769, 0.943, 0.988
+       p 0.40 | a 0.95 | P(mesurée basse) 0.570 | après 1, 2, 3 familles « hautes » : 0.930, 0.996, 1.000
+       p 0.40 | a 1.00 | P(mesurée basse) 0.600 | après 1, 2, 3 familles « hautes » : 1.000, 1.000, 1.000
+
+[F3] Tailles pour lire une taxe sur des épisodes rejoués.
+     (a) Loi binomiale exacte, taux du témoin supposé connu (grand bras témoin) : n épisodes rejoués sous obscurcissement,
+         X = réussites. « Taxe haute » : taux <= p (1 - k_haut) ; « taxe basse » : taux >= p (1 - k_bas). Risque <= 0,05, puissance >= 0,90.
+         taxe 0.30 contre 0.10, réussite du témoin 0.35 : n =   355, « basse » si X >= 101 (risque 0.0493, puissance 0.9031)
+         taxe 0.30 contre 0.10, réussite du témoin 0.60 : n =   151, « basse » si X >= 74 (risque 0.0489, puissance 0.9052)
+         taxe 0.30 contre 0.10, réussite du témoin 0.85 : n =    64, « basse » si X >= 45 (risque 0.0492, puissance 0.9031)
+         taxe 0.50 contre 0.10, réussite du témoin 0.35 : n =    83, « basse » si X >= 21 (risque 0.0469, puissance 0.9111)
+         taxe 0.50 contre 0.10, réussite du témoin 0.60 : n =    36, « basse » si X >= 16 (risque 0.0470, puissance 0.9060)
+         taxe 0.50 contre 0.10, réussite du témoin 0.85 : n =    20, « basse » si X >= 13 (risque 0.0359, puissance 0.9248)
+         taxe 0.30 contre 0.00, réussite du témoin 0.35 : n =   164, « basse » si X >= 50 (risque 0.0478, puissance 0.9031)
+         taxe 0.30 contre 0.00, réussite du témoin 0.60 : n =    68, « basse » si X >= 36 (risque 0.0449, puissance 0.9045)
+         taxe 0.30 contre 0.00, réussite du témoin 0.85 : n =    27, « basse » si X >= 21 (risque 0.0376, puissance 0.9014)
+         taxe 0.10 contre 0.02, réussite du témoin 0.35 : n =  2421, « basse » si X >= 801 (risque 0.0492, puissance 0.9000)
+         taxe 0.10 contre 0.02, réussite du témoin 0.60 : n =   923, « basse » si X >= 524 (risque 0.0486, puissance 0.9005)
+         taxe 0.10 contre 0.02, réussite du témoin 0.85 : n =   300, « basse » si X >= 242 (risque 0.0488, puissance 0.9014)
+     (b) Deux bras de même taille (témoin et obscurci), approximation normale : statistique = taux obscurci - (1 - k_haut) taux témoin.
+         taxe 0.30 contre 0.10, réussite du témoin 0.35 :    542 épisodes par bras
+         taxe 0.30 contre 0.10, réussite du témoin 0.60 :    216 épisodes par bras
+         taxe 0.30 contre 0.10, réussite du témoin 0.85 :     82 épisodes par bras
+         taxe 0.50 contre 0.10, réussite du témoin 0.35 :    101 épisodes par bras
+         taxe 0.50 contre 0.10, réussite du témoin 0.60 :     43 épisodes par bras
+         taxe 0.50 contre 0.10, réussite du témoin 0.85 :     18 épisodes par bras
+         taxe 0.10 contre 0.02, réussite du témoin 0.35 :   4417 épisodes par bras
+         taxe 0.10 contre 0.02, réussite du témoin 0.60 :   1637 épisodes par bras
+         taxe 0.10 contre 0.02, réussite du témoin 0.85 :    491 épisodes par bras
+     (c) Le « 1 % de fausses alertes » quand le seuil est réglé sur peu d'épisodes honnêtes (loi exacte) :
+           100 épisodes honnêtes, seuil au score de rang 1 en partant du haut : taux réalisé moyen 0.0099, de 0.0005 à 0.0295 dans 90 % des cas
+           300 épisodes honnêtes, seuil au score de rang 3 en partant du haut : taux réalisé moyen 0.0100, de 0.0027 à 0.0208 dans 90 % des cas
+          1000 épisodes honnêtes, seuil au score de rang 10 en partant du haut : taux réalisé moyen 0.0100, de 0.0054 à 0.0157 dans 90 % des cas
+          3000 épisodes honnêtes, seuil au score de rang 30 en partant du haut : taux réalisé moyen 0.0100, de 0.0072 à 0.0132 dans 90 % des cas
+
+[F4] Heures de carte graphique des bras entraînés, d'après les durées publiées. Aucun prix : il est à relever au devis.
+     Renforcement sans gradient, modèle de 8 milliards de paramètres : 120 minutes par passe sur 1 000 exemples, une carte [publié].
+       une cible, un réglage, 3 passes                            :     6 heures de carte
+       deux cibles, trois réglages, 3 passes                      :    36 heures de carte
+       trois cibles, grille publiée de douze réglages, 6 passes   :   432 heures de carte
+     Gradient à travers la sonde, suffixe d'entrée, modèle de 8 milliards : 256 pas, environ 10 minutes [publié] ;
+     contre un modèle entraîné à rester lisible : 16 384 pas, environ 10 heures [publié].
+       trois cibles, cinq poids de pénalité, trois graines, cas publié le plus court  :    7.5 heures de carte
+       les mêmes, si chaque suffixe demande dix fois plus                             :   75.0 heures de carte
+       les mêmes, au cas publié le plus long                                          :  450.0 heures de carte
+     Rapport des coûts d'attaque publiés, avec et sans l'entraînement à rester lisible : 64 fois en pas ; taux de réussite de 95 % à 35 %.
+
+[F5] La décision : sous quelles valeurs chaque option est la meilleure. Toutes les entrées sont des [jugements].
+     v = l'étau reste une grandeur que le programme veut dire avec des chiffres ;
+     h = le plafond par effacement est haut sur une cible au moins (un bras entraîné reste alors utile à l'étau) ;
+     q = l'expérience du coût de déplacement du papier C part à temps et peut viser les sondes de sabotage telles qu'elles sont déployées.
+     (a) lecture ajoutée à cette expérience : la meilleure si v et (non h, ou q) ; (b) bras à part : si v, h et non q ; (c) rien : si non v.
+     (a) échelonnée = plafond par effacement d'abord, hôte du bras entraîné choisi ensuite : la meilleure dès que v.
+     Valeurs de base v = 0,85, h = 0,50, q = 0,50 : (a) 0.637 ; (b) 0.212 ; (c) 0.150 ; somme 1.000 (attendu 1) ; (a) échelonnée 0.850
+     Objets de contrôle, attendus écrits avant l'exécution : q = 1 rend (a) = v ; h = 0 rend (a) = v ; h = 1 et q = 0 rendent (a) = 0.
+       q = 1 : 0.850 ; h = 0 : 0.850 ; h = 1, q = 0 : 0.000
+     Part des cas où le plafond par effacement règle seul la question en régime de gradient (1 - h) : 0.50 aux valeurs de base.
+     Sensibilité de (a), engagée dès maintenant :
+       v 0.70 | h 0.3 | q = 0,2 : 0.532 | q = 0,5 : 0.595 | q = 0,8 : 0.658 | (a) échelonnée : 0.700
+       v 0.70 | h 0.5 | q = 0,2 : 0.420 | q = 0,5 : 0.525 | q = 0,8 : 0.630 | (a) échelonnée : 0.700
+       v 0.70 | h 0.7 | q = 0,2 : 0.308 | q = 0,5 : 0.455 | q = 0,8 : 0.602 | (a) échelonnée : 0.700
+       v 0.85 | h 0.3 | q = 0,2 : 0.646 | q = 0,5 : 0.722 | q = 0,8 : 0.799 | (a) échelonnée : 0.850
+       v 0.85 | h 0.5 | q = 0,2 : 0.510 | q = 0,5 : 0.637 | q = 0,8 : 0.765 | (a) échelonnée : 0.850
+       v 0.85 | h 0.7 | q = 0,2 : 0.374 | q = 0,5 : 0.552 | q = 0,8 : 0.731 | (a) échelonnée : 0.850
+       v 0.95 | h 0.3 | q = 0,2 : 0.722 | q = 0,5 : 0.807 | q = 0,8 : 0.893 | (a) échelonnée : 0.950
+       v 0.95 | h 0.5 | q = 0,2 : 0.570 | q = 0,5 : 0.712 | q = 0,8 : 0.855 | (a) échelonnée : 0.950
+       v 0.95 | h 0.7 | q = 0,2 : 0.418 | q = 0,5 : 0.617 | q = 0,8 : 0.817 | (a) échelonnée : 0.950
+     Seuil de q au-dessus duquel (a) engagée dépasse 0,70 : q >= 1 - (1 - 0,70 / v) / h
+       v 0.85 | h 0.3 : q >= 0.412
+       v 0.85 | h 0.5 : q >= 0.647
+       v 0.85 | h 0.7 : q >= 0.748
+       v 0.95 | h 0.3 : q >= 0.123
+       v 0.95 | h 0.5 : q >= 0.474
+       v 0.95 | h 0.7 : q >= 0.624
+     Ce que chaque information fait à (a) engagée, depuis les valeurs de base :
+       q connu : 0.850 si « à temps et compatible », 0.425 sinon (coût : une question, aucune dépense)
+       h connu : 0.850 si « plafond bas partout », 0.425 sinon (coût : le plafond par effacement)
+       v connu : 0.750 si l'étau reste à dire, 0.000 sinon (coût : ta décision sur la façon de dire l'étau)
+
+[F6] L'économie de la taxe : ce que la sanction change (forme linéaire du bloc E1 de la note sur l'étau, plus un terme de sanction).
+     Témoin : sans sanction, ce programme doit redonner le bloc E1 (passe 0,7000 ; 0,5625 ; 0,7000 ; 0,5062).
+       r0 0.80, taxe 0.30 : passe 0.7000
+       r0 0.50, taxe 0.50 : passe 0.5625
+       r0 0.30, taxe 0.50 : passe 0.7000
+       r0 0.80, taxe 0.50 : passe 0.5062
+     Attendu, écrit avant l'exécution : le retrait ne décroît jamais quand la sanction monte ; sans plancher de rappel, il tend vers la taxe ;
+     il reste sous max(r0, taxe).
+       r0 0.80, taxe 0.30, min 0.30 | s=0 : cache 1.00, retrait 0.3000 | s=0.5 : cache 1.00, retrait 0.3000 | s=2 : cache 1.00, retrait 0.3000 | s=10 : cache 1.00, retrait 0.3000 | s=1000 : cache 1.00, retrait 0.3000
+       r0 0.30, taxe 0.50, min 0.30 | s=0 : cache 0.00, retrait 0.3000 | s=0.5 : cache 0.33, retrait 0.3333 | s=2 : cache 1.00, retrait 0.5000 | s=10 : cache 1.00, retrait 0.5000 | s=1000 : cache 1.00, retrait 0.5000
+       r0 0.50, taxe 0.10, min 0.10 | s=0 : cache 1.00, retrait 0.1000 | s=0.5 : cache 1.00, retrait 0.1000 | s=2 : cache 1.00, retrait 0.1000 | s=10 : cache 1.00, retrait 0.1000 | s=1000 : cache 1.00, retrait 0.1000
+     plus grande violation des deux attentes (décroissance, dépassement de max(r0, taxe)) : +0.00e+00 (attendu : <= 0)
+     Avec un plancher de rappel rho_min que l'obscurcissement complet n'efface pas : le saboteur renonce si la sanction dépasse
+     s* = maximum sur o de (1 - rho(o))(1 - taxe o) / rho(o) ; là où une seule prise l'incrimine, c'est aussi le nombre attendu
+     de dommages discrets passés avant la première prise, à son meilleur choix. Objet de contrôle, attendu écrit avant l'exécution :
+     rappel plein et taxe nulle sans plancher : infini ; rappel plancher de 1 : zéro.
+       plancher nul, taxe nulle : inf ; plancher 1 : 0.000
+       sonde à maximum sous renforcement, 8 milliards [publié, convention]  : rho_min 0.942, taxe 0.055 : s* =   0.06 (atteint en cachant 1.00)
+       sonde de nocivité jamais vue, poids ajustés [publié, banc général]   : rho_min 0.160, taxe 0.031 : s* =   5.09 (atteint en cachant 1.00)
+       régression logistique, requêtes SQL, suffixe [publié, figure]        : rho_min 0.030, taxe 0.569 : s* =  13.94 (atteint en cachant 1.00)
+       plancher nul (obscurcissement complet atteint)                       : rho_min 0.000, taxe 0.030 : s* infini : aucune sanction ne dissuade, aucune prise n'arrive
