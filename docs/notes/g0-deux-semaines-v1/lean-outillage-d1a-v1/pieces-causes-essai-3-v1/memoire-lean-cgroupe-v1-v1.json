@@ -1,0 +1,81 @@
+{
+ "note": "pas 5 : l'item Lean de la limite de mémoire, compilé comme le bac (compiler_comme_bac_v1.sh) dans un cgroupe de mémoire (v1, le conteneur du développeur n'a ni systemd ni cgroupe v2) limité à 512M, mémoire d'échange comprise ; ce n'est pas le bac : systemd n'y rapporte rien, aucun classement « mémoire » n'est joué ici. Relevés par memory.max_usage_in_bytes, remis à zéro avant chaque compilation.",
+ "limite": "memory.limit_in_bytes = memory.memsw.limit_in_bytes = 536870912",
+ "cas": [
+  {
+   "item": "témoin sain : limite_memoire_lean_v1.lean avec 1 000 000 cases au lieu de 200 000 000",
+   "code": 0,
+   "pic_octets": 73666560,
+   "oom_kill": 0,
+   "sortie_compilation": [
+    {
+     "caption": "",
+     "data": "ALLOUE 7000000\n",
+     "endPos": {
+      "column": 5,
+      "line": 5
+     },
+     "fileName": "/item/Item.lean",
+     "isSilent": false,
+     "keepFullRange": false,
+     "kind": "[anonymous]",
+     "pos": {
+      "column": 0,
+      "line": 5
+     },
+     "severity": "information"
+    }
+   ]
+  },
+  {
+   "item": "limite_memoire_lean_v1.lean",
+   "sha256_item": "25cf213bd651b4aff154ae626afa9f9ec7a9d43eda27c5294a6905aafb082a1c",
+   "code": 137,
+   "pic_octets": 536870912,
+   "oom_kill": 1,
+   "sortie_compilation": [],
+   "lecture": "processus Lean tué par la limite du cgroupe (« Killed », code 137) ; aucune ligne « ALLOUE »"
+  },
+  {
+   "item": "iso_persistance_ecrire_v3.lean (prélude seul, pour l'ordre de grandeur)",
+   "code": 0,
+   "pic_octets": 75591680,
+   "sortie_compilation": [
+    {
+     "caption": "",
+     "data": "ISOLEMENT ecriture-tmp REUSSI écrit\n",
+     "endPos": {
+      "column": 5,
+      "line": 11
+     },
+     "fileName": "/item/Item.lean",
+     "isSilent": false,
+     "keepFullRange": false,
+     "kind": "[anonymous]",
+     "pos": {
+      "column": 0,
+      "line": 11
+     },
+     "severity": "information"
+    },
+    {
+     "caption": "",
+     "data": "ISOLEMENT ecriture-item REUSSI écrit\n",
+     "endPos": {
+      "column": 5,
+      "line": 12
+     },
+     "fileName": "/item/Item.lean",
+     "isSilent": false,
+     "keepFullRange": false,
+     "kind": "[anonymous]",
+     "pos": {
+      "column": 0,
+      "line": 12
+     },
+     "severity": "information"
+    }
+   ]
+  }
+ ]
+}
