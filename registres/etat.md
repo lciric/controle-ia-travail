@@ -1,6 +1,6 @@
 # État du programme
 
-**2026-11-21 vers 15:20 UTC — nouvelle mère `session_01Qi7Gr3eYmAhDEJzqLgWcv1` (autre compte) en poste sur le brief `registres/passations/2026-11-21-1450-brief-lancement-mere-autre-compte.md` et son erratum 1 ; rien en marche chez le loueur ni chez Hetzner (crédit 49,36 USD) ; rappels de 18 h reprogrammés ; sessions à relancer en filles une fois leur passation déposée (R-4582).**
+**2026-11-21 vers 15:20 UTC — nouvelle mère `session_01Qi7Gr3eYmAhDEJzqLgWcv1` (autre compte) en poste sur le brief `registres/passations/2026-11-21-1450-brief-lancement-mere-autre-compte.md` et son erratum 1 ; rien en marche chez le loueur ni chez Hetzner (crédit 49,36 USD) ; rappels de 18 h reprogrammés ; sessions filles relancées : formation du barreau 5 `session_01Qi7Gr5XKjeM46Bz6Lu9vub`, « Raisons ou regard ? » `session_01Qi7Gr651UmdsYLKPv2qaBk` (R-4583) ; collisionneurs, organisme, lentilles : en attente de leur passation (R-4582).**
 
 **Essai Lean D-1a : ligne « en tâche » close le 2026-11-21 vers 10:50Z — serveur 177067030 détruit à 10:27:57Z, absence relue par la mère, tâches T1 à T3 supprimées (R-4512).**
 
