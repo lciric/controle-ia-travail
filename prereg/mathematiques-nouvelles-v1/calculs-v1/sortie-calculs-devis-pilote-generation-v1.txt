@@ -1,0 +1,104 @@
+Devis du pilote « oracles plantés » du pilier « mathématiques nouvelles » — calculs v1
+Tous les montants en USD. Prix : hypothèses nommées (bloc 0), aucune vérifiée sur page publique à la date du calcul.
+
+Bloc 0 — prix par million de jetons (entrée / sortie) et statut
+   opus55           4.00 /  20.00   référence locale `claude-api` (table « Current Models », cachée le 2026-11-03) ; NON VÉRIFIÉ sur la page publique
+   sonnet55         2.00 /  10.00   même référence ; NON VÉRIFIÉ (variante, non employée)
+   fable52          8.00 /  40.00   même référence ; NON VÉRIFIÉ (variante, non employée)
+   kimi             2.00 /  10.00   `collisionneur_v8.py` l. 73-74 : « Prix vérifiés le 30 octobre » (RAPPORTÉ)
+   argon_prudent   10.00 /  50.00   `collisionneur_v8.py` l. 69-71 : valeur volontairement haute
+   argon_nov        2.00 /  10.00   page archivée `docs/sources/prix/page-prix-gemini-api-20261108T054611Z.html` : jusqu'au 30 novembre 2026 (lu sur page archivée)
+   argon_dec        4.00 /  20.00   même page archivée : à partir du 1er décembre 2026
+   astra           10.00 /  50.00   `collisionneur_v8.py` l. 76-82 : SUPPOSÉS, barème volontairement haut ; identifiant à confirmer
+   ccx33_observe           0.28 USD/h   Hetzner ccx33, 0,22692 EUR l'heure ≈ 0,28 USD (taux 1,25), `registres/depenses.md` l. 422 (observé le 12 novembre)
+   borne_haute_programme   1.30 USD/h   prix horaire de borne haute des machines à carte graphique de la phase 0, repris du brouillon 3 de l'essai Lean, § 4.3
+
+Bloc 1 — effectifs de la banque plantée
+   mondes 12 ; par monde : 8 vrais, 4 faux tôt, 4 pièges, 10 témoins de fonctionnement
+   énoncés analysables 192 ; plantés en tout 312 ; sous-banque S/N 150 (75 vrais, 75 faux)
+   propositions : 24 par monde et par configuration ; 576 en tout (deux configurations)
+   juge de nouveauté : 40 connus reformulés + 20 énoncés de mondes = 60 items
+
+Bloc 2 — devis par poste et par scénario (bas / attendu / pire)
+   (bas : Argon au prix de la page archivée jusqu'au 30 novembre, juge Kimi ; attendu et pire : Argon prudent 10/50, juge Astra 10/50)
+   [bas]
+      proposeurs : 0.04 USD par proposition Opus 5.5, 0.02 Argon ; multi-familles 9.07 ; témoin un modèle 12.10 ; total 21.17
+      bras S (suite bon marché, 150 énoncés) : 0.16 par énoncé ; total 23.40
+      bras N (lecture nue, 150 énoncés) : 0.05 par énoncé ; total 7.80
+      juge de nouveauté : 0.03 par item jugé, 0.03 par reformulation ; total 3.04
+      total des appels 55.41
+      machine : 12 h × 0.28 = 3.36
+      total appels + machine 58.77
+   [attendu]
+      proposeurs : 0.10 USD par proposition Opus 5.5, 0.25 Argon ; multi-familles 50.40 ; témoin un modèle 28.80 ; total 79.20
+      bras S (suite bon marché, 150 énoncés) : 0.31 par énoncé ; total 46.20
+      bras N (lecture nue, 150 énoncés) : 0.14 par énoncé ; total 20.40
+      juge de nouveauté : 0.28 par item jugé, 0.04 par reformulation ; total 18.48
+      total des appels 164.28
+      machine : 24 h × 0.28 = 6.72
+      total appels + machine 171.00
+   [pire]
+      proposeurs : 0.32 USD par proposition Opus 5.5, 0.80 Argon ; multi-familles 161.28 ; témoin un modèle 92.16 ; total 253.44
+      bras S (suite bon marché, 150 énoncés) : 1.27 par énoncé ; total 190.80
+      bras N (lecture nue, 150 énoncés) : 0.50 par énoncé ; total 74.40
+      juge de nouveauté : 0.72 par item jugé, 0.10 par reformulation ; total 47.04
+      total des appels 565.68
+      machine : 48 h × 1.30 = 62.40
+      total appels + machine 628.08
+
+Bloc 3 — lignes conditionnelles, réserve et plafond proposé (aucun GO demandé par ce calcul)
+   conditionnel : banque de connus refaite une fois = 18.48 ; un monde régénéré et rejoué = 12.15
+   attendu avec lignes conditionnelles = 194.91
+   réserve des appels en vol (3 items S au plafond, 2 propositions Argon au pire, 1 jugement au pire) = 7.04
+   plafond d'appels proposé = arrondi à la dizaine de (attendu avec conditionnelles × 1,5 + réserve) = 300 USD
+   plafond machine proposé = 48 h × 1.30 arrondi = 65 USD (minuterie de destruction à 48 h)
+   pire cas des appels sous plafonds par item (bloc 2, scénario pire) = 565.68 ; la coupure au plafond d'appels joue avant
+   machine au prix observé sur la durée de la minuterie : 48 h × 0.28 = 13.44
+   somme des plafonds proposés (appels + machine) = 365 USD ; ce n'est pas un attendu
+
+Bloc 4 — sensibilité : prix d'Argon et modèle du juge (total des appels, scénario attendu)
+   Argon argon_nov      juge kimi   : 122.04
+   Argon argon_nov      juge astra  : 135.48
+   Argon argon_dec      juge kimi   : 129.24
+   Argon argon_dec      juge astra  : 142.68
+   Argon argon_prudent  juge kimi   : 150.84
+   Argon argon_prudent  juge astra  : 164.28
+
+Bloc 5 — bornes exactes (Clopper–Pearson) utiles aux critères gelés
+   borne haute unilatérale à 97,5 % du taux de fausses morts pour k événements sur n énoncés vrais
+      n= 75 : k=0: 0.048 ; k=1: 0.072 ; k=2: 0.093 ; k=3: 0.112 ; k=4: 0.131 ; k=5: 0.149
+      n= 96 : k=0: 0.038 ; k=1: 0.057 ; k=2: 0.073 ; k=3: 0.089 ; k=4: 0.103 ; k=5: 0.117
+   borne basse unilatérale à 97,5 % du rappel pour k tués sur n énoncés faux
+      n= 75 : k=75: 0.952 ; k=74: 0.928 ; k=73: 0.907 ; k=68: 0.817 ; k=38: 0.389
+      n= 38 : k=38: 0.907 ; k=37: 0.862 ; k=36: 0.823 ; k=34: 0.752 ; k=19: 0.334
+      n= 37 : k=37: 0.905 ; k=36: 0.858 ; k=35: 0.818 ; k=33: 0.746 ; k=18: 0.319
+
+Bloc 6 — test exact des signes sur les mondes appariés (différence de rendement multi-familles − témoin, par monde)
+   12 mondes sans ex æquo : au moins 10 différences positives sur 12 pour un niveau unilatéral ≤ 0,05 (niveau réalisé 0.0193)
+   10 mondes sans ex æquo : au moins 9 différences positives sur 10 pour un niveau unilatéral ≤ 0,05 (niveau réalisé 0.0107)
+    8 mondes sans ex æquo : au moins 7 différences positives sur 8 pour un niveau unilatéral ≤ 0,05 (niveau réalisé 0.0352)
+
+Bloc 7 — valeurs critiques calibrées du score apparié, lues dans la table scellée de l'essai Lean (δ = 0,20)
+   fichier : brouillons/couche4-essai-preuve-formelle-v1/calculs-v3/valeurs-critiques-calibrees-v1.json ; méthode : score apparié (forme close dite de Tango, <<SOURCE_TANGO>>) ; cible par queue 0.0125 ; grille n [40, 150]
+   n= 75 : z*(B>0) = 2.2504 ; z*(H<δ) = 2.2754 ; z*(B≥δ) = 2.3099
+   n= 38 : hors de la grille calibrée (40 à 150) : aucune lecture confirmatoire appariée à cet effectif ; strates lues en description
+   n= 37 : hors de la grille calibrée (40 à 150) : aucune lecture confirmatoire appariée à cet effectif ; strates lues en description
+   n= 40 : z*(B>0) = 2.2634 ; z*(H<δ) = 2.2939 ; z*(B≥δ) = 2.2414
+
+Bloc 8 — heures de travail estimées par lot (estimations du concepteur, aucune mesure)
+    16 à  24 h — B1 code : générateur de mondes, grammaire, bac à sable, tests de mort exacts, normaliseur, clés scellées (Opus 5.5)
+     4 à   8 h — B1 vérification du code par un autre modèle, puis vérification des corrections (même contre-lecteur)
+     3 à   5 h — B1 essais R5 : cas sains et artefacts, rejeu complet sur la banque plantée sans aucun appel
+     6 à  10 h — B2 préenregistrement : blancs remplis (Fable 5.2), contre-lecture (Opus 5.5), corrections, vérification
+     6 à  10 h — B3 harnais d'appels : clés hors bac, comptage par appel, plafonds, identifiants servis, manifeste (Opus 5.5)
+    24 à  36 h — B4 course : construction de la banque de connus, proposeurs, bras S et N, juge ; temps mural
+     4 à   8 h — B5 lecture par un agent neuf, verdict (R13), audit de symétrie si déclenché
+     4 à   8 h — A1 consigne v4 du troisième essai de l'outillage Lean (Opus 5.5, en cours), vérification courte
+     3 à   6 h — A2 troisième essai de l'outillage sur le poste de Lazar, rapport, gestes de la mère ; heures murales
+    12 à  20 h — A3 si l'outillage est conforme : vingt pièces à remplir de l'essai D-1b, préenregistrement complet, contre-lecture
+     8 à  14 h — C1 cartes de cible Q4 (version finie), Q5, étalonnage du score apparié : énoncés visés écrits à la main (Fable 5.2)
+     3 à   6 h — C2 relecture des cartes par deux familles et par Lazar, scellement
+     8 à  16 h — C3 formalisation en Lean avec sorry des cibles scellées, puis Q3 (k = 2, 3), puis Q1 (Ville) ; après un outillage conforme
+     6 à  10 h — D1 conception du pilote 2 : cibles fausses plantées, archive complète, gain de corruption, attaque adaptative (Fable 5.2)
+     1 à   2 h — E1 lecture de la note générale des expérimentateurs et des tests de mort, alignement du régime du pilote
+   relecture humaine du pilote : 1.5 à 6.0 h (attendu 3.0 h)
