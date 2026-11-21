@@ -9,4 +9,5 @@
 
 Absences acceptées par l'arbitre : aucune.
 Ligne : 28.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 6.23 USD.
-Dépense totale : 6.23 USD. Mis à jour 2026-11-21T10:05:45Z.
+Réserve (v9-v8) : cellules de Google écrites sur une réponse sans aucun jeton de pensée : E3-T1-conception-C.
+Dépense totale : 6.23 USD. Mis à jour 2026-11-21T22:35:43Z.
