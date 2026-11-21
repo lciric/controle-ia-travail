@@ -1,0 +1,132 @@
+{
+ "piece": "entrées du calcul du devis de la lecture de fin de la colonne matière première, v2",
+ "ecrit_avant_le_premier_jeu_du_programme": true,
+ "ce_qui_change_de_la_v1": "la règle gelée de la borne de sortie et ses cinq objets de contrôle (correction C9) ; les sources ; aucun chiffre des trois cas, de la grille ni des repères ne change",
+ "appels": {
+  "juges": 2,
+  "textes_reels_par_juge": 3,
+  "appels_temoins_par_juge": 1,
+  "source": "conception du véhicule v5 (1b7f6822…), § 2.14 : deux juges de la course, trois réponses brutes ; l'appel de contrôle par juge est une valeur du concepteur de l'additif (additif v2, § 5 et § 6)"
+ },
+ "bornes": {
+  "requete_octets_au_plus": 120000,
+  "sortie_jetons_au_plus": 16000,
+  "source": "valeurs du concepteur de l'additif (additif v2, § 5) ; la taille des trois réponses brutes est à relever, taille seule, sans les ouvrir"
+ },
+ "regle_de_la_borne_de_sortie": {
+  "pire_par_appel_usd": "2.00",
+  "plancher_sortie_jetons": 2000,
+  "source": "additif v2, § 5, « Bornes » : règle proposée par la contre-lecture (C9) ; le pire d'un appel, 2,00 USD, est le plafond de 16,00 USD divisé par huit appels ; le plancher de 2 000 jetons est une valeur du concepteur des corrections, égale à la sortie du cas bas"
+ },
+ "cas": {
+  "bas": {
+   "octets_par_requete": 20000,
+   "octets_par_jeton": "2.5",
+   "sortie_jetons": 2000,
+   "tarif_entree_usd_par_million": "2",
+   "tarif_sortie_usd_par_million": "10",
+   "source": "taille : règle du concepteur, à relever ; 2,5 octets par jeton : devis v6 (d825cb31…), § 4, table des sondes ; tarif : repère 2 et 10 du devis v6, § 2 et S9, non relu, qui n'est pas dit être le tarif des juges"
+  },
+  "haut": {
+   "octets_par_requete": 60000,
+   "octets_par_jeton": "1",
+   "sortie_jetons": 16000,
+   "tarif_entree_usd_par_million": "4",
+   "tarif_sortie_usd_par_million": "20",
+   "source": "taille : règle du concepteur, à relever ; un jeton par octet : devis v6, § 4 ; tarif : repère 4 et 20 de la note d'arbitrage (44d1e86f…), point 2, qui n'est pas dit être le tarif des juges"
+  },
+  "pire": {
+   "octets_par_requete": 120000,
+   "octets_par_jeton": "1",
+   "sortie_jetons": 16000,
+   "tarif_entree_usd_par_million": "10",
+   "tarif_sortie_usd_par_million": "50",
+   "source": "les deux bornes de la requête ; un jeton par octet ; tarif : repère 10 et 50, borne haute de la note d'arbitrage, point 2 ; au-delà de ce tarif, la règle de la borne de sortie abaisse la sortie pour que le pire d'un appel reste de 2,00 USD"
+  }
+ },
+ "plafond_usd": "16.00",
+ "reperes_de_tarif_non_releves": [
+  {"entree": "2", "sortie": "10"},
+  {"entree": "4", "sortie": "20"},
+  {"entree": "10", "sortie": "50"}
+ ],
+ "repere_mesure_course_v9": {
+  "source": "devis v6 (d825cb31…), § 1, ligne S1, lue dans le devis et non à sa source : juges 6,86 et 2,41 USD pour 94 appels chacun",
+  "juges": [
+   {"juge": "juge de l'espèce 3", "usd_sur_la_course": "6.86", "appels": 94},
+   {"juge": "juge de l'espèce 1", "usd_sur_la_course": "2.41", "appels": 94}
+  ]
+ },
+ "objets_de_controle": [
+  {
+   "nom": "faux par construction : tarif au-dessus du repère le plus haut (15 et 75), tailles au pire, borne de sortie laissée à 16 000 jetons, sans la règle ; attendu à la main : 8 x (1,80 + 1,20) = 24,00 > 16,00",
+   "attendu_tient_sous_le_plafond": false,
+   "scenario": {
+    "octets_par_requete": 120000,
+    "octets_par_jeton": "1",
+    "sortie_jetons": 16000,
+    "tarif_entree_usd_par_million": "15",
+    "tarif_sortie_usd_par_million": "75"
+   }
+  },
+  {
+   "nom": "faux par construction : requête d'un octet au-dessus de sa borne, au tarif le plus bas ; attendu : refusée, quel que soit son coût",
+   "attendu_tient_sous_le_plafond": false,
+   "scenario": {
+    "octets_par_requete": 120001,
+    "octets_par_jeton": "2.5",
+    "sortie_jetons": 2000,
+    "tarif_entree_usd_par_million": "2",
+    "tarif_sortie_usd_par_million": "10"
+   }
+  },
+  {
+   "nom": "vrai par construction : le pire, aux deux bornes et au repère le plus haut ; attendu à la main : 8 x (1,20 + 0,80) = 16,00, égal au plafond, donc tenu",
+   "attendu_tient_sous_le_plafond": true,
+   "scenario": {
+    "octets_par_requete": 120000,
+    "octets_par_jeton": "1",
+    "sortie_jetons": 16000,
+    "tarif_entree_usd_par_million": "10",
+    "tarif_sortie_usd_par_million": "50"
+   }
+  }
+ ],
+ "objets_de_controle_de_la_regle": [
+  {
+   "nom": "vrai par construction : tarif 10 et 50 ; attendu à la main : (2,00 - 1,20) / 0,00005 = 16 000, égal à la borne écrite ; l'appel part",
+   "tarif_entree_usd_par_million": "10",
+   "tarif_sortie_usd_par_million": "50",
+   "attendu_borne_de_sortie_jetons": "16000",
+   "attendu_l_appel_part": true
+  },
+  {
+   "nom": "vrai par construction : tarif 2 et 10 ; attendu à la main : (2,00 - 0,24) / 0,00001 = 176 000, ramené à la borne écrite, 16 000 ; l'appel part",
+   "tarif_entree_usd_par_million": "2",
+   "tarif_sortie_usd_par_million": "10",
+   "attendu_borne_de_sortie_jetons": "16000",
+   "attendu_l_appel_part": true
+  },
+  {
+   "nom": "vrai par construction, borne abaissée : tarif 15 et 75 ; attendu à la main : (2,00 - 1,80) / 0,000075 = 2 666,67, partie entière 2 666, au-dessus du plancher ; l'appel part, à 1,80 + 0,19995 = 1,99995 USD au pire",
+   "tarif_entree_usd_par_million": "15",
+   "tarif_sortie_usd_par_million": "75",
+   "attendu_borne_de_sortie_jetons": "2666",
+   "attendu_l_appel_part": true
+  },
+  {
+   "nom": "faux par construction : tarif 16 et 80 ; attendu à la main : (2,00 - 1,92) / 0,00008 = 1 000, sous le plancher de 2 000 ; l'appel ne part pas",
+   "tarif_entree_usd_par_million": "16",
+   "tarif_sortie_usd_par_million": "80",
+   "attendu_borne_de_sortie_jetons": "1000",
+   "attendu_l_appel_part": false
+  },
+  {
+   "nom": "faux par construction : tarif 20 et 100 ; attendu à la main : 2,00 - 2,40 est négatif, la borne vaut zéro ; l'appel ne part pas",
+   "tarif_entree_usd_par_million": "20",
+   "tarif_sortie_usd_par_million": "100",
+   "attendu_borne_de_sortie_jetons": "0",
+   "attendu_l_appel_part": false
+  }
+ ]
+}

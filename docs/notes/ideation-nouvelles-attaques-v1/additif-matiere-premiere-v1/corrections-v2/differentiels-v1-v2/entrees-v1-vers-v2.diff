@@ -1,0 +1,89 @@
+--- /home/user/controle-ia-travail-organisme/docs/notes/ideation-nouvelles-attaques-v1/additif-matiere-premiere-v1/entrees-devis-lecture-de-fin-matiere-premiere-v1.json	2026-11-21 13:02:08.295539350 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/concepteur-corrections-additif-matiere-premiere/entrees-devis-lecture-de-fin-matiere-premiere-v2.json	2026-11-21 13:33:53.960440969 +0000
+@@ -1,16 +1,22 @@
+ {
+- "piece": "entrées du calcul du devis de la lecture de fin de la colonne matière première, v1",
++ "piece": "entrées du calcul du devis de la lecture de fin de la colonne matière première, v2",
+  "ecrit_avant_le_premier_jeu_du_programme": true,
++ "ce_qui_change_de_la_v1": "la règle gelée de la borne de sortie et ses cinq objets de contrôle (correction C9) ; les sources ; aucun chiffre des trois cas, de la grille ni des repères ne change",
+  "appels": {
+   "juges": 2,
+   "textes_reels_par_juge": 3,
+   "appels_temoins_par_juge": 1,
+-  "source": "conception du véhicule v5 (1b7f6822…), § 2.14 : deux juges de la course, trois réponses brutes ; l'appel témoin par juge est une valeur du concepteur de l'additif (additif, § 6)"
++  "source": "conception du véhicule v5 (1b7f6822…), § 2.14 : deux juges de la course, trois réponses brutes ; l'appel de contrôle par juge est une valeur du concepteur de l'additif (additif v2, § 5 et § 6)"
+  },
+  "bornes": {
+   "requete_octets_au_plus": 120000,
+   "sortie_jetons_au_plus": 16000,
+-  "source": "valeurs du concepteur de l'additif (additif, § 5) ; la taille des trois réponses brutes est à relever, taille seule, sans les ouvrir"
++  "source": "valeurs du concepteur de l'additif (additif v2, § 5) ; la taille des trois réponses brutes est à relever, taille seule, sans les ouvrir"
++ },
++ "regle_de_la_borne_de_sortie": {
++  "pire_par_appel_usd": "2.00",
++  "plancher_sortie_jetons": 2000,
++  "source": "additif v2, § 5, « Bornes » : règle proposée par la contre-lecture (C9) ; le pire d'un appel, 2,00 USD, est le plafond de 16,00 USD divisé par huit appels ; le plancher de 2 000 jetons est une valeur du concepteur des corrections, égale à la sortie du cas bas"
+  },
+  "cas": {
+   "bas": {
+@@ -35,7 +41,7 @@
+    "sortie_jetons": 16000,
+    "tarif_entree_usd_par_million": "10",
+    "tarif_sortie_usd_par_million": "50",
+-   "source": "les deux bornes de la requête ; un jeton par octet ; tarif : repère 10 et 50, borne haute de la note d'arbitrage, point 2 ; au-delà, c'est le relais à coût borné qui refuse"
++   "source": "les deux bornes de la requête ; un jeton par octet ; tarif : repère 10 et 50, borne haute de la note d'arbitrage, point 2 ; au-delà de ce tarif, la règle de la borne de sortie abaisse la sortie pour que le pire d'un appel reste de 2,00 USD"
+   }
+  },
+  "plafond_usd": "16.00",
+@@ -53,7 +59,7 @@
+  },
+  "objets_de_controle": [
+   {
+-   "nom": "faux par construction : tarif au-dessus du repère le plus haut (15 et 75), tailles au pire ; attendu à la main : 8 x (1,80 + 1,20) = 24,00 > 16,00",
++   "nom": "faux par construction : tarif au-dessus du repère le plus haut (15 et 75), tailles au pire, borne de sortie laissée à 16 000 jetons, sans la règle ; attendu à la main : 8 x (1,80 + 1,20) = 24,00 > 16,00",
+    "attendu_tient_sous_le_plafond": false,
+    "scenario": {
+     "octets_par_requete": 120000,
+@@ -85,5 +91,42 @@
+     "tarif_sortie_usd_par_million": "50"
+    }
+   }
++ ],
++ "objets_de_controle_de_la_regle": [
++  {
++   "nom": "vrai par construction : tarif 10 et 50 ; attendu à la main : (2,00 - 1,20) / 0,00005 = 16 000, égal à la borne écrite ; l'appel part",
++   "tarif_entree_usd_par_million": "10",
++   "tarif_sortie_usd_par_million": "50",
++   "attendu_borne_de_sortie_jetons": "16000",
++   "attendu_l_appel_part": true
++  },
++  {
++   "nom": "vrai par construction : tarif 2 et 10 ; attendu à la main : (2,00 - 0,24) / 0,00001 = 176 000, ramené à la borne écrite, 16 000 ; l'appel part",
++   "tarif_entree_usd_par_million": "2",
++   "tarif_sortie_usd_par_million": "10",
++   "attendu_borne_de_sortie_jetons": "16000",
++   "attendu_l_appel_part": true
++  },
++  {
++   "nom": "vrai par construction, borne abaissée : tarif 15 et 75 ; attendu à la main : (2,00 - 1,80) / 0,000075 = 2 666,67, partie entière 2 666, au-dessus du plancher ; l'appel part, à 1,80 + 0,19995 = 1,99995 USD au pire",
++   "tarif_entree_usd_par_million": "15",
++   "tarif_sortie_usd_par_million": "75",
++   "attendu_borne_de_sortie_jetons": "2666",
++   "attendu_l_appel_part": true
++  },
++  {
++   "nom": "faux par construction : tarif 16 et 80 ; attendu à la main : (2,00 - 1,92) / 0,00008 = 1 000, sous le plancher de 2 000 ; l'appel ne part pas",
++   "tarif_entree_usd_par_million": "16",
++   "tarif_sortie_usd_par_million": "80",
++   "attendu_borne_de_sortie_jetons": "1000",
++   "attendu_l_appel_part": false
++  },
++  {
++   "nom": "faux par construction : tarif 20 et 100 ; attendu à la main : 2,00 - 2,40 est négatif, la borne vaut zéro ; l'appel ne part pas",
++   "tarif_entree_usd_par_million": "20",
++   "tarif_sortie_usd_par_million": "100",
++   "attendu_borne_de_sortie_jetons": "0",
++   "attendu_l_appel_part": false
++  }
+  ]
+ }

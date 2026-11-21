@@ -1,0 +1,214 @@
+#!/usr/bin/env python3
+"""Calcul du devis de la lecture de fin de la colonne « matière première » — v2.
+
+Arithmétique seule, en décimal exact. Aucun appel, aucun réseau, aucune clé,
+aucune lecture hors du fichier d'entrées donné en argument.
+
+Ce que la v2 ajoute à la v1 (correction C9 de la contre-lecture) : la règle
+gelée de la borne de sortie, calculée par relais sur son tarif, pour que le
+pire d'un appel ne dépasse jamais sa valeur écrite, quel que soit le tarif.
+Le calcul des trois cas, de la grille et des repères est celui de la v1.
+
+Usage :
+    python3 calcul_devis_lecture_de_fin_matiere_premiere_v2.py ENTREES.json SORTIE.json
+
+Le programme sort en code 1 si un objet de contrôle ne rend pas ce que le
+fichier d'entrées annonce pour lui ; il n'écrit alors aucune sortie.
+"""
+import json
+import sys
+from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_UP
+
+MILLION = Decimal(1000000)
+CENT = Decimal("0.01")
+FIN = Decimal("0.000001")
+
+
+def jetons_d_entree(octets, octets_par_jeton):
+    """Jetons d'entrée, arrondis à l'entier supérieur."""
+    return (Decimal(octets) / Decimal(octets_par_jeton)).to_integral_value(
+        rounding=ROUND_CEILING
+    )
+
+
+def cout_d_un_appel(cas):
+    entree = jetons_d_entree(cas["octets_par_requete"], cas["octets_par_jeton"])
+    sortie = Decimal(cas["sortie_jetons"])
+    usd_entree = entree * Decimal(cas["tarif_entree_usd_par_million"]) / MILLION
+    usd_sortie = sortie * Decimal(cas["tarif_sortie_usd_par_million"]) / MILLION
+    return entree, sortie, usd_entree, usd_sortie
+
+
+def lire_un_cas(cas, bornes, appels_par_juge, juges, plafond):
+    hors_borne = (
+        int(cas["octets_par_requete"]) > int(bornes["requete_octets_au_plus"])
+        or int(cas["sortie_jetons"]) > int(bornes["sortie_jetons_au_plus"])
+    )
+    entree, sortie, usd_entree, usd_sortie = cout_d_un_appel(cas)
+    par_appel = usd_entree + usd_sortie
+    par_juge = par_appel * appels_par_juge
+    total = par_juge * juges
+    tient = (not hors_borne) and total <= plafond
+    return {
+        "requete_dans_ses_bornes": not hors_borne,
+        "jetons_d_entree_par_appel": str(int(entree)),
+        "jetons_de_sortie_par_appel": str(int(sortie)),
+        "usd_par_appel": str(par_appel.quantize(FIN, rounding=ROUND_HALF_UP)),
+        "usd_par_juge": str(par_juge.quantize(FIN, rounding=ROUND_HALF_UP)),
+        "usd_total": str(total.quantize(FIN, rounding=ROUND_HALF_UP)),
+        "usd_total_au_centime_superieur": str(
+            total.quantize(CENT, rounding=ROUND_CEILING)
+        ),
+        "tient_sous_le_plafond": tient,
+    }
+
+
+def borne_de_sortie_par_regle(tarif_entree, tarif_sortie, bornes, regle):
+    """Règle gelée de la borne de sortie d'un relais, sur son tarif.
+
+    borne = le plus petit de la borne écrite et de la partie entière de
+    (pire d'un appel − octets au plus × tarif d'entrée / 1 000 000)
+    / (tarif de sortie / 1 000 000), un jeton d'entrée par octet au pire.
+    Sous le plancher écrit, l'appel ne part pas.
+    """
+    pire = Decimal(regle["pire_par_appel_usd"])
+    plancher = int(regle["plancher_sortie_jetons"])
+    borne_ecrite = int(bornes["sortie_jetons_au_plus"])
+    octets = Decimal(int(bornes["requete_octets_au_plus"]))
+    te = Decimal(tarif_entree)
+    ts = Decimal(tarif_sortie)
+    usd_entree_au_pire = octets * te / MILLION
+    reste = pire - usd_entree_au_pire
+    if reste <= 0 or ts <= 0:
+        borne = 0
+    else:
+        calcule = int((reste / (ts / MILLION)).to_integral_value(rounding=ROUND_FLOOR))
+        borne = min(borne_ecrite, calcule)
+    part = borne >= plancher
+    usd_au_pire = usd_entree_au_pire + Decimal(borne) * ts / MILLION
+    return {
+        "borne_de_sortie_jetons": str(borne),
+        "l_appel_part": part,
+        "usd_par_appel_au_pire_sous_cette_borne": str(
+            usd_au_pire.quantize(FIN, rounding=ROUND_HALF_UP)
+        ),
+        "pire_tenu": (not part) or usd_au_pire <= pire,
+    }
+
+
+def main(argv):
+    if len(argv) != 3:
+        sys.stderr.write("usage : programme ENTREES.json SORTIE.json\n")
+        return 2
+    with open(argv[1], "r", encoding="utf-8") as f:
+        e = json.load(f)
+
+    juges = int(e["appels"]["juges"])
+    appels_par_juge = int(e["appels"]["textes_reels_par_juge"]) + int(
+        e["appels"]["appels_temoins_par_juge"]
+    )
+    plafond = Decimal(e["plafond_usd"])
+    bornes = e["bornes"]
+    regle = e["regle_de_la_borne_de_sortie"]
+
+    cas = {}
+    for nom in ("bas", "haut", "pire"):
+        cas[nom] = lire_un_cas(e["cas"][nom], bornes, appels_par_juge, juges, plafond)
+
+    controles = []
+    echec = False
+    for c in e["objets_de_controle"]:
+        rendu = lire_un_cas(c["scenario"], bornes, appels_par_juge, juges, plafond)
+        conforme = rendu["tient_sous_le_plafond"] == c["attendu_tient_sous_le_plafond"]
+        if not conforme:
+            echec = True
+        controles.append(
+            {
+                "nom": c["nom"],
+                "attendu_tient_sous_le_plafond": c["attendu_tient_sous_le_plafond"],
+                "rendu": rendu,
+                "conforme_a_l_attendu": conforme,
+            }
+        )
+
+    # Objets de contrôle de la règle de la borne de sortie (v2).
+    controles_regle = []
+    for c in e["objets_de_controle_de_la_regle"]:
+        rendu = borne_de_sortie_par_regle(
+            c["tarif_entree_usd_par_million"],
+            c["tarif_sortie_usd_par_million"],
+            bornes,
+            regle,
+        )
+        conforme = (
+            rendu["borne_de_sortie_jetons"] == c["attendu_borne_de_sortie_jetons"]
+            and rendu["l_appel_part"] == c["attendu_l_appel_part"]
+            and rendu["pire_tenu"]
+        )
+        if not conforme:
+            echec = True
+        controles_regle.append(
+            {
+                "nom": c["nom"],
+                "attendu_borne_de_sortie_jetons": c["attendu_borne_de_sortie_jetons"],
+                "attendu_l_appel_part": c["attendu_l_appel_part"],
+                "rendu": rendu,
+                "conforme_a_l_attendu": conforme,
+            }
+        )
+
+    if echec:
+        sys.stderr.write("objet de contrôle non conforme : aucune sortie écrite\n")
+        return 1
+
+    # Grille au pire des tailles, par repère de tarif : aucun n'est le tarif relevé.
+    grille = []
+    for t in e["reperes_de_tarif_non_releves"]:
+        sc = dict(e["cas"]["pire"])
+        sc["tarif_entree_usd_par_million"] = t["entree"]
+        sc["tarif_sortie_usd_par_million"] = t["sortie"]
+        r = lire_un_cas(sc, bornes, appels_par_juge, juges, plafond)
+        b = borne_de_sortie_par_regle(t["entree"], t["sortie"], bornes, regle)
+        grille.append(
+            {"repere": t, "au_pire_des_tailles": r, "borne_de_sortie_par_regle": b}
+        )
+
+    # Repère mesuré : coût par appel des juges à la course v9 (une fiche par appel).
+    reperes_mesures = []
+    for m in e["repere_mesure_course_v9"]["juges"]:
+        par_appel = Decimal(m["usd_sur_la_course"]) / Decimal(m["appels"])
+        reperes_mesures.append(
+            {
+                "juge": m["juge"],
+                "usd_par_appel_a_la_course_v9": str(
+                    par_appel.quantize(FIN, rounding=ROUND_HALF_UP)
+                ),
+            }
+        )
+
+    pire_total = Decimal(cas["pire"]["usd_total"])
+    pire_par_appel = Decimal(regle["pire_par_appel_usd"])
+    sortie = {
+        "piece": "calcul du devis de la lecture de fin de la colonne matière première, v2",
+        "appels_par_juge": appels_par_juge,
+        "appels_en_tout": appels_par_juge * juges,
+        "plafond_usd": str(plafond),
+        "plafond_par_juge_usd": str((plafond / juges).quantize(CENT)),
+        "cas": cas,
+        "pire_egal_au_plafond": pire_total == plafond,
+        "pire_par_appel_de_la_regle_fois_les_appels_egal_au_plafond": (
+            pire_par_appel * appels_par_juge * juges == plafond
+        ),
+        "objets_de_controle": controles,
+        "objets_de_controle_de_la_regle": controles_regle,
+        "grille_par_repere_de_tarif": grille,
+        "reperes_mesures_qui_n_entrent_dans_aucun_total": reperes_mesures,
+    }
+    with open(argv[2], "w", encoding="utf-8", newline="\n") as f:
+        json.dump(sortie, f, ensure_ascii=False, indent=1, sort_keys=True)
+        f.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

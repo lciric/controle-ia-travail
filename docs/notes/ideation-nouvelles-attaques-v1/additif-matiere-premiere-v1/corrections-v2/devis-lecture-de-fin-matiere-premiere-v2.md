@@ -1,0 +1,115 @@
+# Devis — lecture de fin de la colonne « matière première » de la course « nouvelles attaques », sur une ligne à part — v2
+
+- **Nature** : pièce décisive (classe A), devis. **Non scellé.** La v1 (`066f5b916b407ee4353f559e2208741fa6133f72413c62d31ef0742b13a041e8`, archivée sans modification) est contre-lue, verdict « À corriger » ; la v2 porte les corrections C1, C3, C8 et C9 et attend la vérification par le même contre-lecteur. Il ne lance rien et ne dépense rien.
+- **Auteur de la v2** : concepteur neuf des corrections, modèle F ; 2026-11-21, après 13:33Z. Processeur seul. Sur GO-2026-11-21-41.
+- **Ce qu'il chiffre** : les huit appels des deux juges de la course à la lecture de fin (additif `additif-matiere-premiere-preenregistrement-court-v9-v2.md`, § 5). Rien d'autre ne coûte d'appel.
+- **Hors des 450 USD de la course et de son plafond total de 456 USD** (additif 1 à la V9, scellé, `9f731795…`, § 0, point 2 ; devis v11 de la course, scellé, `205e08f2…` ; GO-2026-11-21-30) : ce devis ne les touche pas, et rien de lui n'est compté dans les parts des clés de la course. La v1 écrivait 570 et 576,05 USD, les chiffres à six espèces de la V9, que l'additif 1 a remplacés.
+
+## 0. Verdict
+
+| | montant |
+|---|---|
+| cas bas | **0,29 USD** |
+| cas haut | **4,48 USD** |
+| pire | **16,00 USD** |
+| **plafond d'arrêt de la ligne** | **16,00 USD** : 8,00 sur la clé Minuit (juge de l'espèce 3), 8,00 sur le deuxième relais (juge de l'espèce 1) |
+
+**Les deux tarifs des juges ne sont écrits dans aucune pièce lue : ils sont à relever**, et ce relevé est une condition de départ (additif, § 9, arrêt A). Les cas bas et haut sont calculés sur des repères, non sur des tarifs relevés. **Le plafond est ferme à tout tarif** : la borne de sortie de chaque relais suit une règle gelée qui tient le pire d'un appel à 2,00 USD (§ 3). **Les tailles des trois réponses brutes sont à relever aussi**, tailles seules, sans les ouvrir.
+
+**Ligne de GO à demander à Lazar**, après la clôture des trois générations : « Lecture de fin de la colonne "matière première" de la course "nouvelles attaques" : interrupteur `colonne_matiere_premiere` à l'état 2, registre servi `3bcb94e6…` ; ligne de calcul à part de **16,00 USD au plus**, 8,00 sur Minuit et 8,00 sur le deuxième relais, hors des 450 USD de la course ; huit appels, aucun relancé. **Cette ligne peut n'acheter aucun avis** : la garde de motifs n'est jouée sur les réponses brutes qu'après ce mot, et une requête qui mord ne part pas ; un reste de clé plus bas que 8,00 USD refuse aussi le départ des appels de cette clé. » Aucun défaut : sans mot, l'état 1 vaut et rien n'est dépensé.
+
+## 1. Sources de chaque chiffre
+
+| n° | chiffre | source | empreinte |
+|---|---|---|---|
+| E1 | deux juges ; trois réponses brutes ; routage : juge de l'espèce 3 sur Minuit, juge de l'espèce 1 sur le deuxième relais ; ligne à part, « hors des 450 USD de la course » | conception du véhicule v5, § 2.14 | `1b7f6822af20417e997b80290f05e7a4d70aa69c3d65f4139b5b3673cd98a863` |
+| E2 | un appel de contrôle par juge ; requête de 120 000 octets au plus ; sortie de 16 000 jetons au plus ; règle de la borne de sortie, pire d'un appel de 2,00 USD, plancher de 2 000 jetons | additif v2, § 5 et § 6 : valeurs des concepteurs ; règle proposée par la contre-lecture, C9 | compagnon de l'additif |
+| E3 | compte des jetons : un par octet au pire, 2,5 octets par jeton au bas | devis v6 de la course, § 4, table des sondes | `d825cb313898ea5111ede1ef3103ab25b1b923e1f52103481427919ce9d19c2c`, reprise de la v1 et de la contre-lecture |
+| E4 | repère de tarif 2 et 10 USD par million de jetons, entrée et sortie, « non relu » ; il est noté pour une autre espèce | devis v6, § 2 et ligne S9 | même |
+| E5 | repères de tarif 4 et 20, et 10 et 50 « en borne haute », USD par million | note d'arbitrage, point 2 | `44d1e86f499d546c1ef4f51aba5fa2f7631dcae8c66f52c43fc91c120e5cdd06`, reprise de même |
+| E6 | à la course v9 : juges 6,86 et 2,41 USD pour 94 appels chacun (lu dans le devis v6, ligne S1, non à sa source) | devis v6, § 1 | même que E3 |
+| E7 | tailles de 20 000 et 60 000 octets par requête aux cas bas et haut | **règle du concepteur, sans mesure** : à relever | — |
+| E8 | course à cinq espèces : ligne de 450 USD, plafond total de 456 USD | additif 1 à la V9, § 0, point 2 ; devis v11 ; GO-2026-11-21-30 | `9f731795cd8b9166ad8b78346e3d37c7352010ea0edd1f34ac86cfb0ac689200` ; `205e08f23ef9ced92a35340b8fad38765b08483a2129ee32550081d1bd043570` ; `registres/go.md` `c454dea5…` à `fed5dc2f` |
+| E9 | Minuit : part de course de 156,56 USD, soit son reste de 162,56 USD moins au plus 6 USD des deux lignes à part ; rôle : juge de l'espèce 3, cas haut 105,05 USD | complément de valeurs, lot 1, v3, § 0 et § 3 | `b4ef87dc6d5cce138f76457771c4cff18b84dfde662916841fc6386d77e202b2`, recalculée |
+| E10 | Minuit, depuis : deux rôles, juge et proposeur de l'espèce 3, cas haut des deux 131,66 USD, marge 24,90 USD | additif 1 au complément v3, v2, § 0 et § 2, **selon la contre-lecture, C1 ; non relu par moi** (chemin non donné) | `ce76e0d6a0a6e65ffb99f68d9efced8d26e205ed0e2cf11c0e2469b69f672388`, non recalculée |
+| E11 | Minuit, depuis encore : sa part dans la course « diminuée de la reprise des collisionneurs », deux lignes de 28 USD ; d'autres appels accordés « sur Minuit ou sur les clés externes » | GO-2026-11-21-28, -30, -39 et -52 | `registres/go.md`, même |
+
+Aucun de E4 et E5 n'est dit être le tarif d'un juge. E9, E10 et E11 ne donnent **aucun reste de Minuit qui vaille au jour de la lecture de fin** : ils sont cités pour dire ce qui le fait bouger.
+
+## 2. Le calcul
+
+Programme `calcul_devis_lecture_de_fin_matiere_premiere_v2.py` (`6b684a3764a810612c661c04733afb5edba0c547357de615c0f22d4d549cf208`), arithmétique décimale seule ; entrées `entrees-devis-lecture-de-fin-matiere-premiere-v2.json` (`061584b71052784e48ec7e383d519b2f6e3e5f6724b0bac5109e69e4e4f7e9ce`) ; sortie `calcul-devis-lecture-de-fin-matiere-premiere-v2.json` (`941c18a3c6ac3904fe5134fe78e4a4232c073aee855930c749e0ca91ad3d8749`). **Joué deux fois, `cmp` muet.** Rejeu : `python3 -I PROGRAMME ENTREES SORTIE`, Python 3.13.18. La v2 du programme ajoute la règle de la borne de sortie et ses objets de contrôle ; **aucun chiffre des trois cas, de la grille ni des repères ne change de la v1**.
+
+Coût d'un appel = jetons d'entrée × tarif d'entrée + jetons de sortie × tarif de sortie. Huit appels : par juge, trois réponses brutes et un appel de contrôle, compté à la taille d'un appel réel.
+
+| cas | octets par requête | octets par jeton | jetons de sortie | tarif (entrée ; sortie) | par appel | par juge | total |
+|---|---|---|---|---|---|---|---|
+| bas | 20 000 | 2,5 | 2 000 | 2 ; 10 | 0,036 | 0,144 | 0,288, soit **0,29** |
+| haut | 60 000 | 1 | 16 000 | 4 ; 20 | 0,56 | 2,24 | **4,48** |
+| pire | 120 000 (la borne) | 1 | 16 000 (la borne) | 10 ; 50 | 2,00 | 8,00 | **16,00** |
+
+Au pire des tailles, selon le repère de tarif : 3,20 USD à 2 et 10 ; 6,40 à 4 et 20 ; 16,00 à 10 et 50 (champ `grille_par_repere_de_tarif`).
+
+**La règle de la borne de sortie** (additif, § 5), par relais : le plus petit de 16 000 jetons et de la partie entière de (2,00 − 120 000 × tarif d'entrée / 1 000 000) / (tarif de sortie / 1 000 000) ; sous 2 000 jetons, les appels de ce juge ne partent pas.
+
+| tarif (entrée ; sortie) | borne de sortie | l'appel part | pire d'un appel sous cette borne |
+|---|---|---|---|
+| 2 ; 10 | 16 000 | oui | 0,40 |
+| 4 ; 20 | 16 000 | oui | 0,80 |
+| 10 ; 50 | 16 000 | oui | 2,00 |
+| 15 ; 75 | 2 666 | oui | 1,99995 |
+| 16 ; 80 | 1 000 | non | — |
+| 20 ; 100 | 0 | non | — |
+
+Repère mesuré, qui n'entre dans aucun total : à la course v9, un appel de juge sur une fiche a coûté 0,0730 USD (espèce 3) et 0,0256 USD (espèce 1) (E6). Un appel de fin porte un texte bien plus long qu'une fiche : le cas bas, 0,036 par appel, est sans doute trop bas pour l'espèce 3.
+
+## 3. Plafond d'arrêt, et ce qui le tient
+
+- **Plafond de la ligne : 16,00 USD**, 8,00 par clé ; réservé avant le premier appel.
+- **Avant chaque appel** : le cumul compté sur la ligne pour la clé, plus le pire de l'appel à lancer, calculé sur le tarif relevé du relais et sa borne de sortie, ne dépasse pas 8,00 USD ; sinon l'appel ne part pas, arrêt nommé, aucune bascule vers une autre clé (additif, § 9, arrêt C : l'arrêt n° 12, lu sur la ligne à part).
+- **Si le tarif relevé dépasse 10 et 50** : la règle abaisse la borne de sortie de ce relais, sans que personne ne la choisisse ; le pire d'un appel reste de 2,00 USD. Si la borne tombe sous 2 000 jetons, les appels de ce juge ne partent pas (arrêt D), et une ligne neuve se demande à Lazar. La v1 laissait la mère abaisser la borne : la v2 ne laisse rien à choisir, la borne étant écrite dans l'additif scellé. Le plafond n'est jamais relevé en silence.
+- **Si une requête fait plus de 120 000 octets, texte servi et liste compris** : elle ne part pas (arrêt D) ; la borne n'est relevée que par une version neuve de l'additif.
+- **Le reste des clés.** La ligne n'est pas comptée dans les parts de la course, mais elle se paie sur les mêmes clés.
+  - *Minuit.* Son reste est **calculé au registre des dépenses de `main`, jamais lu**, comme à l'arrêt n° 11 de la V9, au jour de la lecture de fin ; il doit couvrir 8,00 USD, sinon les appels de cette clé ne partent pas (arrêt C). **Aucune marge n'est promise ici** : la part de course de Minuit était de 156,56 USD pour un cas haut de 105,05 (E9) ; un second rôle et d'autres dépenses lui ont été mis depuis (E10, E11). Si la course va à son cas haut, ou entre son cas haut et son pire, le reste peut ne pas couvrir la ligne : l'arrêt C refuse alors, et la ligne de GO le dit.
+  - *Deuxième relais.* Son compte est payant (additif 1 à la V9, § 7) ; son reste est lu de la manière que le complément de valeurs écrit pour un compte payant, et doit couvrir 8,00 USD.
+
+## 4. Ce qui n'est pas chiffré
+
+1. **Les deux lecteurs d'antériorité** : sessions à part ; du temps de sessions, zéro dollar d'appels d'interface si ce sont des sessions du compte (devis v6, § 7, points 2 et 7). Leur charge croît des 24 visées et des lignes de contrôle, au même périmètre que pour une fiche.
+2. **Le lot 10 b** (programme de lecture de fin, table de routage, table de comparaison) : de l'ordre de 2 heures de développeur, zéro dollar (conception v5, § 8) ; sa contre-lecture.
+3. **Les textes inertes des objets de contrôle** (annexe de l'additif) : un concepteur, une contre-lecture, zéro dollar.
+4. **La vérification des corrections** de l'additif et de ce devis.
+5. **L'affinage par l'organisme** (conception v5, § 2.14, option (b)) : hors de ce devis ; son propre devis s'il est voulu.
+6. **L'épreuve des visées « sur devis »** : hors de ce devis.
+
+## 5. Ce qui ferait changer ce devis
+
+Le relevé des deux tarifs et des trois tailles : les cas bas et haut se recalculent par le même programme, sur un fichier d'entrées d'une version neuve ; le plafond ne monte que par un mot de Lazar. Une garde de motifs qui refuse les requêtes à l'état 2 : la dépense tombe à zéro pour ces appels, et la lecture de fin se fait sans l'avis des juges, ce que l'additif permet.
+
+## 6. Relevé de méthode
+
+**Chaîne de raisonnement.**
+
+1. Seuls les deux juges passent par un appel payant ; les lecteurs sont des sessions (E1 ; devis v6 `d825cb31…`, § 7, repris de la v1).
+2. Huit appels : deux juges, trois textes et un appel de contrôle chacun (E1, E2).
+3. Le coût d'un appel se borne par la taille de la requête, la borne de sortie et le tarif (E2, E3).
+4. La borne de sortie suit la règle de l'additif ; donc le pire d'un appel est de 2,00 USD à tout tarif, ou l'appel ne part pas (calcul rejoué, `941c18a3…`, champ `objets_de_controle_de_la_regle`).
+5. Total au pire : 8 × 2,00 = 16,00 USD (pas 2 et 4 ; champ `pire_par_appel_de_la_regle_fois_les_appels_egal_au_plafond`).
+6. Supposé : les tailles des cas bas et haut (E7).
+7. Supposé : un jeton d'entrée par octet est bien un pire pour les deux relais (E3, valeur du devis v6, non mesurée sur ces relais).
+8. Le plafond est tenu par l'arrêt C et le relais à coût borné, non par les pas 6 et 7 (additif, § 9).
+9. La course en vigueur est à cinq espèces, 450 et 456 USD (E8, relu) ; le reste de Minuit au jour de la lecture n'est écrit nulle part (E9 relu ; E10 non relu ; E11 relu).
+
+**Objets de contrôle.** Écrits au fichier d'entrées avant le premier jeu. Pour le total : faux par construction, tarif de 15 et 75 à 16 000 jetons sans la règle, attendu à la main 8 × (1,80 + 1,20) = 24,00 USD, « ne tient pas » ; requête de 120 001 octets au tarif le plus bas, « ne tient pas » malgré 0,93 USD ; vrai par construction, le pire, 16,00 USD, « tient ». Pour la règle : vrais, tarifs 10 et 50, 2 et 10 (16 000 jetons), 15 et 75 (2 666 jetons, 1,99995 USD) ; faux, 16 et 80 (1 000 jetons, l'appel ne part pas), 20 et 100 (zéro). Rendu : les huit conformes. Pour le programme : `entrees-objet-faux-regle-v2.json`, où un attendu est faux ; attendu : code 1, aucune sortie ; rendu : code 1, aucun fichier.
+
+**Premier pas non justifié.** Le pas 7. Le justifierait : le compte de jetons d'un texte de la taille d'une requête, relevé sur chaque relais, ou la borne de coût du relais lui-même.
+
+**Mode d'échec affecté.** Sans objet : je suis concepteur, non relecteur.
+
+**Dérivation de l'énoncé seul.** Sans objet : je ne suis pas un agent de re-dérivation.
+
+**Trouvaille de côté.** GO-2026-11-21-47 pose une règle permanente de plafond de sortie large pour un modèle qu'elle nomme (« au moins 16 000 jetons de texte après la réflexion »). Si le deuxième relais sert ce modèle au juge de l'espèce 1, une borne de sortie de 16 000 jetons, réflexion comprise, peut ne pas suffire, et la règle d'ici ne peut que l'abaisser. Non poursuivi : point pour la mère.
+
+**Évaluateur et conseil.** Jugé par le contre-lecteur O à la vérification, qui rejoue le programme et refait les totaux à la main. Par où il pourrait passer sans le mériter : les cas bas et haut reposent sur des tailles que personne n'a mesurées ; le § 3 ne promet aucun reste de Minuit, et pourrait sembler en promettre un. Conseil : vérifier d'abord E10 sur pièce, que je n'ai pas pu relire.
+
+— concepteur neuf des corrections, modèle F

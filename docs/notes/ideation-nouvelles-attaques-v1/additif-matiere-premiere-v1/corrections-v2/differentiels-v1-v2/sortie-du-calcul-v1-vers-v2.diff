@@ -1,0 +1,123 @@
+--- /home/user/controle-ia-travail-organisme/docs/notes/ideation-nouvelles-attaques-v1/additif-matiere-premiere-v1/calcul-devis-lecture-de-fin-matiere-premiere-v1.json	2026-11-21 13:02:08.294926246 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/concepteur-corrections-additif-matiere-premiere/calcul-devis-lecture-de-fin-matiere-premiere-v2.json	2026-11-21 13:34:05.756390741 +0000
+@@ -45,6 +45,12 @@
+     "usd_total": "3.200000",
+     "usd_total_au_centime_superieur": "3.20"
+    },
++   "borne_de_sortie_par_regle": {
++    "borne_de_sortie_jetons": "16000",
++    "l_appel_part": true,
++    "pire_tenu": true,
++    "usd_par_appel_au_pire_sous_cette_borne": "0.400000"
++   },
+    "repere": {
+     "entree": "2",
+     "sortie": "10"
+@@ -61,6 +67,12 @@
+     "usd_total": "6.400000",
+     "usd_total_au_centime_superieur": "6.40"
+    },
++   "borne_de_sortie_par_regle": {
++    "borne_de_sortie_jetons": "16000",
++    "l_appel_part": true,
++    "pire_tenu": true,
++    "usd_par_appel_au_pire_sous_cette_borne": "0.800000"
++   },
+    "repere": {
+     "entree": "4",
+     "sortie": "20"
+@@ -77,6 +89,12 @@
+     "usd_total": "16.000000",
+     "usd_total_au_centime_superieur": "16.00"
+    },
++   "borne_de_sortie_par_regle": {
++    "borne_de_sortie_jetons": "16000",
++    "l_appel_part": true,
++    "pire_tenu": true,
++    "usd_par_appel_au_pire_sous_cette_borne": "2.000000"
++   },
+    "repere": {
+     "entree": "10",
+     "sortie": "50"
+@@ -87,7 +105,7 @@
+   {
+    "attendu_tient_sous_le_plafond": false,
+    "conforme_a_l_attendu": true,
+-   "nom": "faux par construction : tarif au-dessus du repère le plus haut (15 et 75), tailles au pire ; attendu à la main : 8 x (1,80 + 1,20) = 24,00 > 16,00",
++   "nom": "faux par construction : tarif au-dessus du repère le plus haut (15 et 75), tailles au pire, borne de sortie laissée à 16 000 jetons, sans la règle ; attendu à la main : 8 x (1,80 + 1,20) = 24,00 > 16,00",
+    "rendu": {
+     "jetons_d_entree_par_appel": "120000",
+     "jetons_de_sortie_par_appel": "16000",
+@@ -130,8 +148,71 @@
+    }
+   }
+  ],
+- "piece": "calcul du devis de la lecture de fin de la colonne matière première, v1",
++ "objets_de_controle_de_la_regle": [
++  {
++   "attendu_borne_de_sortie_jetons": "16000",
++   "attendu_l_appel_part": true,
++   "conforme_a_l_attendu": true,
++   "nom": "vrai par construction : tarif 10 et 50 ; attendu à la main : (2,00 - 1,20) / 0,00005 = 16 000, égal à la borne écrite ; l'appel part",
++   "rendu": {
++    "borne_de_sortie_jetons": "16000",
++    "l_appel_part": true,
++    "pire_tenu": true,
++    "usd_par_appel_au_pire_sous_cette_borne": "2.000000"
++   }
++  },
++  {
++   "attendu_borne_de_sortie_jetons": "16000",
++   "attendu_l_appel_part": true,
++   "conforme_a_l_attendu": true,
++   "nom": "vrai par construction : tarif 2 et 10 ; attendu à la main : (2,00 - 0,24) / 0,00001 = 176 000, ramené à la borne écrite, 16 000 ; l'appel part",
++   "rendu": {
++    "borne_de_sortie_jetons": "16000",
++    "l_appel_part": true,
++    "pire_tenu": true,
++    "usd_par_appel_au_pire_sous_cette_borne": "0.400000"
++   }
++  },
++  {
++   "attendu_borne_de_sortie_jetons": "2666",
++   "attendu_l_appel_part": true,
++   "conforme_a_l_attendu": true,
++   "nom": "vrai par construction, borne abaissée : tarif 15 et 75 ; attendu à la main : (2,00 - 1,80) / 0,000075 = 2 666,67, partie entière 2 666, au-dessus du plancher ; l'appel part, à 1,80 + 0,19995 = 1,99995 USD au pire",
++   "rendu": {
++    "borne_de_sortie_jetons": "2666",
++    "l_appel_part": true,
++    "pire_tenu": true,
++    "usd_par_appel_au_pire_sous_cette_borne": "1.999950"
++   }
++  },
++  {
++   "attendu_borne_de_sortie_jetons": "1000",
++   "attendu_l_appel_part": false,
++   "conforme_a_l_attendu": true,
++   "nom": "faux par construction : tarif 16 et 80 ; attendu à la main : (2,00 - 1,92) / 0,00008 = 1 000, sous le plancher de 2 000 ; l'appel ne part pas",
++   "rendu": {
++    "borne_de_sortie_jetons": "1000",
++    "l_appel_part": false,
++    "pire_tenu": true,
++    "usd_par_appel_au_pire_sous_cette_borne": "2.000000"
++   }
++  },
++  {
++   "attendu_borne_de_sortie_jetons": "0",
++   "attendu_l_appel_part": false,
++   "conforme_a_l_attendu": true,
++   "nom": "faux par construction : tarif 20 et 100 ; attendu à la main : 2,00 - 2,40 est négatif, la borne vaut zéro ; l'appel ne part pas",
++   "rendu": {
++    "borne_de_sortie_jetons": "0",
++    "l_appel_part": false,
++    "pire_tenu": true,
++    "usd_par_appel_au_pire_sous_cette_borne": "2.400000"
++   }
++  }
++ ],
++ "piece": "calcul du devis de la lecture de fin de la colonne matière première, v2",
+  "pire_egal_au_plafond": true,
++ "pire_par_appel_de_la_regle_fois_les_appels_egal_au_plafond": true,
+  "plafond_par_juge_usd": "8.00",
+  "plafond_usd": "16.00",
+  "reperes_mesures_qui_n_entrent_dans_aucun_total": [

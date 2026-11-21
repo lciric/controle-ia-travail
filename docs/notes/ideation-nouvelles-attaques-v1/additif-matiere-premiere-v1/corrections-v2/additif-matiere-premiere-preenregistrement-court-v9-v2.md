@@ -1,0 +1,225 @@
+# Additif « matière première » au préenregistrement court v9 de la course « nouvelles attaques » — lecture de fin de la colonne — v2
+
+- **Nature** : pièce décisive (classe A), additif à un préenregistrement scellé. **Non scellé.** La v1 est contre-lue (verdict « À corriger », treize corrections) et relue pour le mode « fuite de la vérité » (verdict « cassé ») ; la v2 porte ces corrections et attend la vérification par le même contre-lecteur, puis le scellement par la mère.
+- **Version** : la v2 remplace la v1 (`d283dfe84c3bae7f242f9f6d4c52c1b4540f2fe2b01b36f89eddd587e3db4cc3`, non scellée, archivée sans modification). Corrections : contre-lecture `contre-lecture-v1/contre-lecture-additif-matiere-premiere-v1.md` (`54df89455503582b06b4e6acefa80ea9867085916bd9ba1652ce7aae03ecec93`), C1 à C13 ; relecture `contre-lecture-v1/relecture-fuite-additif-matiere-premiere-v1.md` (`c04e65e89cc5e65ece89e9d3fc68c77ca3dab084dcd261b10cf0d0ac4b376261`), pas principal et pas second. Le sort de chacune est à la table des corrections du même dossier.
+- **Auteur de la v2** : concepteur neuf, modèle F, effort élevé ; il n'a écrit ni la v1, ni la V9, ni la conception du véhicule, ni la note d'arbitrage. Relevé de `date -u` : 2026-11-21T13:33:02Z, après la lecture des pièces, avant l'écriture. Mandat : `mandat-concepteur-corrections-additif-matiere-premiere-v1.md` (`fcee0e856da002211fdff01d214aec505e93b00be045a85f654914e26ff63b62`).
+- **Processeur seul** : aucun appel, aucune dépense, aucun commit. Non ouverts : le registre servi de la matière, la branche `matiere-premiere/…`, toute branche de quarantaine, `archives-reponses-modeles/`. Aucune sortie d'aucun modèle sur la question de la course n'a été lue ; je n'ai lu aucune mesure de la course.
+- **Ce que ce texte ne contient pas** : aucun nom ni énoncé de mode, aucune visée, aucun procédé, aucun identifiant de modèle, aucune valeur de clé ; **ni la construction, ni le nombre, ni l'issue attendue d'aucun objet de contrôle de la lecture de fin** (§ 6).
+- **Là où un choix aurait été un écart à un texte scellé sur `main`, ce texte prend l'option qui ne s'en écarte pas** ; l'autre option est portée à la mère, au rapport du concepteur des corrections, section « Points délicats pour la mère ».
+
+| pièce qui fait foi | où | empreinte |
+|---|---|---|
+| préenregistrement court v9, scellé (noté V9) ; les numéros de ligne renvoient à ce fichier | `origin/main` à `fed5dc2f`, `prereg/ideation-nouvelles-attaques-v1/preenregistrement-court-course-nouvelles-attaques-v9.md` | `864f39a7ecd41a613f8892efbf66607c14da34252d643a4fd40032b5d2b500c2` |
+| additif 1 à la V9, scellé : course à cinq espèces, arrêts n° 24 à n° 27, clé de tirage n° 30 (noté A1) | même commit, même dossier, `additif-1-preenregistrement-court-v9-mode-tenu-a-l-ecart-et-retrait-espece-6-v5.md` | `9f731795cd8b9166ad8b78346e3d37c7352010ea0edd1f34ac86cfb0ac689200` |
+| complément de valeurs, lot 1, v3, scellé (noté CV3) | même commit, même dossier, `complement-valeurs-preenregistrement-court-v9-lot-1-v3.md` | `b4ef87dc6d5cce138f76457771c4cff18b84dfde662916841fc6386d77e202b2` |
+| devis v11 de la course, scellé | même commit, même dossier, `devis-course-nouvelles-attaques-v11.md` | `205e08f23ef9ced92a35340b8fad38765b08483a2129ee32550081d1bd043570` |
+| additif 1 au complément v3, v2, scellé : **non relu par moi** (son chemin ne m'est pas donné, et aucune commande de liste ne m'est permise) ; empreinte et contenu repris de la contre-lecture, C1 | `origin/main`, même dossier selon la contre-lecture | `ce76e0d6a0a6e65ffb99f68d9efced8d26e205ed0e2cf11c0e2469b69f672388`, non recalculée par moi |
+| note d'arbitrage, points 5 et 6 | `origin/main`, `docs/notes/arbitrages-points-delicats-v1/arbitrage-fable-six-points-delicats-v1.md` | `44d1e86f499d546c1ef4f51aba5fa2f7631dcae8c66f52c43fc91c120e5cdd06`, reprise de la v1 et des deux relectures |
+| registre des accords : GO-2026-11-20-65 et -67 ; GO-2026-11-21-19, -20, -21, -22, -28, -30 et -41 | `origin/main` **au commit `fed5dc2f4b10faef327ff1ca0071ea64c4b31db8`**, `registres/go.md` | `c454dea5da77654680913b0bf7c3499837879e9ed5d9857261fe8dd385fc65c8` à ce commit ; la v1 citait `ce2cdb55…`, qui est l'empreinte au commit `07d6b663` |
+| conception du véhicule v5, § 2.14, § 2.15, § 5.2, § 6.2 (notée CO5) | branche de l'organisme, `docs/notes/ideation-nouvelles-attaques-v1/conception-vehicule-v5/conception-vehicule-course-nouvelles-attaques-v5.md` | `1b7f6822af20417e997b80290f05e7a4d70aa69c3d65f4139b5b3673cd98a863`, recalculée |
+| registre servi de la matière : **non ouvert**, empreinte reprise de CO5 | `origin/main`, `docs/notes/mathematiques-nouvelles-v1/consultation-externe-v1/registre-servi-visees-v1.json` | `3bcb94e672390f6f68ca318f214a749dbb0fb14cf8ca4c44728beccf18440d1e` |
+
+## 0. En bref
+
+1. La course part et finit **en état 1, « garde seule »**. Cet additif n'ajoute, ne retire et ne change **rien de ce qui est servi aux proposeurs**, ni rien de la configuration, du lanceur, du tirage ou des mesures M1 à M7, C1 et I1 de la V9 (§ 1).
+2. Il gèle, avant la lecture unique des mesures de la course, la forme d'une lecture que la V9 ne porte pas : **la lecture de fin de la colonne « matière première »** (état 2). Elle fait lire les trois réponses brutes de la matière par quatre juges de fin — les deux lecteurs d'antériorité de la course et ses deux juges — puis range côte à côte, par programme, les idées de la course et les visées de la matière.
+3. Elle ne s'ouvre qu'après la clôture des trois générations, sur un mot de Lazar qui nomme l'interrupteur `colonne_matiere_premiere`, l'état 2 et l'empreinte du registre servi, et sur sa ligne de calcul (§ 9, arrêt A). **Rien de la branche n'est lu avant, ni par une session ni par un programme.**
+4. **Aucune hypothèse, aucune prédiction, aucun signe attendu.** La table est descriptive. Aucune phrase ne dit qu'une colonne vaut mieux que l'autre (§ 8).
+5. **Aucun tirage neuf** : les lignes sont rangées dans l'ordre de leurs identifiants (§ 4, § 5).
+
+## 1. Ce que cet additif ne touche pas
+
+- **Rien de servi.** La partie servie, la ligne de case, la synthèse d'antériorité servie, le registre servi des tentatives, l'enveloppe, les consignes du portier et des juges de la course, les témoins plantés de la course : inchangés, à l'octet.
+- **Rien de la course.** Composition à cinq espèces (A1, § 0, point 2), K = 3, tirages et clés de tirage écrites (0 ; 1, 2, 3 ; 12, 13 ; 20, à la V9 ; 30, à A1 ; 40, à CO5, § 5.2, portée par l'additif du véhicule), plafonds, seuils, parts des clés, arrêts n° 1 à n° 27 et ceux que l'additif du véhicule numérote à leur suite, classes du portier, mesures M1 à M7, C1, I1, critères de lecture : inchangés.
+- **Rien de l'état 1.** Le chargement et la garde de la colonne (CO5, § 2.14 ; lot 10 a) ne dépendent pas de ce texte.
+- **Où ce texte est épinglé.** Il n'entre **pas** dans la configuration de la course ni dans les pièces vérifiées au départ des générations : la V9 dit qu'après le scellement « plus rien ne change : version, lanceur, additif, configuration ». Il est épinglé au **manifeste propre à la lecture de fin**, et vérifié par **l'arrêt n° 14, étendu au départ de la lecture de fin** (§ 9, arrêt B) : c'est la lettre de CO5, § 2.14, « épinglé et mis sous l'arrêt n° 14 ». L'épreuve du lot 10 a (CO5, § 6.2 : l'état 2 refusé « sans additif épinglé ») lit l'empreinte de l'additif à ce manifeste ; sans manifeste de la lecture de fin, ou sans cette empreinte, l'état 2 est refusé.
+- **Constat, par programme, à la lecture de fin** : les empreintes journalisées des requêtes de proposeur de la course sont relues et comptées avant et après la lecture de fin, et aucune ligne ne s'ajoute au journal de la course. La course étant close, ce constat ne peut guère échouer : il n'établit rien de plus que l'arrêt A, et il est rapporté comme constat, non comme épreuve.
+
+## 2. Objet et unités
+
+- **La matière** : trois réponses brutes, sur la branche `matiere-premiere/visees-mathematiques-v1`, commit `88b55a9e`, aux empreintes que la mère donne ; et le registre servi `3bcb94e6…`, dont chaque ligne porte un nom neutre, un énoncé d'une ligne et deux autres champs. Selon la mère : 35 lignes, 24 visées et 11 énoncés de défense. Le programme constate ces trois comptes au chargement ; un écart arrête (§ 9, arrêt B) et va à la mère, rien n'est corrigé en silence. Les trois réponses viennent de trois consultations de maisons extérieures sur un énoncé neutre, qui n'est pas la question de la course (GO-2026-11-21-20 et -22).
+- **L'unité de la colonne « matière première »** : une **ligne du registre servi**, désignée par l'identifiant de ligne que pose le lot 10 a (CO5, § 5.2 : réencodage en syllabes, sans chiffre). **Seules les visées sont comparées** (mère, 07:46Z, mot 9, d'après CO5) ; **des énoncés de défense, seul le compte est dit : ils ne sont servis à aucun juge de fin, ne reçoivent aucune étiquette et n'entrent dans aucune liste de lecture.**
+- **L'unité de la colonne « idées de la course »** : une **fiche lue** au sens de la V9 — une fiche passée, gardée à la relecture « aucune recette », qui a reçu l'une des quatre étiquettes d'antériorité (60 au plus, tirées par la clé 20). Les fiches « non lues » n'entrent dans aucune ligne de la table, hors leur compte.
+- **Ce qui sépare les deux colonnes, et que rien ne répare** : la matière répond à une autre demande que la question v5 ; elle n'a passé ni le contrat de sortie, ni les cases, ni le portier ; elle vient de trois réponses, la course de cinq espèces sur trente-trois cases ; la course est lue sur un tirage de 60, la matière en entier. Les deux colonnes ne sont pas deux bras d'une expérience.
+
+## 3. Qui lit, et quand
+
+Les quatre juges de fin, et eux seuls, lisent les réponses brutes : la liste des lecteurs de la branche (`liste-nominative-lecture-de-fin-matiere-premiere-v2.md`, même dossier) dit qui lit quoi et qui ne lit jamais quoi. Ordre gelé :
+
+1. clôture des trois générations ; relecture « aucune recette » de la course ; lecture d'antériorité de la course ; **scellement des étiquettes de la course** ; lecture unique des mesures M1 à M7, C1, I1 ;
+2. sans rien ouvrir de la branche : la garde de motifs jouée, par programme et sans lecteur, sur le texte servi aux juges et sur les énoncés que les juges recevront (§ 5, « Gardes ») ; le relevé des tarifs et des tailles ; puis le mot de Lazar et sa ligne ; le contrôle « branche orpheline » sans l'ouvrir (CO5, § 2.15) ; les épreuves des gardes de fin en moteur simulé (§ 9) ;
+3. lecture de fin. **Premier pas, avant tout appel** : le programme de fin assemble les requêtes des juges et y joue la garde de motifs (§ 5). Puis les deux juges par le programme (§ 5), les deux lecteurs en sessions à part (§ 4) ; scellement de leurs étiquettes ;
+4. calcul unique de la table (§ 7), par programme.
+
+Aucune étiquette de la course n'est retouchée après le pas 3. La matière n'entre dans aucune source d'antériorité d'une fiche de la course, et aucune fiche de la course n'est une source d'antériorité pour une visée : le recoupement (§ 4, point 5) est une autre étiquette.
+
+## 4. Consigne des deux lecteurs d'antériorité, pour la lecture de fin
+
+Les lecteurs sont ceux de la course (V9, section « Plan d'analyse », « Par qui ») : deux sessions à part, de deux lignées, inscrites. **Leur mandat de fin porte les sept points ci-dessous, mot pour mot, et rien de plus : ni le reste de cet additif, ni l'annexe du § 6, ni le devis, ni aucun renvoi à eux.**
+
+1. **Ce que tu ouvres.** Les trois réponses brutes, au commit et aux empreintes donnés, après avoir écrit ta ligne au journal des lectures (rôle, heure, commit, empreintes). La **liste de lecture de fin**, fabriquée par programme : des lignes, chacune sous son identifiant et son énoncé, rangées dans l'ordre de leurs identifiants. Rien d'autre de la matière ; pas les références qu'elle cite comme preuve : toutes sont « non vérifié », aucune ne vaut antériorité sans lecture sur PDF empreinté, page citée (règle R7).
+2. **Avant de chercher**, pour chaque ligne, tu écris au journal, en quarantaine : sa classe de mécanisme (ce que l'idée met en défaut), comme pour une fiche ; et **sa case**, par trois valeurs de la légende écrites à l'octet, ou « hors grille » si une valeur manque. La case ne sert qu'à produire, par programme, les chaînes de requête de la classe (i) de la V9, pour que l'effort soit le même que pour une fiche. Une ligne « hors grille » n'a pas de classe (i) : c'est compté et dit.
+3. **L'étiquette d'antériorité** : la règle de la V9, sans un mot changé — mêmes sources dans le même ordre, mêmes bases, même période, mêmes classes de requête (ii) et (iii), trente premiers résultats par base et par chaîne, journal des requêtes gardé, mêmes quatre étiquettes. Toute ligne que le premier lecteur dit « aucune antériorité trouvée » passe au second, qui cherche à lui en trouver une ; le second vérifie sur PDF, à la page citée, toute antériorité dite trouvée ou partielle. Toutes les lignes de la liste sont lues, chacune de la même façon : aucune borne, aucun tirage.
+4. **Les quatre épreuves** (branche « avec » de la V9, retenue pour la course) : tes quatre réponses par oui ou non, à part de celles de l'autre lecteur ; un désaccord vaut non ; les quatre classes de la V9, par sa règle, à la lettre ; seul un « mode candidat » peut recevoir « aucune antériorité trouvée ». Une ligne classée « recette » suit la lettre de la V9 pour cette classe ; en plus, tu la signales à Lazar sans passer par la mère, sans en recopier un mot.
+5. **Le recoupement**, étiquette fermée, que tu rends à part pour chaque ligne, contre les fiches lues de la course et ses témoins plantés lus :
+   - « recoupe », suivie des identifiants concernés : au moins une fiche ou un témoin a **la même classe de mécanisme** que la ligne, c'est-à-dire le même couple, visée et supposition mise en défaut. Ni la ressemblance des mots, ni la même case ne suffisent ;
+   - « ne recoupe aucune fiche lue ».
+6. **Ce que tu rends.** Tout reste en quarantaine. Dans un fichier d'étiquettes, par identifiant de ligne : des étiquettes fermées et des identifiants, rien d'autre ; ce fichier est lu par le programme de la table et par Lazar, jamais par la mère. À la mère : rien de ta main ; elle reçoit des comptes, du programme. Dans ton journal : les requêtes, les classes de mécanisme, les cases, les sources. Tu ne recopies aucun passage d'une réponse brute, nulle part. Tu ne dis d'aucune ligne qu'elle est bonne, prometteuse ou meilleure qu'une fiche.
+7. **Ce que tu ne fais pas, ni maintenant ni après** : concevoir, relire ou conseiller une sonde, un agrégateur, un trait de texte, un seuil ou un moniteur ; écrire un mandat pour qui le fait. Les passages que l'attestation signale ne sortent jamais des réponses brutes.
+
+**Hors du mandat des lecteurs, pour le programme et le rapport.**
+
+- *L'étiquette de recoupement retenue pour une ligne* : « recoupe » si les deux lecteurs le disent avec au moins un identifiant commun ; « ne recoupe aucune fiche lue » si les deux le disent ; sinon **« non tranché »** (règle R8 : un désaccord ne fait pas un recoupement, ni une absence).
+- *L'ordre des lignes* est l'ordre lexicographique des octets UTF-8 de leurs identifiants, celui que la V9 définit (l. 311). **Aucun tirage** : la V9 dit « Aucune autre méthode de tirage n'est permise » (l. 311), et la v1 de ce texte posait cinq clés neuves, ce qui était un écart ; la v2 y renonce. Ce que cet ordre ne fait pas : il est le même pour les deux lecteurs et pour tous les appels, donc un effet de rang n'est pas brouillé ; c'est dit en réserve (§ 8).
+- *La branche de l'épreuve 4* : la branche « avec » est fixée pour la course par CV3 (§ 0) ; elle vaut ici, la même. Si une pièce postérieure la changeait pour la course, le point 4 se lirait « aucune classe », et c'est une version neuve de ce texte.
+- *La classe « recette »* : la V9 dit « « recette », au coffre » (l. 328). La v2 garde cette lettre. Une ligne de la matière ainsi classée n'entre dans aucune mesure de la course, ni dans sa garde du coffre, qui compte des fiches rendues par génération. La matière étant attestée « aucune recette », ce constat est aussi un désaccord avec l'attestation : d'où le signalement à Lazar, qui s'ajoute à la lettre et ne la remplace pas.
+
+## 5. Consigne des deux juges de la course, pour la lecture de fin
+
+Les deux juges (espèces 3 et 1) sont joués **pour information**, par le programme de la lecture de fin et la surcharge d'`appel` ; leur avis n'entre dans aucune étiquette, aucun compte de la table hors sa ligne à part, aucun tri, aucun passage vers le bras d'attaque.
+
+- **Le texte servi** : `texte-servi-aux-deux-juges-lecture-de-fin-v1.txt`, **inchangé de la v1** (1 073 octets ; `bbb50f64ad676213a7272cfd0c17b690f68800e3dd3bf9ead37bb61b3492f126`, recalculée). Il demande, pour chaque ligne reçue, une seule de trois étiquettes : « absente » ; « présente, sans procédé » ; « présente, avec un procédé ». Il interdit de proposer, d'ajouter, de recopier, de juger la valeur ou la nouveauté. Il ne nomme ni la course, ni la matière, ni une personne, ni un rôle.
+- **Les appels** : par juge, un appel par réponse brute (trois), plus un appel de contrôle (§ 6) ; huit appels en tout. Aucune relance, aucun remplacement. Chaque appel reçoit une issue et une seule, comptée à part (§ 7, F6) : « lu » ; « refus d'un classifieur de sûreté » (arrêt n° 1 de la V9 : l'appel seul s'arrête, consigné sous le nom de l'arrêt ; arbitrage, point 5) ; « refus du modèle » ; « illisible » (sortie coupée ou hors forme) ; « non envoyé », avec le nom de l'arrêt (garde de motifs, plafond de la ligne, requête hors borne, borne de sortie sous son plancher).
+- **La requête**, dans cet ordre : le texte servi, à l'octet, dernier octet compris ; un séparateur ; la réponse brute entière, à son empreinte, à l'octet ; un séparateur ; la liste des lignes, une par ligne : identifiant, tabulation, énoncé. **La liste ne porte que les lignes « visée » du registre servi et les lignes de contrôle que l'annexe du § 6 prévoit pour les juges ; aucun énoncé de défense.** Les lignes sont rangées dans l'ordre de leurs identifiants (§ 4) ; aucun tirage. Les deux juges reçoivent les mêmes octets. Les séparateurs sont une valeur ouverte (§ 10).
+- **Bornes** : requête de 120 000 octets au plus. Sortie : **par relais, le plus petit de 16 000 jetons et de la partie entière de (2,00 − 120 000 × tarif d'entrée / 1 000 000) / (tarif de sortie / 1 000 000)**, les tarifs étant ceux relevés pour ce relais, en USD par million de jetons. Cette règle est gelée : personne ne choisit la borne. Si la borne ainsi calculée est sous **2 000 jetons**, les appels de ce juge ne partent pas (§ 9, arrêt D) ; le pire d'un appel reste donc de 2,00 USD à tout tarif. Une requête plus longue que sa borne n'est pas envoyée, rien n'est coupé (arrêt D). Le calcul de la règle et ses objets de contrôle sont à la sortie du calcul du devis (`calcul-devis-lecture-de-fin-matiere-premiere-v2.json`, `941c18a3c6ac3904fe5134fe78e4a4232c073aee855930c749e0ca91ad3d8749`).
+- **Gardes** : la garde de motifs (arrêt n° 16) et le journal des requêtes s'appliquent tels quels ; une requête qui porte un motif n'est pas envoyée, sans retrait ni remplacement.
+  - *Avant le mot de Lazar, sans rien ouvrir de la branche* : le programme joue la garde, sans lecteur, sur le texte servi aux juges et sur les énoncés des lignes « visée » du registre servi, qui est sur `main` ; puis sur les lignes de contrôle des juges, quand l'annexe est scellée. Si le texte servi mord, une version neuve s'écrit avant le scellement. Si un énoncé mord, tous les appels réels seraient refusés : c'est dit à Lazar dans la demande, et rien n'est retiré de la liste en silence.
+  - *Sur les réponses brutes : seulement à l'état 2*, comme premier pas de la lecture de fin, sous l'arrêt A, par le programme de fin, qui écrit sa ligne au journal des lectures avant d'ouvrir. La liste des lecteurs dit « avant l'état 2, personne ne lit la branche », et CO5, § 2.15, « Rien de ce paragraphe ne s'ouvre avant l'état 2 » : la v1 faisait jouer cette garde avant le mot de Lazar, la v2 y renonce. **La ligne de calcul peut donc n'acheter aucun avis** : la demande à Lazar le dit.
+  - *Où va ce que la garde écrit.* L'arrêt n° 16 dit la famille et le rang du motif, et « le texte trouvé n'est écrit qu'au journal » (V9, l. 387). Pour la lecture de fin, ce journal est tenu **en quarantaine**, dans le dossier de sortie de la lecture de fin ; il n'est lu que par Lazar. La mère reçoit le compte des appels « non envoyé », par arrêt ; ni la famille, ni le rang, ni le texte trouvé.
+- **Routage et ligne à part** (CO5, § 2.14) : table de routage à part ; le juge de l'espèce 3 sur la clé Minuit, le juge de l'espèce 1 sur le deuxième relais ; ligne à part au plafond du devis (`devis-lecture-de-fin-matiere-premiere-v2.md`), jamais comptée dans les parts de la course.
+- **Lecture de la sortie**, par programme : une ligne par identifiant reçu, l'étiquette égale à l'octet à l'une des trois ; un identifiant manquant, en double ou inconnu, ou une étiquette autre : l'appel entier est « illisible ».
+- **Où vont les sorties des juges.** Les réponses brutes des juges sont conservées **en quarantaine**, noms compris (V9, l. 396 ; règle « récupérer ce qui est récupérable ») ; la mère ne les lit jamais. Les étiquettes des juges, ligne par ligne, suivent le régime des étiquettes des lecteurs (§ 4, point 6) : en quarantaine, lues par le programme de la table et par Lazar ; à la mère, des comptes seulement.
+
+## 6. Objets de contrôle de la lecture de fin
+
+Chacun des quatre juges de fin est éprouvé, dans la lecture même, sur des objets où ce qu'il doit établir est faux par construction et sur des objets où c'est vrai par construction.
+
+- **Leur construction, leur nombre, leur place et l'issue attendue de chacun ne sont pas écrits ici.** Ils sont dans une pièce à part, l'**annexe des objets de contrôle de la lecture de fin** (`annexe-objets-de-controle-lecture-de-fin-matiere-premiere-v1.md`, rendue avec ce texte pour sa forme ; son lieu de versement est fixé par la mère, § 10, valeur 6 ; les textes inertes eux-mêmes sont écrits ensuite, sur cette forme). L'annexe et les textes sont scellés **avant l'état 2** ; leurs empreintes sont inscrites au manifeste de la lecture de fin ; l'arrêt A refuse le départ sans elles.
+- **Qui la lit** : le programme de fin, Lazar, celui qui écrit les textes inertes, le contre-lecteur de cette chaîne. **Jamais les deux lecteurs d'antériorité** : leur mandat ne la cite pas (§ 4), elle n'est pas dans un lieu qu'ils ouvrent, et son lieu est fixé par la mère (§ 10, valeur 6). Les deux juges ne reçoivent que leur requête.
+- **Pourquoi** : la v1 écrivait ces objets et leurs issues dans le texte même que les lecteurs appliquent ; la relecture « fuite de la vérité » l'a jugé cassé, l'issue attendue atteignant le juge contrôlé par son invite.
+- **Tous sont des textes inertes** : aucun ne porte une idée d'attaque réelle ni un procédé réel ; chacun passe la garde de motifs et la vérification du registre servi ; son identifiant de ligne est construit comme celui des autres lignes, et rien dans cet identifiant ne dit ce qu'est la ligne (§ 10, valeur 10).
+
+**Suites, gelées.** Un lecteur qui manque l'un de ses objets de contrôle : toutes ses étiquettes de fin sont annulées, et les lignes qu'il portait sont « non tranché » ou « non lue » ; c'est dit. Un juge qui manque l'un des siens : ses étiquettes sont rapportées sous le titre « juge ayant manqué un contrôle » et ne sont pas comptées. Un contrôle qui n'a pas pu se jouer (appel non envoyé ou refusé, objet sans prise) n'est ni passé ni manqué : il est dit « non joué », et les étiquettes du juge de fin concerné sont rapportées sous la réserve « contrôle non joué ». Une étiquette portée par une ligne de contrôle n'entre dans aucun compte de la table, hors F7.
+
+**Limites, dites.** Ce texte sera sur `main` : un lecteur qui le lit apprend que des contrôles existent, non lesquels. Un lecteur qui confronte sa liste au registre servi, ou qui cherche la source de chaque ligne dans les réponses brutes, peut repérer une ligne qui n'en vient pas : les contrôles éprouvent le soin, non la résistance à un lecteur qui voudrait tricher. La séparation se tient par procédure, non par une serrure. Aucun de ces contrôles n'est encore joué : ils le sont en moteur simulé au lot 10 b, puis dans la lecture elle-même.
+
+## 7. Mesures de fin, et forme de la table
+
+Toutes descriptives, par programme, sur des étiquettes fermées et des comptes ; chaque part avec son numérateur et son dénominateur ; aucun intervalle, aucun test, aucune différence ni aucun rapport **entre** les deux colonnes. La table est **calculée une fois**.
+
+| nom | mesure | définition |
+|---|---|---|
+| antériorité de la matière (F1) | comptes par étiquette | parmi les visées, compte par étiquette d'antériorité ; à côté, pour la course, M5 telle que la V9 la rend |
+| classes de l'épreuve 4 (F2) | comptes par classe | visées par classe, et désaccords ; à côté, les comptes de M5 |
+| recoupements (F3) | comptes | visées par étiquette de recoupement retenue ; et, vu de l'autre colonne, fiches lues de la course citées par au moins un recoupement retenu ; un recoupement avec un témoin planté de la course n'entre dans aucun de ces comptes |
+| cases de la matière (F4) | comptes | visées rangées « dans une case servie par la course », « dans une autre case », « hors grille » ; les cases de la famille tenue à l'écart et de la réserve ne sont pas distinguées |
+| énoncés de défense (F5) | un compte | leur nombre ; rien d'autre |
+| avis des deux juges, pour information (F6) | comptes | par juge et par réponse brute : visées par étiquette ; visées où les deux juges donnent la même étiquette ; et, par juge, le compte des appels par issue, **chaque issue à part** : « lu », « refus d'un classifieur de sûreté » (arrêt n° 1), « refus du modèle », « illisible », « non envoyé » par arrêt nommé |
+| contrôles de fin (F7) | issues | chaque objet de contrôle de l'annexe, par lecteur et par juge, « passé » ou « manqué » ; les trois comptes du registre servi ; le constat des journaux de la course (§ 1) ; le titre posé par le programme (§ 9, arrêt A) |
+
+**Forme de la table**, gelée ; « — » veut dire « sans objet pour cette colonne ».
+
+| ligne | idées de la course | matière première |
+|---|---|---|
+| unités | fiches lues (sur N fiches passées gardées ; « non lues » : n) | visées lues (sur 24 attendues) |
+| « antériorité trouvée » | compte | compte |
+| « antériorité partielle » | compte | compte |
+| « non tranchée » | compte | compte |
+| « aucune antériorité trouvée » | compte | compte |
+| « recette », « réalisation », « variante », « mode candidat », désaccords | comptes | comptes |
+| recoupement retenu | fiches citées par au moins une visée | visées « recoupe » ; « ne recoupe aucune fiche lue » ; « non tranché » |
+| cases | — (M3 et M7 de la V9) | servie ; autre ; hors grille |
+| énoncés de défense, comptés à part | — | compte |
+| **pour information**, à part | I1 de la V9, tel quel | avis des deux juges (F6) |
+| contrôles | témoins de la course (V9) | contrôles de fin (F7) |
+
+Sous la table, en clair : ce qui sépare les deux colonnes (§ 2), les réserves (§ 8), le nom de chaque arrêt de fin déclenché.
+
+## 8. Ce que le rapport dit, et ce qu'il ne dit pas
+
+| issue observée | ce qu'on a le droit de dire | ce qu'on n'a pas le droit de dire |
+|---|---|---|
+| quelle que soit la table | les comptes, colonne par colonne, avec leurs dénominateurs | qu'une colonne vaut mieux, propose plus, coûte moins par idée, ou est plus « neuve » : ni différence, ni rapport, ni rang entre colonnes |
+| visée « aucune antériorité trouvée » | « inédite au périmètre vérifié le [date] », avec le périmètre ; seulement pour un « mode candidat » | « inédite » tout court ; qu'elle réussirait ; toute phrase publique (nœud de Lazar) |
+| visée « non tranchée » ou « antériorité partielle » | ce qui est couvert, ce qui ne l'est pas | qu'elle est inédite |
+| visée « recoupe » | « au moins une fiche lue de la course a la même classe de mécanisme » | que la course a retrouvé la matière, qu'elle en est indépendante, ou que la garde a fui : la garde tient la copie, non le sens, et un recoupement ne montre ni l'un ni l'autre |
+| visée « ne recoupe aucune fiche lue » | cela, avec le nombre de fiches lues et de fiches « non lues » | que la course n'a pas eu cette idée : seules les fiches lues sont comparées |
+| recoupement « non tranché » | le compte | le ranger d'un côté |
+| avis des juges | « pour information », à part | tout critère, tout tri ; qu'une étiquette « avec un procédé » contredit ou confirme l'attestation : c'est un avis de modèle, porté à Lazar |
+| énoncés de défense | leur compte | toute lecture ; toute étiquette |
+| lecture de fin non ouverte, arrêtée ou incomplète | « non ouverte », ou le nom de l'arrêt et ce qui a été lu | compléter par une seconde lecture sans le mot de Lazar |
+
+**Réserves écrites au rapport, toujours** : (1) les lecteurs ne sont pas aveugles à l'origine d'une ligne ; (2) un juge de la course peut être de l'espèce d'une réponse qu'il lit : la mère dit, sans ouvrir la branche, quel relais a rendu chaque réponse (§ 10, valeur 11), et le rapport écrit alors le fait, par juge, au lieu de la réserve ; (3) les références citées par la matière sont « non vérifié » ; (4) la matière n'a pas été affinée par l'organisme dans ce véhicule (CO5, § 2.14, voie (a)) ; (5) les lignes « hors grille » ont reçu moins de requêtes que les autres ; (6) les lecteurs ont lu les fiches de la course avant la matière ; (7) si cet additif n'a pas été scellé avant la lecture unique des mesures de la course, toute la lecture de fin est rapportée sous le titre « exploratoire » (arbitrage, point 6) : **ce titre est posé par le programme** (§ 9, arrêt A), non par un constat à la main ; (8) les lignes sont lues dans un ordre fixe, le même pour tous : un effet de rang n'est pas brouillé.
+
+**Audit de symétrie** (règle R4), le même dans les deux sens. Il se déclenche si la part des visées « aucune antériorité trouvée » est nulle ou d'au moins la moitié (seuils de la V9) ; ou si les recoupements retenus valent zéro visée, ou toutes. Il vérifie : que les deux lecteurs ont cherché au même périmètre que pour la course (journal des requêtes, compte des chaînes par ligne) ; que les contrôles de fin sont passés ; que la liste de lecture est bien celle du programme. Un résultat trop propre est une réserve, non une trouvaille.
+
+## 9. Arrêts de la lecture de fin
+
+Les arrêts de la V9 et de A1 valent tous. Trois arrêts de fin sont des **arrêts déjà écrits, étendus à la lecture de fin** (B, C, F) ; trois sont neufs (A, D, E), et leur numéro est donné par la mère à la suite des arrêts déjà numérotés (§ 10). Chacun est éprouvé sur un cas sain et sur un artefact, en moteur simulé, sur un registre et des textes d'essai inertes, avant l'état 2 (règle R5). Aucun repli silencieux.
+
+| arrêt | condition | action | épreuve : cas sain ; artefact |
+|---|---|---|---|
+| A, « état 2 sans ses conditions » (neuf) | il manque l'une de : la ligne d'accord de Lazar qui nomme l'interrupteur, l'état 2 et l'empreinte du registre servi ; cet additif scellé, son empreinte au manifeste de la lecture de fin ; la ligne de calcul du devis ; **les tarifs des deux relais relevés, et le devis recalculé sur eux** ; l'annexe des objets de contrôle et ses textes scellés, leurs empreintes au manifeste ; les quatre juges inscrits ; la branche vérifiée orpheline par le graphe, sans l'ouvrir ; la clôture des trois générations ; les étiquettes de la course scellées | rien ne s'ouvre ; aucun chemin par variable d'environnement ni par la configuration. **De plus**, le programme compare l'heure du scellement de cet additif à l'heure de la lecture unique des mesures, prises toutes deux au manifeste de la course et au registre des scellements : si le scellement est postérieur, ou si l'une des deux heures manque, il écrit le titre « exploratoire » au manifeste de la lecture de fin et en tête de la table, sans refuser le départ | toutes présentes : départ ; chacune ôtée à son tour : refus qui la nomme ; scellement daté après la lecture des mesures : départ, titre « exploratoire » posé ; daté avant : aucun titre |
+| B, **l'arrêt n° 14, étendu au départ de la lecture de fin** | registre servi, réponses brutes, texte servi aux juges, annexe et textes de contrôle, cet additif, liste des lecteurs : une empreinte diffère de celle du manifeste de la lecture de fin ; ou les comptes 35, 24, 11 ne sont pas constatés | départ refusé, la pièce nommée ; point pour la mère | empreintes égales : départ ; un octet changé dans le texte servi, puis un registre d'essai à 34 lignes : refus |
+| C, **l'arrêt n° 12, lu sur la ligne à part** (CO5, § 2.14) | première clause : avant un appel, le cumul compté sur la ligne pour cette clé, plus le pire de l'appel à lancer, **calculé sur le tarif relevé du relais et sa borne de sortie**, dépasserait **la part de la ligne sur cette clé, 8,00 USD**. Seconde clause : un appel de fin se présente par la table de routage de la course, ou sur une autre clé que la sienne. Avant le premier appel, comme à l'arrêt n° 11 : le reste de la clé — **pour Minuit, calculé au registre des dépenses de `main`, jamais lu** ; pour le deuxième relais, lu de la manière que le complément de valeurs écrit pour un compte payant — est plus bas que 8,00 USD | l'appel ne part pas ; arrêt nommé, qui dit la clé ; aucune bascule ; les parts de la course restent égales au centime | un appel sous la part part et se compte sur la ligne ; un appel qui dépasserait d'un centime, puis un appel présenté par la table de la course, puis un reste d'un centime sous 8,00 USD : refusés |
+| D, « requête de fin hors borne » (neuf) | requête de plus de 120 000 octets ; ou borne de sortie du relais, par la règle du § 5, sous 2 000 jetons | non envoyée ; rien n'est coupé ; comptée « non envoyé » (F6) ; pour la borne de sortie, aucun appel de ce juge ne part, et une ligne neuve se demande | une requête à la borne part ; une requête d'un octet de plus : refusée ; un tarif qui donne 2 666 jetons : départ à cette borne ; un tarif qui en donne 1 000 : refus |
+| E, « lecture de fin déjà faite » (neuf) | une table de fin scellée existe ; ou une étiquette de la course est modifiée après la première ouverture de la branche | second calcul refusé ; nœud de Lazar | premier calcul : fait ; second : refusé |
+| F, **les arrêts n° 17 et n° 18, pour la sortie de la lecture de fin** | hors de la quarantaine : un export qui porte autre chose que des identifiants seuls, des comptes, des empreintes et des tailles (CO5, § 2.15) — en particulier une étiquette attachée à un identifiant de ligne, ou un champ de texte libre ; ou l'empreinte d'un fichier de la branche trouvée hors de la quarantaine ; ou une ouverture sans ligne au journal, ou par un rôle non inscrit | arrêts n° 17 et n° 18 de la V9 ; rien n'est recopié | export de comptes et d'identifiants seuls : passe ; export avec une étiquette attachée à un identifiant, puis avec un champ de texte libre : refusés |
+
+Refus d'un classifieur de sûreté : arrêt n° 1 de la V9, l'appel seul, jamais relancé ni reformulé (arbitrage, point 5), compté sous ce nom (F6).
+
+## 10. Valeurs ouvertes, et ce que la lettre ne fixe pas
+
+| n° | valeur | règle qui la fixe | moment |
+|---|---|---|---|
+| 1 | le numéro des arrêts A, D et E | la mère, à la suite des arrêts n° 1 à n° 27 et de ceux de l'additif du véhicule, que je n'ai pas lu | avant le scellement |
+| 2 | (retirée) les clés de tirage 50 à 54 de la v1 | aucun tirage dans la v2 ; la question d'un tirage est portée à la mère comme point délicat | — |
+| 3 | les séparateurs de la requête des juges | le développeur du lot 10 b, sur la forme de CO5, § 5.3 ; déclarés octet pour octet | avant la contre-lecture du lot 10 b |
+| 4 | le passage de la garde de motifs sur le texte servi aux juges, sur les énoncés des visées et sur les lignes de contrôle des juges | joué par programme, sans lecteur, sans ouvrir la branche (§ 5) ; je n'ai ni la liste des motifs ni ces textes | avant le scellement pour le texte servi ; avant le mot de Lazar pour le reste |
+| 5 | le champ du registre servi qui dit « visée » ou « énoncé de défense » | constaté par le développeur sur la forme, registre d'essai seul ; s'il n'est pas un champ fermé, point pour la mère : sans lui, ni la liste des lecteurs ni celle des juges ne peut être fabriquée | lot 10 b |
+| 6 | les textes inertes des objets de contrôle ; le lieu de l'annexe et de ces textes, hors de ce que les lecteurs ouvrent | écrits sur la forme de l'annexe par un concepteur, contre-lus, scellés par la mère ; lieu fixé par la mère | avant l'état 2 |
+| 7 | les tailles des trois réponses brutes ; les tarifs des deux relais des juges | relevés par la mère, tailles seules, sans ouvrir ; devis recalculé ; condition de l'arrêt A | avant le mot de Lazar |
+| 8 | (fixée) la branche de l'épreuve 4 | branche « avec », CV3, § 0 | — |
+| 9 | l'identité des deux sessions de lecteurs | la mère, sur le mot de Lazar ; liste des lecteurs | avant l'état 2 |
+| 10 | la source des octets de l'identifiant de ligne | le lot 10 a (CO5, § 5.2) ; contrainte de ce texte : l'identifiant ne dépend ni du champ « visée ou défense », ni de ce qu'une ligne vient du registre ou de l'annexe, ni du contenu de l'énoncé d'une façon qu'un lecteur puisse inverser ; si sa construction demandait un tirage, c'est un point pour la mère (V9, l. 311) | lot 10 a |
+| 11 | le relais d'origine de chaque réponse brute | dit par la mère, sans ouvrir la branche, d'après les pièces du versement ; écrit au manifeste de la lecture de fin | avant l'état 2 |
+| 12 | si la mère a lu une réponse brute | dit par la mère avant le scellement (liste des lecteurs, § 5) | avant le scellement |
+
+**Ce que la lettre ne fixe pas, et qui est fixé ici en le disant** : l'épinglage au manifeste de la lecture de fin (§ 1) ; l'unité « ligne du registre servi » ; la mise en case par chaque lecteur (§ 4, point 2) ; la règle de recoupement à deux lecteurs et à identifiant commun (§ 4) ; la forme de l'avis des juges, par étiquettes et non par classement (§ 5), CO5 disant « le classement des juges y figure à part » ; un appel par réponse brute plutôt qu'un seul ; l'existence d'objets de contrôle de fin (§ 6) ; les bornes de 120 000 octets et de 16 000 jetons, la règle de la borne de sortie et son plancher de 2 000 jetons. **Chacun de ces choix a sa décision au rapport du concepteur des corrections** ; aucun n'est un écart à un texte scellé, à ma lecture.
+
+## 11. Relevé de méthode
+
+**Chaîne de raisonnement.**
+
+1. La lecture de fin est une lecture que la V9 ne porte pas ; elle demande un additif scellé, un devis à part, le mot de Lazar, les lecteurs inscrits et la branche orpheline (CO5 `1b7f6822…`, § 2.14, règle d'allumage, relue).
+2. L'additif doit être scellé avant la lecture unique des mesures, sinon la comparaison est conçue en connaissant ce qu'elle compare (GO-2026-11-21-41, `registres/go.md` `c454dea5…` à `fed5dc2f`, relu ; arbitrage `44d1e86f…`, point 6, repris de la v1).
+3. La course en vigueur a cinq espèces, 27 arrêts numérotés et les clés de tirage 30 et 40 en plus de celles de la V9 (A1 `9f731795…`, § 0, point 2, § 2 et § 4 bis, relu ; CO5, § 5.2, relu). Donc les chiffres de la v1 visés par C1 étaient périmés.
+4. La V9 interdit toute autre méthode de tirage (V9 `864f39a7…`, l. 311, relue) ; la clé 30 a demandé un accord de Lazar comme écart (A1, § 2, point a ; GO-2026-11-20-65). Donc des clés neuves seraient un écart ; l'ordre des identifiants n'en est pas un, la V9 le définissant à la même ligne. Supposé : que la l. 311 vaut pour une lecture jointe par additif ; la v2 ne dépend plus de ce supposé.
+5. Assembler une requête de juge, c'est lire une réponse brute ; rien de la branche ne s'ouvre avant l'état 2 (CO5, § 2.15, relu). Donc la garde sur les réponses brutes se joue à l'état 2 ; avant, elle ne peut se jouer que sur ce qui est sur `main` (pas 1 ; CO5, § 2.14 : le registre servi est une entrée, sur `main`).
+6. L'arrêt n° 16 écrit le texte trouvé au journal (V9, l. 387, relue). Donc ce journal doit avoir un lieu : la quarantaine (§ 5).
+7. Les énoncés de défense ne sont que comptés (CO5, § 2.14, « comparaison finale », relu). Donc ils ne vont à aucun juge (§ 5), ce qui lève la contradiction de la v1 entre son § 2 et son F6.
+8. L'issue attendue d'un objet de contrôle ne doit pas atteindre le juge contrôlé (relecture `c04e65e8…`, pas principal). Donc elle sort de ce texte et du mandat des lecteurs (§ 4, § 6).
+9. La borne de sortie est scellée ici ; une valeur scellée ne se change que par version neuve (règle R12). Donc elle est remplacée par une règle que personne n'applique à la main (§ 5) ; le pire d'un appel reste de 2,00 USD à tout tarif (calcul rejoué, `941c18a3…`, cinq objets de contrôle).
+10. La branche « avec » est fixée pour la course (CV3 `b4ef87dc…`, § 0, relu). Donc le point 4 du § 4 s'écrit sans alternative.
+11. Les trois réponses viennent de consultations sur un énoncé neutre (GO-2026-11-21-20 et -22, relus). Donc « une autre demande que la question v5 » est sourcé, sans ouvrir la matière.
+12. Supposé : le registre servi porte un champ fermé qui sépare visées et énoncés de défense (CO5 ne nomme pas ses « deux autres champs »).
+13. Supposé : le texte servi aux juges et les énoncés des visées passent la garde de motifs ; je n'ai ni la liste des motifs ni ces textes.
+14. Supposé : un lecteur ne lit pas l'annexe. Rien ne l'empêche par serrure (§ 6, « Limites »).
+
+**Objets de contrôle.** Pour la lecture de fin : ceux de l'annexe, faux et vrais par construction, avec ce que chacun doit rendre, écrits avant toute lecture et hors de ce texte. Ce qu'ils rendent : **non joué à cette date**, aucun appel n'étant permis. Pour la règle de la borne de sortie, joué : trois objets vrais par construction (tarifs 10 et 50, 2 et 10, 15 et 75 : bornes attendues 16 000, 16 000 et 2 666, l'appel part) et deux faux (16 et 80, 20 et 100 : bornes 1 000 et 0, l'appel ne part pas) ; les cinq prédictions étaient écrites au fichier d'entrées avant le premier jeu ; rendu conforme. Pour le programme lui-même : un fichier d'entrées où un attendu est faux (`entrees-objet-faux-regle-v2.json`) ; attendu : code 1, aucune sortie ; rendu : code 1, aucun fichier écrit.
+
+**Premier pas non justifié.** Le pas 12 : sans champ fermé « visée ou défense », les listes du § 4 et du § 5 ne se fabriquent pas. Le justifierait : le constat du développeur sur la forme du registre (§ 10, valeur 5). Les pas 13 et 14 sont aussi supposés, et dits.
+
+**Mode d'échec affecté.** Sans objet : je suis concepteur, non relecteur.
+
+**Dérivation de l'énoncé seul.** Sans objet : je ne suis pas un agent de re-dérivation.
+
+**Trouvaille de côté.** (1) Depuis la v1, GO-2026-11-21-28 et -30 diminuent la part de Minuit dans la course de ce que coûte la reprise de deux autres courses : le reste de Minuit après la course peut ne pas couvrir la part de la ligne ; l'arrêt C le tient, le devis le dit. (2) GO-2026-11-21-47 pose une règle permanente de plafond de sortie large pour un modèle qu'elle nomme : si le deuxième relais sert ce modèle au juge de l'espèce 1, la borne de sortie d'ici peut s'y heurter. (3) GO-2026-11-21-21 dit que GO-2026-11-21-19 reste inscrit « sans matière rédigée » : la matière de la colonne n'est donc que celle des trois consultations. Rien de cela n'est poursuivi ici.
+
+**Évaluateur et conseil.** Ce texte est jugé par le contre-lecteur O à la vérification des corrections, sur la table des corrections et les différentiels ; le calcul, par son rejeu (`cmp` muet) et ses objets de contrôle. La lecture de fin est jugée par les objets de l'annexe, admis avant elle. Par où ce texte pourrait être reçu sans le mériter : l'annexe peut être lue par un lecteur ; rien ici n'a été joué contre la garde de motifs ; la règle de recoupement n'a été éprouvée sur aucune paire réelle ; l'ordre fixe des lignes n'a pas de contrôle. Conseil au vérificateur : chercher d'abord, dans les sept points du § 4, un mot qui dirait encore qu'une ligne n'est pas une visée ; puis une voie par laquelle une étiquette par identifiant sortirait de la quarantaine (§ 9, arrêt F).
+
+## 12. Contre-lecture
+
+À remplir par la mère : contre-lecteur, brouillons relus et empreintes, rapports et empreintes, verdicts, traitement.
+
+— concepteur neuf des corrections, modèle F
