@@ -1,0 +1,706 @@
+{
+ "version": "configuration-essais-admission-bras-a-v6-mistral-2026-11-21-v2",
+ "etat": "definitive",
+ "objet": "Gabarit de tout ce que lit le chef des deux essais d'admission du bras A (scripts/chef_essais_admission_bras_a_v6.py). Devis accepté : sections 3 à 11 ; avenant 1 (recharge automatique gardée, deux clés de Google, constat à vingt-huit clés). Une configuration définitive en est tirée par ligne de calcul, sous un nom neuf (R12) : elle remplace chaque valeur nulle marquée « à remplir », passe « etat » à « definitive », et est scellée ; le chef refuse ce gabarit.",
+ "a_remplir": "Valeurs nulles à inscrire avant la ligne qui les lit : « go » de chaque ligne ; « constat » (pièce à vingt-huit clés, ou pièce partielle d'un fournisseur) et, si elle est partielle, « constat_second » pour l'autre ; « regles » (fichier scellé, non gabarit) ; « marge_de_change » (0.05) et « marge_de_change_go » ; « age_max_du_fixage_heures » ; « regime_file_google » (« prudent », pour les lignes de Google) ; « lectures_console » après tout envoi coupé ; « levees_cle » après toute clé vue (code de sortie 7) ; « releve_europeen » (repli) ; pour la file Mistral : « releve_verification », « inscrit », « hote » ; pour la file Neon : « releves_verification » (un relevé par variable de clé), « inscrit » ; « mot_de_lazar_sonde » si une sonde n'est pas « comprise » ou si le majorant est « démenti ». Les formes des pièces de Lazar sont à la note de livraison (section des pièces). Règle Google : « sortie_max », « reflexion », « exemption_de_la_sonde » (et son GO), « jetons_par_mot » chez Google, « limite_de_mots » de chaque consigne.",
+ "devis": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/devis-essais-admission-mistral-neon-bras-a-v1.md",
+  "sha256": "421ee2e6ec909c8b6261b3be39109aa5e76d6c275e79b4d7ec122816c83dd1bc"
+ },
+ "verification_du_devis": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/verification-devis-essais-admission-brouillon5-v1.md",
+  "sha256": "0bec479ffe98324c0c1140277145141bd0a356fc20999471c7d76550482768ca",
+  "note": "le fichier du devis se dit encore « brouillon 5 » : chaque ligne de calcul cite aussi l'empreinte de cette vérification (garde 8) ; mettre à null pour ne pas l'exiger"
+ },
+ "avenant": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/avenant-1-devis-essais-admission-recharge-et-deux-cles-v3.md",
+  "sha256": "5e255c5f867124588e23b86ad2c143f4b1a61385e08e880249f91916f94a55ac",
+  "note": "avenant 1 au devis, version en vigueur ; chaque ligne de calcul cite son empreinte (garde 8) ; à remplacer par la version acceptée, sous une configuration neuve"
+ },
+ "marge_de_change": 0.05,
+ "marge_de_change_note": "fraction décidée par Lazar : 0.05 (5 %), GO-2026-11-21-68. Une configuration définitive inscrit 0.05 et, à « marge_de_change_go », l'identifiant du GO qui la décide ; le gabarit ne choisit aucune valeur. Un crédit, un solde, une recharge comptée : montant × taux × (1 − marge), au centime inférieur ; une dépense vue : montant × taux × (1 + marge), au centime supérieur.",
+ "age_max_du_fixage_heures": 96,
+ "age_max_du_fixage_note": "borne d'âge du fixage publié, en heures, entier de 1 à 168 ; nulle au gabarit, exigée d'une configuration définitive (et de toute configuration dès qu'un taux est lu). Décision de la session mère : le dernier fixage publié est admis quand aucun plus récent n'existe (fin de semaine, jour férié). Le programme vérifie : la date « fixage publié le » lisible ; pas après l'heure du taux ; son début (minuit UTC) au plus cette borne avant l'heure de la pièce (le montant le plus tardif), et au plus cette même borne avant l'heure de l'envoi (m-a) : une pièce en euros ne sert que tant que son fixage est frais. Les bornes de l'heure du taux (24 heures avant, 6 heures après, jamais après l'envoi) restent. Par exemple 96 couvre un vendredi lu le lundi suivant, même férié.",
+ "recharge_comptee": false,
+ "recharge_comptee_note": "champ fermé, décision GO-2026-11-21-69 : la recharge automatique n'est pas comptée comme crédit ; chaque projet est borné par son solde vu seul. Une configuration définitive exige false. Le chemin « solde plus une recharge » de l'avenant 1 (4.4) reste au programme, désactivé.",
+ "regime_file_google": "prudent",
+ "regime_file_google_note": "champ fermé, R-1 de la vérification de la livraison 6 ; décision de la session mère R-4682 : régime prudent pour les lignes de Google, en vérification comme en file. Valeurs : « prudent » ou « courant » ; nul au gabarit ; une configuration définitive exige « prudent » ; toute ligne de Google refuse un champ nul. Sous « prudent », la file du juge part au régime prudent quelles que soient les sondes (un envoi sans compteur lisible est compté à 200 jetons par seconde de sa durée, au moins à sa réserve ; un envoi coupé au délai arrête la file, sans reprise) ; le mot de Lazar n'est exigé que si une sonde n'est pas « comprise ». Les lignes de Mistral ne le lisent pas.",
+ "prereg_en_vigueur": {
+  "chemin": "prereg/T0.7-organismes-discrets-v-a-v2-brouillon44.md",
+  "sha256": "b30aa902a8135f888911519f4efd0a3583fddd6b8f748889146d9bca5da43eb8"
+ },
+ "consignes": {
+  "appariement": {
+   "lignes": [
+    406,
+    431
+   ],
+   "sha256": "98a9bd34d280fc7d9db07a733bc78557ff350538a3ace7a2926999ecf14c9248",
+   "limite_de_mots": null
+  },
+  "couverture": {
+   "lignes": [
+    453,
+    487
+   ],
+   "sha256": "ecf590eae0c06d413d173f7f03c5575e52d6034613e0a1a30d681149435a1816",
+   "limite_de_mots": null
+  }
+ },
+ "entrees": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/essai-mesure-lecteurs-bras-a-v1/entrees-essai-mesure-lecteurs-bras-a-v1.json",
+  "sha256": "15b62bb44d9f8e57bbbebf020b08cb681fbd0f5f65cc89dadee9edc7faba467e"
+ },
+ "regles": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/essais-admission-bras-a-v1/regles-admission-bras-a-v1-brouillon44.md",
+  "sha256": "cd0e384c21516b95c0c01ba2275d79a034777c92aca257b5700052724cfb2865",
+  "lignes_du_texte": [
+   529,
+   537
+  ],
+  "gabarit": "docs/notes/relance-organismes-discrets-v1/essais-admission-bras-a-v1/regles-admission-bras-a-v1-gabarit.md"
+ },
+ "constat": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/constat-comptes-mistral-bras-a-2026-11-21-v1.md",
+  "sha256": "4907d0924dfd7526bea1c25b51606bb3d0dca4c07e7509cbefd5e934ffef9536"
+ },
+ "constat_second": {
+  "chemin": null,
+  "sha256": null
+ },
+ "constat_cles": {
+  "google_offre_payante_projet_a": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ]
+  },
+  "google_devise_affichee_projet_a": {
+   "type": "valeurs",
+   "admises": [
+    "EUR",
+    "USD"
+   ]
+  },
+  "google_credit_vu_projet_a": {
+   "type": "nombre"
+  },
+  "google_recharge_automatique_projet_a": {
+   "type": "valeurs",
+   "admises": [
+    "activée",
+    "désactivée",
+    "non proposée"
+   ]
+  },
+  "google_autres_credits_admissibles_projet_a": {
+   "type": "valeurs",
+   "admises": [
+    "aucun"
+   ]
+  },
+  "google_credit_apres_une_recharge_projet_a": {
+   "type": "nombre_ou",
+   "autres": [
+    "non relevé"
+   ]
+  },
+  "google_partage_journaux_projet_a": {
+   "type": "valeurs",
+   "admises": [
+    "désactivé"
+   ],
+   "levable": true
+  },
+  "google_duree_journaux_jours_projet_a": {
+   "type": "entier_egal",
+   "valeur": 7,
+   "levable": true
+  },
+  "google_plafond_depense_projet_a": {
+   "type": "valeurs",
+   "admises": [
+    "aucun, par GO-2026-11-21-68"
+   ]
+  },
+  "google_offre_payante_projet_b": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ]
+  },
+  "google_devise_affichee_projet_b": {
+   "type": "valeurs",
+   "admises": [
+    "EUR",
+    "USD"
+   ]
+  },
+  "google_credit_vu_projet_b": {
+   "type": "nombre"
+  },
+  "google_recharge_automatique_projet_b": {
+   "type": "valeurs",
+   "admises": [
+    "activée",
+    "désactivée",
+    "non proposée"
+   ]
+  },
+  "google_autres_credits_admissibles_projet_b": {
+   "type": "valeurs",
+   "admises": [
+    "aucun"
+   ]
+  },
+  "google_credit_apres_une_recharge_projet_b": {
+   "type": "nombre_ou",
+   "autres": [
+    "non relevé"
+   ]
+  },
+  "google_partage_journaux_projet_b": {
+   "type": "valeurs",
+   "admises": [
+    "désactivé"
+   ],
+   "levable": true
+  },
+  "google_duree_journaux_jours_projet_b": {
+   "type": "entier_egal",
+   "valeur": 7,
+   "levable": true
+  },
+  "google_plafond_depense_projet_b": {
+   "type": "valeurs",
+   "admises": [
+    "aucun, par GO-2026-11-21-68"
+   ]
+  },
+  "google_cle_du_projet_constate_cle_1": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ],
+   "levable": true
+  },
+  "google_cle_du_projet_constate_cle_2": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ],
+   "levable": true
+  },
+  "google_deux_projets_distincts": {
+   "type": "valeurs",
+   "admises": [
+    "oui",
+    "non relevé"
+   ]
+  },
+  "mistral_offre_payante": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ]
+  },
+  "mistral_donnees_pour_amelioration": {
+   "type": "valeurs",
+   "admises": [
+    "désactivé"
+   ]
+  },
+  "mistral_cle_de_l_espace_constate": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ]
+  },
+  "mistral_credit_utilisable_usd": {
+   "type": "nombre_min",
+   "min": 8.23,
+   "devise": "mistral_devise_affichee",
+   "note": "montant dans la devise affichée ; le seuil se lit en USD, après conversion"
+  },
+  "mistral_limite_requetes_par_minute": {
+   "type": "nombre_min",
+   "min": 6
+  },
+  "mistral_limite_jetons_par_minute": {
+   "type": "nombre_min",
+   "min": 100000
+  },
+  "mistral_devise_affichee": {
+   "type": "valeurs",
+   "admises": [
+    "EUR",
+    "USD"
+   ]
+  }
+ },
+ "pieces_de_lazar": {
+  "forme_commune": "Toute pièce porte « ## Mot de Lazar » et le mot cité, des lignes « - clé : valeur » (un doublon est refusé), les montants dans la devise affichée au constat, et, si une devise du constat est l'euro, la ligne « - taux : T USD par EUR ; source : … ; heure du taux (UTC) : AAAA-MM-JJTHH:MMZ ; fixage publié le : AAAA-MM-JJ » (heure du taux au plus 24 heures avant l'heure de la pièce, 6 heures après, jamais après l'envoi ; fixage publié au plus `age_max_du_fixage_heures` avant l'heure de la pièce, jamais après l'heure du taux).",
+  "constat": "Pièce de constat de l'avenant 1 (inscrite sous `constat`), complète : un tableau à quatre colonnes « clé | valeur | source | heure (UTC) », les vingt-huit clés de `constat_cles`, toutes et elles seules ; hors tableau, « - heure de la transcription (UTC) : … », « - portée du constat : les deux fournisseurs » (facultative pour la pièce complète) et la ligne de taux. Une clé levée vaut exactement « non constaté, levé par GO-2026-11-21-68 », de source « levé ». Chaque ligne n'en juge que les clés de son fournisseur.",
+  "mot_sur_la_sonde": "docs/notes/relance-organismes-discrets-v1/mots-de-lazar-sonde-de-borne-<fournisseur>-bras-a-AAAA-MM-JJ-v1.md. Mistral : « - issue de la sonde visée : comprise | non comprise | indécidée », « - empreinte du relevé de vérification : <sha256> », « - majorant visé : <valeur du relevé> ». Google : « - issue de la sonde visée, clé 1 : … », « - issue de la sonde visée, clé 2 : … », « - empreinte du relevé de vérification, clé 1 : <sha256> », « - empreinte du relevé de vérification, clé 2 : <sha256> », « - crédit vu après les vérifications, projet a : <nombre> », « - crédit vu après les vérifications, projet b : <nombre> », « - page : … », « - heure (UTC) : AAAA-MM-JJTHH:MMZ ».",
+  "lecture_de_la_console": "docs/notes/relance-organismes-discrets-v1/lecture-console-<fournisseur>-apres-envoi-coupe-bras-a-AAAA-MM-JJ-v1.md : « - empreinte du relevé ou du rapport : <sha256> », « - page : … », « - heure (UTC) : AAAA-MM-JJTHH:MMZ ». Mistral : « - dépense vue : <nombre> ». Google : « - dépense vue, projet a : <nombre> », « - dépense vue, projet b : <nombre> », « - solde vu, projet a : <nombre> », « - solde vu, projet b : <nombre> », « - recharges survenues : nombre N ; montant M ».",
+  "levee_d_une_alerte_de_cle": "docs/notes/relance-organismes-discrets-v1/levee-alerte-cle-<fournisseur>-bras-a-AAAA-MM-JJ-v1.md : « - dossier de l'alerte : <nom du dossier> », puis « - clé révoquée et remplacée : oui », ou « - faux positif : la chaîne n'est pas la clé » (admise seulement si aucun relais n'a vu la valeur exacte de sa clé).",
+  "constat_partiel": "D-1. Pièce de constat d'un seul fournisseur (sous `constat`, ou sous `constat_second` pour l'autre) : même forme, et hors tableau la ligne exigée « - portée du constat : Mistral seul » ou « - portée du constat : Google seul ». Le tableau est fermé par cette portée : « Mistral seul » porte les sept clés `mistral_*` de `constat_cles`, toutes et elles seules ; « Google seul » les vingt et une clés `google_*`, toutes et elles seules ; une clé de l'autre fournisseur est refusée (« de trop »). Elle sert les lignes de ce seul fournisseur ; les seuils de l'autre n'y sont pas lus. Ligne de taux : exigée si une devise de la pièce est EUR, refusée sinon.",
+  "credit_dit_comme_une_borne": "Une clé de crédit (`mistral_credit_utilisable_usd`, `google_credit_vu_projet_a|b`, `google_credit_apres_une_recharge_projet_a|b`) peut valoir « au moins X » (X écrit en chiffres, dans la devise affichée), de source exactement « borne basse dite par Lazar » : elle est lue comme X, côté prudent, comparée aux seuils comme X, et dite au manifeste (`bornes_basses_lues_comme_leur_valeur`). Refusée sur toute autre clé ; la source sans la forme, ou la forme sans la source, est refusée. Sous `recharge_comptee` vrai (chemin désactivé en définitive), une borne basse sur un crédit vu dont la recharge est relevée est refusée."
+ },
+ "lanceur_relais": {
+  "chemin": "scripts/lancer_relais_local_v1.py",
+  "sha256": "d365affcb0303283a71ac7d5e67e24a5b6060e3b13c2a9e83ea592e48d4b3c82"
+ },
+ "programme_de_forme": {
+  "note": "programme de conformité de forme et de vérification des extraits de l'instrument ; à confirmer à la contre-lecture qu'il est à la forme du texte en vigueur (3.2 et 3.3, tolérance comprise)",
+  "racine_des_modules": "src",
+  "module": "controle_ia.organismes_discrets.reponses_lecteurs_v5",
+  "module_des_reglages": "controle_ia.organismes_discrets.instrument_appariement_v4",
+  "pieces": [
+   {
+    "chemin": "src/controle_ia/organismes_discrets/reponses_lecteurs_v5.py",
+    "sha256": "7151e0e6f48fbcd6dcf652e8e5150f7f0d67dd774479a157e743d1fc2a0bd401"
+   },
+   {
+    "chemin": "src/controle_ia/organismes_discrets/instrument_appariement_v4.py",
+    "sha256": "8f1fa83b555d52d6ff8c7ac037643326ceb986e7a4f96411aa1ffb861daec39f"
+   },
+   {
+    "chemin": "src/controle_ia/organismes_discrets/fabrication_v3.py",
+    "sha256": "fbbd06d8d9b5ba3208b9281e0b3cd790eed075eceb23365cbc4e8d715b4bb8f4"
+   },
+   {
+    "chemin": "src/controle_ia/organismes_discrets/graines_bras_a_v4.py",
+    "sha256": "5a66d8c57682d5d0202f90fb2479bc9ded8dfb5255212049b2131b98734b2545"
+   },
+   {
+    "chemin": "src/controle_ia/organismes_discrets/__init__.py",
+    "sha256": "eeb35eef3ec062287b16e67f0ef3a874e297e1905f3af7fa10aa194cbf38c96f"
+   },
+   {
+    "chemin": "src/controle_ia/verite_dommage/artefacts_v1.py",
+    "sha256": "22f0fc884b3f84d13612180ca40d168e84e9a94472de41cce1ca1e497a94e790"
+   },
+   {
+    "chemin": "src/controle_ia/verite_dommage/__init__.py",
+    "sha256": "f0586fbbc2f4aacdce6b5823ea2625d911c49e2dfe30a7f772d9b882c376edc3"
+   },
+   {
+    "chemin": "src/controle_ia/environnements/propositions.py",
+    "sha256": "5d97b223206c6378295946a769c378ccfe0bd6a12372d3b25bcecb5240ab31ae"
+   },
+   {
+    "chemin": "src/controle_ia/environnements/__init__.py",
+    "sha256": "64baa853876f557fb0c316df322fa18ee3f54a6180aa0e88b5fa85ea71b2cfb2"
+   },
+   {
+    "chemin": "src/controle_ia/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   {
+    "chemin": "src/controle_ia/gardes.py",
+    "sha256": "a83c48ceba4877a2e226c3fd43669b464152f18169bb082e9b1c48ed92179439"
+   },
+   {
+    "chemin": "src/controle_ia/manifeste.py",
+    "sha256": "1a5c7464523e224ca29d62ab70d83f9e7043d9bde3000ef1a4adc9ed74c8188d"
+   },
+   {
+    "chemin": "src/controle_ia/scellement.py",
+    "sha256": "93beeb1c8aae75463afc98e76ffb330b1e4f26be9c08ae8fee539a2df6a94ef2"
+   }
+  ]
+ },
+ "registre_go": {
+  "reference_git": "origin/main",
+  "chemin": "registres/go.md"
+ },
+ "garde_interdits": {
+  "fichier_local": "/home/user/hors-depot/essais-admission-bras-a-v1/interdits-v1.txt",
+  "note": "fichier local, jamais envoyé ni versé ; seule son empreinte, avec celle des termes tirés du poste, va au manifeste",
+  "longueur_min_terme": 4,
+  "termes_exemptes": [
+   "claude",
+   "user",
+   "root",
+   "main",
+   "noreply",
+   "true",
+   "false",
+   "none",
+   "null",
+   "localhost"
+  ]
+ },
+ "hotes_permis": [
+  "api.eu.mistral.ai",
+  "api.mistral.ai",
+  "generativelanguage.googleapis.com"
+ ],
+ "debit_declare_jetons_par_s": 200,
+ "pause_s": 10,
+ "attente_429": {
+  "defaut_s": 30,
+  "max_s": 600
+ },
+ "messages": {
+  "appel_a": "Reply with the single word: OK",
+  "sonde": "Work out 48271 multiplied by 96553, checking your work twice, then reply with the product only."
+ },
+ "projection": {
+  "lectures_appariement": 13888,
+  "lectures_couverture": 1248,
+  "note": "grandeur C du devis de l'essai de mesure, pour le seul chiffrage (devis, section 7)"
+ },
+ "pages_de_prix": [
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/pages-de-prix-essais-admission-v1/mistral-large-4-0-2026-11-21.html",
+   "sha256": "951cc3ff5f3cdd9b83776bfc6d4b4ef6fbe7c48a59c106945539fee6be1b3d36"
+  },
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/pages-de-prix-essais-admission-v1/mistral-regional-inference-2026-11-21.html",
+   "sha256": "b501d686c7cff43cf3b9b1c0bf5b4227ff945c6cdf22e808769639bd2c2d5b18"
+  },
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/pages-de-prix-essais-admission-v1/google-gemini-pricing-2026-11-21.html",
+   "sha256": "4da106182cbbb57172ce41eabb09eb0af08798cb4d030dea0ee444870d4554a8"
+  }
+ ],
+ "releves_documentaires": [
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/releve-api-mistral-gemini-essais-admission-v1.md",
+   "sha256": "291341e204a8cfb74548f58221d3795d73f007cb0987d4e4051bc7d35a4c32c9"
+  },
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/releve-api-mistral-gemini-essais-admission-complement-v1.md",
+   "sha256": "14d73d5263e2c0ba1e52c7794719e702ce05d3354c118cc4f5be39e3ba88a957"
+  }
+ ],
+ "essai_local": null,
+ "fournisseurs": {
+  "mistral": {
+   "modele": "mistral-large-4-0",
+   "variable_cle": "MISTRAL_API_KEY",
+   "prix": [
+    0.77,
+    2.31
+   ],
+   "prix_note": "1,1 fois le prix courant (0,70 et 2,10), sur l'un et l'autre point d'accès : borne haute (devis, 4.5 et 6.1)",
+   "sortie_max": 32768,
+   "sortie_max_sonde": 256,
+   "octets_par_jeton_de_la_borne": 8,
+   "reasoning_effort": "high",
+   "temperature": 0,
+   "mode_de_lecture": "flux",
+   "credit_a_avoir_usd": 9.5,
+   "relais": {
+    "chemin": "scripts/relais_mistral_essais_admission_v6.py",
+    "sha256": "73d1d13e145eefe0732629ba6554802e342b6b74049d15adb75632b678fb1a7d",
+    "noms_environnement": [
+     "PATH",
+     "HOME",
+     "LANG",
+     "HTTPS_PROXY",
+     "NO_PROXY",
+     "SSL_CERT_FILE",
+     "REQUESTS_CA_BUNDLE"
+    ]
+   }
+  },
+  "google": {
+   "modele": "gemini-4-neon",
+   "prix": [
+    3,
+    15
+   ],
+   "sortie_max": null,
+   "sortie_max_sonde": 256,
+   "octets_par_jeton_de_la_borne": 8,
+   "orthographes_niveau": [
+    "XHIGH",
+    "xhigh"
+   ],
+   "mode_de_lecture": "sans flux",
+   "credit_min_avant_verification_usd": 19.76,
+   "credit_min_avant_file_usd": 16.08,
+   "credit_a_avoir_usd": 23.0,
+   "relais": {
+    "chemin": "scripts/relais_google_essais_admission_v6.py",
+    "sha256": "3b5914ede81e5ccf07b19f8665a62a12ff99acabaebb248f1904493b375f7c61",
+    "noms_environnement": [
+     "PATH",
+     "HOME",
+     "LANG",
+     "HTTPS_PROXY",
+     "NO_PROXY",
+     "SSL_CERT_FILE",
+     "REQUESTS_CA_BUNDLE"
+    ]
+   },
+   "variables_cle": [
+    "GEMINI_API_KEY",
+    "GEMINI_API_KEY_2"
+   ],
+   "reflexion": null,
+   "marge_de_texte_jetons": 16000,
+   "exemption_de_la_sonde": null,
+   "exemption_de_la_sonde_go": null,
+   "jetons_par_mot": null,
+   "regle_google_note": "règle permanente « Appels aux modèles de Google » (GO-2026-11-21-71). Deux décisions de Lazar restent ouvertes, le gabarit n'en choisit aucune : (1) le plafond de sortie — « sortie_max » et « reflexion » : soit {\"forme\": \"budget\", \"budget\": 16384} sous un plafond de 32768, soit {\"forme\": \"niveau\", \"borne_declaree\": N} avec un plafond d'au moins N + 16000 (par exemple 65536) ; (2) « exemption_de_la_sonde » (true ou false) et, si true, « exemption_de_la_sonde_go ». Sans exemption, la sonde n'est pas envoyée et la file ne peut pas partir. « jetons_par_mot » et « limite_de_mots » de chaque consigne : à inscrire par quelqu'un d'habilité à lire les consignes. La réserve de sortie des lignes de Google (« reserve_sortie_jetons ») est la sortie maximale : nulle au gabarit, ou égale. Si le plafond de sortie change, les plafonds en dollars du devis sont à reprendre (devis, 6.3).",
+   "reflexion_note": "sous la forme « niveau », `borne_declaree` est un entier au plus égal à `sortie_max` moins 16 000 (49 536 sous 65 536), ou la chaîne « la plus haute admise », lue comme `sortie_max` moins 16 000. Une borne plus basse est admise et dite (`borne_sous_la_plus_haute`) : un jeton de pensée facturé au-dessus arrête la file (C-2). Le débit qu'exige une réponse à la sortie maximale dans le délai du relais est écrit au manifeste (`debit_requis_a_la_sortie_maximale_jetons_par_s`)."
+  }
+ },
+ "lignes": {
+  "verification-mistral-eu": {
+   "numero_au_devis": 1,
+   "go": "GO-2026-11-21-81",
+   "plafond_usd": 0.25,
+   "plafond_registre": "0,25 USD",
+   "exces_possible_d_un_envoi_usd": 1.17,
+   "marques_du_perimetre": [
+    "vérification de la clé de `mistral-large-4-0` sur `api.eu.mistral.ai`",
+    "trois appels au plus"
+   ],
+   "hote": "api.eu.mistral.ai",
+   "dossier": "runs/verification-cle-mistral-bras-a-v1",
+   "appels_max": 3,
+   "envois_max": 3,
+   "borne_octets": 32768,
+   "reserve_sortie_jetons": 32832,
+   "delais": {
+    "silence_s": 600,
+    "total_s": 2700,
+    "relais_silence_s": 590,
+    "relais_total_s": 2690
+   },
+   "lectures_console": [],
+   "levees_cle": []
+  },
+  "verification-mistral-global": {
+   "numero_au_devis": 5,
+   "go": "GO-2026-11-21-82",
+   "plafond_usd": 0.25,
+   "plafond_registre": "0,25 USD",
+   "exces_possible_d_un_envoi_usd": 1.17,
+   "marques_du_perimetre": [
+    "vérification de la clé de `mistral-large-4-0` sur `api.mistral.ai`",
+    "trois appels au plus"
+   ],
+   "hote": "api.mistral.ai",
+   "dossier": "runs/verification-cle-mistral-bras-a-v1",
+   "appels_max": 3,
+   "envois_max": 3,
+   "borne_octets": 32768,
+   "reserve_sortie_jetons": 32832,
+   "delais": {
+    "silence_s": 600,
+    "total_s": 2700,
+    "relais_silence_s": 590,
+    "relais_total_s": 2690
+   },
+   "lectures_console": [],
+   "levees_cle": [],
+   "releve_europeen": {
+    "chemin": null,
+    "sha256": null
+   }
+  },
+  "verification-google-cle-1": {
+   "numero_au_devis": 2,
+   "go": null,
+   "plafond_usd": 1.5,
+   "plafond_registre": "1,50 USD",
+   "exces_possible_d_un_envoi_usd": 2.18,
+   "marques_du_perimetre": [
+    "vérification de la clé de `gemini-4-neon` lue sous `GEMINI_API_KEY`",
+    "trois appels au plus"
+   ],
+   "hote": "generativelanguage.googleapis.com",
+   "dossier": "runs/verification-cle-google-1-bras-a-v1",
+   "appels_max": 3,
+   "envois_max": 3,
+   "borne_octets": null,
+   "reserve_sortie_jetons": null,
+   "delais": {
+    "silence_s": 900,
+    "total_s": 900,
+    "relais_silence_s": 890,
+    "relais_total_s": 890
+   },
+   "lectures_console": [],
+   "levees_cle": [],
+   "variable_cle": "GEMINI_API_KEY"
+  },
+  "verification-google-cle-2": {
+   "numero_au_devis": 6,
+   "go": null,
+   "plafond_usd": 1.5,
+   "plafond_registre": "1,50 USD",
+   "exces_possible_d_un_envoi_usd": 2.18,
+   "marques_du_perimetre": [
+    "vérification de la clé de `gemini-4-neon` lue sous `GEMINI_API_KEY_2`",
+    "trois appels au plus"
+   ],
+   "hote": "generativelanguage.googleapis.com",
+   "dossier": "runs/verification-cle-google-2-bras-a-v1",
+   "appels_max": 3,
+   "envois_max": 3,
+   "borne_octets": null,
+   "reserve_sortie_jetons": null,
+   "delais": {
+    "silence_s": 900,
+    "total_s": 900,
+    "relais_silence_s": 890,
+    "relais_total_s": 890
+   },
+   "lectures_console": [],
+   "levees_cle": [],
+   "variable_cle": "GEMINI_API_KEY_2"
+  },
+  "file-mistral": {
+   "numero_au_devis": 3,
+   "go": "GO-2026-11-21-83",
+   "plafond_usd": 4.75,
+   "plafond_registre": "4,75 USD",
+   "exces_possible_d_un_envoi_usd": 0.64,
+   "marques_du_perimetre": [
+    "essai d'admission du second lecteur",
+    "24 appels"
+   ],
+   "hote": null,
+   "dossier": "runs/essais-admission-bras-a-v1",
+   "appels": 24,
+   "envois_max": 48,
+   "borne_octets": 262144,
+   "reserve_sortie_jetons": 262208,
+   "delais": {
+    "silence_s": 600,
+    "total_s": 2700,
+    "relais_silence_s": 590,
+    "relais_total_s": 2690
+   },
+   "entrees": "toutes",
+   "lectures_console": [],
+   "levees_cle": [],
+   "releve_verification": {
+    "chemin": null,
+    "sha256": null
+   },
+   "inscrit": {
+    "nom_servi": null,
+    "hote": null,
+    "temperature_envoyee": null
+   },
+   "mot_de_lazar_sonde": null
+  },
+  "file-neon": {
+   "numero_au_devis": 4,
+   "go": null,
+   "plafond_usd": 8.5,
+   "plafond_registre": "8,50 USD",
+   "exces_possible_d_un_envoi_usd": 7.58,
+   "marques_du_perimetre": [
+    "essai d'admission du juge des deux ancres",
+    "8 appels",
+    "rangs impairs sous `GEMINI_API_KEY`",
+    "rangs pairs sous `GEMINI_API_KEY_2`"
+   ],
+   "hote": "generativelanguage.googleapis.com",
+   "dossier": "runs/essais-admission-bras-a-v1",
+   "appels": 8,
+   "envois_max": 16,
+   "borne_octets": null,
+   "reserve_sortie_jetons": null,
+   "delais": {
+    "silence_s": 2700,
+    "total_s": 2700,
+    "relais_silence_s": 2690,
+    "relais_total_s": 2690
+   },
+   "entrees": [
+    "A-b1-01",
+    "A-b1-02",
+    "A-b1-03",
+    "A-b1-04",
+    "A-b1-05",
+    "A-b1-06",
+    "C-b1-02",
+    "C-b1-03"
+   ],
+   "lectures_console": [],
+   "levees_cle": [],
+   "inscrit": {
+    "nom_servi": null,
+    "hote": null,
+    "orthographe_niveau": null
+   },
+   "mot_de_lazar_sonde": null,
+   "partage": [
+    {
+     "rang": 1,
+     "entree": "A-b1-01",
+     "variable_cle": "GEMINI_API_KEY"
+    },
+    {
+     "rang": 2,
+     "entree": "A-b1-02",
+     "variable_cle": "GEMINI_API_KEY_2"
+    },
+    {
+     "rang": 3,
+     "entree": "A-b1-03",
+     "variable_cle": "GEMINI_API_KEY"
+    },
+    {
+     "rang": 4,
+     "entree": "A-b1-04",
+     "variable_cle": "GEMINI_API_KEY_2"
+    },
+    {
+     "rang": 5,
+     "entree": "A-b1-05",
+     "variable_cle": "GEMINI_API_KEY"
+    },
+    {
+     "rang": 6,
+     "entree": "A-b1-06",
+     "variable_cle": "GEMINI_API_KEY_2"
+    },
+    {
+     "rang": 7,
+     "entree": "C-b1-02",
+     "variable_cle": "GEMINI_API_KEY"
+    },
+    {
+     "rang": 8,
+     "entree": "C-b1-03",
+     "variable_cle": "GEMINI_API_KEY_2"
+    }
+   ],
+   "envois_max_par_relais": 8,
+   "releves_verification": {
+    "GEMINI_API_KEY": {
+     "chemin": null,
+     "sha256": null
+    },
+    "GEMINI_API_KEY_2": {
+     "chemin": null,
+     "sha256": null
+    }
+   }
+  }
+ },
+ "marge_de_change_go": "GO-2026-11-21-68",
+ "cles_levees": {
+  "go": "GO-2026-11-21-68",
+  "cles": [
+   "google_partage_journaux_projet_a",
+   "google_partage_journaux_projet_b",
+   "google_duree_journaux_jours_projet_a",
+   "google_duree_journaux_jours_projet_b",
+   "google_cle_du_projet_constate_cle_1",
+   "google_cle_du_projet_constate_cle_2"
+  ],
+  "note": "liste fermée (avenant, 5.2) : la valeur « non constaté, levé par GO-2026-11-21-68 » n'est admise que pour ces clés, et seulement si elles sont nommées ici. Aucune clé de Mistral n'est levée."
+ }
+}
