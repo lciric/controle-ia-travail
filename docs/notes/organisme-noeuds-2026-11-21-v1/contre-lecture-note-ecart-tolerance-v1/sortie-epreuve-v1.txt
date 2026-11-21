@@ -1,0 +1,64 @@
+Réseau factice : aires encadrantes de la normale arrondie, pas en unité brute
+  pas 0.10 (sigma arrondie 1.0004) : a=0.69 [0.6895 ; 0.7020] ; a=0.80 [0.7919 ; 0.8017] ; a=0.95 [0.9479 ; 0.9517]
+  pas 0.25 (sigma arrondie 1.0026) : a=0.69 [0.6705 ; 0.7011] ; a=0.80 [0.7865 ; 0.8104] ; a=0.95 [0.9433 ; 0.9532]
+  pas 0.50 (sigma arrondie 1.0104) : a=0.69 [0.6355 ; 0.7011] ; a=0.80 [0.7557 ; 0.8104] ; a=0.95 [0.9433 ; 0.9584]
+  pas 1.00 (sigma arrondie 1.0408) : a=0.69 [0.6355 ; 0.7430] ; a=0.80 [0.7430 ; 0.8506] ; a=0.95 [0.9045 ; 0.9584]
+  pas 2.00 (sigma arrondie 1.1409) : a=0.69 [0.5000 ; 0.7578] ; a=0.80 [0.7578 ; 0.8654] ; a=0.95 [0.8654 ; 0.9730]
+
+=== VRAI 1 : pas 0,25, aire atteignable la plus proche
+  prédit : 0,69 et 0,80 en « conforme au pas du réseau » ; 0,95 en (a) ou (a bis) ; famille convertie
+  a=0.69  décalage=0.7481 ET  aire=0.7011  v_sous=0.6705 v_sur=0.7011  -> conforme au pas du réseau
+  a=0.80  décalage=1.2468 ET  aire=0.8104  v_sous=0.7865 v_sur=0.8104  -> conforme au pas du réseau
+  a=0.95  décalage=2.3688 ET  aire=0.9532  -> (a) conforme
+  famille convertie (lecture conjointe, chaque décalage reçu) : True
+  au moins un décalage « conforme au pas du réseau » (lecture isolée de la ligne 27) : True
+
+=== VRAI 2 : loi continue, décalages exacts sqrt2 * Phi^-1(a)
+  prédit : trois (a) ; famille convertie ; la note n'intervient pas
+  a=0.69  décalage=0.7012 ET  aire=0.6900  -> (a) conforme
+  a=0.80  décalage=1.1902 ET  aire=0.8000  -> (a) conforme
+  a=0.95  décalage=2.3262 ET  aire=0.9500  -> (a) conforme
+  famille convertie (lecture conjointe, chaque décalage reçu) : True
+  au moins un décalage « conforme au pas du réseau » (lecture isolée de la ligne 27) : False
+
+  (pas 0,1 : deuxième aire sous 0,69 = 0.6771, à 0.0129 de 0,69)
+=== FAUX 1 : pas 0,1, voisin suivant (non encadrant) à moins de 0,02 pour 0,69
+  prédit : 0,69 non converti, « aucune unité ne réalise les aires » ; famille non convertie
+  a=0.69  décalage=0.6497 ET  aire=0.6771  v_sous=0.6895 v_sur=0.7020  -> non converti : aucune unité ne réalise les aires
+  a=0.80  décalage=1.1995 ET  aire=0.8017  -> (a) conforme
+  a=0.95  décalage=2.3490 ET  aire=0.9517  -> (a) conforme
+  famille convertie (lecture conjointe, chaque décalage reçu) : False
+  au moins un décalage « conforme au pas du réseau » (lecture isolée de la ligne 27) : False
+
+=== FAUX 2 : nombres en unité brute sous une loi d'écart type 2, lus en écarts types
+  prédit : les trois non convertis ; famille non convertie
+  a=0.69  décalage=0.7012 ET  aire=0.6705  v_sous=0.6705 v_sur=0.7011  -> conforme au pas du réseau
+  a=0.80  décalage=1.1902 ET  aire=0.7865  v_sous=0.7865 v_sur=0.8104  -> conforme au pas du réseau
+  a=0.95  décalage=2.3262 ET  aire=0.9532  -> (a) conforme
+  famille convertie (lecture conjointe, chaque décalage reçu) : True
+  au moins un décalage « conforme au pas du réseau » (lecture isolée de la ligne 27) : True
+
+=== FAUX 3 : pas 0,5, aire encadrante du dessous hors plafond, celle du dessus dans le plafond
+  prédit : 0,69 non converti ; la ligne 28 ne donne aucune de ses deux raisons (trou de nommage)
+  a=0.69  décalage=0.4949 ET  aire=0.6355  v_sous=0.6355 v_sur=0.7011  -> non converti : AUCUNE DES DEUX RAISONS DE LA LIGNE 28 NE S'APPLIQUE
+  a=0.80  décalage=1.2372 ET  aire=0.8104  v_sous=0.7557 v_sur=0.8104  -> conforme au pas du réseau
+  a=0.95  décalage=2.2269 ET  aire=0.9433  v_sous=0.9433 v_sur=0.9584  -> conforme au pas du réseau
+  famille convertie (lecture conjointe, chaque décalage reçu) : False
+  au moins un décalage « conforme au pas du réseau » (lecture isolée de la ligne 27) : True
+
+=== FAUX 4 : loi continue, aires dites + 0,01
+  prédit : trois non convertis par la lettre scellée ; la note n'ajoute aucune conversion
+  a=0.69  décalage=0.7416 ET  aire=0.7000  -> échec, lettre scellée : non converti, rapporté (raison non nommée par la note)
+  a=0.80  décalage=1.2415 ET  aire=0.8100  -> échec, lettre scellée : non converti, rapporté (raison non nommée par la note)
+  a=0.95  décalage=2.4758 ET  aire=0.9600  -> échec, lettre scellée : non converti, rapporté (raison non nommée par la note)
+  famille convertie (lecture conjointe, chaque décalage reçu) : False
+  au moins un décalage « conforme au pas du réseau » (lecture isolée de la ligne 27) : False
+
+=== FAUX 5 : pas 0,25, 0,69 au pas du réseau, 0,80 un palier trop loin
+  prédit : famille non convertie en lecture conjointe ; la lecture isolée de la ligne 27 la convertirait
+  a=0.69  décalage=0.7481 ET  aire=0.7011  v_sous=0.6705 v_sur=0.7011  -> conforme au pas du réseau
+  a=0.80  décalage=1.3714 ET  aire=0.8342  v_sous=0.7865 v_sur=0.8104  -> non converti : aucune unité ne réalise les aires
+  a=0.95  décalage=2.3688 ET  aire=0.9532  -> (a) conforme
+  famille convertie (lecture conjointe, chaque décalage reçu) : False
+  au moins un décalage « conforme au pas du réseau » (lecture isolée de la ligne 27) : True
+
