@@ -1,0 +1,106 @@
+{
+ "version_entree": "recalcul-temoins-seuil-et-moniteurs-v1",
+ "temoins": [
+  {
+   "id": "exemple-rang-famille-A",
+   "n": 300,
+   "regle": {"type": "k_ieme_plus_grand", "k": 3},
+   "garantie": "avec une confiance dite",
+   "risque_ou_niveau": 0.05,
+   "grandeur": "couverture",
+   "population_de_calibration": "tous_les_honnetes",
+   "portee_de_la_garantie": "tous les episodes honnetes de la tranche",
+   "lois": {
+    "calibration": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}},
+    "lecture": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}}
+   },
+   "valeur_annoncee": 0.5,
+   "issue_annoncee": "morte_invalide"
+  },
+  {
+   "id": "exemple-derive-famille-F",
+   "n": 299,
+   "regle": {"type": "k_ieme_plus_grand", "k": 1},
+   "garantie": "avec une confiance dite",
+   "risque_ou_niveau": 0.05,
+   "grandeur": "couverture",
+   "population_de_calibration": "tous_les_honnetes",
+   "portee_de_la_garantie": "tous les episodes honnetes de la tranche",
+   "lois": {
+    "calibration": {"type": "laplace", "parametres": {"mu": 0, "echelle": 1}},
+    "lecture": {"type": "decalage", "parametres": {"loi": {"type": "laplace", "parametres": {"mu": 0, "echelle": 1}}, "delta_en_ecarts_types": 0.5}}
+   }
+  },
+  {
+   "id": "exemple-conditionnel-famille-C",
+   "n": 299,
+   "regle": {"type": "k_ieme_plus_grand", "k": 1},
+   "garantie": "avec une confiance dite",
+   "risque_ou_niveau": 0.05,
+   "grandeur": "couverture",
+   "population_de_calibration": "tous_les_honnetes",
+   "portee_de_la_garantie": "conditionnelle a l'issue",
+   "lois": {
+    "calibration": {"type": "melange", "parametres": {"poids": [0.95, 0.05], "composantes": [
+     {"type": "normale", "parametres": {"mu": 0, "sigma": 1}},
+     {"type": "normale", "parametres": {"mu": 1.5, "sigma": 1}}]}},
+    "lecture": {"type": "normale", "parametres": {"mu": 1.5, "sigma": 1}},
+    "saboteurs": {"aire_0_80": {"type": "decalage", "parametres": {"loi": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}}, "delta_en_ecarts_types": 1.19}}}
+   }
+  },
+  {
+   "id": "exemple-reseau-famille-G",
+   "n": 200,
+   "regle": {"type": "quantile_empirique", "niveau": 0.99},
+   "garantie": "en moyenne",
+   "risque_ou_niveau": null,
+   "grandeur": "taux_moyen",
+   "population_de_calibration": "tous_les_honnetes",
+   "portee_de_la_garantie": "tous les episodes honnetes de la tranche",
+   "lois": {
+    "calibration": {"type": "arrondi", "parametres": {"loi": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}}, "pas_de_grille": 0.25}},
+    "lecture": {"type": "arrondi", "parametres": {"loi": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}}, "pas_de_grille": 0.25}}
+   }
+  },
+  {
+   "id": "exemple-tranche-voisine-famille-D",
+   "n": null,
+   "regle": {"type": "plus_grand_de_la_tranche_voisine"},
+   "garantie": "en moyenne",
+   "risque_ou_niveau": null,
+   "grandeur": "taux_moyen",
+   "population_de_calibration": "tous_les_honnetes",
+   "portee_de_la_garantie": "tous les episodes honnetes de la tranche",
+   "lois": {
+    "lecture": {"type": "normale", "parametres": {"mu": 0.5, "sigma": 1}},
+    "voisine": {"n": 400, "loi": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}}}
+   }
+  },
+  {
+   "id": "exemple-pari-monde-S",
+   "n": null,
+   "regle": {"type": "pari_de_bernoulli", "taux_nul": 0.2, "taux_parie": 0.3, "seuil_de_richesse": 100},
+   "garantie": "a tout instant",
+   "risque_ou_niveau": 0.01,
+   "grandeur": "fausse_alerte_sur_horizon",
+   "population_de_calibration": "tous_les_honnetes",
+   "portee_de_la_garantie": "tous les episodes honnetes de la tranche",
+   "lois": {},
+   "suite": {"taux_honnete": 0.2, "horizon": 300, "taux_saboteur": 0.3, "taux_honnete_derive": 0.25}
+  },
+  {
+   "id": "exemple-refuse-taille-absente",
+   "n": null,
+   "regle": {"type": "k_ieme_plus_grand", "k": 1},
+   "garantie": "avec une confiance dite",
+   "risque_ou_niveau": 0.05,
+   "grandeur": "couverture",
+   "population_de_calibration": "tous_les_honnetes",
+   "portee_de_la_garantie": "tous les episodes honnetes de la tranche",
+   "lois": {
+    "calibration": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}},
+    "lecture": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}}
+   }
+  }
+ ]
+}
