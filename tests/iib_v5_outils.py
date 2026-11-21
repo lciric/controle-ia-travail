@@ -43,29 +43,33 @@ def episode(oracle: str, exces: list, phase: str = "maitre", nom: str = "e0", sa
     return lignes
 
 
-# ---- correctif 0011 : l'environnement que simule un essai est écrit par l'essai, jamais hérité de la machine qui le joue ----
+# ---- correctif 0011 : ce que lit la garde du mode jouet (accord, carte), l'essai le pose lui-même ; le reste de son
+# environnement est hérité de la machine qui le joue (correctif 0012, relecture, mineur 8) ----
 def environnement_sans_carte(dossier: Path, base: dict) -> dict:
     """Environnement d'un sous-processus qui simule un poste sans carte ni accord, où le mode jouet est permis : `base` sans
-    `IIB_GO_ID` (l'accord que le lanceur de session pose sur la machine) ; chemin réduit à un dossier neuf qui ne porte que
-    `git` (le manifeste du run lit le commit), donc sans `nvidia-smi` ; `CUDA_VISIBLE_DEVICES` vide, pour que torch, s'il est
-    installé, ne voie aucune carte (contrat de CUDA). Sur la machine louée (accord posé, `nvidia-smi` dans `/usr/bin`, torch
-    qui voit la carte), le seul chemin `/usr/bin:/bin` ne masquait rien : la garde « mode jouet sur une machine payante » a
-    joué dans l'essai lui-même (première tentative de l'étalonnage, 21 novembre). La garde, elle, ne change pas."""
+    aucune variable `IIB_*` (dont `IIB_GO_ID`, l'accord que le lanceur de session pose sur la machine) ; chemin réduit à un
+    dossier neuf qui ne porte que `git` (le manifeste du run lit le commit), donc sans `nvidia-smi` — ce qui suppose un `git`
+    binaire autonome, qui trouve ses sous-commandes par son propre chemin d'exécution ; `CUDA_VISIBLE_DEVICES` vide, pour que
+    torch, s'il est installé, ne voie aucune carte (contrat de CUDA). Tout le reste de `base` est hérité tel quel. Sur la machine
+    louée (accord posé, `nvidia-smi` dans `/usr/bin`, torch qui voit la carte), le seul chemin `/usr/bin:/bin` ne masquait
+    rien : la garde « mode jouet sur une machine payante » a joué dans l'essai lui-même (première tentative de l'étalonnage,
+    21 novembre). La garde, elle, ne change pas."""
     git = shutil.which("git", path=base.get("PATH"))
     if git is None:
         raise RuntimeError("git introuvable dans le chemin de l'environnement de base : poste sans carte non constructible")
     outils = Path(dossier) / "chemin-du-poste-sans-carte"
     outils.mkdir(parents=True)
     os.symlink(git, outils / "git")
-    env = {k: v for k, v in base.items() if k != "IIB_GO_ID"}
+    env = {k: v for k, v in base.items() if not k.startswith("IIB_")}
     env.update({"PATH": str(outils), "CUDA_VISIBLE_DEVICES": ""})
     return env
 
 
 def python_sans_numpy(dossier: Path) -> Path:
-    """Dossier `bin` d'un environnement virtuel vide (aucun paquet tiers) : son `python3` est celui du système de la machine
-    louée, sans numpy, que la surveillance du lanceur de session appelle par `python3 -I -B`. Vérifié avant emploi (R5) : un
-    `python3` qui verrait numpy ne simulerait pas la machine, et l'essai s'arrête."""
+    """Dossier `bin` d'un environnement virtuel vide (aucun paquet tiers) : son `python3` simule, sans en être un, le python3 du
+    système de la machine louée, sans numpy, que la surveillance du lanceur de session appelle par `python3 -I -B` ; il a la
+    version de l'interpréteur des essais (le vrai python3 du système est joué par l'essai de la règle de coupure, correctif
+    0012). Vérifié avant emploi (R5) : un `python3` qui verrait numpy ne simulerait pas la machine, et l'essai s'arrête."""
     v = Path(dossier) / "environnement-vide"
     v.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(v)], check=True, capture_output=True, timeout=120)

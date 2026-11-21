@@ -178,6 +178,24 @@ def test_etalonnage_refuse_sans_entropie_ni_intouchables_ni_accord(tmp_path):
     with pytest.raises(GardeArret, match="accord cité"):
         la.exiger_accord({"mode": "reel", "go_id": None}, {"IIB_GO_ID": None})
     assert not (tmp_path / "c").exists()                          # aucun refus n'a rien écrit
+    # correctif 0012 (relecture, majeur 2) : rien, dans le code de production, ne neutralise la garde — aucun `carte=False` et
+    # aucune affectation de `CUDA_VISIBLE_DEVICES` sous src/ et scripts/ (le dossier des moniteurs, interdit aux rôles côté
+    # saboteur, n'est pas lu : écart déclaré) ; le détecteur est d'abord éprouvé sur des artefacts et des cas sains (R5)
+    import re
+    carte_false = re.compile(r"\bcarte\s*=\s*False\b")
+    affecte_cuda = re.compile(r"""CUDA_VISIBLE_DEVICES['"]?\s*\]?\s*(:|=(?!=))|export\s+CUDA_VISIBLE_DEVICES|(setdefault|putenv)\(\s*['"]CUDA_VISIBLE_DEVICES""")
+    for artefact in ('f(c, carte=False)', 'os.environ["CUDA_VISIBLE_DEVICES"] = ""', '{"CUDA_VISIBLE_DEVICES": ""}', 'CUDA_VISIBLE_DEVICES= python -m x',
+                     'export CUDA_VISIBLE_DEVICES', 'os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")', 'env.update(CUDA_VISIBLE_DEVICES="")'):
+        assert carte_false.search(artefact) or affecte_cuda.search(artefact), artefact
+    for sain in ('f(c, carte=None)', 'os.environ.get("CUDA_VISIBLE_DEVICES") != ""', 'os.environ["CUDA_VISIBLE_DEVICES"] == "0"', 'carte_visible()'):
+        assert not carte_false.search(sain) and not affecte_cuda.search(sain), sain
+    production = [f for d in ("src", "scripts") for f in sorted((DEPOT / d).rglob("*")) if f.suffix in (".py", ".sh") and f.is_file()
+                  and "barreau8_moniteurs" not in f.parts and "__pycache__" not in f.parts]
+    lus = {str(f.relative_to(DEPOT)) for f in production}
+    assert {"src/controle_ia/iib/lanceur_v5.py", "scripts/amorce_instance_iib_v5.sh", "scripts/lancer_iib_v3.sh"} <= lus
+    fautifs = [str(f.relative_to(DEPOT)) for f in production
+               if carte_false.search(t := f.read_text(encoding="utf-8", errors="replace")) or affecte_cuda.search(t)]
+    assert fautifs == [], fautifs
 
 
 def test_arret_des_machines_par_identifiant_hors_des_intouchables():
@@ -403,6 +421,14 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     assert "attesté par IIB_AUCUNE_INTOUCHABLE=oui\"" not in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
     v3 = (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
     assert "session_v5.main" in v3 and "A=scripts/amorce_instance_iib_v5.sh" in v3 and "consigne_maitre_N consigne_maitre_P consigne_flagrant entrees" in v3
+    # correctif 0012 (relecture, majeur 1) : la branche « surveillance » ne passe à `$SESSION` (session_v5) que la règle de
+    # coupure, sous-commande qui ne charge pas numpy, jamais `config` ; la garde de dépense de la ligne passe par `$SESSION3`
+    import re
+    appel = r'-c "\$SESSION" ([A-Za-z0-9_-]+)'
+    branche = re.search(r"^surveillance\)\n(.*?)^destruction\)", v3, re.M | re.S)
+    assert branche and set(re.findall(appel, branche.group(1))) == {"coupure-etalonnage"}
+    assert branche.group(1).count('"$SESSION"') == len(re.findall(appel, branche.group(1)))     # aucun autre emploi de `$SESSION`
+    assert set(re.findall(appel, branche.group(1) + '\npython3 -I -B -c "$SESSION" config "$D/config.json"\n')) != {"coupure-etalonnage"}  # artefact
     # les originaux sont intacts (empreintes relevées avant ce développement)
     assert hashlib.sha256((s / "lancer_iib_v2.sh").read_bytes()).hexdigest() == "dba3e09769e97e7304600924c4d6c43077412e25347edb76dee193c627947c96"
 
@@ -447,8 +473,9 @@ def test_coupure_de_l_etalonnage_regle_cas_sain_artefact_et_autre_phase():
 def _surveiller(tmp_path, phase, heures, journal_de_fin=False, duree=5):
     """La sous-commande « surveillance » du lanceur de session en version 3, faux outil de location, aucun réseau ; rend
     (code, sortie, texte de la surveillance, appels au faux outil, dossier). Le `python3` que la surveillance trouve en tête
-    du chemin est celui d'un environnement virtuel vide : sans numpy, comme le python3 du système de la machine louée
-    (correctif 0011 ; sur le poste, celui du système voyait numpy et cachait le défaut)."""
+    du chemin est celui d'un environnement virtuel vide : sans numpy, il simule le python3 du système de la machine louée sans
+    en être un (même version que l'interpréteur des essais ; le vrai python3 du système est joué par l'essai de la règle de
+    coupure, correctif 0012) ; sur le poste, celui du système voyait numpy et cachait le défaut (correctif 0011)."""
     import subprocess
     import time
     from datetime import datetime, timezone

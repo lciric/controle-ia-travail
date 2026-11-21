@@ -3,7 +3,8 @@
 dans l'interpréteur de l'amorce), python3 du système sans numpy (environnement virtuel vide ; `python3 -I -S`). Chaque
 condition sur un cas sain et un artefact (R5). La première tentative de l'étalonnage s'est arrêtée sur la machine, pendant la
 suite ciblée, avant tout chargement du modèle : « 5 failed, 263 passed, 3 errors » ; ces essais en reproduisent les deux causes.
-Aucune machine, aucun loueur, aucun réseau."""
+Les deux premiers sont des essais de non-régression de la garde (ils passent avec ou sans le correctif 0011) ; les deux derniers
+échouent sans lui, comme la machine. Aucune machine, aucun loueur, aucun réseau."""
 import os
 import re
 import shutil
@@ -105,10 +106,13 @@ def _carte_vue(python, env: dict) -> str:
     return r.stdout.strip()
 
 
-def test_accord_pose_et_carte_simulee_dans_le_processus_la_garde_refuse_l_essai_isole_passe(tmp_path, monkeypatch):
-    """Dans le processus des essais, chaque condition de la machine — accord posé, carte vue par `nvidia-smi`, carte vue par
-    torch — sur un artefact (sans isolement explicite, la garde refuse le mode jouet : son effet en production est intact) et un
-    cas sain (avec l'isolement que l'essai écrit, la garde laisse passer et c'est le contrôle suivant qui parle)."""
+def test_non_regression_de_la_garde_dans_le_processus_accord_pose_et_carte_simulee(tmp_path, monkeypatch):
+    """Essai de non-régression de la garde : il passe avec ou sans le correctif 0011, car il éprouve l'effet inchangé de la garde
+    et la simulation elle-même (écart au mandat, qui voulait des essais en échec sans la correction : déclaré dans la table de
+    traitement de la relecture). Dans le processus des essais, chaque condition de la machine — accord posé, carte vue par
+    `nvidia-smi`, carte vue par torch — sur un artefact (sans isolement explicite, la garde refuse le mode jouet : son effet en
+    production est intact) et un cas sain (avec l'isolement que l'essai écrit, la garde laisse passer et c'est le contrôle
+    suivant qui parle)."""
     racine = tmp_path / "depot"
     config = _monde(racine)
     modele, monde = ModeleJouetDeLangue(), la.MondeJouet()
@@ -127,7 +131,13 @@ def test_accord_pose_et_carte_simulee_dans_le_processus_la_garde_refuse_l_essai_
     with pytest.raises(GardeArret, match="mode jouet sur une machine payante"):  # artefact : le point d'entrée lit l'environnement
         la.executer("etalonnage", config, racine, "20991231-000009-iib-jouet", modele, monde, carte=False)
     assert not (racine / "runs").exists() and not (racine / "diag").exists()
-    with pytest.raises(GardeArret, match="déjà joué"):               # cas sain : l'essai isole l'accord ({} explicite)
+    # cas sains : les fonctions de phase ne lisent jamais l'environnement du processus (sans argument, `environnement` vaut {}),
+    # l'accord posé n'y entre donc pas ; d'abord la forme des cinq appels corrigés (`carte=False` seul), puis un {} explicite
+    with pytest.raises(GardeArret, match="déjà joué"):
+        la.phase_etalonnage(config, racine, deja, modele, monde, carte=False)
+    with pytest.raises(GardeArret, match="pas de course sans résultat"):
+        la.phase_course(config, racine, "course", modele, monde, carte=False)
+    with pytest.raises(GardeArret, match="déjà joué"):
         la.phase_etalonnage(config, racine, deja, modele, monde, {}, carte=False)
     monkeypatch.delenv("IIB_GO_ID")
     # 2. carte vue par nvidia-smi (factice, en tête du chemin)
@@ -149,8 +159,9 @@ def test_accord_pose_et_carte_simulee_dans_le_processus_la_garde_refuse_l_essai_
     assert not la.carte_visible()
 
 
-def test_point_d_entree_sous_la_machine_simulee_l_isolement_masque_la_carte_la_garde_refuse_sans_lui(tmp_path, tmp_path_factory):
-    """Sous-processus, comme le point d'entrée que l'essai à blanc appelle : la machine simulée est vue ; l'ancien isolement
+def test_non_regression_de_la_garde_au_point_d_entree_sous_la_machine_simulee(tmp_path, tmp_path_factory):
+    """Essai de non-régression de la garde : il passe avec ou sans le correctif 0011 (écart au mandat déclaré dans la table de
+    traitement de la relecture). Sous-processus, comme le point d'entrée que l'essai à blanc appelle : la machine simulée est vue ; l'ancien isolement
     des essais (`/usr/bin:/bin`, sans accord) ne masquait pas la carte que voit torch (l'arrêt de la machine) ; l'isolement
     écrit par les essais la masque, à l'interpréteur simulé comme au vrai interpréteur des essais (sur la machine louée : le
     vrai torch et la vraie carte) ; sans lui, le point d'entrée refuse le mode jouet avant tout manifeste."""
@@ -161,7 +172,7 @@ def test_point_d_entree_sous_la_machine_simulee_l_isolement_masque_la_carte_la_g
     ancien = {**{k: v for k, v in machine.items() if k != "IIB_GO_ID"}, "PATH": "/usr/bin:/bin"}
     assert _carte_vue(py, ancien) == "True"                          # l'ancien isolement de l'essai à blanc ne la masquait pas
     isole = environnement_sans_carte(tmp_path_factory.mktemp("poste"), machine)
-    assert "IIB_GO_ID" not in isole and isole["CUDA_VISIBLE_DEVICES"] == "" and not shutil.which("nvidia-smi", path=isole["PATH"])
+    assert not any(k.startswith("IIB_") for k in isole) and isole["CUDA_VISIBLE_DEVICES"] == "" and not shutil.which("nvidia-smi", path=isole["PATH"])
     assert _carte_vue(py, isole) == "False" and _carte_vue(sys.executable, isole) == "False"      # cas sain
     _depot_jouet(tmp_path)
     carte_seule = {k: v for k, v in machine.items() if k != "IIB_GO_ID"}
@@ -173,14 +184,22 @@ def test_point_d_entree_sous_la_machine_simulee_l_isolement_masque_la_carte_la_g
 
 
 def test_regle_de_coupure_sous_le_python3_du_systeme_sans_numpy_cas_sain_artefact_phase_illisible(tmp_path):
-    """La règle de coupure de l'étalonnage à 12 USD, appelée comme la surveillance l'appelle, sous le python3 du système de la
-    machine louée (sans numpy) : environnement virtuel vide, puis `-I -S` (aucun paquet tiers). Cas sain (sous 12 USD : rien),
-    artefact (à 12 USD : arrêt), autre phase (la règle ne joue pas), phase illisible (refus, aucun repli)."""
+    """La règle de coupure de l'étalonnage à 12 USD, appelée comme la surveillance l'appelle, sous un python3 sans numpy :
+    environnement virtuel vide, puis `-I -S` (aucun paquet tiers) de l'interpréteur des essais et du vrai python3 du système
+    (trouvé sur `/usr/local/bin:/usr/bin:/bin`). Cas sain (sous 12 USD : rien), artefact (à 12 USD : arrêt), autre phase (la
+    règle ne joue pas), phase illisible (refus, aucun repli) ; la sous-commande `config`, qui charge numpy, y échoue avec le
+    message de numpy (la surveillance ne l'appelle pas : essai de l'amorce). Environnement explicite (`LANG=C.UTF-8`, comme
+    `_surveiller`), décodage explicite en UTF-8 (correctif 0012, relecture, majeur 1, mineurs 5 et 6)."""
     sans_numpy = python_sans_numpy(tmp_path / "python-du-systeme")
+    systeme = shutil.which("python3", path="/usr/local/bin:/usr/bin:/bin")
+    assert systeme, "aucun python3 sur /usr/local/bin:/usr/bin:/bin : la variante du vrai python3 du système n'est pas jouable (aucun repli)"
+    env = {"PATH": "/usr/local/bin:/usr/bin:/bin", "LANG": "C.UTF-8"}
+
+    def jouer(commande):
+        return subprocess.run(commande, env=env, capture_output=True, encoding="utf-8", timeout=120)
     # la simulation reproduit la machine (R5) : le module de configuration, qui a besoin de numpy (lois exactes), ne s'y charge
     # pas — c'est la trace de la machine ; la règle de coupure, elle, doit s'y charger sans lui
-    r = subprocess.run([str(sans_numpy / "python3"), "-I", "-B", "-c", f"import sys; sys.path.insert(0, {SRC!r}); from controle_ia.iib import configuration_v5"],
-                       capture_output=True, text=True, timeout=120)
+    r = jouer([str(sans_numpy / "python3"), "-I", "-B", "-c", f"import sys; sys.path.insert(0, {SRC!r}); from controle_ia.iib import configuration_v5"])
     assert r.returncode != 0 and "No module named 'numpy'" in r.stderr
     from datetime import datetime, timezone
 
@@ -188,13 +207,16 @@ def test_regle_de_coupure_sous_le_python3_du_systeme_sans_numpy_cas_sain_artefac
     progres = tmp_path / "progres.txt"
     instant = datetime.fromtimestamp(cree + 600, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     progres.write_text(f"AMORCE IIB v1 DEMARRAGE 1 : {instant}, machine m, commit c\nPROGRES {instant} phase=etalonnage lot=1\n", encoding="utf-8")
+    config = tmp_path / "config.json"
+    config.write_text("{}\n", encoding="utf-8")
 
     def h(heures):
         return str(int(cree + 600 + heures * 3600))
-    for interpreteur in ([str(sans_numpy / "python3"), "-I", "-B"], [sys.executable, "-I", "-S", "-B"]):
+    for interpreteur in ([str(sans_numpy / "python3"), "-I", "-B"], [sys.executable, "-I", "-S", "-B"], [systeme, "-I", "-S", "-B"]):
         def regle(phase, maintenant):
-            return subprocess.run([*interpreteur, "-c", SESSION, "coupure-etalonnage", phase, str(progres), maintenant, "1.30", "0.08", str(cree)],
-                                  capture_output=True, text=True, timeout=120)
+            return jouer([*interpreteur, "-c", SESSION, "coupure-etalonnage", phase, str(progres), maintenant, "1.30", "0.08", str(cree)])
+        conf = jouer([*interpreteur, "-c", SESSION, "config", str(config)])      # `config` garde numpy : échec, avec le message de numpy
+        assert conf.returncode != 0 and "No module named 'numpy'" in conf.stderr, (interpreteur, conf.returncode, conf.stderr[-800:])
         sain = regle("etalonnage", h(8))                             # 8 h à 1,38 USD/h : 11,04 USD
         assert sain.returncode == 0, (interpreteur, sain.stderr[-1500:])
         assert sain.stdout.startswith("RIEN : dépense comptée de l'étalonnage 11.04 USD < 12 USD (depuis : début de l'amorce)"), sain.stdout
@@ -210,11 +232,14 @@ def test_regle_de_coupure_sous_le_python3_du_systeme_sans_numpy_cas_sain_artefac
 def test_les_huit_essais_arretes_sur_la_machine_passent_sous_la_machine_simulee(tmp_path):
     """Reproduction de l'arrêt de la machine : les huit essais en échec ou en erreur sur la machine louée, rejoués par un pytest
     enfant dans l'environnement de la machine simulée — accord posé, carte que voient `nvidia-smi` (en tête du chemin) et
-    torch (interpréteur de l'amorce simulé), python3 du système sans numpy (celui que la surveillance trouve, posé par
-    `_surveiller`). Sans le correctif 0011 ils échouent comme sur la machine ; avec lui, ils passent."""
+    torch (interpréteur de l'amorce simulé), python3 sans numpy qui simule celui du système (celui que la surveillance trouve,
+    posé par `_surveiller`). Sans le correctif 0011 ils échouent comme sur la machine ; avec lui, ils passent. Le pytest enfant
+    trouve `controle_ia` par un `PYTHONPATH` explicite et ne reprend pas `PYTEST_ADDOPTS` (correctif 0012, relecture, mineur 7)."""
     m = machine_simulee(tmp_path / "machine")
     py = python_carte_simulee(tmp_path / "interpreteur", m["site"])
     env = environnement_de_la_machine(m)
+    env.pop("PYTEST_ADDOPTS", None)
+    env["PYTHONPATH"] = SRC                                          # comme l'essai à blanc par le point d'entrée
     assert _carte_vue(py, env) == "True"                             # la simulation est en place (R5)
     r = subprocess.run([str(py), "-m", "pytest", "-q", "-p", "no:cacheprovider", "--color=no", f"--basetemp={tmp_path / 'essais-enfants'}",
                         *ARRETES_SUR_LA_MACHINE], cwd=DEPOT, env=env, capture_output=True, text=True, timeout=1200)
