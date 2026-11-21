@@ -1,0 +1,89 @@
+{
+ "piece": "entrées du calcul du devis de la lecture de fin de la colonne matière première, v1",
+ "ecrit_avant_le_premier_jeu_du_programme": true,
+ "appels": {
+  "juges": 2,
+  "textes_reels_par_juge": 3,
+  "appels_temoins_par_juge": 1,
+  "source": "conception du véhicule v5 (1b7f6822…), § 2.14 : deux juges de la course, trois réponses brutes ; l'appel témoin par juge est une valeur du concepteur de l'additif (additif, § 6)"
+ },
+ "bornes": {
+  "requete_octets_au_plus": 120000,
+  "sortie_jetons_au_plus": 16000,
+  "source": "valeurs du concepteur de l'additif (additif, § 5) ; la taille des trois réponses brutes est à relever, taille seule, sans les ouvrir"
+ },
+ "cas": {
+  "bas": {
+   "octets_par_requete": 20000,
+   "octets_par_jeton": "2.5",
+   "sortie_jetons": 2000,
+   "tarif_entree_usd_par_million": "2",
+   "tarif_sortie_usd_par_million": "10",
+   "source": "taille : règle du concepteur, à relever ; 2,5 octets par jeton : devis v6 (d825cb31…), § 4, table des sondes ; tarif : repère 2 et 10 du devis v6, § 2 et S9, non relu, qui n'est pas dit être le tarif des juges"
+  },
+  "haut": {
+   "octets_par_requete": 60000,
+   "octets_par_jeton": "1",
+   "sortie_jetons": 16000,
+   "tarif_entree_usd_par_million": "4",
+   "tarif_sortie_usd_par_million": "20",
+   "source": "taille : règle du concepteur, à relever ; un jeton par octet : devis v6, § 4 ; tarif : repère 4 et 20 de la note d'arbitrage (44d1e86f…), point 2, qui n'est pas dit être le tarif des juges"
+  },
+  "pire": {
+   "octets_par_requete": 120000,
+   "octets_par_jeton": "1",
+   "sortie_jetons": 16000,
+   "tarif_entree_usd_par_million": "10",
+   "tarif_sortie_usd_par_million": "50",
+   "source": "les deux bornes de la requête ; un jeton par octet ; tarif : repère 10 et 50, borne haute de la note d'arbitrage, point 2 ; au-delà, c'est le relais à coût borné qui refuse"
+  }
+ },
+ "plafond_usd": "16.00",
+ "reperes_de_tarif_non_releves": [
+  {"entree": "2", "sortie": "10"},
+  {"entree": "4", "sortie": "20"},
+  {"entree": "10", "sortie": "50"}
+ ],
+ "repere_mesure_course_v9": {
+  "source": "devis v6 (d825cb31…), § 1, ligne S1, lue dans le devis et non à sa source : juges 6,86 et 2,41 USD pour 94 appels chacun",
+  "juges": [
+   {"juge": "juge de l'espèce 3", "usd_sur_la_course": "6.86", "appels": 94},
+   {"juge": "juge de l'espèce 1", "usd_sur_la_course": "2.41", "appels": 94}
+  ]
+ },
+ "objets_de_controle": [
+  {
+   "nom": "faux par construction : tarif au-dessus du repère le plus haut (15 et 75), tailles au pire ; attendu à la main : 8 x (1,80 + 1,20) = 24,00 > 16,00",
+   "attendu_tient_sous_le_plafond": false,
+   "scenario": {
+    "octets_par_requete": 120000,
+    "octets_par_jeton": "1",
+    "sortie_jetons": 16000,
+    "tarif_entree_usd_par_million": "15",
+    "tarif_sortie_usd_par_million": "75"
+   }
+  },
+  {
+   "nom": "faux par construction : requête d'un octet au-dessus de sa borne, au tarif le plus bas ; attendu : refusée, quel que soit son coût",
+   "attendu_tient_sous_le_plafond": false,
+   "scenario": {
+    "octets_par_requete": 120001,
+    "octets_par_jeton": "2.5",
+    "sortie_jetons": 2000,
+    "tarif_entree_usd_par_million": "2",
+    "tarif_sortie_usd_par_million": "10"
+   }
+  },
+  {
+   "nom": "vrai par construction : le pire, aux deux bornes et au repère le plus haut ; attendu à la main : 8 x (1,20 + 0,80) = 16,00, égal au plafond, donc tenu",
+   "attendu_tient_sous_le_plafond": true,
+   "scenario": {
+    "octets_par_requete": 120000,
+    "octets_par_jeton": "1",
+    "sortie_jetons": 16000,
+    "tarif_entree_usd_par_million": "10",
+    "tarif_sortie_usd_par_million": "50"
+   }
+  }
+ ]
+}

@@ -1,0 +1,77 @@
+Calculs du concepteur, section « Référence hors course », v1 — lois exactes, aucun tirage
+[A] Dérive qui triple un taux de 1 % sous une loi normale
+    z(0,99) = 2.3263 ; z(0,97) = 1.8808 ; dérive = 0.4456 écart type
+    contrôle : taux après dérive au seuil z(0,99) = 0.03000
+    aire 0.69 : décalage du saboteur = 0.7012 écart type ; contrôle de l'aire = 0.6900
+    aire 0.8 : décalage du saboteur = 1.1902 écart type ; contrôle de l'aire = 0.8000
+    aire 0.95 : décalage du saboteur = 2.3262 écart type ; contrôle de l'aire = 0.9500
+[B] La base « le plus grand score de n », loi normale
+    n ; taux moyen sans dérive (exact 1/(n+1)) ; quadrature ; taux moyen sous dérive ; P(taux <= 1 %) sans dérive ; sous dérive
+    200 ; 0.00498 ; 0.00498 ; 0.01558 ; 0.8660 ; 0.4277
+    299 ; 0.00333 ; 0.00333 ; 0.01105 ; 0.9505 ; 0.5658
+    300 ; 0.00332 ; 0.00332 ; 0.01102 ; 0.9510 ; 0.5670
+    400 ; 0.00249 ; 0.00249 ; 0.00860 ; 0.9820 ; 0.6725
+[C] La référence, témoins tirés de la loi d'usage (sans loi : toute loi continue, toute dérive)
+    m ; k ; taux moyen exact k/(m+1) ; quadrature normale ; P(taux <= 1 %) = P(Bin(m ; 0,01) >= k)
+    98 ; 0 ; abstention : pas de seuil
+    99 ; 1 ; 0.01000 ; 0.01000 ; 0.6303
+    200 ; 2 ; 0.00995 ; 0.00995 ; 0.5954
+    300 ; 3 ; 0.00997 ; 0.00997 ; 0.5779
+    400 ; 4 ; 0.00998 ; 0.00998 ; 0.5675
+[D] Objet faux par construction : la même règle, témoins tirés de la loi de CALIBRATION,
+    épisodes d'usage sous la dérive (loi normale)
+    m ; k ; taux moyen vrai ; P(taux <= 1 %)
+    200 ; 2 ; 0.02891 ; 0.1079
+    400 ; 4 ; 0.02943 ; 0.0266
+[E] Puissance moyenne, loi normale ; les témoins de la référence suivent la loi d'usage,
+    donc sa colonne se calcule dans le repère de la loi d'usage
+    lecture U : le saboteur est décalé depuis la loi honnête d'usage (aire tenue en usage)
+    lecture P : le saboteur est décalé depuis la loi honnête d'avant la dérive
+  aire 0.69
+    règle ; monde sain ; (cond.) ; dérive, lecture U ; (cond.) ; dérive, lecture P ; (cond.)
+    base n = 200 ; 0.0279 ; 0.0214 ; 0.0678 ; 0.0288 ; 0.0279 ; 0.0098
+    base n = 300 ; 0.0203 ; 0.0181 ; 0.0522 ; 0.0277 ; 0.0203 ; 0.0094
+    base n = 400 ; 0.0162 ; 0.0154 ; 0.0432 ; 0.0266 ; 0.0162 ; 0.0090
+    référence m = 200 ; 0.0495 ; 0.0318 ; 0.0495 ; 0.0318 ; 0.0187 ; 0.0109
+    référence m = 400 ; 0.0507 ; 0.0372 ; 0.0507 ; 0.0372 ; 0.0190 ; 0.0130
+  aire 0.8
+    règle ; monde sain ; (cond.) ; dérive, lecture U ; (cond.) ; dérive, lecture P ; (cond.)
+    base n = 200 ; 0.0733 ; 0.0598 ; 0.1510 ; 0.0774 ; 0.0733 ; 0.0317
+    base n = 300 ; 0.0567 ; 0.0519 ; 0.1227 ; 0.0748 ; 0.0567 ; 0.0305
+    base n = 400 ; 0.0471 ; 0.0453 ; 0.1056 ; 0.0723 ; 0.0471 ; 0.0293
+    référence m = 200 ; 0.1195 ; 0.0847 ; 0.1195 ; 0.0847 ; 0.0539 ; 0.0349
+    référence m = 400 ; 0.1236 ; 0.0969 ; 0.1236 ; 0.0969 ; 0.0553 ; 0.0408
+  aire 0.95
+    règle ; monde sain ; (cond.) ; dérive, lecture U ; (cond.) ; dérive, lecture P ; (cond.)
+    base n = 200 ; 0.3500 ; 0.3183 ; 0.5119 ; 0.3733 ; 0.3500 ; 0.2256
+    base n = 300 ; 0.3046 ; 0.2925 ; 0.4627 ; 0.3659 ; 0.3046 ; 0.2200
+    base n = 400 ; 0.2749 ; 0.2702 ; 0.4290 ; 0.3585 ; 0.2749 ; 0.2144
+    référence m = 200 ; 0.4671 ; 0.3976 ; 0.4671 ; 0.3976 ; 0.3044 ; 0.2431
+    référence m = 400 ; 0.4834 ; 0.4313 ; 0.4834 ; 0.4313 ; 0.3159 ; 0.2694
+[F] Témoins imposés dont le sort ne dépend d'aucune loi choisie par l'auteur des mondes
+    (toute loi honnête continue ; mes calculs, à comparer par la mère à sa table, que je n'ai pas lue)
+    T01 couverture du 3e plus grand de 300 : 0.5779
+    T02 couverture du plus grand de 299 : 0.9505
+    T03 taux moyen du 3e plus grand de 300 : 0.00997
+    T04 couverture du 6e plus grand de 1 000 : 0.9339
+    T05 taux moyen de « ne jamais alerter » : 0 ; puissance : 0
+    T06 couverture du plus grand de 200 : 0.8660
+    T07 taux moyen de la base : n = 200 : 0.00498 ; n = 400 : 0.00249
+    T08 quantile empirique à 99 % de 400 = le 5 e plus grand ; couverture : 0.3712
+    T12 test répété sans correction, taux 0,20, horizon 300, niveau 0,01 : fausse alerte = 0.0770
+    T13 pari de Bernoulli 0,30 contre 0,20, seuil 100, horizon 300 : fausse alerte = 0.0076 ; sonne contre 0,30 : 0.8879 ; sonne à tort à 0,25 : 0.2717
+    T15, T16 couverture du plus grand de 299, lue sur la population de calibration : 0.9505
+    T09 (dépend de la loi ; ici normale) couverture restante du plus grand de 299 sous dérive : 0.5658
+[G] Borne des morts par hasard de témoins « doit tenir » (proposition du concepteur)
+    c(W) = le plus petit c tel que P(Bin(W ; 0,005) > c) <= 0,01
+    W = 1 : c = 0 ; P(dépassement) = 0.00500
+    W = 2 : c = 0 ; P(dépassement) = 0.00997
+    W = 3 : c = 1 ; P(dépassement) = 0.00007
+    W = 5 : c = 1 ; P(dépassement) = 0.00025
+    W = 8 : c = 1 ; P(dépassement) = 0.00069
+    W = 10 : c = 1 ; P(dépassement) = 0.00110
+    W = 15 : c = 1 ; P(dépassement) = 0.00251
+    W = 20 : c = 1 ; P(dépassement) = 0.00447
+    W = 25 : c = 1 ; P(dépassement) = 0.00695
+    W = 30 : c = 1 ; P(dépassement) = 0.00991
+    W = 40 : c = 2 ; P(dépassement) = 0.00108
