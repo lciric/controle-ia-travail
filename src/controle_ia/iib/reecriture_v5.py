@@ -33,8 +33,45 @@ _MARQUES_EN_TETE = re.compile(r"[ \t]*[*_]")
 CHIFFRES_SIGNIFICATIFS = 4
 
 
-def _longueurs(tok, ids: list[int]) -> list[int]:
-    return [0] + [len(tok.decode(ids[:k + 1], skip_special_tokens=True)) for k in range(len(ids))]
+class _Longueurs:
+    """lg[k] = longueur du décodage cumulé des k premiers jetons (jamais jeton par jeton : le décodage d'un jeton peut dépendre
+    de ses voisins) ; calculée à la demande et gardée ; la longueur cumulée ne décroît pas, ce qui permet la dichotomie."""
+
+    def __init__(self, tok, ids: list[int]):
+        self.tok, self.ids, self.n, self.memo = tok, ids, len(ids), {0: 0}
+
+    def __getitem__(self, k: int) -> int:
+        if k not in self.memo:
+            self.memo[k] = len(self.tok.decode(self.ids[:k], skip_special_tokens=True))
+        return self.memo[k]
+
+    def dernier_au_plus(self, x: int) -> int:
+        """Plus grand k tel que lg[k] ≤ x."""
+        bas, haut = 0, self.n
+        while bas < haut:
+            m = (bas + haut + 1) // 2
+            if self[m] <= x:
+                bas = m
+            else:
+                haut = m - 1
+        return bas
+
+    def premier_au_moins(self, x: int, depuis: int = 0) -> int:
+        """Plus petit k ≥ depuis tel que lg[k] ≥ x."""
+        bas, haut = depuis, self.n
+        if self[haut] < x:
+            raise GardeArret("réécriture : position hors du texte de l'action")
+        while bas < haut:
+            m = (bas + haut) // 2
+            if self[m] >= x:
+                haut = m
+            else:
+                bas = m + 1
+        return bas
+
+
+def _longueurs(tok, ids: list[int]) -> _Longueurs:
+    return _Longueurs(tok, ids)
 
 
 def _ids(tok, texte: str) -> list[int]:
@@ -89,12 +126,12 @@ def exiger_memes_champs(avant: str, apres: str) -> None:
 def _coller(tok, ids, lg, texte, neuf_texte, debut, fin, milieu_ids, tete, queue) -> tuple[list[int], bool]:
     """Remplace les caractères [debut, fin) : jetons d'avant et d'après collés tels quels, `milieu_ids` collés tels quels,
     `tete` et `queue` retokenisés ; élargit la retokenisation à la fin de l'action si le décodage ne redonne pas le texte."""
-    s = max(k for k in range(len(ids) + 1) if lg[k] <= debut)
-    e = min(k for k in range(s, len(ids) + 1) if lg[k] >= fin)
+    s = lg.dernier_au_plus(debut)
+    e = lg.premier_au_moins(fin, s)
     neuf = list(ids[:s]) + _ids(tok, texte[lg[s]:debut] + tete) + list(milieu_ids) + _ids(tok, queue + texte[fin:lg[e]]) + list(ids[e:])
     if tok.decode(neuf, skip_special_tokens=True) == neuf_texte:
         return neuf, False
-    fin_texte = min(k for k in range(len(ids) + 1) if lg[k] >= len(texte))
+    fin_texte = lg.premier_au_moins(len(texte))
     neuf = list(ids[:s]) + _ids(tok, neuf_texte[lg[s]:]) + list(ids[fin_texte:])
     if tok.decode(neuf, skip_special_tokens=True) != neuf_texte:
         raise GardeArret("réécriture : le texte réécrit ne se retrouve pas au décodage, même retokenisé jusqu'à la fin de l'action (arrêt)")

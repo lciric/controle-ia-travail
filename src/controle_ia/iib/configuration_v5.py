@@ -76,6 +76,10 @@ PIECES = ("conception", "consigne_maitre_N", "consigne_maitre_P", "consigne_flag
 CLES = ("version", "mode", "avertissement", "go_id", "entropie", "prefixe_graines", "agent", "pieces", "marqueurs_de_consigne", "code",
         "instances_intouchables", "oracle_de_la_regle", "marqueurs") + tuple(TEXTE)
 CLES_JOUET = ("jouet",)
+# Sections de la location (offre, carte, plafond, calendrier) : le texte scellé ne les fixe pas (devis neuf, ordre neuf) ; elles
+# sont permises telles que le lanceur de session en version 2 et `session_v1` les lisent dans `config.json`, et ne sont pas
+# vérifiées ici (déclaré au rapport du développeur).
+CLES_DE_LOCATION = ("offre", "carte", "plafond_usd", "plafond", "calendrier", "memoire_vive_min_go")
 _SHA = re.compile(r"[0-9a-f]{64}")
 _GO = re.compile(r"GO-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}")
 MOTS_DE_CONSIGNE = ("texte_consigne", "consigne_texte", "texte_prive", "instruction", "indication", "prompt")
@@ -176,7 +180,7 @@ def exiger_config_v5(config: dict, racine=".", pour_lancer: bool = False) -> dic
     mode = config.get("mode")
     if mode not in ("reel", "jouet"):
         raise GardeArret(f"mode {mode!r} : « reel » ou « jouet »")
-    attendues = set(CLES) | (set(CLES_JOUET) if mode == "jouet" else set())
+    attendues = set(CLES) | set(CLES_DE_LOCATION) | (set(CLES_JOUET) if mode == "jouet" else set())
     manquantes, hors = sorted(set(CLES) - set(config)), sorted(set(config) - attendues)
     if manquantes or hors:
         raise GardeArret(f"configuration v5 : clés manquantes {manquantes}, clés inconnues {hors}")

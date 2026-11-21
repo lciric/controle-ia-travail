@@ -63,16 +63,20 @@ def coupe_du_prefixe(tok, ids) -> dict:
     cle = _CLE_COST.search(texte)
     if cle is None:
         return {"champ_cout": False, "conforme": False, "rang": None, "motif": "champ_absent"}
-    for r in range(1, len(ids) + 1):
-        d = tok.decode(ids[:r], skip_special_tokens=True)
-        if len(d) < cle.end():
-            continue
-        if d != texte[:len(d)]:
-            return {"champ_cout": True, "conforme": False, "rang": None, "motif": "decodage_infidele"}
-        if _FIN_DE_CLE.search(d) and len(d.rstrip(" \t")) == cle.end():
-            return {"champ_cout": True, "conforme": True, "rang": r, "motif": None}
-        return {"champ_cout": True, "conforme": False, "rang": None, "motif": "chevauchement_cle_valeur"}
-    return {"champ_cout": True, "conforme": False, "rang": None, "motif": "decodage_infidele"}
+    # premier rang dont le décodage cumulé atteint la fin de la clé (la longueur cumulée ne décroît pas : dichotomie)
+    bas, haut = 1, len(ids)
+    while bas < haut:
+        m = (bas + haut) // 2
+        if len(tok.decode(ids[:m], skip_special_tokens=True)) >= cle.end():
+            haut = m
+        else:
+            bas = m + 1
+    d = tok.decode(ids[:bas], skip_special_tokens=True)
+    if len(d) < cle.end() or d != texte[:len(d)]:
+        return {"champ_cout": True, "conforme": False, "rang": None, "motif": "decodage_infidele"}
+    if _FIN_DE_CLE.search(d) and len(d.rstrip(" \t")) == cle.end():
+        return {"champ_cout": True, "conforme": True, "rang": bas, "motif": None}
+    return {"champ_cout": True, "conforme": False, "rang": None, "motif": "chevauchement_cle_valeur"}
 
 
 def lire_action_v5(tok, ids, fins=frozenset(), limite: int = FENETRE) -> dict:

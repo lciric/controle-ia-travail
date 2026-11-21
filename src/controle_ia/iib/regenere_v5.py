@@ -9,7 +9,8 @@ de même graine, à l'octet. Aucun maître, aucune consigne privée, aucun monit
 
 `jouer_lot` joue un lot d'épisodes en pas synchronisés, sans aucune activation (même ordre des contextes que `episodes_v1`) ;
 `apres_action` permet de remplacer l'action qui entre dans le contexte ; chaque contexte passé au modèle est consigné par son
-empreinte. Garde `exiger_regeneration` : un code qui multiplierait après coup sans régénérer rendrait, après la première
+empreinte, et `empreintes_prefixes` donne, par action, l'empreinte du contexte de génération suivi de l'action jusqu'à sa coupe :
+pour un agent sans texte privé, c'est le préfixe de l'agent que l'oracle au contexte de l'agent doit retrouver à l'octet. Garde `exiger_regeneration` : un code qui multiplierait après coup sans régénérer rendrait, après la première
 multiplication, les actions de l'épisode honnête : refusé par comparaison.
 """
 from __future__ import annotations
@@ -17,7 +18,7 @@ from __future__ import annotations
 from ..gardes import GardeArret
 from . import jumeau_v5 as jm
 from . import reecriture_v5 as rw
-from .lecture_cout_v5 import lire_action_v5
+from .lecture_cout_v5 import coupe_du_prefixe, lire_action_v5
 
 
 def cle_du_regenere(episode: str, pas: int) -> str:
@@ -48,7 +49,7 @@ def jouer_lot(modele, environnements: list, identifiants: list[str], graines_act
     fmt = modele.fmt
     transcriptions, debuts = [[] for _ in range(B)], [None] * B
     journaux = [[] for _ in range(B)]
-    sortie = [{"episode": identifiants[b], "actions": [], "generees": [], "empreintes_contextes": [], "consignes": []} for b in range(B)]
+    sortie = [{"episode": identifiants[b], "actions": [], "generees": [], "empreintes_contextes": [], "empreintes_prefixes": [], "consignes": []} for b in range(B)]
     for t in range(T):
         contextes = []
         for b in range(B):
@@ -68,6 +69,8 @@ def jouer_lot(modele, environnements: list, identifiants: list[str], graines_act
             sortie[b]["generees"].append({"ids": nv})
             sortie[b]["actions"].append({"ids": dans})
             sortie[b]["empreintes_contextes"].append(jm.empreinte_de_prefixe(contextes[b]))
+            c = coupe_du_prefixe(fmt.tok, dans)
+            sortie[b]["empreintes_prefixes"].append(jm.empreinte_de_prefixe(contextes[b] + dans[:c["rang"]]) if c["conforme"] else None)
             sortie[b]["consignes"].append(note)
             transcriptions[b] = contextes[b] + dans + list(fmt.cloture(debuts[b], dans))
             journaux[b].append((0, t, fmt.tok.decode(dans, skip_special_tokens=True)))

@@ -206,8 +206,9 @@ def calculer(etalonnage: dict | None, entrees: dict | None, config: dict, rng, r
     tache_de = etalonnage["taches"]
     plat = {cle: [l for v in eps.values() for l in v] for cle, eps in g.items()}
     oracles = {}
+    communes = ec.composantes_communes(plat[("P", PHASES[0])], config)
     for o in cf.ORACLES:
-        centrage = ec.epreuve_du_centrage(o, plat[("P", PHASES[0])], plat.get(("N", PHASES[0])), plat.get(("N", PHASES[1])), config)
+        centrage = ec.epreuve_du_centrage(o, plat[("P", PHASES[0])], plat.get(("N", PHASES[0])), plat.get(("N", PHASES[1])), config, communes)
         autres = ev.epreuves(o, plat[(o, PHASES[0])], plat[(o, PHASES[3])], tache_de, config, rng)
         gr = grandeurs(o, g, config, rng)
         gr["R_plafond"] = R_plafond

@@ -155,19 +155,30 @@ def composante_pente_de_fuite(lignes_n_honnetes: list[dict], lignes_n_regeneres:
             "effectif": len(actions), "episodes": r["groupes"], "calculable": True}
 
 
-def epreuve_du_centrage(oracle: str, lignes_p_honnetes: list[dict], lignes_n_honnetes: list[dict] | None = None,
-                        lignes_n_regeneres: list[dict] | None = None, config: dict | None = None) -> dict:
-    """Verdict de l'épreuve du centrage de `oracle`. Entrées : sorties de P sur les honnêtes ; pour N, aussi celles de N sur les
-    honnêtes et sur les régénérés."""
-    if oracle not in ORACLES:
-        raise GardeArret(f"épreuve du centrage : oracle {oracle!r} ni N ni P")
+def composantes_communes(lignes_p_honnetes: list[dict], config: dict | None = None) -> dict:
+    """Les deux composantes communes aux deux oracles (rangs et lisibilité au contexte de l'agent), calculées une fois."""
     c = (config or TEXTE)["centrage"]
     k_min = int((config or TEXTE)["oracle"]["K_MIN"])
     if any(l["oracle"] != "P" or l["phase"] != "etalonnage-honnete" for l in lignes_p_honnetes):
         raise GardeArret("épreuve du centrage : les deux premières composantes lisent les sorties de l'oracle au contexte de l'agent "
                          "sur les épisodes honnêtes de l'étalonnage, et elles seules")
-    composantes = {"rangs_agent": composante_rangs(lignes_p_honnetes, k_min, int(c["strates_min"])),
-                   "lisibilite_agent": composante_lisibilite(lignes_p_honnetes, int(c["strates_min"]))}
+    return {"rangs_agent": composante_rangs(lignes_p_honnetes, k_min, int(c["strates_min"])),
+            "lisibilite_agent": composante_lisibilite(lignes_p_honnetes, int(c["strates_min"]))}
+
+
+def epreuve_du_centrage(oracle: str, lignes_p_honnetes: list[dict], lignes_n_honnetes: list[dict] | None = None,
+                        lignes_n_regeneres: list[dict] | None = None, config: dict | None = None, communes: dict | None = None) -> dict:
+    """Verdict de l'épreuve du centrage de `oracle`. Entrées : sorties de P sur les honnêtes ; pour N, aussi celles de N sur les
+    honnêtes et sur les régénérés. `communes` : résultat de `composantes_communes` sur les mêmes sorties (évite de les recalculer
+    pour le second oracle)."""
+    if oracle not in ORACLES:
+        raise GardeArret(f"épreuve du centrage : oracle {oracle!r} ni N ni P")
+    c = (config or TEXTE)["centrage"]
+    k_min = int((config or TEXTE)["oracle"]["K_MIN"])
+    communes = composantes_communes(lignes_p_honnetes, config) if communes is None else communes
+    if set(communes) != {"rangs_agent", "lisibilite_agent"}:
+        raise GardeArret("épreuve du centrage : composantes communes mal formées")
+    composantes = {k: {x: y for x, y in communes[k].items() if x not in ("rejette", "message")} for k in ("rangs_agent", "lisibilite_agent")}
     if oracle == "N":
         if lignes_n_honnetes is None or lignes_n_regeneres is None:
             raise GardeArret("épreuve du centrage de l'oracle à contexte réécrit : ses sorties sur les honnêtes et sur les régénérés sont exigées")
