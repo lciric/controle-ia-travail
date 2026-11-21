@@ -1,0 +1,12 @@
+# Erratum 1 au mandat du concepteur — additif « matière première » v3 et annexe v2 — v1
+
+Pièce de travail (classe C), session du compte organisme, 2026-11-21T16:12Z. Corrige le mandat `mandat-concepteur-additif-matiere-premiere-v3-v1.md` (`08743d760accb5accca607e08749516068ff6b7f6092301d04ef3eaa8c415ec9`) d'après le message de la mère `registres/essaim/vers-organisme/2026-11-21-1448-mere.md` sur `origin/main`, point 7, que l'organisme n'avait pas lu en entier au moment du mandat. Où l'erratum diffère du mandat, l'erratum prime.
+
+1. **Lieu de l'annexe v2.** Elle ne va sur **aucune branche partagée**, pas même une branche neuve `prep/…` : elle reste dans `annexe-hors-branche/` du bloc-notes jusqu'au mot de la mère sur son lieu. Aucune pièce, sur aucune branche, ne nomme un objet de contrôle.
+2. **Trois chiffres non vérifiés à rejouer de leurs pièces** (vérification, trouvaille de côté 2) : 156,56, 105,05 et 131,66, chacun recalculé à partir de la pièce scellée d'où il vient (additif 1 à la V9, complément de valeurs v3, devis v11, additif 1 au complément), chemin et empreinte cités, ou dit « non retrouvé » avec ce qui a été lu.
+3. **Décisions de la mère à porter**, textes scellés sur `origin/main`, à lire par `git show` redirigé :
+   - D2, étiquettes fermées, non un classement : `docs/notes/organisme-noeuds-2026-11-21-v1/pieces-v1/decision-mere-d2-etiquettes-fermees-matiere-premiere-v1.md` (`85c65d0e8ee5b4e36de88ef1131971c736dad2b6b7c34fe10dbd80e25525fb88`) ;
+   - D3, épinglage au seul manifeste de la lecture de fin, commit de scellement de l'additif inscrit au manifeste, antériorité vérifiée par le graphe à l'arrêt A : `…/decision-mere-d3-epinglage-lecture-de-fin-matiere-premiere-v1.md` (`008fd150d139e8f41fb67505e5e854a19b8f408c87be7168978963d134a29028`) ;
+   - D7, garde de motifs sur les réponses brutes à l'état 2 seulement, et, avant la demande à Lazar, garde jouée par programme sur des textes inertes comparables déjà sur `origin/main`, pour dire son taux de refus : `…/decision-mere-d7-garde-reponses-brutes-etat-2-matiere-premiere-v1.md` (`bcd5d87e32d9c2fc929a642251616c61e56b3343e6c39a032001b222c640227d`).
+4. **Valeur 13** : la mère constate elle-même le relais (« je constate le relais ») ; le texte le dit ainsi.
+5. Le message de 14:48Z, point 7, se lit aussi : `git show origin/main:registres/essaim/vers-organisme/2026-11-21-1448-mere.md` redirigé (point 7 seulement ; le reste ne te concerne pas).
