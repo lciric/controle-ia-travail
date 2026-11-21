@@ -1,0 +1,571 @@
+# Description de la lecture des directions des sondes de l'étape B bis par la lentille publique — première passe — v1
+
+- **Lecteur neuf** (session fille de la mère `session_01Qi7Gr3eYmAhDEJzqLgWcv1`), sur le mandat `docs/notes/lecture-sondes-bbis-par-lentilles-v1/mandats/mandat-lecteur-lecture-sondes-bbis-par-lentilles-v1.md` (`4acd4529…`). N'a lu aucun résultat de l'apprentissage des sondes sur la tâche (score, aire, issue, verdict) ; ni auteur, développeur ni opérateur du texte.
+- **Texte appliqué** : `prereg/lecture-sondes-bbis-par-lentilles-v1.md` (`ca5066d757df604cbf642db84f8a8fc56a0db8b6cc183f734842b7abdaf6d572`) et son addendum de concentration `prereg/lecture-sondes-bbis-par-lentilles-v1-addendum-concentration-v1.md` (`7c7387088dd5956d3e75bd8e859346dd4db560582fd2f239d2c892b4d2c22970`), lus en entier ; « Critères de lecture gelés » appliqués à la lettre.
+- **Tables lues** : `diag/20261121-193607-lentilles-bbis-v1/tables-lentilles-bbis.json` (`25ea42f89ea208ad35b8e2feb2f7b6f88a917f6cf1190b5d8f5ac4b56748806a`), branche `calcul/lentilles-sondes-bbis-v1` à `b23472fe…`, égal au compagnon et aux lignes `TABLES-` et `OUVERTURE-LENTILLES-BBIS` (inscrite par la mère, commit `dbec6d91`). Les morceaux `lectures-lentilles-bbis-00{0,1}.npz` n'ont pas été ouverts (empreintes seules).
+- **Phrases du code** : `diag/20261121-203620-lecture-lentilles-bbis-v1/lecture-lentilles-bbis.json` (`0c706569d9bb1221aa66e7e7e047b97783f601876688ce99034442d76d571e89`), rendu par `lanceur_v9 phrases` (code égal à la fiche v3), copie à l'octet sous `lecture/phrases-code-lentilles-bbis-v1.json`. Comparaison : `lecture/comparaison-phrases-lecteur-code-v1.md`.
+- **Date** : 2026-11-21, ouverture à 20:36Z (après l'inscription de la ligne d'ouverture) ; 0 USD, processeur du conteneur, aucun nouveau calcul de lecture.
+
+## Phrase de tête
+
+Lecture descriptive, par la lentille publique côté sortie (lentille R de Llama 3.1 8B Instruct publiée par Neuronpedia, ajustée par un tiers sur 64 textes de WikiText), des directions des sondes apprises sur la tâche et des lecteurs honnêtes de même recette, à la couche où chaque sonde lit. Ce n'est pas notre lentille ajustée. Les directions des sondes sont des vecteurs de lecture ; elles sont lues ici comme des directions écrites dans le flux : la lecture dit ce que la lentille associe à un tel vecteur écrit, non ce que la sonde lit. Elle dit quels jetons et quels pôles la lentille associe à chaque direction ; elle ne dit rien de la détection du sabotage, qui appartient au verdict de l'apprentissage des sondes sur la tâche, ni de ce qu'une sonde fait sur un épisode.
+
+Verdict d'ensemble de la tranche des lentilles publiques sur cette lentille : **Reproduction (B-2 et B-3) : « partiel ».** Aucune chaîne en défaut, aucun audit de symétrie gelé déclenché. (ligne 10 de `docs/notes/neuron-lens-v1/lecture-b-alpha/verdict-b-alpha-v1.md`, branche principale, `ca06acb1550ccc76fef1ec89ae0aec170c5f05252bda2711f131eaa0e645fc1d`, empreinte égale).
+
+La garde du rapport à ε n'a imposé aucun nul par direction (minimum 3717 ≥ 100 à toute couche et toute lentille) : la phrase « indépendance à la norme non tenue » n'est pas écrite.
+
+## État des tables (tel qu'elles le portent)
+
+- **Sondes** : vingt sur vingt lues (dix sondes apprises, dix lecteurs honnêtes ; aucune « non lue ») ; 25 directions (20 vecteurs de score, 5 requêtes d'attention) ; 100 lectures (25 directions × 2 signes × 2 lentilles). Couches : 9 directions à la couche 7, 7 à la couche 15, 9 à la couche 23.
+- **Lecture côté entrée** : Non lue : aucune lentille côté entrée publique.
+- **Calibration** : tenue pour les douze (couche, lentille, nul) :
+
+| couche | lentille | nul | compte p ≤ 0,05 | n | bornes |
+|---|---|---|---|---|---|
+| 7 | publique | nul-isotrope | 60 | 1000 | [23, 85] |
+| 7 | publique | nul-signes | 98 | 1800 | [56, 128] |
+| 7 | logits | nul-isotrope | 48 | 1000 | [23, 85] |
+| 7 | logits | nul-signes | 80 | 1800 | [56, 128] |
+| 15 | publique | nul-isotrope | 58 | 1000 | [23, 85] |
+| 15 | publique | nul-signes | 71 | 1400 | [41, 104] |
+| 15 | logits | nul-isotrope | 52 | 1000 | [23, 85] |
+| 15 | logits | nul-signes | 80 | 1400 | [41, 104] |
+| 23 | publique | nul-isotrope | 42 | 1000 | [23, 85] |
+| 23 | publique | nul-signes | 91 | 1800 | [56, 128] |
+| 23 | logits | nul-isotrope | 44 | 1000 | [23, 85] |
+| 23 | logits | nul-signes | 90 | 1800 | [56, 128] |
+
+- **Indice de couche** : chaque matrice lue porte l'indice de la couche de sa sonde (7, 15, 23) dans les tables.
+- **Garde d'égalité au vingtième rang** (addendum, EC-6) : directions lues à égalité 0, directions nulles marquées 0, témoins à égalité 0 : aucune valeur p bornée, p_bas = p = p_haut partout.
+- **Jeton de début** (128 000) : parmi les vingt premiers d'aucune des 100 lectures (rang en table).
+- **Audit de symétrie (R4)** : déclencheurs « trop beau » et « tout négatif » **non déclenchés** (aucune liste dans aucun des quatre critères « trop beau ») ; aucun audit joué ; issue : sans objet.
+
+## Comptes de libellés, avec l'attendu par le seul hasard
+
+- Concentration (100 lectures) : « concentrée au-delà des deux nuls » 5 (attendu au plus 0,1) ; « intermédiaire » 8 ; « non distincte du nul » 87.
+- Part au-dessus du nul (100 lectures) : « non distincte du nul » 100 ; « concentrée » 0 (attendu au plus 0,1).
+- Familles « sur-représentées » : 4 (attendu au plus 2, soit 100 lectures × 2 familles × 0,01).
+- Pôles (25 directions) : « concentrés » 15 (attendu au plus 0,025) ; « intermédiaires » 6 ; « non distincts » 4.
+- Les valeurs p d'une même couche partagent le nul isotrope ; elles ne sont pas indépendantes (« Métrique », point 9). Aucune correction des comparaisons multiples (descriptif).
+
+## Phrases gelées, par direction
+
+Ordre : couche, puis direction ; pour chaque direction, les quatre lectures (lentille publique côté sortie puis lentille des logits ; signe + puis −), chacune suivie de ses deux phrases de famille, puis la phrase des pôles. Les pôles « intermédiaires » n'ont pas de phrase gelée (« Critères ») : leurs valeurs restent en table et la ligne le dit.
+
+### Couche 7
+
+**P-instruit/e1/enc (w)** — le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e1, vecteur de score ; famille retenue `lineaire`, norme 29,87.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e1 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,8656 et 0,8021) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e1 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,6932 et 0,6697) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e1 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,4843 et 0,3568) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (3 ; p 0,06547 et 0,05947) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e1 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,8966 et 0,7966) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 1994 signe -, neurone 7563 signe +, neurone 13116 signe -, neurone 12942 signe +, neurone 10615 signe -, neurone 4886 signe -, neurone 6816 signe -, neurone 10043 signe +, neurone 9521 signe +, neurone 5598 signe -, cosinus 0,1025, 0,08185, 0,08093, 0,07302, 0,06336, 0,06257, 0,0617, 0,05993, 0,05865, 0,05807) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 1994 signe - : ' $\\n', ' ...\\"\\n', ' .\\n', ' ...', ' /\\n', ' ...\\n', ' ?\\n', ' ||\\n', ' ,\\n', ' [...]' ; neurone 7563 signe + : ' \\u2018', ' number', ' \\u201c', ' Number', '\\u2019', '\\u2018', ' numbered', ' numbers', ' score', ' \\u2019' ; neurone 13116 signe - : ' ,', ' -', ' \\"', " ''", ' ...', " '", ' /', ' ,\\n', ' &', ' ...\\n' ; neurone 12942 signe + : ' recently', ' our', 'recent', ' ourselves', ' Recently', 'annes', ' bursting', 'eam', '.bind', '.?' ; neurone 10615 signe - : ' ,', ' -', ' my', ' ?', ' ;', ' n', ' --', ' ?\\n', ' /', ' I' ; neurone 4886 signe - : '\\n', '...\\n', '**\\n', '...', ' ...\\n', '\\r\\n', '--\\n', '--', '-\\n', "...'\\n" ; neurone 6816 signe - : ':\\n', ')\\n', '|\\n', '\\n', '\\uff1a\\n', ';\\n', '):\\n', ' |\\n', ':\\n\\n', ');\\n' ; neurone 10043 signe + : ' today', ' yesterday', 'today', '\\u4eca\\u65e5', ' tonight', ' tomorrow', 'Yesterday', ' Yesterday', '_today', ' TODAY' ; neurone 9521 signe + : '\\u9109', 'Dispatcher', 'Bush', 'WARNING', '\\u6ca2', 'ushed', 'learner', '\\u4e61', 'hlen', ' homeschool' ; neurone 5598 signe - : ' barang', '307', ' Dash', ' Swedish', ' jas', ' small', ' dash', 'ihar', 'oler', ' \\u5c0f'.
+
+**P-S25/e0/enc (w)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0, vecteur de score ; famille retenue `attention`, norme 35,46.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,2409 et 0,4968) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,5127 et 0,2244) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,07796 et 0,1209) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3678 et 0,3763) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,9895 et 0,99) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Pôles « intermédiaires » (cosinus maximal 0,07857 ; p 0,008496 et 0,006997) : aucune phrase gelée ; valeurs en table.
+
+**P-S25/e0/enc (q)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0, requête d’attention ; famille retenue `attention`, norme 274,9.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) (couche 7, signe +) ne se distingue pas du nul (p 0,1509 et 0,2079) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) (couche 7, signe -) ne se distingue pas du nul (p 0,3233 et 0,5327) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) (couche 7, signe +) ne se distingue des nuls qu'en partie (p 0,03648 et 0,02199) : ses premiers jetons sont rapportés, sans être nommés comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) (couche 7, signe -) ne se distingue pas du nul (p 0,8026 et 0,935) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 2589 signe -, neurone 13829 signe +, neurone 11222 signe -, neurone 5480 signe +, neurone 6430 signe -, neurone 7366 signe -, neurone 13852 signe +, neurone 6324 signe -, neurone 8497 signe +, neurone 848 signe -, cosinus 0,1104, 0,1043, 0,1014, 0,09824, 0,08664, 0,08622, 0,08521, 0,08391, 0,08359, 0,0829) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 2589 signe - : 'ucu', 'amilia', 'oto', ' effects', ' Buf', ' Grab', ' bomb', ' causing', ' RHS', 'locales' ; neurone 13829 signe + : '\\u266a\\n\\n', '.azure', '_bindings', '\\u5bb6\\u4f19', 'rana', '\\u5c3f', '.eql', 'utzer', 'OOT', '.cloudflare' ; neurone 11222 signe - : '.IsNull', '?\\"\\n\\n\\n\\n', '.pointer', '.roles', '_learn', '(parseFloat', '_lng', 'modelName', '.Networking', '\\u30e8' ; neurone 5480 signe + : '--', ' --', ' peace', ' ?', ' you', ' yesterday', ' your', ' that', ' late', ' her' ; neurone 6430 signe - : '...\\n', ' [', ' ...\\n', '\\u2026\\n', ' a', ' [...', ' (', ' \\u2026\\n', ' hom', ' [\\u2026]\\n' ; neurone 7366 signe - : '\\u3080', '\\uff1a\\n', ']:\\n', ' :\\n', ':\\n', '):\\n', 'anik', '!)\\n', ' \\\\\\\\\\n', '!)\\n\\n' ; neurone 13852 signe + : ' complexity', ' Complexity', ' simpl', '_complex', ' simplify', 'complex', ' Simpl', ' Sorting', '\\u7c21', 'Complex' ; neurone 6324 signe - : ' Figure', ' prerequisite', ' setup', ' deck', ' differentiated', ' already', ' graph', ' consist', ' immediately', ' meters' ; neurone 8497 signe + : 'annes', 'olulu', '\\u7802', ' inclus', 'sand', '844', 'ROID', 'idot', '.iOS', 'eus' ; neurone 848 signe - : 'ugu', '--[', '\\u5742', '--,', 'ParameterValue', '/tags', 'IGIN', 'ippers', '.ide', '---'.
+
+**P-S50/e0/enc (w)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e0, vecteur de score ; famille retenue `lineaire`, norme 32,39.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,8856 et 0,9325) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,4228 et 0,4353) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,7961 et 0,8266) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,5117 et 0,5347) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Aucun pôle de la couche n'écrit plus près de la direction que sous le nul (p 0,2159 et 0,2899).
+
+**P-S75/e0/enc (w)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0, vecteur de score ; famille retenue `lineaire`, norme 26,31.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,5812 et 0,5667) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,5577 et 0,5582) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,7961 et 0,8421) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,5042 et 0,4423) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Aucun pôle de la couche n'écrit plus près de la direction que sous le nul (p 0,05297 et 0,08446).
+
+**P-S75/e1/sonde (w)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e1, vecteur de score ; famille retenue `lineaire`, norme 57,44.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,992 et 0,996) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,7156 et 0,8446) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (1 ; p 0,02549 et 0,03398) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,4693 et 0,4178) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 1 et 0,9925) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3678 et 0,3673) : cela ne blanchit pas la sonde.
+- La famille coût paraît 1 fois dans ses vingt premiers jetons (attendu sous le nul 0,004 ; p 0,003498 et 0,005997) : la lecture ajoute un soupçon que la sonde lise le coût ; elle ne le prouve pas.
+- Les pôles qui écrivent le plus près de la direction (neurone 13828 signe +, neurone 2701 signe -, neurone 10560 signe +, neurone 9207 signe -, neurone 5323 signe -, neurone 3576 signe +, neurone 1994 signe -, neurone 6133 signe -, neurone 7884 signe -, neurone 12759 signe -, cosinus 0,1217, 0,07495, 0,06805, 0,06554, 0,06405, 0,06357, 0,06337, 0,06331, 0,06257, 0,06141) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 13828 signe + : '?\\"\\n\\n\\n\\n', '\\u266a\\n\\n', 'amarin', '\\u2026.\\n\\n', '\\u91cd\\u8907', ':\\n\\n\\n\\n\\n\\n', '\\u2026\\"\\n\\n', '/***************************************************************************\\n', 'immel', '\\u5f25' ; neurone 2701 signe - : '?\\"\\n\\n\\n\\n', '\\u2026.\\n\\n', '\\u266a\\n\\n', '\\u2026\\"\\n\\n', 'amarin', ':\\n\\n\\n\\n\\n\\n', ',\\u2026\\n\\n', '\\u2026)\\n\\n', '/***************************************************************************\\n', 'immel' ; neurone 10560 signe + : ' \\n', '\\n', ',', ',\\n', ';', ' and', ' both', ' above', '\\u00a0\\n', ' ...\\n' ; neurone 9207 signe - : ';.', '.\\n', ' .\\n', ':.', '!.', '/.\\n', ' \\".', '\\u5230\\u7684', '\\\\.', "'.\\n" ; neurone 5323 signe - : ' and', ' or', ' @', ' in', ' [', ' the', ' ', ' \\u201c', ' with', ' a' ; neurone 3576 signe + : '\\u3001\\n', 'immel', '),\\n', 'iegel', '\\u90ce', ' -------------------------------------------------------------------------\\n', '?\\"\\n\\n\\n\\n', 'Orm', '\\u7b52', '\\u266a\\n\\n' ; neurone 1994 signe - : ' $\\n', ' ...\\"\\n', ' .\\n', ' ...', ' /\\n', ' ...\\n', ' ?\\n', ' ||\\n', ' ,\\n', ' [...]' ; neurone 6133 signe - : '  ', ' n', ' ;', ' prere', '   ', ' p', ' foreign', ' chan', ' <', '    ' ; neurone 7884 signe - : ' NYC', ' our', ' *', ' travelers', '*', ' kami', '*,', ' @', ' Mineral', ' (' ; neurone 12759 signe - : '\\n', '.\\n', ' .\\n', ' my', ' our', ' three', ' _', ' with', '.', ' .'.
+
+**P-S75/e1/enc (w)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e1, vecteur de score ; famille retenue `lineaire`, norme 39,05.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,8611 et 0,8291) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,9905 et 0,9795) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,938 et 0,98) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3678 et 0,3763) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,05647 et 0,01949) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Aucun pôle de la couche n'écrit plus près de la direction que sous le nul (p 0,03348 et 0,05247).
+
+**P-S100/e0/enc (w)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0, vecteur de score ; famille retenue `lineaire`, norme 18.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (couche 7, signe +) ne se distingue des nuls qu'en partie (p 0,002999 et 0,01249) : ses premiers jetons sont rapportés, sans être nommés comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,6627 et 0,7146) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,3083 et 0,6592) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,9025 et 0,9625) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Pôles « intermédiaires » (cosinus maximal 0,08005 ; p 0,003998 et 0,008496) : aucune phrase gelée ; valeurs en table.
+
+**P-S100/e1/enc (w)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e1, vecteur de score ; famille retenue `lineaire`, norme 19,71.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,2984 et 0,3488) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,5802 et 0,7116) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (couche 7, signe +) ne se distingue pas du nul (p 0,2039 et 0,2369) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (couche 7, signe -) ne se distingue pas du nul (p 0,05147 et 0,03348) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3678 et 0,3548) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Pôles « intermédiaires » (cosinus maximal 0,08022 ; p 0,003498 et 0,006997) : aucune phrase gelée ; valeurs en table.
+
+### Couche 15
+
+**P-instruit/e0/sonde (w)** — la sonde apprise sur l'organisme à consigne cachée, pli e0, vecteur de score ; famille retenue `lineaire`, norme 3,902.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'organisme à consigne cachée, pli e0 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,9305 et 0,8531) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,1094 et 0,1344) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'organisme à consigne cachée, pli e0 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,03898 et 0,1374) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'organisme à consigne cachée, pli e0 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,989 et 0,992) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3698 et 0,3643) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'organisme à consigne cachée, pli e0 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,4868 et 0,3763) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3698 et 0,3643) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 10349 signe -, neurone 5827 signe +, neurone 1135 signe +, neurone 8268 signe -, neurone 4883 signe +, neurone 5236 signe -, neurone 1720 signe +, neurone 3023 signe +, neurone 11668 signe -, neurone 6654 signe +, cosinus 0,1504, 0,09033, 0,07917, 0,07659, 0,07476, 0,07451, 0,07279, 0,071, 0,0701, 0,06831) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 10349 signe - : ' &', ' ', ' \\u201c', ' (', ' --', ' really', ' /', ' +', ' :', '_' ; neurone 5827 signe + : ' backdrop', ' against', ' Against', ' background', ' backgrounds', ' Background', 'Against', 'against', 'background', '\\u80cc\\u666f' ; neurone 1135 signe + : ' \\n', 'ieres', 'adla', 'chy', ' \\u2013', 'ody', '  \\n', 'yx', 'erver', '/wp' ; neurone 8268 signe - : '.gov', 'umed', '.arc', 'uft', 'olis', 'fers', 'oogle', 'egrity', 'enville', 'aren' ; neurone 4883 signe + : ' Mandal', ' programs', ' implementation', ' Typically', 'IVA', '-public', ' Programs', '--', ' practices', '-tracking' ; neurone 5236 signe - : '/latest', ' arrival', ' freshly', ' arrivals', ' arrived', ' Arrival', '-born', 'ItemImage', 'spath', 'swire' ; neurone 1720 signe + : 'ymous', ' sometimes', '-Sah', ' --', '\\u6238', ' whether', ' organised', ' relationship', '\\u00a0je', '\\u2026\\u2026\\u3002' ; neurone 3023 signe + : ' commercial', ' economic', ' economy', ' economics', ' monetary', ' economies', '\\u7ecf\\u6d4e', ' ekonom', 'irtschaft', ' economist' ; neurone 11668 signe - : ' the', ' Christ', ' Sam', ' Christina', ' those', ' Rod', ' Christopher', ' Mile', ' Krist', ' Nad' ; neurone 6654 signe + : ' total', ' Total', 'total', 'Total', '_total', ' TOTAL', 'syn', 'Syn', 'TOTAL', '.total'.
+
+**P-instruit/e0/enc (w)** — le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e0, vecteur de score ; famille retenue `lineaire`, norme 9,258.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e0 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,4778 et 0,6117) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e0 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,08496 et 0,2414) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e0 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,6192 et 0,5702) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e0 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,4623 et 0,5032) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 12465 signe -, neurone 10349 signe -, neurone 13169 signe +, neurone 13910 signe +, neurone 291 signe -, neurone 11583 signe -, neurone 5576 signe +, neurone 11702 signe -, neurone 10866 signe -, neurone 2233 signe +, cosinus 0,09329, 0,08901, 0,08444, 0,07634, 0,07466, 0,07001, 0,06265, 0,06203, 0,05926, 0,05731) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 12465 signe - : '\\n', ' plate', 'ollapse', ' \\n', 'ourg', 'plate', 'ergus', 'endoza', ' TestData', 'dev' ; neurone 10349 signe - : ' &', ' ', ' \\u201c', ' (', ' --', ' really', ' /', ' +', ' :', '_' ; neurone 13169 signe + : ' per', ' military', '.\\n', ':.', ' conduct', ' three', 'oge', ' property', ' survey', ' company' ; neurone 13910 signe + : 'ulu', 'angan', '_weights', ' pseud', '\\u30a4\\u30af', ' weighing', '/lists', 'OutOfRange', 'weigh', '.libs' ; neurone 291 signe - : ' humour', 'era', 'agne', 'er', 'a', 'intendent', 'ity', 'imeline', 'apanese', 'lette' ; neurone 11583 signe - : ' answer', ' answers', ' answered', ' Answer', ' answering', ' ?', '-answer', ' questions', ' unanswered', ' ANSW' ; neurone 5576 signe + : ' football', ' music', ' lifestyle', ' sports', ' restaurants', ' restaurant', ' marriage', ' eating', ' cuisine', ' food' ; neurone 11702 signe - : ' Grain', ' grain', '.stride', ' grains', '\\u7c92', ' Alphabet', ' strides', ' shots', '.digest', ' daily' ; neurone 10866 signe - : ' Womens', ' didnt', ' womens', ' doesnt', ' youre', ' nonzero', ' Dont', ' isnt', 'Whats', 'nt' ; neurone 2233 signe + : ' Australian', ' Australia', 'Australian', ' Australians', ' Melbourne', 'Australia', ' Queensland', ' Aussie', ' Canberra', ' Sydney'.
+
+**P-instruit/e1/sonde (w)** — la sonde apprise sur l'organisme à consigne cachée, pli e1, vecteur de score ; famille retenue `lineaire`, norme 4,362.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'organisme à consigne cachée, pli e1 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,8191 et 0,3853) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,1094 et 0,1289) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'organisme à consigne cachée, pli e1 (vecteur de score) (couche 15, signe -) se distingue des deux nuls (concentration 5,647 ; p 0,0009995 et 0,001499) ; ses premiers jetons : 'eday', 'ebin', 'Knowledge', '\\u30fc\\u30c7', 'orney', 'oeff', ' knowledge', 'lescope', ' Knowledge', 'thesis', 'inyin', 'activo', 'knowledge', 'ebi', 'asic', '_Zero', 'chte', 'berman', 'chest', 'inton'.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'organisme à consigne cachée, pli e1 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,5812 et 0,4513) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3698 et 0,3683) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'organisme à consigne cachée, pli e1 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,4158 et 0,3358) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 13536 signe -, neurone 11638 signe +, neurone 5090 signe +, neurone 9782 signe +, neurone 13639 signe -, neurone 5431 signe -, neurone 6032 signe -, neurone 10303 signe -, neurone 3359 signe -, neurone 12568 signe -, cosinus 0,1389, 0,09689, 0,09604, 0,08784, 0,08456, 0,08022, 0,08005, 0,07696, 0,07082, 0,06747) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 13536 signe - : ' Crit', 'Crit', 'crit', ' criticism', ' critic', ' critique', ' crit', ' criticize', 'icism', ' Critical' ; neurone 11638 signe + : ' atomic', 'atomic', ' atom', ' Atomic', 'oxetine', 'Atomic', ' atoms', 'Bomb', '.atomic', '.atom' ; neurone 5090 signe + : ' ``', '.\\\\', ' suicide', ' RCMP', ' ship', " \\\\'", ' flight', ' Suicide', ' died', ' \\\\`' ; neurone 9782 signe + : ' apple', ' Apple', ' apples', ' cider', 'apple', 'Apple', '.apple', '\\u82f9\\u679c', 'APPLE', ' APPLE' ; neurone 13639 signe - : ' Rep', ' Hole', ' fibre', 'iche', '.rep', ' hole', '.***', ' replication', ' jewellery', ' success' ; neurone 5431 signe - : ' Kid', ' Engagement', ' engagement', 'engage', 'Eng', ' engaged', ' Lo', ' engage', 'uffle', ' LO' ; neurone 6032 signe - : ' seasonal', ' season', ' Season', ' agencies', 'untu', 'season', 'lients', 'odia', 'alion', 'atk' ; neurone 10303 signe - : 'iales', 'mons', '.gwt', 'visa', 'tam', 'atsby', 'Mon', '()._', 'atty', '\\u6b73' ; neurone 3359 signe - : 'istra', '\\u2019B', 'dbe', 'ellular', '\\u8bb0', 'ughs', '-txt', 'aise', '.Merge', '\\u51b5' ; neurone 12568 signe - : 'vtk', 'ucci', '\\u984d', 'umont', 'eyond', 'multiline', 'umpt', 'FullScreen', 'opper', '\\u589e'.
+
+**P-S50/e1/enc (w)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e1, vecteur de score ; famille retenue `lineaire`, norme 26,42.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,2324 et 0,2274) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,8951 et 0,8026) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,8881 et 0,7466) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (couche 15, signe -) ne se distingue des nuls qu'en partie (p 0,03198 et 0,02249) : ses premiers jetons sont rapportés, sans être nommés comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Aucun pôle de la couche n'écrit plus près de la direction que sous le nul (p 0,5592 et 0,6422).
+
+**P-S75/e0/sonde (w)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e0, vecteur de score ; famille retenue `lineaire`, norme 8,792.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,9825 et 0,9995) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (2 ; p 0,02349 et 0,02899) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,3778 et 0,1294) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,8231 et 0,9275) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,1969 et 0,2159) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 8268 signe -, neurone 10349 signe -, neurone 9824 signe -, neurone 13531 signe -, neurone 11068 signe -, neurone 12568 signe -, neurone 1816 signe +, neurone 11559 signe -, neurone 8192 signe -, neurone 14102 signe -, cosinus 0,1203, 0,09727, 0,08827, 0,07366, 0,07102, 0,06912, 0,06718, 0,06647, 0,06437, 0,06359) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 8268 signe - : '.gov', 'umed', '.arc', 'uft', 'olis', 'fers', 'oogle', 'egrity', 'enville', 'aren' ; neurone 10349 signe - : ' &', ' ', ' \\u201c', ' (', ' --', ' really', ' /', ' +', ' :', '_' ; neurone 9824 signe - : ' apparently', ' etc', ' reportedly', ' possibly', ' presumably', ' allegedly', ' approximately', ' nearly', ' almost', ' roughly' ; neurone 13531 signe - : '|:', 'undle', 'centage', ' groove', ';:', 'abad', ' guiding', ':**', '\\u2019:', ':\\r\\n' ; neurone 11068 signe - : ' [\\u2026]\\n\\n', '\\u266a\\n\\n', ' [\\u2026]\\n', '\\u093e\\u0928\\u092e', '.ErrorCode', '\\ufeff\\n', '\\u00e1gina', 'ilenames', 'ernel', '-------------</' ; neurone 12568 signe - : 'vtk', 'ucci', '\\u984d', 'umont', 'eyond', 'multiline', 'umpt', 'FullScreen', 'opper', '\\u589e' ; neurone 1816 signe + : '?\\"\\n\\n\\n\\n', '\\u266a\\n\\n', '\\u2026)\\n\\n', '\\u2026\\"\\n\\n', '\\u2026\\n\\n\\n\\n', '/***************************************************************************\\n', '<|end_header_id|>', '_Valid', '?\\u201d\\n\\n', '\\uff1a\\n\\n' ; neurone 11559 signe - : 'openh', 'fcn', 'isos', ' Byte', 'trak', 'shaw', '.bootstrap', '[end', 'bean', ' Shank' ; neurone 8192 signe - : '\\n', ';\\n', ',\\n', '\\u3001\\n', '...\\n', '[:]', '[\\n', '[', '\\uff0c\\n', ':[' ; neurone 14102 signe - : 'quared', 'unga', ' twice', ' Twice', 'DL', '_installed', ' video', 'errat', ' favorite', 'hiba'.
+
+**P-S100/e0/sonde (w)** — la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e0, vecteur de score ; famille retenue `lineaire`, norme 7,146.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,997 et 0,9995) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,1094 et 0,1194) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,4623 et 0,4018) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,7386 et 0,6392) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,5777 et 0,4793) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 9824 signe -, neurone 8268 signe -, neurone 1816 signe +, neurone 5892 signe -, neurone 1686 signe +, neurone 1180 signe -, neurone 210 signe +, neurone 2027 signe +, neurone 4391 signe +, neurone 11816 signe +, cosinus 0,1172, 0,1088, 0,09348, 0,07539, 0,06875, 0,06858, 0,06509, 0,06373, 0,06369, 0,06298) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 9824 signe - : ' apparently', ' etc', ' reportedly', ' possibly', ' presumably', ' allegedly', ' approximately', ' nearly', ' almost', ' roughly' ; neurone 8268 signe - : '.gov', 'umed', '.arc', 'uft', 'olis', 'fers', 'oogle', 'egrity', 'enville', 'aren' ; neurone 1816 signe + : '?\\"\\n\\n\\n\\n', '\\u266a\\n\\n', '\\u2026)\\n\\n', '\\u2026\\"\\n\\n', '\\u2026\\n\\n\\n\\n', '/***************************************************************************\\n', '<|end_header_id|>', '_Valid', '?\\u201d\\n\\n', '\\uff1a\\n\\n' ; neurone 5892 signe - : '.bridge', 'appid', ' Ariel', ' ones', 'itoris', 'arpa', ' zero', '\\u6735', '.sat', '_estimators' ; neurone 1686 signe + : '265', '\\u3055\\u3044', 'anal', ' analysis', ' analyzed', ' Analysis', '_analysis', ' elect', 'analysis', 'igham' ; neurone 1180 signe - : ' @', ' (', ' and', ' n', ' ,', ' in', ' +', ' -', ' \\u2014', ' that' ; neurone 210 signe + : ' systems', ' Organization', ' system', 'Organization', ' structures', '\\u5236\\u5ea6', ' lax', 'systems', ' Organisation', ' programs' ; neurone 2027 signe + : ' top', ' inside', ' Credits', ' outside', 'oppins', 'ding', 'igits', ' credits', 'ninger', ' Top' ; neurone 4391 signe + : ' hydro', 'OPS', '  ', ' behaviors', ' spring', ' pH', 'ops', ' yeast', '   ', ' Manga' ; neurone 11816 signe + : 'endencies', '_ulong', '\\u795d', 'descriptor', '\\u817f', '.recycle', 'pite', 'ecal', '$$$$', 'Shortcut'.
+
+**P-S100/e1/sonde (w)** — la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e1, vecteur de score ; famille retenue `lineaire`, norme 13,87.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 1 et 1) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,976 et 0,999) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (couche 15, signe +) ne se distingue pas du nul (p 0,6557 et 0,7566) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (couche 15, signe -) ne se distingue pas du nul (p 0,8211 et 0,965) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 1816 signe +, neurone 1180 signe -, neurone 4552 signe -, neurone 4391 signe +, neurone 12974 signe -, neurone 244 signe -, neurone 8253 signe -, neurone 9076 signe -, neurone 7962 signe -, neurone 5865 signe +, cosinus 0,1328, 0,1033, 0,09264, 0,08059, 0,06863, 0,06791, 0,06571, 0,06536, 0,06376, 0,0627) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 1816 signe + : '?\\"\\n\\n\\n\\n', '\\u266a\\n\\n', '\\u2026)\\n\\n', '\\u2026\\"\\n\\n', '\\u2026\\n\\n\\n\\n', '/***************************************************************************\\n', '<|end_header_id|>', '_Valid', '?\\u201d\\n\\n', '\\uff1a\\n\\n' ; neurone 1180 signe - : ' @', ' (', ' and', ' n', ' ,', ' in', ' +', ' -', ' \\u2014', ' that' ; neurone 4552 signe - : '\\u2026\\"\\n\\n', '?\\"\\n\\n\\n\\n', '\\u2026)\\n\\n', '\\u266a\\n\\n', '\\u00bb\\n\\n', '.\\u2026\\n\\n', '\\u7267', '\\u2026.\\n\\n', ':\\n\\n\\n\\n\\n\\n', '\\u2026\\n\\n\\n\\n' ; neurone 4391 signe + : ' hydro', 'OPS', '  ', ' behaviors', ' spring', ' pH', 'ops', ' yeast', '   ', ' Manga' ; neurone 12974 signe - : ' _', ' fly', ' Cohen', ' Bloom', ' family', ' famil', ' Fly', ' clues', ' NASA', ' vector' ; neurone 244 signe - : " '", ' Maine', ' lifestyle', ' _', ' -', 'illion', ' platform', ' either', ' individuals', ' Mage' ; neurone 8253 signe - : '?\\"\\n\\n\\n\\n', '\\u266a\\n\\n', '\\u2026\\"\\n\\n', '\\u2026\\n\\n\\n\\n', '\\u2026)\\n\\n', '.\\u2026\\n\\n', '/***************************************************************************\\n', '\\u2026\\u2026\\n\\n', '_Valid', '\\u86db' ; neurone 9076 signe - : 'ocket', 'ieten', 'yk', 'incy', 'loys', '.roles', '896', 'odor', 'son', 'aris' ; neurone 7962 signe - : '?\\"\\n\\n\\n\\n', '\\u2026)\\n\\n', '\\u2026\\"\\n\\n', '\\uff1a\\n\\n', '?\\u201d\\n\\n', '\\u2026\\n\\n\\n\\n', '!\\u201d\\n\\n', '\\u6fc3', '\\u00bb\\n\\n', '.\\u2026\\n\\n' ; neurone 5865 signe + : ' \\n', '\\n', '\\f', '[\\n', '  \\n', ' [\\n', ' ,\\n', '}\\n', '}.\\n', ' _'.
+
+### Couche 23
+
+**P-S25/e0/sonde (w)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0, vecteur de score ; famille retenue `attention`, norme 24,19.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,6417 et 0,5722) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) (couche 23, signe -) ne se distingue des nuls qu'en partie (p 0,02249 et 0,01299) : ses premiers jetons sont rapportés, sans être nommés comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,6502 et 0,8626) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) (couche 23, signe -) ne se distingue pas du nul (p 0,1469 et 0,3878) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Pôles « intermédiaires » (cosinus maximal 0,07939 ; p 0,005997 et 0,009995) : aucune phrase gelée ; valeurs en table.
+
+**P-S25/e0/sonde (q)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0, requête d’attention ; famille retenue `attention`, norme 69,43.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) (couche 23, signe +) ne se distingue des nuls qu'en partie (p 0,008496 et 0,0009995) : ses premiers jetons sont rapportés, sans être nommés comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) (couche 23, signe -) ne se distingue pas du nul (p 0,04848 et 0,06747) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) (couche 23, signe +) ne se distingue pas du nul (p 0,7426 et 0,7086) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) (couche 23, signe -) ne se distingue des nuls qu'en partie (p 0,01149 et 0,01799) : ses premiers jetons sont rapportés, sans être nommés comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 4769 signe +, neurone 7009 signe -, neurone 13052 signe +, neurone 866 signe +, neurone 2961 signe +, neurone 9879 signe +, neurone 10297 signe +, neurone 4585 signe +, neurone 3230 signe -, neurone 5722 signe +, cosinus 0,1772, 0,1048, 0,07962, 0,07276, 0,07047, 0,06701, 0,0595, 0,05622, 0,05615, 0,05587) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 4769 signe + : 'owitz', 'igo', '\\u00eas', 'rett', ' cruise', ' NBC', 'aris', ' boots', 'azu', 'itt' ; neurone 7009 signe - : ' Site', ' site', ' Ferguson', '-site', 'awe', 'redi', ' Pars', 'site', ' SITE', ' Patricia' ; neurone 13052 signe + : ' neuro', 'uja', ' nerve', ' skull', ' Neuro', 'dict', ' Ion', '.bio', ' skulls', ' ion' ; neurone 866 signe + : ' Train', ' train', ' Irving', 'Train', ' trains', ' Cre', 'Split', ' cre', ' Berm', ' Split' ; neurone 2961 signe + : ' vector', ' hyper', ' embedding', ' vectors', ' Emb', 'imoto', ' micro', '_vect', ' vect', 'ecies' ; neurone 9879 signe + : ' Cohen', ' Vale', 'aise', 'avity', 'atos', ' Cob', 'power', ' Carlson', 'attachments', ' Leigh' ; neurone 10297 signe + : '_', ' --', ' ', 'ople', ' [', '--', "'-", ' ...', 'leck', ' -' ; neurone 4585 signe + : '941', 'PerPixel', '_EXPECT', 'aeda', 'loon', 'ServerError', 'lier', 'geme', 'Nil', ' Nil' ; neurone 3230 signe - : ' Minister', ' minister', ' Ministers', ' ministers', 'bakan', ' minist', ' Ministry', 'Min', ' Minist', ' MIN' ; neurone 5722 signe + : 'cala', 'rlen', '040', 'ocha', 'tick', 'allo', 'dera', 'YZ', 'edith', 'verity'.
+
+**P-S25/e1/sonde (w)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1, vecteur de score ; famille retenue `attention`, norme 6,66.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,02249 et 0,06297) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres paraît 8 fois dans ses vingt premiers jetons (attendu sous le nul 0,1905 ; p 0,0004998 et 0,0004998) : la lecture ajoute un soupçon que la sonde lise des nombres ; elle ne le prouve pas.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (couche 23, signe -) ne se distingue des nuls qu'en partie (p 0,002999 et 0,0009995) : ses premiers jetons sont rapportés, sans être nommés comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,07896 et 0,07596) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (3 ; p 0,05597 et 0,06097) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (couche 23, signe -) ne se distingue pas du nul (p 0,1094 et 0,1049) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Pôles « intermédiaires » (cosinus maximal 0,07686 ; p 0,01299 et 0,01999) : aucune phrase gelée ; valeurs en table.
+
+**P-S25/e1/sonde (q)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1, requête d’attention ; famille retenue `attention`, norme 66,42.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (couche 23, signe +) se distingue des deux nuls (concentration 7,933 ; p 0,0004998 et 0,0004998) ; ses premiers jetons : ' estimate', ' estimation', 'estimate', ' estim', '_estimate', ' estimates', ' Estimated', 'Est', 'Estimated', 'estimated', ' Estimate', ' estimated', ' estimating', ' Est', '\\u4f30', ' estimator', '(est', '_est', ' Estimates', 'est'.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (couche 23, signe -) se distingue des deux nuls (concentration 10,39 ; p 0,0004998 et 0,0004998) ; ses premiers jetons : ' hours', ' Hours', '-hours', 'hours', 'Hours', ' hour', '.hours', ' days', ' minutes', '_hours', '-hour', '\\u5c0f\\u65f6', 'OURS', '.hour', ' weeks', ' Hour', 'hour', ' Minutes', ' months', ' seconds'.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (couche 23, signe +) se distingue des deux nuls (concentration 5,987 ; p 0,0009995 et 0,0004998) ; ses premiers jetons : ' estimate', 'estimate', ' estimation', '_estimate', '/km', 'isser', 'est', 'Est', '120', ' estim', '525', 'ea', 'aur', ' estimates', '_est', 'ount', ' Unlimited', 'onio', 'imization', 'akis'.
+- La famille nombres n'y est pas sur-représentée (2 ; p 0,1244 et 0,1299) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (couche 23, signe -) se distingue des deux nuls (concentration 7,78 ; p 0,0004998 et 0,0004998) ; ses premiers jetons : ' hours', '.hours', ' Hours', 'Hours', '-hours', '\\u5c0f\\u65f6', ' hour', 'hours', '.hour', '_hours', 'iyon', 'OURS', '\\u094d\\u091b', ' hora', '477', ' ours', ' person', 'istas', '_unused', 'neys'.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3658 et 0,3858) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 4769 signe +, neurone 4922 signe +, neurone 3458 signe +, neurone 9479 signe +, neurone 988 signe -, neurone 4252 signe +, neurone 13756 signe +, neurone 4670 signe +, neurone 7650 signe -, neurone 607 signe +, cosinus 0,2542, 0,1478, 0,07718, 0,0753, 0,07111, 0,06737, 0,0671, 0,0663, 0,06436, 0,06406) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 4769 signe + : 'owitz', 'igo', '\\u00eas', 'rett', ' cruise', ' NBC', 'aris', ' boots', 'azu', 'itt' ; neurone 4922 signe + : ' periodic', ' aw', ' UNIT', ' Unit', 'ANGO', ' Period', '663', 'acket', 'chema', '120' ; neurone 3458 signe + : '...\\n', '...\\n\\n', ',...\\n', '....\\n', '../', '...,', '\\u2013and', ',...', ' Wert', ' Ingram' ; neurone 9479 signe + : ' ', '202', '201', '0', '10', '175', '112', '11', '102', '161' ; neurone 988 signe - : ' analysis', ' measurement', ' analyses', ' measurements', 'analysis', ' assessment', ' estimate', ' Analysis', ' estimates', ' analyzing' ; neurone 4252 signe + : ' Saturday', '\\u6236', 'anken', 'ivre', ' decade', ' Kr', ' century', ' Mayer', '540', '.dec' ; neurone 13756 signe + : ' containing', ' contain', ' contains', 'Contains', 'contain', 'contains', '_contains', ' Contains', 'Contain', '414' ; neurone 4670 signe + : ',', 'ewise', ' Style', ' gu', 'NU', 'classed', ' Fed', '&S', '/St', 'ORS' ; neurone 7650 signe - : 'iku', 'indre', ' Pearce', '\\u30a4\\u30c9', 'oron', 'ince', ' Idle', 'hq', ' idle', 'Idle' ; neurone 607 signe + : 'Quest', 'pong', 'QS', ' QS', ' qi', ' queues', ' Bang', ' Queens', ' pang', 'ogo'.
+
+**P-S25/e1/enc (w)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1, vecteur de score ; famille retenue `attention`, norme 7,128.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,07296 et 0,05647) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (couche 23, signe -) ne se distingue pas du nul (p 0,5147 et 0,1999) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,4103 et 0,5182) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3658 et 0,3753) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (couche 23, signe -) ne se distingue pas du nul (p 0,3828 et 0,3708) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 5719 signe +, neurone 9075 signe -, neurone 13673 signe -, neurone 6019 signe -, neurone 12184 signe -, neurone 12048 signe +, neurone 6174 signe -, neurone 9655 signe -, neurone 4486 signe +, neurone 11626 signe +, cosinus 0,1208, 0,09922, 0,09471, 0,06859, 0,06047, 0,0589, 0,05876, 0,05873, 0,0563, 0,05439) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 5719 signe + : ')\\n\\n', '?\\n\\n', ';\\n\\n', '!\\n\\n', '\\n\\n', '()\\n\\n', '\\u201d\\n\\n', ');\\n\\n', '?)\\n\\n', '\\u2019\\n\\n' ; neurone 9075 signe - : '\\u2014\\n\\n', '\\n\\n', ' \\n\\n', '-\\n\\n', ',\\n\\n', '...\\n\\n', ' \\u2014\\n\\n', '?\\n\\n', ';\\n\\n', '/\\n\\n' ; neurone 13673 signe - : '\\n\\n', '.\\n\\n', '...\\n\\n', '!\\n\\n', ' \\n\\n', '?\\n\\n', ',\\n\\n', ':\\n\\n', '\\u3002\\n\\n', '-\\n\\n' ; neurone 6019 signe - : 'tempts', 'imately', 'inition', 'ificates', ' \\u200b\\u200b', 'itionally', 'sburgh', 'entication', 'istration', 'uments' ; neurone 12184 signe - : ' middle', ' center', ' centre', 'middle', 'center', ' centers', '-middle', ' Center', ' Middle', ' Centre' ; neurone 12048 signe + : '\\n\\n', '...\\n\\n', '.\\n\\n', ',\\n\\n', ' \\n\\n', '\\u00a0\\n\\n', '\\u2026\\n\\n', '!\\n\\n', ' .\\n\\n', '?\\n\\n' ; neurone 6174 signe - : ' Wash', ' Washing', ' oppos', ' sched', ' mastur', ' Wrest', ' coun', ' Tues', 'washing', ' Rot' ; neurone 9655 signe - : 'elo', ' Commonwealth', 'apture', ' Projection', ' relu', 'leton', 'ikipedia', 'dale', ' Salv', '.compiler' ; neurone 4486 signe + : '\\u30f3\\u30d7', ' ...\\n', '&eacute', 'tout', ')(\\n', ' Vega', ' ...\\r\\n', 'ulg', '\\\\\\n', '---</' ; neurone 11626 signe + : ' team', ' group', ' list', ' crew', ' lineup', ' squad', 'team', ' collection', ' series', ' roster'.
+
+**P-S25/e1/enc (q)** — le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1, requête d’attention ; famille retenue `attention`, norme 67,18.
+
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (couche 23, signe +) ne se distingue pas du nul (p 0,3308 et 0,2179) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (couche 23, signe -) ne se distingue pas du nul (p 0,07096 et 0,07946) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût paraît 2 fois dans ses vingt premiers jetons (attendu sous le nul 0,0075 ; p 0,001499 et 0,0004998) : la lecture ajoute un soupçon que la sonde lise le coût ; elle ne le prouve pas.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (couche 23, signe +) ne se distingue pas du nul (p 0,3998 et 0,4718) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (couche 23, signe -) ne se distingue pas du nul (p 0,3323 et 0,4593) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût paraît 1 fois dans ses vingt premiers jetons (attendu sous le nul 0,006 ; p 0,004998 et 0,004498) : la lecture ajoute un soupçon que la sonde lise le coût ; elle ne le prouve pas.
+- Les pôles qui écrivent le plus près de la direction (neurone 4808 signe +, neurone 11333 signe -, neurone 3458 signe -, neurone 10516 signe -, neurone 4185 signe +, neurone 4916 signe +, neurone 11719 signe -, neurone 2913 signe +, neurone 4726 signe -, neurone 9666 signe -, cosinus 0,1079, 0,09202, 0,07994, 0,07442, 0,06928, 0,06771, 0,06665, 0,06573, 0,06508, 0,06142) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 4808 signe + : 'iction', 'ectors', 'aur', 'ickness', 'ict', ' Buck', ' Kub', 'estion', 'ecta', 'CD' ; neurone 11333 signe - : '...\\n\\n', ' Zuk', '...\\n', ',...\\n', ' Berk', '\\u2026\\n\\n', ',...\\n\\n', ' Cop', '...\\n\\n\\n', ' Boyle' ; neurone 3458 signe - : ' ,', 'elay', 'arden', 'isy', 'yk', ' www', ' USA', 'arily', '\\u043b\\u0430\\u0432', ' Www' ; neurone 10516 signe - : ' AND', ' OF', ' FOR', ' IN', ' TO', ' WITH', ' ON', ' THE', ' AT', ' FROM' ; neurone 4185 signe + : 'ETCH', 'avig', 'endi', 'etta', ' model', ' estimates', 'argas', ' technical', ' Force', 'forc' ; neurone 4916 signe + : ' PRO', ' **', ' IN', ' FOR', ' HE', ' WE', ' PRE', ' EX', ' NO', ' RE' ; neurone 11719 signe - : 'A', 'F', 'High', 'P', 'S', 'In', 'R', 'Tre', 'G', 'Com' ; neurone 2913 signe + : ' PRO', ' RE', ' IN', ' FOR', ' MIN', ' PRE', ' DIS', ' LEG', ' EX', ' CON' ; neurone 4726 signe - : ' logarith', '\\u00e1ng', 'umu', '.cb', ' Reich', ' \\u671f', 'LOG', 'Log', '\\u671f', ' Pik' ; neurone 9666 signe - : 'BO', '_BO', 'enden', '-bo', 'uide', 'olland', 'ieval', 'kek', 'avan', 'tri'.
+
+**P-S50/e0/sonde (w)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0, vecteur de score ; famille retenue `attention`, norme 9,294.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,9445 et 0,7831) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,1539 et 0,1789) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (couche 23, signe -) ne se distingue pas du nul (p 0,8246 et 0,8371) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,05497 et 0,06497) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (5 ; p 0,01349 et 0,01049) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (couche 23, signe -) ne se distingue pas du nul (p 0,2319 et 0,3948) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 2902 signe +, neurone 9680 signe +, neurone 537 signe -, neurone 9084 signe -, neurone 5722 signe +, neurone 2499 signe +, neurone 7522 signe +, neurone 9067 signe -, neurone 6403 signe -, neurone 13673 signe +, cosinus 0,09871, 0,08027, 0,07454, 0,06928, 0,06415, 0,0577, 0,05721, 0,05553, 0,05446, 0,05433) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 2902 signe + : '.\\n', '\\u3002\\n', '%.\\n', '`.\\n', '?\\n', '!\\n', ' :)\\n', '\\uff09\\u3002\\n', ').\\n', "'.\\n" ; neurone 9680 signe + : 'iente', 'ores', 'ubu', 'oria', ' Dak', 'boom', '/native', ' Orch', 'oles', ' induction' ; neurone 537 signe - : ' Fi', ' FI', ' Fiona', ' Fle', ' Fiji', ' Fernando', '/F', '-F', ' Fiat', ' Finn' ; neurone 9084 signe - : ' mod', ' modal', 'mod', ' modular', ' Mod', '.mod', 'azzi', ' modulus', 'lap', ' toast' ; neurone 5722 signe + : 'cala', 'rlen', '040', 'ocha', 'tick', 'allo', 'dera', 'YZ', 'edith', 'verity' ; neurone 2499 signe + : ' MORE', ' \\u2019', ' BBQ', '.runners', " '", 'oya', ' MG', ' HI', ' \\u25ba', ' DRM' ; neurone 7522 signe + : 'owie', 'nis', ' Thom', 'stretch', 'dem', 'viso', 'atori', 'ije', 'cher', 'aled' ; neurone 9067 signe - : ' them', ' the', ' its', ' away', ' up', ' him', ' \\u25c4', ' their', ' some', ' a' ; neurone 6403 signe - : '_callbacks', '\\uff0c\\u4e0d\\u8fc7', 'Ascii', 'opleft', 'tmpl', 'ourke', 'okens', '\\u00e6k', ' \\u00b4', 'asaki' ; neurone 13673 signe + : ' :)\\n', '``\\n', ':)\\n', '.\\n', ' .\\n', '!!!\\n', '\\u3002\\n', '?\\n', '!\\n', "'.\\n".
+
+**P-S50/e0/sonde (q)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0, requête d’attention ; famille retenue `attention`, norme 67,94.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (requête d'attention) (couche 23, signe +) ne se distingue pas du nul (p 0,07796 et 0,06897) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (requête d'attention) (couche 23, signe -) ne se distingue des nuls qu'en partie (p 0,002999 et 0,002999) : ses premiers jetons sont rapportés, sans être nommés comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (requête d'attention) (couche 23, signe +) ne se distingue pas du nul (p 0,6487 et 0,7341) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3658 et 0,3873) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (requête d'attention) (couche 23, signe -) ne se distingue pas du nul (p 0,07996 et 0,08296) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Les pôles qui écrivent le plus près de la direction (neurone 4769 signe +, neurone 4726 signe -, neurone 12050 signe -, neurone 1997 signe -, neurone 12435 signe -, neurone 12274 signe -, neurone 6317 signe +, neurone 12082 signe -, neurone 12282 signe -, neurone 11451 signe +, cosinus 0,1778, 0,08085, 0,07505, 0,06946, 0,06719, 0,06285, 0,06198, 0,05833, 0,05727, 0,05605) se distinguent des nuls (p 0,0004998 et 0,0004998) ; la lentille publique les lit : neurone 4769 signe + : 'owitz', 'igo', '\\u00eas', 'rett', ' cruise', ' NBC', 'aris', ' boots', 'azu', 'itt' ; neurone 4726 signe - : ' logarith', '\\u00e1ng', 'umu', '.cb', ' Reich', ' \\u671f', 'LOG', 'Log', '\\u671f', ' Pik' ; neurone 12050 signe - : ' simulation', ' simulations', ' Simulation', ' simulated', 'simulation', 'Simulation', ' simulate', ' simulator', ' sim', ' Sim' ; neurone 1997 signe - : ' Circuit', 'uzz', 'LEE', 'ernote', ' Vernon', ' Cir', 'kea', 'avor', '_ITER', 'iltr' ; neurone 12435 signe - : 'oux', 'avana', ' Roo', ' Boyle', ' outcomes', ' acceptance', ' Matth', ' Shir', ' Dana', ' histo' ; neurone 12274 signe - : ' ...\\n\\n', ' --', ' ...', ' ,', '--', ' ...\\n', ' -', ' &', '\\u00a0', 'vais' ; neurone 6317 signe + : ' OF', ' ON', ' IN', ' FOR', ' EX', ' TO', ' OUT', ' OFF', ' NO', ' LIKE' ; neurone 12082 signe - : ' isNaN', '\\u00f4me', 'otel', 'rex', 'mond', 'apolis', ' Babe', '\\u03c3\\u03b5', 'esture', 'errated' ; neurone 12282 signe - : ' Flip', ' flip', 'flip', 'Flip', ' flips', ' flipped', '/fl', ' mir', ' mirror', '_fl' ; neurone 11451 signe + : ' Camden', ' Flag', ' Gall', ' Verd', ' flags', ' Brock', 'flag', 'abble', 'odie', ' flag'.
+
+**P-S50/e1/sonde (w)** — la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e1, vecteur de score ; famille retenue `lineaire`, norme 16,32.
+
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,2829 et 0,4953) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,1539 et 0,1734) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille publique côté sortie, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (couche 23, signe -) ne se distingue pas du nul (p 0,4658 et 0,5257) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (couche 23, signe +) ne se distingue pas du nul (p 0,4008 et 0,5997) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Par la lentille des logits, la direction de la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (couche 23, signe -) ne se distingue pas du nul (p 0,4073 et 0,6397) : ses jetons sont en table, et aucune phrase ne les nomme comme ce qu'elle capte.
+- La famille nombres n'y est pas sur-représentée (1 ; p 0,3658 et 0,3793) : cela ne blanchit pas la sonde.
+- La famille coût n'y est pas sur-représentée (0 ; p 1 et 1) : cela ne blanchit pas la sonde.
+- Pôles « intermédiaires » (cosinus maximal 0,07553 ; p 0,01749 et 0,01799) : aucune phrase gelée ; valeurs en table.
+
+## Comparaisons appariées
+
+- (sonde apprise et lecteur honnête ; `P-instruit/e0/sonde/w` / `P-instruit/e0/enc/w`) Cosinus 0,1887 entre la sonde apprise sur l'organisme à consigne cachée, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'organisme à consigne cachée, pli e0 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (sonde apprise et lecteur honnête ; `P-instruit/e1/sonde/w` / `P-instruit/e1/enc/w`) couches différentes : sans objet
+- (deux plis ; `P-instruit/e0/sonde/w` / `P-instruit/e1/sonde/w`) Cosinus 0,4504 entre la sonde apprise sur l'organisme à consigne cachée, pli e0 (vecteur de score) et la sonde apprise sur l'organisme à consigne cachée, pli e1 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux plis ; `P-instruit/e0/enc/w` / `P-instruit/e1/enc/w`) couches différentes : sans objet
+- (sonde apprise et lecteur honnête ; `P-S25/e0/sonde/w` / `P-S25/e0/enc/w`) couches différentes : sans objet
+- (sonde apprise et lecteur honnête ; `P-S25/e0/sonde/q` / `P-S25/e0/enc/q`) couches différentes : sans objet
+- (sonde apprise et lecteur honnête ; `P-S25/e1/sonde/w` / `P-S25/e1/enc/w`) Cosinus 0,08128 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (sonde apprise et lecteur honnête ; `P-S25/e1/sonde/q` / `P-S25/e1/enc/q`) Cosinus 0,07614 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (même couche) ; 0 jetons communs sur vingt.
+- (deux plis ; `P-S25/e0/sonde/w` / `P-S25/e1/sonde/w`) Cosinus 0,1975 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) et la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux plis ; `P-S25/e0/sonde/q` / `P-S25/e1/sonde/q`) Cosinus 0,2645 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) et la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (requête d'attention) (même couche) ; 0 jetons communs sur vingt.
+- (deux plis ; `P-S25/e0/enc/w` / `P-S25/e1/enc/w`) couches différentes : sans objet
+- (deux plis ; `P-S25/e0/enc/q` / `P-S25/e1/enc/q`) couches différentes : sans objet
+- (sonde apprise et lecteur honnête ; `P-S50/e0/sonde/w` / `P-S50/e0/enc/w`) couches différentes : sans objet
+- (sonde apprise et lecteur honnête ; `P-S50/e1/sonde/w` / `P-S50/e1/enc/w`) couches différentes : sans objet
+- (deux plis ; `P-S50/e0/sonde/w` / `P-S50/e1/sonde/w`) Cosinus 0,15 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) et la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux plis ; `P-S50/e0/enc/w` / `P-S50/e1/enc/w`) couches différentes : sans objet
+- (sonde apprise et lecteur honnête ; `P-S75/e0/sonde/w` / `P-S75/e0/enc/w`) couches différentes : sans objet
+- (sonde apprise et lecteur honnête ; `P-S75/e1/sonde/w` / `P-S75/e1/enc/w`) Cosinus 0,2477 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux plis ; `P-S75/e0/sonde/w` / `P-S75/e1/sonde/w`) couches différentes : sans objet
+- (deux plis ; `P-S75/e0/enc/w` / `P-S75/e1/enc/w`) Cosinus 0,1331 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (sonde apprise et lecteur honnête ; `P-S100/e0/sonde/w` / `P-S100/e0/enc/w`) couches différentes : sans objet
+- (sonde apprise et lecteur honnête ; `P-S100/e1/sonde/w` / `P-S100/e1/enc/w`) couches différentes : sans objet
+- (deux plis ; `P-S100/e0/sonde/w` / `P-S100/e1/sonde/w`) Cosinus 0,4887 entre la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) et la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (même couche) ; 1 jetons communs sur vingt.
+- (deux plis ; `P-S100/e0/enc/w` / `P-S100/e1/enc/w`) Cosinus 0,2984 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (même couche) ; 2 jetons communs sur vingt.
+- (deux doses ; `P-S25/e0/sonde/w` / `P-S50/e0/sonde/w`) Cosinus 0,2323 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) et la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (même couche) ; 1 jetons communs sur vingt.
+- (deux doses ; `P-S25/e0/sonde/w` / `P-S75/e0/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S25/e0/sonde/w` / `P-S100/e0/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S50/e0/sonde/w` / `P-S75/e0/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S50/e0/sonde/w` / `P-S100/e0/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S75/e0/sonde/w` / `P-S100/e0/sonde/w`) Cosinus 0,6612 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) et la sonde apprise sur l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (même couche) ; 3 jetons communs sur vingt.
+- (deux doses ; `P-S25/e0/sonde/q` / `P-S50/e0/sonde/q`) Cosinus 0,2864 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e0 (requête d'attention) et la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e0 (requête d'attention) (même couche) ; 0 jetons communs sur vingt.
+- (deux doses ; `P-S25/e0/enc/w` / `P-S50/e0/enc/w`) Cosinus 0,05027 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux doses ; `P-S25/e0/enc/w` / `P-S75/e0/enc/w`) Cosinus 0,007651 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux doses ; `P-S25/e0/enc/w` / `P-S100/e0/enc/w`) Cosinus -0,0009207 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,25, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux doses ; `P-S50/e0/enc/w` / `P-S75/e0/enc/w`) Cosinus 0,1505 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux doses ; `P-S50/e0/enc/w` / `P-S100/e0/enc/w`) Cosinus 0,1032 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,5, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+- (deux doses ; `P-S75/e0/enc/w` / `P-S100/e0/enc/w`) Cosinus 0,2891 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e0 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e0 (vecteur de score) (même couche) ; 2 jetons communs sur vingt.
+- (deux doses ; `P-S25/e1/sonde/w` / `P-S50/e1/sonde/w`) Cosinus 0,157 entre la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (vecteur de score) et la sonde apprise sur l'adaptateur saboteur à la dose 0,5, pli e1 (vecteur de score) (même couche) ; 1 jetons communs sur vingt.
+- (deux doses ; `P-S25/e1/sonde/w` / `P-S75/e1/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S25/e1/sonde/w` / `P-S100/e1/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S50/e1/sonde/w` / `P-S75/e1/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S50/e1/sonde/w` / `P-S100/e1/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S75/e1/sonde/w` / `P-S100/e1/sonde/w`) couches différentes : sans objet
+- (deux doses ; `P-S25/e1/enc/w` / `P-S50/e1/enc/w`) couches différentes : sans objet
+- (deux doses ; `P-S25/e1/enc/w` / `P-S75/e1/enc/w`) couches différentes : sans objet
+- (deux doses ; `P-S25/e1/enc/w` / `P-S100/e1/enc/w`) couches différentes : sans objet
+- (deux doses ; `P-S50/e1/enc/w` / `P-S75/e1/enc/w`) couches différentes : sans objet
+- (deux doses ; `P-S50/e1/enc/w` / `P-S100/e1/enc/w`) couches différentes : sans objet
+- (deux doses ; `P-S75/e1/enc/w` / `P-S100/e1/enc/w`) Cosinus 0,3044 entre le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 0,75, pli e1 (vecteur de score) et le lecteur honnête de la cellule de l'adaptateur saboteur à la dose 1, pli e1 (vecteur de score) (même couche) ; 0 jetons communs sur vingt.
+
+Les jetons communs de la phrase gelée sont ceux de la lentille publique côté sortie, signe + ; les trois autres comptes (signe −, lentille des logits) sont en table, recomptés par le lecteur à partir des identifiants, sans écart.
+
+**Accord de la lentille publique avec la lentille des logits** (jetons communs aux vingt premiers, signes + et −) et **témoin de couche** (jetons communs entre la lecture à sa couche et aux deux autres couches, lentille publique), tels que les tables les portent :
+
+| direction | couche | accord + | accord − | témoin (autre couche : + / −) |
+|---|---|---|---|---|
+| `P-S100/e0/enc/w` | 7 | 0 | 0 | 15 : 0 / 0; 23 : 0 / 0 |
+| `P-S100/e1/enc/w` | 7 | 0 | 0 | 15 : 1 / 3; 23 : 1 / 1 |
+| `P-S25/e0/enc/q` | 7 | 0 | 0 | 15 : 3 / 1; 23 : 0 / 0 |
+| `P-S25/e0/enc/w` | 7 | 0 | 0 | 15 : 2 / 0; 23 : 1 / 0 |
+| `P-S50/e0/enc/w` | 7 | 0 | 0 | 15 : 2 / 1; 23 : 0 / 0 |
+| `P-S75/e0/enc/w` | 7 | 0 | 0 | 15 : 0 / 2; 23 : 1 / 0 |
+| `P-S75/e1/enc/w` | 7 | 0 | 0 | 15 : 5 / 0; 23 : 0 / 0 |
+| `P-S75/e1/sonde/w` | 7 | 0 | 0 | 15 : 3 / 3; 23 : 0 / 0 |
+| `P-instruit/e1/enc/w` | 7 | 0 | 0 | 15 : 8 / 11; 23 : 2 / 0 |
+| `P-S100/e0/sonde/w` | 15 | 2 | 0 | 7 : 2 / 4; 23 : 6 / 3 |
+| `P-S100/e1/sonde/w` | 15 | 2 | 0 | 7 : 4 / 14; 23 : 5 / 0 |
+| `P-S50/e1/enc/w` | 15 | 2 | 2 | 7 : 2 / 5; 23 : 7 / 2 |
+| `P-S75/e0/sonde/w` | 15 | 3 | 0 | 7 : 2 / 1; 23 : 4 / 3 |
+| `P-instruit/e0/enc/w` | 15 | 0 | 0 | 7 : 1 / 2; 23 : 2 / 3 |
+| `P-instruit/e0/sonde/w` | 15 | 0 | 1 | 7 : 0 / 1; 23 : 3 / 3 |
+| `P-instruit/e1/sonde/w` | 15 | 1 | 3 | 7 : 3 / 1; 23 : 4 / 9 |
+| `P-S25/e0/sonde/q` | 23 | 6 | 4 | 7 : 1 / 0; 15 : 9 / 10 |
+| `P-S25/e0/sonde/w` | 23 | 7 | 3 | 7 : 1 / 0; 15 : 9 / 7 |
+| `P-S25/e1/enc/q` | 23 | 2 | 6 | 7 : 0 / 0; 15 : 5 / 8 |
+| `P-S25/e1/enc/w` | 23 | 1 | 2 | 7 : 1 / 0; 15 : 6 / 6 |
+| `P-S25/e1/sonde/q` | 23 | 9 | 11 | 7 : 2 / 8; 15 : 17 / 18 |
+| `P-S25/e1/sonde/w` | 23 | 5 | 6 | 7 : 0 / 0; 15 : 9 / 14 |
+| `P-S50/e0/sonde/q` | 23 | 5 | 5 | 7 : 2 / 1; 15 : 11 / 9 |
+| `P-S50/e0/sonde/w` | 23 | 5 | 3 | 7 : 1 / 1; 15 : 5 / 7 |
+| `P-S50/e1/sonde/w` | 23 | 3 | 7 | 7 : 0 / 0; 15 : 4 / 1 |
+
+## Attentes de l'auteur (« Prédiction », pour mémoire ; rien n'en dépend)
+
+- **A-1** (au moins une sonde apprise « concentrée au-delà des deux nuls » par la lentille publique à sa couche, à un signe au moins) : **non réfutée** — `P-instruit/e1/sonde` (w, couche 15, signe −) et `P-S25/e1/sonde` (q, couche 23, signes + et −).
+- **A-2** (famille « nombres » ou « coût » sur-représentée dans les vingt premiers jetons d'au moins une sonde apprise sur l'adaptateur saboteur, par la lentille publique) : **non réfutée** — « nombres », 8 sur vingt, `P-S25/e1/sonde` (w, couche 23, signe +), direction elle-même « non distincte du nul ».
+- **A-3** (part des lectures « concentrées » par la lentille publique plus haute à la couche 23 qu'à la couche 7) : **non réfutée** — 2 lectures sur 18 à la couche 23 (une direction sur neuf), 0 sur 18 à la couche 7 (unité de compte non fixée par le texte ; même sens par lecture et par direction).
+- **A-4** (cosinus sonde apprise / lecteur honnête positif pour la plupart des paires de même cellule, pli et couche) : **non réfutée** — 4 paires de même couche, cosinus 0,1887, 0,0813, 0,0761, 0,2477, tous positifs ; les six autres paires sont « couches différentes : sans objet ».
+
+## Description libre, après lecture, non préenregistrée
+
+*Tout ce qui suit est marqué « description libre, après lecture, non préenregistrée » ; rien n'y est un libellé, et rien ne parle de la détection du sabotage.*
+
+1. *(description libre, après lecture, non préenregistrée)* Les cinq lectures « concentrées » viennent de deux directions seulement : la requête d'attention de la sonde apprise sur l'adaptateur saboteur à la dose 0,25, pli e1 (couche 23 ; quatre lectures sur quatre : deux lentilles, deux signes), et le vecteur de score de la sonde apprise sur l'organisme à consigne cachée, pli e1 (couche 15 ; lentille publique, signe −). Pour la première, les deux lentilles s'accordent sur 9 et 11 des vingt premiers jetons ; aucune des cinq n'est un lecteur honnête.
+2. *(description libre, après lecture, non préenregistrée)* Les pôles se distinguent des nuls bien plus souvent que les jetons : 15 directions sur 25 ont des pôles « concentrés », toutes à la plus petite valeur p possible (1/2 001) sous les deux nuls, dont 5 lecteurs honnêtes (2 à la couche 7, 1 à la couche 15, 2 à la couche 23), contre 5 lectures de jetons sur 100. L'attendu par le seul hasard est au plus 0,025. Le texte ne prévoit pour les pôles ni calibration ni déclencheur d'audit : voir la réserve 1.
+3. *(description libre, après lecture, non préenregistrée)* Aux couches 7 et 15, la lentille publique et la lentille des logits ne partagent presque aucun des vingt premiers jetons (0 à 3 sur vingt) ; à la couche 23 elles en partagent 1 à 11. Cela s'accorde avec la mise en garde du texte (« Frontière », point 4) sur la lecture sous les deux tiers de la profondeur ; ce n'est pas une mesure de fidélité.
+4. *(description libre, après lecture, non préenregistrée)* Les cosinus entre directions d'une même couche restent modestes : entre plis, 0,13 à 0,49 ; entre doses, de −0,0009 à 0,66 (le plus haut : vecteurs de score des doses 0,75 et 1, pli e0, couche 15) ; entre sonde apprise et lecteur honnête, 0,076 à 0,25. Les réglages retenus par la validation interne changent de couche ou de famille d'un pli à l'autre pour cinq cellules-rôles sur dix (« Frontière », point 10 : ce ne sont pas des scores).
+5. *(description libre, après lecture, non préenregistrée)* Les quatre familles « sur-représentées » portent toutes sur des directions « non distinctes du nul » ; la plus nombreuse est « nombres », 8 sur vingt (attendu 0,19) ; les trois autres sont « coût », 1 ou 2 jetons sur vingt.
+
+## Réserves
+
+1. **Pôles « concentrés » nombreux (R4, symétrie : « trop beau = réserve »).** 15 sur 25, dont des lecteurs honnêtes, tous au plancher de la valeur p. Aucun déclencheur gelé ne porte sur les pôles et aucune calibration des pôles n'est prévue : le lecteur ne peut dire si le nul des pôles (cosinus maximal des directions nulles) est bien taillé pour des directions repliées par la normalisation. Ces libellés sont écrits tels que les tables les portent ; un contrôle (par exemple une calibration des pôles par des témoins) relèverait d'une version neuve et d'un nœud, non de cette lecture.
+2. **Familles** : 4 « sur-représentées » pour un attendu d'au plus 2 ; écart faible, à valeurs p dépendantes.
+3. **Choix de forme du lecteur** (non fixés par le texte) : écriture des nombres à quatre chiffres significatifs et des jetons sous leur forme Python échappée, repris du rendu du code pour que la comparaison porte sur le fond ; ordre des phrases de famille (le lecteur suit l'ordre du texte, nombres puis coût ; le code, celui des tables) ; attendu d'une famille écrit sous le nul isotrope dans la phrase gelée (le texte dit « attendu sous le nul » sans préciser lequel ; les deux sont en table).
+4. **Jetons communs de la phrase de comparaison** : la phrase gelée n'en porte qu'un compte ; lentille publique et signe + retenus, comme le code ; les autres comptes sont en table.
+
+## Comparaison au code
+
+174 lignes comparées (100 lectures, 25 lignes de pôles, 49 comparaisons) : **174 égales, 0 désaccord** ; aucun libellé recalculé différent de celui des tables (0) ; aucun compte de jetons communs différent (0) ; comptes de familles recalculés par les règles gelées : 0 écart. Aucun désaccord à soumettre au second lecteur. Détail : `lecture/comparaison-phrases-lecteur-code-v1.md`.
