@@ -1,0 +1,9 @@
+# Lot 6 du véhicule NA-1, v1 — pièces récupérées, incomplètes
+
+Session du compte organisme, 2026-11-21 vers 18:25Z. **Pièces non vérifiées, rendu incomplet.** Le développeur du lot 6 (modèle O) a été coupé par un classifieur de sûreté au passage à l'écriture de son rapport, après les essais et les mutations. Conformément à la règle « au premier refus : arrête-toi », il n'a rien retenté et la session ne l'a pas relancé.
+
+- **Récupéré ici**, copié de son dossier de travail sans aucun changement : le paquet (`paquet/orchestrator/`, dix fichiers), le programme d'application, le programme d'écriture du manifeste et des compagnons, le manifeste du paquet (`2c18dd2c…`, égal au rapport de l'agent), la configuration d'essai (`d97cd10a…`, égale), le journal des essais (95 passés pour le lot 6 seul ; 639 passés sur copie neuve, chiffre du rapport de l'agent) et les deux journaux de mutations (34 sur 34 tuées, chiffre du rapport de l'agent).
+- **Manque** : le rapport du développeur, sa table d'empreintes, ses compagnons. Les compagnons `.sha256` présents ici sont posés par la session au versement, pas par l'agent.
+- **Non porté** : le refus de câblage décidé par la mère (GO-2026-11-21-69, message de 18:15Z) ; il ira à un lot 6 v2.
+- **Écarts dits par l'agent** : orchestrateur lu sur les copies données à la reprise (commit `a41b7b50`, treize empreintes du lot 4 vérifiées) ; base v68 posée par copie de ses fichiers tirés d'`origin/main` ; variable `NA_LISTE_REELLE_DEPOT` posée pour trois essais du lot 2 ; dossiers temporaires `/tmp/essais-na-lot6-*` créés avant qu'il pose `TMPDIR`, non nettoyés (données factices seules) ; une sortie trop longue rangée d'office par l'outil sous `/root/.claude/`, non ouverte.
+- Non versés : la copie d'application et la base (plusieurs centaines de mégaoctets, refaites par le programme d'application).
