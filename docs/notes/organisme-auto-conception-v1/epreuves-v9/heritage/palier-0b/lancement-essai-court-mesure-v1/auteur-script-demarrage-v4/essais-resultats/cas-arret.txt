@@ -1,0 +1,26 @@
+script : d20e90e169de4fb2f623fdde910b449bedca0fb3d5d2012535cdc1eea03442a4
+fonctions extraites : 56 lignes, sha256 2c0ea25451dc9d83…
+n1-non-chef-arbre | identite5 | attendu code 86, programme et descendants morts, étranger vivant | rendu code 86 | TENU
+   23:02:07 programme arrete (identifiant:heure de depart) : 17794:2666186 17790:2666186 17797:2666186 17798:2666186 17799:2666186 ; forces : aucun ECHEC code 86 : depart code 5 : programme non chef de sa session et de son groupe
+   processus : 17787:etranger-sans-lien:VIVANT 17794:programme:mort 17797:enfant-sleep:mort 17798:enfant-sous-shell:mort 17799:petit-enfant-sleep:mort
+n2-chef-confirme | identite5 | attendu code 0, suite, rien tué | rendu code 0 | TENU
+   23:02:07 ATTENTION : depart, code 5 ; identite lue sur le programme : session et groupe 18271, depart 2666273 SUITE : identite5 passe sans echec
+   processus : 18269:etranger-sans-lien:VIVANT 18271:programme:VIVANT 18275:enfant-sleep:VIVANT 18276:enfant-sous-shell:VIVANT 18277:petit-enfant-sleep:VIVANT
+n3-mort | identite5 | attendu code 86, rien tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : 18324 n'est pas le programme lance (absent, ou heure de depart autre) : rien n'est arrete
+   processus : 18322:etranger-sans-lien:VIVANT 18324:programme:mort
+n4-orphelin-non-chef | identite5 | attendu code 86, tout mort, petit-fils orphelin compris ; étranger vivant | rendu code 86 | TENU
+   23:02:08 programme arrete (identifiant:heure de depart) : 18351:2666288 18348:2666288 18354:2666288 18355:2666288 ; forces : aucun ECHEC code 86 : depart code 5 : programme non chef de sa session et de son groupe
+   processus : 18346:etranger-sans-lien:VIVANT 18351:programme:mort 18354:enfant-sleep-vivant:mort 18355:petit-fils-orphelin:mort
+n4b-orphelin-chef-arret | arreter | attendu code 0, arreter : tout mort, orphelin compris ; étranger vivant | rendu code 0 | TENU
+   23:02:09 programme arrete (identifiant:heure de depart) : 18818:2666381 18822:2666381 18823:2666381 ; forces : aucun SUITE : arreter passe sans echec
+   processus : 18816:etranger-sans-lien:VIVANT 18818:programme:mort 18823:petit-fils-orphelin:mort 18822:enfant-sleep-vivant:mort
+n5-identifiant-repris-chef | identite5 | attendu code 86, étranger ni adopté ni tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : 19243 n'est pas le programme lance (absent, ou heure de depart autre) : rien n'est arrete
+   processus : 19241:etranger-sans-lien:VIVANT 19243:etranger-qui-reprend-l-identifiant:VIVANT
+n6-identifiant-repris-non-chef | identite5 | attendu code 86, étranger ni adopté ni tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : 19277 n'est pas le programme lance (absent, ou heure de depart autre) : rien n'est arrete
+   processus : 19275:etranger-sans-lien:VIVANT 19277:etranger-qui-reprend-l-identifiant:VIVANT
+n7-arret-heure-de-depart-autre | arreter | attendu code 0, arreter : rien tué (heure de départ écrite autre) | rendu code 0 | TENU
+   23:02:09 arret : 19311 n'est pas le programme lance (heure de depart autre) : rien n'est arrete SUITE : arreter passe sans echec
+   processus : 19309:etranger-sans-lien:VIVANT 19311:programme:VIVANT 19314:enfant-sleep:VIVANT 19315:enfant-sous-shell:VIVANT 19316:petit-enfant-sleep:VIVANT

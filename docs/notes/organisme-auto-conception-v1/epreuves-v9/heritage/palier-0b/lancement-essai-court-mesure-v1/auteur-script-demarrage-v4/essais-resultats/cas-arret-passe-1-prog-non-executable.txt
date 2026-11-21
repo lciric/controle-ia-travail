@@ -1,0 +1,26 @@
+script : 3bbf445a9fc1bd9e8fd51aafa3147892089d035c8ef380a06da541de1305814f
+fonctions extraites : 56 lignes, sha256 6cbb59dc6e2d9dd4…
+n1-non-chef-arbre | identite5 | attendu code 86, programme et descendants morts, étranger vivant | rendu code 1 | ÉCHEC
+   /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/auteur-script-demarrage-essai-3/v4/essais/travail/cas-arret/fonctions.sh: line 9: $1: unbound variable
+   processus : 15095:etranger-sans-lien:VIVANT
+n2-chef-confirme | identite5 | attendu code 0, suite, rien tué | rendu code 0 | TENU
+   23:01:32 ATTENTION : depart, code 5 ; identite lue sur le programme : session et groupe 15870, depart 2662748 SUITE : identite5 passe sans echec
+   processus : 15868:etranger-sans-lien:VIVANT 15870:programme:VIVANT 15873:enfant-sleep:VIVANT 15874:enfant-sous-shell:VIVANT 15875:petit-enfant-sleep:VIVANT
+n3-mort | identite5 | attendu code 86, rien tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : 15937 n'est pas le programme lance (absent, ou heure de depart autre) : rien n'est arrete
+   processus : 15935:etranger-sans-lien:VIVANT 15937:programme:mort
+n4-orphelin-non-chef | identite5 | attendu code 86, tout mort, petit-fils orphelin compris ; étranger vivant | rendu code 1 | ÉCHEC
+   /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/auteur-script-demarrage-essai-3/v4/essais/travail/cas-arret/fonctions.sh: line 9: $1: unbound variable
+   processus : 15964:etranger-sans-lien:VIVANT
+n4b-orphelin-chef-arret | arreter | attendu code 0, arreter : tout mort, orphelin compris ; étranger vivant | rendu code 0 | TENU
+   23:01:38 programme arrete (identifiant:heure de depart) : 16788:2663332 16792:2663332 16793:2663332 ; forces : aucun SUITE : arreter passe sans echec
+   processus : 16786:etranger-sans-lien:VIVANT 16788:programme:mort 16792:enfant-sleep-vivant:mort 16793:petit-fils-orphelin:mort
+n5-identifiant-repris-chef | identite5 | attendu code 86, étranger ni adopté ni tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : 17216 n'est pas le programme lance (absent, ou heure de depart autre) : rien n'est arrete
+   processus : 17213:etranger-sans-lien:VIVANT 17216:etranger-qui-reprend-l-identifiant:VIVANT
+n6-identifiant-repris-non-chef | identite5 | attendu code 86, étranger ni adopté ni tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : 17253 n'est pas le programme lance (absent, ou heure de depart autre) : rien n'est arrete
+   processus : 17250:etranger-sans-lien:VIVANT 17253:etranger-qui-reprend-l-identifiant:VIVANT
+n7-arret-heure-de-depart-autre | arreter | attendu code 0, arreter : rien tué (heure de départ écrite autre) | rendu code 0 | TENU
+   23:01:39 arret : 17293 n'est pas le programme lance (heure de depart autre) : rien n'est arrete SUITE : arreter passe sans echec
+   processus : 17291:etranger-sans-lien:VIVANT 17293:programme:VIVANT 17296:enfant-sleep:VIVANT 17297:enfant-sous-shell:VIVANT 17298:petit-enfant-sleep:VIVANT

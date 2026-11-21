@@ -1,0 +1,26 @@
+#!/bin/bash
+# Faux setsid du banc (artefacts du départ), livré avec le banc (v3), selon FAUX_SETSID :
+#   enfant   : (v4 : pour le lanceur seulement) lance la commande comme enfant, sans session neuve, et l'attend : le processus suivi par le départ v4 vit,
+#              mais n'est pas chef de son groupe -> départ 5, identité NON confirmable ;
+#   tardif   : attend 6 s, puis passe au vrai setsid (même identifiant, même heure de départ) : le départ v4 renonce au
+#              bout de 5 s -> départ 5 ; ensuite le processus est chef de son groupe -> identité confirmable (cas sain) ;
+#   mort     : pour le lanceur seulement, écrit 9 dans TENUE/code-de-sortie.txt et sort en 9 sans rien lancer -> départ 5 ;
+#   sorties  : pour le lanceur seulement, crée le dossier des sorties, puis vrai setsid -> le lanceur refuse en 10 ;
+#   tue      : pour le lanceur seulement, vrai setsid d'un processus qui se tue (signal 9) au bout de 2 s, sans écrire de
+#              code et sans rien au journal -> lanceur tué sans code, pendant l'attente ;
+#   tue-tard : pour le lanceur seulement, comme tue, mais écrit d'abord la ligne « départ du programme » et se tue au
+#              bout de 8 s -> lanceur tué sans code, après l'attente ;
+#   gardien-bloque : pour le lanceur seulement, pose TENUE/pid-gardien-essai-3.txt puis vrai setsid -> le départ du
+#              gardien refuse (code 4) -> échec 84 ;
+#   autre    : vrai setsid.
+# Arguments vus pour le lanceur : nohup /bin/bash LANCEUR TENUE RACINE INTERPRETE SORTIES
+case "${FAUX_SETSID:-}:${3:-}" in
+  enfant:*lancer-essai-3-v4.sh) "$@"; exit $? ;;
+  tardif:*lancer-essai-3-v4.sh) sleep 6; exec /usr/bin/setsid "$@" ;;
+  mort:*lancer-essai-3-v4.sh) echo 9 > "$4/code-de-sortie.txt"; exit 9 ;;
+  sorties:*lancer-essai-3-v4.sh) mkdir -p "$7"; exec /usr/bin/setsid "$@" ;;
+  tue:*lancer-essai-3-v4.sh) exec /usr/bin/setsid /bin/bash -c 'sleep 2; kill -9 $$' ;;
+  tue-tard:*lancer-essai-3-v4.sh) exec /usr/bin/setsid /bin/bash -c 'echo "depart du programme (factice)"; sleep 8; kill -9 $$' ;;
+  gardien-bloque:*lancer-essai-3-v4.sh) echo 1 > "$4/pid-gardien-essai-3.txt"; exec /usr/bin/setsid "$@" ;;
+  *) exec /usr/bin/setsid "$@" ;;
+esac
