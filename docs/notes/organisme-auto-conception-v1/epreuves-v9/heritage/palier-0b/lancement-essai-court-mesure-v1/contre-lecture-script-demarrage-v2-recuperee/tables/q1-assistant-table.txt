@@ -1,0 +1,28 @@
+texte de l'assistant ecrit par le script :
+#!/bin/bash
+[ "${1:-}" = get ] || exit 0
+p= q=
+while IFS= read -r l && [ -n "$l" ]; do case $l in protocol=*) p=${l#*=} ;; host=*) q=${l#*=} ;; esac; done
+[ "$p" = https ] && [ "$q" = github.com ] || exit 0
+IFS= read -r j < /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecteur-script-demarrage-v2/mes-essais/cas/q1-prod/secret/jeton || exit 1
+printf "username=x-access-token\npassword=%s\n" "$j"
+droits : 700 ; lignes portant le jeton en clair : 0
+https + github.com (production) : attendu jeton ; rendu jeton ; TENU
+idem avec path d'un autre depot du meme hote : attendu jeton ; rendu jeton ; TENU
+idem avec username=x : attendu jeton ; rendu jeton ; TENU
+http (sans s) + github.com : attendu rien ; rendu rien ; TENU
+https + hote voisin github.com.evil.example : attendu rien ; rendu rien ; TENU
+https + evilgithub.com : attendu rien ; rendu rien ; TENU
+https + github.com:443 : attendu rien ; rendu rien ; TENU
+https + GitHub.com (casse) : attendu rien ; rendu rien ; TENU
+https + github.com. (point final) : attendu rien ; rendu rien ; TENU
+https + hote avec retour chariot : attendu rien ; rendu rien ; TENU
+deux hotes, le permis en dernier : attendu jeton ; rendu jeton ; TENU
+deux hotes, l'etranger en dernier : attendu rien ; rendu rien ; TENU
+hote permis apres la ligne vide (ignore) : attendu rien ; rendu rien ; TENU
+sans ligne vide finale, hote permis : attendu jeton ; rendu jeton ; TENU
+url= au lieu de protocol/host : attendu rien ; rendu rien ; TENU
+action store : attendu rien ; rendu rien ; TENU
+action erase : attendu rien ; rendu rien ; TENU
+action inconnue (capability) : attendu rien ; rendu rien ; TENU
+sans action : attendu rien ; rendu rien ; TENU

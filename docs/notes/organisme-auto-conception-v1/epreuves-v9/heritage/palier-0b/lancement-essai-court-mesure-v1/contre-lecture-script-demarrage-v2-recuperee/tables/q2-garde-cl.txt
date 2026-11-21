@@ -1,0 +1,23 @@
+tete distante au depart dd01100e471e4a11f5fa81d0c20e60a30a1abf00 ; tete locale 720e3be85f9206b390f78743e50631510030f74b
+le tiers pousse ad444531eca7195e0366cbfd3872da07534b208a (inconnu du depot de versement : inconnu)
+1a. distant avance par un tiers, poussee simple : attendu refus ; rendu refus (code 1 ; garde du crochet : oui « garde : refus, non descendante » ; distant change : non) ; TENU
+1b. distant avance par un tiers, poussee forcee : attendu refus ; rendu refus (code 1 ; garde du crochet : oui « garde : refus, non descendante » ; distant change : non) ; TENU
+   tete distante apres 1a et 1b : ad444531eca7195e0366cbfd3872da07534b208a (attendu ad444531eca7195e0366cbfd3872da07534b208a : oui)
+2a. deux references dont une permise et main : attendu refus ; rendu refus (code 1 ; garde du crochet : oui « garde : refus vers refs/heads/main » ; distant change : non) ; TENU
+2b. --all (branches locales) : attendu refus ; rendu refus (code 1 ; garde du crochet : oui « garde : refus vers refs/heads/autre-branche-cl » ; distant change : non) ; TENU
+2c. --tags : attendu refus ; rendu refus (code 1 ; garde du crochet : oui « garde : refus vers refs/tags/etiquette-cl » ; distant change : non) ; TENU
+2d. --mirror : attendu refus ; rendu refus (code 1 ; garde du crochet : oui « garde : refus vers refs/heads/autre-branche-cl » ; distant change : non) ; TENU
+2e. effacement par --delete : attendu refus ; rendu refus (code 1 ; garde du crochet : oui « garde : refus vers refs/heads/recuperation/palier-0b-programme-1-essai-3-v1 » ; distant change : non) ; TENU
+2f. autre URL (meme serveur), vers main : attendu refus ; rendu refus (code 1 ; garde du crochet : oui « garde : refus vers refs/heads/main » ; distant change : non) ; TENU
+2g. nom de la branche permise suivi d'une barre : attendu refus ; rendu refus (code 128 ; garde du crochet : non  ; distant change : non) ; TENU
+3. sain : poussee descendante : attendu admis ; rendu admis (code 0 ; garde du crochet : non  ; distant change : OUI) ; TENU
+tete distante apres 3 : 720e3be85f9206b390f78743e50631510030f74b ; tete locale 720e3be85f9206b390f78743e50631510030f74b
+--- crochet pre-push du depot de versement (texte) :
+#!/bin/bash
+while read -r l ls r rs; do
+  [ "$r" = refs/heads/recuperation/palier-0b-programme-1-essai-3-v1 ] && [ -n "${ls//0/}" ] || { echo "garde : refus vers $r"; exit 1; }
+  [ -z "${rs//0/}" ] || git merge-base --is-ancestor $rs $ls || { echo "garde : refus, non descendante"; exit 1; }
+done
+droits du crochet : 755
+5a. contournement --no-verify vers une autre branche du depot factice : attendu admis ; rendu admis (code 0 ; garde du crochet : non  ; distant change : OUI) ; TENU
+5b. contournement core.hooksPath vers main du depot factice : attendu admis ; rendu refus (code 129 ; garde du crochet : non  ; distant change : non) ; ECHEC
