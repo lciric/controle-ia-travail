@@ -226,3 +226,13 @@ def test_aucune_suppression_ailleurs_dans_le_code_v5():
         for interdit in ("shutil.rmtree", "os.remove", "os.unlink", ".rmdir(", "subprocess"):
             assert interdit not in source, (f.name, interdit)
         assert source.count(".unlink(") == (1 if f.name == "lanceur_v5.py" else 0), f.name
+
+
+def test_fichier_d_entrees_relu_par_son_empreinte_citee(tmp_path):
+    config = _monde(tmp_path)
+    assert la.lire_entrees(config, tmp_path)["actions_oracle_hors_tours"] == 3520            # cas sain
+    faux = {**config, "pieces": {**config["pieces"], "entrees": {"chemin": "entrees/entrees-iib-v5.json", "sha256": "f" * 64}}}
+    with pytest.raises(GardeArret, match="empreinte citée"):
+        la.lire_entrees(faux, tmp_path)
+    absent = {**config, "pieces": {**config["pieces"], "entrees": {"chemin": "entrees/pas-la.json", "sha256": "f" * 64}}}
+    assert la.lire_entrees(absent, tmp_path) is None                                         # absent : « non calculable » à la désignation

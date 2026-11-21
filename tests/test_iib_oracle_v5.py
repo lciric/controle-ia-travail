@@ -172,3 +172,17 @@ def test_gardes_d_entree():
 def test_mediane_basse():
     assert ov.mediane_basse([5.0, None, 1.0, 3.0, 2.0, 4.0]) == 3.0 and ov.mediane_basse([4.0, 1.0, 3.0, 2.0]) == 2.0
     assert ov.mediane_basse([None, None]) is None
+
+
+def test_N_aux_deux_premieres_actions_son_contexte_est_celui_de_l_agent_sinon_arret(monkeypatch):
+    m = ModeleJouetDeLangue()
+    env = EnvironnementJouet("t1")
+    actions = _actions(m, COUTS)
+    bonnes = ov.prefixes_de_l_agent(m, env, actions)
+    ov.oracles_episode(m, env, actions, jm.Graines(1), CFG, "essai", "e", oracles=("N",), empreintes_agent=bonnes)       # cas sain
+    fausses = list(bonnes)
+    fausses[1] = "0" * 64
+    with pytest.raises(GardeArret, match="devrait être celui de l'agent"):
+        ov.oracles_episode(m, env, actions, jm.Graines(1), CFG, "essai", "e", oracles=("N",), empreintes_agent=fausses)
+    with pytest.raises(GardeArret, match="une empreinte de préfixe"):
+        ov.oracles_episode(m, env, actions, jm.Graines(1), CFG, "essai", "e", empreintes_agent=bonnes[:5])
