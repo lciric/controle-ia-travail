@@ -1,5 +1,10 @@
-"""Outils communs des essais de l'organisme retenu (v5) : étalonnage numérique jouet écrit et scellé, fichier d'entrées."""
+"""Outils communs des essais de l'organisme retenu (v5) : étalonnage numérique jouet écrit et scellé, fichier d'entrées ;
+environnements simulés des essais (correctif 0011) : poste sans carte ni accord, interpréteur du système sans numpy."""
 import json
+import os
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -36,3 +41,35 @@ def episode(oracle: str, exces: list, phase: str = "maitre", nom: str = "e0", sa
             l["exces"] = float(e)                      # excès imposé à la valeur exacte voulue (bornes incluses)
             lignes.append(l)
     return lignes
+
+
+# ---- correctif 0011 : l'environnement que simule un essai est écrit par l'essai, jamais hérité de la machine qui le joue ----
+def environnement_sans_carte(dossier: Path, base: dict) -> dict:
+    """Environnement d'un sous-processus qui simule un poste sans carte ni accord, où le mode jouet est permis : `base` sans
+    `IIB_GO_ID` (l'accord que le lanceur de session pose sur la machine) ; chemin réduit à un dossier neuf qui ne porte que
+    `git` (le manifeste du run lit le commit), donc sans `nvidia-smi` ; `CUDA_VISIBLE_DEVICES` vide, pour que torch, s'il est
+    installé, ne voie aucune carte (contrat de CUDA). Sur la machine louée (accord posé, `nvidia-smi` dans `/usr/bin`, torch
+    qui voit la carte), le seul chemin `/usr/bin:/bin` ne masquait rien : la garde « mode jouet sur une machine payante » a
+    joué dans l'essai lui-même (première tentative de l'étalonnage, 21 novembre). La garde, elle, ne change pas."""
+    git = shutil.which("git", path=base.get("PATH"))
+    if git is None:
+        raise RuntimeError("git introuvable dans le chemin de l'environnement de base : poste sans carte non constructible")
+    outils = Path(dossier) / "chemin-du-poste-sans-carte"
+    outils.mkdir(parents=True)
+    os.symlink(git, outils / "git")
+    env = {k: v for k, v in base.items() if k != "IIB_GO_ID"}
+    env.update({"PATH": str(outils), "CUDA_VISIBLE_DEVICES": ""})
+    return env
+
+
+def python_sans_numpy(dossier: Path) -> Path:
+    """Dossier `bin` d'un environnement virtuel vide (aucun paquet tiers) : son `python3` est celui du système de la machine
+    louée, sans numpy, que la surveillance du lanceur de session appelle par `python3 -I -B`. Vérifié avant emploi (R5) : un
+    `python3` qui verrait numpy ne simulerait pas la machine, et l'essai s'arrête."""
+    v = Path(dossier) / "environnement-vide"
+    v.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(v)], check=True, capture_output=True, timeout=120)
+    r = subprocess.run([str(v / "bin" / "python3"), "-I", "-B", "-c", "import numpy"], capture_output=True, text=True, timeout=60)
+    if r.returncode == 0 or "No module named 'numpy'" not in r.stderr:
+        raise RuntimeError(f"l'environnement virtuel vide voit numpy (code {r.returncode}) : interpréteur sans numpy non simulé")
+    return v / "bin"

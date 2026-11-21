@@ -14,6 +14,11 @@ création (carte et stockage) ; si cette ligne n'est pas encore relevée, elle s
 moins de dépense que la vraie). Elle ne joue que si la phase est l'étalonnage ; une phase illisible est un refus (la surveillance
 arrête : aucun repli silencieux). La règle rend une ligne « ARRET coupure de l'étalonnage : … » ou « RIEN … » ; l'arrêt se fait
 par l'identifiant (R10), puis la destruction par la sous-commande `destruction` du lanceur de session et ses gardes.
+
+**Correctif 0011** : la surveillance appelle la règle par `python3 -I -B` du système, où numpy peut manquer (machine louée,
+première tentative de l'étalonnage, 21 novembre : « No module named 'numpy' », par `configuration_v5` puis les lois exactes).
+Le chemin de la règle ne charge donc que la bibliothèque standard et `gardes` ; `configuration_v5` n'est chargé que par la
+sous-commande `config`, qui en a besoin. Rien d'autre ne change : seuil, compte, phase illisible refusée.
 """
 from __future__ import annotations
 
@@ -25,7 +30,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ..gardes import GardeArret
-from . import configuration_v5 as cf
 
 COUPURE_ETALONNAGE_USD = 12.0          # devis scellé : coupure propre de l'étalonnage, par une règle de la surveillance
 PHASES = ("etalonnage", "conditions", "course")
@@ -75,6 +79,8 @@ def ligne_de_coupure(r: dict) -> str:
 
 
 def verifier_config(chemin, racine=".") -> dict:
+    from . import configuration_v5 as cf          # numpy (lois exactes) : chargé ici seulement, jamais par la règle de coupure
+
     config = json.loads(Path(chemin).read_text(encoding="utf-8"))
     return cf.exiger_config_v5(config, racine, pour_lancer=True)
 

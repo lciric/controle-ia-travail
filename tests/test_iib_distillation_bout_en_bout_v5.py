@@ -31,11 +31,11 @@ def course(tmp_path_factory):
     modele, monde = ModeleJouetEleve(), la.MondeJouet()
     marques = []
     d = _distillateur(racine, modele, progres=lambda **c: marques.append(c))
-    la.phase_etalonnage(config, racine, racine / "course", d.modele, monde)
+    la.phase_etalonnage(config, racine, racine / "course", d.modele, monde, carte=False)      # poste simulé sans carte (correctif 0011)
     cond = la.phase_conditions(config, racine, racine / "course")
     avant = tmp_path_factory.mktemp("iib-v5-distillation-copie") / "depot"
     shutil.copytree(racine, avant)                                  # l'état scellé d'avant la course, pour les refus
-    res = la.phase_course(config, racine, "course", d.modele, monde, d) if cond["issue"] in ("N", "P") else None
+    res = la.phase_course(config, racine, "course", d.modele, monde, d, carte=False) if cond["issue"] in ("N", "P") else None
     return {"racine": racine, "avant": avant, "config": config, "modele": modele, "monde": monde, "d": d, "conditions": cond, "course": res,
             "marques": marques}
 
@@ -114,9 +114,9 @@ def test_course_refusee_avant_le_premier_tour_si_la_lecture_de_la_premiere_actio
     vide = copy.deepcopy(course["config"])
     vide[cd.SECTION]["perte"]["premiere_action"] = None
     with pytest.raises(GardeArret, match="premiere_action non remplie"):
-        la.phase_course(vide, racine, "course", d.modele, course["monde"], d)
+        la.phase_course(vide, racine, "course", d.modele, course["monde"], d, carte=False)
     sans = {k: v for k, v in course["config"].items() if k != cd.SECTION}
     with pytest.raises(GardeArret, match="absente"):
-        la.phase_course(sans, racine, "course", d.modele, course["monde"], d)
+        la.phase_course(sans, racine, "course", d.modele, course["monde"], d, carte=False)
     assert not (racine / "course" / la.NOMS["course"]).exists() and not (racine / "course" / la.NOMS["ids_course"]).exists()
     assert modele.contextes_generes == [] and d.moteur.journal == []                      # aucun épisode joué, aucun poids touché

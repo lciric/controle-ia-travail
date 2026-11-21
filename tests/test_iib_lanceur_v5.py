@@ -92,8 +92,8 @@ def test_second_passage_des_conditions_refuse(course):
     with pytest.raises(GardeArret, match="second passage"):
         la.phase_conditions(course["config"], course["racine"], course["racine"] / "course")
     # même si le seul résultat de la désignation a disparu, le résultat scellé des conditions suffit à refuser
-    with pytest.raises(GardeArret, match="déjà joué"):
-        la.phase_etalonnage(course["config"], course["racine"], course["racine"] / "course", course["modele"], course["monde"])
+    with pytest.raises(GardeArret, match="déjà joué"):            # poste simulé sans carte (correctif 0011)
+        la.phase_etalonnage(course["config"], course["racine"], course["racine"] / "course", course["modele"], course["monde"], carte=False)
 
 
 def test_course_du_maitre_oracle_de_la_regle_seul_puis_oracle_non_designe_sur_les_acceptes(course):
@@ -315,17 +315,21 @@ def test_une_garde_qui_arrete_laisse_les_lots_et_ecrit_le_motif(tmp_path):
         la.executer("etalonnage", config, tmp_path, "20991231-000000-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
 
 
-def test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree(tmp_path):
+def test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree(tmp_path, tmp_path_factory):
     """B1 : `python -m controle_ia.iib.lanceur_v5 --phase etalonnage`, puis `--phase conditions`, sur le monde jouet, comme
-    l'amorce les appelle (répertoire courant = racine du dépôt cloné ; sorties sous runs/, diag/, donnees/)."""
+    l'amorce les appelle (répertoire courant = racine du dépôt cloné ; sorties sous runs/, diag/, donnees/). Le sous-processus
+    joue sur un poste simulé sans carte ni accord, écrit par l'essai (correctif 0011 : sur la machine louée, `/usr/bin:/bin`
+    portait `nvidia-smi` et torch voyait la carte)."""
     import os
     import subprocess
     import sys
 
+    from iib_v5_outils import environnement_sans_carte
+
     config, chemin = _depot_jouet(tmp_path)
     run = "20991231-000001-iib-jouet"
-    env = {k: v for k, v in os.environ.items() if k != "IIB_GO_ID"}
-    env.update({"PYTHONPATH": str(DEPOT / "src"), "PATH": "/usr/bin:/bin"})          # aucune carte visible sur ce chemin
+    env = environnement_sans_carte(tmp_path_factory.mktemp("poste-sans-carte"), os.environ)     # hors du dépôt jouet : il reste propre
+    env["PYTHONPATH"] = str(DEPOT / "src")
     base = [sys.executable, "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-iib-v5-jouet.json", "--run-id", run]
     r = subprocess.run(base + ["--phase", "etalonnage"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=300)
     assert r.returncode == 0, r.stderr[-800:]
@@ -371,7 +375,7 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     for f in ("amorce_instance_iib_v5.sh", "lancer_iib_v3.sh"):
         assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
     amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
-    liste = s / "tests-cibles-iib-v5-v4.txt"
+    liste = s / "tests-cibles-iib-v5-v5.txt"                     # version 5 de la liste : environnement de la machine simulée (correctif 0011)
     assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
     fichiers = liste.read_text(encoding="utf-8").split()
     # tous les fichiers d'essais en version 5, distillateur compris, sauf celui du tokeniseur réel et celui du moteur à torch du
@@ -379,9 +383,9 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     # attendus de l'amorce, et le nombre doit être le même sur le poste et sur la machine)
     hors = ("tokeniseur_reel", "distillation_torch")
     assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py") if not any(h in f.name for h in hors))
-    assert len(fichiers) == 23 and not any(h in f for f in fichiers for h in hors)
+    assert len(fichiers) == 24 and not any(h in f for f in fichiers for h in hors)
     assert {"tests/test_iib_configuration_distillation_v5.py", "tests/test_iib_distillation_v5.py",
-            "tests/test_iib_distillation_bout_en_bout_v5.py"} <= set(fichiers)
+            "tests/test_iib_distillation_bout_en_bout_v5.py", "tests/test_iib_environnement_machine_v5.py"} <= set(fichiers)
     assert amorce.count("controle_ia.iib.lanceur_v5 --phase etalonnage --config") == 1 and "controle_ia.iib.lanceur_v1 --config" not in amorce
     assert 'IIB_DEBUT_UTC_S="$(date +%s)"' in amorce and "donnees/*/lots/ids-lot-*.json" in amorce
 
@@ -442,13 +446,17 @@ def test_coupure_de_l_etalonnage_regle_cas_sain_artefact_et_autre_phase():
 
 def _surveiller(tmp_path, phase, heures, journal_de_fin=False, duree=5):
     """La sous-commande « surveillance » du lanceur de session en version 3, faux outil de location, aucun réseau ; rend
-    (code, sortie, texte de la surveillance, appels au faux outil, dossier)."""
+    (code, sortie, texte de la surveillance, appels au faux outil, dossier). Le `python3` que la surveillance trouve en tête
+    du chemin est celui d'un environnement virtuel vide : sans numpy, comme le python3 du système de la machine louée
+    (correctif 0011 ; sur le poste, celui du système voyait numpy et cachait le défaut)."""
     import subprocess
     import time
     from datetime import datetime, timezone
 
+    from iib_v5_outils import python_sans_numpy
     from test_iib_lanceur_forme_v2 import FAUX_OUTIL
 
+    sans_numpy = python_sans_numpy(tmp_path / "python-du-systeme")
     d = tmp_path / "session"
     d.mkdir(parents=True)
     outil = tmp_path / "outil" / "vastai"
@@ -465,7 +473,7 @@ def _surveiller(tmp_path, phase, heures, journal_de_fin=False, duree=5):
     if phase is not None:
         (d / "amorce.sh").write_text("#!/usr/bin/env bash\n# commentaire : controle_ia.iib.lanceur_v5 --phase autre --config x\n"
                                      f'PYTHONPATH=src python -m controle_ia.iib.lanceur_v5 --phase {phase} --config "$CONFIG" --run-id "$RUN" &\n', encoding="utf-8")
-    e = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(tmp_path), "LANG": "C.UTF-8", "VAST": str(outil), "INTERVALLE": "1",
+    e = {"PATH": f"{sans_numpy}:/usr/local/bin:/usr/bin:/bin", "HOME": str(tmp_path), "LANG": "C.UTF-8", "VAST": str(outil), "INTERVALLE": "1",
          "FAUX_VASTAI_JOURNAL": str(tmp_path / "appels.txt"), "FAUX_JOURNAL": str(tmp_path / "journal.txt"),
          "CONTROLE_IA_GITHUB_TOKEN_2": "ghp_FACTICEfactice0123456789", "VAST_API_KEY": "cle-loueur-factice-0123456789abcdef"}
     r = subprocess.run(["timeout", "-k", "2", str(duree), "bash", str(DEPOT / "scripts" / "lancer_iib_v3.sh"), "surveillance", "61414494", str(d)],

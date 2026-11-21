@@ -32,7 +32,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
 from test_t06_v12_scripts import OFFRES  # noqa: E402
 
 ID, AUTRE = "61414494", 58936096
-ATTENDUS = 271        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v4.txt`), relevés à la répétition
+ATTENDUS = 275        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v5.txt`, correctif 0011 : 271 et les 4 de l'environnement de la machine simulée)
 CONFIG = "prereg/config-iib-v5-jouet.json"
 RECHERCHE = '''"search offers")
     case "$3" in id=*) echo '[]'; exit 0;; esac
