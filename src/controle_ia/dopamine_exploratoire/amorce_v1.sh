@@ -33,6 +33,9 @@ VERSEMENT_S=900
 PERIODE_VERSEMENT_S=600
 PAS_ATTENTE_S=5
 VERSION_VLLM=0.11.0
+# vLLM 0.11.0 demande transformers >= 4.55.2 sans borne haute : sans épingle, le résolveur prend transformers 5 (essai à
+# blanc de pip du 21 novembre 2026, 157 paquets, transformers 5.24.0), d'une génération postérieure à vLLM 0.11.0
+VERSION_TRANSFORMERS_VLLM=4.57.1
 MODELE=meta-llama/Llama-3.1-8B-Instruct
 MIN_ESSAIS=126
 TEMOIN="$T/versement-final-prouve"
@@ -264,7 +267,7 @@ python3 -m venv "$T/venv" && timeout 3600 "$T/venv/bin/pip" install -q --no-cach
 PY="$T/venv/bin/python"
 "$PY" -c 'import torch, sys; sys.exit(0 if torch.cuda.is_available() else 1)' || arret "torch ne voit pas la carte" 2
 if true; then
-    python3 -m venv "$T/venv-vllm" && timeout 3600 "$T/venv-vllm/bin/pip" install -q --no-cache-dir "vllm==$VERSION_VLLM" scipy > "$X/pip-vllm.txt" 2>&1 || arret "installation de vLLM $VERSION_VLLM" 2
+    python3 -m venv "$T/venv-vllm" && timeout 3600 "$T/venv-vllm/bin/pip" install -q --no-cache-dir "vllm==$VERSION_VLLM" "transformers==$VERSION_TRANSFORMERS_VLLM" scipy > "$X/pip-vllm.txt" 2>&1 || arret "installation de vLLM $VERSION_VLLM" 2
 fi
 cd "$D" || arret "dépôt" 2
 # 4. essais du paquet

@@ -3,8 +3,8 @@
 Invite. Le tableau 6 (p. 19) écrit `prompt_type = qwen-boxed`, nom d'un gabarit du banc d'évaluation de Qwen2.5-Math
 (texte ChatML brut). Plan des étapes 0-1, § B.2 : lecture principale « gabarit_du_modele » (défaut) — gabarit de dialogue
 de Llama, avec la consigne du système (« You are a helpful assistant. ») et la phrase finale de « qwen-boxed » ; variante
-« litteral » : la chaîne de Qwen à la lettre. Libellé SUPPOSÉ (de mémoire, à relever sur le code public de l'outil
-d'évaluation Qwen2.5-Math avant la course, plan § B.2 et condition 3 du devis).
+« litteral » : la chaîne de Qwen à la lettre. Libellé relevé le 21 novembre 2026 sur sa source, QwenLM/Qwen2.5-Math,
+`evaluation/utils.py` (branche main, sha256 du fichier 5c9d0c01…b116), l. 134 à 140 : identique à `GABARIT_QWEN_BOXED`.
 
 Vérificateur. Extraction de la dernière boîte (`\\boxed{…}` ou `\\fbox{…}`, accolades appariées), normalisation à la
 manière de Hendrycks et al. (fractions, `\\left`, unités en `\\text`, degrés, dollars, espaces), égalité des chaînes
