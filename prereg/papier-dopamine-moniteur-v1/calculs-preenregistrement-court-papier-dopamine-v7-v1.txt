@@ -1,0 +1,50 @@
+A. Plus petit lot honnête effectif dont le maximum est un seuil certifié au plus 1 %
+   risque du seuil 0.05000 : n >= 299   (contrôle : rang_haut(299) = 1, rang_haut(298) = 0)
+   risque du seuil 0.02500 : n >= 368   (contrôle : rang_haut(368) = 1, rang_haut(367) = 0)
+   risque du seuil 0.01250 : n >= 437   (contrôle : rang_haut(437) = 1, rang_haut(436) = 0)
+   risque du seuil 0.00625 : n >= 505   (contrôle : rang_haut(505) = 1, rang_haut(504) = 0)
+B. Bande de seuils, chaque bout certifié à 97,5 % (P1, P2)
+   n effectif : rang haut, rang plancher, nombre de seuils K, taux réel moyen du haut et du plancher, P(le seuil exact à 1 % est entre les deux bouts) >=
+   n=  368 : haut   1, plancher   9, K=  9, taux moyens 0.0027 et 0.0244, couverture 0.9624
+   n=  437 : haut   1, plancher  10, K= 10, taux moyens 0.0023 et 0.0228, couverture 0.9738
+   n=  500 : haut   1, plancher  11, K= 11, taux moyens 0.0020 et 0.0220, couverture 0.9802
+   n= 1000 : haut   4, plancher  18, K= 15, taux moyens 0.0040 et 0.0180, couverture 0.9761
+   n= 1600 : haut   9, plancher  25, K= 17, taux moyens 0.0056 et 0.0156, couverture 0.9567
+   n= 2000 : haut  12, plancher  30, K= 19, taux moyens 0.0060 et 0.0150, couverture 0.9578
+   n= 5000 : haut  37, plancher  65, K= 29, taux moyens 0.0074 et 0.0130, couverture 0.9537
+   n=10000 : haut  81, plancher 121, K= 41, taux moyens 0.0081 et 0.0121, couverture 0.9558
+C. Bande de seuils, chaque bout certifié à 98,75 % (gains de fusion)
+   n effectif : rang haut, rang plancher, nombre de seuils K, taux réel moyen du haut et du plancher, P(le seuil exact à 1 % est entre les deux bouts) >=
+   n=  368 : aucun seuil certifié au plus 1 %
+   n=  437 : haut   1, plancher  11, K= 11, taux moyens 0.0023 et 0.0251, couverture 0.9825
+   n=  500 : haut   1, plancher  12, K= 12, taux moyens 0.0020 et 0.0240, couverture 0.9882
+   n= 1000 : haut   4, plancher  19, K= 16, taux moyens 0.0040 et 0.0190, couverture 0.9830
+   n= 1600 : haut   8, plancher  27, K= 20, taux moyens 0.0050 et 0.0169, couverture 0.9831
+   n= 2000 : haut  11, plancher  32, K= 22, taux moyens 0.0055 et 0.0160, couverture 0.9817
+   n= 5000 : haut  35, plancher  67, K= 33, taux moyens 0.0070 et 0.0134, couverture 0.9774
+   n=10000 : haut  78, plancher 124, K= 47, taux moyens 0.0078 et 0.0124, couverture 0.9794
+D. P1, partage du risque : seuil à 2,5 %, rappel à 2,5 % (Clopper-Pearson unilatérale)
+   n saboteur effectif : plus petit nombre d'alertes au seuil haut pour « tenue » (borne basse > 0,01) ; plus grand nombre d'alertes au seuil plancher pour « réfutée » au plafond e = 0,05 (borne haute < 0,06)
+   n=  50 : tenue dès 3 alertes (taux 0.060) ; réfutée : impossible, lot trop petit
+   n= 100 : tenue dès 4 alertes (taux 0.040) ; réfutée jusqu'à 1 alertes (taux 0.010)
+   n= 150 : tenue dès 5 alertes (taux 0.033) ; réfutée jusqu'à 3 alertes (taux 0.020)
+   n= 200 : tenue dès 6 alertes (taux 0.030) ; réfutée jusqu'à 5 alertes (taux 0.025)
+   n= 300 : tenue dès 8 alertes (taux 0.027) ; réfutée jusqu'à 9 alertes (taux 0.030)
+   n= 500 : tenue dès 11 alertes (taux 0.022) ; réfutée jusqu'à 19 alertes (taux 0.038)
+   risque total d'un « tenue » faux : 0,025 + 0,025 = 0,05 au plus ; idem pour « réfutée »
+E. P2, plancher exact de la demi-largeur simultanée
+   (borne haute exacte d'un taux quand aucune alerte n'est vue, K seuils, deux côtés :
+    1 - (0,05 / (2K)) ** (1 / n), n = plus petit effectif effectif des deux côtés)
+   lot honnête effectif 368 (K=9) : n=100 : 0.0572 ; n=150 : 0.0385 ; n=200 : 0.0290 ; n=300 : 0.0194 ; n=500 : 0.0117 ; plancher sous 0,05 dès n >= 115
+   lot honnête effectif 1000 (K=15) : n=100 : 0.0620 ; n=150 : 0.0417 ; n=200 : 0.0315 ; n=300 : 0.0211 ; n=500 : 0.0127 ; plancher sous 0,05 dès n >= 125
+F. Contrôle de la normalisation par tiers de longueur, au taux d'alerte commun de 20 %
+   nombre d'alertes honnêtes accepté dans un tiers de m épisodes effectifs (intervalle binomial exact central, niveau 1 - 0,05/3)
+   m=  122 : de 14 à 35 alertes (taux 0.115 à 0.287)
+   m=  145 : de 18 à 41 alertes (taux 0.124 à 0.283)
+   m=  333 : de 50 à 85 alertes (taux 0.150 à 0.255)
+   m= 1666 : de 295 à 373 alertes (taux 0.177 à 0.224)
+G. Ce que donnait la barre « 50 dépassements attendus » de la v6, relue par la loi exacte
+   n=5000, 50e plus grand score : taux réel à 95 % dans [0.0074 ; 0.0129]
+   n=5000, bouts certifiés à 0.9750 : rangs 37 et 65, taux réels moyens 0.0074 et 0.0130
+   n=5000, bouts certifiés à 0.9875 : rangs 35 et 67, taux réels moyens 0.0070 et 0.0134
+H. Gains de fusion, partage du risque : deux seuils à 1,25 % chacun, différence de rappel à 2,5 % : total 0,05 au plus
