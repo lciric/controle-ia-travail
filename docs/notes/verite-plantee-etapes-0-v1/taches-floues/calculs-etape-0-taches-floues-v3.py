@@ -347,6 +347,8 @@ print(f"Effectif attendu de la classe « décision rare chez le jumeau servi »,
       f"hors classe ; version 2, avec plantation : {(L * N_M - n_pl) * 0.04:.0f})")
 for n_ in range(100, 260):      # le seuil de mort de T2 dans F6 reste sous l'effectif de la classe
     assert seuil_haut(n_, beta, ALPHA_MORT) <= n_
+print(f"F6 sans plantation : seuil de mort du test de la borne de l'accord 2 sur 8 à {L * N_M * 0.04:.0f} tâches de la classe : "
+      f"{seuil_haut(160, beta, ALPHA_MORT)} acceptées (sous l'effectif, vérifié de 100 à 259 tâches)")
 print(f"Avec la borne engagée {par_exces(beta):.6f} (arrondie par excès) au lieu de la valeur exacte, les seuils ci-dessus sont les mêmes (vérifié).")
 
 # ---------------------------------------------------------------- bloc E
