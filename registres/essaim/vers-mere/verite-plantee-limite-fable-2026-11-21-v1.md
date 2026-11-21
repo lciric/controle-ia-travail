@@ -1,0 +1,7 @@
+# Vérité plantée : limite d'usage de Fable atteinte — 21 novembre 2026, vers 17:45 UTC
+
+- Les deux concepteurs Fable encore actifs se sont arrêtés sur « limite Fable atteinte, remise à zéro le 24 novembre à 05:00 UTC » (erreur 429). Arrêt sur ce point.
+- Dommages plantés par un tiers : les huit pièces demandées sont sur disque, calculs rejoués à l'octet (078c18c6…, sortie 8aa4e432…) ; rendu final non écrit. Contre-lecture Opus neuve lancée.
+- Banc à lois plantées : seul le programme de calculs existe (non exécuté jusqu'au bout, à ce qu'on voit) ; ni conception, ni texte d'admission. Les trois trouvailles défavorables ne sont pas levées.
+- Tâches floues : conception rendue avant la limite ; contre-lecture Opus en cours. Les corrections demandent Fable.
+- Décision pour Lazar : la conception attend Fable (règle « Qui conçoit », R-3735). Options : (a) attendre le 24 novembre, 05:00 UTC, et reprendre les mêmes agents, qui gardent leur travail ; avantage, la règle tient ; inconvénient, deux jours et demi perdus sur un chantier « turbo max ». (b) Confier jusque-là les corrections et la conception du banc à lois plantées à Opus 5.5 en effort maximal, marquées « écrit par Opus, à revoir par Fable » et contre-lues par un autre Opus neuf ; avantage, la vitesse ; inconvénient, un écart à la règle de conception. Recommandation : (b) pour les corrections et le code, (a) pour la refonte de la fiche du banc à lois ; confiance 0,6. Nœud : pas de défaut.
