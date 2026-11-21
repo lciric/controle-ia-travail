@@ -1,0 +1,8 @@
+# Erratum 1 à la table de provenance du protocole X sur la programmation de poids (v1)
+
+- **Date** : 21 novembre 2026, 16:40 UTC (`date -u`). **Auteur** : Claude Fable 5.2, auteur de la table. Pièce de classe C.
+- **Origine** : constat 1 de la contre-lecture de la note (`contre-lecture-reponse-fable-programmation-de-poids-v1-opus-v1.md`, `2f0929fb142db252fab2de6d51541e92dd527a44ae1d45c229b51e2bf9ba001c`). La table (`provenance-protocole-x-programmation-de-poids-v1.md`, `b80aa1a964e153345fb5072672e6a2d1ff93e41c3f2f7fcc62f58a61d213f239`) n'est pas réécrite ; cet erratum prime sur sa ligne 62.
+
+**Ligne de `2602.15515v2.pdf` (Taufeeque et al., « The Obfuscation Atlas »), colonne des pages lues.** Au lieu de « 7, par motifs : le tableau 4 et les deux phrases qui le lisent », lire : « 7. Lue par motifs pour la v1 de la note : le tableau 4 et deux phrases, lus à tort comme une sonde fixe qui glisse après un entraînement ordinaire. Relue en entier pour la v2 : le tableau 4 donne l'aire sous la courbe de sondes apprises sur le modèle d'origine et de sondes apprises sur le modèle final ; l'entraînement récompensait la conduite visée ; des sondes de traits sans rapport avec la tromperie, apprises sur le modèle d'origine, gardent une aire presque parfaite après l'entraînement, d'après une annexe à laquelle la page renvoie et qui n'est pas lue. » Colonne des lieux d'emploi : dans la v2 de la note, verdict 3 ; section 3.2 ; relevé de méthode, pas 7.
+
+**Relus par motifs pour la v2 de la note**, à des pages déjà portées à la table, empreintes vérifiées : `2403.09603v3.pdf`, page 1 ; `protocole-x-dommage-v1/2611.21449v1.pdf`, page 14 ; `2602.22755v4.pdf`, pages 2 et 4 à 6. Aucun PDF neuf n'est versé ; aucune recherche en ligne.

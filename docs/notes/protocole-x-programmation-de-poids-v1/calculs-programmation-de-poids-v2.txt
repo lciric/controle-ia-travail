@@ -1,0 +1,274 @@
+Calculs de la note sur la programmation de poids (v2). Entrées : suppositions d'illustration.
+python 3.13.18 ; numpy 2.5.3 ; entropie racine 20261121 ; clé de dérivation = (numéro de bloc, rang du cas).
+
+====================================================================================================
+BLOC A — Vérifier les poids par sondage ou en entier (loi hypergéométrique)
+====================================================================================================
+Objets de contrôle : tout vérifier rend 1 ; ne rien vérifier rend 0 ; un seul bloc modifié rend m/N. Tenus.
+
+N = nombre de blocs ; deux découpages supposés : 291 tenseurs ; 15 317 blocs d'un mébioctet
+(16,06 milliards d'octets, soit 8,03 milliards de paramètres sur 16 bits : supposé).
+
+      N  blocs modifiés  part vérifiée  vu à un chargement   chargements attendus avant de voir
+    291               1             1%              0.0103                                 97.0
+    291               1            10%              0.0997                                 10.0
+    291               1            50%              0.5017                                  2.0
+    291               1           100%              1.0000                                    1
+    291               2             1%              0.0205                                 48.7
+    291               2            10%              0.1897                                  5.3
+    291               2            50%              0.7526                                  1.3
+    291               2           100%              1.0000                                    1
+    291               8             1%              0.0805                                 12.4
+    291               8            10%              0.5729                                  1.7
+    291               8            50%              0.9966                                  1.0
+    291               8           100%              1.0000                                    1
+  15317               1             1%              0.0100                                100.1
+  15317               1            10%              0.1000                                 10.0
+  15317               1            50%              0.5000                                  2.0
+  15317               1           100%              1.0000                                    1
+  15317               2             1%              0.0199                                 50.3
+  15317               2            10%              0.1900                                  5.3
+  15317               2            50%              0.7500                                  1.3
+  15317               2           100%              1.0000                                    1
+  15317               8             1%              0.0772                                 13.0
+  15317               8            10%              0.5697                                  1.8
+  15317               8            50%              0.9961                                  1.0
+  15317               8           100%              1.0000                                    1
+
+Lecture : un écart de quelques blocs n'est vu à coup sûr qu'en vérifiant tout ; à 10 % de sondage,
+un écart d'un bloc attend dix chargements en moyenne. Des empreintes par tenseur ne coûtent rien de
+plus à calculer et disent où l'écart loge.
+
+====================================================================================================
+BLOC B — Témoins-leurres plantés parmi des unités candidates (loi hypergéométrique, mélange binomial)
+====================================================================================================
+Objets de contrôle : discernement nul, loi hypergéométrique nue ; discernement parfait, 0 ; aucun témoin, 0. Tenus.
+
+D = 1 000 unités candidates (supposé). k = unités écrites : 1, 7, 10 (« moins de dix », ordre publié).
+
+ témoins w  unités écrites k    a = 0.0    a = 0.5    a = 0.9   a = 0.99
+        10                 1      0.010      0.005      0.001      0.000
+        10                 7      0.068      0.035      0.007      0.001
+        10                10      0.096      0.049      0.010      0.001
+        50                 1      0.050      0.026      0.005      0.001
+        50                 7      0.302      0.166      0.036      0.004
+        50                10      0.403      0.229      0.051      0.005
+       100                 1      0.100      0.053      0.011      0.001
+       100                 7      0.523      0.315      0.074      0.008
+       100                10      0.653      0.418      0.105      0.011
+       300                 1      0.300      0.176      0.041      0.004
+       300                 7      0.918      0.744      0.254      0.029
+       300                10      0.972      0.857      0.343      0.042
+
+Fausse alerte d'une écriture honnête, si elle dérange chaque témoin avec la probabilité h, indépendamment :
+ témoins w      h = 0.0   h = 0.0001    h = 0.001     h = 0.01
+        10       0.0000       0.0010       0.0100       0.0956
+        50       0.0000       0.0050       0.0488       0.3950
+       100       0.0000       0.0100       0.0952       0.6340
+       300       0.0000       0.0296       0.2593       0.9510
+
+Ce que K écritures honnêtes sans un seul témoin dérangé permettent de garantir (règle de trois :
+h <= 3 / (K w) à 95 %), exprimé en fausse alerte par écriture, 1 - (1 - 3/(K w))^w :
+ K écritures honnêtes     w = 10    w = 100    w = 300
+                    3      0.651      0.634      0.633
+                   10      0.263      0.260      0.259
+                   30      0.096      0.095      0.095
+                  100      0.030      0.030      0.030
+                  300      0.010      0.010      0.010
+
+Lecture : la garantie de fausse alerte par écriture vaut à peu près 3 / K quel que soit le nombre de
+témoins : dix écritures honnêtes ne garantissent que 26 %, il en faut trois cents pour 1 %.
+
+====================================================================================================
+BLOC C — Une accumulation à travers une frontière d'écriture (tirages à graines, mélange de paris)
+====================================================================================================
+Objets de contrôle : sans déplacement, part des trajectoires qui sonnent en 5000 épisodes = 0.0068 (au plus 0,013 attendu) ; déplacement de 0,5, délai médian = 42 épisodes (20 à 80 attendu) ;
+la part qui sonne croît avec le déplacement. Tenus.
+Grille des lambdas : (0.05, 0.1, 0.2, 0.3, 0.5) ; alpha = 0.01 ; 10000 trajectoires de 5000 épisodes par cas.
+
+C1 — Part des trajectoires qui sonnent avant n épisodes, selon le déplacement moyen du score par épisode.
+La même table se lit de deux façons : un saboteur qui déplace le score de mu ; ou un honnête dont le
+score a glissé de mu après une écriture bénigne, lu contre la référence d'avant l'écriture.
+ déplacement mu    n = 50   n = 100   n = 200   n = 500  n = 1000  n = 2000  n = 5000  délai médian
+            0.0    0.0016    0.0027    0.0037    0.0049    0.0054    0.0057    0.0068        > 5000
+           0.05    0.0032    0.0079    0.0151    0.0350    0.0733    0.1965    0.6227          4117
+            0.1    0.0077    0.0245    0.0614    0.1999    0.4949    0.8975    0.9999          1008
+            0.2    0.0487    0.1503    0.4086    0.8981    0.9984    1.0000    1.0000           236
+            0.3    0.1520    0.4563    0.8660    0.9998    1.0000    1.0000    1.0000           108
+            0.5    0.6304    0.9647    1.0000    1.0000    1.0000    1.0000    1.0000            42
+
+C2 — La preuve fractionnée par les écritures. Si l'accumulation repart de zéro à chaque écriture, toutes les
+T épisodes, un saboteur de déplacement mu n'est pris que dans une fenêtre où le pari sonne avant T.
+Épisodes servis par le saboteur avant l'alerte, en espérance = T (1 - pi) / pi + délai moyen dans la
+fenêtre qui sonne, pi étant la part des fenêtres qui sonnent (table C1). Colonne « sans remise à zéro » :
+délai moyen sur les trajectoires qui sonnent en 5 000 épisodes (part dite entre parenthèses ; pour
+mu = 0,05 la moyenne est tronquée, donc trop basse).
+ déplacement mu      T = 50     T = 100     T = 200     T = 500    T = 1000    T = 2000     sans remise à zéro
+           0.05       15609       12613       13145       14026       13163        9325           2769 (0.623)
+            0.1        6479        4044        3174        2283        1588        1169           1102 (1.000)
+            0.2        1013         629         409         285         269         269            269 (1.000)
+            0.3         315         182         132         121         121         121            121 (1.000)
+            0.5          62          49          47          47          47          47             47 (1.000)
+
+Le même tableau en facteur : ce que la remise à zéro multiplie, par rapport à l'accumulation continue
+(déplacements où toutes les trajectoires continues sonnent en 5 000 épisodes) ; dernière colonne : le
+rapport de la période T au délai médian continu à partir duquel le facteur passe sous 1,1.
+ déplacement mu      T = 50     T = 100     T = 200     T = 500    T = 1000    T = 2000   T / médiane au seuil
+            0.1        5.88        3.67        2.88        2.07        1.44        1.06         2.0 (T = 2000)
+            0.2        3.77        2.34        1.52        1.06        1.00        1.00          2.1 (T = 500)
+            0.3        2.60        1.50        1.08        1.00        1.00        1.00          1.9 (T = 200)
+            0.5        1.31        1.02        1.00        1.00        1.00        1.00          2.4 (T = 100)
+Erreur de tirage : pi est estimée sur 10 000 trajectoires ; quand elle vaut moins de 1 %, le nombre rendu
+n'est juste qu'à 10 ou 20 % près. Cas concernés : mu = 0.05, T = 50 ; mu = 0.05, T = 100 ; mu = 0.1, T = 50.
+
+C3 — La cadence qui laisse à la boucle de réapprentissage le temps de se fermer. Épisodes par état des
+poids pour que le plancher d'audit livre L épisodes endommagés étiquetés : L / (p q rho), avec p la part
+auditée, q = 1 la reconnaissance par l'oracle (supposée), rho la part d'épisodes endommagés.
+ étiquettes L  part auditée p   rho = 0.02   rho = 0.05    rho = 0.2
+           30            0.05        30000        12000         3000
+           30             0.2         7500         3000          750
+          100            0.05       100000        40000        10000
+          100             0.2        25000        10000         2500
+
+C4 — La référence honnête refaite à chaque état des poids. Part d'actes sabotés qui reste cachée à
+puissance un demi, pour un test sur la moyenne au niveau 1 % : z racine(1/n + 1/m) / mu, mu = 0,5
+(formule et valeurs de la loi de la référence honnête du programme ; n épisodes surveillés par état,
+m épisodes honnêtes de référence par état).
+Objet de contrôle : m = 400, n très grand, attendu 23,3 % (valeur du programme) ; rendu 23.3%. Tenu.
+ n par état  m par état  part cachée   surcoût de témoins m/n
+        100         100        65.8%                     100%
+        200         200        46.5%                     100%
+        400         400        32.9%                     100%
+       1600        1600        16.4%                     100%
+        400         100        52.0%                      25%
+       1600         400        26.0%                      25%
+       6400         400        24.0%                       6%
+       6400        1600        13.0%                      25%
+
+C5 — Ce que la remise à zéro coûte à l'honnête sur l'horizon, et la remise à zéro à niveau réparti (v2).
+C2 garde un niveau de 1 % dans chaque état des poids : chaque remise à zéro dépense de nouveau ce
+niveau. Ici, l'honnête sans aucun déplacement, sur l'horizon de 5 000 épisodes, une écriture toutes les
+T épisodes : part des trajectoires qui sonnent au moins une fois. Deux voies : le compte direct sur les
+tirages du cas sans déplacement, recoupés en fenêtres ; et 1 - (1 - p_T)^(5000 / T), p_T étant la ligne
+« 0.0 » de C1 (fenêtres supposées indépendantes). Puis la même chose quand le niveau est réparti
+également entre les W états de l'horizon (alpha / W par état, seuil W / alpha).
+ période T  états W  niveau plein, direct  niveau plein, formule  niveau réparti, direct  seuil réparti
+        50      100                0.1238                 0.1480                  0.0003          10000
+       100       50                0.1144                 0.1264                  0.0011           5000
+       200       25                0.0874                 0.0885                  0.0033           2500
+       500       10                0.0463                 0.0479                  0.0039           1000
+      1000        5                0.0268                 0.0267                  0.0042            500
+      2000        3                0.0179                 0.0142                  0.0045            300
+Repère : sans remise à zéro, 0.0068 (la valeur de C1, retrouvée sur les mêmes tirages).
+Objets de contrôle : niveau plein et T = 50 entre 0,08 et 0,25 ; la part décroît avec T ; niveau réparti
+au plus 0,013 à toute période. Tenus. Erreur de tirage : un écart type de 0,004 au plus sur 10 000
+trajectoires ; la formule repose sur p_T, estimée sur 16 à 57 trajectoires, donc juste à 15 ou 25 % près.
+
+Le saboteur devant la remise à zéro à niveau réparti. Même espérance qu'en C2, T (1 - pi) / pi + délai
+moyen dans la fenêtre qui sonne, pi étant cette fois la part des fenêtres où le pari atteint W / alpha ;
+en facteur de l'accumulation continue. Seconde ligne de chaque déplacement : part des saboteurs pris sur
+l'horizon de 5 000 épisodes (fenêtres indépendantes ; la dernière est plus courte pour T = 2 000).
+ déplacement mu                   T = 50     T = 100     T = 200     T = 500    T = 1000    T = 2000   en continu
+            0.1      facteur      aucune       75.62       27.45        6.73        2.74        1.37         1.00
+                  part prise       0.000       0.058       0.153       0.494       0.825       0.980        1.000
+            0.2      facteur      206.62       24.07        6.22        1.76        1.32        1.22         1.00
+                  part prise       0.086       0.540       0.954       1.000       1.000       1.000        1.000
+            0.3      facteur       87.64        7.25        2.34        1.44        1.31        1.21         1.00
+                  part prise       0.376       0.997       1.000       1.000       1.000       1.000        1.000
+            0.5      facteur        8.02        2.05        1.58        1.41        1.29        1.20         1.00
+                  part prise       1.000       1.000       1.000       1.000       1.000       1.000        1.000
+« aucune » : aucune des 10 000 trajectoires n'atteint le seuil réparti dans la fenêtre.
+Erreur de tirage : moins de 100 trajectoires atteignent le seuil dans la fenêtre, donc facteur juste à
+10 % près au mieux, pour : mu = 0.1, T = 100 ; mu = 0.1, T = 200 ; mu = 0.2, T = 50 ; mu = 0.3, T = 50.
+Objets de contrôle : chaque facteur au moins égal à celui de C2 ; part prise au plus celle du continu. Tenus.
+Lecture : les facteurs de C2 sont des bornes basses de ce qu'une remise à zéro valide sur l'horizon coûte.
+
+====================================================================================================
+BLOC D — Recouvrement entre deux écritures de rang bas : le plancher du hasard (tirages à graines)
+====================================================================================================
+Largeur d = 4 096 (supposée, celle d'un modèle de huit milliards de paramètres). 2 000 tirages par rang.
+ rang r  espérance r/d  moyenne simulée   médiane  quantile 0,999   maximum
+      1        0.00024          0.00025   0.00011         0.00240   0.00362
+     16        0.00391          0.00390   0.00390         0.00508   0.00529
+     64        0.01562          0.01562   0.01561         0.01662   0.01665
+Objets de contrôle : rang plein, recouvrement 1 ; moyennes simulées à trois écarts types de r/d. Tenus.
+
+Lecture : entre deux adaptateurs sans rien de commun, le recouvrement attendu est de 0,4 % au rang 16 et
+de 1,6 % au rang 64. Une similarité de 0,5 sur la première direction singulière, rapportée entre deux
+entraînements du même travail, est donc très au-dessus du plancher ; ce sont les directions suivantes,
+non partagées entre graines, qui forment la dispersion de l'honnête où un écart peut se loger.
+
+====================================================================================================
+BLOC E — Auditer les écritures par rejeu : taux exigé et enjeu (loi géométrique)
+====================================================================================================
+Part des écritures à rejouer pour prendre une déviation avant la K-ième, avec probabilité 0,95 :
+K = 1 : 0.950 ; K = 2 : 0.776 ; K = 5 : 0.451 ; K = 10 : 0.259 ; K = 20 : 0.139 ;
+
+Écritures déviantes attendues avant la première prise, (1 - q) / q, et épisodes servis par ces écritures
+si chaque état des poids sert T épisodes avant le suivant :
+ part rejouée q  écritures déviantes     T = 200    T = 1000    T = 5000
+           0.05                19.00        3800       19000       95000
+            0.2                 4.00         800        4000       20000
+            0.5                 1.00         200        1000        5000
+           0.95                 0.05          11          53         263
+            1.0                 0.00           0           0           0
+
+Repère (v2) : au même taux de 0,2 appliqué aux épisodes, en régime de signature, 4 épisodes endommagés
+passent en moyenne avant la prise ; appliqué aux écritures, 4 écritures déviantes passent en moyenne avant
+la première prise par rejeu, soit 4 T épisodes servis par un état dévié. Ces épisodes ne sont pas hors de
+tout contrôle : l'audit sur l'issue continue de les tirer. Si l'état dévié endommage une part rho des
+épisodes dans la couverture de l'oracle, auditée au taux p, l'audit sur l'issue prend le premier après
+1 / (p rho) épisodes en moyenne (oracle supposé sans erreur) :
+ part auditée p   rho = 0.05   rho = 0.01  rho = 0.001
+           0.05          400         2000        20000
+            0.2          100          500         5000
+À p = q = 0,2 et mille épisodes par état, les 4 000 épisodes ne passent avant toute prise que si rho
+est sous 0.00125 (un épisode sur 800), ou si le dommage est logé hors de l'épisode, ou si la
+déviation n'a pas d'effet sur l'issue auditée : c'est ce dommage-là que seul le rejeu de l'écriture voit.
+Objets de contrôle : q = 1 rend 0 ; K = 1 exige 0,95 ; p = rho = 1 rend 1. Tenus.
+
+====================================================================================================
+BLOC F — Le rang d'une écriture parmi K écritures jumelles : ce que coûte un niveau (lois exactes)
+====================================================================================================
+Sur une seule écriture, le plus petit niveau atteignable vaut 1 / (K + 1) : 5 % demande 19 jumelles, 1 % en demande 99.
+
+En accumulant W écritures, chacune la plus extrême de ses K + 1 : niveau (1 / (K + 1))^W.
+ jumelles K  écritures W pour 1 %  niveau atteint   entraînements jumeaux K W
+          1                     7          0.0078                           7
+          2                     5          0.0041                          10
+          4                     3          0.0080                          12
+          9                     2          0.0100                          18
+         19                     2          0.0025                          38
+         99                     1          0.0100                          99
+
+Si l'on suppose en plus que la statistique est normale d'une graine à l'autre : l'écart que le suspect
+doit dépasser, en écarts types de graine, pour sonner sur une seule écriture, t(K - 1) racine(1 + 1/K) :
+ jumelles K  niveau 5 %  niveau 1 %
+          3        3.37        8.04
+          5        2.34        4.10
+         10        1.92        2.96
+         20        1.77        2.60
+Objets de contrôle : trois quantiles de Student connus (3,747 ; 1,833 ; 2,920), retrouvés à 0,002 près. Tenus.
+
+====================================================================================================
+BLOC G — Le rodage tiré au sort : voir qu'une écriture a augmenté le dommage (lois exactes)
+====================================================================================================
+Objets de contrôle : deux états égaux, part des rodages qui accusent le nouveau au plus 0,01 (quatre cas) ;
+ancien état sans aucun dommage, sept épisodes endommagés du bras neuf exigés pour conclure. Tenus.
+
+Part des rodages qui voient l'écriture, selon le nombre n d'épisodes audités par bras.
+Dernière colonne : épisodes de rodage pour le plus petit n du tableau qui atteint une part de 0,9,
+à 20 % d'audit et moitié des épisodes par état (soit 10 n).
+ ancien état  nouvel état   n = 100   n = 200   n = 400   n = 800  n = 1600   rodage pour 0,9
+        0.10         0.15     0.073     0.166     0.389     0.738     0.972             16000
+        0.10         0.20     0.301     0.646     0.944     0.999     1.000              4000
+        0.02         0.05     0.052     0.168     0.423     0.812     0.989             16000
+        0.02         0.10     0.459     0.851     0.995     1.000     1.000              4000
+        0.00         0.02     0.004     0.109     0.689     0.996     1.000              8000
+        0.00         0.05     0.234     0.876     1.000     1.000     1.000              4000
+
+Si l'on sait par ailleurs que l'honnête ne commet jamais l'événement audité (régime de signature), une
+prise suffit : part des rodages qui voient un taux de 2 % en n audits du bras neuf, 1 - 0,98^n :
+n = 100 : 0.867 ; n = 200 : 0.982 ; n = 400 : 1.000 ; n = 800 : 1.000 ; n = 1600 : 1.000 ;
+
+Fin des calculs. Toutes les assertions ont tenu.
