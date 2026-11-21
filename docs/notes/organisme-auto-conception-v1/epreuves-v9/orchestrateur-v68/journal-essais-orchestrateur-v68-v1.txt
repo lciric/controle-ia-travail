@@ -1,0 +1,108 @@
+# Journal des essais — orchestrateur v68 — v1
+
+Tous les essais : processeur seul, hors ligne, moteur simulé, aucune dépense, aucune clé ; `python3 -B -m pytest -q -p no:cacheprovider`, `PYTHONDONTWRITEBYTECODE=1`. Copie de travail : `cp -a /home/user/ideation-organism` (commit a41b7b50) dans le bloc-notes, plus les huit fichiers neufs. L'orchestrateur source n'est que lu.
+
+## 1. Base, avant la v68 (douze fichiers d'essais existants ; les quatre fichiers à `scipy` exclus, erreur de collecte)
+
+Commande : `pytest essais/test_attaque_goodhart_v2.py … v5.py essais/test_juges_idees_v2.py essais/test_v54_annexe.py essais/test_v54_corrections.py essais/test_v54_prepilote.py essais/test_v55_corrections.py essais/test_v56_corrections.py essais/test_v57b_cablage_verdict.py essais/test_v59_boucle_fermee.py`
+
+```
+debut 2026-11-19T14:24:32Z
+FAILED essais/test_v54_prepilote.py::TestR12::test_aucun_fichier_de_la_v53_modifie
+FAILED essais/test_v55_corrections.py::TestR12V55::test_aucun_fichier_de_la_v54_modifie
+2 failed, 515 passed, 3 skipped, 587 subtests passed in 496.63s (0:08:16)
+fin 2026-11-19T14:32:49Z
+```
+
+## 2. Avec la v68 : essais neufs, puis essais existants (treize fichiers : les douze plus `test_v53_course2.py`)
+
+```
+debut 2026-11-19T14:40:28Z
+== essais neufs v68
+................................ [ 58%]
+.......................            [100%]
+55 passed, 78 subtests passed in 13.94s
+fin v68 2026-11-19T14:40:43Z
+== essais existants (course2_v54/v56/v59, noyau_v56, budget_v56, etage_v57, lanceurs v8/v59)
+FAILED essais/test_v53_course2.py::TestR12::test_aucun_fichier_de_la_v52b_modifie
+FAILED essais/test_v54_prepilote.py::TestR12::test_aucun_fichier_de_la_v53_modifie
+FAILED essais/test_v55_corrections.py::TestR12V55::test_aucun_fichier_de_la_v54_modifie
+3 failed, 531 passed, 3 skipped, 591 subtests passed in 389.58s (0:06:29)
+fin existants 2026-11-19T14:47:13Z
+```
+
+## 3. Programme d'application : copie neuve, paquet posé, essais v68 rejoués dans la copie
+
+Commande : `python3 -B appliquer_paquet_orchestrateur_v68_v1.py --source /home/user/ideation-organism --destination <bloc-notes>/v68-application-1 --lancer-essais` ; code 0 ; `git status --porcelain --ignored` de la source : vide.
+
+```
+{
+ "conforme": true,
+ "source": "/home/user/ideation-organism",
+ "destination": "/tmp/claude-0/-home-user-controle-ia-travail/79dd35ec-26bf-5ae6-a8dc-0755569d0794/scratchpad/v68-application-1",
+ "commit_de_base": "a41b7b50f7c64ce488c120bb89ad3d25fb1dd1cb",
+ "fichiers_ajoutes": [
+  "orchestrator/pole/configuration_v68.py",
+  "orchestrator/pole/budget_course_v68.py",
+  "orchestrator/pole/course2_v68.py",
+  "orchestrator/pole/simulation_v68.py",
+  "orchestrator/demonstrations/ideation_v68.py",
+  "orchestrator/demonstrations/essai_a_blanc_v68.py",
+  "orchestrator/essais/aides_v68.py",
+  "orchestrator/essais/test_v68_course2.py"
+ ],
+ "git_status": "seuls les fichiers du paquet, non suivis ; aucun fichier suivi modifié",
+ "essais_v68": {
+  "code": 0,
+  "resume": "55 passed, 78 subtests passed in 12.80s"
+ }
+}
+```
+
+## 4. Programme d'application : artefacts (R5)
+
+```
+debut 2026-11-19T14:42:20Z
+== artefact : destination existante
+{"conforme": false, "refus": "Refus : destination /tmp/claude-0/-home-user-controle-ia-travail/79dd35ec-26bf-5ae6-a8dc-0755569d0794/scratchpad/v68-application-1 déjà présente : copie neuve exigée (R12)"}
+code 2
+== artefact : destination dans la source
+{"conforme": false, "refus": "Refus : destination dans l'orchestrateur source : interdit (il reste en lecture seule)"}
+code 2
+== artefact : fichier du paquet altéré (copie du paquet dans le bloc-notes)
+{"conforme": false, "refus": "Refus : empreinte du paquet différente pour paquet/orchestrator/pole/course2_v68.py : refus avant toute copie"}
+code 2
+destination non créée
+fin 2026-11-19T14:42:20Z
+```
+
+## 5. Essai à blanc de bout en bout, dans la copie où le paquet a été posé
+
+Commande : `python3 -I -B demonstrations/essai_a_blanc_v68.py <bloc-notes>/v68-essai-a-blanc-verse` ; code 0 ; détail : `essai-a-blanc-v1/`.
+
+```
+{
+ "toutes_vraies": true,
+ "verifications": {
+  "lecture : section servie à la génération 2 = section recalculée depuis l'étage de la génération 1": true,
+  "lecture : au moins une fiche exclue par l'étage (éliminée), absente de la section": true,
+  "lecture : la sélection lue est celle que l'étage de la génération 1 a scellée": true,
+  "eteint-sans-etage : aucune génération n'a reçu d'héritage": true,
+  "eteint-sans-etage : aucune sélection servie": true,
+  "eteint : aucune génération n'a reçu d'héritage": true,
+  "eteint : aucune sélection servie": true,
+  "tests-de-mort-sans-rien-servir : aucune génération n'a reçu d'héritage": true,
+  "tests-de-mort-sans-rien-servir : aucune sélection servie": true,
+  "tests de mort : un étage après chaque génération, la dernière comprise": true,
+  "éteint sans étage : deux générations, aucun étage": true,
+  "éteint : étage entre les générations seulement": true,
+  "plafond de la course : arrêt avant la génération 2": true,
+  "codes attendus": true,
+  "moteur réel : aucune sortie écrite": true,
+  "moteur réel éteint : refusé par construction": true,
+  "moteur réel allumé : ligne de GO nominative exigée": true,
+  "témoin v59 : JSONDecodeError à la génération 2": true
+ }
+}
+```
+
