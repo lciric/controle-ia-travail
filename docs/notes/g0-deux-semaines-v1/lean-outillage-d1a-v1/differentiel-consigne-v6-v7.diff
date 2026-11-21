@@ -1,0 +1,290 @@
+--- consigne-poste-local-lean-d1a-v6.md	2026-11-21 13:56:00.446268882 +0000
++++ consigne-poste-local-lean-d1a-v7.md	2026-11-21 14:20:39.584698968 +0000
+@@ -1,4 +1,30 @@
+-# Consigne : session du poste local de Lazar — outillage Lean D-1a, quatrième essai (GO-2026-11-10-13) — v6
++# Consigne : session du poste local de Lazar — outillage Lean D-1a, quatrième essai (GO-2026-11-10-13) — v7
++
++**v7 (2026-11-21, vers 14:19 UTC, `date -u`)** : écrite par un rédacteur Opus 5.5 (`claude-opus-5-5`), sous-agent de la
++session mère `session_01QPDgKgejkqwnuaJHJ31Ydo`, à sa demande. Pièce d'instrument (classe B) : la vérification des
++corrections est faite par le même contre-lecteur (Claude Fable) avant usage. Remplace la v6
++(`consigne-poste-local-lean-d1a-v6.md`, `29ba7285807538af4f7925f1bcb29c25e1560cdad3f6ce6169efb2bee203e833`), gardée
++telle quelle (R12). Différentiel : `differentiel-consigne-v6-v7.diff`. **Ce qui change** : les quatre corrections
++obligatoires de la contre-lecture de la v6 (`contre-lecture-consigne-v6-v1.md`,
++`2f87ff7a0b6c61069e2350eea56872670b6394df0423fa1cd0c04dc7e5002a95`, Claude Fable 5.2, « prête après corrections »),
++portées avec le texte neuf qu'elle donne :
++- **C1, relevé du pas noyau** (mandat 5) : `incident_bac`, blocs `temps` et `noyau` et leurs champs, `ecarts` ; ni
++  `incident_compilation` ni `incident_noyau`, que la sortie ne porte pas ;
++- **C2, tout arrêt du pilote « apres » mène à la section 5, sans relance** (mandat 5), y compris la mort sans code ;
++- **C3, « jeton d'accès »** (section « Messages ») : le jeton de création n'est pas un secret et se donne en L3 ;
++- **C4, rien supprimé ni écrasé sur le poste** (mandat 1 : clone à une seule branche dans un dossier neuf ; mandat 6 :
++  clé et pare-feu supprimés chez le loueur seulement).
++
++S'y ajoutent les remarques de la contre-lecture qui ne coûtent qu'une phrase : ouvrir le terminal Ubuntu avant de
++lancer la session ; phrase de lancement avec chemin et empreinte ; ordre des gestes de Lazar dans le temps ; autres
++sessions locales de l'application ; fermeture du terminal dite par la session ; heure de démarrage d'Ubuntu relevée deux
++fois ; `--deja-depense-usd 0.84` seule trace de la dépense sur la branche ; contrôles `rev-parse`, `status` et
++`ls-tree` après la création de la branche ; code 0 de `git cat-file -e` ; empreintes des compagnons égales à la liste ;
++code de sortie des pilotes gardé dans un fichier ; code d'épreuve hors liste rapporté tel quel ; dernière ligne héritée
++du pilote « apres » ; mesure qui rend 32 signalée sans attendre ; repli des messages si un message de la mère ne peut
++être suivi ; accusé de réception attendu avant L1 ; points de la procédure ajoutés à l'écart du rôle de Lazar ; `git
++commit` sans `-a` ni chemin ; noms des clés de modèle lus dans `WSLENV` ; écart 2 du rapport v3 à trancher par la mère.
++Rien d'autre ne change.
+ 
+ **v6 (2026-11-21, vers 13:52 UTC, `date -u`)** : écrite par un rédacteur Opus 5.5 (`claude-opus-5-5`), sous-agent de la
+ session mère `session_01QPDgKgejkqwnuaJHJ31Ydo`, à sa demande (GO-2026-11-21-40, GO-2026-11-21-57). Pièce d'instrument
+@@ -38,9 +64,10 @@
+ 
+ 1. **Le poste sous WSL (Ubuntu)**, sur secteur, veille coupée, capot ouvert, sans déconnexion de la session jusqu'à la
+    destruction du serveur (procédure, section 0, point 7).
+-2. **Un terminal Ubuntu ouvert pendant tout l'essai**, de l'essai à blanc (s'il est refait) ou de L1 jusqu'à l'inventaire
+-   final de la section 5. Sans fenêtre WSL ouverte, WSL arrête Ubuntu et tue les processus détachés, minuterie comprise
+-   (incident R-2434, observé de nouveau au troisième essai avant l'ouverture du terminal).
++2. **Un terminal Ubuntu ouvert pendant tout l'essai**, **ouvert avant de lancer la session** et gardé ouvert jusqu'à
++   l'inventaire final de la section 5 ; la session dit à Lazar quand il peut le fermer. Sans fenêtre WSL ouverte, WSL
++   arrête Ubuntu et tue les processus détachés, minuterie comprise (incident R-2434, observé de nouveau au troisième essai
++   avant l'ouverture du terminal : Ubuntu s'arrêtait entre deux commandes).
+ 3. **La clé de l'interface de Hetzner, par son nom seul : `HCLOUD_TOKEN`**. C'est un jeton en lecture et écriture du projet
+    de l'essai, posé par Lazar dans l'environnement de la session (procédure, section 0, point 3). Elle n'est jamais collée
+    dans la conversation, ni affichée, ni écrite dans un fichier, ni passée en argument.
+@@ -52,7 +79,8 @@
+    version présente, sans incident, alors que le harnais n'est éprouvé que sous 3.11 et 3.13 ; aucune installation.
+ 7. **Le réglage hors du bac à sable** pour les commandes du harnais, pré-autorisées (procédure, section 0, point 4). Il
+    faut aussi le temps d'une fin et d'une reprise réelles de l'hôte de la session, **seulement si l'essai à blanc est
+-   refait** (mandat 2).
++   refait** (mandat 2) ; l'arrêt de l'application par le Gestionnaire des tâches ferme alors toutes ses sessions locales :
++   n'en avoir aucune autre au travail.
+ 8. **Ses réponses à la question « le poste a-t-il changé ? »** (mandat 2) : même ordinateur et même compte Windows ? même
+    application Claude ? même réglage ? mise à jour de Windows, de WSL ou de l'application depuis le troisième essai ?
+ 9. **Plus de relais** : la session du poste et la mère s'écrivent directement (section « Messages »). Lazar ne relaie que
+@@ -71,6 +99,12 @@
+ 12. **Son rappel personnel à `H + 1 h`** (procédure, M6 : console de Hetzner, zéro serveur attendu ; `H` lui est donné par
+     la mère et par la session du poste) et **l'accès à la console de Hetzner du projet**, pour détruire à la main par
+     l'identifiant si `MV7 detruire` rend le code 3 (sections 4 et 5).
++13. **La phrase de lancement** qu'il tape porte le chemin de cette consigne sur `origin/main` et son empreinte ; le
++    premier message rend l'empreinte à la mère, qui la compare.
++
++Cette liste est une liste de contrôle ; dans le temps, les gestes de Lazar vont ainsi : secteur, veille et capot ;
++terminal ; clé du loueur et `gh` ; lancement ; adresse du poste ; réponses sur le poste ; relance de l'hôte si l'essai à
++blanc est refait ; rappel personnel à `H + 1 h` ; console en cas de code 3 ; fermeture du terminal.
+ 
+ Session mère `session_01QPDgKgejkqwnuaJHJ31Ydo` (dans le nuage). Elle agit sur le mot de Lazar GO-2026-11-21-40 (« on ne
+ s'arrete pas a un echec avant d'avoir compris les causes de cet ecec et avoir reussi a les corriger » : causes établies et
+@@ -121,8 +155,10 @@
+ - **Aucun appel de modèle**, **aucune clé de modèle ni dépôt du programme sur la machine**. Aucune autre dépense.
+ - **Déclaration (GO-2026-11-21-40, comme R-2426 et R-2439)** : c'est la **quatrième machine sous cette ligne**, accordée par
+   Lazar. La garde « une machine par GO » du harnais est **contournée par construction** : ta branche neuve ne porte ni
+-  fichier de rattrapage ni journal des créations des essais précédents, seules pièces que la garde lit. Le contournement
+-  ne vaut que pour cet essai : une préparation, une création.
++  fichier de rattrapage ni journal des créations des essais précédents. La garde lit aussi le registre des dépenses de
++  la branche, qui ne porte au commit `47c7faaf` aucune ligne de cet accord : sur ta branche, **`--deja-depense-usd 0.84`
++  est la seule trace de la dépense réelle** (sans lui, le code retient 0 et ne refuse pas). Le contournement ne vaut que
++  pour cet essai : une préparation, une création.
+ 
+ ## Messages entre le poste et la mère (v6)
+ 
+@@ -134,11 +170,12 @@
+   - les empreintes de cette consigne et de la procédure, vérifiées ;
+   - ta branche et son commit.
+ 
+-  La mère en accuse réception : c'est la preuve que le retour fonctionne.
++  La mère en accuse réception : c'est la preuve que le retour fonctionne. Le mandat 2 n'attend pas cet accusé de
++  réception ; L1 l'attend.
+ - **Messages prévus** :
+   - le premier message ;
+   - le choix sur l'essai à blanc, repris ou refait, et pourquoi (mandat 2) ;
+-  - le signal de la mesure des adresses si elle rend 32 (mandat 2) ;
++  - le signal de la mesure des adresses si elle rend 32 (mandat 2), signalé sans attendre de réponse ;
+   - L3 ;
+   - L7 ;
+   - tout arrêt, refus ou incident (codes 1, 3, 4 et 5 ; minuterie non conforme ; machine injoignable ; terminal fermé) ;
+@@ -146,8 +183,10 @@
+   - la fin : destruction, inventaires, accès supprimés, minuterie ;
+   - le rapport : branche, commit et empreinte.
+ - **Contenu** : des identifiants, des heures relevées par `date -u`, des empreintes, des commits et des codes de sortie.
+-  **Jamais** `IP_POSTE` ni une adresse de son /24, ni l'adresse du serveur, ni un jeton, ni un chemin absolu, ni le dossier
+-  personnel, le nom de la machine ou de l'utilisateur. La règle des données du poste (CLC5-07) s'applique aux messages : la
++  **Jamais** `IP_POSTE` ni une adresse de son /24, ni l'adresse du serveur, ni un jeton d'accès (la valeur de
++  `HCLOUD_TOKEN`, le jeton de `gh`), ni un chemin absolu, ni le dossier personnel, le nom de la machine ou de
++  l'utilisateur. Le jeton de création tiré par `preparer` n'est pas un secret : il est écrit dans le fichier de rattrapage
++  poussé, et il se donne à la mère en L3. La règle des données du poste (CLC5-07) s'applique aux messages : la
+   mère inscrit les registres d'après eux.
+ - **Ce qu'un message de la mère vaut** :
+   - Il ne vaut que dans le cadre de cette consigne : le mot « armée », ou une réponse sur un écart.
+@@ -171,7 +210,9 @@
+   reste, et le relais par Lazar de la v5 reprend pour toute la suite :
+   - tu n'as pas l'outil d'envoi ;
+   - un envoi échoue deux fois à une minute d'écart ;
+-  - la mère n'accuse pas réception de ton premier message dans les 30 minutes.
++  - la mère n'accuse pas réception de ton premier message dans les 30 minutes ;
++  - un message de la mère arrive, mais ta session ne peut pas agir sur lui (message d'une autre session traité comme une
++    donnée) : Lazar tape alors le mot « armée » et l'empreinte, comme en v5.
+ 
+   Le mot « armée » relayé par Lazar et tapé par lui dans ta session vaut alors, comme en v5. Le repli est un écart déclaré
+   au rapport.
+@@ -204,26 +245,29 @@
+     6 que la branche part « du commit de l'en-tête ». Ta branche part pourtant de **`47c7faaf`** : la procédure v12
+     n'existe qu'à ce commit, et aucun code n'a changé entre les deux (même lecture que la correction E1 de la v5).
+   - **Écart écrit au rôle de Lazar** : la procédure le fait relayer entre les deux sessions (« Rôles et règle d'or » ; L3 ;
+-    M6 ; L7 ; section 3 ; section 5, point 5). Sous cette consigne, ces messages vont directement du poste à la mère et de
++    M6 ; L7 ; section 3 ; section 5, point 5 ; de même section 0, points 4 et 5, et section 4, point 4). Sous cette consigne, ces messages vont directement du poste à la mère et de
+     la mère au poste, avec le repli écrit ci-dessus. Rien d'autre ne change dans les gestes de la mère, M1 à M6.
+ - **Poste** : sous WSL (Ubuntu), clone dans le système de fichiers Linux ; le jeton de `gh` ne passe qu'à `git`
+   (environnement du processus), jamais écrit ni affiché. Commandes lancées depuis la racine du clone ; au troisième essai,
+   depuis l'hôte Windows par `wsl.exe -e`, les processus détachés vivant dans Ubuntu (écart 8 du rapport v3).
+ - **Environnement des commandes du harnais** : aucune clé de modèle. Celles que `WSLENV` transmet à Ubuntu sont retirées
+-  de l'environnement de chaque commande (procédure v12, section 3). Seuls restent `HCLOUD_TOKEN` et, pour `git`, le jeton
++  de l'environnement de chaque commande (procédure v12, section 3) : leurs noms se lisent dans `WSLENV` (des noms,
++  jamais des valeurs), puis `env -u NOM`, sans `env` ni `printenv` seuls. Seuls restent `HCLOUD_TOKEN` et, pour `git`, le jeton
+   de `gh`.
+ - **Terminal WSL ouvert pendant tout l'essai** (incident R-2434 : sans fenêtre WSL ouverte, WSL arrête Ubuntu et tue les
+   processus détachés, minuterie comprise) :
+-  - un terminal Ubuntu ouvert par Lazar avant l'essai à blanc (s'il est refait) ou avant L1, gardé ouvert **jusqu'à
+-    l'inventaire final** de la section 5 ;
++  - un terminal Ubuntu ouvert par Lazar avant de lancer la session, gardé ouvert **jusqu'à l'inventaire final** de la
++    section 5 ;
+   - vérifie-le avant l'essai à blanc et avant L1 : Ubuntu démarrée avant l'ouverture et jamais redémarrée depuis ; sinon,
+-    aucune préparation ;
++    aucune préparation. Contrôle : l'heure de démarrage d'Ubuntu (`uptime -s`), relevée au début du mandat 2 puis juste
++    avant L1, à deux minutes d'écart au moins, doit être la même aux deux relevés ;
+   - s'il se ferme après L5 : `MV7 verifier-minuterie` tout de suite ; non conforme : `MV7 detruire --identifiant N`,
+     jamais de relance ; message à la mère.
+ - **Données du poste (CLC5-07)** :
+   - identité Git neutre pour ce clone seulement (`poste-local`, `poste-local@invalid`, sans `--global`), vérifiée avant
+     chaque commit ;
+-  - avant chaque commit : `git add -- <fichiers nommés>`, puis `MV7 garde-poste --ip-poste IP_POSTE && git commit …` ;
++  - avant chaque commit : `git add -- <fichiers nommés>`, puis `MV7 garde-poste --ip-poste IP_POSTE && git commit …`,
++    `git commit` sans `-a` et sans chemin, car la garde ne lit que l'index ;
+   - chaque sortie du pilote ou d'un processus détaché passe `MV7 garde-poste --ip-poste IP_POSTE --fichier <pièce>` avant
+     d'être versée (la garde refuse aussi toute adresse du /24 du poste) ; une copie versée où l'adresse du serveur est
+     masquée se déclare avec les empreintes de l'original et de la copie (écart 6 du rapport v3) ;
+@@ -240,20 +284,29 @@
+ 
+ ## Mandat
+ 1. **Dépôt** :
+-   - clone neuf de `https://github.com/lciric/controle-ia-travail.git` ;
++   - clone neuf, par `git clone --single-branch --branch main https://github.com/lciric/controle-ia-travail.git <dossier neuf>`,
++     dans un dossier au nom neuf du système de fichiers d'Ubuntu ;
++   - **rien des essais antérieurs n'est supprimé ni écrasé sur le poste** : ni clone, ni clé, ni dossier de sorties (les
++     originaux des pièces du troisième essai n'existent que là). La clé de L2 et le dossier de sorties du pilote prennent
++     des noms neufs (R12) ; si un nom existe déjà, tu en prends un autre. Aucune commande de suppression de fichier ou de
++     dossier n'entre dans ce mandat ; s'il t'en semble falloir une, tu t'arrêtes et tu le demandes à Lazar ;
+    - `git fetch origin prep/lean-outillage-d1a-v11:refs/remotes/origin/prep/lean-outillage-d1a-v11` ; le commit
+-     `47c7faaf50da2c2abd2cce32dc203c8a7f49e03b` doit y être (`git cat-file -e 47c7faaf50da2c2abd2cce32dc203c8a7f49e03b^{commit}`) ;
++     `47c7faaf50da2c2abd2cce32dc203c8a7f49e03b` doit y être (`git cat-file -e 47c7faaf50da2c2abd2cce32dc203c8a7f49e03b^{commit}`,
++     qui n'affiche rien : le critère est le code 0) ;
+      si la tête de la branche a bougé depuis, tu pars quand même de ce commit et tu le dis au rapport ;
+    - `git ls-remote origin refs/heads/donnees/lean-outillage-d1a-poste-local-v5` doit rendre le **code 0 et aucune ligne**.
+      Une ligne rendue (la branche existe déjà) ou un code non nul (accès au dépôt en échec) : arrêt, compte rendu, aucune
+      préparation ;
+    - **ta branche `donnees/lean-outillage-d1a-poste-local-v5`, partie du commit
+      `47c7faaf50da2c2abd2cce32dc203c8a7f49e03b`**, poussée par `git push -u origin donnees/lean-outillage-d1a-poste-local-v5` ;
+-     jamais `-v3` ni `-v4` ;
++     jamais `-v3` ni `-v4` ; après sa création et avant tout commit du poste, `git rev-parse HEAD` doit rendre
++     `47c7faaf50da2c2abd2cce32dc203c8a7f49e03b` et `git status --porcelain` rien ; sinon arrêt ;
+    - puis la référence de suivi de la procédure (L3 : `git fetch` par refspec, `git remote set-branches --add`,
+      `@{upstream}` résolu) ;
+    - vérifie que `V` ne contient ni `rattrapage-machine-d1a-*-v1.json` ni `journal-creations-machines-v1.jsonl` ; sinon
+-     arrêt (vérifié par la mère sur `3c2f35dd` et `47c7faaf`) ;
++     arrêt (vérifié par la mère sur `3c2f35dd` et `47c7faaf`). Commande : `git ls-tree --name-only HEAD --
++     docs/notes/g0-deux-semaines-v1/lean-outillage-d1a-v1/` doit montrer `procedure-poste-local-d1a-v12.md` (témoin que le
++     bon arbre est lu) et aucun de ces deux noms ;
+    - lis la procédure v12 sur ta branche (ou par `git show 47c7faaf:<chemin>`) et vérifie son empreinte (`10872ae6…`) ;
+    - vérifie les compagnons du code joué sur la machine, chacun par `sha256sum -c` dans son dossier, en sous-interpréteur
+      depuis la racine (`(cd <dossier> && sha256sum -c <fichier>.sha256)`). Attendus :
+@@ -264,7 +317,8 @@
+      - `src/controle_ia/lean_essai/minuterie_v7.py` : `182033f8a70d36b652e94b81dc56060f5b806084641a8a17ca913ef66aceccd8` ;
+      - `src/controle_ia/lean_essai/verificateur_noyau_v6.lean` : `3ef23bfa6600bf3a79fca2c31427dccf6c2ec7d67832bddb5c4df971a269d2ee` ;
+ 
+-     un écart : arrêt, aucune préparation ;
++     l'empreinte lue doit être égale à celle de cette liste, pas seulement passer `sha256sum -c` ; un écart : arrêt,
++     aucune préparation ;
+    - vérifie l'empreinte de cette consigne (`sha256sum -c` de son compagnon, sur `origin/main`) ;
+    - routine de `CLAUDE.md`, point 1 **limité au `sha256sum -c` des documents de lancement** (jamais `verifier-arbre .` :
+      l'arbre de cette branche porte `docs/notes/bras-attaque/`, chemin interdit), et point 2 (`registres/etat.md` et la
+@@ -303,7 +357,7 @@
+    - **`MV7 adresses-sortie --ip-poste IP_POSTE`** :
+      - code 0 : retenir `P` = `prefixe_conseille` (32 ou 24). **Jamais `--prefixe-poste 24` sans cette mesure** ;
+      - si elle rend 32 alors que les deux premiers essais avaient plusieurs sorties dans le même /24 : le signaler à Lazar
+-       et à la mère avant L2 (procédure, section 0, point 5). `P` reste la mesure ; au troisième essai, la mesure a rendu 32,
++       et à la mère avant L2 (procédure, section 0, point 5), sans attendre de réponse. `P` reste la mesure ; au troisième essai, la mesure a rendu 32,
+        Lazar l'a retenue, et le pilote n'a connu aucun échec de connexion ;
+      - code 1 : arrêt, compte rendu, aucune préparation ;
+    - **`stat -c %a src/controle_ia/lean_essai/verificateur_noyau_v6.lean` = `644`** (sinon `chmod 644` de ce seul fichier,
+@@ -339,7 +393,8 @@
+      - essai R5 « bac lit Mathlib.olean » ;
+      - essai R5 « le vérificateur compile sur la machine ».
+ 
+-     **Tout code non nul du pilote `avant` : ni coupure, ni pilote `apres`** ; section 5, compte rendu ;
++     **Tout code non nul du pilote `avant` : ni coupure, ni pilote `apres`** ; section 5, compte rendu. La commande qui
++     lance chaque pilote écrit son code de sortie dans un fichier au nom neuf ;
+    - **coupure** : `MV7 acces-couper … --ip-poste IP_POSTE --prefixe-poste P`, puis `MV7 verifier-coupure`. Si elle rend
+      « pending », une seconde lecture, seule et en lecture seule, avec un journal neuf, une minute plus tard. Non conforme
+      encore : section 5 ;
+@@ -349,24 +404,32 @@
+      - dépôt du harnais v8 (exécuteur et épreuve v8, vérificateur v6, artefacts avec `attendus-v7.json`) ;
+      - contrôle `cmp` du vérificateur et épinglage (`verificateur-epingle-v6.json` : empreinte `3ef23bfa…`, celle du
+        compagnon vérifié au mandat 1 et du troisième essai ; une autre empreinte est un écart, dit au rapport) ;
+-     - **premier pas `noyau`** : non conforme, le pilote s'arrête (`set -e`) et rien d'autre n'est lu ;
++     - **premier pas `noyau`** : non conforme, le pilote s'arrête (`set -e`) et rien d'autre n'est lu : section 5, compte
++       rendu, sans relance ;
+      - **épreuve, 36 cas** : 21 gardes Lean, 5 isolement Lean, 4 Python, 5 limites, 1 limite Lean. Code relevé dans
+-       `epreuve-code-v6.txt` : 0, 1, 3 ou 124 ; le pilote continue ;
++       `epreuve-code-v6.txt` : 0, 1, 3 ou 124 ; le pilote continue. Un autre code (255 si la connexion tombe) est
++       rapporté tel quel, sans conclusion sur l'épreuve ;
+      - **`mesurer`** ;
+      - sonde de fin et relevé de l'installation ;
++     - la dernière ligne qu'il affiche nomme `minuterie_v6 detruire` : texte hérité ; la destruction se fait par la
++       minuterie v7 (`MV7`, section 5 de la procédure), jamais d'après cet affichage ;
+    - **mémoire de la machine entière (v6)** : `mesurer` lance trois passages de l'item sain en suite, puis trois en
+      parallèle dans une tranche réservée de nom neuf (`bacmesure<8 hexadécimaux>.slice`). Pendant le bloc parallèle, toutes
+      les 0,1 s, root relève `memory.peak` de la tranche et `MemAvailable`. Le jugement suit les sept critères écrits
+      d'avance de la procédure v12, § 8.5 (`parallele_3_compte`, `parallele_3_motifs`, `parallele_3_calcul`). **Tu ne fais
+      rien à la main** : aucun passage relancé, aucune commande de plus sur la machine, aucun seuil changé, aucun motif
+      corrigé ;
+-   - **tout autre arrêt du pilote `apres` par un code non nul** (sonde, dépôt, `cmp`, épinglage, `mesurer`, sonde de fin) :
+-     section 5. Sorties versées telles quelles ; toute sortie qui n'entre dans aucune lecture écrite est rapportée telle quelle, sans
+-     lecture inventée (procédure, § 8, préambule) ;
+-   - **si le pas `noyau` échoue par la mémoire ou par le délai** :
+-     - relève au rapport, pour chaque cas en échec : `incident_bac`, `incident_compilation`, `incident_noyau`, le bloc
+-       `noyau` (`resultat`, `fin`, `duree_murale_s`, `resume_systemd`, et le pic échantillonné s'il est rapporté) et les
+-       `ecarts` ;
++   - **tout arrêt du pilote `apres` par un code non nul, à quelque étape que ce soit** (coupure sur la machine, vidage du
++     cache, sonde, dépôt, `cmp`, épinglage, pas `noyau`, `mesurer`, sonde de fin, relevé de l'installation), **ou sa mort
++     sans code** (terminal fermé, connexion perdue) : section 5, **sans relance du pilote ni d'aucune de ses étapes**, et
++     sans commande de plus sur la machine. Sorties versées telles quelles ; toute sortie qui n'entre dans aucune lecture
++     écrite est rapportée telle quelle, sans lecture inventée (procédure, § 8, préambule) ;
++   - **si le pas `noyau` échoue par la mémoire ou par le délai** (`incident_bac` d'un cas vaut « mémoire » ou « délai ») :
++     - relève au rapport, pour chaque cas en échec : `incident_bac` ; le bloc `temps` (la compilation) et le bloc `noyau`
++       (le vérificateur), chacun avec `resultat`, `fin`, `code`, `cpu_s`, `duree_murale_s`, `resume_systemd`,
++       `memoire_pic_echantillonne_octets` et `memoire_echantillons` ; les `ecarts`. Cette sortie ne porte ni
++       `incident_compilation` ni `incident_noyau` : la comparaison des deux blocs (`resultat`, `cpu_s`) dit lequel des deux
++       a été arrêté ;
+      - verse `premier-pas-noyau-v6.json` après `garde-poste --fichier` ;
+      - puis **fin normale (section 5), sans relance**, ni du pas ni du pilote. Au troisième essai, ce pas a tenu, 18 sur
+        18, sans incident ;
+@@ -378,12 +441,13 @@
+ 6. **Fin** : section 5 (normale) ou 4 (anormale).
+    - Serveur détruit par son identifiant **dans tous les cas** ; inventaire « aucun serveur de l'essai », avec
+      `ips_primaires_non_attribuees` vide.
+-   - Clé et pare-feu supprimés ; si `acces-supprimer` rend 422 `resource_in_use`, refaire 2 à 3 minutes plus tard.
++   - Clé et pare-feu supprimés **chez le loueur**, par `MV7 acces-supprimer` (aucun fichier du poste n'est supprimé) ; si
++     `acces-supprimer` rend 422 `resource_in_use`, refaire 2 à 3 minutes plus tard.
+    - Minuterie arrêtée par son PID si elle vit.
+    - **Message à la mère** : heure de la destruction, inventaires, accès supprimés, minuterie (section 5, point 5 : c'est
+      le poste qui prévient la mère). En code 3, Lazar détruit à la main dans la console, et la mère est prévenue tout de
+      suite.
+-   - Terminal WSL fermé seulement après l'inventaire final.
++   - Terminal WSL fermé seulement après l'inventaire final ; tu dis alors à Lazar qu'il peut le fermer.
+ 7. **Lecture et rapport** sur ta branche, sous `docs/notes/g0-deux-semaines-v1/lean-outillage-d1a-v1/` (noms neufs) :
+    `rapport-poste-local-d1a-v4.md` (numéro de l'essai ; nom absent de `47c7faaf` et de `main` le 2026-11-21), scellé, sur
+    `donnees/lean-outillage-d1a-poste-local-v5`. **La lecture suit la section 8 de la procédure v12, écrite avant l'essai,
+@@ -439,6 +503,9 @@
+   journal scellé nommant l'essai qui tue. Non bloquant pour le quatrième essai.
+ - **Canal des messages** : la consigne suppose que la session du poste a l'outil d'envoi entre sessions et que la mère peut
+   lui répondre. Rien ne l'a éprouvé avant cet essai ; le repli écrit couvre son absence.
++- **Adresse du poste** : l'écart 2 du rapport v3 (adresse lue par la session, sur mot de Lazar) n'est pas repris ; cette
++  consigne dit que Lazar la donne. S'il préfère de nouveau la faire lire, c'est un écart qui attend la réponse de la mère : à trancher
++  avant le lancement.
+ 
+ ## Annexe
+ 
