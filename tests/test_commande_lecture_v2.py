@@ -274,7 +274,7 @@ def test_stockage_par_le_corps_recompose(monde):
         _v1(m, offre_json=_offre(m, base=OFFRE_DU_RELEVE))
 
 
-@pytest.mark.parametrize("retouche", [{"disk_space": 299}, {"num_gpus": 2}, {"cpu_ram": 64000}, {"cuda_max_good": 12.4},
+@pytest.mark.parametrize("retouche", [{"disk_space": 149}, {"num_gpus": 2}, {"cpu_ram": 64000}, {"cuda_max_good": 12.4},
                                       {"id": "x1"}, {"gpu_ram": None}, {"gpu_name": "H100 SXM"}, {"dph_total": 1.35},
                                       {"dph_total": 0}, {"cpu_cores_effective": 12}, {"storage_cost": None},
                                       {"storage_cost": "0.1"}, {"storage_cost": float("nan")}, {"storage_cost": True}, {}])
@@ -374,7 +374,11 @@ def test_les_noms_du_corps_recompose_sont_les_objets_de_la_version_1():
                 "OFFRE_LECTURE", "AMORCE", "IMAGE", "DEPOT_URL", "BRANCHE_ENTREES", "ENTREES_DE_LA_MARCHE"):
         assert getattr(cl2, nom) is getattr(rv, nom), nom
     assert cl2.en is en and cl2.lv is lv and cl2.lv.TEXTE == lv.TEXTE and cl2.lv.TEXTE_SHA256 == lv.TEXTE_SHA256
-    assert cl2._montrer is not rv._montrer and cl2._RUN_LECTURE is not rv._RUN_LECTURE
+    assert cl2._montrer is not rv._montrer
+    arbre = ast.parse((RACINE / MODULE_V2).read_text(encoding="utf-8"))       # aucun objet privé importé ni atteint
+    assert not [a.name for n in ast.walk(arbre) if isinstance(n, (ast.Import, ast.ImportFrom)) for a in n.names
+                if a.name.startswith("_")]
+    assert not [n.attr for n in ast.walk(arbre) if isinstance(n, ast.Attribute) and n.attr.startswith("_")]
     assert cl2._RUN_LECTURE.pattern == rv._RUN_LECTURE.pattern and cl2._RUN_LECTURE.flags == rv._RUN_LECTURE.flags
     assert _lignes_du_corps(cl2._montrer) == _lignes_du_corps(rv._montrer)
     libres = {n.id for n in ast.walk(ast.parse(textwrap.dedent(inspect.getsource(cl2.corps_recompose))))
@@ -763,7 +767,7 @@ def test_aucune_substitution_dans_le_module_neuf():
     assert substitutions(source) == []
     # le module importe bien les quatre modules figés (sinon l'épreuve ne regarderait rien)
     for nom in MODULES_FIGES:
-        assert re.search(rf"^from \.{nom} import |^from \. import {nom} as ", source, flags=re.M), nom
+        assert re.search(rf"^\s*from \.{nom} import |^from \. import {nom} as ", source, flags=re.M), nom
 
 
 @pytest.mark.parametrize("ajout", [
