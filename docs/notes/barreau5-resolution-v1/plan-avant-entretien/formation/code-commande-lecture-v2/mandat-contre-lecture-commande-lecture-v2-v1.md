@@ -1,0 +1,28 @@
+# Mandat — contre-lecture du code de commande de la relecture, version 2 (additif 1 au devis du barreau 5) — v1
+
+Écrit le 2026-11-21 vers 16:50Z par la session de formation du barreau 5 (`session_01Qi7Gr5XKjeM46Bz6Lu9vub`), au nom de la session mère (accords GO-2026-11-21-63 et -64 : « code de l'additif 1 au devis par un Fable, contre-lu par Opus »). Pièce de travail (classe C). Destinataire : un agent neuf, Claude Opus 5.5, contre-lecteur d'une pièce de classe B écrite par un autre modèle (Claude Fable 5.2). Tu n'as écrit ni l'additif, ni ce code. Après tes constats et leurs corrections, c'est **toi** qui vérifieras les corrections (même contre-lecteur).
+
+## Objet
+Le commit de commande `76c608b61d52549d4e0dceb9d07be0c5bea273f8` (branche locale `course/barreau5-commande-lecture-v2`, arbre `/tmp/claude-0/-home-user-controle-ia-travail/297a4a07-6190-598e-ba08-f9d65884efdb/scratchpad/arbre-commande`), deux commits au-dessus du code de lecture figé `c76e79169eee337ce66c7d88f62d039e853eebfc`, trois fichiers ajoutés : `src/controle_ia/barreau5_familles/commande_lecture_v2.py`, `scripts/lancer_b5f_lecture_v2.sh`, `tests/test_commande_lecture_v2.py`.
+
+Tu juges sa conformité à l'additif 1, version 2, au devis, § 3 (3.1 à 3.5), § 4 point 2 et § 6, et la solidité des gardes. **Deux modes d'échec nommés par l'additif (§ 3.5), à chercher en priorité :**
+1. **Objet de contrôle oublié ou inopérant** : une garde du corps de la version 1 qui n'est pas rejouée, ou rejouée sur le mauvais objet (mauvais arbre, mauvais commit, mauvais registre) ; une vérification (a) à (d) qui laisse passer ce qu'elle doit refuser ; une substitution d'attribut cachée ; une recomposition infidèle (ordre, arguments, valeur rendue).
+2. **Épreuve qui ne peut pas échouer, ou pas réussir** : un essai dont l'assertion est vraie quelle que soit la garde, un artefact qui échoue pour une autre raison que celle visée, un cas sain qui ne passe que par un raccourci d'essai, une égalité à l'octet comparée à elle-même.
+Juge aussi les cinq écarts que le développeur nomme lui-même dans son rapport (dont la garde ajoutée à l'entrée et le second objet privé `_RUN_LECTURE`), et dis pour chacun : garder, corriger, ou nœud.
+
+## Pièces (liste fermée)
+1. Le rapport du développeur : `/tmp/claude-0/-home-user-controle-ia-travail/297a4a07-6190-598e-ba08-f9d65884efdb/scratchpad/dev-commande-v2/rapport-developpeur-commande-lecture-v2-v1.md` (sha256 a9b3ce5a…, compagnon `.sha256`).
+2. Dans `/tmp/claude-0/-home-user-controle-ia-travail/297a4a07-6190-598e-ba08-f9d65884efdb/scratchpad/pieces-additif1/`, chacune vérifiée par son compagnon : `devis-adaptateurs-tenus-a-l-ecart-v1-additif-1-v2.md` (c3120d3a…) en entier ; `contre-lecture-additif-1-devis-et-constat-registre-v1.md` ; `verification-additif-1-v2-devis-v1.md` ; `scellement-additif-1-v2-devis-v1.md` ; `registre-propre-main-25236c16.md` (registre propre de main avant la ligne d'engagement, sha256 41f5ec14…, lecture seule).
+3. Dans l'arbre de commande, le seul code : les trois fichiers ajoutés ; `src/controle_ia/barreau5_familles/relecture_v1.py`, `lecture_v1.py` (les parties qu'emploie le corps recomposé), `formation_v1.py` (la seule `exiger_garde_de_calcul` et ce qu'elle appelle), `engagement_v1.py`, `src/controle_ia/gardes.py`, `src/controle_ia/scellement.py`, et la seule constante `CHEMINS_GELES` là où elle est définie ; `scripts/lancer_b5f_lecture_v1.sh` ; `tests/test_barreau5_familles_relecture_v1.py`, `tests/test_lancer_b5f_lecture_v1.py`, `tests/test_barreau5_familles_engagement_v1.py`. `git log`, `git diff`, `git show` entre `c76e7916` et `76c608b6` sur ces seuls fichiers.
+4. `CLAUDE.md` du dépôt, « Règles gelées » et « Interdits ».
+
+Tu peux jouer les essais et des mutations de ton choix, **dans une copie** : `git worktree add --detach <ton bloc-notes>/arbre-cl 76c608b61d52549d4e0dceb9d07be0c5bea273f8` depuis l'arbre de commande, environnement `/home/user/controle-ia-travail/.venv`, `PYTHONPATH=<copie>/src`, pytest avec `-p no:cacheprovider --basetemp=<bloc-notes>`. Ne modifie jamais l'arbre de commande lui-même, ni ses commits.
+
+## Cloisonnement (à la lettre)
+- N'ouvre rien d'autre que la liste ci-dessus. **Jamais** : le texte scellé du barreau 5 (`prereg/barreau5-…`) au-delà de son empreinte ; `brouillons/` ; `diag/`, `donnees/`, `runs/`, `scores/` ; aucune branche `donnees/…` ni `traces/…` ; aucun fichier dont le nom contient « consigne-privee » ou « conception-ii-b » ; aucun résultat de 7a, 7b, T0.6, de l'étape B, de l'étape B bis ni de P3-bis ; rien sous `/root/.claude/` ; **rien sous `/root/secret-b5f-formation-v1/`** (ni liste, ni lecture).
+- Aucune commande au loueur, aucun réseau payant, aucune clé lue ni affichée (valeurs factices dans les essais), aucune poussée, aucun commit dans un dépôt partagé.
+- Aucune commande d'arrêt ni de recherche de processus par motif.
+- Au premier refus d'outil, ou au moindre doute de périmètre : arrête-toi et dis-le.
+
+## Ce que tu rends
+Un rapport `contre-lecture-commande-lecture-v2-v1.md` dans `/tmp/claude-0/-home-user-controle-ia-travail/297a4a07-6190-598e-ba08-f9d65884efdb/scratchpad/cl-commande-v2/`, scellé (`PYTHONPATH=/home/user/controle-ia-travail/src /home/user/controle-ia-travail/.venv/bin/python -m controle_ia.scellement sceller <fichier>`) : verdict (« conforme », « conforme après ces corrections » avec liste fermée numérotée, ou « non conforme » ; « nœud » si le montage te paraît plus risqué qu'un code de lecture neuf, § 3.5) ; pour chaque constat : fichier et ligne, mode d'échec, gravité (bloquant ou non), preuve (essai ou mutation joués), correction proposée ; ton avis sur chacun des cinq écarts nommés. Réponse finale : chemin, empreinte, verdict, liste des corrections.
