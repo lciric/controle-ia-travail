@@ -1,0 +1,299 @@
+--- v4/paquet/orchestrator/essais/test_na_v4_garde_motifs.py
++++ v5/paquet/orchestrator/essais/test_na_v5_garde_motifs.py
+@@ -1,6 +1,11 @@
+-"""Essais du lot 2 du véhicule NA-1, v4 : `pole/garde_motifs_na_v4.py`, `pole/extraire_ignorables_unicode_na_v1.py`,
++"""Essais du lot 2 du véhicule NA-1, v5 : `pole/garde_motifs_na_v4.py`, `pole/extraire_ignorables_unicode_na_v1.py`,
+ `pole/ignorables-unicode-15.1.0-na-v1.json`.
+ 
++v5 (remplace `test_na_v4_garde_motifs.py`, `01996d43…` ; décision de la mère R-4500) : la liste réelle des noms refusés
++n'est plus copiée dans le paquet. `TestListeReelleV4` la lit par `liste_reelle_na_v5`, à son chemin sur la branche
++principale et à son empreinte scellée (dépôt et référence par variable, ou fichier sur disque) ; elle échoue si la liste
++manque, jamais ne saute. Aucun autre essai ne change.
++
+ v4, décisions de la mère de 10:20Z : U+2800 et la liste d'apparence vide ramenés à une espace (`TestApparenceVideV4`) ;
+ les motifs « expression_reguliere » normalisés sur leurs littéraux (`TestNormalisationDesMotifsV4`) ; la liste réelle des
+ noms refusés lue à son empreinte, chacun de ses noms mordu dans ses formes réelles (`TestListeReelleV4` : aucun nom n'est
+@@ -41,6 +46,7 @@
+         sys.path.insert(0, _p)
+ 
+ import aides_na_v4 as A  # noqa: E402
++import liste_reelle_na_v5 as LR  # noqa: E402
+ from pole import extraire_ignorables_unicode_na_v1 as ex  # noqa: E402
+ from pole import garde_motifs_na_v4 as gm  # noqa: E402
+ from pole import identifiants_na_v1 as ident  # noqa: E402
+@@ -688,7 +694,7 @@
+ 
+     @classmethod
+     def setUpClass(cls):
+-        cls.lignes = A.lire_liste_reelle()  # échoue si la liste manque ou si son empreinte diffère : jamais un saut
++        cls.lignes = LR.lire_liste_reelle()  # v5 : lue sur la branche principale ; échoue si elle manque : jamais un saut
+         motifs = [{"rang": i, "type": "expression_reguliere", "motif": l,
+                    "temoin_positif": "t " + l[2:-2] + " t"} for i, l in enumerate(cls.lignes, start=1)]
+         familles = [{"nom": FAM1, "motifs": motifs}, A.familles_saines()[1]]
+@@ -696,7 +702,14 @@
+         cls.garde = gm.GardeMotifs(gm.lire_liste_motifs(octets, sha, _N))  # témoins rejoués : chacun mord
+ 
+     def test_trente_quatre_lignes_de_la_forme_b_nom_b(self):
+-        self.assertEqual(len(self.lignes), A.LIGNES_ATTENDUES_LISTE_REELLE)
++        self.assertEqual(len(self.lignes), LR.LIGNES_ATTENDUES)
++        # v5 : une liste d'une autre empreinte, un fichier absent, un dépôt absent : refus, jamais un saut
++        with self.assertRaises(LR.ListeReelleIndisponible):
++            LR.octets_liste_reelle(fichier=A.CHEMIN_LISTE_ESSAI)
++        with self.assertRaises(LR.ListeReelleIndisponible):
++            LR.octets_liste_reelle(fichier=os.path.join(ICI, "liste-absente.txt"))
++        with self.assertRaises(LR.ListeReelleIndisponible):
++            LR.octets_liste_reelle(depot=os.path.join(ICI, "depot-absent"))
+         for i, l in enumerate(self.lignes, start=1):
+             self.assertIsNotNone(re.fullmatch(r"\\b.+\\b", l), f"ligne de rang {i}")
+ 
+--- v4/paquet/orchestrator/essais/sonde_chargement_course_na_v4.py
++++ v5/paquet/orchestrator/essais/sonde_chargement_course_na_v5.py
+@@ -1,11 +1,11 @@
+ """Sonde de chargement sous l'interpréteur de la course (`/usr/local/bin/python3 -I`) : la garde v4 et ses données se
+ chargent sans le module `regex`, et la normalisation tient, celle des motifs comprise. Données factices seules, plus la
+-liste réelle des noms refusés, lue à son empreinte, dont rien n'est affiché que des comptes. Rend un objet JSON.
++liste réelle des noms refusés, lue par `liste_reelle_na_v5` sur la branche principale à son empreinte (v5 : aucune copie
++dans le paquet), dont rien n'est affiché que des comptes. Rend un objet JSON.
+ 
+-Usage : `/usr/local/bin/python3 -I sonde_chargement_course_na_v4.py`
++Usage : `/usr/local/bin/python3 -I sonde_chargement_course_na_v5.py`
+ """
+ 
+-import hashlib
+ import json
+ import os
+ import re
+@@ -14,7 +14,9 @@
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+ sys.path.insert(0, os.path.dirname(ICI))  # -I n'ajoute pas le dossier du programme
++sys.path.insert(0, ICI)
+ 
++import liste_reelle_na_v5 as LR  # noqa: E402
+ from pole import garde_motifs_na_v4 as gm  # noqa: E402
+ 
+ donnees = gm.charger_donnees_ignorables(os.path.join(os.path.dirname(ICI), "pole", "ignorables-unicode-15.1.0-na-v1.json"),
+@@ -25,10 +27,7 @@
+ formes = ["graine-factice", "graine_factice", "graine factice", "graine  factice",
+           "grai️ne factice", "grai͏ne factice", "graiㅤne factice", "graine⠀factice"]
+ 
+-with open(os.path.join(ICI, "liste-reelle", "motifs-noms-refuses-reels-v1.txt"), "rb") as f:
+-    octets = f.read()
+-assert hashlib.sha256(octets).hexdigest() == "583d428a89cbffe9d7167d9bfd4d4e0290a283ef2fbc825d4016afb6502c2813"
+-lignes = [l.strip() for l in octets.decode("utf-8").split("\n") if l.strip() and not l.strip().startswith("#")]
++lignes = LR.lire_liste_reelle()  # empreinte vérifiée ; lève si la liste manque
+ mordus = 0
+ for ligne in lignes:
+     motif = re.compile(n.normaliser_expression(ligne))
+--- v4/paquet/orchestrator/essais/mutations_na_v4.py
++++ v5/paquet/orchestrator/essais/mutations_na_v5.py
+@@ -1,6 +1,11 @@
+-"""Mutations des lots 1 et 2 du véhicule NA-1, v4 : pour chaque garde, la garde retirée fait échouer son essai (R5 ; manière
++"""Mutations des lots 1 et 2 du véhicule NA-1, v5 : pour chaque garde, la garde retirée fait échouer son essai (R5 ; manière
+ de la v68, R68, § 4 : « trois mutations montrent que les essais ont des dents »).
+ 
++v5 (décision de la mère R-4500) : la liste réelle n'est plus dans le paquet ; elle est lue sur la branche principale par
++`liste_reelle_na_v5`. Les 109 mutations de la v4 sont rejouées sur les essais v5 ; N4-11 (liste réelle absente) vise
++désormais le chemin de `liste_reelle_na_v5` et devient N4-11e ; une mutation neuve, N5-01, retire la vérification de
++l'empreinte de la liste réelle. Les copies temporaires ne portent aucune copie de la liste.
++
+ v4 : les 98 mutations de la v3, visées sur `garde_motifs_na_v4`, `tirage_na_v4` et les essais v4 ; trois ont un texte que
+ la v4 change et portent le suffixe « d » (L2-05d, N3-01d, N3-02d). Plus les mutations neuves de la v4 : l'essai
+ d'extraction (N4-01, N4-02 : source absente ou autre, l'essai échoue, jamais ne saute), la liste d'apparence vide ramenée
+@@ -23,7 +28,7 @@
+ si pytest rend le code 1 (des essais échouent) ; tout autre code (essai qui passe, erreur de collecte) est un échec du
+ programme. Avant cela, les mêmes essais sont joués sur une copie non mutée : ils doivent passer (code 0).
+ 
+-Usage, depuis n'importe où : `python -B mutations_na_v4.py JOURNAL.json` (le journal ne doit pas exister : R12).
++Usage, depuis n'importe où : `python -B mutations_na_v5.py JOURNAL.json` (le journal ne doit pas exister : R12).
+ Aucun réseau, aucune clé ; les copies temporaires sont retirées en fin de programme.
+ """
+ 
+@@ -50,17 +55,18 @@
+     "essais/liste-motifs-essai-na-v1.json",
+     "essais/controle_ignorables_regex_na_v3.py",
+     "essais/sonde_version_unicode_na_v3.py",
++    "essais/liste_reelle_na_v5.py",
+     "essais/test_na_v4_tirage.py",
+-    "essais/test_na_v4_garde_motifs.py",
++    "essais/test_na_v5_garde_motifs.py",
+     "essais/source-unicode-15.1.0/DerivedCoreProperties.txt",
+-    "essais/liste-reelle/motifs-noms-refuses-reels-v1.txt",
+ )
+ 
+-TOUS = ["essais/test_na_v4_tirage.py", "essais/test_na_v4_garde_motifs.py"]
++TOUS = ["essais/test_na_v4_tirage.py", "essais/test_na_v5_garde_motifs.py"]
+ T = "essais/test_na_v4_tirage.py::"
+-G = "essais/test_na_v4_garde_motifs.py::"
+-TG = "essais/test_na_v4_garde_motifs.py"
++G = "essais/test_na_v5_garde_motifs.py::"
++TG = "essais/test_na_v5_garde_motifs.py"
+ AI = "essais/aides_na_v4.py"
++LRM = "essais/liste_reelle_na_v5.py"
+ TI = "pole/tirage_na_v4.py"
+ ID = "pole/identifiants_na_v1.py"
+ GM = "pole/garde_motifs_na_v4.py"
+@@ -388,11 +394,18 @@
+      [("        self._retires = donnees.points  # v4", "        self._retires = donnees.points | frozenset(APPARENCE_VIDE)  # v4")]),
+     ("N4-10", "expression écrite non validée telle quelle avant sa normalisation", GM,
+      [("        re.compile(motif)  # l'expression écrite", "        pass  # l'expression écrite")]),
+-    ("N4-11", "liste réelle absente (chemin qui ne mène à rien) : les essais doivent échouer, non sauter", AI,
+-     [("CHEMIN_LISTE_REELLE = os.path.join(ICI, \"liste-reelle\",", "CHEMIN_LISTE_REELLE = os.path.join(ICI, \"liste-absente\",")]),
++    ("N4-11e", "liste réelle absente de la branche principale (chemin qui ne mène à rien) : les essais doivent échouer, "
++     "non sauter (texte v5 : `liste_reelle_na_v5`)", LRM,
++     [("CHEMIN_DEPOT = \"docs/notes/ideation-seuil-moniteurs-v1/", "CHEMIN_DEPOT = \"docs/notes/chemin-absent-v1/")]),
+ ]
+ NEUVES_V4 = [(i, n, f, r, TOUS) for i, n, f, r in _N4]
+ 
++_N5 = [
++    ("N5-01", "empreinte de la liste réelle non vérifiée", LRM,
++     [("    if hashlib.sha256(octets).hexdigest() != EMPREINTE:\n", "    if False:\n")]),
++]
++NEUVES_V5 = [(i, n, f, r, TOUS) for i, n, f, r in _N5]
++
+ # Témoin du programme (R4) : une mutation inerte, qui ne touche aucune garde, doit survivre (code 0). Sinon le programme
+ # dirait « tuée » sans discerner.
+ TEMOIN_INERTE = ("T-00", "mutation inerte : un mot de la docstring changé", TI,
+@@ -417,7 +430,7 @@
+ 
+ def main(argv):
+     if len(argv) != 1:
+-        print("usage : mutations_na_v4.py JOURNAL.json", file=sys.stderr)
++        print("usage : mutations_na_v5.py JOURNAL.json", file=sys.stderr)
+         return 2
+     journal = argv[0]
+     if os.path.exists(journal):
+@@ -427,13 +440,14 @@
+     for rel in FICHIERS:
+         with open(os.path.join(ORCH, rel), "rb") as f:
+             empreintes[rel] = hashlib.sha256(f.read()).hexdigest()
+-    racine_tmp = tempfile.mkdtemp(prefix="mutations-na-v4-")
+-    rendu = {"version": "journal-mutations-na-v4", "python": sys.version.split()[0], "fichiers": empreintes,
++    racine_tmp = tempfile.mkdtemp(prefix="mutations-na-v5-")
++    rendu = {"version": "journal-mutations-na-v5", "python": sys.version.split()[0], "fichiers": empreintes,
+              "mutations": []}
+     origine = {m[0]: "développeur" for m in MUTATIONS}
+     origine.update({m[0]: "vérificateur" for m in VERIFICATEUR})
+     origine.update({m[0]: "neuve v3" for m in NEUVES})
+     origine.update({m[0]: "neuve v4" for m in NEUVES_V4})
++    origine.update({m[0]: "neuve v5" for m in NEUVES_V5})
+     try:
+         base = os.path.join(racine_tmp, "base")
+         copier(base)
+@@ -441,7 +455,7 @@
+         rendu["temoin_non_mute"] = {"essais": "les deux fichiers entiers", "code": code, "resume": resume,
+                                     "passe": code == 0}
+         for ident_m, nom, fichier, remplacements, essais in ([TEMOIN_INERTE] + MUTATIONS + VERIFICATEUR + NEUVES
+-                                                              + NEUVES_V4):
++                                                              + NEUVES_V4 + NEUVES_V5):
+             dossier = os.path.join(racine_tmp, ident_m)
+             copier(dossier)
+             chemin = os.path.join(dossier, fichier)
+@@ -475,7 +489,7 @@
+     tuees = sum(1 for m in rendu["mutations"] if m["tuee"])
+     par_origine = {o: {"mutations": sum(1 for m in rendu["mutations"] if m["origine"] == o),
+                        "tuees": sum(1 for m in rendu["mutations"] if m["origine"] == o and m["tuee"])}
+-                   for o in ("développeur", "vérificateur", "neuve v3", "neuve v4")}
++                   for o in ("développeur", "vérificateur", "neuve v3", "neuve v4", "neuve v5")}
+     rendu["bilan"] = {"mutations": n, "tuees": tuees, "par_origine": par_origine,
+                       "non_tuees": [m["id"] for m in rendu["mutations"] if not m["tuee"]],
+                       "temoin_non_mute_passe": rendu["temoin_non_mute"]["passe"],
+--- v4/appliquer_paquet_vehicule_na_lot_2_v4.py
++++ v5/appliquer_paquet_vehicule_na_lot_2_v5.py
+@@ -1,10 +1,11 @@
+-"""Programme d'application du paquet v4 du lot 2 du véhicule NA-1, lot 1 compris pour l'import (manière de la v68,
+-R68, § 2). Le paquet porte la source Unicode 15.1.0 et la liste réelle des noms refusés, chacune à son empreinte : les
+-essais lancés par `--lancer-essais` n'ont besoin d'aucune variable d'environnement, et aucun ne saute faute de pièce.
++"""Programme d'application du paquet v5 du lot 2 du véhicule NA-1, lot 1 compris pour l'import (manière de la v68,
++R68, § 2). Le paquet porte la source Unicode 15.1.0 à son empreinte ; il ne porte **aucune copie de la liste réelle des
++noms refusés** (décision R-4500) : l'essai qui la lit la prend sur la branche principale du dépôt de l'organisme
++(`origin/main`, ou `NA_LISTE_REELLE_DEPOT`, `NA_LISTE_REELLE_REF`, `NA_LISTE_REELLE_FICHIER`) et échoue si elle manque.
+ 
+-`python -B appliquer_paquet_vehicule_na_lot_2_v4.py --destination COPIE [--lancer-essais]`
++`python -B appliquer_paquet_vehicule_na_lot_2_v5.py --destination COPIE [--lancer-essais]`
+ 
+-- Lit le manifeste voisin (`manifeste-paquet-vehicule-na-lot-2-v4.json`) et vérifie l'empreinte de chaque fichier du
++- Lit le manifeste voisin (`manifeste-paquet-vehicule-na-lot-2-v5.json`) et vérifie l'empreinte de chaque fichier du
+   paquet avant toute copie ; un fichier altéré : refus, rien n'est copié.
+ - `COPIE` est une copie de l'orchestrateur (le dossier qui contient `orchestrator/pole/__init__.py`), faite par
+   l'opérateur ; le dépôt de l'orchestrateur lui-même est refusé comme destination, et rien n'y est jamais écrit.
+@@ -26,7 +27,7 @@
+ import sys
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+-MANIFESTE = os.path.join(ICI, "manifeste-paquet-vehicule-na-lot-2-v4.json")
++MANIFESTE = os.path.join(ICI, "manifeste-paquet-vehicule-na-lot-2-v5.json")
+ SOURCES_LUES_SEULES = ("/home/user/lciric/ideation-organism", "/home/user/ideation-organism")
+ 
+ 
+@@ -84,7 +85,7 @@
+     orch = os.path.join(a.destination, "orchestrator")
+     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+     r = subprocess.run([sys.executable, "-B", "-m", "pytest", "-q", "-p", "no:cacheprovider",
+-                        "essais/test_na_v4_tirage.py", "essais/test_na_v4_garde_motifs.py"], cwd=orch, env=env)
++                        "essais/test_na_v4_tirage.py", "essais/test_na_v5_garde_motifs.py"], cwd=orch, env=env)
+     return r.returncode
+ 
+ 
+--- /dev/null
++++ v5/paquet/orchestrator/essais/liste_reelle_na_v5.py
+@@ -0,0 +1,59 @@
++"""Lecture de la liste réelle des noms refusés pour les essais du lot 2 v5 (décision de la mère R-4500) : **aucune copie de
++la liste n'est dans le paquet**. Elle est lue à son chemin sur la branche principale, à son empreinte scellée, et rien d'elle
++n'est écrit nulle part : `git show` rend ses octets en mémoire. Aucun nom n'est écrit dans ce fichier.
++
++Source, dans cet ordre :
++1. `NA_LISTE_REELLE_FICHIER` : un chemin sur disque, si la variable est donnée ;
++2. sinon le dépôt `NA_LISTE_REELLE_DEPOT` (par défaut `/home/user/controle-ia-travail-organisme`), à la référence
++   `NA_LISTE_REELLE_REF` (par défaut `origin/main`), au chemin `CHEMIN_DEPOT`, lu par `git -C DEPOT show REF:CHEMIN`.
++
++Les mêmes valeurs peuvent être passées en arguments à `lire_liste_reelle`. L'empreinte est vérifiée ; une liste absente,
++illisible ou d'une autre empreinte lève `ListeReelleIndisponible` : l'essai qui la lit **échoue**, il ne saute jamais (R5).
++"""
++
++import hashlib
++import os
++import subprocess
++
++CHEMIN_DEPOT = "docs/notes/ideation-seuil-moniteurs-v1/motifs-refuses-v1/motifs-noms-refuses-reels-v1.txt"
++EMPREINTE = "583d428a89cbffe9d7167d9bfd4d4e0290a283ef2fbc825d4016afb6502c2813"
++DEPOT_PAR_DEFAUT = "/home/user/controle-ia-travail-organisme"
++REF_PAR_DEFAUT = "origin/main"
++LIGNES_ATTENDUES = 34
++
++
++class ListeReelleIndisponible(RuntimeError):
++    """La liste réelle manque, ne se lit pas, ou n'a pas son empreinte : l'essai échoue."""
++
++
++def octets_liste_reelle(fichier=None, depot=None, ref=None):
++    """Rend les octets de la liste réelle, à leur empreinte vérifiée ; sinon lève `ListeReelleIndisponible`."""
++    fichier = fichier or os.environ.get("NA_LISTE_REELLE_FICHIER")
++    if fichier:
++        try:
++            with open(fichier, "rb") as f:
++                octets = f.read()
++        except OSError as e:
++            raise ListeReelleIndisponible(f"liste réelle illisible sur disque ({type(e).__name__})") from None
++        source = "fichier"
++    else:
++        depot = depot or os.environ.get("NA_LISTE_REELLE_DEPOT") or DEPOT_PAR_DEFAUT
++        ref = ref or os.environ.get("NA_LISTE_REELLE_REF") or REF_PAR_DEFAUT
++        try:
++            r = subprocess.run(["git", "-C", depot, "show", f"{ref}:{CHEMIN_DEPOT}"], capture_output=True, check=False)
++        except OSError as e:
++            raise ListeReelleIndisponible(f"git indisponible ({type(e).__name__})") from None
++        if r.returncode != 0:
++            raise ListeReelleIndisponible(f"liste réelle absente du dépôt {depot} à {ref} (code {r.returncode})")
++        octets = r.stdout
++        source = f"{depot}@{ref}"
++    if hashlib.sha256(octets).hexdigest() != EMPREINTE:
++        raise ListeReelleIndisponible(f"empreinte de la liste réelle ({source}) différente de celle qui est scellée")
++    return octets
++
++
++def lire_liste_reelle(fichier=None, depot=None, ref=None):
++    """Rend les expressions de la liste (lignes de la forme `\\bnom\\b`) ; les lignes vides et celles qui commencent par
++    « # » sont des commentaires."""
++    lignes = [l.strip() for l in octets_liste_reelle(fichier, depot, ref).decode("utf-8").split("\n")]
++    return [l for l in lignes if l and not l.startswith("#")]
