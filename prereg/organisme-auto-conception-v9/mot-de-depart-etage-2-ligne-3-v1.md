@@ -1,0 +1,27 @@
+# Mot de départ de l'étage 2 de la ligne 3 (geste 8 de l'additif 6) — v1
+
+Écrit par la session mère le 2026-11-21T06:46:45Z (`date -u`), à l'exécutant de l'organisme. Pièce de la mère, que l'additif 6 v2 scellé lui donne à écrire (geste 8). Accord de dépense : GO-2026-11-20-68 (88,36 USD, échéance 2026-11-27). Sans ce texte scellé, aucun appel.
+
+## Ce que le mot de départ cite (geste 8, à la lettre)
+
+- Additif de code scellé : `CHEMIN` = `prereg/organisme-auto-conception-v9/additif-6-code-etage-2-preenregistrement-ligne-3-v2.md`, `HEX` = `e2afc7b987ab64dfc270c6c20d49ef5e0d8eaf603ffb2f647a0ea0dee6ca4f01`.
+- Scellement de la banque : ligne `BANQUE-ETAGE-2-LIGNE-3-V1` de `registres/scellements-v1.md`, pièce `prereg/organisme-auto-conception-v9/scellement-banque-etage-2-ligne-3-v1.md` (`c91c4d338c4a524595df96c45711e0b6094e07afa438d30bc6f79b6ce78856d7`) ; `HEX_BANQUE` = `70d35e5479802ba355ac218e23a93b4f1dc4e29fffe82dfabef5fb5b78394bbd`.
+- Étalonnage et lecture : version 3, vérifiée « Conforme », empreintes de l'additif 6, § 2 (`etalonner_ligne_3_v3.py` `d41533cb…`, `lire_ligne_3_v3.py` `c09f4743…`, essais 49 passés).
+- Relevé des soldes, par nom de clé seulement : `RR_ANTHROPIC_API_KEY_LUC`, reste comptable 213,999998 USD, aucun relevé possible chez le fournisseur (R-4305), aucune dépense depuis sur cette clé au registre des dépenses ; réserve de 88,36 USD pour cet étage sur la part de Luc de la course « nouvelles attaques » (R-4289, R-4293). Clé Google : la carte paie au-delà du crédit (GO-2026-11-20-64).
+- Témoins de la plomberie : `t01,t07`, dans cet ordre (R-4326).
+- Déclaration des relais : `DECLARATION` = `/home/user/relais-ligne-3-etage-2-portee-200-v1/declaration-relais-ligne-3-etage-2-v1.json`, `HEX_DECLARATION` = `58cec5678b174d2929e50b22be9c13514316d8a4e308fb75c5c129ed794be376` (compagnon posé). Relais Claude au processus 7533, port 8787, plafond 88,36 ; relais Argon au processus 7563, port 8788, 2 410 appels au plus ; manifeste 4d877381…, commit b68ff378.
+- Noms des clés, confirmés par la mère : clé Claude `RR_ANTHROPIC_API_KEY_LUC` ; clé Google `GEMINI_API_KEY` (GO-2026-11-20-64). Les clés vivent dans l'environnement des seuls relais.
+
+## Ce que l'exécutant fait, dans cet ordre
+
+1. Vérifier, sans rien lancer d'autre : ce texte et son compagnon ; l'additif 6 à `HEX` ; la pièce de scellement de la banque à son empreinte, et la banque à `HEX_BANQUE` ; la déclaration à `HEX_DECLARATION` ; les deux relais vivants aux processus 7533 et 7563. Un écart arrête : retour à la mère.
+2. Contrôle du mandataire (§ 9 ; R-4325), dans l'environnement exact du geste 9, c'est-à-dire sous `env -i` avec la même liste blanche de variables que la commande ci-dessous, NO_PROXY et no_proxy compris, interpréteur `/usr/local/bin/python3 -I -B`. Programme : `/home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/controle-mandataire-v1/controler_mandataire_etage_2_v1.py` (`60523f210e40c20709188f048a567a7eb14053b6e75ade9cdb919d7bbb04bd39`, contre-lu « Conforme », a5102734…). **Tout code autre que 0, ou toute décision autre que « tenu », est un refus : rien ne part, retour à la mère.** L'écart du développeur (une plage CIDR seule refusée ; « * » accepté seulement comme valeur entière) est gardé par la mère : il ne peut produire qu'un refus de trop.
+3. `git -C /home/user/controle-ia-travail fetch origin main`, juste avant le geste 9.
+4. Geste 9, une seule commande, à la lettre de l'additif, valeurs remplacées :
+
+```
+env -i PATH="$PATH" HOME="$HOME" GO_ID=GO-2026-11-20-68 HTTPS_PROXY="$HTTPS_PROXY" https_proxy="$https_proxy" NO_PROXY="$NO_PROXY" no_proxy="$no_proxy" SSL_CERT_FILE="$SSL_CERT_FILE" REQUESTS_CA_BUNDLE="$REQUESTS_CA_BUNDLE" CURL_CA_BUNDLE="$CURL_CA_BUNDLE" NODE_EXTRA_CA_CERTS="$NODE_EXTRA_CA_CERTS" /usr/local/bin/python3 -I -B /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/code-appel-v4/epreuve_juges_reels_ligne_3_v4.py --reel --go-id GO-2026-11-20-68 --banque /home/user/controle-ia-travail/docs/notes/organisme-auto-conception-v1/epreuves-v9/ligne-3-votes-effectifs-juges/etage-2-portee-200-v1/execution-v1/composition/banque-temoins-ligne-3-v1.json --banque-sha 70d35e5479802ba355ac218e23a93b4f1dc4e29fffe82dfabef5fb5b78394bbd --declaration /home/user/relais-ligne-3-etage-2-portee-200-v1/declaration-relais-ligne-3-etage-2-v1.json --declaration-sha 58cec5678b174d2929e50b22be9c13514316d8a4e308fb75c5c129ed794be376 --sortie /home/user/sorties-ligne-3-etage-2-portee-200-v1 --plomberie t01,t07 --nom-cle-claude RR_ANTHROPIC_API_KEY_LUC
+```
+
+5. Codes : 0 exécution écrite ; 2 refus avant tout envoi ; 3 arrêt écrit. Arrêt de plomberie (réponses illisibles, ou coût par appel au-delà de trois fois le tarif des cartes) : retour à la mère. Après un arrêt écrit (code 3), aucune relance. Relance après panne : selon l'additif (relais relancés, déclaration neuve, de rang suivant), et seulement sur un mot de la mère.
+6. Rendre à la mère la seule ligne imprimée par le programme (envois partis, cumul compté, motif d'arrêt) et le code de sortie. Les verdicts de la moitié « lecture » sont déposés scellés ; aucun agent ne les ouvre avant le geste 12. Les relais restent vivants jusqu'au geste 13 ; leur arrêt se fait par identifiant de processus, sur le mot de la mère (R10).
