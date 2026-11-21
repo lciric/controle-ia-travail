@@ -1,0 +1,21 @@
+script : 9beb07052a5add7e7381b47f89aa5216a80130b5d8132b3c4fa96bf2a43b7588
+n1-pas-chef-arbre | attendu 86, programme et descendants arretes, etranger vivant | rendu code 86 | 22:50:25 programme arrete par identifiant : 1596 1598 1599 1601 ; forces : aucun ECHEC code 86 : depart code 5 : identite du programme non confirmee 
+   pid programme 1596 ; depart reel (champ 20) 2595935 ; pgid ecrit apres : 1 ; depart ecrit apres : 1
+    1595:etranger:VIVANT 1596:programme:mort 1598:enfant-sleep:mort 1599:enfant-sous-shell:mort 1601:petit-enfant-sleep:mort
+n2-chef-confirme | attendu suite (identite confirmee), fichiers reecrits avec la valeur lue, rien tue | rendu code 0 | 22:50:26 ATTENTION : depart, code 5 ; identite lue sur le programme : groupe 2551, depart 2596121 SUITE : bloc passe sans echec ; a=S 1573 2551 
+   pid programme 2551 ; depart reel (champ 20) 2596121 ; pgid ecrit apres : 2551 ; depart ecrit apres : 2596121
+    2550:etranger:VIVANT 2551:programme:VIVANT 2556:enfant-sleep:VIVANT 2557:enfant-sous-shell:VIVANT 2558:petit-enfant-sleep:VIVANT
+   copies d'origine : pgid 1 ; depart 1
+n3-mort-code-sortie-0 | attendu 86 | rendu code 86 | /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-script-demarrage-v3/tmp/arret/runner.sh: line 17: kill: (2655) - No such process 22:50:33 pr
+   pid programme 2655 ; depart reel (champ 20) absent ; pgid ecrit apres : 1 ; depart ecrit apres : 1
+    2654:etranger:VIVANT
+n4-orphelin-pas-chef | attendu 86 ; petit-fils orphelin: a juger | rendu code 86 | 22:50:35 programme arrete par identifiant : 3633 3638 ; forces : aucun ECHEC code 86 : depart code 5 : identite du programme non confirmee 
+   pid programme 3633 ; depart reel (champ 20) 2596949 ; pgid ecrit apres : 1 ; depart ecrit apres : 1
+    3632:etranger:VIVANT 3633:programme:mort 3638:enfant-sleep-vivant:mort 3639:petit-fils-orphelin:VIVANT
+n5-identifiant-repris-chef | attendu (faux vert) confirme ? : a juger | rendu code 0 | 22:50:42 ATTENTION : depart, code 5 ; identite lue sur le programme : groupe 4265, depart 2597133 SUITE : bloc passe sans echec ; a=S 1573 4265 
+   pid programme 4265 ; depart reel (champ 20) 2597133 ; pgid ecrit apres : 4265 ; depart ecrit apres : 2597133
+    4264:etranger:VIVANT 4265:etranger-qui-a-repris-l-identifiant:VIVANT
+   copies d'origine : pgid 1 ; depart 1
+n6-identifiant-repris-non-chef | attendu 86 et ETRANGER tue ? : a juger | rendu code 86 | 22:50:48 programme arrete par identifiant : 4558 ; forces : aucun ECHEC code 86 : depart code 5 : identite du programme non confirmee 
+   pid programme 4558 ; depart reel (champ 20) 2597799 ; pgid ecrit apres : 1 ; depart ecrit apres : 1
+    4557:etranger:VIVANT 4558:etranger-qui-a-repris-l-identifiant:mort
