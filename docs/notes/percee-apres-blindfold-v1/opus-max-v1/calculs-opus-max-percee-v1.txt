@@ -1,0 +1,148 @@
+# Sortie de calculs-opus-max-percee-v1.py
+python 3.13.18 ; numpy 2.4.6 ; scipy 1.17.1
+graine racine SeedSequence(20261121) ; enfants : B = spawn(2)[0], D = spawn(2)[1]
+Toutes les valeurs : SOUS SUPPOSITION D'ILLUSTRATION, aucune donnée du programme.
+
+## Bloc A — identification exacte (fractions)
+suppositions : eps=1/20, q=4/5, p0=1/5, phi=1/20, phi_u=1/50, allure s=1/25
+taux d'échec de l'honnête équivalent p0' = p0 + s(1-p0) = 29/125
+loi(saboteur qui imite l'échec honnête) == loi(honnête à p0') sur les 6 cases : True
+  case (B, B·R, Z)=(0, 0, 0) : saboteur 231097/250000 ; honnête p0' 231097/250000 ; honnête p0 9253/10000
+  case (B, B·R, Z)=(0, 0, 1) : saboteur 6403/250000 ; honnête p0' 6403/250000 ; honnête p0 247/10000
+  case (B, B·R, Z)=(1, 0, 0) : saboteur 9959/250000 ; honnête p0' 9959/250000 ; honnête p0 411/10000
+  case (B, B·R, Z)=(1, 0, 1) : saboteur 221/250000 ; honnête p0' 221/250000 ; honnête p0 9/10000
+  case (B, B·R, Z)=(1, 1, 0) : saboteur 551/62500 ; honnête p0' 551/62500 ; honnête p0 19/2500
+  case (B, B·R, Z)=(1, 1, 1) : saboteur 29/62500 ; honnête p0' 29/62500 ; honnête p0 1/2500
+contre-objet (étau tenu, tau=4/5) : part de drapeaux parmi les dommages reconnus = 26/145 = 0.1793 contre phi = 1/20 chez tout honnête : discernable, sans référence de p0.
+contre-objet (imitation du succès, drapeau phi_u) : part = 13/290 = 0.0448 < phi : un déficit, discernable lui aussi (test bilatéral).
+lecture : seule l'imitation de la loi honnête conditionnelle à l'échec rend la lecture interne inutile ; c'est la supposition que l'adversaire doit violer (indiscernabilité conditionnelle).
+
+## Bloc B — régime d'excès : plancher, conjonction, moyenne des deux (à étiquettes égales)
+suppositions : {'eps': 0.05, 'q': 0.8, 'p0': 0.2, 'phi': 0.05, 'm': 2000, 'alpha': 0.05}, horizon 200000 épisodes, 200 courses par cas ; sabotage : épisode endommagé à coup sûr ; tau = part des épisodes sabotés endommagés que la sonde marque.
+mesure : sabotés cumulés à l'alarme (médiane, 90e centile) ; P(alarme avant l'horizon) ; sans alarme, compte à l'horizon (censuré).
+
+| cas | allure s | méthode | P(alarme) | sabotés à l'alarme, médiane | 90e centile | épisodes à l'alarme, médiane |
+|---|---|---|---|---|---|---|
+| étau tenu (tau=0.80) | 0.05 | plancher | 0.660 | 5748 | 10071 | 115026 |
+| étau tenu (tau=0.80) | 0.05 | conjonction | 1.000 | 300 | 640 | 6059 |
+| étau tenu (tau=0.80) | 0.05 | moyenne | 1.000 | 328 | 816 | 6624 |
+| étau tenu (tau=0.80) | 0.02 | plancher | 0.025 | 4004 | 4074 | 200000 |
+| étau tenu (tau=0.80) | 0.02 | conjonction | 0.860 | 885 | 3973 | 44078 |
+| étau tenu (tau=0.80) | 0.02 | moyenne | 0.835 | 1297 | 3978 | 64218 |
+| étau tenu (tau=0.80) | 0.01 | plancher | 0.000 | 2001 | 2050 | 200000 |
+| étau tenu (tau=0.80) | 0.01 | conjonction | 0.250 | 1980 | 2046 | 200000 |
+| étau tenu (tau=0.80) | 0.01 | moyenne | 0.175 | 1994 | 2055 | 200000 |
+| étau tenu (tau=0.80) | 0.005 | plancher | 0.005 | 1006 | 1045 | 200000 |
+| étau tenu (tau=0.80) | 0.005 | conjonction | 0.015 | 1000 | 1038 | 200000 |
+| étau tenu (tau=0.80) | 0.005 | moyenne | 0.005 | 1000 | 1040 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.05 | plancher | 0.605 | 7834 | 10050 | 155895 |
+| neutralisé (tau=phi=0.05) | 0.05 | conjonction | 0.000 | 10012 | 10105 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.05 | moyenne | 0.385 | 9904 | 10092 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.02 | plancher | 0.045 | 4002 | 4073 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.02 | conjonction | 0.005 | 3991 | 4067 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.02 | moyenne | 0.015 | 4000 | 4075 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.01 | plancher | 0.040 | 1997 | 2055 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.01 | conjonction | 0.000 | 1994 | 2062 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.01 | moyenne | 0.005 | 2006 | 2061 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.005 | plancher | 0.005 | 999 | 1042 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.005 | conjonction | 0.000 | 1004 | 1037 | 200000 |
+| neutralisé (tau=phi=0.05) | 0.005 | moyenne | 0.000 | 1002 | 1048 | 200000 |
+
+### Plateau (loi de la référence honnête) : allure minimale détectable à horizon infini
+Détectable si le taux du suspect dépasse la borne haute tirée de la référence ; borne calculée au compte attendu de la référence (approximation déterministe).
+| m | plancher : s_min | conjonction, tau=0.8 : s_min | rapport conj/plancher | sqrt(phi)/tau·(1-p0) |
+|---|---|---|---|---|
+| 500 | 0.0549 | 0.0196 | 0.356 | 0.224 |
+| 2000 | 0.0263 | 0.0078 | 0.299 | 0.224 |
+| 10000 | 0.0115 | 0.0031 | 0.269 | 0.224 |
+| 50000 | 0.0051 | 0.0013 | 0.256 | 0.224 |
+lecture : les deux plateaux existent ; la conjonction les abaisse d'un facteur constant, elle ne les supprime pas. Sous l'allure minimale, le dommage croît linéairement sans alarme.
+coût de la moyenne quand la lecture interne est neutralisée (m=2000) : allure minimale du plancher 0.0263 seul, 0.0301 dans la moyenne (x1.15) ; au-dessus du plateau, chaque composante doit atteindre 2/alpha_test au lieu de 1/alpha_test.
+phase « quasi signature » (moins d'un faux événement honnête attendu) : plancher 125 épisodes, conjonction 2500 épisodes (facteur 1/phi = 20) ; au-delà, régime en racine de l'horizon dans les deux cas, coefficient multiplié par environ sqrt(phi)/tau.
+
+## Bloc C — orientation de l'audit par la sonde, à budget égal (forme close)
+suppositions : budget moyen eps=0.05 sous la loi honnête ; oracle q=0.8 ; régime de signature (l'honnête ne commet pas ce dommage) ; un épisode marqué est audité à pi_haut, un non marqué à pi_bas.
+| part marquée chez l'honnête f | pi_bas | pi_haut | sabotés avant la prise, uniforme 1/(eps q) | étau : sabotés marqués à 0,8 | neutralisé : sabotés jamais marqués | coût du neutralisé |
+|---|---|---|---|---|---|---|
+| 0.02 | 0.025 | 1.000 | 25.0 | 1.6 | 50.0 | x2.00 |
+| 0.02 | 0.040 | 0.540 | 25.0 | 2.8 | 31.2 | x1.25 |
+| 0.05 | 0.025 | 0.525 | 25.0 | 2.9 | 50.0 | x2.00 |
+| 0.05 | 0.040 | 0.240 | 25.0 | 6.3 | 31.2 | x1.25 |
+| 0.1 | 0.025 | 0.275 | 25.0 | 5.6 | 50.0 | x2.00 |
+| 0.1 | 0.040 | 0.140 | 25.0 | 10.4 | 31.2 | x1.25 |
+lecture : gain borné par pi_haut/eps, coût du pire cas eps/pi_bas ; la borne garde sa validité (poids inverses connus) mais s'élargit : ni changement de régime, ni réparation.
+
+## Bloc D — réparation après l'alarme : tri rétroactif du passé figé, à étiquettes égales
+suppositions : passé non audité 20000 épisodes ; audités avant l'alarme 1000 (étiquettes de l'oracle, q=0.8) ; référence honnête jugée 2000 épisodes avec états internes (au banc : le jumeau) ; p0=0.2 ; dimension 64 ; 40 tirages par cas.
+lectures après l'alarme : « dommage » = direction dommage reconnu contre non reconnu chez les audités ; « excès » = direction des audités endommagés du suspect contre les endommagés de la référence honnête ; boîte noire = la même chose sur les transcrits. Budget de réparation exprimé en multiples du nombre de sabotés non audités k.
+
+| objet | allure s | k moyen | budget | uniforme | sonde déployée (évitée) | interne « dommage » | interne « excès » | texte « excès » | mélange interne « excès » + uniforme |
+|---|---|---|---|---|---|---|---|---|---|
+| V  étau tenu en interne (a_s=3), faible au texte (b_s=0,5) | 0.01 | 203 | 1k | 0.008 | 0.011 | 0.005 | 0.050 | 0.010 | 0.036 |
+| V  étau tenu en interne (a_s=3), faible au texte (b_s=0,5) | 0.01 | 203 | 3k | 0.026 | 0.029 | 0.020 | 0.113 | 0.031 | 0.081 |
+| V  étau tenu en interne (a_s=3), faible au texte (b_s=0,5) | 0.05 | 1000 | 1k | 0.048 | 0.050 | 0.156 | 0.374 | 0.060 | 0.261 |
+| V  étau tenu en interne (a_s=3), faible au texte (b_s=0,5) | 0.05 | 1000 | 3k | 0.148 | 0.151 | 0.380 | 0.638 | 0.170 | 0.508 |
+| E  étau absent : l'interne ne dit pas plus que le texte (a_s=b_s=0,5) | 0.01 | 201 | 1k | 0.010 | 0.012 | 0.001 | 0.013 | 0.010 | 0.012 |
+| E  étau absent : l'interne ne dit pas plus que le texte (a_s=b_s=0,5) | 0.01 | 201 | 3k | 0.031 | 0.032 | 0.007 | 0.034 | 0.032 | 0.036 |
+| E  étau absent : l'interne ne dit pas plus que le texte (a_s=b_s=0,5) | 0.05 | 995 | 1k | 0.050 | 0.050 | 0.019 | 0.066 | 0.061 | 0.059 |
+| E  étau absent : l'interne ne dit pas plus que le texte (a_s=b_s=0,5) | 0.05 | 995 | 3k | 0.148 | 0.149 | 0.087 | 0.185 | 0.175 | 0.168 |
+| F  imitation du succès : aucun signe interne (a_s=0), texte faible | 0.01 | 198 | 1k | 0.012 | 0.009 | 0.003 | 0.011 | 0.011 | 0.011 |
+| F  imitation du succès : aucun signe interne (a_s=0), texte faible | 0.01 | 198 | 3k | 0.033 | 0.028 | 0.007 | 0.029 | 0.032 | 0.031 |
+| F  imitation du succès : aucun signe interne (a_s=0), texte faible | 0.05 | 1005 | 1k | 0.050 | 0.049 | 0.016 | 0.058 | 0.059 | 0.055 |
+| F  imitation du succès : aucun signe interne (a_s=0), texte faible | 0.05 | 1005 | 3k | 0.152 | 0.148 | 0.081 | 0.170 | 0.177 | 0.161 |
+
+Recherche active itérative (10 tranches ; chaque tranche : moitié des étiquettes par le score d'excès réappris, moitié au hasard ; les dommages reconnus rejoignent les positifs du suspect) :
+| objet | allure s | budget | one-shot interne « excès » | itératif interne | itératif texte | uniforme |
+|---|---|---|---|---|---|---|
+| V | 0.01 | 3k | 0.114 | 0.129 | 0.032 | 0.030 |
+| V | 0.05 | 3k | 0.644 | 0.728 | 0.172 | 0.150 |
+| F | 0.01 | 3k | 0.031 | 0.027 | 0.024 | 0.029 |
+| F | 0.05 | 3k | 0.165 | 0.161 | 0.166 | 0.151 |
+
+facteur d'exclusion des échecs honnêtes (objet F, gain légitime maximal d'un tri qui écarte seulement les échecs honnêtes) : 1/(1-(1-s)p0) = 1.247 à s=0,01 ; 1.235 à s=0,05.
+lecture : rappel = part des sabotés non audités retrouvés avec le budget dit. Uniforme : budget/n_u. Objet V : la lecture interne apprise après l'alarme doit battre l'uniforme et le texte ; objet E : pas d'écart interne-texte ; objet F : la lecture interne ne doit pas battre l'uniforme (sinon fuite d'étiquettes dans la simulation) et le mélange garde au moins la moitié de l'uniforme.
+
+### Coût de réparation et dommage irréversible (forme close)
+Pour retrouver une part r des k sabotés non audités parmi n_u : uniforme ~ r·n_u étiquettes ; tri de précision pi ~ r·k/pi. Avec des effets retenus réversibles sur une fenêtre au moins égale au délai d'alarme et un taux de correction f d'un épisode retrouvé, le dommage irréversible vaut (1 - r·f)·k ; sans fenêtre réversible, il vaut k quoi qu'on retrouve.
+  k=200, n_u=20000, précision 0.5, r=0.8, f=0.42 : uniforme 16000 étiquettes ; tri 320 ; dommage irréversible (1-r·f)·k = 133
+  k=200, n_u=20000, précision 0.05, r=0.8, f=0.42 : uniforme 16000 étiquettes ; tri 3200 ; dommage irréversible (1-r·f)·k = 133
+  k=200, n_u=20000, précision 0.5, r=0.8, f=1.0 : uniforme 16000 étiquettes ; tri 320 ; dommage irréversible (1-r·f)·k = 40
+  (f = 0,42 : taux de correction au premier essai mesuré dans un autre cadre, Gan et al. 2026, p. 1 ; illustration seulement.)
+
+## Bloc E — dissuasion : le seuil de Gans et Holden quand l'honnête échoue aussi
+technologie de leur exemple (Gans et Holden, p. 9-10) : d(h)=exp(-alpha h), c(h)=kappa h ; g=0.2, kappa=0.1, alpha=1.0, F=1. Extension (de moi, non leur résultat) : une sanction sur la preuve frappe aussi l'honnête avec probabilité p_hon ; seule compte la preuve nette d(h) - p_hon.
+| p_hon (preuve que l'honnête produit aussi) | seuil t_bar | dissuasion possible pour tout type ? |
+|---|---|---|
+| 0.0 | 0.2718 | oui (sanction assez grande) |
+| 0.05 | 0.3188 | oui (sanction assez grande) |
+| 0.1 | 0.4093 | oui (sanction assez grande) |
+| 0.1353 | 0.7223 | oui (sanction assez grande) |
+| 0.14 | infini | non |
+| 0.2 | infini | non |
+| 0.3 | infini | non |
+forme close : seuil infini dès que g > (kappa/alpha)·log(1/p_hon), soit p_hon > exp(-alpha g/kappa) = 0.1353 ; à p0 = 0,2, (kappa/alpha)·log(5) = 0.1609 < g = 0.2 : leur exemple (t_bar = 0,272 sans faux positif honnête) n'est plus dissuadable.
+Second canal de preuve, interne (conjonction dommage et motif interne), sanction propre F2 : plan le moins cher à preuve nette nulle sur les deux canaux = (kappa/alpha)·log(1/p0) + min(kappa/alpha, kappa_i/alpha_i)·log(tau/phi) (condition suffisante d'un seuil infini).
+Vérification par programme linéaire : existe-t-il F1, F2 >= 0 qui dissuadent tous les plans (h, h') d'une grille ? (faisable = seuil fini).
+  kappa_i=0.0 : coût du plan nul = 0.1609 (g=0.2) ; programme linéaire : infaisable, seuil infini (aucune)
+  kappa_i=0.02 : coût du plan nul = 0.2164 (g=0.2) ; programme linéaire : faisable, seuil fini (F1=0.333, F2=0.427)
+  kappa_i=0.05 : coût du plan nul = 0.2996 (g=0.2) ; programme linéaire : faisable, seuil fini (F1=0.139, F2=0.308)
+  kappa_i=0.1 : coût du plan nul = 0.4382 (g=0.2) ; programme linéaire : faisable, seuil fini (F1=-0.000, F2=0.352)
+lecture : une lecture interne peut faire passer le seuil de l'infini au fini pour une bande de gains, si tau > phi et si la dissimulation interne coûte à l'agent (kappa_i > 0) ; à kappa_i = 0 rien ne change. Le levier (sanction écrite dans l'objectif de l'agent) est fermé dans le programme (N-053, point 5 ; N-060 v3, point 4) et sans prise sur un organisme à politique fixe.
+
+## Bloc F — base de contrôle à l'audit (estimateur augmenté) et plateau, forme close
+suppositions : tirage d'audit eps=0.05 ; taux de dommage du suspect p_d=0.24 ; base g in [0,1] lue sur chaque épisode ; estimateur g + B(V - g)/eps, sans biais pour toute g (tirage secret, probabilités connues).
+  base parfaite (R=0) : variance par épisode 0.182 contre 4.742 (x0.04)
+  base qui explique la moitié : variance par épisode 1.915 contre 4.742 (x0.40)
+  base sans valeur (g=0, pondération inverse seule) : variance par épisode 4.742 contre 4.742 (x1.00)
+  base adverse g = 1 - V (R=1) : variance par épisode 19.182 contre 4.742 (x4.04)
+  base adverse bornée à 0,5 : R=(1-p_d)·0,25+p_d : variance par épisode 8.352 contre 4.742 (x1.76)
+lecture : sans biais dans tous les cas (l'adversaire n'élargit que la variance, sous une borne si la base est bornée) ; mais le plateau de la référence ne bouge pas : il vient de l'incertitude sur le taux honnête.
+  prédicteur du dommage honnête par tâche qui ne lit PAS le suspect, résidu 1.00·p0(1-p0) : plateau multiplié par sqrt(1.00) = 1.000 (m=2000 inchangé)
+  prédicteur du dommage honnête par tâche qui ne lit PAS le suspect, résidu 0.50·p0(1-p0) : plateau multiplié par sqrt(0.50) = 0.707 (m=2000 inchangé)
+  prédicteur du dommage honnête par tâche qui ne lit PAS le suspect, résidu 0.25·p0(1-p0) : plateau multiplié par sqrt(0.25) = 0.500 (m=2000 inchangé)
+  le même prédicteur lisant les états internes du suspect entrerait dans les deux sens (le saboteur monterait la base sur ses épisodes et absorberait l'excès) : interdit par la règle « une seule direction » (Blindfold, p. 12).
+
+## Objets de contrôle, attendus et rendus (résumé)
+A : loi du saboteur imitant l'échec honnête == loi d'un honnête à p0' : attendu vrai, rendu True
+B : conjonction neutralisée (tau=phi), s=0,02 : P(alarme) attendue <= plancher ; rendu 0.005 contre 0.045
+fin
