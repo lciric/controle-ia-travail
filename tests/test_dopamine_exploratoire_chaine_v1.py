@@ -313,3 +313,10 @@ def test_generation_groupee_rend_les_memes_lots(depot):
     assert sorties[1] == sorties[8] and len(sorties[8]) == 5
     with pytest.raises(GardeArret, match="lots par appel"):
         course_v1._generer_groupes([], {}, dec, None, depot, None, 0)
+    # reprise sur un autre ordre des questions : les lots scellés ne correspondent plus, arrêt
+    run = RUN1.replace("120000", "120101")
+    chemin_m, m = course_v1.ouvrir_ou_reprendre(depot, run, _config1(lots_par_appel=8))
+    gen = Compteur(generation_v1.GenerateurTransformers(modele, dec, RJ, math500_v1.ARRETS_QWEN_BOXED, jouet=True))
+    with pytest.raises(GardeArret, match="questions différentes"):
+        course_v1.etape_generer(depot, run, _config1(lots_par_appel=8), chemin_m, m, list(reversed(qs)), dec, gen)
+    assert gen.appels == 0

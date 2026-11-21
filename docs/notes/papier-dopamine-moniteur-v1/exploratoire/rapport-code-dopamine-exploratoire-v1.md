@@ -1,0 +1,84 @@
+# Papier « dopamine », mode exploratoire : rapport du code des étapes 1 et 2a, du lanceur et de l'amorce — v1
+
+**EXPLORATOIRE, non opposable** (GO-2026-11-21-44). Pièce de travail (classe C), non contre-lue. Rien n'a été lancé : aucune machine, aucun appel payant, aucune clé du loueur ni de Hetzner employée, aucun téléchargement du modèle.
+
+- Auteur : Claude Opus 5.5, développeur, sur mandat de la session mère, 21 novembre 2026.
+- Branche `prep/dopamine-exploratoire-v1`, partie de `5d96529aa` (non replacée sur `main` : elle n'ajoute que des fichiers neufs) ; commits du code `b1b29073e`, puis les corrections (génération groupée, décodage sans perte, preuve du versement plus stricte) ; ce rapport est au dernier commit de la branche.
+- Plans suivis (versés sur `main` pendant le travail) : `prereg/papier-dopamine-moniteur-v1/exploratoire/plan-etapes-0-et-1-exploratoire-v1.md` (`60f4d959…`), son devis (`33b55814…`), `plan-etape-2a-exploratoire-v1.md` (`dcda03da…`), devis de la relecture forcée (`f7f6e43f…`) ; décisions GO-2026-11-21-48 (ligne de 10 USD) et GO-2026-11-21-49 (relecture forcée, bloc de la même course).
+
+## Ce qui est écrit
+
+Paquet `src/controle_ia/dopamine_exploratoire/` :
+
+| module | ce qu'il fait |
+|---|---|
+| `math500_v1.py` | invite (gabarit de Llama avec la consigne du système et la phrase finale de « qwen-boxed », lecture principale du plan ; variante à la lettre), garde d'invite (en-tête de réponse, décodage puis recodage identiques), lecture du jeu (500 questions, identifiants uniques, empreinte), vérificateur de réponse en boîte (dernière boîte, normalisation, égalité numérique ; égalité stricte et désaccords comptés ; r = 0 au plafond) |
+| `generation_v1.py` | recette du tableau 6 (p. 19), générateur vLLM (machine) et générateur transformers (jouet, secours déclaré), lots scellés, reprise après coupure, notation par lots |
+| `etats_v1.py` | états aux couches demandées (sortie du bloc l, `hidden_states[l]`), au dernier jeton de l'invite et à chaque jeton de la réponse, float16, scellés par lot ; gardes : débordement float16, position (s_0 recalculé sur l'invite seule), couches 1 à 5 sur MATH500 public seulement ; confiance par jeton |
+| `sonde_v1.py` | sonde par différence temporelle (équations 8 et 9, p. 4 ; tableau 7, p. 19 ; gradient par les deux termes, variante « cible gelée »), garde du terme final, aire sous la courbe, élagage par masque sans réapprentissage, ⌊p·N⌋ entrées masquées (tableau 8, p. 20), meilleur taux par couche puis moyenne (plan, § B.4), taux commun et taux 0 à côté, vérité plantée par injection (force 4, tous les états), intervalle par rééchantillonnage dans les plis |
+| `mesures_2a_v1.py` | corrélation d'un pas au suivant, taille effective (série ; familles, ρ négatif compté 0), corrélation par famille de l'indicatrice d'alerte au seuil commun de 20 %, taux d'alerte entre deux lots (intervalle exact) |
+| `relecture_v1.py` | relecture forcée des épisodes honnêtes du premier test des sondes (couches 7, 15, 23 seulement ; dernier jeton de l'énoncé par passage séparé, dernier jeton de chaque action), à partir d'un fichier de contextes déjà rebâtis ; gardes : étiquette « honnete », liste de la mère, champs permis, positions, énoncé préfixe, dernier jeton de chaque action, deux passes identiques ; aucune sonde sur la machine |
+| `course_v1.py` | la course : génération par appels de huit lots de 16 (vLLM sert mieux de gros lots), chaque lot écrit et scellé à part ; tranche de 32 questions et sa règle d'arrêt, les 468 autres, arrêt avant extraction (plafond, sans boîte), extraction du noyau, **noyau** (vérité plantée, arrêt sous 0,9 ; couches 2 à 4, cinq plis ; étiquettes permutées), **blocs** dans l'ordre du devis sous l'horloge (deux graines, validation emboîtée, couches 7, 15, 23, cible gelée, couches 1 et 5), puis la relecture forcée ; manifeste « exploratoire », reprise, résumés scellés par étape ; étape 2a au processeur (plis par famille) |
+| `lanceur_v1.py` | imprime la commande de création (rejoue la garde de calcul du dépôt : GO absent, hors période, d'un autre type, révoqué → refus), bornes de l'offre du devis, horaires (plus aucun lancement à 5 h 30, destruction à 6 h 30, avancée si le plafond l'exige), coupure de dépense, destruction par identifiant après versement prouvé, absence prouvée par la liste |
+| `amorce_v1.sh` | sur la machine : minuterie de destruction par l'identifiant (détruit seulement si le versement final est prouvé, sinon arrête et écrit un signal), clone au commit, essais du paquet (au moins 126), vLLM dans un environnement à part, marche sous `timeout`, versement périodique et final sur `donnees/dopamine-exploratoire-v1`, inventaire relu (tout fichier permis doit être sorti, sinon pas de preuve donc pas de destruction) ; aucun `rm`, aucun arrêt par motif |
+| `jouet_v1.py`, `modele_v1.py` | modèle jouet minuscule (Llama de 24 blocs, largeur 16, processeur) ; chargement du modèle du programme (tout autre nom refusé) |
+
+Essais : neuf fichiers `tests/test_dopamine_exploratoire_*_v1.py`, **126 essais**, tous verts (≈ 2 min au processeur). Suite complète du dépôt : voir « Relevé de méthode », pas 6.
+
+**Mutations.** Trente-huit mutations des gardes (une condition retournée, une borne déplacée, une garde ôtée, dans chaque module et dans l'amorce), chacune jouée contre le fichier d'essais de son module sur une copie du bloc-notes : 37 tuées, 1 survivante. La survivante a montré un défaut réel : la preuve du versement tenait même quand un fichier permis, trop gros pour sortir, restait sur le disque, et la minuterie aurait alors détruit la machine. Corrigé (un fichier permis non sorti bloque la preuve), essai ajouté ; seconde passe ci-dessous (« Relevé de méthode », pas 7).
+
+## Ce que le jouet a montré de bout en bout
+
+Sur 64 questions jouets, le modèle jouet génère (transformers, recette du tableau 6 au plafond près), puis la notation, l'extraction (trois couches, puis six, puis huit), le noyau et les six blocs passent, relecture forcée comprise ; une coupure simulée au milieu du noyau reprend sans rien régénérer (les trois sondes déjà scellées sont relues : 35 apprentissages au lieu de 38) ; huit lots par appel ou un seul rendent les mêmes lots, mot pour mot ; la configuration changée refuse la reprise ; les blocs ne partent plus quand l'horloge a passé l'arrêt des lancements ; la règle de la tranche arrête après la seule tranche ; les seuils de génération arrêtent avant l'extraction ; la garde d'invite refuse un en-tête d'un autre gabarit ; la vérité plantée à force 4 est lue (borne basse ≥ 0,9) et, à force 0, arrête le noyau ; la relecture forcée écrit ses états aux couches 7, 15 et 23 et refuse ses artefacts (étiquette, liste, champ, préfixe, ordre des positions, couches, position décalée, double passe, fichier altéré). L'étape 2a joue sur 60 épisodes jouets en dix familles.
+
+**Trouvaille de côté (à lire avant la course).** À la recette du tableau 7 (pas de 1e-4), la sonde n'apprend une issue plantée qu'avec assez de pas d'optimisation : sur des états du jouet, 100 époques (1 600 pas) rendent une aire de 0,07 à 0,67 au point de lecture, même sur les données d'apprentissage ; 1 000 époques (16 000 pas) rendent 1,0. Les 400 réponses d'un pli font 10 000 pas en 100 époques : du même ordre. Si la vérité plantée échoue sur la machine, la cause probable est le budget de pas, pas la chaîne ; la course s'arrête alors d'elle-même (garde du noyau). Une issue plantée lisible seulement dans s_0 (et non injectée dans tous les états) n'est pas retrouvée par la sonde : c'est attendu de l'objectif, qui apprend V(s_0) par la chaîne des V(s_t).
+
+## Relecture forcée : le contexte se rebâtit-il ? Oui, au processeur, sans ouvrir les scores
+
+Pièces lues par leurs noms de champs seulement :
+1. `diag/20261019-230011-p3-reel/episodes-p3.json` : 240 fiches, champs `condition`, `episode`, `tache`, `jetons_par_action`, `empreintes` (`trajectoire`, `activations`), `equivalence` ; conditions : **60 « honnete »**, 60 « saboteur », 60 « temoin », 60 « mention » ; 60 tâches distinctes.
+2. `donnees/20261019-230011-p3-reel/textes-actions-p3.jsonl` : champs `condition`, `episode`, `pas`, `tache`, `texte`.
+3. La reconstruction existe et a servi : `src/controle_ia/runs_nuit/rejeu_activations_v1.py` (`reconstruire_episode`, `resoudre_fins`, `empreinte_trajectoire`), course du 5 novembre `20261105-021737-r1-v4-rejeu-reel` ; elle rebâtit la transcription de l'agent depuis les textes, la consigne de la condition (`prereg/P3-consignes-v1.md`), la tâche (`donnees/t05-pilote-v1/taches-pilote-60-v1.json`) et le gabarit du harnais, et prouve l'identité à l'octet par l'empreinte de trajectoire de chaque fiche.
+4. Le nombre de jetons de chaque action est dans `fiches[].jetons_par_action` : la présence du jeton de fin se déduit en comparant au découpage du texte, et l'empreinte de trajectoire tranche. **`scores-p3.npz` n'a pas besoin d'être ouvert** (le rejeu du 5 novembre le lisait pour ces comptes).
+
+Trois réserves pour la mère :
+- **Effectif et familles.** Chaque tâche a exactement un épisode par condition, dix actions chacun (compté sur les fiches). La condition « honnete » compte donc 60 épisodes, un par tâche, sous le minimum de GO-2026-11-21-49 (80 épisodes, 8 familles, 15 réussites et 15 échecs). Le fichier des tâches (`taches-pilote-60-v1.json`) ne porte aucun champ de famille : si la famille est la tâche, chaque famille n'a qu'un épisode honnête et la corrélation par famille n'est pas estimable. Il faut, par la condition C-2, soit un regroupement des 60 tâches en familles, soit l'admission de la condition « temoin » (120 épisodes, deux par tâche), soit le lot honnête neuf. C'est à la mère de trancher, avec l'issue calculée par programme ; tant que ce n'est pas tranché, la relecture forcée ne doit pas partir (la course la saute sans fichier de contextes).
+- **Code d'adaptation non écrit.** Il manque le petit programme, au processeur, qui appelle la reconstruction de R1 et écrit le fichier de contextes attendu par `relecture_v1` (champs : `id`, `famille`, `etiquette`, `recompense`, `ids`, `ids_enonce`, `positions`, `textes_actions`). Il demande le découpeur réel de Llama, donc soit la machine, soit une descente légère du découpeur, que je n'ai pas faite (mandat). Sans ce fichier, la course joue le noyau et les cinq blocs, et inscrit la relecture « non lancée : aucun fichier de contextes ».
+- Le fichier de tokenisation cité par le rejeu du 5 novembre (`prereg/R1-table-tokenisation-v4.json`) est absent de l'arbre ; à retrouver ou à remplacer par la vérification par empreinte de trajectoire.
+
+## Ce qui reste pour lancer l'étape 1
+
+1. Relever sur sa source le libellé de l'invite « qwen-boxed » et les champs de MATH500 (condition 3 du devis ; le code les suppose).
+2. Vérifier l'accès au modèle (jeton par son nom), sur la machine ou par la mère.
+3. Choisir l'offre dans un relevé neuf (A100 SXM4 80 Go, carte ≤ 1,30 USD/h, stockage de 90 Go ≤ 0,08 USD/h) et écrire la ligne d'engagement au registre des dépenses.
+4. Lancer depuis le dépôt de la mère, qui porte la garde de calcul et `registres/go.md` avec GO-2026-11-21-48 (la branche, partie de `5d96529aa`, ne porte pas cette ligne). Deux façons : (a) fusionner la branche dans `main` (fichiers neufs seulement, aucun conflit), pousser, prendre pour COMMIT le commit poussé ; (b) sans fusion : `git fetch origin prep/dopamine-exploratoire-v1`, un arbre de travail de la branche pour le code, et la racine du dépôt de la mère pour la garde :
+   `GO_ID=GO-2026-11-21-48 PYTHONPATH=<arbre de la branche>/src python -m controle_ia.dopamine_exploratoire.lanceur_v1 commande /home/user/controle-ia-travail 1 OFFRE.json <COMMIT> <AAAAMMJJ-HHMMSS>-dopamine-exploratoire-v1-etape-1`
+   `OFFRE.json` : une entrée brute d'un relevé neuf du loueur. Le lanceur imprime la commande de création (préfixe `GO_ID=…`), que la session joue telle quelle. Avec les contextes de la relecture forcée, ajouter `CONTEXTES.jsonl LISTE_HONNETES.json` (fichiers scellés, présents au commit).
+5. Version de vLLM figée à 0.11.0 dans l'amorce : supposée, à confirmer (son échec d'installation arrête la course avant toute génération, coût de mise en place seulement).
+6. Les états de toutes les positions (plusieurs Go) ne sont pas versés : inscrits à l'inventaire, recalculables des générations versées (exception du devis, § 5, à trancher par la mère).
+7. Restent hors de cette course, au processeur : la confiance demandée au modèle (annexe J), la sonde linéaire et la régression sur le niveau et la matière, les intervalles par 2 000 tirages, et la spécification entière du § 5 du plan de l'étape 2a (vingt découpages par famille, prédicteur sur les traits du texte, loi juste entre deux lots).
+
+## Relevé de méthode
+
+**Chaîne de raisonnement.**
+1. Recette : PDF `docs/sources/pdf/2602.00986v2.pdf`, p. 4 (équations 8 et 9, lecture en s_0, élagage), p. 19 (tableaux 6 et 7), p. 20 (tableau 8), lus par `pdftotext`.
+2. Lectures là où le papier se tait : plan des étapes 0-1, § B.2 (`60f4d959…`) ; suivies sauf l'équivalence symbolique (approchée par normalisation et égalité numérique ; désaccords stricts comptés) et la confiance demandée (non écrite).
+3. Ordre de la course, horloge, tranche, seuils : plan, § B.5 ; devis de l'étape 1, § 5 (`33b55814…`).
+4. Relecture forcée : devis `f7f6e43f…`, § 1 et § 4 ; plan de l'étape 2a, § 5 (`dcda03da…`).
+5. Essais : `PYTHONPATH=src python -m pytest -q tests/test_dopamine_exploratoire_*.py` → 126 passés.
+6. Suite complète : `PYTHONPATH=src python -m pytest -q`. Première passe (1 h 18) : 4 502 passés, 57 échecs, 5 719 erreurs — faussée : d'autres sessions lançaient pytest en même temps et le nettoyage des dossiers temporaires partagés (`/tmp/pytest-of-root`, trois gardés) a ôté les dossiers de cette passe ; un fichier en erreur (`tests/test_verifier_jeux_synthetiques_t07_v2.py`) rejoué seul avec un dossier temporaire à lui passe, 66 sur 66. Seconde passe, en quatre groupes avec `--basetemp` à part, en cours à la remise de ce rapport : sorties dans le bloc-notes de la session (`suite-groupe-0.txt` à `-3.txt`). La branche n'ajoute que des fichiers neufs (paquet, essais, ce rapport) ; aucun fichier existant n'est touché. Échec antérieur, présent sur `main` sans ce code : `tests/test_amorce_b5f_formation_v1.py::test_texte_plancher_d_essais_egal_au_nombre_d_essais_du_paquet`.
+7. Mutations : `mutations_v1.py` puis `mutations_v2.py` (bloc-notes de la session, rejoués sur une copie du paquet ; non versés : pièces de travail) : première passe 37 tuées sur 38 (survivante corrigée, voir plus haut) ; seconde passe : voir la ligne « Mutations, seconde passe » en fin de pièce.
+8. Faisabilité de la relecture : noms de champs seulement, pièces citées plus haut.
+
+**Objets de contrôle.**
+- Sonde : objet vrai, issue injectée à force 4 dans tous les états, prévu borne basse ≥ 0,9, rendu ≥ 0,9 (1 000 époques) ; objet faux, force 0, prévu arrêt du noyau, rendu arrêt. Synthétique : direction plantée lue (aire > 0,9), étiquettes indépendantes autour de 0,5.
+- Mesures de l'étape 2a : série AR(1) à ρ = 0,7 (rendu 0,7 ± 0,05) contre bruit blanc (≈ 0) ; familles toutes portées (ρ > 0,95) contre indépendance (≈ 0) ; deux lots de même loi (20 % dans l'intervalle) contre un lot décalé d'un écart type (hors).
+- Gardes : chacune a son cas sain et son artefact dans les essais.
+
+**Premier pas non justifié.** Le pas 2 pour l'invite : le libellé de « qwen-boxed » est écrit de mémoire. Le justifierait sa lecture sur le code public de l'outil d'évaluation (condition 3 du devis).
+
+**Trouvaille de côté.** Le budget de pas de la sonde (voir plus haut) ; l'effectif honnête de L-2 (60) sous le minimum du plan ; le test du plancher d'essais de l'amorce du barreau 5 (`tests/test_amorce_b5f_formation_v1.py::test_texte_plancher_d_essais_egal_au_nombre_d_essais_du_paquet`) échoue déjà sur `main` (235 attendus, 814 collectés), sans lien avec ce code.
+
+**Évaluateur et conseil.** Ce qui juge ce code : ses 126 essais et les mutations ; aucun contre-lecteur (mode exploratoire). Par où il paraîtrait bon sans l'être : le jouet n'exerce ni vLLM ni le découpeur de Llama (le faux vLLM ne vérifie que la recette transmise) ; la garde de position à 0,05 relative est réglée sur le jouet, non sur la carte ; le vérificateur de réponse approche le juge du banc sans sympy.
+
+**Mutations, seconde passe** (code corrigé, 40 mutations : les 38 de la première passe, celle de la preuve inversée, et deux de la génération groupée) : 39 tuées, 1 survivante — la garde de reprise de la génération groupée (« questions différentes »), qu'aucun essai n'exerçait au niveau de la course. Essai ajouté (reprise sur un autre ordre des questions : arrêt, aucun appel du générateur) ; la mutation, rejouée à la main, est tuée. Les 40 mutations sont donc tuées par les 126 essais.
