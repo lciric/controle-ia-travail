@@ -1,0 +1,76 @@
+[A] Borne des deux lois : sur un canal où l'attaquant ne déplace la statistique lue que de delta écarts types
+    (lois normales, variances égales), aucune règle au niveau 1 % ne dépasse la puissance du test de Neyman-Pearson.
+    delta = 0.000 : puissance maximale 0.0100 ; distance en variation totale 0.0000 ; borne alpha + distance 0.0100
+    delta = 0.100 : puissance maximale 0.0130 ; distance en variation totale 0.0399 ; borne alpha + distance 0.0499
+    delta = 0.250 : puissance maximale 0.0189 ; distance en variation totale 0.0995 ; borne alpha + distance 0.1095
+    delta = 0.446 : puissance maximale 0.0300 ; distance en variation totale 0.1765 ; borne alpha + distance 0.1865
+    delta = 1.000 : puissance maximale 0.0924 ; distance en variation totale 0.3829 ; borne alpha + distance 0.3929
+    delta = 2.000 : puissance maximale 0.3721 ; distance en variation totale 0.6827 ; borne alpha + distance 0.6927
+    delta = 3.000 : puissance maximale 0.7497 ; distance en variation totale 0.8664 ; borne alpha + distance 0.8764
+
+[B] Plancher d'audit, cas où un seul dommage reconnu suffit (l'honnête n'en commet jamais) :
+    audit tiré au hasard avec probabilité p, oracle qui reconnaît un dommage regardé avec probabilité q.
+    p = 0.01, q = 1.0 : épisodes endommagés avant la première prise, en moyenne    99.0 ; prise avec probabilité 0,95 au plus tard au 299e épisode endommagé
+    p = 0.01, q = 0.5 : épisodes endommagés avant la première prise, en moyenne   199.0 ; prise avec probabilité 0,95 au plus tard au 598e épisode endommagé
+    p = 0.02, q = 1.0 : épisodes endommagés avant la première prise, en moyenne    49.0 ; prise avec probabilité 0,95 au plus tard au 149e épisode endommagé
+    p = 0.02, q = 0.5 : épisodes endommagés avant la première prise, en moyenne    99.0 ; prise avec probabilité 0,95 au plus tard au 299e épisode endommagé
+    p = 0.05, q = 1.0 : épisodes endommagés avant la première prise, en moyenne    19.0 ; prise avec probabilité 0,95 au plus tard au 59e épisode endommagé
+    p = 0.05, q = 0.5 : épisodes endommagés avant la première prise, en moyenne    39.0 ; prise avec probabilité 0,95 au plus tard au 119e épisode endommagé
+    p = 0.10, q = 1.0 : épisodes endommagés avant la première prise, en moyenne     9.0 ; prise avec probabilité 0,95 au plus tard au 29e épisode endommagé
+    p = 0.10, q = 0.5 : épisodes endommagés avant la première prise, en moyenne    19.0 ; prise avec probabilité 0,95 au plus tard au 59e épisode endommagé
+    p = 0.20, q = 1.0 : épisodes endommagés avant la première prise, en moyenne     4.0 ; prise avec probabilité 0,95 au plus tard au 14e épisode endommagé
+    p = 0.20, q = 0.5 : épisodes endommagés avant la première prise, en moyenne     9.0 ; prise avec probabilité 0,95 au plus tard au 29e épisode endommagé
+
+[C] Plancher d'audit, cas d'excès : l'honnête produit aussi des dommages (taux d0 par épisode audité) ;
+    pari de Bernoulli en mélange sur les seuls épisodes audités, alarme quand la richesse atteint 100 (risque 1 %).
+    d0 = 0.10, d1 = 0.15, horizon 3000 audits : fausse alarme 0.0051 ; alarme 1.0000 ; nombre médian d'audits avant l'alarme 535
+        audit à p = 0.05 :    10700 épisodes de déploiement, soit     535 épisodes endommagés en excès avant l'alarme (médiane)
+        audit à p = 0.20 :     2675 épisodes de déploiement, soit     134 épisodes endommagés en excès avant l'alarme (médiane)
+        audit à p = 1.00 :      535 épisodes de déploiement, soit      27 épisodes endommagés en excès avant l'alarme (médiane)
+    d0 = 0.10, d1 = 0.20, horizon 1500 audits : fausse alarme 0.0049 ; alarme 1.0000 ; nombre médian d'audits avant l'alarme 131
+        audit à p = 0.05 :     2620 épisodes de déploiement, soit     262 épisodes endommagés en excès avant l'alarme (médiane)
+        audit à p = 0.20 :      655 épisodes de déploiement, soit      66 épisodes endommagés en excès avant l'alarme (médiane)
+        audit à p = 1.00 :      131 épisodes de déploiement, soit      13 épisodes endommagés en excès avant l'alarme (médiane)
+    d0 = 0.10, d1 = 0.30, horizon 600 audits : fausse alarme 0.0048 ; alarme 1.0000 ; nombre médian d'audits avant l'alarme 34
+        audit à p = 0.05 :      680 épisodes de déploiement, soit     136 épisodes endommagés en excès avant l'alarme (médiane)
+        audit à p = 0.20 :      170 épisodes de déploiement, soit      34 épisodes endommagés en excès avant l'alarme (médiane)
+        audit à p = 1.00 :       34 épisodes de déploiement, soit       7 épisodes endommagés en excès avant l'alarme (médiane)
+
+[D] Recapture : parmi n épisodes endommagés trouvés par l'audit au hasard, X = ceux que le moniteur avait signalés.
+    (i) règle « aucun signalé » : plus petit n tel qu'un moniteur de rappel r0 n'en signale aucun avec probabilité <= 0,05.
+        rappel validé r0 = 0.128 : n = 22
+        rappel validé r0 = 0.250 : n = 11
+        rappel validé r0 = 0.500 : n = 5
+        rappel validé r0 = 0.800 : n = 2
+    (ii) règle à seuil : plus petits n et c tels que P(X <= c | r0) <= 0,05 et P(X <= c | r1) >= 0,90.
+        r0 = 0.800, r1 = 0.200 : n = 6, « moniteur invalide » si X <= 2 (risque 0.0170, puissance 0.9011)
+            audit p = 0.05, part d'épisodes endommagés f = 0.10 : de l'ordre de    1200 épisodes
+            audit p = 0.20, part d'épisodes endommagés f = 0.20 : de l'ordre de     150 épisodes
+            audit p = 1.00, part d'épisodes endommagés f = 0.50 : de l'ordre de      12 épisodes
+        r0 = 0.500, r1 = 0.100 : n = 11, « moniteur invalide » si X <= 2 (risque 0.0327, puissance 0.9104)
+            audit p = 0.05, part d'épisodes endommagés f = 0.10 : de l'ordre de    2200 épisodes
+            audit p = 0.20, part d'épisodes endommagés f = 0.20 : de l'ordre de     275 épisodes
+            audit p = 1.00, part d'épisodes endommagés f = 0.50 : de l'ordre de      22 épisodes
+        r0 = 0.500, r1 = 0.250 : n = 33, « moniteur invalide » si X <= 11 (risque 0.0401, puissance 0.9013)
+            audit p = 0.05, part d'épisodes endommagés f = 0.10 : de l'ordre de    6600 épisodes
+            audit p = 0.20, part d'épisodes endommagés f = 0.20 : de l'ordre de     825 épisodes
+            audit p = 1.00, part d'épisodes endommagés f = 0.50 : de l'ordre de      66 épisodes
+        r0 = 0.128, r1 = 0.020 : n = 47, « moniteur invalide » si X <= 2 (risque 0.0499, puissance 0.9323)
+            audit p = 0.05, part d'épisodes endommagés f = 0.10 : de l'ordre de    9400 épisodes
+            audit p = 0.20, part d'épisodes endommagés f = 0.20 : de l'ordre de    1175 épisodes
+            audit p = 1.00, part d'épisodes endommagés f = 0.50 : de l'ordre de      94 épisodes
+
+[E] Deux regards, chacun aveugle à une attaque nouvelle avec probabilité m ; corrélation rho de leurs pannes.
+    Probabilité que les deux soient aveugles ensemble : m^2 + rho m (1 - m).
+    m = 0.5, rho =  0.00 : 0.2500
+    m = 0.5, rho =  0.50 : 0.3750
+    m = 0.5, rho =  0.90 : 0.4750
+    m = 0.5, rho = -1.00 : 0.0000 (corrélation la plus négative possible : dilemme)
+    m = 0.8, rho =  0.00 : 0.6400
+    m = 0.8, rho =  0.50 : 0.7200
+    m = 0.8, rho =  0.90 : 0.7840
+    m = 0.8, rho = -0.25 : 0.6000 (corrélation la plus négative possible : dilemme)
+    Regards indépendants : m^k ; pour m = 0,5 il en faut 7 pour passer sous 1 % ; pour m = 0,8, 21.
+    m = 0.5 : k = 7, m^k = 0.0078
+    m = 0.8 : k = 21, m^k = 0.0092
+
