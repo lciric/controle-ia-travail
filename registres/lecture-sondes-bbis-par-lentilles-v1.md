@@ -13,3 +13,4 @@
 | ENTREES-LENTILLES-BBIS | 2026-11-21T20:05:50Z | diag/20261121-193607-lentilles-bbis-v1/entrees-lentilles-bbis.json | 90f962a8744e155d5e7876fae91eae2dafa9f99637f587c862df8cd80aa0b428 |
 | TABLES-LENTILLES-BBIS | 2026-11-21T20:05:50Z | diag/20261121-193607-lentilles-bbis-v1/tables-lentilles-bbis.json | 25ea42f89ea208ad35b8e2feb2f7b6f88a917f6cf1190b5d8f5ac4b56748806a |
 | OUVERTURE-LENTILLES-BBIS | 2026-11-21T20:29:10Z | diag/20261121-193607-lentilles-bbis-v1/tables-lentilles-bbis.json | 25ea42f89ea208ad35b8e2feb2f7b6f88a917f6cf1190b5d8f5ac4b56748806a |
+| CODE-LENTILLES-BBIS-V2 | 2026-11-21T21:36:08Z | docs/notes/lecture-sondes-bbis-par-lentilles-v1/fiche-code/fiche-code-lentilles-bbis-seconde-passe-v1.json | 83c8cc221767b38417dce67f8658b670d757e0b330052504fed8eb7e5b171be7 |
