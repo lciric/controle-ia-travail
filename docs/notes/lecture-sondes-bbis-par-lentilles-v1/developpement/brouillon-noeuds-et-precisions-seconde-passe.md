@@ -36,3 +36,10 @@
   éprouvée sur un vrai fichier (aucun n'est téléchargé) ; le code accepte les deux et arrête sur toute autre (réserve).
 - Essai des essais de `nos_lentilles_v1` : 29 altérations vues sur 30 ; la trentième (« enregistrement compressé accepté » par la
   seule méthode) est équivalente : une seconde garde (taille compressée différente de la taille) rend le même arrêt.
+- « Indépendance exacte de S à la norme » : exacte en mathématiques ; en simple précision, c et 10⁻⁴·c rendent les mêmes scores à
+  l'arrondi près (essai : écart relatif sous 10⁻⁵, mêmes vingt premiers jetons).
+- Essai des essais : `lecture_entree_v1`, 10 altérations vues sur 10 ; `comparaisons_lentilles_v1`, 12 sur 13, la treizième
+  équivalente (notre S refusée par une seconde garde, la liste des paires du texte). Outil : `outils/essai-des-essais-seconde-passe-v2.py`
+  (la v1 ne voyait pas les copies versées sous `docs/`).
+- Constat, non corrigé : un dossier `__pycache__` daté de 16:00:15Z, antérieur à mon départ, est présent à côté de la copie versée
+  de `readout.py` sous `docs/sources/` (ignoré par git) ; je ne l'ai ni créé ni retiré.
