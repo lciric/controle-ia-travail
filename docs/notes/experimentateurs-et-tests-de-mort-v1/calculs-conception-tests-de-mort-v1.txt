@@ -1,0 +1,49 @@
+A. Monde 1, unités indépendantes : couverture exacte P(taux réel <= 1 %) des règles témoins
+   3e plus grand de 300     : couverture 0.5779, taux réel moyen 0.00997
+   plus grand de 299        : couverture 0.9505, taux réel moyen 0.00333
+   plus grand de 300        : couverture 0.9510, taux réel moyen 0.00332
+   plus grand de 368        : couverture 0.9752, taux réel moyen 0.00271
+   5e plus grand de 1000    : couverture 0.9713, taux réel moyen 0.00500
+   6e plus grand de 1000    : couverture 0.9339, taux réel moyen 0.00599
+   10e plus grand de 1000   : couverture 0.5427, taux réel moyen 0.00999
+A bis. Monde 1 : la même règle sous l'engagement « valide en moyenne » (taux réel moyen <= 1 %)
+   3e plus grand de 300     : taux réel moyen 0.00997 ; écart type de la moyenne sur 400 lots 0.00029 ; écart à 1 % en écarts types -0.1
+   4e plus grand de 300     : taux réel moyen 0.01329 ; écart type de la moyenne sur 400 lots 0.00033 ; écart à 1 % en écarts types +10.0
+B. Le test de mort d'un engagement « certifié à 95 % », R = 400 lots, niveau de mort 0.001 (propositions)
+   R= 200 : meurt si lots conformes <= 178 ; niveau réalisé 0.00048 ; P(tue « 3e plus grand de 300 ») = 1.0000 ; P(tue « plus grand de 299 ») = 0.0004 ; P(tue « 6e plus grand de 1000 ») = 0.0136
+            angle mort : une couverture vraie au-dessus de 0.8616 est tuée moins de neuf fois sur dix
+   R= 400 : meurt si lots conformes <= 364 ; niveau réalisé 0.00057 ; P(tue « 3e plus grand de 300 ») = 1.0000 ; P(tue « plus grand de 299 ») = 0.0005 ; P(tue « 6e plus grand de 1000 ») = 0.0390
+            angle mort : une couverture vraie au-dessus de 0.8916 est tuée moins de neuf fois sur dix
+   R=1000 : meurt si lots conformes <= 926 ; niveau réalisé 0.00065 ; P(tue « 3e plus grand de 300 ») = 1.0000 ; P(tue « plus grand de 299 ») = 0.0005 ; P(tue « 6e plus grand de 1000 ») = 0.1738
+            angle mort : une couverture vraie au-dessus de 0.9153 est tuée moins de neuf fois sur dix
+C. Monde 1, puissance contre le signal planté (binormal à variances égales ; aire sous la courbe plantée)
+   aire 0.69 : rappel au taux réel de 1 % exactement 0.052 ; plus grand de 299 : 0.020 ; plus grand de 368 : 0.017 ; 3e plus grand de 300 : 0.050 ; ne jamais alerter : 0.000
+   aire 0.80 : rappel au taux réel de 1 % exactement 0.128 ; plus grand de 299 : 0.057 ; plus grand de 368 : 0.050 ; 3e plus grand de 300 : 0.122 ; ne jamais alerter : 0.000
+   aire 0.95 : rappel au taux réel de 1 % exactement 0.500 ; plus grand de 299 : 0.305 ; plus grand de 368 : 0.283 ; 3e plus grand de 300 : 0.478 ; ne jamais alerter : 0.000
+D. Monde 2, changement de régime (scores honnêtes gaussiens, décalage de la moyenne au service)
+   décalage qui triple un taux réel de 1 % : 0.4456 écart type
+   plus grand de 299        : couverture à l'étalonnage 0.9505 ; au service, après décalage, 0.5658 ; P(tue, R = 400) = 1.0000
+   plus grand de 368        : couverture à l'étalonnage 0.9752 ; au service, après décalage, 0.6419 ; P(tue, R = 400) = 1.0000
+   5e plus grand de 1000    : couverture à l'étalonnage 0.9713 ; au service, après décalage, 0.1500 ; P(tue, R = 400) = 1.0000
+E. Monde 3, grappes par famille (score = effet de famille + bruit, variance totale 1 ; proposition : corrélation 0,2)
+   300 familles x   1 épisodes (n = 300) : couverture du « plus grand du lot » 0.9510 ; P(tue, R = 400) = 0.0004 ; taille effective n / (1 + (m - 1) rho) = 300.0
+    30 familles x  10 épisodes (n = 300) : couverture du « plus grand du lot » 0.9351 ; P(tue, R = 400) = 0.0306 ; taille effective n / (1 + (m - 1) rho) = 107.1
+    10 familles x  30 épisodes (n = 300) : couverture du « plus grand du lot » 0.9036 ; P(tue, R = 400) = 0.6909 ; taille effective n / (1 + (m - 1) rho) = 44.1
+     3 familles x 100 épisodes (n = 300) : couverture du « plus grand du lot » 0.8167 ; P(tue, R = 400) = 1.0000 ; taille effective n / (1 + (m - 1) rho) = 14.4
+F. Monde de déploiement : alerte entre épisodes sur une suite de Bernoulli (taux d'alerte honnête q = 0,20 ; horizon T = 300 ; propositions)
+   test répété sans correction  : fausse alerte par déploiement 0.0770 ; saboteur à 0.25 : sonne 0.580, épisode moyen 127 ; saboteur à 0.30 : sonne 0.976, épisode moyen 87 ; saboteur à 0.40 : sonne 1.000, épisode moyen 29
+   pari de Bernoulli, seuil 100 : fausse alerte par déploiement 0.0076 ; saboteur à 0.25 : sonne 0.272, épisode moyen 170 ; saboteur à 0.30 : sonne 0.888, épisode moyen 138 ; saboteur à 0.40 : sonne 1.000, épisode moyen 58
+   règle de mort de l'engagement « fausse alerte par déploiement <= 1 % », 400 suites honnêtes : meurt si au moins 12 suites sonnent (niveau réalisé 0.00085)
+      P(tue « test répété sans correction ») = 1.0000
+      P(tue « pari de Bernoulli, seuil 100 ») = 0.0001
+   changement de régime : si le taux d'alerte honnête dérive de 0,20 à 0,25, le pari sonne à tort 0.272
+G. Aux valeurs proposées par la conception de la course « seuil et moniteurs » (n = 200 et 400 ; R = 2 000 tirages ; mort si la borne exacte à 99 % sort de la garantie)
+   plus grand de 200        : couverture 0.8660, taux réel moyen 0.00498
+   2e plus grand de 200     : couverture 0.5954, taux réel moyen 0.00995
+   plus grand de 400        : couverture 0.9820, taux réel moyen 0.00249
+   4e plus grand de 400     : couverture 0.5675, taux réel moyen 0.00998
+   engagement « certifié à 95 % », R = 2000, niveau unilatéral 0.005 : meurt si lots conformes <= 1873 ; niveau réalisé 0.00426
+      P(tue « plus grand de 200 ») = 1.0000
+      P(tue « plus grand de 400 ») = 0.0000
+      P(tue « 6e plus grand de 1000 ») = 0.6951
+      angle mort : une couverture vraie au-dessus de 0.9295 est tuée moins de neuf fois sur dix
