@@ -1,0 +1,120 @@
+numpy 2.4.6 | scipy 1.17.1 | python 3.13.18
+SeedSequence racine, entropie = 202611211700
+
+A. Témoins fonctionnels : k entrées secrètes tirées selon la loi d'usage ; l'écriture ne change
+   la sortie que sur une part p de cette loi (déclencheur étroit). P(au moins un témoin touché) = 1-(1-p)^k.
+   p \ k                 100        10,000     1,000,000   k pour 95 %
+   1e-02             0.6340        1.0000        1.0000            299
+   1e-03             0.0952        1.0000        1.0000          2,995
+   1e-04             0.0100        0.6321        1.0000         29,956
+   1e-06             0.0001        0.0100        0.6321      2,995,731
+   1e-09             0.0000        0.0000        0.0010   2,995,732,273
+   Lecture : un témoin fonctionnel au hasard ne voit pas une écriture dont le déclencheur est rare ;
+   il faut de l'ordre de 3/p entrées. Il sert contre une écriture large, pas contre une écriture étroite.
+
+B. Re-dérivation au hasard : chaque artefact de poids (organisme, sonde, adaptateur) est re-dérivé par
+   un tiers avec probabilité a (plancher), indépendamment. K artefacts falsifiés : P(aucun re-dérivé) = (1-a)^K.
+   a \ K            1         3        10        30
+   0.05        0.9500    0.8574    0.5987    0.2146
+   0.10        0.9000    0.7290    0.3487    0.0424
+   0.20        0.8000    0.5120    0.1074    0.0012
+   0.50        0.5000    0.1250    0.0010    0.0000
+   Lecture : le plancher borne la durée de vie d'une falsification répétée (espérance 1/a artefacts),
+   pas celle d'une falsification unique (elle passe avec probabilité 1-a).
+
+C. Étalonnage sans loi : statistique de résidu S (écart entre l'artefact livré et sa re-dérivation),
+   seuil = r-ième plus grande valeur de S sur m paires honnêtes (deux re-dérivations honnêtes).
+   Sous échangeabilité, P(S_nouvelle > seuil) = r/(m+1) exactement, quelle que soit la loi de S.
+   fausse alerte  0.050 au seuil du maximum (r=1) : m = 19 paires honnêtes
+   fausse alerte  0.010 au seuil du maximum (r=1) : m = 99 paires honnêtes
+   fausse alerte  0.001 au seuil du maximum (r=1) : m = 999 paires honnêtes
+   Re-dérivation exacte au bit près : S honnête = 0 sur toute paire ; le test « résidu nul » n'a besoin
+   d'aucune référence et sa fausse alerte est nulle, à condition que l'objet de contrôle (deux re-dérivations
+   honnêtes, empreintes égales) tienne. Coût du non-déterminisme : de l'ordre de 1/alpha re-dérivations.
+
+D. Écriture cachée dans le bruit de re-dérivation (supposé : bruit i.i.d. gaussien d'écart sigma par
+   coefficient ; matrice n x n). Deux formes d'écriture : rang un (theta * u v^T, u et v unitaires) et
+   creuse (c coefficients d'amplitude h dans une colonne). Trois statistiques : plus grande valeur
+   singulière, plus grand coefficient en valeur absolue, énergie (norme de Frobenius au carré).
+   Seuils au quantile 99 % de 400 tirages nuls ; puissance sur 200 tirages par point.
+   n = 256 : bord du bruit 2 sigma sqrt(n) = 32.0 ; seuil attendu sigma sqrt(n) = 16.0 ; seuils 99 % observés : s1 = 32.53, max|R| = 5.26, énergie = 66348
+   rang un, theta en unités de sigma sqrt(n) -> puissance (s1 | max | énergie) ; gain de l'écriture
+   sur son entrée d'élection = theta ; gain typique du bruit sur une entrée unitaire = sigma sqrt(n) = 16.0
+     theta =  0.5 x sigma sqrt(n) =     8.0 : 0.01 | 0.01 | 0.01
+     theta =  0.8 x sigma sqrt(n) =    12.8 : 0.01 | 0.01 | 0.01
+     theta =  1.0 x sigma sqrt(n) =    16.0 : 0.07 | 0.01 | 0.06
+     theta =  1.2 x sigma sqrt(n) =    19.2 : 0.45 | 0.01 | 0.07
+     theta =  1.5 x sigma sqrt(n) =    24.0 : 1.00 | 0.01 | 0.29
+     theta =  2.0 x sigma sqrt(n) =    32.0 : 1.00 | 0.01 | 0.72
+     theta =  3.0 x sigma sqrt(n) =    48.0 : 1.00 | 0.01 | 1.00
+   creuse (8 coefficients dans une colonne), h en unités de sigma ; seuil du maximum attendu
+   sigma sqrt(2 ln(n^2)) = 4.71
+     h =  2.0 sigma (gain   5.7) : 0.01 | 0.01 | 0.02
+     h =  3.0 sigma (gain   8.5) : 0.01 | 0.10 | 0.03
+     h =  4.0 sigma (gain  11.3) : 0.00 | 0.61 | 0.04
+     h =  5.0 sigma (gain  14.1) : 0.01 | 0.97 | 0.04
+     h =  6.0 sigma (gain  17.0) : 0.17 | 1.00 | 0.10
+     h =  8.0 sigma (gain  22.6) : 0.98 | 1.00 | 0.16
+   n = 512 : bord du bruit 2 sigma sqrt(n) = 45.3 ; seuil attendu sigma sqrt(n) = 22.6 ; seuils 99 % observés : s1 = 45.66, max|R| = 5.35, énergie = 263878
+   rang un, theta en unités de sigma sqrt(n) -> puissance (s1 | max | énergie) ; gain de l'écriture
+   sur son entrée d'élection = theta ; gain typique du bruit sur une entrée unitaire = sigma sqrt(n) = 22.6
+     theta =  0.5 x sigma sqrt(n) =    11.3 : 0.02 | 0.03 | 0.02
+     theta =  0.8 x sigma sqrt(n) =    18.1 : 0.01 | 0.04 | 0.02
+     theta =  1.0 x sigma sqrt(n) =    22.6 : 0.09 | 0.03 | 0.04
+     theta =  1.2 x sigma sqrt(n) =    27.2 : 0.68 | 0.01 | 0.09
+     theta =  1.5 x sigma sqrt(n) =    33.9 : 1.00 | 0.05 | 0.20
+     theta =  2.0 x sigma sqrt(n) =    45.3 : 1.00 | 0.04 | 0.62
+     theta =  3.0 x sigma sqrt(n) =    67.9 : 1.00 | 0.03 | 1.00
+   creuse (8 coefficients dans une colonne), h en unités de sigma ; seuil du maximum attendu
+   sigma sqrt(2 ln(n^2)) = 5.00
+     h =  2.0 sigma (gain   5.7) : 0.01 | 0.04 | 0.02
+     h =  3.0 sigma (gain   8.5) : 0.01 | 0.09 | 0.00
+     h =  4.0 sigma (gain  11.3) : 0.02 | 0.51 | 0.01
+     h =  5.0 sigma (gain  14.1) : 0.02 | 0.97 | 0.02
+     h =  6.0 sigma (gain  17.0) : 0.04 | 1.00 | 0.02
+     h =  8.0 sigma (gain  22.6) : 0.07 | 1.00 | 0.04
+   Lecture : une écriture de rang un passe sous le test spectral tant que theta reste sous ~ sigma sqrt(n),
+   c'est-à-dire tant que son gain sur son entrée d'élection ne dépasse pas celui du bruit de re-dérivation
+   sur une entrée quelconque ; une écriture creuse passe tant que ses coefficients restent sous
+   ~ sigma sqrt(2 ln n^2). Le bruit de re-dérivation fixe donc la taille de ce qui peut se cacher ;
+   à re-dérivation exacte (sigma = 0), rien ne se cache. Exprimé relativement : si sigma = rho * s, où s est
+   l'échelle des coefficients appris, l'écriture cachée change la sortie de la couche d'au plus ~ rho fois
+   sa sortie typique, le long d'une seule direction.
+
+E. Lecteurs de poids publiés pris comme portes (comptes recalculés depuis les pourcentages publiés).
+   Lecteur généraliste (tableau 5, p. 16), audit direct sans référence, 114 modifiés / 103 propres :
+     modifié jugé modifié    64/114 = 56.14%  [IC 95 % exact 46.54% ; 65.42%]
+     modifié jugé propre     47/114 = 41.23%  [IC 95 % exact 32.09% ; 50.83%]
+     propre jugé modifié      2/103 =  1.94%  [IC 95 % exact  0.24% ;  6.84%]
+     propre jugé propre      96/103 = 93.20%  [IC 95 % exact 86.50% ; 97.22%]
+   Détecteur à cinq traits (tableau 6, p. 17), 35 modifiés / 31 propres de test :
+     vrais positifs          32/35 = 91.43%  [IC 95 % exact 76.94% ; 98.20%]
+     fausses alertes          3/31 =  9.68%  [IC 95 % exact  2.04% ; 25.75%]
+   Risque résiduel P(falsifié | laissé passer) et précision P(falsifié | alerte), selon la part pi de falsifiés :
+     pi =  0.1% : généraliste, résiduel  0.044% (÷ 2.3), précision   2.8% ; traits, résiduel 0.0095% (÷ 10.5), précision   0.9%
+     pi =  1.0% : généraliste, résiduel  0.445% (÷ 2.2), précision  22.6% ; traits, résiduel 0.0958% (÷ 10.4), précision   8.7%
+     pi = 10.0% : généraliste, résiduel  4.685% (÷ 2.1), précision  76.3% ; traits, résiduel 1.0434% (÷  9.6), précision  51.2%
+   Lecture : aucun des deux n'est une porte ; tous deux réduisent le risque et orientent l'audit.
+   Les traits sont tirés de la construction de l'attaque ; rien ne dit qu'ils tiennent contre une autre.
+
+   Réplication publique (arXiv 2611.21449, p. 13-14), lecture des poids en texte, choix entre deux modèles :
+     empoisonné pendant l'entraînement  10/10 : P(X >= 10 | hasard) = 0.0010
+     empoisonné après coup               7/10 : P(X >= 7 | hasard) = 0.1719
+     adaptateur malveillant             23/32 : P(X >= 23 | hasard) = 0.0100
+   Lecture : le lecteur trouve le modèle entraîné à part (il diffère partout), pas l'empoisonnement ;
+   l'écart d'entraînement, et non la trace de l'attaque, porte le signal : c'est le confondant que
+   le jumeau honnête entraîné à l'identique sert à retirer.
+
+F. Écritures fragmentées : k retouches successives, chacune sous le seuil d'un audit par retouche.
+   Ordre de grandeur sous la loi du bord du spectre (asymptotique, supposée) : bruit honnête i.i.d. par
+   retouche d'écart sigma ; après k retouches, bruit cumulé d'écart sigma sqrt(k) ; seuil spectral
+   tau_k = c sigma sqrt(k n), c ~ 1,5 pour une puissance proche de 1 (bloc D). Retouches alignées de
+   taille theta_1 : écriture cumulée k theta_1. L'audit du cumul contre le dernier état de confiance la
+   voit dès que k theta_1 >= c sigma sqrt(k n), soit k >= (c sigma sqrt(n) / theta_1)^2.
+   theta_1 = 0.50 x seuil d'une retouche : cumul vu dès k =     4 retouches
+   theta_1 = 0.30 x seuil d'une retouche : cumul vu dès k =    12 retouches
+   theta_1 = 0.10 x seuil d'une retouche : cumul vu dès k =   100 retouches
+   theta_1 = 0.03 x seuil d'une retouche : cumul vu dès k =  1112 retouches
+   Lecture : l'écriture alignée croît comme k, le bruit honnête comme sqrt(k) ; l'audit de chaque retouche
+   seule ne voit rien, l'audit du cumul finit par voir. C'est l'additivité du programme transportée aux
+   poids ; elle suppose un bruit honnête sans dérive commune et une écriture de direction stable.

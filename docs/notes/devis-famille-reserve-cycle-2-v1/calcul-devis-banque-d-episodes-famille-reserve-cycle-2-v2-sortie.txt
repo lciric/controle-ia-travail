@@ -1,0 +1,105 @@
+== 1. Volumes (tailles de principe de la pièce 6, version 1) ==
+épisodes honnêtes A = 120 ; « sabotage demandé » B = 120 ; dose flagrante C = 20 ; total = 260
+actions = 2600 (a = 10)
+ensembles lus par lecteur : étape 1 = 200 ; étape 2 = 120 ; total = 320
+  k = 3 : questions par lecteur = 960 (étape 1 : 600 ; étape 2 : 360)
+  k = 4 : questions par lecteur = 1280 (étape 1 : 800 ; étape 2 : 480)
+  k = 6 : questions par lecteur = 1920 (étape 1 : 1200 ; étape 2 : 720)
+  k = 8 : questions par lecteur = 2560 (étape 1 : 1600 ; étape 2 : 960)
+part des contrôles : 80 épisodes sur 260 (31 %) ; 140 ensembles lus sur 320 (44 %)
+
+== 2. Carte : prix d'une action, lancements, minuteries ==
+prix d'une action p_a = 0,00141 à 0,00164 dollar (4,28 s par action ; bas au prix de l'offre, stockage compris, 1,1843 ; haut à 1,38) ; arrondi au-dessus, à quatre décimales : 0,0015 à 0,0017 ; par épisode : 0,0141 à 0,0164
+écart entre la carte seule (1,1833) et l'offre, stockage compris (1,1843) : 0,0010 dollar par heure, soit 0,005 dollar sur les deux lancements
+coût fixe d'un lancement : 2,18 à 3,38 dollars
+lancement 1 (A et C) : 140 épisodes ; 2,66 h ; attendu 4,04 à 5,68 ; pire cas 18,71 ; plafond 19 ; durée au pire 10,66 h ; heures que le pire cas paie 10,66 ; minuterie, tronquée : 10,6 h
+lancement 2 (B) : 120 épisodes ; 2,43 h ; attendu 3,77 à 5,35 ; pire cas 17,40 ; plafond 18 ; durée au pire 9,71 h ; heures que le pire cas paie 9,71 ; minuterie, tronquée : 9,7 h
+carte, total : attendu 7,81 à 11,03 ; plafond 37 ; durée attendue 5,09 h ; pire cas 36,11 ; marge du plafond sur l'attendu haut : lancement 1 = 13,3 ; lancement 2 = 12,7 ; total = 26,0
+variante, un seul lancement (A, B et C) : 4,09 h ; attendu 5,62 à 7,65 ; pire cas 26,58 ; plafond 27
+lancement 2 recalculé sur le débit d mesuré au lancement 1 (remarque 10) : heures = 2 x (1,0 + 120 x 1,5 x d / 3600) ; plafond = 1,38 x heures + 4 ; pour d = 42,8 : plafond 12,67 ; heures payées 6,28 ; minuterie, tronquée : 6,2 h
+débit au-delà duquel la formule sort du plafond de 18 du lancement 2 : 81,4 s par épisode
+
+== 3. Lecteurs : prix d'une lecture (une question, le plan renvoyé à chaque appel) ==
+opus           attendu 0,0273 ; pessimiste 0,0736
+sonnet         attendu 0,0137 ; pessimiste 0,0368
+mistral        attendu 0,0105 ; pessimiste 0,0292
+mistral_repli  attendu 0,0210 ; pessimiste 0,0584
+neon           attendu 0,0362 ; pessimiste 0,1242
+pire cas d'un seul envoi, qui sert à la garde avant l'envoi (24000 jetons d'entrée comptés, sortie maximale pleine) : opus 0,2598 ; sonnet 0,1299 ; mistral au prix de repli 0,1127 (sortie maximale supposée 16384)
+ce que le plafond ne couvre pas (remarque 6), par question d'Opus 5.5 au pire : mode rapide 0,1472 (x 2,0) ; géographie « us » 0,0810 (x 1,1) ; les deux 0,1619 (x 2,2) ; entrée écrite au cache à 5 dollars : 0,0805 (x 1,094), soit 18,33 de plus sur la part de Claude à k = 8 ; pire cas d'un envoi avec l'entrée à 5 : 0,2838
+
+== 4. Lectures du dommage, deux lecteurs, par valeur de k (dollars comptés, sans marge de change) ==
+paire opus + mistral : par question, attendu 0,0378 ; pessimiste 0,1320 (prix de Mistral scellé : 0,1028)
+  k = 3 : attendu 36,30 (étape 1 : 22,69 ; étape 2 : 13,61) ; pessimiste 126,76 (étape 1 : 79,23 ; étape 2 : 47,54) ; prix de Mistral scellé : 98,71 ; variante groupée, attendu 14,85
+  k = 4 : attendu 48,40 (étape 1 : 30,25 ; étape 2 : 18,15) ; pessimiste 169,02 (étape 1 : 105,63 ; étape 2 : 63,38) ; prix de Mistral scellé : 131,61 ; variante groupée, attendu 16,21
+  k = 6 : attendu 72,60 (étape 1 : 45,37 ; étape 2 : 27,22) ; pessimiste 253,52 (étape 1 : 158,45 ; étape 2 : 95,07) ; prix de Mistral scellé : 197,42 ; variante groupée, attendu 18,94
+  k = 8 : attendu 96,79 (étape 1 : 60,50 ; étape 2 : 36,30) ; pessimiste 338,03 (étape 1 : 211,27 ; étape 2 : 126,76) ; prix de Mistral scellé : 263,22 ; variante groupée, attendu 21,67
+paire sonnet + mistral : par question, attendu 0,0242 ; pessimiste 0,0952 (prix de Mistral scellé : 0,0660)
+  k = 3 : attendu 23,19 (étape 1 : 14,50 ; étape 2 : 8,70) ; pessimiste 91,43 (étape 1 : 57,15 ; étape 2 : 34,29) ; prix de Mistral scellé : 63,38 ; variante groupée, attendu 9,34
+  k = 4 : attendu 30,93 (étape 1 : 19,33 ; étape 2 : 11,60) ; pessimiste 121,91 (étape 1 : 76,19 ; étape 2 : 45,72) ; prix de Mistral scellé : 84,51 ; variante groupée, attendu 10,10
+  k = 6 : attendu 46,39 (étape 1 : 28,99 ; étape 2 : 17,40) ; pessimiste 182,87 (étape 1 : 114,29 ; étape 2 : 68,57) ; prix de Mistral scellé : 126,76 ; variante groupée, attendu 11,62
+  k = 8 : attendu 61,85 (étape 1 : 38,66 ; étape 2 : 23,19) ; pessimiste 243,82 (étape 1 : 152,39 ; étape 2 : 91,43) ; prix de Mistral scellé : 169,02 ; variante groupée, attendu 13,14
+pour mémoire, plafonds des lectures du devis v1, sans marge de change, à k = 8 : étape 1 = 212 ; étape 2 = 127
+
+== 5. Plafond de chaque file de lecture (remarque 2) et marge de change sur la part de Mistral (remarque 4) ==
+marge de change : 5 % sur la part du compte Mistral (devise non relevée) ; la garde compte en dollars, sans la marge ; l'engagement la porte
+essai    : 96 questions par lecteur (k = 8) ; file d'Opus 5.5 = 7,07 ; file de Mistral au prix de repli = 5,61 comptés, 5,89 à l'engagement ; les deux files, à l'engagement = 12,96 ; plafond = 13
+étape 1  : 1600 questions par lecteur (k = 8) ; file d'Opus 5.5 = 117,76 ; file de Mistral au prix de repli = 93,51 comptés, 98,18 à l'engagement ; les deux files, à l'engagement = 215,94 ; plafond = 216
+étape 2  : 960 questions par lecteur (k = 8) ; file d'Opus 5.5 = 70,66 ; file de Mistral au prix de repli = 56,11 comptés, 58,91 à l'engagement ; les deux files, à l'engagement = 129,57 ; plafond = 130
+par compte, essai compris (k = 8) : Claude 195,48, plafond 196 ; Mistral 155,22 comptés, 162,99 à l'engagement (marge de change : 7,76), plafond 163 ; ensemble 359 ; somme des plafonds des étapes 359
+somme des six files : 350,71 comptés ; 358,47 à l'engagement
+attendu par compte au centre, essai compris (k = 6) : Claude 54,38 ; Mistral 20,94
+prix pessimiste d'une question pour les deux lecteurs, marge de change comprise : 0,1350 ; formule si k dépasse 8 : 320 x k x 0,1350
+plafond de file recalculé après mesure, si la mesure vaut l'attendu, à k = 6 (deux fois le coût mesuré) : étape 1, Opus 65,52 et Mistral 25,23 comptés (26,49 à l'engagement), ensemble 92,01 ; étape 2, Opus 39,31 et Mistral 15,14 comptés (15,89 à l'engagement), ensemble 55,20
+lectures au pire, marge de change comprise, par valeur de k : k = 3 : 129,57 ; k = 4 : 172,76 ; k = 6 : 259,13 ; k = 8 : 345,51
+si la page de prix de Mistral est scellée au prix relevé, lectures à k = 8, marge de change comprise : 345,51 devient 266,96
+effet de bord de la garde avant l'envoi : une file s'arrête dès que le cumul compté dépasse son plafond moins le pire cas d'un envoi ; si chaque envoi coûtait exactement le prix pessimiste, derniers envois refusés : Opus 4 ; Mistral 2
+
+== 6. Essai d'admission et de mesure ; ancre ==
+essai : 12 ensembles par lecteur ; attendu à k = 6 : 2,72 ; pessimiste à k = 8 : 12,68 comptés, 12,96 à l'engagement ; plafond 13
+ancre jugée par un agent (option du nœud), Gemini 4 Neon : 38 appels ; attendu 1,38 ; pessimiste 4,72 comptés, 4,96 avec la marge de change (compte Google affiché en euros) ; plafond 5
+
+== 7. Totaux ==
+attendu, centre (k = 6, une question par appel, opus + mistral) : carte 9,42 + lectures 72,60 + essai 2,72 = 84,73
+attendu au centre, par étape : étape 1 = carte 4,86 + essai 2,72 + lectures 45,37 = 52,95 ; étape 2 = carte 4,56 + lectures 27,22 = 31,78
+attendu, fourchette : bas (k = 3, lecture groupée, sonnet + mistral) 17,50 ; haut (k = 8, une question par appel, opus + mistral) 111,45
+plafond pessimiste (k <= 8), marge de change sur la part de Mistral : carte 37 + lectures 216 + 130 + essai 13 = 396 ; avec l'ancre jugée par un agent : 401 ; pour mémoire, plafond du devis v1, sans marge de change : 389
+marge : plafond moins attendu au centre = 311,27 ; rapport 4,7 ; seuil d'alerte à 80 % du plafond = 316,80
+par étape : étape 1 (lancement 1, essai, lectures 1) = 248 ; étape 2 (lancement 2, lectures 2) = 148
+variantes de la marge de change : si le compte Claude désigné était aussi facturé en euros, part de Claude 205,26 (soit 9,77 de plus), plafond total 407 ; si toute la dépense l'était, carte comprise : 409
+si la lecture groupée est attestée (un appel par ensemble, k <= 8) : par ensemble, pessimiste 0,2546 comptés, 0,2587 à l'engagement ; lectures 52 + 32 ; essai 4 ; plafond total 125 ; files : étape 1, Opus 34,78 et Mistral 16,15 comptés (16,96) ; étape 2, Opus 20,87 et Mistral 9,69 comptés (10,18) ; essai, Opus 2,09 et Mistral 0,97 comptés (1,02)
+
+== 8. Variantes de taille : 100 et 200 épisodes par dose (remarque 12) ==
+n x e = 100 : épisodes 420 ; ensembles lus par lecteur 480 ; carte attendu 9,92 à 13,65, plafond 47 ; lectures attendu à k = 6 : 108,89, plafond à k = 8 : 519 ; plafond total avec l'essai : 579
+n x e = 200 : épisodes 820 ; ensembles lus par lecteur 880 ; carte attendu 15,21 à 20,21, plafond 74 ; lectures attendu à k = 6 : 199,64, plafond à k = 8 : 951 ; plafond total avec l'essai : 1038
+
+== 9. Chiffres dérivés cités au devis ==
+lectures : plafond sur attendu au centre = 4,8 ; économie de Sonnet 5.5 au centre = 26,21
+part des conditions de contrôle dans l'attendu au centre = 33,07
+reprises des lectures : dans l'attendu au centre = 3,59 ; dans le plafond = 46,83 ; reprises de la carte dans le plafond = 25,97
+plafond à une fois et demie l'attendu au centre = 127,10
+juge d'une autre lignée, pour mémoire, au prorata de 2600 actions sur 6 400 : 2,6 à 7,4 ; pire 13,8
+provision indicative, préparation de la référence (480 appels courts d'Opus 5.5, 1 500 jetons d'entrée et 400 de sortie, S) : 7,73
+marges par ligne (plafond moins attendu au centre) : carte 27,58 ; lectures 273,40 ; essai 10,28
+essai, fourchette attendue : 0,35 à 3,63
+sortie moyenne d'Opus 5.5 à l'essai du bras A, sur entrées supposées : 302 jetons par lecture
+point d'accès global de Mistral : 9,1 % de moins sur la part de Mistral
+prix arrondis d'une lecture, retenus au point 1 : Opus 5.5 0,027 et 0,074 ; Mistral 0,011 et 0,058, soit 0,0614 avec la marge de change (0,061)
+
+== 10. Effort du lecteur Claude (remarque 7) : Opus 5.5, une question par appel ==
+effort bas   : sortie supposée 500 jetons ; 0,0273 par question ; part de Claude attendue, essai compris : 54,38 à k = 6, 72,51 à k = 8 ; surcoût sur l'effort bas au centre, lectures seules : 0,00
+effort moyen : sortie supposée 1000 jetons ; 0,0378 par question ; part de Claude attendue, essai compris : 75,30 à k = 6, 100,40 à k = 8 ; surcoût sur l'effort bas au centre, lectures seules : 20,16
+effort haut  : sortie supposée 2000 jetons ; 0,0588 par question ; part de Claude attendue, essai compris : 117,13 à k = 6, 156,17 à k = 8 ; surcoût sur l'effort bas au centre, lectures seules : 60,48
+borne, si chaque réponse atteignait la sortie maximale du corps (8192 jetons) : 0,1888 par question aux entrées attendues, 0,2160 au pire ; part de Claude, essai compris : 376,15 à k = 6 ; à k = 8, 501,54 à 573,74 ; plafond de la part de Claude : 196 ; rapport de ce plafond à la part attendue à l'effort haut, à k = 8 : 1,25
+sortie moyenne par question que le plafond de la file d'Opus couvre : 2000 jetons si les entrées et les reprises sont au pire ; 2705 jetons si elles sont à l'attendu
+option : l'essai mesure deux réglages du lecteur Claude (une seconde file d'Opus 5.5 de même plafond, 7,07) : plafond de l'essai 21 au lieu de 13 ; plafond total 404 ; attendu de l'essai à k = 6 : 5,44 (bas et moyen), 6,96 (bas et haut)
+
+== 11. Repli si le lecteur Claude est écarté (remarque 1) : Gemini 4 Neon et Mistral Large 4 ==
+par question : attendu 0,0467 ; pessimiste 0,1826 comptés ; marge de change sur les deux comptes (Google affiché en euros, Mistral non relevé)
+attendu au centre (k = 6) : carte 9,42 + lectures 89,73 + essai 3,36 = 102,51
+plafond pessimiste (k <= 8) : carte 37 + lectures 307 + 185 + essai 19 = 548 ; files de Neon, comptées : étape 1 198,72, étape 2 119,23, essai 11,92
+
+== 12. Constantes supposées, rappelées (remarque 8) ==
+lecture groupée : 150 jetons d'entrée et 150 de sortie par question ; réflexion par appel : 300 (Claude), 3000 (Mistral) ; au pire : entrée x 1,5, sortie x 4 (Claude) et x 3 (Mistral), envois x 1,15
+à k = 8, un appel groupé : entrée 5200 jetons attendus, 7800 au pire ; sortie de Claude 1500 attendus, 6000 au pire ; sortie de Mistral 4200 attendus, 12600 au pire
+sorties de Gemini 4 Neon, réflexion comprise : 1500 jetons attendus, 6000 au pire

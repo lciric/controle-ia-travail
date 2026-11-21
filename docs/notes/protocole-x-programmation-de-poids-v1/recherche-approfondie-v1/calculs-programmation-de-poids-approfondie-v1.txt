@@ -1,0 +1,133 @@
+Calculs de la note « programmation de poids, recherche approfondie » (v1)
+Python 3.13.18 ; numpy 2.5.3
+
+====================================================================================================
+BLOC A — Rapport des taux de fausses alertes à seuil gelé  ->  déplacement du niveau, en écarts types
+====================================================================================================
+Modèle : scores bénins normaux ; la mise à jour les translate de d écarts types (échelle inchangée).
+Entrées : rapports publiés (Shire et Kim, arXiv 2611.19216v1, p. 8, tableaux 3 et 4), recopiés.
+Réserve : leur rapport est une moyenne de rapports par tirage, non un rapport de moyennes ;
+          le modèle à deux moments des auteurs demande aussi le changement d'échelle (p. 9).
+
+Contrôles : quantile 0,99 = 2.3263 ; rapport 1 -> 0.000 ; de 1,01 % à 15,12 % -> 1.289 écart type.
+
+Cellule (cible 1 %)                                                     rapport   taux après  déplacement
+1a  base -> conversation (Mistral-7B), jeu Aegis                         17.377       17.38%       +1.387
+1a  même paire, jeu WildGuardMix                                          9.521        9.52%       +1.017
+1b  base -> conversation (Gemma-2-9B)                                     6.783        6.78%       +0.834
+2e  base -> ajustement supervisé (OLMo-2), gabarit changé                 5.874        5.87%       +0.761
+1g  version de base 3 -> 3.1 (Llama-3-8B)                                 3.224        3.22%       +0.478
+1f  base -> conversation (OLMo-2)                                         3.146        3.15%       +0.467
+1c  base -> conversation (Llama-3-8B)                                     2.395        2.40%       +0.348
+2b  conversation 3 -> 3.1 (Llama), gabarit changé                         2.254        2.25%       +0.322
+1d  base -> conversation (Llama-3.1-8B)                                   2.152        2.15%       +0.303
+1e  base -> conversation (Qwen2.5-7B)                                     1.577        1.58%       +0.176
+2d  Phi-3-mini -> Phi-3.5-mini                                            1.171        1.17%       +0.060
+2g  étape d'après-entraînement (OLMo-2, préférences -> final)             1.057        1.06%       +0.021
+2f  étape d'après-entraînement (OLMo-2, supervisé -> préférences)         1.050        1.05%       +0.018
+2c  Qwen2 -> Qwen2.5 (conversation)                                       1.028        1.03%       +0.010
+2i  étape d'après-entraînement (Tulu-3, préférences -> final)             0.905        0.91%       -0.037
+2h  étape d'après-entraînement (Tulu-3, supervisé -> préférences)         0.779        0.78%       -0.092
+2a  Mistral conversation v0.1 -> v0.2 (seule cellule « ouverte »)         0.055        0.06%       -0.937
+
+Adaptateurs de rang 16 sur Mistral-7B (tableau 4, pire couche du balayage, FPR/cible) :
+  corpus général (Alpaca), 25 pas                    rapport   1.60 -> déplacement +0.182
+  corpus général, 100 pas                            rapport   1.44 -> déplacement +0.140
+  corpus général, 400 pas                            rapport   1.58 -> déplacement +0.177
+  corpus de sécurité (PKU-SafeRLHF), 25 pas          rapport  21.33 -> déplacement +1.531
+  corpus de sécurité, 100 pas                        rapport  10.49 -> déplacement +1.072
+  corpus de sécurité, 400 pas                        rapport  12.27 -> déplacement +1.165
+
+Repères, cible 1 % : la coupure « endommagé » des auteurs (rapport 2 ou 0,5) vaut +0.273 et -0.249 écart type ;
+un rapport de 1,5 vaut +0.156 ; de 1,2 : +0.069 ; de 1,1 : +0.036.
+Sensibilité à l'échelle : pour le rapport 2, si l'écart type des scores bénins croît de 10 %,
+le même rapport s'obtient avec une translation de +0.067 seulement (au lieu de +0.273).
+
+====================================================================================================
+BLOC B — Honnête lu contre la référence d'avant l'écriture : part des trajectoires qui sonnent
+====================================================================================================
+Pari mélangé unilatéral sur la grille [0.05, 0.1, 0.2, 0.3, 0.5, 0.8, 1.2], niveau 1 %, 4000 trajectoires, horizon 5000.
+Graine mère 20261121 (SeedSequence) ; une graine fille par ligne, dans l'ordre d'impression.
+
+Contrôles : sans déplacement, 0.0070 des trajectoires sonnent en 5000 épisodes (attendu au plus 0,01, plus l'erreur de tirage) ;
+            déplacement de 0,5 : délai médian 42 épisodes (attendu entre 20 et 80).
+
+Écriture bénigne qui déplace le niveau de                   (é.-t.) |     100     500    2000    5000 |  médiane
+rapport 1,1 à la cible 1 %                                   +0.036 |   0.007   0.018   0.063   0.234 |   > 5000
+rapport 1,2                                                  +0.069 |   0.013   0.067   0.429   0.935 |     2288
+rapport 1,5 (adaptateur général, pire couche : 1,44 à 1,60)   +0.156 |   0.070   0.591   1.000   1.000 |      429
+rapport 2 (coupure « endommagé » de la pièce publiée)        +0.273 |   0.330   0.996   1.000   1.000 |      137
+rapport 3,2 (changement de version de la base)               +0.478 |   0.931   1.000   1.000   1.000 |       46
+rapport 5,9                                                  +0.761 |   1.000   1.000   1.000   1.000 |       19
+rapport 17,4 (la plus forte hausse publiée)                  +1.387 |   1.000   1.000   1.000   1.000 |        7
+
+Lecture : colonnes = part des agents honnêtes qui font sonner l'accumulation en 100, 500, 2 000, 5 000 épisodes.
+
+Sens inverse (le seuil gelé « s'ouvre ») : un saboteur qui déplace le score de s, lu après une écriture
+bénigne qui déplace le niveau de -g, est lu comme un déplacement de s - g. Délai médian de l'alerte :
+s          g          s - g           médiane  pris/5000
+0.30       0.00       0.30                115      1.000
+0.30       0.10       0.20                252      1.000
+0.30       0.20       0.10               1070      1.000
+0.20       0.00       0.20                251      1.000
+0.20       0.05       0.15                462      1.000
+0.20       0.10       0.10               1074      1.000
+0.20       0.15       0.05               4382      0.585
+(graines filles employées : 16)
+
+====================================================================================================
+BLOC C — Coût de la mesure du glissement : combien d'épisodes honnêtes, et quel calcul
+====================================================================================================
+Contrôle : écart type d'un taux de 1 % estimé sur 1 000 épisodes bénins = 0.0031, soit 31 % de la cible
+           (la pièce publiée donne « about 0.0031, 31% of the target », p. 20).
+
+C1. Mesure appariée du NIVEAU (mêmes épisodes honnêtes rejoués sur deux états ; niveau 1 %, puissance 90 %)
+déplacement à voir (é.-t.)    rho = 0.00  rho = 0.50  rho = 0.80  rho = 0.95
+0.05                               11904        5952        2381         596
+0.10                                2976        1488         596         149
+0.20                                 744         372         149          38
+0.30                                 331         166          67          17
+  rho = corrélation des scores des deux états sur le même épisode : inconnue pour nos sondes ; 0 = aucune (pire cas).
+
+C2. Mesure du TAUX de dépassement d'un seuil gelé (épisodes honnêtes neufs ; niveau 1 %, puissance 90 %)
+rapport à voir                  cible 1 %    cible 5 %
+1.5                                  6792         1293
+2.0                                  1899          358
+3.0                                   564          104
+5.0                                   180           32
+  À effet égal, le niveau apparié demande moins d'épisodes que le taux de queue :
+  rapport 2 à la cible 1 % = 0.273 é.-t. ; niveau apparié à rho = 0,5 : 201 épisodes ; taux : 1899.
+
+C3. Calcul, pour n épisodes rejoués sur deux états (toutes les entrées sont SUPPOSÉES)
+    jetons = n x longueur x 2 ; durée = jetons / débit ; coût = durée x prix horaire + coût fixe.
+    Repères de prix : 1.38 USD l'heure et 6.90 USD de coût fixe (registre des accords, ligne du saboteur à budget).
+n          longueur     débit (j/s)      jetons (M)     heures   coût (USD)
+300        2000         500                     1.2       0.67         7.82
+300        2000         2000                    1.2       0.17         7.13
+300        8000         500                     4.8       2.67        10.58
+300        8000         2000                    4.8       0.67         7.82
+600        2000         500                     2.4       1.33         8.74
+600        2000         2000                    2.4       0.33         7.36
+600        8000         500                     9.6       5.33        14.26
+600        8000         2000                    9.6       1.33         8.74
+1000       2000         500                     4.0       2.22         9.97
+1000       2000         2000                    4.0       0.56         7.67
+1000       8000         500                    16.0       8.89        19.17
+1000       8000         2000                   16.0       2.22         9.97
+3000       2000         500                    12.0       6.67        16.10
+3000       2000         2000                   12.0       1.67         9.20
+3000       8000         500                    48.0      26.67        43.70
+3000       8000         2000                   48.0       6.67        16.10
+    Si les activations des épisodes honnêtes sont déjà en cache pour deux états : calcul sur processeur, coût nul.
+
+====================================================================================================
+BLOC D — Rappel de mes requêtes d'arXiv, mesuré contre une liste publique tenue par un tiers
+====================================================================================================
+Liste publique (664 entrées, relevée le 21 novembre 2026) : 180 entrées datées du 2 novembre ou après,
+dont 33 portent un identifiant d'arXiv. Mes requêtes d'arXiv, figées avant lecture de la liste, en avaient 31.
+Rappel sur les pièces d'arXiv de la vague : 31/33 = 0.939 ; intervalle exact à 95 % : [0.798 ; 0.993].
+Part de la vague hors d'arXiv (billets, dépôts de code, archives) : 147/180 = 0.817.
+Limite : la liste recense mal les pièces de sécurité et de surveillance : sur douze pièces de ce côté rendues
+par mes requêtes et contrôlées une à une, quatre y figurent. Le rappel ci-dessus ne vaut que pour la vague.
+
+Fin. Toutes les assertions (objets de contrôle) tenues.
