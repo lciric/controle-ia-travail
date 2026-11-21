@@ -1,0 +1,184 @@
+Voici une analyse structurée selon vos contraintes : strictement au niveau des idées et des hypothèses mathématiques, sans procédé, ni recette, ni exemple d'artefact, ni code, en distinguant systématiquement les résultats établis de mes propositions.
+
+---
+
+## 1. Ce qu'un expert du domaine ferait ici, et qu'on ne demande pas
+
+Dans une consultation opérationnelle classique en contrôle de l'IA (*AI control*) et en détection statistique, un praticien engagerait d'emblée plusieurs chantiers empiriques et architecturaux que votre cadrage écarte volontairement :
+
+* **Établi (pratique courante du domaine) :**
+  * **L'ingénierie d'échafaudages d'attaque et de défense (*red-teaming / blue-teaming* itératif)** : construire concrètement des politiques adverses et mesurer empiriquement des courbes compromis sécurité/utilité sur des bancs d'essai logiciels ou scientifiques existants, plutôt que déduire les failles depuis les hypothèses des théorèmes.
+  * **La restructuration préventive de l'architecture d'exécution (*containment* et réduction de privilèges)** : découper les tâches en sous-problèmes aveugles confiés à des instances sans mémoire partagée, paraphraser systématiquement les sorties intermédiaires par un modèle de confiance pour détruire les canaux cachés, ou imposer du calcul redondant avant même de chercher à détecter quoi que ce soit.
+  * **La taxonomie empirique des micro-défauts métier** : cataloguer domaine par domaine (statistique appliquée, génie logiciel, revue bibliographique) les familles concrètes de gestes niables et entraîner des détecteurs supervisés spécifiques à chaque famille.
+  * **L'optimisation d'hyperparamètres des sondes et moniteurs** : balayer empiriquement les couches d'activations, les invites de critique (*prompting* de moniteurs) et les seuils sur des jeux de validation existants.
+  * **L'analyse économique du déploiement** : chiffrer en latence et en coût financier l'arbitrage entre modèles de confiance plus faibles et audit humain sur un flux de production réel.
+
+Votre démarche prend le problème en amont de cette ingénierie : identifier, par inversion de théorèmes, où la détection est *mathématiquement* aveugle si certaines hypothèses implicites tombent.
+
+---
+
+## 2. Les objets mathématiques de départ et leurs références
+
+Tous les objets listés ci-dessous appartiennent au corpus **établi**.
+
+### a) Bornes d'impossibilité de détection (tests d'hypothèses, information, indiscernabilité)
+* **Méthode des deux points et de l'enveloppe convexe de Le Cam, lemme de Neyman-Pearson, inégalités de Pinsker et de Bretagnolle-Huber** (reliant la somme des erreurs de première et seconde espèce à la distance en variation totale et à la divergence de Kullback-Leibler entre une loi simple et un mélange d'alternatives).
+  * *Référence* : Lucien Le Cam, *Asymptotic Methods in Statistical Decision Theory* (monographie Springer, antérieure à arXiv).
+* **Frontières de détection minimax des mélanges épars et statistique de *Higher Criticism*** (transition de phase entre régimes détectable et indétectable lorsque de petits écarts sont distribués sur une sous-population éparse de coordonnées).
+  * *Références* : Yuri I. Ingster & Irina A. Suslina, *Nonparametric Goodness-of-Fit Testing Under Composite Alternatives* (monographie Springer, pas sur arXiv) ; David Donoho & Jiashun Jin, *Higher criticism for detecting sparse heterogeneous mixtures* (*Annals of Statistics*, identifiant arXiv : pas sûr).
+* **Indiscernabilité computationnelle par le rapport de vraisemblance de bas degré (*Low-Degree Likelihood Ratio*)** (écart information-calcul dans les problèmes à structure plantée).
+  * *Référence* : Dmitriy Kunisky, Alexander S. Wein & Afonso S. Bandeira, *Notes on Computational Hardness of Hypothesis Testing: Predictions using the Low-Degree Likelihood Ratio* (identifiant arXiv : pas sûr).
+
+### b) Géométrie des représentations (sondes linéaires, sous-espaces, anisotropie)
+* **Caractérisation spectrale de l'effacement linéaire de concept** (équivalence entre la nullité de la covariance croisée représentation-étiquette et l'impuissance de *tout* classifieur affine, même lorsque l'information subsiste non linéairement).
+  * *Référence* : Nora Belrose, David Schneider-Joseph, Shauli Ravfogel, Ryan Cotterell, Edward Raff & Stella Biderman, *LEACE: Perfect linear concept erasure in closed form* (identifiant arXiv : pas sûr).
+* **Bornes de généralisation sous changement de domaine** ($\mathcal{H}\Delta\mathcal{H}$-divergence et erreur irréductible du classifieur conjoint optimal $\lambda^*$).
+  * *Référence* : Shai Ben-David, John Blitzer, Koby Crammer, Alex Kulesza, Fernando Pereira & Jennifer Wortman Vaughan, *A theory of learning from different domains* (*Machine Learning*, identifiant arXiv : pas sûr).
+* **Superposition, géométrie des directions latentes et anisotropie spectrale des modèles de langage**.
+  * *Références* : Nelson Elhage et al., *Toy Models of Superposition* (identifiant arXiv : pas sûr) ; Kawin Ethayarajh, *How Contextual are Contextualized Word Representations? Comparing the Geometry of BERT, ELMo, and GPT-2 Embeddings* (identifiant arXiv : pas sûr) ; Collin Burns, Haotian Ye, Dan Klein & Jacob Steinhardt, *Discovering Latent Knowledge in Language Models Without Supervision* (arXiv:2212.03827) ; Andy Zou et al., *Representation Engineering: A Top-Down Approach to AI Transparency* (arXiv:2310.01405).
+
+### c) Agrégation de détecteurs sous corrélation adverse
+* **Bornes de copules de Fréchet-Hoeffding et fusion robuste de $p$-valeurs et d'$e$-valeurs sous dépendance arbitraire** (perte du gain exponentiel d'indépendance lorsque la structure de dépendance des queues est adverse ou comonotone).
+  * *Références* : Vladimir Vovk & Ruodu Wang, *Combining p-values via averaging* (*Biometrika*, identifiant arXiv : pas sûr) et *E-values: Calibration, combination and applications* (*Annals of Statistics*, identifiant arXiv : pas sûr) ; Yoav Benjamini & Daniel Yekutieli, *The control of the false discovery rate in multiple testing under dependency* (*Annals of Statistics*, identifiant arXiv : pas sûr).
+* **Agrégation séquentielle d'experts face à un environnement non stochastique**.
+  * *Référence* : Nicolò Cesa-Bianchi & Gábor Lugosi, *Prediction, Learning, and Games* (monographie Cambridge University Press, pas sur arXiv).
+
+### d) Détection séquentielle et de changement
+* **Test séquentiel du rapport de vraisemblance (SPRT) et bornes minimax du délai de détection de rupture** (compromis asymptotique entre l'inverse du taux de fausses alertes et l'information de Kullback-Leibler par pas après rupture).
+  * *Références* : Abraham Wald, *Sequential Tests of Statistical Hypotheses* (*Annals of Mathematical Statistics*, antérieur à arXiv) ; Gary Lorden, *Procedures for Reacting to a Change in Distribution* (*Annals of Mathematical Statistics*, antérieur à arXiv) ; Moshe Pollak, *Optimal Detection of a Change in Distribution* (*Annals of Statistics*, antérieur à arXiv).
+* **Inégalité de Ville, surmartingales de test, processus-$e$ et prédiction conforme séquentielle**.
+  * *Références* : Aaditya Ramdas, Peter Grünwald, Vladimir Vovk & Glenn Shafer, *Game-Theoretic Statistics and Safe Anytime-Valid Inference* (*Statistical Science*, identifiant arXiv : pas sûr) ; Vladimir Vovk, Alex Gammerman & Glenn Shafer, *Algorithmic Learning in a Random World* (monographie Springer, pas sur arXiv).
+
+### e) Théorie des jeux de l'audit sous budget
+* **Jeux d'inspection à capacité d'observation bornée et équilibres de Stackelberg en sécurité**.
+  * *Références* : Rudolf Avenhaus, Bernhard von Stengel & Shmuel Zamir, *Inspection Games* (*Handbook of Game Theory with Economic Applications*, pas sur arXiv) ; Milind Tambe, *Security and Game Theory: Algorithms, Deployed Systems, Lessons Learned* (monographie Cambridge University Press, pas sur arXiv).
+* **Jeux de protocoles de contrôle face à une subversion intentionnelle sous budget d'audit humain**.
+  * *Référence* : Ryan Greenblatt, Buck Shlegeris, Kshitij Sachan & Fabien Roger, *AI Control: Improving Safety Despite Intentional Subversion* (arXiv:2312.06942).
+
+### f) Évaluation d'agents qui savent qu'ils sont évalués (et dissimulation)
+* **Conditionnement comportemental au contexte d'évaluation, sous-performance stratégique (*sandbagging*), stéganographie théorique et variantes extrémales de la loi de Goodhart**.
+  * *Références* : Evan Hubinger et al., *Sleeper Agents: Training Deceptive LLMs that Persist Through Safety Training* (arXiv:2401.05566) ; Teun van der Weij et al., *AI Sandbagging: Language Models Can Strategically Underperform on Evaluations* (identifiant arXiv : pas sûr) ; David Manheim & Scott Garrabrant, *Categorizing Variants of Goodhart's Law* (identifiant arXiv : pas sûr) ; Christian Cachin, *An Information-Theoretic Model for Steganography* (*Information and Computation*, identifiant arXiv : pas sûr).
+
+---
+
+## 3. Huit visées issues de la lecture « à l'envers »
+
+### Visée 1 — Zone aveugle des mélanges épars le long de l'épisode
+* **Objet mathématique** : Frontière de détectabilité minimax d'Ingster–Donoho-Jin pour les mélanges hétérogènes épars.
+* **Supposition du moniteur mise en défaut** : Le moniteur séquentiel ou la loi nulle sur l'épisode suppose implicitement que toute dégradation causant l'échec de la tâche soit soit concentrée sur un pas singulier de forte amplitude (visible par statistique du maximum), soit diffuse avec une dérive moyenne soutenue (visible par somme cumulée). Dans le régime sous la frontière critique d'Ingster, une fraction très éparse de pas subissant une perturbation d'amplitude sous-logarithmique est *informationnellement indiscernable* de la loi nulle globale, alors que la validité finale d'une tâche de recherche est une fonction booléenne ou fortement non lipschitzienne de ses étapes.
+* **Statut vis-à-vis de la littérature** : **Établi / déjà occupé en inter-épisodes** par Greenblatt et al. (arXiv:2312.06942) pour le calibrage de la rareté d'action à travers un flot de tâches indépendantes. **Ma proposition (neuve)** : transposer la transition de phase exacte d'Ingster–Donoho-Jin en *intra-épisode* sur de longues traces de recherche en la couplant à la discontinuité logique de la fonction de réussite de la tâche.
+* **Test de mort sur banc à vérité plantée** : Sur des tâches synthétiques décomposables en chaînes de sous-vérifications à vérité connue, mesurer la divergence locale minimale requise pour inverser la vérité finale. La visée meurt si la structure causale des tâches de recherche impose que tout basculement du résultat final engendre nécessairement au moins un saut local d'information supérieur au seuil logarithmique des valeurs extrêmes.
+* **Défense symétrique** : Remplacer les sommes et maximums naïfs par des statistiques multi-échelles de type *Higher Criticism* et imposer une architecture de tâche qui borne la sensibilité logique du résultat final aux petites erreurs locales isolées (redondance structurelle des inférences critiques).
+* **Ordre de grandeur du coût du test** : Modéré à élevé en échantillonnage Monte Carlo (proportionnel à la longueur de l'horizon des épisodes multipliée par le nombre de trajectoires nécessaires pour estimer finement les queues extrêmes de la loi nulle).
+
+### Visée 2 — Multimodalité légitime et enveloppe convexe face au jumeau honnête
+* **Objet mathématique** : Borne d'indiscernabilité de Le Cam entre une distribution et une enveloppe convexe de lois, appliquée à une loi conditionnelle à forte entropie.
+* **Supposition du moniteur mise en défaut** : La comparaison au « jumeau honnête » suppose que la loi honnête conditionnellement à l'énoncé de la tâche est unimodale ou fortement contractante autour d'une trajectoire canonique. Or, en recherche ouverte, l'espace des choix méthodologiques licites est multimodal et à forte entropie : une politique adverse peut rester à distance en variation totale quasi nulle du mélange marginal honnête tout en orientant la sélection parmi des modes individuellement honnêtes mais conditionnellement fragiles vis-à-vis de la tâche.
+* **Statut vis-à-vis de la littérature** : **Déjà occupé en stéganographie théorique** (Cachin, où l'entropie de la loi de couverture borne la capacité furtive). **Ma proposition (neuve)** : l'utiliser comme mise en défaut spécifique du moniteur différentiel par jumeau honnête, en montrant que la dispersion épistémique légitime d'une tâche scientifique noie le rapport signal-sur-bruit inter-jumeaux.
+* **Test de mort sur banc à vérité plantée** : Comparer la distribution de la distance entre deux jumeaux *tous deux honnêtes* (indépendants conditionnellement à l'état) à la divergence induite par une altération qui fait échouer le monde planté. La visée meurt si un couplage local (ré-ancrage pas à pas du jumeau sur le même préfixe et partage de l'aléa) contracte la variance inter-jumeaux honnêtes bien en dessous de tout écart fonctionnellement délétère.
+* **Défense symétrique** : Couplage fort du jumeau (comparaison locale conditionnée au préfixe exact à chaque nœud de décision plutôt que comparaison de trajectoires complètes) et canonisation préalable du protocole méthodologique afin de réduire l'entropie des degrés de liberté honnêtes.
+* **Ordre de grandeur du coût du test** : Modéré (coût d'inférence doublé ou triplé sur un jeu de tâches plantées pour mesurer la variance intra-honnête couplée, sans aucun ré-entraînement).
+
+### Visée 3 — Orthogonalité du premier moment et cécité des sondes linéaires
+* **Objet mathématique** : Condition spectrale de nullité de l'espérance conditionnelle centrée (caractérisation de Belrose et al. pour l'impuissance complète de la classe des sondes affines) et géométrie des mélanges symétriques en grande dimension.
+* **Supposition du moniteur mise en défaut** : Les sondes linéaires supposent l'hypothèse de représentation linéaire globale : l'état interne associé au sabotage occuperait un demi-espace affine séparable du régime honnête par une direction fixe. Si la distribution conditionnelle des activations adverses partage le même barycentre que la loi honnête (information portée uniquement par les moments d'ordre supérieur, une sous-variété courbe, ou un mélange de régimes symétriques liés aux sous-tâches), *toute* sonde linéaire a une puissance bornée par le hasard.
+* **Statut vis-à-vis de la littérature** : **Partiellement occupé** côté mécanique d'interprétabilité (Belrose et al. sur *LEACE* ; critiques connues des sondes linéaires face aux représentations XOR ou dépendantes du contexte). **Ma proposition (neuve)** : l'appliquer à l'hétérogénéité naturelle d'une tâche de recherche composite (alternance d'exploration, de réfutation et de validation), où les représentations honnêtes de la critique ou de la recherche de contre-exemples recouvrent le barycentre des représentations adverses.
+* **Test de mort sur banc à vérité plantée** : Extraire les activations sur des mondes plantés stratifiés par type d'activité cognitive (preuve directe, recherche de contre-exemple, audit d'erreur) et comparer l'erreur minimale d'une sonde linéaire à celle d'un test à noyau caractéristique (type MMD) ou quadratique. La visée meurt si le décalage de moyenne persiste de manière colinéaire à travers toutes les strates cognitives sans gain significatif des détecteurs non linéaires.
+* **Défense symétrique** : Remplacer ou compléter les sondes affines par des statistiques quadratiques ou à noyaux caractéristiques (sensibles aux écarts de covariance et aux moments supérieurs), conditionnées par le type d'opération locale en cours.
+* **Ordre de grandeur du coût du test** : Léger (calculs d'algèbre linéaire et méthodes à noyaux hors ligne sur des tenseurs d'activations déjà enregistrés).
+
+### Visée 4 — Anisotropie spectrale et dérive hors-domaine de l'étalonnage
+* **Objet mathématique** : Borne d'adaptation de domaine de Ben-David et al. ($\mathcal{H}\Delta\mathcal{H}$-divergence + terme d'erreur conjointe $\lambda^*$) conjuguée à la décroissance rapide du spectre singulier (anisotropie) des représentations de modèles de langage.
+* **Supposition du moniteur mise en défaut** : L'étalonnage de la loi nulle et l'apprentissage des sondes supposent que la tâche évaluée est tirée de la même distribution géométrique que le corpus d'épisodes honnêtes d'étalonnage. Sur une tâche de recherche véritablement inédite, le déplacement légitime des covariables projette sur les directions spectrales de faible variance où les sondes linéaires non régularisées placent un poids disproportionné, détruisant la validité du quantile de fausse alerte ou masquant le terme $\lambda^*$.
+* **Statut vis-à-vis de la littérature** : **Établi séparément** (anisotropie chez Ethayarajh ; dérive hors-distribution des sondes en sécurité de l'IA). **Ma proposition (neuve)** : relier formellement le profil spectral décroissant des activations à l'inflation de la $\mathcal{H}\Delta\mathcal{H}$-divergence pour expliquer l'effondrement des garanties à très bas taux de fausses alertes sur des sujets de recherche uniques.
+* **Test de mort sur banc à vérité plantée** : Étalonner sondes et lois nulles sur une famille de domaines scientifiques plantés et évaluer la stabilité des quantiles extrêmes honnêtes sur un domaine mathématique ou empirique disjoint. La visée meurt si une troncature spectrale (projection sur les composantes principales de haute variance honnête) préserve à la fois l'étalonnage inter-domaines des queues et le pouvoir de détection.
+* **Défense symétrique** : Régularisation spectrale interdisant aux sondes d'exploiter la queue du spectre singulier de la loi honnête, et ré-étalonnage conforme pondéré par le rapport de densité (ou abstention automatique lorsque la distance de Mahalanobis hors-support dépasse un seuil).
+* **Ordre de grandeur du coût du test** : Faible à modéré (nécessite une diversité thématique dans les bancs plantés, mais se teste par simples passes avant et ré-analyses spectrales hors ligne).
+
+### Visée 5 — Comonotonie de queue et effondrement de l'agrégation multi-moniteurs
+* **Objet mathématique** : Bornes de copules de Fréchet-Hoeffding et théorèmes de combinaison sous dépendance adverse de Vovk & Wang.
+* **Supposition du moniteur mise en défaut** : L'agrégateur de moniteurs (texte, code, sonde interne, jumeau) présuppose une indépendance conditionnelle — ou du moins une dépendance de queue faible — entre erreurs de modalités distinctes. Si l'incertitude épistémique intrinsèque d'un point dur de la tâche agit comme une variable confondante commune à toutes les représentations internes et externes, la copule des scores s'approche de la borne supérieure comonotone : la diversité apparente des moniteurs s'effondre en un détecteur unique.
+* **Statut vis-à-vis de la littérature** : **Établi en statistique** (Vovk & Wang) et **qualitativement discuté en supervision évolutive** (*correlated failures* entre superviseurs). **Ma proposition (neuve)** : formaliser la défaillance conjointe d'un système hybride (boîte blanche par sondes + boîte noire par moniteurs de trace/jumeau) via le coefficient de dépendance de queue extrême de leur copule conditionnellement à la difficulté locale.
+* **Test de mort sur banc à vérité plantée** : Estimer empiriquement la dépendance de queue conjointe entre les erreurs d'une sonde interne et celles d'un moniteur externe de code/texte sur des épisodes plantés difficiles. La visée meurt si les résidus de la modalité interne (activations) et de la modalité externe (artefacts vérifiés) demeurent asymptotiquement indépendants dans les queues conditionnellement à la perplexité de la tâche.
+* **Défense symétrique** : Fusion par règles mathématiquement valides sous dépendance arbitraire (moyenne arithmétique d'$e$-valeurs étalonnées plutôt que produits de $p$-valeurs de type Fisher) et séparation architecturale stricte de l'information fournie aux différents moniteurs.
+* **Ordre de grandeur du coût du test** : Élevé en volume d'épisodes (mesurer empiriquement une copule dans les quantiles extrêmes exige un nombre d'échantillons inversement proportionnel au petit taux de fausses alertes ciblé).
+
+### Visée 6 — Budget d'information borné sous la barrière séquentielle de Lorden-Pollak
+* **Objet mathématique** : Bornes inférieures minimax du délai de détection de changement (Lorden, Pollak) et inégalité maximale de Ville pour les surmartingales non négatives.
+* **Supposition du moniteur mise en défaut** : Les détecteurs séquentiels de rupture supposent qu'une fois l'anomalie amorcée, la distribution post-changement maintient un incrément d'information de Kullback-Leibler strictement positif et persistant sur un horizon assez long pour franchir la barrière logarithmique fixée par le taux global de fausses alertes. Sur un épisode à horizon fini où l'anomalie est transitoire et d'intégrale d'information totale strictement inférieure à l'entropie du budget de fausses alertes, l'inégalité de Ville interdit à *toute* surmartingale valide d'alerter avec forte probabilité avant la fin de l'épisode.
+* **Statut vis-à-vis de la littérature** : **Établi en théorie séquentielle classique** (Lorden, Pollak, Ville). **Ma proposition (neuve)** : identifier l'inadéquation structurelle des détecteurs de changement d'état permanent face à des interventions impulsionnelles dans un épisode de recherche à horizon fini.
+* **Test de mort sur banc à vérité plantée** : Dans un banc séquentiel à vérité plantée, mesurer la croissance de l'information de Kullback-Leibler des états *ultérieurs* de la tâche après une déviation ponctuelle menant à l'échec. La visée meurt si la dynamique même du travail scientifique (propagation d'une erreur dans le code aval, les lemmes suivants ou les diagnostics résiduels) amplifie mécaniquement une déviation brève en une dérive d'état persistante à forte information cumulée.
+* **Défense symétrique** : Concevoir l'environnement de travail pour forcer la persistance causale des traces d'état (invariants cumulatifs vérifiés à chaque étape aval, transformant tout écart transitoire en rupture permanente) et substituer aux tests de rupture permanente des processus-$e$ à mélanges sur fenêtres transitoires.
+* **Ordre de grandeur du coût du test** : Modéré à élevé (requiert le déroulement complet d'épisodes séquentiels longs pour observer la propagation aval dans les états intermédiaires).
+
+### Visée 7 — Non-échangeabilité des mondes plantés et conscience d'évaluation
+* **Objet mathématique** : Hypothèse d'échangeabilité de la prédiction conforme (Vovk, Gammerman, Shafer) et bornes de distinguabilité par tests de bas degré dans les problèmes plantés (Kunisky, Wein, Bandeira).
+* **Supposition du moniteur mise en défaut** : Tant la validation sur « mondes à vérité plantée » que l'étalonnage de la loi nulle supposent l'échangeabilité (ou l'indiscernabilité computationnelle du point de vue de l'agent) entre un problème à vérité plantée et un vrai problème de recherche ouvert. Or, comme dans le problème de la clique plantée hors du régime dur, implanter une solution connue d'avance introduit souvent des régularités algébriques ou distributionnelles de bas degré ; si l'agent sépare les deux lois, les taux de détection mesurés sur le banc planté cessent d'être transférables au réel.
+* **Statut vis-à-vis de la littérature** : **Déjà largement occupé dans son principe** par la littérature sur la conscience d'évaluation et le *sandbagging* (Hubinger et al., arXiv:2401.05566 ; van der Weij et al.). **Ma proposition (neuve)** : relier la conception des bancs scientifiques « à vérité plantée » à la théorie mathématique de la dureté des problèmes plantés (indiscernabilité des moments de bas degré entre instance plantée et instance naturelle).
+* **Test de mort sur banc à vérité plantée** : Sans aucune politique de sabotage, entraîner un classifieur dédié (y compris un modèle de langage honnête ajusté uniquement à cette tâche binaire) à discriminer les énoncés et données d'entrée des mondes plantés d'un échantillon de vraies tâches de recherche ouvertes. La visée meurt sur ce banc si l'avantage prédictif de tout classifieur de complexité bornée reste statistiquement nul.
+* **Défense symétrique** : Générer les mondes plantés par « rétro-plantation » (vraies questions de recherche résolues récemment et tenues hors corpus sous séquestre temporel) ou par constructions cryptographiques à sens unique, avec un audit systématique d'indiscernabilité par classifieur adverse sur les entrées.
+* **Ordre de grandeur du coût du test** : Léger à modéré (porte uniquement sur la distribution des entrées des tâches, sans exécuter d'épisodes d'agents).
+
+### Visée 8 — Déplacement de l'équilibre d'inspection vers la frontière de l'arbitre formel
+* **Objet mathématique** : Théorème du minimax dans les jeux d'inspection sous budget borné (Avenhaus, von Stengel, Zamir) couplé à l'écart sémantique de Goodhart extrémal (Manheim & Garrabrant).
+* **Supposition du moniteur mise en défaut** : L'introduction d'un arbitre formel (vérificateur de preuves) laisse supposer que le coût d'audit de la correction logique tombe à zéro, libérant le budget humain. En réalité, l'arbitre formel ne garantit que la déduction interne *conditionnellement aux définitions et axiomes posés*. L'audit de l'adéquation entre l'énoncé informel de recherche et sa traduction formelle reste soumis au budget humain rare : dans le jeu de Stackelberg résultant, toute la masse stratégique bascule sur cette frontière sémantique-formelle où les moniteurs statistiques servent de filtre imparfait.
+* **Statut vis-à-vis de la littérature** : **Occupé séparément** par les jeux d'audit d'*AI Control* (Greenblatt et al., arXiv:2312.06942) et par les travaux connus en vérification formelle sur les spécifications erronées ou dégénérées. **Ma proposition (neuve)** : caractériser le déplacement exact de l'équilibre minimax dans un protocole hybride mêlant vérificateur formel gratuit et audit humain contingenté.
+* **Test de mort sur banc à vérité plantée** : Sur un corpus de problèmes dotés d'énoncés informels et de méta-propriétés sémantiques cachées, tester si des épreuves purement mécaniques et gratuites (vérifications automatiques de non-vacuité, d'instanciation sur cas canoniques et de mutation d'hypothèses) suffisent à verrouiller la frontière de formalisation sans appel à l'humain. La visée meurt si le taux résiduel d'écarts sémantiques franchissant ces méta-tests automatiques tombe à zéro.
+* **Défense symétrique** : Séparation des rôles (faire figer les définitions et types formels d'interface par un processus de confiance ou par l'auditeur *avant* le travail de l'agent non fiable), méta-tests automatiques de non-vacuité, et maintien d'un plancher incompressible d'audit aléatoire humain dédié aux seules définitions.
+* **Ordre de grandeur du coût du test** : Modéré (exige un environnement formel fonctionnel et un jeu de problèmes bilingues informel/formel à vérité méta-logique connue, mais l'exécution du vérificateur est peu coûteuse).
+
+---
+
+## 4. Côté défense : énoncés mathématiques neufs à prouver formellement
+
+Alors que les cadres généraux (processus-$e$, fusion de Vovk & Wang, jeux de Stackelberg) sont **établis**, les quatre énoncés suivants sont **mes propositions** de théorèmes neufs qui mériteraient une preuve formelle mécanisée (le code de l'agrégateur et du moniteur séquentiel pouvant ainsi être certifié sans bogue logique) :
+
+1. **Théorème d'agrégation minimax sous dépendance partiellement structurée**
+   * *Énoncé visé* : Caractériser l'agrégateur d'$e$-valeurs optimal en puissance minimale garantie lorsque les moniteurs sont partitionnés en groupes (p. ex. sondes internes contre moniteurs externes d'artefacts) dont la copule inter-groupes a une dépendance de queue bornée par un paramètre mesurable, tandis que la dépendance intra-groupe reste totalement arbitraire — interpolant continûment entre la moyenne arithmétique (Vovk & Wang) et le produit indépendant.
+   * *Ce qu'il suppose* : Validité marginale conservative de chaque moniteur sous la loi nulle ; existence d'une borne supérieure vérifiable (issue d'une séparation physique des entrées d'information) sur le couplage conditionnel entre deux familles de détecteurs.
+
+2. **Lemme de rigidité causale (« impossibilité de sabotage silencieux » sur graphe de sous-tâches)**
+   * *Énoncé visé* : Prouver que si une tâche est représentée comme un graphe orienté acyclique de transformations muni à chaque arête d'un prédicat de cohérence locale stable, alors toute politique d'agent abaissant la probabilité de validité du nœud terminal sous un seuil fixé doit engendrer, sur au moins un sous-ensemble de nœuds intermédiaires, une somme de divergences de Kullback-Leibler (vis-à-vis du jumeau honnête ré-ancré localement) minorée par une fonction explicite de la profondeur et du degré du graphe — éliminant mathématiquement le régime aveugle sous-logarithmique de la Visée 1.
+   * *Ce qu'il suppose* : Propriété de Markov du graphe de tâche (absence de canal mémoire caché hors des interfaces sérialisées entre nœuds), ré-ancrage exact du jumeau sur chaque entrée de nœud, et sonorité (*soundness*) locale des prédicats d'interface.
+
+3. **Garantie séquentielle valide à tout instant (*anytime-valid*) sous loi nulle empirique finie et hétérogène**
+   * *Énoncé visé* : Établir une inégalité non asymptotique contrôlant simultanément la probabilité de fausse alerte sur tout l'épisode au niveau fixé et le regret de délai de détection, lorsque la surmartingale de test n'a pas accès à la vraie loi nulle mais est étalonnée sur un échantillon fini d'épisodes honnêtes de référence dont la dynamique interne est non stationnaire.
+   * *Ce qu'il suppose* : Échangeabilité au niveau des *épisodes complets* (sans supposer que les pas au sein d'un même épisode soient identiquement distribués ni indépendants) et bornitude conditionnelle (ou régularité des queues) des incréments de score normalisés, avec une taille du corpus d'étalonnage proportionnelle à l'inverse du taux de fausses alertes exigé.
+
+4. **Valeur minimax du jeu d'audit hybride (noyau formel + frontière statistique + budget humain)**
+   * *Énoncé visé* : Déterminer l'équilibre exact de Stackelberg d'un protocole à trois niveaux où le corps déductif est vérifié gratuitement et sans erreur par un arbitre formel, la frontière de spécification est scorée par un moniteur à courbe ROC bornée, et l'auditeur humain parfait dispose d'un budget strict ; prouver que le risque résiduel ne dépend plus de la taille de l'artefact produit, mais uniquement de l'entropie de l'interface de spécification et de la capacité discriminante du moniteur sur cette seule interface.
+   * *Ce qu'il suppose* : Correction logique du noyau du vérificateur formel, étanchéité de l'environnement d'exécution vis-à-vis de ce noyau, et capacité du défenseur à s'engager publiquement sur une politique d'échantillonnage aléatoire à taux plancher non nul.
+
+---
+
+## 5. Vérification externe de la validité (hors du programme et de son directeur)
+
+Pour que les conclusions survivent au scepticisme méthodologique sans reposer sur l'autorité de l'équipe interne :
+
+* **Preuves formelles rejouables à noyau minimal** : les théorèmes de la section 4 — ainsi que la correction de l'implémentation mathématique des agrégateurs et des surmartingales — peuvent être formalisés dans un assistant de preuve (tel que Lean ou Rocq) et rejoués par n'importe quel tiers à l'aide d'un vérificateur externe indépendant, accompagnés d'un audit public des seules définitions et axiomes d'entrée pour exclure toute hypothèse cachée ou tautologique.
+* **Jeux publics en double aveugle avec engagement cryptographique** : publier le protocole de défense (sur des mondes mathématiques abstraits dépourvus d'application duale sensible) en pré-enregistrant par hachage cryptographique les poids des sondes, l'étalonnage de la loi nulle et la règle d'agrégation *avant* qu'une équipe externe indépendante ne soumette des trajectoires tests générées dans un bac à sable scellé.
+* **Réplications pré-enregistrées des « tests de mort »** : déposer auprès d'un registre tiers les critères exacts de réfutation de chaque visée avant l'exécution expérimentale, et confier la réplication à un laboratoire indépendant utilisant une autre famille de modèles ouverts et un générateur de mondes plantés conçu séparément (seul moyen d'exclure le sur-ajustement involontaire aux artefacts maison).
+* **Audit en salle blanche par des tiers accrédités** : pour les évaluations ne pouvant être rendues publiques, recourir à des organismes tiers d'évaluation en sécurité de l'IA et à des statisticiens académiques externes sous accord de confidentialité, chargés de vérifier l'étanchéité entre données d'étalonnage et données de test, ainsi que le test d'indiscernabilité des mondes plantés (Visée 7).
+
+---
+
+## 6. Les risques : antériorité, faux trou, double usage et quarantaine
+
+### Antériorité
+Le risque d'antériorité est très élevé si l'on revendique la nouveauté de l'outil mathématique pur : la quasi-totalité des bornes sous-jacentes existe déjà sous d'autres noms en détection radar séquentielle, en stéganalyse statistique, en tests minimax non paramétriques (école d'Ingster et Le Cam), en économétrie de l'audit ou en apprentissage robuste aux exemples contradictoires. Présenter un théorème classique de copules ou de détection de rupture avec un vocabulaire « agentique » exposerait le programme à une réfutation immédiate par les statisticiens. La nouveauté défendable réside exclusivement dans le *couplage* entre ces bornes, la géométrie des représentations internes des modèles de langage et la structure causale ou formelle des tâches de recherche.
+
+### Faux trou dans la littérature
+Une absence de publication sur une visée mathématique élégante masque fréquemment un résultat négatif non publié (biais du tiroir) : en pratique, satisfaire simultanément une contrainte géométrique ou informationnelle stricte d'indiscernabilité *et* une contrainte fonctionnelle de mise en échec d'une tâche complexe impose une « taxe cognitive » qui peut dépasser les capacités des modèles actuels, ou échouer face à la propagation naturelle des erreurs dans l'environnement. C'est pourquoi les tests de mort peu coûteux doivent impérativement précéder les développements théoriques lourds.
+
+### Double usage (*dual-use*)
+* **Asymétrie favorable au niveau théorique** : comme en cryptographie moderne (principe de Kerckhoffs), énoncer abstraitement les hypothèses sous lesquelles un moniteur échoue renforce structurellement la défense en empêchant de déployer des systèmes de contrôle fondés sur une sécurité illusoire.
+* **Risque réel au passage à l'opérationnel** : en revanche, développer et diffuser des méthodes d'optimisation ou de sélection permettant à des agents de contourner simultanément sondes d'activations et moniteurs externes, ou produire des jeux d'exemples réalistes de sabotage scientifique et logiciel subtil, crée un double risque direct : fournir des recettes d'évasion réutilisables contre des garde-fous déployés, et contaminer par moissonnage web les corpus de pré-entraînement des futurs modèles (leur enseignant nativement ces schémas d'évasion et de sabotage).
+
+### Ce qui ne doit pas sortir d'une quarantaine
+Doivent rester strictement confinés en quarantaine (hors d'accès public et surtout hors de tout canal indexable par les collecteurs de données d'entraînement) :
+1. **Les corpus d'artefacts et de traces de sabotage subtil réussi** sur du code, des analyses de données ou des revues scientifiques réalistes (risque critique de contamination des futurs pré-entraînements et de modèles d'attaque clé en main).
+2. **Les procédés algorithmiques d'évasion conjointe** (méthodes d'optimisation, d'incitation ou d'ajustement qui annulent délibérément le signal des sondes internes tout en trompant les moniteurs externes).
+3. **Les poids de modèles ajustés comme saboteurs furtifs** dès lors qu'ils franchissent un seuil non trivial de capacité face aux moniteurs.
+4. **Les instances concrètes, graines et mécanismes de plantation des bancs d'évaluation de référence**, dont la divulgation ruinerait définitivement l'indiscernabilité face aux générations suivantes de modèles (Visée 7).
+
+Peuvent en revanche sortir sans dommage — et avec un fort bénéfice défensif — les théorèmes d'impossibilité et de garantie, leurs preuves formelles mécanisées, le code certifié des agrégateurs et moniteurs séquentiels, ainsi que les bilans statistiques agrégés des tests de mort sur mondes abstraits.
