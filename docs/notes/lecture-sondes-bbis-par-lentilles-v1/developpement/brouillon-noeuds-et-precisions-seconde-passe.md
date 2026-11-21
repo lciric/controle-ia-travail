@@ -43,3 +43,17 @@
   (la v1 ne voyait pas les copies versées sous `docs/`).
 - Constat, non corrigé : un dossier `__pycache__` daté de 16:00:15Z, antérieur à mon départ, est présent à côté de la copie versée
   de `readout.py` sous `docs/sources/` (ignoré par git) ; je ne l'ai ni créé ni retiré.
+- N-dev-7 (2026-11-21) — **dernier crochet de la phrase permise du deuxième palier quand il ne peut pas être dit** : fiche muette
+  sur l'achèvement de la seconde course, ou course menée en entier dont la ligne de lecture n'est pas inscrite. Le texte dit qu'une
+  lentille non lue reçoit quand même la phrase de son verdict ; mais aucun des deux mots du crochet ne peut alors être écrit sans
+  risque d'être faux. Le code n'écrit pas la phrase et pose une note (`phrases_v2.NOTE_DERNIER_CROCHET`), à côté de la ligne « Non lue ».
+- Crochets de chiffres de la phrase permise : « [écart mesuré] » = `ecart_max_abs_diffs_float64` (le plus grand des deux lentilles
+  dans la forme au pluriel) ; « [valeur] et [valeur] » = `ecart_max_abs` de la série d'écart à la lentille publique puis de celle à
+  l'identité ; « de [valeur] à [valeur] » = le plus petit `ref_min` et le plus grand `ref_max` des deux séries. Trois chiffres
+  significatifs, virgule décimale, aucun qualificatif. « (empreinte …) » : l'empreinte entière du fichier.
+- Lignes du verdict d'ensemble : choisies d'après les paliers des lentilles **lues** ; la forme de la phrase permise, elle, d'après
+  les verdicts. La ligne « Verdict d'ensemble » de V et les mots des réserves restent entre crochets, à recopier par le lecteur.
+- Première passe jamais lancée : le texte dit « c'est écrit » sans phrase gelée ; le code pose une note (`NOTE_PREMIERE_PASSE_REMPLACEE`).
+- Reproduction : « vingt premiers jetons » comparés comme ensembles d'identifiants ; un même ensemble dans un autre ordre est compté
+  à part, sans réserve (l'ordre entre jetons de même score à l'intérieur de la liste peut différer entre les deux modules).
+- Essai des essais : `phrases_v2` 15 sur 15 ; `reproduction_v1` 8 sur 8 ; `audits_v2` 8 sur 8 (outil `essai-des-essais-seconde-passe-v3.py`).
