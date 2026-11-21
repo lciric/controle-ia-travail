@@ -28,6 +28,7 @@ from pathlib import Path
 
 from ..gardes import GardeArret
 from ..scellement import verifier
+from . import configuration_distillation_v5 as cd
 from .lois_exactes_v5 import seuil_du_tour_de_controle
 
 AVERTISSEMENT = "EXPLORATOIRE, NON OPPOSABLE (R-522)"
@@ -264,11 +265,13 @@ def exiger_config_v5(config: dict, racine=".", pour_lancer: bool = False) -> dic
     mode = config.get("mode")
     if mode not in ("reel", "jouet"):
         raise GardeArret(f"mode {mode!r} : « reel » ou « jouet »")
-    attendues = set(CLES) | set(CLES_DE_LOCATION) | (set(CLES_JOUET) if mode == "jouet" else set())
+    attendues = set(CLES) | set(CLES_DE_LOCATION) | {cd.SECTION} | (set(CLES_JOUET) if mode == "jouet" else set())
     manquantes, hors = sorted(set(CLES) - set(config)), sorted(set(config) - attendues)
     if manquantes or hors:
         raise GardeArret(f"configuration v5 : clés manquantes {manquantes}, clés inconnues {hors}")
     exiger_aucun_texte_de_consigne(config)
+    if cd.SECTION in config:                                   # section à part de la distillation et de l'évaluation (course)
+        cd.exiger_section(config[cd.SECTION], mode)
     if config["version"] != VERSION or config["avertissement"] != AVERTISSEMENT:
         raise GardeArret(f"version {config['version']!r} ou avertissement non conformes")
     for s, attendu in TEXTE.items():

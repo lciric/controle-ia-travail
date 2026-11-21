@@ -37,6 +37,7 @@ from ..gardes import GardeArret
 from ..manifeste import config_canonique, versions
 from ..scellement import sceller, verifier
 from . import branches_v5 as br
+from . import configuration_distillation_v5 as cd
 from . import configuration_v5 as cf
 from . import controle_premier_cout_v5 as pc
 from . import designation_v5 as dg
@@ -373,6 +374,8 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
     course = dg.configuration_de_course(config, racine, str(chemin_d))            # refuse toute issue autre que N ou P
     oracle = cf.exiger_config_v5(course, racine, pour_lancer=True)["oracle_de_la_regle"]
+    if distillateur is not None:
+        cd.section_de(course, pour_lancer=True)                # section de la distillation exigée avant le premier tour du maître
     autre = "P" if oracle == "N" else "N"
     designation = json.loads((racine / chemin_d).read_text(encoding="utf-8"))
     branches = json.loads((dossier_abs / NOMS["branches"]).read_text(encoding="utf-8"))
@@ -434,9 +437,11 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
     sorties[NOMS["course"]] = _ecrire(dossier_abs, NOMS["course"], resume)
     evaluation = None
     if res["arret"] is None and distillateur is not None:
-        distillateur.distiller(course, monde, acceptes, temoins)
+        sorties.update(distillateur.distiller(course, monde, acceptes, temoins) or {})
         evaluation = evaluer(course, racine, dossier_abs, modele, monde, distillateur, graines, oracle, validite, chrono)
         sorties.update(evaluation["sorties"])
+        if hasattr(distillateur, "cloturer"):
+            sorties.update(distillateur.cloturer())            # état des adaptateurs par condition, scellé
     sorties["manifeste"] = _manifeste(dossier_abs, "course", course, graines, sorties, racine)
     return {"arret": res["arret"], "acceptes": res["acceptes"], "oracle_de_la_regle": oracle, "phrase": resume["phrase"], "sorties": sorties,
             "evaluation": None if evaluation is None else evaluation["resume"],
