@@ -1,0 +1,3548 @@
+{
+ "version": "essai_verificateur_hors_machine_v2",
+ "debut": "2026-11-13T00:43:15Z",
+ "chaine": {
+  "version_lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "commit_mathlib": "56a005855ea17e0b0958f73ec801ae140b0a1679"
+ },
+ "verificateur": {
+  "fichier": "<depot>/src/controle_ia/lean_essai/verificateur_noyau_v6.lean",
+  "sha256": "3ef23bfa6600bf3a79fca2c31427dccf6c2ec7d67832bddb5c4df971a269d2ee"
+ },
+ "compilation": {
+  "fichier": "<depot>/src/controle_ia/lean_essai/verificateur_noyau_v6.lean",
+  "sha256": "3ef23bfa6600bf3a79fca2c31427dccf6c2ec7d67832bddb5c4df971a269d2ee",
+  "code": 0,
+  "messages": "",
+  "conforme": true
+ },
+ "groupes": [
+  "noyau",
+  "observations_noyau",
+  "lean"
+ ],
+ "exclus": {
+  "isolement_lean": "isolement du bac : sur la machine seulement",
+  "python": "bras S dans le bac : sur la machine seulement",
+  "limites_python": "limites du bac : sur la machine seulement"
+ },
+ "cas": [
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "sain : rejeu et aller-retour réussis, toutes les gardes",
+   "fichier": "sain_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": true,
+   "rejeu_ok": true,
+   "gardes_en_echec": {},
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.837,
+   "duree_noyau_s": 8.569
+  },
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "déclaration hors noyau par un simproc (v5, pré-procédure, sans retour arrière) : prise et nommée par le rejeu",
+   "fichier": "noyau_simproc_hors_noyau_v5.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": false,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis",
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L3+": [
+     "texte : « simproc_decl » ligne 17",
+     "texte : « MetaM » ligne 10",
+     "texte : « skipKernelTC » ligne 12"
+    ],
+    "G-L4": [
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ],
+    "G-L8": [
+     "noyau : rejeu en échec : while replaying declaration 'etape_1._hors_noyau':\n(kernel) declaration type mismatch, 'etape_1._hors_noyau' has type\n  True\nbut it is expected to have type\n  False"
+    ]
+   },
+   "observe": {},
+   "axiomes": {},
+   "enonces_imprimes": {},
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "erreur": "while replaying declaration 'etape_1._hors_noyau':\n(kernel) declaration type mismatch, 'etape_1._hors_noyau' has type\n  True\nbut it is expected to have type\n  False",
+     "ok": false,
+     "type": "rejeu"
+    },
+    "attendus": {}
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.951,
+   "duree_noyau_s": 8.761
+  },
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "déclaration hors noyau par run_cmd : prise et nommée par le rejeu",
+   "fichier": "noyau_run_cmd_hors_noyau_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": false,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis",
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L3+": [
+     "texte : « run_cmd » ligne 5",
+     "texte : « skipKernelTC » ligne 6"
+    ],
+    "G-L4": [
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ],
+    "G-L8": [
+     "noyau : rejeu en échec : while replaying declaration 'faux_lemme':\n(kernel) declaration type mismatch, 'faux_lemme' has type\n  True\nbut it is expected to have type\n  False"
+    ]
+   },
+   "observe": {},
+   "axiomes": {},
+   "enonces_imprimes": {},
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "erreur": "while replaying declaration 'faux_lemme':\n(kernel) declaration type mismatch, 'faux_lemme' has type\n  True\nbut it is expected to have type\n  False",
+     "ok": false,
+     "type": "rejeu"
+    },
+    "attendus": {}
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.884,
+   "duree_noyau_s": 8.608
+  },
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "instance qui change le sens de l'énoncé : prise par l'aller-retour",
+   "fichier": "noyau_instance_enonce_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L5": [
+     "noyau : aller-retour de l'énoncé de etape_1 en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+     "noyau : aller-retour de l'énoncé de etape_2 en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+     "noyau : aller-retour de l'énoncé de enonce_item en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [],
+    "etape_2": [],
+    "enonce_item": []
+   },
+   "enonces_imprimes": {
+    "etape_1": "3 ≤ 2",
+    "etape_2": "5 ≤ 1",
+    "enonce_item": "3 ≤ 2"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "constantes_agent": [
+       "enonce_item.ordreFaux"
+      ],
+      "axiomes": []
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "constantes_agent": [
+       "enonce_item.ordreFaux"
+      ],
+      "axiomes": []
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "constantes_agent": [
+       "enonce_item.ordreFaux"
+      ],
+      "axiomes": []
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.738,
+   "duree_noyau_s": 9.011
+  },
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "module prelude sans import : refusé par le vérificateur (CLC3-03)",
+   "fichier": "noyau_prelude_sans_import_v4.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": false,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis",
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L3": [
+     "noyau : imports [] ≠ exactement ['Init', 'Mathlib']",
+     "noyau : imports hors liste []"
+    ],
+    "G-L3+": [
+     "texte : « prelude » ligne 1"
+    ],
+    "G-L4": [
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ],
+    "G-L8": [
+     "noyau : imports du module différents de ceux du harnais",
+     "rejeu non tenté : imports hors liste"
+    ]
+   },
+   "observe": {},
+   "axiomes": {},
+   "enonces_imprimes": {},
+   "noyau": {
+    "imports": {
+     "modules": [],
+     "permis": false,
+     "type": "imports"
+    },
+    "rejeu": null,
+    "attendus": {}
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 0.115,
+   "duree_noyau_s": 1.825
+  },
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "commentaire de documentation /--/ (CLC3-01) : axiome vu par le texte et par le noyau",
+   "fichier": "noyau_doc_commentaire_v4.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L3": [
+     "texte : « axiom » ligne 5",
+     "noyau : constante axiome faux"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.193,
+   "duree_noyau_s": 8.804
+  },
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "nom à omicron grec, constante de l'agent dans l'énoncé final (CLC3-06)",
+   "fichier": "noyau_constante_grecque_v4.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L5": [
+     "noyau : l'énoncé final cite des constantes de l'agent : Cοprime"
+    ],
+    "G-L6": [
+     "noyau : nom de constante hors ASCII 'Cοprime' (ο)"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "Nat.Coprime 2 3",
+    "etape_2": "Cοprime 2 3",
+    "enonce_item": "Cοprime 2 3"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [
+       "Cοprime"
+      ],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [
+       "Cοprime"
+      ],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.584,
+   "duree_noyau_s": 8.502
+  },
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "relevé : le code d'un simproc tourne-t-il à la compilation ?",
+   "fichier": "gl3_simproc_execution_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L3+": [
+     "texte : « simproc_decl » ligne 6",
+     "texte : « IO » ligne 7"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.991,
+   "duree_noyau_s": 8.151
+  },
+  {
+   "groupe": "noyau",
+   "passage": "avec G-L3+",
+   "nom": "relevé : une tactique nommée d'Aesop tourne-t-elle à la compilation ?",
+   "fichier": "gl3_aesop_tactique_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L3+": [
+     "texte : « TacticM » ligne 5",
+     "texte : « IO » ligne 6",
+     "texte : règle de tactique d'Aesop ligne 10"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.793,
+   "duree_noyau_s": 8.463
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "sain : rejeu et aller-retour réussis, toutes les gardes",
+   "fichier": "sain_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": true,
+   "rejeu_ok": true,
+   "gardes_en_echec": {},
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.038,
+   "duree_noyau_s": 8.251
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "déclaration hors noyau par un simproc (v5, pré-procédure, sans retour arrière) : prise et nommée par le rejeu",
+   "fichier": "noyau_simproc_hors_noyau_v5.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": false,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis",
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L4": [
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ],
+    "G-L8": [
+     "noyau : rejeu en échec : while replaying declaration 'etape_1._hors_noyau':\n(kernel) declaration type mismatch, 'etape_1._hors_noyau' has type\n  True\nbut it is expected to have type\n  False"
+    ]
+   },
+   "observe": {},
+   "axiomes": {},
+   "enonces_imprimes": {},
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "erreur": "while replaying declaration 'etape_1._hors_noyau':\n(kernel) declaration type mismatch, 'etape_1._hors_noyau' has type\n  True\nbut it is expected to have type\n  False",
+     "ok": false,
+     "type": "rejeu"
+    },
+    "attendus": {}
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.933,
+   "duree_noyau_s": 8.105
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "déclaration hors noyau par run_cmd : prise et nommée par le rejeu",
+   "fichier": "noyau_run_cmd_hors_noyau_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": false,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis",
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L4": [
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ],
+    "G-L8": [
+     "noyau : rejeu en échec : while replaying declaration 'faux_lemme':\n(kernel) declaration type mismatch, 'faux_lemme' has type\n  True\nbut it is expected to have type\n  False"
+    ]
+   },
+   "observe": {},
+   "axiomes": {},
+   "enonces_imprimes": {},
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "erreur": "while replaying declaration 'faux_lemme':\n(kernel) declaration type mismatch, 'faux_lemme' has type\n  True\nbut it is expected to have type\n  False",
+     "ok": false,
+     "type": "rejeu"
+    },
+    "attendus": {}
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.937,
+   "duree_noyau_s": 8.356
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "instance qui change le sens de l'énoncé : prise par l'aller-retour",
+   "fichier": "noyau_instance_enonce_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L5": [
+     "noyau : aller-retour de l'énoncé de etape_1 en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+     "noyau : aller-retour de l'énoncé de etape_2 en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+     "noyau : aller-retour de l'énoncé de enonce_item en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [],
+    "etape_2": [],
+    "enonce_item": []
+   },
+   "enonces_imprimes": {
+    "etape_1": "3 ≤ 2",
+    "etape_2": "5 ≤ 1",
+    "enonce_item": "3 ≤ 2"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "constantes_agent": [
+       "enonce_item.ordreFaux"
+      ],
+      "axiomes": []
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "constantes_agent": [
+       "enonce_item.ordreFaux"
+      ],
+      "axiomes": []
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "constantes_agent": [
+       "enonce_item.ordreFaux"
+      ],
+      "axiomes": []
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.638,
+   "duree_noyau_s": 8.76
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "module prelude sans import : refusé par le vérificateur (CLC3-03)",
+   "fichier": "noyau_prelude_sans_import_v4.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": false,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis",
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L3": [
+     "noyau : imports [] ≠ exactement ['Init', 'Mathlib']",
+     "noyau : imports hors liste []"
+    ],
+    "G-L4": [
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ],
+    "G-L8": [
+     "noyau : imports du module différents de ceux du harnais",
+     "rejeu non tenté : imports hors liste"
+    ]
+   },
+   "observe": {},
+   "axiomes": {},
+   "enonces_imprimes": {},
+   "noyau": {
+    "imports": {
+     "modules": [],
+     "permis": false,
+     "type": "imports"
+    },
+    "rejeu": null,
+    "attendus": {}
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 0.118,
+   "duree_noyau_s": 1.882
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "commentaire de documentation /--/ (CLC3-01) : axiome vu par le texte et par le noyau",
+   "fichier": "noyau_doc_commentaire_v4.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L3": [
+     "texte : « axiom » ligne 5",
+     "noyau : constante axiome faux"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 6.045,
+   "duree_noyau_s": 9.163
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "nom à omicron grec, constante de l'agent dans l'énoncé final (CLC3-06)",
+   "fichier": "noyau_constante_grecque_v4.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L5": [
+     "noyau : l'énoncé final cite des constantes de l'agent : Cοprime"
+    ],
+    "G-L6": [
+     "noyau : nom de constante hors ASCII 'Cοprime' (ο)"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "Nat.Coprime 2 3",
+    "etape_2": "Cοprime 2 3",
+    "enonce_item": "Cοprime 2 3"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [
+       "Cοprime"
+      ],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [
+       "Cοprime"
+      ],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.057,
+   "duree_noyau_s": 8.713
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "relevé : le code d'un simproc tourne-t-il à la compilation ?",
+   "fichier": "gl3_simproc_execution_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": true,
+   "rejeu_ok": true,
+   "gardes_en_echec": {},
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.353,
+   "duree_noyau_s": 9.964
+  },
+  {
+   "groupe": "noyau",
+   "passage": "sans G-L3+",
+   "nom": "relevé : une tactique nommée d'Aesop tourne-t-elle à la compilation ?",
+   "fichier": "gl3_aesop_tactique_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": true,
+   "rejeu_ok": true,
+   "gardes_en_echec": {},
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.037,
+   "duree_noyau_s": 8.548
+  },
+  {
+   "groupe": "observations_noyau",
+   "passage": "avec G-L3+",
+   "nom": "observation : sous-terme de preuve dans l'énoncé (pp.proofs vrai)",
+   "fichier": "noyau_preuve_dans_enonce_v4.lean",
+   "juge": false,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L5": [
+     "noyau : aller-retour de l'énoncé de etape_1 en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+     "noyau : réélaboration de etape_1 avec métavariable (trou) ou non rapportée",
+     "noyau : réélaboration de etape_1 avec message(s) : 1"
+    ]
+   },
+   "observe": {
+    "G-L1": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L2": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L3": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L3+": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L4": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L5": {
+     "ok": false,
+     "motifs": [
+      "noyau : aller-retour de l'énoncé de etape_1 en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "noyau : réélaboration de etape_1 avec métavariable (trou) ou non rapportée",
+      "noyau : réélaboration de etape_1 avec message(s) : 1",
+      "noyau : aller-retour de l'énoncé de enonce_item en échec : le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "noyau : réélaboration de enonce_item avec métavariable (trou) ou non rapportée"
+     ]
+    },
+    "G-L6": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L7": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L8": {
+     "ok": true,
+     "motifs": []
+    }
+   },
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "↑⟨3,\n      Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 3))\n        (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 5)) (Eq.refl false)⟩ =\n  3",
+    "etape_2": "3 = 3",
+    "enonce_item": "↑⟨3,\n      Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 3))\n        (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 5)) (Eq.refl false)⟩ =\n  3"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": []
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "le texte imprimé, réélaboré, ne redonne pas le type vérifié",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.899,
+   "duree_noyau_s": 8.051
+  },
+  {
+   "groupe": "observations_noyau",
+   "passage": "avec G-L3+",
+   "nom": "observation : énoncé polymorphe en univers",
+   "fichier": "noyau_univers_v4.lean",
+   "juge": false,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L5": [
+     "noyau : aller-retour de l'énoncé de etape_1 en échec : élaboration du texte imprimé : unknown universe level ``u_1`",
+     "noyau : aller-retour de l'énoncé de etape_2 en échec : élaboration du texte imprimé : unknown universe level ``u_1`",
+     "noyau : aller-retour de l'énoncé de enonce_item en échec : élaboration du texte imprimé : unknown universe level ``u_1`"
+    ]
+   },
+   "observe": {
+    "G-L1": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L2": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L3": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L3+": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L4": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L5": {
+     "ok": false,
+     "motifs": [
+      "noyau : aller-retour de l'énoncé de etape_1 en échec : élaboration du texte imprimé : unknown universe level ``u_1`",
+      "noyau : aller-retour de l'énoncé de etape_2 en échec : élaboration du texte imprimé : unknown universe level ``u_1`",
+      "noyau : aller-retour de l'énoncé de enonce_item en échec : élaboration du texte imprimé : unknown universe level ``u_1`"
+     ]
+    },
+    "G-L6": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L7": {
+     "ok": true,
+     "motifs": []
+    },
+    "G-L8": {
+     "ok": true,
+     "motifs": []
+    }
+   },
+   "axiomes": {
+    "etape_1": [
+     "propext"
+    ],
+    "etape_2": [],
+    "enonce_item": [
+     "propext"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ {α : Type u_1} (l : List α), l ++ [] = l",
+    "etape_2": "∀ {α : Type u_1} (l : List α), [] ++ l = l",
+    "enonce_item": "∀ {α : Type u_1} (l : List α), l ++ [] = [] ++ l"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "élaboration du texte imprimé : unknown universe level ``u_1`",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "élaboration du texte imprimé : unknown universe level ``u_1`",
+      "constantes_agent": [],
+      "axiomes": []
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "élaboration du texte imprimé : unknown universe level ``u_1`",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.55,
+   "duree_noyau_s": 8.555
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L1 erreur de compilation",
+   "fichier": "gl1_erreur_compilation_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": false,
+   "gardes_en_echec": {
+    "G-L1": [
+     "code de sortie de la compilation 1",
+     "erreur : Type mismatch\n  etape_1 x\nhas type\n  0 ≤ x ^ 2\nbut is expected to have type\n  0 ≤ x ^ 2 + 1",
+     "module compilé (.olean) absent"
+    ],
+    "G-L2": [
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis",
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L3": [
+     "noyau : imports hors liste None"
+    ],
+    "G-L4": [
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ],
+    "G-L7": [
+     "code de sortie du vérificateur 1 (0 exigé)",
+     "noyau : 0 ligne(s) d'imports (1 exigée)",
+     "noyau : marqueur de fin absent, multiple ou suivi d'autres lignes"
+    ],
+    "G-L8": [
+     "rejeu non tenté : imports hors liste"
+    ]
+   },
+   "observe": {},
+   "axiomes": {},
+   "enonces_imprimes": {},
+   "noyau": {
+    "imports": null,
+    "rejeu": null,
+    "attendus": {}
+   },
+   "code_noyau": 1,
+   "duree_compilation_s": 4.842,
+   "duree_noyau_s": 1.621
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L2 sorry",
+   "fichier": "gl2_sorry_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "texte : « sorry » ligne 7",
+     "noyau : etape_2 dépend de : sorryAx"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "sorryAx",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "sorryAx",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.838,
+   "duree_noyau_s": 8.303
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L2 et G-L7 : stop sans le mot, fausse sortie de l'agent",
+   "fichier": "gl2_stop_sans_mot_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : etape_2 dépend de : sorryAx"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "sorryAx",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "sorryAx",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.935,
+   "duree_noyau_s": 8.756
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L2 native_decide",
+   "fichier": "gl2_native_decide_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : etape_1 dépend de : etape_1._native.native_decide.ax_1_1",
+     "noyau : enonce_item dépend de : enonce_item._native.native_decide.ax_1_1"
+    ],
+    "G-L3": [
+     "noyau : constante axiome enonce_item._native.native_decide.ax_1_1",
+     "noyau : constante axiome etape_1._native.native_decide.ax_1_1"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "etape_1._native.native_decide.ax_1_1"
+    ],
+    "etape_2": [
+     "propext"
+    ],
+    "enonce_item": [
+     "enonce_item._native.native_decide.ax_1_1"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "2 + 2 = 4",
+    "etape_2": "4 = 2 * 2",
+    "enonce_item": "2 + 2 = 2 * 2"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "etape_1._native.native_decide.ax_1_1"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "enonce_item._native.native_decide.ax_1_1"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.986,
+   "duree_noyau_s": 8.51
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L3 axiome ajouté",
+   "fichier": "gl3_axiome_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : etape_2 dépend de : triche",
+     "noyau : enonce_item dépend de : triche"
+    ],
+    "G-L3": [
+     "texte : « axiom » ligne 4",
+     "noyau : constante axiome triche"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "triche",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "triche",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "triche",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "triche",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.836,
+   "duree_noyau_s": 9.107
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L3 unsafe, implemented_by, extern",
+   "fichier": "gl3_unsafe_extern_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L3": [
+     "texte : « unsafe » ligne 4",
+     "texte : « implemented_by » ligne 6",
+     "texte : « extern » ligne 8"
+    ],
+    "G-L3+": [
+     "texte : attribut hors liste « implemented_by » ligne 6",
+     "texte : attribut hors liste « extern » ligne 8"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.739,
+   "duree_noyau_s": 8.55
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L4 étape manquante",
+   "fichier": "gl4_etape_manquante_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de etape_3 non établis"
+    ],
+    "G-L4": [
+     "texte : déclaration `theorem etape_3` (ou `lemma`) absente",
+     "noyau : etape_3 absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_3 non imprimé"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_3": null,
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "etape_3": "",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_3": {
+      "present": false,
+      "aller_retour": null,
+      "raison": "",
+      "constantes_agent": null,
+      "axiomes": null
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.991,
+   "duree_noyau_s": 8.454
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L4 théorème renommé",
+   "fichier": "gl4_renomme_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L4": [
+     "texte : déclaration `theorem enonce_item` (ou `lemma`) absente",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de enonce_item non imprimé"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": null
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": ""
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": false,
+      "aller_retour": null,
+      "raison": "",
+      "constantes_agent": null,
+      "axiomes": null
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.889,
+   "duree_noyau_s": 8.305
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L4 noms hors du premier niveau",
+   "fichier": "gl4_espace_de_noms_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis",
+     "noyau : axiomes de enonce_item non établis"
+    ],
+    "G-L4": [
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module",
+     "noyau : enonce_item absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": null,
+    "etape_2": null,
+    "enonce_item": null
+   },
+   "enonces_imprimes": {
+    "etape_1": "",
+    "etape_2": "",
+    "enonce_item": ""
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": false,
+      "aller_retour": null,
+      "raison": "",
+      "constantes_agent": null,
+      "axiomes": null
+     },
+     "etape_2": {
+      "present": false,
+      "aller_retour": null,
+      "raison": "",
+      "constantes_agent": null,
+      "axiomes": null
+     },
+     "enonce_item": {
+      "present": false,
+      "aller_retour": null,
+      "raison": "",
+      "constantes_agent": null,
+      "axiomes": null
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.834,
+   "duree_noyau_s": 8.756
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L5 étape prouvée à vide (CLP-12 d) : transmise au relecteur",
+   "fichier": "gl5_vacuite_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": true,
+   "rejeu_ok": true,
+   "gardes_en_echec": {},
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), x < 0 → 0 < x → x ^ 2 < 0",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.783,
+   "duree_noyau_s": 8.764
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L6 notation locale",
+   "fichier": "gl6_notation_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L6": [
+     "texte : « notation » ligne 4"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.338,
+   "duree_noyau_s": 8.603
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L6 instance anonyme",
+   "fichier": "gl6_instance_anonyme_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L5": [
+     "noyau : aller-retour de l'énoncé de etape_1 en échec : élaboration du texte imprimé : failed to synthesize instance of type class\n  HAdd Boite Boite ?m.7\n\nHint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synth",
+     "noyau : aller-retour de l'énoncé de enonce_item en échec : élaboration du texte imprimé : failed to synthesize instance of type class\n  HAdd Boite Boite ?m.7\n\nHint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synth",
+     "noyau : l'énoncé final cite des constantes de l'agent : Boite.v, Boite, instAddBoite, Boite.mk"
+    ],
+    "G-L6": [
+     "texte : instance anonyme ligne 7"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [],
+    "etape_2": [],
+    "enonce_item": []
+   },
+   "enonces_imprimes": {
+    "etape_1": "(Boite.mk 2 + Boite.mk 3).v = 6",
+    "etape_2": "6 = 2 * 3",
+    "enonce_item": "(Boite.mk 2 + Boite.mk 3).v = 2 * 3"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "élaboration du texte imprimé : failed to synthesize instance of type class\n  HAdd Boite Boite ?m.7\n\nHint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synth",
+      "constantes_agent": [
+       "Boite.v",
+       "Boite",
+       "instAddBoite",
+       "Boite.mk"
+      ],
+      "axiomes": []
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": []
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": false,
+      "raison": "élaboration du texte imprimé : failed to synthesize instance of type class\n  HAdd Boite Boite ?m.7\n\nHint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synth",
+      "constantes_agent": [
+       "Boite.v",
+       "Boite",
+       "instAddBoite",
+       "Boite.mk"
+      ],
+      "axiomes": []
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.938,
+   "duree_noyau_s": 8.958
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "définition de l'agent imprimée ; l'énoncé final la cite : refusé (CLC3-06)",
+   "fichier": "gl6_definition_imprimee_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L5": [
+     "noyau : l'énoncé final cite des constantes de l'agent : carre"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ carre x",
+    "etape_2": "∀ (x : ℝ), 0 ≤ carre x + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < carre x + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [
+       "carre"
+      ],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [
+       "carre"
+      ],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [
+       "carre"
+      ],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.193,
+   "duree_noyau_s": 9.207
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "G-L7 initialiseur qui vise le fichier de contrôle",
+   "fichier": "gl7_initialiseur_v1.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L3+": [
+     "texte : « initialize » ligne 4",
+     "texte : « IO » ligne 6"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.941,
+   "duree_noyau_s": 8.703
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "CLL-01 identifiants « » qui cachent un axiome",
+   "fichier": "gl0_lexique_guillemets_v2.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "texte : lexique refusé : identifiant entre « » refusé (position 226)"
+    ],
+    "G-L3": [
+     "texte : lexique refusé : identifiant entre « » refusé (position 226)",
+     "noyau : constante axiome triche"
+    ],
+    "G-L3+": [
+     "texte : lexique refusé : identifiant entre « » refusé (position 226)"
+    ],
+    "G-L4": [
+     "texte : lexique refusé : identifiant entre « » refusé (position 226)"
+    ],
+    "G-L6": [
+     "texte : lexique refusé : identifiant entre « » refusé (position 226)",
+     "noyau : nom de constante hors ASCII '«-/»' (« »)",
+     "noyau : nom de constante hors ASCII '«/-»' (« »)"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.481,
+   "duree_noyau_s": 8.854
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "CLL-01 littéraux collés",
+   "fichier": "gl0_lexique_colle_v2.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": false,
+   "gardes_en_echec": {
+    "G-L1": [
+     "code de sortie de la compilation 1",
+     "erreur : unexpected token; expected ')', ',' or ':'",
+     "module compilé (.olean) absent"
+    ],
+    "G-L2": [
+     "texte : lexique refusé : littéral suivi d'un caractère collé (position 147)",
+     "noyau : axiomes de etape_1 non établis",
+     "noyau : axiomes de etape_2 non établis"
+    ],
+    "G-L3": [
+     "texte : lexique refusé : littéral suivi d'un caractère collé (position 147)",
+     "noyau : imports hors liste None"
+    ],
+    "G-L3+": [
+     "texte : lexique refusé : littéral suivi d'un caractère collé (position 147)"
+    ],
+    "G-L4": [
+     "texte : lexique refusé : littéral suivi d'un caractère collé (position 147)",
+     "noyau : etape_1 absent du module",
+     "noyau : etape_2 absent du module"
+    ],
+    "G-L5": [
+     "noyau : énoncé de etape_1 non imprimé",
+     "noyau : énoncé de etape_2 non imprimé",
+     "noyau : énoncé de enonce_item non imprimé"
+    ],
+    "G-L6": [
+     "texte : lexique refusé : littéral suivi d'un caractère collé (position 147)"
+    ],
+    "G-L7": [
+     "code de sortie du vérificateur 1 (0 exigé)",
+     "noyau : 0 ligne(s) d'imports (1 exigée)",
+     "noyau : marqueur de fin absent, multiple ou suivi d'autres lignes"
+    ],
+    "G-L8": [
+     "rejeu non tenté : imports hors liste"
+    ]
+   },
+   "observe": {},
+   "axiomes": {},
+   "enonces_imprimes": {},
+   "noyau": {
+    "imports": null,
+    "rejeu": null,
+    "attendus": {}
+   },
+   "code_noyau": 1,
+   "duree_compilation_s": 4.741,
+   "duree_noyau_s": 1.621
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "CLL-02 définition partielle (non sûre)",
+   "fichier": "gl3_partielle_v2.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L3": [
+     "noyau : constante partielle boucle._unsafe_rec (definition)"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.69,
+   "duree_noyau_s": 8.813
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "CLL-02 etape_1 définition au premier niveau",
+   "fichier": "gl4_etape_definition_v2.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L4": [
+     "noyau : etape_1 de genre 'definition', « theoreme » exigé"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "True",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": []
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.089,
+   "duree_noyau_s": 8.807
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "CLL-03 instance sous un nom attendu : imprimée pour le relecteur",
+   "fichier": "gl6_instance_sous_attendu_v2.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": true,
+   "rejeu_ok": true,
+   "gardes_en_echec": {},
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.984,
+   "duree_noyau_s": 8.953
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "CLL-04 initialiseur par attribut qui forge la sortie",
+   "fichier": "gl7_init_attribut_v2.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L3+": [
+     "texte : « IO » ligne 6",
+     "texte : « IO » ligne 7",
+     "texte : « IO » ligne 8"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 5.137,
+   "duree_noyau_s": 8.415
+  },
+  {
+   "groupe": "lean",
+   "passage": "avec G-L3+",
+   "nom": "CLC2-01 commentaires au milieu d'un lexème (texte refusé ; axiomes vus par le noyau)",
+   "fichier": "gl0_lexique_lean_v3.lean",
+   "juge": true,
+   "ok": true,
+   "ecarts": [],
+   "accepte": false,
+   "rejeu_ok": true,
+   "gardes_en_echec": {
+    "G-L2": [
+     "texte : lexique refusé : début de commentaire au milieu d'un lexème (position 257)"
+    ],
+    "G-L3": [
+     "texte : lexique refusé : début de commentaire au milieu d'un lexème (position 257)",
+     "noyau : constante axiome cachee2",
+     "noyau : constante axiome cachee1"
+    ],
+    "G-L3+": [
+     "texte : lexique refusé : début de commentaire au milieu d'un lexème (position 257)"
+    ],
+    "G-L4": [
+     "texte : lexique refusé : début de commentaire au milieu d'un lexème (position 257)"
+    ],
+    "G-L6": [
+     "texte : lexique refusé : début de commentaire au milieu d'un lexème (position 257)"
+    ]
+   },
+   "observe": {},
+   "axiomes": {
+    "etape_1": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "etape_2": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "enonce_item": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "enonces_imprimes": {
+    "etape_1": "∀ (x : ℝ), 0 ≤ x ^ 2",
+    "etape_2": "∀ (x : ℝ), 0 ≤ x ^ 2 + 1",
+    "enonce_item": "∀ (x : ℝ), 0 < x ^ 2 + 1"
+   },
+   "noyau": {
+    "imports": {
+     "modules": [
+      "Init",
+      "Mathlib"
+     ],
+     "permis": true,
+     "type": "imports"
+    },
+    "rejeu": {
+     "ok": true,
+     "type": "rejeu"
+    },
+    "attendus": {
+     "etape_1": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "etape_2": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     },
+     "enonce_item": {
+      "present": true,
+      "aller_retour": true,
+      "raison": "",
+      "constantes_agent": [],
+      "axiomes": [
+       "propext",
+       "Classical.choice",
+       "Quot.sound"
+      ]
+     }
+    }
+   },
+   "code_noyau": 0,
+   "duree_compilation_s": 4.99,
+   "duree_noyau_s": 8.755
+  }
+ ],
+ "fin": "2026-11-13T00:51:58Z",
+ "conforme": true,
+ "bilan": {
+  "cas_juges": 39,
+  "cas_conformes": 39,
+  "observations": 2
+ }
+}
