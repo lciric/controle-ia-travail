@@ -1,0 +1,49 @@
+relevé prereg/papier-dopamine-moniteur-v1/releve-offres-loueur-cartes-2026-11-21T1055Z-v1.json sha256 bc54f8bd468eb65e051234b31b77373aad1c52100b6e2b2a377532336f6a5196 : 30 offres, tronqué : False
+cartes de 80 Go au relevé : 13
+
+# 1. Les offres contre les bornes du code figé, stockage mis à part (disque de 300 Go)
+# lecture (a) : dph_total tel qu'au relevé (cherché sans --storage : disque de 8 Go compté, cf. contrôle ci-dessous)
+# lecture (b) : prix de l'heure à 300 Go, dph_base + storage_cost * 300 / 720 (formule du loueur, vérifiée ci-dessous)
+contrôle de la formule du loueur : max |dph_total - (dph_base + storage_cost*8/720)| sur 30 offres = 0.00e+00
+lecture (a) : 5 offre(s) passent toutes les bornes hors stockage
+   offre 61618936 : carte 1.0453 USD/h ; stockage 1.0000 USD/Go-mois, soit 0.4110 USD/h à 300 Go (code, /730) ; prix lu 1.0564 ; disque 518 Go ; 32 cœurs ; 128979 Mo ; CUDA 13.0 ; fiabilité 0.937 ; sortie 0.0391 et entrée 0.0391 USD/Go
+   offre 61615831 : carte 1.0453 USD/h ; stockage 1.0000 USD/Go-mois, soit 0.4110 USD/h à 300 Go (code, /730) ; prix lu 1.0564 ; disque 480 Go ; 32 cœurs ; 128979 Mo ; CUDA 13.0 ; fiabilité 0.911 ; sortie 0.0391 et entrée 0.0391 USD/Go
+   offre 60992124 : carte 1.0667 USD/h ; stockage 1.0000 USD/Go-mois, soit 0.4110 USD/h à 300 Go (code, /730) ; prix lu 1.0778 ; disque 736 Go ; 32 cœurs ; 258003 Mo ; CUDA 13.3 ; fiabilité 0.959 ; sortie 0.0391 et entrée 0.0391 USD/Go
+   offre 32744970 : carte 1.1600 USD/h ; stockage 0.2400 USD/Go-mois, soit 0.0986 USD/h à 300 Go (code, /730) ; prix lu 1.1627 ; disque 1050 Go ; 16 cœurs ; 128892 Mo ; CUDA 13.2 ; fiabilité 0.985 ; sortie 0.0391 et entrée 0.0260 USD/Go
+   offre 59284724 : carte 1.1880 USD/h ; stockage 1.0000 USD/Go-mois, soit 0.4110 USD/h à 300 Go (code, /730) ; prix lu 1.1991 ; disque 423 Go ; 32 cœurs ; 128980 Mo ; CUDA 13.3 ; fiabilité 0.994 ; sortie 0.0391 et entrée 0.0391 USD/Go
+lecture (b) : 1 offre(s) passent toutes les bornes hors stockage
+   offre 32744970 : carte 1.1600 USD/h ; stockage 0.2400 USD/Go-mois, soit 0.0986 USD/h à 300 Go (code, /730) ; prix lu 1.2600 ; disque 1050 Go ; 16 cœurs ; 128892 Mo ; CUDA 13.2 ; fiabilité 0.985 ; sortie 0.0391 et entrée 0.0260 USD/Go
+offres de 80 Go refusées hors stockage, lecture (a), et leur motif :
+   offre 59227352 : coeurs, disque (stockage à 300 Go : 0.0822 USD/h)
+   offre 61057990 : disque, cuda (stockage à 300 Go : 0.0822 USD/h)
+   offre 58940655 : disque (stockage à 300 Go : 0.1370 USD/h)
+   offre 59858180 : disque, prix (stockage à 300 Go : 0.0822 USD/h)
+   offre 59225403 : coeurs, disque, prix (stockage à 300 Go : 0.0822 USD/h)
+   offre 59306805 : prix (stockage à 300 Go : 0.2497 USD/h)
+   offre 41153686 : prix (stockage à 300 Go : 0.1370 USD/h)
+   offre 49739786 : prix (stockage à 300 Go : 0.1370 USD/h)
+
+# 2. Offres admises selon le plafond du stockage de l'heure
+plafond 0.08 : lecture (a) 0 offre(s) [] ; lecture (b) 0 offre(s) [] ; storage_cost admis jusqu'à 0.1947 USD/Go-mois
+plafond 0.10 : lecture (a) 1 offre(s) [32744970] ; lecture (b) 1 offre(s) [32744970] ; storage_cost admis jusqu'à 0.2433 USD/Go-mois
+plafond 0.12 : lecture (a) 1 offre(s) [32744970] ; lecture (b) 1 offre(s) [32744970] ; storage_cost admis jusqu'à 0.2920 USD/Go-mois
+plafond 0.14 : lecture (a) 1 offre(s) [32744970] ; lecture (b) 1 offre(s) [32744970] ; storage_cost admis jusqu'à 0.3407 USD/Go-mois
+stockage le moins cher parmi les offres qui passent le reste : 0.0986 USD/h ; marge sous 0.12 : 0.0214 USD/h (21.7 %)
+pour mémoire, 0,2 USD/Go-mois à 300 Go : 0.0822 USD/h (offres de 80 Go à ce prix : aucune ne passe le reste)
+
+# 3. Coût de la relecture (39 adaptateurs, activations gardées en entier), formules du devis
+plafond 0.08 : 151.9 Go ; 4.09 à 5.42 h ; 9.6 à 17.1 USD (haut exact 17.08) ; pire 25.6 (exact 25.64) ; quatre cinquièmes du pire, arrondis au-dessus : 21 ; heures avant la coupure de 21 USD au prix plafond de la carte et au plafond du stockage, moins le quart d'heure : 14.97 (attendu haut 5.42)
+plafond 0.10 : 151.9 Go ; 4.09 à 5.42 h ; 9.6 à 17.2 USD (haut exact 17.19) ; pire 25.9 (exact 25.86) ; quatre cinquièmes du pire, arrondis au-dessus : 21 ; heures avant la coupure de 21 USD au prix plafond de la carte et au plafond du stockage, moins le quart d'heure : 14.75 (attendu haut 5.42)
+plafond 0.12 : 151.9 Go ; 4.09 à 5.42 h ; 9.6 à 17.3 USD (haut exact 17.30) ; pire 26.1 (exact 26.08) ; quatre cinquièmes du pire, arrondis au-dessus : 21 ; heures avant la coupure de 21 USD au prix plafond de la carte et au plafond du stockage, moins le quart d'heure : 14.54 (attendu haut 5.42)
+plafond 0.14 : 151.9 Go ; 4.09 à 5.42 h ; 9.6 à 17.4 USD (haut exact 17.40) ; pire 26.3 (exact 26.29) ; quatre cinquièmes du pire, arrondis au-dessus : 22 ; heures avant la coupure de 21 USD au prix plafond de la carte et au plafond du stockage, moins le quart d'heure : 14.33 (attendu haut 5.42)
+contrôle : au plafond scellé de 0,08, le calcul rend 9,6 à 17,1 USD et un pire cas de 25,6 : les chiffres du devis scellé
+plus haut plafond sous lequel la règle des quatre cinquièmes garde la coupure de 21 USD : 0.1359 USD/h
+avec les quatre points d'ancrage (43 séries, 166.1 Go) : 4.22 à 5.65 h ; 10.1 à 18.3 USD ; pire 27.5 (à 0,08 : 10.1 à 18.1 ; pire 27.0) ; écart dû au plafond : +0.23 et +0.45
+
+# 4. Sur l'offre admise au relevé, aux prix de cette offre (heures du devis)
+offre 32744970 : 1.2600 USD/h à 300 Go (marge sous 1,30 : 0.0400) ; entrée de 40 Go et sortie de 151.9 Go : 6.98 USD ; relecture 12.1 à 13.8 USD ; hôte deux fois plus lent : 20.6 USD ; heures avant la coupure moins le quart d'heure : 16.42
+
+# 5. Ensemble chez le loueur de cartes, avant et après l'additif
+devis scellé (0,08) : attendu 88.0 à 132.4 USD (exact 132.38) ; pire 254.7 ; coupures 175 + 21 + 8 = 204 ; plafond commun 200
+additif 1 (0.12) : attendu 88.0 à 132.6 USD (exact 132.60) ; pire 255.2 ; coupures 175 + 21 + 8 = 204 ; plafond commun 200
+écart dû à l'additif : attendu haut +0.22 USD ; pire cas +0.43 USD ; attendu bas, coupures et plafond commun : inchangés
