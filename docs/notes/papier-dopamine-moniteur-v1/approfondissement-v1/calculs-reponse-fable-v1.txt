@@ -1,0 +1,49 @@
+A. Taux de fausses alertes réel d'un seuil pris au k-ième plus grand score honnête
+   n=  300 k=  3 : moyenne 0.0100, écart type 0.0057, 95 % dans [0.0021 ; 0.0239]
+   n= 1000 k= 10 : moyenne 0.0100, écart type 0.0031, 95 % dans [0.0048 ; 0.0170]
+   n= 1600 k= 16 : moyenne 0.0100, écart type 0.0025, 95 % dans [0.0057 ; 0.0154]
+   n= 5000 k= 50 : moyenne 0.0100, écart type 0.0014, 95 % dans [0.0074 ; 0.0129]
+B. Plus petit lot honnête qui donne un seuil fini
+   validité en moyenne à 1 % (rang conforme) : n >= 99
+   validité à 95 % de confiance à 1 % (le maximum du lot) : n >= 299
+   contrôle de la formule sur l'exemple de Gao (alpha = delta = 0,05) : n >= 59
+C. Prix de la finesse : rang certifié à 95 % et taux réel moyen du seuil
+   n=  299 : rang   1, taux réel moyen 0.0033
+   n=  500 : rang   2, taux réel moyen 0.0040
+   n= 1000 : rang   5, taux réel moyen 0.0050
+   n= 2000 : rang  13, taux réel moyen 0.0065
+   n= 5000 : rang  39, taux réel moyen 0.0078
+   n=10000 : rang  84, taux réel moyen 0.0084
+D. Bande uniforme de Dvoretzky-Kiefer-Wolfowitz à 95 %
+   n=  300 : demi-largeur 0.0784
+   n= 5000 : demi-largeur 0.0192
+   n pour une demi-largeur de 0,002 : 461110
+E. Règle des 50 dépassements : point de fonctionnement jugeable selon n
+   n=  300 : alpha >= 0.167
+   n=  500 : alpha >= 0.100
+   n= 1000 : alpha >= 0.050
+   n= 5000 : alpha >= 0.010
+F. Illustration binormale à variances égales (hypothèse, pas une mesure)
+   aire 0.69 : rappel à 1 % 0.052, pente   4.0, écart type dû au seuil n=300 : 0.023, écart type dû au seuil n=1600 : 0.010, écart type dû au seuil n=5000 : 0.006
+      n pour ramener cet écart type à 0,010 : 1582
+   aire 0.80 : rappel à 1 % 0.128, pente   7.9, écart type dû au seuil n=300 : 0.045, écart type dû au seuil n=1600 : 0.020, écart type dû au seuil n=5000 : 0.011
+      n pour ramener cet écart type à 0,010 : 6102
+   aire 0.95 : rappel à 1 % 0.500, pente  15.0, écart type dû au seuil n=300 : 0.086, écart type dû au seuil n=1600 : 0.037, écart type dû au seuil n=5000 : 0.021
+      n pour ramener cet écart type à 0,010 : 22182
+G. Borne haute exacte (Clopper-Pearson, unilatérale à 95 %) d'un taux d'alerte honnête
+     0 alertes sur 299 : borne haute 0.0100
+    45 alertes sur 300 : borne haute 0.1882
+    60 alertes sur 300 : borne haute 0.2418
+H. Illustration : nombre d'épisodes pour une alerte au niveau du déploiement
+   (pari de Bernoulli contre un taux honnête borné q ; taux du saboteur p supposé)
+   q=0.20 p=0.25 : divergence 0.0074, épisodes pour un facteur 100 : 624
+   q=0.20 p=0.30 : divergence 0.0282, épisodes pour un facteur 100 : 164
+   q=0.20 p=0.40 : divergence 0.1046, épisodes pour un facteur 100 : 45
+I. Contrôle de A par la loi binomiale : P(taux réel du 3e plus grand de 300 > 1 %)
+   0.4221
+J. Rangs que le lot ne sait pas distinguer du seuil à 1 % (1 % dans l'intervalle central à 95 %)
+   n=  300 : rangs 1 à 7, soit un taux réel moyen de 0.0033 à 0.0233
+   n= 1000 : rangs 5 à 17, soit un taux réel moyen de 0.0050 à 0.0170
+   n= 5000 : rangs 38 à 64, soit un taux réel moyen de 0.0076 à 0.0128
+K. Lot honnête pour un seuil certifié à 97,5 % (risque partagé avec la borne du rappel)
+   n >= 368
