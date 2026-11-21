@@ -1,0 +1,833 @@
+# Conception du véhicule — course « nouvelles attaques », à cinq espèces, trois générations — v5
+
+Pièce de travail (classe C), non scellée ; la v1, la v2 et la v3 sont contre-lues, la v4 est contrôlée (verdict « À corriger » chacune) ; la v5, courte, porte les corrections du contrôle de la v4, et reste à vérifier par le même contre-lecteur. Elle conçoit ; elle ne tranche rien de ce que la lettre laisse ouvert : ce qui est tranché l'est par la mère, et c'est dit. Processeur seul : aucun appel, aucune dépense, aucun code écrit pour être lancé, aucun lancement, aucune écriture dans un dépôt.
+
+- Auteur : concepteur du véhicule, modèle F. Je n'ai écrit ni la v9, ni l'inventaire, ni aucun orchestrateur.
+- Date (UTC) : 2026-11-21 ; relevé de `date -u` : 06:45:57Z, après la lecture des pièces, avant l'écriture. Version 2 : 07:10:25Z, après la lecture de la contre-lecture, avant l'écriture.
+- Version : la v2 remplace la v1 (`675f8d39dc64548f34e36763b3a523277d9c1daa1c208e3b2b678dd9f79ace9b`, non scellée, archivée sans modification) après la contre-lecture `docs/notes/ideation-nouvelles-attaques-v1/conception-vehicule-v1/contre-lecture-v1/contre-lecture-conception-vehicule-na-v1.md` (`f5b7aacc9d96dfd3bb10eaa80a6f451d646b3b7c06844dbb4da6837182cf36db`, égale à son compagnon, lue en entier ; notée CL). Elle porte : (1) les décisions de la mère de 06:58Z, D1 à D7 et D10, écrites comme décisions (§ 0 bis) ; (2) les corrections de CL, point par point (table au rapport v2) ; (3) les décisions de la mère de 07:10Z sur trois points de CL (D11 ; la fiche hors contrat de longueur ; la lecture des mesures, gardée à la lettre de la V9 d'ici le mot de Lazar) et sur le calendrier. Le différentiel v1 → v2 est joint.
+- Version : la v3 remplace la v2 (`a21effe48f9b12fe15f3dd1f45dcacb3de2fbde6effe76e599e042a473344310`, non scellée, archivée sans modification) ; relevé de `date -u` : 07:33:38Z, après la lecture des deux pièces, avant l'écriture. Elle suit la contre-lecture `docs/notes/ideation-nouvelles-attaques-v1/conception-vehicule-v2/contre-lecture-v1/contre-lecture-conception-vehicule-na-v2-et-lot-0-v1.md` (`f46322b97fb6facca8fcf6ca16158186aeaceba0d713ae65f2b3d79d6597d401`, égale à son compagnon, lue en entier ; notée CL2) et le relevé du lot 0, `docs/notes/ideation-nouvelles-attaques-v1/lot-0-vehicule-na-v1/releve-lot-0-vehicule-na-v1.md` (`10ac79ecb0e064f5b5ea80ddb060ae37e303d2d84ff242f653f4cccbd7ff753e`, égale à son compagnon, lu en entier ; noté L0). Elle porte : (1) les six décisions de la mère de 07:21Z (§ 0 bis) ; (2) **la réécriture des § 2.3, 2.4, 2.9 et 2.13**, que le relevé rendait caducs ; (3) les points 2 à 14 de CL2, § 5 (table au rapport v3) ; (4) le calendrier rechiffré lot par lot. Le différentiel v2 → v3 est joint.
+- Version : la v4 remplace la v3 (`7f441d472231bec2879cee91402559a1cb24fe410825d3824214ad646a7225b9`, non scellée, archivée sans modification) ; relevé de `date -u` : 07:50:34Z, après la lecture de la contre-lecture, avant l'écriture. Elle suit la contre-lecture `docs/notes/ideation-nouvelles-attaques-v1/conception-vehicule-v3/contre-lecture-v1/contre-lecture-conception-vehicule-na-v3-v1.md` (`80e064d09903661d77776c41e5449aa39f25c37fd150cd9f48f2edf855716577`, égale à son compagnon, lue en entier ; notée CL3). Elle porte : (A) trois défauts de conception : un portier neuf (§ 2.4), ce que rend un « refus écrit » par rôle et le seuil A3 chiffré (§ 2.13), une surcharge de `juger` (§ 2.5, § 2.9) ; (B) les neuf mots de la mère de 07:46Z, écrits comme tranchés (§ 0 bis) ; (C) la colonne « matière première » en **« garde seule » par défaut**, et ce que cela change (§ 2.14, § 2.15, § 7, § 8) ; (D) le dernier octet des pièces servies, posé à la mère ; (E) le calendrier ajusté. Le différentiel v3 → v4 est joint.
+- Version : la v5 remplace la v4 (`3428dfb348c8f367060f587b5953d3c05ed329055f29b07e046ac3538ced2804`, non scellée, archivée sans modification) ; relevé de `date -u` : 08:04:12Z, après la lecture du contrôle, avant l'écriture. Elle suit le contrôle `docs/notes/ideation-nouvelles-attaques-v1/conception-vehicule-v4/controle-v1/controle-conception-vehicule-na-v4-v1.md` (`3fda0db5e37f1bb97c94f93fdd6ec61576dbfb8b2b35171ad093d2b7c803c381`, égale à son compagnon, lu en entier ; noté CT4). Elle porte, et rien d'autre : (1) **A3 par la voie 1** : désactivée par écrit, avec une garde de remplacement sur les refus écrits ; A14 de même (§ 2.13) ; (2) les quatre mots de la mère de 08:00Z, écrits comme tranchés (§ 0 bis) ; (3) trois retouches de lettre : A17 à la table des gardes héritées, une phrase périmée du § 7, les points ouverts du § 9 ; (4) une demi-heure de plus au lot 6. Le différentiel v4 → v5 est joint.
+- **Une erreur de fait de ma v2 est corrigée** : elle disait que le portier appelle l'adaptateur sans passer par `appel`. C'est faux : le portier, les juges et les proposeurs passent tous par `appel` (§ 2.3).
+- **Le lot 0 est fait.** Ses réponses sont portées comme des faits, avec leur renvoi « L0, Qn », dans la numérotation du relevé. Ce qui reste à relever l'est au faux fournisseur, au lot 4 (§ 2.3).
+- Mandat : `docs/notes/ideation-nouvelles-attaques-v1/mandat-redacteur-conception-vehicule-course-nouvelles-attaques-v1.md` (`d2130f6b0aab5d4d32f01f51acd71b23cc3d1623769b24cd4d6fb06317c19af2`, égale à son compagnon), lu en entier.
+- Point de départ : l'inventaire de l'allumage (`0737906f9901de39ddd9b1585679b5b44e6bac67e7051a10374d3e0e496c06e0`), son § 4, et le gabarit des témoins (`a84de0bf3168d93dda6928e2e165c14ecb8b091e976a629ace828813c24c89c0`).
+- Lecture : `origin/main` du dépôt de l'organisme au commit `ebb7492a8a2923a6a790ee0f8d29ee320b530f3d` ; le code existant sur le disque de la branche `lot/compte-organisme-v1` (commit `9555d8b696d3aae9d17a9c41399d0ab24704c530`) et dans le dépôt de l'orchestrateur (commit `a41b7b50f7c64ce488c120bb89ad3d25fb1dd1cb`). Pièces et empreintes : rapport joint, § 1.
+- Ce que ce texte ne contient pas : aucune méthode d'attaque, aucun procédé, aucune recette, aucun nom ni énoncé de mode, aucune case nommée, aucun identifiant de modèle, aucune valeur ni nom de variable de clé, aucun motif de la garde de motifs.
+
+Sigles de renvoi (numéros de ligne) : V9, A1, CV, AC, DV, OC comme à l'inventaire ; PS, la partie servie (`4cd360ba…`) ; R68, le rapport du développeur de la v68 (`ad42b722…`) ; C68, sa contre-lecture (`d2cfeac1…`) ; A69, l'additif des interrupteurs de la v69 : sa v4 scellée (`cb352811f0202aa530fa4fd94de1d7ed4e6a8d589584c06c24c915e3c73bb578`, registre, R-4131) fait foi ; je n'ai lu que le § 7 de sa v1 (`aef8ff2f…`) et je tiens de CL, § 1.5, ce que la v4 y ajoute ; L9 et L10, les lanceurs de course v9 et v10 (`1b47c1cf…`, `f4196ec5…`) ; E9, l'épreuve des témoins v9 (`5be161fa…`) ; CL, la contre-lecture de la v1 (`f5b7aacc…`).
+
+## 0. En bref
+
+1. **Base retenue.** Orchestrateur : le commit `a41b7b50…` plus le paquet v68 (huit fichiers neufs, manifeste `4ed9fd8e…`, contre-lu « Conforme »). Lanceur : le lanceur de course v9 (`1b47c1cf…`), le seul qui ait porté une course réelle de cette composition, avec deux lectures reprises du lanceur v10 (`f4196ec5…`). Épreuve des témoins : celle de la course v9 (`5be161fa…`). Le lanceur 11 n'a pas de code : il n'existe que par la liste de ce qu'il doit épingler (A69, v4 scellée, § 7), que le lanceur neuf suit.
+2. **Plus petite différence.** Le véhicule ne récrit ni le noyau des appels, ni le budget d'une génération, ni la garde de budget de la course, ni les relais, ni la conservation des réponses, ni l'inventaire de fin. Il ajoute des fichiers neufs, jamais une modification (règle R12). **Il lève les deux refus de la v68 par deux fichiers neufs**, un lanceur de l'orchestrateur et une fonction de course ; la course de la v68 lui sert de modèle et n'est pas appelée (§ 1.2).
+3. **Ce qui est neuf, et lourd** : l'assemblage exact de la requête ; le routage par rôle, la part de la clé, la garde de motifs, le journal et le refus sans coût, posés dans une surcharge d'`appel`, point unique par où passe tout envoi ; un adaptateur Claude neuf, sans texte système, qui conserve les réponses brutes ; un lecteur et un validateur de fiches neufs ; le portier à trois classes et quatre classes d'issue d'appel ; le registre servi ; des cases neuves à chaque génération ; les mesures ; le sort des gardes héritées du noyau, que la V9 ne porte pas (§ 2.13).
+4. **Onze lots** : un lot 0 de relevé du code, fait ; neuf lots de code ; **un lot 10 a, nécessaire depuis la v4** (chargement et garde de la colonne « matière première », en « garde seule » par défaut), joué en parallèle des lots 6 et 7, avant le lot 9 ; et un lot 10 b facultatif (lecture de fin de la colonne, attachée à l'allumage). Chemin critique : 2, 3, 5, 6, 8, 9, soit de l'ordre de 29 heures au plus bas ; il ne passe pas par le lot 10 a.
+5. **Calendrier, dit sans forcer** : 41,5 heures de sessions de développeur et de vérificateur et environ 18 heures autour sont une borne basse, non une attente. L'attente honnête est de **48 à 60 heures d'horloge** : un véhicule contre-lu le 24 novembre au plus tôt, un départ le 25 ou le 26. **L'échéance du 2026-11-22 de GO-2026-11-20-67 ne tient pas.** La mère demande à Lazar une échéance au 2026-11-27 : demandée, non accordée ; elle tiendrait avec une marge mince.
+6. **Trois trous que l'inventaire ne nomme pas** (§ 9, points 1 à 3), tous trois tranchés depuis par la mère (D2, D3, D5) : les consignes du portier et des juges pour cette question ne sont écrites nulle part ; la partie servie ne dit pas la syntaxe de la sortie, et rien d'autre de fixe ne doit partir ; le registre servi veut un « nom » que la fiche ne porte pas.
+
+## 0 bis. Décisions de la mère (2026-11-21), portées par cette v5
+
+**Les quatre mots de la mère de 08:00Z**, transmis par la coordination et par CT4, § 5 ; écrits ici comme tranchés. Ils priment sur ce que la v4 laissait ouvert.
+
+| n° | mot de la mère | où il est porté |
+|---|---|---|
+| 1 | **le dernier octet des pièces servies est gardé tel quel, et l'empreinte se calcule sur la pièce entière** | § 5.3 |
+| 2 | V9, l. 83 : **la lecture B est retenue.** Le registre servi de la matière est une **entrée** de la course, versée sous GO-2026-11-21-19 ; la l. 83 vise les **sorties**. La « garde seule » reste le défaut ; le chargeur ne garde que les 35 empreintes. La branche A est retirée | § 2.14 ; § 7 ; § 8 ; § 9, point 18 |
+| 3 | l'état « garde seule » **ne demande pas d'additif à la V9** : il s'écrit au complément de valeurs, avec son empreinte. L'état « lecture de fin » demande l'additif, l'arrêt n° 14, le devis et le mot de Lazar | § 2.14, table de l'interrupteur |
+| 4 | A3 : **aucune garde n'est neutralisée en silence** ; deux voies offertes, le concepteur choisit et le dit | § 2.13 : **voie 1 choisie** ; § 6.2 |
+
+**Les neuf mots de la mère de 07:46Z**, sur les neuf propositions de la v3 ; ils m'ont été transmis par la coordination et par CL3, § 4 ; je n'ai pas relu le registre. Tous sont écrits ici comme tranchés.
+
+| n° | mot de la mère | où il est porté |
+|---|---|---|
+| 1 | le réencodage des identifiants est accepté ; la règle d'encodage est écrite et **éprouvée dans les deux sens** | § 5.2 ; § 6.2 ; § 2.9, surcharge de `juger` |
+| 2 | une fiche dont le champ `case` diffère de sa case : consignée, comptée, classe inchangée | § 2.4 ; § 6.2 |
+| 3 | lecteur à grammaire par étiquettes ancrées ; l'arrêt n° 27 à la lettre ; une étiquette demandée à la session à part | § 2.4 ; § 5.4 ; § 9, point 20. « Dans l'ordre », que ma v3 ajoutait, **est retiré** : il dépassait la lettre |
+| 4 | une erreur de cause non établie sur une clé Claude est « réponse illisible », **avec un sous-compte « cause non établie »** | § 2.3 ; § 2.7 ; § 2.8 ; § 6.2 |
+| 5 | ce que l'outil envoie sans texte système se tranche sur pièce après le lot 4 : déclaré comme transport, octet pour octet, ou refusé | § 2.3 |
+| 6 | **A2 devient un arrêt nommé de course**, numéroté à l'additif | § 2.13 ; § 6.2 ; § 9, point 19 |
+| 7 | la somme des plafonds des processus de relais d'une même clé est au plus sa part | § 2.3 ; § 6.2 |
+| 8 | la forme de la fiche servie au portier et aux juges est gardée et déclarée à l'additif | § 2.4 ; § 2.5 ; § 5.3 |
+| 9 | colonne « matière première » : **état par défaut « garde seule »** ; seules les visées sont comparées ; les lecteurs sont inscrits ; l'allumage est au mot de Lazar et à sa ligne | § 2.14 ; § 2.15 ; § 6.2 ; § 7 ; § 8 ; § 9, point 18 |
+
+**Les mots de la mère de 07:51Z**, reçus pendant l'écriture de la v4 :
+
+| mot de la mère | où il est porté |
+|---|---|
+| le portier neuf : oui | § 2.4 |
+| refus écrit : **une fiche dont l'appel au portier est refusé va « au coffre », avec sa classe écrite, et elle est comptée** ; le seuil A3 du portier et des juges est chiffré par le concepteur, avec cas sain et artefact (**remplacé à 08:00Z** : A3 désactivée par écrit, voie 1) | § 2.13 ; § 6.2 |
+| la surcharge de `juger`, avec le passeport du portier neuf : oui | § 2.5 ; § 2.9 |
+| « garde seule » par défaut : **le lot 10 est obligatoire** et se joue avec les lots 6 et 7 | § 7 ; § 8 |
+| la comparaison de la garde de la colonne porte sur **l'énoncé d'une ligne entier, par empreinte, jamais sur le nom court** | § 2.14 ; § 6.2 |
+| « seuls les juges de fin lisent la branche », cité mot pour mot ; **les deux lecteurs d'antériorité de la course en font partie**, après la clôture des générations | § 2.15 |
+| la branche est vérifiée orpheline par le graphe des commits, sans l'ouvrir | § 2.15 |
+| la l. 83 de la V9 citée à la lettre ; deux branches écrites à la v4 ; tranchée depuis à 08:00Z | § 2.14 |
+| « dans l'ordre » retiré de la grammaire par étiquettes ancrées | § 9, point 20 |
+| le dernier octet des pièces servies : la question et la proposition écrites à la v4 ; tranché depuis à 08:00Z : gardé | § 5.3 |
+
+**Décisions de la mère de 07:21Z**, reçues par le message de reprise de la v3 ; elles priment sur ce que la v2 proposait :
+
+| n° | décision de la mère | où elle est portée |
+|---|---|---|
+| 1 | la fiche trop longue est un rendu obtenu et compte au dénominateur de M3 | § 2.4 ; § 5.4 ; § 9, point 3 |
+| 2 | les lignes de compte du registre servi s'écrivent **toujours**, compte nul compris (la v2 proposait l'inverse) | § 2.6 ; § 6.2 ; § 9, point 3 |
+| 3 | la clé n° 40 va dans la table des clés de l'additif, à côté de la n° 30, tirée au même geste et consignée | § 2.1 ; § 5.2 ; § 9, point 4 |
+| 4 | aucune garde héritée n'arrête un rôle sans écrire sa cause ; une garde qui arrête produit un « refus écrit », compté, jamais un échec du rôle ni un coût ; elles sont nommées une par une | § 2.13 ; § 2.3, pas 0 |
+| 5 | le refus sans coût est « non envoyé », coût nul, une ligne au journal, compté dans les refus, jamais silencieux | § 2.3 ; § 6.2 |
+| 6 | la tension avec la V9, l. 83, est sans objet tant que la colonne « matière première » est éteinte ; la colonne n'étant plus éteinte par défaut depuis 07:46Z, la question s'est rouverte ; **tranchée à 08:00Z : lecture B** | § 2.14 |
+
+**Décisions de 06:58Z :**
+
+Reçues par le message de reprise ; CL les dit inscrites au registre (R-4381, R-4383), que je n'ai pas relu.
+
+| n° | décision de la mère | où elle est portée |
+|---|---|---|
+| D1 | série NA-1, suffixe `_na_v1` | § 1.4 |
+| D2 | **rien n'est ajouté à l'enveloppe** | § 2.3, § 5.3, § 5.4, § 9, point 2 |
+| D3 | les consignes du portier et des juges sont un manque neuf ; elles sont écrites par le modèle F et contre-lues | § 2.4, § 2.5, § 4, § 9, point 1 |
+| D4 | clé de tirage n° 40 pour l'identifiant neutre | § 2.1, § 5.2 |
+| D5 | au registre servi, le nom est l'identifiant de la fiche, l'énoncé est le champ `idee` sur une ligne | § 2.6, § 9, point 3 |
+| D6 | ordre du portier : forme, modèle, hors case ; une réponse illisible du modèle portier va au coffre | § 2.4, § 9, point 5 |
+| D7 | la sonde de refus est lue par programme seul | § 2.10, § 9, point 7 |
+| D10 | le code de base est versé sur la branche `verse/vehicule-na-v1`, commit `61987a3a`, en attente de `main` | § 1.1, § 2.11 |
+
+**Décisions de la mère de 07:10Z**, reçues par un second message pendant l'écriture :
+
+| n° | décision de la mère | où elle est portée |
+|---|---|---|
+| D11 | l'épreuve de l'arrêt n° 12 sous GO-2026-11-21-02 : acceptée telle que le contre-lecteur la propose (CL, § 5) : un cas sain neuf, deux artefacts, la mutation « routeur par espèce » | § 6.1, ligne du n° 12 ; § 9, point 17 |
+| D13 | **règle d'écriture** : une fiche hors contrat de longueur (un champ au-dessus de sa borne, `idee` compris) est traitée comme illisible, donc « au coffre » (D6), comptée, jamais réparée | § 2.4, § 5.4, § 9, point 3 |
+| — | les mesures lues deux fois sont un nœud de Lazar ; d'ici son mot, **la lettre de la V9 est gardée** (l. 315, « lues une fois ») ; l'option est notée à part, soumise à Lazar | § 2.8, § 9, point 11 (D12) |
+| — | calendrier : 40 à 50 heures d'horloge, départ le 24 ou le 25 ; la mère demande à Lazar une échéance au 2026-11-27 : **demandée, non accordée** | § 8 |
+
+Vont à Lazar : D8 (portée de l'arrêt n° 1 en course), D9 (échéance de GO-2026-11-20-67), D12 (lecture des mesures). Le numéro D13 est de moi, pour le renvoi.
+
+**Ajout relayé par la mère vers 07:14Z, corrigé à 07:15Z** : une colonne « matière première », tenue à l'écart des proposeurs. À 07:15Z, la matière n'existait pas. **Depuis 07:39Z, elle existe** (message de la mère ; GO-2026-11-21-19) : un registre servi de noms neutres et d'énoncés d'une ligne sur `main`, attesté « aucune recette », et trois réponses brutes sur une branche tenue à l'écart, que je n'ouvre pas. **Depuis 07:46Z, son état par défaut est « garde seule »** (v3 : « éteinte ») : le registre servi est chargé pour la seule garde, et rien n'est lu à la fin ; la lecture de fin reste soumise au mot de Lazar et à sa ligne (§ 2.14, § 2.15 ; lot 10 a, obligatoire ; lot 10 b, facultatif).
+
+## 1. Le choix de base
+
+### 1.1 Ce qui existe, lu sur pièces
+
+| pièce | où | empreinte | état |
+|---|---|---|---|
+| orchestrateur, commit de base | dépôt de l'orchestrateur, lu à `/home/user/lciric/ideation-organism` (le chemin `/home/user/ideation-organism` que cite R68 est absent de cette machine ; L10, l. 530, nomme les deux) | commit `a41b7b50f7c64ce488c120bb89ad3d25fb1dd1cb` | a porté la course v9 en réel, une génération, par `demonstrations/ideation_v8.py` |
+| paquet v68 | `docs/notes/organisme-auto-conception-v1/epreuves-v9/orchestrateur-v68/paquet/…`, sur le disque de la branche | manifeste `4ed9fd8e893646a5e361f81a2da58099175ac2e3708555b9e7725240fedc8627` | contre-lu « Conforme » (C68) ; moteur simulé seulement ; refuse le moteur réel par construction |
+| lanceur de course v9 (L9) | `scripts/lancer_course_auto_conception_v9.py`, disque de la branche | `1b47c1cf097e4cba290223223655d5ac63707dfeaec032be929930d30fde9b12` | contre-lu « Scellable. » ; a lancé la course v9 |
+| lanceur de course v10 (L10) | `scripts/lancer_course_auto_conception_v10.py`, disque de la branche | `f4196ec5662266a0d22c2832c3fdd19a9af159ef1514b70a95e4b348f546a07a` | éteint, égal à L9 ; allumé, refusé en réel ; lit les coûts de plusieurs générations à blanc |
+| épreuve des témoins v9 (E9) | `scripts/epreuve_temoins_auto_conception_v9.py`, disque de la branche | `5be161fa35e339d171399a3ba2a2c927cd517fba42c745306fd867a4b3e3c69b` | a joué l'épreuve réelle de la course v9 |
+| lanceur de course 11 | aucun fichier (son chemin supposé est absent du disque, vérifié ; CL, § 1.4) | — | réservé au palier 1 de l'héritage ; décrit par A69, v4 scellée, § 7 ; non écrit |
+| orchestrateur v69, v70 | aucun code | — | additif v4 (`cb352811…`) et cadre v3 scellés (registre, R-4131) ; noms réservés |
+
+**Ces pièces de code ne sont pas sur `origin/main`** au commit lu (`git show` répond « exists on disk, but not in 'origin/main' » pour le rapport de la v68 et pour les deux scripts de la course v9). **Décision de la mère (D10)** : le code de base est versé sur la branche `verse/vehicule-na-v1`, tirée de `main`, commit `61987a3a`, en attente de `main`. Les chemins et les empreintes que les mandats de code et le lanceur épinglent citent ce commit de cette branche (CL, § 1.7) ; les empreintes des fichiers sont celles de la table ci-dessus, que je n'ai pas recalculées sur cette branche.
+
+### 1.2 Ce que le véhicule garde, retire, ajoute
+
+**De l'orchestrateur (base et v68), gardé sans y toucher :**
+
+| ce qui est gardé | fichier | pourquoi |
+|---|---|---|
+| l'appel d'un rôle, sa consommation notée dans tous les cas, son plafond borné au reste de l'étape | `pole/noyau_v56.py`, `appel` (l. 147 à 188) | c'est là que passe chaque envoi, de tout rôle ; la classe neuve le surcharge et l'appelle par `super()`, sans le changer (§ 2.3) |
+| le budget d'une génération et la règle des seuils : plafond dur de la proposition, aiguillage et juges lancés sous leur seuil | `pole/budget_v56.py`, configuration v5 de la course v9 (150 ; 140, 135, 120 : L10, l. 46 à 49) | ce sont exactement les valeurs des arrêts n° 6 et n° 7 à cinq espèces (A1, l. 166, 167) |
+| la garde de budget de la course : réservation du plafond d'une génération avant de la jouer, arrêt au plafond de la course | `pole/budget_course_v68.py` | arrêt n° 6 ; V9, l. 377 ; R68, § 3, point 3 |
+| le montant requis, N fois le plafond d'une génération, sans étage | `pole/configuration_v68.py` | 3 × 150 = 450 USD ; régime « éteint, sans étage » de R68, § 5 |
+| la classe de génération, comme classe mère | `pole/course2_v68.py`, `GenerationV68` | la classe neuve en hérite ; elle lui passe un héritage `None`, parce que son constructeur n'accepte que l'objet de sélection de la v68 (l. 164), et sert le registre par sa propre proposition (§ 2.9) |
+
+**De la v68, pris pour modèle et non appelé** (correction de CL, § 1.3). La v1 rangeait `executer_course_v68` parmi ce qui est gardé : c'était faux. La v68 porte deux refus qui ferment ce régime :
+
+| refus de la v68 | où | comment le véhicule le lève, sans toucher au paquet |
+|---|---|---|
+| le moteur réel est refusé toujours, interrupteurs éteints compris | son lanceur, `demonstrations/ideation_v68.py` (`MoteurReelRefuseV68` ; R68, § 4) | **un lanceur de l'orchestrateur neuf**, qui n'appelle pas celui de la v68 (§ 2.9) |
+| la lecture sans étage est refusée | la bibliothèque : `verifier_regime_v68` (`course2_v68.py`, l. 235 à 237), que `executer_course_v68` appelle (l. 303) | **une fonction de course neuve**, écrite sur le modèle d'`executer_course_v68` (boucle, réservation, ligne de génération, bilan scellé), qui n'appelle ni l'une ni l'autre |
+
+La forme de la lecture servie à la génération suivante (`rendre_heritage_v68` : objet, garde ligne par ligne, titre passé en argument, section omise quand il n'y a rien, `heritage_lu`) est de même reprise comme modèle pour le registre servi (§ 2.6), non appelée.
+
+**De l'orchestrateur, gardé sans y toucher, suite :**
+
+| ce qui est gardé | fichier | pourquoi |
+|---|---|---|
+| les juges croisés, anonymat de la fiche, passeport exigé | `pole/juges_croises_v53.py`, `pole/noyau_v56.py`, `juger` | juges joués pour information (§ 2.5) |
+| le coffre, le sceau des sorties, l'arrêt propre sur signal | `pole/coffre_v53.py`, `pole/outils.py`, `pole/noyau_v56.py` | inchangés |
+
+**De l'orchestrateur, hors de ce régime** (les fichiers restent) : l'étage des tests de mort et la machine jetable (OC, l. 13, 42) ; la lecture de la sélection d'un étage ; les deux interrupteurs de la v68. **Neutralisé, non retiré** (corrigé à la v3 sur L0, Q3 et Q4) : la passe « tableau » et les fusions, retirées par construction comme à la course v9 ; les étiquettes, jouées sans appel ; les rôles que le noyau exige sans les appeler, routés vers `hors_course` ; la mémoire qui évite les redites, qui tourne et n'est servie à personne (§ 2.9). **Non appelés** : le lecteur et le validateur de fiches du noyau (`fiches_du_texte`, `preparer`, `valider_contenu`), qui refuseraient toute fiche de cette course (§ 2.4).
+
+**De l'orchestrateur, ajouté** (fichiers neufs, § 2) : une génération et une course pour ce seul régime, nommé ; l'assemblage de la requête ; la surcharge d'`appel` ; un adaptateur Claude sans texte système ; un lecteur et un validateur de fiches ; le portier de cette course ; le registre des tentatives et le registre servi ; le tirage ; les mesures ; un moteur simulé au contrat de cette course ; un lanceur de l'orchestrateur qui lève le refus du moteur réel pour ce seul régime et épingle l'additif (OC, l. 33).
+
+**Du lanceur L9, gardé** : la vérification du préenregistrement, de l'additif, de la contre-lecture et de son verdict exact ; la ligne d'accord vérifiée au montant exact, en période, non révoquée (`verifier_go`) ; le registre dérivé ; la pièce de départ ; la déclaration des relais, la procédure des relais, la porte à blanc ; l'environnement filtré ; la sonde du bac ; l'enveloppe de conservation des réponses brutes, **pour les seules commandes externes** (L0, Q10 : elle ne couvre ni Minuit ni Luc, que l'adaptateur Claude neuf conserve, § 2.3) ; l'inventaire de fin quelle que soit l'issue ; l'arrêt au premier refus pour crédit, par identifiant de processus ; les manifestes de départ et de fin ; les réglages par espèce de la course v9, dont la composition est celle de cette course (V9, l. 61 ; A1, l. 142).
+
+**Du lanceur L9, retiré** : la matière première et son découpage en lots ; les courses closes admises et le mot de reprise ; la clé unique du premier relais ; les sondes propres à la course d'auto-conception qui n'ont pas d'objet ici. **De L10, repris** : la seule relecture du bilan de course par comptes (`bilan_allume`). **De L10, non repris** : les interrupteurs ; et `couts_generation`, que la v1 reprenait à tort : elle ne rend que des totaux, rien par espèce ni par rôle (L0, Q8) ; le lot 8 fait passer la lecture des coûts de L9 sur chaque génération (§ 2.9).
+
+**Du lanceur, ajouté** : cinq clés nommées dont une hors course, quatre relais actifs, la table des rôles et des clés ; l'arrêt n° 11 lu sur la pièce de relevés ; les bornes des relais comptées pour trois générations ; l'épinglage du tirage, de la garde de motifs, des témoins, des pièces servies, de la V9 et de ses compléments ; le routage des deux lignes à part.
+
+### 1.3 Pourquoi cette base
+
+- Aucune autre version ne joue plusieurs générations sous un plafond de course : la v68 seule le fait (OC, l. 25), et sa garde de budget est éprouvée par cas sain, artefacts et trois mutations (C68, constat 5).
+- Aucun autre lanceur n'a porté en réel la composition de cette course : L9 seul. Partir de L10 ferait hériter de deux interrupteurs que le régime n'emploie pas ; partir de L9 et reprendre de L10 deux fonctions de lecture est le plus court.
+- Le lanceur neuf « suit le lanceur 11 » (V9, l. 402) par son rang et par ce qu'il épingle : je reprends la liste d'A69, v4 scellée, § 7, point par point, au § 2.11. Il ne peut pas en suivre le code : il n'y en a pas.
+- Ce que je n'ai pas pu établir par lecture a été posé au lot 0, fait depuis : quatorze réponses (L0), dont cette v3 porte chaque contradiction.
+
+### 1.4 Le nom
+
+Les numéros 69, 70 et 71 sont déjà portés, hors de cette course, par une autre lignée du même orchestrateur (registre, l. 2507, 2558, 2579). Un numéro de plus risque une seconde collision. **Décision de la mère (D1)** : une série propre, « NA-1 », la version dans le nom (règle R12) : suffixe `_na_v1` pour les fichiers de l'orchestrateur, `lancer_course_nouvelles_attaques_v1.py` pour le lanceur, « véhicule NA-1 » dans les textes. Le régime porte un seul nom, écrit en toutes lettres dans le code et dans la ligne d'accord : `trois_generations_sans_etage_lecture_du_registre_des_tentatives` (ce nom-là est une valeur du concepteur).
+
+## 2. Les modules
+
+Un module par fonction du cahier des charges. Pour chacun : la lettre qui l'impose, ce qu'il fait, ce qu'il lit et rend. Les épreuves sont au § 6, les interfaces au § 5. « Dossier de sortie » désigne le dossier de la course hors de l'arbre de travail, qui est la quarantaine ; « dossier du run », le dossier des manifestes, qui en est dehors.
+
+**Règle commune à tous les modules** (V9, l. 82, 83, 387, 388) : hors du dossier de sortie ne s'écrivent que des identifiants, des empreintes, des tailles et des comptes. Aucun message d'erreur, aucune ligne d'écran, aucun manifeste du dossier du run ne recopie un octet d'une réponse de modèle, d'une fiche ou d'une ligne du registre servi. Le lanceur recopie aujourd'hui la fin de la sortie d'erreur de l'orchestrateur dans son refus : le lieu est dans L9 même, l. 2667 à 2669, imprimé sur la sortie d'erreur (L0, Q14), aux mêmes octets qu'en L10, l. 2998. Ce lieu est à fermer (lot 8).
+
+### 2.1 Tirage des cases, de la clé n° 30, des identifiants — module `tirage`
+
+| | |
+|---|---|
+| lettre | V9, l. 300 à 313 ; A1, l. 79 à 82, 119 ; arrêt n° 10, l. 381 ; C1, l. 158 ; A1, l. 160, 163 |
+| fait | lit la légende des trois axes dans le gabarit de la partie servie, à l'octet (jamais dans la question) ; forme les 120 triplets dans l'ordre canonique ; tire la clé 0, puis les clés 1, 2, 3 ; tire la clé 30 parmi les seules cases servies dont la menace du programme est le sabotage (A1, l. 78, 79), ou ne tire rien s'il n'y en a aucune ; désigne la première case de la réserve ; tire les identifiants neutres (§ 5.2) ; expose, pour la course, les tirages des clés 12, 13 et 20, qui ne se jouent qu'une fois leurs n connus |
+| lit | le gabarit à son empreinte ; la racine écrite, jamais recalculée ; la version de `numpy`, refusée sous 1.25 |
+| rend | un seul fichier, octets déterministes (clés triées, fins de ligne fixes, aucune heure) : famille tenue à l'écart, cases des trois générations, case de la clé 30 ou « aucune », case de la réserve, table des identifiants, contrôles C1, versions, racine, clés. L'heure et le commit vont au manifeste, à part, pour que deux jeux soient égaux à l'octet |
+| garde | disjonction (arrêt n° 10) : rejouée par la course au départ de chaque génération, contre ce fichier scellé |
+
+### 2.2 Assemblage de la requête, partie servie, ligne de case — module `requete`
+
+| | |
+|---|---|
+| lettre | V9, l. 69 à 77 ; arrêt n° 14, l. 385 ; arrêt n° 8, l. 379 |
+| fait | charge le gabarit, vérifie son empreinte, exige un seul emplacement sur une ligne propre, le remplace par la ligne de case ; assemble la requête d'un rôle (§ 5.3) ; rend la suite d'octets et sa composition |
+| ne fait jamais | ouvrir la question : le chemin de la question donné à la place du gabarit est refusé par son empreinte et par son nom ; ajouter un octet hors de l'enveloppe de l'additif |
+| contrôle | les trente-trois lignes de case, plus celle de la réserve : trois valeurs égales à l'octet à la légende, identifiants distincts, aucune suite de huit caractères hexadécimaux, aucun chiffre, borne de 256 octets |
+| rend | pour un proposeur : partie servie remplie, synthèse servie à l'octet, registre servi aux générations 2 et 3 ; pour une sonde de refus : la partie servie remplie, seule ; pour le portier et un juge : leur consigne fixe et une fiche (§ 2.4, § 2.5) |
+
+### 2.3 La surcharge d'`appel` : routage, part de la clé, garde de motifs, journal, égalité, refus avant le noyau — modules `appel_garde`, `routage`, `garde_motifs`, `journal`, `adaptateur_claude`
+
+**Réécrit à la v3** (CL2, § 3.1 à § 3.4 ; L0, Q1, Q2, Q5, Q10, Q13). L'« adaptateur gardé » de la v1 et de la v2 disparaît comme lieu du contrôle. Il reposait sur deux erreurs : l'adaptateur ne reçoit ni l'étiquette du rôle, ni la génération, ni la case (`noyau_v56.py`, l. 165), et le portier et les juges partagent le même nom de rôle technique ; et **ma v2 disait à tort que le portier appelle l'adaptateur sans passer par `appel`**. Le fait, vérifié par CL2 et par L0 : **le portier, les juges et les proposeurs passent tous par le seul `appel`** (`noyau_v54.py`, l. 235 ; `noyau_v56.py`, l. 202 ; `course2_v68.py`, l. 197). La surcharge d'`appel` est donc un point unique.
+
+**Le lieu.** Un mélange neuf, `AppelGardeNA` (fichier neuf, lot 4), placé devant la classe de génération (§ 2.9), surcharge `appel`. Il reçoit ce que l'adaptateur ne voit pas : `role` (l'étiquette), `fournisseur` (le nom de l'adaptateur, donc de la clé), `session` (l'étape et l'indice de la case, ou le lot et la fiche), et la génération connaît son numéro. **Avant** d'appeler `super().appel`, il fait, dans cet ordre :
+
+| pas | ce qui est fait | arrêt | lettre |
+|---|---|---|---|
+| 0 | **rôle déjà arrêté par une garde héritée** : si le suivi dit le rôle arrêté, l'appel n'est pas présenté au noyau, qui le sauterait sans trace ; il est écrit en « refus écrit », avec sa cause, et la surcharge rend à l'appelant ce que le § 2.13 fixe pour chaque rôle | — | règle 4 de la mère, 07:21Z ; 07:51Z |
+| 1 | **routage** : le couple (rôle, nom d'adaptateur) est cherché dans la table scellée des rôles et des clés ; un rôle sur une autre clé que la sienne, un rôle qui désigne `hors_course` (§ 2.9), ou tout envoi adressé à la clé hors course, est refusé | n° 12, seconde clause | V9, l. 383 ; AC, l. 88, 175 |
+| 2 | **part de la clé** : cumul compté sur la clé, plus le pire des appels en vol sur elle (zéro : les appels sont lancés l'un après l'autre, L0, Q11 ; le terme reste écrit), plus le pire de l'appel à lancer ; au-delà de la part : refus | n° 12, première clause | V9, l. 383 ; CV, l. 166 |
+| 3 | **garde de motifs** sur la requête assemblée, c'est-à-dire sur la chaîne `consigne` : normalisation, deux familles, refus qui nomme la famille et le rang ; le texte trouvé ne va qu'au journal | n° 16 | V9, l. 387 |
+| 4 | **journal** : une ligne avant l'envoi : taille, empreinte SHA-256, génération, rôle, identifiant de la case (lu à la session, ou à la méta de la fiche pour le portier et un juge), clé par son nom d'usage ; un appel sans ligne ne part pas | — | V9, l. 77 |
+| 5 | **égalité** : l'empreinte de la chaîne remise à `super().appel` est recalculée et comparée à la ligne du journal ; une différence refuse l'envoi | — | V9, l. 77 |
+| 6 | `super().appel`, inchangé : le noyau, l'adaptateur, le relais | — | — |
+| 7 | au retour : coût compté sur la clé ; lecture du **statut, du champ de refus et du champ d'erreur** du résultat, non du statut seul (L0, Q5) ; si le noyau n'a pas lancé l'appel (coupure au plafond dur), une seconde ligne « non lancé » suit la ligne du pas 4 ; **si le modèle servi est absent ou changé (A2), arrêt nommé de la course** (§ 2.13) | n° 1, n° 7, n° 13 ; l'arrêt d'A2, numéroté à l'additif | V9, l. 182, 372, 378, 384 |
+
+**Le refus avant le noyau** (décision de la mère, 07:21Z, règle 5 ; CL2, § 3.3 ; L0, Q13). Un refus aux pas 0 à 5 **ne passe jamais par `super().appel`, ni par `lancer`**. La voie de la v2, un résultat « non envoyé » rendu depuis `lancer`, est abandonnée : levé dans `lancer`, le refus est compté au plafond entier de l'appel et arrête la course ; rendu à coût nul, il compte un échec du rôle (`noyau_v56.py`, l. 161 à 181). Ce que fait la surcharge à un refus :
+
+- aucune consommation notée au coffre, aucune entrée au cumul de l'étape, aucun passage par le suivi des rôles : **coût nul, et hors du suivi** ;
+- **une ligne « non envoyé » au journal**, avec le numéro de l'arrêt et la clé par son nom d'usage ;
+- **un compte des refus**, par rôle et par arrêt, sur la ligne de la génération : un refus n'est jamais silencieux ;
+- puis l'arrêt nommé est levé, quand l'arrêt en est un de la course (n° 12, n° 16) ; un « refus écrit » d'une garde héritée ne lève rien : il est écrit, compté, et la course continue (§ 2.13).
+
+**L'adaptateur Claude neuf, sans texte système** (D2 ; L0, Q1 ; CL2, § 3.2 et § 3.4). L'adaptateur du type employé pour les clés Claude pose **toujours** un texte système fixe, choisi par le nom de rôle technique, et le portier reçoit celui du juge (`adaptateurs.py`, l. 101 à 111, 338, 339) ; **aucun réglage ne le retire**. La v2 voulait un retrait « par un réglage déclaré et sans modifier l'adaptateur » : ce n'est pas possible. La v3 écrit :
+
+- **un fichier neuf** (lot 4), adaptateur du même type pour le véhicule : il construit ses options comme `construire_options`, **sans texte système**, et garde le reste du transport tel quel (aucun outil, un tour, plafond de l'appel, aucun repli de modèle, bac à sable) ; l'adaptateur existant n'est pas modifié ;
+- il sert les deux clés Minuit et Luc, pour leurs proposeurs, le portier et le juge de l'espèce 3 ;
+- **il conserve les réponses brutes de Minuit et de Luc** : avant de rendre la main, il écrit dans le dossier de sortie le texte rendu, le statut, le champ de refus et l'erreur, sous un nom qui ne dit que la session. L'enveloppe de conservation de L9 n'entoure que les commandes externes (L9, l. 2229) et le relais de ces clés ne garde jamais le corps (`relais_reel_v2.py`, l. 30) ; la lecture ne peut pas conserver, puisqu'elle ne reçoit le texte que si le statut est « ok » ;
+- **ce que l'outil envoie quand aucun texte système n'est donné n'est pas lisible dans le code** (L0, Q1). Il est **relevé au faux fournisseur, derrière le vrai relais, dès le lot 4 et avant l'écriture de l'additif**. **Tranché par la mère (07:46Z, mot 5)** : cela se tranche sur pièce, après ce relevé : si un texte par défaut part, il est **déclaré à l'additif comme transport, octet pour octet**, ou **refusé**, et alors la course ne part pas avec cet adaptateur ; une chaîne vide explicite est essayée d'abord, et retenue si le faux fournisseur montre qu'elle supprime tout texte ;
+- pour les trois autres types d'adaptateur, **rien n'est à retirer** : la consigne part seule dans un message, entourée de réglages non textuels, que l'additif nomme comme transport ; la recherche sur le réseau n'est jamais demandée (L0, Q1 ; D2, point 4 du relevé) ;
+- **l'égalité « texte reçu, transport retiré »** de l'essai à blanc porte sur la chaîne de la consigne extraite du corps reçu, jamais sur les octets du corps : un des relais resérialise le corps (L0, Q1).
+
+**Les statuts, et l'arrêt n° 13 sur les clés Claude** (L0, Q5). Le statut ne distingue pas le refus pour crédit, l'erreur d'accès et la réponse coupée. Pour les commandes externes, la garde de crédit du lanceur lit la sortie de la commande et écrit l'arrêt (gardé de L9). Pour Minuit et Luc, le refus pour crédit ne se lit qu'au relais : après une erreur sur une de ces clés, la surcharge lit l'état du relais de la clé, par son adresse locale. **Tranché par la mère (07:46Z, mot 4)** : une erreur de cause non établie sur une clé Claude est classée « réponse illisible », **avec un sous-compte « cause non établie »**, rendu à M6 et sur la ligne de la génération, par rôle et par clé désignée par son nom d'usage au seul journal des arrêts ; elle arrête la course par l'arrêt n° 13, qui dit la clé, si le relais montre un refus pour crédit.
+
+**La table des rôles et des clés** (D-1 de l'inventaire ; AC, l. 56 à 58, 143, 144, 175), portée par la configuration scellée. Les noms d'adaptateur sont libres dans l'orchestrateur (L0, Q2) : chaque ligne de la table est un nom neuf de `conf["fournisseurs"]`.
+
+| clé (nom d'usage) | relais | rôles de la course | part |
+|---|---|---|---|
+| Minuit | un | juge de l'espèce 3 ; proposeur de l'espèce 3 | 156,56 USD |
+| Luc | un | aiguilleur (le portier) ; proposeur de l'espèce 4 | 125,63 USD |
+| deuxième relais | voir la note | juge de l'espèce 1 ; proposeurs des espèces 1 et 5 | 140,39 USD |
+| troisième relais | un | proposeur de l'espèce 2 | 17,01 USD |
+| Rigaud | aucun | aucun rôle ; tout envoi refusé | sans part |
+| `hors_course` | aucun | les rôles que le noyau exige et que la course n'appelle jamais (§ 2.9) ; tout envoi refusé | sans part |
+
+Soit cinq clés. La lettre dit « trois relais » au sens du devis (DV, l. 391 à 397). *Note, neuve à la v3, à vérifier au lot 8* : à la course v9, la clé du deuxième relais était servie par deux processus de relais, un par modèle demandé (L10, l. 121, 122, 454). Si cela vaut encore, la part de 140,39 USD est tenue sur la clé par la surcharge, qui cumule par clé et non par processus ; **tranché par la mère (07:46Z, mot 7)** : la somme des plafonds des processus de relais d'une même clé est au plus la part de cette clé ; le lanceur le vérifie au départ (§ 6.2). Une seconde table, à part, route les deux lignes à part hors de la course (§ 2.10) ; la seconde clause de l'arrêt n° 12 ne la lit pas (registre, R-4306).
+
+Le pire d'un appel : 6,05 USD pour un proposeur (V9, l. 383). Pour l'aiguilleur et le juge, la valeur est ouverte (CV, l. 83). La configuration de la course v9 porte un plafond de session de 0,25 USD pour l'aiguilleur et de 0,60 USD pour le juge (E9, l. 41, 42) : c'est le candidat naturel, à confirmer par la mesure des consignes sans appel avant de l'écrire à l'additif. Je ne le fixe pas.
+
+**Interface à écrire au mandat du lot 4** : `AppelGardeNA` vit dans un mélange que le lot 6 compose ; il attend de la génération son numéro, la table scellée, les parts, les pires par rôle, le journal, et une fonction qui rend l'identifiant de la case d'une session.
+
+### 2.4 Portier et ses classes — modules `lecteur_fiches`, `contrat_fiche`, `portier`
+
+**Réécrit à la v3** (CL2, § 3.5 à § 3.7 ; L0, Q6). Le lecteur et le validateur de fiches de l'orchestrateur ne peuvent pas servir cette course : `preparer` refuse dix noms de champ réservés, dont `case` (`fiches_v53.py`, l. 19, 33 à 35), et **`case` est le premier des douze champs du contrat** (PS, l. 19) : l'appeler refuserait toute fiche. La partie servie est scellée ; le champ ne change pas de nom. `fiches_du_texte` ne lit qu'un bloc d'une seule syntaxe. `valider_contenu` caviarde le texte des champs.
+
+| | |
+|---|---|
+| lettre | V9, l. 88, 92 à 101, 110, 148, 375 ; PS, l. 19, 21 |
+| ce qui n'est pas appelé | ni `preparer`, ni `valider_contenu`, ni `fiches_du_texte` |
+| lecteur neuf | lit les fiches d'une réponse dans les syntaxes déclarées à l'additif : un objet structuré par fiche, des lignes « champ : valeur », et, **tranché par la mère (07:46Z, mot 3)**, une grammaire unique par étiquettes ancrées, qui reconnaît les douze noms de champ quelle que soit leur parure, **sans exiger d'ordre** : la partie servie nomme les champs sans en imposer un (PS, l. 19). Il rend toujours un objet dès qu'un texte est rendu, avec ou sans fiche (§ 2.13) |
+| validateur neuf | vérifie les douze champs du contrat : présence, type de chaîne, borne en octets (D13) ; repère tout champ en plus. **Aucun caviardage avant la classification** : la comparaison à l'octet de l'arrêt n° 4 et la règle « jamais réparée » lisent le texte rendu, tel quel |
+| méta tenue à part | la case servie, le nom d'adaptateur, la génération, l'espèce : hors du contenu de la fiche, jamais mêlées à ses champs |
+| valeur du champ `case` | l'identifiant servi. **Le sort d'une fiche dont le champ `case` diffère de l'identifiant de sa case n'est fixé par aucune lettre** : la règle « hors case » ne compare que les trois champs fermés. **Tranché par la mère (07:46Z, mot 2)** : elle est consignée et comptée à part ; sa classe ne change pas |
+| classe d'issue d'appel, d'abord | par programme : au moins une fiche reconnue, « fiches rendues ». Sinon, une étiquette fermée du portier parmi trois : « réponse vide motivée », « refus du modèle », « réponse illisible ». Aucune n'est relancée. Le refus d'un classifieur de sûreté n'entre pas ici : il est lu au retour de l'appel (arrêt n° 1) |
+| classe d'issue de fiche, ensuite | « passée », « au coffre », « hors case », exclusives. **Ordre décidé par la mère (D6)** : forme, modèle, hors case. (i) programme de forme : un champ hors des douze, « au coffre » ; une fiche hors contrat de longueur, « au coffre » (D13) ; (ii) portier, étiquette fermée « niveau de l'idée » ou « concret » : « concret », « au coffre » ; une réponse illisible ou un refus du modèle portier, « au coffre » (D6), comptée à part ; (iii) programme : un champ fermé qui diffère à l'octet de la ligne de case, « hors case » ; (iv) sinon « passée », avec passeport |
+| fiche hors contrat de longueur | **décidé par la mère (D13, 07:10Z ; 07:21Z, règle 1)** : traitée comme illisible, donc « au coffre », comptée, jamais réparée ; **c'est un rendu obtenu : elle compte au dénominateur de M3** et de la garde du coffre ; son compte est aussi rendu à part |
+| garde « hors case » | arrêt n° 4 : comparaison par programme, à l'octet, aux trois chaînes de la ligne de case, sur le texte rendu ; la fiche est refusée et comptée, son texte n'est servi à personne. À la case « autre, à nommer », la valeur attendue du champ fermé est cette chaîne même (V9, l. 110) |
+| garde du coffre | arrêt n° 5 : après chaque génération, part « au coffre » parmi les fiches rendues, strictement au-dessus d'un quart : la génération suivante ne part pas ; à la troisième, consigné |
+| **le portier est un code neuf** (défaut 1 de CL3, § 1.2 ; **oui de la mère, 07:51Z**) | la v3 laissait croire que le classement du noyau est repris. Il ne peut pas l'être : le portier du noyau lit un bloc `{"classe": …}`, les seules classes `niveau_methode`, `a_corriger` et `concret` (`aiguilleur_v53.py`, l. 30, 41 à 46), et ne donne un passeport qu'à la première (`noyau_v54.py`, l. 248) ; `a_corriger` n'existe pas dans la V9, et aucune de ces classes ne classe une réponse sans fiche. **Le portier neuf** (module `portier`, lot 5) n'appelle ni la classe d'aiguilleur du noyau, ni sa lecture. L'aiguilleur que le noyau construit à partir de la configuration reste présent et n'est jamais appelé ; l'étape « aiguillage » de la classe neuve appelle le portier neuf |
+| ses appels | il appelle `self.appel` de la génération, donc la surcharge du § 2.3, sous l'étiquette de rôle de l'aiguilleur, avec **sa propre fonction de lecture**. **Deux sortes d'appel** : (a) *l'appel « fiche »* : une fiche, sa consigne ; (b) *l'appel « réponse sans fiche »* : le texte d'une réponse où le lecteur n'a reconnu aucune fiche, la même consigne, sa seconde section |
+| sa lecture | elle lit **les étiquettes fermées de la consigne de D3, et elles seules**, dans la forme que cette consigne fixe et que l'additif déclare : pour (a), « niveau de l'idée » ou « concret » ; pour (b), « réponse vide motivée », « refus du modèle » ou « réponse illisible ». **Une étiquette hors liste, absente ou double vaut « illisible »** : pour (a), la fiche va « au coffre » (D6), comptée à part ; pour (b), la réponse est classée « réponse illisible », comptée à part sous « étiquette du portier illisible » |
+| ses passeports | il tient les siens : l'identifiant de la fiche et l'empreinte du texte classé, délivrés à la seule fiche « passée ». La surcharge de `juger` les exige (§ 2.5) ; le passeport de l'aiguilleur du noyau n'est lu par personne |
+| son journal | scellé à la fin de la génération, sans contenu : identifiant, empreinte, classe, cause |
+| appel du portier refusé | **décidé par la mère (07:51Z)** : une fiche dont l'appel au portier est refusé par écrit va « au coffre », **avec sa classe écrite**, et elle est comptée, à part, sous sa cause : aucune fiche rendue ne reste sans classe (§ 2.13) |
+| ce qui est servi au portier | sa consigne fixe (D3), puis la fiche dans la forme que l'orchestrateur lui donne : un titre de section, un bloc structuré clôturé, une indentation d'un espace (`fiches_v54.py`, l. 57 à 59). **Tranché par la mère (07:46Z, mot 8) : cette forme est gardée et déclarée à l'additif, octet pour octet, avec la consigne.** Le portier neuf la produit par le module `requete`, à l'octet de cette déclaration |
+| identifiant de la fiche | celui du noyau est une lettre suivie de douze caractères hexadécimaux : il ferait mordre la garde de motifs. **Réencodage accepté par la mère (07:46Z, mot 1)** ; règle au § 5.2 |
+| ne fait pas | juger la nouveauté ; lire la relecture ; servir quoi que ce soit du coffre |
+| pièce qui manque | **la consigne du portier pour cette question** : manque neuf, écrite par le modèle F et contre-lue (D3 ; § 9, point 1) |
+
+### 2.5 Juges joués pour information — module existant, câblage neuf
+
+| | |
+|---|---|
+| lettre | V9, l. 64, 159 ; arrêt n° 7 |
+| fait | les deux juges, des espèces 3 et 1, lisent chaque fiche « passée », une par appel, sous identifiant anonyme, comme à la course v9 ; leurs verdicts vont au coffre de la génération, leur classement est écrit dans le dossier de sortie |
+| ne fait pas | entrer dans le registre servi, dans un tirage, dans une mesure autre que I1, dans un passage |
+| garde | l'étape n'est lancée que sous le seuil de 120 USD (budget d'une génération, inchangé) |
+| ce qui est servi à un juge | sa consigne fixe (D3), puis la fiche dans la forme que l'orchestrateur lui donne, la même que pour le portier, avec en dernière clé un identifiant servi (`noyau_v56.py`, l. 198, 199) ; cette forme est déclarée à l'additif, octet pour octet. **L'identifiant servi par le noyau est une lettre suivie de dix caractères hexadécimaux : toute requête de juge ferait mordre l'arrêt n° 16** (V9, l. 387) ; réencodage accepté par la mère, règle au § 5.2 ; forme gardée et déclarée, tranché (07:46Z, mots 1 et 8) |
+| **surcharge de `juger`** (défaut 3 de CL3, § 1.4 ; **oui de la mère, 07:51Z**) | l'identifiant servi au juge est construit à l'intérieur de `juger`, et `juger` exige le passeport de l'aiguilleur du noyau (`noyau_v56.py`, l. 194, 198, 199) : ni le réencodage ni le portier neuf ne tiennent sans la surcharger. **La classe neuve surcharge `juger`** (fichier neuf, lot 6) : elle reprend la boucle des juges ; **exige le passeport du portier neuf** ; sert l'identifiant réencodé, fait des mêmes octets que le jeton du noyau ; appelle `self.appel`, donc la surcharge du § 2.3 ; dépose les verdicts au coffre comme le noyau ; lève l'arrêt d'A2 quand la version servie d'un juge change. L'autre voie, surcharger la fabrique des jetons, toucherait tous les jetons : non retenue |
+| appel d'un juge refusé par écrit | un verdict absent, compté (§ 2.13) |
+| gardes héritées | les juges y sont exposés comme les autres rôles (§ 2.13) |
+| pièce qui manque | **la consigne des juges et leurs items pour cette question** : manque neuf, écrite par le modèle F et contre-lue (D3 ; § 9, point 1) |
+
+### 2.6 Registre des tentatives, registre servi, quarantaine — modules `registre`, `verifier_registre_servi`, `quarantaine`
+
+| | |
+|---|---|
+| lettre | V9, l. 62, 63 ; arrêts n° 8, 9, 17, 18, 19 ; garde-fous 2 et 3, l. 119, 120 ; clés 12 et 13, l. 308 |
+| registre des tentatives | dans le dossier de sortie, ajout seul : pour chaque fiche rendue, son identifiant, sa génération, l'identifiant de sa case, sa classe d'issue ; pour une fiche « passée », ses trois champs fermés, son nom et son énoncé d'une ligne : **le nom est l'identifiant de la fiche, l'énoncé est son champ `idee` sur une ligne, espaces ramenés à un seul, sans coupe (D5)** ; rien d'un juge, rien du coût, rien de l'espèce |
+| registre servi | fabriqué au départ des générations 2 et 3, à partir de toutes les générations précédentes : une ligne par tentative « passée » (trois champs fermés, nom, énoncé d'une ligne, classe « passée ») ; pour « au coffre » et « hors case », le seul compte par case, **écrit toujours, compte nul compris (décision de la mère, 07:21Z, règle 2)** : une ligne par case servie et par classe, même à zéro ; ordre des lignes : rangées par identifiant, puis permutées par la clé 12 ou 13 ; taille bornée |
+| vérification, avant tout envoi | par programme, sur le fichier entier : champs permis seulement ; une ligne par tentative ; énoncé sous sa borne ; aucune marque de code, d'étape numérotée ou de consigne (arrêt n° 19) ; aucune étiquette interdite : note, rang, verdict de juge, étiquette d'antériorité, coût (arrêt n° 9) ; consigne et registre sous leur borne (arrêt n° 8). Un défaut : la génération ne part pas ; aucune ligne n'est retirée |
+| ce qu'il rend en plus | sur la ligne de la génération, ce qui a été lu : empreinte du registre servi, nombre de lignes, section servie ou omise, nombre de requêtes qui l'ont reçue (forme de `heritage_lu`, R68, § 3, point 4) |
+| quarantaine | le registre servi, les fiches, les réponses brutes et le classement des juges ne quittent pas le dossier de sortie. Un programme d'export produit ce qui en sort (identifiants, empreintes, tailles, comptes par case) sur une liste fermée de champs, et refuse tout champ libre (arrêt n° 17). Deux outils à part servent la session à part : contrôle qu'une branche n'a aucun ancêtre commun avec `main`, contrôle du journal des lectures contre la liste nominative (arrêt n° 18 ; § 9, point 13) |
+
+### 2.7 Journal — module `journal`
+
+| | |
+|---|---|
+| lettre | V9, l. 77, 156, 315 ; OC, l. 39, 54 |
+| journal des requêtes | une ligne par envoi (§ 2.3, pas 4), ajout seul, dans le dossier de sortie ; jamais servi ; scellé à la fin de chaque génération. Il porte aussi les lignes **« non envoyé »** (refus avant le noyau, avec le numéro de l'arrêt), **« non lancé »** (coupure au plafond dur) et **« refus écrit »** (garde héritée, avec sa cause) |
+| comptes des refus | sur la ligne de la génération : refus par rôle et par arrêt, refus écrits par rôle et par garde, appels non lancés, cases non jouées par espèce, fiches au coffre par refus du portier, verdicts absents, et le **sous-compte « cause non établie »** des réponses illisibles ; relus par comptes par le lanceur (§ 2.11, point 8) |
+| ligne de la génération | cases servies (identifiants), fiches rendues, comptes par classe et par case, classes d'issue d'appel, coût par espèce et par rôle, ce qui a été lu de la précédente |
+| journal des arrêts n° 11 à n° 13 | le cumul par clé ne vit que là : il n'entre ni dans M4 ni dans ce qui est rendu à la composition (V9, l. 156) |
+| arrêts | chaque arrêt est écrit avec son numéro et son nom, la génération, le poste ; pour l'arrêt n° 16, la famille et le rang dehors, le texte trouvé dedans |
+
+### 2.8 Mesures M1 à M7, C1 et I1 — module `mesures`
+
+| | |
+|---|---|
+| lettre | V9, l. 84, 146 à 163, 315, 328, 362 ; arrêt n° 15, l. 386 ; CV, l. 189 |
+| lit | le registre des tentatives, les lignes des générations, le journal, le tirage scellé ; l'attestation scellée de la relecture « aucune recette » (une étiquette par identifiant de fiche : gardée, ou au coffre) ; pour M5, les étiquettes scellées de la lecture d'antériorité et, branche « avec », les classes de l'épreuve 4 et le compte des désaccords |
+| rend | chaque part avec son numérateur et son dénominateur ; M1 et M1 bis par génération et par espèce ; M2 ; M3 par génération et par case ; M4 ; M6 ; M7 ; C1 ; I1 sous le titre « pour information » ; seuls des comptes, des parts et des identifiants sortent du dossier |
+| garde | arrêt n° 15 : refus de calculer tant que le bilan de course ne dit pas trois générations complètes, ou un arrêt nommé, et tant que l'attestation de relecture ou les étiquettes scellées d'antériorité manquent ; une seule lecture, consignée ; la seconde est refusée |
+| une seule lecture | **la lettre de la V9 est gardée** (l. 315, « lues une fois ») : le programme calcule toutes les mesures en une lecture, et refuse la seconde. M5 exigeant les étiquettes scellées de la lecture d'antériorité, cette lecture unique ne peut se faire qu'une fois ces étiquettes scellées : aucune mesure n'est donc lue avant. L'option de deux lectures est notée à part et soumise à Lazar (§ 9, point 11 ; D12) ; le véhicule ne la porte pas |
+| course arrêtée | V9, l. 362 : mesures sur les seules générations complètes, sous le titre « course arrêtée par [nom de l'arrêt] » ; M1 et M2 « sans objet » si la seule génération 1 est complète ; épreuve au § 6.2 |
+| M6 et ses sous-comptes | parmi les « réponses illisibles », rendus à part : « cause non établie » (erreur sur une clé Claude sans refus pour crédit au relais ; 07:46Z, mot 4) et « étiquette du portier illisible » (§ 2.4) |
+| M4 et les clés | M4 ne lit jamais le cumul par clé, qui ne vit qu'au journal des arrêts n° 11 à n° 13 (V9, l. 156) ; épreuve au § 6.2 |
+
+### 2.9 Génération et course du régime — modules `course` et lanceur de l'orchestrateur
+
+**Réécrit à la v3** (CL2, § 3.8, § 3.9 ; L0, Q2, Q3, Q4, Q8).
+
+| | |
+|---|---|
+| lettre | V9, l. 60, 61, 402, 419 ; OC, l. 33 ; arrêts n° 5, 6, 7, 10, 14 |
+| génération | une classe neuve : le mélange `AppelGardeNA` du § 2.3, placé devant `GenerationV68`. Elle passe à la v68 un héritage `None`, parce que son constructeur n'accepte que l'objet de sélection d'un étage (`course2_v68.py`, l. 164) ; elle sert le registre par sa propre proposition |
+| proposition | neuve : elle assemble la requête par le module `requete` ; elle ne reprend du noyau ni le retrait de la fin de ligne de la pièce, ni la section « Case », ni la section d'héritage de la v68 (`course2_v68.py`, l. 190 à 194) ; elle lit les réponses par le lecteur neuf du § 2.4 ; elle donne à chaque fiche un identifiant réencodé (§ 5.2) |
+| **six étapes déclarées, trois jouées avec appels** | la v2 disait « trois étapes, et aucune autre » : ce n'est pas tenable sans surcharger la vérification de la configuration et `executer`, qui joue la liste du module (`course2_v53.py`, l. 42, 73 à 81 ; `course2_v56.py`, l. 346). La plus petite différence est celle de la configuration v5 de la course v9 : **« proposition », « aiguillage » et « juges » sont jouées avec appels ; « etiquettes » est jouée sans appel (plafond nul, aucun bras), écrit un fichier d'accords vide et des dépôts au coffre, et reçoit la transmission du plafond ; « passe_tableau » et « fusions » sont retirées par construction (sacrifiables, plafond au-dessus du plafond de la génération)** |
+| rôles exigés et jamais appelés | le noyau exige un adaptateur pour les deux lecteurs d'étiquettes et le metteur en fusion (`course2_v54.py`, l. 87 à 91, 97 à 99). La classe neuve **surcharge `fournisseurs_requis`** pour n'exiger que les adaptateurs de la table des rôles et des clés. Les champs de configuration que la vérification exige (les deux lecteurs, le bisociateur, la consigne de la passe « tableau », la méthode de la mémoire, les plafonds de session de la fusion et du lecteur) restent présents et inertes ; leurs noms d'adaptateur désignent **`hors_course`**, une entrée de la table sans clé ni relais : tout appel d'un de ces rôles est refusé par la surcharge d'`appel`, « non envoyé », arrêt n° 12, seconde clause, jamais par une erreur de dictionnaire. Aucun rôle n'est ajouté sur une clé de la course |
+| **mémoire anti-redite** | la v2 la disait « non jouée » : c'est faux. Elle tourne dans `executer`, que la classe neuve ne surcharge pas (`course2_v56.py`, l. 355, 368), et passe d'une génération à l'autre. La v3 le déclare : elle tourne, écrit son fichier dans le dossier de sortie, **n'est servie à personne, et n'entre ni dans les classes, ni au registre, ni dans les mesures**. Épreuve : classes et registre égaux à l'octet avec une mémoire factice (§ 6.2). L'autre voie, surcharger `executer` pour l'ôter, est plus lourde et n'est pas retenue |
+| **cases de la génération** | le même objet de configuration sert toutes les générations de la v68, et la boucle des cases le lit (`course2_v68.py`, l. 186, 329). La course neuve fait **une copie de la configuration par génération**, dérivée par programme de la configuration scellée et du tirage scellé ; ses cases ont la forme à deux chaînes que le noyau exige : l'identifiant de la case, puis sa ligne de case. L'empreinte de chaque copie est journalisée et lue par l'arrêt n° 14 |
+| **aiguillage et juges** (neuf à la v4) | la classe neuve surcharge l'étape « aiguillage », qui appelle le portier neuf (§ 2.4), et **surcharge `juger`**, qui exige le passeport du portier neuf et sert l'identifiant réencodé (§ 2.5). L'aiguilleur et le passeport du noyau ne sont lus par personne |
+| gardes héritées | leurs valeurs sont dans la configuration ; leur sort, une par une, est au § 2.13 |
+| course | une fonction neuve sur le modèle d'`executer_course_v68`, qu'elle n'appelle pas, non plus que `verifier_regime_v68` (§ 1.2) : trois générations exactement ; au départ de chacune, garde d'empreintes (arrêt n° 14), garde de disjonction (arrêt n° 10), registre servi fabriqué et vérifié (arrêts n° 8, 9, 19), réservation de 150 USD sur le plafond de 450 (arrêt n° 6) ; après chacune, garde du coffre (arrêt n° 5), ligne de la génération avec ses comptes de refus, sceaux |
+| coûts par rôle | une ligne par appel, rôle et nom d'adaptateur, est écrite dans le fichier des consommations de chaque génération ; rien n'est écrit par rôle pour plusieurs générations (L0, Q8). Le lot 8 lit ce fichier dans chaque génération ; l'espèce se lit à l'étiquette du rôle, la clé au nom d'adaptateur et à la table |
+| lanceur de l'orchestrateur | lève le refus du moteur réel **pour ce seul régime**, à quatre conditions tenues ensemble : le nom du régime ; la ligne d'accord au montant exact ; l'additif du véhicule épinglé à son empreinte ; trois générations, aucun étage. Tout autre jeu d'options reste refusé, moteur simulé compris hors de l'essai à blanc. Il construit l'adaptateur Claude neuf du § 2.3 pour Minuit et pour Luc |
+| composition | figée dans la configuration : cinq proposeurs, un aiguilleur, deux juges ; 55 appels de proposeur par génération ; rien n'apprend ni ne se réécrit (V9, l. 61) |
+
+La garde d'empreintes lit une table scellée, portée par la configuration : la partie servie, la synthèse servie, les consignes du portier et des juges, les témoins plantés, la question (jamais ouverte : son empreinte seule), la liste des motifs et son programme, la configuration et chacune de ses copies par génération, l'additif, le tirage, la table des rôles et des clés, la V9, A1, CV, AC. Elle nomme la pièce fautive.
+
+### 2.10 Épreuve des témoins plantés et sondes de refus — modules `epreuve_temoins`, `sonde_refus`
+
+| | épreuve des témoins | sonde de refus |
+|---|---|---|
+| lettre | V9, l. 129, 374, 375 ; CV, l. 122 à 126 ; gabarit, § 2 et § 5 | A1, l. 118, 160 ; V9, l. 373 ; DV, l. 418 ; AC, l. 120 à 128 |
+| base | E9 : une épreuve par tentative, mode hors ligne à juges factices, sonde du bac, manques techniques dits « non conclue », rapport scellé exigé par le lanceur, du jour, à ses empreintes | la sonde minimale de la clé Luc pour la manière (une requête, un relais épinglé, arrêt par identifiant) |
+| envoie | chaque partie présentée d'un témoin au portier, et aux deux juges pour information ; les deux réponses sans fiche au chemin des classes d'issue d'appel | cinq requêtes, une par proposeur : la partie servie remplie de la première case de la réserve, seule ; sortie bornée |
+| passe | garde d'empreintes, garde de motifs sur chaque requête et sur chaque témoin, journal | garde d'empreintes, garde de motifs, journal |
+| lit | l'issue de chaque témoin contre la table scellée des issues attendues, par programme | « accepte » ou « refuse », **par programme seul (D7)** : au moins une fiche complète au contrat, « accepte » ; statut de refus d'un classifieur, arrêt n° 1 ; tout le reste, arrêt n° 27 (§ 9, point 7). **Risque né de D2 et de D7 ensemble** : une espèce qui répond en prose bloquerait le départ (§ 9, point 20) |
+| arrêts | n° 3 : un témoin manqué, aucune course ; n° 4 : l'épreuve de la garde « hors case » | n° 1 : refus d'un classifieur ; n° 2 : l'espèce refuse ; n° 27 : refus pour crédit, erreur d'accès, réponse illisible : non relancée, départ refusé |
+| routage, hors de la course | portier et juge de l'espèce 3 sur Minuit ; juge de l'espèce 1 sur le deuxième relais | espèces 3 et 4 sur Minuit ; espèces 1 et 5 sur le deuxième relais ; espèce 2 sur le troisième, après le relevé de son statut |
+| plafond | 5 USD, ligne à part | 1 USD, ligne à part |
+| rend | un rapport en deux parts : dans le dossier de sortie, les réponses brutes ; dehors, par témoin, l'issue attendue, l'issue lue, « tenu » ou « manqué », le coût | par espèce : l'issue, le coût, l'empreinte et la taille de la réponse ; la réponse brute reste dans le dossier de sortie |
+
+### 2.11 Lanceur de course — script `lancer_course_nouvelles_attaques_v1.py`
+
+Il suit, point par point, ce qu'A69, dans sa v4 scellée (`cb352811…`), § 7, demande au lanceur 11, transposé à ce régime. Je n'ai pas ouvert la v4 : le contre-lecteur l'a comparée à cette table (CL2, § 1) : les points 1 à 7, 9 et 10 concordent ; le point 8 est complété ci-dessous. Le lanceur neuf remplace la table des cinq noms d'adaptateur fixes de L9 (L9, l. 539, 540) par la table des rôles et des clés, et réécrit les contrôles que L9 attache à un nom (L0, Q2). Les chemins et empreintes épinglés du code de base citent la branche `verse/vehicule-na-v1`, commit `61987a3a` (D10).
+
+| A69, v4, § 7 | ce que le lanceur neuf épingle ou vérifie |
+|---|---|
+| 1 | les empreintes des fichiers de base de l'orchestrateur (liste de L10, l. 534 à 561), les huit du paquet v68, et chaque fichier neuf du véhicule |
+| 2 | sans objet : aucun étage, aucune chaîne du tour fermé |
+| 3 | l'additif du véhicule, scellé, à son chemin et à son empreinte |
+| 4 | la V9, A1, CV, AC, le devis v11, la configuration, le tirage scellé, la partie servie, la synthèse servie, les consignes du portier et des juges, les témoins et leur table, la liste des motifs et son programme, la pièce de relevés du jour |
+| 5 | le seul appel permis : le lanceur de l'orchestrateur du § 2.9, régime nommé, trois générations ; tout autre jeu d'options refusé |
+| 6 | le montant requis, recoupé sans écriture avec l'orchestrateur : 450 USD ; la ligne d'accord de la course à ce montant exact ; les lignes à part à 5 et à 1 USD |
+| 7 | les bornes des relais comptées pour trois générations ; le plafond de chaque relais égal à la part de sa clé, **non à la ligne de course** (V9, l. 235) : un relais déclaré au-dessus de la part de sa clé est refusé au départ ; arrêt n° 11 au départ ; **le relevé de ce qui reste sur chaque clé avant et après la course** (ajout de la v4 : « R-3209, point 2 ») : avant, c'est la pièce de relevés ; après, le lanceur écrit, par clé désignée par son nom d'usage, le cumul compté et le reste qui s'en déduit, au journal des arrêts n° 11 à n° 13 et là seulement (V9, l. 156), jamais dans M4 |
+| 8 | la relecture, par comptes, du budget de course et du bilan, **et, comme la v4 le veut, des classes, du statut et des refus** (CL2, § 1) : classes d'issue de fiche et d'appel, statut de fin de chaque génération, refus par rôle et par arrêt, refus écrits, appels non lancés ; les coûts par espèce et par rôle, lus au fichier des consommations de chaque génération (§ 2.9) |
+| 9 | sans objet : aucun interrupteur |
+| 10 | sans objet : aucune machine louée |
+
+**Arrêt n° 11.** Le lanceur lit la pièce de relevés scellée par la mère, à son empreinte, datée du jour, dans ses cinq lignes à libellé fixe (AC, l. 136 à 144). Minuit et Luc : reste calculé, comparé à la part ; un centime sous la part, refus. Deuxième relais : statut « payant » attesté ; sans relevé ou non payant, refus ; jamais d'euros comparés à des dollars (CV, l. 140 à 146). Troisième relais : statut « recharge automatique » attesté ; sinon, reste relevé en dollars lu contre 17,01 USD (AC, l. 175). Rigaud : rien à lire pour le départ.
+
+**Manifeste de run** (V9, l. 313 ; règle R9) : version de `numpy`, racine, clés de tirage, commits des deux dépôts, empreintes de tout ce qui est épinglé, table des rôles et des clés par nom d'usage, valeurs jamais lues.
+
+### 2.12 Moteur simulé, faux fournisseur, essai à blanc, mesure des consignes — module `simulation`, scripts d'essai
+
+| | |
+|---|---|
+| lettre | V9, l. 384, 409 ; règle R5, l. 368 |
+| moteur simulé | adaptateurs simulés au contrat de cette course : des proposeurs qui rendent, selon l'empreinte de l'identifiant, des fiches au contrat, une fiche à un champ de plus, une fiche à champ fermé différent, une réponse sans fiche de chaque sorte ; un portier et des juges simulés aux étiquettes fermées. Textes inertes, sans rapport avec la question |
+| faux fournisseur | code neuf : l'essai à blanc de L9 ne lance aucun relais et n'a aucun faux fournisseur (L0, Q7) ; seuls les juges factices de E9 et l'amont factice des essais du relais servent de modèle. Un amont local derrière les vrais relais : il garde ce qu'il reçoit, et rend à la demande une réponse normale, un refus pour crédit, une erreur d'accès, un refus de classifieur, une réponse coupée |
+| essai à blanc | la course entière, trois générations, par le lanceur, en moteur simulé, puis par les relais contre le faux fournisseur ; les deux lignes à part de même ; chaque arrêt provoqué une fois (§ 6) |
+| mesure des consignes sans appel | assemble les trente-trois requêtes de proposeur de la génération 1, les plus grandes requêtes possibles des générations 2 et 3 à la borne du registre, les requêtes du portier et des juges sur la plus grande fiche permise ; rend les tailles en octets par rôle et le pire d'un appel par rôle, à la règle de compte et au relevé de tarif du devis ; ces chiffres vont à l'additif (bornes en octets, pire d'un appel d'aiguilleur et de juge) |
+
+### 2.13 Les gardes héritées du noyau, une par une, pour tous les rôles
+
+**Réécrit à la v3** (CL2, § 3.6 ; L0, Q12 ; décision de la mère de 07:21Z, règle 4).
+
+**La règle, décidée par la mère** : aucune garde héritée n'arrête un rôle sans écrire sa cause ; une garde qui arrête produit un **« refus écrit »**, compté, **jamais un échec du rôle ni un coût**. Le refus écrit est une ligne du journal : la garde, sa cause, le rôle, la génération, la case ; il est compté par rôle et par garde sur la ligne de la génération ; il passe par le pas 0 de la surcharge d'`appel` (§ 2.3), donc hors du noyau, sans consommation.
+
+**Ce que rend un « refus écrit » à l'appelant, par rôle** (défaut 2 de CL3, § 1.3 ; mère, 07:51Z). Le noyau rend « rien » pour un appel non lancé, et le portier du noyau en ferait une fiche sans classe (`noyau_v54.py`, l. 238, 239) : ni passée, ni au coffre, ni hors case. Dans le véhicule, rien ne reste sans sort :
+
+| rôle dont l'appel est refusé par écrit | ce que la surcharge rend, et ce que l'appelant en fait | compte |
+|---|---|---|
+| un proposeur | rien n'est rendu ; la case est **non jouée pour cette espèce** ; ce n'est pas un appel : ni M6, ni fiche rendue | « cases non jouées », par espèce et par génération |
+| le portier, appel « fiche » | **décidé par la mère (07:51Z)** : la fiche va **« au coffre », avec sa classe écrite**, comme un illisible (D6) ; c'est une fiche rendue, au dénominateur de M3 et de la garde du coffre | « au coffre par refus du portier », à part |
+| le portier, appel « réponse sans fiche » | la réponse est classée « réponse illisible » | sous-compte « étiquette du portier illisible » |
+| un juge | un verdict absent ; la fiche reste « passée » | « verdicts absents », par juge |
+
+**A3 et A14 : désactivées par écrit — voie 1, choisie** (mère, 08:00Z, mot 4 ; CT4, § 2). Ma v4 posait un « seuil chiffré », 1 + ⌈150 / c⌉, et la valeur d'un million. **Les deux sont retirés.** La formule n'est pas une borne sûre : un appel en erreur peut déclarer un coût nul, que le noyau ne remplace pas par le plafond (`noyau_v56.py`, l. 170), et ce sont justement ces appels qu'A3 compte. Et un million, qu'aucun rôle n'atteint, était une désactivation qui ne disait pas son nom. **Je choisis la voie 1, celle que le contrôleur recommande** ; je ne prends pas la voie 2 : le plan ne borne que le proposeur, à onze appels, non le portier ni les juges ; et un seuil qu'on peut atteindre arrêterait un rôle sur une suite de « réponses illisibles », classe de M6, sur laquelle la V9 ne pose aucun seuil d'arrêt (l. 99, 101).
+
+1. **« A3, échecs consécutifs : désactivée pour tous les rôles de cette course. »** Raison : une réponse sans fiche n'est jamais un refus et la course continue (V9, l. 97, 101) ; aucun seuil d'arrêt n'est posé sur M6. Mise en œuvre : la configuration ne portant qu'un seuil pour tous les rôles (`suivi_roles_v54.py`, l. 34), il reçoit **une valeur hors d'atteinte, écrite à l'additif sous le nom de désactivation**, non de seuil. **Vérifiée au départ** : la configuration est refusée si la valeur diffère de celle que l'additif déclare.
+2. **« A14, part d'inexploitables : désactivée »**, de la même façon et pour la même raison : c'est une part de M6. Mise en œuvre : la part maximale déclarée à 1 à l'additif, sous le nom de désactivation ; vérifiée au départ.
+3. **Le délai d'A3 reste actif**, aligné sur 3 600 secondes : un appel coupé au-delà est classé « réponse illisible », écrit et compté.
+4. **La garde de remplacement porte sur les refus écrits, non sur M6.** Un refus écrit n'est pas une classe de M6 : il ne naît que d'une garde héritée qui arrête un rôle malgré sa mise hors d'état. Sa borne vient du plan :
+
+| rôle | garde de remplacement | pourquoi |
+|---|---|---|
+| un proposeur | **onze refus écrits d'un même proposeur dans une génération : arrêt nommé de la course**, numéroté à l'additif | onze, c'est toutes ses cases : le rôle entier manque, et la composition gelée n'est plus tenue (même raison que pour A2) |
+| le portier | aucune garde neuve : chaque refus écrit envoie une fiche « au coffre », et **l'arrêt n° 5** (strictement plus d'un quart au coffre) borne déjà ce cas | la lettre le tient |
+| un juge | aucun arrêt : les verdicts absents sont comptés et **rapportés**, sous I1 seulement | les juges sont joués pour information (V9, l. 64) |
+
+Le compte des refus écrits d'un proposeur repart de zéro à chaque génération, comme le suivi. Cas sain et artefact au § 6.2.
+
+**Les valeurs héritées de la configuration v5 de la course v9** (L0, Q12) : trois échecs consécutifs arrêtent un rôle ; un appel de plus de 1 800 secondes est un échec, non lu ; au-delà de 34 % d'appels inexploitables d'un rôle sur la génération, l'étape devient « non mesurée (technique) », ce qui arrête la course ; la liste des modèles sous garde de bascule est vide. Le suivi est neuf à chaque génération. **Le portier et les juges y sont exposés comme les proposeurs.**
+
+| garde héritée | où | ce qu'elle ferait | sort, pour **tous les rôles** |
+|---|---|---|---|
+| **A3, échecs consécutifs** | `suivi_roles_v54.py`, l. 72 à 83 ; `noyau_v56.py`, l. 155 à 160 | après trois réponses « inexploitables » de suite, le rôle est arrêté pour le reste de la génération et ses appels sont sautés, **sans arrêt nommé** ; une « réponse vide motivée » sans bloc reconnu en est une (contraire à V9, l. 97, 101, à M6, aux 55 appels figés) | **trois tenues** : (i) pour un proposeur, la lecture passée à `appel` rend un objet dès qu'un texte est rendu, fiche ou non ; une liste de fiches vide et un texte sans fiche vont tous deux au classement en quatre classes d'appel : jamais un échec ; (ii) **la garde est désactivée par écrit**, pour tous les rôles, comme il est dit plus haut ; la lecture du portier neuf et celle de la surcharge de `juger` rendent elles aussi un objet dès qu'un texte est rendu ; (iii) un arrêt de rôle qui surviendrait malgré tout est pris au pas 0 de la surcharge : **refus écrit**, compté, jamais un appel sauté sans trace |
+| **A3, délai** | `suivi_roles_v54.py`, l. 61, 69 à 71 | un appel plus long que le délai est un échec, sa réponse n'est pas lue, même complète ; le délai hérité, 1 800 s, est sous le délai de session du kit, 3 600 s (`adaptateurs.py`, l. 57) | le délai est **aligné au moins sur celui du kit**, pour chaque adaptateur, et déclaré à l'additif ; un appel coupé au-delà est classé « réponse illisible » (M6), écrit et compté |
+| **A14, part d'inexploitables** | `noyau_v56.py`, l. 272 à 278 ; `suivi_roles_v54.py`, l. 86 à 89 | au-delà de 34 %, l'étape est « technique », la génération n'ouvre rien, **la course s'arrête** : contraire à V9, l. 101 (aucun seuil d'arrêt sur M6) | **désactivée par écrit**, non « inerte » : part maximale déclarée à 1 à l'additif, sous le nom de désactivation, vérifiée au départ ; M6 rapporte |
+| **A11**, refus et limite d'usage d'un modèle sous garde | `suivi_roles_v54.py`, l. 63 à 67, 80, 81 | arrêt du rôle « en attente » | inerte : la liste est vide ; **vérifié à la configuration**, qui refuse une liste non vide |
+| **A2**, modèle servi absent ou changé | `noyau_v56.py`, l. 176 à 185, 205 à 211 | arrêt du rôle, réponse non lue ; la course continue | rattachée à « aucune bascule » (V9, l. 182). **Tranché par la mère (07:46Z, mot 6) : A2 est un arrêt nommé de la course**, numéroté à l'additif, qui dit le rôle et la cause, parce qu'un rôle arrêté n'est plus la composition gelée. La surcharge d'`appel` le lève au retour de l'appel (pas 7) ; la surcharge de `juger` le lève quand la version servie d'un juge change |
+| **coupure au plafond dur de l'étape** | `noyau_v56.py`, l. 150 à 154 | quand le reste de l'étape est nul, l'appel n'est pas lancé | rattachée à l'arrêt n° 7 ; chaque appel non lancé est écrit (ligne « non lancé », § 2.3, pas 7) et compté à part, jamais dans M6 |
+| **11a**, plafond dur recalculé faux, ou cumul au-delà du plafond de la génération | `noyau_v56.py`, l. 228 à 236, 280 à 282 | arrêt de l'exécution | rattachée à l'arrêt n° 6 ; arrêt nommé |
+| **garde propre à un nom d'adaptateur réservé** (seuil S12) | `course2_v54.py`, l. 172 à 183 ; `noyau_v54.py`, l. 275 à 300 | arrête le rôle de proposeur de l'adaptateur de ce nom si plus d'un quart de ses fiches sont classées « concret » | sans objet : aucun adaptateur de la table ne porte ce nom ; **épreuve à la configuration**, qui refuse ce nom |
+| **A17, fiche sans passeport** (`SansPasseport`) | `aiguilleur_v53.py`, l. 33 ; `noyau_v56.py`, l. 194 | une fiche présentée à un juge sans passeport arrête la génération | gardée, sous le portier neuf : la surcharge de `juger` exige **le passeport du portier neuf** (§ 2.5) ; une fiche sans ce passeport présentée à un juge est un défaut de programme, non une issue de la course : **arrêt nommé de la course**, numéroté à l'additif |
+| **portier qui ne rend pas de classe** | `noyau_v54.py`, l. 237 à 246 | la fiche est classée « concret » ; l'appel compte un échec du portier | la classe est conforme à D6 (« au coffre », comptée à part) ; l'échec compté est tenu par les lignes A3 et A14 ci-dessus |
+
+**Épreuves** (§ 6.2) : onze réponses vides motivées de suite d'un même proposeur, puis trois réponses illisibles de suite du portier, puis trois d'un juge : aucun rôle arrêté, aucun appel sauté, chacune classée et comptée ; un rôle marqué arrêté par un essai : son appel suivant est un refus écrit, sans coût ; mutation « lecture qui rend rien sans fiche » : le rôle s'arrête, et l'essai doit échouer.
+
+### 2.14 La colonne « matière première » — en « garde seule » par défaut ; lecture de fin soumise au mot de Lazar — module `matiere_premiere`
+
+**Réécrit à la v4** (CL3, § 3 ; mère, 07:46Z, mot 9, et 07:51Z). **L'état par défaut de la colonne est « garde seule »** : le registre servi de la matière est chargé pour la seule garde, qui empêche un de ses énoncés d'entrer dans une requête de proposeur ; rien n'en est lu, rien n'en est servi. La v3 disait « éteinte par défaut », « la course part sans elle », « lot facultatif » : ces trois phrases ne valent plus. **Le chargement et la garde sont nécessaires à la course ; seule la lecture de fin reste attachée à un allumage.**
+
+*Ce que la mère a donné* (message de 07:39Z ; GO-2026-11-21-19, que je n'ai pas lu). Sur `origin/main`, dossier `docs/notes/mathematiques-nouvelles-v1/consultation-externe-v1/` :
+
+| pièce | empreinte | ce que j'en ai fait |
+|---|---|---|
+| `registre-servi-visees-v1.json` : 35 entrées selon la mère, 24 visées et 11 énoncés de défense ; chaque entrée porte un nom neutre, un énoncé d'une ligne, et deux autres champs | `3bcb94e672390f6f68ca318f214a749dbb0fb14cf8ca4c44728beccf18440d1e`, recalculée | tirée par `git show` redirigé pour son empreinte ; **non ouverte** ; je ne recopie aucun nom ni aucun énoncé |
+| `attestation-aucune-recette-v1.md` | `19ef4d7458818e184c4dfcf5535dee2c9710f549c28f34ff4aa0d9b20e736f46`, recalculée | lue en entier, pour sa vigilance |
+| `references-citees-v1.md` | `3216e1b2…`, d'après la mère | non tirée ; toutes ses références sont dites « non vérifié » |
+
+Les trois réponses brutes sont sur la branche `matiere-premiere/visees-mathematiques-v1`, commit `88b55a9e`, tenue à l'écart : **je ne l'ouvre pas**.
+
+*Ce que l'attestation dit, et ce que la conception en retient.* Les trois réponses sont attestées « aucune recette », au niveau de l'idée. Elle signale des points de vigilance : deux passages d'une réponse brute, dont un « à ne pas transmettre tel quel à une session qui conçoit des moniteurs », et deux d'une autre ; aucun dans la troisième. Elle porte sur les réponses brutes, non sur le registre servi. Conséquences : les réponses brutes ne quittent leur branche que vers les juges de fin ; rien de la colonne ne sort du dossier de sortie, hors des identifiants, des empreintes et des comptes.
+
+**L'interrupteur `colonne_matiere_premiere`, à trois états.**
+
+| état | ce qu'il fait | ce qu'il exige |
+|---|---|---|
+| 0, « éteinte » | le module n'est pas chargé | le mot de la mère ; **ce n'est plus le défaut** |
+| **1, « garde seule » : le défaut** | le registre servi est chargé à son empreinte, pour la seule garde ; aucune lecture de fin | **tranché par la mère (08:00Z, mot 3) : aucun additif à la V9.** L'état s'écrit **au complément de valeurs, avec l'empreinte du registre servi** (`3bcb94e6…`). La pièce qui le porte : **la pièce de relevés**, écrite et scellée par la mère, qui « vaut « complément de valeurs scellé » au sens de GO-2026-11-20-67 ; il n'y a pas de lot 2 » (CV, l. 68) ; elle reçoit une ligne de plus, à libellé fixe : l'interrupteur, son état, l'empreinte. Le lanceur lit cette ligne au départ et vérifie l'empreinte (arrêt n° 14). L'arrêt de la garde est numéroté à l'additif du véhicule |
+| 2, « allumée » | la garde, et la lecture de fin | l'état 1, et la **règle d'allumage**, qui ne vaut plus que pour cet état |
+
+**La règle d'allumage de la lecture de fin (état 2)**, toutes conditions ensemble : (a) **le mot de Lazar et sa ligne** : une ligne d'accord qui nomme l'interrupteur, l'état 2 et l'empreinte du registre servi ; (b) un additif à la V9, contre-lu et scellé, épinglé et mis sous l'arrêt n° 14 : la lecture de fin est une lecture que la V9 ne porte pas (mère, 08:00Z, mot 3 : l'additif, l'arrêt n° 14, le devis et le mot de Lazar) ; (c) le devis de la lecture de fin, sur **une ligne à part**, hors des 450 USD de la course ; (d) les lecteurs inscrits (accordé par la mère, 07:46Z) ; (e) la branche vérifiée orpheline (§ 2.15). **Aucun chemin d'allumage** par variable d'environnement ni par la configuration seule. L'état est écrit au manifeste de départ ; l'état 2 peut être demandé après la course, la garde ayant tenu pendant elle.
+
+**Le chargement, en « garde seule ».** Le chargeur vérifie l'empreinte `3bcb94e6…` avant toute lecture (arrêt n° 14). De chaque entrée, il ne lit que **l'énoncé d'une ligne** : il le normalise comme la garde de motifs, en prend l'empreinte SHA-256, et **ne garde que cette empreinte**. Ni le nom, ni l'énoncé, ni les deux autres champs ne sont gardés, écrits ou servis en état 1. Les 35 énoncés entrent dans la garde, visées et énoncés de défense. Avant cela, chaque énoncé passe le programme de vérification du registre servi (une ligne, sous sa borne, aucune marque de code, d'étape numérotée ou de consigne : forme de l'arrêt n° 19) ; un énoncé non conforme : la colonne n'est pas chargée, la course ne part pas, rien n'est retiré en silence.
+
+**La garde de la colonne.**
+
+| | |
+|---|---|
+| **règle de comparaison, décidée par la mère (07:51Z)** | elle porte sur **l'énoncé d'une ligne entier, par empreinte, jamais sur le nom court**, pour qu'un mot repris par hasard n'arrête pas la course. Sont comparées aux 35 empreintes : l'empreinte de chaque ligne normalisée d'une requête assemblée, et l'empreinte du champ d'énoncé de chaque ligne du registre servi. Seule une ligne égale en entier à un énoncé de la colonne mord |
+| trois tenues | (i) le module `requete` n'a aucune entrée par où la colonne puisse arriver : la requête d'un proposeur n'est composée que des pièces du § 5.3, par liste fermée ; (ii) dans la surcharge d'`appel` (§ 2.3, au pas 3), pour tout rôle de proposeur et pour la sonde, la comparaison ci-dessus : une égalité refuse l'envoi, « non envoyé », coût nul, compté, arrêt nommé ; (iii) au départ des générations 2 et 3, la même comparaison sur chaque énoncé du registre servi fabriqué : une égalité, la génération ne part pas |
+| son arrêt | sans numéro dans la V9 : **l'additif du véhicule le lui donne** |
+| **au départ** | le gabarit de la partie servie, la synthèse servie, les consignes du portier et des juges et les témoins passent la garde de la colonne **sans un refus** ; sinon la course ne part pas, et c'est un point pour la mère |
+| **taux de faux refus** | mesuré à l'essai à blanc, sur toutes les requêtes et tous les registres servis de l'essai, et rapporté, comme celui de l'arrêt n° 16 (V9, l. 387) ; attendu nul, la comparaison étant une égalité de ligne entière |
+| ce qu'elle ne tient pas | un énoncé repris en substance, reformulé, n'est pas vu : la garde tient la copie, non le sens |
+
+**La l. 83 de la V9 : tranché par la mère (08:00Z, mot 2).** La lettre : « Dehors : identifiants, empreintes, tailles, comptes par case. **Ni énoncé ni nom de mode** dans un registre du dépôt, une passation ou un message. » (V9, l. 83, au paragraphe « Session à part et quarantaine », tiret « Où »). **La mère retient la lecture B, dans ses termes : le registre servi de la matière est une entrée de la course, versée sous GO-2026-11-21-19 ; la l. 83 vise les sorties.** La « garde seule » reste donc le défaut, et le chargeur ne garde que les 35 empreintes ; rien d'autre n'est écrit nulle part. **La branche A de la v4 est retirée** : elle n'est plus une hypothèse ouverte, et le lot 10 a ne dépend plus d'aucun mot sur cette ligne. La règle 6 de 07:21Z (« sans objet tant que la colonne est éteinte ») est remplacée par ce mot. Mon argument de la v4 (le chargement n'écrit dans aucun des trois lieux que la ligne nomme) reste exact, et ne fait que s'y ajouter.
+
+**La lecture de fin (état 2 seulement).**
+
+| | |
+|---|---|
+| qui lit la branche | la règle de la mère, mot pour mot, telle qu'elle m'est transmise : « Seuls le juge d'antériorité et le juge de la course les lisent, à la fin. Jamais les proposeurs, jamais une session de moniteurs. » (07:39Z) ; « seuls les juges de fin lisent la branche » ; « Les deux lecteurs d'antériorité de la course en font partie, après la clôture des générations. » (07:51Z). **Les juges de fin sont donc quatre : les deux lecteurs d'antériorité de la course et ses deux juges** (§ 2.15) |
+| les lecteurs d'antériorité | lisent les trois réponses brutes sur la branche, au commit et aux empreintes que la mère donne, après la clôture des générations, et étiquettent chaque visée par la règle d'antériorité de la course : mêmes sources, même périmètre, même effort (règles R3 et R4), mêmes classes de l'épreuve 4 |
+| les juges de la course | par le programme de lecture de fin, qui lit les fichiers à leur empreinte et les présente aux deux juges par la surcharge d'`appel`, sous une consigne et une forme que l'additif de la colonne déclare ; leur avis est « pour information » |
+| **routage et ligne à part** | la lecture de fin suit **une table de routage à part**, comme les deux lignes à part (§ 2.10) : le juge de l'espèce 3 sur Minuit, le juge de l'espèce 1 sur le deuxième relais. Elle se paie sur **sa ligne à part**, à son plafond, et n'est **jamais comptée dans les parts de la course** : la première clause de l'arrêt n° 12 lit le plafond de cette ligne, non les parts ; la seconde clause ne lit pas la table de la course. La garde de motifs et le journal s'appliquent |
+| ce qu'elle ne peut pas tenir | la lecture d'antériorité de la colonne n'est pas aveugle à l'origine ; un juge de la course peut être de l'espèce d'une réponse qu'il lit ; les références citées par la matière sont « non vérifié » : aucune ne vaut antériorité sans lecture sur PDF (règle R7). Les trois sont dits au rapport de la course, comme réserves |
+| « affinés par l'organisme » | **proposition, marquée, non tranchée.** (a) *par défaut* : aucun affinage dans ce véhicule ; (b) *option* : une passe à part, après la troisième génération, par un rôle distinct des proposeurs ; un devis, l'additif, le mot de Lazar |
+| **comparaison finale** | **sans juge qui décide** (N-058) : une table descriptive, par programme, de deux colonnes, « idées de la course » et « matière première ». **Tranché par la mère (07:46Z, mot 9) : seules les visées sont comparées** ; les énoncés de défense sont comptés à part. Comptes par étiquette d'antériorité et par classe de l'épreuve 4 ; compte des recoupements, par une étiquette fermée d'un lecteur d'antériorité. Le classement des juges y figure à part, « pour information ». Aucune phrase ne dit qu'une colonne vaut mieux |
+| mesures de la course | inchangées : rien de la colonne n'entre dans M1 à M7, C1 ni I1 |
+
+### 2.15 Les juges de fin, la branche tenue à l'écart, et la preuve de quarantaine
+
+Rien de ce paragraphe ne s'ouvre avant l'état 2.
+
+| | |
+|---|---|
+| qui | **les quatre juges de fin, et eux seuls** : les deux lecteurs d'antériorité de la course, sessions à part ; les deux juges de la course, par le programme de lecture de fin. **Jamais** un proposeur, la mère, une session qui conçoit sondes, agrégateurs, traits de texte ou seuils, ni le concepteur. Leur inscription est accordée par la mère (07:46Z, mot 9) ; elle se fait sur la liste de cette branche |
+| quand | après la clôture des trois générations et la relecture « aucune recette », interrupteur à l'état 2 |
+| **la branche est-elle orpheline ?** | **vérifié par le graphe des commits, sans l'ouvrir** (mère, 07:51Z) : l'outil du § 2.6 demande au dépôt l'ancêtre commun du commit `88b55a9e` et de `main`, et celui du même commit et de chaque branche liée à `main` ; il ne lit aucun fichier de la branche. Aucun ancêtre commun : la branche est orpheline, comme le veulent le garde-fou 2 et l'arrêt n° 17 (V9, l. 119, 388). **Un ancêtre commun : c'est un point pour la mère avant toute lecture ; l'état 2 est refusé.** Le contrôle est fait avant l'état 2 ; je ne l'ai pas joué |
+| ce qu'il lit | sur la branche `matiere-premiere/visees-mathematiques-v1`, au commit `88b55a9e` et aux empreintes données par la mère : les trois réponses brutes, et rien d'autre |
+| ce qu'il écrit | avant chaque ouverture, une ligne au journal des lectures : son rôle, l'heure, le commit, les empreintes de ce qu'il ouvre ; après, ses étiquettes fermées par identifiant de ligne. Hors de la quarantaine : des identifiants, des empreintes, des tailles, des comptes |
+| preuve, arrêt n° 17 | par programme : la branche est orpheline (ci-dessus) ; aucune empreinte d'un fichier de la branche ne se retrouve dans l'arbre de travail, dans le dossier du run ni dans un export ; tout export est fait sur une liste fermée de champs |
+| preuve, arrêt n° 18 | par programme : chaque ouverture a sa ligne, écrite avant elle, par un rôle inscrit ; une lecture sans ligne, ou par un rôle absent de la liste, est refusée là où un programme la tient (la lecture de fin du véhicule), sinon constatée, consignée et portée à Lazar |
+| preuve, arrêt n° 19 | les 35 énoncés du registre servi passent le programme de vérification du registre servi avant d'être chargés ; non conforme, rien n'est chargé, sans retrait silencieux |
+| vigilance de l'attestation | les passages signalés ne sont jamais portés hors des réponses brutes ; aucune sortie de la lecture de fin ne va à une session qui conçoit des moniteurs sans passer par Lazar |
+| limite, dite sans forcer | la règle d'ouverture se tient par procédure et par journal, non par une serrure : une lecture hors règle se constate, elle ne s'empêche pas toujours (V9, l. 125) |
+
+## 3. Vue d'ensemble
+
+```
+lanceur de course ──(vérifie, épingle, arrêt n° 11, relais par clé)──► lanceur de l'orchestrateur (régime nommé)
+                                                                              │
+        tirage scellé ─► course : 3 générations ─► génération g ─► proposition ─► aiguillage ─► juges
+                              │  (arrêts 14, 10, 8, 9, 19, 6)                  │              │
+                              │                                 module requete │              │
+                              ▼                                                ▼              ▼
+                    registre des tentatives ◄── portier ◄──────  surcharge d'appel (routage, part, motifs, journal, refus)
+                              │                                                │
+                    registre servi (g+1), ligne de génération        relais de la clé ─► fournisseur
+                              │
+                    mesures (après la relecture) ─► export hors quarantaine (comptes seulement)
+```
+
+## 4. Ce qui est scellé, et par qui
+
+| pièce | qui l'écrit | qui la contre-lit ou la vérifie | qui la scelle | servie ? |
+|---|---|---|---|---|
+| code du véhicule, lot par lot | modèle O | modèle S | empreintes au manifeste du paquet ; épinglées par le lanceur | — |
+| véhicule entier, additif, garde de motifs | — | un autre modèle (règle R2), avec la confirmation de la répartition | — | — |
+| additif du véhicule | modèle F | un autre modèle | la mère | non |
+| configuration de course | modèle O, sur les valeurs de l'additif | modèle S | la mère, avec l'additif | non |
+| consignes du portier et des juges | modèle F (D3) | un autre modèle (D3) | la mère, après son attestation « aucune recette » | oui, au portier et aux juges |
+| liste des motifs | modèle F | avec le véhicule | la mère | jamais |
+| sortie du tirage | le programme, joué deux fois par la session de l'organisme | égalité par `cmp` | la mère, avant tout appel payant | non ; les lignes de case qui en sortent le sont |
+| témoins plantés et table des issues | un agent neuf de la mère | — | la mère | les parties présentées, à l'épreuve |
+| pièce de relevés | la mère, par programme | `cmp` | la mère | non |
+| journal, registre des tentatives, registre servi, fiches, réponses brutes, classement des juges | le véhicule | — | le véhicule, par compagnon, dans le dossier de sortie | le registre servi seul, aux proposeurs |
+| rapports des lignes à part, bilan de course, mesures | le véhicule | constat par la mère, sur les parts hors quarantaine | le véhicule, puis la mère au registre | non |
+
+## 5. Les interfaces
+
+### 5.1 Entrées et sorties, module par module
+
+| module | entrées | sorties | lu ensuite par |
+|---|---|---|---|
+| `tirage` | gabarit (empreinte), racine, clés | fichier du tirage ; table des identifiants | `requete`, `course`, `mesures`, lanceur, témoins |
+| `requete` | gabarit, synthèse, ligne de case, registre servi, consignes fixes, enveloppe | octets de la requête ; composition (pièces, tailles) | proposition, portier, juges ; surcharge d'`appel` |
+| `garde_motifs` | octets ; liste scellée | « passe », ou famille et rang ; texte trouvé vers le journal | surcharge d'`appel` ; départ ; épreuves |
+| `routage` | rôle, nom d'adaptateur, table scellée, parts, pires par rôle | « permis », ou arrêt n° 12 nommé | surcharge d'`appel` |
+| `appel_garde` (mélange `AppelGardeNA`) | les arguments d'`appel` ; le numéro de la génération ; table, parts, journal | l'appel passé au noyau, ou un refus « non envoyé » sans coût, ou un « refus écrit » ; coût compté par clé ; comptes des refus | classe de génération (lot 6) |
+| `adaptateur_claude` | nom de rôle technique, consigne, dossier, plafond | le résultat de l'appel ; la réponse brute écrite dans le dossier de sortie | noyau, par `lancer` |
+| `lecteur_fiches`, `contrat_fiche` | texte d'une réponse ; bornes | fiches reconnues, ou aucune ; pour chaque fiche : au contrat, champ en plus, hors longueur | `portier` |
+| `portier` (code neuf, lot 5) | une fiche, ou une réponse sans fiche ; la consigne de D3 ; la ligne de case | classe d'issue d'appel ; classe d'issue de fiche ; **ses passeports** ; son journal sans contenu | `registre`, surcharge de `juger`, `mesures` |
+| surcharge de `juger` (classe neuve, lot 6) | une fiche « passée » ; le passeport du portier neuf ; la consigne de D3 | l'appel de chaque juge sous identifiant réencodé ; verdicts au coffre ; verdict absent compté | `mesures` (I1) |
+| `identifiants` (encodage, lot 5) | des octets | un mot de syllabes ; et l'inverse | proposition, surcharge de `juger`, `registre`, `matiere_premiere` |
+| `matiere_premiere`, chargement et garde (lot 10 a) | le registre servi de la matière, à son empreinte | 35 empreintes d'énoncé ; « passe », ou l'arrêt de la colonne | surcharge d'`appel`, départ des générations |
+| `journal` | ligne d'envoi ; ligne de génération ; arrêt | fichiers d'ajout seul, scellés par génération | `mesures`, export, essai à blanc |
+| `portier` | réponse d'un proposeur ; ligne de case ; consigne | classe d'issue d'appel ; fiches et leur classe ; passeports | `registre`, juges, `mesures` |
+| `registre` | fiches classées | registre des tentatives ; registre servi | `requete`, `verifier_registre_servi`, `mesures` |
+| `verifier_registre_servi` | registre servi ; bornes | « conforme », ou arrêt n° 8, 9 ou 19 nommé | `course` |
+| `course` | configuration, tirage, adaptateurs gardés | dossiers des générations ; bilan de course | lanceur, `mesures` |
+| `mesures` | registre, journaux, tirage, attestations scellées | mesures, dans le dossier ; part exportable | export |
+| export | dossier de sortie | inventaire hors quarantaine | dossier du run, la mère |
+| `sonde_refus`, `epreuve_temoins` | tirage, témoins, table des issues, tables de routage à part | rapports en deux parts | lanceur (exigés, du jour, aux empreintes du véhicule) |
+
+### 5.2 L'identifiant neutre, et celui des témoins
+
+Contraintes de la lettre (V9, l. 75) : ni rang, ni numéro sur un total, ni morceau d'empreinte ; aucune suite de huit caractères hexadécimaux ; rien qui laisse déduire le compte des cases, l'ordre du tirage, la génération ou la famille tenue à l'écart.
+
+**La clé de tirage n° 40 est décidée par la mère (D4).** La forme du mot reste une valeur du concepteur, à écrire à l'additif :
+
+- un mot de trois syllabes, chaque syllabe faite d'une consonne prise dans douze et d'une voyelle prise dans cinq, les consonnes choisies hors des lettres qui servent à écrire l'hexadécimal ; six lettres, aucun chiffre : jamais huit caractères hexadécimaux de suite ;
+- 216 000 mots possibles pour 120 cases : le mot ne dit rien du compte ;
+- les 120 mots sont tirés une fois, sans remise, pour **toutes** les cases, dans l'ordre canonique, par une **clé de tirage neuve, la clé n° 40 (D4)** : `rng.choice(216000, size=120, replace=False)` sur `SeedSequence(entropy=racine, spawn_key=(40,))` ; un mot ne dépend donc ni de la génération, ni du fait que la case soit servie, tenue à l'écart ou en réserve ;
+- la lettre le permet : « si sa construction demande un tirage, c'est une clé de tirage neuve, qui ne change aucun tirage écrit » (V9, l. 75, 254) ; elle la veut « portée au complément contre-lu », et il n'y a pas de lot 2. **Décidé par la mère (07:21Z, règle 3)** : la clé n° 40 va dans la table des clés de l'additif, à côté de la n° 30 ; elle est tirée au même geste que les autres, par le même programme, et consignée ;
+- la table des 120 mots sort du tirage, scellée avec lui ; elle n'est jamais servie ; chaque mot passe la garde de motifs avant le scellement ; un mot qui la ferait refuser arrête le tirage par un refus nommé, sans second tirage en silence.
+
+**La ligne de case.** Proposition : `case : <identifiant> ; <valeur 1> ; <valeur 2> ; <valeur 3>`, les trois valeurs à l'octet de la légende, le séparateur « ; » encadré d'une espace de chaque côté (aucune valeur de la légende ne le porte ; deux portent une virgule, deux des parenthèses). Borne : 256 octets, gardée ; la plus longue ligne possible est à mesurer par le programme, je l'estime sous 200 octets.
+
+**Les témoins.** Le gabarit attend de l'additif l'identifiant neutre et la ligne de case que porte un témoin (gabarit, l. 61, 98). Proposition (§ 9, point 8) : tous les témoins portent **la première case de la réserve**, celle de la sonde de refus : elle n'est ni servie par la course, ni de la famille tenue à l'écart, elle n'est déjà plus fraîche, et aucune case de plus n'est consommée. Leur champ `case` prend le mot de cette case dans la table scellée ; leur ligne de case est construite par le même programme que les trente-trois autres. Les témoins ne peuvent donc être scellés qu'après le tirage.
+
+**L'identifiant d'une fiche, et celui que voit un juge — réencodage accepté par la mère (07:46Z, mot 1)** (CL2, § 3.7 ; L0, contradiction 11). Le noyau nomme une fiche par une lettre suivie de douze caractères hexadécimaux, et sert au juge une lettre suivie de dix (`course2_v68.py`, l. 203 ; `noyau_v56.py`, l. 198, 199 ; `graines_v53.py`, l. 65 à 67). Or la garde de motifs refuse toute chaîne hexadécimale de huit caractères et plus (V9, l. 387), et elle vaut pour les requêtes des juges, pour celles du portier, et pour le registre servi, qui porte le nom d'une fiche, donc son identifiant (D5). Tel quel, **chaque requête de juge et chaque ligne du registre servi seraient refusées par l'arrêt n° 16**.
+
+- **Décidé** : ces deux identifiants sont **réencodés** dans l'alphabet des syllabes de l'identifiant de case, sans chiffre et sans suite hexadécimale. Les octets du jeton existant sont gardés tels quels, tirés par la règle de graines de l'orchestrateur : **c'est un encodage, non un tirage neuf**, donc aucun écart à V9, l. 311.
+- **La règle exacte, à écrire à l'additif** (valeurs du concepteur) :
+  1. *Alphabet.* Douze consonnes, dans cet ordre, de rang 0 à 11 : g, j, k, l, m, n, p, r, s, t, v, z. Cinq voyelles, de rang 0 à 4 : a, e, i, o, u. Une syllabe est une consonne suivie d'une voyelle ; son rang, de 0 à 59, vaut cinq fois le rang de la consonne plus le rang de la voyelle. Minuscules seules.
+  2. *Ordre des octets.* Les octets du jeton, dans leur ordre, sont lus comme un seul entier, le premier octet étant le plus fort.
+  3. *Écriture.* Cet entier est écrit en base 60, le chiffre le plus fort d'abord, sur une longueur fixe, complétée à gauche par la syllabe de rang 0 ; chaque chiffre est remplacé par la syllabe de son rang. Aucun préfixe, aucun séparateur.
+  4. *Longueurs.* Six octets (une fiche) : neuf syllabes, dix-huit lettres. Cinq octets (l'identifiant servi au juge) : sept syllabes, quatorze lettres. Trois syllabes restent l'identifiant de case : les trois longueurs ne se confondent pas.
+  5. *Décodage.* Un mot est décodé s'il a la longueur attendue, s'il se découpe en syllabes de l'alphabet, et si l'entier obtenu est inférieur à 256 puissance le nombre d'octets ; sinon il est **refusé**, jamais corrigé.
+- **Éprouvée dans les deux sens** (§ 6.2) : encoder puis décoder rend les octets, pour chaque longueur ; décoder puis encoder rend le mot ; un mot hors alphabet, de mauvaise longueur, ou dont l'entier dépasse la borne est refusé.
+- **Où l'encodage est posé** : pour la fiche, dans la proposition neuve (§ 2.9) ; pour l'identifiant servi au juge, dans la surcharge de `juger` (§ 2.5) ; pour l'identifiant de ligne de la colonne, dans le lot 10 a.
+- Le champ `filiation` d'une fiche cite ce même identifiant réencodé, celui que le registre servi montre.
+- Épreuve (§ 6.2) : toutes les requêtes du portier et des juges de l'essai, et tout registre servi, passent la garde ; mutation « identifiant hexadécimal » : l'arrêt n° 16 mord.
+
+### 5.3 L'enveloppe de la requête
+
+Valeur ouverte, à l'additif (V9, l. 254). **Décision de la mère (D2) : rien n'est ajouté à l'enveloppe.** Elle ne porte donc que des séparateurs et, aux générations 2 et 3, le titre de la section du registre ; aucun texte sur la syntaxe de sortie, aucun texte fixe de rôle (§ 2.3). Forme proposée, à écrire à l'additif :
+
+| rôle | suite d'octets |
+|---|---|
+| proposeur, génération 1 | partie servie remplie ; une ligne vide ; synthèse servie à l'octet |
+| proposeur, générations 2 et 3 | la même ; une ligne vide ; le titre de la section du registre, sur une ligne ; le registre servi. Si le registre est vide : section omise, la requête est celle d'une génération 1, et la ligne de la génération le dit (défaut de la v68, R68, § 3, point 5) |
+| sonde de refus | partie servie remplie, seule |
+| portier, juge | leur consigne fixe ; puis la fiche, dans la forme que l'orchestrateur lui donne : la fin de ligne de la consigne retirée, un titre de section, un bloc structuré clôturé, une indentation d'un espace et, pour un juge, l'identifiant servi en dernière clé (L0, Q1, tableau A). **Cette forme est déclarée à l'additif, octet pour octet** (§ 2.4, § 2.5) |
+
+Le titre de la section du registre et la règle du registre vide restent des valeurs ouvertes de l'additif. Pour le proposeur, le module `requete` remplace ce que le noyau ajoutait (retrait de la fin de ligne, section « Case », section d'héritage) et dit à l'additif s'il garde le dernier octet de chaque pièce.
+
+**Le dernier octet des pièces servies — tranché par la mère (08:00Z, mot 1) : il est gardé tel quel, et l'empreinte se calcule sur la pièce entière.** Le module `requete` fait entrer chaque pièce avec tous ses octets, le dernier compris ; les séparateurs de l'enveloppe s'ajoutent après ; l'empreinte de chaque pièce, prise sur la pièce entière, se retrouve dans la composition journalisée de la requête. Ce qui suit est la question telle que la v4 la posait, gardée pour mémoire ; l'option du retrait ne vaut pas.
+- *La question.* Le noyau retire la fin de ligne finale de la pièce avant d'y ajouter la suite (`course2_v68.py`, l. 190 ; L0, Q1, tableau A). Le module `requete` remplace ce code pour le proposeur. Doit-il garder le dernier octet de la partie servie remplie et de la synthèse servie, ou le retirer comme le noyau ?
+- *Ce que dit la lettre.* La synthèse est servie « telle quelle, à l'octet » (V9, l. 72) ; le gabarit est dérivé « à l'octet » (l. 71) ; la requête rejouée « à partir des pièces scellées » doit rendre l'empreinte du journal (l. 77).
+- *Proposition du concepteur* : **le garder.** Chaque pièce entre dans la requête avec tous ses octets, le dernier compris ; les séparateurs de l'enveloppe s'ajoutent après. Ainsi l'empreinte de chaque pièce se retrouve dans la requête, sans règle de retrait à déclarer.
+- *L'autre option* : le retirer, comme le noyau, et déclarer ce retrait à l'additif ; la requête ressemble à celles de la course v9, au prix d'un octet que la lettre ne dit pas de retirer.
+- *Pour le portier et les juges*, la forme gardée du noyau (mot 8 de la mère) retire la fin de ligne de la consigne : c'est dans la forme déclarée, et la question ne s'y pose pas.
+
+Pour les quatre types d'adaptateur, les réglages non textuels du transport sont nommés à l'additif.
+
+### 5.4 Le contrat de sortie d'une fiche
+
+Les douze champs de PS, l. 19, `case` en tête, tous des chaînes. Une fiche est reconnue quand les douze sont présents. **Sous D2, plus aucune espèce ne reçoit de syntaxe de sortie** : jusqu'ici, seules les espèces servies par l'adaptateur Claude en recevaient une, par le texte système que D2 fait retirer (L0, Q1). **Le lecteur de fiches est neuf** (le lecteur existant ne lit qu'une syntaxe, L0, Q6) et lit les syntaxes déclarées à l'additif : un objet structuré par fiche ; des lignes « champ : valeur » ; et, tranché par la mère (07:46Z, mot 3), une grammaire par étiquettes ancrées, sans ordre exigé. Un champ de plus ne sort pas la fiche du contrat : il l'envoie au coffre. **Une fiche hors contrat de longueur** (un champ au-dessus de sa borne en octets, `idee` compris ; bornes à l'additif, sur la mesure) **est traitée comme illisible, donc « au coffre », comptée, jamais réparée (D13) ; c'est un rendu obtenu, au dénominateur de M3 (07:21Z, règle 1).** Aucun champ n'est caviardé avant la classification. La part « réponse illisible » se lit d'abord à l'essai par le faux fournisseur, qui n'éprouve que le lecteur, puis à la sonde, qui seule montre comment les espèces écrivent.
+
+## 6. Les épreuves
+
+Chaque garde et chaque arrêt confié au véhicule, avec son cas sain et son artefact (règle R5). « Lot » dit où l'épreuve s'écrit ; toutes sont rejouées à l'essai à blanc du lot 9. Les arrêts n° 20 à n° 26 gardent ce qui suit la course et ne sont pas dans le véhicule.
+
+### 6.1 Arrêts nommés
+
+| arrêt | cas sain | artefact | lot |
+|---|---|---|---|
+| n° 1, refus d'un classifieur | réponse normale : lue | refus de classifieur simulé par le faux fournisseur : consigné sous son nom, non relancé | 4, 9 |
+| n° 2, espèce qui refuse à la sonde | cinq acceptations : départ permis | une espèce refuse : retirée, la course ne part pas | 9 |
+| n° 3, témoin manqué | tous les témoins à leur issue attendue | un témoin dont l'issue lue diffère : « aucune course » | 9 |
+| n° 4, garde « hors case » | une fiche dans sa case passe | le témoin « hors case », puis une fiche dont un champ fermé diffère d'un octet : refusées et comptées ; une fiche hors case à champ de plus : au coffre | 5, 9 |
+| n° 5, garde du coffre | un quart exactement au coffre : la génération suivante part | une fiche de plus au coffre : elle ne part pas ; à la troisième génération : consigné | 5, 6 |
+| n° 6, plafonds | réservation égale au reste : permise | réservation d'un centime de trop : arrêt avant le poste ; poste plus cher que sa réservation : arrêt (essais de la v68 repris) | 6 |
+| n° 7, seuils d'une génération | cumul à 135 et à 120 : aiguillage et juges lancés | cumul d'un centime au-dessus : poste non lancé, consigné | 6 |
+| n° 8, consigne trop longue | requête égale à sa borne : départ | un octet de plus : départ refusé | 5, 6 |
+| n° 9, étiquette interdite au registre | registre sans étiquette : passe | une ligne qui porte chacune des cinq étiquettes, tour à tour : la génération ne part pas, aucune ligne retirée | 5 |
+| n° 10, disjonction | trente-trois cases distinctes, hors de la famille tenue à l'écart | une case de cette famille, puis une case déjà servie, plantées dans une copie du tirage : départ refusé | 1, 6 |
+| n° 11, reste sous la part | reste égal à la part : départ | un centime sous la part : refus ; relevé absent ; compte dit non payant, crédit en euros : refus nommé ; troisième relais sans recharge automatique et reste en dollars au-dessus, puis au-dessous de 17,01 | 8 |
+| n° 12, part épuisée, étendu (**D11, acceptée par la mère, telle que CL, § 5, la propose**) | un appel qui tient sous la part, sur sa clé : lancé et compté sur elle, pour chacune des quatre clés ; **cas sain neuf : le juge et le proposeur de l'espèce 3, tous deux sur Minuit, sont lancés et comptés sur Minuit, la part cumulant les deux rôles** (AC, l. 56, 72) : l'ancien artefact de V9, l. 383, est devenu un cas permis | un appel qui dépasserait la part d'un centime : refusé, arrêt nommé ; **artefact en course : l'aiguilleur présenté sur Minuit est refusé** (Minuit est sa clé à l'épreuve des témoins, non en course : la table de la course ne lit pas celle des lignes à part) ; **artefact sur table plantée** : une copie de la table des rôles et des clés, marquée artefact, jamais chargée par la course (donnée à la course, son empreinte est refusée par l'arrêt n° 14), où le juge et le proposeur de l'espèce 3 sont sur deux clés : le juge de l'espèce 3 présenté sur la clé du proposeur de l'espèce 3 y est refusé ; **mutation « routeur par espèce »** : le routeur remplacé par une recherche par espèce laisse passer cet artefact, et l'essai doit échouer ; le proposeur de l'espèce 2 présenté sur le deuxième relais (CV, l. 166) ; **un envoi adressé à Rigaud** (AC, l. 175) : refusés ; en plus, le juge de l'espèce 3 présenté sur la clé de l'aiguilleur. Les deux lignes à part, par leur table : non refusées | 4 |
+| n° 13, refus pour crédit | réponse normale | refus pour crédit simulé : arrêt nommé, qui dit la clé ; aucune bascule | 4, 8 |
+| n° 14, empreinte différente | toutes égales : départ | un octet changé dans la partie servie, puis dans la liste des motifs, puis dans une consigne, puis dans le tirage : refus qui nomme la pièce ; rejoué au départ de la génération 2, de la sonde et de l'épreuve | 6, 9 |
+| n° 15, mesure lue trop tôt | bilan à trois générations, attestation de relecture et étiquettes d'antériorité scellées présentes : calcul, une fois | bilan à deux générations sans arrêt nommé ; attestation absente ; étiquettes d'antériorité absentes ; seconde lecture : refus | 7 |
+| n° 16, motif interdit | les requêtes des trente-trois cases passent ; chaque témoin positif mord ; le gabarit, la synthèse et les témoins passent sans un refus | par famille : un motif planté en clair, puis sous une forme que la normalisation ramène : refus qui nomme la famille et le rang ; un motif qui ne mord pas sur son témoin positif : départ refusé | 2, 4 |
+| n° 17, quarantaine rompue | export aux seuls champs permis | un champ libre planté dans l'export : refus ; une branche tirée de `main` : refus | 7 |
+| n° 18, lecture hors liste | lecteur inscrit, ligne écrite | lecteur absent de la liste ; lecture sans ligne : refus, consigné | 7 |
+| n° 19, registre servi non conforme | registre aux seuls champs permis : passe | un champ de plus ; deux lignes pour une tentative ; un énoncé d'un octet de trop ; une marque de code ; une étape numérotée : refus, sans retrait | 5 |
+| n° 27, sonde illisible | réponse lisible : issue lue | refus pour crédit, puis erreur d'accès, puis réponse coupée : non relancée, départ refusé, consigné | 9 |
+
+### 6.2 Gardes sans numéro
+
+| garde | cas sain | artefact | lot |
+|---|---|---|---|
+| partie servie | le gabarit à son empreinte est rempli et envoyé au moteur simulé | le chemin de la question à la place du gabarit ; un gabarit à zéro, puis à deux emplacements : refusés | 3 |
+| ligne de case | les trente-trois lignes passent le contrôle | une valeur qui diffère d'un octet ; un identifiant numéroté sur un total ; huit caractères hexadécimaux de suite : départ refusé | 1 |
+| requête journalisée | la requête rejouée à partir des pièces scellées rend l'empreinte du journal | un octet changé après la journalisation : envoi refusé ; un appel sans ligne de journal : ne part pas | 3, 4 |
+| tirage | deux jeux égaux à l'octet | `numpy` sous 1.25 : refus ; racine recalculée sur une autre empreinte : refus | 1 |
+| portier, forme | une fiche à douze champs va au portier | le témoin à champ de plus : au coffre sans autre cause | 5 |
+| classes d'issue d'appel | une réponse à fiches : « fiches rendues » | le témoin « réponse vide motivée » et son artefact : chacun à sa classe, jamais l'arrêt n° 1 | 5, 9 |
+| régime | le régime nommé, trois générations, aucun étage : permis | deux générations ; un étage ; un autre nom ; l'additif absent ou d'une autre empreinte ; une ligne d'accord d'un autre montant : refusés avant toute écriture | 6, 8 |
+| rien ne fuit | une course simulée entière | un marqueur inerte planté dans chaque réponse simulée : absent, par recherche de programme, du dossier du run, de l'écran et de l'export | 8, 9 |
+| clé n° 30 (A1, l. 79 à 82) | une seule case est tirée, parmi les seules cases servies dont la menace est le sabotage, à son rang dans l'ordre canonique | aucune case de sabotage servie (tirage d'essai planté) : rien n'est tiré, la sortie dit « aucune » ; une demande de second tirage : refusée | 1 |
+| identifiant, clé n° 40 | les 120 mots sont distincts et passent la garde de motifs | un mot que la garde refuse (liste d'essai plantée) : le tirage s'arrête par un refus nommé, sans second tirage en silence | 1, 2 |
+| case « autre, à nommer » (V9, l. 110) | une fiche dont le champ fermé est égal à cette chaîne, la supposition nommée écrite dans `idee` : passe | la supposition nommée écrite dans le champ fermé : « hors case » ; la part « hors case » de ces cases est rendue à part (M7) | 5, 7 |
+| fiche hors contrat de longueur (D13) | une fiche dont chaque champ est à sa borne : suit son chemin | un champ d'un octet de trop, `idee` puis un autre : « au coffre », comptée, texte inchangé à l'octet dans le dossier de sortie ; mutation « couper à la borne » : l'essai doit échouer | 5 |
+| gardes héritées (§ 2.13) | un proposeur qui rend des fiches : suivi normal | onze réponses vides motivées de suite d'un même proposeur, puis trois réponses illisibles de suite du portier, puis trois d'un juge : aucun rôle arrêté, aucun appel sauté, chacune classée et comptée ; un rôle marqué arrêté par l'essai : son appel suivant est un « refus écrit », avec sa cause, compté, sans coût ni échec ; un appel plus long que le délai hérité mais sous celui du kit : lu ; une liste de modèles sous garde non vide, puis le nom d'adaptateur réservé : configuration refusée ; mutation « lecture qui rend rien sans fiche » : le rôle s'arrête, et l'essai doit échouer | 5, 6 |
+| envoi refusé sans coût (§ 2.3) | un appel permis : coût compté sur sa clé, au cumul de la génération et à M4 | un refus de l'arrêt n° 12, puis de l'arrêt n° 16 : le cumul de la génération, la garde de budget de la course et M4 sont inchangés au centime ; le journal dit « non envoyé », le numéro de l'arrêt et la clé ; le refus est compté sur la ligne de la génération ; **trois constats de plus** : l'état du suivi du rôle est inchangé, la garde A14 n'est pas déclenchée, le fichier des consommations n'a aucune ligne pour cet appel ; **mutation « refus déplacé dans `lancer` » : l'essai doit échouer** | 4, 6 |
+| rôles jamais appelés, `hors_course` (§ 2.9) | la configuration, avec ses champs inertes, est admise ; seuls les adaptateurs de la table sont exigés | un appel planté d'un lecteur d'étiquettes : refusé, « non envoyé », arrêt n° 12 nommé, jamais une erreur de dictionnaire | 4, 6 |
+| adaptateur Claude sans texte système (D2) | au faux fournisseur, derrière le vrai relais : la chaîne de la consigne extraite du corps reçu a l'empreinte du journal, pour un proposeur, le portier et un juge ; aucun texte système n'est reçu, ou celui que l'additif déclare comme transport | l'adaptateur d'origine mis à sa place : son texte système est reçu, l'égalité échoue, départ refusé | 4 (relevé avant l'additif), 9 |
+| identifiants réencodés (§ 5.2) | toutes les requêtes du portier et des juges de l'essai, et tout registre servi, passent la garde de motifs | mutation « identifiant hexadécimal du noyau » : l'arrêt n° 16 mord sur la première requête de juge | 5, 6 |
+| champ `case` et validateur neuf (§ 2.4) | une fiche aux douze champs, `case` en tête, est reconnue | la même passée au validateur du noyau : refusée (témoin du défaut) ; une fiche dont le champ `case` porte un autre identifiant : consignée, comptée à part, classe inchangée (tranché, 07:46Z, mot 2) ; un champ fermé qu'un caviardage changerait : lu tel que rendu | 5 |
+| lignes de compte du registre servi (07:21Z, règle 2) | une case sans fiche au coffre ni hors case : ses deux lignes de compte sont écrites, à zéro | mutation « ligne omise à zéro » : l'essai doit échouer | 5 |
+| mémoire anti-redite déclarée (§ 2.9) | elle tourne et écrit son fichier dans le dossier de sortie | une mémoire factice mise à sa place : classes, registre des tentatives, registre servi et mesures égaux à l'octet ; son fichier absent de toute requête | 6 |
+| configuration par génération (§ 2.9) | trois copies dérivées, chacune à son empreinte journalisée, cases de la génération seules | une copie changée d'un octet, puis une case d'une autre génération plantée : arrêts n° 14 et n° 10 | 6 |
+| arrêt n° 13 sur une clé Claude (§ 2.3) | une erreur d'accès simulée, relais sans refus pour crédit : « réponse illisible », comptée au sous-compte « cause non établie » de M6 et de la ligne de la génération, la course continue (tranché, 07:46Z, mot 4) | une erreur avec, au relais de la clé, un refus pour crédit : arrêt n° 13 nommé, qui dit la clé | 4, 8 |
+| course arrêtée (V9, l. 362) | trois générations complètes : mesures sous leur titre | arrêt provoqué pendant la génération 2 : mesures sur la seule génération 1, sous le titre « course arrêtée par [nom de l'arrêt] », M1 et M2 « sans objet » ; arrêt pendant la génération 3 : mesures sur les générations 1 et 2 | 7 |
+| plafond du relais (V9, l. 235) | chaque relais déclaré au plafond égal à la part de sa clé : départ | un relais déclaré un centime au-dessus de la part, puis à la ligne de course : départ refusé | 8 |
+| M4 sans cumul par clé (V9, l. 156) | M4 rendue par espèce et par rôle | recherche par programme, dans la sortie des mesures et l'export, des noms d'usage des clés et du champ de cumul par clé : absents ; présents au seul journal des arrêts n° 11 à n° 13 | 7 |
+| relevé de fin par clé (A69, v4, § 7, point 7) | après une course simulée, cumul et reste par clé écrits au journal des arrêts n° 11 à n° 13 | le relevé de fin absent : le manifeste de fin rend un échec | 8 |
+| aucune valeur de clé recopiée | une course simulée entière, variables de clé factices | un marqueur inerte planté comme valeur de chaque variable factice : absent, par recherche de programme, des manifestes, des journaux, de l'écran et de l'export | 8, 9 |
+| réponses brutes conservées (V9, l. 396) | chaque appel de l'essai, pour chacun des quatre relais et pour chaque type d'adaptateur, laisse sa réponse brute dans le dossier de sortie, à l'empreinte de ce que le faux fournisseur a rendu | conservation rendue impossible (dossier en lecture seule) : l'appel s'arrête, rien n'est rendu sans copie ; **les deux types d'adaptateur sont couverts** : commandes externes par l'enveloppe de L9, clés Claude par l'adaptateur neuf ; **une réponse en refus et une réponse en erreur sont conservées comme les autres** | 4, 8, 9 |
+| colonne « matière première », **« garde seule » (défaut)** | le registre servi d'essai, aux lignes inertes, est chargé à son empreinte ; seules des empreintes d'énoncé sont gardées ; la course simulée entière part et finit, les 165 requêtes de proposeur **égales à l'octet** à celles d'une course en état « éteinte » | un registre servi d'une autre empreinte ; un énoncé sur deux lignes ou à marque de code : colonne non chargée, départ refusé ; recherche par programme, dans le dossier de sortie, le dossier du run et l'écran, de chaque nom et de chaque énoncé du registre d'essai : absents | 10 a |
+| garde de la colonne : énoncé entier, par empreinte (07:51Z) | une requête qui porte le nom court d'une entrée, ou une partie d'un énoncé, ou un énoncé reformulé : **passe** (cas sain voulu : un mot repris par hasard n'arrête pas la course) ; au départ, le gabarit, la synthèse, les consignes et les témoins passent sans un refus | une ligne de requête égale en entier à un énoncé de la colonne, en clair puis sous une forme que la normalisation ramène : « non envoyé », coût nul, arrêt nommé ; le même énoncé comme champ d'une ligne du registre servi : la génération ne part pas ; une pièce fixe qui porte un énoncé entier : départ refusé ; mutation « garde retirée » : l'essai doit échouer ; **taux de faux refus de l'essai rapporté** | 10 a |
+| états de l'interrupteur et règle d'allumage | l'état 1 sans autre condition que son empreinte ; l'état 0 sur le mot de la mère | l'état 2 sans la ligne d'accord de Lazar qui nomme l'interrupteur, l'état et l'empreinte, sans additif épinglé, sans devis, ou par une variable d'environnement : refusé avant toute écriture | 10 a |
+| branche orpheline, sans l'ouvrir (§ 2.15) | deux dépôts d'essai : une branche sans ancêtre commun avec `main` : admise | une branche tirée de `main` : l'état 2 est refusé ; l'outil n'ouvre aucun fichier de la branche (constat : aucune lecture d'objet de fichier) | 7, 10 b |
+| lecture de fin : routage et ligne à part (§ 2.14) | à l'essai, les appels de fin des deux juges partent sur leurs clés, par la table à part, et sont comptés sur la ligne à part | les parts de la course inchangées au centime après la lecture de fin ; un appel de fin présenté par la table de la course : refusé ; la ligne à part à son plafond : arrêt nommé | 10 b, facultatif |
+| réencodage, **dans les deux sens** (§ 5.2 ; 07:46Z, mot 1) | pour six octets puis pour cinq : encoder puis décoder rend les octets ; décoder puis encoder rend le mot ; les bornes (tous les octets à zéro, tous à 255) | un mot hors alphabet (une lettre hexadécimale, une majuscule, un chiffre) ; un mot de mauvaise longueur ; un mot dont l'entier dépasse la borne : refusés, jamais corrigés ; mutation « ordre des octets inversé » : l'essai doit échouer | 5 |
+| portier neuf (§ 2.4) | une fiche : étiquette « niveau de l'idée », passeport délivré ; une réponse sans fiche : chacune des trois étiquettes à sa classe | une étiquette du portier du noyau (`a_corriger`), une étiquette hors liste, deux étiquettes, aucune : « illisible », la fiche « au coffre », comptée à part ; l'aiguilleur du noyau : jamais appelé (compte de ses appels nul) | 5 |
+| surcharge de `juger` (§ 2.5) | une fiche « passée » munie du passeport du portier neuf : les deux juges sont appelés, sous identifiant réencodé de quatorze lettres | une fiche sans passeport du portier neuf, même munie d'un passeport de l'aiguilleur du noyau : arrêt ; mutation « identifiant du noyau » : l'arrêt n° 16 mord | 6 |
+| ce que rend un refus écrit, par rôle (§ 2.13 ; 07:51Z) | aucun rôle arrêté : aucun refus écrit | un rôle marqué arrêté par l'essai : pour un proposeur, case « non jouée », comptée ; pour le portier, la fiche **« au coffre », classe écrite**, comptée à part, au dénominateur de M3 ; pour un juge, verdict absent, compté ; dans les trois cas, aucun coût, aucune ligne de consommation ; aucune fiche rendue sans classe à la fin de la génération | 5, 6 |
+| A3 et A14 désactivées par écrit (§ 2.13 ; 08:00Z, mot 4) | la configuration porte, pour A3 et pour A14, la valeur que l'additif déclare sous le nom de désactivation : départ ; à l'essai, plus de onze réponses sans texte de suite d'un proposeur, du portier, d'un juge : aucun rôle arrêté, chacune classée « réponse illisible » et comptée ; un appel de plus de 1 800 secondes et de moins de 3 600 : lu ; un appel de plus de 3 600 : coupé, « réponse illisible » | la valeur héritée (trois échecs ; 0,34) ou toute autre valeur que celle de l'additif : configuration refusée au départ, par son nom ; mutation « vérification au départ retirée » : l'essai doit échouer | 6, 8 |
+| garde de remplacement sur les refus écrits (§ 2.13) | aucun refus écrit : aucun arrêt ; dix refus écrits d'un même proposeur dans une génération : comptés, la course continue ; le compte repart de zéro à la génération suivante | un proposeur marqué arrêté par l'essai dès sa première case : onze refus écrits, puis **arrêt nommé de la course**, qui dit le rôle ; pour le portier marqué arrêté : chaque fiche « au coffre », et l'arrêt n° 5 à la fin de la génération ; pour un juge marqué arrêté : verdicts absents comptés et rapportés, aucun arrêt | 6 |
+| A17, passeport manquant (§ 2.13) | une fiche « passée », munie du passeport du portier neuf : jugée | une fiche sans ce passeport présentée à un juge : arrêt nommé de la course | 6 |
+| A2, arrêt nommé de course (07:46Z, mot 6) | modèle servi égal au modèle demandé : la course continue | modèle servi absent, puis changé, pour un proposeur ; version servie d'un juge qui change entre deux fiches : arrêt nommé de la course, qui dit le rôle et la cause ; aucune suite avec un rôle arrêté | 4, 6 |
+| somme des plafonds des relais d'une clé (07:46Z, mot 7) | deux processus de relais d'une même clé, plafonds dont la somme égale la part : départ | somme d'un centime au-dessus de la part : départ refusé | 8 |
+| grammaire par étiquettes ancrées (07:46Z, mot 3) | la même fiche d'essai, inerte, dans chaque parure, et **ses douze champs dans un autre ordre** : reconnue à chaque fois, aux mêmes valeurs | la valeur libre d'un champ qui contient le nom d'un autre champ : la fiche est lue juste, ou refusée, jamais lue fausse ; un champ en double ; onze champs : non reconnue ; rien n'est complété ni réparé | 5 |
+| mutations | — | pour chaque garde, la garde retirée fait échouer son essai (manière de la v68, R68, § 4) | chaque lot |
+
+### 6.3 L'essai à blanc de bout en bout, et la mesure des consignes
+
+1. **En moteur simulé**, par le lanceur : sonde de refus, épreuve des témoins, trois générations, mesures, export. Constats, par comptes : trente-trois cases servies, 165 appels de proposeur, registre servi lu aux générations 2 et 3, les trois classes de fiche et les quatre classes d'appel toutes vues, bilan scellé, cumul sous le plafond.
+2. **Par les relais, contre le faux fournisseur** : la même course ; égalité, appel par appel, entre l'empreinte du journal et l'empreinte du texte reçu, transport retiré ; coût compté sur la clé du rôle ; aucune requête reçue sur la clé hors course.
+3. **Chaque arrêt provoqué une fois** dans une course simulée à part, et son nom relu au bilan.
+4. **Le taux de faux refus de la garde de motifs** sur les registres servis et sur les requêtes du portier et des juges de l'essai (réserve de V9, l. 387) : rapporté, non corrigé.
+5. **La mesure des consignes sans appel** (§ 2.12), dont la sortie est scellée et citée par l'additif.
+
+L'essai est joué par la session de l'organisme et constaté par le vérificateur ; il ne lit aucune sortie d'aucun modèle.
+
+## 7. Le découpage en mandats de code
+
+Un lot est écrit par un développeur O et vérifié par un vérificateur S, sur un mandat tiré de cette conception. Fichiers neufs seulement ; paquet, manifeste et programme d'application à la manière de la v68 (R68, § 2). Chaque lot rend ses essais, ses mutations et son rapport.
+
+**Le lot 0 est fait** : relevé `docs/notes/ideation-nouvelles-attaques-v1/lot-0-vehicule-na-v1/releve-lot-0-vehicule-na-v1.md` (`10ac79ecb0e064f5b5ea80ddb060ae37e303d2d84ff242f653f4cccbd7ff753e`, noté L0), quatorze réponses, dont CL2 a vérifié à la source les cinq plus lourdes. **Les renvois de cette v3 suivent la numérotation du relevé** : Q1, texte ajouté par les adaptateurs ; Q2, noms des adaptateurs et routage ; Q3, étapes ; Q4, cases et mémoire ; Q5, statuts ; Q6, lecteur et validateur de fiches ; Q7, faux fournisseur ; Q8, coûts par rôle ; Q9, relais sur trois générations ; Q10, réponses brutes ; Q11, appels en suite ; Q12, gardes héritées ; **Q13, coût d'un envoi refusé ; Q14, structure du lanceur v9**. La v2 numérotait autrement ses questions 12 et 13.
+
+| lot | contenu | dépend, en code, de | dépend, hors code, de | arrêts et gardes éprouvés |
+|---|---|---|---|---|
+| 0 | relevé du code, sans écriture : **fait** | — | — | — |
+| 1 | `tirage` : cases, clés 0, 1, 2, 3, 30 et 40 (les deux dernières tirées au même geste), identifiants de case, réserve, C1, ligne de case et son contrôle | — | pour l'épreuve du mot refusé : une liste de motifs d'essai ; pour le jeu scellé : la liste des motifs scellée | n° 10 (premier temps) ; ligne de case ; tirage ; clés n° 30 et n° 40 |
+| 2 | `garde_motifs` : programme, format de la liste, témoins positifs | — | **la liste des motifs**, rédaction du modèle F, en parallèle ; l'épreuve par famille de l'arrêt n° 16 se joue sur la liste réelle, contre le gabarit, la synthèse et les témoins | n° 16 |
+| 3 | `requete` et `journal` : partie servie, enveloppe sans ajout (D2), composition par rôle, forme de la fiche servie au portier et aux juges, journal d'ajout seul, lignes « non envoyé » et « non lancé », refus écrits | 1, 2 | la forme de la ligne de case, de l'enveloppe et de la fiche servie, à l'additif (un brouillon suffit pour écrire) | partie servie ; requête journalisée ; n° 8 (mesure de la taille) |
+| 4 | **la surcharge d'`appel`** (mélange `AppelGardeNA` : routage, part, motifs, journal, égalité, refus avant le noyau, lecture des statuts et de l'état du relais) ; **l'adaptateur Claude neuf**, sans texte système, avec sa conservation des réponses brutes ; tables des lignes à part ; **relevé, au faux fournisseur derrière le vrai relais, de ce que l'outil envoie sans texte système** | 3 | l'interface avec le lot 6, écrite au mandat ; **le relevé au faux fournisseur est dû avant l'écriture de l'additif** | n° 1, n° 12 (D11), n° 13, n° 16 (au point d'envoi) ; envoi refusé sans coût ; `hors_course` ; réponses brutes des clés Claude |
+| 5 | `lecteur_fiches` (syntaxes déclarées, grammaire par étiquettes ancrées sans ordre exigé), `contrat_fiche` (validateur neuf, sans caviardage), **`portier`, code neuf : sa lecture des seules étiquettes de D3, ses deux sortes d'appel, ses passeports, son journal**, `identifiants` (encodage dans les deux sens), `registre`, `verifier_registre_servi` | 1, 3 | **les consignes du portier et des juges (D3)**, en brouillon pour écrire ; les bornes en octets, en brouillon | n° 4, n° 5, n° 8, n° 9, n° 19 ; classes d'appel ; champ `case` ; « autre, à nommer » ; hors contrat de longueur ; lignes de compte à zéro |
+| 6 | `course` : classe de génération (mélange du lot 4 devant `GenerationV68`), proposition neuve, six étapes neutralisées, `fournisseurs_requis`, copie de la configuration par génération, gardes héritées et refus écrits avec ce qu'ils rendent par rôle, A3 et A14 désactivées par écrit et vérifiées au départ, garde de remplacement sur les refus écrits, A17 en arrêt nommé, **étape « aiguillage » surchargée, surcharge de `juger`** (passeport du portier neuf, identifiant réencodé, arrêt d'A2), mémoire déclarée ; lanceur de l'orchestrateur ; `simulation` ; configuration de course | 3, 4, 5 | les valeurs de l'additif en brouillon (bornes, seuils des gardes héritées, délais) | n° 5, n° 6, n° 7, n° 10, n° 14 ; régime ; gardes héritées ; mémoire ; identifiants dans les requêtes des juges |
+| 7 | `mesures`, export hors quarantaine, deux outils de quarantaine, chaînes de requête de la classe (i) de l'antériorité | 5 ; **les formats du lot 6** | le format des attestations de relecture et des étiquettes d'antériorité, convenu avec la mère | n° 15, n° 17, n° 18 ; course arrêtée ; M4 sans cumul par clé |
+| 8 | lanceur de course, **rendu comme différentiel contre L9** : table neuve des noms d'adaptateur à la place de celle de L9 (L9, l. 539, 540) et contrôles nommés réécrits ; plafond de relais égal à la part ; bornes pour trois générations ; coûts par rôle lus dans chaque génération ; **fuite de L9, l. 2667 à 2669, fermée** ; relecture par comptes | 6 | **l'additif du véhicule scellé**, pour l'épinglage ; la pièce de relevés, par un exemplaire d'essai | n° 11, n° 13 ; régime ; rien ne fuit ; plafond du relais ; relevé de fin ; aucune valeur de clé |
+| 9 | `sonde_refus`, `epreuve_temoins`, essai à blanc de bout en bout, mesure des consignes sans appel | 7, 8, 10 a | **la liste des motifs scellée ; les consignes scellées (D3) ; les témoins scellés et leur table**, écrits par un agent de la mère, qui ne se scellent qu'après le tirage joué et scellé (§ 5.2) ; l'additif scellé | n° 2, n° 3, n° 4, n° 14, n° 27 ; § 6.3 ; réponses brutes conservées |
+| **10 a, obligatoire** (mère, 07:51Z) | `matiere_premiere`, chargement et garde : chargeur du registre servi `3bcb94e6…` (empreintes d'énoncé seules), interrupteur à trois états, garde de la colonne par énoncé entier et par empreinte, contrôle des pièces fixes au départ, taux de faux refus (§ 2.14) | 3, 4, 5 | pour l'écrire : rien, sur un registre d'essai aux lignes inertes, sans ouvrir le registre réel ; pour la course : le numéro de l'arrêt à l'additif du véhicule ; la ligne de l'état 1 et de son empreinte dans la pièce de relevés, qui vaut complément de valeurs | garde de la colonne ; états de l'interrupteur |
+| 10 b, **facultatif** | lecture de fin : programme de lecture, table de routage et ligne à part, table de comparaison (§ 2.14, § 2.15) ; voie (a) seule | 10 a, 7 | pour l'allumer : la ligne d'accord de Lazar, un additif à la V9 contre-lu et scellé, le devis de la lecture de fin, les lecteurs inscrits, la branche vérifiée orpheline | lecture de fin ; branche orpheline |
+
+**Le lot 10 a est nécessaire à la course** depuis que « garde seule » est le défaut : l'essai à blanc du lot 9 le joue. Il n'est pas sur le chemin critique s'il part avec les lots 6 et 7. Le lot 10 b ne s'écrit que si la mère le demande ; aucun autre lot n'en dépend.
+
+**Ordre.** 1 et 2 ensemble ; puis 3 ; puis 4 et 5 ensemble ; puis 6, **avec le lot 10 a** ; puis 7 et 8 ensemble ; puis 9. **Le lot 7 dépend des formats du lot 6** : il se joue après lui, sauf si ces formats sont figés au mandat du lot 6, sur le § 5.
+
+**Chemin critique.** Sa suite ne change pas ; le lot 5, à 6 heures, y passe devant le lot 4, à 5 : **2, 3, 5, 6, 8, 9**, soit 2 + 2 + 6 + 7,5 + 6,5 + 4,75 = **28,75 heures** de lots, le lot 0 étant fait (28,25 à la v4 ; la demi-heure de plus est la voie 1 d'A3, au lot 6). Le lot 10 a, de l'ordre de 3 heures, n'y entre pas s'il part avec les lots 6 et 7 ; il y entrerait s'il partait après eux. Trois choses s'y ajoutent, **avant tout mandat** : cette v5 et sa vérification, après la v3, la v4 et leurs contre-lectures, de l'ordre de 3 heures en tout ; les mandats des lots 1 à 5, que ni A3 ni les mots de 08:00Z ne touchent, peuvent partir sans l'attendre (CT4, verdict) ; et, avant l'additif, le relevé au faux fournisseur du lot 4. Hors code, trois pièces sont sur ce chemin si elles tardent : les consignes de D3 et les témoins scellés avant le lot 9, l'additif scellé avant l'épinglage du lot 8.
+
+**Le lot 8 se rend comme un différentiel** (CL, § 3.1 ; base : L0, Q14). Le développeur rend : le fichier neuf ; le différentiel lisible contre L9 (`1b47c1cf…`) ; la liste de ses fonctions, en trois colonnes : gardées à l'octet, retirées, ajoutées ou changées, chacune avec sa raison. La liste « propre à la v9, à retirer » et « repris » du relevé (L0, Q14) en est le point de départ. Le vérificateur S vérifie le différentiel et la liste, rejoue les essais, et ne relit en entier que ce qui est ajouté ou changé.
+
+## 8. Le calendrier
+
+Estimation en heures de session, sans appel payant, **rechiffrée lot par lot à la v3** sur le relevé du lot 0 et sur CL2, § 4. Repères lus : la v68, huit fichiers et 2 096 lignes, écrite et essayée en trente minutes d'horloge, contre-lue en douze ; les textes de cette course ont demandé de trois à cinq allers et retours chacun.
+
+| lot | développeur O | vérificateur S | corrections et nouvelle vérification | somme | ce qui a changé depuis la v2 |
+|---|---|---|---|---|---|
+| 0 | — | — | — | fait | — |
+| 1 | 0,75 | 0,5 | 0,5 | 1,75 | — |
+| 2 | 1 | 0,5 | 0,5 | 2 | — |
+| 3 | 1 | 0,5 | 0,5 | 2 | — |
+| 4 | 2,75 | 1,25 | 1 | **5** (2,5 à la v2) | surcharge d'`appel`, adaptateur Claude neuf et sa conservation, statuts et état du relais, relevé au faux fournisseur |
+| 5 | 3,25 | 1,5 | 1,25 | **6** (5 à la v3 ; 3,75 à la v2) | lecteur et validateur neufs, champ `case`, pas de caviardage ; **à la v4 : portier neuf, encodage dans les deux sens** |
+| 6 | 4 | 2 | 1,5 | **7,5** (7 à la v4 ; 6 à la v3 ; 4,75 à la v2) | configuration par génération, six étapes neutralisées, `fournisseurs_requis` et `hors_course`, mémoire déclarée, gardes héritées en refus écrits, délais ; à la v4 : surcharge de `juger`, étape « aiguillage », ce que rend un refus écrit, arrêt d'A2 ; **à la v5 : A3 et A14 désactivées par écrit et vérifiées au départ, garde de remplacement sur les refus écrits, A17** |
+| 7 | 1,75 | 0,75 | 0,5 | 3 (2,75) | — |
+| 8 | 3,5 | 1,75 | 1,25 | **6,5** (5,5) | table des noms, coûts par génération, fuite de L9 fermée |
+| 9 | 2,5 | 1,25 | 1 | 4,75 | — |
+| **10 a** | 1,5 | 0,75 | 0,75 | **3** | neuf comme lot obligatoire à la v4 : chargement et garde de la colonne |
+| **somme** | **22** | **10,75** | **8,75** | **41,5** | |
+| 10 b, facultatif | 1 | 0,5 | 0,5 | 2 | lecture de fin de la colonne ; hors de la somme |
+
+Autour du code, sur les places des modèles F et O et sur la mère :
+
+| travail | heures |
+|---|---|
+| la conception (v3, puis cette v4 courte) et ses contre-lectures, avant tout mandat | 3 |
+| dix mandats de code, tirés de cette conception | 3 |
+| consignes du portier et des juges (D3) : deux textes servis, passés à la garde de motifs, contre-lus, attestés « aucune recette », scellés | 3 à 4 ; hors du chemin critique s'ils partent tout de suite |
+| liste des motifs, jouée sur le gabarit, la synthèse et les témoins | 1,5 |
+| additif du véhicule, sa contre-lecture, ses corrections ; il attend le relevé au faux fournisseur du lot 4 | 3 |
+| contre-lecture du véhicule entier et confirmation de la répartition (règle R2) | 2,5 |
+| jeu du tirage, de l'essai à blanc et de la mesure, constats | 1,5 |
+| **somme** | **17,5 à 18,5** |
+
+**Lecture.** 41,5 heures de lots et 18 heures autour restent **une borne basse, non une attente** : un seul tour de correction par lot, aucune attente d'un scellement, aucune limite d'usage atteinte. Sur le chemin critique, de l'ordre de 29 heures de lots, précédées de la conception et de ses contre-lectures, suivies de la contre-lecture du véhicule entier et du scellement de l'additif. **L'attente honnête reste de 48 à 60 heures d'horloge** (CL3, § 5 : les deux heures de plus du chemin tiennent dans cette fourchette, vers son haut) : un véhicule contre-lu le 24 novembre au plus tôt, et **un départ le 25 ou le 26**, après la pièce de relevés, les deux lignes à part et la lettre de départ. La durée de la course elle-même ne m'est pas connue.
+
+**Pour l'échéance de GO-2026-11-20-67.** Le 22 novembre ne tient pas. **La mère demande à Lazar une échéance au 2026-11-27 : demandée, non accordée.** Si elle l'est, elle tient avec une marge mince : ce n'est pas une demande large, et un seul lot rendu deux fois sur le chemin critique la consomme.
+
+Ce qui peut allonger : la place du modèle F, déjà interrompue par sa limite d'usage (OC, l. 44) ; le relevé au faux fournisseur, s'il montre qu'un texte par défaut part et que la mère doit trancher ; les pièces hors code du § 7 (consignes, témoins, additif), si elles tardent ; les propositions du § 9 qui touchent un texte servi (points 20 et 21) ; D8 et D12, qui attendent Lazar, sans bloquer l'écriture d'aucun lot.
+
+**La colonne « matière première » (§ 2.14)** entre dans ces chiffres depuis la v4 pour son chargement et sa garde : le lot 10 a, obligatoire, de l'ordre de **3 heures**, joué avec les lots 6 et 7. Sa lecture de fin, le lot 10 b, reste facultative : de l'ordre de 2 heures, plus l'additif à la V9, sa contre-lecture, le devis et la ligne d'accord de Lazar, si elle est allumée. Les développeurs des lots 10 a et 10 b n'ouvrent ni le registre servi réel, ni la branche : ils écrivent et éprouvent sur un registre d'essai. La mère ayant retenu la lecture B (08:00Z), le lot 10 a n'attend plus aucun mot : il lui faut seulement la ligne de l'état 1 dans la pièce de relevés.
+
+## 9. Ce que la lettre ne fixe pas
+
+Chaque point est repris de l'inventaire, de son rapport ou du gabarit, ou trouvé ici. Depuis la v2, chacun dit son état : **tranché par la mère**, **décision de Lazar**, ou **proposition marquée, jamais tranchée**. Les trois premiers étaient neufs à la v1.
+
+1. **Les consignes du portier et des juges** *(neuf à la v1)*. La V9 gèle ce que reçoit un proposeur ; elle ne dit rien du texte que reçoivent le portier et les juges, et l'inventaire ne le compte pas. Les consignes de la course v9 portent une autre question et d'autres classes. Sans elles, ni l'épreuve des témoins, ni la course ne peuvent partir ; ce sont des pièces fixes servies, donc sous l'arrêt n° 14 et la garde de motifs. **Tranché par la mère (D3)** : c'est un manque neuf ; elles sont écrites par le modèle F et contre-lues. Restent des propositions du concepteur : deux consignes courtes, contre la partie servie, aux seules étiquettes fermées du § 2.4, attestées « aucune recette » et scellées par la mère ; les items des juges réduits à un rang.
+2. **La syntaxe de la sortie, et ce que l'enveloppe peut porter** *(neuf à la v1)*. La partie servie nomme les champs d'une fiche, non la syntaxe où les écrire (PS, l. 19). La V9 dit « rien d'autre de fixe » (l. 73) et confie l'enveloppe à l'additif (l. 77, 254). **Tranché par la mère (D2) : rien n'est ajouté à l'enveloppe.** Conséquences écrites : le texte fixe de rôle de l'adaptateur est retiré (§ 2.3) ; le lecteur de fiches accepte deux syntaxes (§ 5.4) ; la part « réponse illisible » de l'essai et de la sonde est regardée avant le départ.
+3. **Le « nom » d'une ligne du registre servi** *(neuf à la v1)*. La V9 sert, pour une tentative passée, « son nom » et « son énoncé ramené à une ligne » (l. 63). La fiche de la question v5 n'a ni champ de nom, ni champ d'énoncé (PS, l. 19) ; son champ `filiation` cite « l'identifiant d'une fiche du registre servi ». **Tranché par la mère (D5)** : le nom est l'identifiant de la fiche ; l'énoncé est le champ `idee` sur une ligne. **Tranché par la mère (D13, 07:10Z)**, après que la contre-lecture a montré que la v1 débordait de D5 (CL, § 6.2) : une fiche hors contrat de longueur est traitée comme illisible, donc « au coffre », comptée, jamais réparée. **Tranché par la mère (07:21Z, règles 1 et 2)** : cette fiche est un rendu obtenu et compte au dénominateur de M3 ; **les lignes de compte du registre servi s'écrivent toujours, compte nul compris**, à l'inverse de ce que ma v2 proposait. Reste une proposition : les lignes de compte sont permutées avec les autres par les clés 12 et 13. **L'identifiant lui-même** est réencodé pour passer la garde de motifs : accepté par la mère (07:46Z, mot 1), règle exacte au § 5.2.
+4. **Où se porte la clé de tirage de l'identifiant.** **Tranché par la mère (D4 ; 07:21Z, règle 3)** : la clé n° 40 va dans la table des clés de l'additif, à côté de la n° 30, tirée au même geste et consignée.
+5. **L'ordre du portier, et ce qu'on appelle « le portier ».** **Tranché par la mère (D6)** : forme, modèle, hors case ; une réponse illisible du modèle portier va au coffre. Elle se compte à part, parce qu'elle pèse sur la garde du coffre ; le modèle n'est pas appelé pour une fiche que le programme de forme a déjà envoyée au coffre.
+6. **L'arrêt n° 1 en course.** « Le tour s'arrête » (V9, l. 372) ne dit pas si c'est l'appel, le rôle ou la course. **Décision de Lazar (D8), en attente.** *Proposition du concepteur, que le code porte d'ici son mot comme une valeur de configuration* : l'appel ; il est consigné sous le nom de l'arrêt, non relancé, sans reformulation ; la course continue et le rapport le dit par espèce. À la sonde, il arrête le départ.
+7. **La lecture « accepte » ou « refuse » à la sonde.** La lettre la confie à « la même garde » sans la décrire ; la table des lignes à part ne prévoit aucun appel de portier à la sonde (CV, l. 127 à 130). **Tranché par la mère (D7)** : par programme seul. Au moins une fiche complète au contrat, dans l'une des deux syntaxes : « accepte ». Statut de refus d'un classifieur : arrêt n° 1. Tout le reste, texte sans fiche compris : « réponse que la garde ne sait pas lire », arrêt n° 27. Restent des propositions : la mère demande alors une étiquette à la session à part sans lire la réponse ; la borne de sortie de la sonde est mise assez haut pour une fiche entière.
+8. **La case que portent les témoins** (gabarit, § 6, point 9). *Proposition* : la première case de la réserve (§ 5.2).
+9. **Le devis final** (inventaire, n° 9). *Proposition* : la mesure des consignes sans appel et la pièce de relevés en tiennent lieu, si la mère le dit ; le véhicule rend les chiffres, il n'écrit pas de devis.
+10. **Le pire d'un appel d'aiguilleur et de juge, et où il s'écrit** (rapport de l'inventaire, § 3, point 4). *Proposition* : à l'additif du véhicule, sur la mesure ; candidats du § 2.3.
+11. **Les mesures « lues une fois »** (V9, l. 315) — **nœud de Lazar (D12) ; d'ici son mot, la lettre de la V9 est gardée.** La v1 proposait deux lectures parmi les « autres points » : c'était un écart à un préenregistrement scellé, non porté comme décision (CL, § 6.3). **Ce que le véhicule fait** : une seule lecture de toutes les mesures, refusée tant que l'attestation de relecture et les étiquettes d'antériorité ne sont pas scellées, refusée une seconde fois (§ 2.8). **L'option, notée à part, soumise à Lazar, que le véhicule ne porte pas** :
+    - *Décision.* Les mesures sont-elles lues en deux fois, M5 plus tard que les autres ?
+    - *Enjeu.* M5 dépend de la lecture d'antériorité, qui suit de loin la relecture « aucune recette ». À la lettre, aucune mesure n'est lue avant la fin de cette lecture ; M1 à M4, M6, M7, C1 et I1 attendent donc M5.
+    - *Options.* (a) Garder la lettre : une lecture, après la lecture d'antériorité ; aucun écart ; les mesures de l'héritage et du coût attendent. (b) Deux lectures scellées, chacune unique : M1 à M4, M6, M7, C1 et I1 après la relecture, M5 après l'antériorité ; les premières sont connues plus tôt ; c'est un écart à un texte scellé, par additif contre-lu, et la première lecture est faite avant que les lecteurs d'antériorité aient fini.
+    - *Recommandation.* (a), confiance 0,6 : rien dans la course ne dépend de connaître M1 plus tôt, et (b) ouvre un chemin par où un chiffre lu pourrait toucher une lecture en cours. Je passerais à (b) si la lecture d'antériorité devait durer des semaines.
+    - *Défaut.* Aucun : c'est un écart à un préenregistrement scellé. Sans mot, (a) vaut, puisque c'est la lettre.
+12. **L'ordre entre les témoins et la garde de motifs** (inventaire, § 3). *Proposition* : brouillons des deux, garde jouée sur les témoins en moteur simulé au lot 2, puis scellement ensemble.
+13. **Les cinq programmes du § 4.10 de l'inventaire.** *Propositions* : les chaînes de requête de la classe (i) de l'antériorité, dans le véhicule, au lot 7, parce qu'elles se calculent « à partir de la case » et du tirage ; le programme de la condition (c) de l'additif 1 et celui d'ouverture de la branche, hors du véhicule, dus après le départ, sauf les deux contrôles du § 2.6 ; le programme de la pièce de relevés, hors du véhicule, à la mère.
+14. **La mémoire qui évite les redites** (OC, l. 27), que la V9 ne reprend pas. La v1 et la v2 la disaient « non jouée » : c'est faux, elle tourne dans une fonction que la classe neuve ne surcharge pas (L0, Q4). *Ce que la v3 écrit* : elle tourne, est déclarée, n'est servie à personne et n'entre ni dans les classes, ni au registre, ni dans les mesures ; une épreuve le tient (§ 2.9, § 6.2). L'ôter demanderait de surcharger cette fonction : plus lourd, non retenu.
+15. **La branche de quarantaine avant les deux lignes à part** (rapport de l'inventaire, § 3, point 8). Le véhicule n'en dépend pas : il écrit dans un dossier de sortie hors de l'arbre de travail. *Proposition* : le dossier suffit pour les lignes à part ; la branche est due avant la première lecture.
+16. **Qui lance le véhicule.** La session de l'organisme le lance et ne doit rien lire d'une fiche. *Proposition* : la règle commune du § 2 et l'épreuve « rien ne fuit » la tiennent ; la mère dit si cela suffit, ou si le lancement revient à la session à part.
+17. **Un artefact de l'arrêt n° 12 a perdu son objet.** La V9 éprouve « un appel du juge de l'espèce 3 présenté sur la clé du proposeur de l'espèce 3 » (l. 383), et l'additif 1 garde ce cas (A1, l. 169). Depuis l'additif au complément, ces deux rôles sont sur la même clé (AC, l. 56) : l'artefact ne peut plus être refusé. L'artefact que la v1 proposait à sa place (« le juge de l'espèce 3 sur la clé de l'aiguilleur ») n'éprouvait qu'« un rôle sur une autre clé », et perdait l'objet de l'arrêt, que la table soit lue **par rôle, non par espèce** (V9, l. 402 ; CL, § 5). **Tranché par la mère (D11, 07:10Z) : la proposition du contre-lecteur est acceptée telle quelle** : un cas sain neuf (le juge et le proposeur de l'espèce 3 sur Minuit, comptés sur Minuit) ; un artefact en course (l'aiguilleur présenté sur Minuit, refusé) ; un artefact sur une table plantée que la course ne charge jamais, où le juge de l'espèce 3 présenté sur la clé du proposeur de l'espèce 3 est refusé ; la mutation « routeur par espèce », qui doit faire échouer l'essai. L'artefact de la v1 reste en plus, avec ceux du complément et de son additif (CV, l. 166 ; AC, l. 175). Lettre de l'épreuve : § 6.1, ligne du n° 12.
+18. **La colonne « matière première »** *(neuf à la v2 ; la matière existe depuis 07:39Z)*. **Tranché par la mère (07:46Z, mot 9 ; 07:51Z)** : « garde seule » par défaut ; le lot 10 a obligatoire ; la comparaison de la garde par énoncé entier et par empreinte ; seules les visées comparées ; les lecteurs inscrits ; les juges de fin sont les deux lecteurs d'antériorité et les deux juges ; la lecture de fin au mot de Lazar et à sa ligne. **Tranché aussi (08:00Z)** : la l. 83 de la V9 en lecture B, le registre servi étant une entrée et la ligne visant les sorties ; l'état 1 sans additif à la V9, écrit à la pièce de relevés, qui vaut complément de valeurs ; l'état 2 sous additif, arrêt n° 14, devis et mot de Lazar. **Reste, pour la mère** : l'affinage, voie (a) par défaut.
+19. **Le sort des gardes héritées du noyau** *(neuf à la v2)*. **Tranché par la mère** : un refus écrit, compté, jamais un échec du rôle ni un coût (07:21Z, règle 4) ; A2 est un arrêt nommé de course (07:46Z, mot 6) ; une fiche dont l'appel au portier est refusé va « au coffre », classe écrite, comptée (07:51Z). **A3 et A14 sont désactivées par écrit, par la voie 1** (08:00Z, mot 4), avec une garde de remplacement sur les refus écrits ; A17 est un arrêt nommé. Le sort de chacune est au § 2.13. Restent des valeurs à écrire à l'additif : la valeur de désactivation d'A3, les numéros des arrêts neufs (A2, A17, onze refus écrits, garde de la colonne).
+20. **Une espèce qui répond en prose** *(neuf à la v3 ; CL2, § 3.10)*. Sous D2, plus aucune espèce ne reçoit de syntaxe de sortie ; sous D7, la sonde ne lit « accepte » qu'au vu d'une fiche complète. Une espèce qui répond en prose, sans fiche reconnue, déclenche l'arrêt n° 27 et bloque le départ ; en course, ses réponses seraient « illisibles », à 6,05 USD au pire l'appel. Je ne rediscute ni D2 ni D7. **Tranché par la mère (07:46Z, mot 3), en trois tenues** : (i) le lecteur lit une **grammaire par étiquettes ancrées**, déclarée à l'additif : une fiche est reconnue dès que les douze noms de champ du contrat apparaissent chacun une fois comme étiquette, quelle que soit la parure et **quel que soit l'ordre** (ma v3 exigeait « dans l'ordre » : c'était une règle neuve, que la partie servie ne porte pas ; **retiré, sur le mot de la mère de 07:51Z : on garde la lettre**) (objet structuré, lignes « champ : valeur », titres, gras, puces) ; rien n'est servi de plus, et le lecteur ne répare ni ne complète rien ; (ii) le taux d'illisibles se lit d'abord au faux fournisseur, qui n'éprouve que le lecteur sur des textes d'essai inertes dans chaque parure, puis à la sonde, qui seule montre comment chaque espèce écrit ; (iii) à la sonde, un texte sans fiche reconnue reste l'arrêt n° 27, à la lettre de D7 : la mère demande alors à la session à part une étiquette fermée, sans lire la réponse, et dit par une ligne neuve si l'espèce part. L'autre voie, dire la syntaxe dans une version neuve de la partie servie, est un nœud de Lazar.
+21. **Les propositions de la v3, et leur état à la v4.** Les neuf propositions du rapport v3 sont tranchées par la mère (07:46Z ; § 0 bis). Le § 9 de la v3 en listait sept sous ce point, dont une que le rapport ne comptait pas : **le dernier octet des pièces servies**. **Tranchée depuis (08:00Z, mot 1) : il est gardé**, l'empreinte prise sur la pièce entière (§ 5.3). Sont tranchés aussi à 08:00Z, et retirés des points ouverts : la l. 83 de la V9, l'additif de l'état 1, la manière de traiter A3. **Restent ouvertes à la v5, pour la mère** : les lignes de compte permutées avec les autres (point 3) ; la case des témoins (point 8) ; l'affinage de la colonne (point 18) ; et les autres propositions anciennes de ce § 9 qui n'ont pas reçu de mot (points 9, 10, 12, 13, 15, 16).
+
+## 10. Réserves du concepteur
+
+1. **J'ai lu le code en partie.** En entier : `course2_v68.py`, `noyau_v56.py`, `aiguilleur_v53.py`. En partie : `course2_v53.py` (l. 1 à 330), L10 (l. 1 à 140, 496 à 565, 2889 à 3160, et la liste de ses fonctions), E9 (l. 1 à 120). Non lus par moi : les adaptateurs, les relais, `ideation_v8.py`, `budget_v56.py`, les fichiers de fiches et de juges, `noyau_v54.py`, et L9 hors son empreinte et le compte de ses fonctions. **Depuis le relevé du lot 0, ces fichiers sont lus par le développeur du lot 0, L9 compris** (L0, Q14 : structure, plages de lignes, lieu de fuite), et les contre-lectures en ont revérifié une part à la source ; ce que j'en dis vient d'eux.
+2. **Je n'ai lu ni la question, ni le corps de la synthèse servie, ni aucune sortie de modèle.** La partie servie est lue en entier.
+3. **L'additif de la v69 est lu dans sa v1** (`aef8ff2f…`), son § 7 seulement ; la version scellée est la v4 (`cb352811…`, registre, R-4131), que je n'ai pas ouverte : ce qu'elle ajoute aux points 7 et 8 de son § 7 est repris des deux contre-lectures (CL, § 1.5 ; CL2, § 1), dont la seconde a comparé la table du § 2.11 à la v4.
+4. **Les heures du § 8 sont une estimation**, sans mesure propre : elles s'appuient sur deux durées lues et sur le nombre de pièces.
+5. **Les valeurs chiffrées que je propose** (forme du mot, forme de la ligne de case, séparateurs) sont des valeurs du concepteur ; aucune n'a valeur de règle avant l'additif scellé. Le numéro de clé 40 est décidé par la mère (D4).
+6. Les parts, les seuils et la table des rôles sont recopiés de CV et d'AC ; en cas d'écart, ces pièces font foi.
+7. **Les décisions de la mère de 06:58Z et de 07:10Z, et l'ajout de 07:14Z corrigé à 07:15Z, sont portés d'après les messages de reprise** ; je n'ai relu ni le registre des décisions ni celui des accords depuis le commit `ebb7492a…`, et je n'ai lu ni GO-2026-11-21-17, ni GO-2026-11-21-19, ni N-072.
+8. **La colonne « matière première » est conçue sur la forme seule**, sans rien savoir de la matière ; je n'ai ouvert aucune branche de quarantaine.
+9. **De `suivi_roles_v54.py`, lu pour la v2**, les lignes 1 à 95.
+10. **Pour la v3, je n'ai relu aucun code** : chaque fait neuf sur le code vient du relevé du lot 0 (L0) ou de la seconde contre-lecture (CL2), cités à leur lieu ; CL2 a vérifié à la source les réponses Q1, Q3, Q6, Q12 et Q13 du relevé, et dit les autres plausibles et précises, sans les revérifier ligne à ligne. La table d'empreintes du lot 0 n'est pas ouverte. Une réponse du relevé qui se révélerait fausse toucherait le lieu qui la cite.
+11. **Mon erreur de la v2** (le portier hors d'`appel`) venait d'une lecture de `aiguilleur_v53.py`, où le portier appelle l'adaptateur directement ; la course joue la version suivante, que je n'avais pas lue.
+12. **Ce que l'outil des clés Claude envoie sans texte système n'est connu de personne à ce jour** : le § 2.3 et l'additif en dépendent, par le relevé du lot 4.
+13. **De la matière première, je n'ai lu que l'attestation** ; le registre servi est tiré pour son empreinte, non ouvert ; la branche tenue à l'écart n'est pas ouverte. Le compte de 35 entrées et leur partage sont ceux que la mère donne.
+14. **La note sur les deux processus de relais d'une même clé** (§ 2.3) vient d'un en-tête du lanceur v10 qui décrit une version antérieure : à vérifier au lot 8.
+
+— concepteur du véhicule, modèle F
