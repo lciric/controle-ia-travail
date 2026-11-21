@@ -1,0 +1,86 @@
+# Vérification du brouillon 44 du texte neuf du bras A des organismes discrets — v1
+
+- **Vérificateur** : Claude Opus 5.5 (`claude-opus-5-5`), agent neuf. Je n'ai écrit ni le brouillon 44, ni sa note, ni son mandat, ni aucun brouillon précédent, ni le devis des essais d'admission, ni son avenant. Je ne scelle rien et je ne committe rien.
+- **Brouillon vérifié** : `prereg/T0.7-organismes-discrets-v-a-v2-brouillon44.md`, `b30aa902a8135f888911519f4efd0a3583fddd6b8f748889146d9bca5da43eb8` (recalculée ; égale à son compagnon `.sha256`, présent sur le disque), 2 514 lignes.
+- **Note vérifiée** : `docs/notes/relance-organismes-discrets-v1/preenregistrement-v2-brouillon44-note-v1.md`, `30bd33bfd0c7c49594e11a0f0f4b4c5b354c122633502d94934a2aa5c3e3c06e` (recalculée).
+- **Base** : brouillon 43, `4f91b535ad91581510615c97039a4cae0a96f4d788088b2aff666d4c3d3f97b3` (recalculée), 2 493 lignes. **Mandat** : `mandat-redacteur-fable-brouillon44-v1.md`, `74d25969353113f41210f69d55f39234dd4cc352f97576e1b5ede834394e9596` (recalculée), lu d'abord ; ses interdits appliqués à moi.
+- **Date** : 2026-11-21. Registre lu à la référence locale `origin/main` = `bf63c1699955fede3126a3418345b327834d47e0`, sans `git fetch` ni réseau.
+
+## Verdict : **engageable** — aucune correction ; neuf mineurs pour le brouillon suivant
+
+- Seules les lignes que la note déclare changent : vérifié par programme, à la ligne et au signe.
+- **Les huit règles d'admission, lignes 529 à 537 du 44, sont égales caractère pour caractère aux lignes 521 à 529 du 43** (comparaison de listes : vrai ; empreinte des neuf lignes jointes par un saut de ligne `3d1f0afe82f5aeb3bf5dd757cb6d814e19c66b93a89a65b6f08677823e1b8f96`, la même que celle de la note).
+- Les quatre changements du mandat sont portés fidèlement, sans rien changer à une règle, un seuil, une issue ou une prédiction. Les lignes d'histoire (titre, statut, auteur, date, commits, note, tête de 3.4, 14.56, « Contre-lecture ») sont hors de la liste du mandat, mais d'usage, et déclarées par la note (partie 2).
+- Les décisions postérieures au mandat (GO-2026-11-21-74 et -75, décision de la mère sous GO-2026-11-21-69) rendent trois phrases du 44 périmées à la date de cette vérification. Elles ne sont pas fausses à la date du mandat et ne touchent aucune règle : mineurs m-1 à m-3.
+- **Aucune correction** : je n'ai trouvé aucun défaut qui empêche d'engager le texte comme brouillon. Les manques que le rédacteur déclare sont tous à fermer au brouillon final, non à celui-ci (partie 4).
+
+## 1. Différence par programme
+
+| contrôle | mon résultat | concorde avec la note ? |
+|---|---|---|
+| `diff` du 43 au 44 | `1c1 3c3 5,6c5,6 8,10c8,10 197a198,205 497c505 516c524 529a538 1428c1437 1441c1450 2478a2488,2499 2490,2491c2511,2512` | oui, à l'identique |
+| comptes | 13 lignes changées, 21 lignes neuves (8 + 1 + 12) | oui |
+| au signe, sur chaque ligne changée (`difflib`, sans rejet automatique) | lignes 5, 6, 8, 497→505, 516→524, 1441→1450, 2490→2511 : **insertions seules**, rien de retiré ; 1428→1437 : insertion de 114 signes (« , et le signe qui dit … m-1) » après « service ») ; 1 et 2491→2512 : « 43 » → « 44 » et insertion ; 3 : « 43 » → « 44 », insertion de la description du 44, et « et 14.55 » → « , 14.55 et la section « Contre-lecture » … » ; 9 : deux insertions ; 10 : ligne récrite, déclarée comme telle (E8) | oui |
+| sections des changements | 3.4 commence ligne 503 au 44 ; les lignes 505, 524 et 538 y sont ; 13 commence ligne 1428, son préambule porte 1437 ; 13.1 commence ligne 1443, la case est la ligne 1450 ; 14.56 aux lignes 2487 à 2499 ; « Contre-lecture » ligne 2500 | oui |
+| sections de jugement | aucune ligne changée hors des lignes ci-dessus : 6, 7, 8, 9, 10, 11, 12, 3.2, 3.3, 3.5, 4 et 13.2 intactes | oui |
+| validateur du dépôt, `problemes()` | les deux mêmes problèmes au 43 et au 44 (marque hors des sections exigées ; contre-lecture 10 sans ses empreintes) | oui |
+
+## 2. Fidélité au mandat
+
+| demande du mandat | où, au 44 | jugement |
+|---|---|---|
+| **1. Conditions d'envoi, ce qui reste constaté** | 3.4, ligne 524 (passage « Levée partielle du constat ») ; case de 13.1, ligne 1450 | **fidèle**. Mistral : refus de l'entraînement, page de confidentialité de l'API, 21 novembre, 15:25, heure de Paris (horloge du poste de Lazar, dit), pièce `4ff7e8d6…` — empreinte égale à la table (ligne 204). Google : deux captures de facturation, 16:24:17Z, décrites par l'avenant, non versées, « on ne sait pas quel projet porte quelle clé ». Conforme à l'en-tête de l'avenant et à sa section 5.1. |
+| **1. Ce qui est levé, clé par clé** | mêmes lignes | **fidèle** : les six clés de l'avenant 5.2, dans son ordre, à la valeur fermée « non constaté, levé par GO-2026-11-21-68 » ; « non levé » : les cinq clés vues de chaque projet, `google_deux_projets_distincts` (qui n'admet pas la valeur levée, comme en 5.2), toutes les clés de Mistral (avenant 5.3). |
+| **1. Réserve de contamination** | ligne 524, « Réserve qui en découle » ; 1450 | **fidèle** à la lettre du mandat (offre payante absente ou partage des journaux actif), avec ce qui tient et ce qui ne tient plus (avenant, section 9). L'extension aux textes de la course est un constat juste (voir m-8), sans décision. |
+| **1. Mot « b a b go » non changé, levée partielle inscrite** | ligne 524 : « Le mot « b a b go » (GO-2026-11-21-33) n'est pas changé » ; conditions de Google et de Mistral laissées telles qu'au 43 au début de l'alinéa | **fidèle**. Le texte du mot est intact (la partie d'alinéa du 43 est un préfixe exact de la ligne 524). La clause de lecture « constatées pour ce qui reste constaté, levées pour ce que Lazar a levé » est une règle de lecture, non une récriture ; elle nomme chaque phrase touchée. |
+| **2. Juge des deux ancres sur deux clés** | alinéa neuf, ligne 538, après la règle 8 ; rappel en 1450 | **fidèle à l'avenant 4.1 et 4.2**. Partage par rang (impair → `GEMINI_API_KEY`, pair → `GEMINI_API_KEY_2`), reprise sur la clé du premier envoi, tableau écrit à la configuration. « Reste jugé » : les quatre points de 4.2, à la lettre ou presque. « N'est plus jugé, ou l'est autrement » : les cinq points de 4.2, dans l'ordre. **Le critère ne change pas** : il est recopié tel que la règle 2 le porte. Le plafond n'est pas chiffré dans l'alinéa (« un seul compteur ») : la phrase reste vraie quel que soit le montant de l'avenant suivant. |
+| **2. Le texte peut-il le porter sans changer une règle ?** | note, partie 3 | **oui, je suis d'accord avec le rédacteur.** Règle 2 : « ses huit lectures » ne dit pas quelle clé ; règle 3 : deux vérifications saines relèvent nécessairement le même nom servi, puisque la vérification n'est saine que si ce nom est l'identifiant demandé (ligne 525) — la condition « deux noms différents : la file ne part pas » est donc déjà impliquée ; règle 4 : se lit sur la file. Les mots au singulier sont lus, non récrits. L'avenant appelle cela un écart aux règles 2, 3 et 4 ; l'alinéa le cite et le dit porté par lecture. La règle 8 permet de toute façon un changement avant le premier envoi : rien ne bloque. |
+| **3. Mineurs m-1 et m-2 du 43** | ligne 1437 ; ligne 3 | **fidèles** : m-1, la demi-ligne demandée, avec renvoi à 3.4 ; m-2, « la section « Contre-lecture » » ajoutée à la phrase du 43. |
+| **4. Table d'en-tête** | ligne 10 ; lignes 198 à 205 | **fidèle**. La phrase dit le périmètre exact du mandat. Huit lignes neuves, dans le périmètre. Recalcul refait par moi, dans le seul périmètre (relance hors du sous-dossier de l'essai de mesure, et brouillons `v2-brouillon*.md`) : **187 lignes égales au disque, 0 différente** ; la ligne 179, absente du disque, égale à `git show origin/main:` (`f7090b5d…`). Aucune ligne hors du périmètre n'a changé (la différence ne touche, dans la table, que l'insertion 198 à 205). |
+| **Huit règles, numéros de ligne** | note, partie 3 | **déclaré** : 521–529 → 529–537, décalage 8 ; le fichier des règles devra citer les nouvelles lignes et l'empreinte `b30aa902…` s'il vise le 44. |
+
+## 3. Décisions neuves, postérieures au mandat — mineurs pour le brouillon suivant
+
+Lignes lues : GO-2026-11-21-68, -69, -74 et -75, par `git show origin/main:registres/go.md | grep <id>`. La décision sur Google n'est pas dans la ligne GO-2026-11-21-69 ; je l'ai lue au journal de la relance (entrée OD-304), qui la dit prise par la mère sous l'autonomie de cette ligne.
+
+- **m-1. Constat de Mistral par GO-2026-11-21-75.** Lazar : « c'est bon tout est ok oui offre payante » — offre payante, clé de l'espace vue, crédit d'au moins 7,87 € : oui ; limites européennes non données, repli global accordé d'avance. Les limites de débit de Mistral (région globale) sont relevées par Lazar sous GO-2026-11-21-74. Le 44 écrit, ligne 524 : « l'offre payante de Mistral et ses autres clés — crédit, clé de l'espace, limites de débit, devise — […] restent à constater avant le premier envoi à Mistral », et ligne 1450 : « toutes les clés de Mistral, dont l'offre payante, qui reste à constater ». **Périmé à ce jour.** Texte proposé, ligne 524, à la place de « restent à constater avant le premier envoi à Mistral » : « sont constatées par parole de Lazar (registre des GO, ligne GO-2026-11-21-75 : offre payante, clé de l'espace vue, crédit d'au moins 7,87 € ; limites de débit de la région globale relevées sous GO-2026-11-21-74), à porter à la pièce de constat ; les limites du point d'accès européen ne sont pas données ». **Deux points à dire, sans changer de règle** : (a) « repli global accordé d'avance » ne change pas le signe fixé qui seul déclenche le repli (3.4, lignes 524 et 525) ; s'il voulait dire qu'on part du point d'accès global sans essayer l'européen, ce serait un écart à 3.4, à porter comme tel ; (b) si « aux consoles » couvre Mistral (avenant 8.2, point 3), GO-75 le rend sans objet pour l'offre payante, le crédit et la clé de l'espace, qui sont constatés.
+- **m-2. Plafond de sortie de Google à 65 536, niveau de réflexion gardé, sonde exemptée** (mère, sous GO-2026-11-21-69 ; journal, OD-304 et OD-308). Aucune règle du texte n'est touchée : la sortie maximale envoyée aux essais est fixée au devis (ligne 527), la règle 7 ne vise que la course, et `thinking_level` reste à `xhigh` (ligne 520). Mais l'alinéa neuf, ligne 538, point (3) « la sonde de borne, par clé », décrit une sonde que la décision exempte. Le point est déjà dit « objet du devis et de son avenant, non de ce texte ». Ajouter en fin de ce point : « (sous la décision de la mère du 21 novembre, sous GO-2026-11-21-69, la sortie maximale de Google est 65 536 au niveau de réflexion gardé, et la sonde est exemptée : ce point est sans objet tant que l'avenant qui la porte est en vigueur) », avec le chemin et l'empreinte de cet avenant. Les plafonds en dollars changent aussi (la file vers 16,50 USD selon le journal) : l'alinéa ne les chiffre pas, ce qui est juste ; ne pas en ajouter.
+- **m-3. Recharge automatique non comptée** (GO-2026-11-21-74 : crédit de 10,47 € et 6,81 € versé par Lazar, « la recharge automatique non comptée »). Contraire à l'avenant 1, 4.4 (solde plus une recharge). Le 44 ne porte aucun seuil de crédit : rien à corriger dans une règle. Mais le statut et la table (ligne 202) résument l'avenant par « recharge automatique gardée chez Google » : ajouter, une fois, en 3.4 ou en 14.57, « la recharge reste activée, mais n'est pas comptée dans le crédit (GO-2026-11-21-74) », pour que « gardée » ne se lise pas « comptée ».
+
+## 4. Manques déclarés par le rédacteur — bloquants ?
+
+| manque | bloquant pour le 44 ? | à fermer quand |
+|---|---|---|
+| **voie de service du juge à la course** (note, réserve 2 ; ligne 538, « Limite, dite ») | **non**. L'avenant demande que ce soit écrit au texte ; le 44 l'écrit comme une limite sans choisir. Ce n'est pas un choix du rédacteur : c'est une recommandation de la session, au périmètre interne de la phase. | **m-4** : avant scellement, dans une case de 13.1 ou de 13.2 (configuration de la course), par une règle fixe écrite avant lecture : de préférence le même partage par rang qu'à l'essai, qui est la voie éprouvée. |
+| **état des essais et des dépenses** (réserve 6 ; lignes 519, 1437, 941) | **non**. Les phrases valent à leur date et le statut le dit. | **m-5** : au brouillon final, avec l'état réel (essais joués ou non, lignes de calcul ouvertes), par une lecture du registre bornée aux lignes du bras A. La ligne 941 (6.11, « une vérification de clé par fournisseur ») est déjà lue par l'alinéa 538 ; ne pas toucher 6.11 sans nécessité. |
+| **pièce de constat absente de l'arbre** (réserve 4 ; ligne 1450) | **non** pour un brouillon. **Oui pour le premier envoi** : le programme l'exige (garde 9), et la case doit la citer avant la première vérification de clé. | **m-6** : la case de 13.1 cite la pièce par chemin et empreinte dès qu'elle est scellée. Si la session adopte un constat **par fournisseur** (D-1 de la vérification de la livraison 5, journal OD-308), « la pièce de constat », au singulier, en 3.4 et en 13.1, se lit « les pièces de constat, une par fournisseur » : à dire en une phrase. |
+
+Autres réserves du rédacteur, que je reprends comme mineurs :
+- **m-7.** Ligne 525 : « un appel minimal au modèle ». L'avenant compte trois appels au plus par vérification, sonde comprise (section 6). Sous l'exemption de la sonde (m-2), le compte peut redescendre ; écrire au brouillon suivant « un appel minimal, et les appels que le devis et son avenant y ajoutent, comptés sous la même ligne ».
+- **m-8. Information pour Lazar, non une correction.** La levée n'est pas bornée aux essais d'admission (réserve 1 du rédacteur). Le texte ne prévoit aucun constat avant la course, où partent chez Google les items des ancres, référence cachée comprise. Le 44 le dit sans décider ; c'est juste. Si Lazar veut un constat des journaux de Google avant la course, c'est son mot ; à poser en demande, une ligne.
+- **m-9.** Ligne 524, « Ce qui reste constaté (ii) » : « chacune montre un projet à l'offre payante, avec prépaiement, recharge automatique activée, sans autre crédit » — vrai des captures de 16:24:17Z. Les soldes ont changé depuis le versement de GO-2026-11-21-74 ; le texte ne cite aucun solde, ce qui est juste. Rien à faire, sauf si la pièce de constat porte des captures neuves : citer alors leur heure à la place.
+
+## 5. Consignes de registre
+
+| contrôle, par programme, du 43 au 44 | 43 | 44 |
+|---|---|---|
+| « intervalle impossible » | 23 | 23 |
+| « non ajustable » | 26 | 26 |
+| « moniteur appris » | 36 | 36 |
+| mentions `GO-2026-11-19-…` | 264 | 264 |
+| identifiants `GO-2026-11-19-…` distincts | 29 | 29, les mêmes |
+
+- **Aucune recopie neuve** de ce que les mots de Lazar décident pour l'intervalle impossible ou le moniteur appris non ajustable. **Aucune ligne de GO du 19 novembre ajoutée**, aucune mention de plus de celles déjà nommées.
+- Seuls identifiants de GO neufs : GO-2026-11-21-68 (12 mentions), dans le mandat ; GO-2026-11-21-33 passe de 5 à 8 mentions, pour dire que le mot « b a b go » n'est pas changé — permis.
+- La ligne 8 cite GO-2026-11-21-68 pour le bras A à la lettre ; je l'ai confrontée au registre : égale. Les décisions d'autres chantiers de cette ligne ne sont pas recopiées.
+
+## 6. Ce que j'ai ouvert
+
+- **En entier** : le mandat ; la note du 44. **En partie** : la vérification du 43 (verdict, mineurs, titres et extraits, par recherche de chaînes).
+- **Du brouillon 44** : par programme (différence, comparaison au signe, règles, table, comptes, validateur) ; affichées : les lignes 3, 5 (fin), 8 (extrait), 10, 505, 519 à 538, 1437 (extrait), 1450 (extrait), 2488 à 2498 ; les titres autour des changements.
+- **Du brouillon 43** : par programme seulement.
+- **De l'avenant 1, version 3** : en-tête, section 0, 1.4, 4 et 5 entières ; liste des titres.
+- **Du registre des GO** : les lignes GO-2026-11-21-68, -69, -74 et -75, par la commande donnée. La commande pour -69 a rendu aussi -70 et -73, qui contiennent la chaîne « GO-2026-11-21-69 » ; vues en passant, je n'en fais rien.
+- **Empreintes** : les six pièces de tête ; 187 fichiers de la table, tous dans le périmètre du mandat (relance hors du sous-dossier de l'essai de mesure ; brouillons du texte neuf) ; la ligne 179 par `git show origin/main:`.
+- **Débords, déclarés.** (a) Une recherche de la chaîne « 65 536 » dans `docs/notes/relance-organismes-discrets-v1/`, sous-dossier de l'essai de mesure exclu, qui a listé dix noms de fichiers de ce dossier (aucun sous un chemin cloisonné ; aucun élément de chemin commençant par `t07`) ; (b) au journal de la relance, `journal-relance-organismes-discrets-v1.md`, les seules lignes que cette recherche a rendues (entrées OD-302, OD-304, OD-306 à OD-308), pour trouver la décision de la mère sur Google, qui n'est pas dans la ligne GO-2026-11-21-69 ; (c) la liste des quatre noms du sous-dossier `constat-conditions-envoi-v1/` ; la pièce et sa capture ne sont pas ouvertes ; (d) `git status --short` et `git log --oneline -3`.
+- **Rien d'ouvert, de listé, de cherché ni d'empreinté** sous les chemins que le mandat interdit ; les lignes cloisonnées de la table ne sont pas suivies. Aucun réseau, aucun `git fetch`, aucune clé, aucun appel de modèle, aucun sous-agent.
