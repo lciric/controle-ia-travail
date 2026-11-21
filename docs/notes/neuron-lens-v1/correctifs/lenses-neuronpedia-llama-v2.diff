@@ -1,0 +1,81 @@
+--- a/neuron_lens/lenses.py
++++ b/neuron_lens/lenses.py
+@@ -15,7 +15,49 @@
+ NEURONPEDIA_REPO = "neuronpedia/jacobian-lens"
+ NEURONPEDIA_FILES = {
+     "Qwen/Qwen3-8B": "qwen3-8b/jlens/Salesforce-wikitext/Qwen3-8B_jacobian_lens.pt",
++    "meta-llama/Llama-3.1-8B-Instruct": "llama3.1-8b-it/jlens/Salesforce-wikitext/Llama-3.1-8B-Instruct_jacobian_lens.pt",
+ }
++# Correctif du 2026-11-14: Neuronpedia's other released lenses (spec -> file, per exact model id), and the storage
++# sha256 of the Llama files (archived tree of neuronpedia/jacobian-lens), checked on the cached file actually read.
++NEURONPEDIA_EXTRA = {
++    "meta-llama/Llama-3.1-8B-Instruct": {
++        "npJpp": "llama3.1-8b-it/jpp/Salesforce-wikitext/Llama-3.1-8B-Instruct_jpp_lens.pt",
++        "npR": "llama3.1-8b-it/rlens/Salesforce-wikitext/Llama-3.1-8B-Instruct_rlens.pt",
++    },
++}
++NEURONPEDIA_SHA256 = {
++    "llama3.1-8b-it/jlens/Salesforce-wikitext/Llama-3.1-8B-Instruct_jacobian_lens.pt":
++        "d5300a1575c0b5ad6e01b098c75adb072f3a6c246f184ce2fb35a3550fc8c68b",
++    "llama3.1-8b-it/jpp/Salesforce-wikitext/Llama-3.1-8B-Instruct_jpp_lens.pt":
++        "8bd04f482aed9c85e76e71ccb510907405500512193cdfcc34f4f31722056f7c",
++    "llama3.1-8b-it/rlens/Salesforce-wikitext/Llama-3.1-8B-Instruct_rlens.pt":
++        "a63a1588f2cb61850c68131a5f13b74590f4fe137f67bf80c627547d2230d31c",
++}
++
++
++def neuronpedia_lens(filename: str) -> dict:
++    """A Neuronpedia lens file's Jacobians by layer, refused unless its sha256 is the recorded one (when recorded) and
++    it is ``{"J": {0..n-1: [d, d]}}``: a missing or shifted layer would otherwise fall back to the logit lens in
++    ``score`` without a word. Prints the layers and the payload's other keys."""
++    path = hf_hub_download(NEURONPEDIA_REPO, filename)
++    want = NEURONPEDIA_SHA256.get(filename)
++    if want is not None:
++        h = hashlib.sha256()
++        with open(path, "rb") as fh:
++            for b in iter(lambda: fh.read(1 << 24), b""):
++                h.update(b)
++        if h.hexdigest() != want:
++            raise ValueError(f"{filename}: sha256 {h.hexdigest()}, expected {want}")
++    payload = torch.load(path, map_location="cpu", weights_only=True)
++    J = payload.get("J") if isinstance(payload, dict) else None
++    ok = isinstance(J, dict) and bool(J) and all(
++        type(l) is int and isinstance(m, torch.Tensor) and m.ndim == 2 and m.shape[0] == m.shape[1] for l, m in J.items())
++    if not ok or sorted(J) != list(range(len(J))) or len({tuple(m.shape) for m in J.values()}) != 1:
++        keys = sorted(map(str, payload)) if isinstance(payload, dict) else type(payload).__name__
++        raise ValueError(f"{filename}: not a J-lens layout ({keys})")
++    print(f"{filename}: layers 0-{len(J) - 1}, d {next(iter(J.values())).shape[0]}, "
++          f"other keys {sorted(str(k) for k in payload if k != 'J')}", flush=True)
++    return J
+ 
+ 
+ @contextlib.contextmanager
+@@ -70,7 +112,8 @@
+     ``data/fits/<stem>.pt`` itself, both halves: its ``out`` target, from each layer's output, or
+     with ``@mid`` from each layer's MLP input, keyed by that layer) or ``hub[@mid]`` (the released
+     R-lens in ``stdlogits/rs-lenses``, ``12_release.py``: from each layer's output, the last
+-    layer the identity, or from each MLP input). ``logit``, ``J``, ``fit:`` and ``hub`` need no Drowse."""
++    layer the identity, or from each MLP input), or ``npJpp`` / ``npR`` (Neuronpedia's J++ and R-lens of the
++    models in ``NEURONPEDIA_EXTRA``). ``logit``, ``J``, ``fit:``, ``hub``, ``npJpp`` and ``npR`` need no Drowse."""
+     if spec == "logit":
+         return None
+     if spec.partition("@")[0] == "hub":
+@@ -79,9 +122,15 @@
+         return torch.load(hf_hub_download("stdlogits/rs-lenses", f"{stem(model_id)}/{f}"), map_location="cpu",
+                           weights_only=True, mmap=True)["J"]
+     if spec == "J":
+-        payload = torch.load(hf_hub_download(NEURONPEDIA_REPO, NEURONPEDIA_FILES[model_id]),
+-                             map_location="cpu", weights_only=True)
+-        return payload["J"]
++        if model_id == "Qwen/Qwen3-8B":  # unchanged for the published model
++            payload = torch.load(hf_hub_download(NEURONPEDIA_REPO, NEURONPEDIA_FILES[model_id]),
++                                 map_location="cpu", weights_only=True)
++            return payload["J"]
++        return neuronpedia_lens(NEURONPEDIA_FILES[model_id])
++    if spec in NEURONPEDIA_EXTRA.get(model_id, {}):
++        return neuronpedia_lens(NEURONPEDIA_EXTRA[model_id][spec])
++    if spec in ("npJpp", "npR"):
++        raise KeyError(f"no Neuronpedia {spec} entry for {model_id!r} (NEURON_LENS_MODEL must be the exact model id)")
+     if spec.startswith("fit:"):
+         stem, _, target = spec.removeprefix("fit:").partition("@")
+         _, acc = load_fits([FITS / f"{stem}.pt"], "R", model_id)
