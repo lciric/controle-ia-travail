@@ -1,0 +1,472 @@
+{
+ "version": "configuration-essais-admission-bras-a-v1-gabarit",
+ "etat": "gabarit",
+ "objet": "Gabarit de tout ce que lit le chef des deux essais d'admission du bras A (scripts/chef_essais_admission_bras_a_v1.py). Devis accepté : sections 3 à 11. Une configuration définitive en est tirée par ligne de calcul, sous un nom neuf (R12) : elle remplace chaque valeur nulle marquée « à remplir », passe « etat » à « definitive », et est scellée ; le chef refuse ce gabarit.",
+ "a_remplir": "Valeurs nulles à inscrire avant la ligne qui les lit : « go » de chaque ligne ; « constat » ; « regles » (fichier scellé, non gabarit) ; « lectures_console » après tout envoi coupé ; « releve_europeen » (repli) ; pour chaque file : « releve_verification », « inscrit », « hote » (file Mistral : le point d'accès du relevé), « mot_de_lazar_sonde » si la sonde n'est pas « comprise » ou si le majorant est « démenti ».",
+ "devis": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/devis-essais-admission-mistral-neon-bras-a-v1.md",
+  "sha256": "421ee2e6ec909c8b6261b3be39109aa5e76d6c275e79b4d7ec122816c83dd1bc"
+ },
+ "prereg_en_vigueur": {
+  "chemin": "prereg/T0.7-organismes-discrets-v-a-v2-brouillon43.md",
+  "sha256": "4f91b535ad91581510615c97039a4cae0a96f4d788088b2aff666d4c3d3f97b3"
+ },
+ "consignes": {
+  "appariement": {
+   "lignes": [
+    398,
+    423
+   ],
+   "sha256": "98a9bd34d280fc7d9db07a733bc78557ff350538a3ace7a2926999ecf14c9248"
+  },
+  "couverture": {
+   "lignes": [
+    445,
+    479
+   ],
+   "sha256": "ecf590eae0c06d413d173f7f03c5575e52d6034613e0a1a30d681149435a1816"
+  }
+ },
+ "entrees": {
+  "chemin": "docs/notes/relance-organismes-discrets-v1/essai-mesure-lecteurs-bras-a-v1/entrees-essai-mesure-lecteurs-bras-a-v1.json",
+  "sha256": "15b62bb44d9f8e57bbbebf020b08cb681fbd0f5f65cc89dadee9edc7faba467e"
+ },
+ "regles": {
+  "chemin": null,
+  "sha256": null,
+  "lignes_du_texte": [
+   521,
+   529
+  ],
+  "gabarit": "docs/notes/relance-organismes-discrets-v1/essais-admission-bras-a-v1/regles-admission-bras-a-v1-gabarit.md"
+ },
+ "constat": {
+  "chemin": null,
+  "sha256": null,
+  "forme": "docs/notes/relance-organismes-discrets-v1/constat-conditions-envoi-google-mistral-bras-a-AAAA-MM-JJ-v1.md : une section « ## Mot de Lazar » suivie du mot cité (lignes « > ») ; un tableau à cinq colonnes, « | clé | valeur vue | page | date et heure (UTC) | qui a vu | », une ligne par clé, dates à la forme AAAA-MM-JJTHH:MMZ ; une ligne « - heure de la transcription (UTC) : AAAA-MM-JJTHH:MMZ »."
+ },
+ "constat_cles": {
+  "google_offre_payante": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ]
+  },
+  "google_partage_journaux": {
+   "type": "valeurs",
+   "admises": [
+    "désactivé"
+   ]
+  },
+  "google_duree_journaux_jours": {
+   "type": "entier_egal",
+   "valeur": 7
+  },
+  "mistral_offre_payante": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ]
+  },
+  "mistral_donnees_pour_amelioration": {
+   "type": "valeurs",
+   "admises": [
+    "désactivé"
+   ]
+  },
+  "google_cle_du_projet_constate": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ]
+  },
+  "mistral_cle_de_l_espace_constate": {
+   "type": "valeurs",
+   "admises": [
+    "oui"
+   ]
+  },
+  "mistral_credit_utilisable_usd": {
+   "type": "nombre_min",
+   "min": 8.23
+  },
+  "google_credit_utilisable_usd": {
+   "type": "nombre_min",
+   "min": 19.76
+  },
+  "google_recharge_automatique": {
+   "type": "valeurs",
+   "admises": [
+    "désactivée",
+    "non proposée"
+   ]
+  },
+  "google_autres_credits_admissibles": {
+   "type": "valeurs",
+   "admises": [
+    "aucun"
+   ]
+  },
+  "mistral_limite_requetes_par_minute": {
+   "type": "nombre_min",
+   "min": 6
+  },
+  "mistral_limite_jetons_par_minute": {
+   "type": "nombre_min",
+   "min": 100000
+  }
+ },
+ "pieces_de_lazar": {
+  "mot_sur_la_sonde": "docs/notes/relance-organismes-discrets-v1/mots-de-lazar-sonde-de-borne-<fournisseur>-bras-a-AAAA-MM-JJ-v1.md : « ## Mot de Lazar » et le mot cité ; lignes « - issue de la sonde visée : comprise | non comprise | indécidée », « - empreinte du relevé de vérification : <sha256> » ; Mistral : « - majorant visé : établi | démenti » ; Google : « - crédit prépayé vu après la vérification (USD) : <nombre> », « - page : … », « - heure (UTC) : AAAA-MM-JJTHH:MMZ ».",
+  "lecture_de_la_console": "docs/notes/relance-organismes-discrets-v1/lecture-console-<fournisseur>-apres-envoi-coupe-bras-a-AAAA-MM-JJ-v1.md : « ## Mot de Lazar » et le mot cité ; lignes « - empreinte du relevé ou du rapport : <sha256> », « - dépense vue (USD) : <nombre> », « - dépense comptée (USD) : <nombre> », « - page : … », « - heure (UTC) : AAAA-MM-JJTHH:MMZ » ; Google : « - solde prépayé vu (USD) : <nombre> »."
+ },
+ "lanceur_relais": {
+  "chemin": "scripts/lancer_relais_local_v1.py",
+  "sha256": "d365affcb0303283a71ac7d5e67e24a5b6060e3b13c2a9e83ea592e48d4b3c82"
+ },
+ "programme_de_forme": {
+  "note": "programme de conformité de forme et de vérification des extraits de l'instrument ; à confirmer à la contre-lecture qu'il est à la forme du texte en vigueur (3.2 et 3.3, tolérance comprise)",
+  "racine_des_modules": "src",
+  "module": "controle_ia.organismes_discrets.reponses_lecteurs_v5",
+  "module_des_reglages": "controle_ia.organismes_discrets.instrument_appariement_v4",
+  "pieces": [
+   {
+    "chemin": "src/controle_ia/organismes_discrets/reponses_lecteurs_v5.py",
+    "sha256": "7151e0e6f48fbcd6dcf652e8e5150f7f0d67dd774479a157e743d1fc2a0bd401"
+   },
+   {
+    "chemin": "src/controle_ia/organismes_discrets/instrument_appariement_v4.py",
+    "sha256": "8f1fa83b555d52d6ff8c7ac037643326ceb986e7a4f96411aa1ffb861daec39f"
+   },
+   {
+    "chemin": "src/controle_ia/organismes_discrets/fabrication_v3.py",
+    "sha256": "fbbd06d8d9b5ba3208b9281e0b3cd790eed075eceb23365cbc4e8d715b4bb8f4"
+   },
+   {
+    "chemin": "src/controle_ia/organismes_discrets/graines_bras_a_v4.py",
+    "sha256": "5a66d8c57682d5d0202f90fb2479bc9ded8dfb5255212049b2131b98734b2545"
+   },
+   {
+    "chemin": "src/controle_ia/organismes_discrets/__init__.py",
+    "sha256": "eeb35eef3ec062287b16e67f0ef3a874e297e1905f3af7fa10aa194cbf38c96f"
+   },
+   {
+    "chemin": "src/controle_ia/verite_dommage/artefacts_v1.py",
+    "sha256": "22f0fc884b3f84d13612180ca40d168e84e9a94472de41cce1ca1e497a94e790"
+   },
+   {
+    "chemin": "src/controle_ia/verite_dommage/__init__.py",
+    "sha256": "f0586fbbc2f4aacdce6b5823ea2625d911c49e2dfe30a7f772d9b882c376edc3"
+   },
+   {
+    "chemin": "src/controle_ia/environnements/propositions.py",
+    "sha256": "5d97b223206c6378295946a769c378ccfe0bd6a12372d3b25bcecb5240ab31ae"
+   },
+   {
+    "chemin": "src/controle_ia/environnements/__init__.py",
+    "sha256": "64baa853876f557fb0c316df322fa18ee3f54a6180aa0e88b5fa85ea71b2cfb2"
+   },
+   {
+    "chemin": "src/controle_ia/gardes.py",
+    "sha256": "a83c48ceba4877a2e226c3fd43669b464152f18169bb082e9b1c48ed92179439"
+   },
+   {
+    "chemin": "src/controle_ia/manifeste.py",
+    "sha256": "1a5c7464523e224ca29d62ab70d83f9e7043d9bde3000ef1a4adc9ed74c8188d"
+   },
+   {
+    "chemin": "src/controle_ia/scellement.py",
+    "sha256": "93beeb1c8aae75463afc98e76ffb330b1e4f26be9c08ae8fee539a2df6a94ef2"
+   }
+  ]
+ },
+ "registre_go": {
+  "reference_git": "origin/main",
+  "chemin": "registres/go.md"
+ },
+ "garde_interdits": {
+  "fichier_local": "/home/user/hors-depot/essais-admission-bras-a-v1/interdits-v1.txt",
+  "note": "fichier local, jamais envoyé ni versé ; seule son empreinte, avec celle des termes tirés du poste, va au manifeste",
+  "longueur_min_terme": 4,
+  "termes_exemptes": [
+   "claude",
+   "user",
+   "root",
+   "main",
+   "noreply",
+   "true",
+   "false",
+   "none",
+   "null",
+   "localhost"
+  ]
+ },
+ "hotes_permis": [
+  "api.eu.mistral.ai",
+  "api.mistral.ai",
+  "generativelanguage.googleapis.com"
+ ],
+ "debit_declare_jetons_par_s": 200,
+ "pause_s": 10,
+ "attente_429": {
+  "defaut_s": 30,
+  "max_s": 600
+ },
+ "messages": {
+  "appel_a": "Reply with the single word: OK",
+  "sonde": "Work out 48271 multiplied by 96553, checking your work twice, then reply with the product only."
+ },
+ "projection": {
+  "lectures_appariement": 13888,
+  "lectures_couverture": 1248,
+  "note": "grandeur C du devis de l'essai de mesure, pour le seul chiffrage (devis, section 7)"
+ },
+ "pages_de_prix": [
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/pages-de-prix-essais-admission-v1/mistral-large-4-0-2026-11-21.html",
+   "sha256": "951cc3ff5f3cdd9b83776bfc6d4b4ef6fbe7c48a59c106945539fee6be1b3d36"
+  },
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/pages-de-prix-essais-admission-v1/mistral-regional-inference-2026-11-21.html",
+   "sha256": "b501d686c7cff43cf3b9b1c0bf5b4227ff945c6cdf22e808769639bd2c2d5b18"
+  },
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/pages-de-prix-essais-admission-v1/google-gemini-pricing-2026-11-21.html",
+   "sha256": "4da106182cbbb57172ce41eabb09eb0af08798cb4d030dea0ee444870d4554a8"
+  }
+ ],
+ "releves_documentaires": [
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/releve-api-mistral-gemini-essais-admission-v1.md",
+   "sha256": "291341e204a8cfb74548f58221d3795d73f007cb0987d4e4051bc7d35a4c32c9"
+  },
+  {
+   "chemin": "docs/notes/relance-organismes-discrets-v1/releve-api-mistral-gemini-essais-admission-complement-v1.md",
+   "sha256": "14d73d5263e2c0ba1e52c7794719e702ce05d3354c118cc4f5be39e3ba88a957"
+  }
+ ],
+ "essai_local": null,
+ "fournisseurs": {
+  "mistral": {
+   "modele": "mistral-large-4-0",
+   "variable_cle": "MISTRAL_API_KEY",
+   "prix": [
+    0.77,
+    2.31
+   ],
+   "prix_note": "1,1 fois le prix courant (0,70 et 2,10), sur l'un et l'autre point d'accès : borne haute (devis, 4.5 et 6.1)",
+   "sortie_max": 32768,
+   "sortie_max_sonde": 256,
+   "octets_par_jeton_de_la_borne": 8,
+   "reasoning_effort": "high",
+   "temperature": 0,
+   "mode_de_lecture": "flux",
+   "cle_credit": "mistral_credit_utilisable_usd",
+   "credit_min_usd": 8.23,
+   "credit_a_avoir_usd": 9.5,
+   "relais": {
+    "chemin": "scripts/relais_mistral_essais_admission_v1.py",
+    "sha256": "9aa1cc859f53a6d56f147d04715a8ab9b96cca3af9a840295e1927804a3aea94",
+    "noms_environnement": [
+     "PATH",
+     "HOME",
+     "LANG",
+     "HTTPS_PROXY",
+     "NO_PROXY",
+     "SSL_CERT_FILE",
+     "REQUESTS_CA_BUNDLE"
+    ]
+   }
+  },
+  "google": {
+   "modele": "gemini-4-neon",
+   "variable_cle": "GEMINI_API_KEY",
+   "prix": [
+    3,
+    15
+   ],
+   "sortie_max": 32768,
+   "sortie_max_sonde": 256,
+   "octets_par_jeton_de_la_borne": 8,
+   "orthographes_niveau": [
+    "XHIGH",
+    "xhigh"
+   ],
+   "mode_de_lecture": "sans flux",
+   "cle_credit": "google_credit_utilisable_usd",
+   "credit_min_avant_verification_usd": 19.76,
+   "credit_min_avant_file_usd": 16.08,
+   "credit_a_avoir_usd": 23.0,
+   "relais": {
+    "chemin": "scripts/relais_google_essais_admission_v1.py",
+    "sha256": "d24a477334277b6b63a8f201bbfffdafe5808c74db58f1f7a596ceb3b6a74cda",
+    "noms_environnement": [
+     "PATH",
+     "HOME",
+     "LANG",
+     "HTTPS_PROXY",
+     "NO_PROXY",
+     "SSL_CERT_FILE",
+     "REQUESTS_CA_BUNDLE"
+    ]
+   }
+  }
+ },
+ "lignes": {
+  "verification-mistral-eu": {
+   "numero_au_devis": 1,
+   "go": null,
+   "plafond_usd": 0.25,
+   "plafond_registre": "0,25 USD",
+   "exces_possible_d_un_envoi_usd": 1.17,
+   "marques_du_perimetre": [
+    "vérification de la clé de `mistral-large-4-0` sur `api.eu.mistral.ai`",
+    "trois appels au plus"
+   ],
+   "hote": "api.eu.mistral.ai",
+   "dossier": "runs/verification-cle-mistral-bras-a-v1",
+   "appels_max": 3,
+   "envois_max": 3,
+   "borne_octets": 32768,
+   "reserve_sortie_jetons": 32832,
+   "delais": {
+    "silence_s": 600,
+    "total_s": 2700,
+    "relais_silence_s": 590,
+    "relais_total_s": 2690
+   },
+   "lectures_console": []
+  },
+  "verification-mistral-global": {
+   "numero_au_devis": 5,
+   "go": null,
+   "plafond_usd": 0.25,
+   "plafond_registre": "0,25 USD",
+   "exces_possible_d_un_envoi_usd": 1.17,
+   "marques_du_perimetre": [
+    "vérification de la clé de `mistral-large-4-0` sur `api.mistral.ai`",
+    "trois appels au plus"
+   ],
+   "hote": "api.mistral.ai",
+   "dossier": "runs/verification-cle-mistral-bras-a-v1",
+   "appels_max": 3,
+   "envois_max": 3,
+   "borne_octets": 32768,
+   "reserve_sortie_jetons": 32832,
+   "delais": {
+    "silence_s": 600,
+    "total_s": 2700,
+    "relais_silence_s": 590,
+    "relais_total_s": 2690
+   },
+   "lectures_console": [],
+   "releve_europeen": {
+    "chemin": null,
+    "sha256": null
+   }
+  },
+  "verification-google": {
+   "numero_au_devis": 2,
+   "go": null,
+   "plafond_usd": 1.5,
+   "plafond_registre": "1,50 USD",
+   "exces_possible_d_un_envoi_usd": 2.18,
+   "marques_du_perimetre": [
+    "vérification de la clé de `gemini-4-neon`",
+    "trois appels au plus"
+   ],
+   "hote": "generativelanguage.googleapis.com",
+   "dossier": "runs/verification-cle-google-bras-a-v1",
+   "appels_max": 3,
+   "envois_max": 3,
+   "borne_octets": null,
+   "reserve_sortie_jetons": 32768,
+   "delais": {
+    "silence_s": 900,
+    "total_s": 900,
+    "relais_silence_s": 890,
+    "relais_total_s": 890
+   },
+   "lectures_console": []
+  },
+  "file-mistral": {
+   "numero_au_devis": 3,
+   "go": null,
+   "plafond_usd": 4.75,
+   "plafond_registre": "4,75 USD",
+   "exces_possible_d_un_envoi_usd": 0.64,
+   "marques_du_perimetre": [
+    "essai d'admission du second lecteur",
+    "24 appels"
+   ],
+   "hote": null,
+   "dossier": "runs/essais-admission-bras-a-v1",
+   "appels": 24,
+   "envois_max": 48,
+   "borne_octets": 262144,
+   "reserve_sortie_jetons": 262208,
+   "delais": {
+    "silence_s": 600,
+    "total_s": 2700,
+    "relais_silence_s": 590,
+    "relais_total_s": 2690
+   },
+   "entrees": "toutes",
+   "lectures_console": [],
+   "releve_verification": {
+    "chemin": null,
+    "sha256": null
+   },
+   "inscrit": {
+    "nom_servi": null,
+    "hote": null,
+    "temperature_envoyee": null
+   },
+   "mot_de_lazar_sonde": null
+  },
+  "file-neon": {
+   "numero_au_devis": 4,
+   "go": null,
+   "plafond_usd": 8.5,
+   "plafond_registre": "8,50 USD",
+   "exces_possible_d_un_envoi_usd": 7.58,
+   "marques_du_perimetre": [
+    "essai d'admission du juge des deux ancres",
+    "8 appels"
+   ],
+   "hote": "generativelanguage.googleapis.com",
+   "dossier": "runs/essais-admission-bras-a-v1",
+   "appels": 8,
+   "envois_max": 16,
+   "borne_octets": null,
+   "reserve_sortie_jetons": 32768,
+   "delais": {
+    "silence_s": 2700,
+    "total_s": 2700,
+    "relais_silence_s": 2690,
+    "relais_total_s": 2690
+   },
+   "entrees": [
+    "A-b1-01",
+    "A-b1-02",
+    "A-b1-03",
+    "A-b1-04",
+    "A-b1-05",
+    "A-b1-06",
+    "C-b1-02",
+    "C-b1-03"
+   ],
+   "lectures_console": [],
+   "releve_verification": {
+    "chemin": null,
+    "sha256": null
+   },
+   "inscrit": {
+    "nom_servi": null,
+    "hote": null,
+    "orthographe_niveau": null
+   },
+   "mot_de_lazar_sonde": null
+  }
+ }
+}
