@@ -14,9 +14,9 @@
 | E3-T3-reponse-B | OK | 2 | claude-opus-5-5 | 20269 | oui | 1.37 |
 | E3-T3-reponse-C | OK | 1 | gemini-4-argon | 28113 | oui | 0.73 |
 | E3-T3-reponse-D | OK | 1 | gpt-6.2-astra | 15420 | oui | 0.55 |
-| E3-T3-reponse-E | INTERROMPU | 2 | gemini-4-carbon | 22766 | non | 4.23 |
+| E3-T3-reponse-E | OK | 3 | gemini-4-carbon | 33203 | oui | 5.02 |
 
 Absences acceptées par l'arbitre : kimi.
-Ligne : 28.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 14.72 USD.
+Ligne : 28.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 15.52 USD.
 Réserve (v9-v8) : cellules de Google écrites sur une réponse sans aucun jeton de pensée : E3-T1-conception-C, E3-T2-critique-croisee-C, E3-T3-reponse-C.
-Dépense totale : 14.72 USD. Mis à jour 2026-11-21T23:47:08Z.
+Dépense totale : 15.52 USD. Mis à jour 2026-11-21T23:54:35Z.
