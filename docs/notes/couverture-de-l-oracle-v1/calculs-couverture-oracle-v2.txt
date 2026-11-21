@@ -1,0 +1,183 @@
+
+====================================================================================================
+[A] Détection = sélection x identification : le plancher d'audit corrigé de la couverture de l'oracle
+====================================================================================================
+Rang du premier épisode endommagé pris avec probabilité 0,95 : plus petit K tel que 1 - (1 - p.r)^K >= 0,95,
+p = taux d'audit au hasard, r = probabilité que l'oracle reconnaisse ce dommage quand il le regarde.
+
+     p | r = 1.0  | r = 0.5  | r = 0.2  | r = 0.05 | r = 0.0 
+  0.01 |      299 |      598 |     1497 |     5990 |   jamais
+  0.05 |       59 |      119 |      299 |     1197 |   jamais
+   0.2 |       14 |       29 |       74 |      299 |   jamais
+
+Objets de contrôle : r = 1 doit rendre 299 (p = 0,01) et 14 (p = 0,20), valeurs des notes précédentes ;
+r = 0 doit rendre « jamais ». C'est l'attaquant qui choisit le genre et la dose, donc r est le minimum sur
+ce qu'il peut choisir, pas une moyenne.
+
+====================================================================================================
+[B] Ce que des dommages plantés disent de r : borne exacte, et prix du « pire des strates »
+====================================================================================================
+Borne haute à 95 % du taux de manque de l'oracle dans une strate, après n plants dont m manqués (exacte).
+
+    n |    m = 0 |    m = 1 |    m = 2
+   10 |   0.2589 |   0.3942 |   0.5069
+   20 |   0.1391 |   0.2161 |   0.2826
+   30 |   0.0950 |   0.1486 |   0.1953
+   59 |   0.0495 |   0.0779 |   0.1029
+  100 |   0.0295 |   0.0466 |   0.0616
+  299 |   0.0100 |   0.0158 |   0.0209
+
+Nombre de plants par strate, tous retrouvés, pour certifier « r >= 1 - e dans CHAQUE strate »,
+à 95 % simultanément sur K strates (correction de Bonferroni) : n >= ln(0,05/K) / ln(1 - e).
+
+ K strates |  e = 0,10 |  e = 0,20 |  total (e = 0,10)
+         1 |        29 |        14 |                29
+         5 |        44 |        21 |               220
+        10 |        51 |        24 |               510
+        20 |        57 |        27 |              1140
+
+Objet de contrôle : m = 0, n = 59 doit rendre une borne juste sous 0,05, car 0,95^59 = 0.0485 < 0,05 ; n = 299 juste sous 0,01, car 0,99^299 = 0.0495 < 0,05.
+Ce que la borne certifie : le taux de manque pour des dommages tirés comme ceux du planteur, dans cette strate.
+
+====================================================================================================
+[C] L'angle mort de taille : verdict binaire à limite de détection contre mesure graduée appariée
+====================================================================================================
+Suppositions : horizon T = 10000 épisodes ; audit p = 0.2 ; dommage plafonné à 1 par épisode ;
+verdict binaire : probabilité d'identifier une dose x = Phi((ln x - ln 0.3) / 0.5) ;
+mesure graduée : écart au jumeau par épisode audité, bruit honnête d'écart type 0.25, test unilatéral à 5 %
+sur la somme des écarts de tous les épisodes audités (approximation normale, nombre d'audits pris à sa moyenne).
+
+(i) Verdict binaire seul : probabilité de NON-détection d'un total M réparti en doses x sur M/x épisodes.
+  dose x |  identif. | M = 30   | M = 100  | M = 200 
+     1.0 |   0.99198 |   0.0013 |   0.0000 |   0.0000
+     0.5 |   0.84653 |   0.0000 |   0.0000 |   0.0000
+     0.3 |   0.50000 |   0.0000 |   0.0000 |   0.0000
+     0.1 |   0.01400 |   0.4311 |   0.0605 |   0.0037
+    0.05 |   0.00017 |   0.9799 |   0.9344 |   0.8732
+    0.02 |   0.00000 |   1.0000 |   1.0000 |   0.9999
+
+(ii) Mesure graduée seule : la somme attendue des écarts audités vaut p.M quelle que soit la répartition ;
+     son écart type honnête vaut sigma.racine(p.T). Non-détection = 1 - Phi(M.racine(p/T)/sigma - 1,645).
+     M =   30 : z = 0.537 ; non-détection = 0.8661
+     M =  100 : z = 1.789 ; non-détection = 0.4428
+     M =  200 : z = 3.578 ; non-détection = 0.0266
+     Total vu une fois sur deux : 92.0 ; vu 95 fois sur 100 : 183.9 (unités de dommage, sur 10000 épisodes).
+     Même loi en racine que la règle « moniteur invalide » ; elle est proportionnelle à sigma :
+       sigma = 0.5    -> total vu 95 fois sur 100 :   367.8
+       sigma = 0.25   -> total vu 95 fois sur 100 :   183.9
+       sigma = 0.125  -> total vu 95 fois sur 100 :    92.0
+     Ces lignes supposent que l'écart au jumeau vaut le dommage plus un bruit, quel que soit le genre du dommage.
+     Si la mesure graduée ne répond à un genre qu'avec une sensibilité s (écart attendu = s fois le dommage),
+     le total réel vu 95 fois sur 100 est divisé par s (sigma = 0.25) :
+       s = 1.0   -> total réel vu 95 fois sur 100 :    183.9
+       s = 0.5   -> total réel vu 95 fois sur 100 :    367.8
+       s = 0.2   -> total réel vu 95 fois sur 100 :    919.6
+       s = 0.05  -> total réel vu 95 fois sur 100 :   3678.3
+       s = 0.0   -> jamais
+     Objets de contrôle : s = 1 doit rendre la valeur de la ligne « vu 95 fois sur 100 » ; s = 0 doit rendre « jamais ».
+
+(iii) Pire répartition pour le défenseur, à M donné :
+     M =   30 : binaire seul 1.0000 ; gradué seul 0.8661 ; les deux (produit, au pire) 0.8661
+     M =  100 : binaire seul 1.0000 ; gradué seul 0.4428 ; les deux (produit, au pire) 0.4428
+     M =  200 : binaire seul 0.9999 ; gradué seul 0.0266 ; les deux (produit, au pire) 0.0266
+
+Objets de contrôle : (faux) un verdict binaire devant un dommage dilué sous sa limite : la conclusion
+« le total M est vu » y est fausse, attendu non-détection proche de 1 ; (vrai) dose pleine x = 1 : attendu
+non-détection proche de 0. Lecture : le verdict binaire ne borne rien du dommage dilué ; seule la mesure
+graduée le borne, et sa borne vaut ce que vaut l'appariement au jumeau (sigma).
+
+====================================================================================================
+[D] Masse manquante des genres de dommage : Good-Turing, son biais exact, sa marge sans hypothèse
+====================================================================================================
+loi des genres chez le planteur                  |     n | E[masse manquante] |   E[N1/n] |    biais |     1/n
+objet vrai : 5 genres équiprobables              |   100 |           0.000000 |  0.000000 | 0.000000 |  0.0100
+objet vrai : 5 genres équiprobables              |   500 |           0.000000 |  0.000000 | 0.000000 |  0.0020
+genres en loi de Zipf, 200 genres                |   100 |           0.334765 |  0.336328 | 0.001563 |  0.0100
+genres en loi de Zipf, 200 genres                |   500 |           0.112701 |  0.112924 | 0.000223 |  0.0020
+objet faux : 1 000 000 de genres équiprobables   |   100 |           0.999900 |  0.999901 | 0.000001 |  0.0100
+objet faux : 1 000 000 de genres équiprobables   |   500 |           0.999500 |  0.999501 | 0.000001 |  0.0020
+
+Le biais de N1/n (part des genres vus une seule fois) est toujours entre 0 et 1/n : somme des p^2.(1-p)^(n-1).
+Marge sans hypothèse sur la loi, tirages indépendants : avec probabilité >= 1 - d,
+  masse manquante <= N1/n + (1 + racine(2)).racine(ln(2/d)/n)
+  (inégalité des différences bornées sur N1, qu'un tirage change d'au plus 2, et théorème 1 de Berend et
+   Kontorovich sur la queue haute de la masse manquante ; assemblage de moi, non contre-lu).
+
+ n plants classés |  marge à d = 0,05
+               50 |             0.656
+              100 |             0.464
+              200 |             0.328
+              500 |             0.207
+             1000 |             0.147
+             2000 |             0.104
+             5000 |             0.066
+Plants nécessaires pour une marge de 0,10 : 2151.
+
+Objets de contrôle : sur l'objet faux (presque tout genre est neuf) l'estimateur doit rendre environ 1, il
+rend 0,9999 ; sur l'objet vrai (5 genres) environ 0, il rend 0,000000. La borne ne vaut que pour des tirages
+indépendants d'une loi fixe : celle du planteur, jamais celle d'un attaquant qui choisit.
+
+====================================================================================================
+[E] L'accord entre oracles comme mesure de l'angle mort commun : juste si les dommages se valent, faux sinon
+====================================================================================================
+objet vrai : tous les dommages vus avec probabilité 0,5 par chaque oracle
+   deux oracles   : part vraie vue par aucun = 0.2500 ; part estimée (capture et recapture) = 0.2500
+   trois oracles  : part vraie vue par aucun = 0.1250 ; borne basse de Chao à trois occasions = 0.1250
+objet faux : moitié faciles (0,9), moitié durs pour tous (0,1)
+   deux oracles   : part vraie vue par aucun = 0.4100 ; part estimée (capture et recapture) = 0.0198
+   trois oracles  : part vraie vue par aucun = 0.3650 ; borne basse de Chao à trois occasions = 0.0450
+
+Sur l'objet vrai, les deux méthodes rendent la vérité. Sur l'objet faux, elles « réussissent » (2 % et 4,5 %
+d'angle mort annoncés) là où la conclusion est fausse (41 % et 36,5 %) :
+comme garanties elles sont mortes ; elles restent des bornes basses. Un genre dur pour tous les oracles est
+ce que cherche un attaquant.
+
+====================================================================================================
+[F] La chaîne de raccordement : oracle bon marché sur tout, oracle cher sur un sous-échantillon tiré au hasard
+====================================================================================================
+Suppositions : 4000 épisodes lus par l'oracle bon marché, 200 tirés au hasard pour l'oracle cher ;
+taux de dommage vrai (au sens de l'oracle cher) = 0.15 ; l'oracle bon marché voit une part c des dommages,
+sans fausse alerte. Estimateur : moyenne(bon marché, tout) + moyenne(cher - bon marché, sous-échantillon).
+Variance calculée comme pour deux échantillons indépendants (approximation déclarée).
+
+part vue c | bon marché seul : biais | raccordé : biais | écart type raccordé | vaut n étiquettes chères
+       0.0 |                  -0.150 |            0.000 |              0.0252 |                      200
+       0.3 |                  -0.105 |            0.000 |              0.0219 |                      265
+       0.6 |                  -0.060 |            0.000 |              0.0174 |                      422
+       0.9 |                  -0.015 |            0.000 |              0.0102 |                     1237
+       1.0 |                   0.000 |            0.000 |              0.0056 |                     4000
+
+Objets de contrôle : c = 1 doit valoir N/n fois le sous-échantillon (4000 étiquettes), c = 0 doit valoir le
+sous-échantillon seul (200). Un attaquant qui place son dommage hors de la vue de l'oracle bon marché ramène
+le gain à 1 ; il ne peut pas biaiser l'estimation. Reste l'angle mort de l'oracle cher lui-même.
+
+====================================================================================================
+[G] La formule de taille d'échantillon des garanties nucléaires est le plancher d'audit lu à l'envers
+====================================================================================================
+n = N.(1 - beta^(1/D)) avec N = 1000, D = 30 objets en défaut, beta = 0.1 : n = 74.
+Probabilité exacte (hypergéométrique) de ne tirer aucun défaut avec n = 74 : 0.0961 (visé : 0.1).
+   identification r = 1.0  : non-détection réalisée = 0.0961
+   identification r = 0.8  : non-détection réalisée = 0.1568
+   identification r = 0.5  : non-détection réalisée = 0.3201
+   identification r = 0.2  : non-détection réalisée = 0.6386
+Objet de contrôle : r = 1 doit rendre la valeur exacte ci-dessus. Sous ce modèle (chaque défaut tiré est identifié
+avec probabilité r, indépendamment), la probabilité de détection réalisée n'atteint le niveau visé que si
+l'identification vaut 1 : c'est ce que dit le glossaire, entrée 9.32, lu sous ce modèle (son texte dit « not
+necessarily as large as (1 - beta) », pas « seulement si ») ; et c'est la question.
+
+====================================================================================================
+[H] L'usage tiré au hasard : sans biais n'est pas voir (dilution par le poids de l'usage atteint)
+====================================================================================================
+Suppositions : une famille de K usages de poids égaux w = 1/K ; à chaque audit (taux p = 0.01), un seul usage
+est tiré ; le dommage ne nuit qu'à un usage ; quand cet usage est tiré, l'oracle voit le dommage avec probabilité d.
+Identification par audit = w.d. Rang du premier épisode endommagé pris avec probabilité 0,95 (même loi qu'en A).
+
+ K usages |      w | d = 1.0  | d = 0.5  | d = 0.2 
+        1 |  1.000 |      299 |      598 |     1497
+        5 |  0.200 |     1497 |     2995 |     7488
+       10 |  0.100 |     2995 |     5990 |    14978
+       50 |  0.020 |    14978 |    29956 |    74892
+
+Objets de contrôle : K = 1, d = 1 doit rendre 299 (bloc A, r = 1) ; K = 5, d = 1 doit rendre 1497 (r = 0,2) ;
+K = 10, d = 0,5 doit rendre 5990 (r = 0,05). Lecture : l'estimation reste sans biais, mais l'attaquant qui
+connaît la famille vise l'usage de plus petit poids ; le genre devient de la taille.
