@@ -1,0 +1,200 @@
+........................................................................ [ 26%]
+...................................EEE.................................. [ 53%]
+..........................F...........F..FFF............................ [ 79%]
+.......................................................                  [100%]
+==================================== ERRORS ====================================
+__ ERROR at setup of test_course_entiere_distillation_et_evaluation_scellees ___
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x77b9a2cbce50>, _basetemp=PosixPath('/tmp/pytest-of-root/pytest-0'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def course(tmp_path_factory):
+        racine = tmp_path_factory.mktemp("iib-v5-distillation")
+        config = _monde(racine)
+        config[cd.SECTION] = section_jouet()
+        modele, monde = ModeleJouetEleve(), la.MondeJouet()
+        marques = []
+        d = _distillateur(racine, modele, progres=lambda **c: marques.append(c))
+>       la.phase_etalonnage(config, racine, racine / "course", d.modele, monde)
+
+tests/test_iib_distillation_bout_en_bout_v5.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/controle_ia/iib/lanceur_v5.py:237: in phase_etalonnage
+    exiger_accord(config, environnement or {}, carte)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+config = {'noeuds': {'1': 'a', '2': 'a', '3': 'a', '4': 'a', ...}, 'organisme': {'actions': 10, 'actions_comptees': 9, 'exces_p...age': {'temperature': 1.0, 'coupe_probabilite_cumulee': 1.0, 'jetons_gardes': 0, 'penalite_repetition': 1.0, ...}, ...}
+environnement = {}, carte = None
+
+    def exiger_accord(config: dict, environnement: dict, carte=None) -> str | None:
+        """Accord cité pour toute machine payante : en mode réel, `go_id` de la configuration (forme vérifiée par
+        `configuration_v5`) égal à `IIB_GO_ID` posé par le lanceur de session sur la machine ; sinon refus. Mode jouet : refusé sur
+        une machine payante — `IIB_GO_ID` posé ou carte visible (contre-lecture, m7) ; `carte` : essais (sinon `carte_visible()`)."""
+        if config["mode"] != "reel":
+            if environnement.get("IIB_GO_ID") or (carte_visible() if carte is None else carte):
+>               raise GardeArret("mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine "
+                                 "payante ne joue qu'une configuration réelle sous accord cité")
+E               controle_ia.gardes.GardeArret: mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine payante ne joue qu'une configuration réelle sous accord cité
+
+src/controle_ia/iib/lanceur_v5.py:84: GardeArret
+_ ERROR at setup of test_evaluation_quatre_conditions_deux_oracles_modele_rendu_a_dose_nulle _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x77b9a2cbce50>, _basetemp=PosixPath('/tmp/pytest-of-root/pytest-0'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def course(tmp_path_factory):
+        racine = tmp_path_factory.mktemp("iib-v5-distillation")
+        config = _monde(racine)
+        config[cd.SECTION] = section_jouet()
+        modele, monde = ModeleJouetEleve(), la.MondeJouet()
+        marques = []
+        d = _distillateur(racine, modele, progres=lambda **c: marques.append(c))
+>       la.phase_etalonnage(config, racine, racine / "course", d.modele, monde)
+
+tests/test_iib_distillation_bout_en_bout_v5.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/controle_ia/iib/lanceur_v5.py:237: in phase_etalonnage
+    exiger_accord(config, environnement or {}, carte)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+config = {'noeuds': {'1': 'a', '2': 'a', '3': 'a', '4': 'a', ...}, 'organisme': {'actions': 10, 'actions_comptees': 9, 'exces_p...age': {'temperature': 1.0, 'coupe_probabilite_cumulee': 1.0, 'jetons_gardes': 0, 'penalite_repetition': 1.0, ...}, ...}
+environnement = {}, carte = None
+
+    def exiger_accord(config: dict, environnement: dict, carte=None) -> str | None:
+        """Accord cité pour toute machine payante : en mode réel, `go_id` de la configuration (forme vérifiée par
+        `configuration_v5`) égal à `IIB_GO_ID` posé par le lanceur de session sur la machine ; sinon refus. Mode jouet : refusé sur
+        une machine payante — `IIB_GO_ID` posé ou carte visible (contre-lecture, m7) ; `carte` : essais (sinon `carte_visible()`)."""
+        if config["mode"] != "reel":
+            if environnement.get("IIB_GO_ID") or (carte_visible() if carte is None else carte):
+>               raise GardeArret("mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine "
+                                 "payante ne joue qu'une configuration réelle sous accord cité")
+E               controle_ia.gardes.GardeArret: mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine payante ne joue qu'une configuration réelle sous accord cité
+
+src/controle_ia/iib/lanceur_v5.py:84: GardeArret
+_ ERROR at setup of test_course_refusee_avant_le_premier_tour_si_la_lecture_de_la_premiere_action_est_vide _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x77b9a2cbce50>, _basetemp=PosixPath('/tmp/pytest-of-root/pytest-0'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def course(tmp_path_factory):
+        racine = tmp_path_factory.mktemp("iib-v5-distillation")
+        config = _monde(racine)
+        config[cd.SECTION] = section_jouet()
+        modele, monde = ModeleJouetEleve(), la.MondeJouet()
+        marques = []
+        d = _distillateur(racine, modele, progres=lambda **c: marques.append(c))
+>       la.phase_etalonnage(config, racine, racine / "course", d.modele, monde)
+
+tests/test_iib_distillation_bout_en_bout_v5.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/controle_ia/iib/lanceur_v5.py:237: in phase_etalonnage
+    exiger_accord(config, environnement or {}, carte)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+config = {'noeuds': {'1': 'a', '2': 'a', '3': 'a', '4': 'a', ...}, 'organisme': {'actions': 10, 'actions_comptees': 9, 'exces_p...age': {'temperature': 1.0, 'coupe_probabilite_cumulee': 1.0, 'jetons_gardes': 0, 'penalite_repetition': 1.0, ...}, ...}
+environnement = {}, carte = None
+
+    def exiger_accord(config: dict, environnement: dict, carte=None) -> str | None:
+        """Accord cité pour toute machine payante : en mode réel, `go_id` de la configuration (forme vérifiée par
+        `configuration_v5`) égal à `IIB_GO_ID` posé par le lanceur de session sur la machine ; sinon refus. Mode jouet : refusé sur
+        une machine payante — `IIB_GO_ID` posé ou carte visible (contre-lecture, m7) ; `carte` : essais (sinon `carte_visible()`)."""
+        if config["mode"] != "reel":
+            if environnement.get("IIB_GO_ID") or (carte_visible() if carte is None else carte):
+>               raise GardeArret("mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine "
+                                 "payante ne joue qu'une configuration réelle sous accord cité")
+E               controle_ia.gardes.GardeArret: mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine payante ne joue qu'une configuration réelle sous accord cité
+
+src/controle_ia/iib/lanceur_v5.py:84: GardeArret
+=================================== FAILURES ===================================
+__________________ test_second_passage_des_conditions_refuse ___________________
+
+course = {'racine': PosixPath('/tmp/pytest-of-root/pytest-0/iib-v50'), 'config': {'noeuds': {'1': 'a', '2': 'a', '3': 'a', '4':...ouetDeLangue object at 0x77b8fe95d5d0>, 'monde': <controle_ia.iib.lanceur_v5.MondeJouet object at 0x77b8fe95e550>, ...}
+
+    def test_second_passage_des_conditions_refuse(course):
+        with pytest.raises(GardeArret, match="second passage"):
+            la.phase_conditions(course["config"], course["racine"], course["racine"] / "course")
+        # même si le seul résultat de la désignation a disparu, le résultat scellé des conditions suffit à refuser
+>       with pytest.raises(GardeArret, match="déjà joué"):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'déjà joué'
+E         Actual message: "mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine payante ne joue qu'une configuration réelle sous accord cité"
+
+tests/test_iib_lanceur_v5.py:95: AssertionError
+___________ test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_essai_a_blanc_de_bout_en_0')
+
+    def test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree(tmp_path):
+        """B1 : `python -m controle_ia.iib.lanceur_v5 --phase etalonnage`, puis `--phase conditions`, sur le monde jouet, comme
+        l'amorce les appelle (répertoire courant = racine du dépôt cloné ; sorties sous runs/, diag/, donnees/)."""
+        import os
+        import subprocess
+        import sys
+    
+        config, chemin = _depot_jouet(tmp_path)
+        run = "20991231-000001-iib-jouet"
+        env = {k: v for k, v in os.environ.items() if k != "IIB_GO_ID"}
+        env.update({"PYTHONPATH": str(DEPOT / "src"), "PATH": "/usr/bin:/bin"})          # aucune carte visible sur ce chemin
+        base = [sys.executable, "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-iib-v5-jouet.json", "--run-id", run]
+        r = subprocess.run(base + ["--phase", "etalonnage"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=300)
+>       assert r.returncode == 0, r.stderr[-800:]
+E       AssertionError: ARRÊT : mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine payante ne joue qu'une configuration réelle sous accord cité
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/root/amorce-depot/.venv/bin/python', '-m', 'controle_ia.iib.lanceur_v5', '--config', 'entrees...ur la machine, ou carte visible) : refus — une machine payante ne joue qu'une configuration réelle sous accord cité\n").returncode
+
+tests/test_iib_lanceur_v5.py:331: AssertionError
+_______________ test_surveillance_cas_sain_depense_sous_12_rien ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_surveillance_cas_sain_dep0')
+
+    def test_surveillance_cas_sain_depense_sous_12_rien(tmp_path):
+        code, sortie, texte, appels, d = _surveiller(tmp_path, "etalonnage", 8.0)                # 8 h à 1,38 : 11,04 USD
+>       assert code == 124, sortie                                                                 # la surveillance poursuit : seule la durée de l'essai l'interrompt
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: journaux de la surveillance copiés, datés, dans /tmp/pytest-of-root/pytest-0/test_surveillance_cas_sain_dep0/session/traces-location (fin-de-surveillance-*)
+E         ARRET garde : règle de coupure de l'étalonnage illisible (Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/root/amorce-depot/src/controle_ia/iib/session_v5.py", line 28, in <module>
+E             from . import configuration_v5 as cf
+E           File "/root/amorce-depot/src/controle_ia/iib/configuration_v5.py", line 33, in <module>
+E             from .lois_exactes_v5 import seuil_du_tour_de_controle
+E           File "/root/amorce-depot/src/controle_ia/iib/lois_exactes_v5.py", line 22, in <module>
+E             import numpy as np
+E         ModuleNotFoundError: No module named 'numpy')
+E         ARRÊT PAR L'IDENTIFIANT (R10) : timeout -k 5 120 /tmp/pytest-of-root/pytest-0/test_surveillance_cas_sain_dep0/outil/vastai stop instance 61414494
+E         
+E       assert 3 == 124
+
+tests/test_iib_lanceur_v5.py:479: AssertionError
+_ test_surveillance_artefact_depense_a_12_coupure_motif_ecrit_arret_par_l_identifiant _
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_surveillance_artefact_dep0')
+
+    def test_surveillance_artefact_depense_a_12_coupure_motif_ecrit_arret_par_l_identifiant(tmp_path):
+        code, sortie, texte, appels, d = _surveiller(tmp_path, "etalonnage", 9.0)                # 9 h à 1,38 : 12,42 USD, sous la coupure de la ligne (55)
+        assert code == 3, sortie
+>       assert "ARRET coupure de l'étalonnage : dépense comptée 12.4" in sortie and "ARRET depense" not in texte
+E       assert ("ARRET coupure de l'étalonnage : dépense comptée 12.4" in 'journaux de la surveillance copiés, datés, dans /tmp/pytest-of-root/pytest-0/test_surveillance_artefact_dep0/session/... : timeout -k 5 120 /tmp/pytest-of-root/pytest-0/test_surveillance_artefact_dep0/outil/vastai stop instance 61414494\n')
+
+tests/test_iib_lanceur_v5.py:487: AssertionError
+_ test_surveillance_hors_etalonnage_la_regle_ne_joue_pas_et_phase_illisible_arrete _
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_surveillance_hors_etalonn0')
+
+    def test_surveillance_hors_etalonnage_la_regle_ne_joue_pas_et_phase_illisible_arrete(tmp_path):
+        code, sortie, texte, appels, d = _surveiller(tmp_path / "course", "course", 9.0)
+>       assert code == 124 and "phase course" in texte and "POURSUIVRE" in texte and "ARRET" not in texte and not (d / "coupure-etalonnage.txt").exists()
+E       assert (3 == 124)
+
+tests/test_iib_lanceur_v5.py:501: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_iib_lanceur_v5.py::test_second_passage_des_conditions_refuse
+FAILED tests/test_iib_lanceur_v5.py::test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree
+FAILED tests/test_iib_lanceur_v5.py::test_surveillance_cas_sain_depense_sous_12_rien
+FAILED tests/test_iib_lanceur_v5.py::test_surveillance_artefact_depense_a_12_coupure_motif_ecrit_arret_par_l_identifiant
+FAILED tests/test_iib_lanceur_v5.py::test_surveillance_hors_etalonnage_la_regle_ne_joue_pas_et_phase_illisible_arrete
+ERROR tests/test_iib_distillation_bout_en_bout_v5.py::test_course_entiere_distillation_et_evaluation_scellees
+ERROR tests/test_iib_distillation_bout_en_bout_v5.py::test_evaluation_quatre_conditions_deux_oracles_modele_rendu_a_dose_nulle
+ERROR tests/test_iib_distillation_bout_en_bout_v5.py::test_course_refusee_avant_le_premier_tour_si_la_lecture_de_la_premiere_action_est_vide
+5 failed, 263 passed, 3 errors in 502.12s (0:08:22)
