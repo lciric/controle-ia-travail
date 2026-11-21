@@ -1,0 +1,93 @@
+Devis de la part du lot honnête neuf L-1 qui étalonne P1 et P2 — calculs v2
+Montants en USD. rho et F sont NON FONDÉS : grilles seulement.
+
+Bloc 1 — effectifs effectifs exigés (recalcul)
+   P1, seuil haut certifié à 97,5 % : au moins 368 épisodes honnêtes effectifs (rang haut à 368 : 1 ; à 367 : 0)
+   P2, deux bouts certifiés à 98,75 % : au moins 437 (rang haut à 437 : 1 ; à 436 : 0)
+   bande de P2 à 437 : rangs 1 à 11, K = 11 seuils ; plancher c_min sous e = 0,05 dès 133 épisodes effectifs par côté au lot d'évaluation (hors de ce devis)
+
+Bloc 2 — coût d'un épisode honnête et frais fixes (carte A100 SXM4 de 80 Go)
+   40,2 s par épisode en lots de 8 : 100 épisodes = 1,117 h de carte, soit 1,25 à 1,54 USD ; au pire (hôte deux fois plus lent, 1,40 USD/h) 3,31
+   frais fixes par instance : 1,8 h, soit 2,01 à 2,48 USD ; téléchargement 40 Go : 1,04 à 2,00 USD
+
+Bloc 3 — épisodes réels à acheter pour 437 épisodes effectifs, selon F (familles éligibles) et rho (corrélation par famille)
+   règle : familles de taille égale m ; effectif effectif = plancher(F·m / (1 + (m − 1)·rho)) ; borne haute 1311 épisodes ; « — » = non jugeable sous la borne
+   F \ rho            0,00          0,05          0,10          0,20          0,30          0,50
+        40      440 (m=11)    920 (m=23)             —             —             —             —
+        60       480 (m=8)    660 (m=11)             —             —             —             —
+        80       480 (m=6)     640 (m=8)    880 (m=11)             —             —             —
+       100       500 (m=5)     600 (m=6)     700 (m=7)             —             —             —
+       150       450 (m=3)     600 (m=4)     600 (m=4)     900 (m=6)             —             —
+       200       600 (m=3)     600 (m=3)     600 (m=3)     800 (m=4)    1000 (m=5)             —
+       300       600 (m=2)     600 (m=2)     600 (m=2)     600 (m=2)     600 (m=2)     900 (m=3)
+       437       437 (m=1)     437 (m=1)     437 (m=1)     437 (m=1)     437 (m=1)     437 (m=1)
+   lecture : avec rho > 0, l'effectif effectif plafonne à F / rho quand m grandit ; il faut donc F > 437·rho, et bien plus pour tenir sous la borne
+
+Bloc 4 — même table pour P1 seule (368 épisodes effectifs)
+   F \ rho            0,00          0,05          0,10          0,20          0,30          0,50
+        40      400 (m=10)    680 (m=17)             —             —             —             —
+        60       420 (m=7)     540 (m=9)    900 (m=15)             —             —             —
+        80       400 (m=5)     480 (m=6)     640 (m=8)             —             —             —
+       100       400 (m=4)     500 (m=5)     600 (m=6)   1200 (m=12)             —             —
+       150       450 (m=3)     450 (m=3)     450 (m=3)     600 (m=4)    1050 (m=7)             —
+       200       400 (m=2)     400 (m=2)     600 (m=3)     600 (m=3)     600 (m=3)             —
+       300       600 (m=2)     600 (m=2)     600 (m=2)     600 (m=2)     600 (m=2)     600 (m=2)
+       437       437 (m=1)     437 (m=1)     437 (m=1)     437 (m=1)     437 (m=1)     437 (m=1)
+
+Bloc 5 — scénarios chiffrés, une instance
+   bas : un épisode effectif par épisode réel (rho = 0, ou une tâche par famille), 437 épisodes
+      6,68 h de carte ; 8,57 à 11,32 USD ; pire cas 21,87 USD en 13,36 h
+      sur deux instances : horloge 4,24 h ; 8,48 h de carte ; 11,62 à 15,80 USD
+   cas de référence (convention NON FONDÉE : F = 150, rho = 0,10, m = 4), 600 épisodes
+      8,50 h de carte ; 10,60 à 13,83 USD ; pire cas 27,26 USD en 17,00 h
+      sur deux instances : horloge 5,15 h ; 10,30 h de carte ; 13,66 à 18,31 USD
+   borne haute, 1311 épisodes
+      16,44 h de carte ; 19,49 à 24,79 USD ; pire cas 50,76 USD en 32,88 h
+      sur deux instances : horloge 9,12 h ; 18,24 h de carte ; 22,54 à 29,27 USD
+   coupure proposée : borne haute sur un hôte 1,5 fois plus lent, au prix haut : 36,13 USD en 24,66 h, arrondi à 37 USD
+   au pire cas, la coupure arrête la course vers 23,58 h : 883 épisodes générés au lieu de 1311 (le pire cas entier, 50,76 USD, n'est pas atteignable)
+
+Bloc 6 — taille des sorties (dernier jeton de l'énoncé et de chaque action, couches 7, 15 et 23, demi-précision)
+   10 actions par épisode (inféré, non mesuré ici) : 0,270 Mo par épisode ; 1311 épisodes : 0,35 Go ; 2 Go comptés avec les textes et les journaux
+   pour mémoire, série par jeton aux trois couches : 55 Mo par épisode, 72 Go à la borne haute : non gardée ; relecture forcée à 0,45 s par passe d'épisode (9,8 min à la borne haute)
+
+Bloc 7 — pour mémoire, parts de L-1 hors de ce devis (aucune ligne demandée)
+   100 épisodes de plus (moitiés de l'étape 2b, pré-mesure de l'étape 2a) : 1,1 h de carte, 1,25 à 1,54 USD hors frais fixes
+   lot des gains de fusion, 5 000 épisodes effectifs, effet de plan 1 : 55,8 h de carte, 62,47 à 77,05 USD hors frais fixes
+   le même, effet de plan 1,3 : 72,6 h de carte, 81,21 à 100,17 USD hors frais fixes
+   le même, effet de plan 3 : 167,5 h de carte, 187,42 à 231,15 USD hors frais fixes
+
+Bloc 8 — relevé du marché (releve-offres-loueur-cartes-2026-11-21T1055Z-v1.json)
+   30 offres A100 SXM4 à une carte, louables, à la demande ; 13 de 80 Go ; prix des 80 Go : 0,8461 à 2,0957 USD/h
+   bornes du devis scellé du barreau 5 (prix ≤ 1,30 ; cœurs ≥ 16 ; mémoire ≥ 128 000 Mo ; CUDA ≥ 13.0 ; stockage ≤ 0,08 USD/h) avec un disque d'au moins 80 Go : 2 offre(s) : 1,0970, 1,1627
+   bornes du devis scellé du barreau 5 (prix ≤ 1,30 ; cœurs ≥ 16 ; mémoire ≥ 128 000 Mo ; CUDA ≥ 13.0 ; stockage ≤ 0,08 USD/h) avec un disque d'au moins 150 Go : 1 offre(s) : 1,1627
+   bornes du devis scellé du barreau 5 (prix ≤ 1,30 ; cœurs ≥ 16 ; mémoire ≥ 128 000 Mo ; CUDA ≥ 13.0 ; stockage ≤ 0,08 USD/h) avec un disque d'au moins 300 Go : 0 offre(s) : aucune
+   sortie de données des offres conformes à 80 Go : 0,0026, 0,0391 USD/Go ; entrée : 0,0013, 0,0260 USD/Go
+
+Bloc 9 — deux instances sous la coupure commune ; pire cas sous les bornes de l'offre ; arrêt à deux fois la durée prévue
+   borne haute sur deux instances, hôtes 1,5 fois plus lents, prix haut : 41,86 USD en 27,36 h de carte : au-dessus de la coupure de 37 USD
+   sur deux instances, la coupure commune couvre la borne haute tant que les hôtes ne sont pas plus de 1,31 fois plus lents ; à 1,5 fois, elle arrête vers 1071 épisodes au lieu de 1311
+   pire cas sous les bornes de l'offre (prix 1,30, stockage 0,08, hôte deux fois plus lent), une instance : 47,47 USD : au-dessus de la coupure, qui l'arrête
+   arrêt à deux fois la durée prévue, cas de référence (600 épisodes) : 17,00 h, 25,56 USD au prix haut : il borne avant la coupure
+
+Bloc 10 — objets de contrôle (attendu écrit avant le rejeu)
+   règle d'achat — « faux » : aucun nombre d'épisodes n'achète le verdict, la règle doit rendre « rien »
+   faux par construction : 40 familles, rho = 0,20 (plafond 40 / 0,20 = 200 effectifs), cible 437 : attendu None ; rendu None
+   faux par construction : la même, cible 368 : attendu None ; rendu None
+   faux par construction : 300 familles, rho = 1 (300 effectifs quel que soit m), cible 368 : attendu None ; rendu None
+   vrai par construction : 437 familles, rho = 0,50 : un épisode par famille : attendu (1, 437) ; rendu (1, 437)
+   vrai par construction : 150 familles, rho = 0 : 3 épisodes par famille : attendu (3, 450) ; rendu (3, 450)
+   repli sur la première question : 100 familles, rho = 0,20, cible 437 : attendu None ; rendu None
+   repli sur la première question : la même, cible 368 (1 200 / 3,2 = 375) : attendu (12, 1200) ; rendu (12, 1200)
+   seuil certifié — « faux » : à 367 épisodes aucun seuil certifié à 97,5 % n'existe ; voie indépendante : 1 − 0,99^n
+   faux par construction : rang haut à 367 : attendu 0 ; rendu 0
+   vrai par construction : rang haut à 368 : attendu 1 ; rendu 1
+   voie indépendante : 1 − 0,99^367 ≥ 0,975 : attendu False ; rendu False
+   voie indépendante : 1 − 0,99^368 ≥ 0,975 : attendu True ; rendu True
+   voie indépendante : 1 − 0,99^436 ≥ 0,9875 : attendu False ; rendu False
+   voie indépendante : 1 − 0,99^437 ≥ 0,9875 : attendu True ; rendu True
+   coupure — « faux » : la course entière tient sous la coupure
+   faux par construction : borne haute au pire cas (hôte deux fois plus lent, 1,40 USD/h) sous la coupure : attendu False ; rendu False
+   faux par construction : borne haute sur deux instances, hôtes 1,5 fois plus lents, sous la coupure : attendu False ; rendu False
+   vrai par construction : borne haute sur une instance, hôte 1,5 fois plus lent, sous la coupure : attendu True ; rendu True
+   objets de contrôle : tous conformes à l’attendu
