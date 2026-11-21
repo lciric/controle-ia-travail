@@ -1,0 +1,62 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/redacteur-mandat-mondes-plantes-v3/erratum-mandat-1/calcul_devis_auteur_mondes_plantes_v6.py	2026-11-21 09:27:27.337810159 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/redacteur-mandat-mondes-plantes-v3/erratum-mandat-1/calcul_devis_auteur_mondes_plantes_v7.py	2026-11-21 09:34:26.085835050 +0000
+@@ -1,9 +1,15 @@
+-"""Devis de l'appel à l'auteur des mondes plantés, course « seuil et moniteurs » — calcul v6.
++"""Devis de l'appel à l'auteur des mondes plantés, course « seuil et moniteurs » — calcul v7.
+ 
+ Arithmétique seule : aucun tirage, aucun appel, aucun fichier lu. Sortie : un objet JSON sur la sortie standard.
+-Usage : python3 -B calcul_devis_auteur_mondes_plantes_v6.py > calcul-devis-auteur-mondes-plantes-v6.json
++Usage : python3 -B calcul_devis_auteur_mondes_plantes_v7.py > calcul-devis-auteur-mondes-plantes-v7.json
+ 
+-Deux changements depuis le calcul v5 (b4b1d52ac464a03e105412be4b5e7a72c9a7a2cac26fa7e90ae1117d51fa49df), sur le mot de
++Un seul changement depuis le calcul v6 (989430a5fd31105c6d059252ce03eba92943a8039dfa96e00f854500a64fc957), sur le mot de
++la mère : le plafond d'arrêt est le pire par essai au taux le plus dur des deux, arrondi au cent vers le haut, fois
++le nombre d'essais. Il tient ainsi le pire de deux essais aux deux taux, et le second essai reste possible après un
++premier essai joué jusqu'au bout de ses plafonds. La fonction plafond_d_arret porte ce changement ; rien d'autre
++ne change. La phrase du rappel ci-dessous sur le plafond « au taux de la table » ne vaut donc plus.
++
++Rappel du calcul v6 : deux changements depuis le calcul v5 (b4b1d52ac464a03e105412be4b5e7a72c9a7a2cac26fa7e90ae1117d51fa49df), sur le mot de
+ la mère :
+ - E1  : la borne de sortie passe de 55 000 à 52 000 caractères ;
+ - T2  : un second taux de conversion, 2,227 caractères par jeton, est calculé à côté de la garde de 2,5 de la table.
+@@ -70,9 +76,10 @@
+ 
+ 
+ def plafond_d_arret(c):
+-    """Plafond d'arrêt, comme aux calculs v1 à v5 : pire par essai au taux de la table, arrondi au cent vers le haut."""
++    """Plafond d'arrêt (v7) : pire par essai au taux le plus dur des deux, arrondi au cent vers le haut."""
+     plus_grand_plafond = max(c["plafond_essai_1"], c["plafond_relance"])
+-    pire_par_essai = cout(jetons(ENTREE_GARDE_CAR, TAUX_TABLE), plus_grand_plafond + c["provision"], c["prix_compte"])
++    pire_par_essai = max(
++        cout(jetons(ENTREE_GARDE_CAR, taux), plus_grand_plafond + c["provision"], c["prix_compte"]) for _, taux in TAUX)
+     par_essai = pire_par_essai.quantize(CENT, rounding=ROUND_CEILING)
+     return par_essai, par_essai * ESSAIS_MAX
+ 
+@@ -114,6 +121,9 @@
+         "le_plafond_d_arret_tient_le_pire": plafond >= pire,
+         "depassement_du_cas_haut_usd": str(max(Decimal(0), cas_haut - plafond)),
+         "depassement_du_pire_usd": str(max(Decimal(0), pire - plafond)),
++        "marge_du_plafond_sur_le_pire_usd": str(plafond - pire),
++        "reste_apres_un_premier_essai_au_pire_usd": str(plafond - pire_par_essai),
++        "le_second_essai_au_pire_tient_dans_ce_reste": plafond - pire_par_essai >= pire_par_essai,
+     }
+ 
+ 
+@@ -141,7 +151,7 @@
+     ligne = [l for l in lignes if l["id"] == CANDIDAT_DE_LA_LIGNE][0]
+     noms = [nom for nom, _ in TAUX]
+     sortie = {
+-        "version": "calcul-devis-auteur-mondes-plantes-v6",
++        "version": "calcul-devis-auteur-mondes-plantes-v7",
+         "entrees": {
+             "taux_caracteres_par_jeton": {nom: str(taux) for nom, taux in TAUX},
+             "entree_mesuree_caracteres": ENTREE_MESUREE_CAR,
+@@ -164,6 +174,8 @@
+                 nom: ligne["aux_deux_taux"][nom]["le_plafond_d_arret_tient_le_cas_haut"] for nom in noms},
+             "le_plafond_de_la_ligne_tient_le_pire": {
+                 nom: ligne["aux_deux_taux"][nom]["le_plafond_d_arret_tient_le_pire"] for nom in noms},
++            "le_second_essai_de_la_ligne_reste_possible_apres_un_premier_au_pire": {
++                nom: ligne["aux_deux_taux"][nom]["le_second_essai_au_pire_tient_dans_ce_reste"] for nom in noms},
+         },
+     }
+     json.dump(sortie, sys.stdout, ensure_ascii=False, indent=1, sort_keys=False)
