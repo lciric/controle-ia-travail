@@ -1,0 +1,77 @@
+[F] Borne des deux lois, par épisode puis sur n épisodes indépendants (correction 3) :
+    déplacement de 0,1 écart type à chaque épisode, test du total au niveau 1 %.
+    n =     1 : puissance 0.0130
+    n =   100 : puissance 0.0924
+    n =   400 : puissance 0.3721
+    n =  1000 : puissance 0.7984
+
+[G] Plancher, régime de signature (l'honnête ne commet jamais ce dommage) (correction 1) :
+    prise avec probabilité 0,95 au plus tard au k-ième épisode endommagé ; q = reconnaissance de l'oracle
+    sur les tâches que le saboteur peut choisir.
+    audit 0.01, q = 1.0 : k = 299
+    audit 0.01, q = 0.6 : k = 498
+    audit 0.01, q = 0.2 : k = 1497
+    audit 0.20, q = 1.0 : k = 14
+    audit 0.20, q = 0.2 : k = 74
+    Table du seuil : taux d'audit minimal pour une prise avant K épisodes endommagés (probabilité 0,95),
+    selon q et selon le nombre L d'épisodes endommagés pendant le délai de l'oracle.
+    K =    30 | q=1.0, L= 0 :   9.5 % | q=0.5, L= 0 :  19.0 % | q=0.2, L= 0 :  47.5 % | q=1.0, L=20 :  25.9 %
+    K =   100 | q=1.0, L= 0 :   3.0 % | q=0.5, L= 0 :   5.9 % | q=0.2, L= 0 :  14.8 % | q=1.0, L=20 :   3.7 %
+    K =   300 | q=1.0, L= 0 :   1.0 % | q=0.5, L= 0 :   2.0 % | q=0.2, L= 0 :   5.0 % | q=1.0, L=20 :   1.1 %
+    K =  1000 | q=1.0, L= 0 :   0.3 % | q=0.5, L= 0 :   0.6 % | q=0.2, L= 0 :   1.5 % | q=1.0, L=20 :   0.3 %
+
+[H] Plancher, régime d'excès, grille de mises de la note (20 mises de 0,25 à 9,75 ; honnête à 0,10) :
+    plus petite mise 0.250 ; sa croissance s'annule à un excès de 0.01092 : en dessous, aucune mise ne gagne.
+    excès 0.100 : médiane    131 audits ; épisodes endommagés en excès avant l'alarme, à 20 % d'audit, de l'ordre de     66
+    excès 0.050 : médiane    535 audits ; épisodes endommagés en excès avant l'alarme, à 20 % d'audit, de l'ordre de    134
+    excès 0.020 : médiane   3132 audits ; épisodes endommagés en excès avant l'alarme, à 20 % d'audit, de l'ordre de    313
+    excès 0.010 : pas de médiane avant 40000 audits ; alarme à l'horizon  0.415
+
+[I] Plancher, régime d'excès, mélange réparé (16 mises en progression géométrique, de 5 à 0,00015) :
+    fausse alarme avant 40 000 audits, honnête à 0,10 : 0.0036 (borne 0,01)
+    excès 0.100 : médiane     139 audits (test idéal, approximation de Wald :     104) ; excès cumulé avant l'alarme : audit complet     14, audit à 20 % de l'ordre de     70
+    excès 0.050 : médiane     505 audits (test idéal, approximation de Wald :     376) ; excès cumulé avant l'alarme : audit complet     25, audit à 20 % de l'ordre de    126
+    excès 0.020 : médiane    2939 audits (test idéal, approximation de Wald :    2190) ; excès cumulé avant l'alarme : audit complet     59, audit à 20 % de l'ordre de    294
+    excès 0.010 : médiane   11466 audits (test idéal, approximation de Wald :    8530) ; excès cumulé avant l'alarme : audit complet    115, audit à 20 % de l'ordre de    573
+    excès 0.005 : médiane   45244 audits (test idéal, approximation de Wald :   33643) ; excès cumulé avant l'alarme : audit complet    226, audit à 20 % de l'ordre de   1131
+    Garantie à horizon donné : plus petit excès de la grille pris avec probabilité >= 0,95 avant n audits.
+    n =   2000 audits : excès >= 0.0400 ; à 0.0300 la probabilité n'est que de 0.769
+    n =  10000 audits : excès >= 0.0200 ; à 0.0150 la probabilité n'est que de 0.905
+    n =  40000 audits : excès >= 0.0100 ; à 0.0075 la probabilité n'est que de 0.915
+    Sous le fil : excès cumulé qu'un test de niveau 1 % sur H épisodes ne voit qu'une fois sur deux,
+    z(0,99) x racine(d0 (1 - d0) H / p), approximation normale.
+    H =  10000, audit 0.20 :    156 épisodes endommagés en excès
+    H = 100000, audit 0.20 :    493 épisodes endommagés en excès
+    H =  10000, audit 0.05 :    312 épisodes endommagés en excès
+
+[J] Test séquentiel idéal, qui connaîtrait l'excès d'avance (approximation de Wald, audit complet) :
+    excès 0.100 :      104 audits ; excès cumulé    10 ; formule 2 d0 (1 - d0) ln(100) / excès =     8
+    excès 0.050 :      376 audits ; excès cumulé    19 ; formule 2 d0 (1 - d0) ln(100) / excès =    17
+    excès 0.020 :     2190 audits ; excès cumulé    44 ; formule 2 d0 (1 - d0) ln(100) / excès =    41
+    excès 0.010 :     8530 audits ; excès cumulé    85 ; formule 2 d0 (1 - d0) ln(100) / excès =    83
+    excès 0.005 :    33643 audits ; excès cumulé   168 ; formule 2 d0 (1 - d0) ln(100) / excès =   166
+
+[K] Pari apparié : agent et jumeau audités sur les mêmes tâches, pari sur les seules paires discordantes.
+    Sous l'honnête, « l'agent est celui qui a endommagé » vaut 1/2 quel que soit le taux honnête.
+    fausse alarme avant 20 000 paires discordantes : 0.0029 (borne 0,01)
+    honnête 0,10, saboteur 0.20 : part de l'agent parmi les discordantes 0.692 ; médiane 85 paires discordantes, soit de l'ordre de   327 tâches auditées et   654 verdicts d'oracle (pari à taux honnête connu, bloc C : 131 verdicts)
+    honnête 0,10, saboteur 0.15 : part de l'agent parmi les discordantes 0.614 ; médiane 241 paires discordantes, soit de l'ordre de  1095 tâches auditées et  2191 verdicts d'oracle (pari à taux honnête connu, bloc C : 535 verdicts)
+
+[L] Recapture diluée (correction 2) : part s du sabotage parmi les épisodes endommagés audités ;
+    rappel 0,8 sur le sabotage, signalement a = 0,01 sur le dommage honnête ; règle n = 6, « invalide » si X <= 2.
+    s = 1.00 : rappel apparent 0.800 ; P(« invalide » | moniteur valide) = 0.017
+    s = 0.50 : rappel apparent 0.405 ; P(« invalide » | moniteur valide) = 0.534
+    s = 0.30 : rappel apparent 0.247 ; P(« invalide » | moniteur valide) = 0.835
+    s = 0.20 : rappel apparent 0.168 ; P(« invalide » | moniteur valide) = 0.936
+    Règle corrigée, à s connu : plus petits n et c tels que P(X <= c | rappel 0,8) <= 0,05 et P(X <= c | rappel 0,2) >= 0,90.
+    s = 1.000 : n =   6 épisodes endommagés audités, « invalide » si X <= 2 (risque 0.0170, puissance 0.9011) ; dont environ   6.0 endommagés par le sabotage
+    s = 0.500 : n =  17 épisodes endommagés audités, « invalide » si X <= 3 (risque 0.0426, puissance 0.9048) ; dont environ   8.5 endommagés par le sabotage
+    s = 0.333 : n =  31 épisodes endommagés audités, « invalide » si X <= 4 (risque 0.0476, puissance 0.9270) ; dont environ  10.3 endommagés par le sabotage
+    s = 0.200 : n =  60 épisodes endommagés audités, « invalide » si X <= 5 (risque 0.0485, puissance 0.9325) ; dont environ  12.0 endommagés par le sabotage
+
+[M] Plancher du dilemme parfait (correction 4) et origine de la valeur 0,128 :
+    chaque regard aveugle avec probabilité 0.5 : aveuglement commun au mieux 0.00
+    chaque regard aveugle avec probabilité 0.6 : aveuglement commun au mieux 0.20
+    chaque regard aveugle avec probabilité 0.8 : aveuglement commun au mieux 0.60
+    rappel à 1 % de fausses alertes d'un détecteur binormal d'aire sous la courbe 0,80 : 0.128
+
