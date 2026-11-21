@@ -2,7 +2,7 @@
 bloc de relecture forcée sous GO-2026-11-21-49).
 
 Étape 1 (plan des étapes 0-1, § B.3 à B.5 ; devis de l'étape 1) :
-1. génération : tranche de mesure de 32 questions, règle d'arrêt (4 réponses ou plus au plafond ; longueur moyenne au-dessus
+1. génération (huit lots de 16 par appel du générateur) : tranche de mesure de 32 questions, règle d'arrêt (4 réponses ou plus au plafond ; longueur moyenne au-dessus
    de 2 400 jetons ; réussite sous 10 % ou au-dessus de 90 % ; fin du noyau projetée au-delà de l'arrêt des lancements),
    puis les 468 autres ; arrêt avant extraction si plus de 5 % des réponses au plafond ou plus de 25 % sans boîte ;
 2. extraction des couches du noyau (2, 3, 4), garde de position, confiance par jeton ;
@@ -83,7 +83,7 @@ def config_etape1(*, modele: str, jeu: dict, generateur_nom: str, invite: str = 
                   decoupage: dict | None = None, taux=sonde_v1.TAUX_ELAGAGE_TABLEAU_8, force_verite_plantee: float = 4.0,
                   borne_basse_plantee: float = 0.9, blocs=BLOCS, taille_lot: int = 16, tranche: dict | None = None,
                   seuils_generation: dict | None = None, tolerance_position: float = 0.05, entete: str | None = None,
-                  relecture: dict | None = None) -> dict:
+                  relecture: dict | None = None, lots_par_appel: int = 8) -> dict:
     for b in blocs:
         if b not in BLOCS:
             raise GardeArret(f"bloc {b!r} inconnu ({BLOCS})")
@@ -99,7 +99,8 @@ def config_etape1(*, modele: str, jeu: dict, generateur_nom: str, invite: str = 
             "decoupage": decoupage or {"mode": "plis", "plis": 5}, "elagage": "masque, sans réapprentissage",
             "taux_elagage": [float(t) for t in taux], "force_verite_plantee": force_verite_plantee,
             "plantation": "injection dans tous les états", "borne_basse_plantee": borne_basse_plantee,
-            "blocs": list(blocs), "taille_lot": taille_lot, "tranche": tranche or dict(TRANCHE),
+            "blocs": list(blocs), "taille_lot": taille_lot, "lots_par_appel": lots_par_appel,
+            "tranche": tranche or dict(TRANCHE),
             "seuils_generation": seuils_generation or dict(GENERATION), "tolerance_position": tolerance_position,
             "relecture": relecture, "convention_couches": "sortie du bloc l, numérotation à partir de 1"}
 
@@ -206,13 +207,16 @@ def etape_generer(racine, run_id, config, chemin_m, manifeste, questions, decoup
         raise GardeArret(f"tranche de {nt} questions non multiple de la taille de lot {tl}")
     tranche, reste = questions[:nt], questions[nt:]
     graine = lambda i: graine_derivee(g, f"question/{i}")
+    tous_lots = lots(questions, tl)
+    n_tranche = nt // tl
     t0 = time.time()
-    r1 = generation_v1.generer_par_lots(tranche, textes, decoupeur, gen, d / "generations", tl, graine)
+    joues = _generer_groupes(list(enumerate(tous_lots))[:n_tranche], textes, decoupeur, gen, d / "generations", graine,
+                             n_tranche)
     duree_tranche = time.time() - t0
     generation_v1.noter_par_lots(questions, d / "generations", d / "notation")
     st = stats_generation(d / "generations", d / "notation", [q["id"] for q in tranche])
     projection = None
-    if r1["lots_ecrits"] == len(tranche) // tl:            # tranche jouée ici : sa durée est mesurée
+    if joues == n_tranche:                                 # tranche jouée ici : sa durée est mesurée
         projection = (time.time() + duree_tranche / len(tranche) * len(reste) + EXTRACTION_SUPPOSEE_S
                       + 25 * DUREE_SONDE_SUPPOSEE_S)
     motifs = regle_tranche(st, config["tranche"], projection, horloge.fin)
@@ -221,13 +225,8 @@ def etape_generer(racine, run_id, config, chemin_m, manifeste, questions, decoup
     if motifs:
         raise GardeArret("tranche de mesure : arrêt et destruction — " + " ; ".join(motifs))
     horloge.exiger("génération des questions restantes")
-    reste_lots = [q for q in reste]
-    # les lots du reste sont numérotés à la suite de ceux de la tranche
-    for i, lot in enumerate(lots(reste_lots, tl), start=len(tranche) // tl):
-        final = d / "generations" / f"{nom_lot(i)}.jsonl"
-        if etat_lot(final) == "scelle":
-            continue
-        _generer_un_lot(lot, textes, decoupeur, gen, final, graine)
+    _generer_groupes(list(enumerate(tous_lots))[n_tranche:], textes, decoupeur, gen, d / "generations", graine,
+                     config.get("lots_par_appel", 8))
     generation_v1.noter_par_lots(questions, d / "generations", d / "notation")
     st_all = stats_generation(d / "generations", d / "notation", [q["id"] for q in questions])
     sg = config["seuils_generation"]
@@ -243,17 +242,39 @@ def etape_generer(racine, run_id, config, chemin_m, manifeste, questions, decoup
     return st_all
 
 
-def _generer_un_lot(lot, textes, decoupeur, gen, final: Path, graine) -> None:
+def _generer_groupes(lots_numerotes, textes, decoupeur, gen, dossier: Path, graine, lots_par_appel: int) -> int:
+    """Génère les lots non scellés, `lots_par_appel` lots par appel du générateur (vLLM sert mieux de gros lots), puis
+    écrit chaque lot à part, scellé. Un lot déjà scellé doit porter les mêmes questions (reprise). Rend le nombre de lots
+    écrits."""
     import hashlib
-    invites_ids = [decoupeur.encoder(textes[q["id"]]) for q in lot]
-    graines = [int(graine(q["id"])) for q in lot]
-    sorties = gen.generer(invites_ids, graines)
-    if len(sorties) != len(lot):
-        raise GardeArret(f"{final.name} : {len(sorties)} réponses pour {len(lot)} questions")
-    ecrire_jsonl(final, [{"id": q["id"], "graine": g, "jetons_invite": ids, "jetons_reponse": s["jetons"],
-                          "n_jetons_reponse": len(s["jetons"]), "texte_reponse": s["texte"], "fin": s["fin"],
-                          "invite_sha256": hashlib.sha256(textes[q["id"]].encode("utf-8")).hexdigest(),
-                          "generateur": gen.nom} for q, ids, g, s in zip(lot, invites_ids, graines, sorties)])
+    if isinstance(lots_par_appel, bool) or not isinstance(lots_par_appel, int) or lots_par_appel < 1:
+        raise GardeArret(f"lots par appel {lots_par_appel!r} : entier positif attendu")
+    a_faire = []
+    for i, lot in lots_numerotes:
+        final = dossier / f"{nom_lot(i)}.jsonl"
+        if etat_lot(final) == "scelle":
+            if [x["id"] for x in lire_jsonl(final)] != [q["id"] for q in lot]:
+                raise GardeArret(f"{final.name} : questions différentes de celles du lot {i} (ordre ou jeu changé)")
+            continue
+        a_faire.append((final, lot))
+    for k in range(0, len(a_faire), lots_par_appel):
+        groupe = a_faire[k:k + lots_par_appel]
+        qs = [q for _, lot in groupe for q in lot]
+        invites_ids = [decoupeur.encoder(textes[q["id"]]) for q in qs]
+        graines = [int(graine(q["id"])) for q in qs]
+        sorties = gen.generer(invites_ids, graines)
+        if len(sorties) != len(qs):
+            raise GardeArret(f"{len(sorties)} réponses pour {len(qs)} questions")
+        o = 0
+        for final, lot in groupe:
+            ecrire_jsonl(final, [{"id": q["id"], "graine": g, "jetons_invite": ids, "jetons_reponse": s["jetons"],
+                                  "n_jetons_reponse": len(s["jetons"]), "texte_reponse": s["texte"], "fin": s["fin"],
+                                  "invite_sha256": hashlib.sha256(textes[q["id"]].encode("utf-8")).hexdigest(),
+                                  "generateur": gen.nom}
+                                 for q, ids, g, s in zip(lot, invites_ids[o:o + len(lot)], graines[o:o + len(lot)],
+                                                         sorties[o:o + len(lot)])])
+            o += len(lot)
+    return len(a_faire)
 
 
 # --- étape 1 : sondes ------------------------------------------------------------------------------------------------

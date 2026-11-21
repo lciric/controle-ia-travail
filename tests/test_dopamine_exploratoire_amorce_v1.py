@@ -160,6 +160,17 @@ def test_preuve_refusee_si_un_fichier_permis_ne_sort_pas(tmp_path):
     assert "NON" in r.stdout and not (T / "versement-final-prouve").exists()
 
 
+def test_preuve_refusee_si_un_seul_fichier_permis_est_trop_gros(tmp_path):
+    """Un fichier permis trop gros pour sortir reste sur le disque : pas de preuve, donc pas de destruction."""
+    D, nu, commit = _depot_et_distant(tmp_path)
+    gros = D / "donnees" / RUN / "generations" / "lot-00001.jsonl"
+    gros.write_text("x" * 6000)
+    corps = bloc("versement") + bloc("preuve") + "prouver_versement && echo PROUVE || echo NON\n"
+    r, T = _harnais(tmp_path, corps, COMMIT=commit, SEUIL="5000")
+    assert "NON" in r.stdout and not (T / "versement-final-prouve").exists()
+    assert "non poussé" in (T / "traces" / "journal.txt").read_text()
+
+
 def test_attente_rend_la_main_a_la_fin_du_processus(tmp_path):
     corps = (bloc("versement") + bloc("attente") + "PAS_ATTENTE_S=1; PERIODE_VERSEMENT_S=100\n"
              "sleep 2 & p=$!\nt0=$(date +%s); attendre_la_marche $p; echo $(( $(date +%s) - t0 ))\n")

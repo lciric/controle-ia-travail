@@ -80,7 +80,7 @@ def test_etape1_de_bout_en_bout_coupure_reprise_et_blocs(depot, monkeypatch):
     chemin_m, m = course_v1.ouvrir_ou_reprendre(depot, RUN1, config, entropie=2026, autoriser_depot_sale=True)
     gen = Compteur(generation_v1.GenerateurTransformers(modele, dec, RJ, math500_v1.ARRETS_QWEN_BOXED, jouet=True))
     st = course_v1.etape_generer(depot, RUN1, config, chemin_m, m, qs, dec, gen)
-    assert st["questions"] == 64 and gen.appels == 4
+    assert st["questions"] == 64 and gen.appels == 2          # tranche (2 lots), puis le reste (2 lots) en un appel
     tranche = verifier_resultat(depot, depot / "diag" / RUN1 / "etape1-tranche-exploratoire.json")["resultat"]
     assert tranche["stats"]["questions"] == 32 and tranche["arret"] == [] and tranche["projection_fin_noyau_s"] > 0
     assert (depot / "donnees" / RUN1 / "invite-question-0.txt").read_text().endswith(ENTETE)
@@ -102,7 +102,7 @@ def test_etape1_de_bout_en_bout_coupure_reprise_et_blocs(depot, monkeypatch):
     chemin_m2, m2 = course_v1.ouvrir_ou_reprendre(depot, RUN1, config)
     assert m2["graines"] == m["graines"]
     course_v1.etape_generer(depot, RUN1, config, chemin_m2, m2, qs, dec, gen)
-    assert gen.appels == 4
+    assert gen.appels == 2
     compte = {"n": 0}
 
     def comptee(*a, **k):
@@ -179,7 +179,7 @@ def test_regle_de_la_tranche_arrete(depot):
     gen = Compteur(generation_v1.GenerateurTransformers(modele, dec, RJ, math500_v1.ARRETS_QWEN_BOXED, jouet=True))
     with pytest.raises(GardeArret, match="tranche de mesure"):
         course_v1.etape_generer(depot, RUN1, config, chemin_m, m, qs, dec, gen)
-    assert gen.appels == 2                            # seule la tranche a tourné
+    assert gen.appels == 1                            # seule la tranche a tourné
     d = verifier_resultat(depot, depot / "diag" / RUN1 / "etape1-tranche-exploratoire.json")["resultat"]
     assert d["arret"] and "réussite" in d["arret"][0]
     assert course_v1.regle_tranche({"questions": 32, "au_plafond": 4, "longueur_moyenne": 100, "reussites": 16},
@@ -292,3 +292,24 @@ def test_plis_par_famille_disjoints():
 def test_config_2a_refuse_un_score_inconnu():
     with pytest.raises(GardeArret):
         course_v1.config_etape2a(modele="jouet", episodes={}, score="autre")
+
+
+def test_generation_groupee_rend_les_memes_lots(depot):
+    """Huit lots par appel ou un seul : mêmes lots, mêmes réponses (graine par question) ; reprise d'un groupe coupé."""
+    modele, dec = jouet_v1.modele_jouet(0)
+    qs = jouet_v1.questions_jouets(80)
+    sorties = {}
+    for k, lpa in ((0, 1), (1, 8)):
+        run = RUN1.replace("120000", f"12010{k}")
+        config = _config1(lots_par_appel=lpa)
+        chemin_m, m = course_v1.ouvrir_ou_reprendre(depot, run, config, entropie=3, autoriser_depot_sale=True)
+        gen = Compteur(generation_v1.GenerateurTransformers(modele, dec, RJ, math500_v1.ARRETS_QWEN_BOXED, jouet=True))
+        course_v1.etape_generer(depot, run, config, chemin_m, m, qs, dec, gen)
+        assert gen.appels == (1 + 3 if lpa == 1 else 1 + 1)
+        d = course_v1.dossier_course(depot, run) / "generations"
+        sorties[lpa] = {f.name: [(x["id"], x["jetons_reponse"]) for x in
+                                 (json.loads(l) for l in f.read_text().splitlines())]
+                        for f in sorted(d.glob("lot-*.jsonl"))}
+    assert sorties[1] == sorties[8] and len(sorties[8]) == 5
+    with pytest.raises(GardeArret, match="lots par appel"):
+        course_v1._generer_groupes([], {}, dec, None, depot, None, 0)

@@ -34,7 +34,7 @@ PERIODE_VERSEMENT_S=600
 PAS_ATTENTE_S=5
 VERSION_VLLM=0.11.0
 MODELE=meta-llama/Llama-3.1-8B-Instruct
-MIN_ESSAIS=124
+MIN_ESSAIS=126
 TEMOIN="$T/versement-final-prouve"
 SIGNAL="$X/signal-pour-la-mere.txt"
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
@@ -154,7 +154,7 @@ prouver_versement() {  # inventaire de tout ce qui existe (noms, tailles, emprei
     : > "$tsv" || return 1
     for f in $(tous_les_fichiers "donnees/$RUN_ID" "runs/$RUN_ID" "diag/$RUN_ID" traces-dopamine/journal); do
         case "$f" in *[!A-Za-z0-9._/-]*) j "preuve : nom illisible : $f"; return 1;; esac
-        p=false; permis "$f" && [ "$(stat -c %s "$D/$f")" -le "$SEUIL" ] && p=true
+        p=false; permis "$f" && p=true      # tout fichier permis doit sortir : trop gros, il bloque la preuve
         printf '%s\t%s\t%s\t%s\n' "$f" "$(stat -c %s "$D/$f")" "$(sha256sum < "$D/$f" | cut -c1-64)" "$p" >> "$tsv" || return 1
     done
     [ -s "$tsv" ] || { j "preuve : rien à inventorier"; return 1; }
@@ -260,11 +260,11 @@ P=$(parent_courant) || arret "branche de sortie illisible" 2
 [ -z "$(git -C "$D" ls-tree -d "$P" "donnees/$RUN_ID" 2> /dev/null)" ] || arret "course $RUN_ID déjà présente sur $BR (R12)" 2
 j "dépôt au commit $COMMIT ; branche de sortie $BR (parent $P)"
 # 3. paquets
-python3 -m venv "$T/venv" && timeout 3600 "$T/venv/bin/pip" install -q -r "$D/requirements-gpu.txt" > "$X/pip.txt" 2>&1 || arret "installation des paquets" 2
+python3 -m venv "$T/venv" && timeout 3600 "$T/venv/bin/pip" install -q --no-cache-dir -r "$D/requirements-gpu.txt" > "$X/pip.txt" 2>&1 || arret "installation des paquets" 2
 PY="$T/venv/bin/python"
 "$PY" -c 'import torch, sys; sys.exit(0 if torch.cuda.is_available() else 1)' || arret "torch ne voit pas la carte" 2
 if true; then
-    python3 -m venv "$T/venv-vllm" && timeout 3600 "$T/venv-vllm/bin/pip" install -q "vllm==$VERSION_VLLM" scipy > "$X/pip-vllm.txt" 2>&1 || arret "installation de vLLM $VERSION_VLLM" 2
+    python3 -m venv "$T/venv-vllm" && timeout 3600 "$T/venv-vllm/bin/pip" install -q --no-cache-dir "vllm==$VERSION_VLLM" scipy > "$X/pip-vllm.txt" 2>&1 || arret "installation de vLLM $VERSION_VLLM" 2
 fi
 cd "$D" || arret "dépôt" 2
 # 4. essais du paquet

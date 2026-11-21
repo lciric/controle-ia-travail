@@ -26,7 +26,8 @@ class DecoupeurHF:
         return [int(i) for i in self.tok(texte, add_special_tokens=speciaux)["input_ids"]]
 
     def decoder(self, ids) -> str:
-        return self.tok.decode(list(ids), skip_special_tokens=False)
+        """Sans nettoyage des espaces (« . » collé, etc.) : le décodage reste sans perte, la garde d'invite le suppose."""
+        return self.tok.decode(list(ids), skip_special_tokens=False, clean_up_tokenization_spaces=False)
 
     def gabarit(self, systeme: str, utilisateur: str) -> str:
         return self.tok.apply_chat_template([{"role": "system", "content": systeme},
