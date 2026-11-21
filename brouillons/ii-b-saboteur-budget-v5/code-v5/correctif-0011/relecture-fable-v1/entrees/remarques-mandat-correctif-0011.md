@@ -1,0 +1,21 @@
+# Mandat du développeur du correctif 0011 (environnement de la machine) — v1
+
+Écrit le 2026-11-21 par la session de reconception (côté saboteur). Pièce de classe B. Accords : GO-2026-11-21-84 (Fable à sa limite : « Opus 5.5, en effort maximal, écrit seulement les corrections », relecture par Fable 5.2 appelé par l'API, puis scellement) ; demande de la mère du 21 novembre vers 21:23Z.
+
+## 1. Qui tu es
+[ligne retirée : chemin réservé, voir la table]
+
+## 2. Ce qui s'est passé
+Le premier étalonnage s'est arrêté sur la machine louée **avant tout chargement du modèle**, pendant la suite ciblée : « 5 failed, 263 passed, 3 errors » au lieu de « 271 passed ». Aucun épisode, aucune sortie d'étalonnage. Compte rendu de l'exécutante et traces de la suite, lisibles par `git show origin/claude/iib-executante-v5:<chemin>` (déjà récupérée) : `registres/essaim/vers-mere/executante-iib-v5-2026-11-21-2121-v9.md` et `traces/iib-executante-v5/etalonnage-1-arret-pendant-tests-20261121/instance/` (`tests.txt`, `tests.err`, `pip-freeze.txt`, `journal.txt`) — **ces traces seulement**. Deux causes d'environnement, absentes des postes où la suite passait :
+- (a) la garde « mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) » joue **dans les essais eux-mêmes** sur la machine louée : trois erreurs du distillateur, deux échecs du lanceur ;
+- (b) la surveillance appelle `python3 -I -B` du système, sans numpy : les trois essais de la règle de la coupure à 12 USD échouent sur « No module named 'numpy' ».
+
+## 3. Ce que tu fais
+Base : `origin/prep/iib-code-v5` (62356e2ff612a8228b37a8333689e8114099f3c0, arbre ed9b0e48…), dans un arbre de travail à toi (`git worktree add`, branche locale jamais poussée). **Ne corrige que (a) et (b)**, sans rien affaiblir :
+- (a) les essais en mode jouet doivent passer sur une machine où l'accord est posé et la carte visible, **sans** que la garde perde son effet en production : par exemple les essais isolent explicitement l'environnement qu'ils simulent ; la garde elle-même ne change pas, ou seulement pour devenir plus précise, ce que tu justifies.
+- (b) la règle de la coupure à 12 USD, appelée par la surveillance avec l'interpréteur du système, ne doit dépendre d'aucun module absent de cet interpréteur (pas de numpy), ou la surveillance appelle l'interpréteur de l'environnement de l'amorce ; choisis, justifie, et garde l'arrêt sur phase illisible.
+- **Essais qui reproduisent l'environnement de la machine** : accord posé, carte simulée, interpréteur du système sans numpy (par exemple un environnement virtuel vide ou `python3 -I -S`), chacun sur un cas sain et un artefact (R5) : sans ta correction ils doivent échouer comme sur la machine, avec elle passer.
+- Liste figée des essais en version neuve si des fichiers s'ajoutent, nombre attendu et empreinte mis à jour dans l'amorce ; répétition locale entière à blanc une fois.
+
+## 4. Ce que tu rends
+`git format-patch` de ton seul commit (correctif 0011) dans `correctifs/`, l'arbre et le commit de tête, la sortie des essais (avant et après pour les essais neufs), la répétition, un rapport court `rapport-developpeur-correctif-0011-v1.md`, compagnons. Retour : huit lignes au plus.
