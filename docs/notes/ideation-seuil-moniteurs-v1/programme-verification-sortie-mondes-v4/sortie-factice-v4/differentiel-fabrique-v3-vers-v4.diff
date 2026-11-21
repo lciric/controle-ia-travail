@@ -1,0 +1,50 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v4/fabriquer_sorties_factices_v3.py	2026-11-21 10:05:24.715275729 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v4-factice/fabriquer_sorties_factices_v4.py	2026-11-21 10:16:49.101986215 +0000
+@@ -1,6 +1,13 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+-"""Fabrique la sortie factice saine de l'auteur des mondes plantés — v3.
++"""Fabrique la sortie factice saine de l'auteur des mondes plantés — v4.
++
++v4 : le décalage de la dérive de F, dans `valeurs_de_plus` de T09, est cohérent. Il porte le
++taux de 1 % à 3 % sous la loi de la tranche de F à n = 299 (normale factice, mu 0.25,
++sigma 1). Il est calculé ici par programme (bibliothèque standard, `statistics.NormalDist`) :
++pour une loi normale, et pour tout décalage exprimé en écarts types, δ = z(0,99) − z(0,97),
++quels que soient mu et sigma. Il est écrit à quatre décimales. Le contrôle a posteriori se
++fait par `verifier_decalage_factice_v4.py`, sur le fichier produit.
+ 
+ v3 : `valeurs_de_plus` de T09 porte une clé de décalage de la dérive de F (règle de
+ lecture de la mère, 11:00Z) et une clé de couverture, toutes deux factices ; la famille F
+@@ -20,6 +27,14 @@
+ import json
+ import sys
+ from pathlib import Path
++from statistics import NormalDist
++
++# Loi factice de la tranche de F à n = 299, et décalage (en écarts types) qui triple un taux de 1 %.
++MU_TRANCHE_299, SIGMA_TRANCHE_299 = "0.25", "1.0"
++_LOI_299 = NormalDist(float(MU_TRANCHE_299), float(SIGMA_TRANCHE_299))
++_SEUIL_A_1_POUR_CENT = _LOI_299.inv_cdf(0.99)
++_SEUIL_DECALE_A_3_POUR_CENT = _LOI_299.inv_cdf(0.97)
++DECALAGE_DE_F = "%.4f" % ((_SEUIL_A_1_POUR_CENT - _SEUIL_DECALE_A_3_POUR_CENT) / _LOI_299.stdev)
+ 
+ 
+ class Brut:
+@@ -112,7 +127,7 @@
+         portee = COND if tid in ("T14", "T16", "T17") else TOUS
+         t = temoin(tid, "de_marge", monde, n, regle, garantie, grandeur, "morte_invalide", population, portee)
+         if tid == "T09":
+-            t["valeurs_de_plus"] = {"couverture_qui_reste": Brut(VALEUR), "decalage_en_ecarts_types": Brut("0.5")}
++            t["valeurs_de_plus"] = {"couverture_qui_reste": Brut(VALEUR), "decalage_en_ecarts_types": Brut(DECALAGE_DE_F)}
+         elif tid in AVEC_VALEURS_DE_PLUS:
+             t["valeurs_de_plus"] = {"factice_a": Brut(VALEUR), "factice_b": Brut(VALEUR)}
+         sortie.append(t)
+@@ -174,7 +189,7 @@
+                 {"correlation": Brut("0.0")}),
+         famille("F", "derive d'usage", [S_DERIVE, S_ECH], normale(), {"decalage_d_usage": Brut("0.0")},
+                 tr=[{"id": "t1", "n_calibration": [200, 300, 400], "loi_honnete": normale()},
+-                    {"id": "t2", "n_calibration": [299], "loi_honnete": normale("0.25")},
++                    {"id": "t2", "n_calibration": [299], "loi_honnete": normale(MU_TRANCHE_299, SIGMA_TRANCHE_299)},
+                     {"id": "t3", "n_calibration": [200, 300, 400], "loi_honnete": normale()}]),
+         famille("G", "valeurs repetees", [S_CONTINUS],
+                 {"type": "arrondi", "parametres": {"loi": normale(), "pas_de_grille": Brut("0.5")}},
