@@ -1,0 +1,179 @@
+== Blocs A à L de la version 1, rejoués à l'identique ==
+A 2.3263 0.7906 0.7071 0.5
+B 0.866 0.4353 0.5743
+C 0.866 0.5477 0.5
+D [16.3, 24.8, 33.5, 40.3] [16.3, 33.5, 64.1, 93.0]
+E 78.1 97.3
+F [1.9, 5.0, 14.9]
+G [36.4, 13.6, 5.8]
+H [1.7, 2.9, 2.3, 4.9, 4.9, 16.3]
+I 1.289 1.183
+J [0.53, 0.34, 0.17]
+K 8.02 7.61 23.3
+L [0.111, 0.175, 0.351] [91, 56, 18]
+
+== R4 (constat 4) : tirage du flux avec ou sans remise ==
+R4 A m = 40 n_max = 160 W - m = 2360 | condition n_max <= W - m : True | avec remise : au moins un doublon 99.6 % ; part de doublons 3.3 %
+R4 B m = 100 n_max = 400 W - m = 2300 | condition n_max <= W - m : True | avec remise : au moins un doublon 100.0 % ; part de doublons 8.2 %
+R4 C m = 400 n_max = 1600 W - m = 2000 | condition n_max <= W - m : True | avec remise : au moins un doublon 100.0 % ; part de doublons 31.2 %
+R4 effet du tirage sans remise sur le taux réalisé du seuil nominal du rang (jumeau exact, un vivier de W - m mondes) :
+R4 A | n = 10 : médiane 0.99 %, moyenne sur les viviers 1.00 % ; n = 20 : médiane 0.98 %, moyenne sur les viviers 1.00 % ; n = 40 : médiane 0.95 %, moyenne sur les viviers 1.00 % ; n = 80 : médiane 0.90 %, moyenne sur les viviers 1.00 % ; n = 160 : médiane 0.80 %, moyenne sur les viviers 1.00 %
+R4 B | n = 25 : médiane 0.97 %, moyenne sur les viviers 1.00 % ; n = 50 : médiane 0.93 %, moyenne sur les viviers 1.00 % ; n = 100 : médiane 0.87 %, moyenne sur les viviers 1.00 % ; n = 200 : médiane 0.75 %, moyenne sur les viviers 1.00 % ; n = 400 : médiane 0.52 %, moyenne sur les viviers 1.00 %
+R4 C | n = 100 : médiane 0.85 %, moyenne sur les viviers 1.00 % ; n = 200 : médiane 0.71 %, moyenne sur les viviers 1.00 % ; n = 400 : médiane 0.47 %, moyenne sur les viviers 1.00 % ; n = 800 : médiane 0.13 %, moyenne sur les viviers 1.00 % ; n = 1600 : médiane 0.00 %, moyenne sur les viviers 1.00 %
+
+== R5 (constat 5) : puissance de l'épreuve de l'écart, lecture principale et lecture attestée ==
+R5 formes : erreur relative de kappa, en multiple de racine(n_max/(W - m))/z ; principale : racine((K + 2(1 - c + c²))/(K + 2)) ; attestée : c racine(2/(K + 2)) ; c = c2(n_max) par construction
+R5 A | terme dominant seul (bloc L) 11.1 % | kappa principal 0.5477 ; attesté 0.6477 | erreur de tirage des configurations (N = 2000) : seuil recalé 3.59 %, croisement 1.20 %
+R5 A | c = 0.25 : principale erreur 11.5 %, chances 89 % ; attestée erreur 4.3 %, chances 96 % | c = 0.5 : principale erreur 11.4 %, chances 90 % ; attestée erreur 5.1 %, chances 87 % | c = 0.75 : principale erreur 11.5 %, chances 89 % ; attestée erreur 6.3 %, chances 71 %
+R5 A | validité attestée jusqu'à n_max (borne haute du taux au plus 3 %), jumeau exact : 53.2 %
+R5 A | bruit identique entre original et saboté : principale erreur 11.9 %, chances 87 % ; attestée erreur 4.0 %, chances 98 %
+R5 B | terme dominant seul (bloc L) 17.5 % | kappa principal 0.5477 ; attesté 0.7058 | erreur de tirage des configurations (N = 2000) : seuil recalé 3.59 %, croisement 1.20 %
+R5 B | c = 0.25 : principale erreur 17.8 %, chances 55 % ; attestée erreur 4.7 %, chances 26 % | c = 0.5 : principale erreur 17.6 %, chances 55 % ; attestée erreur 6.5 %, chances 16 % | c = 0.75 : principale erreur 17.8 %, chances 55 % ; attestée erreur 8.7 %, chances 11 %
+R5 B | validité attestée jusqu'à n_max (borne haute du taux au plus 3 %), jumeau exact : 29.0 %
+R5 B | bruit identique entre original et saboté : principale erreur 18.4 %, chances 52 % ; attestée erreur 4.0 %, chances 35 %
+R5 C | terme dominant seul (bloc L) 35.1 % | kappa principal 0.5477 ; attesté 0.8640 | erreur de tirage des configurations (N = 2000) : seuil recalé 3.59 %, croisement 1.20 %
+R5 C | c = 0.25 : principale erreur 37.4 %, chances 17 % ; attestée erreur 6.8 %, chances 0 % | c = 0.5 : principale erreur 37.0 %, chances 17 % ; attestée erreur 11.8 %, chances 0 % | c = 0.75 : principale erreur 37.4 %, chances 17 % ; attestée erreur 17.1 %, chances 0 % (c attesté hors plage)
+R5 C | validité attestée jusqu'à n_max (borne haute du taux au plus 3 %), jumeau exact : 13.6 %
+R5 C | bruit identique entre original et saboté : principale erreur 38.7 %, chances 16 % ; attestée erreur 4.0 %, chances 0 %
+
+== R6 (constat 6) : étape 0, tailles d'effet, erreurs types et tolérances ==
+R6 contrôle de la contre-lecture : erreur type d'un taux de 1 % sur 2000 configurations 0.222 point ; sortie d'un horizon à ± 0,3 point 17.8 % ; d'au moins un sur cinq 62.4 % ; monde nul à ± 0,5 point, dix lectures 22.1 %
+R6 A m = 40 | configurations 2000 | effet planté : c1(m) = 0,60, soit p - 1/2 = 0.2518, mu = 0.9621 écart type | contrôles 28 | risque qu'un code juste soit dit mort : tolérances v1 100.0 % ; tolérances retenues (au moins 3 erreurs types) 7.29 % ; à 4 erreurs types 0.177 %
+R6 A N=2000 | référence exacte | rho1 | centre 0.5007 | erreur type 0.0268 | tolérance v1 ± 0.0500 (1.87 erreurs types) | retenue ± 0.0804
+R6 A N=2000 | référence fixe | rho1 | centre 0.7876 | erreur type 0.0422 | tolérance v1 ± 0.0500 (1.19 erreurs types) | retenue ± 0.1265
+R6 A N=2000 | référence fixe | taille utile, en parts de m | centre 1.0250 | erreur type 0.2084 | tolérance v1 ± 0.3250 (1.56 erreurs types) | retenue ± 0.6251
+R6 A N=2000 | nul par unité | rho2 | centre 0.5000 | erreur type 0.0292 | tolérance v1 ± 0.0500 (1.71 erreurs types) | retenue ± 0.0877
+R6 A N=2000 | nul par unité | taux réalisé à n = 10 | centre 1.00 % | erreur type 0.281 point | tolérance v1 ± 0.300 point (1.07 erreurs types) | retenue ± 0.844 point
+R6 A N=2000 | nul par unité | taux réalisé à n = 20 | centre 1.00 % | erreur type 0.328 point | tolérance v1 ± 0.300 point (0.91 erreurs types) | retenue ± 0.984 point
+R6 A N=2000 | nul par unité | taux réalisé à n = 40 | centre 1.00 % | erreur type 0.402 point | tolérance v1 ± 0.300 point (0.75 erreurs types) | retenue ± 1.205 point
+R6 A N=2000 | nul par unité | taux réalisé à n = 80 | centre 1.00 % | erreur type 0.506 point | tolérance v1 ± 0.300 point (0.59 erreurs types) | retenue ± 1.518 point
+R6 A N=2000 | nul par unité | taux réalisé à n = 160 | centre 1.00 % | erreur type 0.631 point | tolérance v1 ± 0.300 point (0.48 erreurs types) | retenue ± 1.894 point
+R6 A N=2000 | nul par unité et référence fixe (même vivier) | kappa | centre 0.5464 | erreur type 0.0630 | tolérance v1 ± 0.0800 (1.27 erreurs types) | retenue ± 0.1891
+R6 A N=2000 | jumeau faussé | taux à n = 40 | centre 4.99 % | erreur type 1.407 point | tolérance v1 ± 1.000 point (0.71 erreurs types) | retenue ± 4.221 point
+R6 A N=2000 | autre régime | taux nominal à n = m | centre 2.88 % | erreur type 0.374 point | tolérance v1 ± 1.000 point (2.68 erreurs types) | retenue ± 1.121 point
+R6 A N=2000 | autre régime | taux nominal à n = 4m | centre 4.15 % | erreur type 0.446 point | tolérance v1 ± 1.000 point (2.24 erreurs types) | retenue ± 1.337 point
+R6 A N=2000 | autre régime | rho1 recalé | centre 0.8660 | erreur type 0.0464 | tolérance v1 ± 0.0500 (1.08 erreurs types) | retenue ± 0.1391
+R6 A N=2000 | grappes | seuil recalé par grappes, configurations neuves | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.300 point (0.95 erreurs types) | retenue ± 0.944 point
+R6 A N=2000 | grappes | seuil recalé par unités brassées | centre 4.15 % | erreur type 0.710 point | tolérance v1 ± 1.000 point (1.41 erreurs types) | retenue ± 2.129 point
+R6 A N=2000 | monde nul | statistique étalonnée, n = 10 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 A N=2000 | monde nul | statistique étalonnée, n = 20 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 A N=2000 | monde nul | statistique étalonnée, n = 40 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 A N=2000 | monde nul | statistique étalonnée, n = 80 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 A N=2000 | monde nul | statistique étalonnée, n = 160 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 A N=2000 | monde nul | rang, n = 10 | centre 1.00 % | erreur type 0.281 point | tolérance v1 ± 0.500 point (1.78 erreurs types) | retenue ± 0.844 point
+R6 A N=2000 | monde nul | rang, n = 20 | centre 1.00 % | erreur type 0.328 point | tolérance v1 ± 0.500 point (1.52 erreurs types) | retenue ± 0.984 point
+R6 A N=2000 | monde nul | rang, n = 40 | centre 1.00 % | erreur type 0.402 point | tolérance v1 ± 0.500 point (1.25 erreurs types) | retenue ± 1.205 point
+R6 A N=2000 | monde nul | rang, n = 80 | centre 1.00 % | erreur type 0.506 point | tolérance v1 ± 0.500 point (0.99 erreurs types) | retenue ± 1.518 point
+R6 A N=2000 | monde nul | rang, n = 160 | centre 1.00 % | erreur type 0.631 point | tolérance v1 ± 0.500 point (0.79 erreurs types) | retenue ± 1.894 point
+R6 A N=2000 | étalonnage naïf | taux à n = 40 | centre 5.00 % | erreur type 0.487 point | tolérance v1 ± 1.000 point (2.05 erreurs types) | retenue ± 1.462 point
+R6 A N=2000 | étalonnage naïf | taux à n = 160 | centre 14.91 % | erreur type 0.796 point | tolérance v1 ± 1.500 point (1.88 erreurs types) | retenue ± 2.389 point
+R6 A m = 40 | configurations 20000 | effet planté : c1(m) = 0,60, soit p - 1/2 = 0.2518, mu = 0.9621 écart type | contrôles 28 | risque qu'un code juste soit dit mort : tolérances v1 98.8 % ; tolérances retenues (au moins 3 erreurs types) 3.78 % ; à 4 erreurs types 0.102 %
+R6 A N=20000 | référence exacte | rho1 | centre 0.5007 | erreur type 0.0085 | tolérance v1 ± 0.0500 (5.90 erreurs types) | retenue ± 0.0500
+R6 A N=20000 | référence fixe | rho1 | centre 0.7876 | erreur type 0.0133 | tolérance v1 ± 0.0500 (3.75 erreurs types) | retenue ± 0.0500
+R6 A N=20000 | référence fixe | taille utile, en parts de m | centre 1.0250 | erreur type 0.0659 | tolérance v1 ± 0.3250 (4.93 erreurs types) | retenue ± 0.3250
+R6 A N=20000 | nul par unité | rho2 | centre 0.5000 | erreur type 0.0281 | tolérance v1 ± 0.0500 (1.78 erreurs types) | retenue ± 0.0843
+R6 A N=20000 | nul par unité | taux réalisé à n = 10 | centre 1.00 % | erreur type 0.186 point | tolérance v1 ± 0.300 point (1.61 erreurs types) | retenue ± 0.558 point
+R6 A N=20000 | nul par unité | taux réalisé à n = 20 | centre 1.00 % | erreur type 0.251 point | tolérance v1 ± 0.300 point (1.19 erreurs types) | retenue ± 0.753 point
+R6 A N=20000 | nul par unité | taux réalisé à n = 40 | centre 1.00 % | erreur type 0.342 point | tolérance v1 ± 0.300 point (0.88 erreurs types) | retenue ± 1.025 point
+R6 A N=20000 | nul par unité | taux réalisé à n = 80 | centre 1.00 % | erreur type 0.460 point | tolérance v1 ± 0.300 point (0.65 erreurs types) | retenue ± 1.380 point
+R6 A N=20000 | nul par unité | taux réalisé à n = 160 | centre 1.00 % | erreur type 0.595 point | tolérance v1 ± 0.300 point (0.50 erreurs types) | retenue ± 1.785 point
+R6 A N=20000 | nul par unité et référence fixe (même vivier) | kappa | centre 0.5464 | erreur type 0.0596 | tolérance v1 ± 0.0800 (1.34 erreurs types) | retenue ± 0.1787
+R6 A N=20000 | jumeau faussé | taux à n = 40 | centre 4.99 % | erreur type 1.329 point | tolérance v1 ± 1.000 point (0.75 erreurs types) | retenue ± 3.987 point
+R6 A N=20000 | autre régime | taux nominal à n = m | centre 2.88 % | erreur type 0.118 point | tolérance v1 ± 1.000 point (8.46 erreurs types) | retenue ± 1.000 point
+R6 A N=20000 | autre régime | taux nominal à n = 4m | centre 4.15 % | erreur type 0.141 point | tolérance v1 ± 1.000 point (7.09 erreurs types) | retenue ± 1.000 point
+R6 A N=20000 | autre régime | rho1 recalé | centre 0.8660 | erreur type 0.0147 | tolérance v1 ± 0.0500 (3.41 erreurs types) | retenue ± 0.0500
+R6 A N=20000 | grappes | seuil recalé par grappes, configurations neuves | centre 1.00 % | erreur type 0.099 point | tolérance v1 ± 0.300 point (3.02 erreurs types) | retenue ± 0.300 point
+R6 A N=20000 | grappes | seuil recalé par unités brassées | centre 4.15 % | erreur type 0.224 point | tolérance v1 ± 1.000 point (4.46 erreurs types) | retenue ± 1.000 point
+R6 A N=20000 | monde nul | statistique étalonnée, n = 10 | centre 1.00 % | erreur type 0.099 point | tolérance v1 ± 0.500 point (5.03 erreurs types) | retenue ± 0.500 point
+R6 A N=20000 | monde nul | statistique étalonnée, n = 20 | centre 1.00 % | erreur type 0.099 point | tolérance v1 ± 0.500 point (5.03 erreurs types) | retenue ± 0.500 point
+R6 A N=20000 | monde nul | statistique étalonnée, n = 40 | centre 1.00 % | erreur type 0.099 point | tolérance v1 ± 0.500 point (5.03 erreurs types) | retenue ± 0.500 point
+R6 A N=20000 | monde nul | statistique étalonnée, n = 80 | centre 1.00 % | erreur type 0.099 point | tolérance v1 ± 0.500 point (5.03 erreurs types) | retenue ± 0.500 point
+R6 A N=20000 | monde nul | statistique étalonnée, n = 160 | centre 1.00 % | erreur type 0.099 point | tolérance v1 ± 0.500 point (5.03 erreurs types) | retenue ± 0.500 point
+R6 A N=20000 | monde nul | rang, n = 10 | centre 1.00 % | erreur type 0.186 point | tolérance v1 ± 0.500 point (2.69 erreurs types) | retenue ± 0.558 point
+R6 A N=20000 | monde nul | rang, n = 20 | centre 1.00 % | erreur type 0.251 point | tolérance v1 ± 0.500 point (1.99 erreurs types) | retenue ± 0.753 point
+R6 A N=20000 | monde nul | rang, n = 40 | centre 1.00 % | erreur type 0.342 point | tolérance v1 ± 0.500 point (1.46 erreurs types) | retenue ± 1.025 point
+R6 A N=20000 | monde nul | rang, n = 80 | centre 1.00 % | erreur type 0.460 point | tolérance v1 ± 0.500 point (1.09 erreurs types) | retenue ± 1.380 point
+R6 A N=20000 | monde nul | rang, n = 160 | centre 1.00 % | erreur type 0.595 point | tolérance v1 ± 0.500 point (0.84 erreurs types) | retenue ± 1.785 point
+R6 A N=20000 | étalonnage naïf | taux à n = 40 | centre 5.00 % | erreur type 0.154 point | tolérance v1 ± 1.000 point (6.49 erreurs types) | retenue ± 1.000 point
+R6 A N=20000 | étalonnage naïf | taux à n = 160 | centre 14.91 % | erreur type 0.252 point | tolérance v1 ± 1.500 point (5.96 erreurs types) | retenue ± 1.500 point
+R6 B m = 100 | configurations 2000 | effet planté : c1(m) = 0,60, soit p - 1/2 = 0.1587, mu = 0.5782 écart type | contrôles 28 | risque qu'un code juste soit dit mort : tolérances v1 100.0 % ; tolérances retenues (au moins 3 erreurs types) 7.29 % ; à 4 erreurs types 0.177 %
+R6 B N=2000 | référence exacte | rho1 | centre 0.5007 | erreur type 0.0268 | tolérance v1 ± 0.0500 (1.87 erreurs types) | retenue ± 0.0804
+R6 B N=2000 | référence fixe | rho1 | centre 0.7894 | erreur type 0.0423 | tolérance v1 ± 0.0500 (1.18 erreurs types) | retenue ± 0.1268
+R6 B N=2000 | référence fixe | taille utile, en parts de m | centre 1.0100 | erreur type 0.2046 | tolérance v1 ± 0.3250 (1.59 erreurs types) | retenue ± 0.6138
+R6 B N=2000 | nul par unité | rho2 | centre 0.5000 | erreur type 0.0456 | tolérance v1 ± 0.0500 (1.10 erreurs types) | retenue ± 0.1369
+R6 B N=2000 | nul par unité | taux réalisé à n = 25 | centre 1.00 % | erreur type 0.351 point | tolérance v1 ± 0.300 point (0.85 erreurs types) | retenue ± 1.053 point
+R6 B N=2000 | nul par unité | taux réalisé à n = 50 | centre 1.00 % | erreur type 0.436 point | tolérance v1 ± 0.300 point (0.69 erreurs types) | retenue ± 1.307 point
+R6 B N=2000 | nul par unité | taux réalisé à n = 100 | centre 1.00 % | erreur type 0.550 point | tolérance v1 ± 0.300 point (0.55 erreurs types) | retenue ± 1.650 point
+R6 B N=2000 | nul par unité | taux réalisé à n = 200 | centre 1.00 % | erreur type 0.674 point | tolérance v1 ± 0.300 point (0.45 erreurs types) | retenue ± 2.022 point
+R6 B N=2000 | nul par unité | taux réalisé à n = 400 | centre 1.00 % | erreur type 0.727 point | tolérance v1 ± 0.300 point (0.41 erreurs types) | retenue ± 2.182 point
+R6 B N=2000 | nul par unité et référence fixe (même vivier) | kappa | centre 0.5472 | erreur type 0.0974 | tolérance v1 ± 0.0800 (0.82 erreurs types) | retenue ± 0.2921
+R6 B N=2000 | jumeau faussé | taux à n = 100 | centre 4.99 % | erreur type 2.120 point | tolérance v1 ± 1.000 point (0.47 erreurs types) | retenue ± 6.360 point
+R6 B N=2000 | autre régime | taux nominal à n = m | centre 2.88 % | erreur type 0.374 point | tolérance v1 ± 1.000 point (2.68 erreurs types) | retenue ± 1.121 point
+R6 B N=2000 | autre régime | taux nominal à n = 4m | centre 4.15 % | erreur type 0.446 point | tolérance v1 ± 1.000 point (2.24 erreurs types) | retenue ± 1.337 point
+R6 B N=2000 | autre régime | rho1 recalé | centre 0.8660 | erreur type 0.0464 | tolérance v1 ± 0.0500 (1.08 erreurs types) | retenue ± 0.1391
+R6 B N=2000 | grappes | seuil recalé par grappes, configurations neuves | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.300 point (0.95 erreurs types) | retenue ± 0.944 point
+R6 B N=2000 | grappes | seuil recalé par unités brassées | centre 4.15 % | erreur type 0.710 point | tolérance v1 ± 1.000 point (1.41 erreurs types) | retenue ± 2.129 point
+R6 B N=2000 | monde nul | statistique étalonnée, n = 25 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 B N=2000 | monde nul | statistique étalonnée, n = 50 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 B N=2000 | monde nul | statistique étalonnée, n = 100 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 B N=2000 | monde nul | statistique étalonnée, n = 200 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 B N=2000 | monde nul | statistique étalonnée, n = 400 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 B N=2000 | monde nul | rang, n = 25 | centre 1.00 % | erreur type 0.351 point | tolérance v1 ± 0.500 point (1.42 erreurs types) | retenue ± 1.053 point
+R6 B N=2000 | monde nul | rang, n = 50 | centre 1.00 % | erreur type 0.436 point | tolérance v1 ± 0.500 point (1.15 erreurs types) | retenue ± 1.307 point
+R6 B N=2000 | monde nul | rang, n = 100 | centre 1.00 % | erreur type 0.550 point | tolérance v1 ± 0.500 point (0.91 erreurs types) | retenue ± 1.650 point
+R6 B N=2000 | monde nul | rang, n = 200 | centre 1.00 % | erreur type 0.674 point | tolérance v1 ± 0.500 point (0.74 erreurs types) | retenue ± 2.022 point
+R6 B N=2000 | monde nul | rang, n = 400 | centre 1.00 % | erreur type 0.727 point | tolérance v1 ± 0.500 point (0.69 erreurs types) | retenue ± 2.182 point
+R6 B N=2000 | étalonnage naïf | taux à n = 100 | centre 5.00 % | erreur type 0.487 point | tolérance v1 ± 1.000 point (2.05 erreurs types) | retenue ± 1.462 point
+R6 B N=2000 | étalonnage naïf | taux à n = 400 | centre 14.91 % | erreur type 0.796 point | tolérance v1 ± 1.500 point (1.88 erreurs types) | retenue ± 2.389 point
+R6 B m = 100 | configurations 20000 | effet planté : c1(m) = 0,60, soit p - 1/2 = 0.1587, mu = 0.5782 écart type | contrôles 28 | risque qu'un code juste soit dit mort : tolérances v1 99.9 % ; tolérances retenues (au moins 3 erreurs types) 3.78 % ; à 4 erreurs types 0.102 %
+R6 C m = 400 | configurations 2000 | effet planté : c1(m) = 0,60, soit p - 1/2 = 0.0792, mu = 0.2826 écart type | contrôles 28 | risque qu'un code juste soit dit mort : tolérances v1 100.0 % ; tolérances retenues (au moins 3 erreurs types) 7.29 % ; à 4 erreurs types 0.177 %
+R6 C N=2000 | référence exacte | rho1 | centre 0.5007 | erreur type 0.0268 | tolérance v1 ± 0.0500 (1.87 erreurs types) | retenue ± 0.0804
+R6 C N=2000 | référence fixe | rho1 | centre 0.7903 | erreur type 0.0423 | tolérance v1 ± 0.0500 (1.18 erreurs types) | retenue ± 0.1269
+R6 C N=2000 | référence fixe | taille utile, en parts de m | centre 1.0025 | erreur type 0.2027 | tolérance v1 ± 0.3250 (1.60 erreurs types) | retenue ± 0.6082
+R6 C N=2000 | nul par unité | rho2 | centre 0.5000 | erreur type 0.0965 | tolérance v1 ± 0.0500 (0.52 erreurs types) | retenue ± 0.2895
+R6 C N=2000 | nul par unité | taux réalisé à n = 100 | centre 1.00 % | erreur type 0.576 point | tolérance v1 ± 0.300 point (0.52 erreurs types) | retenue ± 1.727 point
+R6 C N=2000 | nul par unité | taux réalisé à n = 200 | centre 1.00 % | erreur type 0.695 point | tolérance v1 ± 0.300 point (0.43 erreurs types) | retenue ± 2.085 point
+R6 C N=2000 | nul par unité | taux réalisé à n = 400 | centre 1.00 % | erreur type 0.714 point | tolérance v1 ± 0.300 point (0.42 erreurs types) | retenue ± 2.142 point
+R6 C N=2000 | nul par unité | taux réalisé à n = 800 | centre 1.00 % | erreur type 0.422 point | tolérance v1 ± 0.300 point (0.71 erreurs types) | retenue ± 1.267 point
+R6 C N=2000 | nul par unité | taux réalisé à n = 1600 | centre 1.00 % | erreur type 0.222 point | tolérance v1 ± 0.300 point (1.35 erreurs types) | retenue ± 0.667 point
+R6 C N=2000 | nul par unité et référence fixe (même vivier) | kappa | centre 0.5476 | erreur type 0.2048 | tolérance v1 ± 0.0800 (0.39 erreurs types) | retenue ± 0.6145
+R6 C N=2000 | jumeau faussé | taux à n = 400 | centre 4.99 % | erreur type 3.700 point | tolérance v1 ± 1.000 point (0.27 erreurs types) | retenue ± 11.100 point
+R6 C N=2000 | autre régime | taux nominal à n = m | centre 2.88 % | erreur type 0.374 point | tolérance v1 ± 1.000 point (2.68 erreurs types) | retenue ± 1.121 point
+R6 C N=2000 | autre régime | taux nominal à n = 4m | centre 4.15 % | erreur type 0.446 point | tolérance v1 ± 1.000 point (2.24 erreurs types) | retenue ± 1.337 point
+R6 C N=2000 | autre régime | rho1 recalé | centre 0.8660 | erreur type 0.0464 | tolérance v1 ± 0.0500 (1.08 erreurs types) | retenue ± 0.1391
+R6 C N=2000 | grappes | seuil recalé par grappes, configurations neuves | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.300 point (0.95 erreurs types) | retenue ± 0.944 point
+R6 C N=2000 | grappes | seuil recalé par unités brassées | centre 4.15 % | erreur type 0.710 point | tolérance v1 ± 1.000 point (1.41 erreurs types) | retenue ± 2.129 point
+R6 C N=2000 | monde nul | statistique étalonnée, n = 100 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 C N=2000 | monde nul | statistique étalonnée, n = 200 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 C N=2000 | monde nul | statistique étalonnée, n = 400 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 C N=2000 | monde nul | statistique étalonnée, n = 800 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 C N=2000 | monde nul | statistique étalonnée, n = 1600 | centre 1.00 % | erreur type 0.315 point | tolérance v1 ± 0.500 point (1.59 erreurs types) | retenue ± 0.944 point
+R6 C N=2000 | monde nul | rang, n = 100 | centre 1.00 % | erreur type 0.576 point | tolérance v1 ± 0.500 point (0.87 erreurs types) | retenue ± 1.727 point
+R6 C N=2000 | monde nul | rang, n = 200 | centre 1.00 % | erreur type 0.695 point | tolérance v1 ± 0.500 point (0.72 erreurs types) | retenue ± 2.085 point
+R6 C N=2000 | monde nul | rang, n = 400 | centre 1.00 % | erreur type 0.714 point | tolérance v1 ± 0.500 point (0.70 erreurs types) | retenue ± 2.142 point
+R6 C N=2000 | monde nul | rang, n = 800 | centre 1.00 % | erreur type 0.422 point | tolérance v1 ± 0.500 point (1.18 erreurs types) | retenue ± 1.267 point
+R6 C N=2000 | monde nul | rang, n = 1600 | centre 1.00 % | erreur type 0.222 point | tolérance v1 ± 0.500 point (2.25 erreurs types) | retenue ± 0.667 point
+R6 C N=2000 | étalonnage naïf | taux à n = 400 | centre 5.00 % | erreur type 0.487 point | tolérance v1 ± 1.000 point (2.05 erreurs types) | retenue ± 1.462 point
+R6 C N=2000 | étalonnage naïf | taux à n = 1600 | centre 14.91 % | erreur type 0.796 point | tolérance v1 ± 1.500 point (1.88 erreurs types) | retenue ± 2.389 point
+R6 C m = 400 | configurations 20000 | effet planté : c1(m) = 0,60, soit p - 1/2 = 0.0792, mu = 0.2826 écart type | contrôles 28 | risque qu'un code juste soit dit mort : tolérances v1 100.0 % ; tolérances retenues (au moins 3 erreurs types) 3.26 % ; à 4 erreurs types 0.092 %
+
+== R7 (constat 7) : objet « témoins à taux p », p = 1 % ==
+R7 n = 160 | témoins 1.6 | part cachée 2.125 (hors plage) | rapport à la référence exacte 10.081 | erreur type du rapport (N = 2000) 0.54
+R7 n = 4000 | témoins 40.0 | part cachée 0.424 | rapport à la référence exacte 10.051 | erreur type du rapport (N = 2000) 0.54
+R7 n = 16000 | témoins 160.0 | part cachée 0.212 | rapport à la référence exacte 10.050 | erreur type du rapport (N = 2000) 0.54
+R7 forme limite racine(1 + 1/p) = 10.050
+
+== R8 (constat 8) : rangs simples contre scores normaux, rang parmi K tirages du jumeau ==
+R8 mu = 0.02 K = 4 | efficacité, rang simple 0.7979 ; score normal 0.7565 | kappa multiplié par 1.0547 si le score normal remplace le rang simple dans la seule statistique du rang | rapport à 1 % de témoins : rang simple 8.02 ; score normal 7.60
+R8 mu = 0.5 K = 4 | efficacité, rang simple 0.7816 ; score normal 0.7427 | kappa multiplié par 1.0523 si le score normal remplace le rang simple dans la seule statistique du rang | rapport à 1 % de témoins : rang simple 7.85 ; score normal 7.46
+
+== R9 (constat 9) : mondes et épisodes ==
+R9 K = 4 modes vus 1 | W = 2400 mondes : au moins 14400 épisodes ; avec l'organisme au repos et le mode tenu à l'écart : 19200
+R9 K = 4 modes vus 2 | W = 2400 mondes : au moins 16800 épisodes ; avec l'organisme au repos et le mode tenu à l'écart : 21600
+R9 K = 4 modes vus 3 | W = 2400 mondes : au moins 19200 épisodes ; avec l'organisme au repos et le mode tenu à l'écart : 24000
+R9 K = 9 modes vus 1 | W = 2400 mondes : au moins 26400 épisodes ; avec l'organisme au repos et le mode tenu à l'écart : 31200
+R9 K = 9 modes vus 2 | W = 2400 mondes : au moins 28800 épisodes ; avec l'organisme au repos et le mode tenu à l'écart : 33600
+R9 K = 9 modes vus 3 | W = 2400 mondes : au moins 31200 épisodes ; avec l'organisme au repos et le mode tenu à l'écart : 36000
+
+== R12 d (constat 12 d) : bornes des bandes à quatre décimales ==
+R12d rho1 : 0.7071 à 0.8660 ; rho2 : 0.4353 à 0.5743
