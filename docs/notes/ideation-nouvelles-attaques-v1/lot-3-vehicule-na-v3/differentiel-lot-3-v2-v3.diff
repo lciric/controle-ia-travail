@@ -1,0 +1,381 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v2/paquet/orchestrator/pole/requete_na_v2.py	2026-11-21 09:32:04.997826664 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v3/paquet/orchestrator/pole/requete_na_v3.py	2026-11-21 10:10:02.417962040 +0000
+@@ -1,9 +1,10 @@
+-"""Véhicule NA-1, lot 3 — assemblage de la requête (`requete_na_v2`) : partie servie remplie par la ligne de case du lot 1,
++"""Véhicule NA-1, lot 3 — assemblage de la requête (`requete_na_v3`) : partie servie remplie par la ligne de case du lot 1,
+ enveloppe sans ajout (D2), composition par rôle, forme de la fiche servie au portier et aux juges, mesure de la taille
+ (arrêt n° 8).
+ 
+-v2 (remplace `requete_na_v1`, `4dfd3eec…`, archivé sans modification) : des noms seuls changent, pour la v3 du lot 2 ; le
+-module lit `tirage_na_v3` au lieu de `tirage_na_v2`, dont l'interface est la même. Aucune règle ne change.
++v3 (remplace `requete_na_v2`, `b8e0bf15…`, archivé sans modification ; elle-même remplaçait `requete_na_v1`,
++`4dfd3eec…`) : des noms seuls changent, pour la v5 du lot 2 ; le module lit `tirage_na_v4` au lieu de `tirage_na_v3`, dont
++l'interface est la même. Aucune règle ne change.
+ 
+ Lettre : V9 (`864f39a7…`), l. 69 à 77 (pièces servies, ligne de case, requête assemblée), l. 379 (arrêt n° 8), l. 385
+ (arrêt n° 14) ; conception du véhicule v5 (`1b7f6822…`), § 0 bis (D2 ; 08:00Z, mot 1 ; 07:46Z, mots 1 et 8), § 2.2, § 2.4
+@@ -11,7 +12,7 @@
+ journalisée), § 7 (lot 3) ; relevé du lot 0 (`10ac79ec…`), Q1, tableau A, et « D2 », points 2 et 3.
+ 
+ - **Un seul encodage.** La requête est une suite d'octets, rendue une fois, figée (`RequeteAssemblee.octets`). C'est elle que
+-  la garde de motifs lit, que le journal décrit (taille, empreinte) et que l'on envoie (module `journal_na_v2`).
++  la garde de motifs lit, que le journal décrit (taille, empreinte) et que l'on envoie (module `journal_na_v3`).
+ - **Partie servie.** Le gabarit est lu à son empreinte ; le fichier de la question est refusé par son nom avant toute
+   ouverture, puis par son empreinte ; le gabarit doit porter un seul emplacement `{{CASE}}`, sur une ligne propre. La ligne
+   de case est celle du tirage (lot 1), contrôlée par le lot 1 et rebâtie à l'octet ; elle remplace l'emplacement, et rien
+@@ -37,7 +38,7 @@
+   taille et la borne.
+ - Aucun message d'erreur ne recopie un octet d'une pièce, d'une fiche, d'une réponse ou du registre.
+ 
+-Bibliothèque standard, et les modules des lots 1 et 2 (`tirage_na_v3`, `identifiants_na_v1`).
++Bibliothèque standard, et les modules des lots 1 et 2 (`tirage_na_v4`, `identifiants_na_v1`).
+ """
+ 
+ import dataclasses
+@@ -46,9 +47,9 @@
+ import os
+ 
+ from pole import identifiants_na_v1 as ident
+-from pole import tirage_na_v3 as tn
++from pole import tirage_na_v4 as tn
+ 
+-VERSION = "requete-na-v2"
++VERSION = "requete-na-v3"
+ 
+ EMPLACEMENT = b"{{CASE}}"
+ FIN_DE_LIGNE = b"\n"
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v2/paquet/orchestrator/pole/journal_na_v2.py	2026-11-21 09:32:21.757827660 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v3/paquet/orchestrator/pole/journal_na_v3.py	2026-11-21 10:10:19.525963057 +0000
+@@ -1,9 +1,10 @@
+-"""Véhicule NA-1, lot 3 — journal des requêtes (`journal_na_v2`) : ajout seul ; lignes « envoi », « non envoyé »,
++"""Véhicule NA-1, lot 3 — journal des requêtes (`journal_na_v3`) : ajout seul ; lignes « envoi », « non envoyé »,
+ « non lancé » et « refus écrit » ; ce que rend un refus écrit, par rôle.
+ 
+-v2 (remplace `journal_na_v1`, `84240623…`, archivé sans modification) : des noms seuls changent, pour la v3 du lot 2 ; le
+-module lit `garde_motifs_na_v3` et `requete_na_v2` au lieu de `garde_motifs_na_v2` et `requete_na_v1`. Les classes de la
+-garde (`GardeMotifs`, `RequeteGardee`, `ArretMotifInterdit`) sont donc celles de la v3. Aucune règle ne change.
++v3 (remplace `journal_na_v2`, `d9de190a…`, archivé sans modification ; elle-même remplaçait `journal_na_v1`,
++`84240623…`) : des noms seuls changent, pour la v5 du lot 2 ; le module lit `garde_motifs_na_v4` et `requete_na_v3` au
++lieu de `garde_motifs_na_v3` et `requete_na_v2`. Les classes de la garde (`GardeMotifs`, `RequeteGardee`,
++`ArretMotifInterdit`) sont donc celles de la v4. Aucune règle ne change.
+ 
+ Lettre : V9 (`864f39a7…`), l. 77 (journal avant chaque envoi, après la garde de motifs ; un appel sans ligne ne part pas ;
+ le journal n'est jamais servi), l. 387 (le texte trouvé n'est écrit qu'au journal) ; conception du véhicule v5
+@@ -19,7 +20,7 @@
+   et seulement si elle passe, une ligne : taille, empreinte SHA-256, génération, rôle, sorte, identifiant de la case, clé
+   par son nom d'usage, composition (pièces, places, tailles, empreintes ; aucun contenu). Ce qui est rendu au lot 4 :
+   la requête gardée (`RequeteGardee` du lot 2) et ses octets, les seuls à remettre au noyau ; le lot 4 appelle
+-  `garde_motifs_na_v3.verifier_avant_envoi(requete_gardee, octets)` sur les octets qu'il remet. Une ligne qui ne
++  `garde_motifs_na_v4.verifier_avant_envoi(requete_gardee, octets)` sur les octets qu'il remet. Une ligne qui ne
+   s'écrit pas : rien n'est rendu, rien ne part.
+ - **Ligne « non envoyé »** : refus avant le noyau, coût nul, le numéro de l'arrêt, la clé. Pour l'arrêt n° 16, la
+   famille, le rang du motif et le texte trouvé : **le texte trouvé ne va qu'à cette ligne**, dans le dossier de sortie ;
+@@ -30,7 +31,7 @@
+   le refus rend à l'appelant, selon la sorte du rôle (`RENDUS_REFUS_ECRIT`).
+ - Aucun message d'erreur de ce module ne recopie un octet d'une requête, d'une fiche ou d'une réponse.
+ 
+-Bibliothèque standard, et les modules des lots 2 et 3 (`garde_motifs_na_v3`, `requete_na_v2`).
++Bibliothèque standard, et les modules des lots 2 et 3 (`garde_motifs_na_v4`, `requete_na_v3`).
+ """
+ 
+ import dataclasses
+@@ -39,10 +40,10 @@
+ import json
+ import os
+ 
+-from pole import garde_motifs_na_v3 as gm
+-from pole import requete_na_v2 as rq
++from pole import garde_motifs_na_v4 as gm
++from pole import requete_na_v3 as rq
+ 
+-VERSION = "journal-na-v2"
++VERSION = "journal-na-v3"
+ EVENEMENTS = ("envoi", "non envoyé", "non lancé", "refus écrit")
+ PRECEDENTE_INITIALE = "aucune"
+ SUFFIXE = ".jsonl"
+@@ -240,7 +241,7 @@
+         """Garde de motifs, puis ligne « envoi » ; rend la requête gardée. Refus de la garde : ligne « non envoyé »
+         (arrêt n° 16, famille, rang du motif, texte trouvé), puis l'arrêt est levé, sans envoi."""
+         if not isinstance(requete, rq.RequeteAssemblee):
+-            raise LigneRefusee("seule une requête assemblée par `requete_na_v2` se journalise")
++            raise LigneRefusee("seule une requête assemblée par `requete_na_v3` se journalise")
+         if not isinstance(garde, gm.GardeMotifs):
+             raise LigneRefusee("la garde de motifs du lot 2 est exigée")
+         _texte("rôle", role)
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v2/paquet/orchestrator/essais/aides_na_lot3_v2.py	2026-11-21 09:32:41.117828811 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v3/paquet/orchestrator/essais/aides_na_lot3_v3.py	2026-11-21 10:10:33.681963899 +0000
+@@ -1,16 +1,17 @@
+-"""Aides des essais du lot 3 du véhicule NA-1 (lisent `requete_na_v2` et `journal_na_v2`) : données factices seules.
++"""Aides des essais du lot 3 du véhicule NA-1 (lisent `requete_na_v3` et `journal_na_v3`) : données factices seules.
+ 
+-v2 (remplace `aides_na_lot3_v1`, `dceb3ca9…`, archivé sans modification) : des noms seuls changent, pour la v3 du lot 2.
+-La garde d'essai est celle de `aides_na_v3.garde_essai()`, qui la construit ainsi :
++v3 (remplace `aides_na_lot3_v2`, `757e2901…`, archivé sans modification) : des noms seuls changent, pour la v5 du lot 2.
++Aucune liste réelle de motifs n'est lue ni copiée ici. La garde d'essai est celle de `aides_na_v4.garde_essai()`, qui la
++construit ainsi :
+ `Normaliseur(charger_donnees_ignorables(chemin, empreinte))`, puis `charger_liste_motifs(chemin, empreinte, normaliseur)`,
+ puis `GardeMotifs(liste)`.
+ 
+ - Le gabarit factice, la synthèse factice, la racine factice et la liste de motifs d'essai sont ceux des lots 1 et 2
+-  (`aides_na_v3`) ; aucune pièce réelle n'est lue.
++  (`aides_na_v4`) ; aucune pièce réelle n'est lue.
+ - Deux consignes factices (portier, juge), inertes, finies par des blancs pour éprouver la forme déclarée ; un registre
+   servi factice, inerte ; une fiche factice aux douze champs, inerte.
+ 
+-Lancé comme programme (`python -B aides_na_lot3_v2.py SORTIE`), il écrit les octets de la requête d'un proposeur de la
++Lancé comme programme (`python -B aides_na_lot3_v3.py SORTIE`), il écrit les octets de la requête d'un proposeur de la
+ génération 2 (première case de la génération, registre factice), pour l'essai « rejouée dans un autre processus ».
+ """
+ 
+@@ -24,9 +25,9 @@
+     if _p not in sys.path:
+         sys.path.insert(0, _p)
+ 
+-import aides_na_v3 as A  # noqa: E402
++import aides_na_v4 as A  # noqa: E402
+ from pole import identifiants_na_v1 as ident  # noqa: E402
+-from pole import requete_na_v2 as rq  # noqa: E402
++from pole import requete_na_v3 as rq  # noqa: E402
+ 
+ CONSIGNE_PORTIER_FACTICE = ("Consigne factice du portier, inerte : elle ne classe rien.\n"
+                             "Deuxième ligne factice.\n\n  \n").encode("utf-8")
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v2/paquet/orchestrator/essais/test_na_v2_requete.py	2026-11-21 09:32:50.801829386 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v3/paquet/orchestrator/essais/test_na_v3_requete.py	2026-11-21 10:10:40.585964309 +0000
+@@ -1,6 +1,6 @@
+-"""Essais du lot 3 du véhicule NA-1 : `pole/requete_na_v2.py`.
++"""Essais du lot 3 du véhicule NA-1 : `pole/requete_na_v3.py`.
+ 
+-v2 (remplace `test_na_v1_requete`, `cbc8df87…`, archivé sans modification) : des noms seuls changent, pour la v3 du lot 2 ;
++v3 (remplace `test_na_v2_requete`, `0c1ec087…`, archivé sans modification) : des noms seuls changent, pour la v5 du lot 2 ;
+ aucun essai n'est ajouté, retiré ni changé.
+ 
+ Partie servie à l'octet ; enveloppe sans ajout (D2) ; dernier octet de chaque pièce gardé, empreinte sur la pièce entière ;
+@@ -22,12 +22,12 @@
+     if _p not in sys.path:
+         sys.path.insert(0, _p)
+ 
+-import aides_na_lot3_v2 as B  # noqa: E402
+-import aides_na_v3 as A  # noqa: E402
++import aides_na_lot3_v3 as B  # noqa: E402
++import aides_na_v4 as A  # noqa: E402
+ from pole import fiches_v54 as fv54  # noqa: E402  (témoin : la forme du noyau)
+-from pole import garde_motifs_na_v3 as gm  # noqa: E402
++from pole import garde_motifs_na_v4 as gm  # noqa: E402
+ from pole import identifiants_na_v1 as ident  # noqa: E402
+-from pole import requete_na_v2 as rq  # noqa: E402
++from pole import requete_na_v3 as rq  # noqa: E402
+ 
+ 
+ def sha(o):
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v2/paquet/orchestrator/essais/test_na_v2_journal.py	2026-11-21 09:32:59.205829886 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v3/paquet/orchestrator/essais/test_na_v3_journal.py	2026-11-21 10:10:48.709964792 +0000
+@@ -1,6 +1,6 @@
+-"""Essais du lot 3 du véhicule NA-1 : `pole/journal_na_v2.py`.
++"""Essais du lot 3 du véhicule NA-1 : `pole/journal_na_v3.py`.
+ 
+-v2 (remplace `test_na_v1_journal`, `006f9f00…`, archivé sans modification) : des noms seuls changent, pour la v3 du lot 2 ;
++v3 (remplace `test_na_v2_journal`, `12666153…`, archivé sans modification) : des noms seuls changent, pour la v5 du lot 2 ;
+ aucun essai n'est ajouté, retiré ni changé.
+ 
+ Journal d'ajout seul, qui refuse une réécriture ; ligne « envoi » après la garde de motifs, avant l'envoi, un appel sans
+@@ -23,11 +23,11 @@
+     if _p not in sys.path:
+         sys.path.insert(0, _p)
+ 
+-import aides_na_lot3_v2 as B  # noqa: E402
+-import aides_na_v3 as A  # noqa: E402
+-from pole import garde_motifs_na_v3 as gm  # noqa: E402
+-from pole import journal_na_v2 as jn  # noqa: E402
+-from pole import requete_na_v2 as rq  # noqa: E402
++import aides_na_lot3_v3 as B  # noqa: E402
++import aides_na_v4 as A  # noqa: E402
++from pole import garde_motifs_na_v4 as gm  # noqa: E402
++from pole import journal_na_v3 as jn  # noqa: E402
++from pole import requete_na_v3 as rq  # noqa: E402
+ 
+ CLE = "cle-essai-a"
+ 
+@@ -238,7 +238,7 @@
+         sortie = os.path.join(tempfile.mkdtemp(), "requete-rejouee.bin")
+         env = {"PATH": os.environ.get("PATH", ""), "PYTHONDONTWRITEBYTECODE": "1", "LANG": "C.UTF-8",
+                "PYTHONHASHSEED": "12345"}
+-        r = subprocess.run([sys.executable, "-B", os.path.join(ICI, "aides_na_lot3_v2.py"), sortie], env=env,
++        r = subprocess.run([sys.executable, "-B", os.path.join(ICI, "aides_na_lot3_v3.py"), sortie], env=env,
+                            capture_output=True, text=True)
+         self.assertEqual(r.returncode, 0, r.stderr[-400:])
+         with open(sortie, "rb") as f:
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v2/paquet/orchestrator/essais/mutations_na_lot3_v2.py	2026-11-21 09:33:31.433831802 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v3/paquet/orchestrator/essais/mutations_na_lot3_v3.py	2026-11-21 10:11:09.589966033 +0000
+@@ -1,9 +1,9 @@
+ """Mutations du lot 3 du véhicule NA-1 : pour chaque garde, la garde retirée fait échouer son essai (R5 ; manière de la
+ v68, R68, § 4, et du programme des lots 1 et 2).
+ 
+-v2 (remplace `mutations_na_lot3_v1`, `e7361247…`, archivé sans modification) : des noms seuls changent, pour la v3 du
+-lot 2 ; la liste des fichiers copiés suit, et porte en plus les données des ignorables et leur programme d'extraction. Les
+-58 mutations et le témoin inerte sont les mêmes, texte pour texte.
++v3 (remplace `mutations_na_lot3_v2`, `06c328bc…`, archivé sans modification) : des noms seuls changent, pour la v5 du
++lot 2 ; la liste des fichiers copiés suit (garde et tirage v4, aides v4). Les 58 mutations et le témoin inerte sont les
++mêmes, texte pour texte.
+ 
+ Pour chaque mutation : une copie neuve, dans un dossier temporaire, des seuls fichiers dont les essais du lot 3 ont besoin
+ (les modules des lots 1 à 3, leurs aides, la liste d'essai, les données des ignorables et leur programme d'extraction, et
+@@ -15,7 +15,7 @@
+ fichiers d'essais entiers sont joués sur une copie non mutée : ils doivent passer (code 0). Un témoin inerte (un mot de
+ docstring changé) doit survivre.
+ 
+-Usage, depuis n'importe où : `python -B mutations_na_lot3_v2.py JOURNAL.json` (le journal ne doit pas exister : R12).
++Usage, depuis n'importe où : `python -B mutations_na_lot3_v3.py JOURNAL.json` (le journal ne doit pas exister : R12).
+ Aucun réseau, aucune clé ; les copies temporaires sont retirées en fin de programme.
+ """
+ 
+@@ -37,24 +37,24 @@
+     "pole/outils.py",
+     "pole/caviardage.py",
+     "pole/identifiants_na_v1.py",
+-    "pole/tirage_na_v3.py",
+-    "pole/garde_motifs_na_v3.py",
++    "pole/tirage_na_v4.py",
++    "pole/garde_motifs_na_v4.py",
+     "pole/ignorables-unicode-15.1.0-na-v1.json",
+     "pole/extraire_ignorables_unicode_na_v1.py",
+-    "pole/requete_na_v2.py",
+-    "pole/journal_na_v2.py",
+-    "essais/aides_na_v3.py",
++    "pole/requete_na_v3.py",
++    "pole/journal_na_v3.py",
++    "essais/aides_na_v4.py",
+     "essais/liste-motifs-essai-na-v1.json",
+-    "essais/aides_na_lot3_v2.py",
+-    "essais/test_na_v2_requete.py",
+-    "essais/test_na_v2_journal.py",
++    "essais/aides_na_lot3_v3.py",
++    "essais/test_na_v3_requete.py",
++    "essais/test_na_v3_journal.py",
+ )
+ 
+-TOUS = ["essais/test_na_v2_requete.py", "essais/test_na_v2_journal.py"]
+-R = "essais/test_na_v2_requete.py::"
+-J = "essais/test_na_v2_journal.py::"
+-RQ = "pole/requete_na_v2.py"
+-JN = "pole/journal_na_v2.py"
++TOUS = ["essais/test_na_v3_requete.py", "essais/test_na_v3_journal.py"]
++R = "essais/test_na_v3_requete.py::"
++J = "essais/test_na_v3_journal.py::"
++RQ = "pole/requete_na_v3.py"
++JN = "pole/journal_na_v3.py"
+ 
+ MUTATIONS = [
+     # --- requete : gabarit et question ---
+@@ -302,7 +302,7 @@
+ 
+ def main(argv):
+     if len(argv) != 1:
+-        print("usage : mutations_na_lot3_v2.py JOURNAL.json", file=sys.stderr)
++        print("usage : mutations_na_lot3_v3.py JOURNAL.json", file=sys.stderr)
+         return 2
+     journal = argv[0]
+     if os.path.exists(journal):
+@@ -312,8 +312,8 @@
+     for rel in FICHIERS:
+         with open(os.path.join(ORCH, rel), "rb") as f:
+             empreintes[rel] = hashlib.sha256(f.read()).hexdigest()
+-    racine_tmp = tempfile.mkdtemp(prefix="mutations-na-lot3-v2-")
+-    rendu = {"version": "journal-mutations-na-lot3-v2", "python": sys.version.split()[0], "fichiers": empreintes,
++    racine_tmp = tempfile.mkdtemp(prefix="mutations-na-lot3-v3-")
++    rendu = {"version": "journal-mutations-na-lot3-v3", "python": sys.version.split()[0], "fichiers": empreintes,
+              "mutations": []}
+     try:
+         base = os.path.join(racine_tmp, "base")
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v2/appliquer_paquet_vehicule_na_lot_3_v2.py	2026-11-21 09:34:05.797833844 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v3/appliquer_paquet_vehicule_na_lot_3_v3.py	2026-11-21 10:11:31.785967352 +0000
+@@ -1,22 +1,22 @@
+-"""Programme d'application du paquet v2 du lot 3 du véhicule NA-1 (manière de la v68, R68, § 2, et du programme des lots 1
++"""Programme d'application du paquet v3 du lot 3 du véhicule NA-1 (manière de la v68, R68, § 2, et du programme des lots 1
+ et 2).
+ 
+-v2 (remplace `appliquer_paquet_vehicule_na_lot_3_v1.py`, `6e4bbd15…`, archivé sans modification) : des noms seuls
+-changent ; le paquet exigé est le paquet v3 du lot 2, et les essais joués sont ceux de cette v3 et du lot 3 v2.
++v3 (remplace `appliquer_paquet_vehicule_na_lot_3_v2.py`, `28133e70…`, archivé sans modification) : des noms seuls
++changent ; le paquet exigé est le paquet v5 du lot 2, et les essais joués sont ceux de cette v5 et du lot 3 v3.
+ 
+-`python -B appliquer_paquet_vehicule_na_lot_3_v2.py --destination COPIE [--lancer-essais]`
++`python -B appliquer_paquet_vehicule_na_lot_3_v3.py --destination COPIE [--lancer-essais]`
+ 
+-- Lit le manifeste voisin (`manifeste-paquet-vehicule-na-lot-3-v2.json`) et vérifie l'empreinte de chaque fichier du
++- Lit le manifeste voisin (`manifeste-paquet-vehicule-na-lot-3-v3.json`) et vérifie l'empreinte de chaque fichier du
+   paquet avant toute copie ; un fichier altéré : refus, rien n'est copié.
+ - `COPIE` est une copie de l'orchestrateur (le dossier qui contient `orchestrator/pole/__init__.py`), faite par
+-  l'opérateur, **sur laquelle le paquet v3 du lot 2 est déjà posé** : chacun de ses fichiers doit y être, à
++  l'opérateur, **sur laquelle le paquet v5 du lot 2 est déjà posé** : chacun de ses fichiers doit y être, à
+   l'empreinte que porte le manifeste ; sinon refus, rien n'est copié. Le dépôt de l'orchestrateur lui-même est refusé
+   comme destination, et rien n'y est jamais écrit.
+ - Les fichiers existants de l'orchestrateur que lisent les essais (forme de fiche du noyau, témoin) doivent y être à leur
+   empreinte du commit de base.
+ - Chaque fichier du paquet est neuf : une cible déjà présente est refusée (R12), avant toute copie.
+ - Après la copie, chaque copie est relue et comparée à son empreinte.
+-- `--lancer-essais` joue ensuite, dans la copie, les essais des lots 1 et 2 (v3) et du lot 3 (v2) (`python -B -m pytest
++- `--lancer-essais` joue ensuite, dans la copie, les essais des lots 1 et 2 (v5) et du lot 3 (v3) (`python -B -m pytest
+   -q -p no:cacheprovider`) et rend leur code.
+ 
+ Le programme ne clone rien et n'écrit dans aucun dépôt. Aucun réseau, aucune clé.
+@@ -31,10 +31,10 @@
+ import sys
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+-MANIFESTE = os.path.join(ICI, "manifeste-paquet-vehicule-na-lot-3-v2.json")
++MANIFESTE = os.path.join(ICI, "manifeste-paquet-vehicule-na-lot-3-v3.json")
+ SOURCES_LUES_SEULES = ("/home/user/lciric/ideation-organism", "/home/user/ideation-organism")
+-ESSAIS = ("essais/test_na_v3_tirage.py", "essais/test_na_v3_garde_motifs.py", "essais/test_na_v2_requete.py",
+-          "essais/test_na_v2_journal.py")
++ESSAIS = ("essais/test_na_v4_tirage.py", "essais/test_na_v5_garde_motifs.py", "essais/test_na_v3_requete.py",
++          "essais/test_na_v3_journal.py")
+ 
+ 
+ class ApplicationRefusee(RuntimeError):
+@@ -66,10 +66,10 @@
+         raise ApplicationRefusee("destination dans le paquet : refusée")
+     if not os.path.isfile(os.path.join(destination, "orchestrator", "pole", "__init__.py")):
+         raise ApplicationRefusee("la destination n'est pas une copie de l'orchestrateur")
+-    for e in m["dependances_lot_2_v3"] + m["fichiers_existants_lus"]:
++    for e in m["dependances_lot_2_v5"] + m["fichiers_existants_lus"]:
+         chemin = os.path.join(destination, e["chemin"])
+         if not os.path.isfile(chemin) or sha256_fichier(chemin) != e["sha256"]:
+-            raise ApplicationRefusee(f"fichier requis absent ou d'une autre empreinte : {e['chemin']} (le paquet v3 du "
++            raise ApplicationRefusee(f"fichier requis absent ou d'une autre empreinte : {e['chemin']} (le paquet v5 du "
+                                      "lot 2 doit être posé, à ses empreintes, sur une copie du commit de base)")
+     for e in fichiers:
+         if os.path.exists(os.path.join(destination, e["chemin"])):
+@@ -83,7 +83,7 @@
+ 
+ 
+ def main(argv=None):
+-    p = argparse.ArgumentParser(description="application du paquet v2 du lot 3 du véhicule NA-1")
++    p = argparse.ArgumentParser(description="application du paquet v3 du lot 3 du véhicule NA-1")
+     p.add_argument("--destination", required=True)
+     p.add_argument("--lancer-essais", action="store_true")
+     a = p.parse_args(argv)
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v2/sonde_gabarit_servi_na_lot3_v2.py	2026-11-21 09:36:51.221843678 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-vehicule-na-lot-3-v3/sonde_gabarit_servi_na_lot3_v3.py	2026-11-21 10:11:36.393967626 +0000
+@@ -2,9 +2,9 @@
+ case possibles (mot de case de rang 0, chaque triplet), par `requete_na_v1`. Ne rend que des comptes, des tailles et des
+ empreintes ; aucun contenu.
+ 
+-`python -B sonde_gabarit_servi_na_lot3_v2.py RACINE_ORCHESTRATEUR CHEMIN_GABARIT`
++`python -B sonde_gabarit_servi_na_lot3_v3.py RACINE_ORCHESTRATEUR CHEMIN_GABARIT`
+ 
+-v2 (remplace `sonde_gabarit_servi_na_lot3_v1.py`, `29d7b056…`) : des noms seuls changent (`requete_na_v2`, `tirage_na_v3`).
++v3 (remplace `sonde_gabarit_servi_na_lot3_v2.py`, `8317c31b…`) : des noms seuls changent (`requete_na_v3`, `tirage_na_v4`).
+ """
+ 
+ import hashlib
+@@ -14,8 +14,8 @@
+ sys.path.insert(0, sys.argv[1])
+ 
+ from pole import identifiants_na_v1 as ident  # noqa: E402
+-from pole import requete_na_v2 as rq  # noqa: E402
+-from pole import tirage_na_v3 as tn  # noqa: E402
++from pole import requete_na_v3 as rq  # noqa: E402
++from pole import tirage_na_v4 as tn  # noqa: E402
+ 
+ 
+ def main():
