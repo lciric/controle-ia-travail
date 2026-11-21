@@ -1,0 +1,213 @@
+Calculs de la note « famille réservée » (v1) — lois exactes, aucun tirage.
+
+==============================================================================
+BLOC A — Ce qu'une réponse publique apprend à qui connaît la demande
+==============================================================================
+Monde d'illustration : la famille secrète occupe une case parmi M, a priori
+uniforme ; le côté des concepteurs déclare des familles, une case chacune,
+ou des ensembles de cases (familles larges).
+
+A1. Réponse oui/non publique, juge gardé quoi qu'il arrive.
+    Probabilité que les concepteurs connaissent le juge après k déclarations
+    d'une case : k/M. Nombre de déclarations larges (moitié des cases restantes)
+    qui suffisent à coup sûr : plafond(log2 M).
+    M    k=1     k=3     k=5     déclarations larges suffisantes
+    8    0.1250  0.3750  0.6250   3
+    20   0.0500  0.1500  0.2500   5
+    64   0.0156  0.0469  0.0781   6
+
+A2. Même réponse, mais un juge recouvert est écarté et remplacé par une famille
+    tirée hors des cases déclarées. Probabilité que les concepteurs connaissent
+    le juge en service : 0 tant qu'il reste deux cases non déclarées. Ce qu'ils
+    apprennent : le juge n'est dans aucune case déclarée ; leur meilleur pari
+    sur le juge passe de 1/M à 1/(M-k).
+    M    k=0     k=1     k=3     k=5
+    8    0.1250  0.1429  0.2000  0.3333 
+    20   0.0500  0.0526  0.0588  0.0667 
+    64   0.0156  0.0159  0.0164  0.0169 
+
+A3. Une seule famille candidate, de probabilité a priori p de recouvrir le juge.
+    Colonne 1 : probabilité que les concepteurs connaissent le juge en service,
+    sous « oui/non public, juge gardé » (= p). Colonne 2 : sous « juge écarté
+    si oui » (= 0). Colonne 3 : facteur par lequel un « non » public multiplie
+    leur meilleur pari sur le juge (= 1/(1-p)).
+    p      juge gardé   juge écarté   facteur après un non
+    0.05   0.05         0.00          1.053
+    0.10   0.10         0.00          1.111
+    0.20   0.20         0.00          1.250
+    0.30   0.30         0.00          1.429
+
+A4. Réponse par compte sur un lot : « j familles du lot recouvrent », sans dire
+    lesquelles. Lot de n familles disjointes, chacune de probabilité a priori p.
+    Si le compte vaut 1, la probabilité qu'une famille donnée du lot soit le
+    juge passe de p à 1/n ; la probabilité que le juge soit dans le lot, de n*p à 1.
+    n    p      avant (une famille)   après (une famille)   juge dans le lot : avant -> après
+    5    0.04   0.04                  0.20                  0.20 -> 1.00
+    5    0.10   0.10                  0.20                  0.50 -> 1.00
+    10   0.03   0.03                  0.10                  0.30 -> 1.00
+
+Lecture : une réponse oui/non, ou un compte, n'est « sans contenu » que pour
+qui ignore la demande. Pour qui l'a écrite, un oui vaut la description du juge.
+Écarter le juge recouvert annule ce que le oui apprend sur le juge en service.
+
+==============================================================================
+BLOC B — Le prix d'un recouvrement partiel non vu
+==============================================================================
+Porte d'illustration (ce n'est pas le critère de la porte du programme, que je
+n'ai pas lu) : on franchit si la borne basse de Wald à 95 % de la différence des
+rappels (bras boîte blanche moins base) est au-dessus de zéro ; n unités sabotées
+par bras, bras indépendants. Vérité : aucun gain, les deux bras ont le rappel r0
+sur la famille juge. Recouvrement : une part c des unités de la famille juge
+relève d'une famille que les concepteurs connaissent, et le bras qui la connaît
+y a le rappel r_s au lieu de r0. Son rappel sur le juge devient (1-c) r0 + c r_s.
+n = 288 et 400 : tailles de banque par mode reprises de l'avis d'Opus.
+
+r0 = 0.30, r_s = 0.90 : probabilité de franchir à tort
+    c       n=288     n=400
+    0.00    0.0255    0.0254
+    0.02    0.0508    0.0564
+    0.05    0.1201    0.1492
+    0.10    0.3368    0.4397
+    0.20    0.8552    0.9447
+    0.50    1.0000    1.0000
+    1.00    1.0000    1.0000
+
+r0 = 0.30, r_s = 0.60 : probabilité de franchir à tort
+    c       n=288     n=400
+    0.00    0.0255    0.0254
+    0.02    0.0364    0.0384
+    0.05    0.0594    0.0676
+    0.10    0.1201    0.1492
+    0.20    0.3368    0.4397
+    0.50    0.9636    0.9931
+    1.00    1.0000    1.0000
+
+Objets de contrôle : sans recouvrement (c = 0), 0.0255 et 0.0254, près du niveau
+nominal 0,025 ; bras spécialisé sans avantage (r_s = r0) : même valeur ;
+famille entièrement connue (c = 1, r_s = 0,90) : 1.000000.
+
+Plus petite part c, au centième, pour laquelle la probabilité de franchir à
+tort dépasse 0,05 (le double du niveau nominal) :
+    r_s = 0.90, n = 288 : c = 0.02
+    r_s = 0.90, n = 400 : c = 0.02
+    r_s = 0.60, n = 288 : c = 0.04
+    r_s = 0.60, n = 400 : c = 0.04
+
+À c = 0,10, le risque de franchir à tort est multiplié par 4.7 à 17.3 selon
+r_s et n (rapport à la valeur sans recouvrement).
+
+Lecture : deux à quatre centièmes d'unités recouvertes suffisent à doubler le
+risque de franchir à tort. Le seuil d'action ne peut donc pas être « recouvre en
+majorité » : c'est « une unité au moins ». Des bras appariés, à erreur type plus
+petite, seraient plus sensibles encore au même biais (raisonnement, non calcul).
+
+==============================================================================
+BLOC C — Le taux de recouvrements manqués, borné par des paires plantées
+==============================================================================
+Le lecteur habilité est éprouvé sur m paires où le recouvrement est vrai par
+construction (coffre factice). Avec x manqués sur m, borne haute exacte à 95 %
+du taux de manqués b. Deux lecteurs, règle « le plus sévère l'emporte » : un
+recouvrement n'est manqué que si les deux le manquent ; b*b s'ils sont
+indépendants, b s'ils se trompent ensemble.
+
+    m     x   borne de b   deux lecteurs indépendants   deux lecteurs liés
+    10    0   0.2589       0.0670                       0.2589
+    10    1   0.3942       0.1554                       0.3942
+    20    0   0.1391       0.0194                       0.1391
+    20    1   0.2161       0.0467                       0.2161
+    30    0   0.0950       0.0090                       0.0950
+    30    1   0.1486       0.0221                       0.1486
+    60    0   0.0487       0.0024                       0.0487
+    60    1   0.0766       0.0059                       0.0766
+    100   0   0.0295       0.0009                       0.0295
+    100   1   0.0466       0.0022                       0.0466
+
+Objet de contrôle : pour x = 0 la bissection retrouve 1 - 0,05^(1/m)
+(m = 30 : 0.0950 ; règle de trois : 3/30 = 0,1000).
+
+Risque restant qu'un juge recouvert serve quand même : q * b, q étant la
+probabilité a priori que la famille déclarée recouvre le juge.
+    q      b=0,0950 (30 paires, un lecteur)   b=0,0090 (deux, indépendants)
+    0.05   0.0048                             0.0005
+    0.10   0.0095                             0.0009
+    0.20   0.0190                             0.0018
+    0.30   0.0285                             0.0027
+
+Familles écartées à tort par vérification, a = taux de fausses alertes d'un
+lecteur, deux lecteurs : 1 - (1-a)^2.
+    a = 0.02 : 0.0396
+    a = 0.05 : 0.0975
+    a = 0.10 : 0.1900
+
+==============================================================================
+BLOC D — Le stock de réserve
+==============================================================================
+Le coffre tient n familles ; chacune recouvre la liste des familles déclarées
+avec la probabilité q. Si toutes recouvrent, il n'y a plus de juge : il faut en
+écrire une, et ce délai se voit du dehors. Corrélation rho entre familles :
+0 si les auteurs sont indépendants ; plus haute s'ils sont des instances d'un
+même modèle, sur la même consigne.
+
+rho = 0.0
+    q      n=1      n=2      n=3      n=4      n=6
+    0.05   0.0500   0.0025   0.0001   0.0000   0.0000 
+    0.10   0.1000   0.0100   0.0010   0.0001   0.0000 
+    0.20   0.2000   0.0400   0.0080   0.0016   0.0001 
+    0.30   0.3000   0.0900   0.0270   0.0081   0.0007 
+
+rho = 0.2
+    q      n=1      n=2      n=3      n=4      n=6
+    0.05   0.0500   0.0120   0.0044   0.0020   0.0006 
+    0.10   0.1000   0.0280   0.0112   0.0054   0.0018 
+    0.20   0.2000   0.0720   0.0336   0.0182   0.0071 
+    0.30   0.3000   0.1320   0.0704   0.0422   0.0189 
+
+rho = 0.5
+    q      n=1      n=2      n=3      n=4      n=6
+    0.05   0.0500   0.0262   0.0179   0.0137   0.0093 
+    0.10   0.1000   0.0550   0.0385   0.0298   0.0208 
+    0.20   0.2000   0.1200   0.0880   0.0704   0.0513 
+    0.30   0.3000   0.1950   0.1495   0.1233   0.0937 
+
+Objets de contrôle : rho = 0, q = 0,2, n = 3 : 1/125 exactement ; n = 1 rend q
+pour toute corrélation ; rho = 0,5, q = 0,2, n = 2 : 3/25 exactement.
+
+Plus petit n pour que la probabilité d'un coffre vide passe sous 0,05, puis 0,01 :
+    rho    q      n (0,05)   n (0,01)
+    0.0    0.10   2          2
+    0.0    0.20   2          3
+    0.0    0.30   3          4
+    0.2    0.10   2          4
+    0.2    0.20   3          6
+    0.2    0.30   4          9
+    0.5    0.10   3          14
+    0.5    0.20   7          47
+    0.5    0.30   15         151
+
+Passer de deux à six familles divise le risque d'un coffre vide par 2.1 à 2.8
+à corrélation 0,5, et par 123 à 160000 sans corrélation.
+
+Lecture : une réserve n'achète de la sûreté que si ses auteurs sont indépendants.
+La diversité des auteurs compte plus que leur nombre.
+
+==============================================================================
+BLOC E — L'engagement public d'un verdict court
+==============================================================================
+Le verdict du lecteur est consigné dans le coffre ; une empreinte en est posée
+du côté public pour qu'on ne puisse pas le changer après coup. Si le fichier ne
+contient que le verdict, quiconque voit l'empreinte retrouve le verdict en
+calculant l'empreinte de chaque verdict possible.
+
+E1. Fichier sans sel : verdicts retrouvés par dictionnaire : 4 sur 4.
+E2. Fichier avec sel de 32 octets inconnu de l'observateur : verdicts retrouvés
+    par dictionnaire (sans le sel, trois sels devinés) : 0 sur 4.
+    À l'évaluation, le sel révélé, verdicts vérifiés par tous : 4 sur 4.
+
+E3. Un inventaire public qui donne les tailles trahit le verdict s'il est écrit
+    en mots : tailles distinctes [7, 10, 13, 21] octets (4 valeurs pour 4 verdicts).
+    En code de largeur fixe, avec sel : tailles distinctes [34] octets (1 valeur).
+
+Lecture : l'empreinte compagnon d'un verdict court est le verdict. Il faut un sel
+tenu dans le coffre, un code de largeur fixe, et aucune taille variable du côté public.
+
+Fin. Toutes les assertions sont passées.
