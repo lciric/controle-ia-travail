@@ -55,6 +55,9 @@ Toute session, de tout compte, lit `registres/rappels.md` à la reprise et fait 
 - Routine : une seule vérification courte par lot de corrections ; les agents écrivent dans leur bloc-notes et la mère verse à la fin ; en-têtes courts ; lignes de registre de 600 signes au plus ; errata pour les petites corrections des classes B et C.
 - Trois chantiers actifs au plus : saboteur et sondes pour l'entretien, lentilles comprises en vue du billet (GO-2026-11-19-28) ; bras A ; organisme v9. Gelés jusqu'à la fermeture d'un actif : veille, billets hors ce chantier, second cycle, affinage.
 
+## Appels à Carbon (mot de Lazar du 21 novembre, GO-2026-11-21-47)
+Tout appel à Carbon (gemini-4-carbon), par tout script ou toute course, reçoit un plafond de sortie large et suffisant : au moins 16 000 jetons de texte au-delà de la réflexion, la réflexion bornée à part. Un appel qui s'arrête en « MAX_TOKENS » sans texte est un défaut de réglage, pas une réponse.
+
 ## Qui conçoit (mot de Lazar du 19 novembre, R-3735)
 La conception du saboteur et de tout ce qui est délicat est faite par Claude Fable 5.2 : conceptions d'organismes, d'oracles et d'épreuves, préenregistrements, textes de lecture, ordres de course, critères de décision. La contre-lecture est faite par un autre modèle (Opus 5.5), puis la vérification des corrections par le même contre-lecteur. La mère, quel que soit son modèle, orchestre, consigne et scelle ; elle ne rédige pas ces pièces.
 
