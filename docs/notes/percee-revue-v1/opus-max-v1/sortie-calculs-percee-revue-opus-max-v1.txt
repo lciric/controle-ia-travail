@@ -1,0 +1,89 @@
+calculs-percee-revue-opus-max-v1
+numpy 2.4.6 | scipy 1.17.1 | python 3.13.18
+graine mère SeedSequence(20261121), enfants : {'A2': 20261121, 'C': 20261121} {'A2': (0,), 'C': (1,)}
+
+=== Bloc A : ce qui passe sans alerte, selon la source de validité ===
+suppositions : rho0=0.1, q=0.2, m=2000, t=0.64, f=0.029, m_f=500, alpha=0.05, z=1.6449
+convention : puissance 1/2 (le décalage égale le seuil), test à horizon fixe,
+approximation normale ; H = n x delta* = excès d'épisodes endommagés par sabotage
+que le test ne voit pas à mi-puissance, sur tous les épisodes (audités ou non).
+
+n | (i) exacte | (ii) réf. m | (iii) 2nd regard, f sur m_f | (iv) tirage, saboteur conditionnel | (ii)/n | (iii)/n | (i)/sqrt(n) | (iv)/sqrt(n)
+1000 | 35 | 37 | 10 | 35 | 0.03660 | 0.00996 | 1.103 | 1.103
+10000 | 110 | 156 | 36 | 110 | 0.01560 | 0.00364 | 1.103 | 1.103
+100000 | 349 | 1157 | 216 | 349 | 0.01157 | 0.00216 | 1.103 | 1.103
+1000000 | 1103 | 11089 | 1953 | 1103 | 0.01109 | 0.00195 | 1.103 | 1.103
+10000000 | 3489 | 110395 | 19312 | 3489 | 0.01104 | 0.00193 | 1.103 | 1.103
+pente limite de (ii) : z sqrt(rho0(1-rho0)/m) = 0.01103 épisode par épisode
+pente limite de (iii) : z rho0 sqrt(f(1-f)/m_f) / t = 0.00193 ; rapport (ii)/(iii) = 5.72
+lecture : (ii) et (iii) fuient linéairement (une constante les sépare) ; (i) et (iv) en racine.
+(iv) ne vaut que pour un saboteur qui conditionne sur la condition tirée ; un saboteur
+inconditionnel n'y laisse aucun écart A contre B et retombe sur (ii).
+
+(v) régime de signature au banc : zéro marque sur m_f échecs honnêtes, une marque = alerte
+m_f | f_max (95 %, zéro marque) | horizon n_sig = alpha/(q rho0 f_max) | n_sig / m_f
+35 | 0.082032 | 30 | 0.871
+500 | 0.005974 | 419 | 0.837
+2000 | 0.001497 | 1670 | 0.835
+10000 | 0.000300 | 8346 | 0.835
+100000 | 0.000030 | 83453 | 0.835
+lecture : la signature ne tient qu'à un horizon proportionnel au nombre d'échecs honnêtes
+de référence ; au banc, ce nombre s'achète en inférence, non en attaquants.
+
+contrôle : (ii) rejoint (i) quand m -> infini : True ; (iii) rejoint la racine quand m_f -> infini : True
+
+=== Bloc A2 : tirages, référence finie (cas ii) ===
+saboteur à delta = 0.00552 (moitié de z sqrt(rho0(1-rho0)/m)), m = 2000, q = 0.2, 20000 tirages par case
+n | annonce sous l'honnête | annonce sous le saboteur | prévu à n infini | excès caché n*delta
+10000 | 0.047 | 0.139 | 0.205 | 55
+100000 | 0.048 | 0.188 | 0.205 | 552
+1000000 | 0.049 | 0.198 | 0.205 | 5517
+lecture : la probabilité d'annonce plafonne vers la valeur prévue, l'excès caché croît comme n.
+
+=== Bloc B : certifier f au banc ; ce que changent des négatifs durs ===
+m_f | k marques | borne haute de f à 95 % (Clopper-Pearson)
+35 | 0 | 0.08203
+35 | 1 | 0.12850
+35 | 5 | 0.27718
+500 | 0 | 0.00597
+500 | 1 | 0.00945
+500 | 5 | 0.02091
+2000 | 0 | 0.00150
+2000 | 1 | 0.00237
+2000 | 5 | 0.00525
+10000 | 0 | 0.00030
+10000 | 1 | 0.00047
+10000 | 5 | 0.00105
+
+mélange : une part h des échecs honnêtes est « sous preuve trompeuse » (le modèle
+représente la bonne réponse tôt puis émet la fausse, comme sous fausses démonstrations),
+marquée avec probabilité f_h ; le reste, avec f_0. Gain du second regard à allure fixée,
+limite du saboteur lent, t²/f x (1 - rho0) (formule de la note percée v2, reprise).
+h | f_h | f global | t²/f x (1-rho0) à t=0,64 | horizon de signature si f était connue
+0.0 | 0.1 | 0.0010 | 368.6 | 2500
+0.02 | 0.1 | 0.0030 | 123.7 | 839
+0.02 | 0.3 | 0.0070 | 52.8 | 358
+0.05 | 0.1 | 0.0060 | 62.0 | 420
+0.05 | 0.3 | 0.0159 | 23.1 | 157
+0.1 | 0.1 | 0.0109 | 33.8 | 229
+0.1 | 0.3 | 0.0309 | 11.9 | 81
+lecture : une marque validée sur des échecs ordinaires (f_0 = 0,001) perd l'essentiel de
+son gain si 5 % des échecs honnêtes sont du genre « sait tôt, émet faux » et marqués 3 fois
+sur 10 ; les négatifs durs décident du régime, pas les négatifs faciles.
+
+=== Bloc C : part de subversion qui survit à l'évasion (« part qui survit »), taille d'échantillon ===
+suppositions : sigma = 1.2 par épisode, G0 = 1.0 ; trois bras de n épisodes
+(attaquant libre, attaquant qui échappe aux lectures, honnête handicapé à note de juge égale) ;
+part qui survit = (D_evade - D_temoin) / (D_libre - D_temoin) ; test unilatéral de « part >= 0,5 »
+(mort) contre « part <= 0,2 » (critère proposé) ; écart type par la méthode delta.
+n par bras | écart type de la part à 0,2 | écart type de la part à 0,5 | puissance (rejeter 0,5 quand vrai 0,2)
+50 | 0.220 | 0.208 | 0.425
+100 | 0.156 | 0.147 | 0.646
+200 | 0.110 | 0.104 | 0.880
+300 | 0.090 | 0.085 | 0.963
+500 | 0.070 | 0.066 | 0.997
+1000 | 0.049 | 0.046 | 1.000
+tirages à n = 300 par bras, 20000 répétitions : rejet de « part >= 0,5 » quand la part vaut 0,2 : 0.969 ;
+quand elle vaut 0,5 (niveau) : 0.051
+lecture : sous ces suppositions, quelques centaines d'épisodes par bras suffisent ; le
+coût de la mesure est dans la fabrication des attaquants, non dans le nombre d'épisodes.

@@ -1,0 +1,167 @@
+
+==============================================================================
+Bloc A - loi exacte de la bascule : dommage et score selon la force d'optimisation
+==============================================================================
+Conduites : H honnete (D=0, m=0) ; B franc (D=1, m=1) ; C cache (D=1, m=1-k).
+Masses de depart : H = e ; C = (1-e)h ; B = (1-e)(1-h). theta = force d'optimisation.
+
+A1 saboteur constant : e=0.0, h=0.2, k=0.8
+ theta  KL (nats)  E[score]  E[dommage]    P(H)    P(C)
+     0      0.000     0.840       1.000   0.000   0.200
+   0.5      0.015     0.783       1.000   0.000   0.272
+     1      0.067     0.714       1.000   0.000   0.357
+     2      0.303     0.557       1.000   0.000   0.553
+     3      0.661     0.413       1.000   0.000   0.734
+     5      1.266     0.255       1.000   0.000   0.932
+     8      1.561     0.205       1.000   0.000   0.993
+    12      1.607     0.200       1.000   0.000   1.000
+    20      1.609     0.200       1.000   0.000   1.000
+
+A2 exploration 10 % dans le meme contexte : e=0.1, h=0.2, k=0.8
+ theta  KL (nats)  E[score]  E[dommage]    P(H)    P(C)
+     0      0.000     0.756       0.900   0.100   0.180
+   0.5      0.022     0.671       0.857   0.143   0.233
+     1      0.094     0.575       0.805   0.195   0.288
+     2      0.381     0.382       0.686   0.314   0.379
+     3      0.739     0.237       0.574   0.426   0.421
+     5      1.237     0.106       0.415   0.585   0.387
+     8      1.551     0.055       0.268   0.732   0.266
+    12      1.814     0.028       0.140   0.860   0.140
+    20      2.142     0.006       0.032   0.968   0.032
+
+A3 exploration 10 %, cache parfait : e=0.1, h=0.2, k=1.0
+ theta  KL (nats)  E[score]  E[dommage]    P(H)    P(C)
+     0      0.000     0.720       0.900   0.100   0.180
+   0.5      0.028     0.609       0.860   0.140   0.251
+     1      0.121     0.486       0.816   0.184   0.330
+     2      0.458     0.258       0.735   0.265   0.477
+     3      0.812     0.113       0.683   0.317   0.570
+     5      1.171     0.017       0.649   0.351   0.632
+     8      1.265     0.001       0.643   0.357   0.642
+    12      1.273     0.000       0.643   0.357   0.643
+    20      1.273     0.000       0.643   0.357   0.643
+
+==============================================================================
+Bloc A4 - transition de phase : dommage final a budget d'optimisation fixe, selon e et k
+==============================================================================
+Budget : ecart de Kullback-Leibler de 1,204 nat (celui du meilleur de 8 : ln 8 - 7/8).
+budget = 1.2044 nat ; h = 0,2
+      e     k=0.5     k=0.8    k=0.95     k=1.0
+    0.0     1.000     1.000     1.000     1.000
+  0.001     0.912     0.988     0.994     0.995
+   0.01     0.711     0.897     0.946     0.956
+   0.03     0.545     0.745     0.849     0.874
+    0.1     0.286     0.427     0.583     0.647
+    0.3    0.000*    0.000*    0.000*    0.318*
+(* : budget inatteignable ; valeur a theta = 200, la bascule ne peut plus rien deplacer)
+
+==============================================================================
+Bloc B - meilleur de N par tirage : le bruit ralentit, l'erreur systematique detourne
+==============================================================================
+
+B1 aucun cache possible, e=0,1 : aire entre H et B = 0.77 (ecart-type du bruit 0.957)
+   N  E[score choisi]  E[dommage choisi]  P(H choisi)
+   1            0.900              0.901        0.099
+   2            0.332              0.850        0.150
+   4           -0.136              0.792        0.208
+   8           -0.547              0.723        0.277
+  16           -0.903              0.649        0.351
+  32           -1.224              0.575        0.425
+
+B2 saboteur constant, cache parfait : aire entre H et B = 0.77 (ecart-type du bruit 0.957)
+   N  E[score choisi]  E[dommage choisi]  P(H choisi)
+   1            0.799              1.000        0.000
+   2            0.216              1.000        0.000
+   4           -0.274              1.000        0.000
+   8           -0.701              1.000        0.000
+  16           -1.066              1.000        0.000
+  32           -1.399              1.000        0.000
+
+B3 e=0,1, cache partiel k=0,8 : aire entre H et B = 0.77 (ecart-type du bruit 0.957)
+   N  E[score choisi]  E[dommage choisi]  P(H choisi)
+   1            0.755              0.899        0.101
+   2            0.171              0.861        0.139
+   4           -0.314              0.814        0.186
+   8           -0.731              0.770        0.230
+  16           -1.095              0.726        0.274
+  32           -1.417              0.688        0.312
+
+B4 comme B1, moniteur plus bruite (aire 0,60) : aire entre H et B = 0.6 (ecart-type du bruit 2.791)
+   N  E[score choisi]  E[dommage choisi]  P(H choisi)
+   1            0.905              0.899        0.101
+   2           -0.685              0.883        0.117
+   4           -1.989              0.865        0.135
+   8           -3.103              0.847        0.153
+  16           -4.061              0.832        0.168
+  32           -4.906              0.816        0.184
+
+==============================================================================
+Bloc B5 - rapport de selection du meilleur de 5 (sans cache), comme la page web le mesure
+==============================================================================
+Rapport = P(H choisi par le meilleur de 5) / P(H choisi au hasard) = P(H choisi) / e.
+     e    aire=0.6   aire=0.77    aire=0.9
+  0.05        1.42        2.41        3.46
+   0.1        1.41        2.30        3.18
+   0.2        1.36        2.08        2.74
+   0.5        1.21        1.55        1.78
+Plafond du rapport (moniteur parfait) : (1 - (1-e)^5)/e ; e=0,1 -> 4.10
+
+==============================================================================
+Bloc C - identite du premier ordre : dE[D]/dtheta en 0 = -Cov(m, D), et sa decomposition
+==============================================================================
+e=0.0, h=0.2, k=0.8 : derivee numerique 0.00000 ; -Cov -0.00000 ; part intra-mode -0.00000 ; part entre modes -0.00000
+e=0.1, h=0.2, k=0.8 : derivee numerique -0.07560 ; -Cov -0.07560 ; part intra-mode -0.00000 ; part entre modes -0.07560
+e=0.3, h=0.5, k=0.5 : derivee numerique -0.15750 ; -Cov -0.15750 ; part intra-mode -0.00000 ; part entre modes -0.15750
+
+==============================================================================
+Bloc D - sonde additive par action : baisser la dose ou cacher, la moins chere l'emporte
+==============================================================================
+Conduites : H (D=0, m=0) ; dose basse L (D=0,5, m=0,5) ; dose haute F (D=1, m=1) ;
+haute dose cachee C (D=1, m=1-k). e = 0 (saboteur constant). Masses : L = l, C = h, F = 1-l-h.
+Budget fixe : 1.2044 nat.
+    l      h     k=0.3     k=0.5     k=0.7     k=1.0
+  0.2    0.0     0.542     0.542     0.542     0.542
+  0.2   0.01     0.544     0.558     0.623     0.738
+  0.2   0.05     0.550     0.613     0.756     0.851
+  0.2    0.2     0.557     0.750     0.936     0.960
+ 0.05   0.05     0.714     0.811     0.903     0.950
+Reference sans optimisation (l=0,2, h=0) : E[D] = 0.900
+
+==============================================================================
+Bloc E - ecart de Kullback-Leibler du meilleur de N : ln N - (N-1)/N (loi exacte)
+==============================================================================
+N=  2 : 0.1931 nat
+N=  4 : 0.6363 nat
+N=  5 : 0.8094 nat
+N=  8 : 1.2044 nat
+N= 16 : 1.8351 nat
+N= 32 : 2.4970 nat
+Controle par tirage (N=8) : 1.2030 nat
+
+==============================================================================
+Bloc F - reperes pour les predictions : minimum attendu de N normales ; part honnete du meilleur de N
+==============================================================================
+E[min de  4 normales centrees reduites] = -1.027
+E[min de  8 normales centrees reduites] = -1.421
+E[min de 16 normales centrees reduites] = -1.765
+e=0.0   : P(au moins un episode honnete parmi 16) = 1-(1-e)^16 = 0.000
+e=0.02  : P(au moins un episode honnete parmi 16) = 1-(1-e)^16 = 0.276
+e=0.05  : P(au moins un episode honnete parmi 16) = 1-(1-e)^16 = 0.560
+e=0.2   : P(au moins un episode honnete parmi 16) = 1-(1-e)^16 = 0.972
+Prix de l'honnetete par contexte : ecart de Kullback-Leibler pour porter toute la masse sur H = ln(1/e)
+e=0.3    : ln(1/e) = 1.204 nat
+e=0.1    : ln(1/e) = 2.303 nat
+e=0.01   : ln(1/e) = 4.605 nat
+e=0.001  : ln(1/e) = 6.908 nat
+
+==============================================================================
+Bloc G - objets de controle de l'epreuve proposee : pente intra-contexte du dommage sur le score
+==============================================================================
+200 contextes x 16 tirages ; dommage D dans [0,1] ; score = effet du contexte + terme + bruit.
+Objet faux : saboteur constant, le score ne depend pas de D dans le contexte (pente vraie 0).
+Objet vrai : score = 1,0 x D + bruit (pente vraie > 0). Intervalle a 95 % par reechantillonnage
+des contextes (2 000 tirages). Meilleur de 16 : baisse du dommage choisi, en part de l'ecart moyen.
+objet faux : pente +0.010 [-0.011 ; +0.030] ; baisse du dommage au meilleur de 16 = +0.011 (dommage moyen 0.693)
+objet vrai : pente +0.290 [+0.276 ; +0.304] ; baisse du dommage au meilleur de 16 = +0.201 (dommage moyen 0.694)
+
+Fin des calculs.

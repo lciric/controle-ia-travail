@@ -1,0 +1,49 @@
+script sha256 9d35c1aca2a885b91e3c2d99922c97954b5eff8ff65851aa8ff950b500e465bb
+python 3.13.18 ; numpy 2.5.3 ; graine racine 202611211648 ; d = 32
+== Bloc A : jugement rétrospectif contre prospectif ; rappel selon le nombre de positifs ==
+A1 rappel rétrospectif (jugé sur ses 10 positifs d'apprentissage) : 0.635 [0.400 ; 0.900]
+A1 rappel prospectif (épisodes neufs)                          : 0.207 [0.129 ; 0.281]
+A1 rapport des moyennes : 3.06
+A2 positifs =    3 : formule d=32 0.100 ; simulation d=32 0.102 [0.030 ; 0.188] ; formule d=4096 0.013
+A2 positifs =   10 : formule d=32 0.200 ; simulation d=32 0.206 [0.122 ; 0.273] ; formule d=4096 0.017
+A2 positifs =   30 : formule d=32 0.288 ; simulation d=32 0.292 [0.250 ; 0.327] ; formule d=4096 0.023
+A2 positifs =  100 : formule d=32 0.339 ; simulation d=32 0.341 [0.314 ; 0.363] ; formule d=4096 0.038
+A2 plafond (positifs infinis) : 0.372
+== Bloc B : négatifs pris chez le suspect audité sans dommage (tolérance) ==
+B origine         rappel famille vue 0.373 [0.351 ; 0.395] ; famille non vue 0.372 [0.351 ; 0.394]
+B saine           rappel famille vue 0.595 [0.533 ; 0.643] ; famille non vue 0.160 [0.090 ; 0.243]
+B artefact        rappel famille vue 0.584 [0.522 ; 0.640] ; famille non vue 0.101 [0.052 ; 0.157]
+B union_saine     rappel famille vue 0.563 [0.515 ; 0.603] ; famille non vue 0.323 [0.293 ; 0.351]
+B union_artefact  rappel famille vue 0.559 [0.515 ; 0.601] ; famille non vue 0.308 [0.285 ; 0.329]
+B1 écart saine − artefact sur la famille non vue : 0.058 [0.004 ; 0.137]
+== Bloc C : régime d'excès, positifs mêlés d'échecs honnêtes ==
+C1 melange    P(saboté noté au-dessus d'un échec honnête) : 0.568 [0.505 ; 0.631]
+C1 contraste  P(saboté noté au-dessus d'un échec honnête) : 0.634 [0.475 ; 0.767]
+C1 transfert  P(saboté noté au-dessus d'un échec honnête) : 0.818 [0.774 ; 0.855]
+C1 valeur idéale du transfert (direction exacte) : 0.841
+== Bloc D : audit orienté par l'ancienne sonde ; recapture et réapprentissage ==
+D1 recapture naïve (tous audités)      : 0.955 [0.936 ; 0.969]
+D1 recapture pondérée (inverse de pi)  : 0.299 [0.224 ; 0.379]
+D1 vérité (tous les sabotés)            : 0.289 [0.275 ; 0.304]
+D2 réapprise nonpond   : famille vue 0.551 [0.524 ; 0.578] ; famille manquée 0.022 [0.014 ; 0.034]
+D2 réapprise pond      : famille vue 0.251 [0.167 ; 0.336] ; famille manquée 0.203 [0.109 ; 0.301]
+D2 réapprise plancher  : famille vue 0.218 [0.116 ; 0.368] ; famille manquée 0.220 [0.091 ; 0.360]
+D2 écart pondéré − non pondéré sur la famille manquée : 0.181 [0.090 ; 0.274]
+== Bloc E : étiquettes que le plancher livre avant le seuil toléré K (lois exactes) ==
+K =   30 : p·q minimal 0.0950 ; attendu 2.851 | x1 : P(>=1) 0.950 P(>=3) 0.553 P(>=10) 0.000 | x3 : P(>=1) 1.000 P(>=3) 0.997 P(>=10) 0.342 | x10 : P(>=1) 1.000 P(>=3) 1.000 P(>=10) 1.000
+K =  100 : p·q minimal 0.0295 ; attendu 2.951 | x1 : P(>=1) 0.950 P(>=3) 0.569 P(>=10) 0.001 | x3 : P(>=1) 1.000 P(>=3) 0.995 P(>=10) 0.392 | x10 : P(>=1) 1.000 P(>=3) 1.000 P(>=10) 1.000
+K =  300 : p·q minimal 0.0099 ; attendu 2.981 | x1 : P(>=1) 0.950 P(>=3) 0.574 P(>=10) 0.001 | x3 : P(>=1) 1.000 P(>=3) 0.994 P(>=10) 0.405 | x10 : P(>=1) 1.000 P(>=3) 1.000 P(>=10) 1.000
+K = 1000 : p·q minimal 0.0030 ; attendu 2.991 | x1 : P(>=1) 0.950 P(>=3) 0.575 P(>=10) 0.001 | x3 : P(>=1) 1.000 P(>=3) 0.994 P(>=10) 0.409 | x10 : P(>=1) 1.000 P(>=3) 1.000 P(>=10) 1.000
+limite K -> infini de K·(1 − 0,05^(1/K)) = −ln 0,05 = 2.9957
+== Bloc F : choisir sur le relevé qui juge (malédiction du gagnant, loi exacte) ==
+m =  1 versions de rappel vrai 0.2 jugées sur 15 épisodes : relevé attendu du choisi 0.200 ; relevé postérieur au choix 0.200
+m =  5 versions de rappel vrai 0.2 jugées sur 15 épisodes : relevé attendu du choisi 0.323 ; relevé postérieur au choix 0.200
+m = 10 versions de rappel vrai 0.2 jugées sur 15 épisodes : relevé attendu du choisi 0.367 ; relevé postérieur au choix 0.200
+m = 20 versions de rappel vrai 0.2 jugées sur 15 épisodes : relevé attendu du choisi 0.406 ; relevé postérieur au choix 0.200
+== Bloc G : gardes sur un journal sain et sur des artefacts plantés ==
+G sain                              : prospectif, négatifs, interdits = ('vert', 'vert', 'vert')
+G artefact rétrospectif            : ('rouge', 'vert', 'vert')
+G artefact négatif pris au suspect : ('vert', 'rouge', 'vert')
+G artefact tenu à l'écart appris   : ('vert', 'vert', 'rouge')
+G artefact signal après verdict    : ('rouge', 'vert', 'vert')
+fin

@@ -1,0 +1,89 @@
+Calculs du troisième billet, candidat A (la référence honnête) - v1
+Python 3.13.18, numpy 2.4.6, scipy 1.17.1
+Niveau 0.01, seuil unilatéral z = 2.3263 ; graine racine 2026112118
+Toutes les entrées sont des suppositions d'illustration ; aucune n'est une mesure.
+
+A. Part d'actes sabotés qui reste cachée (puissance < 0,5, niveau 1 %),
+   sous supposition : un score par acte, honnête N(0,1), saboté N(mu,1), mu = 0,5,
+   actes indépendants ; test sur la moyenne des n actes contre la moyenne de la référence.
+   référence exacte   | n =       100 :  46.53 % | n =     1 000 :  14.71 % | n =    10 000 :   4.65 % | n =   100 000 :   1.47 % | n = 1 000 000 :   0.47 %
+   m = 400 fixe       | n =       100 :  52.02 % | n =     1 000 :  27.53 % | n =    10 000 :  23.72 % | n =   100 000 :  23.31 % | n = 1 000 000 :  23.27 %
+   m = 2 000 fixe     | n =       100 :  47.68 % | n =     1 000 :  18.02 % | n =    10 000 :  11.40 % | n =   100 000 :  10.51 % | n = 1 000 000 :  10.41 %
+   plancher à n infini, m =    400 : z / (mu racine de m) = 23.26 %
+   plancher à n infini, m =   2000 : z / (mu racine de m) = 10.40 %
+   plancher à n infini, m =  10000 : z / (mu racine de m) =  4.65 %
+   À n = m, la part cachée vaut racine de 2 fois son plancher ; allonger encore le
+   déploiement ne la baisse plus que de 29.3 % au mieux.
+   À n = 4 m : 11.8 % au-dessus du plancher ; à n = 10 m : 4.9 %.
+   Contrôle, référence exacte : part cachée à 10^6 actes / à 10^4 actes = 0.1000 (attendu 0,1000 : loi en racine, aucun plancher).
+   Contrôle, m = 400 : le même rapport = 0.9808 (attendu proche de 1 : plancher).
+
+B. « Exactement » : à quelle précision faut-il connaître la moyenne honnête ?
+   Sous supposition : lois normales de même variance (mu = racine de 2 fois le quantile
+   normal de l'aire sous la courbe), actes indépendants, niveau 1 %, puissance 0,5.
+   tolérance = p x mu : écart, en écarts types de l'honnête, que p d'actes sabotés
+   ajoutent à la moyenne ; m_min = (z / (p mu))^2 : taille de référence sous laquelle
+   la part p reste cachée à tout horizon (n infini). Avec une référence exacte, c'est
+   aussi le nombre d'actes surveillés qu'il faut : les deux tailles jouent le même rôle.
+   aire   mu     | p =  0.5 %         | p =  1.0 %         | p =  2.0 %         | p =  5.0 %         | p = 10.0 %        
+   0.60  0.3583 | 0.0018 ; 1 686 349 | 0.0036 ;   421 588 | 0.0072 ;   105 397 | 0.0179 ;    16 864 | 0.0358 ;     4 216
+   0.70  0.7416 | 0.0037 ;   393 599 | 0.0074 ;    98 400 | 0.0148 ;    24 600 | 0.0371 ;     3 936 | 0.0742 ;       984
+   0.77  1.0449 | 0.0052 ;   198 277 | 0.0104 ;    49 570 | 0.0209 ;    12 393 | 0.0522 ;     1 983 | 0.1045 ;       496
+   0.90  1.8124 | 0.0091 ;    65 904 | 0.0181 ;    16 476 | 0.0362 ;     4 119 | 0.0906 ;       660 | 0.1812 ;       165
+   0.95  2.3262 | 0.0116 ;    40 006 | 0.0233 ;    10 002 | 0.0465 ;     2 501 | 0.1163 ;       401 | 0.2326 ;       101
+   0.99  3.2900 | 0.0164 ;    20 000 | 0.0329 ;     5 000 | 0.0658 ;     1 250 | 0.1645 ;       200 | 0.3290 ;        50
+   (chaque case : tolérance ; m_min.)
+   Pour une puissance de 0,8 au lieu de 0,5, multiplier m_min par 1.854.
+   Repère cité dans la note : aire 0.77 et p = 2 % : tolérance 0.0209 ; m_min = 12 393.
+
+C. Un écart systématique b entre l'honnête surveillé et sa référence ne se moyenne pas.
+   Sous supposition : scores normaux de variance 1, indépendants ; test de niveau 1 %
+   réglé comme si la référence était juste ; fausse alerte réelle sous l'honnête :
+   Phi(-z + b / racine de (1/n + 1/m)).
+   référence de moyenne connue, décalée de b
+     b = 0.01 | n =     100 : 0.0130 | n =   1 000 : 0.0222 | n =  10 000 : 0.0924 | n = 100 000 : 0.7984
+     b = 0.02 | n =     100 : 0.0167 | n =   1 000 : 0.0451 | n =  10 000 : 0.3721 | n = 100 000 : 1.0000
+     b = 0.05 | n =     100 : 0.0339 | n =   1 000 : 0.2281 | n =  10 000 : 0.9962 | n = 100 000 : 1.0000
+     b = 0.10 | n =     100 : 0.0924 | n =   1 000 : 0.7984 | n =  10 000 : 1.0000 | n = 100 000 : 1.0000
+   m = 10 000, décalée de b
+     b = 0.01 | n =     100 : 0.0130 | n =   1 000 : 0.0214 | n =  10 000 : 0.0527 | n = 100 000 : 0.0849
+     b = 0.02 | n =     100 : 0.0167 | n =   1 000 : 0.0424 | n =  10 000 : 0.1808 | n = 100 000 : 0.3375
+     b = 0.05 | n =     100 : 0.0337 | n =   1 000 : 0.2065 | n =  10 000 : 0.8867 | n = 100 000 : 0.9927
+     b = 0.10 | n =     100 : 0.0915 | n =   1 000 : 0.7545 | n =  10 000 : 1.0000 | n = 100 000 : 1.0000
+   Contrôle : b = 0,05, moyenne connue : 0.2281 à 1 000 actes et 0.9962 à 10 000 sont
+   les deux valeurs du bloc A3 de la note du protocole X sur le contrôle diffus.
+   Contrôle, b = 0 : fausse alerte = 0.0100 (attendu 0,0100).
+
+D. Deux sorties, et leur prix (sous les mêmes suppositions).
+   Témoins honnêtes vérifiés, entrelacés à taux p (m = p n) : la loi en racine revient,
+   multipliée par racine de (1 + 1/p).
+     p = 0.01 : facteur 10.05
+     p = 0.05 : facteur  4.58
+     p = 0.20 : facteur  2.45
+   Nul par acte (rang parmi K tirages d'un jumeau de confiance sur le même début) :
+   non recalculé ici ; voir le bloc C de la sortie citée en tête (efficacité 0,743 à
+   K = 4 et 0,923 à K = 19, pour mu = 0,5).
+
+E. Contrôles par tirages (graines écrites ; R9).
+   E1 test sur la moyenne, n = 2000, m = 400, mu = 0.5, 510 actes sabotés, 20000 répétitions, graine [2026112118, 1] :
+      fausse alerte 0.0107 (attendu 0,01) ; détection 0.5018 (attendu 0,5 à l'arrondi de 510 actes près)
+   E2 test de rangs (Mann-Whitney, approximation normale du nul), loi honnête de Student
+      à 3 degrés de liberté ; 10 % d'actes sabotés, décalés de 1 ; niveau 1 % ;
+      4 000 répétitions par case ; graine [RACINE, 2, numéro de case].
+      référence fixe, m = 400    fausse alerte | n =    400 : 0.0155 | n =   4000 : 0.0118 | n =  40000 : 0.0105
+      référence fixe, m = 400    détection     | n =    400 : 0.0988 | n =   4000 : 0.1678 | n =  40000 : 0.1920
+      référence qui suit, m = n  fausse alerte | n =    400 : 0.0083 | n =   4000 : 0.0118 | n =  40000 : 0.0095
+      référence qui suit, m = n  détection     | n =    400 : 0.1000 | n =   4000 : 0.8367 | n =  40000 : 1.0000
+      Lecture attendue, écrite avant le tirage : avec la référence fixe, la détection
+      plafonne loin de 1 quand n est multiplié par cent ; avec la référence qui suit,
+      elle tend vers 1. Le plancher ne tient donc ni à la loi normale ni au test sur la
+      moyenne. Erreur type d'une case : au plus 0,008 (4 000 répétitions) ; 0,0016 pour
+      une fausse alerte de 0,01.
+   E3 audit de la case de E2 sortie à 3,5 erreurs types (ajouté après lecture de E2) :
+      n = m = 400, nul, 40 000 répétitions par graine, erreur type 0,0005.
+      graine [2026112118, 3, 1] : fausse alerte 0.0098
+      graine [2026112118, 3, 2] : fausse alerte 0.0103
+      graine [2026112118, 3, 3] : fausse alerte 0.0095
+      moyenne des trois : 0.0098 (attendu 0,01). Lecture : le test est
+      bien réglé ; la case de E2 est un écart de tirage, gardée telle quelle.
+

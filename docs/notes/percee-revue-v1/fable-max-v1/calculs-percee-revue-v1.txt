@@ -1,0 +1,199 @@
+calculs-percee-revue-v1
+Lois exactes ; aucune donnée du programme ; entrées = suppositions d'illustration.
+
+==============================================================================
+BLOC A — Ce que gagne un second regard, quel qu'il soit, sur les épisodes endommagés audités
+==============================================================================
+Monde : l'honnête endommage un épisode avec probabilité rho0. Le saboteur ajoute un dommage
+délibéré dans une part delta des épisodes. Sur un épisode endommagé, un second regard rend une
+valeur S : de loi F0 si l'échec est honnête, de loi F1 si le dommage est délibéré.
+Gain = information par audit (divergence de Kullback-Leibler) du test qui lit (dommage, S),
+divisée par celle du test qui ne lit que le dommage. Le nombre d'audits avant l'alarme, à
+allure fixée, est divisé par ce gain (approximation de Wald).
+
+A1. Second regard à deux valeurs : marque une part t = 0.64 des dommages délibérés et une part
+    f = 0.029 des échecs honnêtes ; rho0 = 0.1.
+    khi-deux de F1 contre F0 = t²/f + (1-t)²/(1-f) - 1 = 13.2576
+    limite annoncée : 1 + (1 - rho0) × khi-deux = 12.9318
+    rappel, test sur le seul événement « endommagé et marqué » : t²/f × (1-rho0)/(1-rho0 f) = 12.7487
+    allure delta     gain exact (rapport des divergences)
+    0.05                4.7251
+    0.02                6.7544
+    0.01                8.4445
+    0.005               9.9818
+    0.001              12.1236
+    0.0001             12.8431
+    1e-05              12.9229
+    Lecture : le gain tend vers une constante finie quand le saboteur ralentit ; il ne croît
+    pas avec la lenteur. Le dommage avant l'alarme garde donc sa loi en inverse de l'allure.
+
+A2. Second regard à valeur continue, deux lois normales de même variance séparées de d écarts
+    types : khi-deux = exp(d²) - 1 ; gain limite = 1 + (1 - rho0)(exp(d²) - 1).
+    d       khi-deux        gain limite
+    0.5            0.28           1.26
+    1              1.72           2.55
+    1.5            8.49           8.64
+    2             53.60          49.24
+    2.5          517.01         466.31
+    3           8102.08        7292.88
+    Lecture : une grande constante est possible, mais elle vit dans la queue de la loi honnête,
+    c'est-à-dire là où la référence honnête est la moins connue.
+
+A3. Le plafond par la référence. Si aucun de m échecs honnêtes de référence n'est marqué, on ne
+    sait de f que : f <= 1 - 0,05^(1/m) (à 95 %). Le gain que l'on a le droit d'inscrire est
+    celui de cette borne. Coût : m échecs honnêtes confirmés = m / rho0 épisodes honnêtes jugés.
+    m        f inscrit     épisodes honnêtes jugés   gain inscrit, t=0,30   t=0,64   t=0,90
+    35         0.082032            350                      1.6          4.7          9.0
+    300        0.009936           3000                      8.7         37.3         73.5
+    2000       0.001497          20000                     54.7        246.5        487.2
+    20000      0.000150         200000                    541.4       2461.5       4867.4
+    100000     0.000030        1000000                   2704.4      12305.9      24335.1
+    Lecture : le gain inscrit croît comme m. Il s'achète en épisodes honnêtes jugés, et ne vaut
+    que si l'honnête de référence est celui du régime surveillé.
+
+==============================================================================
+BLOC B — Ce que le ciblage rapporte : part de l'enjeu logée dans les éléments les plus lourds
+==============================================================================
+Monde : chaque élément d'un travail (une affirmation, un contrôle) porte un enjeu. Un agent qui
+laisse perdre une part delta des éléments, au hasard, détruit une part delta de l'enjeu total.
+S'il choisit les plus lourds, il en détruit la part ci-dessous. Choisir demande de savoir
+lesquels sont lourds et vrais.
+
+B1. Enjeux de loi de Pareto d'indice alpha : part détruite = delta^(1 - 1/alpha).
+    alpha    delta = 1 %          5 %           20 %        (entre parenthèses : multiple du hasard)
+    1.2       0.464 (× 46.4)   0.607 (× 12.1)   0.765 (×  3.8)
+    1.5       0.215 (× 21.5)   0.368 (×  7.4)   0.585 (×  2.9)
+    2         0.100 (× 10.0)   0.224 (×  4.5)   0.447 (×  2.2)
+    3         0.046 (×  4.6)   0.136 (×  2.7)   0.342 (×  1.7)
+
+B2. Enjeux de loi log-normale d'écart type sigma (du logarithme) : part = Phi(sigma - z),
+    z étant le quantile d'ordre 1 - delta de la loi normale.
+    sigma    delta = 1 %          5 %           20 %
+    0.5       0.034 (×  3.4)   0.126 (×  2.5)   0.366 (×  1.8)
+    1         0.092 (×  9.2)   0.260 (×  5.2)   0.563 (×  2.8)
+    1.5       0.204 (× 20.4)   0.442 (×  8.8)   0.745 (×  3.7)
+    2         0.372 (× 37.2)   0.639 (× 12.8)   0.877 (×  4.4)
+    Lecture : dès que les enjeux sont inégaux, le dommage dangereux est le dommage ciblé ; à
+    enjeux égaux, la prime est nulle (multiple 1). La prime mesure ce qu'un agent perd à ne pas
+    calculer ce qu'il évite.
+
+==============================================================================
+BLOC C — Ce que l'épreuve clé sait voir, aux tailles des jeux d'épreuve publiés
+==============================================================================
+Épreuve : sur n éléments retenus par un organisme, une lecture du savoir propose une réponse ;
+on compte les réponses justes. Barre : la justesse p0 de la même lecture sur un témoin ignorant
+(elle ne doit rien « retrouver » là où il n'y a rien à lire). Test binomial exact, unilatéral,
+niveau 1 %. On cherche la plus petite justesse p1 vue avec une puissance de 0,90.
+Tailles : 256, 83 et 399 questions d'épreuve (arXiv 2611.20459v1, p. 6) ; 51 éléments durs
+(même pièce, p. 10) ; 738 = somme des trois premières. Questions à quatre choix : hasard 0,25.
+Conversion en part de l'écart rendue : (p1 - 0,25) / (0,75 - 0,25), l'honnête étant SUPPOSÉ à 0,75
+et l'organisme qui retient au hasard.
+
+    n      barre p0   seuil (réponses justes)   niveau exact   p1 vue à 0,90   part de l'écart rendue
+    51     0.25           21                     0.00818        0.492           0.484
+    83     0.25           31                     0.00850        0.438           0.376
+    256    0.25           81                     0.00984        0.353           0.206
+    399    0.25          121                     0.00919        0.333           0.166
+    738    0.25          213                     0.00939        0.310           0.120
+    51     0.35           27                     0.00647        0.608           0.716
+    83     0.35           40                     0.00905        0.547           0.594
+    256    0.35          109                     0.00718        0.464           0.428
+    399    0.35          163                     0.00874        0.440           0.380
+    738    0.35          290                     0.00840        0.416           0.332
+    Lecture : avec quelques centaines d'éléments, une lecture qui rend un cinquième à un quart
+    de l'écart se sépare d'un témoin ignorant ; avec 51 éléments, il en faut près de la moitié.
+
+==============================================================================
+BLOC D — Lentille linéaire : ce qu'un juge laisse à l'attaquant, selon son angle avec la vérité
+==============================================================================
+Monde d'illustration, ni mesure ni modèle d'un banc : un produit est un point de la boule unité ;
+la note du juge et la vérité sont deux formes linéaires de norme 1 ; r = cosinus de leur angle
+(leur corrélation). Parmi les produits dont la note vaut au moins (1 - eps) fois la note
+maximale, la vérité parcourt l'intervalle (1 - eps) r -/+ racine(2 eps - eps²) racine(1 - r²),
+le plafond valant 1 dès que r >= 1 - eps.
+Unité : la vérité du meilleur produit possible vaut 1.
+
+D1. Plancher et plafond de vérité à note presque maximale.
+    r        eps = 0,02 : plancher  plafond      eps = 0,05 : plancher  plafond
+    0.14            -0.060     0.334              -0.176     0.442     
+    0.3              0.104     0.484              -0.013     0.583     
+    0.5              0.318     0.662               0.205     0.745     
+    0.7              0.544     0.828               0.442     0.888     
+    0.9              0.795     0.969               0.719     0.991     
+    0.95             0.869     0.993               0.805     1.000     
+    0.99             0.942     1.000               0.896     1.000     
+
+D2. Juge composé de deux notes. Chacune = vérité + erreur ; a et b = tangentes de leurs angles ;
+    c = cosinus entre leurs deux erreurs. Composé = lam × juge + (1 - lam) × lecture, lam entre 0 et 1 ;
+    tangente² = lam² a² + (1-lam)² b² + 2 lam (1-lam) c a b ; « meilleur poids » = le lam qui la minimise
+    (il demande de connaître la vérité) ; « poids égaux » = lam 1/2. Colonnes : corrélation avec la vérité.
+    juge r_J   lecture r_L   c      meilleur poids positif   poids égaux
+    0.14       0.3           0         0.326                   0.250
+    0.14       0.3           0.5       0.300                   0.215
+    0.14       0.3           0.9       0.300                   0.196
+    0.14       0.5           0         0.511                   0.265
+    0.14       0.5           0.5       0.500                   0.240
+    0.14       0.5           0.9       0.500                   0.225
+    0.14       0.8           0         0.802                   0.271
+    0.14       0.8           0.5       0.800                   0.258
+    0.14       0.8           0.9       0.800                   0.250
+    0.5        0.3           0         0.549                   0.483
+    0.5        0.3           0.5       0.500                   0.421
+    0.5        0.3           0.9       0.500                   0.385
+    0.5        0.5           0         0.632                   0.632
+    0.5        0.5           0.5       0.555                   0.555
+    0.5        0.5           0.9       0.510                   0.510
+    0.5        0.8           0         0.824                   0.727
+    0.5        0.8           0.5       0.800                   0.672
+    0.5        0.8           0.9       0.800                   0.636
+    0.9        0.3           0         0.902                   0.528
+    0.9        0.3           0.5       0.900                   0.502
+    0.9        0.3           0.9       0.900                   0.483
+    0.9        0.5           0         0.906                   0.744
+    0.9        0.5           0.5       0.900                   0.704
+    0.9        0.5           0.9       0.900                   0.676
+    0.9        0.8           0         0.926                   0.913
+    0.9        0.8           0.5       0.902                   0.880
+    0.9        0.8           0.9       0.900                   0.857
+    Lecture : dans ce monde, une seconde note ne relève le plancher que si elle est elle-même
+    alignée sur la vérité, ou si ses erreurs sont étrangères à celles du juge ; contre un juge déjà
+    aligné (r = 0,90), une lecture à 0,50 n'ajoute presque rien.
+
+==============================================================================
+BLOC E — Les trois zones d'une lecture du savoir sur des éléments dont la vérité est connue
+==============================================================================
+Monde : question à deux réponses. Chez un agent qui sait, la projection de l'état sur l'axe de
+la réponse suit une loi normale de moyenne +s du côté juste (écart type 1). Un agent qui retient
+peut : garder une part kappa de ce signal (effacement partiel) ; le remplacer par le signal de
+la réponse fausse (leurre) ; ne pas calculer la réponse (alors il ressemble à l'ignorant).
+Deux lectures par l'auditeur, sans connaître le déclencheur : la justesse de la lecture du savoir
+(signe de la projection) ; un détecteur d'acte qui signale une projection trop petite en valeur
+absolue, réglé à 1 % de fausses alertes sur l'agent qui sait.
+
+    s     conduite                    justesse de la lecture du savoir    acte signalé (seuil 1 %)
+    2     honnête qui sait                0.9772                             0.0100
+    2     effacement, kappa = 0,75        0.9332                             0.0239
+    2     effacement, kappa = 0,50        0.8413                             0.0446
+    2     effacement, kappa = 0,25        0.6915                             0.0649
+    2     non calculé (ou ignorant)       0.5000                             0.0735
+    2     leurre (réponse fausse)         0.0228                             0.0100
+
+    3     honnête qui sait                0.9987                             0.0100
+    3     effacement, kappa = 0,75        0.9878                             0.0563
+    3     effacement, kappa = 0,50        0.9332                             0.1908
+    3     effacement, kappa = 0,25        0.7734                             0.3947
+    3     non calculé (ou ignorant)       0.5000                             0.5023
+    3     leurre (réponse fausse)         0.0013                             0.0100
+
+    4     honnête qui sait                1.0000                             0.0100
+    4     effacement, kappa = 0,75        0.9987                             0.0924
+    4     effacement, kappa = 0,50        0.9772                             0.3720
+    4     effacement, kappa = 0,25        0.8413                             0.7460
+    4     non calculé (ou ignorant)       0.5000                             0.9058
+    4     leurre (réponse fausse)         0.0000                             0.0100
+
+    Lecture : au-dessus du hasard, la lecture rend la réponse ; au-dessous du hasard (leurre),
+    elle dénonce un savoir retourné, qu'un ignorant ne produit pas ; au hasard, rien ne sépare
+    l'agent qui n'a pas calculé de l'ignorant : c'est la zone qui reste. Plus l'effacement est
+    fort, plus l'acte se voit, et l'inverse : sous effacement linéaire, la séparation de l'acte
+    (1 - kappa) s et celle du savoir kappa s ont pour somme s.

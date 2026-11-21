@@ -1,0 +1,125 @@
+Calculs de la note couverture de l'oracle, Opus 5.5, v1
+python 3.13.18, numpy 2.5.3
+SeedSequence entropie=20261121173000 ; enfants spawn_key=[(0,), (1,), (2,), (3,)]
+Toutes les entrees sont des suppositions d'illustration.
+
+=== Bloc A : plancher, regime de signature. Episodes endommages avant la prise, au seuil 0,95 ===
+N95 = ceil(ln 0.05 / ln(1 - p q)) ; moyenne 1/(p q).
+  p=0.01 q=1.00 : N95=   299 ; moyenne=   100.0
+  p=0.01 q=0.95 : N95=   314 ; moyenne=   105.3
+  p=0.01 q=0.80 : N95=   373 ; moyenne=   125.0
+  p=0.01 q=0.50 : N95=   598 ; moyenne=   200.0
+  p=0.01 q=0.20 : N95=  1497 ; moyenne=   500.0
+  p=0.01 q=0.05 : N95=  5990 ; moyenne=  2000.0
+  p=0.05 q=1.00 : N95=    59 ; moyenne=    20.0
+  p=0.05 q=0.95 : N95=    62 ; moyenne=    21.1
+  p=0.05 q=0.80 : N95=    74 ; moyenne=    25.0
+  p=0.05 q=0.50 : N95=   119 ; moyenne=    40.0
+  p=0.05 q=0.20 : N95=   299 ; moyenne=   100.0
+  p=0.05 q=0.05 : N95=  1197 ; moyenne=   400.0
+  Lecture : l'attaquant qui choisit la strate prend le q le plus bas qu'il peut atteindre.
+
+=== Bloc B : certifier q >= q0 dans une strate par des dommages plantes (borne exacte, 95 %) ===
+B1. Regle zero manque : n0 = ceil(ln 0.05 / ln q0) plants, tous reconnus.
+  q0=0.50 : n0=5
+  q0=0.70 : n0=9
+  q0=0.80 : n0=14
+  q0=0.90 : n0=29
+  q0=0.95 : n0=59
+  q0=0.99 : n0=299
+B2. Puissance : plus petit n tel que P(borne basse CP 95 % >= q0) >= 0,8 quand le vrai q vaut q_vrai.
+  q_vrai=0.95 q0=0.90 : n=179 (reconnus exiges >= 168), puissance=0.813
+  q_vrai=0.95 q0=0.80 : n=30 (reconnus exiges >= 28), puissance=0.812
+  q_vrai=0.90 q0=0.80 : n=82 (reconnus exiges >= 72), puissance=0.806
+  q_vrai=0.90 q0=0.70 : n=28 (reconnus exiges >= 24), puissance=0.858
+  q_vrai=0.80 q0=0.50 : n=18 (reconnus exiges >= 13), puissance=0.867
+  q_vrai=0.70 q0=0.50 : n=37 (reconnus exiges >= 24), puissance=0.807
+  q_vrai=0.90 q0=0.50 : n=8 (reconnus exiges >= 7), puissance=0.813
+B4. Objet de controle de la regle de certification : probabilite de certifier a tort (vrai q au seuil ou dessous).
+  n=82, reconnus >= 72 (certifie q >= 0.8) ; vrai q=0.80 : P(certifier)=0.0458
+  n=82, reconnus >= 72 (certifie q >= 0.8) ; vrai q=0.75 : P(certifier)=0.0034
+  n=82, reconnus >= 72 (certifie q >= 0.8) ; vrai q=0.70 : P(certifier)=0.0001
+  n=8, reconnus >= 7 (certifie q >= 0.5) ; vrai q=0.50 : P(certifier)=0.0352
+  n=8, reconnus >= 7 (certifie q >= 0.5) ; vrai q=0.40 : P(certifier)=0.0085
+  n=30, reconnus >= 28 (certifie q >= 0.8) ; vrai q=0.80 : P(certifier)=0.0442
+  n=30, reconnus >= 28 (certifie q >= 0.8) ; vrai q=0.70 : P(certifier)=0.0021
+B3. Familles tenues a l'ecart toutes couvertes sur n cycles : borne basse exacte 95 % de la part couverte = 0,05^(1/n).
+  n= 1 cycles, tous couverts : part couverte >= 0.050
+  n= 2 cycles, tous couverts : part couverte >= 0.224
+  n= 3 cycles, tous couverts : part couverte >= 0.368
+  n= 5 cycles, tous couverts : part couverte >= 0.549
+  n=10 cycles, tous couverts : part couverte >= 0.741
+  n=20 cycles, tous couverts : part couverte >= 0.861
+
+=== Bloc C : arbitrage plants contre audits (illustration) ===
+Suppositions : horizon H=10000 episodes, seuil tolere K=100 episodes endommages, S=12 strates,
+vrai q=0.9 dans chaque strate ; p*q0 >= 1-0,05^(1/K) = 0.0295 ; plants dimensionnes a puissance 0,8.
+  cout d'un plant = 1.0 audit(s)
+    q0=0.50 : p=0.0590 ; audits=    590 ; plants=   96 ; total=    686
+    q0=0.70 : p=0.0422 ; audits=    422 ; plants=  336 ; total=    758
+    q0=0.80 : p=0.0369 ; audits=    369 ; plants=  984 ; total=   1353
+  cout d'un plant = 3.0 audit(s)
+    q0=0.50 : p=0.0590 ; audits=    590 ; plants=   96 ; total=    878
+    q0=0.70 : p=0.0422 ; audits=    422 ; plants=  336 ; total=   1430
+    q0=0.80 : p=0.0369 ; audits=    369 ; plants=  984 ; total=   3321
+  Lecture : certifier un q0 modeste coute peu de plants et un audit plus dense ; l'optimum depend du prix relatif.
+
+=== Bloc D : loi de resolution q(d) et dommage attendu avant la premiere prise (regime de signature) ===
+Dommage par episode d dans (0, 1] (1 = plafond) ; prise par episode endommage h = p q(d) ;
+dommage attendu avant prise, borne par l'horizon : E[D](d) = d (1 - (1-h)^H) / h ; l'attaquant prend le sup sur d.
+  lineaire q=min(1, 2d)                      : sup E[D]=   100.0 a d=1.0000 (q(d)=1.0000) ; a d=1 : E[D]= 100.0
+  quadratique q=min(1, 2d^2)                 : sup E[D]=   451.3 a d=0.0789 (q(d)=0.0125) ; a d=1 : E[D]= 100.0
+  seuil net q=0,9 si d>=0,2, sinon 0         : sup E[D]=  1987.2 a d=0.1987 (q(d)=0.0000) ; a d=1 : E[D]= 111.1
+  seuil doux q=0,9/(1+exp(-(d-0,2)/0,03))    : sup E[D]=   413.8 a d=0.0672 (q(d)=0.0106) ; a d=1 : E[D]= 111.1
+  Reference, loi lineaire : sup_d d/(p q(d)) = max(1/(p c), 1/(p q(1))) = max(50, 100) = 100, sans dependance a l'horizon.
+  Dependance a l'horizon H (meme p) :
+    H=  10000 : lineaire=100 ; quadratique=451 ; seuil_net=1987 ; seuil_doux=414
+    H= 100000 : lineaire=100 ; quadratique=1427 ; seuil_net=19872 ; seuil_doux=932
+  Lecture : ce qui fixe la garantie est inf q(d)/d aux petites doses, pas q aux doses flagrantes.
+  Biais de spectre : q moyen sur plants a doses [0,5 ; 1] = 0.900 ; q a la dose ou l'attaquant maximise E[D] (d=0.0672) = 0.0106
+
+=== Bloc E : recoupement de deux lecteurs (Lincoln-Petersen) et angle mort commun ===
+N=1000 dommages ; hors angle mort, lecteurs independants q1=0.7, q2=0.6 ; part b invisible aux deux.
+  b=0.0 : N estime= 1000.0 ; couverture estimee de la reunion=0.880 ; vraie=0.880
+  b=0.1 : N estime=  900.0 ; couverture estimee de la reunion=0.880 ; vraie=0.792
+  b=0.3 : N estime=  700.0 ; couverture estimee de la reunion=0.880 ; vraie=0.616
+Heterogeneite sans angle mort : moitie subtile (q=0,2 pour les deux), moitie flagrante (q=0,9 pour les deux).
+  N estime=711.8 (vrai 1000) ; couverture estimee=0.948 ; vraie=0.675
+Source d'une autre nature T (verite par construction, tiree au hasard, q_T=0,3 independante de la classe) :
+  2000 repliques : LP deux lecteurs : moyenne=712.0, 5-95 %=[684.9 ; 738.8]
+  reunion des lecteurs croisee avec T : moyenne=1000.5, 5-95 %=[949.0 ; 1058.3] (vrai 1000)
+  Lecture : le croisement de lecteurs semblables ne voit pas l'aveuglement commun ; une source d'une autre nature le voit.
+
+=== Bloc F : masse manquante des genres (Good-Turing) a petit effectif ===
+Suppositions : 200 genres de dommage, loi de Zipf d'exposant 1,1 ; N dommages trouves par audits ouverts.
+  N=   30 : masse vraie moyenne=0.463 ; estimation GT moyenne=0.467 ; erreur 5-95 %=[-0.186 ; +0.203]
+  N=  100 : masse vraie moyenne=0.292 ; estimation GT moyenne=0.295 ; erreur 5-95 %=[-0.094 ; +0.101]
+  N=  300 : masse vraie moyenne=0.159 ; estimation GT moyenne=0.159 ; erreur 5-95 %=[-0.047 ; +0.048]
+  N= 1000 : masse vraie moyenne=0.052 ; estimation GT moyenne=0.052 ; erreur 5-95 %=[-0.018 ; +0.018]
+  Lecture : estimation de la loi naturelle des genres, jamais une borne contre l'attaquant qui choisit un genre.
+
+=== Bloc G : audit d'or sur episodes naturels (double echantillonnage) : tailles ===
+Demi-largeur de l'intervalle bilateral exact (Clopper-Pearson 95 %) sur q a q=0,8, selon le nombre de dommages vus par l'or.
+    10 dommages dores : q estime=0.80, IC95=[0.444 ; 0.975], demi-largeur~0.265
+    30 dommages dores : q estime=0.80, IC95=[0.614 ; 0.923], demi-largeur~0.154
+    60 dommages dores : q estime=0.80, IC95=[0.677 ; 0.892], demi-largeur~0.108
+   100 dommages dores : q estime=0.80, IC95=[0.708 ; 0.873], demi-largeur~0.083
+   200 dommages dores : q estime=0.80, IC95=[0.738 ; 0.853], demi-largeur~0.058
+Audits d'or necessaires pour 100 dommages dores, selon la prevalence du dommage parmi les episodes audites :
+  prevalence=0.50 :     200 audits d'or
+  prevalence=0.10 :    1000 audits d'or
+  prevalence=0.02 :    5000 audits d'or
+
+=== Bloc H : elargir n'est pas gratuit en regime d'exces (approximation normale) ===
+Taux lu parmi les audites r = f + (q - f) s ; episodes audites pour detecter l'exces (alpha 0,05 unilateral, puissance 0,8).
+  s=0.05 q=0.50 f=0.02 : audites~      282 ; episodes a p=0,05 :       5636
+  s=0.05 q=0.80 f=0.02 : audites~      121 ; episodes a p=0,05 :       2415
+  s=0.05 q=0.80 f=0.10 : audites~      498 ; episodes a p=0,05 :       9960
+  s=0.05 q=0.95 f=0.30 : audites~     1253 ; episodes a p=0,05 :      25053
+  s=0.01 q=0.50 f=0.02 : audites~     5661 ; episodes a p=0,05 :     113229
+  s=0.01 q=0.80 f=0.02 : audites~     2234 ; episodes a p=0,05 :      44673
+  s=0.01 q=0.80 f=0.10 : audites~    11590 ; episodes a p=0,05 :     231809
+  s=0.01 q=0.95 f=0.30 : audites~    30856 ; episodes a p=0,05 :     617126
+  Lecture : un oracle elargi qui gagne en q mais perd en specificite peut rendre l'alarme plus lente.
+
+Fin.
