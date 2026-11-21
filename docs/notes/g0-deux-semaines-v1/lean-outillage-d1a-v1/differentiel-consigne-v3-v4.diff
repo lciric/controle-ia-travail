@@ -1,0 +1,96 @@
+--- consigne-poste-local-lean-d1a-v3.md	2026-11-20 09:46:31.696702466 +0000
++++ consigne-poste-local-lean-d1a-v4.md	2026-11-21 07:10:15.853441814 +0000
+@@ -1,9 +1,27 @@
+-# Consigne : session du poste local de Lazar — outillage Lean D-1a, troisième essai (GO-2026-11-10-13) — v3
++# Consigne : session du poste local de Lazar — outillage Lean D-1a, troisième essai (GO-2026-11-10-13) — v4
+ 
+-Écrite le 2026-11-13 à 03:26 UTC (heure relevée par `date -u`) par la session mère `session_01XJ6Mgn4MZR4nxqK44C8Ea3`, tirée du brouillon 1 du développeur du harnais v10 (`consigne-poste-local-lean-d1a-v3-brouillon1.md`, `3655e9e4380e7a5216ef753306165f5d1b9eab015f034c5ac38d41edaf4d6f4c`) après sa vérification courte (Claude Fable 5.2, `verification-courte-consigne-v3-v1.md`, `82734f0d3cf3cc31a8c57f1d697a86f37c3b1b711f947dd4b9bea132f30c50e8`) : marqueurs remplis, retouche R1 appliquée, point 1 de la routine restreint ; rien d'autre ne change.
++Écrite le 2026-11-21 vers 07:09 UTC (heure relevée par `date -u`) par un rédacteur Opus 5.5 (`claude-opus-5-5`), sous-agent de la session mère `session_01QPDgKgejkqwnuaJHJ31Ydo`, à sa demande (GO-2026-11-21-12, voie 1). Pièce d'instrument (classe B) : à contre-lire par un autre modèle avant usage. Tirée de la consigne v3 (`consigne-poste-local-lean-d1a-v3.md`, `17914672caf9fa2f12daa1da7a5bfec7067c957de8570e42dd6fb1b2899bde50`, jugée « exécutable » par sa vérification courte `verification-courte-consigne-v3-v1.md`, `82734f0d3cf3cc31a8c57f1d697a86f37c3b1b711f947dd4b9bea132f30c50e8`) et de l'état du chantier (`docs/notes/etat-chantier-lean-2026-11-21-v1.md`, `3d2b8d3e2c8cb8811932a0bf4fe773a53a6b2f8964d5c39a63174a7b36172cdd`, § 2 et § 3). **La procédure de la v3 est reprise à la lettre**. Seuls changent : la session mère, la branche de données (neuve, avec un contrôle qu'elle n'existe pas encore), l'accord de dépense redit avec ses sources et son échéance, la clé du loueur et l'arrêt par identifiant redits, le rappel ci-dessous et la liste « Avant de lancer ». Différentiel : `differentiel-consigne-v3-v4.diff`.
+ 
+-Session mère `session_01XJ6Mgn4MZR4nxqK44C8Ea3` (dans le nuage), sur le mot de Lazar R-2439 (« Réparer d'abord, puis
+-relancer » : troisième essai sous GO-2026-11-10-13, troisième machine sous cette ligne accordée), après la réparation du
++**Rappel : le troisième essai n'a jamais été lancé.** Aucun rapport L3 n'est parvenu à la mère. Aucun serveur n'a été créé et aucune dépense n'a été inscrite sous GO-2026-11-10-13 après le 13 novembre : la dernière ligne date du 12 novembre, cumul 0,56 USD (`registres/depenses.md`). Aucune ligne de registre ni passation ne parle de Lean entre le 13 et le 21 novembre. L'inventaire Hetzner du projet était vide le 21 novembre vers 06:10 UTC (état du chantier, § 2). La branche `donnees/lean-outillage-d1a-poste-local-v3` existe sur le dépôt distant à `ae894d8df2a19f51e532ff667160ae7bba2bf6ac`, sans aucun commit propre. Ce que la session du poste a fait localement après l'avoir poussée n'est pas connu. **Tu ne touches pas à cette branche** (ni lecture, ni poussée, ni suppression). Tu ne reprends aucun clone, aucun fichier de rattrapage et aucune minuterie d'une tentative antérieure.
++
++## Avant de lancer — ce que Lazar a sous la main
++
++1. **Le poste sous WSL (Ubuntu)**, sur secteur, veille coupée, capot ouvert, sans déconnexion de la session jusqu'à la destruction du serveur (procédure, section 0, point 7).
++2. **Un terminal Ubuntu ouvert pendant tout l'essai**, ouvert avant l'essai à blanc et gardé ouvert jusqu'à l'inventaire final de la section 5. Sans fenêtre WSL ouverte, WSL arrête Ubuntu et tue les processus détachés, minuterie comprise (incident R-2434).
++3. **La clé de l'interface de Hetzner, par son nom seul : `HCLOUD_TOKEN`**, jeton en lecture et écriture du projet de l'essai, posé par Lazar dans l'environnement de la session (procédure, section 0, point 3). Elle n'est jamais collée dans la conversation, affichée, écrite dans un fichier ni passée en argument.
++4. **`gh` authentifié sur le dépôt privé `lciric/controle-ia-travail`** : son jeton ne passe qu'à `git`, par l'environnement du processus.
++5. **L'adresse publique du poste (`IP_POSTE`)**, donnée à la session. Elle n'est jamais écrite dans un fichier du clone.
++6. **Python 3.11 ou plus récent, `git`, `ssh`, `ssh-keygen`** sous Ubuntu.
++7. **Le réglage hors du bac à sable** pour les commandes du harnais, pré-autorisées (procédure, section 0, point 4), et le temps d'une fin et reprise réelles de l'hôte de la session pour l'essai à blanc.
++8. **La disponibilité pour relayer** : le rapport L3 vers la mère, le mot « armée » de la mère vers le poste, puis le rapport final.
++9. **La réponse à la question de la mère** : qu'a fait la session du poste sur `donnees/lean-outillage-d1a-poste-local-v3` ? S'il reste un ancien clone de cette tentative sur le poste, il ne sert pas.
++10. **Durée attendue : environ 2 à 3 heures de terminal ouvert** (estimation). Au second essai, la session du poste a duré environ 2 heures, de la mesure des adresses de sortie (12:43:59Z) au rapport poussé (commit `3b2a74a2`, 14:43:55Z). Ce temps comprenait environ 30 minutes d'attente du mot « armée » (L1 à 14:02:19Z, création à 14:31:04Z). Le serveur a vécu 9 minutes (25 au premier essai), arrêté au pas `noyau` (`rapport-poste-local-d1a-v2.md`, `b2bace9b…` ; `registres/depenses.md`). Le troisième essai doit aller plus loin (épreuve et mesures) : sa durée n'a jamais été mesurée.
++11. **Coût attendu : environ 0,28 USD**, soit une heure facturée d'une `ccx33` (0,22692 EUR au taux de 1,25, `registres/depenses.md`, lignes des 175751342 et 175838427), si le serveur vit moins d'une heure. La vie du serveur est bornée par la minuterie, au plus `min(création + 48 h, H − 1 h)`. Le coût reste en tout cas sous le reste de la ligne, 64,44 USD.
++
++Session mère `session_01QPDgKgejkqwnuaJHJ31Ydo` (dans le nuage), sur le mot de Lazar R-2439 (« Réparer d'abord, puis
++relancer » : troisième essai sous GO-2026-11-10-13, troisième machine sous cette ligne accordée), redit le 13 novembre
++(R-2492 : « Lean : le troisième essai est à lancer sur ton poste. :go ») et le 21 novembre (GO-2026-11-21-12, voie 1 :
++troisième essai avant le 30 novembre sous GO-2026-11-10-13, consigne v4), après la réparation du
+ harnais (R-2464, R-2470, R-2486) et la contre-lecture courte du harnais v10 (`contre-lecture-courte-harnais-d1a-v10.md`,
+ `e7bdbb1506758ab61da517238729bf3413c3124462c4c09df05bb3c6a4a4a388`, Claude Fable 5.2 : « utilisable après corrections »,
+ aucune garde affaiblie ; corrections E1 à E3 reprises ici). Code : `prep/lean-outillage-d1a-v10`, commit
+@@ -20,9 +38,14 @@
+ n'écris jamais dans `main`, jamais vers `lciric/controle-ia`, jamais une ligne de `registres/go.md` ; la session mère inscrit
+ dépenses, arrêts et décisions d'après ton rapport.
+ 
+-**Dépense autorisée** : **GO-2026-11-10-13**, 65 USD au plus, dont **0,56 USD déjà dépensés** par les deux premiers serveurs
+-(175751342 et 175838427).
+-- **Une seule** machine Hetzner `ccx33` (`hel1`) de plus, vie bornée par la minuterie.
++**Dépense autorisée** : **GO-2026-11-10-13**, 65 USD au plus, **échéance 2026-11-30** (`registres/go.md`), dont **0,56 USD
++déjà dépensés** par les deux premiers serveurs (175751342 et 175838427 ; deux fois 0,28 USD, `registres/depenses.md`).
++- **Une seule** machine Hetzner `ccx33` (`hel1`) de plus, vie bornée par la minuterie. Elle est **créée et détruite par la
++  procédure** (création en L5 par `creer-et-armer`, destruction en section 4 ou 5 par `MV7 detruire --identifiant N`),
++  **toujours par son identifiant (R10)**. Tu n'arrêtes jamais un processus par motif de ligne de commande, seulement par le
++  PID que la procédure te fait relever.
++- **Échéance** : aucune préparation si `T_LIM` (L1 + 6 h) tombe après le 2026-11-30 à 23:59 UTC ; compte rendu à Lazar.
++- **Clé du loueur** : `HCLOUD_TOKEN`, lue par son nom seul dans l'environnement de la session, jamais affichée ni écrite.
+ - **Aucun appel de modèle**, **aucune clé de modèle ni dépôt du programme sur la machine**. Aucune autre dépense.
+ - **Déclaration (R-2439, comme en R-2426)** : c'est la **troisième machine sous cette ligne**, accordée par Lazar. La garde
+   « une machine par GO » du harnais est **contournée par construction** : ta branche neuve ne porte ni fichier de
+@@ -36,7 +59,8 @@
+   - règle 3 levée pour l'interface de Hetzner (jeton `HCLOUD_TOKEN` lu par son nom), pour le SSH vers la seule machine que
+     tu crées, et pour le service d'adresse de `MV7 adresses-sortie` (section 0) ;
+   - règle 4 : permis seulement `git clone`, `git fetch origin <branche>:refs/remotes/origin/<branche>` (avec refspec),
+-    `git remote set-branches --add origin <ta branche>`, la création de ta branche, `git add -- <fichiers nommés>`,
++    `git remote set-branches --add origin <ta branche>`, la lecture `git ls-remote origin refs/heads/<ta branche>` (avant
++    sa création seulement), la création de ta branche, `git add -- <fichiers nommés>`,
+     `git commit`, `git push` de ta seule branche (retentatives 2, 4, 8, 16 s).
+ - **La procédure fait foi pour tous les gestes de la machine** :
+   `docs/notes/g0-deux-semaines-v1/lean-outillage-d1a-v1/procedure-poste-local-d1a-v11.md`, sur la branche du harnais
+@@ -72,8 +96,12 @@
+ 1. **Dépôt** :
+    - clone neuf de `https://github.com/lciric/controle-ia-travail.git` ;
+    - `git fetch origin prep/lean-outillage-d1a-v10:refs/remotes/origin/prep/lean-outillage-d1a-v10` ;
+-   - **ta branche `donnees/lean-outillage-d1a-poste-local-v3`, partie du commit
+-     `ae894d8df2a19f51e532ff667160ae7bba2bf6ac`** (E1), poussée par `git push -u origin donnees/lean-outillage-d1a-poste-local-v3` ;
++   - `git ls-remote origin refs/heads/donnees/lean-outillage-d1a-poste-local-v4` ne doit rien rendre ; sinon arrêt, compte
++     rendu, aucune préparation ;
++   - **ta branche `donnees/lean-outillage-d1a-poste-local-v4`, partie du commit
++     `ae894d8df2a19f51e532ff667160ae7bba2bf6ac`** (E1 ; tête de `prep/lean-outillage-d1a-v10`), poussée par
++     `git push -u origin donnees/lean-outillage-d1a-poste-local-v4` ; jamais `donnees/lean-outillage-d1a-poste-local-v3`
++     (Rappel) ;
+    - puis la référence de suivi de la procédure (L3 : `git fetch` par refspec, `git remote set-branches --add`, `@{upstream}`
+      résolu) ;
+    - vérifie que `V` ne contient ni `rattrapage-machine-d1a-*-v1.json` ni `journal-creations-machines-v1.jsonl` ; sinon arrêt ;
+@@ -129,14 +157,16 @@
+    - Minuterie arrêtée par son PID si elle vit.
+    - Terminal WSL fermé seulement après l'inventaire final.
+ 7. **Rapport** sur ta branche, sous `docs/notes/g0-deux-semaines-v1/lean-outillage-d1a-v1/` (noms neufs) :
+-   `rapport-poste-local-d1a-v3.md`, scellé. Il contient :
++   `rapport-poste-local-d1a-v3.md` (numéro de l'essai ; nom absent de `ae894d8d` et de la branche de la mère le 2026-11-21), scellé, sur
++   `donnees/lean-outillage-d1a-poste-local-v4`. Il contient :
+    - vie du serveur (création, destruction, heures, coût ; cumul sous GO-2026-11-10-13) ;
+    - `P` retenu et la sortie de `adresses-sortie` (comptes seulement) ;
+    - sorties des étapes ;
+    - résultat de la garde de lisibilité, de l'essai « bac lit Mathlib.olean », de l'essai « le vérificateur compile sur la
+      machine », du pas `noyau` (avec, en cas d'échec par la mémoire ou le délai, les relevés de E2) et de l'épreuve ;
+    - valeurs des pièces, incidents, écarts ;
+-   - **lignes proposées** pour `registres/depenses.md` et `registres/arrets.md`.
++   - **lignes proposées** pour `registres/depenses.md` et `registres/arrets.md` (sous GO-2026-11-10-13, branche
++     `donnees/lean-outillage-d1a-poste-local-v4`).
+ 
+    Pièces sous `pieces-poste-local-d1a-<jeton12>-v1/`. Lazar relaie à la mère.
+ 
