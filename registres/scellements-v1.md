@@ -81,3 +81,4 @@
 | SOURCES-COURSE-SEUIL-MONITEURS-V1 | 2026-11-21T07:45:10Z | prereg/ideation-seuil-moniteurs-v1/liste-des-sources-course-seuil-et-moniteurs-v1.md | 4e0aaaeeb1b73171a5f9d2f581278157f2c8c424f59bfdc6e29946aa6f37a29f |
 | MANDAT-MONDES-PLANTES-SEUIL-MONITEURS-V3 | 2026-11-21T08:35:30Z | prereg/ideation-seuil-moniteurs-v1/scellement-mandat-auteur-mondes-plantes-v3-v1.md | 391c089e80c498e7d36ddc51c45b50e0447345ad360397a94c845f71cb5b347a |
 | MOTIFS-REFUSES-SEUIL-MONITEURS-V1 | 2026-11-21T09:10:23Z | docs/notes/ideation-seuil-moniteurs-v1/motifs-refuses-v1/motifs-noms-refuses-reels-v1.txt | 583d428a89cbffe9d7167d9bfd4d4e0290a283ef2fbc825d4016afb6502c2813 |
+| VERITE-TEMOINS-SEUIL-MONITEURS-V1 | 2026-11-21T09:29:35Z | prereg/ideation-seuil-moniteurs-v1/scellement-verite-temoins-imposes-v1.md | e64e362dc69a227397fcca1cfd36df9c1f6601a3fec586f507018475a155b213 |

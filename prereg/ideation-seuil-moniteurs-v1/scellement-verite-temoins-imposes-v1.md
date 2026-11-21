@@ -1,0 +1,17 @@
+# Scellement du programme de vérité des dix-sept témoins imposés, course « seuil et moniteurs » — v1
+
+Écrit par la session mère le 2026-11-21T09:29:35Z (`date -u`). Branche à part verite-temoins/seuil-moniteurs-v1, commit 564347dbdd01fb03242f776ceab798a213d47688, lue par `git show`, chaque fichier égal à son compagnon ; la branche n'est pas fusionnée dans main. Lecteurs permis : la mère (banc noteur, N6 de la note 4f3ae86f…) et les juges de fin ; aucune session de proposeur, de traducteur ni l'auteur des mondes (règle d'ouverture en tête du dossier). Vérification S « Conforme, prêt à sceller » : dix-sept valeurs refaites par d'autres méthodes, écart maximal 4·10⁻¹³ (exactes) et 2·10⁻⁹ (encadrées). Ce programme calcule la vérité des témoins avant toute lecture de la sortie de l'auteur des mondes ; pour les témoins qui dépendent de la loi de l'auteur, seule la valeur du recalcul sur sa loi est opposable (drapeau depend_de_la_loi_de_l_auteur). Écart consigné : la pièce de vérification cite des noms de modèles cherchés et non trouvés ; branche fermée, rien servi. Décisions de la mère : R-4477, R-4486.
+
+| pièce | chemin (au commit nommé) | sha256 |
+|---|---|---|
+| REGLE-D-OUVERTURE-v1.md | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/REGLE-D-OUVERTURE-v1.md | 5f4e95820ab610eaa739d15f839d44799f0b18c86754418f64e6d10535ee4dd9 |
+| calculer_verite_temoins_imposes_v1.py | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/calculer_verite_temoins_imposes_v1.py | 4857343c3388e5045a49dd690d661b3fb2069949691af079f3db21e2db58bf59 |
+| exemple-entree-recalcul-v1.json | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/exemple-entree-recalcul-v1.json | 76ed336e7c1108f7aadf8b8d197f5e2128e70ebff77dc7bceedc595e205b9495 |
+| exemple-sortie-recalcul-v1-rejeu.json | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/exemple-sortie-recalcul-v1-rejeu.json | d18449f515e491dd597fc1dd004f83b16ae409e3a336c46d85b4aa6347906988 |
+| exemple-sortie-recalcul-v1.json | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/exemple-sortie-recalcul-v1.json | d18449f515e491dd597fc1dd004f83b16ae409e3a336c46d85b4aa6347906988 |
+| rapport-developpeur-verite-temoins-v1.md | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/rapport-developpeur-verite-temoins-v1.md | d5385a7743499dae139e3158c7f0c78012d7763178e056a5746aceec254d7527 |
+| table-empreintes-verite-temoins-v1.txt | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/table-empreintes-verite-temoins-v1.txt | 67c6ea5b48f64145f5126f17ac8f46d551b42e51aa6136b029773cafb87b8036 |
+| table-verite-temoins-imposes-v1-rejeu.json | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/table-verite-temoins-imposes-v1-rejeu.json | cea076d94621347d811921fff5ba7846434a97acae58e1b80943c66c090f4d69 |
+| table-verite-temoins-imposes-v1.json | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/table-verite-temoins-imposes-v1.json | cea076d94621347d811921fff5ba7846434a97acae58e1b80943c66c090f4d69 |
+| test_verite_temoins_imposes_v1.py | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/test_verite_temoins_imposes_v1.py | 7ce7ff5ea38a4c3c91f0944b609df5b068582ab5100e4591f43963945b6e71f8 |
+| verification-v1/verification-programme-verite-temoins-v1.md | docs/notes/ideation-seuil-moniteurs-v1/verite-temoins-imposes-v1/verification-v1/verification-programme-verite-temoins-v1.md | 0d9c280eed66e6560dccd5a4f3596465d54aa8871ad1c146c6f95a1d9ddc5b0e |
