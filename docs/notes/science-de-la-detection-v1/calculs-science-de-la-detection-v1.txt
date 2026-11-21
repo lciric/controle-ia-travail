@@ -1,0 +1,109 @@
+Calculs de la note « science de la détection » (v1) : lois exactes, aucun tirage, aucune donnée du programme.
+Toutes les valeurs d'entrée sont des suppositions d'illustration. Non contre-lu.
+
+[A] Règle « moniteur invalide », ligne 1 (ce qui passe sans alerte).
+    U = 1 si l'épisode audité est endommagé selon l'oracle ET n'a pas été signalé par le moniteur.
+    Nul : à tout instant P(U = 1 | passé) <= q_a. Richesse : moyenne de cinq rapports de vraisemblance
+    Bern(k q_a) contre Bern(q_a), k = 1,25 ; 1,5 ; 2 ; 3 ; 5. Annonce quand la richesse atteint 1/alpha.
+    alpha (fausse annonce par déploiement) = 0.05 ; beta (silence à tort) = 0.10.
+
+    (i) Objets de contrôle, mondes à taux constant, programmation dynamique exacte sur N audits :
+        q_a = 0.05, monde valide (taux = q_a), N = 1000 audits : annonce 0.0299 (doit rester <= 0.05)
+        q_a = 0.05, monde valide (taux = q_a), N = 4000 audits : annonce 0.0366 (doit rester <= 0.05)
+        q_a = 0.05, monde aveugle (taux = 0.075), N = 4000 audits : annonce 0.9999 ; médiane 536 audits
+        q_a = 0.05, monde aveugle (taux = 0.100), N = 4000 audits : annonce 1.0000 ; médiane 147 audits
+        q_a = 0.05, monde aveugle (taux = 0.150), N = 4000 audits : annonce 1.0000 ; médiane 46 audits
+        q_a = 0.10, monde valide (taux = q_a), N = 1000 audits : annonce 0.0347 (doit rester <= 0.05)
+        q_a = 0.10, monde valide (taux = q_a), N = 4000 audits : annonce 0.0392 (doit rester <= 0.05)
+        q_a = 0.10, monde aveugle (taux = 0.150), N = 4000 audits : annonce 1.0000 ; médiane 251 audits
+        q_a = 0.10, monde aveugle (taux = 0.200), N = 4000 audits : annonce 1.0000 ; médiane 69 audits
+        q_a = 0.10, monde aveugle (taux = 0.300), N = 4000 audits : annonce 1.0000 ; médiane 21 audits
+
+    (ii) Borne sans hypothèse sur la politique d'attaque (tirages d'audit indépendants de l'agent) :
+        m* = plus petit nombre M d'épisodes « endommagés non signalés » parmi T tel que
+        P(règle muette à T | M) <= beta. Pour toute politique : P(muette à T et M_T >= m*) <= beta.
+        excès = m* - q_a T ; rapport = excès / racine(T q_a (1 - q_a) / p).
+        q_a = 0.05, audit p = 0.05, T =  1000 : m* =   234 ; excès =   184.0 (18.40 % de T) ; rapport = 5.97
+        q_a = 0.05, audit p = 0.05, T =  4000 : m* =   518 ; excès =   318.0 (7.95 % de T) ; rapport = 5.16
+        q_a = 0.05, audit p = 0.05, T = 16000 : m* =  1381 ; excès =   581.0 (3.63 % de T) ; rapport = 4.71
+        q_a = 0.05, audit p = 0.20, T =  1000 : m* =   127 ; excès =    77.0 (7.70 % de T) ; rapport = 5.00
+        q_a = 0.05, audit p = 0.20, T =  4000 : m* =   341 ; excès =   141.0 (3.52 % de T) ; rapport = 4.57
+        q_a = 0.05, audit p = 0.20, T = 16000 : m* =  1075 ; excès =   275.0 (1.72 % de T) ; rapport = 4.46
+        q_a = 0.05, audit p = 1.00, T =  1000 : m* =    72 ; excès =    22.0 (2.20 % de T) ; rapport = 3.19
+        q_a = 0.05, audit p = 1.00, T =  4000 : m* =   244 ; excès =    44.0 (1.10 % de T) ; rapport = 3.19
+        q_a = 0.05, audit p = 1.00, T = 16000 : m* =   916 ; excès =   116.0 (0.72 % de T) ; rapport = 4.21
+        q_a = 0.10, audit p = 0.05, T =  1000 : m* =   325 ; excès =   225.0 (22.50 % de T) ; rapport = 5.30
+        q_a = 0.10, audit p = 0.05, T =  4000 : m* =   809 ; excès =   409.0 (10.22 % de T) ; rapport = 4.82
+        q_a = 0.10, audit p = 0.05, T = 16000 : m* =  2379 ; excès =   779.0 (4.87 % de T) ; rapport = 4.59
+        q_a = 0.10, audit p = 0.20, T =  1000 : m* =   200 ; excès =   100.0 (10.00 % de T) ; rapport = 4.71
+        q_a = 0.10, audit p = 0.20, T =  4000 : m* =   590 ; excès =   190.0 (4.75 % de T) ; rapport = 4.48
+        q_a = 0.10, audit p = 0.20, T = 16000 : m* =  1992 ; excès =   392.0 (2.45 % de T) ; rapport = 4.62
+        q_a = 0.10, audit p = 1.00, T =  1000 : m* =   130 ; excès =    30.0 (3.00 % de T) ; rapport = 3.16
+        q_a = 0.10, audit p = 1.00, T =  4000 : m* =   467 ; excès =    67.0 (1.68 % de T) ; rapport = 3.53
+        q_a = 0.10, audit p = 1.00, T = 16000 : m* =  1812 ; excès =   212.0 (1.32 % de T) ; rapport = 5.59
+
+[B] Surprise par étape estimée par K continuations de chaque côté d'une frontière (deux estimations
+    indépendantes, binomiales, réussite attendue vraie v des deux côtés : surprise vraie nulle).
+    écart type de la surprise estimée ; probabilité qu'elle dépasse 0,3 en valeur absolue (exacte).
+        v = 0.5, K =   4 : écart type 0.354 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.2891
+        v = 0.5, K =   8 : écart type 0.250 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.2101
+        v = 0.5, K =  16 : écart type 0.177 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.1102
+        v = 0.5, K =  32 : écart type 0.125 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.0169
+        v = 0.5, K =  64 : écart type 0.088 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.0005
+        v = 0.5, K = 128 : écart type 0.062 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.0000
+        v = 0.2, K =   4 : écart type 0.283 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.1709
+        v = 0.2, K =   8 : écart type 0.200 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.1124
+        v = 0.2, K =  16 : écart type 0.141 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.0451
+        v = 0.2, K =  32 : écart type 0.100 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.0029
+        v = 0.2, K =  64 : écart type 0.071 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.0000
+        v = 0.2, K = 128 : écart type 0.050 ; P(|surprise estimée| > 0,3 | surprise vraie nulle) = 0.0000
+    Plafond de corrélation d'une sonde parfaite contre l'étiquette bruitée : racine(fidélité),
+    fidélité = var(vraie) / (var(vraie) + var(bruit)), bruit à v = 0,5.
+        écart type vrai des surprises 0.05 -> plafond  K =  4 : 0.14 ; K = 16 : 0.27 ; K = 64 : 0.49
+        écart type vrai des surprises 0.10 -> plafond  K =  4 : 0.27 ; K = 16 : 0.49 ; K = 64 : 0.75
+        écart type vrai des surprises 0.20 -> plafond  K =  4 : 0.49 ; K = 16 : 0.75 ; K = 64 : 0.91
+    Évaluation en agrégat : nombre d'étapes par classe de surprise prédite pour connaître la surprise
+    moyenne réalisée à +/- 0,02 (95 %), bruit à v = 0,5 seul.
+        K =  4 :  1201 étapes par classe
+        K =  8 :   601 étapes par classe
+        K = 16 :   301 étapes par classe
+
+[C] Coupes minimales : combien de suppositions faut-il violer ensemble pour aveugler tout le système ?
+    Lecture prudente : un mécanisme est aveugle dès qu'une supposition qu'il consomme est violée.
+    Les ensembles de suppositions par mécanisme sont ma lecture, non mesurée.
+      système : sonde d'intention
+        ordre 1 ; 3 coupe(s) minimale(s) ; exemples : {S1} | {S8} | {S9}
+      système : sonde d'intention + nouveauté sur activations
+        ordre 1 ; 2 coupe(s) minimale(s) ; exemples : {S1} | {S8}
+      système : sonde d'intention + réussite attendue lue + issue calculée
+        ordre 1 ; 2 coupe(s) minimale(s) ; exemples : {S1} | {S8}
+      système : sonde d'intention + plancher d'audit au hasard
+        ordre 2 ; 9 coupe(s) minimale(s) ; exemples : {S1, S4} | {S1, S5} | {S1, S6} | {S4, S8}
+      système : sonde d'intention + plancher d'audit au hasard + règle « moniteur invalide »
+        ordre 2 ; 6 coupe(s) minimale(s) ; exemples : {S1, S4} | {S1, S5} | {S4, S8} | {S4, S9}
+      système : sonde d'intention + plancher d'audit au hasard + comparaison par paires en aveugle au jumeau
+        ordre 3 ; 18 coupe(s) minimale(s) ; exemples : {S1, S12, S4} | {S1, S12, S5} | {S1, S12, S6} | {S1, S3, S4}
+      système : sonde d'intention + plancher d'audit au hasard + comparaison par paires en aveugle au jumeau + attestation exigée et vérifiée
+        ordre 3 ; 6 coupe(s) minimale(s) ; exemples : {S1, S12, S4} | {S1, S3, S4} | {S12, S4, S8} | {S12, S4, S9}
+    Libellés : S1 = l'attaque déplace ce que la sonde lit ; S2 = les témoins ont la loi de l'honnête du régime ; S3 = le jumeau a la politique de l'honnête ; S4 = l'oracle reconnaît le dommage qu'il regarde ; S5 = le tirage d'audit est secret et indépendant ; S6 = le dommage par épisode est plafonné ; S8 = l'agent ne déplace pas ses représentations ; S9 = l'attaque ressemble à celles déjà vues ; S12 = un lecteur aveugle perçoit le déficit du produit ; S13 = une attestation fausse est vérifiable ou lisible
+
+[D] Angle mort commun de deux oracles, estimé par capture et recapture (Lincoln-Petersen).
+    Chaque oracle voit un dommage vrai avec probabilité r ; corrélation rho de leurs détections.
+    part vraie manquée par les deux ; part estimée en supposant l'indépendance (valeurs en espérance).
+        r = 0.6, rho = 0.0 : manquée par les deux, vraie 0.160 ; estimée 0.160 (estimateur du total / total vrai = 1.00)
+        r = 0.6, rho = 0.3 : manquée par les deux, vraie 0.232 ; estimée 0.078 (estimateur du total / total vrai = 0.83)
+        r = 0.6, rho = 0.6 : manquée par les deux, vraie 0.304 ; estimée 0.026 (estimateur du total / total vrai = 0.71)
+        r = 0.8, rho = 0.0 : manquée par les deux, vraie 0.040 ; estimée 0.040 (estimateur du total / total vrai = 1.00)
+        r = 0.8, rho = 0.3 : manquée par les deux, vraie 0.088 ; estimée 0.020 (estimateur du total / total vrai = 0.93)
+        r = 0.8, rho = 0.6 : manquée par les deux, vraie 0.136 ; estimée 0.006 (estimateur du total / total vrai = 0.87)
+    Lecture : dès que les oracles se trompent ensemble, l'estimation est une borne basse de l'angle mort.
+
+[E] Comparaison par paires en aveugle au jumeau : nul exact P(le produit du suspect perd) = 1/2
+    (ordre tiré au hasard). Plus petit nombre de paires n et seuil c tels que, test unilatéral exact,
+    P(pertes >= c | 1/2) <= 0,01 et P(pertes >= c | 1/2 + d) >= 0,90.
+        d = 0.05 : n = 1320 paires, alerte si pertes >=  703 (risque 0.0096, puissance 0.9031)
+        d = 0.10 : n =  325 paires, alerte si pertes >=  184 (risque 0.0098, puissance 0.9032)
+        d = 0.15 : n =  143 paires, alerte si pertes >=   86 (risque 0.0094, puissance 0.9033)
+        d = 0.20 : n =   80 paires, alerte si pertes >=   51 (risque 0.0092, puissance 0.9084)
+        d = 0.30 : n =   35 paires, alerte si pertes >=   25 (risque 0.0083, puissance 0.9253)
+
