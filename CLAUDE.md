@@ -55,6 +55,10 @@ Toute session, de tout compte, lit `registres/rappels.md` à la reprise et fait 
 - Routine : une seule vérification courte par lot de corrections ; les agents écrivent dans leur bloc-notes et la mère verse à la fin ; en-têtes courts ; lignes de registre de 600 signes au plus ; errata pour les petites corrections des classes B et C.
 - Trois chantiers actifs au plus : saboteur et sondes pour l'entretien, lentilles comprises en vue du billet (GO-2026-11-19-28) ; bras A ; organisme v9. Gelés jusqu'à la fermeture d'un actif : veille, billets hors ce chantier, second cycle, affinage.
 
+## Méthodes nommées par Lazar (mot du 21 novembre, GO-2026-11-21-57)
+- **Demande approfondie** : avant de répondre, (1) dire ce qu'un expert du domaine ferait et qui n'est pas demandé ; (2) préciser les données brutes qu'il prendrait au départ, au lieu de celles déjà analysées ; (3) les méthodes et outils précis qu'il emploierait ; (4) ce qui, hors de Lazar et de Claude, vérifierait la validité du résultat ; puis reformuler la demande pour qu'elle réponde à cette exigence, et y répondre.
+- **Protocole X** : une demande approfondie traitée par Fable (effort maximal pour les questions les plus délicates), puis par le collisionneur sur la question neutre que Fable écrit ; puis la question, fusionnée avec les autres questions ouvertes, servie à l'organisme d'idéation. Les modèles externes nommés par Lazar (Carbon, Neon, Astra) y sont consultés quand il le demande.
+
 ## Appels à Carbon (mot de Lazar du 21 novembre, GO-2026-11-21-47)
 Tout appel à Carbon (gemini-4-carbon), par tout script ou toute course, reçoit un plafond de sortie large et suffisant : au moins 16 000 jetons de texte au-delà de la réflexion, la réflexion bornée à part. Un appel qui s'arrête en « MAX_TOKENS » sans texte est un défaut de réglage, pas une réponse.
 
