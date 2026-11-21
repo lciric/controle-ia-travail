@@ -1,0 +1,569 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v4/verifier_sortie_auteur_mondes_v4.py	2026-11-21 10:06:09.101948171 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v5/verifier_sortie_auteur_mondes_v5.py	2026-11-21 10:31:37.398039018 +0000
+@@ -1,7 +1,13 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+ """Programme de vérification de la sortie de l'auteur des mondes plantés,
+-course « seuil et moniteurs » — v4.
++course « seuil et moniteurs » — v5.
++
++v5 (arbitrage de l'unité des décalages du saboteur, a8f8acfa…, mot de la mère) : contrôle
++par l'aire de chaque famille (voir CONTRÔLE PAR L'AIRE plus bas) ; trois issues (conforme,
++unité brute constatée, non lisible), rapportées en vérification (observations et champ
++`controle_par_l_aire`) et au compte rendu de correspondance ; un saboteur n'est converti
++vers le recalcul que si sa famille est conforme. Aucune autre règle ne change.
+ 
+ v4 (vérification S de la v3 `6dce2dc0…`) : R1 le contrôle de la dérive de F n'est fait par
+ aucun programme scellé ; il sera porté dans le mode `--recalculer` de la v2 du programme
+@@ -38,7 +44,7 @@
+ Bibliothèque standard seule.
+ 
+ Usage :
+-    python3 -I -B verifier_sortie_auteur_mondes_v4.py SORTIE_AUTEUR RAPPORT_JSON [--motifs FICHIER]
++    python3 -I -B verifier_sortie_auteur_mondes_v5.py SORTIE_AUTEUR RAPPORT_JSON [--motifs FICHIER]
+ 
+ Le fichier de motifs (noms de modèles ou de fournisseurs refusés, une expression
+ régulière par ligne, lue sans casse, lignes vides et lignes en « # » ignorées)
+@@ -46,7 +52,7 @@
+ c'est une liste d'essai, fictive, à remplacer par la liste réelle de la mère.
+ 
+ Mode de correspondance (v2) :
+-    python3 -I -B verifier_sortie_auteur_mondes_v4.py --vers-recalcul SORTIE_AUTEUR ENTREE_RECALCUL_JSON [--motifs FICHIER]
++    python3 -I -B verifier_sortie_auteur_mondes_v5.py --vers-recalcul SORTIE_AUTEUR ENTREE_RECALCUL_JSON [--motifs FICHIER]
+ écrit ENTREE_RECALCUL_JSON (entrée du mode `--recalculer` du programme de vérité des
+ témoins) et ENTREE_RECALCUL_JSON.correspondance.json (compte rendu : témoin par témoin,
+ converti ou non, raison, choix appliqués). Codes : 0 écrit ; 2 sortie illisible, rien
+@@ -64,12 +70,13 @@
+ 
+ import hashlib
+ import json
++import math
+ import re
+ import sys
+ import unicodedata
+ from pathlib import Path
+ 
+-NOM_PROGRAMME = "verifier_sortie_auteur_mondes_v4"
++NOM_PROGRAMME = "verifier_sortie_auteur_mondes_v5"
+ VERSION_FORME = "mondes-plantes-seuil-et-moniteurs-v1"
+ TAILLE_MAX_CARACTERES = 52000  # erratum 1 du mandat de l'auteur v3, borne finale (mot de la mère) ; se change ici seulement
+ GARDE_DE_LECTURE_OCTETS = 1000000
+@@ -1245,6 +1252,393 @@
+ # Ensemble
+ # ---------------------------------------------------------------------------
+ 
++# ---------------------------------------------------------------------------
++# CONTRÔLE PAR L'AIRE (v5) — arbitrage de l'unité des décalages du saboteur
++# (docs/notes/ideation-seuil-moniteurs-v1/arbitrage-unite-decalages-v1/arbitrage-fable-unite-decalages-v1.md,
++# a8f8acfa…). Lecture retenue (déclarée de session, = CH5) : les trois décalages du saboteur
++# se lisent en écarts types de la loi honnête de la tranche, c'est-à-dire la racine de la
++# variance de `loi_honnete` entière. Pour chaque famille, chaque tranche et chacun des trois
++# nombres, on calcule l'aire réalisée (probabilité qu'un score du saboteur dépasse un score
++# honnête, un demi pour les ex æquo) sous la lecture retenue, puis, pour diagnostic, sous
++# l'unité brute (le nombre ajouté tel quel au score). Trois issues :
++#   (a) conforme : sous la lecture retenue, toutes les aires à 0,005 près des aires dites ;
++#       tout écart de plus de 0,001 est compté et nommé ;
++#   (b) unité brute constatée : (a) échoue, et l'unité brute réalise toutes les aires à 0,005
++#       près dans toutes les tranches ; le saboteur n'est pas converti ; mot de la mère requis ;
++#   (c) non lisible : ni l'un ni l'autre, écart type indéfini, ou loi hors de ce contrôle ;
++#       rapporté, sans aucun repli.
++# Ce contrôle ne lit que les lois et les nombres de l'auteur. Il ne calcule aucune vérité de
++# témoin. Les aires se calculent en forme fermée pour la loi normale, par une somme finie sur le
++# réseau pour une loi arrondie, et par quadrature de Simpson (changement de variable en sinus
++# hyperbolique) pour les autres lois continues : erreur visée inférieure à 1e-6, non bornée
++# rigoureusement (déclaré).
++# ---------------------------------------------------------------------------
++
++AIRES_DITES = (0.69, 0.80, 0.95)
++TOLERANCE_AIRE_CONFORME = 0.005
++SEUIL_ECART_D_AIRE_NOMME = 0.001
++NOEUDS_DE_QUADRATURE = 2001
++POINTS_DE_RESEAU_MAX = 2000000
++
++
++class NonCalculable(Exception):
++    def __init__(self, code):
++        super().__init__(code)
++        self.code = code
++
++
++def _phi(x):
++    return 0.5 * math.erfc(-x / math.sqrt(2.0))
++
++
++def _beta_reguliere(a, b, x):
++    """Fonction bêta incomplète régularisée I_x(a, b), fraction continue de Lentz."""
++    if x <= 0.0:
++        return 0.0
++    if x >= 1.0:
++        return 1.0
++    ln_avant = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x)
++    if x > (a + 1.0) / (a + b + 2.0):
++        return 1.0 - _beta_reguliere(b, a, 1.0 - x)
++    tiny = 1e-300
++    c, d = 1.0, 1.0 - (a + b) * x / (a + 1.0)
++    d = 1.0 / (d if abs(d) > tiny else tiny)
++    h = d
++    for m in range(1, 400):
++        m2 = 2 * m
++        aa = m * (b - m) * x / ((a + m2 - 1.0) * (a + m2))
++        d = 1.0 + aa * d
++        d = 1.0 / (d if abs(d) > tiny else tiny)
++        c = 1.0 + aa / c if abs(c) > tiny else 1.0 + aa / tiny
++        h *= d * c
++        aa = -(a + m) * (a + b + m) * x / ((a + m2) * (a + m2 + 1.0))
++        d = 1.0 + aa * d
++        d = 1.0 / (d if abs(d) > tiny else tiny)
++        c = 1.0 + aa / c if abs(c) > tiny else 1.0 + aa / tiny
++        delta = d * c
++        h *= delta
++        if abs(delta - 1.0) < 1e-15:
++            break
++    return math.exp(ln_avant) * h / a
++
++
++class LoiContinue:
++    """Loi continue pour le contrôle par l'aire : cdf, pdf, moyenne et variance (None si infinie)."""
++    reseau = False
++
++    def quantile(self, u):
++        lo, hi = -1.0, 1.0
++        while self.cdf(lo) > u:
++            lo *= 2.0
++            if lo < -1e15:
++                raise NonCalculable("calcul_impossible")
++        while self.cdf(hi) < u:
++            hi *= 2.0
++            if hi > 1e15:
++                raise NonCalculable("calcul_impossible")
++        for _ in range(200):
++            mi = 0.5 * (lo + hi)
++            if self.cdf(mi) < u:
++                lo = mi
++            else:
++                hi = mi
++            if hi - lo <= 1e-12 * max(1.0, abs(mi)):
++                break
++        return 0.5 * (lo + hi)
++
++
++class NormaleA(LoiContinue):
++    def __init__(self, mu, sigma):
++        if not sigma > 0:
++            raise NonCalculable("loi_hors_du_controle")
++        self.mu, self.sigma = mu, sigma
++
++    def cdf(self, x):
++        return _phi((x - self.mu) / self.sigma)
++
++    def pdf(self, x):
++        z = (x - self.mu) / self.sigma
++        return math.exp(-0.5 * z * z) / (self.sigma * math.sqrt(2.0 * math.pi))
++
++    def moyenne(self):
++        return self.mu
++
++    def variance(self):
++        return self.sigma ** 2
++
++
++class StudentA(LoiContinue):
++    def __init__(self, nu, mu, echelle):
++        if not (nu > 0 and echelle > 0):
++            raise NonCalculable("loi_hors_du_controle")
++        self.nu, self.mu, self.e = nu, mu, echelle
++        self.c = math.exp(math.lgamma((nu + 1) / 2.0) - math.lgamma(nu / 2.0)) / math.sqrt(nu * math.pi)
++
++    def cdf(self, x):
++        t = (x - self.mu) / self.e
++        queue = 0.5 * _beta_reguliere(self.nu / 2.0, 0.5, self.nu / (self.nu + t * t))
++        return 1.0 - queue if t > 0 else queue
++
++    def pdf(self, x):
++        t = (x - self.mu) / self.e
++        return self.c * (1.0 + t * t / self.nu) ** (-(self.nu + 1) / 2.0) / self.e
++
++    def moyenne(self):
++        return self.mu if self.nu > 1 else None
++
++    def variance(self):
++        return self.e ** 2 * self.nu / (self.nu - 2.0) if self.nu > 2 else None
++
++
++class LaplaceA(LoiContinue):
++    def __init__(self, mu, b):
++        if not b > 0:
++            raise NonCalculable("loi_hors_du_controle")
++        self.mu, self.b = mu, b
++
++    def cdf(self, x):
++        z = (x - self.mu) / self.b
++        return 0.5 * math.exp(z) if z < 0 else 1.0 - 0.5 * math.exp(-z)
++
++    def pdf(self, x):
++        return math.exp(-abs(x - self.mu) / self.b) / (2.0 * self.b)
++
++    def moyenne(self):
++        return self.mu
++
++    def variance(self):
++        return 2.0 * self.b ** 2
++
++
++class LognormaleA(LoiContinue):
++    def __init__(self, mu, sigma):
++        if not sigma > 0:
++            raise NonCalculable("loi_hors_du_controle")
++        self.mu, self.sigma = mu, sigma
++
++    def cdf(self, x):
++        return 0.0 if x <= 0 else _phi((math.log(x) - self.mu) / self.sigma)
++
++    def pdf(self, x):
++        if x <= 0:
++            return 0.0
++        z = (math.log(x) - self.mu) / self.sigma
++        return math.exp(-0.5 * z * z) / (x * self.sigma * math.sqrt(2.0 * math.pi))
++
++    def moyenne(self):
++        return math.exp(self.mu + self.sigma ** 2 / 2.0)
++
++    def variance(self):
++        return (math.exp(self.sigma ** 2) - 1.0) * math.exp(2.0 * self.mu + self.sigma ** 2)
++
++
++class MelangeA(LoiContinue):
++    def __init__(self, poids, composantes):
++        if any(c_.reseau for c_ in composantes) or abs(sum(poids) - 1.0) > 1e-9 or any(w < 0 for w in poids):
++            raise NonCalculable("loi_hors_du_controle")
++        self.w, self.c = poids, composantes
++
++    def cdf(self, x):
++        return sum(w * c_.cdf(x) for w, c_ in zip(self.w, self.c))
++
++    def pdf(self, x):
++        return sum(w * c_.pdf(x) for w, c_ in zip(self.w, self.c))
++
++    def moyenne(self):
++        ms = [c_.moyenne() for c_ in self.c]
++        return None if any(m is None for m in ms) else sum(w * m for w, m in zip(self.w, ms))
++
++    def variance(self):
++        ms, vs = [c_.moyenne() for c_ in self.c], [c_.variance() for c_ in self.c]
++        if any(v is None for v in vs) or any(m is None for m in ms):
++            return None
++        m = sum(w * mi for w, mi in zip(self.w, ms))
++        return sum(w * (vi + mi * mi) for w, vi, mi in zip(self.w, vs, ms)) - m * m
++
++
++class DecaleeA(LoiContinue):
++    def __init__(self, base, decalage):
++        self.base, self.s = base, decalage
++
++    def cdf(self, x):
++        return self.base.cdf(x - self.s)
++
++    def pdf(self, x):
++        return self.base.pdf(x - self.s)
++
++    def moyenne(self):
++        m = self.base.moyenne()
++        return None if m is None else m + self.s
++
++    def variance(self):
++        return self.base.variance()
++
++
++class ReseauA:
++    """Loi arrondie au multiple le plus proche du pas (convention déclarée)."""
++    reseau = True
++
++    def __init__(self, base, pas):
++        if base.reseau or not pas > 0:
++            raise NonCalculable("loi_hors_du_controle")
++        lo, hi = base.quantile(1e-15), base.quantile(1.0 - 1e-15)
++        kmin, kmax = int(math.floor(lo / pas)) - 1, int(math.ceil(hi / pas)) + 1
++        if kmax - kmin > POINTS_DE_RESEAU_MAX:
++            raise NonCalculable("calcul_impossible")
++        self.pas, self.kmin = pas, kmin
++        self.masses = [max(0.0, base.cdf((k + 0.5) * pas) - base.cdf((k - 0.5) * pas)) for k in range(kmin, kmax + 1)]
++        total = sum(self.masses)
++        self.masses = [m / total for m in self.masses]
++        self.cumul = []
++        s = 0.0
++        for m in self.masses:
++            s += m
++            self.cumul.append(s)
++
++    def moyenne(self):
++        return sum(m * (self.kmin + i) * self.pas for i, m in enumerate(self.masses))
++
++    def variance(self):
++        mu = self.moyenne()
++        return sum(m * ((self.kmin + i) * self.pas - mu) ** 2 for i, m in enumerate(self.masses))
++
++
++def _num(x):
++    return float(x)
++
++
++def loi_pour_l_aire(spec, profondeur=0):
++    if profondeur > 12 or not isinstance(spec, dict):
++        raise NonCalculable("loi_hors_du_controle")
++    typ, p = spec.get("type"), spec.get("parametres")
++    if not isinstance(p, dict):
++        raise NonCalculable("loi_hors_du_controle")
++    if typ == "normale":
++        return NormaleA(_num(p["mu"]), _num(p["sigma"]))
++    if typ == "student":
++        return StudentA(_num(p["nu"]), _num(p["mu"]), _num(p["echelle"]))
++    if typ == "laplace":
++        return LaplaceA(_num(p["mu"]), _num(p["echelle"]))
++    if typ == "lognormale":
++        return LognormaleA(_num(p["mu"]), _num(p["sigma"]))
++    if typ == "melange":
++        return MelangeA([_num(w) for w in p["poids"]], [loi_pour_l_aire(c_, profondeur + 1) for c_ in p["composantes"]])
++    if typ == "decalage":
++        base = loi_pour_l_aire(p["loi"], profondeur + 1)
++        v = base.variance()
++        if v is None or base.reseau:
++            raise NonCalculable("loi_hors_du_controle")
++        return DecaleeA(base, _num(p["delta_en_ecarts_types"]) * math.sqrt(v))
++    if typ == "arrondi":
++        return ReseauA(loi_pour_l_aire(p["loi"], profondeur + 1), _num(p["pas_de_grille"]))
++    if typ == "somme_de_pas":
++        pas = loi_pour_l_aire(p["loi_du_pas"], profondeur + 1)
++        if not isinstance(pas, NormaleA):
++            raise NonCalculable("loi_hors_du_controle")
++        nb, r = int(_num(p["nombre_de_pas"])), _num(p["correlation"])
++        if p["structure"] == "ar1":
++            if not -1 < r < 1:
++                raise NonCalculable("loi_hors_du_controle")
++            v = nb + 2 * sum((nb - d) * r ** d for d in range(1, nb))
++        else:
++            v = nb + nb * (nb - 1) * r
++        if not v > 0:
++            raise NonCalculable("loi_hors_du_controle")
++        return NormaleA(nb * pas.mu, pas.sigma * math.sqrt(v))
++    if typ == "effet_de_famille_plus_bruit":
++        return NormaleA(0.0, 1.0)  # CH8 : marginale lue sur la normale réduite (§ 3.2, H : variance 1)
++    raise NonCalculable("loi_hors_du_controle")  # bernoulli, couple, autre
++
++
++def aire_realisee(loi, d):
++    """P(X + d > Y) + ½ P(X + d = Y), X et Y indépendants de loi `loi`."""
++    if isinstance(loi, NormaleA):
++        return _phi(d / (loi.sigma * math.sqrt(2.0)))
++    if loi.reseau:
++        v_decalage = d / loi.pas
++        total = 0.0
++        n = len(loi.masses)
++        for i, m in enumerate(loi.masses):
++            v = i + v_decalage
++            j = round(v)
++            if abs(v - j) < 1e-9:
++                inf = loi.cumul[j - 1] if 1 <= j <= n else (0.0 if j < 1 else 1.0)
++                egal = loi.masses[j] if 0 <= j < n else 0.0
++                total += m * (inf + 0.5 * egal)
++            else:
++                f = math.floor(v)
++                total += m * (loi.cumul[f] if 0 <= f < n else (0.0 if f < 0 else 1.0))
++        return total
++    centre = loi.quantile(0.5)
++    echelle = max((loi.quantile(0.75) - loi.quantile(0.25)) / 1.349, 1e-9)
++    t_lo = math.asinh((loi.quantile(1e-12) - centre) / echelle)
++    t_hi = math.asinh((loi.quantile(1.0 - 1e-12) - centre) / echelle)
++    n = NOEUDS_DE_QUADRATURE
++    h = (t_hi - t_lo) / (n - 1)
++    somme = 0.0
++    for i in range(n):
++        t = t_lo + i * h
++        x = centre + echelle * math.sinh(t)
++        g = loi.cdf(x + d) * loi.pdf(x) * echelle * math.cosh(t)
++        poids = 1 if i in (0, n - 1) else (4 if i % 2 else 2)
++        somme += poids * g
++    return somme * h / 3.0
++
++
++def controler_une_famille(f):
++    decalages = [_num(x) for x in f["saboteur"]["decalages"]]
++    tranches = []
++    try:
++        for tr in f["tranches"]:
++            loi = loi_pour_l_aire(tr["loi_honnete"])
++            v = loi.variance()
++            ecart_type = math.sqrt(v) if v is not None and v > 0 else None
++            brutes = [aire_realisee(loi, d) for d in decalages]
++            lues = [aire_realisee(loi, d * ecart_type) for d in decalages] if ecart_type is not None else None
++            tranches.append({"ecart_type": ecart_type, "lues": lues, "brutes": brutes})
++    except NonCalculable as e:
++        return {"issue": "non_lisible", "raison": e.code, "tranches": tranches, "ecarts": []}
++    except (ArithmeticError, ValueError, KeyError, TypeError):
++        return {"issue": "non_lisible", "raison": "calcul_impossible", "tranches": tranches, "ecarts": []}
++
++    def dans(aires, tol):
++        return aires is not None and all(abs(a - c_) <= tol for a, c_ in zip(aires, AIRES_DITES))
++
++    if all(dans(t["lues"], TOLERANCE_AIRE_CONFORME) for t in tranches):
++        ecarts = [(i, j) for i, t in enumerate(tranches) for j, (a, c_) in enumerate(zip(t["lues"], AIRES_DITES))
++                  if abs(a - c_) > SEUIL_ECART_D_AIRE_NOMME]
++        return {"issue": "conforme", "raison": None, "tranches": tranches, "ecarts": ecarts}
++    if all(dans(t["brutes"], TOLERANCE_AIRE_CONFORME) for t in tranches):
++        return {"issue": "unite_brute_constatee", "raison": None, "tranches": tranches, "ecarts": []}
++    raison = "ecart_type_indefini" if any(t["ecart_type"] is None for t in tranches) else "aucune_unite_ne_realise_les_aires"
++    return {"issue": "non_lisible", "raison": raison, "tranches": tranches, "ecarts": []}
++
++
++def controles_par_l_aire(ctx):
++    """Rend [(famille, chemin, étiquette, résultat)] pour les familles visibles et à l'écart."""
++    sortie = []
++    for f, ici in ctx.familles:
++        sortie.append((f, ici, etiquette_sure(f["id"]), controler_une_famille(f)))
++    for f, ici, etiquette in ctx.ecart:
++        sortie.append((f, ici, etiquette, controler_une_famille(f)))
++    return sortie
++
++
++def rapporter_controles_par_l_aire(c, controles):
++    resume = []
++    for f, ici, etiquette, r in controles:
++        if r["issue"] == "conforme":
++            for i, j in r["ecarts"]:
++                c.observe("O_SABOTEUR_ECART_D_AIRE_AU_DELA_DE_0_001", "%s.saboteur.decalages[%d]" % (ici, j), tranche=i + 1)
++        elif r["issue"] == "unite_brute_constatee":
++            c.observe("O_SABOTEUR_UNITE_BRUTE_CONSTATEE", ici + ".saboteur")
++        else:
++            c.observe("O_SABOTEUR_NON_LISIBLE", ici + ".saboteur", raison=r["raison"])
++        resume.append({"famille": etiquette, "issue": r["issue"], "raison": r["raison"],
++                       "ecarts_au_dela_de_0_001": len(r["ecarts"])})
++    return sorted(resume, key=lambda x: x["famille"])
++
++
+ def verifier(octets, motifs_noms):
+     c = Constat()
+     lois_autres = []
+@@ -1254,10 +1648,12 @@
+     p1 = not c.fautes["1"]
+     lignes_ecart = []
+     ctx = None
++    resume_aire = []
+     if p1:
+         ctx = Contexte(doc)
+         juger_completude(c, ctx)
+         lignes_ecart = juger_coherence(c, ctx)
++        resume_aire = rapporter_controles_par_l_aire(c, controles_par_l_aire(ctx))  # v5
+     juger_motifs(c, doc, texte, motifs_noms)
+ 
+     def verdict(point, juge=True):
+@@ -1311,6 +1707,7 @@
+         "a_lire_par_une_personne_type_autre": sorted(set(a_lire)),
+         "lignes_de_table_des_familles_a_l_ecart": lignes_ecart,
+         "forme_du_bloc_a_l_ecart": ctx.forme_a_l_ecart if ctx else None,
++        "controle_par_l_aire": resume_aire,
+         "observations": sorted(c.observations, key=lambda e: json.dumps(e, sort_keys=True, ensure_ascii=False)),
+         "comptes": comptes,
+         "code_de_sortie": code,
+@@ -1435,7 +1832,7 @@
+     return saboteurs
+ 
+ 
+-def lois_de_famille(f, t, choix, derive_de_f):
++def lois_de_famille(f, t, choix, derive_de_f, controle_aire=None):
+     n = t["n"]
+     tranches = f["tranches"]
+     choix.add("CH1_TRANCHE_PAR_TAILLE")
+@@ -1471,6 +1868,12 @@
+         lois["voisine"] = {"n": entier_simple(voisine["n_calibration"][0]),
+                            "loi": loi_pour_le_moteur(voisine["loi_honnete"], voisine["n_calibration"][0])}
+     if a_besoin_de_saboteurs(t):
++        # v5 : le saboteur n'est converti que si le contrôle par l'aire est conforme.
++        issue = controle_aire["issue"] if controle_aire else "non_lisible"
++        if issue == "unite_brute_constatee":
++            raise NonConvertible("NC_SABOTEUR_EN_UNITE_BRUTE")
++        if issue != "conforme":
++            raise NonConvertible("NC_SABOTEUR_NON_LISIBLE")
+         choix.add("CH5_SABOTEUR_DECALAGE_DE_LA_LOI_HONNETE")
+         base = loi_pour_le_moteur(loi_h, n)
+         saboteurs = {nom: {"type": "decalage", "parametres": {"loi": base, "delta_en_ecarts_types": d}}
+@@ -1505,7 +1908,7 @@
+     return None if lu is None else (f, lu[1], lu[0])
+ 
+ 
+-def convertir_temoin(t, ctx, familles, derive_de_f, choix):
++def convertir_temoin(t, ctx, familles, derive_de_f, choix, aires=None):
+     regle = dict(t["regle"])
+     if regle["type"] == "k_ieme_plus_grand":
+         regle["k"] = entier_simple(regle["k"])
+@@ -1521,7 +1924,7 @@
+     elif t["monde"] == "M":
+         entree["lois"] = lois_du_monde_m(ctx.doc["monde_M"], t, choix)
+     else:
+-        entree["lois"] = lois_de_famille(familles[t["monde"]], t, choix, derive_de_f)
++        entree["lois"] = lois_de_famille(familles[t["monde"]], t, choix, derive_de_f, (aires or {}).get(t["monde"]))
+     if t["id"] == "T07":
+         choix.add("CH9_T07_TAILLE_DE_PLUS_400")
+         entree["tailles_de_plus"] = [TAILLE_DE_PLUS_T07]
+@@ -1535,6 +1938,8 @@
+     familles = {f["id"]: f for f, _ in ctx.familles}
+     familles.update({f["id"]: f for f, _, _ in ctx.ecart})
+     derive_de_f = derive_de_la_famille_f(ctx)
++    controles = controles_par_l_aire(ctx)  # v5
++    aires = {f["id"]: r for f, _, _, r in controles}
+     entrees, compte = [], []
+     for t, chemin in ctx.temoins + ctx.temoins_ecart:
+         choix = set()
+@@ -1542,7 +1947,7 @@
+         if not chemin.startswith("a_l_ecart") and RE_IDENTIFIANT_SUR.fullmatch(t["id"]):
+             ligne["temoin"] = t["id"]
+         try:
+-            entrees.append(convertir_temoin(t, ctx, familles, derive_de_f, choix))
++            entrees.append(convertir_temoin(t, ctx, familles, derive_de_f, choix, aires))
+             ligne["statut"] = "converti"
+         except NonConvertible as nc:
+             ligne["statut"] = "non_converti"
+@@ -1584,7 +1989,27 @@
+                                "taux_de_depart": TAUX_DE_DEPART_DE_LA_DERIVE, "taux_vise": TAUX_VISE_PAR_LA_DERIVE,
+                                "tolerance": TOLERANCE_DU_CONTROLE_DE_DERIVE, "nature_de_la_tolerance": "absolue",
+                                "fait_par_ce_programme": False}}
+-    return {"version_entree": VERSION_ENTREE_RECALCUL, "temoins": entrees}, compte, derive
++    return {"version_entree": VERSION_ENTREE_RECALCUL, "temoins": entrees}, compte, derive, compte_rendu_des_aires(controles)
++
++
++def compte_rendu_des_aires(controles):
++    """v5 : le contrôle par l'aire au compte rendu de correspondance, famille par famille, avec les
++    aires calculées (diagnostic pour le journal de la session ; ce ne sont pas des valeurs vraies)."""
++    sortie = []
++    for f, ici, etiquette, r in controles:
++        sortie.append({
++            "famille": etiquette, "issue": r["issue"], "raison": r["raison"],
++            "mot_de_la_mere_requis": r["issue"] == "unite_brute_constatee",
++            "ecarts_au_dela_de_0_001": [{"tranche": i + 1, "aire_dite": "%.2f" % AIRES_DITES[j]} for i, j in r["ecarts"]],
++            "tranches": [{"rang": i + 1,
++                          "ecart_type": None if t["ecart_type"] is None else round(t["ecart_type"], 6),
++                          "aires_lecture_retenue": None if t["lues"] is None else [round(a, 6) for a in t["lues"]],
++                          "aires_unite_brute": [round(a, 6) for a in t["brutes"]]}
++                         for i, t in enumerate(r["tranches"])],
++        })
++    return {"lecture_retenue": "écarts types de la loi honnête de la tranche (racine de la variance de loi_honnete entière)",
++            "aires_dites": ["0.69", "0.80", "0.95"], "tolerance_conforme": "0.005", "ecart_nomme_au_dela_de": "0.001",
++            "familles": sorted(sortie, key=lambda x: x["famille"])}
+ 
+ 
+ def principal_vers_recalcul(argv):
+@@ -1610,7 +2035,7 @@
+             print("refus : la sortie est illisible ; aucune entrée de recalcul n'est écrite", file=sys.stderr)
+             return SORTIE_ILLISIBLE
+         doc, _, _ = lire_le_texte(Constat(), octets)
+-        donnees, compte, derive = vers_recalcul(doc)
++        donnees, compte, derive, aires_rendues = vers_recalcul(doc)
+         texte_entree = ecrire_brut(donnees) + "\n"
+     except Exception:  # garde v2 : exception imprévue pendant la correspondance
+         print("erreur : exception imprévue pendant la correspondance ; rien n'est écrit", file=sys.stderr)
+@@ -1626,6 +2051,7 @@
+                     "non_convertis": sum(1 for x in compte if x["statut"] == "non_converti")},
+         "choix_declares": sorted({ch for x in compte for ch in x["choix"]}),
+         "derive_de_F": derive,
++        "controle_par_l_aire": aires_rendues,
+     }
+     try:
+         with open(entree, "x", encoding="utf-8") as fh:

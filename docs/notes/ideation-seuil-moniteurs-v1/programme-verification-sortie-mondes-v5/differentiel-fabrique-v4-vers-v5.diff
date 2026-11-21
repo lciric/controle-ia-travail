@@ -1,0 +1,230 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v4-factice/fabriquer_sorties_factices_v4.py	2026-11-21 10:16:49.101986215 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v5/fabriquer_sorties_factices_v5.py	2026-11-21 10:33:21.242045190 +0000
+@@ -1,6 +1,20 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+-"""Fabrique la sortie factice saine de l'auteur des mondes plantés — v4.
++"""Fabrique la sortie factice saine de l'auteur des mondes plantés — v5.
++
++v5 (contrôle par l'aire, arbitrage a8f8acfa…) : chaque famille porte trois décalages de
++saboteur qui réalisent, sous la lecture retenue (écarts types de la loi honnête de la
++tranche), les aires 0,69, 0,80 et 0,95. Ils sont calculés ICI, par un code indépendant du
++moteur du programme de vérification :
++- formes fermées pour la loi normale, la loi de Laplace et les mélanges de normales ;
++- somme finie pour la loi arrondie ;
++- dichotomie pour inverser l'aire.
++Pour que les lois soient calculables en forme fermée, deux lois factices changent : B devient
++une Laplace(0, 1), et K (à l'écart) un mélange de normales d'échelles différentes. La grille
++de G passe à 0,001, pour que l'aire, fonction en escalier sur un réseau, approche les aires
++dites à mieux que 0,001.
++Option `--unite-brute` : la sortie factice d'essai dont la famille A, de loi normale(0, 2),
++porte ses décalages en unité brute ; le contrôle doit y rendre l'issue (b).
+ 
+ v4 : le décalage de la dérive de F, dans `valeurs_de_plus` de T09, est cohérent. Il porte le
+ taux de 1 % à 3 % sous la loi de la tranche de F à n = 299 (normale factice, mu 0.25,
+@@ -36,6 +50,104 @@
+ _SEUIL_DECALE_A_3_POUR_CENT = _LOI_299.inv_cdf(0.97)
+ DECALAGE_DE_F = "%.4f" % ((_SEUIL_A_1_POUR_CENT - _SEUIL_DECALE_A_3_POUR_CENT) / _LOI_299.stdev)
+ 
++# ---- v5 : aires du saboteur, en formes fermées, indépendamment du programme vérifié ----
++import math
++
++AIRES_VISEES = (0.69, 0.80, 0.95)
++_Z = NormalDist()
++
++
++def _inverser(fonction, cible, lo=0.0, hi=50.0):
++    for _ in range(60):
++        mi = 0.5 * (lo + hi)
++        if fonction(mi) < cible:
++            lo = mi
++        else:
++            hi = mi
++    return 0.5 * (lo + hi)
++
++
++def aire_normale(sigma):
++    return lambda d: _Z.cdf(d / (sigma * math.sqrt(2.0)))
++
++
++def aire_laplace(b):
++    # X − Y, X et Y de Laplace(0, b) indépendantes : P(X − Y < d) = 1 − ½ e^(−d/b) (1 + d/(2b)), d ≥ 0.
++    return lambda d: 1.0 - 0.5 * math.exp(-d / b) * (1.0 + d / (2.0 * b))
++
++
++def aire_melange_de_normales(poids, mus, sigmas):
++    def aire(d):
++        return sum(wi * wj * _Z.cdf((d + mi - mj) / math.sqrt(si * si + sj * sj))
++                   for wi, mi, si in zip(poids, mus, sigmas) for wj, mj, sj in zip(poids, mus, sigmas))
++    return aire
++
++
++def ecart_type_melange(poids, mus, sigmas):
++    m = sum(w * mu for w, mu in zip(poids, mus))
++    return math.sqrt(sum(w * (s * s + mu * mu) for w, mu, s in zip(poids, mus, sigmas)) - m * m)
++
++
++def reseau_arrondi_normal(pas, mu=0.0, sigma=1.0):
++    """Masses de la normale arrondie au multiple le plus proche de `pas`."""
++    kmin, kmax = int(math.floor((mu - 9 * sigma) / pas)), int(math.ceil((mu + 9 * sigma) / pas))
++    loi = NormalDist(mu, sigma)
++    masses = [loi.cdf((k + 0.5) * pas) - loi.cdf((k - 0.5) * pas) for k in range(kmin, kmax + 1)]
++    s = sum(masses)
++    return kmin, [m / s for m in masses]
++
++
++def aire_reseau(pas, kmin, masses):
++    cumul, s = [], 0.0
++    for m in masses:
++        s += m
++        cumul.append(s)
++
++    def aire(d):
++        v0 = d / pas
++        total = 0.0
++        for i, m in enumerate(masses):
++            v = i + v0
++            j = round(v)
++            if abs(v - j) < 1e-9:
++                inf = cumul[j - 1] if 1 <= j <= len(masses) else (0.0 if j < 1 else 1.0)
++                eq = masses[j] if 0 <= j < len(masses) else 0.0
++                total += m * (inf + 0.5 * eq)
++            else:
++                f = math.floor(v)
++                total += m * (cumul[f] if 0 <= f < len(masses) else (0.0 if f < 0 else 1.0))
++        return total
++    return aire
++
++
++def decalages_ecarts_types(aire, ecart_type, reseau_pas=None):
++    """Les trois décalages, en écarts types, qui réalisent les aires visées. Sur un réseau, le
++    décalage brut est pris au milieu d'un palier (stable à l'arrondi à quatre décimales)."""
++    sortie = []
++    for cible in AIRES_VISEES:
++        brut = _inverser(aire, cible)
++        if reseau_pas is not None:
++            k = math.floor(brut / reseau_pas)
++            candidats = [(j + 0.5) * reseau_pas for j in (k - 1, k, k + 1)]
++            brut = min(candidats, key=lambda x: abs(aire(x) - cible))
++        sortie.append("%.4f" % (brut / ecart_type))
++    return sortie
++
++
++DEC_NORMALE = decalages_ecarts_types(aire_normale(1.0), 1.0)
++DEC_LAPLACE = decalages_ecarts_types(aire_laplace(1.0), math.sqrt(2.0))
++_MEL = ([0.95, 0.05], [0.0, 1.0], [1.0, 1.0])
++DEC_MELANGE = decalages_ecarts_types(aire_melange_de_normales(*_MEL), ecart_type_melange(*_MEL))
++_MEL_K = ([0.9, 0.1], [0.0, 0.0], [1.0, 3.0])
++DEC_MELANGE_K = decalages_ecarts_types(aire_melange_de_normales(*_MEL_K), ecart_type_melange(*_MEL_K))
++PAS_DE_G = "0.001"
++_KMIN_G, _MASSES_G = reseau_arrondi_normal(float(PAS_DE_G))
++_ET_G = math.sqrt(sum(m * ((_KMIN_G + i) * float(PAS_DE_G)) ** 2 for i, m in enumerate(_MASSES_G))
++                  - sum(m * (_KMIN_G + i) * float(PAS_DE_G) for i, m in enumerate(_MASSES_G)) ** 2)
++DEC_G = decalages_ecarts_types(aire_reseau(float(PAS_DE_G), _KMIN_G, _MASSES_G), _ET_G, reseau_pas=float(PAS_DE_G))
++SIGMA_UNITE_BRUTE = 2.0
++DEC_UNITE_BRUTE = ["%.4f" % _inverser(aire_normale(SIGMA_UNITE_BRUTE), c) for c in AIRES_VISEES]
++
+ 
+ class Brut:
+     """Nombre écrit tel quel dans le JSON (pour garder « 0.0500 »)."""
+@@ -151,13 +263,14 @@
+     return [{"id": "t%d" % i, "n_calibration": list(tailles), "loi_honnete": loi} for i in (1, 2, 3)]
+ 
+ 
+-def famille(fid, nom, casse, loi, jumeau, imposee=True, p_echec=None, tr=None):
++def famille(fid, nom, casse, loi, jumeau, imposee=True, p_echec=None, tr=None, decalages=None):
++    decalages = decalages or DEC_NORMALE
+     return {
+         "id": fid, "nom": nom, "imposee": imposee, "hors_table": False,
+         "suppositions_cassees": list(casse), "p_echec": p_echec,
+         "tranches": tr if tr is not None else tranches(loi),
+-        "saboteur": {"forme": {"type": "decalage", "parametres": {"loi": loi, "delta_en_ecarts_types": Brut("0.1")}},
+-                     "decalages": [Brut("0.1"), Brut("0.2"), Brut("0.3")]},
++        "saboteur": {"forme": {"type": "decalage", "parametres": {"loi": loi, "delta_en_ecarts_types": Brut(decalages[1])}},
++                     "decalages": [Brut(x) for x in decalages]},
+         "jumeau_sain": jumeau,
+         "verite": {"mode": "exacte", "expression": "expression factice d'essai"},
+         "raison": "raison factice d'essai",
+@@ -178,10 +291,10 @@
+     return [
+         famille("A", "queue legere saine", [], normale(), None),
+         famille("B", "queue lourde factice", [S_QUEUE],
+-                {"type": "student", "parametres": {"nu": Brut("3.0"), "mu": Brut("0.0"), "echelle": Brut("1.0")}},
+-                {"nu": Brut("1000.0")}),
++                {"type": "laplace", "parametres": {"mu": Brut("0.0"), "echelle": Brut("1.0")}},
++                {"echelle_normale": Brut("1.0")}, decalages=DEC_LAPLACE),
+         famille("C", "honnetes qui echouent decales", [S_ECHEC], melange("0.05"), {"decalage_des_echecs": Brut("0.0")},
+-                p_echec=Brut("0.0500")),
++                p_echec=Brut("0.0500"), decalages=DEC_MELANGE),
+         famille("D", "tranches inegales", [S_TRANCHES], normale(), {"meme_moyenne": True}, tr=d_tranches),
+         famille("E", "pas correles", [S_PAS],
+                 {"type": "somme_de_pas", "parametres": {"nombre_de_pas": 10, "loi_du_pas": normale(),
+@@ -192,14 +305,14 @@
+                     {"id": "t2", "n_calibration": [299], "loi_honnete": normale(MU_TRANCHE_299, SIGMA_TRANCHE_299)},
+                     {"id": "t3", "n_calibration": [200, 300, 400], "loi_honnete": normale()}]),
+         famille("G", "valeurs repetees", [S_CONTINUS],
+-                {"type": "arrondi", "parametres": {"loi": normale(), "pas_de_grille": Brut("0.5")}},
+-                {"pas_de_grille": Brut("0.0")}),
++                {"type": "arrondi", "parametres": {"loi": normale(), "pas_de_grille": Brut(PAS_DE_G)}},
++                {"pas_de_grille": Brut("0.0")}, decalages=DEC_G),
+         famille("H", "grappes de taches", [S_ECH],
+                 {"type": "effet_de_famille_plus_bruit", "parametres": {"correlation_intra": Brut("0.2"),
+                                                                        "tailles_de_famille": [100, 100, 100]}},
+                 {"correlation_intra": Brut("0.0")}),
+         famille("I", "echec rare extreme", [S_ECHEC], melange("0.05"), {"decalage_des_echecs": Brut("0.0")},
+-                p_echec=Brut("0.0500")),
++                p_echec=Brut("0.0500"), decalages=DEC_MELANGE),
+     ]
+ 
+ 
+@@ -207,9 +320,10 @@
+ 
+ 
+ def a_l_ecart():
+-    f = famille("K", NOM_A_L_ECART, [S_QUEUE],
+-                {"type": "lognormale", "parametres": {"mu": Brut("0.0"), "sigma": Brut("1.0")}},
+-                {"sigma": Brut("0.1")}, imposee=False)
++    loi_k = {"type": "melange", "parametres": {"poids": [Brut("0.9"), Brut("0.1")],
++                                               "composantes": [normale("0.0", "1.0"), normale("0.0", "3.0")]}}
++    f = famille("K", NOM_A_L_ECART, [S_QUEUE], loi_k, {"poids_de_la_queue": Brut("0.0")}, imposee=False,
++                decalages=DEC_MELANGE_K)
+     f["temoins"] = paire_libre("K")
+     return [f]
+ 
+@@ -265,16 +379,34 @@
+     }
+ 
+ 
++def sortie_unite_brute():
++    """Sortie factice d'ESSAI : la famille A, de loi normale(0, 2) dans ses trois tranches, porte
++    des décalages en unité brute (le nombre ajouté tel quel au score). Le contrôle par l'aire
++    doit y rendre « unité brute constatée »."""
++    d = sortie_saine()
++    a = next(f for f in d["familles"] if f["id"] == "A")
++    loi = normale("0.0", "%.1f" % SIGMA_UNITE_BRUTE)
++    for tr in a["tranches"]:
++        tr["loi_honnete"] = loi
++    a["saboteur"] = {"forme": {"type": "decalage", "parametres": {"loi": loi, "delta_en_ecarts_types": Brut(DEC_UNITE_BRUTE[1])}},
++                     "decalages": [Brut(x) for x in DEC_UNITE_BRUTE]}
++    d["remarques"] = ["Sortie factice d'essai, en unité brute pour la famille A : aucune valeur, aucune sorte ni aucune issue n'est vraie."]
++    return d
++
++
+ def principal(argv):
++    unite_brute = bool(argv) and argv[0] == "--unite-brute"
++    if unite_brute:
++        argv = argv[1:]
+     if len(argv) != 1:
+-        print("usage : CHEMIN_DE_SORTIE", file=sys.stderr)
++        print("usage : [--unite-brute] CHEMIN_DE_SORTIE", file=sys.stderr)
+         return 3
+     chemin = Path(argv[0])
+     if chemin.exists():
+         print("erreur : le fichier existe déjà : on n'écrase jamais", file=sys.stderr)
+         return 3
+     with open(chemin, "x", encoding="utf-8") as fh:
+-        fh.write(serialiser(sortie_saine()) + "\n")
++        fh.write(serialiser(sortie_unite_brute() if unite_brute else sortie_saine()) + "\n")
+     return 0
+ 
+ 

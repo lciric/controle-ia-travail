@@ -1,0 +1,213 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v4/test_verifier_sortie_auteur_mondes_v4.py	2026-11-21 10:06:47.453950451 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v5/test_verifier_sortie_auteur_mondes_v5.py	2026-11-21 10:35:52.006054152 +0000
+@@ -1,5 +1,13 @@
+ # -*- coding: utf-8 -*-
+-"""Essais du programme de vérification de la sortie de l'auteur des mondes — v4.
++"""Essais du programme de vérification de la sortie de l'auteur des mondes — v5.
++
++v5 : ceux de la v4 (rejoués sur la sortie factice v5), et ceux du contrôle par l'aire :
++- les trois issues (conforme, unité brute constatée, non lisible), chacune avec ses essais
++  et sa mutation ;
++- l'écart de plus de 0,001 compté et nommé ;
++- le saboteur non converti hors de l'issue conforme ;
++- l'exactitude du moteur d'aire contre des formes fermées (normale, Laplace, mélange de
++  normales, Cauchy).
+ 
+ v4 : ceux de la v3, tous rejoués ; le compte rendu de la dérive de F porte tout ce que le
+ contrôle demande, dit qui le fera (R1), et signale la première tranche à 299 quand
+@@ -37,13 +45,14 @@
+ 
+ import pytest
+ 
+-import fabriquer_sorties_factices_v3 as fab
+-from fabriquer_sorties_factices_v3 import Brut
++import fabriquer_sorties_factices_v5 as fab
++from fabriquer_sorties_factices_v5 import Brut
+ 
+ ICI = Path(__file__).resolve().parent
+-PROGRAMME = ICI / "verifier_sortie_auteur_mondes_v4.py"
++PROGRAMME = ICI / "verifier_sortie_auteur_mondes_v5.py"
+ MOTIFS = ICI / "motifs-noms-refuses-essai-v1.txt"
+-SORTIE_SAINE = ICI / "sortie-factice-saine-v3.json"
++SORTIE_SAINE = ICI / "sortie-factice-saine-v5.json"
++SORTIE_UNITE_BRUTE = ICI / "sortie-factice-essai-unite-brute-v5.json"
+ LANCEUR = Path("/home/user/controle-ia-travail-organisme/scripts/lancer_course_auto_conception_v9.py")
+ EMPREINTE_LANCEUR = "1b47c1cf097e4cba290223223655d5ac63707dfeaec032be929930d30fde9b12"
+ VERITE = Path("/tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/"
+@@ -368,6 +377,23 @@
+     return r
+ 
+ 
++def decalages_de(fid, valeurs):
++    def r(d):
++        fam(d, fid)["saboteur"]["decalages"] = [Brut(v) for v in valeurs]
++    return r
++
++
++def loi_de_b(loi):
++    def r(d):
++        for tr in fam(d, "B")["tranches"]:
++            tr["loi_honnete"] = loi
++    return r
++
++
++STUDENT_NU_2 = {"type": "student", "parametres": {"nu": Brut("2.0"), "mu": Brut("0.0"), "echelle": Brut("1.0")}}
++BERNOULLI = {"type": "bernoulli", "parametres": {"p": Brut("0.5")}}
++
++
+ def a_la_taille(total):
+     """Sortie saine portée à exactement `total` caractères par une remarque de « x »."""
+     def fabrique():
+@@ -570,6 +596,13 @@
+     Artefact("imposee_fausse", "O_IMPOSEE_INCOHERENTE", f_(lambda d: fam(d, "A").__setitem__("imposee", False))),
+     Artefact("jumeau_sur_saine", "O_JUMEAU_SAIN_SUR_FAMILLE_SAINE", f_(lambda d: fam(d, "A").__setitem__("jumeau_sain", {"mu": Brut("0.0")}))),
+     Artefact("mention_dans_non_calcule", "O_MENTION_POSSIBLE_DANS_NON_CALCULE", f_(lambda d: d["non_calcule"].append("famille E : vérité approchée seulement"))),
++    # ---- v5 : contrôle par l'aire ----
++    Artefact("aire_conforme_factice_saine", "Z_LISIBLE", sain),
++    Artefact("aire_ecart_nomme", "O_SABOTEUR_ECART_D_AIRE_AU_DELA_DE_0_001", f_(decalages_de("A", ["0.7012", "1.2000", "2.3262"]))),
++    Artefact("aire_unite_brute", "O_SABOTEUR_UNITE_BRUTE_CONSTATEE", lambda: fab.sortie_unite_brute()),
++    Artefact("aire_aucune_unite", "O_SABOTEUR_NON_LISIBLE", f_(decalages_de("A", ["0.1", "0.2", "0.3"]))),
++    Artefact("aire_ecart_type_indefini", "O_SABOTEUR_NON_LISIBLE", f_(loi_de_b(STUDENT_NU_2))),
++    Artefact("aire_loi_hors_du_controle", "O_SABOTEUR_NON_LISIBLE", f_(loi_de_b(BERNOULLI))),
+     Artefact("budget_en_pour_cent", "O_BUDGET_HORS_FORME_FRACTION", f_(budget(5))),
+     Artefact("budget_chaine_avec_espace", "O_BUDGET_HORS_FORME_FRACTION", f_(budget("5 %"))),
+     Artefact("budget_chaine_collee", "O_BUDGET_HORS_FORME_FRACTION", f_(budget("5%"))),
+@@ -608,6 +641,80 @@
+     assert rap["lignes_de_table_des_familles_a_l_ecart"] == [i for i, r in enumerate(d["table"]) if r["monde"] == "K"]
+     assert rap["sortie_auteur"]["caracteres"] <= BORNE
+     assert rap["sortie_auteur"]["borne_caracteres"] == BORNE
++    assert [(x["famille"], x["issue"], x["ecarts_au_dela_de_0_001"]) for x in rap["controle_par_l_aire"]] == \
++        [(f, "conforme", 0) for f in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "a_l_ecart[0]"]]
++
++
++def test_fichier_unite_brute_egal_au_fabricant():
++    assert SORTIE_UNITE_BRUTE.read_text(encoding="utf-8") == texte(fab.sortie_unite_brute())
++
++
++def test_aire_issue_b_sur_la_factice_d_essai(tmp_path):
++    retour, rap = jouer(SORTIE_UNITE_BRUTE.read_bytes(), tmp_path)
++    assert retour == 0
++    issues = {x["famille"]: (x["issue"], x["raison"]) for x in rap["controle_par_l_aire"]}
++    assert issues["A"] == ("unite_brute_constatee", None)
++    assert all(v == ("conforme", None) for k, v in issues.items() if k != "A")
++
++
++@pytest.mark.parametrize("nom,famille,raison", [
++    ("aire_aucune_unite", "A", "aucune_unite_ne_realise_les_aires"),
++    ("aire_ecart_type_indefini", "B", "ecart_type_indefini"),
++    ("aire_loi_hors_du_controle", "B", "loi_hors_du_controle"),
++])
++def test_aire_issue_c_et_sa_raison(nom, famille, raison, tmp_path):
++    retour, rap = jouer(PAR_NOM[nom].fabrique(), tmp_path)
++    assert retour == 0 and rap["verdict_d_ensemble"] == "lisible"
++    issues = {x["famille"]: (x["issue"], x["raison"]) for x in rap["controle_par_l_aire"]}
++    assert issues[famille] == ("non_lisible", raison)
++
++
++def test_aire_ecart_nomme_par_tranche_et_par_aire(tmp_path):
++    retour, rap = jouer(PAR_NOM["aire_ecart_nomme"].fabrique(), tmp_path)
++    obs = [o for o in rap["observations"] if o["code"] == "O_SABOTEUR_ECART_D_AIRE_AU_DELA_DE_0_001"]
++    assert sorted((o["chemin"], o["tranche"]) for o in obs) == \
++        [("familles[0].saboteur.decalages[1]", 1), ("familles[0].saboteur.decalages[1]", 2), ("familles[0].saboteur.decalages[1]", 3)]
++    assert {x["famille"]: x["issue"] for x in rap["controle_par_l_aire"]}["A"] == "conforme"
++
++
++def charger_le_programme():
++    import importlib.util
++    spec = importlib.util.spec_from_file_location("programme_v5", PROGRAMME)
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++@pytest.mark.parametrize("d", [0.0, 0.3, 0.9, 1.7, 3.2])
++def test_moteur_d_aire_contre_formes_fermees(d):
++    """Le moteur numérique (quadrature) contre des formes fermées, à 1e-6."""
++    import math
++    from statistics import NormalDist
++    p = charger_le_programme()
++    z = NormalDist()
++    # Laplace(0, b) : 1 − ½ e^(−d/b)(1 + d/(2b))
++    b = 1.3
++    assert abs(p.aire_realisee(p.LaplaceA(0.0, b), d) - (1 - 0.5 * math.exp(-d / b) * (1 + d / (2 * b)))) < 1e-6
++    # mélange de normales : Σ w_i w_j Φ((d + μ_i − μ_j)/√(σ_i² + σ_j²))
++    w, m, s = [0.7, 0.3], [0.0, 1.5], [1.0, 2.0]
++    mel = p.MelangeA(w, [p.NormaleA(mi, si) for mi, si in zip(m, s)])
++    attendu = sum(wi * wj * z.cdf((d + mi - mj) / math.sqrt(si * si + sj * sj))
++                  for wi, mi, si in zip(w, m, s) for wj, mj, sj in zip(w, m, s))
++    assert abs(p.aire_realisee(mel, d) - attendu) < 1e-6
++    # Cauchy (Student à un degré), échelle γ : X − Y de Cauchy d'échelle 2γ
++    g = 0.8
++    assert abs(p.aire_realisee(p.StudentA(1.0, 0.0, g), d) - (0.5 + math.atan(d / (2 * g)) / math.pi)) < 1e-6
++    # normale : forme fermée du programme contre NormalDist
++    assert abs(p.aire_realisee(p.NormaleA(0.0, 2.0), d) - z.cdf(d / (2.0 * math.sqrt(2.0)))) < 1e-12
++
++
++def test_moteur_d_aire_reseau_contre_la_fabrique():
++    p = charger_le_programme()
++    loi = p.ReseauA(p.NormaleA(0.0, 1.0), 0.25)
++    kmin, masses = fab.reseau_arrondi_normal(0.25)
++    aire_fab = fab.aire_reseau(0.25, kmin, masses)
++    for d in (0.1, 0.25, 0.6, 1.0, 1.37):
++        assert abs(p.aire_realisee(loi, d) - aire_fab(d)) < 1e-9
+ 
+ 
+ def test_budget_en_fraction_sans_observation(tmp_path):
+@@ -924,6 +1031,18 @@
+     "borne_baissee_a_51999": ([("TAILLE_MAX_CARACTERES = 52000", "TAILLE_MAX_CARACTERES = 51999")], ["taille_a_la_borne"]),
+     "plafond_releve_a_41": ([("TEMOINS_MAX = 40", "TEMOINS_MAX = 41")], ["temoins_au_dela_du_plafond"]),
+     "plafond_baisse_a_39": ([("TEMOINS_MAX = 40", "TEMOINS_MAX = 39")], ["temoins_au_plafond"]),
++    "aire_a_lecture_retenue_en_unite_brute": (
++        [("            lues = [aire_realisee(loi, d * ecart_type) for d in decalages] if ecart_type is not None else None",
++          "            lues = [aire_realisee(loi, d) for d in decalages] if ecart_type is not None else None")],
++        ["aire_conforme_factice_saine"]),
++    "aire_b_sans_repli_sur_l_unite_brute": (
++        [("    if all(dans(t[\"brutes\"], TOLERANCE_AIRE_CONFORME) for t in tranches):",
++          "    if False:")],
++        ["aire_unite_brute"]),
++    "aire_tolerance_conforme_resserree": ([("TOLERANCE_AIRE_CONFORME = 0.005", "TOLERANCE_AIRE_CONFORME = 0.0015")],
++                                          ["aire_ecart_nomme"]),
++    "aire_seuil_d_ecart_nomme_releve": ([("SEUIL_ECART_D_AIRE_NOMME = 0.001", "SEUIL_ECART_D_AIRE_NOMME = 0.002")],
++                                        ["aire_ecart_nomme"]),
+     "D1_bloc_a_l_ecart_non_compte": ([('                nombre_de_temoins += len(o["temoins"])', "                pass")],
+                                      ["plafond_par_le_bloc_a_l_ecart"]),
+     "D2_sans_exclusion_des_noms": ([("    restantes = [k for k in cles if not any(m in normaliser(k) for m in MOTS_EXCLUS_DU_DECALAGE)]",
+@@ -1014,6 +1133,8 @@
+     ("composantes_ambigues", "NC_COMPOSANTES_AMBIGUES", g_(lambda d: fam(d, "C").__setitem__("p_echec", Brut("0.0600"))), "T14"),
+     ("pas_de_composante", "NC_PAS_DE_COMPOSANTE_D_ECHEC", g_(lambda d: tem(d, "LA2").__setitem__("population_de_calibration", "honnetes_qui_echouent")), "LA2"),
+     ("tailles_de_famille", "NC_TAILLES_DE_FAMILLE", g_(tailles_entieres), "LH2"),
++    ("saboteur_en_unite_brute", "NC_SABOTEUR_EN_UNITE_BRUTE", lambda: fab.sortie_unite_brute(), "T05"),
++    ("saboteur_non_lisible", "NC_SABOTEUR_NON_LISIBLE", g_(decalages_de("A", ["0.1", "0.2", "0.3"])), "T07"),
+ ]
+ 
+ 
+@@ -1055,7 +1176,7 @@
+     assert non == {"LM1": "NC_MONDE_M_SANS_GAMMA", "LM2": "NC_MONDE_M_SANS_GAMMA"}
+     assert rendu["comptes"] == {"convertis": 37, "non_convertis": 2}
+     assert rendu["derive_de_F"] == {
+-        "statut": "lue", "temoin": "T09", "n_du_temoin": 299, "rang_de_la_cle": 2, "valeur_transmise": "0.5",
++        "statut": "lue", "temoin": "T09", "n_du_temoin": 299, "rang_de_la_cle": 2, "valeur_transmise": "0.4456",
+         "unite_du_decalage": "ecarts types de la loi de la tranche associée à T09",
+         "tranche_associee_a_T09": {"rang": 2, "n_calibration_contient_299": True, "rangs_des_tranches_a_299": [2],
+                                    "regle": "la première tranche dont n_calibration contient 299 ; "
+@@ -1069,7 +1190,19 @@
+                      "taux_de_depart": "0.01", "taux_vise": "0.03", "tolerance": "0.001",
+                      "nature_de_la_tolerance": "absolue", "fait_par_ce_programme": False}}
+     t09 = next(t for t in json.loads(entree.read_text(encoding="utf-8"))["temoins"] if t["id"] == "T09")
+-    assert t09["lois"]["lecture"]["type"] == "decalage" and t09["lois"]["lecture"]["parametres"]["delta_en_ecarts_types"] == 0.5
++    assert t09["lois"]["lecture"]["type"] == "decalage" and t09["lois"]["lecture"]["parametres"]["delta_en_ecarts_types"] == 0.4456
++
++
++def test_correspondance_controle_par_l_aire_au_compte_rendu(tmp_path):
++    retour, _, rendu = jouer_correspondance(SORTIE_UNITE_BRUTE.read_text(encoding="utf-8"), tmp_path)
++    assert retour == 0
++    cpa = rendu["controle_par_l_aire"]
++    assert cpa["tolerance_conforme"] == "0.005" and cpa["ecart_nomme_au_dela_de"] == "0.001"
++    a = next(x for x in cpa["familles"] if x["famille"] == "A")
++    assert a["issue"] == "unite_brute_constatee" and a["mot_de_la_mere_requis"] is True
++    assert all(abs(x - c_) <= 0.005 for t in a["tranches"] for x, c_ in zip(t["aires_unite_brute"], (0.69, 0.80, 0.95)))
++    non = {x["temoin"]: x["raison"] for x in rendu["temoins"] if x["statut"] == "non_converti" and "temoin" in x}
++    assert non["T05"] == non["T07"] == "NC_SABOTEUR_EN_UNITE_BRUTE"
+ 
+ 
+ def test_correspondance_tranche_de_t09_absente(tmp_path):
