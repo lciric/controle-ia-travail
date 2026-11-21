@@ -1,0 +1,7 @@
+# Passation — session fille « vérité plantée » (branche prep/verite-plantee-etapes-0-v1)
+
+- **Fait** : extrait scellé de la section 4 pour les tâches floues (1491e9d6…). Trois concepteurs Fable lancés. Tâches floues : conception rendue, contre-lue par Opus (26164e73…), scellable après corrections, 2 bloquants. Dommages par un tiers : huit pièces écrites, calculs rejoués à l'octet, contre-lues par Opus (08a694a8…), scellable après corrections, 0 bloquant. Licence du banc public des relecteurs constatée (fa33bc16…). Règles des mandats de code consignées. Demande de fusion en brouillon n° 36.
+- **Reste** : les corrections des deux pièces par le concepteur ; le banc à lois plantées entier (seul son programme de calculs existe) ; puis vérification des corrections, scellement des préenregistrements, code par Opus contre-lu, banc d'étalonnage, plants par programme engendrés et scellés.
+- **Réserves** : limite d'usage de Fable jusqu'au 24 novembre à 05:00 UTC ; les envois directs vers la mère sont refusés (« appareil de confiance »), d'où le repli par `registres/essaim/vers-mere/` ; le bloquant 1 des tâches floues touche le monde retiré et demande la mère ; deux agents ont vu une sortie d'outil rangée sous /root/.claude/ (leur propre sortie, fichier permis), déclaré.
+- **Prochaine action** : appliquer le mot de Lazar ou de la mère sur « attendre Fable ou confier à Opus » (`registres/essaim/vers-mere/verite-plantee-limite-fable-2026-11-21-v1.md`), puis lancer les corrections.
+- **Instances actives** : aucune. Aucune dépense.
