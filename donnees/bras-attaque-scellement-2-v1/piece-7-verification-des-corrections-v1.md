@@ -1,7 +1,7 @@
 # Pièce 7 — Vérification des corrections du scellement 2 du bras d'attaque (famille aveugle n° 1) — v1
 
 - **Au coffre.** Classe A. Par la contre-lectrice de la pièce 7 v1 (`piece-7-contre-lecture-v1.md`,
-  `e0fbe36598b4f8c7…`). Écrite le 21 novembre 2026 vers 16:25 UTC (`date -u`). Je ne concevrai aucun moniteur.
+  `e0fbe36598b4f8c7…`). Écrite le 21 novembre 2026 vers 16:30 UTC. Je ne concevrai aucun moniteur.
 - Branche vérifiée : `claude/scellement-2-familles-aveugles-v1`, commit `f4c479c5`. Lectures ajoutées depuis ma pièce
   7 v1 : les six fichiers de correction ci-dessous, en entier, et le message de l'auteur (chemins, empreintes, et un
   mot par point, sans contenu). Rien d'autre.
