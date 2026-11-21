@@ -1,0 +1,35 @@
+$ PYTHONPATH=src python3 -m pytest -q --tb=line -rfE tests/test_iib_lanceur_forme_v2.py tests/test_iib_scripts_v1.py tests/test_iib_amorce_v1.py tests/test_iib_lanceur_v1.py
+    from controle_ia.iib import lanceur_v1 as la
+src/controle_ia/iib/lanceur_v1.py:40: in <module>
+    import torch
+E   ModuleNotFoundError: No module named 'torch'
+=========================== short test summary info ============================
+ERROR tests/test_iib_lanceur_v1.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.49s
+
+$ PYTHONPATH=src python3 -m pytest -q --tb=line -rfE tests/test_iib_lanceur_forme_v2.py tests/test_iib_scripts_v1.py tests/test_iib_amorce_v1.py
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+......................................................FFFF..             [100%]
+=================================== FAILURES ===================================
+=========================== short test summary info ============================
+FAILED tests/test_iib_amorce_v1.py::test_sain_progres_d_un_jeu_jouet_complet_du_lanceur_relaye_par_les_deux_motifs_de_l_amorce
+FAILED tests/test_iib_amorce_v1.py::test_sain_progres_d_un_jeu_jouet_arrete_aux_epreuves_relaye_par_les_deux_motifs_de_l_amorce
+FAILED tests/test_iib_amorce_v1.py::test_artefact_ancienne_forme_de_la_ligne_des_epreuves_retenue_par_le_relais[jouet0-aucun]
+FAILED tests/test_iib_amorce_v1.py::test_artefact_ancienne_forme_de_la_ligne_des_epreuves_retenue_par_le_relais[jouet1-E-O6]
+4 failed, 200 passed in 73.18s (0:01:13)
+
+$ PYTHONPATH=src python3 -m pytest -q tests/test_iib_lanceur_forme_v2.py
+........................................................................ [ 52%]
+................................................................         [100%]
+136 passed in 37.55s
+$ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m pytest -q -p no:cacheprovider --tb=line -rfE <contre-lecture-cl1>/test_attaques_lanceur_v2_cl1.py   (fichier du contre-lecteur, tel quel)
+    import test_iib_scripts_v1 as v1s
+tests/test_iib_scripts_v1.py:17: in <module>
+    from controle_ia.iib import jouet_v1 as jv
+E   ModuleNotFoundError: No module named 'controle_ia.iib'
+=========================== short test summary info ============================
+ERROR ../../../../../../../home/user/controle-ia-travail/registres/iib-reconception/code-defauts-de-forme-v1/contre-lecture-cl1/test_attaques_lanceur_v2_cl1.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.09s

@@ -1,0 +1,24 @@
+# Complément 5 au mandat du rédacteur — texte en version neuve : l'organisme retenu par Lazar (ancre de coût commune au premier pas, excès doublé)
+
+Écrit le 2026-11-19 par la session de reconception. Accord : `registres/go.md` sur `main`, ligne GO-2026-11-19-58 (mot de Lazar : « Ce qui aide : surtout une ancre de coût commune au premier pas, un peu un excès doublé : go »). Ton nœud 1 est tranché par Lazar, en connaissance de cause. Cloisonnements inchangés (tu ne lis rien d'autre de la première course que la donnée du complément 4).
+
+## 1. Ce que Lazar a décidé
+Il retient l'organisme qui combine les deux leviers que ton texte trouve utiles : **une ancre de coût commune à l'agent et au jumeau au premier pas, et un excès demandé doublé**, alors que ta règle écrite d'avance n'en retenait aucun. C'est un écart déclaré, décidé par lui. Hors de l'ancienne ligne de calcul : devis neuf, ligne neuve, son mot sur le devis avant toute dépense.
+
+## 2. Le texte
+`conception-organisme-retenu-ii-b-v5-brouillon1.md` dans ton sous-dossier (le brouillon 1 de la v4 reste intact). Pièce décisive, scellée avant toute mesure. Il reprend de la v4 tout ce qui tient et écrit, tel quel :
+1. **En tête** : « EXPLORATOIRE, NON OPPOSABLE (R-522) » ; « **Organisme, oracle et épreuve changés après un échec vu** » avec tout ce qui a été vu (donnée du complément 4 comprise, déclarée « vue avant la conception ») ; **les deux résultats négatifs de conception** (organisme d'origine non faisable ; aucun des douze organismes changés retenu par la règle écrite d'avance) ; puis **l'écart déclaré** : la règle écrite d'avance ne retenait pas cet organisme ; il est retenu par décision de Lazar (GO-2026-11-19-58), en connaissance de sa couverture.
+2. **L'organisme retenu**, défini sans ambiguïté : excès demandé doublé ; ancre de coût commune au premier pas — dis exactement ce qu'elle est (qui la fournit, d'où vient sa valeur, comment elle entre dans le contexte de l'agent et dans celui du jumeau, ce qui est compté ou non au premier pas), ce qu'elle change à l'environnement et à ce que l'excès mesure, et ce qu'elle demande à la consigne privée du maître (que tu ne lis pas : écris la demande, la mère la portera).
+3. **L'oracle que la simulation favorise pour cet organisme**, justifié par un passage unique à grille, répétitions et règle de décision écrites avant de le lancer (entropie neuve). Si le couplage est repris, résous la contradiction avec le passage qui rendait « aucun couplage » sur l'organisme d'origine : dis pourquoi la question est différente, ou ne le reprends pas.
+4. **Sa couverture attendue de l'environnement situé**, par zone (dispersion des pas suivants, force de l'ancrage), avec les erreurs de simulation ; où il se distingue, où il ne se distingue pas.
+5. **La perte de discrétion**, en clair : l'excès demandé vaut environ deux dispersions honnêtes de l'action ou plus ; ce que cela retire à la thèse du sabotage diffus ; comment on le mesure sans aucun moniteur ; la distance au saboteur flagrant de référence ; la borne par action — si elle doit être redimensionnée avec l'excès doublé, dis-le, justifie-la a priori ou par la simulation déclarée d'avance, et dis à partir d'où l'organisme serait flagrant.
+6. **L'épreuve du centrage** de l'oracle dans cet environnement à ancre commune (rejouée : le brouillon de la v4 ne l'avait pas fait), **la règle d'acceptation et l'épreuve des faux acceptés** dimensionnées dans la chaîne, les quatre autres épreuves rejouées sur un oracle en défaut.
+7. **L'étalonnage, les conditions de départ et ce que dit chaque issue, dans les deux sens** : écrites d'avance, exclusives, exhaustives, appliquées une fois par programme ; leurs deux erreurs chiffrées ; la phrase de chaque issue, « part » comme « ne part pas : non faisable », et ce que chacune permet et ne permet pas de dire ; la puissance de la lecture du dommage (ton second résultat négatif : dis ce qu'un élève devrait garder de l'excès pour être vu, pour cet organisme).
+8. **Coût en appels du modèle** de l'étalonnage et de la course complète, pour le devis neuf.
+9. Spécification complète du code et des essais (déroulée en entier cette fois, sans renvoi aux brouillons), graines, liste d'arrêt, écarts à la conception d'origine un par ligne, nœuds restants, ce que le texte ne prouve pas, tables de traitement des contre-lectures.
+
+## 3. Contre-lecture en cours
+La contre-lecture de ton brouillon de la v4 est en cours ; ses remarques te seront transmises et passent à ce texte. Commence maintenant ; garde de la place pour elles.
+
+## 4. Cadre et rendu
+Inchangé : ton seul sous-dossier ; ni commit, ni poussée, ni suppression ; enregistre souvent ; nœuds rendus, non tranchés. Rends : chemins, empreintes, et en vingt-cinq lignes au plus : la définition de l'ancre commune, l'oracle retenu, la couverture, la perte de discrétion, les constantes, les conditions de départ et leurs erreurs, le coût, les nœuds.

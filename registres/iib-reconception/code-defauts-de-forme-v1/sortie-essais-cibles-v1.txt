@@ -1,0 +1,33 @@
+$ PYTHONPATH=src python3 -m pytest -q --tb=line -rfE tests/test_iib_scripts_v1.py tests/test_iib_amorce_v1.py tests/test_iib_lanceur_v1.py tests/test_iib_lanceur_forme_v2.py
+/usr/local/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_iib_lanceur_v1.py:16: in <module>
+    from controle_ia.iib import lanceur_v1 as la
+src/controle_ia/iib/lanceur_v1.py:40: in <module>
+    import torch
+E   ModuleNotFoundError: No module named 'torch'
+=========================== short test summary info ============================
+ERROR tests/test_iib_lanceur_v1.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.26s
+
+$ PYTHONPATH=src python3 -m pytest -q --tb=line -rfE tests/test_iib_scripts_v1.py tests/test_iib_amorce_v1.py tests/test_iib_lanceur_forme_v2.py
+E   ModuleNotFoundError: No module named 'torch'
+/tmp/claude-0/-home-user-controle-ia-travail/43943324-c96f-5191-9f95-633db6e7fd97/scratchpad/developpeur-forme/arbre/src/controle_ia/iib/lanceur_v1.py:40: ModuleNotFoundError: No module named 'torch'
+E   ModuleNotFoundError: No module named 'torch'
+/tmp/claude-0/-home-user-controle-ia-travail/43943324-c96f-5191-9f95-633db6e7fd97/scratchpad/developpeur-forme/arbre/src/controle_ia/iib/lanceur_v1.py:40: ModuleNotFoundError: No module named 'torch'
+E   ModuleNotFoundError: No module named 'torch'
+/tmp/claude-0/-home-user-controle-ia-travail/43943324-c96f-5191-9f95-633db6e7fd97/scratchpad/developpeur-forme/arbre/src/controle_ia/iib/lanceur_v1.py:40: ModuleNotFoundError: No module named 'torch'
+E   ModuleNotFoundError: No module named 'torch'
+/tmp/claude-0/-home-user-controle-ia-travail/43943324-c96f-5191-9f95-633db6e7fd97/scratchpad/developpeur-forme/arbre/src/controle_ia/iib/lanceur_v1.py:40: ModuleNotFoundError: No module named 'torch'
+=========================== short test summary info ============================
+FAILED tests/test_iib_amorce_v1.py::test_sain_progres_d_un_jeu_jouet_complet_du_lanceur_relaye_par_les_deux_motifs_de_l_amorce
+FAILED tests/test_iib_amorce_v1.py::test_sain_progres_d_un_jeu_jouet_arrete_aux_epreuves_relaye_par_les_deux_motifs_de_l_amorce
+FAILED tests/test_iib_amorce_v1.py::test_artefact_ancienne_forme_de_la_ligne_des_epreuves_retenue_par_le_relais[jouet0-aucun]
+FAILED tests/test_iib_amorce_v1.py::test_artefact_ancienne_forme_de_la_ligne_des_epreuves_retenue_par_le_relais[jouet1-E-O6]
+4 failed, 121 passed in 44.72s
+
+$ PYTHONPATH=src python3 -m pytest -q tests/test_iib_lanceur_forme_v2.py
+.........................................................                [100%]
+57 passed in 20.88s

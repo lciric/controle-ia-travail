@@ -1,0 +1,28 @@
+# Mandat du contre-lecteur de la conception révisée de l'oracle du saboteur à budget — v1
+
+Écrit le 2026-11-19 par la session de reconception (côté saboteur). Sans aucune valeur mesurée. Contre-lecture complète (classe A, R2) par un agent neuf d'un autre modèle que le rédacteur ; le même agent vérifiera ensuite les corrections.
+
+## 1. Qui tu es, ce que tu ne lis pas
+Agent neuf, côté saboteur ; tu n'as rien écrit de ce que tu lis. Français, aucun sigle seul. Tu écris seulement dans `/tmp/claude-0/-home-user-controle-ia-travail/43943324-c96f-5191-9f95-633db6e7fd97/scratchpad/contre-lecteur-conception/`. Pas de commit, pas de poussée, pas de routine de reprise, jamais la suite d'essais complète, aucune dépense, aucune suppression de fichier. Au premier refus d'un outil : arrêt, texte exact rendu.
+Interdits côté sondes : `prereg/lecture-sondes-barreau8-v1.md`, `src/controle_ia/barreau8_moniteurs/`, `brouillons/barreau8-lecture-sondes-v1/`, branche `lot/compte-4-v1`, ligne R-2059, `docs/verdicts/`. Aucune consigne privée recopiée.
+Interdits des valeurs mesurées de la première course (pour que tes corrections de seuils n'en dépendent pas) : `registres/` hors les fichiers nommés ci-dessous (donc ni le journal de session, ni la note `resultat-negatif-…`, ni son erratum, ni le dossier `verification-lecteurs-cout-v1/`), branches `claude/iib-executante-v1` et `essai/iib-explo-v1`, dossiers `diag/`, `donnees/`, `runs/`, `traces/` du saboteur à budget. Pas de recherche récursive large sur le dépôt.
+
+## 2. Ce que tu lis
+- La pièce : `brouillons/ii-b-saboteur-budget-v2/conception-oracle-revise-ii-b-v2-brouillon1.md` (sha256 5fb82dad92ca2eb09519c9183ec230784281e8341b05750de701323b4fb0e26f), et à côté : le journal de rédaction, les deux grilles déclarées, les scripts de simulation v1 et v2 et de vérification des lois exactes, leurs sorties brutes, le résumé des sorties.
+- Ce que le rédacteur a reçu : `registres/iib-reconception/mandat-redacteur-conception-revisee-oracle-v1.md`, son `…-complement-1.md`, et `registres/iib-reconception/resume-sans-chiffre-resultat-negatif-centrage-oracle-saboteur-budget-v2.md`.
+- La conception en vigueur : `brouillons/ii-b-saboteur-budget-v1/conception-ii-b-v1.md` ; le code par `git show origin/prep/iib-code-v4:<chemin>` (`src/controle_ia/iib/oracle_v1.py`, `tours_v1.py`, `regle_v1.py`, `temoin_jumeau_v1.py`, `configuration_v1.py`, `src/controle_ia/t06/cout.py`, `src/controle_ia/environnements/propositions.py`).
+- `CLAUDE.md` (R1 à R9, R12).
+
+## 3. Ce que tu vérifies, sans complaisance
+1. **L'en-tête « épreuve changée après un échec vu »** : ce qui a été vu est-il dit en entier (ancrage, défauts de l'épreuve, défaut de code de lecture des suites, réécriture au premier nombre) ? L'argument « ce n'est pas un seuil déplacé » tient-il ? Cherche tout endroit où un seuil pourrait dépendre, même de loin, de la première course (y compris par le sens de l'échec dit dans le résumé).
+2. **Les lois nulles** des trois composantes : vraiment exactes, ou seulement approchées (ex aequo, coûts ronds, suites illisibles, stratification, dépendance entre actions d'un épisode, dépendance entre composantes, échangeabilité au contexte d'origine quand l'action de l'agent a été tirée avec d'autres réglages de génération que les suites — température, limite de jetons, arrêt) ? Rejoue le script de vérification des lois exactes et, par un script à toi, à entropie neuve consignée, au moins un point de la grille pour l'arrêt à tort et un pour la puissance.
+3. **La simulation** : le modèle synthétique est-il fidèle à la chaîne du code (lis `oracle_v1.py`) ? Les grilles ont-elles été déclarées avant les passages ? Les choix faits « après avoir vu la simulation » (journal) sont-ils des réglages déguisés ? Les chiffres du texte sont-ils ceux des sorties (sondage d'au moins quinze chiffres, chacun avec son chemin et sa ligne) ?
+4. **La puissance** : l'épreuve est-elle une épreuve ? Où ne voit-elle rien ? Ce qui est dit de sa faiblesse est-il complet ?
+5. **Les cinq autres épreuves** : reprises à l'identique ? Le nœud 4 (plus faciles par endroits pour un oracle en défaut) est-il bien décrit et borné ?
+6. **L'oracle révisé** : la fenêtre commune rend-elle vraiment les deux lectures égales forme par forme (lis `t06/cout.py` et `propositions.py`) ? Le tirage de réécriture « lisible ou non, hors des huit suites, champ entier » est-il spécifié sans ambiguïté (graines, arrêt, jetons, cas illisible, retokenisation) ? Y a-t-il une fuite possible du coût de l'agent vers le contexte du jumeau ? Le saboteur peut-il exploiter la révision (par exemple en écrivant sa valeur hors de la fenêtre pour sortir du compte) ?
+7. **Les nœuds 1 à 8** : de vrais nœuds, bien posés, options complètes ? En manque-t-il ? Le rédacteur a-t-il tranché quelque chose qu'il devait rendre ?
+8. **La spécification du code et des essais** : suffit-elle à un développeur neuf ? Cas sain et artefact pour chaque garde (R5) ? L'essai d'égalité des lecteurs échoue-t-il bien sur le code de la première course ?
+9. Forme : R6 (chaque chiffre renvoie à un chemin), R9 (graines), R12 (noms), langue.
+
+## 4. Ce que tu rends
+`contre-lecture-conception-oracle-revise-ii-b-v2-cl1.md` dans ton sous-dossier : verdict en tête (« scellable en l'état », « scellable après corrections », « à refaire ») ; remarques numérotées, classées bloquant, majeur, mineur, chacune avec le passage visé, ce qui ne va pas, et la correction proposée sous forme de couple « ancien texte → nouveau texte » quand c'est possible ; tes scripts et sorties. Tu ne tranches aucun nœud : tu dis s'il est bien posé. Rends le chemin, l'empreinte, le verdict et la liste des bloquants et majeurs en quinze lignes au plus.

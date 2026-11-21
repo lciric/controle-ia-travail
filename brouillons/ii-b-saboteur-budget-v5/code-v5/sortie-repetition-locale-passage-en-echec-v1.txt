@@ -1,0 +1,71 @@
+$ PYTHONPATH=src python3 scripts/repetition_locale_iib_v5.py …/repetition/liste-figee-1 --liste-figee   (commit b882dcaa4)
+RÉPÉTITION LOCALE, MODE JOUET, 2026-11-21T18:44:12Z — aucun loueur, aucune dépense ; dossier /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1
+
+$ lancer_iib_v3.sh outil …  → code 0
+   OUTIL DE LOCATION VÉRIFIÉ, RIEN CRÉÉ : outil de location employé : /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1/outil-vastai-factice/bin/vastai (version : vastai 1.8.3-factice
+
+$ lancer_iib_v3.sh controles-explo /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1/session …  → code 0
+   CONTRÔLES CONFORMES : S=aa88dc7f50b8b6582480fcef219f9ec3e5c1d77d ; amorce 36fa8adba4b27ac63c509cb919519a3f05c43104af78bfe193fb612fceffa1f1 ; GO-2099-01-01-01 conforme (plafond 60 USD, 2026-11-21 → 2026-11-24) ; plafond d'épreuve 55 + dépense antérieure 0 = 55 
+
+$ lancer_iib_v3.sh creation auto …  → code 0
+   outil de location employé : /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1/outil-vastai-factice/bin/vastai (version : vastai 1.8.3-factice ; trouvé par : variable VAST)
+   OFFRE CONFORME : id=9999 rang=2 machine=101 prix_carte=0.290000 prix_stockage=0.020000 dph_total=0.310000 telechargement=0.0300 telechargement_forfait=0.0300 cuda_max_good=13.2 carte=carte modeste (E2) ; aucune instance iib ; 1 instance(s) sur le compte, ni co
+   COMMANDE DE CRÉATION (à exécuter une seule fois par l'exécutante, jetons par leur nom seulement) :
+   GO_ID=GO-2099-01-01-01 timeout -k 10 300 /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1/outil-vastai-factice/bin/vastai create instance 9999 --raw --image python:3.11-bookworm -
+
+commande de création imprimée (non exécutée) ; variables passées à l'instance : ['BRANCHE', 'COMMIT', 'CONFIG', 'DEPENSE_EPUISEE_UTC_S', 'DEPOT_URL', 'ECHEANCE_UTC_S', 'FIN_GO_UTC_S', 'GH_TOKEN', 'HF_TOKEN', 'IIB_GO_ID', 'MODE', 'PREREG_ABSENT']
+
+$ bash amorce_instance_iib_v5.sh (AMORCE_ESSAI_LOCAL=1, MODE=jouet, liste figée)  → code 1, 419 s
+   2026-11-21T18:44:16Z début iib v5 : MODE=jouet COMMIT=aa88dc7f50b8b6582480fcef219f9ec3e5c1d77d BRANCHE=essai/iib-explo-v5 CONFIG=prereg/config-iib-v5-jouet.json GO=GO-2099-01-01-01 FIN_GO=1795564800 ECHEANCE=1795564800 DEPENSE_EPU
+   2026-11-21T18:44:17Z GO : GO-2099-01-01-01 conforme (plafond 60 USD, 2026-11-21 → 2026-11-24)
+   2026-11-21T18:44:17Z configuration citée présente et scellée : prereg/config-iib-v5-jouet.json ; tests attendus (dernière ligne relevée)
+   2026-11-21T18:44:17Z calendrier : fin_go_utc_s=1795564800 dernier_jour_creation=2026-11-23 echeance_go=2026-11-24
+   2026-11-21T18:44:17Z branche essai/iib-explo-v5 poussée avant l'installation (droit d'écriture éprouvé)
+   AMORCE 2026-11-21T18:44:17Z : MATERIEL MemTotal_ko=16473744 coeurs=4 flock=oui
+   2026-11-21T18:44:17Z suite ciblée : 21 fichiers d'essais, liste scripts/tests-cibles-iib-v5-v2.txt sha256 6bc7026ad4e8eb5fcb559641a2da1888f5273a3b166d88a18ad1e7c38827c4e4
+   ==> /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1/instance/iib/tests.txt <==
+   
+   src/controle_ia/scellement.py:81: GardeArret
+   =========================== short test summary info ============================
+   FAILED tests/test_iib_configuration_v5.py::test_gabarit_de_configuration_verse_au_depot
+   1 failed, 204 passed, 1 skipped in 417.34s (0:06:57)
+   
+   ==> /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1/instance/iib/tests.err <==
+   2026-11-21T18:51:15Z tests en échec : arrêt
+   2026-11-21T18:51:15Z ERREUR DE CHAÎNE (C-V4-1) : git add en échec (-A runs diag) : The following paths and/or pathspecs matched paths that exist outside of your sparse-checkout definition, so will not be updated in the index: runs
+   2026-11-21T18:51:15Z arrêt pendant tests : aucun résultat léger à committer
+   2026-11-21T18:51:15Z branche essai/iib-explo-v5 poussée (arrêt pendant tests)
+   2026-11-21T18:51:15Z ERREUR DE CHAÎNE (C-V4-1) : poussée faite de ce qui existe (arrêt pendant tests), mais un ajout ou un commit a échoué
+   … 0 lignes PROGRES relayées ; première : - ; dernière : -
+AMORCE IIB v1 DEMARRAGE 1 : 2026-11-21T18:44:16Z, machine ?, commit aa88dc7f50b8b6582480fcef219f9ec3e5c1d77d
+AMORCE 2026-11-21T18:44:16Z : commit aa88dc7f50b8b6582480fcef219f9ec3e5c1d77d
+AMORCE 2026-11-21T18:44:16Z : CLONAGE mode=jouet secondes=1 octets_git=5916781 octets_arbre=17580399 debit_Mo_s=23.50 motifs=20
+2026-11-21T18:44:16Z début iib v5 : MODE=jouet COMMIT=aa88dc7f50b8b6582480fcef219f9ec3e5c1d77d BRANCHE=essai/iib-explo-v5 CONFIG=prereg/config-iib-v5-jouet.json GO=GO-2099-01-01-01 FIN_GO=1795564800 ECHEANCE=1795564800 DEPENSE_EPUISEE=1795925017
+2026-11-21T18:44:17Z GO : GO-2099-01-01-01 conforme (plafond 60 USD, 2026-11-21 → 2026-11-24)
+2026-11-21T18:44:17Z configuration citée présente et scellée : prereg/config-iib-v5-jouet.json ; tests attendus (dernière ligne relevée)
+2026-11-21T18:44:17Z calendrier : fin_go_utc_s=1795564800 dernier_jour_creation=2026-11-23 echeance_go=2026-11-24
+2026-11-21T18:44:17Z branche essai/iib-explo-v5 poussée avant l'installation (droit d'écriture éprouvé)
+AMORCE 2026-11-21T18:44:17Z : MATERIEL MemTotal_ko=16473744 coeurs=4 flock=oui
+2026-11-21T18:44:17Z suite ciblée : 21 fichiers d'essais, liste scripts/tests-cibles-iib-v5-v2.txt sha256 6bc7026ad4e8eb5fcb559641a2da1888f5273a3b166d88a18ad1e7c38827c4e4
+==> /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1/instance/iib/tests.txt <==
+
+src/controle_ia/scellement.py:81: GardeArret
+=========================== short test summary info ============================
+FAILED tests/test_iib_configuration_v5.py::test_gabarit_de_configuration_verse_au_depot
+1 failed, 204 passed, 1 skipped in 417.34s (0:06:57)
+
+==> /tmp/claude-0/-home-user-controle-ia-travail/6e2b0069-d4f4-5fd1-be63-f516f6a3ee23/scratchpad/dev-code-v5/repetition/liste-figee-1/instance/iib/tests.err <==
+2026-11-21T18:51:15Z tests en échec : arrêt
+2026-11-21T18:51:15Z ERREUR DE CHAÎNE (C-V4-1) : git add en échec (-A runs diag) : The following paths and/or pathspecs matched paths that exist outside of your sparse-checkout definition, so will not be updated in the index: runs diag hint: If you intend to update such entries, try
+2026-11-21T18:51:15Z arrêt pendant tests : aucun résultat léger à committer
+2026-11-21T18:51:15Z branche essai/iib-explo-v5 poussée (arrêt pendant tests)
+2026-11-21T18:51:15Z ERREUR DE CHAÎNE (C-V4-1) : poussée faite de ce qui existe (arrêt pendant tests), mais un ajout ou un commit a échoué
+AMORCE 2026-11-21T18:51:15Z : fin, code 1
+warning: --filter is ignored in local clones; use file:// instead.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import torch; print('torch', torch.__version__, 'cuda', torch.version.cuda, 'disponible', torch.cuda.is_available())
+    ^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'torch'
+
+ÉCHEC DE LA RÉPÉTITION : l'amorce n'a pas fini normalement

@@ -1,0 +1,66 @@
+Devis de l'organisme retenu du saboteur à budget (v5) — arithmétique (calcul v5) ; secondes, heures, USD
+
+## A. Durées, prix et dépense réels de la première course
+[L01] épisode généré : lots 2 à 12, 88 épisodes en 3439 s → 39.08 s par épisode (lot le plus court 34.4 s, le plus long 45.4 s par épisode ; hypothèse du premier devis : 43,3 s)
+[L02] lot 1 : 543 s pour 8 épisodes → chargement du modèle déduit : 230 s
+[L03] action d'oracle : 960 actions en 491 s → 0.511 s par action (hypothèses du premier devis : 0,5 / 1,0 / 1,5 s ; pire 3,0 s)
+[L04] de la création au début du run : 320 s (dont suite d'essais 178 s) ; de la fin de l'oracle à l'arrêt : 48 s
+[L05] contrôle : run 4469.3 s relevé ; début du run → fin de l'oracle = 4473 s
+[L06] prix réel : carte 1.186667 + stockage 0.033333 = 1.22 USD/h ; borne de l'ordre : 1.3 + 0.08 = 1.38 USD/h
+[L07] dépense de la première course, recalculée (non lue sur une facture) : 4843 s facturées × 1.22 + stockage à l'arrêt 382 s = 1.64 USD (ligne GO-2026-11-10-08, pas la ligne neuve)
+
+## B. Durées unitaires retenues
+[L08] attendu : épisode 39.08 s ; action d'oracle 0.511 s ; fixe avant le premier épisode 550 s ; distillation 1.86 s par transcription et par époque ; prix 1.22 USD/h ; à l'arrêt 24 h à 0.033333 USD/h ; téléchargement 20 Go
+[L09] haut : épisode 45.38 s ; action d'oracle 0.767 s ; fixe avant le premier épisode 826 s ; distillation 2.41 s par transcription et par époque ; prix 1.38 USD/h ; à l'arrêt 24 h à 0.08 USD/h ; téléchargement 20 Go
+[L10] pire : épisode 78.16 s ; action d'oracle 1.534 s ; fixe avant le premier épisode 1651 s ; distillation 3.71 s par transcription et par époque ; prix 1.38 USD/h ; à l'arrêt 48 h à 0.08 USD/h ; téléchargement 40 Go
+
+## C. Étape 1 — l'étalonnage (deux oracles)
+[L11] appels : 160 épisodes générés (1600 actions générées) ; 3840 actions d'oracle, soit 3840 préremplissages et 30720 suites de 16 jetons au plus
+[L12] attendu : 8767 s = 2.44 h (fixe 0.15 ; épisodes 1.74 ; oracles 0.55) ; carte et stockage 2.97 USD ; si la course ne part pas : + arrêt et téléchargement 1.80 → 4.77 USD
+[L13] haut : 11032 s = 3.06 h (fixe 0.23 ; épisodes 2.02 ; oracles 0.82) ; carte et stockage 4.23 USD ; si la course ne part pas : + arrêt et téléchargement 2.92 → 7.15 USD
+[L14] pire : 20049 s = 5.57 h (fixe 0.46 ; épisodes 3.47 ; oracles 1.64) ; carte et stockage 7.69 USD ; si la course ne part pas : + arrêt et téléchargement 5.84 → 13.53 USD
+[L15] coupure proposée de l'étape 1 : 12 USD → 7.25 h de carte à 1.38 USD/h (40 Go déduits) ; marge sur le pire (5.57 h) : 1.68 h
+[L16] plafond proposé de l'étape 1 : 17 USD ; tenu par les gardes : 12 + consignation ≤ 0.92 + stockage à l'arrêt 48 h 3.84 = 16.76 USD ; marge 0.24
+
+## D. Étape 2 — la course (si la règle de désignation dit « part »), même location que l'étalonnage
+[L17] appels par tour : 32 épisodes générés, 320 actions d'oracle ; hors tours : 3520 actions d'oracle ; évaluation : 256 épisodes générés, 2560 actions d'oracle ; distillation : 2 × 96 transcriptions × 3 époques au plus
+[L18] appels de la course à 6 tours (étalonnage non compris) : 448 épisodes générés ; 8000 actions d'oracle (avec l'étalonnage : 608 et 11840)
+[L19] appels de la course à 12 tours (étalonnage non compris) : 640 épisodes générés ; 9920 actions d'oracle (avec l'étalonnage : 800 et 13760)
+[L20] appels de la course à 24 tours (étalonnage non compris) : 1024 épisodes générés ; 13760 actions d'oracle (avec l'étalonnage : 1184 et 17600)
+[L21] attendu : un tour 1414 s = 0.393 h, 0.479 USD ; coût fixe (évaluation, distillation, fin) 3.55 h, 4.33 USD ; actions hors tours 0.50 h, 0.61 USD
+[L22] haut : un tour 1698 s = 0.472 h, 0.651 USD ; coût fixe (évaluation, distillation, fin) 4.27 h, 5.89 USD ; actions hors tours 0.75 h, 1.04 USD
+[L23] pire : un tour 2992 s = 0.831 h, 1.147 USD ; coût fixe (évaluation, distillation, fin) 7.45 h, 10.29 USD ; actions hors tours 1.50 h, 2.07 USD
+[L24] attendu, 6 tours : course seule 6.41 h, 7.82 USD ; avec l'étalonnage 8.84 h, 10.79 USD ; plus arrêt et téléchargement 1.80 → total 12.59 USD
+[L25] attendu, 12 tours : course seule 8.76 h, 10.69 USD ; avec l'étalonnage 11.20 h, 13.66 USD ; plus arrêt et téléchargement 1.80 → total 15.46 USD
+[L26] attendu, 24 tours : course seule 13.48 h, 16.44 USD ; avec l'étalonnage 15.91 h, 19.41 USD ; plus arrêt et téléchargement 1.80 → total 21.21 USD
+[L27] haut, 6 tours : course seule 7.85 h, 10.83 USD ; avec l'étalonnage 10.91 h, 15.06 USD ; plus arrêt et téléchargement 2.92 → total 17.98 USD
+[L28] haut, 12 tours : course seule 10.68 h, 14.73 USD ; avec l'étalonnage 13.74 h, 18.96 USD ; plus arrêt et téléchargement 2.92 → total 21.88 USD
+[L29] haut, 24 tours : course seule 16.34 h, 22.54 USD ; avec l'étalonnage 19.40 h, 26.77 USD ; plus arrêt et téléchargement 2.92 → total 29.69 USD
+[L30] pire, 6 tours : course seule 13.94 h, 19.24 USD ; avec l'étalonnage 19.51 h, 26.92 USD ; plus arrêt et téléchargement 5.84 → total 32.76 USD
+[L31] pire, 12 tours : course seule 18.93 h, 26.12 USD ; avec l'étalonnage 24.50 h, 33.80 USD ; plus arrêt et téléchargement 5.84 → total 39.64 USD
+[L32] pire, 24 tours : course seule 28.90 h, 39.88 USD ; avec l'étalonnage 34.47 h, 47.57 USD ; plus arrêt et téléchargement 5.84 → total 53.41 USD
+
+## E. Points d'arrêt (liste d'arrêt, section 15), cumul depuis la création, arrêt et téléchargement compris
+[L33] attendu : fin de l'étalonnage 2.44 h, 4.77 USD ; tour de contrôle (tour 4) 4.01 h, 6.69 USD ; fin de 12 tours, moins de 48 acceptés 7.15 h, 10.52 USD
+[L34] attendu : fin de l'étalonnage 2.44 h, 4.77 USD ; tour de contrôle (tour 4) 4.01 h, 6.69 USD ; fin de 24 tours, moins de 48 acceptés 11.86 h, 16.27 USD
+[L35] pire : fin de l'étalonnage 5.57 h, 13.53 USD ; tour de contrôle (tour 4) 8.89 h, 18.11 USD ; fin de 12 tours, moins de 48 acceptés 15.54 h, 27.29 USD
+[L36] pire : fin de l'étalonnage 5.57 h, 13.53 USD ; tour de contrôle (tour 4) 8.89 h, 18.11 USD ; fin de 24 tours, moins de 48 acceptés 25.52 h, 41.05 USD
+
+## F. Plafond et coupure proposés de la ligne (étalonnage et course ensemble)
+[L37] coupure 55 USD à 1.22 USD/h (40 Go déduits) : 43.4 h de carte
+[L38] coupure 55 USD à 1.38 USD/h (40 Go déduits) : 38.4 h de carte
+[L39] plafond tenu par les gardes : 55 + consignation ≤ 0.92 + stockage à l'arrêt 48 h 3.84 = 59.76 USD ; sous la ligne de 60 : oui, marge 0.24 ; heures d'arrêt au plus : 51 h
+
+## G. Plafond de tours (10.2, nœud 7 (b')) : partie entière de (plafond − dépense passée − étalonnage − coût fixe − hors tours) / tour
+   coût fixe du fichier d'entrées = évaluation à un oracle + distillation + fin + téléchargement de 40 Go (2,00 USD)
+[L40] plafond du fichier d'entrées 50 USD, durées « attendu » : (50 − 0 − 2.97 − 6.33 − 0.61) / 0.479 → 83 tours ; R = 384 / k_R tient sous ce plafond dès k_R ≥ 5 sur 64 ; durée de carte à ce plafond 39.1 h
+[L41] plafond du fichier d'entrées 50 USD, durées « haut » : (50 − 0 − 4.23 − 7.89 − 1.04) / 0.651 → 56 tours ; R = 384 / k_R tient sous ce plafond dès k_R ≥ 7 sur 64 ; durée de carte à ce plafond 34.5 h
+[L42] plafond du fichier d'entrées 50 USD, durées « pire » : (50 − 0 − 7.69 − 12.29 − 2.07) / 1.147 → 24 tours ; R = 384 / k_R tient sous ce plafond dès k_R ≥ 16 sur 64 ; durée de carte à ce plafond 34.5 h
+[L43] plafond du fichier d'entrées 55 USD, durées « attendu » : (55 − 0 − 2.97 − 6.33 − 0.61) / 0.479 → 94 tours ; R = 384 / k_R tient sous ce plafond dès k_R ≥ 5 sur 64 ; durée de carte à ce plafond 43.4 h
+[L44] plafond du fichier d'entrées 55 USD, durées « haut » : (55 − 0 − 4.23 − 7.89 − 1.04) / 0.651 → 64 tours ; R = 384 / k_R tient sous ce plafond dès k_R ≥ 6 sur 64 ; durée de carte à ce plafond 38.3 h
+[L45] plafond du fichier d'entrées 55 USD, durées « pire » : (55 − 0 − 7.69 − 12.29 − 2.07) / 1.147 → 28 tours ; R = 384 / k_R tient sous ce plafond dès k_R ≥ 14 sur 64 ; durée de carte à ce plafond 37.8 h
+[L46] rappel : R le plus petit possible = 384 / 64 = 6 tours ; la simulation du texte scellé suppose 24 tours
+
+## H. Variante : deux locations (étalonnage, puis course sur une machine neuve)
+[L47] attendu : + un second fixe 0.15 h et un second arrêt-téléchargement = + 1.99 USD
+[L48] pire : + un second fixe 0.46 h et un second arrêt-téléchargement = + 6.47 USD

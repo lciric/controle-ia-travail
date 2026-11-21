@@ -1,0 +1,1 @@
+Versement : `sortie-simulation-couplage-centrage-v2.txt` a été copié par la session pendant que le passage tournait (sortie partielle, 351 octets) ; il ne correspond pas à son compagnon. La sortie complète, qui lui correspond (14a0c60d…), est `sortie-simulation-couplage-centrage-v2-complete.txt`. Rien n'est écrasé (R12).

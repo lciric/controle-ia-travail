@@ -1,0 +1,29 @@
+# Sortie des essais ciblés du saboteur à budget, code en version 5 — v1 (commit 6bdfc7d5c, branche locale prep/iib-code-v5-local)
+
+## 1. Fichiers en version 5, hors l'essai long
+$ PYTHONPATH=src python3 -m pytest -q --tb=line -rfE <les dix-neuf fichiers tests/test_iib_*_v5.py, sauf tests/test_iib_bout_en_bout_nul_v5.py> (commit 6bdfc7d5c)
+........................................................................ [ 36%]
+........................................................................ [ 73%]
+...................................................                      [100%]
+195 passed in 28.09s
+
+## 2. Essai long sous hypothèse nulle, 200 graines (joué au commit a1749825a plus le lanceur non encore committé ; modules lus par cet essai inchangés depuis, sauf regenere_v5 : champ empreintes_prefixes ajouté)
+$ PYTHONPATH=src python3 -m pytest -q -s tests/test_iib_bout_en_bout_nul_v5.py
+
+arrêts sur 200 graines : {'P': 4, 'N': 10} ; par composante de l'oracle à contexte réécrit : {'lisibilite_agent': 1, 'rangs_agent': 3, 'pente_de_fuite': 4, 'chaine_reecrite': 3}
+.
+1 passed in 349.61s (0:05:49)
+
+real	5m49.837s
+user	6m24.618s
+sys	0m9.749s
+fini
+
+## 3. Fichier des quatre échecs sans torch, rejoué sur mon code puis sur la base 338131fb4 : même résultat
+$ PYTHONPATH=src python3 -m pytest -q --tb=no tests/test_iib_amorce_v1.py
+4 failed, 18 passed (ModuleNotFoundError: No module named 'torch', src/controle_ia/iib/lanceur_v1.py:40) — sur 6bdfc7d5c moins les deux essais de garde, et sur 338131fb4
+
+## 4. Suite ciblée entière tests/test_iib_* : lancée au commit b9c4b1396, NON FINIE à l'heure de ce fichier ; sortie partielle telle quelle
+$ PYTHONPATH=src python3 -m pytest -q --continue-on-collection-errors --tb=line -rfE tests/test_iib_*
+................FFFF.......
+(inachevée ; pendant qu'elle tournait, l'arbre a été basculé une dizaine de secondes sur 338131fb4 pour l'essai du point 3 : sa fin, si elle vient, n'est pas opposable)
