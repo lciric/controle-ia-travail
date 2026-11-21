@@ -1,0 +1,39 @@
+Barreau 5 — garde des activations sur un volume de stockage — calcul v1
+Grille : releve-grille-prix-hetzner-2026-11-21T1056Z-v1.json ; devise EUR ; taxe 20 % ; taux employé 1,25 USD pour 1 EUR (convention, non relevé)
+
+Bloc 1 — prix relevés
+   volume : 0,0572 EUR hors taxe par Go et par mois (0,06864 toutes taxes)
+   serveur cx23 à hel1 : 0,0088 EUR hors taxe de l'heure (0,01056 toutes taxes) ; plafond mensuel 5,49 hors taxe
+   serveur ccx13 à hel1 : 0,0585 EUR hors taxe de l'heure (0,07020 toutes taxes) ; plafond mensuel 36,49 hors taxe
+
+Bloc 2 — le volume, toutes taxes
+   200 Go (≈ 152 à 166 Go d'activations) : 13,73 EUR par mois, soit 17,16 USD ; par jour 0,458 EUR
+   50 Go (repli 1, ≈ 44 Go) : 3,43 EUR par mois, soit 4,29 USD ; par jour 0,114 EUR
+
+Bloc 3 — le serveur, par séance (versement ou relecture), toutes taxes
+   cx23 : 6 h = 0,063 EUR ; 12 h = 0,127 EUR ; 24 h = 0,253 EUR
+   ccx13 : 6 h = 0,421 EUR ; 12 h = 0,842 EUR ; 24 h = 1,685 EUR
+
+Bloc 4 — scénarios
+   bas : volume gardé 9 jours (jusqu'au 1er décembre), une séance de 6 h sur cx23 : 4,18 EUR = 5,23 USD
+   attendu : volume gardé un mois entier (jusqu'au 21 décembre), une séance de 12 h sur cx23 : 13,85 EUR = 17,32 USD
+   pire cas sous les coupures : un mois entier, 3 séances de 24 h sur ccx13 : 18,78 EUR = 23,48 USD
+   plafond proposé : 24 USD
+   ce que la minuterie évite : un serveur ccx13 laissé en marche un mois entier, 57,52 EUR = 71,90 USD
+   chaque mois de garde de plus, volume seul : 13,73 EUR = 17,16 USD
+
+Bloc 5 — autres lieux, pour mémoire
+   boîte de stockage de 1 To (page publique : 3,20 EUR hors taxe par mois) : 3,84 EUR toutes taxes = 4,80 USD par mois, sans serveur ; frais d'installation et mode de commande NON vérifiés
+   repli 1 sur un volume de 50 Go : 3,43 EUR = 4,29 USD par mois
+   repli 2 : sans dépense (≈ 4,4 Go en morceaux sur la branche de lecture)
+   disque de l'instance arrêtée : jusqu'à 0,08 USD de l'heure, ≈ 58 USD par mois (devis scellé, § 5 (d))
+
+Bloc 6 — constat du marché des cartes pour l'instance de relecture (releve-offres-loueur-cartes-2026-11-21T1055Z-v1.json)
+   disque d'au moins 150 Go : 1 offre(s) conforme(s) sur 13 cartes de 80 Go : 1,1627
+   disque d'au moins 300 Go : 0 offre(s) conforme(s) sur 13 cartes de 80 Go : aucune
+   motifs de refus à 300 Go (une offre peut en porter plusieurs) : CUDA 1, cœurs 2, disque 5, prix 5, stockage 13
+   refusée pour le seul stockage : 1,0564 USD/h, stockage 1,00 USD par Go et par mois, soit 0,4110 USD/h à 300 Go ; sortie de données 0,0391 USD/Go, soit 6,48 USD pour 166 Go
+   refusée pour le seul stockage : 1,0564 USD/h, stockage 1,00 USD par Go et par mois, soit 0,4110 USD/h à 300 Go ; sortie de données 0,0391 USD/Go, soit 6,48 USD pour 166 Go
+   refusée pour le seul stockage : 1,0778 USD/h, stockage 1,00 USD par Go et par mois, soit 0,4110 USD/h à 300 Go ; sortie de données 0,0391 USD/Go, soit 6,48 USD pour 166 Go
+   refusée pour le seul stockage : 1,1627 USD/h, stockage 0,24 USD par Go et par mois, soit 0,0986 USD/h à 300 Go ; sortie de données 0,0391 USD/Go, soit 6,48 USD pour 166 Go
+   refusée pour le seul stockage : 1,1991 USD/h, stockage 1,00 USD par Go et par mois, soit 0,4110 USD/h à 300 Go ; sortie de données 0,0391 USD/Go, soit 6,48 USD pour 166 Go
