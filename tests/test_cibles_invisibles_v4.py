@@ -1,0 +1,235 @@
+"""[v4 : partie « inventaire » de test_cibles_invisibles_v3.py, l'inventaire sorti de l'essai dans
+scripts/inventaire-cibles-invisibles-v4.json (transcription mécanique, par l'arbre syntaxique, du REGISTRE, des
+LECTEURS_DE_CIBLES_ADMIS et de HORS_INVENTAIRE du v3, sans changement de contenu). Les détecteurs sont ceux du v3, mot
+pour mot. Ajouts : l'essai ne lit que la bibliothèque standard et pytest (pas torch, pas de modèle, pas de git, pas de
+variable d'environnement, pas de date), ce qu'un essai vérifie sur son propre arbre ; une garde par mutation retire
+chaque module suivi que le tri du 21 novembre nommait en retard et exige que l'inventaire le voie. Les collecteurs à
+marqueur (invites interceptées) restent dans le v3, qui importe torch ; le v1 et le v2 restent tels quels.]
+
+Cibles invisibles (N-060 v3) : inventaire des constructeurs d'invites. Toute fonction du code qui construit ou rend une
+invite est trouvée par lecture de l'arbre syntaxique et doit figurer à l'inventaire, couverte par un essai ou exemptée
+avec sa raison ; aucune fonction hors d'une liste fermée de mesures et d'extraction ne lit la clé `cibles`.
+"""
+from __future__ import annotations
+
+import ast
+import json
+from pathlib import Path
+
+import pytest
+
+RACINE = Path(__file__).resolve().parents[1]
+SRC = RACINE / "src"
+INVENTAIRE = RACINE / "scripts" / "inventaire-cibles-invisibles-v4.json"
+
+# Détecteurs : copiés du v3 sans changement.
+APPELS_D_INVITE = {"charger_invite", "charger_gabarit", "charger_gabarits", "remplir", "messages_juge_ensemble",
+                   "message_appariement", "requete_utilisateur", "invite_appel", "consigne_privee", "observation",
+                   "EnvironnementPropositions", "environnement", "conversation_de_controle", "ouverture", "_corps",
+                   "rendre_trace", "rendre_pas", "journal_de_preuves", "_contexte_b0",
+                   # points où un contexte part vers un modèle
+                   "contexte_impose", "generer_lot", "scores_moniteur"}
+CLES_CACHEES = {"cibles", "couts_rapportes"}
+DOSSIERS_SANS_LECTEUR = ("controle_ia/bases/", "controle_ia/sondes/", "controle_ia/harnais/",
+                         "controle_ia/premier_test_ia/", "controle_ia/couche2/")
+
+# Modules suivis par git que le tri des échecs du 21 novembre donne en retard sur l'inventaire du v1 et du v2.
+MODULES_DU_TRI = ("controle_ia/t06/lanceur_v5.py", "controle_ia/t06/lanceur_v6.py",
+                  "controle_ia/t07/repli_recalcul_v1.py", "controle_ia/t07/reextraction_p3_v1.py",
+                  "controle_ia/premier_test_ia/run_v2.py", "controle_ia/audit_fuite_r1_v4/bras_b_v1.py",
+                  "controle_ia/audit_fuite_r1_v4/bras_b_v2.py", "controle_ia/audit_fuite_r1_v4/bras_b_v3.py",
+                  "controle_ia/audit_fuite_r1_v4/bras_b_v4.py", "controle_ia/runs_nuit/rejeu_activations_v1.py")
+
+
+def charger_inventaire(chemin: Path = INVENTAIRE) -> dict:
+    doc = json.loads(chemin.read_text(encoding="utf-8"))
+    statuts = doc["statuts"]
+    return {"couvert": statuts["COUVERT"], "exempte": statuts["EXEMPT"],
+            "registre": {k: (v["statut"], v["raison"]) for k, v in doc["registre"].items()},
+            "lecteurs": {k: set(v) for k, v in doc["lecteurs_de_cibles_admis"].items()},
+            "hors": tuple(doc["hors_inventaire"])}
+
+
+def _fonctions(chemin: Path):
+    """(nom qualifié, nœud) de chaque fonction et méthode, imbriquées comprises."""
+    arbre = ast.parse(chemin.read_text(encoding="utf-8"))
+    pile = [(arbre, "")]
+    while pile:
+        noeud, prefixe = pile.pop()
+        for n in ast.iter_child_nodes(noeud):
+            if isinstance(n, ast.ClassDef):
+                pile.append((n, prefixe + n.name + "."))
+            elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                yield prefixe + n.name, n
+                pile.append((n, prefixe + n.name + "."))
+
+
+def _modules(src: Path, hors: tuple):
+    for f in sorted((src / "controle_ia").rglob("*.py")):
+        rel = f.relative_to(src).as_posix()
+        if not rel.startswith(hors):
+            yield rel, f
+
+
+_DEJA_LUS: dict = {}
+
+
+def _constructeurs(src: Path, hors: tuple) -> dict[str, set]:
+    """Lecture de l'arbre mémorisée par (dossier, exclusions) : l'arbre réel ne change pas pendant la session d'essais ;
+    les arbres plantés des gardes sont des dossiers temporaires neufs, donc des clés neuves."""
+    cle = (str(src), hors)
+    if cle not in _DEJA_LUS or src != SRC:
+        _DEJA_LUS[cle] = _constructeurs_lus(src, hors)
+    return _DEJA_LUS[cle]
+
+
+def _constructeurs_lus(src: Path, hors: tuple) -> dict[str, set]:
+    trouves = {}
+    for rel, f in _modules(src, hors):
+        for nom, n in _fonctions(f):
+            motifs = set()
+            for m in ast.walk(n):
+                if isinstance(m, ast.Call):
+                    appel = m.func.attr if isinstance(m.func, ast.Attribute) else getattr(m.func, "id", None)
+                    if appel in APPELS_D_INVITE:
+                        motifs.add(appel)
+                if isinstance(m, ast.Dict) and any(isinstance(k, ast.Constant) and k.value == "role" for k in m.keys):
+                    motifs.add("{role}")
+            if nom.rsplit(".", 1)[-1] in ("consigne_privee", "observation"):
+                motifs.add("définition")
+            if motifs:
+                trouves[f"{rel}::{nom}"] = motifs
+    return trouves
+
+
+def _lecteurs(src: Path, hors: tuple) -> dict[str, set]:
+    lecteurs = {}
+    for rel, f in _modules(src, hors):
+        for nom, n in _fonctions(f):
+            if any(isinstance(m, ast.Constant) and m.value in CLES_CACHEES for m in ast.walk(n)):
+                lecteurs.setdefault(rel, set()).add(nom)
+    return lecteurs
+
+
+# --- Contrôles, en fonctions pures de (inventaire, arbre) pour que la garde par mutation les rejoue -----------------
+
+def non_examines(inv: dict, src: Path = SRC) -> list:
+    trouves = _constructeurs(src, inv["hors"])
+    return [(k, sorted(trouves[k])) for k in sorted(set(trouves) - set(inv["registre"]))]
+
+
+def disparus(inv: dict, src: Path = SRC) -> list:
+    trouves = _constructeurs(src, inv["hors"])
+    return sorted(k for k in inv["registre"] if k not in trouves)
+
+
+def lecteurs_hors_mesures(inv: dict, src: Path = SRC) -> dict:
+    hors = {rel: sorted(noms - inv["lecteurs"].get(rel, set())) for rel, noms in _lecteurs(src, inv["hors"]).items()}
+    return {rel: noms for rel, noms in hors.items() if noms}
+
+
+# --- Essais ---------------------------------------------------------------------------------------------------------
+
+def test_inventaire_bien_forme():
+    inv = charger_inventaire()
+    assert inv["registre"] and inv["lecteurs"]
+    assert {inv["couvert"], inv["exempte"]} == {"couvert", "exempté"}
+    mal = [k for k, (statut, raison) in inv["registre"].items()
+           if statut not in (inv["couvert"], inv["exempte"]) or not raison.strip() or "::" not in k]
+    assert not mal, f"entrées sans statut admis, sans raison ou sans nom qualifié : {mal}"
+
+
+def test_inventaire_tout_constructeur_d_invite_est_examine():
+    neufs = non_examines(charger_inventaire())
+    assert not neufs, ("constructeur(s) d'invite non examiné(s) : vérifier qu'il(s) ne voient pas `cibles`, les "
+                       f"couvrir par un collecteur ou les exempter avec raison : {neufs}")
+
+
+def test_inventaire_registre_a_jour():
+    perdus = disparus(charger_inventaire())
+    assert not perdus, f"entrées du registre sans fonction : {perdus}"
+
+
+def test_inventaire_lecteurs_admis_a_jour():
+    """Ajout du v4 : un lecteur admis qui n'existe plus dans le code est une exemption morte."""
+    inv = charger_inventaire()
+    reels = _lecteurs(SRC, inv["hors"])
+    morts = {rel: sorted(noms - reels.get(rel, set())) for rel, noms in inv["lecteurs"].items()}
+    morts = {rel: noms for rel, noms in morts.items() if noms}
+    assert not morts, f"lecteurs admis sans lecture de la clé dans le code : {morts}"
+
+
+def test_base_h12_absente_du_code_ou_couverte():
+    """La base (i) H.12 n'a pas de constructeur d'invite dans le code ; dès qu'une fonction charge H12, elle doit être
+    couverte par un collecteur."""
+    inv = charger_inventaire()
+    charge_h12 = []
+    for rel, f in _modules(SRC, inv["hors"]):
+        for nom, n in _fonctions(f):
+            for m in ast.walk(n):
+                if (isinstance(m, ast.Call) and (getattr(m.func, "id", None) == "charger_invite"
+                                                 or getattr(m.func, "attr", None) == "charger_invite")
+                        and any(isinstance(a, ast.Constant) and str(a.value).replace(".", "").upper() == "H12"
+                                for a in m.args)):
+                    charge_h12.append(f"{rel}::{nom}")
+    non_couverts = [k for k in charge_h12 if inv["registre"].get(k, (None,))[0] != inv["couvert"]]
+    assert not non_couverts, f"base H.12 présente sans collecteur : {non_couverts}"
+
+
+def test_aucun_module_hors_mesures_ne_lit_la_cle_cibles():
+    inv = charger_inventaire()
+    hors = lecteurs_hors_mesures(inv)
+    assert not hors, f"fonction(s) hors mesures et extraction qui lisent la référence cachée : {hors}"
+    assert not any(rel.startswith(DOSSIERS_SANS_LECTEUR) for rel in _lecteurs(SRC, inv["hors"])), \
+        "un module de moniteur, de sonde ou d'agent lit la référence cachée"
+
+
+# --- Gardes (R5) ----------------------------------------------------------------------------------------------------
+
+def test_garde_de_l_inventaire_voit_un_constructeur_et_un_lecteur_plantes(tmp_path):
+    """Artefact : un module planté qui construit une invite depuis `tache["cibles"]` est vu deux fois ; sain : le même
+    inventaire sur un arbre sans ce module ne signale rien de plus que l'arbre réel."""
+    plante = tmp_path / "controle_ia" / "couche2"
+    plante.mkdir(parents=True)
+    (plante / "moniteur_plante.py").write_text(
+        "def invite_moniteur(tache, ensemble):\n"
+        "    return [{'role': 'user', 'content': str(tache['cibles']) + ensemble}]\n", encoding="utf-8")
+    inv = charger_inventaire()
+    assert [k for k, _ in non_examines(inv, tmp_path)] == ["controle_ia/couche2/moniteur_plante.py::invite_moniteur"]
+    assert lecteurs_hors_mesures(inv, tmp_path) == {"controle_ia/couche2/moniteur_plante.py": ["invite_moniteur"]}
+    (plante / "moniteur_plante.py").write_text("def sain(tache):\n    return tache['enonce']\n", encoding="utf-8")
+    assert non_examines(inv, tmp_path) == [] and lecteurs_hors_mesures(inv, tmp_path) == {}
+
+
+@pytest.mark.parametrize("module", MODULES_DU_TRI)
+def test_garde_mutation_module_du_tri_retire(module):
+    """Mutation : chaque module que le tri nommait en retard, retiré de l'inventaire, est vu comme non examiné (et,
+    s'il lit la clé `cibles` d'une configuration d'adaptateur, comme lecteur hors mesures)."""
+    inv = charger_inventaire()
+    assert (SRC / module).is_file(), f"module du tri absent de l'arbre : {module}"
+    retires = {k for k in inv["registre"] if k.startswith(module + "::")}
+    assert retires, f"module du tri absent de l'inventaire : {module}"
+    mute = dict(inv, registre={k: v for k, v in inv["registre"].items() if k not in retires},
+                lecteurs={k: v for k, v in inv["lecteurs"].items() if k != module})
+    assert non_examines(inv) == []
+    assert {k for k, _ in non_examines(mute)} == retires
+    if module in inv["lecteurs"]:
+        assert lecteurs_hors_mesures(inv) == {}
+        assert set(lecteurs_hors_mesures(mute)) == {module}
+
+
+def test_essai_independant_du_conteneur():
+    """L'essai n'importe que la bibliothèque standard et pytest, et ne lit ni l'environnement, ni l'heure, ni git, ni
+    un chemin absolu : il se joue sous tout interpréteur où pytest est installé."""
+    arbre = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    importes = set()
+    for n in ast.walk(arbre):
+        if isinstance(n, ast.Import):
+            importes |= {a.name.split(".")[0] for a in n.names}
+        elif isinstance(n, ast.ImportFrom):
+            importes.add((n.module or "").split(".")[0])
+    assert importes <= {"__future__", "ast", "json", "pathlib", "pytest"}, importes
+    attributs = {n.attr for n in ast.walk(arbre) if isinstance(n, ast.Attribute)}
+    assert not attributs & {"environ", "getenv", "now", "utcnow", "today", "check_output", "run", "Popen"}
+    textes = [n.value for n in ast.walk(arbre) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+    assert not [t for t in textes if len(t) > 1 and t[0] == "/" and t[1].isalpha()], "chemin absolu écrit dans l'essai"
