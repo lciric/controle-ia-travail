@@ -15,4 +15,4 @@ Absences acceptées par l'arbitre : aucune.
 Ligne : 28.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 14.63 USD.
 Ligne de reprise (GO-2026-11-21-69) : 30.00 USD, ouverte à 6.23 USD de dépense ; dépensé depuis : 8.40 USD.
 Réserve (v9-v8) : cellules de Google écrites sur une réponse sans aucun jeton de pensée : E3-T1-conception-C.
-Dépense totale : 14.63 USD. Mis à jour 2026-11-21T23:05:36Z.
+Dépense totale : 14.63 USD. Mis à jour 2026-11-21T23:09:30Z.
