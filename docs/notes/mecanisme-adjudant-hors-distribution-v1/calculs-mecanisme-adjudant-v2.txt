@@ -1,0 +1,83 @@
+[N] Référence honnête de taille m : le taux de dommage de l'honnête est estimé, non connu (honnête à 0,10).
+    N1. Écart type du taux estimé sur m épisodes honnêtes audités, racine(d0 (1 - d0) / m) :
+        m =    900 :  1.00 point
+        m =   1000 :  0.95 point
+        m =   3600 :  0.50 point
+        m =  10000 :  0.30 point
+    N2. Sous l'honnête, pari du bloc I fait contre une référence trop basse de delta (vrai taux 0,10, nul 0,10 - delta) :
+        probabilité d'une fausse alarme avant n audits (programmation dynamique exacte).
+        delta = 0.00 point : n =  2000 : 0.0022 ; n = 10000 : 0.0029 ; n = 40000 : 0.0036 ; pas de médiane avant 40 000 audits
+        delta = 0.25 point : n =  2000 : 0.0041 ; n = 10000 : 0.0105 ; n = 40000 : 0.0488 ; pas de médiane avant 40 000 audits
+        delta = 0.50 point : n =  2000 : 0.0082 ; n = 10000 : 0.0496 ; n = 40000 : 0.4528 ; pas de médiane avant 40 000 audits
+        delta = 1.00 point : n =  2000 : 0.0379 ; n = 10000 : 0.4715 ; n = 40000 : 0.9993 ; médiane 10484 audits
+        delta = 2.00 point : n =  2000 : 0.3847 ; n = 10000 : 0.9996 ; n = 40000 : 1.0000 ; médiane 2445 audits
+    N3. Fausse alarme sans condition, la référence étant le taux observé sur m épisodes honnêtes (k dommages sur m,
+        k binomial) : encadrement exact par monotonie (un nul plus haut ne sonne jamais plus tôt), sur une grille de k.
+        m =   1000, n =  2000 audits : fausse alarme entre 0.019 et 0.055 (niveau visé 0,01)
+        m =   1000, n = 10000 audits : fausse alarme entre 0.113 et 0.241 (niveau visé 0,01)
+        m =   1000, n = 40000 audits : fausse alarme entre 0.233 et 0.415 (niveau visé 0,01)
+        m =  10000, n =  2000 audits : fausse alarme entre 0.002 et 0.005 (niveau visé 0,01)
+        m =  10000, n = 10000 audits : fausse alarme entre 0.007 et 0.022 (niveau visé 0,01)
+        m =  10000, n = 40000 audits : fausse alarme entre 0.038 et 0.117 (niveau visé 0,01)
+    N4. Test à horizon fixe, niveau 1 %, puissance 0,95, approximation normale : plus petit excès décelable,
+        (z(0,99) + z(0,95)) x racine(d0 (1 - d0) (1/n + 1/m)), en points.
+        n =  2000 audits | m =   1000 : 4.61 | m =   3600 : 3.32 | m =  10000 : 2.92 | m = infini : 2.66
+        n = 10000 audits | m =   1000 : 3.95 | m =   3600 : 2.32 | m =  10000 : 1.68 | m = infini : 1.19
+        n = 40000 audits | m =   1000 : 3.81 | m =   3600 : 2.07 | m =  10000 : 1.33 | m = infini : 0.60
+        Plancher quand n tend vers l'infini, (z(0,99) + z(0,95)) x racine(d0 (1 - d0) / m) :
+        m =   1000 : 3.77 point
+        m =   3600 : 1.99 point
+        m =  10000 : 1.19 point
+    N5. Une procédure à m déclaré, valide sans connaître le taux honnête : le nul est la borne haute exacte du taux
+        honnête au risque 0,005 (k = m x 0,10 dommages observés sur m, issue typique), le pari est tenu au niveau 0,005 ;
+        fausse alarme totale d'au plus 0,01. Coût en verdicts d'oracle : m, plus la médiane des audits avant l'alarme.
+        Repères du bloc K (pari apparié, nul par acte) : 654 verdicts pour un saboteur à 0,20, 2 191 pour un saboteur à 0,15.
+        m =   200 : nul 0.1670 | saboteur à 0.20 : médiane  1908 audits, total  2108 verdicts | saboteur à 0.15 : jamais (le nul est au-dessus)
+        m =   500 : nul 0.1395 | saboteur à 0.20 : médiane   516 audits, total  1016 verdicts | saboteur à 0.15 : médiane 15220 audits, total 15720 verdicts
+        m =  1000 : nul 0.1269 | saboteur à 0.20 : médiane   334 audits, total  1334 verdicts | saboteur à 0.15 : médiane  2991 audits, total  3991 verdicts
+        m =  2000 : nul 0.1185 | saboteur à 0.20 : médiane   256 audits, total  2256 verdicts | saboteur à 0.15 : médiane  1601 audits, total  3601 verdicts
+        m =  5000 : nul 0.1114 | saboteur à 0.20 : médiane   211 audits, total  5211 verdicts | saboteur à 0.15 : médiane  1018 audits, total  6018 verdicts
+
+[O] Fausse reconnaissance f de l'oracle sur un épisode honnête (régime dit « de signature ») :
+    O1. Règle « un seul épisode reconnu suffit », sous l'honnête : fausse alarme avant n audits, 1 - (1 - f)^n.
+        f = 0.001 : n =   100 : 0.095 ; n =  1000 : 0.632 ; n = 10000 : 1.000 ; une fois sur deux dès 693 audits
+        f = 0.005 : n =   100 : 0.394 ; n =  1000 : 0.993 ; n = 10000 : 1.000 ; une fois sur deux dès 139 audits
+        f = 0.010 : n =   100 : 0.634 ; n =  1000 : 1.000 ; n = 10000 : 1.000 ; une fois sur deux dès 69 audits
+    O2. Ce que borne « aucune fausse reconnaissance sur m témoins honnêtes » : f <= 1 - 0,05^(1/m), au risque 0,05.
+        m =   100 : f <= 2.951 %
+        m =   300 : f <= 0.994 %
+        m =  1000 : f <= 0.299 %
+        m =  3000 : f <= 0.100 %
+        m = 30000 : f <= 0.010 %
+    O3. Nombre m de témoins sans fausse reconnaissance qu'il faut pour que « un seul suffit » tienne 1 % de fausse
+        alarme sur n audits (au risque 0,05) : le plus petit m tel que 1 - 0,05^(1/m) <= 1 - 0,99^(1/n).
+        n =   100 audits : m >= 29808 témoins, soit 298.1 fois l'horizon
+        n =  1000 audits : m >= 298073 témoins, soit 298.1 fois l'horizon
+        n = 10000 audits : m >= 2980729 témoins, soit 298.1 fois l'horizon
+    O4. Règle de compte à m déclaré : f borné par O2, horizon de n = m audits ; c = plus petit compte tel que
+        P(au moins c fausses reconnaissances sur n) <= 0,01 ; puis rang k de l'épisode endommagé auquel le saboteur
+        est pris avec probabilité 0,95 (au moins c reconnus parmi ses k épisodes endommagés, audit p, reconnaissance 1).
+        Repères du bloc G (f nul par construction) : k = 299 à 1 % d'audit, k = 14 à 20 %.
+        m = n =   300 : c = 9 | audit 0.01 : k = 1441 | audit 0.20 : k = 69
+        m = n =  1000 : c = 9 | audit 0.01 : k = 1441 | audit 0.20 : k = 69
+        m = n =  3000 : c = 9 | audit 0.01 : k = 1441 | audit 0.20 : k = 69
+
+[P] Audit orienté par le soupçon : un épisode signalé par le moniteur est audité avec probabilité a_s,
+    un épisode non signalé avec la probabilité plancher a_0 (a_s >= a_0).
+    P1. Recapture lue sur l'échantillon brut : rappel apparent r a_s / (r a_s + (1 - r) a_0), et effet sur la règle
+        du bloc D (six épisodes endommagés par le sabotage et audités, « invalide » si au plus deux signalés).
+        plancher 0.05, signalés 0.50, rappel vrai 0.2 : rappel apparent 0.714 ; P(« invalide ») = 0.060 (échantillon au hasard : 0.901) ; pondéré par l'inverse : 0.200 ; part des audités venue du plancher : 0.357
+        plancher 0.05, signalés 0.50, rappel vrai 0.8 : rappel apparent 0.976 ; P(« invalide ») = 0.000 (échantillon au hasard : 0.017) ; pondéré par l'inverse : 0.800 ; part des audités venue du plancher : 0.122
+        plancher 0.20, signalés 0.50, rappel vrai 0.2 : rappel apparent 0.385 ; P(« invalide ») = 0.576 (échantillon au hasard : 0.901) ; pondéré par l'inverse : 0.200 ; part des audités venue du plancher : 0.769
+        plancher 0.20, signalés 0.50, rappel vrai 0.8 : rappel apparent 0.909 ; P(« invalide ») = 0.001 (échantillon au hasard : 0.017) ; pondéré par l'inverse : 0.800 ; part des audités venue du plancher : 0.455
+        plancher 0.05, signalés 1.00, rappel vrai 0.2 : rappel apparent 0.833 ; P(« invalide ») = 0.009 (échantillon au hasard : 0.901) ; pondéré par l'inverse : 0.200 ; part des audités venue du plancher : 0.208
+        plancher 0.05, signalés 1.00, rappel vrai 0.8 : rappel apparent 0.988 ; P(« invalide ») = 0.000 (échantillon au hasard : 0.017) ; pondéré par l'inverse : 0.800 ; part des audités venue du plancher : 0.062
+        plancher 0.20, signalés 1.00, rappel vrai 0.2 : rappel apparent 0.556 ; P(« invalide ») = 0.246 (échantillon au hasard : 0.901) ; pondéré par l'inverse : 0.200 ; part des audités venue du plancher : 0.556
+        plancher 0.20, signalés 1.00, rappel vrai 0.8 : rappel apparent 0.952 ; P(« invalide ») = 0.000 (échantillon au hasard : 0.017) ; pondéré par l'inverse : 0.800 ; part des audités venue du plancher : 0.238
+    P2. Pari d'excès lu sur l'échantillon brut, sous l'honnête (taux vrai 0,10) : le moniteur signale un épisode honnête
+        endommagé avec probabilité g, un épisode honnête sain avec probabilité 0,01 ; plancher 0,05, signalés 0,50.
+        Taux de dommage apparent parmi les audités, et fausse alarme du pari du bloc I tenu contre 0,10.
+        g = 0.01 : taux apparent 0.100 (pondéré par l'inverse : 0.100) ; fausse alarme avant 500, 2 000 et 10 000 audits : 0.002, 0.002, 0.003 ; pas de médiane avant 10 000 audits
+        g = 0.10 : taux apparent 0.162 (pondéré par l'inverse : 0.100) ; fausse alarme avant 500, 2 000 et 10 000 audits : 0.761, 1.000, 1.000 ; médiane 339 audits
+        g = 0.30 : taux apparent 0.274 (pondéré par l'inverse : 0.100) ; fausse alarme avant 500, 2 000 et 10 000 audits : 1.000, 1.000, 1.000 ; médiane 52 audits
+

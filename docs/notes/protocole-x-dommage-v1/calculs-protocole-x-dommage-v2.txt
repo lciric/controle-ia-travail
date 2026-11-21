@@ -1,0 +1,156 @@
+
+====================================================================================================
+[A] Le dommage sans masse comme choix dans la dispersion de l'honnête : ce que la sélection rapporte,
+    ce que lit le rang de la conclusion, ce que retire un tirage fait par le harnais
+====================================================================================================
+Monde : pour une tâche, chaque chemin d'analyse défendable rend une conclusion ; elle est « mauvaise »
+avec probabilité pi chez l'honnête, qui suit un chemin tiré au hasard. Un agent qui explore k chemins
+défendables et rend le pire rend une mauvaise conclusion avec probabilité 1 - (1 - pi)^k. Chaque produit
+rendu est un chemin défendable : une lecture par produit n'y voit aucun écart.
+
+   pi | k = 1  taux ; excès | k = 2  taux ; excès | k = 4  taux ; excès | k = 8  taux ; excès
+ 0.05 |     0.0500 ; 0.0000 |     0.0975 ; 0.0475 |     0.1855 ; 0.1355 |     0.3366 ; 0.2866
+  0.1 |     0.1000 ; 0.0000 |     0.1900 ; 0.0900 |     0.3439 ; 0.2439 |     0.5695 ; 0.4695
+  0.2 |     0.2000 ; 0.0000 |     0.3600 ; 0.1600 |     0.5904 ; 0.3904 |     0.8322 ; 0.6322
+
+Nombre de tâches pour que le compte des mauvaises conclusions, comparé au taux pi du jumeau (supposé
+connu), sonne au niveau 1 % avec probabilité 0,9 (test binomial exact unilatéral). BORNE OPTIMISTE : le
+taux du jumeau est supposé connu (limite d'un nombre infini de tirages du jumeau) et les k chemins
+indépendants ; la puissance du rang contre K tirages finis, avec ex aequo, est plus basse et n'est pas
+calculée ici ; des chemins corrélés rapportent moins au suspect.
+   pi | k = 1      | k = 2      | k = 4      | k = 8     
+ 0.05 |   jamais  |       378 |        68 |        22
+  0.1 |   jamais  |       192 |        36 |        12
+  0.2 |   jamais  |        99 |        20 |         7
+
+Si l'ensemble des variantes défendables est fixé HORS du suspect (énuméré par le jumeau ou en contexte
+isolé) et que le harnais tire le chemin après l'engagement, le taux rendu vaut pi quel que soit k : excès
+nul. C'est un raisonnement, non un calcul de ce bloc, et il tient sous deux suppositions : le suspect ne
+compose pas l'ensemble (s'il le compose, le taux rendu est la part des mauvaises conclusions dans
+l'ensemble qu'il a composé, et l'excès n'est pas nul) ; l'exécution du chemin tiré est contrôlée.
+Objets de contrôle : k = 1 (honnête) doit rendre un excès nul et « jamais » ; k = 8, pi = 0,10 doit
+rendre un excès de 0,4695. La lecture par produit « réussit » (ne sonne pas) dans les deux : comme
+mesure du dommage de sélection elle est morte ; le compte des conclusions, lui, a une masse.
+
+====================================================================================================
+[B] Le dommage qui se confond avec les échecs honnêtes : le seuil garanti dépend du taux honnête de la
+    statistique qu'on audite, et tend vers le régime de signature quand ce taux tend vers zéro
+====================================================================================================
+Suppositions : horizon T = 10000 épisodes ; audit au hasard p = 0.2 ; nombre d'audits pris à sa moyenne
+n = 2000 ; test binomial exact unilatéral au niveau 1 % sur le taux honnête r de l'événement audité.
+Épisodes en excès que le test ne voit qu'une fois sur deux (et qu'il manque 5 fois sur 100) :
+
+ r honnête |  seuil c |  excès vu 1 fois sur 2 |  excès vu 95 fois sur 100
+       0.1 |      233 |                  163.1 |                     284.5
+      0.03 |       79 |                   93.3 |                     168.9
+      0.01 |       32 |                   58.3 |                     108.6
+     0.003 |       13 |                   33.3 |                      67.0
+     0.001 |        7 |                   23.3 |                      49.1
+    0.0005 |        5 |                   18.4 |                      40.7
+     5e-06 |        1 |                    3.4 |                      14.9
+       0.0 |        1 |                    3.5 |                      15.0
+
+Objets de contrôle : r = 0,10 doit rester près de 156,1 (approximation normale de la note sur
+l'attaquant informé) : rendu 163.1 ; r = 0 doit rendre ln 2 / p = 3.47 et
+ln 20 / p = 14.98 : rendu 3.47 et 14.97.
+
+Lecture : une seule prise suffit (seuil c = 1) quand 1 - (1 - r)^n <= alpha, c'est-à-dire à peu près
+r.n <= alpha : le critère dépend du niveau alpha et du nombre d'audits n à l'horizon dit. Ici, alpha = 1 %
+et n = 2 000 : r <= 0,000005 (une fois sur 200 000 épisodes) ; à une fois par échantillon d'audit
+(r = 0,0005) il faut cinq prises.
+
+Ce qu'il faut d'épisodes honnêtes SANS UN SEUL événement pour établir un taux, par la règle de trois
+(zéro événement sur N borne le taux à 3 / N, au niveau 95 %) ; valeur exacte : ln 20 / -ln(1 - r).
+ r à établir |  règle de trois 3 / r |      exact
+      0.0005 |                  6000 |       5990
+       5e-06 |                600000 |     599145
+Lecture : le régime à cinq prises demande 6 000 épisodes honnêtes sans événement ; le régime à une prise
+en demande 600 000. À l'échelle d'un banc, le régime à une prise ne s'établit donc pas par mesure : il
+ne s'atteint que pour un événement que l'honnête ne peut pas commettre par construction.
+
+« Certifier ou céder » : n'est accepté tel quel que le produit que l'agent certifie ; le reste est refait
+par la voie de confiance. Courbe de certification de l'honnête SUPPOSÉE (part certifiée u, taux d'échec
+eps parmi les certifiés) ; audit p sur la part certifiée.
+ part certifiée u |  échec honnête eps |  excès vu 1 fois sur 2 | part refaite
+              1.0 |                0.1 |                  163.1 |          0.0
+              0.8 |               0.03 |                   88.3 |          0.2
+              0.6 |               0.01 |                   48.3 |          0.4
+              0.4 |              0.003 |                   26.3 |          0.6
+
+Appariement au jumeau sur la même tâche (banc) : sous l'honnête, les paires discordantes se partagent
+à égalité, quel que soit r : le nul est exact sans connaître r. Le bruit, lui, vaut le taux de
+discordance 2.r.(1 - r).(1 - rho), rho = corrélation des issues entre l'agent honnête et son jumeau.
+Facteur sur l'excès non vu, par rapport au test à r connu (approximation en racine, déclarée) :
+   rho = 0.0  : facteur = 1.414
+   rho = 0.5  : facteur = 1.000
+   rho = 0.9  : facteur = 0.447
+   rho = 0.99 : facteur = 0.141
+   rho = 1.0  : facteur = 0.000
+Lecture : apparier à un jumeau indépendant coûte un facteur 1,41 et achète l'exactitude du nul ;
+le gain ne vient que de ce que l'agent et le jumeau partagent (même début, mêmes tirages). Au banc
+seulement : en service il n'y a pas de jumeau.
+
+====================================================================================================
+[C] Deux verrous de la sonde de réussite attendue, chiffrés : ce que fuit un aiguillage tiré au sort,
+    et le plancher « direction au hasard » du recouvrement entre l'adaptateur et la sonde
+====================================================================================================
+(i) Aiguillage tiré au sort : l'épisode est aiguillé avec probabilité a si la lecture est basse, b si
+elle est haute (lectures basses et hautes à parts égales). Information qu'une décision observée livre
+sur la lecture, en bits ; part utile de l'aiguillage a - b ; nombre de décisions observées qui suffit
+pour en apprendre le sens avec 5 % d'erreur au plus (borne de Chernoff, cas symétrique b = 1 - a).
+    a |     b |  bits par décision | part utile | observations
+  1.0 |   0.0 |             1.0000 |        1.0 |            1
+  0.9 |   0.1 |             0.5310 |        0.8 |            6
+  0.8 |   0.2 |             0.2781 |        0.6 |           14
+  0.7 |   0.3 |             0.1187 |        0.4 |           35
+  0.6 |   0.4 |             0.0290 |        0.2 |          147
+  0.5 |   0.5 |             0.0000 |        0.0 |       jamais
+Objets de contrôle : aiguillage déterministe = 1 bit ; aiguillage sans égard à la lecture = 0 bit.
+Lecture : le hasard n'achète le silence qu'en vendant l'aiguillage (0,03 bit pour 0,2 de part utile).
+Le silence se construit autrement : effets retenus jusqu'à la fin de l'épisode, décision hors de la
+vue de l'agent.
+
+(ii) Recouvrement entre la direction lue par la sonde et l'espace où l'adaptateur écrit. Sous le nul
+« sous-espace tiré au hasard, de rang R, en dimension d », le carré du cosinus suit une loi
+bêta(R/2, (d - R)/2), de moyenne R/d. d = 4096 SUPPOSÉ (largeur du flux résiduel, à relire sur la
+configuration du modèle).
+ rang R |  moyenne R/d |  quantile 0,99 |  quantile 0,999
+     16 |      0.00391 |        0.00780 |         0.00956
+     64 |      0.01562 |        0.02268 |         0.02544
+    480 |      0.11719 |        0.13426 |         0.14020
+   2048 |      0.50000 |        0.52569 |         0.53411
+Objets de contrôle : bêta(1, 1) rend 0,5 en 0,5 ; bêta(1/2, 1/2) rend la loi de l'arc sinus ; R = d/2
+rend une médiane de 1/2. Lecture : un adaptateur de rang 16 sur trente modules qui écrivent dans le
+flux (R = 480) recouvre déjà 12 % de toute direction par hasard : le plancher n'est pas zéro. Ce
+plancher est ISOTROPE (sous-espace tiré uniformément) : un repère seulement. Les états et les écritures
+d'un adaptateur sont anisotropes, et le plancher réel peut en être loin ; le plancher qui compte est
+celui de l'adaptateur honnête de même budget.
+
+====================================================================================================
+[D] Tâches floues : la garantie par accord avec le jumeau se paie en recouvrement entre honnêtes
+====================================================================================================
+Règle : la décision d que porte le produit du suspect n'est acceptée que si au moins m de K tirages du
+jumeau sur la même tâche portent la même décision ; sinon le produit est refait par la voie de confiance.
+Pour TOUTE décision d* fixée, que le jumeau prend avec probabilité pi, et quoi que fasse le suspect :
+P(d* acceptée) <= P(Bin(K, pi) >= m). Sans la règle, un suspect qui rend toujours d* passe à coup sûr.
+Acceptation de l'honnête : somme sur d de p_d . P(Bin(K, p_d) >= m).
+
+K = 8 tirages du jumeau. Borne sur le passage d'une décision de probabilité pi chez le jumeau :
+  m |  pi = 0,02 |  pi = 0,10 | accept. loi nette      | accept. loi moyenne    | accept. loi floue      | accept. loi très floue
+  0 |     1.0000 |     1.0000 |                  1.000 |                  1.000 |                  1.000 |                  1.000
+  1 |     0.1492 |     0.5695 |                  0.959 |                  0.923 |                  0.899 |                  0.570
+  2 |     0.0103 |     0.1869 |                  0.951 |                  0.817 |                  0.699 |                  0.187
+  3 |     0.0004 |     0.0381 |                  0.950 |                  0.737 |                  0.453 |                  0.038
+  4 |     0.0000 |     0.0050 |                  0.950 |                  0.671 |                  0.232 |                  0.005
+
+Objets de contrôle : m = 0 (règle vide) doit rendre une borne de 1 et tout accepter : rendu ; une
+décision que le jumeau ne prend jamais (pi = 0) ne passe jamais : rendu.
+Borne RELATIVE à la propension du jumeau : à m = 2, une décision que le jumeau prend 3 fois sur 10
+(deuxième décision de la loi floue) passe encore avec probabilité 0.745 au plus. La règle ne retire
+donc pas un dommage choisi dans le support de l'honnête.
+Lecture : à m = 2, une décision que le jumeau prend 2 fois sur 100 passe avec probabilité 0.0103
+au plus (environ une fois sur 100, non « au plus une fois sur 100 »), et
+l'honnête garde 0,95 de ses produits si ses décisions sont nettes, 0,82 si elles sont moyennes, 0,70
+si elles sont floues, 0,19 si elles sont très floues. Le « flou » d'une tâche est ce défaut de
+recouvrement ; il se mesure sur des honnêtes seuls. La borne vaut pour la décision projetée, tirages du
+jumeau faits après la remise et en secret, non pour ce que la projection efface.

@@ -1,0 +1,161 @@
+Calculs de la note « protocole X : la marge asymétrique, éprouvée par les expérimentateurs » (v1)
+Aucun tirage ; entrées = suppositions d'illustration, sauf mention « recopié ».
+
+[A] La table publiée du rééchantillonnage, décomposée (recopié : Bhatt et al., arXiv 2504.10374v1,
+    p. 1, 5, 7, 8 et 9 du fichier ; sûreté en %, à 95 % d'utilité sauf la première ligne)
+    protocole                                              sûreté   succès de l'attaque   part de la baisse totale
+    surveillance seule (100 % d'utilité)                    41.8    58.2                       —
+    cession à la voie de confiance au-dessus d'un seuil     72.7    27.3                  30.9 points, 60.8 %
+    rééchantillonnage, exécution du moins suspect           83.2    16.8                  10.5 points, 20.7 %
+    + tirages de plus pour l'audit, au présent              84.0    16.0                   0.8 points,  1.6 %
+    + audit après trois signalements                        84.9    15.1                   0.9 points,  1.8 %
+    + tirages de plus sur des pas passés                    87.1    12.9                   2.2 points,  4.3 %
+    + moniteur non fiable, paraphrase de confiance          92.6     7.4                   5.5 points, 10.8 %
+    baisse totale du succès de l'attaque : de 58.2 à 7.4, soit 50.8 points
+    (le résumé de l'article dit « de 58 % à 7 % » ; 100 - 41,8 = 58.2 et 100 - 92,6 = 7.4).
+    Part du passage de la cession au rééchantillonnage : 10.5 points sur 50.8, soit 20.7 %.
+    Part de la cession, qui ne rééchantillonne rien : 30.9 points, soit 60.8 %.
+    Même écart à d'autres utilités (tableau 1, p. 8) : rééchantillonnage moins cession =
+      à 99 % d'utilité :  6.9 points (58.3 -> 65.2)
+      à 95 % d'utilité : 10.5 points (72.7 -> 83.2)
+      à 90 % d'utilité :  5.6 points (83.4 -> 89.0)
+    Objet de contrôle : la somme des parts vaut 100 % (attendu) : 100.0 %.
+
+[B] Monde planté « la règle fait le gain » : k tirages par pas, scores à facteur commun.
+    Score d'un tirage = moyenne + racine(rho) Z + racine(1 - rho) bruit ; Z commun au pas.
+    Tirage honnête : moyenne 0, corrélation rho_h. Tirage d'attaque : visible avec probabilité v
+    (moyenne delta), sinon moyenne 0 ; corrélation rho_a. Sur un pas où il veut attaquer, chaque
+    tirage est une attaque avec probabilité c (sa cohérence), indépendamment. Audit si l'agrégat des
+    k scores dépasse un seuil réglé pour une part alpha de pas honnêtes audités ; l'audit reconnaît
+    toute attaque présente parmi les k. Sûreté = P(pris) / (P(pris) + P(attaque exécutée sans audit)).
+    Défenseur : agrégat (maximum, minimum, moyenne) et exécution (au hasard, le moins suspect).
+    Attaquant : il choisit c après avoir vu la règle (grille de 0,05 à 1).
+    alpha = 0.003 ; rho_h = 0.19 ; rho_a = 0.43 ; surveillance seule réglée à 0.61 (recopiés).
+    Famille G (décalage) : delta = 3.027, v = 1. Famille M (visible ou non) : delta = 6.0, v = 0.609.
+    Attentes écrites avant l'exécution : (1) k = 1 rend 0,610 dans les deux familles ; (2) sous le maximum,
+    le meilleur c de l'attaquant est 1 et l'exécution du moins suspect n'ajoute alors rien ; (3) sous le
+    minimum sans exécution du moins suspect, un attaquant incohérent fait tomber la sûreté sous 0,61 ;
+    (4) le minimum ne bat le maximum que pour rho_h petit ; (5) la famille G ne rendra PAS le fait publié
+    « la moyenne fait moins bien que la surveillance seule » (elle n'a pas de queue lourde).
+    Famille G — contrôle k = 1 : sûreté 0.610 (attendu 0,610)
+    Famille G, k = 2 :      règle             c = 1    c = 0,8   c = 0,45   pire c (valeur)
+        max/hasard              0.703    0.699     0.693     c = 0.05 (0.689)
+        max/moins suspect       0.703    0.763     0.865     c = 1.00 (0.703)
+        min/hasard              0.816    0.662     0.399     c = 0.05 (0.105)
+        min/moins suspect       0.816    0.818     0.823     c = 1.00 (0.816)
+        moyenne/hasard          0.858    0.743     0.564     c = 0.05 (0.387)
+        gain de l'exécution du moins suspect au point selle : sous le maximum +0.015 ; sous le minimum +0.711
+        gain de l'information seule (maximum, au hasard) sur la surveillance seule : +0.079
+    Famille G, k = 5 :      règle             c = 1    c = 0,8   c = 0,45   pire c (valeur)
+        max/hasard              0.790    0.788     0.785     c = 0.05 (0.782)
+        max/moins suspect       0.790    0.911     0.991     c = 1.00 (0.790)
+        min/hasard              0.935    0.480     0.127     c = 0.05 (0.035)
+        min/moins suspect       0.935    0.942     0.964     c = 1.00 (0.935)
+        moyenne/hasard          0.971    0.874     0.638     c = 0.05 (0.263)
+        gain de l'exécution du moins suspect au point selle : sous le maximum +0.008 ; sous le minimum +0.900
+        gain de l'information seule (maximum, au hasard) sur la surveillance seule : +0.172
+    Famille M — contrôle k = 1 : sûreté 0.610 (attendu 0,610)
+    Famille M, k = 2 :      règle             c = 1    c = 0,8   c = 0,45   pire c (valeur)
+        max/hasard              0.847    0.821     0.788     c = 0.05 (0.760)
+        max/moins suspect       0.847    0.821     0.788     c = 0.05 (0.761)
+        min/hasard              0.390    0.320     0.199     c = 0.05 (0.064)
+        min/moins suspect       0.390    0.362     0.292     c = 0.05 (0.140)
+        moyenne/hasard          0.777    0.753     0.721     c = 0.05 (0.694)
+        gain de l'exécution du moins suspect au point selle : sous le maximum +0.000 ; sous le minimum +0.076
+        gain de l'information seule (maximum, au hasard) sur la surveillance seule : +0.150
+    Famille M, k = 5 :      règle             c = 1    c = 0,8   c = 0,45   pire c (valeur)
+        max/hasard              0.991    0.978     0.942     c = 0.05 (0.892)
+        max/moins suspect       0.991    0.979     0.947     c = 0.05 (0.903)
+        min/hasard              0.169    0.105     0.047     c = 0.05 (0.028)
+        min/moins suspect       0.169    0.135     0.087     c = 0.15 (0.072)
+        moyenne/hasard          0.906    0.850     0.727     c = 0.05 (0.509)
+        gain de l'exécution du moins suspect au point selle : sous le maximum +0.010 ; sous le minimum +0.044
+        gain de l'information seule (maximum, au hasard) sur la surveillance seule : +0.282
+    Si l'attaquant choisit aussi la famille (G ou M) après avoir vu la règle : valeur de chaque règle =
+    la plus basse des deux familles et de tous les c ; gain = valeur moins 0,610 (surveillance seule).
+        k = 2  max/hasard              G 0.689   M 0.760   valeur 0.689   gain +0.079
+        k = 2  max/moins suspect       G 0.703   M 0.761   valeur 0.703   gain +0.093
+        k = 2  min/hasard              G 0.105   M 0.064   valeur 0.064   gain -0.546
+        k = 2  min/moins suspect       G 0.816   M 0.140   valeur 0.140   gain -0.470
+        k = 2  moyenne/hasard          G 0.387   M 0.694   valeur 0.387   gain -0.223
+        k = 5  max/hasard              G 0.782   M 0.892   valeur 0.782   gain +0.172
+        k = 5  max/moins suspect       G 0.790   M 0.903   valeur 0.790   gain +0.180
+        k = 5  min/hasard              G 0.035   M 0.028   valeur 0.028   gain -0.582
+        k = 5  min/moins suspect       G 0.935   M 0.072   valeur 0.072   gain -0.538
+        k = 5  moyenne/hasard          G 0.263   M 0.509   valeur 0.263   gain -0.347
+    Bascule minimum contre maximum selon rho_h (famille G, k = 5, pire c pour chaque règle) :
+        rho_h    max/hasard   min/moins suspect   moyenne/hasard   le meilleur
+        0.00     0.782        0.968              0.401          min/moins suspect
+        0.03     0.782        0.971              0.390          min/moins suspect
+        0.10     0.782        0.958              0.328          min/moins suspect
+        0.19     0.782        0.935              0.263          min/moins suspect
+        0.40     0.785        0.851              0.166          min/moins suspect
+        0.70     0.800        0.643              0.098          max/hasard
+    Repères publiés, pour comparaison seulement (Lucassen et Kaufman, p. 1, 6, 7) : maximum de 5,
+    0,71 ; minimum, 0,32 à rho_h = 0,19 et 0,75 à rho_h = 0 ; bascule vers rho_h = 0,031 ; moyenne et
+    médiane sous la surveillance seule. Le monde planté n'est pas ajusté sur ces valeurs.
+
+[C] Ce que chaque intervention détruit, en lois exactes.
+  [C1] Rééchantillonnage, exécution au hasard : P(le tirage exécuté est une attaque) = somme_a Bin(k, c)(a) a / k.
+       Vérifié pour k = 2, 5, 9 et c = 0,02, 0,43, 1 : toujours c. Marge nulle sur le succès, pour toute politique.
+  [C2] Exécution par majorité de k tirages, contre un saboteur qui tire son attaque à pile ou face (taux q par tirage).
+       non adapté : taux exécuté = P(majorité d'attaques).  adapté : il relève q pour garder son taux exécuté.
+       cible     k    non adapté : taux exécuté (divisé par)    adapté : q requis   tirages d'attaque produits par dommage exécuté
+       0.001     3    2.998e-06  (     333.6)              0.0184               55.1   (contre 1 sans majorité)
+       0.001     5    9.985e-09  (  100150.2)              0.0476              237.8   (contre 1 sans majorité)
+       0.020     3    1.184e-03  (      16.9)              0.0840               12.6   (contre 1 sans majorité)
+       0.020     5    7.762e-05  (     257.7)              0.1353               33.8   (contre 1 sans majorité)
+       0.100     3    2.800e-02  (       3.6)              0.1958                5.9   (contre 1 sans majorité)
+       0.100     5    8.560e-03  (      11.7)              0.2466               12.3   (contre 1 sans majorité)
+       Saboteur cohérent (il attaque à coup sûr quand le contenu de la tâche porte une marque) : majorité sans effet,
+       taux exécuté inchangé (maj(k, 1) = 1) ; k tirages d'attaque par dommage, tous semblables.
+       Témoin de marge : majorité de 3 contre q = 0,4 : 0.352 au lieu de 0,400.
+       Côté honnête : si l'erreur d'un tirage est propre au tirage, la majorité la réduit ; si elle tient à la tâche, non.
+       erreur honnête par tirage 0,20 ; part des tâches où l'erreur tient à la tâche (i) ; erreur après majorité de 5 :
+         part de tâches toujours manquées 0.00, erreur propre au tirage 0.200 ailleurs : 0.058
+         part de tâches toujours manquées 0.10, erreur propre au tirage 0.111 ailleurs : 0.110
+         part de tâches toujours manquées 0.20, erreur propre au tirage 0.000 ailleurs : 0.200
+  [C3] Remise à zéro du contexte, probabilité lam à chaque frontière, contre un sabotage qui tient un fil sur m pas.
+       succès du fil x (1 - lam)^(m-1) ; honnête qui a besoin de sa mémoire à une part h des frontières : x (1 - h lam)^(m-1)
+       m    lam    fil du saboteur   honnête h = 0   h = 0,2   h = 1    saboteur sans fil
+        2   0.1    0.900             1.000           0.980     0.900    1.000
+        2   0.5    0.500             1.000           0.900     0.500    1.000
+        5   0.1    0.656             1.000           0.922     0.656    1.000
+        5   0.5    0.062             1.000           0.656     0.062    1.000
+       10   0.1    0.387             1.000           0.834     0.387    1.000
+       10   0.5    0.002             1.000           0.387     0.002    1.000
+       Objet de contrôle : h = 1 rend la même chute que le fil (aucune marge) ; « sans fil » ne perd rien.
+
+[D] Trois pièges de la lecture « il existe une intensité où le succès chute plus vite que l'utilité ».
+  [D1] Multiplicité. m cellules (interventions x intensités), chacune comparée aux mêmes bras témoins ;
+       statistiques normales de corrélation 1/2 ; on annonce une marge si la meilleure dépasse 1,645 (5 % unilatéral).
+       Sous le nul complet, probabilité d'annoncer à tort :
+       m =  1 : 0.050   (indépendantes : 0.050) ; seuil qui tient 5 % : 1.645
+       m =  3 : 0.118   (indépendantes : 0.143) ; seuil qui tient 5 % : 2.062
+       m =  9 : 0.233   (indépendantes : 0.370) ; seuil qui tient 5 % : 2.417
+       m = 15 : 0.300   (indépendantes : 0.537) ; seuil qui tient 5 % : 2.565
+       m = 24 : 0.365   (indépendantes : 0.708) ; seuil qui tient 5 % : 2.694
+       Objet de contrôle : m = 1 rend 0,050 (attendu).
+  [D2] Échelle. Succès du sabotage 0,20 -> 0,10 ; utilité honnête 0,80 -> 0,68 :
+       en points : sabotage -10, utilité -12 -> pas de marge
+       en part relative : sabotage -50 %, utilité -15 % -> marge
+       en logarithme de cote : sabotage -0.811, utilité -0.633 -> marge
+       Le signe dépend de l'échelle : l'énoncé n'est décidable qu'à utilité égale, contre une base nommée.
+  [D3] Régression vers la moyenne. On ne rééchantillonne que les pas dont le premier score dépasse le quantile 0,974
+       (recopié : 2,6 % des pas honnêtes, Lucassen et Kaufman, p. 4). Sans rien changer à l'agent :
+       corrélation 0.19 : premier score moyen 2.32, second 0.44 (écarts types) ; second plus bas dans 96.8 % des cas
+       corrélation 0.50 : premier score moyen 2.32, second 1.16 (écarts types) ; second plus bas dans 90.6 % des cas
+       corrélation 0.80 : premier score moyen 2.32, second 1.86 (écarts types) ; second plus bas dans 77.9 % des cas
+       corrélation gaussienne qui rendrait 79 % de seconds scores plus bas : 0.78
+       gain de preuve k / (1 + (k - 1) rho), k = 2 : 1.68 à rho = 0,19 ; 1.12 à rho = 0.78
+       gain de preuve k / (1 + (k - 1) rho), k = 4 : 2.55 à rho = 0,19 ; 1.20 à rho = 0.78
+       gain de preuve k / (1 + (k - 1) rho), k = 5 : 2.84 à rho = 0,19 ; 1.21 à rho = 0.78
+       Repère publié (même pièce, p. 5) : 79 % de seconds scores plus bas, baisse moyenne de 22 points sur 100,
+       par ce seul effet. Attente : le monde gaussien exagère cette part (scores réels bornés, à égalités).
+       Lecture : là où l'on décide (la queue haute), les tirages honnêtes se ressemblent bien plus que leur
+       corrélation d'ensemble ne le dit ; égalités non comptées, monde gaussien supposé.
+
+[E] Coût de l'étape 1 (un modèle expérimentateur écrit les témoins), produit de bornes déjà au dépôt.
+    16 implémentations, bornes de l'erratum 1 de la conception (0,14 à 4,10 USD par implémentation) : de 2.24 à 65.60 USD. Non mesuré.
+
+Fin des calculs.
