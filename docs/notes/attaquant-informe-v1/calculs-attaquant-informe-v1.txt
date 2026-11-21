@@ -1,0 +1,84 @@
+[A] Du seuil toléré au taux d'audit (dommage « de signature » : l'honnête ne le produit jamais,
+    un seul épisode endommagé reconnu suffit). K = nombre d'épisodes endommagés tolérés avant l'alerte ;
+    q = probabilité que l'oracle reconnaisse un dommage qu'il regarde ; L = épisodes endommagés produits
+    pendant le délai de l'oracle et de la réponse. Plus petit taux d'audit p tel que la prise survienne
+    au plus tard au (K - L)e épisode endommagé avec probabilité 0,95 : p = (1 - 0,05^(1/(K-L))) / q.
+    K =    30, q = 1.0, L =   0 : p minimal = 0.0950
+    K =    30, q = 1.0, L =  20 : p minimal = 0.2589
+    K =    30, q = 0.5, L =   0 : p minimal = 0.1901
+    K =    30, q = 0.5, L =  20 : p minimal = 0.5177
+    K =   100, q = 1.0, L =   0 : p minimal = 0.0295
+    K =   100, q = 1.0, L =  20 : p minimal = 0.0368
+    K =   100, q = 0.5, L =   0 : p minimal = 0.0590
+    K =   100, q = 0.5, L =  20 : p minimal = 0.0735
+    K =   300, q = 1.0, L =   0 : p minimal = 0.0099
+    K =   300, q = 1.0, L =  20 : p minimal = 0.0106
+    K =   300, q = 0.5, L =   0 : p minimal = 0.0199
+    K =   300, q = 0.5, L =  20 : p minimal = 0.0213
+    K =  1000, q = 1.0, L =   0 : p minimal = 0.0030
+    K =  1000, q = 1.0, L =  20 : p minimal = 0.0031
+    K =  1000, q = 0.5, L =   0 : p minimal = 0.0060
+    K =  1000, q = 0.5, L =  20 : p minimal = 0.0061
+
+[B] Dommage « d'excès » : l'honnête produit aussi ce dommage, au taux d0 ; le saboteur l'élève de eps.
+    Test unilatéral au niveau 1 % sur les n = p N épisodes audités (approximation normale, déclarée).
+    Excès de taux que le test ne voit qu'une fois sur deux : eps* = z_0,99 sqrt(d0 (1 - d0) / (p N)).
+    Épisodes endommagés en excès sur l'horizon, à ce taux : eps* N = z_0,99 sqrt(d0 (1 - d0) N / p).
+    d0 = 0.10, N =   1000, p = 0.05 : eps* = 0.0987 ; épisodes en excès non vus =    98.7 ; part de l'horizon = 0.0987
+    d0 = 0.10, N =   1000, p = 0.20 : eps* = 0.0493 ; épisodes en excès non vus =    49.3 ; part de l'horizon = 0.0493
+    d0 = 0.10, N =   1000, p = 1.00 : eps* = 0.0221 ; épisodes en excès non vus =    22.1 ; part de l'horizon = 0.0221
+    d0 = 0.10, N =  10000, p = 0.05 : eps* = 0.0312 ; épisodes en excès non vus =   312.1 ; part de l'horizon = 0.0312
+    d0 = 0.10, N =  10000, p = 0.20 : eps* = 0.0156 ; épisodes en excès non vus =   156.1 ; part de l'horizon = 0.0156
+    d0 = 0.10, N =  10000, p = 1.00 : eps* = 0.0070 ; épisodes en excès non vus =    69.8 ; part de l'horizon = 0.0070
+    d0 = 0.10, N = 100000, p = 0.05 : eps* = 0.0099 ; épisodes en excès non vus =   987.0 ; part de l'horizon = 0.0099
+    d0 = 0.10, N = 100000, p = 0.20 : eps* = 0.0049 ; épisodes en excès non vus =   493.5 ; part de l'horizon = 0.0049
+    d0 = 0.10, N = 100000, p = 1.00 : eps* = 0.0022 ; épisodes en excès non vus =   220.7 ; part de l'horizon = 0.0022
+    d0 = 0.01, N =   1000, p = 0.05 : eps* = 0.0327 ; épisodes en excès non vus =    32.7 ; part de l'horizon = 0.0327
+    d0 = 0.01, N =   1000, p = 0.20 : eps* = 0.0164 ; épisodes en excès non vus =    16.4 ; part de l'horizon = 0.0164
+    d0 = 0.01, N =   1000, p = 1.00 : eps* = 0.0073 ; épisodes en excès non vus =     7.3 ; part de l'horizon = 0.0073
+    d0 = 0.01, N =  10000, p = 0.05 : eps* = 0.0104 ; épisodes en excès non vus =   103.5 ; part de l'horizon = 0.0104
+    d0 = 0.01, N =  10000, p = 0.20 : eps* = 0.0052 ; épisodes en excès non vus =    51.8 ; part de l'horizon = 0.0052
+    d0 = 0.01, N =  10000, p = 1.00 : eps* = 0.0023 ; épisodes en excès non vus =    23.1 ; part de l'horizon = 0.0023
+    d0 = 0.01, N = 100000, p = 0.05 : eps* = 0.0033 ; épisodes en excès non vus =   327.3 ; part de l'horizon = 0.0033
+    d0 = 0.01, N = 100000, p = 0.20 : eps* = 0.0016 ; épisodes en excès non vus =   163.7 ; part de l'horizon = 0.0016
+    d0 = 0.01, N = 100000, p = 1.00 : eps* = 0.0007 ; épisodes en excès non vus =    73.2 ; part de l'horizon = 0.0007
+
+[C] Audit selon l'enjeu. Types d'épisodes : part f, enjeu s (dommage possible, défini par le défenseur).
+    Un saboteur qui n'attaque que le type i cause en moyenne s_i / pi_i de dommage jusqu'à sa première prise
+    (prise comprise), pi_i étant la probabilité d'audit de ce type. Budget moyen d'audit : somme f_i pi_i = p.
+    budget p = 0.01 ; enjeu moyen = 1.60 ; enjeu maximal = 25
+      audit uniforme            : dommage moyen avant prise, au pire type =   2500.0
+      audit proportionnel à l'enjeu : probabilités par type = 0.0062, 0.0312, 0.1562 ; dommage moyen avant prise, tout type =    160.0
+      rapport = 15.62 (= enjeu maximal / enjeu moyen)
+    budget p = 0.02 ; enjeu moyen = 1.60 ; enjeu maximal = 25
+      audit uniforme            : dommage moyen avant prise, au pire type =   1250.0
+      audit proportionnel à l'enjeu : probabilités par type = 0.0125, 0.0625, 0.3125 ; dommage moyen avant prise, tout type =     80.0
+      rapport = 15.62 (= enjeu maximal / enjeu moyen)
+    budget p = 0.05 ; enjeu moyen = 1.60 ; enjeu maximal = 25
+      audit uniforme            : dommage moyen avant prise, au pire type =    500.0
+      audit proportionnel à l'enjeu : probabilités par type = 0.0312, 0.1562, 0.7812 ; dommage moyen avant prise, tout type =     32.0
+      rapport = 15.62 (= enjeu maximal / enjeu moyen)
+
+[D] Audit mixte : plancher au hasard pi_min sur tout épisode, le reste du budget suivant le soupçon.
+    Contre un saboteur qui n'endommage que des épisodes au soupçon le plus bas, seul le plancher compte :
+    prise avec probabilité 0,95 au plus tard au n-ième épisode endommagé, n = ceil(ln 0,05 / ln(1 - pi_min)).
+    pi_min = 0.000 (audit des seuls plus suspects) : jamais
+    pi_min = 0.005 : n = 598
+    pi_min = 0.010 : n = 299
+    pi_min = 0.020 : n = 149
+    pi_min = 0.050 : n = 59
+
+[E] Fuite de la pièce d'audit (formule de l'article « Blindfold », p. 1 : biais au pire = (1 - eps) D_A,
+    eps = taux d'audit, D_A = distance en variation totale entre ce que l'agent voit selon la pièce).
+    eps = 0.01, D_A = 0.00 : biais au pire du taux certifié = 0.0000
+    eps = 0.01, D_A = 0.05 : biais au pire du taux certifié = 0.0495
+    eps = 0.01, D_A = 0.50 : biais au pire du taux certifié = 0.4950
+    eps = 0.01, D_A = 1.00 : biais au pire du taux certifié = 0.9900
+    eps = 0.05, D_A = 0.00 : biais au pire du taux certifié = 0.0000
+    eps = 0.05, D_A = 0.05 : biais au pire du taux certifié = 0.0475
+    eps = 0.05, D_A = 0.50 : biais au pire du taux certifié = 0.4750
+    eps = 0.05, D_A = 1.00 : biais au pire du taux certifié = 0.9500
+    eps = 0.20, D_A = 0.00 : biais au pire du taux certifié = 0.0000
+    eps = 0.20, D_A = 0.05 : biais au pire du taux certifié = 0.0400
+    eps = 0.20, D_A = 0.50 : biais au pire du taux certifié = 0.4000
+    eps = 0.20, D_A = 1.00 : biais au pire du taux certifié = 0.8000
