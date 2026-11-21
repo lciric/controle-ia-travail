@@ -1,0 +1,63 @@
+From 6bdfc7d5c86866c0af50158e6c777dcc634b8c59 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 21 Nov 2026 17:55:13 +0000
+Subject: [PATCH 6/6] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0?=
+ =?UTF-8?q?=20budget,=20code=20en=20version=205=20:=20deux=20essais=20de?=
+ =?UTF-8?q?=20garde=20(fichier=20d'entr=C3=A9es=20relu=20par=20son=20empre?=
+ =?UTF-8?q?inte=20cit=C3=A9e=20;=20contexte=20de=20l'oracle=20=C3=A0=20con?=
+ =?UTF-8?q?texte=20r=C3=A9=C3=A9crit=20aux=20deux=20premi=C3=A8res=20actio?=
+ =?UTF-8?q?ns)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Qi7Gr7ANUETZCpKzknQujX
+---
+ tests/test_iib_lanceur_v5.py | 10 ++++++++++
+ tests/test_iib_oracle_v5.py  | 14 ++++++++++++++
+ 2 files changed, 24 insertions(+)
+
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index 37bfc1c3f..1fe9755f3 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -226,3 +226,13 @@ def test_aucune_suppression_ailleurs_dans_le_code_v5():
+         for interdit in ("shutil.rmtree", "os.remove", "os.unlink", ".rmdir(", "subprocess"):
+             assert interdit not in source, (f.name, interdit)
+         assert source.count(".unlink(") == (1 if f.name == "lanceur_v5.py" else 0), f.name
++
++
++def test_fichier_d_entrees_relu_par_son_empreinte_citee(tmp_path):
++    config = _monde(tmp_path)
++    assert la.lire_entrees(config, tmp_path)["actions_oracle_hors_tours"] == 3520            # cas sain
++    faux = {**config, "pieces": {**config["pieces"], "entrees": {"chemin": "entrees/entrees-iib-v5.json", "sha256": "f" * 64}}}
++    with pytest.raises(GardeArret, match="empreinte citée"):
++        la.lire_entrees(faux, tmp_path)
++    absent = {**config, "pieces": {**config["pieces"], "entrees": {"chemin": "entrees/pas-la.json", "sha256": "f" * 64}}}
++    assert la.lire_entrees(absent, tmp_path) is None                                         # absent : « non calculable » à la désignation
+diff --git a/tests/test_iib_oracle_v5.py b/tests/test_iib_oracle_v5.py
+index 9f32b71b5..1521dcfcf 100644
+--- a/tests/test_iib_oracle_v5.py
++++ b/tests/test_iib_oracle_v5.py
+@@ -172,3 +172,17 @@ def test_gardes_d_entree():
+ def test_mediane_basse():
+     assert ov.mediane_basse([5.0, None, 1.0, 3.0, 2.0, 4.0]) == 3.0 and ov.mediane_basse([4.0, 1.0, 3.0, 2.0]) == 2.0
+     assert ov.mediane_basse([None, None]) is None
++
++
++def test_N_aux_deux_premieres_actions_son_contexte_est_celui_de_l_agent_sinon_arret(monkeypatch):
++    m = ModeleJouetDeLangue()
++    env = EnvironnementJouet("t1")
++    actions = _actions(m, COUTS)
++    bonnes = ov.prefixes_de_l_agent(m, env, actions)
++    ov.oracles_episode(m, env, actions, jm.Graines(1), CFG, "essai", "e", oracles=("N",), empreintes_agent=bonnes)       # cas sain
++    fausses = list(bonnes)
++    fausses[1] = "0" * 64
++    with pytest.raises(GardeArret, match="devrait être celui de l'agent"):
++        ov.oracles_episode(m, env, actions, jm.Graines(1), CFG, "essai", "e", oracles=("N",), empreintes_agent=fausses)
++    with pytest.raises(GardeArret, match="une empreinte de préfixe"):
++        ov.oracles_episode(m, env, actions, jm.Graines(1), CFG, "essai", "e", empreintes_agent=bonnes[:5])
+-- 
+2.43.0
+
