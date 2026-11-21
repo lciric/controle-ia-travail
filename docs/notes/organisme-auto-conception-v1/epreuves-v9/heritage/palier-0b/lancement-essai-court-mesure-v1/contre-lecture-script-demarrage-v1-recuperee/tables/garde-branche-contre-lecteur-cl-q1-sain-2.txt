@@ -1,0 +1,15 @@
+départ : tête de la branche permise 24677e4a0e ; références du distant : refs/heads/main refs/heads/recuperation/palier-0b-programme-1-essai-3-v1 
+A1 étiquette vers refs/tags : attendu refus ; rendu refus (code 1 ; message de la garde : oui) ; TENU
+A2 --all (pousse la branche locale, qui n'est pas la permise) : attendu refus ; rendu refus (code 1 ; message de la garde : oui) ; TENU
+A3 --mirror : attendu refus ; rendu refus (code 1 ; message de la garde : oui) ; TENU
+A4 forme courte HEAD:nom-de-la-branche-permise (sain) : attendu admis ; rendu admis (code 0 ; message de la garde : non) ; TENU
+après A1-A4 : références du distant : refs/heads/main refs/heads/recuperation/palier-0b-programme-1-essai-3-v1 
+--- artefacts où l'écart est attendu (la garde est un crochet LOCAL) ---
+B1 --no-verify vers une autre branche (contournement du crochet) : attendu refus ; rendu admis (code 0 ; message de la garde : non) ; ÉCART
+après B1 : références du distant : refs/heads/autre-branche-cl refs/heads/main refs/heads/recuperation/palier-0b-programme-1-essai-3-v1 
+C1 poussée du script (sans force) sur histoire divergente : attendu refus ; rendu refus (code 1 ; message de la garde : non) ; TENU
+après C1 : tête du distant inchangée : oui
+C2 poussée forcée « + » vers la branche permise (le crochet ne regarde ni la force ni l'ascendance) : attendu refus ; rendu admis (code 0 ; message de la garde : non) ; ÉCART
+après C2 : tête du distant changée (histoire réécrite) : OUI
+D1 poussée depuis le dépôt de lecture (adresse de poussée invalide) : code 1 (attendu non nul) ; error: src refspec refs/heads/main does not match any
+occurrences de « push » dans le script de démarrage : 3 ; lignes d'appel git push : 77:     && essayer git -C $V push -q origin HEAD:refs/heads/$BRANCHE; then|146:  && git -C $D config remote.origin.pushurl aucune-poussee-depuis-ce-depot || echouer 40 "dépôt local"|
