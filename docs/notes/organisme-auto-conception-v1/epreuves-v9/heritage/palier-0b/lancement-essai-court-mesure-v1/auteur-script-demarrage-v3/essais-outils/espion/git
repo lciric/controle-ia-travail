@@ -1,0 +1,10 @@
+#!/bin/bash
+# Espion git (banc v3, point 1) : note, pour chaque appel, si la variable J, la variable qui porte le jeton
+# (JETON_FACTICE_ESSAI) ou les arguments portent le jeton factice (lu dans ESPION_JETON) ; n'écrit aucune valeur, ne lit
+# aucune autre variable ; puis passe au vrai git.
+IFS= read -r t < "$ESPION_JETON"
+x=0; [ "${J:-}" = "$t" ] && x=1
+y=0; [ "${JETON_FACTICE_ESSAI:-}" = "$t" ] && y=1
+z=0; [[ " $* " = *"$t"* ]] && z=1
+echo "appel git : J_porte_le_jeton=$x variable_nommee_porte_le_jeton=$y arguments_portent_le_jeton=$z" >> "$ESPION_JOURNAL"
+exec /usr/bin/git "$@"
