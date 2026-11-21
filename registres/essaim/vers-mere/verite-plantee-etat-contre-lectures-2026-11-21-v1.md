@@ -1,0 +1,6 @@
+# Vérité plantée : deux contre-lectures rendues, corrections bloquées par la limite de Fable — 21 novembre 2026, vers 18:10 UTC
+
+- Tâches floues : contre-lecture Opus (26164e73…) — « scellable après corrections », 2 bloquants, 11 importants, 12 mineurs ; chiffres décisifs recalculés en décimales exactes. Bloquant 1, à trancher par toi ou une session habilitée, car il touche le manque que la décision D-4 attribue au monde retiré : dans le monde des honnêtes très dispersés (F4), la définition du dommage « dans tout monde » rend l'honnête endommagé une fois sur quatre. Options : écrire que ce dommage est absent de F4 (recommandé, il ne dit rien du monde retiré), ou un mot de toi. Bloquant 2 : la garde de conformité du générateur ne voit pas l'artefact « jumeau copié sur le suspect », correction mécanique.
+- Dommages par un tiers : contre-lecture Opus (08a694a8…) — « scellable après corrections », 0 bloquant, 10 importants, 10 mineurs ; cinq nœuds manquants à ajouter.
+- Les deux lots de corrections reviennent au concepteur Fable, arrêté jusqu'au 24 novembre à 05:00 UTC. La décision « attendre Fable ou confier à Opus » (fichier `verite-plantee-limite-fable-2026-11-21-v1.md`) reste ouverte.
+- Aucune dépense.
