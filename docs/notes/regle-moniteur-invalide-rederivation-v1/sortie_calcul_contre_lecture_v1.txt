@@ -1,0 +1,41 @@
+Contre-lecture de la re-dérivation « moniteur invalide » : contrôles numériques, version 1.
+rho0 = 0.10, alpha = 0.05, beta = 0.10 ; grille de douze taux rho0 (1 + 4/2^j). Aucun tirage.
+
+[1] Pente de la borne de la re-dérivation : C/A - r* >= 0 pour tout taux de la grille et tout lambda avec A > 0
+    plus petit écart C/A - b/a rencontré : 9.087e-10 (doit être >= 0 ; identité : u phi(-lam b) + b phi(lam u) >= 0)
+    r* - rho0 pour le plus petit taux : 9.763e-05 (> 0)
+
+[2] Lemme G (grille de douze taux) : g(N) <= 1,25 kappa(2 eps*) racine(2 rho0 (1-rho0) L N),
+    eps*(N) = racine(2 L (1-rho0) / (rho0 N)) dans [plus petit écart, 2]. L = log(12/alpha) = 5.4806
+    domaine en N (audits) : [24.7 ; 2.586e+07]
+    plus grand rapport g(N) / borne du lemme sur le domaine : 0.8428 (doit être <= 1)
+      N =      100 : g(N) =     11.28 ; g(N) / racine(2 rho0 (1-rho0) L N) = 1.136
+      N =     1000 : g(N) =     33.90 ; g(N) / racine(2 rho0 (1-rho0) L N) = 1.079
+      N =    10000 : g(N) =    103.01 ; g(N) / racine(2 rho0 (1-rho0) L N) = 1.037
+      N =   100000 : g(N) =    315.56 ; g(N) / racine(2 rho0 (1-rho0) L N) = 1.005
+      N =  1000000 : g(N) =   1023.73 ; g(N) / racine(2 rho0 (1-rho0) L N) = 1.031
+      N = 10000000 : g(N) =   3216.93 ; g(N) / racine(2 rho0 (1-rho0) L N) = 1.024
+
+[3] Borne par réduction (beta = 0.09 + 0.01) contre la borne B(n) de la re-dérivation (beta = 0.10)
+    q | n | N+ | g(N+) | réduction | réduction / échelle | B(n) | B(n) / échelle | ordre principal analytique
+    0.20 |     1000 |      230 |     17.2 |     146.8 |  6.92 |     136.1 |  6.42 |     129.4
+    0.20 |     4000 |      859 |     32.1 |     263.1 |  6.20 |     252.4 |  5.95 |     258.9
+    0.20 |    16000 |     3318 |     61.9 |     495.8 |  5.84 |     483.7 |  5.70 |     517.7
+    0.20 |   100000 |    20295 |    143.9 |    1155.0 |  5.44 |    1140.4 |  5.38 |    1294.3
+    0.20 |  1000000 |   200931 |    472.5 |    3699.0 |  5.51 |    3661.9 |  5.46 |    4092.9
+    0.20 | 10000000 |  2002943 |   1415.1 |   11257.9 |  5.31 |   11159.6 |  5.26 |   12942.8
+    0.05 |     1000 |       67 |      9.8 |     370.4 |  8.73 |     317.9 |  7.49 |     266.3
+    0.05 |     4000 |      233 |     17.3 |     612.0 |  7.21 |     564.6 |  6.65 |     532.7
+    0.05 |    16000 |      865 |     32.2 |    1092.2 |  6.44 |    1045.1 |  6.16 |    1065.3
+    0.05 |   100000 |     5161 |     73.3 |    2455.5 |  5.79 |    2411.6 |  5.68 |    2663.3
+    0.05 |  1000000 |    50508 |    237.5 |    7704.8 |  5.74 |    7606.7 |  5.67 |    8422.0
+    0.05 | 10000000 |   501604 |    708.8 |   23333.8 |  5.50 |   23105.5 |  5.45 |   26632.9
+
+[4] Audit complet : borne sur trajectoire de Singh, proposition 1 (ii), racine(H (log(H/alpha) + (1-p0)/(4 p0)) / 2) + 1,
+    grille de H taux uniformes, à côté de g(H) + 1 pour la grille de douze taux (même rho0, même alpha)
+      H =     1000 : Singh      79.0 ; douze taux      34.9
+      H =     4000 : Singh     165.6 ; douze taux      67.2
+      H =    16000 : Singh     346.6 ; douze taux     131.6
+      H =   100000 : Singh     916.4 ; douze taux     316.6
+      H =  1000000 : Singh    3088.2 ; douze taux    1024.7
+
