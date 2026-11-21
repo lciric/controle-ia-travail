@@ -62,6 +62,9 @@ Toute session, de tout compte, lit `registres/rappels.md` à la reprise et fait 
 ## Appels à Carbon (mot de Lazar du 21 novembre, GO-2026-11-21-47)
 Tout appel à Carbon (gemini-4-carbon), par tout script ou toute course, reçoit un plafond de sortie large et suffisant : au moins 16 000 jetons de texte au-delà de la réflexion, la réflexion bornée à part. Un appel qui s'arrête en « MAX_TOKENS » sans texte est un défaut de réglage, pas une réponse.
 
+## Appels aux modèles de Google (mot de Lazar du 21 novembre, GO-2026-11-21-71)
+« corrige et vérifie tous les réglages plafond troncation limite mots réflexion avant d'envoyer un modèle gemini ; je ne veux plus voir ce genre d'erreur » (Argon envoyé sans réglage de réflexion : zéro jeton de pensée sur 22 réponses). Avant tout envoi à un modèle de Google, par tout script, une vérification par code refuse l'envoi si : le réglage de réflexion n'est pas explicite dans le corps (niveau le plus haut admis ou budget prévu) ; le plafond de sortie n'atteint pas réflexion plus 16 000 jetons de texte ; la limite de mots de l'invite ne tient pas dans le plafond de texte. Après la réponse : zéro jeton de pensée, fin en MAX_TOKENS, SAFETY, RECITATION ou texte vide = défaut journalisé, jamais une réponse. Une garde commune vit dans `src/controle_ia/` ; tout script qui appelle Google l'emploie ou la reproduit, essais et mutations à l'appui.
+
 ## Qui conçoit (mot de Lazar du 19 novembre, R-3735)
 La conception du saboteur et de tout ce qui est délicat est faite par Claude Fable 5.2 : conceptions d'organismes, d'oracles et d'épreuves, préenregistrements, textes de lecture, ordres de course, critères de décision. La contre-lecture est faite par un autre modèle (Opus 5.5), puis la vérification des corrections par le même contre-lecteur. La mère, quel que soit son modèle, orchestre, consigne et scelle ; elle ne rédige pas ces pièces.
 
