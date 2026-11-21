@@ -5,9 +5,12 @@
 | E3-T1-conception-C | OK | 1 | gemini-4-argon | 39330 | oui | 0.56 |
 | E3-T1-conception-D | OK | 1 | gpt-6.2-astra | 15107 | oui | 0.20 |
 | E3-T1-conception-E | OK | 1 | gemini-4-carbon | 41991 | oui | 0.68 |
-| E3-T2-critique-croisee-A | INTERROMPU | 1 | claude-fable-5-2 | 0 | non | 3.03 |
+| E3-T2-critique-croisee-A | OK | 2 | claude-fable-5-2 | 19983 | oui | 5.17 |
+| E3-T2-critique-croisee-B | OK | 1 | claude-opus-5-5 | 17946 | oui | 0.73 |
+| E3-T2-critique-croisee-C | INTERROMPU | 1 | gemini-4-argon | 12987 | non | 1.77 |
 
 Absences acceptées par l'arbitre : aucune.
-Ligne : 28.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 6.23 USD.
+Ligne : 28.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 10.87 USD.
+Ligne de reprise (GO-2026-11-21-69) : 30.00 USD, ouverte à 6.23 USD de dépense ; dépensé depuis : 4.64 USD.
 Réserve (v9-v8) : cellules de Google écrites sur une réponse sans aucun jeton de pensée : E3-T1-conception-C.
-Dépense totale : 6.23 USD. Mis à jour 2026-11-21T22:35:43Z.
+Dépense totale : 10.87 USD. Mis à jour 2026-11-21T22:51:26Z.
