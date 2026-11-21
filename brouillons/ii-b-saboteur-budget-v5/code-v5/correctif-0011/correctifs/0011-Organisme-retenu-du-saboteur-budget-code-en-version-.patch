@@ -1,0 +1,539 @@
+From 844fda80002059682d6f66a50fe22baee126f559 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 21 Nov 2026 21:53:26 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200011,=20envi?=
+ =?UTF-8?q?ronnement=20de=20la=20machine=20lou=C3=A9e=20(les=20essais=20en?=
+ =?UTF-8?q?=20mode=20jouet=20=C3=A9crivent=20l'environnement=20qu'ils=20si?=
+ =?UTF-8?q?mulent,=20la=20garde=20du=20mode=20jouet=20sur=20une=20machine?=
+ =?UTF-8?q?=20payante=20ne=20change=20pas=20;=20la=20r=C3=A8gle=20de=20cou?=
+ =?UTF-8?q?pure=20de=20l'=C3=A9talonnage=20=C3=A0=2012=20USD=20ne=20charge?=
+ =?UTF-8?q?=20plus=20numpy,=20l'arr=C3=AAt=20sur=20phase=20illisible=20res?=
+ =?UTF-8?q?te=20;=20essais=20qui=20reproduisent=20la=20machine=20:=20accor?=
+ =?UTF-8?q?d=20pos=C3=A9,=20carte=20simul=C3=A9e,=20python3=20du=20syst?=
+ =?UTF-8?q?=C3=A8me=20sans=20numpy=20;=20liste=20fig=C3=A9e=20des=20essais?=
+ =?UTF-8?q?=20en=20version=205,=20275=20essais)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Qi7Gr7ANUETZCpKzknQujX
+---
+ scripts/amorce_instance_iib_v5.sh             |   7 +-
+ scripts/repetition_locale_iib_v5.py           |   2 +-
+ scripts/tests-cibles-iib-v5-v5.txt            |  24 ++
+ src/controle_ia/iib/session_v5.py             |   8 +-
+ tests/iib_v5_outils.py                        |  39 ++-
+ .../test_iib_distillation_bout_en_bout_v5.py  |   8 +-
+ tests/test_iib_environnement_machine_v5.py    | 223 ++++++++++++++++++
+ tests/test_iib_lanceur_v5.py                  |  30 ++-
+ 8 files changed, 320 insertions(+), 21 deletions(-)
+ create mode 100644 scripts/tests-cibles-iib-v5-v5.txt
+ create mode 100644 tests/test_iib_environnement_machine_v5.py
+
+diff --git a/scripts/amorce_instance_iib_v5.sh b/scripts/amorce_instance_iib_v5.sh
+index ad58dbc62..8f4d7015d 100644
+--- a/scripts/amorce_instance_iib_v5.sh
++++ b/scripts/amorce_instance_iib_v5.sh
+@@ -3,8 +3,9 @@
+ # `scripts/amorce_instance_iib_v1.sh` (nom neuf, R12 ; la v1 reste telle quelle). Changements, et eux seuls :
+ #  (a) le run est joué par `controle_ia.iib.lanceur_v5 --phase etalonnage` (étalonnage seul ; les conditions de départ et la
+ #      désignation se jouent ensuite, une fois, sur processeur, sur les sorties scellées rapatriées) ;
+-#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v4.txt` (empreinte écrite en dur ci-dessous) : les vingt-trois fichiers d'essais
+-#      en version 5, distillateur compris, sans celui du tokeniseur réel ni celui du moteur à torch du distillateur (une ligne « N passed, 1 skipped » ne passe pas le contrôle
++#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v5.txt` (empreinte écrite en dur ci-dessous) : les vingt-quatre fichiers d'essais
++#      en version 5, distillateur et environnement de la machine simulée compris (correctif 0011), sans celui du tokeniseur réel ni celui du
++#      moteur à torch du distillateur (une ligne « N passed, 1 skipped » ne passe pas le contrôle
+ #      du nombre de tests attendus : constat de la répétition locale) ;
+ #  (c) l'instant de début de l'amorce est passé au lanceur (`IIB_DEBUT_UTC_S`) : la dépense de l'étalonnage se compte depuis lui ;
+ #  (d) données légères poussées : identifiants des actions, lot par lot (`donnees/<run>/lots/`) ; les sorties d'oracle, lot par lot,
+@@ -382,7 +383,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
+     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
+ fi
+ # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
+-LISTE_TESTS="scripts/tests-cibles-iib-v5-v4.txt"; LISTE_SHA256="342ee21d495b54cb5fd4a8ae6d7427043edb3c228cc16afd57ab4f9e3d099b68"; FICHIERS_TESTS=""
++LISTE_TESTS="scripts/tests-cibles-iib-v5-v5.txt"; LISTE_SHA256="f9ff477d753c675883d81af2dca6721e4c6bc96128b0d17c850eeddca897f1ac"; FICHIERS_TESTS=""
+ if [ -z "${TESTS_ARGS:-}" ]; then
+     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
+     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"
+diff --git a/scripts/repetition_locale_iib_v5.py b/scripts/repetition_locale_iib_v5.py
+index c74942152..ea5d76c8a 100644
+--- a/scripts/repetition_locale_iib_v5.py
++++ b/scripts/repetition_locale_iib_v5.py
+@@ -32,7 +32,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
+ from test_t06_v12_scripts import OFFRES  # noqa: E402
+ 
+ ID, AUTRE = "61414494", 58936096
+-ATTENDUS = 271        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v4.txt`), relevés à la répétition
++ATTENDUS = 275        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v5.txt`, correctif 0011 : 271 et les 4 de l'environnement de la machine simulée)
+ CONFIG = "prereg/config-iib-v5-jouet.json"
+ RECHERCHE = '''"search offers")
+     case "$3" in id=*) echo '[]'; exit 0;; esac
+diff --git a/scripts/tests-cibles-iib-v5-v5.txt b/scripts/tests-cibles-iib-v5-v5.txt
+new file mode 100644
+index 000000000..515e39d81
+--- /dev/null
++++ b/scripts/tests-cibles-iib-v5-v5.txt
+@@ -0,0 +1,24 @@
++tests/test_iib_artefacts_centrage_v5.py
++tests/test_iib_bout_en_bout_nul_v5.py
++tests/test_iib_branches_v5.py
++tests/test_iib_configuration_distillation_v5.py
++tests/test_iib_configuration_v5.py
++tests/test_iib_controle_premier_cout_v5.py
++tests/test_iib_couplage_v5.py
++tests/test_iib_designation_v5.py
++tests/test_iib_distillation_bout_en_bout_v5.py
++tests/test_iib_distillation_v5.py
++tests/test_iib_environnement_machine_v5.py
++tests/test_iib_epreuve_centrage_v5.py
++tests/test_iib_epreuves_v5.py
++tests/test_iib_fuite_v5.py
++tests/test_iib_jumeau_v5.py
++tests/test_iib_lanceur_v5.py
++tests/test_iib_lecture_cout_v5.py
++tests/test_iib_oracle_v5.py
++tests/test_iib_rapportes_v5.py
++tests/test_iib_reecriture_v5.py
++tests/test_iib_regenere_v5.py
++tests/test_iib_regle_v5.py
++tests/test_iib_temoin_jumeau_v5.py
++tests/test_iib_tours_v5.py
+diff --git a/src/controle_ia/iib/session_v5.py b/src/controle_ia/iib/session_v5.py
+index 718bbd9ec..0e6f12616 100644
+--- a/src/controle_ia/iib/session_v5.py
++++ b/src/controle_ia/iib/session_v5.py
+@@ -14,6 +14,11 @@ création (carte et stockage) ; si cette ligne n'est pas encore relevée, elle s
+ moins de dépense que la vraie). Elle ne joue que si la phase est l'étalonnage ; une phase illisible est un refus (la surveillance
+ arrête : aucun repli silencieux). La règle rend une ligne « ARRET coupure de l'étalonnage : … » ou « RIEN … » ; l'arrêt se fait
+ par l'identifiant (R10), puis la destruction par la sous-commande `destruction` du lanceur de session et ses gardes.
++
++**Correctif 0011** : la surveillance appelle la règle par `python3 -I -B` du système, où numpy peut manquer (machine louée,
++première tentative de l'étalonnage, 21 novembre : « No module named 'numpy' », par `configuration_v5` puis les lois exactes).
++Le chemin de la règle ne charge donc que la bibliothèque standard et `gardes` ; `configuration_v5` n'est chargé que par la
++sous-commande `config`, qui en a besoin. Rien d'autre ne change : seuil, compte, phase illisible refusée.
+ """
+ from __future__ import annotations
+ 
+@@ -25,7 +30,6 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ from ..gardes import GardeArret
+-from . import configuration_v5 as cf
+ 
+ COUPURE_ETALONNAGE_USD = 12.0          # devis scellé : coupure propre de l'étalonnage, par une règle de la surveillance
+ PHASES = ("etalonnage", "conditions", "course")
+@@ -75,6 +79,8 @@ def ligne_de_coupure(r: dict) -> str:
+ 
+ 
+ def verifier_config(chemin, racine=".") -> dict:
++    from . import configuration_v5 as cf          # numpy (lois exactes) : chargé ici seulement, jamais par la règle de coupure
++
+     config = json.loads(Path(chemin).read_text(encoding="utf-8"))
+     return cf.exiger_config_v5(config, racine, pour_lancer=True)
+ 
+diff --git a/tests/iib_v5_outils.py b/tests/iib_v5_outils.py
+index 037d8e6dc..7ac6b6181 100644
+--- a/tests/iib_v5_outils.py
++++ b/tests/iib_v5_outils.py
+@@ -1,5 +1,10 @@
+-"""Outils communs des essais de l'organisme retenu (v5) : étalonnage numérique jouet écrit et scellé, fichier d'entrées."""
++"""Outils communs des essais de l'organisme retenu (v5) : étalonnage numérique jouet écrit et scellé, fichier d'entrées ;
++environnements simulés des essais (correctif 0011) : poste sans carte ni accord, interpréteur du système sans numpy."""
+ import json
++import os
++import shutil
++import subprocess
++import sys
+ from pathlib import Path
+ 
+ import numpy as np
+@@ -36,3 +41,35 @@ def episode(oracle: str, exces: list, phase: str = "maitre", nom: str = "e0", sa
+             l["exces"] = float(e)                      # excès imposé à la valeur exacte voulue (bornes incluses)
+             lignes.append(l)
+     return lignes
++
++
++# ---- correctif 0011 : l'environnement que simule un essai est écrit par l'essai, jamais hérité de la machine qui le joue ----
++def environnement_sans_carte(dossier: Path, base: dict) -> dict:
++    """Environnement d'un sous-processus qui simule un poste sans carte ni accord, où le mode jouet est permis : `base` sans
++    `IIB_GO_ID` (l'accord que le lanceur de session pose sur la machine) ; chemin réduit à un dossier neuf qui ne porte que
++    `git` (le manifeste du run lit le commit), donc sans `nvidia-smi` ; `CUDA_VISIBLE_DEVICES` vide, pour que torch, s'il est
++    installé, ne voie aucune carte (contrat de CUDA). Sur la machine louée (accord posé, `nvidia-smi` dans `/usr/bin`, torch
++    qui voit la carte), le seul chemin `/usr/bin:/bin` ne masquait rien : la garde « mode jouet sur une machine payante » a
++    joué dans l'essai lui-même (première tentative de l'étalonnage, 21 novembre). La garde, elle, ne change pas."""
++    git = shutil.which("git", path=base.get("PATH"))
++    if git is None:
++        raise RuntimeError("git introuvable dans le chemin de l'environnement de base : poste sans carte non constructible")
++    outils = Path(dossier) / "chemin-du-poste-sans-carte"
++    outils.mkdir(parents=True)
++    os.symlink(git, outils / "git")
++    env = {k: v for k, v in base.items() if k != "IIB_GO_ID"}
++    env.update({"PATH": str(outils), "CUDA_VISIBLE_DEVICES": ""})
++    return env
++
++
++def python_sans_numpy(dossier: Path) -> Path:
++    """Dossier `bin` d'un environnement virtuel vide (aucun paquet tiers) : son `python3` est celui du système de la machine
++    louée, sans numpy, que la surveillance du lanceur de session appelle par `python3 -I -B`. Vérifié avant emploi (R5) : un
++    `python3` qui verrait numpy ne simulerait pas la machine, et l'essai s'arrête."""
++    v = Path(dossier) / "environnement-vide"
++    v.parent.mkdir(parents=True, exist_ok=True)
++    subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(v)], check=True, capture_output=True, timeout=120)
++    r = subprocess.run([str(v / "bin" / "python3"), "-I", "-B", "-c", "import numpy"], capture_output=True, text=True, timeout=60)
++    if r.returncode == 0 or "No module named 'numpy'" not in r.stderr:
++        raise RuntimeError(f"l'environnement virtuel vide voit numpy (code {r.returncode}) : interpréteur sans numpy non simulé")
++    return v / "bin"
+diff --git a/tests/test_iib_distillation_bout_en_bout_v5.py b/tests/test_iib_distillation_bout_en_bout_v5.py
+index 82d0fb110..2cba6307b 100644
+--- a/tests/test_iib_distillation_bout_en_bout_v5.py
++++ b/tests/test_iib_distillation_bout_en_bout_v5.py
+@@ -31,11 +31,11 @@ def course(tmp_path_factory):
+     modele, monde = ModeleJouetEleve(), la.MondeJouet()
+     marques = []
+     d = _distillateur(racine, modele, progres=lambda **c: marques.append(c))
+-    la.phase_etalonnage(config, racine, racine / "course", d.modele, monde)
++    la.phase_etalonnage(config, racine, racine / "course", d.modele, monde, carte=False)      # poste simulé sans carte (correctif 0011)
+     cond = la.phase_conditions(config, racine, racine / "course")
+     avant = tmp_path_factory.mktemp("iib-v5-distillation-copie") / "depot"
+     shutil.copytree(racine, avant)                                  # l'état scellé d'avant la course, pour les refus
+-    res = la.phase_course(config, racine, "course", d.modele, monde, d) if cond["issue"] in ("N", "P") else None
++    res = la.phase_course(config, racine, "course", d.modele, monde, d, carte=False) if cond["issue"] in ("N", "P") else None
+     return {"racine": racine, "avant": avant, "config": config, "modele": modele, "monde": monde, "d": d, "conditions": cond, "course": res,
+             "marques": marques}
+ 
+@@ -114,9 +114,9 @@ def test_course_refusee_avant_le_premier_tour_si_la_lecture_de_la_premiere_actio
+     vide = copy.deepcopy(course["config"])
+     vide[cd.SECTION]["perte"]["premiere_action"] = None
+     with pytest.raises(GardeArret, match="premiere_action non remplie"):
+-        la.phase_course(vide, racine, "course", d.modele, course["monde"], d)
++        la.phase_course(vide, racine, "course", d.modele, course["monde"], d, carte=False)
+     sans = {k: v for k, v in course["config"].items() if k != cd.SECTION}
+     with pytest.raises(GardeArret, match="absente"):
+-        la.phase_course(sans, racine, "course", d.modele, course["monde"], d)
++        la.phase_course(sans, racine, "course", d.modele, course["monde"], d, carte=False)
+     assert not (racine / "course" / la.NOMS["course"]).exists() and not (racine / "course" / la.NOMS["ids_course"]).exists()
+     assert modele.contextes_generes == [] and d.moteur.journal == []                      # aucun épisode joué, aucun poids touché
+diff --git a/tests/test_iib_environnement_machine_v5.py b/tests/test_iib_environnement_machine_v5.py
+new file mode 100644
+index 000000000..07cf38681
+--- /dev/null
++++ b/tests/test_iib_environnement_machine_v5.py
+@@ -0,0 +1,223 @@
++"""Environnement de la machine louée, reproduit sur le poste (correctif 0011) : accord posé (`IIB_GO_ID`), carte simulée (un
++`nvidia-smi` factice en tête du chemin ; un torch factice qui voit une carte tant que `CUDA_VISIBLE_DEVICES` n'est pas vide,
++dans l'interpréteur de l'amorce), python3 du système sans numpy (environnement virtuel vide ; `python3 -I -S`). Chaque
++condition sur un cas sain et un artefact (R5). La première tentative de l'étalonnage s'est arrêtée sur la machine, pendant la
++suite ciblée, avant tout chargement du modèle : « 5 failed, 263 passed, 3 errors » ; ces essais en reproduisent les deux causes.
++Aucune machine, aucun loueur, aucun réseau."""
++import os
++import re
++import shutil
++import subprocess
++import sys
++import types
++from pathlib import Path
++
++import pytest
++from iib_v5_outils import environnement_sans_carte, python_sans_numpy
++from test_iib_lanceur_v5 import _depot_jouet, _monde
++
++from controle_ia.gardes import GardeArret
++from controle_ia.iib import lanceur_v5 as la
++from controle_ia.iib.jouet_v5 import ModeleJouetDeLangue
++
++DEPOT = Path(__file__).resolve().parents[1]
++SRC = str(DEPOT / "src")
++GO = "GO-2099-01-01-01"                         # accord factice, de la forme de ceux que le lanceur de session pose sur la machine
++VOIR_LA_CARTE = "from controle_ia.iib.lanceur_v5 import carte_visible; print(carte_visible())"
++# la commande même par laquelle la surveillance du lanceur de session appelle la règle de coupure de l'étalonnage
++SESSION = re.search(r'^SESSION="(.+)"$', (DEPOT / "scripts" / "lancer_iib_v3.sh").read_text(encoding="utf-8"), re.M).group(1).replace("$DEPOT", str(DEPOT))
++NVIDIA_SMI_FACTICE = "#!/bin/sh\necho 'NVIDIA A100-SXM4-80GB, 595.91.07, 81920 MiB (carte simulée par les essais du correctif 0011)'\n"
++TORCH_FACTICE = '''"""torch factice des essais du correctif 0011 : une carte est visible, comme sur la machine louée, tant que
++CUDA_VISIBLE_DEVICES n'est pas vide (contrat de CUDA : vide, aucune carte n'est visible du processus)."""
++import os
++
++
++class cuda:  # noqa: N801
++    @staticmethod
++    def is_available():
++        return os.environ.get("CUDA_VISIBLE_DEVICES") != ""
++'''
++# « 5 failed, 263 passed, 3 errors » : les huit essais arrêtés sur la machine louée (traces de l'exécutante, tests.txt, 21 novembre)
++ARRETES_SUR_LA_MACHINE = (
++    "tests/test_iib_lanceur_v5.py::test_second_passage_des_conditions_refuse",
++    "tests/test_iib_lanceur_v5.py::test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree",
++    "tests/test_iib_lanceur_v5.py::test_surveillance_cas_sain_depense_sous_12_rien",
++    "tests/test_iib_lanceur_v5.py::test_surveillance_artefact_depense_a_12_coupure_motif_ecrit_arret_par_l_identifiant",
++    "tests/test_iib_lanceur_v5.py::test_surveillance_hors_etalonnage_la_regle_ne_joue_pas_et_phase_illisible_arrete",
++    "tests/test_iib_distillation_bout_en_bout_v5.py::test_course_entiere_distillation_et_evaluation_scellees",
++    "tests/test_iib_distillation_bout_en_bout_v5.py::test_evaluation_quatre_conditions_deux_oracles_modele_rendu_a_dose_nulle",
++    "tests/test_iib_distillation_bout_en_bout_v5.py::test_course_refusee_avant_le_premier_tour_si_la_lecture_de_la_premiere_action_est_vide",
++)
++
++
++def machine_simulee(dossier: Path) -> dict:
++    """Pièces de la carte simulée : `bin/nvidia-smi` factice, exécutable ; `site/torch/` factice."""
++    d = Path(dossier)
++    (d / "bin").mkdir(parents=True)
++    smi = d / "bin" / "nvidia-smi"
++    smi.write_text(NVIDIA_SMI_FACTICE, encoding="utf-8")
++    smi.chmod(0o755)
++    (d / "site" / "torch").mkdir(parents=True)
++    (d / "site" / "torch" / "__init__.py").write_text(TORCH_FACTICE, encoding="utf-8")
++    return {"bin": d / "bin", "site": d / "site"}
++
++
++def environnement_de_la_machine(m: dict) -> dict:
++    """L'environnement des essais, plus ce que porte la machine louée : l'accord posé, une carte que `nvidia-smi` voit en tête
++    du chemin ; aucun masque de CUDA."""
++    env = {k: v for k, v in os.environ.items() if k != "CUDA_VISIBLE_DEVICES"}
++    env.update({"IIB_GO_ID": GO, "PATH": f"{m['bin']}{os.pathsep}{os.environ.get('PATH', '')}"})
++    return env
++
++
++def python_carte_simulee(dossier: Path, site: Path) -> Path:
++    """Interpréteur d'un environnement virtuel dont le torch (factice) voit la carte, et qui voit les paquets de l'interpréteur
++    des essais (numpy, pytest) par un fichier `.pth` : l'environnement de l'amorce sur la machine louée. Vérifié avant emploi
++    (R5) : torch factice chargé, carte vue sans masque, masquée par `CUDA_VISIBLE_DEVICES` vide ; sinon l'essai s'arrête."""
++    v = Path(dossier) / "environnement-de-l-amorce"
++    v.parent.mkdir(parents=True, exist_ok=True)
++    subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(v)], check=True, capture_output=True, timeout=120)
++    py = v / "bin" / "python"
++    paquets = Path(subprocess.run([str(py), "-I", "-c", "import sysconfig; print(sysconfig.get_paths()['purelib'])"], check=True,
++                                  capture_output=True, text=True, timeout=60).stdout.strip())
++    shutil.copytree(Path(site) / "torch", paquets / "torch")
++    parents = [p for p in sys.path if p and Path(p).is_dir() and Path(p).name in ("site-packages", "dist-packages")]
++    (paquets / "paquets-des-essais.pth").write_text("".join(p + "\n" for p in parents), encoding="utf-8")
++    sonde = "import os, numpy, pytest, torch; print(os.path.realpath(torch.__file__)); print(torch.cuda.is_available())"
++    env = {k: v for k, v in os.environ.items() if k != "CUDA_VISIBLE_DEVICES"}
++    vu = subprocess.run([str(py), "-c", sonde], env=env, capture_output=True, text=True, timeout=120)
++    masque = subprocess.run([str(py), "-c", sonde], env={**env, "CUDA_VISIBLE_DEVICES": ""}, capture_output=True, text=True, timeout=120)
++    factice = str((paquets / "torch" / "__init__.py").resolve())
++    if vu.returncode or masque.returncode or vu.stdout.splitlines()[-2:] != [factice, "True"] or masque.stdout.splitlines()[-2:] != [factice, "False"]:
++        raise RuntimeError(f"interpréteur de la carte simulée non conforme : {vu.stdout!r} {vu.stderr[-400:]!r} / {masque.stdout!r}")
++    return py
++
++
++def _module_torch_factice() -> types.ModuleType:
++    t = types.ModuleType("torch")
++    exec(TORCH_FACTICE, t.__dict__)                                  # noqa: S102 (texte constant de ce fichier)
++    return t
++
++
++def _carte_vue(python, env: dict) -> str:
++    r = subprocess.run([str(python), "-c", VOIR_LA_CARTE], env={**env, "PYTHONPATH": SRC}, capture_output=True, text=True, timeout=300)
++    assert r.returncode == 0, r.stderr[-800:]
++    return r.stdout.strip()
++
++
++def test_accord_pose_et_carte_simulee_dans_le_processus_la_garde_refuse_l_essai_isole_passe(tmp_path, monkeypatch):
++    """Dans le processus des essais, chaque condition de la machine — accord posé, carte vue par `nvidia-smi`, carte vue par
++    torch — sur un artefact (sans isolement explicite, la garde refuse le mode jouet : son effet en production est intact) et un
++    cas sain (avec l'isolement que l'essai écrit, la garde laisse passer et c'est le contrôle suivant qui parle)."""
++    racine = tmp_path / "depot"
++    config = _monde(racine)
++    modele, monde = ModeleJouetDeLangue(), la.MondeJouet()
++    deja = racine / "deja"
++    (deja / "lots").mkdir(parents=True)                             # un étalonnage déjà joué ici : le contrôle qui suit la garde
++    m = machine_simulee(tmp_path / "machine")
++    vide = tmp_path / "chemin-vide"
++    vide.mkdir()
++    monkeypatch.setitem(sys.modules, "torch", _module_torch_factice())          # torch du processus : le factice (sur la machine, il masque le vrai)
++    monkeypatch.setenv("PATH", str(vide))
++    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
++    monkeypatch.delenv("IIB_GO_ID", raising=False)
++    assert not la.carte_visible()                                    # point de départ : ni carte ni accord
++    # 1. accord posé dans l'environnement du processus, comme sur la machine
++    monkeypatch.setenv("IIB_GO_ID", GO)
++    with pytest.raises(GardeArret, match="mode jouet sur une machine payante"):  # artefact : le point d'entrée lit l'environnement
++        la.executer("etalonnage", config, racine, "20991231-000009-iib-jouet", modele, monde, carte=False)
++    assert not (racine / "runs").exists() and not (racine / "diag").exists()
++    with pytest.raises(GardeArret, match="déjà joué"):               # cas sain : l'essai isole l'accord ({} explicite)
++        la.phase_etalonnage(config, racine, deja, modele, monde, {}, carte=False)
++    monkeypatch.delenv("IIB_GO_ID")
++    # 2. carte vue par nvidia-smi (factice, en tête du chemin)
++    monkeypatch.setenv("PATH", f"{m['bin']}{os.pathsep}{vide}")
++    assert la.carte_visible()
++    with pytest.raises(GardeArret, match="mode jouet sur une machine payante"):  # artefact : la carte est détectée
++        la.phase_etalonnage(config, racine, deja, modele, monde)
++    with pytest.raises(GardeArret, match="déjà joué"):               # cas sain : carte=False explicite
++        la.phase_etalonnage(config, racine, deja, modele, monde, carte=False)
++    # 3. carte vue par torch, aucun nvidia-smi sur le chemin
++    monkeypatch.setenv("PATH", str(vide))
++    monkeypatch.delenv("CUDA_VISIBLE_DEVICES")
++    assert la.carte_visible()
++    with pytest.raises(GardeArret, match="mode jouet sur une machine payante"):
++        la.phase_course(config, racine, "course", modele, monde)
++    with pytest.raises(GardeArret, match="pas de course sans résultat"):
++        la.phase_course(config, racine, "course", modele, monde, carte=False)
++    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")                  # le masque de CUDA que pose l'isolement des sous-processus
++    assert not la.carte_visible()
++
++
++def test_point_d_entree_sous_la_machine_simulee_l_isolement_masque_la_carte_la_garde_refuse_sans_lui(tmp_path, tmp_path_factory):
++    """Sous-processus, comme le point d'entrée que l'essai à blanc appelle : la machine simulée est vue ; l'ancien isolement
++    des essais (`/usr/bin:/bin`, sans accord) ne masquait pas la carte que voit torch (l'arrêt de la machine) ; l'isolement
++    écrit par les essais la masque, à l'interpréteur simulé comme au vrai interpréteur des essais (sur la machine louée : le
++    vrai torch et la vraie carte) ; sans lui, le point d'entrée refuse le mode jouet avant tout manifeste."""
++    m = machine_simulee(tmp_path_factory.mktemp("machine"))
++    py = python_carte_simulee(tmp_path_factory.mktemp("interpreteur"), m["site"])
++    machine = environnement_de_la_machine(m)
++    assert _carte_vue(py, machine) == "True"                         # artefact de la simulation : la carte est vue
++    ancien = {**{k: v for k, v in machine.items() if k != "IIB_GO_ID"}, "PATH": "/usr/bin:/bin"}
++    assert _carte_vue(py, ancien) == "True"                          # l'ancien isolement de l'essai à blanc ne la masquait pas
++    isole = environnement_sans_carte(tmp_path_factory.mktemp("poste"), machine)
++    assert "IIB_GO_ID" not in isole and isole["CUDA_VISIBLE_DEVICES"] == "" and not shutil.which("nvidia-smi", path=isole["PATH"])
++    assert _carte_vue(py, isole) == "False" and _carte_vue(sys.executable, isole) == "False"      # cas sain
++    _depot_jouet(tmp_path)
++    carte_seule = {k: v for k, v in machine.items() if k != "IIB_GO_ID"}
++    for n, env in enumerate((machine, carte_seule, {**isole, "IIB_GO_ID": GO})):     # accord et carte ; carte seule ; accord seul
++        run = f"20991231-00002{n}-iib-jouet"
++        r = subprocess.run([str(py), "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-iib-v5-jouet.json", "--run-id", run,
++                            "--phase", "etalonnage"], cwd=tmp_path, env={**env, "PYTHONPATH": SRC}, capture_output=True, text=True, timeout=300)
++        assert r.returncode == 1 and "mode jouet sur une machine payante" in r.stderr and not (tmp_path / "runs" / run).exists(), (n, r.stderr[-800:])
++
++
++def test_regle_de_coupure_sous_le_python3_du_systeme_sans_numpy_cas_sain_artefact_phase_illisible(tmp_path):
++    """La règle de coupure de l'étalonnage à 12 USD, appelée comme la surveillance l'appelle, sous le python3 du système de la
++    machine louée (sans numpy) : environnement virtuel vide, puis `-I -S` (aucun paquet tiers). Cas sain (sous 12 USD : rien),
++    artefact (à 12 USD : arrêt), autre phase (la règle ne joue pas), phase illisible (refus, aucun repli)."""
++    sans_numpy = python_sans_numpy(tmp_path / "python-du-systeme")
++    # la simulation reproduit la machine (R5) : le module de configuration, qui a besoin de numpy (lois exactes), ne s'y charge
++    # pas — c'est la trace de la machine ; la règle de coupure, elle, doit s'y charger sans lui
++    r = subprocess.run([str(sans_numpy / "python3"), "-I", "-B", "-c", f"import sys; sys.path.insert(0, {SRC!r}); from controle_ia.iib import configuration_v5"],
++                       capture_output=True, text=True, timeout=120)
++    assert r.returncode != 0 and "No module named 'numpy'" in r.stderr
++    from datetime import datetime, timezone
++
++    cree = 1_795_000_000
++    progres = tmp_path / "progres.txt"
++    instant = datetime.fromtimestamp(cree + 600, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
++    progres.write_text(f"AMORCE IIB v1 DEMARRAGE 1 : {instant}, machine m, commit c\nPROGRES {instant} phase=etalonnage lot=1\n", encoding="utf-8")
++
++    def h(heures):
++        return str(int(cree + 600 + heures * 3600))
++    for interpreteur in ([str(sans_numpy / "python3"), "-I", "-B"], [sys.executable, "-I", "-S", "-B"]):
++        def regle(phase, maintenant):
++            return subprocess.run([*interpreteur, "-c", SESSION, "coupure-etalonnage", phase, str(progres), maintenant, "1.30", "0.08", str(cree)],
++                                  capture_output=True, text=True, timeout=120)
++        sain = regle("etalonnage", h(8))                             # 8 h à 1,38 USD/h : 11,04 USD
++        assert sain.returncode == 0, (interpreteur, sain.stderr[-1500:])
++        assert sain.stdout.startswith("RIEN : dépense comptée de l'étalonnage 11.04 USD < 12 USD (depuis : début de l'amorce)"), sain.stdout
++        art = regle("etalonnage", h(9))                              # 9 h : 12,42 USD
++        assert art.returncode == 0 and art.stdout.startswith("ARRET coupure de l'étalonnage : dépense comptée 12.42 USD ≥ 12 USD"), art.stdout
++        autre = regle("course", h(30))
++        assert autre.returncode == 0 and "ne joue pas" in autre.stdout, autre.stderr[-800:]
++        illisible = regle("illisible", h(1))
++        assert illisible.returncode == 1 and "REFUS : coupure de l'étalonnage : phase 'illisible' illisible" in illisible.stderr, illisible.stderr[-800:]
++        assert "No module named" not in sain.stderr + art.stderr + autre.stderr + illisible.stderr
++
++
++def test_les_huit_essais_arretes_sur_la_machine_passent_sous_la_machine_simulee(tmp_path):
++    """Reproduction de l'arrêt de la machine : les huit essais en échec ou en erreur sur la machine louée, rejoués par un pytest
++    enfant dans l'environnement de la machine simulée — accord posé, carte que voient `nvidia-smi` (en tête du chemin) et
++    torch (interpréteur de l'amorce simulé), python3 du système sans numpy (celui que la surveillance trouve, posé par
++    `_surveiller`). Sans le correctif 0011 ils échouent comme sur la machine ; avec lui, ils passent."""
++    m = machine_simulee(tmp_path / "machine")
++    py = python_carte_simulee(tmp_path / "interpreteur", m["site"])
++    env = environnement_de_la_machine(m)
++    assert _carte_vue(py, env) == "True"                             # la simulation est en place (R5)
++    r = subprocess.run([str(py), "-m", "pytest", "-q", "-p", "no:cacheprovider", "--color=no", f"--basetemp={tmp_path / 'essais-enfants'}",
++                        *ARRETES_SUR_LA_MACHINE], cwd=DEPOT, env=env, capture_output=True, text=True, timeout=1200)
++    lignes = r.stdout.strip().splitlines()
++    assert r.returncode == 0 and lignes and re.fullmatch(r"8 passed(, [0-9]+ warnings?)? in [0-9.]+s( \([0-9]+:[0-9]{2}:[0-9]{2}\))?", lignes[-1]), \
++        r.stdout[-6000:] + r.stderr[-1500:]
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index 8de1782cf..9a644b34e 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -92,8 +92,8 @@ def test_second_passage_des_conditions_refuse(course):
+     with pytest.raises(GardeArret, match="second passage"):
+         la.phase_conditions(course["config"], course["racine"], course["racine"] / "course")
+     # même si le seul résultat de la désignation a disparu, le résultat scellé des conditions suffit à refuser
+-    with pytest.raises(GardeArret, match="déjà joué"):
+-        la.phase_etalonnage(course["config"], course["racine"], course["racine"] / "course", course["modele"], course["monde"])
++    with pytest.raises(GardeArret, match="déjà joué"):            # poste simulé sans carte (correctif 0011)
++        la.phase_etalonnage(course["config"], course["racine"], course["racine"] / "course", course["modele"], course["monde"], carte=False)
+ 
+ 
+ def test_course_du_maitre_oracle_de_la_regle_seul_puis_oracle_non_designe_sur_les_acceptes(course):
+@@ -315,17 +315,21 @@ def test_une_garde_qui_arrete_laisse_les_lots_et_ecrit_le_motif(tmp_path):
+         la.executer("etalonnage", config, tmp_path, "20991231-000000-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
+ 
+ 
+-def test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree(tmp_path):
++def test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree(tmp_path, tmp_path_factory):
+     """B1 : `python -m controle_ia.iib.lanceur_v5 --phase etalonnage`, puis `--phase conditions`, sur le monde jouet, comme
+-    l'amorce les appelle (répertoire courant = racine du dépôt cloné ; sorties sous runs/, diag/, donnees/)."""
++    l'amorce les appelle (répertoire courant = racine du dépôt cloné ; sorties sous runs/, diag/, donnees/). Le sous-processus
++    joue sur un poste simulé sans carte ni accord, écrit par l'essai (correctif 0011 : sur la machine louée, `/usr/bin:/bin`
++    portait `nvidia-smi` et torch voyait la carte)."""
+     import os
+     import subprocess
+     import sys
+ 
++    from iib_v5_outils import environnement_sans_carte
++
+     config, chemin = _depot_jouet(tmp_path)
+     run = "20991231-000001-iib-jouet"
+-    env = {k: v for k, v in os.environ.items() if k != "IIB_GO_ID"}
+-    env.update({"PYTHONPATH": str(DEPOT / "src"), "PATH": "/usr/bin:/bin"})          # aucune carte visible sur ce chemin
++    env = environnement_sans_carte(tmp_path_factory.mktemp("poste-sans-carte"), os.environ)     # hors du dépôt jouet : il reste propre
++    env["PYTHONPATH"] = str(DEPOT / "src")
+     base = [sys.executable, "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-iib-v5-jouet.json", "--run-id", run]
+     r = subprocess.run(base + ["--phase", "etalonnage"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=300)
+     assert r.returncode == 0, r.stderr[-800:]
+@@ -371,7 +375,7 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
+     for f in ("amorce_instance_iib_v5.sh", "lancer_iib_v3.sh"):
+         assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
+     amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
+-    liste = s / "tests-cibles-iib-v5-v4.txt"
++    liste = s / "tests-cibles-iib-v5-v5.txt"                     # version 5 de la liste : environnement de la machine simulée (correctif 0011)
+     assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
+     fichiers = liste.read_text(encoding="utf-8").split()
+     # tous les fichiers d'essais en version 5, distillateur compris, sauf celui du tokeniseur réel et celui du moteur à torch du
+@@ -379,9 +383,9 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
+     # attendus de l'amorce, et le nombre doit être le même sur le poste et sur la machine)
+     hors = ("tokeniseur_reel", "distillation_torch")
+     assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py") if not any(h in f.name for h in hors))
+-    assert len(fichiers) == 23 and not any(h in f for f in fichiers for h in hors)
++    assert len(fichiers) == 24 and not any(h in f for f in fichiers for h in hors)
+     assert {"tests/test_iib_configuration_distillation_v5.py", "tests/test_iib_distillation_v5.py",
+-            "tests/test_iib_distillation_bout_en_bout_v5.py"} <= set(fichiers)
++            "tests/test_iib_distillation_bout_en_bout_v5.py", "tests/test_iib_environnement_machine_v5.py"} <= set(fichiers)
+     assert amorce.count("controle_ia.iib.lanceur_v5 --phase etalonnage --config") == 1 and "controle_ia.iib.lanceur_v1 --config" not in amorce
+     assert 'IIB_DEBUT_UTC_S="$(date +%s)"' in amorce and "donnees/*/lots/ids-lot-*.json" in amorce
+ 
+@@ -442,13 +446,17 @@ def test_coupure_de_l_etalonnage_regle_cas_sain_artefact_et_autre_phase():
+ 
+ def _surveiller(tmp_path, phase, heures, journal_de_fin=False, duree=5):
+     """La sous-commande « surveillance » du lanceur de session en version 3, faux outil de location, aucun réseau ; rend
+-    (code, sortie, texte de la surveillance, appels au faux outil, dossier)."""
++    (code, sortie, texte de la surveillance, appels au faux outil, dossier). Le `python3` que la surveillance trouve en tête
++    du chemin est celui d'un environnement virtuel vide : sans numpy, comme le python3 du système de la machine louée
++    (correctif 0011 ; sur le poste, celui du système voyait numpy et cachait le défaut)."""
+     import subprocess
+     import time
+     from datetime import datetime, timezone
+ 
++    from iib_v5_outils import python_sans_numpy
+     from test_iib_lanceur_forme_v2 import FAUX_OUTIL
+ 
++    sans_numpy = python_sans_numpy(tmp_path / "python-du-systeme")
+     d = tmp_path / "session"
+     d.mkdir(parents=True)
+     outil = tmp_path / "outil" / "vastai"
+@@ -465,7 +473,7 @@ def _surveiller(tmp_path, phase, heures, journal_de_fin=False, duree=5):
+     if phase is not None:
+         (d / "amorce.sh").write_text("#!/usr/bin/env bash\n# commentaire : controle_ia.iib.lanceur_v5 --phase autre --config x\n"
+                                      f'PYTHONPATH=src python -m controle_ia.iib.lanceur_v5 --phase {phase} --config "$CONFIG" --run-id "$RUN" &\n', encoding="utf-8")
+-    e = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(tmp_path), "LANG": "C.UTF-8", "VAST": str(outil), "INTERVALLE": "1",
++    e = {"PATH": f"{sans_numpy}:/usr/local/bin:/usr/bin:/bin", "HOME": str(tmp_path), "LANG": "C.UTF-8", "VAST": str(outil), "INTERVALLE": "1",
+          "FAUX_VASTAI_JOURNAL": str(tmp_path / "appels.txt"), "FAUX_JOURNAL": str(tmp_path / "journal.txt"),
+          "CONTROLE_IA_GITHUB_TOKEN_2": "ghp_FACTICEfactice0123456789", "VAST_API_KEY": "cle-loueur-factice-0123456789abcdef"}
+     r = subprocess.run(["timeout", "-k", "2", str(duree), "bash", str(DEPOT / "scripts" / "lancer_iib_v3.sh"), "surveillance", "61414494", str(d)],
+-- 
+2.43.0
+

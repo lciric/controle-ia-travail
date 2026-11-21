@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+echo "$*" >> "$FAUX_VASTAI_JOURNAL"
+[ "${FAUX_MUET:-}" = 1 ] && [ "$1" = --version ] && exit 3
+[ "$1" = --version ] && { echo "vastai 1.8.3-factice"; exit 0; }
+case "$1 $2" in
+"create instance") cat "$FAUX_REPONSE"; exit "${FAUX_CODE:-0}" ;;
+"show instances")
+    [ "${FAUX_INVENTAIRE_ILLISIBLE:-}" = 1 ] && { echo "<html>erreur 502</html>"; exit 0; }
+    [ "${FAUX_INVENTAIRE_ERREUR:-}" = 1 ] && { echo "{\"error\": \"unauthorized\"}"; echo "HTTPError 401 ; Authorization: Bearer $VAST_API_KEY" >&2; exit 1; }
+    if [ -n "${FAUX_INVENTAIRE_CLIGNOTE:-}" ] && grep -q "^destroy" "$FAUX_VASTAI_JOURNAL"; then
+        k=$(grep -c "^show instances" "$FAUX_VASTAI_JOURNAL"); [ $((k % 2)) = 0 ] && { cat "$FAUX_INVENTAIRE_CLIGNOTE"; exit 0; }
+    fi
+    cat "$FAUX_INSTANCES"; exit 0 ;;
+"destroy instance")
+    oui=non; for a in "$@"; do [ "$a" = -y ] && oui=oui; done
+    if [ "$oui" = non ]; then
+        printf 'Are you sure you want to destroy instance %s? [y/N] ' "$3"
+        read -r rep || { echo "Aborted: no confirmation"; exit 1; }
+        [ "$rep" = y ] || { echo "Aborted"; exit 1; }
+    fi
+    case "${FAUX_DESTRUCTION:-}" in vide) echo "[]" > "$FAUX_INSTANCES"; echo "destroying instance $3."; exit 0 ;; sans-effet) echo "destroying instance $3."; exit 0 ;; echec) echo "failed with error 500 ; Authorization: Bearer $VAST_API_KEY"; exit 1 ;; esac
+    python3 - "$FAUX_INSTANCES" "$3" <<'PY'
+import json, sys
+l = json.load(open(sys.argv[1]))
+json.dump([i for i in l if str(i["id"]) != sys.argv[2]], open(sys.argv[1], "w"))
+PY
+    [ "${FAUX_DESTRUCTION:-}" = echec-mais-retire ] && { echo "erreur de lecture de la réponse"; exit 1; }
+    echo "destroying instance $3."; exit 0 ;;
+esac
+if [ "$1" = logs ]; then cat "$FAUX_JOURNAL"; exit 0; fi
+echo "appel inattendu : $*" >&2; exit 3
