@@ -12,3 +12,4 @@
 | MONTAGE-LENTILLES-BBIS | 2026-11-21T19:53:01Z | diag/20261121-193607-lentilles-bbis-v1/montage-lentilles-bbis.json | 7eaad3c3fc9381626d57caa614a6d801e2750c67f413a6788d1b5a21c395c7f0 |
 | ENTREES-LENTILLES-BBIS | 2026-11-21T20:05:50Z | diag/20261121-193607-lentilles-bbis-v1/entrees-lentilles-bbis.json | 90f962a8744e155d5e7876fae91eae2dafa9f99637f587c862df8cd80aa0b428 |
 | TABLES-LENTILLES-BBIS | 2026-11-21T20:05:50Z | diag/20261121-193607-lentilles-bbis-v1/tables-lentilles-bbis.json | 25ea42f89ea208ad35b8e2feb2f7b6f88a917f6cf1190b5d8f5ac4b56748806a |
+| OUVERTURE-LENTILLES-BBIS | 2026-11-21T20:29:10Z | diag/20261121-193607-lentilles-bbis-v1/tables-lentilles-bbis.json | 25ea42f89ea208ad35b8e2feb2f7b6f88a917f6cf1190b5d8f5ac4b56748806a |
