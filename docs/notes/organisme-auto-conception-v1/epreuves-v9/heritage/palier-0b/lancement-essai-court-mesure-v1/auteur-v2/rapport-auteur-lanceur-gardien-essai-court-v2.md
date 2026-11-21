@@ -1,0 +1,86 @@
+# Rapport de l'auteur v2 du lanceur et du gardien — palier 0b, essai court de mesure — v2
+
+Mandat `mandat-auteur-lanceur-et-gardien-essai-court-palier-0b-v1.md` (32580fd6…8d84) et erratum 1 (d21745f5…193b, qui prime), vérifiés par `sha256sum`, lus en entier ; pièces de `auteur-v1/` et de `contre-lecture-v1/` lues en entier. Dossier (noté D) : `/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/auteur-lanceur-gardien-palier-0b-v2/`. Complément 1 v3 extrait par `git show origin/main:… >` dans D : extraction v1 `complement-1-v3-extraction-v1.md` 1484cd75…7268 (égale à l'attendue) ; extraction v2 `complement-1-v3-extraction-v2.md` 56ed20f8…b867 (aucune empreinte attendue donnée ; relevée). Aucun vrai programme lancé ; rien écrit sous `/home/user/palier-0b-racine/` ni sous `/home/user/journaux-palier-0b-essai-court-v1/` ; aucun commit du dépôt (seuls des dépôts git factices jetables sous D/essais, comme en v1) ; aucune dépense ; aucun refus de permission, de classifieur ou de garde rencontré ; arrêts de processus : seulement mes factices, par identifiant, suivis par `stat -c %n /proc/PID`.
+
+## Fichiers v2 et empreintes (sha256 ; compagnons `.sha256` écrits à côté)
+
+À employer (D/) :
+- `lancer-essai-court-v2.sh` — 4c96c7034b9ef62b5c3231b864efbb4c2fcf5e748aa995cc7fc582130c5213f3
+- `demarrer-essai-court-v2.sh` — 2ec06e957a9e5fabf46413f8efe712e486a21f970cb5beb638bbde417bad0e38
+- `gardien-essai-court-v2.py` — 528e2e2574dc407388d481a4c942df75a284c9a6dcbac82f2621f7436c1d6a31
+- `demarrer-gardien-essai-court-v2.sh` — ef145f066e217f38cbe65fa924d3438854d22523c452e5c41f1db36a2f4f5d27
+- `verifier-commande-v2.py` — 68a74c7c2ae4634442b440c0500637e22ba210c30a167c3e1e79ca523e99861f
+
+Essais (D/essais/) : `rejouer-tout-v2.sh` (passage final de tous les essais), `jouer-scenario-v2.sh`, `essai-projection-v2.py`, `cl/cl-*.sh` (copies adaptées de la contre-lecture), `c/` (programme factice v2 et scénarios des corrections 5 et 6), `ecrire-compagnons-v2.sh` ; copies non modifiées : `auteur-v1-copie/`, `contre-lecture-v1-copie/`. Empreintes des essais : `essais/empreintes-essais-v2.txt`. Sorties du passage final : `essais/resultats/final-*.txt` (dossiers `essais/a-final/`, `essais/cl/e/*-final/`, `essais/c/e/*-final/`). Notes au fil de l'eau : `notes-avancement-v2.md`.
+
+Emploi prévu (inchangé dans sa forme, noms v2) : copier les quatre pièces dans le dossier de tenue, puis `bash …/demarrer-essai-court-v2.sh /home/user/journaux-palier-0b-essai-court-v1` et, aussitôt, `bash …/demarrer-gardien-essai-court-v2.sh /home/user/journaux-palier-0b-essai-court-v1` (valeurs d'emploi par défaut : sorties de l'essai court, 8 000 000 000 o, n = 13, 45 min, 60 s, délai forcé 60 s, 648).
+
+## Ce qui change de v1 à v2, par correction
+
+1. **Garde d'identité.** `demarrer-essai-court-v2.sh` lit, au lancement, le 22e champ de `/proc/PID/stat` (heure de démarrage, en tops) et l'écrit dans `depart-processus-essai-court.txt`, seulement si le parent lu est le script lui-même (`$$`) et le groupe établi ; sinon « inconnu » (code 5). Le gardien relit cette valeur et la compare avant tout signal (`identite()`), avec le démarrage et le groupe (= identifiant) ; écart, fichier absent ou illisible : aucun signal, raison écrite dans `arret-gardien.txt` et dès la prise de garde dans le journal. Le gardien ne prend plus l'heure de départ à la prise de garde.
+2. **Arrêt forcé du groupe entier.** Après le signal de fin, attente que **tous** les membres présents du groupe (numéro de groupe et de session lus dans `/proc/*/stat`, zombies exclus) aient disparu ; s'il en reste au délai, `killpg` d'arrêt forcé. Le numéro d'un groupe ne pouvant être repris tant qu'un membre le porte, le groupe est encore celui identifié au signal de fin.
+3. **Descendants hors du groupe.** À chaque tour (et juste avant le signal, et pendant l'attente), arbre des descendants par la chaîne des parents dans `/proc/*/stat`, à partir du processus lancé identifié et des descendants déjà vus encore présents (les orphelins d'un descendant vu restent atteints) ; table identifiant → heure de départ. À l'arrêt : signal de fin, puis arrêt forcé au délai, **par identifiant**, à chaque descendant hors du groupe encore présent avec la même heure de départ (relue juste avant l'envoi). Colonne `descendants_vivants` ajoutée au journal. **Limite** : un descendant né et détaché (nouvelle session) puis devenu orphelin (son parent mort) entre deux relevés, et donc rattaché à un autre parent que la chaîne, échappe ; à l'instant de l'arrêt, tout descendant encore relié par des ancêtres vivants est pris.
+4. **Mesure instantanée.** Signal d'abord ; t_arrêt = heure d'envoi du signal de fin ; attente de la fin de tous (points 2 et 3) ; **puis** relevé de n et s4 sur le dossier figé ; la mesure dit si le dossier est figé (sinon « NON figé », et aucun signal : t_arrêt = heure de la décision).
+5. **Empreintes de l'inventaire.** Gardées (décision de la session). « Ne lit aucun contenu » s'entend « **n'interprète aucun contenu** » : seules les empreintes de l'inventaire lisent des octets ; aucune décision n'en dépend. Les entrées non régulières ne sont pas hachées (« non régulier : non haché »).
+6. **Fichier d'arrêt et projections.** Colonne `fichier_arret` : toute entrée dont le nom commence par « arret » (à la lettre, casse comprise), à toute profondeur du dossier des sorties, par `lstat` (noms seulement) ; « aucun » ou « oui (k : chemins…) ». Les trois lignes de projection portent « borne basse » ; au-delà de quatre heures (strictement), ligne « relance entière peu sûre entre deux redémarrages ».
+
+## Table des essais par correction (passage final, pièces dans leur état final)
+
+| Correction | Cas sain | Artefact | Attendu | Rendu |
+|---|---|---|---|---|
+| 1 identité | s2 (vrai départ, heure écrite = lue) | (a) `cl-decoy-v2.sh` h2 : fichiers désignant un `sleep` sans lien, pas de fichier d'heure ; (b) `cl-decoy-perime-v2.sh` : heure écrite d'un processus fini, identifiant réécrit vers un `sleep` sans lien ; (c) s9 : groupe écrit faux | sain : signal ; artefacts : aucun signal, raison écrite | sain : signal de fin au groupe, programme arrêté (code 143). (a) « aucun signal envoyé : identité non confirmée (heure de départ écrite absente…) », factice vivant après 4 s ; (b) « NON confirmée (heure de départ lue 476938 différente de l'écrite 476722…) », aucun `arret-gardien.txt`, factice vivant ; (c) « aucun signal envoyé… pas le chef du groupe écrit ». Factices arrêtés ensuite par moi, par identifiant. |
+| 2 groupe entier | c2-sain : membre du même groupe qui obéit au signal de fin | h4 (`scenario2` de la contre-lecture) : chef mort, membre sourd du groupe | sain : aucun arrêt forcé ; artefact : arrêt forcé du groupe, sourd arrêté | sain : « tous les membres du groupe… absents après le signal de fin », pas d'arrêt forcé. Artefact : « après 5.0 s, encore présents : membres du groupe [8643] » → arrêt forcé du groupe → « tous absents » ; marqueur figé à 1795280211.284 (avant l'arrêt forcé), `/proc/8643` absent. s7 (délai d'emploi 60 s) : arrêt forcé à 60,0 s, chef et enfant absents. |
+| 3 descendants | h1, témoin `setsid sleep 120` sans lien lancé à côté | h1 (`scenario.sh h1` de la contre-lecture) : enfant en session à part | témoin : aucun signal ; enfant : arrêté par identifiant | témoin vivant après le scénario (`/proc/8504`), arrêté ensuite par moi. Enfant : « descendant hors du groupe : 8520 (groupe 8520, session 8520) : signal SIGTERM envoyé », puis tous absents ; marqueur figé à 1795280192.637 (avant le signal), `/proc/8520` absent. |
+| 4 mesure instantanée | h1 (programme lent, 0,5 s par source) | h3 (`scenario.sh h3`, programme rapide 1 ms par source) | n égal au nombre de fichiers de s4, dossier figé | h1 : n = 5, s4 : 5 fichiers. h3 : n = 809, s4 : 809 fichiers (v1 : 788 contre 799) ; état « dossier figé » ; lignes du journal suivantes identiques (n 809). Premier passage : n = 826 = 826 fichiers, alors que n à la décision valait 816 : le relevé est bien postérieur au gel. |
+| 5 empreintes | c5-sain : manifeste 3 ordinaire | c5-artefact : manifeste 3 de même nom et même taille (64 o), contenu « ARRET IMMEDIAT n=999 libres=0 projection impossible » | empreinte de l'inventaire = `sha256sum` ; mêmes décisions dans les deux cas | inventaire 041964…061d = `sha256sum` (sain), 345d7a…a277 = `sha256sum` (artefact) ; les deux : « arrêt de mesure », « n = 6 a atteint le seuil 6 », colonne `fichier_arret` « aucun » ×6 : le contenu ne change aucune décision. |
+| 6 fichier d'arrêt, projections | c6-sain : noms voisins `etape-4/darret.txt`, `etape-4/couche-mecanique/Arret.txt` ; projection F (1,5 h), G (4,000 h exactement) | c6-artefact : `etape-4/couche-mecanique/bras-1-a-3/proposeur-0/arret-factice.txt` (profondeur 4) ; projections H (9 h), I (4,14 h) | sain : « aucun », pas de mention ; artefact : « oui », mention ; « borne basse » sur les trois lignes | c6-sain : « aucun » ×6 ; c6-artefact : « aucun » ×2 puis « oui (1 : etape-4/couche-mecanique/bras-1-a-3/proposeur-0/arret-factice.txt) » ×4 ; aucun arrêt (la colonne n'est pas un cas d'arrêt). `essai-projection-v2.py` : F, G sans mention, H, I avec, J « projection impossible » ; 0 échec. |
+
+Essais rejoués de `auteur-v1/essais/` (lanceur factice tiré du lanceur v2, 6 lignes changées) : refus du lanceur v0 à v7 : 0 échec (codes 0, 10, 11, 11, 12, 0, 13, 13, 2, 4, 3 ; dossier neuf jamais créé) ; projection A à E : 0 échec ; s1 sain place (code 0, aucun arrêt) ; s2 artefact place (arrêt, code 143) ; s3 sain n (code 0) ; s4 artefact n (arrêt à n = 14, intervalle 1 s pour 0,5 s par source) ; s5 sain durée (code 0) ; s6 artefact durée (arrêt, n = 6) ; s7 arrêt forcé à 60 s ; s8 « projection impossible (n = 1 < 2) » ; s9 identité. Rejoués de `contre-lecture-v1/essais/` : E1 h1, E3 h3, E3bis decoy, E4 h4 (table) ; E5 argv : diff extraction v1 / lanceur v2 : seul le 10e argument diffère ; extraction v1 / extraction v2 : aucune différence ; une seule ligne `env` dans le lanceur ; **objets faux ajoutés** (manquaient en v1) : lanceur altéré d'un octet (`-B` → `-b`), d'un argument en trop, d'une ligne doublée : vérificateur « ÉCHEC », code 1 les trois fois ; lanceur v2 : « ÉGAL », code 0.
+
+Calculs à la main (premier passage, mêmes formules) : s4 : 7,001439 s × 648/13 = 349,0 s ; 1 511 424 × 648/13 = 75 338 673 o ; 1 477 824 = 14 × 100 000 + 19 dossiers × 4 096. s6 : 5,011295 × 129,6 = 649,5 s ; 69 632 × 129,6 = 9 024 307 o. h1 : 2,033902 × 162 = 329,5 s ; 61 440 × 162 = 9 953 280 o. Égaux aux fichiers.
+
+## Écarts (à trancher par la session si besoin)
+
+1. Lanceur v2 : seul changement de fond, `GIT_OPTIONAL_LOCKS=0` devant `git status` (la contre-lecture notait que `git status` peut réécrire l'index de la racine) ; la ligne de commande est inchangée à l'octet (vérifiée sur les deux extractions). Non demandé par l'erratum ; retirable sans effet sur le reste.
+2. `fichier_arret` compte toute entrée (fichier ou dossier) dont le nom commence par « arret » à la lettre ; « Arret… », « arrêt… » ne comptent pas. La colonne v1 `arret_du_programme` (seulement `etape-N/arret.txt`) est remplacée.
+3. Si l'identité n'est pas confirmée au moment d'un arrêt, aucun nouvel essai n'a lieu (comme en v1) ; pour un arrêt de mesure sans signal, `mesure-essai-court.txt` est écrit quand même, marqué « dossier NON figé ».
+4. « Programme absent » (fin du gardien) = le processus lancé est absent ; si des descendants relevés restent vivants hors arrêt (sortie normale du programme), la dernière ligne les nomme, sans signal (le mandat ne permet que deux cas d'arrêt).
+5. Pendant l'attente d'arrêt (au plus délai + 10 s), aucune ligne de minute (comme en v1).
+6. Le contrôle du départ par le parent (`$$`) rend « inconnu » (code 5) si le lanceur est déjà fini avant la lecture : le gardien ne signalera alors rien ; cas non rencontré dans les essais (il ne peut survenir que si le lanceur finit en moins de quelques millisecondes, par exemple sur un refus de départ, où rien n'est à arrêter).
+7. Les essais s1 à s9, h1, h3, h4, c2-sain ont d'abord été joués avant deux retouches du gardien (ligne « identité à la prise de garde », condition de racine de l'arbre simplifiée) ; tout a été rejoué ensuite sur les pièces finales (`rejouer-tout-v2.sh final`) : ce sont les rendus de la table.
+
+## Limites
+
+- Factices plus simples que le vrai programme ; le vrai programme n'a jamais été lancé ; le comportement réel au signal de fin, et des scripts qu'il lance en session à part, n'est pas éprouvé.
+- Descendants détachés et devenus orphelins entre deux relevés : peuvent échapper (correction 3).
+- Un processus en sommeil non interruptible survivrait à l'arrêt forcé ; le gardien l'écrirait (« ENCORE PRÉSENTS »), sans plus.
+- Le délai d'emploi de 60 s n'est éprouvé qu'en s7 ; les autres essais forcés le sont à 5 s ; intervalle 1 s au lieu de 60.
+- La place libre (~40 Go pendant les essais) concerne le système de fichiers de D ; celui de la racine réelle n'est pas mesuré.
+- Le relevé de `/proc/*/stat` voit tous les processus du conteneur ; aucune décision ne porte sur un processus qui n'est ni le lancé identifié, ni un membre de son groupe (même session), ni un descendant relevé avec la même heure de départ.
+
+## Relevé de méthode
+
+**Chaîne de raisonnement.**
+1. Le lanceur porte la commande du complément 1 v3 à l'octet sauf le dernier argument : `verifier-commande-v2.py` sur les deux extractions (1484cd75…7268 ; 56ed20f8…b867), tête 619 octets, a0dc38a4…bd59 de part et d'autre ; argv par `bash` : seul le 10e argument diffère (`essais/resultats/final-argv.txt`).
+2. Le vérificateur distingue un lanceur faux : trois altérations construites rendent « ÉCHEC » (même fichier).
+3. Les refus de départ rendent les codes prévus sans rien créer : `final-refus.txt`, 0 échec.
+4. L'heure de départ écrite est celle du processus lancé : lue dans `/proc/PID/stat` par le script qui l'a fourché, parent vérifié (`demarrer-essai-court-v2.sh`) ; égale à celle relue par le gardien dans tous les scénarios (lignes « prise de garde »).
+5. Aucun signal n'atteint un processus désigné par des fichiers périmés ou faux : decoy, décoy périmé, s9 (table, correction 1).
+6. Le groupe entier est arrêté, chef mort compris : h4, s7 (correction 2).
+7. Un descendant en session à part est arrêté, un témoin sans lien ne l'est pas : h1 (correction 3).
+8. n et s4 sont relevés sur le dossier figé : h3, n = nombre de fichiers de s4 ; relevé postérieur au gel (premier passage : 816 à la décision, 826 au relevé, 826 fichiers) (correction 4).
+9. Les décisions ne dépendent pas du contenu : c5 sain et artefact, mêmes décisions ; empreintes égales à `sha256sum` (correction 5).
+10. Colonne d'arrêt et projections conformes au complément (extraction v2, lignes 46 et 28) : c6, `essai-projection-v2.py` (correction 6).
+11. Le vrai programme mourra au signal de fin et ses descendants seront dans l'arbre relevé à l'instant de l'arrêt : supposé (non éprouvé sur le vrai programme).
+
+**Objets de contrôle.** Garde d'identité : faux par construction (decoy sans heure, decoy à heure périmée, groupe faux) → attendu aucun signal, rendu aucun signal ; vrai par construction (départ réel, s2…s8) → attendu signal, rendu signal. Arrêt du groupe : faux (membre sourd, chef mort, h4 ; programme sourd, s7) → attendu arrêt forcé, rendu arrêt forcé ; vrai (tous obéissent, c2-sain, s2) → attendu pas d'arrêt forcé, rendu aucun. Descendants : vrai (enfant en session à part, h1) → arrêté ; faux (témoin sans lien) → intact. Mesure : programme rapide (h3) → n = fichiers de s4. Contenu : artefact de contenu trompeur → aucune décision changée. Colonne d'arrêt : noms voisins → « aucun » ; vrai nom profond → « oui ». Vérificateur de commande : trois lanceurs faux → ÉCHEC ; vrai → ÉGAL. Aucun mécanisme n'a « réussi » là où la conclusion était fausse.
+
+**Premier pas non justifié.** Pas 11 : la conduite du vrai programme au signal de fin et la vie de ses scripts en session à part ne sont pas éprouvées ; la justifierait un essai du vrai programme dans un dossier jetable, hors de mon mandat.
+
+**Mode d'échec affecté.** Sans objet : je suis l'auteur, non un relecteur.
+
+**Dérivation de l'énoncé seul.** Sans objet : je ne suis pas un agent de re-dérivation.
+
+**Trouvaille de côté.** (a) L'extraction v2 du complément 1 v3 se dit « pas encore retenue par la mère » (ligne 6) ; l'erratum la cite à la lettre pour la colonne d'arrêt et les projections : je l'ai suivie sur ces points seulement ; la commande y est identique à l'octet. (b) Le complément veut encore un gardien qui « n'arrête rien » ; le mandat (R-4605) prime. (c) Au premier passage, n à la décision (816) et n au relevé (826) diffèrent de 10 sources en 15 ms : sur le vrai programme, l'écart est d'au plus une source.
+
+**Évaluateur et conseil.** Juges : le contre-lecteur (modèle S), puis la session ; témoins admis : les essais ci-dessus, chacun avec un objet vrai et un objet faux construits. Mon produit pourrait être bien jugé sans le mériter : factices plus simples que le vrai (peu de processus, petites écritures, intervalle 1 s), lanceur factice tiré du vrai par 6 lignes changées, scénarios écrits par moi qui connais le code ; aucun essai ne joue de descendant détaché entre deux relevés (limite écrite, non démontrée).
