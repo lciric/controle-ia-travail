@@ -1,0 +1,46 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/redacteur-mandat-mondes-plantes-v2/calcul_devis_auteur_mondes_plantes_v2.py	2026-11-21 08:17:38.861561183 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/redacteur-mandat-mondes-plantes-v3/calcul_devis_auteur_mondes_plantes_v3.py	2026-11-21 08:29:25.721603201 +0000
+@@ -1,9 +1,13 @@
+-"""Devis de l'appel à l'auteur des mondes plantés, course « seuil et moniteurs » — calcul v2.
++"""Devis de l'appel à l'auteur des mondes plantés, course « seuil et moniteurs » — calcul v3.
+ 
+ Arithmétique seule : aucun tirage, aucun appel, aucun fichier lu. Sortie : un objet JSON sur la sortie standard.
+-Usage : python3 -B calcul_devis_auteur_mondes_plantes_v2.py > calcul-devis-auteur-mondes-plantes-v2.json
++Usage : python3 -B calcul_devis_auteur_mondes_plantes_v3.py > calcul-devis-auteur-mondes-plantes-v3.json
+ 
+-Deux changements depuis le calcul v1 (d715bcf2ed522737934f8a38994e27997e25f46874c4db96058e3c6090f00385), demandés par la
++Un seul changement depuis le calcul v2 (b14a8142c46b0e6d2dbffbbebc1381f2e7fbbd5e3519aacdbf90b50791615fc3), après la
++vérification (e21edffb0cd8c5dc9ff9e3b3d5fb786db63a1c70ab4385b3c70cf0b7f091ee1f, § 4) : M1, la taille du mandat v3,
++27 421 octets, remplace celle du mandat v2, 27 310 octets.
++
++Rappel du calcul v2 : deux changements depuis le calcul v1 (d715bcf2ed522737934f8a38994e27997e25f46874c4db96058e3c6090f00385), demandés par la
+ contre-lecture (9ea0ab895fc5bbf6a7226cf11778697da2f0d3ede79d997c43879df50b70ace5, § 6) :
+ - M1  : la taille du mandat v2, 27 310 octets, remplace celle du mandat v1, 24 062 octets ;
+ - R2  : le premier essai du candidat R2-a part au plafond de relance, 32 000 jetons de sortie, et non au plafond nominal
+@@ -16,7 +20,7 @@
+         lignes 100 à 141, empreinte 850df311807384fc66c44f6a6b90d3c8a9a3288d2b88a2b74312f9a78c4d4910 :
+         prix par million de jetons (entrée, sortie), plafond de sortie, plafond de relance, provision de réflexion,
+         garde de 2,5 caractères par jeton.
+-- M1  : mandat de l'auteur, mandat-auteur-mondes-plantes-seuil-et-moniteurs-v2.md : 27 310 octets (borne haute de ses
++- M1  : mandat de l'auteur, mandat-auteur-mondes-plantes-seuil-et-moniteurs-v3.md : 27 421 octets (borne haute de ses
+         caractères) ; sa sortie est bornée à 40 000 caractères (§ 4.1 du mandat).
+ - R1  : règles du rédacteur, dites comme telles au devis : garde d'envoi à 30 000 caractères, deux essais au plus.
+ - R2  : règle du contre-lecteur, reprise par le rédacteur : premier essai de R2-a au plafond de relance.
+@@ -28,7 +32,7 @@
+ MILLION = Decimal(1000000)
+ CENT = Decimal("0.01")
+ CAR_PAR_JETON = Decimal("2.5")          # S3
+-ENTREE_MESUREE_CAR = 27310              # M1
++ENTREE_MESUREE_CAR = 27421             # M1
+ ENTREE_GARDE_CAR = 30000                # R1
+ SORTIE_BORNE_CAR = 40000                # M1
+ ESSAIS_MAX = 2                          # R1
+@@ -104,7 +108,7 @@
+ def main():
+     lignes = [devis(c) for c in CANDIDATS]
+     sortie = {
+-        "version": "calcul-devis-auteur-mondes-plantes-v2",
++        "version": "calcul-devis-auteur-mondes-plantes-v3",
+         "entrees": {
+             "caracteres_par_jeton": str(CAR_PAR_JETON),
+             "entree_mesuree_caracteres": ENTREE_MESUREE_CAR,
