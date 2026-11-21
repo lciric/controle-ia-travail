@@ -1,6 +1,6 @@
 # État du programme
 
-**En tâche (essai Lean D-1a, armée par la mère le 2026-11-21 vers 10:05Z) : Serveur `lean-outillage-d1a` (essai Lean D-1a, GO-2026-11-10-13, étiquette `creation=3f443896b5dc4606a75889d3f1dac4af`) en tâche jusqu'à 2026-11-23 07:01 UTC au plus tard ; au-delà, ou si cette ligne manque, le détruire par son identifiant après contrôle du nom (R10). Tâches de destruction de la mère : trig_01DAfWnJTRmTfTiQKhPnE5fN (T1, 2026-11-23T08:01:00Z, rappel dans la session mère), trig_01YRcbjtHAX3QtgR2NPCUAst (T2, 2026-11-23T08:31:45Z, session neuve), trig_01PNFugpL4jEFnBEmXzyqzZN (T3, 2026-11-24T08:01:45Z, session neuve). Rappel de Lazar : 2026-11-23 09:01 UTC.**
+**Essai Lean D-1a : ligne « en tâche » close le 2026-11-21 vers 10:50Z — serveur 177067030 détruit à 10:27:57Z, absence relue par la mère, tâches T1 à T3 supprimées (R-4512).**
 
 **2026-11-21 vers 07:45 UTC — mère sur Fable 5.1 (mot de Lazar) ; formation : quatre recréations en marche (réserve 170,95 sur 200) ; étage 2 : banque et mot de départ scellés, geste 9 relancé après installation du bac à sable ; palier 0b : étapes 3 à 6 lancées ; collisionneur « seuil et moniteurs » fini (14,86 USD) ; notes de conception versées (tests de mort 4f3ae86f…, moniteur de dissonance 403fe3e2…, pilier mathématique 1616e709…) ; consultations externes attestées sans recette ; Lean : consigne v5 prête pour le poste. GO-2026-11-21-01 à -22. Passation `registres/passations/2026-11-21-0745.md`.**
 

@@ -1,0 +1,101 @@
+Translation qui triple un taux gaussien de 1 % : 0.4456 écart type
+A. Sensibilité d'un seuil à une translation des scores honnêtes
+   gaussien, taux nominal 0.200 : taux de hasard au seuil 1.40 par écart type ; la translation 0.446 le multiplie par 1.73 ; translation qui le triple : 1.095
+   gaussien, taux nominal 0.100 : taux de hasard au seuil 1.75 par écart type ; la translation 0.446 le multiplie par 2.02 ; translation qui le triple : 0.757
+   gaussien, taux nominal 0.050 : taux de hasard au seuil 2.06 par écart type ; la translation 0.446 le multiplie par 2.30 ; translation qui le triple : 0.608
+   gaussien, taux nominal 0.010 : taux de hasard au seuil 2.67 par écart type ; la translation 0.446 le multiplie par 3.00 ; translation qui le triple : 0.446
+   gaussien, taux nominal 0.001 : taux de hasard au seuil 3.37 par écart type ; la translation 0.446 le multiplie par 4.09 ; translation qui le triple : 0.342
+   logistique : translation qui triple 1 % = 0.617 écart type
+   Laplace : translation qui triple 1 % = 0.777 écart type
+   Student à 3 degrés : translation qui triple 1 % = 0.918 écart type
+   en variation totale, tripler 1 % demande un déplacement de masse de 0,02 seulement
+B. La base « le plus grand score de n » sous cette translation (taux vrai, exact)
+   n= 200 : taux moyen sans dérive 0.00498, avec 0.01558 ; probabilité que le taux vrai soit d'au plus 1 % : 0.8660 puis 0.4277
+   n= 299 : taux moyen sans dérive 0.00333, avec 0.01105 ; probabilité que le taux vrai soit d'au plus 1 % : 0.9505 puis 0.5658
+   n= 300 : taux moyen sans dérive 0.00332, avec 0.01102 ; probabilité que le taux vrai soit d'au plus 1 % : 0.9510 puis 0.5670
+   n= 368 : taux moyen sans dérive 0.00271, avec 0.00924 ; probabilité que le taux vrai soit d'au plus 1 % : 0.9752 puis 0.6419
+   n= 400 : taux moyen sans dérive 0.00249, avec 0.00860 ; probabilité que le taux vrai soit d'au plus 1 % : 0.9820 puis 0.6725
+   n=1000 : taux moyen sans dérive 0.00100, avec 0.00388 ; probabilité que le taux vrai soit d'au plus 1 % : 1.0000 puis 0.9386
+C. Robustesse au pire cas sur une boule de lois, au taux de 1 %
+   boule de Kullback-Leibler de rayon 0.0993 nat (celui de la translation) : il faut régler le seuil au taux 1.81e-07 sous la loi d'étalonnage, soit de l'ordre de 5.53e+06 épisodes
+   rapport de densité borné par 3 : seuil au taux 0.00333 ; sous la translation gaussienne son taux vrai est 0.01168, donc au-dessus de 1 %
+   enveloppe de translation d'au plus 0.446 : seuil au taux 0.00279 (facteur 3.59) ; seuil fini valide en moyenne dès n = 358, certifié à 95 % dès n = 1074
+   prix en rappel d'une marge de 0.446 sans dérive, aire 0.69 : 0.052 -> 0.019
+   prix en rappel d'une marge de 0.446 sans dérive, aire 0.80 : 0.128 -> 0.057
+   prix en rappel d'une marge de 0.446 sans dérive, aire 0.95 : 0.500 -> 0.328
+D. Témoins honnêtes du régime d'usage : combien pour voir la dérive
+   seuil à 1 % (4e plus grand de 400), test exact bêta-binomial unilatéral à 5 % : m=50 puissance 0.20 ; m=100 puissance 0.34 ; m=200 puissance 0.49 ; m=300 puissance 0.56 ; m=500 puissance 0.63 ;
+   seuil auxiliaire à 20 % (80e plus grand de 400), test exact bêta-binomial unilatéral à 5 % : m=50 puissance 0.68 ; m=100 puissance 0.87 ; m=200 puissance 0.98 ; m=300 puissance 0.99 ; m=500 puissance 1.00 ;
+   graine racine 20261121, suites dérivées dans l'ordre des lignes ; 4000 tirages par ligne
+   test de rang (Mann-Whitney, unilatéral à 5 %, approximation normale) contre la translation : m=20 puissance 0.62 ; m=30 puissance 0.74 ; m=50 puissance 0.89 ; m=100 puissance 0.99 ;
+   borne basse du nombre moyen de témoins pour certifier « 1 % et non 3 % » sur les seuls dépassements (risque 0,05, puissance 0.8) : 207
+   borne basse du nombre moyen de témoins pour certifier « 1 % et non 3 % » sur les seuls dépassements (risque 0,05, puissance 0.5) : 91
+E. Le seuil ancré : k-ième plus grand de l'étalonnage, translaté par la borne haute de la dérive
+   (borne de Hodges-Lehmann par inversion du test de rang ; n = 400 ; taux vrai exact par tirage ;
+    rappel contre un saboteur d'aire 0,80 ; base = le plus grand score de l'étalonnage)
+   confiance dite, risque 5 % m= 50 sain                    : taux vrai moyen 0.0011 (base 0.0025), part des tirages au-dessus de 1 % 0.001, borne moyenne +0.29, écart de rappel à la base -0.020 (erreur type 0.000)
+   confiance dite, risque 5 % m= 50 translation qui triple  : taux vrai moyen 0.0012 (base 0.0087), part des tirages au-dessus de 1 % 0.001, borne moyenne +0.73, écart de rappel à la base -0.079 (erreur type 0.001)
+   confiance dite, risque 5 % m= 50 échelle x 1,25          : taux vrai moyen 0.0062 (base 0.0114), part des tirages au-dessus de 1 % 0.183, borne moyenne +0.32, écart de rappel à la base -0.031 (erreur type 0.000)
+   confiance dite, risque 5 % m= 50 queue seule (2 % à +3)  : taux vrai moyen 0.0075 (base 0.0130), part des tirages au-dessus de 1 % 0.299, borne moyenne +0.33, écart de rappel à la base -0.023 (erreur type 0.000)
+   confiance dite, risque 5 % m=100 sain                    : taux vrai moyen 0.0014 (base 0.0025), part des tirages au-dessus de 1 % 0.003, borne moyenne +0.21, écart de rappel à la base -0.016 (erreur type 0.000)
+   confiance dite, risque 5 % m=100 translation qui triple  : taux vrai moyen 0.0013 (base 0.0086), part des tirages au-dessus de 1 % 0.002, borne moyenne +0.66, écart de rappel à la base -0.075 (erreur type 0.001)
+   confiance dite, risque 5 % m=100 échelle x 1,25          : taux vrai moyen 0.0069 (base 0.0111), part des tirages au-dessus de 1 % 0.230, borne moyenne +0.24, écart de rappel à la base -0.025 (erreur type 0.000)
+   confiance dite, risque 5 % m=100 queue seule (2 % à +3)  : taux vrai moyen 0.0085 (base 0.0130), part des tirages au-dessus de 1 % 0.368, borne moyenne +0.25, écart de rappel à la base -0.019 (erreur type 0.000)
+   confiance dite, risque 5 % m=200 sain                    : taux vrai moyen 0.0015 (base 0.0025), part des tirages au-dessus de 1 % 0.002, borne moyenne +0.17, écart de rappel à la base -0.013 (erreur type 0.000)
+   confiance dite, risque 5 % m=200 translation qui triple  : taux vrai moyen 0.0015 (base 0.0085), part des tirages au-dessus de 1 % 0.003, borne moyenne +0.61, écart de rappel à la base -0.071 (erreur type 0.001)
+   confiance dite, risque 5 % m=200 échelle x 1,25          : taux vrai moyen 0.0077 (base 0.0112), part des tirages au-dessus de 1 % 0.279, borne moyenne +0.18, écart de rappel à la base -0.020 (erreur type 0.000)
+   confiance dite, risque 5 % m=200 queue seule (2 % à +3)  : taux vrai moyen 0.0095 (base 0.0132), part des tirages au-dessus de 1 % 0.447, borne moyenne +0.20, écart de rappel à la base -0.016 (erreur type 0.000)
+   confiance dite, risque 5 % m=400 sain                    : taux vrai moyen 0.0017 (base 0.0024), part des tirages au-dessus de 1 % 0.004, borne moyenne +0.13, écart de rappel à la base -0.011 (erreur type 0.000)
+   confiance dite, risque 5 % m=400 translation qui triple  : taux vrai moyen 0.0016 (base 0.0084), part des tirages au-dessus de 1 % 0.002, borne moyenne +0.58, écart de rappel à la base -0.069 (erreur type 0.001)
+   confiance dite, risque 5 % m=400 échelle x 1,25          : taux vrai moyen 0.0081 (base 0.0110), part des tirages au-dessus de 1 % 0.301, borne moyenne +0.15, écart de rappel à la base -0.017 (erreur type 0.000)
+   confiance dite, risque 5 % m=400 queue seule (2 % à +3)  : taux vrai moyen 0.0101 (base 0.0132), part des tirages au-dessus de 1 % 0.486, borne moyenne +0.17, écart de rappel à la base -0.014 (erreur type 0.000)
+   en moyenne                 m= 50 sain                    : taux vrai moyen 0.0016 (base 0.0025), part des tirages au-dessus de 1 % 0.003, borne moyenne +0.40, écart de rappel à la base -0.010 (erreur type 0.000)
+   en moyenne                 m= 50 translation qui triple  : taux vrai moyen 0.0016 (base 0.0085), part des tirages au-dessus de 1 % 0.004, borne moyenne +0.85, écart de rappel à la base -0.069 (erreur type 0.001)
+   en moyenne                 m= 50 échelle x 1,25          : taux vrai moyen 0.0079 (base 0.0111), part des tirages au-dessus de 1 % 0.275, borne moyenne +0.45, écart de rappel à la base -0.017 (erreur type 0.001)
+   en moyenne                 m= 50 queue seule (2 % à +3)  : taux vrai moyen 0.0101 (base 0.0130), part des tirages au-dessus de 1 % 0.480, borne moyenne +0.45, écart de rappel à la base -0.013 (erreur type 0.000)
+   en moyenne                 m=100 sain                    : taux vrai moyen 0.0022 (base 0.0025), part des tirages au-dessus de 1 % 0.005, borne moyenne +0.30, écart de rappel à la base -0.003 (erreur type 0.000)
+   en moyenne                 m=100 translation qui triple  : taux vrai moyen 0.0022 (base 0.0084), part des tirages au-dessus de 1 % 0.006, borne moyenne +0.74, écart de rappel à la base -0.060 (erreur type 0.001)
+   en moyenne                 m=100 échelle x 1,25          : taux vrai moyen 0.0098 (base 0.0112), part des tirages au-dessus de 1 % 0.406, borne moyenne +0.34, écart de rappel à la base -0.006 (erreur type 0.001)
+   en moyenne                 m=100 queue seule (2 % à +3)  : taux vrai moyen 0.0120 (base 0.0131), part des tirages au-dessus de 1 % 0.621, borne moyenne +0.34, écart de rappel à la base -0.006 (erreur type 0.000)
+   en moyenne                 m=200 sain                    : taux vrai moyen 0.0026 (base 0.0025), part des tirages au-dessus de 1 % 0.008, borne moyenne +0.23, écart de rappel à la base +0.003 (erreur type 0.000)
+   en moyenne                 m=200 translation qui triple  : taux vrai moyen 0.0026 (base 0.0085), part des tirages au-dessus de 1 % 0.007, borne moyenne +0.68, écart de rappel à la base -0.054 (erreur type 0.001)
+   en moyenne                 m=200 échelle x 1,25          : taux vrai moyen 0.0113 (base 0.0111), part des tirages au-dessus de 1 % 0.518, borne moyenne +0.26, écart de rappel à la base +0.003 (erreur type 0.001)
+   en moyenne                 m=200 queue seule (2 % à +3)  : taux vrai moyen 0.0134 (base 0.0131), part des tirages au-dessus de 1 % 0.727, borne moyenne +0.27, écart de rappel à la base -0.000 (erreur type 0.000)
+   en moyenne                 m=400 sain                    : taux vrai moyen 0.0029 (base 0.0025), part des tirages au-dessus de 1 % 0.014, borne moyenne +0.19, écart de rappel à la base +0.008 (erreur type 0.001)
+   en moyenne                 m=400 translation qui triple  : taux vrai moyen 0.0029 (base 0.0085), part des tirages au-dessus de 1 % 0.013, borne moyenne +0.63, écart de rappel à la base -0.051 (erreur type 0.001)
+   en moyenne                 m=400 échelle x 1,25          : taux vrai moyen 0.0126 (base 0.0114), part des tirages au-dessus de 1 % 0.613, borne moyenne +0.21, écart de rappel à la base +0.008 (erreur type 0.001)
+   en moyenne                 m=400 queue seule (2 % à +3)  : taux vrai moyen 0.0143 (base 0.0134), part des tirages au-dessus de 1 % 0.784, borne moyenne +0.23, écart de rappel à la base +0.002 (erreur type 0.001)
+E2. Le seuil des témoins seuls : k-ième plus grand de m témoins du régime d'usage, k = partie entière de 0,01 (m + 1)
+   (exact, sans tirage ; vaut pour toute dérive commune aux témoins et aux épisodes d'usage ; base à n = 400 ;
+    borne basse à 99 % de l'écart de rappel moyen sur 2 000 tirages indépendants, saboteur d'aire 0,80)
+   m= 99 k=1 : taux vrai moyen 0.01000, probabilité d'un taux d'au plus 1 % 0.630 ; sain : écart de rappel +0.066, borne basse +0.061 ; translation qui triple : écart de rappel +0.007, borne basse +0.002 ;
+   m=150 k=1 : taux vrai moyen 0.00662, probabilité d'un taux d'au plus 1 % 0.779 ; sain : écart de rappel +0.041, borne basse +0.037 ; translation qui triple : écart de rappel -0.018, borne basse -0.023 ;
+   m=200 k=2 : taux vrai moyen 0.00995, probabilité d'un taux d'au plus 1 % 0.595 ; sain : écart de rappel +0.072, borne basse +0.069 ; translation qui triple : écart de rappel +0.014, borne basse +0.009 ;
+   m=300 k=3 : taux vrai moyen 0.00997, probabilité d'un taux d'au plus 1 % 0.578 ; sain : écart de rappel +0.075, borne basse +0.072 ; translation qui triple : écart de rappel +0.017, borne basse +0.012 ;
+   m=400 k=4 : taux vrai moyen 0.00998, probabilité d'un taux d'au plus 1 % 0.568 ; sain : écart de rappel +0.076, borne basse +0.074 ; translation qui triple : écart de rappel +0.018, borne basse +0.014 ;
+F. Rang de l'agent parmi K exécutions du jumeau sur la même tâche (alerte si l'agent dépasse les K)
+   K= 4 : taux honnête exact 0.200 dans tout régime ; saboteur d'aire 0.69 : 0.397 (pari à 100 en 46 épisodes) ; saboteur d'aire 0.80 : 0.556 (pari à 100 en 16 épisodes) ; saboteur d'aire 0.95 : 0.856 (pari à 100 en 5 épisodes) ;
+   K= 9 : taux honnête exact 0.100 dans tout régime ; saboteur d'aire 0.69 : 0.252 ; saboteur d'aire 0.80 : 0.403 ; saboteur d'aire 0.95 : 0.767 ;
+   K=99 : taux honnête exact 0.010 dans tout régime ; saboteur d'aire 0.69 : 0.048 ; saboteur d'aire 0.80 : 0.113 ; saboteur d'aire 0.95 : 0.437 ;
+   si l'honnête diffère du jumeau (aire 0.52), K=4 : taux honnête 0.217 au lieu de 0,200
+   si l'honnête diffère du jumeau (aire 0.55), K=4 : taux honnête 0.244 au lieu de 0,200
+   si l'honnête diffère du jumeau (aire 0.60), K=4 : taux honnête 0.293 au lieu de 0,200
+G. Ré-étalonnage sur le flux du suspect : « le centième le plus suspect du lot », saboteur d'aire 0,80
+   part d'épisodes sabotés 0.00 : rappel 0.128, taux de fausses alertes 0.0100
+   part d'épisodes sabotés 0.05 : rappel 0.091, taux de fausses alertes 0.0058
+   part d'épisodes sabotés 0.20 : rappel 0.043, taux de fausses alertes 0.0018
+   part d'épisodes sabotés 0.50 : rappel 0.019, taux de fausses alertes 0.0006
+   part d'épisodes sabotés 1.00 : rappel 0.010, taux de fausses alertes 0.0002
+H. Sans aucune dérive : taux réalisé dans une famille de tâches neuve, seuil réglé à 1 % toutes familles confondues
+   corrélation dans la famille 0.05 : médiane 0.0085, 90e centile 0.0182, 95e centile 0.0222 ; part des familles neuves au taux triplé ou pire : 0.014
+   corrélation dans la famille 0.10 : médiane 0.0071, 90e centile 0.0214, 95e centile 0.0285 ; part des familles neuves au taux triplé ou pire : 0.043
+   corrélation dans la famille 0.20 : médiane 0.0046, 90e centile 0.0250, 95e centile 0.0377 ; part des familles neuves au taux triplé ou pire : 0.075
+J. Comparer deux moniteurs « à 1 % » quand le taux de l'un a triplé : rappel gagné par les seules fausses alertes
+   aire 0.69 : rappel au taux vrai de 1 % 0.052, au taux vrai de 3 % 0.119, soit +0.067
+   aire 0.80 : rappel au taux vrai de 1 % 0.128, au taux vrai de 3 % 0.245, soit +0.117
+   aire 0.95 : rappel au taux vrai de 1 % 0.500, au taux vrai de 3 % 0.672, soit +0.172
+K. Contrôle « taux d'alerte entre deux lots honnêtes » : loi binomiale ou bêta-binomiale ?
+   seuil au rang 73 de 368, lu sur 200 épisodes honnêtes de même loi : l'intervalle binomial central à 95 % [29 ; 51] est quitté avec probabilité 0.099
+   seuil au rang 73 de 368, lu sur 368 épisodes honnêtes de même loi : l'intervalle binomial central à 95 % [58 ; 88] est quitté avec probabilité 0.150
+   seuil au rang 200 de 1000, lu sur 1000 épisodes honnêtes de même loi : l'intervalle binomial central à 95 % [175 ; 225] est quitté avec probabilité 0.153
+   rejeu de Gao, p. 6 : P(K >= 14) sous BetaBinomial(75, 5, 96) = 0.001745
