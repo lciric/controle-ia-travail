@@ -13,4 +13,5 @@
 
 Absences acceptées par l'arbitre : kimi.
 Ligne : 24.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 9.84 USD.
-Dépense totale : 9.84 USD. Mis à jour 2026-11-21T14:03:17Z.
+Réserve (v9-v8) : cellules de Google écrites sur une réponse sans aucun jeton de pensée : E3-T1-conception-C, E3-T2-critique-croisee-C.
+Dépense totale : 9.84 USD. Mis à jour 2026-11-21T22:18:18Z.
