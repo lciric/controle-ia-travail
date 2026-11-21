@@ -1,0 +1,112 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v3/verifier_sortie_auteur_mondes_v3.py	2026-11-21 09:55:09.078696616 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v4/verifier_sortie_auteur_mondes_v4.py	2026-11-21 10:06:09.101948171 +0000
+@@ -1,7 +1,13 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+ """Programme de vérification de la sortie de l'auteur des mondes plantés,
+-course « seuil et moniteurs » — v3.
++course « seuil et moniteurs » — v4.
++
++v4 (vérification S de la v3 `6dce2dc0…`) : R1 le contrôle de la dérive de F n'est fait par
++aucun programme scellé ; il sera porté dans le mode `--recalculer` de la v2 du programme
++de vérité, et le compte rendu le dit (`controle.par`) et transmet tout ce qu'il demande ;
++R2 la tolérance est absolue, et si plusieurs tranches de F contiennent 299, la première
++est prise, et c'est signalé. Aucune règle de vérification ne change.
+ 
+ v3 (vérification S de la v2 `9270bcab…`, mots de la mère, 11:00Z) : D1 plus de 40
+ témoins (tête et bloc à l'écart ensemble) est une faute du point 1 ; D2 la dérive de F
+@@ -32,7 +38,7 @@
+ Bibliothèque standard seule.
+ 
+ Usage :
+-    python3 -I -B verifier_sortie_auteur_mondes_v3.py SORTIE_AUTEUR RAPPORT_JSON [--motifs FICHIER]
++    python3 -I -B verifier_sortie_auteur_mondes_v4.py SORTIE_AUTEUR RAPPORT_JSON [--motifs FICHIER]
+ 
+ Le fichier de motifs (noms de modèles ou de fournisseurs refusés, une expression
+ régulière par ligne, lue sans casse, lignes vides et lignes en « # » ignorées)
+@@ -40,7 +46,7 @@
+ c'est une liste d'essai, fictive, à remplacer par la liste réelle de la mère.
+ 
+ Mode de correspondance (v2) :
+-    python3 -I -B verifier_sortie_auteur_mondes_v3.py --vers-recalcul SORTIE_AUTEUR ENTREE_RECALCUL_JSON [--motifs FICHIER]
++    python3 -I -B verifier_sortie_auteur_mondes_v4.py --vers-recalcul SORTIE_AUTEUR ENTREE_RECALCUL_JSON [--motifs FICHIER]
+ écrit ENTREE_RECALCUL_JSON (entrée du mode `--recalculer` du programme de vérité des
+ témoins) et ENTREE_RECALCUL_JSON.correspondance.json (compte rendu : témoin par témoin,
+ converti ou non, raison, choix appliqués). Codes : 0 écrit ; 2 sortie illisible, rien
+@@ -63,7 +69,7 @@
+ import unicodedata
+ from pathlib import Path
+ 
+-NOM_PROGRAMME = "verifier_sortie_auteur_mondes_v3"
++NOM_PROGRAMME = "verifier_sortie_auteur_mondes_v4"
+ VERSION_FORME = "mondes-plantes-seuil-et-moniteurs-v1"
+ TAILLE_MAX_CARACTERES = 52000  # erratum 1 du mandat de l'auteur v3, borne finale (mot de la mère) ; se change ici seulement
+ GARDE_DE_LECTURE_OCTETS = 1000000
+@@ -930,8 +936,9 @@
+ # ---------------------------------------------------------------------------
+ 
+ N_DE_T09 = TABLE_DES_TEMOINS_IMPOSES["T09"]["n"]           # 299, § 3.1
++TAUX_DE_DEPART_DE_LA_DERIVE = "0.01"                        # v4 : le taux que le décalage triple
+ TAUX_VISE_PAR_LA_DERIVE = "0.03"                            # le décalage triple un taux de 1 %
+-TOLERANCE_DU_CONTROLE_DE_DERIVE = "0.001"                   # mot de la mère : 10⁻³, comme au § 6, point 4
++TOLERANCE_DU_CONTROLE_DE_DERIVE = "0.001"                   # mot de la mère : 10⁻³ absolue, comme au § 6, point 4
+ MOTS_EXCLUS_DU_DECALAGE = ("couverture", "taux", "probabilite")
+ MOTS_DU_DECALAGE = ("decalage", "derive")
+ 
+@@ -1488,7 +1495,8 @@
+     """CH7 (v3) : le décalage de la dérive de F, lu dans `valeurs_de_plus` de T09 par la règle
+     de la mère (`lire_decalage_de_t09`). Rend (famille F, valeur, rang de la clé) ou None. La
+     valeur est transmise telle quelle ; le contrôle qu'elle triple un taux de 1 % sous la loi
+-    de l'auteur appartient au recalcul (programme de vérité), non à ce programme."""
++    de la tranche associée à T09 sera fait par le mode `--recalculer` de la v2 du programme de
++    vérité (v4, R1), non par ce programme."""
+     f = next((f for f, _ in ctx.familles if f["id"] == "F"), None)
+     t09 = next((t for t, _ in ctx.temoins if t["id"] == "T09"), None)
+     if f is None or t09 is None:
+@@ -1548,20 +1556,34 @@
+         derive = {"statut": "illisible_F_a_ecarter"}
+     else:
+         # Précisions de la mère : le contrôle se fait sous la loi de la tranche associée à T09,
+-        # celle dont `n_calibration` contient 299 ; tolérance de 10⁻³ sur le taux de 3 % (§ 6,
+-        # point 4). Le contrôle appartient au recalcul ; on transmet ici la tranche, sa loi, la
+-        # valeur lue et le rang de sa clé.
++        # celle dont `n_calibration` contient 299 (la première, si plusieurs la contiennent) ;
++        # tolérance ABSOLUE de 10⁻³ sur le taux de 3 % (comme le seuil du § 6, point 4).
++        # v4 (R1) : ce contrôle n'est fait par aucun programme scellé ; il sera porté dans le mode
++        # `--recalculer` de la v2 du programme de vérité. Ce programme ne le fait pas : il transmet
++        # tout ce que le contrôle demande.
+         tranches = derive_de_f[0]["tranches"]
+-        rang_tranche = next((i for i, tr in enumerate(tranches)
+-                             if any(est_entier(x) and int(x) == N_DE_T09 for x in tr["n_calibration"])), None)
+-        derive = {"statut": "lue", "rang_de_la_cle": derive_de_f[2],
++        rangs_a_299 = [i for i, tr in enumerate(tranches)
++                       if any(est_entier(x) and int(x) == N_DE_T09 for x in tr["n_calibration"])]
++        rang_tranche = rangs_a_299[0] if rangs_a_299 else None
++        retenue = rang_tranche if rang_tranche is not None else 0
++        derive = {"statut": "lue", "temoin": "T09", "n_du_temoin": N_DE_T09,
++                  "rang_de_la_cle": derive_de_f[2],
+                   "valeur_transmise": getattr(derive_de_f[1], "texte", None) or str(derive_de_f[1]),
+-                  "tranche_associee_a_T09": {"rang": (rang_tranche if rang_tranche is not None else 0) + 1,
+-                                             "n_calibration_contient_299": rang_tranche is not None},
+-                  "loi_de_la_tranche": ecrire_brut(tranches[rang_tranche if rang_tranche is not None else 0]["loi_honnete"]),
+-                  "controle": {"par": "le recalcul (programme de vérité), non ce programme",
+-                               "critere": "le décalage triple le taux de 1 % sous la loi de la tranche associée à T09",
+-                               "taux_vise": TAUX_VISE_PAR_LA_DERIVE, "tolerance": TOLERANCE_DU_CONTROLE_DE_DERIVE}}
++                  "unite_du_decalage": "ecarts types de la loi de la tranche associée à T09",
++                  "tranche_associee_a_T09": {"rang": retenue + 1,
++                                             "n_calibration_contient_299": rang_tranche is not None,
++                                             "rangs_des_tranches_a_299": [i + 1 for i in rangs_a_299],
++                                             "regle": "la première tranche dont n_calibration contient 299 ; "
++                                                      "si aucune, la première tranche, signalée"},
++                  "loi_de_la_tranche": ecrire_brut(tranches[retenue]["loi_honnete"]),
++                  "loi_de_la_tranche_format": "texte JSON d'une loi de la grammaire, nombres écrits tels quels",
++                  "controle": {"par": "programme de vérité v2, mode --recalculer",
++                               "critere": "sous la loi de la tranche associée à T09, le seuil au quantile à 99 % "
++                                          "(taux de départ de 1 %) a, sous la même loi décalée de la valeur "
++                                          "transmise, un taux de 3 %",
++                               "taux_de_depart": TAUX_DE_DEPART_DE_LA_DERIVE, "taux_vise": TAUX_VISE_PAR_LA_DERIVE,
++                               "tolerance": TOLERANCE_DU_CONTROLE_DE_DERIVE, "nature_de_la_tolerance": "absolue",
++                               "fait_par_ce_programme": False}}
+     return {"version_entree": VERSION_ENTREE_RECALCUL, "temoins": entrees}, compte, derive
+ 
+ 

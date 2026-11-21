@@ -1,0 +1,103 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v3/test_verifier_sortie_auteur_mondes_v3.py	2026-11-21 09:55:30.696720857 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v4/test_verifier_sortie_auteur_mondes_v4.py	2026-11-21 10:06:47.453950451 +0000
+@@ -1,5 +1,9 @@
+ # -*- coding: utf-8 -*-
+-"""Essais du programme de vérification de la sortie de l'auteur des mondes — v3.
++"""Essais du programme de vérification de la sortie de l'auteur des mondes — v4.
++
++v4 : ceux de la v3, tous rejoués ; le compte rendu de la dérive de F porte tout ce que le
++contrôle demande, dit qui le fera (R1), et signale la première tranche à 299 quand
++plusieurs la contiennent (R2), avec un essai et une mutation.
+ 
+ v3 : ceux de la v2, tous rejoués, et ceux de D1 (plafond de témoins en faute du point 1),
+ D2 (dérive de F lue dans T09 par la règle de la mère, F écartée sinon), D3 (monde M non
+@@ -18,7 +22,7 @@
+ en clair.
+ 
+ Lancement : /home/user/controle-ia-travail/.venv/bin/python -B -m pytest -q -p no:cacheprovider \
+-    --basetemp=DOSSIER/essais-tmp DOSSIER/test_verifier_sortie_auteur_mondes_v3.py
++    --basetemp=DOSSIER/essais-tmp DOSSIER/test_verifier_sortie_auteur_mondes_v4.py
+ 
+ Développeur du programme de vérification de la sortie des mondes, modèle O.
+ """
+@@ -37,7 +41,7 @@
+ from fabriquer_sorties_factices_v3 import Brut
+ 
+ ICI = Path(__file__).resolve().parent
+-PROGRAMME = ICI / "verifier_sortie_auteur_mondes_v3.py"
++PROGRAMME = ICI / "verifier_sortie_auteur_mondes_v4.py"
+ MOTIFS = ICI / "motifs-noms-refuses-essai-v1.txt"
+ SORTIE_SAINE = ICI / "sortie-factice-saine-v3.json"
+ LANCEUR = Path("/home/user/controle-ia-travail-organisme/scripts/lancer_course_auto_conception_v9.py")
+@@ -1051,12 +1055,19 @@
+     assert non == {"LM1": "NC_MONDE_M_SANS_GAMMA", "LM2": "NC_MONDE_M_SANS_GAMMA"}
+     assert rendu["comptes"] == {"convertis": 37, "non_convertis": 2}
+     assert rendu["derive_de_F"] == {
+-        "statut": "lue", "rang_de_la_cle": 2, "valeur_transmise": "0.5",
+-        "tranche_associee_a_T09": {"rang": 2, "n_calibration_contient_299": True},
++        "statut": "lue", "temoin": "T09", "n_du_temoin": 299, "rang_de_la_cle": 2, "valeur_transmise": "0.5",
++        "unite_du_decalage": "ecarts types de la loi de la tranche associée à T09",
++        "tranche_associee_a_T09": {"rang": 2, "n_calibration_contient_299": True, "rangs_des_tranches_a_299": [2],
++                                   "regle": "la première tranche dont n_calibration contient 299 ; "
++                                            "si aucune, la première tranche, signalée"},
+         "loi_de_la_tranche": '{"type": "normale", "parametres": {"mu": 0.25, "sigma": 1.0}}',
+-        "controle": {"par": "le recalcul (programme de vérité), non ce programme",
+-                     "critere": "le décalage triple le taux de 1 % sous la loi de la tranche associée à T09",
+-                     "taux_vise": "0.03", "tolerance": "0.001"}}
++        "loi_de_la_tranche_format": "texte JSON d'une loi de la grammaire, nombres écrits tels quels",
++        "controle": {"par": "programme de vérité v2, mode --recalculer",
++                     "critere": "sous la loi de la tranche associée à T09, le seuil au quantile à 99 % "
++                                "(taux de départ de 1 %) a, sous la même loi décalée de la valeur "
++                                "transmise, un taux de 3 %",
++                     "taux_de_depart": "0.01", "taux_vise": "0.03", "tolerance": "0.001",
++                     "nature_de_la_tolerance": "absolue", "fait_par_ce_programme": False}}
+     t09 = next(t for t in json.loads(entree.read_text(encoding="utf-8"))["temoins"] if t["id"] == "T09")
+     assert t09["lois"]["lecture"]["type"] == "decalage" and t09["lois"]["lecture"]["parametres"]["delta_en_ecarts_types"] == 0.5
+ 
+@@ -1067,7 +1078,36 @@
+     fam(d, "F")["tranches"][1]["n_calibration"] = [300]
+     retour, _, rendu = jouer_correspondance(d, tmp_path)
+     assert retour == 0
+-    assert rendu["derive_de_F"]["tranche_associee_a_T09"] == {"rang": 1, "n_calibration_contient_299": False}
++    tr = rendu["derive_de_F"]["tranche_associee_a_T09"]
++    assert (tr["rang"], tr["n_calibration_contient_299"], tr["rangs_des_tranches_a_299"]) == (1, False, [])
++
++
++def plusieurs_tranches_a_299(d):
++    fam(d, "F")["tranches"][1]["n_calibration"] = [299]
++    fam(d, "F")["tranches"][2]["n_calibration"] = [200, 299, 300, 400]
++
++
++def test_correspondance_plusieurs_tranches_a_299(tmp_path):
++    """R2 : si plusieurs tranches de F contiennent 299, la première est prise, et c'est signalé."""
++    d = sain()
++    plusieurs_tranches_a_299(d)
++    retour, _, rendu = jouer_correspondance(d, tmp_path)
++    assert retour == 0
++    tr = rendu["derive_de_F"]["tranche_associee_a_T09"]
++    assert (tr["rang"], tr["n_calibration_contient_299"], tr["rangs_des_tranches_a_299"]) == (2, True, [2, 3])
++    assert rendu["derive_de_F"]["loi_de_la_tranche"] == '{"type": "normale", "parametres": {"mu": 0.25, "sigma": 1.0}}'
++
++
++def test_mutation_derniere_tranche_a_299(tmp_path):
++    ancien = "        rang_tranche = rangs_a_299[0] if rangs_a_299 else None"
++    s = source()
++    assert s.count(ancien) == 1
++    mutant = tmp_path / "mutant.py"
++    mutant.write_text(s.replace(ancien, "        rang_tranche = rangs_a_299[-1] if rangs_a_299 else None"), encoding="utf-8")
++    d = sain()
++    plusieurs_tranches_a_299(d)
++    retour, _, rendu = jouer_correspondance(d, tmp_path / "essai", programme=mutant)
++    assert rendu["derive_de_F"]["tranche_associee_a_T09"]["rang"] != 2
+ 
+ 
+ def test_mutation_tranche_de_t09(tmp_path):
+@@ -1077,7 +1117,7 @@
+     mutant = tmp_path / "mutant.py"
+     mutant.write_text(s.replace(ancien, "N_DE_T09 = 300"), encoding="utf-8")
+     retour, _, rendu = jouer_correspondance(sain(), tmp_path / "essai", programme=mutant)
+-    assert rendu["derive_de_F"]["tranche_associee_a_T09"] != {"rang": 2, "n_calibration_contient_299": True}
++    assert rendu["derive_de_F"]["tranche_associee_a_T09"]["rang"] != 2
+ 
+ 
+ def test_correspondance_derive_illisible_dit_f_a_ecarter(tmp_path):
