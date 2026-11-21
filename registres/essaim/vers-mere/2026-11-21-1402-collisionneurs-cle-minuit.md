@@ -1,0 +1,14 @@
+# Compte rendu de la session des collisionneurs sur la clé Minuit (2026-11-21, 14:02Z)
+
+Verdict : aucune course n'est allée au bout. Le conteneur de cette session a redémarré deux fois, vers 11:52Z puis vers 13:5xZ, et chaque redémarrage a tué les courses en marche. Rien n'a été relancé. Les quatre dossiers sont versés sans lecture sur cette branche.
+
+- Clé RR_ANTHROPIC_API_KEY_MINUIT vue, par son nom seulement. Script 850df311… vérifié. Les cinq paires de faits et de question vérifiées contre leurs compagnons.
+- Reprise de la dérive de régime (dossier du 21 à 09:57) : devis-reprise refusé en code 2 (« conception du tour III.1 absente ; la reprise exige le tour III.1 entier »). Pas de relance, aucune dépense.
+- Reprise des méthodes de mathématiques nouvelles (dossier du 21 à 09:38) : devis-reprise refusé en code 4 sur la ligne de 28 USD. Il restait 21,77 USD ; le pire cas des tours III.2 et III.3 vaut 26,19 USD au plafond de Fable 49000, et encore 22,34 USD au plafond 22000. Pas de relance, aucune dépense. Le devis à 30 USD demandé ensuite n'a pas été fait : la course est passée à l'autre session.
+- Mécanisme adjudant (GO-2026-11-21-34), runs/collisionneur-mecanisme-adjudant-v1-20261121-114751, avec Astra : tuée au milieu de la cellule d'Opus du tour III.1. Une cellule rendue (Fable). Cumul au journal : 1,34 USD, plus l'envoi d'Opus interrompu, absent du journal.
+- Percée en contrôle et sécurité (GO-2026-11-21-39), runs/collisionneur-percee-controle-securite-v1-20261121-114810, avec Astra : même cas. Une cellule rendue (Fable). Cumul 1,13 USD, plus l'envoi d'Opus interrompu.
+- Antériorité du pilier (GO-2026-11-21-39), runs/collisionneur-anteriorite-pilier-v1-20261121-130555, sans Astra, devis 20,59 USD au pire : lancée à 13:05Z, avant que je lise le message de la mère de 13:06Z qui annulait les courses neuves. Tuée par le second redémarrage. Une cellule rendue (Fable). Cumul 1,07 USD, plus un envoi interrompu possible.
+- Dérive de régime v2 (GO-2026-11-21-26, plafond et ligne de 24 USD), runs/collisionneur-derive-de-regime-v2-20261121-130555, sans Astra, devis 20,64 USD au pire : même cas. Une cellule rendue (Fable). Cumul 1,32 USD, plus un envoi interrompu possible.
+- Pour l'autre session : relancer etage3 sur le même dossier saute les cellules valides et relance les autres. --reprise ne sert qu'en cas de changement de script. La composition est scellée dans especes.json : les deux premiers dossiers gardent Astra, les deux suivants ne l'ont pas. Une première tentative de lancement de la percée a échoué avant tout appel, à cause d'une erreur de commande. Elle n'a rien coûté, et son dossier vide a été retiré.
+- Cumul total au journal de cette session : 4,86 USD sur la clé Minuit, plus jusqu'à quatre envois interrompus non journalisés.
+- Aucun processus de cette session ne tourne : 581, 611, 225 et 226 sont absents.
