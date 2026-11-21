@@ -13,6 +13,7 @@ from controle_ia.iib import configuration_v5 as cf
 
 RACINE = Path(__file__).resolve().parents[1]
 SHA_MODULE = hashlib.sha256((RACINE / cf.MODULE_DE_LECTURE).read_bytes()).hexdigest()
+ENTROPIE_DE_LA_MERE = 34177889608133376136283958643409181656      # tirée par la mère pour l'étalonnage, portée dans le gabarit v3
 
 
 def config_remplie(mode="reel"):
@@ -25,7 +26,7 @@ def config_remplie(mode="reel"):
     c["code"] = {"branche": "prep/iib-code-v5-local", "commit": "a" * 40, "module_de_lecture": {"chemin": cf.MODULE_DE_LECTURE, "sha256": SHA_MODULE}}
     c["marqueurs"] = {"EMPREINTES_CODE_IIB": f"au commit aaaa : {cf.MODULE_DE_LECTURE} {SHA_MODULE} ; autre.py " + "b" * 64}
     if mode == "reel":
-        c["calendrier"] = {"dernier_jour_creation": "2099-01-01", "fin_go_utc": "2099-01-03T00:00:00Z"}
+        c["calendrier"] = {"dernier_jour_creation": "2026-11-26", "fin_go_utc": "2026-12-01T00:00:00Z"}     # dates de la ligne
         c["prealables"] = {"ligne_registre_creation_7b": "R-9999 factice : 7b créée (instance 99999999)"}
     return c
 
@@ -167,13 +168,15 @@ def test_gabarit_de_configuration_verse_au_depot():
     """Le gabarit versé (`docs/notes/…`) est celui du code, entropie vide, aucune consigne ; son sceau est intact."""
     from controle_ia.scellement import verifier
 
-    chemin = RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v2.json"
+    chemin = RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v3.json"
     verifier(chemin)
     lu = json.loads(chemin.read_text(encoding="utf-8"))
-    attendu = json.loads(json.dumps(cf.gabarit("reel")))
+    attendu = json.loads(json.dumps(cf.gabarit("reel", ENTROPIE_DE_LA_MERE)))
     attendu["code"]["module_de_lecture"]["sha256"] = SHA_MODULE
     attendu["marqueurs"]["EMPREINTES_CODE_IIB"] = f"{cf.MODULE_DE_LECTURE} {SHA_MODULE}"
-    assert lu == attendu and lu["entropie"] is None
+    assert lu == attendu and lu["entropie"] == ENTROPIE_DE_LA_MERE == 34177889608133376136283958643409181656
+    assert lu["calendrier"] == {"dernier_jour_creation": "2026-11-26", "fin_go_utc": "2026-12-01T00:00:00Z"}
+    verifier(RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v2.json")
     cf.exiger_aucun_texte_de_consigne(lu)
     verifier(RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v1.json")      # la version 1 reste, intacte (R12)
 
@@ -190,8 +193,9 @@ def test_sections_de_location_exigees_en_mode_reel_aux_bornes_du_devis_scelle():
     artefacts = [(("plafond", "ligne_usd"), 80), (("plafond", "variante"), "A"), (("plafond_usd",), 60), (("carte", "course", "prix_max_usd_h"), 1.5),
                  (("carte", "course", "nom_offre"), "H200 NVL"), (("carte", "course", "memoire_carte_min_mo"), 40000),
                  (("offre", "stockage_max_usd_h"), 0.10), (("offre", "telechargement_max_usd_go"), 0.5), (("offre", "disque_min_go"), 50),
-                 (("offre", "etiquette"), "autre-chantier"), (("offre", "etiquette"), "iib explo"), (("calendrier", "fin_go_utc"), "2099-01-03T00:00:00"),
-                 (("calendrier", "dernier_jour_creation"), "2099-02-01"), (("calendrier", "dernier_jour_creation"), None),
+                 (("offre", "etiquette"), "autre-chantier"), (("offre", "etiquette"), "iib explo"), (("calendrier", "fin_go_utc"), "2026-12-01T00:00:00"),
+                 (("calendrier", "fin_go_utc"), "2026-12-02T00:00:00Z"), (("calendrier", "dernier_jour_creation"), "2026-11-27"),
+                 (("calendrier", "dernier_jour_creation"), "2026-11-28"), (("calendrier", "dernier_jour_creation"), None),
                  (("memoire_vive_min_go",), 0), (("prealables", "ligne_registre_creation_7b"), " ")]
     for chemin, valeur in artefacts:
         c = config_remplie()

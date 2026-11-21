@@ -7,7 +7,8 @@ atteint sa limite sans saut de ligne ni fin de tour et que seuls des caractères
 virgule, point, « k ») le séparent de la fin, elle est illisible.
 
 `coupe_du_prefixe` : coupe juste après « COST: », **fonction du seul préfixe** : le plus petit rang r dont le décodage des r
-premiers jetons finit par la première clé COST de l'action (espaces et tabulations permis après les deux-points). La valeur qui
+premiers jetons, nettoyé du gras, finit par la première clé COST de l'action (espaces, tabulations et marques de gras qui
+ferment la clé permis après les deux-points : règle de la version 1 ; la fenêtre commence après eux). La valeur qui
 suit n'entre pas dans la décision : « COST: » suivi aussitôt de la clé suivante a une coupe conforme et une fenêtre illisible.
 
 `lire_action_v5` : coupe, fenêtre du coût déclaré, valeur de l'ancien lecteur du champ entier (`t06.cout.cout_action`) et
@@ -63,19 +64,27 @@ def coupe_du_prefixe(tok, ids) -> dict:
     cle = _CLE_COST.search(texte)
     if cle is None:
         return {"champ_cout": False, "conforme": False, "rang": None, "motif": "champ_absent"}
-    # premier rang dont le décodage cumulé atteint la fin de la clé (la longueur cumulée ne décroît pas : dichotomie)
-    bas, haut = 1, len(ids)
+    # Règle de la version 1 (`oracle_v1.coupe_du_prefixe`), reprise (vérification de la contre-lecture, R1) : le plus petit rang
+    # dont le décodage, nettoyé du gras, finit par la clé — la coupe peut donc tomber après les marques de gras qui ferment la clé
+    # (« **COST:** », jeton « :** ») et les espaces qui la suivent, jamais au-delà ; un saut de ligne n'en fait pas partie.
+    limite = cle.end() + len(re.match(r"[ \t*_]*", texte[cle.end():]).group(0))
+    bas, haut = 1, len(ids)                              # la longueur du décodage cumulé ne décroît pas : dichotomie
     while bas < haut:
         m = (bas + haut) // 2
         if len(tok.decode(ids[:m], skip_special_tokens=True)) >= cle.end():
             haut = m
         else:
             bas = m + 1
-    d = tok.decode(ids[:bas], skip_special_tokens=True)
-    if len(d) < cle.end() or d != texte[:len(d)]:
-        return {"champ_cout": True, "conforme": False, "rang": None, "motif": "decodage_infidele"}
-    if _FIN_DE_CLE.search(d) and len(d.rstrip(" \t")) == cle.end():
-        return {"champ_cout": True, "conforme": True, "rang": bas, "motif": None}
+    for r in range(bas, len(ids) + 1):
+        d = tok.decode(ids[:r], skip_special_tokens=True)
+        if len(d) < cle.end():
+            return {"champ_cout": True, "conforme": False, "rang": None, "motif": "decodage_infidele"}
+        if len(d) > limite:
+            break
+        if d != texte[:len(d)]:
+            return {"champ_cout": True, "conforme": False, "rang": None, "motif": "decodage_infidele"}
+        if _FIN_DE_CLE.search(re.sub(r"[*_]", "", d)):
+            return {"champ_cout": True, "conforme": True, "rang": r, "motif": None}
     return {"champ_cout": True, "conforme": False, "rang": None, "motif": "chevauchement_cle_valeur"}
 
 

@@ -72,24 +72,49 @@ def test_coupe_conforme_et_lecture_egale_des_deux_cotes(tok, valeur):
     assert s["valeur"] == a["fenetre"]["valeur"] and s["formes"] == a["fenetre"]["formes"], valeur
 
 
-@pytest.mark.parametrize("cle", ["COST:", "Cost:", "COST :", "**COST**:"])
+@pytest.mark.parametrize("cle", ["COST:", "Cost:", "COST :", "**COST**:", "**COST:**", "__COST:__", "**Cost:** "])
 def test_coupe_selon_la_forme_de_la_cle(tok, cle):
     a = lc.lire_action_v5(tok, _action(tok, " 480", cle))
     assert a["coupe"]["conforme"] and a["cout_declare"] == 480.0, (cle, a["coupe"])
 
 
-@pytest.mark.parametrize("valeur, cle", [("", "COST:"), ("\n 500", "COST:"), (" 480", "**COST:**")])
+@pytest.mark.parametrize("valeur, cle", [("", "COST:"), ("\n 500", "COST:")])
 def test_constat_un_jeton_reel_chevauche_la_cle_et_ce_qui_la_suit(tok, valeur, cle):
-    """Constat, écrit tel que le code le traite : le tokeniseur réel a des jetons « :\\n » et « :** ». Une valeur vide, une
-    valeur à la ligne suivante ou une clé en gras fermée après les deux-points n'ont donc **aucune coupe conforme** : l'action
-    est comptée (coupe non conforme, motif de chevauchement), non bornable, et reste telle quelle dans les contextes. Le cas
-    « COST: suivi aussitôt de la clé suivante : coupe conforme, fenêtre illisible » du texte ne se produit qu'avec un tokeniseur
-    qui sépare les deux-points du saut de ligne."""
+    """Constat, écrit tel que le code le traite : le tokeniseur réel a un jeton « :\\n » (et « :**\\n »). Une valeur vide ou une
+    valeur à la ligne suivante n'ont donc **aucune coupe conforme** : l'action est comptée (coupe non conforme, motif de
+    chevauchement), non bornable, et reste telle quelle dans les contextes ; le texte scellé traite ce cas par l'épreuve de la
+    coupe. La clé en gras fermée après les deux-points (« **COST:** », jeton « :** ») a, elle, sa coupe conforme, après les
+    marques (règle de la version 1 ; essais ci-dessous)."""
     ids = _action(tok, valeur, cle)
     c = lc.coupe_du_prefixe(tok, ids)
     assert c == {"champ_cout": True, "conforme": False, "rang": None, "motif": "chevauchement_cle_valeur"}
     a = lc.lire_action_v5(tok, ids)
     assert a["fenetre"] is None and not a["cout_lisible"]
+
+
+@pytest.mark.parametrize("valeur", [" 480", " 1,200 GPU-hours", " a few hundred", " 4 GPUs for 100 hours"])
+@pytest.mark.parametrize("cle", ["**COST:**", "__COST:__"])
+def test_cle_en_gras_fermee_apres_les_deux_points_coupe_conforme_lecture_egale_reecriture_retrouvee(tok, cle, valeur):
+    """Vérification de la contre-lecture, R1 : la coupe tombe après les marques qui ferment la clé ; la fenêtre commence après
+    elles ; lecture égale des deux côtés ; la réécriture garde les marques à la clé (3.3 c) et se retrouve au décodage."""
+    ids = _action(tok, valeur, cle)
+    a = lc.lire_action_v5(tok, ids)
+    rang = a["coupe"]["rang"]
+    import re
+    prefixe = tok.decode(ids[:rang])
+    assert a["coupe"]["conforme"] and re.sub(r"[*_]", "", prefixe).rstrip(" \t").endswith("COST:")
+    if cle == "**COST:**":
+        assert prefixe.endswith("**COST:**")              # jeton « :** » : la coupe tombe après les marques
+    assert a["cout_declare"] == VALEURS[valeur]
+    s = lc.lire_fenetre(tok, tok(valeur + "\n")["input_ids"][:lc.FENETRE])
+    assert s["valeur"] == a["fenetre"]["valeur"] and s["formes"] == a["fenetre"]["formes"]
+    suite = tok(" 777 GPU-hours\n")["input_ids"]
+    r = rw.remplacer_valeur(tok, ids, rang, suite)
+    assert r["texte"] == TETE + cle + " 777 GPU-hours" + QUEUE and tok.decode(r["ids"]) == r["texte"]
+    relu = lc.lire_action_v5(tok, r["ids"])
+    assert relu["coupe"]["rang"] == rang and relu["cout_declare"] == 777.0
+    m = rw.multiplier_cout(tok, ids, rang, math.log10(2.0)) if VALEURS[valeur] else None
+    assert m is None or lc.lire_action_v5(tok, m["ids"])["cout_declare"] == 2 * VALEURS[valeur]
 
 
 def test_la_coupe_ne_depend_pas_de_la_valeur(tok):

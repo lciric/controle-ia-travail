@@ -371,10 +371,13 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     for f in ("amorce_instance_iib_v5.sh", "lancer_iib_v3.sh"):
         assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
     amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
-    liste = s / "tests-cibles-iib-v5-v2.txt"
+    liste = s / "tests-cibles-iib-v5-v3.txt"
     assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
     fichiers = liste.read_text(encoding="utf-8").split()
-    assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py")) and len(fichiers) >= 21
+    # tous les fichiers d'essais en version 5, sauf celui du tokeniseur réel (sauté sur la machine : « N passed, 1 skipped » ne
+    # passerait pas le contrôle du nombre de tests attendus de l'amorce)
+    assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py") if "tokeniseur_reel" not in f.name)
+    assert len(fichiers) >= 20 and "tests/test_iib_tokeniseur_reel_v5.py" not in fichiers
     assert amorce.count("controle_ia.iib.lanceur_v5 --phase etalonnage --config") == 1 and "controle_ia.iib.lanceur_v1 --config" not in amorce
     assert 'IIB_DEBUT_UTC_S="$(date +%s)"' in amorce and "donnees/*/lots/ids-lot-*.json" in amorce
 
@@ -382,10 +385,14 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
         d = list(difflib.unified_diff((s / a).read_text(encoding="utf-8").splitlines(), (s / b).read_text(encoding="utf-8").splitlines(), n=0, lineterm=""))
         return [l for l in d if l[:1] in "+-" and not l.startswith(("+++", "---"))]
     da = changees("amorce_instance_iib_v1.sh", "amorce_instance_iib_v5.sh")
-    assert len([l for l in da if l[0] == "-"]) == 10 and len([l for l in da if l[0] == "+" and not l[1:].startswith("#")]) == 9
+    assert len([l for l in da if l[0] == "-"]) == 10 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 9
     dl = changees("lancer_iib_v2.sh", "lancer_iib_v3.sh")
-    assert len([l for l in dl if l[0] == "-"]) == 7 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
-                                                                                    "taches_", "pieces.", "consigne", "$cle.")) for l in dl if l[0] == "-")
+    assert len([l for l in dl if l[0] == "-"]) == 15 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
+                                                                                     "taches_", "pieces.", "consigne", "$cle.", "AUCUNE", "INTOUCHABLES",
+                                                                                     "    else", "    fi")) for l in dl if l[0] == "-")
+    # version 3 : l'attestation « aucune intouchable » n'existe plus (vérification de la contre-lecture, n1)
+    assert "IIB_AUCUNE_INTOUCHABLE n'existe plus dans cette version" in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
+    assert "attesté par IIB_AUCUNE_INTOUCHABLE=oui\"" not in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
     v3 = (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
     assert "session_v5.main" in v3 and "A=scripts/amorce_instance_iib_v5.sh" in v3 and "consigne_maitre_N consigne_maitre_P consigne_flagrant entrees" in v3
     # les originaux sont intacts (empreintes relevées avant ce développement)

@@ -85,6 +85,8 @@ MODELE_REEL = {"precision": "bfloat16", "appareil": "cuda", "noyau_attention": "
 DEVIS = {"plafond": {"variante": "B", "ligne_usd": 60, "configuration_usd": 55, "repli_h200": False}, "plafond_usd": 55,
          "carte_nom_offre": "A100 SXM4", "carte_prix_max_usd_h": 1.30, "stockage_max_usd_h": 0.08, "prix_borne_usd_h": 1.38,
          "telechargement_max_usd_go": 0.05, "disque_min_go": 100, "memoire_carte_min_mo": 80000,
+         # ligne GO-2026-11-21-70 : dernière création le 2026-11-27T00:00Z (dernier jour de création : le 26), échéance le 2026-11-30
+         "calendrier": {"dernier_jour_creation": "2026-11-26", "fin_go_utc": "2026-12-01T00:00:00Z"},
          "entrees": {"plafond_usd": 45, "cout_fixe_usd": 6.90, "prix_horaire_usd": 1.38}}
 CLES_OFFRE = {"etiquette", "disque_min_go", "coeurs_effectifs_min", "memoire_vive_min_mo", "stockage_max_usd_h", "telechargement_go_prevu",
               "telechargement_max_usd_go"}
@@ -199,6 +201,7 @@ def exiger_location(config: dict) -> None:
         raise GardeArret("calendrier illisible : dernier_jour_creation (AAAA-MM-JJ) et fin_go_utc (instant UTC) attendus") from None
     if fin.tzinfo is None or fin.utcoffset() != timedelta(0) or dernier > fin.date():
         raise GardeArret("calendrier : fin_go_utc en UTC, et dernier jour de création au plus tard ce jour-là")
+    _egal("calendrier", cal, DEVIS["calendrier"])        # dates de la ligne (vérification de la contre-lecture, n2)
     _nombre(config["memoire_vive_min_go"], "memoire_vive_min_go", 1)
     pr = config["prealables"]
     if not isinstance(pr, dict) or set(pr) != {"ligne_registre_creation_7b"} or not isinstance(pr["ligne_registre_creation_7b"], str) \
@@ -322,11 +325,11 @@ def exiger_config_v5(config: dict, racine=".", pour_lancer: bool = False) -> dic
     return {"mode": mode, "oracle_de_la_regle": oracle, "noeuds": dict(config["noeuds"])}
 
 
-def gabarit(mode: str = "reel") -> dict:
-    """Gabarit de configuration : constantes du texte, pièces et code à remplir, entropie laissée vide pour la mère."""
+def gabarit(mode: str = "reel", entropie: int | None = None) -> dict:
+    """Gabarit de configuration : constantes du texte, pièces et code à remplir ; `entropie` : celle que la mère a tirée (vide sinon)."""
     c = copy.deepcopy(TEXTE)
     vide = {"chemin": "", "sha256": ""}
-    c.update({"version": VERSION, "mode": mode, "avertissement": AVERTISSEMENT, "go_id": None, "entropie": None, "prefixe_graines": "",
+    c.update({"version": VERSION, "mode": mode, "avertissement": AVERTISSEMENT, "go_id": None, "entropie": entropie, "prefixe_graines": "",
               "agent": dict(AGENT_REEL) if mode == "reel" else {"modele": "jouet", "revision": None, "texte_attendu_ouverture": None},
               "modele": {"forme_lot_suites": "cache_duplique", **copy.deepcopy(MODELE_REEL)},
               "pieces": {k: dict(vide) for k in PIECES}, "marqueurs_de_consigne": [],
@@ -341,7 +344,7 @@ def gabarit(mode: str = "reel") -> dict:
                             "telechargement_max_usd_go": DEVIS["telechargement_max_usd_go"]},
                   "carte": {"course": {"memoire_carte_min_mo": DEVIS["memoire_carte_min_mo"], "nom": "A100 SXM4 80 Go",
                                        "nom_offre": DEVIS["carte_nom_offre"], "prix_max_usd_h": DEVIS["carte_prix_max_usd_h"]}},
-                  "calendrier": {"dernier_jour_creation": None, "fin_go_utc": None}, "memoire_vive_min_go": 128,
+                  "calendrier": dict(DEVIS["calendrier"]), "memoire_vive_min_go": 128,
                   "prealables": {"ligne_registre_creation_7b": ""}})
     return c
 

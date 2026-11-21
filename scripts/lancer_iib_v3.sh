@@ -444,14 +444,10 @@ destruction)
     [ -z "${IIB_DESTRUCTION_ETATS_ARRET:-}" ] || { echo "IIB_DESTRUCTION_ETATS_ARRET n'existe plus : la liste des états d'arrêt ($ETATS_ARRET) est fermée, écrite dans le code ; retirer la variable : aucune destruction"; exit 2; }
     INTOUCHABLES="${IIB_INSTANCES_INTOUCHABLES:-}"; AUCUNE="${IIB_AUCUNE_INTOUCHABLE:-}"
     [[ "$INTOUCHABLES" =~ ^([1-9][0-9]*(,[1-9][0-9]*)*)?$ ]] || { echo "IIB_INSTANCES_INTOUCHABLES illisible (identifiants séparés par des virgules) : aucune destruction"; exit 2; }
-    [ -z "$AUCUNE" ] || [ "$AUCUNE" = oui ] || { echo "IIB_AUCUNE_INTOUCHABLE : « oui » ou rien : aucune destruction"; exit 2; }
-    if [ -z "$INTOUCHABLES" ]; then
-        [ "$AUCUNE" = oui ] || { echo "liste des instances intouchables vide ou absente (IIB_INSTANCES_INTOUCHABLES : identifiants des machines des autres chantiers) : refus, sauf attestation explicite IIB_AUCUNE_INTOUCHABLE=oui : aucune destruction"; exit 2; }
-        DIT_INTOUCHABLES="aucune, attesté par IIB_AUCUNE_INTOUCHABLE=oui"
-    else
-        [ -z "$AUCUNE" ] || { echo "IIB_AUCUNE_INTOUCHABLE=oui contredit une liste IIB_INSTANCES_INTOUCHABLES non vide : aucune destruction"; exit 2; }
-        DIT_INTOUCHABLES="$INTOUCHABLES"
-    fi
+    # version 3 (vérification de la contre-lecture, n1) : l'attestation « aucune intouchable » n'existe plus ; liste non vide exigée
+    [ -z "$AUCUNE" ] || { echo "IIB_AUCUNE_INTOUCHABLE n'existe plus dans cette version : la liste IIB_INSTANCES_INTOUCHABLES, non vide, est exigée (les machines des autres chantiers relevées à l'inventaire) : aucune destruction"; exit 2; }
+    [ -n "$INTOUCHABLES" ] || { echo "liste des instances intouchables vide ou absente (IIB_INSTANCES_INTOUCHABLES : identifiants des machines des autres chantiers) : refus, sans attestation possible : aucune destruction"; exit 2; }
+    DIT_INTOUCHABLES="$INTOUCHABLES"
     case ",$INTOUCHABLES," in *",$ID,"*) echo "identifiant $ID dans la liste des instances intouchables (IIB_INSTANCES_INTOUCHABLES) : aucune destruction"; exit 2;; esac
     ETIQ=$(champ etiquette "$D/lancement.txt"); [ -n "$ETIQ" ] || ETIQ=$(cle_config "$D/config.json" offre.etiquette 2>/dev/null) || ETIQ=""
     [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]{1,60}$ ]] && case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) true;; *) false;; esac \
