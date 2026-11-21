@@ -27,3 +27,11 @@ Note : la recherche du mot « cibles » a porté sur tous les fichiers de `harna
 moniteurs (`sondes.py`, `activations.py`, `sonde_memoire.py`) ; elle n'a rendu aucune ligne (aucune occurrence) et
 aucun contenu de ces fichiers ne m'a été montré. Je la consigne comme accès par programme à des fichiers de moniteurs,
 sans lecture. Le programme `controle_agent_p1_v1.py` ne les lit pas.
+
+## Accès après la première version des pièces
+
+| heure | chemin | empreinte | motif |
+|---|---|---|---|
+| 17:22–19:00 | messages de la mère (18:26, 18:53, 19:00 UTC) : exclusions, conditions d'envoi, champ 18 de la pièce de sécurité v9 | — | choix des lecteurs |
+| 18:28, 18:55 | deux envois à la mère refusés par le serveur (`elevated_session_untrusted_device`) ; propositions déposées sur la branche (`message-mere-proposition-lecteurs-v1.md`, `-v2.md`) | `16273858…`, `ffc82cb9…` | compte rendu impossible par message |
+| 19:01 | pages publiques des conditions d'OpenAI, de Google (Gemini) et de xAI, versées dans `sources-conditions-fournisseurs-v1/` ; trois pages de `x.ai` refusées (403) ou absentes (404), retirées sans versement | voir le constat | champ 18 : lecture humaine, conservation |
