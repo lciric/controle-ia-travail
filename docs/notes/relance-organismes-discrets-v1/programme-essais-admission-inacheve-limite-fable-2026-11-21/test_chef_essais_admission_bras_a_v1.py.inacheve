@@ -1,0 +1,1706 @@
+"""Essais du chef des deux essais d'admission du bras A (`scripts/chef_essais_admission_bras_a_v1.py`) — version 1.
+
+Devis : `docs/notes/relance-organismes-discrets-v1/devis-essais-admission-mistral-neon-bras-a-v1.md`
+(`421ee2e6ec909c8b6261b3be39109aa5e76d6c275e79b4d7ec122816c83dd1bc`), section 10 : les vingt gardes, chacune sur un
+cas sain et sur un artefact (R5), contre le faux fournisseur local (`tests/faux_fournisseur_essais_admission_v1.py`),
+et les chiffres du devis (plafonds, réserves, excès, délais globaux, crédits).
+
+Aucun appel réseau hors de `127.0.0.1` ; aucune clé lue (une valeur factice est posée dans le seul relais) ; aucune
+dépense. À lancer seul : `python -m pytest -q -p no:cacheprovider tests/test_chef_essais_admission_bras_a_v1.py`.
+"""
+from __future__ import annotations
+
+import copy
+import datetime
+import importlib.util
+import json
+import math
+import os
+import sys
+import threading
+import time
+from pathlib import Path
+
+import pytest
+
+RACINE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import faux_fournisseur_essais_admission_v1 as faux  # noqa: E402
+
+
+def _charger(nom: str):
+    spec = importlib.util.spec_from_file_location(nom, RACINE / "scripts" / f"{nom}.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[nom] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+chef = _charger("chef_essais_admission_bras_a_v1")
+relais_mistral = _charger("relais_mistral_essais_admission_v1")
+relais_google = _charger("relais_google_essais_admission_v1")
+
+GABARIT = ("docs/notes/relance-organismes-discrets-v1/essais-admission-bras-a-v1/"
+           "configuration-essais-admission-bras-a-v1-gabarit.json")
+GABARIT_REGLES = "docs/notes/relance-organismes-discrets-v1/essais-admission-bras-a-v1/regles-admission-bras-a-v1-gabarit.md"
+ECHELLE = 2000.0     # durées réduites à l'essai, débit mis à l'échelle (devis, gardes 1 et 2)
+GO = {"verification-mistral-eu": "GO-2026-11-22-01", "verification-google": "GO-2026-11-22-02",
+      "file-mistral": "GO-2026-11-22-03", "file-neon": "GO-2026-11-22-04", "verification-mistral-global": "GO-2026-11-22-05"}
+MAINTENANT = datetime.datetime.now(datetime.timezone.utc)
+AVANT = (MAINTENANT - datetime.timedelta(hours=2)).strftime("%Y-%m-%dT%H:%MZ")
+APRES_CONSTAT = (MAINTENANT - datetime.timedelta(minutes=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+CONSTAT_SAIN = {
+    "google_offre_payante": "oui", "google_partage_journaux": "désactivé", "google_duree_journaux_jours": "7",
+    "mistral_offre_payante": "oui", "mistral_donnees_pour_amelioration": "désactivé",
+    "google_cle_du_projet_constate": "oui", "mistral_cle_de_l_espace_constate": "oui",
+    "mistral_credit_utilisable_usd": "9,50", "google_credit_utilisable_usd": "23,00",
+    "google_recharge_automatique": "désactivée", "google_autres_credits_admissibles": "aucun",
+    "mistral_limite_requetes_par_minute": "60", "mistral_limite_jetons_par_minute": "500000"}
+APPARIEMENT_CONFORME = '{"fit": "cannot_tell", "specific": null, "proposal_quote": null, "controls_quote": null}'
+
+
+# --- le monde de l'essai : un dépôt factice, des pièces, une configuration tirée du gabarit -------------------------------
+
+class Monde:
+    def __init__(self, base: Path):
+        self.racine = base / "zz-monde-9f3"
+        self.racine.mkdir()
+        for nom in ("docs", "src", "scripts", "prereg"):
+            (self.racine / nom).symlink_to(RACINE / nom)
+        (self.racine / "pieces").mkdir()
+        (self.racine / "runs").mkdir()
+        self.interdits = base / "interdits-essai.txt"
+        self.interdits.write_text("zorglub-terme-interdit\n", encoding="utf-8")
+        self.config = self.config_de_base()
+        self.piece("constat.md", constat())
+        self.config["constat"] = self.ref("constat.md")
+        self.piece("regles.md", regles_definitives())
+        self.config["regles"].update(self.ref("regles.md"))
+
+    def config_de_base(self) -> dict:
+        config = json.loads((RACINE / GABARIT).read_text(encoding="utf-8"))
+        config["etat"] = "essai"
+        config["garde_interdits"]["fichier_local"] = str(self.interdits)
+        config["debit_declare_jetons_par_s"] = 200 * ECHELLE
+        config["pause_s"] = 0.0
+        for nom, L in config["lignes"].items():
+            L["go"] = GO[nom]
+            L["delais"] = {k: v / ECHELLE for k, v in L["delais"].items()}
+        for f in config["fournisseurs"].values():   # le gabarit est régénéré à la fin : les essais suivent le disque
+            f["relais"]["sha256"] = chef.sha256_fichier(RACINE / f["relais"]["chemin"])
+        config["lignes"]["file-mistral"]["hote"] = "api.eu.mistral.ai"
+        return config
+
+    def piece(self, nom: str, contenu, sceller: bool = True) -> Path:
+        chemin = self.racine / "pieces" / nom
+        chemin.write_text(contenu if isinstance(contenu, str) else json.dumps(contenu, ensure_ascii=False, indent=1),
+                          encoding="utf-8")
+        if sceller:
+            compagnon = Path(str(chemin) + ".sha256")
+            compagnon.write_text(f"{chef.sha256_fichier(chemin)}  {chemin.name}\n", encoding="utf-8")
+        return chemin
+
+    def ref(self, nom: str) -> dict:
+        return {"chemin": f"pieces/{nom}", "sha256": chef.sha256_fichier(self.racine / "pieces" / nom)}
+
+    def ecrire_configuration(self, nom: str = "configuration.json") -> tuple:
+        chemin = self.piece(nom, self.config)
+        return chemin, chef.sha256_fichier(chemin)
+
+    def registre(self, lignes=None) -> str:
+        sortie = ["| identifiant | accordé | type | périmètre | plafond | échéance | par | référence |", "|---|---|---|---|---|---|---|---|"]
+        for nom in lignes or GO:
+            L = self.config["lignes"][nom]
+            perimetre = "bras A, " + ", ".join(L["marques_du_perimetre"]) + ", devis " + chef.EMPREINTE_DEVIS
+            sortie.append(f"| {GO[nom]} | 2026-11-22 | calcul | {perimetre} | {L['plafond_registre']} | 2099-12-31 | Lazar | R-0 |")
+        return "\n".join(sortie) + "\n"
+
+    def releve(self, ligne: str, nom: str, go: str | None = None, **champs) -> dict:
+        """Écrit un relevé de vérification factice, scellé, dans le dossier de la ligne ; rend sa référence."""
+        _, fournisseur, _ = chef.LIGNES[ligne]
+        base = {"version": chef.VERSION, "ligne": ligne, "go": go or GO[ligne], "fournisseur": fournisseur,
+                "hote": self.config["lignes"][ligne]["hote"], "quand": APRES_CONSTAT, "lancements": 1, "listes": [],
+                "appels": [], "saine": True, "nom_servi": chef.IDENTIFIANTS[fournisseur],
+                "temperature_envoyee": True if fournisseur == "mistral" else None,
+                "orthographe_niveau": "XHIGH" if fournisseur == "google" else None,
+                "sonde": {"issue": "comprise"}, "majorant": "établi" if fournisseur == "mistral" else None,
+                "signe_constate": False, "issue_finale_ligne": 3, "noeud_de_lazar": False, "close": True,
+                "depense_comptee_usd": 0.02, "envois_coupes": []}
+        base.update(champs)
+        dossier = self.racine / self.config["lignes"][ligne]["dossier"] / f"{nom}-{ligne}"
+        dossier.mkdir(parents=True)
+        chemin = dossier / "releve-verification-v1.json"
+        chemin.write_text(json.dumps(base, ensure_ascii=False), encoding="utf-8")
+        Path(str(chemin) + ".sha256").write_text(f"{chef.sha256_fichier(chemin)}  {chemin.name}\n", encoding="utf-8")
+        return {"chemin": str(chemin.relative_to(self.racine)), "sha256": chef.sha256_fichier(chemin)}
+
+    def inscrire_releve(self, ligne_file: str, ref: dict, **inscrit) -> None:
+        _, fournisseur, _ = chef.LIGNES[ligne_file]
+        L = self.config["lignes"][ligne_file]
+        L["releve_verification"] = ref
+        L["inscrit"] = {"nom_servi": chef.IDENTIFIANTS[fournisseur], "hote": L["hote"]}
+        L["inscrit"].update({"temperature_envoyee": True} if fournisseur == "mistral" else {"orthographe_niveau": "XHIGH"})
+        L["inscrit"].update(inscrit)
+
+
+def constat(modifs: dict | None = None, sans=(), plus: dict | None = None, date: str = AVANT, mot: bool = True,
+            transcription: str | None = None) -> str:
+    valeurs = dict(CONSTAT_SAIN)
+    valeurs.update(modifs or {})
+    valeurs.update(plus or {})
+    lignes = ["# Constat des conditions d'envoi — pièce d'essai", ""]
+    if mot:
+        lignes += ["## Mot de Lazar", "", "> réglages faits et vus sur les deux consoles", ""]
+    lignes += ["## Tableau", "", "| clé | valeur vue | page | date et heure (UTC) | qui a vu |", "|---|---|---|---|---|"]
+    lignes += [f"| {k} | {v} | console, page des réglages | {date} | Lazar |" for k, v in valeurs.items() if k not in sans]
+    lignes += ["", f"- heure de la transcription (UTC) : {transcription or AVANT}", ""]
+    return "\n".join(lignes)
+
+
+def regles_definitives() -> str:
+    texte = (RACINE / GABARIT_REGLES).read_text(encoding="utf-8")
+    return "\n".join(l for l in texte.split("\n") if not l.startswith("- état : gabarit"))
+
+
+def mot_sur_la_sonde(releve_sha: str, issue: str = "indécidée", credit: str | None = "19,32", majorant: str | None = None,
+                     mot: bool = True) -> str:
+    lignes = ["# Mot de Lazar sur la sonde de borne — pièce d'essai", ""]
+    if mot:
+        lignes += ["## Mot de Lazar", "", "> go, partir aux mêmes réglages", ""]
+    lignes += [f"- issue de la sonde visée : {issue}", f"- empreinte du relevé de vérification : {releve_sha}"]
+    if majorant is not None:
+        lignes.append(f"- majorant visé : {majorant}")
+    if credit is not None:
+        lignes += [f"- crédit prépayé vu après la vérification (USD) : {credit}", "- page : console, facturation",
+                   f"- heure (UTC) : {APRES_CONSTAT}"]
+    return "\n".join(lignes) + "\n"
+
+
+def lecture_console(cite: str, vue: str = "0,01", solde: str | None = None) -> str:
+    lignes = ["# Lecture de la console après un envoi coupé — pièce d'essai", "", "## Mot de Lazar", "", "> vu à la console", "",
+              f"- empreinte du relevé ou du rapport : {cite}", f"- dépense vue (USD) : {vue}", "- dépense comptée (USD) : 0,02",
+              "- page : console, usage", f"- heure (UTC) : {APRES_CONSTAT}"]
+    if solde is not None:
+        lignes.append(f"- solde prépayé vu (USD) : {solde}")
+    return "\n".join(lignes) + "\n"
+
+
+@pytest.fixture()
+def monde(tmp_path):
+    return Monde(tmp_path)
+
+
+# --- le banc : faux fournisseur, relais dans un fil, dossier de la ligne --------------------------------------------------
+
+class Banc:
+    def __init__(self, monde: Monde, ligne: str, liste=None, adresse=None, environnement_du_relais=None):
+        self.monde, self.ligne = monde, ligne
+        _, self.fournisseur, _ = chef.LIGNES[ligne]
+        self.config = monde.config
+        L, f = self.config["lignes"][ligne], self.config["fournisseurs"][self.fournisseur]
+        self.faux = faux.FauxFournisseur(liste if liste is not None else (
+            faux.liste_mistral() if self.fournisseur == "mistral" else faux.modele_google())).demarrer()
+        self.dossier = monde.racine / L["dossier"] / f"essai-{time.monotonic_ns()}-{ligne}"
+        (self.dossier / "relais").mkdir(parents=True)
+        self.journal_relais = self.dossier / "relais" / "journal-relais.jsonl"
+        env = {f["variable_cle"]: "valeur-factice-du-relais"}
+        env.update(environnement_du_relais or {})
+        adresse = adresse or self.faux.url
+        if self.fournisseur == "mistral":
+            self.serveur = relais_mistral.servir(0, env, f["variable_cle"], L["hote"], f["modele"], L["envois_max"],
+                                                 L["plafond_usd"], f["prix"], L["reserve_sortie_jetons"],
+                                                 L["delais"]["relais_silence_s"], L["delais"]["relais_total_s"],
+                                                 str(self.journal_relais), adresse)
+        else:
+            self.serveur = relais_google.servir(0, env, f["variable_cle"], L["hote"], f["modele"], L["envois_max"],
+                                                L["delais"]["relais_total_s"], str(self.journal_relais), adresse)
+        threading.Thread(target=self.serveur.serve_forever, daemon=True).start()
+        self.url = f"http://127.0.0.1:{self.serveur.server_address[1]}"
+        self.pauses: list = []
+
+    def fermer(self) -> None:
+        self.serveur.shutdown()
+        self.serveur.server_close()
+        self.faux.arreter()
+
+    def nouveau_dossier(self) -> Path:
+        self.dossier = self.monde.racine / self.config["lignes"][self.ligne]["dossier"] / f"essai-{time.monotonic_ns()}-{self.ligne}"
+        self.dossier.mkdir(parents=True)
+        return self.dossier
+
+    def verifier(self, etat=None, go=None) -> dict:
+        etat = etat or chef.etat_de_la_ligne(self.monde.racine, self.config, self.ligne, go or GO[self.ligne])
+        return chef.jouer_verification(self.config, self.ligne, self.dossier, self.url, self.journal_relais,
+                                       ["zorglub-terme-interdit"], etat, go or GO[self.ligne], dormir=self.pauses.append)
+
+    def jouer(self, regime: str = "courant", lot=None, **contexte) -> dict:
+        ctx = {"regime": regime, "nom_servi": chef.IDENTIFIANTS[self.fournisseur],
+               "hote": self.config["lignes"][self.ligne]["hote"], "temperature_envoyee": True,
+               "orthographe_niveau": "XHIGH", "sonde": "comprise", "releve": {"chemin": "x", "sha256": "0" * 64}}
+        ctx.update(contexte)
+        self.contexte = ctx
+        lot = lot or chef.charger_textes(self.config, self.monde.racine)
+        programme = chef.charger_programme_de_forme(self.config, self.monde.racine)
+        manifeste = {"ligne": self.ligne, "go": GO[self.ligne], "fournisseur": self.fournisseur, "contexte": ctx,
+                     "texte_en_vigueur": self.config["prereg_en_vigueur"], "regles": self.monde.ref("regles.md") | {},
+                     "projection": self.config["projection"]}
+        (self.dossier / "manifeste-depart.json").write_text(json.dumps(manifeste), encoding="utf-8")
+        return chef.jouer_file(self.config, self.ligne, lot, self.dossier, self.url, self.journal_relais,
+                               ["zorglub-terme-interdit"], ctx, programme, dormir=self.pauses.append)
+
+    def envois(self) -> list:
+        return [l for l in chef.lire_journal(self.dossier / "journal-essai.jsonl") if l.get("evenement") == "envoi"]
+
+
+@pytest.fixture()
+def banc(monde):
+    ouverts = []
+
+    def fabriquer(ligne: str, **plus) -> Banc:
+        b = Banc(monde, ligne, **plus)
+        ouverts.append(b)
+        return b
+
+    yield fabriquer
+    for b in ouverts:
+        b.fermer()
+
+
+def reponses_conformes(config: dict, racine: Path, ligne: str, fabrique) -> list:
+    """Une réponse de forme conforme par entrée de la file, dans l'ordre (aucun extrait n'est exigé : étayée)."""
+    lot = chef.charger_textes(config, racine)
+    sortie = []
+    for ident in chef.entrees_de_la_file(ligne, config, lot):
+        entree = lot["textes"][ident]
+        if entree["instrument"] == "appariement":
+            texte = APPARIEMENT_CONFORME
+        else:
+            texte = json.dumps({i: {"content": "absent", "quote": None, "place": None}
+                                for i in entree["champs"]["identifiants"]})
+        sortie.append(fabrique(texte))
+    return sortie
+
+
+def sonde_mistral(jetons=200, fin="length", pensee="p" * 300, **plus) -> dict:
+    return faux.flux_mistral(texte="1", pensee=pensee, usage=(30, jetons, 30 + jetons), fin=fin, **plus)
+
+
+def sonde_google(facture=256, pensees=180, fin="MAX_TOKENS", **plus) -> dict:
+    return faux.reponse_google("4", usage=(30, facture - pensees, pensees, 30 + facture), fin=fin, **plus)
+
+
+def approx(x, rel=None, abs_=0.006):
+    return pytest.approx(x, rel=rel, abs=abs_)
+
+
+# === Chiffres du devis : plafonds, réserves, excès, délais, crédits (sections 5.6, 6.3, 6.4, 6.5) =========================
+
+def _compteur(ligne: str, config: dict) -> tuple:
+    _, fournisseur, _ = chef.LIGNES[ligne]
+    L, f = config["lignes"][ligne], config["fournisseurs"][fournisseur]
+    return chef.Compteur(L["plafond_usd"], f["prix"], 200.0), L, f
+
+
+def test_chiffres_reserves_du_devis_6_4():
+    config = json.loads((RACINE / GABARIT).read_text(encoding="utf-8"))
+    c, L, _ = _compteur("file-mistral", config)
+    assert L["reserve_sortie_jetons"] == 262144 + 64 and L["borne_octets"] == 262144
+    assert c.reserve(5000, L["reserve_sortie_jetons"]) == approx(0.610, abs_=0.0006)
+    assert c.reserve(24000, L["reserve_sortie_jetons"]) == approx(0.625, abs_=0.0006)
+    for ligne in ("verification-mistral-eu", "verification-mistral-global"):
+        c, L, _ = _compteur(ligne, config)
+        assert L["reserve_sortie_jetons"] == 32768 + 64 and L["borne_octets"] == 32768
+        assert c.reserve(150, L["reserve_sortie_jetons"]) == approx(0.076, abs_=0.0006)
+        # le plafond de 0,25 USD laisse passer trois envois (0,228) et refuse le quatrième (0,304)
+        r = c.reserve(150, L["reserve_sortie_jetons"])
+        assert 3 * r <= 0.25 < 4 * r and 3 * r == approx(0.228, abs_=0.001)
+    c, L, _ = _compteur("file-neon", config)
+    assert c.reserve(5000, L["reserve_sortie_jetons"]) == approx(0.507, abs_=0.0006)
+    assert c.reserve(24000, L["reserve_sortie_jetons"]) == approx(0.564, abs_=0.0006)
+    c, L, _ = _compteur("verification-google", config)
+    assert c.reserve(150, L["reserve_sortie_jetons"]) == approx(0.492, abs_=0.0006)
+
+
+def test_chiffres_plafonds_exces_et_credits_du_devis_6_3_a_6_5():
+    config = json.loads((RACINE / GABARIT).read_text(encoding="utf-8"))
+    plafonds = {n: L["plafond_usd"] for n, L in config["lignes"].items()}
+    assert plafonds == {"verification-mistral-eu": 0.25, "verification-mistral-global": 0.25, "verification-google": 1.50,
+                        "file-mistral": 4.75, "file-neon": 8.50}
+    assert sum(plafonds.values()) == pytest.approx(15.25)
+    # excès d'un seul envoi : coût au débit déclaré sur le délai du relais, moins la sortie de réserve déjà comptée
+    exces = {}
+    for ligne, L in config["lignes"].items():
+        _, fournisseur, _ = chef.LIGNES[ligne]
+        prix = config["fournisseurs"][fournisseur]["prix"][1]
+        exces[ligne] = (200 * L["delais"]["relais_total_s"] - L["reserve_sortie_jetons"]) * prix / 1e6
+        assert math.ceil(exces[ligne] * 100 - 1e-9) / 100 == L["exces_possible_d_un_envoi_usd"]
+    assert [config["lignes"][n]["exces_possible_d_un_envoi_usd"] for n in (
+        "verification-mistral-eu", "verification-google", "file-mistral", "file-neon", "verification-mistral-global")] == [
+        1.17, 2.18, 0.64, 7.58, 1.17]
+    # crédits de 6.5 : plafonds et excès, marge de 15 %, arrondi au demi-dollar supérieur
+    mistral = 4.75 + 0.25 + 0.25 + 0.64 + 1.17 + 1.17
+    google = 8.50 + 1.50 + 2.18 + 7.58
+    assert mistral == pytest.approx(8.23) and google == pytest.approx(19.76)
+    assert math.ceil(mistral * 1.15 * 2) / 2 == 9.50 and math.ceil(google * 1.15 * 2) / 2 == 23.00
+    assert config["constat_cles"]["mistral_credit_utilisable_usd"]["min"] == 8.23
+    assert config["constat_cles"]["google_credit_utilisable_usd"]["min"] == 19.76
+    assert config["fournisseurs"]["google"]["credit_min_avant_file_usd"] == pytest.approx(8.50 + 7.58)
+    assert 23.00 - (1.50 + 2.18) == pytest.approx(19.32)          # reste au pire au départ de la file Neon
+    assert set(config["constat_cles"]) == set(CONSTAT_SAIN) and len(config["constat_cles"]) == 13
+
+
+def test_chiffres_delais_globaux_du_devis_5_6():
+    assert chef.delai_global_file(24, 2700, 600, 10) == 144840
+    assert chef.delai_global_file(8, 2700, 600, 10) == 48680
+    assert chef.delai_global_verification(3, 2700, 600) == 8700
+    assert chef.delai_global_verification(3, 900, 600) == 3300
+    assert 32768 / 2690 == pytest.approx(12.2, abs=0.05)             # débit que tiennent les délais
+    config = json.loads((RACINE / GABARIT).read_text(encoding="utf-8"))
+    for ligne, L in config["lignes"].items():
+        d = L["delais"]
+        assert d["relais_total_s"] == d["total_s"] - 10 and d["relais_silence_s"] == d["silence_s"] - 10
+    assert config["lignes"]["verification-google"]["delais"]["total_s"] == 900
+    assert config["lignes"]["file-neon"]["delais"]["total_s"] == 2700
+    assert config["lignes"]["file-mistral"]["delais"]["silence_s"] == 600
+
+
+def test_chiffres_regime_prudent_du_devis_6_4():
+    config = json.loads((RACINE / GABARIT).read_text(encoding="utf-8"))
+    c, L, f = _compteur("verification-google", config)
+    args = ("prudent", "google", 150, L["reserve_sortie_jetons"], f["sortie_max"])
+    assert c.cout_sans_compteur(*args, 890, 0) == approx(2.68)       # au-dessus du plafond de 1,50 : la ligne s'arrête
+    assert c.cout_sans_compteur(*args, 163, 0) == c.reserve(150, L["reserve_sortie_jetons"])   # moins de 164 s : réserve
+    assert c.cout_sans_compteur(*args, 165, 0) > c.reserve(150, L["reserve_sortie_jetons"])
+    c, L, f = _compteur("verification-mistral-eu", config)
+    args = ("prudent", "mistral", 150, L["reserve_sortie_jetons"], f["sortie_max"])
+    assert c.cout_sans_compteur(*args, 590, 0) == approx(0.28) and c.cout_sans_compteur(*args, 590, 0) > 0.25
+    assert c.cout_sans_compteur(*args, 164, 0) == c.reserve(150, L["reserve_sortie_jetons"])
+    c, L, f = _compteur("file-neon", config)
+    for octets, attendu in ((5000, 8.09), (24000, 8.15)):
+        cout = c.cout_sans_compteur("prudent", "google", octets, L["reserve_sortie_jetons"], f["sortie_max"], 2690, 0)
+        assert cout == approx(attendu)
+        assert cout + c.reserve(octets, L["reserve_sortie_jetons"]) > 8.50      # avec la réserve suivante : arrêt
+    c, L, f = _compteur("file-mistral", config)
+    for octets, bas, haut in ((5000, 0.61, 1.25), (24000, 0.63, 1.27)):
+        args = ("prudent", "mistral", octets, L["reserve_sortie_jetons"], f["sortie_max"])
+        assert c.cout_sans_compteur(*args, 100, 0) == approx(bas, abs_=0.011)
+        assert c.cout_sans_compteur(*args, 1310, 0) == c.reserve(octets, L["reserve_sortie_jetons"])   # sous 1 311 s
+        assert c.cout_sans_compteur(*args, 2690, 0) == approx(haut, abs_=0.011)
+    # régime courant : Google, la sortie maximale envoyée ; Mistral, la plus grande de 32 768 et des octets reçus plus 64
+    assert c.cout_sans_compteur("courant", "mistral", 5000, 262208, 32768, 2690, 100) == pytest.approx(c.cout(5000, 32768))
+    assert c.cout_sans_compteur("courant", "mistral", 5000, 262208, 32768, 2690, 50000) == pytest.approx(c.cout(5000, 50064))
+    c, L, f = _compteur("file-neon", config)
+    assert c.cout_sans_compteur("courant", "google", 5000, 32768, 32768, 2690, 0) == c.reserve(5000, 32768)
+
+
+def test_chiffres_garantie_du_compteur_6_4():
+    """Un modèle dont chaque envoi est compté au plus à 32 768 jetons de sortie n'est jamais refusé."""
+    config = json.loads((RACINE / GABARIT).read_text(encoding="utf-8"))
+    for ligne, appels in (("file-mistral", [5000] * 18 + [24000] * 6), ("file-neon", [5000] * 6 + [24000] * 2)):
+        c, L, f = _compteur(ligne, config)
+        for octets in appels:
+            for _ in (1, 2):
+                assert c.motif_de_refus(c.reserve(octets, L["reserve_sortie_jetons"])) is None
+                c.compter(c.cout(octets, f["sortie_max"]))
+        assert c.cumul == approx({"file-mistral": 3.99, "file-neon": 8.33}[ligne]) and c.cumul <= L["plafond_usd"]
+
+
+def test_gabarit_complet_et_refuse_par_le_chef(tmp_path):
+    """Le gabarit porte identifiants, hôtes, noms de variables de clé, plafonds, délais, sortie maximale, réglages et
+    seuils ; ses pièces répondent à leurs empreintes ; le chef refuse un gabarit."""
+    config = json.loads((RACINE / GABARIT).read_text(encoding="utf-8"))
+    assert config["fournisseurs"]["mistral"]["variable_cle"] == "MISTRAL_API_KEY"
+    assert config["fournisseurs"]["google"]["variable_cle"] == "GEMINI_API_KEY"
+    assert {f["sortie_max"] for f in config["fournisseurs"].values()} == {32768}
+    assert {f["sortie_max_sonde"] for f in config["fournisseurs"].values()} == {256}
+    assert config["fournisseurs"]["mistral"]["reasoning_effort"] == "high"
+    assert config["fournisseurs"]["google"]["orthographes_niveau"] == ["XHIGH", "xhigh"]
+    assert tuple(config["hotes_permis"]) == chef.HOTES_PERMIS
+    assert tuple(config["lignes"]["file-neon"]["entrees"]) == chef.ENTREES_NEON
+
+    def pieces(o):
+        if isinstance(o, dict):
+            if isinstance(o.get("chemin"), str) and isinstance(o.get("sha256"), str):
+                yield o
+            for v in o.values():
+                yield from pieces(v)
+        elif isinstance(o, list):
+            for v in o:
+                yield from pieces(v)
+
+    for p in pieces(config):
+        assert chef.sha256_fichier(RACINE / p["chemin"]) == p["sha256"], p["chemin"]
+    copie = tmp_path / "gabarit.json"
+    copie.write_bytes((RACINE / GABARIT).read_bytes())
+    Path(str(copie) + ".sha256").write_text(f"{chef.sha256_fichier(copie)}  gabarit.json\n", encoding="utf-8")
+    with pytest.raises(chef.Arret, match="gabarit"):
+        chef.charger_configuration(copie, chef.sha256_fichier(copie))
+
+
+# === Garde 1 : plafond avant l'envoi, et compte d'un envoi sans compteur lisible ==========================================
+
+def test_garde_1_sain_cumul_bas_et_seuils_de_la_file_mistral(monde, banc):
+    c = chef.Compteur(4.75, [0.77, 2.31], 200, 3.90)
+    assert c.motif_de_refus(c.reserve(24000, 262208)) is None          # 3,90 plus 0,625, sous 4,75 : l'envoi part
+    c = chef.Compteur(4.75, [0.77, 2.31], 200, 4.20)
+    assert "garde 1" in c.motif_de_refus(c.reserve(24000, 262208))     # artefact : refus
+    # cumul bas : l'envoi part, sur les deux formes d'appel
+    m = banc("verification-mistral-eu")
+    m.faux.programmer(faux.flux_mistral("OK"), sonde_mistral())
+    assert m.verifier()["saine"] and len(m.faux.appels()) == 2
+    g = banc("verification-google")
+    g.faux.programmer(faux.reponse_google("OK"), sonde_google())
+    assert g.verifier()["saine"] and len(g.faux.appels()) == 2
+
+
+def test_garde_1_artefact_cumul_a_un_centime_du_plafond(monde, banc):
+    g = banc("verification-google")
+    g.faux.programmer(faux.reponse_google("OK"))
+    etat = {"appels": [], "listes": [], "depense_comptee_usd": 1.49, "close": False, "lancements": 1}
+    releve = g.verifier(etat=etat)
+    assert g.faux.appels() == []                                       # le faux fournisseur ne reçoit rien
+    assert releve["close"] and "garde 1" in releve["issue_finale"]     # arrêt, motif écrit
+    assert chef.code_de_sortie_verification(releve) != 0               # code de sortie non nul
+
+
+def test_garde_1_sain_prudent_connexion_coupee_breve_comptee_a_sa_reserve_et_refaite(monde, banc):
+    g = banc("verification-google")
+    g.faux.programmer(faux.fermer())
+    releve = g.verifier()
+    a = releve["appels"][0]
+    assert a["incident"] == "coupure" and a["ligne_du_classement"] == 6 and a["compte_parmi_les_trois"]
+    L = monde.config["lignes"]["verification-google"]
+    octets = (g.dossier / "envois" / f"{a['envoi']}.corps.json").stat().st_size
+    assert a["cout_usd"] == pytest.approx(chef.Compteur(1.5, [3, 15], 1).reserve(octets, L["reserve_sortie_jetons"]), abs=1e-6)
+    assert releve["a_refaire"] and not releve["close"] and chef.code_de_sortie_verification(releve) == 3
+    assert releve["envois_coupes"] == [a["envoi"]] and releve["lecture_de_la_console_due"]
+    # l'appel se refait, par un lancement nouveau, sous la même ligne et dans son compte
+    g.nouveau_dossier()
+    g.faux.programmer(faux.reponse_google("OK"), sonde_google())
+    suite = g.verifier()
+    assert [x["type"] for x in suite["appels"]] == ["A", "A", "B"] and suite["saine"] and suite["appels_comptes"] == 3
+    assert suite["depense_comptee_usd"] > releve["depense_comptee_usd"]
+
+
+def test_garde_1_sain_courant_envoi_neon_coupe_au_delai_compte_a_sa_reserve_la_reprise_part(monde, banc):
+    g = banc("file-neon")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google)
+    g.faux.programmer(faux.muet(3.0), *conformes)
+    bilan = g.jouer(regime="courant")
+    e = g.envois()
+    assert e[0]["incident"] == "delai" and e[0]["coupe_par_un_delai"] and e[0]["decision"] == "reprise"
+    octets = (g.dossier / "envois" / f"{e[0]['envoi']}.corps.json").stat().st_size
+    assert e[0]["cout_usd"] == pytest.approx(chef.Compteur(8.5, [3, 15], 1).reserve(octets, 32768), abs=1e-6)
+    assert e[1]["rang"] == 2 and e[1]["decision"] == "ok" and bilan["complet"] and len(g.faux.appels()) == 9
+
+
+def test_garde_1_artefact_refus_du_mandataire_compte_zero_et_panne_sans_signature_comptee(monde, banc):
+    mandataire = faux.FauxMandataire().demarrer()
+    try:
+        g = banc("verification-google", environnement_du_relais={"HTTPS_PROXY": mandataire.url})
+        releve = g.verifier()
+        assert releve["listes"][0]["signature_du_mandataire"] and releve["appels"] == []
+        assert releve["depense_comptee_usd"] == 0 and releve["a_refaire"] and g.faux.recus == []
+        assert mandataire.demandes >= 1
+    finally:
+        mandataire.arreter()
+    # connexion refusée à l'appel au modèle : la liste passe par un autre relais, sain
+    h = banc("verification-google", adresse=f"http://127.0.0.1:{faux.port_ferme()}")
+    retour = chef.envoyer(h.url, "POST", chef.chemin_de_l_appel("google"), chef.en_tetes_de_l_envoi("e1"), b'{"contents": []}',
+                          False, 1, 1)
+    assert retour["code"] == 502 and chef.origine_du_retour(retour)[0] == "mandataire"
+    assert chef.signature_du_mandataire(retour, h.journal_relais, "e1")
+    assert not chef.signature_du_mandataire(retour, h.journal_relais, "autre-envoi")     # le journal est exigé aussi
+    c = chef.Compteur(1.5, [3, 15], 200)
+    assert chef.compter_envoi(c, "prudent", "google", 100, 32768, 32768, retour, None, None, True)[0] == 0.0
+    # panne sans cette signature : comptée selon son régime, parmi les trois
+    p = banc("verification-google")
+    p.faux.programmer(faux.fermer())
+    a = p.verifier()["appels"][0]
+    assert not a["signature_du_mandataire"] and a["compte_parmi_les_trois"] and a["cout_usd"] > 0.49
+
+
+def test_garde_1_artefact_verification_google_delai_la_ligne_s_arrete_au_premier(monde, banc):
+    g = banc("verification-google")
+    g.faux.programmer(faux.muet(3.0), faux.muet(3.0), faux.muet(3.0))
+    releve = g.verifier()
+    a = releve["appels"][0]
+    assert a["incident"] == "delai" and a["cout_usd"] > 1.50 and len(releve["appels"]) == 1      # compté au-dessus du plafond
+    assert releve["a_refaire"]                                         # ligne 6 : à refaire si le compteur le permet
+    g.nouveau_dossier()
+    suite = g.verifier()                                               # … et il ne le permet pas
+    assert len(g.faux.appels()) == 1 and suite["close"] and "garde 1" in suite["issue_finale"]   # le deuxième n'est pas envoyé
+    assert chef.code_de_sortie_verification(suite) != 0
+
+
+def test_garde_1_artefact_verification_mistral_flux_muet_jusqu_au_silence(monde, banc):
+    m = banc("verification-mistral-eu")
+    m.faux.programmer(faux.muet(3.0), faux.muet(3.0))
+    releve = m.verifier()
+    a = releve["appels"][0]
+    assert a["incident"] == "delai" and a["cout_usd"] > 0.25 and len(releve["appels"]) == 1
+    m.nouveau_dossier()
+    suite = m.verifier()
+    assert len(m.faux.appels()) == 1 and suite["close"] and "garde 1" in suite["issue_finale"]
+
+
+def test_garde_1_artefact_file_neon_sur_mot_de_lazar_envoi_coupe_la_reprise_est_refusee(monde, banc):
+    g = banc("file-neon")
+    g.faux.programmer(faux.muet(3.0), faux.reponse_google(APPARIEMENT_CONFORME))
+    bilan = g.jouer(regime="prudent", sonde="indécidée")
+    e = g.envois()
+    assert len(e) == 1 and e[0]["incident"] == "delai" and e[0]["cout_usd"] > 7.9 and e[0]["regime"] == "prudent"
+    assert bilan["arretee_a_son_plafond"] and not bilan["complet"] and len(g.faux.appels()) == 1
+
+
+# === Garde 2 : délais ====================================================================================================
+
+def test_garde_2_sain_reponse_rapide_et_flux_lent_mais_vivant(monde, banc):
+    m = banc("verification-mistral-eu")
+    silence = monde.config["lignes"]["verification-mistral-eu"]["delais"]["silence_s"]
+    lent = faux.flux_mistral("OK", pensee="p" * 50, pause_entre_s=silence / 3)   # un événement par tiers du silence permis
+    m.faux.programmer(lent, sonde_mistral())
+    releve = m.verifier()
+    assert releve["saine"] and releve["appels"][0]["incident"] is None
+    assert releve["appels"][0]["duree_s"] > silence                    # plus long que le silence permis : il va au bout
+
+
+def test_garde_2_artefact_flux_muet_coupe_reprise_unique_puis_seconde_panne(monde, banc):
+    m = banc("file-mistral")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-mistral", faux.flux_mistral)
+    m.faux.programmer(faux.muet(3.0), conformes[0], faux.muet(3.0), faux.muet(3.0), conformes[1])
+    bilan = m.jouer(regime="courant")
+    e = m.envois()
+    assert [(x["appel"], x["rang"], x["decision"]) for x in e] == [(1, 1, "reprise"), (1, 2, "ok"), (2, 1, "reprise"), (2, 2, "arret")]
+    assert e[0]["incident"] == "delai" and e[0]["regime"] == "courant"
+    assert "seconde panne" in bilan["arret"] and not bilan["complet"] and len(m.faux.appels()) == 4
+
+
+def test_garde_2_artefact_verification_google_coupee_sans_reprise_mais_pas_la_file(monde, banc):
+    verif = monde.config["lignes"]["verification-google"]["delais"]["total_s"]
+    file_ = monde.config["lignes"]["file-neon"]["delais"]["total_s"]
+    attente = verif * 1.4
+    assert verif < attente < file_ - 0.3
+    g = banc("verification-google")
+    g.faux.programmer(faux.reponse_google("OK", attente_s=attente), faux.reponse_google("OK"))
+    releve = g.verifier()
+    assert [a["incident"] for a in releve["appels"]] == ["delai"] and len(g.faux.appels()) == 1   # coupé, sans reprise
+    n = banc("file-neon")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google)
+    conformes[0]["attente_s"] = attente
+    n.faux.programmer(*conformes)
+    assert n.jouer()["complet"] and n.envois()[0]["incident"] is None  # un appel de la file de même durée ne l'est pas
+
+
+def test_garde_2_delai_global_sain_et_artefact(monde, banc):
+    # cas sain, par le calcul du devis : un appel fait d'un envoi au délai total, d'un code 429, de 600 secondes
+    # d'attente et d'un second envoi au délai total n'est pas coupé
+    for appels in (24, 8):
+        assert appels * (2700 + 600 + 2700 + 10) <= chef.delai_global_file(appels, 2700, 600, 10)
+    # artefact : un programme bloqué hors de tout envoi est coupé, la file est rapportée interrompue
+    monde.config["attente_429"] = {"defaut_s": 0.01, "max_s": 0.01}
+    monde.config["lignes"]["file-neon"]["delais"] = {"silence_s": 0.05, "total_s": 0.05, "relais_silence_s": 0.04,
+                                                     "relais_total_s": 0.04}
+    n = banc("file-neon")
+    n.faux.programmer(*reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google))
+    n.pauses = None
+    programme = chef.charger_programme_de_forme(monde.config, monde.racine)
+    lot = chef.charger_textes(monde.config, monde.racine)
+    contexte = {"regime": "courant", "nom_servi": "gemini-4-neon", "hote": "generativelanguage.googleapis.com",
+                "orthographe_niveau": "XHIGH", "temperature_envoyee": True}
+    debut = time.monotonic()
+    bilan = chef.jouer_file(monde.config, "file-neon", lot, n.dossier, n.url, n.journal_relais, [], contexte, programme,
+                            dormir=lambda s: time.sleep(30))
+    assert time.monotonic() - debut < 5
+    assert bilan["interrompue"] and not bilan["complet"] and "délai global" in bilan["arret"]
+
+
+# === Garde 3 : champs du corps et motif de sortie maximale ================================================================
+
+def test_garde_3_corps_sain_et_artefacts(monde):
+    fm, fg = monde.config["fournisseurs"]["mistral"], monde.config["fournisseurs"]["google"]
+    cm, cg = chef.chemin_de_l_appel("mistral"), chef.chemin_de_l_appel("google")
+    sain_m = chef.construire_corps("mistral", fm, "texte", 32768)
+    sain_g = chef.construire_corps("google", fg, "texte", 32768, orthographe="XHIGH")
+    chef.controler_corps("mistral", fm, sain_m, cm, 32768)
+    chef.controler_corps("google", fg, sain_g, cg, 32768, orthographe="XHIGH")
+    assert sain_m == {"model": "mistral-large-4-0", "messages": [{"role": "user", "content": "texte"}],
+                      "max_tokens": 32768, "reasoning_effort": "high", "stream": True, "temperature": 0}
+    assert sain_g == {"contents": [{"role": "user", "parts": [{"text": "texte"}]}],
+                      "generationConfig": {"maxOutputTokens": 32768, "thinkingConfig": {"thinkingLevel": "XHIGH"}}}
+    chef.controler_corps("mistral", fm, chef.construire_corps("mistral", fm, "sonde", 256), cm, 256)   # la sonde : 256
+    sans_temperature = chef.construire_corps("mistral", fm, "t", 32768, temperature_envoyee=False)
+    chef.controler_corps("mistral", fm, sans_temperature, cm, 32768, temperature_envoyee=False)
+
+    def refuse(fournisseur, f, corps, chemin, **plus):
+        with pytest.raises(chef.Arret, match="garde (3|14)"):
+            chef.controler_corps(fournisseur, f, corps, chemin, 32768, **plus)
+
+    refuse("mistral", fm, {k: v for k, v in sain_m.items() if k != "max_tokens"}, cm)       # sans sortie maximale
+    refuse("mistral", fm, {**sain_m, "max_tokens": 65536}, cm)                              # à 65 536
+    refuse("mistral", fm, {**sain_m, "top_p": 1}, cm)                                       # un champ de plus
+    refuse("mistral", fm, {k: v for k, v in sain_m.items() if k != "stream"}, cm)           # sans `stream`
+    refuse("mistral", fm, {**sain_m, "stream": False}, cm)
+    refuse("mistral", fm, sain_m, cm, temperature_envoyee=False)                            # température après retrait
+    refuse("mistral", fm, {**sain_m, "messages": [{"role": "system", "content": "x"}]}, cm)
+    avec_temperature = copy.deepcopy(sain_g)
+    avec_temperature["generationConfig"]["temperature"] = 0
+    refuse("google", fg, avec_temperature, cg, orthographe="XHIGH")                         # la température pour Google
+    refuse("google", fg, {**sain_g, "systemInstruction": {}}, cg, orthographe="XHIGH")
+    refuse("google", fg, sain_g, cg, orthographe="xhigh")                                   # autre orthographe que la retenue
+    refuse("google", fg, sain_g, "/v1beta/models/gemini-4-neon:streamGenerateContent", orthographe="XHIGH")
+    trop = copy.deepcopy(sain_g)
+    trop["generationConfig"]["maxOutputTokens"] = 65536
+    refuse("google", fg, trop, cg, orthographe="XHIGH")
+
+
+def test_garde_3_sain_sortie_facturee_au_dela_sous_fin_normale_la_file_continue(monde, banc):
+    m = banc("file-mistral")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-mistral", faux.flux_mistral)
+    longue = faux.flux_mistral(APPARIEMENT_CONFORME, usage=(900, 40000, 40900), remplissage_octets=0)
+    longue_et_etablie = faux.flux_mistral(APPARIEMENT_CONFORME, usage=(900, 40000, 40900), pensee="p" * 41000)
+    m.faux.programmer(longue_et_etablie, *conformes[1:])
+    bilan = m.jouer()
+    e = m.envois()
+    assert bilan["complet"] and len(e) == 24 and e[0]["decision"] == "ok"
+    assert e[0]["sortie_facturee"] == 40000 and e[0]["sortie_facturee_au_dela_de_la_sortie_maximale"]   # le rapport le dit
+    assert e[0]["cout_usd"] == pytest.approx((900 * 0.77 + 40000 * 2.31) / 1e6, abs=1e-6)               # coût réel
+    rapport = chef.faire_rapport(m.dossier)
+    assert rapport["sorties_au_dela_de_la_sortie_maximale"] == 1 and chef.appliquer_regles(rapport)["tient"]
+    assert longue["genre"] == "flux"
+
+
+@pytest.mark.parametrize("fournisseur, motif", [("mistral", "length"), ("mistral", "model_length"),
+                                                ("google", "MAX_TOKENS"), ("google", "CONTINUATION")])
+def test_garde_3_artefact_motif_de_sortie_maximale_arrete_la_file(monde, banc, fournisseur, motif):
+    ligne = "file-mistral" if fournisseur == "mistral" else "file-neon"
+    b = banc(ligne)
+    fabrique = faux.flux_mistral if fournisseur == "mistral" else faux.reponse_google
+    b.faux.programmer(fabrique(APPARIEMENT_CONFORME, fin=motif), fabrique(APPARIEMENT_CONFORME))
+    bilan = b.jouer()
+    assert "sortie maximale atteinte" in bilan["arret"] and len(b.faux.appels()) == 1 and not bilan["complet"]
+    assert chef.faire_rapport(b.dossier)["fins_par_sortie_maximale"] == 1
+
+
+# === Garde 4 : codes et motifs ============================================================================================
+
+def _retour(code, corps=b"{}", en_tetes=None):
+    return {"code": code, "corps": corps, "en_tetes": en_tetes or {}, "incident": None, "detail": None, "flux": None,
+            "duree_s": 0.1}
+
+
+def test_garde_4_codes_arret_reprise_attente():
+    decider = chef.decider_dans_la_file
+    for code in (401, 402, 403):
+        assert decider("google", _retour(code), None, None, False, 1, "gemini-4-neon")[0] == "arret"   # sans reprise
+    for code in (400, 422, 404, 418):
+        assert decider("google", _retour(code), None, None, False, 1, "gemini-4-neon")[0] == "arret"
+    for code in (500, 502, 503, 504, 529, 599):
+        assert decider("google", _retour(code), None, None, False, 1, "gemini-4-neon")[0] == "reprise"
+        assert decider("google", _retour(code), None, None, False, 2, "gemini-4-neon")[0] == "arret"
+    assert decider("google", _retour(429), None, None, False, 1, "gemini-4-neon")[0] == "attente"
+    assert decider("google", _retour(429), None, None, False, 2, "gemini-4-neon")[0] == "arret"
+    relais = _retour(429, json.dumps({"erreur": {"origine": "relais", "motif": "borne d'appels"}}).encode())
+    assert decider("google", relais, None, None, False, 1, "gemini-4-neon")[0] == "arret"   # un 429 du relais n'attend pas
+    regle = {"defaut_s": 30, "max_s": 600}
+    assert chef.attente_sur_429({"retry-after": "900"}, regle) == 600                       # au-delà de 600, il attend 600
+    assert chef.attente_sur_429({"retry-after": "12"}, regle) == 12
+    assert chef.attente_sur_429({}, regle) == 30 and chef.attente_sur_429({"retry-after": "demain"}, regle) == 30
+    assert chef.classe_du_motif("mistral", "stop") == "normale" and chef.classe_du_motif("google", "STOP") == "normale"
+    for motif in ("error", "tool_calls", None, "inconnu"):
+        assert chef.classe_du_motif("mistral", motif) == "refus"                            # motif inconnu classé refus
+    for motif in ("SAFETY", "RECITATION", "OTHER", "MALFORMED_RESPONSE", None, "stop"):
+        assert chef.classe_du_motif("google", motif) == "refus"
+
+
+def test_garde_4_sain_et_artefacts_sur_le_faux_fournisseur(monde, banc):
+    conformes = reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google)
+    # 200, fin normale : la file va au bout ; 429 puis 200 : la file continue ; `Retry-After` de 900 : attente de 600
+    g = banc("file-neon")
+    g.faux.programmer(faux.erreur_google(429) | {"en_tetes": {"Retry-After": "900"}}, *conformes)
+    assert g.jouer()["complet"] and g.pauses[0] == 600 and len(g.faux.appels()) == 9
+    # aucune reprise cachée : une réponse 500, deux envois reçus, pas trois
+    h = banc("file-neon")
+    h.faux.programmer(faux.erreur_google(500), faux.erreur_google(504), *conformes)
+    bilan = h.jouer()
+    assert len(h.faux.appels()) == 2 and "seconde panne" in bilan["arret"]
+    # 429 puis 429 : arrêt
+    i = banc("file-neon")
+    i.faux.programmer(faux.erreur_google(429), faux.erreur_google(429), *conformes)
+    assert "429" in i.jouer()["arret"] and len(i.faux.appels()) == 2 and i.pauses[0] == 30
+    # 401 : arrêt, sans reprise, code et origine au journal
+    j = banc("file-neon")
+    j.faux.programmer(faux.erreur_google(401), *conformes)
+    assert "401" in j.jouer()["arret"] and len(j.faux.appels()) == 1
+    assert (j.envois()[0]["code"], j.envois()[0]["origine"]) == (401, "amont")
+    # motif de refus : arrêt
+    k = banc("file-neon")
+    k.faux.programmer(faux.reponse_google(APPARIEMENT_CONFORME, fin="SAFETY"), *conformes)
+    assert "refus" in k.jouer()["arret"] and chef.faire_rapport(k.dossier)["refus"] == 1
+    sans_candidat = banc("file-neon")
+    sans_candidat.faux.programmer(faux.reponse_google(None, blocage="PROHIBITED_CONTENT"), *conformes)
+    assert "refus" in sans_candidat.jouer()["arret"]
+
+
+# === Garde 5 : nom servi ==================================================================================================
+
+def test_garde_5_nom_servi(monde, banc):
+    conformes = reponses_conformes(monde.config, monde.racine, "file-mistral", faux.flux_mistral)
+    sain = banc("file-mistral")           # nom égal ; le dernier événement de chaque flux n'a pas de champ `model`
+    sain.faux.programmer(*conformes)
+    assert sain.jouer()["complet"] and {e["nom_servi"] for e in sain.envois()} == {"mistral-large-4-0"}
+    autre = banc("file-mistral")
+    autre.faux.programmer(faux.flux_mistral(APPARIEMENT_CONFORME, modele="mistral-large-4"), *conformes)
+    bilan = autre.jouer()
+    assert "garde 5" in bilan["arret"] and len(autre.faux.appels()) == 1
+    assert autre.envois()[0]["cause"].startswith("garde 5")                                  # motif au journal
+    un_seul = banc("file-mistral")        # un seul événement porte un autre nom
+    un_seul.faux.programmer(faux.flux_mistral(APPARIEMENT_CONFORME, autre_nom_au_dernier="mistral-large-latest"), *conformes)
+    assert "garde 5" in un_seul.jouer()["arret"]
+    neon = banc("file-neon")
+    neon.faux.programmer(faux.reponse_google(APPARIEMENT_CONFORME, modele="models/gemini-4-neon"))
+    assert "garde 5" in neon.jouer()["arret"]                                                # la session ne normalise rien
+
+
+# === Garde 6 : rien de personnel dans ce qui part =========================================================================
+
+def test_garde_6_rien_de_personnel(monde, tmp_path):
+    interdits = chef.charger_interdits(monde.config, monde.racine, {"CLAUDE_SESSION_ID": "identifiant-de-session-xyz"})
+    assert "zorglub-terme-interdit" in interdits and "identifiant-de-session-xyz" in interdits
+    en_tetes = chef.en_tetes_de_l_envoi("01-A-b1-01-1")
+    chef.controler_envoi(b'{"messages": [{"role": "user", "content": "entree synthetique"}]}', en_tetes, interdits)   # sain
+    for glisse in ("ecrire a quelqu.un@exemple.org", "voir /home/quelquun/depot", "session_01QPDgKgkCezLtWTAC6NJ7ok",
+                   "le terme Zorglub-Terme-Interdit", "identifiant-de-session-xyz"):
+        with pytest.raises(chef.Arret, match="garde 6"):
+            chef.controler_envoi(json.dumps({"content": glisse}).encode(), en_tetes, interdits)
+    with pytest.raises(chef.Arret, match="agent d'utilisateur"):
+        chef.controler_envoi(b"{}", {**en_tetes, "User-Agent": "python-requests/2.0"}, interdits)
+    monde.config["garde_interdits"]["fichier_local"] = str(tmp_path / "absent.txt")
+    with pytest.raises(chef.Arret, match="garde 6"):
+        chef.charger_interdits(monde.config, monde.racine, {})
+    # lot relu par empreinte ; consigne remplie comparée à son empreinte
+    lot = json.loads((RACINE / monde.config["entrees"]["chemin"]).read_text(encoding="utf-8"))
+    assert len(chef.charger_textes(monde.config, monde.racine)["textes"]) == 24
+    lot["entrees"][0]["consigne_remplie"]["octets"] += 1
+    monde.piece("lot-change.json", lot)
+    monde.config["entrees"] = monde.ref("lot-change.json")
+    with pytest.raises(chef.Arret, match="consigne remplie"):
+        chef.charger_textes(monde.config, monde.racine)
+    monde.config["entrees"]["sha256"] = "0" * 64
+    with pytest.raises(chef.Arret, match="lot des entrées"):
+        chef.charger_textes(monde.config, monde.racine)
+
+
+# === Garde 7 : clés par leur nom ==========================================================================================
+
+def test_garde_7_cles_par_leur_nom(monde, tmp_path):
+    dossier = tmp_path / "ligne"
+    dossier.mkdir()
+    with pytest.raises(chef.Arret, match="garde 7"):                   # nom absent : rien ne part
+        chef.lancer_relais(monde.config, "verification-google", monde.racine, dossier, {"PATH": os.environ["PATH"]})
+    assert not (dossier / "relais" / "console-relais.txt").exists()
+    with pytest.raises(chef.Arret, match="boucle locale"):             # le programme ne parle qu'à la boucle locale
+        chef.envoyer("http://exemple.org:80", "POST", "/v1/chat/completions", {}, b"{}", False, 1, 1)
+    assert chef.ouvrier(dossier, {"PATH": "/usr/bin", "GEMINI_API_KEY": "x"}, b"{}") == 2    # l'ouvrier n'a aucune clé
+    (dossier / "journal.jsonl").write_text('{"note": "rien"}\n', encoding="utf-8")
+    assert chef.chercher_formes_de_cle(dossier) == []                  # sain
+    (dossier / "journal.jsonl").write_text('{"note": "AIza' + "B" * 35 + '"}\n', encoding="utf-8")
+    assert chef.chercher_formes_de_cle(dossier) == ["journal.jsonl"]   # clé factice glissée dans un journal : trouvée
+    # le relais efface sa variable, ne rend jamais la clé, et retire toute clé reçue du client (essais du relais)
+    assert set(chef.ENVIRONNEMENT_OUVRIER) == {"PATH", "HOME", "LANG", "GO_ID"}
+
+
+# === Garde 8 : ligne de calcul ============================================================================================
+
+def test_garde_8_ligne_de_calcul(monde):
+    registre, jour = monde.registre(), "2026-11-22"
+    for ligne in GO:                                                   # identifiant valide
+        assert len(chef.verifier_ligne_de_calcul(monde.config, ligne, {"GO_ID": GO[ligne]}, registre, jour)) == 64
+    with pytest.raises(chef.Arret, match="garde 8"):                   # absent
+        chef.verifier_ligne_de_calcul(monde.config, "file-neon", {}, registre, jour)
+    with pytest.raises(chef.Arret, match="garde 8"):                   # d'une ligne qui nomme l'autre file
+        chef.verifier_ligne_de_calcul(monde.config, "file-neon", {"GO_ID": GO["file-mistral"]}, registre, jour)
+    croise = copy.deepcopy(monde.config)
+    croise["lignes"]["file-neon"]["go"] = GO["file-mistral"]
+    croise["lignes"]["file-neon"]["plafond_registre"] = "4,75 USD"
+    with pytest.raises(chef.Arret, match="ne nomme pas file-neon"):
+        chef.verifier_ligne_de_calcul(croise, "file-neon", {"GO_ID": GO["file-mistral"]}, registre, jour)
+    with pytest.raises(chef.Arret, match="échue"):
+        chef.verifier_ligne_de_calcul(monde.config, "file-neon", {"GO_ID": GO["file-neon"]}, registre, "2100-01-01")
+    with pytest.raises(chef.Arret, match="empreinte du devis"):
+        chef.verifier_ligne_de_calcul(monde.config, "file-neon", {"GO_ID": GO["file-neon"]},
+                                      registre.replace(chef.EMPREINTE_DEVIS, "f" * 64), jour)
+    with pytest.raises(chef.Arret, match="1 ligne|0 ligne"):
+        chef.verifier_ligne_de_calcul(monde.config, "file-neon", {"GO_ID": GO["file-neon"]}, monde.registre(["file-mistral"]), jour)
+    sans_go = copy.deepcopy(monde.config)
+    sans_go["lignes"]["file-neon"]["go"] = None
+    with pytest.raises(chef.Arret, match="garde 8"):
+        chef.verifier_ligne_de_calcul(sans_go, "file-neon", {"GO_ID": "GO-2026-11-22-04"}, registre, jour)
+
+
+# === Garde 9 : conditions d'envoi constatées, lues ========================================================================
+
+def test_garde_9_sain(monde):
+    lu = chef.garde_constat(monde.config, monde.racine, MAINTENANT)
+    assert lu["valeurs"]["google_credit_utilisable_usd"] == 23.0 and lu["valeurs"]["google_duree_journaux_jours"] == 7
+    monde.piece("constat-2.md", constat({"google_recharge_automatique": "non proposée"}))
+    monde.config["constat"] = monde.ref("constat-2.md")
+    assert chef.garde_constat(monde.config, monde.racine, MAINTENANT)["valeurs"]["google_recharge_automatique"] == "non proposée"
+
+
+def test_garde_9_artefacts_de_la_piece(monde):
+    def refuse(motif):
+        with pytest.raises(chef.Arret, match=motif):
+            chef.garde_constat(monde.config, monde.racine, MAINTENANT)
+
+    bon = dict(monde.config["constat"])
+    monde.config["constat"] = {"chemin": "pieces/absent.md", "sha256": "0" * 64}
+    refuse("garde 9")                                                  # pièce absente
+    monde.config["constat"] = {**bon, "sha256": "0" * 64}
+    refuse("empreinte")                                                # d'une autre empreinte
+    monde.config["constat"] = {"chemin": None, "sha256": None}
+    refuse("non inscrits")
+    monde.piece("constat-sans-compagnon.md", constat(), sceller=False)
+    monde.config["constat"] = monde.ref("constat-sans-compagnon.md")
+    refuse("compagnon")
+    for nom, texte, motif in (
+            ("manque", constat(sans=("google_partage_journaux",)), "manquante"),                    # une clé manquante
+            ("de-trop", constat(plus={"google_budget_minimal_usd": "5"}), "de trop"),               # une clé de plus
+            ("date", constat(date=(MAINTENANT + datetime.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%MZ")), "postérieure"),
+            ("date-locale", constat(date="2026-11-22 10:00"), "temps universel"),
+            ("mot", constat(mot=False), "mot de Lazar")):                                           # mot de Lazar absent
+        monde.piece(f"constat-{nom}.md", texte)
+        monde.config["constat"] = monde.ref(f"constat-{nom}.md")
+        refuse(motif)
+
+
+@pytest.mark.parametrize("cle, valeur", [
+    ("google_offre_payante", "non"), ("google_partage_journaux", "activé"), ("google_duree_journaux_jours", "55"),
+    ("mistral_offre_payante", "non"), ("mistral_donnees_pour_amelioration", "activé"),
+    ("google_cle_du_projet_constate", "non"), ("mistral_cle_de_l_espace_constate", "non"),
+    ("mistral_credit_utilisable_usd", "8,00"), ("google_credit_utilisable_usd", "10,00"),
+    ("google_credit_utilisable_usd", "16,00"), ("google_credit_utilisable_usd", "après usage"),
+    ("google_recharge_automatique", "activée"), ("google_autres_credits_admissibles", "300"),
+    ("google_autres_credits_admissibles", "oui"), ("mistral_limite_requetes_par_minute", "3"),
+    ("mistral_limite_jetons_par_minute", "50000")])
+def test_garde_9_un_artefact_par_cle(monde, cle, valeur):
+    monde.piece("constat-artefact.md", constat({cle: valeur}))
+    monde.config["constat"] = monde.ref("constat-artefact.md")
+    with pytest.raises(chef.Arret, match=f"garde 9 : {cle}"):
+        chef.garde_constat(monde.config, monde.racine, MAINTENANT)
+    chemin, empreinte = monde.ecrire_configuration()                   # ni vérification ni file
+    for ligne in ("verification-google", "verification-mistral-eu"):
+        assert chef.executer(ligne, chemin, empreinte, {"GO_ID": GO[ligne]}, racine=monde.racine,
+                             registre=monde.registre(), a_l_instant=MAINTENANT) == 2
+    assert not list((monde.racine / "runs").iterdir())
+
+
+# === Garde 10 : clé vérifiée, point d'accès fixé ==========================================================================
+
+def _constat_lu(monde):
+    return chef.garde_constat(monde.config, monde.racine, MAINTENANT)
+
+
+def test_garde_10_sain_regime_courant_et_regime_prudent(monde):
+    ref = monde.releve("verification-google", "v1", depense_comptee_usd=3.68)
+    monde.inscrire_releve("file-neon", ref)
+    contexte = chef.garde_cle_verifiee(monde.config, monde.racine, "file-neon", _constat_lu(monde))
+    assert contexte["regime"] == "courant" and contexte["credit_du_constat_moins_depense_comptee_usd"] == pytest.approx(19.32)
+    assert contexte["orthographe_niveau"] == "XHIGH" and contexte["nom_servi"] == "gemini-4-neon"
+    refm = monde.releve("verification-mistral-eu", "v1")
+    monde.inscrire_releve("file-mistral", refm)
+    assert chef.garde_cle_verifiee(monde.config, monde.racine, "file-mistral", _constat_lu(monde))["regime"] == "courant"
+
+
+def test_garde_10_sain_sonde_indecidee_avec_le_mot_de_lazar(monde):
+    ref = monde.releve("verification-google", "v1", depense_comptee_usd=3.68, sonde={"issue": "indécidée"})
+    monde.inscrire_releve("file-neon", ref)
+    monde.piece("mot.md", mot_sur_la_sonde(ref["sha256"], "indécidée", "19,32"))
+    monde.config["lignes"]["file-neon"]["mot_de_lazar_sonde"] = monde.ref("mot.md")
+    contexte = chef.garde_cle_verifiee(monde.config, monde.racine, "file-neon", _constat_lu(monde))
+    assert contexte["regime"] == "prudent" and contexte["credit_vu_usd"] == 19.32 and contexte["mot_de_lazar"]
+    refm = monde.releve("verification-mistral-eu", "v1", majorant="démenti")
+    monde.inscrire_releve("file-mistral", refm)
+    monde.piece("mot-m.md", mot_sur_la_sonde(refm["sha256"], "comprise", None, majorant="démenti"))
+    monde.config["lignes"]["file-mistral"]["mot_de_lazar_sonde"] = monde.ref("mot-m.md")
+    assert chef.garde_cle_verifiee(monde.config, monde.racine, "file-mistral", _constat_lu(monde))["regime"] == "prudent"
+
+
+def test_garde_10_artefacts_du_releve(monde):
+    def refuse(motif, ligne="file-neon"):
+        with pytest.raises(chef.Arret, match=motif):
+            chef.garde_cle_verifiee(monde.config, monde.racine, ligne, _constat_lu(monde))
+
+    refuse("non inscrits")                                             # relevé absent
+    monde.inscrire_releve("file-neon", monde.releve("verification-google", "a", saine=False, nom_servi=None))
+    refuse("n'est pas sain")                                           # non sain
+    refm = monde.releve("verification-mistral-global", "b", go="GO-x")
+    monde.inscrire_releve("file-mistral", refm)
+    refuse("autre point d'accès", "file-mistral")                      # d'un autre point d'accès
+    refm = monde.releve("verification-mistral-eu", "c", go="GO-y", temperature_envoyee=False)
+    monde.inscrire_releve("file-mistral", refm)
+    refuse("n'est pas ce que porte le relevé", "file-mistral")         # traitement de la température autre que le relevé
+    ref = monde.releve("verification-google", "d", go="GO-z")
+    monde.inscrire_releve("file-neon", {**ref, "sha256": "0" * 64})
+    refuse("empreinte")
+    for issue in ("indécidée", "non comprise"):                        # sans pièce du mot
+        ref = monde.releve("verification-google", f"e-{issue[:3]}", go=f"GO-{issue[:3]}", sonde={"issue": issue})
+        monde.inscrire_releve("file-neon", ref)
+        refuse("sans pièce du mot de Lazar")
+    ref = monde.releve("verification-google", "f", go="GO-f", sonde={"issue": None})
+    monde.inscrire_releve("file-neon", ref)
+    refuse("n'a pas été jouée")
+    refm = monde.releve("verification-mistral-eu", "g", go="GO-g", majorant="démenti")
+    monde.inscrire_releve("file-mistral", refm)
+    refuse("sans pièce du mot de Lazar", "file-mistral")               # majorant « démenti » sans pièce du mot
+
+
+def test_garde_10_artefacts_de_la_piece_du_mot(monde):
+    ref = monde.releve("verification-google", "v1", depense_comptee_usd=0.5, sonde={"issue": "indécidée"})
+    monde.inscrire_releve("file-neon", ref)
+    L = monde.config["lignes"]["file-neon"]
+
+    def refuse(texte, motif, empreinte=None):
+        monde.piece("mot.md", texte)
+        L["mot_de_lazar_sonde"] = {**monde.ref("mot.md"), **({"sha256": empreinte} if empreinte else {})}
+        with pytest.raises(chef.Arret, match=motif):
+            chef.garde_cle_verifiee(monde.config, monde.racine, "file-neon", _constat_lu(monde))
+
+    refuse(mot_sur_la_sonde(ref["sha256"]), "empreinte", "0" * 64)     # pièce d'une autre empreinte que la configuration
+    refuse(mot_sur_la_sonde("a" * 64), "cite un autre relevé")         # pièce qui cite un autre relevé
+    refuse(mot_sur_la_sonde(ref["sha256"], credit=None), "crédit prépayé vu")              # sans crédit vu
+    refuse(mot_sur_la_sonde(ref["sha256"], credit="12,00"), "sous 16.08")                  # au crédit vu de 12,00
+    refuse(mot_sur_la_sonde(ref["sha256"], issue="non comprise"), "ne vise pas l'issue")
+    refuse(mot_sur_la_sonde(ref["sha256"], mot=False), "mot de Lazar")
+
+
+def test_garde_10_artefact_controle_par_la_depense_comptee(monde):
+    """Constat de Google à 20,00, dépense comptée de 4,10 sur deux lignes de vérification, solde vu de 19,90 : le
+    contrôle donne 15,90 ; le même contrôle, sonde « comprise », sans pièce : la file ne part pas."""
+    monde.piece("constat-20.md", constat({"google_credit_utilisable_usd": "20,00"}))
+    monde.config["constat"] = monde.ref("constat-20.md")
+    monde.releve("verification-google", "v1", go="GO-2026-11-22-02", depense_comptee_usd=3.68, close=True)
+    ref = monde.releve("verification-google", "v2", go="GO-2026-11-22-09", depense_comptee_usd=0.42, sonde={"issue": "indécidée"})
+    monde.inscrire_releve("file-neon", ref)
+    monde.piece("mot.md", mot_sur_la_sonde(ref["sha256"], "indécidée", "19,90"))
+    monde.config["lignes"]["file-neon"]["mot_de_lazar_sonde"] = monde.ref("mot.md")
+    with pytest.raises(chef.Arret, match="15.90"):
+        chef.garde_cle_verifiee(monde.config, monde.racine, "file-neon", _constat_lu(monde))
+    ref = monde.releve("verification-google", "v3", go="GO-2026-11-22-09", depense_comptee_usd=0.42)   # sonde « comprise »
+    monde.inscrire_releve("file-neon", ref)
+    monde.config["lignes"]["file-neon"]["mot_de_lazar_sonde"] = None
+    with pytest.raises(chef.Arret, match="15.90"):
+        chef.garde_cle_verifiee(monde.config, monde.racine, "file-neon", _constat_lu(monde))
+
+
+# === Garde 11 : signe de « ne sert pas ce modèle » ========================================================================
+
+def test_garde_11_signe():
+    sans = {"admise_sans_identifiant": True}
+    avec = {"admise_sans_identifiant": False}
+    signe = chef.signe_ne_sert_pas
+    assert signe(sans, 400, {"type": "invalid_model"})                                      # signe constaté
+    assert signe(sans, 404, {"code": 1500}) and signe(sans, 404, {"code": "1500"})
+    assert signe(sans, 422, {"message": "Model MISTRAL-LARGE-4-0 does not exist"})
+    assert signe(sans, 422, {"detail": [{"loc": ["body", "model"], "msg": "x"}]})
+    assert not signe(sans, 401, {"type": "invalid_model"})                                  # code 401
+    assert not signe(sans, 200, {"type": "invalid_model"})                                  # code 200
+    assert not signe(avec, 400, {"type": "invalid_model"})                                  # la liste porte l'identifiant
+    assert not signe(sans, 404, "<html>Not Found</html>") and not signe(sans, 404, {"error": "not found"})   # pas le corps de Mistral
+    assert not signe(sans, 422, {"detail": [{"loc": ["body", "max_tokens"]}]})              # 422 qui nomme `max_tokens`
+    assert not signe(sans, 422, {"detail": [{"loc": ["body", "model"]}, {"loc": ["body", "temperature"]}]})
+    assert not signe(sans, 422, {"detail": [{"loc": ["body", "model_config"]}]})            # égalité d'un élément, non sous-chaîne
+    assert not signe(sans, 404, {"message": "model not found"})                             # sans l'identifiant
+    assert not signe({"admise_sans_identifiant": False, "lisible": False}, 400, {"type": "invalid_model"})   # liste illisible
+    assert chef.liste_lue("mistral", 200, json.dumps({"modeles": []}).encode())["lisible"] is False
+    for forme in ("objet", "tableau"):                                                      # les deux formes relevées
+        corps = json.dumps(faux.liste_mistral(("mistral-small",), forme)["corps"]).encode()
+        assert chef.liste_lue("mistral", 200, corps)["admise_sans_identifiant"]
+        corps = json.dumps(faux.liste_mistral(("mistral-small", "mistral-large-4-0"), forme)["corps"]).encode()
+        assert chef.liste_lue("mistral", 200, corps)["porte_identifiant"]
+    alias = json.dumps({"data": [{"id": "mistral-large-latest", "aliases": ["mistral-large-4-0"]}]}).encode()
+    assert chef.liste_lue("mistral", 200, alias)["admise_sans_identifiant"]                  # les `aliases` sont ignorés
+
+
+def test_garde_11_sur_le_faux_fournisseur(monde, banc):
+    constate = banc("verification-mistral-eu", liste=faux.liste_mistral(("mistral-small",)))
+    constate.faux.programmer(faux.erreur_mistral(400, type_="invalid_model"))
+    releve = constate.verifier()
+    assert releve["signe_constate"] and releve["issue_finale_ligne"] == 9 and releve["close"] and not releve["saine"]
+    assert "invalid_model" in releve["appels"][0]["corps_d_erreur"]                         # le corps d'erreur, borné
+    # liste sans l'identifiant et code 200 avec le bon nom : saine, point d'accès européen retenu, pas de signe
+    saine = banc("verification-mistral-eu", liste=faux.liste_mistral(("mistral-small",)))
+    saine.faux.programmer(faux.flux_mistral("OK"), sonde_mistral())
+    releve = saine.verifier()
+    assert releve["saine"] and not releve["signe_constate"] and releve["hote"] == "api.eu.mistral.ai"
+    # sur le point d'accès global, il n'y a ni signe ni repli
+    monde.releve("verification-mistral-eu", "eu", signe_constate=True, saine=False)
+    mondial = banc("verification-mistral-global", liste=faux.liste_mistral(("mistral-small",)))
+    mondial.faux.programmer(faux.erreur_mistral(400, type_="invalid_model"))
+    releve = mondial.verifier()
+    assert not releve["signe_constate"] and releve["issue_finale_ligne"] == 13 and releve["noeud_de_lazar"]
+    # refus du mandataire : pas de signe, pas de repli
+    ferme = banc("verification-mistral-eu", adresse=f"http://127.0.0.1:{faux.port_ferme()}")
+    releve = ferme.verifier()
+    assert not releve["signe_constate"] and releve["appels"] == [] and releve["a_refaire"]
+
+
+# === Garde 12 : fichier des règles ========================================================================================
+
+def test_garde_12_fichier_des_regles(monde):
+    assert chef.garde_regles(monde.config, monde.racine) == monde.config["regles"]["sha256"]      # conforme
+    texte = (monde.racine / "pieces" / "regles.md").read_text(encoding="utf-8")
+    assert all(f"    {n}. " in texte for n in range(1, 9))                                        # les huit règles
+    bon = dict(monde.config["regles"])
+
+    def refuse(nom, contenu, motif):
+        monde.piece(nom, contenu)
+        monde.config["regles"] = {**bon, **monde.ref(nom)}
+        with pytest.raises(chef.Arret, match=motif):
+            chef.garde_regles(monde.config, monde.racine)
+
+    monde.config["regles"] = {**bon, "chemin": "pieces/absent.md"}
+    with pytest.raises(chef.Arret, match="garde 12"):                                             # absent
+        chef.garde_regles(monde.config, monde.racine)
+    refuse("regles-autre-brouillon.md", texte.replace(monde.config["prereg_en_vigueur"]["sha256"], "b" * 64),
+           "cite un autre brouillon")
+    refuse("regles-gabarit.md", (RACINE / GABARIT_REGLES).read_text(encoding="utf-8"), "gabarit")
+    refuse("regles-resume.md", texte.replace("au moins 22 réponses", "au moins 20 réponses"), "copie à la lettre")
+    monde.piece("regles-sans-compagnon.md", texte, sceller=False)
+    monde.config["regles"] = {**bon, **monde.ref("regles-sans-compagnon.md")}
+    with pytest.raises(chef.Arret, match="compagnon"):                                            # non scellé
+        chef.garde_regles(monde.config, monde.racine)
+
+
+def test_garde_12_fichier_change_apres_la_file_le_programme_des_regles_refuse(monde, banc):
+    n = banc("file-neon")
+    n.faux.programmer(*reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google))
+    assert n.jouer()["complet"]
+    rapport = chef.faire_rapport(n.dossier)
+    chef.rendre_piece(n.dossier, "rapport-technique.json", rapport, "google", chef.texte_du_rapport(rapport))
+    resultat = chef.appliquer_regles_au_dossier(n.dossier, monde.config, monde.racine)            # règles appliquées
+    assert resultat["tient"] and resultat["regles_sha256"] == monde.config["regles"]["sha256"]
+    with open(monde.racine / "pieces" / "regles.md", "a", encoding="utf-8") as f:
+        f.write("\nune ligne ajoutée après la file\n")
+    with pytest.raises(chef.Arret, match="garde 12"):
+        chef.appliquer_regles_au_dossier(n.dossier, monde.config, monde.racine)
+
+
+# === Garde 13 : une file ne se rejoue pas =================================================================================
+
+def test_garde_13_une_file_ne_se_rejoue_pas(monde):
+    monde.inscrire_releve("file-neon", monde.releve("verification-google", "v1"))
+    env = {"GO_ID": GO["file-neon"]}
+    avant = chef.gardes_avant_depart(monde.config, "file-neon", env, monde.racine, monde.registre(), MAINTENANT)   # premier départ
+    assert avant["contexte"]["regime"] == "courant" and avant["regles"]["sha256"] == monde.config["regles"]["sha256"]
+    (monde.racine / "runs" / "essais-admission-bras-a-v1" / "20261122-100000-file-neon").mkdir(parents=True)
+    with pytest.raises(chef.Arret, match="garde 13"):                                             # second départ : refus
+        chef.gardes_avant_depart(monde.config, "file-neon", env, monde.racine, monde.registre(), MAINTENANT)
+    monde.inscrire_releve("file-mistral", monde.releve("verification-mistral-eu", "v1"))          # l'autre file part
+    chef.gardes_avant_depart(monde.config, "file-mistral", {"GO_ID": GO["file-mistral"]}, monde.racine, monde.registre(), MAINTENANT)
+
+
+# === Garde 14 : identifiant figé et voie d'accès ==========================================================================
+
+def test_garde_14_identifiant_fige_et_voie_d_acces(monde):
+    for ligne in chef.LIGNES:
+        assert chef.controler_identifiants(monde.config, ligne) in chef.HOTES_PERMIS             # conformes
+
+    def refuse(modifier, ligne, motif="garde 14"):
+        config = copy.deepcopy(monde.config)
+        modifier(config)
+        with pytest.raises(chef.Arret, match=motif):
+            chef.controler_identifiants(config, ligne)
+
+    for alias in ("mistral-large-latest", "mistral-large-4"):
+        refuse(lambda c, a=alias: c["fournisseurs"]["mistral"].update(modele=a), "file-mistral")
+    refuse(lambda c: c["fournisseurs"]["google"].update(modele="gemini-4-neon-latest"), "file-neon")
+    refuse(lambda c: c["lignes"]["file-neon"].update(hote="exemple.org"), "file-neon")           # un hôte autre
+    refuse(lambda c: c["lignes"]["verification-mistral-eu"].update(hote="api.mistral.ai"), "verification-mistral-eu")
+    refuse(lambda c: c["lignes"]["file-mistral"].update(hote="generativelanguage.googleapis.com"), "file-mistral")
+    refuse(lambda c: c["hotes_permis"].append("exemple.org"), "file-neon")
+    fm = monde.config["fournisseurs"]["mistral"]
+    corps = chef.construire_corps("mistral", fm, "t", 32768)
+    with pytest.raises(chef.Arret, match="garde 14"):                                             # dans le corps
+        chef.controler_corps("mistral", fm, {**corps, "model": "mistral-large-latest"}, "/v1/chat/completions", 32768)
+    fg = monde.config["fournisseurs"]["google"]
+    with pytest.raises(chef.Arret, match="garde 14"):                                             # dans le chemin de l'appel
+        chef.controler_corps("google", fg, chef.construire_corps("google", fg, "t", 32768, orthographe="XHIGH"),
+                             "/v1beta/models/gemini-4-neon-latest:generateContent", 32768, orthographe="XHIGH")
+    with pytest.raises(relais_mistral.RelaisInvalide):                                            # le relais refuse l'hôte
+        relais_mistral.cible_de("exemple.org", None)
+    with pytest.raises(relais_google.RelaisInvalide):
+        relais_google.cible_de("api.mistral.ai", None)
+    with pytest.raises(chef.Arret, match="adresse_d_essai"):                                      # relais d'essai sous une ligne réelle
+        chef.controler_etat_initial({"amont": "api.eu.mistral.ai", "modele": "mistral-large-4-0", "appels": 0, "max_appels": 3,
+                                     "adresse_d_essai": "http://127.0.0.1:1", "cle_dans_l_environnement": False,
+                                     "plafond_usd": 0.25}, monde.config, "verification-mistral-eu")
+    with pytest.raises(chef.Arret, match="amont"):                                                # l'hôte global sous la ligne européenne
+        chef.controler_etat_initial({"amont": "api.mistral.ai", "modele": "mistral-large-4-0", "appels": 0, "max_appels": 3,
+                                     "adresse_d_essai": None, "cle_dans_l_environnement": False, "plafond_usd": 0.25},
+                                    monde.config, "verification-mistral-eu")
+
+
+# === Garde 15 : repli lié au signe ========================================================================================
+
+def test_garde_15_repli_lie_au_signe(monde):
+    L = monde.config["lignes"]["verification-mistral-global"]
+    with pytest.raises(chef.Arret, match="garde 15"):                                             # relevé absent
+        chef.garde_repli(monde.config, monde.racine)
+    L["releve_europeen"] = monde.releve("verification-mistral-eu", "signe", saine=False, signe_constate=True,
+                                        issue_finale_ligne=9, nom_servi=None)
+    assert chef.garde_repli(monde.config, monde.racine)["signe_constate"] is True                 # signe constaté
+    for nom, champs in (("401", {"issue_finale_ligne": 7}), ("autre-nom", {"issue_finale_ligne": 4}),
+                        ("ligne-13", {"issue_finale_ligne": 13})):                                # relevés sans signe
+        L["releve_europeen"] = monde.releve("verification-mistral-eu", nom, go=f"GO-{nom}", saine=False,
+                                            signe_constate=False, **champs)
+        with pytest.raises(chef.Arret, match="n'est pas constaté"):
+            chef.garde_repli(monde.config, monde.racine)
+    L["releve_europeen"] = monde.releve("verification-mistral-global", "pas-eu", go="GO-pas-eu", signe_constate=True)
+    with pytest.raises(chef.Arret, match="n'est pas celui de la vérification européenne"):
+        chef.garde_repli(monde.config, monde.racine)
+    chemin, empreinte = monde.ecrire_configuration()                                              # la vérification globale ne part pas
+    assert chef.executer("verification-mistral-global", chemin, empreinte, {"GO_ID": GO["verification-mistral-global"]},
+                         racine=monde.racine, registre=monde.registre(), a_l_instant=MAINTENANT) == 2
+
+
+# === Garde 16 : forme de la réponse à la vérification, classement, sonde, majorant ========================================
+
+def test_garde_16_sain_formes_completes_et_sondes_comprises(monde, banc):
+    m = banc("verification-mistral-eu")           # flux complet, dont le dernier événement n'a pas de champ `model`
+    m.faux.programmer(faux.flux_mistral("OK", dernier_sans_modele=True), sonde_mistral(200, "length"))
+    releve = m.verifier()
+    assert releve["saine"] and releve["nom_servi"] == "mistral-large-4-0" and releve["temperature_envoyee"] is True
+    assert releve["sonde"]["issue"] == "comprise" and releve["majorant"] == "établi" and not releve["noeud_de_lazar"]
+    assert releve["appels"][1]["morceaux_par_type"] == {"thinking": 1, "text": 1}
+    assert releve["champs_du_bloc_d_usage"] == ["completion_tokens", "prompt_tokens", "total_tokens"]
+    assert chef.code_de_sortie_verification(releve) == 0 and releve["close"]
+    corps_a, corps_b = (json.loads(a["corps"]) for a in m.faux.appels())
+    assert corps_b == {**corps_a, "max_tokens": 256, "messages": [{"role": "user", "content": monde.config["messages"]["sonde"]}]}
+    assert corps_a["messages"][0]["content"] == "Reply with the single word: OK" and corps_a["max_tokens"] == 32768
+    g = banc("verification-google")
+    g.faux.programmer(faux.reponse_google("OK"), sonde_google(256, 180, "MAX_TOKENS"))
+    releve = g.verifier()
+    assert releve["saine"] and releve["orthographe_niveau"] == "XHIGH" and releve["sonde"]["issue"] == "comprise"
+    assert releve["appels"][1]["reflexion"] == 180 and chef.code_de_sortie_verification(releve) == 0
+    assert [json.loads(a["corps"])["generationConfig"]["maxOutputTokens"] for a in g.faux.appels()] == [32768, 256]
+    assert g.faux.appels()[0]["chemin"] == "/v1beta/models/gemini-4-neon:generateContent"
+    assert g.faux.appels()[0]["en_tetes"]["x-goog-api-key"] == "valeur-factice-du-relais"   # la clé ne vit que dans le relais
+    assert g.faux.recus[0]["methode"] == "GET" and g.faux.recus[0]["chemin"] == "/v1beta/models/gemini-4-neon"
+
+
+@pytest.mark.parametrize("fournisseur, reponse, ligne_attendue", [
+    ("mistral", faux.flux_mistral("OK", sans_usage=True), 5),                   # 200 sans `usage` dans le flux
+    ("mistral", faux.flux_mistral("OK", sans_total=True), 5),                   # sans `total_tokens`
+    ("mistral", faux.flux_mistral("OK", sans_morceau_texte=True, pensee="p"), 5),   # contenu sans morceau `text`
+    ("mistral", faux.flux_mistral("OK", fin="length"), 5),
+    ("mistral", faux.flux_mistral("OK", modele="mistral-large-4"), 4),          # un autre nom servi
+    ("mistral", faux.flux_mistral("OK", modele="Mistral-Large-4-0"), 4),        # une autre casse
+    ("mistral", faux.flux_mistral("OK", autre_nom_au_dernier="mistral-large-latest"), 4),
+    ("mistral", faux.flux_mistral("OK", modele=None), 4),                       # aucun événement ne porte `model`
+    ("google", faux.reponse_google("OK", modele=None), 4),                      # sans `modelVersion`
+    ("google", faux.reponse_google("OK", modele="models/gemini-4-neon"), 4),    # un préfixe
+    ("google", faux.reponse_google("OK", modele="gemini-4-neon-2026-11-01"), 4),   # un suffixe de date
+    ("google", faux.reponse_google("OK", sans_usage=True), 5),
+    ("google", faux.reponse_google(None), 5),                                   # texte non extractible
+    ("google", faux.reponse_google("OK", fin="MAX_TOKENS"), 5)])
+def test_garde_16_artefacts_de_forme(monde, banc, fournisseur, reponse, ligne_attendue):
+    b = banc("verification-mistral-eu" if fournisseur == "mistral" else "verification-google")
+    b.faux.programmer(reponse, faux.flux_mistral("OK"))
+    releve = b.verifier()
+    assert not releve["saine"] and releve["issue_finale_ligne"] == ligne_attendue and releve["close"]
+    assert len(b.faux.appels()) == 1                                             # ni repli, ni appel de plus
+    assert releve["noeud_de_lazar"] == (ligne_attendue == 4)
+    assert chef.code_de_sortie_verification(releve) == 1
+
+
+def test_garde_16_google_sans_thoughtstokencount_vaut_zero(monde, banc):
+    g = banc("verification-google")
+    g.faux.programmer(faux.reponse_google("OK", usage=(30, 2, 0, 32), sans_pensees=True), sonde_google())
+    releve = g.verifier()
+    assert releve["saine"] and releve["appels"][0]["reflexion"] == 0
+
+
+def test_garde_16_classement_ligne_2_limite_de_sortie_a_la_liste(monde, banc):
+    g = banc("verification-google", liste=faux.modele_google(limite_sortie=16384))
+    g.faux.programmer(faux.reponse_google("OK"))
+    releve = g.verifier()
+    assert releve["issue_finale_ligne"] == 2 and g.faux.appels() == [] and releve["close"]   # aucun appel payant
+
+
+def test_garde_16_classement_lignes_7_et_8(monde, banc):
+    sept = banc("verification-mistral-eu")                                       # 401 et liste qui porte l'identifiant
+    sept.faux.programmer(faux.erreur_mistral(401, message="Unauthorized"))
+    releve = sept.verifier()
+    assert releve["appels"][0]["ligne_du_classement"] == 7 and releve["a_refaire"] and not releve["close"]
+    huit = banc("verification-mistral-eu", liste=faux.liste_mistral(("mistral-small",)))     # 403 et liste sans l'identifiant
+    huit.faux.programmer(faux.erreur_mistral(403, message="Forbidden"))
+    releve = huit.verifier()
+    assert releve["issue_finale_ligne"] == 8 and releve["noeud_de_lazar"] and releve["close"]
+
+
+def test_garde_16_classement_ligne_10_temperature_retiree(monde, banc):
+    m = banc("verification-mistral-eu")
+    m.faux.programmer(faux.erreur_mistral(422, detail=[{"loc": ["body", "temperature"], "msg": "not supported"}]),
+                      faux.flux_mistral("OK"), sonde_mistral())
+    releve = m.verifier()
+    assert [(a["type"], a["ligne_du_classement"]) for a in releve["appels"]] == [("A", 10), ("Ap", 3), ("B", None)]
+    corps = [json.loads(a["corps"]) for a in m.faux.appels()]
+    assert "temperature" in corps[0] and "temperature" not in corps[1] and "temperature" not in corps[2]
+    assert releve["saine"] and releve["temperature_envoyee"] is False and releve["appels_comptes"] == 3
+
+
+def test_garde_16_classement_ligne_11_les_deux_temps(monde, banc):
+    g = banc("verification-google")
+    g.faux.programmer(faux.erreur_google(400, "Invalid value at generationConfig", champs=["generation_config.thinking_config.thinkingLevel"]),
+                      faux.reponse_google("OK"), sonde_google())
+    releve = g.verifier()
+    assert [(a["type"], a["ligne_du_classement"]) for a in releve["appels"]] == [("A", 11), ("Ap", 3), ("B", None)]
+    niveaux = [json.loads(a["corps"])["generationConfig"]["thinkingConfig"]["thinkingLevel"] for a in g.faux.appels()]
+    assert niveaux == ["XHIGH", "xhigh", "xhigh"] and releve["orthographe_niveau"] == "xhigh"   # l'orthographe saine est inscrite
+
+
+def test_garde_16_classement_ligne_12(monde, banc):
+    cas = [faux.erreur_mistral(400, param="max_tokens", message="invalid"),                 # nomme `max_tokens`
+           faux.erreur_mistral(400, message="temperature and reasoning_effort are invalid")]   # nomme deux champs
+    for reponse in cas:
+        m = banc("verification-mistral-eu")
+        m.faux.programmer(reponse, faux.flux_mistral("OK"))
+        releve = m.verifier()
+        assert releve["issue_finale_ligne"] == 12 and len(m.faux.appels()) == 1 and not releve["noeud_de_lazar"]
+    g = banc("verification-google")                                                         # le même champ à l'appel A′
+    refus = faux.erreur_google(400, "Invalid value for thinkingLevel")
+    g.faux.programmer(refus, copy.deepcopy(refus), faux.reponse_google("OK"))
+    releve = g.verifier()
+    assert [a["ligne_du_classement"] for a in releve["appels"]] == [11, 12] and len(g.faux.appels()) == 2
+
+
+def test_garde_16_classement_ligne_13(monde, banc):
+    cas = [faux.erreur_mistral(400, message="bad request"),                                 # 400 sans champ nommé
+           faux.erreur_mistral(404, message="Not Found"),                                   # 404 hors du signe
+           faux.rep_json(200 + 300, b"<html>illisible</html>") | {"code": 400},             # corps illisible
+           faux.rep_json(418, {"message": "I'm a teapot"})]                                 # code 418
+    for reponse in cas:
+        m = banc("verification-mistral-eu")
+        m.faux.programmer(reponse, faux.flux_mistral("OK"))
+        releve = m.verifier()
+        assert releve["issue_finale_ligne"] == 13 and releve["noeud_de_lazar"] and len(m.faux.appels()) == 1
+    coupe = banc("verification-mistral-eu")                                                 # appel A coupé à sa borne en octets
+    coupe.faux.programmer(faux.flux_sans_fin(), faux.flux_mistral("OK"))
+    releve = coupe.verifier()
+    a = releve["appels"][0]
+    assert a["coupe_a_sa_borne_en_octets"] and releve["issue_finale_ligne"] == 13 and len(coupe.faux.appels()) == 1
+    assert releve["envois_coupes"] == [a["envoi"]]
+
+
+def test_garde_16_classement_unites():
+    liste = {"admise_sans_identifiant": False}
+    classer = chef.classer_issue
+    assert classer("mistral", "api.eu.mistral.ai", "A", liste, _retour(502), None, None, True)[0] == 1
+    assert classer("mistral", "api.eu.mistral.ai", "A", liste, _retour(429), None, None, False)[0] == 6
+    assert classer("google", "h", "A", liste, _retour(503), None, None, False)[0] == 6
+    assert classer("google", "h", "A", liste, _retour(None), None, "delai", False)[0] == 6
+    assert classer("google", "h", "A", liste, _retour(402), None, None, False)[0] == 7
+    temperature = json.dumps({"message": "temperature is not supported"}).encode()
+    assert classer("mistral", "api.eu.mistral.ai", "A", liste, _retour(400, temperature), None, None, False)[0] == 10
+    assert classer("mistral", "api.eu.mistral.ai", "Ap", liste, _retour(400, temperature), None, None, False)[0] == 12
+    assert classer("google", "h", "A", liste, _retour(400, temperature), None, None, False)[0] == 12   # autre champ, chez Google
+    assert chef.champs_nommes({"detail": [{"loc": ["body", "max_tokens_extra"]}]}) == set()         # `loc` : égalité
+    assert chef.champs_nommes({"param": "generationConfig.maxOutputTokens"}) == {"maxOutputTokens"}
+    assert chef.champs_nommes({"error": {"message": "Unknown name THINKINGLEVEL"}}) == {"thinkingLevel"}
+    relais = json.dumps({"erreur": {"origine": "relais", "motif": "borne d'appels"}}).encode()
+    assert classer("google", "h", "A", liste, _retour(429, relais), None, None, False)[0] == 13
+
+
+@pytest.mark.parametrize("reponse, issue, par_octets", [
+    (sonde_mistral(900, "length"), "non comprise", False),                       # à 900 jetons facturés
+    (faux.flux_sans_fin(), "non comprise", True),                                # coupée à 32 768 octets
+    (sonde_mistral(40, "stop"), "indécidée", False),                             # finie `stop` à 40 jetons
+    (sonde_mistral(256, "length", pensee=None), "indécidée", False),             # aucun morceau `thinking`
+    (sonde_mistral(256, "length", type_pensee="reasoning"), "indécidée", False),   # la pensée sous un autre type
+    (faux.flux_mistral("1", pensee="p" * 300, usage=(30, 256, 330), fin="length"), "non comprise", False),   # 256 et 300
+    (sonde_mistral(256, "length", pensee="p" * 5000), "non comprise", True),     # 5 000 octets de contenu reçus
+    (sonde_mistral(256, "length", pensee="p" * 2047), "comprise", False),        # la même à 2 048 octets
+    (faux.erreur_mistral(400, message="bad request"), "indécidée", False)])      # code d'erreur
+def test_garde_16_sonde_de_mistral(monde, banc, reponse, issue, par_octets):
+    m = banc("verification-mistral-eu")
+    m.faux.programmer(faux.flux_mistral("OK"), reponse)
+    releve = m.verifier()
+    assert releve["sonde"]["issue"] == issue and releve["sonde"]["par_constat_d_octets"] == par_octets
+    assert releve["saine"] and releve["close"]
+    assert releve["noeud_de_lazar"] == (issue != "comprise") and chef.code_de_sortie_verification(releve) == (issue != "comprise")
+    if issue == "comprise":
+        assert releve["appels"][1]["octets_contenu"] == 2048
+
+
+@pytest.mark.parametrize("reponse, issue", [
+    (sonde_google(900, 700), "non comprise"),
+    (sonde_google(40, 20, "STOP"), "indécidée"),
+    (sonde_google(256, 0), "indécidée"),                                         # `thoughtsTokenCount` à 0
+    (faux.reponse_google("4", usage=(30, 256, 0, 286), fin="MAX_TOKENS", sans_pensees=True), "indécidée"),   # ou absent
+    (faux.reponse_google("4", usage=(30, 200, 56, 330), fin="MAX_TOKENS"), "non comprise"),   # 256 d'un côté, 300 de l'autre
+    (faux.reponse_google("4", fin="SAFETY"), "indécidée"),                       # refus
+    (sonde_google(256, 180, "CONTINUATION"), "comprise")])
+def test_garde_16_sonde_de_google(monde, banc, reponse, issue):
+    g = banc("verification-google")
+    g.faux.programmer(faux.reponse_google("OK"), reponse)
+    releve = g.verifier()
+    assert releve["sonde"]["issue"] == issue and releve["noeud_de_lazar"] == (issue != "comprise")
+
+
+def test_garde_16_sonde_a_refaire_sur_un_code_429(monde, banc):
+    g = banc("verification-google")
+    g.faux.programmer(faux.reponse_google("OK"), faux.erreur_google(429))
+    releve = g.verifier()
+    assert releve["a_refaire"] and not releve["close"] and releve["sonde"]["issue"] is None
+    g.nouveau_dossier()
+    g.faux.programmer(sonde_google())
+    suite = g.verifier()
+    assert suite["sonde"]["issue"] == "comprise" and suite["appels_comptes"] == 3 and suite["close"]
+    g.nouveau_dossier()                                                          # ligne close : plus aucun lancement
+    monde.inscrire_releve("file-neon", monde.releve("verification-google", "autre", go="GO-autre"))
+    with pytest.raises(chef.Arret, match="close"):
+        chef.gardes_avant_depart(monde.config, "verification-google", {"GO_ID": GO["verification-google"]}, monde.racine,
+                                 monde.registre(), MAINTENANT)
+
+
+def test_garde_16_troisieme_appel_a_prime_la_sonde_demande_une_ligne_nouvelle(monde, banc):
+    m = banc("verification-mistral-eu")
+    m.faux.programmer(faux.erreur_mistral(401, message="Unauthorized"))
+    assert m.verifier()["a_refaire"]
+    m.nouveau_dossier()
+    m.faux.programmer(faux.erreur_mistral(400, message="temperature unsupported"), faux.flux_mistral("OK"), sonde_mistral())
+    releve = m.verifier()
+    assert [a["type"] for a in releve["appels"]] == ["A", "A", "Ap"] and releve["saine"] and releve["close"]
+    assert "ligne nouvelle" in releve["issue_finale"] and releve["sonde"]["issue"] is None and len(m.faux.appels()) == 3
+
+
+def test_garde_16_majorant_par_octets(monde, banc):
+    a = banc("verification-mistral-eu")                                          # 300 jetons facturés pour 100 octets, à l'appel A
+    a.faux.programmer(faux.flux_mistral("x" * 100, usage=(30, 300, 330)), sonde_mistral())
+    releve = a.verifier()
+    assert releve["saine"] and releve["majorant"] == "démenti" and releve["noeud_de_lazar"]   # saine sur sa forme, mais nœud
+    assert chef.code_de_sortie_verification(releve) == 1
+    b = banc("verification-mistral-eu")                                          # de même à la sonde : 250 pour 100 octets
+    b.faux.programmer(faux.flux_mistral("OK"), faux.flux_mistral("1", pensee="p" * 99, usage=(30, 250, 280), fin="length"))
+    releve = b.verifier()
+    assert releve["sonde"]["issue"] == "comprise" and releve["majorant"] == "démenti" and releve["noeud_de_lazar"]
+    assert chef.constat_du_majorant([{"code": 200, "sortie_facturee": 164, "octets_contenu": 100}]) == "établi"
+    assert chef.constat_du_majorant([{"code": 200, "sortie_facturee": 165, "octets_contenu": 100}]) == "démenti"
+    assert chef.constat_du_majorant([{"code": 500}]) is None
+
+
+def test_majorant_dementi_en_file_le_compteur_passe_au_regime_prudent(monde, banc):
+    m = banc("file-mistral")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-mistral", faux.flux_mistral)
+    dementi = faux.flux_mistral(APPARIEMENT_CONFORME, usage=(900, 5000, 5900))   # 5 000 jetons pour une centaine d'octets
+    m.faux.programmer(dementi, faux.erreur_mistral(500), *conformes[1:])
+    bilan = m.jouer(regime="courant")
+    e = m.envois()
+    assert bilan["complet"] and bilan["majorant_dementi_en_file"] and bilan["regime_final"] == "prudent"
+    assert e[0]["majorant_dementi"] and e[0]["decision"] == "ok" and e[0]["regime"] == "courant"   # sans arrêter la file
+    assert e[1]["regime"] == "prudent" and "prudent" in e[1]["facon_de_compter"]
+
+
+# === Garde 17 : les huit entrées de Neon ==================================================================================
+
+def test_garde_17_entrees_et_ordre(monde, banc):
+    lot = chef.charger_textes(monde.config, monde.racine)
+    assert chef.entrees_de_la_file("file-neon", monde.config, lot) == list(chef.ENTREES_NEON)      # les huit, dans l'ordre
+    assert chef.entrees_de_la_file("file-mistral", monde.config, lot) == lot["ordre"] and len(lot["ordre"]) == 24
+    n = banc("file-neon")
+    n.faux.programmer(*reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google))
+    assert n.jouer()["complet"] and [e["entree"] for e in n.envois()] == list(chef.ENTREES_NEON)
+    for autres in (list(chef.ENTREES_NEON) + ["C-b1-01"],                                          # une neuvième entrée
+                   ["A-b2-01"] + list(chef.ENTREES_NEON[1:]),                                      # une entrée autre
+                   list(reversed(chef.ENTREES_NEON)), list(chef.ENTREES_NEON[:7])):                # un autre ordre
+        config = copy.deepcopy(monde.config)
+        config["lignes"]["file-neon"]["entrees"] = autres
+        with pytest.raises(chef.Arret, match="garde 17"):
+            chef.entrees_de_la_file("file-neon", config, lot)
+        with pytest.raises(chef.Arret, match="garde 17"):                                          # refus avant tout envoi
+            chef.controler_identifiants(config, "file-neon")
+    config = copy.deepcopy(monde.config)
+    config["lignes"]["file-mistral"]["entrees"] = list(chef.ENTREES_NEON)
+    with pytest.raises(chef.Arret, match="garde 17"):
+        chef.entrees_de_la_file("file-mistral", config, lot)
+
+
+# === Garde 18 : aucun morceau de réponse dans le rapport ==================================================================
+
+def test_garde_18_aucun_morceau_de_reponse(monde, banc):
+    n = banc("file-neon")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google)
+    conformes[0] = faux.reponse_google(APPARIEMENT_CONFORME, avec_part_de_pensee=True)
+    n.faux.programmer(*conformes)
+    assert n.jouer()["complet"]
+    rapport = chef.faire_rapport(n.dossier)
+    chef.rendre_piece(n.dossier, "rapport-technique.json", rapport, "google", chef.texte_du_rapport(rapport))   # sain
+    ecrit = (n.dossier / "rapport-technique.json").read_text(encoding="utf-8")
+    assert "cannot_tell" not in ecrit and "proposal_quote" not in ecrit and (n.dossier / "rapport-technique.json.sha256").exists()
+    for glisse in (APPARIEMENT_CONFORME[5:40], "réflexion du modèle, à écarter"):                  # texte jugé, puis pensée
+        triche = dict(rapport, note=f"extrait : {glisse}")
+        with pytest.raises(chef.Arret, match="garde 18"):                                          # trouvé : pièce non rendue
+            chef.rendre_piece(n.dossier, "rapport-triche.json", triche, "google")
+        assert not (n.dossier / "rapport-triche.json").exists()
+    assert chef.controler_aucune_sous_chaine("abc " + "z" * 20, ["z" * 21]) == 0                   # 20 caractères : admis
+    assert chef.controler_aucune_sous_chaine("abc " + "z" * 21, ["z" * 21]) == 1                   # plus de 20 : trouvé
+    m = banc("verification-mistral-eu")                                          # le relevé d'une vérification aussi
+    m.faux.programmer(faux.flux_mistral("OK " + "réponse fixe du modèle à ne jamais recopier"), sonde_mistral())
+    releve = m.verifier()
+    assert "ne jamais recopier" not in (m.dossier / "releve-verification-v1.json").read_text(encoding="utf-8")
+    assert releve["appels"][0]["longueur_du_texte_extrait"] == len("OK réponse fixe du modèle à ne jamais recopier")
+
+
+# === Garde 19 : borne dure en octets par envoi (Mistral) ==================================================================
+
+def test_garde_19_sain_flux_de_200_000_octets(monde, banc):
+    m = banc("file-mistral")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-mistral", faux.flux_mistral)
+    long = faux.flux_mistral(APPARIEMENT_CONFORME, pensee="p" * 200_000, usage=(900, 30000, 30900))
+    m.faux.programmer(long, *conformes[1:])
+    bilan = m.jouer()
+    e = m.envois()[0]
+    assert bilan["complet"] and e["incident"] is None and 200_000 < e["octets_contenu"] < 262_144
+    assert e["cout_usd"] == pytest.approx((900 * 0.77 + 30000 * 2.31) / 1e6, abs=1e-6)             # coût réel
+    lecteur = chef.LecteurFlux()                                                 # les valeurs des champs `type` ne sont pas comptées
+    lecteur.nourrir(b'data: {"model": "m", "choices": [{"delta": {"content": [{"type": "thinking", "thinking": '
+                    b'[{"type": "text", "text": "abcd"}]}, {"type": "text", "text": "\xc3\xa9"}]}}]}\n\n')
+    assert lecteur.octets_contenu == 4 + 2 and lecteur.morceaux_par_type == {"thinking": 1, "text": 1}
+    assert "".join(lecteur.textes) == "é" and lecteur.autres == ["abcd"]
+
+
+def test_garde_19_artefact_file_coupee_a_sa_borne(monde, banc):
+    m = banc("file-mistral")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-mistral", faux.flux_mistral)
+    m.faux.programmer(faux.flux_sans_fin(), *conformes)
+    bilan = m.jouer()
+    e = m.envois()
+    assert len(e) == 1 and e[0]["coupe_a_sa_borne_en_octets"] and e[0]["octets_contenu"] > 262_144
+    octets = (m.dossier / "envois" / f"{e[0]['envoi']}.corps.json").stat().st_size
+    reserve = chef.Compteur(4.75, [0.77, 2.31], 1).reserve(octets, 262208)
+    assert e[0]["cout_usd"] == pytest.approx(reserve, abs=1e-6) and 0.60 < reserve < 0.63          # compté 0,610 ou 0,625
+    assert bilan["arretee_par_sa_borne_de_depense"] and not bilan["arretee_a_son_plafond"] and not bilan["complet"]
+    assert "borne en octets" in bilan["arret"] and len(m.faux.appels()) == 1                       # aucun second envoi
+    fin = time.monotonic() + 5
+    while m.faux.fermees_par_le_client == 0 and time.monotonic() < fin:
+        time.sleep(0.02)
+    assert m.faux.fermees_par_le_client == 1                                     # le faux fournisseur voit la connexion fermée
+    rapport = chef.faire_rapport(m.dossier)
+    regles = chef.appliquer_regles(rapport)
+    assert not regles["tient"] and rapport["envois_coupes"] == [e[0]["envoi"]] and rapport["lecture_de_la_console_due"]
+    client_ferme = [l for l in chef.lire_journal(m.journal_relais) if l.get("client_ferme")]
+    assert client_ferme and client_ferme[0]["octets_envoyes_amont"] > 0
+
+
+def test_garde_19_google_ne_porte_aucune_borne_en_octets(monde, banc):
+    assert monde.config["lignes"]["file-neon"]["borne_octets"] is None
+    assert monde.config["lignes"]["verification-google"]["borne_octets"] is None
+    n = banc("file-neon")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google)
+    conformes[0] = faux.reponse_google(APPARIEMENT_CONFORME + " " * 400_000)     # 400 000 octets : rien n'est coupé
+    n.faux.programmer(*conformes)
+    assert n.jouer()["complet"] and n.envois()[0]["incident"] is None
+    assert "aucune" in n.envois()[0]["borne_en_octets"]                          # la garde le dit au journal
+
+
+# === Garde 20 : lecture de la console après un envoi coupé ================================================================
+
+def test_garde_20_sain(monde):
+    assert chef.garde_console(monde.config, monde.racine, "file-neon", GO["file-neon"]) == []      # aucune ligne antérieure
+    ref = monde.releve("verification-google", "v1", envois_coupes=["L1-01-A"], depense_comptee_usd=0.5)
+    monde.piece("console.md", lecture_console(ref["sha256"], "0,49", "22,50"))
+    monde.config["lignes"]["file-neon"]["lectures_console"] = [monde.ref("console.md")]
+    assert len(chef.garde_console(monde.config, monde.racine, "file-neon", GO["file-neon"])) == 1  # pièce conforme
+    assert chef.garde_console(monde.config, monde.racine, "file-mistral", GO["file-mistral"]) == []   # un envoi coupé chez Google
+    assert chef.garde_console(monde.config, monde.racine, "verification-google", GO["verification-google"]) == []   # sa propre ligne
+    monde.releve("verification-mistral-eu", "v1", envois_coupes=[], appels=[{"signature_du_mandataire": True}])
+    assert chef.garde_console(monde.config, monde.racine, "file-mistral", GO["file-mistral"]) == []   # refus du mandataire
+
+
+def test_garde_20_artefacts(monde):
+    ref = monde.releve("verification-google", "v1", envois_coupes=["L1-01-A"], depense_comptee_usd=0.5)
+    L = monde.config["lignes"]["file-neon"]
+
+    def refuse(motif, ligne="file-neon"):
+        with pytest.raises(chef.Arret, match=motif):
+            chef.garde_console(monde.config, monde.racine, ligne, GO[ligne])
+
+    refuse("sans lecture de la console")                                         # envoi coupé sans pièce
+    monde.piece("console.md", lecture_console(ref["sha256"], "0,49", "22,50"))
+    L["lectures_console"] = [{**monde.ref("console.md"), "sha256": "0" * 64}]
+    refuse("empreinte")                                                          # pièce d'une autre empreinte
+    monde.piece("console-autre.md", lecture_console("c" * 64, "0,49", "22,50"))
+    L["lectures_console"] = [monde.ref("console-autre.md")]
+    refuse("sans lecture de la console")                                         # pièce qui cite un autre relevé
+    monde.piece("console-haut.md", lecture_console(ref["sha256"], "0,61", "22,50"))
+    L["lectures_console"] = [monde.ref("console-haut.md")]
+    refuse("au-dessus de la dépense comptée")                                    # dépense vue au-dessus de la dépense comptée
+    monde.piece("console-bas.md", lecture_console(ref["sha256"], "0,49", "5,00"))
+    L["lectures_console"] = [monde.ref("console-bas.md")]
+    refuse("solde prépayé vu")                                                   # solde vu de 5,00 avant la file Neon
+    monde.piece("console-sans-solde.md", lecture_console(ref["sha256"], "0,49", None))
+    L["lectures_console"] = [monde.ref("console-sans-solde.md")]
+    refuse("solde prépayé vu")
+    # une seconde ligne de vérification de Google exige de nouveau 19,76 USD de crédit vu
+    monde.piece("console-19.md", lecture_console(ref["sha256"], "0,49", "19,32"))
+    monde.config["lignes"]["verification-google"]["lectures_console"] = [monde.ref("console-19.md")]
+    monde.config["lignes"]["verification-google"]["go"] = "GO-2026-11-22-08"
+    with pytest.raises(chef.Arret, match="sous 19.76"):
+        chef.garde_console(monde.config, monde.racine, "verification-google", "GO-2026-11-22-08")
+
+
+def test_garde_20_connexion_coupee_puis_refait_sain_sans_piece_la_file_ne_part_pas(monde, banc):
+    g = banc("verification-google")
+    g.faux.programmer(faux.fermer())
+    assert g.verifier()["a_refaire"]
+    g.nouveau_dossier()
+    g.faux.programmer(faux.reponse_google("OK"), sonde_google())
+    releve = g.verifier()                                                        # refait sain, sous la même ligne
+    assert releve["saine"] and releve["sonde"]["issue"] == "comprise" and len(releve["envois_coupes"]) == 1
+    chemin = g.dossier / "releve-verification-v1.json"
+    ref = {"chemin": str(chemin.relative_to(monde.racine)), "sha256": chef.sha256_fichier(chemin)}
+    monde.inscrire_releve("file-neon", ref)
+    with pytest.raises(chef.Arret, match="garde 20"):                            # sans pièce : la file ne part pas
+        chef.gardes_avant_depart(monde.config, "file-neon", {"GO_ID": GO["file-neon"]}, monde.racine, monde.registre(), MAINTENANT)
+    monde.piece("console.md", lecture_console(ref["sha256"], "0,40", "22,50"))
+    monde.config["lignes"]["file-neon"]["lectures_console"] = [monde.ref("console.md")]
+    avant = chef.gardes_avant_depart(monde.config, "file-neon", {"GO_ID": GO["file-neon"]}, monde.racine, monde.registre(), MAINTENANT)
+    assert avant["lectures_de_la_console"][0]["cite"] == ref["sha256"]
+
+
+# === Les critères écrits d'avance (devis, section 7), sur les seuls compteurs du rapport ==================================
+
+def _rapport(ligne: str, **modifs) -> dict:
+    n = chef.CRITERES[ligne]["lectures"]
+    nom = chef.IDENTIFIANTS[chef.LIGNES[ligne][1]]
+    rapport = {"ligne": ligne, "reponses_de_code_200": n, "lectures_jouees": n, "refus": 0, "fins_par_sortie_maximale": 0,
+               "conformes": n, "complete": True, "arret": None, "noms_servis": [nom], "nom_servi_du_releve": nom,
+               "lectures_sans_nom_servi_lisible": 0, "sortie_facturee_max": 1239, "issue_de_la_sonde": "comprise",
+               "regles": {"chemin": "x", "sha256": "r" * 64}}
+    rapport.update(modifs)
+    return rapport
+
+
+def test_criteres_recopies_du_devis_section_7():
+    assert chef.CRITERES == {"file-mistral": {"lectures": 24, "conformes_min": 22}, "file-neon": {"lectures": 8, "conformes_min": 8}}
+    regles = chef.appliquer_regles
+    assert regles(_rapport("file-mistral"))["tient"] and regles(_rapport("file-mistral", conformes=22))["tient"]
+    assert not regles(_rapport("file-mistral", conformes=21))["tient"]                           # 22 sur 24
+    assert regles(_rapport("file-neon"))["tient"] and not regles(_rapport("file-neon", conformes=7))["tient"]   # huit sur huit
+    for ligne in ("file-mistral", "file-neon"):
+        n = chef.CRITERES[ligne]["lectures"]
+        assert not regles(_rapport(ligne, reponses_de_code_200=n - 1))["tient"]                  # une réponse de moins
+        assert not regles(_rapport(ligne, refus=1))["tient"]
+        assert not regles(_rapport(ligne, fins_par_sortie_maximale=1))["tient"]
+        assert not regles(_rapport(ligne, complete=False, arret="file arrêtée à son plafond"))["tient"]
+        assert not regles(_rapport(ligne, noms_servis=["autre"]))["tient"]                       # un seul nom servi
+        assert not regles(_rapport(ligne, noms_servis=sorted([chef.IDENTIFIANTS[chef.LIGNES[ligne][1]], "autre"])))["tient"]
+        assert not regles(_rapport(ligne, lectures_sans_nom_servi_lisible=1))["tient"]
+    assert "second lecteur" in regles(_rapport("file-mistral"))["suite"]
+    assert "nœud de Lazar" in regles(_rapport("file-neon", conformes=7))["suite"]
+    # règle 7 : la plus grande de 8 192 et de quatre fois le maximum observé, arrondie aux 1 024 supérieurs
+    assert regles(_rapport("file-mistral", sortie_facturee_max=1239))["regle_7"]["sortie_maximale_a_la_course"] == 8192
+    assert regles(_rapport("file-mistral", sortie_facturee_max=2049))["regle_7"]["sortie_maximale_a_la_course"] == 9216
+    assert regles(_rapport("file-mistral", sortie_facturee_max=3000))["regle_7"]["sortie_maximale_a_la_course"] == 12288
+    assert "nœud de Lazar" in regles(_rapport("file-neon", issue_de_la_sonde="indécidée"))["regle_7"]["lue_sur"]
+
+
+def test_regles_du_gabarit_copie_a_la_lettre_du_devis_et_du_texte():
+    devis = (RACINE / "docs/notes/relance-organismes-discrets-v1/devis-essais-admission-mistral-neon-bras-a-v1.md").read_text(
+        encoding="utf-8").split("\n")
+    assert chef.sha256_fichier(RACINE / "docs/notes/relance-organismes-discrets-v1/devis-essais-admission-mistral-neon-bras-a-v1.md") == chef.EMPREINTE_DEVIS
+    gabarit = (RACINE / GABARIT_REGLES).read_text(encoding="utf-8")
+    bloc = "\n".join(devis[456:465])
+    assert bloc in gabarit and bloc.count("\n") == 8                             # le titre et les huit règles
+    config = json.loads((RACINE / GABARIT).read_text(encoding="utf-8"))
+    prereg = (RACINE / config["prereg_en_vigueur"]["chemin"]).read_text(encoding="utf-8")
+    assert chef.texte_des_regles(prereg, config["regles"]["lignes_du_texte"]) == bloc
+    assert "- état : gabarit" in gabarit and config["prereg_en_vigueur"]["sha256"] in gabarit
+
+
+def test_file_mistral_entiere_rapport_et_regles(monde, banc):
+    m = banc("file-mistral")
+    conformes = reponses_conformes(monde.config, monde.racine, "file-mistral", faux.flux_mistral)
+    conformes[3] = faux.flux_mistral("pas un objet")                             # deux réponses hors forme : 22 sur 24
+    conformes[10] = faux.flux_mistral("```json\n" + APPARIEMENT_CONFORME + "\n```\net une phrase autour")
+    conformes[5] = faux.flux_mistral("```json\n" + APPARIEMENT_CONFORME + "\n```")   # un bloc de code : toléré, compté
+    m.faux.programmer(*conformes)
+    bilan = m.jouer()
+    rapport = chef.faire_rapport(m.dossier)
+    assert bilan["complet"] and rapport["conformes"] == 22 and rapport["blocs_de_code_retires"] == 1
+    assert rapport["reponses_de_code_200"] == 24 and rapport["nombre_d_envois"] == 24 and rapport["etayees"] == 22
+    assert rapport["noms_servis"] == ["mistral-large-4-0"] and rapport["cout_projete"]["C_usd"] > 0
+    assert chef.appliquer_regles(rapport)["tient"]
+    assert {e["cause_de_forme"] for e in rapport["envois"]} == {None, "forme"}   # un code de cause, sans texte
+    assert len(m.faux.appels()) == 24 and m.pauses == [0.0] * 24                 # une pause après chaque réponse
+    corps = json.loads(m.faux.appels()[0]["corps"])
+    assert set(corps) == {"model", "messages", "max_tokens", "reasoning_effort", "stream", "temperature"}
+    assert m.faux.appels()[0]["en_tetes"]["authorization"] == "Bearer valeur-factice-du-relais"
+    assert "x-envoi" not in m.faux.appels()[0]["en_tetes"]                       # l'identifiant d'envoi ne part pas à l'amont
+
+
+def test_file_mistral_sans_temperature_apres_retrait(monde, banc):
+    m = banc("file-mistral")
+    m.faux.programmer(faux.flux_mistral(APPARIEMENT_CONFORME, fin="length"))
+    m.jouer(temperature_envoyee=False)
+    assert "temperature" not in json.loads(m.faux.appels()[0]["corps"])
+
+
+# === Une ligne de bout en bout : amorce, relais lancé par le lanceur, ouvrier sans clé =====================================
+
+def test_bout_en_bout_verification_puis_file_neon(monde, tmp_path):
+    fournisseur = faux.FauxFournisseur(faux.modele_google()).demarrer()
+    try:
+        monde.config["essai_local"] = {"google": fournisseur.url}
+        chemin, empreinte = monde.ecrire_configuration("configuration-verification.json")
+        env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "GO_ID": GO["verification-google"],
+               "GEMINI_API_KEY": "valeur-factice-du-relais"}
+        fournisseur.programmer(faux.reponse_google("OK"), sonde_google())
+        code = chef.executer("verification-google", chemin, empreinte, env, racine=monde.racine, registre=monde.registre(),
+                             a_l_instant=MAINTENANT)
+        assert code == 0
+        dossier = next((monde.racine / "runs" / "verification-cle-google-bras-a-v1").iterdir())
+        releve = json.loads((dossier / "releve-verification-v1.json").read_text(encoding="utf-8"))
+        assert releve["saine"] and releve["sonde"]["issue"] == "comprise" and releve["go"] == GO["verification-google"]
+        inventaire = json.loads((dossier / "inventaire.json").read_text(encoding="utf-8"))
+        assert inventaire["etat"] == "finie" and (dossier / "inventaire.json.sha256").exists()
+        final = json.loads((dossier / "relais" / "etat-final.json").read_text(encoding="utf-8"))
+        assert final["appels"] == 2 and final["cle_dans_l_environnement"] is False
+        assert "valeur-factice-du-relais" not in "".join(
+            p.read_text(encoding="utf-8", errors="replace") for p in dossier.rglob("*") if p.is_file())
+        arret = [l for l in chef.lire_journal(dossier / "journal-amorce.jsonl") if l.get("evenement") == "relais_arrete"]
+        assert arret and arret[0]["arrete"]                                      # relais arrêté par son identifiant de processus
+        # la file : relevé inscrit, puis départ
+        ref = {"chemin": str((dossier / "releve-verification-v1.json").relative_to(monde.racine)),
+               "sha256": chef.sha256_fichier(dossier / "releve-verification-v1.json")}
+        monde.inscrire_releve("file-neon", ref)
+        chemin, empreinte = monde.ecrire_configuration("configuration-file.json")
+        fournisseur.programmer(*reponses_conformes(monde.config, monde.racine, "file-neon", faux.reponse_google))
+        env["GO_ID"] = GO["file-neon"]
+        plus_tard = MAINTENANT + datetime.timedelta(seconds=5)
+        assert chef.executer("file-neon", chemin, empreinte, env, racine=monde.racine, registre=monde.registre(),
+                             a_l_instant=plus_tard) == 0
+        file_ = next((monde.racine / "runs" / "essais-admission-bras-a-v1").iterdir())
+        rapport = json.loads((file_ / "rapport-technique.json").read_text(encoding="utf-8"))
+        assert rapport["complete"] and rapport["conformes"] == 8 and rapport["regime_de_depart"] == "courant"
+        assert rapport["texte_en_vigueur"]["sha256"] == monde.config["prereg_en_vigueur"]["sha256"]   # le brouillon en vigueur
+        config = chef.charger_configuration(chemin, empreinte)
+        assert chef.appliquer_regles_au_dossier(file_, config, monde.racine)["tient"]
+        assert len(list((file_ / "envois").iterdir())) == 8 and len(list((file_ / "reponses-brutes-non-lues").glob("*.corps"))) == 8
+        # garde 13 : un second départ de la même file est refusé, et rien ne part
+        avant = len(fournisseur.appels())
+        assert chef.executer("file-neon", chemin, empreinte, env, racine=monde.racine, registre=monde.registre(),
+                             a_l_instant=plus_tard + datetime.timedelta(seconds=5)) == 2
+        assert len(fournisseur.appels()) == avant
+        # garde 8 : sans la ligne de calcul, rien ne part
+        assert chef.executer("verification-google", chemin, empreinte, {**env, "GO_ID": "GO-2026-01-01-01"},
+                             racine=monde.racine, registre=monde.registre(), a_l_instant=plus_tard) == 2
+    finally:
+        fournisseur.arreter()
+
+
+def test_ligne_de_commande_usage_et_configuration_absente(tmp_path, capsys):
+    assert chef.principal([]) == 2 and "usage" in capsys.readouterr().err
+    assert chef.principal(["file-neon", str(tmp_path / "absente.json"), "0" * 64]) == 2
+    assert "configuration absente" in capsys.readouterr().err
