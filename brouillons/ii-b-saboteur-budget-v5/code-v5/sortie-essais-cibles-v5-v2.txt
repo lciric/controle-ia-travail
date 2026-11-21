@@ -1,0 +1,19 @@
+# Sortie des essais ciblés du saboteur à budget, code en version 5 — v2 (commit 74438c4fc, branche locale prep/iib-code-v5-local)
+
+## 1. Les vingt fichiers en version 5 hors l'essai long, tokeniseur réel compris
+$ PYTHONPATH=src IIB_TOKENISEUR_REEL=…/tokeniseur-reel/tokenizer.json …/tokeniseur-reel/venv/bin/python -m pytest -q --tb=line -rfEs <les vingt fichiers tests/test_iib_*_v5.py hors tests/test_iib_bout_en_bout_nul_v5.py>
+........................................................................ [ 21%]
+........................................................................ [ 42%]
+........................................................................ [ 63%]
+........................................................................ [ 84%]
+...................................................                      [100%]
+339 passed in 33.48s
+
+## 2. Essai long sous hypothèse nulle, 200 graines, rejoué au commit 74438c4fc
+$ PYTHONPATH=src python3 -m pytest -q -s tests/test_iib_bout_en_bout_nul_v5.py   (commit 74438c4fc)
+
+arrêts sur 200 graines : {'P': 4, 'N': 10} ; par composante de l'oracle à contexte réécrit : {'lisibilite_agent': 1, 'rangs_agent': 3, 'pente_de_fuite': 4, 'chaine_reecrite': 3}
+.
+1 passed in 362.90s (0:06:02)
+
+## 3. Suite ciblée entière tests/test_iib_* : non rejouée (commandé par la session mère)
