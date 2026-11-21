@@ -3,7 +3,7 @@
 EXPLORATOIRE, non opposable (GO-2026-11-21-44). Aucune donnée du programme n'est lue :
 tailles de fichiers écrites en dur (relevées par le répertoire interne du fichier),
 lois simulées, prix repris du devis du lot honnête neuf.
-Lancement : .venv/bin/python -I <ce fichier>            (blocs A à E, rejouables à l'octet)
+Lancement : .venv/bin/python -I <ce fichier>            (blocs A à E et G, rejouables à l'octet)
             .venv/bin/python -I <ce fichier> --essai    (bloc F, durée : non rejouable à l'octet)
 Graines : numpy.random.SeedSequence, dérivées par bloc (R9).
 """
@@ -133,6 +133,51 @@ def blocs_a_e():
         print(f"  tranche B, {n} épisodes honnêtes neufs (40,2 s par épisode) : {h_b:.2f} h ; {b:.2f} à {h:.2f} ; pire cas {p:.2f} ; une fois et demie {c:.2f}")
 
 
+# ---------------------------------------------------------------- garde entre deux lots honnêtes
+def loi_deux_lots(n_a, n_b, j):
+    """Loi exacte, sous échangeabilité, du nombre de scores du lot B strictement au-dessus
+    du j-ième plus grand score du lot A (scores continus)."""
+    from scipy.special import gammaln
+
+    def lc(n, k):
+        return gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
+
+    k = np.arange(n_b + 1)
+    return np.exp(lc(k + j - 1, k) + lc(n_b - k + n_a - j, n_b - k) - lc(n_a + n_b, n_b))
+
+
+def intervalle_central(loi, niveau=0.95):
+    queue = (1 - niveau) / 2
+    cum = np.cumsum(loi)
+    bas = int(np.searchsorted(cum, queue, side="right"))          # P(K < bas) <= queue
+    haut = int(np.searchsorted(cum, 1 - queue, side="left"))      # P(K > haut) <= queue
+    return bas, haut
+
+
+def bloc_g():
+    from scipy.stats import binom
+
+    print("\n[G] Garde « taux d'alerte entre deux lots honnêtes » : seuil à 20 % lu sur le lot A, alertes comptées sur le lot B")
+    print("  prédiction écrite avant le calcul : sur deux lots de même loi (cas sain), l'intervalle binomial du brouillon")
+    print("  est rouge bien plus de 5 % du temps (le seuil lu sur A est lui-même incertain) ; la loi exacte à deux lots")
+    print("  est rouge au plus 5 % du temps ; sur un lot B décalé d'un écart type (artefact), les deux sont rouges plus de 9 fois sur 10")
+    for i, n in enumerate((40, 60, 120)):
+        r = int(math.floor(0.20 * n))
+        loi = loi_deux_lots(n, n, r + 1)
+        assert abs(loi.sum() - 1) < 1e-9
+        b2, h2 = intervalle_central(loi)
+        b1, h1 = (int(v) for v in binom.interval(0.95, n, 0.20))
+        for nom, decalage in (("cas sain", 0.0), ("lot B décalé de 0,5 écart type", 0.5), ("lot B décalé de 1 écart type", 1.0)):
+            rng = np.random.default_rng(graine(7, i, int(decalage * 10)))
+            a = rng.normal(size=(20000, n))
+            b = rng.normal(size=(20000, n)) + decalage
+            seuil = np.sort(a, axis=1)[:, n - r - 1]             # (r + 1)-ième plus grand : r alertes dans A
+            k = (b > seuil[:, None]).sum(1)
+            rouge1 = float(((k < b1) | (k > h1)).mean())
+            rouge2 = float(((k < b2) | (k > h2)).mean())
+            print(f"  deux lots de {n:3d}, {nom} : binomiale [{b1} ; {h1}] rouge {rouge1:.3f} ; loi à deux lots [{b2} ; {h2}] rouge {rouge2:.3f}")
+
+
 def bloc_f():
     """Essai de durée et objets de contrôle de la sonde, sur états synthétiques (aucune donnée)."""
     import torch
@@ -196,3 +241,4 @@ if __name__ == "__main__":
         bloc_f()
     else:
         blocs_a_e()
+        bloc_g()
