@@ -1,0 +1,6 @@
+# Complément au relevé des API — schéma OpenAPI de Mistral — v1
+
+Complète `docs/notes/relance-organismes-discrets-v1/releve-api-mistral-gemini-essais-admission-v1.md` (291341e2…). Source : le schéma officiel https://docs.mistral.ai/openapi.yaml (« openapi: 3.1.0 », « title: Mistral AI API », « version: 1.0.0 »), récupéré le 2026-11-21 par l'outil de lecture web, 1 548 910 octets, empreinte `7652f1307b3bc6cb7a10526c28788a430246f641cb9785a9f1b7b0dd912cdfae` ; lu par la session de relance par recherche de chaînes. Copie non versée au dépôt ; provenance par transcription, non opposable (R7).
+
+- **`UsageInfo`** (ligne 24219 du schéma) : `prompt_tokens`, `completion_tokens`, `total_tokens` (tous trois requis, entiers, défaut 0), plus `prompt_audio_seconds` et `service_tier` ; `additionalProperties: false`. **Aucun compte de raisonnement séparé** dans l'usage du chat (le champ `reasoning_tokens` du schéma vise d'autres points d'accès). Lecture de la session : la sortie facturée se compte par `completion_tokens`, égal à `total_tokens − prompt_tokens` ; que le raisonnement y soit compris reste non écrit.
+- **`finish_reason`** de la réponse entière (ligne 46404) : `stop`, `length`, `model_length`, `error`, `tool_calls`. En flux (ligne 46636) : `stop`, `length`, `error`, `tool_calls`, `null`.
