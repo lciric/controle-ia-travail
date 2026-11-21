@@ -1078,7 +1078,8 @@ print(f"Version 3, arrondis dans le bon sens (majorant par excès, minorant par 
       f"{math.ceil(total * 1e4) / 1e4:.4f} (valeur {total:.6f}) ; tout comme attendu au moins {math.floor((1 - total) * 1e4) / 1e4:.4f} ; "
       f"familles A et B seules au moins {math.floor((1 - fam_a - fam_b) * 1e4) / 1e4:.4f}")
 print(f"  (la ligne « Ensemble » ci-dessus, reprise de la version 2, arrondit au plus proche : {total:.4f} et {1 - total:.3f} ;"
-      f" la version 2 écrivait de même 0.0260 et 0.974 pour 0.026017 et 0.973983)")
+      f" la version 2 écrivait de même 0.0260 et 0.974 pour {total + ALPHA_MORT:.6f} et {1 - total - ALPHA_MORT:.6f},"
+      f" à 2,8e-12 près, le majorant de A2 dans F6)")
 print(f"0 manque sur 59 : borne haute à 95 % {cp_haute(0, 59, 0.95):.4f} (repère de N-075, erratum 3, rejoué ; repris de la version 1)")
 
 
