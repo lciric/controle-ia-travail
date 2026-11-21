@@ -1,0 +1,523 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verite-temoins-mondes/calculer_verite_temoins_imposes_v1.py	2026-11-21 09:06:20.425734850 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verite-temoins-mondes-v2/calculer_verite_temoins_imposes_v2.py	2026-11-21 10:06:12.970375133 +0000
+@@ -1,8 +1,26 @@
+ #!/usr/bin/env python3
+-"""Programme de vérité des dix-sept témoins imposés — course « seuil et moniteurs » — v1.
++"""Programme de vérité des dix-sept témoins imposés — course « seuil et moniteurs » — v2.
+ 
+ Développeur du programme de vérité des témoins imposés, modèle O. Bibliothèque standard seule.
+ 
++v2 (demandée par la mère avant le premier usage réel, la v1 étant scellée, commit 564347db) :
++(1) « moyenne plus k écarts types » : la valeur annoncée est comparée aux deux conventions d'écart type
++    (n − 1 et n), et la convention qui accorde est nommée ;
++(2) toute erreur numérique sur un témoin (dépassement, domaine, non-convergence) devient un refus codé de
++    ce seul témoin ; le lot continue ;
++(3) plafond déclaré des tailles, N_MAX = 5 000, refus codé au-delà ;
++(4) « 0 » et « 0.0 » : la même loi écrite avec des nombres égaux suit la même voie (exacte si possible) ;
++(5) le bloc `comptes` nomme les identifiants en écart, refusés et en désaccord d'issue ;
++(6) forme de la table : décalage de T09 arrondi, rang de T08 en entier ;
++(7) tolérance d'évaluation juste : voie binomiale à petit k resserrée, et tolérance déclarée
++    max(1e-12, 2e-15 × n), mesurée jusqu'à n = 5 000 ;
++(8) trouvé en éprouvant le plafond : le rendu d'un rationnel exact au-delà de n ≈ 2 150 dépassait la limite
++    de conversion des entiers en texte ; la limite est levée pour ce seul rendu ;
++(9) contrôle de cohérence de la dérive de F, en mode recalcul, sur le bloc `derive_de_F` de la
++    correspondance du programme de vérification v3 : sous la loi de la tranche associée à T09, le décalage
++    transmis doit faire passer le taux vrai de 1 % à 3 %, à 10⁻³ près. Appel :
++    --recalculer TEMOINS_JSON SORTIE_JSON --correspondance CORRESPONDANCE_JSON.
++
+ Ce que c'est. Un moteur de loi exacte pour les règles de témoin de la grammaire fermée du § 4.3 du mandat
+ de l'auteur des mondes plantés v3 (`816313cb…`), la table des dix-sept témoins imposés T01 à T17 (§ 3.1),
+ et une fonction de recalcul d'un témoin quelconque, loi et règle données (§ 6, point 4).
+@@ -14,12 +32,13 @@
+ décalage), le calcul passe par des flottants, et il est TOUJOURS encadré : chaque valeur flottante est
+ rendue avec une borne d'erreur écrite. La borne de discrétisation est rigoureuse (sommes inférieure et
+ supérieure d'une fonction monotone contre une mesure positive, queues comprises) ; s'y ajoute une
+-tolérance d'évaluation des fonctions de répartition, DÉCLARÉE et non démontrée
+-(`TOLERANCE_EVALUATION`).
++tolérance d'évaluation des fonctions de répartition, DÉCLARÉE et non démontrée, mesurée sur grille
++(`tolerance_evaluation(n)`).
+ 
+ Lancer :
+-    python3 -I -B calculer_verite_temoins_imposes_v1.py SORTIE_JSON
+-    python3 -I -B calculer_verite_temoins_imposes_v1.py --recalculer TEMOINS_JSON SORTIE_JSON
++    python3 -I -B calculer_verite_temoins_imposes_v2.py SORTIE_JSON
++    python3 -I -B calculer_verite_temoins_imposes_v2.py --recalculer TEMOINS_JSON SORTIE_JSON
++    python3 -I -B calculer_verite_temoins_imposes_v2.py --recalculer TEMOINS_JSON SORTIE_JSON --correspondance CORRESPONDANCE_JSON
+ 
+ Aucun tirage aléatoire, donc aucune graine. Aucun appel réseau. Le programme refuse d'écraser un
+ fichier de sortie existant (règle R12).
+@@ -29,13 +48,24 @@
+ import sys
+ from fractions import Fraction
+ 
+-VERSION_SORTIE = "verite-temoins-imposes-seuil-et-moniteurs-v1"
++VERSION_SORTIE = "verite-temoins-imposes-seuil-et-moniteurs-v2"
+ VERSION_ENTREE_RECALCUL = "recalcul-temoins-seuil-et-moniteurs-v1"
+ 
+ ALPHA = Fraction(1, 100)              # « le taux de fausses alertes est d'au plus 1 % » (§ 1, § 2)
+ SEUIL_ECART = Fraction(1, 1000)       # § 6, point 4 : écart de plus de 0,001 compté et nommé
+ TOLERANCE_EVALUATION = 1e-12          # déclarée, non démontrée : erreur d'évaluation d'une répartition
++PENTE_TOLERANCE = 2e-15               # v2 : part qui croît avec n (bêta incomplète, puissances), mesurée
++N_MAX = 5000                          # v2 : plafond déclaré des tailles (n, tranche voisine, horizon)
+ DEMI_LARGEUR_CIBLE = 1e-5             # cible de la borne de discrétisation des intégrales encadrées
++
++
++def tolerance_evaluation(n):
++    """Tolérance d'évaluation déclarée pour une grandeur dont le calcul flottant dépend de n.
++    Mesure (lectures/mesurer_tolerance_v2.py) : erreur maximale de P(Bin(n, p) <= k) en flottants, sur grille,
++    9,2e-13 à n = 2 000 et 2,8e-12 à n = 5 000 (voie de la bêta incomplète) ; voie à petit k sous 6e-14 ;
++    gamma incomplète à a = (n − 1)/2 sous 4e-13. Déclarée : max(1e-12, 2e-15 × n), marge au moins 3,6 jusqu'à
++    N_MAX ; égale à 1e-12 jusqu'à n = 500."""
++    return max(TOLERANCE_EVALUATION, PENTE_TOLERANCE * n)
+ POINTS_MIN, POINTS_MAX = 2 ** 12, 2 ** 18
+ DECIMALES = 12
+ 
+@@ -104,6 +134,14 @@
+     return x
+ 
+ 
++def taille(x, nom):
++    """Une taille (n, tranche voisine, horizon) : entier de 1 à N_MAX. Au-delà, la tolérance déclarée n'est
++    plus mesurée et le coût des rationnels exacts n'est plus éprouvé : refus codé."""
++    v = entier(x, nom, 1)
++    if v > N_MAX: raise Refus("taille_au_dela_du_plafond", f"{nom} = {v} > N_MAX = {N_MAX}")  # GARDE:taille_au_dela_du_plafond
++    return v
++
++
+ def probabilite_ouverte(x, nom):
+     p = rationnel(x, nom)
+     if not 0 < p < 1: raise Refus("probabilite_hors_domaine", f"{nom} = {p} hors de ]0, 1[")  # GARDE:probabilite_hors_domaine
+@@ -152,7 +190,17 @@
+ 
+ 
+ def texte_fraction(fr):
+-    return None if fr is None else f"{fr.numerator}/{fr.denominator}"
++    """Rationnel exact en texte décimal « numérateur/dénominateur ». v2 : au-delà de n ≈ 2 150, le
++    dénominateur 100^n dépasse la limite de 4 300 chiffres que Python impose à la conversion d'un entier en
++    texte ; la limite est levée le temps de ce seul rendu (un rationnel calculé ici, jamais une entrée)."""
++    if fr is None:
++        return None
++    ancienne_limite = sys.get_int_max_str_digits()
++    try:
++        sys.set_int_max_str_digits(0)
++        return f"{fr.numerator}/{fr.denominator}"
++    finally:
++        sys.set_int_max_str_digits(ancienne_limite)
+ 
+ 
+ def decrire(enc):
+@@ -371,10 +419,15 @@
+     if p >= 1.0:
+         return 0.0
+     if kmax <= 40:
++        # v2 : log C(n, j) par récurrence (somme de petits logarithmes), et non par la différence
++        # lgamma(n + 1) − lgamma(j + 1) − lgamma(n − j + 1), dont l'erreur absolue croît comme n log n.
+         lp, lq = math.log(p), math.log1p(-p)
+-        base = math.lgamma(n + 1)
+-        return min(1.0, sum(math.exp(base - math.lgamma(j + 1) - math.lgamma(n - j + 1) + j * lp + (n - j) * lq)
+-                            for j in range(kmax + 1)))
++        termes = []
++        log_comb = 0.0
++        for j in range(kmax + 1):
++            termes.append(math.exp(log_comb + j * lp + (n - j) * lq))
++            log_comb += math.log((n - j) / (j + 1))
++        return min(1.0, math.fsum(termes))
+     return beta_incomplete(n - kmax, kmax + 1.0, 1.0 - p)
+ 
+ 
+@@ -386,8 +439,20 @@
+ # Lois des scores (§ 4.2 du mandat de l'auteur) : construction gardée
+ # ---------------------------------------------------------------------------------------------------
+ 
++def _normaliser(obj):
++    """v2 : forme canonique d'une loi écrite. Tout nombre (entier ou rationnel lu du JSON) devient son
++    rationnel réduit : « 0 », « 0.0 » et « 0.00 » s'écrivent pareil, et la même loi suit la même voie."""
++    if isinstance(obj, dict):
++        return {cle: _normaliser(v) for cle, v in obj.items()}
++    if isinstance(obj, list):
++        return [_normaliser(v) for v in obj]
++    if isinstance(obj, (int, Fraction)) and not isinstance(obj, bool):
++        return "nombre:" + texte_fraction(Fraction(obj))
++    return obj
++
++
+ def canonique(spec):
+-    return json.dumps(spec, sort_keys=True, default=str, ensure_ascii=False)
++    return json.dumps(_normaliser(spec), sort_keys=True, default=str, ensure_ascii=False)
+ 
+ 
+ class LoiContinue:
+@@ -903,7 +968,7 @@
+         if (hi - lo) / 2 <= DEMI_LARGEUR_CIBLE or points >= POINTS_MAX:
+             break
+         points *= 2
+-    return lo - TOLERANCE_EVALUATION, hi + TOLERANCE_EVALUATION
++    return lo - tolerance_evaluation(n), hi + tolerance_evaluation(n)
+ 
+ 
+ def esperance_sf_rang_reseau(n, k, calib, cible, lecture_pour_condition=None):
+@@ -926,7 +991,7 @@
+                 continue
+             proba_condition += masse_s
+         esperance += masse_s * sf_en(cible, x, calib)
+-    borne = n * tronque + TOLERANCE_EVALUATION
++    borne = n * tronque + 2 * tolerance_evaluation(n)  # v2 : sommation par parties, deux erreurs de cumul
+     return esperance - borne, esperance + borne, proba_condition
+ 
+ 
+@@ -945,7 +1010,7 @@
+     atomes = cible.atomes()
+     tronque = max(0.0, 1.0 - sum(m for _x, m in atomes))
+     e = sum(m * max(0.0, phi(x) - phi_c) for x, m in atomes)
+-    return e - TOLERANCE_EVALUATION, e + tronque + TOLERANCE_EVALUATION
++    return e - tolerance_evaluation(n), e + tronque + tolerance_evaluation(n)
+ 
+ 
+ def _esperance_calibration_continue(n, k, calib, cible, plancher=None):
+@@ -1004,7 +1069,7 @@
+         if (hi - lo) / 2 <= DEMI_LARGEUR_CIBLE or points >= POINTS_MAX:
+             break
+         points *= 2
+-    return Encadre(borner_probabilite(lo - TOLERANCE_EVALUATION), borner_probabilite(hi + TOLERANCE_EVALUATION))
++    return Encadre(borner_probabilite(lo - tolerance_evaluation(n)), borner_probabilite(hi + tolerance_evaluation(n)))
+ 
+ 
+ def regle_moyenne_k(n, k, calib, lecture, saboteurs, convention):
+@@ -1077,8 +1142,8 @@
+         nb = grappes.tailles.count(m)
+         f_lo, _ = facteur(m, g_bas)
+         _, f_hi = facteur(m, g_haut)
+-        produit_lo *= max(0.0, f_lo - TOLERANCE_EVALUATION) ** nb
+-        produit_hi *= min(1.0, f_hi + TOLERANCE_EVALUATION) ** nb
++        produit_lo *= max(0.0, f_lo - tolerance_evaluation(grappes.n_total())) ** nb
++        produit_hi *= min(1.0, f_hi + tolerance_evaluation(grappes.n_total())) ** nb
+     return Encadre(borner_probabilite(1.0 - produit_hi), borner_probabilite(1.0 - produit_lo))
+ 
+ 
+@@ -1179,10 +1244,10 @@
+                 "population_de_calibration": t["population_de_calibration"],
+                 "portee_de_la_garantie": t["portee_de_la_garantie"]}
+     if garantie == "a tout instant":
+-        quantites, grandeur_valeur, ecarts = _recalcul_sequentiel(t, typ, params)
++        quantites, grandeur_valeur, ecarts, extras = _recalcul_sequentiel(t, typ, params)
+     else:
+         if typ in REGLES_SEQUENTIELLES: raise Refus("garantie_incoherente", f"règle séquentielle « {typ} » sous une garantie « {garantie} »")  # GARDE:garantie_incoherente
+-        quantites, grandeur_valeur, ecarts = _recalcul_a_seuil(t, typ, params, lois, grandeur)
++        quantites, grandeur_valeur, ecarts, extras = _recalcul_a_seuil(t, typ, params, lois, grandeur)
+     quantite_garantie = quantites["fausse_alerte_sur_horizon" if garantie == "a tout instant" else
+                                   ("taux_moyen" if garantie == "en moyenne" else "couverture")]
+     tenue = tenue_de_la_garantie(garantie, quantite_garantie, risque)
+@@ -1197,14 +1262,48 @@
+     for nom, q in quantites.items():
+         if isinstance(q, dict):
+             resultat[nom] = {cle: (None if v is None else decrire(v)) for cle, v in q.items()}
++    if extras["rang"] is not None:
++        resultat["rang_k_ieme_plus_grand"] = extras["rang"]
++    variante = extras["variante"]
++    issues = {"n_moins_1": issue}
++    if variante is not None:
++        tenue_n = tenue_de_la_garantie(garantie, variante["quantite_garantie"], risque)
++        issues["n"] = issue_du_temoin(t["id"], tenue_n, variante["ecarts"])
++        resultat["ecart_type_divise_par_n"] = dict(decrire(variante["valeur"]), tenue_de_la_garantie=tenue_n,
++                                                   issue_recalculee=issues["n"])
+     if "valeur_annoncee" in t:
+-        resultat["comparaison"] = comparer(valeur, t["valeur_annoncee"])
++        if variante is None:
++            resultat["comparaison"] = comparer(valeur, t["valeur_annoncee"])
++        else:
++            resultat["comparaison"] = comparer_deux_conventions(valeur, variante["valeur"], t["valeur_annoncee"])
+     if "issue_annoncee" in t:
+         resultat["issue_annoncee"] = t["issue_annoncee"]
+-        resultat["accord_issue"] = (t["issue_annoncee"] == issue)
++        resultat["accord_issue"] = t["issue_annoncee"] in issues.values()
++        if variante is not None:
++            resultat["accord_issue_par_convention"] = {c: t["issue_annoncee"] == i for c, i in issues.items()}
+     return resultat
+ 
+ 
++def comparer_deux_conventions(valeur_n_moins_1, valeur_n, annoncee):
++    """Remarque 10 de la v1 : l'écart type de l'échantillon divise par n − 1 ou par n, la lettre ne le dit
++    pas. La valeur annoncée est comparée aux deux ; la convention qui accorde est nommée, sans trancher."""
++    par = {"n_moins_1": comparer(valeur_n_moins_1, annoncee)}
++    par["n"] = comparer(valeur_n, annoncee)
++    accordent = [c for c in ("n_moins_1", "n") if par[c]["statut"] == "en_deca_de_0_001"]
++    indecises = [c for c in ("n_moins_1", "n") if par[c]["statut"] == "indecis_a_la_borne"]
++    if len(accordent) == 2:
++        nom = "les_deux"
++    elif accordent:
++        nom = accordent[0]
++    elif indecises:
++        nom = "indecise"
++    else:
++        nom = "aucune"
++    statut = "en_deca_de_0_001" if accordent else ("indecis_a_la_borne" if indecises else "au_dela_de_0_001")
++    return {"valeur_annoncee": par["n_moins_1"]["valeur_annoncee"], "statut": statut,
++            "convention_qui_accorde": nom, "par_convention": par}
++
++
+ def comparer(valeur, annoncee):
+     """§ 6, point 4 : un écart de plus de 0,001 est compté et nommé ; audit dans les deux sens."""
+     a = rationnel(annoncee, "valeur_annoncee")
+@@ -1225,7 +1324,7 @@
+     if typ not in REGLES_SEQUENTIELLES | {"jamais_alerter", "toujours_alerter"}: raise Refus("garantie_incoherente_seuil", f"règle « {typ} » sous une garantie « a tout instant »")  # GARDE:garantie_incoherente_seuil
+     suite = t.get("suite")
+     if not isinstance(suite, dict) or not {"taux_honnete", "horizon"} <= set(suite) or set(suite) - CLES_DE_SUITE: raise Refus("suite_absente", "garantie « a tout instant » : objet suite {taux_honnete, horizon[, taux_saboteur, taux_honnete_derive]} requis")  # GARDE:suite_absente
+-    horizon = entier(suite["horizon"], "horizon", 1)
++    horizon = taille(suite["horizon"], "horizon")
+     q = probabilite_ouverte(suite["taux_honnete"], "taux_honnete")
+     if typ == "test_repete_sans_correction":
+         alerte = predicat_test_repete(probabilite_ouverte(params["taux_nul"], "taux_nul"),
+@@ -1253,15 +1352,15 @@
+             probabilite_de_sonner(alerte, probabilite_ouverte(suite["taux_honnete_derive"], "taux_honnete_derive"), horizon))
+     if t["grandeur"] == "puissance":
+         if "puissance_contre_le_saboteur" not in quantites: raise Refus("puissance_sans_saboteur_sequentiel", "grandeur « puissance » sans taux_saboteur")  # GARDE:puissance_sans_saboteur_sequentiel
+-        return quantites, quantites["puissance_contre_le_saboteur"], []
++        return quantites, quantites["puissance_contre_le_saboteur"], [], {"rang": None, "variante": None}
+     if t["grandeur"] != "fausse_alerte_sur_horizon": raise Refus("grandeur_incoherente_sequentielle", f"grandeur « {t['grandeur']} » sous une garantie « a tout instant »")  # GARDE:grandeur_incoherente_sequentielle
+-    return quantites, fa, []
++    return quantites, fa, [], {"rang": None, "variante": None}
+ 
+ 
+ def _taille(t, requise):
+     n = t["n"]
+     if requise and n is None: raise Refus("taille_absente", "règle à échantillon de calibration sans taille n")  # GARDE:taille_absente
+-    return None if n is None else entier(n, "n", 1)
++    return None if n is None else taille(n, "n")
+ 
+ 
+ def _recalcul_a_seuil(t, typ, params, lois, grandeur):
+@@ -1283,7 +1382,7 @@
+     if typ == "plus_grand_de_la_tranche_voisine":
+         voisine = lois.get("voisine")
+         if not isinstance(voisine, dict) or set(voisine) != {"n", "loi"}: raise Refus("voisine_absente", "« plus grand de la tranche voisine » : lois.voisine {n, loi} requis")  # GARDE:voisine_absente
+-        n = entier(voisine["n"], "n de la tranche voisine", 1)
++        n = taille(voisine["n"], "n de la tranche voisine")
+         calib = construire_loi(voisine["loi"])
+         meme_loi = canonique(voisine["loi"]) == canonique(lois["lecture"])
+     quantites = {}
+@@ -1294,17 +1393,18 @@
+         if grandeur != "couverture" or t["garantie"] != "avec une confiance dite" or saboteurs: raise Refus("grappes_grandeur", "famille en grappes : seule la couverture (garantie « avec une confiance dite ») est calculée ici")  # GARDE:grappes_grandeur
+         quantites["couverture"] = couverture_grappes(calib, lecture)
+         quantites["taux_moyen"] = None
+-        return quantites, quantites["couverture"], []
++        return quantites, quantites["couverture"], [], {"rang": 1, "variante": None}
++    rang, variante = None, None
+     if typ in REGLES_DE_RANG or typ == "plus_grand_de_la_tranche_voisine":
+         k = k_de_la_regle(typ, params, n)
+-        quantites["rang_k_ieme_plus_grand"] = Encadre.exact(Fraction(k))
++        rang = k                                   # v2 : rendu en entier, hors des grandeurs encadrées
+         quantites["couverture"] = couverture_rang(n, k, calib, lecture, meme_loi)
+         quantites["taux_moyen"] = taux_moyen_rang(n, k, calib, lecture, meme_loi)
+-        for taille in t.get("tailles_de_plus") or []:
+-            taille = entier(taille, "tailles_de_plus", 1)
+-            k2 = k_de_la_regle(typ, params, taille)
+-            quantites[f"taux_moyen_n{taille}"] = taux_moyen_rang(taille, k2, calib, lecture, meme_loi)
+-            quantites[f"couverture_n{taille}"] = couverture_rang(taille, k2, calib, lecture, meme_loi)
++        for t_plus in t.get("tailles_de_plus") or []:
++            t_plus = taille(t_plus, "tailles_de_plus")
++            k2 = k_de_la_regle(typ, params, t_plus)
++            quantites[f"taux_moyen_n{t_plus}"] = taux_moyen_rang(t_plus, k2, calib, lecture, meme_loi)
++            quantites[f"couverture_n{t_plus}"] = couverture_rang(t_plus, k2, calib, lecture, meme_loi)
+         for nom, sab in saboteurs.items():
+             puissances[nom] = esperance_rang(n, k, calib, sab)
+             sachant[nom] = puissance_rang_sachant(n, k, calib, lecture, sab)
+@@ -1345,6 +1445,17 @@
+         for nom in saboteurs:
+             puissances[nom] = par_convention["n_moins_1"][2][nom]
+             sachant[nom] = None
++        # v2 (remarque 10) : la convention « divisé par n » est rendue en entier, pour la comparaison
++        puissances_n = par_convention["n"][2]
++        ecarts_n = [puissances_n[nom].moins(esperance_rang(n, 1, calib, sab)) for nom, sab in saboteurs.items()]
++        if puissances_n:
++            quantites["puissances_ecart_type_divise_par_n"] = dict(puissances_n)
++        if grandeur == "puissance" and len(puissances_n) == 1:
++            valeur_n = next(iter(puissances_n.values()))
++        else:
++            valeur_n = {"couverture": par_convention["n"][0], "taux_moyen": par_convention["n"][1]}.get(grandeur)
++        garantie_n = par_convention["n"][1] if t["garantie"] == "en moyenne" else par_convention["n"][0]
++        variante = {"valeur": valeur_n, "quantite_garantie": garantie_n, "ecarts": ecarts_n}
+     # écart de puissance à la base (le plus grand des n scores de calibration, même tirage)
+     if saboteurs and calib is not None and typ != "plus_grand_de_la_tranche_voisine":
+         for nom, sab in saboteurs.items():
+@@ -1367,13 +1478,112 @@
+         valeur = next(iter(puissances.values()))
+     else:
+         valeur = quantites[grandeur]
+-    return quantites, valeur, list(ecarts_base.values())
++    return quantites, valeur, list(ecarts_base.values()), {"rang": rang, "variante": variante}
++
+ 
++TAUX_VISE_DERIVE = Fraction(3, 100)        # v2 : la dérive de F fait passer le taux de 1 % à 3 %
++TOLERANCE_DERIVE = Fraction(1, 1000)       # v2 : tolérance absolue du contrôle, fixée par la mère
++CLES_DERIVE = {"valeur_transmise", "loi_de_la_tranche", "rang_de_la_cle", "tranche_associee_a_T09"}
++VERDICT_DERIVE_COHERENTE = "dérive cohérente"
++VERDICT_DERIVE_INCOHERENTE = "dérive incohérente : F écartée"
+ 
+-def recalculer(entree):
++
++def _lire_loi_transmise(x):
++    """La loi de la tranche, transmise par la correspondance en texte JSON (ou déjà en objet)."""
++    if isinstance(x, dict):
++        return x
++    if not isinstance(x, str):
++        return None
++    try:
++        return json.loads(x, parse_float=Fraction, parse_constant=_pas_de_constante)
++    except (ValueError, Refus):
++        return None
++
++
++def _lire_rationnel_transmis(x):
++    if isinstance(x, (int, Fraction)) and not isinstance(x, bool):
++        return Fraction(x)
++    if not isinstance(x, str):
++        return None
++    try:
++        return Fraction(x)
++    except (ValueError, ZeroDivisionError):
++        return None
++
++
++def controler_derive(bloc):
++    """v2 : contrôle de cohérence de la dérive de F (bloc `derive_de_F` de la correspondance du programme de
++    vérification v3). Sous la loi F de la tranche associée à T09, le seuil s a un taux vrai de 1 % avant la
++    dérive (P_F(X > s) = 0,01) ; la dérive translate la loi de d = δ × écart type de F (convention du type
++    `decalage`). Le taux vrai après la dérive est P_F(X > s − d) ; il doit valoir 3 % à 10⁻³ près.
++    Rendu exact pour δ = 0 ; sinon encadré (dichotomie sur s, tolérance d'évaluation)."""
++    if not isinstance(bloc, dict) or not CLES_DERIVE <= set(bloc): raise Refus("derive_forme", f"bloc derive_de_F : clés attendues {sorted(CLES_DERIVE)}")  # GARDE:derive_forme
++    delta = _lire_rationnel_transmis(bloc["valeur_transmise"])
++    if delta is None: raise Refus("derive_valeur", f"valeur transmise illisible : {bloc['valeur_transmise']!r}")  # GARDE:derive_valeur
++    tranche = bloc["tranche_associee_a_T09"]
++    if not isinstance(tranche, dict) or tranche.get("n_calibration_contient_299") is not True: raise Refus("derive_tranche", "la tranche associée à T09 doit être celle dont n_calibration contient 299")  # GARDE:derive_tranche
++    controle = bloc.get("controle")
++    if isinstance(controle, dict) and (_lire_rationnel_transmis(controle.get("taux_vise")) != TAUX_VISE_DERIVE or _lire_rationnel_transmis(controle.get("tolerance")) != TOLERANCE_DERIVE): raise Refus("derive_controle_different", "le contrôle transmis ne dit pas 3 % à 0,001 près")  # GARDE:derive_controle_different
++    spec = _lire_loi_transmise(bloc["loi_de_la_tranche"])
++    if spec is None: raise Refus("derive_loi_illisible", "loi de la tranche illisible")  # GARDE:derive_loi_illisible
++    loi = construire_loi(spec)
++    if not loi.continue_ or loi.grappes or loi.reseau: raise Refus("derive_loi_non_continue", "contrôle de dérive : loi continue requise (pas de réseau ni de grappes)")  # GARDE:derive_loi_non_continue
++    if delta == 0:
++        taux = Encadre.exact(ALPHA)
++    else:
++        d = float(delta) * loi.ecart_type()
++        s_bas, s_haut = _isf_continue(loi, float(ALPHA))
++        lo = loi.sf(s_haut - d)
++        hi = loi.sf(s_bas - d)
++        taux = Encadre(borner_probabilite(min(lo, hi) - TOLERANCE_EVALUATION),
++                       borner_probabilite(max(lo, hi) + TOLERANCE_EVALUATION))
++    bas, haut = float(TAUX_VISE_DERIVE - TOLERANCE_DERIVE), float(TAUX_VISE_DERIVE + TOLERANCE_DERIVE)
++    if taux.exacte is not None:
++        dedans = abs(taux.exacte - TAUX_VISE_DERIVE) <= TOLERANCE_DERIVE
++        verdict = VERDICT_DERIVE_COHERENTE if dedans else VERDICT_DERIVE_INCOHERENTE
++    elif float(taux.lo) >= bas and float(taux.hi) <= haut:
++        verdict = VERDICT_DERIVE_COHERENTE
++    elif float(taux.hi) < bas or float(taux.lo) > haut:
++        verdict = VERDICT_DERIVE_INCOHERENTE
++    else:
++        verdict = "indecise_a_la_borne"
++    return {"statut": "calcule", "verdict": verdict, "taux_apres_derive": decrire(taux),
++            "taux_vise": texte_fraction(TAUX_VISE_DERIVE), "tolerance_absolue": texte_fraction(TOLERANCE_DERIVE),
++            "decalage_transmis_en_ecarts_types": arrondi_decimal(delta),
++            "decalage_qui_triple_sous_cette_loi_en_ecarts_types": arrondi_decimal(decalage_qui_triple(loi)),
++            "loi_de_la_tranche": spec, "rang_de_la_cle": bloc["rang_de_la_cle"], "tranche_associee_a_T09": tranche}
++
++
++def _derive_dans_la_sortie(correspondance, entree):
++    if correspondance is None:
++        return {"statut": "non_transmise", "raison": "aucune correspondance donnée (--correspondance)"}
++    bloc = correspondance.get("derive_de_F") if isinstance(correspondance, dict) else None
++    if bloc is None:
++        return {"statut": "non_transmise", "raison": "la correspondance ne porte pas de bloc derive_de_F"}
++    if isinstance(bloc, dict) and bloc.get("statut", "lue") != "lue":
++        return {"statut": "non_lue_par_la_verification", "statut_transmis": bloc.get("statut")}
++    try:
++        res = controler_derive(bloc)
++    except Refus as refus:
++        return {"statut": "refuse", "code": refus.code, "raison": refus.message}
++    except (ArithmeticError, ValueError, RuntimeError) as erreur:
++        return {"statut": "refuse", "code": "erreur_numerique", "raison": f"{type(erreur).__name__} : {erreur}"}
++    # information : la loi de lecture de T09 dans l'entrée est-elle la dérive transmise ?
++    t09 = next((t for t in entree.get("temoins", []) if isinstance(t, dict) and t.get("id") == "T09"), None)
++    if t09 is not None and isinstance(t09.get("lois"), dict):
++        attendue = {"type": "decalage", "parametres": {"loi": res["loi_de_la_tranche"],
++                                                      "delta_en_ecarts_types": _lire_rationnel_transmis(bloc["valeur_transmise"])}}
++        res["accord_avec_la_lecture_de_T09"] = canonique(t09["lois"].get("lecture")) == canonique(attendue)
++    else:
++        res["accord_avec_la_lecture_de_T09"] = None
++    return res
++
++
++def recalculer(entree, correspondance=None):
+     if not isinstance(entree, dict) or set(entree) != {"version_entree", "temoins"} or entree["version_entree"] != VERSION_ENTREE_RECALCUL or not isinstance(entree["temoins"], list): raise Refus("version_entree", f"entrée attendue : {{\"version_entree\": \"{VERSION_ENTREE_RECALCUL}\", \"temoins\": […]}}")  # GARDE:version_entree
+     sortie = {"version_sortie": VERSION_SORTIE + "-recalcul", "alpha": texte_fraction(ALPHA),
+               "seuil_ecart": texte_fraction(SEUIL_ECART), "tolerance_evaluation_declaree": TOLERANCE_EVALUATION,
++              "pente_de_tolerance_declaree_par_episode": PENTE_TOLERANCE, "plafond_des_tailles": N_MAX,
+               "temoins": {}}
+     vus = set()
+     for t in entree["temoins"]:
+@@ -1385,13 +1595,25 @@
+             sortie["temoins"][cle] = recalculer_temoin(t)
+         except Refus as refus:
+             sortie["temoins"][cle] = {"id": ident, "statut": "refuse", "code": refus.code, "raison": refus.message}
+-    statuts = [v["statut"] for v in sortie["temoins"].values()]
+-    sortie["comptes"] = {"calcules": statuts.count("calcule"), "refuses": statuts.count("refuse"),
+-                         "ecarts_au_dela_de_0_001": sum(1 for v in sortie["temoins"].values()
+-                                                       if v.get("comparaison", {}).get("statut") == "au_dela_de_0_001"),
+-                         "ecarts_indecis_a_la_borne": sum(1 for v in sortie["temoins"].values()
+-                                                         if v.get("comparaison", {}).get("statut") == "indecis_a_la_borne"),
+-                         "desaccords_d_issue": sum(1 for v in sortie["temoins"].values() if v.get("accord_issue") is False)}
++        except (ArithmeticError, ValueError, RuntimeError) as erreur:
++            # v2 : dépassement, domaine, non-convergence : refus codé de ce seul témoin, le lot continue
++            sortie["temoins"][cle] = {"id": ident, "statut": "refuse", "code": "erreur_numerique",
++                                      "raison": f"{type(erreur).__name__} : {erreur}"}
++    temoins = sortie["temoins"]
++
++    def ids(condition):
++        return sorted(c for c, v in temoins.items() if condition(v))
++    au_dela = ids(lambda v: v.get("comparaison", {}).get("statut") == "au_dela_de_0_001")
++    indecis = ids(lambda v: v.get("comparaison", {}).get("statut") == "indecis_a_la_borne")
++    desaccords = ids(lambda v: v.get("accord_issue") is False)
++    refuses = ids(lambda v: v["statut"] == "refuse")
++    sortie["comptes"] = {"calcules": len(temoins) - len(refuses), "refuses": len(refuses),
++                         "ecarts_au_dela_de_0_001": len(au_dela), "ecarts_indecis_a_la_borne": len(indecis),
++                         "desaccords_d_issue": len(desaccords),
++                         # v2 (§ 6, point 4 : l'écart est compté ET nommé)
++                         "ids_ecarts_au_dela_de_0_001": au_dela, "ids_ecarts_indecis_a_la_borne": indecis,
++                         "ids_desaccords_d_issue": desaccords, "ids_refuses": refuses}
++    sortie["derive_de_F"] = _derive_dans_la_sortie(correspondance, entree)   # v2 : contrôle de la dérive
+     return sortie
+ 
+ 
+@@ -1566,7 +1788,7 @@
+     depuis("T04", False, libre, "P(Bin(1000, 0,01) >= 6)")
+     depuis("T06", False, libre, "1 − 0,99^200")
+     depuis("T08", False, libre, "rang : ⌈400 × 0,99⌉ = 396e plus petit = 5e plus grand ; P(Bin(400, 0,01) >= 5)",
+-           {"rang_k_ieme_plus_grand": Fraction(5)})
++           {"rang_k_ieme_plus_grand": rec["T08"]["rang_k_ieme_plus_grand"]})   # v2 : entier, lu du recalcul
+     # T05 et T07 : valeur et issue indépendantes de la loi ; puissances à la loi de référence binormale
+     for ident in ("T05", "T07"):
+         r = rec[ident]
+@@ -1592,7 +1814,7 @@
+              else "règle identique à la base, écart apparié nul par construction"))
+     delta = decalage_qui_triple(Normale(0, 1))
+     depuis("T09", True, "normale réduite (note, bloc D)", "couverture = 1 − (1 − P(X >= q99 + d))^299, d = q99 − q97 (décalage qui fait passer à 3 % le taux du quantile vrai à 99 %)",
+-           {"decalage_en_ecarts_types": delta}, True,
++           {"decalage_en_ecarts_types": arrondi_decimal(delta)}, True,
+            "le décalage est vers le haut (scores plus suspects à l'usage) : la lettre ne dit pas le sens ; lecture de la note")
+     depuis("T10", True, "effet de famille et bruit gaussiens, ρ = 0,2 (note, bloc E)",
+            "1 − (E_U[Φ((z99 − √ρ U)/√(1 − ρ))^100])^3", {}, True)
+@@ -1695,10 +1917,14 @@
+         if len(argv) == 3 and argv[0] == "--recalculer":
+             ecrire_json(recalculer(lire_json(argv[1])), argv[2])
+             return 0
++        if len(argv) == 5 and argv[0] == "--recalculer" and argv[3] == "--correspondance":
++            ecrire_json(recalculer(lire_json(argv[1]), lire_json(argv[4])), argv[2])
++            return 0
+     except Refus as refus:
+         print(f"REFUS {refus.code} : {refus.message}", file=sys.stderr)
+         return 3
+-    print("usage : PROGRAMME SORTIE_JSON | PROGRAMME --recalculer TEMOINS_JSON SORTIE_JSON", file=sys.stderr)
++    print("usage : PROGRAMME SORTIE_JSON | PROGRAMME --recalculer TEMOINS_JSON SORTIE_JSON "
++          "[--correspondance CORRESPONDANCE_JSON]", file=sys.stderr)
+     return 2
+ 
+ 

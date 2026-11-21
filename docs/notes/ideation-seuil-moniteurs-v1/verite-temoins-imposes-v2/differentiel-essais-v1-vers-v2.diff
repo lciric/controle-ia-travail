@@ -1,0 +1,360 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verite-temoins-mondes/test_verite_temoins_imposes_v1.py	2026-11-21 09:07:44.633739855 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verite-temoins-mondes-v2/test_verite_temoins_imposes_v2.py	2026-11-21 10:07:02.189951327 +0000
+@@ -1,20 +1,26 @@
+-"""Essais du programme de vérité des dix-sept témoins imposés — v1.
++"""Essais du programme de vérité des dix-sept témoins imposés — v2.
+ 
+ Développeur du programme de vérité des témoins imposés, modèle O.
+ 
+ Lancer : /home/user/controle-ia-travail/.venv/bin/python -B -m pytest -q -p no:cacheprovider CE_FICHIER
+ 
+-Quatre familles d'essais :
++Cinq familles d'essais :
+ 1. pour chaque forme de règle de la grammaire du § 4.3, un cas sain dont la valeur est calculée à la main
+    (le calcul est écrit en commentaire), et des artefacts refusés (règle R5) ;
+ 2. la table : T08 au rang juste, T12 du bon côté, T07 aux deux tailles, issues des dix-sept témoins ;
+ 3. l'accord, à 0,001 près, avec le programme de calcul de la note (`301c0f52…`), là où il calcule la même
+-   chose ; les valeurs de la note sont celles de sa sortie rejouée (`9b66cc78…`, voir le rapport) ;
+-4. les mutations : chaque garde retirée fait échouer son essai ; six mutations de calcul aussi.
++   chose ; les valeurs de la note sont celles de sa sortie rejouée (`9b66cc78…`, voir le rapport v1) ;
++4. les mutations : chaque garde retirée fait échouer son essai ; et vingt et une mutations de calcul : les
++   onze mutations de calcul de la v1, et dix de la v2, une par correction ;
++5. les corrections de la v2 : deux conventions d'écart type, erreur numérique refusée par témoin, plafond
++   des tailles, « 0 » et « 0.0 », identifiants dans les comptes, forme de la table, tolérance juste, le
++   rendu des rationnels exacts au-delà de 4 300 chiffres (trouvé en éprouvant le plafond), et le contrôle
++   de cohérence de la dérive de F en mode recalcul.
+ """
+ import math
+ import os
+ import re
++import sys
+ import tempfile
+ import types
+ from fractions import Fraction as F
+@@ -22,7 +28,7 @@
+ import pytest
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+-CHEMIN = os.path.join(ICI, "calculer_verite_temoins_imposes_v1.py")
++CHEMIN = os.path.join(ICI, "calculer_verite_temoins_imposes_v2.py")
+ with open(CHEMIN, encoding="utf-8") as _f:
+     SOURCE = _f.read()
+ 
+@@ -318,7 +324,9 @@
+     assert s["temoins"]["D"]["comparaison"]["statut"] == "en_deca_de_0_001"
+     assert s["temoins"]["D"]["issue_recalculee"] == "morte_invalide" and s["temoins"]["D"]["accord_issue"] is False
+     assert s["comptes"] == {"calcules": 3, "refuses": 1, "ecarts_au_dela_de_0_001": 1,
+-                            "ecarts_indecis_a_la_borne": 0, "desaccords_d_issue": 1}
++                            "ecarts_indecis_a_la_borne": 0, "desaccords_d_issue": 1,
++                            "ids_ecarts_au_dela_de_0_001": ["B"], "ids_ecarts_indecis_a_la_borne": [],
++                            "ids_desaccords_d_issue": ["D"], "ids_refuses": ["C"]}
+ 
+ 
+ def test_lecture_json_en_rationnels_et_ligne_de_commande():
+@@ -336,7 +344,7 @@
+         sortie = os.path.join(d, "sortie.json")
+         assert P.main(["--recalculer", entree, sortie]) == 0
+         res = P.lire_json(sortie)["temoins"]["Q"]
+-        assert res["quantites"]["rang_k_ieme_plus_grand"]["valeur"] == 5
++        assert res["rang_k_ieme_plus_grand"] == 5 and isinstance(res["rang_k_ieme_plus_grand"], int)
+         assert F(res["valeur_exacte"]) == P.queue_binomiale_exacte(400, F(1, 100), 5)
+         assert P.main(["--recalculer", entree, sortie]) == 3          # on n'écrase jamais
+         assert P.main(["--inconnu"]) == 2
+@@ -510,6 +518,19 @@
+ 
+ 
+ V = P.VERSION_ENTREE_RECALCUL
++LOI_F_TEXTE = '{"type": "normale", "parametres": {"mu": 0.25, "sigma": 1.0}}'
++
++
++def bloc_derive(valeur, loi_texte=LOI_F_TEXTE):
++    """Forme du bloc `derive_de_F` de la correspondance du programme de vérification v3 (entrée factice
++    `entree-recalcul-factice-saine-v3.json.correspondance.json`, `c35c4bc3…`)."""
++    return {"controle": {"critere": "le décalage triple le taux de 1 % sous la loi de la tranche associée à T09",
++                         "par": "le recalcul (programme de vérité), non ce programme", "taux_vise": "0.03",
++                         "tolerance": "0.001"},
++            "loi_de_la_tranche": loi_texte, "rang_de_la_cle": 2, "statut": "lue",
++            "tranche_associee_a_T09": {"n_calibration_contient_299": True, "rang": 2}, "valeur_transmise": valeur}
++
++
+ STUDENT1 = {"type": "student", "parametres": {"nu": 1, "mu": 0, "echelle": 1}}
+ LAPLACE = {"type": "laplace", "parametres": {"mu": 0, "echelle": 1}}
+ 
+@@ -578,6 +599,13 @@
+     "version_entree": lambda m: m.recalculer({"version_entree": "autre", "temoins": []}),
+     "identifiant_double": lambda m: m.recalculer({"version_entree": V, "temoins": [T(id="A"), T(id="A")]}),
+     "sortie_existante": lambda m: m.ecrire_json({}, CHEMIN),
++    "taille_au_dela_du_plafond": lambda m: m.recalculer_temoin(T(n=m.N_MAX + 1)),
++    "derive_forme": lambda m: m.controler_derive({"valeur_transmise": "0.5"}),
++    "derive_valeur": lambda m: m.controler_derive(bloc_derive("un demi")),
++    "derive_tranche": lambda m: m.controler_derive(dict(bloc_derive("0.5"), tranche_associee_a_T09={"n_calibration_contient_299": False, "rang": 0})),
++    "derive_controle_different": lambda m: m.controler_derive(dict(bloc_derive("0.5"), controle={"taux_vise": "0.02", "tolerance": "0.001"})),
++    "derive_loi_illisible": lambda m: m.controler_derive(bloc_derive("0.5", loi_texte="{normale")),
++    "derive_loi_non_continue": lambda m: m.controler_derive(bloc_derive("0.5", loi_texte='{"type": "arrondi", "parametres": {"loi": {"type": "normale", "parametres": {"mu": 0, "sigma": 1}}, "pas_de_grille": 0.5}}')),
+ }
+ 
+ GARDES = re.findall(r"# GARDE:(\w+)", SOURCE)
+@@ -704,6 +732,263 @@
+     ("ecart_a_la_base_calcule_en_flottants", "                ecarts_base[nom] = Encadre.exact(Fraction(0))\n",
+      "                ecarts_base[nom] = puissances[nom].moins(esperance_rang(n, 1, calib, sab))\n", _verif_ecart_structurel),
+ ]
++NOMS_MUTATIONS_V1 = [m[0] for m in MUTATIONS_DE_CALCUL]
++
++
++# ===================================================================================================
++# 5. Corrections de la v2 : un essai et une mutation par correction
++# ===================================================================================================
++
++def _moyenne_k(**kw):
++    return T(n=10, regle={"type": "moyenne_plus_k_ecarts_types", "k": 2}, garantie="en moyenne",
++             risque_ou_niveau=None, grandeur="taux_moyen", **kw)
++
++
++def _verif_deux_conventions(m):
++    r = m.recalculer_temoin(_moyenne_k())
++    v1, vn = r["valeur_vraie"], r["ecart_type_divise_par_n"]["valeur"]
++    assert abs(v1 - vn) > 0.003          # à n = 10, les deux conventions se séparent nettement
++    c = m.recalculer_temoin(dict(_moyenne_k(), valeur_annoncee=F(vn)))["comparaison"]
++    assert c["convention_qui_accorde"] == "n" and c["statut"] == "en_deca_de_0_001"
++    c = m.recalculer_temoin(dict(_moyenne_k(), valeur_annoncee=F(v1)))["comparaison"]
++    assert c["convention_qui_accorde"] == "n_moins_1" and c["statut"] == "en_deca_de_0_001"
++    c = m.recalculer_temoin(dict(_moyenne_k(), valeur_annoncee=F(1, 2)))["comparaison"]
++    assert c["convention_qui_accorde"] == "aucune" and c["statut"] == "au_dela_de_0_001"
++    assert set(c["par_convention"]) == {"n_moins_1", "n"}
++
++
++def test_ecart_type_deux_conventions_nommees():
++    _verif_deux_conventions(P)
++    r = P.recalculer_temoin(dict(_moyenne_k(), issue_annoncee="morte_invalide"))
++    assert set(r["accord_issue_par_convention"]) == {"n_moins_1", "n"}
++    assert r["accord_issue"] == any(r["accord_issue_par_convention"].values())
++
++
++LOGNORMALE_QUI_DEBORDE = decalage({"type": "lognormale", "parametres": {"mu": 1000, "sigma": 1}}, 1)
++
++
++def _verif_erreur_numerique(m):
++    # l'écart type d'une lognormale de mu = 1000 déborde (exp(2001)) : OverflowError sur ce seul témoin
++    s = m.recalculer({"version_entree": V, "temoins": [
++        T(id="deborde", lois={"calibration": N01, "lecture": LOGNORMALE_QUI_DEBORDE}), T(id="sain", n=299)]})
++    assert s["temoins"]["deborde"]["statut"] == "refuse" and s["temoins"]["deborde"]["code"] == "erreur_numerique"
++    assert "OverflowError" in s["temoins"]["deborde"]["raison"]
++    assert s["temoins"]["sain"]["statut"] == "calcule"
++    assert s["comptes"]["ids_refuses"] == ["deborde"]
++
++
++def test_erreur_numerique_refusee_pour_ce_seul_temoin():
++    _verif_erreur_numerique(P)
++    with pytest.raises(OverflowError):        # l'erreur est bien numérique, et vient du calcul du témoin
++        P.recalculer_temoin(T(lois={"calibration": N01, "lecture": LOGNORMALE_QUI_DEBORDE}))
++
++
++def _verif_plafond_exact(m):
++    # cas sain au plafond, voie exacte : 1 − 0,99^N_MAX ; le dénominateur a 2 N_MAX + 1 chiffres
++    r = m.recalculer_temoin(T(n=m.N_MAX))
++    valeur = F(r["valeur_exacte"]) if len(r["valeur_exacte"]) < 4300 else None
++    if valeur is None:
++        ancienne = sys.get_int_max_str_digits()
++        sys.set_int_max_str_digits(0)
++        try:
++            valeur = F(r["valeur_exacte"])
++        finally:
++            sys.set_int_max_str_digits(ancienne)
++    assert valeur == 1 - F(99, 100) ** m.N_MAX
++
++
++def test_plafond_des_tailles():
++    assert P.N_MAX >= 2000
++    _verif_plafond_exact(P)
++    # voie flottante à n = 2 000 : les encadrements contiennent les valeurs exactes 1 − 0,99^2000 et 1/2001
++    r = P.recalculer_temoin(T(n=2000, lois={"calibration": N01, "lecture": decalage(N01, 0)}))
++    assert abs(r["valeur_vraie"] - float(1 - F(99, 100) ** 2000)) <= r["borne_erreur"] + 1e-12
++    tm = r["quantites"]["taux_moyen"]
++    assert abs(tm["valeur"] - 1 / 2001) <= tm["borne_erreur"] + 1e-12
++    # artefacts : chaque taille au-delà du plafond est refusée, avec son code
++    au_dela = P.N_MAX + 1
++    for t in (T(n=au_dela),
++              T(regle={"type": "plus_grand_de_la_tranche_voisine"}, n=None, lois={"lecture": N01, "voisine": {"n": au_dela, "loi": N01}}),
++              SEQ(suite={"taux_honnete": F(1, 5), "horizon": au_dela}),
++              dict(T(), tailles_de_plus=[au_dela])):
++        with pytest.raises(P.Refus) as e:
++            P.recalculer_temoin(t)
++        assert e.value.code == "taille_au_dela_du_plafond"
++
++
++def _verif_zero(m):
++    # « 0.0 » et « 1.0 » lus du JSON sont des rationnels ; « 0 » et « 1 » des entiers : même loi, voie exacte
++    lecture = {"type": "normale", "parametres": {"mu": F(0), "sigma": F(1)}}
++    r = m.recalculer_temoin(T(n=300, regle={"type": "k_ieme_plus_grand", "k": 3}, lois={"calibration": N01, "lecture": lecture}))
++    assert r["mode"] == "exact_rationnel"
++    assert F(r["quantites"]["taux_moyen"]["valeur_exacte"]) == F(3, 301)
++
++
++def test_zero_et_zero_virgule_zero():
++    _verif_zero(P)
++    with tempfile.TemporaryDirectory(dir=ICI) as d:
++        chemin = os.path.join(d, "loi.json")
++        with open(chemin, "w", encoding="utf-8") as f:
++            f.write('[{"type": "normale", "parametres": {"mu": 0, "sigma": 1}}, '
++                    '{"type": "normale", "parametres": {"mu": 0.0, "sigma": 1.00}}]')
++        a, b = P.lire_json(chemin)
++    assert isinstance(a["parametres"]["mu"], int) and isinstance(b["parametres"]["mu"], F)
++    assert P.canonique(a) == P.canonique(b)
++    # une loi différente reste différente, et suit la voie encadrée
++    assert P.canonique(a) != P.canonique(normale(F(1, 2)))
++    r = P.recalculer_temoin(T(n=300, lois={"calibration": N01, "lecture": normale(F(1, 2))}))
++    assert r["mode"] == "flottant_borne"
++
++
++def _verif_ids(m):
++    s = m.recalculer({"version_entree": V, "temoins": [dict(T(id="B", n=299), valeur_annoncee=F(9525, 10000)),
++                                                         dict(T(id="A", n=299), valeur_annoncee=F(9505, 10000))]})
++    assert s["comptes"]["ids_ecarts_au_dela_de_0_001"] == ["B"]
++    assert s["comptes"]["ecarts_au_dela_de_0_001"] == 1
++
++
++def test_comptes_nomment_les_identifiants():
++    _verif_ids(P)
++
++
++def _table_ecrite(m):
++    with tempfile.TemporaryDirectory(dir=ICI) as d:
++        chemin = os.path.join(d, "table.json")
++        assert m.main([chemin]) == 0
++        return P.lire_json(chemin)
++
++
++@pytest.fixture(scope="module")
++def table_ecrite():
++    return _table_ecrite(P)
++
++
++def _verif_rang_T08(m, table=None):
++    v = (table or _table_ecrite(m))["temoins"]["T08"]["valeurs_de_plus"]["rang_k_ieme_plus_grand"]
++    assert isinstance(v, int)
++
++
++def _verif_decalage_T09(m, table=None):
++    v = (table or _table_ecrite(m))["temoins"]["T09"]["valeurs_de_plus"]["decalage_en_ecarts_types"]
++    assert isinstance(v, F) and (v * 10 ** P.DECIMALES).denominator == 1
++
++
++def test_forme_de_la_table(table_ecrite):
++    _verif_rang_T08(P, table_ecrite)
++    _verif_decalage_T09(P, table_ecrite)
++    assert table_ecrite["version_sortie"] == "verite-temoins-imposes-seuil-et-moniteurs-v2"
++
++
++def test_en_tete_compte_les_mutations():
++    assert "vingt et une mutations de calcul" in __doc__ and "onze mutations de calcul de la v1" in __doc__
++    assert "dix de la v2" in __doc__
++    assert len(MUTATIONS_DE_CALCUL) == 21 and len(NOMS_MUTATIONS_V1) == 11
++    assert [m[0] for m in MUTATIONS_DE_CALCUL[:11]] == NOMS_MUTATIONS_V1
++
++
++def _cdf_exacte(n, p, kmax):
++    fr = F(p)
++    a, b = fr.numerator, fr.denominator
++    s = sum(math.comb(n, j) * a ** j * (b - a) ** (n - j) for j in range(kmax + 1))
++    return F(s, b ** n)
++
++
++# points de la mesure (lectures/mesurer_tolerance_v2.py) où l'erreur flottante dépasse 1e-12
++POINTS_AU_DELA_DE_1E_12 = [(5000, 500, 0.1), (5000, 100, 0.02)]
++
++
++def _verif_tolerance(m):
++    for n, kmax, p in POINTS_AU_DELA_DE_1E_12:
++        assert abs(m.binomiale_cdf_flottante(n, p, kmax) - float(_cdf_exacte(n, p, kmax))) <= m.tolerance_evaluation(n)
++
++
++def _verif_petit_k(m):
++    # voie à petit k resserrée : à n = 2 000, k − 1 = 5, p = 0,001, la v1 errait de 1,1e-12
++    assert abs(m.binomiale_cdf_flottante(2000, 0.001, 5) - float(_cdf_exacte(2000, 0.001, 5))) <= 1e-13
++
++
++def test_tolerance_juste():
++    _verif_tolerance(P)
++    _verif_petit_k(P)
++    erreurs = [abs(P.binomiale_cdf_flottante(n, p, k) - float(_cdf_exacte(n, p, k))) for n, k, p in POINTS_AU_DELA_DE_1E_12]
++    assert max(erreurs) > 1e-12                       # la tolérance fixe de la v1 ne suffisait pas
++    assert P.tolerance_evaluation(500) == 1e-12       # jusqu'à n = 500, rien ne change (table inchangée)
++    assert P.tolerance_evaluation(2000) >= 3 * 1.1e-12
++    # la voie à petit k redonne exactement la v1 pour k − 1 = 0 (la base, T05 et T07 de la table)
++    for n, p in ((200, 0.003), (299, 0.01), (2000, 0.0005)):
++        v1 = min(1.0, sum(math.exp(math.lgamma(n + 1) - math.lgamma(1) - math.lgamma(n + 1) + 0 * math.log(p) + n * math.log1p(-p)) for _ in range(1)))
++        assert P.binomiale_cdf_flottante(n, p, 0) == v1
++
++
++Z97 = 1.8807936081512509   # quantile normal à 97 % (tables)
++
++
++def _verif_derive(m):
++    # Décalage juste : sous une normale, δ = z99 − z97 en écarts types ; au seuil q99, le taux après la dérive
++    # est Φ̄(z99 − δ) = Φ̄(z97) = 0,03 (la moyenne 0,25 de la tranche n'y change rien : translation).
++    juste = m.controler_derive(bloc_derive(f"{Z99 - Z97:.12f}"))
++    assert juste["verdict"] == "dérive cohérente"
++    assert abs(juste["taux_apres_derive"]["valeur"] - 0.03) < 1e-9
++    # Décalage faux : δ = 0,5 ; taux Φ̄(z99 − 0,5), à plus de 10⁻³ de 3 %.
++    faux = m.controler_derive(bloc_derive("0.5"))
++    assert faux["verdict"] == "dérive incohérente : F écartée"
++    assert abs(faux["taux_apres_derive"]["valeur"] - phibar(Z99 - 0.5)) < 1e-9
++    assert abs(phibar(Z99 - 0.5) - 0.03) > 0.001
++
++
++def test_derive_de_F_juste_fausse_et_hors_moteur():
++    _verif_derive(P)
++    # Laplace (0, 1) : q99 = ln 50 ; translation d = δ √2 ; taux après dérive = ½ e^{−(ln 50 − d)} = 0,01 e^d.
++    # δ = ln 3 / √2 donne exactement 0,03.
++    laplace = '{"type": "laplace", "parametres": {"mu": 0, "echelle": 1}}'
++    r = P.controler_derive(bloc_derive(f"{math.log(3) / math.sqrt(2):.15f}", loi_texte=laplace))
++    assert r["verdict"] == "dérive cohérente" and abs(r["taux_apres_derive"]["valeur"] - 0.03) < 1e-12
++    # δ = 0 : voie exacte, le taux reste 1 %
++    r = P.controler_derive(bloc_derive("0"))
++    assert r["taux_apres_derive"]["valeur_exacte"] == "1/100" and r["verdict"] == "dérive incohérente : F écartée"
++    # loi hors moteur : refus codé dans la sortie du recalcul, le lot continue
++    couple = '{"type": "couple", "parametres": {}}'
++    s = P.recalculer({"version_entree": V, "temoins": [T(id="sain", n=299)]}, {"derive_de_F": bloc_derive("0.5", loi_texte=couple)})
++    assert s["derive_de_F"]["statut"] == "refuse" and s["derive_de_F"]["code"] == "loi_hors_moteur"
++    assert s["temoins"]["sain"]["statut"] == "calcule"
++    # sans correspondance : dit « non transmise », jamais un silence
++    assert P.recalculer({"version_entree": V, "temoins": []})["derive_de_F"]["statut"] == "non_transmise"
++    # bout en bout, en ligne de commande, avec l'accord à la lecture de T09
++    delta = F("0.5")
++    t09 = T(id="T09", n=299, lois={"calibration": normale(F(1, 4)), "lecture": decalage(normale(F(1, 4)), delta)})
++    with tempfile.TemporaryDirectory(dir=ICI) as d:
++        import json as _json
++        entree, corr, sortie = (os.path.join(d, x) for x in ("e.json", "c.json", "s.json"))
++        with open(entree, "w", encoding="utf-8") as f:
++            f.write(_json.dumps({"version_entree": V, "temoins": [t09]}, default=lambda x: float(x)))
++        with open(corr, "w", encoding="utf-8") as f:
++            f.write(_json.dumps({"derive_de_F": bloc_derive("0.5")}))
++        assert P.main(["--recalculer", entree, sortie, "--correspondance", corr]) == 0
++        res = P.lire_json(sortie)["derive_de_F"]
++    assert res["verdict"] == "dérive incohérente : F écartée" and res["accord_avec_la_lecture_de_T09"] is True
++
++
++MUTATIONS_DE_CALCUL += [
++    ("deux_conventions_confondues", '    par["n"] = comparer(valeur_n, annoncee)\n',
++     '    par["n"] = par["n_moins_1"]\n', _verif_deux_conventions),
++    ("erreur_numerique_arrete_le_lot", "        except (ArithmeticError, ValueError, RuntimeError) as erreur:\n",
++     "        except () as erreur:\n", _verif_erreur_numerique),
++    ("zero_et_zero_virgule_zero_separes", "    return json.dumps(_normaliser(spec), sort_keys=True, default=str, ensure_ascii=False)\n",
++     "    return json.dumps(spec, sort_keys=True, default=str, ensure_ascii=False)\n", _verif_zero),
++    ("comptes_sans_identifiants", '"ids_ecarts_au_dela_de_0_001": au_dela,', '"ids_ecarts_au_dela_de_0_001": [],', _verif_ids),
++    ("rang_de_T08_en_rationnel", '{"rang_k_ieme_plus_grand": rec["T08"]["rang_k_ieme_plus_grand"]}',
++     '{"rang_k_ieme_plus_grand": Fraction(rec["T08"]["rang_k_ieme_plus_grand"])}', _verif_rang_T08),
++    ("decalage_de_T09_non_arrondi", '{"decalage_en_ecarts_types": arrondi_decimal(delta)}',
++     '{"decalage_en_ecarts_types": delta}', _verif_decalage_T09),
++    ("pente_de_tolerance_nulle", "PENTE_TOLERANCE = 2e-15", "PENTE_TOLERANCE = 0.0", _verif_tolerance),
++    ("petit_k_par_difference_de_log_gamma", "            termes.append(math.exp(log_comb + j * lp + (n - j) * lq))\n",
++     "            termes.append(math.exp(math.lgamma(n + 1) - math.lgamma(j + 1) - math.lgamma(n - j + 1) + j * lp + (n - j) * lq))\n",
++     _verif_petit_k),
++    ("rationnel_exact_au_dela_de_4300_chiffres", "        sys.set_int_max_str_digits(0)\n", "        pass\n",
++     _verif_plafond_exact),
++    ("derive_dans_le_mauvais_sens", "        lo = loi.sf(s_haut - d)\n        hi = loi.sf(s_bas - d)\n",
++     "        lo = loi.sf(s_haut + d)\n        hi = loi.sf(s_bas + d)\n", _verif_derive),
++]
+ 
+ 
+ @pytest.mark.parametrize("nom,ancien,nouveau,verif", MUTATIONS_DE_CALCUL, ids=[m[0] for m in MUTATIONS_DE_CALCUL])
