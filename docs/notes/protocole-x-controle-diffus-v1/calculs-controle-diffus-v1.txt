@@ -1,0 +1,141 @@
+Calculs de la note sur « Diffuse AI Control on Fuzzy Tasks » : changer de programme ou contre-attaquer — v1
+Lois exactes et quadratures déterministes ; aucun tirage ; entrées marquées [imprimé] ou [supposé].
+
+====================================================================================================
+BLOC A — La condition de Hebbar en formule : ce que l'accumulation exige de la référence honnête
+====================================================================================================
+Modèle [supposé] : score de suspicion par action, honnête N(0,1) ; action sabotée N(d,1) ;
+une part p des actions est sabotée ; la moyenne honnête n'est connue qu'à s près.
+Niveau 0.01 unilatéral, puissance 0.90 : z = 2.3263 + 1.2816.
+
+A1. Écart standardisé d = sqrt(2) * Phi^-1(aire) :
+    aire 0.600 -> d = 0.358   moniteur faible [supposé]
+    aire 0.630 -> d = 0.469   sonde sur l'organisme de sous-rendement en mathématiques [imprimé : Hollinsworth et al., 2610.12445v1, p. 9]
+    aire 0.770 -> d = 1.045   meilleur auditeur de code, par dépôt [imprimé : Gan et al., 2604.16286v2, p. 1]
+    aire 0.959 -> d = 2.460   sonde interne non publiée, 16 exemples, sans adversaire [imprimé : Gan et al., p. 24]
+    aire 0.988 -> d = 3.192   sondes sur sabotage concentré d'agent [imprimé : Hollinsworth et al., p. 1]
+
+A2. Actions nécessaires selon l'erreur s de la référence (en écarts types) ; « jamais » = aucun horizon ne suffit.
+    aire    p      p*d       s=0.00      s=0.02      s=0.05      s=0.10      s=0.20     
+    0.600   0.50   0.1791    411         520         790         2102        jamais     
+    0.600   0.10   0.0358    10182       52167       jamais      jamais      jamais     
+    0.600   0.02   0.0072    253732      jamais      jamais      jamais      jamais     
+    0.630   0.50   0.2347    241         288         390         732         11049      
+    0.630   0.10   0.0469    5952        18074       jamais      jamais      jamais     
+    0.630   0.02   0.0094    147977      jamais      jamais      jamais      jamais     
+    0.770   0.50   0.5224    53          57          64          80          137        
+    0.770   0.10   0.1045    1234        1887        4535        668254      jamais     
+    0.770   0.02   0.0209    30033       1.6e+07     jamais      jamais      jamais     
+    0.959   0.50   1.2298    13          13          14          15          18         
+    0.959   0.10   0.2460    254         301         400         721         7272       
+    0.959   0.02   0.0492    5602        15907       jamais      jamais      jamais     
+    0.988   0.50   1.5960    9           10          10          11          12         
+    0.988   0.10   0.3192    166         188         233         350         1184       
+    0.988   0.02   0.0638    3414        7239        72624       jamais      jamais     
+
+A3. Fausse alarme d'un test qui croit sa référence exacte, quand elle est décalée de s (modèle honnête) :
+    n          s=0.02     s=0.05     s=0.10    
+    100        0.0167     0.0339     0.0924    
+    1000       0.0451     0.2281     0.7984    
+    10000      0.3721     0.9962     1.0000    
+    100000     1.0000     1.0000     1.0000    
+    Plus on accumule, plus la fausse alarme est certaine : c'est « no amount of mildly suspicious actions is enough ».
+
+A4. Référence estimée sur m actions honnêtes (s = 0) : excès minimal visible à horizon infini = (z_a+z_b)/sqrt(m).
+    m        p*d minimal  p minimal si aire 0,77       p minimal si aire 0,959     
+    100      0.3608       0.3453                       0.1467                      
+    1000     0.1141       0.1092                       0.0464                      
+    10000    0.0361       0.0345                       0.0147                      
+    100000   0.0114       0.0109                       0.0046                      
+    L'horizon au-delà de m n'achète rien : c'est la règle « horizon au plus m » d'une accumulation.
+
+A5. Paires agent / jumeau sur la même tâche (référence annulée si le jumeau vaut l'honnête) : paires nécessaires.
+    aire    p      rho=0.0     rho=0.5     rho=0.8      (sans paire, s=0)
+    0.770   0.50   100         53          24           53
+    0.770   0.10   2426        1234        518          1234
+    0.770   0.02   59840       30033       12148        30033
+    0.959   0.50   22          13          7            13
+    0.959   0.10   471         254         123          254
+    0.959   0.02   10983       5602        2369         5602
+
+Contrôles A : aire 0,5 -> d = 0 ; s = p*d -> jamais ; s = 0 -> fausse alarme = niveau ; rho = 0,5 -> même n. Tenus.
+
+====================================================================================================
+BLOC B — Le banc du papier, d'après ses chiffres imprimés (2606.08892v3)
+====================================================================================================
+B1. Variance de la vérité approchée [imprimé : figure 9, p. 19] : générateur 127, tâche 29, tirage du générateur 9, bruit du juge 20 ; somme 185 (imprimée : 186).
+    Parts : 68.6 %, 15.7 %, 4.9 %, 10.8 % (imprimées, figure 3, p. 5 : 68, 16, 5, 11).
+B2. À générateur et tâche fixés, une lecture de la vérité approchée a un écart type de 5.39 points ;
+    part due au seul bruit du juge : 69 %.
+    1 lecture(s) moyennée(s) : fiabilité 0.31, corrélation plafond d'un lecteur parfait du produit 0.56.
+    2 lecture(s) moyennée(s) : fiabilité 0.47, corrélation plafond d'un lecteur parfait du produit 0.69.
+    4 lecture(s) moyennée(s) : fiabilité 0.64, corrélation plafond d'un lecteur parfait du produit 0.80.
+    8 lecture(s) moyennée(s) : fiabilité 0.78, corrélation plafond d'un lecteur parfait du produit 0.88.
+    À générateur fixé, tâches variées : fiabilité 0.66, plafond 0.81.
+B3. Attaque publiée [imprimé : figure 1, p. 2 ; figure 4, p. 6] : vérité approchée 70.7 -> 34.7 (chute 36.0), juge faible 80.8 -> 85.3 ; marge eps = 3.6.
+    En écarts types d'une lecture à tâche fixée : 6.7 ; aire sous la courbe d'UNE lecture de la vérité approchée sur UN produit : 0.999999.
+    Avec la dispersion propre au modèle fort, tâches variées [imprimé : figure 9, bas gauche, p. 19, lue sur image : 59] : écart type 7.68, chute de 4.7 écarts types.
+    Le produit saboté n'est pas subtil pour qui a la vérité : la difficulté est l'oracle absent, non l'indice faible.
+    Rapport des écarts d'un moniteur d'aire 0,959 et d'un moniteur d'aire 0,77 : 2.35.
+B4. Sous un juge durci, il reste au plus de l'ordre de eps = 3.6 points : 0.67 écart type par produit ; le voir demanderait 30 lectures de vérité.
+B5. Prix imprimé du juge durci chez un modèle honnête : environ 75 au lieu d'environ 80 (p. 8), soit de l'ordre de 6 %.
+B6. Reconstruire leurs tâches [imprimé : README du dépôt public, copie empreintée] : environ 5 USD par article.
+       32 articles : environ    160 USD (hors générations et notations des essais).
+      128 articles : environ    640 USD (hors générations et notations des essais).
+      302 articles : environ   1510 USD (hors générations et notations des essais).
+     2642 articles : environ  13210 USD (hors générations et notations des essais).
+Contrôles B : somme des termes imprimés = 185 pour 186 imprimé (arrondis) ; eps = 3,6 retrouvé. Tenus.
+
+====================================================================================================
+BLOC C — Dire « cet adaptateur sabote » contre des adaptateurs bénins de même recette : nombre de témoins
+====================================================================================================
+Modèle [supposé] : la lecture moyenne d'un adaptateur bénin j vaut mu + u_j, u_j ~ N(0, tau^2) (recette, graine) ;
+l'adaptateur saboteur est déplacé de theta. Épreuve : est-il hors de l'intervalle de prédiction de K témoins bénins,
+au niveau 0.01 unilatéral ? (Le bruit d'échantillonnage sigma^2/n des produits s'ajoute à tau^2 ; ici n grand.)
+
+    K    t critique theta/tau=2    theta/tau=3    theta/tau=5    theta/tau=8   
+    2    31.821      0.041         0.061         0.102         0.163        
+    3    6.965       0.076         0.143         0.324         0.621        
+    5    3.747       0.147         0.325         0.745         0.986        
+    8    2.998       0.215         0.484         0.922         1.000        
+    12   2.718       0.263         0.579         0.968         1.000        
+    20   2.539       0.304         0.652         0.986         1.000        
+    30   2.462       0.326         0.687         0.991         1.000        
+    inf  2.326       0.372          0.750          0.996          1.000          (référence connue)
+
+    Lecture : avec deux témoins, la puissance ne dépasse pas 0,17 même à huit écarts ; avec trois, 0,63 ;
+    il faut huit témoins pour voir un déplacement de cinq écarts neuf fois sur dix, quel que soit le nombre de produits lus.
+Contrôles C : t critiques de Student retrouvés (31,821 ; 6,965 ; 2,998 ; 2,539) ; theta = 0 -> niveau. Tenus.
+
+====================================================================================================
+BLOC D — Exclure l'attaque déjà publiée ne prouve rien : pente minimale d'une lecture ajoutée à la note
+====================================================================================================
+Note composée [supposé] : w' = (1-lam) * w + lam * q, où q suit la vérité entre politiques avec une pente kappa.
+L'attaque publiée sort de la bande de largeur eps dès que (1-lam)*(w_max - w_att) + lam*kappa*(g_max - g_att) > eps.
+[imprimé] w_max = 88.4, w_att = 85.3 (écart 3.1), eps = 3.6 ; g_att = 34.7 ; g des meilleures notes faibles : 77 à 81 (p. 5).
+    lam    kappa min (g_max=77)   kappa min (g_max=81)  
+    0.25   0.121                  0.110                 
+    0.50   0.097                  0.089                 
+    0.75   0.089                  0.081                 
+    1.00   0.085                  0.078                 
+    Une lecture qui ne suit qu'un dixième de l'écart de vérité suffit : un succès contre l'attaque d'origine est acquis d'avance,
+    comme pour le juge-détecteur du papier (p. 25-26), cassé ensuite par l'attaque refaite. Seule l'attaque refaite compte.
+Contrôle D : lam = 1 -> kappa min = eps / écart de vérité = 0.085. Tenu.
+
+====================================================================================================
+BLOC E — La part sue du dommage : combien de produits de basse qualité confirmée faut-il lire
+====================================================================================================
+Sur des produits de basse qualité confirmée par la vérité, une seconde lecture marque « su » : une part t chez le saboteur,
+une part f chez l'honnête qui échoue autant. Décision sur la borne basse de t / sqrt(f) (bornes exactes à 95 % chacune).
+Couples (t, f) [supposés], sauf le second, repris de comptes imprimés d'un moniteur de texte (9/14 et 1/35).
+    (t ; f)          t/sqrt(f)  N=50      N=100     N=300     N=500     N=1000   
+    (0.600 ; 0.050)  2.68       1.36      1.60      2.00      2.14      2.29      
+    (0.643 ; 0.029)  3.80       1.70      2.01      2.62      2.90      3.11      
+    (0.300 ; 0.050)  1.34       0.56      0.70      0.93      1.01      1.10      
+    (0.500 ; 0.200)  1.12       0.67      0.79      0.92      0.96      1.01      
+    (0.200 ; 0.100)  0.63       0.25      0.34      0.45      0.48      0.52      
+    Lecture : il faut de l'ordre de 300 à 500 produits de chaque sorte pour tenir une borne basse de 2 quand le vrai rapport vaut 2,7 ;
+    à 50 de chaque sorte, même un rapport de 3,8 n'est pas tenu.
+Contrôles E : 0 sur 35 -> borne haute = 1 - 0,05^(1/35) = 0.0820 ; 14 sur 14 -> borne basse = 0.8074. Tenus.
+
+FIN — toutes les assertions tenues.
