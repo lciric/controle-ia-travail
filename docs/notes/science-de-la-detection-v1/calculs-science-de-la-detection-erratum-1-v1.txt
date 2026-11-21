@@ -1,0 +1,84 @@
+Calculs de l'erratum 1 de la note « science de la détection » : règle « moniteur invalide » corrigée.
+Lois exactes et formules fermées, aucun tirage, aucune donnée du programme. Entrées : suppositions d'illustration. Non contre-lu.
+
+[A] Deux lectures de « moyenne de rapports, multipliée d'audit en audit ».
+    Le rapport d'un audit est affine en son taux : la moyenne des rapports EST le rapport au taux moyen.
+      v1, cinq taux (1,25 à 5)               : taux moyen 2.5500 fois le taux acceptable ; écart entre les deux écritures 0.0e+00
+        produit des moyennes : aucun taux réel sous 1.6799 fois le taux acceptable ne fait croître la richesse
+        moyenne des produits (mélange) : bande sans croissance jusqu'à 1.1209 fois ; pente limite de l'excès 0.01209 par épisode
+      seize taux (1,25 à 5, pas 0,25)        : taux moyen 3.1250 fois le taux acceptable ; écart entre les deux écritures 1.1e-16
+        produit des moyennes : aucun taux réel sous 1.9118 fois le taux acceptable ne fait croître la richesse
+        moyenne des produits (mélange) : bande sans croissance jusqu'à 1.1209 fois ; pente limite de l'excès 0.01209 par épisode
+      descendante, douze taux (1 + 4/2^j)    : taux moyen 1.6665 fois le taux acceptable ; écart entre les deux écritures 1.1e-16
+        produit des moyennes : aucun taux réel sous 1.3093 fois le taux acceptable ne fait croître la richesse
+        moyenne des produits (mélange) : bande sans croissance jusqu'à 1.0010 fois ; pente limite de l'excès 0.00010 par épisode
+    Le programme de la note v1 calculait le mélange ; sa phrase se lisait aussi comme le produit des moyennes.
+
+[B] Borne garantie de l'excès avant l'annonce (théorème de la re-dérivation, réimplémenté ici) :
+    avec probabilité >= 1 - beta, pour tout m avant l'annonce et m <= n : (endommagés non signalés) - rho0 m < borne.
+    rho0 = 0.10, alpha = 0.05, beta = 0.10. Entre parenthèses : valeur publiée par la re-dérivation.
+      v1, cinq taux (1,25 à 5)               audit 0.05 : n =  1000 :   302.3 ; n =  4000 :   540.1 ; n = 16000 :   988.3
+      v1, cinq taux (1,25 à 5)               audit 0.20 : n =  1000 :   130.0 ; n =  4000 :   238.3 ; n = 16000 :   465.5
+      seize taux (1,25 à 5, pas 0,25)        audit 0.05 : n =  1000 :   322.4 (322.4) ; n =  4000 :   566.5 (566.5) ; n = 16000 :  1058.5 (1058.5)
+      seize taux (1,25 à 5, pas 0,25)        audit 0.20 : n =  1000 :   136.5 (136.6) ; n =  4000 :   255.8 (255.8) ; n = 16000 :   489.6 (489.6)
+      descendante, douze taux (1 + 4/2^j)    audit 0.05 : n =  1000 :   317.9 (317.9) ; n =  4000 :   564.6 (564.6) ; n = 16000 :  1045.1 (1045.1)
+      descendante, douze taux (1 + 4/2^j)    audit 0.20 : n =  1000 :   136.1 (136.1) ; n =  4000 :   252.4 (252.4) ; n = 16000 :   483.7 (483.7)
+    plus grand écart à la re-dérivation sur ses douze valeurs : 0.05 (accord attendu à 0,1 près)
+
+[C] Table de la règle corrigée (mélange, grille descendante de douze taux) : borne garantie de l'excès,
+    part de n, et borne / racine(n rho0 (1 - rho0) / q). Audit 1,00 : borne sur chaque trajectoire (sans beta).
+      audit 0.05, n =     1000 : borne     317.9 ; 31.790 % de n ; rapport 7.49 ; taux retenu 3.0000 fois
+      audit 0.05, n =     4000 : borne     564.6 ; 14.116 % de n ; rapport 6.65 ; taux retenu 2.0000 fois
+      audit 0.05, n =    16000 : borne    1045.1 ;  6.532 % de n ; rapport 6.16 ; taux retenu 1.5000 fois
+      audit 0.05, n =   100000 : borne    2411.6 ;  2.412 % de n ; rapport 5.68 ; taux retenu 1.1250 fois
+      audit 0.05, n =  1000000 : borne    7606.6 ;  0.761 % de n ; rapport 5.67 ; taux retenu 1.0625 fois
+      audit 0.05, n = 10000000 : borne   23105.4 ;  0.231 % de n ; rapport 5.45 ; taux retenu 1.0156 fois
+      audit 0.20, n =     1000 : borne     136.1 ; 13.611 % de n ; rapport 6.42 ; taux retenu 2.0000 fois
+      audit 0.20, n =     4000 : borne     252.4 ;  6.311 % de n ; rapport 5.95 ; taux retenu 1.5000 fois
+      audit 0.20, n =    16000 : borne     483.7 ;  3.023 % de n ; rapport 5.70 ; taux retenu 1.2500 fois
+      audit 0.20, n =   100000 : borne    1140.4 ;  1.140 % de n ; rapport 5.38 ; taux retenu 1.0625 fois
+      audit 0.20, n =  1000000 : borne    3661.9 ;  0.366 % de n ; rapport 5.46 ; taux retenu 1.0312 fois
+      audit 0.20, n = 10000000 : borne   11159.5 ;  0.112 % de n ; rapport 5.26 ; taux retenu 1.0078 fois
+      audit 1.00, n =     1000 : borne      33.9 ;  3.390 % de n ; rapport 3.57 ; taux retenu 1.2500 fois
+      audit 1.00, n =     4000 : borne      66.2 ;  1.654 % de n ; rapport 3.49 ; taux retenu 1.1250 fois
+      audit 1.00, n =    16000 : borne     130.6 ;  0.816 % de n ; rapport 3.44 ; taux retenu 1.0625 fois
+      audit 1.00, n =   100000 : borne     315.6 ;  0.316 % de n ; rapport 3.33 ; taux retenu 1.0312 fois
+      audit 1.00, n =  1000000 : borne    1023.7 ;  0.102 % de n ; rapport 3.41 ; taux retenu 1.0078 fois
+      audit 1.00, n = 10000000 : borne    3216.9 ;  0.032 % de n ; rapport 3.39 ; taux retenu 1.0039 fois
+    Même table pour la grille v1 (cinq taux) : la borne finit linéaire.
+      audit 0.20, n =     1000 : borne     130.0 ; 13.004 % de n ; rapport 6.13 ; taux retenu 2.0000 fois
+      audit 0.20, n =     4000 : borne     238.3 ;  5.958 % de n ; rapport 5.62 ; taux retenu 1.2500 fois
+      audit 0.20, n =    16000 : borne     465.5 ;  2.910 % de n ; rapport 5.49 ; taux retenu 1.2500 fois
+      audit 0.20, n =   100000 : borne    1736.1 ;  1.736 % de n ; rapport 8.18 ; taux retenu 1.2500 fois
+      audit 0.20, n =  1000000 : borne   13545.6 ;  1.355 % de n ; rapport 20.19 ; taux retenu 1.2500 fois
+      audit 0.20, n = 10000000 : borne  125320.4 ;  1.253 % de n ; rapport 59.08 ; taux retenu 1.2500 fois
+
+[D] D'où venaient 100, 190 et 392 : valeur à horizon fixe de la note v1 (silence jusqu'à T, agent aveugle
+    à tous les tirages, loi exacte), à côté de la borne garantie [B] (uniforme dans le temps, agent qui voit
+    les tirages passés). Excès au-delà de rho0 T, audit 0,20.
+      v1, cinq taux (1,25 à 5)               T =  1000 : horizon fixe  100.0, garantie  130.0 ; T =  4000 : horizon fixe  190.0, garantie  238.3 ; T = 16000 : horizon fixe  392.0, garantie  465.5
+      descendante, douze taux (1 + 4/2^j)    T =  1000 : horizon fixe  107.0, garantie  136.1 ; T =  4000 : horizon fixe  201.0, garantie  252.4 ; T = 16000 : horizon fixe  388.0, garantie  483.7
+
+[E] Objets de contrôle, mondes à taux constant, programmation dynamique exacte (en audits).
+      v1, cinq taux (1,25 à 5)
+        monde valide (taux acceptable) : annonce 0.0347 à 1 000 audits, 0.0392 à 4 000, 0.0394 à 12 000 (doit rester <= 0.05)
+        taux réel 1.10 fois : annonce 0.1149 à 1 000 audits, 0.2720 à 4 000, 0.3990 à 12 000 ; médiane non atteinte à 12 000
+        taux réel 1.25 fois : annonce 0.5039 à 1 000 audits, 0.9766 à 4 000, 1.0000 à 12 000 ; médiane 991 audits
+        taux réel 1.50 fois : annonce 0.9834 à 1 000 audits, 1.0000 à 4 000, 1.0000 à 12 000 ; médiane 251 audits
+        taux réel 2.00 fois : annonce 1.0000 à 1 000 audits, 1.0000 à 4 000, 1.0000 à 12 000 ; médiane 69 audits
+        taux réel 3.00 fois : annonce 1.0000 à 1 000 audits, 1.0000 à 4 000, 1.0000 à 12 000 ; médiane 21 audits
+      descendante, douze taux (1 + 4/2^j)
+        monde valide (taux acceptable) : annonce 0.0144 à 1 000 audits, 0.0184 à 4 000, 0.0217 à 12 000 (doit rester <= 0.05)
+        taux réel 1.10 fois : annonce 0.0640 à 1 000 audits, 0.2507 à 4 000, 0.7604 à 12 000 ; médiane 7322 audits
+        taux réel 1.25 fois : annonce 0.3975 à 1 000 audits, 0.9805 à 4 000, 1.0000 à 12 000 ; médiane 1245 audits
+        taux réel 1.50 fois : annonce 0.9709 à 1 000 audits, 1.0000 à 4 000, 1.0000 à 12 000 ; médiane 331 audits
+        taux réel 2.00 fois : annonce 1.0000 à 1 000 audits, 1.0000 à 4 000, 1.0000 à 12 000 ; médiane 93 audits
+        taux réel 3.00 fois : annonce 1.0000 à 1 000 audits, 1.0000 à 4 000, 1.0000 à 12 000 ; médiane 28 audits
+
+[F] Jusqu'où douze taux suffisent : horizon où l'écart utile au-dessus du taux acceptable,
+    racine(2 L (1 - rho0) / (q rho0 n)) avec L = log(12 / alpha), tombe au double du plus petit écart de la grille.
+      audit 0.05 : plus petit écart 0.00195 ; horizon d'environ 1.29e+08 épisodes
+      audit 0.20 : plus petit écart 0.00195 ; horizon d'environ 3.23e+07 épisodes
+      audit 1.00 : plus petit écart 0.00195 ; horizon d'environ 6.47e+06 épisodes
+      au-delà, pente limite de l'excès : 9.76e-05 par épisode
+
