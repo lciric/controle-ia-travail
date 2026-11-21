@@ -1,0 +1,8 @@
+# Erratum 1 au mandat du développeur du lot 4 du véhicule NA-1 (v1, `df5a1cea1009878386e4f9362a887a2d2881f4bd71395afc4f9a482a0634e994`)
+
+Pièce de travail (classe C), écrite par la session du compte organisme le 2026-11-21 vers 08:58Z, sur les mots de la mère de 08:54Z. Le mandat v1 n'est pas modifié ; cet erratum se lit avec lui et prime sur lui pour les points ci-dessous.
+
+1. **Égalité au point d'envoi.** La surcharge d'`appel` encode la requête en UTF-8 **une seule fois** ; cette suite d'octets est celle que la garde de motifs lit (`garde_motifs_na_v2.garder_requete`, ou la version vérifiée la plus récente du lot 2), celle que le journal décrit (taille et empreinte) et celle qui est remise au noyau. Elle appelle `verifier_avant_envoi(requete_gardee, octets)` sur les octets mêmes qu'elle remet à `super().appel` ; un écart est un refus « non envoyé », sans coût. Un essai fait diverger les deux suites et voit le refus ; la mutation qui retire l'appel est tuée.
+2. **Texte trouvé.** Le texte trouvé par la garde ne va qu'au journal de la ligne « non envoyé », dans le dossier de sortie ; ni le message de l'arrêt n° 16, ni ses arguments, ni sa représentation ne le portent.
+3. **Lots servis.** Les lots 1 et 2 vérifiés sont ceux de `docs/notes/ideation-nouvelles-attaques-v1/lots-1-et-2-vehicule-na-v2/` (table `4ba408af…`, vérification `674996b4…`) ; une v3 du lot 2 (normalisation des caractères invisibles, de l'espace et du tiret, mots de la mère de 08:54Z) est en cours ; si elle est vérifiée avant ton départ, la session te la donne, et l'interface `garder_requete` et `verifier_avant_envoi` ne change pas.
+4. **Lot 3.** Le lot 3 est en cours ; son interface te sera donnée au départ, avec son rapport vérifié.
