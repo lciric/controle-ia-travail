@@ -1,0 +1,96 @@
+--- consigne-poste-local-lean-d1a-v7.md	2026-11-21 14:20:39.584698968 +0000
++++ consigne-poste-local-lean-d1a-v8.md	2026-11-21 14:26:12.942376622 +0000
+@@ -1,4 +1,24 @@
+-# Consigne : session du poste local de Lazar — outillage Lean D-1a, quatrième essai (GO-2026-11-10-13) — v7
++# Consigne : session du poste local de Lazar — outillage Lean D-1a, quatrième essai (GO-2026-11-10-13) — v8
++
++**v8 (2026-11-21, vers 14:26 UTC, `date -u`)** : écrite par un rédacteur Opus 5.5 (`claude-opus-5-5`), sous-agent de la
++session mère `session_01QPDgKgejkqwnuaJHJ31Ydo`, à sa demande. Pièce d'instrument (classe B). Remplace la v7
++(`consigne-poste-local-lean-d1a-v7.md`, `11be3c275b312d9dd19d70a96911147f03498202c26db76591ab7c0da1e80979`), gardée
++telle quelle (R12). Différentiel : `differentiel-consigne-v7-v8.diff`. **Ce qui change**, d'après la vérification de la
++v7 par le même contre-lecteur (`verification-consigne-v7-v1.md`,
++`d114dce85e99fb59492fc58c7445777376e28f6ef86d46bc98ecfcb385a0f92a`, avec son erratum 1,
++`verification-consigne-v7-v1-erratum-1.md`, `83e101df7982b2a2c8f1b8945800f18a14485ac78832d3cb8c4603209cffaaef` ;
++Claude Fable 5.2, « prête après corrections »), corrections portées mot pour mot :
++- **E1, contrôle du terminal** (Règles) : heure de démarrage du processus 1 d'Ubuntu (`ps -o lstart= -p 1`) au lieu de
++  `uptime -s`, qui peut passer à tort ;
++- **E2, retrait des clés de modèle** (Règles) : `env -u NOM <commande>`, jamais `env -u NOM` seul, qui afficherait les
++  valeurs ;
++- **E3, accusé de réception** (section « Messages ») : L1 attend l'accusé ou le passage au repli écrit ;
++- **adresse du poste (écart 2 du rapport v3)**, décision de routine de la mère sur la recommandation de la vérification
++  (§ 5) : la session la lit depuis Ubuntu, écart accepté d'avance et déclaré au rapport, et Lazar reste libre de la
++  donner (« Avant de lancer », point 5 ; mandat 2 ; réserve « Adresse du poste »).
++
++Rien d'autre ne change. L'en-tête de la v7 ci-dessous est gardé comme historique : il annonce encore `uptime -s` et
++l'écart 2 « à trancher », que la v8 remplace.
+ 
+ **v7 (2026-11-21, vers 14:19 UTC, `date -u`)** : écrite par un rédacteur Opus 5.5 (`claude-opus-5-5`), sous-agent de la
+ session mère `session_01QPDgKgejkqwnuaJHJ31Ydo`, à sa demande. Pièce d'instrument (classe B) : la vérification des
+@@ -73,8 +93,9 @@
+    dans la conversation, ni affichée, ni écrite dans un fichier, ni passée en argument.
+ 4. **`gh` authentifié sur le dépôt privé `lciric/controle-ia-travail`** : son jeton ne passe qu'à `git`, par
+    l'environnement du processus.
+-5. **L'adresse publique du poste (`IP_POSTE`)**, donnée à la session. Elle n'est jamais écrite dans un fichier du clone ni
+-   dans un message.
++5. **L'adresse publique du poste (`IP_POSTE`)** : lue par la session depuis Ubuntu, par une requête au service que
++   `MV7 adresses-sortie` interroge, ou donnée par Lazar s'il le préfère. Elle reste dans la conversation : jamais écrite
++   dans un fichier du clone ni dans un message.
+ 6. **Python 3.11 ou plus récent, `git`, `ssh`, `ssh-keygen`** sous Ubuntu. Au troisième essai : Python 3.14.4, seule
+    version présente, sans incident, alors que le harnais n'est éprouvé que sous 3.11 et 3.13 ; aucune installation.
+ 7. **Le réglage hors du bac à sable** pour les commandes du harnais, pré-autorisées (procédure, section 0, point 4). Il
+@@ -171,7 +192,7 @@
+   - ta branche et son commit.
+ 
+   La mère en accuse réception : c'est la preuve que le retour fonctionne. Le mandat 2 n'attend pas cet accusé de
+-  réception ; L1 l'attend.
++  réception ; L1 attend l'accusé, ou le passage au repli écrit plus bas.
+ - **Messages prévus** :
+   - le premier message ;
+   - le choix sur l'essai à blanc, repris ou refait, et pourquoi (mandat 2) ;
+@@ -252,15 +273,18 @@
+   depuis l'hôte Windows par `wsl.exe -e`, les processus détachés vivant dans Ubuntu (écart 8 du rapport v3).
+ - **Environnement des commandes du harnais** : aucune clé de modèle. Celles que `WSLENV` transmet à Ubuntu sont retirées
+   de l'environnement de chaque commande (procédure v12, section 3) : leurs noms se lisent dans `WSLENV` (des noms,
+-  jamais des valeurs), puis `env -u NOM`, sans `env` ni `printenv` seuls. Seuls restent `HCLOUD_TOKEN` et, pour `git`, le jeton
+-  de `gh`.
++  jamais des valeurs), puis chaque commande du harnais est lancée par `env -u NOM <commande>` ; jamais `env -u NOM` sans
++  commande à la suite, ni `env` ni `printenv` seuls : ils afficheraient les valeurs. Seuls restent `HCLOUD_TOKEN` et,
++  pour `git`, le jeton de `gh`.
+ - **Terminal WSL ouvert pendant tout l'essai** (incident R-2434 : sans fenêtre WSL ouverte, WSL arrête Ubuntu et tue les
+   processus détachés, minuterie comprise) :
+   - un terminal Ubuntu ouvert par Lazar avant de lancer la session, gardé ouvert **jusqu'à l'inventaire final** de la
+     section 5 ;
+   - vérifie-le avant l'essai à blanc et avant L1 : Ubuntu démarrée avant l'ouverture et jamais redémarrée depuis ; sinon,
+-    aucune préparation. Contrôle : l'heure de démarrage d'Ubuntu (`uptime -s`), relevée au début du mandat 2 puis juste
+-    avant L1, à deux minutes d'écart au moins, doit être la même aux deux relevés ;
++    aucune préparation. Contrôle : l'heure de démarrage du processus 1 d'Ubuntu (`ps -o lstart= -p 1`), relevée au début
++    du mandat 2 puis juste avant L1, à deux minutes d'écart au moins, doit être la même aux deux relevés, à deux secondes
++    près. `uptime -s` ne suffit pas : il donne le démarrage de la machine virtuelle de WSL, qui peut survivre à un arrêt
++    d'Ubuntu ;
+   - s'il se ferme après L5 : `MV7 verifier-minuterie` tout de suite ; non conforme : `MV7 detruire --identifiant N`,
+     jamais de relance ; message à la mère.
+ - **Données du poste (CLC5-07)** :
+@@ -354,6 +378,10 @@
+        `python3 -c "import urllib.request; print(sorted(urllib.request.getproxies()))"`. Elle lit l'environnement de ta
+        session, neuf à chaque session : une commande, rien à relancer. `[]` attendu ; sinon arrêt, compte rendu, aucune
+        préparation.
++   - **`IP_POSTE`** : si Lazar ne te l'a pas donnée, tu la lis depuis Ubuntu par
++     `python3 -c "import urllib.request; print(urllib.request.urlopen('https://api.ipify.org', timeout=15).read(64).decode('ascii'))"`
++     (une requête, le service de `adresses-sortie`). C'est un écart écrit à la procédure v12, qui la fait donner par
++     Lazar (écart 2 du rapport v3, repris) ; tu le déclares au rapport. La mesure qui suit se fait comme écrit ;
+    - **`MV7 adresses-sortie --ip-poste IP_POSTE`** :
+      - code 0 : retenir `P` = `prefixe_conseille` (32 ou 24). **Jamais `--prefixe-poste 24` sans cette mesure** ;
+      - si elle rend 32 alors que les deux premiers essais avaient plusieurs sorties dans le même /24 : le signaler à Lazar
+@@ -503,9 +531,9 @@
+   journal scellé nommant l'essai qui tue. Non bloquant pour le quatrième essai.
+ - **Canal des messages** : la consigne suppose que la session du poste a l'outil d'envoi entre sessions et que la mère peut
+   lui répondre. Rien ne l'a éprouvé avant cet essai ; le repli écrit couvre son absence.
+-- **Adresse du poste** : l'écart 2 du rapport v3 (adresse lue par la session, sur mot de Lazar) n'est pas repris ; cette
+-  consigne dit que Lazar la donne. S'il préfère de nouveau la faire lire, c'est un écart qui attend la réponse de la mère : à trancher
+-  avant le lancement.
++- **Adresse du poste** : l'écart 2 du rapport v3 (adresse lue par la session) est repris et écrit au mandat 2. On y perd
++  le recoupement entre l'adresse donnée par Lazar et celle que le service renvoie ; le pire cas est borné (serveur sans
++  clé ni dépôt, clé jetable seule admise, une vingtaine de minutes de vie).
+ 
+ ## Annexe
+ 
