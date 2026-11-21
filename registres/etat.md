@@ -1,5 +1,7 @@
 # État du programme
 
+**2026-11-21 vers 15:20 UTC — nouvelle mère `session_01Qi7Gr3eYmAhDEJzqLgWcv1` (autre compte) en poste sur le brief `registres/passations/2026-11-21-1450-brief-lancement-mere-autre-compte.md` et son erratum 1 ; rien en marche chez le loueur ni chez Hetzner (crédit 49,36 USD) ; rappels de 18 h reprogrammés ; sessions à relancer en filles une fois leur passation déposée (R-4582).**
+
 **Essai Lean D-1a : ligne « en tâche » close le 2026-11-21 vers 10:50Z — serveur 177067030 détruit à 10:27:57Z, absence relue par la mère, tâches T1 à T3 supprimées (R-4512).**
 
 **2026-11-21 vers 07:45 UTC — mère sur Fable 5.1 (mot de Lazar) ; formation : quatre recréations en marche (réserve 170,95 sur 200) ; étage 2 : banque et mot de départ scellés, geste 9 relancé après installation du bac à sable ; palier 0b : étapes 3 à 6 lancées ; collisionneur « seuil et moniteurs » fini (14,86 USD) ; notes de conception versées (tests de mort 4f3ae86f…, moniteur de dissonance 403fe3e2…, pilier mathématique 1616e709…) ; consultations externes attestées sans recette ; Lean : consigne v5 prête pour le poste. GO-2026-11-21-01 à -22. Passation `registres/passations/2026-11-21-0745.md`.**
