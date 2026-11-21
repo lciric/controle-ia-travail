@@ -1,0 +1,52 @@
+Vérification du relecteur affecté, épreuve qui ne peut pas échouer ou pas réussir — v1
+numpy 2.5.3 ; racine 20261121
+[1] Garde de la référence (§ 9, objet vrai ; arrêt n° 20) sur un générateur SAIN
+    V1* de la référence = Beta(k, m + 1 - k) exactement pour une loi continue
+    t de Student à 0,995, df = 1999 : 2.5783
+    m = 200, k = 2 : moyenne vraie 0.009950 ; part vraie V1* <= 1 % = 0.5954
+      couverture exacte de Clopper-Pearson 99 % à 2000 tirages : 0.99061 (rouge 0.00939)
+      sur 20000 répliques : rouge par la moyenne 0.0107 ; par la part 0.0110 ; par l'une ou l'autre 0.0181
+    m = 400, k = 4 : moyenne vraie 0.009975 ; part vraie V1* <= 1 % = 0.5675
+      couverture exacte de Clopper-Pearson 99 % à 2000 tirages : 0.99056 (rouge 0.00944)
+      sur 20000 répliques : rouge par la moyenne 0.0103 ; par la part 0.0092 ; par l'une ou l'autre 0.0165
+    rouge d'un couple (monde, tranche), m = 200 et 400 joués : 0.0344
+    P(garde rouge au moins une fois | générateur sain), cellules indépendantes :
+      1 famille(s) continue(s) x 3 tranches = 3 couples : 0.100
+      3 famille(s) continue(s) x 3 tranches = 9 couples : 0.270
+      4 famille(s) continue(s) x 3 tranches = 12 couples : 0.343
+      5 famille(s) continue(s) x 3 tranches = 15 couples : 0.408
+      6 famille(s) continue(s) x 3 tranches = 18 couples : 0.467
+      8 famille(s) continue(s) x 3 tranches = 24 couples : 0.568
+      10 famille(s) continue(s) x 3 tranches = 30 couples : 0.650
+[2] Objet faux (§ 9) : témoins de la loi de calibration, usage sous dérive, loi normale
+    m = 200 : moyenne de V1* 0.02892 ; écart type par tirage 0.01725 ; part des répliques où la mort « invalide, en moyenne » tombe : 1.0000
+      écart à k/(m+1) en erreurs types : 49.2
+    m = 400 : moyenne de V1* 0.02943 ; écart type par tirage 0.01244 ; part des répliques où la mort « invalide, en moyenne » tombe : 1.0000
+      écart à k/(m+1) en erreurs types : 69.9
+[3] Puissance de mort d'un témoin « doit mourir » selon sa distance au seuil (2 000 tirages, 99 %)
+    (a) garantie « en moyenne », écart type par tirage pris à 0,0060 (ordre de Beta(3, 298))
+        écart type de Beta(3, 298) : 0.00572
+        taux vrai moyen 0.0100 : P(mort) = 0.0050
+        taux vrai moyen 0.0102 : P(mort) = 0.1554
+        taux vrai moyen 0.0104 : P(mort) = 0.7093
+        taux vrai moyen 0.0105 : P(mort) = 0.9088
+        taux vrai moyen 0.0106 : P(mort) = 0.9828
+        taux vrai moyen 0.0108 : P(mort) = 0.9999
+        taux vrai moyen 0.0110 : P(mort) = 1.0000
+        taux vrai moyen 0.0120 : P(mort) = 1.0000
+    (b) garantie « avec une confiance dite », risque 0,05 : part vraie des tirages où V1* > 1 %
+        part vraie 0.050 : P(mort) = 0.0043
+        part vraie 0.055 : P(mort) = 0.0552
+        part vraie 0.060 : P(mort) = 0.2674
+        part vraie 0.065 : P(mort) = 0.6200
+        part vraie 0.070 : P(mort) = 0.8827
+        part vraie 0.080 : P(mort) = 0.9978
+    (c) témoin « doit tenir » au bord exact (T02, part 0,0495 ; T03, moyenne 0,00997)
+        T02 : P(mort) = 0.00309
+        T03 : P(mort) = 0.00227
+[4] Borne c(W) (critères, § 4, point 2) si les morts de témoins « doit tenir » sont liées
+    exemple : W témoins en W/2 paires de règles identiques jouées sur les mêmes tirages
+      W = 4, c = 1 : P(plus de c morts) = 0.0100 (borne visée 0,01)
+      W = 10, c = 1 : P(plus de c morts) = 0.0248 (borne visée 0,01)
+      W = 20, c = 1 : P(plus de c morts) = 0.0489 (borne visée 0,01)
+      W = 30, c = 1 : P(plus de c morts) = 0.0724 (borne visée 0,01)
