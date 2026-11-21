@@ -5,15 +5,73 @@ offres, les instances et le préalable de création ; ces sous-commandes lisent 
 la version 1, que la configuration en version 5 porte à l'identique en mode réel (`configuration_v5.exiger_location`). Seule la
 sous-commande `config` change : elle vérifie par `configuration_v5.exiger_config_v5` (prête à lancer), non par la version 1.
 Usage : `python -I -B -c "… session_v5.main(sys.argv[1:])" config CONFIG.json`, ou toute sous-commande de `session_v1`.
+
+**Coupure propre de l'étalonnage à 12 USD** (devis scellé de la version 5 ; ligne d'accord GO-2026-11-21-70) : sous-commande
+`coupure-etalonnage PHASE PROGRES.txt MAINTENANT_S PRIX_CARTE PRIX_STOCKAGE CREATION_S`, jouée par la surveillance du lanceur de
+session à chaque relevé, après la garde de dépense de la ligne (55 USD), qui reste. La dépense comptée est celle de la machine
+depuis le début de l'amorce (première ligne « AMORCE IIB … DEMARRAGE 1 : <instant> » relevée du journal), au prix réel lu à la
+création (carte et stockage) ; si cette ligne n'est pas encore relevée, elle se compte depuis la création, qui la précède (jamais
+moins de dépense que la vraie). Elle ne joue que si la phase est l'étalonnage ; une phase illisible est un refus (la surveillance
+arrête : aucun repli silencieux). La règle rend une ligne « ARRET coupure de l'étalonnage : … » ou « RIEN … » ; l'arrêt se fait
+par l'identifiant (R10), puis la destruction par la sous-commande `destruction` du lanceur de session et ses gardes.
 """
 from __future__ import annotations
 
 import json
+import math
+import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ..gardes import GardeArret
 from . import configuration_v5 as cf
+
+COUPURE_ETALONNAGE_USD = 12.0          # devis scellé : coupure propre de l'étalonnage, par une règle de la surveillance
+PHASES = ("etalonnage", "conditions", "course")
+_DEBUT_AMORCE = re.compile(r"^AMORCE IIB v\d+ DEMARRAGE 1 : (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)", re.M)
+
+
+def _positif(quoi: str, v, strict: bool = False) -> float:
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        raise GardeArret(f"coupure de l'étalonnage : {quoi} = {v!r} (nombre attendu)") from None
+    if not math.isfinite(x) or x < 0 or (strict and x == 0):
+        raise GardeArret(f"coupure de l'étalonnage : {quoi} = {v!r} (nombre positif attendu)")
+    return x
+
+
+def coupure_etalonnage(phase: str, progres: str, maintenant_s, prix_carte, prix_stockage, creation_s) -> dict:
+    """Règle de la surveillance : pendant l'étalonnage, la dépense comptée depuis le début de l'amorce, au prix réel lu, atteint
+    12 USD → arrêt. Hors de l'étalonnage la règle ne joue pas (la coupure de la ligne reste seule)."""
+    if phase not in PHASES:
+        raise GardeArret(f"coupure de l'étalonnage : phase {phase!r} illisible ({', '.join(PHASES)}) : refus, aucun repli")
+    now, cree = _positif("maintenant", maintenant_s), _positif("création", creation_s)
+    prix = _positif("prix de la carte", prix_carte, strict=True) + _positif("prix du stockage", prix_stockage)
+    if phase != "etalonnage":
+        return {"joue": False, "arret": False, "phase": phase, "seuil_usd": COUPURE_ETALONNAGE_USD}
+    m = _DEBUT_AMORCE.search(progres or "")
+    debut, origine = cree, "création (début de l'amorce non encore relevé)"
+    if m:
+        lu = datetime.strptime(m.group(1), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()
+        if lu >= cree:                                   # un début d'amorce antérieur à la création est un artefact : la création compte
+            debut, origine = lu, "début de l'amorce"
+    if now < debut:
+        raise GardeArret("coupure de l'étalonnage : début postérieur à maintenant")
+    depense = (now - debut) / 3600.0 * prix
+    return {"joue": True, "arret": depense >= COUPURE_ETALONNAGE_USD, "phase": phase, "depense_usd": round(depense, 4),
+            "seuil_usd": COUPURE_ETALONNAGE_USD, "prix_usd_h": round(prix, 6), "depuis": origine, "debut_utc_s": int(debut)}
+
+
+def ligne_de_coupure(r: dict) -> str:
+    if not r["joue"]:
+        return f"RIEN : phase {r['phase']} : la règle de coupure de l'étalonnage ne joue pas"
+    if r["arret"]:
+        return (f"ARRET coupure de l'étalonnage : dépense comptée {r['depense_usd']:.2f} USD ≥ {r['seuil_usd']:g} USD (depuis : {r['depuis']} ; "
+                f"{r['prix_usd_h']:g} USD/h, prix réel lu) : rapatrier ce qui est versé, arrêter l'instance par son identifiant (R10), puis "
+                "la détruire par la sous-commande « destruction » ; résultats partiels consignés comme tels")
+    return f"RIEN : dépense comptée de l'étalonnage {r['depense_usd']:.2f} USD < {r['seuil_usd']:g} USD (depuis : {r['depuis']})"
 
 
 def verifier_config(chemin, racine=".") -> dict:
@@ -29,6 +87,17 @@ def main(argv: list[str]) -> int:
             print(f"REFUS : {e}", file=sys.stderr)
             return 1
         print(f"configuration v5 conforme (mode {r['mode']}, nœuds {''.join(r['noeuds'][k] for k in sorted(r['noeuds']))})")
+        return 0
+    if argv and argv[0] == "coupure-etalonnage":
+        if len(argv) != 7:
+            print("REFUS : usage : coupure-etalonnage PHASE PROGRES.txt MAINTENANT_S PRIX_CARTE PRIX_STOCKAGE CREATION_S", file=sys.stderr)
+            return 2
+        try:
+            texte = Path(argv[2]).read_text(encoding="utf-8") if Path(argv[2]).is_file() else ""
+            print(ligne_de_coupure(coupure_etalonnage(argv[1], texte, *argv[3:7])))
+        except (GardeArret, OSError, ValueError) as e:
+            print(f"REFUS : {e}", file=sys.stderr)
+            return 1
         return 0
     from . import session_v1
 

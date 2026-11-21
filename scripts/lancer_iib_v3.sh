@@ -395,6 +395,11 @@ surveillance)
     : >> "$D/progres.txt"
     echo "$(date -u +%FT%TZ) $(ligne_outil)" >> "$D/surveillance.txt"
     INTERVALLE="${INTERVALLE:-60}"; ILLISIBLES=0
+    # v3, règle de coupure de l'étalonnage (devis scellé de la version 5, GO-2026-11-21-70) : la phase est celle que joue l'amorce
+    # déposée dans le dossier de la session ; illisible, la règle refuse à chaque relevé et la surveillance arrête (aucun repli).
+    PHASE=$(grep -v '^[[:space:]]*#' "$D/amorce.sh" 2>/dev/null | sed -n 's/.*controle_ia\.iib\.lanceur_v5 --phase \([a-z_]*\) .*/\1/p' | sort -u)
+    [ -n "$PHASE" ] && [ "$(printf '%s\n' "$PHASE" | wc -l)" = 1 ] || PHASE=illisible
+    echo "règle de coupure de l'étalonnage : phase $PHASE (lue dans $D/amorce.sh) ; seuil 12 USD de dépense comptée depuis le début de l'amorce, au prix réel lu ; la coupure de la ligne ($PLC USD) reste" >> "$D/surveillance.txt"
     echo "surveillance iib v1 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, plafond de la configuration $PLC USD ; alerte après 2 h sans PROGRES ; aucune autre instance lue au-delà des champs filtrés ni touchée" >> "$D/surveillance.txt"
     while true; do
         now=$(date -u +%s)
@@ -418,6 +423,13 @@ surveillance)
             ILLISIBLES=$((ILLISIBLES + 1))
             if [ "$ILLISIBLES" -ge 3 ]; then DEC="ARRET garde : garde de dépense illisible trois fois de suite ($DEC)"; else DEC="ALERTE garde de dépense illisible ($ILLISIBLES/3) : $DEC"; fi
         fi
+        case "$DEC" in ARRET*|FIN*|REFUS*) ;; *)       # règle de coupure de l'étalonnage : après la garde de la ligne, qui prime
+            if CE=$(python3 -I -B -c "$SESSION" coupure-etalonnage "$PHASE" "$D/progres.txt" "$now" "$PC" "$PS" "$CR" 2>&1); then
+                case "$CE" in ARRET*) echo "$(date -u +%FT%TZ) ALERTE coupure de l'étalonnage atteinte (la décision d'avant était : $DEC)" >> "$D/surveillance.txt"
+                                      DEC="$CE"; printf '%s %s\ninstance %s\nphase %s\n' "$(date -u +%FT%TZ)" "$CE" "$ID" "$PHASE" > "$D/coupure-etalonnage.txt"
+                                      conserver "$D/coupure-etalonnage.txt" "$D" coupure-etalonnage txt >/dev/null || echo "ALERTE : copie datée du motif de la coupure impossible" ;; esac
+            else DEC="ARRET garde : règle de coupure de l'étalonnage illisible ($CE)"; fi ;;
+        esac
         echo "$(date -u +%FT%TZ) $DEC" >> "$D/surveillance.txt"
         case "$DEC" in ARRET*|FIN*|REFUS*)      # fin de la surveillance : une copie datée des journaux, avec empreinte (R-3661) ; rien d'autre ne change
             for jf in surveillance.txt progres.txt journal-dernier.txt journal-instance.txt; do
