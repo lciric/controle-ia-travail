@@ -9,7 +9,7 @@ from controle_ia.iib.jouet_v5 import etalonnage_numerique, ligne_numerique
 from controle_ia.scellement import sceller
 
 ENTREES = {"schema": cf.SCHEMA_ENTREES, "plafond_usd": 60, "depense_passee_usd": 5, "cout_fixe_usd": 10, "prix_horaire_usd": 1.3,
-           "oracles_par_tour": 1, "actions_oracle_hors_tours": 3520,
+           "oracles_par_tour": 1, "actions_oracle_hors_tours": 3830,
            "plafond_de_tours": {"forme": "formule", "formule": cf.FORMULE_PLAFOND_DE_TOURS}}
 DUREES = {"episode_genere_h": 0.004, "action_oracle_h": 0.0005}
 

@@ -5,7 +5,8 @@ EXPLORATOIRE, NON OPPOSABLE (R-522). Toutes les constantes du texte scellé
 dans `TEXTE`, et **vérifiées à l'égalité au chargement** : une constante changée est un refus. Les sept nœuds sont à leur
 défaut (nœud 7 en (b')) : l'instrument de l'oracle à contexte réécrit est l'épisode régénéré, sa marge est la marge de moitié,
 le contrôle du premier coût est rapporté, l'oracle non désigné joue sur les épisodes acceptés du maître et à l'évaluation
-(1 oracle par tour, 3 520 actions d'oracle hors tours).
+(1 oracle par tour, 3 830 actions d'oracle hors tours : erratum 2 du texte scellé et erratum 1 du devis, jusqu'à 127 épisodes
+distillés, 1 270 + 2 560).
 
 - **Aucun texte de consigne privée** : la configuration ne porte que le chemin et l'empreinte de chaque consigne (les deux
   variantes de celle du maître, la variante « rien au premier coût » de celle du flagrant) et les marqueurs de consigne par
@@ -66,7 +67,7 @@ TEXTE = {
     "depart": {"honnetes_acceptes_max": 6, "rapport": 3, "retenue": 0.5, "facteur_emd": 2.80, "vises_avec_marge": 384, "vises_sans_marge": 192,
                "taille_d_origine": 12, "instrument_N": "regenere", "instrument_P": "regenere", "marge_N": "moitie", "marge_P": "moitie",
                "tirages": 10000, "niveau": 0.95},
-    "noeud_7": {"oracles_par_tour": 1, "actions_oracle_hors_tours": 3520},
+    "noeud_7": {"oracles_par_tour": 1, "actions_oracle_hors_tours": 3830},
     "tours": {"episodes_par_tour": 32, "cible": 96, "minimum": 48, "tour_de_controle": 4, "episodes_du_controle": 128, "niveau": 0.95,
               "tirages": 10000},
     "controle_premier_cout": {"niveau_d_alerte": 1.0 / 20.0, "echelle": 1008, "usage": "rapporte"},
@@ -328,8 +329,10 @@ def exiger_config_v5(config: dict, racine=".", pour_lancer: bool = False) -> dic
     return {"mode": mode, "oracle_de_la_regle": oracle, "noeuds": dict(config["noeuds"])}
 
 
-def gabarit(mode: str = "reel", entropie: int | None = None) -> dict:
-    """Gabarit de configuration : constantes du texte, pièces et code à remplir ; `entropie` : celle que la mère a tirée (vide sinon)."""
+def gabarit(mode: str = "reel", entropie: int | None = None, premiere_action: str | None = None) -> dict:
+    """Gabarit de configuration : constantes du texte, pièces et code à remplir ; `entropie` : celle que la mère a tirée (vide sinon).
+    En mode réel, la section à part de la distillation et de l'évaluation y est dès l'étalonnage (la configuration de la course en
+    est dérivée sans ajout) ; `premiere_action` : lecture de la première action dans la perte (`gardee` ou `exclue`, vide sinon)."""
     c = copy.deepcopy(TEXTE)
     vide = {"chemin": "", "sha256": ""}
     c.update({"version": VERSION, "mode": mode, "avertissement": AVERTISSEMENT, "go_id": None, "entropie": entropie, "prefixe_graines": "",
@@ -349,6 +352,10 @@ def gabarit(mode: str = "reel", entropie: int | None = None) -> dict:
                                        "nom_offre": DEVIS["carte_nom_offre"], "prix_max_usd_h": DEVIS["carte_prix_max_usd_h"]}},
                   "calendrier": dict(DEVIS["calendrier"]), "memoire_vive_min_go": 128,
                   "prealables": {"ligne_registre_creation_7b": ""}})
+        section = cd.gabarit_section()
+        section["perte"]["premiere_action"] = premiere_action
+        cd.exiger_section(section, mode)
+        c[cd.SECTION] = section
     return c
 
 
@@ -360,7 +367,7 @@ def regle_de(config: dict, oracle: str) -> dict:
 
 def exiger_entrees(entrees, reel: bool = False) -> dict:
     """Fichier d'entrées scellé avant l'étalonnage (section 10.2) : plafond, dépense passée, coût fixe, prix horaire, nombre
-    d'oracles par tour et actions d'oracle hors tours (nœud 7, option (b') : 1 et 3 520), plafond de tours **en formule**.
+    d'oracles par tour et actions d'oracle hors tours (nœud 7, option (b') : 1 et 3 830, erratum 2 du texte scellé), plafond de tours **en formule**.
     `reel` : les valeurs du devis scellé sont vérifiées à l'égalité (plafond 45, coût fixe 6,90, prix borne 1,38 ; contre-lecture,
     m8) ; la dépense passée est positive ou nulle (0, plus toute dépense de la ligne neuve faite avant la location)."""
     cles = {"schema", "plafond_usd", "depense_passee_usd", "cout_fixe_usd", "prix_horaire_usd", "oracles_par_tour",

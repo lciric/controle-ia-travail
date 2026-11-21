@@ -235,7 +235,7 @@ def test_aucune_suppression_ailleurs_dans_le_code_v5():
 
 def test_fichier_d_entrees_relu_par_son_empreinte_citee(tmp_path):
     config = _monde(tmp_path)
-    assert la.lire_entrees(config, tmp_path)["actions_oracle_hors_tours"] == 3520            # cas sain
+    assert la.lire_entrees(config, tmp_path)["actions_oracle_hors_tours"] == 3830            # cas sain
     faux = {**config, "pieces": {**config["pieces"], "entrees": {"chemin": "entrees/entrees-iib-v5.json", "sha256": "f" * 64}}}
     with pytest.raises(GardeArret, match="empreinte citée"):
         la.lire_entrees(faux, tmp_path)
@@ -371,13 +371,17 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     for f in ("amorce_instance_iib_v5.sh", "lancer_iib_v3.sh"):
         assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
     amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
-    liste = s / "tests-cibles-iib-v5-v3.txt"
+    liste = s / "tests-cibles-iib-v5-v4.txt"
     assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
     fichiers = liste.read_text(encoding="utf-8").split()
-    # tous les fichiers d'essais en version 5, sauf celui du tokeniseur réel (sauté sur la machine : « N passed, 1 skipped » ne
-    # passerait pas le contrôle du nombre de tests attendus de l'amorce)
-    assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py") if "tokeniseur_reel" not in f.name)
-    assert len(fichiers) >= 20 and "tests/test_iib_tokeniseur_reel_v5.py" not in fichiers
+    # tous les fichiers d'essais en version 5, distillateur compris, sauf celui du tokeniseur réel et celui du moteur à torch du
+    # distillateur (sautés sans leurs dépendances : « N passed, 1 skipped » ne passerait pas le contrôle du nombre de tests
+    # attendus de l'amorce, et le nombre doit être le même sur le poste et sur la machine)
+    hors = ("tokeniseur_reel", "distillation_torch")
+    assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py") if not any(h in f.name for h in hors))
+    assert len(fichiers) == 23 and not any(h in f for f in fichiers for h in hors)
+    assert {"tests/test_iib_configuration_distillation_v5.py", "tests/test_iib_distillation_v5.py",
+            "tests/test_iib_distillation_bout_en_bout_v5.py"} <= set(fichiers)
     assert amorce.count("controle_ia.iib.lanceur_v5 --phase etalonnage --config") == 1 and "controle_ia.iib.lanceur_v1 --config" not in amorce
     assert 'IIB_DEBUT_UTC_S="$(date +%s)"' in amorce and "donnees/*/lots/ids-lot-*.json" in amorce
 

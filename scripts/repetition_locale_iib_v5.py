@@ -32,7 +32,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
 from test_t06_v12_scripts import OFFRES  # noqa: E402
 
 ID, AUTRE = "61414494", 58936096
-ATTENDUS = 205        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v3.txt`), relevés à la répétition
+ATTENDUS = 267        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v4.txt`), relevés à la répétition
 CONFIG = "prereg/config-iib-v5-jouet.json"
 RECHERCHE = '''"search offers")
     case "$3" in id=*) echo '[]'; exit 0;; esac
@@ -72,7 +72,7 @@ def monde(t: Path) -> dict:
               "taches_reserve": json.dumps({"taches": [{"identifiant": f"r{k}"} for k in range(32)]}),
               "taches_evaluation": json.dumps({"taches": [{"identifiant": f"v{k}"} for k in range(8)]}),
               "entrees": json.dumps({"schema": cf.SCHEMA_ENTREES, "plafond_usd": 45, "depense_passee_usd": 0, "cout_fixe_usd": 6.90,
-                                     "prix_horaire_usd": 1.38, "oracles_par_tour": 1, "actions_oracle_hors_tours": 3520,
+                                     "prix_horaire_usd": 1.38, "oracles_par_tour": 1, "actions_oracle_hors_tours": 3830,
                                      "plafond_de_tours": {"forme": "formule", "formule": cf.FORMULE_PLAFOND_DE_TOURS}})}
     for nom, texte in pieces.items():
         f = src / "prereg" / f"iib-v5-jouet-{nom}.json"

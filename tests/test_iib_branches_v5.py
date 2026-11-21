@@ -56,9 +56,9 @@ def test_chaque_etape_de_l_ordre_sur_son_cas():
 
 def test_plafond_de_tours_par_la_formule_du_noeud_7_b_prime():
     r = br.plafond_de_tours(ENTREES, DUREES, 3.0)
-    reste = 60 - 5 - 3.0 - 10 - 1.3 * 0.0005 * 3520
+    reste = 60 - 5 - 3.0 - 10 - 1.3 * 0.0005 * 3830
     tour = 1.3 * 32 * (0.004 + 10 * 0.0005 * 1)
-    assert r == math.floor(reste / tour) == 106
+    assert r == math.floor(reste / tour) == 105
     assert br.plafond_de_tours({**ENTREES, "plafond_usd": 18}, DUREES, 3.0) < 0          # rien n'est financé : R > R_plafond partout
     with pytest.raises(br.NonCalculable):
         br.plafond_de_tours(ENTREES, {"episode_genere_h": 0.0, "action_oracle_h": 0.0}, 3.0)
@@ -67,7 +67,7 @@ def test_plafond_de_tours_par_la_formule_du_noeud_7_b_prime():
 def test_etalonnage_sain_les_deux_oracles_grandeurs_intervalles_et_phrases():
     e = etalonnage(3, ancrage=0.7)
     r = br.calculer(e, ENTREES, CFG, jm.Graines(1).generateur(br.CLE_TIRAGES))
-    assert r["non_calculable"] is None and r["R_plafond"] == 106 and "issue" not in r and set(r["oracles"]) == {"N", "P"}
+    assert r["non_calculable"] is None and r["R_plafond"] == 105 and "issue" not in r and set(r["oracles"]) == {"N", "P"}
     for o in ("N", "P"):
         x = r["oracles"][o]
         g = x["grandeurs"]

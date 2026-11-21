@@ -3,8 +3,8 @@
 # `scripts/amorce_instance_iib_v1.sh` (nom neuf, R12 ; la v1 reste telle quelle). Changements, et eux seuls :
 #  (a) le run est joué par `controle_ia.iib.lanceur_v5 --phase etalonnage` (étalonnage seul ; les conditions de départ et la
 #      désignation se jouent ensuite, une fois, sur processeur, sur les sorties scellées rapatriées) ;
-#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v3.txt` (empreinte écrite en dur ci-dessous) : les vingt fichiers d'essais
-#      en version 5 sans celui du tokeniseur réel, sauté sur la machine (une ligne « N passed, 1 skipped » ne passe pas le contrôle
+#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v4.txt` (empreinte écrite en dur ci-dessous) : les vingt-trois fichiers d'essais
+#      en version 5, distillateur compris, sans celui du tokeniseur réel ni celui du moteur à torch du distillateur (une ligne « N passed, 1 skipped » ne passe pas le contrôle
 #      du nombre de tests attendus : constat de la répétition locale) ;
 #  (c) l'instant de début de l'amorce est passé au lanceur (`IIB_DEBUT_UTC_S`) : la dépense de l'étalonnage se compte depuis lui ;
 #  (d) données légères poussées : identifiants des actions, lot par lot (`donnees/<run>/lots/`) ; les sorties d'oracle, lot par lot,
@@ -382,7 +382,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
 fi
 # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-iib-v5-v3.txt"; LISTE_SHA256="79dd4fbba8be1261ee8baa332ec17da6c06ac09a3cbcaf67d4dc078c76a297ea"; FICHIERS_TESTS=""
+LISTE_TESTS="scripts/tests-cibles-iib-v5-v4.txt"; LISTE_SHA256="342ee21d495b54cb5fd4a8ae6d7427043edb3c228cc16afd57ab4f9e3d099b68"; FICHIERS_TESTS=""
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"

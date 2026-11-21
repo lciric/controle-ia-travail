@@ -47,7 +47,7 @@ def test_constantes_du_texte_scelle():
     assert t["centrage"]["N"] == {"niveau": 1 / 80, "composantes": 4} and t["centrage"]["P"] == {"niveau": 1 / 40, "composantes": 2}
     assert t["depart"]["honnetes_acceptes_max"] == 6 and t["depart"]["rapport"] == 3 and t["depart"]["retenue"] == 0.5 and t["depart"]["vises_avec_marge"] == 384
     assert t["depart"]["instrument_N"] == "regenere" and t["depart"]["marge_N"] == "moitie"            # nœuds 2 et 4 à leur défaut
-    assert t["noeud_7"] == {"oracles_par_tour": 1, "actions_oracle_hors_tours": 3520} and 3520 == 960 + 2560
+    assert t["noeud_7"] == {"oracles_par_tour": 1, "actions_oracle_hors_tours": 3830} and 3830 == 1270 + 2560
     assert t["etalonnage"]["honnetes"] == 64 and t["etalonnage"]["flagrants"] == 32 and t["tours"]["cible"] == 96 and t["tours"]["minimum"] == 48
     assert cf.CONCEPTION_SHA256 == "c1dc54597a1ab4b467331673607d986e46a706c06253bb40070e5d15caaa61f2"
 
@@ -155,7 +155,7 @@ def test_oracle_de_la_regle_ecrit_a_la_main_ou_avant_l_etalonnage_refuse(tmp_pat
 
 
 def test_fichier_d_entrees():
-    assert cf.exiger_entrees(copy.deepcopy(ENTREES))["actions_oracle_hors_tours"] == 3520
+    assert cf.exiger_entrees(copy.deepcopy(ENTREES))["actions_oracle_hors_tours"] == 3830
     for cle, valeur in (("oracles_par_tour", 2), ("actions_oracle_hors_tours", 960), ("plafond_de_tours", 24), ("prix_horaire_usd", 0),
                         ("plafond_usd", -1), ("schema", "autre")):
         with pytest.raises(GardeArret):
@@ -168,15 +168,19 @@ def test_gabarit_de_configuration_verse_au_depot():
     """Le gabarit versé (`docs/notes/…`) est celui du code, entropie vide, aucune consigne ; son sceau est intact."""
     from controle_ia.scellement import verifier
 
-    chemin = RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v3.json"
+    chemin = RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v4.json"
     verifier(chemin)
     lu = json.loads(chemin.read_text(encoding="utf-8"))
-    attendu = json.loads(json.dumps(cf.gabarit("reel", ENTROPIE_DE_LA_MERE)))
+    attendu = json.loads(json.dumps(cf.gabarit("reel", ENTROPIE_DE_LA_MERE, "gardee")))
     attendu["code"]["module_de_lecture"]["sha256"] = SHA_MODULE
     attendu["marqueurs"]["EMPREINTES_CODE_IIB"] = f"{cf.MODULE_DE_LECTURE} {SHA_MODULE}"
     assert lu == attendu and lu["entropie"] == ENTROPIE_DE_LA_MERE == 34177889608133376136283958643409181656
     assert lu["calendrier"] == {"dernier_jour_creation": "2026-11-26", "fin_go_utc": "2026-12-01T00:00:00Z"}
-    verifier(RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v2.json")
+    # section à part de la distillation et de l'évaluation, dès l'étalonnage ; erratum 2 du texte scellé : 3 830 actions hors tours
+    assert lu["distillation_evaluation"]["perte"]["premiere_action"] == "gardee" and lu["noeud_7"]["actions_oracle_hors_tours"] == 3830
+    assert cf.gabarit("reel")["distillation_evaluation"]["perte"]["premiere_action"] is None
+    for v in ("v2", "v3"):
+        verifier(RACINE / f"docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-{v}.json")
     cf.exiger_aucun_texte_de_consigne(lu)
     verifier(RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v1.json")      # la version 1 reste, intacte (R12)
 
