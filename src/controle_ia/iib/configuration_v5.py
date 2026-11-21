@@ -73,13 +73,27 @@ TEXTE = {
 }
 SECTIONS_TAILLES = ("etalonnage", "tours", "epreuves", "depart", "centrage", "generation")     # réductibles en mode jouet seulement
 PIECES = ("conception", "consigne_maitre_N", "consigne_maitre_P", "consigne_flagrant", "taches_reserve", "taches_evaluation", "entrees")
-CLES = ("version", "mode", "avertissement", "go_id", "entropie", "prefixe_graines", "agent", "pieces", "marqueurs_de_consigne", "code",
-        "instances_intouchables", "oracle_de_la_regle", "marqueurs") + tuple(TEXTE)
+CLES = ("version", "mode", "avertissement", "go_id", "entropie", "prefixe_graines", "agent", "modele", "pieces", "marqueurs_de_consigne",
+        "code", "instances_intouchables", "oracle_de_la_regle", "marqueurs") + tuple(TEXTE)
+# Réglages non textuels du modèle (contre-lecture, B1) : section neuve, lue par `modele_v5`, vérifiée à l'égalité en mode réel.
+AGENT_REEL = {"modele": "meta-llama/Llama-3.1-8B-Instruct", "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+              "texte_attendu_ouverture": "Today Date: 26 Jul 2024"}
+FORMES_LOT_SUITES = ("cache_duplique", "prerempli_par_suite")
+MODELE_REEL = {"precision": "bfloat16", "appareil": "cuda", "noyau_attention": "sdpa", "variables_gabarit": {"date_string": "26 Jul 2024"}}
+# Devis scellé (`brouillons/ii-b-saboteur-budget-v5/devis-v5/devis-ii-b-v5-scelle-v1.md`, cb881522…) : ligne de 60 dollars, coupure 55 ;
+# machine de l'ordre de la première course ; fichier d'entrées au prix borne (1,30 + 0,08 = 1,38) et au coût fixe de 6,90, plafond 45.
+DEVIS = {"plafond": {"variante": "B", "ligne_usd": 60, "configuration_usd": 55, "repli_h200": False}, "plafond_usd": 55,
+         "carte_nom_offre": "A100 SXM4", "carte_prix_max_usd_h": 1.30, "stockage_max_usd_h": 0.08, "prix_borne_usd_h": 1.38,
+         "telechargement_max_usd_go": 0.05, "disque_min_go": 100, "memoire_carte_min_mo": 80000,
+         "entrees": {"plafond_usd": 45, "cout_fixe_usd": 6.90, "prix_horaire_usd": 1.38}}
+CLES_OFFRE = {"etiquette", "disque_min_go", "coeurs_effectifs_min", "memoire_vive_min_mo", "stockage_max_usd_h", "telechargement_go_prevu",
+              "telechargement_max_usd_go"}
+CLES_CARTE = {"memoire_carte_min_mo", "nom", "nom_offre", "prix_max_usd_h"}
 CLES_JOUET = ("jouet",)
-# Sections de la location (offre, carte, plafond, calendrier) : le texte scellé ne les fixe pas (devis neuf, ordre neuf) ; elles
-# sont permises telles que le lanceur de session en version 2 et `session_v1` les lisent dans `config.json`, et ne sont pas
-# vérifiées ici (déclaré au rapport du développeur).
-CLES_DE_LOCATION = ("offre", "carte", "plafond_usd", "plafond", "calendrier", "memoire_vive_min_go")
+# Sections de la location (contre-lecture, M7) : le lanceur de session et `session_v1` les lisent dans `config.json` sous la forme
+# de la version 1. Mode réel : toutes exigées, forme vérifiée, bornes du devis scellé vérifiées à l'égalité (`exiger_location`).
+# Mode jouet : permises, non vérifiées.
+CLES_DE_LOCATION = ("offre", "carte", "plafond_usd", "plafond", "calendrier", "memoire_vive_min_go", "prealables")
 _SHA = re.compile(r"[0-9a-f]{64}")
 _GO = re.compile(r"GO-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}")
 MOTS_DE_CONSIGNE = ("texte_consigne", "consigne_texte", "texte_prive", "instruction", "indication", "prompt")
@@ -140,6 +154,73 @@ def _piece(v, quoi: str) -> None:
         raise GardeArret(f"{quoi} : {{chemin, sha256 (64 caractères)}} attendu, et rien d'autre")
 
 
+def _nombre(v, quoi: str, minimum: float | None = None) -> float:
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or (minimum is not None and v < minimum):
+        raise GardeArret(f"{quoi} : {v!r} (nombre" + (f" d'au moins {minimum:g}" if minimum is not None else "") + " attendu)")
+    return float(v)
+
+
+def exiger_location(config: dict) -> None:
+    """Mode réel : sections de location présentes, de la forme que lisent le lanceur de session et `session_v1`, et aux bornes du
+    devis scellé (ligne 60, coupure 55, A100 SXM4 à 1,30 dollar l'heure au plus, stockage à 0,08 au plus : prix borne 1,38)."""
+    manquantes = [k for k in CLES_DE_LOCATION if k not in config]
+    if manquantes:
+        raise GardeArret(f"mode réel : sections de location absentes {manquantes} (le lanceur de session les lit ; l'ordre les remplit)")
+    _egal("plafond", config["plafond"], DEVIS["plafond"])
+    _egal("plafond_usd", config["plafond_usd"], DEVIS["plafond_usd"])
+    o = config["offre"]
+    if not isinstance(o, dict) or set(o) != CLES_OFFRE:
+        raise GardeArret(f"offre : clés {sorted(CLES_OFFRE)} attendues")
+    if not isinstance(o["etiquette"], str) or not re.fullmatch(r"iib[A-Za-z0-9_.-]{0,57}", o["etiquette"]):
+        raise GardeArret("offre.etiquette : 1 à 60 caractères de [A-Za-z0-9_.-], commençant par « iib »")
+    _nombre(o["disque_min_go"], "offre.disque_min_go", DEVIS["disque_min_go"])
+    _nombre(o["coeurs_effectifs_min"], "offre.coeurs_effectifs_min", 1)
+    _nombre(o["memoire_vive_min_mo"], "offre.memoire_vive_min_mo", 1)
+    _nombre(o["telechargement_go_prevu"], "offre.telechargement_go_prevu", 1)
+    _egal("offre.stockage_max_usd_h", o["stockage_max_usd_h"], DEVIS["stockage_max_usd_h"])
+    _egal("offre.telechargement_max_usd_go", o["telechargement_max_usd_go"], DEVIS["telechargement_max_usd_go"])
+    c = config["carte"]
+    if not isinstance(c, dict) or "course" not in c or set(c) - {"course", "relance"} or any(not isinstance(v, dict) or set(v) != CLES_CARTE for v in c.values()):
+        raise GardeArret(f"carte : {{course (et relance, facultative) : {sorted(CLES_CARTE)}}} attendu")
+    _egal("carte.course.nom_offre", c["course"]["nom_offre"], DEVIS["carte_nom_offre"])
+    _egal("carte.course.prix_max_usd_h", c["course"]["prix_max_usd_h"], DEVIS["carte_prix_max_usd_h"])
+    _nombre(c["course"]["memoire_carte_min_mo"], "carte.course.memoire_carte_min_mo", DEVIS["memoire_carte_min_mo"])
+    if round(float(c["course"]["prix_max_usd_h"]) + float(o["stockage_max_usd_h"]), 6) != DEVIS["prix_borne_usd_h"]:
+        raise GardeArret("prix borne (carte + stockage) ≠ 1,38 dollar l'heure (devis scellé)")
+    cal = config["calendrier"]
+    if not isinstance(cal, dict) or set(cal) != {"dernier_jour_creation", "fin_go_utc"}:
+        raise GardeArret("calendrier : {dernier_jour_creation, fin_go_utc} attendu")
+    from datetime import date, datetime, timedelta
+
+    try:
+        dernier = date.fromisoformat(str(cal["dernier_jour_creation"]))
+        fin = datetime.fromisoformat(str(cal["fin_go_utc"]).replace("Z", "+00:00"))
+    except ValueError:
+        raise GardeArret("calendrier illisible : dernier_jour_creation (AAAA-MM-JJ) et fin_go_utc (instant UTC) attendus") from None
+    if fin.tzinfo is None or fin.utcoffset() != timedelta(0) or dernier > fin.date():
+        raise GardeArret("calendrier : fin_go_utc en UTC, et dernier jour de création au plus tard ce jour-là")
+    _nombre(config["memoire_vive_min_go"], "memoire_vive_min_go", 1)
+    pr = config["prealables"]
+    if not isinstance(pr, dict) or set(pr) != {"ligne_registre_creation_7b"} or not isinstance(pr["ligne_registre_creation_7b"], str) \
+            or not pr["ligne_registre_creation_7b"].strip():
+        raise GardeArret("prealables : {ligne_registre_creation_7b : texte non vide} attendu (le lanceur de session la relit au registre)")
+
+
+def exiger_modele(config: dict) -> None:
+    """Section `modele` : forme du lot des suites ; en mode réel, agent et réglages égaux aux constantes (aucun changement de
+    modèle sans accord), texte attendu dans l'ouverture compris."""
+    m = config["modele"]
+    if not isinstance(m, dict) or set(m) != {"forme_lot_suites", *MODELE_REEL}:
+        raise GardeArret(f"modele : clés {sorted({'forme_lot_suites', *MODELE_REEL})} attendues")
+    if m["forme_lot_suites"] not in FORMES_LOT_SUITES:
+        raise GardeArret(f"modele.forme_lot_suites : {FORMES_LOT_SUITES}")
+    if not isinstance(m["variables_gabarit"], dict):
+        raise GardeArret("modele.variables_gabarit : dictionnaire attendu")
+    if config["mode"] == "reel":
+        _egal("modele", {k: v for k, v in m.items() if k != "forme_lot_suites"}, MODELE_REEL)
+        _egal("agent", config["agent"], AGENT_REEL)
+
+
 def exiger_table_s() -> None:
     """La table s(R) du texte est recalculée (loi binomiale exacte) : un écart est un refus."""
     for R, s in TABLE_S.items():
@@ -190,6 +271,9 @@ def exiger_config_v5(config: dict, racine=".", pour_lancer: bool = False) -> dic
     for s, attendu in TEXTE.items():
         (_egal if (mode == "reel" or s not in SECTIONS_TAILLES) else _meme_forme)(s, config[s], attendu)
     exiger_table_s()
+    exiger_modele(config)
+    if mode == "reel":
+        exiger_location(config)
     if not isinstance(config["pieces"], dict) or set(config["pieces"]) != set(PIECES):
         raise GardeArret(f"pieces : {sorted(PIECES)} attendues")
     for k in PIECES:
@@ -243,12 +327,22 @@ def gabarit(mode: str = "reel") -> dict:
     c = copy.deepcopy(TEXTE)
     vide = {"chemin": "", "sha256": ""}
     c.update({"version": VERSION, "mode": mode, "avertissement": AVERTISSEMENT, "go_id": None, "entropie": None, "prefixe_graines": "",
-              "agent": {"modele": None, "revision": None},
+              "agent": dict(AGENT_REEL) if mode == "reel" else {"modele": "jouet", "revision": None, "texte_attendu_ouverture": None},
+              "modele": {"forme_lot_suites": "cache_duplique", **copy.deepcopy(MODELE_REEL)},
               "pieces": {k: dict(vide) for k in PIECES}, "marqueurs_de_consigne": [],
               "code": {"branche": "", "commit": "", "module_de_lecture": {"chemin": MODULE_DE_LECTURE, "sha256": ""}},
               "instances_intouchables": [], "oracle_de_la_regle": {"valeur": None, "designation": None},
               "marqueurs": {"EMPREINTES_CODE_IIB": ""}})
     c["pieces"]["conception"] = {"chemin": CONCEPTION_CHEMIN, "sha256": CONCEPTION_SHA256}
+    if mode == "reel":                                  # sections de location : bornes du devis scellé ; calendrier et préalable à remplir par l'ordre
+        c.update({"plafond": dict(DEVIS["plafond"]), "plafond_usd": DEVIS["plafond_usd"],
+                  "offre": {"etiquette": "iib-explo-v5", "disque_min_go": DEVIS["disque_min_go"], "coeurs_effectifs_min": 16,
+                            "memoire_vive_min_mo": 128000, "stockage_max_usd_h": DEVIS["stockage_max_usd_h"], "telechargement_go_prevu": 40,
+                            "telechargement_max_usd_go": DEVIS["telechargement_max_usd_go"]},
+                  "carte": {"course": {"memoire_carte_min_mo": DEVIS["memoire_carte_min_mo"], "nom": "A100 SXM4 80 Go",
+                                       "nom_offre": DEVIS["carte_nom_offre"], "prix_max_usd_h": DEVIS["carte_prix_max_usd_h"]}},
+                  "calendrier": {"dernier_jour_creation": None, "fin_go_utc": None}, "memoire_vive_min_go": 128,
+                  "prealables": {"ligne_registre_creation_7b": ""}})
     return c
 
 
@@ -258,9 +352,11 @@ def regle_de(config: dict, oracle: str) -> dict:
     return dict(config["regle"][oracle])
 
 
-def exiger_entrees(entrees) -> dict:
+def exiger_entrees(entrees, reel: bool = False) -> dict:
     """Fichier d'entrées scellé avant l'étalonnage (section 10.2) : plafond, dépense passée, coût fixe, prix horaire, nombre
-    d'oracles par tour et actions d'oracle hors tours (nœud 7, option (b') : 1 et 3 520), plafond de tours **en formule**."""
+    d'oracles par tour et actions d'oracle hors tours (nœud 7, option (b') : 1 et 3 520), plafond de tours **en formule**.
+    `reel` : les valeurs du devis scellé sont vérifiées à l'égalité (plafond 45, coût fixe 6,90, prix borne 1,38 ; contre-lecture,
+    m8) ; la dépense passée est positive ou nulle (0, plus toute dépense de la ligne neuve faite avant la location)."""
     cles = {"schema", "plafond_usd", "depense_passee_usd", "cout_fixe_usd", "prix_horaire_usd", "oracles_par_tour",
             "actions_oracle_hors_tours", "plafond_de_tours"}
     if not isinstance(entrees, dict) or set(entrees) != cles or entrees["schema"] != SCHEMA_ENTREES:
@@ -273,6 +369,8 @@ def exiger_entrees(entrees) -> dict:
         raise GardeArret("fichier d'entrées : prix horaire nul")
     _egal("entrees.noeud_7", {"oracles_par_tour": entrees["oracles_par_tour"], "actions_oracle_hors_tours": entrees["actions_oracle_hors_tours"]},
           TEXTE["noeud_7"])
+    if reel:
+        _egal("entrees", {k: entrees[k] for k in DEVIS["entrees"]}, DEVIS["entrees"])
     if entrees["plafond_de_tours"] != {"forme": "formule", "formule": FORMULE_PLAFOND_DE_TOURS}:
         raise GardeArret("fichier d'entrées : le plafond de tours est une formule (section 10.2), jamais un nombre écrit d'avance")
     return entrees

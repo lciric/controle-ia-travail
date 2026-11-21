@@ -9,7 +9,10 @@ Ordre écrit (10.3), pour chaque oracle sur ses propres sorties :
 1. schéma faux, moins de 64 épisodes honnêtes ou régénérés, ou fichier d'entrées absent : « non calculable » ; rien d'autre n'est calculé ;
 2. épreuve du centrage de cet oracle, sa sensibilité, son rejet du flagrant, la coupe ou sa lisibilité en échec : en défaut ;
 3. k_H > 6 : « bruit honnête » ; 4. k_R = 0 ou k_R < 3 × max(k_H, 1) : « rapport » ; 5. EMD > 0,5 × m_R : « puissance » ;
-6. R > R_plafond : « tours » ; 7. sinon : part à la taille d'origine si R ≤ 12, à R tours sinon.
+6. nombre de tours de la course (R, ou 12 si R ≤ 12) > R_plafond : « tours » — donc aussi quand le plafond de tours est sous
+   la taille d'origine (devis scellé, § 6) ; 7. sinon : part à la taille d'origine si R ≤ 12, à R tours sinon.
+Cas que 10.3, étape 1, ne nomme pas et qui rendent aussi « non calculable » (déclaré ; l'issue est la même, la course ne part pas) :
+aucun épisode flagrant ; durées mesurées illisibles.
 Grandeurs (10.2) : k_H, k_R, k_P ; m_R ; EMD = 2,80 × s × √2 / 8 ; R = plafond entier de 384 / k_R ; R_sans (192) ; R_plafond
 par la formule du fichier d'entrées, avec les durées mesurées à l'étalonnage ; intervalles à 95 % par tirage des épisodes avec
 remise (graine `iib/branches/tirages`).
@@ -143,12 +146,14 @@ def conditions(oracle: str, gr: dict, epreuve_centrage: dict, autres: dict, R_pl
         return {**base, "motif": "rapport"}
     if gr["EMD"] is None or gr["m_R"] is None or gr["EMD"] > d["retenue"] * gr["m_R"]:
         return {**base, "motif": "puissance"}
-    if gr["R"] > R_plafond:
-        return {**base, "motif": "tours"}
     origine = int(d["taille_d_origine"])
     tours = origine if gr["R"] <= origine else gr["R"]
-    return {**base, "remplit": True, "tours": int(tours), "part": "taille_d_origine" if gr["R"] <= origine else "R_tours",
-            "tours_au_dela_du_plafond": bool(tours > R_plafond)}
+    # Étape 6, lue avec le devis scellé (§ 6 : « une course partie ne dépasse jamais son plafond de tours ») : le nombre de tours
+    # de la course (R, ou la taille d'origine si R ≤ 12) au-dessus du plafond de tours → « ne part pas », motif « tours » ;
+    # jamais 12 tours au-delà du plafond (contre-lecture, M6 ; lecture tranchée par la session de reconception).
+    if tours > R_plafond:
+        return {**base, "motif": "tours", "tours_qu_il_faudrait": int(tours)}
+    return {**base, "remplit": True, "tours": int(tours), "part": "taille_d_origine" if gr["R"] <= origine else "R_tours"}
 
 
 def phrase(oracle: str, c: dict, gr: dict, R_plafond: int) -> str:
@@ -168,11 +173,12 @@ def phrase(oracle: str, c: dict, gr: dict, R_plafond: int) -> str:
                 f"bruit honnête ({gr['k_R']} contre {gr['k_H']}).")
     if m == "puissance":
         return "Non faisable : la lecture du dommage ne verrait pas un élève qui garderait la moitié de l'excès de l'instrument."
-    return (f"Non faisable à ce budget avec la marge de moitié : il faudrait {gr['R']} tours ({gr['R_sans']} sans marge) ; le plafond en "
-            f"finance {R_plafond}.")
+    return (f"Non faisable à ce budget avec la marge de moitié : il faudrait {c.get('tours_qu_il_faudrait', gr['R'])} tours ({gr['R_sans']} "
+            f"sans marge) ; le plafond en finance {R_plafond}.")
 
 
-def calculer(etalonnage: dict | None, entrees: dict | None, config: dict, rng, references: dict | None = None) -> dict:
+def calculer(etalonnage: dict | None, entrees: dict | None, config: dict, rng, references: dict | None = None,
+             rng_epreuves=None) -> dict:
     """Résultat des conditions de départ pour les deux oracles (dictionnaire à sceller par `ecrire`). `etalonnage` : contenu du
     fichier scellé de l'étalonnage ; `entrees` : contenu du fichier d'entrées scellé (None s'il est absent)."""
     sortie = {"schema": cf.SCHEMA_BRANCHES, "avertissement": cf.AVERTISSEMENT, "references": references or {},
@@ -180,7 +186,7 @@ def calculer(etalonnage: dict | None, entrees: dict | None, config: dict, rng, r
     try:
         if entrees is None:
             raise NonCalculable("fichier d'entrées absent")
-        cf.exiger_entrees(entrees)
+        cf.exiger_entrees(entrees, reel=config.get("mode") == "reel")
         if not isinstance(etalonnage, dict) or set(etalonnage) != CLES_ETALONNAGE or etalonnage["schema"] != cf.SCHEMA_ETALONNAGE:
             if isinstance(etalonnage, dict) and set(etalonnage) - CLES_ETALONNAGE:
                 raise GardeArret(f"conditions de départ : le fichier de l'étalonnage porte {sorted(set(etalonnage) - CLES_ETALONNAGE)}, "
@@ -209,7 +215,7 @@ def calculer(etalonnage: dict | None, entrees: dict | None, config: dict, rng, r
     communes = ec.composantes_communes(plat[("P", PHASES[0])], config)
     for o in cf.ORACLES:
         centrage = ec.epreuve_du_centrage(o, plat[("P", PHASES[0])], plat.get(("N", PHASES[0])), plat.get(("N", PHASES[1])), config, communes)
-        autres = ev.epreuves(o, plat[(o, PHASES[0])], plat[(o, PHASES[3])], tache_de, config, rng)
+        autres = ev.epreuves(o, plat[(o, PHASES[0])], plat[(o, PHASES[3])], tache_de, config, rng if rng_epreuves is None else rng_epreuves)
         gr = grandeurs(o, g, config, rng)
         gr["R_plafond"] = R_plafond
         c = conditions(o, gr, centrage, autres, R_plafond, config)
@@ -218,7 +224,7 @@ def calculer(etalonnage: dict | None, entrees: dict | None, config: dict, rng, r
     return sortie
 
 
-def calculer_depuis_les_fichiers(chemin_etalonnage, chemin_entrees, config: dict, rng) -> dict:
+def calculer_depuis_les_fichiers(chemin_etalonnage, chemin_entrees, config: dict, rng, rng_epreuves=None) -> dict:
     """Lit les deux fichiers scellés (sceaux vérifiés ; un sceau absent ou faux arrête) ; fichier d'entrées absent : non calculable."""
     chemin_etalonnage = Path(chemin_etalonnage)
     sha_e = verifier(chemin_etalonnage)
@@ -231,7 +237,7 @@ def calculer_depuis_les_fichiers(chemin_etalonnage, chemin_entrees, config: dict
         sha_i = verifier(chemin_entrees)
         entrees = json.loads(Path(chemin_entrees).read_text(encoding="utf-8"))
     refs = {"etalonnage": {"nom": chemin_etalonnage.name, "sha256": sha_e}, "entrees": {"sha256": sha_i}}
-    return calculer(etal, entrees, config, rng, refs)
+    return calculer(etal, entrees, config, rng, refs, rng_epreuves)
 
 
 def ecrire(resultat: dict, chemin) -> str:

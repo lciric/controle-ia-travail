@@ -32,7 +32,7 @@ def test_premiere_action_a_l_octet_et_contexte_qui_porte_le_cout_multiplie():
     h, r = _paire(m, g)
     tok = m.fmt.tok
     assert r["actions"][0]["ids"] == h["actions"][0]["ids"] == r["generees"][0]["ids"]
-    contextes = m.contextes_generes[10:]                       # ceux de l'épisode régénéré
+    contextes = [None] + m.contextes_generes[10:]              # ceux de l'épisode régénéré : neuf, la première action est copiée
     assert len(contextes) == 10
     multipliees = [t for t, n in enumerate(r["consignes"]) if n["multipliee"]]
     assert multipliees and 0 not in multipliees
@@ -47,6 +47,30 @@ def test_premiere_action_a_l_octet_et_contexte_qui_porte_le_cout_multiplie():
     # l'agent s'ancre sur le coût multiplié : après la première multiplication, la suite diverge de l'épisode honnête
     t0 = multipliees[0]
     assert any(r["generees"][t]["ids"] != h["actions"][t]["ids"] for t in range(t0 + 1, 10))
+
+
+def test_la_premiere_action_du_regenere_est_copiee_non_generee():
+    """Contre-lecture, M3 : sur carte, deux générations de même graine ne sont pas garanties égales à l'octet ; la première
+    action de l'épisode honnête est copiée. Un modèle qui ne rend jamais deux fois la même première action le montre."""
+    class Instable(ModeleJouetDeLangue):
+        appels_au_premier_pas = 0
+
+        def generer_actions(self, contextes, graines, max_nouveaux, temperature):
+            premier = self.fmt.tok.decode(list(contextes[0])).count("[A]") == 1
+            if premier:
+                Instable.appels_au_premier_pas += 1
+                graines = [g + Instable.appels_au_premier_pas for g in graines]          # jamais la même sortie deux fois
+            return super().generer_actions(contextes, graines, max_nouveaux, temperature)
+    m = Instable()
+    g = jm.Graines(77)
+    h, r = _paire(m, g)                                           # la garde d'égalité n'arrête pas : rien n'a été généré à nouveau
+    assert Instable.appels_au_premier_pas == 1 and r["actions"][0]["ids"] == h["actions"][0]["ids"]
+    # sans l'épisode honnête, la première action est générée (aucune copie possible)
+    ga = [g.entiers("iib/etalonnage/honnete/t1/e0", 10)]
+    seul = rg.jouer_regeneres(m, [EnvironnementJouet("t1")], ["t1/e0"], ga, g, CFG)[0]
+    assert Instable.appels_au_premier_pas == 2 and seul["actions"][0]["ids"] != h["actions"][0]["ids"]
+    with pytest.raises(GardeArret, match="première action copiée"):
+        rg.jouer_lot(m, [EnvironnementJouet("t1")], ["e"], ga, 400, 1.0, premieres=[])
 
 
 def test_loi_de_delta_nul_une_fois_sur_cinq_jamais_au_dessus_de_la_limite():

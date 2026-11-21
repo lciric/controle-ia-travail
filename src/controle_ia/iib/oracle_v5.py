@@ -77,7 +77,7 @@ def prefixes_de_l_agent(modele, env_honnete, actions: list[dict]) -> list[str | 
 
 def oracles_episode(modele, env_honnete, actions: list[dict], graines, config: dict, phase: str, episode: str,
                     oracles=("P", "N"), reglages_agent: dict | None = None, empreintes_agent: list | None = None,
-                    marqueurs=(), espion=None) -> dict:
+                    marqueurs=(), espion=None, chrono: dict | None = None) -> dict:
     """Oracles sur les T actions d'un épisode (`actions[t]` : {"ids"}). `empreintes_agent` : empreintes des préfixes de l'agent
     hors texte privé, relevées à la génération (sinon calculées par `prefixes_de_l_agent`). `espion` (essais seulement) :
     appelé avec (oracle, pas, préfixe) pour chaque préfixe passé au jumeau."""
@@ -89,7 +89,14 @@ def oracles_episode(modele, env_honnete, actions: list[dict], graines, config: d
     T = int(config["organisme"]["actions"])
     if len(actions) != T or env_honnete.T != T:
         raise GardeArret(f"oracle : {len(actions)} actions pour {T} attendues")
+    import time
+
     oc, tirage = config["oracle"], config["tirage"]
+
+    def compter(o, t0, action=0):
+        if chrono is not None:                              # durée par oracle : tirages, lectures et réécriture propres à l'oracle
+            chrono[f"oracle_{o}_s"] = chrono.get(f"oracle_{o}_s", 0.0) + time.perf_counter() - t0
+            chrono[f"oracle_{o}_actions"] = chrono.get(f"oracle_{o}_actions", 0) + action
     K, K_MIN, fen = int(oc["K"]), int(oc["K_MIN"]), int(oc["fenetre"])
     reglages_agent = tirage if reglages_agent is None else reglages_agent
     fmt, tok = modele.fmt, modele.fmt.tok
@@ -142,8 +149,10 @@ def oracles_episode(modele, env_honnete, actions: list[dict], graines, config: d
                 if tirages.get("P") is not None:
                     tirages[o] = tirages["P"]                    # suites tirées une fois, servies aux deux oracles
                     continue
+            t0 = time.perf_counter()
             g = graines.entiers(jm.cle_du_jumeau(o, phase, episode, t), K)
             r = jm.tirer_suites(modele, prefixe, tirage, reglages_agent, g, marqueurs, int(oc["max_jetons"]), K, verifie[o])
+            compter(o, t0, 1)
             if marqueurs:
                 verifie[o] = min(r["texte_verifie"], len(tok.decode(ctx[o], skip_special_tokens=False)))
             tirages[o] = r
@@ -157,6 +166,7 @@ def oracles_episode(modele, env_honnete, actions: list[dict], graines, config: d
             exces = float(math.log10(lu["cout_declare"]) - math.log10(estimation)) if bornable else None
             couplage, reecrite = None, None
             if o == "N" and t >= 1 and coupe["conforme"]:
+                t0 = time.perf_counter()
                 choix = cp.choisir(valeurs, lu["cout_declare"], graines.generateur(cle_du_couplage(phase, episode, t)), int(oc["bloc_couplage"]))
                 cp.exiger_remplacement_du_jumeau(choix, K)
                 suite = [] if choix["repli_vide"] else r["suites"][choix["indice"]]
@@ -169,6 +179,7 @@ def oracles_episode(modele, env_honnete, actions: list[dict], graines, config: d
                 comptes["separateurs_inseres"] += int(rr["separateur_insere"])
                 comptes["elargies"] += int(rr["elargie"])
                 comptes["a_la_coupe"] += int(rr["a_la_coupe"])
+                compter(o, t0)
             sortie = {"schema": SCHEMA_ORACLE, "oracle": o, "phase": phase, "episode": episode, "pas": t,
                       "champ_cout": bool(coupe["champ_cout"]), "coupe_conforme": bool(coupe["conforme"]), "rang_coupe": coupe["rang"],
                       "motif_coupe": coupe["motif"], "cout_declare": lu["cout_declare"], "cout_lisible": bool(lu["cout_lisible"]),

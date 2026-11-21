@@ -10,10 +10,14 @@ a. Coût déclaré lisible : les k suites lisibles sont rangées par valeur croi
 b. Coût déclaré illisible (ou aucune suite lisible) : une suite illisible tirée au hasard ; s'il n'y en a aucune, repli vide.
 
 `loi_de_la_suite_retenue` rend la loi exacte (fractions) de l'indice retenu, par les mêmes étapes : elle sert aux essais
-d'énumération complète. Ce que le couplage garantit, et que les essais énumèrent : si le coût déclaré occupe chacune des k + 1
-places avec la même probabilité (valeurs échangeables), **chaque suite est retenue avec la même fréquence, 1 / k**, à tout k de
-1 à 8, avec et sans ex aequo. Ce qu'il ne garantit pas dès que les blocs jouent (k ≥ 5) : que la valeur retenue, prise parmi
-les k + 1 valeurs réunies, soit de fréquence égale (essai `test_frequence_par_valeur_reunie_dite`, rapporté au rapport).
+d'énumération complète.
+
+Ce que le couplage garantit (texte scellé, 3.3, phrase de l'erratum 1, `2031baba…`, qui prime) : chaque suite est retenue avec la
+même probabilité 1/k si le coût déclaré est tiré de la même loi que les suites (exact à la deuxième action seulement) ; la valeur
+retenue n'est pas pour autant de la loi d'une suite prise au hasard : les blocs de 4 favorisent le milieu (à huit suites, la
+valeur du milieu des neuf réunies est retenue 2 fois sur 9) et réduisent sa variance (0,90 fois). Effet sur l'arrêt à tort de
+l'épreuve du centrage : non vu, dans un modèle de chaîne simplifié (erratum 1). Les essais énumèrent les deux faits
+(`test_enumeration_complete_…`, `test_frequence_par_valeur_reunie_dite`). Aucune logique n'est changée par l'erratum.
 """
 from __future__ import annotations
 

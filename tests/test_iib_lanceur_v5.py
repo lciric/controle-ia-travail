@@ -40,9 +40,9 @@ def course(tmp_path_factory):
     racine = tmp_path_factory.mktemp("iib-v5")
     config = _monde(racine)
     modele, monde = ModeleJouetDeLangue(), la.MondeJouet()
-    etal = la.phase_etalonnage(config, racine, racine / "course", modele, monde)
+    etal = la.phase_etalonnage(config, racine, racine / "course", modele, monde, carte=False)
     cond = la.phase_conditions(config, racine, racine / "course")
-    res = la.phase_course(config, racine, "course", modele, monde) if cond["issue"] in ("N", "P") else None
+    res = la.phase_course(config, racine, "course", modele, monde, carte=False) if cond["issue"] in ("N", "P") else None
     return {"racine": racine, "config": config, "modele": modele, "monde": monde, "etalonnage": etal, "conditions": cond, "course": res}
 
 
@@ -64,7 +64,7 @@ def test_etalonnage_sorties_scellees_sans_texte(course):
     r = json.loads((d / la.NOMS["rapportes_etalonnage"]).read_text(encoding="utf-8"))
     assert r["controle_premier_cout"]["honnetes"]["validite"] in ("valide", "non_valide") and "regeneres/N" in r["par_condition_et_par_oracle"]
     assert r["lecture_de_la_troisieme_donnee"]["ecart_type_par_tiers"] and r["par_condition_et_par_oracle"]["honnetes/N"]["ancrage"]["couples"] > 300
-    m = json.loads((d / "manifeste-etalonnage-iib-v5.json").read_text(encoding="utf-8"))
+    m = json.loads((d / "graines-etalonnage-iib-v5.json").read_text(encoding="utf-8"))
     assert m["entropie"] == str(course["config"]["entropie"]) and any(k.startswith("essai/iib/jumeau/N/") for k in m["graines"])
     assert any(k.startswith("essai/iib/regenere/") for k in m["graines"]) and any(k.startswith("essai/iib/plante/") for k in m["graines"])
     assert not any("/jumeau/N/" in k and k.endswith(("pas0", "pas1")) for k in m["graines"])     # suites communes aux deux premières actions
@@ -145,28 +145,33 @@ def test_pas_de_course_sans_resultat_de_conditions_scelle_part(tmp_path):
     config = _monde(racine)
     modele, monde = ModeleJouetDeLangue(), la.MondeJouet()
     with pytest.raises(GardeArret, match="pas de course sans résultat"):
-        la.phase_course(config, racine, "course", modele, monde)
+        la.phase_course(config, racine, "course", modele, monde, carte=False)
     # issue « ne part pas » scellée : refus
     ecrire_scelle(racine / "course" / la.NOMS["designation"], {"schema": cf.SCHEMA_DESIGNATION, "issue": "ne_part_pas"})
     with pytest.raises(GardeArret, match="pas de course"):
-        la.phase_course(config, racine, "course", modele, monde)
+        la.phase_course(config, racine, "course", modele, monde, carte=False)
     # résultat écrit à la main, sans sceau : refus
     (racine / "course2").mkdir()
     (racine / "course2" / la.NOMS["designation"]).write_text(json.dumps({"schema": cf.SCHEMA_DESIGNATION, "issue": "P"}), encoding="utf-8")
     with pytest.raises(GardeArret, match="empreinte compagnon"):
-        la.phase_course(config, racine, "course2", modele, monde)
+        la.phase_course(config, racine, "course2", modele, monde, carte=False)
 
 
 def test_etalonnage_refuse_sans_entropie_ni_intouchables_ni_accord(tmp_path):
     config = _monde(tmp_path)
     modele, monde = ModeleJouetDeLangue(), la.MondeJouet()
     with pytest.raises(GardeArret, match="à remplir par la mère"):
-        la.phase_etalonnage({**config, "entropie": None}, tmp_path, tmp_path / "c", modele, monde)
+        la.phase_etalonnage({**config, "entropie": None}, tmp_path, tmp_path / "c", modele, monde, carte=False)
     with pytest.raises(GardeArret, match="instances_intouchables"):
-        la.phase_etalonnage({**config, "instances_intouchables": []}, tmp_path, tmp_path / "c", modele, monde)
+        la.phase_etalonnage({**config, "instances_intouchables": []}, tmp_path, tmp_path / "c", modele, monde, carte=False)
+    # mode jouet sur une machine payante (accord posé, ou carte visible) : refus (contre-lecture, m7)
+    with pytest.raises(GardeArret, match="mode jouet sur une machine payante"):
+        la.phase_etalonnage(config, tmp_path, tmp_path / "c", modele, monde, {"IIB_GO_ID": "GO-2099-01-01-01"}, carte=False)
+    with pytest.raises(GardeArret, match="mode jouet sur une machine payante"):
+        la.phase_etalonnage(config, tmp_path, tmp_path / "c", modele, monde, {}, carte=True)
     # accord cité : exigé en mode réel, sur la machine
     reel = {"mode": "reel", "go_id": "GO-2099-01-01-01"}
-    assert la.exiger_accord(reel, {"IIB_GO_ID": "GO-2099-01-01-01"}) == "GO-2099-01-01-01" and la.exiger_accord({"mode": "jouet"}, {}) is None
+    assert la.exiger_accord(reel, {"IIB_GO_ID": "GO-2099-01-01-01"}) == "GO-2099-01-01-01" and la.exiger_accord({"mode": "jouet"}, {}, False) is None
     for env in ({}, {"IIB_GO_ID": "GO-2099-01-01-02"}):
         with pytest.raises(GardeArret, match="accord cité"):
             la.exiger_accord(reel, env)
@@ -236,3 +241,152 @@ def test_fichier_d_entrees_relu_par_son_empreinte_citee(tmp_path):
         la.lire_entrees(faux, tmp_path)
     absent = {**config, "pieces": {**config["pieces"], "entrees": {"chemin": "entrees/pas-la.json", "sha256": "f" * 64}}}
     assert la.lire_entrees(absent, tmp_path) is None                                         # absent : « non calculable » à la désignation
+
+
+# ------------------------------------------------------------------------------------------------------------------------------
+# Corrections de la contre-lecture : versement par lot (M1), marques de progrès (M2), point d'entrée et essai à blanc (B1)
+# ------------------------------------------------------------------------------------------------------------------------------
+def _depot_jouet(racine: Path) -> tuple[dict, Path]:
+    """Dépôt git jouet sous `racine` (le manifeste du run lit le commit), configuration jouet écrite et scellée."""
+    import subprocess
+
+    config = _monde(racine)
+    chemin = racine / "entrees/config-iib-v5-jouet.json"
+    chemin.write_text(json.dumps(config, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    sceller(chemin)
+    for args in (("init", "-q", "-b", "main"), ("config", "user.email", "t@example.invalid"), ("config", "user.name", "t"), ("add", "-A"),
+                 ("commit", "-q", "-m", "monde jouet")):
+        subprocess.run(["git", "-C", str(racine), *args], check=True, capture_output=True)
+    return config, chemin
+
+
+def test_versement_par_lot_et_marques_de_progres(course, capfd):
+    """M1, M2 : chaque lot est écrit et scellé à mesure ; les lots réunis sont l'étalonnage ; une ligne PROGRES par lot."""
+    d = course["racine"] / "course"
+    lots = sorted((d / "lots").glob("lot-*.json"))
+    assert len(lots) == 8 * 3 + 4 == course["etalonnage"]["lots"]         # huit lots d'honnêtes, de régénérés, de plantés ; quatre de flagrants
+    lignes = []
+    for f in lots:
+        verifier(f)
+        verifier(d / "lots" / f"ids-{f.name}")
+        brut = f.read_text(encoding="utf-8")
+        assert "COST" not in brut and SIGNAL_FLAGRANT not in brut
+        lignes += json.loads(brut)["lignes"]
+    e = json.loads((d / la.NOMS["etalonnage"]).read_text(encoding="utf-8"))
+    assert lignes == e["lignes"]
+    r = json.loads((d / la.NOMS["rapportes_etalonnage"]).read_text(encoding="utf-8"))
+    par = r["duree_d_une_action_d_oracle_par_oracle_h"]
+    assert set(par) == {"P", "N"} and e["durees"]["action_oracle_h"] == max(par.values())       # la plus longue des deux (m1)
+    assert la.duree_d_une_action_d_oracle({"oracle_P_s": 36.0, "oracle_P_actions": 100, "oracle_N_s": 72.0, "oracle_N_actions": 100})["retenue_h"] == pytest.approx(0.0002)
+    la.progres(etape="etalonnage", phase="etalonnage-honnete", lot=3, texte="deux mots")
+    ligne = capfd.readouterr().err.strip().splitlines()[-1]
+    import re
+    assert re.fullmatch(r"PROGRES [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z( [a-zA-Z0-9_-]+=[^ ]+)+", ligne), ligne   # motif de l'amorce
+
+
+def test_une_garde_qui_arrete_laisse_les_lots_et_ecrit_le_motif(tmp_path):
+    """M1 : marqueur de consigne dans un préfixe du jumeau au troisième lot d'honnêtes → arrêt ; les lots déjà joués restent,
+    scellés ; `arret.json` porte le motif et la liste de ce qui est écrit ; aucune issue, aucun étalonnage complet."""
+    config, _ = _depot_jouet(tmp_path)
+
+    class MondePiege(la.MondeJouet):
+        vus = 0
+
+        def environnement(self, condition, tache):
+            env = super().environnement(condition, tache)
+            if condition == "honnete" and tache == "r9":           # tâche du troisième lot : une observation porte un texte « privé »
+                vrai = env.observation
+                env.observation = lambda a, pas, j: vrai(a, pas, j) + " " + SIGNAL_MAITRE
+            return env
+    with pytest.raises(GardeArret, match="texte privé"):
+        la.executer("etalonnage", config, tmp_path, "20991231-000000-iib-jouet", ModeleJouetDeLangue(), MondePiege(), {}, carte=False)
+    d = tmp_path / "diag/20991231-000000-iib-jouet"
+    arret = json.loads((d / "arret.json").read_text(encoding="utf-8"))["resultat"]
+    verifier(d / "arret.json")
+    assert arret["etape"] == "etalonnage" and "texte privé dans un préfixe du jumeau" in arret["motif"] and arret["issue"].startswith("aucune")
+    lots = sorted(f.name for f in (d / "lots").glob("lot-*.json"))
+    assert lots == [f"lot-{n:03d}-etalonnage-{p}.json" for n, p in enumerate(("honnete", "regenere", "plante") * 2, start=1)]
+    assert all(f"diag/20991231-000000-iib-jouet/lots/{n}" in arret["ecrits_avant_l_arret"] for n in lots)
+    assert not (d / la.NOMS["etalonnage"]).exists() and not (d / "resume.json").exists() and not (d / la.NOMS["designation"]).exists()
+    for f in (d / "lots").glob("*.json"):
+        verifier(f)
+    # second lancement dans le même run : refus (R12), rien n'est écrasé
+    with pytest.raises(GardeArret, match="existe déjà"):
+        la.executer("etalonnage", config, tmp_path, "20991231-000000-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
+
+
+def test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree(tmp_path):
+    """B1 : `python -m controle_ia.iib.lanceur_v5 --phase etalonnage`, puis `--phase conditions`, sur le monde jouet, comme
+    l'amorce les appelle (répertoire courant = racine du dépôt cloné ; sorties sous runs/, diag/, donnees/)."""
+    import os
+    import subprocess
+    import sys
+
+    config, chemin = _depot_jouet(tmp_path)
+    run = "20991231-000001-iib-jouet"
+    env = {k: v for k, v in os.environ.items() if k != "IIB_GO_ID"}
+    env.update({"PYTHONPATH": str(DEPOT / "src"), "PATH": "/usr/bin:/bin"})          # aucune carte visible sur ce chemin
+    base = [sys.executable, "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-iib-v5-jouet.json", "--run-id", run]
+    r = subprocess.run(base + ["--phase", "etalonnage"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=300)
+    assert r.returncode == 0, r.stderr[-800:]
+    assert json.loads(r.stdout) == {"run": run, "phase": "etalonnage", "lots": 28}
+    progres = [l for l in r.stderr.splitlines() if l.startswith("PROGRES ")]
+    assert len(progres) >= 28 + 3 and "etape=chargement" in progres[0] and "phase=fin" in progres[-1]
+    assert sum("phase=etalonnage-honnete" in l for l in progres) == 8 and sum("phase=etalonnage-flagrant" in l for l in progres) == 4
+    resume = json.loads((tmp_path / "diag" / run / "resume.json").read_text(encoding="utf-8"))
+    manifeste = json.loads((tmp_path / "runs" / run / "manifeste.json").read_text(encoding="utf-8"))
+    assert resume["resultat"]["arret"] is None and resume["resultat"]["lots"] == 28 and manifeste["commande"] == la.COMMANDE
+    assert manifeste["config"]["entropie"] == config["entropie"] and manifeste["decisif"] is False
+    assert (tmp_path / "donnees" / run / "lots" / "ids-lot-001-etalonnage-honnete.json").is_file()
+    for nom, sha in resume["resultat"]["empreintes"].items():
+        f = tmp_path / ("donnees" if nom.startswith("lots/ids-") else "diag") / run / nom
+        assert verifier(f) == sha, nom
+    c = subprocess.run(base + ["--phase", "conditions"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120)
+    assert c.returncode == 0, c.stderr[-800:]
+    issue = json.loads(c.stdout)
+    des = json.loads((tmp_path / "diag" / run / la.NOMS["designation"]).read_text(encoding="utf-8"))
+    assert issue["issue"] == des["issue"] in ("N", "P", "ne_part_pas") and issue["phase"] == "conditions"
+    # second passage des conditions par le point d'entrée : refus, code 1
+    c2 = subprocess.run(base + ["--phase", "conditions"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120)
+    assert c2.returncode == 1 and "second passage" in c2.stderr
+    # la course n'a pas de point d'entrée ; une configuration non scellée est refusée
+    assert subprocess.run(base + ["--phase", "course"], cwd=tmp_path, env=env, capture_output=True, text=True).returncode == 2
+    (tmp_path / "entrees/config-nue.json").write_text(json.dumps(config), encoding="utf-8")
+    nu = subprocess.run([sys.executable, "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-nue.json", "--run-id", "20991231-000002-iib-jouet"],
+                        cwd=tmp_path, env=env, capture_output=True, text=True)
+    assert nu.returncode == 1 and "empreinte compagnon" in nu.stderr and not (tmp_path / "runs/20991231-000002-iib-jouet").exists()
+    # accord posé sur la machine avec une configuration jouet : refus avant tout manifeste
+    paye = subprocess.run(base[:-1] + ["20991231-000003-iib-jouet"], cwd=tmp_path, env={**env, "IIB_GO_ID": "GO-2099-01-01-01"}, capture_output=True, text=True)
+    assert paye.returncode == 1 and "mode jouet sur une machine payante" in paye.stderr and not (tmp_path / "runs/20991231-000003-iib-jouet").exists()
+
+
+def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_declares():
+    """B1 : l'amorce en version neuve appelle le lanceur v5 et la liste d'essais ciblés v5 ; elle et le lanceur de session en
+    version 3 ne diffèrent de leurs originaux (intacts) que par les lignes déclarées."""
+    import difflib
+    import hashlib
+    import subprocess
+
+    s = DEPOT / "scripts"
+    for f in ("amorce_instance_iib_v5.sh", "lancer_iib_v3.sh"):
+        assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
+    amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
+    liste = s / "tests-cibles-iib-v5-v2.txt"
+    assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
+    fichiers = liste.read_text(encoding="utf-8").split()
+    assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py")) and len(fichiers) >= 21
+    assert amorce.count("controle_ia.iib.lanceur_v5 --phase etalonnage --config") == 1 and "controle_ia.iib.lanceur_v1 --config" not in amorce
+    assert 'IIB_DEBUT_UTC_S="$(date +%s)"' in amorce and "donnees/*/lots/ids-lot-*.json" in amorce
+
+    def changees(a, b):
+        d = list(difflib.unified_diff((s / a).read_text(encoding="utf-8").splitlines(), (s / b).read_text(encoding="utf-8").splitlines(), n=0, lineterm=""))
+        return [l for l in d if l[:1] in "+-" and not l.startswith(("+++", "---"))]
+    da = changees("amorce_instance_iib_v1.sh", "amorce_instance_iib_v5.sh")
+    assert len([l for l in da if l[0] == "-"]) == 10 and len([l for l in da if l[0] == "+" and not l[1:].startswith("#")]) == 9
+    dl = changees("lancer_iib_v2.sh", "lancer_iib_v3.sh")
+    assert len([l for l in dl if l[0] == "-"]) == 7 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
+                                                                                    "taches_", "pieces.", "consigne", "$cle.")) for l in dl if l[0] == "-")
+    v3 = (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
+    assert "session_v5.main" in v3 and "A=scripts/amorce_instance_iib_v5.sh" in v3 and "consigne_maitre_N consigne_maitre_P consigne_flagrant entrees" in v3
+    # les originaux sont intacts (empreintes relevées avant ce développement)
+    assert hashlib.sha256((s / "lancer_iib_v2.sh").read_bytes()).hexdigest() == "dba3e09769e97e7304600924c4d6c43077412e25347edb76dee193c627947c96"

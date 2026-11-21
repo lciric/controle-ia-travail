@@ -24,6 +24,9 @@ def config_remplie(mode="reel"):
               "marqueurs_de_consigne": [{"sha256": "9" * 64, "longueur": 40}], "instances_intouchables": [58936096, 61000001]})
     c["code"] = {"branche": "prep/iib-code-v5-local", "commit": "a" * 40, "module_de_lecture": {"chemin": cf.MODULE_DE_LECTURE, "sha256": SHA_MODULE}}
     c["marqueurs"] = {"EMPREINTES_CODE_IIB": f"au commit aaaa : {cf.MODULE_DE_LECTURE} {SHA_MODULE} ; autre.py " + "b" * 64}
+    if mode == "reel":
+        c["calendrier"] = {"dernier_jour_creation": "2099-01-01", "fin_go_utc": "2099-01-03T00:00:00Z"}
+        c["prealables"] = {"ligne_registre_creation_7b": "R-9999 factice : 7b créée (instance 99999999)"}
     return c
 
 
@@ -164,7 +167,7 @@ def test_gabarit_de_configuration_verse_au_depot():
     """Le gabarit versé (`docs/notes/…`) est celui du code, entropie vide, aucune consigne ; son sceau est intact."""
     from controle_ia.scellement import verifier
 
-    chemin = RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v1.json"
+    chemin = RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v2.json"
     verifier(chemin)
     lu = json.loads(chemin.read_text(encoding="utf-8"))
     attendu = json.loads(json.dumps(cf.gabarit("reel")))
@@ -172,3 +175,88 @@ def test_gabarit_de_configuration_verse_au_depot():
     attendu["marqueurs"]["EMPREINTES_CODE_IIB"] = f"{cf.MODULE_DE_LECTURE} {SHA_MODULE}"
     assert lu == attendu and lu["entropie"] is None
     cf.exiger_aucun_texte_de_consigne(lu)
+    verifier(RACINE / "docs/notes/barreau8-iib-v1/config-iib-organisme-retenu-v5-gabarit-v1.json")      # la version 1 reste, intacte (R12)
+
+
+def test_sections_de_location_exigees_en_mode_reel_aux_bornes_du_devis_scelle():
+    """Contre-lecture, M7 : le lanceur de session lit ces sections dans la configuration ; devis scellé : ligne 60, coupure 55,
+    A100 SXM4 à 1,30 dollar l'heure au plus, stockage à 0,08 au plus (prix borne 1,38)."""
+    cf.exiger_config_v5(config_remplie(), RACINE)                  # cas sain
+    for section in cf.CLES_DE_LOCATION:
+        c = config_remplie()
+        del c[section]
+        with pytest.raises(GardeArret, match="sections de location absentes"):
+            cf.exiger_config_v5(c, RACINE)
+    artefacts = [(("plafond", "ligne_usd"), 80), (("plafond", "variante"), "A"), (("plafond_usd",), 60), (("carte", "course", "prix_max_usd_h"), 1.5),
+                 (("carte", "course", "nom_offre"), "H200 NVL"), (("carte", "course", "memoire_carte_min_mo"), 40000),
+                 (("offre", "stockage_max_usd_h"), 0.10), (("offre", "telechargement_max_usd_go"), 0.5), (("offre", "disque_min_go"), 50),
+                 (("offre", "etiquette"), "autre-chantier"), (("offre", "etiquette"), "iib explo"), (("calendrier", "fin_go_utc"), "2099-01-03T00:00:00"),
+                 (("calendrier", "dernier_jour_creation"), "2099-02-01"), (("calendrier", "dernier_jour_creation"), None),
+                 (("memoire_vive_min_go",), 0), (("prealables", "ligne_registre_creation_7b"), " ")]
+    for chemin, valeur in artefacts:
+        c = config_remplie()
+        d = c
+        for k in chemin[:-1]:
+            d = d[k]
+        d[chemin[-1]] = valeur
+        with pytest.raises(GardeArret):
+            cf.exiger_config_v5(c, RACINE)
+    c = config_remplie()
+    c["offre"]["cle_de_plus"] = 1
+    with pytest.raises(GardeArret, match="offre"):
+        cf.exiger_config_v5(c, RACINE)
+    # mode jouet : sections permises, non exigées
+    j = cf.gabarit("jouet")
+    assert not set(cf.CLES_DE_LOCATION) & set(j)
+
+
+def test_section_du_modele_verifiee_a_l_egalite_en_mode_reel():
+    """Contre-lecture, B1 : réglages non textuels du modèle dans une section neuve ; aucun changement de modèle sans accord."""
+    c = config_remplie()
+    assert c["modele"] == {"forme_lot_suites": "cache_duplique", "precision": "bfloat16", "appareil": "cuda", "noyau_attention": "sdpa",
+                           "variables_gabarit": {"date_string": "26 Jul 2024"}}
+    c["modele"]["forme_lot_suites"] = "prerempli_par_suite"
+    cf.exiger_config_v5(c, RACINE)                                 # les deux formes du lot des suites sont permises
+    for chemin, valeur in ((("modele", "forme_lot_suites"), "autre"), (("modele", "noyau_attention"), "eager"), (("modele", "precision"), "float16"),
+                           (("modele", "variables_gabarit"), {"date_string": "1 Jan 2025"}), (("agent", "revision"), "f" * 40),
+                           (("agent", "modele"), "autre/modele"), (("agent", "texte_attendu_ouverture"), None)):
+        c = config_remplie()
+        c[chemin[0]][chemin[1]] = valeur
+        with pytest.raises(GardeArret):
+            cf.exiger_config_v5(c, RACINE)
+    c = config_remplie()
+    c["oracle"]["forme_lot_suites"] = "cache_duplique"            # la section `oracle` reste égale au texte : une clé de plus est un refus
+    with pytest.raises(GardeArret, match="texte scellé"):
+        cf.exiger_config_v5(c, RACINE)
+    from controle_ia.iib import modele_v5
+
+    modele_v5.exiger_tirage_a_la_temperature_seule(config_remplie())
+    c = config_remplie()
+    c["generation"]["temperature"] = 0.7                           # hors du texte, mais la garde du chargeur le voit aussi
+    with pytest.raises(GardeArret, match="température"):
+        modele_v5.exiger_tirage_a_la_temperature_seule(c)
+    assert type(modele_v5.construire_modele(cf.gabarit("jouet"))).__name__ == "ModeleJouetDeLangue"
+
+
+def test_fichier_d_entrees_aux_valeurs_du_devis_scelle_en_mode_reel():
+    """Contre-lecture, m8 : 45 ; 6,90 ; 1,38 vérifiés à l'égalité ; dépense passée positive ou nulle."""
+    devis = {**ENTREES, "plafond_usd": 45, "depense_passee_usd": 0, "cout_fixe_usd": 6.90, "prix_horaire_usd": 1.38}
+    assert cf.exiger_entrees(devis, reel=True)["cout_fixe_usd"] == 6.90
+    assert cf.exiger_entrees({**devis, "depense_passee_usd": 1.2}, reel=True)["depense_passee_usd"] == 1.2     # une création manquée
+    for cle, valeur in (("plafond_usd", 50), ("cout_fixe_usd", 6.33), ("prix_horaire_usd", 1.22)):
+        with pytest.raises(GardeArret, match="texte scellé"):
+            cf.exiger_entrees({**devis, cle: valeur}, reel=True)
+    cf.exiger_entrees(ENTREES)                                      # mode jouet : valeurs libres
+
+
+def test_session_v5_verifie_la_configuration_par_la_version_5(tmp_path, capsys):
+    from controle_ia.iib import session_v5
+
+    bon = tmp_path / "config.json"
+    bon.write_text(json.dumps(config_remplie()), encoding="utf-8")
+    assert session_v5.main(["config", str(bon), str(RACINE)]) == 0 and "configuration v5 conforme" in capsys.readouterr().out
+    c = config_remplie()
+    c["instances_intouchables"] = []
+    mauvais = tmp_path / "config-2.json"
+    mauvais.write_text(json.dumps(c), encoding="utf-8")
+    assert session_v5.main(["config", str(mauvais), str(RACINE)]) == 1 and "REFUS" in capsys.readouterr().err

@@ -5,7 +5,9 @@ déclaré lisible, le premier nombre de la fenêtre du coût est multiplié par 
 (`reecriture_v5.multiplier_cout`) ; δ : nul une fois sur cinq, sinon tiré de la loi de la section 2.1 (normale de moyenne
 log10 2 et d'écart type 0,10, tronquée en haut à log10 2,5) ; graine propre `iib/regenere/<episode>/pas<t>`. **L'action suivante
 est générée dans le contexte qui porte ce coût multiplié.** La première action est celle de l'épisode honnête de même tâche et
-de même graine, à l'octet. Aucun maître, aucune consigne privée, aucun moniteur.
+de même graine, à l'octet : quand l'épisode honnête est fourni, ses jetons sont **copiés** au premier pas, sans génération (sur
+carte, deux générations de même graine ne sont pas garanties égales à l'octet ; contre-lecture, M3) ; la garde d'égalité reste,
+et la garde de régénération porte sur ce qui suit. Aucun maître, aucune consigne privée, aucun moniteur.
 
 `jouer_lot` joue un lot d'épisodes en pas synchronisés, sans aucune activation (même ordre des contextes que `episodes_v1`) ;
 `apres_action` permet de remplacer l'action qui entre dans le contexte ; chaque contexte passé au modèle est consigné par son
@@ -37,9 +39,10 @@ def tirer_delta(rng, loi: dict) -> float:
 
 
 def jouer_lot(modele, environnements: list, identifiants: list[str], graines_actions: list[list[int]], max_nouveaux: int,
-              temperature: float, apres_action=None) -> list[dict]:
+              temperature: float, apres_action=None, premieres: list | None = None) -> list[dict]:
     """Joue B épisodes en pas synchronisés. `graines_actions[b][t]` : graine de l'action t de l'épisode b.
-    `apres_action(b, t, ids)` rend les jetons de l'action qui entrent dans le contexte et un dictionnaire consigné."""
+    `apres_action(b, t, ids)` rend les jetons de l'action qui entrent dans le contexte et un dictionnaire consigné.
+    `premieres[b]` : jetons de la première action, **copiés** (aucune génération au premier pas) — épisode régénéré."""
     B = len(identifiants)
     if B < 1 or len(environnements) != B or len(graines_actions) != B:
         raise GardeArret(f"lot : {B} épisodes, {len(environnements)} environnements, {len(graines_actions)} jeux de graines")
@@ -59,7 +62,12 @@ def jouer_lot(modele, environnements: list, identifiants: list[str], graines_act
                 contextes.append(list(fmt.ouverture(*debuts[b])))
             else:
                 contextes.append(transcriptions[b] + list(fmt.tour(debuts[b], obs)))
-        nouveaux = modele.generer_actions(contextes, [graines_actions[b][t] for b in range(B)], max_nouveaux, temperature)
+        if t == 0 and premieres is not None:
+            if len(premieres) != B:
+                raise GardeArret("lot : une première action copiée par épisode attendue")
+            nouveaux = [list(p) for p in premieres]
+        else:
+            nouveaux = modele.generer_actions(contextes, [graines_actions[b][t] for b in range(B)], max_nouveaux, temperature)
         if len(nouveaux) != B or any(not nv for nv in nouveaux):
             raise GardeArret(f"pas {t} : génération vide ou incomplète")
         for b in range(B):
@@ -97,8 +105,9 @@ def jouer_regeneres(modele, environnements: list, identifiants: list[str], grain
         delta = tirer_delta(graines.generateur(cle_du_regenere(identifiants[b], t)), loi)
         r = rw.multiplier_cout(tok, ids, lu["coupe"]["rang"], delta, fins, fen)
         return r["ids"], {"delta": delta, "cout_avant": lu["cout_declare"], "multipliee": bool(r["multipliee"])}
+    premieres = None if honnetes is None else [list(h["actions"][0]["ids"]) for h in honnetes]
     joues = jouer_lot(modele, environnements, identifiants, graines_actions, int(config["generation"]["max_nouveaux"]),
-                      float(config["generation"]["temperature"]), apres)
+                      float(config["generation"]["temperature"]), apres, premieres)
     if honnetes is not None:
         for ep, h in zip(joues, honnetes):
             exiger_regeneration(h["actions"], ep)

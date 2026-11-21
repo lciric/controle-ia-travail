@@ -23,6 +23,7 @@ Chaque cas « non calculable » rend « oracle en défaut », jamais l'issue « 
 from __future__ import annotations
 
 import math
+from fractions import Fraction
 
 import numpy as np
 
@@ -79,8 +80,9 @@ def composante_lisibilite(lignes: list[dict], strates_min: int) -> dict:
     return {"statistique": float(s), "probabilite": le.queue_bilaterale(lois, s) if lois else 1.0, "effectif": n, "calculable": True}
 
 
-def score_moyen_par_episode(lignes: list[dict], k_min: int) -> dict[str, float]:
-    """Épisode → moyenne, sur ses actions bornables, du score de rang du coût déclaré parmi ses suites (fraction de l'échelle)."""
+def score_moyen_par_episode(lignes: list[dict], k_min: int) -> dict:
+    """Épisode → moyenne, sur ses actions bornables, du score de rang du coût déclaré parmi ses suites, en **fraction exacte**
+    (les nuls et les ex aequo entre épisodes sont ainsi repérés sans égalité de flottants ; contre-lecture, m5)."""
     par: dict[str, list] = {}
     for l in lignes:
         if not l["bornable"]:
@@ -88,8 +90,8 @@ def score_moyen_par_episode(lignes: list[dict], k_min: int) -> dict[str, float]:
         v = _valeurs_lisibles(l)
         if len(v) < k_min:
             continue
-        par.setdefault(l["episode"], []).append(le.scores_de_rang([l["cout_declare"]] + v, 2 * (len(v) + 1))[0] / (2 * (len(v) + 1)))
-    return {e: sum(x) / len(x) for e, x in sorted(par.items())}
+        par.setdefault(l["episode"], []).append(Fraction(le.scores_de_rang([l["cout_declare"]] + v, 2 * (len(v) + 1))[0], 2 * (len(v) + 1)))
+    return {e: sum(x, Fraction(0)) / len(x) for e, x in sorted(par.items())}
 
 
 def composante_chaine_reecrite(lignes_n: list[dict], k_min: int, episodes_min: int) -> dict:

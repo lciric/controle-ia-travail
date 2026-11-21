@@ -2,10 +2,13 @@
 
 EXPLORATOIRE, NON OPPOSABLE (R-522). Trois phases séparées, chacune rendue par des fichiers scellés, sans retour en arrière :
 
-A. `phase_etalonnage` — 64 épisodes honnêtes (deux par tâche de réserve), 64 régénérés (mêmes tâches, mêmes graines), 64 à excès
-   planté (copies des honnêtes), 32 flagrants ; les deux oracles sur les honnêtes, les régénérés et les flagrants, l'oracle à
-   contexte réécrit sur les plantés ; sorties `etalonnage-oracles-iib-v5.json` (aucun texte), identifiants des actions, durées
-   mesurées, rapportés (dont le contrôle du premier coût et sa garde de validité).
+A. `phase_etalonnage` — 64 épisodes honnêtes (deux par tâche de réserve), 64 régénérés (mêmes tâches, mêmes graines, première
+   action copiée de l'honnête), 64 à excès planté (copies des honnêtes), 32 flagrants ; les deux oracles sur les honnêtes, les
+   régénérés et les flagrants, l'oracle à contexte réécrit sur les plantés. **Versé par lot** (`lots/`, scellé à mesure), avec
+   une marque de progrès par lot ; à la fin `etalonnage-oracles-iib-v5.json` (aucun texte), durées mesurées (action d'oracle :
+   la plus longue des deux oracles), dépense comptée depuis la création de la machine, rapportés (dont le contrôle du premier
+   coût et sa garde de validité). Point d'entrée : `python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config … --run-id …`
+   (`executer` : manifeste du run, `resume.json`, ou `arret.json` avec le motif sur toute garde).
 B. `phase_conditions` — `branches_v5` puis `designation_v5`, **une seule fois** : dès que l'un des deux résultats scellés existe,
    un second passage est refusé. Le résultat de la désignation nomme l'issue ; personne d'autre.
 C. `phase_course` — refusée sans résultat de désignation scellé « part » (issue N ou P) ; la configuration de course est écrite
@@ -58,16 +61,43 @@ CONDITIONS_EVALUATION = ("H", "B50", "B100", "TJ100")
 # ------------------------------------------------------------------------------------------------------------------------------
 # Gardes
 # ------------------------------------------------------------------------------------------------------------------------------
-def exiger_accord(config: dict, environnement: dict) -> str | None:
+def carte_visible() -> bool:
+    """Une carte de calcul est-elle visible ? (`nvidia-smi` sur le chemin, ou torch qui en voit une ; sans torch : non.)"""
+    import shutil
+
+    if shutil.which("nvidia-smi"):
+        return True
+    try:
+        import torch
+    except ImportError:
+        return False
+    return bool(torch.cuda.is_available())
+
+
+def exiger_accord(config: dict, environnement: dict, carte=None) -> str | None:
     """Accord cité pour toute machine payante : en mode réel, `go_id` de la configuration (forme vérifiée par
-    `configuration_v5`) égal à `IIB_GO_ID` posé par le lanceur de session sur la machine ; sinon refus. Mode jouet : rien."""
+    `configuration_v5`) égal à `IIB_GO_ID` posé par le lanceur de session sur la machine ; sinon refus. Mode jouet : refusé sur
+    une machine payante — `IIB_GO_ID` posé ou carte visible (contre-lecture, m7) ; `carte` : essais (sinon `carte_visible()`)."""
     if config["mode"] != "reel":
+        if environnement.get("IIB_GO_ID") or (carte_visible() if carte is None else carte):
+            raise GardeArret("mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine "
+                             "payante ne joue qu'une configuration réelle sous accord cité")
         return None
     go = config.get("go_id")
     if not go or environnement.get("IIB_GO_ID") != go:
         raise GardeArret(f"accord cité absent ou différent (configuration : {go!r} ; machine : {environnement.get('IIB_GO_ID')!r}) : aucune "
                          "machine payante sans accord cité (refus)")
     return go
+
+
+def progres(**champs) -> None:
+    """Marque de progrès lue par la surveillance du lanceur de session (même forme que `t06.lanceur.progres`, récrite ici parce
+    que ce module-là importe torch) : « PROGRES <instant UTC> clé=valeur … » sur la sortie d'erreur, valeurs sans espace."""
+    import sys
+    from datetime import datetime, timezone
+
+    instant = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    print("PROGRES " + instant + " " + " ".join(f"{k}={str(v).replace(' ', '_')}" for k, v in champs.items()), file=sys.stderr, flush=True)
 
 
 def commande_d_arret(identifiant, config: dict) -> list[str]:
@@ -164,7 +194,7 @@ def appliquer_oracles(modele, monde, episodes: list[dict], config: dict, graines
         t0 = time.perf_counter()
         r = ov.oracles_episode(modele, monde.environnement("honnete", ep["tache"]), ep["actions"], graines, config, ep["phase"], ep["episode"],
                                oracles=oracles, reglages_agent=reglages_de_l_agent(config), empreintes_agent=ep.get("empreintes_agent"),
-                               marqueurs=monde.marqueurs)
+                               marqueurs=monde.marqueurs, chrono=chrono)
         chrono["oracle_s"] = chrono.get("oracle_s", 0.0) + time.perf_counter() - t0
         chrono["actions_oracle"] = chrono.get("actions_oracle", 0) + len(ep["actions"]) * len(oracles)
         ep.setdefault("oracle", {}).update(r["sorties"])
@@ -184,58 +214,94 @@ def _lignes(episodes: list[dict], oracle: str) -> list[dict]:
 # ------------------------------------------------------------------------------------------------------------------------------
 # A. Étalonnage
 # ------------------------------------------------------------------------------------------------------------------------------
-def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None) -> dict:
+def duree_d_une_action_d_oracle(chrono: dict) -> dict:
+    """Durée d'une action d'oracle, **par oracle** (temps de ses tirages, lectures et réécritures propres, divisé par le nombre
+    d'actions où il a tiré lui-même ses suites), et la plus longue des deux, que retient le plafond de tours (devis scellé, § 6 ;
+    contre-lecture, m1)."""
+    par = {o: chrono[f"oracle_{o}_s"] / chrono[f"oracle_{o}_actions"] / 3600.0 for o in ("P", "N") if chrono.get(f"oracle_{o}_actions")}
+    if not par:
+        raise GardeArret("étalonnage : aucune action d'oracle chronométrée")
+    return {"par_oracle_h": par, "retenue_h": max(par.values())}
+
+
+def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None, donnees=None,
+                     debut_utc_s: float | None = None, carte=None) -> dict:
+    """Étalonnage, **versé par lot** (contre-lecture, M1) : après chaque lot d'épisodes, ses sorties d'oracle et les identifiants de
+    ses actions sont écrits et scellés (`lots/`) ; une garde qui arrête laisse donc sur le disque tout ce qui a été joué, et
+    l'appelant (`executer`) écrit le motif. Marques de progrès à chaque lot (M2). `donnees` : dossier des identifiants d'actions
+    (défaut : `dossier`). `debut_utc_s` : instant de création de la machine, pour compter la dépense depuis la création (m2)."""
     racine, dossier = Path(racine), Path(dossier)
+    donnees = dossier if donnees is None else Path(donnees)
     cf.exiger_config_v5(config, racine, pour_lancer=True)
-    exiger_accord(config, environnement or {})
+    exiger_accord(config, environnement or {}, carte)
     if config["oracle_de_la_regle"]["valeur"] is not None:
         raise GardeArret("étalonnage : la configuration porte déjà un oracle de la règle (il n'est écrit qu'après, par la désignation)")
-    if (dossier / NOMS["etalonnage"]).exists():
+    if (dossier / NOMS["etalonnage"]).exists() or (dossier / "lots").exists():
         raise GardeArret("étalonnage déjà joué dans ce dossier : toute reprise est une course neuve, sous devis neuf (refus)")
     graines, chrono, e = graines_de(config), {}, config["etalonnage"]
     reserve = list(monde.taches_reserve)
     if len(reserve) * e["honnetes_par_tache"] != e["honnetes"] or len(reserve) * e["flagrants_par_tache"] != e["flagrants"]:
         raise GardeArret(f"{len(reserve)} tâches de réserve : incohérent avec {e['honnetes']} honnêtes et {e['flagrants']} flagrants")
-    debut = time.perf_counter()
+    entrees = lire_entrees(config, racine)
+    debut = time.time() if debut_utc_s is None else float(debut_utc_s)
+    fins, lot = frozenset(modele.fmt.fins), int(config["generation"]["lot"])
+    sorties, tous, n_lot = {}, [], [0]
+    par_phase = {"etalonnage-honnete": [], "etalonnage-regenere": [], "etalonnage-plante": [], "etalonnage-flagrant": []}
+
+    def verser(phase: str, episodes: list[dict]) -> None:
+        """Lot scellé : sorties d'oracle par épisode (aucun texte) et identifiants des actions ; puis marque de progrès."""
+        n_lot[0] += 1
+        nom = f"lot-{n_lot[0]:03d}-{phase}.json"
+        lignes = [l for ep in episodes for o in ("P", "N") for l in ep["oracle"].get(o, [])]
+        ov.exiger_aucun_texte(lignes)
+        sorties[f"lots/{nom}"] = _ecrire(dossier / "lots", nom, {"lignes": lignes, "taches": {ep["episode"]: ep["tache"] for ep in episodes}})
+        sorties[f"lots/ids-{nom}"] = _ecrire(donnees / "lots", f"ids-{nom}", {
+            "ids": _ids(episodes), "multiplications": {f"{ep['phase']}/{ep['episode']}": ep["consignes"] for ep in episodes if "consignes" in ep}})
+        par_phase[phase].extend(episodes)
+        tous.extend(episodes)
+        progres(etape="etalonnage", phase=phase, lot=n_lot[0], episodes=len(tous), actions_oracle=chrono.get("actions_oracle", 0))
     plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
               for t in reserve for k in range(e["honnetes_par_tache"])]
     plan_f = [{"phase": "etalonnage-flagrant", "episode": t if k == 0 else f"{t}/e{k}", "tache": t, "condition": "flagrant",
                "cle": f"iib/etalonnage/flagrant/{t}" + ("" if k == 0 else f"/e{k}")} for t in reserve for k in range(e["flagrants_par_tache"])]
-    honnetes = jouer(modele, monde, plan_h, config, graines, chrono)
-    flagrants = jouer(modele, monde, plan_f, config, graines, chrono)
-    regeneres = []
-    for morceau in _par_lots(honnetes, int(config["generation"]["lot"])):
+    progres(etape="etalonnage", phase="debut", episodes_prevus=len(plan_h) * 3 + len(plan_f))
+    for morceau in _par_lots(plan_h, lot):
+        honnetes = jouer(modele, monde, morceau, config, graines, chrono)
+        appliquer_oracles(modele, monde, honnetes, config, graines, chrono)
+        verser("etalonnage-honnete", honnetes)
         t0 = time.perf_counter()
-        joues = rg.jouer_regeneres(modele, [monde.environnement("honnete", h["tache"]) for h in morceau], [h["episode"] for h in morceau],
-                                   [h["graines_actions"] for h in morceau], graines, config, morceau)
+        joues = rg.jouer_regeneres(modele, [monde.environnement("honnete", h["tache"]) for h in honnetes], [h["episode"] for h in honnetes],
+                                   [h["graines_actions"] for h in honnetes], graines, config, honnetes)
         chrono["generation_s"] += time.perf_counter() - t0
-        chrono["episodes_generes"] += len(morceau)
-        regeneres += [{"phase": "etalonnage-regenere", "episode": h["episode"], "tache": h["tache"], "condition": "honnete", "actions": j["actions"],
-                       "empreintes_agent": j["empreintes_prefixes"], "consignes": j["consignes"]} for h, j in zip(morceau, joues)]
-    fins = frozenset(modele.fmt.fins)
-    plantes = []
-    for h in honnetes:
-        p = pl.planter(modele.fmt.tok, h["actions"], graines, h["episode"], config, fins)
-        plantes.append({"phase": "etalonnage-plante", "episode": h["episode"], "tache": h["tache"], "condition": "honnete", "actions": p["actions"],
-                        "consignes": p["consignes"]})
-    appliquer_oracles(modele, monde, honnetes + regeneres + flagrants, config, graines, chrono)
-    appliquer_oracles(modele, monde, plantes, config, graines, chrono, oracles=("N",))
-    tous = honnetes + regeneres + plantes + flagrants
+        chrono["episodes_generes"] += len(honnetes)
+        regeneres = [{"phase": "etalonnage-regenere", "episode": h["episode"], "tache": h["tache"], "condition": "honnete", "actions": j["actions"],
+                      "empreintes_agent": j["empreintes_prefixes"], "consignes": j["consignes"]} for h, j in zip(honnetes, joues)]
+        appliquer_oracles(modele, monde, regeneres, config, graines, chrono)
+        verser("etalonnage-regenere", regeneres)
+        plantes = []
+        for h in honnetes:
+            p = pl.planter(modele.fmt.tok, h["actions"], graines, h["episode"], config, fins)
+            plantes.append({"phase": "etalonnage-plante", "episode": h["episode"], "tache": h["tache"], "condition": "honnete",
+                            "actions": p["actions"], "consignes": p["consignes"]})
+        appliquer_oracles(modele, monde, plantes, config, graines, chrono, oracles=("N",))
+        verser("etalonnage-plante", plantes)
+    for morceau in _par_lots(plan_f, lot):
+        flagrants = jouer(modele, monde, morceau, config, graines, chrono)
+        appliquer_oracles(modele, monde, flagrants, config, graines, chrono)
+        verser("etalonnage-flagrant", flagrants)
+    honnetes, regeneres, plantes, flagrants = (par_phase[k] for k in ("etalonnage-honnete", "etalonnage-regenere", "etalonnage-plante",
+                                                                         "etalonnage-flagrant"))
     lignes = [l for ep in tous for o in ("P", "N") for l in ep["oracle"].get(o, [])]
-    for o in ("P", "N"):
-        ov.exiger_aucun_texte(_lignes(tous, o))
-    durees = {"episode_genere_h": chrono["generation_s"] / chrono["episodes_generes"] / 3600.0,
-              "action_oracle_h": chrono["oracle_s"] / chrono["actions_oracle"] / 3600.0}
-    entrees = lire_entrees(config, racine)
-    depense = (time.perf_counter() - debut) / 3600.0 * float(entrees["prix_horaire_usd"]) if entrees is not None else 0.0
-    sorties = {NOMS["etalonnage"]: _ecrire(dossier, NOMS["etalonnage"], {
+    oracle_h = duree_d_une_action_d_oracle(chrono)
+    durees = {"episode_genere_h": chrono["generation_s"] / chrono["episodes_generes"] / 3600.0, "action_oracle_h": oracle_h["retenue_h"]}
+    depense = max(0.0, time.time() - debut) / 3600.0 * float(entrees["prix_horaire_usd"]) if entrees is not None else 0.0
+    sorties[NOMS["etalonnage"]] = _ecrire(dossier, NOMS["etalonnage"], {
         "schema": cf.SCHEMA_ETALONNAGE, "lignes": lignes, "taches": {ep["episode"]: ep["tache"] for ep in tous}, "durees": durees,
-        "depense_etalonnage_usd": depense})}
-    sorties[NOMS["ids_etalonnage"]] = _ecrire(dossier, NOMS["ids_etalonnage"], {
-        "ids": _ids(tous), "multiplications": {f"{ep['phase']}/{ep['episode']}": ep["consignes"] for ep in regeneres + plantes}})
-    premier = {o: pc.controle([l for l in _lignes(honnetes, o) if l["pas"] == 0], pc.GROUPE_DE_VALIDITE, config) for o in ("P",)}
-    validite = premier["P"]["validite"]
-    rapportes = {"controle_premier_cout": {"honnetes": premier["P"],
+        "depense_etalonnage_usd": depense})
+    progres(etape="etalonnage", phase="oracles_ecrits", lignes=len(lignes))
+    premier = pc.controle([l for l in _lignes(honnetes, "P") if l["pas"] == 0], pc.GROUPE_DE_VALIDITE, config)
+    validite = premier["validite"]
+    rapportes = {"controle_premier_cout": {"honnetes": premier,
                                            "flagrants": pc.controle([l for l in _lignes(flagrants, "P") if l["pas"] == 0],
                                                                     "les flagrants de l'étalonnage", config, validite)},
                  "par_condition_et_par_oracle": {f"{nom}/{o}": rp.rapportes(_lignes(eps, o))
@@ -243,10 +309,14 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
                                                                   ("flagrants", flagrants)) for o in ("P", "N") if _lignes(eps, o)},
                  "lecture_de_la_troisieme_donnee": rp.lecture_de_la_troisieme_donnee(_lignes(honnetes, "N"), _lignes(honnetes, "P"),
                                                                                     graines.generateur("iib/rapportes/troisieme-donnee")),
-                 "durees": durees, "chrono": chrono}
+                 "durees": durees, "duree_d_une_action_d_oracle_par_oracle_h": oracle_h["par_oracle_h"],
+                 "depense": {"usd": depense, "depuis": "création de la machine" if debut_utc_s is not None else "début de la phase (instant de création non fourni)"},
+                 "chrono": chrono}
     sorties[NOMS["rapportes_etalonnage"]] = _ecrire(dossier, NOMS["rapportes_etalonnage"], rapportes)
-    sorties["manifeste"] = _manifeste(dossier, "etalonnage", config, graines, sorties, racine)
-    return {"sorties": sorties, "validite_du_controle_du_premier_cout": validite, "durees": durees}
+    sorties["graines-etalonnage-iib-v5.json"] = _ecrire(dossier, "graines-etalonnage-iib-v5.json", {"entropie": str(graines.entropie), "prefixe": graines.prefixe,
+                                                                             "graines": graines.employees})
+    progres(etape="etalonnage", phase="fin", episodes=len(tous), lots=n_lot[0])
+    return {"sorties": sorties, "validite_du_controle_du_premier_cout": validite, "durees": durees, "lots": n_lot[0]}
 
 
 def lire_entrees(config: dict, racine) -> dict | None:
@@ -257,7 +327,7 @@ def lire_entrees(config: dict, racine) -> dict | None:
         return None
     if verifier(chemin) != spec["sha256"]:
         raise GardeArret("fichier d'entrées : empreinte ≠ empreinte citée par la configuration (R11)")
-    return cf.exiger_entrees(json.loads(chemin.read_text(encoding="utf-8")))
+    return cf.exiger_entrees(json.loads(chemin.read_text(encoding="utf-8")), reel=config["mode"] == "reel")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -274,7 +344,11 @@ def phase_conditions(config: dict, racine, dossier) -> dict:
     graines = graines_de(config)
     chemin_etal = dossier / NOMS["etalonnage"]
     spec = config["pieces"]["entrees"]
-    resultat = br.calculer_depuis_les_fichiers(chemin_etal, racine / spec["chemin"], config, graines.generateur(br.CLE_TIRAGES))
+    from .epreuves_v5 import CLE_TIRAGES as CLE_EPREUVES
+
+    resultat = br.calculer_depuis_les_fichiers(chemin_etal, racine / spec["chemin"], config, graines.generateur(br.CLE_TIRAGES),
+                                               graines.generateur(CLE_EPREUVES))
+    progres(etape="conditions", etat="non_calculable" if resultat["non_calculable"] else "calculees")
     if resultat["references"]["entrees"]["sha256"] not in (None, spec["sha256"]):
         raise GardeArret("fichier d'entrées : empreinte ≠ empreinte citée par la configuration (R11)")
     sha_b = br.ecrire(resultat, dossier / NOMS["branches"])
@@ -288,12 +362,12 @@ def phase_conditions(config: dict, racine, dossier) -> dict:
 # ------------------------------------------------------------------------------------------------------------------------------
 # C. Course
 # ------------------------------------------------------------------------------------------------------------------------------
-def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None, environnement: dict | None = None) -> dict:
+def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None, environnement: dict | None = None, carte=None) -> dict:
     """`config` : configuration de l'étalonnage ; la configuration de course est dérivée ici du résultat scellé de la
     désignation. `dossier` : chemin relatif à `racine` du dossier de l'étalonnage et de la course."""
     racine = Path(racine)
     dossier_abs = racine / dossier
-    exiger_accord(config, environnement or {})
+    exiger_accord(config, environnement or {}, carte)
     chemin_d = Path(dossier) / NOMS["designation"]
     if not (racine / chemin_d).is_file():
         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
@@ -456,3 +530,98 @@ class MondeReel:
         if condition in ("maitre-N", "maitre-P"):
             return self._cs.environnement_maitre(t, self._T, self._guide, self._maitre[condition[-1]])
         raise GardeArret(f"condition {condition!r} inconnue")
+
+
+# ------------------------------------------------------------------------------------------------------------------------------
+# Point d'entrée (contre-lecture, B1) : `python -m controle_ia.iib.lanceur_v5 --phase … --config … --run-id …`
+# ------------------------------------------------------------------------------------------------------------------------------
+COMMANDE = "python -m controle_ia.iib.lanceur_v5"
+PHASES = ("etalonnage", "conditions")
+
+
+def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=None, environnement: dict | None = None,
+             autoriser_depot_sale: bool = False, carte=None) -> dict:
+    """Joue une phase sous `runs/<run>/`, `diag/<run>/` et `donnees/<run>/` (la forme que l'amorce consigne et pousse).
+
+    - `etalonnage` : manifeste du run (R9) ; étalonnage versé par lot ; à la fin `diag/<run>/resume.json` ; sur toute garde ou
+      toute erreur, `diag/<run>/arret.json` avec l'étape, le motif et la liste de ce qui est écrit (les lots restent sur le
+      disque, scellés), puis l'erreur se propage : rien n'est supprimé, aucune issue n'est inventée.
+    - `conditions` : conditions de départ et désignation, une seule fois, sur l'étalonnage scellé du même run (processeur seul).
+    La course n'a pas de point d'entrée dans cette version : elle attend le distillateur (contre-lecture, M5)."""
+    import os
+
+    from ..gardes import motif_d_arret
+    from ..manifeste import creer_manifeste, ecrire_resultat
+
+    if phase not in PHASES:
+        raise GardeArret(f"phase {phase!r} : {PHASES} (la course n'a pas de point d'entrée dans cette version)")
+    racine = Path(racine)
+    environnement = dict(os.environ) if environnement is None else environnement
+    diag, donnees = racine / "diag" / run_id, racine / "donnees" / run_id
+    if phase == "conditions":
+        cf.exiger_config_v5(config, racine, pour_lancer=True)
+        return phase_conditions(config, racine, diag)
+    cf.exiger_config_v5(config, racine, pour_lancer=True)
+    exiger_accord(config, environnement, carte)
+    chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste"], entropie=int(config["entropie"]),
+                                  decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
+    etat = {"etape": "chargement"}
+    debut = time.perf_counter()
+    try:
+        from . import modele_v5
+
+        progres(etape="chargement", mode=config["mode"])
+        modele = modele if modele is not None else modele_v5.construire_modele(config)
+        monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
+        etat["etape"] = "etalonnage"
+        cree = environnement.get("IIB_DEBUT_UTC_S")
+        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte)
+        resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
+                  "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
+                  "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True,
+                  "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées"}
+        ecrire_resultat(racine, chemin_m, "resume", resume)
+        return resume
+    except BaseException as e:
+        ecrits = sorted(str(f.relative_to(racine)) for d in (diag, donnees) if d.is_dir() for f in d.rglob("*.json"))
+        ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": phase, "etape": etat["etape"],
+                                                     "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
+                                                     "duree_s": round(time.perf_counter() - debut, 1),
+                                                     "issue": "aucune : étalonnage interrompu, rien n'est désigné ; toute reprise est une course neuve"})
+        progres(etape="arret", phase=phase, fichiers_ecrits=len(ecrits))
+        raise
+
+
+def len_reserve(config: dict) -> int:
+    return int(config["etalonnage"]["honnetes"]) // int(config["etalonnage"]["honnetes_par_tache"])
+
+
+def _main(argv: list[str]) -> int:
+    import argparse
+    import signal
+    import sys
+
+    from ..gardes import lever_sur_term
+
+    p = argparse.ArgumentParser(prog=COMMANDE)
+    p.add_argument("--phase", default="etalonnage", choices=PHASES)
+    p.add_argument("--config", required=True)
+    p.add_argument("--run-id", required=True)
+    p.add_argument("--autoriser-depot-sale", action="store_true")
+    args = p.parse_args(argv)
+    signal.signal(signal.SIGTERM, lever_sur_term)
+    try:
+        verifier(args.config)
+        config = json.loads(Path(args.config).read_text(encoding="utf-8"))
+        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale)
+    except GardeArret as e:
+        print(f"ARRÊT : {e}", file=sys.stderr)
+        return 1
+    print(json.dumps({"run": args.run_id, "phase": args.phase, **{k: r[k] for k in ("lots", "issue", "tours") if k in r}}, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(_main(sys.argv[1:]))

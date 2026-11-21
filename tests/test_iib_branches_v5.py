@@ -45,8 +45,13 @@ def test_chaque_etape_de_l_ordre_sur_son_cas():
     # l'ordre : un oracle en défaut ne dit rien du bruit honnête, etc.
     assert c(_gr(k_H=7, k_R=0), cen={"passe": False, "message": "m"})["motif"] == "en_defaut"
     assert c(_gr(k_H=7, k_R=0))["motif"] == "bruit_honnete" and c(_gr(k_R=0, EMD=9.0))["motif"] == "rapport"
-    # plafond sous la taille d'origine : la course partirait à 12 tours, c'est dit
-    assert c(_gr(R=8), plafond=9)["tours_au_dela_du_plafond"] is True
+    # plafond de tours sous la taille d'origine (contre-lecture, M6 ; devis scellé, § 6) : « ne part pas », motif « tours » ;
+    # jamais 12 tours au-delà du plafond
+    for plafond in (9, 11, 0, -3):
+        d = c(_gr(R=8), plafond=plafond)
+        assert not d["remplit"] and d["motif"] == "tours" and d["tours"] is None and d["tours_qu_il_faudrait"] == 12
+    assert c(_gr(R=8), plafond=12)["tours"] == 12 and "tours_au_dela_du_plafond" not in c(_gr(R=8), plafond=12)
+    assert "il faudrait 12 tours (4 sans marge) ; le plafond en finance 9" in br.phrase("P", c(_gr(R=8, R_sans=4), plafond=9), _gr(R=8, R_sans=4), 9)
 
 
 def test_plafond_de_tours_par_la_formule_du_noeud_7_b_prime():
