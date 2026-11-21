@@ -1,0 +1,172 @@
+Calculs — marge asymétrique après Ctrl-Z — Opus 5.5, effort maximal — v1
+python 3.13.18 ; numpy 2.4.6 ; scipy 1.17.1
+racine des graines (SeedSequence) : 20261121171425
+
+[A] Tirage multiple sans règle : la loi de l'action exécutée ne change pas (exact).
+  politique : attaquant incohérent (attaque 3 tirages sur 10)
+    k=1 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=3/10 (0.3000), P(h1)=1/2 (0.5000)
+    k=2 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=9/100 (0.0900), P(h1)=3/4 (0.7500)
+    k=3 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=27/1000 (0.0270), P(h1)=7/8 (0.8750)
+    k=4 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=81/10000 (0.0081), P(h1)=15/16 (0.9375)
+    k=5 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=243/100000 (0.0024), P(h1)=31/32 (0.9688)
+  politique : attaquant cohérent (attaque à chaque tirage)
+    k=1 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=1 (1.0000), P(h1)=0 (0.0000)
+    k=2 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=1 (1.0000), P(h1)=0 (0.0000)
+    k=3 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=1 (1.0000), P(h1)=0 (0.0000)
+    k=4 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=1 (1.0000), P(h1)=0 (0.0000)
+    k=5 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=1 (1.0000), P(h1)=0 (0.0000)
+  politique : honnête (h1 : 5/7, h2 : 2/7)
+    k=1 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=0 (0.0000), P(h1)=5/7 (0.7143)
+    k=2 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=0 (0.0000), P(h1)=45/49 (0.9184)
+    k=3 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=0 (0.0000), P(h1)=335/343 (0.9767)
+    k=4 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=0 (0.0000), P(h1)=2385/2401 (0.9933)
+    k=5 : choix au hasard, loi égale à la loi d'origine : True ; règle « moins suspect » : P(a)=0 (0.0000), P(h1)=16775/16807 (0.9981)
+  Lecture : sans règle qui regarde le contenu, aucun effet, ni sur l'attaque ni sur le travail honnête ;
+  avec la règle du moniteur, l'attaque incohérente recule en (3/10)^k, l'attaque cohérente pas du tout,
+  et la loi honnête est déplacée vers l'action la moins suspecte (effet sur l'utilité de signe non fixé).
+
+[B] Consensus sans moniteur (majorité de k tirages) : probabilité d'exécuter l'attaque à un pas d'attaque.
+  q = probabilité qu'un tirage soit une attaque ; colonnes : k = 1, 3, 5, 7, 9
+  q=0.30 : 0.3000  0.2160  0.1631  0.1260  0.0988
+  q=0.45 : 0.4500  0.4253  0.4069  0.3917  0.3786
+  q=0.60 : 0.6000  0.6480  0.6826  0.7102  0.7334
+  q=0.80 : 0.8000  0.8960  0.9421  0.9667  0.9804
+  q=1.00 : 1.0000  1.0000  1.0000  1.0000  1.0000
+  Utilité honnête (probabilité de bonne réponse par pas, majorité de k tirages) :
+  p_honnête=0.60 : 0.6000  0.6480  0.6826  0.7102  0.7334
+  p_honnête=0.80 : 0.8000  0.8960  0.9421  0.9667  0.9804
+  Lecture : contre q < 1/2 l'attaque s'efface et l'utilité monte ; contre q > 1/2 l'attaque est amplifiée ;
+  la meilleure riposte (q = 1, attaquer à chaque tirage) garde une exécution de 1 à tout k : marge nulle.
+
+[C] Artefact du seuil : placebo = neutralisation au hasard d'une part lambda des actions, honnêtes et d'attaque.
+  dommage ~ Binomiale(n=100, p=0.3*(1-lambda)) ; succès si dommage >= theta ; utilité relative = 1-lambda
+  theta=25 : succès sans intervention S0=0.8864
+    lambda=0.05 : S=0.8113 ; baisse relative du succès 0.085 ; de l'utilité 0.050 ; rapport 1.70 ; baisse relative du dommage moyen 0.050 (rapport 1,00)
+    lambda=0.10 : S=0.7091 ; baisse relative du succès 0.200 ; de l'utilité 0.100 ; rapport 2.00 ; baisse relative du dommage moyen 0.100 (rapport 1,00)
+    lambda=0.20 : S=0.4455 ; baisse relative du succès 0.497 ; de l'utilité 0.200 ; rapport 2.49 ; baisse relative du dommage moyen 0.200 (rapport 1,00)
+    lambda=0.30 : S=0.1933 ; baisse relative du succès 0.782 ; de l'utilité 0.300 ; rapport 2.61 ; baisse relative du dommage moyen 0.300 (rapport 1,00)
+  theta=30 : succès sans intervention S0=0.5377
+    lambda=0.05 : S=0.4065 ; baisse relative du succès 0.244 ; de l'utilité 0.050 ; rapport 4.88 ; baisse relative du dommage moyen 0.050 (rapport 1,00)
+    lambda=0.10 : S=0.2828 ; baisse relative du succès 0.474 ; de l'utilité 0.100 ; rapport 4.74 ; baisse relative du dommage moyen 0.100 (rapport 1,00)
+    lambda=0.20 : S=0.1009 ; baisse relative du succès 0.812 ; de l'utilité 0.200 ; rapport 4.06 ; baisse relative du dommage moyen 0.200 (rapport 1,00)
+    lambda=0.30 : S=0.0216 ; baisse relative du succès 0.960 ; de l'utilité 0.300 ; rapport 3.20 ; baisse relative du dommage moyen 0.300 (rapport 1,00)
+  theta=35 : succès sans intervention S0=0.1629
+    lambda=0.05 : S=0.0936 ; baisse relative du succès 0.425 ; de l'utilité 0.050 ; rapport 8.50 ; baisse relative du dommage moyen 0.050 (rapport 1,00)
+    lambda=0.10 : S=0.0482 ; baisse relative du succès 0.704 ; de l'utilité 0.100 ; rapport 7.04 ; baisse relative du dommage moyen 0.100 (rapport 1,00)
+    lambda=0.20 : S=0.0087 ; baisse relative du succès 0.946 ; de l'utilité 0.200 ; rapport 4.73 ; baisse relative du dommage moyen 0.200 (rapport 1,00)
+    lambda=0.30 : S=0.0009 ; baisse relative du succès 0.995 ; de l'utilité 0.300 ; rapport 3.32 ; baisse relative du dommage moyen 0.300 (rapport 1,00)
+  Lecture : sur un taux de succès à seuil, un placebo sans spécificité « chute plus vite que l'utilité » ;
+  sur une échelle linéaire du dommage, le même placebo ne montre aucune marge.
+
+[D] Valeur de la mémoire pour un saboteur qui dose son rythme face à un détecteur par somme à horizon fixe.
+  scores honnêtes i.i.d. de loi normale réduite ; un pas d'attaque décale le score de delta ;
+  alarme si la somme des T scores dépasse z_(1-alpha) * racine(T) ; alpha = 0,01.
+  avec mémoire : exactement K pas d'attaque (K réel, relâchement continu) ; sans mémoire : chaque pas attaque
+  avec la probabilité r (nombre d'attaques binomial). Chacun prend le dommage le plus grand sous un risque
+  d'alarme beta qu'il accepte. Perte relative = 1 - (T r) / K ; approximation : 0,5 delta^2 r(1-r) z_b/(z_a - z_b).
+  Dernière colonne : perte / (delta^2 r (1-r)), qui doit rester près de la constante c = 0,5 z_b/(z_a - z_b)
+  si la perte est bien du second ordre en delta/sigma.
+  T=200, beta=0.05 (constante c=1.2068) :
+    delta=0.05 : K avec mémoire=  192.76 ; T r sans mémoire=  192.74 ; perte relative=0.00011 ; approximation=0.00011 ; perte/(delta^2 r(1-r))=1.2087
+    delta=0.10 : K avec mémoire=   96.38 ; T r sans mémoire=   96.09 ; perte relative=0.00301 ; approximation=0.00301 ; perte/(delta^2 r(1-r))=1.2059
+    delta=0.20 : K avec mémoire=   48.19 ; T r sans mémoire=   47.77 ; perte relative=0.00878 ; approximation=0.00883 ; perte/(delta^2 r(1-r))=1.2004
+    delta=0.30 : K avec mémoire=   32.13 ; T r sans mémoire=   31.66 ; perte relative=0.01450 ; approximation=0.01464 ; perte/(delta^2 r(1-r))=1.1949
+    delta=0.50 : K avec mémoire=   19.28 ; T r sans mémoire=   18.78 ; perte relative=0.02578 ; approximation=0.02627 ; perte/(delta^2 r(1-r))=1.1842
+    delta=1.00 : K avec mémoire=    9.64 ; T r sans mémoire=    9.13 ; perte relative=0.05311 ; approximation=0.05535 ; perte/(delta^2 r(1-r))=1.1578
+  T=200, beta=0.20 (constante c=0.2834) :
+    delta=0.05 : saturé (attaquer à chaque pas reste sous le risque accepté) ; valeur de la mémoire nulle
+    delta=0.10 : saturé (attaquer à chaque pas reste sous le risque accepté) ; valeur de la mémoire nulle
+    delta=0.20 : K avec mémoire=  104.99 ; T r sans mémoire=  104.69 ; perte relative=0.00282 ; approximation=0.00283 ; perte/(delta^2 r(1-r))=0.2828
+    delta=0.30 : K avec mémoire=   69.99 ; T r sans mémoire=   69.59 ; perte relative=0.00575 ; approximation=0.00580 ; perte/(delta^2 r(1-r))=0.2810
+    delta=0.50 : K avec mémoire=   41.99 ; T r sans mémoire=   41.51 ; perte relative=0.01151 ; approximation=0.01175 ; perte/(delta^2 r(1-r))=0.2775
+    delta=1.00 : K avec mémoire=   21.00 ; T r sans mémoire=   20.47 ; perte relative=0.02530 ; approximation=0.02663 ; perte/(delta^2 r(1-r))=0.2692
+  T=1000, beta=0.05 (constante c=1.2068) :
+    delta=0.05 : K avec mémoire=  431.01 ; T r sans mémoire=  430.70 ; perte relative=0.00074 ; approximation=0.00074 ; perte/(delta^2 r(1-r))=1.2065
+    delta=0.10 : K avec mémoire=  215.51 ; T r sans mémoire=  215.07 ; perte relative=0.00204 ; approximation=0.00204 ; perte/(delta^2 r(1-r))=1.2053
+    delta=0.20 : K avec mémoire=  107.75 ; T r sans mémoire=  107.26 ; perte relative=0.00463 ; approximation=0.00464 ; perte/(delta^2 r(1-r))=1.2028
+    delta=0.30 : K avec mémoire=   71.84 ; T r sans mémoire=   71.32 ; perte relative=0.00720 ; approximation=0.00724 ; perte/(delta^2 r(1-r))=1.2003
+    delta=0.50 : K avec mémoire=   43.10 ; T r sans mémoire=   42.57 ; perte relative=0.01233 ; approximation=0.01244 ; perte/(delta^2 r(1-r))=1.1955
+    delta=1.00 : K avec mémoire=   21.55 ; T r sans mémoire=   21.01 ; perte relative=0.02495 ; approximation=0.02545 ; perte/(delta^2 r(1-r))=1.1834
+  T=1000, beta=0.20 (constante c=0.2834) :
+    delta=0.05 : K avec mémoire=  939.02 ; T r sans mémoire=  938.99 ; perte relative=0.00004 ; approximation=0.00004 ; perte/(delta^2 r(1-r))=0.2836
+    delta=0.10 : K avec mémoire=  469.51 ; T r sans mémoire=  469.18 ; perte relative=0.00071 ; approximation=0.00071 ; perte/(delta^2 r(1-r))=0.2832
+    delta=0.20 : K avec mémoire=  234.76 ; T r sans mémoire=  234.28 ; perte relative=0.00203 ; approximation=0.00204 ; perte/(delta^2 r(1-r))=0.2824
+    delta=0.30 : K avec mémoire=  156.50 ; T r sans mémoire=  155.98 ; perte relative=0.00335 ; approximation=0.00337 ; perte/(delta^2 r(1-r))=0.2816
+    delta=0.50 : K avec mémoire=   93.90 ; T r sans mémoire=   93.34 ; perte relative=0.00596 ; approximation=0.00603 ; perte/(delta^2 r(1-r))=0.2800
+    delta=1.00 : K avec mémoire=   46.95 ; T r sans mémoire=   46.37 ; perte relative=0.01236 ; approximation=0.01268 ; perte/(delta^2 r(1-r))=0.2761
+  T=5000, beta=0.05 (constante c=1.2068) :
+    delta=0.05 : K avec mémoire=  963.78 ; T r sans mémoire=  963.33 ; perte relative=0.00047 ; approximation=0.00047 ; perte/(delta^2 r(1-r))=1.2064
+    delta=0.10 : K avec mémoire=  481.89 ; T r sans mémoire=  481.38 ; perte relative=0.00105 ; approximation=0.00105 ; perte/(delta^2 r(1-r))=1.2059
+    delta=0.20 : K avec mémoire=  240.94 ; T r sans mémoire=  240.41 ; perte relative=0.00221 ; approximation=0.00221 ; perte/(delta^2 r(1-r))=1.2048
+    delta=0.30 : K avec mémoire=  160.63 ; T r sans mémoire=  160.09 ; perte relative=0.00337 ; approximation=0.00338 ; perte/(delta^2 r(1-r))=1.2037
+    delta=0.50 : K avec mémoire=   96.38 ; T r sans mémoire=   95.83 ; perte relative=0.00568 ; approximation=0.00570 ; perte/(delta^2 r(1-r))=1.2015
+    delta=1.00 : K avec mémoire=   48.19 ; T r sans mémoire=   47.64 ; perte relative=0.01142 ; approximation=0.01152 ; perte/(delta^2 r(1-r))=1.1960
+  T=5000, beta=0.20 (constante c=0.2834) :
+    delta=0.05 : K avec mémoire= 2099.72 ; T r sans mémoire= 2099.36 ; perte relative=0.00017 ; approximation=0.00017 ; perte/(delta^2 r(1-r))=0.2834
+    delta=0.10 : K avec mémoire= 1049.86 ; T r sans mémoire= 1049.37 ; perte relative=0.00047 ; approximation=0.00047 ; perte/(delta^2 r(1-r))=0.2832
+    delta=0.20 : K avec mémoire=  524.93 ; T r sans mémoire=  524.37 ; perte relative=0.00106 ; approximation=0.00107 ; perte/(delta^2 r(1-r))=0.2828
+    delta=0.30 : K avec mémoire=  349.95 ; T r sans mémoire=  349.37 ; perte relative=0.00165 ; approximation=0.00166 ; perte/(delta^2 r(1-r))=0.2825
+    delta=0.50 : K avec mémoire=  209.97 ; T r sans mémoire=  209.38 ; perte relative=0.00283 ; approximation=0.00285 ; perte/(delta^2 r(1-r))=0.2817
+    delta=1.00 : K avec mémoire=  104.99 ; T r sans mémoire=  104.38 ; perte relative=0.00576 ; approximation=0.00583 ; perte/(delta^2 r(1-r))=0.2800
+  Lecture : la mémoire ne vaut au saboteur diffus que l'écart de Jensen d'une probabilité d'alarme de courbure
+  delta^2/T en le nombre d'attaques ; dans cette grille, au plus 1,5 % du dommage à delta/sigma <= 0,3, au plus
+  5,3 % à delta/sigma = 1. C'est la face « attaquant » de l'invariance à la répartition du lemme L.
+
+[E] Plus petit écart détectable entre deux taux de succès (unilatéral 5 %, puissance 0,80, approximation normale).
+  taux de référence 0.50 : n=50: 0.249 ; n=100: 0.176 ; n=200: 0.124 ; n=400: 0.088 ; n=800: 0.062 ; n=1600: 0.044
+  taux de référence 0.20 : n=50: 0.199 ; n=100: 0.141 ; n=200: 0.099 ; n=400: 0.070 ; n=800: 0.050 ; n=1600: 0.035
+  Lecture : par intensité et par intervention, quelques centaines d'épisodes d'attaque par bras pour voir
+  dix points ; le bras placebo à utilité égale double le compte.
+
+[F] Banc d'étalonnage miniature : trois procédures de lecture sur trois mondes plantés.
+  par épisode : 60 occasions ; contribution d'attaque 0.3 ; succès si dommage >= 18 ;
+  utilité honnête = part de 60 pas réussis, p=0.7 ; intervention et placebo neutralisent lambda=0.15 ;
+  l'intervention détruit en plus une part v des contributions d'attaque restantes ; 400 épisodes d'attaque
+  et 400 épisodes honnêtes par bras (sans intervention, intervention, placebo) ; 2000 expériences par monde.
+  Procédures : (1) pentes brutes relatives (rétention du succès contre rétention de l'utilité, contre le bras
+  sans intervention) ; (2) pentes brutes absolues (baisse en points du succès contre baisse en points de
+  l'utilité) ; (3) placebo à utilité égale (succès sous intervention contre succès sous placebo).
+  monde sans marge propre (l'intervention est un placebo) (v=0.00) :
+    vérité exacte : S0=0.5486 ; S placebo=0.2529 ; S intervention=0.2529 ; U0=0.700 ; U intervention = U placebo = 0.595 ; marge vraie sur le placebo=0.0000
+    taux de déclaration « marge » : (1) 1.0000 ; (2) 1.0000 ; (3) 0.0435
+  monde marge propre faible (ressource détruite : 5 % des contributions) (v=0.05) :
+    vérité exacte : S0=0.5486 ; S placebo=0.2529 ; S intervention=0.1843 ; U0=0.700 ; U intervention = U placebo = 0.595 ; marge vraie sur le placebo=0.0686
+    taux de déclaration « marge » : (1) 1.0000 ; (2) 1.0000 ; (3) 0.7610
+  monde marge propre forte (ressource détruite : 20 % des contributions) (v=0.20) :
+    vérité exacte : S0=0.5486 ; S placebo=0.2529 ; S intervention=0.0506 ; U0=0.700 ; U intervention = U placebo = 0.595 ; marge vraie sur le placebo=0.2023
+    taux de déclaration « marge » : (1) 1.0000 ; (2) 1.0000 ; (3) 1.0000
+  Lecture : sur le monde sans marge propre, les deux lectures par pentes brutes déclarent une marge presque
+  toujours (témoin « doit mourir ») ; la lecture contre placebo tient son niveau (témoin « doit tenir »).
+
+[G] Rééchantillonnage pour information : facteur de budget effectif 1/(rho + (1-rho)/k) pour un attaquant
+  cohérent (décalage delta dans chaque tirage), scores gaussiens équicorrélés de corrélation rho entre tirages.
+  rho=0.19 : k=1,2,3,5,10 -> 1.000  1.681  2.174  2.841  3.690
+  rho=0.43 : k=1,2,3,5,10 -> 1.000  1.399  1.613  1.838  2.053
+  rho=0.50 : k=1,2,3,5,10 -> 1.000  1.333  1.500  1.667  1.818
+  rho=0.90 : k=1,2,3,5,10 -> 1.000  1.053  1.071  1.087  1.099
+  rho=1.00 : k=1,2,3,5,10 -> 1.000  1.000  1.000  1.000  1.000
+  Lecture : rho = 1 (positions lues avant le premier jeton tiré, identiques d'un tirage à l'autre) : aucun gain ;
+  0,19 est la corrélation honnête mesurée en boîte noire par Lucassen et Kaufman (p. 7), 0,43 celle des attaques.
+
+[H] Marge contre un attaquant figé et contre la meilleure riposte (dommages relatifs, hors audit).
+  d1 = dommage de la stratégie qui use de la ressource ; d0 = meilleure stratégie qui s'en passe ;
+  l'intervention détruit la part rho de d1 et ne touche pas d0 ; V = d1 - d0 = valeur de la ressource.
+  d0=1.00, rho=0.30 : marge contre l'attaquant figé=0.30 ; contre la meilleure riposte=0.00 ; borne V=0.00
+  d0=1.00, rho=1.00 : marge contre l'attaquant figé=1.00 ; contre la meilleure riposte=0.00 ; borne V=0.00
+  d0=0.98, rho=0.30 : marge contre l'attaquant figé=0.30 ; contre la meilleure riposte=0.02 ; borne V=0.02
+  d0=0.98, rho=1.00 : marge contre l'attaquant figé=1.00 ; contre la meilleure riposte=0.02 ; borne V=0.02
+  d0=0.90, rho=0.30 : marge contre l'attaquant figé=0.30 ; contre la meilleure riposte=0.10 ; borne V=0.10
+  d0=0.90, rho=1.00 : marge contre l'attaquant figé=1.00 ; contre la meilleure riposte=0.10 ; borne V=0.10
+  d0=0.50, rho=0.30 : marge contre l'attaquant figé=0.30 ; contre la meilleure riposte=0.30 ; borne V=0.50
+  d0=0.50, rho=1.00 : marge contre l'attaquant figé=1.00 ; contre la meilleure riposte=0.50 ; borne V=0.50
+  Lecture : la marge contre la meilleure riposte vaut min(rho d1, V) ; mesurée contre un organisme figé,
+  elle peut valoir 100 % quand la riposte n'en laisse que 2 % (cas d0 = 0,98, rho = 1).
+
+[I] Comptes pour les barreaux (arithmétique seule ; les coûts unitaires sont repris, non mesurés ici).
+  barreau 1 bis : 7 épreuves x 3 témoins passés par l'expérimentateur = 21 greffons ;
+  appels : de 2.98 à 86.10 USD (machine en sus)
+  barreau 2 : 1 intervention(s) x 1 intensité(s) : 3 bras ; 400 épisodes d'attaque et 400 honnêtes par bras -> 2400 épisodes
+  barreau 2 : 1 intervention(s) x 3 intensité(s) : 7 bras ; 400 épisodes d'attaque et 400 honnêtes par bras -> 5600 épisodes
+  barreau 2 : 3 intervention(s) x 3 intensité(s) : 19 bras ; 400 épisodes d'attaque et 400 honnêtes par bras -> 15200 épisodes
+
+Fin.

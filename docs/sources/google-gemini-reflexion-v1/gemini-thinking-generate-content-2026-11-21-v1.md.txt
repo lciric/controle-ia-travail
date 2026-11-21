@@ -1,0 +1,1349 @@
+> ## AI Agent Context
+> - Full documentation index: https://aistudio.google.com/llms.txt
+> - Gemini Docs MCP server (consistent live info): https://gemini-api-docs-mcp.dev
+> - Coding agent skills & setup guide: https://aistudio.google.com/docs/coding-agents.md
+
+# Gemini thinking
+
+[Gemini models](/docs/models) use an internal
+"thinking process" that significantly improves their reasoning and multi-step
+planning abilities, making them highly effective for complex tasks such as
+coding, advanced mathematics, and data analysis.
+
+This guide shows you how to work with Gemini's thinking capabilities using the
+Gemini API.
+
+## Generating content with thinking  {% id="generating-content-with-thinking" %}
+
+Initiating a request with a thinking model is similar to any other content
+generation request. The key difference lies in specifying one of the
+[models with thinking support](/docs/thinking?generate-content=true#tools) in the `model` field, as
+demonstrated in the following
+[text generation](/docs/text-generation) example:
+
+{% tabs %}
+  {% tab label="Python" %}
+  ```python
+  from google import genai
+  
+  client = genai.Client()
+  prompt = "Explain the concept of Occam's Razor and provide a simple, everyday example."
+  
+  response = client.models.generate_content(
+      model="gemini-4-hydrogen",
+      contents=prompt,
+  )
+  
+  print(response.text)
+  ```
+
+  {% /tab %}
+
+  {% tab label="JavaScript" %}
+  ```javascript
+  import { GoogleGenAI } from "@google/genai";
+  
+  const ai = new GoogleGenAI({});
+  
+  const response = await ai.models.generateContent({
+      model: "gemini-4-hydrogen",
+      contents: "Explain the concept of Occam's Razor and provide a simple, everyday example.",
+  });
+  
+  console.log(response.text);
+  ```
+
+  {% /tab %}
+
+  {% tab label="Java" %}
+  ```java
+  import com.google.genai.Client;
+  import com.google.genai.types.GenerateContentResponse;
+  
+  public class GenerateContentWithThinking {
+    public static void main(String[] args) {
+      Client client = new Client();
+  
+      GenerateContentResponse response =
+          client.models.generateContent(
+              "gemini-4-hydrogen",
+              "Explain the concept of Occam's Razor and provide a simple, everyday example.",
+              null);
+  
+      System.out.println(response.text());
+    }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="Go" %}
+  ```go
+  package main
+  
+  import (
+      "context"
+      "fmt"
+      "log"
+  
+      "google.golang.org/genai"
+  )
+  
+  func main() {
+      ctx := context.Background()
+      client, err := genai.NewClient(ctx, nil)
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      prompt := "Explain the concept of Occam's Razor and provide a simple, everyday example."
+      resp, err := client.Models.GenerateContent(ctx, "gemini-4-hydrogen", genai.Text(prompt), nil)
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      fmt.Println(resp.Text())
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="REST" %}
+  ```shell
+  curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-4-hydrogen:generateContent" \
+    -H "x-goog-api-key: $GEMINI_API_KEY" \
+    -H 'Content-Type: application/json' \
+    -X POST \
+    -d '{
+      "contents": [
+        {
+          "parts": [
+            {
+              "text": "Explain the concept of Occam'\''s Razor and provide a simple, everyday example."
+            }
+          ]
+        }
+      ]
+    }'
+  ```
+
+  {% /tab %}
+
+{% /tabs %}
+
+## Thought summaries  {% id="summaries" %}
+
+Thought summaries are summarized versions of the model's raw thoughts and offer
+insights into the model's internal reasoning process. Note that
+thinking levels and budgets apply to the model's raw thoughts and not to thought
+summaries.
+
+You can enable thought summaries by setting `includeThoughts` to `true` in your
+request configuration. You can then access the summary by iterating through the
+`response` parameter's `parts`, and checking the `thought` boolean.
+
+Here's an example demonstrating how to enable and retrieve thought summaries
+without streaming, which returns a single, final thought summary with the
+response:
+
+{% tabs %}
+  {% tab label="Python" %}
+  ```python
+  from google import genai
+  from google.genai import types
+  
+  client = genai.Client()
+  prompt = "What is the sum of the first 50 prime numbers?"
+  
+  response = client.models.generate_content(
+      model="gemini-4-hydrogen",
+      contents=prompt,
+      config=types.GenerateContentConfig(
+          thinking_config=types.ThinkingConfig(
+              include_thoughts=True
+          )
+      ),
+  )
+  
+  for part in response.candidates[0].content.parts:
+      if not part.text:
+          continue
+      if part.thought:
+          print("Thought summary:")
+          print(part.text)
+          print()
+      else:
+          print("Answer:")
+          print(part.text)
+          print()
+  ```
+
+  {% /tab %}
+
+  {% tab label="JavaScript" %}
+  ```javascript
+  import { GoogleGenAI } from "@google/genai";
+  
+  const ai = new GoogleGenAI({});
+  
+  const response = await ai.models.generateContent({
+      model: "gemini-4-hydrogen",
+      contents: "What is the sum of the first 50 prime numbers?",
+      config: {
+          thinkingConfig: {
+              includeThoughts: true,
+          },
+      },
+  });
+  
+  for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (!part.text) {
+          continue;
+      }
+      if (part.thought) {
+          console.log("Thought summary:");
+          console.log(part.text);
+      } else {
+          console.log("Answer:");
+          console.log(part.text);
+      }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="Java" %}
+  ```java
+  import com.google.genai.Client;
+  import com.google.genai.types.GenerateContentConfig;
+  import com.google.genai.types.GenerateContentResponse;
+  import com.google.genai.types.Part;
+  import com.google.genai.types.ThinkingConfig;
+  import java.util.Collections;
+  
+  public class GenerateContentThoughtSummaries {
+    public static void main(String[] args) {
+      Client client = new Client();
+  
+      GenerateContentConfig config =
+          GenerateContentConfig.builder()
+              .thinkingConfig(ThinkingConfig.builder().includeThoughts(true).build())
+              .build();
+  
+      GenerateContentResponse response =
+          client.models.generateContent(
+              "gemini-4-hydrogen", "What is the sum of the first 50 prime numbers?", config);
+  
+      for (Part part : response.parts() != null ? response.parts() : Collections.<Part>emptyList()) {
+        String text = part.text().orElse("");
+        if (text.isEmpty()) {
+          continue;
+        }
+        if (part.thought().orElse(false)) {
+          System.out.println("Thought summary:");
+          System.out.println(text);
+          System.out.println();
+        } else {
+          System.out.println("Answer:");
+          System.out.println(text);
+          System.out.println();
+        }
+      }
+    }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="Go" %}
+  ```go
+  package main
+  
+  import (
+      "context"
+      "fmt"
+      "log"
+  
+      "google.golang.org/genai"
+  )
+  
+  func main() {
+      ctx := context.Background()
+      client, err := genai.NewClient(ctx, nil)
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      contents := genai.Text("What is the sum of the first 50 prime numbers?")
+      resp, err := client.Models.GenerateContent(ctx, "gemini-4-hydrogen", contents, &genai.GenerateContentConfig{
+          ThinkingConfig: &genai.ThinkingConfig{
+              IncludeThoughts: true,
+          },
+      })
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      for _, part := range resp.Candidates[0].Content.Parts {
+          if part.Text == "" {
+              continue
+          }
+          if part.Thought {
+              fmt.Println("Thought summary:")
+              fmt.Println(part.Text)
+          } else {
+              fmt.Println("Answer:")
+              fmt.Println(part.Text)
+          }
+      }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="REST" %}
+  ```shell
+  curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-4-hydrogen:generateContent" \
+    -H "x-goog-api-key: $GEMINI_API_KEY" \
+    -H 'Content-Type: application/json' \
+    -X POST \
+    -d '{
+      "contents": [
+        {
+          "parts": [
+            {
+              "text": "What is the sum of the first 50 prime numbers?"
+            }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "thinkingConfig": {
+          "includeThoughts": true
+        }
+      }
+    }'
+  ```
+
+  {% /tab %}
+
+{% /tabs %}
+
+And here is an example using thinking with streaming, which returns rolling,
+incremental summaries during generation:
+
+{% tabs %}
+  {% tab label="Python" %}
+  ```python
+  from google import genai
+  from google.genai import types
+  
+  client = genai.Client()
+  
+  prompt = """
+  Alice, Bob, and Carol each live in a different house on the same street: red, green, and blue.
+  The person who lives in the red house owns a cat.
+  Bob does not live in the green house.
+  Carol owns a dog.
+  The green house is to the left of the red house.
+  Alice does not own a cat.
+  Who lives in each house, and what pet do they own?
+  """
+  
+  thoughts = ""
+  answer = ""
+  
+  for chunk in client.models.generate_content_stream(
+      model="gemini-4-hydrogen",
+      contents=prompt,
+      config=types.GenerateContentConfig(
+          thinking_config=types.ThinkingConfig(
+              include_thoughts=True
+          )
+      ),
+  ):
+      for part in chunk.candidates[0].content.parts:
+          if not part.text:
+              continue
+          if part.thought:
+              if not thoughts:
+                  print("Thought summary:")
+              print(part.text, end="")
+              thoughts += part.text
+          else:
+              if not answer:
+                  print("\nAnswer:")
+              print(part.text, end="")
+              answer += part.text
+  ```
+
+  {% /tab %}
+
+  {% tab label="JavaScript" %}
+  ```javascript
+  import { GoogleGenAI } from "@google/genai";
+  
+  const ai = new GoogleGenAI({});
+  
+  const prompt = `Alice, Bob, and Carol each live in a different house on the same
+  street: red, green, and blue. The person who lives in the red house owns a cat.
+  Bob does not live in the green house. Carol owns a dog. The green house is to
+  the left of the red house. Alice does not own a cat. Who lives in each house,
+  and what pet do they own?`;
+  
+  let thoughts = "";
+  let answer = "";
+  
+  const response = await ai.models.generateContentStream({
+      model: "gemini-4-hydrogen",
+      contents: prompt,
+      config: {
+          thinkingConfig: {
+              includeThoughts: true,
+          },
+      },
+  });
+  
+  for await (const chunk of response) {
+      for (const part of chunk.candidates?.[0]?.content?.parts || []) {
+          if (!part.text) {
+              continue;
+          }
+          if (part.thought) {
+              if (!thoughts) {
+                  console.log("Thought summary:");
+              }
+              process.stdout.write(part.text);
+              thoughts += part.text;
+          } else {
+              if (!answer) {
+                  console.log("\nAnswer:");
+              }
+              process.stdout.write(part.text);
+              answer += part.text;
+          }
+      }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="Java" %}
+  ```java
+  import com.google.genai.Client;
+  import com.google.genai.ResponseStream;
+  import com.google.genai.types.GenerateContentConfig;
+  import com.google.genai.types.GenerateContentResponse;
+  import com.google.genai.types.Part;
+  import com.google.genai.types.ThinkingConfig;
+  import java.util.Collections;
+  
+  public class StreamWithThinking {
+    public static void main(String[] args) {
+      Client client = new Client();
+  
+      String prompt =
+          "Alice, Bob, and Carol each live in a different house on the same street: red, green, and blue.\n"
+              + "The person who lives in the red house owns a cat.\n"
+              + "Bob does not live in the green house.\n"
+              + "Carol owns a dog.\n"
+              + "The green house is to the left of the red house.\n"
+              + "Alice does not own a cat.\n"
+              + "Who lives in each house, and what pet do they own?";
+  
+      StringBuilder thoughts = new StringBuilder();
+      StringBuilder answer = new StringBuilder();
+  
+      GenerateContentConfig config =
+          GenerateContentConfig.builder()
+              .thinkingConfig(ThinkingConfig.builder().includeThoughts(true).build())
+              .build();
+  
+      try (ResponseStream<GenerateContentResponse> responseStream =
+          client.models.generateContentStream("gemini-4-hydrogen", prompt, config)) {
+        for (GenerateContentResponse chunk : responseStream) {
+          for (Part part : chunk.parts() != null ? chunk.parts() : Collections.<Part>emptyList()) {
+            String text = part.text().orElse("");
+            if (text.isEmpty()) {
+              continue;
+            }
+            if (part.thought().orElse(false)) {
+              if (thoughts.length() == 0) {
+                System.out.println("Thought summary:");
+              }
+              System.out.print(text);
+              thoughts.append(text);
+            } else {
+              if (answer.length() == 0) {
+                System.out.println("\nAnswer:");
+              }
+              System.out.print(text);
+              answer.append(text);
+            }
+          }
+        }
+      }
+    }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="Go" %}
+  ```go
+  package main
+  
+  import (
+      "context"
+      "fmt"
+      "log"
+  
+      "google.golang.org/genai"
+  )
+  
+  const prompt = `
+  Alice, Bob, and Carol each live in a different house on the same street: red, green, and blue.
+  The person who lives in the red house owns a cat.
+  Bob does not live in the green house.
+  Carol owns a dog.
+  The green house is to the left of the red house.
+  Alice does not own a cat.
+  Who lives in each house, and what pet do they own?
+  `
+  
+  func main() {
+      ctx := context.Background()
+      client, err := genai.NewClient(ctx, nil)
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      stream := client.Models.GenerateContentStream(
+          ctx,
+          "gemini-4-hydrogen",
+          genai.Text(prompt),
+          &genai.GenerateContentConfig{
+              ThinkingConfig: &genai.ThinkingConfig{
+                  IncludeThoughts: true,
+              },
+          },
+      )
+  
+      for chunk, err := range stream {
+          if err != nil {
+              log.Fatal(err)
+          }
+          for _, part := range chunk.Candidates[0].Content.Parts {
+              if part.Text == "" {
+                  continue
+              }
+              if part.Thought {
+                  fmt.Printf("Thought: %s\n", part.Text)
+              } else {
+                  fmt.Printf("Answer: %s\n", part.Text)
+              }
+          }
+      }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="REST" %}
+  ```shell
+  curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-4-hydrogen:streamGenerateContent?alt=sse" \
+    -H "x-goog-api-key: $GEMINI_API_KEY" \
+    -H 'Content-Type: application/json' \
+    --no-buffer \
+    -X POST \
+    -d '{
+      "contents": [
+        {
+          "parts": [
+            {
+              "text": "Alice, Bob, and Carol each live in a different house on the same street: red, green, and blue. The person who lives in the red house owns a cat. Bob does not live in the green house. Carol owns a dog. The green house is to the left of the red house. Alice does not own a cat. Who lives in each house, and what pet do they own?"
+            }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "thinkingConfig": {
+          "includeThoughts": true
+        }
+      }
+    }'
+  ```
+
+  {% /tab %}
+
+{% /tabs %}
+
+## Controlling thinking  {% id="levels-budgets" %}
+
+Gemini models engage in dynamic thinking by default, automatically adjusting the
+amount of reasoning effort based on the complexity of the user's request.
+However, if you have specific latency constraints or require the model to engage
+in deeper reasoning than usual, you can optionally use parameters to control
+thinking behavior.
+
+### Thinking levels (Gemini 4 and Gemini 3)  {% id="thinking-levels" %}
+
+The `thinkingLevel` parameter, required for Gemini 4 and recommended for Gemini 3 models,
+lets you control reasoning behavior. Gemini 4 Carbon and Argon (`gemini-4-carbon` and `gemini-4-argon`) support `low`, `medium` (default), and `high`, and Gemini 4 Neon and Hydrogen (`gemini-4-neon` and `gemini-4-hydrogen`) support `low`, `medium`, `high` (default), and `xhigh`. To compare models across reasoning depth, speed, and cost, see [Choosing a model](/docs/choosing-a-model).
+
+The following table lists default thinking settings and supported `thinkingLevel` values for each Gemini 4 and Gemini 3 model:
+
+{% table %}
+  * Model
+  * Default thinking
+  * Levels supported
+
+  ---
+
+  * gemini-4-carbon
+  * On (medium)
+  * low, medium, high
+
+  ---
+
+  * gemini-4-argon
+  * On (medium)
+  * low, medium, high
+
+  ---
+
+  * gemini-4-neon
+  * On (high)
+  * low, medium, high, xhigh
+
+  ---
+
+  * gemini-4-hydrogen
+  * On (high)
+  * low, medium, high, xhigh
+
+  ---
+
+  * gemini-3.8-flash
+  * On (medium)
+  * low, medium, high
+
+  ---
+
+  * gemini-3.6-flash
+  * On (medium)
+  * minimal, low, medium, high
+
+  ---
+
+  * gemini-3.5-flash-lite
+  * On (minimal)
+  * minimal, low, medium, high
+
+  ---
+
+  * gemini-3.1-pro-preview
+  * On (high)
+  * low, medium, high
+
+  ---
+
+  * gemini-3.1-flash-lite
+  * On (minimal)
+  * minimal, low, medium, high
+
+  ---
+
+  * gemini-3.1-flash-lite-image
+  * On (minimal)
+  * minimal, high
+
+  ---
+
+  * gemini-3-flash-preview
+  * On (high)
+  * minimal, low, medium, high
+
+  ---
+
+  * gemini-3-pro-preview
+  * On (high)
+  * low, high
+
+  ---
+
+  * gemini-robotics-er-2-preview
+  * On (high)
+  * minimal, low, medium, high
+{% /table %}
+
+### Understanding thinking levels  {% id="understanding-thinking-levels" %}
+
+The `thinking_level` is your main control over quality, latency, and token use in [Gemini 4 Neon](/docs/whats-new-gemini-4-neon?generate-content=true) and [Gemini 4 Hydrogen](/docs/whats-new-gemini-4-hydrogen?generate-content=true). Both models default to `high` and support `xhigh`:
+
+| Thinking level | Token use | When to use |
+| :--- | :--- | :--- |
+| `low` | Fewest tokens, lowest latency | Cost- and latency-sensitive workloads, such as fast chat and high-throughput processing. Still capable on agentic tasks. |
+| `medium` | Lower token use, faster responses | Interactive coding, live UI prototyping, responsive chat, and latency-sensitive tool calls. (Default on `gemini-4-carbon`, `gemini-4-argon`, `gemini-3.8-flash`, and `gemini-3.6-flash`.) |
+| `high` (default on `gemini-4-neon` and `gemini-4-hydrogen`) | Balanced intelligence and speed | Recommended default on `gemini-4-neon` and `gemini-4-hydrogen` for most tasks, including complex coding, agentic execution, tool calling, and multimodal knowledge work. Maximum reasoning depth on `gemini-4-carbon`, `gemini-4-argon`, and Gemini 3 models. |
+| `xhigh` | Most tokens, deepest reasoning | Reserve for hard, multi-step coding and agentic problems where `high` falls short, when you can trade higher latency and token use (supported on `gemini-4-neon` and `gemini-4-hydrogen`). |
+| `minimal` | Near-off thinking, lowest latency | Matches a near-off setting for most queries on `gemini-3.6-flash`, `gemini-3.5-flash-lite` (default), `gemini-3.1-flash-lite`, `gemini-3-flash-preview`, and `gemini-robotics-er-2-preview`. Not supported on Gemini 4 models or `gemini-3.8-flash`. |
+
+Start with `high` for most complex tasks, and reserve `xhigh` for hard, multi-step problems where `high` falls short. Using `xhigh` increases latency and token use and can cause overthinking or exhaust `max_output_tokens` on simpler prompts such as text or JSON extraction. Run your evaluations at all four levels with a high `max_output_tokens` so the limit doesn't cut answers short, then pick the lowest `thinking_level` that meets your quality bar.
+
+{% tabs %}
+  {% tab label="Python" %}
+  ```python
+  from google import genai
+  from google.genai import types
+  
+  client = genai.Client()
+  
+  response = client.models.generate_content(
+      model="gemini-4-hydrogen",
+      contents="Audit this payment retry queue for race conditions and rewrite the lock acquisition logic.",
+      config=types.GenerateContentConfig(
+          thinking_config=types.ThinkingConfig(
+              thinking_level="xhigh",
+          ),
+      ),
+  )
+  
+  print(response.text)
+  ```
+
+  {% /tab %}
+
+  {% tab label="JavaScript" %}
+  ```javascript
+  import { GoogleGenAI } from "@google/genai";
+  
+  const ai = new GoogleGenAI({});
+  
+  const response = await ai.models.generateContent({
+    model: "gemini-4-hydrogen",
+    contents: "Audit this payment retry queue for race conditions and rewrite the lock acquisition logic.",
+    config: {
+      thinkingConfig: {
+        thinkingLevel: "xhigh",
+      },
+    },
+  });
+  
+  console.log(response.text);
+  ```
+
+  {% /tab %}
+
+  {% tab label="REST" %}
+  ```bash
+  curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-4-hydrogen:generateContent" \
+    -H "x-goog-api-key: $GEMINI_API_KEY" \
+    -H 'Content-Type: application/json' \
+    -X POST \
+    -d '{
+      "contents": [{
+        "parts": [{"text": "Audit this payment retry queue for race conditions and rewrite the lock acquisition logic."}]
+      }],
+      "generationConfig": {
+        "thinkingConfig": {
+          "thinkingLevel": "xhigh"
+        }
+      }
+    }'
+  ```
+
+  {% /tab %}
+
+{% /tabs %}
+
+The following example sets `thinkingLevel` to `low`:
+
+{% tabs %}
+  {% tab label="Python" %}
+  ```python
+  from google import genai
+  from google.genai import types
+  
+  client = genai.Client()
+  
+  response = client.models.generate_content(
+      model="gemini-4-hydrogen",
+      contents="Provide a list of 3 famous physicists and their key contributions",
+      config=types.GenerateContentConfig(
+          thinking_config=types.ThinkingConfig(thinking_level="low")
+      ),
+  )
+  
+  print(response.text)
+  ```
+
+  {% /tab %}
+
+  {% tab label="JavaScript" %}
+  ```javascript
+  import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+  
+  const ai = new GoogleGenAI({});
+  
+  const response = await ai.models.generateContent({
+      model: "gemini-4-hydrogen",
+      contents: "Provide a list of 3 famous physicists and their key contributions",
+      config: {
+          thinkingConfig: {
+              thinkingLevel: ThinkingLevel.LOW,
+          },
+      },
+  });
+  
+  console.log(response.text);
+  ```
+
+  {% /tab %}
+
+  {% tab label="Java" %}
+  ```java
+  import com.google.genai.Client;
+  import com.google.genai.types.GenerateContentConfig;
+  import com.google.genai.types.GenerateContentResponse;
+  import com.google.genai.types.ThinkingConfig;
+  import com.google.genai.types.ThinkingLevel;
+  
+  public class GenerateContentWithThinkingLevel {
+    public static void main(String[] args) {
+      Client client = new Client();
+  
+      GenerateContentConfig config =
+          GenerateContentConfig.builder()
+              .thinkingConfig(
+                  ThinkingConfig.builder().thinkingLevel(ThinkingLevel.Known.LOW).build())
+              .build();
+  
+      GenerateContentResponse response =
+          client.models.generateContent(
+              "gemini-4-hydrogen",
+              "Provide a list of 3 famous physicists and their key contributions",
+              config);
+  
+      System.out.println(response.text());
+    }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="Go" %}
+  ```go
+  package main
+  
+  import (
+      "context"
+      "fmt"
+      "log"
+  
+      "google.golang.org/genai"
+  )
+  
+  func main() {
+      ctx := context.Background()
+      client, err := genai.NewClient(ctx, nil)
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      resp, err := client.Models.GenerateContent(
+          ctx,
+          "gemini-4-hydrogen",
+          genai.Text("Provide a list of 3 famous physicists and their key contributions"),
+          &genai.GenerateContentConfig{
+              ThinkingConfig: &genai.ThinkingConfig{
+                  ThinkingLevel: genai.ThinkingLevelLow,
+              },
+          },
+      )
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      fmt.Println(resp.Text())
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="REST" %}
+  ```shell
+  curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-4-hydrogen:generateContent" \
+    -H "x-goog-api-key: $GEMINI_API_KEY" \
+    -H 'Content-Type: application/json' \
+    -X POST \
+    -d '{
+      "contents": [
+        {
+          "parts": [
+            {
+              "text": "Provide a list of 3 famous physicists and their key contributions"
+            }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "thinkingConfig": {
+          "thinkingLevel": "low"
+        }
+      }
+    }'
+  ```
+
+  {% /tab %}
+
+{% /tabs %}
+
+You cannot disable thinking for Gemini 4 Carbon, Gemini 4 Argon, Gemini 4 Neon, or Gemini 4 Hydrogen. Gemini 3 Flash and Flash-Lite
+also do not support full thinking-off, but the `minimal`
+setting means the model likely will not think (though it still potentially can).
+If you don't specify a thinking level, Gemini will use the model's
+default thinking level (e.g., `"high"` for Gemini 4 Neon and Gemini 4 Hydrogen, and `"medium"` for Gemini 4 Carbon, Gemini 4 Argon, Gemini 3.8 Flash, and Gemini 3.6 Flash).
+
+Gemini 2.5 series models don't support `thinkingLevel`; use `thinkingBudget`
+instead.
+
+### Token limits and `max_output_tokens` {% id="token-limits" %}
+
+The
+[`max_output_tokens`](/api-reference/generate-content/generate-content#request-body)
+generation parameter sets the maximum number of tokens a response can generate,
+including thought tokens.
+
+When set, this parameter acts as a hard cutoff enforced by the infrastructure
+without changing how the model allocates its thinking budget
+(`thinking_level`).
+
+If the model hits this limit while reasoning, it stops generating with
+`finish_reason: MAX_TOKENS` and returns truncated or empty output (while still
+billing for any thinking tokens generated). To reduce cost or latency without
+truncating responses, lower `thinking_level` (`low` or `medium`) instead of
+setting a small `max_output_tokens`.
+
+For Gemini 4 models (`gemini-4-carbon`, `gemini-4-argon`, `gemini-4-neon`, and `gemini-4-hydrogen`), keep the following context and output limits in mind:
+
+* **Shared 1M context window:** Input, thinking, and output tokens share a single 1M-token context window (`1,048,576` tokens). If your input tokens plus `max_output_tokens` exceed 1,048,576 tokens, the API automatically caps the output limit to the remaining space in the context window (`1,048,576` minus your input tokens).
+* **Per-request output caps and long decode (up to 1M tokens):** A single request returns up to `65,536` tokens on `gemini-4-neon` and `gemini-4-hydrogen` (streaming and non-streaming) and on streaming or SDK calls for `gemini-4-carbon` and `gemini-4-argon` (direct non-streaming REST calls on Carbon and Argon return up to `32,768` tokens). To generate past the per-request cap (up to `1,048,576` tokens minus your input), set `max_output_tokens` above the cap. The latest Google GenAI SDKs continue across hops automatically by default (`automatic_continuation=True`), or you can run a client loop using the `continuation_token` returned when a hop stops with `finish_reason: "CONTINUATION"`. See [Long decode](/docs/long-decode?generate-content=true) for code examples.
+
+### Thinking budgets  {% id="set-budget" %}
+
+The `thinkingBudget` parameter, introduced with the Gemini 2.5 series, guides
+the model on the specific number of thinking tokens to use for reasoning.
+
+{% callout type="warning" %}
+  In Gemini 4 models (`gemini-4-carbon`, `gemini-4-argon`, `gemini-4-neon`, and `gemini-4-hydrogen`), `thinkingBudget` (`thinking_budget`) is deprecated. If passed alone, it maps to the nearest `thinkingLevel` (`thinking_level`) and returns a warning; sending `thinkingBudget` and `thinkingLevel` together returns a `400` error. For Gemini 4 and Gemini 3 models, use [`thinkingLevel`](/docs/thinking?generate-content=true#thinking-levels) instead of `thinkingBudget`.
+
+{% /callout %}
+
+The following are `thinkingBudget` configuration details for each model type.
+You can disable thinking by setting `thinkingBudget` to 0.
+
+Setting the `thinkingBudget` to -1 turns on **dynamic thinking**, meaning the
+model will adjust the budget based on the
+complexity of the request.
+
+{% table %}
+  * Model
+  * Default setting
+  * Range
+  * Disable thinking
+  * Turn on dynamic thinking
+
+  ---
+
+  * **2.5 Pro**
+  * Dynamic thinking
+  * `128` to `32768`
+  * N/A: Cannot disable thinking
+  * `thinkingBudget = -1` (Default)
+
+  ---
+
+  * **2.5 Flash**
+  * Dynamic thinking
+  * `0` to `24576`
+  * `thinkingBudget = 0`
+  * `thinkingBudget = -1` (Default)
+
+  ---
+
+  * **2.5 Flash Preview**
+  * Dynamic thinking
+  * `0` to `24576`
+  * `thinkingBudget = 0`
+  * `thinkingBudget = -1` (Default)
+
+  ---
+
+  * **2.5 Flash Lite**
+  * Model does not think
+  * `512` to `24576`
+  * `thinkingBudget = 0`
+  * `thinkingBudget = -1`
+
+  ---
+
+  * **2.5 Flash Lite Preview**
+  * Model does not think
+  * `512` to `24576`
+  * `thinkingBudget = 0`
+  * `thinkingBudget = -1`
+
+  ---
+
+  * **Robotics-ER 1.6 Preview**
+  * Dynamic thinking
+  * `0` to `24576`
+  * `thinkingBudget = 0`
+  * `thinkingBudget = -1` (Default)
+
+  ---
+
+  * **2.5 Flash Live Native Audio Preview (09-2025)**
+  * Dynamic thinking
+  * `0` to `24576`
+  * `thinkingBudget = 0`
+  * `thinkingBudget = -1` (Default)
+{% /table %}
+
+{% tabs %}
+  {% tab label="Python" %}
+  ```python
+  from google import genai
+  from google.genai import types
+  
+  client = genai.Client()
+  
+  response = client.models.generate_content(
+      model="gemini-2.5-flash-lite",
+      contents="Provide a list of 3 famous physicists and their key contributions",
+      config=types.GenerateContentConfig(
+          thinking_config=types.ThinkingConfig(thinking_budget=1024)
+          # Turn off thinking:
+          # thinking_config=types.ThinkingConfig(thinking_budget=0)
+          # Turn on dynamic thinking:
+          # thinking_config=types.ThinkingConfig(thinking_budget=-1)
+      ),
+  )
+  
+  print(response.text)
+  ```
+
+  {% /tab %}
+
+  {% tab label="JavaScript" %}
+  ```javascript
+  import { GoogleGenAI } from "@google/genai";
+  
+  const ai = new GoogleGenAI({});
+  
+  const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-lite",
+      contents: "Provide a list of 3 famous physicists and their key contributions",
+      config: {
+          thinkingConfig: {
+              thinkingBudget: 1024,
+              // Turn off thinking:
+              // thinkingBudget: 0
+              // Turn on dynamic thinking:
+              // thinkingBudget: -1
+          },
+      },
+  });
+  
+  console.log(response.text);
+  ```
+
+  {% /tab %}
+
+  {% tab label="Java" %}
+  ```java
+  import com.google.genai.Client;
+  import com.google.genai.types.GenerateContentConfig;
+  import com.google.genai.types.GenerateContentResponse;
+  import com.google.genai.types.ThinkingConfig;
+  
+  public class GenerateContentWithThinkingBudget {
+    public static void main(String[] args) {
+      Client client = new Client();
+  
+      GenerateContentConfig config =
+          GenerateContentConfig.builder()
+              .thinkingConfig(
+                  ThinkingConfig.builder()
+                      .thinkingBudget(1024)
+                      // Turn off thinking:
+                      // .thinkingBudget(0)
+                      // Turn on dynamic thinking:
+                      // .thinkingBudget(-1)
+                      .build())
+              .build();
+  
+      GenerateContentResponse response =
+          client.models.generateContent(
+              "gemini-2.5-flash-lite",
+              "Provide a list of 3 famous physicists and their key contributions",
+              config);
+  
+      System.out.println(response.text());
+    }
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="Go" %}
+  ```go
+  package main
+  
+  import (
+      "context"
+      "fmt"
+      "log"
+  
+      "google.golang.org/genai"
+  )
+  
+  func main() {
+      ctx := context.Background()
+      client, err := genai.NewClient(ctx, nil)
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      resp, err := client.Models.GenerateContent(
+          ctx,
+          "gemini-2.5-flash-lite",
+          genai.Text("Provide a list of 3 famous physicists and their key contributions"),
+          &genai.GenerateContentConfig{
+              ThinkingConfig: &genai.ThinkingConfig{
+                  ThinkingBudget: genai.Ptr[int32](1024),
+                  // Turn off thinking:
+                  // ThinkingBudget: genai.Ptr[int32](0),
+                  // Turn on dynamic thinking:
+                  // ThinkingBudget: genai.Ptr[int32](-1),
+              },
+          },
+      )
+      if err != nil {
+          log.Fatal(err)
+      }
+  
+      fmt.Println(resp.Text())
+  }
+  ```
+
+  {% /tab %}
+
+  {% tab label="REST" %}
+  ```shell
+  curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent" \
+    -H "x-goog-api-key: $GEMINI_API_KEY" \
+    -H 'Content-Type: application/json' \
+    -X POST \
+    -d '{
+      "contents": [
+        {
+          "parts": [
+            {
+              "text": "Provide a list of 3 famous physicists and their key contributions"
+            }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "thinkingConfig": {
+          "thinkingBudget": 1024
+        }
+      }
+    }'
+  ```
+
+  {% /tab %}
+
+{% /tabs %}
+
+Depending on the prompt, the model might overflow or underflow the token budget.
+
+## Thought signatures  {% id="signatures" %}
+
+{% callout type="note" %}
+  The [Google GenAI SDK](/docs/libraries) automatically handles thought signatures
+  for you. You only need to [manage thought signatures manually](/docs/thought-signatures)
+  if you modify conversation history or call the REST API directly.
+
+{% /callout %}
+
+The Gemini API is stateless, so the model treats every API request independently
+and doesn't have access to thought context from previous turns in multi-turn
+interactions.
+
+In order to enable maintaining thought context across multi-turn interactions,
+Gemini returns thought signatures, which are encrypted representations of the
+model's internal thought process.
+
+* **Gemini 2.5 models** return thought signatures when thinking is enabled and
+  the request includes [function calling](/docs/function-calling#thinking),
+  specifically [function declarations](/docs/function-calling#step-2).
+
+* **Gemini 4 and Gemini 3 models** may return thought signatures for all types of [parts](/api-reference/generate-content#Resource:Content).
+  We recommend you always pass all signatures back as received, but it's
+  *required* for function calling signatures. Read the
+  [Thought Signatures](/docs/thought-signatures) page to
+  learn more.
+
+
+Other usage limitations to consider with function calling include:
+
+* Signatures are returned from the model within other parts in the response,
+  for example function calling or text parts.
+  [Return the entire response](/docs/function-calling#step-4)
+  with all parts back to the model in subsequent turns.
+
+* Don't concatenate parts with signatures together.
+
+* Don't merge one part with a signature with another part without a signature.
+
+
+## Pricing  {% id="pricing" %}
+
+{% callout type="note" %}
+  Summaries are available in the [free and paid tiers](/docs/pricing) of the API. Thought signatures increase the input tokens billed when sent back in subsequent requests.
+
+{% /callout %}
+
+When thinking is turned on, response pricing is the sum of output
+tokens and thinking tokens. You can get the total number of generated thinking
+tokens from the `thoughtsTokenCount` field.
+
+{% tabs %}
+  {% tab label="Python" %}
+  ```python
+  print("Thoughts tokens:", response.usage_metadata.thoughts_token_count)
+  print("Output tokens:", response.usage_metadata.candidates_token_count)
+  ```
+
+  {% /tab %}
+
+  {% tab label="JavaScript" %}
+  ```javascript
+  console.log(`Thoughts tokens: ${response.usageMetadata?.thoughtsTokenCount}`);
+  console.log(`Output tokens: ${response.usageMetadata?.candidatesTokenCount}`);
+  ```
+
+  {% /tab %}
+
+  {% tab label="Java" %}
+  ```java
+  response
+      .usageMetadata()
+      .ifPresent(
+          usage -> {
+            System.out.println("Thoughts tokens: " + usage.thoughtsTokenCount().orElse(0));
+            System.out.println("Output tokens: " + usage.candidatesTokenCount().orElse(0));
+          });
+  ```
+
+  {% /tab %}
+
+  {% tab label="Go" %}
+  ```go
+  if resp.UsageMetadata != nil {
+      fmt.Println("Thoughts tokens:", resp.UsageMetadata.ThoughtsTokenCount)
+      fmt.Println("Output tokens:", resp.UsageMetadata.CandidatesTokenCount)
+  }
+  ```
+
+  {% /tab %}
+
+{% /tabs %}
+
+Thinking models generate full thoughts to improve the quality of the final
+response, and then output [summaries](/docs/thinking#summaries) to provide insight into the
+thought process. So, pricing is based on the full thought tokens the
+model needs to generate to create a summary, despite only the summary being
+output from the API.
+
+{% callout type="note" %}
+  Because `max_output_tokens` applies to the combined total of thinking tokens and
+  output tokens, setting a low limit can truncate responses. See
+  [Token limits and `max_output_tokens`](/docs/thinking#token-limits) for details.
+
+{% /callout %}
+
+You can learn more about tokens in the [Token counting](/docs/tokens)
+guide.
+
+## Best practices  {% id="best-practices" %}
+
+This section includes some guidance for using thinking models efficiently.
+As always, following our
+[prompting guidance and best practices](/docs/prompting-strategies) will get you
+the best results.
+
+### Debugging and steering  {% id="debugging" %}
+
+* **Review reasoning**: When you're not getting your expected response from the
+  thinking models, it can help to carefully analyze Gemini's thought summaries.
+  You can see how it broke down the task and arrived at its conclusion, and use
+  that information to correct towards the right results.
+
+* **Provide Guidance in Reasoning**: If you're hoping for a particularly lengthy
+  output, you may want to provide guidance in your prompt to constrain the
+  [amount of thinking](/docs/thinking?generate-content=true#set-budget) the model uses. This lets you reserve more
+  of the token output for your response.
+
+
+### Task complexity  {% id="tasks" %}
+
+* **Easy Tasks (Thinking could be OFF):** For straightforward requests where
+  complex reasoning isn't required, such as fact retrieval or
+  classification, thinking is not required. Examples include:
+
+  * "Where was DeepMind founded?"
+  * "Is this email asking for a meeting or just providing information?"
+
+* **Medium Tasks (Default/Some Thinking):** Many common requests benefit from a
+  degree of step-by-step processing or deeper understanding. Gemini can flexibly
+  use thinking capability for tasks like:
+
+  * Analogize photosynthesis and growing up.
+  * Compare and contrast electric cars and hybrid cars.
+
+* **Hard Tasks (Maximum Thinking Capability):** For truly complex challenges,
+  such as solving complex math problems or coding tasks, we recommend setting
+  a high thinking budget. These types of tasks require the model to engage
+  its full reasoning and planning capabilities, often
+  involving many internal steps before providing an answer. Examples include:
+
+  * Solve problem 1 in AIME 2025: Find the sum of all integer bases b > 9 for
+    which 17{% sub %}b{% /sub %} is a divisor of 97{% sub %}b{% /sub %}.
+
+  * Write Python code for a web application that visualizes real-time stock
+    market data, including user authentication. Make it as efficient as
+    possible.
+
+
+
+## Supported models, tools, and capabilities  {% id="tools" %}
+
+Thinking features are supported on all 4, 3, and 2.5 series models.
+You can find all model capabilities on the
+[model overview](/docs/models) page.
+
+Thinking models work with all of Gemini's tools and capabilities. This allows
+the models to interact with external systems, execute code, or access real-time
+information, incorporating the results into their reasoning and final response.
+
+You can try examples of using tools with thinking models in the
+[Thinking cookbook](https://colab.research.google.com/github/google-gemini/cookbook/blob/main/quickstarts/Get_started_thinking.ipynb).
+
+## What's next?  {% id="whats-next" %}
+
+* Thinking coverage is available in our [OpenAI Compatibility](/docs/openai#thinking) guide.
+

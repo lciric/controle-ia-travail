@@ -8,3 +8,4 @@
 | GO-LENTILLES-BBIS | 2026-11-21T16:02:40Z | registres/go-extraits/GO-LENTILLES-BBIS-v1.md | 8a68e335e9c110605232c43051498e155d0efdd0cde843d7d0e68fc037299b92 |
 | CODE-LENTILLES-BBIS | 2026-11-21T16:02:40Z | docs/notes/lecture-sondes-bbis-par-lentilles-v1/fiche-code/fiche-code-lentilles-bbis-v1.json | a44c0e54d6b8b2882719f8c4e60e9441a20567a9acbf4e8708a029a854f4b95b |
 | CODE-LENTILLES-BBIS | 2026-11-21T17:59:24Z | docs/notes/lecture-sondes-bbis-par-lentilles-v1/fiche-code/fiche-code-lentilles-bbis-v2.json | 63ab873b2f24ba42ec6084f1b6484cda2d699165a362b938dbff18ba95abf83e |
+| CODE-LENTILLES-BBIS | 2026-11-21T19:35:10Z | docs/notes/lecture-sondes-bbis-par-lentilles-v1/fiche-code/fiche-code-lentilles-bbis-v3.json | 316328535a196ff39f81ca524da16ef21078459972e1d569096b8b359f89cb6d |

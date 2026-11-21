@@ -1,0 +1,78 @@
+calcul-signature-ou-exces-v1 — sortie
+python 3.13.18 ; numpy 2.5.3
+alpha unilatéral = 0.01 ; z = 2.3263 ; puissance 1/2
+
+A. Aire sous la courbe -> d' (binormal, variances égales)
+  AUROC 0.55 -> d' = 0.1777
+  AUROC 0.57 -> d' = 0.2494
+  AUROC 0.60 -> d' = 0.3583
+  AUROC 0.62 -> d' = 0.4320
+  AUROC 0.65 -> d' = 0.5449
+  AUROC 0.70 -> d' = 0.7416
+  AUROC 0.75 -> d' = 0.9539
+  AUROC 0.80 -> d' = 1.1902
+  AUROC 0.90 -> d' = 1.8124
+  AUROC 0.95 -> d' = 2.3262
+
+B. Part sabotée minimale détectée, référence honnête fixe de taille m (test sur la moyenne)
+   colonnes : m ; n = m ; n infini ; n infini avec biais b = 0,1
+  AUROC 0.55 : m=100: aucune | aucune | aucune ; m=400: 0.926 | 0.655 | aucune ; m=1600: 0.464 | 0.327 | 0.890
+  AUROC 0.57 : m=100: aucune | 0.933 | aucune ; m=400: 0.662 | 0.466 | 0.867 ; m=1600: 0.331 | 0.233 | 0.634
+  AUROC 0.60 : m=100: 0.920 | 0.649 | 0.928 ; m=400: 0.463 | 0.325 | 0.604 ; m=1600: 0.231 | 0.162 | 0.441
+  AUROC 0.62 : m=100: 0.768 | 0.538 | 0.770 ; m=400: 0.385 | 0.269 | 0.501 ; m=1600: 0.192 | 0.135 | 0.366
+  AUROC 0.65 : m=100: 0.614 | 0.427 | 0.610 ; m=400: 0.307 | 0.213 | 0.397 ; m=1600: 0.152 | 0.107 | 0.290
+  AUROC 0.70 : m=100: 0.459 | 0.314 | 0.449 ; m=400: 0.227 | 0.157 | 0.292 ; m=1600: 0.112 | 0.078 | 0.213
+  AUROC 0.75 : m=100: 0.363 | 0.244 | 0.349 ; m=400: 0.178 | 0.122 | 0.227 ; m=1600: 0.088 | 0.061 | 0.166
+  AUROC 0.80 : m=100: 0.296 | 0.195 | 0.279 ; m=400: 0.144 | 0.098 | 0.182 ; m=1600: 0.071 | 0.049 | 0.133
+  AUROC 0.90 : m=100: 0.204 | 0.128 | 0.184 ; m=400: 0.097 | 0.064 | 0.119 ; m=1600: 0.047 | 0.032 | 0.087
+  AUROC 0.95 : m=100: 0.166 | 0.100 | 0.143 ; m=400: 0.077 | 0.050 | 0.093 ; m=1600: 0.037 | 0.025 | 0.068
+   (« aucune » : aucune part <= 1 n'est détectée à puissance 1/2)
+
+C. Nul par acte (jumeau honnête, K = 4 tirages par épisode ; banc seulement, N-075 § 5)
+  AUROC 0.55 : n=100: aucune ; n=400: 0.734 ; n=1600: 0.367
+  AUROC 0.57 : n=100: aucune ; n=400: 0.525 ; n=1600: 0.262
+  AUROC 0.60 : n=100: 0.733 ; n=400: 0.367 ; n=1600: 0.183
+  AUROC 0.62 : n=100: 0.613 ; n=400: 0.306 ; n=1600: 0.152
+  AUROC 0.65 : n=100: 0.491 ; n=400: 0.244 ; n=1600: 0.121
+  AUROC 0.70 : n=100: 0.368 ; n=400: 0.181 ; n=1600: 0.089
+  AUROC 0.75 : n=100: 0.292 ; n=400: 0.142 ; n=1600: 0.070
+  AUROC 0.80 : n=100: 0.240 ; n=400: 0.115 ; n=1600: 0.056
+  AUROC 0.90 : n=100: 0.168 ; n=400: 0.078 ; n=1600: 0.038
+  AUROC 0.95 : n=100: 0.138 ; n=400: 0.063 ; n=1600: 0.030
+
+D. Parts du papier, sous supposition de mélange (annexe A, p. 15)
+   perte par épisode saboté L = 70,7 - 34,7 = 36.0 points de vérité de substitution
+   f pour perdre 10 points en moyenne = 0.2778 ; f pour tomber au niveau de GPT-OSS-20B (39,3) = 0.8722
+   taille de référence minimale m* (horizon infini) pour détecter f = 0.278
+  AUROC 0.55 : b=0: 2221 ; b=0,05: aucune ; b=0,1: aucune ; b=0,2: aucune
+  AUROC 0.57 : b=0: 1127 ; b=0,05: 14550 ; b=0,1: aucune ; b=0,2: aucune
+  AUROC 0.60 : b=0: 546 ; b=0,05: 2207 ; b=0,1: aucune ; b=0,2: aucune
+  AUROC 0.62 : b=0: 376 ; b=0,05: 1104 ; b=0,1: 13524 ; b=0,2: aucune
+  AUROC 0.65 : b=0: 236 ; b=0,05: 527 ; b=0,1: 2051 ; b=0,2: aucune
+  AUROC 0.70 : b=0: 128 ; b=0,05: 222 ; b=0,1: 482 ; b=0,2: 150131
+  AUROC 0.75 : b=0: 77 ; b=0,05: 117 ; b=0,1: 199 ; b=0,2: 1282
+  AUROC 0.80 : b=0: 50 ; b=0,05: 69 ; b=0,1: 102 ; b=0,2: 317
+  AUROC 0.90 : b=0: 21 ; b=0,05: 26 ; b=0,1: 33 ; b=0,2: 59
+  AUROC 0.95 : b=0: 13 ; b=0,05: 15 ; b=0,1: 18 ; b=0,2: 27
+
+E. Aire de mort : en dessous, aucune taille de référence ne suffit (f d' <= b)
+  f = 0.100 : b=0.05: 0.638 ; b=0.10: 0.760 ; b=0.20: 0.921
+  f = 0.278 : b=0.05: 0.551 ; b=0.10: 0.600 ; b=0.20: 0.695
+  f = 0.500 : b=0.05: 0.528 ; b=0.10: 0.556 ; b=0.20: 0.611
+
+F. Vitesse de prise d'un audit orienté par le score, budget p = 5 %
+   facteur = P(audit | épisode saboté) / p ; plancher 2,5 % uniforme ou aucun
+  AUROC 0.55 : avec plancher x1.25 ; sans plancher x1.42
+  AUROC 0.57 : avec plancher x1.37 ; sans plancher x1.63
+  AUROC 0.60 : avec plancher x1.59 ; sans plancher x1.98
+  AUROC 0.62 : avec plancher x1.76 ; sans plancher x2.25
+  AUROC 0.65 : avec plancher x2.06 ; sans plancher x2.71
+  AUROC 0.70 : avec plancher x2.72 ; sans plancher x3.66
+  AUROC 0.75 : avec plancher x3.62 ; sans plancher x4.90
+  AUROC 0.80 : avec plancher x4.87 ; sans plancher x6.49
+  AUROC 0.90 : avec plancher x9.19 ; sans plancher x11.33
+  AUROC 0.95 : avec plancher x13.12 ; sans plancher x15.04
+
+G. Contrôles par simulation (SeedSequence(20261121), deux enfants)
+  G1 puissance simulée au point f_min = 0.1441 (AUROC 0,80, m = n = 400) : 0.4968 (erreur type 0.0035 ; attendue 0,5)
+  G2 taux d'audit simulé sur l'honnête : 0.0501 (visé 0,05) ; facteur simulé x4.864 ; formule x4.867

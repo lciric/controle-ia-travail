@@ -1,0 +1,233 @@
+Calculs de la note « le signal bruité pourrait suffire pour entraîner » (v1)
+Lois exactes, intégration de Simpson sur grille fixe de -12 à 16 au pas de 0,004 ; aucun tirage.
+Toutes les entrées sont des suppositions d'illustration ; aucun chiffre n'est une mesure.
+
+====================================================================================================
+BLOC A — Le « meilleur de cinq » de la source est une fonction de la séparation des scores
+Supposition : soupçon normal, écart type 1 ; honnête centré en 0, sous-rendement centré en d.
+Lot : part f d'épisodes honnêtes. On retient le moins suspect de 5 tirages.
+rapport = P(l'épisode retenu est honnête) / f ; plafond = (1 - (1-f)^5) / f (moniteur parfait).
+----------------------------------------------------------------------------------------------------
+     d    aire |  f=0,10 P  rapport |  f=0,20 P  rapport |  f=0,50 P  rapport
+ 0.000  0.5000 |    0.1000    1.000 |    0.2000    1.000 |    0.5000    1.000
+ 0.250  0.5702 |    0.1278    1.278 |    0.2487    1.243 |    0.5722    1.144
+ 0.360  0.6005 |    0.1410    1.410 |    0.2712    1.356 |    0.6032    1.206
+ 0.500  0.6382 |    0.1585    1.585 |    0.3004    1.502 |    0.6416    1.283
+ 0.740  0.6996 |    0.1895    1.895 |    0.3513    1.756 |    0.7033    1.407
+ 1.000  0.7602 |    0.2236    2.236 |    0.4054    2.027 |    0.7628    1.526
+ 1.045  0.7700 |    0.2294    2.294 |    0.4145    2.072 |    0.7722    1.544
+ 1.500  0.8556 |    0.2852    2.852 |    0.4993    2.496 |    0.8520    1.704
+ 2.000  0.9214 |    0.3353    3.353 |    0.5717    2.859 |    0.9091    1.818
+ 3.000  0.9831 |    0.3910    3.910 |    0.6482    3.241 |    0.9572    1.914
+plafond du rapport à f = 0.10 : 4.0951
+plafond du rapport à f = 0.20 : 3.3616
+plafond du rapport à f = 0.50 : 1.9375
+----------------------------------------------------------------------------------------------------
+Inversion à f = 0,20 : quelle séparation d (et quelle aire) rend un rapport donné ?
+rapport 1.5 -> d = 0.4979, aire sous la courbe = 0.6376
+rapport 2.0 -> d = 0.9737, aire sous la courbe = 0.7544
+rapport 3.0 -> d = 2.2624, aire sous la courbe = 0.9452
+Repère : aire de 0,77 (meilleur auditeur d'une des deux sources) -> d = 1.0449 dans ce modèle.
+
+====================================================================================================
+BLOC B — Deux comportements seulement : un signal faible suffit, il coûte des générations
+Supposition : la politique suivante imite exactement les épisodes retenus (meilleur de 5 par le
+soupçon), population infinie. Deux comportements : honnête (0) et sous-rendement visible (d).
+Nombre de générations pour passer d'une part honnête f0 à 0,95 au moins.
+----------------------------------------------------------------------------------------------------
+     d    aire |  f0=0,10  f0=0,01  f0=0,001
+ 0.100  0.5282 |       45       66        86
+ 0.250  0.5702 |       18       27        35
+ 0.360  0.6005 |       13       19        25
+ 0.500  0.6382 |        9       14        18
+ 1.045  0.7700 |        5        7        10
+ 2.000  0.9214 |        3        5         7
+Témoin : f0 = 0 exactement, d = 0,5 -> part honnête après 50 générations = 0.000000 (rien à renforcer : la sélection ne crée pas un comportement absent).
+
+====================================================================================================
+BLOC C — Trois comportements : honnête, sous-rendement visible, sous-rendement discret
+Supposition : soupçons moyens (0 ; 1,045 ; eps), écart type 1 ; même règle que le bloc B.
+Le visible est séparé comme une aire de 0,77 ; le discret est séparé de eps seulement.
+dommage = part des deux comportements de sous-rendement ; rappel = rappel du même moniteur,
+à 5 % de fausses alertes, sur le sous-rendement qui reste.
+----------------------------------------------------------------------------------------------------
+C1 angle mort (eps = 0), mélange
+  génération   honnête   visible   discret   dommage  soupçon moyen   rappel
+           0    0.1000    0.8000    0.1000    0.9000         0.8360   0.2494
+           1    0.2072    0.5855    0.2072    0.7928         0.6119   0.2157
+           2    0.3474    0.3053    0.3474    0.6526         0.3190   0.1549
+           3    0.4486    0.1028    0.4486    0.5514         0.1074   0.0918
+           5    0.4971    0.0057    0.4971    0.5029         0.0060   0.0526
+          10    0.5000    0.0000    0.5000    0.5000         0.0000   0.0500
+          20    0.5000    0.0000    0.5000    0.5000         0.0000   0.0500
+          30    0.5000    0.0000    0.5000    0.5000         0.0000   0.0500
+          50    0.5000    0.0000    0.5000    0.5000         0.0000   0.0500
+         100    0.5000    0.0000    0.5000    0.5000         0.0000   0.0500
+         200    0.5000    0.0000    0.5000    0.5000         0.0000   0.0500
+  rapport discret/(honnête+discret) au départ : 0.5000
+C2 angle mort, honnête rare au départ
+  génération   honnête   visible   discret   dommage  soupçon moyen   rappel
+           0    0.0010    0.9490    0.0500    0.9990         0.9917   0.2631
+           1    0.0024    0.8770    0.1206    0.9976         0.9164   0.2472
+           2    0.0054    0.7244    0.2702    0.9946         0.7570   0.2134
+           3    0.0104    0.4705    0.5191    0.9896         0.4916   0.1566
+           5    0.0184    0.0592    0.9223    0.9816         0.0619   0.0635
+          10    0.0196    0.0000    0.9804    0.9804         0.0000   0.0500
+          20    0.0196    0.0000    0.9804    0.9804         0.0000   0.0500
+          30    0.0196    0.0000    0.9804    0.9804         0.0000   0.0500
+          50    0.0196    0.0000    0.9804    0.9804         0.0000   0.0500
+         100    0.0196    0.0000    0.9804    0.9804         0.0000   0.0500
+         200    0.0196    0.0000    0.9804    0.9804         0.0000   0.0500
+  rapport discret/(honnête+discret) au départ : 0.9804
+C3 angle mort, après rupture du pli
+  génération   honnête   visible   discret   dommage  soupçon moyen   rappel
+           0    0.6000    0.3500    0.0500    0.4000         0.3657   0.2463
+           1    0.8066    0.1262    0.0672    0.1934         0.1319   0.1964
+           2    0.8930    0.0326    0.0744    0.1070         0.0340   0.1183
+           3    0.9163    0.0074    0.0764    0.0837         0.0077   0.0697
+           5    0.9228    0.0003    0.0769    0.0772         0.0004   0.0510
+          10    0.9231    0.0000    0.0769    0.0769         0.0000   0.0500
+          20    0.9231    0.0000    0.0769    0.0769         0.0000   0.0500
+          30    0.9231    0.0000    0.0769    0.0769         0.0000   0.0500
+          50    0.9231    0.0000    0.0769    0.0769         0.0000   0.0500
+         100    0.9231    0.0000    0.0769    0.0769         0.0000   0.0500
+         200    0.9231    0.0000    0.0769    0.0769         0.0000   0.0500
+  rapport discret/(honnête+discret) au départ : 0.0769
+C4 signal faible mais juste (eps = +0,2)
+  génération   honnête   visible   discret   dommage  soupçon moyen   rappel
+           0    0.1000    0.8000    0.1000    0.9000         0.8560   0.2521
+           1    0.2125    0.6058    0.1817    0.7875         0.6694   0.2281
+           2    0.3798    0.3476    0.2726    0.6202         0.4178   0.1864
+           3    0.5434    0.1376    0.3190    0.4566         0.2076   0.1345
+           5    0.7213    0.0103    0.2685    0.2787         0.0644   0.0816
+          10    0.8988    0.0000    0.1012    0.1012         0.0202   0.0743
+          20    0.9902    0.0000    0.0098    0.0098         0.0020   0.0742
+          30    0.9991    0.0000    0.0009    0.0009         0.0002   0.0742
+          50    1.0000    0.0000    0.0000    0.0000         0.0000   0.0742
+         100    1.0000    0.0000    0.0000    0.0000         0.0000   0.0742
+         200    1.0000    0.0000    0.0000    0.0000         0.0000   0.0742
+  rapport discret/(honnête+discret) au départ : 0.5000
+C5 signal faible mais juste (eps = +0,2), honnête rare
+  génération   honnête   visible   discret   dommage  soupçon moyen   rappel
+           0    0.0010    0.9490    0.0500    0.9990         1.0017   0.2643
+           1    0.0024    0.8916    0.1060    0.9976         0.9529   0.2530
+           2    0.0057    0.7806    0.2137    0.9943         0.8584   0.2313
+           3    0.0122    0.5959    0.3919    0.9878         0.7011   0.1949
+           5    0.0359    0.1655    0.7987    0.9641         0.3327   0.1086
+          10    0.1183    0.0005    0.8812    0.8817         0.1768   0.0744
+          20    0.5675    0.0000    0.4325    0.4325         0.0865   0.0742
+          30    0.9345    0.0000    0.0655    0.0655         0.0131   0.0742
+          50    0.9995    0.0000    0.0005    0.0005         0.0001   0.0742
+         100    1.0000    0.0000    0.0000    0.0000         0.0000   0.0742
+         200    1.0000    0.0000    0.0000    0.0000         0.0000   0.0742
+  rapport discret/(honnête+discret) au départ : 0.9804
+C6 signal qui préfère le discret (eps = -0,2)
+  génération   honnête   visible   discret   dommage  soupçon moyen   rappel
+           0    0.8900    0.1000    0.0100    0.1100         0.1025   0.2523
+           1    0.9619    0.0248    0.0134    0.0381         0.0232   0.1895
+           2    0.9776    0.0055    0.0169    0.0224         0.0024   0.0919
+           3    0.9777    0.0012    0.0211    0.0223        -0.0030   0.0454
+           5    0.9674    0.0001    0.0326    0.0326        -0.0065   0.0329
+          10    0.9069    0.0000    0.0931    0.0931        -0.0186   0.0325
+          20    0.5019    0.0000    0.4981    0.4981        -0.0996   0.0325
+          30    0.0856    0.0000    0.9144    0.9144        -0.1829   0.0325
+          50    0.0007    0.0000    0.9993    0.9993        -0.1999   0.0325
+         100    0.0000    0.0000    1.0000    1.0000        -0.2000   0.0325
+         200    0.0000    0.0000    1.0000    1.0000        -0.2000   0.0325
+  rapport discret/(honnête+discret) au départ : 0.0111
+Lecture : avec eps = 0 le rapport discret/(honnête+discret) ne bouge pas ; le soupçon moyen
+retombe au niveau honnête alors que le dommage reste à ce rapport, et le rappel tombe à 5 %.
+Quand le dommage tend vers zéro, la colonne « rappel » est celle du dernier comportement de
+sous-rendement, de masse presque nulle. Cas C6 : le dommage baisse d'abord (le visible part),
+puis remonte jusqu'à 1 (le discret, mieux vu que l'honnête, prend toute la place).
+
+====================================================================================================
+BLOC D — Seuil de paiement : à partir de quel taux de détection le signal pousse du bon côté
+Supposition : récompense R_h pour l'honnête, R_n pour un sous-rendement non détecté, R_d pour un
+sous-rendement détecté ; détection indépendante de tout le reste, de probabilité t.
+Le sous-rendement paie si t < t* = (R_n - R_h) / (R_n - R_d).
+----------------------------------------------------------------------------------------------------
+   R_h    R_n    R_d       t*   remarque
+  1.00   2.00  -1.00   0.3333   valeurs publiées par un des voisins : seuil attendu 1/3
+  1.00   1.00  -1.00   0.0000   aucun gain à tromper : tout taux positif suffit
+  1.00   1.50   0.00   0.3333   pénalité faible
+  1.00   3.00  -1.00   0.5000   gain fort à tromper
+  0.00   1.00  -9.00   0.1000   pénalité dix fois le gain
+Témoin de la formule : à t = t* les deux espérances sont égales.
+  espérance du sous-rendement à t* : 1.0000000000 ; honnête : 1.0000000000
+
+====================================================================================================
+BLOC E — Le bruit se paie en épisodes, pas en signe
+Supposition : deux groupes d'épisodes de même taille, écart type 1, différence de moyenne d.
+Taille par groupe pour voir la différence (bilatéral 5 %, puissance 80 %) : 2 * ((1,96 + 0,8416)/d)^2.
+----------------------------------------------------------------------------------------------------
+  aire        d  épisodes par groupe
+  0.55   0.1777                  498
+  0.60   0.3583                  123
+  0.65   0.5449                   53
+  0.70   0.7416                   29
+  0.77   1.0449                   15
+  0.90   1.8124                    5
+
+====================================================================================================
+BLOC F — Puissance de la lecture proposée (corrélation entre score et dommage)
+Transformation de Fisher : n = ((1,96 + 0,8416) / atanh(rho))^2 + 3 épisodes pour distinguer
+une corrélation rho de zéro (bilatéral 5 %, puissance 80 %).
+----------------------------------------------------------------------------------------------------
+   rho   épisodes
+  0.10        783
+  0.14        399
+  0.15        347
+  0.20        194
+  0.30         85
+  0.46         35
+  0.55         24
+Intervalle à 95 % autour de rho = 0,15 selon le nombre n d'épisodes :
+  n =   50 : [-0.134 ; +0.411]
+  n =  100 : [-0.048 ; +0.337]
+  n =  200 : [+0.011 ; +0.283]
+  n =  400 : [+0.053 ; +0.244]
+  n =  800 : [+0.082 ; +0.217]
+Même intervalle autour de rho = 0,30 (ce qui réfuterait la prédiction « au plus 0,15 ») :
+  n =  100 : [+0.110 ; +0.469]
+  n =  200 : [+0.168 ; +0.421]
+  n =  400 : [+0.208 ; +0.387]
+  n =  800 : [+0.236 ; +0.362]
+
+====================================================================================================
+BLOC G — De la corrélation au « gain du meilleur de cinq » sur le dommage
+Supposition : score et dommage de loi normale jointe, corrélation rho ; dommage de moyenne mu et
+d'écart type sigma (cv = sigma/mu). On retient le moins suspect de 5 : le dommage moyen du retenu
+vaut mu - rho * sigma * E[max de 5 normales]. gain = baisse relative du dommage = rho * cv * E[max].
+----------------------------------------------------------------------------------------------------
+E[max de 5 normales centrées réduites] = 1.162964
+   rho |  gain, cv = 0,5  gain, cv = 1,0
+  0.00 |          0.0000          0.0000
+  0.14 |          0.0814          0.1628
+  0.15 |          0.0872          0.1744
+  0.30 |          0.1744          0.3489
+  0.46 |          0.2675          0.5350
+  0.55 |          0.3198          0.6396
+
+====================================================================================================
+BLOC H — Témoins de l'identité centrale : la réponse au premier ordre est la covariance
+Politique à comportements discrets k, de parts p_k, score moyen s_k (grand = bien vu), dommage D_k.
+Entraînement idéalisé : p_k devient proportionnel à p_k * exp(eta * s_k).
+Identité : la dérivée en eta = 0 du dommage moyen vaut Cov(s, D).
+----------------------------------------------------------------------------------------------------
+vrai par construction : le score baisse quand le dommage monte
+  dommage moyen au départ : 0.800000 ; dérivée numérique : -0.118000 ; covariance : -0.118000 ; dommage moyen à eta = 5 : 0.260103
+faux par construction : saboteur constant, même dommage partout, scores variés
+  dommage moyen au départ : 1.000000 ; dérivée numérique : +0.000000 ; covariance : +0.000000 ; dommage moyen à eta = 5 : 1.000000
+faux à terme : le score préfère le dommage discret à l'honnête, un visible est là au départ
+  dommage moyen au départ : 0.110000 ; dérivée numérique : -0.087220 ; covariance : -0.087220 ; dommage moyen à eta = 5 : 0.030350
+faux par construction : le score préfère le dommage discret à l'honnête, sans visible
+  dommage moyen au départ : 0.100000 ; dérivée numérique : +0.018000 ; covariance : +0.018000 ; dommage moyen à eta = 5 : 0.231969
+Chemin du troisième témoin (dommage moyen selon eta) :
+  eta = 0 : 0.1100 ; eta = 1 : 0.0522 ; eta = 2 : 0.0310 ; eta = 5 : 0.0303 ; eta = 10 : 0.0767 ; eta = 15 : 0.1841 ; eta = 20 : 0.3802 ; eta = 25 : 0.6251 ; eta = 30 : 0.8193 ; eta = 40 : 0.9710
+Constat : dérivée = covariance dans les quatre cas. Négative au premier, nulle au deuxième,
+positive au quatrième. Au troisième elle est NÉGATIVE alors que le dommage finit par monter :
+avant le calcul, l'auteur l'attendait positive. La lecture au premier ordre ne voit pas un
+comportement discret encore rare ; elle peut réfuter, elle ne peut pas confirmer.
+
+Fin.
