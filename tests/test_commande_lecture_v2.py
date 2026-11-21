@@ -274,7 +274,7 @@ def test_stockage_par_le_corps_recompose(monde):
         _v1(m, offre_json=_offre(m, base=OFFRE_DU_RELEVE))
 
 
-@pytest.mark.parametrize("retouche", [{"disk_space": 149}, {"num_gpus": 2}, {"cpu_ram": 64000}, {"cuda_max_good": 12.4},
+@pytest.mark.parametrize("retouche", [{"disk_space": 149}, {"disk_space": 299}, {"num_gpus": 2}, {"cpu_ram": 64000}, {"cuda_max_good": 12.4},
                                       {"id": "x1"}, {"gpu_ram": None}, {"gpu_name": "H100 SXM"}, {"dph_total": 1.35},
                                       {"dph_total": 0}, {"cpu_cores_effective": 12}, {"storage_cost": None},
                                       {"storage_cost": "0.1"}, {"storage_cost": float("nan")}, {"storage_cost": True}, {}])
@@ -290,7 +290,9 @@ def test_memes_autres_bornes_meme_refus_d_un_champ_illisible_meme_valeur_rendue(
         except GardeArret as e:
             return ("refus", str(e))
     assert jouer(cl2.exiger_offre_lecture_v2) == jouer(rv.exiger_offre_lecture)
-    assert jouer(rv.exiger_offre_lecture)[0] == ("rendu" if not retouche else "refus")
+    # frontière du disque : 299 Go est refusé pour la relecture décisive (300 Go), admis pour la répétition (150 Go)
+    sain = not retouche or (retouche == {"disk_space": 299} and plan == "repetition")
+    assert jouer(rv.exiger_offre_lecture)[0] == jouer(cl2.exiger_offre_lecture_v2)[0] == ("rendu" if sain else "refus")
 
 
 # --- portée (§ 3.4, deuxième tiret) --------------------------------------------------------------------------------------
@@ -313,6 +315,13 @@ def test_portee_repetition_par_le_corps_recompose_la_borne_de_0_08_n_a_pas_bouge
         _corps(m, plan="repetition", offre_json=_offre(m, storage_cost=0.40))
     cmd = _corps(m, plan="repetition", offre_json=_offre(m, storage_cost=0.19))
     assert "--disk 150" in cmd and "--label b5f-repetition-v1" in cmd
+    # le disque de la formule est celui de la pièce : 0,30 USD par Go et par mois rend 0,0616 à 150 Go (accepté), et
+    # rendrait 0,1233 à 300 Go ; sain par la garde et par le corps recomposé, comme par la version 1
+    assert 0.30 * 300 / 730.0 > 0.12 > 0.08 > 0.30 * 150 / 730.0
+    assert cl2.exiger_offre_lecture_v2(dict(OFFRE, storage_cost=0.30), "repetition") == {"id": "654321", "prix_usd_h": 1.2}
+    cmd = _corps(m, plan="repetition", offre_json=_offre(m, storage_cost=0.30))
+    assert "--disk 150" in cmd and cmd.encode("utf-8") == _v1(m, plan="repetition",
+                                                             offre_json=_offre(m, storage_cost=0.30)).encode("utf-8")
     # 0,50 USD par Go et par mois : 0,1027 à 150 Go, sous 0,12 et au-dessus de 0,08 : la répétition se lit à 0,08
     assert 0.12 > 0.50 * 150 / 730.0 > 0.08
     with pytest.raises(GardeArret, match="stockage de 150 Go"):
@@ -500,7 +509,7 @@ def test_c_commit_de_commande_qui_ne_descend_pas_du_code_fige(monde):
 
 def test_d_ligne_de_l_accord_de_lecture_sans_la_citation(monde):
     m = _monter(monde, ref=lambda k: "session de lecture session_essai")
-    with pytest.raises(GardeArret, match="GO-LECTURE-B5F"):
+    with pytest.raises(GardeArret, match="ne cite pas, une fois et à la lettre"):
         _corps(m)
 
 
@@ -549,12 +558,15 @@ def test_d_format_de_la_citation_lu_a_la_lettre():
                      sain.replace(", vérifiée sha256 " + "f" * 64, ""),           # sans le rapport de vérification
                      sain.replace("f" * 64, "f" * 12 + "…"),                      # empreinte du rapport abrégée
                      sain.replace(" ; commande", " commande"),
+                     sain + "0",                                                  # rapport de 65 signes
+                     sain + "xyz",
+                     sain + " note sans point-virgule",                           # texte libre sans « ; »
                      sain + " " + sain,                                           # deux citations
                      sain + " ; " + sain.replace(k, "2" * 40),                    # deux citations, deux commits
                      sain + " ; commande de lecture v2, commit " + "2" * 40):
-        with pytest.raises(GardeArret, match="GO-LECTURE-B5F"):
+        with pytest.raises(GardeArret, match="ne cite pas, une fois et à la lettre"):
             cl2.commit_de_commande_cite(_registre_minimal(artefact))
-    with pytest.raises(GardeArret, match="GO-LECTURE-B5F"):
+    with pytest.raises(GardeArret, match="ne cite pas, une fois et à la lettre"):
         cl2.commit_de_commande_cite("| GO-FORMATION-B5F | 2026-11-24T10:00:00Z | x | " + sain + " |\n")   # autre ligne
     # la citation n'est lue que dans la colonne de référence d'une ligne de table, par le lecteur de la version 1
     with pytest.raises(GardeArret, match="clé CLE-INVENTEE-B5F inconnue"):
