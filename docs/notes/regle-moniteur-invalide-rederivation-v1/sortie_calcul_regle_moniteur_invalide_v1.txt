@@ -1,0 +1,161 @@
+# Règle « moniteur invalide » — sortie du calcul, version 1
+python 3.13.18, numpy 2.4.6, scipy 1.17.1
+rho0 = 0.1, alpha = 0.05, beta = 0.1, graine racine = 20261121
+
+## 1. Grilles, taux moyen et seuils de non-détection
+arith16: K = 16, rho_k/rho0 = [1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.25, 3.5, 3.75, 4.0, 4.25, 4.5, 4.75, 5.0]
+   produit des moyennes = rapport unique au taux moyen rho_barre = 0.31250 (3.1250 rho0) ; seuil de non-détection r* = 0.19118 (1.9118 rho0)
+   moyenne des produits : seuil de non-détection du plus petit taux r*_1 = 0.11209 (1.1209 rho0)
+geom5: K = 5, rho_k/rho0 = [1.25, 1.7678, 2.5, 3.5355, 5.0]
+   produit des moyennes = rapport unique au taux moyen rho_barre = 0.28107 (2.8107 rho0) ; seuil de non-détection r* = 0.17855 (1.7855 rho0)
+   moyenne des produits : seuil de non-détection du plus petit taux r*_1 = 0.11209 (1.1209 rho0)
+descendante12: K = 12, rho_k/rho0 = [5.0, 3.0, 2.0, 1.5, 1.25, 1.125, 1.0625, 1.0312, 1.0156, 1.0078, 1.0039, 1.002]
+   produit des moyennes = rapport unique au taux moyen rho_barre = 0.16665 (1.6665 rho0) ; seuil de non-détection r* = 0.13093 (1.3093 rho0)
+   moyenne des produits : seuil de non-détection du plus petit taux r*_1 = 0.10010 (1.0010 rho0)
+
+## 1b. Produit des moyennes (arith16) : attaquant au taux constant r sous le seuil de non-détection
+r / rho0 | theta de Lundberg | P(jamais annoncé) >= 1 - alpha^theta
+1.20 | 0.7414 | 0.8915
+1.50 | 0.4032 | 0.7011
+1.70 | 0.2005 | 0.4516
+1.80 | 0.1043 | 0.2683
+1.90 | 0.0109 | 0.0321
+
+## 2a. Borne garantie (martingale exponentielle exacte, Ville) de l'excès T_m - rho0 m,
+pour tout m < annonce, m <= n, avec probabilité >= 1 - beta ; ajouter 1 pour l'épisode d'annonce
+grille | règle | q | n | borne | constante | pente | rho_k retenu / rho0 | lambda | ordre principal
+arith16 | produit | 0.20 | 1000 | 160.5 | 43.1 | 0.11737 | 3.1250 | 0.2868 | 94.8
+arith16 | produit | 0.20 | 4000 | 486.9 | 69.3 | 0.10440 | 3.1250 | 0.1479 | 189.7
+arith16 | produit | 0.20 | 16000 | 1687.6 | 123.1 | 0.09778 | 3.1250 | 0.0748 | 379.4
+arith16 | produit | 0.05 | 1000 | 276.9 | 131.2 | 0.14567 | 3.1250 | 0.4930 | 197.4
+arith16 | produit | 0.05 | 4000 | 662.8 | 184.4 | 0.11962 | 3.1250 | 0.2646 | 394.8
+arith16 | produit | 0.05 | 16000 | 1987.5 | 298.0 | 0.10559 | 3.1250 | 0.1365 | 789.6
+arith16 | melange | 0.20 | 1000 | 136.6 | 81.6 | 0.05497 | 1.7500 | 0.6399 | 115.0
+arith16 | melange | 0.20 | 4000 | 255.8 | 119.0 | 0.03420 | 1.5000 | 0.5131 | 229.9
+arith16 | melange | 0.20 | 16000 | 489.6 | 212.3 | 0.01733 | 1.2500 | 0.5131 | 459.9
+arith16 | melange | 0.05 | 1000 | 322.4 | 198.0 | 0.12440 | 2.7500 | 0.5342 | 237.6
+arith16 | melange | 0.05 | 4000 | 566.5 | 337.9 | 0.05715 | 1.7500 | 0.6025 | 475.3
+arith16 | melange | 0.05 | 16000 | 1058.5 | 496.3 | 0.03514 | 1.5000 | 0.4736 | 950.6
+geom5 | produit | 0.20 | 1000 | 148.2 | 44.0 | 0.10416 | 2.8107 | 0.3300 | 94.8
+geom5 | produit | 0.20 | 4000 | 435.2 | 69.4 | 0.09145 | 2.8107 | 0.1702 | 189.7
+geom5 | produit | 0.20 | 16000 | 1481.4 | 121.6 | 0.08499 | 2.8107 | 0.0860 | 379.4
+geom5 | produit | 0.05 | 1000 | 268.9 | 138.1 | 0.13079 | 2.8107 | 0.5560 | 197.4
+geom5 | produit | 0.05 | 4000 | 613.1 | 187.7 | 0.10634 | 2.8107 | 0.3045 | 394.8
+geom5 | produit | 0.05 | 16000 | 1779.6 | 297.8 | 0.09262 | 2.8107 | 0.1571 | 789.6
+geom5 | melange | 0.20 | 1000 | 126.5 | 70.3 | 0.05625 | 1.7678 | 0.6399 | 107.3
+geom5 | melange | 0.20 | 4000 | 238.3 | 150.3 | 0.02201 | 1.2500 | 0.9558 | 214.6
+geom5 | melange | 0.20 | 16000 | 465.5 | 188.3 | 0.01733 | 1.2500 | 0.5131 | 429.2
+geom5 | melange | 0.05 | 1000 | 299.1 | 185.5 | 0.11360 | 2.5000 | 0.6147 | 222.3
+geom5 | melange | 0.05 | 4000 | 525.9 | 292.0 | 0.05848 | 1.7678 | 0.6025 | 444.6
+geom5 | melange | 0.05 | 16000 | 988.3 | 622.1 | 0.02289 | 1.2500 | 0.8821 | 889.2
+descendante12 | melange | 0.20 | 1000 | 136.1 | 69.0 | 0.06710 | 2.0000 | 0.5131 | 113.2
+descendante12 | melange | 0.20 | 4000 | 252.4 | 115.6 | 0.03420 | 1.5000 | 0.5131 | 226.3
+descendante12 | melange | 0.20 | 16000 | 483.7 | 206.4 | 0.01733 | 1.2500 | 0.5131 | 452.6
+descendante12 | melange | 0.05 | 1000 | 317.9 | 180.6 | 0.13726 | 3.0000 | 0.4930 | 234.0
+descendante12 | melange | 0.05 | 4000 | 564.6 | 286.9 | 0.06943 | 2.0000 | 0.4832 | 468.0
+descendante12 | melange | 0.05 | 16000 | 1045.1 | 482.8 | 0.03514 | 1.5000 | 0.4736 | 936.0
+
+## 2b. Croissance : borne / n et borne / sqrt(n) pour des horizons longs (borne 2a)
+grille | règle | q | n | borne | borne/n | borne/sqrt(n)
+arith16 | produit | 0.20 | 1000 | 160.5 | 0.16051 | 5.076
+arith16 | produit | 0.20 | 16000 | 1687.6 | 0.10547 | 13.342
+arith16 | produit | 0.20 | 100000 | 9667.1 | 0.09667 | 30.570
+arith16 | produit | 0.20 | 1000000 | 92886.1 | 0.09289 | 92.886
+arith16 | produit | 0.20 | 10000000 | 917186.2 | 0.09172 | 290.040
+arith16 | produit | 0.05 | 1000 | 276.9 | 0.27691 | 8.757
+arith16 | produit | 0.05 | 16000 | 1987.5 | 0.12422 | 15.713
+arith16 | produit | 0.05 | 100000 | 10343.5 | 0.10344 | 32.709
+arith16 | produit | 0.05 | 1000000 | 94923.1 | 0.09492 | 94.923
+arith16 | produit | 0.05 | 10000000 | 923527.2 | 0.09235 | 292.045
+arith16 | melange | 0.20 | 1000 | 136.6 | 0.13655 | 4.318
+arith16 | melange | 0.20 | 16000 | 489.6 | 0.03060 | 3.871
+arith16 | melange | 0.20 | 100000 | 1759.6 | 0.01760 | 5.564
+arith16 | melange | 0.20 | 1000000 | 13568.9 | 0.01357 | 13.569
+arith16 | melange | 0.20 | 10000000 | 125343.7 | 0.01253 | 39.637
+arith16 | melange | 0.05 | 1000 | 322.4 | 0.32236 | 10.194
+arith16 | melange | 0.05 | 16000 | 1058.5 | 0.06616 | 8.368
+arith16 | melange | 0.05 | 100000 | 2641.4 | 0.02641 | 8.353
+arith16 | melange | 0.05 | 1000000 | 15532.7 | 0.01553 | 15.533
+arith16 | melange | 0.05 | 10000000 | 130757.5 | 0.01308 | 41.349
+descendante12 | melange | 0.20 | 1000 | 136.1 | 0.13611 | 4.304
+descendante12 | melange | 0.20 | 16000 | 483.7 | 0.03023 | 3.824
+descendante12 | melange | 0.20 | 100000 | 1140.4 | 0.01140 | 3.606
+descendante12 | melange | 0.20 | 1000000 | 3662.0 | 0.00366 | 3.662
+descendante12 | melange | 0.20 | 10000000 | 11159.5 | 0.00112 | 3.529
+descendante12 | melange | 0.05 | 1000 | 317.9 | 0.31790 | 10.053
+descendante12 | melange | 0.05 | 16000 | 1045.1 | 0.06532 | 8.262
+descendante12 | melange | 0.05 | 100000 | 2411.6 | 0.02412 | 7.626
+descendante12 | melange | 0.05 | 1000000 | 7606.6 | 0.00761 | 7.607
+descendante12 | melange | 0.05 | 10000000 | 23105.8 | 0.00231 | 7.307
+
+## 2c. Forme fermée plus lâche (inégalité de Freedman, variance au pire n q (1-q) max(u^2, b^2))
+grille | règle | q | n | borne | part linéaire | part en racine | rho_k retenu / rho0 | borne / n
+arith16 | produit | 0.20 | 1000 | 212.2 | 91.2 | 121.0 | 3.1250 | 0.2122
+arith16 | produit | 0.20 | 4000 | 595.5 | 364.7 | 230.8 | 3.1250 | 0.1489
+arith16 | produit | 0.20 | 16000 | 1909.3 | 1458.9 | 450.4 | 3.1250 | 0.1193
+arith16 | produit | 0.05 | 1000 | 375.8 | 91.2 | 284.6 | 3.1250 | 0.3758
+arith16 | produit | 0.05 | 4000 | 888.6 | 364.7 | 523.8 | 3.1250 | 0.2221
+arith16 | produit | 0.05 | 16000 | 2461.3 | 1458.9 | 1002.3 | 3.1250 | 0.1538
+arith16 | melange | 0.20 | 1000 | 197.3 | 34.6 | 162.7 | 1.7500 | 0.1973
+arith16 | melange | 0.20 | 4000 | 395.1 | 94.2 | 300.9 | 1.5000 | 0.0988
+arith16 | melange | 0.20 | 16000 | 791.0 | 193.5 | 597.5 | 1.2500 | 0.0494
+arith16 | melange | 0.05 | 1000 | 415.1 | 86.2 | 328.9 | 3.0000 | 0.4151
+arith16 | melange | 0.05 | 4000 | 830.6 | 138.2 | 692.4 | 1.7500 | 0.2077
+arith16 | melange | 0.05 | 16000 | 1665.0 | 376.8 | 1288.2 | 1.5000 | 0.1041
+geom5 | produit | 0.20 | 1000 | 202.6 | 78.6 | 124.0 | 2.8107 | 0.2026
+geom5 | produit | 0.20 | 4000 | 549.7 | 314.2 | 235.5 | 2.8107 | 0.1374
+geom5 | produit | 0.20 | 16000 | 1715.3 | 1256.8 | 458.5 | 2.8107 | 0.1072
+geom5 | produit | 0.05 | 1000 | 371.8 | 78.6 | 293.2 | 2.8107 | 0.3718
+geom5 | produit | 0.05 | 4000 | 850.4 | 314.2 | 536.2 | 2.8107 | 0.2126
+geom5 | produit | 0.05 | 16000 | 2279.0 | 1256.8 | 1022.2 | 2.8107 | 0.1424
+geom5 | melange | 0.20 | 1000 | 188.3 | 35.3 | 153.0 | 1.7678 | 0.1883
+geom5 | melange | 0.20 | 4000 | 381.7 | 48.4 | 333.3 | 1.2500 | 0.0954
+geom5 | melange | 0.20 | 16000 | 767.8 | 193.5 | 574.3 | 1.2500 | 0.0480
+geom5 | melange | 0.05 | 1000 | 398.9 | 66.0 | 333.0 | 2.5000 | 0.3989
+geom5 | melange | 0.05 | 4000 | 794.6 | 141.3 | 653.3 | 1.7678 | 0.1987
+geom5 | melange | 0.05 | 16000 | 1612.2 | 193.5 | 1418.7 | 1.2500 | 0.1008
+descendante12 | melange | 0.20 | 1000 | 195.7 | 45.2 | 150.5 | 2.0000 | 0.1957
+descendante12 | melange | 0.20 | 4000 | 392.0 | 94.2 | 297.8 | 1.5000 | 0.0980
+descendante12 | melange | 0.20 | 16000 | 785.3 | 193.5 | 591.8 | 1.2500 | 0.0491
+descendante12 | melange | 0.05 | 1000 | 410.8 | 86.2 | 324.7 | 3.0000 | 0.4108
+descendante12 | melange | 0.05 | 4000 | 823.9 | 181.0 | 643.0 | 2.0000 | 0.2060
+descendante12 | melange | 0.05 | 16000 | 1652.6 | 376.8 | 1275.8 | 1.5000 | 0.1033
+
+## 3. Borne inférieure pour TOUTE règle de niveau alpha (attaquant i.i.d., Pinsker, gamma = 0,05)
+q | n | excès atteignable avec probabilité >= beta | rapport à sqrt(n rho0 (1-rho0) / q)
+0.20 | 1000 | 18.0 | 0.849
+0.20 | 4000 | 36.0 | 0.849
+0.20 | 16000 | 73.0 | 0.860
+0.05 | 1000 | 55.0 | 1.296
+0.05 | 4000 | 107.0 | 1.261
+0.05 | 16000 | 211.0 | 1.243
+
+## 4. Excès atteint par un attaquant à taux constant (simulation, quantile 1 - beta, R = 1000)
+Minorant du pire cas ; maximum sur des taux r = rho0 (1 + j/20).
+grille | règle | q | n | excès atteint | taux qui l'atteint / rho0 | part sans annonce à n pour ce taux
+arith16 | produit | 0.20 | 1000 | 103.0 | 2.15 | 0.136
+arith16 | produit | 0.20 | 4000 | 355.0 | 1.95 | 0.146
+arith16 | produit | 0.20 | 16000 | 1344.1 | 1.85 | 0.208
+arith16 | produit | 0.05 | 1000 | 126.0 | 2.20 | 0.421
+arith16 | produit | 0.05 | 4000 | 443.0 | 2.20 | 0.104
+arith16 | produit | 0.05 | 16000 | 1468.2 | 1.95 | 0.130
+arith16 | melange | 0.20 | 1000 | 85.0 | 2.00 | 0.088
+arith16 | melange | 0.20 | 4000 | 171.9 | 1.45 | 0.168
+arith16 | melange | 0.20 | 16000 | 351.1 | 1.25 | 0.099
+arith16 | melange | 0.05 | 1000 | 129.0 | 2.20 | 0.467
+arith16 | melange | 0.05 | 4000 | 378.6 | 2.05 | 0.082
+arith16 | melange | 0.05 | 16000 | 731.2 | 1.50 | 0.093
+descendante12 | melange | 0.20 | 1000 | 90.9 | 1.95 | 0.166
+descendante12 | melange | 0.20 | 4000 | 168.0 | 1.50 | 0.086
+descendante12 | melange | 0.20 | 16000 | 310.0 | 1.20 | 0.195
+descendante12 | melange | 0.05 | 1000 | 131.2 | 2.20 | 0.617
+descendante12 | melange | 0.05 | 4000 | 386.0 | 2.05 | 0.089
+descendante12 | melange | 0.05 | 16000 | 723.8 | 1.50 | 0.077
+
+## 5. Audits avant l'annonce quand le taux réel vaut 2 rho0 (R = 4000, plafond 20000 audits)
+grille | règle | médiane des audits | quantile 0,9 | part sans annonce au plafond | épisodes médians q=0,20 | q=0,05
+arith16 | produit | 61 | 642 | 0.0000 | 305 | 1220
+arith16 | melange | 66 | 189 | 0.0000 | 330 | 1320
+geom5 | produit | 56 | 328 | 0.0000 | 280 | 1120
+geom5 | melange | 69 | 185 | 0.0000 | 345 | 1380
+descendante12 | melange | 94 | 209 | 0.0000 | 470 | 1880

@@ -1,0 +1,70 @@
+[A] Recalcul. Puissance maximale au niveau 1 % pour un déplacement delta (un seul épisode).
+    z(0,99) = 2.326348
+    delta 0.100 : puissance 0.0130 ; variation totale 0.0399
+    delta 0.250 : puissance 0.0189 ; variation totale 0.0995
+    delta 0.446 : puissance 0.0300 ; variation totale 0.1765
+    delta 1.000 : puissance 0.0924 ; variation totale 0.3829
+    delta 2.000 : puissance 0.3721 ; variation totale 0.6827
+    delta 3.000 : puissance 0.7497 ; variation totale 0.8664
+    Ajout : test du total sur n épisodes indépendants, déplacement 0,1 écart type à chaque épisode.
+      n =     1 : puissance 0.0130
+      n =   100 : puissance 0.0924
+      n =   400 : puissance 0.3721
+      n =  1000 : puissance 0.7984
+
+[B] Recalcul. Prise au k-ième épisode endommagé avec probabilité 0,95 (l'honnête n'en commet jamais).
+    p 0.01, q 1.0 : moyenne   99.0 ; k95 = 299
+    p 0.01, q 0.5 : moyenne  199.0 ; k95 = 598
+    p 0.20, q 1.0 : moyenne    4.0 ; k95 = 14
+    p 0.20, q 0.5 : moyenne    9.0 ; k95 = 29
+    Ajout : oracle inégal, q = 1 sur la moitié des tâches, q = 0,2 sur l'autre, audit 1 %.
+      saboteur qui choisit les tâches à q = 0,2 : k95 = 1497
+      q moyen 0,6 : k95 = 498
+      q = 1 : k95 = 299
+
+[C] Recalcul. Pari en mélange de l'auteur (20 mises de 0,25 à 9,75), d0 = 0,10, alarme à 100.
+    d1 0.15 : fausse alarme 0.0051 ; alarme 1.0000 ; médiane 535 audits
+    d1 0.20 : fausse alarme 0.0049 ; alarme 1.0000 ; médiane 131 audits
+    d1 0.30 : fausse alarme 0.0048 ; alarme 1.0000 ; médiane 34 audits
+    Ajout : plus petite mise 0.250 ; excès critique eps* = 0.01092 : sous eps*, toutes les mises
+    de la grille ont une croissance négative du logarithme de la richesse.
+      eps 0.005 : croissance de la plus petite mise -0.001351
+      eps 0.010 : croissance de la plus petite mise -0.000209
+      eps 0.012 : croissance de la plus petite mise +0.000247
+      eps 0.020 : croissance de la plus petite mise +0.002073
+    Frontière asymptotique : 0.11092 n + 33.3 ; calculée :
+      n =    100 audits : frontière    23 ; excès toléré    13.0
+      n =   1000 audits : frontière   143 ; excès toléré    43.0
+      n =  10000 audits : frontière  1143 ; excès toléré   143.0
+      n =  40000 audits : frontière  4470 ; excès toléré   470.0
+    Ajout : attaquant lent, taux d0 + eps à chaque épisode ; excès total = eps x médiane / p.
+      eps 0.10 : médiane   131 audits ; excès total p=1 :    13 ; p=0,2 :    66 ; p=0,05 :    262
+      eps 0.05 : médiane   535 audits ; excès total p=1 :    27 ; p=0,2 :   134 ; p=0,05 :    535
+      eps 0.02 : médiane  3132 audits ; excès total p=1 :    63 ; p=0,2 :   313 ; p=0,05 :   1253
+      eps 0.01 : pas de médiane avant 40000 audits ; alarme à l'horizon 0.415
+
+[D] Recalcul en fractions exactes.
+    (i) r0 0.128 : n = 22
+    (i) r0 0.25 : n = 11
+    (i) r0 0.5 : n = 5
+    (i) r0 0.8 : n = 2
+    (ii) r0 0.8, r1 0.2 : n = 6, c = 2, risque 0.01696, puissance 0.90112
+    (ii) r0 0.5, r1 0.1 : n = 11, c = 2, risque 0.03271, puissance 0.91044
+    (ii) r0 0.5, r1 0.25 : n = 33, c = 11, risque 0.04007, puissance 0.90128
+    (ii) r0 0.128, r1 0.02 : n = 47, c = 2, risque 0.04992, puissance 0.93226
+    Ajout : recapture diluée. Part s du sabotage parmi les endommagés audités ; rappel 0,8 sur le
+    sabotage, signalement 0,01 sur le dommage honnête ; règle n = 6, « invalide » si X <= 2.
+      s =   1 : rappel apparent 0.800 ; P(annonce « invalide » | moniteur valide) = 0.017
+      s = 0.5 : rappel apparent 0.405 ; P(annonce « invalide » | moniteur valide) = 0.534
+      s = 0.3 : rappel apparent 0.247 ; P(annonce « invalide » | moniteur valide) = 0.835
+      s = 0.2 : rappel apparent 0.168 ; P(annonce « invalide » | moniteur valide) = 0.936
+
+[E] Recalcul. Aveuglement conjoint minimal de deux regards aveugles chacun avec probabilité m.
+    m 0.5 : indépendants 0.2500 ; dilemme parfait 0.0000 (corrélation -1.00) ; regards indépendants pour passer sous 1 % : 7
+    m 0.8 : indépendants 0.6400 ; dilemme parfait 0.6000 (corrélation -0.25) ; regards indépendants pour passer sous 1 % : 21
+
+[Contrôles] Témoins dont la réponse est connue par construction.
+    B à p = q = 1 : k95 attendu 1 ; rendu 1
+    D à n = 46 pour (0,128 ; 0,02) : règle attendue absente ; rendu « présente » = False
+    C sous l'honnête : fausse alarme attendue <= 0,01 (inégalité de Ville) ; rendu 0.0051
+

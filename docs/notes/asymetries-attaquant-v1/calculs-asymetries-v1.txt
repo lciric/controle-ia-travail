@@ -1,0 +1,101 @@
+
+==============================================================================
+A. Moniteur qui apprend : borne du nombre total d'erreurs, taux d'audit constant
+==============================================================================
+Hypothèse reprise de la source : un apprenant en ligne qui fait au plus B erreurs
+sur toute suite réalisable ; chaque épisode est audité, après la décision, avec
+la probabilité e, indépendamment. Alors e * E[erreurs totales] <= B, donc
+E[erreurs totales] <= B / e, quel que soit l'horizon et quel que soit l'adversaire.
+
+Témoin (doit redonner la note sur l'adjudant) : épisode endommagé où la prise
+est acquise avec probabilité 0,95, sans rien apprendre : ceil(ln 0,05 / ln(1-e)).
+  e = 0.01 : 299
+  e = 0.20 : 14
+
+   B \ e      0,01      0,05      0,20
+     5        500       100        25
+    20       2000       400       100
+   100      10000      2000       500
+
+Objet où la conclusion est fausse : si la vérité n'est pas une fonction de ce
+que lit le moniteur (même entrée, deux vérités), aucune borne B n'existe ;
+à taux d'erreur m par épisode, les erreurs valent m * T :
+  T =    1000, m = 0,10 :      100 erreurs (croît sans plafond)
+  T =   10000, m = 0,10 :     1000 erreurs (croît sans plafond)
+  T =  100000, m = 0,10 :    10000 erreurs (croît sans plafond)
+
+==============================================================================
+B. Fuite par les corrections : combien de prises pour apprendre ce que suit l'audit
+==============================================================================
+L'agent compare deux façons d'endommager. La première est auditée au plancher p0 ;
+la seconde à r * p0 (le soupçon s'ajoute au plancher). Il n'observe que « corrigé ou
+non ». Taille par bras pour un test unilatéral de deux proportions, risques 0,05 et
+0,05 (approximation normale) ; puis nombre attendu d'épisodes pris pendant l'essai.
+
+   p0     r    par bras   épisodes endommagés   prises attendues
+  0.01  1.00   jamais (taux égaux : rien à apprendre ; objet de contrôle)
+  0.01  1.25      38519                 77038              866.7
+  0.01  1.50      10685                 21370              267.1
+  0.01  2.00       3196                  6392               95.9
+  0.01  5.00        391                   782               23.5
+  0.05  1.00   jamais (taux égaux : rien à apprendre ; objet de contrôle)
+  0.05  1.25       7351                 14702              827.0
+  0.05  1.50       2027                  4054              253.4
+  0.05  2.00        598                  1196               89.7
+  0.05  5.00         67                   134               20.1
+  0.20  1.00   jamais (taux égaux : rien à apprendre ; objet de contrôle)
+  0.20  1.25       1507                  3014              678.1
+  0.20  1.50        404                   808              202.0
+  0.20  2.00        111                   222               66.6
+  0.20  5.00          6                    12                7.2
+
+Règle d'alarme : arrêt à la K-ième prise. Probabilité que l'agent termine son essai
+(2n épisodes endommagés) avec moins de K prises ; loi exacte (deux binomiales).
+   p0     r     K=1        K=3        K=10
+  0.01  2.00   1.02e-42   4.95e-39   2.45e-30
+  0.05  2.00   2.07e-41   1.01e-37   5.02e-29
+  0.05  5.00   1.37e-10   4.89e-08   2.00e-03
+  0.20  2.00   4.15e-36   2.18e-32   1.21e-23
+
+==============================================================================
+C. Accord entre deux copies : accord brut, accord corrigé, ancres
+==============================================================================
+Monde jouet : par épisode, un fait binaire w tiré à pile ou face par le défenseur.
+Honnête : rapporte w avec exactitude a, erreurs indépendantes entre copies.
+Mensonge focal : les deux copies rapportent 1 quel que soit w.
+Mensonge cohérent : les deux copies rapportent 1 - w (même fonction de la pièce).
+Accord brut = P(mêmes rapports sur le même épisode).
+Accord corrigé = accord sur le même épisode - accord entre deux épisodes différents.
+
+    a    stratégie            brut   entre épisodes   corrigé
+  0.95  honnête             0.905            0.500     0.405
+  0.90  honnête             0.820            0.500     0.320
+  0.80  honnête             0.680            0.500     0.180
+  0.70  honnête             0.580            0.500     0.080
+   --   mensonge focal      1.000            1.000     0.000
+   --   mensonge cohérent   1.000            0.500     0.500
+
+Lecture : l'accord brut classe les deux menteurs au-dessus de l'honnête ; l'accord
+corrigé met le mensonge focal à zéro, mais laisse le mensonge cohérent au-dessus
+de tout honnête imparfait. Seules des ancres (épisodes dont le défenseur connaît w)
+le séparent : exactitude sur ancre, honnête a, focal 1/2, cohérent 0.
+
+Nombre d'ancres m pour séparer honnête (a) et mensonge cohérent, règle « au moins
+la moitié des ancres justes » : risque de condamner l'honnête (loi binomiale exacte).
+    a     m=3       m=5       m=9
+  0.90    0.0280    0.0086    0.0009
+  0.80    0.1040    0.0579    0.0196
+  0.70    0.2160    0.1631    0.0988
+(le mensonge cohérent a 0 ancre juste : toujours pris par cette règle)
+
+==============================================================================
+D. Témoins indépendants équivalents à n copies corrélées
+==============================================================================
+n_eq = n / (1 + (n - 1) * rho) ; limite 1 / rho quand n grandit.
+rho = 0,435 et 0,480 : corrélations estimées sur des tirages réels d'un même modèle,
+lues en page 1 de la source citée dans la note (Agbeyegbe et Agbeyegbe).
+   rho     n=2     n=5    n=10   n=100   limite
+  0.000    2.00    5.00   10.00  100.00   infini
+  0.435    1.39    1.82    2.03    2.27     2.30
+  0.480    1.35    1.71    1.88    2.06     2.08
+(rho = 0 : objet de contrôle, n copies valent n témoins)
