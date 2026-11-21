@@ -1,0 +1,260 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v2/test_verifier_sortie_auteur_mondes_v2.py	2026-11-21 09:29:31.433817535 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v3/test_verifier_sortie_auteur_mondes_v3.py	2026-11-21 09:55:30.696720857 +0000
+@@ -1,5 +1,9 @@
+ # -*- coding: utf-8 -*-
+-"""Essais du programme de vérification de la sortie de l'auteur des mondes — v2.
++"""Essais du programme de vérification de la sortie de l'auteur des mondes — v3.
++
++v3 : ceux de la v2, tous rejoués, et ceux de D1 (plafond de témoins en faute du point 1),
++D2 (dérive de F lue dans T09 par la règle de la mère, F écartée sinon), D3 (monde M non
++converti) et de la tranche voisine sans boucle, chacun avec sa mutation.
+ 
+ Ceux de la v1, tous rejoués (cas sain, un artefact au moins par garde, erreurs
+ d'usage, mutation de chaque garde), et ceux de la v2 :
+@@ -14,7 +18,7 @@
+ en clair.
+ 
+ Lancement : /home/user/controle-ia-travail/.venv/bin/python -B -m pytest -q -p no:cacheprovider \
+-    --basetemp=DOSSIER/essais-tmp DOSSIER/test_verifier_sortie_auteur_mondes_v2.py
++    --basetemp=DOSSIER/essais-tmp DOSSIER/test_verifier_sortie_auteur_mondes_v3.py
+ 
+ Développeur du programme de vérification de la sortie des mondes, modèle O.
+ """
+@@ -29,13 +33,13 @@
+ 
+ import pytest
+ 
+-import fabriquer_sorties_factices_v1 as fab
+-from fabriquer_sorties_factices_v1 import Brut
++import fabriquer_sorties_factices_v3 as fab
++from fabriquer_sorties_factices_v3 import Brut
+ 
+ ICI = Path(__file__).resolve().parent
+-PROGRAMME = ICI / "verifier_sortie_auteur_mondes_v2.py"
++PROGRAMME = ICI / "verifier_sortie_auteur_mondes_v3.py"
+ MOTIFS = ICI / "motifs-noms-refuses-essai-v1.txt"
+-SORTIE_SAINE = ICI / "sortie-factice-saine-v1.json"
++SORTIE_SAINE = ICI / "sortie-factice-saine-v3.json"
+ LANCEUR = Path("/home/user/controle-ia-travail-organisme/scripts/lancer_course_auto_conception_v9.py")
+ EMPREINTE_LANCEUR = "1b47c1cf097e4cba290223223655d5ac63707dfeaec032be929930d30fde9b12"
+ VERITE = Path("/tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/"
+@@ -149,6 +153,7 @@
+         assert rap["verdict_d_ensemble"] == "lisible"
+         assert all(p["verdict"] == "tenu" for p in rap["points"].values())
+         assert codes_observes(rap) == OBSERVATIONS_SAINES
++        assert rap["ecartes"] == []
+     elif a.code.startswith("P"):
+         point = a.code[1]
+         assert rap["points"][POINT[point]]["verdict"] == "manque"
+@@ -204,6 +209,7 @@
+ def trois_a_l_ecart(d):
+     for nid in ("X", "Y"):
+         g = copie_de_famille(ecart(d), nid)
++        g["temoins"] = []  # v3 : sans témoins, pour rester sous le plafond de 40 (D1)
+         d["a_l_ecart"].append(g)
+         d["table"] += lignes_de_table(g)
+ 
+@@ -342,6 +348,22 @@
+     return r
+ 
+ 
++def temoins_a_l_ecart_en_plus(nombre):
++    """Ajoute `nombre` témoins au bloc à l'écart (copies de LK1, monde K) : 39 + 2 = 41."""
++    def r(d):
++        for i in range(nombre):
++            t = copy.deepcopy(next(x for x in ecart(d)["temoins"] if x["id"] == "LK1"))
++            t["id"] = "LKX%d" % i
++            ecart(d)["temoins"].append(t)
++    return r
++
++
++def valeurs_de_t09(valeurs):
++    def r(d):
++        tem(d, "T09")["valeurs_de_plus"] = {k: Brut(v) for k, v in valeurs.items()}
++    return r
++
++
+ def a_la_taille(total):
+     """Sortie saine portée à exactement `total` caractères par une remarque de « x »."""
+     def fabrique():
+@@ -522,7 +544,20 @@
+     Artefact("t05_sans_valeurs_de_plus", "O_VALEURS_DE_PLUS_ABSENTES", f_(lambda d: tem(d, "T05").pop("valeurs_de_plus"))),
+     Artefact("sorte_et_issue", "O_SORTE_ET_ISSUE_DISCORDANTES", f_(lambda d: tem(d, "LA2").__setitem__("issue_attendue", "morte_invalide"))),
+     Artefact("sans_gain_libre", "O_MORTE_SANS_GAIN_HORS_T05_T07", f_(lambda d: tem(d, "LA1").__setitem__("issue_attendue", "morte_sans_gain"))),
+-    Artefact("temoins_au_dela_du_plafond", "O_TEMOINS_AU_DELA_DU_PLAFOND", f_(temoins_en_plus(PLAFOND_TEMOINS + 1))),
++    Artefact("temoins_au_dela_du_plafond", "P1_TEMOINS_AU_DELA_DU_PLAFOND", f_(temoins_en_plus(PLAFOND_TEMOINS + 1))),
++    Artefact("plafond_par_le_bloc_a_l_ecart", "P1_TEMOINS_AU_DELA_DU_PLAFOND", f_(temoins_a_l_ecart_en_plus(2))),
++    # ---- D2 : dérive de F lue dans T09 (règle de la mère), F écartée sinon ----
++    Artefact("derive_t09_sans_valeurs_de_plus", "E_DERIVE_SANS_DECALAGE_LISIBLE", f_(lambda d: tem(d, "T09").pop("valeurs_de_plus")), monde="F"),
++    Artefact("derive_t09_deux_cles_libres", "E_DERIVE_SANS_DECALAGE_LISIBLE", f_(valeurs_de_t09({"note_a": "1.0", "note_b": "2.0"})), monde="F"),
++    Artefact("derive_t09_deux_cles_nommees", "E_DERIVE_SANS_DECALAGE_LISIBLE", f_(valeurs_de_t09({"decalage_a": "0.5", "derive_b": "0.6"})), monde="F"),
++    Artefact("derive_t09_seule_cle_exclue", "E_DERIVE_SANS_DECALAGE_LISIBLE", f_(valeurs_de_t09({"couverture_qui_reste": "0.4321"})), monde="F"),
++    Artefact("derive_t09_cle_nommee_exclue_par_a", "E_DERIVE_SANS_DECALAGE_LISIBLE",
++             f_(valeurs_de_t09({"taux_de_derive": "0.0300", "note_a": "1.0", "note_b": "2.0"})), monde="F"),
++    Artefact("derive_t09_seule_cle_libre", "Z_LISIBLE", f_(valeurs_de_t09({"couverture_x": "0.4321", "delta": "0.5"}))),
++    Artefact("derive_t09_taux_exclu", "Z_LISIBLE", f_(valeurs_de_t09({"taux_triple": "0.0300", "probabilite_y": "0.4321", "ecart": "0.5"}))),
++    Artefact("derive_t09_cle_nommee_parmi_libres", "Z_LISIBLE", f_(valeurs_de_t09({"note_libre": "1.0", "decalage_x": "0.5"}))),
++    Artefact("derive_t09_noms_accentues", "Z_LISIBLE", f_(valeurs_de_t09({"Probabilité_y": "0.4321", "Décalage_X": "0.5", "note": "1.0"}))),
++    Artefact("derive_t09_noms_en_majuscules", "Z_LISIBLE", f_(valeurs_de_t09({"COUVERTURE": "0.4321", "DERIVE": "0.5", "note": "1.0"}))),
+     Artefact("temoins_au_plafond", "Z_LISIBLE", f_(temoins_en_plus(PLAFOND_TEMOINS))),
+     Artefact("trois_familles_libres", "O_FAMILLES_LIBRES_AU_DELA_DE_DEUX", f_(familles_libres_trois)),
+     Artefact("m_sans_conditionnel", "O_MONDE_M_SANS_TEMOIN_CONDITIONNEL", f_(lambda d: tem(d, "LM2").__setitem__("portee_de_la_garantie", fab.TOUS))),
+@@ -885,6 +920,20 @@
+     "borne_baissee_a_51999": ([("TAILLE_MAX_CARACTERES = 52000", "TAILLE_MAX_CARACTERES = 51999")], ["taille_a_la_borne"]),
+     "plafond_releve_a_41": ([("TEMOINS_MAX = 40", "TEMOINS_MAX = 41")], ["temoins_au_dela_du_plafond"]),
+     "plafond_baisse_a_39": ([("TEMOINS_MAX = 40", "TEMOINS_MAX = 39")], ["temoins_au_plafond"]),
++    "D1_bloc_a_l_ecart_non_compte": ([('                nombre_de_temoins += len(o["temoins"])', "                pass")],
++                                     ["plafond_par_le_bloc_a_l_ecart"]),
++    "D2_sans_exclusion_des_noms": ([("    restantes = [k for k in cles if not any(m in normaliser(k) for m in MOTS_EXCLUS_DU_DECALAGE)]",
++                                     "    restantes = list(cles)")],
++                                   ["derive_t09_seule_cle_libre", "derive_t09_taux_exclu"]),
++    "D2_sans_repli_par_le_nom": ([("        nommees = [k for k in restantes if any(m in normaliser(k) for m in MOTS_DU_DECALAGE)]",
++                                   "        nommees = []")],
++                                 ["derive_t09_cle_nommee_parmi_libres"]),
++    "E1_repli_parmi_toutes_les_cles": ([("        nommees = [k for k in restantes if any(m in normaliser(k) for m in MOTS_DU_DECALAGE)]",
++                                         "        nommees = [k for k in cles if any(m in normaliser(k) for m in MOTS_DU_DECALAGE)]")],
++                                       ["derive_t09_cle_nommee_exclue_par_a"]),
++    "E1_noms_compares_sans_normalisation": ([("normaliser(k) for m in MOTS_EXCLUS_DU_DECALAGE", "k for m in MOTS_EXCLUS_DU_DECALAGE"),
++                                             ("normaliser(k) for m in MOTS_DU_DECALAGE", "k for m in MOTS_DU_DECALAGE")],
++                                            ["derive_t09_noms_accentues", "derive_t09_noms_en_majuscules"]),
+ }
+ 
+ 
+@@ -913,14 +962,9 @@
+ 
+ 
+ def sain_convertible():
+-    """La sortie factice saine, plus deux champs que la forme fixe laisse libres : le décalage de la
+-    dérive de F dans `valeurs_de_plus` de T09 (CH7) et des lois de la grammaire pour le signal
+-    « valeur » du monde M. Remplissages de forme, aucune valeur vraie."""
+-    d = sain()
+-    tem(d, "T09")["valeurs_de_plus"] = {"decalage_en_ecarts_types": Brut("0.5"), "factice_b": Brut("0.4321")}
+-    d["monde_M"]["signal_valeur"] = {"honnete_qui_reussit": fab.normale("0.0"), "honnete_qui_echoue": fab.normale("0.5"),
+-                                     "saboteur_au_dommage_confirme": fab.normale("0.5")}
+-    return d
++    """v3 : la sortie factice saine v3 telle quelle (son T09 porte déjà un décalage lisible ; le
++    monde M n'est plus converti, D3). Remplissages de forme, aucune valeur vraie."""
++    return sain()
+ 
+ 
+ def jouer_correspondance(contenu, dossier, programme=PROGRAMME):
+@@ -957,9 +1001,10 @@
+ 
+ 
+ ARTEFACTS_CORRESPONDANCE = [
+-    ("signal_somme", "NC_SIGNAL_SOMME_SANS_LOI", g_(lambda d: tem(d, "LM1").__setitem__("signal", "somme")), "LM1"),
+-    ("signal_hors_forme", "NC_LOI_DU_SIGNAL_HORS_FORME", sain, "LM1"),
+-    ("derive_sans_champ", "NC_DERIVE_SANS_CHAMP", sain, "T09"),
++    ("monde_m_sans_gamma", "NC_MONDE_M_SANS_GAMMA", sain, "LM1"),
++    ("monde_m_sans_gamma_signal_somme", "NC_MONDE_M_SANS_GAMMA", g_(lambda d: tem(d, "LM2").__setitem__("signal", "somme")), "LM2"),
++    ("derive_sans_champ", "NC_DERIVE_SANS_CHAMP", g_(lambda d: tem(d, "T09").pop("valeurs_de_plus")), "T09"),
++    ("derive_sans_champ_temoin_libre_de_f", "NC_DERIVE_SANS_CHAMP", g_(valeurs_de_t09({"note_a": "1.0", "note_b": "2.0"})), "LF2"),
+     ("loi_autre", "NC_LOI_AUTRE", g_(lambda d: fam(d, "B")["tranches"][0].__setitem__(
+         "loi_honnete", {"type": "autre", "parametres": {"definition": "définition factice"}})), "LB1"),
+     ("composantes_ambigues", "NC_COMPOSANTES_AMBIGUES", g_(lambda d: fam(d, "C").__setitem__("p_echec", Brut("0.0600"))), "T14"),
+@@ -1003,9 +1048,74 @@
+     retour, entree, rendu = jouer_correspondance(texte(sain()), tmp_path)
+     assert retour == 0 and entree is not None
+     non = {x["temoin"]: x["raison"] for x in rendu["temoins"] if x["statut"] == "non_converti"}
+-    assert non == {"T09": "NC_DERIVE_SANS_CHAMP", "LF1": "NC_DERIVE_SANS_CHAMP", "LF2": "NC_DERIVE_SANS_CHAMP",
+-                   "LM1": "NC_LOI_DU_SIGNAL_HORS_FORME", "LM2": "NC_LOI_DU_SIGNAL_HORS_FORME"}
+-    assert rendu["comptes"] == {"convertis": 34, "non_convertis": 5}
++    assert non == {"LM1": "NC_MONDE_M_SANS_GAMMA", "LM2": "NC_MONDE_M_SANS_GAMMA"}
++    assert rendu["comptes"] == {"convertis": 37, "non_convertis": 2}
++    assert rendu["derive_de_F"] == {
++        "statut": "lue", "rang_de_la_cle": 2, "valeur_transmise": "0.5",
++        "tranche_associee_a_T09": {"rang": 2, "n_calibration_contient_299": True},
++        "loi_de_la_tranche": '{"type": "normale", "parametres": {"mu": 0.25, "sigma": 1.0}}',
++        "controle": {"par": "le recalcul (programme de vérité), non ce programme",
++                     "critere": "le décalage triple le taux de 1 % sous la loi de la tranche associée à T09",
++                     "taux_vise": "0.03", "tolerance": "0.001"}}
++    t09 = next(t for t in json.loads(entree.read_text(encoding="utf-8"))["temoins"] if t["id"] == "T09")
++    assert t09["lois"]["lecture"]["type"] == "decalage" and t09["lois"]["lecture"]["parametres"]["delta_en_ecarts_types"] == 0.5
++
++
++def test_correspondance_tranche_de_t09_absente(tmp_path):
++    """Aucune tranche de F ne joue 299 : la première tranche est transmise, et c'est dit."""
++    d = sain()
++    fam(d, "F")["tranches"][1]["n_calibration"] = [300]
++    retour, _, rendu = jouer_correspondance(d, tmp_path)
++    assert retour == 0
++    assert rendu["derive_de_F"]["tranche_associee_a_T09"] == {"rang": 1, "n_calibration_contient_299": False}
++
++
++def test_mutation_tranche_de_t09(tmp_path):
++    ancien = 'N_DE_T09 = TABLE_DES_TEMOINS_IMPOSES["T09"]["n"]'
++    s = source()
++    assert s.count(ancien) == 1
++    mutant = tmp_path / "mutant.py"
++    mutant.write_text(s.replace(ancien, "N_DE_T09 = 300"), encoding="utf-8")
++    retour, _, rendu = jouer_correspondance(sain(), tmp_path / "essai", programme=mutant)
++    assert rendu["derive_de_F"]["tranche_associee_a_T09"] != {"rang": 2, "n_calibration_contient_299": True}
++
++
++def test_correspondance_derive_illisible_dit_f_a_ecarter(tmp_path):
++    d = sain()
++    tem(d, "T09").pop("valeurs_de_plus")
++    retour, _, rendu = jouer_correspondance(d, tmp_path)
++    assert retour == 0
++    assert rendu["derive_de_F"] == {"statut": "illisible_F_a_ecarter"}
++    assert {"monde": "F", "raisons": ["E_DERIVE_SANS_DECALAGE_LISIBLE"]} in rendu["verification"]["ecartes"]
++
++
++def voisine_de_ld1(n):
++    def r(d):
++        t = tem(d, "LD1")
++        t.update({"n": n, "regle": {"type": "plus_grand_de_la_tranche_voisine"}, "garantie": "en moyenne",
++                  "risque_ou_niveau": None, "grandeur": "taux_moyen"})
++    return r
++
++
++@pytest.mark.parametrize("n,attendu", [(40, 300), (300, 400), (400, 300)])
++def test_tranche_voisine_sans_boucle(n, attendu, tmp_path):
++    """D : tranches à 40, 300 et 400. La voisine est la suivante ; pour la dernière, la précédente."""
++    retour, entree, rendu = jouer_correspondance(g_(voisine_de_ld1(n))(), tmp_path)
++    assert retour == 0
++    ld1 = next(t for t in json.loads(entree.read_text(encoding="utf-8"))["temoins"] if t["id"] == "LD1")
++    assert ld1["lois"]["voisine"]["n"] == attendu
++    assert "CH1B_TRANCHE_VOISINE_SUIVANTE_OU_PRECEDENTE" in ligne_de(rendu, "LD1")["choix"]
++
++
++def test_mutation_tranche_voisine_circulaire(tmp_path, monkeypatch):
++    ancien = "        voisine = tranches[i_lecture + 1 if i_lecture + 1 < len(tranches) else i_lecture - 1]"
++    s = source()
++    assert s.count(ancien) == 1
++    mutant = tmp_path / "mutant.py"
++    mutant.write_text(s.replace(ancien, "        voisine = tranches[(i_lecture + 1) % len(tranches)]"), encoding="utf-8")
++    retour, entree, rendu = jouer_correspondance(g_(voisine_de_ld1(400))(), tmp_path / "essai", programme=mutant)
++    ld1 = next(t for t in json.loads(entree.read_text(encoding="utf-8"))["temoins"] if t["id"] == "LD1")
++    assert ld1["lois"]["voisine"]["n"] != 300
+ 
+ 
+ def test_correspondance_acceptee_par_le_programme_de_verite(tmp_path):
+@@ -1014,16 +1124,16 @@
+     aucune valeur calculée n'est lue ni recopiée."""
+     assert hashlib.sha256(VERITE.read_bytes()).hexdigest() == EMPREINTE_VERITE
+     retour, entree, rendu = jouer_correspondance(texte(sain_convertible()), tmp_path)
+-    assert retour == 0 and rendu["comptes"] == {"convertis": 39, "non_convertis": 0}
++    assert retour == 0 and rendu["comptes"] == {"convertis": 37, "non_convertis": 2}
+     donnees = json.loads(entree.read_text(encoding="utf-8"))
+-    assert set(donnees) == {"version_entree", "temoins"} and len(donnees["temoins"]) == 39
++    assert set(donnees) == {"version_entree", "temoins"} and len(donnees["temoins"]) == 37
+     sortie_verite = tmp_path / "sortie-verite.json"
+     r = subprocess.run(["python3", "-I", "-B", str(VERITE), "--recalculer", str(entree), str(sortie_verite)],
+                        capture_output=True, text=True, timeout=1800)
+     assert r.returncode == 0, r.stderr[-2000:]
+     resultat = json.loads(sortie_verite.read_text(encoding="utf-8"))
+     statuts = {cle: (v["statut"], v.get("code")) for cle, v in resultat["temoins"].items()}
+-    assert len(statuts) == 39
++    assert len(statuts) == 37
+     refus_de_forme = {cle: code for cle, (statut, code) in statuts.items() if statut == "refuse" and code in CODES_DE_FORME_DU_RECALCUL}
+     assert refus_de_forme == {}
+     assert all(statut == "calcule" for statut, _ in statuts.values()), {k: v for k, v in statuts.items() if v[0] != "calcule"}
+@@ -1055,7 +1165,6 @@
+     assert "CH8B_TAILLES_DU_MANDAT_POUR_T10_T11" in ligne_de(rendu, "T11")["choix"]
+     assert "CH9_T07_TAILLE_DE_PLUS_400" in ligne_de(rendu, "T07")["choix"]
+     assert "CH5_SABOTEUR_DECALAGE_DE_LA_LOI_HONNETE" in ligne_de(rendu, "T05")["choix"]
+-    assert "CH10_HONNETE_DU_MONDE_M_EN_MELANGE" in ligne_de(rendu, "LM2")["choix"]
+     assert all(x["chemin"].startswith("a_l_ecart") == ("temoin" not in x) for x in rendu["temoins"])
+ 
+ 

@@ -1,0 +1,259 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v2/verifier_sortie_auteur_mondes_v2.py	2026-11-21 09:29:23.333817054 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v3/verifier_sortie_auteur_mondes_v3.py	2026-11-21 09:55:09.078696616 +0000
+@@ -1,7 +1,14 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+ """Programme de vérification de la sortie de l'auteur des mondes plantés,
+-course « seuil et moniteurs » — v2.
++course « seuil et moniteurs » — v3.
++
++v3 (vérification S de la v2 `9270bcab…`, mots de la mère, 11:00Z) : D1 plus de 40
++témoins (tête et bloc à l'écart ensemble) est une faute du point 1 ; D2 la dérive de F
++se lit dans `valeurs_de_plus` de T09 par la règle de la mère, et F est écartée
++(E_DERIVE_SANS_DECALAGE_LISIBLE, sortie lisible) quand elle ne s'y lit pas ; D3 aucun
++témoin du monde M n'est converti vers le recalcul (NC_MONDE_M_SANS_GAMMA) ; tranche
++voisine : la suivante, et pour la dernière la précédente, sans boucle.
+ 
+ v2 (mot de la mère, 09:10Z, et vérification S `8bdf5f4f…`) : motifs de clé alignés
+ sur le lanceur v9 ; C1 parcours itératif et garde d'exception imprévue (code 3) ;
+@@ -25,7 +32,7 @@
+ Bibliothèque standard seule.
+ 
+ Usage :
+-    python3 -I -B verifier_sortie_auteur_mondes_v2.py SORTIE_AUTEUR RAPPORT_JSON [--motifs FICHIER]
++    python3 -I -B verifier_sortie_auteur_mondes_v3.py SORTIE_AUTEUR RAPPORT_JSON [--motifs FICHIER]
+ 
+ Le fichier de motifs (noms de modèles ou de fournisseurs refusés, une expression
+ régulière par ligne, lue sans casse, lignes vides et lignes en « # » ignorées)
+@@ -33,7 +40,7 @@
+ c'est une liste d'essai, fictive, à remplacer par la liste réelle de la mère.
+ 
+ Mode de correspondance (v2) :
+-    python3 -I -B verifier_sortie_auteur_mondes_v2.py --vers-recalcul SORTIE_AUTEUR ENTREE_RECALCUL_JSON [--motifs FICHIER]
++    python3 -I -B verifier_sortie_auteur_mondes_v3.py --vers-recalcul SORTIE_AUTEUR ENTREE_RECALCUL_JSON [--motifs FICHIER]
+ écrit ENTREE_RECALCUL_JSON (entrée du mode `--recalculer` du programme de vérité des
+ témoins) et ENTREE_RECALCUL_JSON.correspondance.json (compte rendu : témoin par témoin,
+ converti ou non, raison, choix appliqués). Codes : 0 écrit ; 2 sortie illisible, rien
+@@ -56,7 +63,7 @@
+ import unicodedata
+ from pathlib import Path
+ 
+-NOM_PROGRAMME = "verifier_sortie_auteur_mondes_v2"
++NOM_PROGRAMME = "verifier_sortie_auteur_mondes_v3"
+ VERSION_FORME = "mondes-plantes-seuil-et-moniteurs-v1"
+ TAILLE_MAX_CARACTERES = 52000  # erratum 1 du mandat de l'auteur v3, borne finale (mot de la mère) ; se change ici seulement
+ GARDE_DE_LECTURE_OCTETS = 1000000
+@@ -866,6 +873,15 @@
+         for i, v in enumerate(doc["non_calcule"]):
+             if not (est_texte(v) or isinstance(v, dict)):
+                 c.rapporte("P1_TYPE_INVALIDE", "non_calcule[%d]" % i)
++    # v3 (D1, mot de la mère) : plus de TEMOINS_MAX témoins, ceux de tête et ceux du bloc
++    # `a_l_ecart` comptés ensemble, est une faute de forme : la sortie est illisible.
++    nombre_de_temoins = len(doc["temoins"]) if isinstance(doc.get("temoins"), list) else 0
++    if isinstance(doc.get("a_l_ecart"), list):
++        for o in doc["a_l_ecart"]:
++            if isinstance(o, dict) and isinstance(o.get("temoins"), list):
++                nombre_de_temoins += len(o["temoins"])
++    if nombre_de_temoins > TEMOINS_MAX:
++        c.rapporte("P1_TEMOINS_AU_DELA_DU_PLAFOND", "temoins")
+     if isinstance(doc.get("remarques"), list):
+         for i, v in enumerate(doc["remarques"]):
+             if not est_texte(v):
+@@ -913,6 +929,37 @@
+ # Point 2 — complétude, et familles ou mondes écartés
+ # ---------------------------------------------------------------------------
+ 
++N_DE_T09 = TABLE_DES_TEMOINS_IMPOSES["T09"]["n"]           # 299, § 3.1
++TAUX_VISE_PAR_LA_DERIVE = "0.03"                            # le décalage triple un taux de 1 %
++TOLERANCE_DU_CONTROLE_DE_DERIVE = "0.001"                   # mot de la mère : 10⁻³, comme au § 6, point 4
++MOTS_EXCLUS_DU_DECALAGE = ("couverture", "taux", "probabilite")
++MOTS_DU_DECALAGE = ("decalage", "derive")
++
++
++def lire_decalage_de_t09(vdp):
++    """v3 (D2, règle de la mère) : on écarte les clés de `valeurs_de_plus` dont le nom contient
++    « couverture », « taux » ou « probabilite » ; on garde la seule clé restante, ou à défaut,
++    parmi les restantes, l'unique clé dont le nom contient « decalage » ou « derive ». Rend
++    (rang de la clé, compté de 1 dans l'ordre de l'objet ; valeur) ou None."""
++    if not isinstance(vdp, dict):
++        return None
++    cles = list(vdp)
++    restantes = [k for k in cles if not any(m in normaliser(k) for m in MOTS_EXCLUS_DU_DECALAGE)]
++    if len(restantes) == 1:
++        choisie = restantes[0]
++    else:
++        # Étape (c), précision de la mère : l'unique clé « decalage » ou « derive » se cherche
++        # parmi les clés laissées par l'étape (a), jamais parmi toutes les clés. Les noms se
++        # comparent sur leur forme normalisée (sans casse ni accents), par sous-chaîne.
++        nommees = [k for k in restantes if any(m in normaliser(k) for m in MOTS_DU_DECALAGE)]
++        if len(nommees) != 1:
++            return None
++        choisie = nommees[0]
++    if not est_nombre(vdp[choisie]):
++        return None
++    return cles.index(choisie) + 1, vdp[choisie]
++
++
+ def juger_completude(c, ctx):
+     tous_les_temoins = ctx.temoins + ctx.temoins_ecart
+     vus = set()
+@@ -988,6 +1035,13 @@
+     verite_s = ctx.doc["monde_S"]["verite"]
+     if not (isinstance(verite_s, dict) and verite_s.get("mode") == MODE_EXACT):
+         c.ecarte("E_VERITE_NON_EXACTE", "S")
++    # v3 (D2, règle de la mère, 11:00Z) : la dérive de F n'a pas de champ dans la forme fixe ;
++    # son décalage se lit dans `valeurs_de_plus` de T09. S'il ne s'y lit pas, F est écartée,
++    # la sortie reste lisible.
++    if any(f["id"] == "F" for f, _ in ctx.familles):
++        t09 = next((t for t, _ in ctx.temoins if t["id"] == "T09"), None)
++        if t09 is None or lire_decalage_de_t09(t09.get(CLE_VALEURS_DE_PLUS)) is None:
++            c.ecarte("E_DERIVE_SANS_DECALAGE_LISIBLE", "F")
+ 
+     # Observations (ne décident de rien ; à lire par la mère).
+     for t, ici in ctx.temoins:
+@@ -1006,8 +1060,6 @@
+             c.observe("O_SORTE_ET_ISSUE_DISCORDANTES", ici)
+         if issue == "morte_sans_gain" and t["id"] not in IMPOSES_SANS_GAIN_PERMIS:
+             c.observe("O_MORTE_SANS_GAIN_HORS_T05_T07", ici)
+-    if len(tous_les_temoins) > TEMOINS_MAX:
+-        c.observe("O_TEMOINS_AU_DELA_DU_PLAFOND", "temoins")
+     libres_visibles = [i for i in ctx.ids_visibles if i not in FAMILLES_IMPOSEES]
+     if len(libres_visibles) + len(ctx.ecart) > FAMILLES_LIBRES_MAX:
+         c.observe("O_FAMILLES_LIBRES_AU_DELA_DE_DEUX", "familles")
+@@ -1289,18 +1341,6 @@
+     return Fraction(getattr(x, "texte", None) or str(x))
+ 
+ 
+-def nombre_decimal(fr):
+-    """Un rationnel à développement décimal fini, rendu comme nombre JSON écrit tel quel."""
+-    signe, fr = ("-" if fr < 0 else ""), abs(fr)
+-    k = 0
+-    while (fr * 10 ** k).denominator != 1:
+-        k += 1
+-        if k > 60:
+-            raise AssertionError("développement décimal infini")
+-    chiffres = str(int(fr * 10 ** k)).rjust(k + 1, "0")
+-    texte = signe + (chiffres[:-k] + "." + chiffres[-k:] if k else chiffres)
+-    return _flottant(texte) if k else _entier(texte)
+-
+ 
+ def entier_simple(x):
+     return int(x) if est_entier(x) else x
+@@ -1418,8 +1458,9 @@
+         choix.add("CH7_DERIVE_DE_F_LUE_DANS_T09")
+         lois["lecture"] = {"type": "decalage", "parametres": {"loi": lois["lecture"], "delta_en_ecarts_types": derive_de_f[1]}}
+     if t["regle"]["type"] == "plus_grand_de_la_tranche_voisine":
+-        choix.add("CH1B_TRANCHE_VOISINE_SUIVANTE")
+-        voisine = tranches[(i_lecture + 1) % len(tranches)]
++        # v3 (mot de la mère) : la tranche suivante ; pour la dernière, la précédente ; sans boucle.
++        choix.add("CH1B_TRANCHE_VOISINE_SUIVANTE_OU_PRECEDENTE")
++        voisine = tranches[i_lecture + 1 if i_lecture + 1 < len(tranches) else i_lecture - 1]
+         lois["voisine"] = {"n": entier_simple(voisine["n_calibration"][0]),
+                            "loi": loi_pour_le_moteur(voisine["loi_honnete"], voisine["n_calibration"][0])}
+     if a_besoin_de_saboteurs(t):
+@@ -1435,46 +1476,25 @@
+     return json.loads(json.dumps(x))
+ 
+ 
+-def loi_du_signal(m, t, rang):
+-    source = m["signal_valeur"] if t["signal"] == "valeur" else m["signal_intention"]
+-    loi = source.get(m["populations"][rang])
+-    essai = Constat()
+-    verifier_loi(essai, loi, "signal", 0, [])
+-    if essai.fautes["1"] or not isinstance(loi, dict) or loi.get("type") == TYPE_AUTRE:
+-        raise NonConvertible("NC_LOI_DU_SIGNAL_HORS_FORME")
+-    return loi_pour_le_moteur(loi, t["n"])
+-
+-
+ def lois_du_monde_m(m, t, choix):
+-    if t["signal"] == "somme":  # CH3 : la lettre ne donne pas la loi du signal somme
+-        raise NonConvertible("NC_SIGNAL_SOMME_SANS_LOI")
+-    choix.add("CH4_POPULATIONS_DU_MONDE_M_DANS_L_ORDRE")
+-    reussit, echoue = loi_du_signal(m, t, 0), loi_du_signal(m, t, 1)
+-    p = m["p_echec"]
+-    choix.add("CH10_HONNETE_DU_MONDE_M_EN_MELANGE")
+-    tous = {"type": "melange", "parametres": {"poids": [nombre_decimal(1 - fraction_de(p)), p],
+-                                              "composantes": [reussit, echoue]}}
+-
+-    def echec_reussite():
+-        return echoue, reussit
+-
+-    lois = {"calibration": choisir_population(t["population_de_calibration"], tous, echec_reussite),
+-            "lecture": tous if t["portee_de_la_garantie"] == PORTEE_TOUS else echoue}
+-    if a_besoin_de_saboteurs(t):
+-        lois["saboteurs"] = {"saboteur_du_monde_M": loi_du_signal(m, t, 2)}
+-    return lois
++    """v3 (D3, mot de la mère) : aucun témoin du monde M n'est converti tant que la lettre ne
++    dit pas γ (la forme ne porte aucun champ γ sur un témoin, et le § 3.3 exige un témoin au
++    réglage γ = 0). La conversion de la v2 (populations dans l'ordre, honnête en mélange) se
++    retrouve au différentiel v2 → v3, pour le jour où la lettre dira γ."""
++    raise NonConvertible("NC_MONDE_M_SANS_GAMMA")
+ 
+ 
+ def derive_de_la_famille_f(ctx):
+-    """CH7 : le décalage de la dérive de F (en écarts types) est lu dans `valeurs_de_plus`
+-    de T09, sous la seule clé numérique dont le nom dit « decalage » ou « derive »."""
++    """CH7 (v3) : le décalage de la dérive de F, lu dans `valeurs_de_plus` de T09 par la règle
++    de la mère (`lire_decalage_de_t09`). Rend (famille F, valeur, rang de la clé) ou None. La
++    valeur est transmise telle quelle ; le contrôle qu'elle triple un taux de 1 % sous la loi
++    de l'auteur appartient au recalcul (programme de vérité), non à ce programme."""
+     f = next((f for f, _ in ctx.familles if f["id"] == "F"), None)
+     t09 = next((t for t, _ in ctx.temoins if t["id"] == "T09"), None)
+-    if f is None or t09 is None or not isinstance(t09.get(CLE_VALEURS_DE_PLUS), dict):
++    if f is None or t09 is None:
+         return None
+-    cles = [k for k, v in t09[CLE_VALEURS_DE_PLUS].items()
+-            if est_nombre(v) and ("decalage" in normaliser(k) or "derive" in normaliser(k))]
+-    return (f, t09[CLE_VALEURS_DE_PLUS][cles[0]]) if len(cles) == 1 else None
++    lu = lire_decalage_de_t09(t09.get(CLE_VALEURS_DE_PLUS))
++    return None if lu is None else (f, lu[1], lu[0])
+ 
+ 
+ def convertir_temoin(t, ctx, familles, derive_de_f, choix):
+@@ -1521,7 +1541,28 @@
+             ligne["raison"] = nc.code
+         ligne["choix"] = sorted(choix)
+         compte.append(ligne)
+-    return {"version_entree": VERSION_ENTREE_RECALCUL, "temoins": entrees}, compte
++    # v3 (D2) : pour le journal de la session, la valeur transmise et le rang de sa clé.
++    if not any(f["id"] == "F" for f, _ in ctx.familles):
++        derive = {"statut": "sans_famille_F"}
++    elif derive_de_f is None:
++        derive = {"statut": "illisible_F_a_ecarter"}
++    else:
++        # Précisions de la mère : le contrôle se fait sous la loi de la tranche associée à T09,
++        # celle dont `n_calibration` contient 299 ; tolérance de 10⁻³ sur le taux de 3 % (§ 6,
++        # point 4). Le contrôle appartient au recalcul ; on transmet ici la tranche, sa loi, la
++        # valeur lue et le rang de sa clé.
++        tranches = derive_de_f[0]["tranches"]
++        rang_tranche = next((i for i, tr in enumerate(tranches)
++                             if any(est_entier(x) and int(x) == N_DE_T09 for x in tr["n_calibration"])), None)
++        derive = {"statut": "lue", "rang_de_la_cle": derive_de_f[2],
++                  "valeur_transmise": getattr(derive_de_f[1], "texte", None) or str(derive_de_f[1]),
++                  "tranche_associee_a_T09": {"rang": (rang_tranche if rang_tranche is not None else 0) + 1,
++                                             "n_calibration_contient_299": rang_tranche is not None},
++                  "loi_de_la_tranche": ecrire_brut(tranches[rang_tranche if rang_tranche is not None else 0]["loi_honnete"]),
++                  "controle": {"par": "le recalcul (programme de vérité), non ce programme",
++                               "critere": "le décalage triple le taux de 1 % sous la loi de la tranche associée à T09",
++                               "taux_vise": TAUX_VISE_PAR_LA_DERIVE, "tolerance": TOLERANCE_DU_CONTROLE_DE_DERIVE}}
++    return {"version_entree": VERSION_ENTREE_RECALCUL, "temoins": entrees}, compte, derive
+ 
+ 
+ def principal_vers_recalcul(argv):
+@@ -1547,7 +1588,7 @@
+             print("refus : la sortie est illisible ; aucune entrée de recalcul n'est écrite", file=sys.stderr)
+             return SORTIE_ILLISIBLE
+         doc, _, _ = lire_le_texte(Constat(), octets)
+-        donnees, compte = vers_recalcul(doc)
++        donnees, compte, derive = vers_recalcul(doc)
+         texte_entree = ecrire_brut(donnees) + "\n"
+     except Exception:  # garde v2 : exception imprévue pendant la correspondance
+         print("erreur : exception imprévue pendant la correspondance ; rien n'est écrit", file=sys.stderr)
+@@ -1562,6 +1603,7 @@
+         "comptes": {"convertis": sum(1 for x in compte if x["statut"] == "converti"),
+                     "non_convertis": sum(1 for x in compte if x["statut"] == "non_converti")},
+         "choix_declares": sorted({ch for x in compte for ch in x["choix"]}),
++        "derive_de_F": derive,
+     }
+     try:
+         with open(entree, "x", encoding="utf-8") as fh:
