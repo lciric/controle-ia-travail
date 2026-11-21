@@ -1,0 +1,614 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes/verifier_sortie_auteur_mondes_v1.py	2026-11-21 08:52:08.425684204 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/dev-verification-sortie-mondes-v2/verifier_sortie_auteur_mondes_v2.py	2026-11-21 09:29:23.333817054 +0000
+@@ -1,7 +1,17 @@
+ #!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+ """Programme de vérification de la sortie de l'auteur des mondes plantés,
+-course « seuil et moniteurs » — v1.
++course « seuil et moniteurs » — v2.
++
++v2 (mot de la mère, 09:10Z, et vérification S `8bdf5f4f…`) : motifs de clé alignés
++sur le lanceur v9 ; C1 parcours itératif et garde d'exception imprévue (code 3) ;
++C2 vérité non exacte toujours écartée ; C3 budget en fraction, en pour cent ou en
++chaîne « 5 % » ; N2 repli des tirets typographiques. Erratum 1 du mandat v3 (mots
++de la mère) : borne de taille à 52 000 caractères (TAILLE_MAX_CARACTERES) et plafond
++de 40 témoins, imposés, libres et bloc à l'écart compris (TEMOINS_MAX), chacun lu
++d'une seule constante. Mode neuf `--vers-recalcul` (mot de la mère, 09:15Z) : la
++correspondance entre une sortie lisible et l'entrée du mode `--recalculer` du
++programme de vérité des témoins (voir CORRESPONDANCE plus bas).
+ 
+ Juge les points 1 (forme), 2 (complétude), 3 (cohérence) et 5 (motifs) du § 6
+ du mandat de l'auteur v3 (empreinte 816313cb342a642e4dadda6d111e30fff2800eda2a7975722a0961c5ec05dbe9),
+@@ -15,18 +25,26 @@
+ Bibliothèque standard seule.
+ 
+ Usage :
+-    python3 -I -B verifier_sortie_auteur_mondes_v1.py SORTIE_AUTEUR RAPPORT_JSON [--motifs FICHIER]
++    python3 -I -B verifier_sortie_auteur_mondes_v2.py SORTIE_AUTEUR RAPPORT_JSON [--motifs FICHIER]
+ 
+ Le fichier de motifs (noms de modèles ou de fournisseurs refusés, une expression
+ régulière par ligne, lue sans casse, lignes vides et lignes en « # » ignorées)
+ vaut par défaut `motifs-noms-refuses-essai-v1.txt`, posé à côté du programme :
+ c'est une liste d'essai, fictive, à remplacer par la liste réelle de la mère.
+ 
+-Codes de sortie :
++Mode de correspondance (v2) :
++    python3 -I -B verifier_sortie_auteur_mondes_v2.py --vers-recalcul SORTIE_AUTEUR ENTREE_RECALCUL_JSON [--motifs FICHIER]
++écrit ENTREE_RECALCUL_JSON (entrée du mode `--recalculer` du programme de vérité des
++témoins) et ENTREE_RECALCUL_JSON.correspondance.json (compte rendu : témoin par témoin,
++converti ou non, raison, choix appliqués). Codes : 0 écrit ; 2 sortie illisible, rien
++n'est écrit ; 3 erreur ou exception imprévue, rien n'est écrit.
++
++Codes de sortie (mode de vérification) :
+     0  lisible ; points 1, 2, 3 et 5 tenus ;
+     1  lisible ; point 3 ou point 5 manqué (sortie refusée en l'état, à lire) ;
+     2  illisible (point 1 ou point 2 manqué) ;
+-    3  erreur d'usage ou de lecture : rien n'est jugé, aucun rapport n'est écrit.
++    3  erreur d'usage ou de lecture, ou exception imprévue (par exemple un JSON trop
++       profond pour l'analyseur) : rien n'est jugé, aucun rapport n'est écrit.
+ 
+ Développeur du programme de vérification de la sortie des mondes, modèle O.
+ """
+@@ -38,14 +56,14 @@
+ import unicodedata
+ from pathlib import Path
+ 
+-NOM_PROGRAMME = "verifier_sortie_auteur_mondes_v1"
++NOM_PROGRAMME = "verifier_sortie_auteur_mondes_v2"
+ VERSION_FORME = "mondes-plantes-seuil-et-moniteurs-v1"
+-TAILLE_MAX_CARACTERES = 40000
++TAILLE_MAX_CARACTERES = 52000  # erratum 1 du mandat de l'auteur v3, borne finale (mot de la mère) ; se change ici seulement
+ GARDE_DE_LECTURE_OCTETS = 1000000
+ FICHIER_MOTIFS_PAR_DEFAUT = "motifs-noms-refuses-essai-v1.txt"
+ MOTS_MAX = 30
+ REMARQUES_MAX = 10
+-TEMOINS_MAX = 28
++TEMOINS_MAX = 40  # erratum 1 : imposés, libres et bloc à l'écart compris ; se change ici seulement
+ FAMILLES_LIBRES_MAX = 2
+ DECIMALES_MIN = 4
+ 
+@@ -206,19 +224,29 @@
+ NOM_MIN_CARACTERES = 4
+ 
+ # Point 5 : chaînes qui ressemblent à une clé (motifs génériques, sans nom de fournisseur).
++# v2 : alignés sur MOTIF_VALEUR_DE_CLE du lanceur v9 (scripts/lancer_course_auto_conception_v9.py,
++# empreinte 1b47c1cf…, lignes 534-535) : chaque branche du lanceur est prise au moins aussi
++# largement qu'il la prend (aucune frontière de mot, longueurs au plus égales), et les motifs plus
++# larges de la v1 sont gardés. Un préfixe s'écrit avec une classe d'un seul caractère (« s[k]- »,
++# « gh[pousr]_ », « h[f]_ », « A[K]IA », « A[I]za »…) : le texte du programme ne contient aucun
++# préfixe en clair, et la garde de versement ne le prend pas pour une clé. Une entrée par ligne
++# (les essais de mutation neutralisent un motif en réécrivant sa ligne).
+ MOTIFS_DE_CLE = (
+-    ("prefixe_sk", re.compile(r"\bsk-[A-Za-z0-9_\-]{16,}")),
+-    ("prefixe_akia", re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")),
+-    ("prefixe_gh", re.compile(r"\bgh[pousr]_[A-Za-z0-9]{30,}")),
+-    ("prefixe_pat", re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}")),
+-    ("prefixe_xox", re.compile(r"\bxox[abprs]-[A-Za-z0-9\-]{10,}")),
+-    ("prefixe_aiza", re.compile(r"\bAIza[0-9A-Za-z_\-]{30,}")),
+-    ("bloc_de_cle_privee", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+-    ("jeton_a_trois_segments", re.compile(r"\beyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}")),
+-    ("porteur", re.compile(r"(?i)\bbearer\s+[A-Za-z0-9_\-.=]{16,}")),
++    ("prefixe_sk", re.compile(r"s[k]-[A-Za-z0-9_\-]{16,}")),
++    ("prefixe_sk_segment", re.compile(r"s[k]-[A-Za-z0-9]{1,32}-[A-Za-z0-9]")),
++    ("prefixe_akia", re.compile(r"(?:A[K]IA|A[S]IA)[0-9A-Z]{12,}")),
++    ("prefixe_gh", re.compile(r"g[h][pousr]_[A-Za-z0-9]{20,}")),
++    ("prefixe_hf", re.compile(r"h[f]_[A-Za-z0-9]{20,}")),
++    ("prefixe_pat", re.compile(r"githu[b]_pat_[A-Za-z0-9_]{20,}")),
++    ("prefixe_xox", re.compile(r"xo[x][abprs]-[A-Za-z0-9\-]{10,}")),
++    ("prefixe_aiza", re.compile(r"A[I]za[0-9A-Za-z_\-]{20,}")),
++    ("bloc_de_cle_privee", re.compile(r"-----BEGIN [A-Z ]*PRIVATE[ ]KEY-----")),
++    ("jeton_a_trois_segments", re.compile(r"e[y]J[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}")),
++    ("porteur", re.compile(r"(?i)bearer\s+[A-Za-z0-9_\-.=]{16,}")),
+     ("affectation_de_secret", re.compile(r"(?i)\b(?:api[_-]?key|secret|token|password|mot_de_passe)\s*[:=]\s*\S{8,}")),
+ )
+ RE_LONGUE_CHAINE = re.compile(r"[A-Za-z0-9_\-+/=]{32,}")
++TIRETS_REPLIES = {cp: "-" for cp in list(range(0x2010, 0x2016)) + [0x2212, 0xFE63, 0xFF0D]}
+ 
+ VOCABULAIRE = set(CLES_PREMIER_NIVEAU) | set(CLES_TEMOIN) | {CLE_VALEURS_DE_PLUS} | set(CLES_FAMILLE) \
+     | set(CLES_FAMILLE_A_L_ECART_EN_PLUS) | set(CLES_TRANCHE) | set(CLES_SABOTEUR) | set(CLES_VERITE) \
+@@ -312,6 +340,7 @@
+     t = unicodedata.normalize("NFKD", texte)
+     t = "".join(ch for ch in t if not unicodedata.combining(ch))
+     t = t.replace("’", "'")
++    t = t.translate(TIRETS_REPLIES)  # v2 (N2) : U+2010 à U+2015, U+2212, U+FE63, U+FF0D replient en « - »
+     return " ".join(t.lower().split())
+ 
+ 
+@@ -402,7 +431,9 @@
+         else:
+             c.rapporte("P1_JSON_INVALIDE", "texte_brut")
+         return None, texte, False
+-    except (ValueError, RecursionError):
++    except ValueError:
++        # v2 (C1) : une RecursionError de l'analyseur (JSON valide mais trop profond) n'est plus
++        # dite « illisible » : elle remonte à `principal`, qui rend le code 3 sans rapport.
+         c.rapporte("P1_JSON_INVALIDE", "texte_brut")
+         return None, texte, False
+     if not isinstance(objet, dict):
+@@ -607,16 +638,21 @@
+ 
+ 
+ def verifier_verite(c, v, chemin):
+-    """`verite` : objet {mode, expression}. Un mode autre que « exacte », ou une
+-    vérité nulle, n'est pas une faute de forme : la famille est écartée (point 2)."""
++    """`verite` : objet {mode, expression}. v2 (C2) : un `mode` autre que la chaîne
++    « exacte » (nul, vide, absent, autre texte, autre type), ou une vérité nulle,
++    n'est pas une faute de forme : la famille est écartée (point 2 ; D-M18).
++    `expression` n'est exigée que d'une vérité exacte. Une `verite` qui n'est ni un
++    objet ni nulle, ou une clé en trop, reste une faute de forme."""
+     if v is None:
+         return
+     if not isinstance(v, dict):
+         c.rapporte("P1_TYPE_INVALIDE", chemin)
+         return
+-    verifier_cles(c, v, CLES_VERITE, chemin)
+-    champ_texte(c, v, "mode", chemin)
+-    champ_texte(c, v, "expression", chemin)
++    if v.get("mode") == MODE_EXACT:
++        verifier_cles(c, v, CLES_VERITE, chemin)
++        champ_texte(c, v, "expression", chemin)
++    else:
++        verifier_cles(c, v, (), chemin, CLES_VERITE)
+ 
+ 
+ def verifier_famille(c, f, chemin, a_l_ecart, lois_autres):
+@@ -689,6 +725,26 @@
+                     verifier_temoin(c, t, "%s.temoins[%d]" % (chemin, i))
+ 
+ 
++RE_BUDGET_EN_TEXTE = re.compile(r"\s*(\d+(?:[.,]\d+)?)\s*%\s*")
++
++
++def forme_du_budget(b):
++    """v2 (C3) : budget b parmi 1 %, 5 %, 10 %, 20 %, 30 %, écrit en fraction (0.05),
++    en nombre de pour cent (5) ou en chaîne (« 5 % », « 5% », espace insécable admise).
++    Rend « fraction », « pour_cent », « chaine », ou None hors des cinq valeurs."""
++    if est_nombre(b):
++        if any(abs(float(b) - x) <= 1e-12 for x in BUDGETS_ADMIS):
++            return "fraction"
++        if any(abs(float(b) - 100 * x) <= 1e-9 for x in BUDGETS_ADMIS):
++            return "pour_cent"
++        return None
++    if isinstance(b, str):
++        m = RE_BUDGET_EN_TEXTE.fullmatch(b)
++        if m and any(abs(float(m.group(1).replace(",", ".")) - 100 * x) <= 1e-9 for x in BUDGETS_ADMIS):
++            return "chaine"
++    return None
++
++
+ def est_objet_temoins_a_part(o):
+     return isinstance(o, dict) and set(o) == {"temoins"}
+ 
+@@ -748,9 +804,11 @@
+         if "signal_moyen_propose" in m and not (est_nombre(m["signal_moyen_propose"]) or est_texte(m["signal_moyen_propose"])):
+             c.rapporte("P1_TYPE_INVALIDE", "monde_M.signal_moyen_propose")
+         if "budget_b_propose" in m:
+-            b = m["budget_b_propose"]
+-            if not (est_nombre(b) and any(abs(float(b) - x) <= 1e-12 for x in BUDGETS_ADMIS)):
++            forme = forme_du_budget(m["budget_b_propose"])
++            if forme is None:
+                 c.rapporte("P1_BUDGET_HORS_LISTE", "monde_M.budget_b_propose")
++            elif forme != "fraction":
++                c.observe("O_BUDGET_HORS_FORME_FRACTION", "monde_M.budget_b_propose")
+         champ_texte(c, m, "verite_gamma_nul", "monde_M")
+         champ_texte(c, m, "limite_monde_M", "monde_M")
+         if isinstance(m.get("limite_monde_M"), str) and "\n" in m["limite_monde_M"].strip():
+@@ -862,6 +920,18 @@
+         if t["id"] in vus:
+             c.rapporte("P2_IDENTIFIANT_DE_TEMOIN_EN_DOUBLE", ici)
+         vus.add(t["id"])
++    # v2 (remarque 14 du vérificateur de la vérité ; D-M16 se lit par identifiant) : T01 à T17
++    # sont réservés aux témoins imposés, une fois chacun, en tête. Un témoin libre qui porte l'un
++    # de ces identifiants (second porteur en tête, ou témoin du bloc à l'écart) est une faute.
++    imposes_vus = set()
++    for t, ici in ctx.temoins:
++        if t["id"] in TEMOINS_IMPOSES:
++            if t["id"] in imposes_vus:
++                c.rapporte("P2_IDENTIFIANT_IMPOSE_RESERVE", ici + ".id")
++            imposes_vus.add(t["id"])
++    for t, ici in ctx.temoins_ecart:
++        if t["id"] in TEMOINS_IMPOSES:
++            c.rapporte("P2_IDENTIFIANT_IMPOSE_RESERVE", ici + ".id")
+     ids_en_tete = [t["id"] for t, _ in ctx.temoins]
+     for tid in TEMOINS_IMPOSES:
+         if tid not in ids_en_tete:
+@@ -936,8 +1006,8 @@
+             c.observe("O_SORTE_ET_ISSUE_DISCORDANTES", ici)
+         if issue == "morte_sans_gain" and t["id"] not in IMPOSES_SANS_GAIN_PERMIS:
+             c.observe("O_MORTE_SANS_GAIN_HORS_T05_T07", ici)
+-    if len(ctx.temoins) > TEMOINS_MAX:
+-        c.observe("O_PLUS_DE_VINGT_HUIT_TEMOINS", "temoins")
++    if len(tous_les_temoins) > TEMOINS_MAX:
++        c.observe("O_TEMOINS_AU_DELA_DU_PLAFOND", "temoins")
+     libres_visibles = [i for i in ctx.ids_visibles if i not in FAMILLES_IMPOSEES]
+     if len(libres_visibles) + len(ctx.ecart) > FAMILLES_LIBRES_MAX:
+         c.observe("O_FAMILLES_LIBRES_AU_DELA_DE_DEUX", "familles")
+@@ -978,17 +1048,25 @@
+ 
+ 
+ def parcourir(valeur, chemin, visite):
+-    """Visite chaque chaîne et chaque clé ; `visite(texte, chemin)`."""
+-    if isinstance(valeur, dict):
+-        for k, v in valeur.items():
+-            ici = chemin + "." + nom_sur(k) if chemin else nom_sur(k)
+-            visite(k, ici)
+-            parcourir(v, ici, visite)
+-    elif isinstance(valeur, list):
+-        for i, v in enumerate(valeur):
+-            parcourir(v, "%s[%d]" % (chemin, i), visite)
+-    elif isinstance(valeur, str):
+-        visite(valeur, chemin)
++    """Visite chaque chaîne et chaque clé ; `visite(texte, chemin)`.
++    v2 (C1) : parcours itératif, dans le même ordre que la v1 (préordre), sans
++    limite de profondeur due à la récursion."""
++    pile = [("valeur", valeur, chemin)]
++    while pile:
++        sorte, x, ici = pile.pop()
++        if sorte == "cle":
++            visite(x, ici)
++        elif isinstance(x, dict):
++            enfants = []
++            for k, v in x.items():
++                sous = ici + "." + nom_sur(k) if ici else nom_sur(k)
++                enfants.append(("cle", k, sous))
++                enfants.append(("valeur", v, sous))
++            pile.extend(reversed(enfants))
++        elif isinstance(x, list):
++            pile.extend(reversed([("valeur", v, "%s[%d]" % (ici, i)) for i, v in enumerate(x)]))
++        elif isinstance(x, str):
++            visite(x, ici)
+ 
+ 
+ def juger_coherence(c, ctx):
+@@ -1177,10 +1255,326 @@
+         "observations": sorted(c.observations, key=lambda e: json.dumps(e, sort_keys=True, ensure_ascii=False)),
+         "comptes": comptes,
+         "code_de_sortie": code,
+-        "sortie_auteur": {"octets": len(octets), "caracteres": len(texte)},
++        "sortie_auteur": {"octets": len(octets), "caracteres": len(texte), "borne_caracteres": TAILLE_MAX_CARACTERES},
+     }
+ 
+ 
++# ---------------------------------------------------------------------------
++# CORRESPONDANCE (v2, mot de la mère 09:15Z) : sortie lisible de l'auteur -> entrée du
++# mode `--recalculer` du programme de vérité des témoins
++# (calculer_verite_temoins_imposes_v1.py, 4857343c…). Format lu sur l'exemple
++# exemple-entree-recalcul-v1.json (76ed336e…) et sur les gardes de ce programme.
++# Chaque choix que la lettre ne fixe pas porte un code CH_… écrit dans le compte rendu ;
++# chaque témoin qui ne se convertit pas porte un code NC_… et n'entre pas dans l'entrée.
++# Aucune valeur n'est calculée ici : on recopie des lois et des règles.
++# ---------------------------------------------------------------------------
++
++VERSION_ENTREE_RECALCUL = "recalcul-temoins-seuil-et-moniteurs-v1"
++AIRES_NOMMEES = ("aire_0_69", "aire_0_80", "aire_0_95")       # § 3.2 : trois tailles de signal
++AIRE_DE_LA_PUISSANCE = "aire_0_80"                            # CH6
++TAILLES_DES_GRAPPES_IMPOSEES = {"T10": [100] * 3, "T11": [10] * 30}  # § 3.1, définitions de T10 et T11
++TAILLE_DE_PLUS_T07 = 400                                      # § 3.1, T07 joué à n = 200 et n = 400
++LOI_NORMALE_REDUITE = {"type": "normale", "parametres": {"mu": 0, "sigma": 1}}  # CH8 (§ 3.2, H : variance 1)
++RE_IDENTIFIANT_SUR = re.compile(r"[A-Za-z0-9_.\-]{1,32}")
++
++
++class NonConvertible(Exception):
++    def __init__(self, code):
++        super().__init__(code)
++        self.code = code
++
++
++def fraction_de(x):
++    from fractions import Fraction
++    return Fraction(getattr(x, "texte", None) or str(x))
++
++
++def nombre_decimal(fr):
++    """Un rationnel à développement décimal fini, rendu comme nombre JSON écrit tel quel."""
++    signe, fr = ("-" if fr < 0 else ""), abs(fr)
++    k = 0
++    while (fr * 10 ** k).denominator != 1:
++        k += 1
++        if k > 60:
++            raise AssertionError("développement décimal infini")
++    chiffres = str(int(fr * 10 ** k)).rjust(k + 1, "0")
++    texte = signe + (chiffres[:-k] + "." + chiffres[-k:] if k else chiffres)
++    return _flottant(texte) if k else _entier(texte)
++
++
++def entier_simple(x):
++    return int(x) if est_entier(x) else x
++
++
++def ecrire_brut(x):
++    """JSON compact ; chaque nombre lu dans la sortie est réécrit avec son texte brut
++    (le programme de vérité lit les décimaux en rationnels exacts)."""
++    if x is None or isinstance(x, bool):
++        return json.dumps(x)
++    if isinstance(x, (NombreBrut, EntierBrut)):
++        return x.texte
++    if isinstance(x, int):
++        return str(x)
++    if isinstance(x, float):
++        raise AssertionError("flottant sans texte brut")
++    if isinstance(x, str):
++        return json.dumps(x, ensure_ascii=False)
++    if isinstance(x, dict):
++        return "{" + ", ".join(json.dumps(k, ensure_ascii=False) + ": " + ecrire_brut(v) for k, v in x.items()) + "}"
++    if isinstance(x, list):
++        return "[" + ", ".join(ecrire_brut(v) for v in x) + "]"
++    raise AssertionError("valeur non sérialisable")
++
++
++def loi_pour_le_moteur(loi, n=None):
++    typ = loi["type"]
++    if typ == TYPE_AUTRE:
++        raise NonConvertible("NC_LOI_AUTRE")
++    p = dict(loi["parametres"])
++    if typ == "melange":
++        p["composantes"] = [loi_pour_le_moteur(x, n) for x in p["composantes"]]
++    elif typ in ("arrondi", "decalage"):
++        p["loi"] = loi_pour_le_moteur(p["loi"], n)
++    elif typ == "somme_de_pas":
++        p["loi_du_pas"] = loi_pour_le_moteur(p["loi_du_pas"], n)
++        p["nombre_de_pas"] = entier_simple(p["nombre_de_pas"])
++    elif typ == "couple":
++        p["marges"] = [loi_pour_le_moteur(x, n) for x in p["marges"]]
++    elif typ == "effet_de_famille_plus_bruit":
++        tailles = p["tailles_de_famille"]
++        if isinstance(tailles, list):
++            p["tailles_de_famille"] = [entier_simple(m) for m in tailles]
++        else:  # CH8c : un entier m se lit « n / m familles de m »
++            m = int(tailles)
++            if not (est_entier(n) and int(n) % m == 0):
++                raise NonConvertible("NC_TAILLES_DE_FAMILLE")
++            p["tailles_de_famille"] = [m] * (int(n) // m)
++    return {"type": typ, "parametres": p}
++
++
++def composantes_d_echec(loi_h, p_echec, choix):
++    """CH2 : « l'honnête qui échoue » est la composante du mélange dont le poids égale
++    P(échec) ; « l'honnête qui réussit », l'autre composante, s'il n'y en a qu'une."""
++    if loi_h["type"] != "melange" or p_echec is None:
++        raise NonConvertible("NC_PAS_DE_COMPOSANTE_D_ECHEC")
++    choix.add("CH2_ECHEC_PAR_POIDS_EGAL_A_P_ECHEC")
++    poids = [fraction_de(w) for w in loi_h["parametres"]["poids"]]
++    comps = loi_h["parametres"]["composantes"]
++    rangs = [i for i, w in enumerate(poids) if w == fraction_de(p_echec)]
++    if len(rangs) != 1:
++        raise NonConvertible("NC_COMPOSANTES_AMBIGUES")
++    autres = [c_ for i, c_ in enumerate(comps) if i != rangs[0]]
++    return comps[rangs[0]], (autres[0] if len(autres) == 1 else None)
++
++
++def choisir_population(population, loi_tous, echec_reussite):
++    if population == "tous_les_honnetes":
++        return loi_tous
++    echec, reussite = echec_reussite()
++    loi = echec if population == "honnetes_qui_echouent" else reussite
++    if loi is None:
++        raise NonConvertible("NC_COMPOSANTES_AMBIGUES")
++    return loi
++
++
++def a_besoin_de_saboteurs(t):
++    return t["id"] in IMPOSES_SANS_GAIN_PERMIS or t["grandeur"] == "puissance"
++
++
++def garder_saboteurs(t, saboteurs, choix):
++    if t["grandeur"] == "puissance" and t["id"] not in IMPOSES_SANS_GAIN_PERMIS:
++        choix.add("CH6_PUISSANCE_A_L_AIRE_0_80")
++        return {AIRE_DE_LA_PUISSANCE: saboteurs[AIRE_DE_LA_PUISSANCE]}
++    return saboteurs
++
++
++def lois_de_famille(f, t, choix, derive_de_f):
++    n = t["n"]
++    tranches = f["tranches"]
++    choix.add("CH1_TRANCHE_PAR_TAILLE")
++    i_lecture = next((i for i, tr in enumerate(tranches)
++                      if est_entier(n) and any(int(x) == int(n) for x in tr["n_calibration"])), 0)
++    loi_h = tranches[i_lecture]["loi_honnete"]
++    grappes = loi_h["type"] == "effet_de_famille_plus_bruit"
++    if grappes and t["id"] in TAILLES_DES_GRAPPES_IMPOSEES:
++        choix.add("CH8B_TAILLES_DU_MANDAT_POUR_T10_T11")
++        loi_h = {"type": loi_h["type"], "parametres": dict(loi_h["parametres"],
++                                                           tailles_de_famille=TAILLES_DES_GRAPPES_IMPOSEES[t["id"]])}
++
++    def echec_reussite():
++        return composantes_d_echec(loi_h, f["p_echec"], choix)
++
++    calibration = choisir_population(t["population_de_calibration"], loi_h, echec_reussite)
++    lecture = loi_h if t["portee_de_la_garantie"] == PORTEE_TOUS else choisir_population("honnetes_qui_echouent", loi_h, echec_reussite)
++    lois = {"calibration": loi_pour_le_moteur(calibration, n)}
++    if grappes:
++        choix.add("CH8_GRAPPES_LUES_SUR_LA_NORMALE_REDUITE")
++        lois["lecture"] = copy_simple(LOI_NORMALE_REDUITE)
++    else:
++        lois["lecture"] = loi_pour_le_moteur(lecture, n)
++    if SUPPOSITIONS[2] in f["suppositions_cassees"]:
++        if derive_de_f is None or f is not derive_de_f[0]:
++            raise NonConvertible("NC_DERIVE_SANS_CHAMP")
++        choix.add("CH7_DERIVE_DE_F_LUE_DANS_T09")
++        lois["lecture"] = {"type": "decalage", "parametres": {"loi": lois["lecture"], "delta_en_ecarts_types": derive_de_f[1]}}
++    if t["regle"]["type"] == "plus_grand_de_la_tranche_voisine":
++        choix.add("CH1B_TRANCHE_VOISINE_SUIVANTE")
++        voisine = tranches[(i_lecture + 1) % len(tranches)]
++        lois["voisine"] = {"n": entier_simple(voisine["n_calibration"][0]),
++                           "loi": loi_pour_le_moteur(voisine["loi_honnete"], voisine["n_calibration"][0])}
++    if a_besoin_de_saboteurs(t):
++        choix.add("CH5_SABOTEUR_DECALAGE_DE_LA_LOI_HONNETE")
++        base = loi_pour_le_moteur(loi_h, n)
++        saboteurs = {nom: {"type": "decalage", "parametres": {"loi": base, "delta_en_ecarts_types": d}}
++                     for nom, d in zip(AIRES_NOMMEES, f["saboteur"]["decalages"])}
++        lois["saboteurs"] = garder_saboteurs(t, saboteurs, choix)
++    return lois
++
++
++def copy_simple(x):
++    return json.loads(json.dumps(x))
++
++
++def loi_du_signal(m, t, rang):
++    source = m["signal_valeur"] if t["signal"] == "valeur" else m["signal_intention"]
++    loi = source.get(m["populations"][rang])
++    essai = Constat()
++    verifier_loi(essai, loi, "signal", 0, [])
++    if essai.fautes["1"] or not isinstance(loi, dict) or loi.get("type") == TYPE_AUTRE:
++        raise NonConvertible("NC_LOI_DU_SIGNAL_HORS_FORME")
++    return loi_pour_le_moteur(loi, t["n"])
++
++
++def lois_du_monde_m(m, t, choix):
++    if t["signal"] == "somme":  # CH3 : la lettre ne donne pas la loi du signal somme
++        raise NonConvertible("NC_SIGNAL_SOMME_SANS_LOI")
++    choix.add("CH4_POPULATIONS_DU_MONDE_M_DANS_L_ORDRE")
++    reussit, echoue = loi_du_signal(m, t, 0), loi_du_signal(m, t, 1)
++    p = m["p_echec"]
++    choix.add("CH10_HONNETE_DU_MONDE_M_EN_MELANGE")
++    tous = {"type": "melange", "parametres": {"poids": [nombre_decimal(1 - fraction_de(p)), p],
++                                              "composantes": [reussit, echoue]}}
++
++    def echec_reussite():
++        return echoue, reussit
++
++    lois = {"calibration": choisir_population(t["population_de_calibration"], tous, echec_reussite),
++            "lecture": tous if t["portee_de_la_garantie"] == PORTEE_TOUS else echoue}
++    if a_besoin_de_saboteurs(t):
++        lois["saboteurs"] = {"saboteur_du_monde_M": loi_du_signal(m, t, 2)}
++    return lois
++
++
++def derive_de_la_famille_f(ctx):
++    """CH7 : le décalage de la dérive de F (en écarts types) est lu dans `valeurs_de_plus`
++    de T09, sous la seule clé numérique dont le nom dit « decalage » ou « derive »."""
++    f = next((f for f, _ in ctx.familles if f["id"] == "F"), None)
++    t09 = next((t for t, _ in ctx.temoins if t["id"] == "T09"), None)
++    if f is None or t09 is None or not isinstance(t09.get(CLE_VALEURS_DE_PLUS), dict):
++        return None
++    cles = [k for k, v in t09[CLE_VALEURS_DE_PLUS].items()
++            if est_nombre(v) and ("decalage" in normaliser(k) or "derive" in normaliser(k))]
++    return (f, t09[CLE_VALEURS_DE_PLUS][cles[0]]) if len(cles) == 1 else None
++
++
++def convertir_temoin(t, ctx, familles, derive_de_f, choix):
++    regle = dict(t["regle"])
++    if regle["type"] == "k_ieme_plus_grand":
++        regle["k"] = entier_simple(regle["k"])
++    entree = {"id": t["id"], "n": entier_simple(t["n"]), "regle": regle, "garantie": t["garantie"],
++              "risque_ou_niveau": t["risque_ou_niveau"], "grandeur": t["grandeur"],
++              "population_de_calibration": t["population_de_calibration"],
++              "portee_de_la_garantie": t["portee_de_la_garantie"]}
++    if t["monde"] == "S":
++        s = ctx.doc["monde_S"]
++        entree["lois"] = {}
++        entree["suite"] = {"taux_honnete": s["taux_honnete"], "horizon": entier_simple(s["horizon"]),
++                           "taux_saboteur": s["taux_saboteur"], "taux_honnete_derive": s["taux_honnete_derive"]}
++    elif t["monde"] == "M":
++        entree["lois"] = lois_du_monde_m(ctx.doc["monde_M"], t, choix)
++    else:
++        entree["lois"] = lois_de_famille(familles[t["monde"]], t, choix, derive_de_f)
++    if t["id"] == "T07":
++        choix.add("CH9_T07_TAILLE_DE_PLUS_400")
++        entree["tailles_de_plus"] = [TAILLE_DE_PLUS_T07]
++    entree["valeur_annoncee"] = t["valeur_vraie"]
++    entree["issue_annoncee"] = t["issue_attendue"]
++    return entree
++
++
++def vers_recalcul(doc):
++    ctx = Contexte(doc)
++    familles = {f["id"]: f for f, _ in ctx.familles}
++    familles.update({f["id"]: f for f, _, _ in ctx.ecart})
++    derive_de_f = derive_de_la_famille_f(ctx)
++    entrees, compte = [], []
++    for t, chemin in ctx.temoins + ctx.temoins_ecart:
++        choix = set()
++        ligne = {"chemin": chemin}
++        if not chemin.startswith("a_l_ecart") and RE_IDENTIFIANT_SUR.fullmatch(t["id"]):
++            ligne["temoin"] = t["id"]
++        try:
++            entrees.append(convertir_temoin(t, ctx, familles, derive_de_f, choix))
++            ligne["statut"] = "converti"
++        except NonConvertible as nc:
++            ligne["statut"] = "non_converti"
++            ligne["raison"] = nc.code
++        ligne["choix"] = sorted(choix)
++        compte.append(ligne)
++    return {"version_entree": VERSION_ENTREE_RECALCUL, "temoins": entrees}, compte
++
++
++def principal_vers_recalcul(argv):
++    try:
++        sortie, entree, chemin_motifs = lire_arguments(argv)
++        motifs = charger_motifs(chemin_motifs)
++        compte_rendu = Path(str(entree) + ".correspondance.json")
++        if not sortie.is_file():
++            raise ErreurDUsage("sortie de l'auteur introuvable")
++        if entree.exists() or compte_rendu.exists():
++            raise ErreurDUsage("l'entrée ou son compte rendu existe déjà : on n'écrase jamais")
++        with open(sortie, "rb") as fh:
++            octets = fh.read(GARDE_DE_LECTURE_OCTETS + 1)
++    except ErreurDUsage as e:
++        print("erreur : " + str(e), file=sys.stderr)
++        return SORTIE_ERREUR
++    except OSError:
++        print("erreur : lecture impossible", file=sys.stderr)
++        return SORTIE_ERREUR
++    try:
++        resultat = verifier(octets, motifs)
++        if resultat["verdict_d_ensemble"] != "lisible":  # garde : sortie illisible, rien n'est converti
++            print("refus : la sortie est illisible ; aucune entrée de recalcul n'est écrite", file=sys.stderr)
++            return SORTIE_ILLISIBLE
++        doc, _, _ = lire_le_texte(Constat(), octets)
++        donnees, compte = vers_recalcul(doc)
++        texte_entree = ecrire_brut(donnees) + "\n"
++    except Exception:  # garde v2 : exception imprévue pendant la correspondance
++        print("erreur : exception imprévue pendant la correspondance ; rien n'est écrit", file=sys.stderr)
++        return SORTIE_ERREUR
++    rendu = {
++        "programme": {"nom": NOM_PROGRAMME, "sha256": empreinte(Path(__file__).read_bytes())},
++        "sortie_auteur_sha256": empreinte(octets),
++        "entree_recalcul_sha256": empreinte(texte_entree.encode("utf-8")),
++        "verification": {"verdict_d_ensemble": resultat["verdict_d_ensemble"], "code_de_sortie": resultat["code_de_sortie"],
++                         "ecartes": resultat["ecartes"]},
++        "temoins": compte,
++        "comptes": {"convertis": sum(1 for x in compte if x["statut"] == "converti"),
++                    "non_convertis": sum(1 for x in compte if x["statut"] == "non_converti")},
++        "choix_declares": sorted({ch for x in compte for ch in x["choix"]}),
++    }
++    try:
++        with open(entree, "x", encoding="utf-8") as fh:
++            fh.write(texte_entree)
++        with open(compte_rendu, "x", encoding="utf-8") as fh:
++            fh.write(json.dumps(rendu, sort_keys=True, ensure_ascii=False, indent=2) + "\n")
++    except OSError:
++        print("erreur : écriture impossible", file=sys.stderr)
++        return SORTIE_ERREUR
++    print("correspondance : %d témoins convertis, %d non convertis" % (rendu["comptes"]["convertis"], rendu["comptes"]["non_convertis"]))
++    return SORTIE_TOUT_TENU
++
++
+ def charger_motifs(chemin):
+     if not chemin.is_file():
+         raise ErreurDUsage("fichier de motifs introuvable")
+@@ -1226,6 +1620,8 @@
+ 
+ 
+ def principal(argv):
++    if argv and argv[0] == "--vers-recalcul":
++        return principal_vers_recalcul(argv[1:])
+     try:
+         sortie, rapport, chemin_motifs = lire_arguments(argv)
+         motifs = charger_motifs(chemin_motifs)
+@@ -1241,7 +1637,13 @@
+     except OSError:
+         print("erreur : lecture impossible", file=sys.stderr)
+         return SORTIE_ERREUR
+-    resultat = verifier(octets, motifs)
++    try:
++        resultat = verifier(octets, motifs)
++    except Exception:  # garde v2 (C1) : exception imprévue
++        # Aucun repli silencieux (R5) : rien n'est jugé, aucun rapport, code 3. Le message ne
++        # recopie rien de la sortie de l'auteur.
++        print("erreur : exception imprévue pendant la vérification ; rien n'est jugé", file=sys.stderr)
++        return SORTIE_ERREUR
+     resultat["programme"] = {"nom": NOM_PROGRAMME, "sha256": empreinte(Path(__file__).read_bytes()),
+                              "mandat_de_l_auteur_sha256": "816313cb342a642e4dadda6d111e30fff2800eda2a7975722a0961c5ec05dbe9"}
+     resultat["sortie_auteur"]["sha256"] = empreinte(octets)
