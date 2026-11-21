@@ -1,0 +1,145 @@
+# Sortie du programme de l'opérateur : empreinte du gabarit de conversation du calage de G1 (v1)
+# Relevé le 2026-11-21T19:33:05Z (date -u), depuis la racine du dépôt, environnement .venv du dépôt (dépendances figées)
+# Aucun fichier du modèle n'est présent sur ce poste et rien n'a été téléchargé : seules les épreuves au tokeniseur jouet ont tourné.
+
+## 1. Épreuves du programme : cas sain et artefacts (R5), au tokeniseur jouet du harnais
+$ PYTHONPATH=src python -B docs/notes/configuration-calage-g1-v1/empreinte_gabarit_calage_v1.py --configuration prereg/configuration-generation-calage-g1-v1.json --essai
+réussi | cas sain : relevé complet au tokeniseur jouet | 3493 jetons, gabarit 9a6ac2cf411f…, conversation 447d47d50c63…
+réussi | cas sain : deux calculs donnent les mêmes empreintes | empreintes identiques
+réussi | artefact : gabarit modifié d'un caractère, les empreintes changent | gabarit 2911cd44f76e…, conversation 21b80fdfcff7…
+réussi | artefact : gabarit qui réécrit le passé | arrêt : gabarit refusé par le harnais : gabarit : la réponse de l'assistant ne prolonge pas l'invite à l'identique
+réussi | artefact : texte attendu absent de l'ouverture | arrêt : ouverture sans 'Today Date: 26 Jul 2024' : le gabarit ne lit pas les variables figées
+réussi | artefact : vecteur d'essai des graines altéré | arrêt : graines : vecteur d'essai de clé [8, 0, 0] non reproduit sur ce poste (graines) ; la chaîne des graines n'y est pas celle de la configuration
+réussi | artefact : fonction des graines du harnais altérée | arrêt : graines : la fonction du harnais ne reproduit pas le vecteur d'essai de clé [8, 0, 0]
+réussi | artefact : fichier du harnais d'une autre empreinte | arrêt : harnais différent de celui de la configuration : docs/sources/invites-2606.08892-v1/index.json : adb4b8bca778… au lieu de 000000000000…
+réussi | artefact : guide de classification d'une autre empreinte | arrêt : guide H1-classification : empreinte différente de celle de la configuration
+réussi | artefact : révision qui n'est pas un commit complet | arrêt : modèle ou révision refusés par le harnais : modèle 'meta-llama/Llama-3.1-8B-Instruct' sans révision figée (commit complet, 40 caractères hexadécimaux)
+épreuves : toutes réussies
+code de sortie : 0
+
+## 2. Mode réel sur ce poste : arrêt attendu, le tokeniseur n'y est pas et le programme ne télécharge rien
+$ PYTHONPATH=src python -B docs/notes/configuration-calage-g1-v1/empreinte_gabarit_calage_v1.py --configuration prereg/configuration-generation-calage-g1-v1.json
+ARRÊT : meta-llama/Llama-3.1-8B-Instruct@0e9e39f249a1 : tokeniseur absent du cache local ; ce programme ne télécharge rien (précharger le modèle par le harnais, ou donner --dossier)
+code de sortie : 1
+
+## 3. Relevé au tokeniseur jouet (exemple de forme ; ne vaut pour aucune mesure)
+$ PYTHONPATH=src python -B docs/notes/configuration-calage-g1-v1/empreinte_gabarit_calage_v1.py --configuration prereg/configuration-generation-calage-g1-v1.json --jouet
+{
+ "avertissement": "tokeniseur par caractères du harnais : ce relevé éprouve le programme et ne vaut pour aucune mesure",
+ "champs_de_l_operateur": [
+  "gabarit_de_conversation.empreinte",
+  "gabarit_de_conversation.jeton_de_remplissage",
+  "gabarit_de_conversation.jetons_d_arret",
+  "modele.fichiers_du_modele",
+  "pile_d_inference.python",
+  "pile_d_inference.torch_construction"
+ ],
+ "configuration": {
+  "chemin": "prereg/configuration-generation-calage-g1-v1.json",
+  "sha256": "4bfdd98d2226abe1fc173a68e62700039f14fc8d2b3bb2b2d6ba6bbf7082079d"
+ },
+ "date_utc": "2026-11-21T19:33:17Z",
+ "ecarts_de_versions": [],
+ "environnement": {
+  "enonce_de_controle_sha256": "0b84c54ea10b68905f738387a819e289e9c6ad5a5a39d7d7e58c11c0db02dfb3",
+  "guide_de_classification": {
+   "chemin": "docs/sources/invites-2606.08892-v1/invites/H1-classification.txt",
+   "invite": "H1-classification",
+   "sha256": "69d50fb972f3255c94430205ab09c4f21054185d7def25b061c7255d71cc5540"
+  }
+ },
+ "gabarit_de_conversation": {
+  "conversation_de_controle": {
+   "actions_sha256": [
+    "a819e12239138c18dc82718bac8bca793be65c8ad3af252549230081ad554683",
+    "192b1b46c661692aa016f24cbc560cb44e5816396d457e7bb55c881aeee21ca6",
+    "3eb3994fe0c042be8d7074f935195ff77028b6f0b675282f2f6ec76252b06521",
+    "eb7a819bf1830c7a2cdef819a1f7a4ac11b8cee98dc65be96e2b8d611b5b2956",
+    "1afdcf5bc004cf1ae590f625342d2988ff0975bfb4995f876d8107ff02fa1ade"
+   ],
+   "consigne_sha256": "9369bc9f0bf94a76aec91d133cf2618c6e242beb9daeb1d894a8352088880448",
+   "format_verifie": true,
+   "ids_sha256": "447d47d50c632ff2bc4a552e04e5656c98e517bb085a5154e86bbcd7727457bd",
+   "jetons": 3493,
+   "observations_sha256": [
+    "0853cf848c0d5d563fc657c3c9915059568d0315a98084638fbac2f7ddf8e834",
+    "238c3316aece33874d058fb7a9b0222bf04386bc39b7c93640f4648294ced4c9",
+    "4d4c2a81ed5c9db5f6e87ce2df80296f1cc630ba42b01e2395023311a263a507",
+    "dcf0ea01e0b632328f537bdd9bf136783aa1afd5c164808a5ccd3983bafd436e",
+    "aa30a820a867b64c56bcf4eafdd2823f5d8d390259675845d82b412d1f85e306"
+   ],
+   "texte_sha256": "220943f8062bb8e655e124a622a5fae619e94434d41217ed1d066ee741a82b5c",
+   "tours": 5
+  },
+  "gabarit_caracteres": 155,
+  "gabarit_sha256": "9a6ac2cf411f21cf1fa155617d146256deee33e64c43eace6c36fd9eb3dd5a2a",
+  "jeton_de_debut": 1,
+  "jeton_de_remplissage": 0,
+  "jeton_de_remplissage_origine": "pad_token_id du tokeniseur",
+  "jetons_d_arret": [
+   2,
+   135
+  ],
+  "jetons_de_cloture": [
+   135,
+   99
+  ],
+  "texte_attendu_dans_l_ouverture": {
+   "attendu": null,
+   "verifie": false
+  }
+ },
+ "graines": {
+  "conforme": true,
+  "fonction_du_harnais": "graines_des_actions, conforme",
+  "numpy": "2.4.6",
+  "vecteurs": 2
+ },
+ "harnais": {
+  "conforme_a_la_configuration": true,
+  "fichiers": {
+   "docs/sources/invites-2606.08892-v1/index.json": "adb4b8bca7788baf2c4714df96dcdcc2c5043e8f1943542d0fbe1863491ae2d9",
+   "docs/sources/invites-2606.08892-v1/invites/H1-classification.txt": "69d50fb972f3255c94430205ab09c4f21054185d7def25b061c7255d71cc5540",
+   "src/controle_ia/environnements/invites.py": "f3ee371a8069c8871aee46003d82daf38b5004bfa01a41a6c835c54a34a68855",
+   "src/controle_ia/environnements/propositions.py": "5d97b223206c6378295946a769c378ccfe0bd6a12372d3b25bcecb5240ab31ae",
+   "src/controle_ia/harnais/activations.py": "adeb5856d430f3a6163989c2a53c8ced459235c6dcdd03834b694404c57e0095",
+   "src/controle_ia/harnais/episode.py": "79113b4973d64bbcf0af16b2d7114c009b34132e1392e95ff83cef4d0a488c32",
+   "src/controle_ia/harnais/formats.py": "98dbfa9b13578946c4d731c4bb1cfcfb85b9fd0cacdfd56a786042c93e6ef6b4",
+   "src/controle_ia/harnais/modeles.py": "d0befc29aeba4b2487b85d365b8087c467769f0d99f610267f85f19cbea221a7"
+  },
+  "racine": "/home/user/controle-ia-travail"
+ },
+ "mode": "jouet",
+ "modele": {
+  "dossier": null,
+  "dossier_nomme_par_la_revision": null,
+  "fichiers": null,
+  "nom": "meta-llama/Llama-3.1-8B-Instruct",
+  "poids_releves": null,
+  "revision": "0e9e39f249a16976918f6564b8830bc894c89659"
+ },
+ "objet": "relevé de l'opérateur pour la configuration de génération du calage de G1 : empreinte du gabarit de conversation, jetons d'arrêt, fichiers du modèle, versions",
+ "programme": {
+  "nom": "empreinte_gabarit_calage_v1.py",
+  "sha256": "7c3a541a38a4c33e679779802f0fae9e58a1c548a4557dd8f02cdcae88119640",
+  "version": "v1"
+ },
+ "versions": {
+  "capacite_du_processeur": "AVX512",
+  "huggingface_hub": "1.33.0",
+  "implementation": "CPython",
+  "jinja2": "3.1.6",
+  "machine": "x86_64",
+  "numpy": "2.4.6",
+  "plateforme": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "python": "3.13.18",
+  "safetensors": "0.8.0",
+  "tokenizers": "0.23.2",
+  "torch": "2.14.1",
+  "torch_construction": "2.14.1+cu130",
+  "torch_cuda": "13.0",
+  "transformers": "5.18.0"
+ },
+ "versions_conformes_a_la_configuration": true
+}
+code de sortie : 0

@@ -1,0 +1,66 @@
+Script chargé : collisionneur-v9-v7, sha256 319a7b66b5b975ccd1506def5e988e8bf3e0b8bb94afc6f2d6bd397829ae1724
+Constantes lues dans le script : 2 caractères par jeton d'entrée projeté, tolérance de la garde (0.01, 32), caractères par jeton de sortie au plus {'anthropic': 3.0, 'gemini': 4.5, 'openai': 4.5, 'kimi': 4.5}, 200 caractères de balises par pièce
+
+=== cinq espèces (Fable, Opus, Argon, Astra, Carbon) ===
+1. Pire cas de sortie d'une cellule, USD (plafond + provision, au prix de sortie)
+   A fable   plafond  49000, relance  64000, provision      0, prix 10 / 50 : 2.450 (relance 3.200)
+   B opus    plafond  64000, relance  64000, provision      0, prix 4 / 20 : 1.280 (relance 1.280)
+   C argon   plafond  32768, relance  32768, provision  16384, prix 4 / 20 : 0.983 (relance 0.983)
+   D astra   plafond   8000, relance  32000, provision      0, prix 10 / 50 : 0.400 (relance 1.600)
+   E carbon  plafond  65536, relance  65536, provision  49152, prix 4 / 20 : 2.294 (relance 2.294)
+   par tour : 7.407 sans relance ; relances en plus : 9.357
+2. Tours III.2 et III.3, toutes cellules à envoyer, longueurs supposées (socle 20000, conception 30000 caractères)
+   tour III.2 9.68 + tour III.3 19.24 = 28.92 USD sans relance ; 61.74 avec relances
+   rapport de la version 7 (mathématiques) : 9.50 + 18.95 = 28.45 sans relance ; 60.81 avec relances ; écart du recalcul : +1.6 % et +1.5 %
+3. Tour III.1 sans état (comme à la génération 1) : 7.73 USD sans relance ; relances en plus : 9.68
+   état de 5 réponses de 24500 caractères : + 2.00 USD d'entrée au tour III.1 (71750 jetons d'entrée projetés par prompt)
+   état de 5 réponses de 45000 caractères : + 3.65 USD d'entrée au tour III.1 (123000 jetons d'entrée projetés par prompt)
+   état de 5 réponses de 65000 caractères : + 5.27 USD d'entrée au tour III.1 (173000 jetons d'entrée projetés par prompt)
+   critique précédente de 21000 caractères rendue à son auteur : + 0.34 USD d'entrée au tour III.2
+   critique précédente de 45000 caractères rendue à son auteur : + 0.73 USD d'entrée au tour III.2
+   critique précédente de 65000 caractères rendue à son auteur : + 1.05 USD d'entrée au tour III.2
+4. Total au pire d'une génération à partir de la deuxième, USD
+   longueurs bas    : 38.52 sans relance ; 82.90 si chaque cellule était relancée (tours III.2 et III.3 : rapport de la version 7)
+   longueurs milieu : 40.56 sans relance ; 86.99 si chaque cellule était relancée (tours III.2 et III.3 : rapport de la version 7)
+   longueurs haut   : 42.50 sans relance ; 90.87 si chaque cellule était relancée (tours III.2 et III.3 : rapport de la version 7)
+   rappel, sans état ni critique rendue (une génération 1) : 36.18 sans relance ; 78.22 avec relances
+4 bis. Borne stricte avant tout envoi (tout texte de la génération au plafond de sortie de son auteur, pièce d'état à 65000 caractères)
+   tour III.1 13.00 + tour III.2 19.80 + tour III.3 20.96 = 53.76 USD sans relance ; 113.36 avec relances ; plus long prompt projeté : 433684 jetons d'entrée
+
+=== quatre espèces (Fable, Opus, Argon, Carbon) ===
+1. Pire cas de sortie d'une cellule, USD (plafond + provision, au prix de sortie)
+   A fable   plafond  49000, relance  64000, provision      0, prix 10 / 50 : 2.450 (relance 3.200)
+   B opus    plafond  64000, relance  64000, provision      0, prix 4 / 20 : 1.280 (relance 1.280)
+   C argon   plafond  32768, relance  32768, provision  16384, prix 4 / 20 : 0.983 (relance 0.983)
+   D carbon  plafond  65536, relance  65536, provision  49152, prix 4 / 20 : 2.294 (relance 2.294)
+   par tour : 7.007 sans relance ; relances en plus : 7.757
+2. Tours III.2 et III.3, toutes cellules à envoyer, longueurs supposées (socle 20000, conception 30000 caractères)
+   tour III.2 8.24 + tour III.3 14.23 = 22.47 USD sans relance ; 46.43 avec relances
+3. Tour III.1 sans état (comme à la génération 1) : 7.23 USD sans relance ; relances en plus : 7.98
+   état de 4 réponses de 24500 caractères : + 1.10 USD d'entrée au tour III.1 (59400 jetons d'entrée projetés par prompt)
+   état de 4 réponses de 45000 caractères : + 2.01 USD d'entrée au tour III.1 (100400 jetons d'entrée projetés par prompt)
+   état de 4 réponses de 65000 caractères : + 2.90 USD d'entrée au tour III.1 (140400 jetons d'entrée projetés par prompt)
+   critique précédente de 21000 caractères rendue à son auteur : + 0.24 USD d'entrée au tour III.2
+   critique précédente de 45000 caractères rendue à son auteur : + 0.50 USD d'entrée au tour III.2
+   critique précédente de 65000 caractères rendue à son auteur : + 0.72 USD d'entrée au tour III.2
+4. Total au pire d'une génération à partir de la deuxième, USD
+   longueurs bas    : 31.03 sans relance ; 64.31 si chaque cellule était relancée (tours III.2 et III.3 : recalcul)
+   longueurs milieu : 32.21 sans relance ; 66.66 si chaque cellule était relancée (tours III.2 et III.3 : recalcul)
+   longueurs haut   : 33.32 sans relance ; 68.88 si chaque cellule était relancée (tours III.2 et III.3 : recalcul)
+   rappel, sans état ni critique rendue (une génération 1) : 29.70 sans relance ; 61.64 avec relances
+4 bis. Borne stricte avant tout envoi (tout texte de la génération au plafond de sortie de son auteur, pièce d'état à 65000 caractères)
+   tour III.1 10.13 + tour III.2 14.62 + tour III.3 15.92 = 40.66 USD sans relance ; 83.58 avec relances ; plus long prompt projeté : 401084 jetons d'entrée
+
+5. Lecture des seuils en nombres d'entrées, 5 lignées
+   3 entrées par lignée (15 en tout) : plateau si au plus 3 entrées touchées sur le cycle, au plus 1 dans une même lignée, au plus 2 entrées neuves, premier choix tenu dans 4 lignées au moins
+   4 entrées par lignée (20 en tout) : plateau si au plus 5 entrées touchées sur le cycle, au plus 2 dans une même lignée, au plus 3 entrées neuves, premier choix tenu dans 4 lignées au moins
+   5 entrées par lignée (25 en tout) : plateau si au plus 6 entrées touchées sur le cycle, au plus 2 dans une même lignée, au plus 3 entrées neuves, premier choix tenu dans 4 lignées au moins
+   6 entrées par lignée (30 en tout) : plateau si au plus 7 entrées touchées sur le cycle, au plus 3 dans une même lignée, au plus 4 entrées neuves, premier choix tenu dans 4 lignées au moins
+   8 entrées par lignée (40 en tout) : plateau si au plus 10 entrées touchées sur le cycle, au plus 4 dans une même lignée, au plus 6 entrées neuves, premier choix tenu dans 4 lignées au moins
+
+5. Lecture des seuils en nombres d'entrées, 4 lignées
+   3 entrées par lignée (12 en tout) : plateau si au plus 3 entrées touchées sur le cycle, au plus 1 dans une même lignée, au plus 1 entrées neuves, premier choix tenu dans 3 lignées au moins
+   4 entrées par lignée (16 en tout) : plateau si au plus 4 entrées touchées sur le cycle, au plus 2 dans une même lignée, au plus 2 entrées neuves, premier choix tenu dans 3 lignées au moins
+   5 entrées par lignée (20 en tout) : plateau si au plus 5 entrées touchées sur le cycle, au plus 2 dans une même lignée, au plus 3 entrées neuves, premier choix tenu dans 3 lignées au moins
+   6 entrées par lignée (24 en tout) : plateau si au plus 6 entrées touchées sur le cycle, au plus 3 dans une même lignée, au plus 3 entrées neuves, premier choix tenu dans 3 lignées au moins
+   8 entrées par lignée (32 en tout) : plateau si au plus 8 entrées touchées sur le cycle, au plus 4 dans une même lignée, au plus 4 entrées neuves, premier choix tenu dans 3 lignées au moins
