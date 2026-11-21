@@ -1,0 +1,64 @@
+# Preuve jointe, majeur 1 de la relecture du correctif 0011 : emplois de « cf » et de « session_v5 », analyseur statique
+# Produit le 2026-11-21T22:39:25Z sur le commit 887561b759ded1bcadb450cedead3f29e946dda7 (correctif 0012) ; src/controle_ia/iib/session_v5.py y est celui du correctif 0011 : objet 0e6f12616a27d655b6e76786b4574d2350e20d72 (à 844fda80 : 0e6f12616a27d655b6e76786b4574d2350e20d72).
+# Zones exclues de toute recherche (cloisonnement du mandat) : src/controle_ia/barreau8_moniteurs, docs/verdicts, prereg/lecture-sondes-barreau8-v1.md,
+# brouillons/barreau8-lecture-sondes-v1, diag, donnees, runs, traces, registres (prose ; la ligne interdite y est). Lignes tronquées à 240 caractères.
+
+## A. Toute occurrence du mot « cf » dans src/controle_ia/iib/session_v5.py (git grep -nw cf HEAD)
+HEAD:src/controle_ia/iib/session_v5.py:82:    from . import configuration_v5 as cf          # numpy (lois exactes) : chargé ici seulement, jamais par la règle de coupure
+HEAD:src/controle_ia/iib/session_v5.py:85:    return cf.exiger_config_v5(config, racine, pour_lancer=True)
+
+## B. Toute ligne de code (*.py, *.sh) du dépôt qui cite « session_v5 », au commit, hors zones exclues (git grep -n session_v5 HEAD)
+##    les lignes du chantier t06 visent le module homonyme controle_ia.t06.session_v5, autre module
+HEAD:brouillons/ordres-t06-e2-e3-v3/pieces/generer_ordres_v3.py:3:(`controle_ia.t06.session_v5.filtre_recherche` appliqué aux configurations d'épreuve : une seule source, égalité vérifiée ici et par
+HEAD:brouillons/ordres-t06-e2-e3-v3/pieces/generer_ordres_v3.py:23:    from controle_ia.t06 import session_v5
+HEAD:brouillons/ordres-t06-e2-e3-v3/pieces/generer_ordres_v3.py:25:    return {"modeste": session_v5.filtre_recherche(c2, "course"), "a100": session_v5.filtre_recherche(c3, "course"),
+HEAD:brouillons/ordres-t06-e2-e3-v3/pieces/generer_ordres_v3.py:26:            "h200": session_v5.filtre_recherche(c3, "relance")}
+HEAD:brouillons/ordres-t06-e2-e3-v3/pieces/generer_ordres_v3.py:36:         f"(**ce filtre est exactement celui que `creation auto` envoie**, lu dans le lanceur v6 : `python3 -I -B -c \"import sys; sys.path.insert(0,'src'); from controle_ia […]
+HEAD:brouillons/ordres-t06-e2-e3-v3/pieces/generer_ordres_v3.py:37:         f"import json; print(session_v5.filtre_recherche(json.load(open('{CFG_E2}')), 'course'))\"`, à comparer au caractère près),\n"
+HEAD:brouillons/ordres-t06-e2-e3-v4/pieces/generer_ordres_v4.py:57:    t = t.replace("amorce v4 <sha256>", "amorce v5 <sha256>").replace("session_v5", "session_v6")
+HEAD:scripts/banc_mutations_t06_v6.py:37:LN5, S4, GEN3 = "scripts/lancer_t06_v6.sh", "src/controle_ia/t06/session_v5.py", "brouillons/ordres-t06-e2-e3-v3/pieces/generer_ordres_v3.py"
+HEAD:scripts/banc_mutations_t06_v6.py:50:    ("C-V5-1 (session) : liste dans l'ordre reçu, pas du prix croissant", S4, 'for rang, o in enumerate(sorted((o for o in offres if isinstance(o, dict)), key=cle), 1):', 'for rang, o in enumerate((o […]
+HEAD:scripts/banc_mutations_t06_v6.py:51:    ("C-V5-1 (session) : machine exclue admise", S4, '        if str(o.get("machine_id")) in exclues:', '        if False:', T5, "session_v5"),
+HEAD:scripts/banc_mutations_t06_v6.py:52:    ("C-V5-1 (session) : liste vide non signalée", S4, '    if not offres:\n        raise GardeSession("recherche filtrée : liste VIDE', '    if False:\n        raise GardeSession("recherche filtrée  […]
+HEAD:scripts/banc_mutations_t06_v6.py:53:    ("C-V5-1 (session) : prix maximal absent du filtre", S4, "f\"disk_space>={b['disque_min_go']} dph_total<={c['prix_max_usd_h']}\"", "f\"disk_space>={b['disque_min_go']}\"", T5, "session_v5"),
+HEAD:scripts/banc_mutations_t06_v6.py:54:    ("C-V5-1 (session) : bornes de l'offre non vérifiées", S4, 'r = s2.verifier_offre([o], config, carte)', 'r = {"id": int(o["id"]), "prix_carte": float(o["dph_total"]), "prix_stockage": 0.0, "telec […]
+HEAD:scripts/banc_mutations_t06_v6.py:57:    ("R-1660 (ordres) : filtre de lecture de l'ordre d'E2 non lu dans le lanceur", GEN3, "\"modeste\": session_v5.filtre_recherche(c2, \"course\")", "\"modeste\": \"num_gpus=1 gpu_name=RTX_4090 renta […]
+HEAD:scripts/banc_mutations_t06_v6.py:58:    ("R-1660 (ordres) : filtre d'E3 lu sans la fiabilité", GEN3, "\"a100\": session_v5.filtre_recherche(c3, \"course\")", "\"a100\": session_v5.filtre_recherche(c3, \"course\").replace(\" reliability […]
+HEAD:scripts/lancer_iib_v3.sh:3:# seuls changements : l'amorce citée est `scripts/amorce_instance_iib_v5.sh` ; la configuration est vérifiée par `iib/session_v5`
+HEAD:scripts/lancer_iib_v3.sh:88:SESSION="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.iib import session_v5; sys.exit(session_v5.main(sys.argv[1:]))"
+HEAD:scripts/lancer_t06_v6.sh:74:SESSION5="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.t06 import session_v5; sys.exit(session_v5.main(sys.argv[1:]))"
+HEAD:src/controle_ia/iib/session_v5.py:7:Usage : `python -I -B -c "… session_v5.main(sys.argv[1:])" config CONFIG.json`, ou toute sous-commande de `session_v1`.
+HEAD:src/controle_ia/t06/session_v5.py:9:    python -I -m controle_ia.t06.session_v5 filtre CONFIG.json CARTE(course|relance)
+HEAD:src/controle_ia/t06/session_v5.py:12:    python -I -m controle_ia.t06.session_v5 choisir OFFRES.json CONFIG.json CARTE [MACHINES_EXCLUES (séparées par des virgules)]
+HEAD:src/controle_ia/t06/session_v6.py:1:"""Chaîne de session de T0.6, v6 (lanceur v7, R-1677 ; nom neuf, R12 : `session_v5.py`, `session_v4.py` et `session_v3.py` restent tels quels). Différences avec
+HEAD:src/controle_ia/t06/session_v6.py:2:`session_v5.py` : (1) le filtre de recherche porte aussi `inet_down>=500` (débit descendant annoncé, Mb/s, INET_DOWN_MIN_MBPS) ; (2) la sous-commande
+HEAD:src/controle_ia/t06/session_v7.py:1:"""Chaîne de session de T0.6, v7 (lanceur v8, R-1683 ; nom neuf, R12 : `session_v6.py` et les précédents restent tels quels). Différences avec `session_v6.py` : (1) **une liste vide n'est pas une abs […]
+HEAD:src/controle_ia/t06/session_v7.py:2:`session_v5.py` : (1) le filtre de recherche porte aussi `inet_down>=500` (débit descendant annoncé, Mb/s, INET_DOWN_MIN_MBPS) ; (2) la sous-commande
+HEAD:tests/test_iib_configuration_v5.py:260:def test_session_v5_verifie_la_configuration_par_la_version_5(tmp_path, capsys):
+HEAD:tests/test_iib_configuration_v5.py:261:    from controle_ia.iib import session_v5
+HEAD:tests/test_iib_configuration_v5.py:265:    assert session_v5.main(["config", str(bon), str(RACINE)]) == 0 and "configuration v5 conforme" in capsys.readouterr().out
+HEAD:tests/test_iib_configuration_v5.py:270:    assert session_v5.main(["config", str(mauvais), str(RACINE)]) == 1 and "REFUS" in capsys.readouterr().err
+HEAD:tests/test_iib_lanceur_v5.py:423:    assert "session_v5.main" in v3 and "A=scripts/amorce_instance_iib_v5.sh" in v3 and "consigne_maitre_N consigne_maitre_P consigne_flagrant entrees" in v3
+HEAD:tests/test_iib_lanceur_v5.py:424:    # correctif 0012 (relecture, majeur 1) : la branche « surveillance » ne passe à `$SESSION` (session_v5) que la règle de
+HEAD:tests/test_iib_lanceur_v5.py:438:    from controle_ia.iib import session_v5 as se
+HEAD:tests/test_t06_v6_scripts.py:15:from controle_ia.t06 import session_v5 as s4
+HEAD:tests/test_t06_v6_scripts.py:21:SESSION5 = RACINE / "src" / "controle_ia" / "t06" / "session_v5.py"
+HEAD:tests/test_t06_v6_scripts.py:166:def test_session_v5_filtre_et_choix():
+
+## C. Emploi du nom « cf » à travers le module : session_v5.cf, ou l'alias d'un import de controle_ia.iib.session_v5 suivi de « .cf »
+### C1. git grep -nE 'session_v5[[:space:]]*\.[[:space:]]*cf\b' HEAD (code du dépôt, hors zones exclues)
+(aucune ligne)
+### C2. alias des imports de controle_ia.iib.session_v5 (git grep -lE 'iib import session_v5|iib\.session_v5') et lignes « alias.cf »
+tests/test_iib_configuration_v5.py : alias « session_v5 » ; lignes « session_v5.cf » : 0
+tests/test_iib_lanceur_v5.py : alias « se » ; lignes « se.cf » : 0
+
+## D. Analyseurs statiques sur src/controle_ia/iib/session_v5.py (règles de pyflakes : noms non définis, imports inutiles)
+### D1. ruff 0.16.9 : ruff check --no-cache --isolated --select F src/controle_ia/iib/session_v5.py
+All checks passed!
+code de sortie : 0
+### D2. flake8 7.4.1 (mccabe: 0.7.0, pycodestyle: 2.15.0, pyflakes: 4.0.0) CPython 3.13.18 on : flake8 --isolated --select=F src/controle_ia/iib/session_v5.py
+(aucune ligne écrite : aucun défaut)
+code de sortie : 0
+
+## Conclusion
+Dans session_v5.py, « cf » n'est plus que le nom local de verifier_config : son import et son emploi (A). Aucun code du dépôt n'emploie session_v5.cf ni « alias.cf » (C). Hors du module, les appelants de controle_ia.iib.session_v5 sont le lanceur de session (variable « SESSION » : main ; sa branche « surveillance » ne passe que « coupure-etalonnage », vérifié par l'essai de l'amorce) et deux fichiers d'essais (main, coupure_etalonnage, ligne_de_coupure) (B). Les deux analyseurs ne relèvent aucun nom non défini ni import inutile (D).

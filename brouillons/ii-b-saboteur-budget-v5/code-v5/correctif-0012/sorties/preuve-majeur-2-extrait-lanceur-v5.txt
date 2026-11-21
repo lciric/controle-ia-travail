@@ -1,0 +1,120 @@
+# Preuve jointe, majeur 2 de la relecture du correctif 0011 : extrait de lanceur_v5.py (carte_visible, exiger_accord, executer, _main)
+# Produit le 2026-11-21T22:36:36Z dans l'arbre du correctif (tête 844fda80), par awk sur les bornes des fonctions ; numéros de ligne du fichier.
+# Fichier : src/controle_ia/iib/lanceur_v5.py ; sha256 36c39fe343dee3631470d0e6c2bd5f8234517a7c91bd897c8cb1acc61d46cdc9 ; objet git au commit 844fda80 : e4d88c988bd0955482b41b28a16d0c1db1699386 ; à la base 62356e2f : e4d88c988bd0955482b41b28a16d0c1db1699386
+# Différence du fichier entre la base 62356e2f et l'arbre courant (vide : les correctifs 0011 et 0012 ne le touchent pas) :
+# (fin de la différence)
+
+## carte_visible : lignes 65 à 77
+  65  def carte_visible() -> bool:
+  66      """Une carte de calcul est-elle visible ? (`nvidia-smi` sur le chemin, ou torch qui en voit une ; sans torch : non.)"""
+  67      import shutil
+  68  
+  69      if shutil.which("nvidia-smi"):
+  70          return True
+  71      try:
+  72          import torch
+  73      except ImportError:
+  74          return False
+  75      return bool(torch.cuda.is_available())
+  76  
+  77  
+
+## exiger_accord : lignes 78 à 93
+  78  def exiger_accord(config: dict, environnement: dict, carte=None) -> str | None:
+  79      """Accord cité pour toute machine payante : en mode réel, `go_id` de la configuration (forme vérifiée par
+  80      `configuration_v5`) égal à `IIB_GO_ID` posé par le lanceur de session sur la machine ; sinon refus. Mode jouet : refusé sur
+  81      une machine payante — `IIB_GO_ID` posé ou carte visible (contre-lecture, m7) ; `carte` : essais (sinon `carte_visible()`)."""
+  82      if config["mode"] != "reel":
+  83          if environnement.get("IIB_GO_ID") or (carte_visible() if carte is None else carte):
+  84              raise GardeArret("mode jouet sur une machine payante (accord posé sur la machine, ou carte visible) : refus — une machine "
+  85                               "payante ne joue qu'une configuration réelle sous accord cité")
+  86          return None
+  87      go = config.get("go_id")
+  88      if not go or environnement.get("IIB_GO_ID") != go:
+  89          raise GardeArret(f"accord cité absent ou différent (configuration : {go!r} ; machine : {environnement.get('IIB_GO_ID')!r}) : aucune "
+  90                           "machine payante sans accord cité (refus)")
+  91      return go
+  92  
+  93  
+
+## executer : lignes 547 à 599
+ 547  def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=None, environnement: dict | None = None,
+ 548               autoriser_depot_sale: bool = False, carte=None) -> dict:
+ 549      """Joue une phase sous `runs/<run>/`, `diag/<run>/` et `donnees/<run>/` (la forme que l'amorce consigne et pousse).
+ 550  
+ 551      - `etalonnage` : manifeste du run (R9) ; étalonnage versé par lot ; à la fin `diag/<run>/resume.json` ; sur toute garde ou
+ 552        toute erreur, `diag/<run>/arret.json` avec l'étape, le motif et la liste de ce qui est écrit (les lots restent sur le
+ 553        disque, scellés), puis l'erreur se propage : rien n'est supprimé, aucune issue n'est inventée.
+ 554      - `conditions` : conditions de départ et désignation, une seule fois, sur l'étalonnage scellé du même run (processeur seul).
+ 555      La course n'a pas de point d'entrée dans cette version : elle attend le distillateur (contre-lecture, M5)."""
+ 556      import os
+ 557  
+ 558      from ..gardes import motif_d_arret
+ 559      from ..manifeste import creer_manifeste, ecrire_resultat
+ 560  
+ 561      if phase not in PHASES:
+ 562          raise GardeArret(f"phase {phase!r} : {PHASES} (la course n'a pas de point d'entrée dans cette version)")
+ 563      racine = Path(racine)
+ 564      environnement = dict(os.environ) if environnement is None else environnement
+ 565      diag, donnees = racine / "diag" / run_id, racine / "donnees" / run_id
+ 566      if phase == "conditions":
+ 567          cf.exiger_config_v5(config, racine, pour_lancer=True)
+ 568          return phase_conditions(config, racine, diag)
+ 569      cf.exiger_config_v5(config, racine, pour_lancer=True)
+ 570      exiger_accord(config, environnement, carte)
+ 571      chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste"], entropie=int(config["entropie"]),
+ 572                                    decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
+ 573      etat = {"etape": "chargement"}
+ 574      debut = time.perf_counter()
+ 575      try:
+ 576          from . import modele_v5
+ 577  
+ 578          progres(etape="chargement", mode=config["mode"])
+ 579          modele = modele if modele is not None else modele_v5.construire_modele(config)
+ 580          monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
+ 581          etat["etape"] = "etalonnage"
+ 582          cree = environnement.get("IIB_DEBUT_UTC_S")
+ 583          r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte)
+ 584          resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
+ 585                    "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
+ 586                    "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True,
+ 587                    "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées"}
+ 588          ecrire_resultat(racine, chemin_m, "resume", resume)
+ 589          return resume
+ 590      except BaseException as e:
+ 591          ecrits = sorted(str(f.relative_to(racine)) for d in (diag, donnees) if d.is_dir() for f in d.rglob("*.json"))
+ 592          ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": phase, "etape": etat["etape"],
+ 593                                                       "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
+ 594                                                       "duree_s": round(time.perf_counter() - debut, 1),
+ 595                                                       "issue": "aucune : étalonnage interrompu, rien n'est désigné ; toute reprise est une course neuve"})
+ 596          progres(etape="arret", phase=phase, fichiers_ecrits=len(ecrits))
+ 597          raise
+ 598  
+ 599  
+
+## _main : lignes 604 à 628
+ 604  def _main(argv: list[str]) -> int:
+ 605      import argparse
+ 606      import signal
+ 607      import sys
+ 608  
+ 609      from ..gardes import lever_sur_term
+ 610  
+ 611      p = argparse.ArgumentParser(prog=COMMANDE)
+ 612      p.add_argument("--phase", default="etalonnage", choices=PHASES)
+ 613      p.add_argument("--config", required=True)
+ 614      p.add_argument("--run-id", required=True)
+ 615      p.add_argument("--autoriser-depot-sale", action="store_true")
+ 616      args = p.parse_args(argv)
+ 617      signal.signal(signal.SIGTERM, lever_sur_term)
+ 618      try:
+ 619          verifier(args.config)
+ 620          config = json.loads(Path(args.config).read_text(encoding="utf-8"))
+ 621          r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale)
+ 622      except GardeArret as e:
+ 623          print(f"ARRÊT : {e}", file=sys.stderr)
+ 624          return 1
+ 625      print(json.dumps({"run": args.run_id, "phase": args.phase, **{k: r[k] for k in ("lots", "issue", "tours") if k in r}}, ensure_ascii=False))
+ 626      return 0
+ 627  
+ 628  

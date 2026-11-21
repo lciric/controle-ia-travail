@@ -1,0 +1,34 @@
+# Preuve jointe, mineur 7 de la relecture du correctif 0011 : greffons de pytest de la machine louée, et torch
+# Produit le 2026-11-21T22:36:55Z. Source : traces/iib-executante-v5/etalonnage-1-arret-pendant-tests-20261121/instance/pip-freeze.txt sur origin/claude/iib-executante-v5 (trace permise par le mandat), sha256 d8be3d898421ea0ca30e14608a105fceed9faa6aa73859585efd3a1d499f8355
+
+## 1. Paquets de la machine dont le nom désigne pytest ou un greffon de pytest (motif « pytest »)
+54:pytest==9.1.1
+
+## 2. Greffons déclarés (point d'entrée « pytest11 ») sur le poste, et présence du paquet déclarant sur la machine
+anyio 4.15.1 : pytest11 anyio = anyio.pytest_plugin
+sur la machine :
+3:anyio==4.16.0
+
+## 3. Imports du greffon anyio.pytest_plugin (version du poste : 4.15.1 ; machine : 4.16.0) et toute mention de torch
+1:from __future__ import annotations
+3:import dataclasses
+4:import socket
+5:import sys
+6:from collections.abc import Callable, Generator, Iterator
+7:from contextlib import ExitStack, contextmanager
+8:from inspect import isasyncgenfunction, iscoroutinefunction, ismethod
+9:from typing import TYPE_CHECKING, Any, cast
+11:import pytest
+12:from _pytest.fixtures import FuncFixtureInfo, SubRequest
+13:from _pytest.outcomes import Exit
+14:from _pytest.scope import Scope
+16:from . import get_available_backends
+17:from ._core._eventloop import (
+23:from ._core._exceptions import iterate_exceptions
+mentions de « torch » dans le paquet anyio du poste : 0
+
+## Conclusion
+Aucun paquet pytest-* sur la machine ; le seul greffon de pytest de sa liste connu sur le poste est celui d'anyio (pytest11), qui n'importe que pytest et anyio, jamais torch (lu sur la version 4.15.1 du poste ; la machine porte 4.16.0, une version mineure plus loin : réserve). Dans le pytest enfant de l'essai 4, torch est de toute façon le torch factice de l'interpréteur simulé, placé devant les paquets parents.
+
+## Réserve précise
+Paquets de la liste de la machine absents du poste (48 sur 72), dont les points d'entrée « pytest11 » n'ont pas pu être lus : annotated-doc, contourpy, cuda-bindings, cuda-pathfinder, cuda-toolkit, cycler, filelock, fonttools, fsspec, hf-xet, httpcore, httpx, huggingface_hub, kiwisolver, markdown-it-py, matplotlib, mdurl, mpmath, networkx, nvidia-cublas, nvidia-cuda-cupti, nvidia-cuda-nvrtc, nvidia-cuda-runtime, nvidia-cudnn-cu13, nvidia-cufft, nvidia-cufile, nvidia-curand, nvidia-cusolver, nvidia-cusparse, nvidia-cusparselt-cu13, nvidia-nccl-cu13, nvidia-nvjitlink, nvidia-nvshmem-cu13, nvidia-nvtx, pypandoc_binary, regex, rich, safetensors, scipy, shellingham, sympy, tokenizers, torch, tqdm, transformers, triton, typer, tzdata.

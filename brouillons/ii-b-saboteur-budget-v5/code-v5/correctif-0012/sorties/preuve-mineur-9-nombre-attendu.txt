@@ -1,0 +1,86 @@
+# Preuve jointe, mineur 9 de la relecture du correctif 0011 : aucun 271 par défaut ne subsiste-t-il ? (amorce, lanceur de session, modèles d'ordre)
+# Produit le 2026-11-21T22:39:25Z. Motifs : « 271 » et « TESTS_ATTENDUS » (toutes formes). Lignes tronquées à 240 caractères.
+
+## 1. Code de la chaîne en version 5, au commit 887561b759ded1bcadb450cedead3f29e946dda7 (correctif 0012)
+### scripts/amorce_instance_iib_v5.sh (sha256 a4686068f0cbc0733ad220675d2118c9739884b8d24b26c4a3ba40444aeb20d6)
+33:# TESTS_ATTENDUS, ECHEANCE_UTC_S, FIN_GO_UTC_S, DEPENSE_EPUISEE_UTC_S ; posées par Vast : CONTAINER_ID, CONTAINER_API_KEY (jamais
+328:ATTENDUS="${TESTS_ATTENDUS:-}"
+### scripts/lancer_iib_v3.sh (sha256 42d295c83a911d021472d2b7f4237985aee4f2cc5c8b3d0d7695e2e92754706a)
+69:# IIB_DEPENSE_ANTERIEURE_USD, IIB_TESTS_ATTENDUS (^[0-9]*$), IIB_DEPOT, IIB_IMAGE, VAST (chemin explicite de l'outil de location),
+222:    [[ "${IIB_TESTS_ATTENDUS:-}" =~ ^[0-9]*$ ]] || { echo "IIB_TESTS_ATTENDUS illisible (^[0-9]*$ exigé)"; exit 2; }
+265:        "$(date -u +%FT%TZ)" "$S" "$CFG" "$BRANCHE" "$E" "$GOC" "$PLC" "$ANT" "$MODE_C" "$VAR" "$CAL" "$S7B" "${IIB_TESTS_ATTENDUS:-}" >> "$D/lancement.txt"
+317:    CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.gi […]
+### scripts/repetition_locale_iib_v5.py (sha256 6914065e7f68ffd7de331c6355009d046e09d1a48ca3e17291c4a0e5e9626a8b)
+35:ATTENDUS = 275        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v5.txt`, correctif 0011 : 271 et les 4 de l'environnement de la machine simulée)
+129:         "IIB_BRANCHE_CODE": "prep/iib-repetition", "IIB_DEPENSE_ANTERIEURE_USD": "0", "IIB_TESTS_ATTENDUS": "",
+173:        env["TESTS_ATTENDUS"] = str(ATTENDUS)             # le contrôle du nombre de tests attendus est joué lui aussi
+
+## 2. Ordres de l'étalonnage en version 5 et leurs générateurs, dans le dépôt principal (branche claude/iib-reconception-oracle-v1, commit 53528726089e) : brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ (lignes qui portent 271 ou IIB_TESTS_ATTENDUS)
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ordre-etalonnage-ii-b-v5-brouillon1.md (sha256 db7f4dc042b43776dba1cc2553ac60fd8cc3f8860138adf4b48192b965c04549)
+109: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=<<BRANCHE_ETALONNAGE>>`, `IIB_DEPENSE_ANTERIEURE_USD=<<DEPENSE_LIGNE_AVANT_LOCATION_USD>>`, `IIB_ […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ordre-etalonnage-ii-b-v5-brouillon2.md (sha256 adf8dbacdfe533148a279ecde23a71d090ad349a564af555826ae55415ef6795)
+114: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=essai/iib-explo-v5`, `IIB_DEPENSE_ANTERIEURE_USD=0`, `IIB_TESTS_ATTENDUS=267`, `IIB_INSTANCES_INT […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ordre-etalonnage-ii-b-v5-brouillon3.md (sha256 4bad49e2e0c441560ac0a147a9f7de0fe7012a6f9b7d2eb63d7dac622e247cb1)
+7: - **Statut** : **brouillon 3**, pièce décisive (ordre d'une course payante), non contre-lu. Fabriqué par programme (`fabriquer-ordre-etalonnage-ii-b-v5-brouillon3-v1.py`) depuis le brouillon 2 (`ordre-etalonnage-ii-b-v5-brouillon2.md`, ` […]
+25: | Essais | liste figée `scripts/tests-cibles-iib-v5-v4.txt` (`342ee21d495b54cb5fd4a8ae6d7427043edb3c228cc16afd57ab4f9e3d099b68`, écrite en dur dans l'amorce ; 23 fichiers, sans l'essai du tokeniseur réel ni celui du moteur à torch du di […]
+96: 2. **Code** : B1, M1, M2, M3, M6 et M7 corrigés par le correctif 0007 et levés par la vérification des corrections (`6a9e2e7927b03533552b676b694736e6eb3ace72d58ca52007cb1c6b9cadfa57`), qui laisse deux restes : R1, la coupe après une clé […]
+100: 6. **Contrôles à blanc à ce commit, par l'exécutante, sans dépense, sans recherche d'offre** : garde de la configuration en code 0 ; **suite ciblée en version 5** rejouée, dernière ligne « `271` passed » ; un lecteur qui n'a écrit ni l […]
+114: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=essai/iib-explo-v5`, `IIB_DEPENSE_ANTERIEURE_USD=0`, `IIB_TESTS_ATTENDUS=271`, `IIB_INSTANCES_INT […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ordre-etalonnage-ii-b-v5-brouillon4.md (sha256 12fb6dac586ebd6410b69e7af600beb4b6e429c0cc829f2d37fce5dbfa8b7e32)
+7: - **Statut** : **brouillon 4**, pièce décisive (ordre d'une course payante), non contre-lu. Fabriqué par programme (`fabriquer-ordre-etalonnage-ii-b-v5-brouillon4-v1.py`) depuis le brouillon 3 (`ordre-etalonnage-ii-b-v5-brouillon3.md`, ` […]
+9: - **Pièces citées** (non modifiées, empreintes recalculées par le programme) : texte scellé de l'organisme retenu, `brouillons/ii-b-saboteur-budget-v5/conception-organisme-retenu-ii-b-v5-scellee-v1.md` (`c1dc54597a1ab4b467331673607d986e4 […]
+25: | Essais | liste figée `scripts/tests-cibles-iib-v5-v4.txt` (`342ee21d495b54cb5fd4a8ae6d7427043edb3c228cc16afd57ab4f9e3d099b68`, écrite en dur dans l'amorce ; 23 fichiers, sans l'essai du tokeniseur réel ni celui du moteur à torch du di […]
+96: 2. **Code** : B1, M1, M2, M3, M6 et M7 corrigés par le correctif 0007 et levés par la vérification des corrections (`6a9e2e7927b03533552b676b694736e6eb3ace72d58ca52007cb1c6b9cadfa57`), qui laisse deux restes : R1, la coupe après une clé […]
+100: 6. **Contrôles à blanc à ce commit, par l'exécutante, sans dépense, sans recherche d'offre** : garde de la configuration en code 0 ; **suite ciblée en version 5** rejouée, dernière ligne « `271` passed » ; un lecteur qui n'a écrit ni l […]
+114: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=essai/iib-explo-v5`, `IIB_DEPENSE_ANTERIEURE_USD=0`, `IIB_TESTS_ATTENDUS=271`, `IIB_INSTANCES_INT […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ordre-etalonnage-ii-b-v5-brouillon5.md (sha256 3bde656a8b75d5ee984ff6011bfb35e0ea8192b43c24f5d91d506e5b1824973e)
+7: - **Statut** : **brouillon 5**, pièce décisive (ordre d'une course payante). Fabriqué par programme (`fabriquer-ordre-etalonnage-ii-b-v5-brouillon5-v1.py`) depuis le brouillon 4 (`ordre-etalonnage-ii-b-v5-brouillon4.md`, `12fb6dac586ebd6 […]
+9: - **Pièces citées** (non modifiées, empreintes recalculées par le programme) : texte scellé de l'organisme retenu, `brouillons/ii-b-saboteur-budget-v5/conception-organisme-retenu-ii-b-v5-scellee-v1.md` (`c1dc54597a1ab4b467331673607d986e4 […]
+25: | Essais | liste figée `scripts/tests-cibles-iib-v5-v4.txt` (`342ee21d495b54cb5fd4a8ae6d7427043edb3c228cc16afd57ab4f9e3d099b68`, écrite en dur dans l'amorce ; 23 fichiers, sans l'essai du tokeniseur réel ni celui du moteur à torch du di […]
+96: 2. **Code** : B1, M1, M2, M3, M6 et M7 corrigés par le correctif 0007 et levés par la vérification des corrections (`6a9e2e7927b03533552b676b694736e6eb3ace72d58ca52007cb1c6b9cadfa57`), qui laisse deux restes : R1, la coupe après une clé […]
+100: 6. **Contrôles à blanc à ce commit, par l'exécutante, sans dépense, sans recherche d'offre** : garde de la configuration en code 0 ; **suite ciblée en version 5** rejouée, dernière ligne « `271` passed » ; un lecteur qui n'a écrit ni l […]
+114: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=essai/iib-explo-v5`, `IIB_DEPENSE_ANTERIEURE_USD=0`, `IIB_TESTS_ATTENDUS=271`, `IIB_INSTANCES_INT […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ordre-etalonnage-ii-b-v5-brouillon6.md (sha256 4e5c156e0601ed62adef6f801fdea94ea5f4e2237850ed1bdea2386364702ad7)
+7: - **Statut** : **brouillon 5**, pièce décisive (ordre d'une course payante). Fabriqué par programme (`fabriquer-ordre-etalonnage-ii-b-v5-brouillon5-v1.py`) depuis le brouillon 4 (`ordre-etalonnage-ii-b-v5-brouillon4.md`, `12fb6dac586ebd6 […]
+9: - **Pièces citées** (non modifiées, empreintes recalculées par le programme) : texte scellé de l'organisme retenu, `brouillons/ii-b-saboteur-budget-v5/conception-organisme-retenu-ii-b-v5-scellee-v1.md` (`c1dc54597a1ab4b467331673607d986e4 […]
+25: | Essais | liste figée `scripts/tests-cibles-iib-v5-v4.txt` (`342ee21d495b54cb5fd4a8ae6d7427043edb3c228cc16afd57ab4f9e3d099b68`, écrite en dur dans l'amorce ; 23 fichiers, sans l'essai du tokeniseur réel ni celui du moteur à torch du di […]
+96: 2. **Code** : B1, M1, M2, M3, M6 et M7 corrigés par le correctif 0007 et levés par la vérification des corrections (`6a9e2e7927b03533552b676b694736e6eb3ace72d58ca52007cb1c6b9cadfa57`), qui laisse deux restes : R1, la coupe après une clé […]
+100: 6. **Contrôles à blanc à ce commit, par l'exécutante, sans dépense, sans recherche d'offre** : garde de la configuration en code 0 ; **suite ciblée en version 5** rejouée, dernière ligne « `271` passed » ; un lecteur qui n'a écrit ni l […]
+114: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=essai/iib-explo-v5`, `IIB_DEPENSE_ANTERIEURE_USD=0`, `IIB_TESTS_ATTENDUS=271`, `IIB_INSTANCES_INT […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ordre-etalonnage-ii-b-v5-brouillon7.md (sha256 b61bc15f557b276a4c2c0f8b7327bfa603b5eafee4855c95bb9c8525b835c6c1)
+7: - **Statut** : **brouillon 5**, pièce décisive (ordre d'une course payante). Fabriqué par programme (`fabriquer-ordre-etalonnage-ii-b-v5-brouillon5-v1.py`) depuis le brouillon 4 (`ordre-etalonnage-ii-b-v5-brouillon4.md`, `12fb6dac586ebd6 […]
+9: - **Pièces citées** (non modifiées, empreintes recalculées par le programme) : texte scellé de l'organisme retenu, `brouillons/ii-b-saboteur-budget-v5/conception-organisme-retenu-ii-b-v5-scellee-v1.md` (`c1dc54597a1ab4b467331673607d986e4 […]
+25: | Essais | liste figée `scripts/tests-cibles-iib-v5-v4.txt` (`342ee21d495b54cb5fd4a8ae6d7427043edb3c228cc16afd57ab4f9e3d099b68`, écrite en dur dans l'amorce ; 23 fichiers, sans l'essai du tokeniseur réel ni celui du moteur à torch du di […]
+97: 2. **Code** : B1, M1, M2, M3, M6 et M7 corrigés par le correctif 0007 et levés par la vérification des corrections (`6a9e2e7927b03533552b676b694736e6eb3ace72d58ca52007cb1c6b9cadfa57`), qui laisse deux restes : R1, la coupe après une clé […]
+101: 6. **Contrôles à blanc à ce commit, par l'exécutante, sans dépense, sans recherche d'offre** : garde de la configuration en code 0 ; **suite ciblée en version 5** rejouée, dernière ligne « `271` passed » ; un lecteur qui n'a écrit ni l […]
+115: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=essai/iib-explo-v5`, `IIB_DEPENSE_ANTERIEURE_USD=0`, `IIB_TESTS_ATTENDUS=271`, `IIB_INSTANCES_INT […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/ordre-etalonnage-ii-b-v5-brouillon8.md (sha256 55de7ac17d27514a4110682c6e46bcace0540291bbb14853aaaaae5614d41a20)
+7: - **Statut** : **brouillon 5**, pièce décisive (ordre d'une course payante). Fabriqué par programme (`fabriquer-ordre-etalonnage-ii-b-v5-brouillon5-v1.py`) depuis le brouillon 4 (`ordre-etalonnage-ii-b-v5-brouillon4.md`, `12fb6dac586ebd6 […]
+9: - **Pièces citées** (non modifiées, empreintes recalculées par le programme) : texte scellé de l'organisme retenu, `brouillons/ii-b-saboteur-budget-v5/conception-organisme-retenu-ii-b-v5-scellee-v1.md` (`c1dc54597a1ab4b467331673607d986e4 […]
+25: | Essais | liste figée `scripts/tests-cibles-iib-v5-v4.txt` (`342ee21d495b54cb5fd4a8ae6d7427043edb3c228cc16afd57ab4f9e3d099b68`, écrite en dur dans l'amorce ; 23 fichiers, sans l'essai du tokeniseur réel ni celui du moteur à torch du di […]
+97: 2. **Code** : B1, M1, M2, M3, M6 et M7 corrigés par le correctif 0007 et levés par la vérification des corrections (`6a9e2e7927b03533552b676b694736e6eb3ace72d58ca52007cb1c6b9cadfa57`), qui laisse deux restes : R1, la coupe après une clé […]
+101: 6. **Contrôles à blanc à ce commit, par l'exécutante, sans dépense, sans recherche d'offre** : garde de la configuration en code 0 ; **suite ciblée en version 5** rejouée, dernière ligne « `271` passed » ; un lecteur qui n'a écrit ni l […]
+115: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=essai/iib-explo-v5`, `IIB_DEPENSE_ANTERIEURE_USD=0`, `IIB_TESTS_ATTENDUS=271`, `IIB_INSTANCES_INT […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/fabriquer-ordre-etalonnage-ii-b-v5-brouillon1-v1.py (sha256 1a786dc60d386f432e1b56df0f901ebf9f6feb15d528829a919d9ebda078deae)
+195: - Variables : `GO_ID=GO-2026-11-21-70`, `IIB_REGISTRE_GO`, `IIB_REGISTRE_DECISIONS`, `IIB_BRANCHE_CODE=<<BRANCHE_CODE_V5>>`, `IIB_BRANCHE=<<BRANCHE_ETALONNAGE>>`, `IIB_DEPENSE_ANTERIEURE_USD=<<DEPENSE_LIGNE_AVANT_LOCATION_USD>>`, `IIB_ […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/fabriquer-ordre-etalonnage-ii-b-v5-brouillon2-v1.py (sha256 34482eeb7c3a076a7a51792ffb14eb3fc81f3f23cca84608d274de2026c45a3c)
+(aucune ligne)
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/fabriquer-ordre-etalonnage-ii-b-v5-brouillon3-v1.py (sha256 b85c2ac77e13e6e16262d1cd300575f00e246c23cae9cc5aef5f30860c285802)
+50: "- **Statut** : **brouillon 3**, pièce décisive (ordre d'une course payante), non contre-lu. Fabriqué par programme (`fabriquer-ordre-etalonnage-ii-b-v5-brouillon3-v1.py`) depuis le brouillon 2 (`" + B2 + "`, `" + B2_SHA + "`, intact, R […]
+57: "**271 essais attendus** : 271 réussis à la tête du code, sur processeur (`sortie-essais-cibles-v5-v5.txt`) ; la liste figée ne change pas, le correctif 0010 ajoute quatre essais à un fichier qu'elle porte déjà (267 avant lui)", 1),
+58: ("dernière ligne attendue des essais", "« `267` passed »", "« `271` passed »", 2),
+59: ("variable du nombre d'essais", "`IIB_TESTS_ATTENDUS=267`", "`IIB_TESTS_ATTENDUS=271`", 1),
+69: "amorce en version 5 (271 essais), étalonnage versé par lot et poussé, surveillance qui lit « phase etalonnage » et finit par « FIN », destruction par l'identifiant, conditions et désignation, second passage refusé : réussie, code 0, à  […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/fabriquer-ordre-etalonnage-ii-b-v5-brouillon4-v1.py (sha256 6bf3d3c17abd823b413e518570a788263d66b685480044fc5e2a8f13a1b19a1d)
+23: CITE = "`" + V10_CHEMIN + "` (`" + V10 + "`), « étalonnage autorisable », même arbre que celui du § 1, répétition locale rejouée par le contre-lecteur (271 essais), deux mineurs que l'ordre déclare (§ 3 : origine du compte, phrase du mo […]
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/fabriquer-ordre-etalonnage-ii-b-v5-brouillon5-v1.py (sha256 e630212b434c3dc1702af1ca9317b0df0d87bc437ac09e61bf4192329b8bc1d3)
+(aucune ligne)
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/fabriquer-ordre-etalonnage-ii-b-v5-brouillon6-v1.py (sha256 c03248fc7bd558b61db1970efe788eafc2c61406320b666f455bf8a97f951595)
+(aucune ligne)
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/fabriquer-ordre-etalonnage-ii-b-v5-brouillon7-v1.py (sha256 0cde07ed74147fb025e3bd5c76b55a446eac925bd3f6ebf474fd9d38e541c6f7)
+(aucune ligne)
+### brouillons/ii-b-saboteur-budget-v5/ordre-etalonnage-v5/fabriquer-ordre-etalonnage-ii-b-v5-brouillon8-v1.py (sha256 ee988f89c5b064fee683b68b229ca622a76c2a647693781b00f661191ff3ae24)
+(aucune ligne)
+
+## Conclusion
+Le code de la chaîne en version 5 ne porte aucun nombre attendu par défaut : l'amorce lit TESTS_ATTENDUS, vide par défaut (seul le succès de la suite est alors contrôlé, sans le nombre) ; le lanceur de session passe IIB_TESTS_ATTENDUS (vide permis) ; la répétition porte 275. Le nombre 271 subsiste dans les ordres de l'étalonnage, brouillons 3 à 8 (« 271 essais attendus », IIB_TESTS_ATTENDUS=271), et dans les générateurs des brouillons 3 (substitution 267 → 271) et 4 (citation « 271 essais ») : une relance demande un ordre en version neuve avec IIB_TESTS_ATTENDUS=275 (à la mère ; je n'y touche pas).
