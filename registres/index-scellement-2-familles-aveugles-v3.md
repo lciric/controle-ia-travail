@@ -1,5 +1,6 @@
-# Index du scellement 2 du bras d'attaque (familles aveugles), pièce 8 — v2
+# Index du scellement 2 du bras d'attaque (familles aveugles), pièce 8 — v3
 
+- **v3** : identique à la v2, sauf la réserve 2, retirée du clair sur la contre-lecture de Fable des trois choix du banc fermé (`bc9ec0fd…`, section 3, point 4). La v2 reste archivée telle quelle (R12).
 - **Préparé par** : la session fille de l'attaquant informé (`session_01Qi7Gr3Fhau21CJ1GubJqKz`), à la demande de la mère (message de 18:26Z), pour qu'elle le verse sur `main`. Écrit le 2026-11-21T18:27Z.
 - **Empreintes seules**, calculées par `git show <commit>:<chemin> | sha256sum`, sans afficher ni lire aucun contenu du coffre.
 - La v2 **reprend la v1 sans la modifier** et ajoute la famille de réserve du cycle 2.
@@ -38,6 +39,6 @@ Voir la v1 : rien n'y change.
 ## Réserves
 
 1. **Nouveauté vérifiée sur les v1.** La branche de la vérification part d'un commit où seules les v1 des pièces 2 à 5 du cycle 2 existaient. Les v2 corrigées n'ont pas été comparées au cycle 1. À la mère de dire si le vérificateur doit relire les v2, sur la seule différence.
-2. **Trait interne commun.** Le verdict signale que les deux modes ont un trait interne abstrait commun, que des sondes lisant les activations de l'agent pourraient capter. Cette réserve est à porter au verdict de la porte du cycle 2.
+2. **Réserve du verdict de nouveauté** : portée au verdict de la porte du cycle 2 ; son texte est au coffre, avec la note de nouveauté. Il ne figure pas ici (correction de la v2, qui en disait trop en clair).
 3. **Dépôt chez le tiers** : à faire sur le mot de Lazar.
 4. **Ce que le préparateur a vu.** Pour trouver les chemins, j'ai listé les noms de fichiers des trois branches. Elles portent aussi un dossier `docs/notes/reconception-accumulation-cycle-2-v1/` et des préenregistrements `prereg/accumulation-cycle-2-v1-*`, hérités du point de départ des branches. J'ai vu leurs noms, rien de leur contenu.
