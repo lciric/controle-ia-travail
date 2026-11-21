@@ -1,0 +1,28 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/redacteur-mandat-mondes-plantes-v3/erratum-mandat-1/calcul_devis_auteur_mondes_plantes_v7.py	2026-11-21 09:34:26.085835050 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/16eb2a62-e29a-56e1-a702-f48557a5876c/scratchpad/redacteur-mandat-mondes-plantes-v3/erratum-mandat-1/calcul_devis_auteur_mondes_plantes_v8.py	2026-11-21 09:45:36.613874908 +0000
+@@ -1,9 +1,13 @@
+-"""Devis de l'appel à l'auteur des mondes plantés, course « seuil et moniteurs » — calcul v7.
++"""Devis de l'appel à l'auteur des mondes plantés, course « seuil et moniteurs » — calcul v8.
+ 
+ Arithmétique seule : aucun tirage, aucun appel, aucun fichier lu. Sortie : un objet JSON sur la sortie standard.
+-Usage : python3 -B calcul_devis_auteur_mondes_plantes_v7.py > calcul-devis-auteur-mondes-plantes-v7.json
++Usage : python3 -B calcul_devis_auteur_mondes_plantes_v8.py > calcul-devis-auteur-mondes-plantes-v8.json
+ 
+-Un seul changement depuis le calcul v6 (989430a5fd31105c6d059252ce03eba92943a8039dfa96e00f854500a64fc957), sur le mot de
++Le calcul v8 est le calcul v7 (668bcad4e431748d0dd37e9e03ebb2939c4198afc5254ade01a0653b68b8267d) sous un nom neuf : seuls
++ce titre, cette ligne d'usage et le champ « version » de la sortie changent. Aucune entrée, aucune formule, aucun
++montant ne change : le devis v8 ne diffère du v7 que par l'erratum qu'il nomme.
++
++Rappel du calcul v7 : un seul changement depuis le calcul v6 (989430a5fd31105c6d059252ce03eba92943a8039dfa96e00f854500a64fc957), sur le mot de
+ la mère : le plafond d'arrêt est le pire par essai au taux le plus dur des deux, arrondi au cent vers le haut, fois
+ le nombre d'essais. Il tient ainsi le pire de deux essais aux deux taux, et le second essai reste possible après un
+ premier essai joué jusqu'au bout de ses plafonds. La fonction plafond_d_arret porte ce changement ; rien d'autre
+@@ -151,7 +155,7 @@
+     ligne = [l for l in lignes if l["id"] == CANDIDAT_DE_LA_LIGNE][0]
+     noms = [nom for nom, _ in TAUX]
+     sortie = {
+-        "version": "calcul-devis-auteur-mondes-plantes-v7",
++        "version": "calcul-devis-auteur-mondes-plantes-v8",
+         "entrees": {
+             "taux_caracteres_par_jeton": {nom: str(taux) for nom, taux in TAUX},
+             "entree_mesuree_caracteres": ENTREE_MESUREE_CAR,
