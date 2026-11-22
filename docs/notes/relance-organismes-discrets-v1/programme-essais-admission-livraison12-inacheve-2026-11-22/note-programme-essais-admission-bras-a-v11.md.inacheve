@@ -1,0 +1,201 @@
+# Note de livraison 12 — programme des deux essais d'admission du bras A, version 11
+
+- État : LIVRÉE à la session le 22 novembre 2026. Rien scellé, rien committé, rien poussé : la session scelle.
+- Auteur : sous-agent rédacteur de code (Claude Opus 5.5), sous le mandat `mandat-redacteur-fable-programme-essais-admission-v1.md` (`d3bc3628…`). Aucun réseau, aucun `git fetch`, aucun appel à un fournisseur, aucune dépense, aucune valeur de clé lue ni affichée, `GO_ID` jamais fixé.
+- Objet : les corrections de la contre-lecture de la livraison 11 (`contre-lecture-programme-essais-admission-livraison11-v1.md`, verdict « engageable après corrections »), sous la règle retenue par la session.
+- Pièce neuve : l'avenant 3 v2 (`avenant-3-devis-essais-admission-seuils-de-credit-google-leves-v2.md`, sha256 `4b331d9aed86b280ea720ac554911df168fe7564799957a29776a1cad4dbeaa0`, égale à son compagnon), lu en entier.
+- Ligne lue au registre : GO-2026-11-22-16, par `git show origin/main:registres/go.md | grep -E "GO-2026-11-22-16"`, et elle seule. Type `décision`, de Lazar, échéance 2026-11-30, « oui, seuils levés », elle « confirme la conséquence tirée de GO-2026-11-22-02 par l'avenant 3 v2 (4b331d9a…) », et sa référence demande d'être citée « dans la ligne de GO de chaque ligne de Google ».
+
+## Journal
+1. Six fichiers `_v11` copiés des `_v10` scellés (commit `d4dd31062`), noms changés par un programme qui les nomme un à un ; par `diff`, seuls les noms diffèrent. Outils de mutation en version 7 (`tests/mutations_essais_admission_v7/`). Les `_v10` et les outils version 6 ne sont pas touchés.
+2. Codés : C-1, C-2, C-3 et les mineurs 2, 3, 4 et 6. Le faux fournisseur rend désormais le 429 de Google à sa forme réelle.
+3. Les trois essais de la livraison 11 sur le refus pour crédit portaient la règle que C-1 corrige : ils sont retirés et remplacés (section 1).
+4. Essais : section 8. Campagne : section 7.
+
+## 1. C-1 — le 429 de Google suit la ligne 6 ; le second 429 arrête la ligne
+
+**Règle appliquée** (retenue par la session, dans le devis), pour Google seulement :
+- **Un 429** suit la ligne 6 du classement de 4.4 :
+  - à une vérification, « à refaire sous la même ligne », par un lancement nouveau, si le compteur le permet ;
+  - dans la file, une attente (`Retry-After`, borné à 600 secondes), puis **une seule reprise** (devis 5.6).
+- **Un second 429 sur le même appel** est un défaut journalisé qui arrête la ligne, jamais une réponse. Motif exact (`MOTIF_SECOND_429`) :
+
+  > second code 429 sur le même appel : crédit épuisé possible ; défaut journalisé, jamais une réponse ; la ligne s'arrête, sans autre reprise ; nœud de Lazar (GO-2026-11-22-02)
+
+  Le « même appel », c'est :
+  - à la vérification : le même genre d'appel, A, A′ ou B, déjà compté sous un 429 du fournisseur, dans un lancement antérieur de la même ligne (`second_429`). L'appel est alors classé ligne 13 : close, nœud, `a_refaire` nul ;
+  - dans la file : la reprise d'un appel, ce que le chef faisait déjà ; seul le motif change.
+- **Un 402**, ou un **400 ou 403** dont le message dit sans ambiguïté le crédit ou le solde épuisé, arrête la ligne aussitôt (`refus_pour_credit`, motif `MOTIF_CREDIT_EPUISE`, « refus pour crédit épuisé (code N, « mot ») : … »). Les formes admises sont des mots entiers, en minuscules :
+  - `prepayment`, `prepaid` ou `prepay` ;
+  - `depleted` ;
+  - `insufficient balance`, `insufficient funds` ou `insufficient credit(s)` ;
+  - `out of credit(s)` ;
+  - `credit(s) exhausted`, `depleted` ou `expired` ;
+  - `crédit(s) épuisé(s)` ou `insuffisant(s)` ;
+  - `solde épuisé` ou `insuffisant` ;
+  - `payment required`.
+
+  Ne comptent plus, puisqu'un 429 de débit les porte : `quota`, `billing`, `exhausted`, `balance` seul (« load balancer »).
+- **Un 429 ne s'arrête jamais aussitôt**, même s'il dit le crédit épuisé : il est indiscernable d'un débit.
+
+**Placement dans le classement de la vérification** :
+- 402 et 403 : avant les lignes 6 et 7 ;
+- 400 : après les lignes 9 à 11 (mineur 2). Un 400 sur l'orthographe du niveau de réflexion qui dirait « quota » garde son appel A′.
+
+**Mistral** (mineur 3) : hors de GO-2026-11-22-02. Son 402 retourne à la ligne 7 et son 429 à la ligne 6, comme avant la livraison 11. Le second 429 de la file arrêtait déjà, et c'est inchangé.
+
+**Faux fournisseur** :
+- `erreur_google` donne le statut de Google par code (429 : `RESOURCE_EXHAUSTED`, 403 : `PERMISSION_DENIED`…) ;
+- `debit_google()` rend le 429 de débit à sa forme longue : `RESOURCE_EXHAUSTED`, « You exceeded your current quota, please check your plan and billing details … rate-limits », `QuotaFailure` « …PerMinute… », `RetryInfo` 23 s. C'est la forme relevée par la contre-lecture, supposée et non relevée sur le service.
+
+**Non fait, à dire** : la proposition (b) de la contre-lecture — lire `retryDelay` comme `Retry-After` — n'est pas codée. Le 429 de Google attend donc le défaut de la configuration (`attente_429.defaut_s`, 30 s), borné à 600. La proposition (c) est tranchée par la règle de la session : tout 429 est un débit, et le second arrête la ligne.
+
+| essai | cas sain | artefact |
+|---|---|---|
+| `test_l12_le_faux_fournisseur_rend_le_429_de_google_a_sa_forme_reelle` | `RESOURCE_EXHAUSTED`, quota, billing, `RetryInfo` | — |
+| `test_l12_sain_verification_un_429_puis_un_200_la_ligne_6_a_refaire_puis_saine` | 429 : ligne 6, à refaire ; lancement nouveau : A sain, sonde comprise, vérification saine | — |
+| `test_l12_artefact_verification_deux_429_sur_le_meme_appel_arretent_la_ligne` | — | deux 429 sur A : ligne 13, close, nœud, motif exact, deux appels seulement ; deux 429 sur la sonde : de même |
+| `test_l12_artefact_un_402_ou_un_credit_dit_arrete_aussitot` | 429 « prepayment depleted » : pas d'arrêt aussitôt ; quatre messages ambigus : rien ; Mistral 402 : ligne 7 ; 400 d'orthographe avec « quota » : ligne 11 ou 12 | 402, 403 « prepayment », 400 « insufficient balance » : un appel, close, nœud, motif exact |
+| `test_l12_file_un_429_puis_un_200_continue_deux_429_arretent_un_402_arrete` | 429 puis 200 : attente, reprise, file complète | deux 429 : arrêt au second, motif exact, aucune réponse ; 402 : arrêt aussitôt, sans attente |
+
+## 2. C-2 — la garde 8 exige l'avenant 3 et GO-2026-11-22-16
+
+**Configuration.** Une pièce neuve, `avenant_3` (chemin et empreinte), remplie au gabarit (`4b331d9a…`). `controler_avenant_3` est appelé par `gardes_avant_depart` pour les seules lignes de Google :
+- inscrite, la pièce est vérifiée dans tout état, à son empreinte et à son compagnon ;
+- en définitive, elle est exigée, et son empreinte doit être `4b331d9a…` ;
+- les lignes de Mistral ne la lisent pas.
+
+**Garde 8**, pour une ligne de Google :
+- en définitive, la configuration doit inscrire l'avenant 3 ;
+- dès qu'elle l'inscrit, la ligne du registre doit citer **l'empreinte de l'avenant 3** et **`GO-2026-11-22-16`**, au périmètre ou à la référence.
+
+Le manifeste recopie la pièce (`avenant_3`).
+
+| essai | cas sain | artefact |
+|---|---|---|
+| `test_l12_garde_8_exige_l_avenant_3_et_go_16` | les trois lignes courtes ; Mistral sans objet ; la pièce, à l'essai et en définitive | empreinte de l'avenant 3 absente ; GO-16 absent ; définitive sans avenant 3 ; pièce nulle, à moitié inscrite, d'une autre empreinte, mal formée, autre pièce scellée, sans compagnon |
+
+## 3. C-3 — la levée des seuils, sous GO-2026-11-22-02 et GO-2026-11-22-16
+
+En configuration définitive (`controler_levee_des_seuils`) :
+- **`leves_par`** doit être GO-2026-11-22-02 lui-même, ligne de décision qui cite « recharge automatique », ou une décision qui **cite GO-2026-11-22-02 par son identifiant**. Une autre décision qui parle seulement de la recharge est refusée : c'est le GO-2026-11-21-99 fictif de la contre-lecture.
+- **GO-2026-11-22-16** doit être au registre : une seule ligne, de huit cellules, de type `décision`, de Lazar, non échue, non révoquée, qui cite GO-2026-11-22-02. Sinon rien ne part.
+- La confirmation lue est recopiée (`seuils_de_credit_google.confirmation`).
+
+À l'essai et à blanc, seule la forme est contrôlée.
+
+| essai | cas sain | artefact |
+|---|---|---|
+| `test_l12_levee_seulement_sous_go_02_ou_qui_le_cite_et_go_16_au_registre` | GO-02 ; une décision qui le cite | une décision qui ne le cite pas ; GO-16 absent, échu, qui ne cite pas GO-02 |
+
+## 4. Les sept mineurs
+
+| mineur | traité comment |
+|---|---|
+| 1. forme du champ (« appliques »/« leves » à l'avenant 3) | **non changé, écart déclaré** : le code garde `"exiges"` et `{"leves_par": "<GO>"}`. L'avenant dit « forme proposée » ; celle du code nomme le GO qui lève, ce que C-3 exige de lire |
+| 2. mots cherchés comme sous-chaînes | **corrigé** : mots entiers, liste resserrée (section 1) ; le 400 est lu après les lignes 9 à 11 |
+| 3. refus pour crédit appliqué à Mistral | **corrigé** : Google seul |
+| 4. sortie `a-blanc` muette sur les seuils | **corrigé** : elle imprime `seuils_de_credit_google` et `registre_lu: false` (`test_l12_a_blanc_…`) |
+| 5. fonctions changées hors de la campagne | **en partie** : `classer_issue`, `decider_dans_la_file`, `refus_pour_credit`, `second_429`, `controler_avenant_3` et `controler_levee_des_seuils` sont dans la campagne neuve `livraison12`. `jouer_verification` (la branche de la sonde) et `garde_console` restent hors campagne : trop grandes pour un mutant à la fois en temps raisonnable. Elles sont couvertes par les essais ciblés de la sonde et de la console |
+| 6. `RR_ANTHROPIC_API_KEY_MINUIT` non retirée par la campagne | **corrigé** : ajoutée à `VARIABLES_RETIREES`, et retirée aussi de mes commandes d'essai |
+| 7. échéance de la levée lue au seul départ | **non changé** : une file partie le 30 novembre au soir continue après minuit. C'est la règle de toutes les gardes de départ, et c'est sans effet pratique |
+
+## 5. Configuration définitive de Google
+
+À tirer du gabarit `_v11` sous un nom neuf, scellée. Les empreintes `""` sont à remplir par la session.
+
+**Premier niveau** (champs à changer par rapport au gabarit) :
+
+```json
+{
+ "version": "configuration-essais-admission-bras-a-v11-google-AAAA-MM-JJ-v1",
+ "etat": "definitive",
+ "marge_de_change": 0.05,
+ "marge_de_change_go": "GO-2026-11-21-68",
+ "age_max_du_fixage_heures": 96,
+ "recharge_comptee": false,
+ "regime_file_google": "prudent",
+ "seuils_de_credit_google": {"leves_par": "GO-2026-11-22-02"},
+ "temperature_retiree_d_avance": false,
+ "constat": {"chemin": "docs/notes/relance-organismes-discrets-v1/constat-comptes-google-bras-a-AAAA-MM-JJ-vN.md", "sha256": ""},
+ "constat_second": {"chemin": null, "sha256": null},
+ "regles": {"chemin": "<fichier des règles scellé, non gabarit>", "sha256": "", "lignes_du_texte": [521, 529],
+            "gabarit": "docs/notes/relance-organismes-discrets-v1/essais-admission-bras-a-v1/regles-admission-bras-a-v1-gabarit.md"},
+ "essai_local": null
+}
+```
+
+`avenant_2` (`9d4b8a08…`), `avenant_3` (`4b331d9a…`), `devis`, `verification_du_devis` et `avenant` sont au gabarit : on les garde.
+
+**`fournisseurs.google`** (champs à changer) :
+
+```json
+{
+ "sortie_max": 65536,
+ "reflexion": {"forme": "niveau", "borne_declaree": 49536},
+ "exemption_de_la_sonde": true,
+ "exemption_de_la_sonde_go": "GO-2026-11-22-03",
+ "jetons_par_mot": "<à inscrire par le lecteur habilité>",
+ "credit_min_avant_verification_usd": 28.28,
+ "credit_min_avant_file_usd": 23.59,
+ "credit_a_avoir_usd": 32.97
+}
+```
+
+Les limites de mots des deux consignes sont à inscrire par le lecteur habilité, avec limite × jetons par mot ≤ 16 000.
+
+**Les trois lignes de Google, sous `lignes`** : inchangées depuis la note de la livraison 10, section 3 :
+- plafonds de 3,00, 3,00 et 16,50 USD ;
+- `plafond_registre` « 3,00 USD », « 3,00 USD », « 16,50 USD » ;
+- excès de 1,69, 1,69 et 7,09 ;
+- délais de 900/900/890/890 et 2 700/2 700/2 690/2 690 ;
+- les deux relevés et l'`inscrit` de la file, dont chaque relevé porte `outputTokenLimit` ≥ 65 536.
+
+**Au registre, il faut** :
+- les trois lignes courtes de la section 6 ;
+- les décisions GO-2026-11-22-02 (levée), GO-2026-11-22-03 (exemption) et GO-2026-11-22-16 (confirmation), déjà sur la branche principale, toutes échues après le 30 novembre ;
+- la pièce de constat de Google seul, à la forme de la note de la livraison 11, section 4.
+
+## 6. Les trois lignes courtes du registre, pour Google
+
+Huit cellules séparées par « ` | ` ». Au périmètre : les marques de la ligne et l'empreinte du devis. À la référence :
+- l'avenant 2, par son chemin et son empreinte ;
+- les empreintes de la vérification du devis et de l'avenant 1 ;
+- l'empreinte de l'avenant 3 ;
+- `GO-2026-11-22-16`.
+
+Le plafond est à la lettre ; `calcul` et `Lazar`.
+
+```
+| GO-AAAA-MM-JJ-NN | AAAA-MM-JJ | calcul | vérification de la clé de `gemini-4-neon` lue sous `GEMINI_API_KEY`, trois appels au plus, devis 421ee2e6ec909c8b6261b3be39109aa5e76d6c275e79b4d7ec122816c83dd1bc | 3,00 USD | AAAA-MM-JJ | Lazar | avenant 2 docs/notes/relance-organismes-discrets-v1/avenant-2-devis-essais-admission-plafond-google-65536-v3.md 9d4b8a08fbeec8568f03aafe5f882b0631cbd0fef501641f99303591d4d103e3 ; 0bec479ffe98324c0c1140277145141bd0a356fc20999471c7d76550482768ca ; 5e255c5f867124588e23b86ad2c143f4b1a61385e08e880249f91916f94a55ac ; 4b331d9aed86b280ea720ac554911df168fe7564799957a29776a1cad4dbeaa0 ; GO-2026-11-22-16 |
+| GO-AAAA-MM-JJ-NN | AAAA-MM-JJ | calcul | vérification de la clé de `gemini-4-neon` lue sous `GEMINI_API_KEY_2`, trois appels au plus, devis 421ee2e6ec909c8b6261b3be39109aa5e76d6c275e79b4d7ec122816c83dd1bc | 3,00 USD | AAAA-MM-JJ | Lazar | avenant 2 docs/notes/relance-organismes-discrets-v1/avenant-2-devis-essais-admission-plafond-google-65536-v3.md 9d4b8a08fbeec8568f03aafe5f882b0631cbd0fef501641f99303591d4d103e3 ; 0bec479ffe98324c0c1140277145141bd0a356fc20999471c7d76550482768ca ; 5e255c5f867124588e23b86ad2c143f4b1a61385e08e880249f91916f94a55ac ; 4b331d9aed86b280ea720ac554911df168fe7564799957a29776a1cad4dbeaa0 ; GO-2026-11-22-16 |
+| GO-AAAA-MM-JJ-NN | AAAA-MM-JJ | calcul | essai d'admission du juge des deux ancres, 8 appels, rangs impairs sous `GEMINI_API_KEY`, rangs pairs sous `GEMINI_API_KEY_2`, devis 421ee2e6ec909c8b6261b3be39109aa5e76d6c275e79b4d7ec122816c83dd1bc | 16,50 USD | AAAA-MM-JJ | Lazar | avenant 2 docs/notes/relance-organismes-discrets-v1/avenant-2-devis-essais-admission-plafond-google-65536-v3.md 9d4b8a08fbeec8568f03aafe5f882b0631cbd0fef501641f99303591d4d103e3 ; 0bec479ffe98324c0c1140277145141bd0a356fc20999471c7d76550482768ca ; 5e255c5f867124588e23b86ad2c143f4b1a61385e08e880249f91916f94a55ac ; 4b331d9aed86b280ea720ac554911df168fe7564799957a29776a1cad4dbeaa0 ; GO-2026-11-22-16 |
+```
+
+**Longueurs**, avec un identifiant à deux chiffres finaux et des dates pleines : **637, 639 et 674 signes**. L'empreinte de l'avenant 3 et GO-2026-11-22-16 ajoutent 86 signes. **Elles passent les 600 signes** que l'avenant 2 (réserve 15) prête aux consignes. Je n'ai pas pu lire cette consigne. Les six empreintes, le chemin de l'avenant 2 et l'identifiant de la confirmation sont tous exigés par la garde 8 ; aucun signe n'est retirable sans changer ce qu'elle lit.
+
+Si la limite tient, il y a deux leviers :
+- retirer le chemin de l'avenant 2 (88 signes), ce qui contredit la demande de la mère de renvoyer à l'avenant par son chemin ;
+- faire lire par la garde 8 les empreintes à une pièce citée, plutôt qu'à la ligne même.
+
+**À trancher par la mère.**
+
+**Éprouvées** :
+- par la garde 8 (`test_l12_garde_8_…`) ;
+- par toutes les gardes de départ, sur une configuration définitive (`test_l9_lignes_courtes_du_registre_eprouvees_a_blanc_de_bout_en_bout`, à registre court mis à jour) ;
+- la levée des seuils sous GO-02 et GO-16, par `test_l11_sain_seuils_leves_…`.
+
+## 7. Campagne de mutations, version 7
+
+(remplie en fin de travail)
+
+## 8. Commande d'essai, sortie et empreintes
+
+(remplie en fin de travail)
+
+## 9. Chemins ouverts, déclarés
+
+- **Lus** : la contre-lecture de la livraison 11 ; l'avenant 3 v2, en entier ; la ligne GO-2026-11-22-16 du registre, par la commande `grep` ; les `_v10` et `_v11` (par `diff` et par recherche de lignes) ; les outils de mutation version 6.
+- **Listé** : le nom des fichiers « avenant-3 » de `docs/notes/relance-organismes-discrets-v1/`, par `ls | grep`, pour trouver la pièce.
+- **Écrits** : les six `_v11`, les deux outils version 7 et cette note.
+- Aucun chemin interdit ouvert, listé ni empreinté. Aucun `sed`, aucune substitution hors de mes fichiers, nommés un à un.
