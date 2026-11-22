@@ -1,4 +1,8 @@
-"""Audit après coup — instruments sur mondes simulés (v1).
+"""Audit après coup — instruments sur mondes simulés (v2).
+
+Version 2 : corrections de la contre-lecture v1 (`docs/notes/chantiers-21-novembre-v1/code-v1/
+contre-lecture-code-audit-apres-coup-opus-v1.md`, 6f15aca7…), sauf I-9 et les points renvoyés au concepteur ; voir
+`rapport-code-audit-apres-coup-v2.md`. Les modules sans correction sont recopiés à l'identique de la v1.
 
 Spécification : `docs/notes/chantiers-21-novembre-v1/conceptions-v2/conception-3-audit-apres-coup-v3-consolidee.md`
 (sha256 e3979498…). Pièces de classe B (instrument) : elles éprouvent du code, non le monde. Aucun modèle, aucun

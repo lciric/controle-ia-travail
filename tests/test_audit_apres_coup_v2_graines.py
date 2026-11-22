@@ -50,7 +50,7 @@ def _derivation_jouet(entropie, cle):
 
 
 gr.enregistrer_derivation("jouet_essais_v2", _derivation_jouet)
-VERITE = "a" * 64
+VERITE = gr.declarer_verite("a" * 64, "essais : vérité jouet")
 
 
 def test_jeton_monde_plante_admis():
@@ -73,6 +73,29 @@ def test_artefact_contenu_reel_sous_jeton_valide_refuse():
                                gr.empreinte_octets(faux), VERITE)
     with pytest.raises(GardeArret, match="re-dérivé"):
         gr.verifier_provenance(faux, forge)
+
+
+def test_artefact_verite_non_declaree_refusee():
+    contenu, jeton = gr.emettre_jeton(E, (1, 2), "jouet_essais_v2", "b" * 64)
+    with pytest.raises(GardeArret, match="vérité plantée non déclarée"):
+        gr.verifier_provenance(contenu, jeton)
+
+
+def test_espaces_de_graines_distincts():
+    """I-4 : chaque espace, aux clés des essais, rend des premiers octets deux à deux distincts ; un espace inconnu ou
+    réservé aux canaux est refusé."""
+    vus = {}
+    for nom in gr.ESPACES:
+        if nom in ("canal", "canal_episode"):
+            continue
+        vus[nom] = gr.generateur_auxiliaire(E, nom, 9, 3).random(4).tobytes()
+    vus["canal"] = gr.flux_tache(E, 9, 3, "piece").random(4).tobytes()
+    vus["canal_episode"] = gr.generateur_episode(E, 9, 3, 0, "piece").random(4).tobytes()
+    assert len(set(vus.values())) == len(vus)
+    with pytest.raises(GardeArret):
+        gr.generateur_auxiliaire(E, "inconnu", 1)
+    with pytest.raises(GardeArret):
+        gr.generateur_auxiliaire(E, "canal", 1)
 
 
 def test_refus_jeton_sans_verite():

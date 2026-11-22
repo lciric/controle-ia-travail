@@ -62,6 +62,35 @@ def test_artefact_probabilite_absente_refusee():
         Journal().ajouter_episodes(**lot)
 
 
+def test_mutation_audite_qui_ne_suit_pas_U_inferieur_a_pi():
+    lot = _lot(4)
+    k = int(np.flatnonzero(~lot["audite"])[0])
+    lot["audite"] = lot["audite"].copy()
+    lot["audite"][k] = True
+    lot["source"] = np.where(lot["audite"], 1, 0)
+    with pytest.raises(GardeArret, match="« audité » ne suit pas U_i < π_i"):
+        Journal().ajouter_episodes(**lot)
+
+
+def test_artefact_source_plancher_pour_U_au_dessus_de_pi_min():
+    """I-5 : π = 0,5 dont plancher 0,1 et soupçon 0,4 ; un audité de U ≥ 0,1 étiqueté « plancher » est refusé."""
+    lot = _lot(6)
+    lot["part_plancher"] = np.full(6, 0.1)
+    lot["part_soupcon"] = np.full(6, 0.4)
+    lot["source"] = np.where(lot["audite"], 1, 0)
+    with pytest.raises(GardeArret, match="source incohérente avec U_i et les parts"):
+        Journal().ajouter_episodes(**lot)
+    lot["source"] = np.where(~lot["audite"], 0, np.where(lot["u_piece"] < 0.1, 1, 3))
+    Journal().ajouter_episodes(**lot)  # cas sain
+
+
+def test_artefact_pi_different_de_la_somme_des_parts():
+    lot = _lot(4)
+    lot["part_soupcon"] = np.full(4, 0.1)
+    with pytest.raises(GardeArret, match="somme des trois parts"):
+        Journal().ajouter_episodes(**lot)
+
+
 def test_artefact_horloge_et_ordre():
     lot = _lot(4)
     lot["h_piece"] = lot["h_fin"]  # pièce tirée à la fin, non après

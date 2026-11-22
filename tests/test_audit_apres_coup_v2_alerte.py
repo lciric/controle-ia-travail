@@ -7,6 +7,7 @@ import pytest
 
 from controle_ia.audit_apres_coup_v2.alerte import (ETIQUETTE_AU_DELA, PariExces, alerte_exces, alerte_signature,
                                                   latence)
+from controle_ia.audit_apres_coup_v2.attaque_choisie import TYPES_ILLUSTRATION
 from controle_ia.audit_apres_coup_v2.graines import generateur_auxiliaire
 from controle_ia.audit_apres_coup_v2.oracle_simule import OracleSimule
 from controle_ia.audit_apres_coup_v2.regle_audit import RegleAudit, g_identite
@@ -73,16 +74,35 @@ def test_alerte_de_signature_et_latence():
     lat = latence(res.journal, res.verite.dommage, h)
     assert lat.nombre >= 3  # délai de 2 endommagés compris
     jamais = latence(res.journal, res.verite.dommage, None)
-    with pytest.raises(GardeArret, match="jamais"):
-        jamais.nombre
+    for champ in ("nombre", "endommages", "dommage_enjeu"):  # I-7 : aucun nombre lisible
+        with pytest.raises(GardeArret, match="jamais"):
+            getattr(jamais, champ)
+    assert jamais.censure_a["etiquette"] == "censuré"
 
 
 def test_alerte_d_exces_sur_la_seule_strate_du_plancher():
-    m = Monde(21, E, ((1.0, 1.0),), 1.0, politique_constante(0.30), 0.0)
+    """m-3 : règle à β > 0 et γ > 0, score informatif ; l'heure rendue est celle de la seule sous-suite de source
+    « plancher », et elle diffère de l'heure calculée sur toutes les sources."""
+    m = Monde(21, E, TYPES_ILLUSTRATION, 1.6, politique_constante(0.16), 0.0)
+    r = RegleAudit(0.05, 0.05, 0.4, g_identite, 1.6)
+    res = simuler(m, r, OracleSimule(1.0, 0.0, 0, "exces"), 0, 20_000)
+    pari = PariExces(ALPHA, 0.01, d0=0.10)
+    out = alerte_exces(res.journal, pari)
+    e = res.journal.colonne("v_episode")
+    src = res.journal.colonne("source")[e]
+    v = res.journal.colonne("v_verdict").astype(np.int64)
+    h = res.journal.colonne("v_h_verdict")
+    r_pl = int(pari.premieres_alarmes(v[src == 1][None, :])[0])
+    r_tout = int(pari.premieres_alarmes(v[None, :])[0])
+    assert out["rang"] == r_pl and out["heure"] == (int(h[src == 1][r_pl - 1]) if r_pl else None)
+    assert r_tout > 0 and r_pl > 0  # les deux alarment ; leurs heures diffèrent
+    assert out["heure"] != int(h[r_tout - 1])
+    assert out["declaration"]["n"] == out["horizon_lu"]
+
+
+def test_alerte_d_exces_etiquette_au_dela_de_la_reference():
+    m = Monde(22, E, ((1.0, 1.0),), 1.0, politique_constante(0.10), 0.0)
     r = RegleAudit(0.2, 0.0, 0.0, g_identite, 1.0)
     res = simuler(m, r, OracleSimule(1.0, 0.0, 0, "exces"), 0, 20_000)
-    assert alerte_exces(res.journal, PariExces(ALPHA, 0.02, d0=0.10)) is not None
-    m0 = Monde(22, E, ((1.0, 1.0),), 1.0, politique_constante(0.10), 0.0)
-    res0 = simuler(m0, r, OracleSimule(1.0, 0.0, 0, "exces"), 0, 2000)
-    # sous le nul, l'alarme est rare ; ici on vérifie seulement que la lecture ne prend que la strate du plancher
-    assert np.all(res0.journal.colonne("source")[res0.journal.colonne("v_episode")] >= 1)
+    out = alerte_exces(res.journal, PariExces(ALPHA, 0.02, reference=(40, 400)))
+    assert out["horizon_lu"] > 400 and out["etiquette"] == ETIQUETTE_AU_DELA

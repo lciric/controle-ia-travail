@@ -240,9 +240,9 @@ def test_mutation_score_consigne_apres_le_verdict():
         h.consigner_score(1, v0, horloge=14)
 
 
-def test_epreuve_1_revérification_au_scellement():
-    """I-2 : un épisode de verdict de la famille d'un épisode d'une lignée encore ouverte est refusé à
-    l'enregistrement ; le scellement revérifie la lignée."""
+def test_epreuve_1_verdict_tardif_de_l_organisme_d_une_lignee_ouverte():
+    """I-2 : un épisode de verdict de l'organisme d'un épisode d'une lignée encore ouverte est refusé à
+    l'enregistrement (la garde ne dépend plus de l'ordre des appels)."""
     h = eb.harnais_plante(E)
     v0 = h.sceller_version(b"en place", horloge=2)
     eb._episode(h, E, 1, "flux", "flux_F", bras="flux_1")
