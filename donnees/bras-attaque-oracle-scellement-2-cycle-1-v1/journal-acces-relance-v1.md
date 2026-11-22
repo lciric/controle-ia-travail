@@ -58,3 +58,5 @@ d'autres chantiers (organisme, bras A, saboteur) ; aucune ne portait de contenu 
 dans `registres/decisions.md` a aussi rendu R-4703, ligne sur une course de lecture des sondes (« aboutie », coût,
 empreintes) : je la consigne comme accès à une ligne de registre d'un moniteur, **sans aucune valeur, aucun seuil,
 aucun résultat** ; je n'ai rien ouvert de ce qu'elle cite.
+
+Scellé le 2026-11-22 à 15:00 UTC (`date -u`), avec la passation `relance-passation-2026-11-22-1500.md`. Fin du journal v1.
