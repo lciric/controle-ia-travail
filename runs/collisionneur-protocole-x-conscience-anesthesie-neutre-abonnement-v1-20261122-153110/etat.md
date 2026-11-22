@@ -8,9 +8,10 @@
 | E3-T1-conception-F | OK | 1 | gemini-4-neon | 34168 | oui | 0.48 |
 | E3-T2-critique-croisee-C | OK | 1 | gemini-4-argon | 42425 | oui | 0.67 |
 | E3-T2-critique-croisee-D | OK | 1 | gpt-6.2-astra | 14873 | oui | 0.66 |
-| E3-T2-critique-croisee-E | INTERROMPU | 1 | gemini-4-carbon | 0 | non | 2.46 |
+| E3-T2-critique-croisee-E | OK | 2 | gemini-4-carbon | 36998 | oui | 3.32 |
+| E3-T2-critique-croisee-F | OK | 1 | gemini-4-neon | 34245 | oui | 0.81 |
 
 Absences acceptées par l'arbitre : aucune.
 Refus avant l'envoi : 1 (REGLE_TEXTE_MIN, détail au journal).
-Ligne : 50.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 7.96 USD.
-Dépense totale : 7.96 USD. Mis à jour 2026-11-22T18:54:39Z.
+Ligne : 50.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 9.63 USD.
+Dépense totale : 9.63 USD. Mis à jour 2026-11-22T19:09:47Z.
