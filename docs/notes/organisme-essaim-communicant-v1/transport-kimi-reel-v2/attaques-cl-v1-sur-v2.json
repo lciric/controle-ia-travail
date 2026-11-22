@@ -1,0 +1,198 @@
+{
+ "N10_max_tokens_ignore_par_l_amont": {
+  "constat": "300 ko lus jusqu'au bout pour max_tokens = 16 ; aucune coupure en cours de flux ; l'usage est refusé à la fin (réserve), mais l'amont aurait facturé ≈ 60 000 jetons",
+  "issue": "AnomalieReponse: sortie lue au-delà de max_tokens : coupure côté client (l'amont l'ignore)",
+  "octets_lus": 842,
+  "refus": null,
+  "usage": null
+ },
+ "N11a_cle_dans_id": {
+  "fuite_dans_id_reponse": false,
+  "id_reponse": "chatcmpl-?cl??…"
+ },
+ "N11b_cle_dans_model_servi": {
+  "fuite_diag": false,
+  "fuite_exception": false
+ },
+ "N11c_cle_tronquee_dans_le_code_d_erreur": {
+  "cle_entiere": false,
+  "constat": "_court tronque à 80 avant _masquer : la clé coupée n'est plus reconnue",
+  "issue": "ErreurTransportFatale",
+  "longueur_prefixe": 5,
+  "prefixe_de_cle_present": false
+ },
+ "N12_debuglevel_global": {
+  "cle_sur_stdout": false,
+  "constat": "l'adaptateur strict ne vérifie pas debuglevel ; set_debuglevel(0) explicite manque",
+  "issue": "ConfigurationRefusee: pile HTTP altérée : debuglevel de http.client non nul"
+ },
+ "N13_affectation_directe": "refusée",
+ "N13_amont_reecrit_apres_construction": {
+  "cle_recue_en_clair": false,
+  "constat": "_p, _tls, _mandataire, taille_max, plafond_max_tokens, noms_interdits : mutables, jamais revérifiés",
+  "issue": "ConfigurationRefusee: configuration du transport modifiée après la construction",
+  "refuse_a_la_construction": true,
+  "requetes_hote_non_admis": 0
+ },
+ "N14_constante_MODELE_reecrite": {
+  "constat": "globales du module (MODELE, _entier, OCTETS_PAR_JETON_SORTIE_MAX, MOTIFS_INTERDITS…) non figées",
+  "issue": "ConfigurationRefusee: constante MODELE de transport_kimi_reel_v2 réécrite",
+  "modele_envoye": null
+ },
+ "N15_envoi_double_sous_putrequest": {
+  "constat": "le compteur ne voit que putrequest ; http.client.HTTPConnection.send/_send_output non vérifiés",
+  "envois_mesures": 0,
+  "issue": "ConfigurationRefusee: pile HTTP altérée : http.client.HTTPConnection.send remplacé",
+  "posts_serveur": 0,
+  "tentatives": null
+ },
+ "N16_filtre_des_noms_et_identifiants": {
+  "resultats": {
+   "Bonjour CIRIC": "refusé",
+   "Bonjour Lazar": "refusé",
+   "Bonjour Lаzar": "refusé",
+   "Bonjour Ćirić": "refusé",
+   "ref e2c3ce0b-40f3-55d3-a6bf-333c05f6ccd1": "refusé",
+   "ref session_01XJ6MgnUbaBVDZbP5j1KTqo": "refusé"
+  }
+ },
+ "N17_corps_de_la_fumee": {
+  "champs": [
+   "max_completion_tokens",
+   "max_tokens",
+   "messages",
+   "messages[0].content",
+   "messages[0].role",
+   "model",
+   "stream",
+   "stream_options",
+   "stream_options.include_usage"
+  ]
+ },
+ "N18_mandataire_407": {
+  "cle_dans_connect": false,
+  "connects": 1,
+  "constat": "407 du mandataire → ErreurFournisseur (relançable) ; mieux : fatale",
+  "envois_mesures": 1,
+  "issue": "ErreurTransportFatale: mandataire : tunnel refusé ( 407 Proxy Authentication Required)",
+  "ligne_connect": "CONNECT api.moonshot.ai:443 HTTP/1.1"
+ },
+ "N19_fumee_a_blanc_journal": {
+  "appels": [
+   [
+    "f2-h2-max16",
+    "compte_a_la_reserve"
+   ]
+  ],
+  "code": 16,
+  "derniere_ligne": {
+   "code": 16,
+   "depense_usd": 0.001066,
+   "detail": "champ exigé absent (prompt, completion, total ou completion_tokens_details.reasoning_tokens)",
+   "evenement": "arret"
+  },
+  "lecture_v2": "f2 en premier reçoit l'usage sans détail de la règle k = 0 : refusé, forme gardée, arrêt 16 au premier appel",
+  "premier_motif": "champ exigé absent (prompt, completion, total ou completion_tokens_details.reasoning_tokens)",
+  "premier_usage_brut": [
+   {
+    "place": "racine",
+    "rang": 3,
+    "usage": {
+     "completion_tokens": 30,
+     "prompt_tokens": 20,
+     "total_tokens": 50
+    }
+   }
+  ],
+  "requetes": 1
+ },
+ "N19b_fumee_H3_violee_arrete": {
+  "appels": [
+   "f2-h2-max16",
+   "f1-sain-court",
+   "f3-h3-table"
+  ],
+  "arret": "coût mesuré 0.083000 > réserve 0.040192 (H2 ou H3 violée)",
+  "code": 16,
+  "f3_cout": 0.083,
+  "f3_reserve": 0.040192,
+  "requetes": 3
+ },
+ "N1_redirection_307": {
+  "attendu": "ErreurTransportFatale, 1 requête, 0 vers l'autre hôte",
+  "issue": "ErreurTransportFatale: statut 307 de l'amont (corps illisible)",
+  "requetes_autre_hote": 0,
+  "requetes_origine": 1
+ },
+ "N20_go_contourne_par_prefixe": {
+  "code": 3,
+  "constat": "préfixe accepté sans GO, puis le transport refuse l'hôte (pas d'envoi)"
+ },
+ "N2_429_retry_after": {
+  "attendu": "ErreurFournisseur immédiate, 1 requête, aucune attente",
+  "duree_s": 0.05,
+  "issue": "ErreurFournisseur: statut 429 de l'amont (sans motif)",
+  "requetes": 1
+ },
+ "N3_connexion_neuve": {
+  "attendu": "2 ports distincts, 2 requêtes, 2 envois mesurés",
+  "envois": 2,
+  "ports_client": [
+   43566,
+   43578
+  ],
+  "requetes": 2
+ },
+ "N4_flux_annonce_corps_json": {
+  "attendu": "ErreurFournisseur (pas de [DONE]), 1 requête",
+  "issue": "ErreurFournisseur: flux coupé avant [DONE]",
+  "requetes": 1
+ },
+ "N5_usage_intermediaire_puis_contenu": {
+  "constat": "usage pris d'un morceau qui n'est pas le dernier ; la doc (api_chat.md l. 216, 1176-1183) dit que l'usage vient seul dans le dernier morceau, choices vide, et null ailleurs",
+  "issue": null,
+  "octets_contenu": 608,
+  "place": null,
+  "usage_rendu": null
+ },
+ "N6_deux_usages": {
+  "constat": "le dernier usage gagne, sans comparaison : sous-compte possible de 1895 jetons de sortie",
+  "issue": null,
+  "usage_rendu": null
+ },
+ "N7a_reflexion_champ_inconnu_total_exact": {
+  "constat": "champ inconnu ignoré, total_tokens cohérent : invisible au client (limite déclarée § 6)",
+  "issue": null,
+  "usage_rendu": {
+   "entree": 20,
+   "sortie": 10
+  }
+ },
+ "N7b_reflexion_dans_total_seulement": {
+  "attendu": "excédent ajouté (reasoning_tokens premier niveau)",
+  "issue": null,
+  "usage_rendu": {
+   "entree": 20,
+   "sortie": 1510
+  }
+ },
+ "N8_modele_autre_au_dernier_morceau": {
+  "attendu": "AnomalieReponse",
+  "issue": "AnomalieReponse: modèle servi 'kimi-k3' ≠ demandé 'kimi-k3.1-pro'",
+  "requetes": 1
+ },
+ "N8b_modele_null_en_cours": {
+  "constat": "model null au milieu toléré (sans effet tant que les autres morceaux le portent)",
+  "issue": null,
+  "modele": null
+ },
+ "N9a_ligne_de_2_Mo": {
+  "attendu": "AnomalieReponse (morceau illisible) ou ErreurFournisseur",
+  "issue": "AnomalieReponse: morceau de flux illisible"
+ },
+ "N9b_flux_sans_fin_au_dela_de_la_taille": {
+  "attendu": "AnomalieReponse dès 200 000 octets",
+  "issue": "AnomalieReponse: sortie lue au-delà de max_tokens : coupure côté client (l'amont l'ignore)",
+  "octets_lus": 34136
+ }
+}
