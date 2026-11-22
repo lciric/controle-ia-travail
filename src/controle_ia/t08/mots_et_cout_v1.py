@@ -261,7 +261,7 @@ def charger_module_par_chemin(chemin, sha_attendue: str, nom: str = NOM_MODULE_P
             sys.modules.pop(nom, None)
         else:
             sys.modules[nom] = ancien
-        if isinstance(e, GardeArret):
+        if isinstance(e, GardeArret) or not isinstance(e, Exception):    # interruption, sortie : relevées telles quelles
             raise
         raise GardeArret(f"pièce « mots et coût » : chargement par chemin de {chemin.name} impossible "
                          f"({type(e).__name__}: {e}) : arrêt") from e
@@ -277,9 +277,17 @@ def charger_piece(mode: str, marqueur: dict | None = None, racine=".", ligne: di
     if marqueur is None:
         raise GardeArret("pièce « mots et coût » : marqueur CODE_MOTS_ET_COUT_T06 absent : aucune lecture en mode réel")
     controle = verifier_inscription(marqueur, ligne, racine)
+    ancien = sys.modules.get(NOM_MODULE_PIECE)
     module = charger_module_par_chemin(_sous_racine(racine, marqueur["module"], "module de la pièce"),
                                        marqueur["sha256_module"])
-    piece = Piece(module, marqueur["module"], mode)
+    try:
+        piece = Piece(module, marqueur["module"], mode)
+    except BaseException:               # pièce refusée (jouet, contrat incomplet) : `sys.modules` tel qu'avant (CA-01)
+        if ancien is None:
+            sys.modules.pop(NOM_MODULE_PIECE, None)
+        else:
+            sys.modules[NOM_MODULE_PIECE] = ancien
+        raise
     piece.inscription = controle
     return piece
 

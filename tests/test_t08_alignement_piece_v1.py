@@ -238,8 +238,7 @@ def test_chargement_autre_garde_arret(tmp_path):
 
 def test_chargement_contrat_incomplet(tmp_path):
     r, mq, ligne = _module_inscrit(tmp_path, "def centres(a):\n    return {}\n")
-    with pytest.raises(GardeArret, match="fonctions du contrat absentes"):
-        mc.charger_piece("reel", mq, r, ligne)
+    _exiger_arret(r, mq, ligne, "fonctions du contrat absentes")      # aucun module laissé dans sys.modules (CA-01)
 
 
 def test_enveloppe_du_paquet_par_chemin_refusee(tmp_path):
@@ -317,3 +316,57 @@ def test_chargement_par_chemin_relit_l_empreinte(tmp_path):
     with pytest.raises(GardeArret, match="≠ empreinte citée"):
         mc.charger_module_par_chemin(m, "0" * 64, nom="controle_ia_t08_essai_chargeur")
     assert "controle_ia_t08_essai_chargeur" not in sys.modules
+
+
+class _Espion:
+    """Module de la pièce vu par l'enveloppe : enregistre chaque attribut lu et chaque appel (CA-03)."""
+
+    def __init__(self, module):
+        self._module, self.lus, self.appels = module, [], []
+
+    def __getattr__(self, nom):
+        self.lus.append(nom)
+        v = getattr(self._module, nom)
+        if not callable(v):
+            return v
+
+        def appel(*a, **k):
+            self.appels.append((nom, a, k))
+            return v(*a, **k)
+        return appel
+
+
+def test_enveloppe_n_appelle_que_le_contrat_et_passe_les_entrees_telles_quelles(piece_reelle):
+    """CA-03 : l'enveloppe lit seulement les six fonctions du contrat (et `PIECE_JOUET`, au refus du jouet), et passe à
+    la pièce les actions, les étiquettes et les centres tels qu'elle les a reçus (centres : tâche et coût seuls)."""
+    espion = _Espion(piece_reelle.module)
+    p = mc.Piece(espion, "espion", "reel")
+    app, y = _actions_factices(3, [f"t{i}" for i in range(5)])
+    lus, _ = _actions_factices(4, [f"u{i}" for i in range(2)])
+    c = p.centres(app + lus)
+    for base in ("A", "B"):
+        m = p.apprendre(base, "S100", 0, app, y, c, [a["cle"] for a in app])
+        p.noter(m, lus, c)
+        if base == "A":
+            p.etat_a(m)
+    assert set(espion.lus) <= set(mc.CONTRAT) | {"PIECE_JOUET"}
+    assert [n for n, _, _ in espion.appels] == ["centres", "apprendre_a", "noter_a", "etat_a", "apprendre_b", "noter_b"]
+    appels = {n: (a, k) for n, a, k in espion.appels}
+    assert appels["centres"][0][0] == [{"tache": a["tache"], "cout": a["cout"]} for a in app + lus]
+    for n in ("apprendre_a", "apprendre_b"):
+        (acts, yy, cc), k = appels[n]
+        assert acts is app and np.array_equal(yy, y) and cc is c and k == {}
+    for n in ("noter_a", "noter_b"):
+        (interne, acts, cc), k = appels[n]
+        assert acts is lus and cc is c and k == {}
+
+
+
+def test_chargement_interruption_relevee_telle_quelle(tmp_path):
+    """CA-05 : une interruption ou une sortie pendant l'exécution de la pièce est relevée telle quelle (non convertie en
+    `GardeArret`), après restauration de `sys.path` et `sys.modules`."""
+    r, mq, ligne = _module_inscrit(tmp_path, "raise SystemExit(3)\n" + CONTRAT_VIDE)
+    avant = set(sys.modules)
+    with pytest.raises(SystemExit):
+        mc.charger_piece("reel", mq, r, ligne)
+    assert set(sys.modules) - avant == set()

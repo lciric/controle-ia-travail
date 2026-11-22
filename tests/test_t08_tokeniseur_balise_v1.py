@@ -159,3 +159,27 @@ def test_constat_balise_a_cheval(tok):
         elif suite[:1].isdigit():                                 # premier groupe de trois chiffres au plus, lu après
             groupe = int(re.match(r"\d{1,3}", suite).group())       # la balise : jeton d'une valeur s'il vaut 0 à 100
             assert (ids[j] == jetons[groupe]) if groupe <= 100 else (ids[j] not in jetons.values()), suite
+
+
+# Balayage (CA-06) : caractères ASCII imprimables et blancs qui, écrits juste après la balise, fusionnent avec `>` en un
+# seul jeton du tokeniseur réel (état « à cheval ») ; constat figé, relevé par cet essai : 41 lettres sur 52, le saut de
+# ligne, et toute la ponctuation sauf `!`, `^`, `~` ; ni chiffre, ni espace, ni tabulation, ni retour chariot.
+A_CHEVAL_ASCII = set("abcdefijkmnprstvwxyABCDEFGHIJKLMNOPRSTVXZ" + "\"#$%&'()*+,-./:;<=>?@[\\]_`{|}" + "\n")
+
+
+def test_balayage_ascii_apres_la_balise(tok):
+    """Chaque caractère ASCII imprimable ou blanc après la balise, puis la valeur 85 : la détection ne manque jamais la
+    balise ; l'état est « balise » (jeton suivant = jeton de la valeur, ou le caractère lui-même) ou « a_cheval » pour
+    exactement les caractères de `A_CHEVAL_ASCII`."""
+    import string
+
+    vus = set()
+    for ch in string.printable:
+        ids = tok.encode(f"{BALISE}{ch}85", add_special_tokens=False)
+        j = _arret(tok, ids)
+        assert j is not None, repr(ch)
+        coupe = couper_a_la_balise(tok, ids[:j])
+        assert coupe["k"] == j and coupe["etat"] in ("balise", "a_cheval"), (repr(ch), coupe)
+        if coupe["etat"] == "a_cheval":
+            vus.add(ch)
+    assert vus == A_CHEVAL_ASCII, (sorted(vus - A_CHEVAL_ASCII), sorted(A_CHEVAL_ASCII - vus))
