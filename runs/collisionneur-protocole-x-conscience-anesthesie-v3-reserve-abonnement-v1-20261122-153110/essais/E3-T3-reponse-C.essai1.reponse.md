@@ -1,0 +1,210 @@
+# Proposition C — Tour III.3 : réponse aux critiques, protocole corrigé et synthèse à l'arbitre
+
+La pièce `E3-T1-conception-C` est absente (statut : REFUS) `[VÉRIFIÉ]` ; je n'en invente pas le contenu.
+Les pièces `E3-T2-critique-croisee-A`, `B`, `D`, `E` et `F` sont présentes et closes par leur marqueur `[VÉRIFIÉ]`, tandis que leurs empreintes `sha256` annoncées ne sont pas recalculées ici `[OBSERVÉ-NON-AUDITÉ]`.
+
+---
+
+## (a) Réponse aux critiques visant la proposition C
+
+Conformément à la consigne de ne répondre en `(a)` qu'aux sections qui visent la proposition C `[VÉRIFIÉ]`, je traite les `5 (illustratif)` sections intitulées « Sur la proposition C » dans les pièces du tour III.2 :
+
+1. **Critique de A (« Sur la proposition C »)** : constate que la pièce C est absente (REFUS) et qu'aucune critique ni supposition de contenu n'est possible `[VÉRIFIÉ]`.
+   - *Décision :* **Acceptée** `[VÉRIFIÉ]`. Le constat factuel est exact `[VÉRIFIÉ]`.
+2. **Critique de B (« Sur la proposition C »)** : constate que la pièce C est absente (REFUS, décision de l'arbitre) et n'en reconstitue rien `[VÉRIFIÉ]`.
+   - *Décision :* **Acceptée** `[VÉRIFIÉ]`. Le constat factuel est exact `[VÉRIFIÉ]`.
+3. **Critique de D (« Sur la proposition C »)** : rapporte que la pièce est absente (statut transmis : REFUS) et qu'il n'y a aucune méthode à critiquer `[VÉRIFIÉ]`.
+   - *Décision :* **Acceptée** `[VÉRIFIÉ]`. Le constat factuel est exact `[VÉRIFIÉ]`.
+4. **Critique de E (« Sur la proposition C »)** : constate que la pièce `E3-T1-conception-C` est absente du dossier reçu (statut : REFUS) et qu'aucun contenu n'en est inventé `[VÉRIFIÉ]`.
+   - *Décision :* **Acceptée** `[VÉRIFIÉ]`. Le constat factuel est exact `[VÉRIFIÉ]`.
+5. **Critique de F (« Sur la proposition C »)** : constate que la pièce `E3-T1-conception-C` est absente (statut : REFUS) et qu'aucun contenu n'est inventé ni critiqué `[VÉRIFIÉ]`.
+   - *Décision :* **Acceptée** `[VÉRIFIÉ]`. Le constat factuel est exact `[VÉRIFIÉ]`.
+
+**Conséquence méthodologique (règles 2 et B1) :** Faute de pièce `E3-T1-conception-C` au tour III.1 `[VÉRIFIÉ]`, je n'invente aucune conception antérieure `[VÉRIFIÉ]`. Dans la section `(b)` ci-dessous, je construis le protocole expérimental de C en transformant en tests et en contrôles pré-enregistrés `8 (illustratif)` défauts méthodologiques mis au jour par A, B, D, E et F lors du tour III.2, en déclarant explicitement chaque emprunt et chaque critique (règle B1) `[HYPOTHÈSE]` :
+
+- **Test T-C1 (Opérateur centré et appariement spectral à $\alpha \le 1 (illustratif)$)** : transforme en test la critique de A, B, E et F sur l'impossibilité, pour un sous-espace aléatoire uniforme de rang $k (illustratif)$, d'atteindre la perte globale $D^* (illustratif)$ sans dépasser $\alpha = 1 (illustratif)$ (ce qui inverse le signe et change d'opérateur) et sans décaler la moyenne hors distribution `[HYPOTHÈSE]`.
+- **Test T-C2 (Sélection résiduelle orthogonale contre fragilité hiérarchique)** : transforme en test la critique de B et E contre le test des `20 (illustratif)` partitions de A (D2) et contre la porte de sélection de F `[HYPOTHÈSE]`. B et E montrent que si les tâches intégratives présupposent les tâches locales, la partition des faits sortira au rang `1 (illustratif)` par simple fragilité hiérarchique sous B comme sous A `[HYPOTHÈSE]`. Je remplace donc la permutation naïve des partitions par une recherche à budget égal dans le complément orthogonal $U^\perp$ et sur étiquettes permutées intra-strate `[HYPOTHÈSE]`.
+- **Test T-C3 (Séparation du profil complet en norme $\ell_\infty$)** : transforme en test la critique de D contre A et B (`[VÉRIFIÉ]` chez D) montrant qu'une différence de moyennes ($\Delta S$) peut masquer des compensations entre tâches d'un même groupe `[HYPOTHÈSE]`.
+- **Test T-C4 (Plan factoriel distance d'entrée $\times$ fonction à format constant)** : emprunte à E et F le contrôle de fenêtre d'attention ($T_{\text{fenêtre}}$) et le croisement avec l'empan de dépendance en entrée, tout en corrigeant la distorsion de QCM à `1 (illustratif)` jeton de A (critiquée par D, E, F) et l'ajout de justification dans les tâches gardées de B (critiqué par D, E, F) `[HYPOTHÈSE]`.
+- **Test T-C5 (Calibration « 1 contre $M-1 (illustratif)$ » et porte de puissance TOST)** : emprunte à F sa critique de la variance « 1 sous-espace contre la moyenne de $M (illustratif)$ témoins » chez D et E (`[VÉRIFIÉ]` chez F) et à A, B, E, F leur calcul de perte de puissance du test d'équivalence TOST `[HYPOTHÈSE]`.
+- **Test T-C6 (Greffe croisée du cache clé-valeur)** : emprunte à D son contrôle négatif sur l'expérience E3 de B et sur $H_{\text{KV}}$ de E, afin de séparer une relecture tardive d'un cache KV écrit une seule fois d'une dynamique auto-entretenue `[HYPOTHÈSE]`.
+- **Test T-C7 (Complexité de Lempel-Ziv à quantile de binarisation fixe et substituts de phase)** : transforme en test la critique de A, B, D, E et F contre l'indice $\text{PCI}_{\text{LM}}$ (qui chute mécaniquement quand la norme d'activation baisse) en fixant la densité binaire marginale $p_0 (illustratif)$ par couche et par dose `[HYPOTHÈSE]`.
+- **Test T-C8 (Détection passive intra-tâche hors échantillon)** : transforme en test la critique de A, B, D, E et F contre le détecteur passif de F et E (biaisé par construction par le contraste d'extraction entre tâches locales et intégratives) `[HYPOTHÈSE]`.
+
+---
+
+## (b) Expériences corrigées de la proposition C (Points 0 à 6)
+
+### Point 0 : Décidabilité empirique
+
+**Oui sur l'hypothèse mécaniste fonctionnelle, non sur le vécu phénoménal `[HYPOTHÈSE]`.**
+Les positions A et B des faits formulent deux prédictions empiriques mutuellement exclusives sur le profil de dégradation fonctionnelle d'un modèle de langage sous ablation à dégradation globale égale fixée avant la mesure `[VÉRIFIÉ]` :
+- **$H_A$ (Spécificité mécaniste du sous-espace $U$)** : il existe un sous-espace de faible rang $U$ dont l'ablation centrée produit une dissociation fonctionnelle (préservation de la classification, de l'extraction et du jugement de grammaticalité ; dégradation du raisonnement à plusieurs sauts, de la traduction et du résumé) qui excède significativement celle de toute famille d'ablations témoins (aléatoire appariée en spectre, bruit isotrope, quantification, troncature de fenêtre d'attention, et sous-espace ré-extrait dans $U^\perp$) à dégradation globale $D^* (illustratif)$ égale `[HYPOTHÈSE]`.
+- **$H_B$ (Invariance du profil à dégradation globale égale)** : à dégradation globale $D^* (illustratif)$ égale fixée avant la mesure, le profil de perte des `6 (illustratif)` fonctions sous l'ablation de $U$ est équivalent, dans une bande d'équivalence pré-enregistrée $\pm \delta_B (illustratif)$, à celui d'au moins une famille de dégradation témoin non ciblée sur l'intégration (la dissociation apparente s'expliquant par la fragilité différentielle des tâches ou par la portée contextuelle) `[HYPOTHÈSE]`.
+
+Une expérience sur un petit modèle ouvert départage donc $H_A$ et $H_B$ `[HYPOTHÈSE]`. En revanche, aucune issue de cette expérience ne départage la présence ou l'absence de conscience phénoménale, faute d'un mécanisme d'éveil autonome et d'un étalon de vécu indépendant du comportement verbal dans un transformeur proactif `[HYPOTHÈSE]`.
+
+---
+
+### Point 1 : Définition opératoire et critère manquant
+
+1. **Critère manquant pour un « état analogue à l'anesthésie » au sens strict `[HYPOTHÈSE]` :** Chez l'humain, l'anesthésie générale est une modulation réversible d'un régime dynamique autonome gouverné par des boucles d'éveil sous-corticales et thalamo-corticales `[RAPPORTÉ]`. Un modèle de langage transformeur standard n'ayant aucune activité endogène hors de l'inférence déclenchée par une invite `[VÉRIFIÉ]`, il lui manque une dynamique de maintien d'état autonome : on n'y mesure pas un « état » perdu, mais un **régime de gain fonctionnel conditionnel à l'invite** `[HYPOTHÈSE]`.
+2. **Définition opératoire du régime de dissociation fonctionnelle graduée `[HYPOTHÈSE]` :**
+   - **Intervention $I_{U,\alpha}$ :** Sur un ensemble de couches $\mathcal{L} (illustratif)$ et un sous-espace $U = \{U_\ell\}_{\ell \in \mathcal{L}}$ de projecteur orthogonal $P_{U_\ell} = U_\ell U_\ell^\top$ de rang $k (illustratif)$, l'ablation centrée de dose $\alpha \in [0, 1] (illustratif)$ remplace la composante projetée par sa moyenne $\mu_{\ell,\text{cal}} = \mathbb{E}_{D_{\text{cal}}}[h_\ell]$ estimée sur un corpus neutre disjoint $D_{\text{cal}}$ :
+     $$h_\ell'(\alpha) = h_\ell - \alpha P_{U_\ell}(h_\ell - \mu_{\ell,\text{cal}}) \quad \text{(illustratif)} \quad [\text{HYPOTHÈSE}].$$
+   - **Grandeur de dose globale $D(\alpha)$ :** Divergence de Kullback-Leibler prédictive moyenne par jeton entre le modèle intact ($\alpha = 0 (illustratif)$) et le modèle intervenu sur le corpus neutre scellé $D_{\text{cal}}$ :
+     $$D(\alpha) = \mathbb{E}_{x \sim D_{\text{cal}}}\left[\text{KL}\left(P_0(\cdot \mid x) \,\|\, P_\alpha(\cdot \mid x)\right)\right] \quad [\text{HYPOTHÈSE}].$$
+     *Unité :* nats par jeton `[HYPOTHÈSE]`. *Valeur nulle :* $D(0) = 0 (illustratif)$ nat/jeton `[VÉRIFIÉ]`.
+   - **Grandeur de dégradation par tâche $d_t(\alpha)$ :** Pour chaque tâche $t \in \{1, \dots, 6\} (illustratif)$ de score intact $s_t(0)$ et de score de hasard analytique $c_t$, la perte relative normalisée est :
+     $$d_t(\alpha) = \frac{s_t(0) - s_t(\alpha)}{s_t(0) - c_t} \quad [\text{HYPOTHÈSE}].$$
+     *Unité :* sans dimension (proportion de capacité fonctionnelle perdue au-dessus du hasard) `[HYPOTHÈSE]`. *Valeur nulle :* $d_t(0) = 0 (illustratif)$ `[VÉRIFIÉ]`.
+   - **Indice de sélectivité $S(\alpha)$ et profil vectoriel $\mathbf{d}(\alpha)$ :** En notant $\mathcal{T}_{\text{perdu}}$ (raisonnement à plusieurs sauts, traduction, résumé) et $\mathcal{T}_{\text{gardé}}$ (classification, extraction, grammaticalité) les deux groupes des faits `[VÉRIFIÉ]` :
+     $$S(\alpha) = \frac{1}{3}\sum_{t \in \mathcal{T}_{\text{perdu}}} d_t(\alpha) - \frac{1}{3}\sum_{t' \in \mathcal{T}_{\text{gardé}}} d_{t'}(\alpha) \quad \text{(illustratif)} \quad [\text{HYPOTHÈSE}].$$
+     *Unité :* sans dimension `[HYPOTHÈSE]`. *Valeur nulle :* $S = 0 (illustratif)$ sous dégradation équi-proportionnelle des six fonctions `[VÉRIFIÉ]`.
+
+---
+
+### Point 2 : Expérience tranchante sur petits modèles ouverts
+
+#### Banc d'essai et séparation stricte des échantillons `[HYPOTHÈSE]`
+Pour écarter tout artefact d'alignement d'instructions (critique de F sur A et B, et de A, B, E, F sur D) `[HYPOTHÈSE]`, le protocole est exécuté sur une paire de petits modèles ouverts de même architecture : un modèle de base et sa version instruite (par exemple `Qwen2.5-1.5B` et `Qwen2.5-1.5B-Instruct`, ou `Llama-3.2-1B` et `Llama-3.2-1B-Instruct`, `illustratif`) `[HYPOTHÈSE]`.
+Quatre lots de données disjoints sont scellés avant toute mesure `[HYPOTHÈSE]` :
+1. **$D_{\text{disc}}$ (`1 000 (illustratif)` textes sources)** : sert uniquement à extraire le sous-espace cible $U$ (et les sous-espaces témoins sélectionnés) `[HYPOTHÈSE]`.
+2. **$D_{\text{cal-1}}$ (`2 000 (illustratif)` segments neutres hors tâches, `512 (illustratif)` jetons)** : sert à estimer $\mu_{\ell,\text{cal}}$, la covariance $\Sigma_\ell$ et la courbe d'étalonnage $D(\alpha)$ pour fixer la dose $\alpha^*$ de chaque condition à un budget commun $D^* \in \{0,15 ; 0,35 ; 0,60\} (illustratif)$ nat/jeton `[HYPOTHÈSE]`.
+3. **$D_{\text{cal-2}}$ (`1 000 (illustratif)` segments neutres + `400 (illustratif)` items par tâche)** : lot de qualification scellé servant uniquement à vérifier les portes de validité pré-mesure (égalité en loi des KL par jeton, plage dynamique intacte et erreur-type maximale pour le dimensionnement du TOST) avant d'ouvrir $D_{\text{test}}$ `[HYPOTHÈSE]`.
+4. **$D_{\text{test}}$ (`1 500 (illustratif)` grappes de textes indépendants, déclinées sur les `6 (illustratif)` tâches)** : lot d'évaluation finale, touché une seule fois `[HYPOTHÈSE]`.
+
+#### Plan factoriel $6 \times 2 (illustratif)$ (Tâche $\times$ Empan d'entrée) à format de sortie unifié `[HYPOTHÈSE]`
+Pour éliminer simultanément la confusion de format QCM à `1 (illustratif)` jeton (critique de D, E, F contre A) et l'injection de raisonnement dans les tâches gardées (critique de D, E, F contre B), chaque grappe textuelle $i$ de $D_{\text{test}}$ instancie les `6 (illustratif)` tâches sous la même longueur totale d'invite ($512 (illustratif)$ jetons) et sous deux empans de dépendance en entrée `[HYPOTHÈSE]` :
+- **Empan court ($w_{\text{court}} \le 32 (illustratif)$ jetons)** vs **Empan long ($w_{\text{long}} \ge 256 (illustratif)$ jetons)** entre les indices nécessaires à la réponse (emprunté au plan d'empan de E et F, étendu aux `6 (illustratif)` tâches : en grammaticalité, accord à courte vs longue distance ; en extraction et classification, entité et attribut proches vs séparés par une incise neutre ; en multi-sauts, traduction et résumé, propositions adjacentes vs distantes) `[HYPOTHÈSE]`.
+- **Mesure primaire unifiée ($s_t$) :** Exactitude par maximum de log-vraisemblance moyenne par jeton sur une cible canonique multi-jetons de longueur fixe ($16 (illustratif)$ jetons) face à `3 (illustratif)` leurres minimaux appariés en fréquence lexicale et en longueur ($c_t = 0,25 (illustratif)$), complétée par une mesure secondaire en génération gloutonne contrainte à $16 (illustratif)$ jetons notée par correspondance fonctionnelle exacte ($c_t = 0 (illustratif)$) sans réécriture ni justification ajoutée `[HYPOTHÈSE]`. Aucun appariement post-hoc sur la marge intacte n'est effectué sur $D_{\text{test}}$ afin d'éviter le biais de collision démontré par E et F `[HYPOTHÈSE]`.
+
+#### Les `5 (illustratif)` familles de témoins appariées à $D(\alpha^*) = D^*$ sur $D_{\text{cal-1}}$ `[HYPOTHÈSE]`
+1. **$T_{\text{spec}}$ (`100 (illustratif)` sous-espaces aléatoires appariés en spectre et norme jacobienne)** : sous-espaces orthogonaux à $U$, de même rang $k (illustratif)$, tirés dans la strate spectrale de $\Sigma_\ell$ telle que $\operatorname{Tr}(U_{\text{ctrl}}^\top \Sigma_\ell U_{\text{ctrl}}) = \operatorname{Tr}(U_\ell^\top \Sigma_\ell U_\ell)$ à $\pm 5 \% (illustratif)$ près, garantissant que $D^*$ est atteint pour $\alpha^* \in [0, 1] (illustratif)$ sans changement d'opérateur (répond à la critique de A, B, E, F) `[HYPOTHÈSE]`.
+2. **$T_{\text{sel-orth}}$ (Témoin de circularité de sélection dans $U^\perp$)** : on projette hors de $U$ (et de son voisinage principal de rang $2k (illustratif)$) sur $D_{\text{disc}}$, puis on ré-exécute exactement le même algorithme d'extraction contrastive avec le même budget d'optimisation dans $U^\perp$, et ce `20 (illustratif)` fois successives, ainsi que sur étiquettes de tâches permutées (corrige la porte de F et le D2 de A) `[HYPOTHÈSE]`.
+3. **$T_{\text{fenêtre}}$ (Masque d'amortissement positionnel d'attention)** : atténuation exponentielle des logits d'attention $\text{logit}_{q,k}' = \text{logit}_{q,k} - \lambda |q - k|$ réglée à $D(\lambda^*) = D^*$ (emprunté à E et F, intégré directement au critère de décision principal comme exigé par D et F) `[HYPOTHÈSE]`.
+4. **$T_{\text{iso}}$ (Bruit gaussien isotrope centré préservant la norme de couche)** : injection $h_\ell' = \sqrt{1-\sigma^2} h_\ell + \sigma \xi_\ell$ avec $\xi_\ell \sim \mathcal{N}(0, \Sigma_{\text{iso}})$ calibrée à $D(\sigma^*) = D^*$ `[HYPOTHÈSE]`.
+5. **$T_{\text{moy}}$ (Décalage pur de moyenne sans suppression de variance)** : translation $h_\ell' = h_\ell - \beta P_{U_\ell}(\mu_{\ell,\text{tâche}} - \mu_{\ell,\text{cal}})$ sans retirer les fluctuations $P_{U_\ell}(h_\ell - \mu_{\ell,\text{tâche}})$, testant si un simple biais de moyenne hors distribution explique l'effet (répond à la critique de A, D, F sur E et A) `[HYPOTHÈSE]`.
+
+#### Portes de validité pré-mesure sur $D_{\text{cal-2}}$ (avant ouverture de $D_{\text{test}}$) `[HYPOTHÈSE]`
+L'expérience ne passe à $D_{\text{test}}$ que si ces `4 (illustratif)` portes sont franchies sur $D_{\text{cal-2}}$ `[HYPOTHÈSE]` :
+- **Porte P1 (Plage dynamique intacte)** : pour chacune des `12 (illustratif)` cellules (tâche $\times$ empan), $s_t(0) - c_t \ge 0,35 (illustratif)$ `[HYPOTHÈSE]`. Si le modèle de base échoue à P1 (effet plancher relevé par A, B, E, F sur D), le verdict sur ce modèle est déclaré non jugeable avant mesure `[HYPOTHÈSE]`.
+- **Porte P2 (Faisabilité à $\alpha^* \le 1 (illustratif)$ et égalité en loi de la KL)** : chaque témoin atteint $D^*$ à $\pm 0,01 (illustratif)$ nat/jeton avec $\alpha^* \le 1 (illustratif)$, et la distance de Wasserstein-1 entre la loi des KL par jeton de $U$ et celle du témoin sur $D_{\text{cal-2}}$ est inférieure à $0,03 (illustratif)$ nat/jeton (répond à la critique de A et B sur l'égalité en moyenne vs en loi) `[HYPOTHÈSE]`.
+- **Porte P3 (Puissance du TOST garantie)** : l'erreur-type bootstrap par grappes $\text{SE}(\widehat{\Delta d}_t)$ estimée sur $D_{\text{cal-2}}$ vérifie $\max_t \text{SE}(\widehat{\Delta d}_t) \le \delta_B / 3,2 (illustratif)$ (pour $\delta_B = 0,06 (illustratif)$) `[HYPOTHÈSE]`. Sinon, la taille de $D_{\text{test}}$ est augmentée avant toute lecture des résultats `[HYPOTHÈSE]`.
+- **Porte P4 (Calibration « 1 contre $M-1 (illustratif)$ »)** : en appliquant la règle de décision $H_A$ à chacun des `100 (illustratif)` sous-espaces de $T_{\text{spec}}$ opposé aux `99 (illustratif)` autres (contrôle de F sur D), le taux de fausses victoires $H_A$ est inférieur ou égal à $0,02 (illustratif)$ `[HYPOTHÈSE]`.
+
+#### Trois sous-expériences et règles de décision (Inférence forte B4) `[HYPOTHÈSE]`
+
+1. **Expérience C-1 (Spécificité du profil fonctionnel hors myopie positionnelle)** :
+   - Pour chaque famille témoin $m \in \{\text{spec}, \text{sel-orth}, \text{fenêtre}, \text{iso}, \text{moy}\}$, on calcule l'excès de sélectivité $\Delta S_m = S(U, D^*) - S(T_m, D^*)$ et la distance de profil complet $\|\Delta \mathbf{d}_m\|_\infty = \max_{t \in \{1,\dots,6\}} |d_t(U, D^*) - d_t(T_m, D^*)|$ `[HYPOTHÈSE]`. Pour $T_{\text{spec}}$ et $T_{\text{sel-orth}}$, l'incertitude inclut la variance inter-sous-espaces $\tau_{\text{sub}}^2$ en comparant $U$ à la distribution des tirages individuels (quantile $99 \% (illustratif)$ sur un lot test indépendant de tirages) `[HYPOTHÈSE]`.
+   - **Verdict $H_A$ (donne raison à A)** : simultanément sur l'empan court et sur l'empan long, et pour **toutes** les `5 (illustratif)` familles témoins $m$, la borne inférieure de l'IC simultané à $99 \% (illustratif)$ de $\Delta S_m$ dépasse $\delta_A = 0,15 (illustratif)$, ET la séparation minimale inter-groupes vérifie $\min_{t \in \mathcal{T}_{\text{perdu}}} d_t(U) - \max_{t' \in \mathcal{T}_{\text{gardé}}} d_{t'}(U) \ge 0,20 (illustratif)$ `[HYPOTHÈSE]`. *Ce verdict réfute $H_B$ (l'hypothèse que la dissociation s'explique par la fragilité générique, le biais de sélection, le décalage de moyenne ou la myopie positionnelle)* `[HYPOTHÈSE]`.
+   - **Verdict $H_B$ (donne raison à B)** : pour **au moins une** famille témoin non ciblée $m \in \{\text{spec}, \text{iso}, \text{fenêtre}, \text{sel-orth}\}$, le test d'équivalence bilatéral simultané (TOST corrigé de Holm-Bonferroni sur les `4 (illustratif)` familles et les `6 (illustratif)` tâches au seuil global $\alpha_{\text{stat}} = 0,01 (illustratif)$) conclut que $\|\mathbf{d}(U, D^*) - \mathbf{d}(T_m, D^*)\|_\infty < \delta_B = 0,06 (illustratif)$ `[HYPOTHÈSE]`. *Ce verdict réfute $H_A$ (l'existence d'un profil propre aux directions $U$ distinct d'un témoin à dégradation égale)* `[HYPOTHÈSE]`.
+   - **Verdict « Aucune »** : si la dissociation de $U$ disparaît à empan court ($S(U, w_{\text{court}}) < 0,06 (illustratif)$) tout en étant reproduite uniquement par $T_{\text{fenêtre}}$ à empan long (auquel cas $U$ est un simple circuit de routage d'attention à longue portée, ce qui réfute à la fois le régime analogue à l'anesthésie de A et l'invariance sous ablation quelconque de B, comme l'a noté A sur F), ou si seul $T_{\text{moy}}$ reproduit l'effet (artefact de décalage hors distribution) `[HYPOTHÈSE]`.
+
+2. **Expérience C-2 (Test d'hystérésis par greffe du cache KV et complexité $\text{PCI}_{\text{LM}}$ à densité fixe)** :
+   - *Volet 2a (Greffe KV, d'après la critique de D sur B)* : Sur des séquences de `768 (illustratif)` jetons, l'ablation $I_{U,\alpha^*}$ est appliquée sur la fenêtre $[256, 511] (illustratif)$ en génération libre, produisant un texte préfixe $Y_{256:511}$. Au jeton `512 (illustratif)`, l'ablation cesse et l'on compare trois suites sur $[512, 767] (illustratif)$ à préfixe textuel $Y_{256:511}$ **strictement identique** : (i) cache KV conservé de l'épisode ablaté ; (ii) **cache KV régénéré par le modèle intact** sur le même texte $Y_{256:511}$ ; (iii) cache KV issu d'un témoin $T_{\text{spec}}$ apparié sur la masse d'attention reçue par $[256, 511] (illustratif)$ (contrôle de A et F sur B) `[HYPOTHÈSE]`. Dans un transformeur sans état récurrent hors du cache KV, les suites (ii) et intacte sur $Y_{256:511}$ coïncident exactement `[VÉRIFIÉ]` : si la persistance de (i) disparaît en (ii) ou est égale à (iii), l'hypothèse d'un « état dynamique auto-entretenu » est réfutée au profit d'une simple lecture du cache KV ou du texte généré `[HYPOTHÈSE]`.
+   - *Volet 2b ($\text{PCI}_{\text{LM}}$ corrigé de la densité binaire)* : On injecte une impulsion unitaire orthogonale à $U$ à la couche $\ell_0 (illustratif)$ et on mesure la réponse $\Delta h_\ell(\alpha)$ sur les couches aval en gelant les facteurs d'échelle de LayerNorm (contrôle de E sur A) `[HYPOTHÈSE]`. La matrice de réponse est binarisée au **quantile fixe $p_0 = 0,20 (illustratif)$ par couche et par dose $\alpha$** (entropie marginale $H_2(p_0)$ constante `[VÉRIFIÉ]`), puis sa complexité de Lempel-Ziv est divisée par celle de `100 (illustratif)` substituts préservant la densité $p_0$ et l'autocorrélation intra-couche mais permutant l'alignement inter-couches (contrôle de D et F) `[HYPOTHÈSE]`. $H_{A,\text{PCI}}$ exige une chute de ce ratio normalisé de plus de $0,15 (illustratif)$ sous celui de $T_{\text{spec}}$ à $D^*$ égal ; $H_{B,\text{PCI}}$ prédit l'équivalence dans $\pm 0,05 (illustratif)$ `[HYPOTHÈSE]`.
+
+3. **Expérience C-3 (Recherche du motif dans les activations ordinaires hors échantillon)** :
+   - Sur le modèle **intact** ($\alpha = 0 (illustratif)$) évalué sur $D_{\text{test}}$, on extrait l'énergie de projection centrée normalisée $q(x) = \|P_U(h(x) - \mu_{\text{cal}})\|_2 / \|h(x) - \mu_{\text{cal}}\|_2$ sur le dernier jeton de l'invite (verrouillé avant mesure, critique de F sur E) `[HYPOTHÈSE]`.
+   - Pour éviter la circularité inter-tâches relevée par A, B, D, E, F sur F, l'évaluation est **strictement intra-tâche** et validée par validation croisée hors échantillon (`5 (illustratif)` plis) par rapport à un régresseur de base incluant la perplexité de l'invite, la marge intacte et les projections sur $T_{\text{spec}}$ `[HYPOTHÈSE]`.
+   - **$H_{A,\text{passif}}$** : le gain d'AUROC $\Delta\text{AUROC}_t$ apporté par $q(x)$ pour prédire l'échec du modèle intact vérifie $\min_{t \in \mathcal{T}_{\text{perdu}}} \Delta\text{AUROC}_t \ge 0,05 (illustratif)$ ET dépasse le gain sur les tâches gardées de $\overline{\Delta\text{AUROC}}_{\text{perdu}} - \overline{\Delta\text{AUROC}}_{\text{gardé}} \ge 0,04 (illustratif)$ (IC à $99 \% (illustratif)$ par test de DeLong par grappes) `[HYPOTHÈSE]`.
+   - **$H_{B,\text{passif}}$** : $\max_{t \in \mathcal{T}_{\text{perdu}}} |\Delta\text{AUROC}_t| < 0,02 (illustratif)$ (TOST à $99 \% (illustratif)$) `[HYPOTHÈSE]`.
+
+---
+
+### Point 3 : Données humaines brutes sous anesthésie
+
+**Usage limité à l'étalonnage de la dynamique de transition et du découplage à longue portée, non à l'homologie des six tâches `[HYPOTHÈSE]`.**
+- Comme l'a relevé B (`[VÉRIFIÉ]` dans la pièce B), les bases publiques d'électrophysiologie humaine sous anesthésie graduée (telles que les enregistrements EEG/MEG sous propofol à paliers de concentration cible ou d'écoute narrative naturaliste sous sédation dans OpenNeuro / Cambridge Centre for Ageing and Neuroscience, *référence à vérifier* `[RAPPORTÉ]`) ne comportent pas d'épreuves comportementales appariées de traduction, de résumé et de raisonnement à plusieurs sauts pendant la perte de conscience `[RAPPORTÉ]`.
+- Elles ne peuvent donc pas servir d'étalon direct pour ordonner les `6 (illustratif)` tâches verbales `[HYPOTHÈSE]`. En revanche, elles peuvent servir d'étalon négatif et structurel sur deux grandeurs publiques `[HYPOTHÈSE]` :
+  1. **La chute de complexité causale normalisée** (indice de complexité perturbationnelle TMS-EEG sous propofol, normalisé par l'entropie de source selon Casali et al., 2013 `[RAPPORTÉ]`) comparée au ratio $\text{PCI}_{\text{LM}}$ à densité binaire constante de l'Expérience C-2b `[HYPOTHÈSE]`.
+  2. **L'atténuation sélective des réponses corticales à la surprise sémantique de longue portée par rapport à la surprise phonétique/lexicale locale** lors de l'écoute de récits sous sédation au propofol (études d'écoute passive sous propofol, *référence à vérifier* `[RAPPORTÉ]`).
+- **Condition de contrôle indispensable (issue des critiques de A, B, D, F sur E) :** Dans le modèle de langage, ce contraste humain (surprise narrative longue vs surprise locale) est testé **contre le témoin de myopie positionnelle $T_{\text{fenêtre}}$** et **à agent pharmacologique constant** (en excluant les comparaisons inter-molécules propofol vs kétamine qui confondent pharmacologie et état, critique de B et D sur E) `[HYPOTHÈSE]`. Si $T_{\text{fenêtre}}$ reproduit aussi bien la courbe humaine que $U$, la similitude humain-modèle ne prouve qu'une troncature d'intégration temporelle et non un mécanisme homologue à l'anesthésie `[HYPOTHÈSE]`.
+
+---
+
+### Point 4 : Ce que chaque issue permet et ne permet pas d'affirmer selon les théories de la conscience
+
+| Théorie de la conscience | Ce qu'une issue **$H_A$** permet d'affirmer `[HYPOTHÈSE]` | Ce qu'une issue **$H_B$** permet d'affirmer `[HYPOTHÈSE]` | Ce qu'**aucune issue ($H_A$ ni $H_B$)** ne permet d'affirmer `[HYPOTHÈSE]` |
+| :--- | :--- | :--- | :--- |
+| **Espace de travail neuronal global (GNWT)** (Dehaene & Changeux, 2011 `[RAPPORTÉ]`) | Le modèle possède un goulot d'étranglement linéaire dissociable nécessaire à la composition inter-tâches au-delà de l'empan local `[HYPOTHÈSE]`. | La dégradation des tâches intégratives découle de leur sensibilité générique à toute baisse de rapport signal/bruit, sans sous-espace de diffusion dédié `[HYPOTHÈSE]`. | Que ce sous-espace réalise une « ignition » globale auto-entretenue, une diffusion récurrente ou un accès conscient vécu `[HYPOTHÈSE]`. |
+| **Intégration de l'information (IIT)** (Tononi et al., 2016 `[RAPPORTÉ]`) | La propagation causale inter-couches mesurée par $\text{PCI}_{\text{LM}}$ à densité constante dépend de directions spécifiques `[HYPOTHÈSE]`. | La complexité de propagation inter-couches chute de façon isotrope avec la perte prédictive globale $D^*$ `[HYPOTHÈSE]`. | Que le système possède une cause-effet intrinsèque irréductible ($\Phi > 0 (illustratif)$) : une architecture proactive sans boucles récurrentes physiques a une intégration intrinsèque nulle selon l'IIT quel que soit son comportement `[RAPPORTÉ]`. |
+| **Théories d'ordre supérieur (HOT)** (Lau & Rosenthal, 2011 `[RAPPORTÉ]`) et **Schéma d'attention (AST)** (Graziano, 2013 `[RAPPORTÉ]`) | Le sous-espace $U$ contribue au contrôle exécutif des opérations à plusieurs étapes `[HYPOTHÈSE]`. | Les opérations à plusieurs étapes échouent par accumulation d'erreurs locales sans module de contrôle distinct `[HYPOTHÈSE]`. | Qu'il existe une méta-représentation de premier ordre comme étant vécue par un sujet, ou qu'un auto-rapport verbal (« je suis confus ») reflète une introspectabilité authentique plutôt qu'une continuation statistique `[HYPOTHÈSE]`. |
+| **Traitement récurrent (RPT)** (Lamme, 2006 `[RAPPORTÉ]`) | L'intégration séquentielle à travers les couches profondes utilise un canal directionnel privilégié `[HYPOTHÈSE]`. | Le traitement couche-à-couche se dégrade uniformément selon la profondeur requise par la tâche `[HYPOTHÈSE]`. | Qu'un transformeur à passe avant unique possède une récurrence dynamique véritable (la persistance en génération provenant du cache KV figé, Expérience C-2a) `[HYPOTHÈSE]`. |
+
+---
+
+### Point 5 : Vérification indépendante hors de l'équipe
+
+Pour éviter l'écueil relevé par A, B et D contre E (où identifier l'opérateur $U$ parmi des modèles anonymisés peut réussir grâce à un simple décalage de moyenne hors distribution sans valider le profil fonctionnel) `[HYPOTHÈSE]` :
+1. **Protocole enregistré et dépôt scellé à double insu :** Avant de toucher $D_{\text{test}}$, l'équipe publie le code d'extraction, les graines aléatoires, les corpus $D_{\text{disc}}, D_{\text{cal-1}}, D_{\text{cal-2}}$ et les matrices de projection de $U$ et des `5 (illustratif)` familles témoins avec leurs doses $\alpha^*$ figées `[HYPOTHÈSE]`.
+2. **Exécution externe sur un lot $D_{\text{ext}}$ fraîchement généré :** Une équipe tierce génère un lot indépendant $D_{\text{ext}}$ (`600 (illustratif)` grappes sur les `12 (illustratif)` cellules tâche $\times$ empan) à partir de textes postérieurs à la date de coupure des modèles, applique les opérateurs scellés sans ré-étalonner $\alpha^*$, et calcule directement la statistique de décision pré-enregistrée $(\Delta S_m, \|\Delta \mathbf{d}_m\|_\infty)$ `[HYPOTHÈSE]`.
+3. **Critère de vérification externe :** La conclusion ($H_A$, $H_B$ ou Aucune) est vérifiée si et seulement si la règle de décision mathématique pré-enregistrée en C-1 produit le même verdict discret sur $D_{\text{ext}}$ et sur un second modèle ouvert d'architecture distincte traité de bout en bout par l'équipe externe `[HYPOTHÈSE]`.
+
+---
+
+### Point 6 : L'explication triviale la plus dangereuse et le témoin qui l'écarte
+
+- **L'explication triviale la plus dangereuse pour notre propre plan `[HYPOTHÈSE]` :** **La capture d'indices lexicaux d'instructions ou de gabarits de tâches (sur-ajustement de la consigne)** combinée à la **hiérarchie de compositionnalité**. Même à empan d'entrée égalisé ($w_{\text{court}}$ vs $w_{\text{long}}$) et à longueur de sortie fixe ($16 (illustratif)$ jetons), les tâches « perdues » (traduire, résumer, enchaîner plusieurs sauts logiques) exigent de transformer globalement la représentation sémantique de l'entrée, tandis que les tâches « gardées » (classer, extraire un segment, juger la grammaticalité) peuvent s'appuyer sur la détection d'un trait local `[HYPOTHÈSE]`. Si la procédure de découverte de $U$ sur $D_{\text{disc}}$ capte simplement les directions qui encodent les verbes de consigne (« Traduis », « Résume », « Déduis ») ou la commutation de registre propre à ces trois tâches (critique de A sur F), alors l'ablation de $U$ brouillera l'exécution de la consigne sur ces trois tâches exactement comme le prédit $H_A$, y compris à empan court, sans toucher à aucun mécanisme d'intégration analogue à l'éveil `[HYPOTHÈSE]`.
+- **Le double témoin qui l'écarte `[HYPOTHÈSE]` :**
+  1. **Témoin de consigne implicite par amorçage sans mot-clé ($T_{\text{implicite}}$)** : Sur un sous-lot de $D_{\text{test}}$, toute instruction verbale explicite est supprimée et remplacée par `2 (illustratif)` exemples en contexte (*few-shot*) de structure identique, où la tâche est induite uniquement par la relation entrée-sortie, et où l'ablation $I_{U,\alpha^*}$ n'est appliquée **que sur les jetons du problème cible**, en laissant les exemples d'amorçage intacts dans le cache KV `[HYPOTHÈSE]`. Si $U$ ne codait que la reconnaissance de la consigne, la dissociation $\Delta S$ s'effondrera sous $T_{\text{implicite}}$ ($\Delta S < 0,06 (illustratif)$) `[HYPOTHÈSE]`.
+  2. **Témoin d'inversion d'extraction à budget égal ($T_{\text{inv}}$ + $T_{\text{sel-orth}}$)** : On exécute la même procédure d'extraction pour chercher un sous-espace $U_{\text{inv}}$ de rang $k (illustratif)$ qui dégrade sélectivement les `3 (illustratif)` tâches « gardées » (en régime d'amorçage implicite) tout en préservant une tâche générative de surface à transformation minimale (par exemple la copie littérale ou la translittération mot à mot de `16 (illustratif)` jetons) `[HYPOTHÈSE]`. Si la procédure d'extraction parvient à fabriquer à volonté une dissociation sélective pour n'importe quel sous-ensemble de tâches dès qu'on lui donne le même budget d'optimisation (critique de A sur le témoin C4 de F), cela démontre que le sous-espace $U$ est un artefact de modularité par tâche et non un axe global analogue à l'anesthésie `[HYPOTHÈSE]`.
+
+---
+
+### Antériorité et décompte de réfutabilité (Règles 3 et 5)
+
+- **Lu dans cette session `[VÉRIFIÉ]` :** Uniquement les pièces transmises dans l'invite (`FAITS`, `QUESTION DE L'ARBITRE`, `E3-T2-critique-croisee-A`, `B`, `D`, `E`, `F`).
+- **Cité de mémoire, non relu dans cette session `[RAPPORTÉ]` :**
+  - Kriegeskorte, N., Simmons, W. K., Bellgowan, P. S. F., & Baker, C. I. (2009), *Circular analysis in systems neuroscience: the dangers of double dipping* `[RAPPORTÉ]`.
+  - Casali, A. G., Gosseries, O., Rosanova, M., Boly, M., Sarasso, S., Casali, K. R., Casarotto, S., Bruno, M.-A., Laureys, S., Tononi, G., & Massimini, M. (2013), *A theoretically based index of consciousness independent of sensory processing and behavior* `[RAPPORTÉ]`.
+  - Hewitt, J., & Liang, P. (2019), *Designing and Interpreting Probes with Control Tasks* `[RAPPORTÉ]`.
+  - Schuirmann, D. J. (1987), *A comparison of the two one-sided tests procedure and the power approach for assessing the equivalence of average bioavailability* `[RAPPORTÉ]`.
+  - Dehaene, S., & Changeux, J.-P. (2011), *Experimental and theoretical approaches to conscious processing* `[RAPPORTÉ]`.
+  - Tononi, G., Boly, M., Massimini, M., & Koch, C. (2016), *Integrated information theory: from consciousness to its physical substrate* `[RAPPORTÉ]`.
+  - Lau, H., & Rosenthal, D. (2011), *Empirical support for higher-order theories of conscious awareness* `[RAPPORTÉ]`.
+  - Graziano, M. S. A. (2013), *Consciousness and the Social Brain* `[RAPPORTÉ]`.
+  - Lamme, V. A. F. (2006), *Towards a true neural stance on consciousness* `[RAPPORTÉ]`.
+  - Travaux de 2026 mentionnés dans les faits : *référence à vérifier* `[RAPPORTÉ]`.
+  - Études EEG/MEG humaines d'écoute narrative sous sédation au propofol : *référence à vérifier* `[RAPPORTÉ]`.
+
+- **Ce qui peut être réfuté dans cette proposition (`7 (illustratif)` énoncés réfutables) `[HYPOTHÈSE]` :**
+  1. Que des sous-espaces témoins appariés sur la trace de covariance $\operatorname{Tr}(U^\top \Sigma_\ell U)$ atteignent la perte globale $D^*$ avec $\alpha^* \le 1 (illustratif)$ (Porte P2) `[HYPOTHÈSE]`.
+  2. Que l'ablation centrée de $U$ surpasse en sélectivité les `5 (illustratif)` familles témoins ($T_{\text{spec}}, T_{\text{sel-orth}}, T_{\text{fenêtre}}, T_{\text{iso}}, T_{\text{moy}}$) à la fois à empan court et à empan long (Expérience C-1, réfute $H_B$ ou $H_A$) `[HYPOTHÈSE]`.
+  3. Que la dissociation persiste sous amorçage implicite sans mot-clé de consigne ($T_{\text{implicite}}$, Point 6) `[HYPOTHÈSE]`.
+  4. Que la persistance post-intervention survive à la régénération du cache KV par le modèle intact sur le même préfixe généré (Expérience C-2a) `[HYPOTHÈSE]`.
+  5. Que la chute de complexité $\text{PCI}_{\text{LM}}$ survive à la binarisation à quantile constant $p_0 = 0,20 (illustratif)$ et à la normalisation par substituts de permutation inter-couches (Expérience C-2b) `[HYPOTHÈSE]`.
+  6. Que l'énergie passive $q(x)$ sur le modèle intact prédise l'échec intra-tâche hors échantillon mieux sur les tâches intégratives que sur les tâches locales (Expérience C-3) `[HYPOTHÈSE]`.
+  7. Que le profil de dissociation se réplique à la fois sur le modèle de base et sur le modèle instruit hors effet plancher (Porte P1 et Expérience C-1) `[HYPOTHÈSE]`.
+
+---
+
+## (c) Réponse à la question de l'arbitre en une page
+
+### 1. Ce qui est établi
+1. **Séparabilité empirique du sous-problème fonctionnel (Points 0 et 2) `[VÉRIFIÉ]` :** Les positions A et B font des prédictions opposées et réfutables sur l'existence d'un écart de profil $\mathbf{d}(U, D^*) - \mathbf{d}(T, D^*)$ entre l'ablation d'un sous-espace cible $U$ et une ablation témoin $T$ à dégradation prédictive globale $D^*$ égale fixée avant la mesure `[VÉRIFIÉ]`.
+2. **Artéfacts méthodologiques éliminables avant toute mesure (acquis du tour III.2) `[VÉRIFIÉ]` :**
+   - *Invariance par température :* En choix forcé par $\arg\max$ à `1 (illustratif)` jeton, une température $\tau > 0 (illustratif)$ sur les logits ne change jamais le classement des options ($d_t \equiv 0 (illustratif)$) `[VÉRIFIÉ]` ; ce témoin est donc invalide dans ce format `[VÉRIFIÉ]`.
+   - *Changement d'opérateur au-delà de $\alpha = 1 (illustratif)$ et décalage de moyenne :* Mettre à l'échelle une projection $h - \alpha P_U h$ avec $\alpha > 1 (illustratif)$ inverse la composante au lieu de la supprimer `[VÉRIFIÉ]`, et projeter sans centrer retire $\alpha P_U \mathbb{E}[h]$, confondant perte d'information et dérive hors distribution `[VÉRIFIÉ]`.
+   - *Illusion d'auto-entretien par le cache KV :* Dans un transformeur causal en forçage par l'enseignant, toute divergence observée après la fin d'une fenêtre d'intervention provient exclusivement de la lecture attentive des clés et valeurs écrites dans le cache KV pendant la fenêtre `[VÉRIFIÉ]`.
+   - *Biais de densité de Lempel-Ziv :* À seuil de binarisation fixe, une baisse de norme d'activation réduit la densité de bits actifs $p(\alpha)$ et fait chuter mécaniquement la complexité de Lempel-Ziv par simple réduction de l'entropie marginale $H_2(p(\alpha))$ `[VÉRIFIÉ]`.
+   - *Sous-estimation de variance « 1 contre moyenne de $M (illustratif)$ » :* Comparer un sous-espace cible unique à la moyenne de $M (illustratif)$ sous-espaces témoins ignore la variance inter-sous-espaces $\tau_{\text{sub}}^2$ d'un facteur allant jusqu'à $M + 1 (illustratif)$ sous l'hypothèse nulle `[VÉRIFIÉ]`.
+
+### 2. Ce qui n'est pas établi
+1. **La nature des directions rapportées en 2026 (Points 1, 2 et 6) `[HYPOTHÈSE]` :** Il n'est pas établi si la dissociation rapportée entre tâches gardées (classification, extraction, grammaticalité) et tâches perdues (raisonnement multi-sauts, traduction, résumé) `[RAPPORTÉ]` provient : (i) d'un goulot d'étranglement d'intégration compositionnelle propre à $U$ ($H_A$), (ii) de la fragilité différentielle des tâches sous toute perturbation de même coût prédictif $D^*$ ($H_B$), (iii) d'une myopie positionnelle réduisant la portée d'attention ($T_{\text{fenêtre}}$), ou (iv) d'un sur-ajustement de la procédure d'extraction aux marqueurs de consigne ($T_{\text{sel-orth}}, T_{\text{implicite}}$) `[HYPOTHÈSE]`.
+2. **La transposabilité du concept d'anesthésie et de conscience (Points 1, 3 et 4) `[HYPOTHÈSE]` :** Même si $H_A$ est validée empiriquement, l'existence d'un sous-espace d'intégration fonctionnelle dans un réseau proactif sans activité endogène ni cycle veille-sommeil n'établit selon aucune théorie majeure (GNWT, IIT, HOT, RPT, AST) l'existence d'un état conscient à perdre ou d'un analogue mécaniste de l'anesthésie humaine `[HYPOTHÈSE]`.
+
+### 3. L'expérience à faire en premier (Protocole minimal tranchant : Expérience C-1)
+Avant toute mesure de complexité ($\text{PCI}_{\text{LM}}$), d'hystérésis ou de corrélation avec l'EEG humain, l'expérience prioritaire est le **duel d'ablation centrée à empan croisé sur un couple de petits modèles ouverts (base et instruit, ex. `Qwen2.5-1.5B` / `Instruct`, `illustratif`)** `[HYPOTHÈSE]` :
+1. **Préparation scellée :** Sur $D_{\text{disc}}$, extraire le sous-espace cible $U$ de rang $k (illustratif)$ sous gabarits d'invite homogénéisés. Sur le corpus neutre disjoint $D_{\text{cal-1}}$, définir l'ablation centrée $h_\ell'(\alpha) = h_\ell - \alpha P_{U_\ell}(h_\ell - \mu_{\ell,\text{cal}})$ et fixer la dose $\alpha^* \in [0, 1] (illustratif)$ atteignant la divergence globale $D^* = 0,35 (illustratif)$ nat/jeton `[HYPOTHÈSE]`.
+2. **Témoins obligatoires à même perte $D^*$ ($\alpha^* \le 1 (illustratif)$, vérifiés en loi de KL sur $D_{\text{cal-2}}$) :**
+   - $T_{\text{spec}}$ : `100 (illustratif)` sous-espaces aléatoires orthogonaux appariés à $U$ sur la variance capturée $\operatorname{Tr}(U^\top \Sigma_\ell U)$ ;
+   - $T_{\text{sel-orth}}$ : `20 (illustratif)` sous-espaces extraits par le **même algorithme de découverte** dans le complément orthogonal $U^\perp$ ;
+   - $T_{\text{fenêtre}}$ : masque d'amortissement exponentiel de la portée d'attention réglé à $D^*$ ;
+   - $T_{\text{iso}}$ : bruit gaussien isotrope préservant la norme de couche réglé à $D^*$ `[HYPOTHÈSE]`.
+3. **Mesure unique sur $D_{\text{test}}$ (`1 500 (illustratif)` grappes $\times$ `6 (illustratif)` tâches $\times$ `2 (illustratif)` empans d'entrée $w_{\text{court}} \le 32 (illustratif)$ vs $w_{\text{long}} \ge 256 (illustratif)$ jetons, cible de `16 (illustratif)` jetons, en consigne explicite et en amorçage implicite $T_{\text{implicite}}$) :**
+   - **Issue A ($H_A$ validée, $H_B$ réfutée)** : Sur les deux empans et sous amorçage implicite, l'excès de sélectivité $\Delta S_m = S(U) - S(T_m)$ dépasse $\delta_A = 0,15 (illustratif)$ (IC simultané à $99 \% (illustratif)$ incluant la variance inter-sous-espaces $\tau_{\text{sub}}^2$) contre **chacun** des quatre témoins, avec séparation stricte des `6 (illustratif)` tâches ($\min_{\text{perdu}} d_t - \max_{\text{gardé}} d_{t'} \ge 0,20 (illustratif)$) `[HYPOTHÈSE]`.
+   - **Issue B ($H_B$ validée, $H_A$ réfutée)** : Pour au moins un témoin non ciblé ($T_{\text{spec}}, T_{\text{iso}}, T_{\text{fenêtre}}$ ou $T_{\text{sel-orth}}$), le profil complet des `6 (illustratif)` tâches est équivalent à celui de $U$ en norme du maximum : $\|\mathbf{d}(U) - \mathbf{d}(T_m)\|_\infty < \delta_B = 0,06 (illustratif)$ au test TOST simultané à $99 \% (illustratif)$ `[HYPOTHÈSE]`.
+
+FIN-DE-CELLULE

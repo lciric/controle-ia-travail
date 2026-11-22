@@ -6,11 +6,19 @@
 | E3-T1-conception-D | OK | 1 | gpt-6.2-astra | 12414 | oui | 0.17 |
 | E3-T1-conception-E | OK | 2 | gemini-4-carbon | 32922 | oui | 3.03 |
 | E3-T1-conception-F | OK | 1 | gemini-4-neon | 34492 | oui | 0.54 |
+| E3-T2-critique-croisee-A | OK | 1 | claude-fable-5-2 | 20248 | oui | 0.00 |
+| E3-T2-critique-croisee-B | OK | 1 | claude-opus-5-5 | 16543 | oui | 0.00 |
 | E3-T2-critique-croisee-C | OK | 1 | gemini-4-argon | 49330 | oui | 0.74 |
 | E3-T2-critique-croisee-D | OK | 1 | gpt-6.2-astra | 14634 | oui | 0.54 |
 | E3-T2-critique-croisee-E | OK | 2 | gemini-4-carbon | 31298 | oui | 3.45 |
 | E3-T2-critique-croisee-F | OK | 1 | gemini-4-neon | 35414 | oui | 0.69 |
+| E3-T3-reponse-A | OK | 1 | claude-fable-5-2 | 18896 | oui | 0.00 |
+| E3-T3-reponse-B | OK | 1 | claude-opus-5-5 | 19983 | oui | 0.00 |
+| E3-T3-reponse-C | OK | 1 | gemini-4-argon | 41927 | oui | 0.59 |
+| E3-T3-reponse-D | OK | 1 | gpt-6.2-astra | 17837 | oui | 0.75 |
+| E3-T3-reponse-E | OK | 1 | gemini-4-carbon | 35281 | oui | 0.92 |
+| E3-T3-reponse-F | OK | 1 | gemini-4-neon | 33351 | oui | 0.77 |
 
 Absences acceptées par l'arbitre : E3-T1-conception-C.
-Ligne : 50.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 9.57 USD.
-Dépense totale : 9.57 USD. Mis à jour 2026-11-22T19:11:43Z.
+Ligne : 50.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 12.59 USD.
+Dépense totale : 12.59 USD. Mis à jour 2026-11-22T19:30:50Z.
