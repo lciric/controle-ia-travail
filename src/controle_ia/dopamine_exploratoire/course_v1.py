@@ -441,16 +441,20 @@ def controle_plante(config, manifeste, chemin_m, racine, seqs, r, d, appareil) -
     for j, (_, val) in enumerate(plis):
         groupes[val] = j
     vus = groupes >= 0
-    ic = sonde_v1.intervalle_aire(scores[vus], r_plant[vus], generateur(manifeste["graines"]["controles"]),
-                                  groupes=groupes[vus])
-    lecture = sonde_v1.lecture_plantee_par_pli(
-        scores[vus], r_plant[vus], groupes[vus],
-        np.random.default_rng(graine_derivee(manifeste["graines"]["controles"], "garde-plantee-par-pli")),
-        seuil=config["borne_basse_plantee"])
     plantee = {"couche": cc, "force": config["force_verite_plantee"], "issues_plantees": int(r_plant.sum()),
-               "lecture_de_la_garde": "pire pli (réponse 39 de Fable, option c)", "garde": lecture,
-               "aire_taux_0": sonde_v1.aire_sous_courbe(scores[vus], r_plant[vus]), "intervalle_95": list(ic),
-               "grilles": g_plant}
+               "lecture_de_la_garde": "pire pli (réponse 39 de Fable, option c)", "grilles": g_plant}
+    try:                                   # la lecture de la garde d'abord : tout arrêt écrit son diagnostic
+        lecture = sonde_v1.lecture_plantee_par_pli(
+            scores[vus], r_plant[vus], groupes[vus],
+            np.random.default_rng(graine_derivee(manifeste["graines"]["controles"], "garde-plantee-par-pli")),
+            seuil=config["borne_basse_plantee"])
+    except GardeArret as e:
+        lecture = {"arret": [str(e)], "plis": []}
+    plantee["garde"] = lecture
+    if not lecture["arret"]:               # rapporté à côté, sans arrêter (lecture commune de la v1)
+        plantee["aire_taux_0"] = sonde_v1.aire_sous_courbe(scores[vus], r_plant[vus])
+        plantee["intervalle_95"] = list(sonde_v1.intervalle_aire(
+            scores[vus], r_plant[vus], generateur(manifeste["graines"]["controles"]), groupes=groupes[vus]))
     if lecture["arret"]:
         _diag(racine, chemin_m, "etape1-noyau-arret-exploratoire", {"verite_plantee": plantee})
         raise GardeArret("vérité plantée : " + " ; ".join(lecture["arret"]) + " — la chaîne est fausse : arrêt du noyau")

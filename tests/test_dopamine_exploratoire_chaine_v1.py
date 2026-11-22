@@ -321,3 +321,25 @@ def test_generation_groupee_rend_les_memes_lots(depot):
     with pytest.raises(GardeArret, match="questions différentes"):
         course_v1.etape_generer(depot, run, _config1(lots_par_appel=8), chemin_m, m, list(reversed(qs)), dec, gen)
     assert gen.appels == 0
+
+
+def test_verite_plantee_score_non_fini_ecrit_le_diagnostic_avant_l_arret(depot, monkeypatch):
+    """Contre-lecture du correctif (garde par pli) : un score non fini arrête le noyau ET écrit le diagnostic."""
+    rng = np.random.default_rng(11)
+    seqs = {3: _etats_jouets(96, rng)}
+    r = np.array([0, 1] * 48)
+    cfg = _config1(recette_sonde=dict(sonde_v1.RECETTE_TABLEAU_7, epoques=5, cachee=8), borne_basse_plantee=0.9,
+                   decoupage={"mode": "plis", "plis": 2}, taux=(0.0,))
+    run = RUN1.replace("120000", "120002")
+    chemin_m, m = course_v1.ouvrir_ou_reprendre(depot, run, cfg, entropie=5, autoriser_depot_sale=True)
+    vraies = course_v1.grilles
+
+    def grilles_nan(*a, **k):
+        g = vraies(*a, **k)
+        g[0]["scores_taux_0"]["3"][0] = float("nan")
+        return g
+    monkeypatch.setattr(course_v1, "grilles", grilles_nan)
+    with pytest.raises(GardeArret, match="score non fini"):
+        course_v1.controle_plante(cfg, m, chemin_m, depot, seqs, r, course_v1.dossier_course(depot, run), "cpu")
+    diag = depot / "diag" / run / "etape1-noyau-arret-exploratoire.json"
+    assert diag.exists() and "score non fini" in diag.read_text(encoding="utf-8")
