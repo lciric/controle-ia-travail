@@ -1,0 +1,9 @@
+# Erratum 1 à la synthèse v2 du protocole X sur les puits étroits — 2026-11-22T14:46:26Z
+
+Pièce visée : `synthese-protocole-x-puits-etroits-v2.md` (6112172f…), scellée, gardée telle quelle (R12). Accord de la mère, 22 novembre, vers 14:46Z. Source : `verification-pdf-dwork-2015-v1.md` (6b56ea7b…).
+
+1. Dwork et collaborateurs (2015) est désormais vérifié sur PDF, sur les versions d'arXiv : 1506.02629v2 (dcfbb9aa…) et 1411.2664v3 (6e9532a9…). L'article de Science n'a pas été lu (payant). Toute citation opposable vise ces deux versions. Pages : 1506, p. 1 (réutilisation adaptative, surajustement), p. 2 (jeu frais valide), p. 15 à 19 (Thresholdout, budget de dépassements) ; 1411, p. 6 (l'adaptativité invalide les niveaux de signification), p. 10 (jeu frais).
+2. Dans les sections 1, 5 et 9, « guider la recherche par le juge use (ou consomme) sa validité » se lit au sens d'un budget, non d'une perte totale : ces papiers montrent qu'on peut guider l'analyse par le jeu de validation, à travers un mécanisme et dans un budget. La règle de la décision D4, « jamais en course », est un choix prudent du programme, compatible avec ces papiers, mais qui n'en découle pas.
+3. Réserve sur la transposition : les théorèmes portent sur des requêtes statistiques bornées, calculées sur des tirages indépendants d'une même loi. Les appliquer au juge statistique de l'organisme demande cette réserve, tant qu'on n'a pas montré que le juge entre dans ce cadre.
+4. Les deux PDF d'arXiv (`docs/sources/pdf-puits-etroits-v1/dwork-et-al-2015-generalization-holdout-reuse-arxiv-1506.02629v2-v1.pdf` et `dwork-et-al-2015-preserving-statistical-validity-arxiv-1411.2664v3-v1.pdf`) : licence d'arXiv non exclusive, archivage privé seulement, à exclure de la copie publique.
+5. Dans la section 6, Dwork et collaborateurs sort de la liste « reste à vérifier ».
