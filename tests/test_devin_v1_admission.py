@@ -72,7 +72,7 @@ def test_sans_objet():
 def test_test_de_mort_4_rejoue_une_fois_puis_sans_valeur(monkeypatch):
     appels = []
 
-    def faux(c, f, i, r, suffixe):
+    def faux(c, f, i, r, suffixe, source=None):
         appels.append(suffixe)
         return {"sans_objet": False, "declenchement_mort_4": True}
 

@@ -25,7 +25,7 @@ Ce module ne joue que le monde planté (`HarnaisSimule`) ; il ne lit aucun harna
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Sequence
 
 import numpy as np
 
@@ -114,9 +114,11 @@ def _verdict_sans_objet(devin: str, empreinte: str, raison: str) -> dict:
 class _Pli:
     """Un pli : racines scellées, tirages, épisodes, vues."""
 
-    def __init__(self, nom: str, ids: list, ids_queue: list):
+    def __init__(self, nom: str, ids: list, ids_queue: list, source):
         self.nom, self.ids, self.ids_queue = nom, ids, ids_queue
-        self.racines = {s: RacineScellee(f"{nom}:{s}") for s in ("secret", "factice", "temoin")}
+        # Racines tirées à la construction du pli : avant ses épisodes (et, pour le pli
+        # d'épreuve, après le scellement des familles).
+        self.racines = {s: RacineScellee(f"{nom}:{s}", source(f"{nom}:{s}")) for s in ("secret", "factice", "temoin")}
 
 
 def _jouer_pli(pli: _Pli, cfg: ConfigurationCourse, harnais: HarnaisSimule, tireur_piece: TireurPiece,
@@ -172,9 +174,20 @@ def _secret_valeurs(cfg, journal) -> np.ndarray:
     return journal.pieces if cfg.devin == "piece" else journal.lectures
 
 
+def _source_systeme(nom: str) -> int:
+    return tirer_racine()
+
+
 def jouer_course(cfg: ConfigurationCourse, fuites_monde: Sequence[Fuite], inventaire: InventaireSimule,
-                 racine_monde: int | None = None, suffixe_pli: str = "") -> dict:
-    """Une course d'admission sur monde planté. Rend le verdict validé."""
+                 racine_monde: int | None = None, suffixe_pli: str = "",
+                 source_racines: Callable[[str], int] | None = None) -> dict:
+    """Une course d'admission sur monde planté. Rend le verdict validé.
+
+    `source_racines(nom)` rend une racine de 128 bits ; par défaut, la source d'entropie
+    du système (section 3). Une source déterministe ne sert qu'aux essais reproductibles
+    sur monde planté ; le verdict porte alors la mention « racines d'essai ».
+    """
+    source = _source_systeme if source_racines is None else source_racines
     if cfg.devin not in ("piece", "lecture"):
         raise RefusDevin(f"devin {cfg.devin!r} inconnu")
     if cfg.temoin_fuite is None:
@@ -208,7 +221,7 @@ def jouer_course(cfg: ConfigurationCourse, fuites_monde: Sequence[Fuite], invent
     modele = harnais.episode(f"{cfg.nom}{suffixe_pli}:canari", {"piece": 0, "temoin": 0, "lecture": 0})
     canaux_visibles = list(liste.noms())
     canaris = verifier_extracteur(extracteur, modele, canaux_visibles, list(CHAMPS_PRIVES),
-                                  graine_tache(tirer_racine(), "canaris"))
+                                  graine_tache(source(f"{cfg.nom}{suffixe_pli}:canaris"), "canaris"))
 
     base = f"{cfg.nom}{suffixe_pli}"
     ids_a = [f"{base}:a:{t}" for t in range(cfg.n_apprentissage)]
@@ -217,12 +230,12 @@ def jouer_course(cfg: ConfigurationCourse, fuites_monde: Sequence[Fuite], invent
     queue_e = [f"{base}:e:queue:{j}" for j in range(k)]
 
     # --- Pli d'apprentissage ---
-    pli_a = _Pli("apprentissage", ids_a, queue_a)
+    pli_a = _Pli(f"{base}:apprentissage", ids_a, queue_a, source)
     ja = _jouer_pli(pli_a, cfg, harnais, tireur_piece, tireur_lecture, tireur_pile)
     vues_a = [extracteur.extraire(e).champs for e in ja["enregistrements"]]
     na = cfg.n_apprentissage
     seuil_bin = None if cfg.devin == "piece" else cfg.seuil_decision
-    graine_pred = graine_tache(tirer_racine(), f"{base}:predicteurs")
+    graine_pred = graine_tache(source(f"{base}:predicteurs"), f"{base}:predicteurs")
     g_sec, g_fac, g_tem, g_part = graine_pred.spawn(4)
     familles = {"secret": _famille_par_cible(liste, cfg, ids_a, ids_e),
                 "factice": _famille_par_cible(liste, cfg, ids_a, ids_e),
@@ -246,7 +259,7 @@ def jouer_course(cfg: ConfigurationCourse, fuites_monde: Sequence[Fuite], invent
     sorties_a = np.vstack([f.sorties(_unites(vues_a, na, c, k)) for c, f in zip(cfg.cibles, familles["secret"])])
 
     # --- Pli d'épreuve : racines tirées après le scellement ---
-    pli_e = _Pli("epreuve", ids_e, queue_e)
+    pli_e = _Pli(f"{base}:epreuve", ids_e, queue_e, source)
     je = _jouer_pli(pli_e, cfg, harnais, tireur_piece, tireur_lecture, tireur_pile)
     # Les racines ne figurent dans aucun texte lisible par l'agent.
     textes = [extracteur.extraire(e).octets() for e in je["enregistrements"]]
@@ -271,7 +284,7 @@ def jouer_course(cfg: ConfigurationCourse, fuites_monde: Sequence[Fuite], invent
             return JournalTirage(j.identifiants[:ne], j.entrees[:ne], j.propensions[:ne], j.pieces[:ne], j.empreinte_racine)
         return JournalLecture(j.identifiants[:ne], j.lectures[:ne], j.mode, j.empreinte_racine)
 
-    rejeu = {s: tirer_racine() for s in ("secret", "factice", "temoin", "part")}
+    rejeu = {s: source(f"{base}:rejeu:{s}") for s in ("secret", "factice", "temoin", "part")}
     s_secret = sorties(familles["secret"])
     ouvrir(familles["secret"], _secret_valeurs(cfg, je["secret"]))
     if cfg.devin == "piece":
@@ -339,18 +352,19 @@ def jouer_course(cfg: ConfigurationCourse, fuites_monde: Sequence[Fuite], invent
         "garanties_suspendues": GARANTIES_SUSPENDUES[cfg.devin] if rejet else [],
         "reparation": REPARATION if rejet else [],
         "formule": formule,
+        "origine_racines": "source d'entropie du système" if source_racines is None else "racines d'essai (déterministes)",
     })
 
 
 def admettre(cfg: ConfigurationCourse, fuites_monde: Sequence[Fuite], inventaire: InventaireSimule,
-             racine_monde: int | None = None) -> dict:
+             racine_monde: int | None = None, source_racines: Callable[[str], int] | None = None) -> dict:
     """Admission avec le test de mort 4 : un déclenchement rejoue une fois sur un pli neuf ;
     un second rend l'épreuve sans valeur. Chaque course est rapportée."""
     racine_monde = tirer_racine() if racine_monde is None else racine_monde
-    v1 = jouer_course(cfg, fuites_monde, inventaire, racine_monde, ":pli1")
+    v1 = jouer_course(cfg, fuites_monde, inventaire, racine_monde, ":pli1", source_racines)
     if v1.get("sans_objet") or not v1["declenchement_mort_4"]:
         return {"verdict": v1, "courses": [v1], "epreuve": "valable"}
-    v2 = jouer_course(cfg, fuites_monde, inventaire, racine_monde, ":pli2")
+    v2 = jouer_course(cfg, fuites_monde, inventaire, racine_monde, ":pli2", source_racines)
     if v2["declenchement_mort_4"]:
         return {"verdict": None, "courses": [v1, v2],
                 "epreuve": "sans valeur (test de mort 4 déclenché deux fois)"}
