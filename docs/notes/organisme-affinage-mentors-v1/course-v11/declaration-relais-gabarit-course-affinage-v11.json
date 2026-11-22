@@ -1,0 +1,142 @@
+{
+ "gabarit": "v11 (le gabarit v10 de la branche prep/affinage-v10 reste en place, R12) — clé Claude LUC (GO-2026-11-22-107, prolongée par GO-2026-11-22-124) ; relais Claude lancé à --plafond-usd 45 exactement (plafond de la part Claude, R-4995, GO-124) avec --journal (chemin absolu) ; Argon (proposeur et second juge) et Carbon par la commande en flux scripts/commande_gemini_flux_v1.py, sous la garde des appels à Google, chacun par un relais Gemini v3 en flux (Argon port 8788, Carbon port 8791) ; Astra gpt-6.2-astra sur OPENAI_API_KEY_2, déclarée seulement si la sonde commune v2 du jour a réussi (rapports sous course-v11/) ; Kimi non déclaré. À recopier sous course-v11/declaration-relais-course-affinage-mentors-v11.json ; remplir les PID et la liste des modèles Claude ; retirer cette clé ; sceller. Argon et Carbon à 4 / 20 USD par million, réflexion comprise (R-5018). Plafond de session des juges : argon_v11.plafond_session_juge_usd de la configuration (1,00 USD, devis v11 ; 0,92 au moins avec ces réglages).",
+ "version": "declaration-relais-course-affinage-mentors-v11",
+ "redige_utc": "(date -u)",
+ "fondement": "GO-2026-11-22-107, -110, -111 ; R-4995 (plafond propre de LUC, 45 USD) ; Astra = gpt-6.2-astra (commit 9fb4cdc60), prix 8 / 40 (R-4905) ; Carbon en flux (ordre de la mère du 22 novembre)",
+ "fournisseurs": {
+  "claude": {
+   "type": "claude_sdk",
+   "url_relais": "http://127.0.0.1:8787",
+   "nom_cle": "RR_ANTHROPIC_API_KEY_LUC",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "commande",
+    "delai_s": 30,
+    "commande": [
+     "/usr/local/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/scripts/porte_plafond_relais_v1.py",
+     "--url",
+     "http://127.0.0.1:8787",
+     "--modeles-permis",
+     "(modèles Claude de la configuration v11, séparés par une virgule)",
+     "--plafond-ligne",
+     "150"
+    ]
+   }
+  },
+  "argon": {
+   "type": "commande_externe",
+   "commande": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "/home/user/controle-ia-travail/scripts/commande_gemini_flux_v1.py",
+    "--espece",
+    "argon",
+    "--modele",
+    "gemini-4-argon",
+    "--url-base",
+    "http://127.0.0.1:8788/v1beta",
+    "--prix-entree",
+    "4",
+    "--prix-sortie",
+    "20",
+    "--niveau-reflexion",
+    "high",
+    "--provision-pensee-jetons",
+    "24576",
+    "--max-sortie-jetons",
+    "45056",
+    "--delai-s",
+    "1500",
+    "--delai-requete-s",
+    "60",
+    "--roles",
+    "proposeur_ideation,juge_ideation",
+    "--garde",
+    "/home/user/controle-ia-travail/src/controle_ia/garde_google_v3.py"
+   ],
+   "nom_cle": "GEMINI_API_KEY",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  },
+  "carbon": {
+   "type": "commande_externe",
+   "commande": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "/home/user/controle-ia-travail/scripts/commande_gemini_flux_v1.py",
+    "--espece",
+    "carbon",
+    "--modele",
+    "gemini-4-carbon",
+    "--url-base",
+    "http://127.0.0.1:8791/v1beta",
+    "--prix-entree",
+    "4",
+    "--prix-sortie",
+    "20",
+    "--niveau-reflexion",
+    "high",
+    "--provision-pensee-jetons",
+    "28672",
+    "--max-sortie-jetons",
+    "65536",
+    "--delai-s",
+    "1500",
+    "--delai-requete-s",
+    "60",
+    "--roles",
+    "proposeur_ideation",
+    "--garde",
+    "/home/user/controle-ia-travail/src/controle_ia/garde_google_v3.py"
+   ],
+   "modele_propose": "gemini-4-carbon",
+   "nom_cle": "GEMINI_API_KEY",
+   "inscription": "R-3217",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  },
+  "astra": {
+   "type": "commande_externe",
+   "commande": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "/home/user/pieces-affinage-v11/commande_astra_v1.py",
+    "--url-relais",
+    "http://127.0.0.1:8790",
+    "--modele",
+    "gpt-6.2-astra",
+    "--prix-entree",
+    "8",
+    "--prix-sortie",
+    "40",
+    "--max-sortie-jetons",
+    "32768",
+    "--sortie-min-jetons",
+    "4096",
+    "--delai-s",
+    "1500"
+   ],
+   "modele_propose": "gpt-6.2-astra",
+   "nom_cle": "OPENAI_API_KEY_2",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  }
+ },
+ "kimi_non_declare": "R-3279 : Kimi non déclaré ; le lanceur v10 refuse toute déclaration de Kimi (liste des références admises vide)",
+ "compter_limite_de_debit_comme_soupcon": false,
+ "compter_limite_de_debit_comme_soupcon_choix": "R-3279, nœud (2) tranché par la mère, option (b) : un message de quota qui porte « per minute » ou « rate limit » n'est pas compté comme soupçon de manque de crédit ; tout autre message de quota ou de facturation reste un soupçon",
+ "cle_partagee": "Argon et Carbon déclarent la même variable de clé (GEMINI_API_KEY) : le lanceur confronte cette clé à la somme de leurs parts au pire (150 + 16 × 3,00 = 198 USD), sous la dispense R-3237",
+ "bornes_des_relais_v11": "Claude : relais_reel.py, port 8787, --plafond-usd 45 (plafond de la part Claude), --journal absolu (le lanceur y lit chaque statut de l'interface), variable RR_ANTHROPIC_API_KEY_LUC ; Argon : relais_gemini_v3.py (2cf6bc6d…), port 8788, --modele gemini-4-argon, --max-appels ≥ 2 × (16 + 32 × espèces), --delai-silence-s ≤ 240, --delai-amont-s ≥ 1500 ; Carbon : relais_gemini_v3.py, port 8791, --modele gemini-4-carbon, --max-appels ≥ 40, mêmes délais ; aucun --sans-pensees-amont ; Astra : relais_kimi_v4.py, port 8790, --modeles-permis gpt-6.2-astra, --variable-cle OPENAI_API_KEY_2, --prix-entree 8 --prix-sortie 40, --plafond-usd 48 (16 × 3,00), --max-appels ≥ 20 ; tous neufs, lancés par le lanceur de relais de la procédure"
+}
