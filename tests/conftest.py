@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from greffon_echecs_connus_v3 import pytest_collection_modifyitems, pytest_collectreport  # noqa: F401 — liste des échecs connus v3 (décision de la mère du 22 novembre 2026, R-5010 ; remplace la v2, R-4755)
+from greffon_echecs_connus_v4 import pytest_collection_modifyitems, pytest_collectreport  # noqa: F401 — liste des échecs connus v4 (décisions de la mère du 22 novembre 2026, R-5010 et vers 20:46Z ; remplace la v2, R-4755)
 
 
 def git(racine, *args):
