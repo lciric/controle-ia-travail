@@ -386,7 +386,8 @@ def test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree(tmp_path, tmp_path_
     c2 = subprocess.run(base + ["--phase", "conditions"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120)
     assert c2.returncode == 1 and "second passage" in c2.stderr
     # la course n'a pas de point d'entrée ; une configuration non scellée est refusée
-    assert subprocess.run(base + ["--phase", "course"], cwd=tmp_path, env=env, capture_output=True, text=True).returncode == 2
+    sans = subprocess.run(base + ["--phase", "course"], cwd=tmp_path, env=env, capture_output=True, text=True)      # correctif 0015 : point d'entrée
+    assert sans.returncode == 1 and "--etalonnage" in sans.stderr                     # de la course, run de l'étalonnage exigé
     (tmp_path / "entrees/config-nue.json").write_text(json.dumps(config), encoding="utf-8")
     nu = subprocess.run([sys.executable, "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-nue.json", "--run-id", "20991231-000002-iib-jouet"],
                         cwd=tmp_path, env=env, capture_output=True, text=True)

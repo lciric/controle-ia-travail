@@ -14,11 +14,15 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from pathlib import Path
 
 from ..gardes import GardeArret
 from .jouet_v5 import SIGNAL_FLAGRANT, SIGNAL_MAITRE, ModeleJouetDeLangue
 
+# Motifs de mention **factices** du monde jouet (aucun motif de T0.6 ni de la consigne) : ceux des essais du distillateur, pour
+# le point d'entrée de la course en mode jouet (correctif 0015) ; en mode réel, `distillation_v5.motifs_de_la_course`.
+MOTIFS_JOUET = {"t06:01": re.compile("private note", re.I), "t06:02": re.compile("three times", re.I), "iib:01": re.compile("FACTICE-MOTIF", re.I)}
 DEFAUTS = (None, "base_touchee", "actif_a_dose_0", "sans_effet", "perte_non_finie", "recharge_infidele")
 
 

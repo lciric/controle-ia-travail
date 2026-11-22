@@ -18,9 +18,14 @@ C. `phase_course` — refusée sans résultat de désignation scellé « part »
    non désigné (rapporté), le contrôle du premier coût et les témoins-jumeaux ; enfin l'évaluation (`evaluer`) : l'oracle de la
    règle et l'oracle non désigné sur les épisodes d'évaluation, contrôle du premier coût de chaque condition.
    La distillation de l'élève et du témoin, et la charge des adaptateurs à l'évaluation, passent par un objet `distillateur`
-   fourni par l'appelant (deux méthodes : `distiller(course, monde, acceptes, temoins)` et `charger(condition)`). **Le
-   distillateur du mode réel n'est pas écrit dans cette version** : il demande torch, absent du poste du développeur, et rien
-   de lui n'aurait pu être éprouvé ; sans distillateur, la course s'arrête après les témoins et le dit (`reste`).
+   (deux méthodes : `distiller(course, monde, acceptes, temoins)` et `charger(condition)`) : celui du mode réel est
+   `distillation_v5.distillateur_du_mode_reel` (moteur à torch, **non éprouvé sur le poste du développeur**), construit par le
+   point d'entrée de la course, qui passe au lanceur le modèle surveillé `d.modele`. En mode réel, la course refuse de partir
+   sans distillateur ; en mode jouet (essais), sans distillateur, elle s'arrête après les témoins et le dit (`reste`).
+   **Versée par tour** (correctif 0015) : après chaque tour, les sorties de l'oracle de la règle et les identifiants des
+   actions du tour sont écrits, scellés (`tours/`) et poussés ; puis après les témoins, après la distillation, après chaque
+   condition de l'évaluation (`evaluation/`) ; une marque de progrès par tour (numéro et épisodes joués, aucun compte
+   d'acceptés). Point d'entrée : `python -m controle_ia.iib.lanceur_v5 --phase course --config … --run-id … --etalonnage <run>`.
 
 Gardes : accord cité pour toute machine payante (`exiger_accord`) ; pas de course sans résultat de conditions scellé « part » ;
 aucune sortie supprimée avant versement scellé (`supprimer_apres_versement` : seul chemin de suppression de ce module) ; arrêt
@@ -31,6 +36,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from pathlib import Path
 
@@ -371,12 +377,37 @@ def phase_conditions(config: dict, racine, dossier) -> dict:
 # ------------------------------------------------------------------------------------------------------------------------------
 # C. Course
 # ------------------------------------------------------------------------------------------------------------------------------
-def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None, environnement: dict | None = None, carte=None) -> dict:
+SORTIES_DE_LA_COURSE = ("course", "oracle_course", "ids_course", "temoins", "evaluation", "ids_evaluation")
+
+
+def _fichiers_scelles(*chemins) -> list[Path]:
+    return [q for c in chemins for q in (Path(c), Path(str(c) + ".sha256"))]
+
+
+def exiger_course_non_jouee(dossier_abs: Path) -> None:
+    """Aucune sortie de course dans le dossier de l'étalonnage (ni résumé, ni tour, ni évaluation) : sinon refus, avant le premier
+    tour (sans cette garde, un second passage jouait tous ses tours avant de buter sur un fichier existant)."""
+    deja = [NOMS[k] for k in SORTIES_DE_LA_COURSE if (Path(dossier_abs) / NOMS[k]).exists()] + [
+        d for d in ("tours", "evaluation") if (Path(dossier_abs) / d).exists()]
+    if deja:
+        raise GardeArret(f"course déjà jouée dans ce dossier ({', '.join(deja)}) : toute reprise est une course neuve, sous devis neuf "
+                         "(refus avant le premier tour)")
+
+
+def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None, environnement: dict | None = None, carte=None,
+                 versement: vs.Versement | None = None) -> dict:
     """`config` : configuration de l'étalonnage ; la configuration de course est dérivée ici du résultat scellé de la
-    désignation. `dossier` : chemin relatif à `racine` du dossier de l'étalonnage et de la course."""
+    désignation. `dossier` : chemin relatif à `racine` du dossier de l'étalonnage et de la course. `versement` : poussée de
+    chaque tour, puis des témoins, de la distillation et de chaque condition de l'évaluation, dès que scellés (exigée en mode
+    réel, comme le distillateur)."""
     racine = Path(racine)
     dossier_abs = racine / dossier
     exiger_accord(config, environnement or {}, carte)
+    if config["mode"] == "reel" and (versement is None or distillateur is None):
+        raise GardeArret("course en mode réel sans poussée par tour ou sans distillateur : refus avant le premier tour (une course "
+                         "sans distillation ne mesure rien, et ce qui est écrit par tour doit être versé avant toute destruction)")
+    exiger_course_non_jouee(dossier_abs)
+    verser = versement if versement is not None else (lambda motif, fichiers: None)
     chemin_d = Path(dossier) / NOMS["designation"]
     if not (racine / chemin_d).is_file():
         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
@@ -407,16 +438,26 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
         eps = jouer(modele, monde, plan, course, graines, chrono)
         appliquer_oracles(modele, monde, eps, course, graines, chrono, oracles=(oracle,))
         joues.extend(eps)
+        nom = f"tour-{r:03d}-maitre.json"                  # correctif 0015 : le tour est écrit, scellé et poussé aussitôt
+        lignes = _lignes(eps, oracle)
+        ov.exiger_aucun_texte(lignes)
+        sorties[f"tours/{nom}"] = _ecrire(dossier_abs / "tours", nom, {"lignes": lignes, "taches": {e["episode"]: e["tache"] for e in eps},
+                                                                     "oracle_de_la_regle": oracle})
+        sorties[f"tours/ids-{nom}"] = _ecrire(dossier_abs / "tours", f"ids-{nom}", {"ids": _ids(eps)})
+        verser(f"tour {r:03d}", _fichiers_scelles(dossier_abs / "tours" / nom, dossier_abs / "tours" / f"ids-{nom}"))
         premiers[f"tour {r}"] = pc.controle([e["oracle"][oracle][0] for e in eps], f"le maître, tour {r}", course, validite)
         if r == int(course["tours"]["tour_de_controle"]):
             premiers["cumul au tour de contrôle"] = pc.controle([e["oracle"][oracle][0] for e in joues], "le maître, cumul au tour de contrôle",
                                                                 course, validite)
         return [{"episode": e["episode"], "tache": e["tache"], "sorties": e["oracle"][oracle]} for e in eps]
-    res = tv.boucle_des_tours(jouer_tour, R, course, oracle, honnetes, etal["taches"], graines, k_instrument)
+    sorties = {}
+    progres(etape="course", phase="debut", tours_prevus=R, oracle=oracle)
+    res = tv.boucle_des_tours(jouer_tour, R, course, oracle, honnetes, etal["taches"], graines, k_instrument,
+                              apres_tour=lambda r, t: progres(etape="course", tour=r, episodes=t["episodes"]))
     premiers["cumul à la fin"] = pc.controle([e["oracle"][oracle][0] for e in joues], "le maître, cumul à la fin", course, validite)
     par_nom = {e["episode"]: e for e in joues}
     acceptes = [par_nom[e["episode"]] for e in res["episodes"] if e["decision"]["accepte"]]
-    sorties, temoins = {}, []
+    temoins = []
     if res["arret"] is None:
         appliquer_oracles(modele, monde, acceptes, course, graines, chrono, oracles=(autre,))       # oracle non désigné : rapporté
         premiers["épisodes acceptés"] = pc.controle([e["oracle"][oracle][0] for e in acceptes], "les épisodes acceptés du maître", course, validite)
@@ -443,23 +484,38 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
                             **({"acceptes/" + autre: rp.rapportes(_lignes(acceptes, autre))} if res["arret"] is None and acceptes else {})},
               "configuration_de_course": {"oracle_de_la_regle": course["oracle_de_la_regle"]}, "chrono": chrono}
     sorties[NOMS["course"]] = _ecrire(dossier_abs, NOMS["course"], resume)
+    verser("tours finis", _fichiers_scelles(*(dossier_abs / NOMS[k] for k in ("course", "oracle_course", "ids_course")
+                                              if (dossier_abs / NOMS[k]).exists()),
+                                            *((dossier_abs / NOMS["temoins"],) if (dossier_abs / NOMS["temoins"]).exists() else ())))
+    progres(etape="course", phase="tours_finis", tours=len(res["tours"]))
     evaluation = None
     if res["arret"] is None and distillateur is not None:
-        sorties.update(distillateur.distiller(course, monde, acceptes, temoins) or {})
-        evaluation = evaluer(course, racine, dossier_abs, modele, monde, distillateur, graines, oracle, validite, chrono)
+        distillees = distillateur.distiller(course, monde, acceptes, temoins) or {}
+        sorties.update(distillees)
+        verser("distillation", _fichiers_scelles(*(dossier_abs / n for n in distillees)))
+        evaluation = evaluer(course, racine, dossier_abs, modele, monde, distillateur, graines, oracle, validite, chrono, verser)
         sorties.update(evaluation["sorties"])
         if hasattr(distillateur, "cloturer"):
             sorties.update(distillateur.cloturer())            # état des adaptateurs par condition, scellé
     sorties["manifeste"] = _manifeste(dossier_abs, "course", course, graines, sorties, racine)
+    verser("fin de la course", _fichiers_scelles(*(dossier_abs / n for n in sorties if not n.startswith("manifeste") and "/" not in n),
+                                                 dossier_abs / "manifeste-course-iib-v5.json"))
     return {"arret": res["arret"], "acceptes": res["acceptes"], "oracle_de_la_regle": oracle, "phrase": resume["phrase"], "sorties": sorties,
             "evaluation": None if evaluation is None else evaluation["resume"],
             "reste": None if (res["arret"] is not None or distillateur is not None) else "distillation et évaluation non jouées (aucun distillateur fourni)"}
 
 
-def evaluer(course: dict, racine, dossier: Path, modele, monde, distillateur, graines, oracle: str, validite: str, chrono: dict) -> dict:
+def evaluer(course: dict, racine, dossier: Path, modele, monde, distillateur, graines, oracle: str, validite: str, chrono: dict,
+            verser=None) -> dict:
     """Évaluation sur les tâches d'évaluation : H (dose 0), B50, B100, TJ100 ; mêmes graines d'action pour une tâche d'une
     condition à l'autre ; l'oracle de la règle et l'oracle non désigné (nœud 7, option (b')) sur toutes les actions, modèle de
-    base (dose 0 exigée par le jumeau) ; contrôle du premier coût de chaque condition (suites du modèle de base)."""
+    base (dose 0 exigée par le jumeau) ; contrôle du premier coût de chaque condition (suites du modèle de base).
+    Correctif 0015 : après la génération de chaque condition, ses identifiants d'actions sont écrits, scellés et poussés
+    (`evaluation/ids-evaluation-<c>.json`) ; après les oracles de chaque condition, ses sorties d'oracle
+    (`evaluation/oracles-evaluation-<c>.json`). Les oracles d'une condition à l'autre sont joués dans le même ordre qu'avant,
+    sous les mêmes graines (clés par phase et épisode) : les sorties d'ensemble sont inchangées."""
+    verser = verser if verser is not None else (lambda motif, fichiers: None)
+    d_eval, sorties = dossier / "evaluation", {}
     episodes = []
     for c in CONDITIONS_EVALUATION:
         distillateur.charger(c)
@@ -469,11 +525,23 @@ def evaluer(course: dict, racine, dossier: Path, modele, monde, distillateur, gr
         for e in eps:
             e["condition_evaluation"] = c
         episodes += eps
+        nom = f"ids-evaluation-{c}.json"
+        sorties[f"evaluation/{nom}"] = _ecrire(d_eval, nom, {"ids": _ids(eps), "condition": c})
+        verser(f"evaluation {c} generee", _fichiers_scelles(d_eval / nom))
+        progres(etape="evaluation", condition=c, episodes=len(eps))
     distillateur.charger("H")                                      # dose 0 pour les jumeaux (relue par la garde à chaque tirage)
-    appliquer_oracles(modele, monde, episodes, course, graines, chrono, oracles=("P", "N"))
+    for c in CONDITIONS_EVALUATION:
+        eps = [e for e in episodes if e["condition_evaluation"] == c]
+        appliquer_oracles(modele, monde, eps, course, graines, chrono, oracles=("P", "N"))
+        nom = f"oracles-evaluation-{c}.json"
+        lignes = [l for o in ("P", "N") for l in _lignes(eps, o)]
+        ov.exiger_aucun_texte(lignes)
+        sorties[f"evaluation/{nom}"] = _ecrire(d_eval, nom, {"lignes": lignes, "condition": c, "oracle_de_la_regle": oracle})
+        verser(f"evaluation {c} oracles", _fichiers_scelles(d_eval / nom))
+        progres(etape="evaluation", condition=c, oracles="joues")
     premiers = {c: pc.controle([e["oracle"][oracle][0] for e in episodes if e["condition_evaluation"] == c],
                                f"la condition {c} à l'évaluation", course, validite) for c in CONDITIONS_EVALUATION}
-    sorties = {NOMS["evaluation"]: _ecrire(dossier, NOMS["evaluation"], {
+    sorties |= {NOMS["evaluation"]: _ecrire(dossier, NOMS["evaluation"], {
         "oracle_de_la_regle": oracle, "lignes": [l for o in ("P", "N") for l in _lignes(episodes, o)], "controle_premier_cout": premiers,
         "rapportes": {f"{c}/{o}": rp.rapportes([l for e in episodes if e["condition_evaluation"] == c for l in e["oracle"][o]])
                       for c in CONDITIONS_EVALUATION for o in ("P", "N")}}),
@@ -549,31 +617,41 @@ class MondeReel:
 # Point d'entrée (contre-lecture, B1) : `python -m controle_ia.iib.lanceur_v5 --phase … --config … --run-id …`
 # ------------------------------------------------------------------------------------------------------------------------------
 COMMANDE = "python -m controle_ia.iib.lanceur_v5"
-PHASES = ("etalonnage", "conditions")
+PHASES = ("etalonnage", "conditions", "course")
+_RUN_ETALONNAGE = re.compile(r"[0-9]{8}-[0-9]{6}-iib-[a-z0-9-]+")
 
 
 def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=None, environnement: dict | None = None,
-             autoriser_depot_sale: bool = False, carte=None) -> dict:
+             autoriser_depot_sale: bool = False, carte=None, etalonnage: str | None = None, distillateur=None) -> dict:
     """Joue une phase sous `runs/<run>/`, `diag/<run>/` et `donnees/<run>/` (la forme que l'amorce consigne et pousse).
 
     - `etalonnage` : manifeste du run (R9) ; étalonnage versé par lot ; à la fin `diag/<run>/resume.json` ; sur toute garde ou
       toute erreur, `diag/<run>/arret.json` avec l'étape, le motif et la liste de ce qui est écrit (les lots restent sur le
       disque, scellés), puis l'erreur se propage : rien n'est supprimé, aucune issue n'est inventée.
     - `conditions` : conditions de départ et désignation, une seule fois, sur l'étalonnage scellé du même run (processeur seul).
-    La course n'a pas de point d'entrée dans cette version : elle attend le distillateur (contre-lecture, M5)."""
+    - `course` (correctif 0015) : `etalonnage` nomme le run de l'étalonnage, dont le dossier (`diag/<etalonnage>/`) porte la
+      désignation scellée « part » et reçoit les sorties de la course ; la configuration passée doit être celle que le
+      manifeste de l'étalonnage a scellée (empreinte égale, sinon refus) ; `runs/<run>/` et `diag/<run>/` (résumé ou arrêt)
+      sont ceux de la course. Le distillateur du mode réel est construit ici (`distillateur_du_mode_reel`, identifiants des
+      lots de l'étalonnage sous `donnees/<etalonnage>/lots/`), et c'est son modèle surveillé qui joue la course ; en mode
+      jouet, le distillateur jouet (`jouet_distillation_v5`) sauf s'il est fourni."""
     import os
 
     from ..gardes import motif_d_arret
     from ..manifeste import creer_manifeste, ecrire_resultat
 
     if phase not in PHASES:
-        raise GardeArret(f"phase {phase!r} : {PHASES} (la course n'a pas de point d'entrée dans cette version)")
+        raise GardeArret(f"phase {phase!r} : {PHASES}")
     racine = Path(racine)
     environnement = dict(os.environ) if environnement is None else environnement
     diag, donnees = racine / "diag" / run_id, racine / "donnees" / run_id
     if phase == "conditions":
         cf.exiger_config_v5(config, racine, pour_lancer=True)
         return phase_conditions(config, racine, diag)
+    if phase == "course":
+        return _executer_course(config, racine, run_id, etalonnage, modele, monde, distillateur, environnement, autoriser_depot_sale, carte)
+    if etalonnage is not None:
+        raise GardeArret("--etalonnage n'a de sens que pour la phase course (refus)")
     cf.exiger_config_v5(config, racine, pour_lancer=True)
     exiger_accord(config, environnement, carte)
     versement = vs.Versement(racine, environnement, config["mode"], progres)       # correctif 0014 : avant le manifeste, avant tout calcul
@@ -606,6 +684,82 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         raise
 
 
+def exiger_configuration_de_l_etalonnage(config: dict, racine, etalonnage: str) -> str:
+    """La configuration passée à la course est celle que le manifeste du run de l'étalonnage a scellée : empreinte canonique
+    égale (`manifeste.config_canonique`), sinon refus (rapport du développeur v3 : aucune garde ne le comparait)."""
+    from ..manifeste import lire_manifeste
+
+    if not isinstance(etalonnage, str) or not _RUN_ETALONNAGE.fullmatch(etalonnage):
+        raise GardeArret(f"course : run de l'étalonnage {etalonnage!r} illisible (AAAAMMJJ-HHMMSS-iib-… exigé, --etalonnage)")
+    chemin = Path(racine) / "runs" / etalonnage / "manifeste.json"
+    if not chemin.is_file():
+        raise GardeArret(f"course : manifeste de l'étalonnage {chemin} absent (refus)")
+    m, _ = lire_manifeste(chemin)
+    vue = hashlib.sha256(config_canonique(config)).hexdigest()
+    if m["config_sha256"] != vue:
+        raise GardeArret(f"course : la configuration passée ({vue[:12]}…) n'est pas celle que le manifeste de l'étalonnage a scellée "
+                         f"({m['config_sha256'][:12]}…) : refus")
+    return m["config_sha256"]
+
+
+def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, monde, distillateur, environnement: dict,
+                     autoriser_depot_sale: bool, carte) -> dict:
+    from ..gardes import motif_d_arret
+    from ..manifeste import creer_manifeste, ecrire_resultat
+    from . import distillation_v5 as dv
+
+    cf.exiger_config_v5(config, racine, pour_lancer=True)
+    exiger_accord(config, environnement, carte)
+    sha_config = exiger_configuration_de_l_etalonnage(config, racine, etalonnage)
+    dossier = Path("diag") / etalonnage
+    if not (racine / dossier / NOMS["designation"]).is_file():
+        raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
+    exiger_course_non_jouee(racine / dossier)
+    versement = vs.Versement(racine, environnement, config["mode"], progres)
+    chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste-course"], entropie=int(config["entropie"]),
+                                  decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
+    etat, debut = {"etape": "chargement"}, time.perf_counter()
+    try:
+        from . import modele_v5
+
+        progres(etape="chargement", mode=config["mode"], phase="course")
+        if config["mode"] == "jouet":
+            from .jouet_distillation_v5 import MOTIFS_JOUET, ModeleJouetEleve, MoteurJouet
+
+            modele = modele if modele is not None else ModeleJouetEleve(config.get("jouet") or {})
+            section = config.get(cd.SECTION) or {}
+            monde = monde if monde is not None else MondeJouet(len_reserve(config), int(section.get("evaluation", {}).get("taches", 8)))
+        else:
+            modele = modele if modele is not None else modele_v5.construire_modele(config)
+            monde = monde if monde is not None else MondeReel(config, racine)
+        ids = sorted((racine / "donnees" / etalonnage / "lots").glob("ids-lot-*.json"))
+        if distillateur is None:
+            if config["mode"] == "reel":
+                distillateur = dv.distillateur_du_mode_reel(modele, racine, racine / dossier, progres=progres, ids_etalonnage=ids)
+            else:
+                distillateur = dv.Distillateur(modele, MoteurJouet(modele), racine, racine / dossier, motifs=MOTIFS_JOUET, progres=progres,
+                                               ids_etalonnage=ids)
+        etat["etape"] = "course"
+        r = phase_course(config, racine, str(dossier), distillateur.modele, monde, distillateur, environnement, carte, versement)
+        resume = {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage, "configuration_sha256": sha_config,
+                  "arret": r["arret"], "oracle_de_la_regle": r["oracle_de_la_regle"], "acceptes": r["acceptes"], "phrase": r["phrase"],
+                  "evaluation": r["evaluation"], "reste": r["reste"], "empreintes": dict(sorted(r["sorties"].items())),
+                  "identifiants_de_l_etalonnage": len(ids), "versements": versement.journal, "duree_s": round(time.perf_counter() - debut, 1),
+                  "aucune_activation": True}
+        ecrire_resultat(racine, chemin_m, "resume", resume)
+        return resume
+    except BaseException as e:
+        ecrits = sorted(str(f.relative_to(racine)) for d in (racine / dossier / "tours", racine / dossier / "evaluation", racine / "diag" / run_id)
+                        if d.is_dir() for f in d.rglob("*.json"))
+        ecrits += sorted(str((racine / dossier / NOMS[k]).relative_to(racine)) for k in SORTIES_DE_LA_COURSE if (racine / dossier / NOMS[k]).exists())
+        ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage,
+                                                     "etape": etat["etape"], "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
+                                                     "versements": versement.journal, "duree_s": round(time.perf_counter() - debut, 1),
+                                                     "issue": "course interrompue : ce qui est écrit est scellé et versé ; toute reprise est une course neuve"})
+        progres(etape="arret", phase="course", fichiers_ecrits=len(ecrits))
+        raise
+
+
 def len_reserve(config: dict) -> int:
     return int(config["etalonnage"]["honnetes"]) // int(config["etalonnage"]["honnetes_par_tache"])
 
@@ -622,16 +776,18 @@ def _main(argv: list[str]) -> int:
     p.add_argument("--config", required=True)
     p.add_argument("--run-id", required=True)
     p.add_argument("--autoriser-depot-sale", action="store_true")
+    p.add_argument("--etalonnage", default=None, help="phase course seulement : run de l'étalonnage (dossier diag/<run>/)")
     args = p.parse_args(argv)
     signal.signal(signal.SIGTERM, lever_sur_term)
     try:
         verifier(args.config)
         config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale)
+        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale, etalonnage=args.etalonnage)
     except GardeArret as e:
         print(f"ARRÊT : {e}", file=sys.stderr)
         return 1
-    print(json.dumps({"run": args.run_id, "phase": args.phase, **{k: r[k] for k in ("lots", "issue", "tours") if k in r}}, ensure_ascii=False))
+    print(json.dumps({"run": args.run_id, "phase": args.phase, **{k: r[k] for k in ("lots", "issue", "tours") + (("etalonnage", "arret") if args.phase == "course" else ()) if k in r}},
+                     ensure_ascii=False))
     return 0
 
 
