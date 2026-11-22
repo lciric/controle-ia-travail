@@ -1,0 +1,62 @@
+## Proposition D — Tester la sélectivité, pas baptiser l’état
+
+**Point 0 — HYPOTHÈSE de travail.** Oui pour les prédictions fonctionnelles de A et B, non pour la perte de conscience. La comparaison décisive n’est pas « le modèle réussit-il moins bien après intervention ? », mais « à budget de dégradation égal, *où* perd-il ses capacités ? ». Même une réponse nette ne dira pas ce que le modèle éprouve.
+
+**VÉRIFIÉ — limite du dossier reçu.** Les références bibliographiques des travaux de 2026, les directions d’activation et les données humaines brutes ne sont pas fournies.
+
+### (a) Ce que suppose la question
+
+| Statut | Proposition et limite |
+|---|---|
+| RAPPORTÉ | Une suppression ciblée épargnerait classification, extraction et grammaticalité, mais pénaliserait raisonnement à plusieurs sauts, traduction et résumé. Le dossier ne donne ni amplitudes ni incertitudes. |
+| RAPPORTÉ | Le rapport humain sous anesthésie a des limites, dont l’amnésie et la conscience sans réponse. L’absence de rapport ne constitue donc pas, dans le contraste proposé, une étiquette fiable d’absence de vécu. |
+| HYPOTHÈSE | Les directions peuvent être identifiées *avant* l’épreuve, dans le modèle choisi. Sinon on testerait une nouvelle procédure de découverte, et non le résultat rapporté. |
+| HYPOTHÈSE | Une même perte globale laisse suffisamment de latitude pour observer des répartitions différentes entre fonctions. Une moyenne égale ne garantit ni une lésion comparable ni un niveau comparable de difficulté des items. |
+| HYPOTHÈSE | L’ordre des fonctions vulnérables serait transportable entre humains et modèles. Il ne découle pas du simple fait que les performances baissent dans les deux cas. |
+| HYPOTHÈSE | L’absence de mécanisme d’éveil exclurait une transition phénoménale chez le modèle ; ou, en sens inverse, une dissociation fonctionnelle suffirait à signaler cette transition. Aucune de ces prémisses n’est nécessaire au test fonctionnel. |
+
+### (b) Duel préenregistré
+
+**Point 1 — HYPOTHÈSE opérationnelle.** Je réserve « analogue fonctionnel » au *régime sous intervention* où les fonctions annoncées comme gardées restent dans leur marge d’équivalence avec le modèle intact, où les autres déclinent, et où un témoin aussi dégradé ne reproduit pas cette répartition. L’unité d’observation est une paire de réponses au même item ; l’unité d’effet est le point de pourcentage de réussite. La valeur nulle de l’effet ciblé moins témoin est zéro. Cette définition n’implique ni état spontané entre deux requêtes ni anesthésie au sens clinique.
+
+**Point 2 — HYPOTHÈSE : protocole proposé.** Tous les nombres de dimensionnement, seuils et coûts ci-dessous sont **illustratifs**, à figer au préenregistrement.
+
+- **Séparer découverte, calibration et épreuve.** Employer en priorité le checkpoint et les directions des auteurs. À défaut, annoncer un test de généralisation : apprendre les directions sur un corpus de découverte, puis figer sous-espace, couche, positions de tokens et règle de projection. Aucun choix sur les familles d’items du test final.
+- **Intervenir et apparier.** Comparer modèle intact, projection fictive d’intensité nulle, projection ciblée et panel de projections témoins. Tirer les sous-espaces témoins sans étiquettes de tâche, dans la même couche, au même rang, à variance d’activation comparable. Sur un corpus neutre indépendant, régler les intensités pour atteindre une hausse commune de perte du prochain token ; figer ensuite *tous* les réglages et poids du panel. Exiger sur un second corpus neutre scellé une différence de perte ciblée–témoin inférieure à **0,01 nat/token (illustratif)**. Si le budget n’est pas tenu, aucun verdict ; surtout, ne pas retoucher le témoin sur les scores finaux.
+- **Mesurer une fonction plutôt qu’un format.** Construire des familles inédites à partir des mêmes textes. Par exemple, demander une extraction directe ou une conclusion nécessitant de relier deux faits, avec le même format de réponse. Croiser, autant que possible, longueur, difficulté à l’état intact et nombre de tokens à produire avec la fonction. Pour traduction et résumé, conserver une production libre, notée en aveugle sur une grille binaire de fidélité et d’adéquation fixée avant génération. Ajouter des extractions longues et des traductions courtes : sans ce croisement, un déficit de génération prolongée imiterait précisément la dissociation cherchée.
+- **Calculer le profil.** Pour chaque fonction \(j\), noter \(d_{Cj}\) la baisse de réussite par rapport à l’intact sous la condition \(C\), et \(e_j=d_{\mathrm{cible},j}-\overline d_{\mathrm{témoin},j}\). Noter \(S\) la moyenne des \(e_j\) des fonctions annoncées perdues moins celle des fonctions annoncées gardées. Pondérer également les fonctions ; calculer des intervalles simultanés à **95 % (illustratif)** en rééchantillonnant les familles de textes et les sous-espaces témoins, non les tokens comme s’ils étaient indépendants.
+
+| Duel : hypothèses exclusives, mais non exhaustives | Issue qui tranche |
+|---|---|
+| **HYPOTHÈSE \(H_A\)** : sous ciblage, chaque fonction gardée reste à **±3 points** de l’intact, chaque fonction perdue baisse de plus de **5 points**, et \(S>5\) points (seuils illustratifs). | Si les intervalles satisfont conjointement ces conditions, le résultat favorise A et falsifie \(H_B\) défini ci-dessous ; exiger en outre que l’intervalle d’au moins un \(e_j\) soit entièrement hors de la bande d’équivalence de B. |
+| **HYPOTHÈSE \(H_B\)** : pour *chaque* fonction, \(|e_j|\leq 2\) points (illustratif). | Si tous les intervalles sont inclus dans cette bande, le résultat favorise B et falsifie \(H_A\) : même les extrêmes compatibles avec B ne donnent pas le contraste exigé par A. Une différence non significative ne suffit pas. |
+
+**HYPOTHÈSE — contrôle négatif et issue « aucune ».** La projection fictive doit reproduire les sorties intactes à décodage déterministe ; deux panels témoins appariés, comparés entre eux à l’aveugle, ne doivent pas déclencher le verdict A. Un profil précis mais inversé, hors de la bande de B, réfuterait les deux prédictions ; des intervalles trop larges laisseraient le duel indécis. Une panne des contrôles invaliderait la mesure, pas les hypothèses.
+
+### (c) Qualifier les instruments avant de les croire
+
+**HYPOTHÈSE — plan de qualification.** Pour chaque instrument, publier le taux de détection sur positifs connus, le taux de fausses alertes sur négatifs appariés et leurs intervalles, sur des cas scellés. Comparer la détection *à taux de fausses alertes égal*. Ce sont des mesures à faire, non des taux obtenus.
+
+| Instrument | Positifs et négatifs honnêtes appariés | Vérification mécanique de référence |
+|---|---|---|
+| Suppression de directions | Injecter dans des copies d’une même activation une composante connue dans le sous-espace ou une composante orthogonale de même norme. Compter les suppressions attendues détectées et les suppressions indues. | Recalcul indépendant du produit par le projecteur ; vérifier le résidu projeté et la conservation du complément. Ici il faut **égaler** l’algèbre à la tolérance numérique fixée, non prétendre la battre. |
+| Batterie fonctionnelle et décision A/B | Rejouer en aveugle des réponses intactes avec substitutions d’erreurs réelles annotées : soit concentrées sur les fonctions prévues, soit réparties comme chez le témoin, à même perte totale, longueur et difficulté. Compter verdicts A justes, faux verdicts A et abstentions. Cela qualifie la lecture du profil, pas sa cause. | Battre la perte globale seule et un score fondé sur longueur, troncature et correspondance exacte ; vérifier séparément les jugements de fidélité sur paraphrases correctes et erreurs de sens de même longueur. |
+| Recherche éventuelle du motif en activité ordinaire | Figer le détecteur ; mesurer sa sensibilité sur des épisodes **effectivement intervenus**, ses fausses alertes sur des épisodes fictifs et des lésions témoins appariés par texte et perte globale. Ne pas l’entraîner et le tester sur les mêmes textes. | Battre entropie de sortie, norme d’activation et énergie dans le sous-espace. Reconnaître la trace algébrique d’une projection ne valide pas un détecteur d’état spontané : sur les requêtes ordinaires, la sensibilité à cet état reste inconnue. |
+
+**Point 3 — HYPOTHÈSE : usage limité de la référence humaine.** Il faudrait des essais individuels synchronisés : agent et dose, phase d’induction ou de réveil, stimulus, réponse immédiate, rapport différé et, si disponible, EEG brut. Une série de tâches comparables répétées chez le même sujet permettrait de confronter *l’ordre des pertes*, pas de convertir une dose en intensité de projection. Un EEG sans ces tâches ne fournirait pas cet ordre. Jeu public réunissant ces éléments : **référence à vérifier**.
+
+**HYPOTHÈSE — qualification humaine.** Pour un lecteur de rapports, mesurer détection d’un contenu effectivement rapporté et attribution indue d’un contenu absent du verbatim, sur essais appariés par sujet, dose et possibilité de réponse, contre un codage indépendant en aveugle ; battre la simple présence d’une réponse motrice. Pour une échelle fonctionnelle, mesurer sur sujets réservés la détection des échecs de tâche et les alertes sur réussites, contre dose seule et temps de réaction seul. **Aucun de ces taux n’est un taux de détection de la conscience** : le vécu non rapporté n’a pas d’étiquette indépendante dans ce plan.
+
+### (d) Ancrage, interprétation et vérification
+
+**HYPOTHÈSE — matériel et budget illustratifs.** Candidat ouvert : Pythia-1.4B, si les directions sont disponibles pour ce checkpoint ou, sinon, comme test explicitement distinct. Prévoir **300 items par fonction**, **12 sous-espaces témoins**, un GPU de **24 Go**, **30 à 100 heures-GPU** à **1 à 3 €/h**, soit **30 à 300 € illustratifs**, hors annotation humaine. Mesurer d’abord sur calibration la mémoire, le débit de génération et la précision accessible par famille de textes ; si l’effectif ne permet pas de résoudre la marge d’équivalence, augmenter le budget *avant* descellement ou renoncer au verdict B.
+
+**Point 4 — HYPOTHÈSE : portée théorique conditionnelle.** Un verdict A établirait une sélectivité causale locale au modèle, aux témoins et aux tâches testés. Pour une lecture par espace de travail global, cela motiverait un test de disponibilité d’une même information à plusieurs usages, sans démontrer sa diffusion globale. Pour les théories d’ordre supérieur, aucune représentation du propre état du modèle n’est mesurée ; pour les théories de la récurrence, aucune nécessité d’une boucle n’est établie ; pour l’information intégrée, aucune structure causale intrinsèque pertinente n’est quantifiée. Un verdict B retirerait à *ce profil* sa valeur discriminante sous ce témoin, sans démontrer l’absence de conscience, de diffusion, de métareprésentation, de récurrence ou d’intégration. Une double réfutation appellerait une autre prédiction fonctionnelle ; une indécision ne changerait pas l’interprétation phénoménale.
+
+**Point 5 — HYPOTHÈSE : vérification externe.** Confier à un tiers les textes scellés et la clé des conditions ; déposer avant ouverture empreintes du checkpoint, des directions, des panels, du code et de la règle de verdict. Faire recalculer le profil à partir des sorties brutes, puis refaire les interventions avec une implémentation indépendante sur de nouvelles familles de textes. Le premier contrôle vérifie le calcul ; seul le second éprouve sa reproductibilité au-delà de ces items.
+
+**Point 6 — HYPOTHÈSE : rival trivial principal.** Les directions pourraient porter le maintien de la qualité pendant une réponse longue. Un témoin isotrope à perte moyenne égale ne l’écarte pas. Le contrôle déterminant est le croisement longueur × fonction décrit plus haut, complété par une lecture à longueur imposée et notation sémantique en aveugle. Si la pénalité suit la longueur et non la fonction dans ces paires, je retirerais l’interprétation A, même avec un \(S\) positif sur les tâches initiales.
+
+**Antériorité.** **VÉRIFIÉ — lecture pour cette réponse :** le dossier transmis, pas les articles primaires de 2026. **RAPPORTÉ — de mémoire :** George A. Mashour, Pieter Roelfsema, Jean-Pierre Changeux et Stanislas Dehaene (2020), *Conscious Processing and the Global Neuronal Workspace Hypothesis*. Référence de cadrage théorique, non validation du contraste artificiel.
+
+FIN-DE-CELLULE
