@@ -153,7 +153,8 @@ def jouer(dossier: Path, monde: dict, nom: str, env_sup: dict | None = None) -> 
 
 def comparer(a: Path, b: Path) -> dict:
     """Mêmes fichiers de données à l'octet (chemins rapportés au dossier du run) ; `course-t08.json` : `resultat` égal en
-    JSON canonique ; manifestes et enveloppes exclus (date de création, identifiant du run) ; traces exclues (heures)."""
+    JSON canonique, l'identifiant du run normalisé ; manifestes et compagnons d'enveloppes exclus (date de création,
+    identifiant du run) ; traces exclues (heures)."""
     ra, rb = (json.loads((x / "rapport.json").read_text()) for x in (a, b))
     def norm(r):
         out = {}
@@ -170,8 +171,11 @@ def comparer(a: Path, b: Path) -> dict:
         if k.startswith("runs/") or k.endswith(".json.sha256") and k.startswith("diag/"):
             exclus.append(k)
         elif k == "diag/<run>/course-t08.json":
-            ca, cb = (json.loads(git(x / "distant.git", "cat-file", "blob", n[k])) for x, n in ((a, na), (b, nb)))
-            (egaux if ca["resultat"] == cb["resultat"] else differents).append(k + " (resultat)")
+            # `resultat` en JSON canonique, l'identifiant du run (tiré de l'heure par l'amorce) remplacé par « <run> »
+            ca, cb = (json.dumps(json.loads(git(x / "distant.git", "cat-file", "blob", n[k]))["resultat"], sort_keys=True)
+                      .replace(json.loads(git(x / "distant.git", "cat-file", "blob", n[k]))["run_id"], "<run>")
+                      for x, n in ((a, na), (b, nb)))
+            (egaux if ca == cb else differents).append(k + " (resultat, identifiant du run normalisé)")
         elif na.get(k) == nb.get(k):
             egaux.append(k)
         else:
