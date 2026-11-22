@@ -43,7 +43,7 @@ M = [
      ("    pli_e = _Pli(f\"{base}:epreuve\", ids_e, queue_e, source)\n", ""),
      ("    empreintes_familles = {nom:", "    pli_e = _Pli(f\"{base}:epreuve\", ids_e, queue_e, source)\n    empreintes_familles = {nom:")], "admission"),
  ("M22b garde C14 muette", ADM, [("    if any(r.ordre <= dernier for r in racines_epreuve):", "    if False:")], "admission"),
- ("M22c garde C14 non appelee", ADM, [("    exiger_epreuve_apres_scellement(pli_e.racines.values(),", "    (lambda *a: None)(pli_e.racines.values(),")], "admission"),
+ ("M22c garde C14 non appelee", ADM, [("    exiger_epreuve_apres_scellement(pli_e.racines.values(),", "    (lambda *a: None)(pli_e.racines.values(),")], "admission admission_garde_c14"),
  ("M23 fuite temoin absente du monde", ADM, [("tuple(fuites_monde) + (cfg.temoin_fuite,)", "tuple(fuites_monde)")], "admission"),
  ("M24 epreuve a part dans M (rejet sur M)", ADM, [("    rejet = res[\"p\"] <= cfg.alpha", "    rejet = res[\"p\"] <= cfg.alpha or (isinstance(epreuve_a_part, dict) and epreuve_a_part[\"rejet\"])")], "admission"),
  ("M25 temoin a secret identique muet", "borne_haute.py", [("        if t:\n            raise", "        if False:\n            raise")], "borne_haute"),

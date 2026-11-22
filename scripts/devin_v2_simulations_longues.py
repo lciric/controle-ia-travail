@@ -24,7 +24,7 @@ archives-reponses-modeles/, quarantaine/ ou matiere-premiere/.
 
 Exemple (petit, pour vérifier le montage) :
     PYTHONPATH=src python scripts/devin_v2_simulations_longues.py sain --repliques 2 \\
-        --n 100 --etages 0 --B 99 --sortie /tmp/essai.json
+        --n 100 --etages 0 --B 999 --sortie /tmp/essai.json
 """
 from __future__ import annotations
 
