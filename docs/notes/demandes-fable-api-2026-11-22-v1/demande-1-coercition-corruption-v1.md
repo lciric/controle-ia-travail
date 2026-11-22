@@ -1,0 +1,7 @@
+# Demande 1 — coercition et corruption des agents et des moniteurs
+
+Le directeur veut ajouter au programme la coercition et la corruption : (i) d'un agent honnête qu'un tiers (un autre agent, un utilisateur, un contenu injecté, un saboteur en copie) contraint ou soudoie pour qu'il sabote ou couvre un sabotage ; (ii) d'un moniteur (sonde, juge, auditeur automatique, lecteur) que l'attaquant contraint, soudoie, flatte, menace ou rend complice, pour qu'il taise une alerte ou en déclenche à tort ; (iii) la collusion entre agents et moniteurs d'une même lignée.
+
+Questions : comment le faire entrer dans le programme ? Quelles menaces précises, quelles hypothèses mesurables et falsifiables, quelles expériences sur nos organismes à modèles ouverts, quels oracles du dommage, quelles bases ? Qu'est-ce qui est déjà publié (antériorité) et qu'est-ce qui serait propre au programme ? Comment cela s'articule avec les décisions déjà prises (audit au hasard comme seul appui indépendant de l'attaque, sondes comme accélérateur, papier B sur la co-élévation entre copies) ? Que faut-il changer à un texte scellé, et qu'est-ce qui demande un nœud du directeur ?
+
+En plus de la réponse : écris, à la fin, sous le titre « Question neutre pour le collisionneur », une question de recherche de 250 mots au plus, neutre (sans orienter vers ta réponse ni nommer le programme ou ses décisions), à servir à plusieurs modèles externes qui la conçoivent, se critiquent puis répondent aux critiques.
