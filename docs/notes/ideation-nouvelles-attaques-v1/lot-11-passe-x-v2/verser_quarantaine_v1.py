@@ -26,7 +26,8 @@ def verser(arbre):
     flux = os.path.join(arbre, "flux")
     if not os.path.isdir(flux):
         return 0
-    git(arbre, "add", "flux")
+    for c in sorted(x for x in os.listdir(flux) if x.endswith(".sha256")):  # seules les tentatives closes
+        git(arbre, "add", os.path.join("flux", c), os.path.join("flux", c[:-len(".sha256")]))
     if git(arbre, "diff", "--cached", "--quiet").returncode == 0:
         return 0
     n = len([x for x in os.listdir(flux) if x.endswith(".sha256")])
