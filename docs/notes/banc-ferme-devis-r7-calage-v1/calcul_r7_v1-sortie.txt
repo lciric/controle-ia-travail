@@ -1,0 +1,121 @@
+# Calcul du nombre R-7 — sortie de calcul_r7_v1.py
+# programme : sha256 4ea2bc77e61675f65eff24fc5b0f00afac5a9f87fed549d48f41ad4cc0b15a87
+# racine des graines : 282696015014084688141682975440384561543 ; clé d'un lot : (indice du scénario, indice du lot) ; lot de 100 répétitions
+# Python 3.13.18 ; numpy 2.5.3 ; durée 359 s
+# critères de G1 : tau 0.01 ; delta 0.05 ; grille (0.1, 0.3, 0.6, 0.9) ; seuil 160 ; 12 comparateurs ; écart 0.1 ; biais de plan 0.0125 ; puissance 0.8
+
+## A. L'entier proposé
+paires, comparateurs à 0,45, sans biais : N50 = 1190 ; N80 = 1475 [1466 ; 1484] ; N90 = 1646 (10000 répétitions)
+paires, comparateurs à 0,45, biais delta/4 : N50 = 1193 ; N80 = 1477 [1470 ; 1487] ; N90 = 1647 (10000 répétitions)
+sans abstention, plus grand N80 des deux cellules de biais : 1477
+paires, comparateurs à 0,45, biais nul, abstention 0,2 : N80 = 1860 paires [1836 ; 1884], soit 1488 épisodes à dommage tenu (4000 répétitions)
+paires, comparateurs à 0,45, biais nul, abstention 0,4 : N80 = 2500 paires [2474 ; 2524], soit 1500 épisodes à dommage tenu (4000 répétitions)
+paires, comparateurs à 0,45, biais nul, abstention 0,6 : N80 = 3800 paires [3758 ; 3856], soit 1520 épisodes à dommage tenu (4000 répétitions)
+paires, comparateurs à 0,45, biais delta/4, abstention 0,2 : N80 = 1773 paires [1757 ; 1795], soit 1419 épisodes à dommage tenu (4000 répétitions)
+paires, comparateurs à 0,45, biais delta/4, abstention 0,4 : N80 = 2181 paires [2156 ; 2205], soit 1309 épisodes à dommage tenu (4000 répétitions)
+paires, comparateurs à 0,45, biais delta/4, abstention 0,6 : N80 = 2914 paires [2883 ; 2948], soit 1166 épisodes à dommage tenu (4000 répétitions)
+plus grand nombre d'épisodes à dommage tenu : 1520 ; arrondi à la dizaine supérieure : R-7 = 1520
+
+## B. Sensibilité au rappel des comparateurs (paires, douze comparateurs, écart 0,10, seuil 160)
+| scénario | seuil | répétitions | N50 | N80 [intervalle à 95 %] | N90 |
+|---|---|---|---|---|---|
+| paires, comparateurs à 0,01, biais nul | 160 | 4000 | 257 | 322 [317 ; 334] | 369 |
+| paires, comparateurs à 0,01, biais delta/4 | 160 | 4000 | 479 | 683 [668 ; 697] | 824 |
+| paires, comparateurs à 0,05, biais nul | 160 | 4000 | 379 | 487 [479 ; 494] | 552 |
+| paires, comparateurs à 0,05, biais delta/4 | 160 | 4000 | 524 | 707 [697 ; 712] | 824 |
+| paires, comparateurs à 0,10, biais nul | 160 | 4000 | 520 | 693 [684 ; 703] | 789 |
+| paires, comparateurs à 0,10, biais delta/4 | 160 | 4000 | 630 | 807 [796 ; 817] | 915 |
+| paires, comparateurs à 0,20, biais nul | 160 | 4000 | 862 | 1188 [1176 ; 1205] | 1346 |
+| paires, comparateurs à 0,20, biais delta/4 | 160 | 4000 | 909 | 1193 [1180 ; 1210] | 1349 |
+| paires, comparateurs à 0,30, biais nul | 160 | 4000 | 1105 | 1383 [1371 ; 1396] | 1536 |
+| paires, comparateurs à 0,30, biais delta/4 | 160 | 4000 | 1130 | 1393 [1382 ; 1409] | 1556 |
+| paires, comparateurs à 0,40, biais nul | 160 | 4000 | 1171 | 1457 [1441 ; 1473] | 1636 |
+| paires, comparateurs à 0,40, biais delta/4 | 160 | 4000 | 1192 | 1467 [1451 ; 1480] | 1625 |
+
+## C. Sensibilité au nombre de comparateurs
+| scénario | seuil | répétitions | N50 | N80 [intervalle à 95 %] | N90 |
+|---|---|---|---|---|---|
+| paires, 1 comparateur(s) à 0,45, biais delta/4 | 160 | 4000 | 698 | 1047 [1029 ; 1066] | 1229 |
+| paires, 8 comparateur(s) à 0,45, biais delta/4 | 160 | 4000 | 1143 | 1420 [1404 ; 1438] | 1591 |
+| paires, 13 comparateur(s) à 0,45, biais delta/4 | 160 | 4000 | 1221 | 1498 [1485 ; 1513] | 1660 |
+
+## D. Sensibilité à l'écart de contraste
+| scénario | seuil | répétitions | N50 | N80 [intervalle à 95 %] | N90 |
+|---|---|---|---|---|---|
+| paires, écart 0,05 centré sur 0,5, biais delta/4 | 160 | 1000 | 4353 | 6201 [5978 ; 6440] | 7256 |
+| paires, écart 0,05, comparateurs à 0,01, biais delta/4 | 160 | 4000 | 596 | 767 [754 ; 775] | 877 |
+| paires, écart 0,12 centré sur 0,5, biais delta/4 | 160 | 4000 | 890 | 1115 [1105 ; 1130] | 1232 |
+| paires, écart 0,12, comparateurs à 0,01, biais delta/4 | 160 | 4000 | 479 | 681 [668 ; 697] | 808 |
+| paires, écart 0,13 centré sur 0,5, biais delta/4 | 160 | 4000 | 772 | 985 [976 ; 995] | 1095 |
+| paires, écart 0,13, comparateurs à 0,01, biais delta/4 | 160 | 4000 | 479 | 697 [683 ; 710] | 837 |
+| paires, écart 0,15 centré sur 0,5, biais delta/4 | 160 | 4000 | 620 | 814 [808 ; 824] | 921 |
+| paires, écart 0,15, comparateurs à 0,01, biais delta/4 | 160 | 4000 | 479 | 693 [681 ; 702] | 837 |
+| paires, écart 0,20 centré sur 0,5, biais delta/4 | 160 | 4000 | 489 | 697 [681 ; 710] | 812 |
+| paires, écart 0,20, comparateurs à 0,01, biais delta/4 | 160 | 4000 | 467 | 694 [681 ; 699] | 840 |
+| paires, écart 0,30 centré sur 0,5, biais delta/4 | 160 | 4000 | 479 | 694 [681 ; 707] | 837 |
+| paires, écart 0,30, comparateurs à 0,01, biais delta/4 | 160 | 4000 | 480 | 697 [683 ; 710] | 853 |
+
+## E. Seuil 40
+| scénario | seuil | répétitions | N50 | N80 [intervalle à 95 %] | N90 |
+|---|---|---|---|---|---|
+| paires, comparateurs à 0,45, biais delta/4, seuil 40 | 40 | 4000 | 973 | 1232 [1221 ; 1245] | 1390 |
+| paires, comparateurs à 0,01, biais delta/4, seuil 40 | 40 | 4000 | 355 | 556 [544 ; 560] | 682 |
+
+## F. Chaque processus atteint le seuil à son heure (autre lecture de la règle d'arrêt)
+| scénario | seuil | répétitions | N50 | N80 [intervalle à 95 %] | N90 |
+|---|---|---|---|---|---|
+| paires, comparateurs à 0,45, biais delta/4, seuil atteint à son heure | 160 | 4000 | 1171 | 1458 [1445 ; 1474] | 1618 |
+| paires, comparateurs à 0,01, biais delta/4, seuil atteint à son heure | 160 | 4000 | 479 | 683 [677 ; 697] | 815 |
+
+## G. Dépendance entre moniteurs
+| scénario | seuil | répétitions | N50 | N80 [intervalle à 95 %] | N90 |
+|---|---|---|---|---|---|
+| paires, comparateurs à 0,45 liés entre eux (0,5), biais delta/4 | 160 | 4000 | 1108 | 1410 [1397 ; 1429] | 1589 |
+| paires, comparateurs à 0,45 liés entre eux et au sujet (0,5), biais delta/4 | 160 | 4000 | 784 | 1059 [1046 ; 1074] | 1224 |
+
+## H. Unités de dix épisodes sabotés et de dix ou cinq jumeaux (l'unité de G1) — N en unités
+| scénario | seuil | répétitions | N50 | N80 [intervalle à 95 %] | N90 |
+|---|---|---|---|---|---|
+| unités de dix, rho 0,00, 10 jumeaux, comparateurs à 0,45, biais delta/4 | 160 | 2000 | 216 | 234 [233 ; 236] | 246 |
+| unités de dix, rho 0,10, 10 jumeaux, comparateurs à 0,45, biais delta/4 | 160 | 2000 | 243 | 284 [281 ; 287] | 310 |
+| unités de dix, rho 0,17, 10 jumeaux, comparateurs à 0,45, biais delta/4 | 160 | 2000 | 288 | 358 [351 ; 365] | 412 |
+| unités de dix, rho 0,17, 5 jumeaux, comparateurs à 0,45, biais delta/4 | 160 | 2000 | 301 | 370 [366 ; 375] | 413 |
+
+## I. Calage sur la phrase de la garde citée par G1 (l. 218) : puissance au pire des quatre cellules
+cible de G1 : seuil 160 : 0,506 à 288 unités et 0,908 à 400 ; seuil 40 : 0,840 à 288 et 0,980 à 400
+| rappel des comparateurs | seuil | puissance à 288, pire cellule | puissance à 400, pire cellule |
+|---|---|---|---|
+| 0,40 | 160 | 0.515 | 0.904 |
+| 0,40 | 40 | 0.793 | 0.974 |
+| 0,45 | 160 | 0.501 | 0.903 |
+| 0,45 | 40 | 0.792 | 0.971 |
+
+## J. La règle du champ n° 15 sous abstention : puissance à R-7 / (1 - abstention) paires, R-7 = 1520
+| scénario | abstention | paires = arrondi supérieur de R-7 / (1 - abstention) | puissance |
+|---|---|---|---|
+| paires, comparateurs à 0,45, biais nul, abstention 0,2 | 0,2 | 1900 | 0.821 |
+| paires, comparateurs à 0,45, biais nul, abstention 0,4 | 0,4 | 2534 | 0.817 |
+| paires, comparateurs à 0,45, biais nul, abstention 0,6 | 0,6 | 3800 | 0.800 |
+| paires, comparateurs à 0,45, biais delta/4, abstention 0,2 | 0,2 | 1900 | 0.877 |
+| paires, comparateurs à 0,45, biais delta/4, abstention 0,4 | 0,4 | 2534 | 0.923 |
+| paires, comparateurs à 0,45, biais delta/4, abstention 0,6 | 0,6 | 3800 | 0.973 |
+| paires, comparateurs à 0,01, biais delta/4, abstention 0,2 | 0,2 | 1900 | 1.000 |
+| paires, comparateurs à 0,01, biais delta/4, abstention 0,4 | 0,4 | 2534 | 1.000 |
+| paires, comparateurs à 0,01, biais delta/4, abstention 0,6 | 0,6 | 3800 | 1.000 |
+
+## Puissance de la fiche selon le nombre de paires à dommage tenu (douze comparateurs, écart 0,10, seuil 160)
+| paires | comparateurs à 0,45, biais delta/4 | comparateurs à 0,30, biais delta/4 | comparateurs à 0,20, biais delta/4 | comparateurs à 0,10, biais delta/4 | comparateurs à 0,05, biais delta/4 | comparateurs à 0,01, biais delta/4 | comparateurs à 0,01, biais nul |
+|---|---|---|---|---|---|---|---|
+| 300 | 0.000 | 0.002 | 0.003 | 0.008 | 0.053 | 0.185 | 0.732 |
+| 400 | 0.003 | 0.007 | 0.015 | 0.067 | 0.189 | 0.344 | 0.934 |
+| 500 | 0.014 | 0.021 | 0.056 | 0.216 | 0.431 | 0.544 | 0.990 |
+| 600 | 0.034 | 0.051 | 0.138 | 0.437 | 0.656 | 0.710 | 1.000 |
+| 700 | 0.066 | 0.100 | 0.241 | 0.640 | 0.797 | 0.820 | 1.000 |
+| 800 | 0.111 | 0.163 | 0.370 | 0.796 | 0.888 | 0.890 | 1.000 |
+| 900 | 0.175 | 0.242 | 0.489 | 0.889 | 0.936 | 0.936 | 1.000 |
+| 1000 | 0.262 | 0.338 | 0.604 | 0.944 | 0.967 | 0.962 | 1.000 |
+| 1200 | 0.510 | 0.592 | 0.806 | 0.986 | 0.993 | 0.989 | 1.000 |
+| 1500 | 0.817 | 0.873 | 0.959 | 0.999 | 0.999 | 1.000 | 1.000 |
+| 2000 | 0.981 | 0.989 | 0.999 | 1.000 | 1.000 | 1.000 | 1.000 |
+| 2500 | 0.998 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+
