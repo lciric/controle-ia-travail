@@ -28,10 +28,11 @@ import numpy as np
 import scipy.sparse as sp
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.feature_extraction.text import HashingVectorizer
-from sklearn.linear_model import LogisticRegressionCV
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from threadpoolctl import threadpool_limits
 
 from . import RefusDevin
 from .monde_plante import ParametresMonde, mot
@@ -143,7 +144,7 @@ class PredicteurTrait(Predicteur):
 
 # Critère de validation croisée et options explicites (aucune valeur par défaut implicite
 # de scikit-learn ; le critère est un point laissé ouvert au rapport).
-_OPTIONS_LRCV = {"scoring": "neg_log_loss", "l1_ratios": (0.0,), "use_legacy_attributes": False}
+_OPTIONS_LRCV = {"scoring": "roc_auc", "l1_ratios": (0.0,), "use_legacy_attributes": False}
 
 
 def _cv(graine: np.random.SeedSequence, plis: int = 3):
@@ -172,7 +173,7 @@ class PredicteurLogistique0(Predicteur):
 class _Hachage:
     def __init__(self, bits_mots: int, bits_car: int):
         motif = r"(?u)\b\w+\b"
-        self.mots = HashingVectorizer(n_features=2**bits_mots, token_pattern=motif, ngram_range=(1, 2),
+        self.mots = HashingVectorizer(n_features=2**bits_mots, token_pattern=motif, ngram_range=(1, 1),
                                       alternate_sign=False, norm=None)
         self.car = HashingVectorizer(n_features=2**bits_car, analyzer="char_wb", ngram_range=(2, 4),
                                      alternate_sign=False, norm="l2") if bits_car else None
@@ -186,13 +187,18 @@ class _Hachage:
 
 
 class PredicteurEtage1(Predicteur):
+    """Sac de mots (unigrammes) et n-grammes de caractères hachés, plus les traits de
+    l'étage 0, en régression logistique pénalisée ; pénalité (L1 ou L2) et force choisies
+    par validation croisée interne au pli d'apprentissage."""
+
     etage = "1"
     nom = "logistique:etage1"
 
-    def __init__(self, traits, bits_mots=14, bits_car=14, Cs=(0.01, 0.1, 1.0)):
-        self._traits = traits
+    def __init__(self, traits, bits_mots=14, bits_car=14, Cs=(0.03, 0.1, 0.3, 1.0), l1_ratios=(1.0, 0.0)):
+        self._traits = tuple(traits)
         self._h = _Hachage(bits_mots, bits_car)
         self.Cs = list(Cs)
+        self.l1_ratios = list(l1_ratios)  # 1,0 : pénalité L1 ; 0,0 : pénalité L2
         self.echelle = None
         self.modele = None
 
@@ -205,8 +211,10 @@ class PredicteurEtage1(Predicteur):
     def ajuster(self, unites, y, seuil_binaire, graine):
         cv, _ = _cv(graine)
         x = self._x(unites, ajuster=True)
-        self.modele = LogisticRegressionCV(Cs=self.Cs, cv=cv, solver="liblinear", max_iter=2000, **_OPTIONS_LRCV)
-        self.modele.fit(x, _cible_binaire(y, seuil_binaire))
+        g = GridSearchCV(LogisticRegression(solver="liblinear", max_iter=2000),
+                         {"C": self.Cs, "l1_ratio": self.l1_ratios}, cv=cv, scoring=_OPTIONS_LRCV["scoring"])
+        g.fit(x, _cible_binaire(y, seuil_binaire))
+        self.modele = g.best_estimator_
 
     def sortie(self, unites):
         return self.modele.decision_function(self._x(unites))
@@ -232,11 +240,15 @@ class PredicteurArbres2bis(Predicteur):
         cv, rs = _cv(graine)
         base = HistGradientBoostingClassifier(max_iter=self.max_iter, early_stopping=False, random_state=rs)
         g = GridSearchCV(base, self.grille, cv=cv, scoring="roc_auc")
-        g.fit(self._x(unites), _cible_binaire(y, seuil_binaire))
+        # Un seul fil : sur de petits plis, le parallélisme d'OpenMP coûte plus qu'il ne rend,
+        # et un seul fil rend l'ajustement indépendant du nombre de cœurs.
+        with threadpool_limits(1):
+            g.fit(self._x(unites), _cible_binaire(y, seuil_binaire))
         self.modele = g.best_estimator_
 
     def sortie(self, unites):
-        return self.modele.decision_function(self._x(unites))
+        with threadpool_limits(1):
+            return self.modele.decision_function(self._x(unites))
 
 
 def famille_sans_depense(liste: ListeBlanche, etages=("0", "1", "2bis"), options: Mapping | None = None) -> list[Predicteur]:
