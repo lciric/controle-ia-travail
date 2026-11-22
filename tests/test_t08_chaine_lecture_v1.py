@@ -185,7 +185,7 @@ def test_passage_a_blanc_artefacts(tmp_path, cas):
 
 # --- configuration réelle de la lecture -----------------------------------------------------------------------------
 
-def _monde_lecture(tmp_path, *, sha_course_registre=None, fichier_hors_run=False):
+def _monde_lecture(tmp_path, *, sha_course_registre=None, fichier_hors_run=False, sha_fichier="6" * 64):
     import subprocess
 
     r = tmp_path / "depot"
@@ -203,7 +203,7 @@ def _monde_lecture(tmp_path, *, sha_course_registre=None, fichier_hors_run=False
     fichiers = {}
     for k in L.FICHIERS_COURSE:
         d = f"donnees/{run_c if not (fichier_hors_run and k == 'mesures_etalonnage') else 'autre'}/{k}.jsonl"
-        fichiers[k] = {"chemin": d, "sha256": "6" * 64}
+        fichiers[k] = {"chemin": d, "sha256": sha_fichier if k == "mesures_etalonnage" else "6" * 64}
     ch = ecrire_resultat(r, chemin_m, "course-t08", {"fichiers": fichiers, "comptes": {"secret": 1}})
     base = r / "diag" / "20261116-000000-mots-et-cout" / "base-a-t08.json"
     sb = _sceller_json(base, {"x": 1})
@@ -234,13 +234,43 @@ def test_configuration_lecture_cas_sain(tmp_path, capsys):
     assert "secret" not in json.dumps(c)                       # rien des comptes de la course n'est recopié
 
 
-@pytest.mark.parametrize("cas", ["empreinte_course", "fichier_hors_run", "sortie_existante"])
+@pytest.mark.parametrize("cas", ["empreinte_course", "fichier_hors_run", "sortie_existante", "fichier_sans_empreinte",
+                                 "empreinte_courte"])
 def test_configuration_lecture_artefacts(tmp_path, capsys, cas):
     r, _ = _monde_lecture(tmp_path, sha_course_registre="0" * 64 if cas == "empreinte_course" else None,
-                          fichier_hors_run=cas == "fichier_hors_run")
+                          fichier_hors_run=cas == "fichier_hors_run",
+                          sha_fichier={"fichier_sans_empreinte": None, "empreinte_courte": "6" * 12}.get(cas, "6" * 64))
     s = r / "prereg" / "lecture.json"
     if cas == "sortie_existante":
         s.write_text("{}\n")
     assert L.main(["--racine", str(r), "--texte", "prereg/texte.md", "--config-course", "prereg/config-course.json",
                    "--sortie", "prereg/lecture.json"]) == 1
     assert "ARRÊT" in capsys.readouterr().err
+
+
+def test_fichier_recompose_entre_a_l_empreinte_de_course_t08_seulement(tmp_path):
+    """r-9 (GO-2026-11-22-134) : un fichier recomposé de ses morceaux entre à son chemin d'origine s'il est égal à l'octet
+    à la sortie scellée (empreinte de `course-t08.json`) ; recomposé autrement, même avec un compagnon refait, il n'entre
+    pas ; sans empreinte consignée, la configuration n'est pas écrite (essai des artefacts ci-dessus)."""
+    from controle_ia.t08 import entrees_v1 as en
+
+    r = tmp_path
+    (r / "donnees" / "run").mkdir(parents=True)
+    vrai = b"x" * 1000 + b"y" * 1000
+    p = r / "donnees" / "run" / "lectures-J8-raisonnement-t08.jsonl"
+    p.write_bytes(vrai)
+    sha = sceller(p)
+    lb = en.ListeBlanche(r, {"lectures_J8_raisonnement": {"chemin": "donnees/run/lectures-J8-raisonnement-t08.jsonl",
+                                                          "sha256": sha, "phase": "lecture"}})
+    lb.ouvrir_phase("lecture")
+    morceaux = [vrai[:900], vrai[900:1500], vrai[1500:]]           # découpe et recomposition à l'octet
+    p.unlink()
+    Path(str(p) + ".sha256").unlink()
+    p.write_bytes(b"".join(morceaux))
+    sceller(p)
+    assert lb.controler("lectures_J8_raisonnement")[1]["etat"] == "conforme"
+    p.unlink()
+    Path(str(p) + ".sha256").unlink()
+    p.write_bytes(b"".join([morceaux[1], morceaux[0], morceaux[2]]))   # morceaux dans le désordre, compagnon refait
+    sceller(p)
+    assert lb.controler("lectures_J8_raisonnement")[1]["etat"] == "differe_de_la_consignee"

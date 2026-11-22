@@ -15,6 +15,11 @@ chaque entrée à son chemin et à son empreinte **inscrite** :
   et la liste `resultat.fichiers` (chemins et empreintes des six fichiers de la course) sont lus, après vérification de son
   empreinte contre la ligne et contre son compagnon ; rien d'autre n'en est gardé (aucun compte, aucun score) ;
 - manifeste de la course : `runs/<run de la course>/manifeste.json`, à l'empreinte de l'enveloppe ;
+- **empreinte exigée de chaque fichier de la course** (r-9 ; mot de Lazar `GO-2026-11-22-134`) : chaque fichier que lit la
+  lecture entre à l'empreinte que lui donne `course-t08.json` (64 caractères hexadécimaux), jamais au seul compagnon ; un
+  fichier sans empreinte dans `course-t08.json` n'entre pas (arrêt, rien d'écrit). Un fichier de plus de 90 Mo versé en
+  morceaux et recomposé entre donc à son chemin d'origine si, et seulement si, il est égal à l'octet à la sortie scellée :
+  la liste blanche compare son empreinte à celle-ci (`differe_de_la_consignee` sinon, entrée manquante, ligne D1) ;
 - pièce HD (facultatif, `--hd` : fichier JSON `{"index": …, "mesures": …, "textes": …, "manifeste": …}`) : registre du texte de
   validité (`registres/validite-adaptateur-v1.md`, vivant) et les quatre fichiers, phase `hd`, sans empreinte consignée (le
   code les contrôle contre la ligne `SORTIES-HD-VADAPT` et l'index, à l'étape (h bis)) ; sans `--hd`, la lecture écrit
@@ -34,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -78,6 +84,8 @@ def entrees_lecture(racine: Path, marqueurs: dict, registre_rel: str, hd: dict |
     if Path(ch_course).parent.name != run_c:
         raise GardeArret(f"course-t08.json : run {run_c} ≠ dossier {Path(ch_course).parent.name}")
     fichiers = corps["resultat"]["fichiers"]
+    if not isinstance(fichiers, dict):
+        raise GardeArret("course-t08.json : resultat.fichiers attendu (chemin et empreinte de chaque fichier)")
     e = {"registre_scellements": {"chemin": registre_rel, "sha256": None, "scelle": False, "phase": "lecture"},
          "mesures_7b": {"chemin": f"donnees/{run}/mesures-t06.npz", "sha256": emp["mesures-t06.npz"]},
          "textes_7b": {"chemin": f"donnees/{run}/textes-actions-t06.jsonl", "sha256": emp["textes-actions-t06.jsonl"]},
@@ -90,7 +98,10 @@ def entrees_lecture(racine: Path, marqueurs: dict, registre_rel: str, hd: dict |
          "course_t08": {"chemin": ch_course, "sha256": course["sha256"]},
          "manifeste_course": {"chemin": f"runs/{run_c}/manifeste.json", "sha256": sha_m}}
     for nom, cle in FICHIERS_COURSE.items():
-        f = fichiers[cle]
+        f = fichiers.get(cle)
+        if not isinstance(f, dict) or not re.fullmatch(r"[0-9a-f]{64}", str(f.get("sha256") or "")):
+            raise GardeArret(f"course-t08.json : {cle} sans empreinte de 64 caractères : il n'entre pas dans la lecture "
+                             "(r-9, GO-2026-11-22-134)")
         if not str(f["chemin"]).startswith(f"donnees/{run_c}/"):
             raise GardeArret(f"course-t08.json : {cle} hors de donnees/{run_c}/")
         e[nom] = {"chemin": _rel(racine, f["chemin"]), "sha256": f["sha256"]}

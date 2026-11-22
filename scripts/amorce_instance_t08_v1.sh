@@ -263,7 +263,7 @@ PREREG_ABSENT="${PREREG_ABSENT:-0}"
 AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'
 echo "AMORCE $(date -u +%FT%TZ) : commit $COMMIT"
 # T08 : clonage réduit au code de la course et de ses essais (mode sans cône ; motifs relevés en jouant la liste d'essais figée sur
-# un clone réduit : 252 essais passés, un écarté, aucun fichier manquant), d'une seule branche, sans étiquettes ; puis la branche d'entrée seule.
+# un clone réduit : 255 essais passés, un écarté, aucun fichier manquant), d'une seule branche, sans étiquettes ; puis la branche d'entrée seule.
 #  - /.gitignore (caches Python, `donnees/`) : sans lui, les caches écrits par les essais salissent l'arbre et la course refuse
 #    de partir (essai de bout en bout du 22 novembre) ;
 #  - code et essais : /src/ /tests/ /scripts/ /.claude/ /pyproject.toml /requirements-*.txt ;
@@ -493,7 +493,7 @@ FIN_GARDES
 ) || { journal "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1)"; consigner_arret "gardes de l'instance"; refus "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1 | cut -c1-300)"; }
 journal "$GARDES"
 # T08 : suite ciblée et figée de T0.8 (liste de fichiers à l'empreinte et au nombre attendu écrits en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="5b6db29b7434c3bd38c6178d04b790572e96f767c1ba36410694fcb2a0000c2c"; ATTENDUS="252"; FICHIERS_TESTS=""   # T08
+LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="5b6db29b7434c3bd38c6178d04b790572e96f767c1ba36410694fcb2a0000c2c"; ATTENDUS="255"; FICHIERS_TESTS=""   # T08
 [ -z "${TESTS_ARGS:-}" ] || ATTENDUS="${TESTS_ATTENDUS:-}"   # T08 : répétition jouet seulement (TESTS_ARGS refusé hors jouet)
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
