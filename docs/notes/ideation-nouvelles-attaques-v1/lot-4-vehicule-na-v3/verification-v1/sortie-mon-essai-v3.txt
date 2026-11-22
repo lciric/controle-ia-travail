@@ -1,0 +1,29 @@
+ADAPT OK  400 ir message exact -> crédit d'amont (400, message de solde) | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 casse mixte -> crédit d'amont (400, message de solde) | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 espaces autour (fragment contigu) -> crédit d'amont (400, message de solde) | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 espaces internes doubles -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 message dans un autre champ (top-level message) -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 message dans error.detail -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 corps non JSON -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 corps JSON liste -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 message non chaine -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 autre message -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 fragment partiel -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 billing_error + fragment -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  400 authentication_error + fragment -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  429 rate_limit + fragment -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  403 permission + fragment -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  500 api_error + fragment -> erreur de statut | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  402 billing_error -> crédit d'amont | requetes 1 | 'balance' dans fiche: False
+ADAPT OK  402 billing_error sans fragment -> crédit d'amont | requetes 1 | 'balance' dans fiche: False
+CHAINE OK  1er appel 400 credit -> n13: True ('cle_a', "crédit d'amont (400, message de solde)") | requetes 1 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  repli: refus puis 400 credit -> n13: True ('cle_a', "crédit d'amont (400, message de solde)") | requetes 2 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  repli: refus puis 400 casse mixte -> n13: True ('cle_a', "crédit d'amont (400, message de solde)") | requetes 2 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  1er appel 402 billing -> n13: True ('cle_a', "crédit d'amont") | requetes 1 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  400 autre message -> n13: False réponse illisible, cause non établie | requetes 1 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  429 + fragment -> n13: False réponse illisible, cause non établie | requetes 1 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  400 billing_error + fragment -> n13: False réponse illisible, cause non établie | requetes 1 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  400 corps non JSON -> n13: False réponse illisible, cause non établie | requetes 1 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  400 message ailleurs -> n13: False réponse illisible, cause non établie | requetes 1 | 'balance' dans journal: False | na_replis: False
+CHAINE OK  temoin sain -> n13: False ok | requetes 1 | 'balance' dans journal: False | na_replis: False
+MAUVAIS: 0
