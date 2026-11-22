@@ -108,8 +108,13 @@ CLES_DE_LA_CONFIGURATION = ("lanceur", "texte", "configuration_de_reference", "e
                             "reglages_instrument", "ligne_1")
 CLES_DE_LA_LIGNE_1 = ("plafond_usd", "marge_de_credit_usd")
 _SHA = re.compile(r"[0-9a-f]{64}")
-_GO = re.compile(r"GO-\d{4}-\d{2}-\d{2}-\d{2,}")
+# m-3 : règle stricte, alignée sur la garde de calcul du dépôt corrigée (`origin/main`, `.claude/hooks/garde_calcul.py`,
+# R-5013 : rang de deux ou trois chiffres) ; la date de l'identifiant doit être une date du calendrier.
+_GO = re.compile(r"GO-(?P<date>\d{4}-\d{2}-\d{2})-(?P<rang>\d{2,3})")
 _LIGNE_GO = re.compile(r"^\|\s*GO-")
+# m-3 : périmètre de la ligne de GO confronté à la ligne jouée (règle du rédacteur : le texte n'écrit pas de marque)
+PERIMETRE_LIGNE_1 = "ligne 1 du bras A"
+_MENTION_DE_LIGNE = re.compile(r"(?<![\w-])lignes?\s+(\S+)", re.I)
 _PLAFOND = re.compile(r"^\s*(\d+(?:[.,]\d+)?)\s*USD\b")
 _IDENTIFIANT_D_INSTANCE = re.compile(r"[0-9]{1,12}")
 NOM_DU_MANIFESTE_DU_VERSEMENT = "manifeste-du-versement.json"
@@ -293,7 +298,35 @@ def graines_de_la_course(configuration: Mapping, plan: Mapping) -> dict:
 
 # --- Départ de la ligne 1 : GO, crédit, tarif ---------------------------------------------------------------------------
 
+def exiger_identifiant_de_go(go_id: object, ou: str = "identifiant de GO") -> str:
+    """Règle stricte (m-3) : `GO-AAAA-MM-JJ-NN` ou `…-NNN` en entier (rang de deux ou trois chiffres, comme la garde de
+    calcul corrigée), date du calendrier ; rien de plus, rien de moins."""
+    m = _GO.fullmatch(go_id) if isinstance(go_id, str) else None
+    if m is None:
+        raise GardeArret(f"{ou} {go_id!r} : forme GO-AAAA-MM-JJ-NN ou GO-AAAA-MM-JJ-NNN exigée — départ refusé")
+    try:
+        date.fromisoformat(m["date"])
+    except ValueError:
+        raise GardeArret(f"{ou} {go_id!r} : date de l'identifiant hors du calendrier — départ refusé") from None
+    return go_id
+
+
+def exiger_perimetre_de_la_ligne_1(go_id: str, perimetre: str) -> str:
+    """m-3 : le périmètre de la ligne de GO nomme la ligne jouée, « ligne 1 du bras A » (casse et blancs indifférents),
+    et aucune autre ligne (toute mention « ligne(s) N » y vaut 1). Règle du rédacteur, plus stricte que le texte."""
+    norme = " ".join(perimetre.split()).lower()
+    if re.search(r"(?<![\w-])" + re.escape(PERIMETRE_LIGNE_1.lower()) + r"(?![\w-])", norme) is None:
+        raise GardeArret(f"{go_id} : périmètre {perimetre!r} ne nomme pas « {PERIMETRE_LIGNE_1} », la ligne jouée — refusé")
+    autres = [m.group(0) for m in _MENTION_DE_LIGNE.finditer(norme)
+              if m.group(0).split()[0] != "ligne" or m.group(1).rstrip(".,;:)") != "1"]
+    if autres:
+        raise GardeArret(f"{go_id} : périmètre {perimetre!r} nomme aussi {autres} — un GO pour la seule ligne jouée exigé")
+    return perimetre
+
+
 def _cellules_du_registre(texte_du_registre: str) -> list[list[str]]:
+    """Lignes du registre qui commencent par `| GO-` ; une telle ligne dont l'identifiant n'a pas la forme stricte
+    arrête (R5 : aucune ligne sautée en silence — une révocation mal lue ne doit pas passer pour absente)."""
     lignes = []
     for n, ligne in enumerate(texte_du_registre.splitlines(), 1):
         if not _LIGNE_GO.match(ligne):
@@ -301,6 +334,7 @@ def _cellules_du_registre(texte_du_registre: str) -> list[list[str]]:
         cellules = [x.strip() for x in ligne.strip().strip("|").split("|")]
         if len(cellules) != 8:
             raise GardeArret(f"registre des GO, ligne {n} : 8 cellules attendues, {len(cellules)} trouvées")
+        exiger_identifiant_de_go(cellules[0], f"registre des GO, ligne {n} : identifiant")
         lignes.append(cellules)
     return lignes
 
@@ -309,8 +343,7 @@ def exiger_ligne_de_go(go_id: object, texte_du_registre: str, aujourd_hui: date,
                        plafond_requis_usd: float = PLAFOND_LIGNE_1_USD) -> dict:
     """Identifiant de GO cité et valide (8.1 : « ligne de GO absente pour une ligne de carte » ; 13.2, case « lignes de
     GO »). La garde de calcul du dépôt le vérifie aussi au lancement de l'instance."""
-    if not isinstance(go_id, str) or _GO.fullmatch(go_id) is None:
-        raise GardeArret(f"identifiant de GO {go_id!r} : forme GO-AAAA-MM-JJ-NN exigée — départ refusé")
+    exiger_identifiant_de_go(go_id)
     if go_id == GO_INEMPLOYE:
         raise GardeArret(f"{GO_INEMPLOYE} « reste inemployée » (13.2, case « devis ») — départ refusé")
     lignes = _cellules_du_registre(texte_du_registre)
@@ -319,11 +352,12 @@ def exiger_ligne_de_go(go_id: object, texte_du_registre: str, aujourd_hui: date,
         raise GardeArret(f"{go_id} absent du registre des GO — départ refusé")
     if len(siennes) > 1:
         raise RegleNonEcrite(f"{go_id} porte {len(siennes)} lignes au registre : le texte ne dit pas laquelle fait foi")
-    ident, accorde, typ, _perimetre, plafond, echeance, par, _ref = siennes[0]
+    ident, accorde, typ, perimetre, plafond, echeance, par, _ref = siennes[0]
     if typ != "calcul":
         raise GardeArret(f"{go_id} est de type {typ!r}, non « calcul » — départ refusé")
-    if not par.startswith("Lazar"):
-        raise GardeArret(f"{go_id} n'est pas accordé par Lazar — départ refusé")
+    if par != "Lazar":                                    # m-3 : égalité exacte, comme la garde de calcul
+        raise GardeArret(f"{go_id} n'est pas accordé par Lazar (cellule {par!r}) — départ refusé")
+    exiger_perimetre_de_la_ligne_1(go_id, perimetre)
     try:
         accorde_d, echeance_d = date.fromisoformat(accorde), date.fromisoformat(echeance)
     except ValueError:
@@ -340,7 +374,7 @@ def exiger_ligne_de_go(go_id: object, texte_du_registre: str, aujourd_hui: date,
     for c in lignes:
         if c[2] == "révocation" and any(cite.search(x) for x in c[3:]):
             raise GardeArret(f"{go_id} révoqué par {c[0]} — départ refusé")
-    return {"go": go_id, "plafond_usd": plafond_usd, "echeance": echeance}
+    return {"go": go_id, "plafond_usd": plafond_usd, "echeance": echeance, "perimetre": perimetre}
 
 
 def exiger_credit(credit_lu_usd: object) -> float:
@@ -353,9 +387,25 @@ def exiger_credit(credit_lu_usd: object) -> float:
     return float(credit_lu_usd)
 
 
-def exiger_tarif(configuration: Mapping, tarifs: Mapping) -> dict:
+def _instant_utc(texte: str) -> datetime:
+    """`AAAA-MM-JJTHH:MM:SSZ` → instant UTC (lève `ValueError` hors du calendrier ou de la forme)."""
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", texte) is None:
+        raise ValueError(texte)
+    return datetime.fromisoformat(texte[:-1] + "+00:00")
+
+
+def _exiger_maintenant_utc(maintenant: object) -> datetime:
+    if not isinstance(maintenant, datetime) or maintenant.tzinfo is None:
+        raise GardeArret(f"horloge de départ {maintenant!r} : date et heure avec fuseau exigées")
+    return maintenant.astimezone(timezone.utc)
+
+
+def exiger_tarif(configuration: Mapping, tarifs: Mapping, maintenant: datetime) -> dict:
     """Garde de 8.4, ligne 1164 (8.1) : tarif relevé au plus égal à celui du devis (carte 1,30 USD par heure ;
-    stockage 0,08 ; téléchargement 0,05 par Go : configuration de référence)."""
+    stockage 0,08 ; téléchargement 0,05 par Go : configuration de référence).
+    m-4 (13.2, case « tarifs » : « relevés et datés, au jour du devis ») : borne déclarée — la date du relevé est **le
+    même jour UTC** que l'horloge de départ `maintenant`, et le relevé n'est pas postérieur à elle."""
+    maintenant = _exiger_maintenant_utc(maintenant)
     r = configuration["reference"]
     bornes = {"carte_usd_h": r["carte"]["course"]["prix_max_usd_h"], "stockage_usd_h": r["offre"]["stockage_max_usd_h"],
               "telechargement_usd_go": r["offre"]["telechargement_max_usd_go"]}
@@ -364,6 +414,16 @@ def exiger_tarif(configuration: Mapping, tarifs: Mapping) -> dict:
     if not isinstance(tarifs["date_utc"], str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z",
                                                                tarifs["date_utc"]) is None:
         raise GardeArret("tarifs relevés : date du relevé AAAA-MM-JJTHH:MM:SSZ exigée")
+    try:
+        releve = _instant_utc(tarifs["date_utc"])
+    except ValueError:
+        raise GardeArret(f"tarifs relevés : date {tarifs['date_utc']!r} hors du calendrier") from None
+    if releve > maintenant:
+        raise GardeArret(f"tarifs relevés le {tarifs['date_utc']}, après l'horloge de départ "
+                         f"({maintenant:%Y-%m-%dT%H:%M:%SZ}) — refusé (m-4)")
+    if releve.date() != maintenant.date():
+        raise GardeArret(f"tarifs relevés le {releve.date()}, non le jour UTC du départ ({maintenant.date()}) — un "
+                         "relevé du jour exigé (13.2, case « tarifs ») — départ refusé")
     for nom, borne in bornes.items():
         v = tarifs[nom]
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0:
@@ -373,15 +433,30 @@ def exiger_tarif(configuration: Mapping, tarifs: Mapping) -> dict:
     return dict(tarifs)
 
 
-def constat_de_depart_ligne_1(configuration: Mapping, *, go_id: str, texte_du_registre_go: str, aujourd_hui: date,
+CLES_DU_CONSTAT = ("configuration_sha256", "credit_lu_usd", "empreinte", "go", "lanceur_sha256", "ligne", "maintenant_utc",
+                   "plafond_usd", "tarifs", "texte_sha256")
+
+
+def _empreinte_du_constat(constat: Mapping) -> str:
+    corps = {k: v for k, v in constat.items() if k != "empreinte"}
+    return hashlib.sha256(json.dumps(corps, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def constat_de_depart_ligne_1(configuration: Mapping, *, go_id: str, texte_du_registre_go: str, maintenant: datetime,
                               credit_lu_usd: float, tarifs: Mapping) -> dict:
-    """Tout ce qui doit tenir avant la création de l'instance de la ligne 1 ; refus au premier manquement."""
+    """Tout ce qui doit tenir avant la création de l'instance de la ligne 1 ; refus au premier manquement. `maintenant`
+    (horloge de départ, avec fuseau) date le GO (jour UTC) et borne le relevé du tarif (m-4). Le constat porte son
+    empreinte (contenu canonique) : `jouer_ligne_1` le recontrôle (M-2)."""
     if configuration["entropie_fictive"]:
         raise GardeArret("entropie fictive : aucun départ réel")
-    go = exiger_ligne_de_go(go_id, texte_du_registre_go, aujourd_hui)
-    return {"ligne": 1, "configuration_sha256": configuration["sha256"], "texte_sha256": configuration["texte_sha256"],
-            "lanceur_sha256": configuration["lanceur_sha256"], "go": go, "credit_lu_usd": exiger_credit(credit_lu_usd),
-            "tarifs": exiger_tarif(configuration, tarifs), "plafond_usd": PLAFOND_LIGNE_1_USD}
+    maintenant = _exiger_maintenant_utc(maintenant)
+    go = exiger_ligne_de_go(go_id, texte_du_registre_go, maintenant.date())
+    constat = {"ligne": 1, "configuration_sha256": configuration["sha256"], "texte_sha256": configuration["texte_sha256"],
+               "lanceur_sha256": configuration["lanceur_sha256"], "go": go,
+               "credit_lu_usd": exiger_credit(credit_lu_usd), "tarifs": exiger_tarif(configuration, tarifs, maintenant),
+               "plafond_usd": PLAFOND_LIGNE_1_USD, "maintenant_utc": maintenant.strftime("%Y-%m-%dT%H:%M:%SZ")}
+    constat["empreinte"] = _empreinte_du_constat(constat)
+    return constat
 
 
 # --- Compteur du plafond ------------------------------------------------------------------------------------------------
@@ -414,6 +489,59 @@ class CompteurDePlafond:
         return cumul
 
 
+# --- M-2 : la ligne 1 liée au constat de départ et au plafond ------------------------------------------------------------
+
+def exiger_constat_et_compteur(configuration: Mapping, constat: object, compteur: object) -> dict:
+    """M-2 (8.1 : le contrôle en échec « refuse la dépense qu'il conditionne »). Liaison choisie, la plus simple : la
+    ligne ne se joue qu'avec **le constat lui-même** (non son empreinte seule), recontrôlé ici sur ce qui conditionne la
+    dépense, et avec un compteur qui en découle :
+    - constat aux clés fermées, empreinte égale à son contenu (une altération après coup est vue) ;
+    - même configuration, même texte scellé, même lanceur que la configuration jouée (une configuration d'essai, à
+      entropie fictive, n'a jamais de constat : `constat_de_depart_ligne_1` la refuse) ;
+    - plafond du constat égal à 18 USD ; GO de calcul cité, de plafond au moins 18 USD, périmètre de la ligne jouée ;
+      crédit et tarifs relus par les mêmes gardes que le constat (bornes du devis) ;
+    - compteur : `CompteurDePlafond`, plafond **au plus** celui du constat, taux horaire **au moins** carte + stockage
+      relevés (un compteur plus lent que la carte sous-compterait la dépense).
+    Ne relit ni le registre des GO ni l'horloge : ce qui a été constaté au départ fait foi ; ce qui s'en écarte arrête."""
+    if not isinstance(constat, Mapping) or sorted(constat) != sorted(CLES_DU_CONSTAT):
+        raise GardeArret("ligne 1 : constat de départ absent ou mal formé — la ligne n'est pas jouée (M-2 ; 8.1)")
+    if constat["empreinte"] != _empreinte_du_constat(constat):
+        raise GardeArret("ligne 1 : constat de départ altéré (empreinte différente de son contenu) — refusé (M-2)")
+    if constat["ligne"] != 1:
+        raise GardeArret(f"ligne 1 : constat d'une autre ligne ({constat['ligne']!r}) — refusé (M-2)")
+    for cle, attendu in (("configuration_sha256", "sha256"), ("texte_sha256", "texte_sha256"),
+                         ("lanceur_sha256", "lanceur_sha256")):
+        if constat[cle] != configuration[attendu]:
+            raise GardeArret(f"ligne 1 : constat fait sur une autre {cle.split('_')[0]} que celle jouée — refusé (M-2)")
+    if configuration["entropie_fictive"]:
+        raise GardeArret("ligne 1 : configuration à entropie fictive — aucune ligne jouée (M-2)")
+    if constat["plafond_usd"] != PLAFOND_LIGNE_1_USD:
+        raise GardeArret(f"ligne 1 : plafond du constat {constat['plafond_usd']!r}, {PLAFOND_LIGNE_1_USD} USD exigés (M-2)")
+    go = constat["go"]
+    if not isinstance(go, Mapping) or not isinstance(go.get("plafond_usd"), (int, float)) \
+            or go["plafond_usd"] < PLAFOND_LIGNE_1_USD:
+        raise GardeArret("ligne 1 : GO du constat absent ou de plafond sous 18 USD — refusé (M-2)")
+    exiger_identifiant_de_go(go.get("go"))
+    exiger_perimetre_de_la_ligne_1(go["go"], str(go.get("perimetre", "")))
+    exiger_credit(constat["credit_lu_usd"])
+    tarifs = constat["tarifs"]
+    try:
+        maintenant = _instant_utc(constat["maintenant_utc"])
+    except (TypeError, ValueError):
+        raise GardeArret("ligne 1 : horloge du constat illisible — refusé (M-2)") from None
+    exiger_tarif(configuration, tarifs, maintenant)
+    if not isinstance(compteur, CompteurDePlafond):
+        raise GardeArret("ligne 1 : compteur du plafond (`CompteurDePlafond`) exigé (M-2)")
+    if compteur.plafond_usd > constat["plafond_usd"]:
+        raise GardeArret(f"ligne 1 : compteur au plafond de {compteur.plafond_usd} USD, au-delà des "
+                         f"{constat['plafond_usd']} USD du constat — refusé (M-2)")
+    taux_releve = tarifs["carte_usd_h"] + tarifs["stockage_usd_h"]
+    if compteur.taux < taux_releve:
+        raise GardeArret(f"ligne 1 : compteur au taux de {compteur.taux} USD par heure, sous carte + stockage relevés "
+                         f"({taux_releve}) — il sous-compterait la dépense ; refusé (M-2)")
+    return dict(constat)
+
+
 # --- Ligne 1 : épisodes honnêtes des 16 tâches de fabrication ------------------------------------------------------------
 
 def action_coupee(ids: Sequence[int], fins: set, max_nouveaux: int = MAX_NOUVEAUX) -> bool:
@@ -432,20 +560,27 @@ def action_coupee(ids: Sequence[int], fins: set, max_nouveaux: int = MAX_NOUVEAU
 def ecrire_sans_ecraser(chemin: Path, contenu: object) -> Path:
     """Écrit un fichier neuf ; un fichier existant n'est jamais écrasé (8.5 ; R12)."""
     chemin = Path(chemin)
+    try:                                  # m-2 : sérialisé en mémoire d'abord ; aucun fichier partiel
+        texte = json.dumps(contenu, ensure_ascii=False, sort_keys=True, indent=1, allow_nan=False)
+    except (TypeError, ValueError) as e:
+        raise GardeArret(f"{chemin} : contenu non sérialisable ({e}) — rien n'est écrit") from None
     try:
         f = open(chemin, "x", encoding="utf-8")
     except FileExistsError:
         raise GardeArret(f"{chemin} existe déjà : aucune sortie n'est écrasée (8.5 ; R12)") from None
     with f:
-        json.dump(contenu, f, ensure_ascii=False, sort_keys=True, indent=1)
+        f.write(texte)
     return chemin
 
 
 def jouer_ligne_1(modele, fmt, configuration: Mapping, plan: Mapping, graines: Mapping, guide, dossier_des_sorties,
-                  compteur: CompteurDePlafond, jouer_lot: Callable | None = None, chrono: dict | None = None) -> dict:
+                  compteur: CompteurDePlafond, constat: Mapping, jouer_lot: Callable | None = None,
+                  chrono: dict | None = None) -> dict:
     """6.3 (b) : les 128 épisodes honnêtes du modèle de base sur les 16 tâches de fabrication, un lot de 8 épisodes par
     tâche, chaque lot écrit dès qu'il est joué (jamais écrasé) ; plafond relevé avant et après chaque lot ; coupe à 400
-    jetons comptée, arrêt A14 au-delà de 20 % des 1 280 actions. Aucun épisode des tâches de vérification."""
+    jetons comptée, arrêt A14 au-delà de 20 % des 1 280 actions. Aucun épisode des tâches de vérification. Rien n'est
+    joué sans constat de départ valide ni avec un compteur plus large que lui (M-2 : `exiger_constat_et_compteur`)."""
+    constat = exiger_constat_et_compteur(configuration, constat, compteur)
     if jouer_lot is None:
         from .lanceur_bras_a_v2 import jouer_honnetes as jouer_lot
     taches = list(plan["fabrication"])
@@ -475,7 +610,7 @@ def jouer_ligne_1(modele, fmt, configuration: Mapping, plan: Mapping, graines: M
         raise GardeArret(f"ligne 1 : {joues} épisodes joués, {EPISODES_LIGNE_1} exigés")
     return {"episodes": joues, "actions": joues * PAS, "actions_coupees": coupees,
             "part_coupees": coupees / (joues * PAS), "fichiers": fichiers, "duree_s": time.perf_counter() - depart,
-            "cumul_usd": compteur.cumul_usd()}
+            "cumul_usd": compteur.cumul_usd(), "constat_empreinte": constat["empreinte"]}
 
 
 def lire_les_episodes_de_la_ligne_1(dossier) -> list[dict]:
@@ -536,9 +671,14 @@ def retenir_et_controler(fmt, episode: Mapping, tache: Mapping, fabriques: Mappi
 
 
 def fabriquer_condition(fmt, episodes: Sequence[Mapping], taches: Mapping[str, Mapping], champ: str | None,
-                        doses: Sequence[float], entropie: int, reglages, guide) -> dict[float, dict]:
+                        doses: Sequence[float], entropie: int, reglages, guide, *,
+                        dose_recue: bool = False) -> dict[float, dict]:
     """Transcriptions d'une condition, au grain du jeton. `champ=None` : témoin identité (aucun déplacement).
-    Rend, par dose : épisodes retenus (identifiants, textes, déplacements, motif) et bilan des comptes par motif."""
+    Rend, par dose : épisodes retenus (identifiants, textes, déplacements, motif) et bilan des comptes par motif.
+    m-6 : `dose_recue=True` (doses et témoin bénin, 6.4 point 2) exige les 128 épisodes et calcule la dose reçue ;
+    jamais pour le témoin identité ni pour les jumeaux de vérification."""
+    if dose_recue and (champ is None or len(episodes) != EPISODES_LIGNE_1):
+        raise GardeArret("dose reçue : sur les 128 transcriptions d'une condition déplacée seulement (6.4, point 2)")
     decoder = _decodeur(fmt)
     par_dose = {float(p): {"episodes": [], "retenus": [], "fabriques": []} for p in doses}
     for ep in episodes:
@@ -567,7 +707,7 @@ def fabriquer_condition(fmt, episodes: Sequence[Mapping], taches: Mapping[str, M
         d["bilan"] = dict(fab.bilan(d.pop("fabriques")), motifs_laisses_honnetes=motifs,
                           episodes_laisses_honnetes_retenus=sum(e["laisse_honnete"] for e in d["episodes"]))
         retenus = d.pop("retenus")
-        if champ is not None and len(retenus) == EPISODES_LIGNE_1:
+        if dose_recue:
             d["bilan"]["dose_recue"] = iv.bilan_dose_recue(
                 [(iv.verite_par_construction(h, r), r) for h, r in retenus], p, champ)
     return par_dose
@@ -579,11 +719,12 @@ def fabriquer_les_six(fmt, episodes: Sequence[Mapping], taches: Mapping[str, Map
     sont fabriquées ensemble, par épisode, pour qu'un motif trouvé à l'une laisse l'épisode honnête aux quatre."""
     if len(episodes) != EPISODES_LIGNE_1:
         raise GardeArret(f"étape (c) : {len(episodes)} épisodes, {EPISODES_LIGNE_1} exigés")
-    doses = fabriquer_condition(fmt, episodes, taches, "CONTROLS", iv.DOSES_FABRIQUEES, entropie, reglages, guide)
+    doses = fabriquer_condition(fmt, episodes, taches, "CONTROLS", iv.DOSES_FABRIQUEES, entropie, reglages, guide,
+                                dose_recue=True)
     sortie = {f"controls-{p:.2f}": doses[p] for p in iv.DOSES_FABRIQUEES}
     sortie["identite"] = fabriquer_condition(fmt, episodes, taches, None, (1.0,), entropie, reglages, guide)[1.0]
     sortie["prediction-1.00"] = fabriquer_condition(fmt, episodes, taches, "PREDICTION", (1.0,), entropie, reglages,
-                                                    guide)[1.0]
+                                                    guide, dose_recue=True)[1.0]
     if tuple(sortie) != NOMS_DES_ADAPTATEURS:
         raise GardeArret("étape (c) : les six adaptateurs, dans l'ordre du texte, exigés")
     return sortie
@@ -686,12 +827,20 @@ def nom_du_dossier_de_versement(ligne: str, etat: str, quand: datetime) -> str:
 def inventaire(dossier) -> list[dict]:
     """Noms, tailles et empreintes de tout ce que porte le dossier (8.5), sans rien ouvrir d'autre ; lien refusé."""
     dossier = Path(dossier)
+    exclus = {NOM_DU_MANIFESTE_DU_VERSEMENT, NOM_DU_MANIFESTE_DU_VERSEMENT + ".sha256"}
     sortie = []
     for p in sorted(dossier.rglob("*")):
         if p.is_symlink():
             raise GardeArret(f"versement : {p} est un lien symbolique — non suivi, à dire dans les manquants")
-        if p.is_file() and p.name not in (NOM_DU_MANIFESTE_DU_VERSEMENT, NOM_DU_MANIFESTE_DU_VERSEMENT + ".sha256"):
-            sortie.append({"nom": p.relative_to(dossier).as_posix(), "taille": p.stat().st_size, "sha256": empreinte(p)})
+        if not p.is_file():
+            continue
+        relatif = p.relative_to(dossier).as_posix()
+        if relatif in exclus:                       # m-1 : seul le manifeste à la racine du dossier est hors inventaire
+            continue
+        if p.name in exclus:
+            raise GardeArret(f"versement : {relatif} porte le nom du manifeste du versement hors de la racine du "
+                             "dossier — il échapperait à l'inventaire ; refusé (m-1)")
+        sortie.append({"nom": relatif, "taille": p.stat().st_size, "sha256": empreinte(p)})
     return sortie
 
 
@@ -762,7 +911,7 @@ def _main(argv: Sequence[str] | None = None) -> int:
     configuration = lire_la_configuration(a.configuration, a.racine)
     constat = constat_de_depart_ligne_1(
         configuration, go_id=a.go, texte_du_registre_go=Path(a.registre_go).read_text(encoding="utf-8"),
-        aujourd_hui=datetime.now(timezone.utc).date(), credit_lu_usd=a.credit_lu_usd,
+        maintenant=datetime.now(timezone.utc), credit_lu_usd=a.credit_lu_usd,
         tarifs={"carte_usd_h": a.tarif_carte_usd_h, "stockage_usd_h": a.tarif_stockage_usd_h,
                 "telechargement_usd_go": a.tarif_telechargement_usd_go, "date_utc": a.date_du_releve_utc})
     print(json.dumps(constat, ensure_ascii=False, sort_keys=True, indent=1))
