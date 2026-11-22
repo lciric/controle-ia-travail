@@ -1,0 +1,317 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-9.1.1, pluggy-1.7.0
+rootdir: /home/user/arbre-main-suite-greffon
+configfile: pyproject.toml
+plugins: anyio-4.16.0
+collected 205 items
+
+tests/test_cibles_invisibles_v3.py ................F..F.                 [ 10%]
+tests/test_depot_expurge_v7.py .............................F            [ 24%]
+tests/test_agregateurs.py ...........................                    [ 38%]
+tests/test_bases.py ...........                                          [ 43%]
+tests/test_artefacts_v1.py ............................................. [ 65%]
+............................                                             [ 79%]
+tests/test_bras_b_v1.py ........................                         [ 90%]
+tests/test_comparer_echecs_attendus_v1.py ...................            [100%]
+
+=================================== FAILURES ===================================
+____________ test_inventaire_tout_constructeur_d_invite_est_examine ____________
+
+    def test_inventaire_tout_constructeur_d_invite_est_examine():
+        trouves = _constructeurs()
+        neufs = sorted(set(trouves) - set(REGISTRE))
+>       assert not neufs, ("constructeur(s) d'invite non examiné(s) : vérifier qu'il(s) ne voient pas `cibles`, les "
+                           f"couvrir par un collecteur ou les exempter avec raison : {[(k, sorted(trouves[k])) for k in neufs]}")
+E       AssertionError: constructeur(s) d'invite non examiné(s) : vérifier qu'il(s) ne voient pas `cibles`, les couvrir par un collecteur ou les exempter avec raison : [('controle_ia/accumulation_b6/lecture_v1.py::calculer', ['{role}']), ('controle_ia/barreau5_familles/epreuve_verite_plantee_v1.py::planter', ['{role}']), ('controle_ia/barreau5_familles/formation_v1.py::_executer', ['conversation_de_controle', 'ouverture']), ('controle_ia/barreau5_familles/formation_v1.py::evaluer_membre', ['environnement']), ('controle_ia/barreau5_familles/formation_v1.py::executer', ['charger_invite']), ('controle_ia/barreau5_familles/formation_v1.py::jouer_sans_activations', ['consigne_privee', 'generer_lot', 'observation', 'ouverture']), ('controle_ia/barreau5_familles/formation_v1.py::jouer_scripte_jouet', ['consigne_privee', 'observation', 'ouverture']), ('controle_ia/barreau5_familles/formation_v1.py::membres_de_famille', ['environnement']), ('controle_ia/barreau5_familles/formation_v1.py::tirer_famille', ['environnement']), ('controle_ia/barreau5_familles/relecture_v1.py::_executer', ['charger_invite', 'conversation_de_controle', 'environnement', 'ouverture']), ('controle_ia/barreau5_familles/relecture_v1.py::rejouer', ['consigne_privee', 'observation', 'ouverture']), ('controle_ia/barreau8_moniteurs/lecture_sondes_v5.py::_directions_attendues', ['{role}']), ('controle_ia/barreau8_moniteurs/passe_recalcul_v5.py::debut_d_episode', ['charger_invite', 'consigne_privee', 'environnement', 'observation']), ('controle_ia/barreau8_moniteurs/passe_recalcul_v5.py::ecrire_fichiers_de_donnees', ['{role}']), ('controle_ia/barreau8_moniteurs/passe_recalcul_v5.py::garde_p2_gabarit', ['ouverture']), ('controle_ia/barreau8_moniteurs/passe_recalcul_v5.py::rebatir_episodes', ['charger_invite', 'consigne_privee', 'environnement', 'observation', 'ouverture']), ('controle_ia/dopamine_exploratoire/modele_v1.py::DecoupeurHF.gabarit', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v1.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v1.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v1.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v2.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v2.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v2.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v1.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v1.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v1.py::calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v2.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v2.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v2.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v3.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v3.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v3.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v4.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v4.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v4.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v5.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v5.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v5.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v6.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v6.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v6.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v7.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v7.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v7.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v8.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v8.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v8.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v9.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v9.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v9.py::_etiqueter', ['{role}']), ('controle_ia/relecture_fable_api_v1.py::_ligne_base', ['{role}']), ('controle_ia/relecture_fable_api_v1.py::lire_entree', ['{role}']), ('controle_ia/relecture_fable_api_v1.py::relire', ['{role}']), ('controle_ia/relecture_fable_api_v2.py::_ligne_base', ['{role}']), ('controle_ia/relecture_fable_api_v2.py::lire_entree', ['{role}']), ('controle_ia/relecture_fable_api_v2.py::relire', ['{role}']), ('controle_ia/relecture_fable_api_v3.py::_ligne_base', ['{role}']), ('controle_ia/relecture_fable_api_v3.py::lire_entree', ['{role}']), ('controle_ia/relecture_fable_api_v3.py::relire', ['{role}']), ('controle_ia/t07bbis/etat_impose_v1.py::charger', ['conversation_de_controle', 'ouverture']), ('controle_ia/t07bbis/etat_impose_v1.py::rejouer_episode', ['charger_invite', 'consigne_privee', 'observation', 'ouverture'])]
+E       assert not ['controle_ia/accumulation_b6/lecture_v1.py::calculer', 'controle_ia/barreau5_familles/epreuve_verite_plantee_v1.py::p...eau5_familles/formation_v1.py::executer', 'controle_ia/barreau5_familles/formation_v1.py::jouer_sans_activations', ...]
+
+tests/test_cibles_invisibles_v3.py:484: AssertionError
+_____________ test_aucun_module_hors_mesures_ne_lit_la_cle_cibles ______________
+
+    def test_aucun_module_hors_mesures_ne_lit_la_cle_cibles():
+        lecteurs = {}
+        for rel, f in _modules():
+            for nom, n in _fonctions(f):
+                corps = [m for m in ast.walk(n) if isinstance(m, ast.Constant) and m.value in CLES_CACHEES]
+                if corps:
+                    lecteurs.setdefault(rel, set()).add(nom)
+        hors = {rel: sorted(noms - LECTEURS_DE_CIBLES_ADMIS.get(rel, set())) for rel, noms in lecteurs.items()}
+        hors = {rel: noms for rel, noms in hors.items() if noms}
+>       assert not hors, f"fonction(s) hors mesures et extraction qui lisent la référence cachée : {hors}"
+E       AssertionError: fonction(s) hors mesures et extraction qui lisent la référence cachée : {'controle_ia/barreau5_familles/formation_v1.py': ['_executer'], 'controle_ia/barreau5_familles/relecture_v1.py': ['_executer']}
+E       assert not {'controle_ia/barreau5_familles/formation_v1.py': ['_executer'], 'controle_ia/barreau5_familles/relecture_v1.py': ['_executer']}
+
+tests/test_cibles_invisibles_v3.py:520: AssertionError
+_______________ test_v7_noms_du_depot_reel_tous_vises_ou_nommes ________________
+
+    def test_v7_noms_du_depot_reel_tous_vises_ou_nommes():
+        """Dans le dépôt réel, tout chemin suivi qui porte un nom retiré est retiré par nom, sous embargo, ou nommé dans
+        GARDES_SIGNALES : sinon la copie s'arrêterait (cet essai le dit avant)."""
+        suivis = subprocess.run(["git", "-C", str(RACINE), "ls-files"], capture_output=True, text=True,
+                                check=True).stdout.split("\n")
+        portes = [f for f in suivis if f and any(x in f.lower() for x in de.FRAGMENTS_PAR_NOM)]
+        assert len([f for f in portes if f.startswith("brouillons/pain-axis-")]) >= 104
+        hors = [f for f in portes if not de.retire_par_nom(f) and not de.sous_embargo(f) and f not in de.GARDES_SIGNALES
+                and not any(de.correspond(f, m) for m, _ in de.RETRAITS)]
+>       assert hors == []
+E       AssertionError: assert ['runs/course....sha256', ...] == []
+E         
+E         Left contains 36 more items, first extra item: 'runs/course-ideation-regard-ou-raisons-v1/20261114-100746-course-ideation-regard-ou-raisons-v1-g1/copies/sortie--doublons-par-juge.json'
+E         Use -v to get more diff
+
+tests/test_depot_expurge_v7.py:489: AssertionError
+==================================== PASSES ====================================
+________________ test_v7_copie_de_bout_en_bout_retraits_par_nom ________________
+----------------------------- Captured stdout call -----------------------------
+{
+ "commit_source": "dc699259ed1fbccb3dfde3e2dca7e0ed51102a22",
+ "commit_copie": "5201aee3fc15176aa9461f9487856609e61688e8",
+ "fichiers_gardes": 6,
+ "fichiers_retires": 2,
+ "fichiers_sous_embargo": 0,
+ "fichiers_retires_par_nom": 7,
+ "retraits_par_nom_par_motif": {
+  "brouillons `brouillons/pain-axis-*` : restent dans le dépôt privé, exclus de toute copie publique (R-173, R-209) : filtrés par nom, contenu jamais lu": 5,
+  "notes d'un autre projet, non publié (R-2679) : filtrées par nom, contenu jamais lu": 2
+ },
+ "identifiants_git_retires_par_nom": 6,
+ "chemins_gardes_signales": [
+  "docs/decisions/proposition-P-013-T0.7-temoins-pain-axis-v1.md"
+ ],
+ "script": "scripts/depot_expurge_v7.py",
+ "script_sha256": "ed5d73e6f74951990d9bbb8fde7bc0076aa98e88334d89fd5db6d9d03dcdbbb1",
+ "archives_examinees": 1,
+ "courriels_de_tiers_gardes": 0,
+ "retraits_par_motif": {
+  "copie d'un PDF d'arXiv de tiers": 1,
+  "candidature à un autre fonds, confidentielle": 1,
+  "brouillons `brouillons/pain-axis-*` : restent dans le dépôt privé, exclus de toute copie publique (R-173, R-209) : filtrés par nom, contenu jamais lu": 5,
+  "notes d'un autre projet, non publié (R-2679) : filtrées par nom, contenu jamais lu": 2
+ },
+ "paquet": "controle-ia-expurge-dc69925.bundle",
+ "paquet_sha256": "a895ebdbcccbe0612cb3c432b1e7610090fb201c4fdde741e3e5a9e60e07741c"
+}
+_____________________ test_cas_sain_jouet_de_bout_en_bout ______________________
+---------------------------- Captured stderr setup -----------------------------
+PROGRES 2026-11-22T03:04:41Z etape=format verifie=True
+PROGRES 2026-11-22T03:04:41Z etape=donnees tromperie=20 enjeux=24 faits_exclus=0
+PROGRES 2026-11-22T03:04:41Z etape=extraction duree_s=0.1
+PROGRES 2026-11-22T03:04:42Z etape=entrainement concept=tromperie principale=tromperie-lineaire-c2 aire_validation=1.0
+PROGRES 2026-11-22T03:04:43Z etape=entrainement concept=enjeux principale=enjeux-difference_moyennes-c0 aire_validation=0.5
+PROGRES 2026-11-22T03:04:44Z etape=sondes-figees empreinte=32c7bb666b2d031e58f9cf5fb30bc6987417bf5c0acbdaa44d9d3f0f193ba592 sondes=28
+PROGRES 2026-11-22T03:04:54Z etape=episodes lot=1/4 actions=8
+PROGRES 2026-11-22T03:04:58Z etape=episodes lot=2/4 actions=16
+PROGRES 2026-11-22T03:05:01Z etape=episodes lot=3/4 actions=24
+PROGRES 2026-11-22T03:05:05Z etape=episodes lot=4/4 actions=32
+PROGRES 2026-11-22T03:05:05Z etape=fin episodes=16 actions=32
+PROGRES 2026-11-22T03:05:05Z etape=reconstruction conformes=20 contextes_conformes=16 trajectoires_identiques=8 fins_resolues=0 actions=32
+PROGRES 2026-11-22T03:05:06Z etape=fidelite lecture=conforme fautes=0 ecart_max=0.000e+00
+PROGRES 2026-11-22T03:05:07Z etape=controle_negatif lecture=discriminant hors_tolerance=4/4
+PROGRES 2026-11-22T03:05:13Z etape=fin fideles=16 notees=32
+=========================== short test summary info ============================
+PASSED tests/test_cibles_invisibles_v3.py::test_aucune_invite_ne_porte_les_cibles[agent_p3]
+PASSED tests/test_cibles_invisibles_v3.py::test_aucune_invite_ne_porte_les_cibles[agent_pilote_a]
+PASSED tests/test_cibles_invisibles_v3.py::test_aucune_invite_ne_porte_les_cibles[juges_pilote]
+PASSED tests/test_cibles_invisibles_v3.py::test_aucune_invite_ne_porte_les_cibles[juges_rejeu]
+PASSED tests/test_cibles_invisibles_v3.py::test_aucune_invite_ne_porte_les_cibles[trace_lite]
+PASSED tests/test_cibles_invisibles_v3.py::test_aucune_invite_ne_porte_les_cibles[trace_lite_conduite]
+PASSED tests/test_cibles_invisibles_v3.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_p3]
+PASSED tests/test_cibles_invisibles_v3.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_pilote_a]
+PASSED tests/test_cibles_invisibles_v3.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_pilote]
+PASSED tests/test_cibles_invisibles_v3.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_rejeu]
+PASSED tests/test_cibles_invisibles_v3.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite]
+PASSED tests/test_cibles_invisibles_v3.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite_conduite]
+PASSED tests/test_cibles_invisibles_v3.py::test_garde_temoin_positif_l_appariement_lit_les_cibles
+PASSED tests/test_cibles_invisibles_v3.py::test_detecteur_insensible_a_la_casse_et_aux_espaces
+PASSED tests/test_cibles_invisibles_v3.py::test_la_tache_de_l_agent_n_a_aucun_champ_pour_les_cibles
+PASSED tests/test_cibles_invisibles_v3.py::test_instruction_privee_p3_independante_de_la_tache
+PASSED tests/test_cibles_invisibles_v3.py::test_inventaire_registre_a_jour
+PASSED tests/test_cibles_invisibles_v3.py::test_base_h12_absente_du_code_ou_couverte
+PASSED tests/test_cibles_invisibles_v3.py::test_garde_de_l_inventaire_voit_un_constructeur_et_un_lecteur_plantes
+PASSED tests/test_depot_expurge_v7.py::test_appariement_par_segment
+PASSED tests/test_depot_expurge_v7.py::test_segment_double_etoile_au_milieu
+PASSED tests/test_depot_expurge_v7.py::test_corpus_et_lots_de_tournoi_jamais_dans_la_copie
+PASSED tests/test_depot_expurge_v7.py::test_releve_de_gemini_jamais_dans_la_copie
+PASSED tests/test_depot_expurge_v7.py::test_fichiers_charges_par_le_code_jamais_retires
+PASSED tests/test_depot_expurge_v7.py::test_retrait_d_un_fichier_charge_arrete
+PASSED tests/test_depot_expurge_v7.py::test_fichier_retire_survivant_dans_une_archive
+PASSED tests/test_depot_expurge_v7.py::test_copie_de_bout_en_bout_saine_puis_artefact
+PASSED tests/test_depot_expurge_v7.py::test_garde_des_secrets_saine_et_artefact
+PASSED tests/test_depot_expurge_v7.py::test_copie_refusee_si_un_secret_est_garde
+PASSED tests/test_depot_expurge_v7.py::test_archive_d_un_format_non_examine_arrete
+PASSED tests/test_depot_expurge_v7.py::test_pdf_de_sous_dossier_retire
+PASSED tests/test_depot_expurge_v7.py::test_v4_tar_gz_examine_et_gzip_non_tar_refuse
+PASSED tests/test_depot_expurge_v7.py::test_v6_embargo_par_nom_sain_et_artefact
+PASSED tests/test_depot_expurge_v7.py::test_v6_embargo_dans_une_archive_gardee
+PASSED tests/test_depot_expurge_v7.py::test_v6_formes_de_cles_elargies
+PASSED tests/test_depot_expurge_v7.py::test_v6_donnees_personnelles_saines_et_artefacts
+PASSED tests/test_depot_expurge_v7.py::test_v6_paquet_incremental_refuse
+PASSED tests/test_depot_expurge_v7.py::test_v6_copie_avec_embargo_et_readme_public
+PASSED tests/test_depot_expurge_v7.py::test_v7_pain_axis_retire_par_nom_sain_et_artefact
+PASSED tests/test_depot_expurge_v7.py::test_v7_autre_projet_retire_par_nom_sain_et_artefact
+PASSED tests/test_depot_expurge_v7.py::test_v7_noms_retires_dans_une_archive_gardee
+PASSED tests/test_depot_expurge_v7.py::test_v7_identifiant_git_sain_et_artefact
+PASSED tests/test_depot_expurge_v7.py::test_v7_copie_de_bout_en_bout_retraits_par_nom
+PASSED tests/test_depot_expurge_v7.py::test_v7_copie_refusee_artefacts_par_nom[docs/notes/resume-pain-axis-v1.md-resume\n-hors des dossiers vis\xe9s]
+PASSED tests/test_depot_expurge_v7.py::test_v7_copie_refusee_artefacts_par_nom[brouillons/regard-ou-raisons-essai-v2/q.md-q\n-hors des dossiers vis\xe9s]
+PASSED tests/test_depot_expurge_v7.py::test_v7_copie_refusee_artefacts_par_nom[docs/notes/innocent-v1.md-piece sans cle\n-identifiant d'objet git]
+PASSED tests/test_depot_expurge_v7.py::test_v7_copie_refusee_artefacts_par_nom[livrables/lot-v1.zip-None-survivent dans une archive gard\xe9e]
+PASSED tests/test_depot_expurge_v7.py::test_v7_copie_refusee_artefacts_par_nom[livrables/lot-v2.zip--survivent dans une archive gard\xe9e]
+PASSED tests/test_agregateurs.py::test_formes_closes[0.0-10-1.0-0.3]
+PASSED tests/test_agregateurs.py::test_formes_closes[5.0-50-1.0-0.2]
+PASSED tests/test_agregateurs.py::test_formes_closes[-4.0-30-2.0-0.5]
+PASSED tests/test_agregateurs.py::test_formes_closes[12.0-100-0.7-0.1]
+PASSED tests/test_agregateurs.py::test_monotonie_et_parite
+PASSED tests/test_agregateurs.py::test_validite_sous_p0_et_artefact_sigma_sous_estime
+PASSED tests/test_agregateurs.py::test_ordre_lecture_temps_d_abord
+PASSED tests/test_agregateurs.py::test_episode_depuis_multi_ensemble_et_gardes
+PASSED tests/test_agregateurs.py::test_garde_episode_artefacts[mauvais0]
+PASSED tests/test_agregateurs.py::test_garde_episode_artefacts[mauvais1]
+PASSED tests/test_agregateurs.py::test_garde_episode_artefacts[mauvais2]
+PASSED tests/test_agregateurs.py::test_garde_episode_artefacts[mauvais3]
+PASSED tests/test_agregateurs.py::test_invariance_par_permutation_au_bit_pres
+PASSED tests/test_agregateurs.py::test_identite_terminale
+PASSED tests/test_agregateurs.py::test_garantie_locale_balayage_et_page
+PASSED tests/test_agregateurs.py::test_garantie_locale_co_elevation
+PASSED tests/test_agregateurs.py::test_autocorrelation_et_suites_sens
+PASSED tests/test_agregateurs.py::test_correlation_inter_agents_sens_et_gardes
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>0]
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>1]
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>2]
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>3]
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>4]
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>5]
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>6]
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>7]
+PASSED tests/test_agregateurs.py::test_gardes_parametres_artefacts[<lambda>8]
+PASSED tests/test_bases.py::test_jetons_des_valeurs_cas_sain_et_artefacts
+PASSED tests/test_bases.py::test_esperance_renormalisee_et_masse
+PASSED tests/test_bases.py::test_scores_moniteur_independants_du_lot_et_anomalies
+PASSED tests/test_bases.py::test_reponse_imposee_ajoutee_apres_l_ouverture
+PASSED tests/test_bases.py::test_finales_identiques_aux_statistiques_de_T03
+PASSED tests/test_bases.py::test_trajectoires_croissantes_et_lectures_tardives
+PASSED tests/test_bases.py::test_gardes_des_trajectoires
+PASSED tests/test_bases.py::test_premiere_alarme
+PASSED tests/test_bases.py::test_taux_de_faux_positifs_conforme_sous_effet_episode
+PASSED tests/test_bases.py::test_accumulation_bat_le_max_sur_un_sabotage_diffus
+PASSED tests/test_bases.py::test_gardes_de_fuite_entre_calibrage_et_evaluation
+PASSED tests/test_artefacts_v1.py::test_extrait_verifie_a_la_normalisation_des_espaces_pres[dense baseline at matched compute]
+PASSED tests/test_artefacts_v1.py::test_extrait_verifie_a_la_normalisation_des_espaces_pres[dense   baseline\nat matched\tcompute]
+PASSED tests/test_artefacts_v1.py::test_extrait_verifie_a_la_normalisation_des_espaces_pres[  dense baseline at matched compute \n]
+PASSED tests/test_artefacts_v1.py::test_extrait_verifie_a_la_normalisation_des_espaces_pres[dense\xa0baseline at\u2003matched compute]
+PASSED tests/test_artefacts_v1.py::test_extrait_verifie_a_la_normalisation_des_espaces_pres[compute; three random seeds\nCOST: 120]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[Dense baseline at matched compute-introuvable]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[dense baseline at matched compute: three-introuvable]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[dense baseline at matched-compute-introuvable]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[dense\u200bbaseline at matched compute-introuvable]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[**dense baseline** at matched compute-introuvable]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[dense baseline at matched computation-introuvable]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[-vide]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[ \n\t -vide]
+PASSED tests/test_artefacts_v1.py::test_extrait_non_verifie[None-absent]
+PASSED tests/test_artefacts_v1.py::test_apostrophes_et_formes_unicode_non_normalisees
+PASSED tests/test_artefacts_v1.py::test_positions_dans_le_texte_d_origine_et_bornes_de_mots
+PASSED tests/test_artefacts_v1.py::test_occurrences_chevauchantes_toutes_rendues
+PASSED tests/test_artefacts_v1.py::test_longueur_minimale
+PASSED tests/test_artefacts_v1.py::test_types_refuses
+PASSED tests/test_artefacts_v1.py::test_extrait_a_cheval_sur_deux_segments_verifie_sans_segment_porteur
+PASSED tests/test_artefacts_v1.py::test_plan_mal_forme_refuse[segments0]
+PASSED tests/test_artefacts_v1.py::test_plan_mal_forme_refuse[un texte]
+PASSED tests/test_artefacts_v1.py::test_plan_mal_forme_refuse[segments2]
+PASSED tests/test_artefacts_v1.py::test_plan_mal_forme_refuse[segments3]
+PASSED tests/test_artefacts_v1.py::test_lecture_stricte_non_etaye_compte_absent
+PASSED tests/test_artefacts_v1.py::test_lecture_incomplete_ou_mal_formee_refusee
+PASSED tests/test_artefacts_v1.py::test_reference_mal_formee_refusee[reference0-liste non vide]
+PASSED tests/test_artefacts_v1.py::test_reference_mal_formee_refusee[reference1-en double]
+PASSED tests/test_artefacts_v1.py::test_reference_mal_formee_refusee[reference2-sans description]
+PASSED tests/test_artefacts_v1.py::test_reference_mal_formee_refusee[reference3-identifiant]
+PASSED tests/test_artefacts_v1.py::test_retrait_sain_et_son_attendu
+PASSED tests/test_artefacts_v1.py::test_retrait_detecte_par_un_lecteur_sain_de_l_autre_lignee
+PASSED tests/test_artefacts_v1.py::test_retrait_complaisance_avec_l_extrait_retire_rattrapee_par_le_programme
+PASSED tests/test_artefacts_v1.py::test_retrait_complaisance_avec_un_extrait_d_ailleurs_non_detectee
+PASSED tests/test_artefacts_v1.py::test_retrait_lu_par_la_lignee_qui_a_cite_l_extrait_refuse
+PASSED tests/test_artefacts_v1.py::test_retrait_gardes[kw0-sans extrait]
+PASSED tests/test_artefacts_v1.py::test_retrait_gardes[kw1-non v\xe9rifi\xe9 dans le plan source]
+PASSED tests/test_artefacts_v1.py::test_retrait_gardes[kw2-hors de la r\xe9f\xe9rence]
+PASSED tests/test_artefacts_v1.py::test_retrait_gardes[kw3-plan vide]
+PASSED tests/test_artefacts_v1.py::test_retrait_gardes[kw4-lign\xe9e]
+PASSED tests/test_artefacts_v1.py::test_retrait_gardes[kw5-\xe0 cheval]
+PASSED tests/test_artefacts_v1.py::test_retrait_gardes[kw6-restent dans le plan]
+PASSED tests/test_artefacts_v1.py::test_retrait_gardes[kw7-liste attendue]
+PASSED tests/test_artefacts_v1.py::test_retrait_extrait_recree_a_la_jointure_refuse
+PASSED tests/test_artefacts_v1.py::test_retrait_temoin_qui_ne_survit_pas_accepte_et_classe
+PASSED tests/test_artefacts_v1.py::test_derangement_sans_point_fixe_reproductible_et_independant_de_l_ordre
+PASSED tests/test_artefacts_v1.py::test_derangement_gardes[ids0-1-au moins deux]
+PASSED tests/test_artefacts_v1.py::test_derangement_gardes[ids1-1-double]
+PASSED tests/test_artefacts_v1.py::test_derangement_gardes[ids2--1-graine]
+PASSED tests/test_artefacts_v1.py::test_derangement_gardes[ids3-True-graine]
+PASSED tests/test_artefacts_v1.py::test_reference_permutee_et_son_attendu
+PASSED tests/test_artefacts_v1.py::test_reference_permutee_seuil_exige[None]
+PASSED tests/test_artefacts_v1.py::test_reference_permutee_seuil_exige[1.0]
+PASSED tests/test_artefacts_v1.py::test_reference_permutee_seuil_exige[-0.1]
+PASSED tests/test_artefacts_v1.py::test_reference_permutee_seuil_exige[True]
+PASSED tests/test_artefacts_v1.py::test_reference_permutee_seuil_exige[0.2]
+PASSED tests/test_artefacts_v1.py::test_reference_permutee_gardes
+PASSED tests/test_artefacts_v1.py::test_artefacts_reference_permutee_par_derangement
+PASSED tests/test_artefacts_v1.py::test_troncature_coupe_aux_mots_et_garde_le_texte_d_origine
+PASSED tests/test_artefacts_v1.py::test_troncature_a_la_frontiere_d_un_segment
+PASSED tests/test_artefacts_v1.py::test_troncature_detectee_ou_non_selon_la_lecture
+PASSED tests/test_artefacts_v1.py::test_troncature_fraction_refusee[0.0]
+PASSED tests/test_artefacts_v1.py::test_troncature_fraction_refusee[1.0]
+PASSED tests/test_artefacts_v1.py::test_troncature_fraction_refusee[-0.2]
+PASSED tests/test_artefacts_v1.py::test_troncature_fraction_refusee[1.5]
+PASSED tests/test_artefacts_v1.py::test_troncature_fraction_refusee[nan]
+PASSED tests/test_artefacts_v1.py::test_troncature_fraction_refusee[True]
+PASSED tests/test_artefacts_v1.py::test_troncature_fraction_refusee[0.5]
+PASSED tests/test_artefacts_v1.py::test_troncature_fraction_refusee[1e-06]
+PASSED tests/test_artefacts_v1.py::test_troncature_gardes
+PASSED tests/test_artefacts_v1.py::test_vue_aveugle_sans_nature_ni_attendu
+PASSED tests/test_artefacts_v1.py::test_empreinte_stable_et_sensible
+PASSED tests/test_artefacts_v1.py::test_nature_inconnue_refusee
+PASSED tests/test_bras_b_v1.py::test_cas_sain_jouet_de_bout_en_bout
+PASSED tests/test_bras_b_v1.py::test_modeles_de_pli_redonnent_la_recette_de_w_bit_a_bit
+PASSED tests/test_bras_b_v1.py::test_g1_second_passage_refuse
+PASSED tests/test_bras_b_v1.py::test_g2_empreinte_changee_arrete
+PASSED tests/test_bras_b_v1.py::test_g3_w_non_retrouvee_arrete_avant_toute_carte[chemin0]
+PASSED tests/test_bras_b_v1.py::test_g3_w_non_retrouvee_arrete_avant_toute_carte[chemin1]
+PASSED tests/test_bras_b_v1.py::test_g3_w_non_retrouvee_arrete_avant_toute_carte[chemin2]
+PASSED tests/test_bras_b_v1.py::test_g3_w_non_retrouvee_arrete_avant_toute_carte[chemin3]
+PASSED tests/test_bras_b_v1.py::test_g3_w_non_retrouvee_arrete_avant_toute_carte[chemin4]
+PASSED tests/test_bras_b_v1.py::test_g3_comparaison_exacte_et_tolerance
+PASSED tests/test_bras_b_v1.py::test_g4_identite_non_conforme_arrete_avant_substitution
+PASSED tests/test_bras_b_v1.py::test_g5_note_de_longueur_differente_arrete
+PASSED tests/test_bras_b_v1.py::test_g5_jetons_d_action_differents_arretent
+PASSED tests/test_bras_b_v1.py::test_g6_activation_non_finie_arrete
+PASSED tests/test_bras_b_v1.py::test_g7_classe_vide_arrete
+PASSED tests/test_bras_b_v1.py::test_carte_invisible_en_mode_reel_refuse
+PASSED tests/test_bras_b_v1.py::test_decision_aux_seuils_du_point_7[0.6-0.5-fuite]
+PASSED tests/test_bras_b_v1.py::test_decision_aux_seuils_du_point_7[0.65-0.5-fuite]
+PASSED tests/test_bras_b_v1.py::test_decision_aux_seuils_du_point_7[0.66-0.5-non tranch\xe9]
+PASSED tests/test_bras_b_v1.py::test_decision_aux_seuils_du_point_7[0.9-0.95-lecture du sabotage]
+PASSED tests/test_bras_b_v1.py::test_decision_aux_seuils_du_point_7[0.9-0.9499-non tranch\xe9]
+PASSED tests/test_bras_b_v1.py::test_decision_aux_seuils_du_point_7[0.6-0.97-non tranch\xe9 (signatures simultan\xe9es)]
+PASSED tests/test_bras_b_v1.py::test_identite_au_bit_ou_tolerance
+PASSED tests/test_bras_b_v1.py::test_bit_exige_seulement_meme_carte_et_memes_versions
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_cas_sain_liste_exacte_code_0
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_cas_sain_sous_ensemble_nomme_les_attendus_qui_passent
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_cas_sain_plusieurs_sorties_et_aucun_echec
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefact_echec_neuf_injecte_code_1
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefact_erreur_de_mise_en_place_neuve_code_1
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_identifiants_echappes_et_message_coupe_hors_crochets[True-True]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_identifiants_echappes_et_message_coupe_hors_crochets[False-True]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_identifiants_echappes_et_message_coupe_hors_crochets[True-False]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_sortie_illisible_code_2[........F.F\n=========================== short test summary info ============================\nFAILED tests/test_x.py::test_un - AssertionError: AMORCE - refus\n-aucune ligne de bilan]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_sortie_illisible_code_2[........FF\n2 failed, 8 passed in 3.00s\n-relancer pytest avec -rf]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_sortie_illisible_code_2[........F.F\n=========================== short test summary info ============================\nFAILED tests/test_x.py::test_un - AssertionError: AMORCE - refus\n2 failed, 5 passed in 12.34s\n-relancer pytest avec -rf]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_sortie_illisible_code_2[-aucune ligne de bilan]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_note_illisible_code_2[# note sans marqueurs\n- `tests/test_x.py::test_un`\n-marqueur]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_note_illisible_code_2[# note factice\n\nTexte, `tests/test_hors_liste.py::test_cite` hors des marqueurs.\n\n<!-- debut-liste-echecs-attendus -->\n```text\ntests/test_x.py::test_un\ntests/test_x.py::test_un\n```\n<!-- fin-liste-echecs-attendus -->\n-en double]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_note_illisible_code_2[# note factice\n\nTexte, `tests/test_hors_liste.py::test_cite` hors des marqueurs.\n\n<!-- debut-liste-echecs-attendus -->\n```text\n\n```\n<!-- fin-liste-echecs-attendus -->\n-vide]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_note_illisible_code_2[# note factice\n\nTexte, `tests/test_hors_liste.py::test_cite` hors des marqueurs.\n\n<!-- fin-liste-echecs-attendus -->\n```text\ntests/test_x.py::test_un\n```\n<!-- debut-liste-echecs-attendus -->\n-avant le marqueur de d\xe9but]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_artefacts_note_illisible_code_2[# note factice\n\nTexte, `tests/test_hors_liste.py::test_cite` hors des marqueurs.\n\n<!-- debut-liste-echecs-attendus -->\n```text\ntests/test_x.py::test_un\npas un identifiant\n```\n<!-- fin-liste-echecs-attendus -->\n-illisible]
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_sans_argument_code_2
+PASSED tests/test_comparer_echecs_attendus_v1.py::test_note_reelle_du_depot_lisible_178_identifiants_des_onze_fichiers
+FAILED tests/test_cibles_invisibles_v3.py::test_inventaire_tout_constructeur_d_invite_est_examine
+FAILED tests/test_cibles_invisibles_v3.py::test_aucun_module_hors_mesures_ne_lit_la_cle_cibles
+FAILED tests/test_depot_expurge_v7.py::test_v7_noms_du_depot_reel_tous_vises_ou_nommes
+=================== 3 failed, 202 passed in 75.23s (0:01:15) ===================

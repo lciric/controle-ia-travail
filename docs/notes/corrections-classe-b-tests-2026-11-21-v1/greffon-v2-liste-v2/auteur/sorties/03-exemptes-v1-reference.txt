@@ -1,0 +1,444 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-9.1.1, pluggy-1.7.0
+rootdir: /home/user/arbre-main-suite-greffon
+configfile: pyproject.toml
+plugins: anyio-4.16.0
+collected 55 items
+
+tests/test_lancer_course_auto_conception_v11.py FFFFFFFFF...F            [ 23%]
+tests/test_cibles_invisibles_v1.py ................x..x.                 [ 61%]
+tests/test_cibles_invisibles_v2.py ................x..x.                 [100%]
+
+=================================== FAILURES ===================================
+________________________ test_cas_sain_interprete_reel _________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_cas_sain_interprete_reel0')
+
+    def test_cas_sain_interprete_reel(tmp_path):
+        s = _script(tmp_path)
+>       assert _accepte(L, _declaration(_cmd(sys.executable, s)), _depart(L.sha256_fichier(s)))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:104: in _accepte
+    res = module.verifier_declaration(decl, _fixe(), depart)
+                                            ^^^^^^^
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+____________________ test_cas_sain_interprete_lien_hors_usr ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_cas_sain_interprete_lien_0')
+interprete_hors_usr = PosixPath('/tmp/pytest-of-root/pytest-9/test_cas_sain_interprete_lien_0/venv/bin/python')
+
+    def test_cas_sain_interprete_lien_hors_usr(tmp_path, interprete_hors_usr):
+        s = _script(tmp_path)
+        assert not str(interprete_hors_usr).startswith(("/usr/", "/bin/"))
+>       assert _accepte(L, _declaration(_cmd(interprete_hors_usr, s)), _depart(L.sha256_fichier(s)))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:104: in _accepte
+    res = module.verifier_declaration(decl, _fixe(), depart)
+                                            ^^^^^^^
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_________________ test_cas_sain_cible_resolue_de_l_interprete __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_cas_sain_cible_resolue_de0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fca672ada70>
+
+    def test_cas_sain_cible_resolue_de_l_interprete(tmp_path, monkeypatch):
+        """La cible résolue est écartée même hors de `/usr/` : copie de l'interpréteur dans le dossier d'essai, liée."""
+        cible = tmp_path / "py" / "python3-copie"
+        cible.parent.mkdir()
+        cible.write_bytes(Path(os.path.realpath(sys.executable)).read_bytes())
+        lien = tmp_path / "venv-python"
+        lien.symlink_to(cible)
+        monkeypatch.setattr(sys, "executable", str(lien))
+        s = _script(tmp_path)
+>       assert _accepte(L, _declaration(_cmd(cible, s)), _depart(L.sha256_fichier(s)))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:104: in _accepte
+    res = module.verifier_declaration(decl, _fixe(), depart)
+                                            ^^^^^^^
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_________________________ test_v10_refuse_le_meme_cas __________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_v10_refuse_le_meme_cas0')
+interprete_hors_usr = PosixPath('/tmp/pytest-of-root/pytest-9/test_v10_refuse_le_meme_cas0/venv/bin/python')
+
+    def test_v10_refuse_le_meme_cas(tmp_path, interprete_hors_usr):
+        """Contraste : le défaut du tri (§ 1) rejoué sur la v10 ; l'essai pouvait échouer."""
+        s = _script(tmp_path)
+        with pytest.raises(L10.Refus, match="programme non épinglé"):
+>           L10.verifier_declaration(_declaration(_cmd(interprete_hors_usr, s)), _fixe(), _depart(L10.sha256_fichier(s)))
+                                                                                 ^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+__________________ test_artefact_autre_programme_non_epingle ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_artefact_autre_programme_0')
+interprete_hors_usr = PosixPath('/tmp/pytest-of-root/pytest-9/test_artefact_autre_programme_0/venv/bin/python')
+
+    def test_artefact_autre_programme_non_epingle(tmp_path, interprete_hors_usr):
+        s = _script(tmp_path)
+        autre = _script(tmp_path, "autre.py")
+        autre.write_text("print('autre programme')\n", encoding="utf-8")   # contenu propre : empreinte autre que celle du script
+        assert L.sha256_fichier(autre) != L.sha256_fichier(s)
+        cmd = _cmd(interprete_hors_usr, s) + [str(autre)]
+        with pytest.raises(L.Refus, match="programme non épinglé"):
+>           L.verifier_declaration(_declaration(cmd), _fixe(), _depart(L.sha256_fichier(s)))
+                                                      ^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_______________ test_artefact_autre_lien_vers_le_meme_interprete _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_artefact_autre_lien_vers_0')
+interprete_hors_usr = PosixPath('/tmp/pytest-of-root/pytest-9/test_artefact_autre_lien_vers_0/venv/bin/python')
+
+    def test_artefact_autre_lien_vers_le_meme_interprete(tmp_path, interprete_hors_usr):
+        """Seuls `sys.executable` et sa cible résolue sont écartés : un autre chemin vers le même interpréteur reste à épingler."""
+        s = _script(tmp_path)
+        autre_lien = tmp_path / "ailleurs" / "python"
+        autre_lien.parent.mkdir()
+        autre_lien.symlink_to(os.path.realpath(sys.executable))
+        with pytest.raises(L.Refus, match="programme non épinglé"):
+>           L.verifier_declaration(_declaration(_cmd(autre_lien, s)), _fixe(), _depart(L.sha256_fichier(s)))
+                                                                      ^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_______________________ test_artefact_script_non_epingle _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_artefact_script_non_eping0')
+interprete_hors_usr = PosixPath('/tmp/pytest-of-root/pytest-9/test_artefact_script_non_eping0/venv/bin/python')
+
+    def test_artefact_script_non_epingle(tmp_path, interprete_hors_usr):
+        s = _script(tmp_path)
+        with pytest.raises(L.Refus, match="programme non épinglé"):
+>           L.verifier_declaration(_declaration(_cmd(interprete_hors_usr, s)), _fixe(), _depart("0" * 64))
+                                                                               ^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+____________________ test_artefact_commande_sans_programme _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_artefact_commande_sans_pr0')
+interprete_hors_usr = PosixPath('/tmp/pytest-of-root/pytest-9/test_artefact_commande_sans_pr0/venv/bin/python')
+
+    def test_artefact_commande_sans_programme(tmp_path, interprete_hors_usr):
+        """L'interpréteur seul, sans fichier épinglé : `fichiers` vide, refus (comme sous `/usr/` en v10)."""
+        cmd = [str(interprete_hors_usr), "-c", "print(1)", "--url-relais", "http://127.0.0.1:8790"]
+        with pytest.raises(L.Refus, match="programme non épinglé"):
+>           L.verifier_declaration(_declaration(cmd), _fixe(), _depart(L.sha256_fichier(interprete_hors_usr)))
+                                                      ^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+____________________ test_mutation_filtre_v10_remis_attrape ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_mutation_filtre_v10_remis0')
+interprete_hors_usr = PosixPath('/tmp/pytest-of-root/pytest-9/test_mutation_filtre_v10_remis0/venv/bin/python')
+
+    def test_mutation_filtre_v10_remis_attrape(tmp_path, interprete_hors_usr):
+        source = V11.read_text(encoding="utf-8")
+        assert source.count(FILTRE_V11) == 1
+        mute = _charger("lancer_course_auto_conception_v11_mute", V11, source.replace(FILTRE_V11, FILTRE_V10))
+        s = _script(tmp_path)
+        with pytest.raises(mute.Refus, match="programme non épinglé"):
+>           mute.verifier_declaration(_declaration(_cmd(interprete_hors_usr, s)), _fixe(), _depart(mute.sha256_fichier(s)))
+                                                                                  ^^^^^^^
+
+tests/test_lancer_course_auto_conception_v11.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_lancer_course_auto_conception_v11.py:60: in _fixe
+    octets = (RACINE / rel).read_bytes()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v4/configuration-course-auto-conception-v5.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+________________________ test_essai_a_blanc_eteint_v11 _________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-9/test_essai_a_blanc_eteint_v110')
+
+    @pytest.mark.skipif(not _matiere_v3(), reason="matière v3 absente de la référence de main")
+    def test_essai_a_blanc_eteint_v11(tmp_path):
+        d = tmp_path / "ab"
+>       assert L.principal(["--a-blanc", str(d)]) == 0
+E       AssertionError: assert 2 == 0
+E        +  where 2 = <function principal at 0x7fca670016c0>(['--a-blanc', '/tmp/pytest-of-root/pytest-9/test_essai_a_blanc_eteint_v110/ab'])
+E        +    where <function principal at 0x7fca670016c0> = L.principal
+
+tests/test_lancer_course_auto_conception_v11.py:258: AssertionError
+----------------------------- Captured stderr call -----------------------------
+{"erreur": "FileNotFoundError: [Errno 2] No such file or directory: '/home/user/arbre-main-suite-greffon/docs/notes/organisme-auto-conception-v1/course-v2/consigne-proposeur-auto-conception-v2.md'"}
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_lancer_course_auto_conception_v11.py::test_noms_propres_v11
+PASSED tests/test_lancer_course_auto_conception_v11.py::test_le_reste_de_la_v10_inchange
+PASSED tests/test_lancer_course_auto_conception_v11.py::test_documentation_garde_le_texte_de_la_v10
+PASSED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[agent_p3]
+PASSED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[agent_pilote_a]
+PASSED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[juges_pilote]
+PASSED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[juges_rejeu]
+PASSED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[trace_lite]
+PASSED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[trace_lite_conduite]
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_p3]
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_pilote_a]
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_pilote]
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_rejeu]
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite]
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite_conduite]
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_temoin_positif_l_appariement_lit_les_cibles
+PASSED tests/test_cibles_invisibles_v1.py::test_detecteur_insensible_a_la_casse_et_aux_espaces
+PASSED tests/test_cibles_invisibles_v1.py::test_la_tache_de_l_agent_n_a_aucun_champ_pour_les_cibles
+PASSED tests/test_cibles_invisibles_v1.py::test_instruction_privee_p3_independante_de_la_tache
+PASSED tests/test_cibles_invisibles_v1.py::test_inventaire_registre_a_jour
+PASSED tests/test_cibles_invisibles_v1.py::test_base_h12_absente_du_code_ou_couverte
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_de_l_inventaire_voit_un_constructeur_et_un_lecteur_plantes
+PASSED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[agent_p3]
+PASSED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[agent_pilote_a]
+PASSED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[juges_pilote]
+PASSED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[juges_rejeu]
+PASSED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[trace_lite]
+PASSED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[trace_lite_conduite]
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_p3]
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_pilote_a]
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_pilote]
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_rejeu]
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite]
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite_conduite]
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_temoin_positif_l_appariement_lit_les_cibles
+PASSED tests/test_cibles_invisibles_v2.py::test_detecteur_insensible_a_la_casse_et_aux_espaces
+PASSED tests/test_cibles_invisibles_v2.py::test_la_tache_de_l_agent_n_a_aucun_champ_pour_les_cibles
+PASSED tests/test_cibles_invisibles_v2.py::test_instruction_privee_p3_independante_de_la_tache
+PASSED tests/test_cibles_invisibles_v2.py::test_inventaire_registre_a_jour
+PASSED tests/test_cibles_invisibles_v2.py::test_base_h12_absente_du_code_ou_couverte
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_de_l_inventaire_voit_un_constructeur_et_un_lecteur_plantes
+XFAIL tests/test_cibles_invisibles_v1.py::test_inventaire_tout_constructeur_d_invite_est_examine - échec connu (echecs-connus-v1.txt) : L'inventaire figé du v1 ne couvre pas les constructeurs d'invite ajoutés depuis au code suivi par git (lanceurs T0.6 v5 et v6, repli et réextraction T0.7, run v2 du premier test, bras B de l'audit de fuite, rejeu des activations). [décision de la mère du 21 novembre 2026, vers 21:24Z ; tri registres/essaim/vers-mere/annexe-tests-complets-2026-11-21-v1/tri-echecs-tests-complets-2026-11-21-v1.md]
+XFAIL tests/test_cibles_invisibles_v1.py::test_aucun_module_hors_mesures_ne_lit_la_cle_cibles - échec connu (echecs-connus-v1.txt) : La liste figée du v1 des lecteurs admis de la clé « cibles » ne connaît pas les fonctions ajoutées depuis (lanceurs T0.6 v5 et v6, chargement des adaptateurs du repli T0.7). [décision de la mère du 21 novembre 2026, vers 21:24Z ; tri registres/essaim/vers-mere/annexe-tests-complets-2026-11-21-v1/tri-echecs-tests-complets-2026-11-21-v1.md]
+XFAIL tests/test_cibles_invisibles_v2.py::test_inventaire_tout_constructeur_d_invite_est_examine - échec connu (echecs-connus-v1.txt) : L'inventaire figé du v2 ne couvre pas les constructeurs d'invite ajoutés depuis au code suivi par git (repli et réextraction T0.7, run v2 du premier test). [décision de la mère du 21 novembre 2026, vers 21:24Z ; tri registres/essaim/vers-mere/annexe-tests-complets-2026-11-21-v1/tri-echecs-tests-complets-2026-11-21-v1.md]
+XFAIL tests/test_cibles_invisibles_v2.py::test_aucun_module_hors_mesures_ne_lit_la_cle_cibles - échec connu (echecs-connus-v1.txt) : La liste figée du v2 des lecteurs admis de la clé « cibles » ne connaît pas le chargement des adaptateurs du repli T0.7, ajouté depuis. [décision de la mère du 21 novembre 2026, vers 21:24Z ; tri registres/essaim/vers-mere/annexe-tests-complets-2026-11-21-v1/tri-echecs-tests-complets-2026-11-21-v1.md]
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_cas_sain_interprete_reel
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_cas_sain_interprete_lien_hors_usr
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_cas_sain_cible_resolue_de_l_interprete
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_v10_refuse_le_meme_cas
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_artefact_autre_programme_non_epingle
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_artefact_autre_lien_vers_le_meme_interprete
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_artefact_script_non_epingle
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_artefact_commande_sans_programme
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_mutation_filtre_v10_remis_attrape
+FAILED tests/test_lancer_course_auto_conception_v11.py::test_essai_a_blanc_eteint_v11
+================== 10 failed, 41 passed, 4 xfailed in 26.32s ===================
