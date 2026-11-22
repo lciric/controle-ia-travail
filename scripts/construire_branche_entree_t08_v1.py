@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Branche d'entrée de la course de T0.8 — v1 (consigne de la chaîne de lancement, `722ceb5e…`, § 3.1).
+"""Branche d'entrée de la course de T0.8 — v1 (consigne de la chaîne de lancement, `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`, § 3.1).
 
 Règle du texte de T0.8 (« Liste d'arrêt », troisième puce) : le fichier de sondes n'est jamais copié sur la machine, ni comme
 fichier ni comme objet git ; la machine ne clone que la branche d'entrée et le code cité. Ce programme :
@@ -296,6 +296,9 @@ def main(argv=None) -> int:
                 raise Arret(f"{a.ref} : commit du code consigné {cm['code'][:12]} ≠ COMMIT_CODE_T08 de la configuration")
         else:
             p = plan(Path(a.depot), a.commit_7b, a.commit_code, a.commit_texte, a.texte, a.config)
+            if a.quoi == "construire" and p["commit_code_config"] != a.commit_code:   # contre-lecture m-1
+                raise Arret(f"--commit-code {a.commit_code[:12]} ≠ COMMIT_CODE_T08 de la configuration "
+                            f"({str(p['commit_code_config'])[:12]}) : arrêt, rien d'écrit")
         if a.quoi == "construire":
             commit = ecrire(Path(a.depot), a.branche, p, {"7b": a.commit_7b, "code": a.commit_code, "texte": a.commit_texte})
             try:

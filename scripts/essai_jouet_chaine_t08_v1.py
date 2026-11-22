@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Essai de bout en bout de l'amorce de T0.8 en mode jouet (consigne de la chaîne de lancement, `722ceb5e…`, § 4) — v1.
+"""Essai de bout en bout de l'amorce de T0.8 en mode jouet (consigne de la chaîne de lancement, `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`, § 4) — v1.
 
 Sur processeur, sans réseau du loueur ni dépense. Construit un dépôt distant jetable (`file://`) :
 - branche du code : un commit dont l'arbre est celui du commit courant **restreint aux chemins que l'amorce extrait**
@@ -38,6 +38,10 @@ CHEMINS_CODE = (".gitignore", "src", "tests", "scripts", "pyproject.toml", "requ
                 "prereg/T0.8-base-A-mots-et-cout-v1.md.sha256")
 CONFIG_JOUET = "prereg/T0.8-configuration-course-jouet-v1.json"
 GO_ORIGINE, GO_PROLONGATION = "GO-2026-11-10-12", "GO-2026-11-22-79"
+# noms de deux des 34 resume.json anciens de l'arbre de main (runs jouets, notes), recréés vides dans l'arbre du code de l'essai :
+# la garde resserrée ne doit pas s'y arrêter (contre-lecture B-1, cas sain)
+RESUME_ETRANGERS = ("diag/20261004-104156-harnais-factice/resume.json",
+                    "docs/notes/collisionneur-bassins-etroits-v1/consultations-a-part-v1/resume.json")
 BRANCHE_CODE, BRANCHE_ENTREE = "prep/code-t08-jouet", "entree/t08-jouet-v1"
 
 
@@ -71,6 +75,9 @@ def construire(dossier: Path, horodatage: str, entropie: int, interdit_code=Fals
     w.mkdir()
     a = subprocess.run(["git", "-C", str(RACINE), "archive", "HEAD", *CHEMINS_CODE], capture_output=True, check=True).stdout
     subprocess.run(["tar", "-x", "-C", str(w)], input=a, check=True)
+    for etranger in RESUME_ETRANGERS:   # cas sain de la garde resserrée (B-1) : des resume.json d'autres runs, comme dans l'arbre de main
+        (w / etranger).parent.mkdir(parents=True, exist_ok=True)
+        (w / etranger).write_text("{}\n")
     if interdit_code:              # un resume.json de 7b (run factice de l'essai) dans l'arbre du code, hors des motifs extraits
         (w / "diag" / f"{horodatage}-t06-7b-jouet").mkdir(parents=True)
         (w / "diag" / f"{horodatage}-t06-7b-jouet" / "resume.json").write_text("{}\n")

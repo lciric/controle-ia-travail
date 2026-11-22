@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Différentiel annoté, ligne par ligne, entre les deux fichiers copiés de la chaîne de T0.8 et leurs modèles de la course de
-confirmation (consigne de la chaîne de lancement, `722ceb5e…`, § 4, dernier point). v1.
+confirmation (consigne de la chaîne de lancement, `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`, § 4, dernier point). v1.
 
 Pour chaque bloc de `diff -u` (modèle → copie), chaque ligne retirée (« − ») et ajoutée (« + ») est recopiée, numérotée, avec
 la raison du bloc (`RAISONS`, écrites par le développeur de la chaîne ; elles renvoient aux points de la consigne, § 3.4 et

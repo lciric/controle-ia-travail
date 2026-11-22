@@ -1,5 +1,5 @@
 """Entrée en ligne de commande du passage à blanc de la lecture de T0.8 sur le registre réel (consigne de la chaîne de
-lancement, `722ceb5e…`, § 3.3). v1.
+lancement, `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`, § 3.3). v1.
 
     python -m controle_ia.t08.passage_a_blanc_v1 --config <configuration scellée (course ou lecture)> \
         --registre registres/scellements-v1.md --prereg <texte scellé> [--racine-piece .]

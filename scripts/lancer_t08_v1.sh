@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# [T0.8 v1 (consigne de la chaîne de lancement de T0.8, `722ceb5e…`, § 3.4) : copie de `scripts/lancer_t06_v13.sh` sous un nom neuf
+# [T0.8 v1 (consigne de la chaîne de lancement de T0.8, `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`, § 3.4) : copie de `scripts/lancer_t06_v13.sh` sous un nom neuf
 # (R12 : la v13 reste telle quelle), dont rien ne change hors ce que la consigne nomme ; chaque ligne changée porte « T08 » ou est
 # déclarée dans le rapport de la chaîne. Mêmes sous-commandes, mêmes codes de sortie. Changent : (1) les noms (`t08`), la branche
 # de sortie par défaut (`calcul/t08-course-v1`), la branche d'entrée (`entree/t08-course-v1`), la configuration lue sur la branche
@@ -190,8 +190,7 @@ creation)
     MODE_C=reel   # T08 : la course de T0.8 n'a qu'un mode sur la machine (aucune épreuve à blanc)
     [ -z "${T08_EPUISEMENT_SIMULE_S:-}" ] || { echo "T08_EPUISEMENT_SIMULE_S : aucune épreuve à blanc pour T0.8"; exit 2; }   # T08
     CAL=$(python3 -I -B -c "$SESSION8" calendrier "$REG" "$D/config.json" "$GO_ID_ENV") || { echo "calendrier lu au registre au jour de la création : $CAL : nœud, pas de création"; exit 3; }   # T08
-    FIN_GO=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p'); [ -n "$ECH" ] || ECH="$FIN_GO"
-    [[ "$ECH" =~ ^[0-9]+$ ]] && [ "$ECH" -le "$FIN_GO" ] && [ "$ECH" -gt "$(date +%s)" ] || { echo "échéance $ECH hors de ]maintenant, fin du GO $FIN_GO]"; exit 2; }
+    FIN_GO=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p'); [[ "$FIN_GO" =~ ^[0-9]+$ ]] || { echo "fin du GO illisible"; exit 2; }   # T08 : l'échéance de la machine est bornée plus bas par le plafond restant (M-5), jamais par la seule fin du GO
     python3 -I -B -c "$SESSION8" go "$REG" "$D/config.json" "$GO_ID_ENV" >/dev/null || { echo "GO non conforme au jour de la création"; exit 2; }   # T08
     JGHN=$(jeton_gh_nom) && { [ -n "${HF_TOKEN:-}" ] || [ "$MODE_C" = jouet ]; } || { echo "jeton absent (ni CONTROLE_IA_GITHUB_TOKEN ni CONTROLE_IA_GITHUB_TOKEN_2, ou HF_TOKEN en mode réel) : pas de création"; exit 2; }
     command -v "$VAST" >/dev/null || { echo "outil de location introuvable : offre non relue, pas de création"; exit 2; }
@@ -217,6 +216,9 @@ creation)
     DEP=$(python3 -I -B -c "$SESSION3" depense "$PLC" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW"); code_dep=$?   # T08 : aucune simulation d'épuisement
     [ "$code_dep" = 0 ] || { echo "dépense cumulée déjà au plafond ou illisible ($DEP) : nœud, pas de création"; exit 3; }
     EPUIS=$(printf '%s\n' "$DEP" | sed -n 's/.*epuisement_utc_s=\([0-9]*\).*/\1/p'); [[ "$EPUIS" =~ ^[0-9]+$ ]] || { echo "heure d'épuisement illisible"; exit 2; }
+    # T08 (M-5) : échéance de la machine = heure du plafond restant (par défaut) ; une échéance donnée ne peut que l'avancer
+    [ -n "$ECH" ] || ECH="$EPUIS"
+    [[ "$ECH" =~ ^[0-9]+$ ]] && [ "$ECH" -le "$EPUIS" ] && [ "$ECH" -gt "$(date +%s)" ] || { echo "échéance $ECH hors de ]maintenant, heure du plafond restant $EPUIS]"; exit 2; }
     B64=$(base64 -w0 < "$D/amorce.sh")
     [ "$(printf %s "$B64" | base64 -d | sha256sum | cut -d' ' -f1)" = "$(champ amorce "$D/lancement.txt")" ] || { echo "encodage de l'amorce"; exit 2; }
     CMD="GO_ID=$GO_ID_ENV timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$COMMIT -e PREREG=$P -e CONFIG=$(champ config "$D/lancement.txt") -e BRANCHE=$BRANCHE -e BRANCHE_ENTREE=$(champ branche_entree "$D/lancement.txt") -e ENTREE_COMMIT=$(champ entree "$D/lancement.txt") -e BRANCHE_CODE=$(champ branche_code "$D/lancement.txt") -e GO_ID_T08=$GO_ID_ENV -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute.json\" 2>&1; bash $DEPOT/scripts/lancer_t08_v1.sh apres-creation \"$D/creation-brute.json\" \$? \"$D\""   # T08 : variables de la branche d'entrée et du code, GO de la course
@@ -237,7 +239,7 @@ apres-creation)
     fi
     if [ -z "$ID" ] && [ "${NON:-0}" -ge 1 ] && [ "${OK:-0}" -eq 0 ]; then
         # C-V5-1 : refus explicite (offre retirée) : retenter au rang suivant seulement si aucune instance du programme n'existe
-        ETIQ=$(cle_config "$D/config.json" offre.etiquette) || { echo "étiquette illisible"; exit 4; }
+        ETIQ=$(cle_config "$D/vue-offre.json" offre.etiquette) || { echo "étiquette illisible"; exit 4; }   # T08 (M-2) : vue de l'offre
         if vast_masque "$D/instances-apres.json" timeout -k 5 120 "$VAST" show instances --raw && python3 -I -B -c "$SESSION" instances "$D/instances-apres.json" "$ETIQ" >/dev/null; then
             printf 'machine_refusee %s\n' "$(champ machine_proposee "$D/lancement.txt")" >> "$D/lancement.txt"
             echo "OFFRE REFUSÉE À LA CRÉATION (retirée ?) : aucune instance du programme ; machine $(champ machine_proposee "$D/lancement.txt") exclue ; rang suivant : bash $DEPOT/scripts/lancer_t08_v1.sh creation auto $(champ carte "$D/lancement.txt") $(champ anterieure "$D/lancement.txt") $D $(champ echeance "$D/lancement.txt")"; exit 5
@@ -331,7 +333,7 @@ surveillance)
         echo "$(date -u +%FT%TZ) $DEC" >> "$D/surveillance.txt"
         case "$DEC" in
             ARRET*) echo "$DEC"; echo "ARRÊT PAR L'IDENTIFIANT (R10) : timeout -k 5 120 $VAST stop instance $ID"; exit 3 ;;
-            FIN*) echo "$DEC"; echo "FIN : instance à arrêter par son identifiant, disque gardé jusqu'au verdict : timeout -k 5 120 $VAST stop instance $ID"; exit 0 ;;
+            FIN*) echo "$DEC"; echo "FIN : l'amorce détruit la machine après le versement prouvé (M-3, « Devis » : aucune garde de 72 heures) ; vérifier la poussée (ordre, étape 9), puis l'inventaire ; machine encore là : destruction par l'identifiant (R10) : timeout -k 5 120 $VAST destroy instance $ID"; exit 0 ;;   # T08
             REFUS*) echo "$DEC"; exit 4 ;;
             "ALERTE compte rendu"*) if [ ! -e "$D/compte-rendu-alerte.txt" ]; then echo "$(date -u +%FT%TZ) $DEC" | tee "$D/compte-rendu-alerte.txt"; fi ;;   # T08 : une seule fois
             ALERTE*) echo "$(date -u +%FT%TZ) $DEC" ;;

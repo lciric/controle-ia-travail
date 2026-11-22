@@ -137,3 +137,6 @@ if __name__ == "__main__":
     except GardeArret as e:
         print(f"ARRÊT : {e}", file=sys.stderr)
         sys.exit(1)
+    except Exception as e:                      # contre-lecture m-4 : toute autre erreur sort aussi en « ARRÊT : », sans trace
+        print(f"ARRÊT : {type(e).__name__} : {e}", file=sys.stderr)
+        sys.exit(1)

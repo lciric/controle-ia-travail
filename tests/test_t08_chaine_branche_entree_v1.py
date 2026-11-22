@@ -153,3 +153,13 @@ def test_verification_seule_sans_la_branche_de_7b(fx, capsys):
     assert B.main(["verifier", "--depot", str(d), "--commit-texte", ct2, "--texte", A.CH_TEXTE, "--config", A.CH_CONFIG,
                    "--ref", "entree/t08-essai"]) == 1
     assert "commit du texte consigné" in capsys.readouterr().err
+
+
+def test_artefact_commit_du_code_autre_que_celui_de_la_configuration(fx, capsys):
+    """Contre-lecture m-1 : `construire` exige `--commit-code` égal à COMMIT_CODE_T08 de la configuration."""
+    c = A.config_factice(fx)
+    c["marqueurs"]["COMMIT_CODE_T08"] = fx["c7b"]
+    ct = A.commit_texte(fx, c)
+    assert B.main(_args(fx, ct, branche="entree/t08-essai")) == 1
+    assert "COMMIT_CODE_T08" in capsys.readouterr().err
+    assert A.git(fx["depot"], "branch", "--list", "entree/t08-essai") == ""

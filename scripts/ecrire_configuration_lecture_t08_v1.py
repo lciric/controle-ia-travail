@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Configuration réelle de la lecture de T0.8 — programme qui l'écrit (consigne de la chaîne de lancement, `722ceb5e…`,
+"""Configuration réelle de la lecture de T0.8 — programme qui l'écrit (consigne de la chaîne de lancement, `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`,
 § 3.3). v1.
 
 Aucune règle de lecture n'est écrite ici : elles sont dans `lecture_v1.py`, contre-lu. Ce programme ne fait qu'assembler la

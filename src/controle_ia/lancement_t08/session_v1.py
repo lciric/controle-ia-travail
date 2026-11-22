@@ -1,4 +1,4 @@
-"""Session de la chaîne de lancement de T0.8, v1 (consigne `722ceb5e…`, § 3.4 et 3.5). Bibliothèque standard et modules de
+"""Session de la chaîne de lancement de T0.8, v1 (consigne `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`, § 3.4 et 3.5). Bibliothèque standard et modules de
 session de T0.6 seulement ; aucun appel au réseau ni à l'outil de location.
 
 Ce qui change par rapport à la chaîne de la course de confirmation (`t06.session_v12` et précédents), et rien d'autre :
@@ -20,7 +20,9 @@ Ce qui change par rapport à la chaîne de la course de confirmation (`t06.sessi
    `choisir_offre`, tirée de `lancement` ; **aucune carte de relance** : une configuration qui en porte une est refusée, et la
    seule carte demandable est `course` (aucune H200, section « Machine » du texte).
 4. **Surveillance** (`decider_surveillance_t08`) : celle de la v3 au plafond de la configuration, plus une ligne
-   « ALERTE compte rendu » quand la dépense cumulée atteint le seuil du compte rendu (40 USD, texte) ; jamais un arrêt.
+   « ALERTE compte rendu » quand la dépense cumulée atteint le seuil du compte rendu (40 USD, texte), jamais un arrêt ; la ligne
+   « FIN » dit la destruction après le versement prouvé (texte : aucune garde de 72 heures ; contre-lecture M-3), non plus
+   « disque gardé jusqu'au verdict ».
 
     python -I -m controle_ia.lancement_t08.session_v1 go REGISTRE_GO.md CONFIG.json GO_ID [AAAA-MM-JJ]
     python -I -m controle_ia.lancement_t08.session_v1 calendrier REGISTRE_GO.md CONFIG.json GO_ID [AAAA-MM-JJ]
@@ -111,7 +113,7 @@ def go_t08(registre, config: dict, go_id: str, jour: date | None = None) -> dict
         raise GardeSession(f"{origine} : plafond {o['plafond']!r}, « {plafond:g} USD » exact attendu (configuration)")
     g = o if go_id == origine else _ligne(lignes, go_id)
     if go_id != origine:
-        if not g["perimetre"].startswith(PREFIXE_PROLONGATION + origine):
+        if not re.match(re.escape(PREFIXE_PROLONGATION + origine) + r"(?![0-9A-Za-z_-])", g["perimetre"]):   # m-3 : frontière
             raise GardeSession(f"{go_id} : périmètre ne commençant pas par « {PREFIXE_PROLONGATION}{origine} » : pas une "
                                "prolongation de l'accord d'origine")
         if g["plafond"] != f"plafond de {origine}" and s3._plafond_ligne(g["plafond"]) != plafond:
@@ -152,6 +154,9 @@ def vue_offre(config: dict) -> dict:
 
 def decider_surveillance_t08(journal: str, maintenant_s: float, depense: dict, compte_rendu_usd) -> str:
     d = s3.decider_surveillance_v3(journal, maintenant_s, depense)
+    if d.startswith("FIN"):                     # contre-lecture M-3 : destruction après le versement prouvé, aucune garde du disque
+        return ("FIN : run terminé (ligne de fin de l'amorce) ; l'amorce détruit la machine après le versement prouvé ; vérifier "
+                "la poussée, puis l'inventaire ; machine encore là : destruction par l'identifiant (R10)")
     seuil = _nombre(compte_rendu_usd, "seuil du compte rendu", positif=True)
     if d == "POURSUIVRE" and depense["cumulee_usd"] >= seuil:
         return (f"ALERTE compte rendu : dépense cumulée {depense['cumulee_usd']:.2f} USD ≥ {seuil:g} USD : compte rendu à "

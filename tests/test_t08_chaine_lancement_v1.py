@@ -167,7 +167,8 @@ def test_lanceur_cas_sain_controles_creation_apres_creation_surveillance(monde, 
     (tmp_path / "instances.json").write_text(json.dumps([{"id": 777777, "label": "t08-v1"}]))
     (tmp_path / "journal.txt").write_text("AMORCE 2026-11-27T10:00:00Z : fin, code 0\n")
     r = lancer(monde, tmp_path, "surveillance", 777777, d, FAUX_INSTANCES=str(tmp_path / "instances.json"))
-    assert r.returncode == 0 and "FIN" in r.stdout and "stop instance 777777" in r.stdout, r.stdout + r.stderr
+    assert r.returncode == 0 and "FIN" in r.stdout and "destroy instance 777777" in r.stdout, r.stdout + r.stderr
+    assert "disque gardé" not in r.stdout and "stop instance" not in r.stdout                  # M-3
 
 
 def test_lanceur_surveillance_compte_rendu_une_seule_fois(monde, tmp_path):
@@ -331,12 +332,12 @@ def test_minuterie_artefact_heure_passee_consignation_puis_destruction(tmp_path)
                        env=_env_minuterie(tmp_path), capture_output=True, text=True, timeout=120)
     j = (r / "t08-minuterie.log").read_text()
     assert p.returncode == 0 and "instance 424242 détruite" in j, j
-    assert "plafond de 120 USD cumulé de T0.8" in j
+    assert "plafond restant de T0.8 atteint" in j and "puis destruction" in j and "dépense épuisée" in j
     consigne = (tmp_path / "consigne.txt").read_text().split("\n")
     appels = [l.split() for l in (tmp_path / "curl.txt").read_text().split("\n") if l]
-    assert [a[0] for a in appels] == ["PUT", "DELETE"]
+    assert [a[0] for a in appels] == ["DELETE"]                                    # M-3 : destruction, plus d'arrêt qui garde le disque
     t_consigne = int(consigne[0].split()[-1])
-    assert "dépense épuisée" in consigne[0] and t_consigne < int(appels[0][1]) < int(appels[1][1])     # consignation, arrêt, destruction
+    assert "dépense épuisée" in consigne[0] and t_consigne < int(appels[0][1])     # consignation, puis destruction
 
 
 # --- consigne v2/v3 : plafond restant (O-2), accord prolongé à dates simulées (O-3), alerte de deux heures (m-O2) ---------
@@ -456,3 +457,42 @@ def test_alerte_de_deux_heures_ligne_recente_rien_deux_heures_alerte():
     assert S.decider_surveillance_t08(recente, now, d, 40) == "POURSUIVRE"
     dec = S.decider_surveillance_t08(ancienne, now, d, 40)
     assert dec.startswith("ALERTE sans PROGRES") and "aucun arrêt" in dec
+
+
+# --- contre-lecture de la v1 : M-2 (offre refusée, code 5), M-5 (échéance bornée par le plafond restant), m-1, m-3 --------
+
+def test_offre_refusee_a_la_creation_code_5_et_machine_exclue(monde, tmp_path):
+    d = tmp_path / "d"
+    assert lancer(monde, tmp_path, "controles", d).returncode == 0
+    assert lancer(monde, tmp_path, "creation", "auto", "course", "0", d).returncode == 0
+    f = tmp_path / "creation-brute.json"
+    f.write_text('{"success": false, "error": "no_such_ask", "msg": "offre retirée"}\n')
+    r = lancer(monde, tmp_path, "apres-creation", f, 1, d)
+    assert r.returncode == 5 and "OFFRE REFUSÉE À LA CRÉATION" in r.stdout, r.stdout
+    assert "machine_refusee 201" in (d / "lancement.txt").read_text()
+    (tmp_path / "offres.json").write_text(json.dumps([A.OFFRE_A100, {**A.OFFRE_A100, "id": 2, "machine_id": 209, "dph_total": 1.1}]))
+    r = lancer(monde, tmp_path, "creation", "auto", "course", "0", d)                  # rang suivant : la machine refusée est exclue
+    assert r.returncode == 0 and " create instance 2 " in r.stdout.splitlines()[-1], r.stdout
+
+
+def test_echeance_de_la_machine_bornee_par_le_plafond_restant(monde, tmp_path):
+    d = tmp_path / "d"
+    assert lancer(monde, tmp_path, "controles", d).returncode == 0
+    r = lancer(monde, tmp_path, "creation", "auto", "course", "0", d)
+    assert r.returncode == 0
+    l = (d / "lancement.txt").read_text().splitlines()
+    ech = int([x for x in l if x.startswith("echeance ")][-1].split()[1])
+    assert ech == _epuisement(d)                                                       # par défaut : l'heure du plafond restant
+    cmd = r.stdout.splitlines()[-1]
+    assert f"-e ECHEANCE_UTC_S={ech} " in cmd
+    d2 = tmp_path / "d2"
+    assert lancer(monde, tmp_path, "controles", d2).returncode == 0
+    r = lancer(monde, tmp_path, "creation", "auto", "course", "0", d2, str(ech + 10 ** 7))   # au-delà du plafond restant : refus
+    assert r.returncode == 2 and "heure du plafond restant" in r.stdout
+
+
+def test_prolongation_par_un_identifiant_plus_long_refusee(tmp_path):
+    reg = _reg(tmp_path)
+    reg.write_text(reg.read_text().replace(f"Prolongation de {A.ORIGINE} (factice)", f"Prolongation de {A.ORIGINE}5 (factice)"))
+    with pytest.raises(GardeSession, match="pas une prolongation"):
+        S.go_t08(reg, _config(), A.PROLONGATION, J)

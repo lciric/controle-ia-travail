@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# [T0.8 v1 (consigne de la chaîne de lancement de T0.8, `722ceb5e…`, § 3.5) : copie de `scripts/amorce_instance_t06_v11.sh` sous un nom
+# [T0.8 v1 (consigne de la chaîne de lancement de T0.8, `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`, § 3.5) : copie de `scripts/amorce_instance_t06_v11.sh` sous un nom
 # neuf (R12 : la v11 reste telle quelle), dont rien ne change hors ce que la consigne nomme ; chaque ligne changée porte « T08 » ou est
 # déclarée dans le rapport de la chaîne. Changent : (1) les noms (`t08` : fichiers de travail `$R/t08-…`, lignes « AMORCE T08 ») ;
 # (2) le clonage : le code au commit `COMMIT` (celui de `COMMIT_CODE_T08`), une seule branche (`BRANCHE_CODE`, sans étiquettes),
@@ -13,7 +13,7 @@
 # parcourt ; (4) la liste d'essais ciblée et figée de T0.8 (`scripts/tests-cibles-t08-v1.txt`, empreinte et nombre attendu écrits
 # en dur) ; (5) les modèles Llama-3.1-8B-Instruct et Llama-3.2-3B-Instruct aux révisions de la configuration, préchargés l'un après
 # l'autre au cache local (la course les charge hors ligne) ; (6) la commande jouée : `python -m controle_ia.t08.course_v1 --config …
-# --run-id … --prereg …`, une fois ; (7) la minuterie : mécanisme inchangé, montants de T0.8 (120 USD) ; (8) la fin : sorties de
+# --run-id … --prereg …`, une fois ; (7) la minuterie : montants de T0.8 (120 USD) ; à l'heure du plafond restant, consignation puis **destruction** (contre-lecture M-3 : le texte le veut ; la v11 envoyait « stopped ») ; échéance de la machine bornée par le plafond restant, jamais par la seule fin du GO (M-5) ; en fin normale, destruction après le versement prouvé (sinon arrêt, disque gardé) ; (8) la fin : sorties de
 # la course (`runs/<run>`, `diag/<run>`, `donnees/<run>/*-t08.*`) scellées et poussées sur la branche de sortie, marqueur de fin
 # normale seulement si rien ne reste à pousser ; retirés : le bras B de l'audit de fuite, les morceaux d'activations, les épreuves
 # à blanc (`EPREUVE_GO_ID` refusé). Le GO de la course vient de `GO_ID_T08` (lancé par le lanceur avec `GO_ID`), lu au registre du
@@ -117,17 +117,19 @@ print("%03d" % code)' "$API/instances/$CONTAINER_ID/" "$1" "$2" "$R/t08-api-corp
     else c=aucun; fi
     echo "$c"
 }
+raison=""
 while [ "$(date +%s)" -lt "$ECH" ] && [ ! -e "$R/t08-detruire" ]; do
     if [ "$DEP" -gt 0 ] && [ "$(date +%s)" -ge "$DEP" ] && [ ! -e "$R/t08-depense-epuisee" ]; then
-        echo "$(date -u +%FT%TZ) DÉPENSE ÉPUISÉE (C08, plafond de 120 USD cumulé de T0.8) : consignation, poussée, puis état « stopped »" >> "$J"
+        # T08 (M-3) : le texte veut la destruction après consignation et poussée, non un arrêt qui garde le disque (un conteneur arrêté
+        # n'exécute plus cette minuterie)
+        echo "$(date -u +%FT%TZ) DÉPENSE ÉPUISÉE (C08, plafond restant de T0.8 atteint, 120 USD cumulés) : consignation, poussée, puis destruction" >> "$J"
         echo "dépense épuisée $(date -u +%FT%TZ)" > "$R/t08-depense-epuisee"
         consigner "dépense épuisée"
-        if [ -e "$R/t08-detruire" ]; then echo "$(date -u +%FT%TZ) PUT stopped non envoyé : ordre de destruction de l'amorce reçu pendant la consignation (R-1689)" >> "$J"
-        else c=$(appel PUT '{"state": "stopped"}'); echo "$(date -u +%FT%TZ) PUT stopped (dépense épuisée) : HTTP $c" >> "$J"; fi
+        raison="dépense épuisée"; break
     fi
     sleep "$PAS"
 done
-raison="échéance"; [ -e "$R/t08-detruire" ] && raison="ordre de l'amorce"
+[ -n "$raison" ] || { raison="échéance"; [ -e "$R/t08-detruire" ] && raison="ordre de l'amorce"; }
 if [ "$raison" = "échéance" ]; then echo "$(date -u +%FT%TZ) ÉCHÉANCE $ECH atteinte (C14) : consignation et poussée des résultats partiels avant la destruction" >> "$J"; consigner "échéance"; fi
 FIN=$(( $(date +%s) + MARGE )); n=0
 while :; do
@@ -163,6 +165,10 @@ refus_precoce() {  # avant la minuterie : destruction immédiate (minuterie lanc
     echo "AMORCE $(date -u +%FT%TZ) : refus : $1 : rien ne part"; attente_refus; echo "refus : $1" > "$R/t08-detruire"
     if [ "$ESSAI" = 1 ]; then exit 2; fi
     bash "$R/t08-minuterie.sh" 0 0 "$R" "$API" < /dev/null >> "$R/t08-minuterie.log" 2>&1; sleep infinity; exit 2; }
+versement_prouve() {  # T08 (M-3) : $1 = branche ; la tête distante égale la tête locale du dépôt extrait
+    local l r; l=$(git -C "$R/amorce-depot" rev-parse HEAD 2>/dev/null) || return 1
+    r=$(timeout -k 5 120 git -C "$R/amorce-depot" ls-remote origin "refs/heads/$1" 2>/dev/null | cut -f1)
+    [ -n "$1" ] && [ -n "$l" ] && [ "$l" = "$r" ]; }
 sommeil() {  # disque lisible par la session ; arrêt et destruction par l'identifiant (R10)
     echo "AMORCE $(date -u +%FT%TZ) : sommeil ($1) : disque lisible, la session arrête et détruit par l'identifiant"
     if [ "$ESSAI" = 1 ]; then echo "sommeil ($1)" > "$R/t08-sommeil"; exit "${2:-0}"; fi
@@ -203,7 +209,6 @@ E="$R/t08-echeance.txt"; DE="$R/t08-depense-epuisee-utc.txt"
 if [ -s "$E" ]; then read -r ECH < "$E"; else
     ECH="${ECHEANCE_UTC_S:-}"
     case "$ECH" in ''|*[!0-9]*) refus_precoce "ECHEANCE_UTC_S absente ou non entière";; esac
-    [ "$ECH" -le "$FIN_GO" ] || { echo "AMORCE T08 : échéance ramenée à la fin du GO ($FIN_GO)"; ECH=$FIN_GO; }
     echo "$ECH" > "$E"
 fi
 if [ -s "$DE" ]; then read -r DEP < "$DE"; else
@@ -211,6 +216,8 @@ if [ -s "$DE" ]; then read -r DEP < "$DE"; else
     case "$DEP" in ''|*[!0-9]*) refus_precoce "DEPENSE_EPUISEE_UTC_S absente ou non entière (C08 : heure d'épuisement des 120 USD de T0.8, calculée à la création)";; esac
     echo "$DEP" > "$DE"
 fi
+# T08 (M-5) : l'échéance de la machine est bornée par l'heure du plafond restant, jamais par la seule fin de validité de l'accord
+if [ "$DEP" -gt 0 ] && [ "$ECH" -gt "$DEP" ]; then echo "AMORCE T08 : échéance ramenée à l'heure du plafond restant ($DEP)"; ECH=$DEP; echo "$ECH" > "$E"; fi
 if [ "$DEP" -gt 0 ] && [ "$(date +%s)" -ge "$DEP" ] && [ ! -e "$R/t08-depense-epuisee" ]; then      # R-1689 : l'argent est déjà épuisé au démarrage, l'amorce détruira
     echo "dépense déjà épuisée au démarrage $(date -u +%FT%TZ) (R-1689)" > "$R/t08-depense-epuisee"
 fi
@@ -230,7 +237,8 @@ if [ -d "$R/amorce-depot" ]; then
             detruire "second démarrage après la dépense épuisée (C08, C-V3-2) : commits en attente poussés, l'argent est épuisé : destruction, pas de sommeil" 0
         fi
         [ "$(date +%s)" -lt "$ECH" ] || detruire "second démarrage après l'échéance (C14, C-V3-2) : commits en attente poussés, destruction" 0
-        sommeil "second démarrage après une fin normale, rien ne repart" 0
+        versement_prouve "${BRANCHE:-}" && detruire "second démarrage après une fin normale : versement prouvé, destruction (M-3)" 0   # T08
+        sommeil "second démarrage après une fin normale, versement non prouvé : disque lisible, rien ne repart" 0
     fi
     [ -f "$R/t08-consigner.sh" ] && timeout -k 10 1200 bash "$R/t08-consigner.sh" "redémarrage d'un run interrompu"
     refus "redémarrage : dépôt déjà extrait sur le disque (second démarrage d'un run interrompu) : résultats partiels consignés, rien ne repart"
@@ -255,7 +263,7 @@ PREREG_ABSENT="${PREREG_ABSENT:-0}"
 AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'
 echo "AMORCE $(date -u +%FT%TZ) : commit $COMMIT"
 # T08 : clonage réduit au code de la course et de ses essais (mode sans cône ; motifs relevés en jouant la liste d'essais figée sur
-# un clone réduit : 248 essais passés, un écarté, aucun fichier manquant), d'une seule branche, sans étiquettes ; puis la branche d'entrée seule.
+# un clone réduit : 252 essais passés, un écarté, aucun fichier manquant), d'une seule branche, sans étiquettes ; puis la branche d'entrée seule.
 #  - /.gitignore (caches Python, `donnees/`) : sans lui, les caches écrits par les essais salissent l'arbre et la course refuse
 #    de partir (essai de bout en bout du 22 novembre) ;
 #  - code et essais : /src/ /tests/ /scripts/ /.claude/ /pyproject.toml /requirements-*.txt ;
@@ -404,7 +412,6 @@ journal "citations lues : configuration $CONFIG ; préenregistrement ${PREREG_AB
 CAL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_T08" calendrier registres/go.md "$CONFIG" "$GO_ID" 2>&1) || refus "calendrier lu au registre non conforme ($CAL)"   # T08
 FIN_CONFIG=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p' | tail -1)
 [ "$FIN_CONFIG" = "$FIN_GO" ] || refus "fin du GO reçue ($FIN_GO) ≠ fin de validité de la ligne $GO_ID au registre du commit ($FIN_CONFIG) (L11)"
-[ "$ECH" -le "$FIN_CONFIG" ] || refus "échéance $ECH après la fin du GO ($FIN_CONFIG)"
 journal "calendrier : $CAL"
 code_branche=0
 timeout -k 5 300 git ls-remote --exit-code origin "refs/heads/$BRANCHE" >/dev/null 2>"$T/ls-remote.err" || code_branche=$?
@@ -486,7 +493,7 @@ FIN_GARDES
 ) || { journal "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1)"; consigner_arret "gardes de l'instance"; refus "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1 | cut -c1-300)"; }
 journal "$GARDES"
 # T08 : suite ciblée et figée de T0.8 (liste de fichiers à l'empreinte et au nombre attendu écrits en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="5b6db29b7434c3bd38c6178d04b790572e96f767c1ba36410694fcb2a0000c2c"; ATTENDUS="248"; FICHIERS_TESTS=""   # T08
+LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="5b6db29b7434c3bd38c6178d04b790572e96f767c1ba36410694fcb2a0000c2c"; ATTENDUS="252"; FICHIERS_TESTS=""   # T08
 [ -z "${TESTS_ARGS:-}" ] || ATTENDUS="${TESTS_ATTENDUS:-}"   # T08 : répétition jouet seulement (TESTS_ARGS refusé hors jouet)
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
@@ -576,7 +583,11 @@ if [ -n "$RESTE" ]; then
 fi
 AUTRES=$(git status --porcelain 2>&1 | head -n 3 | tr '\n' ';'); [ -z "$AUTRES" ] || journal "note : git status --porcelain (hors runs, diag, donnees, traces) : $AUTRES"
 echo "fin normale $(date -u +%FT%TZ), run $RUN" > "$R/t08-fin-normale"
-if pousser; then journal "branche $BRANCHE poussée (résultats, données de la course et traces)"; liberer_verrou; arreter_instance "fin du run" 0; fi   # T08 : sans bras B
+if pousser; then journal "branche $BRANCHE poussée (résultats, données de la course et traces)"; liberer_verrou   # T08 : sans bras B
+    # T08 (M-3) : destruction après le versement prouvé (tête locale = tête distante de la branche de sortie) ; sinon arrêt, disque gardé
+    if versement_prouve "$BRANCHE"; then journal "versement prouvé : $(git rev-parse HEAD) = origin/$BRANCHE"; detruire "fin normale : versement prouvé, destruction par l'identifiant (M-3)" 0; fi
+    journal "poussée faite, mais versement non prouvé (tête distante ≠ tête locale) : arrêt, disque gardé"; arreter_instance "versement non prouvé" 1
+fi
 journal "run complet, mais poussée finale impossible après trois tentatives : résultats restés sur l'instance (disque lisible ; un second démarrage repousse, C13)"
 liberer_verrou
 arreter_instance "poussée impossible" 1

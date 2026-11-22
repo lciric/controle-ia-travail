@@ -79,7 +79,7 @@ def depot_factice(d: Path) -> dict:
 def config_factice(fx: dict, **changes) -> dict:
     e = {n: {"chemin": CH[n], "sha256": sha((fx["f7b"] if n.endswith("_7b") else fx["fcode"])[CH[n]]), "phase": "course"}
          for n in CH}
-    c = {"mode": "reel", "entrees": e, "marqueurs": {"EMPREINTES_ENTREES_7B": dict(fx["emp"])}}
+    c = {"mode": "reel", "entrees": e, "marqueurs": {"EMPREINTES_ENTREES_7B": dict(fx["emp"]), "COMMIT_CODE_T08": fx["ccode"]}}
     c.update(changes)
     return c
 

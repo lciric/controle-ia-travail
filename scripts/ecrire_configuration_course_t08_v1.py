@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Configuration réelle de la course de T0.8 — programme qui l'écrit à partir du texte scellé (consigne de la chaîne de
-lancement, `722ceb5e…`, § 3.2). v1.
+lancement, `722ceb5e…`, tenue en v3 `6f52c4db…` ; texte au brouillon 15 `8d68b7a0…`, § 3.2). v1.
 
 La configuration ne peut être finie qu'après le scellement du texte (commit du code, entropie) : ce programme l'écrit alors,
 **à partir du texte scellé et des marqueurs que le scellement a remplis, jamais d'ailleurs** :
