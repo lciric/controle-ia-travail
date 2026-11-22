@@ -351,9 +351,13 @@ courir() {
     # (l) v4 : inventaire à la fin de chaque étape, puis poussée aussitôt (par la boucle des poussées, seule à pousser)
     if ! appel sans-jeton hors-ligne inventaire > /dev/null; then log "inventaire en echec apres $etape (course continuee)"; fi
     printf '%s\n' "$etape" > "$A_POUSSER"
+    # la boucle des poussées retire le marqueur après sa poussée : l'étape suivante attend (au plus ATTENTE_POUSSEE_ETAPE_S)
+    for _ in $(seq 1 "${ATTENTE_POUSSEE_ETAPE_S:-600}"); do [ -e "$A_POUSSER" ] || break; sleep 1; done
+    [ -e "$A_POUSSER" ] && log "poussee apres $etape non constatee dans le delai (course continuee)"
   done
 }
 ETAT="course en cours"
+rm -f "$A_POUSSER"
 courir &
 PID_COURSE=$!
 COURSE_LANCEE=1
@@ -363,9 +367,13 @@ log "course lancee, PID $PID_COURSE"
 while kill -0 "$PID_COURSE" 2>/dev/null; do
   for _ in $(seq 1 "$PERIODE"); do kill -0 "$PID_COURSE" 2>/dev/null || break; [ -s "$A_POUSSER" ] && break; sleep 1; done
   if kill -0 "$PID_COURSE" 2>/dev/null; then
-    [ -s "$A_POUSSER" ] && log "poussee apres l'etape $(head -c 80 "$A_POUSSER")"
-    : > "$A_POUSSER"
-    pousser || true
+    if [ -s "$A_POUSSER" ]; then
+      ETAPE_POUSSEE=$(head -c 80 "$A_POUSSER")
+      if pousser; then log "inventaire pousse apres l'etape $ETAPE_POUSSEE"; fi
+      rm -f "$A_POUSSER"
+    else
+      pousser || true
+    fi
   fi
 done
 set +e
