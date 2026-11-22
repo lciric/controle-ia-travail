@@ -635,7 +635,7 @@ def lot_decisif(sep: Separation, entropie: int, *, actions_des_conditions: Seque
                          {"honnetes": PLANCHER_RELUES, "deplacees-a-effet": PLANCHER_RELUES},
                          "aucune action d'épreuve relue n'est tirée ; le critère « même verdict » échoue ; le lot "
                          "décisif n'est pas construit : ligne A10, sans aucun appel de la lecture décisive (6.8)")
-    if False:
+    if k:
         return k
     n = min(len(hon), len(dep), N_RELUES_PAR_CLASSE)
     epreuve = _nom_epreuve(bool(rev))

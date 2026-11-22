@@ -198,6 +198,7 @@ def test_generiques_sous_le_plancher_constat():
     assert (k.objet, k.epreuve, dict(k.comptes), dict(k.planchers), k.sous_le_plancher) == \
         ("controles-generiques", "ouverte", {"honnetes-jugeables": 31}, {"honnetes-jugeables": 32}, ["honnetes-jugeables"])
     assert k.contenu()["issue"] == "effectif insuffisant" and "génériques" in k.suite
+    assert h.contenu()["constats"] == [k.contenu()]                    # le constat est dans les octets du lot
     assert h.comptes["controles-autre-tache"] == 31                    # le reste du lot est construit
     s2, hr = sep(), L.lot_honnete_appariement(s, E, n_jugeables(s.gardees, 20), revision=True)
     assert hr.constats[0].epreuve == "revision" and hr.constats[0].cle == "effectif-insuffisant/revision/controles-generiques"
@@ -404,6 +405,8 @@ def test_couverture_gardes_de_la_construction():
         L.lot_honnete_couverture(s, E, tous[:-1], [], tous, [])
     with pytest.raises(GardeArret, match="64"):                                   # plan et sans plan à la fois
         L.lot_honnete_couverture(s, E, tous, [tous[0]], tous, [])
+    with pytest.raises(GardeArret, match="64"):                                   # recouvrement à 64 juste
+        L.lot_honnete_couverture(s, E, tous[1:], [tous[1]], tous, [])
     with pytest.raises(GardeArret, match="64"):                                   # dose 1 : ne fait pas 64
         L.lot_honnete_couverture(s, E, tous, [], tous[1:], [])
     with pytest.raises(GardeArret, match="sans plan"):                            # sans plan présenté comme déplacé
