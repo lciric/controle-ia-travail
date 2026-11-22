@@ -1,0 +1,1766 @@
+--- lot-4-v1/pole/appel_garde_na_v1.py
++++ lot-4-v2/pole/appel_garde_na_v2.py
+@@ -1,93 +1,111 @@
+-"""Véhicule NA-1, lot 4 — la surcharge d'`appel` (`appel_garde_na_v1`, mélange `AppelGardeNA`) : routage par rôle, part de la
+-clé et cumul compté, garde de motifs au point d'envoi, journal, égalité entre ce qui est journalisé et ce qui part, refus
+-avant le noyau (« non envoyé », sans coût), « refus écrit », lecture des statuts et de l'état du relais, `hors_course`.
+-
+-Lettre : V9 (`864f39a7…`), l. 77 (journal avant chaque envoi ; un appel sans ligne ne part pas ; une requête changée après
+-la journalisation est refusée à l'envoi), l. 156, l. 372 (arrêt n° 1), l. 383 (arrêt n° 12), l. 384 (arrêt n° 13), l. 387
+-(arrêt n° 16) ; conception du véhicule v5 (`1b7f6822…`), § 2.3 (pas 0 à 7 ; refus avant le noyau ; statuts et arrêt
+-n° 13 sur les clés Claude ; interface avec le lot 6), § 2.13 (gardes héritées, refus écrits, A2), § 6.1 et § 6.2 ; relevé
+-du lot 0 (`10ac79ec…`), Q2, Q5, Q11, Q13 ; mandat du lot 4 et ses errata 1 à 3.
+-
+-**Le lieu** : un mélange, placé devant la classe de génération (lot 6), qui surcharge `appel` et appelle `super().appel`
+-(le noyau, inchangé) seulement si tout est permis. **Ordre**, exactement :
+-
+-0. rôle déjà arrêté par une garde héritée (le suivi le dit) : « refus écrit », sans coût ; rien n'est présenté au noyau ;
+-1. routage : le couple (rôle, nom d'adaptateur) de la table scellée ; sinon arrêt n° 12, seconde clause ;
+-   puis trois contrôles de forme : la consigne est une requête assemblée par le lot 3 ; sa case est celle que la session
+-   désigne ; sa génération est celle de la génération qui l'envoie ; sinon l'arrêt « requête journalisée » ;
+-2. part de la clé (cumul + pire en vol + pire de l'appel) ; sinon arrêt n° 12, première clause ;
+-3. et 4. garde de motifs puis ligne « envoi » (journal du lot 3, qui lit les octets de la requête une fois) ; un motif :
+-   ligne « non envoyé », puis l'arrêt n° 16, qui dit la famille et le rang, jamais le texte trouvé ; un journal en panne
+-   (`JournalRefuse` ou `OSError`) : rien ne part, arrêt « requête journalisée » ;
+-5. égalité : la chaîne remise au noyau est le décodage strict des octets gardés ; son encodage UTF-8 est comparé aux octets
+-   que la garde a lus (`verifier_avant_envoi`) ; un écart, après la ligne « envoi » : une ligne « non envoyé » qui renvoie
+-   à la ligne « envoi » par son rang, sans coût, puis l'arrêt « requête journalisée » ; la requête n'est jamais comptée à
+-   la fois comme envoyée et comme refusée (`comptes_envois_na`) ;
+-6. `super().appel`, inchangé ; le coût que le noyau compte (écart de `etat["cout"]`, plafond compris en cas d'exception) est
+-   ajouté au cumul de la clé ;
+-7. au retour : rien de rendu (coupure au plafond dur) : ligne « non lancé » ; statut, champ de refus et champ d'erreur lus :
+-   refus d'un classifieur : arrêt n° 1 (porté par l'appel par défaut, D8 en attente ; par la course si la configuration le
+-   dit) ; modèle servi absent ou changé : arrêt d'A2, nommé ; erreur sur une clé Claude (le message synthétique de l'outil
+-   compris, que le kit rend en refus `assistant.model`) : l'état du relais est lu par son adresse locale ; un refus pour
+-   crédit qu'il montre : arrêt n° 13, qui dit la clé ; sinon « réponse illisible », au sous-compte « cause non établie ».
+-
+-**Un refus avant le noyau** (pas 0 à 5) ne passe jamais par `super().appel` : aucune consommation au coffre, aucun coût au
+-cumul de l'étape ni de la clé, aucun passage par le suivi des rôles ; une ligne au journal ; un compte (`na_comptes`).
+-
+-**Arrêts nommés neufs, numérotés à l'additif** : « requête journalisée » (V9, l. 77 : journal en panne, écart d'égalité,
+-consigne qui n'est pas une requête assemblée, case ou génération incohérente) et A2 (07:46Z, mot 6). Le texte trouvé par
+-la garde ne va qu'à la ligne « non envoyé » : l'arrêt n° 16 levé ici est neuf, levé hors du bloc qui a reçu celui du lot 2,
+-et ne porte ni le texte, ni l'arrêt du lot 2 en contexte.
++"""Véhicule NA-1, lot 4 v2 — la surcharge d'`appel` (`appel_garde_na_v2`, mélange `AppelGardeNA`) : routage par rôle, part
++de la clé et cumul compté **par tentative**, garde de motifs au point d'envoi, journal, égalité, refus avant le noyau,
++« refus écrit », lecture des retours, `hors_course`, et **la règle de repli** de GO-2026-11-22-35 pour les clés Claude, sur
++l'adaptateur direct (`adaptateur_claude_direct_na_v1`).
++
++v2 (remplace `appel_garde_na_v1.py`, `d16d07bf…`, archivé sans modification). Lettre neuve : nœuds du véhicule v2
++(`79b9d423…`), § 1 (A1 à A7), § 2 (N2), § 5 (R1 à R16) ; projet d'additif v2 (`6e9bb88e…`), A-6, § 5 (P1 à P17), § 10
++(n° 31, n° 34) ; décisions de la mère portées par le mandat du lot 4 v2. La lettre de la v1 (V9 l. 77, 372, 383, 384, 387 ;
++conception v5, § 2.3, § 2.13 ; errata 1 à 3 du lot 4 v1) reste tenue, sauf ce que le repli change.
++
++**Ordre d'un appel**, exactement :
++
++0. rôle déjà arrêté par une garde héritée : « refus écrit », sans coût (inchangé) ;
++1. routage : le couple (rôle, adaptateur) de la table scellée, sinon n° 12, seconde clause ; puis les contrôles de forme
++   (requête assemblée, case, génération : arrêt « requête journalisée ») ; **pour un rôle d'une clé Claude, le modèle
++   demandé est celui du rôle** (configuration), sinon arrêt n° 31 avant l'envoi ;
++2. à 6. **pour chaque tentative** d'une chaîne fermée (le modèle du rôle, puis le premier, puis le second modèle de repli ;
++   une seule tentative hors des clés Claude) : rôle arrêté (pas 0, sans coût) ; n° 12 avec **le pire de la tentative**
++   (rôle, modèle) ; garde de motifs et **ligne « envoi » neuve** (rang neuf) ; égalité, et **la même requête assemblée**
++   (même empreinte) à chaque tentative, sinon « requête journalisée » (cause « reformulation ») ; `super().appel(…,
++   modele=<tentative>)`, qui repasse la réservation du noyau (n° 6, n° 7 : une coupure arrête la chaîne, « non lancé ») ;
++   le coût que compte le noyau va au cumul de la clé, et **le pire de la tentative si le coût est inconnu** (A3) ;
++7. au retour d'une tentative, liste fermée (A6) :
++   - réponse « ok » : n° 31 si le modèle servi est absent ou n'est pas le modèle demandé **de la tentative** ; sinon, au
++     rang 1, « ok » ; au rang 2 ou 3, « refus par classifieur, servi par repli » (fiche attribuée au modèle servi) ;
++   - raison d'arrêt « refusal » lue par l'adaptateur direct (`messages.stop_reason`) : **repli** vers la tentative
++     suivante ; au troisième refus, l'arrêt n° 1 (portée « appel » par défaut, « course » sur réglage) ;
++   - trace de repli du fournisseur ou du kit, refus du relais pour modèle : n° 31 ;
++   - refus de classifieur d'une commande externe ou du protocole : n° 1, sans repli (lettre de la V9 l. 372) ;
++   - erreur : crédit d'amont (402, `billing_error`) ou plafond du relais : n° 13, qui dit la clé, sans repli ; budget
++     dépassé du relais de protocole : n° 13 ; toute autre erreur d'une clé Claude : « réponse illisible, cause non
++     établie » (sous-compte « en repli » si la chaîne était ouverte) ; une réponse servie mais coupée ou hors liste est
++     « servie » au sens du § 5 du projet d'additif ;
++   - tout autre événement de refus : « réponse illisible, cause non établie », sous-compte « refus hors liste », jamais
++     rejoué ni lu comme un n° 1 (remplace « tout autre refus » de la v1, l. 74).
++
++**Chaque tentative** est consignée (`na_replis`) : rôle, génération, case, session, rang de la ligne « envoi », rang de la
++tentative, modèle demandé, modèle servi, catégorie (ou « catégorie non lue »), coût compté (micro-dollars), coût inconnu,
++issue, attribution, fichier de la réponse brute ; la clé n'y figure pas : elle ne va qu'au journal des arrêts
++(`na_journal_arrets_cles["tentatives_de_repli"]`).
++
++**Arrêts** : n° 1, 12, 13, 16 et « requête journalisée » comme en v1 ; A2 devient le **n° 31** (proposé, § 10 du projet
++d'additif) ; un pire de (rôle, modèle) manquant refuse la construction (**n° 34**, proposé) ; l'adaptateur direct refuse
++un réglage non admis (**n° 32**, proposé). **L'arrêt n° 27 n'est pas touché** : il vit au lot 6 (sonde), et ce module
++n'en lit ni n'en lève aucun. **Rien n'est ajouté à l'enveloppe** : la chaîne remise au noyau est, à chaque tentative, le
++décodage strict des octets gardés.
+ 
+ Bibliothèque standard, et les modules des lots 2 à 4 (`garde_motifs_na_v4`, `requete_na_v3`, `journal_na_v3`,
+-`routage_na_v1`).
++`routage_na_v1`, `adaptateur_claude_direct_na_v1`).
+ """
+ 
+ import dataclasses
+-import json
+ import re
+-import urllib.parse
+-import urllib.request
+ 
++from pole import adaptateur_claude_direct_na_v1 as ad
+ from pole import garde_motifs_na_v4 as gm
+ from pole import journal_na_v3 as jn
+ from pole import requete_na_v3 as rq
+ from pole import routage_na_v1 as rt
+-from pole.relais import valider_url_relais
++from pole.adaptateurs import modele_conforme
+ 
+-VERSION = "appel-garde-na-v1"
++VERSION = "appel-garde-na-v2"
+ ARRET_REQUETE_JOURNALISEE = "requête journalisée"
+ ARRET_A2 = "A2"
+ NUMERO_ARRET_CLASSIFIEUR = 1
+ NUMERO_ARRET_CREDIT = 13
+ NUMERO_ARRET_MOTIF = gm.NUMERO_ARRET
++NUMERO_ARRET_A2 = 31  # proposé (projet d'additif v2, § 10) ; la mère le confirme à l'assemblage
++NUMERO_ARRET_PIRE = 34  # proposé (projet d'additif v2, § 10)
+ PORTEES_ARRET_1 = ("appel", "course")
+ PORTEE_ARRET_1_DEFAUT = "appel"  # proposition du concepteur (conception v5, § 9, point 6) ; D8 en attente de Lazar
+-CAUSES_REQUETE = ("journal", "égalité", "requête non assemblée", "case incohérente", "génération incohérente")
++CAUSES_REQUETE = ("journal", "égalité", "requête non assemblée", "case incohérente", "génération incohérente",
++                  "reformulation")
+ CAUSE_EGALITE = "égalité refusée après la ligne « envoi »"
++TYPE_CLE_CLAUDE = "claude_sdk"
++TENTATIVES_MAX = 3
+ _RENVOI = re.compile(r" ; renvoi à la ligne « envoi » de rang ([1-9][0-9]*)$")
+ _GARDE = re.compile(r"^(A[0-9]+(?:/A[0-9]+)?)\b")
+-# Événements de refus qui disent un changement ou une absence de modèle (A2), lus au champ `refus["evenement"]`.
+-EVENEMENTS_MODELE = ("assistant.model", "result.model_usage", "system.model_fallback", "commande.modele_servi",
+-                     "commande.modele_servi_absent", "commande.modele_demande_inconnu", "resultat.modele_servi",
+-                     "relais.modele_non_permis")
+-# Tout autre refus (statut « refus ») est le refus d'un classifieur de sûreté (arrêt n° 1), dont ceux-ci, nommés.
+-EVENEMENTS_CLASSIFIEUR = ("assistant.stop_reason", "result.stop_reason", "commande.refus", "kimi.content_filter",
+-                          "system.model_refusal_fallback", "system.model_refusal_no_fallback")
+-# Le message que l'outil fabrique lui-même pour une erreur (crédit, accès, réponse coupée : relevé au faux fournisseur)
+-# porte ce modèle ; l'adaptateur du kit le rend en « refus » `assistant.model`. Ce n'est pas un modèle servi : la surcharge
+-# le lit comme une erreur de la clé (état du relais, puis « cause non établie »), jamais comme A2.
+-MODELE_SYNTHETIQUE = "<synthetic>"
+-CHAMPS_ETAT_RELAIS = ("plafond_usd", "depense_usd", "engage_usd", "reserve_par_appel_usd", "refus", "refus_modele")
+-DELAI_ETAT_RELAIS_S = 10
++# A6 : le seul événement qui ouvre le repli (clé Claude, adaptateur direct).
++EVENEMENTS_REPLI = (ad.EVENEMENT_REFUS_CLASSIFIEUR,)
++# N° 31 : modèle changé, repli du fournisseur ou du kit, modèle refusé par un relais.
++EVENEMENTS_MODELE = ("assistant.model", "result.model_usage", "system.model_fallback", "system.model_refusal_fallback",
++                     "commande.modele_servi", "commande.modele_servi_absent", "commande.modele_demande_inconnu",
++                     "resultat.modele_servi", ad.EVENEMENT_MODELE_NON_PERMIS, ad.EVENEMENT_REPLI_FOURNISSEUR)
++# N° 1 sans repli : refus de classifieur d'une commande externe ou du protocole (et du kit, s'il servait encore).
++EVENEMENTS_CLASSIFIEUR_SANS_REPLI = ("commande.refus", "kimi.content_filter", "assistant.stop_reason",
++                                     "result.stop_reason", "system.model_refusal_no_fallback")
++ERREURS_CREDIT = (ad.ERREUR_CREDIT_AMONT, ad.ERREUR_PLAFOND_RELAIS)
++# Issues rendues au lot 6 (`issue_na`).
++ISSUE_OK = "ok"
++ISSUE_SERVI_PAR_REPLI = "refus par classifieur, servi par repli"
++ISSUE_ARRET_1 = "arrêt n° 1, consigné, non relancé"  # commande externe, protocole : sans repli (inchangée)
++ISSUE_ARRET_1_APRES_REPLI = "arrêt n° 1, consigné après trois refus"
++ISSUE_ILLISIBLE = "réponse illisible, cause non établie"
++ISSUE_ERREUR = "erreur"
++ISSUE_REFUS_ECRIT = "refus écrit"
++ATTRIBUTION_ESPECE = "espèce"
++PREFIXE_ATTRIBUTION_REPLI = "servie par repli : "
+ 
+ 
+ class ContexteRefuse(ValueError):
+     """Le contexte que la génération donne au mélange ne tient pas sa forme : aucune génération ne se construit."""
+ 
+ 
+-class EtatRelaisIllisible(ValueError):
+-    """L'état du relais n'a pas pu être lu ou n'a pas sa forme."""
++class PireManquantNA(ContexteRefuse):
++    """N° 34 (proposé) : un (rôle, modèle) sans pire écrit ; le départ est refusé."""
++
++    numero = NUMERO_ARRET_PIRE
+ 
+ 
+ class ArretNA(RuntimeError):
+@@ -129,12 +147,12 @@
+ 
+     def __init__(self, role, evenement):
+         super().__init__(f"arrêt n° {NUMERO_ARRET_CLASSIFIEUR}, refus d'un classifieur de sûreté : rôle « {role} » ; "
+-                         "consigné tel quel, non relancé")
++                         "consigné tel quel")
+         self.role, self.evenement = role, evenement
+ 
+ 
+ class ArretCreditNA(ArretNA):
+-    """Arrêt n° 13 : refus pour crédit ; arrêt nommé de la course, qui dit la clé ; aucune bascule."""
++    """Arrêt n° 13 : refus pour crédit ; arrêt nommé de la course, qui dit la clé ; aucune bascule, aucun repli."""
+ 
+     numero = NUMERO_ARRET_CREDIT
+     nom = "refus pour crédit"
+@@ -146,52 +164,33 @@
+ 
+ 
+ class ArretA2NA(ArretNA):
+-    """A2 (07:46Z, mot 6) : modèle servi absent ou changé ; arrêt nommé de la course, qui dit le rôle et la cause."""
++    """N° 31 (proposé ; A2 de la v1) : modèle servi absent ou différent du modèle demandé de la tentative ; trace de repli du
++    fournisseur ou du kit ; arrêt nommé de la course, qui dit le rôle et la cause."""
+ 
++    numero = NUMERO_ARRET_A2
+     nom = ARRET_A2
+ 
+     def __init__(self, role, cause):
+-        super().__init__(f"arrêt d'A2 : rôle « {role} » ; {cause} ; la composition gelée n'est plus tenue")
++        super().__init__(f"arrêt n° {NUMERO_ARRET_A2} (A2) : rôle « {role} » ; {cause} ; la composition gelée n'est plus "
++                         "tenue")
+         self.role, self.cause = role, cause
+ 
+ 
+-# --- l'état du relais (clés Claude) ------------------------------------------------------------------------------------
+-
+-def relais_montre_refus_credit(etat):
+-    """Vrai si l'état du relais (`/relais/etat`, relais v2) montre un refus pour crédit : au moins un refus autre que de
+-    modèle, et plus de quoi réserver un appel (la règle même du relais : dépense + engagé + réserve > plafond)."""
+-    if not isinstance(etat, dict) or any(k not in etat for k in CHAMPS_ETAT_RELAIS):
+-        raise EtatRelaisIllisible("état du relais sans ses champs")
+-    try:
+-        v = {k: float(etat[k]) for k in CHAMPS_ETAT_RELAIS}
+-    except (TypeError, ValueError):
+-        raise EtatRelaisIllisible("état du relais aux champs non numériques") from None
+-    return v["refus"] - v["refus_modele"] > 0 and v["depense_usd"] + v["engage_usd"] + v["reserve_par_appel_usd"] \
+-        > v["plafond_usd"] + 1e-12
+-
+-
+-def lecteur_etat_relais_http(table, delai_s=DELAI_ETAT_RELAIS_S):
+-    """Un lecteur de l'état du relais d'une clé, par son adresse locale (`GET /relais/etat`), sans mandataire réseau."""
+-    ouvreur = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+-
+-    def lire(cle):
+-        adresse = table.cles[cle].relais
+-        valider_url_relais(adresse)
+-        url = urllib.parse.urljoin(adresse.rstrip("/") + "/", "relais/etat")
+-        try:
+-            with ouvreur.open(url, timeout=delai_s) as r:
+-                return json.loads(r.read().decode("utf-8"))
+-        except (OSError, ValueError) as e:
+-            raise EtatRelaisIllisible(f"relais de « {cle} » illisible ({type(e).__name__})") from None
+-
+-    return lire
++# --- le contexte -------------------------------------------------------------------------------------------------------
+ 
++def _roles_claude(table):
++    return sorted(r for r, e in table.roles.items() if e.cle != rt.CLE_HORS_COURSE
++                  and table.cles[e.cle].type == TYPE_CLE_CLAUDE)
+ 
+-# --- le contexte -------------------------------------------------------------------------------------------------------
+ 
+ @dataclasses.dataclass(frozen=True)
+ class ContexteAppelGardeNA:
+-    """Ce que le mélange attend de la classe de génération (interface figée avec le lot 6)."""
++    """Ce que le mélange attend de la classe de génération (interface v2 avec le lot 6).
++
++    En plus de la v1 : `modeles_par_role` ({rôle d'une clé Claude : modèle}), `modeles_repli` (les deux modèles de repli
++    de GO-35, dans leur ordre, lus de la configuration), `pires_repli` ({rôle d'une clé Claude : {modèle de repli : USD au
++    micro-dollar}}). `pires_par_role` reste le pire du modèle du rôle. `lire_etat_relais` (v1) est retiré : l'adaptateur
++    direct rend l'erreur d'amont et celle du relais telles quelles (N2)."""
+ 
+     numero_generation: object
+     table: rt.TableRolesCles
+@@ -201,10 +200,13 @@
+     garde: gm.GardeMotifs
+     identifiant_case_de_session: object
+     cumul: rt.CumulParCle
+-    lire_etat_relais: object = None
++    modeles_par_role: dict
++    modeles_repli: tuple
++    pires_repli: dict
+     portee_arret_1: str = PORTEE_ARRET_1_DEFAUT
+     parts_micro: dict = dataclasses.field(init=False, repr=False)
+     pires_micro: dict = dataclasses.field(init=False, repr=False)
++    pires_tentative_micro: dict = dataclasses.field(init=False, repr=False)
+ 
+     def __post_init__(self):
+         if not isinstance(self.table, rt.TableRolesCles) or self.table.marque == rt.MARQUE_ARTEFACT:
+@@ -229,10 +231,52 @@
+             object.__setattr__(self, "pires_micro", rt.lire_pires(self.table, self.pires_par_role))
+         except rt.TableRefusee as e:
+             raise ContexteRefuse(str(e)) from None
+-        if self.lire_etat_relais is None:
+-            object.__setattr__(self, "lire_etat_relais", lecteur_etat_relais_http(self.table))
+-        elif not callable(self.lire_etat_relais):
+-            raise ContexteRefuse("lire_etat_relais : une fonction de la clé")
++        self._lire_repli()
++
++    def _lire_repli(self):
++        claude = _roles_claude(self.table)
++        mr = self.modeles_repli
++        if type(mr) is not tuple or len(mr) != TENTATIVES_MAX - 1 or len(set(mr)) != len(mr) \
++                or any(type(m) is not str or not m for m in mr):
++            raise ContexteRefuse("modèles de repli : deux noms distincts, dans l'ordre de GO-35 (premier, second)")
++        if not isinstance(self.modeles_par_role, dict) or sorted(self.modeles_par_role) != claude \
++                or any(type(m) is not str or not m for m in self.modeles_par_role.values()):
++            raise ContexteRefuse("modèles par rôle : exactement un par rôle d'une clé Claude")
++        if any(m in mr for m in self.modeles_par_role.values()):
++            raise ContexteRefuse("un modèle de rôle ne peut pas être un modèle de repli")
++        if not isinstance(self.pires_repli, dict) or sorted(self.pires_repli) != claude:
++            raise PireManquantNA(f"arrêt n° {NUMERO_ARRET_PIRE} (proposé) : un pire de repli pour chaque rôle d'une clé "
++                                 "Claude ; départ refusé")
++        micro = {}
++        for role in claude:
++            p = self.pires_repli[role]
++            if not isinstance(p, dict) or sorted(p) != sorted(mr):
++                raise PireManquantNA(f"arrêt n° {NUMERO_ARRET_PIRE} (proposé) : le rôle « {role} » n'a pas un pire pour "
++                                     "chaque modèle de repli ; départ refusé")
++            for m in mr:
++                try:
++                    v = rt.micro_exact(p[m])
++                except rt.MontantRefuse:
++                    raise PireManquantNA(f"arrêt n° {NUMERO_ARRET_PIRE} (proposé) : pire de repli de « {role} » sans "
++                                         "sa forme (micro-dollar) ; départ refusé") from None
++                if v <= 0:
++                    raise PireManquantNA(f"arrêt n° {NUMERO_ARRET_PIRE} (proposé) : pire de repli de « {role} » "
++                                         "strictement positif ; départ refusé")
++                micro[(role, m)] = v
++            micro[(role, self.modeles_par_role[role])] = self.pires_micro[role]
++        object.__setattr__(self, "pires_tentative_micro", micro)
++
++    def chaine(self, role, modele):
++        """La suite fermée des modèles d'un appel : le modèle du rôle puis les deux modèles de repli (clé Claude) ; le seul
++        modèle demandé ailleurs."""
++        if role in self.modeles_par_role:
++            return (modele,) + self.modeles_repli
++        return (modele,)
++
++    def pire(self, role, modele):
++        if role in self.modeles_par_role:
++            return self.pires_tentative_micro[(role, modele)]
++        return self.pires_micro[role]
+ 
+ 
+ def _plus(d, k, n=1):
+@@ -253,11 +297,34 @@
+             raise ContexteRefuse("la génération du véhicule exige son contexte d'appel (`ContexteAppelGardeNA`)")
+         self.na = contexte
+         self.na_comptes = {"non_envoyes": {}, "refus_ecrits": {}, "non_lances": {}, "arrets_consignes": {},
+-                           "cause_non_etablie": {}, "etat_relais_illisible": {}}
++                           "cause_non_etablie": {}, "replis": {}}
+         self.na_arrets_consignes = []
+-        self.na_journal_arrets_cles = {"cause_non_etablie": {}, "etat_relais_illisible": {}}
++        self.na_journal_arrets_cles = {"cause_non_etablie": {}, "tentatives_de_repli": {}}
+         self.na_servis = {}
++        self.na_replis = []
+         super().__init__(*a, **kw)
++        self._verifier_adaptateurs_directs_na()
++
++    def _verifier_adaptateurs_directs_na(self):
++        """D-N1 : chaque adaptateur d'une clé Claude est l'adaptateur direct, et sa liste fermée admet le modèle de chaque
++        rôle qu'il sert et les deux modèles de repli ; sinon aucune génération ne se construit."""
++        adaptateurs = getattr(self, "ad", None)
++        if not isinstance(adaptateurs, dict):
++            raise ContexteRefuse("la génération ne porte pas ses adaptateurs (`ad`)")
++        t = self.na.table
++        for nom, c in t.cles.items():
++            if c.type != TYPE_CLE_CLAUDE:
++                continue
++            for nom_ad in c.adaptateurs:
++                a = adaptateurs.get(nom_ad)
++                if not isinstance(a, ad.AdaptateurClaudeDirectNA):
++                    raise ContexteRefuse(f"clé Claude « {nom} » : l'adaptateur « {nom_ad} » doit être l'adaptateur direct "
++                                         "(D-N1)")
++                exiges = {self.na.modeles_par_role[r] for r, e in t.roles.items()
++                          if e.adaptateur == nom_ad and r in self.na.modeles_par_role} | set(self.na.modeles_repli)
++                if not exiges <= set(a.modeles_admis):
++                    raise ContexteRefuse(f"adaptateur « {nom_ad} » : sa liste fermée n'admet pas tous les modèles de ses "
++                                         "rôles et de repli")
+ 
+     # --- crochets, surchargeables par le lot 6 et par les essais ----------------------------------------------------
+ 
+@@ -271,6 +338,10 @@
+         """La chaîne que reçoit le noyau : le décodage strict des octets gardés (un seul encodage, au lot 3)."""
+         return rq.chaine_pour_le_noyau(envoi.octets)
+ 
++    def _requete_de_tentative_na(self, consigne, rang_tentative):
++        """La requête d'une tentative : la requête assemblée même, à chaque rang (P1 : aucune reformulation)."""
++        return consigne
++
+     # --- refus avant le noyau ----------------------------------------------------------------------------------------
+ 
+     def _case_de_session_na(self, session):
+@@ -320,7 +391,29 @@
+             raise ArretRequeteJournaliseeNA("journal", role)
+         _plus(self.na_comptes["refus_ecrits"].setdefault(role, {}), garde)
+         return {"r": None, "lu": None, "motif": f"refus écrit ({garde})", "duree": 0.0, "refus_ecrit": rendu,
+-                "issue_na": "refus écrit"}
++                "issue_na": ISSUE_REFUS_ECRIT, "par_repli": False, "tentatives": []}
++
++    # --- consignation des tentatives ---------------------------------------------------------------------------------
++
++    def _consigner_tentative_na(self, tentatives, *, role, cle, consigne, session, rang_tentative, modele, envoi=None,
++                                r=None, cout_micro=0, inconnu=False, issue, attribution=None):
++        t = getattr(r, "tentative", None) if r is not None else None
++        t = t if isinstance(t, dict) else {}
++        ligne = {"role": role, "generation": consigne.generation, "case": consigne.identifiant_case,
++                 "session": "/".join(map(str, session)) if isinstance(session, (tuple, list)) else str(session),
++                 "rang_envoi": envoi.rang if envoi is not None else None, "rang_tentative": rang_tentative,
++                 "modele_demande": modele, "modele_servi": getattr(r, "modele_servi", None) if r is not None else None,
++                 "categorie": t.get("categorie"), "classe_erreur": t.get("classe_erreur"),
++                 "cout_micro": cout_micro, "cout_inconnu": bool(inconnu), "issue": issue,
++                 "attribution": attribution, "reponse_brute": t.get("reponse_brute")}
++        tentatives.append(ligne)
++        self.na_replis.append(ligne)
++        if rang_tentative > 1:
++            _plus(self.na_journal_arrets_cles["tentatives_de_repli"], cle)
++        return ligne
++
++    def _compte_repli_na(self, role, quoi):
++        _plus(self.na_comptes["replis"].setdefault(role, {}), quoi)
+ 
+     # --- l'appel -----------------------------------------------------------------------------------------------------
+ 
+@@ -330,7 +423,7 @@
+         cause_arret = self.role_arrete_na(role)
+         if cause_arret:
+             return self._refus_ecrit_na(role, fournisseur, consigne, session, cause_arret)
+-        # pas 1 : routage par rôle
++        # pas 1 : routage par rôle, puis contrôles de forme, puis modèle du rôle (clé Claude)
+         try:
+             entree = na.table.router(role, fournisseur)
+         except rt.ArretPartCle as arret:
+@@ -347,15 +440,49 @@
+             self._refuser_requete_na("case incohérente", role, cle, consigne.identifiant_case, na.numero_generation)
+         if consigne.generation is not None and consigne.generation != na.numero_generation:
+             self._refuser_requete_na("génération incohérente", role, cle, consigne.identifiant_case, na.numero_generation)
+-        # pas 2 : part de la clé
+-        pire = na.pires_micro[role]
++        if role in na.modeles_par_role and modele != na.modeles_par_role[role]:
++            self._non_envoye_na(NUMERO_ARRET_A2, role, cle, consigne.identifiant_case, na.numero_generation,
++                                cause="modèle demandé autre que celui du rôle", sorte=consigne.sorte)
++            raise ArretA2NA(role, "modèle demandé autre que celui du rôle")
++        chaine = na.chaine(role, modele)
++        tentatives = []
++        for i, m in enumerate(chaine, start=1):
++            if i > 1:
++                cause_arret = self.role_arrete_na(role)
++                if cause_arret:
++                    rendu = self._refus_ecrit_na(role, fournisseur, consigne, session, cause_arret)
++                    self._consigner_tentative_na(tentatives, role=role, cle=cle, consigne=consigne, session=session,
++                                                 rang_tentative=i, modele=m, issue="refus écrit en chaîne")
++                    self._compte_repli_na(role, "arrêtées par une garde héritée")
++                    return dict(rendu, tentatives=list(tentatives))
++            requete = self._requete_de_tentative_na(consigne, i)
++            if not isinstance(requete, rq.RequeteAssemblee) or requete.sha256 != consigne.sha256 \
++                    or requete.taille != consigne.taille or requete.octets != consigne.octets:
++                self._consigner_tentative_na(tentatives, role=role, cle=cle, consigne=consigne, session=session,
++                                             rang_tentative=i, modele=m, issue="reformulation refusée")
++                self._refuser_requete_na("reformulation", role, cle, consigne.identifiant_case, na.numero_generation)
++            rendu = self._tentative_na(etat, role=role, role_kit=role_kit, fournisseur=fournisseur, modele=m,
++                                       consigne=requete, plafond_role=plafond_role, session=session, lire=lire, cle=cle,
++                                       entree=entree, rang_tentative=i, dernier=i == len(chaine), tentatives=tentatives)
++            if rendu is not _REPLI:
++                return rendu
++        raise AssertionError("la chaîne se termine toujours par une issue")  # pragma: no cover
++
++    def _tentative_na(self, etat, *, role, role_kit, fournisseur, modele, consigne, plafond_role, session, lire, cle,
++                      entree, rang_tentative, dernier, tentatives):
++        na = self.na
++        consigner = dict(tentatives=tentatives, role=role, cle=cle, consigne=consigne, session=session,
++                         rang_tentative=rang_tentative, modele=modele)
++        # pas 2 : part de la clé, au pire de la tentative
++        pire = na.pire(role, modele)
+         try:
+             compte = rt.verifier_part(na.table, na.parts_micro, na.cumul, cle, role, pire)
+         except rt.ArretPartCle as arret:
++            self._consigner_tentative_na(**consigner, issue="arrêt n° 12")
+             self._non_envoye_na(rt.NUMERO_ARRET_PART, role, cle, consigne.identifiant_case, na.numero_generation,
+                                 clause=arret.clause, sorte=consigne.sorte, sha256=consigne.sha256, taille=consigne.taille)
+             raise
+-        # pas 3 et 4 : garde de motifs, puis ligne « envoi » (le journal du lot 3 écrit la ligne « non envoyé » d'un motif)
++        # pas 3 et 4 : garde de motifs, puis ligne « envoi » neuve
+         envoi, motif, panne = None, None, False
+         try:
+             envoi = na.journal.journaliser_envoi(consigne, na.garde, role=role, cle=cle)
+@@ -365,6 +492,7 @@
+             panne = True
+         if motif is not None:
+             _plus(self.na_comptes["non_envoyes"].setdefault(role, {}), str(NUMERO_ARRET_MOTIF))
++            self._consigner_tentative_na(**consigner, issue="arrêt n° 16")
+             raise ArretMotifNA(motif[0], motif[1], role)
+         if panne:
+             _plus(self.na_comptes["non_envoyes"].setdefault(role, {}), ARRET_REQUETE_JOURNALISEE)
+@@ -379,67 +507,125 @@
+                                 cause=f"{CAUSE_EGALITE} ; renvoi à la ligne « envoi » de rang {envoi.rang}",
+                                 sorte=consigne.sorte, sha256=envoi.requete_gardee.sha256, taille=envoi.requete_gardee.taille)
+             raise ArretRequeteJournaliseeNA("égalité", role) from None
+-        # pas 6 : le noyau, inchangé ; le coût qu'il compte va au cumul de la clé
++        # pas 6 : le noyau, inchangé ; le coût qu'il compte va au cumul de la clé ; inconnu : le pire de la tentative (A3)
+         cout_avant = float(etat["cout"])
+         jeton = na.cumul.ouvrir_vol(compte, pire)
++        a, fini, compte_micro, inconnu = None, False, 0, True
+         try:
+             a = super().appel(etat, role=role, role_kit=role_kit, fournisseur=fournisseur, modele=modele, consigne=chaine,
+                               plafond_role=plafond_role, session=session, lire=lire)
++            fini = True
+         finally:
+             na.cumul.fermer_vol(jeton)
+-            na.cumul.ajouter(compte, rt.micro_cout(max(0.0, float(etat["cout"]) - cout_avant)))
++            delta = rt.micro_cout(max(0.0, float(etat["cout"]) - cout_avant))
++            r = a.get("r") if isinstance(a, dict) else None
++            inconnu = (not fini) or bool(getattr(r, "cout_inconnu", False))
++            compte_micro = max(delta, pire) if inconnu else delta
++            na.cumul.ajouter(compte, compte_micro)
++        consigner.update(envoi=envoi, cout_micro=compte_micro, inconnu=inconnu)
+         # pas 7 : au retour
+         if a is None:
+             cause = jn.CAUSE_NON_LANCE if etat.get("coupee") else "rôle arrêté par une garde héritée, vu par le noyau"
+             try:
+                 na.journal.journaliser_non_lance(envoi, cause)
+             except (jn.JournalRefuse, OSError):
+-                panne = True
+-            if panne:
+-                raise ArretRequeteJournaliseeNA("journal", role)
++                raise ArretRequeteJournaliseeNA("journal", role) from None
+             _plus(self.na_comptes["non_lances"], role)
++            self._consigner_tentative_na(**consigner, issue="non lancé")
++            if rang_tentative > 1:
++                self._compte_repli_na(role, "arrêtées en repli : non lancé")
+             return None
+-        return self._apres_retour_na(a, role, cle, entree)
++        return self._apres_retour_na(a, role, cle, entree, rang_tentative, dernier, consigner)
+ 
+-    def _apres_retour_na(self, a, role, cle, entree):
++    def _apres_retour_na(self, a, role, cle, entree, rang_tentative, dernier, consigner):
+         r = a["r"]
+         statut = getattr(r, "statut", None)
+         servi = getattr(r, "modele_servi", None)
+-        if statut == "ok":
++        demande = consigner["modele"]
++        tentatives = consigner["tentatives"]
++        type_cle = self.na.table.cles[cle].type
++        direct = isinstance(getattr(r, "tentative", None), dict)
++        servie = direct and bool(r.tentative.get("servie"))
++
++        def fin(issue, **plus):
++            return dict(a, issue_na=issue, tentatives=list(tentatives), **plus)
++
++        # n° 31 sur toute réponse servie : le modèle servi est celui demandé à la tentative
++        if statut == "ok" or servie:
+             if not servi:
+-                raise ArretA2NA(role, "modèle servi absent pour une réponse « ok »")
+-            vu = self.na_servis.setdefault(role, servi)
++                self._consigner_tentative_na(**consigner, r=r, issue=f"arrêt n° {NUMERO_ARRET_A2}")
++                raise ArretA2NA(role, "modèle servi absent pour une réponse servie")
++            if not modele_conforme(demande, servi):
++                self._consigner_tentative_na(**consigner, r=r, issue=f"arrêt n° {NUMERO_ARRET_A2}")
++                raise ArretA2NA(role, "modèle servi différent du modèle demandé de la tentative")
++            vu = self.na_servis.setdefault((role, demande), servi)
+             if vu != servi:
+-                raise ArretA2NA(role, "modèle servi changé entre deux appels du rôle")
+-            return dict(a, issue_na="ok")
++                self._consigner_tentative_na(**consigner, r=r, issue=f"arrêt n° {NUMERO_ARRET_A2}")
++                raise ArretA2NA(role, "modèle servi changé entre deux appels du rôle, au même modèle demandé")
++            if rang_tentative > 1:
++                attribution = PREFIXE_ATTRIBUTION_REPLI + servi
++                classe = "ok" if statut == "ok" else "réponse illisible"
++                self._consigner_tentative_na(**consigner, r=r, issue=ISSUE_SERVI_PAR_REPLI, attribution=attribution)
++                self._compte_repli_na(role, "servies par repli")
++                return fin(ISSUE_SERVI_PAR_REPLI, par_repli=True, modele_servi_repli=servi, attribution=attribution,
++                           classe_tentative_servie=classe)
++            if statut == "ok":
++                self._consigner_tentative_na(**consigner, r=r, issue=ISSUE_OK, attribution=ATTRIBUTION_ESPECE)
++                return fin(ISSUE_OK, par_repli=False, attribution=ATTRIBUTION_ESPECE)
+         refus = getattr(r, "refus", None)
+         ev = refus.get("evenement") if isinstance(refus, dict) else None
+-        synthetique = statut == "refus" and ev == "assistant.model" and refus.get("modele_servi") == MODELE_SYNTHETIQUE
+-        if statut == "refus" and not synthetique:
++        if statut == "refus":
+             if ev in EVENEMENTS_MODELE:
+-                raise ArretA2NA(role, "modèle servi changé ou refusé par le transport")
+-            _plus(self.na_comptes["arrets_consignes"].setdefault(role, {}), str(NUMERO_ARRET_CLASSIFIEUR))
+-            self.na_arrets_consignes.append({"arret": NUMERO_ARRET_CLASSIFIEUR, "role": role,
+-                                             "evenement": ev if isinstance(ev, str) else None})
+-            if self.na.portee_arret_1 == "course":
+-                raise ArretClassifieurNA(role, ev)
+-            return dict(a, issue_na="arrêt n° 1, consigné, non relancé")
+-        type_cle = self.na.table.cles[cle].type
++                self._consigner_tentative_na(**consigner, r=r, issue=f"arrêt n° {NUMERO_ARRET_A2}")
++                raise ArretA2NA(role, "modèle servi changé, repli du fournisseur ou modèle refusé par le relais")
++            if ev in EVENEMENTS_REPLI and type_cle == TYPE_CLE_CLAUDE and direct:
++                self._consigner_tentative_na(**consigner, r=r, issue="refus de classifieur")
++                if rang_tentative == 1:
++                    self._compte_repli_na(role, "chaînes ouvertes")
++                if not dernier:
++                    return _REPLI
++                self._compte_repli_na(role, "trois refus")
++                return self._arret_1_na(a, role, ev, fin, ISSUE_ARRET_1_APRES_REPLI, tentatives)
++            if ev in EVENEMENTS_CLASSIFIEUR_SANS_REPLI and not (type_cle == TYPE_CLE_CLAUDE and direct):
++                self._consigner_tentative_na(**consigner, r=r, issue=ISSUE_ARRET_1)
++                return self._arret_1_na(a, role, ev, fin, ISSUE_ARRET_1, tentatives)
++            # A6 : tout autre événement de refus est une réponse illisible, jamais rejouée
++            self._consigner_tentative_na(**consigner, r=r, issue=ISSUE_ILLISIBLE)
++            _plus(self.na_comptes["cause_non_etablie"].setdefault(role, {}), "refus hors liste")
++            _plus(self.na_journal_arrets_cles["cause_non_etablie"], cle)
++            return fin(ISSUE_ILLISIBLE, par_repli=False, en_repli=rang_tentative > 1)
+         if type_cle == "kimi_protocole" and statut == "budget_depasse":
++            self._consigner_tentative_na(**consigner, r=r, issue=f"arrêt n° {NUMERO_ARRET_CREDIT}")
+             raise ArretCreditNA(cle, role, "statut du relais de protocole")
+-        if type_cle == "claude_sdk":
+-            try:
+-                credit = relais_montre_refus_credit(self.na.lire_etat_relais(cle))
+-            except Exception:  # noqa: BLE001 — relais illisible : compté, jamais en silence ; la cause reste non établie
+-                _plus(self.na_comptes["etat_relais_illisible"], role)
+-                _plus(self.na_journal_arrets_cles["etat_relais_illisible"], cle)
+-                credit = False
+-            if credit:
+-                raise ArretCreditNA(cle, role, "état du relais")
+-            _plus(self.na_comptes["cause_non_etablie"], role)
++        if type_cle == TYPE_CLE_CLAUDE:
++            classe = r.tentative.get("classe_erreur") if direct else None
++            if classe in ERREURS_CREDIT:
++                self._consigner_tentative_na(**consigner, r=r, issue=f"arrêt n° {NUMERO_ARRET_CREDIT}")
++                if rang_tentative > 1:
++                    self._compte_repli_na(role, "arrêtées en repli : crédit")
++                raise ArretCreditNA(cle, role, classe)
++            self._consigner_tentative_na(**consigner, r=r, issue=ISSUE_ILLISIBLE)
++            sous = "en repli" if rang_tentative > 1 else (classe or "erreur hors adaptateur direct")
++            _plus(self.na_comptes["cause_non_etablie"].setdefault(role, {}), sous)
+             _plus(self.na_journal_arrets_cles["cause_non_etablie"], cle)
+-            return dict(a, issue_na="réponse illisible, cause non établie")
+-        return dict(a, issue_na="erreur")
++            if rang_tentative > 1:
++                self._compte_repli_na(role, "arrêtées en repli : cause non établie")
++            return fin(ISSUE_ILLISIBLE, par_repli=False, en_repli=rang_tentative > 1)
++        self._consigner_tentative_na(**consigner, r=r, issue=ISSUE_ERREUR)
++        return fin(ISSUE_ERREUR, par_repli=False)
++
++    def _arret_1_na(self, a, role, ev, fin, issue, tentatives):
++        _plus(self.na_comptes["arrets_consignes"].setdefault(role, {}), str(NUMERO_ARRET_CLASSIFIEUR))
++        self.na_arrets_consignes.append({"arret": NUMERO_ARRET_CLASSIFIEUR, "role": role,
++                                         "evenement": ev if isinstance(ev, str) else None,
++                                         "tentatives": len(tentatives),
++                                         "categories": [t["categorie"] for t in tentatives]})
++        if self.na.portee_arret_1 == "course":
++            raise ArretClassifieurNA(role, ev)
++        return fin(issue, par_repli=False)
++
++
++_REPLI = object()
+ 
+ 
+ # --- comptes, pour la ligne de la génération (lot 6) -------------------------------------------------------------------
+@@ -447,8 +633,8 @@
+ def comptes_envois_na(lignes):
+     """Comptes d'un journal relu (`journal_na_v3.verifier_journal`) : une ligne « envoi » suivie d'une ligne « non lancé »
+     ou d'une ligne « non envoyé » qui la renvoie par son rang (écart d'égalité) n'est pas comptée comme partie ; aucune
+-    requête n'est comptée deux fois. Rend {"partis", "journalises_non_lances", "journalises_puis_refuses", "non_envoyes",
+-    "refus_ecrits"} par rôle."""
++    requête n'est comptée deux fois. Chaque tentative d'une chaîne de repli est un envoi. Rend {"partis",
++    "journalises_non_lances", "journalises_puis_refuses", "non_envoyes", "refus_ecrits"} par rôle."""
+     envois = {l["rang"]: l for l in lignes if l["evenement"] == "envoi"}
+     retires = {}
+     for l in lignes:
+@@ -471,6 +657,22 @@
+     return rendu
+ 
+ 
+-__all__ = ("AppelGardeNA", "ContexteAppelGardeNA", "ContexteRefuse", "ArretNA", "ArretMotifNA", "ArretRequeteJournaliseeNA",
+-           "ArretClassifieurNA", "ArretCreditNA", "ArretA2NA", "EtatRelaisIllisible", "relais_montre_refus_credit",
+-           "lecteur_etat_relais_http", "comptes_envois_na", "ARRET_REQUETE_JOURNALISEE", "PORTEE_ARRET_1_DEFAUT")
++def comptes_replis_na(tentatives):
++    """La mesure descriptive « replis » (P10, point 3) d'une liste de tentatives (`na_replis`) : comptes et coûts par
++    (rôle, modèle demandé, modèle servi, catégorie, issue). Rien n'en est rendu à la composition."""
++    rendu = {}
++    for t in tentatives:
++        k = (t["role"], t["modele_demande"], t["modele_servi"] or "aucun", t["categorie"] or "sans objet", t["issue"])
++        e = rendu.setdefault(k, {"tentatives": 0, "cout_micro": 0, "couts_inconnus": 0})
++        e["tentatives"] += 1
++        e["cout_micro"] += t["cout_micro"]
++        e["couts_inconnus"] += int(t["cout_inconnu"])
++    return [dict(zip(("role", "modele_demande", "modele_servi", "categorie", "issue"), k), **v)
++            for k, v in sorted(rendu.items())]
++
++
++__all__ = ("AppelGardeNA", "ContexteAppelGardeNA", "ContexteRefuse", "PireManquantNA", "ArretNA", "ArretMotifNA",
++           "ArretRequeteJournaliseeNA", "ArretClassifieurNA", "ArretCreditNA", "ArretA2NA", "comptes_envois_na",
++           "comptes_replis_na", "ARRET_REQUETE_JOURNALISEE", "PORTEE_ARRET_1_DEFAUT", "ISSUE_OK", "ISSUE_SERVI_PAR_REPLI",
++           "ISSUE_ARRET_1", "ISSUE_ARRET_1_APRES_REPLI", "ISSUE_ILLISIBLE", "ISSUE_ERREUR", "ISSUE_REFUS_ECRIT",
++           "NUMERO_ARRET_A2", "NUMERO_ARRET_PIRE")
+--- lot-4-v1/pole/adaptateur_claude_na_v1.py
++++ lot-4-v2/pole/adaptateur_claude_direct_na_v1.py
+@@ -1,87 +1,337 @@
+-"""Véhicule NA-1, lot 4 — adaptateur Claude neuf, sans texte système, qui conserve les réponses brutes
+-(`adaptateur_claude_na_v1`).
++"""Véhicule NA-1, lot 4 v2 — adaptateur Claude direct (`adaptateur_claude_direct_na_v1`) : l'interface des messages du
++fournisseur, appelée en direct par le relais de la clé, sans l'outil ni le kit d'agent.
+ 
+-Lettre : V9 (`864f39a7…`), l. 73 (rien d'autre de fixe), l. 396 (réponses brutes conservées) ; conception du véhicule v5
+-(`1b7f6822…`), § 0 bis (D2 : rien n'est ajouté à l'enveloppe ; 07:46Z, mot 5), § 2.3 (adaptateur Claude neuf), § 6.2
+-(adaptateur sans texte système ; réponses brutes conservées) ; relevé du lot 0 (`10ac79ec…`), Q1, Q5, Q10.
+-
+-- **Sans texte système.** L'adaptateur du kit (`AdaptateurClaudeSDK`) pose toujours un texte système fixe, choisi par le
+-  nom de rôle technique, et aucun réglage ne le retire (relevé du lot 0, Q1). Celui-ci construit ses options par
+-  `construire_options` de l'adaptateur existant (aucun outil, un tour, plafond de l'appel, aucun repli de modèle, bac à
+-  sable, lectures interdites) puis **remplace le seul texte système** par la forme choisie : `"chaine_vide"` (une chaîne
+-  vide explicite, essayée d'abord : 07:46Z, mot 5) ou `"absent"` (aucun texte). L'adaptateur existant n'est pas modifié.
+-  Ce que l'outil envoie alors au fournisseur se relève au faux fournisseur (`releve_sans_systeme_na_v1`).
+-- **Rôles** : `proposeur_ideation` et `juge_ideation` (le portier est appelé sous le second) ; aucun mode de lecture, aucune
+-  racine de lecture, aucun outil.
+-- **Réponses brutes conservées** (V9, l. 396 ; relevé du lot 0, Q10) : avant de rendre la main, l'adaptateur écrit dans le
+-  dossier des réponses (dans le dossier de sortie, en quarantaine) un fichier neuf, nommé par la seule session
+-  (`reponse-brute-<session>.json`, puis `-2`, `-3`… : on n'écrase jamais), qui porte le texte rendu non caviardé, le
+-  statut, le champ de refus, l'erreur, le modèle servi, le coût déclaré, et son compagnon `.sha256`. Une réponse en refus
+-  ou en erreur est conservée comme les autres ; une exception de la session aussi (son type seul), avant d'être relevée.
+-  **La conservation impossible arrête l'appel** : rien n'est rendu sans copie.
++Lettre : nœuds du véhicule v2 (`79b9d423…`), § 1 (décision N1, exigences A1 à A7) et § 2 (décision N2) ; projet d'additif
++v2 (`6e9bb88e…`), A-1 à A-6, § 2 (A1 à A7), § 5 (P1, P3, P16), § 10 (n° 31, n° 32) ; V9 l. 73,
++l. 77, l. 387 (rien d'autre de fixe ; plus aucun octet ne change), l. 396 (réponses brutes conservées). Il remplace
++`adaptateur_claude_na_v1.py` (`38baa206…`) pour les clés Claude ; l'adaptateur d'origine n'est pas modifié.
++
++- **Corps.** La requête assemblée part seule, dans un message de rôle « user », **sans champ système** (A-1, D2). Le corps
++  n'a que des clés d'une liste fermée (`CLES_CORPS`) : le modèle, le plafond de sortie, le message, et les réglages non
++  textuels du jeu (rôle, modèle) (A7) ; tout autre champ (`system`, `fallbacks`, `betas`, `tools`, `metadata`, …) refuse
++  l'envoi (`CorpsRefuse`). Aucun en-tête n'est ajouté par l'adaptateur, sauf le jeton factice du relais (`x-api-key`) : le
++  kit 2.12 ne pose que `Authorization` (relevé du présent lot), que le relais v2 ne relaie pas et ne lit pas.
++- **A1, aucune relance cachée.** Le client se construit avec `max_retries=0` ; l'attribut est relu à la construction et
++  avant chaque envoi : une autre valeur refuse (`RelanceCachee`). Toute relance est une tentative du véhicule.
++- **A2, aucun repli du fournisseur.** Ni le paramètre de repli côté serveur ni un en-tête bêta ne partent (liste fermée du
++  corps ; aucun en-tête ajouté). Une trace de repli dans la réponse (bloc `fallback`, itération `fallback_message`) rend
++  un refus d'événement `messages.repli_fournisseur`, que la surcharge lit en n° 31. Le modèle servi (`model`) est rendu
++  tel quel ; la surcharge le compare au modèle demandé de la tentative.
++- **A3, coût d'une tentative.** Par l'usage déclaré, au barème versé (un barème par modèle admis, exigé) ; sans usage
++  lisible, le coût est inconnu et vaut le plafond de la tentative (`cout_inconnu`), jamais zéro. Une erreur rendue par un
++  statut avant tout octet de réponse coûte zéro ; une erreur après le début d'un flux, ou sans statut (connexion, délai),
++  est au coût inconnu.
++- **A4, réponse brute conservée par tentative**, refus et erreurs compris, avant de rendre la main : un fichier neuf par
++  tentative et son compagnon ; conservation impossible : rien n'est rendu.
++- **A5, catégorie** lue au champ `stop_details.category` ; absente ou vide : « catégorie non lue », jamais un vide.
++- **A6, liste fermée des raisons d'arrêt** : `end_turn` est « ok » ; `refusal` est un refus de classifieur
++  (`messages.stop_reason`, seul déclencheur du repli) ; `max_tokens` et toute autre raison, ou une raison absente, sont une
++  erreur « réponse illisible » (servie, jamais rejouée).
++- **A7, réglages non textuels par (rôle, modèle)** : un jeu (plafond de sortie, effort, réflexion, flux) pour chaque rôle
++  du kit et chaque modèle admis ; chaque valeur est contrôlée à la construction contre la table des valeurs admises
++  (versée, avec son empreinte, par la configuration) ; un réglage non admis refuse le départ (n° 32, proposé)
++  avec son nom. Aucune valeur admise n'est écrite dans ce module.
++- **N2, crédit d'amont** : une erreur 402 de type `billing_error` est rendue « crédit d'amont » ; le 402 du relais à son
++  plafond, « plafond du relais » ; le 403 du relais « modèle non permis », un refus d'événement `relais.modele_non_permis`
++  (n° 31). Toute autre erreur garde son statut et son type, sans classe de crédit.
++- **Modèles admis** : une liste fermée donnée par la configuration (les modèles des rôles et les deux modèles de repli) ;
++  `verifier_modele_reel` du kit n'est plus sur le chemin (nœuds v2, § 5.2, point 2).
+ 
+ Bibliothèque standard, et les modules existants de l'orchestrateur (`adaptateurs`, `caviardage`, `outils`, `relais`).
++Le paquet `anthropic` n'est importé que pour construire le client réel, jamais dans les essais au faux client.
+ """
+ 
+-import asyncio
++import dataclasses
+ import hashlib
+ import json
++import math
+ import os
+ 
+-from .adaptateurs import (AdaptateurClaudeSDK, MoteurNonArme, Resultat, construire_options, importer_sdk,
+-                          verifier_modele_reel)
++from .adaptateurs import Adaptateur, ModeleNonPermis, MoteurNonArme, Resultat
+ from .caviardage import caviarder
+ from .outils import lister_fichiers
+-from .relais import CleDansEnvironnement, noms_de_cle_presents
++from .relais import JETON_FACTICE, CleDansEnvironnement, noms_de_cle_presents, valider_url_relais
+ 
+-VERSION = "adaptateur-claude-na-v1"
+-FORMES_SANS_SYSTEME = ("chaine_vide", "absent")
+-FORME_DEFAUT = "chaine_vide"  # essayée d'abord (mère, 07:46Z, mot 5) ; retenue ou non sur pièce, après le relevé
++VERSION = "adaptateur-claude-direct-na-v1"
++NOM_ADAPTATEUR = "claude-direct-na"
+ ROLES_NA = ("proposeur_ideation", "juge_ideation")
++FORMAT_REPONSE = "reponse-brute-direct-na-v1"
+ PREFIXE_REPONSE = "reponse-brute-"
+-FORMAT_REPONSE = "reponse-brute-na-v1"
++DELAI_DEFAUT_S = 3600.0
++# Corps : liste fermée des clés ; tout le reste refuse l'envoi.
++CLES_CORPS = ("model", "max_tokens", "messages", "thinking", "output_config")
++CLES_REGLAGE = ("max_tokens", "effort", "reflexion", "flux")
++# Plafond de sortie au-delà duquel le flux est exigé (choix de code, prudent : au-delà, une réponse non en flux peut
++# dépasser le délai d'une requête ; nœuds v2, A7 : « le flux est obligatoire pour 128 000 jetons de sortie »).
++SEUIL_FLUX_JETONS = 16_000
++REFLEXION_OMISE = "omise"
++# Raisons d'arrêt (A6) et événements rendus au champ `refus["evenement"]`.
++RAISON_OK = "end_turn"
++RAISON_REFUS = "refusal"
++EVENEMENT_REFUS_CLASSIFIEUR = "messages.stop_reason"
++EVENEMENT_REPLI_FOURNISSEUR = "messages.repli_fournisseur"
++EVENEMENT_MODELE_NON_PERMIS = "relais.modele_non_permis"
++CATEGORIE_NON_LUE = "catégorie non lue"
++# Erreurs (N2).
++TYPE_FACTURATION = "billing_error"
++ERREUR_CREDIT_AMONT = "crédit d'amont"
++ERREUR_PLAFOND_RELAIS = "plafond du relais"
++ERREUR_MODELE_RELAIS = "modèle non permis par le relais"
++ERREUR_REPONSE_COUPEE = "réponse coupée au plafond de sortie"
++ERREUR_RAISON_HORS_LISTE = "raison d'arrêt hors liste"
++ERREUR_SANS_STATUT = "erreur sans statut (connexion ou délai)"
++ERREUR_STATUT = "erreur de statut"
++MESSAGE_PLAFOND_RELAIS = "plafond de dépense du relais atteint"
++MESSAGE_MODELE_RELAIS = "modèle non permis"
++NUMERO_ARRET_REGLAGE = 32  # proposé (projet d'additif v2, § 10) ; la mère le confirme à l'assemblage
++
++
++class CorpsRefuse(ValueError):
++    """Le corps à envoyer n'est pas celui de la règle (D2, A2) : rien ne part ; le message ne recopie aucun contenu."""
++
++
++class RelanceCachee(RuntimeError):
++    """A1 : le client relancerait de lui-même (`max_retries` différent de zéro) : rien ne part."""
++
++
++class ReglageNonAdmisNA(ValueError):
++    """N° 32 (proposé) : un réglage non textuel non admis pour un (rôle, modèle) ; le départ est refusé, le nom dit."""
++
++    numero = NUMERO_ARRET_REGLAGE
++
++    def __init__(self, role, modele, reglage, raison):
++        super().__init__(f"arrêt n° {NUMERO_ARRET_REGLAGE} (proposé), réglage non admis : « {reglage} » pour le rôle "
++                         f"« {role} » et le modèle « {modele} » ({raison}) ; départ refusé")
++        self.role, self.modele, self.reglage = role, modele, reglage
+ 
+ 
+ class ConservationImpossible(RuntimeError):
+-    """La réponse brute n'a pas pu être écrite : l'appel s'arrête, rien n'est rendu sans copie."""
++    """La réponse brute d'une tentative n'a pas pu être écrite : rien n'est rendu sans copie."""
+ 
+ 
+-def construire_options_na(dossier, budget_usd, max_tours, *, url_relais, modele, role, interdire_lecture=None,
+-                          forme_sans_systeme=FORME_DEFAUT):
+-    """Les options de l'adaptateur du kit, au seul texte système près, remplacé par la forme choisie."""
+-    if role not in ROLES_NA:
+-        raise ValueError(f"rôle du véhicule : {ROLES_NA}")
+-    if forme_sans_systeme not in FORMES_SANS_SYSTEME:
+-        raise ValueError(f"forme sans texte système : {FORMES_SANS_SYSTEME}")
+-    o = dict(construire_options(dossier, budget_usd, max_tours, url_relais=url_relais, modele=modele, role=role,
+-                                interdire_lecture=interdire_lecture))
+-    o["system_prompt"] = "" if forme_sans_systeme == "chaine_vide" else None
+-    o["forme_sans_systeme"] = forme_sans_systeme
+-    return o
+-
+-
+-class AdaptateurClaudeNA(AdaptateurClaudeSDK):
+-    """Moteur réel du véhicule pour les clés Claude : `query()` du kit, une session neuve par appel, sans texte système."""
+-
+-    nom = "claude-sdk-na"
+-
+-    def __init__(self, url_relais, dossier_reponses, *, forme_sans_systeme=FORME_DEFAUT, environnement=None, arme=False,
+-                 interdire_lecture=None, delai_s=None, sdk=None):
+-        kw = {} if delai_s is None else {"delai_s": delai_s}
+-        super().__init__(url_relais, environnement=environnement, arme=arme, interdire_lecture=interdire_lecture, **kw)
+-        if forme_sans_systeme not in FORMES_SANS_SYSTEME:
+-            raise ValueError(f"forme sans texte système : {FORMES_SANS_SYSTEME}")
++@dataclasses.dataclass
++class ResultatDirectNA(Resultat):
++    """Le résultat de l'adaptateur d'origine, plus la fiche de la tentative (`tentative`) : raison d'arrêt, catégorie,
++    erreur (classe, statut, type), servie ou non, usage, nom du fichier de la réponse brute."""
++
++    tentative: object = None
++
++
++# --- réglages et barème (A7, A3) -----------------------------------------------------------------------------------------
++
++def _entier_positif(v):
++    return type(v) is int and v > 0
++
++
++def lire_reglages_na(reglages, admis, modeles_admis):
++    """Contrôle au départ (A7) : `reglages` = {rôle du kit: {modèle: {max_tokens, effort, reflexion, flux}}}, un jeu pour
++    chaque rôle et chaque modèle admis ; `admis` = {modèle: {"max_tokens_max", "efforts", "reflexions"}}, la table versée.
++    Rend {(rôle, modèle): jeu} ; un écart lève `ReglageNonAdmisNA` (n° 32, proposé) avec le nom du réglage."""
++    if not isinstance(reglages, dict) or sorted(reglages) != sorted(ROLES_NA):
++        raise ReglageNonAdmisNA("?", "?", "rôles", "un jeu pour chaque rôle du véhicule")
++    if not isinstance(admis, dict):
++        raise ReglageNonAdmisNA("?", "?", "table des valeurs admises", "absente")
++    rendu = {}
++    for role in ROLES_NA:
++        par_modele = reglages[role]
++        if not isinstance(par_modele, dict) or sorted(par_modele) != sorted(modeles_admis):
++            raise ReglageNonAdmisNA(role, "?", "modèles", "un jeu pour chaque modèle admis, et seulement eux")
++        for modele in modeles_admis:
++            jeu, a = par_modele[modele], admis.get(modele)
++            if not isinstance(a, dict) or not _entier_positif(a.get("max_tokens_max")) \
++                    or not isinstance(a.get("efforts"), (list, tuple)) or not isinstance(a.get("reflexions"), (list, tuple)):
++                raise ReglageNonAdmisNA(role, modele, "table des valeurs admises", "absente ou sans sa forme pour ce modèle")
++            if not isinstance(jeu, dict) or sorted(jeu) != sorted(CLES_REGLAGE):
++                raise ReglageNonAdmisNA(role, modele, "jeu", f"exactement {', '.join(CLES_REGLAGE)}")
++            if not _entier_positif(jeu["max_tokens"]) or jeu["max_tokens"] > a["max_tokens_max"]:
++                raise ReglageNonAdmisNA(role, modele, "max_tokens", "hors de la borne admise")
++            if jeu["effort"] is not None and jeu["effort"] not in a["efforts"]:
++                raise ReglageNonAdmisNA(role, modele, "effort", "valeur non admise pour ce modèle")
++            if jeu["reflexion"] not in a["reflexions"]:
++                raise ReglageNonAdmisNA(role, modele, "reflexion", "valeur non admise pour ce modèle")
++            if type(jeu["flux"]) is not bool:
++                raise ReglageNonAdmisNA(role, modele, "flux", "vrai ou faux")
++            if jeu["max_tokens"] > SEUIL_FLUX_JETONS and not jeu["flux"]:
++                raise ReglageNonAdmisNA(role, modele, "flux", f"exigé au-delà de {SEUIL_FLUX_JETONS} jetons de sortie")
++            rendu[(role, modele)] = dict(jeu)
++    return rendu
++
++
++def lire_bareme_na(bareme, modeles_admis):
++    """Barème versé, dollars par million de jetons : {modèle: [entrée, sortie, écriture de cache, lecture de cache]}, un par
++    modèle admis, et seulement eux."""
++    if not isinstance(bareme, dict) or sorted(bareme) != sorted(modeles_admis):
++        raise ValueError("barème : un par modèle admis, et seulement eux")
++    rendu = {}
++    for m, t in bareme.items():
++        if not isinstance(t, (list, tuple)) or len(t) != 4 or any(
++                isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x) or x < 0 for x in t):
++            raise ValueError(f"barème de « {m} » : quatre montants finis, positifs")
++        rendu[m] = tuple(float(x) for x in t)
++    return rendu
++
++
++def cout_par_usage(tarif, usage):
++    """Coût d'après l'usage déclaré ; None si l'usage manque ou n'a pas sa forme (le coût est alors inconnu)."""
++    if not isinstance(usage, dict):
++        return None
++    champs = ("input_tokens", "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")
++    valeurs = []
++    for c in champs:
++        v = usage.get(c)
++        if v is None:
++            v = 0
++        if type(v) is not int or v < 0:
++            return None
++        valeurs.append(v)
++    if "input_tokens" not in usage or "output_tokens" not in usage:
++        return None
++    return sum(v * t for v, t in zip(valeurs, tarif)) / 1_000_000
++
++
++# --- le corps (D2, A2) ---------------------------------------------------------------------------------------------------
++
++def construire_corps_na(modele, consigne, jeu):
++    corps = {"model": modele, "max_tokens": jeu["max_tokens"], "messages": [{"role": "user", "content": consigne}]}
++    if jeu["reflexion"] != REFLEXION_OMISE:
++        corps["thinking"] = {"type": jeu["reflexion"]}
++    if jeu["effort"] is not None:
++        corps["output_config"] = {"effort": jeu["effort"]}
++    return corps
++
++
++def verifier_corps_na(corps, consigne, modele):
++    """Le corps ne porte que la liste fermée ; le seul message est la consigne, de rôle « user », chaîne identique."""
++    if not isinstance(corps, dict) or any(k not in CLES_CORPS for k in corps):
++        raise CorpsRefuse("champ hors de la liste fermée du corps : rien ne part (D2, A2)")
++    if corps.get("model") != modele or not _entier_positif(corps.get("max_tokens")):
++        raise CorpsRefuse("modèle ou plafond de sortie du corps sans sa forme")
++    m = corps.get("messages")
++    if not isinstance(m, list) or len(m) != 1 or not isinstance(m[0], dict) or sorted(m[0]) != ["content", "role"] \
++            or m[0]["role"] != "user" or type(m[0]["content"]) is not str or m[0]["content"] != consigne:
++        raise CorpsRefuse("le corps ne porte pas la consigne seule, dans un message « user »")
++    return corps
++
++
++def octets_consigne_du_corps(corps_octets):
++    """La consigne extraite du corps reçu (égalité à l'essai à blanc : CO l. 230), encodée en UTF-8."""
++    objet = json.loads(corps_octets.decode("utf-8"))
++    return objet["messages"][0]["content"].encode("utf-8")
++
++
++# --- lecture d'une réponse ------------------------------------------------------------------------------------------------
++
++def _dict_de(message):
++    if isinstance(message, dict):
++        return message
++    for nom in ("to_dict", "model_dump"):
++        f = getattr(message, nom, None)
++        if callable(f):
++            d = f()
++            if isinstance(d, dict):
++                return d
++    raise TypeError("réponse sans forme lisible")
++
++
++def trace_repli_fournisseur(m):
++    """Vrai si la réponse porte une trace de repli du fournisseur : un bloc `fallback`, ou une itération `fallback_message`
++    à l'usage."""
++    contenu = m.get("content")
++    if isinstance(contenu, list) and any(isinstance(b, dict) and b.get("type") == "fallback" for b in contenu):
++        return True
++    usage = m.get("usage")
++    it = usage.get("iterations") if isinstance(usage, dict) else None
++    return isinstance(it, list) and any(isinstance(e, dict) and e.get("type") == "fallback_message" for e in it)
++
++
++def lire_reponse(m):
++    """(statut, texte, raison, catégorie, classe d'erreur, événement de refus) d'un message lu (dict)."""
++    raison = m.get("stop_reason")
++    contenu = m.get("content") if isinstance(m.get("content"), list) else []
++    texte = "".join(b.get("text") for b in contenu if isinstance(b, dict) and b.get("type") == "text"
++                    and isinstance(b.get("text"), str))
++    if trace_repli_fournisseur(m):
++        return "refus", "", raison, None, None, EVENEMENT_REPLI_FOURNISSEUR
++    if raison == RAISON_REFUS:
++        details = m.get("stop_details")
++        cat = details.get("category") if isinstance(details, dict) else None
++        cat = cat if isinstance(cat, str) and cat.strip() else CATEGORIE_NON_LUE
++        return "refus", "", raison, cat, None, EVENEMENT_REFUS_CLASSIFIEUR
++    if raison == RAISON_OK:
++        return "ok", texte, raison, None, None, None
++    if raison == "max_tokens":
++        return "erreur", "", raison, None, ERREUR_REPONSE_COUPEE, None
++    return "erreur", "", raison if isinstance(raison, str) else None, None, ERREUR_RAISON_HORS_LISTE, None
++
++
++def classer_erreur(exc):
++    """(classe, statut HTTP, type) d'une erreur du client ; aucun texte recopié."""
++    statut = getattr(exc, "status_code", None)
++    corps = getattr(exc, "body", None)
++    type_ = getattr(exc, "type", None)
++    if type_ is None and isinstance(corps, dict) and isinstance(corps.get("error"), dict):
++        type_ = corps["error"].get("type")
++    if type(statut) is not int:
++        return ERREUR_SANS_STATUT, None, None
++    if statut == 402 and type_ == TYPE_FACTURATION:
++        return ERREUR_CREDIT_AMONT, statut, type_
++    if statut == 402 and isinstance(corps, dict) and corps.get("erreur") == MESSAGE_PLAFOND_RELAIS:
++        return ERREUR_PLAFOND_RELAIS, statut, None
++    if statut == 403 and isinstance(corps, dict) and corps.get("erreur") == MESSAGE_MODELE_RELAIS:
++        return ERREUR_MODELE_RELAIS, statut, None
++    return ERREUR_STATUT, statut, type_ if isinstance(type_, str) else None
++
++
++# --- le client ------------------------------------------------------------------------------------------------------------
++
++def fabrique_client_reel(url_relais, delai_s):
++    """Le client réel de l'interface des messages : relais local, jeton factice, `max_retries=0`, sans variable de
++    l'environnement (aucun mandataire réseau, adresse donnée)."""
++    import anthropic  # noqa: PLC0415 — importé seulement pour le client réel
++    client = anthropic.Anthropic(base_url=url_relais, api_key=JETON_FACTICE, max_retries=0, timeout=delai_s,
++                                 default_headers={"x-api-key": JETON_FACTICE},
++                                 http_client=anthropic.DefaultHttpxClient(trust_env=False))
++    return client, (anthropic.APIError,)
++
++
++def _verifier_sans_relance(client):
++    if getattr(client, "max_retries", None) != 0:
++        raise RelanceCachee("A1 : le client doit être construit avec max_retries=0 ; rien ne part")
++
++
++class AdaptateurClaudeDirectNA(Adaptateur):
++    """Moteur réel du véhicule pour les clés Claude : une requête par tentative, au travers du relais de la clé."""
++
++    nom = NOM_ADAPTATEUR
++
++    def __init__(self, url_relais, dossier_reponses, *, modeles_admis, reglages, admis, bareme, environnement=None,
++                 arme=False, delai_s=DELAI_DEFAUT_S, fabrique_client=None):
++        self.url_relais = valider_url_relais(url_relais)
+         if not isinstance(dossier_reponses, str) or not os.path.isabs(dossier_reponses) or not os.path.isdir(dossier_reponses):
+             raise ValueError("dossier des réponses brutes : un dossier absolu existant (dans le dossier de sortie)")
+-        self.forme_sans_systeme = forme_sans_systeme
++        if not isinstance(modeles_admis, (list, tuple)) or not modeles_admis or len(set(modeles_admis)) != len(modeles_admis) \
++                or any(not isinstance(m, str) or not m for m in modeles_admis):
++            raise ValueError("modèles admis : une liste fermée de noms, sans doublon")
++        if isinstance(delai_s, bool) or not isinstance(delai_s, (int, float)) or not delai_s > 0:
++            raise ValueError("delai_s : nombre strictement positif (secondes)")
++        self.modeles_admis = tuple(modeles_admis)
++        self.reglages = lire_reglages_na(reglages, admis, self.modeles_admis)
++        self.bareme = lire_bareme_na(bareme, self.modeles_admis)
+         self.dossier_reponses = os.path.normpath(dossier_reponses)
+-        self._sdk = sdk
++        self._environnement = environnement
++        self.arme = arme
++        self.delai_s = float(delai_s)
++        fabrique = fabrique_client if fabrique_client is not None else fabrique_client_reel
++        self._client, self._erreurs_api = fabrique(self.url_relais, self.delai_s)
++        self._erreurs_api = tuple(self._erreurs_api)
++        _verifier_sans_relance(self._client)
++
++    # --- conservation (A4) ---------------------------------------------------------------------------------------------
+ 
+     def _conserver(self, dossier, contenu):
+-        """Écrit la réponse brute dans un fichier neuf, nommé par la session, et son compagnon ; rend le chemin."""
+         session = os.path.basename(os.path.normpath(dossier))
+         octets = (json.dumps(dict(contenu, format=FORMAT_REPONSE, session=session), ensure_ascii=False, sort_keys=True,
+-                             indent=1) + "\n").encode("utf-8")
++                             indent=1, default=str) + "\n").encode("utf-8")
+         try:
+             for n in range(1, 10_000):
+                 nom = f"{PREFIXE_REPONSE}{session}{'' if n == 1 else '-' + str(n)}.json"
+@@ -94,12 +344,30 @@
+                     os.fsync(f.fileno())
+                 with open(chemin + ".sha256", "x", encoding="utf-8") as f:
+                     f.write(f"{hashlib.sha256(octets).hexdigest()}  {nom}\n")
+-                return chemin
++                return nom
+         except OSError as e:
+-            raise ConservationImpossible(f"réponse brute non conservée ({type(e).__name__}) : l'appel s'arrête, rien "
+-                                         "n'est rendu sans copie") from None
++            raise ConservationImpossible(f"réponse brute non conservée ({type(e).__name__}) : rien n'est rendu sans "
++                                         "copie") from None
+         raise ConservationImpossible("trop de réponses brutes pour une même session : rien n'est rendu sans copie")
+ 
++    # --- l'envoi ---------------------------------------------------------------------------------------------------------
++
++    def _envoyer(self, corps, flux, recu):
++        """Rend (message lu en dict, corps brut). `recu["octets"]` passe à vrai dès qu'une réponse a commencé."""
++        messages = self._client.messages
++        if flux:
++            evenements = []
++            with messages.stream(**corps) as flot:
++                recu["octets"] = True
++                for ev in flot:
++                    evenements.append(_dict_de(ev))
++                final = _dict_de(flot.get_final_message())
++            return final, {"flux": evenements, "message_final": final}
++        brut = messages.with_raw_response.create(**corps)
++        recu["octets"] = True
++        texte = brut.http_response.text
++        return _dict_de(brut.parse()), {"corps_http": texte}
++
+     def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+         environnement = os.environ if self._environnement is None else self._environnement
+         presents = noms_de_cle_presents(environnement)
+@@ -107,29 +375,73 @@
+             raise CleDansEnvironnement("variables de clé présentes dans l'environnement de l'orchestrateur ("
+                                        + ", ".join(presents) + ") : la clé doit rester dans le relais du noyau")
+         if not self.arme:
+-            raise MoteurNonArme("moteur réel non armé : aucun agent réel n'est lancé (essais, simulation)")
+-        verifier_modele_reel(modele)
++            raise MoteurNonArme("moteur réel non armé : aucun appel n'est fait (essais, simulation)")
++        if role not in ROLES_NA:
++            raise ValueError(f"rôle du véhicule : {ROLES_NA}")
++        if modele not in self.modeles_admis:
++            raise ModeleNonPermis("modèle hors de la liste fermée de l'adaptateur direct")
++        if max_tours != 1:
++            raise ValueError("un seul tour par tentative")
+         if not isinstance(consigne, str):
+             raise TypeError("la consigne est une chaîne")
+-        sdk = self._sdk if self._sdk is not None else importer_sdk()
+-        o = construire_options_na(os.path.abspath(dossier), budget_usd, max_tours, url_relais=self.url_relais,
+-                                  modele=modele, role=role, interdire_lecture=self.interdire_lecture,
+-                                  forme_sans_systeme=self.forme_sans_systeme)
+-        options = self.options_sdk(sdk, o)
++        if isinstance(budget_usd, bool) or not isinstance(budget_usd, (int, float)) or not budget_usd > 0:
++            raise ValueError("plafond de la tentative : strictement positif")
++        jeu = self.reglages[(role, modele)]
++        corps = verifier_corps_na(construire_corps_na(modele, consigne, jeu), consigne, modele)
++        octets_corps = json.dumps(corps, ensure_ascii=False, sort_keys=True).encode("utf-8")
++        _verifier_sans_relance(self._client)
++        base = {"modele_demande": modele, "role_kit": role, "corps_sha256": hashlib.sha256(octets_corps).hexdigest(),
++                "corps_taille": len(octets_corps), "reglages": dict(jeu)}
++        recu = {"octets": False}
+         try:
+-            texte, cout, statut, erreur, lecture = asyncio.run(self._executer(sdk, consigne, options, self.delai_s))
++            m, brut = self._envoyer(corps, jeu["flux"], recu)
++        except self._erreurs_api as e:
++            classe, statut_http, type_ = classer_erreur(e)
++            inconnu = classe == ERREUR_SANS_STATUT or recu["octets"]
++            cout = float(budget_usd) if inconnu else 0.0
++            corps_erreur = getattr(e, "body", None)
++            tentative = dict(base, servie=False, raison_arret=None, categorie=None, classe_erreur=classe,
++                             statut_http=statut_http, type_erreur=type_, usage=None, cout_inconnu=inconnu)
++            if classe == ERREUR_MODELE_RELAIS:
++                refus = {"motif": "modèle refusé par le relais", "modele_demande": modele, "modele_servi": None,
++                         "evenement": EVENEMENT_MODELE_NON_PERMIS, "categorie": None}
++                statut = "refus"
++            else:
++                refus, statut = None, "erreur"
++            nom = self._conserver(dossier, dict(tentative, statut=statut, corps_brut={"erreur": corps_erreur},
++                                                cout_declare_usd=cout))
++            tentative["reponse_brute"] = nom
++            return ResultatDirectNA("", lister_fichiers(dossier), cout, statut, f"{classe} ({statut_http})",
++                                    texte_brut=None, refus=refus, modele_servi=None, cout_inconnu=inconnu,
++                                    tentative=tentative)
+         except BaseException as e:
+-            self._conserver(dossier, {"statut": "exception", "erreur": type(e).__name__, "texte_brut": None, "refus": None,
+-                                      "modele_servi": None, "cout_declare_usd": None, "cout_inconnu": True})
++            self._conserver(dossier, dict(base, statut="exception", erreur=type(e).__name__, corps_brut=None,
++                                          cout_declare_usd=None, cout_inconnu=True))
+             raise
+-        self._conserver(dossier, {"statut": statut, "erreur": erreur, "texte_brut": texte, "refus": lecture["refus"],
+-                                  "modele_servi": lecture["modele_servi"], "cout_declare_usd": cout,
+-                                  "cout_inconnu": lecture["cout_inconnu"]})
+-        return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur, texte_brut=texte,
+-                        refus=lecture["refus"], modele_servi=lecture["modele_servi"],
+-                        depense_modele_non_autorise_usd=lecture["depense_modele_non_autorise_usd"],
+-                        cout_inconnu=lecture["cout_inconnu"])
+-
+-
+-__all__ = ("AdaptateurClaudeNA", "construire_options_na", "ConservationImpossible", "FORMES_SANS_SYSTEME", "FORME_DEFAUT",
+-           "ROLES_NA")
++        statut, texte, raison, categorie, classe, evenement = lire_reponse(m)
++        servi = m.get("model") if isinstance(m.get("model"), str) and m.get("model") else None
++        usage = m.get("usage")
++        cout = cout_par_usage(self.bareme[modele], usage)
++        inconnu = cout is None
++        cout = float(budget_usd) if inconnu else cout
++        tentative = dict(base, servie=raison != RAISON_REFUS and evenement != EVENEMENT_REPLI_FOURNISSEUR,
++                         raison_arret=raison, categorie=categorie, classe_erreur=classe, statut_http=200,
++                         type_erreur=None, usage=usage if isinstance(usage, dict) else None, cout_inconnu=inconnu)
++        refus = None
++        if statut == "refus":
++            refus = {"motif": "refus de classifieur" if evenement == EVENEMENT_REFUS_CLASSIFIEUR
++                     else "trace de repli du fournisseur", "modele_demande": modele, "modele_servi": servi,
++                     "evenement": evenement, "categorie": categorie}
++        nom = self._conserver(dossier, dict(tentative, statut=statut, modele_servi=servi, corps_brut=brut,
++                                            cout_declare_usd=cout))
++        tentative["reponse_brute"] = nom
++        return ResultatDirectNA(caviarder(texte)[0] if texte else "", lister_fichiers(dossier), cout, statut,
++                                classe, texte_brut=texte if statut == "ok" else None, refus=refus, modele_servi=servi,
++                                cout_inconnu=inconnu, tentative=tentative)
++
++
++__all__ = ("AdaptateurClaudeDirectNA", "ResultatDirectNA", "CorpsRefuse", "RelanceCachee", "ReglageNonAdmisNA",
++           "ConservationImpossible", "lire_reglages_na", "lire_bareme_na", "construire_corps_na", "verifier_corps_na",
++           "octets_consigne_du_corps", "lire_reponse", "classer_erreur", "cout_par_usage", "fabrique_client_reel",
++           "NOM_ADAPTATEUR", "EVENEMENT_REFUS_CLASSIFIEUR", "EVENEMENT_REPLI_FOURNISSEUR", "EVENEMENT_MODELE_NON_PERMIS",
++           "CATEGORIE_NON_LUE", "ERREUR_CREDIT_AMONT", "ERREUR_PLAFOND_RELAIS", "ROLES_NA")
+--- lot-4-v1/essais/aides_na_lot4_v1.py
++++ lot-4-v2/essais/aides_na_lot4_v2.py
+@@ -1,25 +1,23 @@
+-"""Aides des essais du lot 4 du véhicule NA-1 (lisent `routage_na_v1`, `appel_garde_na_v1`, `adaptateur_claude_na_v1`) :
+-données factices seules, noms de clés neutres (`cle_a` … `cle_d`, `cle_sans_part`, `hors_course`), aucune clé, aucun appel.
+-
+-- Les tables d'essai : celle de la course (même forme de routage que la table de la conception v5, § 2.3 : la clé `cle_a`
+-  porte le juge et le proposeur de l'espèce 3, la clé `cle_b` l'aiguilleur et le proposeur de l'espèce 4, la clé `cle_c`
+-  le juge de l'espèce 1 et les proposeurs des espèces 1 et 5, sur deux adaptateurs, la clé `cle_d` le proposeur de
+-  l'espèce 2 ; une clé sans part, sans rôle ; `hors_course` et un lecteur d'étiquettes jamais appelé), les deux tables des
+-  lignes à part (épreuve des témoins, sonde de refus), et la table plantée de D11, marquée « artefact ».
+-- `NoyauEssai` : une classe de base qui porte **le vrai `appel` du noyau** (`OrchestreV56.appel`) et ce qu'il lit (suivi des
+-  rôles v54, plafonds de session, coffre de consommations, sessions dans un dossier temporaire) ; la génération d'essai est
+-  `GenerationEssai(AppelGardeNA, NoyauEssai)`.
+-- `AdaptateurEnregistreur` : garde chaque consigne reçue (la chaîne même que le noyau remet) et rend un `Resultat` réglé.
+-- `FauxKit` : imite l'interface du kit d'agent que lit l'adaptateur, sans aucun appel ; garde les options reçues.
+-- Les requêtes : celles du lot 3 (`aides_na_lot3_v3`), la garde : celle du lot 2 (`aides_na_v4.garde_essai`).
++"""Aides des essais du lot 4 v2 du véhicule NA-1 (lisent `appel_garde_na_v2`, `adaptateur_claude_direct_na_v1`) : données
++factices seules, noms de modèles neutres (`modele-role-essai`, `modele-repli-1-essai`, `modele-repli-2-essai`), aucune clé,
++aucun appel à un fournisseur.
++
++- `FauxClientMessages` : imite l'interface des messages que lit l'adaptateur direct (`messages.with_raw_response.create`,
++  `messages.stream`, `max_retries`), sans réseau. Il rend, dans l'ordre d'un script, des réponses (raison d'arrêt, catégorie,
++  usage, modèle servi choisis), des refus « refusal », des erreurs de statut (crédit d'amont, plafond du relais, modèle non
++  permis, surcharge) ou de connexion ; il garde chaque corps reçu. Le modèle servi par défaut est le modèle demandé.
++- Les jeux de réglages, la table des valeurs admises et le barème sont des **valeurs d'essai, non opposables** : aucune
++  n'est une valeur du fournisseur.
++- `Montage` : la génération d'essai `GenerationEssai(AppelGardeNA v2, NoyauEssai)` sur la table de course du lot 4 v1 (les
++  clés `cle_a` et `cle_b` sont des clés Claude, servies par l'adaptateur direct ; les autres gardent l'adaptateur
++  enregistreur), avec **le vrai `appel` du noyau** (`OrchestreV56.appel`).
+ """
+ 
+-import hashlib
+ import json
+ import os
++import shutil
+ import sys
+ import tempfile
+-import time
+ 
+ ICI = os.path.dirname(os.path.abspath(__file__))
+ RACINE_ORCHESTRATEUR = os.path.dirname(ICI)
+@@ -27,357 +25,252 @@
+     if _p not in sys.path:
+         sys.path.insert(0, _p)
+ 
+-import aides_na_lot3_v3 as L3  # noqa: E402
++import aides_na_lot4_v1 as H1  # noqa: E402
+ import aides_na_v4 as A  # noqa: E402
+-from pole import appel_garde_na_v1 as ag  # noqa: E402
++from pole import adaptateur_claude_direct_na_v1 as ad  # noqa: E402
++from pole import appel_garde_na_v2 as ag  # noqa: E402
+ from pole import journal_na_v3 as jn  # noqa: E402
+-from pole import noyau_v56 as nv  # noqa: E402
+-from pole import requete_na_v3 as rq  # noqa: E402
+ from pole import routage_na_v1 as rt  # noqa: E402
+-from pole.adaptateurs import Resultat  # noqa: E402
+-from pole.suivi_roles_v54 import SuiviRoles  # noqa: E402
+-
+-PARTS = {"cle_a": 156.56, "cle_b": 125.63, "cle_c": 140.39, "cle_d": 17.01}
+-PIRE_PROPOSEUR, PIRE_AIGUILLEUR, PIRE_JUGE = 6.05, 0.25, 0.60
+-RELAIS_A, RELAIS_B = "http://127.0.0.1:9", "http://127.0.0.1:10"
+-MODELE_ESSAI = "modele-essai-inerte"
+-PLAFONDS_SESSION = {"proposeur": 6.05, "aiguilleur": 0.25, "juge": 0.60}
+-ARRETS_ESSAI = {"a3_echecs_consecutifs": 3, "a3_delai_s": {"*": 1800}, "a14_part_max": 0.34, "a11_modeles": []}
+-ROLES = {  # étiquette : (sorte, espèce, clé, adaptateur)
+-    "juge-espece-3": ("juge", 3, "cle_a", "ad_a"),
+-    "proposeur-espece-3": ("proposeur", 3, "cle_a", "ad_a"),
+-    "aiguilleur": ("portier", 4, "cle_b", "ad_b"),
+-    "proposeur-espece-4": ("proposeur", 4, "cle_b", "ad_b"),
+-    "juge-espece-1": ("juge", 1, "cle_c", "ad_c1"),
+-    "proposeur-espece-1": ("proposeur", 1, "cle_c", "ad_c1"),
+-    "proposeur-espece-5": ("proposeur", 5, "cle_c", "ad_c2"),
+-    "proposeur-espece-2": ("proposeur", 2, "cle_d", "ad_d"),
+-    "lecteur-etiquettes-1": ("juge", 1, "hors_course", "hors_course"),
+-}
+-ADAPTATEURS = ("ad_a", "ad_b", "ad_c1", "ad_c2", "ad_d", "ad_sans_part", "hors_course", "ad_x")
+-
+-
+-def sha(octets):
+-    return hashlib.sha256(octets).hexdigest()
+ 
++MODELE_ROLE = "modele-role-essai"
++REPLI_1, REPLI_2 = "modele-repli-1-essai", "modele-repli-2-essai"
++MODELES_REPLI = (REPLI_1, REPLI_2)
++MODELES_ADMIS = (MODELE_ROLE, REPLI_1, REPLI_2)
++EFFORTS_ESSAI = ("bas", "moyen", "haut")  # valeurs d'essai, non opposables
++ADMIS_ESSAI = {m: {"max_tokens_max": 128_000, "efforts": list(EFFORTS_ESSAI), "reflexions": ["adaptive", "omise"]}
++               for m in MODELES_ADMIS}
++BAREME_ESSAI = {MODELE_ROLE: [4.0, 20.0, 5.0, 0.2], REPLI_1: [5.0, 25.0, 6.25, 0.5], REPLI_2: [3.0, 15.0, 3.75, 0.3]}
++JETON = "relais-local-sans-cle"
+ 
+-def cles_course(parts=True, en_plus=()):
+-    p = PARTS if parts else {k: None for k in PARTS}
+-    return [
+-        {"nom": "cle_a", "type": "claude_sdk", "part_usd": p["cle_a"], "adaptateurs": ["ad_a"], "relais": RELAIS_A},
+-        {"nom": "cle_b", "type": "claude_sdk", "part_usd": p["cle_b"], "adaptateurs": ["ad_b"], "relais": RELAIS_B},
+-        {"nom": "cle_c", "type": "commande_externe", "part_usd": p["cle_c"], "adaptateurs": ["ad_c1", "ad_c2"],
+-         "relais": None},
+-        {"nom": "cle_d", "type": "kimi_protocole", "part_usd": p["cle_d"], "adaptateurs": ["ad_d"], "relais": None},
+-        {"nom": "cle_sans_part", "type": "aucun", "part_usd": None, "adaptateurs": ["ad_sans_part"], "relais": None},
+-        {"nom": "hors_course", "type": "aucun", "part_usd": None, "adaptateurs": ["hors_course"], "relais": None},
+-    ] + list(en_plus)
+ 
++def jeu(max_tokens=8000, effort="haut", reflexion="adaptive", flux=False):
++    return {"max_tokens": max_tokens, "effort": effort, "reflexion": reflexion, "flux": flux}
+ 
+-def objet_table_course(roles=None):
+-    roles = ROLES if roles is None else roles
+-    return {"format": rt.FORMAT_TABLE, "marque": "course", "nom": "course", "plafond_ligne_usd": None,
+-            "cles": cles_course(), "roles": [{"role": r, "sorte": s, "espece": e, "cle": c, "adaptateur": a}
+-                                             for r, (s, e, c, a) in ROLES.items() if r in roles]}
+ 
++def reglages_essai(**par_modele):
++    """Un jeu par rôle du kit et par modèle admis ; `par_modele` remplace le jeu d'un modèle pour les deux rôles."""
++    return {r: {m: dict(par_modele.get(m, jeu(effort="haut" if r == "proposeur_ideation" else "moyen")))
++                for m in MODELES_ADMIS} for r in ad.ROLES_NA}
+ 
+-def objet_table_artefact():
+-    """D11 : la table plantée, jamais chargée par la course ; le juge et le proposeur de l'espèce 3 sur deux clés."""
+-    o = objet_table_course()
+-    o["marque"] = "artefact"
+-    o["cles"].append({"nom": "cle_x", "type": "claude_sdk", "part_usd": 10.0, "adaptateurs": ["ad_x"], "relais": RELAIS_A})
+-    for r in o["roles"]:
+-        if r["role"] == "juge-espece-3":
+-            r["cle"], r["adaptateur"] = "cle_x", "ad_x"
+-    return o
+ 
++# --- le faux client de l'interface des messages ---------------------------------------------------------------------------
+ 
+-def objet_table_ligne(nom, plafond, roles):
+-    cles = [dict(c, part_usd=None) for c in cles_course() if c["nom"] not in ("hors_course",)]
+-    return {"format": rt.FORMAT_TABLE, "marque": "ligne à part", "nom": nom, "plafond_ligne_usd": plafond, "cles": cles,
+-            "roles": [{"role": r, "sorte": s, "espece": e, "cle": c, "adaptateur": a} for r, (s, e, c, a) in roles.items()]}
++class FauxErreurStatut(Exception):
++    """Une erreur rendue par un statut (forme de `APIStatusError` : `status_code`, `body`, `type`)."""
+ 
++    def __init__(self, status_code, body=None, type_=None):
++        super().__init__(f"statut {status_code}")
++        self.status_code, self.body, self.type = status_code, body, type_
+ 
+-def objet_table_temoins():
+-    """Épreuve des témoins (conception v5, § 2.10) : le portier et le juge de l'espèce 3 sur la clé de l'espèce 3 ; le juge
+-    de l'espèce 1 sur la clé du deuxième relais ; plafond 5 USD."""
+-    return objet_table_ligne("épreuve des témoins", 5.0, {
+-        "aiguilleur": ("portier", 4, "cle_a", "ad_a"), "juge-espece-3": ("juge", 3, "cle_a", "ad_a"),
+-        "juge-espece-1": ("juge", 1, "cle_c", "ad_c1")})
+ 
++class FauxErreurConnexion(Exception):
++    """Une erreur sans statut (connexion, délai)."""
+ 
+-def objet_table_sonde():
+-    """Sonde de refus (§ 2.10) : espèces 3 et 4 sur la clé de l'espèce 3 ; 1 et 5 sur le deuxième relais ; 2 sur le
+-    troisième ; plafond 1 USD."""
+-    return objet_table_ligne("sonde de refus", 1.0, {
+-        "proposeur-espece-3": ("proposeur", 3, "cle_a", "ad_a"), "proposeur-espece-4": ("proposeur", 4, "cle_a", "ad_a"),
+-        "proposeur-espece-1": ("proposeur", 1, "cle_c", "ad_c1"), "proposeur-espece-5": ("proposeur", 5, "cle_c", "ad_c2"),
+-        "proposeur-espece-2": ("proposeur", 2, "cle_d", "ad_d")})
+ 
++ERREURS_API_ESSAI = (FauxErreurStatut, FauxErreurConnexion)
+ 
+-def octets_table(objet):
+-    o = json.dumps(objet, ensure_ascii=False, sort_keys=True).encode("utf-8")
+-    return o, sha(o)
+ 
++def credit_amont():
++    return FauxErreurStatut(402, {"type": "error", "error": {"type": "billing_error", "message": "inerte"}}, "billing_error")
+ 
+-def table(objet=None, marque="course"):
+-    o, s = octets_table(objet if objet is not None else objet_table_course())
+-    return rt.lire_table(o, s, marque)
+ 
++def plafond_relais():
++    return FauxErreurStatut(402, {"erreur": "plafond de dépense du relais atteint", "plafond_usd": 1.0})
+ 
+-PIRE_LIGNE_A_PART = 0.20  # valeur d'essai, sous le plafond de chaque ligne à part
+ 
++def modele_refuse_relais():
++    return FauxErreurStatut(403, {"erreur": "modèle non permis", "modele_demande": "x"})
+ 
+-def pires(t):
+-    rendu = {}
+-    for r, e in t.roles.items():
+-        if e.cle == rt.CLE_HORS_COURSE:
+-            continue
+-        if t.marque == rt.MARQUE_LIGNE_A_PART:
+-            rendu[r] = PIRE_LIGNE_A_PART
+-            continue
+-        rendu[r] = {"proposeur": PIRE_PROPOSEUR, "portier": PIRE_AIGUILLEUR, "juge": PIRE_JUGE}[e.sorte]
+-    return rendu
+ 
++def acces_refuse():
++    return FauxErreurStatut(403, {"type": "error", "error": {"type": "permission_error", "message": "inerte"}},
++                            "permission_error")
+ 
+-def parts(t):
+-    if t.marque == rt.MARQUE_LIGNE_A_PART:
+-        return {}
+-    return {c: PARTS[c] if c in PARTS else t.cles[c].part_micro / rt.MICRO
+-            for c in sorted({e.cle for e in t.roles.values() if e.cle != rt.CLE_HORS_COURSE})}
+ 
++def surcharge():
++    return FauxErreurStatut(529, {"type": "error", "error": {"type": "overloaded_error", "message": "inerte"}},
++                            "overloaded_error")
+ 
+-# --- requêtes factices (lot 3) -----------------------------------------------------------------------------------------
+ 
+-def cases():
+-    return L3.cases()
++def reponse(texte="Réponse factice inerte.", raison="end_turn", categorie=None, usage="defaut", modele="demande",
++            details=True, blocs_en_plus=(), iterations=None):
++    """Une réponse du faux fournisseur ; `modele="demande"` : le modèle demandé ; `None` : champ absent."""
++    return {"_reponse": True, "texte": texte, "raison": raison, "categorie": categorie, "usage": usage, "modele": modele,
++            "details": details, "blocs_en_plus": list(blocs_en_plus), "iterations": iterations}
+ 
+ 
+-def requete_proposeur(generation=1, indice=0, synthese_octets=A.SYNTHESE_FACTICE):
+-    c = cases()[str(generation)][indice]
+-    if generation == 1:
+-        return rq.assembler_proposeur(L3.gabarit(), c, L3.synthese(synthese_octets), 1)
+-    return rq.assembler_proposeur(L3.gabarit(), c, L3.synthese(synthese_octets), generation, L3.registre(),
+-                                  L3.TITRE_REGISTRE_FACTICE)
++def refus(categorie=None, usage="defaut", modele="demande", details=True):
++    return reponse(texte="", raison="refusal", categorie=categorie, usage=usage, modele=modele, details=details)
+ 
+ 
+-def requete_juge(generation=1, indice=0):
+-    c = cases()[str(generation)][indice]
+-    return rq.assembler_juge(L3.consigne_juge(), L3.contenu_fiche(c), L3.identifiant_juge(), c.identifiant, generation)
++class _Brut:
++    def __init__(self, message):
++        self._message = message
++        self.http_response = type("ReponseHTTP", (), {"text": json.dumps(message, ensure_ascii=False)})()
+ 
++    def parse(self):
++        return dict(self._message)
+ 
+-def requete_portier(generation=1, indice=0):
+-    c = cases()[str(generation)][indice]
+-    return rq.assembler_portier_fiche(L3.consigne_portier(), L3.contenu_fiche(c), c.identifiant, generation)
+ 
++class _Flot:
++    def __init__(self, message, erreur_en_cours=None):
++        self._message, self._erreur = message, erreur_en_cours
+ 
+-def requete_portier_sans_fiche(generation=1, indice=0):
+-    c = cases()[str(generation)][indice]
+-    return rq.assembler_portier_reponse_sans_fiche(L3.consigne_portier(), "Réponse factice, inerte, sans fiche.",
+-                                                   c.identifiant, generation)
++    def __enter__(self):
++        return self
+ 
++    def __exit__(self, *a):
++        return False
+ 
+-def session_de(requete, etape="proposition", role="role"):
+-    """Une session d'essai ; la fonction de case du contexte la rend à l'identifiant de la case de la requête."""
+-    return (etape, requete.identifiant_case, role)
++    def __iter__(self):
++        yield {"type": "message_start", "message": {"model": self._message.get("model"), "usage": {}}}
++        if self._erreur is not None:
++            raise self._erreur
++        yield {"type": "message_delta", "delta": {"stop_reason": self._message.get("stop_reason")}}
+ 
++    def get_final_message(self):
++        return dict(self._message)
+ 
+-def case_de_session(session):
+-    return session[1]
+ 
++class _Messages:
++    def __init__(self, client):
++        self._c = client
++        self.with_raw_response = type("AvecBrut", (), {"create": staticmethod(self._create_brut)})()
+ 
+-# --- le noyau d'essai -------------------------------------------------------------------------------------------------
++    def _suivant(self, corps):
++        self._c.corps_recus.append(json.loads(json.dumps(corps)))
++        e = self._c.script.pop(0) if self._c.script else reponse()
++        if isinstance(e, BaseException):
++            raise e
++        return self._c.message_de(e, corps)
+ 
+-class CoffreEssai:
+-    def __init__(self):
+-        self._consommations = []
++    def _create_brut(self, **corps):
++        return _Brut(self._suivant(corps))
+ 
+-    def noter_consommation(self, etape, role, cout_usd, **champs):
+-        self._consommations.append(dict({"etape": etape, "role": role, "cout_usd": float(cout_usd)}, **champs))
++    def stream(self, **corps):
++        e = self._c.script[0] if self._c.script else None
++        if isinstance(e, tuple) and e and e[0] == "erreur en cours de flux":
++            self._c.script.pop(0)
++            self._c.corps_recus.append(json.loads(json.dumps(corps)))
++            return _Flot(self._c.message_de(reponse(), corps), erreur_en_cours=e[1])
++        return _Flot(self._suivant(corps))
+ 
+-    def consommations(self):
+-        return [dict(c) for c in self._consommations]
+ 
++class FauxClientMessages:
++    def __init__(self, script=None, max_retries=0):
++        self.script, self.max_retries, self.corps_recus = list(script or []), max_retries, []
++        self.messages = _Messages(self)
+ 
+-class NoyauEssai:
+-    """Ce que lit `OrchestreV56.appel`, et rien d'autre ; `appel` est celui du noyau, inchangé."""
++    @staticmethod
++    def message_de(e, corps):
++        modele = corps["model"] if e["modele"] == "demande" else e["modele"]
++        usage = {"input_tokens": 1000, "output_tokens": 500} if e["usage"] == "defaut" else e["usage"]
++        if e["iterations"] is not None and isinstance(usage, dict):
++            usage = dict(usage, iterations=e["iterations"])
++        m = {"id": "msg_essai", "type": "message", "role": "assistant",
++             "content": ([{"type": "text", "text": e["texte"]}] if e["texte"] else []) + e["blocs_en_plus"],
++             "stop_reason": e["raison"], "stop_sequence": None}
++        if modele is not None:
++            m["model"] = modele
++        if usage is not None:
++            m["usage"] = usage
++        m["stop_details"] = ({"type": "refusal", "category": e["categorie"], "explanation": None}
++                             if e["raison"] == "refusal" and e["details"] else None)
++        return m
+ 
+-    appel = nv.OrchestreV56.appel
+-    _arreter_role_a2 = nv.OrchestreV56._arreter_role_a2
+ 
+-    def __init__(self, adaptateurs, dossier):
+-        self.ad = adaptateurs
+-        self.ps = dict(PLAFONDS_SESSION)
+-        self.suivi = SuiviRoles(ARRETS_ESSAI, horloge=time.monotonic)
+-        self.horloge = time.monotonic
+-        self.coffre = CoffreEssai()
+-        self.appels_sautes, self.roles_arretes_a2, self.evenements = {}, {}, []
+-        self.racine_sessions = os.path.join(dossier, "sessions")
+-        os.makedirs(self.racine_sessions, exist_ok=True)
++def fabrique(client):
++    return lambda url, delai: (client, ERREURS_API_ESSAI)
+ 
+-    def ev(self, type_, **champs):
+-        self.evenements.append(dict(champs, type=type_))
+ 
+-    def session(self, *logique):
+-        d = os.path.join(self.racine_sessions, sha("/".join(map(str, logique)).encode("utf-8"))[:16])
+-        os.makedirs(d, exist_ok=True)
+-        return d
++def adaptateur_direct(dossier_reponses, script=None, client=None, reglages=None, admis=None, bareme=None,
++                      modeles_admis=MODELES_ADMIS, environnement=None, arme=True):
++    client = client if client is not None else FauxClientMessages(script)
++    a = ad.AdaptateurClaudeDirectNA(H1.RELAIS_A, dossier_reponses, modeles_admis=modeles_admis,
++                                    reglages=reglages if reglages is not None else reglages_essai(),
++                                    admis=admis if admis is not None else ADMIS_ESSAI,
++                                    bareme=bareme if bareme is not None else {m: BAREME_ESSAI[m] for m in modeles_admis},
++                                    environnement={} if environnement is None else environnement, arme=arme,
++                                    fabrique_client=fabrique(client))
++    a.client_essai = client
++    return a
+ 
+ 
+-class GenerationEssai(ag.AppelGardeNA, NoyauEssai):
+-    pass
++# --- le contexte et le montage --------------------------------------------------------------------------------------------
+ 
++def roles_claude(t):
++    return [r for r, e in t.roles.items() if e.cle != rt.CLE_HORS_COURSE and t.cles[e.cle].type == "claude_sdk"]
+ 
+-class AdaptateurEnregistreur:
+-    """Garde la chaîne reçue ; rend un `Resultat` réglé (`reglages` : liste consommée, puis le défaut)."""
+ 
+-    nom = "enregistreur"
++def modeles_par_role(t):
++    return {r: MODELE_ROLE for r in roles_claude(t)}
+ 
+-    def __init__(self, cout=0.01, reglages=None):
+-        self.recus, self.cout, self.reglages = [], cout, list(reglages or [])
+ 
+-    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+-        self.recus.append({"role_kit": role, "consigne": consigne, "budget": budget_usd, "modele": modele})
+-        r = dict(self.reglages.pop(0)) if self.reglages else {}
+-        if r.pop("lever", None):
+-            raise RuntimeError("panne d'adaptateur d'essai")
+-        r.setdefault("texte_final", "texte factice inerte")
+-        r.setdefault("statut", "ok")
+-        r.setdefault("cout_declare_usd", self.cout)
+-        r.setdefault("modele_servi", modele if r["statut"] == "ok" else None)
+-        r.setdefault("texte_brut", r["texte_final"])
+-        return Resultat(**r)
++def pires_repli(t):
++    p1 = H1.pires(t)
++    return {r: {REPLI_1: p1[r], REPLI_2: p1[r]} for r in roles_claude(t)}
+ 
+ 
+-def adaptateurs(**reglages):
+-    return {n: AdaptateurEnregistreur(reglages=reglages.get(n)) for n in ADAPTATEURS}
++class GenerationEssai(ag.AppelGardeNA, H1.NoyauEssai):
++    pass
+ 
+ 
+ class Montage:
+-    """Une génération d'essai et tout ce qu'elle lit, dans un dossier temporaire neuf."""
++    """Une génération d'essai v2 et tout ce qu'elle lit, dans un dossier temporaire neuf. `scripts` : {adaptateur Claude :
++    script du faux client} ; `reglages` : {adaptateur enregistreur : réglages}."""
+ 
+-    def __init__(self, objet=None, marque="course", generation=1, portee_arret_1="appel", etat_relais=None, cumul=None,
+-                 reglages=None, journal_nom="journal-requetes-g1.jsonl"):
+-        self.dossier = tempfile.mkdtemp(prefix="essais-na-lot4-")
++    def __init__(self, objet=None, marque="course", generation=1, portee_arret_1="appel", cumul=None, scripts=None,
++                 reglages=None, journal_nom="journal-requetes-g1.jsonl", pires_repli_=None, modeles_repli=MODELES_REPLI,
++                 classe=GenerationEssai, adaptateurs_en_plus=None):
++        self.dossier = tempfile.mkdtemp(prefix="essais-na-lot4-v2-")
+         self.sortie = os.path.join(self.dossier, "sortie")
+-        os.makedirs(self.sortie)
+-        self.table = table(objet, marque)
++        self.reponses = os.path.join(self.sortie, "reponses-brutes")
++        os.makedirs(self.reponses)
++        self.table = H1.table(objet, marque)
+         self.journal = jn.JournalRequetes(self.sortie, journal_nom)
+         self.garde = A.garde_essai()
+         self.cumul = cumul if cumul is not None else rt.CumulParCle(self.table)
+-        self.lectures_relais = []
+-        etat = etat_relais if etat_relais is not None else etat_relais_sain()
+-
+-        def lire_etat(cle):
+-            self.lectures_relais.append(cle)
+-            if isinstance(etat, Exception):
+-                raise etat
+-            return dict(etat)
+-
+         self.contexte = ag.ContexteAppelGardeNA(
+             numero_generation=generation if self.table.marque == rt.MARQUE_COURSE else None, table=self.table,
+-            parts=parts(self.table), pires_par_role=pires(self.table), journal=self.journal, garde=self.garde,
+-            identifiant_case_de_session=case_de_session, cumul=self.cumul, lire_etat_relais=lire_etat,
++            parts=H1.parts(self.table), pires_par_role=H1.pires(self.table), journal=self.journal, garde=self.garde,
++            identifiant_case_de_session=H1.case_de_session, cumul=self.cumul,
++            modeles_par_role=modeles_par_role(self.table), modeles_repli=modeles_repli,
++            pires_repli=pires_repli_ if pires_repli_ is not None else pires_repli(self.table),
+             portee_arret_1=portee_arret_1)
+-        self.ad = adaptateurs(**(reglages or {}))
+-        self.gen = GenerationEssai(self.ad, self.dossier, contexte_na=self.contexte)
++        self.ad = H1.adaptateurs(**(reglages or {}))
++        scripts = scripts or {}
++        for nom in ("ad_a", "ad_b"):
++            self.ad[nom] = adaptateur_direct(self.reponses, scripts.get(nom))
++        self.ad.update(adaptateurs_en_plus or {})
++        self.gen = classe(self.ad, self.dossier, contexte_na=self.contexte)
++
++    def fermer(self):
++        shutil.rmtree(self.dossier, True)
++
++    def client(self, nom="ad_a"):
++        return self.ad[nom].client_essai
+ 
+     def etat(self, reste=50.0, cout=0.0):
+         return {"cout": cout, "reste": reste, "coupee": False, "etape": "proposition", "plafond_dur_usd": reste}
+ 
+-    def appeler(self, role, requete, fournisseur=None, etat=None, session=None, plafond_role=None, modele=MODELE_ESSAI,
+-                lire=None):
++    def appeler(self, role, requete, fournisseur=None, etat=None, session=None, plafond_role=None, modele=None, lire=None):
+         e = self.table.entree(role)
+         fournisseur = fournisseur if fournisseur is not None else e.adaptateur
++        modele = modele if modele is not None else (MODELE_ROLE if role in self.contexte.modeles_par_role
++                                                    else H1.MODELE_ESSAI)
+         plafond_role = plafond_role or {"proposeur": "proposeur", "portier": "aiguilleur", "juge": "juge"}[
+             e.sorte if e is not None else "juge"]
+         role_kit = "proposeur_ideation" if (e is not None and e.sorte == "proposeur") else "juge_ideation"
+         self.dernier_etat = etat if etat is not None else self.etat()
+         return self.gen.appel(self.dernier_etat, role=role, role_kit=role_kit, fournisseur=fournisseur, modele=modele,
+-                              consigne=requete,
+-                              plafond_role=plafond_role,
+-                              session=session if session is not None else session_de(requete, role=role), lire=lire)
++                              consigne=requete, plafond_role=plafond_role,
++                              session=session if session is not None else H1.session_de(requete, role=role), lire=lire)
+ 
+     def lignes(self):
+         return jn.verifier_journal(self.journal.chemin)
+ 
+-    def recus(self):
+-        return [r for a in self.ad.values() for r in a.recus]
+-
+-
+-def etat_relais_sain():
+-    return {"plafond_usd": 156.56, "depense_usd": 3.0, "engage_usd": 0.0, "reserve_par_appel_usd": 0.4, "refus": 0,
+-            "refus_modele": 0, "appels": 5, "restant_usd": 153.56}
+-
+-
+-def etat_relais_credit():
+-    return {"plafond_usd": 156.56, "depense_usd": 156.40, "engage_usd": 0.0, "reserve_par_appel_usd": 0.4, "refus": 1,
+-            "refus_modele": 0, "appels": 300, "restant_usd": 0.16}
+-
+-
+-# --- le faux kit d'agent (adaptateur Claude neuf) -----------------------------------------------------------------------
+-
+-class FauxKit:
+-    """L'interface du kit que lit l'adaptateur (`ClaudeAgentOptions`, `HookMatcher`, `query`, messages), sans aucun appel.
+-    `script` : les messages à rendre, construits par les fonctions ci-dessous."""
+-
+-    class ClaudeSDKError(Exception):
+-        pass
+-
+-    class ClaudeAgentOptions:
+-        def __init__(self, **reglages):
+-            self.__dict__.update(reglages)
+-            self.reglages = dict(reglages)
+-
+-    class HookMatcher:
+-        def __init__(self, matcher=None, hooks=()):
+-            self.matcher, self.hooks = matcher, list(hooks)
+-
+-    class TextBlock:
+-        def __init__(self, text):
+-            self.text = text
+-
+-    class AssistantMessage:
+-        def __init__(self, content, model=None, stop_reason=None, usage=None):
+-            self.content, self.model, self.stop_reason, self.usage = content, model, stop_reason, usage
+-
+-    class SystemMessage:
+-        def __init__(self, subtype, data):
+-            self.subtype, self.data = subtype, data
+-
+-    class ResultMessage:
+-        def __init__(self, subtype, result, total_cost_usd, is_error=False, stop_reason=None, model_usage=None):
+-            self.subtype, self.result, self.total_cost_usd, self.is_error = subtype, result, total_cost_usd, is_error
+-            self.stop_reason, self.model_usage = stop_reason, model_usage
+-
+-    def __init__(self, script=None, lever=None):
+-        self.script, self.lever, self.options_recues, self.consignes_recues = script, lever, [], []
+-
+-    async def query(self, prompt, options):
+-        self.options_recues.append(options)
+-        self.consignes_recues.append(prompt)
+-        if self.lever is not None:
+-            raise self.lever
+-        for m in (self.script(self) if callable(self.script) else []):
+-            yield m
+-
+-
+-def script_normal(texte="Réponse factice inerte."):
+-    def s(kit):
+-        modele = kit.options_recues[-1].model
+-        return [kit.AssistantMessage([kit.TextBlock(texte)], model=modele, stop_reason="end_turn"),
+-                kit.ResultMessage("success", texte, 0.02)]
+-    return s
+-
+-
+-def script_refus():
+-    def s(kit):
+-        modele = kit.options_recues[-1].model
+-        return [kit.AssistantMessage([kit.TextBlock("")], model=modele, stop_reason="refusal")]
+-    return s
+-
++    def envois(self):
++        return [l for l in self.lignes() if l["evenement"] == "envoi"]
+ 
+-def script_erreur():
+-    def s(kit):
+-        return [kit.ResultMessage("error_during_execution", "erreur factice inerte", 0.0, is_error=True)]
+-    return s
++    def fichiers_reponses(self):
++        return sorted(f for f in os.listdir(self.reponses) if f.endswith(".json"))
