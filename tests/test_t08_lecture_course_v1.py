@@ -812,6 +812,19 @@ def test_lecture_reelle_charge_la_piece_par_charger_piece(env, monkeypatch):
     run = f"{env['h']}-t08-lecture-reel-piece"
     with pytest.raises(GardeArret, match="non chargée par `charger_piece` en mode réel"):
         lv.executer_lecture(cfg, env["racine"], run, prereg="prereg/x.md", piece=lv.mc.charger_piece("jouet"))
+    # CA-02 : pièce réelle contrôlée sur un autre marqueur (celui du brouillon 11) que celui de la configuration
+    from controle_ia.t08 import entrees_v1 as en_
+
+    mq_reel = {"commit": "da06bb57610f840152e4e9a8c449b036577cc582",
+               "fichier_inscription": "registres/code-mots-et-cout-t06/CODE-MOTS-ET-COUT-T06-v1.json",
+               "sha256_inscription": "e418fdafbf8362f0458eb0448ec2d32ffa9a8bb122ec619ad0aaf68a9df3b43b",
+               "module": "scripts/mots_et_cout_t06_v3.py",
+               "sha256_module": "9dbcc55ca47b21674636f5d6c9126af15244d5ee63a9df8dee274df126c4e674"}
+    ligne = en_.exiger_ligne(en_.lire_registre_scellements(ej.RACINE_DEPOT / "registres" / "scellements-v1.md"),
+                             "CODE-MOTS-ET-COUT-T06")
+    autre = lv.mc.charger_piece("reel", mq_reel, ej.RACINE_DEPOT, ligne)
+    with pytest.raises(GardeArret, match="contrôlée sur un autre marqueur"):
+        lv.executer_lecture(cfg, env["racine"], run, prereg="prereg/x.md", piece=autre)
     # (a) à (c) passent sur le registre et l'inscription factices ; le module cité n'est pas sous la racine des entrées :
     # arrêt au point (d) (le refus de l'enveloppe chargée par chemin : `test_t08_alignement_piece_v1`)
     with pytest.raises(GardeArret, match=r"^\(d\) module src/controle_ia/t08/mots_et_cout_v1.py absent sur disque"):

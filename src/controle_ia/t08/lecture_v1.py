@@ -193,6 +193,8 @@ def passage_a_blanc_reel(marqueurs: dict, registre, prereg, maintenant: datetime
             "SCELLEMENT-T08": controles["SCELLEMENT-T08"], "CODE-T08": controles["CODE-T08"],
             "anteriorite_sur": controles["anteriorite_sur"], "RUN-CONFIRMATION-T06": run,
             "CODE-MOTS-ET-COUT-T06": code_piece, "piece_mots_et_cout": piece_controlee,
+            "piece_points_joues": "(a) seul ; (b) à (e) et chargement NON joués (racine_piece absente)"
+            if racine_piece is None else "(a) à (e) et chargement par chemin",
             "LECTURE-T08-BASE-A_presente": "LECTURE-T08-BASE-A" in reg["lignes"],
             "registre": {"lignes_lues": sorted(reg["lignes"]), "ignorees": reg["ignorees"],
                          "mal_formees": reg["mal_formees"], "mal_formees_lues": reg["mal_formees_lues"]}}
@@ -1066,6 +1068,14 @@ def executer_lecture(config: dict, racine, run_id: str, prereg: str | None = Non
     if mode == "reel" and (piece.mode != "reel" or piece.inscription is None):
         raise GardeArret("lecture réelle : pièce « mots et coût » non chargée par `charger_piece` en mode réel (contrôles "
                          "(a) à (e) exigés) : arrêt")
+    if mode == "reel":                  # pièce rattachée au marqueur de cette configuration (CA-02)
+        c, i = marqueurs["CODE_MOTS_ET_COUT_T06"], piece.inscription
+        vu = {"commit": i["commit"], "fichier_inscription": i["fichier_inscription"]["chemin"],
+              "sha256_inscription": i["fichier_inscription"]["sha256"], "module": i["module"]["chemin"],
+              "sha256_module": i["module"]["sha256"]}
+        if vu != {k: c[k] for k in vu}:
+            raise GardeArret("lecture réelle : pièce « mots et coût » contrôlée sur un autre marqueur que "
+                             "CODE_MOTS_ET_COUT_T06 de la configuration : arrêt")
     debut = time.perf_counter()
     lecture = LectureT08(config, racine, None, piece, prereg=prereg)
     # (a) et (b) ne tirent rien : ils passent avant le manifeste ; un arrêt par leurs gardes (entrées, empreintes,
