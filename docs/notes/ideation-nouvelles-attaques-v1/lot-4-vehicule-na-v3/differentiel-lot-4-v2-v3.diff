@@ -1,0 +1,428 @@
+--- lot-4-v2/pole/adaptateur_claude_direct_na_v1.py
++++ lot-4-v3/pole/adaptateur_claude_direct_na_v2.py
+@@ -1,6 +1,13 @@
+-"""Véhicule NA-1, lot 4 v2 — adaptateur Claude direct (`adaptateur_claude_direct_na_v1`) : l'interface des messages du
++"""Véhicule NA-1, lot 4 v3 — adaptateur Claude direct (`adaptateur_claude_direct_na_v2`) : l'interface des messages du
+ fournisseur, appelée en direct par le relais de la clé, sans l'outil ni le kit d'agent.
+ 
++v2 (remplace `adaptateur_claude_direct_na_v1.py`, `50563801…`, archivé sans modification ; vérification du lot 4 v2,
++point B1). Seul changement de règle : un refus pour crédit d'amont se lit aussi sous la forme reçue ce jour sur une clé,
++un statut 400 de type `invalid_request_error` dont le message contient le fragment fixé `FRAGMENT_CREDIT_400`
++(comparaison sans casse) ; classe « crédit d'amont (400, message de solde) ». Règle stricte : les trois conditions à la
++fois ; le message n'est ni recopié dans la fiche de la tentative, ni dans le résultat, ni au journal (il reste dans la
++seule réponse brute conservée, A4).
++
+ Lettre : nœuds du véhicule v2 (`79b9d423…`), § 1 (décision N1, exigences A1 à A7) et § 2 (décision N2) ; projet d'additif
+ v2 (`6e9bb88e…`), A-1 à A-6, § 2 (A1 à A7), § 5 (P1, P3, P16), § 10 (n° 31, n° 32) ; V9 l. 73,
+ l. 77, l. 387 (rien d'autre de fixe ; plus aucun octet ne change), l. 396 (réponses brutes conservées). Il remplace
+@@ -31,7 +38,9 @@
+   du kit et chaque modèle admis ; chaque valeur est contrôlée à la construction contre la table des valeurs admises
+   (versée, avec son empreinte, par la configuration) ; un réglage non admis refuse le départ (n° 32, proposé)
+   avec son nom. Aucune valeur admise n'est écrite dans ce module.
+-- **N2, crédit d'amont** : une erreur 402 de type `billing_error` est rendue « crédit d'amont » ; le 402 du relais à son
++- **N2, crédit d'amont** : une erreur 402 de type `billing_error` est rendue « crédit d'amont » ; une erreur 400 de type
++  `invalid_request_error` dont le message (`error.message` du corps) contient `FRAGMENT_CREDIT_400`, sans casse, est
++  rendue « crédit d'amont (400, message de solde) » ; le 402 du relais à son
+   plafond, « plafond du relais » ; le 403 du relais « modèle non permis », un refus d'événement `relais.modele_non_permis`
+   (n° 31). Toute autre erreur garde son statut et son type, sans classe de crédit.
+ - **Modèles admis** : une liste fermée donnée par la configuration (les modèles des rôles et les deux modèles de repli) ;
+@@ -52,7 +61,7 @@
+ from .outils import lister_fichiers
+ from .relais import JETON_FACTICE, CleDansEnvironnement, noms_de_cle_presents, valider_url_relais
+ 
+-VERSION = "adaptateur-claude-direct-na-v1"
++VERSION = "adaptateur-claude-direct-na-v2"
+ NOM_ADAPTATEUR = "claude-direct-na"
+ ROLES_NA = ("proposeur_ideation", "juge_ideation")
+ FORMAT_REPONSE = "reponse-brute-direct-na-v1"
+@@ -74,7 +83,12 @@
+ CATEGORIE_NON_LUE = "catégorie non lue"
+ # Erreurs (N2).
+ TYPE_FACTURATION = "billing_error"
++TYPE_REQUETE_INVALIDE = "invalid_request_error"
++# Fragment fixé du message d'un crédit épuisé rendu en 400 (forme reçue ce jour sur une clé ; vérification du lot 4 v2,
++# B1) ; comparé sans casse, jamais recopié.
++FRAGMENT_CREDIT_400 = "credit balance is too low"
+ ERREUR_CREDIT_AMONT = "crédit d'amont"
++ERREUR_CREDIT_AMONT_400 = "crédit d'amont (400, message de solde)"
+ ERREUR_PLAFOND_RELAIS = "plafond du relais"
+ ERREUR_MODELE_RELAIS = "modèle non permis par le relais"
+ ERREUR_REPONSE_COUPEE = "réponse coupée au plafond de sortie"
+@@ -264,6 +278,14 @@
+     return "erreur", "", raison if isinstance(raison, str) else None, None, ERREUR_RAISON_HORS_LISTE, None
+ 
+ 
++def message_de_solde(corps):
++    """Vrai si le message d'erreur du corps (`error.message`) contient le fragment fixé, sans casse ; rien n'est rendu du
++    message lui-même."""
++    err = corps.get("error") if isinstance(corps, dict) else None
++    message = err.get("message") if isinstance(err, dict) else None
++    return isinstance(message, str) and FRAGMENT_CREDIT_400.casefold() in message.casefold()
++
++
+ def classer_erreur(exc):
+     """(classe, statut HTTP, type) d'une erreur du client ; aucun texte recopié."""
+     statut = getattr(exc, "status_code", None)
+@@ -275,6 +297,8 @@
+         return ERREUR_SANS_STATUT, None, None
+     if statut == 402 and type_ == TYPE_FACTURATION:
+         return ERREUR_CREDIT_AMONT, statut, type_
++    if statut == 400 and type_ == TYPE_REQUETE_INVALIDE and message_de_solde(corps):
++        return ERREUR_CREDIT_AMONT_400, statut, type_
+     if statut == 402 and isinstance(corps, dict) and corps.get("erreur") == MESSAGE_PLAFOND_RELAIS:
+         return ERREUR_PLAFOND_RELAIS, statut, None
+     if statut == 403 and isinstance(corps, dict) and corps.get("erreur") == MESSAGE_MODELE_RELAIS:
+@@ -444,4 +468,5 @@
+            "ConservationImpossible", "lire_reglages_na", "lire_bareme_na", "construire_corps_na", "verifier_corps_na",
+            "octets_consigne_du_corps", "lire_reponse", "classer_erreur", "cout_par_usage", "fabrique_client_reel",
+            "NOM_ADAPTATEUR", "EVENEMENT_REFUS_CLASSIFIEUR", "EVENEMENT_REPLI_FOURNISSEUR", "EVENEMENT_MODELE_NON_PERMIS",
+-           "CATEGORIE_NON_LUE", "ERREUR_CREDIT_AMONT", "ERREUR_PLAFOND_RELAIS", "ROLES_NA")
++           "CATEGORIE_NON_LUE", "ERREUR_CREDIT_AMONT", "ERREUR_CREDIT_AMONT_400", "ERREUR_PLAFOND_RELAIS", "ROLES_NA",
++           "FRAGMENT_CREDIT_400", "message_de_solde")
+--- lot-4-v2/pole/appel_garde_na_v2.py
++++ lot-4-v3/pole/appel_garde_na_v3.py
+@@ -1,9 +1,11 @@
+-"""Véhicule NA-1, lot 4 v2 — la surcharge d'`appel` (`appel_garde_na_v2`, mélange `AppelGardeNA`) : routage par rôle, part
++"""Véhicule NA-1, lot 4 v3 — la surcharge d'`appel` (`appel_garde_na_v3`, mélange `AppelGardeNA`) : routage par rôle, part
+ de la clé et cumul compté **par tentative**, garde de motifs au point d'envoi, journal, égalité, refus avant le noyau,
+ « refus écrit », lecture des retours, `hors_course`, et **la règle de repli** de GO-2026-11-22-35 pour les clés Claude, sur
+-l'adaptateur direct (`adaptateur_claude_direct_na_v1`).
++l'adaptateur direct (`adaptateur_claude_direct_na_v2`).
+ 
+-v2 (remplace `appel_garde_na_v1.py`, `d16d07bf…`, archivé sans modification). Lettre neuve : nœuds du véhicule v2
++v3 (remplace `appel_garde_na_v2.py`, `ac88fdbd…`, archivé sans modification ; vérification du lot 4 v2, point B1) : la
++classe « crédit d'amont (400, message de solde) » de l'adaptateur direct v2 lève aussi l'arrêt n° 13, à toute tentative,
++sans repli ; aucune autre règle ne change. La v2 remplaçait `appel_garde_na_v1.py` (`d16d07bf…`). Lettre neuve : nœuds du véhicule v2
+ (`79b9d423…`), § 1 (A1 à A7), § 2 (N2), § 5 (R1 à R16) ; projet d'additif v2 (`6e9bb88e…`), A-6, § 5 (P1 à P17), § 10
+ (n° 31, n° 34) ; décisions de la mère portées par le mandat du lot 4 v2. La lettre de la v1 (V9 l. 77, 372, 383, 384, 387 ;
+ conception v5, § 2.3, § 2.13 ; errata 1 à 3 du lot 4 v1) reste tenue, sauf ce que le repli change.
+@@ -27,7 +29,7 @@
+      suivante ; au troisième refus, l'arrêt n° 1 (portée « appel » par défaut, « course » sur réglage) ;
+    - trace de repli du fournisseur ou du kit, refus du relais pour modèle : n° 31 ;
+    - refus de classifieur d'une commande externe ou du protocole : n° 1, sans repli (lettre de la V9 l. 372) ;
+-   - erreur : crédit d'amont (402, `billing_error`) ou plafond du relais : n° 13, qui dit la clé, sans repli ; budget
++   - erreur : crédit d'amont (402, `billing_error` ; ou 400, `invalid_request_error`, message de solde) ou plafond du relais : n° 13, qui dit la clé, sans repli ; budget
+      dépassé du relais de protocole : n° 13 ; toute autre erreur d'une clé Claude : « réponse illisible, cause non
+      établie » (sous-compte « en repli » si la chaîne était ouverte) ; une réponse servie mais coupée ou hors liste est
+      « servie » au sens du § 5 du projet d'additif ;
+@@ -46,20 +48,20 @@
+ décodage strict des octets gardés.
+ 
+ Bibliothèque standard, et les modules des lots 2 à 4 (`garde_motifs_na_v4`, `requete_na_v3`, `journal_na_v3`,
+-`routage_na_v1`, `adaptateur_claude_direct_na_v1`).
++`routage_na_v1`, `adaptateur_claude_direct_na_v2`).
+ """
+ 
+ import dataclasses
+ import re
+ 
+-from pole import adaptateur_claude_direct_na_v1 as ad
++from pole import adaptateur_claude_direct_na_v2 as ad
+ from pole import garde_motifs_na_v4 as gm
+ from pole import journal_na_v3 as jn
+ from pole import requete_na_v3 as rq
+ from pole import routage_na_v1 as rt
+ from pole.adaptateurs import modele_conforme
+ 
+-VERSION = "appel-garde-na-v2"
++VERSION = "appel-garde-na-v3"
+ ARRET_REQUETE_JOURNALISEE = "requête journalisée"
+ ARRET_A2 = "A2"
+ NUMERO_ARRET_CLASSIFIEUR = 1
+@@ -85,7 +87,7 @@
+ # N° 1 sans repli : refus de classifieur d'une commande externe ou du protocole (et du kit, s'il servait encore).
+ EVENEMENTS_CLASSIFIEUR_SANS_REPLI = ("commande.refus", "kimi.content_filter", "assistant.stop_reason",
+                                      "result.stop_reason", "system.model_refusal_no_fallback")
+-ERREURS_CREDIT = (ad.ERREUR_CREDIT_AMONT, ad.ERREUR_PLAFOND_RELAIS)
++ERREURS_CREDIT = (ad.ERREUR_CREDIT_AMONT, ad.ERREUR_CREDIT_AMONT_400, ad.ERREUR_PLAFOND_RELAIS)
+ # Issues rendues au lot 6 (`issue_na`).
+ ISSUE_OK = "ok"
+ ISSUE_SERVI_PAR_REPLI = "refus par classifieur, servi par repli"
+--- lot-4-v2/essais/aides_na_lot4_v2.py
++++ lot-4-v3/essais/aides_na_lot4_v3.py
+@@ -1,4 +1,4 @@
+-"""Aides des essais du lot 4 v2 du véhicule NA-1 (lisent `appel_garde_na_v2`, `adaptateur_claude_direct_na_v1`) : données
++"""Aides des essais du lot 4 v3 du véhicule NA-1 (lisent `appel_garde_na_v3`, `adaptateur_claude_direct_na_v2`) : données
+ factices seules, noms de modèles neutres (`modele-role-essai`, `modele-repli-1-essai`, `modele-repli-2-essai`), aucune clé,
+ aucun appel à un fournisseur.
+ 
+@@ -8,7 +8,7 @@
+   permis, surcharge) ou de connexion ; il garde chaque corps reçu. Le modèle servi par défaut est le modèle demandé.
+ - Les jeux de réglages, la table des valeurs admises et le barème sont des **valeurs d'essai, non opposables** : aucune
+   n'est une valeur du fournisseur.
+-- `Montage` : la génération d'essai `GenerationEssai(AppelGardeNA v2, NoyauEssai)` sur la table de course du lot 4 v1 (les
++- `Montage` : la génération d'essai `GenerationEssai(AppelGardeNA v3, NoyauEssai)` sur la table de course du lot 4 v1 (les
+   clés `cle_a` et `cle_b` sont des clés Claude, servies par l'adaptateur direct ; les autres gardent l'adaptateur
+   enregistreur), avec **le vrai `appel` du noyau** (`OrchestreV56.appel`).
+ """
+@@ -27,8 +27,8 @@
+ 
+ import aides_na_lot4_v1 as H1  # noqa: E402
+ import aides_na_v4 as A  # noqa: E402
+-from pole import adaptateur_claude_direct_na_v1 as ad  # noqa: E402
+-from pole import appel_garde_na_v2 as ag  # noqa: E402
++from pole import adaptateur_claude_direct_na_v2 as ad  # noqa: E402
++from pole import appel_garde_na_v3 as ag  # noqa: E402
+ from pole import journal_na_v3 as jn  # noqa: E402
+ from pole import routage_na_v1 as rt  # noqa: E402
+ 
+@@ -82,6 +82,15 @@
+     return FauxErreurStatut(403, {"erreur": "modèle non permis", "modele_demande": "x"})
+ 
+ 
++MESSAGE_SOLDE_ESSAI = "Your Credit Balance is too LOW to access the interface (message d'essai, inerte)."
++
++
++def credit_400(message=MESSAGE_SOLDE_ESSAI, statut=400, type_="invalid_request_error"):
++    """La forme du crédit épuisé reçue ce jour sur une clé (vérification du lot 4 v2, B1) : 400, `invalid_request_error`,
++    message de solde ; `message`, `statut`, `type_` changés pour les artefacts."""
++    return FauxErreurStatut(statut, {"type": "error", "error": {"type": type_, "message": message}}, type_)
++
++
+ def acces_refuse():
+     return FauxErreurStatut(403, {"type": "error", "error": {"type": "permission_error", "message": "inerte"}},
+                             "permission_error")
+@@ -216,13 +225,13 @@
+ 
+ 
+ class Montage:
+-    """Une génération d'essai v2 et tout ce qu'elle lit, dans un dossier temporaire neuf. `scripts` : {adaptateur Claude :
++    """Une génération d'essai v3 et tout ce qu'elle lit, dans un dossier temporaire neuf. `scripts` : {adaptateur Claude :
+     script du faux client} ; `reglages` : {adaptateur enregistreur : réglages}."""
+ 
+     def __init__(self, objet=None, marque="course", generation=1, portee_arret_1="appel", cumul=None, scripts=None,
+                  reglages=None, journal_nom="journal-requetes-g1.jsonl", pires_repli_=None, modeles_repli=MODELES_REPLI,
+                  classe=GenerationEssai, adaptateurs_en_plus=None):
+-        self.dossier = tempfile.mkdtemp(prefix="essais-na-lot4-v2-")
++        self.dossier = tempfile.mkdtemp(prefix="essais-na-lot4-v3-")
+         self.sortie = os.path.join(self.dossier, "sortie")
+         self.reponses = os.path.join(self.sortie, "reponses-brutes")
+         os.makedirs(self.reponses)
+--- lot-4-v2/essais/test_na_v2_appel_garde.py
++++ lot-4-v3/essais/test_na_v3_appel_garde.py
+@@ -1,4 +1,4 @@
+-"""Essais du lot 4 v2 du véhicule NA-1 — la surcharge d'`appel` v2 (`appel_garde_na_v2`) et la règle de repli, contre le
++"""Essais du lot 4 v3 du véhicule NA-1 — la surcharge d'`appel` v2 (`appel_garde_na_v3`) et la règle de repli, contre le
+ vrai `appel` du noyau (`OrchestreV56.appel`) et l'adaptateur direct au faux client de l'interface des messages.
+ 
+ Chaque garde : un cas sain et un artefact (R5). Données factices seules ; aucun appel, aucune clé, aucun réseau.
+@@ -12,9 +12,9 @@
+ sys.path.insert(0, ICI)
+ 
+ import aides_na_lot4_v1 as H1  # noqa: E402
+-import aides_na_lot4_v2 as H  # noqa: E402
+-from pole import adaptateur_claude_direct_na_v1 as ad  # noqa: E402
+-from pole import appel_garde_na_v2 as ag  # noqa: E402
++import aides_na_lot4_v3 as H  # noqa: E402
++from pole import adaptateur_claude_direct_na_v2 as ad  # noqa: E402
++from pole import appel_garde_na_v3 as ag  # noqa: E402
+ from pole import journal_na_v3 as jn  # noqa: E402
+ from pole import routage_na_v1 as rt  # noqa: E402
+ 
+@@ -416,6 +416,34 @@
+             m.appeler(P3, H1.requete_proposeur())
+         self.assertEqual(c.exception.lu_par, ad.ERREUR_CREDIT_AMONT)
+ 
++    def test_credit_400_message_de_solde_leve_13(self):
++        m = self.montage(scripts={"ad_a": [H.credit_400()]})
++        with self.assertRaises(ag.ArretCreditNA) as c:
++            m.appeler(P3, H1.requete_proposeur())
++        self.assertEqual((c.exception.cle, c.exception.lu_par), ("cle_a", ad.ERREUR_CREDIT_AMONT_400))
++        self.assertNotIn("Balance", str(c.exception))
++        self.assertNotIn("balance", str(m.gen.na_replis).lower())
++        with open(m.journal.chemin, encoding="utf-8") as f:
++            self.assertNotIn("balance", f.read().lower())
++
++    def test_credit_400_en_repli_leve_13_sans_second_repli(self):
++        m = self.montage(scripts={"ad_a": [H.refus(), H.credit_400(), H.reponse()]})
++        with self.assertRaises(ag.ArretCreditNA) as c:
++            m.appeler(P3, H1.requete_proposeur())
++        self.assertEqual(c.exception.lu_par, ad.ERREUR_CREDIT_AMONT_400)
++        self.assertEqual(len(m.client().corps_recus), 2)
++
++    def test_400_d_un_autre_message_n_est_pas_13(self):
++        for message in ("max_tokens: valeur hors borne (inerte)", "credit balance", "", None):
++            m = self.montage(scripts={"ad_a": [H.credit_400(message=message)]})
++            self.assertEqual(m.appeler(P3, H1.requete_proposeur())["issue_na"], ag.ISSUE_ILLISIBLE, message)
++
++    def test_fragment_sous_un_autre_statut_ou_type_n_est_pas_13(self):
++        for statut, type_ in ((429, "rate_limit_error"), (403, "permission_error"), (500, "api_error"),
++                              (400, "billing_error"), (400, "authentication_error")):
++            m = self.montage(scripts={"ad_a": [H.credit_400(statut=statut, type_=type_)]})
++            self.assertEqual(m.appeler(P3, H1.requete_proposeur())["issue_na"], ag.ISSUE_ILLISIBLE, (statut, type_))
++
+     def test_plafond_du_relais(self):
+         m = self.montage(scripts={"ad_a": [H.plafond_relais()]})
+         with self.assertRaises(ag.ArretCreditNA):
+--- lot-4-v2/essais/test_na_v1_adaptateur_claude_direct.py
++++ lot-4-v3/essais/test_na_v2_adaptateur_claude_direct.py
+@@ -1,6 +1,6 @@
+-"""Essais de l'adaptateur Claude direct du véhicule NA-1 (`adaptateur_claude_direct_na_v1`), exigences A1 à A7 et N2.
++"""Essais de l'adaptateur Claude direct du véhicule NA-1 (`adaptateur_claude_direct_na_v2`), exigences A1 à A7 et N2.
+ 
+-Au faux client de l'interface des messages (`aides_na_lot4_v2.FauxClientMessages`) ; et, pour A1, l'en-tête du relais et
++Au faux client de l'interface des messages (`aides_na_lot4_v3.FauxClientMessages`) ; et, pour A1, l'en-tête du relais et
+ l'égalité sur le corps reçu, au **client réel du kit de l'interface** (`anthropic`, s'il est installé) pointé sur un faux
+ serveur de la boucle locale (`127.0.0.1`), sans mandataire réseau : aucune requête ne sort de la machine, aucune clé.
+ """
+@@ -17,8 +17,8 @@
+ ICI = os.path.dirname(os.path.abspath(__file__))
+ sys.path.insert(0, ICI)
+ 
+-import aides_na_lot4_v2 as H  # noqa: E402
+-from pole import adaptateur_claude_direct_na_v1 as ad  # noqa: E402
++import aides_na_lot4_v3 as H  # noqa: E402
++from pole import adaptateur_claude_direct_na_v2 as ad  # noqa: E402
+ from pole.adaptateurs import ModeleNonPermis, MoteurNonArme  # noqa: E402
+ from pole.relais import CleDansEnvironnement  # noqa: E402
+ 
+@@ -209,6 +209,23 @@
+         self.assertNotIn("fallbacks", objet)
+         self.assertEqual(r.modele_servi, H.MODELE_ROLE)
+ 
++    def test_credit_400_message_de_solde_par_le_client_reel(self):
++        """B1 de la vérification du lot 4 v2 : la forme reçue ce jour (400, `invalid_request_error`, message de solde) est un
++        crédit d'amont ; un 400 d'un autre message, ou le fragment sous un autre statut, ne l'est pas."""
++        msg = H.MESSAGE_SOLDE_ESSAI
++        s = self.serveur([
++            (400, {"type": "error", "error": {"type": "invalid_request_error", "message": msg}}),
++            (400, {"type": "error", "error": {"type": "invalid_request_error", "message": "max_tokens hors borne"}}),
++            (429, {"type": "error", "error": {"type": "rate_limit_error", "message": msg}}),
++            (402, {"type": "error", "error": {"type": "billing_error", "message": msg}})])
++        a = self.adaptateur_reel(s)
++        r = [self.lancer(a) for _ in range(4)]
++        self.assertEqual([x.tentative["classe_erreur"] for x in r],
++                         [ad.ERREUR_CREDIT_AMONT_400, ad.ERREUR_STATUT, ad.ERREUR_STATUT, ad.ERREUR_CREDIT_AMONT])
++        for x in r:
++            self.assertNotIn("balance", json.dumps(x.tentative, ensure_ascii=False).lower())
++            self.assertNotIn("balance", str(x.erreur).lower())
++
+     def test_refus_credit_et_relais_par_le_client_reel(self):
+         s = self.serveur([
+             (200, _message(H.MODELE_ROLE, raison="refusal", texte="", categorie=None)),
+@@ -311,6 +328,26 @@
+ 
+ # --- A5, A6 -----------------------------------------------------------------------------------------------------------
+ 
++class TestCredit400(Base):
++    def test_regle_stricte(self):
++        cas = (((400, "invalid_request_error", H.MESSAGE_SOLDE_ESSAI), ad.ERREUR_CREDIT_AMONT_400),
++               ((400, "invalid_request_error", "CREDIT BALANCE IS TOO LOW"), ad.ERREUR_CREDIT_AMONT_400),
++               ((400, "invalid_request_error", "credit balance is low"), ad.ERREUR_STATUT),
++               ((400, "invalid_request_error", None), ad.ERREUR_STATUT),
++               ((400, "permission_error", H.MESSAGE_SOLDE_ESSAI), ad.ERREUR_STATUT),
++               ((401, "invalid_request_error", H.MESSAGE_SOLDE_ESSAI), ad.ERREUR_STATUT),
++               ((429, "rate_limit_error", H.MESSAGE_SOLDE_ESSAI), ad.ERREUR_STATUT))
++        for (statut, type_, message), attendu in cas:
++            self.assertEqual(ad.classer_erreur(H.credit_400(message, statut, type_))[0], attendu, (statut, type_, message))
++
++    def test_message_garde_a_la_seule_reponse_brute(self):
++        r = self.lancer(self.adaptateur([H.credit_400()]))
++        self.assertEqual(r.tentative["classe_erreur"], ad.ERREUR_CREDIT_AMONT_400)
++        self.assertNotIn("balance", json.dumps(r.tentative, ensure_ascii=False).lower())
++        brut = self.brute(r.tentative["reponse_brute"])
++        self.assertEqual(brut["corps_brut"]["erreur"]["error"]["message"], H.MESSAGE_SOLDE_ESSAI)
++
++
+ class TestA5A6(Base):
+     def test_categorie_lue_ou_non_lue(self):
+         cas = ((H.refus("cyber"), "cyber"), (H.refus(None), ad.CATEGORIE_NON_LUE), (H.refus(""), ad.CATEGORIE_NON_LUE),
+--- lot-4-v2/essais/mutations_na_lot4_v2.py
++++ lot-4-v3/essais/mutations_na_lot4_v3.py
+@@ -1,13 +1,13 @@
+-"""Mutations du lot 4 v2 du véhicule NA-1 : pour chaque garde neuve (règle de repli, adaptateur direct, n° 31, n° 32,
++"""Mutations du lot 4 v3 du véhicule NA-1 : pour chaque garde neuve (règle de repli, adaptateur direct, n° 31, n° 32,
+ n° 34, A1 à A7, N2), la garde retirée fait échouer son essai (R5 ; manière du lot 4 v1, `mutations_na_lot4_v1.py`).
+ 
+ Pour chaque mutation : une copie neuve, dans un dossier temporaire, du dossier `pole/` de la copie de l'orchestrateur et
+-des seuls fichiers d'essais dont les essais du lot 4 v2 ont besoin ; un ou plusieurs remplacements à texte exact (chaque
++des seuls fichiers d'essais dont les essais du lot 4 v3 ont besoin ; un ou plusieurs remplacements à texte exact (chaque
+ texte cherché doit y être une fois exactement, sinon la mutation est dite invalide) ; puis les essais nommés, joués dans un
+ processus à part. « Tuée » si et seulement si pytest rend le code 1. Avant cela, les deux fichiers d'essais entiers
+ passent sur une copie non mutée (code 0), et un témoin inerte survit. La liste réelle des motifs n'est ni copiée ni lue.
+ 
+-Usage : `python -B mutations_na_lot4_v2.py JOURNAL.json` (le journal ne doit pas exister : R12). Aucun réseau hors de la
++Usage : `python -B mutations_na_lot4_v3.py JOURNAL.json` (le journal ne doit pas exister : R12). Aucun réseau hors de la
+ boucle locale, aucune clé ; les copies temporaires sont retirées en fin de programme.
+ """
+ 
+@@ -25,15 +25,15 @@
+ ESSAIS_COPIES = (
+     "essais/__init__.py", "essais/conftest.py", "essais/aides.py", "essais/aides_v53.py", "essais/aides_v54.py",
+     "essais/aides_v55.py", "essais/aides_v56.py", "essais/aides_na_v4.py", "essais/liste-motifs-essai-na-v1.json",
+-    "essais/aides_na_lot3_v3.py", "essais/aides_na_lot4_v1.py", "essais/aides_na_lot4_v2.py",
+-    "essais/test_na_v2_appel_garde.py", "essais/test_na_v1_adaptateur_claude_direct.py",
++    "essais/aides_na_lot3_v3.py", "essais/aides_na_lot4_v1.py", "essais/aides_na_lot4_v3.py",
++    "essais/test_na_v3_appel_garde.py", "essais/test_na_v2_adaptateur_claude_direct.py",
+ )
+-AG = "pole/appel_garde_na_v2.py"
+-AD = "pole/adaptateur_claude_direct_na_v1.py"
++AG = "pole/appel_garde_na_v3.py"
++AD = "pole/adaptateur_claude_direct_na_v2.py"
+ MODULES = (AG, AD)
+-TOUS = ["essais/test_na_v2_appel_garde.py", "essais/test_na_v1_adaptateur_claude_direct.py"]
+-T = "essais/test_na_v2_appel_garde.py::"
+-D = "essais/test_na_v1_adaptateur_claude_direct.py::"
++TOUS = ["essais/test_na_v3_appel_garde.py", "essais/test_na_v2_adaptateur_claude_direct.py"]
++T = "essais/test_na_v3_appel_garde.py::"
++D = "essais/test_na_v2_adaptateur_claude_direct.py::"
+ 
+ MUTATIONS = [
+     # --- la chaîne de repli ---
+@@ -205,6 +205,36 @@
+     ("D-15", "crédit d'amont non reconnu", AD,
+      [("    if statut == 402 and type_ == TYPE_FACTURATION:\n", "    if False:\n")],
+      [T + "TestArret13::test_credit_d_amont"]),
++    # --- N2, forme 400 (B1 de la vérification du lot 4 v2) ---
++    ("D-34", "crédit 400 non reconnu", AD,
++     [("    if statut == 400 and type_ == TYPE_REQUETE_INVALIDE and message_de_solde(corps):\n", "    if False:\n")],
++     [T + "TestArret13::test_credit_400_message_de_solde_leve_13", D + "TestCredit400::test_regle_stricte"]),
++    ("D-35", "tout 400 de requête invalide lu comme crédit", AD,
++     [("    if statut == 400 and type_ == TYPE_REQUETE_INVALIDE and message_de_solde(corps):\n",
++       "    if statut == 400 and type_ == TYPE_REQUETE_INVALIDE:\n")],
++     [T + "TestArret13::test_400_d_un_autre_message_n_est_pas_13"]),
++    ("D-36", "fragment lu sous tout statut", AD,
++     [("    if statut == 400 and type_ == TYPE_REQUETE_INVALIDE and message_de_solde(corps):\n",
++       "    if message_de_solde(corps):\n")],
++     [T + "TestArret13::test_fragment_sous_un_autre_statut_ou_type_n_est_pas_13"]),
++    ("D-37", "type non exigé pour le 400", AD,
++     [("    if statut == 400 and type_ == TYPE_REQUETE_INVALIDE and message_de_solde(corps):\n",
++       "    if statut == 400 and message_de_solde(corps):\n")],
++     [T + "TestArret13::test_fragment_sous_un_autre_statut_ou_type_n_est_pas_13"]),
++    ("D-38", "comparaison avec la casse", AD,
++     [("    return isinstance(message, str) and FRAGMENT_CREDIT_400.casefold() in message.casefold()\n",
++       "    return isinstance(message, str) and FRAGMENT_CREDIT_400 in message\n")],
++     [D + "TestCredit400::test_regle_stricte"]),
++    ("D-39", "message recopié dans la fiche de la tentative", AD,
++     [("            tentative = dict(base, servie=False, raison_arret=None, categorie=None, classe_erreur=classe,\n",
++       "            tentative = dict(base, servie=False, raison_arret=None, categorie=None, classe_erreur=classe, "
++       "message=str(corps_erreur),\n")],
++     [D + "TestCredit400::test_message_garde_a_la_seule_reponse_brute"]),
++    ("R-29", "crédit 400 hors de la liste du n° 13", AG,
++     [("ERREURS_CREDIT = (ad.ERREUR_CREDIT_AMONT, ad.ERREUR_CREDIT_AMONT_400, ad.ERREUR_PLAFOND_RELAIS)",
++       "ERREURS_CREDIT = (ad.ERREUR_CREDIT_AMONT, ad.ERREUR_PLAFOND_RELAIS)")],
++     [T + "TestArret13::test_credit_400_message_de_solde_leve_13",
++      T + "TestArret13::test_credit_400_en_repli_leve_13_sans_second_repli"]),
+     # --- A3 ---
+     ("D-16", "coût inconnu compté à zéro", AD,
+      [("        cout = float(budget_usd) if inconnu else cout\n        tentative = dict(base, servie=",
+@@ -298,7 +328,7 @@
+ 
+ def main(argv):
+     if len(argv) != 1:
+-        print("usage : mutations_na_lot4_v2.py JOURNAL.json", file=sys.stderr)
++        print("usage : mutations_na_lot4_v3.py JOURNAL.json", file=sys.stderr)
+         return 2
+     journal = argv[0]
+     if os.path.exists(journal):
+@@ -308,8 +338,8 @@
+     for rel in MODULES + ESSAIS_COPIES:
+         with open(os.path.join(ORCH, rel), "rb") as f:
+             empreintes[rel] = hashlib.sha256(f.read()).hexdigest()
+-    racine_tmp = tempfile.mkdtemp(prefix="mutations-na-lot4-v2-")
+-    rendu = {"version": "journal-mutations-na-lot4-v2", "python": sys.version.split()[0], "fichiers": empreintes,
++    racine_tmp = tempfile.mkdtemp(prefix="mutations-na-lot4-v3-")
++    rendu = {"version": "journal-mutations-na-lot4-v3", "python": sys.version.split()[0], "fichiers": empreintes,
+              "mutations": []}
+     try:
+         base = os.path.join(racine_tmp, "base")
