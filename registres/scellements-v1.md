@@ -87,3 +87,5 @@
 | ERRATUM-V5-TEXTE-SERVI-V3-DEVIS-V8-MONDES-SEUIL-MONITEURS | 2026-11-21T10:52:12Z | prereg/ideation-seuil-moniteurs-v1/scellement-erratum-v5-texte-servi-v3-devis-v8-mondes-plantes-v1.md | dfe0aace22a2e0eb4fa48656556e3be7ef532801304323b9a95c6f99dffae171 |
 | ERRATUM-1-SCELLEMENT-CONCEPTION-SEUIL-MONITEURS | 2026-11-21T10:58:37Z | prereg/ideation-seuil-moniteurs-v1/scellement-conception-course-seuil-et-moniteurs-v1-erratum-1.md | 64e06388e12c7e14d1622e0610a51307577e2692b07da571af7361ecaf5cddd2 |
 | ADDITIF-1-V2-DEVIS-B5F | 2026-11-21T11:42:44Z | docs/notes/barreau5-resolution-v1/plan-avant-entretien/scellement-additif-1-v2-devis-v1.md | 02d1c52f02cb2a269b1c6b7ee74d0e129c663cfd03832a938ec7b2008780028f |
+| SCELLEMENT-T08 | 2026-11-22T22:27:03Z | prereg/T0.8-bases-boite-noire-v0-v1.md | 0855ae06d8253ef7609f2418cef4c46c34626b07161317f0b182604b1532adad |
+| CODE-T08 | 2026-11-22T22:27:05Z | docs/notes/t08-code-aligne-v1/empreintes-code-t08-bd32f9a5-v1.md | bd32f9a5c3edede9ac2fad36946750b322303687 |
