@@ -445,3 +445,17 @@ def test_integration_magasin_jeu_lecture(tmp_path):
     assert all(q.shape == (1, D) for q in ja.sequences)
     with pytest.raises(GardeArret, match="désalignées"):
         lc.jeu_depuis_series([(S, None, None)], {f"S/{c}": 0 for c in cles[:-1]}, cles)
+
+
+def test_ligne_non_calculable_par_tirages_degeneres(tmp_path):
+    """Garde des tirages dégénérés dans une ligne : positives concentrées dans une seule tâche d'épreuve."""
+    lignes, et = _lignes(n_taches=12, par_tache=4, signal=3.0)
+    for k in et:
+        et[k] = int(k.startswith("s/t0-") and k.endswith(("a1", "a3"))) or int(k.startswith("s/t1-") and k.endswith("a1"))
+    j = lc.construire_jeu(lignes, et)
+    r = lc.lire_ligne(lc.Configuration("difference_moyennes_appariee", k_externes=2), j, np.random.default_rng(0),
+                      tmp_path / "j.jsonl", "x")
+    assert r["etat"] == "non calculable" and "dégénérés" in r["motif"]
+    sain = lc.lire_ligne(lc.Configuration("difference_moyennes_appariee"), lc.construire_jeu(*_lignes()),
+                         np.random.default_rng(0), tmp_path / "k.jsonl", "y")
+    assert sain["etat"] == "calculée" and sain["intervalle_taches"]["etat"] == "calculé"

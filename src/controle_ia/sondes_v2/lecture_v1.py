@@ -521,7 +521,9 @@ def lire_ligne(conf: Configuration, jeu: Jeu, rng: np.random.Generator, journal,
     d'apprentissage, gel (empreinte écrite au journal), puis seulement ouverture de l'épreuve et scores.
     Rend, par pli : réglage et table interne, empreinte de la sonde gelée, aire d'apprentissage (mémorisation), aire
     d'épreuve, prédicteurs triviaux ; et, pour la ligne : aire moyenne des plis [provisoire (Q11)], scores d'épreuve
-    par identifiant de ligne, état « non interprétable » ou non. Avec `rendre_gels`, rend aussi {pli : SondeGelee}
+    par identifiant de ligne, état « non interprétable » ou non ; intervalle par blocs de tâches sur les scores
+    d'épreuve mis ensemble (`intervalle_blocs`, scores de sondes de plis différents), la ligne devenant « non
+    calculable » si plus de 1 % des tirages sont dégénérés. Avec `rendre_gels`, rend aussi {pli : SondeGelee}
     (objets en mémoire, jamais écrits)."""
     conf.verifier()
     plis = plis_externes(jeu, conf.k_externes, rng, engagement)
@@ -555,13 +557,24 @@ def lire_ligne(conf: Configuration, jeu: Jeu, rng: np.random.Generator, journal,
              "plis": sortie_plis}
         return (r, gels) if rendre_gels else r
     aire = float(np.mean(aires))
+    intervalle = None
+    if garder_scores:
+        ids_epr = [jeu.ids[i] for p in plis for i in p["epr"]]
+        idx_epr = np.array([i for p in plis for i in p["epr"]])
+        intervalle = intervalle_ou_non_calculable(np.array([scores[i] for i in ids_epr]), jeu.y[idx_epr],
+                                                  jeu.taches[idx_epr], conf.n_tirages_blocs,
+                                                  entier_de_graine(rng))
+        if intervalle["etat"] != "calculé":
+            r = {"nom": nom, "etat": "non calculable", "motif": f"intervalle par tâches : {intervalle['motif']}",
+                 "plis": sortie_plis, "intervalle_taches": intervalle}
+            return (r, gels) if rendre_gels else r
     sep_triv = {}
     for k in PREDICTEURS_TRIVIAUX:
         vals = triviaux_plis[k]
         sep_triv[k] = None if any(v is None for v in vals) else float(np.mean(vals))
     non_interp = [k for k, v in sep_triv.items() if v is not None and v >= aire]
     r = {"nom": nom, "etat": "calculée", "famille": conf.famille, "aire": aire, "aires_plis": aires,
-         "memorisation": float(np.mean([p["aire_apprentissage"] for p in sortie_plis])),
+         "intervalle_taches": intervalle, "memorisation": float(np.mean([p["aire_apprentissage"] for p in sortie_plis])),
          "triviaux": sep_triv, "non_interpretable": bool(non_interp), "triviaux_qui_separent": non_interp,
          "plis": sortie_plis, "scores_epreuve": scores if garder_scores else None,
          "plis_ids": {p["nom"]: [jeu.ids[i] for i in p["epr"]] for p in plis} if garder_scores else None}
