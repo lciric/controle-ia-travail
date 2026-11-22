@@ -466,7 +466,7 @@ FIN_GARDES
 ) || { journal "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1)"; consigner_arret "gardes de l'instance"; refus "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1 | cut -c1-300)"; }
 journal "$GARDES"
 # T08 : suite ciblée et figée de T0.8 (liste de fichiers à l'empreinte et au nombre attendu écrits en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="@@LISTE_SHA256@@"; ATTENDUS="@@ATTENDUS@@"; FICHIERS_TESTS=""   # T08
+LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="5b6db29b7434c3bd38c6178d04b790572e96f767c1ba36410694fcb2a0000c2c"; ATTENDUS="231"; FICHIERS_TESTS=""   # T08
 [ -z "${TESTS_ARGS:-}" ] || ATTENDUS="${TESTS_ATTENDUS:-}"   # T08 : répétition jouet seulement (TESTS_ARGS refusé hors jouet)
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
