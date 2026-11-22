@@ -1,0 +1,129 @@
+[
+ {
+  "epreuve": "v2 : vrai, faux (dont transformée inclinée), malformé par construction",
+  "attendu": {
+   "G1-a-01": "vraie",
+   "G1-a-02": "fausse",
+   "G1-b-01": "fausse",
+   "G2-a-01": "rien",
+   "G2-b-01": "vraie",
+   "G2-b-02": "fausse"
+  },
+  "rendu": {
+   "G1-a-01": "vraie",
+   "G1-a-02": "fausse",
+   "G1-b-01": "fausse",
+   "G2-a-01": "rien",
+   "G2-b-01": "vraie",
+   "G2-b-02": "fausse"
+  },
+  "tenue": true
+ },
+ {
+  "epreuve": "v2 : invariance aux verdicts permutés",
+  "attendu": true,
+  "rendu": true,
+  "tenue": true
+ },
+ {
+  "epreuve": "v2 : canari absent de la sortie",
+  "attendu": false,
+  "rendu": false,
+  "tenue": true
+ },
+ {
+  "epreuve": "v2 : mutation de la liste blanche (promue)",
+  "attendu": 3,
+  "rendu": 3,
+  "tenue": true
+ },
+ {
+  "epreuve": "champ « promu » glissé dans l'arbre (racine), sur la v1",
+  "attendu": "refus 3 si listé, sinon constaté",
+  "rendu": {
+   "code": 0,
+   "sortie_ecrite": true,
+   "nom_dans_la_liste_noire_v1": false
+  },
+  "tenue": null,
+  "constat": "le champ PASSE la v1"
+ },
+ {
+  "epreuve": "champ « promu » glissé dans l'arbre (racine), sur la v2",
+  "attendu": "refus 3, aucune sortie",
+  "rendu": {
+   "code": 3,
+   "sortie_ecrite": false
+  },
+  "tenue": true
+ },
+ {
+  "epreuve": "champ « rang » glissé dans l'arbre (si_sinon), sur la v1",
+  "attendu": "refus 3 si listé, sinon constaté",
+  "rendu": {
+   "code": 0,
+   "sortie_ecrite": true,
+   "nom_dans_la_liste_noire_v1": false
+  },
+  "tenue": null,
+  "constat": "le champ PASSE la v1"
+ },
+ {
+  "epreuve": "champ « rang » glissé dans l'arbre (si_sinon), sur la v2",
+  "attendu": "refus 3, aucune sortie",
+  "rendu": {
+   "code": 3,
+   "sortie_ecrite": false
+  },
+  "tenue": true
+ },
+ {
+  "epreuve": "champ « log_w » glissé dans l'arbre (softmax_feuille), sur la v1",
+  "attendu": "refus 3 si listé, sinon constaté",
+  "rendu": {
+   "code": 0,
+   "sortie_ecrite": true,
+   "nom_dans_la_liste_noire_v1": false
+  },
+  "tenue": null,
+  "constat": "le champ PASSE la v1"
+ },
+ {
+  "epreuve": "champ « log_w » glissé dans l'arbre (softmax_feuille), sur la v2",
+  "attendu": "refus 3, aucune sortie",
+  "rendu": {
+   "code": 3,
+   "sortie_ecrite": false
+  },
+  "tenue": true
+ },
+ {
+  "epreuve": "champ « log_w_max » glissé dans l'arbre (racine), sur la v1",
+  "attendu": "refus 3 si listé, sinon constaté",
+  "rendu": {
+   "code": 3,
+   "sortie_ecrite": false,
+   "nom_dans_la_liste_noire_v1": true
+  },
+  "tenue": true,
+  "constat": null
+ },
+ {
+  "epreuve": "champ « log_w_max » glissé dans l'arbre (racine), sur la v2",
+  "attendu": "refus 3, aucune sortie",
+  "rendu": {
+   "code": 3,
+   "sortie_ecrite": false
+  },
+  "tenue": true
+ },
+ {
+  "epreuve": "v2 : source réelle au chemin cité",
+  "attendu": "calcul si présente",
+  "rendu": {
+   "code": 2,
+   "present": false
+  },
+  "tenue": null
+ }
+]
