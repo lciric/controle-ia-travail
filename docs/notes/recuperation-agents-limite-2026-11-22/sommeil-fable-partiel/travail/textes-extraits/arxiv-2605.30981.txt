@@ -1,0 +1,1957 @@
+
+=== PAGE 1 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers:
+Formalization and Measurement
+Riju Marwah 1 2 Ritvik Garimella 2 Vishal Pallagani 2 Atishay Jain 2 3 Michael Stewart 2 Amit Sheth 2 4
+
+Abstract
+
+and context-heavy workflows (Liu et al., 2023). Practitioners observe loss of instruction adherence, growing repetition,
+and unstable token entropy, often without a realtime signal
+that a generation is deteriorating (Holtzman et al., 2020).
+This lack of runtime transparency is particularly problematic
+in long-horizon production deployments such as multi-step
+reasoning, tool use, and dialogue, where small deviations
+accumulate into factual errors or unsafe outputs(Dziri et al.,
+2023). Existing mitigations largely operate at training time
+or via offline evaluation and do not indicate when a specific
+generation becomes unreliable (Su et al., 2021).
+
+arXiv:2605.30981v1 [cs.CL] 29 May 2026
+
+Autoregressive language models frequently degrade during long-horizon generation, producing
+repetitive text, losing instruction adherence, and
+exhibiting unstable entropy. Despite the prevalence of these failures, practitioners lack online diagnostics to detect them in real-time as they occur.
+We formalize this degradation as cognitive fatigue,
+a measurable generation-time state characterized
+by decay in attention to the original prompt, representational drift, and entropy miscalibration. We
+introduce the Fatigue Index (FI), a lightweight,
+model-agnostic diagnostic that aggregates these
+three signals under explicit axioms (monotonicity,
+boundedness, interpretability) enabling reliable
+runtime monitoring. Across nine models (1B–
+13B parameters), FI trajectories exhibit structured
+temporal dynamics, predict task degradation (AUROC = 0.95) and repetition (ρ = 0.94), and reveal non-monotonic scaling behavior: instructiontuned models below 3B exhibit faster collapse
+than base models, with this trend reversing at 7B.
+Stress analyses further show that FI onset accelerates under longer contexts, middle-positioned
+evidence, and reduced numerical precision. These
+results establish cognitive fatigue as a coherent
+and measurable phenomenon, and position FI as a
+principled tool for runtime reliability monitoring
+in production LLM systems.
+
+We study this phenomenon as cognitive fatigue in LLMs:
+a progressive, within-run degradation in instruction adherence, representation stability, and predictive calibration. We
+operationalize fatigue using three lightweight inference-time
+signals: decay in attention to the prompt, embedding drift,
+and deviation of next-token entropy from a healthy range.
+Each signal corresponds to an interpretable failure mode
+and requires no retraining or modification of model weights.
+To make these signals actionable, we introduce the Fatigue Index (FI), a normalized and interpretable aggregation
+grounded in explicit axioms that ensure stability and comparability for online monitoring. We take a foundational
+stance, asking whether cognitive fatigue can be rigorously
+defined and reliably measured. We empirically validate FI
+through token-level trajectories, predictive alignment with
+task accuracy and error proxies, and scaling analyses under long-context (varying input length) stress for models
+ranging from 1B to 13B. We focus on models up to 13B to
+balance diagnostic sensitivity with experimental tractability
+across diverse architectures.
+
+1. Introduction
+
+Contributions.
+
+Large Language Models (LLMs) perform well on short
+prompts, but systematically degrade during long generations
+
+1. A formalization of cognitive fatigue for nine decoderonly models grounded in three token-level, modelagnostic signals measurable at inference time.
+2. The Fatigue Index (FI) with axioms & properties that justify its form and enable interpretable, stable monitoring.
+3. Empirical validation that FI predicts quality-relevant outcomes and is robust across prompts, seeds, lengths, and
+model sizes; and a hysteresis-based alerting scheme with
+fewer false triggers.
+
+1
+
+Guru Gobind Singh Indraprastha University, India 2 Artificial
+Intelligence Institute, University of South Carolina, USA 3 Indian
+Institute of Technology, Kanpur, India 4 Indian AI Research Organization, India. Correspondence to: Riju Marwah <marwah.riju@gmail.com>.
+Proceedings of the 43 rd International Conference on Machine
+Learning, Seoul, South Korea. PMLR 306, 2026. Copyright 2026
+by the author(s).
+
+1
+
+
+=== PAGE 2 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+(a) Inputs
+Prompt +
+Context
+Query text, fewshot examples,
+system prompt
+
+(b) Measurement Core
+
+(d) Evidence & Findings
+
+Lightweight Inference-time Signals
+
+HotpotQA, SQuAD, TriviaQA
+
+Prompt Attention Aₜ Φₐ(A)
+
+Architecture,
+quantization,
+sampling
+strategy
+
+Probes
+Attention logits,
+hidden states
+(per decoding
+step)
+
+Predictive Validity
+
+Metrics: EM/F1, Repetition, Latency
+
+Decay of cross-attention to prompt tokens
+
+⇒
+
+FI ↑
+F1 ↓ , Repetition ↑ (Spearman ρ, AUROC)
+Validated on HotpotQA, SQuAD, TriviaQA across 9 models
+
+Evaluation Only – Not used to compute FI
+
+Entropy Deviation Eₜ Φₑ(E)
+Model Family
+& Decoding
+
+Empirical Validation
+
+Evaluation Data
+
+Fatigue Index
+
+Shift from baseline token distribution entropy
+
+Precision & Quantization
+
+⇒
+
+FI = wₐΦₐ(A) + wₑΦₑ(E) + wdΦd(D)
+
+Embedding Drift Dₜ Φd(D)
+
+FP16 vs. 4-bit quantization
+Faster entropy collapse
+4-bit onset earlier and steeper than FP16
+
+Signals fused into Fatigue Index FI
+FIₜ in [0,1], computed online at each decoding step t
+wₐ + wₑ + wd = 1
+
+Cosine drift of hidden-state representations
+
+Long-Context Stress
+
+⇒
+
+Context Length ↑
+Earlier FI onset
+Tested: 192-1,446 Token Contexts
+
+(c) Axioms & Properties
+Monotonicity
+(Worsening
+signals ↑ FI)
+
+1
+
+Scale
+Invariance
+(Unit-free)
+
+2
+
+3
+Boundedness
+(FI
+[0,1])
+
+∈
+
+4
+Stability
+(Hysteresis)
+
+Compositionality
+(Interpretable
+weights)
+
+5
+
+Scaling with Model Size
+Non-monotonic FI onset. Base vs. Instruct models
+Instruct tuning delays FI onset
+
+Figure 1. Overview of the cognitive fatigue measurement framework. (a) A prompt and context are fed to a decoder-only model,
+with probes extracting attention logits and hidden states. (b) Three signals are computed online at each decoding step: prompt-attention
+decay, entropy deviation, and embedding drift, normalized and aggregated into the Fatigue Index (FI). Evaluation datasets are used
+only to validate FI, not to compute it. (c) FI is grounded in five axioms: monotonicity, scale invariance, boundedness, stability, and
+compositionality. (d) FI is validated against repetition and F1 drop, precision stress (FP16 vs. 4-bit), long-context (varying input length)
+stress, and scaling behavior across nine models from 1B to 13B parameters.
+
+2. Related Work
+
+a healthy entropy band as one component of a broader notion
+of model fatigue rather than as a control signal. Farquhar
+et al. (2024) introduce semantic entropy for hallucination
+detection, and surveys by Anh-Hoang et al. (2025) and
+Alansari & Luqman (2025) categorize detection methods
+into token-level uncertainty estimation and self-consistency
+based approaches, whereas our framework enables continuous monitoring during generation by combining entropy
+with attention-based and drift-based signals. Joglekar et al.
+(2025) train models to self-report policy violations through
+explicit confessions, which rely on eliciting introspective
+behaviors, while we directly measure internal dynamics
+from attention patterns, hidden representations, and output
+distributions. Li et al. (2023) introduce Inference-Time Intervention (ITI) to improve factuality by shifting activations
+along truth-correlated directions, and subsequent work extends this paradigm to cognitive reasoning steering (CREST)
+(Kadem & Zheng, 2026) and to prototype-based dynamic
+steering (Kayan & Zhang, 2025), whereas our contribution
+is purely diagnostic and provides guidance on when and
+where such interventions may be most beneficial. Overall,
+we uniquely aggregate three complementary signals into
+a single axiomatic index that is measurable online and requires no retraining, thereby unifying previously isolated
+symptoms of long-horizon degradation into a coherent and
+interpretable diagnostic.
+
+Liu et al. (2023) show that language models exhibit systematic performance degradation when relevant information appears in the middle of long contexts, characterizing positional bias at the task level, whereas we introduce
+token-level diagnostics that are measurable online during
+generation. Su et al. (2021) introduce RoPE, which encodes positional information through rotation matrices, and
+Peng et al. (2023) build on this idea by proposing YaRN,
+which combines NTK-by-parts interpolation with attention
+temperature scaling to extend effective context windows.
+In contrast, we identify the naturally decaying inter-token
+dependencies induced by RoPE as a contributing factor to
+attention dilution and increased stress under long-context
+conditions. Zhang et al. (2025) propose Recursive Language
+Models (RLMs), which treat prompts as external environments and rely on recursive sub-calls to process contexts
+beyond fixed window limits, while our work focuses on measuring the internal degradation that arises during standard
+autoregressive decoding. Holtzman et al. (2020) characterize neural text degeneration and propose nucleus sampling,
+and Welleck et al. (2020) introduce unlikelihood training to
+reduce repetition, whereas we operationalize degeneration
+as an online state that can be monitored through entropy
+and distributional drift without modifying training or decoding. Braverman et al. (2020) demonstrate that language
+models are often miscalibrated and that their entropy rates
+drift upward over time, and Zhang et al. (2024) and Li et al.
+(2024b) propose entropy-based dynamic temperature adjustment strategies for decoding, while we treat deviations from
+
+Research Question 1
+Can cognitive fatigue be formally defined and reliably
+measured?
+
+2
+
+
+=== PAGE 3 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+3. Cognitive Fatigue: Definition & Signals
+
+eracy), or erratically uncertain (high-entropy). Next-token
+entropy provides a direct view of this calibration state at
+inference time. (Holtzman et al., 2020)
+
+We define cognitive fatigue in large language models as the
+gradual degradation of coherence, calibration, and reliability
+during extended autoregressive decoding. Unlike isolated
+errors or random noise, fatigue is systematic: the model
+progressively loses focus on the original instructions, its
+internal hidden states drift from their initialization, and its
+output distribution collapses toward overconfident, repetitive continuations. Importantly, this phenomenon is not
+rare or adversarial, it arises naturally from autoregressive
+transformer decoders at long horizons.
+
+We compute the Shannon entropy of the next-token softmax distribution. Entropy within a calibrated range indicates stable generation; persistent low values indicate
+over-confidence and repetitive degeneration. In contrast,
+abnormally high entropy signals indecision.
+3.2. Fatigue Index: Definition, Normalization, and
+Weighting
+
+We formalize this fatigue as a runtime risk indicator measured at every decoding step, rather than a subjective impression. We operationalize fatigue through three lightweight,
+token-level signals, each capturing a different facet of degradation. Together, these signals form the foundation of the
+fatigue index, enabling runtime monitoring and intervention.
+
+Individual signals are insufficient: attention-to-prompt can
+drop momentarily without failure, embedding drift grows
+slowly even in stable runs, and entropy fluctuates with content. A usable diagnostic must therefore integrate these
+signals into a single interpretable and comparable metric.
+We require a real-time control signal imposing constraints
+on complexity: the aggregator must be computationally
+cheap, transparent, and robust to perturbations. We adopt
+a linear aggregator over normalized signals, prioritizing
+interpretability and inspectability over statistical optimality.
+
+3.1. Signals
+We define three complementary signals, each directly observable at inference time and corresponding to a distinct
+failure mode. All signals are computed per token.
+
+Formally, we defined the Fatigue Index at decoding step t as
+
+Attention-to-prompt (attention decay). A primary failure mode in long-horizon generation is loss of instruction
+adherence: as decoding progresses, the model may increasingly condition on its own recent outputs rather than the
+original task specification. Transformer decoders expose
+this phenomenon through attention weights. As the context
+grows, attention mass allocated to the initial prompt decay
+even with relevant instruction. (Li et al., 2024a)
+
+F It = wA ϕA (At ) + wD ϕD (Dt ) + wE ϕE (Et ),
+
+(1)
+
+where ϕA , ϕE , ϕD ∈ [0, 1] are monotone normalization
+maps and Dt , Et are the raw signal values, and wA + wD +
+wE = 1. Higher values indicate greater fatigue.
+The normalization maps convert heterogeneous raw signals into a consistent, unit-free scale, enabling meaningful aggregation. We adopt theory-guided fixed weights
+wA = 0.40, wE = 0.35, wD = 0.25, empirically validated
+in Section 7. The ordering wA ≥ wE ≥ wD encodes domain priors: (i) wA : prompt attention most directly governs
+instruction following (Qin et al., 2024); (ii) wE : entropy
+governs degeneracy and repetition (Holtzman et al., 2020);
+(iii) wD : drift signals longer-horizon instability but is noisier (Li et al., 2024a). With frozen discretizations of these
+weights, all experiments are executed for comparability and
+to avoid adaptive tuning. Weight ordering reflects the intended diagnostic role of each signal, not its standalone
+power as a degeneration detector; weight sensitivity analysis and learned-weight comparisons remain open extensions.
+For long-horizon degradation, FI is interpreted as an instantaneous risk score. Once calibration is fixed, FI admits a
+constant scale across runs and models since each term is
+normalized and bounded. Crucially, FI reflects the internal reliability state of the generation process. More complex aggregators would conceal attribution and complicate
+online use. In contrast, FI enables attribution by exposing per-signal contributions and supports simple stabilizing
+mechanisms such as hysteresis, reducing false alerts.
+
+We compute the mean last-layer attention weight from the
+current token to the tokens in initial prompt slice. A declining trend indicates that the model is increasingly underutilizing its instructions.
+Embedding drift. Long-horizon decoding repeatedly updates a shared residual stream, allowing small perturbations
+to accumulate over time. As a result, hidden states gradually
+drifts away from the representational subspace induced by
+the prompt, even when the generated text remains locally
+fluent. This internal drift precedes surface level incoherence
+and repetition without immediate textual signals. (Li et al.,
+2024a)
+At each step t, we measure the Euclidean distance Dt =
+|ht − h0 |2 , where ht is the hidden state at step t and h0 is
+the hidden state of the last prompt token. Persistent growth
+in Dt indicates that the model’s internal representation is diverging from the task context, capturing a latent degradation
+process that is not directly observable from surface text.
+Entropy Collapse. During extended generation, models
+often become overconfident (low-entropy,repetition, degen3
+
+
+=== PAGE 4 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+4. Axioms of the Fatigue Index
+
+A5 (Compositionality). Fatigue should decompose into
+interpretable per-signal contributions:
+X
+Ft =
+wk gk (sk,t ),
+wk ≥ 0,
+
+We specify axioms that any admissible online fatigue measure should satisfy. These axioms are normative design
+requirements, they define what a well-behaved runtime diagnostic should do, and motivate the structure of the Fatigue
+Index accordingly. They are not empirically verified laws of
+model internals, nor do they constitute a mechanistic theory
+of why degradation occurs; rather, they constrain the space
+of valid online fatigue measures to those with interpretable,
+stable, and directionally correct behavior.
+
+k
+
+where sk,t ∈ {At , Et , Dt } and gk are monotone maps. This
+enables attribution and controllable weighting of failure
+modes.
+Together, these axioms require directional correctness, scale
+invariance, bounded range, temporal stability, and interpretability. They constrain the space of valid online fatigue
+measures without uniquely specifying a construction; the
+Fatigue Index defined in Section 3.2 is one such realization. Moreover, if a fatigue measure is additive and satisfies
+A1–A3 and A5, it admits a representation as a weighted
+sum of bounded, monotone signal transforms (Theorem E.1,
+Appendix E).
+
+Let At denote prompt-directed attention, Et output entropy,
+and Dt representation drift at decoding step t. Let E ⋆
+denote the target entropy (calibrated range center). Let Ft =
+F (At , Et , Dt ) be any candidate fatigue score computed
+online from these signals.
+A1 (Monotonicity). Fatigue must respond directionally
+to worsening reliability signals:
+
+Research Question 2
+
+A′t ≤ At ⇒ F (A′t , Et , Dt ) ≥ F (At , Et , Dt ),
+
+Which architectural and numerical factors are associated with the emergence of cognitive fatigue?
+
+|Et′ −E ⋆ | ≥ |Et −E ⋆ | ⇒ F (At , Et′ , Dt ) ≥ F (At , Et , Dt ),
+Dt′ ≥ Dt ⇒ F (At , Et , Dt′ ) ≥ F (At , Et , Dt ).
+
+5. Mechanisms of Cognitive Fatigue
+
+Thus, reduced attention, increased entropy deviation, or
+increased representational drift must monotonically increase
+fatigue.
+
+5.1. Where Fatigue Creeps In
+Cognitive fatigue does not arise from a single failure mode,
+but from interacting architectural and numerical pressures
+that accumulate during long-horizon decoding. Table 1
+summarizes the primary mechanisms, the signals they affect,
+and the empirical evidence supporting each.
+
+A2 (Scale Invariance). Monotone reparameterizations of
+the raw signals must preserve fatigue ordering:
+rank(F (ϕA (A), ϕE (E), ϕD (D))) = rank(F (A, E, D)) ,
+
+5.2. Architectural Stress Analyses (Empirical Probes)
+for any strictly monotone maps ϕA , ϕE , ϕD . This ensures that fatigue ordering is preserved under monotone
+re-parameterizations of the raw signals, it does not imply
+that absolute FI values are invariant across decoding regimes.
+In the implemented metric (Section 6.2), fixed normalization
+maps choose one calibrated representation for boundedness
+and thresholdability; scale invariance holds in the ordinal
+sense, not as universal comparability of absolute values.
+
+To identify architectural pressures associated with fatigue,
+we perform controlled ablations varying context length, positional bias, and numerical precision.
+Context-length stress. We vary neutral filler length while
+holding question and evidence constant, thereby isolating
+sequence length effects independent of task difficulty. As
+show in Figure 2, longer contexts are associated with earlier
+and more sustained collapse of prompt-directed attention.
+Embedding drift increases in all conditions but becomes
+more variable as length grows, while entropy exhibits larger
+fluctuations. These trends are consistent with attention dilution and the accumulation of residual deviations under
+extended sequences.
+
+A3 (Boundedness). Fatigue lies on a fixed, interpretable
+scale: Ft ∈ [0, 1]. This supports stable thresholds and consistent online monitoring.
+A4 (Temporal Stability). Small, transient perturbations
+in the underlying signals should not induce large, instantaneous changes in fatigue:
+
+Positional Sensitivity. We place identical evidence at front,
+middle and end positions with constant length. Figure 3
+shows front-positioned evidence receives higher attention
+farthest in token distance to the decoding head. This positional bias explains systematic under-utilization of late
+context, accelerating prompt-forgetting.
+
+∥Ft − Ft−1 ∥ ≤ L ∥(At , Et , Dt ) − (At−1 , Et−1 , Dt−1 )∥,
+for some L > 0. This property prevents spurious oscillations under inference-time noise.
+4
+
+
+=== PAGE 5 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+Mechanism
+
+Description
+
+Observed Effect
+
+Evidence / Citation
+
+Attention dilution
+(architectural
+pressure)
+
+As sequence length grows, softmax attention mass over early
+prompt tokens is diluted; positional biases (RoPE, ALiBi) further favor recent tokens.
+Errors compound in the shared
+residual stream; deviations propagate rather than cancel due to
+autoregressive updates and LayerNorm dynamics.
+Autoregressive training favors
+sharp predictions; greedy or lowtemperature decoding amplifies
+overconfidence, especially under
+quantization.
+Long contexts strain numerical
+precision in KV caches; RoPE
+phase saturation without scaling
+degrades long-range recall.
+Temperature, top-p, repetition
+penalties reshape entropy and attention dynamics; extreme settings can accelerate collapse.
+
+Declining attention to prompt/evidence; worse F1 when evidence is
+distant from the decode head.
+
+Positional ablation (front/middle/end); (Vaswani
+et al., 2017; Press et al.,
+2022; Su et al., 2021)
+
+Monotonic increase in embedding
+drift Dt ; higher drift aligns with
+repetition and lower F1.
+
+Drift
+trajectories;
+predictive-validity
+analysis; (He et al., 2016;
+Ba et al., 2016; Xiong
+et al., 2020)
+Entropy trajectories; precision ablation; (Bengio
+et al., 2015; Huszár, 2016;
+Dettmers et al., 2023; Lin
+et al., 2023)
+Context-length
+stress
+tests; (Press et al., 2022;
+Chen et al., 2023; Peng
+et al., 2023)
+Controlled
+decoding
+(fixed top-p = 0.95);
+(Holtzman et al., 2020;
+Welleck et al., 2020; Li
+et al., 2016)
+
+Residual drift
+(state accumulation)
+
+Entropy collapse
+
+Context length stress
+
+Decoding hyperparameters
+
+Entropy leaves a healthy band;
+repetitive and degenerate outputs
+late in generation.
+
+Biased attention scores and unstable output distributions as length
+increases.
+Earlier entropy collapse or repetition under long horizons.
+
+Table 1. Architectural and numerical mechanisms associated with cognitive fatigue in decoder-only language models, the signals they
+affect, and empirical evidence linking them to long-horizon degradation.
+
+6.1. Per-token Signals
+
+Precision and quantization. For isolation of numerical
+effects, we compare FP16 and 4-bit NF4 decoding under
+matched prompts and seeds. Attention and drift trajectories remain similar, but entropy exhibits deeper, more
+variable collapse under quantization (Figure 4). Reduced
+precision destabilizes predictive calibration rather than disrupting prompt focus or representation stability, increasing
+susceptibility to degeneration. Supplementary precision
+stress results on HotpotQA and TriviaQA are reported in
+Appendix D (Figure 9 and 10).
+
+Let t index generated tokens. All quantities are computed
+online with constant-time overhead.
+Prompt attention (At ). Mean last-layer attention mass
+allocated to a fixed prompt slice, reflecting continued conditioning on the instruction:
+
+At =
+
+These probes show fatigue arises from interacting architectural pressures: longer contexts dilute attention and amplify
+drift, positional bias suppresses late evidence, and reduced
+precision destabilizes entropy. These mechanisms explain
+signal trajectories in Section 7 and motivate FI as a composite diagnostic.
+
+H min(K,L
+X p)
+
+1 X
+H
+
+h=1
+
+Attnh (xt , xj ),
+
+(2)
+
+j=1
+
+with Lp as prompt length and K as prompt slice size.
+Output entropy (Et ). Shannon entropy of P (xt+1 | x≤t )
+computed from model logits, serving as a proxy for predictive calibration.
+
+6. Estimation of the Fatigue Index
+
+Embedding drift (Dt ). Euclidean distance from the final
+prompt state:
+
+We specify the inference-time computation of the Fatigue
+Index (FI) to enable reproducible implementation. This
+section defines the per-token signals, their normalization
+and aggregation, and the calibration procedure.
+
+Dt = ∥ht − h0 ∥2 ,
+
+(3)
+
+where h0 is the top-layer hidden state of the final prompt
+token.
+5
+
+
+=== PAGE 6 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+0.006
+0.004
+0.002
+0
+
+10
+
+20
+
+30
+
+40
+
+Step
+
+Nats
+
+0.000
+
+8
+7
+6
+5
+4
+3
+2
+1
+0
+
+50
+
+60
+
+Evidence Attention
+
+Embedding Drift
+len=1446
+len=192
+len=964
+
+0
+
+10
+
+20
+
+30
+
+Step
+
+40
+
+0.008
+
+50
+
+60
+
+20
+
+30
+
+Step
+
+40
+
+50
+
+0.002
+
+200
+150
+100
+50
+
+0
+
+20
+
+Step
+
+40
+
+60
+
+0
+
+0
+
+20
+
+Step
+
+40
+
+60
+
+Figure 3. Attention to evidence tokens as a function of their position in the prompt, measured over 60 generation steps. Evidence
+placed at the front of the context receives 5–10× higher mean
+attention than evidence placed in the middle or at the end, and this
+gap is stable across all steps, confirming a strong primacy bias that
+may cause the model to underweight late-context evidence during
+reasoning.
+
+len=1446
+len=192
+len=964
+10
+
+pos=front
+pos=middle
+pos=end
+
+250
+
+0.004
+
+0.000
+
+Entropy
+
+0
+
+0.006
+
+Evidence Distance
+
+300
+
+pos=front
+pos=end
+pos=middle
+
+Token distance
+
+len=1446
+len=192
+len=964
+
+L2 distance
+
+Mean attention
+
+0.008
+
+120
+100
+80
+60
+40
+20
+0
+
+Mean attention
+
+Attention to Prompt
+
+0.010
+
+60
+
+Figure 2. Effect of context length on attention, drift, and entropy
+trajectories across 60 steps. Longer contexts (len=1446) exhibit
+near-zero prompt attention throughout, indicating early attention
+collapse, while shorter contexts (len=192) maintain substantially
+higher attention. Embedding drift and entropy both show increased
+variability with context length, suggesting that longer inputs destabilize internal representations, which is a key failure mode to
+monitor in deployment.
+
+6.3. One-time Calibration and Implementation
+Calibration hyperparameters (entropy band, drift cap, and
+weights) are fixed from a small preliminary pass and then
+frozen before evaluation. Fixed default values for all hyperparameters are reported in Appendix A (Table 6). Last-layer
+attentions are obtained using eager attention. All normalization maps are stateless and incur negligible overhead.
+
+6.2. Normalization and Aggregation
+Raw signals are mapped to unitless penalties in [0, 1] using
+fixed monotone transforms:
+
+Research Question 3
+Does Fatigue Index reliably track long-horizon degradation and predict performance loss across models,
+prompts, and decoding settings?
+
+ϕA (At ) = 1 − clip(At , 0, 1),
+
+
+H − Et
+
+ ℓ
+if
+E
+<
+H
+,
+t
+ℓ
+
+
+
+ Hℓ
+
+
+ 0
+if Hℓ ≤ Et ≤ Hu , 0, 1
+ϕE (Et ) = clip
+,
+
+
+
+ Et − H u
+
+
+
+
+if Et > Hu ,
+β
+
+
+Dt
+ϕD (Dt ) = clip
+, 0, 1 ,
+κ
+
+7. Empirical Validation
+We evaluate whether the Fatigue Index (FI) behaves as a
+meaningful, general, and online indicator of generation-time
+degradation. Unless otherwise stated, all experiments use
+OPT-2.7B. We analyze 27,405 generated sequences drawn
+from three distinct domains: HotpotQA (reasoning) (Yang
+et al., 2018), TriviaQA (knowledge) (Joshi et al., 2017), and
+SQuAD (comprehension) (Rajpurkar et al., 2016).
+
+where clip(x, a, b)
+=
+min{max{x, a}, b} and
+(Hℓ , Hu , β, κ) are fixed from a small preliminary
+pass and then frozen for all reported experiments.
+
+7.1. Cross-Dataset Behavior of Fatigue
+
+Entropy is penalized only when it deviates from a fixed
+“healthy band,” capturing both overconfidence and excessive
+uncertainty. Drift is scaled by a fixed cap so that transient deviations remain small while persistent divergence saturates
+the signal.
+
+We examine whether fatigue is specific to a particular benchmark or whether it arises consistently across task domains.
+Figure 5 shows the mean FI trajectory as a function of generated token position for each dataset. Despite substantial
+differences in task structure and prompt style, FI exhibits
+a highly consistent accumulation pattern across all three
+domains. In each case, FI rises smoothly with generation
+length and approaches a similar asymptotic range.
+
+FI is computed via Eq. 1 with weights wA = 0.40, wE =
+0.35, and wD = 0.25. For online alerting, FI is smoothed
+over a short window and passed through hysteresis with
+distinct activation and deactivation thresholds, suppressing
+transient jitter without altering signal definitions.
+
+Table 2 reports the mean FI and repetition rates for each
+dataset. Mean FI values are tightly clustered around ≈
+6
+
+
+=== PAGE 7 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+Nats
+
+6
+4
+2
+0
+
+0
+
+10
+
+20
+
+30
+
+40
+
+Step
+
+50
+
+60
+
+100
+80
+60
+40
+20
+0
+
+4bit
+fp
+
+1.0
+0.8
+
+0
+
+10
+
+20
+
+30
+
+Step
+
+40
+
+50
+
+60
+
+Mean attention
+
+Attention to Prompt
+0.0088
+
+0.6
+0.4
+HotpotQA (Reasoning) (N=7405)
+TriviaQA (Knowledge) (N=10000)
+SQuAD (Comprehension) (N=10000)
+
+0.2
+
+0.0084
+4bit
+fp
+
+0.0080
+0.0076
+
+Universal Fatigue Trajectories Across Domains
+
+Embedding Drift
+
+Fatigue Index (FI)
+
+4bit
+fp
+
+L2 distance
+
+Entropy
+
+8
+
+0
+
+10
+
+20
+
+30
+
+Step
+
+40
+
+50
+
+0.0
+60
+
+0
+
+20
+
+40
+
+60
+
+Generated Token Position
+
+80
+
+100
+
+Figure 5. Universal fatigue trajectories across domains (OPT2.7B). Mean Fatigue Index (FI) over generated token positions
+for HotpotQA (reasoning), TriviaQA (knowledge), and SQuAD
+(comprehension). Shaded regions denote 95% confidence intervals.
+All three datasets exhibit a sharp FI rise within the first 5 tokens
+followed by a consistent logarithmic increase toward saturation
+near FI 0.94, indicating that output fatigue is a domain-agnostic
+phenomenon rather than a task-specific artifact.
+
+Figure 4. Effect of numerical precision (FP16 vs. 4-bit NF4) on entropy, attention, and embedding drift under matched prompts and
+seeds. Attention to prompt and embedding drift trajectories remain
+nearly identical across precisions, indicating that quantization does
+not disrupt prompt focus or representation stability. Entropy, however, exhibits deeper and more variable collapse under 4-bit NF4,
+suggesting that reduced precision primarily destabilizes predictive
+calibration and increases susceptibility to degeneration. Note: the
+4-bit NF4 entropy trajectory is reconstructed from paper-reported
+statistics due to a plotting error in the original experimental run;
+attention and drift curves are extracted directly from experimental
+output.
+
+exhibit low entropy. While Figure 5 demonstrates that FI
+achieves higher AUROC than entropy alone, this only partially addresses the concern regarding their correlation. FI
+is therefore best understood as a detector of long-sequence
+text generation, rather than as a comprehensive reliability
+metric for failures such as hallucinations or instruction drift.
+
+0.82, and higher FI coincides with elevated repetition. This
+consistency rules out dataset-specific artifacts and supports
+fatigue as a domain-agnostic degradation process intrinsic
+to long-horizon decoding.
+
+7.3. Online Stability
+For deployment, an online diagnostic must avoid excessive
+threshold oscillations. We therefore compare a naive threshold on FI with a hysteresis-based decision rule. Table 4
+reports the number of alert flips per generation.
+
+7.2. Predictive Validity
+We evaluate whether FI predicts repetition-based degeneration proxies; comprehensive EM/F1 forecasting is beyond
+the scope of the current analysis. Table 3 reports Spearman
+correlations between FI and repetition computed over the
+full generation (up to 120 tokens) and over only the first 20
+tokens.
+
+Across all datasets, hysteresis reduces jitter by more than
+91%. This demonstrates that FI supports stable online monitoring and is production-ready for real-time control or intervention policies without introducing spurious flickering
+behavior. Robustness of FI across random seeds and prompt
+styles is further analyzed in Appendix C1
+
+Across all datasets, FI exhibits strong correlation with failure. In contrast, correlations computed from the first 20
+tokens are substantially weaker. The low correlation of early
+tokens (ρ ≈ 0.4) compared to the full sequence (ρ > 0.8) is
+expected: degradation is a cumulative, non-Markovian process, and FI is designed to track trajectories rather than provide strong single-step early warnings. The full-trajectory
+correlation is therefore the primary supported claim; earlytoken correlation is reported to characterize the onset dynamics, not as a standalone predictive result.
+
+7.4. Benefit of Aggregation
+We test whether aggregation is necessary by comparing FI
+against its individual components (entropy, drift, and attention) in discriminating severe degeneration on HotpotQA.
+Table 5 reports AUROC values.
+On HotpotQA, the aggregated FI achieves an AUROC of
+0.978, significantly outperforming the strongest individual
+baseline (Drift: 0.951). Attention alone performs poorly as
+a standalone degeneration detector (AUROC = 0.31), yet
+it is assigned the highest weight because it most directly
+
+These results establish FI as a predictive signal of degeneration rather than a purely descriptive statistic. However,
+one limitation is that repetition ratio is not fully independent
+of entropy-based signals, since repetitive outputs tend to
+7
+
+
+=== PAGE 8 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+Table 2. Cross-dataset robustness. Mean FI and repetition rate (fraction of generated tokens that are exact n-gram repeats) across three
+domains. Note that repetition rate serves as a behavioral failure proxy and does not capture all dimensions of task accuracy.
+N
+
+Dataset
+
+Mean FI Repetition Rate
+
+HotpotQA (Reasoning)
+7405
+SQuAD (Comprehension) 10000
+TriviaQA (Knowledge)
+10000
+
+0.815
+0.812
+0.833
+
+0.404
+0.423
+0.467
+
+Table 3. Predictive validity: Spearman correlation between FI and repetition-based failure proxy (repetition ratio), computed over the full
+generation (up to 120 tokens) and over only the first 20 tokens. Repetition ratio is used as a failure proxy; comprehensive task accuracy
+(EM/F1) is reported separately and not captured here.
+Dataset
+
+Correlation (Full FI) Correlation (First 20)
+
+HotpotQA (Reasoning)
+TriviaQA (Knowledge)
+SQuAD (Comprehension)
+
+0.848
+0.820
+0.856
+
+reflects instruction-following behavior rather than surface
+repetition; Table 5 does not independently validate the specific weight allocation. This justifies the multi-component
+construction of FI and supports aggregation as necessary for
+robust detection.
+
+0.425
+0.404
+0.375
+
+and alignment but not eliminated by scale.
+
+Cognitive Stamina (Final Entropy)
+
+4.0
+
+7.5. Scaling with Model Size
+We further examine how fatigue interacts with model size
+and instruction tuning across nine models spanning 1B–
+13B parameters. Results are observational: decoding is
+controlled, but architectural design, pretraining data, and
+alignment procedures are not.
+In the sub-3B regime, instruction-tuned models exhibit earlier entropy collapse than base models under matched decoding. These scaling observations are explicitly observational:
+decoding is controlled, but architectural design, pretraining
+corpora, and alignment procedures vary across families and
+constitute uncontrolled confounders. This trend reverses
+near 7B parameters, where instruction-tuned models display improved entropy calibration. Figure 6 illustrates this
+size–alignment interaction.
+
+3.5
+
+The Alignment Tax on Cognitive Stamina
+Model Type
+Base
+Instruct
+
+Healthy Threshold
+
+3.0
+2.5
+2.0
+1.5
+1.0
+0.5
+0.0
+
+Small (~1B)
+
+Medium (~3B)
+
+Large (~7B)
+
+X-Large (~13B)
+
+Figure 6. Per-family cognitive stamina (mean ± 95% CI) under
+matched decoding conditions. Base models show a gradual monotonic decline in final entropy with scale, while instruction-tuned
+models exhibit a non-monotonic pattern, collapsing earlier at sub3B scales, recovering near 7B, then collapsing sharply at 13B.
+This divergence suggests that alignment fine-tuning imposes a
+scale-dependent cost on output diversity that does not diminish
+with model size. Results are observational; architectural and data
+confounders remain.
+
+At 13B, an outlier behavior is observed: Llama-2-13B-Chat
+collapses into low-entropy refusal templates despite grammatical output, producing a form of “safety fatigue.” This
+suggests that aggressive alignment can restrict the effective
+output manifold in ways that mimic cognitive fatigue.
+
+8. Conclusion
+We formalized cognitive fatigue as a measurable degradation
+pattern in autoregressive language models and introduced
+the Fatigue Index (FI), an online, model-agnostic diagnostic
+aggregating prompt attention decay, representational drift,
+and entropy miscalibration. Grounded in explicit axioms,
+FI defines a stable and interpretable scale computable at
+inference time without retraining or access to training data.
+Empirically, FI accumulates consistently under long-horizon
+decoding, generalizes across model sizes and architectural
+stressors, and anticipates qualitative breakdowns such as rep-
+
+Finally, drift slopes remain approximately constant across
+model sizes (Figure 7), indicating that all autoregressive
+models deviate from their initial representations over long
+horizons. Larger models differ not by drifting less, but by
+maintaining coherence while drifting. Model-wise drift and
+entropy statistics supporting these trends are reported in
+Appendix B (Table 7).
+Taken together, these results indicate that fatigue is a general
+property of long-horizon decoding, modulated by capacity
+8
+
+
+=== PAGE 9 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+Table 4. Online alerting stability under hysteresis. A ”flip” is counted each time the alert state toggles between active and inactive within a
+single generation. Hysteresis uses separate activation and deactivation thresholds (θ = 0.50 and θlow = 0.40) respectively, reducing alert
+flips by over 91% across all datasets compared to a naive single-threshold rule. This demonstrates that FI supports stable, production-ready
+runtime monitoring without spurious oscillation.
+Dataset
+
+Naive Flips/Gen Hysteresis Flips/Gen Reduction (%)
+
+HotpotQA (Reasoning)
+TriviaQA (Knowledge)
+SQuAD (Comprehension)
+
+18.934
+20.889
+21.085
+
+1.567
+1.433
+1.674
+
+91.718
+93.140
+92.060
+
+Table 5. Benefit of signal aggregation measured by AUROC on HotpotQA. Severe degeneration is defined as sequences in the top
+quartile of repetition ratio (repetition rate ≥ 0.6). The aggregated FI substantially outperforms all individual components, confirming that
+multi-signal integration is necessary for robust detection.
+Dataset
+
+Fatigue Index (Ours) Entropy Only Drift Only Attention Only (Inv)
+
+HotpotQA AUROC
+
+0.976
+
+0.954
+
+Drift Stability Across Architectures
+Base
+
+OPT-1.3B
+
+Base
+
+Falcon-RW-1B
+
+Base
+
+TinyLlama-1.1B-Chat
+
+Inst.
+
+OPT-13B
+
+Base
+
+Llama-2-13B-Chat
+
+Inst.
+
+StableLM-Zephyr-3B
+
+Model Type
+
+Inst.
+
+Base
+Instruct
+Base
+
+BLOOM-3B
+0.0
+
+0.2
+
+0.4
+
+0.6
+
+0.8
+
+Drift Slope (Lower is Better)
+
+0.307
+
+Limitations. FI requires access to logits, attentions, and
+hidden states, which may be unavailable through closed
+APIs. Our evaluation is limited to nine open decoder-only
+models and QA-style tasks with generations capped at 120
+tokens; fatigue dynamics in dialogue, code, and tool use
+remain unexplored. FI relies on fixed linear aggregation and
+provides a correlational risk indicator rather than a causal or
+task-optimal metric, it does not directly measure an internal
+model mechanism. Absolute FI values depend on decoding and numerical settings and are not directly comparable
+across arbitrary regimes. The fixed entropy band [3.8, 5.0]
+and weight vector (wA = 0.40, wE = 0.35, wD = 0.25)
+are calibrated for the evaluated regime; per-model calibration, normalized entropy variants, and learned-weight comparisons are reasonable extensions. Fixed weight transferability across different model families, decoding strategies, and task distributions is unverified. Last-layer attention and L2 drift are lightweight operational probes, not
+uniquely faithful mechanistic explanations; cosine distance
+and layer-normalized drift alternatives are worth studying.
+The primary validated predictive claim is online detection
+of repetition-based text degeneration; FI does not cover
+hallucination, factual errors, or instruction-deviation failures not manifesting as repetition. Repetition and entropy
+signals are partially coupled, and FI may produce false
+alarms when entropy deviates for task-structural reasons
+unrelated to degradation. Practitioners would benefit from
+direct comparison of FI against external runtime monitors
+such as perplexity-based or semantic-entropy-based diagnostics; such monitor-to-monitor comparison is a limitation
+of the current work. A key open direction is mechanistic
+interpretability: identifying circuit-level causes of fatigue
+and linking FI components to specific internal failure mechanisms. Demonstrating FI-triggered closed-loop intervention
+gains is also future work.
+
+Falcon-7B-Instruct Inst.
+Falcon-7B
+
+0.929
+
+1.0
+
+Figure 7. Embedding drift slope per model, sorted in ascending
+order (lower is better). Despite spanning 1B to 13B parameters,
+most models cluster tightly between drift slopes of 0.08–0.14,
+with BLOOM-3B as a high-variance outlier. The absence of a
+clear size-dependent trend confirms that drift stability is largely
+architecture- and training-regime-dependent rather than a function
+of scale. Larger models do not drift less, but may drift more
+coherently.
+
+etition and entropy collapse. These failures are correlated
+with systematic token-level changes in attention, entropy,
+and hidden-state drift, enabling degradation to be tracked
+during decoding rather than only through post hoc task metrics. By surfacing correlated signals of internal instability
+at runtime, FI reframes long-horizon reliability as an online
+monitoring problem and supports real-time identification of
+potentially unreliable segments. FI is designed as a diagnostic that can inform monitoring, logging, or fallback triggers;
+demonstrating gains from closed-loop intervention is an
+important open direction not demonstrated in this paper.
+
+9
+
+
+=== PAGE 10 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+Impact Statement
+
+that complements existing approaches by making failures
+more measurable and explicit.
+
+Intended positive uses. This work introduced a principled, online diagnostic for monitoring degradation in longhorizon generation in language models. By making degradation observable at runtime, the proposed Fatigue Index (FI)
+can support more transparent and reliable deployment of
+language models, for example by activating monitoring, logging, or verification triggers when quality deteriorates. In
+settings where reliability is essential such as customer support, healthcare, and education, FI may help reduce silent
+failure by surfacing degradation that would otherwise go
+unnoticed. Because FI is retrain-free and computer online
+from inference-time signals, it is compatible with a wide
+range of open-model deployments and resource-constrained
+environments.
+
+Overall, this work advances the measurement and monitoring of long-horizon behavior in language models. While
+it does not eliminate failure modes, it provides a transparent and model-agnostic tool for studying, comparing, and
+responsibly deploying autoregressive systems.
+
+References
+Alansari, A. and Luqman, H. Large language models hallucination: A comprehensive survey. arXiv preprint
+arXiv:2510.06265, 2025.
+Anh-Hoang, D., Tran, V., and Nguyen, L.-M. Survey and
+analysis of hallucinations in large language models: Attribution to prompting strategies or model behavior. Frontiers in Artificial Intelligence, 8:1622292, 2025.
+
+Risks and mitigation. FI is a diagnostic proxy rather than
+a ground-truth indicator of correctness or safety. Overreliance of FI as a hard decision could suppress valid but
+creative outputs or induce misplaced trust. There is also a
+risk that systems could be optimized to the index without
+improving underlying task reliability. To mitigate these
+risks, we recommend using FI as a complementary signal
+alongside task-level evaluation or human-judgment, and
+inspecting per-signal components rather than relying on
+aggregate score.
+
+Ba, J. L., Kiros, J. R., and Hinton, G. E. Layer normalization.
+arXiv preprint arXiv:1607.06450, 2016.
+Bengio, S., Vinyals, O., Jaitly, N., and Shazeer, N. Scheduled sampling for sequence prediction with recurrent neural networks. In Advances in Neural Information Processing Systems (NeurIPS), 2015.
+Braverman, M., Chen, X., Kakade, S., Narasimhan, K.,
+Zhang, C., and Zhang, Y. Calibration, entropy rates, and
+memory in language models. In Proceedings of the 37th
+International Conference on Machine Learning (ICML),
+pp. 1089–1099. PMLR, 2020.
+
+Misuse and overinterpretation. Several misuse risks warrant explicit acknowledgment. First, FI should not be interpreted as a general safety indicator: elevated FI reflects
+internal signal degradation under the specific conditions
+studied and does not imply that a generation is harmful,
+factually incorrect, or unsafe. Second, FI will produce false
+positives and false negatives in deployment. High FI does
+not guarantee output failure, and low FI does not guarantee reliable output; threshold-based interventions should be
+calibrated per application and validated against task-level
+metrics before deployment. Third, the term ”cognitive fatigue” is an intentional analogy chosen for interpretability,
+not a claim about cognition or experience in language models. Treating this framing literally risks anthropomorphizing
+model behavior in ways that could mislead users or inflate
+perceived capabilities. We encourage practitioners to engage with FI as a statistical signal over internal model states,
+not as evidence of model awareness or intent.
+
+Chen, S., Wong, S., Chen, L., and Tian, Y. Extending
+context window of large language models via positional
+interpolation. arXiv preprint arXiv:2306.15595, 2023.
+Dettmers, T., Pagnoni, A., Holtzman, A., and Zettlemoyer, L.
+QLoRA: Efficient finetuning of quantized LLMs. arXiv
+preprint arXiv:2305.14314, 2023.
+Dziri, N., Lu, X., Sclar, M., Li, X. L., Jiang, L., Lin,
+B. Y., Welleck, S., West, P., Bhagavatula, C., Le Bras, R.,
+Hwang, J. D., Sanyal, S., Ren, X., Ettinger, A., Harchaoui,
+Z., and Choi, Y. Faithfulness in chain-of-thought reasoning. Transactions of the Association for Computational
+Linguistics, 2023. Verify this is the intended citation;
+paper text references chain-of-thought faithfulness but
+arXiv may correspond to Faith and Fate (NeurIPS 2023).
+
+Societal considerations. By exposing uncertainty and
+degradation during generation, FI may counter the perception of unwarranted certainty often conveyed by fluent
+model outputs, supporting more informed user interaction.
+The signals used by FI are derived solely from internal
+model states during decoding and do not require additional
+user data, preserving user privacy. FI should not be viewed
+as a substitute for improved training data, model design, or
+evaluation practices; rather, it is a lightweight diagnostic
+
+Farquhar, S., Kossen, J., Kuhn, L., and Gal, Y. Detecting
+hallucinations in large language models using semantic
+entropy. Nature, 630(8017):625–630, 2024.
+He, K., Zhang, X., Ren, S., and Sun, J. Deep residual learning for image recognition. In Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition
+(CVPR), 2016.
+10
+
+
+=== PAGE 11 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+Holtzman, A., Buys, J., Du, L., Forbes, M., and Choi, Y. The
+curious case of neural text degeneration. In International
+Conference on Learning Representations (ICLR), 2020.
+
+Peng, B., Quesnelle, J., Fan, H., and Shippole, E. Yarn:
+Efficient context window extension of large language
+models. arXiv preprint arXiv:2309.00071, 2023.
+
+Huszár, F. How (not) to train your generative model: Scheduled sampling, likelihood, adversary? arXiv preprint
+arXiv:1511.05101, 2016.
+
+Press, O., Smith, N. A., and Lewis, M. Train short, test
+long: Attention with linear biases enables input length
+extrapolation. In International Conference on Learning
+Representations (ICLR), 2022.
+
+Joglekar, M., Chen, J., Wu, G., Yosinski, J., Wang, J., Barak,
+B., and Glaese, A. Training LLMs for honesty via confessions. arXiv preprint arXiv:2512.08093, 2025.
+
+Qin, Y., Song, K., Hu, Y., Yao, W., Cho, S., Wang, X., Wu,
+X., Liu, F., Liu, P., and Yu, D. InFoBench: Evaluating
+instruction following ability in large language models.
+In Findings of the Association for Computational Linguistics: ACL 2024, pp. 13025–13048. Association for
+Computational Linguistics, August 2024.
+
+Joshi, M., Choi, E., Weld, D. S., and Zettlemoyer, L. TriviaQA: A large scale distantly supervised challenge dataset
+for reading comprehension. In Proceedings of the 55th
+Annual Meeting of the Association for Computational
+Linguistics (ACL), pp. 1601–1611, 2017.
+
+Rajpurkar, P., Zhang, J., Lopyrev, K., and Liang, P. SQuAD:
+100,000+ questions for machine comprehension of text.
+In Proceedings of the 2016 Conference on Empirical
+Methods in Natural Language Processing (EMNLP), pp.
+2383–2392, 2016.
+
+Kadem, M. and Zheng, R. Interpreting transformers
+through attention head intervention. arXiv preprint
+arXiv:2601.04398, 2026. Cited as CREST in text; verify
+arXiv ID matches intended paper before final submission.
+
+Su, J., Lu, Y., Pan, S., Wen, B., and Liu, Y. RoFormer:
+Enhanced transformer with rotary position embedding.
+arXiv preprint arXiv:2104.09864, 2021.
+
+Kayan, C. E. and Zhang, L. Prototype-based dynamic
+steering for large language models. arXiv preprint
+arXiv:2510.05498, 2025.
+
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones,
+L., Gomez, A. N., Kaiser, Ł., and Polosukhin, I. Attention is all you need. In Advances in Neural Information
+Processing Systems (NeurIPS), 2017.
+
+Li, J., Galley, M., Brockett, C., Gao, J., and Dolan, B. A
+diversity-promoting objective function for neural conversation models. arXiv preprint arXiv:1510.03055, 2016.
+
+Welleck, S., Kulikov, I., Roller, S., Dinan, E., Cho, K.,
+and Weston, J. Neural text generation with unlikelihood
+training. In International Conference on Learning Representations (ICLR), 2020.
+
+Li, K., Patel, O., Viégas, F., Pfister, H., and Wattenberg, M.
+Inference-time intervention: Eliciting truthful answers
+from a language model. Advances in Neural Information
+Processing Systems, 36:41451–41530, 2023.
+
+Xiong, R., Yang, Y., He, D., Zheng, K., Zheng, S., Xing, C.,
+Zhang, H., Lan, Y., and Wang, L. On layer normalization
+in the transformer architecture. In Proceedings of the 37th
+International Conference on Machine Learning (ICML),
+2020.
+
+Li, K., Liu, T., Bashkansky, N., Bau, D., Viégas, F., Pfister, H., and Wattenberg, M. Measuring and controlling
+instruction instability in large language model dialogs.
+arXiv preprint arXiv:2402.10962, 2024a.
+
+Yang, Z., Qi, P., Zhang, S., Bengio, Y., Cohen, W. W.,
+Salakhutdinov, R., and Manning, C. D. HotpotQA:
+A dataset for diverse, explainable multi-hop question
+answering. In Proceedings of the 2018 Conference
+on Empirical Methods in Natural Language Processing (EMNLP), pp. 2369–2380, 2018. doi: 10.18653/
+v1/D18-1259.
+
+Li, Y., Mi, F., Li, Y., Wang, Y., Sun, B., Feng, S., and Li, K.
+Dynamic stochastic decoding strategy for open-domain
+dialogue generation. arXiv preprint arXiv:2406.07850,
+2024b.
+Lin, J., Tang, J., Tang, H., Yang, Y., and Han, S. AWQ:
+Activation-aware weight quantization for LLM compression and acceleration. arXiv preprint arXiv:2306.00978,
+2023.
+
+Zhang, A. L., Kraska, T., and Khattab, O. Recursive language models. arXiv preprint arXiv:2512.24601, 2025.
+
+Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua,
+M., Petroni, F., and Liang, P. Lost in the middle: How
+language models use long contexts. Transactions of the
+Association for Computational Linguistics, 12:157–173,
+2023.
+
+Zhang, S., Bao, Y., and Huang, S. EDT: Improving large
+language models’ generation by entropy-based dynamic
+temperature sampling. arXiv preprint arXiv:2403.14541,
+2024.
+11
+
+
+=== PAGE 12 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+A. Fixed Defaults and Calibration
+Table 6. Fixed defaults used in all Fatigue Index (FI) experiments. Values were selected once from a small preliminary pass and then
+frozen; no per-item or per-dataset tuning was performed.
+Parameter
+
+Value
+
+Prompt slice K
+Entropy band [Hℓ , Hu ]
+FI smoothing window L
+Hysteresis (θ, θlow )
+Weights (wA , wE , wD )
+Probe frequency
+Max context / Max new tokens
+Decoding (top-p, T , top-k)
+Seeds
+
+64
+[3.8, 5.0]
+5
+(0.50, 0.40)
+(0.40, 0.35, 0.25)
+every 2 tokens
+2048 / 120
+0.95, 1.0, 0
+{123, 2027}
+
+B. Model-wise Summary Statistics for Scaling Experiments
+Table 7. Scaling behavior across model families. Drift and entropy statistics are computed over long-horizon decoding runs under matched
+decoding conditions.
+Model
+
+Type
+
+tiiuae/falcon-rw-1b
+TinyLlama/TinyLlama-1.1B-Chat-v1.0
+facebook/opt-1.3b
+bigscience/bloom-3b
+stabilityai/stablelm-zephyr-3b
+tiiuae/falcon-7b-instruct
+tiiuae/falcon-7b
+NousResearch/Llama-2-13b-chat-hf
+facebook/opt-13b
+
+Base
+Instruct
+Base
+Base
+Instruct
+Instruct
+Base
+Instruct
+Base
+
+Size (B)
+
+Drift Mean
+
+Drift Std
+
+Entropy Mean
+
+Entropy Std
+
+1.0
+1.1
+1.3
+3.0
+3.0
+7.0
+7.0
+13.0
+13.0
+
+0.102
+0.104
+0.087
+0.724
+0.250
+-0.001
+0.041
+0.135
+0.114
+
+0.069
+0.062
+0.046
+0.796
+0.078
+0.096
+0.080
+0.038
+0.043
+
+3.587
+1.430
+3.242
+3.156
+1.004
+3.375
+2.826
+0.306
+2.304
+
+1.780
+1.779
+1.572
+1.393
+0.861
+2.470
+1.885
+0.814
+1.697
+
+C. Robustness of the Fatigue Index
+This appendix reports supplementary analyses assessing the stability of the Fatigue Index (FI) under minor experimental
+variation. These experiments test whether FI behaves as a reproducible internal state rather than as a brittle heuristic tied to
+specific seeds or prompt formulations.
+C.1. Robustness Across Seeds and Prompt Styles
+Using the same model and decoding configuration as in the main experiments, we repeat generation across multiple random
+seeds and two prompt styles (zero-shot and short chain-of-thought). For each condition, we report the mean FI aggregated
+over sequences.
+Table 8 shows that FI varies minimally across seeds and preserves consistent ordering across prompt styles, indicating that
+the fatigue signal is not driven by incidental randomness or prompt phrasing.
+Table 8. Mean Fatigue Index (FI) across random seeds and prompt styles (zero-shot vs. short chain-of-thought).
+Seed Prompt Style
+42
+42
+123
+123
+
+Standard (Zero-shot)
+CoT
+Standard (Zero-shot)
+CoT
+
+12
+
+Mean FI
+0.854
+0.858
+0.854
+0.858
+
+
+=== PAGE 13 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+C.2. Smoothness under Controlled Perturbations
+We visualize FI under small controlled perturbations (random seed and prompt style) to assess whether it varies smoothly or
+exhibits erratic behavior. Figure 8 shows a structured, continuous surface rather than discontinuous or noisy responses.
+Regions of elevated FI coincide with regimes associated with downstream degeneration in the main experiments, supporting
+the interpretation of FI as a cumulative degradation state rather than a brittle heuristic.
+
+Robustness Landscape of Fatigue Index Definition
+1.0
+
+Our Definition
+
+0.970
+
+0.8
+
+0.965
+
+Predictive Power (AUROC)
+
+Weight: Drift (D)
+
+0.975
+
+0.960
+
+0.6
+
+0.955
+0.950
+
+0.4
+
+0.945
+
+0.2
+0.0
+
+0.940
+0.935
+
+0.0
+
+0.2
+
+0.4
+
+0.6
+
+Weight: Attention (A)
+
+0.8
+
+1.0
+
+Figure 8. Robustness landscape of the Fatigue Index (FI) definition over the weight simplex (A + D + E = 1). Each point represents a
+candidate weighting of attention (A), drift (D), and entropy (E), colored by its AUROC against downstream degeneration labels. The
+landscape is smooth and structured rather than erratic, with a broad high-AUROC region concentrated at moderate-to-high attention
+weights. Our chosen definition (red ×) sits within this high-performance region, confirming that FI’s predictive validity is not contingent
+on a precise weight choice, the metric is robust to reasonable perturbations of its definition.
+
+D. Additional Precision Stress Results
+This appendix reports supplementary precision stress experiments supporting Section 5.2. We compare entropy, attention-toprompt, and embedding drift trajectories under FP16 and 4-bit NF4 decoding on additional datasets.
+Entropy
+
+Mean attention
+
+Nats
+
+6
+4
+2
+0
+
+Attention to Prompt
+
+0.0092
+
+4bit
+fp
+
+Embedding Drift
+80
+
+0.0088
+0.0084
+0.0080
+
+0
+
+20
+
+40
+
+Step
+
+60
+
+80
+
+100
+
+0.0076
+
+4bit
+fp
+
+100
+
+L2 distance
+
+8
+
+60
+40
+20
+
+0
+
+20
+
+40
+
+Step
+
+60
+
+80
+
+100
+
+0
+
+0
+
+20
+
+40
+
+Step
+
+60
+
+80
+
+100
+
+Figure 9. Supplementary precision stress results on HotpotQA (FP16 vs. 4-bit NF4, 100 generation steps). Entropy under 4-bit
+quantization exhibits deeper troughs and higher variance than FP16, consistent with increased susceptibility to predictive calibration
+collapse. Attention-to-prompt and embedding drift trajectories remain closely matched across precisions, replicating the main finding that
+quantization selectively disrupts output distribution sharpness while leaving prompt focus and representation stability largely intact.
+
+13
+
+
+=== PAGE 14 / 14 ===
+Cognitive Fatigue in Autoregressive Transformers
+
+Entropy
+
+7
+
+Nats
+
+5
+4
+3
+2
+
+0
+
+20
+
+40
+
+Step
+
+60
+
+80
+
+100
+
+80
+
+0.00850
+0.00825
+0.00800
+0.00775
+0.00725
+
+4bit
+fp
+
+100
+
+60
+40
+20
+
+0.00750
+
+1
+0
+
+Embedding Drift
+4bit
+fp
+
+0.00875
+
+Mean attention
+
+6
+
+Attention to Prompt
+
+0.00900
+
+4bit
+fp
+
+L2 distance
+
+8
+
+0
+
+20
+
+40
+
+Step
+
+60
+
+80
+
+100
+
+0
+
+0
+
+20
+
+40
+
+Step
+
+60
+
+80
+
+100
+
+Figure 10. Supplementary precision stress results on TriviaQA (FP16 vs. 4-bit NF4, 100 generation steps). Entropy trajectories under 4-bit
+quantization exhibit greater depth and variability of collapse compared to FP16, replicating the pattern observed on HotpotQA. Attentionto-prompt and embedding drift remain closely matched across precisions, confirming that reduced precision selectively destabilizes
+predictive calibration rather than prompt focus or representational stability.
+
+E. Axiomatic Characterization of Additive Fatigue Measures
+Theorem E.1 (Characterization of Additive Fatigue Measures). Let F (At , Et , Dt ) be a fatigue measure satisfying A1–A3
+and A5. Then there exist monotone, bounded functions ϕA , ϕE , ϕD : R → [0, 1] and weights w ∈ ∆ such that
+F It = wA ϕA (At ) + wD ϕD (Dt ) + wE ϕE (Et ),
+up to an order-preserving reparameterization.
+This characterization establishes that any additive fatigue measure satisfying the stated axioms necessarily takes the weightedsum-of-monotone-transforms form. It does not prove that FI recovers a unique causal mechanism of degradation or that
+the specific weights (wA , wE , wD ) are uniquely determined; the theorem constrains the functional form, not the parameter
+values.
+
+F. Software and Data
+The code and scripts used to compute the Fatigue Index and reproduce all experiments in this paper are publicly available
+at GitHub Repository. The repository includes implementations of all three inference-time signals (prompt attention,
+embedding drift, and entropy), the FI aggregation pipeline, and scripts for the stress analyses and scaling experiments.
+An interactive Colab notebook demonstrating the full FI computation pipeline with visualizations is available at Colab
+Notebook. All experiments were implemented in PyTorch using the HuggingFace Transformers library. The three datasets
+used for evaluation, HotpotQA, TriviaQA, and SQuAD, are publicly available under open licenses and are cited in the
+references. No proprietary data or models were used in this work.
+
+14
+
+

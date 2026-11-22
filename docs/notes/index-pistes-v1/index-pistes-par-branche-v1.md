@@ -1,0 +1,23 @@
+# Index des pistes, idées, hypothèses, échecs, remue-méninges et retours des modèles, par branche — v1
+
+- Nature : classe C, écrit par programme par la mère sur l'ordre de Lazar (« dépose bien l'ensemble de TOUTES les idées … dans le dépôt et renvois dans la passation »). Noms et dossiers seulement ; aucun contenu lu.
+- Périmètre : branches distantes poussées depuis le 18 novembre, fichiers AJOUTÉS par rapport à main sous docs/, prereg/, papiers/, registres/essaim, registres/passations. Branches exclues par nom : quarantaine, coffre, lot/compte-4-v1, matière première séquestrée des modes d'attaque, archives des réponses, oracle du bras d'attaque.
+- Colonne « sensibles » : fichiers dont le nom porte un motif cloisonné (vérité, rendu, scores, barreau 5, T0.6, étape B, P3-bis, résultat…), jamais versés par la mère.
+
+| branche | commit | date | fichiers ajoutés | dont sensibles | dossiers |
+|---|---|---|---|---|---|
+| claude/adoring-mayer-6l4ygi | 62bd0d4d6 | 2026-11-22 | 258 | 10 | docs/notes/demande-sommeil-consolidation-v1<br>docs/notes/preparation-experiences-anesthesie-v1<br>docs/notes/protocole-x-conscience-anesthesie-v1<br>registres/essaim/vers-mere<br>registres/essaim/vers-veille-de-cap |
+| claude/bibliothecaire-v1 | 6e7c2d31f | 2026-11-22 | 303 | 6 | docs/notes/memoire-conception-v1<br>docs/sources/ideation-organism-a41b7b50-v1 |
+| claude/chantiers-21-novembre-v1 | c080f4e65 | 2026-11-22 | 334 | 4 | docs/notes/chantiers-21-novembre-v1<br>docs/notes/memoire-conception-v1<br>registres/essaim/vers-mere |
+| claude/chantiers-21-novembre-v1-fable-devin-d | dfa5aa37d | 2026-11-22 | 325 | 2 | docs/notes/chantiers-21-novembre-v1<br>docs/notes/memoire-conception-v1<br>registres/essaim/vers-mere |
+| claude/exploration-idees-fable-v1 | 33b4d6a1a | 2026-11-22 | 84 | 0 | docs/notes/exploration-idees-fable-v1 |
+| claude/lentilles-noyau-sabotage-fable-v1 | 54a384980 | 2026-11-22 | 50 | 0 | docs/notes/lentilles-noyau-sabotage-v1 |
+| claude/mathematiques-nouvelles-fable-b4-v1 | 649e3438f | 2026-11-22 | 2120 | 8 | docs/notes/mathematiques-nouvelles-v1<br>docs/sources/pdf<br>docs/sources/prix<br>docs/sources/web<br>prereg/mathematiques-nouvelles-v1/LISEZMOI-brouillon-2-et-devis-v2-v1.md<br>prereg/mathematiques-nouvelles-v1/LISEZMOI-brouillon-2-et-devis-v2-v1.md.sha256<br>prereg/mathematiques-nouvelles-v1/LISEZMOI-brouillon-3-et-devis-v3-v1.md<br>prereg/mathematiques-nouvelles-v1/LISEZMOI-brouillon-3-et-devis-v3-v1.md.sha256<br>prereg/mathematiques-nouvelles-v1/calculs-v2<br>prereg/mathematiques-nouvelles-v1/calculs-v3<br>prereg/mathematiques-nouvelles-v1/calculs-v4<br>prereg/mathematiques-nouvelles-v1/contre-lecture-brouillon-3-v1.md … |
+| claude/mathematiques-nouvelles-v1 | 3abbc7760 | 2026-11-22 | 2126 | 8 | docs/notes/mathematiques-nouvelles-v1<br>docs/sources/pdf<br>docs/sources/prix<br>docs/sources/web<br>prereg/mathematiques-nouvelles-v1/LISEZMOI-brouillon-2-et-devis-v2-v1.md<br>prereg/mathematiques-nouvelles-v1/LISEZMOI-brouillon-2-et-devis-v2-v1.md.sha256<br>prereg/mathematiques-nouvelles-v1/LISEZMOI-brouillon-3-et-devis-v3-v1.md<br>prereg/mathematiques-nouvelles-v1/LISEZMOI-brouillon-3-et-devis-v3-v1.md.sha256<br>prereg/mathematiques-nouvelles-v1/calculs-v2<br>prereg/mathematiques-nouvelles-v1/calculs-v3<br>prereg/mathematiques-nouvelles-v1/calculs-v4<br>prereg/mathematiques-nouvelles-v1/contre-lecture-brouillon-3-v1.md … |
+| claude/papier-c-banc-de-juge-fable-v1 | abecce011 | 2026-11-22 | 2 | 0 | docs/notes/papier-c-banc-de-juge-v1 |
+| claude/papier-dopamine-etape-1-v1 | 03114835a | 2026-11-22 | 31 | 6 | docs/notes/demandes-fable-api-2026-11-22-v1<br>docs/notes/papier-dopamine-moniteur-v1<br>registres/essaim/vers-mere |
+| claude/protocole-x-puits-etroits-v1 | 0aabcf7bf | 2026-11-22 | 121 | 0 | docs/notes/demandes-fable-api-2026-11-22-v1<br>docs/sources/pdf-puits-etroits-v1 |
+| claude/veille-de-cap-conception-fable-v1 | 76b76deac | 2026-11-22 | 12 | 0 | docs/notes/veille-de-cap-v1 |
+| claude/veille-de-cap-v1 | 8e7db7cbd | 2026-11-22 | 22 | 0 | docs/notes/veille-de-cap-v1 |
+| donnees/dopamine-exploratoire-v1 | a9296c520 | 2026-11-22 | 6 | 0 | docs/notes/papier-dopamine-moniteur-v1<br>registres/essaim/vers-mere |
+| prep/verite-plantee-etapes-0-v1 | 0b2b3994b | 2026-11-22 | 436 | 175 | docs/notes/relecture-plantee-etapes-0-v1<br>docs/notes/verite-plantee-etapes-0-v1<br>registres/essaim/vers-mere<br>registres/passations/2026-11-21-1801-verite-plantee.md<br>registres/passations/2026-11-21-1801-verite-plantee.md.sha256<br>registres/passations/2026-11-22-1152-verite-plantee.md<br>registres/passations/2026-11-22-1152-verite-plantee.md.sha256 |

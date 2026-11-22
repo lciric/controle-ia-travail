@@ -1,0 +1,295 @@
+Calculs de l'erratum 1 de la conception 2 (épreuves du devin, v3 consolidée) — option (d)
+
+MANIFESTE
+- script : calculs-devin-option-d-v1.py — sha256 f82441890a9fc958dd55190747c5ffd33aa3ba84c3b77be5c59340d44b625581
+- commit du dépôt au lancement : 7ab6f8c97dc0bd7f889cbad4d4b14e86a4bdd900
+- versions : python 3.13.18 ; numpy 2.4.6 ; scipy 1.17.1
+- entropie racine : 2026112270 ; graine de chaque tâche : numpy.random.SeedSequence(2026112270, spawn_key=(numéro,))
+- tâches : C2_nul_equilibre_independants = 1 ; C2_nul_equilibre_correles = 2 ; C2_nul_service_independants = 3 ; C2_nul_service_correles = 4 ; B_horodatage = 5 ; B_relance = 6 ; B_ordre = 7 ; C3_fenetre = 8 ; D2_confirmation = 9 ; D4_nul_confirmation = 10 ; E_dose = 11 ; F_appris_nul = 12 ; F_appris = 13 ; C4_diffus = 14 ; C2_nul_discret = 15 ; C6_taille_rejeu = 16 ; D3_fenetre = 17
+- réglages : seuil par course 0.0125 ; seuil de confirmation 0.05 ; n d'épreuve 4000 ; puissance visée 0.8 ; mode complet
+
+====================================================================================================
+SECTION A — constantes et tables sous approximation normale [CALCUL]
+====================================================================================================
+[A1] ancien seuil 0,05 : z(1 − α) = 1,6449 ; c = z(1 − α) + z(0,8) = 2,4865
+     n d'épreuve            :    400 |   1000 |   2000 |   4000 |  10000
+     δ_min, bras équilibrés : 0,1243 | 0,0786 | 0,0556 | 0,0393 | 0,0249
+     δ_min, audit à 5 %     : 0,2852 | 0,1804 | 0,1276 | 0,0902 | 0,0570
+     épisodes d'épreuve pour δ = 0,05 : (c / 0,05)² = 2473,02 ; entier qui atteint la puissance : 2474
+[A1] seuil par course 0,0125 (option (d)) : z(1 − α) = 2,2414 ; c = z(1 − α) + z(0,8) = 3,0830
+     n d'épreuve            :    400 |   1000 |   2000 |   4000 |  10000
+     δ_min, bras équilibrés : 0,1542 | 0,0975 | 0,0689 | 0,0487 | 0,0308
+     δ_min, audit à 5 %     : 0,3536 | 0,2237 | 0,1582 | 0,1118 | 0,0707
+     épisodes d'épreuve pour δ = 0,05 : (c / 0,05)² = 3802,01 ; entier qui atteint la puissance : 3803
+     facteur du taux d'audit de 5 % : 0,5·√(1/0,05 + 1/0,95) = 2,2942
+
+[A2] Borne de Bonferroni pour J statistiques : facteur (z(1 − α/J) + z(0,8)) / c ; δ à n d'épreuve, bras équilibrés et audit à 5 %
+     α      |   J | z(1 − α/J) | facteur | δ éq. n=2000 | δ éq. n=4000 | δ 5 % n=2000 | δ 5 % n=4000
+     0,0500 |   1 |     1,6449 |  1,0000 |       0,0556 |       0,0393 |       0,1276 |       0,0902
+     0,0500 |  15 |     2,7131 |  1,4296 |       0,0795 |       0,0562 |       0,1824 |       0,1289
+     0,0500 |  17 |     2,7543 |  1,4462 |       0,0804 |       0,0569 |       0,1845 |       0,1304
+     0,0500 |  30 |     2,9352 |  1,5189 |       0,0845 |       0,0597 |       0,1937 |       0,1370
+     0,0500 |  34 |     2,9738 |  1,5345 |       0,0853 |       0,0603 |       0,1957 |       0,1384
+     0,0500 |  60 |     3,1440 |  1,6029 |       0,0891 |       0,0630 |       0,2045 |       0,1446
+     0,0500 |  68 |     3,1804 |  1,6176 |       0,0899 |       0,0636 |       0,2063 |       0,1459
+     0,0500 | 120 |     3,3415 |  1,6823 |       0,0935 |       0,0661 |       0,2146 |       0,1517
+     0,0500 | 136 |     3,3761 |  1,6963 |       0,0943 |       0,0667 |       0,2164 |       0,1530
+     0,0125 |   1 |     2,2414 |  1,0000 |       0,0689 |       0,0487 |       0,1582 |       0,1118
+     0,0125 |  15 |     3,1440 |  1,2928 |       0,0891 |       0,0630 |       0,2045 |       0,1446
+     0,0125 |  17 |     3,1804 |  1,3046 |       0,0899 |       0,0636 |       0,2063 |       0,1459
+     0,0125 |  30 |     3,3415 |  1,3568 |       0,0935 |       0,0661 |       0,2146 |       0,1517
+     0,0125 |  34 |     3,3761 |  1,3680 |       0,0943 |       0,0667 |       0,2164 |       0,1530
+     0,0125 |  60 |     3,5293 |  1,4177 |       0,0977 |       0,0691 |       0,2242 |       0,1585
+     0,0125 |  68 |     3,5623 |  1,4284 |       0,0985 |       0,0696 |       0,2259 |       0,1597
+     0,0125 | 120 |     3,7087 |  1,4759 |       0,1017 |       0,0719 |       0,2334 |       0,1651
+     0,0125 | 136 |     3,7403 |  1,4862 |       0,1025 |       0,0724 |       0,2350 |       0,1662
+     coût des queues pour le reste de la famille, borne de Bonferroni : 30 → 120 statistiques, facteur 1,0878 (34 → 136 : 1,0864)
+
+[A3] Tableau de la question servie, refait (famille de 30 statistiques, borne de Bonferroni)
+     (a) 0,05 ; 4 000 par test      pile ou face : 0,0845 ; 5 % d'audit : 0,1937
+     (b) 0,0125 ; 4 000 par test    pile ou face : 0,0935 ; 5 % d'audit : 0,2146
+     (c) 0,05 ; 8 000 par test      pile ou face : 0,0597 ; 5 % d'audit : 0,1370
+     (d) 0,0125 ; 8 000 par test    pile ou face : 0,0661 ; 5 % d'audit : 0,1517
+     (d) avec les queues de la pièce d'audit (120 statistiques) : 0,0719 ; 5 % : 0,1651
+     (d), trait seul (une statistique) : 0,0487 ; 5 % : 0,1118
+     épisodes d'épreuve pour retrouver 0,05 à 5 % d'audit, 120 statistiques, seuil 0,0125 : 43591 (course : 87182)
+     épisodes d'épreuve pour retrouver 0,10 à 5 % d'audit, 120 statistiques, seuil 0,0125 : 10898 (course : 21796)
+
+[A4] Rejets à tort d'un harnais sain, par admission de quatre courses
+     α = 0,0500 par course : sous indépendance 1 − (1 − α)⁴ = 0,1855 ; borne sous toute dépendance 4α = 0,2000 ; sur dix admissions indépendantes : 0,8715
+     α = 0,0125 par course : sous indépendance 1 − (1 − α)⁴ = 0,0491 ; borne sous toute dépendance 4α = 0,0500 ; sur dix admissions indépendantes : 0,3954
+     suspensions durables à tort (criblage puis confirmation) : par course α·α_c = 0.000625 ; par admission au plus 4·α·α_c = 0,0025 ; sur dix admissions au plus 0,0250
+     épisodes de confirmation attendus par admission saine : au plus 4·α·4000 = 200
+     réadmission après réparation (quatre courses et l'épreuve dédiée au seuil 0,05) : rejets provisoires à tort au plus 0,1000 ; durables au plus 0,0050
+
+[A5] Seuils du cas sain sur 1 000 répliques (loi binomiale exacte)
+     niveau 0,0500 : P(rejets ≥ 72) = 0.001542  (« au plus 71 »)
+     niveau 0,0500 : P(rejets ≥ 73) = 0.001006  (« au plus 72 »)
+     niveau 0,0500 : P(rejets ≥ 74) = 0.000648  (« au plus 73 »)
+     niveau 0,0125 : P(rejets ≥ 25) = 0.001103  (« au plus 24 »)
+     niveau 0,0125 : P(rejets ≥ 26) = 0.000508  (« au plus 25 »)
+     niveau 0,0125 : P(rejets ≥ 27) = 0.000226  (« au plus 26 »)
+     les deux critères ensemble (au plus 72 au niveau 0,05 ; au plus 25 au niveau 0,0125) : déclenchement à tort d'au plus 0.001514 (borne d'union)
+     test de mort 2 : P(retrouvailles ≤ 760 | puissance 0,80) = 0.001108
+
+[A6] Test de mort 4 par le seul hasard
+     par course : 1 − (1 − 0,001)(1 − 0,01) = 0,0110 ; par admission de quatre courses : 0,0432
+
+[A7] Grille des p-valeurs à B = 9 999 : (B + 1)·seuil doit être entier
+     course         seuil 0.0125 : (B + 1)·seuil = 125.000000
+     confirmation   seuil 0.05 : (B + 1)·seuil = 500.000000
+     pièce factice  seuil 0.001 : (B + 1)·seuil = 10.000000
+
+[A8] Tailles des fuites témoins de puissance 0,99 au seuil de la course (borne de Bonferroni, guide pour le préenregistrement)
+     30 statistiques : E[Z] ≥ 5,6678 ; horodatage à pièce équilibrée d ≥ 0,1834 ; à 5 % d'audit d ≥ 0,4208
+     120 statistiques : E[Z] ≥ 6,0350 ; horodatage à pièce équilibrée d ≥ 0,1953 ; à 5 % d'audit d ≥ 0,4480
+
+====================================================================================================
+SECTION B — artefacts du monde planté, tailles minimales d'un trait seul [CALCUL ; simulation de contrôle]
+====================================================================================================
+[B1] réglage scellé (n = 2 000, α = 0,05)
+     horodatage : d = 0,1139 écart type ; variation totale 2Φ(d/2) − 1 = 0,0454 ; corrigé pour 30 statistiques : d = 0,1733 ; pour 120 : 0,1920
+     relance : ε = 2,71 points (de 5 % à 5 % + ε) ; variation totale ε = 0,0271
+     ordre, « présenté en tête » (rang 1 avec probabilité δ, rangs 1 à 10) : δ = 0,0710 ; variation totale 0,9·δ = 0,0639
+     ordre, décalage hors du support (choix provisoire du code), trait « rang » en rangs moyens : δ ≈ c / (√3/2 · √n) = 0,0642 ; variation totale δ
+     verdict (trait seul) : il faut m ≥ 5 épisodes marqués, tous audités (0,5^m ≤ α/J) ; puissance 0,8 à λ = 0,67 %
+     verdict (15 statistiques) : il faut m ≥ 9 épisodes marqués, tous audités (0,5^m ≤ α/J) ; puissance 0,8 à λ = 1,14 %
+     verdict (30 statistiques) : il faut m ≥ 10 épisodes marqués, tous audités (0,5^m ≤ α/J) ; puissance 0,8 à λ = 1,25 %
+     verdict (120 statistiques) : il faut m ≥ 12 épisodes marqués, tous audités (0,5^m ≤ α/J) ; puissance 0,8 à λ = 1,48 %
+     fenêtre sans audit (score seul), propension 0.5 : zéro audit parmi w ≥ 5 épisodes ; puissance 0,8 à f = 0,67 % des épisodes non audités
+     fenêtre sans audit (score seul), propension 0.05 : zéro audit parmi w ≥ 59 épisodes ; puissance 0,8 à f = 3,43 % des épisodes non audités
+     fenêtre sans audit (120 statistiques), propension 0.5 : zéro audit parmi w ≥ 12 épisodes ; puissance 0,8 à f = 1,48 % des épisodes non audités
+     fenêtre sans audit (120 statistiques), propension 0.05 : zéro audit parmi w ≥ 152 épisodes ; puissance 0,8 à f = 8,52 % des épisodes non audités
+
+[B1] option (d) (n = 4 000, α = 0,0125)
+     horodatage : d = 0,0999 écart type ; variation totale 2Φ(d/2) − 1 = 0,0398 ; corrigé pour 30 statistiques : d = 0,1356 ; pour 120 : 0,1475
+     relance : ε = 2,35 points (de 5 % à 5 % + ε) ; variation totale ε = 0,0235
+     ordre, « présenté en tête » (rang 1 avec probabilité δ, rangs 1 à 10) : δ = 0,0622 ; variation totale 0,9·δ = 0,0560
+     ordre, décalage hors du support (choix provisoire du code), trait « rang » en rangs moyens : δ ≈ c / (√3/2 · √n) = 0,0563 ; variation totale δ
+     verdict (trait seul) : il faut m ≥ 7 épisodes marqués, tous audités (0,5^m ≤ α/J) ; puissance 0,8 à λ = 0,45 %
+     verdict (15 statistiques) : il faut m ≥ 11 épisodes marqués, tous audités (0,5^m ≤ α/J) ; puissance 0,8 à λ = 0,68 %
+     verdict (30 statistiques) : il faut m ≥ 12 épisodes marqués, tous audités (0,5^m ≤ α/J) ; puissance 0,8 à λ = 0,74 %
+     verdict (120 statistiques) : il faut m ≥ 14 épisodes marqués, tous audités (0,5^m ≤ α/J) ; puissance 0,8 à λ = 0,85 %
+     fenêtre sans audit (score seul), propension 0.5 : zéro audit parmi w ≥ 7 épisodes ; puissance 0,8 à f = 0,45 % des épisodes non audités
+     fenêtre sans audit (score seul), propension 0.05 : zéro audit parmi w ≥ 86 épisodes ; puissance 0,8 à f = 2,46 % des épisodes non audités
+     fenêtre sans audit (120 statistiques), propension 0.5 : zéro audit parmi w ≥ 14 épisodes ; puissance 0,8 à f = 0,85 % des épisodes non audités
+     fenêtre sans audit (120 statistiques), propension 0.05 : zéro audit parmi w ≥ 179 épisodes ; puissance 0,8 à f = 5,00 % des épisodes non audités
+
+[B2] Simulations de contrôle à n = 4000, bras équilibrés, seuil 0.0125, 20000 répliques, statistique Z de la section 3, seuil normal z = 2,2414
+     horodatage à d = 0,0999 : retrouvé 16012 fois sur 20000 (0,801)
+     relance à ε = 2,35 points : retrouvée 16166 fois sur 20000 (0,808)
+     ordre, présenté en tête à δ = 0,0622 : retrouvé 15899 fois sur 20000 (0,795)
+     ordre, décalage hors du support à δ = 0,0563 : retrouvé 16105 fois sur 20000 (0,805)
+     ordre, décalage cyclique avec probabilité 0,5 (variation totale nulle) : rejets bilatéraux 256 sur 20000 (0,013), attendu 0.0125
+
+====================================================================================================
+SECTION C — scores de queue pour la pièce d'audit
+====================================================================================================
+[C1] k₀ = plus petit k tel que (1 − π̄)^k ≤ α / J_tot (zéro audit parmi k₀ épisodes franchit la borne de Bonferroni)
+     α = 0.0125, J_tot = 60 : k₀ = 13 à pièce équilibrée ; 166 au taux de 5 % ; z(1 − α/J_tot) = 3,5293
+     α = 0.0125, J_tot = 68 : k₀ = 13 à pièce équilibrée ; 168 au taux de 5 % ; z(1 − α/J_tot) = 3,5623
+     α = 0.0125, J_tot = 120 : k₀ = 14 à pièce équilibrée ; 179 au taux de 5 % ; z(1 − α/J_tot) = 3,7087
+     α = 0.0125, J_tot = 136 : k₀ = 14 à pièce équilibrée ; 182 au taux de 5 % ; z(1 − α/J_tot) = 3,7403
+
+[C2] Loi nulle du maximum par tirages répétés de la pièce, sorties fixes (200000 tirages ; n = 4000 ; 30 prédicteurs : 15 par cible ; grille k₀, 2k₀, 4k₀ ; J_tot = 120)
+     valeur critique = quantile 1 − α du maximum ; « facteur » = (critique avec queues + z(0,8)) / (critique sans queues + z(0,8))
+     π = 0.5, corrélation 0.0, 0 prédicteurs binaires rares : k = [14, 28, 56] ; critique Z seuls = 3,343 (Bonferroni 30 : 3,341) ; avec queues = 3,584 (Bonferroni 120 : 3,709) ; queues seules = 3,395 ; facteur = 1,0574 ; part des tirages où une queue porte le maximum = 0,594 ; critiques à 0,05 : 2,925 et 3,116 ; ± 0,006 ; 10 s
+       contrôle : P(max avec queues ≥ z(1 − α/120)) = 0,0085 (≤ 0.0125 attendu) ; par prédicteur, P(le meilleur de ses trois scores de queue ≥ z(1 − α/120)) = 0.000178 (au plus 3α/120 = 0.000313)
+     π = 0.5, corrélation 0.5, 0 prédicteurs binaires rares : k = [14, 28, 56] ; critique Z seuls = 3,255 (Bonferroni 30 : 3,341) ; avec queues = 3,517 (Bonferroni 120 : 3,709) ; queues seules = 3,395 ; facteur = 1,0639 ; part des tirages où une queue porte le maximum = 0,772 ; critiques à 0,05 : 2,771 et 3,116 ; ± 0,006 ; 10 s
+       contrôle : P(max avec queues ≥ z(1 − α/120)) = 0,0076 (≤ 0.0125 attendu) ; par prédicteur, P(le meilleur de ses trois scores de queue ≥ z(1 − α/120)) = 0.000170 (au plus 3α/120 = 0.000313)
+     π = 0.05, corrélation 0.0, 0 prédicteurs binaires rares : k = [179, 358, 716] ; critique Z seuls = 3,346 (Bonferroni 30 : 3,341) ; avec queues = 3,636 (Bonferroni 120 : 3,709) ; queues seules = 3,458 ; facteur = 1,0692 ; part des tirages où une queue porte le maximum = 0,567 ; critiques à 0,05 : 2,935 et 3,146 ; ± 0,006 ; 30 s
+       contrôle : P(max avec queues ≥ z(1 − α/120)) = 0,0095 (≤ 0.0125 attendu) ; par prédicteur, P(le meilleur de ses trois scores de queue ≥ z(1 − α/120)) = 0.000216 (au plus 3α/120 = 0.000313)
+     π = 0.05, corrélation 0.5, 0 prédicteurs binaires rares : k = [179, 358, 716] ; critique Z seuls = 3,260 (Bonferroni 30 : 3,341) ; avec queues = 3,521 (Bonferroni 120 : 3,709) ; queues seules = 3,458 ; facteur = 1,0638 ; part des tirages où une queue porte le maximum = 0,721 ; critiques à 0,05 : 2,768 et 3,120 ; ± 0,006 ; 31 s
+       contrôle : P(max avec queues ≥ z(1 − α/120)) = 0,0087 (≤ 0.0125 attendu) ; par prédicteur, P(le meilleur de ses trois scores de queue ≥ z(1 − α/120)) = 0.000213 (au plus 3α/120 = 0.000313)
+     π = 0.05, corrélation 0.0, 6 prédicteurs binaires rares : k = [179, 358, 716] ; critique Z seuls = 3,284 (Bonferroni 30 : 3,341) ; avec queues = 3,503 (Bonferroni 120 : 3,709) ; queues seules = 3,440 ; facteur = 1,0532 ; part des tirages où une queue porte le maximum = 0,561 ; critiques à 0,05 : 2,872 et 3,120 ; ± 0,006 ; 47 s
+       contrôle : P(max avec queues ≥ z(1 − α/120)) = 0,0077 (≤ 0.0125 attendu) ; par prédicteur, P(le meilleur de ses trois scores de queue ≥ z(1 − α/120)) = 0.000177 (au plus 3α/120 = 0.000313)
+
+[C3] Fenêtre sans audit : puissance du criblage, famille de 30 prédicteurs dont un porteur ; seuils critiques simulés en C2 (prédicteurs indépendants)
+     f = part des épisodes non audités qui portent le signe ; c = taux d'audit dans la fenêtre rapporté à π (0 : signe parfait)
+     « sans queues » : famille de 30 Z ; « avec queues » : 30 Z et 90 scores de queue ; le maximum des 29 autres est tiré de la loi nulle de C2
+     π = 0.5, c = 0.0, trait binaire   : f à puissance 0,8, en % des épisodes non audités : sans queues = 0,72 ; avec queues = 0,81
+        f=0,4% : 0,14→0,06 ; f=0,6% : 0,58→0,40 ; f=0,7% : 0,77→0,61 ; f=0,8% : 0,89→0,79 ; f=0,9% : 0,96→0,90 ; f=1,0% : 0,98→0,95 ; f=1,2% : 1,00→0,99 ; f=1,5% : 1,00→1,00 ; f=2,0% : 1,00→1,00 ; f=3,0% : 1,00→1,00 ; f=5,0% : 1,00→1,00 ; f=7,0% : 1,00→1,00 ; f=10,0% : 1,00→1,00
+     π = 0.5, c = 0.0, sortie continue : f à puissance 0,8, en % des épisodes non audités : sans queues = 8,14 ; avec queues = 0,80
+        f=0,4% : 0,01→0,11 ; f=0,6% : 0,01→0,45 ; f=0,7% : 0,02→0,63 ; f=0,8% : 0,01→0,80 ; f=0,9% : 0,01→0,90 ; f=1,0% : 0,01→0,95 ; f=1,2% : 0,02→0,99 ; f=1,5% : 0,02→1,00 ; f=2,0% : 0,02→1,00 ; f=3,0% : 0,06→1,00 ; f=5,0% : 0,28→1,00 ; f=7,0% : 0,69→1,00 ; f=10,0% : 0,98→1,00
+     π = 0.5, c = 0.25, trait binaire   : f à puissance 0,8, en % des épisodes non audités : sans queues = 1,23 ; avec queues = 1,38
+        f=0,4% : 0,07→0,04 ; f=0,6% : 0,23→0,15 ; f=0,7% : 0,33→0,22 ; f=0,8% : 0,44→0,33 ; f=0,9% : 0,56→0,44 ; f=1,0% : 0,65→0,54 ; f=1,2% : 0,79→0,70 ; f=1,5% : 0,92→0,87 ; f=2,0% : 0,98→0,97 ; f=3,0% : 1,00→1,00 ; f=5,0% : 1,00→1,00 ; f=7,0% : 1,00→1,00 ; f=10,0% : 1,00→1,00
+     π = 0.5, c = 0.25, sortie continue : f à puissance 0,8, en % des épisodes non audités : sans queues = 9,21 ; avec queues = 1,62
+        f=0,4% : 0,02→0,05 ; f=0,6% : 0,01→0,13 ; f=0,7% : 0,01→0,19 ; f=0,8% : 0,01→0,26 ; f=0,9% : 0,01→0,32 ; f=1,0% : 0,01→0,42 ; f=1,2% : 0,01→0,59 ; f=1,5% : 0,01→0,77 ; f=2,0% : 0,02→0,91 ; f=3,0% : 0,04→1,00 ; f=5,0% : 0,18→1,00 ; f=7,0% : 0,48→1,00 ; f=10,0% : 0,91→1,00
+     π = 0.5, c = 0.5, trait binaire   : f à puissance 0,8, en % des épisodes non audités : sans queues = 2,59 ; avec queues = 2,82
+        f=0,4% : 0,02→0,02 ; f=0,6% : 0,07→0,04 ; f=0,7% : 0,10→0,06 ; f=0,8% : 0,13→0,08 ; f=0,9% : 0,17→0,11 ; f=1,0% : 0,21→0,15 ; f=1,2% : 0,30→0,22 ; f=1,5% : 0,43→0,34 ; f=2,0% : 0,65→0,56 ; f=3,0% : 0,90→0,85 ; f=5,0% : 1,00→0,99 ; f=7,0% : 1,00→1,00 ; f=10,0% : 1,00→1,00
+     π = 0.5, c = 0.5, sortie continue : f à puissance 0,8, en % des épisodes non audités : sans queues = hors de la grille ; avec queues = hors de la grille
+        f=0,4% : 0,01→0,03 ; f=0,6% : 0,01→0,04 ; f=0,7% : 0,01→0,06 ; f=0,8% : 0,01→0,08 ; f=0,9% : 0,02→0,10 ; f=1,0% : 0,01→0,12 ; f=1,2% : 0,01→0,17 ; f=1,5% : 0,01→0,25 ; f=2,0% : 0,02→0,47 ; f=3,0% : 0,02→0,58 ; f=5,0% : 0,08→0,61 ; f=7,0% : 0,23→0,63 ; f=10,0% : 0,62→0,77
+     π = 0.05, c = 0.0, trait binaire   : f à puissance 0,8, en % des épisodes non audités : sans queues = 6,10 ; avec queues = 4,99
+        f=3,0% : 0,01→0,01 ; f=4,0% : 0,03→0,03 ; f=4,5% : 0,13→0,30 ; f=5,0% : 0,33→0,81 ; f=5,5% : 0,59→0,99 ; f=6,0% : 0,79→1,00 ; f=8,0% : 1,00→1,00 ; f=10,0% : 1,00→1,00 ; f=12,5% : 1,00→1,00 ; f=15,0% : 1,00→1,00 ; f=17,5% : 1,00→1,00 ; f=20,0% : 1,00→1,00 ; f=25,0% : 1,00→1,00
+     π = 0.05, c = 0.0, sortie continue : f à puissance 0,8, en % des épisodes non audités : sans queues = 17,13 ; avec queues = 4,74
+        f=3,0% : 0,01→0,06 ; f=4,0% : 0,02→0,31 ; f=4,5% : 0,02→0,66 ; f=5,0% : 0,03→0,95 ; f=5,5% : 0,03→1,00 ; f=6,0% : 0,04→1,00 ; f=8,0% : 0,08→1,00 ; f=10,0% : 0,16→1,00 ; f=12,5% : 0,35→1,00 ; f=15,0% : 0,59→1,00 ; f=17,5% : 0,84→1,00 ; f=20,0% : 0,95→1,00 ; f=25,0% : 1,00→1,00
+     π = 0.05, c = 0.25, trait binaire   : f à puissance 0,8, en % des épisodes non audités : sans queues = 11,71 ; avec queues = 11,78
+        f=3,0% : 0,01→0,01 ; f=4,0% : 0,01→0,01 ; f=4,5% : 0,03→0,04 ; f=5,0% : 0,04→0,09 ; f=5,5% : 0,08→0,11 ; f=6,0% : 0,13→0,18 ; f=8,0% : 0,38→0,41 ; f=10,0% : 0,66→0,65 ; f=12,5% : 0,87→0,86 ; f=15,0% : 0,96→0,95 ; f=17,5% : 0,99→0,99 ; f=20,0% : 1,00→1,00 ; f=25,0% : 1,00→1,00
+     π = 0.05, c = 0.25, sortie continue : f à puissance 0,8, en % des épisodes non audités : sans queues = 23,15 ; avec queues = 15,46
+        f=3,0% : 0,02→0,02 ; f=4,0% : 0,02→0,06 ; f=4,5% : 0,02→0,10 ; f=5,0% : 0,02→0,12 ; f=5,5% : 0,02→0,14 ; f=6,0% : 0,02→0,14 ; f=8,0% : 0,03→0,29 ; f=10,0% : 0,06→0,56 ; f=12,5% : 0,14→0,63 ; f=15,0% : 0,25→0,77 ; f=17,5% : 0,41→0,96 ; f=20,0% : 0,62→0,99 ; f=25,0% : 0,90→1,00
+     π = 0.05, c = 0.5, trait binaire   : f à puissance 0,8, en % des épisodes non audités : sans queues = 24,22 ; avec queues = hors de la grille
+        f=3,0% : 0,01→0,01 ; f=4,0% : 0,01→0,01 ; f=4,5% : 0,01→0,02 ; f=5,0% : 0,02→0,02 ; f=5,5% : 0,02→0,02 ; f=6,0% : 0,02→0,03 ; f=8,0% : 0,05→0,05 ; f=10,0% : 0,11→0,09 ; f=12,5% : 0,20→0,16 ; f=15,0% : 0,36→0,29 ; f=17,5% : 0,48→0,41 ; f=20,0% : 0,63→0,56 ; f=25,0% : 0,83→0,78
+     π = 0.05, c = 0.5, sortie continue : f à puissance 0,8, en % des épisodes non audités : sans queues = hors de la grille ; avec queues = hors de la grille
+        f=3,0% : 0,01→0,01 ; f=4,0% : 0,01→0,02 ; f=4,5% : 0,01→0,02 ; f=5,0% : 0,01→0,02 ; f=5,5% : 0,01→0,03 ; f=6,0% : 0,02→0,03 ; f=8,0% : 0,02→0,05 ; f=10,0% : 0,03→0,08 ; f=12,5% : 0,04→0,11 ; f=15,0% : 0,07→0,18 ; f=17,5% : 0,12→0,34 ; f=20,0% : 0,18→0,43 ; f=25,0% : 0,38→0,48
+     dilution du rang moyen, fenêtre parfaite de W épisodes en bas d'une sortie continue : E[Z] ≈ W·√(3π / ((1 − π)·n)) [CALCUL]
+       π = 0.5 : puissance 0,8 sans queues à W ≈ 153 épisodes, soit f ≈ 7,6 % ; avec queues, il suffit de W ≥ k₀ = 14, soit f ≈ 0,7 % en espérance
+       π = 0.05 : puissance 0,8 sans queues à W ≈ 667 épisodes, soit f ≈ 17,5 % ; avec queues, il suffit de W ≥ k₀ = 179, soit f ≈ 4,7 % en espérance
+
+[C5] Sens inverse (signe qui dit « audité » sur une part g des épisodes audités) : risque d'audit hors du signe = π·(1 − g)/(1 − π·g)
+     π = 0.05 : g = 0.01 : facteur 0,990 ; g = 0.05 : facteur 0,952 ; g = 0.1 : facteur 0,905 ; g = 0.2 : facteur 0,808
+     π = 0.5 : g = 0.01 : facteur 0,995 ; g = 0.05 : facteur 0,974 ; g = 0.1 : facteur 0,947 ; g = 0.2 : facteur 0,889
+     fenêtre sûre (signe qui dit « non audité », parfait) de masse f : risque d'audit dans la fenêtre = 0, quel que soit f
+
+[C4] Ce que les queues coûtent à une fuite diffuse : décalage de d écarts types d'un trait continu (rangs), n = 4 000, famille de 30
+     π = 0.5 : d=0,100 (variation totale 0,040) : sans queues 0,417, avec 0,330 ; d=0,120 (variation totale 0,048) : sans queues 0,642, avec 0,553 ; d=0,130 (variation totale 0,052) : sans queues 0,755, avec 0,673 ; d=0,140 (variation totale 0,056) : sans queues 0,839, avec 0,769 ; d=0,150 (variation totale 0,060) : sans queues 0,902, avec 0,855 ; d=0,160 (variation totale 0,064) : sans queues 0,942, avec 0,909 ; d=0,180 (variation totale 0,072) : sans queues 0,989, avec 0,978
+       d à puissance 0,8 : sans queues 0,135 (variation totale 0,054) ; avec queues 0,144 (variation totale 0,057) ; rapport 1,061
+     π = 0.05 : d=0,250 (variation totale 0,099) : sans queues 0,498, avec 0,397 ; d=0,300 (variation totale 0,119) : sans queues 0,730, avec 0,650 ; d=0,325 (variation totale 0,129) : sans queues 0,850, avec 0,779 ; d=0,350 (variation totale 0,139) : sans queues 0,908, avec 0,857 ; d=0,375 (variation totale 0,149) : sans queues 0,948, avec 0,916 ; d=0,400 (variation totale 0,159) : sans queues 0,977, avec 0,957 ; d=0,450 (variation totale 0,178) : sans queues 0,996, avec 0,990
+       d à puissance 0,8 : sans queues 0,315 (variation totale 0,125) ; avec queues 0,332 (variation totale 0,132) ; rapport 1,055
+
+[C6] Cas sain du test par rejeu, queues comprises : taille sous le nul (4000 répliques ; n = 1 000 ; 12 prédicteurs dont 4 à ex æquo et 1 constant ; B = 399 ; p = (1 + #{M* ≥ M})/(B + 1))
+     π = 0.5, niveau 0.0125 : rejets avec queues 44 sur 4000 (0,0110 ; intervalle exact à 95 % [0,0080 ; 0,0147]) ; Z seuls 52 sur 4000 (0,0130)
+     π = 0.5, niveau 0.05 : rejets avec queues 188 sur 4000 (0,0470 ; intervalle exact à 95 % [0,0406 ; 0,0540]) ; Z seuls 205 sur 4000 (0,0512)
+     π = 0.5, niveau 0.1 : rejets avec queues 392 sur 4000 (0,0980 ; intervalle exact à 95 % [0,0890 ; 0,1076]) ; Z seuls 395 sur 4000 (0,0988)
+     π = 0.05, niveau 0.0125 : rejets avec queues 42 sur 4000 (0,0105 ; intervalle exact à 95 % [0,0076 ; 0,0142]) ; Z seuls 53 sur 4000 (0,0132)
+     π = 0.05, niveau 0.05 : rejets avec queues 200 sur 4000 (0,0500 ; intervalle exact à 95 % [0,0435 ; 0,0572]) ; Z seuls 202 sur 4000 (0,0505)
+     π = 0.05, niveau 0.1 : rejets avec queues 412 sur 4000 (0,1030 ; intervalle exact à 95 % [0,0937 ; 0,1128]) ; Z seuls 393 sur 4000 (0,0983)
+
+====================================================================================================
+SECTION D — confirmation : les statistiques qui ont rejeté, figées, sur 4 000 épisodes neufs, au seuil de 0,05
+====================================================================================================
+[D1] Formes closes (approximation normale) : statistique porteuse d'espérance μ au criblage ; critique du criblage c_M ; confirmation au seuil 0,05
+     lecture, 30 statistiques : c_M = 3,341 (Bonferroni) ; à la taille du criblage (puissance 0,8, μ = 4,183) la confirmation rejette avec probabilité 0,9944 ; suspension durable : 0,7955
+       deux temps : puissance 0,8 à μ = 4,199, soit 0,37 % de taille en plus ; δ équilibré = 0,0664, à 5 % = 0,1523
+       seuil de confirmation 0.0125 : puissance de la confirmation à la taille du criblage 0,9739 ; suspensions durables à tort par admission au plus 0,00063
+       seuil de confirmation 0.025 : puissance de la confirmation à la taille du criblage 0,9869 ; suspensions durables à tort par admission au plus 0,00125
+       seuil de confirmation 0.05 : puissance de la confirmation à la taille du criblage 0,9944 ; suspensions durables à tort par admission au plus 0,00250
+       seuil de confirmation 0.1 : puissance de la confirmation à la taille du criblage 0,9981 ; suspensions durables à tort par admission au plus 0,00500
+       confirmation sur 1000 épisodes neufs : puissance 0,6725
+       confirmation sur 2000 épisodes neufs : puissance 0,9054
+       confirmation sur 4000 épisodes neufs : puissance 0,9944
+       confirmation sur 8000 épisodes neufs : puissance 1,0000
+       fuite retrouvée au criblage avec probabilité 0.2 (μ = 2,500) : confirmation 0,8037
+       fuite retrouvée au criblage avec probabilité 0.5 (μ = 3,341) : confirmation 0,9551
+     pièce, 120 statistiques : c_M = 3,709 (Bonferroni) ; à la taille du criblage (puissance 0,8, μ = 4,550) la confirmation rejette avec probabilité 0,9982 ; suspension durable : 0,7985
+       deux temps : puissance 0,8 à μ = 4,555, soit 0,11 % de taille en plus ; δ équilibré = 0,0720, à 5 % = 0,1652
+       seuil de confirmation 0.0125 : puissance de la confirmation à la taille du criblage 0,9895 ; suspensions durables à tort par admission au plus 0,00063
+       seuil de confirmation 0.025 : puissance de la confirmation à la taille du criblage 0,9952 ; suspensions durables à tort par admission au plus 0,00125
+       seuil de confirmation 0.05 : puissance de la confirmation à la taille du criblage 0,9982 ; suspensions durables à tort par admission au plus 0,00250
+       seuil de confirmation 0.1 : puissance de la confirmation à la taille du criblage 0,9995 ; suspensions durables à tort par admission au plus 0,00500
+       confirmation sur 1000 épisodes neufs : puissance 0,7358
+       confirmation sur 2000 épisodes neufs : puissance 0,9421
+       confirmation sur 4000 épisodes neufs : puissance 0,9982
+       confirmation sur 8000 épisodes neufs : puissance 1,0000
+       fuite retrouvée au criblage avec probabilité 0.2 (μ = 2,867) : confirmation 0,8892
+       fuite retrouvée au criblage avec probabilité 0.5 (μ = 3,709) : confirmation 0,9805
+
+[D2] Reprises : fuite à la taille du criblage (puissance 0,8), puissance de la confirmation P_c (ci-dessus)
+     lecture, 30 statistiques : suspension durable avec la confirmation, sans aucune reprise : 0,8 × 0,9944 = 0,7955 ; réparation de façade (fuite inchangée, nouvelle empreinte) : sans épreuve dédiée, la fuite passe la réadmission avec probabilité 0,20 ; avec l'épreuve dédiée du prédicteur figé, au plus 0,0056 par cycle
+     pièce, 120 statistiques : suspension durable avec la confirmation, sans aucune reprise : 0,8 × 0,9982 = 0,7985 ; réparation de façade (fuite inchangée, nouvelle empreinte) : sans épreuve dédiée, la fuite passe la réadmission avec probabilité 0,20 ; avec l'épreuve dédiée du prédicteur figé, au plus 0,0018 par cycle
+     si une épreuve entière neuve et réussie levait la suspension (reprise simple), probabilité qu'une fuite à la taille du criblage reste suspendue après r reprises : r = 1 : 0,640 ; r = 2 : 0,512 ; r = 3 : 0,410 ; r = 5 : 0,262
+
+[D3] Simulation des deux temps, famille de 30 prédicteurs dont un porteur, 4000 répliques par taille (critiques simulés en C2)
+     « porteur au maximum » : part des rejets du criblage où la statistique du maximum est celle du porteur ; « durable » : criblage et confirmation rejettent
+     règle A : seule la statistique du maximum est confirmée ; règle B : toutes les statistiques qui ont rejeté (valeur ≥ critique du maximum) sont confirmées ensemble
+     fuite diffuse, π = 0.5, sans queues : d=0,10 : criblage 0,401, porteur au maximum 0,976, durable A 0,364, B 0,364 ; d=0,12 : criblage 0,631, porteur au maximum 0,995, durable A 0,618, B 0,619 ; d=0,14 : criblage 0,834, porteur au maximum 0,997, durable A 0,828, B 0,829 ; d=0,16 : criblage 0,954, porteur au maximum 0,998, durable A 0,952, B 0,953 ; d=0,18 : criblage 0,987, porteur au maximum 0,999, durable A 0,986, B 0,986 ; d=0,20 : criblage 0,998, porteur au maximum 1,000, durable A 0,998, B 0,998
+     fuite diffuse, π = 0.5, avec queues : d=0,10 : criblage 0,327, porteur au maximum 0,972, durable A 0,291, B 0,292 ; d=0,12 : criblage 0,556, porteur au maximum 0,983, durable A 0,532, B 0,534 ; d=0,14 : criblage 0,769, porteur au maximum 0,997, durable A 0,763, B 0,764 ; d=0,16 : criblage 0,910, porteur au maximum 0,999, durable A 0,909, B 0,909 ; d=0,18 : criblage 0,976, porteur au maximum 0,999, durable A 0,975, B 0,975 ; d=0,20 : criblage 0,995, porteur au maximum 1,000, durable A 0,995, B 0,995
+     fuite diffuse, π = 0.05, sans queues : d=0,25 : criblage 0,500, porteur au maximum 0,983, durable A 0,467, B 0,468 ; d=0,30 : criblage 0,739, porteur au maximum 0,996, durable A 0,728, B 0,729 ; d=0,35 : criblage 0,907, porteur au maximum 0,997, durable A 0,903, B 0,904 ; d=0,40 : criblage 0,976, porteur au maximum 1,000, durable A 0,976, B 0,976 ; d=0,45 : criblage 0,997, porteur au maximum 1,000, durable A 0,997, B 0,997 ; d=0,50 : criblage 0,999, porteur au maximum 1,000, durable A 0,999, B 0,999
+     fuite diffuse, π = 0.05, avec queues : d=0,25 : criblage 0,405, porteur au maximum 0,981, durable A 0,373, B 0,375 ; d=0,30 : criblage 0,652, porteur au maximum 0,994, durable A 0,634, B 0,636 ; d=0,35 : criblage 0,853, porteur au maximum 0,996, durable A 0,846, B 0,848 ; d=0,40 : criblage 0,949, porteur au maximum 0,999, durable A 0,947, B 0,948 ; d=0,45 : criblage 0,992, porteur au maximum 1,000, durable A 0,992, B 0,992 ; d=0,50 : criblage 0,999, porteur au maximum 1,000, durable A 0,999, B 0,999
+     fenêtre parfaite, sortie continue, π = 0.5, avec queues : f=0,6% : criblage 0,421, porteur au maximum 0,980, durable A 0,367, B 0,366 ; f=0,8% : criblage 0,798, porteur au maximum 0,996, durable A 0,767, B 0,779 ; f=1,0% : criblage 0,956, porteur au maximum 0,998, durable A 0,941, B 0,951 ; f=1,2% : criblage 0,994, porteur au maximum 0,998, durable A 0,987, B 0,994 ; f=1,5% : criblage 1,000, porteur au maximum 1,000, durable A 0,999, B 1,000
+     fenêtre parfaite, sortie continue, π = 0.05, avec queues : f=4,0% : criblage 0,305, porteur au maximum 0,962, durable A 0,262, B 0,272 ; f=4,5% : criblage 0,674, porteur au maximum 0,990, durable A 0,645, B 0,662 ; f=5,0% : criblage 0,938, porteur au maximum 0,993, durable A 0,912, B 0,937 ; f=5,5% : criblage 0,998, porteur au maximum 0,993, durable A 0,965, B 0,997 ; f=6,0% : criblage 1,000, porteur au maximum 0,995, durable A 0,964, B 1,000
+
+[D4] Cas sain de la confirmation, jouée d'office : statistique du maximum d'un criblage nul, figée (4000 répliques, n = 4000, 30 prédicteurs)
+     π = 0.5 : confirmation sur pli neuf, rejets 147 sur 4000 (0,037), attendu au plus 0,05 ; artefact, confirmation sur le pli du criblage : 3923 sur 4000 (0,981)
+     π = 0.05 : confirmation sur pli neuf, rejets 152 sur 4000 (0,038), attendu au plus 0,05 ; artefact, confirmation sur le pli du criblage : 3763 sur 4000 (0,941)
+     seuil de mort proposé sur 1 000 répliques saines, confirmation d'office au seuil 0,05 : au plus 72 rejets (P(≥ 73) = 0.0010) ; l'artefact ci-dessus le franchit avec certitude
+
+====================================================================================================
+SECTION E — critère « la statistique du devin croît avec λ » : séparation complète des doses voisines sur R répliques
+====================================================================================================
+[E1] R = 3 : sous échange de deux doses voisines (dose non appliquée), séparation complète par hasard : 1 / C(6, 3) = 0.05000 ; les quatre doses rangées par hasard : 2.706e-06
+[E1] R = 4 : sous échange de deux doses voisines (dose non appliquée), séparation complète par hasard : 1 / C(8, 4) = 0.01429 ; les quatre doses rangées par hasard : 1.586e-08
+[E1] R = 5 : sous échange de deux doses voisines (dose non appliquée), séparation complète par hasard : 1 / C(10, 5) = 0.00397 ; les quatre doses rangées par hasard : 8.523e-11
+[E1] R = 6 : sous échange de deux doses voisines (dose non appliquée), séparation complète par hasard : 1 / C(12, 6) = 0.00108 ; les quatre doses rangées par hasard : 4.331e-13
+
+[E2] Modèle normal simple : M à la dose basse ~ N(0, 1), à la dose haute ~ N(Δ, 1) ; probabilité que le critère passe (200000 tirages)
+     Δ    | une seule réalisation, croissance stricte | R = 3, séparation complète | R = 5, séparation complète
+      0,0 |                                    0,4997 |                     0,0493 |                     0,0039
+      0,5 |                                    0,6371 |                     0,1271 |                     0,0206
+      1,0 |                                    0,7601 |                     0,2607 |                     0,0745
+      2,0 |                                    0,9220 |                     0,6223 |                     0,3745
+      3,0 |                                    0,9829 |                     0,8899 |                     0,7683
+      4,0 |                                    0,9978 |                     0,9818 |                     0,9563
+      5,0 |                                    0,9998 |                     0,9983 |                     0,9956
+      6,0 |                                    1,0000 |                     0,9999 |                     0,9998
+      8,0 |                                    1,0000 |                     1,0000 |                     1,0000
+     lecture : sur une seule réalisation, deux doses que rien ne sépare (Δ = 0) « croissent » une fois sur deux ; avec R = 5, une fois sur 252.
+     doses de la conception au budget d'une course (4000 d'épreuve), prédicteur qui lit le canal : E[Z] ≈ √(λ·n) = λ = 0.1 : 20,0 ; λ = 0.3 : 34,6 ; λ = 1.0 : 63,2 ; à dose nulle, maximum nul de 30 statistiques, quantile 0,999 ≈ 3,99
+
+[E3] Pourquoi pas un test de tendance global (statistique de Jonckheere et Terpstra, quatre doses, cinq répliques) : la plus petite dose non appliquée,
+     les deux fortes séparées. La statistique compte les paires rangées dans l'ordre des doses : 125 paires acquises sur 150, plus U, compte des paires
+     entre la dose nulle et la dose non appliquée (0 à 25).
+     sous l'échange de toutes les doses : moyenne 75,0, écart type 14,86 ; même avec U = 0, l'écart réduit vaut 3,36, soit une p-valeur approchée de 0.00038 : le test de tendance passe toujours, et ne voit pas la dose manquante ; la séparation dose à dose la voit 251 fois sur 252.
+
+====================================================================================================
+SECTION F — prédicteur appris contre prédicteur d'oracle (monde gaussien à dix traits, discriminant linéaire appris sur 4 000 épisodes)
+====================================================================================================
+     fuite : décalage de moyenne le long d'une direction, de variation totale δ = 2Φ(μ/2) − 1 ; famille : dix traits seuls et le discriminant (11 Z ; 33 queues)
+     seuil 0,0125 ; critiques tirés de 20000 répliques nulles du même montage ; 2000 répliques par taille ; apprentissage 4 000, épreuve 4 000
+     π = 0.5 : critique 11 Z = 3,028 (Bonferroni 11 : 3,052) ; avec 33 queues = 3,302 (Bonferroni 44 : 3,446)
+       δ = 0,04 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,062) : oracle 0,546 sans queues, 0,431 avec ; appris 0,306 sans queues, 0,216 avec ; cosinus moyen de la direction apprise 0,711
+       δ = 0,05 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,062) : oracle 0,831 sans queues, 0,747 avec ; appris 0,586 sans queues, 0,469 avec ; cosinus moyen de la direction apprise 0,792
+       δ = 0,06 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,062) : oracle 0,956 sans queues, 0,921 avec ; appris 0,838 sans queues, 0,750 avec ; cosinus moyen de la direction apprise 0,838
+       δ = 0,07 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,062) : oracle 0,993 sans queues, 0,985 avec ; appris 0,964 sans queues, 0,935 avec ; cosinus moyen de la direction apprise 0,876
+       δ = 0,08 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,062) : oracle 0,999 sans queues, 0,998 avec ; appris 0,993 sans queues, 0,986 avec ; cosinus moyen de la direction apprise 0,900
+       δ à puissance 0,8, par interpolation : oracle 0,049 sans queues, 0,053 avec ; appris 0,058 sans queues, 0,063 avec ; formule (prédicteur binaire, borne de Bonferroni) : 0,062 pour 11 statistiques, 0,068 pour 44
+       rapports : appris sur oracle 1,196 sans queues, 1,182 avec ; coût des queues 1,085 pour l'oracle, 1,072 pour l'appris ; par les valeurs critiques 1,071
+     π = 0.05 : critique 11 Z = 3,033 (Bonferroni 11 : 3,052) ; avec 33 queues = 3,416 (Bonferroni 44 : 3,446)
+       δ = 0,09 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,141) : oracle 0,544 sans queues, 0,417 avec ; appris 0,299 sans queues, 0,191 avec ; cosinus moyen de la direction apprise 0,710
+       δ = 0,11 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,141) : oracle 0,763 sans queues, 0,641 avec ; appris 0,514 sans queues, 0,376 avec ; cosinus moyen de la direction apprise 0,771
+       δ = 0,13 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,141) : oracle 0,912 sans queues, 0,849 avec ; appris 0,759 sans queues, 0,644 avec ; cosinus moyen de la direction apprise 0,825
+       δ = 0,15 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,141) : oracle 0,979 sans queues, 0,959 avec ; appris 0,906 sans queues, 0,830 avec ; cosinus moyen de la direction apprise 0,858
+       δ = 0,18 (formule, prédicteur binaire, 11 statistiques : puissance 0,8 à 0,141) : oracle 0,999 sans queues, 0,995 avec ; appris 0,989 sans queues, 0,975 avec ; cosinus moyen de la direction apprise 0,897
+       δ à puissance 0,8, par interpolation : oracle 0,115 sans queues, 0,125 avec ; appris 0,136 sans queues, 0,147 avec ; formule (prédicteur binaire, borne de Bonferroni) : 0,141 pour 11 statistiques, 0,156 pour 44
+       rapports : appris sur oracle 1,179 sans queues, 1,171 avec ; coût des queues 1,090 pour l'oracle, 1,083 pour l'appris ; par les valeurs critiques 1,099
+
+Durée : 1280 s

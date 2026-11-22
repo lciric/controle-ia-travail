@@ -1,0 +1,7 @@
+« Un système d'idéation fait de plusieurs modèles de langue cherche des idées rares, justes et fécondes. La liste jointe recense les hypothèses, mécanismes et stratégies déjà envisagés pour explorer les idées rares et pour l'« allumage » d'une idée, c'est-à-dire ce qui fait qu'une idée rare devient féconde et engendre des descendants retenus. Chaque entrée porte son état ; beaucoup n'ont jamais été éprouvées. Une première course d'un système dédié a échoué pour une raison technique, avant toute proposition. Les références de la liste n'ont pas été vérifiées.
+1. Pour chaque mécanisme jamais éprouvé : faut-il l'éprouver directement sur un banc dont la réponse est connue, le confier au système lui-même comme matière à affiner, le fusionner avec un autre, l'écarter, ou l'ajourner ? Donnez la raison, et ce qui réfuterait un mécanisme éprouvé.
+2. Que manque-t-il à la liste, que la littérature connaît sur l'exploration d'idées rares et sur la façon dont une idée devient féconde ?
+3. Quels désaccords de la liste faut-il trancher d'abord, et par quelle expérience ou quel calcul ?
+4. Quand vaut-il mieux confier un mécanisme au système plutôt que l'éprouver directement, et inversement ? Quels risques chaque voie crée-t-elle ?
+5. Dans quel ordre procéder, du moins cher au plus cher, et que décide chaque étape ?
+Citez auteurs, année et titre ; séparez ce que vous savez de ce que vous supposez ; aucun chiffre sans source. »
