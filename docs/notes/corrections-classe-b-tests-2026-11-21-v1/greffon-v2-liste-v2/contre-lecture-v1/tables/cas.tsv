@@ -1,0 +1,41 @@
+cas	attendu	rendu	verdict	resume
+1a fantome (objet faux)	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_a.py::test_nope (aucun essai collecté de ce nom)
+1b sain (objet vrai)	0	0	OK	1 passed, 1 xfailed in 0.03s
+2a liste alteree apres scellement	4	4	OK	2 skipped in 0.01s | ERROR: liste des échecs connus refusée : /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/sb/c2a/tests/echecs-connus-v2.txt : empreinte 2f4243dc74e0… ≠ scellée 35c7310f5717…
+2b liste scellee intacte	0	0	OK	1 passed, 1 xfailed in 0.03s
+2c liste ET compagnon alteres ensemble (objet: exemption elargie)	0?	0	ECART	2 xfailed in 0.03s
+2d compagnon absent	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus refusée : /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/sb/c2d/tests/echecs-connus-v2.txt : empreinte compagnon echecs-connus-v2.txt.sha256 absente
+3a doublon	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus refusée (echecs-connus-v2.txt) : ligne 3 : 'tests/test_a.py::test_ko' en double
+3b sans doublon	0	0	OK	2 xfailed in 0.02s
+4a fichier absent	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_absent.py::test_x (fichier absent)
+4b fichier present	0	0	OK	1 xfailed in 0.02s
+5a exempte qui passe (strict)	1	1	OK	[XPASS(strict)] échec connu (echecs-connus-v2.txt) : motif [ref] | tests/test_a.py:7: AssertionError | tests/test_a.py:10: AssertionError | tests/test_a.py:14: AssertionError | tests/test_a.py:14: AssertionError | tests/test_a.py:18: AssertionError | 6 failed in 0.03s
+5b exempte qui echoue	0	0	OK	1 xfailed in 0.03s
+6a skip bloc, ligne listee (R-A)	4	4	OK	2 skipped in 0.01s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_skipbloc.py::test_s (fichier joué mais sauté en bloc : aucun essai collecté, exemption non jugeable)
+6b skip bloc, NON liste	0	0	OK	1 passed, 1 skipped in 0.01s
+6c importorskip, ligne listee (R-A)	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_importorskip.py::test_s (fichier joué mais sauté en bloc : aucun essai collecté, exemption non jugeable)
+6d module sans aucun essai collecte (non saute), ligne listee	4?	0	ECART	1 passed in 0.01s
+6e module marque skip (pytestmark), ligne listee	?	0	ECART	1 skipped in 0.01s
+6f skip bloc ligne listee, run par dossier tests (defaut)	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_skipbloc.py::test_s (fichier joué mais sauté en bloc : aucun essai collecté, exemption non jugeable)
+6g skip bloc ligne listee, run par argument fichier seul	4	4	OK	1 skipped in 0.01s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_skipbloc.py::test_s (fichier joué mais sauté en bloc : aucun essai collecté, exemption non jugeable)
+7a --runxfail (R-B)	4	4	OK	2 skipped in 0.01s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : l'option --runxfail désarme l'échec attendu strict des essais listés ; elle est refusée par tests/greffon_echecs_connus_v2.py (R-B)
+7b sans --runxfail	0	0	OK	1 xfailed in 0.02s
+7c PYTEST_ADDOPTS=--runxfail	4	4	OK	no tests ran in 0.01s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : l'option --runxfail désarme l'échec attendu strict des essais listés ; elle est refusée par tests/greffon_echecs_connus_v2.py (R-B)
+7d --runxfail sans aucun essai collecte (-k absent)	4	4	OK	2 skipped in 0.01s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : l'option --runxfail désarme l'échec attendu strict des essais listés ; elle est refusée par tests/greffon_echecs_connus_v2.py (R-B)
+8a -k deselectionne l'essai liste	0	0	OK	1 passed, 5 deselected in 0.01s
+8b --deselect de l'essai liste	0	0	OK	1 passed, 5 deselected in 0.01s
+8c fantome + -k qui deselectionne tout	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_a.py::test_nope (aucun essai collecté de ce nom)
+8d fantome + --deselect	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_a.py::test_nope (aucun essai collecté de ce nom)
+9a passe ne collectant pas le fichier liste	0	0	OK	1 passed in 0.01s
+9b fantome, passe ne collectant pas le fichier	0	0	OK	1 passed in 0.01s
+9c passe par identifiant d'un autre essai du fichier listé (ligne vraie)	0	0	OK	1 passed in 0.01s
+9d idem, ligne fantome	4	4	OK	no tests ran in 0.01s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_a.py::test_nope (aucun essai collecté de ce nom)
+9e --collect-only, ligne fantome	4	4	OK	ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_a.py::test_nope (aucun essai collecté de ce nom)
+10a essai non liste qui echoue reste un echec (test_ko2)	1	1	OK	tests/test_a.py:10: AssertionError | 1 failed, 1 xfailed in 0.03s
+10b prefixe: liste test_p seul (parametre absent de l'id)	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus (echecs-connus-v2.txt) : ligne(s) sans essai : tests/test_a.py::test_p (aucun essai collecté de ce nom)
+10c parametre exact test_p[1]	1	1	OK	tests/test_a.py:14: AssertionError | 1 failed, 1 xfailed in 0.02s
+10d methode de classe	0	0	OK	1 xfailed in 0.02s
+10e xfail propre non strict sur essai liste qui passe	1	0	ECART	=================================== XPASSES ==================================== | XPASS tests/test_xfail_propre.py::test_s | 1 xpassed in 0.01s
+10f rootdir = tests/	4?	4	ECART	no tests ran in 0.00s | ERROR: file or directory not found: test_a.py::test_ko
+10g ligne avec motif *	4	4	OK	2 skipped in 0.02s | ERROR: liste des échecs connus refusée (echecs-connus-v2.txt) : ligne 2 : caractère de motif dans 'tests/test_a.py::test_*' (identifiants exacts seulement)
+10h ligne hors tests/	4	4	OK	2 skipped in 0.01s | ERROR: liste des échecs connus refusée (echecs-connus-v2.txt) : ligne 2 : identifiant complet attendu (tests/….py::essai), lu 'scripts/x.py::test_a'

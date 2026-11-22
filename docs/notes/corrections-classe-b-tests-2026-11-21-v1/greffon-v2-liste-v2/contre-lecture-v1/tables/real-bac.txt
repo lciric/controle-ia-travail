@@ -1,0 +1,3014 @@
+............................EEEEEEEEEEEEEEEEEEEEEEEEEEEEEFEEEEEEE....... [ 40%]
+...........s..................................................FFFFFFFFFF [ 81%]
+FF....x..x.FFFFFFFFFFFF....x..x.                                         [100%]
+==================================== ERRORS ====================================
+___________ ERROR at setup of test_sain_commandes_ordinaires[ls -la] ___________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_________ ERROR at setup of test_sain_commandes_ordinaires[kill 12345] _________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires1')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires1/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+______ ERROR at setup of test_sain_commandes_ordinaires[kill -TERM 4242] _______
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires2')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires2/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+___ ERROR at setup of test_sain_commandes_ordinaires[vastai show instances] ____
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires3')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires3/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_sain_commandes_ordinaires[vastai destroy instance 987654] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires4')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires4/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+______ ERROR at setup of test_sain_commandes_ordinaires[python -m pytest] ______
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires5')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires5/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_______ ERROR at setup of test_sain_commandes_ordinaires[echo pkillers] ________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires6')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_commandes_ordinaires6/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_____________ ERROR at setup of test_sain_lancement_avec_go_valide _____________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_lancement_avec_go_va0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_lancement_avec_go_va0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+________ ERROR at setup of test_artefact_arret_par_motif[pkill -f vllm] ________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_______ ERROR at setup of test_artefact_arret_par_motif[killall python3] _______
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_1')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_1/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+__ ERROR at setup of test_artefact_arret_par_motif[kill $(pgrep -f train.py)] __
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_2')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_2/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_____ ERROR at setup of test_artefact_arret_par_motif[kill `pgrep python`] _____
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_3')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_3/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_arret_par_motif[pgrep -f serve | xargs kill] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_4')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_4/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_arret_par_motif[pgrep -f serve | xargs -r kill -9] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_5')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_5/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+____ ERROR at setup of test_artefact_arret_par_motif[sleep 1; pkill python] ____
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_6')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_arret_par_motif_6/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+______________ ERROR at setup of test_artefact_lancement_sans_go _______________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_lancement_sans_g0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_lancement_sans_g0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+______ ERROR at setup of test_artefact_go_invalide[-absent de registres] _______
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide__abs0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide__abs0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-10-23 | calcul | phase 0 | 150 USD | 2026-11-21 | Lazar | message |\n-hors de sa p\xe9riode] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-23 | calcul | phase 0 | 150 USD | 2026-12-02 | Lazar | message |\n-hors de sa p\xe9riode] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO1')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO1/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-22 | publication | phase 0 | 150 USD | 2026-11-23 | Lazar | message |\n-type] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO2')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO2/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-22 | calcul | phase 0 | 150 USD | 2026-11-23 | Claude | message |\n-Lazar] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO3')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO3/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-22 | calcul | phase 0 |\n-mal form\xe9] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO4')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO4/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_go_invalide[| GO-2026-10-05-01 | hier | calcul | p | 1 | demain | Lazar | m |\n-dates] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO5')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO5/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-22 | calcul | phase 0 | 150 USD | 2026-11-22 | Lazar | message |\n| GO-2026-10-05-01 | 2026-11-22 | calcul | phase 0 | 150 USD | 2026-11-22 | Lazar | message |\n-double] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO6')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_go_invalide___GO6/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_______________ ERROR at setup of test_artefact_registre_absent ________________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_registre_absent0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_registre_absent0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_______________ ERROR at setup of test_artefact_entree_illisible _______________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_entree_illisible0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_entree_illisible0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+___________ ERROR at setup of test_sain_go_sans_echeance_hors_calcul ___________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_go_sans_echeance_hor0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_go_sans_echeance_hor0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_echeance_illisible[| GO-2026-10-05-01 | 2026-11-21 | calcul | phase 0 | 150 USD | \u2014 | Lazar | message |\n] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_echeance_illisib0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_echeance_illisib0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_echeance_illisible[| GO-2026-10-07-01 | 2026-11-19 | d\xe9p\xf4t distant | phase 0 | 150 USD | jamais | Lazar | message |\n| GO-2026-10-05-01 | 2026-11-21 | calcul | phase 0 | 150 USD | 2026-12-02 | Lazar | message |\n] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_echeance_illisib1')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_echeance_illisib1/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+____________ ERROR at setup of test_revocation_cas_sain_et_artefact ____________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_revocation_cas_sain_et_ar0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_revocation_cas_sain_et_ar0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+______ ERROR at setup of test_sain_ligne_d_extension_au_meme_identifiant _______
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_ligne_d_extension_au0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_sain_ligne_d_extension_au0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-21 | publication | extension au pilote p-v1 | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-02 | Lazar | R-389 |\n] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es0')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es0/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-21 | calcul | extension au pilote p-v1 | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-02 | Claude | R-389 |\n] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es1')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es1/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-21 | calcul | extension au pilote p-v1 | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-22 | Lazar | R-389 |\n] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es2')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es2/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-17 | calcul | extension au pilote p-v1 | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-02 | Lazar | R-389 |\n] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es3')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es3/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+_ ERROR at setup of test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-21 | calcul | phase 0 bis | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-02 | Lazar | R-389 |\n] _
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es4')
+
+    @pytest.fixture
+    def racine(tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+>       shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+
+tests/test_garde_calcul.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/shutil.py:428: in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py')
+dst = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/tables/pytest-of-root/pytest-4/test_artefact_doublon_qui_n_es4/.claude/hooks/garde_calcul.py')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+/usr/local/lib/python3.13/shutil.py:260: FileNotFoundError
+=================================== FAILURES ===================================
+______ test_registre_reel_du_depot_accepte_le_go_de_calcul_de_la_phase_0 _______
+
+    def test_registre_reel_du_depot_accepte_le_go_de_calcul_de_la_phase_0():
+        """Le vrai registre du dépôt (pas un registre factice : L-2) est lisible par la garde ; GO-2026-10-04-08, de calcul,
+        est reconnu, sans juger sa période de validité (elle dépend de la date du test)."""
+        import importlib.util
+    
+        spec = importlib.util.spec_from_file_location("garde_calcul", HOOK)
+        g = importlib.util.module_from_spec(spec)
+>       spec.loader.exec_module(g)
+
+tests/test_garde_calcul.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1160: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x7f2a6379b5f0>
+path = '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/.claude/hooks/garde_calcul.py'
+
+<frozen importlib._bootstrap_external>:1218: FileNotFoundError
+_______________ test_aucune_invite_ne_porte_les_cibles[agent_p3] _______________
+
+nom = 'agent_p3'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a637383e0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:140: in collecter_agent_p3
+    run_p3.jouer_p3(None, None, plan, graines([tache["identifiant"]], 12345), config, CONSIGNES_P3, notation,
+src/controle_ia/premier_test_ia/run.py:237: in jouer_p3
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+____________ test_aucune_invite_ne_porte_les_cibles[agent_pilote_a] ____________
+
+nom = 'agent_pilote_a'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a63b9f360>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:115: in collecter_agent_pilote_a
+    pilote_a.jouer_pilote(None, None, plan, {e: np.random.default_rng(0) for e, _ in plan}, config)
+src/controle_ia/environnements/pilote_a.py:100: in jouer_pilote
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_____________ test_aucune_invite_ne_porte_les_cibles[juges_pilote] _____________
+
+nom = 'juges_pilote'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2b3600ccb0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:177: in collecter_juges_pilote
+    pilote_a.noter_ensembles(None, fmt, demandes, {d["cle"]: 0 for d in demandes}, len(demandes), 8, 0.0)
+src/controle_ia/environnements/pilote_a.py:169: in noter_ensembles
+    msgs, crit = messages_juge_ensemble(d["questions"], d["ensemble"], d["variante"], d.get("classification"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/juges.py:43: in messages_juge_ensemble
+    utilisateur = (charger_invite("H4").strip() + "\n\n" + corps) if variante == "b0" else corps
+                   ^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_____________ test_aucune_invite_ne_porte_les_cibles[juges_rejeu] ______________
+
+nom = 'juges_rejeu'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a6378ef10>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:192: in collecter_juges_rejeu
+    rejeu1._contexte_b0(fmt, d, consigne)
+src/controle_ia/environnements/noter_rejeu_juges_v1.py:509: in _contexte_b0
+    msgs, crit = messages_juge_ensemble(d["questions"], d["ensemble"], "b0", d.get("classification"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/juges.py:43: in messages_juge_ensemble
+    utilisateur = (charger_invite("H4").strip() + "\n\n" + corps) if variante == "b0" else corps
+                   ^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+______________ test_aucune_invite_ne_porte_les_cibles[trace_lite] ______________
+
+nom = 'trace_lite'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a6378f9b0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:202: in collecter_trace_lite
+    charger_invite("H1-classification"), instructions_cachees=instruction)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_________ test_aucune_invite_ne_porte_les_cibles[trace_lite_conduite] __________
+
+nom = 'trace_lite_conduite'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a6389e750>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:239: in collecter_trace_lite_conduite
+    env = pr.EnvironnementPropositions(pilote_a.tache_de(tache), 1, len(ACTIONS), charger_invite("H1-classification"))
+                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+___________ test_garde_la_collecte_voit_une_fuite_plantee[agent_p3] ____________
+
+nom = 'agent_p3'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51b79450>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:140: in collecter_agent_p3
+    run_p3.jouer_p3(None, None, plan, graines([tache["identifiant"]], 12345), config, CONSIGNES_P3, notation,
+src/controle_ia/premier_test_ia/run.py:237: in jouer_p3
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+________ test_garde_la_collecte_voit_une_fuite_plantee[agent_pilote_a] _________
+
+nom = 'agent_pilote_a'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a6166a030>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:115: in collecter_agent_pilote_a
+    pilote_a.jouer_pilote(None, None, plan, {e: np.random.default_rng(0) for e, _ in plan}, config)
+src/controle_ia/environnements/pilote_a.py:100: in jouer_pilote
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_________ test_garde_la_collecte_voit_une_fuite_plantee[juges_pilote] __________
+
+nom = 'juges_pilote'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a6166a8a0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:177: in collecter_juges_pilote
+    pilote_a.noter_ensembles(None, fmt, demandes, {d["cle"]: 0 for d in demandes}, len(demandes), 8, 0.0)
+src/controle_ia/environnements/pilote_a.py:169: in noter_ensembles
+    msgs, crit = messages_juge_ensemble(d["questions"], d["ensemble"], d["variante"], d.get("classification"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/juges.py:43: in messages_juge_ensemble
+    utilisateur = (charger_invite("H4").strip() + "\n\n" + corps) if variante == "b0" else corps
+                   ^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+__________ test_garde_la_collecte_voit_une_fuite_plantee[juges_rejeu] __________
+
+nom = 'juges_rejeu'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51a7fcb0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:192: in collecter_juges_rejeu
+    rejeu1._contexte_b0(fmt, d, consigne)
+src/controle_ia/environnements/noter_rejeu_juges_v1.py:509: in _contexte_b0
+    msgs, crit = messages_juge_ensemble(d["questions"], d["ensemble"], "b0", d.get("classification"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/juges.py:43: in messages_juge_ensemble
+    utilisateur = (charger_invite("H4").strip() + "\n\n" + corps) if variante == "b0" else corps
+                   ^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+__________ test_garde_la_collecte_voit_une_fuite_plantee[trace_lite] ___________
+
+nom = 'trace_lite'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51a7f150>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:202: in collecter_trace_lite
+    charger_invite("H1-classification"), instructions_cachees=instruction)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+______ test_garde_la_collecte_voit_une_fuite_plantee[trace_lite_conduite] ______
+
+nom = 'trace_lite_conduite'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a61504600>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v1.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v1.py:239: in collecter_trace_lite_conduite
+    env = pr.EnvironnementPropositions(pilote_a.tache_de(tache), 1, len(ACTIONS), charger_invite("H1-classification"))
+                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_______________ test_aucune_invite_ne_porte_les_cibles[agent_p3] _______________
+
+nom = 'agent_p3'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51ce6ed0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:257: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:141: in collecter_agent_p3
+    run_p3.jouer_p3(None, None, plan, graines([tache["identifiant"]], 12345), config, CONSIGNES_P3, notation,
+src/controle_ia/premier_test_ia/run.py:237: in jouer_p3
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+____________ test_aucune_invite_ne_porte_les_cibles[agent_pilote_a] ____________
+
+nom = 'agent_pilote_a'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51ac6af0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:257: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:116: in collecter_agent_pilote_a
+    pilote_a.jouer_pilote(None, None, plan, {e: np.random.default_rng(0) for e, _ in plan}, config)
+src/controle_ia/environnements/pilote_a.py:100: in jouer_pilote
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_____________ test_aucune_invite_ne_porte_les_cibles[juges_pilote] _____________
+
+nom = 'juges_pilote'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51ac7330>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:257: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:178: in collecter_juges_pilote
+    pilote_a.noter_ensembles(None, fmt, demandes, {d["cle"]: 0 for d in demandes}, len(demandes), 8, 0.0)
+src/controle_ia/environnements/pilote_a.py:169: in noter_ensembles
+    msgs, crit = messages_juge_ensemble(d["questions"], d["ensemble"], d["variante"], d.get("classification"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/juges.py:43: in messages_juge_ensemble
+    utilisateur = (charger_invite("H4").strip() + "\n\n" + corps) if variante == "b0" else corps
+                   ^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_____________ test_aucune_invite_ne_porte_les_cibles[juges_rejeu] ______________
+
+nom = 'juges_rejeu'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51a93ed0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:257: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:193: in collecter_juges_rejeu
+    rejeu1._contexte_b0(fmt, d, consigne)
+src/controle_ia/environnements/noter_rejeu_juges_v1.py:509: in _contexte_b0
+    msgs, crit = messages_juge_ensemble(d["questions"], d["ensemble"], "b0", d.get("classification"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/juges.py:43: in messages_juge_ensemble
+    utilisateur = (charger_invite("H4").strip() + "\n\n" + corps) if variante == "b0" else corps
+                   ^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+______________ test_aucune_invite_ne_porte_les_cibles[trace_lite] ______________
+
+nom = 'trace_lite'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51ae6030>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:257: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:203: in collecter_trace_lite
+    charger_invite("H1-classification"), instructions_cachees=instruction)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_________ test_aucune_invite_ne_porte_les_cibles[trace_lite_conduite] __________
+
+nom = 'trace_lite_conduite'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51aa74a0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_aucune_invite_ne_porte_les_cibles(nom, monkeypatch):
+>       invites = COLLECTEURS[nom](tache_factice(), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:257: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:240: in collecter_trace_lite_conduite
+    env = pr.EnvironnementPropositions(pilote_a.tache_de(tache), 1, len(ACTIONS), charger_invite("H1-classification"))
+                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+___________ test_garde_la_collecte_voit_une_fuite_plantee[agent_p3] ____________
+
+nom = 'agent_p3'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51a97850>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:141: in collecter_agent_p3
+    run_p3.jouer_p3(None, None, plan, graines([tache["identifiant"]], 12345), config, CONSIGNES_P3, notation,
+src/controle_ia/premier_test_ia/run.py:237: in jouer_p3
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+________ test_garde_la_collecte_voit_une_fuite_plantee[agent_pilote_a] _________
+
+nom = 'agent_pilote_a'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51a77950>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:116: in collecter_agent_pilote_a
+    pilote_a.jouer_pilote(None, None, plan, {e: np.random.default_rng(0) for e, _ in plan}, config)
+src/controle_ia/environnements/pilote_a.py:100: in jouer_pilote
+    guide = charger_invite("H1-classification")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+_________ test_garde_la_collecte_voit_une_fuite_plantee[juges_pilote] __________
+
+nom = 'juges_pilote'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51aaf620>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:178: in collecter_juges_pilote
+    pilote_a.noter_ensembles(None, fmt, demandes, {d["cle"]: 0 for d in demandes}, len(demandes), 8, 0.0)
+src/controle_ia/environnements/pilote_a.py:169: in noter_ensembles
+    msgs, crit = messages_juge_ensemble(d["questions"], d["ensemble"], d["variante"], d.get("classification"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/juges.py:43: in messages_juge_ensemble
+    utilisateur = (charger_invite("H4").strip() + "\n\n" + corps) if variante == "b0" else corps
+                   ^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+__________ test_garde_la_collecte_voit_une_fuite_plantee[juges_rejeu] __________
+
+nom = 'juges_rejeu'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51aadfd0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:193: in collecter_juges_rejeu
+    rejeu1._contexte_b0(fmt, d, consigne)
+src/controle_ia/environnements/noter_rejeu_juges_v1.py:509: in _contexte_b0
+    msgs, crit = messages_juge_ensemble(d["questions"], d["ensemble"], "b0", d.get("classification"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/juges.py:43: in messages_juge_ensemble
+    utilisateur = (charger_invite("H4").strip() + "\n\n" + corps) if variante == "b0" else corps
+                   ^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+__________ test_garde_la_collecte_voit_une_fuite_plantee[trace_lite] ___________
+
+nom = 'trace_lite'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51aafee0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:203: in collecter_trace_lite
+    charger_invite("H1-classification"), instructions_cachees=instruction)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+______ test_garde_la_collecte_voit_une_fuite_plantee[trace_lite_conduite] ______
+
+nom = 'trace_lite_conduite'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a51aaf0e0>
+
+    @pytest.mark.parametrize("nom", sorted(COLLECTEURS))
+    def test_garde_la_collecte_voit_une_fuite_plantee(nom, monkeypatch):
+        """Artefact (R5) : l'énoncé recopie les cibles ; la collecte doit trouver le marqueur dans ce chemin."""
+>       invites = COLLECTEURS[nom](tache_factice(fuite=True), monkeypatch)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_cibles_invisibles_v2.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cibles_invisibles_v2.py:240: in collecter_trace_lite_conduite
+    env = pr.EnvironnementPropositions(pilote_a.tache_de(tache), 1, len(ACTIONS), charger_invite("H1-classification"))
+                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:36: in charger_invite
+    index = index_invites(racine)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/environnements/invites.py:21: in index_invites
+    verifier(chemin)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json')
+
+    def verifier(chemin: str | Path) -> str:
+        """Vérifie un dépôt contre son empreinte compagnon ; lève `GardeArret` sinon."""
+        p = Path(chemin)
+        c = compagnon(p)
+        if not p.is_file():
+>           raise GardeArret(f"{p} : fichier absent sur disque")
+E           controle_ia.gardes.GardeArret: /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-greffon-v2-b/bac/docs/sources/invites-2606.08892-v1/index.json : fichier absent sur disque
+
+src/controle_ia/scellement.py:81: GardeArret
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_manifeste.py::test_graines_derivees_deterministes_et_distinctes
+PASSED tests/test_manifeste.py::test_artefact_graine_alteree
+PASSED tests/test_manifeste.py::test_artefact_taches_en_double
+PASSED tests/test_manifeste.py::test_garde_numpy
+PASSED tests/test_manifeste.py::test_sain_chaine_complete
+PASSED tests/test_manifeste.py::test_artefact_depot_sale
+PASSED tests/test_manifeste.py::test_artefact_run_existant
+PASSED tests/test_manifeste.py::test_artefact_identifiant_invalide
+PASSED tests/test_manifeste.py::test_artefact_decisif_sans_prereg
+PASSED tests/test_manifeste.py::test_artefact_config_alteree
+PASSED tests/test_manifeste.py::test_artefact_resultat_rattache_a_un_autre_manifeste
+PASSED tests/test_prereg.py::test_contre_lecture_par_entree
+PASSED tests/test_prereg.py::test_artefact_contre_lecture_sans_empreintes
+PASSED tests/test_prereg.py::test_sain_prereg_conforme
+PASSED tests/test_prereg.py::test_artefact_gabarit_non_rempli
+PASSED tests/test_prereg.py::test_artefact_section_absente
+PASSED tests/test_prereg.py::test_artefact_scelle_par_contournement_mais_non_conforme
+PASSED tests/test_prereg.py::test_artefact_prereg_modifie_apres_scellement
+PASSED tests/test_prereg.py::test_run_decisif_rattache_au_prereg
+PASSED tests/test_prereg.py::test_artefact_marqueur_de_gabarit_restant
+PASSED tests/test_prereg.py::test_artefact_prereg_hors_du_depot
+PASSED tests/test_scellement.py::test_sain_sceller_puis_verifier
+PASSED tests/test_scellement.py::test_artefact_fichier_altere
+PASSED tests/test_scellement.py::test_artefact_compagnon_absent
+PASSED tests/test_scellement.py::test_artefact_compagnon_mauvais_nom
+PASSED tests/test_scellement.py::test_artefact_ecrasement_interdit
+PASSED tests/test_scellement.py::test_artefact_fichier_absent
+PASSED tests/test_scellement.py::test_arbre_sain_et_artefacts
+PASSED tests/test_garde_google_v1.py::test_sain_par_espece_et_par_mode[argon-high-32768-16384-flux]
+PASSED tests/test_garde_google_v1.py::test_sain_par_espece_et_par_mode[argon-high-32768-16384-non_diffuse]
+PASSED tests/test_garde_google_v1.py::test_sain_par_espece_et_par_mode[carbon-high-65536-49152-flux]
+PASSED tests/test_garde_google_v1.py::test_sain_par_espece_et_par_mode[carbon-high-32768-16384-non_diffuse]
+PASSED tests/test_garde_google_v1.py::test_sain_par_espece_et_par_mode[neon-xhigh-65536-32768-flux]
+PASSED tests/test_garde_google_v1.py::test_sain_par_espece_et_par_mode[neon-xhigh-65536-32768-non_diffuse]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[niveau absent-reglage0-thinkingLevel absent]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[niveau non admis-reglage1-non admis]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[niveau plus bas que le plus haut-reglage2-au lieu de 'high']
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[niveau en majuscules-reglage3-non admis]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[budget avec le niveau-reglage4-thinkingBudget pr\xe9sent]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[pens\xe9es non incluses-reglage5-includeThoughts]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[pens\xe9es incluses fausses-reglage6-includeThoughts]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[plafond absent-reglage7-mal form\xe9s]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[plafond flottant-reglage8-mal form\xe9s]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[plafond au-del\xe0 de la limite en flux-reglage9-au-del\xe0 de la limite]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_reglage_manquant[texte sous 16 000-reglage10-< 16000]
+PASSED tests/test_garde_google_v1.py::test_limites_versees_par_mode
+PASSED tests/test_garde_google_v1.py::test_provision_nulle_ou_negative_refusee
+PASSED tests/test_garde_google_v1.py::test_limite_de_mots_bord
+PASSED tests/test_garde_google_v1.py::test_espece_inconnue_refusee
+PASSED tests/test_garde_google_v1.py::test_niveau_attendu_explicite
+PASSED tests/test_garde_google_v1.py::test_repli_declare_au_budget
+PASSED tests/test_garde_google_v1.py::test_niveau_refuse
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[STOP-R\xe9ponse.-100-None-None]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[MAX_TOKENS-D\xe9but-100-None-MAX_TOKENS]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[MAX_TOKENS--0-None-MAX_TOKENS]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[SAFETY--0-None-SAFETY]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[RECITATION-Texte-100-None-RECITATION]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[PROHIBITED_CONTENT--0-None-PROHIBITED_CONTENT]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[BLOCKLIST--0-None-BLOCKLIST]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[SPII--0-None-SPII]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[STOP--100-None-VIDE]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[STOP-   \n-100-None-VIDE]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[STOP-R\xe9ponse.-0-None-SANS_PENSEES]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[STOP-R\xe9ponse.-None-None-SANS_PENSEES]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[STOP-R\xe9ponse.-True-None-SANS_PENSEES]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[OTHER-R\xe9ponse.-100-None-FIN_OTHER]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[None-R\xe9ponse.-100-None-FIN_None]
+PASSED tests/test_garde_google_v1.py::test_un_essai_par_motif_de_fin[None--0-PROHIBITED_CONTENT-PROHIBITED_CONTENT]
+PASSED tests/test_garde_google_v1.py::test_sources_citees_dans_le_module
+PASSED tests/test_garde_refus_question_v1.py::TestCasSain::test_modele_unique_accepte
+PASSED tests/test_garde_refus_question_v1.py::TestCasSain::test_plusieurs_modeles_acceptent
+PASSED tests/test_garde_refus_question_v1.py::TestCasSain::test_question_sha256_calculee
+PASSED tests/test_garde_refus_question_v1.py::TestCasSain::test_extrait_court_non_tronque
+PASSED tests/test_garde_refus_question_v1.py::TestCasSain::test_extrait_long_tronque
+PASSED tests/test_garde_refus_question_v1.py::TestCasSain::test_prompt_sonde_contient_extrait
+PASSED tests/test_garde_refus_question_v1.py::TestCasSain::test_bilan_to_dict
+PASSED tests/test_garde_refus_question_v1.py::TestCasSain::test_classifier_reponse_accepte
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_refus_stop_reason
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_refus_categorie_gemini
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_refus_reponse_vide
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_refus_textuel
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_refus_textuel_francais
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_mixte_accepte_et_refuse
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_tous_refusent_code_2
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_erreur_exception
+PASSED tests/test_garde_refus_question_v1.py::TestArtefact::test_erreur_ne_compte_pas_comme_accepte
+PASSED tests/test_garde_refus_question_v1.py::TestClassifier::test_refusal_stop
+PASSED tests/test_garde_refus_question_v1.py::TestClassifier::test_gemini_safety
+PASSED tests/test_garde_refus_question_v1.py::TestClassifier::test_gemini_prohibited
+PASSED tests/test_garde_refus_question_v1.py::TestClassifier::test_vide
+PASSED tests/test_garde_refus_question_v1.py::TestClassifier::test_espaces_seuls
+PASSED tests/test_garde_refus_question_v1.py::TestClassifier::test_accepte_normal
+PASSED tests/test_garde_refus_question_v1.py::TestClassifier::test_refus_textuel_cannot
+PASSED tests/test_garde_refus_question_v1.py::TestClassifier::test_refus_textuel_unable
+PASSED tests/test_run_factice.py::test_sain_chaine_et_rejeu
+PASSED tests/test_run_factice.py::test_artefact_resultat_altere
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_temoin_positif_l_appariement_lit_les_cibles
+PASSED tests/test_cibles_invisibles_v1.py::test_detecteur_insensible_a_la_casse_et_aux_espaces
+PASSED tests/test_cibles_invisibles_v1.py::test_la_tache_de_l_agent_n_a_aucun_champ_pour_les_cibles
+PASSED tests/test_cibles_invisibles_v1.py::test_instruction_privee_p3_independante_de_la_tache
+PASSED tests/test_cibles_invisibles_v1.py::test_inventaire_registre_a_jour
+PASSED tests/test_cibles_invisibles_v1.py::test_base_h12_absente_du_code_ou_couverte
+PASSED tests/test_cibles_invisibles_v1.py::test_garde_de_l_inventaire_voit_un_constructeur_et_un_lecteur_plantes
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_temoin_positif_l_appariement_lit_les_cibles
+PASSED tests/test_cibles_invisibles_v2.py::test_detecteur_insensible_a_la_casse_et_aux_espaces
+PASSED tests/test_cibles_invisibles_v2.py::test_la_tache_de_l_agent_n_a_aucun_champ_pour_les_cibles
+PASSED tests/test_cibles_invisibles_v2.py::test_instruction_privee_p3_independante_de_la_tache
+PASSED tests/test_cibles_invisibles_v2.py::test_inventaire_registre_a_jour
+PASSED tests/test_cibles_invisibles_v2.py::test_base_h12_absente_du_code_ou_couverte
+PASSED tests/test_cibles_invisibles_v2.py::test_garde_de_l_inventaire_voit_un_constructeur_et_un_lecteur_plantes
+SKIPPED [1] tests/test_garde_google_v1.py:70: liste versée absente
+XFAIL tests/test_cibles_invisibles_v1.py::test_inventaire_tout_constructeur_d_invite_est_examine - échec connu (echecs-connus-v2.txt) : L'inventaire figé du v1 ne couvre pas les constructeurs d'invite ajoutés depuis au code suivi par git (lanceurs T0.6 v5 et v6, repli et réextraction T0.7, run v2 du premier test, bras B de l'audit de fuite, rejeu des activations). [décision de la mère du 21 novembre 2026, vers 21:24Z ; tri registres/essaim/vers-mere/annexe-tests-complets-2026-11-21-v1/tri-echecs-tests-complets-2026-11-21-v1.md]
+XFAIL tests/test_cibles_invisibles_v1.py::test_aucun_module_hors_mesures_ne_lit_la_cle_cibles - échec connu (echecs-connus-v2.txt) : La liste figée du v1 des lecteurs admis de la clé « cibles » ne connaît pas les fonctions ajoutées depuis (lanceurs T0.6 v5 et v6, chargement des adaptateurs du repli T0.7). [décision de la mère du 21 novembre 2026, vers 21:24Z ; tri registres/essaim/vers-mere/annexe-tests-complets-2026-11-21-v1/tri-echecs-tests-complets-2026-11-21-v1.md]
+XFAIL tests/test_cibles_invisibles_v2.py::test_inventaire_tout_constructeur_d_invite_est_examine - échec connu (echecs-connus-v2.txt) : L'inventaire figé du v2 ne couvre pas les constructeurs d'invite ajoutés depuis au code suivi par git (repli et réextraction T0.7, run v2 du premier test). [décision de la mère du 21 novembre 2026, vers 21:24Z ; tri registres/essaim/vers-mere/annexe-tests-complets-2026-11-21-v1/tri-echecs-tests-complets-2026-11-21-v1.md]
+XFAIL tests/test_cibles_invisibles_v2.py::test_aucun_module_hors_mesures_ne_lit_la_cle_cibles - échec connu (echecs-connus-v2.txt) : La liste figée du v2 des lecteurs admis de la clé « cibles » ne connaît pas le chargement des adaptateurs du repli T0.7, ajouté depuis. [décision de la mère du 21 novembre 2026, vers 21:24Z ; tri registres/essaim/vers-mere/annexe-tests-complets-2026-11-21-v1/tri-echecs-tests-complets-2026-11-21-v1.md]
+ERROR tests/test_garde_calcul.py::test_sain_commandes_ordinaires[ls -la] - Fi...
+ERROR tests/test_garde_calcul.py::test_sain_commandes_ordinaires[kill 12345]
+ERROR tests/test_garde_calcul.py::test_sain_commandes_ordinaires[kill -TERM 4242]
+ERROR tests/test_garde_calcul.py::test_sain_commandes_ordinaires[vastai show instances]
+ERROR tests/test_garde_calcul.py::test_sain_commandes_ordinaires[vastai destroy instance 987654]
+ERROR tests/test_garde_calcul.py::test_sain_commandes_ordinaires[python -m pytest]
+ERROR tests/test_garde_calcul.py::test_sain_commandes_ordinaires[echo pkillers]
+ERROR tests/test_garde_calcul.py::test_sain_lancement_avec_go_valide - FileNo...
+ERROR tests/test_garde_calcul.py::test_artefact_arret_par_motif[pkill -f vllm]
+ERROR tests/test_garde_calcul.py::test_artefact_arret_par_motif[killall python3]
+ERROR tests/test_garde_calcul.py::test_artefact_arret_par_motif[kill $(pgrep -f train.py)]
+ERROR tests/test_garde_calcul.py::test_artefact_arret_par_motif[kill `pgrep python`]
+ERROR tests/test_garde_calcul.py::test_artefact_arret_par_motif[pgrep -f serve | xargs kill]
+ERROR tests/test_garde_calcul.py::test_artefact_arret_par_motif[pgrep -f serve | xargs -r kill -9]
+ERROR tests/test_garde_calcul.py::test_artefact_arret_par_motif[sleep 1; pkill python]
+ERROR tests/test_garde_calcul.py::test_artefact_lancement_sans_go - FileNotFo...
+ERROR tests/test_garde_calcul.py::test_artefact_go_invalide[-absent de registres]
+ERROR tests/test_garde_calcul.py::test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-10-23 | calcul | phase 0 | 150 USD | 2026-11-21 | Lazar | message |\n-hors de sa p\xe9riode]
+ERROR tests/test_garde_calcul.py::test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-23 | calcul | phase 0 | 150 USD | 2026-12-02 | Lazar | message |\n-hors de sa p\xe9riode]
+ERROR tests/test_garde_calcul.py::test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-22 | publication | phase 0 | 150 USD | 2026-11-23 | Lazar | message |\n-type]
+ERROR tests/test_garde_calcul.py::test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-22 | calcul | phase 0 | 150 USD | 2026-11-23 | Claude | message |\n-Lazar]
+ERROR tests/test_garde_calcul.py::test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-22 | calcul | phase 0 |\n-mal form\xe9]
+ERROR tests/test_garde_calcul.py::test_artefact_go_invalide[| GO-2026-10-05-01 | hier | calcul | p | 1 | demain | Lazar | m |\n-dates]
+ERROR tests/test_garde_calcul.py::test_artefact_go_invalide[| GO-2026-10-05-01 | 2026-11-22 | calcul | phase 0 | 150 USD | 2026-11-22 | Lazar | message |\n| GO-2026-10-05-01 | 2026-11-22 | calcul | phase 0 | 150 USD | 2026-11-22 | Lazar | message |\n-double]
+ERROR tests/test_garde_calcul.py::test_artefact_registre_absent - FileNotFoun...
+ERROR tests/test_garde_calcul.py::test_artefact_entree_illisible - FileNotFou...
+ERROR tests/test_garde_calcul.py::test_sain_go_sans_echeance_hors_calcul - Fi...
+ERROR tests/test_garde_calcul.py::test_artefact_echeance_illisible[| GO-2026-10-05-01 | 2026-11-21 | calcul | phase 0 | 150 USD | \u2014 | Lazar | message |\n]
+ERROR tests/test_garde_calcul.py::test_artefact_echeance_illisible[| GO-2026-10-07-01 | 2026-11-19 | d\xe9p\xf4t distant | phase 0 | 150 USD | jamais | Lazar | message |\n| GO-2026-10-05-01 | 2026-11-21 | calcul | phase 0 | 150 USD | 2026-12-02 | Lazar | message |\n]
+ERROR tests/test_garde_calcul.py::test_revocation_cas_sain_et_artefact - File...
+ERROR tests/test_garde_calcul.py::test_sain_ligne_d_extension_au_meme_identifiant
+ERROR tests/test_garde_calcul.py::test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-21 | publication | extension au pilote p-v1 | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-02 | Lazar | R-389 |\n]
+ERROR tests/test_garde_calcul.py::test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-21 | calcul | extension au pilote p-v1 | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-02 | Claude | R-389 |\n]
+ERROR tests/test_garde_calcul.py::test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-21 | calcul | extension au pilote p-v1 | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-22 | Lazar | R-389 |\n]
+ERROR tests/test_garde_calcul.py::test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-17 | calcul | extension au pilote p-v1 | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-02 | Lazar | R-389 |\n]
+ERROR tests/test_garde_calcul.py::test_artefact_doublon_qui_n_est_pas_une_extension_admise[| GO-2026-10-05-01 | 2026-11-21 | calcul | phase 0 bis | 40 USD imput\xe9s \xe0 cette ligne | 2026-12-02 | Lazar | R-389 |\n]
+FAILED tests/test_garde_calcul.py::test_registre_reel_du_depot_accepte_le_go_de_calcul_de_la_phase_0
+FAILED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[agent_p3]
+FAILED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[agent_pilote_a]
+FAILED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[juges_pilote]
+FAILED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[juges_rejeu]
+FAILED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[trace_lite]
+FAILED tests/test_cibles_invisibles_v1.py::test_aucune_invite_ne_porte_les_cibles[trace_lite_conduite]
+FAILED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_p3]
+FAILED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_pilote_a]
+FAILED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_pilote]
+FAILED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_rejeu]
+FAILED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite]
+FAILED tests/test_cibles_invisibles_v1.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite_conduite]
+FAILED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[agent_p3]
+FAILED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[agent_pilote_a]
+FAILED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[juges_pilote]
+FAILED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[juges_rejeu]
+FAILED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[trace_lite]
+FAILED tests/test_cibles_invisibles_v2.py::test_aucune_invite_ne_porte_les_cibles[trace_lite_conduite]
+FAILED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_p3]
+FAILED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[agent_pilote_a]
+FAILED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_pilote]
+FAILED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[juges_rejeu]
+FAILED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite]
+FAILED tests/test_cibles_invisibles_v2.py::test_garde_la_collecte_voit_une_fuite_plantee[trace_lite_conduite]
+25 failed, 110 passed, 1 skipped, 4 xfailed, 36 errors in 29.04s
