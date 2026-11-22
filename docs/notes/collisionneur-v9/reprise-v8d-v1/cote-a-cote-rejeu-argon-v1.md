@@ -1,0 +1,16 @@
+# Rejeu à part des cellules d'Argon : ancienne cellule et cellule rejouée, côte à côte
+
+Produit par `rejeu_argon_v8d_v2.py cote-a-cote` le 2026-11-22T06:11:24Z, sans lecture des textes. Pensées : jetons de pensée au journal.
+
+| dossier d'origine | cellule | ancienne : sha256 texte | car. | pensées | réglage | rejouée : sha256 texte | car. | pensées | niveau | même invite | coût USD de la cellule |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| collisionneur-percee-controle-securite-v1-20261121-114810 | E3-T1-conception-C | `96d71746bc587451030cd7da3c5f061a44361aeb4e016d297150659aa492eb88` | 44279 | 0 | aucun niveau | `782a885776e31712d40ea2a855393f755b811ab92b91244ea98b5d4ca165d9a1` | 53089 | 8722 | high | oui | 0.4824 |
+| collisionneur-percee-controle-securite-v1-20261121-114810 | E3-T2-critique-croisee-C | `e68d9e4feeeedfc2b65b6ee3f9b16b98a2f28fa47a5bf2c1c5032a1ab9d129a2` | 39302 | 0 | aucun niveau | `43f13e5c1d50e707862095404d1337c900c7e0025bb1bd6de94be834f82c7f10` | 39155 | 18151 | high | oui | 0.7559 |
+| collisionneur-derive-de-regime-v2-20261121-131044 | E3-T1-conception-C | `00639f0a49ee08e76c0a2113af691b346caea12b0b1a65258b97ff008f27b4a6` | 49598 | 0 | aucun niveau | `9dfcd7bb908397a6a962b4f2c807679200557640cc2fa654a41cc581ea3b83bf` | 54834 | 12388 | high | oui | 0.6004 |
+| collisionneur-derive-de-regime-v2-20261121-131044 | E3-T2-critique-croisee-C | `048ed4d0d3bc695e01ea791eeda5ea82ee755ccd493928eb3b836822678b4f42` | 33332 | 0 | aucun niveau | `bdba012a205249dc72c0cc7ab0ed06705367b6f032fd0f15d71fdb89a6e9e243` | 45928 | 16985 | high | oui | 0.7810 |
+| collisionneur-methodes-maths-v1-20261121-093850 | E3-T1-conception-C | `77d34bc58eb5d5a622dfb7cb2cb748ac336aa87725dcf8ce71a0046c8cda170e` | 39330 | 0 | aucun niveau | `9580643b3bc35e19225d4c04e4301fc77623e8871058360a5bf4d2927a3a11f1` | 40949 | 12517 | high | oui | 0.4914 |
+| collisionneur-anteriorite-pilier-v1-20261121-131029 | E3-T1-conception-C | `0cf398a74ffbeb139d0da06c8213aef6e2fc56a313c146b5dff60d9838db84d1` | 23885 | 0 | aucun niveau | `280100b38d2d5818c3e714a104ef52b64650ed681c2bbd3307e62c5edf470a0a` | 37862 | 11395 | high | oui | 0.4555 |
+| collisionneur-anteriorite-pilier-v1-20261121-131029 | E3-T2-critique-croisee-C | `21a08c9643bc9ed875c98511d7cb253c22a7ddc1203f496247b7a13f529060a3` | 35244 | 0 | aucun niveau | `061b658ac109df7b6d036c483de94399c008e23b2cded94e0978401723462ecc` | 37389 | 18958 | high | oui | 0.7235 |
+| collisionneur-anteriorite-pilier-v1-20261121-131029 | E3-T3-reponse-C | `db5dd9e4ffd7b36aac8d1ebd8a65c6fcd646a28b331523c8c863e530ede7d89f` | 28113 | 0 | aucun niveau | `773aeddd1f8f733343d59957f1574f0eaa257f40c3be7d8bf2f346bbc358ad72` | 35823 | 12301 | high | oui | 0.5873 |
+| collisionneur-question-de-recherche-fusionnee-v1-20261121-153256 | E3-T1-conception-C | `1f15dc6ed6b82bc94751eccab42bcc3face8d061c18135c344532be925bd69f7` | 61212 | 0 | aucun niveau | `e819c8484b191609e92b0d5adf04ddd5f9beee80a1ac4a03cfab6ebdb0fa8484` | 65748 | 14739 | high | oui | 2.3684 |
+| collisionneur-question-de-recherche-fusionnee-v1-20261121-153256 | E3-T2-critique-croisee-C | `496815c7809b94502e21b25209771ea2ff9498ce064e58a1e9fc2fc1f96cb2ec` | 37929 | 0 | aucun niveau | `dfd224e097ee0258a0f360ff3b35816c59c42f9f9bf3bfcf8c89cb8fa8d566ba` | 38983 | 20231 | high | oui | 0.8096 |

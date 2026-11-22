@@ -1,0 +1,180 @@
+**Intégrité des pièces transmises.** Les pièces `FAITS`, `QUESTION DE L'ARBITRE`, `E3-T1-conception-C` ainsi que les critiques croisées `A`, `B`, `D` et `E` sont toutes présentes, complètes et sans coupure visible **[VÉRIFIÉ]**.
+
+**Convention de statut.** Les éléments issus du bloc `FAITS` portent le statut **[RAPPORTÉ]** ; les constats textuels directs sur les pièces reçues portent le statut **[VÉRIFIÉ]** ; toutes les modélisations, déductions conditionnelles, décisions méthodologiques et recommandations portent le statut **[HYPOTHÈSE]**. Conformément à la consigne de l'arbitre, aucun chiffre ni aucune référence bibliographique ne sont inventés.
+
+---
+
+## (a) Réponse point par point aux critiques visant la proposition C
+
+Nous regroupons l'ensemble des critiques adressées à `C` par `A`, `B`, `D` et `E` en onze points méthodologiques sans en omettre aucun **[VÉRIFIÉ]**. Conformément à la règle B1, nous déclarons explicitement chaque emprunt fait aux autres propositions.
+
+### 1. Le « canari de contamination » et la mention d'« antériorité certaine » (Critiques de A, B, D, E)
+* **Teneur de la critique** : Qualifier une régurgitation du modèle d'« antériorité certaine » dans notre texte du tour III.1 **[VÉRIFIÉ]** violait la règle 5 et confondait trois mécanismes : la mémorisation d'une source d'entraînement, la prédictibilité mathématique d'un préfixe (`D`), et la fabulation de citations ou de preuves (`A`, `B`, `E`). En sens inverse, le silence du modèle ne prouve pas l'absence d'antériorité (`A`) **[HYPOTHÈSE]**.
+* **Décision : Acceptée (correction de statut) et transformée en test (contrôle de fabulation)**.
+* **Modification appliquée** : Le terme « antériorité certaine » est retiré **[HYPOTHÈSE]**. La sonde de complétion est rétrogradée au statut de *générateur de pistes* (**[HYPOTHÈSE]**) : une piste n'est jamais comptée comme collision tant que le document source daté n'a pas été retrouvé et l'implication vérifiée (`A`, `B`). Nous intégrons le contrôle négatif demandé par `A`, `B`, `D` et `E` : soumettre des préfixes d'énoncés faux ou inédits composés après la date de coupure des poids du modèle, afin de mesurer le taux de fabulation $\varphi_{\text{canari}}$ **[HYPOTHÈSE]**.
+
+### 2. Non-identifiabilité de la prévalence $\pi$ dans l'Expérience 1 et inversion du contrôle négatif (Critiques de A, B, D, E)
+* **Teneur de la critique** : Dans l'Expérience 1 du tour III.1 **[VÉRIFIÉ]**, la proportion empirique de cibles invalidées $\hat{q}$ a pour espérance $\mathbb{E}[\hat{q}] = \pi r + (1-\pi)\varphi$, où $\pi$ est la prévalence vraie des collisions, $r$ le rappel de l'instrument et $\varphi$ son taux de fausses alertes (`A`, `B`, `D`, `E`). Sans estimer $r$ et $\varphi$ séparément, comparer $\hat{q}$ à un seuil confond la prévalence des collisions avec le bruit de l'instrument (dès que $\varphi$ dépasse le seuil, $H_B$ est rejetée à tort sous $\pi = 0$, `E`) **[HYPOTHÈSE]**. De plus, les variantes obfusquées de Fano, Bretagnolle–Huber et Wald **[RAPPORTÉ]** que nous appelions « contrôle négatif » **[VÉRIFIÉ]** sont des *contrôles positifs* dont le rappel est proche de l'unité par mémoire paramétrique, laissant $\varphi$ non mesuré et le rappel sur travaux récents non contrôlé (`A`, `B`, `D`, `E`) **[HYPOTHÈSE]**.
+* **Décision : Acceptée**.
+* **Modification appliquée** : En empruntant le modèle de déconvolution formulé par `A`, `B`, `D` et `E` ainsi que la définition du négatif de couple de `D` (*« ce voisin ne règle pas la cible »*, prouvé par contre-modèle), l'Expérience 1 corrigée estime $\hat{r}$ et $\hat{\varphi}$ sur un banc indépendant post-coupure avant de tester l'estimateur déconvolué $\hat{\pi} = (\hat{q} - \hat{\varphi})/(\hat{r} - \hat{\varphi})$ **[HYPOTHÈSE]**.
+
+### 3. Omission du coût après revendication et du coût des faux abandons dans $\tau_1$, et erreur sur la bascule « si les agents échouent presque toujours » (Critiques de A, B, D)
+* **Teneur de la critique** :
+  1. Le seuil $\tau_1 = C_{\text{lect}}/B_{\text{cible}}$ **[VÉRIFIÉ]** omettait le coût de réputation d'une collision découverte après revendication (`A`, `B`) ainsi que la perte liée à l'abandon erroné d'une bonne cible sur fausse alerte (`D` : le gain net moyen s'écrit $G = \pi r b - (1-\pi)\varphi h - c$, et non $\pi b - c$) **[HYPOTHÈSE]**.
+  2. Les cibles payantes étant à budget égal et toutes rapportées **[RAPPORTÉ]**, le budget $B_{\text{cible}}$ d'une cible déjà résolue dans la littérature est intégralement dépensé même si l'agent échoue à la prouver (`A`, `D`). Notre condition de bascule vers (b) lorsque le taux de succès des agents est faible **[VÉRIFIÉ]** était donc erronée pour la dépense budgétaire **[HYPOTHÈSE]**.
+* **Décision : Acceptée**.
+* **Modification appliquée** : Nous supprimons la bascule fondée sur le faible taux de succès des agents **[HYPOTHÈSE]**. En empruntant la fonction de gain net de `D`, si $V_{\text{cible}}$ est la perte d'abandon à tort d'une cible valide, $C_{\text{rev}}$ le coût d'une collision après revendication publique, $s_1$ la probabilité qu'un agent revendique sur une cible en collision (attraction vers le connu soulignée par `E` et reprise par `A`), et $r_{\text{aval}}$ le rappel du contrôle final avant publication, alors le gain brut d'une détection amont est $b = B_{\text{cible}} + s_1(1 - r_{\text{aval}})C_{\text{rev}}$ **[HYPOTHÈSE]**. La lecture amont a un gain net espéré positif si et seulement si $\pi > \tau_1^*$, avec :
+  $$\tau_1^* = \frac{C_{\text{lect}} + \varphi V_{\text{cible}}}{r \left[ B_{\text{cible}} + s_1 (1 - r_{\text{aval}}) C_{\text{rev}} \right] + \varphi V_{\text{cible}}}$$
+  **[HYPOTHÈSE]**.
+
+### 4. Fuite circulaire sur les travaux de 2026 et défaut de construction des cibles par « négation » ou « stricte amélioration » (Critiques de A, B, D, E)
+* **Teneur de la critique** :
+  1. *Négation (`E`)* : Définir une cible comme la négation d'un théorème principal de 2026 **[VÉRIFIÉ]** produit un énoncé faux dès que le théorème publié est vrai ; or la forme « énoncé à démontrer ou réfuter » **[RAPPORTÉ]** rémunère la réfutation, qui coïncide alors par construction avec le théorème de 2026 **[HYPOTHÈSE]**.
+  2. *Stricte amélioration et circularité (`A`, `B`, `D`, `E`)* : Utiliser les travaux voisins de 2026 **[RAPPORTÉ]** simultanément pour définir les cibles comme améliorations de leurs énoncés (§1), pour indexer les graines de l'instrument (§3, §6.3) et pour fabriquer les cas positifs du banc d'évaluation (§(c)) **[VÉRIFIÉ]** crée une fuite circulaire totale. Une cible construite pour échapper à un théorème $T$ n'est pas impliquée par $T$ par construction, ce qui ne teste nullement sa collision avec un autre article $T'$ (`B`, `D`) **[HYPOTHÈSE]**.
+* **Décision : Acceptée**.
+* **Modification appliquée** :
+  1. Nous retirons la construction de cibles par négation ou par modification directe des travaux de 2026 **[HYPOTHÈSE]**.
+  2. Nous imposons une partition étanche en trois lots disjoints **[HYPOTHÈSE]** : (i) les cibles candidates sont rédigées et horodatées par des chercheurs n'ayant pas consulté le lot de 2026 (contrôle d'étanchéité emprunté à `B`) ; (ii) le banc d'étalonnage de $(r, \varphi)$ est construit à partir d'articles récents hors du lot de 2026 ; (iii) le lot de 2026 **[RAPPORTÉ]** est réservé exclusivement au criblage opérationnel des cibles candidates.
+
+### 5. Fragilité de l'hypothèse « de Markov » sur le voisinage de citations des graines de 2026 (Critiques de A, B)
+* **Teneur de la critique** : Les travaux de 2026 ayant été croisés par hasard **[RAPPORTÉ]**, supposer qu'ils citent tout l'état de l'art pertinent contredit l'existence de silos disciplinaires (recherche opérationnelle, actuariat, théorie des jeux) que notre propre tableau du §3 signalait comme mode de défaillance (`A`, `B`) **[HYPOTHÈSE]**. Si une proportion $\rho$ des collisions réside hors du voisinage à un saut des graines, le rappel maximal de notre recommandation est borné par $1 - \rho$ (`B`) **[HYPOTHÈSE]**.
+* **Décision : Transformée en test (Expérience 3 corrigée)**.
+* **Modification appliquée** : Nous ne postulons plus que $\rho$ est négligeable. En empruntant la méthode de traduction multi-dialectes de `B` et `E` et le contrôle de relance à budget égal de `D` et `E`, l'Expérience 3 mesure directement si une recherche inter-silos hors du graphe de citations des graines de 2026 découvre des collisions certifiées supplémentaires **[HYPOTHÈSE]**.
+
+### 6. Vacuité logique (*ex falso quodlibet*) de l'implication auto-formalisée $\tilde{T}_{\text{lit}} \implies \tilde{T}_{\text{cible}}$, erreur commune de traduction et faible profondeur du prouveur (Critiques de A, B, D, E)
+* **Teneur de la critique** : Dans l'Outil 3 du §3 **[VÉRIFIÉ]**, si l'auto-formalisation de $T_{\text{lit}}$ (admise avec `sorry`) introduit une prémisse contradictoire avec la bibliothèque Lean ($\tilde{T}_{\text{lit}} \implies \texttt{False}$) ou si celle de $T_{\text{cible}}$ produit une conclusion tautologique ($\texttt{True} \implies \tilde{T}_{\text{cible}}$), alors l'implication $\tilde{T}_{\text{lit}} \implies \tilde{T}_{\text{cible}}$ est prouvée par construction (*ex falso quodlibet*), générant une fausse alerte (`A`, `E`) **[HYPOTHÈSE]**. De plus, si le même modèle traduit les deux énoncés en omettant la même condition globale, la preuve Lean réussit sur une traduction erronée (`A`, `D`). Inversement, lorsque la probabilité $\pi_{\text{tac}}$ que la tactique automatique ferme une implication vraie (ex. changement de variable ou inégalité de Jensen) est faible devant le bruit de vacuité $\epsilon_{\text{vac}}$, le rapport de vraisemblance $r_{\text{pipe}}/f_{\text{pipe}}$ tend vers $1$ (`B`, `D`, `E`) **[HYPOTHÈSE]**.
+* **Décision : Acceptée (ajout des garde-fous mécaniques) et transformée en test (Expérience 2 corrigée)**.
+* **Modification appliquée** : En empruntant les contrôles formels de `A`, `D` et `E`, aucune implication Lean $\tilde{T}_{\text{lit}} \implies \tilde{T}_{\text{cible}}$ n'est recevable sans passer quatre vérifications **[HYPOTHÈSE]** :
+  1. *Traduction indépendante* de $T_{\text{lit}}$ et $T_{\text{cible}}$ avec audit des hypothèses globales (`D`).
+  2. *Non-contradiction de la prémisse* : échec exigé de la tactique sur $\tilde{T}_{\text{lit}} \implies \texttt{False}$ (`A`, `E`).
+  3. *Non-tautologie de la cible* : échec exigé sur $\texttt{True} \implies \tilde{T}_{\text{cible}}$ (`E`).
+  4. *Sensibilité à la prémisse (ablation)* : échec exigé lorsque l'on retire le théorème $\tilde{T}_{\text{lit}}$ ou que l'on remplace $\tilde{T}_{\text{cible}}$ par un quasi-jumeau muni d'un contre-modèle (`A`, `D`).
+
+### 7. Ignorer le corps des preuves manque les lemmes intermédiaires (Critiques de D, E)
+* **Teneur de la critique** : Restreindre l'extraction aux seuls « énoncés des théorèmes principaux (sans les preuves) » **[VÉRIFIÉ]** exclut par construction les collisions avec un lemme technique intermédiaire ou une proposition auxiliaire plus forte que le théorème principal (`D`, `E`) **[HYPOTHÈSE]**.
+* **Décision : Acceptée**.
+* **Modification appliquée** : L'extraction porte désormais sur *tous les environnements déclaratifs* de l'article et de ses annexes (`Theorem`, `Proposition`, `Lemma`, `Corollary`, `Claim`), en n'omettant que le texte interne des démonstrations (`\begin{proof}...\end{proof}`) lors du premier passage **[HYPOTHÈSE]**.
+
+### 8. Biais de présupposition et confusion avec la longueur de déduction dans l'« aveugle inversé » du lecteur humain (Critiques de A, B, E)
+* **Teneur de la critique** : Demander au lecteur humain **[RAPPORTÉ]** dans quel manuel le résultat apparaît et comment le prouver en dix lignes **[VÉRIFIÉ]** présuppose que le résultat est connu (ce qui gonfle $\varphi_{\text{hum}}$, `A`), confond nouveauté mathématique et longueur de preuve à temps de réflexion borné $t$ (`B`, `E`), et traite un échec de réduction comme une preuve de nouveauté sans mesurer le rappel humain $r_{\text{hum}}$ (`A`) **[HYPOTHÈSE]**.
+* **Décision : Acceptée**.
+* **Modification appliquée** : La question suggestive et la contrainte de longueur sont supprimées **[HYPOTHÈSE]**. Le lecteur humain **[RAPPORTÉ]** est étalonné en aveugle sur un lot mêlant les cibles candidates, des collisions connues réécrites (mesure de $r_{\text{hum}}$) et des énoncés dont la non-réductibilité aux voisins est établie par un contre-exemple caché (mesure de $\varphi_{\text{hum}}$, emprunté à `A`). Conformément à `D`, une alerte humaine n'est validée que si elle exhibe la source datée *et* la chaîne d'implication exacte ; une absence de réduction est enregistrée comme « non réfuté au budget de temps $t$ », jamais comme certificat de nouveauté **[HYPOTHÈSE]**.
+
+### 9. Exemption trop large des « objets à score exact » (Critiques de A, D, E)
+* **Teneur de la critique** : Extraire uniquement « la seule valeur numérique du meilleur score connu » **[VÉRIFIÉ]** sans lire la notice ni les conditions (`E`) confond des scores obtenus sous des lois nulles, horizons ou budgets incompatibles, et manque le cas où une règle de décision déjà publiée sous un autre nom atteint le score cible sur le banc du programme (`A`, `D`) **[HYPOTHÈSE]**.
+* **Décision : Acceptée**.
+* **Modification appliquée** : En empruntant le protocole de `D`, la vérification amont d'un *objet à score exact* **[RAPPORTÉ]** consiste à aligner les contraintes exactes de la notice du banc, à extraire des travaux voisins les *règles de décision ou algorithmes publiés*, et à les réexécuter mécaniquement sur la fonction de score du programme avant de sceller la ligne de base à battre **[HYPOTHÈSE]**.
+
+### 10. Défauts de l'Expérience 2 : absence de récupération en corpus, exactitude équilibrée, covariance par triade, trace d'édition et schéma $H_0/H_1$ (Critiques de A, B, D, E)
+* **Teneur de la critique** :
+  1. *Paires pré-formées vs corpus ouvert (`A`, `D`)* : Comme le formalise `D`, le rappel complet d'un pipeline est le produit $P(I \mid Y) P(F \mid I, Y) P(K \mid F, I, Y)$ (récupération du témoin dans un corpus de taille $M$, fidélité de traduction, preuve de l'implication). Tester des paires déjà formées $(E_1, E_2)$ ignore le facteur de récupération $P(I \mid Y)$ **[HYPOTHÈSE]**.
+  2. *Exactitude équilibrée et covariance par triade (`D`, `E`)* : L'exactitude équilibrée $(r + 1 - \varphi)/2$ ne minimise ni la charge ni le risque bayésien $R(r, \varphi; \pi) = \pi(1-r)c_+ + (1-\pi)\varphi c_-$ dès que $\pi/(1-\pi) \neq c_-/c_+$ (`D`, `E`). En outre, engendrer une paire positive $(E_{1,i}, E_{2,i})$ et une paire négative $(E_{1,i}, E_{3,i})$ à partir du même énoncé racine $E_{1,i}$ crée une covariance $\gamma \neq 0$ qui fausse la variance de l'estimateur (`E`) **[HYPOTHÈSE]**.
+  3. *Trace d'édition et vérité-terrain des négatifs (`A`, `B`, `D`)* : Si $E_3$ est obtenu par édition minimale de $E_1$, un classifieur peut détecter la trace d'édition en surface (`A`) ; et cette modification prouve seulement que $E_1 \not\implies E_3$ (négatif local de couple au sens de `D`), non que $E_3$ est neuf dans l'absolu (`B`, `D`) **[HYPOTHÈSE]**.
+  4. *Contrôles triviaux et rigidité du schéma $H_0/H_1$ (`B`, `E`)* : Les paires identiques mot pour mot ne testent que le câblage (`B`), et le schéma canonique $(H_0, H_1)$ de l'Outil 2 échoue sur les jeux d'inspection sous budget dépourvus d'hypothèses statistiques $H_0/H_1$ (`E`) **[HYPOTHÈSE]**.
+* **Décision : Acceptée (refonte intégrale de l'Expérience 2 en §(b))**.
+* **Modification appliquée** : Le schéma d'empreintage de l'Outil 2 est généralisé au quintuplet *(Espace d'états/Domaine, Dynamique/Famille de lois, Contraintes/Structure de dépendance ou de budget, Classe de stratégies/Règles admissibles, Fonctionnelle objectif/Borne)* pour couvrir les cinq zones **[RAPPORTÉ]** sans projection dégénérée (`E`) **[HYPOTHÈSE]**. L'Expérience 2 opère désormais en récupération sur corpus ouvert de taille $M$, sur des racines positives et négatives disjointes ($\gamma = 0$), intégralement réécrites pour éliminer toute trace d'édition, et évaluées selon le risque bayésien **[HYPOTHÈSE]**.
+
+### 11. Maintien de l'exemption de lecture papier pour les « lemmes de bibliothèque » (Critique implicite de A et B sur l'homogénéité des collisions)
+* **Teneur de la critique** : Dans leurs critiques respectives, `A` et `B` soulignent le risque de définir le gain d'évitement de collision de la lecture papier sur les lemmes de bibliothèque comme nul par construction **[VÉRIFIÉ]**.
+* **Décision : Rejetée si elle vise à imposer une veille bibliographique papier aux lemmes de bibliothèque (avec ajout du contrôle de fermeture automatique de B et E)**.
+* **Raison du rejet** : Les faits distinguent explicitement trois formes de cibles en liste fermée, dont le *lemme de bibliothèque*, en présence d'une bibliothèque Lean de statistique publique **[RAPPORTÉ]**. Pour un *lemme de bibliothèque*, un théorème déjà publié sur papier mais absent du dépôt formel Lean (et de ses requêtes d'intégration / Pull Requests publiques en cours) conserve toute sa valeur d'infrastructure s'il est formalisé **[HYPOTHÈSE]**. La vraie collision qui détruit la valeur d'un lemme de bibliothèque est exclusivement formelle : (i) le lemme figure déjà dans le dépôt Lean ou dans une PR publique (`B`, `D`), ou (ii) le lemme se ferme automatiquement en quelques secondes par les tactiques Lean existantes à partir de la bibliothèque (`B`, `E`). Nous imposons ces deux vérifications mécaniques avant scellement, mais nous maintenons l'exemption de toute lecture d'articles papier pour cette forme **[HYPOTHÈSE]**.
+
+---
+
+## (b) Les expériences corrigées (Inférence forte, règle B4)
+
+Conformément à la règle B4 et à l'interdiction d'inventer des chiffres, chaque expérience oppose deux hypothèses exclusives $H_A$ et $H_B$ formulées en fonction des paramètres exacts du programme, avec des contrôles négatifs éliminant les biais identifiés au tour III.2 **[HYPOTHÈSE]**.
+
+### Expérience 1 corrigée : Rentabilité bayésienne du criblage amont des énoncés ($\pi$ déconvolué face au seuil complet $\tau_1^*$)
+
+* **Protocole en deux étapes sur lots disjoints** :
+  1. *Étalonnage indépendant de $(r, \varphi)$ hors mémoire* : Construire un banc d'étalonnage composé de $m_+$ couples positifs $(T_{\text{source}}, C_+)$ et de $m_-$ couples négatifs $(T_{\text{source}}', C_-)$ à partir d'articles récents *disjoints* des travaux voisins de 2026 **[RAPPORTÉ]** et postérieurs à la date de coupure des poids du modèle. Pour éviter la covariance par triade (`E`) et l'artefact d'édition (`A`), $T_{\text{source}} \neq T_{\text{source}}'$ et tous les énoncés $C_+, C_-$ sont intégralement réécrits par un tiers selon le même gabarit stylistique. Chaque couple négatif est muni d'un contre-exemple fini certifiant que $T_{\text{source}}' \not\implies C_-$ (définition de `D`). On mesure les estimateurs $\hat{r}$ (rappel) et $\hat{\varphi}$ (taux de fausse alerte par couple).
+  2. *Criblage d'un échantillon de cibles candidates* : Sur $n$ cibles candidates de forme *énoncé à démontrer ou réfuter* **[RAPPORTÉ]** rédigées et horodatées avant toute ouverture du lot de 2026 (`B`), on exécute l'instrument de lecture et l'on observe la proportion brute d'alertes $\hat{q}$. On calcule l'estimateur déconvolué de la prévalence des collisions :
+     $$\hat{\pi} = \frac{\hat{q} - \hat{\varphi}}{\hat{r} - \hat{\varphi}}$$
+     et son intervalle de confiance $[\underline{\pi}, \overline{\pi}]$ au niveau de risque fixé par l'arbitre.
+* **Contrôles négatifs et conditions de validité fatales** :
+  - *Bras à livre fermé (`A`, `B`)* : L'agent est d'abord interrogé sur les $m_+$ positifs sans accès aux textes sources. Tout cas résolu à livre fermé est retiré du calcul de $\hat{r}$ pour ne mesurer que le rappel de lecture effective.
+  - *Condition d'identifiabilité (`D`, `E`)* : Si la borne inférieure de l'intervalle de confiance de $\hat{r} - \hat{\varphi}$ est inférieure ou égale à zéro, l'instrument est déclaré aveugle et l'expérience s'arrête (invalidation de l'instrument).
+* **Hypothèses exclusives** (en notant $\tau_1^* = \frac{C_{\text{lect}} + \hat{\varphi} V_{\text{cible}}}{\hat{r} [ B_{\text{cible}} + s_1 (1 - r_{\text{aval}}) C_{\text{rev}} ] + \hat{\varphi} V_{\text{cible}}}$ le seuil économique complet établi en §(a).3) :
+  - **$H_A$ (Nécessité économique du filtrage amont)** : $\pi > \tau_1^*$ (la prévalence réelle des collisions parmi les cibles candidates justifie le coût de lecture amont et le risque de faux abandons).
+  - **$H_B$ (Rentabilité du report à la première revendication — Option b)** : $\pi \le \tau_1^*$ (le criblage systématique avant scellement a une valeur nette négative ou nulle).
+* **Issues falsificatrices et condition de jugeabilité** :
+  - Si $\underline{\pi} > \tau_1^*$, **$H_B$ est falsifiée** (l'option (b) est rejetée pour les énoncés).
+  - Si $\overline{\pi} \le \tau_1^*$, **$H_A$ est falsifiée** (le criblage amont systématique est rejeté).
+  - Si $\tau_1^* \in [\underline{\pi}, \overline{\pi}]$ (puissance insuffisante liée à un produit $n \pi$ trop faible), le duel est déclaré **non jugeable** à l'effectif $n$ et ne falsifie aucune hypothèse (`A`, `B`, `D`).
+
+### Expérience 2 corrigée : Pipeline d'empreintage quintuplet + filtre d'implication Lean non-vide face à la recherche lexicale/vectorielle en corpus ouvert
+
+* **Protocole** :
+  Placer dans un corpus ouvert de taille $M$ (couvrant les cinq zones **[RAPPORTÉ]** et leurs disciplines voisines, avec texte intégral accessible pour toutes les entrées afin d'éliminer le biais de censure d'accès signalé par `A`, `B`, `E`) les antécédents vrais de $m_+$ cibles positives (divisées en une strate de collisions littérales et une strate de collisions de traduction inter-dialectes, `B`) ainsi que les voisins thématiques de $m_-$ cibles négatives (racines disjointes, munies d'un contre-modèle prouvant la non-implication avec tout document de l'index local).
+  Comparer sur ce corpus ouvert :
+  1. *La baseline mécanique* : Récupération par recherche hybride (BM25 sur LaTeX + similarité de plongements vectoriels) suivie d'un seuillage de score.
+  2. *Le pipeline agentique corrigé* : Canonisation en quintuplet *(Domaine, Dynamique, Contraintes/Dépendance, Règles admissibles, Objectif/Borne)* $\to$ récupération des $k$ candidats dans l'index $M$ $\to$ auto-formalisation croisée indépendante $(\tilde{T}_{\text{lit}}, \tilde{T}_{\text{cible}})$ $\to$ preuve d'implication Lean $\tilde{T}_{\text{lit}} \implies \tilde{T}_{\text{cible}}$ validée *uniquement* si les trois filtres de non-vacuité échouent ($\tilde{T}_{\text{lit}} \not\implies \texttt{False}$, $\texttt{True} \not\implies \tilde{T}_{\text{cible}}$, et échec après suppression de l'hypothèse critique).
+* **Contrôles négatifs** :
+  - *Contrôle de vacuité logique (`A`, `E`)* : Injecter délibérément dans le banc des énoncés auto-formalisés à prémisses contradictoires ; si le filtre de non-vacuité laisse passer une seule implication issue d'une prémisse contradictoire, l'Outil 3 est invalidé.
+  - *Contrôle de citation hors implication (`B`, `D`, `E`)* : Insérer dans l'index $M$ des articles mentionnant mot pour mot l'énoncé cible comme « conjecture ouverte » ou sous hypothèse i.i.d. stationnaire ; toute alerte positive sur ces documents est comptée dans $\hat{\varphi}_{\text{global}}$.
+* **Métrique** : Risque bayésien bout-en-bout $\hat{R} = \pi_0 (1 - \hat{r}_{\text{global}}) c_+ + (1 - \pi_0) \hat{\varphi}_{\text{global}} c_-$, où $\hat{r}_{\text{global}}$ exige à la fois la récupération du bon article dans l'index $M$ et la validation de l'implication sur le passage exact (`D`), et où $\delta_R > 0$ désigne le surcoût opérationnel d'exécution du pipeline agentique par rapport à la baseline.
+* **Hypothèses exclusives** :
+  - **$H_A$ (Supériorité décisionnelle du pipeline structuré et formel)** : $R(\text{Baseline}) - R(\text{Pipeline}) > \delta_R$.
+  - **$H_B$ (Domination ou équivalence de la baseline mécanique)** : $R(\text{Baseline}) - R(\text{Pipeline}) \le \delta_R$ (la perte de rappel aux étapes de récupération $P(I \mid Y)$, de traduction $P(F \mid I, Y)$ ou de preuve $P(K \mid F, I, Y)$ annule le gain sémantique).
+* **Issues falsificatrices** :
+  - Si l'intervalle de confiance de $\hat{R}(\text{Baseline}) - \hat{R}(\text{Pipeline})$ est strictement supérieur à $\delta_R$, **$H_B$ est falsifiée** (le pipeline agentique est déployé).
+  - S'il est inférieur ou égal à $\delta_R$, **$H_A$ est falsifiée** (l'auto-formalisation d'antériorité et la canonisation par agent sont abandonnées au profit de la baseline mécanique couplée au lecteur humain **[RAPPORTÉ]**).
+
+### Expérience 3 corrigée : Suffisance du voisinage de citations de 2026 contre ouverture inter-silos (Capture-recapture à budget égal)
+
+* **Protocole** :
+  Sur un lot de cibles candidates de forme *énoncé*, exécuter en parallèle et en isolation stricte (aucun partage de traces ni de requêtes, `D`) trois bras dotés exactement du même budget de calcul et de lecture :
+  - *Bras 1 (Voisinage de citations)* : Examen des travaux voisins de 2026 croisés par hasard **[RAPPORTÉ]** (théorèmes, propositions et lemmes intermédiaires) et de leur voisinage de citations directes (amont et aval à un saut).
+  - *Bras 2 (Ouverture inter-silos hors voisinage)* : Recherche par traduction des cibles dans les vocabulaires des disciplines jumelles (recherche opérationnelle, actuariat, théorie de l'information, contrôle stochastique — emprunté à `B` et `E`) sur les bases d'articles en *excluant* le lot de 2026 et ses citations directes.
+  - *Bras témoin 1' (Contrôle de répétition d'effort, emprunté à `D` et `E`)* : Second passage indépendant à même budget sur le graphe de citations étendu des graines, afin de mesurer le gain dû à la seule accumulation d'effort.
+  Toutes les alertes remontées par les trois bras sont adjudiquées en aveugle par le lecteur humain du domaine **[RAPPORTÉ]** sur présentation du passage source et d'une réduction mathématique vérifiée (`A`, `D`).
+* **Contrôles négatifs** :
+  - *Cartographie placebo (`A`)* : Exécuter le Bras 2 sur un corpus mathématique disjoint mais partageant des notations de surface ; toute cible écartée sur ce corpus placebo invalide le filtre d'adjudication.
+  - *Témoins inter-silos plantés (`B`)* : Inclure en aveugle quelques cibles construites par réécriture de théorèmes classiques d'actuariat ou de recherche opérationnelle non cités par les travaux de 2026, pour vérifier que le Bras 2 est fonctionnel.
+* **Métrique** : Surplus net inter-silos $\Delta_{\text{silo}} = N_{\text{adj}}(\text{Bras 2} \setminus \text{Bras 1}) - N_{\text{adj}}(\text{Bras 1'} \setminus \text{Bras 1})$, différence entre le nombre de cibles en collision certifiées uniquement par l'ouverture inter-silos et le nombre de cibles en collision certifiées uniquement par un second passage de même budget dans le graphe de citations.
+* **Hypothèses exclusives** :
+  - **$H_A$ (Existence de collisions actives dans les silos hors graphe de citations)** : $\mathbb{E}[\Delta_{\text{silo}}] > 0$.
+  - **$H_B$ (Suffisance du voisinage de citations des travaux de 2026)** : $\mathbb{E}[\Delta_{\text{silo}}] \le 0$.
+* **Issues falsificatrices** :
+  - Si $\Delta_{\text{silo}} > 0$ de façon statistiquement significative, **$H_B$ est falsifiée** : l'hypothèse de couverture par le voisinage de 2026 est réfutée et la lecture amont doit couvrir les cinq zones avec traduction multi-silos (Option a élargie).
+  - Si $\Delta_{\text{silo}} \le 0$ (alors que les témoins plantés du Bras 2 sont détectés), **$H_A$ est falsifiée** : le criblage borné au voisinage des travaux de 2026 suffit à budget fixé.
+
+---
+
+## (c) Réponse synthétique à la question de l'arbitre (en une page)
+
+### 1. Ce qui est établi
+* **Cadre factuel du pilier [RAPPORTÉ]** : Les cibles payantes sont en liste fermée, à budget égal et toutes rapportées, sous trois formes (*objet à score exact*, *énoncé à démontrer ou réfuter*, *lemme de bibliothèque*). La veille est gelée pour économiser l'effort, mais une bibliothèque Lean de statistique publique couvre déjà divergences, Fano, Bretagnolle–Huber, identité de Wald et e-valeurs, et plusieurs travaux voisins de 2026 ont été croisés par hasard sans être lus. Un juge de nouveauté et un lecteur humain du domaine sont prévus. Une collision après dépense ou après revendication coûte cher ; une lecture large retarde les pilotes.
+* **Identités méthodologiques établies par la critique croisée [HYPOTHÈSE]** :
+  1. *Engagement de la dépense* : Puisque les cibles sont à budget égal et toutes rapportées **[RAPPORTÉ]**, le budget de calcul d'une cible déjà résolue dans la littérature est perdu dès que le pilote est lancé, même si l'agent échoue à prouver la cible (`A`, `D`). L'option (b) (ne lire qu'à la première revendication) protège la réputation externe mais ne protège jamais la dépense interne.
+  2. *Asymétrie de la preuve d'antériorité (`D`)* : Un témoin daté accompagné d'une réduction valide prouve la collision ; en revanche, l'échec d'un agent, d'un prouveur Lean ou d'un lecteur humain à réduire une cible dans un budget de temps $t$ ne prouve jamais qu'elle est « neuve dans le monde », mais seulement qu'aucun voisin testé ne l'implique sous ce budget.
+  3. *Non-identifiabilité sans étalonnage (`A`, `B`, `D`, `E`)* : Tout instrument de veille de rappel $r$ et de taux de fausse alerte $\varphi$ produit un taux d'alertes d'espérance $q = \pi r + (1-\pi)\varphi$. Mesurer la rentabilité d'une lecture amont sans estimer séparément $r$ et $\varphi$ sur des contrôles positifs hors mémoire et de vrais contrôles négatifs (munis de contre-modèles) est impossible.
+
+### 2. Ce qui n'est pas établi (« je ne sais pas »)
+* **Je ne sais pas** quelle est la prévalence réelle $\pi$ des collisions parmi les cibles candidates, ni combien de cibles les travaux de 2026 croisés par hasard **[RAPPORTÉ]** règlent déjà **[HYPOTHÈSE]**.
+* **Je ne sais pas** quelles sont les valeurs numériques des paramètres de coût du programme ($C_{\text{lect}}, B_{\text{cible}}, C_{\text{rev}}, V_{\text{cible}}$), ni quelle proportion $\rho$ des collisions réside hors du graphe de citations des travaux de 2026 dans des silos voisins (recherche opérationnelle, actuariat) **[HYPOTHÈSE]**.
+* **Je ne sais pas** si l'auto-formalisation croisée suivie d'un prouveur Lean (sous filtre de non-vacuité $\tilde{T}_{\text{lit}} \not\implies \texttt{False}$) bat en corpus ouvert une recherche lexicale et vectorielle sur le risque bayésien **[HYPOTHÈSE]**.
+
+### 3. Réponse aux points 1 à 6 et recommandation corrigée
+1. **Ce qu'un expert ferait et qu'on ne demande pas [HYPOTHÈSE]** : Il refuserait d'appliquer la même politique temporelle aux trois formes de cibles, et définirait pour chaque cible candidate *avant* toute recherche le critère exact du témoin qui forcerait à l'abandonner (`D`).
+2. **Données brutes de départ [HYPOTHÈSE]** : (i) Le dépôt complet de la bibliothèque Lean de statistique publique **[RAPPORTÉ]**, son graphe de dépendances et ses requêtes d'intégration (PR) publiques ; (ii) les notices complètes des bancs d'évaluation (contraintes, budgets, classes de lois nulles) ; (iii) le texte intégral des travaux voisins de 2026 **[RAPPORTÉ]**, leurs bibliographies et les bases de prépublications et d'actes des cinq zones.
+3. **Méthodes, outils et modes d'échec [HYPOTHÈSE]** :
+   - *Unification de types et tactiques Lean* (échoue si les définitions diffèrent).
+   - *Empreintage structuré en quintuplet* (Domaine, Dynamique, Contraintes/Dépendance, Règles admissibles, Objectif/Borne) couplé à la traduction de requêtes inter-dialectes (échoue par perte d'une condition globale lors de la compression).
+   - *Implication formelle $\tilde{T}_{\text{lit}} \implies \tilde{T}_{\text{cible}}$ sur squelettes Lean* (échoue par vacuité logique si $\tilde{T}_{\text{lit}}$ est mal formalisé — d'où l'obligation du triple test mécanique de non-contradiction, non-tautologie et ablation — ou par profondeur insuffisante du prouveur).
+   - *Traversée de citations depuis les graines de 2026* (échoue face aux silos disciplinaires non cités).
+4. **Vérifications externes hors programme [HYPOTHÈSE]** : Soumission de PR aux mainteneurs de la bibliothèque Lean publique **[RAPPORTÉ]** ; moteurs publics de recherche de théorèmes Lean par signature ; et évaluation par le lecteur humain du domaine **[RAPPORTÉ]** (sans question suggestive, avec obligation de fournir la source datée et la réduction, étalonné sur des témoins positifs et des contre-exemples cachés).
+5. **Demande reformulée [HYPOTHÈSE]** : *« Quelle allocation différenciée de la vérification d'antériorité entre contrôle formel Lean, lecture des travaux de 2026 et recherche élargie aux cinq zones minimise l'espérance de perte totale (coût de lecture + retard + faux abandons + budgets gaspillés + collisions après revendication) pour chacune des trois formes de cibles **[RAPPORTÉ]** ? »*
+6. **Recommandation [HYPOTHÈSE] — Protocole stratifié avec exception ciblée au gel avant scellement (rejet de a, b, c pris en bloc)** :
+   - **Forme 1 : Lemmes de bibliothèque [RAPPORTÉ]** $\rightarrow$ *Zéro lecture d'articles papier.* Avant de sceller, interroger mécaniquement le dépôt Lean public **[RAPPORTÉ]**, ses PR ouvertes et ses tactiques automatiques. Si le lemme est absent et ne se ferme pas automatiquement à budget court, la cible est scellée.
+   - **Forme 2 : Objets à score exact [RAPPORTÉ]** $\rightarrow$ *Vérification des notices et réexécution des règles.* Avant de sceller, lire dans les travaux voisins de 2026 **[RAPPORTÉ]** uniquement les règles de décision et contraintes de banc, et réexécuter ces règles sur le banc du programme pour fixer le score de référence. Lecture bibliographique approfondie uniquement si un agent bat ce score (Option b).
+   - **Forme 3 : Énoncés à démontrer ou réfuter [RAPPORTÉ]** $\rightarrow$ *Option (a) restreinte par étapes.* Lever immédiatement le gel sur les seuls travaux voisins de 2026 **[RAPPORTÉ]** et leurs références directes (en extrayant théorèmes, propositions et lemmes intermédiaires) pour écarter toute cible déjà impliquée avant de dépenser son budget. Ne déclencher l'extension aux cinq zones complètes (Option a intégrale) ou le report (Option b) qu'au vu des conditions de bascule : si $\overline{\pi} \le \tau_1^*$ dans l'Expérience 1, basculer vers (b) ; si $\Delta_{\text{silo}} > 0$ dans l'Expérience 3, basculer vers (a) élargie aux dialectes voisins. Un audit aval complet (juge + lecteur humain **[RAPPORTÉ]**) reste obligatoire sur le résultat exact obtenu avant toute revendication.
+
+### 4. L'expérience à faire en premier
+Il faut exécuter **en premier** un **audit d'étalonnage et de criblage sur la pile des travaux de 2026 (Phase 1 de l'Expérience 1 couplée au Bras 1 de l'Expérience 3)** **[HYPOTHÈSE]** :
+1. Horodater et figer la liste actuelle des cibles candidates de forme *énoncé* (en notant lesquelles ont été rédigées après avoir aperçu les titres de 2026).
+2. Étalonner simultanément le couple $(\hat{r}, \hat{\varphi})$ de l'ensemble *(agent lecteur + lecteur humain **[RAPPORTÉ]**)* sur un petit banc post-coupure muni de contre-exemples finis, tout en leur faisant auditer les travaux voisins de 2026 **[RAPPORTÉ]** (énoncés principaux et lemmes intermédiaires) contre les cibles candidates.
+3. **Pourquoi en premier ?** Parce que les travaux de 2026 sont déjà repérés **[RAPPORTÉ]** (coût de collecte nul) : si $\hat{r} \approx \hat{\varphi}$, on sait immédiatement qu'on ne peut pas déléguer le filtrage à l'agent ; et si ne serait-ce que quelques cibles candidates tombent par implication directe depuis cette pile de 2026, le coût des budgets $B_{\text{cible}}$ immédiatement économisés rembourse l'audit et réfute d'emblée le maintien d'un gel aveugle (Option b) **[HYPOTHÈSE]**.
+
+FIN-DE-CELLULE
