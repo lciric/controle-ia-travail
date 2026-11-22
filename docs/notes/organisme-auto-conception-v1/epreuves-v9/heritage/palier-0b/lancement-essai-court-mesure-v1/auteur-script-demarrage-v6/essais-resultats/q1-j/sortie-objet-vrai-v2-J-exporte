@@ -1,0 +1,229 @@
+#!/bin/bash
+H0_PREVU=2026-11-22T01:19:08Z
+JETON_DEMARRAGE='factice_4fkwekZhGUNebL8KFvKm8Cf0rzMyUvRtOStw'
+# Essai 3, palier 0b : demarrage de la machine, v2
+set -u -o pipefail
+COMMIT=d7f949acd9ac92e998e57663d2cc741de93f18c3
+REFERENCE=ab90e73b0c824544150f450819a38c7db76dd1cac505942fd66b5375f96591b4
+BRANCHE=recuperation/palier-0b-programme-1-essai-3-v1
+DEPOT_URL=https://github.com/lciric/controle-ia-travail.git
+BASE=/srv/essai-3 SECRET=/root/essai-3-secret APT_GET=apt-get PY_SYS=/usr/bin/python3 INTERVALLE=1800 ATTENTE=20
+OPT_GARDIEN= AGE_MAX=7200 PLAFOND=1048576
+PIECES="b989db6e2e17772b74ec8ac99a5ed2708bf305d212a5e6825ed210759b7b5865 lancer-essai-3-v4.sh
+64b2c0ce03e1e586547580cbed62f8e8c84bbd798c695a588202955809105937 demarrer-essai-3-v4.sh
+ba39fe9be5d6fbf760e409d7677ed60662f6118103cb7bd75b93a6786d6246ed gardien-essai-3-v4.py
+b333b2eb4bac58c567e0a2efa479ae424dccc6fa9d88fe5a4d95011cb2ce6232 demarrer-gardien-essai-3-v4.sh"
+ESSAI=
+for v in BASE SECRET DEPOT_URL APT_GET PY_SYS INTERVALLE ATTENTE OPT_GARDIEN COMMIT REFERENCE; do
+  n=ESSAI_DEMARRAGE_$v
+  [ -z "${!n+x}" ] || ESSAI="$ESSAI $v"
+done
+if [ -n "$ESSAI" ]; then
+  [ "${ESSAI_DEMARRAGE_BANC:-}" = oui ] || { echo "refus : portes d'essai sans banc :$ESSAI"; exit 19; }
+  for v in $ESSAI; do n=ESSAI_DEMARRAGE_$v; printf -v $v %s "${!n}"; done
+fi
+SCRIPT=$(readlink -f "${BASH_SOURCE[0]}")
+J=$BASE/journal-demarrage-essai-3.txt T=$BASE/tenue VERIF=$BASE/tenue-verification R=$BASE/racine D=$BASE/depot.git
+V=$BASE/versement S=$BASE/sorties/etapes-3-a-6-essai-3 PY=$BASE/venv/bin/python AS=$BASE/assistant-jeton.sh
+PROTO=${DEPOT_URL%%:*} HOTE=${DEPOT_URL#*://} HOTE=${HOTE%%/*}
+export GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null HOME=${HOME:-/root}
+PAS=0
+h() { date -u +%FT%TZ; }
+noter() { echo "$(h) $*"; }
+pas() { PAS=$1; noter "pas ($1) : debut : $2"; }
+fait() { noter "pas ($PAS) : fait"; }
+echouer() {
+  noter "ECHEC du pas ($PAS), code $1 : $2"
+  echo "code $1, pas ($PAS) : $2" > $BASE/echec-demarrage-essai-3.txt
+  [ -d $V/.git ] && verser "echec au pas ($PAS), code $1"
+  exit $1
+}
+essayer() {
+  local k
+  for k in 1 2 3; do
+    "$@" && return 0
+    noter "tentative $k de $1 echouee"
+    [ $k = 3 ] || sleep $ATTENTE
+  done
+  return 1
+}
+vivant() {
+  local s a
+  [ -n "$1" ] && s=$(cat /proc/$1/stat 2>/dev/null) || return 1
+  a=(${s##*) })
+  [ -z "$2" ] || [ "${a[19]:-}" = "$2" ]
+}
+lire() { cat "$1" 2>/dev/null; }
+etat() {
+  local p d gp gd
+  p=$(lire $T/pid-essai-3.txt); d=$(lire $T/depart-processus-essai-3.txt); [ "$d" = inconnu ] && d=
+  gp=$(lire $T/pid-gardien-essai-3.txt); gd=$(lire $BASE/depart-gardien-essai-3.txt)
+  echo "heure : $(h)"
+  echo "versement : $1"
+  echo "n : $(find $S/etape-4/couche-mecanique/bras-1-a-3 -mindepth 3 -maxdepth 3 -type d 2>/dev/null | wc -l)"
+  echo "octets libres : $(df -B1 --output=avail $BASE | tail -n 1)"
+  echo "programme : ${p:-aucun} $(vivant "$p" "$d" && echo vivant || echo absent)"
+  echo "gardien : ${gp:-aucun} $(vivant "$gp" "$gd" && echo vivant || echo absent)"
+  echo "code du depart : $(lire $BASE/code-depart-essai-3.txt)"
+  echo "code de sortie : $(lire $T/code-de-sortie.txt)"
+  echo "echec : $(lire $BASE/echec-demarrage-essai-3.txt)"
+}
+verser() {
+  local d=$V/essai-3 f
+  mkdir -p $d/tenue
+  cp -f $J $d/
+  for f in journal-de-tenue-essai-3.txt arret-gardien.txt; do
+    [ -f $T/$f ] && cp -f $T/$f $d/tenue/
+  done
+  for f in journal-essai-3.txt sortie-gardien-essai-3.txt; do
+    [ -f $T/$f ] && tail -c $PLAFOND $T/$f > $d/tenue/$f
+  done
+  for f in $T/inventaire-etape-*-essai-3.txt.sha256; do
+    [ -f $f ] && cp -f ${f%.sha256} $f $d/tenue/
+  done
+  [ -f $BASE/fin-essai-3.txt ] && cp -f $BASE/fin-essai-3.txt $d/
+  etat "$1" > $d/etat-essai-3.txt
+  if git -C $V add -A . && git -C $V commit -q -m "$1" && essayer git -C $V push -q origin HEAD:refs/heads/$BRANCHE; then
+    noter "versement $1 : pousse"
+  else
+    noter "ECHEC du versement $1"
+  fi
+}
+boucle() {
+  local n=0 gp gd k
+  noter "boucle : debut ($BASHPID)"
+  while :; do
+    n=$((n + 1))
+    gp=$(lire $T/pid-gardien-essai-3.txt); gd=$(lire $BASE/depart-gardien-essai-3.txt)
+    if ! vivant "$gp" "$gd"; then
+      verser "versement $n : dernier"
+      echo "fin : gardien absent le $(h), $n versements" > $BASE/fin-essai-3.txt
+      verser "fichier fin"
+      noter "boucle de versement : fin"
+      return 0
+    fi
+    verser "versement $n"
+    for ((k = 0; k < INTERVALLE; k += 60)); do
+      vivant "$gp" "$gd" || break
+      sleep $((INTERVALLE - k < 60 ? INTERVALLE - k : 60))
+    done
+  done
+}
+
+if [ "${1:-}" = --boucle-de-versement ]; then
+  unset JETON_DEMARRAGE
+  exec >> $J 2>&1
+  boucle
+  exit
+fi
+JETON=${JETON_DEMARRAGE:-}
+unset JETON_DEMARRAGE
+if [ -e $BASE ] || [ -L $BASE ]; then
+  [ -d $BASE ] && echo "$(h) demarrage refuse : $BASE present" >> $J
+  exit 20
+fi
+mkdir -p $BASE || exit 20
+exec >> $J 2>&1
+noter "demarrage v2, H0_PREVU ${H0_PREVU:-absent}, essai :${ESSAI:- aucun}"
+[[ "${H0_PREVU:-}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] && t=$(date -d $H0_PREVU +%s) \
+  || echouer 21 "H0_PREVU absent ou mal forme"
+AGE=$(( $(date +%s) - t ))
+[ $AGE -le $AGE_MAX ] && [ $AGE -ge -600 ] || echouer 21 "H0_PREVU vieux de $AGE s, hors de -600 a $AGE_MAX"
+[[ "$JETON" =~ ^[A-Za-z0-9_-]{20,100}$ ]] || echouer 22 "jeton absent ou mal forme"
+umask 077
+mkdir -m 700 -p $SECRET && printf '%s\n' "$JETON" > $SECRET/jeton || echouer 23 "fichier du jeton"
+unset JETON
+umask 022
+[ "$(stat -c %a $SECRET/jeton)" = 600 ] || echouer 23 "droits du fichier du jeton autres que 600"
+printf '%s\n' '#!/bin/bash' '[ "${1:-}" = get ] || exit 0' 'p= q=' \
+  'while IFS= read -r l && [ -n "$l" ]; do case $l in protocol=*) p=${l#*=} ;; host=*) q=${l#*=} ;; esac; done' \
+  "[ \"\$p\" = $PROTO ] && [ \"\$q\" = $HOTE ] || exit 0" "IFS= read -r j < $SECRET/jeton || exit 1" \
+  'printf "username=x-access-token\npassword=%s\n" "$j"' > $AS && chmod 700 $AS || echouer 24 "assistant"
+
+pas a "git et Python du systeme"
+export DEBIAN_FRONTEND=noninteractive
+essayer $APT_GET -o DPkg::Lock::Timeout=600 update || echouer 30 "liste des paquets"
+essayer $APT_GET -o DPkg::Lock::Timeout=600 install -y --no-install-recommends git python3 python3-venv ca-certificates \
+  xz-utils || echouer 31 "paquets"
+command -v git && [ -x $PY_SYS ] || echouer 32 "git ou $PY_SYS absent"
+fait
+g() { git -C $V config "$@"; }
+git init -q $V && g user.name "machine essai 3" && g user.email essai-3@machine.invalid && g credential.helper $AS \
+  && g remote.origin.url $DEPOT_URL && printf '%s\n' '#!/bin/bash' 'while read -r l ls r rs; do' \
+  "  [ \"\$r\" = refs/heads/$BRANCHE ] && [ -n \"\${ls//0/}\" ] || { echo \"garde : refus vers \$r\"; exit 1; }" \
+  '  [ -z "${rs//0/}" ] || git merge-base --is-ancestor $rs $ls || { echo "garde : refus, non descendante"; exit 1; }' \
+  'done' > $V/.git/hooks/pre-push && chmod 755 $V/.git/hooks/pre-push || echouer 25 "preparation du versement"
+
+pas b "clonage, profondeur 1"
+git init -q --bare $D && git -C $D config credential.helper $AS && git -C $D config remote.origin.url $DEPOT_URL \
+  && git -C $D config remote.origin.pushurl aucune-poussee-depuis-ce-depot || echouer 40 "depot local"
+essayer git -C $D fetch -q --depth 1 origin $COMMIT || echouer 41 "clonage impossible"
+[ "$(git -C $D rev-parse --verify -q "$COMMIT^{commit}")" = $COMMIT ] || echouer 42 "commit absent du clone"
+fait
+
+pas c "racine par git archive"
+mkdir $R && git -C $D archive --format=tar $COMMIT | tar -x -C $R || echouer 50 "extraction"
+G=$(find $R -name .git | head -n 5)
+[ -z "$G" ] || echouer 51 "la racine contient un .git : $G"
+(cd $R && LC_ALL=C find . -type f ! -path ./COMMIT-DE-LA-COPIE.txt ! -path ./EMPREINTES-DE-LA-COPIE.txt -print0 \
+  | LC_ALL=C sort -z | xargs -0 sha256sum) > $BASE/liste-de-la-copie.txt || echouer 52 "liste des empreintes"
+L=$(sha256sum < $BASE/liste-de-la-copie.txt | cut -c1-64)
+[ $L = $REFERENCE ] || echouer 53 "liste de la copie $L, attendue $REFERENCE"
+cp $BASE/liste-de-la-copie.txt $R/EMPREINTES-DE-LA-COPIE.txt && echo $COMMIT > $R/COMMIT-DE-LA-COPIE.txt \
+  || echouer 54 "fichiers de la copie"
+fait
+
+pas d "environnement Python"
+$PY_SYS -m venv $BASE/venv || echouer 60 "environnement"
+(cd $BASE && essayer $BASE/venv/bin/pip install --no-input --disable-pip-version-check -r $R/requirements-cpu.txt) \
+  || echouer 61 "paquets Python"
+[ -f $PY ] && [ -x $PY ] || echouer 62 "interpreteur absent"
+fait
+
+pas e "pieces de la tenue"
+mkdir $BASE/charge $T || echouer 70 "dossiers"
+sed -n '/^__CHARGE_DES_PIECES__$/,$p' "$SCRIPT" | sed 1d | base64 -d | tar -xJ --no-same-owner -C $BASE/charge \
+  || echouer 70 "charge illisible"
+[ $(find $BASE/charge -mindepth 1 | wc -l) = 4 ] || echouer 71 "charge : autre chose que quatre entrees"
+while read -r e f; do
+  [ -f $BASE/charge/$f ] && [ ! -L $BASE/charge/$f ] && cp $BASE/charge/$f $T/$f || echouer 71 "piece $f absente"
+  L=$(sha256sum < $T/$f | cut -c1-64)
+  [ $L = $e ] || echouer 72 "empreinte de $f : $L, attendue $e"
+done <<< "$PIECES"
+chmod 755 $T/*.sh
+fait
+
+pas f "departs"
+G=$(find $R -name .git | head -n 5)
+[ -z "$G" ] || echouer 55 "un .git avant le depart : $G"
+H_ARRET=$(date -u -d @$((t + 94 * 3600)) +%FT%TZ) || echouer 80 "heure d'arret"
+noter "arret de duree : $H_ARRET ; age de H0_PREVU : $AGE s"
+mkdir $VERIF $BASE/sorties || echouer 80 "dossiers"
+/bin/bash $T/lancer-essai-3-v4.sh $VERIF $R $PY $S --verifier-seulement
+c=$?
+[ $c = 0 ] && [ "$(lire $VERIF/code-de-sortie.txt)" = 0 ] || echouer 81 "verification seule : code $c"
+GARDE=(--sorties $S --heure-arret-duree $H_ARRET --arret-mesure desarme --seuil-libre-octets 8000000000 $OPT_GARDIEN)
+$PY_SYS -I -B $T/gardien-essai-3-v4.py --tenue $VERIF "${GARDE[@]}" --verifier-seulement || echouer 82 "parametres du gardien"
+/bin/bash $T/demarrer-essai-3-v4.sh $T $R $PY $S
+c=$?
+echo $c > $BASE/code-depart-essai-3.txt
+[ $c = 0 ] || [ $c = 5 ] || echouer 83 "depart de l'essai : code $c"
+[ $c = 0 ] || noter "ATTENTION : depart, code 5 : aucun signal du gardien"
+for i in $(seq 1 300); do
+  k=$(lire $T/code-de-sortie.txt) && break
+  grep -q "part du programme" $T/journal-essai-3.txt && break
+  sleep 1
+done
+[ -z "$k" ] || [ $k = 0 ] || echouer 85 "programme arrete au depart, code $k"
+/bin/bash $T/demarrer-gardien-essai-3-v4.sh $T $PY_SYS "${GARDE[@]}" || echouer 84 "gardien refuse : programme SANS gardien"
+s=$(lire /proc/$(lire $T/pid-gardien-essai-3.txt)/stat) && a=(${s##*) }) && echo ${a[19]} > $BASE/depart-gardien-essai-3.txt
+fait
+
+pas g "boucle de versement"
+setsid nohup /bin/bash "$SCRIPT" --boucle-de-versement < /dev/null &
+echo $! > $BASE/pid-versement-essai-3.txt
+noter "boucle lancee : $!"
+fait
+exit 0
+__CHARGE_DES_PIECES__
+/Td6WFoAAATm1rRGAgAhARwAAAAQz1jM4Rf/PftdADYYSiDhb3/jYfsNPNon5d1Xv47zXtZrka8enLRmohCmJ3zsbLqOXGM1E0or5TGpRQ3+HQTBuIJbb3ZTU8qw3FTYkjvQuzzM3QXYl/sLmIxRplsh/twVoIJ3SHgnhRzdXDZcBBPAA8+kxdcIEkcB72swTzu6TTf5oi7mIoU+unpIShCo3JKFTfRNCqZCN8HK6W2WVb50tWOO9b5tjw8pl+a6gSWgD1rfn7gMLU/nE/Qiy0re2NWPlfsurM8Xm1Xk9Y5OoGozSpdnm/ZG58u328I0a7fVq+5qYRHwT7W4Eg3n8V7lKPnSK9+sowQJihs7IoyhKM3Y6ftT/0jJ7LBpGqzym7BTiXyB1/SGPoYnfprg75cS5I+bJZq1pwI0DUM3zMn2vVvJqmKdIJ6ADIA++sRDiEXhw/Q4273YNyjIGxR7kk5kqciJ3kztK+O1ULKTS8jROxiXclbEGQNvyOfMtspZTXDzaPtBr3VASE3zLu74mrCYnmJduHFFGdSUd1plTQoN/4aS7wnkjXntorWohp24kCLc1VqfA1Jw/Jip7VxpE6wrjk1R22mm/gCzE0okuVqoYsKC7DF5DeyzqELJcEeB2MR49NS8NFm6nka2VgLy965FFTG1FfktY5KDjg12Pp8xYFWXuqROvoOvlh6SZs/IDs0haUp4jrar+tldZ/s3gVPsL6AVmrtx1JNoMgfKrQuEOSKFHYEOZgNVsg5lg4c2YsONlVyazybucWQLMNuFWc+ejsgAp2FzJn13ii0DXyoZ2SV+aKH+LTA7XG1JxC5o8Bv0/iFEEGMOAbyApVWpzGeNrfpwkSD4PMGjat6j4Wv8ELwDwHejCF6GXuqKN/hvZxVTqqjB5DQiU9IpyjWqUwKqLjVQrjRUNYOgOZRGs0jSp5FghazQk+v3VHU79T7laBZ6AJZ+SaMdifHpdo1EJcQClCaHBIsvGw69k83JidRTcrLo9izm7jJ5UIv2Z0sqAhLJHFwYrsckUdtw6W+mSC8AG+RvXrrCasD7B8vfFmVJ8s9369FOXyh5xK1JQQTEMKpYeQdhCwYSupHRAEEXY08brOqCZb/fmzdWuJsHIoicFH/W/dx0SKw3s/glpYzETiG2LoYdqwdHXsSkbmpEQr4LI3oWANmAngR+czjIUGbX53S6E2g10Bz4LuwZR1kNi7eEV6rBGC2bZsLrAqZ9Fdkw6/Ll8RrplVXvsC0hBbw2v1F7YpMsiuES1yQlIrXsHzibpHV5W/NGaqqP9C4qcKn9+cd1bf0ETZWd8rdhE9qJsrlp9881+6cWF8Lxl4O2L4Teqb/jsz8v14h21rn/oSBGe1zlz2OgRWvOHSc4IoXjv9F+x9Hiaf/+LsghFrgNTcQV1IatuzbpC1tp1p8CKVN918YGrodLVN9NblYmMjyUVAAe//1EcwmImpbY9KuFeOPxTmkh/JjwZmXSWfktXnXFiw4qQCkpaIxFMFlnmlvX3WMGTKwWjpmTUPzZo6e5gjG1gKENVXQrIBeehPCSiS0qal9zrMDHvA1dl6RGL5gewL4TpkzwX+qh4v52YYHASUvDBWFNbSXTg03ayxPzerIP1NJmubEjttgFYOApFwaRsYUciqBPFVzGDubK2eiC96wfCud8VCqvJWkR2MNxCKHa1rO1uh/nVxEhddUH5bL8YIzVyrojY4gHKIJlCDOr/b6Jvh5+WrNP7W+sV3e7eZssgrX+bwBBOFu+45ft2X0A9V4kUEHc3mEyZ8IMq2xS11Om0MgU+a0s3m1CWL0Xy21XYodzOMM6r8jQWUwKgV+9XVDl/rAwrWthSBPFmFn8DAPmtLWArVpuTdpWpGBHa1gi/kITj5ai0nZM2L35gxlsQmVaai3kzzNNRmrW1qRCjKnFyCUKLH7Fx24r8TG5xYwQB1/BHGW8c0zgWPFiIu8roFwG10o9hnfEmxZ+5CV4bXva8QA/hpMPkgxf/RqTiQ/JdAB2NV0UuNqujz3n/3suxn8eQix/NCsk1dM3Vs8x/DXbVKbnRwDvzYtUgmpvCgQR1Eo2DBe6U3JgEi1jWRvwxfeCxcZfDTvM7jhfB7k/md/4blfL+F/f9g9Rfx+0aOSqew+yHjkvf7dHVBvKrYiE6t2wNsVZTdG5jKxPrM1DoBmCfDfgBWjddyyL1pmzglcf0nOCvKz8rWJ6qq8GohfZaUf5M7Xj5fZbDL5rcYpyvGdwds7MJ1bjO1QG3nfgKDTJAxpyN2AG8JD+E1gP0t4Pz/jrvoaTIRTXv+CD4kW4d2JB8SAf4lhUPrTYF5BbON0mWS+JothyvgAj+GOwl/Xn8okg1sa3AUezPc3Ar+BVjVV9iVDFAuHyCwuvH0VULsIaf1BJFYSTN+oqjgSOh1J+5qetJ7a9INRuUL37Kqx/X0WY1A2bivZ7vuvebHK3dcQODPhu+76J9Bwgyo+9c1iSqOZuLevrViW83pq2BaxiHYlbIcQA+Tiqh/ifMWCrpgpg83zh7bfERluPE3ssmNK9e1M2oHGDYn01E2CqQ59akZx8FAMWh5hcqHeTzKUwFWh+gMwcoU1mKZyhcbuh2SElUDtx1ERniDuNllbzYeiQiXptLif30rWKqtyPqvogZITmMMAbHOL/rdBUtZMQlkTWaoV5M+a7iTiMvAjm5B+BPcvrUP1xhLmy1DfDiycK0zYf2guEj8wJFlgezgjkIqDLr1GoD7k3FqUlTSS2q7O0FM2TCXo4XrpI92WJ2/wUyY2FR6VnnYYINBDq3NjRK93GJ9sDvuCGvXJYDPm+RYVcN+tQHlXoqqfphStLuOqJ2KT4dktAyta2/o+ZNxvcPvQlzJoXnwMCoR96Bd0DmV4XkXnh/e1j4GwmKNcKYs8wb1dsWI68uH/jXoIkSWSPo/hp6rfZLaIg3tyW2J0350DrEiRjzaUhdrjgpX2qZQsz3mqu9sarYTi0Nri08WKyLc/VgiPCHjLfo7euyiUQ4/Sd96WC3f7rELUFJwT1n36aoB8ThyjmPs4TgCVPVpI1fJTCRQwl0iBOIn2+Gatj/YKysvBEa5eD66/DIs52ixi//5noSDuzXqOiI9krovFg0aWOwv8FKydbPsAcvjlLVFio37I0PE3oQeYjcyACFyL4CFHDs2YyCesUNym5RJv0o1U2u4pR7LjbAvr46bwovC5gbrEcr1o631MPs9ABsJPwlXVpV3LyQpkKrP2WV+ba9aKmZUYtgab9PH7xwEehkRALCUsIinrwPuqk1T8VRrDmhQr7Q3tYXEI96rj3PWPa42q7odSJGbff7dcTp08PsZedJroAqOnBrFEVbYgxWJPPhNa8ajcU5QHPfEjEtr4BeUPWvbQV8wBT1A4hQjyKvxoDq3cRCi4gh1KxvYnHydORZJgGmJBBmqIupoRX/S32WJ87jKa4mZv2LTeNfzcLiZ1xQ7huIdbx1oUQlT56IrbHu6lNqoRSU7chDF+o75Bpf69ge5yaJeBv9vdaKRxu9kk/PSYzoC45318PnANVG6Ns8k0UGQf+i7wHaARV8OfEzl87KPo7MSz3FRavyuEsVsYEGbSc7Bp1bqeQKh9AE3DuKglLaoL4lI3jjqMJsTfEqxK1l6OkJLmaVVvV+ryz2474sZ8+UAVP3RYVtqxXmZvwzQxM/l95qla8NzmHbXAzcaXQmXiUzZbZlNlcYzelFCTa1Q0z5I8msIbhwDHB7oMpjtvG0R327o/XfuCBtq5gTqLUA/1/royfF4SU7h4ILcHlrgMzBPCs/g6yJ7w1f5IxAXczgS1999d1qtIDfdeAv/c/dMu4/E0IpA/TQyYd65roidasqZV+O2jU0bRpVsd+g6VDFFFiOXOQP6ZbMvZB1XCBMSfYWUgEIlHkSwTRNR/2UFX0rdDOeEbMV/mWb7ahqB8eAlXjVn47cdFzedLOeJY4Nos/hDt6RjYlZoXtkWwHhZkSzMawC9mC8Y6CrhbdeyJfBm/1Fs6Jn9Vhjc/dBghFs6KyR0dvAbV0sB5THKSKiTOsfObJ7m/xFTA/FKiPSSYb/J2k7ceuYs/ZEilQSgs/9l7A+x6g9peI8OMBMLfetUSJ8b4xR1qOwpWe/odwt9LwgJj94ttciQNgIRWS1HZZaACRTJOFa0/GLbs/jWkOgTtiAKkDLUcWzELA/vrfAP8Vj18Vd6z+C4W0rLWcyGrf5/CiD8pb6lQgGbCw2TOuiDMtMH/6v284H2WdF++GT3l50FGE5y0JAg8nVdRy4eyj5uPB+fewttvSTAF2hu0m0j5sKSNNgcOvPXewdo1R/RIj60K4xBZx4GD/uXVrESvl0dDgHeEQMvZmUjYohZIkkBEdNOndBqlmMz6GxRu9GU+PPCwEBtkfvlUjnjBzh5xphgFVVJ7JznWpzOcUidbs41WpDdvXFsTHjnLgs8EOWiSdqH6zdGKxfOoEilBAUjXwkP6S7rvCA6KwsoI6xWvy4mWepCUGTCjrV01khYRY3iRrsY6+K6G2h3jadfIiqXh83upgulol3wGRvAkh4eqBMgp1cyJ5Nz5rKOZm+3HxbaAxG2/RwvQ2w+kGUeiMLypjNvp/k08nIN2faUfh9uWv6SLJXnHjTngD5kkwS0Ct5nPT6mmCzj0PyCnKtJvvEXu4AL+zsTvbQIA89dbmBIrTG7B4KzcV8TOZrzzxYd9XtEPjBPHT0FpaTXNPMknm4e+ODypEFBFIvlz73hdwa/LZweBG75CtMctX/N3FcD1atRrFHj8EjIPKso+HaVXZ1LBEjVuaylkYLEgn+Eb3uJQGTELyXE/WXvnMOXtW4nc44yUcioi4xO2XqwjGd1+k0n+weZfKkU4hYOuFII0FB5/oF3cUqjU4n6i82N9Qt/UoiBtqeObcz/wALvNh3RP6+Zw9/8sgQT5VpPZ5IC4YGgyQ7bqG9bri+nJpmsU23Tc8y1I+1nexLl5CF515F++o6pPneUmRc6J/b/28kjKxv5i7d8KndMfMxHFKLY0OxIK+GJ8NGQmH1CSm76iF1jQ+mGax0ev8IFA001qBX0X0JWIBMrCNTdwHwJoZniwBlbPuaXpsDuG13ktp8luS+meXR1c52nwk8tCcQbLbt2XD6Be0HDUGh+3Le3fkf8fmecA/GJWGYgJhHTbDmSAqXXCNGIbCxheMzZOuEbEIroLTuBP0aVlUv7vcozITTB2AMnjxGFsiTWvq/2qOqWrAVhDA4mmUViTA8uWhe6Z51AsnvhdKpeh0lW9BUgzo2bS0Wq4zpAiKQCjcIVBdb8lumUCDBbAIk2V0DWa6LCKwVy0poobpjYlY2bROXE7motT4jyhMHyKkfDQhHA4axDwKYJToHLD9VCTob7g9nTTFAli8xu1d1ar/1o086hKvSr/nVCkNsubaF+hGieBjuvPHKrSm+tlXdQlG23aIfhURI042TS5ns8apcyIIeLPrYc7kyOOVvDv0j0ElqtVSIQDblXKF6BH9FNp5BKSCERziwJXw0Wz1Lt9p+d+OjF9yCPUK7QSn11p9KYzRRtledvyUfZHld+dhptbFcZNB08KEGCOWeW8qarAfn8vFsBTJyQMiwIdItqG5QhnrCThPNdfyYRP5tbZkH41r9Yt9HUbkYNEHVTnsVLqutYwRd/RFoXRBsle5nnjhwZGNTPj6vJmszgDBqQpSWD/zj16s9thsxCETuYwwjeNoTzfhT4FWJ/0h/GKXExpdKNbB9CjYWP6H351Cu70ZUjnlkhdlCTDN6jmyJncXHQPqxm8kmB4UzW51XfDn228dDjwgBfs8ttiax3LdYsZxDBZyiwXNs/aPK18P8DUtO9QktvFsNMqQheSj+UF7XbtmtpSivkU2Caq5yJZgj6oKjfQ9pCsy8sUf2TtYts27HkRabQvj8/WqPpzRSDBiDvxyoqhnaNiUUNON4FX83OxHnInRYSB8QmbWpdJwbDtINitmI8nsNzow7SkX2pBASThgsiyUJzurFBMUxI5M4aHC3lPUf9g3WovIggExGwzlpa+ir4jLP5cOSswWQw0UDd167XauWWKet4b73+7PK8LNBrxrenkBPfrlHOSHITiFNcDIG8pseKJuOXgdKXeIk6NR2PDf0/VbCHZ+0/AAGdfPrEhJ9vQjmhHnUk53oSXLOQXJ0o/Hgo/saFnWa5EhqipQH+TNMNf2Dj2AT6dv2zXyv7OPmds4aNIn8BSPjMK4a+4Qez3nZj/hyk4zN3Q1vlQExoEoCAvjvqp1Y1g42xZJpc5MtVUBiRFzMVrVpvkK+RjPoe2wf+aCqlfx8pWd18mjVwaSSG/hdE6Kmaze57MTbVmSh61papOYsmtMV26UKq000bhPi69om8QbyOHH0+sDZ30Ecv9pJ5Dhf5V4girFtZREmvAuH6/f3F63Z3tACJcslk/u4U7NShqXLl3tI3m/rJC893LAELg/gJ/v8dINdV5WfNwL5fKxcsUFLl53N/GN8GYutXs5gGwc8YMXDfXwjf1DMfsawMhyI5Fu80tdmTm9mbNr/EA/9oc8TBVCvfhO5KCfezl32jViQ6GdwJQonOwvFfaLS41o4pMyCvVAX+TYN1iL3LOnJsSFr9zYhrjx4TnbIrjUngbXmooFQPYAuhhSn1WQ8gpQlzezIeoi2Py5E4/7atMUmM+u1W4bguxy85menSpzVlMh7rVNJiYshJSFj41rlcQYN15KmEwBSUgOLFoZaZpAvvj93VtZWWIyRS4cbELu5b50txZauoKwZ+nvlZmcdcxl72d+9t6a/QA6aaOB8Mch2h/x7VpBnJJ3bXdflzWE7+434+5UJlQ8vnibL5uVnBjOidok9aMZLSiqvRWDt1BceqQajjtZaKhayD/We6GZMxA+eOXbY6qah2v7j6Xt3iy3eCQiQsHPTcJDnOkGuRIQcBcYFu3uGG68P0VqFyG1NGCz0TYDDRar8k1honOfhsuHWG3AS9F7rH2sVOLXWJpFKVHfFnfivv7tE7L8lWJ3mSIaEvaTbxBnujGDvCptz6kbGPveW2nv2GgjD6qbvy4L66Sn6YPV0SZp3SWtJsB+2jIrY3L2uAxAlLr+BXi7FJXWbCDUofWg1+tTiJa/jpKvUJjoKBCaPr1UKLZFyd3ZlzEUcFFWiIi0i8aue3z4OkNDV+bKadlP7NLGKIB9tlVIBbJfVNBq8BvzO3SnUblqWCYsk3ssQN5ZfV/1gk0ujPcV53Mb81vcp2G+OW8T4wdXFGQ9IIxWmx16gfpArpRBs6i0FxAVhBaGipq70gpNt7qI5FrtjMmL1VWTXa8kQ0HU15OJCnla5GOOWf841t8iJvpM2vj7TJCG8uVbS0coj3Be8a3kavp0CnSPZ/GZkJ4lXwFr2C7V2R2RrXy1+F63YCMYJ+HYhqkPuLz3KhxXjqQoU3/04SzbH1FuzIgHgIJHxwpAQUz7NDdW+0r14y+eQc/raPQQUGLzhIHNsROmz8TAXQWLtTdV+J1kTj+iJG5b11tORIkVo+nGNs4EVz51mXGGpAnENIuaL1f2b3y1+/LVivRoE1g31uxqBaYRr/m3O0HQEbn6oGQQrpPVKnqnN4cWlH3sLxKeauqoteStovyRHHVVcZNzlnKDtq2bXJtFyKk73Q8sMFC7UZJYwrkJz7odRsygR7IOPVQuv7oDe7IhBfSOyRPWaXStkRzZib5hkYB7lVTegsmf3NIKpnWNysFk9xAoKzBckrjsSOmSH+0D4TPQPcOWHYPNruQtVqzg3qW7mED3X7uLefCd0nR0V/4h6SM2g+a2yhufkeg1L1SPrKOndEr4cTsRiQ1x1rNOn8eJG5wu0zww0MH1qRTJ7ecUBzcGwxPMaf8ZT+GowEgGVKFqBJSWf7wi0UJT5O5RjBIW8UqSpsKD/VzDzlkDIgvlpYy2x8pO2s03krbD8gT2s6KXAS/AiDnbTPDLIAbjLH/mrgAFja2VKZ4OBKhoVkTZmYcEtD1W3VLOEUiGMJ3a6jL3mvecsW5UumPfeFTkgBXi7H5SgMN/ep+3RMe6Gh9hdRxJkLyLPNb0Q2kjFn2emqg45I4wkMKn/yA4m6sHJEqr/xcTWI9ZuUaQOkF6ELIFx0/XU2Zmz+8ZBHNCHpTPTtuZWGnmnSpoEXtmH8YGtw4Ewl510UbCmy0KrqYu9PtCGMdDwTT3LbKSZI7JDeDBsG70sgN0ktgKj0wmLQJs3Cpzlt6b0SIPMqcg/Rkz4/KoUPKSzRxd8qWmfIAbofGairab5W1ZborVqMfJjPJJ55FfdW3GS35UVATBDhM5x2dZdOGpIaL2MfOh+e1xoTEPlW+4F/zthxdXQBHyCOc/tpJfgXV13vZ4dqSrURIrFXydcz7TvDn7xPiUL5BqoYMkZI0lorvCeQY19UF7rA+uM2SRhunuZzxFhOUmY00ufZ8fT7f8sbHSse479tQiHfqXclJoFv1pXTv1GGyx53+Kw9sMrgihAIt3UJQ0w+Un3UViTSpAeyqHhBmdbAUsn9x1ofFLDKaKWE7ifkkMkENvK+nztyZ8LlaskjqmNYW2sE3ZuefTtgEVA7eHlJ9xBiC6bAq30Iu3IZrtjr3iKq1Xp0jpvjlrZUSXAU6NQqerLgrqFI/W6p2mXwCRNbDXoDTWVN/TpEf9vh9UN1wkrnmf/nWrhzSRQcaRmEkApSvOLse8AO3nOG4Fq96wBnQVAxlUBxwxoYMqVDX1brHbYK3X7tr6sQIoH5q+91clnL7DG/NhmiKgF9TjK5MTLXMNWJrN65hEvKDcMP8Vp41/7ExsYaex3zvD/sOuUqJv09dmaSnTbdHwzNRgPLH0g2VMsemU4v+RNFlg8ffW2rPeLZX6Gr7Ttq0dJ1SII/UYFpTWp9Abh6hEdbLTF0iaRgidBmbMCeTf9Gd8Zz0dHkzxrk5iHwNDZMkR0F6WLf8hhFML6r2ulQoCUIxMwCOlrOe2I0LplWkRBY6epwX7VFmTg4HQ5eCSki/sRPnhhAsotXlYwLiyVsUYrDosmg3UO1VjbkePdmmVUA8IlI5FYVKY6sDSDesDAlwa7zS9FzYzPzclolY6HxqBbQQInDAl0iswRIGxoTMClst2YMGAKIhCrrgzDi3fyot/t8r+QevI8EEGgzyoaNHcBoupv0Ngz4Uv4udDcf0s0SLUv7vmpk1tUbjdcTpXrC/EaBrorHQnU7vAu/qIcYX/ayVFoaEGtczskd7j1k5gjtD2f9Je1xj9/vmIuY2y9mCnwpqnqm0vulCVQLtiHlCMYNPzVlQCNqD4iM88ynKsWNd/WOL2g32NGDWF/kYjrGJv3XLG+rx2bEyQAZyk2iIswrz1ojyiTBiuSZqM3Yuu4+e/TGk/u53MHxomOizxqaF0LVc2bEStxKfKY9dK8NFz87rGsG0+27HwpQbyeTVEt8XoW5kdB8SNnK4BLe0CSnnmNsyrLfZsp9PFH9ws9cK+6OOcP/jG9kT63P11Wbw0P8qIwrOPc0gBrSguj7Bg5bnZwwfVQRfyRrWF9QgmnH5dUF4fiP+Ihv/gcD7ls4tRX6/qzVWH99NcDiAb9P91VmyPeUiBJLhFWDm1CWSD70G/MIOc1gvLVyFh3tbswyFtDGvR8CpnBmNyzToq135kMdKkM50XAPFtMYzNjuPznmINJ52kRUSj6lGHXPnX7ESlLaG9M+FU4jfPDKQEJrVPMQbpiqzHaz0C+rMFbqvlfm+b6OiOpIihZ8fZ0n9un8xQKcGt5nWl2KgeOimNuR/kWwhcp/5n6eyER27FLi/SXbWTCwXDbl3rMspdY7f55cVYf5ZJ2kYT2C6raGzrIyOMzSa5t1HBPx+DaArA7/SLRCO38jrRLBUfpHXndORGyyNPsLonFEMUoDzFpXi53pUgZkYHVF4kslAjY9vfIK263Q0UzxEAiN0t3APMHpt2Nai4jFXqHdLVrtPikEQW71CqD6Gp/lt4yBhslWSDSWT/zs7HR7hjURqgsowIOlXsYCGVeg4lJ0QJo7r/22DSv1fayuk+k+XNzllTKNyRAOi7E8Al4KE4jnc4wByAf6oURCOoMyC7Haw4IT0GHdc0AdDlIToEvrbBb3u5k8IKliUHRkQnCEYecIglUjArnmHGfDpO3SKuLlQdJjzLmBsl+vPHLIc5z0yrB8MokSAe2BaV0UuramovldlMcvQADsTbUMS/p7p+tjxypHJvXsjyRgb2wafa3+3hpj0FCsYlXYzbPo0MKHN8OYWKdF/wm2LcBalpeGKGJAes13JG0720khboqNmfxO+K+4LC7VeD8vhnzUzGpxAHFx493KLjY/bNbYSZxPaTkSzdoV4TsxUAlsyjaeJuUUeGNFxUAgJSr46tB4VM01OY2AISIbI18+q75AkY5qKHqrn5T0S/2SDTjWId6Mfcoww8n7xH49siMFstP4+jglvQXZrL5y+isdExBXjU4nGN/ca4Rby+O8iK5BCwaGBm1yuq1rYhjRrugMVH0vYxojU/JAGB/JV+v2TVpeXXdSFAz7AtUAeJJFv8OuUjmfL2GngSNqE1aw4nY3CilX/X4dBBO4+UHxnA9L92isjAhgXPziQYXhjdBnU3Z+BRec7hdbGBT4Dm83c5HjBatu2bztRrMfYkuA7S/GfdN8CtDe6ouObmMF2OU+yGKLtlfaT4fuv/k8W6Hd10FwRMJEPTz7VIT1Mej4zjzzpkJcPX+41WWZjsQc0VqcRuiEWlekzZ/sEVQXJKYo+K2FRAnTOhCCeykhkLWRDF4daPvrmSDmW9V+Y/orl3GSLGzr6eCs3eYbZUXbkKROz5uMqchtWgQMPkXYBlwCRaNLzWyiRAAwaGynDVV3uoEaUhtDkHgx8LGSeFHO7ZQis9MWWEe1chw6EAPGWX282aLECnQsLUGVO209pIsWyUfHH3o2K8x2Vxwtui0CHze+iBkeadnrgOwiszkQvOGRbItVGShxfz34K4dYQY/FH2m70WLCSDdLlPqjQUd4Babos3vLoBvbvR3jRLEas6ipT7rqj5Nh6a3LPTBqh8cuQqwPS6K1dInmdiHa6XKzYYOteA0/PheQ0f1HwGSPw76I7oQj8vKY9MZoLSAMiBygSx/CYGTVbxN4utetV+gtDopfNLO4O+6FTBrqnfBFOk4SEpNpj+7ASdqEmJC2D1io2FkUj7IFMTqvgxnEXucuRtInAX2lmQTlpYY0Bqn8L2xPRlI3S519ZNqab1bgylY6aw5VfBOuIpbgJByAoLrIemU+w0yGjSKv512dhLHJkSZj0eKr20tzH0Cq55vgzbL94e4dcZwRzfhdjyzNO0EBFgKWVMR29MvGHuIbcj/iFzWs1Wi1e5+80C3ZMgqgdzTgzLEK1cYPfVoFnxAMD0l9kOUUJEG1e5G/Wj2ja4Gx1u8MY5Eal0+SRU8CEB5j3N+HuQ0IMheFyvS3zDTBHTuzD2ziajd/26FZxKa9+lVB2A0UgYPdKsmhIo0ccVBZkgpBc0o9i4E16z4nm5vjZHvhWQD2iDlHaUN/NXRB2KzdjTSRTa+8FgnCm+7OiyyVzA5EX2Z+fw0FzORhVm2mRSmoPupkLt+GkoGtrXYyL8qbeeyzcymdikPY0ye5GBk4lKRU4k6DBhMCwThJSHZfLVT47YxmP+gEi+6y0SD31mBkw/OEIGNTv5ai616hoKD7g96W+DsITsxJhCVo4fSbMxCCqs3Do57kkA2Y8KwtzxxF4ViLHM4Ok5A59oH6FPUHpKDmtFMaXPxNUc8bsiAyHQspc7q3C0M769UJKdFk0WnxsJkXWe3gTArHRiY26m8rr41dffgTtSvv8jT2mSSSCcwhJGJvKGelYOxWQ6Ut3byI+9J06GOejPYHsRDDEWPjkD2HhaWIoOAntafdBHxijkkc/K+Ml5SNFP9pN6e/BjBAwmhiIN7V0vj9Vrkjaaqke/aQ/TxWMfgN22fi1OLt+I0d0l6NE7QaU1cGUgXFktlbjELxcIiEfmbImyKPL6AZ419/5lJ6I3imqXj/k8NP4mgwshI95GEymIGpnlszaezGEH0/MEPAR5XQ78g53ltNbuC4HNbDn1tqUuC7JKPEI24N66sY3M4TRPrVLVTAzy2hgxpf7fLXl1i0E3ob6w6qJN0+aVvbru/lOMR6T9vCM3PKhV35gnlBAhoJrg82oYRWHtgdqsfAbF6Ch6oHBCIVy1kgieDQCtiSJ7CFqYAil1Pm++RXJOjXDRVIJMSeXL7dbsr0lvoQpaZDVXa1gDZhJOeMdXTIOfe8DFgZcgTNstM6fY8MRi0LVvAo29kuSz0mB4PH/JXigaJA2934FAxZh4Q8ZT5BEG5e9NS+/JvFU2rP1Y9gxlclFRl3zokMtpHtBRdu351iM+h+7bgKJcHNcY5kHSRDCnTYaxfbZj5+rs7CIAiPlDQ9KtBkH8dmNqod6FzZzykZjFaHNhFbTqnzDas0h5NSgG3WUXpjCL+4mecUsUefzdKjht8k45mhudMVApSJOuKPbzZncVwrn2qPHTHwEAEPTA0IW9jPNl4MtSzJ5pIUcwmQZxJddW2vOhKBZ+B+oguW5TtEKgfb0PSIzR3jbSYN5BErzeKplEHEmgzYSprX2veO3lnHWig+5SSgbSpRo6K8oy/TbAEyctwN9YqnH3bayhua9+0DYbdN8YQW7nbiLfjPezl6aL4PFjr7PU9yXCbXrxLNoZo4fiIy3eJtEp+DI1cABHEQJl9E7o9fe2i9t2sZhjR8eWDsjoTwFpi+fuiF33jVEWF0+zo3o+0jOtcTvf0Cyg73oFYiOfAC6bRuAUvTj5PKx70suBJHeHd+M0RrNasGLKpriMh4r/deP35Nnbkgh+q4AySwpDngzi2hMG+lN6sx46Scw1385FRxqDBGja8ExfYwQMJvIy6fzZ8s53akW28Z6LuK4xOHBIpBAXc1eXcoJgmf9ft7aYJajDp4KACZHqpZ6ADes23WAj5sGnaMvL5vPaneYfyGcFS15+CwAfdHgNZlO5u57uDJtPBbWFI5A8YUTWFlei+LVm/G/wuTXqvY96OkMUvs1JJ1F4mmU2PI9eVf0M0d4NFGbhd3dIi0ESEeXXQwQHPw50FRLYqEqWsog5+8m2aQbXLBZoS8BZKH0dn/ltmYVBmL7DMEe67mFydnVhbTlazGcfecPo0AlBrXInzza0alQrtHCpN/rZcY7HeCD1okoAAdPOQj7uYN53Z1g6wgjUUpt4EWkRJx0YS+ErvDcsLvlpnaGsP5GQ6ax2dRf17nSfI+kZ4ZyBy7Cmt8okBMhfL/ZT50Tkru4NdmcbewygPHOuAMUcrZ1O48yvbTWLeCtK63e6aAqiyprtNFosDbyZ8tevJ1ddeToigtQt4Eq+c3ikQRrYyRmfm9HXsMFGIXcGzVXPccD6lQTq+GirytKK21HsW+BmJU54zZyzXEh0ltDWtHLUQGy48lLlBNrDQArVtPfyjf1Gz6pNVkO+Ur72Jk4ecBtepM3QpmtuvlwmrpNmIDfY8N1xgZPJ/K9jp9Alo5M+ywk+fQ4y3LGuO6dFNSL2jUNSDnRJvBGE2Kny99aksPnQmSMzFMVzNckqEQ0IbYnV/B65cmaUwjzMTMwagUywmpe9MMtGbAbvjZZOyRRnvCtZYOyOhbKMFxTE3HNF3oowS5ABQkOZiboxYYQd+AxLKh8UB3o3xc4KH5cnSaEQnt8LqLBLOzZMXX2UaqYZx+bW7FFyIIa8SFy5bG81oZxWd1OB6cdp875osQma20aQOcyA69VcoFdVyHwFYdw57oKSHXZAJBOnuJ3UjSaRdykbKK+guDoP8pHE2irBH/2vtiFPR4O/7oZNf/czrdoPy1/pPjmgX9pOQBwHDS6v4zhX7khFfmiAbIvEhtc+Ln+foyCiPZE8Hyxwu37SbpQugIogTQ3g+IJoE2LbXjhAiN4EPWS6jaB+QPLMuTj7CsM9Ai6b2VcrfW7SwZzOOb+B7LSQxL0UEfxiycvQC8HNSR97Lz7t2dOPIlcjzYKbpcuey7JuP00QZwQ9qIFqVrEJ1DTlbTBShgbbvgGTITjroT+PkVKd1DZ+EHz1O0ZhJAPCB0zRpZgZxjvU6YjPP3WtzjBDxvCTA1Um5IYe5EVFQfMoyILOzf11t90lPrLyDrZXknbHuhqNegQCKFIJvFgd32hd2GjeI87cgfG5j7m50/ILXhbExz3CwmQgczjupXlXp7K7bGGuimqyFT9p9RQsBjRgjBHr/nsgi+/6uI4VFayQNsvc5Z/418XKbSI6fb9NfvapYoV59/ICc/adWoYdm9dImsBxOoXKgCH+ztnNStLLFROwAg+Re8DYTZI/h2QwZCZVwxlK8oU+Q36yZruzbJXOuDZVW2wzG7U4xJ/1hisTNOAdxInTFB6BktjUm1VAtZNE+8OOEal8t0QgWVXs+1KABCVr4WqVQrBSTurw40HIVTt8z+SK/Rwh2ttKXSH7WZAcSJUZKX+UzJcIukYf9ehCJ5kd+8t720CLF2yG5EycLUNAixAod/PEFkzDNETvqvTvMr/hsCKvL0qRUMWWqYYrEI0QgUM7TzGfNW5Wb7t7QuE35lj7q6UrMnXfX6wpGDQ1Hh9Tf4iAY07G2G7eUMbD5c1K+er5qU+ia+S3OfXawzKghKB2S4qUlnmUncX7fJhtp3sYb/fFEgCnlFfvMuwI14JicRJFQh1fNWPL/9+0bVSbdubFZiMIjEKisT1naQtSxE6cVAWqIyWi37zoRLnY3NzT3IkFbk9SSr5L/z+3C+z1d/6zE4M8hKbPiJDCdE2Z6AXnkFhmropRMeSXg3BEUbYGtvFdl0VfPa62msfe7pTzkgjbZoJ9JMs4d8cJlT/Ax2pNi+D07VyJ0sZoNGtOXUhLfxqzj24rRj0sJ2Y7qEZR+0DrZOYwnT4Z4eEkmp0JNsj7u5x+QfQ/9y0rHRGH2i8M4Sg1Kl9sSAOh/uM0wa6bUib7NeEbKF4fvE1RuUvj8F27R3rpdBlZt5lkwzoDdbiqrZjjM5UiHBiNu71CpVsUXuouoCzbcXtpkNJYYD0uOv/+0qLGkHpLEpQzZj3RpVSzwX7JUHKbt4zFFG3ykb2VsJ1ZOyUGPQ9cfxSqVsEtCG5zAXGnvGXppXKeY9qo/XzzGQAtIDzclMQg1LjtSdQ2qgdVFocMCDngQhkaZSYhuC0inNGilmDR9s0XLV/1GlG/xEUnwTg7WZu5MHvNJ03IUUzFB4TQ6gtzB/kG/KgtyN3R4ybNHNlR53CAiesj99s2Tn7QXDmYa7Czb0uhZwAUJ2rtZbrM0MNtqhKgJCBeajpuwnyFbq7XtQ47zVfCuBT66lA8N9rTwp/Bl6jp9ZAEpb0TUHLMOtnODuKpilvmNwJvaqbGQzUBeGVSScnRQzHffGbe9UTgdGmiVUd5LvqhxZKkHFmDflRqnnVsQnv9qeQDfdt+C4mHMR9crIjYhTG97OBEpww/Lun9vqfSS2qWjDzvEAEiBLBPlng1vXf/mLNKWDFMcDdroCIOcxhrBrygY5nhdwl9Xh5hrTBqZiav7WNepOx8NLsDugtUbKj9bnlTLhqltyMJZdj7ZIMeB4iowSws9vbHIJvoG8laHHzSbaCC6wMOCVCwkkLaW6tNRnn39ffav3lT76l8+1o5N+X+ynFR2i1aazbIMbyx31+0CJ0GPsn8FZnwdI0uuFE52qbyRLpgXSl+Y7uwE28o9/tpIHT9KoxECWjg9O7Q6aCtOqoifSkHr6MzhzLgga3BgQNar4o3gzPvXY9u1QF4A1/3JqAUWFlwSLEVfBEe4lUcc1dfuBXSth9PDQ/ngYLc2UtI11O0beeCgKLiuFCFeVusyMk+BIpz2Oy5kAd4uHmhTjDEopyIewttSfseAuNgM3ge4YWeHsdKsTZjDJLLQQw3ZtUl0VMl6G7MCCpp6TY9Sqs8gF0JkngGgFwZGBW+a9hkE4noOaLqDtEvM1+6DWamTILzmPh5EAMiiOOnDhrEx4ots61/9uu+1j9yolPTNAHwT/JJTgPifa0i62tyZkJL6GiZsB9npk2QsmsKZoIoEWRNH6386yahvRMTT+/7YeDxfUyqzLrXuQFLOoyIh7owuFgVMGx2A+H/jmNDck65a6ZAQYxhkbfOy0qYCq6Tucv9ziwGgiM/HfWyqUwKLSMRFz9Jv9NPQDYO+9ozEeEb5VkuSUfGUe5jcBovPMh7IDQgHYYrZsoJkQNg0LlbXtErKMzcDNF9V73m/KAgyauYOj23EKkpPnzIXJbavimkDK/vOvFdwiqwYd21n46/420bci4kAWCwqRH4Br5yI4hcxMv8c3TQs2NUwNYn2xtYCLxNVZpCjgCQrQwRvqgukxh3CDNxk/lYOsfe+9pItlqqv57Bpa8WHlEYdWdq6hm3YCXI2nNCYbZ0ocXPIqLGUzEONuibt8r0Ap3x6bN3igm1VxX3kBavYExEIZVdfDkow7q2T9xSDmbyGNxiGF9T5FjhWu0IIKALK65zEWzwodB2HfIo2b6JNHtIatzBd4o1ssRS8mi5hBzfMtRut7wZG3oaPkxnUPr4lu4/neFb+1/irxPNvi0z2EfQeQI6nBMM31RHtGI+xTsbf2VI9PoSf4cdf9FT92HPTQOYYa3ku401iHmz+VCgeBvykB4U9QtFBbkvQtavWVg5uL1bb/dxdzETWVbFPG2tau9ApVz7nEcILEosOcSOLv1DsGfLA0vfoGHIrbLbai59ZQAqDCI2JzLY7GHuTeyUMLmPQYR228rIgjHIqhUf6iXcoTqj9DdkfEM7Id7Y75P8XppqCBltaccS1XdeFKLmKUzHw8JsZI4wmWA+RsEBvHazHsqtNnk21IXv+l6hEFdTrwngZHwrpG8yETnJTU1UJZqbaDC6Hxu/OH+EQWr7fYJMCntQbWsbNw/NHVaznlJ3YgRErJSFU18Mb2LbHIQoapLyQkhvezLR8cXTsth4tyy1MyUDVw5nDeCDTHEbrWtxfCpLj8qRZkPEfkHwCzQvh8P+p3w9aM258qTKWWXQqd5XYW/KW3vX7meTKkkXPPoyWOu90oSu6HKa07XFXE7+ZwxXYp0/6yu8F3DemKzVbZOcttl2Ho11oQsngmpC12HhJ0gldAKmcmLsGGufo5k/K82HS11vvD+4rp3yl0pQ8XtUWkL+yioZ3P0LVHEYZlSYEGhF7fs3ylr3Fm8KD3rHPKvEAQknFHYv5UQl/Zh1jffSeQBYe/qKgGwVD+6DILNrdvCfEMG2/xSFKqGR5LlK3A641A1q/8SU0+1ZS8FZhRGnJ0u9pCn/cHtiQlAhvzVRz7SRUiQrIVOnYVPeSxOMkccT9nYXN2HoMp+B9TcDCcuQQmeSoq3XzUkgU0M8QJUWLMIok+Y/8+6Ncgq0E+67fOOAqzE3H1v10AeDQh+sCHslgNu5Gb4qvRfRcXsyNCVMmm2sKbWIQD74kn/1bC7qGoL5PQ1WV/onE1Y2h4cTDTZZSo1y81Hu3G/fadBEjIIyhLI4ZoCyS5rlcPIgQIV8fNe31ZBqiRV94Nrmnkam/Qq7wbVuR5gK1dUw88HkEzDxe5ZkbP+wMZlR3I5OB5J0KgJ1EV1uk5e6k9JfmeBCQ0eVj/lVEHy8tofnRhSskeuIw3LvmZD6zve8phiB34muYKq8H/rnqG6SaT0fRlWMxX9BkgqDHF7WmPqYT2WvzdgvUqB90gpAD/CWHLsohxaLtG1+Mh6+0cgVrCXV8fg27oL0coBNaQV/+l/7rSlXAal8S4C3XnZFgTJX+48r5APMT8R0TWvjLXoWZqbN8x4Xva5LaV3t+AbShASS5rojkRI+WpcrRwuZZRrI/ltvBv2ZWlCMdf7xb2n+8oMQPZnbzy2nHmxrfU9egtQCA/wi4FHGAx4Ic/iW1TDl5Ep73pd8LMkbfp4NewyH7u/m6E2hEQZkeP7p1zpC1Qs/LV/QwbOZ2AM0d0GUHkeljG635K3uziq54eCdiYGSkhHCTfosNyGiUFC6O0owHUKR7hs+rJeZE86WLx3VXA4dEHgEjRA6tRJqjbduD+kOW19nVppYVtIe45rKSzFjN80uAJjl4ZM2SiCEKI3Bl/wnCTJ8k9Uydh4bfBS+NO9yy4YFgdFt9DYvCXdXhCa1gVI6C34SHdwrIVSDAAImPI1MFokRn5E2pcfDMMnGllixDpvyKjl/pOkWNozZg84Zq5Tk/tkJkW1GK5FHg9/ybEzHBEX3UP0i0dZ/QBQjql8cHNQJDf2HuObvOihTtTdSO6sdYYdzyWCqH8ySIzVZBnd2EEN+zkUpvGDIQY7vutjVKm15aT2HyggGyXpF5suj8cStPeKL59q6MAgODhFmamkbzHBth2QTf2uwrXXgAoqc4Aezrd95M1GLAMKFMcGy5qKbwB3MiiPDe2crsAvOuu6b180yKMeENtSdD15Ysx+U7dpgjrtDHoofvFZNnYPoBIEyn6pm2eOcTXflxJbG7hcyL7C6gXENCB8FVyQIIl4OgrD741qqGB23HxWwGhn6rCXaBqworTC/RrYAAMvIjMmyc+gg+8mh5etNgK1jCIGtpg59EX/t/HY2/etIZmtbWvzPnuNKbdQFWurRxo+ClgmQyiti1hkbeNWRWDaSFui/sIjmAOKm5PDkCiUxyaGf04y4TMhpS9y6W+nMRNX1NqpmvguPCR0cymAv4Igx1WZdDT772cJjdH5iYRLkrBJKZnIOKwRlxAdIFnFYHdLX4szrqdaGStZChaM3mteH7Z5J45VXPpzoZi16hDQlqR9ahDO0DUtqon26MdRBH+5sp/L/t/YRMuMmKvfcg8+14vwGs9pt+n5ah48qs80FY+BjPvlyEUk8eesmVnu/L8jyIcr8FfWKF1FPOMudaVZdbkGK7tSISJDTjQ9Zqp7s3umJcjIJA2aMKrSFfYKxG7vpXjZT8PEDcxXF/eCL8laFU8S6AMfgvYfWR6yNZPjEJtIHlDHO8THDzBra4epjYO9fxvCo7AKGgp/83RKHAgSarMWSlIV3UrsOmy8EGMBVsRTk32/xy7e1TeoYnQ7rPtKlWBs73WvY2Ao8N7wL9ZRnKj9h63GE2fawDc9d025rzY5QTzKGjFYjTTwAUScr5lNFAvCRJjRMbS7i4JGhfuvWf6CrxTgeIQgp7AKVxE8f3oZAOYDlqIK7fxuwAX15Eeo65dzNLPYO1SchGNSQtsveY2H6tzU1U3Z8FUCfOgekQVWHtUSWg0+smLO5ToDqX93/gXHf8p4UqUo5NM5sE2tyvRDaYlp++Gb//jd1XqnsvOMe6f4Eu8Tan3aHUYivArReOa2Lq0yPonBciZyXiSyZIp89BwO7SYBQ3pJpsGjRXZOVkAGGui7Twc/8taumRu2qzHpI4byMwmq8u0ocmV6mTWAe3adZOu45hdiHjt9ldVG0Wsrsog26eWz9/jgFNkiin75ZZwtMLAm2XnfXEnAID3YpWTHMkKdn+axx7uMX8hCgztEFDstIN1hAyfrh2jM6baiWkR4xa5zUUE+ohr/S5CmsNukusWdZNWZNlYyuWlY1lesLbaA1SexqJJIv9o5r2dUCQBCClhOyIpKMerpPX1MCNM7PJGn49bsYQswo0aDvflogb1ioJtmaAdMM4AF2DrcuiZc6V6Jp+aLYcNxTF04BXgnYx7HLhUEGIS7rT6eHXloAtc/DP1LYwhFDhTDwGdR33iYe/NsEjU3y/RQL4ZOlPYL/SWQeeG4hzLnRUqKjNSNhcyrS4EuboWDTYS2DdDodig62DylS8APw3Rzl9vGIrTvDDmUbhW6gxzjaMI7KBvoksRYI141haI30R+Tc6J3gwZoUJqxcRSqreR2BbnIaKF6VGokoV8giiQeMtfdQ+FObALQsblIaEvCZq9Y2xBoGQeS/vGEtBzamPWHc+CmZ133VBADm2/Wsmfv5lf6pnm5OyaWFg3uCtPSkq5jfcb0SUefoIigCAEifws9MWwyb7U0n1FWZNb9vDikYUCqt3yKwJsn/crGpk2e+BymvGtrpJgEWMabx0aovMt8YTLk5gwFvBq8p12ga9UvGS3LmZ3C1KJlphEtO8l0yKCd43XotiSDiza0XqZAgDPYLPDrlNg8D7dju6WS9qdi3wAJs66K328fSEzFcwfvHj1b8xgLY0K228afqTi2WIUFROppotFmU3upeLYTF83Pzxp9QwPhvhkieGvTLLVQPVFRey/r7BFZIBDbeHTREjNzu/ELCIViENt1DU2afzS+ELEuw8KoCp+EBUEvAA/jzgyqMkUSRIwOGgsujAYeu897hjqAYQ25EIQGAWXW/gtvAVNcufEse4yQEaF+d7l+cN+g3qxjMs4qFYiF0UN93HruM76uiUcAnwAroN3rRFM6fVa8kL48JpC1IVGkoHf54qS1JB5YOOZZe/8TiuBC2rNmZlxJFTVeVBtU1xJafp99EfR+1wRP4VkwNBgFfzAsBzRr58DGEyphy9tnfxX4aAvhK4cfXfa9eo3MrN6AcLkzgoCr4aK2fIWK3PiKu7aVn6KbSIa5jIUdTPMlfceGrbIQ8T9roc2DMj2Yo1R3AC6GjZcbrZBiyFBBFViMAnZTUerxcduDb4E1xaW24AjKvJxUnSbIZ7/U86Xa+V+8wuU15UvkgXhmbWsVDFkldKjBItxn1RnV6qowoHfnAQqHqxgD4NW1Q6S75NZnii42ouTgrk4zNSH9rEaKx8L1XxEwx8sUVRHsielKjvsyIS/RXcVUzrWNHWh8sX9sC4mNghSwsElypanXO2apZvaU0NyUtJoXggV2msD/XGXLubbbb6Dbbnx94dSUcu0XEYQah+Nols36+n9wBQ7G1nRmKEalDpNxq1D18RpPaqrfEjm72yUbrCcxCt6MSdZ5adNifhUb3P+3SlgphM7Xj8uC523e9jq3LK2+YDFVxHb1KFMl/t++2Roicz+xrxsHAhoJsdB7JgIw2YpQvyJVYYfl0xKXar5YFNR9w5Z8cLpPP+WDYKEbuSlzY7sYF/aky1xuxf3QN5hSBRR5BubjtTKaD9ZUXgs0BzB90TNtwNjUp9FO9YNvWRTdM5oe4Eios29QXMHjJ9anFdfI1gcKcPttGd4GS1ktWVOq95457rXeEDTDlN3bWQaVsaW6TZ0s/V75Y+2ZGdvMxwfomg9CIC8S0v5IGpPeQWXpbRNIMK3Zw3Cfv2iZkxEUFBw0IEQ/BlmWzCRV0OAgH4WaICMu/4tadGKe49G2DHADESV4AlPuldnw0Z7iA0zx0txrE4ONmtUGpkSvFKfuSAAAAwu84CtPT/X8AAZd8gLAEAMdyf7OxxGf7AgAAAAAEWVo=

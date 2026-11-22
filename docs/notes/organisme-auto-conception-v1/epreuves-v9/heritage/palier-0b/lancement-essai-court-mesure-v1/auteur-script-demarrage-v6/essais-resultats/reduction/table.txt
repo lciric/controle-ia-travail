@@ -1,0 +1,24 @@
+G1-sain : attendu 0 ; rendu 0 ; TENU ; réduction : réduction : 362 lignes, 31 retirées, 331 gardées dont 0 d'allure de commentaire ou vides mais protégées (guillemets, substitution, document en ligne ou ligne continuée) épreuve : bash -n passe sur les deux textes ; 31 lignes retirées, tout
+G2-garde-fou-chaines-et-document : attendu 0 ; rendu 0 ; TENU ; réduction : réduction : 22 lignes, 1 retirées, 21 gardées dont 7 d'allure de commentaire ou vides mais protégées (guillemets, substitution, document en ligne ou ligne continuée) épreuve : bash -n passe sur les deux textes ; 1 lignes retirées, toutes d
+G3-garde-fou-guillemet-ouvert : attendu 9 ; rendu 9 ; TENU ; refus (9) : réduction refusée : refus (garde-fou) : état non fermé en fin de texte : ['N', 'D'], documents en ligne ouverts : 0
+A1-artefact-ligne-de-code-retiree : attendu 9 ; rendu 9 ; TENU ; refus (9) : épreuve : 1 ligne(s) de diff autres qu'un retrait de commentaire entier ou de ligne vide
+A2-artefact-ligne-modifiee : attendu 9 ; rendu 9 ; TENU ; refus (9) : épreuve : 4 ligne(s) de diff autres qu'un retrait de commentaire entier ou de ligne vide
+A3-artefact-ligne-1-retiree : attendu 9 ; rendu 9 ; TENU ; refus (9) : épreuve : la ligne 1 du script est retirée
+T1-temoin-reducteur-naif : attendu 9 ; rendu 9 ; TENU ; refus (9) : bash -n refuse le texte réduit
+T2-temoin-naif-chaine-seule : attendu 0 ; rendu 0 ; TENU ; réduction : épreuve : bash -n passe sur les deux textes ; 2 lignes retirées, toutes de commentaire entier ou vides ; aucun autre écart 
+--- G2 : lignes d'allure de commentaire ou vides des constructions, présentes dans le texte réduit (attendu 7 sur 7) :
+  [1] # pas un commentaire : dans une chaine double
+  [1] # ligne d'un document en ligne
+  [1] # toujours dans la chaine simple'
+  [1] # dans une substitution")
+  [1] # apres une ligne continuee
+  [2] lignes vides dans la chaîne double et le document en ligne (attendu 2)
+  total : 7 sur 7
+  vrai commentaire final retiré : oui
+--- T2 (témoin naïf, chaîne seule) : lignes de la chaîne présentes : 0 sur 2 cherchées (la ligne d'allure de commentaire et la ligne vide ; attendu 0 : perdues, sans refus de l'épreuve)
+--- T2 : valeur de MULTI, script complet puis texte réduit (chaque ligne entre crochets) :
+  [MULTI="premiere ligne|# pas un commentaire : dans une chaine double||fin"|]
+  [MULTI="premiere ligne|fin"|]
+--- G1 : diff du script complet et du texte réduit : 31 lignes retirées, 0 ajoutées
+--- sorties laissées par les refus (attendu : aucune) :
+(fin de liste)

@@ -1,0 +1,55 @@
+script : f61aea46033d63dec6fde0cd66455f5474e000d140d9d98c5f23ab61976aeeb2
+fonctions extraites : 97 lignes, sha256 93f4c4655418915c…
+n1-non-chef-arbre-cg | ref5, code du départ 5 | attendu code 86, arreter puis cgroup.kill : programme et descendants morts, groupe vide, étranger vivant | rendu code 86 | TENU
+   00:27:23 arrete : 31606:3177785 31602:3177783 31607:3177786 31608:3177786 31609:3177786 ; forces : aucun ; groupe /sys/fs/cgroup/unified/essai-3-banc-v6-arret-n1-non-chef-arbre-cg : [] 00:27:23 groupe vide ECHEC code 86 : code 5 : non chef ; cgroup.kill : groupe vide
+   processus : 31601:etranger-sans-lien:VIVANT 31606:programme:mort 31607:enfant-sleep:mort 31608:enfant-sous-shell:mort 31609:petit-enfant-sleep:mort
+   membres du groupe après la fonction : []
+n2-chef-code-5-cg | ref5, code du départ 5 | attendu code 0, suite, rien tué | rendu code 0 | TENU
+   00:27:23 ATTENTION : code 5 ; identite 31683, depart 3177828 SUITE : ref5 passe sans echec
+   processus : 31682:etranger-sans-lien:VIVANT 31683:programme:VIVANT 31687:enfant-sleep:VIVANT 31688:enfant-sous-shell:VIVANT 31689:petit-enfant-sleep:VIVANT
+   membres du groupe après la fonction : [31683 31687 31688 31689 ]
+n2b-chef-code-0-cg | ref0, code du départ 0 | attendu code 0, référence prise, rien tué | rendu code 0 | TENU
+   reference : 3177839 SUITE : ref0 passe sans echec
+   processus : 31736:etranger-sans-lien:VIVANT 31737:programme:VIVANT 31742:enfant-sleep:VIVANT 31743:enfant-sous-shell:VIVANT 31744:petit-enfant-sleep:VIVANT
+   membres du groupe après la fonction : [31737 31742 31743 31744 ]
+n3-mort-cg | ref5, code du départ 5 | attendu code 86, groupe déjà vide : rien tué | rendu code 86 | TENU
+   00:27:23 groupe vide ECHEC code 86 : code 5 : 31791 non confirme ; cgroup.kill : groupe vide
+   processus : 31790:etranger-sans-lien:VIVANT 31791:programme:mort
+   membres du groupe après la fonction : []
+n4-orphelin-non-chef-cg | ref5, code du départ 5 | attendu code 86, tout mort, petit-fils orphelin compris, groupe vide ; étranger vivant | rendu code 86 | TENU
+   00:27:24 arrete : 31829:3177855 31824:3177854 31831:3177856 31832:3177856 ; forces : aucun ; groupe /sys/fs/cgroup/unified/essai-3-banc-v6-arret-n4-orphelin-non-chef-cg : [] 00:27:24 groupe vide ECHEC code 86 : code 5 : non chef ; cgroup.kill : groupe vide
+   processus : 31823:etranger-sans-lien:VIVANT 31829:programme:mort 31831:enfant-sleep-vivant:mort 31832:petit-fils-orphelin:mort
+   membres du groupe après la fonction : []
+n4b-orphelin-chef-arret-cg | arreter, code du départ 5 | attendu code 0, arreter : tout mort, orphelin compris ; étranger vivant | rendu code 0 | TENU
+   00:27:24 arrete : 31902:3177898 31907:3177901 31908:3177902 ; forces : aucun ; groupe /sys/fs/cgroup/unified/essai-3-banc-v6-arret-n4b-orphelin-chef-arret-cg : [] SUITE : arreter passe sans echec
+   processus : 31901:etranger-sans-lien:VIVANT 31902:programme:mort 31907:enfant-sleep-vivant:mort 31908:petit-fils-orphelin:mort
+   membres du groupe après la fonction : []
+n5-identifiant-repris-chef-cg | ref5, code du départ 5 | attendu code 86, étranger ni adopté ni tué (hors du groupe) | rendu code 86 | TENU
+   00:27:24 groupe vide ECHEC code 86 : code 5 : 31967 non confirme ; cgroup.kill : groupe vide
+   processus : 31966:etranger-sans-lien:VIVANT 31967:etranger-qui-reprend-l-identifiant:VIVANT
+   membres du groupe après la fonction : []
+n6-identifiant-repris-non-chef-cg | ref5, code du départ 5 | attendu code 86, étranger ni adopté ni tué (hors du groupe) | rendu code 86 | TENU
+   00:27:24 groupe vide ECHEC code 86 : code 5 : 32005 non confirme ; cgroup.kill : groupe vide
+   processus : 32004:etranger-sans-lien:VIVANT 32005:etranger-qui-reprend-l-identifiant:VIVANT
+   membres du groupe après la fonction : []
+n7-arret-reference-autre-cg | arreter, code du départ 5 | attendu code 0, arreter : rien tué (référence autre d'un top) | rendu code 0 | TENU
+   00:27:24 arret : 32043 autre : rien SUITE : arreter passe sans echec
+   processus : 32042:etranger-sans-lien:VIVANT 32043:programme:VIVANT 32047:enfant-sleep:VIVANT 32048:enfant-sous-shell:VIVANT 32049:petit-enfant-sleep:VIVANT
+   membres du groupe après la fonction : [32043 32047 32048 32049 ]
+n8-descendant-session-neuve-pere-mort-cg | arreter, code du départ 5 | attendu code 0, arreter : tout mort, descendant en session neuve compris ; étranger vivant | rendu code 0 | TENU
+   00:27:24 arrete : 32097:3177933 32102:3177935 32103:3177935 ; forces : aucun ; groupe /sys/fs/cgroup/unified/essai-3-banc-v6-arret-n8-descendant-session-neuve-pere-mort-cg : [] SUITE : arreter passe sans echec
+   processus : 32096:etranger-sans-lien:VIVANT 32097:programme:mort 32102:enfant-sleep-vivant:mort 32103:descendant-session-neuve-pere-mort:mort
+   membres du groupe après la fonction : []
+n8b-descendant-session-neuve-code-86-cg | ref5, code du départ 5 | attendu code 86, identité écrite = un étranger : cgroup.kill, programme et descendant en session neuve morts, groupe vide ; les deux étrangers vivants | rendu code 86 | TENU
+   00:27:25 groupe vide ECHEC code 86 : code 5 : 32164 non confirme ; cgroup.kill : groupe vide
+   processus : 32162:etranger-sans-lien:VIVANT 32164:etranger-dont-l-identifiant-est-ecrit:VIVANT 32163:programme:mort 32169:enfant-sleep-vivant:mort 32170:descendant-session-neuve-pere-mort:mort
+   membres du groupe après la fonction : []
+n8c-descendant-session-neuve-filet-cg | filet, code du départ 5 | attendu code 0, filet : cgroup.kill, programme et descendant en session neuve morts, groupe vide écrit ; étranger vivant | rendu code 0 | TENU
+   00:27:25 groupe vide /tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/auteur-script-demarrage-essai-3/v6/essais/travail/cas-arret/fonctions.sh: line 43: h: command not found SUITE : filet passe sans echec
+   processus : 32221:etranger-sans-lien:VIVANT 32222:programme:mort 32227:enfant-sleep-vivant:mort 32228:descendant-session-neuve-pere-mort:mort
+   fichier du filet : filet  : cgroup.kill ; groupe vide
+   membres du groupe après la fonction : []
+n9-code-0-heure-du-depart-autre-cg | ref0, code du départ 0 | attendu code 86, référence refusée (heure écrite par le départ autre d'un top) : cgroup.kill, groupe vide ; étranger vivant | rendu code 86 | TENU
+   00:27:25 groupe vide ECHEC code 86 : reference refusee ; cgroup.kill : groupe vide
+   processus : 32270:etranger-sans-lien:VIVANT 32271:programme:mort 32275:enfant-sleep:mort 32276:enfant-sous-shell:mort 32277:petit-enfant-sleep:mort
+   membres du groupe après la fonction : []
