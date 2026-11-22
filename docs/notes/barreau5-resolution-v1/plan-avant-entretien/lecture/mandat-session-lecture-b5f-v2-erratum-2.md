@@ -1,0 +1,14 @@
+# Erratum 2 au mandat de la session de lecture du barreau 5 — v2
+
+Écrit le 22 novembre 2026 vers 19:40Z (`date -u`) par le conducteur de la reprise de la lecture du barreau 5 (`session_013QMayjM1PQPWkLifMw9HDR`, Opus 5.5), sur la relecture de cloisonnement d'un agent neuf (verdict « à corriger », six constats, aucune fuite). Pièces visées : `mandat-session-lecture-b5f-v2.md` (`b1eb2afc57d59df9d3a9eab96c22087ebbde6b4cb54824c4b62231ccc9fa991f`) et son erratum 1 (`cde0279cad37ed84ef051623269648722308a7629251076d3f354de41a46e510`), restés tels quels (R12). Cet erratum prime sur eux pour les seuls points ci-dessous.
+
+1. **Rapport de vérification du code de commande** (`fca7d949f7f8b6865e7b8de048e2c8ace80dae90503299074c726f76ea302c04`) : tu en vérifies l'empreinte, **tu ne l'ouvres pas**. Il sort de la liste « ce que tu lis » (§ 3, point 6) ; l'erratum 1, point 3, est remplacé en ce sens.
+2. **Lectures partielles, par extraction bornée seulement.** Tu ne lis jamais en entier le texte scellé, la vérification de l'additif, ni le registre propre.
+   - Texte scellé : une plage par section du § 3, point 2, par `sed -n 'D,Fp'` ; avant d'afficher, un programme vérifie que la première ligne de chaque plage est le titre ou le début de point attendu ; sinon arrêt, et tu le dis au conducteur.
+   - Vérification de l'additif : la seule « remarque 2 », extraite de la même façon.
+   - Registre propre : un filtre par programme qui n'affiche que les lignes de table dont la clé est nommée au § 4, point 4, ou au § 5.2 ; rien d'autre.
+3. **Essais.** Tu ne joues pas la suite entière (`python -m pytest -q` du § 4, point 1, est retiré). Tu ne joues que les quatre fichiers du § 5.1, avec `--tb=no -q -p no:cacheprovider --basetemp=<ton bloc-notes>` ; tu ne rends que la ligne de compte. Un essai rouge : arrêt, son nom seul au conducteur.
+4. **Vérification de l'arbre.** Tu ne gardes de `verifier-arbre .` que le code de sortie et la ligne de bilan (`| tail -n 1`) ; aucun nom de fichier n'est affiché ni rendu.
+5. **Branches des entrées et des scores.** Jamais de `checkout` ni d'arbre de travail sur `donnees/barreau5-familles-jumelles-v1-entrees-de-lecture`, `…-lecture` ou `…-repetition`. Noms par `git ls-tree -r --name-only <commit>` ; un fichier permis (§ 3, dernier alinéa) par `git show <commit>:<chemin>`, et lui seul. Les programmes figés lisent ce qu'ils lisent ; toi non.
+6. **Comptes du journal** : comptes de fichiers et d'étapes seulement. Tout autre compte (par adaptateur, par famille, par membre, par classe, par signe) vaut « journal non conforme » : arrêt, comme au § 6.
+7. **Coupures dans la ligne d'engagement** (§ 5.4, pas 1) : tu y écris les coupures que le signal te donne, et non celles du devis ; elles sont au plus strictes. À la reprise : relecture décisive **9 USD**, répétition **8 USD**, accords `GO-2026-11-19-86` et `GO-2026-11-22-117`.
