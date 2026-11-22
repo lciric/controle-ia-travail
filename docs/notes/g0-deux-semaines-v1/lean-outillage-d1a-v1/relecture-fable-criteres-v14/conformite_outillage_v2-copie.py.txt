@@ -1,0 +1,402 @@
+"""Règle de combinaison de la conformité de l'outillage Lean D-1a — v2 (cinquième essai ; nœud 2 de la lecture de
+conformité du quatrième essai, R-4687 ; R-4716).
+
+v2 (2026-11-22) : copie de `conformite_outillage_v1` (gardée telle quelle, R12) avec les corrections de sa contre-lecture
+(« à corriger ») et elles seules :
+- **B1** : l'épreuve n'est « tenue » que si son code est 0, son statut « conforme », `conforme` vrai, chaque genre
+  « conforme », chaque cas à `ok` vrai avec `ecarts` vide et chaque témoin sain vrai ; sinon, quand aucune lecture écrite ne
+  dit « non tenu », elle est « non établi » (la v1 lisait « tenu » une épreuve en code 1 sans aucun cas en échec, ou à
+  `conforme` faux seul) ;
+- **B2** : toute pièce qui n'est pas un objet JSON, et tout élément de `cas`, `suite` ou `parallele_3` qui n'est pas un objet,
+  sont « non établi » ; de même les champs `genres`, `sains`, `genres_morts`, `controles_hote`, `ok` et `ecarts` mal typés ;
+  `main` attrape toute erreur inattendue, écrit un JSON « non établi » qui ne porte que le type de l'erreur, et sort en
+  code 3 ;
+- **non bloquante 7** : les 18 cas du noyau sont contrôlés par leurs noms et leurs passages (avec et sans G-L3+), pas
+  seulement par leur nombre ; un pilote « apres » en code 0 alors que le pas `noyau` est à `conforme` faux (le pilote
+  s'arrête à ce pas, `set -e`) est une contradiction : le pas n'est lu ni pour ni contre, « non établi » ; un
+  `parallele_3_compte` vrai avec un passage en parallèle refusé ou en incident est une contradiction, « non établi » ;
+- de même que pour l'épreuve, un cas du noyau à `ok` vrai avec des `ecarts` non vides est une contradiction (ajout de la
+  v2, déclaré dans la procédure v14).
+
+La procédure v12 ne disait pas comment les lectures du pas `noyau`, de l'épreuve et des mesures se combinent en une lecture
+de l'outillage (§ 8.6 : « seule la mère déclare, sur ces lectures »). Ce module applique la règle écrite à la section 8.7
+de la procédure du poste local v14, **avant l'essai**, aux sorties copiées sur le poste ; il ne lance rien sur la machine.
+
+Trois issues, et elles seules :
+- **« conforme »** : chaque lecture de la liste est tenue ; aucune tolérance n'est appliquée par le code ;
+- **« non conforme »** : une lecture écrite d'avance dit non conforme (pilote « avant » en échec, pas `noyau` non conforme,
+  cas de l'épreuve en échec dans une pièce cohérente, contrôle de l'hôte, manifestes différents, sonde réseau ouverte) ;
+- **« non établi »** : une pièce manque, ne se lit pas ou est mal formée, deux pièces ou deux champs se contredisent,
+  l'épreuve n'est pas tenue entière sans qu'aucune lecture écrite dise non conforme, l'épreuve sort morte (code 3), en borne
+  de temps (124) ou sur un autre code, une tentative réseau n'a pas été lancée (« non éprouvé », § 8.2), le vérificateur
+  épinglé n'est pas celui de la liste, ou une sortie ne rentre dans aucune lecture écrite.
+
+Que le passage en parallèle soit compté ou non ne décide pas de la conformité : cela dit l'usage, trois items en parallèle
+s'il est compté (§ 8.5), un item à la fois sinon. La pièce des mesures doit pourtant se lire : absente, d'une autre version,
+contradictoire (`parallele_3_compte` et `parallele_3_motifs`, ou `parallele_3_compte` vrai et un passage en parallèle
+refusé), ou avec un passage en suite de l'item sain refusé ou en incident (sortie que la section 8.5 ne lit pas), elle rend
+la lecture « non établi ».
+
+« non conforme » et « non établi » ne déclarent rien : ce sont des nœuds pour la mère, et toute tolérance d'un écart passe par
+un mot de le directeur inscrit (comme l'option (b) du quatrième essai, R-4716), jamais par ce code ni par le poste. Ce module ne
+prononce aucun verdict de porte ; il rend une lecture que la mère reprend.
+
+Codes de sortie : 0 « conforme » ; 1 « non conforme » ; 3 « non établi », y compris toute erreur inattendue du code (le JSON
+écrit porte alors `outillage` « non établi » et `erreur`, le seul type de l'erreur, jamais son message, qui pourrait porter un
+chemin du poste) ; 2 usage (arguments).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+VERSION = "conformite_outillage_v2"
+REGLE = "procédure du poste local v14, section 8.7"
+VERSION_EPREUVE = "epreuve_isolement_v9"
+VERIFICATEUR_SHA256 = "3ef23bfa6600bf3a79fca2c31427dccf6c2ec7d67832bddb5c4df971a269d2ee"
+ATTENDUS_DEFAUT = Path(__file__).resolve().parents[3] / "scripts" / "lean_essai_d1a_v4" / "artefacts_r5_v4" / "attendus-v8.json"
+GENRES = {"gardes Lean": "lean", "isolement Lean": "isolement_lean", "Python": "python", "limites": "limites_python",
+          "limites Lean": "limites_lean"}
+PASSAGES_NOYAU = ("avec G-L3+", "sans G-L3+")   # épreuve v9, `premier_pas_noyau` : genre « noyau (<passage>) »
+PIECES = {"noyau": "premier-pas-noyau-v6.json", "epreuve_code": "epreuve-code-v6.txt",
+          "epreuve": "epreuve-isolement-v6.json", "mesures": "mesures-v6.json",
+          "sonde_apres": "sonde-apres-coupure-v6.json", "sonde_fin": "sonde-fin-v6.json",
+          "verificateur": "verificateur-epingle-v6.json"}
+# même motif que l'épreuve v8 et v9 (`RE_TENTATIVE`), recopié pour ne rien importer de ce qui tourne sur la machine
+RE_TENTATIVE = re.compile(r'ISOLEMENT (\S+) (ECHEC|REUSSI)((?:(?!\\n)[^\n"])*)')
+RE_CODE_EPREUVE = re.compile(r"code de sortie de l'épreuve : (-?\d+)\b")
+NON_LANCE = ("could not execute external process", "no such file", "code 127")
+CONFORME, NON_CONFORME, NON_ETABLI = "conforme", "non conforme", "non établi"
+STATUTS = (CONFORME, NON_CONFORME, "épreuve morte")
+TENU, NON_TENU = "tenu", "non tenu"
+RANG = {TENU: 0, NON_ETABLI: 1, NON_TENU: 2}   # dans une lecture comme entre elles, « non tenu » l'emporte
+
+
+class Lecture:
+    """Une lecture : issue (« tenu », « non établi », « non tenu ») et motifs ; « non tenu » l'emporte sur « non établi »,
+    qui l'emporte sur « tenu »."""
+
+    def __init__(self, nom: str):
+        self.nom, self.issue, self.motifs = nom, TENU, []
+
+    def marquer(self, issue: str, motif: str) -> None:
+        self.motifs.append(f"{issue} : {motif}")
+        if RANG[issue] > RANG[self.issue]:
+            self.issue = issue
+
+    def rendre(self, **extra) -> dict:
+        return {"lecture": self.nom, "issue": self.issue, "motifs": self.motifs, **extra}
+
+
+def _lire_json(chemin: Path, l: Lecture) -> dict | None:
+    """v2 (B2) : une pièce qui n'est pas un objet JSON est « non établi », comme une pièce absente ou illisible."""
+    try:
+        d = json.loads(chemin.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        l.marquer(NON_ETABLI, f"pièce absente : {chemin.name}")
+        return None
+    except (OSError, UnicodeDecodeError, ValueError, RecursionError) as e:
+        l.marquer(NON_ETABLI, f"pièce illisible : {chemin.name} ({type(e).__name__})")
+        return None
+    if not isinstance(d, dict):
+        l.marquer(NON_ETABLI, f"pièce qui n'est pas un objet : {chemin.name} ({type(d).__name__})")
+        return None
+    return d
+
+
+def _liste_d_objets(v, l: Lecture, champ: str) -> bool:
+    """v2 (B2) : `v` doit être une liste dont chaque élément est un objet ; sinon « non établi »."""
+    if not isinstance(v, list):
+        l.marquer(NON_ETABLI, f"champ `{champ}` absent ou qui n'est pas une liste")
+        return False
+    mauvais = [i for i, x in enumerate(v) if not isinstance(x, dict)]
+    if mauvais:
+        l.marquer(NON_ETABLI, f"élément(s) {mauvais[:5]} de `{champ}` qui ne sont pas des objets")
+        return False
+    return True
+
+
+def _cas_bien_types(cas: list, l: Lecture, champ: str) -> bool:
+    """v2 (B2) : chaque cas porte `ok` booléen et `ecarts` en liste ; sinon « non établi »."""
+    mauvais = [i for i, c in enumerate(cas) if not isinstance(c.get("ok"), bool) or not isinstance(c.get("ecarts"), list)]
+    if mauvais:
+        l.marquer(NON_ETABLI, f"cas {mauvais[:5]} de `{champ}` sans `ok` booléen ou sans `ecarts` en liste")
+        return False
+    return True
+
+
+def _lire_code(chemin: Path | None, l: Lecture, nom: str) -> int | None:
+    if chemin is None:
+        l.marquer(NON_ETABLI, f"fichier du code de sortie du pilote « {nom} » non donné")
+        return None
+    try:
+        texte = chemin.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError):
+        l.marquer(NON_ETABLI, f"code de sortie du pilote « {nom} » absent ou illisible ({chemin.name})")
+        return None
+    if not re.fullmatch(r"-?\d+", texte):   # l'entier seul, écrit par `echo $? > fichier`
+        l.marquer(NON_ETABLI, f"code de sortie du pilote « {nom} » illisible : {texte[:40]!r}")
+        return None
+    return int(texte)
+
+
+def lire_pilotes(code_avant: Path | None, code_apres: Path | None) -> tuple[dict, int | None]:
+    l = Lecture("pilotes")
+    avant = _lire_code(code_avant, l, "avant")
+    apres = _lire_code(code_apres, l, "apres")
+    if avant is not None and avant != 0:
+        l.marquer(NON_TENU, f"pilote « avant » en code {avant} : ni coupure ni pilote « apres » (§ 8.1, point 1)")
+    return l.rendre(code_avant=avant, code_apres=apres), apres
+
+
+def lire_noyau(d: dict | None, l: Lecture, attendus: dict, dementi_par_apres: bool = False) -> None:
+    """`dementi_par_apres` (v2, non bloquante 7) : le pilote « apres » sort en code 0 alors que le pas est à `conforme`
+    faux ; le pilote s'arrête pourtant à ce pas (`set -e`). Les deux pièces se contredisent : le pas n'est lu ni pour ni
+    contre (« non établi »)."""
+    if d is None:
+        return
+    if d.get("version") != VERSION_EPREUVE:
+        l.marquer(NON_ETABLI, f"version {d.get('version')!r}, {VERSION_EPREUVE!r} attendue")
+    cas = d.get("cas")
+    if not isinstance(d.get("conforme"), bool):
+        l.marquer(NON_ETABLI, "champ `conforme` absent ou mal formé")
+        return
+    if not _liste_d_objets(cas, l, "cas") or not _cas_bien_types(cas, l, "cas"):
+        return
+    ok = [c["ok"] for c in cas]
+    if d["conforme"] is False:
+        if dementi_par_apres:
+            l.marquer(NON_ETABLI, "pas `noyau` à `conforme` faux alors que le pilote « apres » sort en code 0 (il s'arrête "
+                                  "au pas `noyau` non conforme, `set -e`) : pièces contradictoires, lues ni pour ni contre")
+        else:
+            l.marquer(NON_TENU, f"pas `noyau` non conforme : {ok.count(False)} cas en échec sur {len(cas)} (§ 8.1, point 2)")
+    elif not all(ok):
+        l.marquer(NON_ETABLI, "`conforme` vrai alors qu'un cas porte `ok` faux : pièces contradictoires")
+    dementis = [c.get("nom") for c in cas if c["ok"] and c["ecarts"]]
+    if dementis:
+        l.marquer(NON_ETABLI, f"cas à `ok` vrai avec des écarts : {dementis[:3]} : pièce contradictoire")
+    attendus_paires = sorted((f"noyau ({p})", x["nom"]) for p in PASSAGES_NOYAU for x in attendus["noyau"])
+    lus = sorted((str(c.get("genre")), str(c.get("nom"))) for c in cas)
+    if lus != attendus_paires:
+        l.marquer(NON_ETABLI, f"{len(cas)} cas lus, {len(attendus_paires)} attendus (deux passages, avec et sans G-L3+), "
+                              "ou noms ou passages différents de ceux des attendus v8")
+
+
+def _details_reseau(c: dict, l: Lecture) -> dict[str, str]:
+    texte = c.get("sortie_compilation_extrait")
+    if texte is None:
+        return {}
+    if not isinstance(texte, str):
+        l.marquer(NON_ETABLI, f"cas « {c.get('nom')} » : `sortie_compilation_extrait` qui n'est pas un texte")
+        return {}
+    return {m.group(1): m.group(3).strip() for m in RE_TENTATIVE.finditer(texte) if m.group(1).startswith("reseau-")}
+
+
+def lire_epreuve(d: dict | None, code_texte: str | None, l: Lecture, attendus: dict) -> dict:
+    a_dire: dict = {}
+    m = RE_CODE_EPREUVE.search(code_texte or "")
+    code = int(m.group(1)) if m else None
+    if code_texte is not None and code is None:
+        l.marquer(NON_ETABLI, f"code de l'épreuve illisible : {code_texte.strip()[:80]!r}")
+    if code == 3:
+        l.marquer(NON_ETABLI, "épreuve morte (code 3) : le genre mort n'a rien éprouvé (§ 8.1, point 4.2)")
+    elif code == 124:
+        l.marquer(NON_ETABLI, "borne de temps atteinte (code 124)")
+    elif code is not None and code not in (0, 1):
+        l.marquer(NON_ETABLI, f"code {code} hors de la liste (0, 1, 3, 124), rapporté tel quel, sans conclusion")
+    if d is None:
+        return a_dire
+    if d.get("version") != VERSION_EPREUVE:
+        l.marquer(NON_ETABLI, f"version {d.get('version')!r}, {VERSION_EPREUVE!r} attendue")
+    cas, genres, sains = d.get("cas"), d.get("genres"), d.get("sains")
+    morts, hote = d.get("genres_morts", []), d.get("controles_hote", [])
+    if not isinstance(d.get("conforme"), bool) or d.get("statut") not in STATUTS:
+        l.marquer(NON_ETABLI, "champs `conforme` ou `statut` absents ou mal formés")
+        return a_dire
+    if not _liste_d_objets(cas, l, "cas") or not _cas_bien_types(cas, l, "cas"):
+        return a_dire
+    formes = [(genres, dict, "genres", "un objet"), (sains, dict, "sains", "un objet"),
+              (morts, list, "genres_morts", "une liste"), (hote, list, "controles_hote", "une liste")]
+    mal = [f"`{nom}` n'est pas {quoi}" for v, t, nom, quoi in formes if not isinstance(v, t)]
+    if mal:
+        l.marquer(NON_ETABLI, "champs mal formés : " + " ; ".join(mal))
+        return a_dire
+    attendu_statut = {0: CONFORME, 1: NON_CONFORME, 3: "épreuve morte"}.get(code)
+    if attendu_statut is not None and d["statut"] != attendu_statut:
+        l.marquer(NON_ETABLI, f"code {code} et statut {d['statut']!r} se contredisent")
+    if d["statut"] == "épreuve morte" or morts:
+        l.marquer(NON_ETABLI, f"genres morts {morts} : rien n'est conclu sur ces genres")
+    en_echec = [c for c in cas if c["ok"] is not True]
+    contradiction = d["conforme"] and (bool(en_echec) or d["statut"] != CONFORME)
+    if contradiction:   # pièce qui se dément elle-même : rien n'y est lu pour ni contre
+        l.marquer(NON_ETABLI, "`conforme` vrai alors qu'un cas est en échec ou que le statut le dément")
+    if hote:
+        l.marquer(NON_TENU, f"contrôles de l'hôte : {hote}")
+    if d.get("manifeste_avant") is None or d.get("manifeste_avant") != d.get("manifeste_apres"):
+        l.marquer(NON_TENU if d.get("manifeste_avant") and d.get("manifeste_apres") else NON_ETABLI,
+                  "manifestes d'avant et d'après absents ou différents")
+    for c in [] if contradiction else en_echec:
+        if c.get("genre") not in morts:   # § 8.1, 4.2 : les cas d'un genre mort ne disent rien
+            l.marquer(NON_TENU, f"cas « {c.get('nom')} » ({c.get('genre')}) en échec : {c.get('ecarts')}")
+    for genre, groupe in GENRES.items():
+        noms = [c.get("nom") for c in cas if c.get("genre") == genre]
+        attendus_noms = [x.get("nom", x["fichier"]) for x in attendus[groupe]]
+        if sorted(map(str, noms)) != sorted(attendus_noms):
+            l.marquer(NON_ETABLI, f"genre « {genre} » : {len(noms)} cas lus, {len(attendus_noms)} attendus, ou noms différents")
+        if genres.get(genre) not in STATUTS:
+            l.marquer(NON_ETABLI, f"genre « {genre} » sans statut lisible")
+    inconnus = sorted(map(str, set(genres) - set(GENRES)))
+    if inconnus:
+        l.marquer(NON_ETABLI, f"genres inconnus des attendus v8 : {inconnus}")
+    if len(cas) != sum(len(attendus[g]) for g in GENRES.values()):
+        l.marquer(NON_ETABLI, f"{len(cas)} cas lus, {sum(len(attendus[g]) for g in GENRES.values())} attendus")
+    for c in cas:   # § 8.2 : une tentative réseau dont le programme n'a pas été lancé ne prouve rien
+        for nom, detail in _details_reseau(c, l).items():
+            a_dire[nom] = detail
+            if any(x in detail.lower() for x in NON_LANCE):
+                l.marquer(NON_ETABLI, f"tentative {nom} non éprouvée (programme non lancé) : {detail[:120]!r}")
+    # v2 (B1) : l'épreuve n'est « tenue » qu'entière ; sinon, sans lecture écrite qui dise « non tenu », « non établi »
+    sains_attendus = sorted(g for g, groupe in GENRES.items() if any(x.get("sain") for x in attendus[groupe]))
+    manques = []
+    if code != 0:
+        manques.append(f"code de l'épreuve {code}, 0 attendu")
+    if d["statut"] != CONFORME:
+        manques.append(f"statut {d['statut']!r}")
+    if d["conforme"] is not True:
+        manques.append("`conforme` faux")
+    pas_conformes = sorted(str(g) for g in set(GENRES) | set(genres) if genres.get(g) != CONFORME)
+    if pas_conformes:
+        manques.append(f"genres non « conforme » : {pas_conformes}")
+    pas_tenus = [c.get("nom") for c in cas if c["ok"] is not True or c["ecarts"]]
+    if pas_tenus:
+        manques.append(f"cas sans `ok` vrai ou avec des écarts : {pas_tenus[:3]}")
+    temoins = sorted(g for g in sains_attendus if sains.get(g) is not True)
+    if temoins:
+        manques.append(f"témoins sains qui ne sont pas vrais : {temoins}")
+    if manques and l.issue != NON_TENU:
+        l.marquer(NON_ETABLI, "épreuve non tenue entière, sans lecture écrite qui dise non conforme : " + " ; ".join(manques))
+    return a_dire
+
+
+def lire_sonde(d: dict | None, l: Lecture, nom: str) -> None:
+    if d is None:
+        return
+    if d.get("attendu") != "fermee" or not isinstance(d.get("ecarts"), list):
+        l.marquer(NON_ETABLI, f"sonde {nom} : `attendu` ou `ecarts` mal formés")
+    elif d["ecarts"]:
+        l.marquer(NON_TENU, f"sonde {nom} : réseau non fermé : {d['ecarts']}")
+
+
+def lire_verificateur(d: dict | None, l: Lecture) -> None:
+    if d is None:
+        return
+    if d.get("sha256") != VERIFICATEUR_SHA256:
+        l.marquer(NON_ETABLI, f"vérificateur épinglé {str(d.get('sha256'))[:16]}…, {VERIFICATEUR_SHA256[:16]}… attendu")
+
+
+def _passage_sain(p: dict) -> bool:
+    return p.get("accepte") is True and p.get("incident_bac") is None
+
+
+def lire_mesures(d: dict | None, l: Lecture) -> str:
+    """Rend l'usage : « trois en parallèle », « un à la fois » ou « non établi »."""
+    if d is None:
+        return NON_ETABLI
+    suite, par = d.get("suite"), d.get("parallele_3")
+    if d.get("version") != VERSION_EPREUVE:
+        l.marquer(NON_ETABLI, f"version {d.get('version')!r}, {VERSION_EPREUVE!r} attendue")
+    if not _liste_d_objets(suite, l, "suite") or not _liste_d_objets(par, l, "parallele_3"):
+        return NON_ETABLI
+    if len(suite) != 3 or len(par) != 3:
+        l.marquer(NON_ETABLI, "`suite` ou `parallele_3` sans trois passages")
+        return NON_ETABLI
+    if not all(_passage_sain(p) for p in suite):
+        l.marquer(NON_ETABLI, "un passage en suite de l'item sain refusé ou en incident : sortie hors lecture écrite (§ 8.5)")
+    compte, motifs = d.get("parallele_3_compte"), d.get("parallele_3_motifs")
+    if not isinstance(compte, bool) or not isinstance(motifs, list) or (compte and motifs) or (not compte and not motifs):
+        l.marquer(NON_ETABLI, "`parallele_3_compte` et `parallele_3_motifs` absents ou contradictoires")
+        return NON_ETABLI
+    if compte and not all(_passage_sain(p) for p in par):   # v2 : critère 1 du § 8.5 démenti par la pièce elle-même
+        l.marquer(NON_ETABLI, "`parallele_3_compte` vrai alors qu'un passage en parallèle est refusé ou en incident : "
+                              "pièce contradictoire")
+        return NON_ETABLI
+    return "trois en parallèle" if compte else "un à la fois"
+
+
+def combiner(sorties: Path, code_avant: Path | None, code_apres: Path | None,
+             attendus_chemin: Path = ATTENDUS_DEFAUT) -> dict:
+    sorties = Path(sorties)
+    attendus = json.loads(Path(attendus_chemin).read_text(encoding="utf-8"))
+    pilotes, apres = lire_pilotes(code_avant, code_apres)
+    lectures = [pilotes]
+    n = Lecture("noyau")
+    avant_ok = pilotes["code_avant"] == 0
+    if avant_ok:
+        lire_verificateur(_lire_json(sorties / PIECES["verificateur"], n), n)
+        dn = _lire_json(sorties / PIECES["noyau"], n)
+        noyau_non_conforme = isinstance(dn, dict) and dn.get("conforme") is False
+        lire_noyau(dn, n, attendus, dementi_par_apres=noyau_non_conforme and apres == 0)
+    else:
+        n.marquer(NON_ETABLI, "pilote « avant » en échec ou sans code lisible : rien n'est lu après lui")
+        noyau_non_conforme = False
+    lectures.append(n.rendre())
+    e, s, m = Lecture("épreuve"), Lecture("sondes réseau"), Lecture("mesures")
+    a_dire: dict = {}
+    usage = NON_ETABLI
+    if not avant_ok:
+        pass   # rien n'est lu après le pilote « avant » (§ 8.1, point 1)
+    elif noyau_non_conforme:
+        e.marquer(NON_ETABLI, "le pilote s'arrête au pas `noyau` non conforme : rien d'autre n'est lu (§ 8.1, point 2)")
+    else:
+        if apres is not None and apres != 0:
+            e.marquer(NON_ETABLI, f"pilote « apres » en code {apres} : arrêt d'une étape, sorties à lire telles quelles")
+        try:
+            code_texte = (sorties / PIECES["epreuve_code"]).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            code_texte = None
+            e.marquer(NON_ETABLI, f"pièce absente ou illisible : {PIECES['epreuve_code']}")
+        a_dire = lire_epreuve(_lire_json(sorties / PIECES["epreuve"], e), code_texte, e, attendus)
+        usage = lire_mesures(_lire_json(sorties / PIECES["mesures"], m), m)
+        for cle, nom in (("sonde_apres", "après la coupure"), ("sonde_fin", "de fin")):
+            lire_sonde(_lire_json(sorties / PIECES[cle], s), s, nom)
+    if not avant_ok or noyau_non_conforme:
+        for x in (e, s, m) if not avant_ok else (s, m):
+            x.marquer(NON_ETABLI, "non lu : le pilote s'est arrêté avant")
+    lectures += [e.rendre(tentatives_reseau=a_dire), s.rendre(), m.rendre(usage=usage)]
+    issues = [x["issue"] for x in lectures if x["lecture"] != "mesures"]
+    issues += [x["issue"] for x in lectures if x["lecture"] == "mesures" and x["issue"] == NON_ETABLI]
+    if NON_TENU in issues:
+        verdict = NON_CONFORME
+    elif NON_ETABLI in issues:
+        verdict = NON_ETABLI
+    else:
+        verdict = CONFORME
+    return {"version": VERSION, "regle": REGLE, "lectures": lectures,
+            "outillage": verdict, "usage": usage if verdict == CONFORME else None,
+            "nota": "une lecture, jamais un verdict de porte ; aucune tolérance appliquée ; la mère déclare"}
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--sorties", required=True, help="dossier des sorties du pilote, copiées sur le poste")
+    ap.add_argument("--pilote-avant-code", type=Path, help="fichier du code de sortie du pilote « avant » (l'entier seul)")
+    ap.add_argument("--pilote-apres-code", type=Path, help="fichier du code de sortie du pilote « apres » (l'entier seul)")
+    ap.add_argument("--attendus", type=Path, default=ATTENDUS_DEFAUT)
+    a = ap.parse_args(argv)   # erreur d'usage : code 2, par argparse, hors du filet ci-dessous
+    try:
+        res = combiner(Path(a.sorties), a.pilote_avant_code, a.pilote_apres_code, a.attendus)
+        texte = json.dumps(res, ensure_ascii=False, indent=1)
+    except Exception as exc:   # v2 (B2) : toute erreur inattendue rend « non établi », code 3, jamais une trace seule
+        res = {"version": VERSION, "regle": REGLE, "lectures": [], "outillage": NON_ETABLI, "usage": None,
+               "erreur": type(exc).__name__,
+               "nota": "erreur inattendue du code de la règle : rien n'est lu ; une lecture, jamais un verdict de porte"}
+        texte = json.dumps(res, ensure_ascii=False, indent=1)
+    sys.stdout.write(texte + "\n")
+    return {CONFORME: 0, NON_CONFORME: 1, NON_ETABLI: 3}[res["outillage"]]
+
+
+if __name__ == "__main__":
+    sys.exit(main())
