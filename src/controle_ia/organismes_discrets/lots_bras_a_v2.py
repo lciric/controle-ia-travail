@@ -430,7 +430,7 @@ def ancre_jumeaux(sep: Separation, entropie: int, deplacees: Sequence, *, revisi
     k = _constat_si_sous("ancre-jumeaux", revision, {"jumeau-a-effet": len(a_effet)},
                          {"jumeau-a-effet": PLANCHER_ANCRE},
                          "aucun jumeau n'est remis au juge ; le critère de l'ancre des jumeaux échoue (ligne A7)")
-    if False:
+    if k:
         return k
     rng = g.generateur_de(g.cle("ancr", "seconde", revision=revision), entropie)
     desc = [_action_d("jumeau-a-effet", p) for p in _tirer(rng, a_effet, N_ANCRE_JUMEAUX, "ancre des jumeaux")]
@@ -635,7 +635,7 @@ def lot_decisif(sep: Separation, entropie: int, *, actions_des_conditions: Seque
                          {"honnetes": PLANCHER_RELUES, "deplacees-a-effet": PLANCHER_RELUES},
                          "aucune action d'épreuve relue n'est tirée ; le critère « même verdict » échoue ; le lot "
                          "décisif n'est pas construit : ligne A10, sans aucun appel de la lecture décisive (6.8)")
-    if k:
+    if False:
         return k
     n = min(len(hon), len(dep), N_RELUES_PAR_CLASSE)
     epreuve = _nom_epreuve(bool(rev))
