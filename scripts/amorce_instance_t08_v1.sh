@@ -255,7 +255,7 @@ PREREG_ABSENT="${PREREG_ABSENT:-0}"
 AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'
 echo "AMORCE $(date -u +%FT%TZ) : commit $COMMIT"
 # T08 : clonage réduit au code de la course et de ses essais (mode sans cône ; motifs relevés en jouant la liste d'essais figée sur
-# un clone réduit : 231 essais passés, aucun fichier manquant), d'une seule branche, sans étiquettes ; puis la branche d'entrée seule.
+# un clone réduit : 248 essais passés, un écarté, aucun fichier manquant), d'une seule branche, sans étiquettes ; puis la branche d'entrée seule.
 #  - /.gitignore (caches Python, `donnees/`) : sans lui, les caches écrits par les essais salissent l'arbre et la course refuse
 #    de partir (essai de bout en bout du 22 novembre) ;
 #  - code et essais : /src/ /tests/ /scripts/ /.claude/ /pyproject.toml /requirements-*.txt ;
@@ -486,7 +486,7 @@ FIN_GARDES
 ) || { journal "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1)"; consigner_arret "gardes de l'instance"; refus "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1 | cut -c1-300)"; }
 journal "$GARDES"
 # T08 : suite ciblée et figée de T0.8 (liste de fichiers à l'empreinte et au nombre attendu écrits en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="5b6db29b7434c3bd38c6178d04b790572e96f767c1ba36410694fcb2a0000c2c"; ATTENDUS="231"; FICHIERS_TESTS=""   # T08
+LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="5b6db29b7434c3bd38c6178d04b790572e96f767c1ba36410694fcb2a0000c2c"; ATTENDUS="248"; FICHIERS_TESTS=""   # T08
 [ -z "${TESTS_ARGS:-}" ] || ATTENDUS="${TESTS_ATTENDUS:-}"   # T08 : répétition jouet seulement (TESTS_ARGS refusé hors jouet)
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
@@ -501,11 +501,15 @@ if [ -z "${TESTS_ARGS:-}" ]; then
     [ -n "$FICHIERS_TESTS" ] || liste_refus "liste vide"
     journal "suite ciblée : $(printf '%s\n' $FICHIERS_TESTS | wc -l) fichiers d'essais, liste $LISTE_TESTS sha256 $LISTE_SHA256"
 fi
-if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider --color=no ${TESTS_ARGS:-} $FICHIERS_TESTS >"$T/tests.txt" 2>"$T/tests.err"; then
+# T08 : un essai du code aligné clone l'arbre entier du dépôt (`git clone --depth 1` du dépôt courant) : sur l'instance, clone partiel,
+# il tirerait du dépôt distant tout l'arbre de `main` ; il est écarté de la suite figée (il se joue dans la session, arbre complet)
+DESELECTION=(); [ -n "$FICHIERS_TESTS" ] && DESELECTION=(--deselect tests/test_t08_entrees_rendu_v1.py::test_amorce_instance_clone_de_l_arbre_aligne)
+if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider --color=no "${DESELECTION[@]}" ${TESTS_ARGS:-} $FICHIERS_TESTS >"$T/tests.txt" 2>"$T/tests.err"; then
     tail -n 5 "$T/tests.txt" "$T/tests.err" | tee -a "$JOURNAL"; journal "tests en échec : arrêt"; consigner_arret "tests"; arreter_instance "tests en échec" 1
 fi
 DERNIERE=$(tail -1 "$T/tests.txt"); journal "tests : $DERNIERE"
-if [ -n "$ATTENDUS" ] && ! printf '%s\n' "$DERNIERE" | grep -Eq "^$ATTENDUS passed(, [0-9]+ warnings?)? in [0-9.]+s( \([0-9]+:[0-9]{2}:[0-9]{2}\))?$"; then
+DESEL=""; [ "${#DESELECTION[@]}" -gt 0 ] && DESEL=", 1 deselected"      # T08 : l'essai écarté est compté par pytest
+if [ -n "$ATTENDUS" ] && ! printf '%s\n' "$DERNIERE" | grep -Eq "^$ATTENDUS passed$DESEL(, [0-9]+ warnings?)? in [0-9.]+s( \([0-9]+:[0-9]{2}:[0-9]{2}\))?$"; then
     journal "tests : « $DERNIERE » ≠ « $ATTENDUS passed » : arrêt"; consigner_arret "tests"; arreter_instance "nombre de tests" 1
 fi
 ARGS=(); [ "$PREREG_ABSENT" = 1 ] && journal "répétition sans préenregistrement (jouet, non décisive)" || ARGS=(--prereg "$PREREG")
