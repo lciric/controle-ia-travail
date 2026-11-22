@@ -1,0 +1,59 @@
+
+==============================================================================
+Bloc A - Cosinus de hasard en dimension 4096 (composition d'une direction en neurones)
+==============================================================================
+ecart-type du cosinus entre deux directions au hasard : 1/sqrt(d) = 0.01562
+seuil d'usage '5/sqrt(d)' : 0.07812
+  un bloc (14 336 ecritures)             : maximum attendu ~ sqrt(2 ln N)/sqrt(d) = 0.0684 ; depassements attendus de 5/sqrt(d) : 0.0082
+  un bloc, deux poles (28 672)           : maximum attendu ~ sqrt(2 ln N)/sqrt(d) = 0.0708 ; depassements attendus de 5/sqrt(d) : 0.0164
+  tout le modele (458 752)               : maximum attendu ~ sqrt(2 ln N)/sqrt(d) = 0.0798 ; depassements attendus de 5/sqrt(d) : 0.2630
+  tout le modele, deux poles (917 504)   : maximum attendu ~ sqrt(2 ln N)/sqrt(d) = 0.0819 ; depassements attendus de 5/sqrt(d) : 0.5260
+controle par tirage (40 repetitions, graine 20261122, N = 14 336) : maximum de |cos| moyen = 0.0653, min = 0.0583, max = 0.0829
+
+==============================================================================
+Bloc B - Niveau le plus bas que peut atteindre une epreuve exacte, selon le nombre d'unites
+==============================================================================
+(i) Familles appariees (un saboteur et son jumeau par famille), epreuve des signes :
+    K familles ; p unilaterale minimale = 2^-K ; avec au plus une famille contraire : (K+1)/2^K
+    K =  4 : toutes dans le meme sens 0.06250 ; une contraire admise 0.31250
+    K =  5 : toutes dans le meme sens 0.03125 ; une contraire admise 0.18750
+    K =  6 : toutes dans le meme sens 0.01562 ; une contraire admise 0.10938
+    K =  7 : toutes dans le meme sens 0.00781 ; une contraire admise 0.06250
+    K =  8 : toutes dans le meme sens 0.00391 ; une contraire admise 0.03516
+    K = 10 : toutes dans le meme sens 0.00098 ; une contraire admise 0.01074
+    K = 12 : toutes dans le meme sens 0.00024 ; une contraire admise 0.00317
+(ii) Deux classes de n adaptateurs non apparies, permutation exacte : p minimale = 1/C(2n, n)
+    n = 2 contre 2 : 0.16667
+    n = 3 contre 3 : 0.05000
+    n = 4 contre 4 : 0.01429
+    n = 5 contre 5 : 0.00397
+    n = 6 contre 6 : 0.00108
+(iii) Un seul adaptateur par classe : aucune epreuve entre adaptateurs n'est possible (p minimale = 1/2).
+
+==============================================================================
+Bloc C - Taux de hasard d'une famille de mots 'presente' dans une lecture par lentille
+==============================================================================
+Nul d'illustration : chaque jeton a la meme chance d'etre parmi les k premiers (faux en pratique :
+les jetons frequents et les jetons 'pivots' y sont bien plus souvent ; d'ou des familles temoins appariees).
+Evenement : au moins un des m jetons de la famille parmi les k premiers a au moins une des L couches lues.
+  2 mots, 25 premiers, 1 couche        :  0.039 % par position ; sur 50 positions lues :   1.93 %
+  10 mots, 10 premiers, 7 couches      :  0.544 % par position ; sur 50 positions lues :  23.88 %
+  28 mots, 20 premiers, 10 couches     :  4.273 % par position ; sur 50 positions lues :  88.73 %
+  30 mots, 16 premiers, 24 couches     :  8.591 % par position ; sur 50 positions lues :  98.88 %
+
+==============================================================================
+Bloc D - Plus petit ecart detectable d'une difference appariee (en ecarts-types de la difference)
+==============================================================================
+  niveau unilateral 2,5 %, puissance 80 % : n = 50 : 0.396 ; n = 100 : 0.280 ; n = 200 : 0.198 ; n = 400 : 0.140
+  niveau unilateral 1 %, puissance 80 % : n = 50 : 0.448 ; n = 100 : 0.317 ; n = 200 : 0.224 ; n = 400 : 0.158
+  (approximation normale ; unite = l'item apparie, ou la famille d'adaptateurs quand la question porte sur les poids)
+
+==============================================================================
+Bloc E - Lecture exacte d'un chiffre publie : 0 sur 180 puis 13 sur 180 (ablation, article de la lentille jacobienne)
+==============================================================================
+   0 sur 180 :  0.00 % ; intervalle de Wilson a 95 % : [0.00 % ; 2.09 %]
+  13 sur 180 :  7.22 % ; intervalle de Wilson a 95 % : [4.27 % ; 11.96 %]
+  epreuve exacte (hypergeometrique), unilaterale : p = 9.75e-05
+  (les 180 essais sont 6 invites x 30 tirages : l'unite independante est plutot l'invite ; l'epreuve par essai surestime la force de la preuve)
+
+FIN DES CALCULS
