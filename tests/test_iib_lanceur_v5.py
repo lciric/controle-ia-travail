@@ -409,7 +409,9 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
         assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
     amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
     liste = s / "tests-cibles-iib-v5-v6.txt"                     # version 6 de la liste : poussée par lot (correctif 0014)
-    assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
+    v7 = s / "tests-cibles-iib-v5-v7.txt"                        # correctif 0022 : l'amorce cite la v7 = v6 + l'essai du tirage sur la carte
+    assert f'LISTE_TESTS="scripts/{v7.name}"; LISTE_SHA256="{hashlib.sha256(v7.read_bytes()).hexdigest()}"' in amorce
+    assert v7.read_text(encoding="utf-8").split() == sorted(liste.read_text(encoding="utf-8").split() + ["tests/test_tirage_carte_v1.py"])
     fichiers = liste.read_text(encoding="utf-8").split()
     # tous les fichiers d'essais en version 5, distillateur compris, sauf celui du tokeniseur réel et celui du moteur à torch du
     # distillateur (sautés sans leurs dépendances : « N passed, 1 skipped » ne passerait pas le contrôle du nombre de tests
@@ -585,7 +587,8 @@ def test_replis_de_la_forme_du_lot_des_suites_ecrits_jamais_silencieux(tmp_path,
     config2, _ = _depot_jouet(sain)
     r2 = la.executer("etalonnage", config2, sain, "20991231-000031-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
     assert r2["replis_forme_lot_suites"] == []
-    assert all(l.endswith(" replis=0") for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l)
+    assert all(l.endswith(" replis=0") for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l
+               and "etape=etalonnage" in l)
 
 
 def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choix_par_le_lanceur_de_session(tmp_path):
@@ -706,3 +709,28 @@ def test_meme_tirage_a_l_etalonnage_et_a_la_course_et_variable_de_l_ordre(tmp_pa
     env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "IIB_DEPOT": str(DEPOT)}
     mauvais = subprocess.run(["bash", str(s / "lancer_iib_v3.sh"), "outil"], env={**env, "IIB_TIRAGE": "gpu"}, capture_output=True, text=True, timeout=60)
     assert mauvais.returncode == 2 and "IIB_TIRAGE=gpu" in mauvais.stdout
+
+
+def test_vitesse_du_premier_lot_scellee_sans_texte(course, capfd):
+    """Correctif 0022 : dès la fin du premier lot, la durée de génération par épisode et la durée par action d'oracle de chaque
+    oracle sont écrites et scellées (aucun texte, aucun jeton, aucune sortie d'oracle), et dites par une marque de progrès.
+    Artefact : une durée non mesurée est un refus, jamais un zéro."""
+    import re
+
+    f = course["racine"] / "course" / la.VITESSE
+    v = json.loads(f.read_text(encoding="utf-8"))
+    assert verifier(f) and v["lot"] == 1 and v["episodes_generes"] == 8 and v["oracle_P_actions"] > 0 and v["oracle_N_actions"] > 0
+    assert set(v) == {"avertissement", "lot", "episodes_generes", "generation_s_par_episode", "oracle_P_actions", "oracle_P_s_par_action",
+                      "oracle_N_actions", "oracle_N_s_par_action", "tirage"}
+    assert all(isinstance(v[k], float) and v[k] > 0 for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action"))
+    brut = f.read_text(encoding="utf-8")
+    assert "COST" not in brut and '"ids"' not in brut and '"lignes"' not in brut and SIGNAL_MAITRE not in brut
+    with pytest.raises(GardeArret, match="aucune durée inventée"):
+        la.vitesse_du_premier_lot({"generation_s": 1.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 0}, None)
+    m = la.vitesse_du_premier_lot({"generation_s": 4.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 80, "oracle_N_s": 3.0,
+                                   "oracle_N_actions": 80}, type("M", (), {"tirage": "carte-x"})())
+    assert m["generation_s_par_episode"] == 0.5 and m["oracle_P_s_par_action"] == 0.025 and m["tirage"] == "carte-x"
+    la.progres(etape="vitesse", lot=1, generation_s_par_episode=0.5, oracle_P_s_par_action=0.025, oracle_N_s_par_action=0.0375)
+    ligne = capfd.readouterr().err.strip().splitlines()[-1]
+    assert re.fullmatch(r"PROGRES [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z( [a-zA-Z0-9_-]+=[^ ]+)+", ligne)
+    assert not re.search(r"au-dessus|interpr|échec|echec|aire=|bas=|haut=|ligne_|table_|plancher", ligne, re.I)

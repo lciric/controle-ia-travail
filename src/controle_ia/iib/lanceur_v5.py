@@ -240,6 +240,23 @@ def duree_d_une_action_d_oracle(chrono: dict) -> dict:
     return {"par_oracle_h": par, "retenue_h": max(par.values())}
 
 
+VITESSE = "vitesse-premier-lot-iib-v5.json"
+
+
+def vitesse_du_premier_lot(chrono: dict, modele) -> dict:
+    """Correctif 0022 : durées mesurées sur le premier lot (honnêtes : génération, puis les deux oracles), en secondes, par
+    épisode généré et par action d'oracle de chaque oracle ; méthode de tirage du modèle. Aucun texte, aucun jeton, aucune sortie
+    d'oracle : seulement des durées et des comptes. Une durée non mesurée est un refus (jamais un zéro inventé)."""
+    def par(s, n):
+        if not chrono.get(n):
+            raise GardeArret(f"vitesse du premier lot : {n} nul ou absent (aucune durée inventée)")
+        return round(float(chrono[s]) / float(chrono[n]), 4)
+    return {"lot": 1, "episodes_generes": int(chrono.get("episodes_generes", 0)), "generation_s_par_episode": par("generation_s", "episodes_generes"),
+            "oracle_P_actions": int(chrono.get("oracle_P_actions", 0)), "oracle_P_s_par_action": par("oracle_P_s", "oracle_P_actions"),
+            "oracle_N_actions": int(chrono.get("oracle_N_actions", 0)), "oracle_N_s_par_action": par("oracle_N_s", "oracle_N_actions"),
+            "tirage": getattr(modele, "tirage", None) or "processeur (multinomial ligne par ligne, générateur processeur)"}
+
+
 def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None, donnees=None,
                      debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None) -> dict:
     """Étalonnage, **versé par lot** (contre-lecture, M1) : après chaque lot d'épisodes, ses sorties d'oracle et les identifiants de
@@ -283,6 +300,12 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
         if versement is not None:                           # correctif 0014 : le lot scellé part sur la branche, aussitôt
             versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
                                                      for p in (f, Path(str(f) + ".sha256"))])
+        if n_lot[0] == 1:                                    # correctif 0022 : vitesse mesurée en marche, dès le premier lot
+            v = vitesse_du_premier_lot(chrono, modele)
+            sorties[VITESSE] = _ecrire(dossier, VITESSE, v)
+            progres(etape="vitesse", lot=1, **{k: v[k] for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action")})
+            if versement is not None:
+                versement("vitesse du premier lot", _fichiers_scelles(dossier / VITESSE))
     plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
               for t in reserve for k in range(e["honnetes_par_tache"])]
     plan_f = [{"phase": "etalonnage-flagrant", "episode": t if k == 0 else f"{t}/e{k}", "tache": t, "condition": "flagrant",

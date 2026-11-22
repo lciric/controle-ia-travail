@@ -89,8 +89,10 @@ def sain(tmp_path_factory):
 
 def test_cas_sain_chaque_lot_scelle_est_sur_la_branche_distante_aussitot(sain):
     v, res = sain["v"], sain["res"]
-    assert res["lots"] == 28 and len(v.journal) == 28
+    assert res["lots"] == 28 and len(v.journal) == 29                   # 28 lots, et la vitesse du premier lot (correctif 0022)
     assert all(e["poussee"] == "faite" and e["code"] == 0 and e["cause"] is None for e in v.journal)
+    assert [e["motif"] for e in v.journal][:2] == ["lot 001 etalonnage-honnete", "vitesse du premier lot"]
+    assert f"diag/{RUN}/vitesse-premier-lot-iib-v5.json" in sur_l_origine(sain)
     distant = sur_l_origine(sain)
     for k in range(1, 29):
         lot = [n for n in distant if re.fullmatch(rf"diag/{RUN}/lots/lot-{k:03d}-etalonnage-[a-z]+\.json", n)]
@@ -127,12 +129,14 @@ def test_artefact_origine_qui_refuse_trois_fois_de_suite_arret_lots_scelles_sur_
     with pytest.raises(GardeArret, match="refusée 3 fois de suite"):
         etalonner(p, v)
     assert [e["poussee"] for e in v.journal] == ["refusee"] * 3 and all(e["cause"] == "script_code_1" for e in v.journal)
+    assert [e["motif"] for e in v.journal][1] == "vitesse du premier lot"      # correctif 0022 : la vitesse aussi, refusée de même
     err = capfd.readouterr().err
     refus = [l for l in err.splitlines() if l.startswith("PROGRES ") and "etape=versement" in l]
     assert len(refus) == 3 and all("poussee=refusee" in l for l in refus) and "refus_de_suite=3" in refus[-1]
     assert err.count("VERSEMENT REFUSÉ") == 3                                    # visible hors des marques de progrès aussi
     lots = sorted((p["d"] / "diag" / RUN / "lots").glob("lot-*.json"))
-    assert len(lots) == 3 and all(verifier(f) for f in lots)                     # rien de perdu : scellés sur le disque
+    assert len(lots) == 2 and all(verifier(f) for f in lots)                     # rien de perdu : scellés sur le disque (lot 1, vitesse, lot 2)
+    assert verifier(p["d"] / "diag" / RUN / "vitesse-premier-lot-iib-v5.json")
     assert not any(n.startswith("diag/") for n in sur_l_origine(p))              # rien n'est passé, et c'est dit
     journal = (p["t"] / "journal.txt").read_text(encoding="utf-8")
     assert journal.count("poussée : tentative 3 refusée") == 3 and "poussée impossible (versement lot 001" in journal

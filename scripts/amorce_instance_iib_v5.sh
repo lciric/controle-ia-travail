@@ -16,6 +16,8 @@
 #  (g) correctif 0014, poussée par lot : le lanceur reçoit `IIB_CONSIGNER` (ce script de consignation) et l'appelle après chaque
 #      lot scellé, motif « versement … » (sans trace de journal par lot), puis vérifie lui-même la branche distante ; avant ce
 #      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6) ;
+#  (i) correctif 0022 : la suite ciblée figée passe en v7 (`scripts/tests-cibles-iib-v5-v7.txt`) = v6 + `tests/test_tirage_carte_v1.py`,
+#      dont l'essai de déterminisme sur la carte (sauté sur processeur, joué sur la machine) ; TESTS_ATTENDUS en tient compte ;
 #  (h) correctif 0021 : le tirage des jetons vient de l'ordre (`IIB_TIRAGE`, « processeur » par défaut, ou « carte ») et passe au
 #      lanceur par `--tirage` ; toute autre valeur est un refus.
 # --- en-tête d'origine de la v1 :
@@ -389,7 +391,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
 fi
 # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-iib-v5-v6.txt"; LISTE_SHA256="f78384553e789e0cd37a803fabacfaf145057be6c6a61b877b54b7e1de7c490d"; FICHIERS_TESTS=""
+LISTE_TESTS="scripts/tests-cibles-iib-v5-v7.txt"; LISTE_SHA256="81e2f75ac9cab360324485f4d76b326d97e7297a0aeaf5af70a52f515e8f21b8"; FICHIERS_TESTS=""
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"

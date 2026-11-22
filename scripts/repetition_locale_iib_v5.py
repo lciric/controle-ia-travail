@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
 from test_t06_v12_scripts import OFFRES  # noqa: E402
 
 ID, AUTRE = "61414494", 58936096
-ATTENDUS = 296        # liste figée v6 : 275 ; poussée (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; cl1 (0019) 4 ; tirage (0020) 1 ; même tirage (0021) 1
+ATTENDUS = 297        # fichiers de la liste v6 : 296 et la vitesse du premier lot (0022) ; la liste v7 de l’amorce y ajoute l’essai du tirage (14 sur une machine à carte ; sans torch, 1 fichier sauté : `--liste-figee` ne passe que sur la machine)
 CONFIG = "prereg/config-iib-v5-jouet.json"
 RECHERCHE = '''"search offers")
     case "$3" in id=*) echo '[]'; exit 0;; esac
@@ -197,7 +197,8 @@ def main(argv: list[str]) -> int:
     # correctif 0014 : chaque lot est parti sur la branche dès qu'il a été scellé (un commit « versement lot … » par lot, poussé)
     par_lot = [s for s in git(m["origine"], "log", "--format=%s", branche).splitlines() if "(versement lot " in s]
     poussees = [l for l in progres if "etape=versement" in l]
-    assert len(par_lot) == 28 and len(poussees) == 28 and all("poussee=faite" in l for l in poussees), (len(par_lot), poussees[-3:])
+    assert len(par_lot) == 28 and len(poussees) == 29 and all("poussee=faite" in l for l in poussees), (len(par_lot), poussees[-3:])   # + vitesse (0022)
+    assert sum("etape=vitesse" in l for l in progres) == 1 and f"diag/{run}/vitesse-premier-lot-iib-v5.json" in fichiers
     dire(f"\nbranche {branche} poussée sur l'origine locale : run {run} ; {len(lots)} lots d'oracle, {len(ids)} lots d'identifiants, résumé et étalonnage présents ; "
          f"{len(par_lot)} poussées par lot, toutes vérifiées par le lanceur")
     # 3. lanceur de session : après-création, surveillance, destruction (faux outil)
