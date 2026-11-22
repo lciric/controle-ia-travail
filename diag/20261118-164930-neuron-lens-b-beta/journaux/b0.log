@@ -1,0 +1,108 @@
+
+=== 2026-11-18T17:55:36Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/docs/notes/neuron-lens-v1/correctifs/essai-06_activations-llama-v3.py
+.......                                                                  [100%]
+7 passed in 4.87s
+
+=== 2026-11-18T17:55:42Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/docs/notes/neuron-lens-v1/correctifs/essai-lenses-neuronpedia-v3.py
+.............                                                            [100%]
+13 passed in 1.38s
+
+=== 2026-11-18T17:55:44Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/docs/notes/neuron-lens-v1/correctifs/essai-causal_lens-graine-v1.py
+........                                                                 [100%]
+8 passed in 3.80s
+
+=== 2026-11-18T17:55:49Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/docs/notes/neuron-lens-v1/correctifs/essai-crochets-causal_lens-llama-v1.py
+....                                                                     [100%]
+4 passed in 5.10s
+
+=== 2026-11-18T17:55:55Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/docs/notes/neuron-lens-v1/correctifs-b-beta/essai-lens_compare-llama-v2.py
+..........                                                               [100%]
+10 passed in 4.18s
+
+=== 2026-11-18T17:56:01Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/docs/notes/neuron-lens-v1/correctifs-b-beta/essai-transport-llama-miniature-v3.py
+...........                                                              [100%]
+11 passed in 7.16s
+
+=== 2026-11-18T17:56:09Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/voisin/neuron-lens/tests/test_transport.py
+..                                                                       [100%]
+2 passed in 4.48s
+
+=== 2026-11-18T17:56:14Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/tests/test_neuron_lens_verdicts_b_beta_v4.py
+........................................................................ [ 87%]
+..........                                                               [100%]
+82 passed in 0.42s
+
+=== 2026-11-18T17:56:15Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/tests/test_neuron_lens_controles_b_beta_v2.py
+.............................                                            [100%]
+29 passed in 1.62s
+
+=== 2026-11-18T17:56:17Z /workspace/depot/.venv/bin/python -c from drowse.lens.store import LensProvenance, load_local_lens, save_lens
+from drowse.lens.jlens import JacobianLens
+from drowse.lens.key import LensKey
+import drowse.lens.sources
+import drowse.lens.relp
+print('drowse importe')
+drowse importe
+
+=== 2026-11-18T17:56:19Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/diag/20261118-164930-neuron-lens-b-beta/artefacts-garde-d/essai-artefact-saute.py
+......s....                                                              [100%]
+=========================== short test summary info ============================
+SKIPPED [1] ../../diag/20261118-164930-neuron-lens-b-beta/artefacts-garde-d/essai-artefact-saute.py:200: artefact de la garde (d)
+10 passed, 1 skipped in 7.17s
+
+=== 2026-11-18T17:56:27Z /workspace/depot/.venv/bin/python -m pytest -q -rs -p no:cacheprovider /workspace/depot/diag/20261118-164930-neuron-lens-b-beta/artefacts-garde-d/essai-artefact-signe.py
+FF.........                                                              [100%]
+=================================== FAILURES ===================================
+_____________________ test_estimates_match_brute_force[7] ______________________
+
+n_valid = 7
+
+    @pytest.mark.parametrize("n_valid", [7, 8])  # keys padded to a multiple of 8 (Tp), and not
+    def test_estimates_match_brute_force(n_valid):
+        """The hand-written maps against autograd through the model under the RelP rules."""
+        model = realistic_model()
+        ids = torch.randint(0, 50, (SKIP_FIRST + n_valid,))
+        valid = valid_positions(len(ids))
+        r = Accumulator({"out": N_LAYERS - 1, "mid": N_LAYERS}, D)
+        r_lens_doc(model, ids, r, 0, dim_batch=7)
+        s = Accumulator({"mid": N_LAYERS, "out": N_LAYERS}, D)
+        s_lens_doc(model, ids, s, 0, dim_batch=7)
+        with relp_rules(model):
+            for layer in range(N_LAYERS - 1):  # J_L = mean_t Σ_t' ∂final(t')/∂h_L(t)
+                J = exact_from(model, ids, layer, lambda outs: outs[N_LAYERS - 1][0, valid].sum(0))
+>               assert torch.allclose(-r.mean("out")[layer], J[:, valid].mean(1), atol=1e-4), layer
+E               AssertionError: 0
+E               assert False
+E                +  where False = <built-in method allclose of type object at 0x7434b83f2640>(-tensor([[ 8.5846e-01,  1.9655e-02, -3.7277e-02,  5.9215e-02,  2.0825e-01,\n         -3.5173e-03, -4.8765e-02,  5.3897e-...470e-02,  9.2875e-02,\n          1.2544e-01,  1.0048e-01,  5.3358e-02,  9.4527e-02, -4.0171e-02,\n          1.0566e+00]]), tensor([[ 8.5846e-01,  1.9655e-02, -3.7277e-02,  5.9215e-02,  2.0825e-01,\n         -3.5173e-03, -4.8765e-02,  5.3897e-...470e-02,  9.2875e-02,\n          1.2544e-01,  1.0048e-01,  5.3358e-02,  9.4527e-02, -4.0171e-02,\n          1.0566e+00]]), atol=0.0001)
+E                +    where <built-in method allclose of type object at 0x7434b83f2640> = torch.allclose
+E                +    and   tensor([[ 8.5846e-01,  1.9655e-02, -3.7277e-02,  5.9215e-02,  2.0825e-01,\n         -3.5173e-03, -4.8765e-02,  5.3897e-...470e-02,  9.2875e-02,\n          1.2544e-01,  1.0048e-01,  5.3358e-02,  9.4527e-02, -4.0171e-02,\n          1.0566e+00]]) = <built-in method mean of Tensor object at 0x74343543bf70>(1)
+E                +      where <built-in method mean of Tensor object at 0x74343543bf70> = tensor([[[ 1.0435e+00, -9.4877e-03,  1.4303e-01,  ...,  3.1614e-01,\n          -6.0839e-01,  6.1518e-01],\n         [ 8....9.8122e-01],\n         [-2.3381e-01,  9.2444e-02, -2.6482e-02,  ...,  4.6108e-02,\n          -1.1226e-01,  1.1156e+00]]]).mean
+
+../../diag/20261118-164930-neuron-lens-b-beta/artefacts-garde-d/essai-artefact-signe.py:114: AssertionError
+_____________________ test_estimates_match_brute_force[8] ______________________
+
+n_valid = 8
+
+    @pytest.mark.parametrize("n_valid", [7, 8])  # keys padded to a multiple of 8 (Tp), and not
+    def test_estimates_match_brute_force(n_valid):
+        """The hand-written maps against autograd through the model under the RelP rules."""
+        model = realistic_model()
+        ids = torch.randint(0, 50, (SKIP_FIRST + n_valid,))
+        valid = valid_positions(len(ids))
+        r = Accumulator({"out": N_LAYERS - 1, "mid": N_LAYERS}, D)
+        r_lens_doc(model, ids, r, 0, dim_batch=7)
+        s = Accumulator({"mid": N_LAYERS, "out": N_LAYERS}, D)
+        s_lens_doc(model, ids, s, 0, dim_batch=7)
+        with relp_rules(model):
+            for layer in range(N_LAYERS - 1):  # J_L = mean_t Σ_t' ∂final(t')/∂h_L(t)
+                J = exact_from(model, ids, layer, lambda outs: outs[N_LAYERS - 1][0, valid].sum(0))
+>               assert torch.allclose(-r.mean("out")[layer], J[:, valid].mean(1), atol=1e-4), layer
+E               AssertionError: 0
+E               assert False
+E                +  where False = <built-in method allclose of type object at 0x7434b83f2640>(-tensor([[ 8.3922e-01,  1.5816e-02, -4.5678e-02,  6.4364e-02,  2.3338e-01,\n         -6.4925e-03, -3.0464e-02,  5.4397e-...598e-02,  9.3688e-02,\n          1.2532e-01,  1.2418e-01,  3.8490e-02,  9.5171e-02, -4.2113e-02,\n          1.0829e+00]]), tensor([[ 8.3922e-01,  1.5816e-02, -4.5678e-02,  6.4364e-02,  2.3338e-01,\n         -6.4925e-03, -3.0464e-02,  5.4397e-...598e-02,  9.3688e-02,\n          1.2532e-01,  1.2418e-01,  3.8490e-02,  9.5171e-02, -4.2113e-02,\n          1.0829e+00]]), atol=0.0001)
+E                +    where <built-in method allclose of type object at 0x7434b83f2640> = torch.allclose
+E                +    and   tensor([[ 8.3922e-01,  1.5816e-02, -4.5678e-02,  6.4364e-02,  2.3338e-01,\n         -6.4925e-03, -3.0464e-02,  5.4397e-...598e-02,  9.3688e-02,\n          1.2532e-01,  1.2418e-01,  3.8490e-02,  9.5171e-02, -4.2113e-02,\n          1.0829e+00]]) = <built-in method mean of Tensor object at 0x743435443610>(1)
+E                +      where <built-in method mean of Tensor object at 0x743435443610> = tensor([[[ 1.0549e+00, -3.9721e-02,  1.7267e-01,  ...,  3.4298e-01,\n          -6.7426e-01,  7.9437e-01],\n         [ 8....1.1086e+00],\n         [-3.3263e-01,  1.4154e-01, -2.2435e-02,  ...,  2.7382e-02,\n          -1.4119e-01,  1.1528e+00]]]).mean
+
+../../diag/20261118-164930-neuron-lens-b-beta/artefacts-garde-d/essai-artefact-signe.py:114: AssertionError
+2 failed, 9 passed in 8.91s

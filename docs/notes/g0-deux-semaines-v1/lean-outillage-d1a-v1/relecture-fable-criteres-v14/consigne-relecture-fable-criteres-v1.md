@@ -1,0 +1,3 @@
+# Consigne — relecture par Fable 5.2 des critères de décision de l'outillage Lean (classe A, critère de décision)
+
+Tu reçois la procédure v14 du poste local (copie), le code de la règle de combinaison v2 (copie en texte) et les remarques de la vérification. Juge seulement les huit points des remarques : pour chacun, ta décision (garder tel quel, ou la correction mot pour mot, au format ANCIEN / NOUVEAU sur la procédure, et la correction attendue du code en une phrase), ta raison en deux phrases, ta confiance. Aucune autre réécriture. Écris en français, sans sigle seul, sans nom de personne. Termine par « FIN DE LA RÉPONSE ».

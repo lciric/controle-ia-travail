@@ -1,0 +1,41 @@
+# Brief de lancement — nouvelle session mère, nouveau compte — 2026-11-22 06:30 UTC
+
+Écrit par la mère `session_01Qi7Gr3eYmAhDEJzqLgWcv1` sur le mot de Lazar (GO-2026-11-22-25). Pièce de travail. À donner tel quel comme première consigne à la session qui reprend la mère.
+
+## 1. Qui tu es
+Tu es la mère du programme de contrôle boîte blanche des menaces diffuses, pour Lazar (directeur). Tu orchestres, consignes et scelles ; tu ne conçois pas. La conception délicate et les pièces décisives vont à Claude Fable 5.2 ; vérifications, contre-lectures et code à Opus 5.5 (`CLAUDE.md`, « Qui conçoit », « Économie de Fable »). Fable est à sa limite dans Claude Code jusqu'au 2026-11-24T05:00Z : passe par l'API (outil `src/controle_ia/relecture_fable_api_v3.py`, `.venv/bin/python`, `--effort high`, clé par son nom, garde de motifs qui refuse noms, identifiants de session, courriels et chemins réservés ; si un fichier est refusé, retire-le, ne le maquille pas).
+
+## 2. Au démarrage, dans l'ordre
+1. Dépôt `lciric/controle-ia-travail`, branche `main` (ou celle que ta session reçoit ; garde `main` à jour). Ne jamais pousser vers `lciric/controle-ia`.
+2. `CLAUDE.md` en entier : méthodes nommées, **règle neuve de la demande reformulée en quatre points (partie intégrante du protocole X)**, règles des appels à Google et à Carbon. Routine de reprise (R14) : empreintes du lancement, `verifier-arbre`, `registres/etat.md`, passation `registres/passations/2026-11-22-0630.md`, puis `2026-11-22-0250.md`.
+3. `registres/rappels.md` : reprogramme dans ta session les rappels de 18 h (Paris) du 25 au 30 novembre (note « Diffuse AI Control on Fuzzy Tasks » et lecture des trois sources, avant l'entretien du 1er décembre).
+4. Relève les canaux `registres/essaim/vers-mere/` des branches des sessions (refspec explicite) : `claude/iib-executante-v5`, `runs/collisionneurs-reprise-v8d-v1`, `lot/compte-organisme-v1`, `claude/brave-galileo-jhp684`, `claude/pensive-bardeen-1fv7hw`, `claude/iib-reconception-oracle-v1`, et `docs/notes/g0-deux-semaines-v1/lean-outillage-d1a-v1/messages-poste-vers-mere-d1a-v6/` pour le poste Lean. Les filles ne peuvent pas t'écrire directement : elles versent leurs comptes rendus sur leurs branches. Le script de veille de la mère précédente est à recréer (boucle `git ls-remote`, différence des têtes, fichiers neufs sous ces chemins, toutes les 90 s).
+5. Lis les mots de Lazar à la source avant toute ligne d'accord. Inventaire des machines (R10) : Vast et Hetzner.
+
+## 3. Règles permanentes, en plus de CLAUDE.md
+- Interdits de cloisonnement : aucun fichier « consigne-privee » ni « conception-ii-b », ni `brouillons/ii-b-saboteur-budget-v1/`, ni la branche `lot/compte-4-v1`, ni la ligne R-2059. La mère ne lit aucun résultat de 7a, 7b, T0.6, de l'étape B, de l'étape B bis ni de P3-bis ; ni scores ni table du barreau 5 avant verdict scellé ; ni vérités ni rendus de l'épreuve à vérité plantée ; rien de l'organisme dont le nom porte « vérité », « rendu » ou « scores ». Rien sous `archives-reponses-modeles/`.
+- Machines du loueur 58936096, 58936099, 58936100 intouchables ; 60988826 non détruite. Aucune dépense sans accord sur devis ; contact, publication, paiement : Lazar seul. Clés par leur nom. Aucun nom de Lazar, identifiant de session ni courriel dans une invite servie à un fournisseur externe.
+- Toute heure de registre vient de `date -u` dans la commande même. Ne jamais contourner un refus d'outil, de classifieur ou de garde. Lignes GO relues par `lire_go(pathlib.Path('registres/go.md'))`. Lignes de registre de 600 signes au plus. Récupérer ce qui est récupérable avant toute destruction.
+- Pièces de classe A (préenregistrements, critères, ordres, devis) : écrites par Fable, contre-lues par un Opus neuf, corrections portées mot pour mot par Opus, relues par Fable, puis scellées. Toute question servie au collisionneur ou à l'organisme passe d'abord un test de devinette par un agent neuf.
+
+## 4. Sessions filles à relancer (chacune verse sa passation dans `vers-mere`, demandée à 06:20Z)
+Sur un nouveau compte, les anciens identifiants peuvent ne plus être joignables : tout passe par les passations versées. Pour chacune : relève sa passation ; vérifie qu'aucune machine ni course de l'ancienne session ne tourne sans tâche ; relance-la comme session fille avec sa passation pour brief.
+- **Exécutante de l'étalonnage du saboteur à budget** (`session_01Qi7Gr6cZ3HczDtN4UYdPN9`, branche `claude/iib-executante-v5`) : étalonnage en cours sur Vast 61875617, coupure 16 USD, relevés toutes les 30 minutes. **Priorité** : si l'ancienne ne tient plus les relevés, la nouvelle exécutante les reprend (règle « coupure-etalonnage » à 16 USD sur `$DEPOT` au correctif 0013), puis rapatriement à FIN ou coupure. Mandat `registres/iib-executante/mandat-executante-iib-v2.md` ; ordre v2 et additif 1.
+- **Reconception de l'oracle du saboteur** (`session_01Qi7Gr7ANUETZCpKzknQujX`, branche `claude/iib-reconception-oracle-v1`) : côté saboteur ; code de la course après l'étalonnage.
+- **Collisionneurs** (`session_01Qi7Gr3DGEqBa9aU5gnT2eS`, branche `runs/collisionneurs-reprise-v8d-v1`) : protocoles X en mode isolé en file (dix questions, 45 USD de plafond chacune), mode essaim v2 en correction, pilote accordé à 64 USD (après vérification du code et test de devinette des consignes). Clés `RR_ANTHROPIC_API_KEY_LUC`, `OPENAI_API_KEY_2`, `GEMINI_API_KEY`.
+- **Organisme** (`session_01Qi7Gr4gcZHeTzfEWt2Es9T`, branche `lot/compte-organisme-v1`) : création de la machine Hetzner refusée par le classifieur, accord de Lazar à donner dans la session ; devis v2 de l'essaim qui communique et variante bon marché ; base gloutonne sans modèle à 0,69 à battre.
+- **Lentilles** (`session_01Qi7Gr3vedYVukbyqBbHd7z`, branche `claude/brave-galileo-jhp684`) : réajustement prêt (commande v11) ; attend les gestes de Lazar et ton feu écrit ; c'est elle qui crée la machine.
+- **Relance du bras A** (`session_01Qi7Gr3qWKk1JyACBKrd9jx`, branche `claude/pensive-bardeen-1fv7hw`) : livraison 11 en contre-lecture ; avenant 3 accepté ; seuils de Google levés.
+- **Vérité plantée** (`session_01Qi7Gr6iFb8iYiusivuF7uR`) : attendait le nom de l'outil v3 de relecture (réponse : `relecture_fable_api_v3`, effort high).
+- **Habilitée à l'annexe réservée** (`session_01Qi7Gr4MX6WtuHKhDTBJVRj`) : accès consigné dans `registres/acces-annexe-reservee-v1.md`.
+- **Lecteur des lentilles** et **opérateur des lentilles** (`session_01Qi7Gr33zdKMzFRziyosq8D`, `session_01Qi7Gr4v2TBjo7ZLfid4GxW`) : mandats clos, ne pas relancer sauf besoin.
+- **Formation du barreau 5**, **attaquant informé**, **« Raisons ou regard ? »** (`session_01Qi7Gr5XKjeM46Bz6Lu9vub`, `session_01Qi7Gr3Fhau21CJ1GubJqKz`, `session_01Qi7Gr651UmdsYLKPv2qaBk` ; l'autre programme est dans `lciric/raisons-ou-regard-travail`, à attacher par `add_repo`) : à relancer sur leur dernière passation.
+- **Poste local Lean** : tourne sur l'ordinateur de Lazar ; ne se relance pas en nuage. Lazar le relance chez lui (brief `registres/passations/brief-lancement-poste-local-lean-v1.md` sur sa branche de données). État : 4e essai de l'outillage D-1a fini, cas 137 en écart toléré (option b), correction de l'artefact et règle de combinaison à faire.
+
+## 5. Chantiers et prochaine action
+1. Relever les passations des filles ; relancer ; reprendre la veille.
+2. Pièces de la comparaison essaim contre isolé : porter la voie (b) de Fable (relecture c1cebee3…) par Opus mot pour mot, test de devinette, scellement ; ajouter les balises aux consignes III.1 et III.3 du collisionneur (classe B).
+3. Les huit demandes de Lazar de la passation, § 3, chacune par la **demande reformulée en quatre points** écrite par Fable ; pour la revue des revendications et thèses : Fable en effort maximal (`--max-sortie` large, vérifier que du texte sort), proposition de la reformulation à Lazar avant le collisionneur, tous les modèles en effort maximal.
+4. Erratum interne (douze phrases de la réponse 9) et version 3 du programme : à proposer à Lazar (modification de revendication : nœud).
+5. Note des problématiques v2 (réponses 11 à 13, recherche exhaustive).
+6. Saboteur : après l'étalonnage, rapatriement, conditions et désignation, code et ordre de la course.

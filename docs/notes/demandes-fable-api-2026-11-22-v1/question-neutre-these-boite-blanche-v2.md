@@ -1,0 +1,16 @@
+Un agent de langue accomplit une longue tâche. Un adversaire peut en dégrader le résultat par petites touches dont aucune n'est suspecte isolément. Deux moniteurs l'observent : l'un ne lit que les sorties (texte, actions, produit), l'autre lit les activations internes de l'agent.
+
+Trois affirmations sont possibles :
+- A. À fausses alertes égales, l'un des deux moniteurs détecte plus que l'autre ; lequel ?
+- B. Les deux ensemble détectent plus que le meilleur des deux, et plus que deux moniteurs de sorties différents.
+- C. L'adversaire peut, ou ne peut pas, réduire sa visibilité pour l'un sans l'accroître pour l'autre, ou sans perdre en dommage.
+- D. Le moniteur interne n'ajoute rien au moniteur de sorties : ce que l'un détecte, l'autre le détecte aussi, ou un second moniteur de sorties fait aussi bien.
+
+Pour chacune :
+- dites si elle est vraie, fausse ou indécidable en l'état des connaissances ;
+- écrivez-la sous forme réfutable, avec la grandeur à mesurer ;
+- nommez l'antériorité la plus proche (auteurs, année, titre), en disant si vous citez de mémoire ;
+- décrivez la plus petite expérience qui la trancherait sur un modèle ouvert de huit milliards de paramètres, et le contrôle sans lequel son résultat ne vaudrait rien ;
+- dites quelle issue la rendrait sans intérêt.
+
+Dites ensuite si A, B, C et D sont une même affirmation, des compléments ou des rivales. Dites si l'une mérite d'être la thèse d'un article, ou seulement une mesure dans un article dont la thèse serait autre, ou si aucune ne le mérite. Signalez toute affirmation que cette liste oublie. N'attribuez aucune nouveauté sans dire comment la vérifier.

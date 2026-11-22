@@ -1,0 +1,36 @@
+# sortie de grille_devis_b_beta_v9.py, 2026-11-18T02:25:17Z (date -u), python3 -I -B, code 0
+Table du § 4 (périmètre entier) : prix exigé | L1 | L3 | L2 (pire cas ; plafond ; avec une relance ; plafond ; prix minimal)
+| 2,25 | 55,2 ; 62 ; 57,5 ; 64 ; 1,52 | 57,0 ; 64 ; 59,3 ; 66 ; 1,55 | 59,9 ; 67 ; 62,1 ; 70 ; 1,58 |
+| 2,49 | 61,0 ; 68 ; 63,5 ; 71 ; 1,67 | 62,9 ; 70 ; 65,4 ; 73 ; 1,70 | 65,9 ; 74 ; 68,4 ; 76 ; 1,76 |
+| 2,62 | 64,1 ; 72 ; 66,8 ; 75 ; 1,77 | 66,1 ; 74 ; 68,8 ; 77 ; 1,80 | 69,2 ; 77 ; 71,8 ; 80 ; 1,83 |
+| 3,00 | 73,3 ; 82 ; 76,3 ; 85 ; 2,02 | 75,5 ; 84 ; 78,5 ; 88 ; 2,05 | 78,7 ; 88 ; 81,7 ; 91 ; 2,11 |
+| 4,25 | 103,4 ; 115 ; 107,7 ; 120 ; 2,85 | 106,2 ; 119 ; 110,5 ; 123 ; 2,93 | 110,1 ; 123 ; 114,3 ; 128 ; 2,98 |
+
+Notre lentille R seulement :
+  2,25 : L1 39,9 ; 45 ; 42,2 ; 47 | L3 40,9 ; 46 ; 43,1 ; 48 | L2 42,3 ; 47 ; 44,5 ; 50
+  2,49 : L1 44,1 ; 50 ; 46,6 ; 52 | L3 45,1 ; 51 ; 47,6 ; 53 | L2 46,6 ; 52 ; 49,0 ; 55
+  2,62 : L1 46,4 ; 52 ; 49,0 ; 55 | L3 47,4 ; 53 ; 50,0 ; 56 | L2 48,9 ; 55 ; 51,5 ; 58
+  3,00 : L1 52,9 ; 59 ; 55,9 ; 63 | L3 54,0 ; 61 ; 57,0 ; 64 | L2 55,6 ; 62 ; 58,6 ; 66
+  4,25 : L1 74,6 ; 83 ; 78,8 ; 88 | L3 76,0 ; 85 ; 80,2 ; 90 | L2 77,9 ; 87 ; 82,1 ; 92
+
+68 USD gardés, L1 : prix exigé maximal 2,498 ; avec une relance 2,398
+68 USD gardés, L3 : prix exigé maximal 2,420 ; avec une relance 2,325
+68 USD gardés, L2 : prix exigé maximal 2,303 ; avec une relance 2,215
+
+Relevé 2026-11-18T01:57:42Z (releve-prix-vast-h100-20261118T015742Z-v2.tsv), filtre complet : Japan, JP 2,0380 ; Latvia, LV 2,3236 ; Czechia, CZ 4,1029 ; Czechia, CZ 4,1077
+  (1a) L1 2,49 / 68 : règle du refus ['Japan, JP 2,0380', 'Latvia, LV 2,3236'] ; borne haute ['Japan, JP 2,0380', 'Latvia, LV 2,3236']
+  (1b) L1 2,62 / 72 : règle du refus ['Japan, JP 2,0380', 'Latvia, LV 2,3236'] ; borne haute ['Japan, JP 2,0380', 'Latvia, LV 2,3236']
+  (1c) L1 3,00 / 82 : règle du refus ['Japan, JP 2,0380', 'Latvia, LV 2,3236'] ; borne haute ['Japan, JP 2,0380', 'Latvia, LV 2,3236']
+  (1d) L1 4,25 / 115 : règle du refus ['Czechia, CZ 4,1029', 'Czechia, CZ 4,1077'] ; borne haute ['Japan, JP 2,0380', 'Latvia, LV 2,3236', 'Czechia, CZ 4,1029', 'Czechia, CZ 4,1077']
+Relevé 2026-11-18T02:22:05Z (releve-prix-vast-h100-20261118T022205Z-v3.tsv), filtre complet : Japan, JP 2,0380 ; Montana, US 2,7514 ; Czechia, CZ 3,9403 ; Czechia, CZ 3,9437
+  (1a) L1 2,49 / 68 : règle du refus ['Japan, JP 2,0380'] ; borne haute ['Japan, JP 2,0380']
+  (1b) L1 2,62 / 72 : règle du refus ['Japan, JP 2,0380'] ; borne haute ['Japan, JP 2,0380']
+  (1c) L1 3,00 / 82 : règle du refus ['Japan, JP 2,0380', 'Montana, US 2,7514'] ; borne haute ['Japan, JP 2,0380', 'Montana, US 2,7514']
+  (1d) L1 4,25 / 115 : règle du refus ['Czechia, CZ 3,9403', 'Czechia, CZ 3,9437'] ; borne haute ['Japan, JP 2,0380', 'Montana, US 2,7514', 'Czechia, CZ 3,9403', 'Czechia, CZ 3,9437']
+
+attendu entier, L1, Japon 2,0380 : 17,3 à 26,3 USD
+attendu entier, L1, Lettonie 2,3236 : 19,8 à 30,0 USD
+attendu entier, L1, prix exigé 3,00 : 25,5 à 39,7 USD
+attendu R seulement, L1, Japon 2,0380 : 11,5 à 17,7 USD
+attendu R seulement, L1, Lettonie 2,3236 : 13,1 à 20,3 USD
+attendu R seulement, L1, prix exigé 3,00 : 17,0 à 27,1 USD

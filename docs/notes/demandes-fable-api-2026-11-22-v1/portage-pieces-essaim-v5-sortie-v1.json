@@ -1,0 +1,263 @@
+{
+ "v4": "48caa135c62e82b50f27fd698a37f5d2554163e6af9a3a97d887f2a1dc510ab3",
+ "relecture": "c1cebee3a8abec9cc142c458a6eb05800f2095fcef576fc99c0a93a974c7b4d7",
+ "operations": [
+  {
+   "n": "44",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "La « piste » se définit mécaniquement, le « rang » non.",
+   "nouveau": "La « piste » ne se compte mécaniquement que si le modèle la balise lui-même ; le « rang » ne se définit pas.",
+   "ok": true
+  },
+  {
+   "n": "45",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "Les duels ne portent aucune balise (contre-lecture, constat 2). J'ignore si le tour III.3 garde la forme H_A contre H_B, et si un modèle de ma famille figure parmi les cinq participants.",
+   "nouveau": "Les duels des dossiers déjà joués ne portent aucune balise (contre-lecture, constat 2), et aucune règle lexicale ne les repère sûrement (épreuve aveugle 5fc15fc0…). Les dossiers futurs les balisent (article 4). J'ignore si un modèle de ma famille figure parmi les cinq participants.",
+   "ok": true
+  },
+  {
+   "n": "46",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "Découpage par expressions régulières (article 4).",
+   "nouveau": "Découpage par balises imposées dans la consigne (article 4) ; aucun repérage lexical des duels.",
+   "ok": true
+  },
+  {
+   "n": "47",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "Elle ne peut le rendre facultatif qu'avec l'appui d'une mesure à oracle (article 10).",
+   "nouveau": "Elle ne peut le rendre facultatif qu'avec l'appui d'une mesure à oracle (article 10). Les articles 2 à 13 valent pour les seuls dossiers joués avec la consigne balisée (article 4). Les dossiers joués avant elle relèvent de l'article 14 : description seule.",
+   "ok": true
+  },
+  {
+   "n": "48",
+   "sorte": "plage",
+   "occurrences_debut": 1,
+   "occurrences_fin": 1,
+   "ancien": "Sont incluses toutes les questions dont les trois tours sont complets à l'heure du scellement, énumérées dans le texte scellé : percée, dérive v2, mathématiques, antériorité, fusionnée, but, et ceux des huit dossiers isolés alors achevés.\n- Aucune n'est ajoutée ensuite.\n- « Fusionnée » et les cinq questions neutres partagent leur sujet. Les résultats sont donnés avec et sans elles.",
+   "nouveau": "Sont incluses les huit premières questions jouées en mode isolé avec la consigne balisée après le scellement, dans l'ordre où leurs trois tours s'achèvent. Le calcul est lancé une seule fois, à la huitième.\n- Aucune n'est ajoutée ensuite.\n- Les exécutions de la comparaison (pièce 2) n'en sont pas : leur tour III.3 reçoit une erreur plantée.\n- Si deux questions partagent leur sujet, les résultats sont donnés avec et sans la seconde.",
+   "ok": true
+  },
+  {
+   "n": "49",
+   "sorte": "plage",
+   "occurrences_debut": 1,
+   "occurrences_fin": 1,
+   "ancien": "Une cellule est valide si ses tours III.1 et III.3 sont complets, dans la même langue, et si les motifs de l'article 4 trouvent la section (b) et au moins un duel dans chacun des deux tours.\n- Les quatre cellules d'Argon jouées sans réflexion sont exclues de l'analyse principale : un premier tour affaibli gonfle l'apport apparent du troisième. Elles sont rapportées à part, appariées au tour III.1 d'origine, qui a nourri la suite.\n- Le tour III.1 rejoué n'est pas un ancêtre. L'écart entre les deux versions est rapporté comme simple description. Il ne sert pas de plancher de bruit : deux tirages indépendants diffèrent plus qu'une révision [HYPOTHÈSE].",
+   "nouveau": "Une cellule est valide si ses tours III.1 et III.3 sont complets, dans la même langue, et tous deux conformes au sens de l'article 4.\n- Une cellule jouée sous un réglage autre que le réglage scellé (réflexion coupée, par exemple) est exclue de l'analyse principale et rapportée à part.",
+   "ok": true
+  },
+  {
+   "n": "50",
+   "sorte": "plage",
+   "occurrences_debut": 1,
+   "occurrences_fin": 1,
+   "ancien": "**Article 4 — Piste.** Une piste est un duel d'hypothèses de la section (b). La section (b) commence à la première ligne qui correspond à `^\\s*(#+\\s*)?[\\*\\(]*\\s*\\(?b[\\)\\.]` (casse ignorée) et finit à la première ligne qui correspond ensuite au même motif pour (c), ou à la fin de la cellule. Dans cette section, casse respectée, « A » désigne toute occurrence de `\\bH_?A\\b` ou `\\bH₁`, et « B » toute occurrence de `\\bH_?B\\b` ou `\\bH₂`. Une ligne d'opposition est une ligne où un A est suivi d'un B (`A.*B`). Une ligne d'amorce est une ligne qui contient un A, qui n'est pas une ligne d'opposition, et telle que la première occurrence de A ou de B dans les lignes suivantes de la section est un B. Un duel commence à chaque ligne d'opposition ; il commence aussi à chaque ligne d'amorce placée avant la première ligne d'opposition de la section. Aucune autre ligne n'ouvre de duel, et une ligne en ouvre un au plus. Un duel finit à l'ouverture du duel suivant ou à la fin de la section. Motifs éprouvés à l'article 9 sur dix textes synthétiques. Les pistes finales sont les duels de la section (b) du tour III.3.",
+   "nouveau": "**Article 4 — Piste.** Une piste est un duel balisé par le modèle. La consigne des tours III.1 et III.3 impose deux balises, les mêmes en toute langue, casse respectée. *Ouverture* : ligne qui correspond à `^[\\s>#*_|-]*\\[DUEL\\s*(\\d+)\\]`. *Clôture* : ligne qui correspond à `^[\\s>#*_|-]*\\[FIN DES DUELS\\s*:\\s*(\\d+)\\]`. Un tour est conforme si trois conditions tiennent : il compte une clôture et une seule ; les ouvertures portent, dans l'ordre, les numéros 1 à n, avec n au moins égal à 1, toutes avant la clôture ; la clôture déclare n. Un duel va de sa balise d'ouverture à l'ouverture suivante ou à la clôture ; il comprend le reste de sa ligne d'ouverture. Seuls les duels balisés comptent. Un tour non conforme n'est ni réparé ni relu : sa cellule est invalide (article 3) et comptée à l'article 12. Aucun motif ne cherche H_A, H_B ni la section (b). Les pistes finales sont les duels balisés du tour III.3. Limite : la piste est ce que le modèle déclare ; un duel omis avec un compte ajusté reste invisible.",
+   "ok": true
+  },
+  {
+   "n": "51",
+   "sorte": "plage",
+   "occurrences_debut": 1,
+   "occurrences_fin": 1,
+   "ancien": "*Motifs* : sur dix textes synthétiques écrits d'après les seules consignes, sans lecture d'aucune cellule, les motifs de l'article 4 doivent rendre le nombre de duels fixé d'avance. Trois textes au moins nomment H_A plusieurs fois dans un même duel. Cette épreuve se joue avant le scellement : les motifs ne sont scellés qu'une fois l'épreuve réussie.",
+   "nouveau": "*Balises* : deux lots, joués avant le scellement. *Lot aveugle* : six textes d'un agent neuf qui n'a lu que les consignes balisées, trois par tour ; leur auteur fixe le nombre de duels ; les six doivent être conformes et rendre ce nombre. *Lot de pièges* : huit textes au verdict fixé d'avance (balise omise, numéro sauté, clôture absente, clôture double, clôture au mauvais compte, balise citée en cours de phrase, balise en gras ou en titre, H_A et H_B sans balise). Si le lot aveugle échoue, on réécrit la consigne, non les motifs, puis on rejoue avec un agent neuf.",
+   "ok": true
+  },
+  {
+   "n": "52 (ajout en tête)",
+   "sorte": "insere_apres",
+   "occurrences_ancre": 1,
+   "ancre": "**Article 10 — Règle de décision (seuils de convention).**\n",
+   "ajout": "- **Champ.** Dossiers balisés seulement (article 2). Les dossiers de l'article 14 n'entrent dans aucun verdict.\n",
+   "ok": true
+  },
+  {
+   "n": "52",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "cellules d'Argon exclues,",
+   "nouveau": "cellules exclues à l'article 3 mises à part,",
+   "ok": true
+  },
+  {
+   "n": "53",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "| Verdict « facultatif » | 0,05 |",
+   "nouveau": "| Verdict « facultatif » | 0,05 |\n| Cellules valides : neuf sur dix au moins | 0,7 |",
+   "ok": true
+  },
+  {
+   "n": "54",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "Section (b) ou duel introuvable (article 3) dans plus d'une cellule sur dix.",
+   "nouveau": "Tour non conforme (article 4) dans plus d'une cellule sur dix.",
+   "ok": true
+  },
+  {
+   "n": "55",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "les résultats avec et sans Argon,",
+   "nouveau": "les résultats avec et sans les cellules exclues à l'article 3, le nombre de tours non conformes par lettre et par tour,",
+   "ok": true
+  },
+  {
+   "n": "56",
+   "sorte": "insere_apres",
+   "occurrences_ancre": 1,
+   "ancre": "les prévisions face aux résultats, l'empreinte du code.\n",
+   "ajout": "\n**Article 14 — Dossiers joués avant la consigne balisée.**\n- *Lesquels.* Percée, dérive v2, mathématiques, antériorité, fusionnée, but, et ceux des huit dossiers isolés achevés au scellement. « Fusionnée » et les cinq questions neutres partagent leur sujet : résultats avec et sans elles.\n- *Aucun duel n'y est repéré.* Survie, nouveauté et inertie d'ordre n'y sont pas calculées.\n- *Mesures, par cellule, sur le texte entier des tours III.1 et III.3.*\n  - Révision de cellule : un moins le coefficient de Jaccard des mots pleins (article 5).\n  - Part des mots pleins nouveaux du tour III.3 présents dans les critiques reçues (article 6).\n  - Gain de références (article 8).\n  - Là où une liste scellée existe, gain de couverture de l'union des réponses.\n- *Repère.* La révision de cellule est donnée à côté de la même grandeur entre lettres différentes d'une même question au tour III.1.\n- *Argon.* Les quatre cellules jouées sans réflexion sont hors des médianes et rapportées à part, appariées au tour III.1 d'origine. L'écart entre les deux versions de ce tour est une simple description.\n- *Épreuve.* Un tour comparé à lui-même donne une révision nulle.\n- *Portée.* Aucun seuil, aucun verdict. Calcul après le scellement, sans lecture préalable d'aucune réponse. Tout changement de définition après le premier calcul rend le résultat exploratoire.\n",
+   "ok": true
+  },
+  {
+   "n": "57 (plan, ajout)",
+   "sorte": "insere_apres",
+   "occurrences_ancre": 1,
+   "ancre": "- L'enveloppe de l'essaim égale le coût mesuré du mode isolé sur la même question, à dix pour cent près.\n",
+   "ajout": "- Les consignes des tours, balises de l'article 4 comprises, sont figées avant le pilote et identiques pour les vingt exécutions.\n",
+   "ok": true
+  },
+  {
+   "n": "57",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "Liste ou expressions de détection modifiées après la première exécution.",
+   "nouveau": "Liste, expressions de détection ou consignes des tours modifiées après la première exécution.",
+   "ok": true
+  },
+  {
+   "n": "58",
+   "sorte": "remplace",
+   "occurrences_ancien": 1,
+   "ancien": "*Recommandation.* Option a. Confiance : 0,75.",
+   "nouveau": "*Recommandation.* Option a pour les dossiers balisés, option c pour les dossiers déjà joués (article 14). Confiance : 0,8.",
+   "ok": true
+  }
+ ],
+ "verifications": [
+  {
+   "n": "44",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "45",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "46",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "47",
+   "nouveau_present": 1,
+   "ancien_present": 1,
+   "ancien_contenu_dans_nouveau": true,
+   "ok": true
+  },
+  {
+   "n": "48",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "49",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "50",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "51",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "52 (ajout en tête)",
+   "ajout_present": 1,
+   "ancre_suivie_de_l_ajout": true
+  },
+  {
+   "n": "52",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "53",
+   "nouveau_present": 1,
+   "ancien_present": 1,
+   "ancien_contenu_dans_nouveau": true,
+   "ok": true
+  },
+  {
+   "n": "54",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "55",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "56",
+   "ajout_present": 1,
+   "ancre_suivie_de_l_ajout": true
+  },
+  {
+   "n": "57 (plan, ajout)",
+   "ajout_present": 1,
+   "ancre_suivie_de_l_ajout": true
+  },
+  {
+   "n": "57",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  },
+  {
+   "n": "58",
+   "nouveau_present": 1,
+   "ancien_present": 0,
+   "ancien_contenu_dans_nouveau": false,
+   "ok": true
+  }
+ ],
+ "defaire_rend_v4": true,
+ "sha256_v5": "681d341cbbb8700c7af6591247969cee4ba6d03abd5f979cf48946042602301a"
+}

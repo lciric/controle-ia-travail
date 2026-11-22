@@ -1,0 +1,762 @@
+# Script des couples du brouillon 4 au brouillon 5 du préenregistrement
+# « lecture des sondes de l'étape B bis par lentilles, v2 » — v1
+#
+# Auteur : rédacteur du brouillon 5 (sous-agent de la session des lentilles, Claude Fable 5.2), 2026-11-19 et 2026-11-20.
+# Ce que fait ce script : il lit le brouillon 4, vérifie son empreinte, applique chaque couple (texte avant, texte après) après
+# avoir vérifié que le texte « avant » paraît une fois et une seule dans le brouillon 4, que les textes « avant » ne se chevauchent
+# pas, puis écrit le brouillon 5 et imprime, pour chaque couple, son identifiant, la correction ou la tâche qu'il sert, son lieu, la
+# ligne du brouillon 4 où commence le texte « avant » et les deux textes. Il vérifie enfin que les deux bornes du bloc séparable
+# paraissent une fois chacune et liste les marqueurs entre doubles chevrons du brouillon 5.
+# Même forme que le script du brouillon 3 au brouillon 4 (`couples-brouillon3-vers-brouillon4-v1.py`), dont il reprend la
+# mécanique. Il ne lit aucune donnée, aucune sonde, aucun score. Bibliothèque standard seulement.
+#
+# Usage : python -I couples-brouillon4-vers-brouillon5-v1.py BROUILLON4 BROUILLON5
+#   (refuse d'écraser un BROUILLON5 qui existe et diffère, R12 ; « - » comme BROUILLON5 : contrôle seul, rien n'est écrit)
+import hashlib
+import re
+import sys
+
+EMPREINTE_BROUILLON_4 = "fe46a9468b8b985a76d4e700a5bed82b3b970851335214216c8319e5f8084e4b"
+
+# (identifiant, correction ou tâche, lieu, texte avant, texte après)
+COUPLES = [
+    # ------------------------------------------------------------------------------------------------
+    ('L01', 'forme', 'tête : bloc « Brouillon 5 », avant le bloc du brouillon 4',
+r'''## Brouillon 4 — différences avec le brouillon 3
+''',
+r'''## Brouillon 5 — différences avec le brouillon 4
+
+- **Ce qu'est ce fichier** : le brouillon 4 (`prereg/lecture-sondes-bbis-par-lentilles-v2-brouillon4.md`,
+  `fe46a9468b8b985a76d4e700a5bed82b3b970851335214216c8319e5f8084e4b`, archivé sans changement, R12) avec les corrections de sa
+  contre-lecture (« contre-lecture 4 » : `docs/notes/neuron-lens-v1/contre-lecture-texte-lecture-lentilles-v2-brouillon4-v1.md`,
+  `08a698577a952669dd3cd75fa7d7bcb7447a5b1e795106b322bf0e377792c17b`, verdict « scellable après corrections » : quatre
+  corrections bloquantes, B1 à B4, dix non bloquantes, N1 à N10), deux marqueurs portés, et ce bloc. Fabriqué par programme, comme
+  le brouillon 4 : des couples (texte avant, texte après), chaque « avant » trouvé une fois et une seule dans le brouillon 4 ;
+  contrôle par `diff` contre le brouillon 4. Pièces de fabrication, scellées, dans
+  `prereg/pieces-lecture-sondes-bbis-par-lentilles-v1/` : `couples-brouillon4-vers-brouillon5-v1.py` (le script, qui porte chaque
+  couple, ce qu'il sert et son lieu ; couples L01 à L43), `sortie-couples-brouillon4-vers-brouillon5-v1.txt` (sa sortie) et
+  `diff-brouillon4-vers-brouillon5-v1.txt` (le `diff`) ; leurs empreintes sont dans leurs compagnons (ce fichier ne peut pas
+  porter l'empreinte d'une pièce qui le fabrique).
+- **Auteur du brouillon 5** : rédacteur neuf, sous-agent de la session des lentilles (`session_01XJ6Mgr9o68QqLiFTLg3zRW`), modèle
+  **Claude Fable 5.2** (`claude-fable-5-2`), sur le mandat
+  `docs/notes/lecture-sondes-bbis-par-lentilles-v1/mandats/mandat-redacteur-texte-lecture-v2-brouillon5-v1.md`
+  (`929cea97827c2c157cf2b61b61242c80f3f1bb21afa151eea25244bdd3757188`, recalculée avant lecture ; section « Texte du mandat » seule
+  lue, la section « Après le brouillon 5 » non lue), parti sur le mot de Lazar « go reco » (note
+  `docs/notes/neuron-lens-v1/mot-lazar-go-redacteur-brouillon5-2026-11-19-v1.md`,
+  `f28f18aeb6bb153ab38033ad0f974b3c162e2c1cd090defb15334f0c493aa838`, branche des lentilles ; ce mot n'a pas, à l'écriture, de
+  ligne de registre que le rédacteur ait vue : il est cité d'après cette seule note). Il n'a écrit ni la v1, ni les brouillons 1 à 4
+  de la v2, ni le critère d'identité, ni le devis, ni l'addendum de concentration, ni aucune contre-lecture ou vérification ; il
+  ne sera ni développeur, ni opérateur, ni lecteur de ce texte. Aucun commit, aucun push, aucune machine, aucune dépense, aucun
+  modèle chargé ; aucun fichier existant modifié ; réseau : `git fetch origin main` seul.
+- **Heures (UTC, `date -u`)** : lecture des pièces à partir du 2026-11-19 à 23:48:15 ; écriture à partir de 23:55 ; fin relevée
+  au pied. Branche des lentilles `claude/brave-galileo-jhp684` à `c12961e14c2a8615e8fbc400fbed0df40fd6f2ab` ; branche principale
+  récupérée à `840c3ecc5660e509e15eef1a64ea4caefc9f2e8e` (daté 2026-11-19T23:49:42Z ; la session des lentilles l'avait donnée à
+  `ef800868`, la récupération l'a avancée).
+- **Pièces lues** : la section « Texte du mandat » du mandat ; `CLAUDE.md` ; la contre-lecture 4, **en entier** ; du brouillon 4,
+  **non lu en entier** : les lignes 1 à 135, 196 à 328, 376 à 428, 627 à 665, 794 à 874, 1043 à 1126, 1196 à 1255, 1359 à 1392,
+  1484 à 1494, 1556 à 1584, 1627 à 1740, 1771 à 1809, 1945 à 1960, 2001 à 2128, 2150 à 2261, 2349 à 2395, le pied, et les lignes
+  rendues par des recherches de mots (titres, marqueurs, « N12 », « N17 », « N18 », « N19 », « retient », « pas été calculée ») ;
+  la tête et la fin du script des couples du brouillon 4 et le début et la fin de sa sortie (pour en reprendre la forme) ; du
+  critère d'identité version 8 (`541bb86b…`) : ses titres, le début du § 5 (l. 352 à 375), le § 6 entier (l. 444 à 469),
+  « Étiquettes » du § 7 (l. 487 à 492) et la ligne (g) de son § 0.4 ; du programme de comparaison version 4 (`4a0f3b2c…`) : les
+  lignes 505 à 540 (libellés des déclencheurs) et les lignes de sa constante `CRITERE` ; de l'addendum de concentration
+  (`7c738708…`) : les lignes rendues par une recherche de « EC-6 », de « arrêt nommé » et des noms de clés du registre propre
+  (pour savoir s'il nomme une ligne de registre à son arrêt : il n'en nomme pas) ; de la contre-lecture 3 (`42024aa9…`, branche
+  principale) : la liste de ses derniers titres, l'annexe B entière et le début de l'annexe C ; les deux notes des mots de Lazar
+  sur la règle de départage (`e0ad5502…`) et sur le départ de ce rédacteur (`f28f18ae…`), entières ; de la note sur la garde
+  d'égalité (`dbd1e514…`), l'empreinte seule, recalculée sur les deux branches ; le validateur `src/controle_ia/prereg.py`
+  (`3b2e3ee5…`, l. 1 à 80) ; la v1 scellée (`ca5066d7…`) par le seul programme de contrôle de l'annexe B, sans lecture. **Non
+  lus** : le devis version 9, la version 4 du critère, les vérifications de l'addendum, le rapport du lecteur désigné sur le bloc
+  séparable, les brouillons 1 à 3 : aucune correction n'en avait besoin au-delà de ce que la contre-lecture 4 en rapporte.
+- **Expositions, déclarées** (R4) :
+  - *V, le verdict scellé de la tranche de l'ajustement de nos lentilles* (`3a9b947e…`, lecture permise par le mandat, limitée
+    aux lignes que la correction B2 exige) : la liste de ses titres ; la ligne 30 entière (ligne de la mesure B-7 : libellé
+    « autre », ses valeurs par couche et ses marges, sa description) ; le début de la ligne 29 (160 caractères : libellé
+    « intermédiaire » de la mesure B-6 et le début de ses valeurs) ; le début des lignes 21 à 23 (60 caractères : en-tête de la
+    table). Le reste de V n'a pas été ouvert. Tout porte sur nos lentilles, rien sur les sondes.
+  - *Registres de la branche principale, par recherche de clés nommées* : de `registres/go.md`, les lignes GO-2026-11-19-78 et
+    GO-2026-11-19-92, entières ; de `registres/decisions.md`, les lignes R-3994 et R-3995, entières. Elles ne portent que des
+    noms, des heures et des états de cette chaîne ; aucune aire, aucun score, aucune issue d'une chaîne cloisonnée n'y paraît.
+    Le titre du dernier commit de la branche principale (une ligne sur un « barreau 5 » : noms et comptes d'essais d'une autre
+    chaîne, sans mesure) a été vu en relevant l'état du dépôt.
+  - *Chiffres vus sur données synthétiques* : ceux que la contre-lecture 4 et le brouillon 4 citent de l'addendum de
+    concentration (fréquence des égalités).
+- **Jamais ouverts** : aucun fichier de la liste « Jamais ouverts » de la v1 ; aucune sortie, aucun score, aucune table, aucune
+  lecture, aucun verdict de l'apprentissage des sondes sur la tâche ; aucune table ni sortie de la lecture par la lentille publique ;
+  aucune branche `donnees/*` ou `calcul/*` ; aucun fichier sous `diag/` ou `runs/` ; rien sous `docs/verdicts/` ; aucun fichier
+  « consigne-privee » ou « conception-ii-b » ; rien de `brouillons/ii-b-saboteur-budget-v1/` ; aucune sortie de P3, P3-bis, T0.6,
+  T0.7, de l'étape B, du bras d'attaque ni du saboteur à budget. **Aucun choix de ce brouillon n'a pu être fait d'après une
+  sortie de la chaîne des sondes.**
+- **Refus d'outil** : état au pied du texte.
+
+**Lieux des blocs, déclarations et pieds des brouillons 1 à 4 que ce brouillon réécrit, un à un** (une correction l'exige pour
+chacun ; tout le reste de ces blocs, déclarations d'auteur, dates et pieds compris, est inchangé et décrit le brouillon qu'il
+nomme) :
+
+| lieu | ce qui change | pourquoi |
+|---|---|---|
+| bloc « Brouillon 4 », première puce (couple L02) | la phrase « Tout le reste […] est inchangé » reçoit son exception | contre-lecture 4, N4 |
+| bloc « Brouillon 4 », « Auteur » (couples L03 et L04) | identifiant de la session des lentilles ; le mot « go pour le brouillon 4, option 3 » dit mot rapporté | B1 ; N9 (R-3994) |
+| bloc « Brouillon 4 », table des écarts de la version 8 (couple L05) | une ligne ajoutée, E7 | B3 |
+| bloc « Brouillon 3 », point (a) (couple L06) | la parenthèse sur la portée de la décision GO-2026-11-19-47 | N8 (R-3995) |
+| en-tête de la v2, table des marqueurs et son état (couple L07) | deux marqueurs dits portés ; état au brouillon 5 | mandat, tâche 3 |
+| « Changements de la v1 à la v2 », mise à jour du brouillon 4 (couple L08) | « 814 lignes » devient « 813 lignes (814 éléments […]) » | N5 |
+| « Ce que l'auteur savait », exposition, point 5 (couple L14 ; texte du brouillon 2) | les deux identifiants de session reçoivent celui de la session qui les a reprises | B1 |
+| « Hypothèse », alinéa « Brouillon 4 » des réserves, et déclaration du bloc séparable (couples L15 et L18) | une phrase « Brouillon 5 » ajoutée à chacun | B2 |
+| « Nœuds », N18 et N19 (couples L39 à L41 ; texte du brouillon 4) | N18 dit tranché, N19 dit clos | N7, N8 |
+
+Les pieds des brouillons 1, 2 et 4 ne sont pas touchés ; un pied du brouillon 5 est ajouté après eux (couple L43).
+
+**Table de traitement** (contre-lecture 4, puis tâches du mandat ; « faite » ou « refusée » avec sa raison ; les couples sont
+ceux des pièces de fabrication)
+
+| objet | traitement | où (couples) |
+|---|---|---|
+| **B1** identifiants de session | **faite**, dans les mots de la contre-lecture. L'heure de la reprise de la session des lentilles n'est pas dans les lignes lues : seule la date est écrite | bloc « Brouillon 4 » (L03) ; exposition, point 5 (L14) |
+| **B2** couche 15 : lieu cité dans V et libellé de V | **faite**, dans les mots de la contre-lecture, vérifiés sur V (titre « Verdict, en mots simples » ; ligne B-7, libellé « autre », mots « la couche 15 est intermédiaire, bien tard » ; ligne B-6, libellé « intermédiaire »). Deux phrases ajoutées pour que le lecteur désigné sache ce qui a bougé (L15, L18). **Aucune valeur chiffrée ne bouge** ; bornes du bloc séparable intactes | Hypothèse (L15 à L19) ; table des changements, n° 23 (L12) |
+| **B3** écart E7 : phrase du verdict au déclencheur (vi) | **faite, et précisée** : ligne E7 ; champ de la fiche ; phrase de tête ; essai (cas sain et artefacts). Au-delà du texte proposé : la forme que le code contrôle est écrite (début, fin, milieu), le déclencheur est reconnu par son entrée « (vi) » dans la sortie du programme, et une ligne d'arrêt est ajoutée, pour que l'arrêt « forme mal comprise » de l'essai ait sa ligne (R5) | table des écarts (L05) ; Entrées, fiche (L23) ; Critères (L29) ; Liste d'arrêt (L34) ; Code neuf (L37) |
+| **B4** première passe arrêtée sur une garde d'égalité | **faite, la règle la plus prudente, étendue et justifiée** : les mots de la contre-lecture sont repris ; en plus, « non calculée » reçoit un sens que le code lit au registre propre (jamais lancée : ni `ENTREES-LENTILLES-BBIS` ni `TABLES-LENTILLES-BBIS`), et **toute** première passe lancée et non achevée n'est pas remplacée — arrêt sur une garde d'égalité, ou sur une autre ligne d'arrêt de la v1 : le trou est le même (une passe arrêtée par une règle scellée, rendue par une passe sans cette règle), et l'addendum de concentration ne nomme aucune ligne de registre qui distingue ses arrêts des autres. La lentille des logits est traitée comme la lentille publique (la première passe lit les deux). Phrase gelée de tête ajoutée ; ligne d'arrêt ; essais. **Portée à Lazar pour information au scellement** (« Nœuds ») | Métrique, 6 (L25) ; Plan, 11 (L27) ; Critères (L32) ; Liste d'arrêt (L34) ; Code neuf (L37) ; Nœuds (L41) |
+| **N1** phrase « notre S seule » | **faite** | Critères (L30) |
+| **N2** fiche muette sur l'achèvement de la seconde course | **faite, et précisée** : motif propre, dans les mots de la contre-lecture, aux trois lieux. En plus : la voie du mot de Lazar (ligne `NOEUD-PALIER-2-AJUSTEMENT-SEUL-LENTILLES-BBIS`) n'est pas ouverte à une fiche muette, parce que la phrase « n'ont pas été refaites », qu'elle ferait écrire, serait fausse si la course a été menée en entier — la raison même de N2 ; la ligne « Course du réajustement » reçoit une quatrième valeur | Entrées (L20) ; Critères (L28) ; Liste d'arrêt (L33) ; Code neuf (L36, L37) |
+| **N3** garde de la fonction de lecture, phrase mal dite | **faite** | Plan, 5 (L26) |
+| **N4** phrase « Tout le reste […] est inchangé » | **faite** | bloc « Brouillon 4 » (L02) |
+| **N5** « 814 lignes » | **faite** | Changements (L08) |
+| **N6** une lentille au premier palier, l'autre au deuxième | **faite** : les deux lignes de verdict d'ensemble sont écrites, chacune nommant sa lentille ; réserves de la ligne du deuxième palier : celles de cette lentille ; essai | Critères (L31) ; Code neuf (L37) |
+| **N7** nœud N18 tranché, option (a) | **faite** : marqueur remplacé par la note et la ligne de registre ; formes conditionnelles retirées (« Métrique », point 6 ; fin des essais ; fin du nœud) ; N18 gardé, daté, sous un titre « tranché » | Métrique, 6 (L24) ; Code neuf (L37) ; Nœuds (L39, L40) ; table des marqueurs (L07) ; table des changements (L11, L13) |
+| **N8** nœud N19, lecture de la session principale | **faite** : marqueur remplacé par la phrase de R-3995, citée ; nœud repris ; ligne 20 de la table des changements reprise ; parenthèse du bloc du brouillon 3 | Nœuds (L41) ; table des changements (L10) ; bloc « Brouillon 3 » (L06) ; table des marqueurs (L07) |
+| **N9** mot « go pour le brouillon 4, option 3 » | **faite** : consigné comme mot rapporté (R-3994) | bloc « Brouillon 4 » (L04) |
+| **N10** étiquettes du programme version 4 | **faite** : une phrase dans la fiche ; un essai | Entrées, fiche (L23) ; Code neuf (L37) |
+| **marqueur** `MOT_DE_LAZAR_SUR_LA_REGLE_DE_DEPARTAGE` (nom sans chevrons) | **porté** : note `e0ad5502…` et ligne GO-2026-11-19-92, vérifiée sur la branche principale (`840c3ecc…`) ; à confirmer par la session principale | Nœuds, N18 (L39) |
+| **marqueur** `MOT_DE_LAZAR_GO_47_POUR_LA_V2` (nom sans chevrons) | **porté** : phrase de R-3995, vérifiée sur la branche principale ; à confirmer par la session principale | Nœuds, N19 (L41) |
+| **mot « go pour le brouillon 4 »** | **fait** : voir N9 ; ligne R-3994 vérifiée sur la branche principale | L04 |
+| **autres marqueurs ; table des marqueurs** | **faite** : trois portés, **neuf restent** (liste et porteurs : table des marqueurs, état au brouillon 5) ; aucun ajouté | en-tête de la v2 (L07) |
+| **N12 et N17** | **laissés ouverts, aucun tranché.** Le texte est écrit pour chaque option : N12, options (a), (b), (c) dans « Entrées » ; N17, options (a) et (b) à la puce « par gabarit », avec ce que le défaut (b) au deuxième palier demande (un addendum de recopie écrit après le verdict d'identité, contre-lu, scellé, inscrit par une clé nommée). L'option qui vaut est lue dans la pièce que nomme `GO-LENTILLES-BBIS-V2` ; pièce muette : le défaut du nœud | Entrées (L21, L22) ; Liste d'arrêt (L33) ; Lignes de registre (L35) ; Code neuf (L37) ; Nœuds (L38, L39) |
+| **table « Changements de la v1 à la v2 »** | **faite** : lignes 20, 21, 23 et 24 reprises ; lignes 25 à 29 ajoutées, une par changement neuf | Changements (L10 à L13) |
+| **bloc « Changements du brouillon 4 au brouillon 5 »** | **fait** : ci-dessous, une ligne par changement | ce bloc |
+| **contrôle par programme des lignes de la v1** | **rejoué** (programme de l'annexe B de la contre-lecture 3, recopié mot pour mot) sur la v1 `ca5066d7…` et sur ce brouillon : **791 lignes égales, aucune supprimée, 10 prolongées, 13 réécrites** — le compte ne change pas ; seule la quatrième valeur de sa première ligne de sortie, le nombre de lignes insérées, change (0000 au lieu de 908) | Changements (L09) ; pied (L43) |
+
+**Changements du brouillon 4 au brouillon 5** (une ligne par changement ; « règle » : le changement fixe ou change une règle
+de la seconde passe ; « lettre » : il corrige des mots sans changer une règle)
+
+| n° | changement | sorte | couples |
+|---|---|---|---|
+| 1 | identifiants de session corrigés (auteur du brouillon 4 ; exposition, point 5) | lettre | L03, L14 |
+| 2 | couche 15 : lieu cité dans V (« Verdict, en mots simples », table, ligne B-7) et libellé de V pour cette mesure (« autre » ; « intermédiaire, bien tard » est un mot de sa description) ; aucune valeur changée | lettre | L12, L15 à L19 |
+| 3 | écart E7 : la phrase que le verdict d'identité écrit au déclencheur (vi) a son champ dans la fiche, sa forme contrôlée, sa place dans la phrase de tête, sa ligne d'arrêt et son essai | règle | L05, L23, L29, L34, L37 |
+| 4 | une première passe lancée et non achevée (garde d'égalité ou autre arrêt de la v1) n'est pas « non calculée » : la seconde passe ne la remplace pas et n'écrit aucune phrase de la lentille publique ni de la lentille des logits avant le nœud de la v1 | règle | L25, L27, L32, L34, L37 |
+| 5 | phrase « notre S seule » : dite construite par la règle du critère et égale, par programme, à cette construction | lettre | L30 |
+| 6 | fiche muette sur l'achèvement de la seconde course : non lue sous un motif propre, sans voie par le mot de Lazar ; quatrième valeur de la ligne « Course du réajustement » | règle | L20, L28, L33, L36 |
+| 7 | garde de la fonction de lecture : « dont l'écart de score est nul » | lettre | L26 |
+| 8 | une lentille à chaque palier : deux lignes de verdict d'ensemble, chacune nommant sa lentille, réserves par lentille | règle | L31, L37 |
+| 9 | nœud N18 tranché par Lazar, option (a) : marqueur porté, formes conditionnelles retirées | lettre (la règle écrite est celle retenue) | L07, L11, L13, L24, L37, L39, L40 |
+| 10 | nœud N19 clos par la lecture de la session principale (R-3995) : marqueur porté | lettre | L06, L07, L10, L13, L41 |
+| 11 | mot « go pour le brouillon 4, option 3 » dit mot rapporté (R-3994) | lettre | L04 |
+| 12 | étiquettes du programme version 4 : la version du critère n'en est pas tirée | règle (une interdiction de plus) | L23, L37 |
+| 13 | nœuds N12 et N17 laissés ouverts : texte écrit pour chaque option ; issue lue dans la pièce de `GO-LENTILLES-BBIS-V2` ; clé conditionnelle `ADDENDUM-RECOPIE-IDENTITE-LENTILLES-BBIS-V2` | règle, conditionnelle | L21, L22, L33, L35, L37, L38, L39 |
+| 14 | compte des lignes de la v1 : « 813 lignes (814 éléments […]) » ; contrôle rejoué | lettre | L08, L09 |
+| 15 | phrase « Tout le reste […] est inchangé » du bloc du brouillon 4 : exception écrite | lettre | L02 |
+| 16 | table des marqueurs et son état ; table des changements ; entrée de contre-lecture ; pied | forme | L07, L10 à L13, L42, L43 |
+
+**Choix du rédacteur au-delà de la lettre du mandat ou de la contre-lecture** (chacun à juger par qui vérifie ce brouillon) :
+(1) B4 étendue à toute première passe lancée et non achevée, et à la lentille des logits, avec un critère lu au registre propre
+et une phrase gelée de tête ; (2) B3 : forme contrôlée de la phrase, écrite, et ligne d'arrêt ; (3) N2 : aucune voie par le mot
+de Lazar pour une fiche muette, et quatrième valeur de la ligne « Course du réajustement » ; (4) N12 et N17 : l'option qui vaut
+est lue dans la pièce que nomme `GO-LENTILLES-BBIS-V2`, sous une forme fixée, et le défaut du nœud vaut si la pièce est muette ;
+une clé de registre conditionnelle est nommée pour l'addendum de recopie ; (5) deux phrases « Brouillon 5 » ajoutées dans
+« Hypothèse » (dont une dans la déclaration du bloc séparable) pour le lecteur désigné ; (6) une phrase ajoutée à l'entrée de
+contre-lecture sur ce qu'il faut donner à qui vérifie ce brouillon ; (7) le mot de départ de ce rédacteur est cité d'après sa
+seule note, faute de ligne de registre vue.
+
+**Nœuds pour Lazar** : **aucun nœud neuf de décision.** Pour information au scellement : la règle de B4 (une première passe
+lancée et non achevée n'est pas remplacée ; aucune phrase de la lentille publique avant le nœud de la v1) ; un autre choix lui
+serait à soumettre. Restent ouverts, avec leur défaut vers le 2026-11-21 : **N12** (part propre à l'ajustement seul ; défaut
+(a), que le texte porte) et **N17** (lecture « par gabarit » ; défaut : (b) au deuxième palier, (a) au premier) — **si le défaut
+de N17 tombe, une lentille au deuxième palier ne sera lue qu'après un addendum de recopie écrit après le verdict d'identité.**
+N18 est tranché (option (a), GO-2026-11-19-92) ; N19 est clos (R-3995).
+
+**Reste à faire après ce brouillon** : la vérification de ses corrections par le contre-lecteur du brouillon 4 (R2, R-3735) ; le
+couple de la couche 15 à donner au lecteur désigné (couples L16, L17 et L19) ; les neuf marqueurs ; la confirmation, par la
+session principale, des trois marqueurs portés par des rédacteurs ; l'issue de N12 et de N17 dans la pièce de
+`GO-LENTILLES-BBIS-V2`.
+
+## Brouillon 4 — différences avec le brouillon 3
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L02', 'N4', 'bloc « Brouillon 4 », première puce : la phrase « Tout le reste […] est inchangé »',
+r'''l'empreinte d'une pièce qui le fabrique). **Tout le reste — en-têtes, déclarations d'auteur, dates et pieds des brouillons 1 à 3 —
+  est inchangé et décrit le brouillon qu'il nomme.**
+''',
+r'''l'empreinte d'une pièce qui le fabrique). **Tout le reste — en-têtes, déclarations d'auteur, dates et pieds des brouillons 1 à 3 —
+  est inchangé et décrit le brouillon qu'il nomme**, hors trois retouches marquées « brouillon 4 » dans le bloc du brouillon 3
+  (couples K02 à K04) et une note de tête dans « Traitement de la contre-lecture 3 » (couple K10) (exception écrite au
+  brouillon 5 ; contre-lecture 4, N4).
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L03', 'B1', 'bloc « Brouillon 4 », « Auteur » : identifiant de la session des lentilles',
+r'''- **Auteur du brouillon 4** : rédacteur neuf, sous-agent de la session des lentilles (`session_013QMaykLXtozHttcSQ4ke1s`), modèle
+''',
+r'''- **Auteur du brouillon 4** : rédacteur neuf, sous-agent de la session des lentilles (`session_01XJ6Mgr9o68QqLiFTLg3zRW`, qui a
+  repris sur un autre compte la session `session_013QMaykLXtozHttcSQ4ke1s` ; identifiant corrigé au brouillon 5), modèle
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L04', 'N9 ; mandat, tâche 3', 'bloc « Brouillon 4 », « Auteur » : le mot « go pour le brouillon 4, option 3 »',
+r'''  `9ac9ed2bf65596198f0c51a4a06564919dd58b89517262feae03599c18749f67`). Il n'a écrit ni la v1, ni les brouillons 1 à 3 de la v2, ni le
+''',
+r'''  `9ac9ed2bf65596198f0c51a4a06564919dd58b89517262feae03599c18749f67` ; brouillon 5 : ce mot est consigné comme **mot rapporté**
+  par la session des lentilles et sa note ; la session principale ne l'a pas retrouvé à la source dans les pages relues et ne
+  l'a pas inscrit comme accord ; il ouvrait un travail sans dépense, sous l'option 3 déjà inscrite, GO-2026-11-19-78 : ligne
+  R-3994 de `registres/decisions.md`, branche principale). Il n'a écrit ni la v1, ni les brouillons 1 à 3 de la v2, ni le
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L05', 'B3', 'bloc « Brouillon 4 », table des écarts de la version 8 du critère : ligne E7 ajoutée après E6',
+r'''les deux champs de la fiche qui la citaient sont repris | CI, § 4, § 6 et § 7 | Entrées (condition, fiche) ; Liste d'arrêt ; Code neuf |
+''',
+r'''les deux champs de la fiche qui la citaient sont repris | CI, § 4, § 6 et § 7 | Entrées (condition, fiche) ; Liste d'arrêt ; Code neuf |
+| E7. **Phrase du verdict au déclencheur (vi)** (ligne ajoutée au brouillon 5 ; contre-lecture 4, B3 : écart que le brouillon 4 avait manqué). Au deuxième palier, pour R, quand le programme rend le déclencheur (vi) et que l'audit ne trouve aucun contrôle manqué, le verdict d'identité écrit une phrase de plus (« pour R, [31 matrices des moitiés égales sur 31 \| série … inchangée] malgré des octets d'ajustement différents ; audit sans contrôle manqué ») ; le libellé ne change pas, et aucune identité n'en est tirée. La version 4 du critère n'avait pas cette phrase ; ce texte recopie le verdict mot pour mot et arrête sur une forme inconnue : sans règle, cette phrase aurait arrêté la seconde passe, ou aurait été recopiée sans règle | CI, § 6 | Entrées (fiche) ; Critères ; Liste d'arrêt ; Code neuf |
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L06', 'N8', 'bloc « Brouillon 3 », point (a) : portée de la décision GO-2026-11-19-47',
+r'''**la session principale dit si ce mot couvre la version 2** ; brouillon 4 : aucune ligne de registre
+  trouvée, marqueur porté au nœud N19). Le brouillon 2 gardait la statistique
+''',
+r'''**la session principale dit si ce mot couvre la version 2** ; brouillon 4 : aucune ligne de registre
+  trouvée, marqueur porté au nœud N19 ; brouillon 5 : la session principale l'a dit, ligne R-3995 — aucune ligne n'étend ce mot
+  à la version 2, et il n'en faut pas : la version 2, texte neuf, porte cette statistique par sa propre conception et cite ce
+  mot comme son origine ; nœud N19, clos). Le brouillon 2 gardait la statistique
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L07', 'mandat, tâche 3 ; N7 ; N8', 'en-tête de la v2, table des marqueurs : les deux lignes ajoutées au brouillon 4, et l\'état des marqueurs',
+r'''  | MOT_DE_LAZAR_GO_47_POUR_LA_V2 (ajouté au brouillon 4) | Nœuds, N19 | la session principale | la ligne de registre, ou le mot de Lazar, qui dit que la décision GO-2026-11-19-47 (chaque direction nulle jugée sans elle-même), donnée pour le texte scellé de la v1, vaut pour la version 2 |
+  | MOT_DE_LAZAR_SUR_LA_REGLE_DE_DEPARTAGE (ajouté au brouillon 4) | Nœuds, N18 | la session principale, d'après le mot de Lazar | l'option que Lazar retient pour l'égalité de score (nœud sans défaut), avec sa ligne de registre ; si ce n'est pas l'option (a), le texte est repris avant le scellement |
+
+  **État des marqueurs au brouillon 4** : **un porté** (VERIFICATION_DU_BLOC_V, par le rédacteur du brouillon 4, à confirmer par
+  la session principale) ; **onze restent** : les neuf autres de la table du brouillon 2, portés par qui la table le dit
+  (la session principale pour sept, la session des lentilles pour un, qui écrit la version pour un), et les deux ajoutés par ce
+  brouillon, portés par la session principale. La pièce des différences du brouillon 2 à la version aura à lister aussi les
+  changements des brouillons 3 et 4, dont les pièces de fabrication existent.
+''',
+r'''  | MOT_DE_LAZAR_GO_47_POUR_LA_V2 (ajouté au brouillon 4) — **porté au brouillon 5** | Nœuds, N19 | porté par le rédacteur du brouillon 5, sur son mandat, d'après la ligne R-3995 de la session principale ; **à confirmer par la session principale** | la lecture de la session principale (ligne R-3995 de `registres/decisions.md`) : aucune ligne n'étend la décision GO-2026-11-19-47 (chaque direction nulle jugée sans elle-même) à la version 2, et il n'en faut pas ; elle régit l'addendum d'écart au texte scellé de la v1 ; la version 2, texte neuf, porte la statistique corrigée par sa propre conception et cite cette décision comme son origine |
+  | MOT_DE_LAZAR_SUR_LA_REGLE_DE_DEPARTAGE (ajouté au brouillon 4) — **porté au brouillon 5** | Nœuds, N18 | porté par le rédacteur du brouillon 5, sur son mandat, d'après la note de la session des lentilles et la ligne GO-2026-11-19-92 inscrite par la session principale ; **à confirmer par la session principale** | l'option que Lazar a retenue pour l'égalité de score : option (a), identifiant de jeton croissant (mot « go reco », 2026-11-19, 22:42:56Z), avec sa note et sa ligne de registre |
+
+  **État des marqueurs au brouillon 5** : **trois portés**, tous par un rédacteur et tous **à confirmer par la session
+  principale** : VERIFICATION_DU_BLOC_V (au brouillon 4), MOT_DE_LAZAR_GO_47_POUR_LA_V2 et
+  MOT_DE_LAZAR_SUR_LA_REGLE_DE_DEPARTAGE (au brouillon 5). **Neuf restent**, ceux de la table du brouillon 2 qui ne sont pas
+  portés, par qui la table le dit : la session principale pour sept (DECLARATION_DE_LAZAR_SUR_LE_VERDICT,
+  DECLARATION_DE_LA_SESSION_PRINCIPALE, ETAT_DU_REGISTRE_PROPRE_A_L_ANCRE, ETAT_DE_LA_PREMIERE_PASSE_AU_SCELLEMENT,
+  DECISION_DATEE_DE_LA_RETENUE, CONTRE_LECTURE_ET_SCELLEMENT_DU_CRITERE, CONTRE_LECTURE_4), la session des lentilles pour un
+  (DECLARATION_DE_LA_SESSION_DES_LENTILLES), qui écrit la version pour un (DIFFERENCES_DU_BROUILLON_2_A_LA_VERSION). Aucun
+  marqueur n'est ajouté par le brouillon 5. (État au brouillon 4, pour mémoire : un porté, onze restants.) La pièce des
+  différences du brouillon 2 à la version aura à lister aussi les changements des brouillons 3, 4 et 5, dont les pièces de
+  fabrication existent.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L08', 'N5', '« Changements de la v1 à la v2 », mise à jour du brouillon 4 : nombre de lignes de la v1',
+r'''brouillon). Depuis le brouillon 3, la correction de la statistique réécrit des lignes de la v1 : sur ses 814 lignes, 791 sont
+''',
+r'''brouillon). Depuis le brouillon 3, la correction de la statistique réécrit des lignes de la v1 : sur ses 813 lignes (814
+éléments avec la ligne vide finale, comme compte l'annexe B de la contre-lecture 3 ; précision du brouillon 5), 791 sont
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L09', 'mandat, tâche 6', '« Changements de la v1 à la v2 » : mise à jour du brouillon 5, après celle du brouillon 4',
+r'''porté par l'addendum de concentration de la v1, scellé, non par ce texte**, qui ne régit que la seconde passe.
+''',
+r'''porté par l'addendum de concentration de la v1, scellé, non par ce texte**, qui ne régit que la seconde passe.
+
+**Mise à jour du brouillon 5** (contrôle rejoué par son rédacteur, avec le même programme, recopié mot pour mot de l'annexe B
+de la contre-lecture 3, sur la v1 `ca5066d7…` et sur ce brouillon) : **le compte ne change pas** — 791 lignes égales, aucune
+supprimée, 10 prolongées (182, 320, 351, 356, 358, 385, 476, 478, 480, 600) et 13 réécrites (1, 147, 263, 321, 322, 335, 336,
+337, 339, 461, 465, 466, 467). Les changements du brouillon 5 (lignes 25 à 29 de la table, et les lignes 20, 21, 23 et 24
+reprises) ne touchent que des passages ajoutés par la v2 ou par ses brouillons : aucune ligne de la v1 de plus n'est réécrite.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L10', 'N8 ; mandat, tâches 3 et 5', 'table des changements de la v1 à la v2, n° 20 : portée de la décision GO-2026-11-19-47',
+r'''(décision de Lazar GO-2026-11-19-47, donnée pour la v1 ; sa portée pour la v2 : N19) |
+''',
+r'''(décision de Lazar GO-2026-11-19-47, donnée pour la v1). Brouillon 5 : cette décision ne s'étend pas à la v2 et n'a pas à s'y étendre ; la v2, texte neuf, porte la statistique corrigée par sa propre conception et cite cette décision comme son origine (lecture de la session principale, R-3995 ; nœud N19, clos) |
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L11', 'N7 ; mandat, tâche 5', 'table des changements de la v1 à la v2, n° 21 : le nœud N18',
+r'''vérification de l'addendum de concentration, § 3 ; le choix de la règle est un nœud ouvert (N18) |
+''',
+r'''vérification de l'addendum de concentration, § 3 ; le choix de la règle était le nœud N18, tranché par Lazar le 2026-11-19 : option (a), identifiant croissant (GO-2026-11-19-92 ; brouillon 5) |
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L12', 'B2', 'table des changements de la v1 à la v2, n° 23 : mots de V pour la couche 15',
+r'''reprennent les mots de V (« intermédiaire » à la couche 15, au sens de V pour cette mesure) ;''',
+r'''reprennent les mots de V (« intermédiaire, bien tard » à la couche 15, mot de la description de V ; libellé de V pour B-7 : « autre » ; lieu et libellé corrigés au brouillon 5) ;'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L13', 'N7 ; N8 ; mandat, tâche 5', 'table des changements de la v1 à la v2 : n° 24 repris ; n° 25 à 29 ajoutés',
+r'''nœuds N18 (ouvert, sans défaut) et N19 (marqueur) | Plan (1) ; Liste d'arrêt ; Lignes de registre ; Nœuds | vérification de l'addendum de concentration, § 3, points 1 et 5 |
+''',
+r'''nœuds N18 (ouvert au brouillon 4 ; tranché, option (a), au brouillon 5) et N19 (marqueur au brouillon 4 ; clos au brouillon 5) | Plan (1) ; Liste d'arrêt ; Lignes de registre ; Nœuds | vérification de l'addendum de concentration, § 3, points 1 et 5 |
+| 25 | **phrase du verdict au déclencheur (vi)** (brouillon 5) : au deuxième palier, pour notre R, la phrase que le verdict d'identité écrit quand le programme rend le déclencheur (vi) et que l'audit ne trouve aucun contrôle manqué est lue dans un champ de la fiche, contrôlée dans sa forme et recopiée après la phrase permise ; forme inconnue ou champ incohérent : arrêt | Entrées (fiche) ; Critères ; Liste d'arrêt ; Code neuf | CI, § 6, écart de sa version 8 manqué au brouillon 4 (E7) ; contre-lecture 4, B3 |
+| 26 | **première passe lancée et non achevée** (brouillon 5) : arrêtée sur une garde d'égalité de l'addendum de concentration, ou sur une autre ligne d'arrêt de la v1, elle n'est pas « non calculée » ; la seconde passe ne la remplace pas pour la lentille publique ni pour la lentille des logits et n'écrit aucune de leurs phrases avant le nœud de la v1 ; « non calculée » veut dire jamais lancée, lu au registre propre | Métrique (6) ; Plan (11) ; Critères ; Liste d'arrêt ; Code neuf | contre-lecture 4, B4 : sans cette règle, une lecture arrêtée par une garde scellée était rendue par une passe sans cette garde (R5 : aucun repli silencieux) |
+| 27 | **cas mal couverts de la condition de lecture** (brouillon 5) : une lentille au premier palier et l'autre au deuxième (deux lignes de verdict d'ensemble, chacune nommant sa lentille ; réserves par lentille) ; fiche muette sur l'achèvement de la seconde course (non lue, motif propre, sans voie par le mot de Lazar ; quatrième valeur de la ligne « Course du réajustement ») ; les étiquettes du programme version 4 ne disent pas la version du critère | Entrées ; Critères ; Liste d'arrêt ; Code neuf | contre-lecture 4, N6, N2, N10 |
+| 28 | **nœuds N12 et N17 laissés ouverts, texte écrit pour chaque option** (brouillon 5) : N12, options (a), (b) et (c) ; N17, options (a) et (b), avec l'addendum de recopie que demande l'option (b) et sa clé `ADDENDUM-RECOPIE-IDENTITE-LENTILLES-BBIS-V2` ; l'option qui vaut est lue dans la pièce que nomme `GO-LENTILLES-BBIS-V2` ; pièce muette : le défaut du nœud | Entrées ; Liste d'arrêt ; Lignes de registre ; Code neuf ; Nœuds | mandat du rédacteur du brouillon 5 ; contre-lecture 4, point 4 (le défaut de N17 au deuxième palier demande un addendum après le verdict d'identité) |
+| 29 | **corrections de lettre** (brouillon 5) : identifiants de session ; lieu et libellé de V pour la couche 15 (ligne 23) ; phrase « notre S seule » dite égale, par programme, à la construction du critère ; phrase de la garde de la fonction de lecture ; nombre de lignes de la v1 ; mot « go pour le brouillon 4 » dit mot rapporté | bloc « Brouillon 4 » ; Ce que l'auteur savait ; Hypothèse ; Critères ; Plan (5) ; Changements | contre-lecture 4, B1, B2, N1, N3, N4, N5, N9 |
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L14', 'B1', '« Ce que l\'auteur savait », exposition, point 5 : identifiants des deux sessions',
+r'''5. *Les deux sessions.* La session des lentilles (`session_013QMaykLXtozHttcSQ4ke1s`), qui a mandaté les deux rédacteurs, déclare :
+   <<DECLARATION_DE_LA_SESSION_DES_LENTILLES>>. La session principale (`session_013QMayjsoZJFBUCqcnvD5h1`), qui scelle, inscrit les
+''',
+r'''5. *Les deux sessions.* La session des lentilles (`session_013QMaykLXtozHttcSQ4ke1s`, reprise sur un autre compte le 2026-11-19 par
+   `session_01XJ6Mgr9o68QqLiFTLg3zRW`), qui a mandaté les rédacteurs, déclare :
+   <<DECLARATION_DE_LA_SESSION_DES_LENTILLES>>. La session principale (`session_013QMayjsoZJFBUCqcnvD5h1`, reprise le 2026-11-19 à
+   15:02Z par `session_01XJ6Mgr8BN6UanALsQatc5E`, R-3901), qui scelle, inscrit les
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L15', 'B2', '« Hypothèse », réserves tirées de V, alinéa « Brouillon 4 » : phrase « Brouillon 5 » ajoutée',
+r'''reprise ci-dessous dans les mots de V. La vérification par le lecteur de la seconde passe reste due.
+''',
+r'''reprise ci-dessous dans les mots de V. La vérification par le lecteur de la seconde passe reste due.
+**Brouillon 5** (contre-lecture 4, B2) : le lieu cité dans V et le libellé que V donne à cette mesure étaient mal dits au
+brouillon 4 ; ils sont corrigés ci-dessous et dans le bloc séparable. Les mots cités de V ne changent pas.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L16', 'B2', '« Hypothèse », réserve (R-c) : lieu cité dans V',
+r'''dans les mots de V (§ 2, ligne B-7) :''',
+r'''dans les mots de V (« Verdict, en mots simples », table, ligne B-7, dont le libellé est « autre ») :'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L17', 'B2', '« Hypothèse », réserve (R-c) : ce que V dit de la couche 15',
+r'''**à la couche 15, V la dit
+  « intermédiaire »** — « intermédiaire » au sens de V pour cette seule mesure, sans rapport avec le libellé « intermédiaire »
+  de la lecture par concentration de ce texte (« Seuil ») ;''',
+r'''**à la couche 15, V la dit
+  « intermédiaire, bien tard »** — mot de la description de V pour cette seule mesure, dont le libellé est « autre » : ce n'est
+  ni le libellé « intermédiaire » que V donne à la mesure B-6, ni le libellé « intermédiaire » de la lecture par concentration
+  de ce texte (« Seuil ») ;'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L18', 'B2', '« Hypothèse », bloc séparable, déclaration du brouillon 4 : phrase « Brouillon 5 » ajoutée',
+r'''> écart est corrigé au brouillon 4, aux deux endroits, dans les mots de V ; aucune valeur chiffrée ne bouge** (couples K14 et K16
+> des pièces de fabrication du brouillon 4).''',
+r'''> écart est corrigé au brouillon 4, aux deux endroits, dans les mots de V ; aucune valeur chiffrée ne bouge** (couples K14 et K16
+> des pièces de fabrication du brouillon 4). **Brouillon 5** (contre-lecture 4, B2) : à ces deux endroits, le lieu cité dans V
+> (« Verdict, en mots simples », table, ligne B-7, et non « § 2 ») et le libellé de V pour cette mesure (« autre » ;
+> « intermédiaire, bien tard » est un mot de sa description) sont corrigés ; les mots cités de V et toutes les valeurs chiffrées
+> restent les mêmes (couples L16, L17 et L19 des pièces de fabrication du brouillon 5 ; le troisième est dans ce bloc).'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L19', 'B2', '« Hypothèse », bloc séparable, ligne « lecture contre ablation par fenêtre », colonne « ce qui en suit »',
+r'''(V, § 2, ligne B-7 : « la lecture prédit mal l'effet d'une activation en contexte jusqu'à la couche 14, la couche 15 est intermédiaire, bien tard » ; « intermédiaire » au sens de V pour cette mesure, la mesure B-7 de G, sans rapport avec le libellé « intermédiaire » de la lecture par concentration de ce texte) |''',
+r'''(V, « Verdict, en mots simples », table, ligne B-7, libellé « autre » : « la lecture prédit mal l'effet d'une activation en contexte jusqu'à la couche 14, la couche 15 est intermédiaire, bien tard » ; « intermédiaire » est ici un mot de la description de V pour la mesure B-7 de G, ni le libellé « intermédiaire » de la mesure B-6 de V, ni celui de la lecture par concentration de ce texte) |'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L20', 'N2', '« Entrées », condition de lecture, deuxième palier en ajustement seul ou seconde course incomplète : fiche muette',
+r'''(brouillon 4 : CI, § 5,
+  traite la seconde course incomplète comme l'ajustement seul ; une fiche qui ne dit pas si la seconde course a été menée en
+  entier est lue comme « incomplète ») : **non lue** (« Non lue : notre lentille [R / S] au deuxième palier, sans mesure
+  propre ; aucune lecture sans nœud de Lazar »).''',
+r'''(brouillon 4 : CI, § 5,
+  traite la seconde course incomplète comme l'ajustement seul) : **non lue** (« Non lue : notre lentille [R / S] au deuxième
+  palier, sans mesure propre ; aucune lecture sans nœud de Lazar »). **Fiche muette** (brouillon 5 ; contre-lecture 4, N2) :
+  une fiche de course rejouée qui ne dit pas si la seconde course a été menée en entier ne permet de la tenir ni pour entière
+  ni pour incomplète ; la lentille est **non lue**, sous un motif propre : « Non lue : notre lentille [R / S] au deuxième
+  palier, fiche muette sur l'achèvement de la seconde course ; aucune lecture sans nœud de Lazar » (le motif « sans mesure
+  propre » serait faux si la course a été menée en entier). **La voie décrite ci-dessous ne lui est pas ouverte** : la phrase
+  « n'ont pas été refaites », qu'elle ferait écrire, pourrait être fausse ; il faut d'abord une fiche qui dise l'achèvement
+  (une fiche neuve, scellée, sous un nom neuf, R12, inscrite par la session principale : nœud de Lazar).'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L21', 'mandat, tâche 4 (N12)', '« Entrées », condition de lecture, même puce : le nœud N12 écrit pour chaque option',
+r'''  elle. » Sans cette ligne : non lue.
+''',
+r'''  elle. » Sans cette ligne : non lue.
+  **Nœud N12 laissé ouvert (brouillon 5) : ce qui précède est écrit sous son option (a), qui est aussi son défaut.** Les deux
+  autres options, écrites d'avance, sans que ce texte tranche : **sous l'option (b)** (l'avertissement suffit), la ligne
+  `NOEUD-PALIER-2-AJUSTEMENT-SEUL-LENTILLES-BBIS` n'est pas exigée : la lentille est lue dès que la ligne
+  `AVERTISSEMENT-PALIER-2-LENTILLES-BBIS` est inscrite avant le montage de la seconde passe, sous la même phrase permise, le
+  même dernier crochet et la même phrase gelée ; **sous l'option (c)** (jamais lue), aucune ligne n'ouvre la lecture : « Non
+  lue : notre lentille [R / S] au deuxième palier, sans mesure propre ; jamais lue en ajustement seul (nœud N12, option (c)) ».
+  Sous les trois options, la fiche muette reste non lue. **L'option qui vaut** est celle que recopie la pièce nommée par
+  `GO-LENTILLES-BBIS-V2` (le mot de Lazar ou le défaut échu, avec sa ligne de `registres/decisions.md` : « Lignes de
+  registre ») ; si cette pièce ne dit rien de N12, l'option (a) vaut.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L22', 'mandat, tâche 4 (N17)', '« Entrées », condition de lecture, puce « par gabarit » : le nœud N17 écrit pour chaque option',
+r'''Si Lazar ou la
+  session principale lit CI comme exigeant un texte écrit **après** le verdict d'identité, c'est une version neuve (nœud N17, ouvert).
+''',
+r'''Si Lazar ou la
+  session principale lit CI comme exigeant un texte écrit **après** le verdict d'identité, c'est une version neuve (nœud N17, ouvert).
+  **Nœud N17 laissé ouvert (brouillon 5) : ce texte est écrit pour ses deux options, sans trancher.** **Sous l'option (a)**
+  (la lecture par gabarit est acceptée) : rien de plus n'est exigé. **Sous l'option (b)** — que le défaut du nœud applique à
+  une lentille au deuxième palier, et l'option (a) à une lentille au premier — la lentille n'est lue qu'après un **addendum de
+  recopie** à ce texte : écrit **après** le verdict d'identité ; limité à la recopie, mot pour mot, depuis la fiche de
+  rangement, du verdict d'identité de la lentille et des chiffres de la sortie du programme (aucune règle, aucun seuil, aucun
+  libellé, aucune phrase gelée n'y est ajouté ni changé : tout cela reste fixé ici) ; contre-lu par un sous-agent neuf (R2) ;
+  scellé ; inscrit au registre propre par la ligne `ADDENDUM-RECOPIE-IDENTITE-LENTILLES-BBIS-V2` (chemin et empreinte) avant
+  le montage de la seconde passe. Sans cette ligne, ou si l'addendum n'a pas l'empreinte de sa ligne : « Non lue : notre
+  lentille [R / S], addendum de recopie du verdict d'identité absent (nœud N17, option (b)) ». **L'option qui vaut à chaque
+  palier** est celle que recopie la pièce nommée par `GO-LENTILLES-BBIS-V2` (« Lignes de registre ») ; si cette pièce ne dit
+  rien de N17, le défaut vaut : (b) au deuxième palier, (a) au premier.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L23', 'B3 ; N10', '« Entrées », fiche de rangement, chiffres de la sortie du programme : champ de la phrase du déclencheur (vi) ; étiquettes',
+r'''**la liste des déclencheurs** (`declencheurs`) et `audit_requis` (CI, § 6).
+''',
+r'''**la liste des déclencheurs** (`declencheurs`) et `audit_requis` (CI, § 6) ;
+  **pour R au deuxième palier, la phrase que le verdict écrit au déclencheur (vi)** (brouillon 5 ; CI, § 6 ; contre-lecture 4,
+  B3), mot pour mot, dans un champ à part du libellé, ou « aucune ». Le code lit cette phrase dans ce champ et en contrôle la
+  place et la forme. **Place** : elle est attendue quand notre R est au deuxième palier, que la liste des déclencheurs de R
+  porte une entrée qui commence par « (vi) » (c'est ainsi que le programme version 4 l'écrit) et que la fiche cite l'audit,
+  versé scellé, sans contrôle manqué ; dans tout autre cas le champ vaut « aucune ». **Forme** (CI, § 6) : elle commence par
+  « pour R, », finit par « malgré des octets d'ajustement différents ; audit sans contrôle manqué », et porte entre les deux
+  soit « 31 matrices des moitiés égales sur 31 », soit des mots qui commencent par « série » et finissent par « inchangée ».
+  Champ absent, « aucune » là où la phrase est attendue, phrase là où elle ne l'est pas, ou autre forme : arrêt, forme mal
+  comprise (« Liste d'arrêt »).
+  **Étiquettes** (brouillon 5 ; contre-lecture 4, N10) : l'en-tête du programme version 4, sa constante `CRITERE` et le champ
+  `critere` de sa sortie nomment encore la version 5 du critère (CI, § 7, « Étiquettes ») ; ce sont des étiquettes : ni la
+  fiche, ni le code de la seconde passe, ni son lecteur n'en tirent la version du critère, qui est la version 8 citée en
+  « Documents », par son chemin et son empreinte.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L24', 'N7 ; mandat, tâche 3', '« Métrique », point 6 : le nœud sur la règle de départage, tranché',
+r'''     **Nœud ouvert (brouillon 4)** : le choix entre cette règle et une permutation fixe des identifiants, tirée par graine, est
+     porté à Lazar (nœud N18, sans défaut) ; ce texte porte la règle recommandée, l'identifiant croissant ; si Lazar en retient
+     une autre, ce point, le point 7 et les essais sont repris avant le scellement.
+''',
+r'''     **Nœud tranché (brouillon 5)** : le choix entre cette règle, une permutation fixe des identifiants tirée par graine, et la
+     garde à trois étages de la première passe a été porté à Lazar (nœud N18, ouvert au brouillon 4) ; **Lazar a retenu cette
+     règle, l'identifiant croissant** (option (a) ; mot « go reco » du 2026-11-19 ; note `e0ad5502…` et ligne GO-2026-11-19-92
+     de `registres/go.md` : « Nœuds », N18).
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L25', 'B4', '« Métrique », point 6, « Lien avec la première passe » : première passe arrêtée sur une garde d\'égalité',
+r'''**Si la première passe s'arrête** sur l'une de ses deux gardes d'égalité, c'est un nœud
+     de la v1, que ce texte ne tranche pas ; la seconde passe n'a pas cette garde : elle départage et écrit ses comptes ;''',
+r'''**Si la première passe s'arrête** sur l'une de ses deux gardes d'égalité, c'est un nœud
+     de la v1, que ce texte ne tranche pas ; **une première passe ainsi arrêtée n'est pas « non calculée » au sens du plan,
+     point 11 : la seconde passe ne la remplace pas pour la lentille publique** (ni pour la lentille des logits), et aucune
+     phrase de la lentille publique n'est écrite par la seconde passe avant ce nœud (brouillon 5 ; contre-lecture 4, B4 ; le
+     plan, point 11, dit comment le code le sait) ; ses lectures de la lentille publique ne servent alors qu'aux comparaisons
+     entre lentilles ; la seconde passe n'a pas cette garde : elle départage et écrit ses comptes ;'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L26', 'N3', '« Plan d\'analyse », point 5, « Égalités » : la phrase sur la tolérance du cas sain',
+r'''dont les scores diffèrent de zéro, sous le seuil''',
+r'''dont l'écart de score est nul, donc sous le seuil'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L27', 'B4', '« Plan d\'analyse », point 11 : ce que veut dire « première passe non calculée »',
+r'''Si la
+    première passe n'a pas été calculée, la seconde la remplace pour la lentille publique, et c'est écrit (aucune lecture humaine
+    de la lentille publique n'a alors eu lieu avant).
+''',
+r'''Si la
+    première passe n'a pas été calculée (une première passe arrêtée sur une garde d'égalité de l'addendum de concentration ne
+    l'est pas : « Métrique », point 6), la seconde la remplace pour la lentille publique, et c'est écrit (aucune lecture humaine
+    de la lentille publique n'a alors eu lieu avant).
+    **« Non calculée » (brouillon 5 ; contre-lecture 4, B4)** veut dire **jamais lancée**, ce que le code lit au registre
+    propre, au montage de la seconde passe : ni `ENTREES-LENTILLES-BBIS` ni `TABLES-LENTILLES-BBIS` n'y sont inscrites. Une
+    première passe **lancée et non achevée** (`ENTREES-LENTILLES-BBIS` inscrite, `TABLES-LENTILLES-BBIS` absente : arrêtée
+    sur une garde d'égalité, arrêtée sur une autre ligne de la liste d'arrêt de la v1, ou encore en cours) **n'est pas
+    remplacée** : une passe qu'une règle scellée a arrêtée n'est pas rendue par une passe qui n'a pas cette règle (R5 : aucun
+    repli silencieux). La seconde passe n'écrit alors **aucune phrase gelée de la lentille publique ni de la lentille des
+    logits**, ne compare rien à des tables qui n'existent pas, n'emploie ses propres lectures de ces deux lentilles que pour
+    les comparaisons entre lentilles, et écrit en tête : « Reproduction de la première passe : non faite, première passe
+    lancée et non achevée ; aucune phrase de la lentille publique ni de la lentille des logits n'est écrite ici avant le
+    nœud de la v1. » Ces phrases ne sont écrites qu'après ce nœud, par la passe et sous le texte qu'il désigne.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L28', 'N2', '« Critères », phrase de tête de la seconde passe, ligne « Verdict d\'identité » : valeurs de la course',
+r'''[ajustement seul | course rejouée | course rejouée, seconde course incomplète]. »''',
+r'''[ajustement seul | course rejouée | course rejouée, seconde course incomplète | course rejouée, achèvement de la seconde course non dit par la fiche]. »'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L29', 'B3', '« Critères », phrases permises : la phrase du déclencheur (vi), après les deux phrases du deuxième palier qui portent sur R',
+r'''  - **Notre S seule au deuxième palier** : CI dit''',
+r'''  - **Phrase du déclencheur (vi)** (brouillon 5 ; CI, § 6 ; contre-lecture 4, B3) : si la fiche porte, pour notre R, la
+    phrase du déclencheur (vi), elle suit la phrase permise, mot pour mot. Elle ne se présente que si notre R est au deuxième
+    palier (les deux formes ci-dessus : « nos deux lentilles » et « notre R seule ») ; elle est recopiée du champ de la fiche
+    (« Entrées »), sans un mot de plus ; aucune identité n'en est tirée, ni de la lentille ni de son export (CI, § 6).
+  - **Notre S seule au deuxième palier** : CI dit'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L30', 'N1', '« Critères », phrase « notre S seule au deuxième palier » : la marge retirée',
+r'''écrite en entier selon cette règle (si la session
+    principale la construit autrement, ce sont les mots de CI qui valent) :''',
+r'''écrite en entier, construite par cette règle de
+    CI, § 5, et égale, par programme, à cette construction (contre-lecture 4, annexe D ; brouillon 5) :'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L31', 'N6', '« Critères », lignes du verdict d\'ensemble : une lentille au premier palier, l\'autre au deuxième',
+r'''  lue : [(R-a) à (R-e)]. »
+''',
+r'''  lue : [(R-a) à (R-e)]. »
+- **Une de nos lentilles au premier palier, l'autre au deuxième** (brouillon 5 ; contre-lecture 4, N6) : **les deux lignes de
+  verdict d'ensemble sont écrites, chacune nommant sa lentille** : d'abord celle du premier palier d'une seule lentille
+  (ci-dessus), puis celle du deuxième palier, où « Ce verdict ne se transporte pas à la lentille lue ici. » s'écrit « Ce
+  verdict ne se transporte pas à notre lentille [R | S]. » et où la dernière phrase s'écrit « Mesures faites le 18 novembre
+  sur des lentilles détruites, rappelées pour contexte ; elles ne décrivent pas notre lentille [R | S] : [réserves de cette
+  lentille]. » **La liste des réserves de la ligne du deuxième palier est celle de cette lentille** : pour notre R, (R-a) pour
+  la lecture contre pilotage, (R-b), (R-c) et (R-e) ; pour notre S, (R-d) et (R-e). Aucun autre mot des deux lignes ne change.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L32', 'B4', '« Critères », phrase de tête de la seconde passe, ligne « Reproduction de la première passe »',
+r'''sinon]. » Et, s'il y a lieu : « code de lecture différent de celui
+  de la première passe : [modules] ».
+''',
+r'''sinon]. » Et, s'il y a lieu : « code de lecture différent de celui
+  de la première passe : [modules] ». Si la première passe a été lancée et n'est pas achevée (brouillon 5 ; plan, point 11) :
+  à la place de la première phrase, « Reproduction de la première passe : non faite, première passe lancée et non achevée ;
+  aucune phrase de la lentille publique ni de la lentille des logits n'est écrite ici avant le nœud de la v1. », et aucune
+  phrase gelée de ces deux lentilles ne suit.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L33', 'N2 ; mandat, tâche 4', '« Liste d\'arrêt », lignes de la v2, ligne « pour une lentille » : fiche muette ; options de N12 ; option (b) de N17',
+r'''deuxième palier en ajustement seul, **ou en course rejouée dont la seconde course est incomplète ou dont la fiche ne dit pas l'achèvement**, sans la ligne `NOEUD-PALIER-2-AJUSTEMENT-SEUL-LENTILLES-BBIS` |''',
+r'''deuxième palier en ajustement seul, **ou en course rejouée dont la seconde course est incomplète**, sans la ligne `NOEUD-PALIER-2-AJUSTEMENT-SEUL-LENTILLES-BBIS` (brouillon 5 : c'est l'option (a) du nœud N12, son défaut ; sous son option (b) : sans la ligne d'avertissement seulement ; sous son option (c) : toujours) ; deuxième palier en course rejouée **dont la fiche ne dit pas l'achèvement de la seconde course** (brouillon 5 : toujours, quelle que soit la ligne inscrite ; motif propre) ; lentille à un palier où vaut l'option (b) du nœud N17 (son défaut : le deuxième palier) sans la ligne `ADDENDUM-RECOPIE-IDENTITE-LENTILLES-BBIS-V2`, ou dont l'addendum de recopie n'a pas l'empreinte de sa ligne (brouillon 5) |'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L34', 'B3 ; B4 ; mandat, tâche 4', '« Liste d\'arrêt », lignes de la v2 : trois lignes ajoutées après celle de la reproduction',
+r'''| reproduction de la première passe : libellé ou jetons différents | sans arrêt : réserve écrite, en tête ; pour la direction, comparaisons entre lentilles « non calculables » ; audit de symétrie joué (plan, point 11) |
+''',
+r'''| reproduction de la première passe : libellé ou jetons différents | sans arrêt : réserve écrite, en tête ; pour la direction, comparaisons entre lentilles « non calculables » ; audit de symétrie joué (plan, point 11) |
+| première passe lancée et non achevée au montage de la seconde (`ENTREES-LENTILLES-BBIS` inscrite, `TABLES-LENTILLES-BBIS` absente : arrêt sur une garde d'égalité de l'addendum de concentration, autre arrêt de la v1, ou passe en cours) (brouillon 5) | la seconde passe **ne remplace pas la première** : aucune phrase gelée de la lentille publique ni de la lentille des logits ; phrase « Reproduction de la première passe : non faite […] » en tête ; ses lectures de ces deux lentilles ne servent qu'aux comparaisons entre lentilles ; le nœud est celui de la v1 (plan, point 11) |
+| pour notre R au deuxième palier : champ de la phrase du déclencheur (vi) absent de la fiche ; « aucune » là où la phrase est attendue ; phrase là où elle ne l'est pas ; phrase d'une autre forme que celle de CI, § 6 (« Entrées », fiche) (brouillon 5) | arrêt avant tout calcul ; nœud (la forme est mal comprise) |
+| pièce nommée par `GO-LENTILLES-BBIS-V2` qui dit l'issue du nœud N12 ou du nœud N17 dans une autre forme que celle de « Lignes de registre » (brouillon 5) | arrêt avant tout calcul ; nœud (la forme est mal comprise ; une pièce qui ne dit rien d'un nœud n'arrête pas : le défaut du nœud vaut) |
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L35', 'mandat, tâche 4 ; N7', '« Lignes de registre », clés ajoutées par la v2 : issue des nœuds dans la pièce de `GO-LENTILLES-BBIS-V2` ; clé conditionnelle',
+r'''dont la seconde course est incomplète (CI, § 5).
+''',
+r'''dont la seconde course est incomplète (CI, § 5).
+**Brouillon 5** : (i) la pièce que nomme `GO-LENTILLES-BBIS-V2` recopie aussi la ligne GO-2026-11-19-92 (nœud N18, option
+(a)) et **l'issue des nœuds N12 et N17** : le mot de Lazar ou le défaut échu, chacun avec sa ligne de
+`registres/decisions.md`, sur une ligne par nœud, de la forme « N12 : option [(a) | (b) | (c)] » et « N17 : option [(a) |
+(b)] au premier palier ; option [(a) | (b)] au deuxième palier » ; le code y lit l'option qui vaut (« Entrées », condition
+de lecture) ; une ligne d'une autre forme : arrêt (« Liste d'arrêt ») ; si la pièce ne dit rien d'un nœud, son défaut vaut :
+(a) pour N12 ; (b) au deuxième palier et (a) au premier pour N17. (ii) Clé **conditionnelle**
+`ADDENDUM-RECOPIE-IDENTITE-LENTILLES-BBIS-V2` (chemin et empreinte de l'addendum de recopie du verdict d'identité, scellé et
+contre-lu), exigée seulement pour une lentille à un palier où vaut l'option (b) du nœud N17, inscrite après le verdict
+d'identité et avant `MONTAGE-LENTILLES-BBIS-V2` (« Entrées », lecture « par gabarit »).
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L36', 'N2', '« Code neuf », essais ajoutés, condition de lecture : fiche muette',
+r'''fiche qui ne dit pas l'achèvement de la seconde course (lue comme incomplète) ;''',
+r'''fiche qui ne dit pas l'achèvement de la seconde course (brouillon 5 : non lue sous son motif propre, « fiche muette […] », avec la ligne du mot de Lazar comme sans elle) ;'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L37', 'N7 ; B3 ; B4 ; N2 ; N6 ; N10 ; mandat, tâche 4', '« Code neuf », fin des essais du brouillon 4 : phrase conditionnelle retirée ; essais du brouillon 5',
+r'''Si Lazar retient au nœud N18 une autre règle que l'identifiant croissant, les essais de la règle de départage sont repris avec elle.
+''',
+r'''**Brouillon 5** : la phrase qui prévoyait de reprendre les essais de la règle de départage sous une autre option du nœud N18
+est retirée : Lazar a retenu l'identifiant croissant (GO-2026-11-19-92), et ces essais valent tels quels.
+
+**Essais ajoutés par le brouillon 5** (R5 : cas sain et artefact pour chacun ; graines `lentilles-bbis-v2/essai/<garde>`) :
+- **phrase du déclencheur (vi)** (CI, § 6) : cas sain : deuxième palier, notre R, déclencheur (vi) rendu, audit cité sans
+  contrôle manqué : la phrase est lue dans son champ et recopiée après la phrase permise, dans chacune de ses deux formes
+  (« 31 matrices des moitiés égales sur 31 » ; « série … inchangée »), pour « nos deux lentilles » et pour « notre R seule » ;
+  cas sain : deuxième palier sans déclencheur (vi), champ « aucune » : rien n'est ajouté ; artefacts : champ absent ;
+  « aucune » alors que (vi) est rendu ; phrase présente sans (vi), ou pour notre S, ou au premier palier ; phrase d'une autre
+  forme (début, milieu ou fin changés d'un mot) : arrêt, forme mal comprise, chacun ;
+- **première passe lancée et non achevée** (registre jouet) : cas sain : ni `ENTREES-LENTILLES-BBIS` ni
+  `TABLES-LENTILLES-BBIS` (première passe jamais lancée) : la seconde passe remplace la première, et c'est écrit ; cas sain :
+  les deux lignes présentes : reproduction comparée aux tables ; artefact : `ENTREES-LENTILLES-BBIS` présente,
+  `TABLES-LENTILLES-BBIS` absente (première passe arrêtée sur une garde d'égalité) : la seconde passe n'écrit aucune phrase
+  gelée de la lentille publique ni de la lentille des logits, écrit la phrase « Reproduction de la première passe : non
+  faite […] », et rend les comparaisons entre lentilles ; **un code qui remplace la première passe dans ce cas est vu par
+  l'essai** (présence d'une phrase de la lentille publique dans la sortie : échec) ;
+- **fiche muette** : course rejouée, fiche sans mot sur l'achèvement de la seconde course : non lue, motif propre, ligne
+  « Course du réajustement » dans sa quatrième valeur, avec la ligne `NOEUD-PALIER-2-AJUSTEMENT-SEUL-LENTILLES-BBIS` comme
+  sans elle (artefact : un code qui la lit comme incomplète et ouvre la voie du mot de Lazar est vu) ; cas sain : fiche qui dit
+  « menée en entier », fiche qui dit « incomplète » : chacune traitée selon sa règle ;
+- **une lentille à chaque palier** : notre R au premier palier et notre S au deuxième, puis l'inverse : les deux lignes de
+  verdict d'ensemble sont écrites, chacune nomme sa lentille, la ligne du deuxième palier ne porte que les réserves de sa
+  lentille (artefact : une seule ligne écrite, ou la liste entière des réserves (R-a) à (R-e) : refus) ;
+- **options des nœuds N12 et N17** (pièce jouet nommée par `GO-LENTILLES-BBIS-V2`) : N12, un cas par option : (a) lue avec
+  la ligne du mot de Lazar, non lue sans elle ; (b) lue avec la seule ligne d'avertissement ; (c) non lue, avec toutes les
+  lignes ; pièce muette sur N12 : comme (a) ; N17, un cas par option et par palier : (b) au deuxième palier, ligne
+  `ADDENDUM-RECOPIE-IDENTITE-LENTILLES-BBIS-V2` présente et addendum de l'empreinte de sa ligne : lue (cas sain) ; ligne
+  absente, ou addendum d'une autre empreinte : non lue, motif écrit (artefact) ; (a) : ligne non exigée ; pièce muette sur
+  N17 : (b) au deuxième palier, (a) au premier ; ligne d'issue d'une autre forme : arrêt ;
+- **étiquettes du programme** : sortie jouet dont le champ `critere` nomme la version 5 : la version du critère écrite par la
+  seconde passe reste la version 8 de « Documents » (artefact : un code qui recopie le champ `critere` est vu).
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L38', 'mandat, tâche 4 (N12)', '« Nœuds », N12, part propre à l\'ajustement seul : nœud laissé ouvert, texte écrit pour chaque option',
+r'''  s'arrête avant la fin de ses mesures (CI, § 5 ; brouillon 4).
+''',
+r'''  s'arrête avant la fin de ses mesures (CI, § 5 ; brouillon 4).
+  **Brouillon 5 : nœud laissé ouvert ; le brouillon 5 ne le tranche pas.** Ouvert au brouillon 2 (2026-11-19, vers 11:08Z),
+  son défaut, (a), tombe vers le 2026-11-21. Le texte est écrit pour chaque option (« Entrées », condition de lecture) :
+  **si (a)** : la règle telle qu'écrite, mot de Lazar postérieur à l'avertissement ; **si (b)** : la ligne d'avertissement
+  suffit, même phrase permise et même phrase gelée ; **si (c)** : la lentille n'est jamais lue en ajustement seul ni en
+  seconde course incomplète, motif écrit. L'option qui vaut est lue dans la pièce que nomme `GO-LENTILLES-BBIS-V2` ; pièce
+  muette : (a). Aucune de ces options ne demande une version neuve de ce texte.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L39', 'mandat, tâches 3 et 4 (N17 ; N18) ; N7', '« Nœuds » : N17 écrit pour chaque option ; titre des nœuds tranchés après le brouillon 4 ; tête de N18, marqueur porté',
+r'''  0,65.** Défaut sous 48 heures : (b) pour une lentille au deuxième palier, (a) au premier.
+- **N18 — égalité de score : quelle règle de départage** (ouvert au brouillon 4 ; **sans défaut** : c'est le contenu d'une pièce
+  décisive, rien n'est scellé avant le mot de Lazar : <<MOT_DE_LAZAR_SUR_LA_REGLE_DE_DEPARTAGE>>).
+''',
+r'''  0,65.** Défaut sous 48 heures : (b) pour une lentille au deuxième palier, (a) au premier.
+  **Brouillon 5 : nœud laissé ouvert ; le brouillon 5 ne le tranche pas.** Ouvert au brouillon 2 (2026-11-19, vers 11:08Z),
+  son défaut tombe vers le 2026-11-21. Le texte est écrit pour ses deux options (« Entrées », puce « par gabarit ») : **si
+  (a)** : rien de plus ; **si (b)**, pour le palier où elle vaut : la lentille n'est lue qu'après un addendum de recopie.
+  **Ce que le défaut demanderait** : il applique (b) à une lentille au deuxième palier ; si une de nos lentilles sort au
+  deuxième palier, il faudra donc, **après le verdict d'identité**, écrire un addendum à ce texte, limité à la recopie mot
+  pour mot du verdict d'identité et des chiffres de la sortie du programme depuis la fiche, le faire contre-lire par un
+  sous-agent neuf (R2), le sceller, et l'inscrire par la ligne `ADDENDUM-RECOPIE-IDENTITE-LENTILLES-BBIS-V2` avant le montage
+  de la seconde passe ; sans lui, cette lentille n'est pas lue. Cet addendum est écrit après la première passe et après le
+  verdict de l'apprentissage des sondes sur la tâche : il est plus exposé que ce texte, et c'est pourquoi il ne porte aucune
+  règle. Au premier palier, le défaut ne demande rien. L'option qui vaut à chaque palier est lue dans la pièce que nomme
+  `GO-LENTILLES-BBIS-V2` ; pièce muette : le défaut.
+
+**Tranché par Lazar après le brouillon 4 (N18), et clos par une lecture de la session principale (N19)** — brouillon 5 :
+- **N18 — égalité de score : quelle règle de départage** (ouvert au brouillon 4, sans défaut ; **tranché par Lazar le
+  2026-11-19 : option (a), identifiant de jeton croissant**). Mot de Lazar, donné dans la session des lentilles : « go
+  reco » (22:42:56Z), consigné par la note
+  `docs/notes/neuron-lens-v1/mot-lazar-regle-departage-seconde-passe-2026-11-19-v1.md`,
+  `e0ad550245e4ce02d4324de2fe9083b0d3fc53db10aeb3e8570b9572a5593bc8` (branche des lentilles), et inscrit par la session
+  principale à la ligne **GO-2026-11-19-92** de `registres/go.md` (branche principale, relevée par le rédacteur du brouillon 5
+  au commit `840c3ecc…`), dont les mots sont : « nœud N18, option (a). Règle de départage à score égal de la seconde passe :
+  identifiant de jeton croissant ; pour les pôles, cosinus décroissant, puis indice de neurone croissant, puis signe + avant
+  signe −. » ; mot relu à la source par la session principale (ligne R-3994 de `registres/decisions.md`). C'est la règle que
+  ce texte porte (« Métrique », points 6 et 7). Ce qui suit est le nœud tel qu'il a été posé, gardé pour mémoire ; les
+  options (b) et (c) sont écartées.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L40', 'N7 ; mandat, tâche 3', '« Nœuds », N18, fin : formes conditionnelles retirées',
+r''' Si Lazar retient (b) : dans
+  « Métrique », point 6, « identifiant de jeton croissant » devient « rang croissant dans π », avec le tirage et l'empreinte de
+  π au plan, points 3 et 4 ; les pôles gardent l'indice de neurone croissant ; les essais sont repris. Si Lazar retient (c) :
+  « Métrique », points 6 et 7, le plan, point 5, la « Liste d'arrêt » et les essais sont repris, et les bornes du recouvrement
+  sont à écrire. Dans les deux cas, avant le scellement.
+''',
+r''' (Brouillon 5 : les
+  phrases qui disaient ce qu'il aurait fallu reprendre sous l'option (b) ou sous l'option (c) sont retirées, l'option (a)
+  étant retenue ; elles restent lisibles dans le brouillon 4, archivé.)
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L41', 'N8 ; mandat, tâche 3 ; B4', '« Nœuds », N19 : marqueur porté, nœud clos ; règle de B4 portée à Lazar pour information',
+r'''- **N19 — la statistique corrigée vaut-elle pour la seconde passe** (signalé au brouillon 4 ; ce n'est pas un choix ouvert de ce
+  texte, c'est une ligne de registre à citer). Le mot de Lazar GO-2026-11-19-47 (« go », R-3771 : option 2, chaque direction
+  nulle jugée sans elle-même) est donné pour l'addendum au texte scellé de la v1. La passation de la session des lentilles dit,
+  d'après la session principale, qu'il vaut pour la v2. Le rédacteur du brouillon 4 a cherché la ligne qui le consigne dans
+  `registres/go.md` et `registres/decisions.md` (branche principale, commit `3a58d008…`) et ne l'a pas trouvée :
+  <<MOT_DE_LAZAR_GO_47_POUR_LA_V2>> (à porter par la session principale : la ligne de registre, ou le mot de Lazar). Ce que le
+  texte en dit sans attendre : la seconde passe refait la première, que régit l'addendum ; une autre statistique dans la seconde
+  passe romprait la reproduction (plan, point 11).
+''',
+r'''- **N19 — la statistique corrigée vaut-elle pour la seconde passe** (signalé au brouillon 4 ; **clos au brouillon 5 par une
+  lecture de la session principale** ; ce n'était pas un choix ouvert de ce texte). Le mot de Lazar GO-2026-11-19-47 (« go »,
+  R-3771 : option 2, chaque direction nulle jugée sans elle-même) est donné pour l'addendum au texte scellé de la v1. Le
+  rédacteur du brouillon 4 a cherché une ligne qui l'étende à la version 2 dans `registres/go.md` et
+  `registres/decisions.md` (branche principale, commit `3a58d008…`) et ne l'a pas trouvée ; la contre-lecture 4 l'a confirmé.
+  **Lecture de la session principale**, ligne **R-3995** de `registres/decisions.md` (branche principale,
+  2026-11-19T22:50:15Z ; relevée par le rédacteur du brouillon 5 au commit `840c3ecc…`), dont les mots sont : « Aucune ligne
+  n'étend GO-2026-11-19-47 à la v2. GO-47 régit l'addendum d'écart au texte v1 scellé. La v2 est un texte neuf, non scellé :
+  elle porte la statistique corrigée par sa propre conception, cite GO-47 comme son origine, et ne demande pas de mot de
+  plus. » C'est une lecture de la session principale, non un mot de Lazar ; aucun mot de plus n'est dû, puisque cette
+  version, non scellée, est contre-lue et scellée comme un texte neuf. **Ce que ce texte en tire** : la statistique corrigée
+  est une règle propre de la version 2 (« Métrique », point 6 ; plan, point 6), écrite dans les mots de l'addendum de
+  concentration ; sa raison est que la seconde passe refait la première, que régit l'addendum, et qu'une autre statistique
+  dans la seconde passe romprait la reproduction (plan, point 11) ; la décision GO-2026-11-19-47 est citée comme l'origine de
+  cette statistique, non comme ce qui l'autorise ici.
+
+**Porté à Lazar pour information au scellement** (brouillon 5 ; ce n'est pas un nœud neuf de décision) : la règle que ce
+texte fixe face à un nœud de la v1 — **une première passe lancée et non achevée, arrêtée sur une garde d'égalité de
+l'addendum de concentration ou autrement, n'est pas remplacée par la seconde passe, et aucune phrase de la lentille publique
+ni de la lentille des logits n'est écrite par la seconde passe avant le nœud de la v1** (« Métrique », point 6 ; plan,
+point 11 ; contre-lecture 4, B4). C'est la règle la plus prudente ; tout autre choix (par exemple, laisser la seconde passe
+rendre ces phrases sous sa règle de départage) serait à soumettre à Lazar avant le scellement.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L42', 'forme', '« Contre-lecture », entrée 4 : ce qui a eu lieu, ce qui reste, ce qu\'il faut donner à qui vérifie le brouillon 5',
+r'''validateur continue de signaler cette entrée tant qu'elle n'a pas eu lieu).
+''',
+r'''validateur continue de signaler cette entrée tant qu'elle n'a pas eu lieu).
+  **Brouillon 5** : la contre-lecture du brouillon 4 a eu lieu (sous-agent neuf sur Opus 5.5, 2026-11-19, rapport `08a69857…`,
+  « scellable après corrections », chemin et empreinte entière dans le bloc « Brouillon 5 ») ; il reste la vérification des
+  corrections de ce brouillon par le même contre-lecteur ; le marqueur de cette entrée reste donc, à la session principale.
+  À qui vérifie ce brouillon, donner explicitement : le brouillon 4 ; les trois pièces de fabrication du brouillon 5 (script
+  des couples, sa sortie, le `diff`) ; le rapport de la contre-lecture du brouillon 4 ; la note du mot de Lazar sur la règle
+  de départage (`e0ad5502…`) et la ligne GO-2026-11-19-92 ; les lignes R-3994 et R-3995 ; CI dans sa version 8 (§ 5 et § 6) ;
+  le programme de comparaison version 4 (libellés des déclencheurs) ; V, pour les seules lignes des mesures B-6 et B-7 ; le
+  mandat du rédacteur du brouillon 5. Au lecteur désigné par Lazar, donner les couples L16, L17 et L19 (couche 15). Aucune
+  empreinte entière n'est répétée ici, pour la même raison.
+'''),
+    # ------------------------------------------------------------------------------------------------
+    ('L43', 'forme', 'pied : pied du brouillon 5, après celui du brouillon 4',
+r'''(onze marqueurs : les neuf de la table du brouillon 2 qui restent, et les deux ajoutés par ce brouillon) ; il ne rend aucune section absente ou vide. Ce brouillon n'est donc pas scellable comme préenregistrement en l'état, et ne doit pas l'être.
+''',
+r'''(onze marqueurs : les neuf de la table du brouillon 2 qui restent, et les deux ajoutés par ce brouillon) ; il ne rend aucune section absente ou vide. Ce brouillon n'est donc pas scellable comme préenregistrement en l'état, et ne doit pas l'être.
+
+Pied (v2, brouillon 5) : écriture achevée le 2026-11-20 à 00:00:00 UTC (`date -u`), juste avant le dernier passage du validateur. Aucun refus d'outil, de permission ni de classifieur pendant la lecture des pièces ni pendant l'écriture. Contrôle de la v1 dans ce brouillon (programme de la contre-lecture 3, annexe B, recopié mot pour mot) : 791 lignes égales, aucune supprimée, 10 prolongées (182, 320, 351, 356, 358, 385, 476, 478, 480, 600), 13 réécrites (1, 147, 263, 321, 322, 335, 336, 337, 339, 461, 465, 466, 467), comme aux brouillons 3 et 4. Bornes du bloc séparable : une occurrence de la ligne de début, une de la ligne de fin (contrôle du script des couples). `controle_ia.prereg.problemes` sur ce brouillon rend deux manques, **attendus et voulus** : « contre-lecture 4 sans ses deux empreintes (brouillon relu et rapport) » et « marqueurs de gabarit restants » (neuf marqueurs : ceux de la table du brouillon 2 qui restent ; les deux marqueurs ajoutés par le brouillon 4 sont portés) ; il ne rend aucune section absente ou vide. Ce brouillon n'est donc pas scellable comme préenregistrement en l'état, et ne doit pas l'être.
+'''),
+]
+
+
+def main(argv):
+    if len(argv) != 3:
+        raise SystemExit("usage : python -I couples-brouillon4-vers-brouillon5-v1.py BROUILLON4 BROUILLON5")
+    source, cible = argv[1], argv[2]
+    brut = open(source, "rb").read()
+    if hashlib.sha256(brut).hexdigest() != EMPREINTE_BROUILLON_4:
+        raise SystemExit("le fichier donné n'est pas le brouillon 4 (empreinte différente) : arrêt")
+    texte = brut.decode("utf-8")
+    # 1. chaque texte « avant » paraît une fois et une seule ; aucun chevauchement
+    places = []
+    for ident, tache, lieu, avant, apres in COUPLES:
+        n = texte.count(avant)
+        if n != 1:
+            raise SystemExit(f"couple {ident} : texte avant trouvé {n} fois dans le brouillon 4 (attendu : 1)")
+        if avant == apres:
+            raise SystemExit(f"couple {ident} : texte après égal au texte avant")
+        d = texte.index(avant)
+        places.append((d, d + len(avant), ident))
+    if len({c[0] for c in COUPLES}) != len(COUPLES):
+        raise SystemExit("identifiants de couples répétés")
+    places.sort()
+    for (d1, f1, i1), (d2, f2, i2) in zip(places, places[1:]):
+        if f1 > d2:
+            raise SystemExit(f"couples {i1} et {i2} : textes avant qui se chevauchent")
+    # 2. application, de la fin vers le début (les positions relevées restent justes)
+    neuf = texte
+    par_ident = {c[0]: c for c in COUPLES}
+    for d, f, ident in sorted(places, reverse=True):
+        neuf = neuf[:d] + par_ident[ident][4] + neuf[f:]
+    # 3. sortie lisible
+    print(f"brouillon 4 : {source} ; sha256 {EMPREINTE_BROUILLON_4}")
+    print(f"couples : {len(COUPLES)} ; chaque texte avant trouvé une fois et une seule ; aucun chevauchement")
+    for d, f, ident in places:
+        _, tache, lieu, avant, apres = par_ident[ident]
+        ligne = texte.count("\n", 0, d) + 1
+        print("=" * 100)
+        print(f"couple {ident} | sert : {tache} | lieu : {lieu} | brouillon 4, ligne {ligne} | "
+              f"avant : {len(avant)} caractères ; après : {len(apres)} caractères")
+        print("--- avant")
+        print(avant)
+        print("--- après")
+        print(apres)
+    print("=" * 100)
+    # 4. contrôles sur le brouillon 5
+    debut = neuf.count("> **[DÉBUT DU BLOC-V")
+    fin = neuf.count("> **[FIN DU BLOC-V]**")
+    print(f"bornes du bloc séparable dans le brouillon 5 : début {debut} fois, fin {fin} fois (attendu : 1 et 1)")
+    assert debut == 1 and fin == 1
+    assert neuf.index("> **[DÉBUT DU BLOC-V") < neuf.index("> **[FIN DU BLOC-V]**")
+    avant_m = sorted(set(re.findall(r"<<[A-Z0-9_]+>>", texte)))
+    apres_m = sorted(set(re.findall(r"<<[A-Z0-9_]+>>", neuf)))
+    print("marqueurs du brouillon 4 :", len(avant_m))
+    print("marqueurs du brouillon 5 :", len(apres_m))
+    for m in apres_m:
+        print("   ", m.strip("<>"), "| occurrences :", neuf.count(m), "|", "gardé du brouillon 4" if m in avant_m else "ajouté")
+    for m in avant_m:
+        if m not in apres_m:
+            print("   ", m.strip("<>"), "| porté (absent du brouillon 5)")
+    reste = sorted(set(re.findall(r"@@[A-Z_]+@@", neuf)))
+    if reste:
+        raise SystemExit(f"champs de fabrication non remplis : {reste}")
+    empreinte = hashlib.sha256(neuf.encode("utf-8")).hexdigest()
+    print(f"brouillon 5 : {len(neuf.encode('utf-8'))} octets ; {neuf.count(chr(10))} lignes ; sha256 {empreinte}")
+    if cible == "-":
+        print("contrôle seul : rien n'est écrit")
+        return
+    try:
+        existant = open(cible, "rb").read()
+    except FileNotFoundError:
+        existant = None
+    if existant is not None and existant != neuf.encode("utf-8"):
+        raise SystemExit(f"{cible} existe et diffère : on n'écrase jamais (R12)")
+    if existant is None:
+        with open(cible, "xb") as f:
+            f.write(neuf.encode("utf-8"))
+    print(f"écrit : {cible}")
+
+
+if __name__ == "__main__":
+    main(sys.argv)

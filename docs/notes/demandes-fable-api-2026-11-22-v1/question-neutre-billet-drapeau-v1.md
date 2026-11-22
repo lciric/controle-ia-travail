@@ -1,0 +1,5 @@
+# Question neutre — billet-drapeau (extraite de la réponse 20 de Fable, section « Question neutre pour le collisionneur », sans retouche)
+
+« Une équipe prépare une étude empirique dont aucune mesure n'est encore faite. Son domaine avance vite : des travaux voisins paraissent chaque mois, et une part de ses idées de départ s'est révélée déjà publiée ailleurs. L'étude éprouve un dispositif de détection contre un adversaire ; certaines mesures ne valent que si des éléments restent inconnus de certaines personnes ou de certains systèmes. L'équipe se demande s'il faut rendre public un texte court avant ses résultats. Quels contenus un tel texte peut-il porter ? Pour chacun, quel effet a-t-il sur la reconnaissance ultérieure du travail, sur la probabilité qu'un autre groupe publie d'abord, et sur la validité des mesures à venir ? À quelles conditions vaut-il mieux publier avant, publier après, ou ne rien publier ? Quelles vérifications, indépendantes de l'équipe, diraient que le choix était le bon ? Donnez l'argument le plus fort pour chaque option, puis votre choix et ce qui vous en ferait changer. »
+
+---

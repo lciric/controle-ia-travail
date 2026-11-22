@@ -1,0 +1,49 @@
+A. Exactitude d'ordre sur les paires vraies (M1), test binomial exact unilatéral contre 0,5, niveau 0,05
+  n = 24 : seuil 17/24, risque réel 0,032 ; puissance si l'exactitude vraie vaut 0,65 : 0,358 ; 0,75 : 0,766 ; 0,85 : 0,980
+  n = 16 : seuil 12/16, risque réel 0,038 ; puissance si l'exactitude vraie vaut 0,65 : 0,289 ; 0,75 : 0,630 ; 0,85 : 0,921
+B. Scission sur les paires nulles (M2), « minoritaire » si la borne supérieure de Clopper-Pearson unilatérale à 95 % est < 0,5
+  n = 24 : au plus 7/24 (borne 0,479 ; à 8/24 la borne vaut 0,521) ; probabilité de la décision si la scission vraie vaut 0,15 : 0,980 ; 0,20 : 0,911 ; 0,30 : 0,565 ; 0,50 : 0,032
+  n = 16 : au plus 4/16 (borne 0,484 ; à 5/16 la borne vaut 0,548) ; probabilité de la décision si la scission vraie vaut 0,15 : 0,921 ; 0,20 : 0,798 ; 0,30 : 0,450 ; 0,50 : 0,038
+C. Scission « majoritaire » déclarée à 12/24 ou plus : probabilité selon la scission vraie
+  0,20 : 0,001 ; 0,30 : 0,031 ; 0,35 : 0,094 ; 0,50 : 0,581 ; 0,60 : 0,886 ; 0,70 : 0,988
+D. « Pas de détection » (M1 <= 12/24) : probabilité selon l'exactitude vraie
+  0,50 : 0,581 ; 0,65 : 0,094 ; 0,75 : 0,007 ; 0,85 : 0,000
+E. Zones sans décision : M1 de 13 à 16 sur 24 ; M2 de 8 à 11 sur 24
+  M1 de 13 à 16 : 0,50 : 0,387 ; 0,65 : 0,548 ; 0,75 : 0,227 ; 0,85 : 0,020
+  M2 de 8 à 11 : 0,15 : 0,020 ; 0,20 : 0,088 ; 0,30 : 0,404 ; 0,50 : 0,387
+F. Ampleur de l'écart dans la paire sur l'étalonnage (8 paires vraies contre 4 nulles) : loi exacte de l'aire sous des rangs échangeables (paires supposées indépendantes, ce qu'elles ne sont pas : 4 modèles par groupe)
+  P(aire >= 0,75) = 53/495 = 0,107 ; P(aire <= 0,25) = 53/495 = 0,107 ; P(l'une ou l'autre) = 0,214
+  Aire de 1 sur 4 honnêtes contre 4 sycophantes par hasard : 1/70 = 0,0143
+G. Plafond, au niveau du modèle, d'un score constant dans la paire (ordre idéal : paires ss, puis vraies, puis hh ; 24 sycophantes en ss, 24 sycophantes et 24 honnêtes à égalité en paires vraies, 24 honnêtes en hh)
+  aire maximale = (1728 + 576/2) / 2304 = 0,875
+H. Contrôle causal (C1) : seuils en nombre d'unités
+  24 unités : « porteurs » à 6/24 ou plus ; « non porteurs » à 2/24 ou moins ; entre les deux : 3 à 5
+  48 unités : « porteurs » à 12/48 ou plus ; « non porteurs » à 4/48 ou moins ; entre les deux : 5 à 11
+  Rang d'un ensemble nommé qui dépasse le maximum de 20 témoins : centile 95,2
+  Taux d'erreur des seuils à 24 unités (loi binomiale exacte, unités supposées indépendantes ; remarque I-5)
+    part vraie d'unités porteuses 0,05 : P(6 ou plus sur 24) = 0,001 ; P(2 ou moins sur 24) = 0,884
+    part vraie d'unités porteuses 0,10 : P(6 ou plus sur 24) = 0,028 ; P(2 ou moins sur 24) = 0,564
+    part vraie d'unités porteuses 0,25 : P(6 ou plus sur 24) = 0,578 ; P(2 ou moins sur 24) = 0,040
+    part vraie d'unités porteuses 0,35 : P(6 ou plus sur 24) = 0,896 ; P(2 ou moins sur 24) = 0,003
+I. Comptes
+  modèles : principal 96, ancre 6, étalonnage 8, total 110 ; réserve au plus 12 ; total au plus 122
+  mesures causales : 68 par unité (2 de référence, 3 sens fois 22 ensembles) ; 24 unités : 1632 ; 48 unités : 3264
+  stockage de 110 modèles (18 couches chacun) et d'un plongement : 22,4 Go
+  stockage de 122 modèles (18 couches chacun) et d'un plongement : 24,8 Go
+  jetons d'entrée cumulés par conversation chez les auteurs : moyenne de 782 605, 1 673 367, 1 549 461 = 1 335 144
+  projection (un lecteur, 48 cas et 3 d'ancre) : 51 conversations fois la moyenne = 68,1 millions
+  projection (deux lecteurs, 96 et 6) : 102 conversations fois la moyenne = 136,2 millions
+  variante sans carte (remarque m-8) : contrôle causal du texte v1, 26 h pour 2 016 mesures (v1, l. 190) ; règle de trois pour 1 632 : 26 × 1 632 / 2 016 = 21,0 h
+K. Ce que bornent des comptes publiés par des voisins (calculs du rédacteur sur des chiffres lus sur PDF)
+  0 fausse alerte sur 21 (Liu et Yang, arXiv 2611.07847v2, p. 1) : borne supérieure de Clopper-Pearson unilatérale à 95 % = 0,133
+  10 sur 10 en choix forcé (Goworek et al., arXiv 2611.21449v1, p. 13 à 15) : queue supérieure sous 0,5 = 0,001
+  7 sur 10 en choix forcé (Goworek et al., arXiv 2611.21449v1, p. 13 à 15) : queue supérieure sous 0,5 = 0,172
+  23 sur 32 en choix forcé (Goworek et al., arXiv 2611.21449v1, p. 13 à 15) : queue supérieure sous 0,5 = 0,010
+  14 sur 32 en choix forcé (Goworek et al., arXiv 2611.21449v1, p. 13 à 15) : queue supérieure sous 0,5 = 0,811
+  13 sur 32 en choix forcé (Goworek et al., arXiv 2611.21449v1, p. 13 à 15) : queue supérieure sous 0,5 = 0,892
+  17 sur 32 en choix forcé (Goworek et al., arXiv 2611.21449v1, p. 13 à 15) : queue supérieure sous 0,5 = 0,430
+  3 sur 3 en choix forcé (billet, expérience 7) : queue supérieure sous 0,5 = 0,125
+J. Déclencheurs de l'audit de symétrie : probabilités sous quelques vérités
+  M1 = 24/24 si l'exactitude vraie vaut 0,85 : 0,0202 ; 0,95 : 0,292
+  M1 <= 6/24 si l'exactitude vraie vaut 0,5 : 0,0113
+  M2 = 0/24 si la scission vraie vaut 0,05 : 0,292 ; 0,15 : 0,0202

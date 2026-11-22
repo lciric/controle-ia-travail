@@ -1,3 +1,11 @@
+**2026-11-22T07:37:03Z (`date -u`) — EN TÂCHE : Vast 61875617 (étalonnage du saboteur, coupure 16 USD ; relevés par l'exécutante session_01XJ6MgqUTEVCed6a2f6rWmC et la mère) ; Vast 61932710 (réajustement des lentilles, GO-2026-11-22-05, session_01XJ6MgqfTmLrdjtfZDdJu8G). Nouvelle mère session_01XJ6Mgr4LgbMsg5zLyRZCpG, autonomie jusqu'à 20:53Z (GO-2026-11-22-29). Hetzner : aucun serveur.**
+
+**2026-11-22T06:28:56Z (`date -u`) — PASSATION vers une nouvelle mère sur un nouveau compte (GO-2026-11-22-25) : `registres/passations/2026-11-22-0630.md` et son brief `2026-11-22-0630-brief-lancement-mere-nouveau-compte.md`. EN TÂCHE : Vast 61875617, étalonnage du saboteur (coupure 16 USD, exécutante). Collisionneurs : protocoles X en mode isolé en file. Hetzner : aucun serveur.**
+
+**2026-11-22T04:48:07Z (`date -u`) — EN TÂCHE : instance Vast 61875617 (`iib-explo-v5`), étalonnage du saboteur à budget v5 en cours (6,16 USD comptés à 04:39Z) ; coupure propre relevée à 16 USD par le mot de Lazar (GO-2026-11-22-01, additif 1 a9d43d59…, correctif 0013 porté par l'exécutante) ; dépense tenue 20,76 USD ; relevés toutes les 30 minutes. Bras A : aucun versement Google (recharge automatique, GO-2026-11-22-02).**
+
+**2026-11-21T23:31:22Z (`date -u`) — EN TÂCHE : instance Vast 61875617 (`iib-explo-v5`), reprise de l'étalonnage du saboteur à budget v5 (ordre v2 scellé 7219083a…), créée 23:29:16Z par l'exécutante session_01Qi7Gr6cZ3HczDtN4UYdPN9 ; attendu 2,44 h, coupure 12 USD (R-4747).**
+
 **2026-11-21T21:25:05Z (`date -u`) — CLOS : instance 61859391 détruite (étalonnage 1 du saboteur arrêté sur la suite ciblée, ≈ 1,24 USD) ; aucune machine louée en marche (R-4728).**
 
 **2026-11-21T21:09:57Z (`date -u`) — EN TÂCHE : instance Vast 61859391 (`iib-explo-v5`), étalonnage du saboteur à budget v5, créée 21:08:29Z par l'exécutante session_01Qi7Gr6cZ3HczDtN4UYdPN9 sous GO-2026-11-21-70 (ordre scellé 08010ad1…) ; durée attendue 2,44 h, coupure 12 USD ; arrêt par identifiant à FIN, garde à l'arrêt ≤ 48 h (R-4726).**
