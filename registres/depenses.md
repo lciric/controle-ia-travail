@@ -595,3 +595,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 | 2026-11-22 | avis de Carbon et d'Astra sur le seuil de 0,75 des mathématiques (question A), session session_013QMayn726Xov44bFqF2FTv, clé Gemini | 0,71 USD (0,78 au prix haut) | GO-2026-11-22-105 | R-4979 |
 | 2026-11-22 | bras A, appel à Neon sur le point 2 (premier envoi coupé compté au pire 0,98 + relance en flux 0,77) | 1,76 USD au plus | GO-2026-11-22-100, -104 | R-4979 |
 | 2026-11-22 | lecteur des verdicts, un appel à Neon | 0,28 USD | GO-2026-11-22-106 | R-4981 |
+| 2026-11-22 | avis de Neon sur le seuil de 0,75 des mathématiques (question A) | 0,56 USD | GO-2026-11-22-109 | R-4983 |
