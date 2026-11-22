@@ -597,3 +597,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 | 2026-11-22 | lecteur des verdicts, un appel à Neon | 0,28 USD | GO-2026-11-22-106 | R-4981 |
 | 2026-11-22 | avis de Neon sur le seuil de 0,75 des mathématiques (question A) | 0,56 USD | GO-2026-11-22-109 | R-4983 |
 | 2026-11-22 | renvois par l'interface (passe X groupe 2 Opus 5.5 1,55 ; exploration Fable 5.1 2,80 ; exploration Opus 5.5 coupée au plafond 1,92), clé LUC | 6,27 USD | GO-2026-11-22-103 | R-4992 |
+| 2026-11-22 | renvois par l'interface, relance de l'exploration Opus 5.5 en effort high après troncature | 0,85 USD (total des renvois 7,13 USD) | GO-2026-11-22-103 | R-4996 |
