@@ -11,6 +11,8 @@
 #  (c6) correctif 0019 (contre-lecture cl1, M1) : la course est engagée une seule fois par étalonnage, d'une machine à l'autre ; la
 #       référence distante `essai/iib-course-engagee-<run de l'étalonnage>` est cherchée (présente : refus, rien ne part), puis
 #       poussée avant l'installation ; le lanceur, lui, scelle et pousse `course-engagee-iib-v5.json` avant le premier tour ;
+#       correctif 0020 : liste de la course en version 2 (`tests-cibles-iib-course-v5-v2.txt`), plus l'essai du tirage sur la
+#       carte (`tests/test_tirage_carte_v1.py`, dont un essai marqué « carte » qui ne se joue que là) ; le tirage par défaut ne change pas ;
 #  (c5) les lignes du journal disent « course ». Machine neuve (le second démarrage de l'amorce de l'étalonnage ne relance rien).
 # Choisie par le lanceur de session v3 avec `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` (seule autre valeur permise).
 # Écrite et éprouvée à blanc en essai local seulement ; jamais lancée par son développeur.
@@ -417,7 +419,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
 fi
 # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-iib-course-v5-v1.txt"; LISTE_SHA256="7c4757fa17c0b059cf5bb071a0b557e0aeba789af396cafb4d0d6776bbbea2bc"; FICHIERS_TESTS=""
+LISTE_TESTS="scripts/tests-cibles-iib-course-v5-v2.txt"; LISTE_SHA256="035c9427f9be8e509b493d28515567d2f99550dd74e0648289bd25c28c2babbf"; FICHIERS_TESTS=""
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"

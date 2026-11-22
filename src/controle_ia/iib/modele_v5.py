@@ -17,6 +17,19 @@ from __future__ import annotations
 from ..gardes import GardeArret
 from . import configuration_v5 as cf
 
+# Correctif 0020 : tirage des jetons. « processeur » (défaut, inchangé) : `modele_v1.ModeleTorch` ; « carte » (chemin neuf,
+# choisi explicitement) : `modele_tirage_carte_v1.ModeleTorchTirageCarte`, Gumbel-max à bruit compté sur l'appareil du modèle.
+TIRAGES = ("processeur", "carte")
+TIRAGE_DEFAUT = "processeur"
+
+
+def exiger_tirage(tirage: str, mode: str) -> str:
+    if tirage not in TIRAGES:
+        raise GardeArret(f"tirage {tirage!r} : {TIRAGES} (refus)")
+    if tirage != TIRAGE_DEFAUT and mode != "reel":
+        raise GardeArret("tirage sur la carte : le modèle jouet ne tire pas par torch ; mode réel seulement (refus)")
+    return tirage
+
 
 def exiger_tirage_a_la_temperature_seule(config: dict) -> None:
     """Le modèle ne sait tirer qu'à la température : tout autre réglage de tirage non neutre est un refus."""
@@ -29,13 +42,15 @@ def exiger_tirage_a_la_temperature_seule(config: dict) -> None:
         raise GardeArret("température du jumeau ≠ température de la génération de l'agent (refus)")
 
 
-def charger_modele_reel(config: dict):
+def charger_modele_reel(config: dict, tirage: str = TIRAGE_DEFAUT):
     """Modèle réel (carte seulement) : jamais appelé par les essais."""
     from ..harnais.formats import FormatChat
     from ..harnais.modeles import charger_modele, exiger_modele_autorise, fins_du_modele
     from ..premier_test_ia.run import controler_format_agent
     from .modele_v1 import ModeleTorch
+    from .modele_tirage_carte_v1 import ModeleTorchTirageCarte
 
+    exiger_tirage(tirage, config["mode"])
     cf.exiger_modele(config)
     exiger_tirage_a_la_temperature_seule(config)
     a, m = config["agent"], config["modele"]
@@ -43,16 +58,18 @@ def charger_modele_reel(config: dict):
     torch_m, tok = charger_modele(a["modele"], a["revision"], m["precision"], m["appareil"], m["noyau_attention"])
     fmt = FormatChat(tok, variables=m["variables_gabarit"])
     fmt.fins = fins_du_modele(torch_m, tok) | {fmt._pieces(("x", "y"))["cloture"][0]}
-    modele = ModeleTorch(torch_m, fmt, m["forme_lot_suites"], nom=f"{a['modele']}@{a['revision'][:12]}")
+    classe = ModeleTorch if tirage == TIRAGE_DEFAUT else ModeleTorchTirageCarte
+    modele = classe(torch_m, fmt, m["forme_lot_suites"], nom=f"{a['modele']}@{a['revision'][:12]}")
     modele.controle_du_format = controler_format_agent(fmt, a, config["mode"])
     return modele
 
 
-def construire_modele(config: dict):
+def construire_modele(config: dict, tirage: str = TIRAGE_DEFAUT):
+    exiger_tirage(tirage, config["mode"])
     cf.exiger_modele(config)
     exiger_tirage_a_la_temperature_seule(config)
     if config["mode"] == "jouet":
         from .jouet_v5 import ModeleJouetDeLangue
 
         return ModeleJouetDeLangue(config.get("jouet") or {})
-    return charger_modele_reel(config)
+    return charger_modele_reel(config, tirage)

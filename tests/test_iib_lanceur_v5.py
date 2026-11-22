@@ -610,9 +610,9 @@ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choi
     vivantes = [l for l in c.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
     assert len(vivantes) == 1 and '--phase course --config "$CONFIG" --run-id "$RUN" --etalonnage "$RUN_ETAL"' in vivantes[0]
     assert 'IIB_CONSIGNER="$R/iib-consigner.sh"' in vivantes[0] and 'ajouter "runs/$RUN" "diag/$RUN" "diag/$RUN_ETAL"' in c
-    liste = s / "tests-cibles-iib-course-v5-v1.txt"
+    liste = s / "tests-cibles-iib-course-v5-v2.txt"                     # correctif 0020 : plus l'essai du tirage sur la carte
     assert liste.read_text(encoding="utf-8").split() == sorted((s / "tests-cibles-iib-v5-v6.txt").read_text(encoding="utf-8").split()
-                                                              + ["tests/test_iib_distillation_torch_v5.py"])
+                                                              + ["tests/test_iib_distillation_torch_v5.py", "tests/test_tirage_carte_v1.py"])
     assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in c
     # la phase lue par la surveillance du lanceur de session (même commande que `lancer_iib_v3.sh`, ligne PHASE=) : « course »
     lue = subprocess.run(["bash", "-c", "grep -v '^[[:space:]]*#' \"$1\" | sed -n 's/.*controle_ia\\.iib\\.lanceur_v5 --phase \\([a-z_]*\\) .*/\\1/p' | sort -u",
@@ -652,3 +652,15 @@ def test_amorce_de_la_course_engagement_unique_par_etalonnage(tmp_path):
     assert refs == ["refs/heads/essai/iib-course-engagee-20991231-000020-iib-jouet"]
     deux = subprocess.run(["bash", str(script), str(tmp_path), str(d)], capture_output=True, text=True, timeout=120)
     assert deux.returncode == 2 and "course déjà engagée sur cet étalonnage" in deux.stdout and "FIN" not in deux.stdout
+
+
+def test_tirage_choisi_explicitement_defaut_inchange(tmp_path):
+    """Correctif 0020 : le tirage sur la carte est un chemin neuf, choisi explicitement (`tirage="carte"`, `--tirage carte`) ; le
+    défaut reste le tirage d'origine et il est écrit au résumé ; « carte » en mode jouet est refusé avant tout manifeste."""
+    config, _ = _depot_jouet(tmp_path)
+    with pytest.raises(GardeArret, match="mode réel seulement"):
+        la.executer("etalonnage", config, tmp_path, "20991231-000040-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False,
+                    tirage="carte")
+    assert not (tmp_path / "runs" / "20991231-000040-iib-jouet").exists()
+    r = la.executer("etalonnage", config, tmp_path, "20991231-000041-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
+    assert r["tirage"] == "processeur"

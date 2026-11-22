@@ -643,7 +643,7 @@ _RUN_ETALONNAGE = re.compile(r"[0-9]{8}-[0-9]{6}-iib-[a-z0-9-]+")
 
 
 def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=None, environnement: dict | None = None,
-             autoriser_depot_sale: bool = False, carte=None, etalonnage: str | None = None, distillateur=None) -> dict:
+             autoriser_depot_sale: bool = False, carte=None, etalonnage: str | None = None, distillateur=None, tirage: str = "processeur") -> dict:
     """Joue une phase sous `runs/<run>/`, `diag/<run>/` et `donnees/<run>/` (la forme que l'amorce consigne et pousse).
 
     - `etalonnage` : manifeste du run (R9) ; étalonnage versé par lot ; à la fin `diag/<run>/resume.json` ; sur toute garde ou
@@ -670,11 +670,15 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         cf.exiger_config_v5(config, racine, pour_lancer=True)
         return phase_conditions(config, racine, diag)
     if phase == "course":
-        return _executer_course(config, racine, run_id, etalonnage, modele, monde, distillateur, environnement, autoriser_depot_sale, carte)
+        return _executer_course(config, racine, run_id, etalonnage, modele, monde, distillateur, environnement, autoriser_depot_sale, carte,
+                                tirage)
     if etalonnage is not None:
         raise GardeArret("--etalonnage n'a de sens que pour la phase course (refus)")
     cf.exiger_config_v5(config, racine, pour_lancer=True)
     exiger_accord(config, environnement, carte)
+    from .modele_v5 import exiger_tirage
+
+    exiger_tirage(tirage, config["mode"])                                           # correctif 0020 : tirage choisi, défaut inchangé
     versement = vs.Versement(racine, environnement, config["mode"], progres)       # correctif 0014 : avant le manifeste, avant tout calcul
     chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste"], entropie=int(config["entropie"]),
                                   decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
@@ -683,8 +687,8 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
     try:
         from . import modele_v5
 
-        progres(etape="chargement", mode=config["mode"])
-        modele = modele if modele is not None else modele_v5.construire_modele(config)
+        progres(etape="chargement", mode=config["mode"], tirage=tirage)
+        modele = modele if modele is not None else modele_v5.construire_modele(config, tirage)
         monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
         etat["etape"] = "etalonnage"
         cree = environnement.get("IIB_DEBUT_UTC_S")
@@ -692,7 +696,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
                   "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
                   "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,
-                  "replis_forme_lot_suites": r["replis_forme_lot_suites"],
+                  "replis_forme_lot_suites": r["replis_forme_lot_suites"], "tirage": tirage,
                   "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées"}
         ecrire_resultat(racine, chemin_m, "resume", resume)
         return resume
@@ -746,7 +750,7 @@ def exiger_identifiants_de_l_etalonnage(racine, etalonnage: str, mode: str) -> l
 
 
 def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, monde, distillateur, environnement: dict,
-                     autoriser_depot_sale: bool, carte) -> dict:
+                     autoriser_depot_sale: bool, carte, tirage: str = "processeur") -> dict:
     from ..gardes import motif_d_arret
     from ..manifeste import creer_manifeste, ecrire_resultat
     from . import distillation_v5 as dv
@@ -754,6 +758,9 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
     cf.exiger_config_v5(config, racine, pour_lancer=True)
     exiger_accord(config, environnement, carte)
     sha_config = exiger_configuration_de_l_etalonnage(config, racine, etalonnage)
+    from .modele_v5 import exiger_tirage
+
+    exiger_tirage(tirage, config["mode"])                                 # correctif 0020
     dossier = Path("diag") / etalonnage
     if not (racine / dossier / NOMS["designation"]).is_file():
         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
@@ -766,7 +773,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
     try:
         from . import modele_v5
 
-        progres(etape="chargement", mode=config["mode"], phase="course")
+        progres(etape="chargement", mode=config["mode"], phase="course", tirage=tirage)
         if config["mode"] == "jouet":
             from .jouet_distillation_v5 import MOTIFS_JOUET, ModeleJouetEleve, MoteurJouet
 
@@ -774,7 +781,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
             section = config.get(cd.SECTION) or {}
             monde = monde if monde is not None else MondeJouet(len_reserve(config), int(section.get("evaluation", {}).get("taches", 8)))
         else:
-            modele = modele if modele is not None else modele_v5.construire_modele(config)
+            modele = modele if modele is not None else modele_v5.construire_modele(config, tirage)
             monde = monde if monde is not None else MondeReel(config, racine)
         if distillateur is None:
             if config["mode"] == "reel":
@@ -787,7 +794,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage, "configuration_sha256": sha_config,
                   "arret": r["arret"], "oracle_de_la_regle": r["oracle_de_la_regle"], "acceptes": r["acceptes"], "phrase": r["phrase"],
                   "evaluation": r["evaluation"], "reste": r["reste"], "empreintes": dict(sorted(r["sorties"].items())),
-                  "identifiants_de_l_etalonnage": len(ids), "versements": versement.journal, "replis_forme_lot_suites": replis_de(modele),
+                  "identifiants_de_l_etalonnage": len(ids), "tirage": tirage, "versements": versement.journal, "replis_forme_lot_suites": replis_de(modele),
                   "duree_s": round(time.perf_counter() - debut, 1),
                   "aucune_activation": True}
         ecrire_resultat(racine, chemin_m, "resume", resume)
@@ -821,13 +828,16 @@ def _main(argv: list[str]) -> int:
     p.add_argument("--config", required=True)
     p.add_argument("--run-id", required=True)
     p.add_argument("--autoriser-depot-sale", action="store_true")
+    p.add_argument("--tirage", default="processeur", choices=("processeur", "carte"),
+                   help="correctif 0020 : « carte » = tirage des jetons sur l'appareil du modèle (chemin neuf) ; défaut inchangé")
     p.add_argument("--etalonnage", default=None, help="phase course seulement : run de l'étalonnage (dossier diag/<run>/)")
     args = p.parse_args(argv)
     signal.signal(signal.SIGTERM, lever_sur_term)
     try:
         verifier(args.config)
         config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale, etalonnage=args.etalonnage)
+        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale, etalonnage=args.etalonnage,
+                     tirage=args.tirage)
     except GardeArret as e:
         print(f"ARRÊT : {e}", file=sys.stderr)
         return 1
