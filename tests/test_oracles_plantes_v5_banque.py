@@ -223,20 +223,30 @@ def test_racines_differentes_banques_differentes(banque):
 
 # ---------------------------------------------------------------- sous-banque S/N
 def test_sous_banque_stratifiee_sans_etiquette(banque):
+    # v5 (brouillon 2) : 150 analysés, 48 témoins servis hors analyse, 10 seconds services : 208 items
     ids = [f"monde-{k}" for k in range(12)]
     servie, cle = tirer_sous_banque(banque, ids, RACINE_ESSAI, P["sous_banque"])
-    assert len(servie["items"]) == 150 and len(cle["items"]) == 150
+    assert len(servie["items"]) == 208 and len(cle["items"]) == 208
+    analyses = [it for it in cle["items"] if it["role"] == "analyse"]
     compte = {}
-    for it in cle["items"]:
+    for it in analyses:
         compte[it["etiquette"]] = compte.get(it["etiquette"], 0) + 1
     assert compte == {"VERITE_PLANTEE": 75, "FAUX_TOT": 38, "PIEGE": 37}
+    temoins = [it for it in cle["items"] if it["role"] == "temoin_hors_analyse"]
+    assert len(temoins) == 48
+    for w in ids:
+        t = [it["etiquette"] for it in temoins if it["identifiant_monde"] == w]
+        assert t.count("TEMOIN_TRIVIAL") == 2 and t.count("TEMOIN_GROSSIER") == 2
+    doubles = [it for it in cle["items"] if it["role"] == "second_service"]
+    ids_analyses = {it["identifiant"] for it in analyses}
+    assert len(doubles) == 10 and all(d["double_de"] in ids_analyses for d in doubles)
     par_monde = {}
-    for it in cle["items"]:
+    for it in analyses:
         par_monde.setdefault(it["identifiant_monde"], []).append(it["etiquette"])
     assert all(6 <= l.count("VERITE_PLANTEE") <= 7 and 3 <= l.count("FAUX_TOT") <= 4 for l in par_monde.values())
-    assert len({it["identifiant"] for it in servie["items"]}) == 150
+    assert len({it["identifiant"] for it in servie["items"]}) == 208
     o = octets_json(servie)
-    for tok in ("VERITE_PLANTEE", "FAUX_TOT", "PIEGE", "etiquette", "gabarit"):
+    for tok in ("VERITE_PLANTEE", "FAUX_TOT", "PIEGE", "TEMOIN", "etiquette", "gabarit", "role", "double_de"):
         assert tok.encode() not in o
     assert set(servie["items"][0]) == {"identifiant", "identifiant_monde", "enonce"}
     again, _ = tirer_sous_banque(banque, ids, RACINE_ESSAI, P["sous_banque"])

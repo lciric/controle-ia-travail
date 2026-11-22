@@ -157,13 +157,13 @@ def test_normalisation_preserve_la_semantique_sur_la_base_aleatoire():
 # ---------------------------------------------------------------- graines
 def test_graines_arbre_du_preenregistrement():
     racine = 123456789
-    enfants = np.random.SeedSequence(racine).spawn(10)
-    for i in range(10):
+    enfants = np.random.SeedSequence(racine).spawn(11)
+    for i in range(11):
         assert list(graine(racine, i).generate_state(4)) == list(enfants[i].generate_state(4))
     assert generateur(racine, 0, 3, 0).integers(0, 10 ** 9) == generateur(racine, 0, 3, 0).integers(0, 10 ** 9)
 
 
-@pytest.mark.parametrize("racine,chemin", [(5, (10,)), (5, ()), (-1, (0,)), (True, (0,)), (1.5, (0,))])
+@pytest.mark.parametrize("racine,chemin", [(5, (11,)), (5, ()), (-1, (0,)), (True, (0,)), (1.5, (0,))])
 def test_graines_hors_arbre_refusees(racine, chemin):
     with pytest.raises(GardeArret):
         graine(racine, *chemin)

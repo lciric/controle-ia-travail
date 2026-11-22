@@ -380,7 +380,8 @@ def _vars_expr(e, acc):
     if isinstance(e, tuple):
         if e and e[0] == "var":
             acc.add(e[1])
-        for x in e[1:]:
+        # v5 (remarque 19) : un tuple d'arguments de fonction se parcourt en entier, premier argument compris
+        for x in (e if e and not isinstance(e[0], str) else e[1:]):
             _vars_expr(x, acc)
     return acc
 
@@ -447,7 +448,7 @@ def _toutes_liees(f, acc):
     if isinstance(f, tuple) and f:
         if f[0] in ("tout", "existe", "somme", "somme_sur"):
             acc.append(f[1])
-        for x in f[1:]:
+        for x in (f if not isinstance(f[0], str) else f[1:]):
             _toutes_liees(x, acc)
     return acc
 

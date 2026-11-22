@@ -26,6 +26,7 @@ from .banque import construire_banque
 from .base_aleatoire import tirer_base
 from .cles import (charger_cle, ecrire_monde, fragments_de_cle, instances_de_cle, octets_json,
                    verifier_absence_fuite, verifier_absence_instances)
+from .banque import ETIQUETTES
 from .graines import description, generateur
 from .lignee import Registre
 from .parametres import charger
@@ -121,6 +122,11 @@ def executer(racine: int, sortie: str | Path) -> tuple[int, dict]:
     rapport = rejouer_batterie_banque([m for m, _ in banque], cles, registre)
     rapport["plantes_total"] = sum(len(c["plantes"]) for c in cles)
     rapport["mondes"] = len(cles)
+    # base « forme seule » (v5, brouillon 2, P9) : règle fixe et classifieur de style, plis par l'enfant [10]
+    from .forme_seule import ecarts_p9, mesurer
+    fs = params["forme_seule"]
+    rapport["base_forme_seule"] = mesurer(banque, generateur(racine, 10), int(fs["plis"]), fs["lissage"])
+    rapport["ecarts"] += ecarts_p9(rapport["base_forme_seule"])
     viol = violations_a1(rapport)
     rapport["A1_violee"] = bool(viol)
     rapport["temoins_conformes"] = not any(e.startswith("témoin") for e in rapport["ecarts"])
@@ -128,7 +134,7 @@ def executer(racine: int, sortie: str | Path) -> tuple[int, dict]:
     servie, cle_sb = tirer_sous_banque(banque, ids, racine, params["sous_banque"])
     o_servie = octets_json(servie)
     for c in cles:
-        verifier_absence_fuite(o_servie, [f for f in fragments_de_cle(c) if f.isupper() or f.startswith("{")],
+        verifier_absence_fuite(o_servie, [f for f in fragments_de_cle(c) if f in ETIQUETTES.values() or f.startswith("{")],
                                "sous-banque servie")
         verifier_absence_instances(servie, instances_de_cle(c), "sous-banque servie")
     for nom, obj in (("sous-banque-servie-v5.json", servie), ("sous-banque-cle-v5.json", cle_sb)):
@@ -218,7 +224,11 @@ def main(argv=None) -> int:
         "autocontrole_t6": rapport["autocontrole_t6_instances_de_cle"],
         "redites_parmi_plantes": rapport["redites_parmi_plantes_vivantes"],
         "collisions_de_lignee": rapport["collisions_de_lignee"]["nombre"],
-        "base_grammaire_aleatoire": rapport["base_grammaire_aleatoire"], "code_de_sortie": code,
+        "base_grammaire_aleatoire": rapport["base_grammaire_aleatoire"],
+        "forme_seule_regle": {k: v["taux"] for k, v in rapport["base_forme_seule"]["regle_fixe"].items()},
+        "forme_seule_aires": {k: v for k, v in rapport["base_forme_seule"]["classifieur_de_style"].items()
+                              if k.startswith("aire")},
+        "code_de_sortie": code,
     }, ensure_ascii=False, indent=1))
     return code
 

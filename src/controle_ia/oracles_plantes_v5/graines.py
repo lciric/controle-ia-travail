@@ -19,7 +19,8 @@ ENFANTS = {
     0: "définitions des mondes", 1: "plantation", 2: "sous-banque S/N", 3: "identifiants et ordre des items",
     4: "ordre des mondes et des configurations", 5: "rééchantillonnage", 6: "dix énoncés servis deux fois",
     7: "strates et tirage des connus", 8: "tirage de l'audit humain",
-    9: "base « grammaire aléatoire » (hors liste du préenregistrement, question ouverte)",
+    9: "base « grammaire aléatoire » (adopté au brouillon 2)",
+    10: "validation croisée du classifieur de style de la base « forme seule » (réservé au brouillon 2)",
 }
 
 

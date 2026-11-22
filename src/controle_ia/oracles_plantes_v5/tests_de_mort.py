@@ -138,7 +138,7 @@ def _noms_fonctions(e, acc):
     if isinstance(e, tuple) and e:
         if e[0] == "fn":
             acc.add(e[1])
-        for x in e[1:]:
+        for x in (e if not isinstance(e[0], str) else e[1:]):
             _noms_fonctions(x, acc)
     return acc
 
@@ -151,7 +151,7 @@ def _candidats(arbre, liees_prefixe: set):
         if isinstance(e, tuple) and e:
             if e[0] in ("tout", "existe", "somme", "somme_sur"):
                 toutes_liees.add(e[1])
-            for x in e[1:]:
+            for x in (e if not isinstance(e[0], str) else e[1:]):
                 liees(x)
 
     liees(arbre)
@@ -166,7 +166,7 @@ def _candidats(arbre, liees_prefixe: set):
                 for a in e[2]:
                     if not (_vars_expr(a, set()) & internes):
                         vus.setdefault(imprimer_expr(a), a)
-            for x in e[1:]:
+            for x in (e if not isinstance(e[0], str) else e[1:]):
                 visiter(x)
 
     visiter(arbre)

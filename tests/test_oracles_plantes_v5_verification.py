@@ -210,8 +210,9 @@ def test_r13bis_meme_forme_dans_deux_mondes_ni_mort_ni_arret(tmp_path):
     # forme normale (constantes substituées) ; le registre est commun à toute la banque
     banque = banque11_ou(19)
     (m9, p9), (m10, p10) = banque[9], banque[10]
-    ft = next(p.texte for p in p9 if p.gabarit == "croissance_sans_QU")
-    vr = next(p.texte for p in p10 if p.gabarit == "croissance")
+    # v5 : ces deux gabarits ne sont plus plantés ; les textes sont écrits ici, sur les mêmes mondes
+    ft = "pour tout n dans NAT, u(n) <= max(U0, U1) * PU^n"
+    vr = "pour tout n dans NAT, u(n) <= max(U0, U1) * (PU + QU)^n"
     nm = mod("normalisation")
     assert nm.normaliser(m9.analyser(ft), m9, m9.ev).empreinte == nm.normaliser(m10.analyser(vr), m10, m10.ev).empreinte
     reg = lignee.Registre(tmp_path / "r.jsonl")
