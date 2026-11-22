@@ -1,0 +1,64 @@
+Calcul d'appui 6 — cas d'école de la batterie, version 3 du texte (prototype du concepteur)
+numpy 2.5.3
+
+A. Règle de trois instances au hasard
+  un contre-exemple parmi 13 instances : {'M': 13, 'm': 1, 'valeur': 0.230769, 'attendu': '3/13', 'conforme': True}
+  un faux sans variable (une instance, contre-exemple) : {'M': 1, 'm': 1, 'valeur': 1.0, 'attendu': '1', 'conforme': True}
+  aucun contre-exemple vérifiable parmi 13 instances : {'M': 13, 'm': 0, 'valeur': 0.0, 'attendu': '0', 'conforme': True}
+  trois instances, un contre-exemple : {'M': 3, 'm': 1, 'valeur': 1.0, 'attendu': '1', 'conforme': True}
+  deux instances, deux contre-exemples : {'M': 2, 'm': 2, 'valeur': 1.0, 'attendu': '1', 'conforme': True}
+  46 instances, toutes contre-exemples : {'M': 46, 'm': 46, 'valeur': 1.0, 'attendu': '1', 'conforme': True}
+  aucune instance : {'M': 0, 'm': 0, 'valeur': 0.0, 'attendu': '0', 'conforme': True}
+  écart le plus grand à l'énumération de tous les triplets, M de 4 à 14 : 1.1e-16
+  tirage de contrôle, 20 000 graines
+    M=13, m=1 : {'frequence': 0.2303, 'exacte': 0.2308, 'ecart': 0.0005}
+    M=31, m=6 : {'frequence': 0.4867, 'exacte': 0.4883, 'ecart': 0.0017}
+    M=46, m=9 : {'frequence': 0.486, 'exacte': 0.4881, 'ecart': 0.0021}
+    M=1, m=1 : {'frequence': 1.0, 'exacte': 1.0, 'ecart': 0.0}
+    M=13, m=0 : {'frequence': 0.0, 'exacte': 0.0, 'ecart': 0.0}
+    M=2, m=1 : {'frequence': 1.0, 'exacte': 1.0, 'ecart': 0.0}
+
+B. Le plus grand nombre de contre-exemples qui laisse la probabilité au plus égale à la moitié
+  M=13 : {'plus_grand_m_sous_la_moitie': 2, 'part_des_instances': 0.1538, 'probabilite': 0.4231, 'probabilite_a_m_plus_un': 0.5804}
+  M=31 : {'plus_grand_m_sous_la_moitie': 6, 'part_des_instances': 0.1935, 'probabilite': 0.4883, 'probabilite_a_m_plus_un': 0.5497}
+  M=46 : {'plus_grand_m_sous_la_moitie': 9, 'part_des_instances': 0.1957, 'probabilite': 0.4881, 'probabilite_a_m_plus_un': 0.5296}
+  M=100 : {'plus_grand_m_sous_la_moitie': 20, 'part_des_instances': 0.2, 'probabilite': 0.4919, 'probabilite_a_m_plus_un': 0.511}
+  M=1000 : {'plus_grand_m_sous_la_moitie': 206, 'part_des_instances': 0.206, 'probabilite': 0.4998, 'probabilite_a_m_plus_un': 0.5017}
+  limite, instances nombreuses : 1 - (1/2)^(1/3) : 0.2063
+
+C. Règle des ex æquo
+  scores tous égaux : {'exces_au_prorata': 0.0, 'exces_au_bloc_entier': -0.1}
+  séparation parfaite : {'exces_au_prorata': 0.9, 'exces_au_bloc_entier': 0.9}
+  9 vérités sur 75 et 45 faux sur 75 au score haut : {'exces_au_prorata': 0.4, 'exces_au_bloc_entier': -0.1}
+  sonde sans information, scores tous distincts : {'attendu_exact_8_sur_76_moins_un_dixieme': 0.00526, 'simulation_20000_tirages': {'tous les faux (75)': {'exces_moyen': 0.00509, 'erreur_type': 0.00035}, 'faux tôt (38)': {'exces_moyen': 0.00569, 'erreur_type': 0.00043}, 'pièges (37)': {'exces_moyen': 0.00518, 'erreur_type': 0.00043}}}
+
+D. Aire non définie
+  {'aire': None, 'jugement': {'n': 120, 'tenue': False, 'motif': 'non calculable', 'racines_sans_valeur': 1}}
+
+E. Critère d'arrêt de la sonde des nombres (douze apprentissages par banque)
+  saine/0.0 : apprentissages 12 ; écart au module 0.0
+    decrement     : {'non_converges': 0, 'pas_le_plus_long': 10, 'ecart_des_poids_le_plus_grand': 0.0}
+    pas_entier    : {'non_converges': 1, 'pas_le_plus_long': 200, 'ecart_des_poids_le_plus_grand': 3.2e-09}
+    pas_effectif  : {'non_converges': 0, 'pas_le_plus_long': 13, 'ecart_des_poids_le_plus_grand': 4.5e-09}
+  grandeur/1.0 : apprentissages 12 ; écart au module 0.0
+    decrement     : {'non_converges': 0, 'pas_le_plus_long': 13, 'ecart_des_poids_le_plus_grand': 0.0}
+    pas_entier    : {'non_converges': 0, 'pas_le_plus_long': 14, 'ecart_des_poids_le_plus_grand': 4.6e-10}
+    pas_effectif  : {'non_converges': 0, 'pas_le_plus_long': 14, 'ecart_des_poids_le_plus_grand': 4.6e-10}
+  relation/1.0 : apprentissages 12 ; écart au module 0.0
+    decrement     : {'non_converges': 0, 'pas_le_plus_long': 11, 'ecart_des_poids_le_plus_grand': 0.0}
+    pas_entier    : {'non_converges': 0, 'pas_le_plus_long': 12, 'ecart_des_poids_le_plus_grand': 1.3e-10}
+    pas_effectif  : {'non_converges': 0, 'pas_le_plus_long': 12, 'ecart_des_poids_le_plus_grand': 1.3e-10}
+  gabarit/0.0 : apprentissages 12 ; écart au module 0.0
+    decrement     : {'non_converges': 0, 'pas_le_plus_long': 10, 'ecart_des_poids_le_plus_grand': 0.0}
+    pas_entier    : {'non_converges': 0, 'pas_le_plus_long': 11, 'ecart_des_poids_le_plus_grand': 1.7e-14}
+    pas_effectif  : {'non_converges': 0, 'pas_le_plus_long': 11, 'ecart_des_poids_le_plus_grand': 1.2e-14}
+  fenetres/0.0 : apprentissages 12 ; écart au module 0.0
+    decrement     : {'non_converges': 0, 'pas_le_plus_long': 12, 'ecart_des_poids_le_plus_grand': 0.0}
+    pas_entier    : {'non_converges': 8, 'pas_le_plus_long': 200, 'ecart_des_poids_le_plus_grand': 2.6e-08}
+    pas_effectif  : {'non_converges': 0, 'pas_le_plus_long': 16, 'ecart_des_poids_le_plus_grand': 3e-08}
+
+F. Audit du tirage de contrôle, banque saine du banc (écart de plus de 0,02 : audit)
+  faux : 9000
+  moyenne_du_tirage : 0.1322
+  calcul_juste : {'moyenne_exacte': 0.1308, 'ecart': 0.0014, 'audit': False}
+  calcul_fausse : {'moyenne_exacte': 0.0662, 'ecart': 0.066, 'audit': True}
