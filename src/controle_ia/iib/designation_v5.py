@@ -94,9 +94,23 @@ def ecrire(resultat: dict, chemin) -> str:
     return sceller(chemin)
 
 
+PREFIXE_DE_LA_COURSE = "course/"     # correctif 0018 : texte scellé, section 14 (« la course dérive ses clés de la même entropie
+                                     # sous un préfixe propre ») ; R9
+
+
+def prefixe_de_la_course(config_etalonnage: dict) -> str:
+    """Préfixe propre de la course : celui de l'étalonnage suivi de `course/` ; jamais égal à celui de l'étalonnage."""
+    p = str(config_etalonnage["prefixe_graines"]) + PREFIXE_DE_LA_COURSE
+    if p == config_etalonnage["prefixe_graines"] or not PREFIXE_DE_LA_COURSE:
+        raise GardeArret("préfixe des graines de la course égal à celui de l'étalonnage : la section 14 exige un préfixe propre (refus)")
+    return p
+
+
 def configuration_de_course(config_etalonnage: dict, racine, chemin_designation: str) -> dict:
     """Configuration de la course : celle de l'étalonnage, où `oracle_de_la_regle` porte l'issue et l'empreinte du résultat scellé
-    de la désignation. Refus si l'issue n'est ni N ni P (la course ne part pas), ou si la configuration en porte déjà un."""
+    de la désignation, et où `prefixe_graines` est le préfixe propre de la course (`prefixe_de_la_course`, section 14 : même
+    entropie, clés sous un préfixe propre ; correctif 0018). Refus si l'issue n'est ni N ni P (la course ne part pas), ou si la
+    configuration porte déjà un oracle de la règle."""
     if config_etalonnage["oracle_de_la_regle"] != {"valeur": None, "designation": None}:
         raise GardeArret("configuration de course : la configuration porte déjà un oracle de la règle (refus)")
     chemin = Path(racine) / chemin_designation
@@ -106,5 +120,6 @@ def configuration_de_course(config_etalonnage: dict, racine, chemin_designation:
         raise GardeArret(f"pas de course sans résultat de désignation scellé « part » (issue lue : {r.get('issue')!r})")
     c = copy.deepcopy(config_etalonnage)
     c["oracle_de_la_regle"] = {"valeur": r["issue"], "designation": {"chemin": str(chemin_designation), "sha256": sha}}
+    c["prefixe_graines"] = prefixe_de_la_course(config_etalonnage)
     cf.exiger_oracle_de_la_regle(c, racine)
     return c

@@ -272,3 +272,45 @@ def test_phase_course_en_mode_reel_refuse_sans_distillateur_ou_sans_poussee(tmp_
     for dist, vers in ((None, object()), (object(), None), (None, None)):
         with pytest.raises(GardeArret, match="sans poussée par tour ou sans distillateur"):
             la.phase_course(config, tmp_path, "course", None, None, dist, {}, carte=False, versement=vers)
+
+
+def test_graines_de_la_course_sous_un_prefixe_propre(course):
+    """Correctif 0018 (texte scellé, section 14 ; R9) : même entropie, clés de la course sous un préfixe propre, disjointes de
+    celles de l'étalonnage ; le distillateur tire sous le même préfixe que les tours."""
+    from controle_ia.iib import designation_v5 as dg
+
+    d, config = course["racine"] / "course", course["config"]
+    p = config["prefixe_graines"] + dg.PREFIXE_DE_LA_COURSE
+    m = json.loads((d / "manifeste-course-iib-v5.json").read_text(encoding="utf-8"))
+    e = json.loads((d / "graines-etalonnage-iib-v5.json").read_text(encoding="utf-8"))
+    assert m["prefixe_graines"] == p != e["prefixe"] and m["entropie"] == e["entropie"]
+    assert m["graines"] and all(k.startswith(p) for k in m["graines"]) and not set(m["graines"]) & set(e["graines"])
+    assert any(k.startswith(p + "iib/maitre/") for k in m["graines"]) and any(k.startswith(p + "iib/temoin/") for k in m["graines"])
+    s = json.loads((d / "distillation-iib-v5.json").read_text(encoding="utf-8"))
+    assert s["prefixe_graines"] == p and all(k.startswith(p) for k in s["graines"])
+    assert m["config"]["prefixe_graines"] == p and config["prefixe_graines"] == "essai/"      # la configuration de l'étalonnage, intacte
+
+
+def test_prefixe_de_la_course_artefacts(course, monkeypatch):
+    from controle_ia.iib import designation_v5 as dg
+
+    assert dg.prefixe_de_la_course({"prefixe_graines": ""}) == "course/"                # cas sain : la configuration réelle porte ""
+    monkeypatch.setattr(dg, "PREFIXE_DE_LA_COURSE", "")
+    with pytest.raises(GardeArret, match="préfixe propre"):
+        dg.prefixe_de_la_course({"prefixe_graines": "essai/"})
+    monkeypatch.undo()
+    if course["conditions"]["issue"] not in ("N", "P"):
+        pytest.skip("la course jouet n'est pas partie")
+    vraie = dg.configuration_de_course
+
+    def sans_prefixe_propre(c, racine, chemin):                                         # artefact : la course reprend le préfixe de l'étalonnage
+        r = vraie(c, racine, chemin)
+        r["prefixe_graines"] = c["prefixe_graines"]
+        return r
+    monkeypatch.setattr(dg, "configuration_de_course", sans_prefixe_propre)
+    racine = course["avant"]
+    modele = ModeleJouetEleve()
+    d = _distillateur(racine, modele)
+    with pytest.raises(GardeArret, match="préfixe propre de la course"):
+        la.phase_course(course["config"], racine, "course", d.modele, course["monde"], d, carte=False)
+    assert not (racine / "course" / "tours").exists()

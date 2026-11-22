@@ -423,6 +423,8 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
     course = dg.configuration_de_course(config, racine, str(chemin_d))            # refuse toute issue autre que N ou P
     oracle = cf.exiger_config_v5(course, racine, pour_lancer=True)["oracle_de_la_regle"]
+    if course["prefixe_graines"] != dg.prefixe_de_la_course(config):         # correctif 0018 : section 14, préfixe propre de la course
+        raise GardeArret("course : préfixe des graines différent du préfixe propre de la course (section 14) : refus")
     if distillateur is not None:
         cd.section_de(course, pour_lancer=True)                # section de la distillation exigée avant le premier tour du maître
     autre = "P" if oracle == "N" else "N"
@@ -729,7 +731,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
     exiger_course_non_jouee(racine / dossier)
     versement = vs.Versement(racine, environnement, config["mode"], progres)
-    chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste-course"], entropie=int(config["entropie"]),
+    chemin_m, _ = creer_manifeste(racine, run_id, config, [dg.prefixe_de_la_course(config) + "iib/v5/manifeste"], entropie=int(config["entropie"]),
                                   decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
     etat, debut = {"etape": "chargement"}, time.perf_counter()
     try:
