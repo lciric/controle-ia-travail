@@ -215,7 +215,7 @@ def test_tolerance_entre_machines(famille, reglage, monkeypatch):
     seqs, y, _ = _donnees(graine=5, d=64, n=60)
     a = fc.apprendre(famille, "s", 15, seqs, y, reglage)
     perm = np.random.default_rng(0).permutation(len(seqs))
-    monkeypatch.setattr(fc, "threadpool_limits", lambda n: threadpool_limits(4))
+    monkeypatch.setattr(fc, "threadpool_limits", lambda n=1: threadpool_limits(4))
     b = fc.apprendre(famille, "s", 15, [seqs[i] for i in perm], y[perm], reglage)
     sa, sb = fc.scores_actions(a, seqs), fc.scores_actions(b, seqs)
     ecart = np.max(np.abs(sa - sb)) / np.max(np.abs(sa))
@@ -226,7 +226,7 @@ def test_tolerance_ridge_entre_machines(monkeypatch):
     X, v, _ = _ridge_donnees(80, 40)
     a = fc.regression_ridge_honnetes("r", X, v, 1.0)
     perm = np.random.default_rng(0).permutation(80)
-    monkeypatch.setattr(fc, "threadpool_limits", lambda n: threadpool_limits(4))
+    monkeypatch.setattr(fc, "threadpool_limits", lambda n=1: threadpool_limits(4))
     b = fc.regression_ridge_honnetes("r", X[perm], v[perm], 1.0)
     ra, rb = fc.residu_ridge(a, X, v), fc.residu_ridge(b, X, v)
     assert np.max(np.abs(ra - rb)) / np.max(np.abs(ra)) < fc.TOLERANCE_ENTRE_MACHINES["ridge_honnetes"]

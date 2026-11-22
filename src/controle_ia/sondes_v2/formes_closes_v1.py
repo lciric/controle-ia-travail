@@ -37,7 +37,7 @@ import warnings
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LogisticRegression
-from threadpoolctl import threadpool_limits
+from threadpoolctl import ThreadpoolController
 
 from ..gardes import GardeArret
 from ..sondes.familles import SondeLineaireJetons, _verifier_donnees
@@ -51,6 +51,17 @@ TOLERANCE_ENTRE_MACHINES = {"difference_moyennes_appariee": 1e-9, "difference_mo
 FAMILLES_JETONS = ("difference_moyennes_appariee", "difference_moyennes_blanchie", "logistique_l2")
 REGLAGES = {"difference_moyennes_appariee": (None,), "difference_moyennes_blanchie": RETRECISSEMENTS,
             "logistique_l2": INVERSES_PENALITE, "ridge_honnetes": ALPHAS_RIDGE}
+
+
+_CONTROLEUR: list = []
+
+
+def threadpool_limits(n: int = 1):
+    """Contexte « n tâches de calcul linéaire », par un contrôleur de threadpoolctl créé une fois (l'inventaire des
+    bibliothèques lit /proc/self/maps : coûteux à chaque appel)."""
+    if not _CONTROLEUR:
+        _CONTROLEUR.append(ThreadpoolController())
+    return _CONTROLEUR[0].limit(limits=int(n))
 
 
 def _f64(sequences):
@@ -78,14 +89,22 @@ def _verifier_paires(paires, y) -> list[tuple[int, int]]:
     return out
 
 
+def _moyennes_actions(seqs, indices) -> np.ndarray:
+    """Moyenne des jetons de chaque action désignée (définition d'une direction, jamais score d'une action lue)."""
+    sel = [seqs[i] for i in indices]
+    L = np.array([len(q) for q in sel], dtype=np.float64)
+    debuts = np.concatenate([[0], np.cumsum(L[:-1]).astype(np.int64)])
+    return np.add.reduceat(np.concatenate(sel), debuts, axis=0) / L[:, None]
+
+
 def _direction_moyennes(seqs, y, paires):
     if paires is None:
         mp = np.concatenate([s for s, t in zip(seqs, y) if t == 1]).mean(axis=0)
         mn = np.concatenate([s for s, t in zip(seqs, y) if t == 0]).mean(axis=0)
         return mp - mn, mp, mn
     paires = _verifier_paires(paires, y)
-    cp = np.stack([seqs[i].mean(axis=0) for i, _ in paires])
-    cn = np.stack([seqs[j].mean(axis=0) for _, j in paires])
+    cp = _moyennes_actions(seqs, [i for i, _ in paires])
+    cn = _moyennes_actions(seqs, [j for _, j in paires])
     return (cp - cn).mean(axis=0), cp.mean(axis=0), cn.mean(axis=0)
 
 
@@ -225,16 +244,26 @@ def residu_ridge(sonde: SondeLineaireJetons, vecteurs, valeurs) -> np.ndarray:
 
 def scores_actions(sonde, sequences) -> np.ndarray:
     """Score de chaque action : **maximum** sur ses jetons de w·h + b (double précision). Refuse toute agrégation autre
-    que le maximum."""
+    que le maximum. Calcul vectorisé : jetons mis bout à bout, un produit, puis maximum par action
+    (`numpy.maximum.reduceat`)."""
     if sonde.agregation != "max":
         raise GardeArret(f"sonde {sonde.nom} : agrégation {sonde.agregation!r} ; le maximum seulement")
-    _verifier_donnees(sequences)
+    if len(sequences) == 0:
+        raise GardeArret("aucune action")
+    d = int(np.asarray(sonde.w).shape[0])
+    longueurs = np.empty(len(sequences), dtype=np.int64)
+    for i, q in enumerate(sequences):
+        if q.ndim != 2 or q.shape[0] < 1 or q.shape[1] != d:
+            raise GardeArret(f"action de forme {q.shape} : (jetons ≥ 1, {d}) attendue")
+        longueurs[i] = q.shape[0]
+    X = np.concatenate(sequences).astype(np.float64, copy=False)
+    debuts = np.concatenate([[0], np.cumsum(longueurs)[:-1]])
     with threadpool_limits(1):
-        out = np.array([float(np.max(sonde.scores_par_jeton(np.asarray(s, dtype=np.float64)))) for s in sequences],
-                       dtype=np.float64)
+        par_jeton = sonde.scores_par_jeton(X)
+        out = np.maximum.reduceat(par_jeton, debuts)
     if not np.all(np.isfinite(out)):
         raise GardeArret(f"sonde {sonde.nom} : score non fini")
-    return out
+    return np.asarray(out, dtype=np.float64)
 
 
 def diagnostic_moyenne_jetons(sonde, sequences) -> np.ndarray:
