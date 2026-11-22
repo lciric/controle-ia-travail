@@ -1,0 +1,3 @@
+# Marque de la relance de Neon — v1
+
+Heure (date -u) : 2026-11-22T15:23:19Z. Relance de la seule unité ajout_neon (gemini-4-neon) de la mini-passe, **relance après panne de transport** (ConnectionResetError de 15:0xZ, aucune réponse rendue). Sur la consigne de la mère de 15:21Z, mot de Lazar : une requête, sous GO-2026-11-22-70 (et GO-2026-11-22-54 exigé par le programme), plafond relevé de 6,05 USD, total de la mini-passe porté à 32,19 USD. Programme inchangé : mini_passe_v2.py. Configuration : configuration-mini-passe-neon-relance-v1.json (f4b90330…). Journal : journal-mini-passe-neon-relance-20261122T152319Z.jsonl. Quarantaine neuve : flux-exploration-neon-relance.
