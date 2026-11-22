@@ -1,0 +1,20 @@
+B1 : 1 octet différent de l'amorce v6
+B2 : lignes retirées de l'amorce : 1 (< [ "$(printf '%s' "$TEXTE" | sha256sum | cut -c1-64)" = "$E…)
+B3 : lignes E_SCRIPT= dans l'amorce : 1 (v6 : 0)
+B1 : fabricant de la copie identique au v8 : oui
+B2 : fabricant de la copie identique au v8 : oui
+B3 : fabricant de la copie identique au v8 : oui
+D1 : seule différence avec le fabricant v8 : 2 lignes ; > E_AMORCE_EPINGLE=c945bb9ccdd4a2227b8b0…
+B1 : attendu 9 ; rendu 9 ; TENU ; refus (9) : épinglage : amorce d78a080f5bc238872d3d9d24ded9ee4e4138b8cffc336b0a277a65edf269f721, attendue 524cfc4a78a2b77c3cb5ad0c915628217e932c7cd58dbfebc80c4643f5d9d75 ; fichiers laissés : 0
+B2 : attendu 9 ; rendu 9 ; TENU ; refus (9) : épinglage : amorce 11a2dfe5e7a07e9b361314b3d94d14bec9dac039439e0c77de60378e3325d831, attendue 524cfc4a78a2b77c3cb5ad0c915628217e932c7cd58dbfebc80c4643f5d9d75 ; fichiers laissés : 0
+B3 : attendu 9 ; rendu 9 ; TENU ; refus (9) : épinglage : amorce c945bb9ccdd4a2227b8b03f5a6458474c6d73651fa267ad00421fe569b02c56a, attendue 524cfc4a78a2b77c3cb5ad0c915628217e932c7cd58dbfebc80c4643f5d9d75 ; fichiers laissés : 0
+D1 : attendu 9 ; rendu 9 ; TENU ; refus (9) : données : 2 ligne(s) E_SCRIPT=, attendue une seule, ligne 4, égale à 061f79930face6fc7945c30fb5dbb6275563495b0ea0fe132ba82f1457137ce5 ; fichiers laissés : 0
+E0-sain : essai 1 ; codes v7 0, v8 0 ; H0 v7 H0_PREVU=2026-11-22T01:56:01Z, v8 H0_PREVU=2026-11-22T01:56:01Z
+  données : v7 5a67c913aa51755cc29042af92948ef4bdc90aa0aa342d534ed1492d72880ada ; v8 5a67c913aa51755cc29042af92948ef4bdc90aa0aa342d534ed1492d72880ada ; IDENTIQUES
+  données.sans-jeton : v7 404f57ae0c42be531fb9f9d6e27d0fbf3aef32049d125b269b6a5e7744fe168a ; v8 404f57ae0c42be531fb9f9d6e27d0fbf3aef32049d125b269b6a5e7744fe168a ; IDENTIQUES
+  données.charge.b64 : v7 24b99467fc3a56644269108a9ac6fadea6d7844327b8b509962efc2bd6cb8a50 ; v8 24b99467fc3a56644269108a9ac6fadea6d7844327b8b509962efc2bd6cb8a50 ; IDENTIQUES
+  données.script-reduit.sh : v7 061f79930face6fc7945c30fb5dbb6275563495b0ea0fe132ba82f1457137ce5 ; v8 061f79930face6fc7945c30fb5dbb6275563495b0ea0fe132ba82f1457137ce5 ; IDENTIQUES
+  lignes E_SCRIPT= des données v8 : 1 ; ligne 4 : E_SCRIPT=061f79930face6fc7945c30fb5dbb6275563495b0ea0fe132ba82f1457137ce5
+  taille en lecture stricte (chaîne JSON échappée en ASCII, jeton de 100 signes) : 32653 octets ; limite 32768 ; marge 115
+  information : même chaîne avec l'échappement HTML de Go (< > & en \u00XX) : 32708 octets ; marge 60
+E0 : TENU
